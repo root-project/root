@@ -2439,8 +2439,6 @@ void TGraphPainter::PaintGraphAsymmErrors(TGraph *theGraph, Option_t *option)
    Double_t xb[4], yb[4];
 
    const Int_t kBASEMARKER=8;
-   Double_t s2x, s2y, symbolsize, sbase;
-   Double_t x, y, exl, exh, eyl, eyh, xl1, xl2, xr1, xr2, yup1, yup2, ylow1, ylow2, tx, ty;
    static Float_t cxx[30] = {1.0,1.0,0.5,0.5,1.0,1.0,0.5,0.6,1.0,0.5,0.5,1.0,0.5,0.6,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,1.0,1.0,1.0,1.0,0.5,0.5,0.5,1.0};
    static Float_t cyy[30] = {1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,0.5,0.5,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,1.0,1.0,1.0,1.0,0.5,0.5,0.5,1.0};
    Int_t theNpoints = theGraph->GetN();
@@ -2512,8 +2510,8 @@ void TGraphPainter::PaintGraphAsymmErrors(TGraph *theGraph, Option_t *option)
    box.SetFillColor(theGraph->GetFillColor());
    box.SetFillStyle(theGraph->GetFillStyle());
 
-   symbolsize  = theGraph->GetMarkerSize();
-   sbase       = symbolsize*kBASEMARKER;
+   Double_t symbolsize = theGraph->GetMarkerSize();
+   Double_t sbase = symbolsize*kBASEMARKER;
    Int_t mark  = TAttMarker::GetMarkerStyleBase(theGraph->GetMarkerStyle());
    Double_t cx  = 0;
    Double_t cy  = 0;
@@ -2523,16 +2521,17 @@ void TGraphPainter::PaintGraphAsymmErrors(TGraph *theGraph, Option_t *option)
    }
 
    // Define the offset of the error bars due to the symbol size
-   s2x  = gPad->PixeltoX(Int_t(0.5*sbase)) - gPad->PixeltoX(0);
-   s2y  =-gPad->PixeltoY(Int_t(0.5*sbase)) + gPad->PixeltoY(0);
-   Int_t dxend = Int_t(gStyle->GetEndErrorSize());
-   tx    = gPad->PixeltoX(dxend) - gPad->PixeltoX(0);
-   ty    =-gPad->PixeltoY(dxend) + gPad->PixeltoY(0);
+   Double_t s2x  =  gPad->PixeltoX(Int_t(0.5*sbase)) - gPad->PixeltoX(0);
+   Double_t s2y  = -gPad->PixeltoY(Int_t(0.5*sbase)) + gPad->PixeltoY(0);
+   Int_t dxend   = Int_t(gStyle->GetEndErrorSize());
+   Double_t tx   =  gPad->PixeltoX(dxend) - gPad->PixeltoX(0);
+   Double_t ty   = -gPad->PixeltoY(dxend) + gPad->PixeltoY(0);
    Float_t asize = 0.6*symbolsize*kBASEMARKER/gPad->GetWh();
 
    gPad->SetBit(TGraph::kClipFrame, theGraph->TestBit(TGraph::kClipFrame));
 
    // loop over all the graph points
+   Double_t x, y, exl, exh, eyl, eyh, xl1, xl2, xr1, xr2, yup1, yup2, ylow1, ylow2;
    for (Int_t i=0;i<theNpoints;i++) {
       x  = gPad->XtoPad(theX[i]);
       y  = gPad->YtoPad(theY[i]);
@@ -2752,8 +2751,6 @@ void TGraphPainter::PaintGraphMultiErrors(TGraph *theGraph, Option_t *option)
    Double_t xb[4], yb[4];
 
    const Int_t kBASEMARKER = 8;
-   Double_t s2x, s2y, symbolsize, sbase;
-   Double_t x, y, xl1, xl2, xr1, xr2, yup1, yup2, ylow1, ylow2, tx, ty;
    static Float_t cxx[30] = {1.0,1.0,0.5,0.5,1.0,1.0,0.5,0.6,1.0,0.5,0.5,1.0,0.5,0.6,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,1.0,1.0,1.0,1.0,0.5,0.5,0.5,1.0};
    static Float_t cyy[30] = {1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,0.5,0.5,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,1.0,1.0,1.0,1.0,0.5,0.5,0.5,1.0};
    Int_t theNpoints = tg->GetN();
@@ -2862,6 +2859,7 @@ void TGraphPainter::PaintGraphMultiErrors(TGraph *theGraph, Option_t *option)
 
    Int_t NPointsInside = AnyOption0 ? theNpoints : 0;
 
+   Double_t x,y;
    for (Int_t i = 0; i < theNpoints && !AnyOption0; i++) {
       x = gPad->XtoPad(theX[i]);
       y = gPad->YtoPad(theY[i]);
@@ -2908,8 +2906,8 @@ void TGraphPainter::PaintGraphMultiErrors(TGraph *theGraph, Option_t *option)
    box.SetFillColor(tg->GetFillColor());
    box.SetFillStyle(tg->GetFillStyle());
 
-   symbolsize = tg->GetMarkerSize();
-   sbase = symbolsize * kBASEMARKER;
+   Double_t symbolsize = tg->GetMarkerSize();
+   Double_t sbase = symbolsize * kBASEMARKER;
    Int_t mark = TAttMarker::GetMarkerStyleBase(tg->GetMarkerStyle());
    Double_t cx = 0.;
    Double_t cy = 0.;
@@ -2920,15 +2918,17 @@ void TGraphPainter::PaintGraphMultiErrors(TGraph *theGraph, Option_t *option)
    }
 
    // Define the offset of the error bars due to the symbol size
-   s2x = gPad->PixeltoX(Int_t(0.5 * sbase)) - gPad->PixeltoX(0);
-   s2y = -gPad->PixeltoY(Int_t(0.5 * sbase)) + gPad->PixeltoY(0);
+   Double_t s2x = gPad->PixeltoX(Int_t(0.5 * sbase)) - gPad->PixeltoX(0);
+   Double_t s2y = -gPad->PixeltoY(Int_t(0.5 * sbase)) + gPad->PixeltoY(0);
    auto dxend = Int_t(gStyle->GetEndErrorSize());
-   tx = gPad->PixeltoX(dxend) - gPad->PixeltoX(0);
-   ty = -gPad->PixeltoY(dxend) + gPad->PixeltoY(0);
+   Double_t tx = gPad->PixeltoX(dxend) - gPad->PixeltoX(0);
+   Double_t ty = -gPad->PixeltoY(dxend) + gPad->PixeltoY(0);
    Float_t asize = 0.6 * symbolsize * kBASEMARKER / gPad->GetWh();
 
    gPad->SetBit(TGraph::kClipFrame, tg->TestBit(TGraph::kClipFrame));
 
+   // loop over all the graph points
+   Double_t xl1, xl2, xr1, xr2, yup1, yup2, ylow1, ylow2;
    for (Int_t i = 0; i < theNpoints; i++) {
       x = gPad->XtoPad(theX[i]);
       y = gPad->YtoPad(theY[i]);
@@ -3174,9 +3174,6 @@ void TGraphPainter::PaintGraphBentErrors(TGraph *theGraph, Option_t *option)
    Double_t xb[4], yb[4];
 
    const Int_t kBASEMARKER=8;
-   Double_t s2x, s2y, symbolsize, sbase;
-   Double_t x, y, exl, exh, eyl, eyh, xl1, xl2, xr1, xr2, yup1, yup2, ylow1, ylow2, tx, ty;
-   Double_t bxl, bxh, byl, byh, bs;
    static Float_t cxx[30] = {1.0,1.0,0.5,0.5,1.0,1.0,0.5,0.6,1.0,0.5,0.5,1.0,0.5,0.6,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,1.0,1.0,1.0,1.0,0.5,0.5,0.5,1.0};
    static Float_t cyy[30] = {1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,0.5,0.5,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,1.0,1.0,1.0,1.0,0.5,0.5,0.5,1.0};
    Int_t theNpoints = theGraph->GetN();
@@ -3252,27 +3249,29 @@ void TGraphPainter::PaintGraphBentErrors(TGraph *theGraph, Option_t *option)
    box.SetFillColor(theGraph->GetFillColor());
    box.SetFillStyle(theGraph->GetFillStyle());
 
-   symbolsize  = theGraph->GetMarkerSize();
-   sbase       = symbolsize*kBASEMARKER;
-   Int_t mark  = TAttMarker::GetMarkerStyleBase(theGraph->GetMarkerStyle());
-   Double_t cx  = 0;
-   Double_t cy  = 0;
+   Double_t symbolsize = theGraph->GetMarkerSize();
+   Double_t sbase = symbolsize*kBASEMARKER;
+   Int_t mark = TAttMarker::GetMarkerStyleBase(theGraph->GetMarkerStyle());
+   Double_t cx = 0;
+   Double_t cy = 0;
    if (mark >= 20 && mark <= 49) {
       cx = cxx[mark-20];
       cy = cyy[mark-20];
    }
 
    // define the offset of the error bars due to the symbol size
-   s2x  = gPad->PixeltoX(Int_t(0.5*sbase)) - gPad->PixeltoX(0);
-   s2y  =-gPad->PixeltoY(Int_t(0.5*sbase)) + gPad->PixeltoY(0);
-   Int_t dxend = Int_t(gStyle->GetEndErrorSize());
-   tx   = gPad->PixeltoX(dxend) - gPad->PixeltoX(0);
-   ty   =-gPad->PixeltoY(dxend) + gPad->PixeltoY(0);
+   Double_t s2x =  gPad->PixeltoX(Int_t(0.5*sbase)) - gPad->PixeltoX(0);
+   Double_t s2y = -gPad->PixeltoY(Int_t(0.5*sbase)) + gPad->PixeltoY(0);
+   Int_t dxend  = Int_t(gStyle->GetEndErrorSize());
+   Double_t tx  =  gPad->PixeltoX(dxend) - gPad->PixeltoX(0);
+   Double_t ty  = -gPad->PixeltoY(dxend) + gPad->PixeltoY(0);
    Float_t asize = 0.6*symbolsize*kBASEMARKER/gPad->GetWh();
 
    gPad->SetBit(TGraph::kClipFrame, theGraph->TestBit(TGraph::kClipFrame));
 
    // loop over all the graph points
+   Double_t x, y, exl, exh, eyl, eyh, xl1, xl2, xr1, xr2, yup1, yup2, ylow1, ylow2;
+   Double_t bxl, bxh, byl, byh, bs;
    for (Int_t i=0;i<theNpoints;i++) {
       x   = gPad->XtoPad(theX[i]);
       y   = gPad->YtoPad(theY[i]);
@@ -3474,8 +3473,6 @@ void TGraphPainter::PaintGraphErrors(TGraph *theGraph, Option_t *option)
    Double_t xb[4], yb[4];
 
    const Int_t kBASEMARKER=8;
-   Double_t s2x, s2y, symbolsize, sbase;
-   Double_t x, y, ex, ey, xl1, xl2, xr1, xr2, yup1, yup2, ylow1, ylow2, tx, ty;
    static Float_t cxx[30] = {1.0,1.0,0.5,0.5,1.0,1.0,0.5,0.6,1.0,0.5,0.5,1.0,0.5,0.6,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,1.0,1.0,1.0,1.0,0.5,0.5,0.5,1.0};
    static Float_t cyy[30] = {1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,0.5,0.5,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0,0.0,1.0,1.0,1.0,1.0,0.5,0.5,0.5,1.0};
    Int_t theNpoints = theGraph->GetN();
@@ -3545,27 +3542,28 @@ void TGraphPainter::PaintGraphErrors(TGraph *theGraph, Option_t *option)
    box.SetFillColor(theGraph->GetFillColor());
    box.SetFillStyle(theGraph->GetFillStyle());
 
-   symbolsize  = theGraph->GetMarkerSize();
-   sbase       = symbolsize*kBASEMARKER;
-   Int_t mark  = TAttMarker::GetMarkerStyleBase(theGraph->GetMarkerStyle());
-   Double_t cx  = 0;
-   Double_t cy  = 0;
+   Double_t symbolsize = theGraph->GetMarkerSize();
+   Double_t sbase = symbolsize*kBASEMARKER;
+   Int_t mark = TAttMarker::GetMarkerStyleBase(theGraph->GetMarkerStyle());
+   Double_t cx = 0;
+   Double_t cy = 0;
    if (mark >= 20 && mark <= 49) {
       cx = cxx[mark-20];
       cy = cyy[mark-20];
    }
 
    // define the offset of the error bars due to the symbol size
-   s2x  = gPad->PixeltoX(Int_t(0.5*sbase)) - gPad->PixeltoX(0);
-   s2y  =-gPad->PixeltoY(Int_t(0.5*sbase)) + gPad->PixeltoY(0);
-   Int_t dxend = Int_t(gStyle->GetEndErrorSize());
-   tx    = gPad->PixeltoX(dxend) - gPad->PixeltoX(0);
-   ty    =-gPad->PixeltoY(dxend) + gPad->PixeltoY(0);
+   Double_t s2x =  gPad->PixeltoX(Int_t(0.5*sbase)) - gPad->PixeltoX(0);
+   Double_t s2y = -gPad->PixeltoY(Int_t(0.5*sbase)) + gPad->PixeltoY(0);
+   Int_t dxend  = Int_t(gStyle->GetEndErrorSize());
+   Double_t tx  =  gPad->PixeltoX(dxend) - gPad->PixeltoX(0);
+   Double_t ty  = -gPad->PixeltoY(dxend) + gPad->PixeltoY(0);
    Float_t asize = 0.6*symbolsize*kBASEMARKER/gPad->GetWh();
 
    gPad->SetBit(TGraph::kClipFrame, theGraph->TestBit(TGraph::kClipFrame));
 
    // loop over all the graph points
+   Double_t x, y, ex, ey, xl1, xl2, xr1, xr2, yup1, yup2, ylow1, ylow2;
    for (Int_t i=0;i<theNpoints;i++) {
       x  = gPad->XtoPad(theX[i]);
       y  = gPad->YtoPad(theY[i]);
