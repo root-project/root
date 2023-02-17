@@ -208,6 +208,7 @@ void TMinuitMinimizer::SetFunction(const  ROOT::Math::IMultiGenFunction & func) 
    // calculated by Minuit
    // Here a TMinuit instance is created since only at this point we know the number of parameters
 
+   const bool hasGrad = func.HasGradient();
 
    fDim = func.NDim();
 
@@ -216,12 +217,12 @@ void TMinuitMinimizer::SetFunction(const  ROOT::Math::IMultiGenFunction & func) 
 
    // assign to the static pointer (NO Thread safety here)
    GetGlobalFuncPtr() = const_cast<ROOT::Math::IMultiGenFunction *>(&func);
-   fMinuit->SetFCN(&TMinuitMinimizer::Fcn);
+   fMinuit->SetFCN(hasGrad ? &TMinuitMinimizer::FcnGrad : &TMinuitMinimizer::Fcn);
 
    double arglist[1];
    int ierr = 0;
 
-   if(func.HasGradient()) {
+   if(hasGrad) {
       // set gradient
       // by default do not check gradient calculation
       // it cannot be done here, check can be done only after having defined the parameters
