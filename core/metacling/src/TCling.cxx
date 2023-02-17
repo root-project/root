@@ -1092,8 +1092,8 @@ static GlobalModuleIndex *loadGlobalModuleIndex(cling::Interpreter &interp)
    assert(ModuleManager);
    // StringRef ModuleIndexPath = HSI.getModuleCachePath();
    // HeaderSearch& HSI = PP.getHeaderSearchInfo();
-   // HSI.setModuleCachePath(TROOT::GetLibDir().Data());
-   std::string ModuleIndexPath = TROOT::GetLibDir().Data();
+   // HSI.setModuleCachePath(TROOT::GetSharedLibDir().Data());
+   std::string ModuleIndexPath = TROOT::GetSharedLibDir().Data();
    if (ModuleIndexPath.empty())
       return nullptr;
    // Get an existing global index. This loads it if not already loaded.
@@ -1243,38 +1243,10 @@ static void RegisterCxxModules(cling::Interpreter &clingInterp)
       LoadModules(FIXMEModules, clingInterp);
 
       GlobalModuleIndex *GlobalIndex = nullptr;
-      // Conservatively enable platform by platform.
-      bool supportedPlatform =
-#ifdef R__LINUX
-         true
-#elif defined(R__MACOSX)
-         true
-#else // Windows
-         false
-#endif
-         ;
-      // Allow forcefully enabling/disabling the GMI.
-      llvm::Optional<std::string> envUseGMI = llvm::sys::Process::GetEnv("ROOT_USE_GMI");
-      if (envUseGMI.hasValue()) {
-         if (!envUseGMI->empty() && !ROOT::FoundationUtils::CanConvertEnvValueToBool(*envUseGMI))
-            ::Warning("TCling__RegisterCxxModules",
-                      "Cannot convert '%s' to bool, setting to false!",
-                      envUseGMI->c_str());
-
-         bool value = envUseGMI->empty() || ROOT::FoundationUtils::ConvertEnvValueToBool(*envUseGMI);
-
-         if (supportedPlatform == value)
-            ::Warning("TCling__RegisterCxxModules", "Global module index is%sused already!",
-                     (value) ? " " :" not ");
-         supportedPlatform = value;
-      }
-
-      if (supportedPlatform) {
-         loadGlobalModuleIndex(clingInterp);
-         // FIXME: The ASTReader still calls loadGlobalIndex and loads the file
-         // We should investigate how to suppress it completely.
-         GlobalIndex = CI.getASTReader()->getGlobalIndex();
-      }
+      loadGlobalModuleIndex(clingInterp);
+      // FIXME: The ASTReader still calls loadGlobalIndex and loads the file
+      // We should investigate how to suppress it completely.
+      GlobalIndex = CI.getASTReader()->getGlobalIndex();
 
       llvm::StringSet<> KnownModuleFileNames;
       if (GlobalIndex)
@@ -1467,11 +1439,7 @@ TCling::TCling(const char *name, const char *title, const char* const argv[], vo
       // ROOT usually knows better where its libraries are. This way we can
       // discover modules without having to should thisroot.sh and should fix
       // gnuinstall.
-#ifdef R__WIN32
-      Paths.push_back(TROOT::GetBinDir().Data());
-#else
-      Paths.push_back(TROOT::GetLibDir().Data());
-#endif
+      Paths.push_back(TROOT::GetSharedLibDir().Data());
       GetEnvVarPath("CLING_PREBUILT_MODULE_PATH", Paths);
       std::string EnvVarPath;
       for (const std::string& P : Paths)
@@ -1510,7 +1478,7 @@ TCling::TCling(const char *name, const char *title, const char* const argv[], vo
          assert(llvm::sys::fs::exists(Env) && "Path does not exist!");
          ModulesCachePath = Env.str();
       } else {
-         ModulesCachePath = TROOT::GetLibDir();
+         ModulesCachePath = TROOT::GetSharedLibDir();
       }
 
       clingArgsStorage.push_back("-fmodules-cache-path=" + ModulesCachePath);
@@ -1639,7 +1607,7 @@ TCling::TCling(const char *name, const char *title, const char* const argv[], vo
       cling::DynamicLibraryManager& DLM = *fInterpreter->getDynamicLibraryManager();
       // Make sure cling looks into ROOT's libdir, even if not part of LD_LIBRARY_PATH
       // e.g. because of an RPATH build.
-      DLM.addSearchPath(TROOT::GetLibDir().Data(), /*isUser=*/true,
+      DLM.addSearchPath(TROOT::GetSharedLibDir().Data(), /*isUser=*/true,
                         /*prepend=*/true);
       auto ShouldPermanentlyIgnore = [](llvm::StringRef FileName) -> bool{
          llvm::StringRef stem = llvm::sys::path::stem(FileName);

@@ -13,6 +13,11 @@ if(mathmore)
   set(ROOT_MATHMORE_LIBRARY MathMore)
 endif()
 
+set (EXTRA_DICT_OPTS)
+if (runtime_cxxmodules AND WIN32)
+  set (EXTRA_DICT_OPTS NO_CXXMODULE)
+endif()
+
 ROOT_STANDARD_LIBRARY_PACKAGE(RooFitMore
   HEADERS
     RooFitMoreLib.h
@@ -50,6 +55,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitMore
     RIO
     MathCore
     Foam
+  ${EXTRA_DICT_OPTS}
 )
 
 # For recent clang, this can facilitate auto-vectorisation.

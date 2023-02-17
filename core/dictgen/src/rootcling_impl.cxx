@@ -120,6 +120,8 @@ const std::string gPathSeparator(ROOT::TMetaUtils::GetPathSeparator());
 bool gBuildingROOT = false;
 const ROOT::Internal::RootCling::DriverConfig* gDriverConfig = nullptr;
 
+#define rootclingStringify(s) rootclingStringifyx(s)
+#define rootclingStringifyx(s) #s
 
 // Maybe too ugly? let's see how it performs.
 using HeadersDeclsMap_t = std::map<std::string, std::list<std::string>>;
@@ -4275,6 +4277,12 @@ int RootClingMain(int argc,
       // Try to get the module name in the modulemap based on the filepath.
       moduleName = GetModuleNameFromRdictName(outputFile);
 
+#ifdef _MSC_VER
+      clingArgsInterpreter.push_back("-Xclang");
+      clingArgsInterpreter.push_back("-fmodule-feature");
+      clingArgsInterpreter.push_back("-Xclang");
+      clingArgsInterpreter.push_back("msvc" + std::string(rootclingStringify(_MSC_VER)));
+#endif
       clingArgsInterpreter.push_back("-fmodule-name=" + moduleName.str());
 
       std::string moduleCachePath = llvm::sys::path::parent_path(gOptSharedLibFileName).str();
