@@ -5691,13 +5691,27 @@ void TPad::SaveAs(const char *filename, Option_t * /*option*/) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Save primitives in this pad on the C++ source file out.
 
-void TPad::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
+void TPad::SavePrimitive(std::ostream &out, Option_t * option /*= ""*/)
 {
    TContext ctxt(this, kFALSE); // not interactive
 
    char quote = '"';
+
+   static Int_t pcounter = 0;
+   TString padName = GetName();
+
+   TString opt = option;
+   if (!opt.Contains("toplevel")) {
+      pcounter++;
+      padName += "__";
+      padName += pcounter;
+      padName = gInterpreter-> MapCppName(padName);
+   }
+   const char *pname = padName.Data();
+   if (!strlen(pname)) pname = "unnamed";
+
    char lcname[100];
-   const char *cname = GetName();
+   const char *cname = padName.Data();
    size_t nch = strlen(cname);
    if (nch < sizeof(lcname)) {
       strlcpy(lcname, cname, sizeof(lcname));
@@ -5717,7 +5731,7 @@ void TPad::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
       out <<"  "<<std::endl;
       out <<"// ------------>Primitives in pad: "<<GetName()<<std::endl;
 
-      out<<"   TPad *"<<cname<<" = new TPad("<<quote<<GetName()<<quote<<", "<<quote<<GetTitle()
+      out<<"   TPad *"<<cname<<" = new TPad("<<quote<<pname<<quote<<", "<<quote<<GetTitle()
       <<quote
       <<","<<fXlowNDC
       <<","<<fYlowNDC
@@ -5854,9 +5868,10 @@ void TPad::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
          if (!strcmp(obj->GetName(),"Graph"))
             ((TGraph*)obj)->SetName(TString::Format("Graph%d",grnum++).Data());
       obj->SavePrimitive(out, (Option_t *)next.GetOption());
+      if (obj->InheritsFrom(TPad::Class()) and !opt.Contains("toplevel"))
+         out<<"   "<<pname<<"->cd();"<<std::endl;
    }
    out<<"   "<<cname<<"->Modified();"<<std::endl;
-   out<<"   "<<GetMother()->GetName()<<"->cd();"<<std::endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
