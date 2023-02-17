@@ -1926,7 +1926,8 @@ void TCanvas::SaveSource(const char *filename, Option_t *option)
    //   Now recursively scan all pads of this canvas
    cd();
    if (invalid) SetName("c1");
-   TPad::SavePrimitive(out,option);
+   TPad::SavePrimitive(out,"toplevel");
+
    //   Write canvas options related to pad editor
    out<<"   "<<GetName()<<"->SetSelected("<<GetName()<<");"<<std::endl;
    if (GetShowToolBar()) {
