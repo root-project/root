@@ -118,6 +118,8 @@ public:
    template<class Func>
    void SetHessianFunction(Func f) { fHessianFunc = f;}
 
+   void SetErrorDef(double up) override { fUp = up; }
+
 private:
    const Function &fFunc;
    double fUp;
