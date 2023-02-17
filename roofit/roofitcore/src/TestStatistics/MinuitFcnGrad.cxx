@@ -21,6 +21,40 @@
 namespace RooFit {
 namespace TestStatistics {
 
+namespace {
+
+class MinuitGradFunctor : public ROOT::Math::IMultiGradFunction {
+
+public:
+   MinuitGradFunctor(MinuitFcnGrad const &fcn) : _fcn{fcn} {}
+
+   ROOT::Math::IMultiGradFunction *Clone() const override { return new MinuitGradFunctor(_fcn); }
+
+   unsigned int NDim() const override { return _fcn.NDim(); }
+
+   void Gradient(const double *x, double *grad) const override { return _fcn.Gradient(x, grad); }
+
+   void GradientWithPrevResult(const double *x, double *grad, double *previous_grad, double *previous_g2,
+                               double *previous_gstep) const override
+   {
+      return _fcn.GradientWithPrevResult(x, grad, previous_grad, previous_g2, previous_gstep);
+   }
+
+   bool returnsInMinuit2ParameterSpace() const override { return _fcn.returnsInMinuit2ParameterSpace(); }
+
+private:
+   double DoEval(const double *x) const override { return _fcn(x); }
+
+   double DoDerivative(double const * /*x*/, unsigned int /*icoord*/) const override
+   {
+      throw std::runtime_error("MinuitFcnGrad::DoDerivative is not implemented, please use Gradient instead.");
+   }
+
+   MinuitFcnGrad const &_fcn;
+};
+
+} // namespace
+
 /** \class MinuitFcnGrad
  *
  * \brief Minuit-RooMinimizer interface which synchronizes parameter data and coordinates evaluation of likelihood
@@ -48,15 +82,18 @@ namespace TestStatistics {
 MinuitFcnGrad::MinuitFcnGrad(const std::shared_ptr<RooFit::TestStatistics::RooAbsL> &_likelihood, RooMinimizer *context,
                              std::vector<ROOT::Fit::ParameterSettings> &parameters, LikelihoodMode likelihoodMode,
                              LikelihoodGradientMode likelihoodGradientMode)
-   : RooAbsMinimizerFcn(RooArgList(*_likelihood->getParameters()), context), minuit_internal_x_(NDim(), 0),
-     minuit_external_x_(NDim(), 0)
+   : RooAbsMinimizerFcn(RooArgList(*_likelihood->getParameters()), context),
+     minuit_internal_x_(NDim(), 0),
+     minuit_external_x_(NDim(), 0),
+     _multiGenFcn{std::make_unique<MinuitGradFunctor>(*this)}
 {
    synchronizeParameterSettings(parameters, true);
 
    calculation_is_clean = std::make_shared<WrapperCalculationCleanFlags>();
 
    likelihood = LikelihoodWrapper::create(likelihoodMode, _likelihood, calculation_is_clean);
-   if (likelihoodMode == LikelihoodMode::multiprocess && likelihoodGradientMode == LikelihoodGradientMode::multiprocess) {
+   if (likelihoodMode == LikelihoodMode::multiprocess &&
+       likelihoodGradientMode == LikelihoodGradientMode::multiprocess) {
       likelihood_in_gradient = LikelihoodWrapper::create(LikelihoodMode::serial, _likelihood, calculation_is_clean);
    } else {
       likelihood_in_gradient = likelihood;
@@ -68,7 +105,7 @@ MinuitFcnGrad::MinuitFcnGrad(const std::shared_ptr<RooFit::TestStatistics::RooAb
    if (likelihood != likelihood_in_gradient) {
       likelihood_in_gradient->synchronizeParameterSettings(parameters);
    }
-   gradient->synchronizeParameterSettings(this, parameters);
+   gradient->synchronizeParameterSettings(getMultiGenFcn(), parameters);
 
    // Note: can be different than RooGradMinimizerFcn/LikelihoodGradientSerial, where default options are passed
    // (ROOT::Math::MinimizerOptions::DefaultStrategy() and ROOT::Math::MinimizerOptions::DefaultErrorDef())
@@ -79,7 +116,7 @@ MinuitFcnGrad::MinuitFcnGrad(const std::shared_ptr<RooFit::TestStatistics::RooAb
    gradient->synchronizeWithMinimizer(ROOT::Math::MinimizerOptions());
 }
 
-double MinuitFcnGrad::DoEval(const double *x) const
+double MinuitFcnGrad::operator()(const double *x) const
 {
    bool parameters_changed = syncParameterValuesFromMinuitCalls(x, false);
 
@@ -104,8 +141,7 @@ double MinuitFcnGrad::DoEval(const double *x) const
                                    << "Returning maximum FCN so far (" << _maxFCN
                                    << ") to force MIGRAD to back out of this region. Error log follows" << std::endl;
          } else {
-            oocoutW(nullptr, Eval) << "MinuitFcnGrad: Minimized function has error status but is ignored"
-                                   << std::endl;
+            oocoutW(nullptr, Eval) << "MinuitFcnGrad: Minimized function has error status but is ignored" << std::endl;
          }
 
          bool first(true);
@@ -254,11 +290,6 @@ void MinuitFcnGrad::GradientWithPrevResult(const double *x, double *grad, double
    syncParameterValuesFromMinuitCalls(x, returnsInMinuit2ParameterSpace());
    gradient->fillGradientWithPrevResult(grad, previous_grad, previous_g2, previous_gstep);
    calculating_gradient_ = false;
-}
-
-double MinuitFcnGrad::DoDerivative(const double * /*x*/, unsigned int /*icoord*/) const
-{
-   throw std::runtime_error("MinuitFcnGrad::DoDerivative is not implemented, please use Gradient instead.");
 }
 
 bool MinuitFcnGrad::Synchronize(std::vector<ROOT::Fit::ParameterSettings> &parameters)

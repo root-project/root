@@ -30,19 +30,17 @@ class RooMinimizer;
 namespace RooFit {
 namespace TestStatistics {
 
-class MinuitFcnGrad : public ROOT::Math::IMultiGradFunction, public RooAbsMinimizerFcn {
+class MinuitFcnGrad : public RooAbsMinimizerFcn {
 public:
    MinuitFcnGrad(const std::shared_ptr<RooFit::TestStatistics::RooAbsL> &_likelihood, RooMinimizer *context,
                  std::vector<ROOT::Fit::ParameterSettings> &parameters, LikelihoodMode likelihoodMode,
                  LikelihoodGradientMode likelihoodGradientMode);
 
-   inline ROOT::Math::IMultiGradFunction *Clone() const override { return new MinuitFcnGrad(*this); }
-
    /// Overridden from RooAbsMinimizerFcn to include gradient strategy synchronization.
    bool Synchronize(std::vector<ROOT::Fit::ParameterSettings> &parameter_settings) override;
 
    // used inside Minuit:
-   inline bool returnsInMinuit2ParameterSpace() const override { return gradient->usesMinuitInternalValues(); }
+   inline bool returnsInMinuit2ParameterSpace() const { return gradient->usesMinuitInternalValues(); }
 
    inline void setOptimizeConstOnFunction(RooAbsArg::ConstOpCode opcode, bool doAlsoTrackingOpt) override
    {
@@ -52,20 +50,14 @@ public:
       }
    }
 
-   ROOT::Math::IMultiGenFunction *getMultiGenFcn() override { return this; };
+   ROOT::Math::IMultiGenFunction *getMultiGenFcn() override { return _multiGenFcn.get(); }
 
-private:
-   /// IMultiGradFunction override necessary for Minuit
-   double DoEval(const double *x) const override;
+   double operator()(const double *x) const;
 
-public:
    /// IMultiGradFunction overrides necessary for Minuit
-   void Gradient(const double *x, double *grad) const override;
+   void Gradient(const double *x, double *grad) const;
    void GradientWithPrevResult(const double *x, double *grad, double *previous_grad, double *previous_g2,
-                               double *previous_gstep) const override;
-
-   /// Part of IMultiGradFunction interface, used widely both in Minuit and in RooFit.
-   inline unsigned int NDim() const override { return _nDim; }
+                               double *previous_gstep) const;
 
    inline std::string getFunctionName() const override { return likelihood->GetName(); }
 
@@ -80,9 +72,6 @@ public:
    }
 
 private:
-   /// This override should not be used in this class, so it throws.
-   double DoDerivative(const double *x, unsigned int icoord) const override;
-
    bool syncParameterValuesFromMinuitCalls(const double *x, bool minuit_internal) const;
 
    // members
@@ -97,6 +86,8 @@ public:
 private:
    mutable std::vector<double> minuit_internal_x_;
    mutable std::vector<double> minuit_external_x_;
+
+   std::unique_ptr<ROOT::Math::IMultiGradFunction> _multiGenFcn;
 
 public:
    mutable bool minuit_internal_roofit_x_mismatch_ = false;
