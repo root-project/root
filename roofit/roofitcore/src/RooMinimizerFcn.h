@@ -34,15 +34,10 @@ using TMatrixDSym = TMatrixTSym<double>;
 // forward declaration
 class RooMinimizer;
 
-class RooMinimizerFcn : public RooAbsMinimizerFcn, public ROOT::Math::IBaseFunctionMultiDim {
+class RooMinimizerFcn : public RooAbsMinimizerFcn {
 
 public:
    RooMinimizerFcn(RooAbsReal *funct, RooMinimizer *context);
-   RooMinimizerFcn(const RooMinimizerFcn &other);
-   ~RooMinimizerFcn() override;
-
-   ROOT::Math::IBaseFunctionMultiDim *Clone() const override;
-   unsigned int NDim() const override { return getNDim(); }
 
    std::string getFunctionName() const override;
    std::string getFunctionTitle() const override;
@@ -50,12 +45,13 @@ public:
    void setOptimizeConstOnFunction(RooAbsArg::ConstOpCode opcode, bool doAlsoTrackingOpt) override;
 
    void setOffsetting(bool flag) override;
-   ROOT::Math::IMultiGenFunction *getMultiGenFcn() override { return this; };
+   ROOT::Math::IMultiGenFunction *getMultiGenFcn() override { return _multiGenFcn.get(); }
+
+   double operator()(const double *x) const;
 
 private:
-   double DoEval(const double *x) const override;
-
    RooAbsReal *_funct;
+   std::unique_ptr<ROOT::Math::IBaseFunctionMultiDim> _multiGenFcn;
 };
 
 #endif

@@ -28,6 +28,7 @@
 #include "RooMinimizer.h"
 #include "RooNaNPacker.h"
 
+#include "Math/Functor.h"
 #include "TMatrixDSym.h"
 
 #include <fstream>
@@ -49,21 +50,12 @@ RooArgSet getParameters(RooAbsReal const &funct)
 
 } // namespace
 
+// use reference wrapper for the Functor, such that the functor points to this RooMinimizerFcn by reference.
 RooMinimizerFcn::RooMinimizerFcn(RooAbsReal *funct, RooMinimizer *context)
-   : RooAbsMinimizerFcn(getParameters(*funct), context), _funct(funct)
+   : RooAbsMinimizerFcn(getParameters(*funct), context),
+     _funct(funct),
+     _multiGenFcn{std::make_unique<ROOT::Math::Functor>(std::cref(*this), getNDim())}
 {
-}
-
-RooMinimizerFcn::RooMinimizerFcn(const RooMinimizerFcn &other)
-   : RooAbsMinimizerFcn(other), ROOT::Math::IBaseFunctionMultiDim(other), _funct(other._funct)
-{
-}
-
-RooMinimizerFcn::~RooMinimizerFcn() {}
-
-ROOT::Math::IBaseFunctionMultiDim *RooMinimizerFcn::Clone() const
-{
-   return new RooMinimizerFcn(*this);
 }
 
 void RooMinimizerFcn::setOptimizeConstOnFunction(RooAbsArg::ConstOpCode opcode, bool doAlsoTrackingOpt)
@@ -72,7 +64,7 @@ void RooMinimizerFcn::setOptimizeConstOnFunction(RooAbsArg::ConstOpCode opcode, 
 }
 
 /// Evaluate function given the parameters in `x`.
-double RooMinimizerFcn::DoEval(const double *x) const
+double RooMinimizerFcn::operator()(const double *x) const
 {
 
    // Set the parameter values for this iteration
