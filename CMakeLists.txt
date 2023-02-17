@@ -523,7 +523,7 @@ if(runtime_cxxmodules)
   get_property(modules_idx_deps GLOBAL PROPERTY modules_idx_deps_property)
   if(WIN32)
     set(modules_idx_cmd COMMAND set PATH=${library_output_dir}\\\;%PATH%\\\; && set ROOTIGNOREPREFIX=1\\\; &&
-                                set ROOT_HIST=0\\\; && root.exe -l -q -b)
+                                set ROOT_HIST=0\\\; && $<TARGET_FILE:root.exe> -l -q -b)
   else()
     set(modules_idx_cmd COMMAND ${ld_library_path}=${library_output_dir}:$ENV{${ld_library_path}}
                                 ROOTIGNOREPREFIX=1 ROOT_HIST=0 $<TARGET_FILE:root.exe> -l -q -b)
@@ -545,7 +545,7 @@ add_custom_target(hsimple ALL DEPENDS tutorials/hsimple.root)
 add_dependencies(hsimple onepcm)
 if(WIN32)
   set(hsimple_cmd COMMAND set PATH=${CMAKE_RUNTIME_OUTPUT_DIRECTORY}\\\;%PATH%\\\; && set ROOTIGNOREPREFIX=1\\\; &&
-                          set ROOT_HIST=0\\\; && root.exe -l -q -b -n -x hsimple.C -e return)
+                          set ROOT_HIST=0\\\; && $<TARGET_FILE:root.exe> -l -q -b -n -x hsimple.C -e return)
 else()
   set(hsimple_cmd COMMAND ${MODULES_ROOT_INCPATH} ${ld_library_path}=${CMAKE_LIBRARY_OUTPUT_DIRECTORY}:$ENV{${ld_library_path}}
                           ROOTIGNOREPREFIX=1 ROOT_HIST=0 $<TARGET_FILE:root.exe> -l -q -b -n -x hsimple.C -e return)
