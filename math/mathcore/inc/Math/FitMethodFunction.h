@@ -55,12 +55,12 @@ public:
    /**
       Virtual Destructor (no operations)
    */
-   virtual ~BasicFitMethodFunction ()  {}
+   ~BasicFitMethodFunction () override  {}
 
    /**
       Number of dimension (parameters) . From IGenMultiFunction interface
     */
-   virtual unsigned int NDim() const { return fNDim; }
+   unsigned int NDim() const override { return fNDim; }
 
    /**
       method returning the data i-th contribution to the fit objective function
