@@ -252,7 +252,11 @@ ROOT::TreeUtils::RFriendInfo GetFriendInfo(const TTree &tree, bool retrieveEntri
                                            "\" from file \"" + thisFileName + "\"");
                nEntriesInThisFriend.emplace_back(thisTree->GetEntries());
             } else {
-               nEntriesInThisFriend.emplace_back(TTree::kMaxEntries);
+               // Avoid odr-using TTree::kMaxEntries which would require a
+               // definition in C++14. In C++17, all constexpr static data
+               // members are implicitly inline.
+               static constexpr auto maxEntries = TTree::kMaxEntries;
+               nEntriesInThisFriend.emplace_back(maxEntries);
             }
          }
       } else {
