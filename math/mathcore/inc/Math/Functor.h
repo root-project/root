@@ -46,39 +46,20 @@ namespace Math {
  */
 class Functor : public IBaseFunctionMultiDim  {
 
-
 public:
 
    /// Default constructor.
    Functor ()  {}
 
-
-   /**
-       construct from a pointer to member function (multi-dim type)
-    */
+   /// Construct from a pointer to member function (multi-dim type).
    template <class PtrObj, typename MemFn>
    Functor(const PtrObj& p, MemFn memFn, unsigned int dim )
       : fDim{dim}, fFunc{std::bind(memFn, p, std::placeholders::_1)}
    {}
 
-
-   /**
-      construct from a callable object of multi-dimension
-      with the right signature (implementing operator()(const double *x)
-    */
-   template <typename Func>
-   Functor( const Func & f, unsigned int dim ) : fDim{dim}, fFunc{f} {}
-
-   /**
-        specialized constructor from a std::function of multi-dimension
-        with the right signature (double operator()(double const *x)
-        This specialized constructor is introduced in order to use the Functor class in
-        Python passing Python user defined functions
-      */
-   //template <typename Func>
-   Functor(const std::function<double(double const *)> &f, unsigned int dim)
-      : fDim{dim}, fFunc{f}
-   {}
+   /// Construct from a callable object of multi-dimension
+   /// with the right signature (implementing `double operator()(const double *x)`).
+   Functor(std::function<double(double const *)> const& f, unsigned int dim ) : fDim{dim}, fFunc{f} {}
 
    // clone of the function handler (use copy-ctor)
    Functor * Clone() const override { return new Functor(*this); }
@@ -88,11 +69,9 @@ public:
 
 private :
 
-
    inline double DoEval (const double * x) const override {
       return fFunc(x);
    }
-
 
    unsigned int fDim;
    std::function<double(double const *)> fFunc;
@@ -115,39 +94,20 @@ private :
 
 class Functor1D : public IBaseFunctionOneDim  {
 
-
 public:
 
    /// Default constructor.
    Functor1D() = default;
 
-   /**
-      construct from a callable object with the right signature
-      implementing operator() (double x)
-    */
-   template <typename Func>
-   Functor1D(const Func & f) :
-      fFunc{f}
-   {}
+   /// Construct from a callable object with the right signature
+   /// implementing `double operator() (double x)`.
+   Functor1D(std::function<double(double)> const& f) : fFunc{f} {}
 
-
-   /**
-       construct from a pointer to member function (1D type)
-    */
+   // Construct from a pointer to member function (1D type).
    template <class PtrObj, typename MemFn>
-   Functor1D(const PtrObj& p, MemFn memFn)
-      : fFunc{std::bind(memFn, p, std::placeholders::_1)}
-   {}
+   Functor1D(const PtrObj& p, MemFn memFn) : fFunc{std::bind(memFn, p, std::placeholders::_1)} {}
 
-   /**
-      specialized constructor from a std::function implementing the function evaluation.
-      This specialized constructor is introduced in order to use the Functor class in
-      Python passing Python user defined functions
-   */
-   Functor1D(const std::function<double(double)> &f) : fFunc{f} {}
-
-
-   // clone of the function handler (use copy-ctor)
+   // Clone of the function handler (use copy-ctor).
    Functor1D * Clone() const override { return new Functor1D(*this); }
 
 private :
@@ -197,34 +157,17 @@ public:
       fDim{dim}, fFunc{f}, fDerivFunc{std::bind(&Func::Derivative, f, std::placeholders::_1, std::placeholders::_2)}
    {}
 
-   /**
-       construct from a pointer to member function and member function types for function and derivative evaluations
-    */
+   /// Construct from a pointer to member function and member function types for function and derivative evaluations.
    template <class PtrObj, typename MemFn, typename GradMemFn>
    GradFunctor(const PtrObj& p, MemFn memFn, GradMemFn gradFn, unsigned int dim )
       : fDim{dim}, fFunc{std::bind(memFn, p, std::placeholders::_1)}, fDerivFunc{std::bind(gradFn, p, std::placeholders::_1, std::placeholders::_2)}
    {}
 
-   /**
-      construct for Gradient Functions of multi-dimension
-      Func gives the function evaluation, GradFunc the partial derivatives
-      The function dimension is  required
-    */
-   template <typename Func, typename GradFunc>
-   GradFunctor(const Func & f, const GradFunc & g, unsigned int dim  ) :
-      fDim{dim}, fFunc{f}, fDerivFunc{g} {}
-
-   /**
-      specialized constructor from 2 std::functions
-      with the right signature (the first one implementing double operator()(double const *x)
-      for the function evaluation and the second one implementing double operator()(double const *x, unsigned int icoord)
-      for the function partial derivatives.
-      This specialized constructor is introduced in order to use the Functor class in
-      Python passing Python user defined functions
-    */
-   // template <typename Func>
-   GradFunctor(const std::function<double(double const *)> &f,
-               const std::function<double(double const *, unsigned int)> &g, unsigned int dim)
+   /// Construct for Gradient Functions of multi-dimension Func gives the
+   /// function evaluation, GradFunc the partial derivatives The function
+   /// dimension is required.
+   GradFunctor(std::function<double(double const *)> const& f,
+               std::function<double(double const *, unsigned int)> const& g, unsigned int dim)
       : fDim{dim}, fFunc{f}, fDerivFunc{g}
    {}
 
@@ -238,13 +181,12 @@ public:
     * @param dim : number of function dimension
     * @param g   : function object computing the function gradient
     */
-   GradFunctor(const std::function<double(double const *)> &f, unsigned int dim,
-               const std::function<void(double const *, double *)> &g)
+   GradFunctor(std::function<double(double const *)> const&f, unsigned int dim,
+               std::function<void(double const *, double *)> const& g)
       : fDim{dim}, fFunc{f}, fGradFunc{g}
    {}
 
-
-   // clone of the function handler (use copy-ctor)
+   // Clone of the function handler (use copy-ctor).
    GradFunctor * Clone() const { return new GradFunctor(*this); }
 
    // for multi-dimensional functions
@@ -255,17 +197,16 @@ public:
       // (it will fill the gradient calling DoDerivative() for each component).
       if(!fGradFunc) {
          IGradientFunctionMultiDim::Gradient(x, g);
+         return;
       }
       fGradFunc(x, g);
    }
 
 private :
 
-
    inline double DoEval (const double * x) const {
       return fFunc(x);
    }
-
 
    inline double DoDerivative (const double * x, unsigned int icoord  ) const {
       if(fDerivFunc) {
@@ -307,20 +248,15 @@ private :
 
 class GradFunctor1D : public IGradientFunctionOneDim  {
 
-
 public:
 
    /// Default constructor.
    GradFunctor1D() = default;
 
-
-   /**
-      construct from an object with the right signature
-      implementing both operator() (double x) and Derivative(double x)
-    */
+   /// Construct from an object with the right signature,
+   /// implementing both `operator() (double x)` and `Derivative(double x)`.
    template <typename Func>
    GradFunctor1D(const Func & f) : fFunc{f}, fDerivFunc{std::bind(&Func::Derivative, f, std::placeholders::_1)} {}
-
 
    /**
        construct from a pointer to class and two pointers to member functions, one for
@@ -333,26 +269,15 @@ public:
    {}
 
 
-   /**
-      construct from two 1D function objects
-    */
-   template <typename Func, typename GradFunc>
-   GradFunctor1D(const Func & f, const GradFunc & g ) : fFunc{f}, fDerivFunc{g} {}
-
-   /**
-     specialized constructor from 2 std::function objects
-     implementing double operator()(double x). The first one for the function evaluation
-     and the second one implementing the function derivative.
-     This specialized constructor is introduced in order to use the class in
-     Python passing Python user defined functions
-   */
-   GradFunctor1D(const std::function<double(double)> &f, const std::function<double(double)> &g )
+   /// Specialized constructor from 2 function objects implementing double
+   /// operator()(double x). The first one for the function evaluation and the
+   /// second one implementing the function derivative.
+   GradFunctor1D(std::function<double(double)> const& f, std::function<double(double)> const& g)
       : fFunc{f}, fDerivFunc{g}
    {}
 
    // clone of the function handler (use copy-ctor)
    GradFunctor1D * Clone() const { return new GradFunctor1D(*this); }
-
 
 private :
 
@@ -364,8 +289,7 @@ private :
 };
 
 
-
-   } // end namespace Math
+} // end namespace Math
 
 } // end namespace ROOT
 
