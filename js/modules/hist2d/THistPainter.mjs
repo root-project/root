@@ -897,10 +897,8 @@ class THistPainter extends ObjectPainter {
 
    /** @summary Generates automatic color for some objects painters */
    createAutoColor(numprimitives) {
-      if (!numprimitives) {
-         let pad = this.getPadPainter().getRootPad(true);
-         numprimitives = pad?.fPrimitves ? pad.fPrimitves.arr.length : 5;
-      }
+      if (!numprimitives)
+         numprimitives = this.getPadPainter()?.getRootPad(true)?.fPrimitves?.arr?.length || 5;
 
       let indx = this._auto_color || 0;
       this._auto_color = indx + 1;
@@ -928,11 +926,12 @@ class THistPainter extends ObjectPainter {
       if (this.options._pfc || this.options._plc || this.options._pmc) {
          let mp = this.getMainPainter();
          if (isFunc(mp?.createAutoColor)) {
-            let icolor = mp.createAutoColor();
-            if (this.options._pfc) { histo.fFillColor = icolor; delete this.fillatt; }
-            if (this.options._plc) { histo.fLineColor = icolor; delete this.lineatt; }
-            if (this.options._pmc) { histo.fMarkerColor = icolor; delete this.markeratt; }
+            let icolor = mp.createAutoColor(), exec = '';
+            if (this.options._pfc) { histo.fFillColor = icolor; exec += `SetFillColor(${icolor});;`; delete this.fillatt; }
+            if (this.options._plc) { histo.fLineColor = icolor; exec += `SetLineColor(${icolor});;`; delete this.lineatt; }
+            if (this.options._pmc) { histo.fMarkerColor = icolor; exec += `SetMarkerColor(${icolor});;`; delete this.markeratt; }
             this.options._pfc = this.options._plc = this.options._pmc = false;
+            this._auto_exec = exec; // can be reused when sending option back to server
          }
       }
 
@@ -1287,6 +1286,22 @@ class THistPainter extends ObjectPainter {
       if (isFunc(cp?.processChanges))
          cp.processChanges(kind, this);
    }
+
+   /** @summary Fill option object used in TWebCanvas */
+   fillWebObjectOptions(res) {
+      if (!res) {
+         if (!this.snapid || !this._auto_exec) return null;
+         res = { _typename: 'TWebObjectOptions', snapid: this.snapid.toString(), opt: this.getDrawOpt(), fcust: '', fopt: [] };
+      }
+
+      if (this._auto_exec) {
+         res.fcust = 'auto_exec:' + this._auto_exec;
+         delete this._auto_exec;
+      }
+
+      return res;
+   }
+
 
    /** @summary Toggle histogram title drawing */
    toggleTitle(arg) {

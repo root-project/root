@@ -1,6 +1,6 @@
 import { gStyle, settings, isBatchMode, clTF1, kNoZoom } from '../core.mjs';
 import { rgb as d3_rgb } from '../d3.mjs';
-import { floatToString, buildSvgPath } from '../base/BasePainter.mjs';
+import { floatToString, buildSvgCurve } from '../base/BasePainter.mjs';
 import { THistPainter } from './THistPainter.mjs';
 
 
@@ -416,12 +416,11 @@ class TH1Painter extends THistPainter {
          bins2.unshift({ grx, gry: Math.round(funcs.gry(y - yerr)) });
       }
 
-      let kind = (this.options.ErrorKind === 4) ? 'bezier' : 'line',
-          path1 = buildSvgPath(kind, bins1),
-          path2 = buildSvgPath('L'+kind, bins2);
+      let path1 = buildSvgCurve(bins1, { line: this.options.ErrorKind !== 4 }),
+          path2 = buildSvgCurve(bins2, { line: this.options.ErrorKind !== 4, cmd: 'L' });
 
       this.draw_g.append('svg:path')
-                 .attr('d', path1.path + path2.path + 'Z')
+                 .attr('d', path1 + path2 + 'Z')
                  .call(this.fillatt.func);
    }
 
