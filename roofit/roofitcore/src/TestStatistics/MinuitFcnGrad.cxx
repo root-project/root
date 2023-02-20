@@ -71,7 +71,7 @@ private:
  * likelihood object, or to use a higher level entry point like RooAbsPdf::fitTo() or RooAbsPdf::createNLL().
  */
 
-/// \param[in] _likelihood L
+/// \param[in] absL The input likelihood.
 /// \param[in] context RooMinimizer that creates and owns this class.
 /// \param[in] parameters The vector of ParameterSettings objects that describe the parameters used in the Minuit
 /// \param[in] likelihoodMode Lmode
@@ -79,41 +79,33 @@ private:
 /// \param[in] verbose true for verbose output
 /// Fitter. Note that these must match the set used in the Fitter used by \p context! It can be passed in from
 /// RooMinimizer with fitter()->Config().ParamsSettings().
-MinuitFcnGrad::MinuitFcnGrad(const std::shared_ptr<RooFit::TestStatistics::RooAbsL> &_likelihood, RooMinimizer *context,
+MinuitFcnGrad::MinuitFcnGrad(const std::shared_ptr<RooFit::TestStatistics::RooAbsL> &absL, RooMinimizer *context,
                              std::vector<ROOT::Fit::ParameterSettings> &parameters, LikelihoodMode likelihoodMode,
                              LikelihoodGradientMode likelihoodGradientMode)
-   : RooAbsMinimizerFcn(RooArgList(*_likelihood->getParameters()), context),
-     minuit_internal_x_(NDim(), 0),
-     minuit_external_x_(NDim(), 0),
+   : RooAbsMinimizerFcn(RooArgList(*absL->getParameters()), context),
+     _minuitInternalX(NDim(), 0),
+     _minuitExternalX(NDim(), 0),
      _multiGenFcn{std::make_unique<MinuitGradFunctor>(*this)}
 {
    synchronizeParameterSettings(parameters, true);
 
-   calculation_is_clean = std::make_shared<WrapperCalculationCleanFlags>();
+   _calculationIsClean = std::make_unique<WrapperCalculationCleanFlags>();
 
-   likelihood = LikelihoodWrapper::create(likelihoodMode, _likelihood, calculation_is_clean);
+   _likelihood = LikelihoodWrapper::create(likelihoodMode, absL, _calculationIsClean);
    if (likelihoodMode == LikelihoodMode::multiprocess &&
        likelihoodGradientMode == LikelihoodGradientMode::multiprocess) {
-      likelihood_in_gradient = LikelihoodWrapper::create(LikelihoodMode::serial, _likelihood, calculation_is_clean);
-   } else {
-      likelihood_in_gradient = likelihood;
+      _likelihoodInGradient = LikelihoodWrapper::create(LikelihoodMode::serial, absL, _calculationIsClean);
    }
-   gradient =
-      LikelihoodGradientWrapper::create(likelihoodGradientMode, _likelihood, calculation_is_clean, getNDim(), _context);
+   _gradient =
+      LikelihoodGradientWrapper::create(likelihoodGradientMode, absL, _calculationIsClean, getNDim(), _context);
 
-   likelihood->synchronizeParameterSettings(parameters);
-   if (likelihood != likelihood_in_gradient) {
-      likelihood_in_gradient->synchronizeParameterSettings(parameters);
-   }
-   gradient->synchronizeParameterSettings(getMultiGenFcn(), parameters);
+   applyToLikelihood([&](auto &l) { l.synchronizeParameterSettings(parameters); });
+   _gradient->synchronizeParameterSettings(getMultiGenFcn(), parameters);
 
    // Note: can be different than RooGradMinimizerFcn/LikelihoodGradientSerial, where default options are passed
    // (ROOT::Math::MinimizerOptions::DefaultStrategy() and ROOT::Math::MinimizerOptions::DefaultErrorDef())
-   likelihood->synchronizeWithMinimizer(ROOT::Math::MinimizerOptions());
-   if (likelihood != likelihood_in_gradient) {
-      likelihood_in_gradient->synchronizeWithMinimizer(ROOT::Math::MinimizerOptions());
-   }
-   gradient->synchronizeWithMinimizer(ROOT::Math::MinimizerOptions());
+   applyToLikelihood([&](auto &l) { l.synchronizeWithMinimizer(ROOT::Math::MinimizerOptions()); });
+   _gradient->synchronizeWithMinimizer(ROOT::Math::MinimizerOptions());
 }
 
 double MinuitFcnGrad::operator()(const double *x) const
@@ -122,10 +114,10 @@ double MinuitFcnGrad::operator()(const double *x) const
 
    // Calculate the function for these parameters
    //   RooAbsReal::setHideOffset(false);
-   auto likelihood_here(gradient->isCalculating() ? likelihood_in_gradient : likelihood);
-   likelihood_here->evaluate();
-   double fvalue = likelihood_here->getResult().Sum();
-   calculation_is_clean->likelihood = true;
+   auto &likelihoodHere(_likelihoodInGradient && _gradient->isCalculating() ? *_likelihoodInGradient : *_likelihood);
+   likelihoodHere.evaluate();
+   double fvalue = likelihoodHere.getResult().Sum();
+   _calculationIsClean->likelihood = true;
    //   RooAbsReal::setHideOffset(true);
 
    if (!parameters_changed) {
@@ -145,20 +137,19 @@ double MinuitFcnGrad::operator()(const double *x) const
          }
 
          bool first(true);
-         ooccoutW(static_cast<RooAbsArg *>(nullptr), Eval) << "Parameter values: ";
-         for (const auto rooAbsArg : *_floatParamList) {
-            auto var = static_cast<const RooRealVar *>(rooAbsArg);
+         ooccoutW(nullptr, Eval) << "Parameter values: ";
+         for (auto *var : static_range_cast<const RooRealVar *>(*_floatParamList)) {
             if (first) {
                first = false;
             } else {
-               ooccoutW(static_cast<RooAbsArg *>(nullptr), Eval) << ", ";
+               ooccoutW(nullptr, Eval) << ", ";
             }
-            ooccoutW(static_cast<RooAbsArg *>(nullptr), Eval) << var->GetName() << "=" << var->getVal();
+            ooccoutW(nullptr, Eval) << var->GetName() << "=" << var->getVal();
          }
-         ooccoutW(static_cast<RooAbsArg *>(nullptr), Eval) << std::endl;
+         ooccoutW(nullptr, Eval) << std::endl;
 
-         RooAbsReal::printEvalErrors(ooccoutW(static_cast<RooAbsArg *>(nullptr), Eval), cfg().printEvalErrors);
-         ooccoutW(static_cast<RooAbsArg *>(nullptr), Eval) << std::endl;
+         RooAbsReal::printEvalErrors(ooccoutW(nullptr, Eval), cfg().printEvalErrors);
+         ooccoutW(nullptr, Eval) << std::endl;
       }
 
       if (cfg().doEEWall) {
@@ -173,7 +164,7 @@ double MinuitFcnGrad::operator()(const double *x) const
 
    // Optional logging
    if (cfg().verbose) {
-      std::cout << "\nprevFCN" << (likelihood_here->isOffsetting() ? "-offset" : "") << " = " << std::setprecision(10)
+      std::cout << "\nprevFCN" << (likelihoodHere.isOffsetting() ? "-offset" : "") << " = " << std::setprecision(10)
                 << fvalue << std::setprecision(4) << "  ";
       std::cout.flush();
    }
@@ -215,13 +206,13 @@ double MinuitFcnGrad::operator()(const double *x) const
 /// happens when Minuit tries out values that lay outside the RooFit parameter's range(s). RooFit's setVal (called
 /// inside SetPdfParamVal) then clips the RooAbsArg's value to one of the range limits, instead of setting it to the
 /// value Minuit intended. When this happens, i.e. syncParameterValuesFromMinuitCalls is called with
-/// minuit_internal = false and the values do not match the previous values stored in minuit_internal_x_ *but* the
-/// values after SetPdfParamVal did not get set to the intended value, the minuit_internal_roofit_x_mismatch_ flag is
+/// minuit_internal = false and the values do not match the previous values stored in _minuitInternalX *but* the
+/// values after SetPdfParamVal did not get set to the intended value, the _minuitInternalRooFitXMismatch flag is
 /// set. This information can be used by calculators, if desired, for instance when a calculator does not want to make
 /// use of the range information in the RooAbsArg parameters.
 bool MinuitFcnGrad::syncParameterValuesFromMinuitCalls(const double *x, bool minuit_internal) const
 {
-   bool a_parameter_has_been_updated = false;
+   bool aParamWasUpdated = false;
    if (minuit_internal) {
       if (!returnsInMinuit2ParameterSpace()) {
          throw std::logic_error("Updating Minuit-internal parameters only makes sense for (gradient) calculators that "
@@ -229,83 +220,72 @@ bool MinuitFcnGrad::syncParameterValuesFromMinuitCalls(const double *x, bool min
       }
 
       for (std::size_t ix = 0; ix < NDim(); ++ix) {
-         bool parameter_changed = (x[ix] != minuit_internal_x_[ix]);
+         bool parameter_changed = (x[ix] != _minuitInternalX[ix]);
          if (parameter_changed) {
-            minuit_internal_x_[ix] = x[ix];
+            _minuitInternalX[ix] = x[ix];
          }
-         a_parameter_has_been_updated |= parameter_changed;
+         aParamWasUpdated |= parameter_changed;
       }
 
-      if (a_parameter_has_been_updated) {
-         calculation_is_clean->set_all(false);
-         likelihood->updateMinuitInternalParameterValues(minuit_internal_x_);
-         if (likelihood != likelihood_in_gradient) {
-            likelihood_in_gradient->updateMinuitInternalParameterValues(minuit_internal_x_);
-         }
-         gradient->updateMinuitInternalParameterValues(minuit_internal_x_);
+      if (aParamWasUpdated) {
+         _calculationIsClean->set_all(false);
+         applyToLikelihood([&](auto &l) { l.updateMinuitInternalParameterValues(_minuitInternalX); });
+         _gradient->updateMinuitInternalParameterValues(_minuitInternalX);
       }
    } else {
-      bool a_parameter_is_mismatched = false;
+      bool aParamIsMismatched = false;
 
       for (std::size_t ix = 0; ix < NDim(); ++ix) {
          // Note: the return value of SetPdfParamVal does not always mean that the parameter's value in the RooAbsReal
          // changed since last time! If the value was out of range bin, setVal was still called, but the value was not
          // updated.
          SetPdfParamVal(ix, x[ix]);
-         minuit_external_x_[ix] = x[ix];
-         // The above is why we need minuit_external_x_. The minuit_external_x_ vector can also be passed to
+         _minuitExternalX[ix] = x[ix];
+         // The above is why we need _minuitExternalX. The _minuitExternalX vector can also be passed to
          // LikelihoodWrappers, if needed, but typically they will make use of the RooFit parameters directly. However,
          // we log in the flag below whether they are different so that calculators can use this information.
-         bool parameter_changed = (x[ix] != minuit_external_x_[ix]);
-         a_parameter_has_been_updated |= parameter_changed;
-         a_parameter_is_mismatched |= (((RooRealVar *)_floatParamList->at(ix))->getVal() != minuit_external_x_[ix]);
+         bool parameter_changed = (x[ix] != _minuitExternalX[ix]);
+         aParamWasUpdated |= parameter_changed;
+         aParamIsMismatched |=
+            (static_cast<RooRealVar const *>(_floatParamList->at(ix))->getVal() != _minuitExternalX[ix]);
       }
 
-      minuit_internal_roofit_x_mismatch_ = a_parameter_is_mismatched;
+      _minuitInternalRooFitXMismatch = aParamIsMismatched;
 
-      if (a_parameter_has_been_updated) {
-         calculation_is_clean->set_all(false);
-         likelihood->updateMinuitExternalParameterValues(minuit_external_x_);
-         if (likelihood != likelihood_in_gradient) {
-            likelihood_in_gradient->updateMinuitExternalParameterValues(minuit_external_x_);
-         }
-         gradient->updateMinuitExternalParameterValues(minuit_external_x_);
+      if (aParamWasUpdated) {
+         _calculationIsClean->set_all(false);
+         applyToLikelihood([&](auto &l) { l.updateMinuitExternalParameterValues(_minuitExternalX); });
+         _gradient->updateMinuitExternalParameterValues(_minuitExternalX);
       }
    }
-   return a_parameter_has_been_updated;
+   return aParamWasUpdated;
 }
 
 void MinuitFcnGrad::Gradient(const double *x, double *grad) const
 {
-   calculating_gradient_ = true;
+   _calculatingGradient = true;
    syncParameterValuesFromMinuitCalls(x, returnsInMinuit2ParameterSpace());
-   gradient->fillGradient(grad);
-   calculating_gradient_ = false;
+   _gradient->fillGradient(grad);
+   _calculatingGradient = false;
 }
 
 void MinuitFcnGrad::GradientWithPrevResult(const double *x, double *grad, double *previous_grad, double *previous_g2,
                                            double *previous_gstep) const
 {
-   calculating_gradient_ = true;
+   _calculatingGradient = true;
    syncParameterValuesFromMinuitCalls(x, returnsInMinuit2ParameterSpace());
-   gradient->fillGradientWithPrevResult(grad, previous_grad, previous_g2, previous_gstep);
-   calculating_gradient_ = false;
+   _gradient->fillGradientWithPrevResult(grad, previous_grad, previous_g2, previous_gstep);
+   _calculatingGradient = false;
 }
 
 bool MinuitFcnGrad::Synchronize(std::vector<ROOT::Fit::ParameterSettings> &parameters)
 {
    bool returnee = synchronizeParameterSettings(parameters, _optConst);
-   likelihood->synchronizeParameterSettings(parameters);
-   if (likelihood != likelihood_in_gradient) {
-      likelihood_in_gradient->synchronizeParameterSettings(parameters);
-   }
-   gradient->synchronizeParameterSettings(parameters);
+   applyToLikelihood([&](auto &l) { l.synchronizeParameterSettings(parameters); });
+   _gradient->synchronizeParameterSettings(parameters);
 
-   likelihood->synchronizeWithMinimizer(_context->fitter()->Config().MinimizerOptions());
-   if (likelihood != likelihood_in_gradient) {
-      likelihood_in_gradient->synchronizeWithMinimizer(_context->fitter()->Config().MinimizerOptions());
-   }
-   gradient->synchronizeWithMinimizer(_context->fitter()->Config().MinimizerOptions());
+   applyToLikelihood([&](auto &l) { l.synchronizeWithMinimizer(_context->fitter()->Config().MinimizerOptions()); });
+   _gradient->synchronizeWithMinimizer(_context->fitter()->Config().MinimizerOptions());
    return returnee;
 }
 
