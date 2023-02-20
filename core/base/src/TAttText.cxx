@@ -339,19 +339,22 @@ void TAttText::Modify()
    // Do we need to change font?
    if (!gPad->IsBatch()) {
       gVirtualX->SetTextAngle(fTextAngle);
-      Float_t wh = (Float_t)gPad->XtoPixel(gPad->GetX2());
-      Float_t hh = (Float_t)gPad->YtoPixel(gPad->GetY1());
       Float_t tsize;
-      if (wh < hh)  tsize = fTextSize*wh;
-      else          tsize = fTextSize*hh;
-      if (fTextFont%10 > 2) tsize = fTextSize;
+      if (fTextFont%10 > 2) {
+         tsize = fTextSize;
+      } else {
+         Float_t wh = (Float_t)gPad->XtoPixel(gPad->GetX2());
+         Float_t hh = (Float_t)gPad->YtoPixel(gPad->GetY1());
+         if (wh < hh)  tsize = fTextSize*wh;
+         else          tsize = fTextSize*hh;
+      }
 
       if (gVirtualX->GetTextFont() != fTextFont) {
-            gVirtualX->SetTextFont(fTextFont);
-            gVirtualX->SetTextSize(tsize);
+         gVirtualX->SetTextFont(fTextFont);
+         gVirtualX->SetTextSize(tsize);
+      } else if (gVirtualX->GetTextSize() != tsize) {
+         gVirtualX->SetTextSize(tsize);
       }
-      if (gVirtualX->GetTextSize() != tsize)
-            gVirtualX->SetTextSize(tsize);
       gVirtualX->SetTextAlign(fTextAlign);
       gVirtualX->SetTextColor(fTextColor);
    }
