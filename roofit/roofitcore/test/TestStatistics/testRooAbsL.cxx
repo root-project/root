@@ -60,7 +60,7 @@ protected:
    void SetUp() override
    {
       RooRandom::randomGenerator()->SetSeed(seed);
-      clean_flags = std::make_shared<RooFit::TestStatistics::WrapperCalculationCleanFlags>();
+      clean_flags = std::make_unique<RooFit::TestStatistics::WrapperCalculationCleanFlags>();
    }
 
    std::size_t seed = 23;
@@ -68,7 +68,7 @@ protected:
    std::unique_ptr<RooAbsReal> nll;
    std::unique_ptr<RooArgSet> values;
    RooAbsPdf *pdf;
-   RooAbsData *data;
+   std::unique_ptr<RooAbsData> data;
    std::shared_ptr<RooFit::TestStatistics::RooAbsL> likelihood;
    std::shared_ptr<RooFit::TestStatistics::WrapperCalculationCleanFlags> clean_flags;
 };
@@ -84,8 +84,8 @@ protected:
       w.factory("Uniform::u(x)");
 
       // Generate template histograms
-      RooDataHist *h_sig = w.pdf("g")->generateBinned(*w.var("x"), 1000);
-      RooDataHist *h_bkg = w.pdf("u")->generateBinned(*w.var("x"), 1000);
+      std::unique_ptr<RooDataHist> h_sig{w.pdf("g")->generateBinned(*w.var("x"), 1000)};
+      std::unique_ptr<RooDataHist> h_bkg{w.pdf("u")->generateBinned(*w.var("x"), 1000)};
 
       w.import(*h_sig, RooFit::Rename("h_sig"));
       w.import(*h_bkg, RooFit::Rename("h_bkg"));
@@ -142,7 +142,7 @@ protected:
 
       pdf = w.pdf("model");
       // Construct dataset from physics pdf
-      data = pdf->generate(RooArgSet(*w.var("x"), *w.cat("index")), RooFit::AllBinned());
+      data = std::unique_ptr<RooDataSet>{pdf->generate({*w.var("x"), *w.cat("index")}, RooFit::AllBinned())};
    }
 };
 
@@ -153,7 +153,7 @@ protected:
 TEST_F(RooAbsLTest, UnbinnedLikelihoodIntrospection)
 {
    std::tie(nll, pdf, data, values) = generate_1D_gaussian_pdf_nll(w, 10000);
-   likelihood = RooFit::TestStatistics::buildLikelihood(pdf, data);
+   likelihood = RooFit::TestStatistics::buildLikelihood(pdf, data.get());
 
    EXPECT_STREQ("RooUnbinnedL", (likelihood->GetClassName()).c_str());
    EXPECT_STREQ("RooUnbinnedL::g", (likelihood->GetInfo()).c_str());
@@ -162,8 +162,8 @@ TEST_F(RooAbsLTest, UnbinnedLikelihoodIntrospection)
 TEST_F(BinnedDatasetTest, BinnedLikelihoodIntrospection)
 {
    pdf->setAttribute("BinnedLikelihood");
-   data = pdf->generateBinned(*w.var("x"));
-   likelihood = RooFit::TestStatistics::buildLikelihood(pdf, data);
+   data = std::unique_ptr<RooDataHist>{pdf->generateBinned(*w.var("x"))};
+   likelihood = RooFit::TestStatistics::buildLikelihood(pdf, data.get());
 
    EXPECT_STREQ("RooBinnedL", (likelihood->GetClassName()).c_str());
    EXPECT_STREQ("RooBinnedL::model", (likelihood->GetInfo()).c_str());
@@ -177,9 +177,9 @@ TEST_F(RooAbsLTest, SumLikelihoodIntrospection)
 
    pdf = w.pdf("model");
    // Construct dataset from physics pdf
-   data = pdf->generate(RooArgSet(*w.var("x"), *w.cat("index")));
+   data = std::unique_ptr<RooDataSet>{pdf->generate({*w.var("x"), *w.cat("index")})};
 
-   likelihood = RooFit::TestStatistics::buildLikelihood(pdf, data);
+   likelihood = RooFit::TestStatistics::buildLikelihood(pdf, data.get());
 
    EXPECT_STREQ("RooSumL", (likelihood->GetClassName()).c_str());
    EXPECT_STREQ("RooSumL::model", (likelihood->GetInfo()).c_str());
@@ -189,13 +189,14 @@ TEST_F(SimBinnedConstrainedTest, SumSubsidiaryLikelihoodIntrospection)
 {
 
    likelihood = RooFit::TestStatistics::buildLikelihood(
-      pdf, data, RooFit::TestStatistics::GlobalObservables({*w.var("alpha_bkg_obs_A"), *w.var("alpha_bkg_obs_B")}));
+      pdf, data.get(),
+      RooFit::TestStatistics::GlobalObservables({*w.var("alpha_bkg_obs_A"), *w.var("alpha_bkg_obs_B")}));
 
    EXPECT_STREQ("RooSumL", (likelihood->GetClassName()).c_str());
    EXPECT_STREQ("RooSumL::model", (likelihood->GetInfo()).c_str());
 
    // Is RooSumL so we can cast to this type to use its further functionality
-   RooFit::TestStatistics::RooSumL *sum_likelihood = dynamic_cast<RooFit::TestStatistics::RooSumL *>(likelihood.get());
+   auto sum_likelihood = static_cast<RooFit::TestStatistics::RooSumL *>(likelihood.get());
 
    EXPECT_STREQ("RooUnbinnedL", (sum_likelihood->GetComponents()[0]->GetClassName()).c_str());
    EXPECT_STREQ("RooUnbinnedL::model_A", (sum_likelihood->GetComponents()[0]->GetInfo()).c_str());
@@ -210,8 +211,8 @@ TEST_F(BinnedDatasetTest, EventSections)
    // Test whether the summed total of multiple sections gives the same result
    // as an evaluation with a single section over the whole event range.
    pdf->setAttribute("BinnedLikelihood");
-   data = pdf->generateBinned(*w.var("x"));
-   likelihood = RooFit::TestStatistics::buildLikelihood(pdf, data);
+   data = std::unique_ptr<RooDataHist>{pdf->generateBinned(*w.var("x"))};
+   likelihood = RooFit::TestStatistics::buildLikelihood(pdf, data.get());
 
    auto whole = likelihood->evaluatePartition({0, 1}, 0, 0);
    auto part1 = likelihood->evaluatePartition({0, 0.5}, 0, 0);
@@ -224,7 +225,8 @@ TEST_F(SimBinnedConstrainedTest, EventSections)
    // Test whether the summed total of multiple sections gives the same result
    // as an evaluation with a single section over the whole event range.
    likelihood = RooFit::TestStatistics::buildLikelihood(
-      pdf, data, RooFit::TestStatistics::GlobalObservables({*w.var("alpha_bkg_obs_A"), *w.var("alpha_bkg_obs_B")}));
+      pdf, data.get(),
+      RooFit::TestStatistics::GlobalObservables({*w.var("alpha_bkg_obs_A"), *w.var("alpha_bkg_obs_B")}));
 
    auto whole = likelihood->evaluatePartition({0, 1}, 0, likelihood->getNComponents());
    auto part1 = likelihood->evaluatePartition({0, 0.5}, 0, likelihood->getNComponents());
@@ -246,7 +248,7 @@ TEST_F(RooAbsLTest, SubEventSections)
    // must contain two events, but which section?), or 11 (one must be empty,
    // but which one?).
    std::tie(nll, pdf, data, values) = generate_1D_gaussian_pdf_nll(w, 10);
-   likelihood = RooFit::TestStatistics::buildLikelihood(pdf, data);
+   likelihood = RooFit::TestStatistics::buildLikelihood(pdf, data.get());
 
    auto whole = likelihood->evaluatePartition({0, 1}, 0, likelihood->getNComponents());
    ROOT::Math::KahanSum<double> nine_parts, eleven_parts, twenty_parts;
@@ -278,7 +280,8 @@ TEST_F(SimBinnedConstrainedTest, SubEventSections)
    // complex likelihood has an extended term and a subsidiary component
    // which also depend on section so will also be checked here.
    likelihood = RooFit::TestStatistics::buildLikelihood(
-      pdf, data, RooFit::TestStatistics::GlobalObservables({*w.var("alpha_bkg_obs_A"), *w.var("alpha_bkg_obs_B")}));
+      pdf, data.get(),
+      RooFit::TestStatistics::GlobalObservables({*w.var("alpha_bkg_obs_A"), *w.var("alpha_bkg_obs_B")}));
 
    auto whole = likelihood->evaluatePartition({0, 1}, 0, likelihood->getNComponents());
 

@@ -70,7 +70,7 @@ protected:
    void SetUp() override
    {
       RooRandom::randomGenerator()->SetSeed(seed);
-      clean_flags = std::make_shared<RooFit::TestStatistics::WrapperCalculationCleanFlags>();
+      clean_flags = std::make_unique<RooFit::TestStatistics::WrapperCalculationCleanFlags>();
    }
 
    std::size_t seed = 23;
@@ -78,7 +78,7 @@ protected:
    std::unique_ptr<RooAbsReal> nll;
    std::unique_ptr<RooArgSet> values;
    RooAbsPdf *pdf;
-   RooAbsData *data;
+   std::unique_ptr<RooAbsData> data;
    std::shared_ptr<RooFit::TestStatistics::RooAbsL> likelihood;
    std::shared_ptr<RooFit::TestStatistics::WrapperCalculationCleanFlags> clean_flags;
 };
@@ -94,8 +94,8 @@ protected:
       w.factory("Uniform::u(x)");
 
       // Generate template histograms
-      RooDataHist *h_sig = w.pdf("g")->generateBinned(*w.var("x"), 1000);
-      RooDataHist *h_bkg = w.pdf("u")->generateBinned(*w.var("x"), 1000);
+      std::unique_ptr<RooDataHist> h_sig{w.pdf("g")->generateBinned(*w.var("x"), 1000)};
+      std::unique_ptr<RooDataHist> h_bkg{w.pdf("u")->generateBinned(*w.var("x"), 1000)};
 
       w.import(*h_sig, RooFit::Rename("h_sig"));
       w.import(*h_bkg, RooFit::Rename("h_bkg"));
@@ -112,7 +112,7 @@ protected:
 TEST_F(LikelihoodJobTest, UnbinnedGaussian1D)
 {
    std::tie(nll, pdf, data, values) = generate_1D_gaussian_pdf_nll(w, 10000);
-   likelihood = RooFit::TestStatistics::buildLikelihood(pdf, data);
+   likelihood = RooFit::TestStatistics::buildLikelihood(pdf, data.get());
    auto nll_ts =
       LikelihoodWrapper::create(RooFit::TestStatistics::LikelihoodMode::multiprocess, likelihood, clean_flags);
 
@@ -127,7 +127,7 @@ TEST_F(LikelihoodJobTest, UnbinnedGaussian1D)
 TEST_F(LikelihoodJobTest, UnbinnedGaussian1DTwice)
 {
    std::tie(nll, pdf, data, values) = generate_1D_gaussian_pdf_nll(w, 10000);
-   likelihood = RooFit::TestStatistics::buildLikelihood(pdf, data);
+   likelihood = RooFit::TestStatistics::buildLikelihood(pdf, data.get());
    auto nll_ts =
       LikelihoodWrapper::create(RooFit::TestStatistics::LikelihoodMode::multiprocess, likelihood, clean_flags);
 
@@ -146,7 +146,7 @@ TEST_F(LikelihoodJobTest, UnbinnedGaussianND)
    unsigned int N = 4;
 
    std::tie(nll, pdf, data, values) = generate_ND_gaussian_pdf_nll(w, N, 1000);
-   likelihood = RooFit::TestStatistics::buildLikelihood(pdf, data);
+   likelihood = RooFit::TestStatistics::buildLikelihood(pdf, data.get());
    auto nll_ts =
       LikelihoodWrapper::create(RooFit::TestStatistics::LikelihoodMode::multiprocess, likelihood, clean_flags);
 
@@ -161,11 +161,11 @@ TEST_F(LikelihoodJobTest, UnbinnedGaussianND)
 
 TEST_F(LikelihoodJobBinnedDatasetTest, UnbinnedPdf)
 {
-   data = pdf->generateBinned(*w.var("x"));
+   data = std::unique_ptr<RooDataHist>{pdf->generateBinned(*w.var("x"))};
 
    nll.reset(pdf->createNLL(*data));
 
-   likelihood = RooFit::TestStatistics::buildLikelihood(pdf, data);
+   likelihood = RooFit::TestStatistics::buildLikelihood(pdf, data.get());
    auto nll_ts =
       LikelihoodWrapper::create(RooFit::TestStatistics::LikelihoodMode::multiprocess, likelihood, clean_flags);
 
@@ -180,7 +180,7 @@ TEST_F(LikelihoodJobBinnedDatasetTest, UnbinnedPdf)
 TEST_F(LikelihoodJobBinnedDatasetTest, BinnedManualNLL)
 {
    pdf->setAttribute("BinnedLikelihood");
-   data = pdf->generateBinned(*w.var("x"));
+   data = std::unique_ptr<RooDataHist>{pdf->generateBinned(*w.var("x"))};
 
    // manually create NLL, ripping all relevant parts from RooAbsPdf::createNLL, except here we also set binnedL = true
    RooArgSet projDeps;
@@ -191,7 +191,7 @@ TEST_F(LikelihoodJobBinnedDatasetTest, BinnedManualNLL)
    int extended = 2;
    RooNLLVar nll_manual("nlletje", "-log(likelihood)", *pdf, *data, projDeps, extended, nll_config);
 
-   likelihood = RooFit::TestStatistics::buildLikelihood(pdf, data);
+   likelihood = RooFit::TestStatistics::buildLikelihood(pdf, data.get());
    auto nll_ts =
       LikelihoodWrapper::create(RooFit::TestStatistics::LikelihoodMode::multiprocess, likelihood, clean_flags);
 
@@ -235,11 +235,11 @@ TEST_F(LikelihoodJobTest, SimBinned)
 
    // Construct dataset
    pdf = w.pdf("model");
-   data = pdf->generate(RooArgSet(*w.var("x"), *w.cat("index")), RooFit::AllBinned());
+   data = std::unique_ptr<RooDataSet>{pdf->generate({*w.var("x"), *w.cat("index")}, RooFit::AllBinned())};
 
    nll.reset(pdf->createNLL(*data));
 
-   likelihood = RooFit::TestStatistics::buildLikelihood(pdf, data);
+   likelihood = RooFit::TestStatistics::buildLikelihood(pdf, data.get());
    auto nll_ts =
       LikelihoodWrapper::create(RooFit::TestStatistics::LikelihoodMode::multiprocess, likelihood, clean_flags);
 
@@ -279,7 +279,7 @@ TEST_F(LikelihoodJobTest, BinnedConstrained)
 
    pdf = w.pdf("model");
    // Construct dataset from physics pdf
-   data = w.pdf("model_phys")->generateBinned(*w.var("x"));
+   data = std::unique_ptr<RooDataHist>{w.pdf("model_phys")->generateBinned(*w.var("x"))};
 
    nll.reset(pdf->createNLL(*data, RooFit::GlobalObservables(*w.var("alpha_bkg_obs"))));
 
@@ -288,7 +288,7 @@ TEST_F(LikelihoodJobTest, BinnedConstrained)
    auto nll0 = nll->getVal();
 
    likelihood = RooFit::TestStatistics::buildLikelihood(
-      pdf, data, RooFit::TestStatistics::GlobalObservables(RooArgSet(*w.var("alpha_bkg_obs"))));
+      pdf, data.get(), RooFit::TestStatistics::GlobalObservables(RooArgSet(*w.var("alpha_bkg_obs"))));
    auto nll_ts =
       LikelihoodWrapper::create(RooFit::TestStatistics::LikelihoodMode::multiprocess, likelihood, clean_flags);
 
@@ -308,15 +308,15 @@ TEST_F(LikelihoodJobTest, SimUnbinned)
 
    pdf = w.pdf("model");
    // Construct dataset from physics pdf
-   data = pdf->generate(RooArgSet(*w.var("x"), *w.cat("index")));
+   data = std::unique_ptr<RooDataSet>{pdf->generate({*w.var("x"), *w.cat("index")})};
 
-   nll.reset(pdf->createNLL(*data));
+   nll = std::unique_ptr<RooAbsReal>{pdf->createNLL(*data)};
 
    // --------
 
    auto nll0 = nll->getVal();
 
-   likelihood = RooFit::TestStatistics::buildLikelihood(pdf, data);
+   likelihood = RooFit::TestStatistics::buildLikelihood(pdf, data.get());
    auto nll_ts =
       LikelihoodWrapper::create(RooFit::TestStatistics::LikelihoodMode::multiprocess, likelihood, clean_flags);
 
@@ -341,14 +341,14 @@ TEST_F(LikelihoodJobTest, SimUnbinnedNonExtended)
    w.cat("index")->setLabel("B");
    dB->addColumn(*w.cat("index"));
 
-   data = (RooDataSet *)dA->Clone();
-   dynamic_cast<RooDataSet *>(data)->append(*dB);
+   data = std::unique_ptr<RooDataSet>{static_cast<RooDataSet *>(dA->Clone())};
+   static_cast<RooDataSet &>(*data).append(*dB);
 
    pdf = w.pdf("model");
 
    nll.reset(pdf->createNLL(*data));
 
-   likelihood = RooFit::TestStatistics::buildLikelihood(pdf, data);
+   likelihood = RooFit::TestStatistics::buildLikelihood(pdf, data.get());
    auto nll_ts =
       LikelihoodWrapper::create(RooFit::TestStatistics::LikelihoodMode::multiprocess, likelihood, clean_flags);
 
@@ -403,7 +403,7 @@ protected:
 
       pdf = w.pdf("model");
       // Construct dataset from physics pdf
-      data = pdf->generate(RooArgSet(*w.var("x"), *w.cat("index")), RooFit::AllBinned());
+      data = std::unique_ptr<RooDataSet>{pdf->generate({*w.var("x"), *w.cat("index")}, RooFit::AllBinned())};
    }
 };
 
@@ -418,7 +418,8 @@ TEST_F(LikelihoodJobSimBinnedConstrainedTest, BasicParameters)
    auto nll0 = nll->getVal();
 
    likelihood = RooFit::TestStatistics::buildLikelihood(
-      pdf, data, RooFit::TestStatistics::GlobalObservables({*w.var("alpha_bkg_obs_A"), *w.var("alpha_bkg_obs_B")}));
+      pdf, data.get(),
+      RooFit::TestStatistics::GlobalObservables({*w.var("alpha_bkg_obs_A"), *w.var("alpha_bkg_obs_B")}));
    auto nll_ts =
       LikelihoodWrapper::create(RooFit::TestStatistics::LikelihoodMode::multiprocess, likelihood, clean_flags);
 
@@ -439,7 +440,7 @@ TEST_F(LikelihoodJobSimBinnedConstrainedTest, ConstrainedAndOffset)
    auto nll0 = nll->getVal();
 
    likelihood = RooFit::TestStatistics::buildLikelihood(
-      pdf, data, RooFit::TestStatistics::ConstrainedParameters(RooArgSet(*w.var("alpha_bkg_obs_A"))),
+      pdf, data.get(), RooFit::TestStatistics::ConstrainedParameters(RooArgSet(*w.var("alpha_bkg_obs_A"))),
       RooFit::TestStatistics::GlobalObservables(RooArgSet(*w.var("alpha_bkg_obs_B"))));
    auto nll_ts =
       LikelihoodWrapper::create(RooFit::TestStatistics::LikelihoodMode::multiprocess, likelihood, clean_flags);
@@ -479,7 +480,7 @@ TEST_F(LikelihoodJobTest, BatchedUnbinnedGaussianND)
    // and then this line can be deleted.
    pdf->fixAddCoefNormalization(*data->get(), false);
 
-   likelihood = RooFit::TestStatistics::buildLikelihood(pdf, data);
+   likelihood = RooFit::TestStatistics::buildLikelihood(pdf, data.get());
    dynamic_cast<RooFit::TestStatistics::RooUnbinnedL *>(likelihood.get())->setUseBatchedEvaluations(true);
    auto nll_ts =
       LikelihoodWrapper::create(RooFit::TestStatistics::LikelihoodMode::multiprocess, likelihood, clean_flags);
@@ -506,7 +507,7 @@ TEST_P(LikelihoodJobSplitStrategies, SimBinnedConstrainedAndOffset)
    auto nll0 = nll->getVal();
 
    likelihood = RooFit::TestStatistics::buildLikelihood(
-      pdf, data, RooFit::TestStatistics::ConstrainedParameters(RooArgSet(*w.var("alpha_bkg_obs_A"))),
+      pdf, data.get(), RooFit::TestStatistics::ConstrainedParameters(RooArgSet(*w.var("alpha_bkg_obs_A"))),
       RooFit::TestStatistics::GlobalObservables(RooArgSet(*w.var("alpha_bkg_obs_B"))));
 
    RooFit::MultiProcess::Config::LikelihoodJob::defaultNEventTasks = std::get<0>(GetParam());
