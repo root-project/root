@@ -778,9 +778,12 @@ void TWebCanvas::ShowWebWindow(const ROOT::Experimental::RWebDisplayArgs &args)
    }
 
    auto w = Canvas()->GetWw(), h = Canvas()->GetWh();
+   if (Canvas()->TestBit(TCanvas::kMenuBar)) h += 40;
+   if (Canvas()->TestBit(TCanvas::kShowEventStatus)) h += 40;
+   if (Canvas()->TestBit(TCanvas::kShowEditor)) w += 200;
 
    if ((w > 10) && (w < 50000) && (h > 10) && (h < 30000))
-      fWindow->SetGeometry(w + 6, h + 22);
+      fWindow->SetGeometry(w, h);
 
    if ((args.GetBrowserKind() == ROOT::Experimental::RWebDisplayArgs::kQt5) ||
        (args.GetBrowserKind() == ROOT::Experimental::RWebDisplayArgs::kQt6) ||
