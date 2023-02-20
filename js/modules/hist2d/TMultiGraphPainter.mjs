@@ -223,7 +223,7 @@ class TMultiGraphPainter extends ObjectPainter {
    /** @summary method draws next graph  */
    async drawNextGraph(indx, opt) {
 
-      let graphs = this.getObject().fGraphs;
+      let graphs = this.getObject().fGraphs, exec = '';
 
       // at the end of graphs drawing draw functions (if any)
       if (indx >= graphs.arr.length) {
@@ -231,21 +231,24 @@ class TMultiGraphPainter extends ObjectPainter {
          return this.drawNextFunction(0);
       }
 
+      let gr = graphs.arr[indx], o = graphs.opt[indx] || opt || '';
+
       // if there is auto colors assignment, try to provide it
       if (this._pfc || this._plc || this._pmc) {
          let mp = this.getMainPainter();
          if (isFunc(mp?.createAutoColor)) {
             let icolor = mp.createAutoColor(graphs.arr.length);
-            if (this._pfc) graphs.arr[indx].fFillColor = icolor;
-            if (this._plc) graphs.arr[indx].fLineColor = icolor;
-            if (this._pmc) graphs.arr[indx].fMarkerColor = icolor;
+            if (this._pfc) { gr.fFillColor = icolor; exec += `SetFillColor(${icolor});;`; }
+            if (this._plc) { gr.fLineColor = icolor; exec += `SetLineColor(${icolor});;`; }
+            if (this._pmc) { gr.fMarkerColor = icolor; exec += `SetMarkerColor(${icolor});;`; }
          }
       }
 
-      let o = graphs.opt[indx] || opt || '';
-
-      return this.drawGraph(graphs.arr[indx], o, graphs.arr.length - indx).then(subp => {
-         if (subp) this.painters.push(subp);
+      return this.drawGraph(gr, o, graphs.arr.length - indx).then(subp => {
+         if (subp) {
+            this.painters.push(subp);
+            subp._auto_exec = exec;
+         }
 
          return this.drawNextGraph(indx+1, opt);
       });

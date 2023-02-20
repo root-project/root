@@ -175,7 +175,8 @@ class THStackPainter extends ObjectPainter {
 
       let rindx = this.options.horder ? indx : nhists-indx-1,
           hist = hlst.arr[rindx],
-          hopt = hlst.opt[rindx] || hist.fOption || this.options.hopt;
+          hopt = hlst.opt[rindx] || hist.fOption || this.options.hopt,
+          exec = '';
 
       if (hopt.toUpperCase().indexOf(this.options.hopt) < 0)
          hopt += ' ' + this.options.hopt;
@@ -186,9 +187,9 @@ class THStackPainter extends ObjectPainter {
          let mp = this.getMainPainter();
          if (isFunc(mp?.createAutoColor)) {
             let icolor = mp.createAutoColor(nhists);
-            if (this.options._pfc) hist.fFillColor = icolor;
-            if (this.options._plc) hist.fLineColor = icolor;
-            if (this.options._pmc) hist.fMarkerColor = icolor;
+            if (this.options._pfc) { hist.fFillColor = icolor; exec += `SetFillColor(${icolor});;`; }
+            if (this.options._plc) { hist.fLineColor = icolor; exec += `SetLineColor(${icolor});;`; }
+            if (this.options._pmc) { hist.fMarkerColor = icolor; exec += `SetMarkerColor(${icolor});;`; }
          }
       }
 
@@ -201,7 +202,10 @@ class THStackPainter extends ObjectPainter {
          let prev_name = subpad_painter.selectCurrentPad(subpad_painter.this_pad_name);
 
          return this.hdraw_func(subpad_painter.getDom(), hist, hopt).then(subp => {
-            this.painters.push(subp);
+            if (subp) {
+               subp._auto_exec = exec;
+               this.painters.push(subp);
+            }
             subpad_painter.selectCurrentPad(prev_name);
             return this.drawNextHisto(indx+1, pad_painter);
          });

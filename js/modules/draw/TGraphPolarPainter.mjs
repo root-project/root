@@ -1,6 +1,6 @@
 import { settings, create, isBatchMode } from '../core.mjs';
 import { scaleLinear, select as d3_select, pointer as d3_pointer } from '../d3.mjs';
-import { DrawOptions, buildSvgPath, makeTranslate } from '../base/BasePainter.mjs';
+import { DrawOptions, buildSvgCurve, makeTranslate } from '../base/BasePainter.mjs';
 import { ObjectPainter, getElementMainPainter } from '../base/ObjectPainter.mjs';
 import { TAttLineHandler } from '../base/TAttLineHandler.mjs';
 import { ensureTCanvas } from '../gpad/TCanvasPainter.mjs';
@@ -403,7 +403,7 @@ class TGraphPolarPainter extends ObjectPainter {
 
       if (this.options.curve && bins.length)
          this.draw_g.append('svg:path')
-                 .attr('d', buildSvgPath('bezier', bins).path)
+                 .attr('d', buildSvgCurve(bins))
                  .style('fill', 'none')
                  .call(this.lineatt.func);
 

@@ -1,5 +1,5 @@
 import { select as d3_select } from '../d3.mjs';
-import { settings, internals, isNodeJs, isFunc, isStr } from '../core.mjs';
+import { settings, internals, isNodeJs, isFunc, isStr, btoa_func } from '../core.mjs';
 
 
 /** @summary Returns visible rect of element
@@ -11,6 +11,9 @@ import { settings, internals, isNodeJs, isFunc, isStr } from '../core.mjs';
   * With node.js can use 'width' and 'height' attributes when provided in element
   * @private */
 function getElementRect(elem, sizearg) {
+   if (!elem || elem.empty())
+      return { x: 0, y: 0, width: 0, height: 0 };
+
    if (isNodeJs() && (sizearg != 'bbox'))
       return { x: 0, y: 0, width: parseInt(elem.attr('width')), height: parseInt(elem.attr('height')) };
 
@@ -212,100 +215,100 @@ class TRandom {
 } // class TRandom
 
 
-/** @summary Function used to provide svg:path for the smoothed curves.
-  * @desc reuse code from d3.js. Used in TH1, TF1 and TGraph painters
-  * @param {string} kind  should contain 'bezier' or 'line'.
-  * If first symbol 'L', then it used to continue drawing
+/** @summary Build smooth SVG curve uzing Bezier
+  * @desc Reuse code from https://stackoverflow.com/questions/62855310
   * @private */
-function buildSvgPath(kind, bins, height, ndig) {
+function buildSvgCurve(p, args) {
 
-   const smooth = kind.indexOf('bezier') >= 0;
+   if (!args) args = { };
+   if (!args.line)
+      args.calc = true;
+   else if (args.ndig === undefined)
+      args.ndig = 0;
 
-   if (ndig === undefined) ndig = smooth ? 2 : 0;
-   if (height === undefined) height = 0;
+   let npnts = p.length;
+   if (npnts < 3) args.line = true;
 
-   const jsroot_d3_svg_lineSlope = (p0, p1) => (p1.gry - p0.gry) / (p1.grx - p0.grx),
-         jsroot_d3_svg_lineFiniteDifferences = points => {
-      let i = 0, j = points.length - 1, m = [], p0 = points[0], p1 = points[1], d = m[0] = jsroot_d3_svg_lineSlope(p0, p1);
-      while (++i < j) {
-         p0 = p1; p1 = points[i + 1];
-         m[i] = (d + (d = jsroot_d3_svg_lineSlope(p0, p1))) / 2;
+   args.t = args.t ?? 0.2;
+
+   if ((args.ndig === undefined) || args.height) {
+      args.maxy = p[0].gry;
+      args.mindiff = 100;
+      for (let i = 1; i < npnts; i++) {
+         args.maxy = Math.max(args.maxy, p[i].gry);
+         args.mindiff = Math.min(args.mindiff, Math.abs(p[i].grx - p[i-1].grx), Math.abs(p[i].gry - p[i-1].gry));
       }
-      m[i] = d;
-      return m;
-   }, jsroot_d3_svg_lineMonotoneTangents = points => {
-      let d, a, b, s, m = jsroot_d3_svg_lineFiniteDifferences(points), i = -1, j = points.length - 1;
-      while (++i < j) {
-         d = jsroot_d3_svg_lineSlope(points[i], points[i + 1]);
-         if (Math.abs(d) < 1e-6) {
-            m[i] = m[i + 1] = 0;
-         } else {
-            a = m[i] / d;
-            b = m[i + 1] / d;
-            s = a * a + b * b;
-            if (s > 9) {
-               s = d * 3 / Math.sqrt(s);
-               m[i] = s * a;
-               m[i + 1] = s * b;
-            }
-         }
-      }
-      i = -1;
-      while (++i <= j) {
-         s = (points[Math.min(j, i + 1)].grx - points[Math.max(0, i - 1)].grx) / (6 * (1 + m[i] * m[i]));
-         points[i].dgrx = s || 0;
-         points[i].dgry = m[i] * s || 0;
-      }
+      if (args.ndig === undefined)
+         args.ndig = args.mindiff > 20 ? 0 : (args.mindiff > 5 ? 1 : 2);
+   }
+
+   const end_point = (pnt1, pnt2, sign) => {
+      let len = Math.sqrt((pnt2.gry - pnt1.gry)**2 + (pnt2.grx - pnt1.grx)**2) * args.t,
+          a2 = Math.atan2(pnt2.dgry, pnt2.dgrx),
+          a1 = Math.atan2(sign*(pnt2.gry - pnt1.gry), sign*(pnt2.grx - pnt1.grx));
+
+      pnt1.dgrx = len * Math.cos(2*a1 - a2);
+      pnt1.dgry = len * Math.sin(2*a1 - a2);
+   }, conv = val => {
+      if (!args.ndig || (Math.round(val) === val))
+         return val.toFixed(0);
+      let s = val.toFixed(args.ndig), p = s.length-1;
+      while (s[p] == '0') p--;
+      if (s[p] == '.') p--;
+      s = s.slice(0, p+1);
+      return (s == '-0') ? '0' : s;
    };
 
-   let res = { path: '', close: '' }, bin = bins[0], maxy = Math.max(bin.gry, height + 5),
-      currx = Math.round(bin.grx), curry = Math.round(bin.gry), dx, dy, npnts = bins.length;
-
-   const conv = val => {
-      let vvv = Math.round(val);
-      if ((ndig == 0) || (vvv === val)) return vvv.toString();
-      let str = val.toFixed(ndig);
-      while ((str[str.length - 1] == '0') && (str.lastIndexOf('.') < str.length - 1))
-         str = str.slice(0, str.length - 1);
-      if (str[str.length - 1] == '.')
-         str = str.slice(0, str.length - 1);
-      if (str == '-0') str = '0';
-      return str;
-   };
-
-   res.path = ((kind[0] == 'L') ? 'L' : 'M') + conv(bin.grx) + ',' + conv(bin.gry);
-
-   // just calculate all deltas, can be used to build exclusion
-   if (smooth || kind.indexOf('calc') >= 0)
-      jsroot_d3_svg_lineMonotoneTangents(bins);
-
-   if (smooth) {
-      // build smoothed curve
-      res.path += `C${conv(bin.grx+bin.dgrx)},${conv(bin.gry+bin.dgry)},`;
-      for (let n = 1; n < npnts; ++n) {
-         let prev = bin;
-         bin = bins[n];
-         if (n > 1) res.path += 'S';
-         res.path += `${conv(bin.grx - bin.dgrx)},${conv(bin.gry - bin.dgry)},${conv(bin.grx)},${conv(bin.gry)}`;
-         maxy = Math.max(maxy, prev.gry);
+   if (args.calc) {
+      for (let i = 1; i < npnts - 1; i++) {
+         p[i].dgrx = (p[i+1].grx - p[i-1].grx) * args.t;
+         p[i].dgry = (p[i+1].gry - p[i-1].gry) * args.t;
       }
+
+      if (npnts > 2) {
+         end_point(p[0], p[1], 1.);
+         end_point(p[npnts - 1], p[npnts - 2], -1);
+      } else if (p.length == 2) {
+         p[0].dgrx = (p[1].grx - p[0].grx) * args.t;
+         p[0].dgry = (p[1].gry - p[0].gry) * args.t;
+         p[1].dgrx = -p[0].dgrx;
+         p[1].dgry = -p[0].dgry;
+      }
+   }
+
+   let path = `${args.cmd ?? 'M'}${conv(p[0].grx)},${conv(p[0].gry)}`;
+
+   if (!args.line) {
+      let i0 = 1;
+      if (args.qubic) {
+         npnts--; i0++;
+         path += `Q${conv(p[1].grx-p[1].dgrx)},${conv(p[1].gry-p[1].dgry)},${conv(p[1].grx)},${conv(p[1].gry)}`;
+      }
+      path += `C${conv(p[i0-1].grx+p[i0-1].dgrx)},${conv(p[i0-1].gry+p[i0-1].dgry)},${conv(p[i0].grx-p[i0].dgrx)},${conv(p[i0].gry-p[i0].dgry)},${conv(p[i0].grx)},${conv(p[i0].gry)}`;
+
+      // continue with simpler points
+      for (let i = i0 + 1; i < npnts; i++)
+         path += `S${conv(p[i].grx-p[i].dgrx)},${conv(p[i].gry-p[i].dgry)},${conv(p[i].grx)},${conv(p[i].gry)}`;
+
+      if (args.qubic)
+         path += `Q${conv(p[npnts].grx-p[npnts].dgrx)},${conv(p[npnts].gry-p[npnts].dgry)},${conv(p[npnts].grx)},${conv(p[npnts].gry)}`;
    } else if (npnts < 10000) {
       // build simple curve
 
-      let acc_x = 0, acc_y = 0;
+      let acc_x = 0, acc_y = 0, currx = Math.round(p[0].grx), curry = Math.round(p[0].gry);
 
       const flush = () => {
-         if (acc_x) { res.path += 'h' + acc_x; acc_x = 0; }
-         if (acc_y) { res.path += 'v' + acc_y; acc_y = 0; }
+         if (acc_x) { path += 'h' + acc_x; acc_x = 0; }
+         if (acc_y) { path += 'v' + acc_y; acc_y = 0; }
       };
 
       for (let n = 1; n < npnts; ++n) {
-         bin = bins[n];
-         dx = Math.round(bin.grx) - currx;
-         dy = Math.round(bin.gry) - curry;
+         let bin = p[n],
+             dx = Math.round(bin.grx) - currx,
+             dy = Math.round(bin.gry) - curry;
          if (dx && dy) {
             flush();
-            res.path += `l${dx},${dy}`;
+            path += `l${dx},${dy}`;
          } else if (!dx && dy) {
             if ((acc_y === 0) || ((dy < 0) !== (acc_y < 0))) flush();
             acc_y += dy;
@@ -314,20 +317,20 @@ function buildSvgPath(kind, bins, height, ndig) {
             acc_x += dx;
          }
          currx += dx; curry += dy;
-         maxy = Math.max(maxy, curry);
       }
 
       flush();
 
    } else {
       // build line with trying optimize many vertical moves
-      let lastx, lasty, cminy = curry, cmaxy = curry, prevy = curry;
+      let currx = Math.round(p[0].grx), curry = Math.round(p[0].gry),
+          cminy = curry, cmaxy = curry, prevy = curry;
+
       for (let n = 1; n < npnts; ++n) {
-         bin = bins[n];
-         lastx = Math.round(bin.grx);
-         lasty = Math.round(bin.gry);
-         maxy = Math.max(maxy, lasty);
-         dx = lastx - currx;
+         let bin = p[n],
+             lastx = Math.round(bin.grx),
+             lasty = Math.round(bin.gry),
+             dx = lastx - currx;
          if (dx === 0) {
             // if X not change, just remember amplitude and
             cminy = Math.min(cminy, lasty);
@@ -337,33 +340,35 @@ function buildSvgPath(kind, bins, height, ndig) {
          }
 
          if (cminy !== cmaxy) {
-            if (cminy != curry) res.path += 'v' + (cminy - curry);
-            res.path += 'v' + (cmaxy - cminy);
-            if (cmaxy != prevy) res.path += 'v' + (prevy - cmaxy);
+            if (cminy != curry)
+               path += `v${cminy-curry}`;
+            path += `v${cmaxy-cminy}`;
+            if (cmaxy != prevy)
+               path += `v${prevy-cmaxy}`;
             curry = prevy;
          }
-         dy = lasty - curry;
+         let dy = lasty - curry;
          if (dy)
-            res.path += `l${dx},${dy}`;
+            path += `l${dx},${dy}`;
          else
-            res.path += 'h' + dx;
+            path += `h${dx}`;
          currx = lastx; curry = lasty;
          prevy = cminy = cmaxy = lasty;
       }
 
       if (cminy != cmaxy) {
          if (cminy != curry)
-            res.path += `v${cminy - curry}`;
-         res.path += `v${cmaxy - cminy}`;
+            path += `v${cminy-curry}`;
+         path += `v${cmaxy-cminy}`;
          if (cmaxy != prevy)
-            res.path += `v${prevy - cmaxy}`;
+            path += `v${prevy-cmaxy}`;
       }
    }
 
-   if (height > 0)
-      res.close = `L${conv(bin.grx)},${conv(maxy)}h${conv(bins[0].grx - bin.grx)}Z`;
+   if (args.height)
+      args.close = `L${conv(p[p.length-1].grx)},${conv(Math.max(args.maxy, args.height))}H${conv(p[0].grx)}Z`;
 
-   return res;
+   return path;
 }
 
 /** @summary Compress SVG code, produced from drawing
@@ -519,15 +524,13 @@ class BasePainter {
           main = this.selectDom(),
           lmt = 5; // minimal size
 
-      if (enlarge !== 'on') {
-         if (new_size && new_size.width && new_size.height)
-            main_origin.style('width', new_size.width + 'px')
-               .style('height', new_size.height + 'px');
-      }
+      if ((enlarge !== 'on') && new_size?.width && new_size?.height)
+         main_origin.style('width', new_size.width + 'px')
+                    .style('height', new_size.height + 'px');
 
       let rect_origin = getElementRect(main_origin, true),
-         can_resize = main_origin.attr('can_resize'),
-         do_resize = false;
+          can_resize = main_origin.attr('can_resize'),
+          do_resize = false;
 
       if (can_resize == 'height')
          if (height_factor && Math.abs(rect_origin.width * height_factor - rect_origin.height) > 0.1 * rect_origin.width) do_resize = true;
@@ -547,18 +550,20 @@ class BasePainter {
       }
 
       let rect = getElementRect(main),
-          old_h = main.property('draw_height'),
-          old_w = main.property('draw_width');
+          old_h = main.property('_jsroot_height'),
+          old_w = main.property('_jsroot_width');
 
       rect.changed = false;
 
       if (old_h && old_w && (old_h > 0) && (old_w > 0)) {
          if ((old_h !== rect.height) || (old_w !== rect.width))
-            if ((check_level > 1) || (rect.width / old_w < 0.66) || (rect.width / old_w > 1.5) ||
-               (rect.height / old_h < 0.66) && (rect.height / old_h > 1.5)) rect.changed = true;
+            rect.changed = (check_level > 1) || (rect.width / old_w < 0.99) || (rect.width / old_w > 1.01) || (rect.height / old_h < 0.99) || (rect.height / old_h > 1.01);
       } else {
          rect.changed = true;
       }
+
+      if (rect.changed)
+         main.property('_jsroot_height', rect.height).property('_jsroot_width', rect.width);
 
       return rect;
    }
@@ -681,6 +686,60 @@ function makeTranslate(x,y)
    return null;
 }
 
+/** @summary Create image based on SVG
+  * @return {Promise} with produced image in base64 form (or canvas when no image_format specified)
+  * @private */
+async function svgToImage(svg, image_format) {
+
+   if (image_format == 'svg')
+      return svg;
+
+   const doctype = '<?xml version="1.0" standalone="no"?><!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">';
+
+   svg = encodeURIComponent(doctype + svg);
+
+   svg = svg.replace(/%([0-9A-F]{2})/g, (match, p1) => {
+       let c = String.fromCharCode('0x'+p1);
+       return c === '%' ? '%25' : c;
+   });
+
+   svg = decodeURIComponent(svg);
+
+   const img_src = 'data:image/svg+xml;base64,' + btoa_func(svg);
+
+   if (isNodeJs())
+      return import('canvas').then(async handle => {
+
+         const img = await handle.default.loadImage(img_src);
+
+         const canvas = handle.default.createCanvas(img.width, img.height);
+
+         canvas.getContext('2d').drawImage(img, 0, 0);
+
+         return image_format ? canvas.toDataURL('image/' + image_format) : canvas;
+      });
+
+   return new Promise(resolveFunc => {
+      const image = document.createElement('img');
+
+      image.onload = function() {
+         let canvas = document.createElement('canvas');
+         canvas.width = image.width;
+         canvas.height = image.height;
+
+         canvas.getContext('2d').drawImage(image, 0, 0);
+
+         resolveFunc(image_format ? canvas.toDataURL('image/' + image_format) : canvas);
+      }
+      image.onerror = function(arg) {
+         console.log('IMAGE ERROR', arg);
+         resolveFunc(null);
+      }
+
+      image.src = img_src;
+   });
+}
+
 export { getElementRect, getAbsPosInCanvas,
-         DrawOptions, TRandom, floatToString, buildSvgPath, compressSVG,
-         BasePainter, _loadJSDOM, makeTranslate };
+         DrawOptions, TRandom, floatToString, buildSvgCurve, compressSVG,
+         BasePainter, _loadJSDOM, makeTranslate, svgToImage };
