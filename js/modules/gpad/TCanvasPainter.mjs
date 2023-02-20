@@ -306,18 +306,21 @@ class TCanvasPainter extends TPadPainter {
          this.onWebsocketClosed();
          this.closeWebsocket(true);
       } else if (msg.slice(0,6) == 'SNAP6:') {
-         // This is snapshot, produced with ROOT6
+         // This is snapshot, produced with TWebCanvas
          let p1 = msg.indexOf(':', 6),
              version = msg.slice(6, p1),
              snap = parse(msg.slice(p1+1));
 
-         this.syncDraw(true).then(() => this.redrawPadSnap(snap)).then(() => {
-            this.completeCanvasSnapDrawing();
-            let ranges = this.getWebPadOptions(); // all data, including subpads
-            if (ranges) ranges = ':' + ranges;
-            handle.send(`READY6:${version}${ranges}`); // send ready message back when drawing completed
-            this.confirmDraw();
-         });
+         this.syncDraw(true)
+             .then(() => this.ensureBrowserSize(!this.snapid, snap.fSnapshot.fCw, snap.fSnapshot.fCh))
+             .then(() => this.redrawPadSnap(snap))
+             .then(() => {
+                this.completeCanvasSnapDrawing();
+                let ranges = this.getWebPadOptions(); // all data, including subpads
+                if (ranges) ranges = ':' + ranges;
+                handle.send(`READY6:${version}${ranges}`); // send ready message back when drawing completed
+                this.confirmDraw();
+             });
       } else if (msg.slice(0,5) == 'MENU:') {
          // this is menu with exact identifier for object
          let lst = parse(msg.slice(5));
@@ -415,7 +418,6 @@ class TCanvasPainter extends TPadPainter {
          delete this.ged_view;
       }
       this.brlayout?.deleteContent(true);
-
       this.processChanges('sbits', this);
    }
 
@@ -693,21 +695,15 @@ class TCanvasPainter extends TPadPainter {
       if (!isFunc(window?.resizeTo) || !canvW || !canvH || isBatchMode() || this.embed_canvas || this.batch_mode)
          return;
 
-      let cW = this.getPadWidth(), cH = this.getPadHeight();
-      if (!cW || !cH) {
-         let dom = this.selectDom('origin');
-         if (dom.empty()) return;
-         let rect = getElementRect(dom);
-         cW = rect.width;
-         cH = rect.height;
-         if (!cW || !cH) return;
-      }
+      let rect = getElementRect(this.selectDom('origin'));
+      if (!rect.width || !rect.height) return;
 
-      let fullW = window.innerWidth - cW + canvW,
-          fullH = window.innerHeight - cH + canvH;
-      if ((fullW > 0) && (fullH > 0) && ((cW != canvW) || (cH != canvH))) {
-          window.resizeTo(fullW, fullH);
-          return true;
+      let fullW = window.innerWidth - rect.width + canvW,
+          fullH = window.innerHeight - rect.height + canvH;
+
+      if ((fullW > 0) && (fullH > 0) && ((rect.width != canvW) || (rect.height != canvH))) {
+         window.resizeTo(fullW, fullH);
+         return true;
       }
    }
 

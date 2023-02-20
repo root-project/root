@@ -1,5 +1,5 @@
 import { settings, create, gStyle, isStr, clTF2 } from '../core.mjs';
-import { DrawOptions, buildSvgPath } from '../base/BasePainter.mjs';
+import { DrawOptions, buildSvgCurve } from '../base/BasePainter.mjs';
 import { ObjectPainter } from '../base/ObjectPainter.mjs';
 import { TH1Painter } from '../hist2d/TH1Painter.mjs';
 import * as jsroot_math from '../base/math.mjs';
@@ -311,19 +311,20 @@ class TF1Painter extends ObjectPainter {
             if ((h0 > h) || (h0 < 0)) h0 = h;
          }
 
-         let path = buildSvgPath('bezier', this.bins, h0, 2);
+         let args = { height: h0, t: 0.1 },
+             path = buildSvgCurve(this.bins, args);
 
          if (!this.lineatt.empty())
             this.draw_g.append('svg:path')
                 .attr('class', 'line')
-                .attr('d', path.path)
+                .attr('d', path)
                 .style('fill', 'none')
                 .call(this.lineatt.func);
 
          if (!this.fillatt.empty())
             this.draw_g.append('svg:path')
                 .attr('class', 'area')
-                .attr('d', path.path + path.close)
+                .attr('d', path + args.close)
                 .call(this.fillatt.func);
       }
    }

@@ -1,5 +1,5 @@
 import { gStyle, create } from '../core.mjs';
-import { DrawOptions, floatToString, buildSvgPath } from '../base/BasePainter.mjs';
+import { DrawOptions, floatToString, buildSvgCurve } from '../base/BasePainter.mjs';
 import { ObjectPainter } from '../base/ObjectPainter.mjs';
 import { TH1Painter } from '../hist/TH1Painter.mjs';
 
@@ -223,17 +223,9 @@ class TSplinePainter extends ObjectPainter {
             bins.push({ x, y, grx: funcs.grx(x), gry: funcs.gry(y) });
          }
 
-         let h0 = h;  // use maximal frame height for filling
-         if ((pmain.hmin !== undefined) && (pmain.hmin >= 0)) {
-            h0 = Math.round(funcs.gry(0));
-            if ((h0 > h) || (h0 < 0)) h0 = h;
-         }
-
-         let path = buildSvgPath('bezier', bins, h0, 2);
-
          this.draw_g.append('svg:path')
              .attr('class', 'line')
-             .attr('d', path.path)
+             .attr('d', buildSvgCurve(bins))
              .style('fill', 'none')
              .call(this.lineatt.func);
       }

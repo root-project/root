@@ -1,6 +1,6 @@
 import { gStyle, settings, constants, isBatchMode } from '../core.mjs';
 import { rgb as d3_rgb } from '../d3.mjs';
-import { floatToString, DrawOptions, buildSvgPath } from '../base/BasePainter.mjs';
+import { floatToString, DrawOptions, buildSvgCurve } from '../base/BasePainter.mjs';
 import { RHistPainter } from './RHistPainter.mjs';
 import { ensureRCanvas } from '../gpad/RCanvasPainter.mjs';
 
@@ -286,14 +286,13 @@ class RH1Painter extends RHistPainter {
          bins2.unshift({grx: grx, gry: gry2});
       }
 
-      let kind = (this.options.ErrorKind === 4) ? 'bezier' : 'line',
-          path1 = buildSvgPath(kind, bins1),
-          path2 = buildSvgPath('L'+kind, bins2);
+      let path1 = buildSvgCurve(bins1, { line: this.options.ErrorKind !== 4 }),
+          path2 = buildSvgCurve(bins2, { line: this.options.ErrorKind !== 4, cmd: 'L' });
 
       if (this.fillatt.empty()) this.fillatt.setSolidColor('blue');
 
       this.draw_g.append('svg:path')
-                 .attr('d', path1.path + path2.path + 'Z')
+                 .attr('d', path1 + path2 + 'Z')
                  .call(this.fillatt.func);
 
       return true;

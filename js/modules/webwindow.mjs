@@ -673,11 +673,17 @@ async function connectWebWindow(arg) {
    else if (!isObject(arg))
       arg = {};
 
-   let d = decodeUrl();
+   let d = decodeUrl(), new_key;
+
+   if (typeof sessionStorage !== 'undefined') {
+      new_key = sessionStorage.getItem('RWebWindow_Key');
+      sessionStorage.removeItem('RWebWindow_Key');
+      if (new_key) console.log(`Use key ${new_key} from session storage`);
+   }
 
    // special holder script, prevents headless chrome browser from too early exit
    if (d.has('headless') && d.get('key') && (browser.isChromeHeadless || browser.isChrome) && !arg.ignore_chrome_batch_holder)
-      loadScript('root_batch_holder.js?key=' + d.get('key'));
+      loadScript('root_batch_holder.js?key=' + (new_key || d.get('key')));
 
    if (!arg.platform)
       arg.platform = d.get('platform');
@@ -704,10 +710,10 @@ async function connectWebWindow(arg) {
          arg.socket_kind = 'websocket';
    }
 
-   if (arg.winW && arg.winH && !isBatchMode() && isFunc(window?.resizeTo))
+   if (!new_key && arg.winW && arg.winH && !isBatchMode() && isFunc(window?.resizeTo))
       window.resizeTo(arg.winW, arg.winH);
 
-   if (arg.winX && arg.winY && !isBatchMode() && isFunc(window?.moveTo))
+   if (!new_key && arg.winX && arg.winY && !isBatchMode() && isFunc(window?.moveTo))
       window.moveTo(arg.winX, arg.winY);
 
    // only for debug purposes
@@ -723,17 +729,8 @@ async function connectWebWindow(arg) {
          if (browser.qt5) window.onqt5unload = window.onbeforeunload;
       }
 
-      handle.key = d.get('key');
+      handle.key = new_key || d.get('key');
       handle.token = d.get('token');
-
-      if (typeof sessionStorage !== 'undefined') {
-         let new_key = sessionStorage.getItem('RWebWindow_Key');
-         sessionStorage.removeItem('RWebWindow_Key');
-         if (new_key) {
-            console.log(`Use key ${new_key} from session storage`);
-            handle.key = new_key;
-         }
-      }
 
       if (arg.receiver) {
          // when receiver exists, it handles itself callbacks
