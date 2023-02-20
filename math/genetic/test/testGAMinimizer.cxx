@@ -12,11 +12,11 @@ class RosenBrockFunction : public ROOT::Math::IMultiGenFunction {
 public :
 
    RosenBrockFunction() : fNCalls(0) {}
-   virtual ~RosenBrockFunction() {}
+   ~RosenBrockFunction() override {}
 
-   unsigned int NDim() const { return 2; }
+   unsigned int NDim() const override { return 2; }
 
-   ROOT::Math::IMultiGenFunction * Clone() const {
+   ROOT::Math::IMultiGenFunction * Clone() const override {
       return new RosenBrockFunction();
    }
 
@@ -25,7 +25,7 @@ public :
    private:
    mutable unsigned int fNCalls;
 
-   inline double DoEval (const double * x) const {
+   inline double DoEval (const double * x) const override {
       fNCalls++;
       //cout << "called!" << endl;
       const Double_t xx = x[0];
@@ -38,33 +38,33 @@ public :
 
 class Parabole: public ROOT::Math::IMultiGenFunction {
 public:
-   virtual ~Parabole() {}
+   ~Parabole() override {}
 
-   unsigned int NDim() const { return 1; }
+   unsigned int NDim() const override { return 1; }
 
-   ROOT::Math::IMultiGenFunction * Clone() const {
+   ROOT::Math::IMultiGenFunction * Clone() const override {
       return new Parabole();
    }
 
    private:
 
-   inline double DoEval (const double * x) const {
+   inline double DoEval (const double * x) const override {
       return x[0] * x[0];
    }
 };
 
 class MultiMin: public ROOT::Math::IMultiGenFunction {
 private:
-   inline double DoEval (const double * x) const {
+   inline double DoEval (const double * x) const override {
       return 0.6*TMath::Power(x[0],4) + 0.1*TMath::Power(x[0],3) - 2*TMath::Power(x[0],2) + 1;
    }
 
 public:
-   virtual ~MultiMin() {}
+   ~MultiMin() override {}
 
-   unsigned int NDim() const { return 1; }
+   unsigned int NDim() const override { return 1; }
 
-   ROOT::Math::IMultiGenFunction * Clone() const {
+   ROOT::Math::IMultiGenFunction * Clone() const override {
       return new MultiMin();
    }
 };

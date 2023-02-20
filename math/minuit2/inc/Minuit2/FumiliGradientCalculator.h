@@ -41,9 +41,9 @@ public:
 
    bool G2(const MinimumParameters &, MnAlgebraicVector &) const override;
 
-   virtual bool CanComputeG2() const override { return true;}
+   bool CanComputeG2() const override { return true;}
 
-   virtual bool CanComputeHessian() const override { return true;}
+   bool CanComputeHessian() const override { return true;}
 
 
 private:
