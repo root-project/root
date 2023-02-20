@@ -8,7 +8,6 @@ ULong_t
 ios_base::iostate
 basic_ifstream<char,char_traits<char> >::off_type
 basic_streambuf<char,char_traits<char> >::char_type
-ROOT::Math::GradFunctor1D::Impl
 Colormap_t
 ROOT::Fit::Chi2FCN<ROOT::Math::IBaseFunctionMultiDim>::BaseFunction
 unsigned short
@@ -81,12 +80,10 @@ ROOT::Fit::PoissonLLGradFunction
 vector<TString,allocator<TString> >::iterator::difference_type
 ROOT::DelArrFunc_t
 ROOT::Fit::PoissonLikelihoodFCN<ROOT::Math::IBaseFunctionMultiDim>::BaseObjFunction
-ROOT::Math::GradFunctor1D::ImplBase
 vector<ROOT::Fit::ParameterSettings,allocator<ROOT::Fit::ParameterSettings> >::const_reference
 vector<double,allocator<double> >::const_pointer
 basic_ostream<char,char_traits<char> >::traits_type
 basic_stringbuf<char,char_traits<char>,allocator<char> >::off_type
-ROOT::Math::Functor::ImplBase
 GContext_t
 ROOT::Math::TDataPoint3F
 vector<TString,allocator<TString> >::const_iterator
@@ -101,7 +98,6 @@ basic_istringstream<char,char_traits<char>,allocator<char> >::traits_type
 unsigned char
 ROOT::Math::IntegratorOneDim::Type
 ROOT::Fit::LogLikelihoodFCN<ROOT::Math::IBaseFunctionMultiDim>::BaseFunction
-ROOT::Math::Functor1D::Impl
 ROOT::Fit::Fitter::BaseFunc
 basic_ostringstream<char,char_traits<char>,allocator<char> >::off_type
 basic_stringstream<char,char_traits<char>,allocator<char> >::char_type
@@ -160,7 +156,6 @@ ReAllocCharFun_t
 UInt_t
 Display_t
 ROOT::Math::IParametricFunctionMultiDim::BaseFunc
-ROOT::Math::GradFunctor::ImplBase
 char_traits<char>::char_type
 ROOT::ResetAfterMergeFunc_t
 basic_ostringstream<char,char_traits<char>,allocator<char> >::int_type
@@ -184,7 +179,6 @@ ROOT::Math::TDataPoint3D
 vector<string,allocator<string> >::reference
 vector<TString,allocator<TString> >::const_pointer
 vector<double,allocator<double> >::const_iterator
-ROOT::Math::GradFunctor::Impl
 string::pointer
 ROOT::Math::TDataPointN<float>::value_type
 TColorGradient::SizeType_t
@@ -218,7 +212,6 @@ basic_ios<char,char_traits<char> >::off_type
 basic_ofstream<char,char_traits<char> >::char_type
 ClassStreamerFunc_t
 ROOT::Fit::Fitter::BaseGradFunc
-ROOT::Math::Functor::Impl
 ROOT::Math::TDataPoint1F
 basic_ostream<char,char_traits<char> >::pos_type
 short
@@ -296,7 +289,6 @@ ROOT::Math::Integrator
 ROOT::Fit::Chi2FCN<ROOT::Math::IGradientFunctionMultiDim>::IModelFunction
 ROOT::Fit::Fitter::IGradModelFunction
 ROOT::Math::TDataPoint1D
-ROOT::Math::Functor1D::ImplBase
 ROOT::Fit::PoissonLikelihoodFCN<ROOT::Math::IGradientFunctionMultiDim>::BaseFunction
 ROOT::Math::ParamFunctor::FreeFunc
 char
