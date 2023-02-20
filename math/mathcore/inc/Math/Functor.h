@@ -83,10 +83,6 @@ class FunctorHandler : public ParentFunctor::Impl {
 
 public:
 
-   // constructor for 1d functions
-   FunctorHandler(const Func & fun) : fDim(1), fFunc(fun) {}
-
-
    // constructor for multi-dimensional functions w/0 NDim()
    FunctorHandler(unsigned int dim, const Func & fun ) :
       fDim(dim),
@@ -135,6 +131,12 @@ private :
 
 };
 
+template<class ParentFunctor, class Func >
+std::unique_ptr<FunctorHandler<ParentFunctor,Func>> makeFunctorHandler(unsigned int dim, const Func & fun)
+{
+   return std::make_unique<FunctorHandler<ParentFunctor,Func>>(dim, fun);
+}
+
 
 /**
    Functor Handler class for gradient functions where both callable objects are provided for the function
@@ -156,14 +158,6 @@ class FunctorDerivHandler : public ParentFunctor::Impl {
    typedef typename ImplFunc::BaseFunc BaseFunc;
 
 public:
-
-   // constructor for 1d functions
-   FunctorDerivHandler(const Func & fun, const DerivFunc & gfun) :
-      fDim(1),
-      fFunc(fun),
-      fDerivFunc(gfun)
-   {}
-
 
    // constructor for multi-dimensional functions
    FunctorDerivHandler(unsigned int dim, const Func & fun, const DerivFunc & gfun) :
@@ -217,6 +211,12 @@ private :
    mutable DerivFunc fDerivFunc;
 
 };
+
+template<class ParentFunctor, class Func, class DerivFunc >
+std::unique_ptr<FunctorDerivHandler<ParentFunctor,Func, DerivFunc>> makeFunctorDerivHandler(unsigned int dim, const Func & fun, const DerivFunc & gfun)
+{
+   return std::make_unique<FunctorDerivHandler<ParentFunctor,Func,DerivFunc>>(dim, fun, gfun);
+}
 
 /**
    Functor Handler class for gradient functions where both callable objects are provided for the function
@@ -291,141 +291,6 @@ private:
    mutable std::function<void(const double *, double*)> fGradFunc;
 };
 
-/**
-   Functor Handler to Wrap pointers to member functions
-   The member function type must be (XXX means any name is allowed) :
-   double XXX ( double x) for 1D functions
-   and
-   double XXXX (const double *x) for multi-dimensional functions
-
-   @ingroup  Functor_int
-*/
-template <class ParentFunctor, typename PointerToObj,
-          typename PointerToMemFn>
-class MemFunHandler : public ParentFunctor::Impl
-{
-   //typedef typename ParentFunctor::Dim Dim;
-   typedef typename ParentFunctor::Impl ImplFunc;
-   typedef typename ImplFunc::BaseFunc BaseFunc;
-
-public:
-
-   /// constructor from a pointer to the class and a pointer to the function
-   MemFunHandler(const PointerToObj& pObj, PointerToMemFn pMemFn)
-      : fDim(1), fObj(pObj), fMemFn(pMemFn)        // should pass pointer by value ??
-   {}
-
-   /// constructor from a pointer to the class and a pointer to the function
-   MemFunHandler(unsigned int dim, const PointerToObj& pObj, PointerToMemFn pMemFn)
-      : fDim(dim), fObj(pObj), fMemFn(pMemFn)
-   {}
-
-   virtual ~MemFunHandler() {}
-
-   // clone of the function handler (use copy-ctor)
-   ImplFunc * Copy() const { return new MemFunHandler(*this); }
-
-   // clone of the function handler (use copy-ctor)
-   BaseFunc * Clone() const { return new MemFunHandler(*this); }
-
-   // constructor for multi-dimensional functions
-   unsigned int NDim() const {
-      return fDim;
-   }
-
-private :
-
-   inline double DoEval (double x) const {
-      return ((*fObj).*fMemFn)(x);
-   }
-
-   inline double DoEval (const double * x) const {
-      return ((*fObj).*fMemFn)(x);
-   }
-
-   unsigned int fDim;
-   mutable PointerToObj fObj;
-   PointerToMemFn fMemFn;
-
-};
-
-/**
-   Functor Handler to Wrap pointers to member functions for the evaluation of the function
-   and the gradient.
-   The member function type must be (XXX means any name is allowed) :
-   double XXX ( double x) for 1D function and derivative evaluation
-   double XXX (const double *x) for multi-dimensional function evaluation and
-   double XXX (cost double *x, int icoord) for partial derivatives evaluation
-
-   @ingroup  Functor_int
-
-*/
-template <class ParentFunctor, typename PointerToObj,
-          typename PointerToMemFn, typename PointerToGradMemFn>
-class MemGradFunHandler : public ParentFunctor::Impl
-{
-   typedef typename ParentFunctor::Impl ImplFunc;
-   typedef typename ImplFunc::BaseFunc BaseFunc;
-   //typedef typename ParentFunctor::Dim Dim;
-
-public:
-
-   /// constructor from a pointer to the class and a pointer to the function
-   MemGradFunHandler(const PointerToObj& pObj, PointerToMemFn pMemFn, PointerToGradMemFn pGradMemFn)
-      : fDim(1),
-        fObj(pObj),
-        fMemFn(pMemFn),
-        fGradMemFn(pGradMemFn)
-   {}
-
-   /// constructor from a pointer to the class and a pointer to the function
-   MemGradFunHandler(unsigned int dim,
-                 const PointerToObj& pObj,
-                 PointerToMemFn pMemFn,
-                 PointerToGradMemFn pGradMemFn )
-      : fDim(dim),
-        fObj(pObj),
-        fMemFn(pMemFn),
-        fGradMemFn(pGradMemFn)
-   {}
-
-   virtual ~MemGradFunHandler() {}
-
-   // clone of the function handler (use copy-ctor)
-   ImplFunc * Copy() const { return new MemGradFunHandler(*this); }
-
-   // clone of the function handler (use copy-ctor)
-   BaseFunc * Clone() const { return new MemGradFunHandler(*this); }
-
-   // constructor for multi-dimensional functions
-   unsigned int NDim() const {
-      return fDim;
-   }
-
-private :
-
-   inline double DoEval (double x) const {
-      return ((*fObj).*fMemFn)(x);
-   }
-
-   inline double DoEval (const double * x) const {
-      return ((*fObj).*fMemFn)(x);
-   }
-
-   inline double DoDerivative (double x) const {
-      return ((*fObj).*fGradMemFn)(x);
-   }
-
-   inline double DoDerivative (const double * x, unsigned int icoord ) const {
-      return ((*fObj).*fGradMemFn)(x,icoord);
-   }
-
-   unsigned int fDim;
-   mutable PointerToObj fObj;
-   PointerToMemFn fMemFn;
-   PointerToGradMemFn fGradMemFn;
-};
-
 
 //****************************
 // LM 7/2/2014:  no needed this : make template ctor of Functor1D and GradFunctor1D not
@@ -489,7 +354,7 @@ public:
     */
    template <class PtrObj, typename MemFn>
    Functor(const PtrObj& p, MemFn memFn, unsigned int dim )
-      : fImpl(new MemFunHandler<Functor, PtrObj, MemFn>(dim, p, memFn))
+      : fImpl(makeFunctorHandler<Functor>(dim, std::bind(memFn, p, std::placeholders::_1)))
    {}
 
 
@@ -500,7 +365,7 @@ public:
     */
    template <typename Func>
    Functor( const Func & f, unsigned int dim ) :
-      fImpl(new FunctorHandler<Functor,Func>(dim,f) )
+      fImpl(makeFunctorHandler<Functor>(dim,f) )
    {}
 
    /**
@@ -511,7 +376,7 @@ public:
       */
    //template <typename Func>
    Functor(const std::function<double(double const *)> &f, unsigned int dim)
-      : fImpl(new FunctorHandler<Functor, std::function<double(double const *)> >(dim, f) )
+      : fImpl(makeFunctorHandler<Functor>(dim, f) )
    {}
 
    /**
@@ -594,7 +459,7 @@ public:
     */
    template <typename Func>
    Functor1D(const Func & f) :
-      fImpl(new FunctorHandler<Functor1D,Func>(f))
+      fImpl(makeFunctorHandler<Functor1D>(1, f))
    {}
 
 
@@ -603,7 +468,7 @@ public:
     */
    template <class PtrObj, typename MemFn>
    Functor1D(const PtrObj& p, MemFn memFn)
-      : fImpl(new MemFunHandler<Functor1D, PtrObj, MemFn>(p, memFn))
+      : fImpl(makeFunctorHandler<Functor1D>(1, std::bind(memFn, p, std::placeholders::_1)))
    {}
 
    /**
@@ -612,7 +477,7 @@ public:
       Python passing Python user defined functions
    */
    Functor1D(const std::function<double(double)> &f)
-      : fImpl(new FunctorHandler<Functor1D, std::function<double(double)>>(f))
+      : fImpl(makeFunctorHandler<Functor1D>(1, f))
    {}
 
    /**
@@ -695,7 +560,7 @@ public:
     */
    template <typename Func>
    GradFunctor( const Func & f, unsigned int dim ) :
-      fImpl(new FunctorHandler<GradFunctor,Func>(dim,f) )
+      fImpl(makeFunctorHandler<GradFunctor>(dim,f) )
    {}
 
    /**
@@ -703,7 +568,7 @@ public:
     */
    template <class PtrObj, typename MemFn, typename GradMemFn>
    GradFunctor(const PtrObj& p, MemFn memFn, GradMemFn gradFn, unsigned int dim )
-      : fImpl(new MemGradFunHandler<GradFunctor, PtrObj, MemFn, GradMemFn>(dim, p, memFn, gradFn))
+      : fImpl(makeFunctorDerivHandler<GradFunctor>(dim, std::bind(memFn, p, std::placeholders::_1), std::bind(gradFn, p, std::placeholders::_1, std::placeholders::_2)) )
    {}
 
    /**
@@ -713,7 +578,7 @@ public:
     */
    template <typename Func, typename GradFunc>
    GradFunctor(const Func & f, const GradFunc & g, int dim  ) :
-      fImpl(new FunctorDerivHandler<GradFunctor,Func,GradFunc>(dim, f, g) )
+      fImpl(makeFunctorDerivHandler<GradFunctor>(dim, f, g) )
    { }
 
    /**
@@ -727,8 +592,7 @@ public:
    // template <typename Func>
    GradFunctor(const std::function<double(double const *)> &f,
                const std::function<double(double const *, unsigned int)> &g, unsigned int dim)
-      : fImpl(new FunctorDerivHandler<GradFunctor, std::function<double(double const *)>,
-                                     std::function<double(double const *, unsigned int)> >(dim, f, g))
+      : fImpl(makeFunctorDerivHandler<GradFunctor>(dim, f, g))
    {}
 
    /**
@@ -840,7 +704,7 @@ public:
     */
    template <typename Func>
    GradFunctor1D(const Func & f) :
-      fImpl(new FunctorHandler<GradFunctor1D,Func>(f) )
+      fImpl(makeFunctorHandler<GradFunctor1D>(1, f) )
    {}
 
 
@@ -851,7 +715,7 @@ public:
     */
    template <class PtrObj, typename MemFn, typename GradMemFn>
    GradFunctor1D(const PtrObj& p, MemFn memFn, GradMemFn gradFn)
-      : fImpl(new MemGradFunHandler<GradFunctor1D, PtrObj, MemFn, GradMemFn>(p, memFn, gradFn))
+      : fImpl(makeFunctorDerivHandler<GradFunctor1D>(1, std::bind(memFn, p, std::placeholders::_1), std::bind(gradFn, p, std::placeholders::_1)) )
    {}
 
 
@@ -861,7 +725,7 @@ public:
     */
    template <typename Func, typename GradFunc>
    GradFunctor1D(const Func & f, const GradFunc & g ) :
-      fImpl(new FunctorDerivHandler<GradFunctor1D,Func, GradFunc>(f, g) )
+      fImpl(makeFunctorDerivHandler<GradFunctor1D>(1, f, g) )
    {}
 
    /**
@@ -872,7 +736,7 @@ public:
      Python passing Python user defined functions
    */
    GradFunctor1D(const std::function<double(double)> &f, const std::function<double(double)> &g )
-      : fImpl(new FunctorDerivHandler<GradFunctor1D, std::function<double(double)>, std::function<double(double)> >(f, g))
+      : fImpl(makeFunctorDerivHandler<GradFunctor1D>(1, f, g))
    {}
 
    /**
