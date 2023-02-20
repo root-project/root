@@ -73,7 +73,7 @@ public:
       return fFunc(&x[0]);
    }
 
-   Double_t EstimatorFunction(std::vector<double> & factors ){
+   Double_t EstimatorFunction(std::vector<double> & factors ) override{
       fNCalls += 1;
       return Evaluate( factors);
    }
