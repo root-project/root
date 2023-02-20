@@ -77,6 +77,9 @@ sap.ui.define([
          }
       },
 
+      onAfterRendering() {
+      },
+
       isv7() {
          let cp = this.getCanvasPainter();
          return cp?.v7canvas;
@@ -527,6 +530,10 @@ sap.ui.define([
             new_state = !this._Page.getShowHeader();
          this.getView().getModel().setProperty("/MenuBarIcon", chk_icon(new_state));
          this._Page.setShowHeader(new_state);
+
+         let canvp = this.getCanvasPainter();
+         if (canvp)
+            canvp.enforceCanvasSize = true;
       },
 
       onDivideDialog() {
