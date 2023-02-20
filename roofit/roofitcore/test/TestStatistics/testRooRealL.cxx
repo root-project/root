@@ -57,7 +57,7 @@ TEST_P(RooRealL, getVal)
    auto nominal_result = nll->getVal();
 
    RooFit::TestStatistics::RooRealL nll_new("nll_new", "new style NLL",
-                                            std::make_shared<RooFit::TestStatistics::RooUnbinnedL>(pdf, data.get()));
+                                            std::make_unique<RooFit::TestStatistics::RooUnbinnedL>(pdf, data.get()));
 
    auto mp_result = nll_new.getVal();
 
@@ -212,7 +212,7 @@ TEST_P(RooRealL, setVal)
    std::unique_ptr<RooAbsReal> nll{pdf->createNLL(*data)};
 
    RooFit::TestStatistics::RooRealL nll_new("nll_new", "new style NLL",
-                                            std::make_shared<RooFit::TestStatistics::RooUnbinnedL>(pdf, data.get()));
+                                            std::make_unique<RooFit::TestStatistics::RooUnbinnedL>(pdf, data.get()));
 
    // calculate first results
    auto nominal_result1 = nll->getVal();
@@ -266,7 +266,7 @@ TEST_P(RealLVsMPFE, getVal)
    auto mpfe_result = nll_mpfe->getVal();
 
    RooFit::TestStatistics::RooRealL nll_new("nll_new", "new style NLL",
-                                            std::make_shared<RooFit::TestStatistics::RooUnbinnedL>(pdf, data.get()));
+                                            std::make_unique<RooFit::TestStatistics::RooUnbinnedL>(pdf, data.get()));
 
    auto mp_result = nll_new.getVal();
 
@@ -304,7 +304,7 @@ TEST_P(RealLVsMPFE, minimize)
 
    std::unique_ptr<RooAbsReal> nll_mpfe{pdf->createNLL(*data)};
    RooFit::TestStatistics::RooRealL nll_new("nll_new", "new style NLL",
-                                            std::make_shared<RooFit::TestStatistics::RooUnbinnedL>(pdf, data.get()));
+                                            std::make_unique<RooFit::TestStatistics::RooUnbinnedL>(pdf, data.get()));
 
    // save initial values for the start of all minimizations
    RooArgSet values{*mu, *pdf};
