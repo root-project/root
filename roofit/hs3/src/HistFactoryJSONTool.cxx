@@ -213,7 +213,7 @@ void exportMeasurement(RooStats::HistFactory::Measurement &measurement, JSONNode
    }
 
    // the data
-   auto &datalist = n["observations"];
+   auto &datalist = n["data"];
    datalist.set_map();
 
    for (const auto &c : measurement.GetChannels()) {

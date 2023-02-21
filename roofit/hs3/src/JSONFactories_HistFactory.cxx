@@ -69,20 +69,21 @@ inline void stackError(const JSONNode &n, std::vector<double> &sumW, std::vector
 {
    if (!n.is_map())
       return;
-   if (!n.has_child("counts"))
-      throw "no counts given";
-   if (!n["counts"].is_seq())
-      throw "counts are not in list form";
+   if (!n.has_child("contents"))
+      throw std::invalid_argument("no contents given");
+   JSONNode const &contents = n["contents"];
+   if (!contents.is_seq())
+      throw std::invalid_argument("contents are not in list form");
    if (!n.has_child("errors"))
-      throw "no errors given";
+      throw std::invalid_argument("no errors given");
    if (!n["errors"].is_seq())
-      throw "errors are not in list form";
-   if (n["counts"].num_children() != n["errors"].num_children()) {
-      throw "inconsistent bin numbers";
+      throw std::invalid_argument("errors are not in list form");
+   if (contents.num_children() != n["errors"].num_children()) {
+      throw std::invalid_argument("inconsistent bin numbers");
    }
-   const size_t nbins = n["counts"].num_children();
+   const size_t nbins = contents.num_children();
    for (size_t ibin = 0; ibin < nbins; ++ibin) {
-      double w = n["counts"][ibin].val_double();
+      double w = contents[ibin].val_double();
       double e = n["errors"][ibin].val_double();
       if (ibin < sumW.size())
          sumW[ibin] += w;
@@ -461,7 +462,7 @@ public:
       std::vector<std::string> funcnames;
       std::vector<std::string> coefnames;
       RooArgSet observables;
-      if (p.has_child("observables")) {
+      if (p.has_child("variables")) {
          RooJSONFactoryWSTool::getObservables(ws, p, name, observables);
          scope.setObservables(observables);
       }
