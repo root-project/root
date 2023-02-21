@@ -366,15 +366,19 @@ RLoopManager::RLoopManager(std::unique_ptr<RDataSource> ds, const ColumnNames_t 
 }
 
 RLoopManager::RLoopManager(ROOT::RDF::Experimental::RDatasetSpec &&spec)
-   : fBeginEntry(spec.GetEntryRangeBegin()), fEndEntry(spec.GetEntryRangeEnd()),
-     fDatasetGroups(spec.MoveOutDatasetGroups()), fNSlots(RDFInternal::GetNSlots()),
+   : fBeginEntry(spec.GetEntryRangeBegin()),
+     fEndEntry(spec.GetEntryRangeEnd()),
+     fSamples(spec.MoveOutSamples()),
+     fNSlots(RDFInternal::GetNSlots()),
      fLoopType(ROOT::IsImplicitMTEnabled() ? ELoopType::kROOTFilesMT : ELoopType::kROOTFiles),
-     fNewSampleNotifier(fNSlots), fSampleInfos(fNSlots), fDatasetColumnReaders(fNSlots)
+     fNewSampleNotifier(fNSlots),
+     fSampleInfos(fNSlots),
+     fDatasetColumnReaders(fNSlots)
 {
    auto chain = std::make_shared<TChain>("");
-   for (auto &group : fDatasetGroups) {
-      const auto &trees = group.GetTreeNames();
-      const auto &files = group.GetFileNameGlobs();
+   for (auto &sample : fSamples) {
+      const auto &trees = sample.GetTreeNames();
+      const auto &files = sample.GetFileNameGlobs();
       for (auto i = 0u; i < files.size(); ++i) {
          // We need to use `<filename>?#<treename>` as an argument to TChain::Add
          // (see https://github.com/root-project/root/pull/8820 for why)
@@ -384,7 +388,7 @@ RLoopManager::RLoopManager(ROOT::RDF::Experimental::RDatasetSpec &&spec)
          // change this easily because of backward compatibility: the sample ID
          // is exposed to users via RSampleInfo and DefinePerSample).
          const auto sampleId = files[i] + '/' + trees[i];
-         fDatasetGroupMap.insert({sampleId, &group});
+         fSampleMap.insert({sampleId, &sample});
       }
    }
 
@@ -716,9 +720,8 @@ void RLoopManager::UpdateSampleInfo(unsigned int slot, TTreeReader &r) {
    if (range.second == -1) {
       range.second = tree->GetEntries(); // convert '-1', i.e. 'until the end', to the actual entry number
    }
-   const std::string &id = fname + "/" + treename;
-   fSampleInfos[slot] =
-      fDatasetGroupMap.empty() ? RSampleInfo(id, range) : RSampleInfo(id, range, fDatasetGroupMap[id]);
+   const std::string &id = fname + '/' + treename;
+   fSampleInfos[slot] = fSampleMap.empty() ? RSampleInfo(id, range) : RSampleInfo(id, range, fSampleMap[id]);
 }
 
 /// Initialize all nodes of the functional graph before running the event loop.
