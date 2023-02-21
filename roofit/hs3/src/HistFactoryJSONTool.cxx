@@ -75,7 +75,7 @@ void exportSample(const RooStats::HistFactory::Sample &sample, JSONNode &s)
 void exportChannel(const RooStats::HistFactory::Channel &c, JSONNode &ch)
 {
    ch.set_map();
-   ch["type"] << "histfactory";
+   ch["type"] << "histfactory_dist";
 
    auto &staterr = ch["statError"];
    staterr.set_map();
