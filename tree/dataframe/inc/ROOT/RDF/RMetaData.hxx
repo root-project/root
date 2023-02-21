@@ -23,7 +23,7 @@ namespace Experimental {
 \ingroup dataframe
 \brief Class behaving as a heterogenuous dictionary to store dataset metadata
 
- This class should be passed to an RDatasetGroup object which represents a single dataset group.
+ This class should be passed to an RSample object which represents a single dataset sample.
  Once a dataframe is built with RMetaData object, it could be accessed via DefinePerSample.
 */
 class RMetaData {

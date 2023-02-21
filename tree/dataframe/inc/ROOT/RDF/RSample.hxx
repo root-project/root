@@ -8,8 +8,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_RDF_RDATASETGROUP
-#define ROOT_RDF_RDATASETGROUP
+#ifndef ROOT_RDF_RSAMPLE
+#define ROOT_RDF_RSAMPLE
 
 #include <ROOT/RDF/RMetaData.hxx>
 
@@ -22,12 +22,12 @@ namespace Experimental {
 
 /**
 \ingroup dataframe
-\brief Class representing a dataset group (mapping of trees (and their fileglobs) to metadata)
+\brief Class representing a sample (grouping of trees (and their fileglobs) and (optional) metadata)
 
  This class should be passed to RDatasetSpec in order to build a RDataFrame.
 */
-class RDatasetGroup {
-   std::string fGroupName;
+class RSample {
+   std::string fSampleName;
    /**
     * A list of names of trees.
     * This list should go in lockstep with fFileNameGlobs, only in case this dataset is a TChain where each file
@@ -42,36 +42,35 @@ class RDatasetGroup {
    std::vector<std::string> fFileNameGlobs;
    RMetaData fMetaData;
 
-   unsigned int fGroupId{0}; // global group index, set inside of the RDatasetSpec
+   unsigned int fSampleId{0}; // global sample index, set inside of the RDatasetSpec
 
 public:
-   RDatasetGroup(RDatasetGroup &&) = default;
-   RDatasetGroup &operator=(RDatasetGroup &&) = default;
-   RDatasetGroup(const RDatasetGroup &) = default;
-   RDatasetGroup &operator=(const RDatasetGroup &) = default;
-   RDatasetGroup() = delete;
+   RSample(RSample &&) = default;
+   RSample &operator=(RSample &&) = default;
+   RSample(const RSample &) = default;
+   RSample &operator=(const RSample &) = default;
+   RSample() = delete;
 
-   RDatasetGroup(const std::string &groupName, const std::string &treeName, const std::string &fileNameGlob,
-                 const RMetaData &metaData = {});
+   RSample(const std::string &sampleName, const std::string &treeName, const std::string &fileNameGlob,
+           const RMetaData &metaData = {});
 
-   RDatasetGroup(const std::string &groupName, const std::string &treeName,
-                 const std::vector<std::string> &fileNameGlobs, const RMetaData &metaData = {});
+   RSample(const std::string &sampleName, const std::string &treeName, const std::vector<std::string> &fileNameGlobs,
+           const RMetaData &metaData = {});
 
-   RDatasetGroup(const std::string &groupName,
-                 const std::vector<std::pair<std::string, std::string>> &treeAndFileNameGlobs,
-                 const RMetaData &metaData = {});
+   RSample(const std::string &sampleName, const std::vector<std::pair<std::string, std::string>> &treeAndFileNameGlobs,
+           const RMetaData &metaData = {});
 
-   RDatasetGroup(const std::string &groupName, const std::vector<std::string> &treeNames,
-                 const std::vector<std::string> &fileNameGlobs, const RMetaData &metaData = {});
+   RSample(const std::string &sampleName, const std::vector<std::string> &treeNames,
+           const std::vector<std::string> &fileNameGlobs, const RMetaData &metaData = {});
 
-   const std::string &GetGroupName() const;
+   const std::string &GetSampleName() const;
    const std::vector<std::string> &GetTreeNames() const;
    const std::vector<std::string> &GetFileNameGlobs() const;
    const RMetaData &GetMetaData() const;
 
    /// \cond HIDDEN_SYMBOLS
-   unsigned int GetGroupId() const; // intended to be used only after the RDataSpec is build, otherwise is 0
-   void SetGroupId(unsigned int id);
+   unsigned int GetSampleId() const; // intended to be used only after the RDataSpec is build, otherwise is 0
+   void SetSampleId(unsigned int id);
    /// \endcond
 };
 
@@ -79,4 +78,4 @@ public:
 } // namespace RDF
 } // namespace ROOT
 
-#endif // ROOT_RDF_RDATASETGROUP
+#endif // ROOT_RDF_RSAMPLE

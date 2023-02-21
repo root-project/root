@@ -1479,14 +1479,14 @@ ROOT::RDataFrame FromSpec(const std::string &jsonFile)
    const nlohmann::json fullData = nlohmann::json::parse(std::ifstream(jsonFile));
    RDatasetSpec spec;
 
-   for (const auto &groups : fullData["groups"]) {
-      std::string tag = groups["tag"];
+   for (const auto &sample : fullData["samples"]) {
+      std::string tag = sample["tag"];
       // TODO: if requested in https://github.com/root-project/root/issues/11624
       // allow union-like types for trees and files, see: https://github.com/nlohmann/json/discussions/3815
-      std::vector<std::string> trees = groups["trees"];
-      std::vector<std::string> files = groups["files"];
+      std::vector<std::string> trees = sample["trees"];
+      std::vector<std::string> files = sample["files"];
       RMetaData m;
-      for (const auto &metadata : groups["metadata"].items()) {
+      for (const auto &metadata : sample["metadata"].items()) {
          const auto &val = metadata.value();
          if (val.is_string())
             m.Add(metadata.key(), val.get<std::string>());
@@ -1497,7 +1497,7 @@ ROOT::RDataFrame FromSpec(const std::string &jsonFile)
          else
             throw std::logic_error("The metadata keys can only be of type [string|int|double].");
       }
-      spec.AddGroup(RDatasetGroup{tag, trees, files, m});
+      spec.AddSample(RSample{tag, trees, files, m});
    }
    if (fullData.contains("friends")) {
       for (const auto &friends : fullData["friends"].items()) {

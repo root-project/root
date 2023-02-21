@@ -76,15 +76,15 @@ class RDatasetSpecTest(unittest.TestCase):
             metaB.Add("lumi", 0.5)
 
             spec = RDatasetSpec()
-            spec.AddGroup(
+            spec.AddSample(
                 (
-                    "groupA",
+                    "sampleA",
                     ["subTree1", "subTree2"],
                     ["PYspecTestFile5.root", "PYspecTestFile6.root"],
                     metaA,
                 )
             )
-            spec.AddGroup(("groupB", "subTree", "PYspecTestFile4.root", metaB))
+            spec.AddSample(("sampleB", "subTree", "PYspecTestFile4.root", metaB))
             spec.WithGlobalRange(r)
             spec.WithGlobalFriends("anotherTree", "PYspecTestFile7.root", "friendTree")
             spec.WithGlobalFriends(
@@ -140,7 +140,7 @@ class RDatasetSpecTest(unittest.TestCase):
 
     def test_FromSpec(self):
         rdf = ROOT.RDF.Experimental.FromSpec("spec.json")
-        rdf = rdf.DefinePerSample("name", "rdfsampleinfo_.GetGroupName()")
+        rdf = rdf.DefinePerSample("name", "rdfsampleinfo_.GetSampleName()")
         rdf = rdf.DefinePerSample("lumi", 'rdfsampleinfo_.GetD("lumi")')
 
         if self.legacy_pyroot:
@@ -163,7 +163,7 @@ class RDatasetSpecTest(unittest.TestCase):
         fr2 = fr2P.GetValue()
 
         expectedRes = [101, 102, 103, 104]
-        names = ["groupA", "groupA", "groupA", "groupB"]
+        names = ["sampleA", "sampleA", "sampleA", "sampleB"]
         lumis = [1.0, 1.0, 1.0, 0.5]
 
         self.assertEqual(len(res), len(expectedRes))

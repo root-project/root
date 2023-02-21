@@ -8,7 +8,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "ROOT/RDF/RDatasetGroup.hxx"
+#include "ROOT/RDF/RSample.hxx"
 #include "TChain.h"
 #include <stdexcept> // std::logic_error
 
@@ -16,22 +16,22 @@ namespace ROOT {
 namespace RDF {
 namespace Experimental {
 
-RDatasetGroup::RDatasetGroup(const std::string &groupName, const std::string &treeName, const std::string &fileNameGlob,
-                             const RMetaData &metaData)
-   : RDatasetGroup(groupName, std::vector<std::string>{treeName}, std::vector<std::string>{fileNameGlob}, metaData)
+RSample::RSample(const std::string &sampleName, const std::string &treeName, const std::string &fileNameGlob,
+                 const RMetaData &metaData)
+   : RSample(sampleName, std::vector<std::string>{treeName}, std::vector<std::string>{fileNameGlob}, metaData)
 {
 }
 
-RDatasetGroup::RDatasetGroup(const std::string &groupName, const std::string &treeName,
-                             const std::vector<std::string> &fileNameGlobs, const RMetaData &metaData)
-   : RDatasetGroup(groupName, std::vector<std::string>(fileNameGlobs.size(), treeName), fileNameGlobs, metaData)
+RSample::RSample(const std::string &sampleName, const std::string &treeName,
+                 const std::vector<std::string> &fileNameGlobs, const RMetaData &metaData)
+   : RSample(sampleName, std::vector<std::string>(fileNameGlobs.size(), treeName), fileNameGlobs, metaData)
 {
 }
 
-RDatasetGroup::RDatasetGroup(const std::string &groupName,
-                             const std::vector<std::pair<std::string, std::string>> &treeAndFileNameGlobs,
-                             const RMetaData &metaData)
-   : fGroupName(groupName), fMetaData(metaData)
+RSample::RSample(const std::string &sampleName,
+                 const std::vector<std::pair<std::string, std::string>> &treeAndFileNameGlobs,
+                 const RMetaData &metaData)
+   : fSampleName(sampleName), fMetaData(metaData)
 {
    // avoid constructing and destructing the helper TChain here if we don't need to
    if (treeAndFileNameGlobs.empty())
@@ -51,9 +51,9 @@ RDatasetGroup::RDatasetGroup(const std::string &groupName,
    }
 }
 
-RDatasetGroup::RDatasetGroup(const std::string &groupName, const std::vector<std::string> &treeNames,
-                             const std::vector<std::string> &fileNameGlobs, const RMetaData &metaData)
-   : fGroupName(groupName), fMetaData(metaData)
+RSample::RSample(const std::string &sampleName, const std::vector<std::string> &treeNames,
+                 const std::vector<std::string> &fileNameGlobs, const RMetaData &metaData)
+   : fSampleName(sampleName), fMetaData(metaData)
 {
    if (treeNames.size() != 1 && treeNames.size() != fileNameGlobs.size())
       throw std::logic_error("Mismatch between number of trees and file globs.");
@@ -71,34 +71,34 @@ RDatasetGroup::RDatasetGroup(const std::string &groupName, const std::vector<std
    }
 }
 
-const std::string &RDatasetGroup::GetGroupName() const
+const std::string &RSample::GetSampleName() const
 {
-   return fGroupName;
+   return fSampleName;
 }
 
-const std::vector<std::string> &RDatasetGroup::GetTreeNames() const
+const std::vector<std::string> &RSample::GetTreeNames() const
 {
    return fTreeNames;
 }
 
-const std::vector<std::string> &RDatasetGroup::GetFileNameGlobs() const
+const std::vector<std::string> &RSample::GetFileNameGlobs() const
 {
    return fFileNameGlobs;
 }
 
-const RMetaData &RDatasetGroup::GetMetaData() const
+const RMetaData &RSample::GetMetaData() const
 {
    return fMetaData;
 }
 
-unsigned int RDatasetGroup::GetGroupId() const
+unsigned int RSample::GetSampleId() const
 {
-   return fGroupId;
+   return fSampleId;
 }
 
-void RDatasetGroup::SetGroupId(unsigned int id)
+void RSample::SetSampleId(unsigned int id)
 {
-   fGroupId = id;
+   fSampleId = id;
 }
 
 } // namespace Experimental

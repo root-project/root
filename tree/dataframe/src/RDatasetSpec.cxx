@@ -28,20 +28,20 @@ RDatasetSpec::REntryRange::REntryRange(Long64_t begin, Long64_t end) : fBegin(be
                              "creation of a dataset specification.");
 }
 
-const std::vector<std::string> RDatasetSpec::GetGroupNames() const
+const std::vector<std::string> RDatasetSpec::GetSampleNames() const
 {
-   std::vector<std::string> groupNames;
-   groupNames.reserve(fDatasetGroups.size());
-   for (const auto &group : fDatasetGroups)
-      groupNames.emplace_back(group.GetGroupName());
-   return groupNames;
+   std::vector<std::string> sampleNames;
+   sampleNames.reserve(fSamples.size());
+   for (const auto &sample : fSamples)
+      sampleNames.emplace_back(sample.GetSampleName());
+   return sampleNames;
 }
 
 const std::vector<std::string> RDatasetSpec::GetTreeNames() const
 {
    std::vector<std::string> treeNames;
-   for (const auto &group : fDatasetGroups) {
-      const auto &trees = group.GetTreeNames();
+   for (const auto &sample : fSamples) {
+      const auto &trees = sample.GetTreeNames();
       treeNames.insert(std::end(treeNames), std::begin(trees), std::end(trees));
    }
    return treeNames;
@@ -50,8 +50,8 @@ const std::vector<std::string> RDatasetSpec::GetTreeNames() const
 const std::vector<std::string> RDatasetSpec::GetFileNameGlobs() const
 {
    std::vector<std::string> fileNames;
-   for (const auto &group : fDatasetGroups) {
-      const auto &files = group.GetFileNameGlobs();
+   for (const auto &sample : fSamples) {
+      const auto &files = sample.GetFileNameGlobs();
       fileNames.insert(std::end(fileNames), std::begin(files), std::end(files));
    }
    return fileNames;
@@ -60,9 +60,9 @@ const std::vector<std::string> RDatasetSpec::GetFileNameGlobs() const
 const std::vector<RMetaData> RDatasetSpec::GetMetaData() const
 {
    std::vector<RMetaData> metaDatas;
-   metaDatas.reserve(fDatasetGroups.size());
-   for (const auto &group : fDatasetGroups)
-      metaDatas.emplace_back(group.GetMetaData());
+   metaDatas.reserve(fSamples.size());
+   for (const auto &sample : fSamples)
+      metaDatas.emplace_back(sample.GetMetaData());
    return metaDatas;
 }
 
@@ -81,15 +81,15 @@ Long64_t RDatasetSpec::GetEntryRangeEnd() const
    return fEntryRange.fEnd;
 }
 
-std::vector<RDatasetGroup> RDatasetSpec::MoveOutDatasetGroups()
+std::vector<RSample> RDatasetSpec::MoveOutSamples()
 {
-   return std::move(fDatasetGroups);
+   return std::move(fSamples);
 }
 
-RDatasetSpec &RDatasetSpec::AddGroup(RDatasetGroup datasetGroup)
+RDatasetSpec &RDatasetSpec::AddSample(RSample sample)
 {
-   datasetGroup.SetGroupId(fDatasetGroups.size());
-   fDatasetGroups.push_back(std::move(datasetGroup));
+   sample.SetSampleId(fSamples.size());
+   fSamples.push_back(std::move(sample));
    return *this;
 }
 
