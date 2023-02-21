@@ -1,7 +1,6 @@
 {
-   "samples": [
-      {
-         "tag": "sampleA",
+   "samples": {
+      "sampleA": {
          "trees": [
             "subTree1",
             "subTree2"
@@ -14,8 +13,7 @@
             "lumi": 1.0
          }
       },
-      {
-         "tag": "sampleB",
+      "sampleB": {
          "trees": [
             "subTree"
          ],
@@ -26,7 +24,7 @@
             "lumi": 0.5
          }
       }
-   ],
+   },
    "friends": {
       "friendTree": {
          "trees": [
