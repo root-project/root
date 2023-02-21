@@ -11,7 +11,7 @@
 #ifndef ROOT_RDF_RSAMPLEINFO
 #define ROOT_RDF_RSAMPLEINFO
 
-#include <ROOT/RDF/RDatasetGroup.hxx>
+#include <ROOT/RDF/RSample.hxx>
 #include <ROOT/RStringView.hxx>
 #include <Rtypes.h>
 
@@ -36,20 +36,20 @@ class RSampleInfo {
    std::string fID;
    std::pair<ULong64_t, ULong64_t> fEntryRange;
 
-   const ROOT::RDF::Experimental::RDatasetGroup *fDatasetGroup = nullptr; // non-owning
+   const ROOT::RDF::Experimental::RSample *fSample = nullptr; // non-owning
 
-   void ThrowIfNoDatasetGroup() const
+   void ThrowIfNoSample() const
    {
-      if (fDatasetGroup == nullptr) {
-         const auto msg = "RSampleInfo: dataset group data was requested but no dataset groups are available.";
+      if (fSample == nullptr) {
+         const auto msg = "RSampleInfo: sample data was requested but no samples are available.";
          throw std::logic_error(msg);
       }
    }
 
 public:
    RSampleInfo(std::string_view id, std::pair<ULong64_t, ULong64_t> entryRange,
-               const ROOT::RDF::Experimental::RDatasetGroup *datasetGroup = nullptr)
-      : fID(id), fEntryRange(entryRange), fDatasetGroup(datasetGroup)
+               const ROOT::RDF::Experimental::RSample *sample = nullptr)
+      : fID(id), fEntryRange(entryRange), fSample(sample)
    {
    }
    RSampleInfo() = default;
@@ -59,34 +59,34 @@ public:
    RSampleInfo &operator=(RSampleInfo &&) = default;
    ~RSampleInfo() = default;
 
-   const std::string &GetGroupName() const
+   const std::string &GetSampleName() const
    {
-      ThrowIfNoDatasetGroup();
-      return fDatasetGroup->GetGroupName();
+      ThrowIfNoSample();
+      return fSample->GetSampleName();
    }
 
-   unsigned int GetGroupId() const
+   unsigned int GetSampleId() const
    {
-      ThrowIfNoDatasetGroup();
-      return fDatasetGroup->GetGroupId();
+      ThrowIfNoSample();
+      return fSample->GetSampleId();
    }
 
    int GetI(const std::string &key) const
    {
-      ThrowIfNoDatasetGroup();
-      return fDatasetGroup->GetMetaData().GetI(key);
+      ThrowIfNoSample();
+      return fSample->GetMetaData().GetI(key);
    }
 
    double GetD(const std::string &key) const
    {
-      ThrowIfNoDatasetGroup();
-      return fDatasetGroup->GetMetaData().GetD(key);
+      ThrowIfNoSample();
+      return fSample->GetMetaData().GetD(key);
    }
 
    std::string GetS(const std::string &key) const
    {
-      ThrowIfNoDatasetGroup();
-      return fDatasetGroup->GetMetaData().GetS(key);
+      ThrowIfNoSample();
+      return fSample->GetMetaData().GetS(key);
    }
 
    /// Check whether the sample name contains the given substring.
