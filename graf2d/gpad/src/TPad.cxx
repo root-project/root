@@ -5868,8 +5868,12 @@ void TPad::SavePrimitive(std::ostream &out, Option_t * option /*= ""*/)
          if (!strcmp(obj->GetName(),"Graph"))
             ((TGraph*)obj)->SetName(TString::Format("Graph%d",grnum++).Data());
       obj->SavePrimitive(out, (Option_t *)next.GetOption());
-      if (obj->InheritsFrom(TPad::Class()) and !opt.Contains("toplevel"))
-         out<<"   "<<pname<<"->cd();"<<std::endl;
+      if (obj->InheritsFrom(TPad::Class())) {
+         if (opt.Contains("toplevel"))
+            out<<"   "<<pname<<"->cd();"<<std::endl;
+         else
+            out<<"   "<<cname<<"->cd();"<<std::endl;
+      }
    }
    out<<"   "<<cname<<"->Modified();"<<std::endl;
 }
