@@ -23,7 +23,7 @@
     "distributions": {
         "model_channel1": {
             "type": "histfactory",
-            "observables": {
+            "variables": {
                 "obs_x_channel1": {
                     "nbins": 2,
                     "min": 1,
@@ -43,7 +43,7 @@
                     ],
                     "statError": 0,
                     "data": {
-                        "counts": [
+                        "contents": [
                             20,
                             10
                         ]
@@ -58,7 +58,7 @@
                     },
                     "statError": 1,
                     "data": {
-                        "counts": [
+                        "contents": [
                             100,
                             0
                         ],
@@ -80,7 +80,7 @@
                     },
                     "statError": 1,
                     "data": {
-                        "counts": [
+                        "contents": [
                             0,
                             100
                         ],
@@ -105,23 +105,23 @@
             ]
         }
     },
-    "estimates": {
+    "parameter_points": {
         "default_values": {
             "mu": {
                 "value": 1
             }
         }
     },
-    "observations": {
+    "data": {
         "observed_channel1": {
-            "observables": {
+            "variables": {
                 "obs_x_channel1": {
                     "nbins": 2,
                     "min": 1,
                     "max": 2
                 }
             },
-            "counts": [
+            "contents": [
                 122,
                 112
             ]
