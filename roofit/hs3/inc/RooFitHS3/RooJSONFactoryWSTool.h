@@ -144,6 +144,22 @@ public:
    static RooFit::Detail::JSONNode &makeVariablesNode(RooFit::Detail::JSONNode &rootNode);
    static RooFit::Detail::JSONNode const *getVariablesNode(RooFit::Detail::JSONNode const &rootNode);
 
+   // error handling helpers
+   class DependencyMissingError : public std::exception {
+      std::string _parent, _child, _class, _message;
+
+   public:
+      DependencyMissingError(const std::string &p, const std::string &c, const std::string &classname)
+         : _parent(p), _child(c), _class(classname)
+      {
+         _message = "object '" + _parent + "' is missing dependency '" + _child + "' of type '" + _class + "'";
+      };
+      const std::string &parent() const { return _parent; }
+      const std::string &child() const { return _child; }
+      const std::string &classname() const { return _class; }
+      const char *what() const noexcept override { return _message.c_str(); }
+   };
+
 private:
    struct Config {
       static bool stripObservables;
@@ -162,22 +178,6 @@ private:
    std::map<std::string, std::unique_ptr<RooAbsData>> loadData(const RooFit::Detail::JSONNode &n);
    std::unique_ptr<RooDataSet> unbinned(RooDataHist const &hist);
    static RooRealVar *createObservable(RooWorkspace &ws, const std::string &name, const RooJSONFactoryWSTool::Var &var);
-
-   // error handling helpers
-   class DependencyMissingError : public std::exception {
-      std::string _parent, _child, _class, _message;
-
-   public:
-      DependencyMissingError(const std::string &p, const std::string &c, const std::string &classname)
-         : _parent(p), _child(c), _class(classname)
-      {
-         _message = "object '" + _parent + "' is missing dependency '" + _child + "' of type '" + _class + "'";
-      };
-      const std::string &parent() const { return _parent; }
-      const std::string &child() const { return _child; }
-      const std::string &classname() const { return _class; }
-      const char *what() const noexcept override { return _message.c_str(); }
-   };
 
    template <class T>
    T *requestImpl(const std::string &objname);
