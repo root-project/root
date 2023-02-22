@@ -48,7 +48,7 @@ namespace TestStatistics {
 MinuitFcnGrad::MinuitFcnGrad(const std::shared_ptr<RooFit::TestStatistics::RooAbsL> &_likelihood, RooMinimizer *context,
                              std::vector<ROOT::Fit::ParameterSettings> &parameters, LikelihoodMode likelihoodMode,
                              LikelihoodGradientMode likelihoodGradientMode)
-   : RooAbsMinimizerFcn(RooArgList(*_likelihood->getParameters()), context), minuit_internal_x_(NDim(), 0),
+   : RooAbsMinimizerFcn(*_likelihood->getParameters(), context), minuit_internal_x_(NDim(), 0),
      minuit_external_x_(NDim(), 0)
 {
    synchronizeParameterSettings(parameters, true);

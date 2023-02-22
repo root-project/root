@@ -99,7 +99,7 @@ public:
    evaluatePartition(Section events, std::size_t components_begin, std::size_t components_end) = 0;
 
    // necessary from MinuitFcnGrad to reach likelihood properties:
-   virtual RooArgSet *getParameters();
+   virtual std::unique_ptr<RooArgSet> getParameters();
 
    /// \brief Interface function signaling a request to perform constant term optimization.
    ///
