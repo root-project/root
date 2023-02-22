@@ -1503,7 +1503,13 @@ ROOT::RDataFrame FromSpec(const std::string &jsonFile)
       const auto &sample = keyValue.value();
       // TODO: if requested in https://github.com/root-project/root/issues/11624
       // allow union-like types for trees and files, see: https://github.com/nlohmann/json/discussions/3815
+      if (!sample.contains("trees")) {
+         throw std::runtime_error("A list of tree names must be provided for sample " + sampleName + ".");
+      }
       std::vector<std::string> trees = sample["trees"];
+      if (!sample.contains("files")) {
+         throw std::runtime_error("A list of files must be provided for sample " + sampleName + ".");
+      }
       std::vector<std::string> files = sample["files"];
       RMetaData m;
       for (const auto &metadata : sample["metadata"].items()) {
