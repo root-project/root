@@ -295,6 +295,30 @@ std::unique_ptr<ParamHistFunc> createPHFMCStat(const std::string &name, const st
    return phf;
 }
 
+bool has_staterror(const JSONNode &comp)
+{
+   if (comp.has_child("modifiers")) {
+      for (const auto &mod : comp["modifiers"].children()) {
+         if (mod["type"].val() == "staterror")
+            return true;
+      }
+   }
+   return false;
+}
+
+RooDataHist *getBinnedData(RooWorkspace &ws, const JSONNode &p, const Scope &scope, std::string const &binnedDataName)
+{
+   RooArgSet varlist;
+   scope.getObservables(varlist);
+   auto *dh = dynamic_cast<RooDataHist *>(ws.embeddedData(binnedDataName));
+   if (!dh) {
+      auto dhForImport = RooJSONFactoryWSTool::readBinnedData(p["data"], binnedDataName, varlist);
+      ws.import(*dhForImport, RooFit::Silence(true), RooFit::Embedded());
+      dh = static_cast<RooDataHist *>(ws.embeddedData(dhForImport->GetName()));
+   }
+   return dh;
+}
+
 std::unique_ptr<ParamHistFunc> createPHFShapeSys(const JSONNode &p, const std::string &phfname, RooWorkspace &w,
                                                  RooArgList &constraints, const RooArgSet &observables)
 {
@@ -307,47 +331,34 @@ std::unique_ptr<ParamHistFunc> createPHFShapeSys(const JSONNode &p, const std::s
    return createPHF(sysname, phfname, vals, w, constraints, observables, p["constraint"].val(), gammas, 0, 1000);
 }
 
-bool importHistSample(RooWorkspace &ws, Scope &scope, const JSONNode &p, RooArgList &constraints)
+bool importHistSample(RooWorkspace &ws, RooDataHist &dh, Scope &scope, const std::string &fprefix, const JSONNode &p,
+                      RooArgList &constraints)
 {
-   std::string name(RooJSONFactoryWSTool::name(p));
-   std::string prefix = RooJSONFactoryWSTool::genPrefix(p, true);
-   if (prefix.size() > 0)
-      name = prefix + name;
+   std::string name = p["name"].val();
+   std::string name_with_prefix = fprefix + "_" + name;
+
    if (!p.has_child("data")) {
-      RooJSONFactoryWSTool::error("function '" + name + "' is of histogram type, but does not define a 'data' key");
+      RooJSONFactoryWSTool::error("sample '" + name + "' does not define a 'data' key");
    }
 
    std::stack<std::unique_ptr<RooAbsArg>> ownedArgsStack;
    RooArgSet shapeElems;
    RooArgSet normElems;
-   RooArgSet varlist;
-   scope.getObservables(varlist);
 
-   auto getBinnedData = [&](std::string const &binnedDataName) -> RooDataHist & {
-      auto *dh = dynamic_cast<RooDataHist *>(ws.embeddedData(binnedDataName));
-      if (!dh) {
-         auto dhForImport = RooJSONFactoryWSTool::readBinnedData(p["data"], binnedDataName, varlist);
-         ws.import(*dhForImport, RooFit::Silence(true), RooFit::Embedded());
-         dh = static_cast<RooDataHist *>(ws.embeddedData(dhForImport->GetName()));
-      }
-      return *dh;
-   };
-
-   RooDataHist &dh = getBinnedData(name);
-   auto hf =
-      std::make_unique<RooHistFunc>(("hist_" + name).c_str(), RooJSONFactoryWSTool::name(p).c_str(), *(dh.get()), dh);
-   ownedArgsStack.push(std::make_unique<RooBinWidthFunction>(
-      TString::Format("%s_binWidth", (!prefix.empty() ? prefix : name).c_str()).Data(),
-      TString::Format("%s_binWidth", (!prefix.empty() ? prefix : name).c_str()).Data(), *hf, true));
+   auto hf = std::make_unique<RooHistFunc>(("hist_" + name_with_prefix).c_str(), RooJSONFactoryWSTool::name(p).c_str(),
+                                           *(dh.get()), dh);
+   ownedArgsStack.push(std::make_unique<RooBinWidthFunction>(TString::Format("%s_binWidth", name_with_prefix.c_str()),
+                                                             TString::Format("%s_binWidth", name_with_prefix.c_str()),
+                                                             *hf, true));
    shapeElems.add(*ownedArgsStack.top());
 
-   if (p.has_child("statError") && p["statError"].val_bool()) {
+   if (has_staterror(p)) {
       RooAbsArg *phf = scope.getObject("mcstat");
       if (phf) {
          shapeElems.add(*phf);
       } else {
-         RooJSONFactoryWSTool::error("function '" + name +
-                                     "' has 'statError' active, but no element called 'mcstat' in scope!");
+         RooJSONFactoryWSTool::error("sample '" + name +
+                                     "' has 'staterror' active, but no element called 'mcstat' in scope!");
       }
    }
 
@@ -388,20 +399,24 @@ bool importHistSample(RooWorkspace &ws, Scope &scope, const JSONNode &p, RooArgL
                                                            : "alpha_" + sysname);
             RooAbsReal *par = ::getNP(ws, parname.c_str());
             histo_nps.add(*par);
-            RooDataHist &dh_low = getBinnedData(sysname + "Low_" + name);
-            ownedArgsStack.push(std::make_unique<RooHistFunc>(
-               (sysname + "Low_" + name).c_str(), RooJSONFactoryWSTool::name(p).c_str(), *(dh_low.get()), dh_low));
+            RooDataHist *dh_low = getBinnedData(ws, p, scope, sysname + "Low_" + name_with_prefix);
+            ownedArgsStack.push(std::make_unique<RooHistFunc>((sysname + "Low_" + name_with_prefix).c_str(),
+                                                              (sysname + "Low_" + name_with_prefix).c_str(),
+                                                              *(dh_low->get()), *dh_low));
             histo_low.add(*ownedArgsStack.top());
-            RooDataHist &dh_high = getBinnedData(sysname + "High_" + name);
-            ownedArgsStack.push(std::make_unique<RooHistFunc>(
-               (sysname + "High_" + name).c_str(), RooJSONFactoryWSTool::name(p).c_str(), *(dh_high.get()), dh_high));
+            RooDataHist *dh_high = getBinnedData(ws, p, scope, sysname + "High_" + name_with_prefix);
+            ownedArgsStack.push(std::make_unique<RooHistFunc>((sysname + "High_" + name_with_prefix).c_str(),
+                                                              (sysname + "Low_" + name_with_prefix).c_str(),
+                                                              *(dh_high->get()), *dh_high));
             histo_high.add(*ownedArgsStack.top());
             constraints.add(*getConstraint(ws, sysname, parname));
          } else if (modtype == "shapesys") {
             std::string sysname(mod["name"].val());
-            std::string funcName = prefix + sysname + "_ShapeSys";
+            std::string funcName = name_with_prefix + "_" + sysname + "_ShapeSys";
             RooAbsArg *phf = scope.getObject(funcName);
             if (!phf) {
+               RooArgSet varlist;
+               scope.getObservables(varlist);
                auto newphf = createPHFShapeSys(mod, funcName, ws, constraints, varlist);
                ws.import(*newphf, RooFit::RecycleConflictNodes(), RooFit::Silence(true));
                scope.setObject(funcName, ws.function(funcName.c_str()));
@@ -416,14 +431,16 @@ bool importHistSample(RooWorkspace &ws, Scope &scope, const JSONNode &p, RooArgL
 
       if (overall_nps.size() > 0) {
          auto v = std::make_unique<RooStats::HistFactory::FlexibleInterpVar>(
-            ("overallSys_" + name).c_str(), ("overallSys_" + name).c_str(), overall_nps, 1., overall_low, overall_high);
+            ("overallSys_" + name_with_prefix).c_str(), ("overallSys_" + name_with_prefix).c_str(), overall_nps, 1.,
+            overall_low, overall_high);
          v->setAllInterpCodes(4); // default HistFactory interpCode
          normElems.add(*v);
          ownedArgsStack.push(std::move(v));
       }
       if (histo_nps.size() > 0) {
-         auto v = std::make_unique<PiecewiseInterpolation>(("histoSys_" + name).c_str(), ("histoSys_" + name).c_str(),
-                                                           *hf, histo_low, histo_high, histo_nps, false);
+         auto v = std::make_unique<PiecewiseInterpolation>(("histoSys_" + name_with_prefix).c_str(),
+                                                           ("histoSys_" + name_with_prefix).c_str(), *hf, histo_low,
+                                                           histo_high, histo_nps, false);
          v->setAllInterpCodes(4); // default interpCode for HistFactory
          shapeElems.add(*v);
          ownedArgsStack.push(std::move(v));
@@ -433,13 +450,14 @@ bool importHistSample(RooWorkspace &ws, Scope &scope, const JSONNode &p, RooArgL
       }
    }
 
-   RooProduct shape((name + "_shapes").c_str(), (name + "_shapes").c_str(), shapeElems);
+   RooProduct shape((name_with_prefix + "_shapes").c_str(), (name_with_prefix + "_shapes").c_str(), shapeElems);
    ws.import(shape, RooFit::RecycleConflictNodes(true), RooFit::Silence(true));
-   if (normElems.size() > 0) {
-      RooProduct norm((name + "_scaleFactors").c_str(), (name + "_scaleFactors").c_str(), normElems);
+   if (!normElems.empty()) {
+      RooProduct norm((name_with_prefix + "_scaleFactors").c_str(), (name_with_prefix + "_scaleFactors").c_str(),
+                      normElems);
       ws.import(norm, RooFit::RecycleConflictNodes(true), RooFit::Silence(true));
    } else {
-      ws.factory("RooConstVar::" + name + "_scaleFactors(1.)");
+      ws.factory("RooConstVar::" + name_with_prefix + "_scaleFactors(1.)");
    }
 
    return true;
@@ -453,7 +471,7 @@ public:
 
       Scope scope;
 
-      std::string name(RooJSONFactoryWSTool::name(p));
+      std::string name = p["name"].val();
       RooArgList funcs;
       RooArgList coefs;
       RooArgList constraints;
@@ -479,25 +497,46 @@ public:
          RooJSONFactoryWSTool::getObservables(ws, p, name, observables);
          scope.setObservables(observables);
       }
-      for (const auto &comp : p["samples"].children()) {
-         std::string fname(comp["name"].val() + "_shapes");
-         std::string coefname(comp["name"].val() + "_scaleFactors");
-         std::string fprefix = RooJSONFactoryWSTool::genPrefix(comp, true);
 
+      std::string fprefix = name;
+
+      std::vector<RooDataHist *> data;
+      for (const auto &comp : p["samples"].children()) {
          if (observables.empty()) {
             RooJSONFactoryWSTool::getObservables(ws, comp["data"], fprefix, observables);
             scope.setObservables(observables);
          }
 
-         for (const auto &sampleNode : p["samples"].children()) {
-            importHistSample(ws, scope, sampleNode, constraints);
+         auto dh = getBinnedData(ws, comp, scope, fprefix + "_" + comp["name"].val() + "_dataHist");
+         size_t nbins = dh->numEntries();
+
+         if (sumW.size() == 0) {
+            sumW.resize(nbins);
+            sumW2.resize(nbins);
          }
 
-         auto phf = createPHFMCStat(name, sumW, sumW2, ws, constraints, observables, statErrorThreshold, statErrorType);
-         if (phf) {
-            ws.import(*phf, RooFit::RecycleConflictNodes(), RooFit::Silence(true));
-            scope.setObject("mcstat", ws.function(phf->GetName()));
+         if (has_staterror(comp)) {
+            for (size_t i = 0; i < nbins; ++i) {
+               sumW[i] += dh->weight(i);
+               sumW2[i] += dh->weightSquared(i);
+            }
          }
+         data.push_back(dh);
+      }
+
+      auto phf = createPHFMCStat(name, sumW, sumW2, ws, constraints, observables, statErrorThreshold, statErrorType);
+      if (phf) {
+         ws.import(*phf, RooFit::RecycleConflictNodes(), RooFit::Silence(true));
+         scope.setObject("mcstat", ws.function(phf->GetName()));
+      }
+
+      int idx = 0;
+      for (const auto &comp : p["samples"].children()) {
+         std::string fname(fprefix + "_" + comp["name"].val() + "_shapes");
+         std::string coefname(fprefix + "_" + comp["name"].val() + "_scaleFactors");
+
+         importHistSample(ws, *data[idx], scope, fprefix, comp, constraints);
+         ++idx;
 
          RooAbsReal *func = tool->request<RooAbsReal>(fname.c_str(), name);
          funcs.add(*func);
