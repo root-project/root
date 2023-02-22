@@ -1511,19 +1511,23 @@ ROOT::RDataFrame FromSpec(const std::string &jsonFile)
          throw std::runtime_error("A list of files must be provided for sample " + sampleName + ".");
       }
       std::vector<std::string> files = sample["files"];
-      RMetaData m;
-      for (const auto &metadata : sample["metadata"].items()) {
-         const auto &val = metadata.value();
-         if (val.is_string())
-            m.Add(metadata.key(), val.get<std::string>());
-         else if (val.is_number_integer())
-            m.Add(metadata.key(), val.get<int>());
-         else if (val.is_number_float())
-            m.Add(metadata.key(), val.get<double>());
-         else
-            throw std::logic_error("The metadata keys can only be of type [string|int|double].");
+      if (!sample.contains("metadata")) {
+         spec.AddSample(RSample{sampleName, trees, files});
+      } else {
+         RMetaData m;
+         for (const auto &metadata : sample["metadata"].items()) {
+            const auto &val = metadata.value();
+            if (val.is_string())
+               m.Add(metadata.key(), val.get<std::string>());
+            else if (val.is_number_integer())
+               m.Add(metadata.key(), val.get<int>());
+            else if (val.is_number_float())
+               m.Add(metadata.key(), val.get<double>());
+            else
+               throw std::logic_error("The metadata keys can only be of type [string|int|double].");
+         }
+         spec.AddSample(RSample{sampleName, trees, files, m});
       }
-      spec.AddSample(RSample{sampleName, trees, files, m});
    }
    if (fullData.contains("friends")) {
       for (const auto &friends : fullData["friends"].items()) {
