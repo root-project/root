@@ -150,6 +150,10 @@ jobs:
 
           cat "$FILE" || true
 
+      - uses: olemorud/gcc-problem-matcher@v1.0
+        with:
+          build-directory: /tmp/workspace/src/
+
       - name: Pull Request Build
         if: github.event_name == 'pull_request'
         env:
