@@ -87,7 +87,6 @@ public:
       return fName;
     }
    
-   ~RModel_Base(){}
    ClassDef(RModel_Base,1);
 
 };
