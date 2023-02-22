@@ -971,7 +971,7 @@ RooJSONFactoryWSTool::createObservable(RooWorkspace &ws, const std::string &name
    return rrv;
 }
 
-std::unique_ptr<RooDataHist> RooJSONFactoryWSTool::readBinnedData(const JSONNode &n, const std::string &namecomp)
+std::unique_ptr<RooDataHist> RooJSONFactoryWSTool::readBinnedData(const JSONNode &n, const std::string &name)
 {
    RooArgList varlist;
 
@@ -982,13 +982,13 @@ std::unique_ptr<RooDataHist> RooJSONFactoryWSTool::readBinnedData(const JSONNode
       varlist.addOwned(std::move(var));
    }
 
-   return readBinnedData(n, namecomp, varlist);
+   return readBinnedData(n, name, varlist);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 // reading binned data
 std::unique_ptr<RooDataHist>
-RooJSONFactoryWSTool::readBinnedData(const JSONNode &n, const std::string &namecomp, RooArgList varlist)
+RooJSONFactoryWSTool::readBinnedData(const JSONNode &n, const std::string &name, RooArgList varlist)
 {
    if (!n.has_child("contents"))
       RooJSONFactoryWSTool::error("no contents given");
@@ -1000,7 +1000,7 @@ RooJSONFactoryWSTool::readBinnedData(const JSONNode &n, const std::string &namec
    if (contents.num_children() != bins.size())
       RooJSONFactoryWSTool::error(TString::Format("inconsistent bin numbers: contents=%d, bins=%d",
                                                   (int)contents.num_children(), (int)(bins.size())));
-   auto dh = std::make_unique<RooDataHist>(namecomp.c_str(), namecomp.c_str(), varlist);
+   auto dh = std::make_unique<RooDataHist>(name.c_str(), name.c_str(), varlist);
    // temporarily disable dirty flag propagation when filling the RDH
    std::vector<double> initVals;
    for (auto &v : varlist) {
