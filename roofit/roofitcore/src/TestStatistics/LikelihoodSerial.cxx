@@ -67,7 +67,7 @@ void LikelihoodSerial::initVars()
    _saveVars.removeAll();
 
    // Retrieve non-constant parameters
-   auto vars = std::make_unique<RooArgSet>(*likelihood_->getParameters());
+   std::unique_ptr<RooArgSet> vars{likelihood_->getParameters()};
 
    RooArgList varList(*vars);
 
