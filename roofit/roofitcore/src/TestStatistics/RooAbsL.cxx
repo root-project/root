@@ -219,10 +219,9 @@ void RooAbsL::initClones(RooAbsPdf &inpdf, RooAbsData &indata)
    data_->optimizeReadingWithCaching(*pdf_, RooArgSet(), RooArgSet());
 }
 
-RooArgSet *RooAbsL::getParameters()
+std::unique_ptr<RooArgSet> RooAbsL::getParameters()
 {
-   auto ding = pdf_->getParameters(*data_);
-   return ding;
+   return std::unique_ptr<RooArgSet>{pdf_->getParameters(*data_)};
 }
 
 void RooAbsL::constOptimizeTestStatistic(RooAbsArg::ConstOpCode opcode, bool doAlsoTrackingOpt)
