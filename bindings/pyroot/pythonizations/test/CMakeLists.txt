@@ -128,6 +128,13 @@ endif()
 # RTensor pythonizations
 if (dataframe AND tmva)
     if(NOT MSVC OR CMAKE_SIZEOF_VOID_P EQUAL 4 OR win_broken_tests)
+        ROOT_ADD_PYUNITTEST(pyroot_pyz_sofie_gnn sofie_gnn.py PYTHON_DEPS numpy)
+    endif()
+endif()
+
+# SOFIE-GNN pythonizations
+if (tmva AND sofie)
+    if(NOT MSVC OR CMAKE_SIZEOF_VOID_P EQUAL 4 OR win_broken_tests)
         ROOT_ADD_PYUNITTEST(pyroot_pyz_rtensor rtensor.py PYTHON_DEPS numpy)
     endif()
 endif()
