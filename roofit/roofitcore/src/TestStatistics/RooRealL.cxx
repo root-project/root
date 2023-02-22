@@ -31,8 +31,9 @@ RooRealL::RooRealL(const char *name, const char *title, std::shared_ptr<RooAbsL>
    : RooAbsReal(name, title), likelihood_(std::move(likelihood)),
      vars_proxy_("varsProxy", "proxy set of parameters", this)
 {
-   vars_obs_.add(*likelihood_->getParameters());
-   vars_proxy_.add(*likelihood_->getParameters());
+   std::unique_ptr<RooArgSet> params{likelihood_->getParameters()};
+   vars_obs_.add(*params);
+   vars_proxy_.add(*params);
 }
 
 RooRealL::RooRealL(const RooRealL &other, const char *name)

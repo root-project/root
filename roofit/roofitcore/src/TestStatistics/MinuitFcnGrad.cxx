@@ -82,7 +82,7 @@ private:
 MinuitFcnGrad::MinuitFcnGrad(const std::shared_ptr<RooFit::TestStatistics::RooAbsL> &absL, RooMinimizer *context,
                              std::vector<ROOT::Fit::ParameterSettings> &parameters, LikelihoodMode likelihoodMode,
                              LikelihoodGradientMode likelihoodGradientMode)
-   : RooAbsMinimizerFcn(RooArgList(*absL->getParameters()), context),
+   : RooAbsMinimizerFcn(*absL->getParameters(), context),
      _minuitInternalX(NDim(), 0),
      _minuitExternalX(NDim(), 0),
      _multiGenFcn{std::make_unique<MinuitGradFunctor>(*this)}
