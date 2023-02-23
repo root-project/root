@@ -227,6 +227,7 @@ The header consists of the following elements:
  - List frame: list of alias column record frames
  - List frame: list of extra type information
 
+The last four list frames containing information about fields and columns are collectively referred to as _Schema description_.
 The release candidate tag is used to mark unstable implementations of the file format.
 Production code sets the tag to zero.
 
@@ -400,7 +401,7 @@ The footer envelope has the following structure:
 
 - Feature flags
 - Header checksum (CRC32)
-- List frame of extension header envelope links
+- Schema extension record frame
 - List frame of column group record frames
 - List frame of cluster summary record frames
 - List frame of cluster group record frames
@@ -408,8 +409,9 @@ The footer envelope has the following structure:
 
 The header checksum can be used to cross-check that header and footer belong together.
 
-The extension headers are just additional headers with an empty name and description.
-They are necessary when fields have been backfilled during writing.
+The schema extension record frame contains an additional schema description that is incremental with respect to the schema contained in the header (see Section Header Envelope).
+The interpretation of the information contained therein should be identical as if it was found directly at the end of the header.
+This is necessary when fields have been added during writing.
 
 The ntuple meta-data can be split over multiple meta-data envelopes (see below).
 
