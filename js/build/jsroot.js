@@ -11,7 +11,7 @@ let version_id = '7.3.x';
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-let version_date = '10/02/2023';
+let version_date = '23/02/2023';
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -8237,8 +8237,8 @@ class BasePainter {
       }
 
       let rect_origin = getElementRect(main_origin, true),
-         can_resize = main_origin.attr('can_resize'),
-         do_resize = false;
+          can_resize = main_origin.attr('can_resize'),
+          do_resize = false;
 
       if (can_resize == 'height')
          if (height_factor && Math.abs(rect_origin.width * height_factor - rect_origin.height) > 0.1 * rect_origin.width) do_resize = true;
@@ -8258,17 +8258,26 @@ class BasePainter {
       }
 
       let rect = getElementRect(main),
-          old_h = main.property('draw_height'),
-          old_w = main.property('draw_width');
+          old_h = main.property('_jsroot_height'),
+          old_w = main.property('_jsroot_width');
 
       rect.changed = false;
 
       if (old_h && old_w && (old_h > 0) && (old_w > 0)) {
          if ((old_h !== rect.height) || (old_w !== rect.width))
-            if ((check_level > 1) || (rect.width / old_w < 0.66) || (rect.width / old_w > 1.5) ||
-               (rect.height / old_h < 0.66) && (rect.height / old_h > 1.5)) rect.changed = true;
+            rect.changed = (check_level > 1) || (rect.width / old_w < 0.9) || (rect.width / old_w > 1.1) ||
+                           (rect.height / old_h < 0.9) || (rect.height / old_h > 1.1);
       } else {
          rect.changed = true;
+      }
+
+      if (rect.changed)
+         main.property('_jsroot_height', rect.height).property('_jsroot_width', rect.width);
+
+      // after change enlarge state always mark main element as resized
+      if (main_origin.property('did_enlarge')) {
+         rect.changed = true;
+         main_origin.property('did_enlarge', false);
       }
 
       return rect;
@@ -8325,7 +8334,7 @@ class BasePainter {
             enlarge.node().appendChild(main.node().firstChild);
 
          origin.property('use_enlarge', true);
-
+         origin.property('did_enlarge', true);
          return true;
       }
       if ((action === false) && (state !== 'off')) {
@@ -8335,6 +8344,7 @@ class BasePainter {
 
          enlarge.remove();
          origin.property('use_enlarge', false);
+         origin.property('did_enlarge', true);
          return true;
       }
 
@@ -48275,7 +48285,8 @@ class JSRootMenu {
             arg => { faxis.fLabelColor = arg; painter.interactiveRedraw('pad', getColorExec(arg, 'SetLabelColor'), kind); });
       this.addSizeMenu('Offset', 0, 0.1, 0.01, faxis.fLabelOffset,
             arg => { faxis.fLabelOffset = arg; painter.interactiveRedraw('pad', `exec:SetLabelOffset(${arg})`, kind); });
-      this.addSizeMenu('Size', 0.02, 0.11, 0.01, faxis.fLabelSize,
+      let a = faxis.fLabelSize >= 1;
+      this.addSizeMenu('Size', a ? 2 : 0.02, a ? 30 : 0.11, a ? 2 : 0.01, faxis.fLabelSize,
             arg => { faxis.fLabelSize = arg; painter.interactiveRedraw('pad', `exec:SetLabelSize(${arg})`, kind); });
       this.add('endsub:');
       this.add('sub:Title');
@@ -48295,7 +48306,8 @@ class JSRootMenu {
             arg => { faxis.fTitleColor = arg; painter.interactiveRedraw('pad', getColorExec(arg, 'SetTitleColor'), kind); });
       this.addSizeMenu('Offset', 0, 3, 0.2, faxis.fTitleOffset,
                       arg => { faxis.fTitleOffset = arg; painter.interactiveRedraw('pad', `exec:SetTitleOffset(${arg})`, kind); });
-      this.addSizeMenu('Size', 0.02, 0.11, 0.01, faxis.fTitleSize,
+      a = faxis.fTitleSize >= 1;
+      this.addSizeMenu('Size', a ? 2 : 0.02, a ? 30 : 0.11, a ? 2 : 0.01, faxis.fTitleSize,
                       arg => { faxis.fTitleSize = arg; painter.interactiveRedraw('pad', `exec:SetTitleSize(${arg})`, kind); });
       this.add('endsub:');
       this.add('sub:Ticks');
@@ -55493,14 +55505,14 @@ class TPadPainter extends ObjectPainter {
       r.ux1 = func(main.logx, r.ux1, 0);
       r.ux2 = func(main.logx, r.ux2, 1);
 
-      let k = (r.ux1 - r.ux2)/frect.width;
+      let k = (r.ux2 - r.ux1)/(frect.width || 10);
       r.px1 = r.ux1 - k*frect.x;
       r.px2 = r.px1 + k*this.getPadWidth();
 
       r.uy1 = func(main.logy, r.uy1, 0);
       r.uy2 = func(main.logy, r.uy2, 1);
 
-      k = (r.uy2 - r.uy1)/frect.height;
+      k = (r.uy2 - r.uy1)/(frect.height || 10);
       r.py1 = r.uy1 - k*frect.y;
       r.py2 = r.py1 + k*this.getPadHeight();
 
