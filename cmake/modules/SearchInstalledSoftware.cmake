@@ -1754,7 +1754,7 @@ if(cuda OR tmva-gpu)
       find_program(CUDA_NVCC_EXECUTABLE
         NAMES nvcc nvcc.exe
         PATHS "${CUDA_TOOLKIT_ROOT_DIR}"
-          ENV CUDA_TOOKIT_ROOT
+          ENV CUDA_TOOLKIT_ROOT
           ENV CUDA_PATH
           ENV CUDA_BIN_PATH
         PATH_SUFFIXES bin bin64
