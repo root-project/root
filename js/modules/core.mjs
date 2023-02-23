@@ -5,7 +5,7 @@ let version_id = 'dev';
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-let version_date = '20/02/2023';
+let version_date = '23/02/2023';
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -991,7 +991,7 @@ const clTObject = 'TObject', clTNamed = 'TNamed',
       clTH1 = 'TH1', clTH2 = 'TH2', clTH3 = 'TH3', clTF1 = 'TF1', clTF2 = 'TF2', clTProfile = 'TProfile', clTProfile2D = 'TProfile2D',
       clTGeoVolume = 'TGeoVolume', clTGeoNode = 'TGeoNode', clTGeoNodeMatrix = 'TGeoNodeMatrix',
       nsREX = 'ROOT::Experimental::',
-      kNoZoom = -1111;
+      kNoZoom = -1111, kNoStats = BIT(9);
 
 
 /** @summary Create some ROOT classes
@@ -1675,6 +1675,10 @@ function getMethods(typename, obj) {
    return m;
 }
 
+gStyle.fXaxis = create(clTAttAxis);
+gStyle.fYaxis = create(clTAttAxis);
+gStyle.fZaxis = create(clTAttAxis);
+
 /** @summary Add methods for specified type.
   * @desc Will be automatically applied when decoding JSON string
   * @private */
@@ -1737,7 +1741,7 @@ export { version_id, version_date, version, source_dir, isNodeJs, isBatchMode, s
          clTAxis, clTStyle, clTH1, clTH2, clTH3, clTF1, clTF2, clTProfile, clTProfile2D, clTHStack,
          clTGraph, clTGraph2DErrors, clTGraph2DAsymmErrors,
          clTGraphPolar, clTGraphPolargram, clTGraphTime, clTCutG,
-         clTPolyLine3D, clTPolyMarker3D, clTGeoVolume, clTGeoNode, clTGeoNodeMatrix, nsREX, kNoZoom,
+         clTPolyLine3D, clTPolyMarker3D, clTGeoVolume, clTGeoNode, clTGeoNodeMatrix, nsREX, kNoZoom, kNoStats,
          isArrayProto, getDocument, BIT, clone, addMethods, parse, parseMulti, toJSON,
          decodeUrl, findFunction, createHttpRequest, httpRequest, loadScript, injectCode,
          create, createHistogram, createTPolyLine, createTGraph, createTHStack, createTMultiGraph,

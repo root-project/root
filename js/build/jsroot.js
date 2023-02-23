@@ -11,7 +11,7 @@ let version_id = 'dev';
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-let version_date = '20/02/2023';
+let version_date = '23/02/2023';
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -996,7 +996,7 @@ const clTObject = 'TObject', clTNamed = 'TNamed',
       clTH1 = 'TH1', clTH2 = 'TH2', clTH3 = 'TH3', clTF1 = 'TF1', clTF2 = 'TF2', clTProfile = 'TProfile', clTProfile2D = 'TProfile2D',
       clTGeoVolume = 'TGeoVolume', clTGeoNode = 'TGeoNode', clTGeoNodeMatrix = 'TGeoNodeMatrix',
       nsREX = 'ROOT::Experimental::',
-      kNoZoom = -1111;
+      kNoZoom = -1111, kNoStats = BIT(9);
 
 
 /** @summary Create some ROOT classes
@@ -1680,6 +1680,10 @@ function getMethods(typename, obj) {
    return m;
 }
 
+gStyle.fXaxis = create$1(clTAttAxis);
+gStyle.fYaxis = create$1(clTAttAxis);
+gStyle.fZaxis = create$1(clTAttAxis);
+
 /** @summary Add methods for specified type.
   * @desc Will be automatically applied when decoding JSON string
   * @private */
@@ -1822,6 +1826,7 @@ isObject: isObject,
 isPromise: isPromise,
 isRootCollection: isRootCollection,
 isStr: isStr,
+kNoStats: kNoStats,
 kNoZoom: kNoZoom,
 loadScript: loadScript,
 nsREX: nsREX,
@@ -8347,6 +8352,12 @@ class BasePainter {
       if (rect.changed)
          main.property('_jsroot_height', rect.height).property('_jsroot_width', rect.width);
 
+      // after change enlarge state always mark main element as resized
+      if (main_origin.property('did_enlarge')) {
+         rect.changed = true;
+         main_origin.property('did_enlarge', false);
+      }
+
       return rect;
    }
 
@@ -8401,7 +8412,7 @@ class BasePainter {
             enlarge.node().appendChild(main.node().firstChild);
 
          origin.property('use_enlarge', true);
-
+         origin.property('did_enlarge', true);
          return true;
       }
       if ((action === false) && (state !== 'off')) {
@@ -8411,6 +8422,7 @@ class BasePainter {
 
          enlarge.remove();
          origin.property('use_enlarge', false);
+         origin.property('did_enlarge', true);
          return true;
       }
 
@@ -59717,7 +59729,7 @@ class TAxisPainter extends ObjectPainter {
                set_bit = (bit, on) => { if (axis.TestBit(bit) != on) axis.InvertBit(bit); };
 
          this.titleOffset = (vertical ? new_x : new_y) / offset_k;
-         axis.fTitleOffset = this.titleOffset / this.titleSize;
+         axis.fTitleOffset = this.titleOffset / this.offsetScaling / this.titleSize;
 
          if (curr_indx == 1) {
             set_bit(abits.kCenterTitle, true); this.titleCenter = true;
@@ -59842,7 +59854,7 @@ class TAxisPainter extends ObjectPainter {
 
          if (lcnt > 0) side = -side;
 
-         let lastpos = 0, fix_coord = this.vertical ? -labeloffset*side : (labeloffset+2)*side + ticksPlusMinus*tickSize;
+         let lastpos = 0, fix_coord = this.vertical ? -labeloffset*side : labeloffset*side + ticksPlusMinus*tickSize;
 
          this.startTextDrawing(labelsFont, 'font', label_g[lcnt]);
 
@@ -59882,6 +59894,7 @@ class TAxisPainter extends ObjectPainter {
                arg.x = pos;
                arg.y = fix_coord;
                arg.align = rotate_lbls ? ((side < 0) ? 12 : 32) : ((side < 0) ? 20 : 23);
+               if (arg.align % 10 === 3) arg.y -= labelsFont.size*0.1; // font takes 10% more by top align
             }
 
             if (rotate_lbls)
@@ -59937,9 +59950,9 @@ class TAxisPainter extends ObjectPainter {
    extractDrawAttributes(scalingSize, w, h) {
       let axis = this.getObject(),
           is_gaxis = axis?._typename === clTGaxis,
-          frect = this.getPadPainter()?.getFrameRect(),
-          pad_w = Math.round((frect?.width || 8)/0.8), // use factor 0.8 as ratio between frame and pad size, frame size is visible and more obvios
-          pad_h = Math.round((frect?.height || 8)/0.8),
+          pp = this.getPadPainter(),
+          pad_w = pp?.getPadWidth() || scalingSize || w/0.8, // use factor 0.8 as ratio between frame and pad size
+          pad_h = pp?.getPadHeight() || scalingSize || h/0.8,
           tickSize = 0, tickScalingSize = 0, titleColor;
 
       this.scalingSize = scalingSize || Math.max(Math.min(pad_w, pad_h), 10);
@@ -59991,12 +60004,16 @@ class TAxisPainter extends ObjectPainter {
          this.titleSize = (axis.fTitleSize >= 1) ? axis.fTitleSize : Math.round(axis.fTitleSize * this.scalingSize);
          this.titleFont = new FontHandler(axis.fTitleFont, this.titleSize, scalingSize);
          this.titleFont.setColor(titleColor);
-         this.titleOffset = axis.fTitleOffset * this.titleSize; // in pixels
+         this.offsetScaling = (axis.fTitleSize >= 1) ? 1 : (this.vertical ? pad_w : pad_h) / this.scalingSize;
+         this.titleOffset = axis.fTitleOffset;
+         if (!this.titleOffset && this.name[0] == 'x') this.titleOffset = gStyle.fXaxis.fTitleOffset;
+         this.titleOffset *= this.titleSize * this.offsetScaling;
          this.titleCenter = axis.TestBit(EAxisBits.kCenterTitle);
          this.titleOpposite = axis.TestBit(EAxisBits.kOppositeTitle);
       } else {
          delete this.titleSize;
          delete this.titleFont;
+         delete this.offsetScaling;
          delete this.titleOffset;
          delete this.titleCenter;
          delete this.titleOpposite;
@@ -60012,10 +60029,10 @@ class TAxisPainter extends ObjectPainter {
           is_gaxis = axis?._typename === clTGaxis,
           axis_g = layer,
           draw_lines = true,
-          pp = this.getPadPainter(),
-          pad_w = pp?.getPadWidth() || 10,
-          pad_h = pp?.getPadHeight() || 10,
-          swap_side = this.swap_side || false;
+          pp = this.getPadPainter();
+          pp?.getPadWidth() || 10;
+          pp?.getPadHeight() || 10;
+          let swap_side = this.swap_side || false;
 
       // shift for second ticks set (if any)
       if (!secondShift)
@@ -60070,7 +60087,7 @@ class TAxisPainter extends ObjectPainter {
                .attr('d', axis_lines)
                .call(this.lineatt.func);
 
-      let title_shift_x = 0, title_shift_y = 0, title_g = null, axis_rect = null, labelsMaxWidth = 0,
+      let title_shift_x = 0, title_shift_y = 0, title_g = null, labelsMaxWidth = 0,
           // draw labels (sometime on both sides)
           pr = (disable_axis_drawing || this.optionUnlab) ? Promise.resolve(0) :
                 this.drawLabels(axis_g, axis, w, h, handle, side, this.labelsFont, this.labelsOffset, this.ticksSize, ticksPlusMinus, max_text_width);
@@ -60114,7 +60131,7 @@ class TAxisPainter extends ObjectPainter {
 
          title_g = axis_g.append('svg:g').attr('class', 'axis_title');
 
-         let title_offest_k = 1.6 / this.scalingSize,
+         let title_offest_k = side,
              rotate = axis.TestBit(EAxisBits.kRotateTitle) ? -1 : 1;
 
          this.startTextDrawing(this.titleFont, 'font', title_g);
@@ -60124,7 +60141,7 @@ class TAxisPainter extends ObjectPainter {
          this.title_align = this.titleCenter ? 'middle' : (myxor ? 'begin' : 'end');
 
          if (this.vertical) {
-            title_offest_k *= -side*pad_w;
+            title_offest_k *= -1.6;
 
             title_shift_x = Math.round(title_offest_k * this.titleOffset);
 
@@ -60141,7 +60158,7 @@ class TAxisPainter extends ObjectPainter {
                             rotate: (rotate < 0) ? 90 : 270,
                             text: this.fTitle, color: this.titleFont.color, draw_g: title_g });
          } else {
-            title_offest_k *= side*pad_h;
+            title_offest_k *= 1.6;
 
             title_shift_x = Math.round(this.titleCenter ? w/2 : (xor_reverse ? 0 : w));
             title_shift_y = Math.round(title_offest_k * this.titleOffset);
@@ -60150,23 +60167,14 @@ class TAxisPainter extends ObjectPainter {
                             text: this.fTitle, color: this.titleFont.color, draw_g: title_g });
          }
 
-         if (this.vertical && !this.titleOffset && ('getBoundingClientRect' in axis_g.node()))
-            axis_rect = axis_g.node().getBoundingClientRect();
-
          this.addTitleDrag(title_g, this.vertical, title_offest_k, swap_side, this.vertical ? h : w);
 
          return this.finishTextDrawing(title_g);
       }).then(() => {
+
          if (title_g) {
-            // fine-tuning of title position when possible
-            if (axis_rect) {
-               let title_rect = title_g.node().getBoundingClientRect();
-               if ((axis_rect.left != axis_rect.right) && (title_rect.left != title_rect.right))
-                  title_shift_x = (side > 0) ? Math.round(axis_rect.left - title_rect.right - this.titleFont.size*0.3) :
-                                               Math.round(axis_rect.right - title_rect.left + this.titleFont.size*0.3);
-               else
-                  title_shift_x = -1 * Math.round(((side > 0) ? (this.labelsOffset + labelsMaxWidth) : 0) + this.titleFont.size*0.7);
-            }
+            if (!this.titleOffset && this.vertical && labelsMaxWidth)
+              title_shift_x = Math.round(-side * (labelsMaxWidth + 0.7*this.offsetScaling*this.titleSize));
 
             title_g.attr('transform', makeTranslate(title_shift_x, title_shift_y))
                    .property('shift_x', title_shift_x)
@@ -63455,7 +63463,8 @@ class JSRootMenu {
             arg => { faxis.fLabelColor = arg; painter.interactiveRedraw('pad', getColorExec(arg, 'SetLabelColor'), kind); });
       this.addSizeMenu('Offset', 0, 0.1, 0.01, faxis.fLabelOffset,
             arg => { faxis.fLabelOffset = arg; painter.interactiveRedraw('pad', `exec:SetLabelOffset(${arg})`, kind); });
-      this.addSizeMenu('Size', 0.02, 0.11, 0.01, faxis.fLabelSize,
+      let a = faxis.fLabelSize >= 1;
+      this.addSizeMenu('Size', a ? 2 : 0.02, a ? 30 : 0.11, a ? 2 : 0.01, faxis.fLabelSize,
             arg => { faxis.fLabelSize = arg; painter.interactiveRedraw('pad', `exec:SetLabelSize(${arg})`, kind); });
       this.add('endsub:');
       this.add('sub:Title');
@@ -63474,7 +63483,8 @@ class JSRootMenu {
             arg => { faxis.fTitleColor = arg; painter.interactiveRedraw('pad', getColorExec(arg, 'SetTitleColor'), kind); });
       this.addSizeMenu('Offset', 0, 3, 0.2, faxis.fTitleOffset,
                       arg => { faxis.fTitleOffset = arg; painter.interactiveRedraw('pad', `exec:SetTitleOffset(${arg})`, kind); });
-      this.addSizeMenu('Size', 0.02, 0.11, 0.01, faxis.fTitleSize,
+      a = faxis.fTitleSize >= 1;
+      this.addSizeMenu('Size', a ? 2 : 0.02, a ? 30 : 0.11, a ? 2 : 0.01, faxis.fTitleSize,
                       arg => { faxis.fTitleSize = arg; painter.interactiveRedraw('pad', `exec:SetTitleSize(${arg})`, kind); });
       this.add('endsub:');
       this.add('sub:Ticks');
@@ -69294,7 +69304,7 @@ class TPadPainter extends ObjectPainter {
          this.drawActiveBorder(frect);
       }
 
-      this._fast_drawing = settings.SmallPad && ((rect.width < settings.SmallPad.width) || (rect.height < settings.SmallPad.height));
+      this._fast_drawing = settings.SmallPad && ((rect.width * (1 - this.pad.fLeftMargin - this.pad.fRightMargin) < settings.SmallPad.width) || (rect.height * (1 - this.pad.fBottomMargin - this.pad.fTopMargin)  < settings.SmallPad.height));
 
       if (this.alignButtons && btns)
          this.alignButtons(btns, rect.width, rect.height);
@@ -69461,7 +69471,7 @@ class TPadPainter extends ObjectPainter {
          this.drawActiveBorder(svg_rect);
       }
 
-      this._fast_drawing = settings.SmallPad && ((w < settings.SmallPad.width) || (h < settings.SmallPad.height));
+      this._fast_drawing = settings.SmallPad && ((w * (1 - this.pad.fLeftMargin-this.pad.fRightMargin) < settings.SmallPad.width) || (h * (1 - this.pad.fBottomMargin - this.pad.fTopMargin) < settings.SmallPad.height));
 
       // special case of 3D canvas overlay
       if (svg_pad.property('can3d') === constants$1.Embed3D.Overlay)
@@ -73843,18 +73853,14 @@ class HistContour {
 
 } // class HistContour
 
-/** @summary histogram status bits
-  * @private */
-const TH1StatusBits = {
-   kNoStats     : BIT(9),  // don't draw stats box
-   kUserContour : BIT(10), // user specified contour levels
-   kCanRebin    : BIT(11), // can rebin axis
-   kLogX        : BIT(15), // X-axis in log scale
-   kIsZoomed    : BIT(16), // bit set when zooming on Y axis
-   kNoTitle     : BIT(17), // don't draw the histogram title
-   kIsAverage   : BIT(18)  // Bin contents are average (used by Add)
-};
-
+// TH1 bits
+//    kNoStats = BIT(9), don't draw stats box
+const kUserContour = BIT(10), // user specified contour levels
+//      kCanRebin    = BIT(11), // can rebin axis
+//      kLogX        = BIT(15), // X-axis in log scale
+//      kIsZoomed    = BIT(16), // bit set when zooming on Y axis
+      kNoTitle     = BIT(17); // don't draw the histogram title
+//      kIsAverage   = BIT(18);  // Bin contents are average (used by Add)
 
 /**
  * @summary Basic painter for histogram classes
@@ -74074,9 +74080,9 @@ class THistPainter extends ObjectPainter {
 
          // check only stats bit, later other settings can be monitored
          let statpainter = pp?.findPainterFor(this.findStat());
-         if (histo.TestBit(TH1StatusBits.kNoStats) != obj.TestBit(TH1StatusBits.kNoStats)) {
+         if (histo.TestBit(kNoStats) != obj.TestBit(kNoStats)) {
             histo.fBits = obj.fBits;
-            if (statpainter) statpainter.Enabled = !histo.TestBit(TH1StatusBits.kNoStats);
+            if (statpainter) statpainter.Enabled = !histo.TestBit(kNoStats);
          }
 
          // special treatment for webcanvas - also name can be changed
@@ -74374,7 +74380,7 @@ class THistPainter extends ObjectPainter {
       if (this.options.Same)
          return false;
 
-      return fp.drawAxes(false, this.options.Axis < 0, (this.options.Axis < 0),
+      return fp.drawAxes(false, this.options.Axis < 0, this.options.Axis < 0,
                          this.options.AxisPos, this.options.Zscale && this.options.Zvert, this.options.Zscale && !this.options.Zvert);
    }
 
@@ -74407,9 +74413,9 @@ class THistPainter extends ObjectPainter {
       if (!this.isMainPainter() || !histo)
          return false;
       if (arg === 'only-check')
-         return !histo.TestBit(TH1StatusBits.kNoTitle);
-      histo.InvertBit(TH1StatusBits.kNoTitle);
-      this.drawHistTitle().then(() => this.processOnlineChange(`exec:SetBit(TH1::kNoTitle,${histo.TestBit(TH1StatusBits.kNoTitle)?1:0})`));
+         return !histo.TestBit(kNoTitle);
+      histo.InvertBit(kNoTitle);
+      this.drawHistTitle().then(() => this.processOnlineChange(`exec:SetBit(TH1::kNoTitle,${histo.TestBit(kNoTitle)?1:0})`));
    }
 
    /** @summary Draw histogram title
@@ -74424,7 +74430,7 @@ class THistPainter extends ObjectPainter {
           pp = this.getPadPainter(),
           tpainter = pp?.findPainterFor(null, 'title'),
           pt = tpainter?.getObject(),
-          draw_title = !histo.TestBit(TH1StatusBits.kNoTitle) && (st.fOptTitle > 0);
+          draw_title = !histo.TestBit(kNoTitle) && (st.fOptTitle > 0);
 
       if (!pt && isFunc(pp?.findInPrimitives))
          pt = pp.findInPrimitives('title', clTPaveText);
@@ -74548,7 +74554,7 @@ class THistPainter extends ObjectPainter {
       if (this.options.PadStats || !histo) return null;
 
       if (!force && !this.options.ForceStat) {
-         if (this.options.NoStat || histo.TestBit(TH1StatusBits.kNoStats) || !settings.AutoStat) return null;
+         if (this.options.NoStat || histo.TestBit(kNoStats) || !settings.AutoStat) return null;
 
          if ((this.options.Axis > 0) || !this.isMainPainter()) return null;
       }
@@ -74624,7 +74630,7 @@ class THistPainter extends ObjectPainter {
    /** @summary Check if such function should be drawn directly */
    needDrawFunc(histo, func) {
       if (func._typename === clTPaveStats)
-          return (func.fName !== 'stats') || (!histo.TestBit(TH1StatusBits.kNoStats) && !this.options.NoStat);
+          return (func.fName !== 'stats') || (!histo.TestBit(kNoStats) && !this.options.NoStat);
 
        if (func._typename === clTF1)
           return !func.TestBit(BIT(9));
@@ -75067,8 +75073,8 @@ class THistPainter extends ObjectPainter {
          zmax = fp.zoom_zmax;
       }
 
-      if (histo.fContour && (histo.fContour.length > 1))
-         if (histo.TestBit(TH1StatusBits.kUserContour))
+      if (histo.fContour?.length > 1)
+         if (histo.TestBit(kUserContour))
             custom_levels = histo.fContour;
          else
             nlevels = histo.fContour.length;
@@ -79725,13 +79731,15 @@ class TH2Painter extends TH2Painter$2 {
       } else {
 
          let pad = this.getPadPainter().getRootPad(true),
-             zmult = 1 + 2*gStyle.fHistTopMargin;
+             zmult = 1;
 
-         if (this.draw_content || (this.gmaxbin != 0)) {
+         if (this.options.minimum !== kNoZoom && this.options.maximum !== kNoZoom) {
+            this.zmin = this.options.minimum;
+            this.zmax = this.options.maximum;
+         } else if (this.draw_content || (this.gmaxbin != 0)) {
             this.zmin = pad?.fLogz ? this.gminposbin * 0.3 : this.gminbin;
             this.zmax = this.gmaxbin;
-         } else {
-            zmult = 1;
+            zmult = 1 + 2*gStyle.fHistTopMargin;
          }
 
          if (pad?.fLogz && (this.zmin <= 0))
@@ -95160,7 +95168,6 @@ class TDrawSelector extends TSelector {
          this.y = y;
          this.z = z;
       } else {
-         let kNoStats = BIT(9);
          hist.fBits = hist.fBits | kNoStats;
       }
 
@@ -97380,6 +97387,7 @@ function addStreamerInfosForPainter(lst) {
   * @param {string} [args.option] - draw options
   * @param {number} [args.width = 1200] - image width
   * @param {number} [args.height = 800] - image height
+  * @param {boolean} [args.use_canvas_size = false] - if configured used size stored in TCanvas object
   * @return {Promise} with svg code */
 async function makeSVG(args) {
 
@@ -97387,6 +97395,11 @@ async function makeSVG(args) {
    if (!args.object) return Promise.reject(Error('No object specified to generate SVG'));
    if (!args.width) args.width = 1200;
    if (!args.height) args.height = 800;
+
+   if (args.use_canvas_size && (args.object?._typename == clTCanvas) && args.object.fCw && args.object.fCh) {
+      args.width = args.object?.fCw;
+      args.height = args.object?.fCh;
+   }
 
    async function build(main) {
 
@@ -105298,7 +105311,6 @@ class TGraph2DPainter extends ObjectPainter {
       histo.fZaxis.fXmax = uzmax;
       histo.fMinimum = uzmin;
       histo.fMaximum = uzmax;
-      let kNoStats = BIT(9);
       histo.fBits = histo.fBits | kNoStats;
       return histo;
    }
@@ -106399,7 +106411,6 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
       if (!histo) {
          histo = graph.fHistogram = createHistogram('TH1F', 100);
          histo.fName = graph.fName + '_h';
-         const kNoStats = BIT(9);
          histo.fBits = histo.fBits | kNoStats;
          this._own_histogram = true;
       } else if ((histo.fMaximum != kNoZoom) && (histo.fMinimum != kNoZoom)) {
@@ -108146,8 +108157,7 @@ class TEfficiencyPainter extends ObjectPainter {
    fillHisto(hist) {
       const eff = this.getObject(),
             nbinsx = hist.fXaxis.fNbins,
-            nbinsy = hist.fYaxis.fNbins,
-            kNoStats = BIT(9);
+            nbinsy = hist.fYaxis.fNbins;
 
       for (let i = 0; i < nbinsx+2; ++i)
          for (let j = 0; j < nbinsy+2; ++j) {
@@ -109097,7 +109107,6 @@ function createTF2Histogram(func, hist = undefined) {
    hist.fMarkerColor = func.fMarkerColor;
    hist.fMarkerStyle = func.fMarkerStyle;
    hist.fMarkerSize = func.fMarkerSize;
-   const kNoStats = BIT(9);
    hist.fBits |= kNoStats;
 
    return hist;
@@ -121249,6 +121258,7 @@ exports.isObject = isObject;
 exports.isPromise = isPromise;
 exports.isRootCollection = isRootCollection;
 exports.isStr = isStr;
+exports.kNoStats = kNoStats;
 exports.kNoZoom = kNoZoom;
 exports.loadOpenui5 = loadOpenui5;
 exports.loadScript = loadScript;

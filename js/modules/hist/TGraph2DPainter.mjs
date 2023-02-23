@@ -1,4 +1,4 @@
-import { BIT, settings, createHistogram, kNoZoom, clTGraph2DErrors, clTGraph2DAsymmErrors } from '../core.mjs';
+import { settings, createHistogram, kNoZoom, clTGraph2DErrors, clTGraph2DAsymmErrors, kNoStats } from '../core.mjs';
 import { REVISION, Color, LineBasicMaterial } from '../three.mjs';
 import { DrawOptions } from '../base/BasePainter.mjs';
 import { ObjectPainter } from '../base/ObjectPainter.mjs';
@@ -101,7 +101,6 @@ class TGraph2DPainter extends ObjectPainter {
       histo.fZaxis.fXmax = uzmax;
       histo.fMinimum = uzmin;
       histo.fMaximum = uzmax;
-      let kNoStats = BIT(9);
       histo.fBits = histo.fBits | kNoStats;
       return histo;
    }

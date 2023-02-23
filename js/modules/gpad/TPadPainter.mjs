@@ -512,7 +512,7 @@ class TPadPainter extends ObjectPainter {
          this.drawActiveBorder(frect);
       }
 
-      this._fast_drawing = settings.SmallPad && ((rect.width < settings.SmallPad.width) || (rect.height < settings.SmallPad.height));
+      this._fast_drawing = settings.SmallPad && ((rect.width * (1 - this.pad.fLeftMargin - this.pad.fRightMargin) < settings.SmallPad.width) || (rect.height * (1 - this.pad.fBottomMargin - this.pad.fTopMargin)  < settings.SmallPad.height));
 
       if (this.alignButtons && btns)
          this.alignButtons(btns, rect.width, rect.height);
@@ -679,7 +679,7 @@ class TPadPainter extends ObjectPainter {
          this.drawActiveBorder(svg_rect);
       }
 
-      this._fast_drawing = settings.SmallPad && ((w < settings.SmallPad.width) || (h < settings.SmallPad.height));
+      this._fast_drawing = settings.SmallPad && ((w * (1 - this.pad.fLeftMargin-this.pad.fRightMargin) < settings.SmallPad.width) || (h * (1 - this.pad.fBottomMargin - this.pad.fTopMargin) < settings.SmallPad.height));
 
       // special case of 3D canvas overlay
       if (svg_pad.property('can3d') === constants.Embed3D.Overlay)
