@@ -321,6 +321,20 @@ ROOT::Experimental::RNTupleDescriptor::FindPrevClusterId(DescriptorId_t clusterI
    return kInvalidDescriptorId;
 }
 
+ROOT::Experimental::RNTupleDescriptor::RFieldDescriptorIterable
+ROOT::Experimental::RNTupleDescriptor::RHeaderExtension::GetTopLevelFields(const RNTupleDescriptor &desc) const
+{
+   std::vector<DescriptorId_t> fields{fFields.begin(), fFields.end()};
+   // leave top-level fields only
+   auto fieldZeroId = desc.GetFieldZeroId();
+   fields.erase(std::remove_if(fields.begin(), fields.end(),
+                               [&](DescriptorId_t fieldId) {
+                                  return desc.GetFieldDescriptor(fieldId).GetParentId() != fieldZeroId;
+                               }),
+                fields.end());
+   return RFieldDescriptorIterable(desc, std::move(fields));
+}
+
 ROOT::Experimental::RResult<void>
 ROOT::Experimental::RNTupleDescriptor::AddClusterDetails(RClusterDescriptor &&clusterDesc)
 {
@@ -374,6 +388,8 @@ std::unique_ptr<ROOT::Experimental::RNTupleDescriptor> ROOT::Experimental::RNTup
       clone->fClusterGroupDescriptors.emplace(d.first, d.second.Clone());
    for (const auto &d : fClusterDescriptors)
       clone->fClusterDescriptors.emplace(d.first, d.second.Clone());
+   if (fHeaderExtension)
+      clone->fHeaderExtension = std::make_unique<RHeaderExtension>(*fHeaderExtension);
    return clone;
 }
 
@@ -575,6 +591,8 @@ ROOT::Experimental::RFieldDescriptorBuilder::MakeDescriptor() const {
 
 void ROOT::Experimental::RNTupleDescriptorBuilder::AddField(const RFieldDescriptor& fieldDesc) {
    fDescriptor.fFieldDescriptors.emplace(fieldDesc.GetId(), fieldDesc.Clone());
+   if (fDescriptor.fHeaderExtension)
+      fDescriptor.fHeaderExtension->AddField(fieldDesc);
 }
 
 ROOT::Experimental::RResult<void>
@@ -615,6 +633,8 @@ void ROOT::Experimental::RNTupleDescriptorBuilder::AddColumn(DescriptorId_t logi
    c.fIndex = index;
    if (!c.IsAliasColumn())
       fDescriptor.fNPhysicalColumns++;
+   if (fDescriptor.fHeaderExtension)
+      fDescriptor.fHeaderExtension->AddColumn(c);
    fDescriptor.fColumnDescriptors.emplace(logicalId, std::move(c));
 }
 
@@ -644,6 +664,8 @@ ROOT::Experimental::RNTupleDescriptorBuilder::AddColumn(RColumnDescriptor &&colu
    if (!columnDesc.IsAliasColumn())
       fDescriptor.fNPhysicalColumns++;
    fDescriptor.fColumnDescriptors.emplace(logicalId, std::move(columnDesc));
+   if (fDescriptor.fHeaderExtension)
+      fDescriptor.fHeaderExtension->AddColumn(columnDesc);
 
    return RResult<void>::Success();
 }
@@ -673,6 +695,13 @@ void ROOT::Experimental::RNTupleDescriptorBuilder::Reset()
    fDescriptor.fColumnDescriptors.clear();
    fDescriptor.fClusterDescriptors.clear();
    fDescriptor.fClusterGroupDescriptors.clear();
+   fDescriptor.fHeaderExtension.reset();
+}
+
+void ROOT::Experimental::RNTupleDescriptorBuilder::BeginHeaderExtension()
+{
+   if (!fDescriptor.fHeaderExtension)
+      fDescriptor.fHeaderExtension = std::make_unique<RNTupleDescriptor::RHeaderExtension>();
 }
 
 ROOT::Experimental::RResult<void>
