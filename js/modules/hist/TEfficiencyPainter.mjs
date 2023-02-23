@@ -1,4 +1,4 @@
-import { BIT, create, createHistogram, isStr, clTH1, clTH2 } from '../core.mjs';
+import { BIT, create, createHistogram, isStr, clTH1, clTH2, kNoStats } from '../core.mjs';
 import { ObjectPainter } from '../base/ObjectPainter.mjs';
 import { TGraphPainter, clTGraphAsymmErrors } from '../hist2d/TGraphPainter.mjs';
 import { TF1Painter } from '../hist/TF1Painter.mjs';
@@ -149,8 +149,7 @@ class TEfficiencyPainter extends ObjectPainter {
    fillHisto(hist) {
       const eff = this.getObject(),
             nbinsx = hist.fXaxis.fNbins,
-            nbinsy = hist.fYaxis.fNbins,
-            kNoStats = BIT(9);
+            nbinsy = hist.fYaxis.fNbins;
 
       for (let i = 0; i < nbinsx+2; ++i)
          for (let j = 0; j < nbinsy+2; ++j) {

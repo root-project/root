@@ -557,7 +557,8 @@ class JSRootMenu {
             arg => { faxis.fLabelColor = arg; painter.interactiveRedraw('pad', getColorExec(arg, 'SetLabelColor'), kind); });
       this.addSizeMenu('Offset', 0, 0.1, 0.01, faxis.fLabelOffset,
             arg => { faxis.fLabelOffset = arg; painter.interactiveRedraw('pad', `exec:SetLabelOffset(${arg})`, kind); });
-      this.addSizeMenu('Size', 0.02, 0.11, 0.01, faxis.fLabelSize,
+      let a = faxis.fLabelSize >= 1;
+      this.addSizeMenu('Size', a ? 2 : 0.02, a ? 30 : 0.11, a ? 2 : 0.01, faxis.fLabelSize,
             arg => { faxis.fLabelSize = arg; painter.interactiveRedraw('pad', `exec:SetLabelSize(${arg})`, kind); });
       this.add('endsub:');
       this.add('sub:Title');
@@ -576,7 +577,8 @@ class JSRootMenu {
             arg => { faxis.fTitleColor = arg; painter.interactiveRedraw('pad', getColorExec(arg, 'SetTitleColor'), kind); });
       this.addSizeMenu('Offset', 0, 3, 0.2, faxis.fTitleOffset,
                       arg => { faxis.fTitleOffset = arg; painter.interactiveRedraw('pad', `exec:SetTitleOffset(${arg})`, kind); });
-      this.addSizeMenu('Size', 0.02, 0.11, 0.01, faxis.fTitleSize,
+      a = faxis.fTitleSize >= 1;
+      this.addSizeMenu('Size', a ? 2 : 0.02, a ? 30 : 0.11, a ? 2 : 0.01, faxis.fTitleSize,
                       arg => { faxis.fTitleSize = arg; painter.interactiveRedraw('pad', `exec:SetTitleSize(${arg})`, kind); });
       this.add('endsub:');
       this.add('sub:Ticks');

@@ -1,6 +1,6 @@
 import { BIT, isArrayProto, isRootCollection, isObject, isFunc, isStr, getMethods,
          create, createHistogram, createTGraph,
-         clTObject, clTObjString, clTHashList, clTPolyMarker3D, clTH1, clTH2, clTH3 } from './core.mjs';
+         clTObject, clTObjString, clTHashList, clTPolyMarker3D, clTH1, clTH2, clTH3, kNoStats } from './core.mjs';
 import { kChar, kShort, kInt, kFloat,
          kCharStar, kDouble, kDouble32,
          kUChar, kUShort, kUInt,
@@ -1098,7 +1098,6 @@ class TDrawSelector extends TSelector {
          this.y = y;
          this.z = z;
       } else {
-         let kNoStats = BIT(9);
          hist.fBits = hist.fBits | kNoStats;
       }
 

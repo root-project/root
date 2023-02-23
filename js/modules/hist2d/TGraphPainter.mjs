@@ -1,5 +1,5 @@
 import { gStyle, BIT, settings, create, createHistogram, isBatchMode, isFunc, isStr,
-         clTPaveStats, clTCutG, clTF1, clTF2, kNoZoom } from '../core.mjs';
+         clTPaveStats, clTCutG, clTF1, clTF2, kNoZoom, kNoStats } from '../core.mjs';
 import { select as d3_select } from '../d3.mjs';
 import { DrawOptions, buildSvgCurve, makeTranslate } from '../base/BasePainter.mjs';
 import { ObjectPainter } from '../base/ObjectPainter.mjs';
@@ -301,7 +301,6 @@ class TGraphPainter extends ObjectPainter {
       if (!histo) {
          histo = graph.fHistogram = createHistogram('TH1F', 100);
          histo.fName = graph.fName + '_h';
-         const kNoStats = BIT(9);
          histo.fBits = histo.fBits | kNoStats;
          this._own_histogram = true;
       } else if ((histo.fMaximum != kNoZoom) && (histo.fMinimum != kNoZoom)) {
