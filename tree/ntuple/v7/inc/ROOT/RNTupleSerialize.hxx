@@ -131,6 +131,9 @@ public:
          fOnDisk2MemClusterGroupIDs.push_back(memId);
          return onDiskId;
       }
+      /// Ensure that columns added after header serialization have an on-disk column ID; this is required to ensure
+      /// consistency between page lists and the schema extension in the footer
+      void MapLateAddedColumns(const RNTupleDescriptor &desc);
       DescriptorId_t GetOnDiskFieldId(DescriptorId_t memId) const { return fMem2OnDiskFieldIDs.at(memId); }
       DescriptorId_t GetOnDiskColumnId(DescriptorId_t memId) const { return fMem2OnDiskColumnIDs.at(memId); }
       DescriptorId_t GetOnDiskClusterId(DescriptorId_t memId) const { return fMem2OnDiskClusterIDs.at(memId); }
