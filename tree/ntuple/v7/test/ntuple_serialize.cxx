@@ -623,3 +623,80 @@ TEST(RNTuple, SerializeFooter)
    EXPECT_EQ(100u, pageRange.fPageInfos[0].fNElements);
    EXPECT_EQ(7000u, pageRange.fPageInfos[0].fLocator.GetPosition<std::uint64_t>());
 }
+
+TEST(RNTuple, SerializeFooterXHeader)
+{
+   RNTupleDescriptorBuilder builder;
+   builder.SetNTuple("ntpl", "");
+   builder.AddField(RFieldDescriptorBuilder()
+                       .FieldId(0)
+                       .FieldName("")
+                       .Structure(ENTupleStructure::kRecord)
+                       .MakeDescriptor()
+                       .Unwrap());
+   builder.AddField(RFieldDescriptorBuilder()
+                       .FieldId(42)
+                       .FieldName("field")
+                       .TypeName("int32_t")
+                       .Structure(ENTupleStructure::kLeaf)
+                       .MakeDescriptor()
+                       .Unwrap());
+   builder.AddFieldLink(0, 42);
+   builder.AddColumn(17, 17, 42, RColumnModel(EColumnType::kInt32, true), 0);
+
+   auto context = RNTupleSerializer::SerializeHeaderV1(nullptr, builder.GetDescriptor());
+   EXPECT_GT(context.GetHeaderSize(), 0);
+   auto bufHeader = std::make_unique<unsigned char[]>(context.GetHeaderSize());
+   context = RNTupleSerializer::SerializeHeaderV1(bufHeader.get(), builder.GetDescriptor());
+
+   builder.BeginHeaderExtension();
+   builder.AddField(RFieldDescriptorBuilder()
+                       .FieldId(43)
+                       .FieldName("struct")
+                       .Structure(ENTupleStructure::kRecord)
+                       .MakeDescriptor()
+                       .Unwrap());
+   builder.AddField(RFieldDescriptorBuilder()
+                       .FieldId(44)
+                       .FieldName("f")
+                       .TypeName("float")
+                       .Structure(ENTupleStructure::kLeaf)
+                       .MakeDescriptor()
+                       .Unwrap());
+   builder.AddField(RFieldDescriptorBuilder()
+                       .FieldId(45)
+                       .FieldName("i64")
+                       .TypeName("int64_t")
+                       .Structure(ENTupleStructure::kLeaf)
+                       .MakeDescriptor()
+                       .Unwrap());
+   builder.AddFieldLink(0, 43);
+   builder.AddFieldLink(43, 44);
+   builder.AddFieldLink(0, 45);
+   builder.AddColumn(18, 18, 44, RColumnModel(EColumnType::kReal32, true), 0);
+   builder.AddColumn(19, 19, 45, RColumnModel(EColumnType::kInt64, true), 0);
+
+   auto desc = builder.MoveDescriptor();
+   auto sizeFooter = RNTupleSerializer::SerializeFooterV1(nullptr, desc, context);
+   EXPECT_GT(sizeFooter, 0);
+   auto bufFooter = std::make_unique<unsigned char[]>(sizeFooter);
+   EXPECT_EQ(sizeFooter, RNTupleSerializer::SerializeFooterV1(bufFooter.get(), desc, context));
+
+   RNTupleSerializer::DeserializeHeaderV1(bufHeader.get(), context.GetHeaderSize(), builder);
+   RNTupleSerializer::DeserializeFooterV1(bufFooter.get(), sizeFooter, builder);
+
+   desc = builder.MoveDescriptor();
+
+   EXPECT_EQ(5u, desc.GetNFields());
+   EXPECT_EQ(3u, desc.GetNLogicalColumns());
+   EXPECT_EQ(3u, desc.GetNPhysicalColumns());
+   auto xHeader = desc.GetHeaderExtension();
+   EXPECT_TRUE(xHeader != nullptr);
+   EXPECT_EQ(3u, xHeader->GetNFields());
+   EXPECT_EQ(2u, xHeader->GetNLogicalColumns());
+   EXPECT_EQ(2u, xHeader->GetNPhysicalColumns());
+   auto fldIdStruct = desc.FindFieldId("struct");
+   EXPECT_EQ(1, fldIdStruct);
+   EXPECT_EQ(2, desc.FindFieldId("i64"));
+   EXPECT_EQ(3, desc.FindFieldId("f", fldIdStruct));
+}
