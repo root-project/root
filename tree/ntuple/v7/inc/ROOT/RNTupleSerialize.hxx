@@ -106,15 +106,17 @@ public:
       std::uint32_t GetHeaderCRC32() const { return fHeaderCrc32; }
       DescriptorId_t MapFieldId(DescriptorId_t memId) {
          auto onDiskId = fOnDisk2MemFieldIDs.size();
-         fMem2OnDiskFieldIDs[memId] = onDiskId;
-         fOnDisk2MemFieldIDs.push_back(memId);
-         return onDiskId;
+         const auto &p = fMem2OnDiskFieldIDs.try_emplace(memId, onDiskId);
+         if (p.second)
+            fOnDisk2MemFieldIDs.push_back(memId);
+         return (*p.first).second;
       }
       DescriptorId_t MapColumnId(DescriptorId_t memId) {
          auto onDiskId = fOnDisk2MemColumnIDs.size();
-         fMem2OnDiskColumnIDs[memId] = onDiskId;
-         fOnDisk2MemColumnIDs.push_back(memId);
-         return onDiskId;
+         const auto &p = fMem2OnDiskColumnIDs.try_emplace(memId, onDiskId);
+         if (p.second)
+            fOnDisk2MemColumnIDs.push_back(memId);
+         return (*p.first).second;
       }
       DescriptorId_t MapClusterId(DescriptorId_t memId) {
          auto onDiskId = fOnDisk2MemClusterIDs.size();
