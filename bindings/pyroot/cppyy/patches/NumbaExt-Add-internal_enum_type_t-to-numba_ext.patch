@@ -1,0 +1,32 @@
+From 89349f7e08e2210e1e6de10c768f92fa7db1b3d1 Mon Sep 17 00:00:00 2001
+From: Baidyanath Kundu <kundubaidya99@gmail.com>
+Date: Sat, 17 Sep 2022 13:13:39 +0200
+Subject: [PATCH 33/34] [PyROOT] Add internal_enum_type_t to numba_ext
+
+---
+ bindings/pyroot/cppyy/cppyy/python/cppyy/numba_ext.py | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/bindings/pyroot/cppyy/cppyy/python/cppyy/numba_ext.py b/bindings/pyroot/cppyy/cppyy/python/cppyy/numba_ext.py
+index d20c3e9c9d..e76dad20cb 100644
+--- a/bindings/pyroot/cppyy/cppyy/python/cppyy/numba_ext.py
++++ b/bindings/pyroot/cppyy/cppyy/python/cppyy/numba_ext.py
+@@ -43,6 +43,7 @@ _cpp2numba = {
+     'uint8_t'                : nb_types.uint8,
+     'short'                  : nb_types.short,
+     'unsigned short'         : nb_types.ushort,
++    'internal_enum_type_t'   : nb_types.intc,
+     'int'                    : nb_types.intc,
+     'unsigned int'           : nb_types.uintc,
+     'int32_t'                : nb_types.int32,
+@@ -82,6 +83,7 @@ _cpp2ir = {
+     'uint8_t'                : ir.IntType(8),
+     'short'                  : ir.IntType(nb_types.short.bitwidth),
+     'unsigned short'         : ir.IntType(nb_types.ushort.bitwidth),
++    'internal_enum_type_t'   : ir.IntType(nb_types.intc.bitwidth),
+     'int'                    : ir.IntType(nb_types.intc.bitwidth),
+     'unsigned int'           : ir.IntType(nb_types.uintc.bitwidth),
+     'int32_t'                : ir.IntType(32),
+-- 
+2.39.0
+
