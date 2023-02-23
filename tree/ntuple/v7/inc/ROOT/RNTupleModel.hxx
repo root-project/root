@@ -36,6 +36,7 @@ namespace Experimental {
 
 class RCollectionNTupleWriter;
 class RNTupleModel;
+class RNTupleWriter;
 
 namespace Detail {
 
@@ -47,6 +48,7 @@ namespace Detail {
 
 Represents a set of alterations to a `RNTupleModel` that happened after the model is used to initialize a `RPageSink`
 instance. This object can be used to communicate metadata updates to a `RPageSink`.
+You will not normally use this directly; see `RNTupleModel::RIncrementalUpdater` instead.
 */
 // clang-format on
 struct RNTupleModelChangeset {
@@ -73,6 +75,16 @@ that faciliates checking whether entries are compatible with it (i.e.: have been
 // clang-format on
 class RNTupleModel {
 public:
+   /// A wrapper over a field name and an optional description; used in `AddField()` and `RUpdater::AddField()`
+   struct NameWithDescription_t {
+      NameWithDescription_t(const char *name) : fName(name) {}
+      NameWithDescription_t(std::string_view name) : fName(name) {}
+      NameWithDescription_t(std::string_view name, std::string_view descr) : fName(name), fDescription(descr) {}
+
+      std::string_view fName;
+      std::string_view fDescription = "";
+   };
+
    /// Projected fields are fields whose columns are reused from existing fields. Projected fields are not attached
    /// to the models zero field.  Only the real source fields are written to, projected fields are stored as meta-data
    /// (header) information only.  Only top-level projected fields are supported because otherwise the layout of types
@@ -118,6 +130,46 @@ public:
       bool IsEmpty() const { return fFieldZero->begin() == fFieldZero->end(); }
    };
 
+   /// A model is usually immutable after giving up on it, e.g. to construct a `RNTupleWriter`. However, for the rare
+   /// cases that require changing the model after the fact, `RIncrementalUpdater` provides limited support for
+   /// incremental updates, e.g. addition of new fields.
+   ///
+   /// See `RNTupleWriter::GetIncrementalModelUpdater()` for an example.
+   class RIncrementalUpdater {
+      friend class RNTupleWriter;
+
+   private:
+      RNTupleWriter &fWriter;
+      Detail::RNTupleModelChangeset fOpenChangeset;
+
+      RIncrementalUpdater(RNTupleWriter &writer);
+
+   public:
+      ~RIncrementalUpdater() { CommitUpdate(); }
+      /// Begin a new set of alterations to the underlying model. As a side effect, all `REntry` instances related to
+      /// the model are invalidated.
+      void BeginUpdate();
+      /// Commit changes since the last call to `BeginUpdate()`. All the invalidated `REntry`s remain invalid.
+      /// `CreateEntry()` or `CreateBareEntry()` can be used to create an `REntry` that matching the new model.
+      /// Upon completion, `BeginUpdate()` can be called again to begin a new set of changes.
+      void CommitUpdate();
+
+      void AddField(std::unique_ptr<Detail::RFieldBase> field);
+      template <typename T>
+      void AddField(const NameWithDescription_t &fieldNameDesc, T *fromWhere)
+      {
+         fOpenChangeset.fModel.AddField<T>(fieldNameDesc, fromWhere);
+         auto fieldZero = fOpenChangeset.fModel.GetFieldZero();
+         auto it = std::find_if(fieldZero->begin(), fieldZero->end(),
+                                [&](const auto &f) { return f.GetName() == fieldNameDesc.fName; });
+         R__ASSERT(it != fieldZero->end());
+         fOpenChangeset.fAddedFields.emplace_back(&(*it));
+      }
+
+      RResult<void> AddProjectedField(std::unique_ptr<Detail::RFieldBase> field,
+                                      std::function<std::string(const std::string &)> mapping);
+   };
+
 private:
    /// Hierarchy of fields consisting of simple types and collections (sub trees)
    std::unique_ptr<RFieldZero> fFieldZero;
@@ -154,16 +206,6 @@ public:
    static std::unique_ptr<RNTupleModel> Create();
    /// A bare model has no default entry
    static std::unique_ptr<RNTupleModel> CreateBare();
-
-   struct NameWithDescription_t {
-      NameWithDescription_t(const char* name): fName(name) {}
-      NameWithDescription_t(std::string_view name): fName(name) {}
-      NameWithDescription_t(std::string_view name, std::string_view descr):
-      fName(name), fDescription(descr) {}
-
-      std::string_view fName;
-      std::string_view fDescription = "";
-   };
 
    /// Creates a new field given a `name` or `{name, description}` pair and a
    /// corresponding tree value that is managed by a shared pointer.
@@ -261,6 +303,7 @@ public:
    const RProjectedFields &GetProjectedFields() const { return *fProjectedFields; }
 
    void Freeze();
+   void Unfreeze() { fModelId = 0; }
    bool IsFrozen() const { return fModelId != 0; }
    std::uint64_t GetModelId() const { return fModelId; }
 
