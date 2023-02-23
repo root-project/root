@@ -355,6 +355,11 @@ void ROOT::Experimental::Detail::RPageSink::UpdateDescriptor(const RNTupleModelC
       pageRange.fPhysicalColumnId = i;
       fOpenPageRanges.emplace_back(std::move(pageRange));
    }
+
+   // Mapping of memory to on-disk column IDs usually happens during serialization of the schema description. If the
+   // header was already serialized, this has to be done manually as it is required for page list serialization.
+   if (fSerializationContext.GetHeaderSize() > 0)
+      fSerializationContext.MapLateAddedColumns(descriptor);
 }
 
 void ROOT::Experimental::Detail::RPageSink::Create(RNTupleModel &model)
