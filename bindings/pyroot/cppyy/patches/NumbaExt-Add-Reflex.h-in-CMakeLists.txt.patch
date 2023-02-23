@@ -1,0 +1,24 @@
+From a470e4b6ae257abbaf19f48a22dc32ceab1f7b4b Mon Sep 17 00:00:00 2001
+From: Baidyanath Kundu <kundubaidya99@gmail.com>
+Date: Sat, 3 Sep 2022 15:21:22 +0200
+Subject: [PATCH 10/34] [PyROOT] Add Reflex.h in CMakeLists.txt
+
+---
+ bindings/pyroot/cppyy/CPyCppyy/CMakeLists.txt | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/bindings/pyroot/cppyy/CPyCppyy/CMakeLists.txt b/bindings/pyroot/cppyy/CPyCppyy/CMakeLists.txt
+index 9ef1e3b0ab..5dda29a5bc 100644
+--- a/bindings/pyroot/cppyy/CPyCppyy/CMakeLists.txt
++++ b/bindings/pyroot/cppyy/CPyCppyy/CMakeLists.txt
+@@ -6,6 +6,7 @@
+ 
+ set(headers
+     inc/CPyCppyy/API.h
++    inc/CPyCppyy/Reflex.h
+     inc/CPyCppyy/PyResult.h
+     inc/CPyCppyy/CommonDefs.h
+     inc/CPyCppyy/PyException.h
+-- 
+2.39.0
+

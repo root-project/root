@@ -1,0 +1,63 @@
+From 4a6649bc977d1a5f6b9078b2690b18c0b20560c5 Mon Sep 17 00:00:00 2001
+From: Baidyanath Kundu <kundubaidya99@gmail.com>
+Date: Tue, 1 Nov 2022 18:11:05 +0100
+Subject: [PATCH 34/34] [PyROOT] Add an entrypoint for cppyy.numba_ext
+
+---
+ bindings/pyroot/pythonizations/CMakeLists.txt         |  6 ++++++
+ .../pythonizations/python/ROOT_numba/__init__.py      | 11 +++++++++++
+ 2 files changed, 17 insertions(+)
+ create mode 100644 bindings/pyroot/pythonizations/python/ROOT_numba/__init__.py
+
+diff --git a/bindings/pyroot/pythonizations/CMakeLists.txt b/bindings/pyroot/pythonizations/CMakeLists.txt
+index 8395785b24..35d2670b7d 100644
+--- a/bindings/pyroot/pythonizations/CMakeLists.txt
++++ b/bindings/pyroot/pythonizations/CMakeLists.txt
+@@ -106,6 +106,7 @@ set(py2_py3_sources
+ )
+ 
+ set(py3_sources
++  ROOT_numba/__init__.py
+   ${PYROOT_EXTRA_PY3_SOURCE}
+ )
+ 
+@@ -134,6 +135,7 @@ set(cpp_sources
+ )
+ 
+ set(ROOTPySrcDir python/ROOT)
++set(ROOTNumbaDir python/ROOT_numba)
+ set(ROOT_headers_dir inc)
+ 
+ # Add custom rules to copy the Python sources into the build directory
+@@ -231,6 +233,10 @@ install(DIRECTORY ${localruntimedir}/ROOT
+         DESTINATION ${CMAKE_INSTALL_PYTHONDIR}
+         COMPONENT libraries)
+ 
++install(DIRECTORY ${localruntimedir}/ROOT_numba
++        DESTINATION ${CMAKE_INSTALL_PYTHONDIR}
++        COMPONENT libraries)
++
+ # Install headers required by pythonizations
+ install(FILES ${PYROOT_EXTRA_HEADERS}
+         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/ROOT
+diff --git a/bindings/pyroot/pythonizations/python/ROOT_numba/__init__.py b/bindings/pyroot/pythonizations/python/ROOT_numba/__init__.py
+new file mode 100644
+index 0000000000..47ed35014a
+--- /dev/null
++++ b/bindings/pyroot/pythonizations/python/ROOT_numba/__init__.py
+@@ -0,0 +1,11 @@
++import sys
++
++if sys.version_info < (3, 7):
++    raise Exception("ROOT numba extension requires Python 3.7 or higher")
++
++import numba
++
++if not hasattr(numba, 'version_info') or numba.version_info < (0, 54):
++    raise Exception("ROOT numba extension requires Numba version 0.54 or higher")
++
++import cppyy.numba_ext
+\ No newline at end of file
+-- 
+2.39.0
+

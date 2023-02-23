@@ -1,0 +1,76 @@
+From 99de092176cfe25262a770fd59a64e192c508c02 Mon Sep 17 00:00:00 2001
+From: Baidyanath Kundu <kundubaidya99@gmail.com>
+Date: Mon, 5 Sep 2022 14:22:26 +0200
+Subject: [PATCH 25/34] [PyROOT] Add CompareMethodArgType to give arg compat
+ score
+
+---
+ .../clingwrapper/src/clingwrapper.cxx         | 31 +++++++++++++++++++
+ .../clingwrapper/src/cpp_cppyy.h              |  2 ++
+ 2 files changed, 33 insertions(+)
+
+diff --git a/bindings/pyroot/cppyy/cppyy-backend/clingwrapper/src/clingwrapper.cxx b/bindings/pyroot/cppyy/cppyy-backend/clingwrapper/src/clingwrapper.cxx
+index fb41b312ca..ce742457e4 100644
+--- a/bindings/pyroot/cppyy/cppyy-backend/clingwrapper/src/clingwrapper.cxx
++++ b/bindings/pyroot/cppyy/cppyy-backend/clingwrapper/src/clingwrapper.cxx
+@@ -33,6 +33,7 @@
+ // Standard
+ #include <assert.h>
+ #include <algorithm>     // for std::count, std::remove
++#include <climits>
+ #include <stdexcept>
+ #include <map>
+ #include <new>
+@@ -1590,6 +1591,36 @@ std::string Cppyy::GetMethodArgType(TCppMethod_t method, TCppIndex_t iarg)
+     return "<unknown>";
+ }
+ 
++Cppyy::TCppIndex_t Cppyy::CompareMethodArgType(TCppMethod_t method, TCppIndex_t iarg, const std::string &req_type)
++{
++    if (method) {
++        TFunction* f = m2f(method);
++        TMethodArg* arg = (TMethodArg *)f->GetListOfMethodArgs()->At((int)iarg);
++        void *argqtp = gInterpreter->TypeInfo_QualTypePtr(arg->GetTypeInfo());
++
++        TypeInfo_t *reqti = gInterpreter->TypeInfo_Factory(req_type.c_str());
++        void *reqqtp = gInterpreter->TypeInfo_QualTypePtr(reqti);
++
++        // This scoring is not based on any particular rules
++        if (gInterpreter->IsSameType(argqtp, reqqtp))
++            return 0; // Best match
++        else if ((gInterpreter->IsSignedIntegerType(argqtp) && gInterpreter->IsSignedIntegerType(reqqtp)) || 
++                 (gInterpreter->IsUnsignedIntegerType(argqtp) && gInterpreter->IsUnsignedIntegerType(reqqtp)) ||
++                 (gInterpreter->IsFloatingType(argqtp) && gInterpreter->IsFloatingType(reqqtp)))
++            return 1;
++        else if ((gInterpreter->IsSignedIntegerType(argqtp) && gInterpreter->IsUnsignedIntegerType(reqqtp)) ||
++                 (gInterpreter->IsFloatingType(argqtp) && gInterpreter->IsUnsignedIntegerType(reqqtp)))
++            return 2;
++        else if ((gInterpreter->IsIntegerType(argqtp) && gInterpreter->IsIntegerType(reqqtp)))
++            return 3;
++        else if ((gInterpreter->IsVoidPointerType(argqtp) && gInterpreter->IsPointerType(reqqtp)))
++            return 4;
++        else 
++            return 10; // Penalize heavily for no possible match
++    }
++    return INT_MAX; // Method is not valid
++}
++
+ std::string Cppyy::GetMethodArgDefault(TCppMethod_t method, TCppIndex_t iarg)
+ {
+     if (method) {
+diff --git a/bindings/pyroot/cppyy/cppyy-backend/clingwrapper/src/cpp_cppyy.h b/bindings/pyroot/cppyy/cppyy-backend/clingwrapper/src/cpp_cppyy.h
+index 7757c19d1a..24f1a5feff 100644
+--- a/bindings/pyroot/cppyy/cppyy-backend/clingwrapper/src/cpp_cppyy.h
++++ b/bindings/pyroot/cppyy/cppyy-backend/clingwrapper/src/cpp_cppyy.h
+@@ -177,6 +177,8 @@ namespace Cppyy {
+     RPY_EXPORTED
+     std::string GetMethodArgType(TCppMethod_t, TCppIndex_t iarg);
+     RPY_EXPORTED
++    TCppIndex_t CompareMethodArgType(TCppMethod_t, TCppIndex_t iarg, const std::string &req_type);
++    RPY_EXPORTED
+     std::string GetMethodArgDefault(TCppMethod_t, TCppIndex_t iarg);
+     RPY_EXPORTED
+     std::string GetMethodSignature(TCppMethod_t, bool show_formalargs, TCppIndex_t maxargs = (TCppIndex_t)-1);
+-- 
+2.39.0
+
