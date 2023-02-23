@@ -25,7 +25,6 @@
 
 import ROOT
 
-#switch off MT in OpenMP (BLAS)
 
 TMVA = ROOT.TMVA
 TFile = ROOT.TFile
@@ -144,7 +143,7 @@ if not useTMVACNN:
 
 writeOutputFile = True
 
-num_threads = 4  # use default threads
+num_threads = 4  # use max 4 threads
 max_epochs = 10  # maximum number of epochs used for training
 
 
