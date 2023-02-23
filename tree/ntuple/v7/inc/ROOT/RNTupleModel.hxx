@@ -35,6 +35,30 @@ namespace ROOT {
 namespace Experimental {
 
 class RCollectionNTupleWriter;
+class RNTupleModel;
+
+namespace Detail {
+
+// clang-format off
+/**
+\class ROOT::Experimental::Detail::RNTupleModelChangeset
+\ingroup NTuple
+\brief The incremental changes to a `RNTupleModel`
+
+Represents a set of alterations to a `RNTupleModel` that happened after the model is used to initialize a `RPageSink`
+instance. This object can be used to communicate metadata updates to a `RPageSink`.
+*/
+// clang-format on
+struct RNTupleModelChangeset {
+   RNTupleModel &fModel;
+   std::vector<RFieldBase *> fAddedFields;
+   std::vector<RFieldBase *> fAddedProjectedFields;
+
+   RNTupleModelChangeset(RNTupleModel &model) : fModel(model) {}
+   bool IsEmpty() const { return fAddedFields.empty() && fAddedProjectedFields.empty(); }
+};
+
+} // namespace Detail
 
 // clang-format off
 /**
