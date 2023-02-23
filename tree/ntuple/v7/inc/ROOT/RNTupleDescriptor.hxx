@@ -392,7 +392,37 @@ writte struct. This allows for forward and backward compatibility when the meta-
 class RNTupleDescriptor {
    friend class RNTupleDescriptorBuilder;
 
+public:
+   class RFieldDescriptorIterable;
+
 private:
+   class RHeaderExtension {
+      friend class RNTupleDescriptorBuilder;
+
+   private:
+      /// Contains the list of field IDs that are part of the header extension; the corresponding columns are
+      /// available via `GetColumnIterable()`.
+      std::vector<DescriptorId_t> fFields;
+      /// Number of logical and physical columns; updated by the descriptor builder when columns are added
+      std::uint64_t fNLogicalColumns = 0;
+      std::uint64_t fNPhysicalColumns = 0;
+
+      void AddField(const RFieldDescriptor &fieldDesc) { fFields.push_back(fieldDesc.GetId()); }
+      void AddColumn(const RColumnDescriptor &columnDesc)
+      {
+         fNLogicalColumns++;
+         if (!columnDesc.IsAliasColumn())
+            fNPhysicalColumns++;
+      }
+
+   public:
+      std::size_t GetNFields() const { return fFields.size(); }
+      std::size_t GetNLogicalColumns() const { return fNLogicalColumns; }
+      std::size_t GetNPhysicalColumns() const { return fNPhysicalColumns; }
+      /// Return an iterator over the top-level fields defined in the extension header
+      RFieldDescriptorIterable GetTopLevelFields(const RNTupleDescriptor &desc) const;
+   };
+
    /// The ntuple name needs to be unique in a given storage location (file)
    std::string fName;
    /// Free text from the user
@@ -419,6 +449,7 @@ private:
    /// May contain only a subset of all the available clusters, e.g. the clusters of the current file
    /// from a chain of files
    std::unordered_map<DescriptorId_t, RClusterDescriptor> fClusterDescriptors;
+   std::unique_ptr<RHeaderExtension> fHeaderExtension;
 
 public:
    // clang-format off
@@ -480,12 +511,20 @@ public:
    */
    // clang-format on
    class RFieldDescriptorIterable {
+      friend class RNTupleDescriptor;
+
    private:
       /// The associated NTuple for this range.
       const RNTupleDescriptor& fNTuple;
       /// The descriptor ids of the child fields. These may be sorted using
       /// a comparison function.
       std::vector<DescriptorId_t> fFieldChildren = {};
+
+      RFieldDescriptorIterable(const RNTupleDescriptor &ntuple, std::vector<DescriptorId_t> &&fields)
+         : fNTuple(ntuple), fFieldChildren(fields)
+      {
+      }
+
    public:
       class RIterator {
       private:
@@ -721,6 +760,9 @@ public:
    /// Walks up the parents of the field ID and returns a field name of the form a.b.c.d
    /// In case of invalid field ID, an empty string is returned.
    std::string GetQualifiedFieldName(DescriptorId_t fieldId) const;
+
+   /// Return header extension information; if the descriptor does not have a header extension, return `nullptr`
+   const RHeaderExtension *GetHeaderExtension() const { return fHeaderExtension.get(); }
 
    /// Methods to load and drop cluster details
    RResult<void> AddClusterDetails(RClusterDescriptor &&clusterDesc);
@@ -997,6 +1039,10 @@ public:
 
    /// Clears so-far stored clusters, fields, and columns and return to a pristine ntuple descriptor
    void Reset();
+
+   /// Mark the beginning of the header extension; any fields and columns added after a call to this function are
+   /// annotated as begin part of the header extension.
+   void BeginHeaderExtension();
 };
 
 } // namespace Experimental
