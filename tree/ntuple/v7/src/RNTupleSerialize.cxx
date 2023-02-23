@@ -989,6 +989,31 @@ RResult<std::uint32_t> ROOT::Experimental::Internal::RNTupleSerializer::Deserial
    return frameSize;
 }
 
+void ROOT::Experimental::Internal::RNTupleSerializer::RContext::MapLateAddedColumns(const RNTupleDescriptor &desc)
+{
+   auto mapColumns = [&](std::span<DescriptorId_t> fieldIDs, bool forAliasColumns) {
+      std::deque<DescriptorId_t> idQueue{fieldIDs.begin(), fieldIDs.end()};
+      while (!idQueue.empty()) {
+         auto parentId = idQueue.front();
+         idQueue.pop_front();
+         for (const auto &c : desc.GetColumnIterable(parentId)) {
+            if (c.IsAliasColumn() == forAliasColumns)
+               MapColumnId(c.GetLogicalId());
+         }
+         for (const auto &f : desc.GetFieldIterable(parentId))
+            idQueue.push_back(f.GetId());
+      }
+   };
+
+   if (auto xHeader = desc.GetHeaderExtension()) {
+      std::vector<DescriptorId_t> fieldIDs;
+      for (const auto &field : xHeader->GetTopLevelFields(desc))
+         fieldIDs.emplace_back(field.GetId());
+      mapColumns(fieldIDs, /*forAliasColumns=*/false);
+      mapColumns(fieldIDs, /*forAliasColumns=*/true);
+   }
+}
+
 std::uint32_t
 ROOT::Experimental::Internal::RNTupleSerializer::SerializeSchemaDescription(void *buffer, const RNTupleDescriptor &desc,
                                                                             RContext &context, bool forHeaderExtension)
