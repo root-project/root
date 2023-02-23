@@ -1054,10 +1054,9 @@ ROOT::Experimental::Internal::RNTupleSerializer::DeserializeSchemaDescription(co
    if (!result)
       return R__FORWARD_ERROR(result);
    bytes += result.Unwrap();
-   // Zero field
-   descBuilder.AddField(
-      RFieldDescriptorBuilder().FieldId(kZeroFieldId).Structure(ENTupleStructure::kRecord).MakeDescriptor().Unwrap());
-   for (std::uint32_t fieldId = 0; fieldId < nFields; ++fieldId) {
+   const std::uint32_t fieldIdRangeBegin = descBuilder.GetDescriptor().GetNFields() - 1;
+   for (unsigned i = 0; i < nFields; ++i) {
+      std::uint32_t fieldId = fieldIdRangeBegin + i;
       RFieldDescriptorBuilder fieldBuilder;
       result = DeserializeFieldV1(bytes, fnFrameSizeLeft(), fieldBuilder);
       if (!result)
@@ -1082,8 +1081,10 @@ ROOT::Experimental::Internal::RNTupleSerializer::DeserializeSchemaDescription(co
    if (!result)
       return R__FORWARD_ERROR(result);
    bytes += result.Unwrap();
+   const std::uint32_t columnIdRangeBegin = descBuilder.GetDescriptor().GetNLogicalColumns();
    std::unordered_map<DescriptorId_t, std::uint32_t> maxIndexes;
-   for (std::uint32_t columnId = 0; columnId < nColumns; ++columnId) {
+   for (unsigned i = 0; i < nColumns; ++i) {
+      std::uint32_t columnId = columnIdRangeBegin + i;
       RColumnDescriptorBuilder columnBuilder;
       result = DeserializeColumnV1(bytes, fnFrameSizeLeft(), columnBuilder);
       if (!result)
@@ -1112,7 +1113,8 @@ ROOT::Experimental::Internal::RNTupleSerializer::DeserializeSchemaDescription(co
    if (!result)
       return R__FORWARD_ERROR(result);
    bytes += result.Unwrap();
-   for (std::uint32_t i = 0; i < nAliasColumns; ++i) {
+   const std::uint32_t aliasColumnIdRangeBegin = columnIdRangeBegin + nColumns;
+   for (unsigned i = 0; i < nAliasColumns; ++i) {
       std::uint32_t physicalId;
       std::uint32_t fieldId;
       result = DeserializeAliasColumn(bytes, fnFrameSizeLeft(), physicalId, fieldId);
@@ -1121,7 +1123,7 @@ ROOT::Experimental::Internal::RNTupleSerializer::DeserializeSchemaDescription(co
       bytes += result.Unwrap();
 
       RColumnDescriptorBuilder columnBuilder;
-      columnBuilder.LogicalColumnId(nColumns + i).PhysicalColumnId(physicalId).FieldId(fieldId);
+      columnBuilder.LogicalColumnId(aliasColumnIdRangeBegin + i).PhysicalColumnId(physicalId).FieldId(fieldId);
       columnBuilder.Model(descBuilder.GetDescriptor().GetColumnDescriptor(physicalId).GetModel());
 
       std::uint32_t idx = 0;
@@ -1227,8 +1229,10 @@ std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializePageList
    return size;
 }
 
-std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeFooterV1(
-   void *buffer, const ROOT::Experimental::RNTupleDescriptor &desc, const RContext &context)
+std::uint32_t
+ROOT::Experimental::Internal::RNTupleSerializer::SerializeFooterV1(void *buffer,
+                                                                   const ROOT::Experimental::RNTupleDescriptor &desc,
+                                                                   RContext &context)
 {
    auto base = reinterpret_cast<unsigned char *>(buffer);
    auto pos = base;
@@ -1240,9 +1244,10 @@ std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeFooterV1
    pos += SerializeFeatureFlags(std::vector<std::int64_t>(), *where);
    pos += SerializeUInt32(context.GetHeaderCRC32(), *where);
 
-   // So far no support for extension headers
+   // Schema extension, i.e. incremental changes with respect to the header
    auto frame = pos;
-   pos += SerializeListFramePreamble(0, *where);
+   pos += SerializeRecordFramePreamble(*where);
+   pos += SerializeSchemaDescription(*where, desc, context, /*forHeaderExtension=*/true);
    pos += SerializeFramePostscript(buffer ? frame : nullptr, pos - frame);
 
    // So far no support for shared clusters (no column groups)
@@ -1342,6 +1347,9 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::Internal::RNTupleSerialize
    bytes += result.Unwrap();
    descBuilder.SetNTuple(name, description);
 
+   // Zero field
+   descBuilder.AddField(
+      RFieldDescriptorBuilder().FieldId(kZeroFieldId).Structure(ENTupleStructure::kRecord).MakeDescriptor().Unwrap());
    result = DeserializeSchemaDescription(bytes, fnBufSizeLeft(), descBuilder);
    if (!result)
       return R__FORWARD_ERROR(result);
@@ -1384,12 +1392,14 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::Internal::RNTupleSerialize
    auto frame = bytes;
    auto fnFrameSizeLeft = [&]() { return frameSize - (bytes - frame); };
 
-   std::uint32_t nXHeaders;
-   result = DeserializeFrameHeader(bytes, fnBufSizeLeft(), frameSize, nXHeaders);
+   result = DeserializeFrameHeader(bytes, fnBufSizeLeft(), frameSize);
    if (!result)
       return R__FORWARD_ERROR(result);
-   if (nXHeaders > 0)
-      R__LOG_WARNING(NTupleLog()) << "extension headers are still unsupported";
+   bytes += result.Unwrap();
+   descBuilder.BeginHeaderExtension();
+   result = DeserializeSchemaDescription(bytes, fnFrameSizeLeft(), descBuilder);
+   if (!result)
+      return R__FORWARD_ERROR(result);
    bytes = frame + frameSize;
 
    std::uint32_t nColumnGroups;
