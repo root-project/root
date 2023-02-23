@@ -206,7 +206,7 @@ std::uint32_t SerializeColumnListV1(const ROOT::Experimental::RNTupleDescriptor 
       }
 
       for (const auto &f : desc.GetFieldIterable(parentId))
-         idQueue.push_back(f.GetId());
+         idQueue.push_front(f.GetId());
    }
 
    return pos - base;
@@ -319,7 +319,7 @@ std::uint32_t SerializeAliasColumnList(const ROOT::Experimental::RNTupleDescript
       }
 
       for (const auto &f : desc.GetFieldIterable(parentId))
-         idQueue.push_back(f.GetId());
+         idQueue.push_front(f.GetId());
    }
 
    return pos - base;
@@ -1001,7 +1001,7 @@ void ROOT::Experimental::Internal::RNTupleSerializer::RContext::MapLateAddedColu
                MapColumnId(c.GetLogicalId());
          }
          for (const auto &f : desc.GetFieldIterable(parentId))
-            idQueue.push_back(f.GetId());
+            idQueue.push_front(f.GetId());
       }
    };
 
