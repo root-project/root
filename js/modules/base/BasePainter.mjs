@@ -524,8 +524,8 @@ class BasePainter {
       }
 
       let rect_origin = getElementRect(main_origin, true),
-         can_resize = main_origin.attr('can_resize'),
-         do_resize = false;
+          can_resize = main_origin.attr('can_resize'),
+          do_resize = false;
 
       if (can_resize == 'height')
          if (height_factor && Math.abs(rect_origin.width * height_factor - rect_origin.height) > 0.1 * rect_origin.width) do_resize = true;
@@ -545,17 +545,26 @@ class BasePainter {
       }
 
       let rect = getElementRect(main),
-          old_h = main.property('draw_height'),
-          old_w = main.property('draw_width');
+          old_h = main.property('_jsroot_height'),
+          old_w = main.property('_jsroot_width');
 
       rect.changed = false;
 
       if (old_h && old_w && (old_h > 0) && (old_w > 0)) {
          if ((old_h !== rect.height) || (old_w !== rect.width))
-            if ((check_level > 1) || (rect.width / old_w < 0.66) || (rect.width / old_w > 1.5) ||
-               (rect.height / old_h < 0.66) && (rect.height / old_h > 1.5)) rect.changed = true;
+            rect.changed = (check_level > 1) || (rect.width / old_w < 0.9) || (rect.width / old_w > 1.1) ||
+                           (rect.height / old_h < 0.9) || (rect.height / old_h > 1.1);
       } else {
          rect.changed = true;
+      }
+
+      if (rect.changed)
+         main.property('_jsroot_height', rect.height).property('_jsroot_width', rect.width);
+
+      // after change enlarge state always mark main element as resized
+      if (main_origin.property('did_enlarge')) {
+         rect.changed = true;
+         main_origin.property('did_enlarge', false);
       }
 
       return rect;
@@ -612,7 +621,7 @@ class BasePainter {
             enlarge.node().appendChild(main.node().firstChild);
 
          origin.property('use_enlarge', true);
-
+         origin.property('did_enlarge', true);
          return true;
       }
       if ((action === false) && (state !== 'off')) {
@@ -622,6 +631,7 @@ class BasePainter {
 
          enlarge.remove();
          origin.property('use_enlarge', false);
+         origin.property('did_enlarge', true);
          return true;
       }
 
