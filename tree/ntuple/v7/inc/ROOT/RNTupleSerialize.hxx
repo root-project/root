@@ -212,6 +212,13 @@ public:
    static RResult<std::uint32_t> DeserializeClusterGroup(const void *buffer, std::uint32_t bufSize,
                                                          RClusterGroup &clusterGroup);
 
+   /// Serialize the schema description in `desc` into `buffer`. If `forHeaderExtension` is true, serialize only the
+   /// fields and columns tagged as part of the header extension (see `RNTupleDescriptorBuilder::BeginHeaderExtension`).
+   static std::uint32_t SerializeSchemaDescription(void *buffer, const RNTupleDescriptor &desc, RContext &context,
+                                                   bool forHeaderExtension = false);
+   static RResult<std::uint32_t>
+   DeserializeSchemaDescription(const void *buffer, std::uint32_t bufSize, RNTupleDescriptorBuilder &descBuilder);
+
    static RContext SerializeHeaderV1(void *buffer, const RNTupleDescriptor &desc);
    static std::uint32_t SerializePageListV1(void *buffer,
                                             const RNTupleDescriptor &desc,

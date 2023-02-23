@@ -989,16 +989,177 @@ RResult<std::uint32_t> ROOT::Experimental::Internal::RNTupleSerializer::Deserial
    return frameSize;
 }
 
+std::uint32_t
+ROOT::Experimental::Internal::RNTupleSerializer::SerializeSchemaDescription(void *buffer, const RNTupleDescriptor &desc,
+                                                                            RContext &context, bool forHeaderExtension)
+{
+   auto base = reinterpret_cast<unsigned char *>(buffer);
+   auto pos = base;
+   void** where = (buffer == nullptr) ? &buffer : reinterpret_cast<void**>(&pos);
+
+   std::size_t nFields = 0, nColumns = 0, nAliasColumns = 0;
+   std::vector<DescriptorId_t> subtrees;
+   if (forHeaderExtension) {
+      if (auto xHeader = desc.GetHeaderExtension()) {
+         nFields = xHeader->GetNFields();
+         nColumns = xHeader->GetNPhysicalColumns();
+         nAliasColumns = xHeader->GetNLogicalColumns() - xHeader->GetNPhysicalColumns();
+         for (const auto &field : xHeader->GetTopLevelFields(desc))
+            subtrees.emplace_back(field.GetId());
+      }
+   } else {
+      nFields = desc.GetNFields() - 1;
+      nColumns = desc.GetNPhysicalColumns();
+      nAliasColumns = desc.GetNLogicalColumns() - desc.GetNPhysicalColumns();
+      subtrees.emplace_back(desc.GetFieldZeroId());
+   }
+
+   auto frame = pos;
+   pos += SerializeListFramePreamble(nFields, *where);
+   pos += SerializeFieldTree(desc, context, *where, subtrees);
+   pos += SerializeFramePostscript(buffer ? frame : nullptr, pos - frame);
+
+   frame = pos;
+   pos += SerializeListFramePreamble(nColumns, *where);
+   pos += SerializeColumnListV1(desc, context, *where, subtrees);
+   pos += SerializeFramePostscript(buffer ? frame : nullptr, pos - frame);
+
+   frame = pos;
+   pos += SerializeListFramePreamble(nAliasColumns, *where);
+   pos += SerializeAliasColumnList(desc, context, *where, subtrees);
+   pos += SerializeFramePostscript(buffer ? frame : nullptr, pos - frame);
+
+   // We don't use extra type information yet
+   frame = pos;
+   pos += SerializeListFramePreamble(0, *where);
+   pos += SerializeFramePostscript(buffer ? frame : nullptr, pos - frame);
+   return static_cast<std::uint32_t>(pos - base);
+}
+
+RResult<std::uint32_t>
+ROOT::Experimental::Internal::RNTupleSerializer::DeserializeSchemaDescription(const void *buffer, std::uint32_t bufSize,
+                                                                              RNTupleDescriptorBuilder &descBuilder)
+{
+   auto base = reinterpret_cast<const unsigned char *>(buffer);
+   auto bytes = base;
+   auto fnBufSizeLeft = [&]() { return bufSize - (bytes - base); };
+   RResult<std::uint32_t> result{0};
+
+   std::uint32_t frameSize;
+   auto frame = bytes;
+   auto fnFrameSizeLeft = [&]() { return frameSize - (bytes - frame); };
+
+   std::uint32_t nFields;
+   result = DeserializeFrameHeader(bytes, fnBufSizeLeft(), frameSize, nFields);
+   if (!result)
+      return R__FORWARD_ERROR(result);
+   bytes += result.Unwrap();
+   // Zero field
+   descBuilder.AddField(
+      RFieldDescriptorBuilder().FieldId(kZeroFieldId).Structure(ENTupleStructure::kRecord).MakeDescriptor().Unwrap());
+   for (std::uint32_t fieldId = 0; fieldId < nFields; ++fieldId) {
+      RFieldDescriptorBuilder fieldBuilder;
+      result = DeserializeFieldV1(bytes, fnFrameSizeLeft(), fieldBuilder);
+      if (!result)
+         return R__FORWARD_ERROR(result);
+      bytes += result.Unwrap();
+      if (fieldId == fieldBuilder.GetParentId())
+         fieldBuilder.ParentId(kZeroFieldId);
+      auto fieldDesc = fieldBuilder.FieldId(fieldId).MakeDescriptor();
+      if (!fieldDesc)
+         return R__FORWARD_ERROR(fieldDesc);
+      auto parentId = fieldDesc.Inspect().GetParentId();
+      descBuilder.AddField(fieldDesc.Unwrap());
+      auto resVoid = descBuilder.AddFieldLink(parentId, fieldId);
+      if (!resVoid)
+         return R__FORWARD_ERROR(resVoid);
+   }
+   bytes = frame + frameSize;
+
+   std::uint32_t nColumns;
+   frame = bytes;
+   result = DeserializeFrameHeader(bytes, fnBufSizeLeft(), frameSize, nColumns);
+   if (!result)
+      return R__FORWARD_ERROR(result);
+   bytes += result.Unwrap();
+   std::unordered_map<DescriptorId_t, std::uint32_t> maxIndexes;
+   for (std::uint32_t columnId = 0; columnId < nColumns; ++columnId) {
+      RColumnDescriptorBuilder columnBuilder;
+      result = DeserializeColumnV1(bytes, fnFrameSizeLeft(), columnBuilder);
+      if (!result)
+         return R__FORWARD_ERROR(result);
+      bytes += result.Unwrap();
+
+      std::uint32_t idx = 0;
+      const auto fieldId = columnBuilder.GetFieldId();
+      auto maxIdx = maxIndexes.find(fieldId);
+      if (maxIdx != maxIndexes.end())
+         idx = maxIdx->second + 1;
+      maxIndexes[fieldId] = idx;
+
+      auto columnDesc = columnBuilder.Index(idx).LogicalColumnId(columnId).PhysicalColumnId(columnId).MakeDescriptor();
+      if (!columnDesc)
+         return R__FORWARD_ERROR(columnDesc);
+      auto resVoid = descBuilder.AddColumn(columnDesc.Unwrap());
+      if (!resVoid)
+         return R__FORWARD_ERROR(resVoid);
+   }
+   bytes = frame + frameSize;
+
+   std::uint32_t nAliasColumns;
+   frame = bytes;
+   result = DeserializeFrameHeader(bytes, fnBufSizeLeft(), frameSize, nAliasColumns);
+   if (!result)
+      return R__FORWARD_ERROR(result);
+   bytes += result.Unwrap();
+   for (std::uint32_t i = 0; i < nAliasColumns; ++i) {
+      std::uint32_t physicalId;
+      std::uint32_t fieldId;
+      result = DeserializeAliasColumn(bytes, fnFrameSizeLeft(), physicalId, fieldId);
+      if (!result)
+         return R__FORWARD_ERROR(result);
+      bytes += result.Unwrap();
+
+      RColumnDescriptorBuilder columnBuilder;
+      columnBuilder.LogicalColumnId(nColumns + i).PhysicalColumnId(physicalId).FieldId(fieldId);
+      columnBuilder.Model(descBuilder.GetDescriptor().GetColumnDescriptor(physicalId).GetModel());
+
+      std::uint32_t idx = 0;
+      auto maxIdx = maxIndexes.find(fieldId);
+      if (maxIdx != maxIndexes.end())
+         idx = maxIdx->second + 1;
+      maxIndexes[fieldId] = idx;
+
+      auto aliasColumnDesc = columnBuilder.Index(idx).MakeDescriptor();
+      if (!aliasColumnDesc)
+         return R__FORWARD_ERROR(aliasColumnDesc);
+      auto resVoid = descBuilder.AddColumn(aliasColumnDesc.Unwrap());
+      if (!resVoid)
+         return R__FORWARD_ERROR(resVoid);
+   }
+   bytes = frame + frameSize;
+
+   std::uint32_t nTypeInfo;
+   frame = bytes;
+   result = DeserializeFrameHeader(bytes, fnBufSizeLeft(), frameSize, nTypeInfo);
+   if (!result)
+      return R__FORWARD_ERROR(result);
+   if (nTypeInfo > 0)
+      R__LOG_WARNING(NTupleLog()) << "Extra type information is still unsupported! ";
+   bytes = frame + frameSize;
+
+   return bytes - reinterpret_cast<const unsigned char *>(buffer);
+}
 
 ROOT::Experimental::Internal::RNTupleSerializer::RContext
-ROOT::Experimental::Internal::RNTupleSerializer::SerializeHeaderV1(
-   void *buffer, const ROOT::Experimental::RNTupleDescriptor &desc)
+ROOT::Experimental::Internal::RNTupleSerializer::SerializeHeaderV1(void *buffer,
+                                                                   const ROOT::Experimental::RNTupleDescriptor &desc)
 {
    RContext context;
 
    auto base = reinterpret_cast<unsigned char *>(buffer);
    auto pos = base;
-   void** where = (buffer == nullptr) ? &buffer : reinterpret_cast<void**>(&pos);
+   void **where = (buffer == nullptr) ? &buffer : reinterpret_cast<void **>(&pos);
 
    pos += SerializeEnvelopePreamble(*where);
    // So far we don't make use of feature flags
@@ -1008,28 +1169,8 @@ ROOT::Experimental::Internal::RNTupleSerializer::SerializeHeaderV1(
    pos += SerializeString(desc.GetDescription(), *where);
    pos += SerializeString(std::string("ROOT v") + ROOT_RELEASE, *where);
 
-   DescriptorId_t subtrees[1] = {desc.GetFieldZeroId()};
-   auto frame = pos;
    R__ASSERT(desc.GetNFields() > 0); // we must have at least a zero field
-   pos += SerializeListFramePreamble(desc.GetNFields() - 1, *where);
-   pos += SerializeFieldTree(desc, context, *where, subtrees);
-   pos += SerializeFramePostscript(buffer ? frame : nullptr, pos - frame);
-
-   frame = pos;
-   pos += SerializeListFramePreamble(desc.GetNPhysicalColumns(), *where);
-   pos += SerializeColumnListV1(desc, context, *where, subtrees);
-   pos += SerializeFramePostscript(buffer ? frame : nullptr, pos - frame);
-
-   frame = pos;
-   auto nAliasColumns = desc.GetNLogicalColumns() - desc.GetNPhysicalColumns();
-   pos += SerializeListFramePreamble(nAliasColumns, *where);
-   pos += SerializeAliasColumnList(desc, context, *where, subtrees);
-   pos += SerializeFramePostscript(buffer ? frame : nullptr, pos - frame);
-
-   // We don't use extra type information yet
-   frame = pos;
-   pos += SerializeListFramePreamble(0, *where);
-   pos += SerializeFramePostscript(buffer ? frame : nullptr, pos - frame);
+   pos += SerializeSchemaDescription(*where, desc, context);
 
    std::uint32_t size = pos - base;
    std::uint32_t crc32 = 0;
@@ -1201,111 +1342,9 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::Internal::RNTupleSerialize
    bytes += result.Unwrap();
    descBuilder.SetNTuple(name, description);
 
-   std::uint32_t frameSize;
-   auto frame = bytes;
-   auto fnFrameSizeLeft = [&]() { return frameSize - (bytes - frame); };
-
-   std::uint32_t nFields;
-   result = DeserializeFrameHeader(bytes, fnBufSizeLeft(), frameSize, nFields);
+   result = DeserializeSchemaDescription(bytes, fnBufSizeLeft(), descBuilder);
    if (!result)
       return R__FORWARD_ERROR(result);
-   bytes += result.Unwrap();
-   // Zero field
-   descBuilder.AddField(RFieldDescriptorBuilder()
-      .FieldId(kZeroFieldId)
-      .Structure(ENTupleStructure::kRecord)
-      .MakeDescriptor()
-      .Unwrap());
-   for (std::uint32_t fieldId = 0; fieldId < nFields; ++fieldId) {
-      RFieldDescriptorBuilder fieldBuilder;
-      result = DeserializeFieldV1(bytes, fnFrameSizeLeft(), fieldBuilder);
-      if (!result)
-         return R__FORWARD_ERROR(result);
-      bytes += result.Unwrap();
-      if (fieldId == fieldBuilder.GetParentId())
-         fieldBuilder.ParentId(kZeroFieldId);
-      auto fieldDesc = fieldBuilder.FieldId(fieldId).MakeDescriptor();
-      if (!fieldDesc)
-         return R__FORWARD_ERROR(fieldDesc);
-      auto parentId = fieldDesc.Inspect().GetParentId();
-      descBuilder.AddField(fieldDesc.Unwrap());
-      auto resVoid = descBuilder.AddFieldLink(parentId, fieldId);
-      if (!resVoid)
-         return R__FORWARD_ERROR(resVoid);
-   }
-   bytes = frame + frameSize;
-
-   std::uint32_t nColumns;
-   frame = bytes;
-   result = DeserializeFrameHeader(bytes, fnBufSizeLeft(), frameSize, nColumns);
-   if (!result)
-      return R__FORWARD_ERROR(result);
-   bytes += result.Unwrap();
-   std::unordered_map<DescriptorId_t, std::uint32_t> maxIndexes;
-   for (std::uint32_t columnId = 0; columnId < nColumns; ++columnId) {
-      RColumnDescriptorBuilder columnBuilder;
-      result = DeserializeColumnV1(bytes, fnFrameSizeLeft(), columnBuilder);
-      if (!result)
-         return R__FORWARD_ERROR(result);
-      bytes += result.Unwrap();
-
-      std::uint32_t idx = 0;
-      const auto fieldId = columnBuilder.GetFieldId();
-      auto maxIdx = maxIndexes.find(fieldId);
-      if (maxIdx != maxIndexes.end())
-         idx = maxIdx->second + 1;
-      maxIndexes[fieldId] = idx;
-
-      auto columnDesc = columnBuilder.Index(idx).LogicalColumnId(columnId).PhysicalColumnId(columnId).MakeDescriptor();
-      if (!columnDesc)
-         return R__FORWARD_ERROR(columnDesc);
-      auto resVoid = descBuilder.AddColumn(columnDesc.Unwrap());
-      if (!resVoid)
-         return R__FORWARD_ERROR(resVoid);
-   }
-   bytes = frame + frameSize;
-
-   std::uint32_t nAliasColumns;
-   frame = bytes;
-   result = DeserializeFrameHeader(bytes, fnBufSizeLeft(), frameSize, nAliasColumns);
-   if (!result)
-      return R__FORWARD_ERROR(result);
-   bytes += result.Unwrap();
-   for (std::uint32_t i = 0; i < nAliasColumns; ++i) {
-      std::uint32_t physicalId;
-      std::uint32_t fieldId;
-      result = DeserializeAliasColumn(bytes, fnFrameSizeLeft(), physicalId, fieldId);
-      if (!result)
-         return R__FORWARD_ERROR(result);
-      bytes += result.Unwrap();
-
-      RColumnDescriptorBuilder columnBuilder;
-      columnBuilder.LogicalColumnId(nColumns + i).PhysicalColumnId(physicalId).FieldId(fieldId);
-      columnBuilder.Model(descBuilder.GetDescriptor().GetColumnDescriptor(physicalId).GetModel());
-
-      std::uint32_t idx = 0;
-      auto maxIdx = maxIndexes.find(fieldId);
-      if (maxIdx != maxIndexes.end())
-         idx = maxIdx->second + 1;
-      maxIndexes[fieldId] = idx;
-
-      auto aliasColumnDesc = columnBuilder.Index(idx).MakeDescriptor();
-      if (!aliasColumnDesc)
-         return R__FORWARD_ERROR(aliasColumnDesc);
-      auto resVoid = descBuilder.AddColumn(aliasColumnDesc.Unwrap());
-      if (!resVoid)
-         return R__FORWARD_ERROR(resVoid);
-   }
-   bytes = frame + frameSize;
-
-   std::uint32_t nTypeInfo;
-   frame = bytes;
-   result = DeserializeFrameHeader(bytes, fnBufSizeLeft(), frameSize, nTypeInfo);
-   if (!result)
-      return R__FORWARD_ERROR(result);
-   if (nTypeInfo > 0)
-      R__LOG_WARNING(NTupleLog()) << "Extra type information is still unsupported! ";
-   bytes = frame + frameSize;
 
    return RResult<void>::Success();
 }
