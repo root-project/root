@@ -440,6 +440,30 @@ public:
    const Detail::RNTupleMetrics &GetMetrics() const { return fMetrics; }
 
    const RNTupleModel *GetModel() const { return fModel.get(); }
+
+   /// Get a `RNTupleModel::RIncrementalUpdater` that provides limited support for incremental updates to the underlying
+   /// model, e.g. addition of new fields.
+   ///
+   /// **Example: add a new field after the model has been used to construct a `RNTupleWriter` object**
+   /// ~~~ {.cpp}
+   /// #include <ROOT/RNTuple.hxx>
+   /// using ROOT::Experimental::RNTupleModel;
+   /// using ROOT::Experimental::RNTupleWriter;
+   ///
+   /// auto model = RNTupleModel::Create();
+   /// auto fldFloat = model->MakeField<float>("fldFloat");
+   /// auto ntuple = RNTupleWriter::Recreate(std::move(model), "myNTuple", "some/file.root");
+   /// auto updater = ntuple->GetIncrementalModelUpdater();
+   /// updater->BeginUpdate();
+   /// updater->AddField(std::make_unique<RField<float>>("pt"));
+   /// updater->CommitUpdate();
+   ///
+   /// // ...
+   /// ~~~
+   std::unique_ptr<RNTupleModel::RIncrementalUpdater> GetIncrementalModelUpdater()
+   {
+      return std::unique_ptr<RNTupleModel::RIncrementalUpdater>(new RNTupleModel::RIncrementalUpdater(*this));
+   }
 };
 
 // clang-format off
