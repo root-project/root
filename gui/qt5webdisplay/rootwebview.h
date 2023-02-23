@@ -18,13 +18,13 @@
 class RootWebView : public QWebEngineView {
    Q_OBJECT
 protected:
-   unsigned fWidth, fHeight;
-   int fX, fY;
+   unsigned fWidth{0}, fHeight{0};
+   int fX{0}, fY{0};
 
-   virtual void closeEvent(QCloseEvent *);
+   void closeEvent(QCloseEvent *) override;
 
-   virtual void dropEvent(QDropEvent* event);
-   virtual void dragEnterEvent( QDragEnterEvent *e );
+   void dropEvent(QDropEvent *) override;
+   void dragEnterEvent(QDragEnterEvent *) override;
 
 public slots:
    void onLoadStarted();
