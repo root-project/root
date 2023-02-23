@@ -12,6 +12,7 @@
 9. Use new gStyle attributes for candle and violin plots
 10. Implement autoplace for TLegend
 11. Change algorithm of building smooth (bezier) curves
+12. Adjust TAxis title positioning to native ROOT behavior
 
 
 ## Changes in 7.3.0

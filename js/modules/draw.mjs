@@ -519,6 +519,7 @@ function addStreamerInfosForPainter(lst) {
   * @param {string} [args.option] - draw options
   * @param {number} [args.width = 1200] - image width
   * @param {number} [args.height = 800] - image height
+  * @param {boolean} [args.use_canvas_size = false] - if configured used size stored in TCanvas object
   * @return {Promise} with svg code */
 async function makeSVG(args) {
 
@@ -526,6 +527,11 @@ async function makeSVG(args) {
    if (!args.object) return Promise.reject(Error('No object specified to generate SVG'));
    if (!args.width) args.width = 1200;
    if (!args.height) args.height = 800;
+
+   if (args.use_canvas_size && (args.object?._typename == clTCanvas) && args.object.fCw && args.object.fCh) {
+      args.width = args.object?.fCw;
+      args.height = args.object?.fCh;
+   }
 
    async function build(main) {
 
