@@ -27,8 +27,8 @@ class RootWebPage : public QWebEnginePage {
    Q_OBJECT
 protected:
    int fConsole{0};
-   virtual void javaScriptConsoleMessage(QWebEnginePage::JavaScriptConsoleMessageLevel level, const QString &message,
-                                         int lineNumber, const QString &sourceID);
+   void javaScriptConsoleMessage(QWebEnginePage::JavaScriptConsoleMessageLevel level, const QString &message,
+                                 int lineNumber, const QString &sourceID) override;
 
 public:
    RootWebPage(QObject *parent = nullptr);
