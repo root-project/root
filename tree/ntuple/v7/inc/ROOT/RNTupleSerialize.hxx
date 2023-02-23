@@ -224,7 +224,7 @@ public:
                                             const RNTupleDescriptor &desc,
                                             std::span<DescriptorId_t> physClusterIDs,
                                             const RContext &context);
-   static std::uint32_t SerializeFooterV1(void *buffer, const RNTupleDescriptor &desc, const RContext &context);
+   static std::uint32_t SerializeFooterV1(void *buffer, const RNTupleDescriptor &desc, RContext &context);
 
    static RResult<void> DeserializeHeaderV1(const void *buffer,
                                             std::uint32_t bufSize,
