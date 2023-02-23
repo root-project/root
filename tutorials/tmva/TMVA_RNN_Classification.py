@@ -26,7 +26,8 @@ num_threads = 4  # use max 4 threads
 # do enable MT running
 if "imt" in ROOT.gROOT.GetConfigFeatures():
     ROOT.EnableImplicitMT(num_threads)
-    ROOT.gSystem.Setenv("OMP_NUM_THREADS", "1")  # switch OFF MT in OpenBLAS
+    # switch off MT in OpenBLAS to avoid conflict with tbb
+    ROOT.gSystem.Setenv("OMP_NUM_THREADS", "1")
     print("Running with nthreads  = {}".format(ROOT.GetThreadPoolSize()))
 else:
     print("Running in serial mode since ROOT does not support MT")
