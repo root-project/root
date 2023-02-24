@@ -1215,9 +1215,10 @@ ROOT::Experimental::RCollectionClassField::RCollectionClassField(std::string_vie
       throw RException(R__FAIL(std::string(className) + " has no associated collection proxy"));
 
    fProxy.reset(classp->GetCollectionProxy()->Generate());
+   fProperties = fProxy->GetProperties();
    if (fProxy->HasPointers())
       throw RException(R__FAIL("collection proxies whose value type is a pointer are not supported"));
-   if (fProxy->GetProperties() & TVirtualCollectionProxy::kIsAssociative)
+   if (fProperties & TVirtualCollectionProxy::kIsAssociative)
       throw RException(R__FAIL("associative collections not supported"));
 
    fIFuncsRead = RCollectionIterableOnce::GetIteratorFuncs(fProxy.get(), true /* readOnly */);
@@ -1284,8 +1285,8 @@ void ROOT::Experimental::RCollectionClassField::ReadGlobalImpl(NTupleSize_t glob
    fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, &nItems);
 
    TVirtualCollectionProxy::TPushPop RAII(fProxy.get(), value->GetRawPtr());
-   void *obj = fProxy->Allocate(static_cast<std::uint32_t>(nItems),
-                                (fProxy->GetProperties() & TVirtualCollectionProxy::kNeedDelete));
+   void *obj =
+      fProxy->Allocate(static_cast<std::uint32_t>(nItems), (fProperties & TVirtualCollectionProxy::kNeedDelete));
    unsigned i = 0;
    // TODO(jalopezg): we might be able to further optimize this in case `GetCollectionType() == kSTLvector`
    for (auto ptr : RCollectionIterableOnce{obj, fIFuncsWrite, fProxy.get()}) {
@@ -1322,7 +1323,7 @@ ROOT::Experimental::Detail::RFieldValue ROOT::Experimental::RCollectionClassFiel
 
 void ROOT::Experimental::RCollectionClassField::DestroyValue(const Detail::RFieldValue &value, bool dtorOnly)
 {
-   if (fProxy->GetProperties() & TVirtualCollectionProxy::kNeedDelete) {
+   if (fProperties & TVirtualCollectionProxy::kNeedDelete) {
       for (auto ptr : RCollectionIterableOnce{value.GetRawPtr(), fIFuncsWrite, fProxy.get()}) {
          auto itemValue = fSubFields[0]->CaptureValue(ptr);
          fSubFields[0]->DestroyValue(itemValue, true /* dtorOnly */);

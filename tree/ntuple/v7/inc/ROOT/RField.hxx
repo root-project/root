@@ -503,6 +503,7 @@ private:
    };
 
    std::unique_ptr<TVirtualCollectionProxy> fProxy;
+   Int_t fProperties;
    /// Two sets of functions to operate on iterators, to be used depending on the access type
    RCollectionIterableOnce::RIteratorFuncs fIFuncsRead;
    RCollectionIterableOnce::RIteratorFuncs fIFuncsWrite;
