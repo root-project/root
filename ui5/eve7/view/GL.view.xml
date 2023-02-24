@@ -3,4 +3,5 @@
    xmlns:mvc="sap.ui.core.mvc"
    xmlns:core="sap.ui.core"
    xmlns="sap.m">
+   <core:Fragment fragmentName="rootui5.eve7.view.ViewToolbar" type="XML" />
 </mvc:View>

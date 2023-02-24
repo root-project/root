@@ -35,6 +35,9 @@ private:
 
    ECameraType fCameraType{kCameraPerspXOZ};
 
+   bool fMandatory{true};
+   std::string fPostStreamFlag;
+
 public:
    REveViewer(const std::string &n="REveViewer", const std::string &t="");
    virtual ~REveViewer();
@@ -46,6 +49,12 @@ public:
 
    void SetCameraType(ECameraType t) { fCameraType = t; }
    ECameraType GetCameraType() const { return fCameraType; }
+
+   void DisconnectClient();
+   void ConnectClient();
+
+   void SetMandatory(bool x);
+   bool GetMandatory() { return fMandatory; }
 
    void RemoveElementLocal(REveElement *el) override;
    void RemoveElementsLocal() override;
@@ -110,6 +119,7 @@ public:
 
    Bool_t  UseLightColorSet()   const { return fUseLightColorSet; }
    void    SwitchColorSet();
+ //  Int_t WriteCoreJson(nlohmann::json &cj, Int_t rnr_offset) override;
 };
 
 } // namespace Experimental

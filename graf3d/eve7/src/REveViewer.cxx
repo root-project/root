@@ -113,7 +113,38 @@ int REveViewer::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
       case kCameraOrthoXOY: ct = "OrthoXOY"; break;
    }
    j["CameraType"] = ct;
+   j["Mandatory"] = fMandatory;
+
+   j["UT_PostStream"] = "UT_EveViewSubscribed";
+
    return REveElement::WriteCoreJson(j, rnr_offset);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Function called from MIR when user closes one of the viewer window.
+//  Client id stored in thread local data
+void REveViewer::DisconnectClient()
+{
+   gEve->DisconnectEveViewer(this);
+}
+////////////////////////////////////////////////////////////////////////////////
+/// Function called from MIR when user wants to stream unsubscribed view.
+//  Client id stored in thread local data
+void REveViewer::ConnectClient()
+{
+   gEve->ConnectEveViewer(this);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+///
+//  Set Flag if this viewer is presented on connect
+void REveViewer::SetMandatory(bool x)
+{
+   fMandatory = x;
+   for (auto &c : RefChildren()) {
+      REveSceneInfo *sinfo = dynamic_cast<REveSceneInfo *>(c);
+      sinfo->GetScene()->GetScene()->SetMandatory(fMandatory);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
