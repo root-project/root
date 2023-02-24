@@ -49,14 +49,14 @@ public:
       fDeclFileSysName(fsdecl), fImplFileSysName(fsimpl),
       fSelected(kTRUE) { }
 
-   virtual ~TClassDocInfo()
+   ~TClassDocInfo() override
    {
       // Required since we overload TObject::Hash.
       ROOT::CallRecursiveRemoveIfNeeded(*this);
    }
 
    TDictionary *GetClass() const { return fClass; }
-   virtual const char*     GetName() const;
+           const char*     GetName() const override;
            const char*     GetHtmlFileName() const { return fHtmlFileName; }
            const char*     GetDeclFileName() const { return fDeclFileName; }
            const char*     GetImplFileName() const { return fImplFileName; }
@@ -77,12 +77,12 @@ public:
            void            SetDeclFileSysName(const char* fsname) { fDeclFileSysName = fsname; }
            void            SetImplFileSysName(const char* fsname) { fImplFileSysName = fsname; }
 
-           ULong_t         Hash() const;
+           ULong_t         Hash() const override;
 
            TList&          GetListOfTypedefs() { return fTypedefs; }
 
-   virtual Bool_t          IsSortable() const { return kTRUE; }
-   virtual Int_t           Compare(const TObject* obj) const;
+   Bool_t          IsSortable() const override { return kTRUE; }
+   Int_t           Compare(const TObject* obj) const override;
 
 private:
    TClassDocInfo();
@@ -97,7 +97,7 @@ private:
    TList                   fTypedefs; // typedefs to this class
    Bool_t                  fSelected; // selected for doc output
 
-   ClassDef(TClassDocInfo,0); // info cache for class documentation
+   ClassDefOverride(TClassDocInfo,0); // info cache for class documentation
 };
 
 //____________________________________________________________________
@@ -110,7 +110,7 @@ public:
       TNamed(name, doc), fSuper(super), fSub(0), fSelected(kTRUE) {
          if (super) super->GetSub().Add(this);
       }
-   virtual ~TModuleDocInfo() { fSub.Clear("nodelete"); fClasses.Clear("nodelete"); }
+   ~TModuleDocInfo() override { fSub.Clear("nodelete"); fClasses.Clear("nodelete"); }
 
    void        SetDoc(const char* doc) { SetTitle(doc); }
    const char* GetDoc() const { return GetTitle(); }
@@ -130,7 +130,7 @@ private:
    TList       fClasses;
    Bool_t      fSelected; // selected for doc output
 
-   ClassDef(TModuleDocInfo,0); // documentation for a group of classes
+   ClassDefOverride(TModuleDocInfo,0); // documentation for a group of classes
 };
 
 //__________________________________________________________________________
@@ -152,7 +152,7 @@ class TLibraryDocInfo: public TNamed {
    std::set<std::string> fDependencies; // dependencies on other libraries
    std::set<std::string> fModules; // modules in the library
 
-   ClassDef(TLibraryDocInfo,0); // documentation for a library
+   ClassDefOverride(TLibraryDocInfo,0); // documentation for a library
 };
 
 
