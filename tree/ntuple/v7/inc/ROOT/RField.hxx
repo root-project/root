@@ -443,15 +443,69 @@ public:
 /// Objects of such type behave as collections that can be accessed through the corresponding member functions in
 /// `TVirtualCollectionProxy`. At a bare minimum, the user is required to provide an implementation for the following
 /// functions in `TVirtualCollectionProxy`: `HasPointers()`, `GetProperties()`, `GetValueClass()`, `GetType()`,
-/// `Sizeof()`, `PushProxy()`, `PopProxy()`, `At()`, `Clear()`, and `Insert()`.
+/// `PushProxy()`, `PopProxy()`, `GetFunctionCreateIterators()`, `GetFunctionNext()`, and
+/// `GetFunctionDeleteTwoIterators()`.
 ///
 /// The collection proxy for a given class can be set via `TClass::CopyCollectionProxy()`.
 class RCollectionClassField : public Detail::RFieldBase {
 private:
-   /// Chunk size in bytes used in `ReadGlobalImp()`. Items held in the same chunk will be inserted in
-   /// a single `TVirtualCollectionProxy::Insert()` call.
-   static constexpr const std::size_t kReadChunkSize = 64 * 1024;
+   /// Allows for iterating over the elements of a proxied collection. RCollectionIterableOnce avoids an additional
+   /// iterator copy (see `TVirtualCollectionProxy::GetFunctionCopyIterator`) and thus can only be iterated once.
+   class RCollectionIterableOnce {
+   public:
+      struct RIteratorFuncs {
+         TVirtualCollectionProxy::CreateIterators_t fCreateIterators;
+         TVirtualCollectionProxy::DeleteTwoIterators_t fDeleteTwoIterators;
+         TVirtualCollectionProxy::Next_t fNext;
+      };
+      static RIteratorFuncs GetIteratorFuncs(TVirtualCollectionProxy *proxy, bool readOnly);
+   private:
+      class RIterator {
+         const RCollectionIterableOnce &fOwner;
+         void *fIterator;
+         void *fElementPtr;
+      public:
+         using iterator_category = std::forward_iterator_tag;
+         using iterator = RIterator;
+         using difference_type = std::ptrdiff_t;
+         using pointer = void *;
+
+         RIterator(const RCollectionIterableOnce &owner) : fOwner(owner) {}
+         RIterator(const RCollectionIterableOnce &owner, void *iter) : fOwner(owner), fIterator(iter)
+         {
+            fElementPtr = fOwner.fIFuncs.fNext(&fIterator, &fOwner.fEnd);
+         }
+         iterator operator++()
+         {
+            fElementPtr = fOwner.fIFuncs.fNext(&fIterator, &fOwner.fEnd);
+            return *this;
+         }
+         pointer operator*() const { return fElementPtr; }
+         bool operator!=(const iterator &rh) const { return fElementPtr != rh.fElementPtr; }
+         bool operator==(const iterator &rh) const { return fElementPtr == rh.fElementPtr; }
+      };
+
+      const RIteratorFuncs &fIFuncs;
+      unsigned char fBeginSmallBuf[TVirtualCollectionProxy::fgIteratorArenaSize];
+      unsigned char fEndSmallBuf[TVirtualCollectionProxy::fgIteratorArenaSize];
+      void *fBegin = &fBeginSmallBuf;
+      void *fEnd = &fEndSmallBuf;
+   public:
+      RCollectionIterableOnce(void *collection, const RIteratorFuncs &ifuncs, TVirtualCollectionProxy *proxy)
+         : fIFuncs(ifuncs)
+      {
+         fIFuncs.fCreateIterators(collection, &fBegin, &fEnd, proxy);
+      }
+      ~RCollectionIterableOnce() { fIFuncs.fDeleteTwoIterators(&fBegin, &fEnd); }
+
+      RIterator begin() { return RIterator(*this, fBegin); }
+      RIterator end() { return RIterator(*this); }
+   };
+
    std::unique_ptr<TVirtualCollectionProxy> fProxy;
+   /// Two sets of functions to operate on iterators, to be used depending on the access type
+   RCollectionIterableOnce::RIteratorFuncs fIFuncsRead;
+   RCollectionIterableOnce::RIteratorFuncs fIFuncsWrite;
    std::size_t fItemSize;
    ClusterSize_t fNWritten;
 

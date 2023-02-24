@@ -1186,6 +1186,19 @@ void ROOT::Experimental::RClassField::AcceptVisitor(Detail::RFieldVisitor &visit
 
 //------------------------------------------------------------------------------
 
+ROOT::Experimental::RCollectionClassField::RCollectionIterableOnce::RIteratorFuncs
+ROOT::Experimental::RCollectionClassField::RCollectionIterableOnce::GetIteratorFuncs(TVirtualCollectionProxy *proxy,
+                                                                                     bool readOnly)
+{
+   RIteratorFuncs ifuncs;
+   ifuncs.fCreateIterators = proxy->GetFunctionCreateIterators(readOnly);
+   ifuncs.fDeleteTwoIterators = proxy->GetFunctionDeleteTwoIterators(readOnly);
+   ifuncs.fNext = proxy->GetFunctionNext(readOnly);
+   R__ASSERT((ifuncs.fCreateIterators != nullptr) && (ifuncs.fDeleteTwoIterators != nullptr) &&
+             (ifuncs.fNext != nullptr));
+   return ifuncs;
+}
+
 ROOT::Experimental::RCollectionClassField::RCollectionClassField(std::string_view fieldName, std::string_view className)
    : RCollectionClassField(fieldName, className, TClass::GetClass(std::string(className).c_str()))
 {
@@ -1206,6 +1219,9 @@ ROOT::Experimental::RCollectionClassField::RCollectionClassField(std::string_vie
       throw RException(R__FAIL("collection proxies whose value type is a pointer are not supported"));
    if (fProxy->GetProperties() & TVirtualCollectionProxy::kIsAssociative)
       throw RException(R__FAIL("associative collections not supported"));
+
+   fIFuncsRead = RCollectionIterableOnce::GetIteratorFuncs(fProxy.get(), true /* readOnly */);
+   fIFuncsWrite = RCollectionIterableOnce::GetIteratorFuncs(fProxy.get(), false /* readOnly */);
 
    std::unique_ptr<ROOT::Experimental::Detail::RFieldBase> itemField;
    if (auto valueClass = fProxy->GetValueClass()) {
@@ -1247,13 +1263,14 @@ ROOT::Experimental::RCollectionClassField::CloneImpl(std::string_view newName) c
 
 std::size_t ROOT::Experimental::RCollectionClassField::AppendImpl(const Detail::RFieldValue &value)
 {
-   TVirtualCollectionProxy::TPushPop RAII(fProxy.get(), value.GetRawPtr());
    std::size_t nbytes = 0;
-   auto count = fProxy->Size();
-   for (unsigned i = 0; i < count; ++i) {
-      auto itemValue = fSubFields[0]->CaptureValue(fProxy->At(i));
+   unsigned count = 0;
+   for (auto ptr : RCollectionIterableOnce{value.GetRawPtr(), fIFuncsRead, fProxy.get()}) {
+      auto itemValue = fSubFields[0]->CaptureValue(ptr);
       nbytes += fSubFields[0]->Append(itemValue);
+      count++;
    }
+
    Detail::RColumnElement<ClusterSize_t> elemIndex(&fNWritten);
    fNWritten += count;
    fColumns[0]->Append(elemIndex);
@@ -1262,35 +1279,22 @@ std::size_t ROOT::Experimental::RCollectionClassField::AppendImpl(const Detail::
 
 void ROOT::Experimental::RCollectionClassField::ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue *value)
 {
-   TVirtualCollectionProxy::TPushPop RAII(fProxy.get(), value->GetRawPtr());
-
    ClusterSize_t nItems;
    RClusterIndex collectionStart;
    fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, &nItems);
 
-   // `TVirtualCollectionProxy::Clear()` is responsible for destroying the items in the collection
-   fProxy->Clear("force");
-
-   // Avoid heap fragmentation at the cost of temporarily allocating slightly more memory
-   const size_t buffSize = std::max(kReadChunkSize, fItemSize);
-   const std::uint32_t nItemsPerChunk = buffSize / fItemSize;
-   auto buff = std::make_unique<unsigned char[]>(buffSize);
-
-   auto nItemsLeft = static_cast<std::uint32_t>(nItems);
-   while (nItemsLeft > 0) {
-      auto count = std::min(nItemsLeft, nItemsPerChunk);
-      for (std::size_t i = 0; i < count; ++i) {
-         auto itemValue = fSubFields[0]->GenerateValue(buff.get() + (i * fItemSize));
-         fSubFields[0]->Read(collectionStart + i, &itemValue);
-      }
-      fProxy->Insert(buff.get(), value->GetRawPtr(), count);
-      for (std::size_t i = 0; i < count; ++i) {
-         auto itemValue = fSubFields[0]->CaptureValue(buff.get() + (i * fItemSize));
-         fSubFields[0]->DestroyValue(itemValue, true /* dtorOnly */);
-      }
-      collectionStart = collectionStart + count;
-      nItemsLeft -= count;
+   TVirtualCollectionProxy::TPushPop RAII(fProxy.get(), value->GetRawPtr());
+   void *obj = fProxy->Allocate(static_cast<std::uint32_t>(nItems),
+                                (fProxy->GetProperties() & TVirtualCollectionProxy::kNeedDelete));
+   unsigned i = 0;
+   // TODO(jalopezg): we might be able to further optimize this in case `GetCollectionType() == kSTLvector`
+   for (auto ptr : RCollectionIterableOnce{obj, fIFuncsWrite, fProxy.get()}) {
+      auto itemValue = fSubFields[0]->CaptureValue(ptr);
+      fSubFields[0]->Read(collectionStart + i, &itemValue);
+      i++;
    }
+   if (obj != value->GetRawPtr())
+      fProxy->Commit(obj);
 }
 
 const ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations &
@@ -1318,11 +1322,9 @@ ROOT::Experimental::Detail::RFieldValue ROOT::Experimental::RCollectionClassFiel
 
 void ROOT::Experimental::RCollectionClassField::DestroyValue(const Detail::RFieldValue &value, bool dtorOnly)
 {
-   TVirtualCollectionProxy::TPushPop RAII(fProxy.get(), value.GetRawPtr());
    if (fProxy->GetProperties() & TVirtualCollectionProxy::kNeedDelete) {
-      auto nItems = fProxy->Size();
-      for (unsigned i = 0; i < nItems; ++i) {
-         auto itemValue = fSubFields[0]->CaptureValue(fProxy->At(i));
+      for (auto ptr : RCollectionIterableOnce{value.GetRawPtr(), fIFuncsWrite, fProxy.get()}) {
+         auto itemValue = fSubFields[0]->CaptureValue(ptr);
          fSubFields[0]->DestroyValue(itemValue, true /* dtorOnly */);
       }
    }
@@ -1339,11 +1341,9 @@ ROOT::Experimental::Detail::RFieldValue ROOT::Experimental::RCollectionClassFiel
 std::vector<ROOT::Experimental::Detail::RFieldValue>
 ROOT::Experimental::RCollectionClassField::SplitValue(const Detail::RFieldValue &value) const
 {
-   TVirtualCollectionProxy::TPushPop RAII(fProxy.get(), value.GetRawPtr());
-   auto nItems = fProxy->Size();
    std::vector<Detail::RFieldValue> result;
-   for (unsigned i = 0; i < nItems; ++i) {
-      result.emplace_back(fSubFields[0]->CaptureValue(fProxy->At(i)));
+   for (auto ptr : RCollectionIterableOnce{value.GetRawPtr(), fIFuncsRead, fProxy.get()}) {
+      result.emplace_back(fSubFields[0]->CaptureValue(ptr));
    }
    return result;
 }
