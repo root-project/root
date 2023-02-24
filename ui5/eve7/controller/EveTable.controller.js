@@ -555,6 +555,26 @@ sap.ui.define([
                }
             }
          }
+      },
+
+
+      switchSingle: function()
+      {
+         let oRouter = UIComponent.getRouterFor(this);
+         EVE.$eve7tmp = { mgr: this.mgr, eveViewerId: this.eveViewerId};
+
+         oRouter.navTo("Table", { viewName: this.mgr.GetElement(this.eveViewerId).fName });
+      },
+
+      swap: function ()
+      {
+         this.mgr.controllers[0].switchViewSides(this.mgr.GetElement(this.eveViewerId));
+      },
+
+      detachViewer: function()
+      {
+         this.mgr.controllers[0].removeView(this.mgr.GetElement(this.eveViewerId));
+         this.destroy();
       }
    });
 });

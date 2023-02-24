@@ -40,7 +40,7 @@
               -->
 
               <contentLeft>
-            <MenuButton text="View" type="Transparent"  enabled="true">
+            <MenuButton text="Subscribe" type="Transparent"  enabled="true">
               <menu>
                 <Menu itemSelected="onViewMenuAction" id="menuViewId"/>
               </menu>

@@ -7,6 +7,7 @@
     xmlns:table="sap.ui.table"
     xmlns:f="sap.ui.layout.form"
     height="100%">
+   <core:Fragment fragmentName="rootui5.eve7.view.ViewToolbar" type="XML" />
   <m:FlexBox direction="Column" height="100%">
     <layout:VerticalLayout id="header" width="100%" >
       <m:Label text="Choose Collection:" />
