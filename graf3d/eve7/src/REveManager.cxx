@@ -15,6 +15,7 @@
 #include <ROOT/REveSelection.hxx>
 #include <ROOT/REveViewer.hxx>
 #include <ROOT/REveScene.hxx>
+#include <ROOT/REveSceneInfo.hxx>
 #include <ROOT/REveClient.hxx>
 #include <ROOT/RWebWindow.hxx>
 #include <ROOT/RFileDialog.hxx>
@@ -51,7 +52,20 @@ namespace REX = ROOT::Experimental;
 
 REveManager *REX::gEve = nullptr;
 
+struct MIR_TL_Data_t
+{
+   std::vector<REveScene*> addedWatch;
+   std::vector<REveScene*> removedWatch;
+
+   void reset() {
+      addedWatch.clear();
+      removedWatch.clear();
+   }
+};
+
 thread_local std::vector<RLogEntry> gEveLogEntries;
+thread_local MIR_TL_Data_t gMIRData;
+
 /** \class REveManager
 \ingroup REve
 Central application manager for Eve.
@@ -731,6 +745,8 @@ void REveManager::WindowConnect(unsigned connid)
 
    for (auto &c : fScenes->RefChildren()) {
       REveScene *scene = dynamic_cast<REveScene *>(c);
+      if (!scene->GetMandatory())
+         continue;
 
       scene->AddSubscriber(std::make_unique<REveClient>(connid, fWebWindow));
       printf("\nEVEMNG ............. streaming scene %s [%s]\n", scene->GetCTitle(), scene->GetCName());
@@ -812,9 +828,11 @@ void REveManager::WindowData(unsigned connid, const std::string &arg)
       R__LOG_ERROR(REveLog()) << "Internal error - no connection with id " << connid << " found";
       return;
    }
-   // client status data
+
+
    if (arg.compare("__REveDoneChanges") == 0)
    {
+      // client status data
       std::unique_lock<std::mutex> lock(fServerState.fMutex);
 
       for (auto &conn : fConnList) {
@@ -833,6 +851,7 @@ void REveManager::WindowData(unsigned connid, const std::string &arg)
    }
    else if (arg.compare( 0, 10, "FILEDIALOG") == 0)
    {
+      // file dialog
        RFileDialog::Embedded(fWebWindow, arg);
        return;
    }
@@ -845,16 +864,16 @@ void REveManager::WindowData(unsigned connid, const std::string &arg)
    int id = cj["fElementId"];
    std::string ctype = cj["class"];
 
-   ScheduleMIR(cmd, id, ctype);
+   ScheduleMIR(cmd, id, ctype, connid);
 }
 
 //
 //____________________________________________________________________
-void REveManager::ScheduleMIR(const std::string &cmd, ElementId_t id, const std::string& ctype)
+void REveManager::ScheduleMIR(const std::string &cmd, ElementId_t id, const std::string& ctype, unsigned connid)
 {
    std::unique_lock<std::mutex> lock(fServerState.fMutex);
    fServerStatus.fTLastMir = std::time(nullptr);
-   fMIRqueue.push(std::shared_ptr<MIR>(new MIR(cmd, id, ctype)));
+   fMIRqueue.push(std::shared_ptr<MIR>(new MIR(cmd, id, ctype, connid)));
 
    if (fMIRqueue.size() > 5)
       std::cout  << "Warning, REveManager::ScheduleMIR(). queue size " << fMIRqueue.size() << std::endl;
@@ -1006,10 +1025,11 @@ void REveManager::MIRExecThread()
          //
          fServerState.fVal = ServerState::UpdatingScenes;
          std::shared_ptr<MIR> mir = fMIRqueue.front();
+
+         // reset local thread related data
+         gMIRData.reset();
          fMIRqueue.pop();
 
-         // edit scenes unlock except its list of client connections
-         //
          lock.unlock();
 
          // allow scenes to accept changes in the element
@@ -1028,13 +1048,47 @@ void REveManager::MIRExecThread()
          //
          lock.lock();
 
+         // disconnect requested scene from clients
+         for (auto &scene : gMIRData.removedWatch)
+            scene->RemoveSubscriber(mir->fConnId);
+
+
+         // connect and stream scenes to new clients
+         for (auto &scene : gMIRData.addedWatch) {
+            scene->AddSubscriber(std::make_unique<REveClient>(mir->fConnId, fWebWindow));
+            scene->StreamElements();
+            Send(mir->fConnId, scene->fOutputJson);
+            if (scene->fTotalBinarySize > 0)
+               SendBinary(mir->fConnId, &scene->fOutputBinary[0], scene->fTotalBinarySize);
+         }
+
          SendSceneChanges();
+
          fServerState.fVal = fConnList.empty() ? ServerState::Waiting : ServerState::UpdatingClients;
          fServerState.fCV.notify_all();
       }
    }
 }
 
+//____________________________________________________________________
+void REveManager::DisconnectEveViewer(REveViewer* view)
+{
+   for (auto &c : view->RefChildren()) {
+      REveSceneInfo *sinfo = dynamic_cast<REveSceneInfo *>(c);
+      std::cout << "Disconnect scee " << sinfo->GetScene()->GetName();
+      gMIRData.removedWatch.push_back(sinfo->GetScene());
+   }
+}
+//____________________________________________________________________
+void REveManager::ConnectEveViewer(REveViewer* view)
+{
+   view->StampObjProps();
+   for (auto &c : view->RefChildren()) {
+      REveSceneInfo *sinfo = dynamic_cast<REveSceneInfo *>(c);
+      std::cout << "Connect scene " << sinfo->GetScene()->GetName();
+      gMIRData.addedWatch.push_back(sinfo->GetScene());
+   }
+}
 
 //____________________________________________________________________
 void REveManager::Send(unsigned connid, const std::string &data)

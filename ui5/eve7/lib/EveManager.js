@@ -316,6 +316,17 @@ sap.ui.define([], function() {
          }
       }
 
+      recursiveDestroy(el) {
+         if (el.childs) {
+            let mc = el.childs;
+            for (let i = 0; i < mc.length; ++i) {
+               this.recursiveDestroy(mc[i]);
+            }
+         }
+         // delete this.map[el.fElementId];
+         delete this.map[el.fElementId];
+      }
+
       //______________________________________________________________________________
 
       ImportSceneChangeJson(msg)
@@ -506,6 +517,7 @@ sap.ui.define([], function() {
          let scenes    = world.childs[2];
          let lastChild = scenes.childs.length -1;
 
+         // AMT:: TODO rename nEveManagerInit in the controllers
          if (scenes.childs[lastChild].fElementId == msg.fSceneId)
             this.controllers.forEach(ctrl => {
                if (ctrl.onEveManagerInit)
@@ -607,9 +619,11 @@ sap.ui.define([], function() {
             if (EVE.DebugSelection)
                console.log("UnSel prim", id, this.GetElement(id), this.GetElement(id).fSceneId);
 
-            this.UnselectElement(sel, id);
-            let iel = this.GetElement(id);
-            changedSet.add(iel.fSceneId);
+            let primEl = this.GetElement(id);
+            if (primEl) {
+               this.UnselectElement(sel, primEl);
+               changedSet.add(primEl.fSceneId);
+            }
 
             for (let imp of value.implied)
             {
@@ -618,7 +632,7 @@ sap.ui.define([], function() {
                   if (EVE.DebugSelection)
                      console.log("UnSel impl", imp, impEl, impEl.fSceneId);
 
-                  this.UnselectElement(sel, imp);
+                  this.UnselectElement(sel, impEl);
                   changedSet.add(impEl.fSceneId);
                }
             }
@@ -630,21 +644,22 @@ sap.ui.define([], function() {
                console.log("Sel prim", id, this.GetElement(id), this.GetElement(id).fSceneId);
 
             let secIdcs = Array.from(value.set);
-            let iel = this.GetElement(id);
-            if ( ! iel) {
-               console.log("EveManager.UT_Selection_Refresh_State this should not happen ", iel);
-               continue;
+            let primEl = this.GetElement(id);
+            if (primEl) {
+               changedSet.add(primEl.fSceneId);
+               this.SelectElement(sel, primEl, secIdcs, value.extra);
             }
-            changedSet.add(iel.fSceneId);
-            this.SelectElement(sel, id, secIdcs, value.extra);
 
-            for (let imp of value.implied)
+            for (let impId of value.implied)
             {
-               if (EVE.DebugSelection)
-                  console.log("Sel impl", imp, this.GetElement(imp), this.GetElement(imp).fSceneId);
+               let impEl = this.GetElement(impId);
+               if (impEl) {
+                  if (EVE.DebugSelection)
+                     console.log("Sel impl", impId, impEl, impEl.fSceneId);
 
-               this.SelectElement(sel, imp, secIdcs, value.extra);
-               changedSet.add(this.GetElement(imp).fSceneId);
+                  this.SelectElement(sel, impEl, secIdcs, value.extra);
+                  changedSet.add(impEl.fSceneId);
+               }
             }
          }
 
@@ -677,33 +692,27 @@ sap.ui.define([], function() {
          // So, we need something like reapply selections after new scenes arrive.
       }
 
-      SelectElement(selection_obj, element_id, sec_idcs, extra)
+      SelectElement(selection_obj, element, sec_idcs, extra)
       {
-         let element = this.GetElement(element_id);
-         if ( ! element) return;
-
          let scene = this.GetElement(element.fSceneId);
          if (scene.$receivers) {
             for (let r of scene.$receivers)
             {
-               r.SelectElement(selection_obj, element_id, sec_idcs, extra);
+               r.SelectElement(selection_obj, element.fElementId, sec_idcs, extra);
             }
          }
 
          // console.log("EveManager.SelectElement", element, scene.$receivers[0].viewer.outline_pass.id2obj_map);
       }
 
-      UnselectElement(selection_obj, element_id)
+      UnselectElement(selection_obj, element)
       {
-         let element = this.GetElement(element_id);
-         if ( ! element) return;
-
          let scene = this.GetElement(element.fSceneId);
 
          if (scene.$receivers) {
             for (let r of scene.$receivers)
             {
-               r.UnselectElement(selection_obj, element_id);
+               r.UnselectElement(selection_obj, element.fElementId);
             }
          }
 
@@ -787,6 +796,11 @@ sap.ui.define([], function() {
          }
       }
 
+      UT_EveViewSubscribed(el) {
+         if (el.hasOwnProperty('pendInstance')) {
+            this.controllers[0].makeEveViewController(el);
+         }
+      }
 
       //==============================================================================
       // Offline handling
