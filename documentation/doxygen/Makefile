@@ -64,7 +64,6 @@ doxygen: filter pyzdoc
 	./makeinput.sh
 	doxygen
 	gzip $(DOXYGEN_IMAGE_PATH)/ROOT.tag
-	gzip $(DOXYGEN_IMAGE_PATH)/ROOT.qch
 	rm -rf files c1* *.ps *.eps *.png *.jpg *.tex *.svg *.pdf *.root *.xpm *.out *.dat *.dtd *.dot *.txt *.csv *.log *.rs
 	rm -rf listofclass.sh tmva* data* result* config* test* Roo* My* Freq*
 	rm -f Doxyfile_INPUT filter htmlfooter.html MDF.C pca.C
