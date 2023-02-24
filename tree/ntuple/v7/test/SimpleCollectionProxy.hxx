@@ -6,9 +6,30 @@
 namespace {
 /// Simple collection proxy for `StructUsingCollectionProxy<T>`
 template <typename CollectionT>
-struct SimpleCollectionProxy : public TVirtualCollectionProxy {
+class SimpleCollectionProxy : public TVirtualCollectionProxy {
    CollectionT *fObject = nullptr;
 
+   static void
+   Func_CreateIterators(void *collection, void **begin_arena, void **end_arena, TVirtualCollectionProxy * /*proxy*/)
+   {
+      static_assert(sizeof(void *) <= TVirtualCollectionProxy::fgIteratorArenaSize);
+      auto &vec = static_cast<CollectionT *>(collection)->v;
+      *begin_arena = &(*vec.begin());
+      *end_arena = &(*vec.end());
+   }
+
+   static void *Func_Next(void *iter, const void *end)
+   {
+      auto &_iter = *static_cast<typename CollectionT::ValueType **>(iter);
+      auto _end = *static_cast<typename CollectionT::ValueType *const *>(end);
+      if (_iter >= _end)
+         return nullptr;
+      return _iter++;
+   }
+
+   static void Func_DeleteTwoIterators(void * /*begin*/, void * /*end*/) {}
+
+public:
    SimpleCollectionProxy()
       : TVirtualCollectionProxy(TClass::GetClass(ROOT::Internal::GetDemangledTypeName(typeid(CollectionT)).c_str()))
    {
@@ -44,7 +65,11 @@ struct SimpleCollectionProxy : public TVirtualCollectionProxy {
    void *At(UInt_t idx) override { return &fObject->v[idx]; }
    void Clear(const char * /*opt*/ = "") override { fObject->v.clear(); }
    UInt_t Size() const override { return fObject->v.size(); }
-   void *Allocate(UInt_t /*n*/, Bool_t /*forceDelete*/) override { return nullptr; }
+   void *Allocate(UInt_t n, Bool_t /*forceDelete*/) override
+   {
+      fObject->v.resize(n);
+      return fObject;
+   }
    void Commit(void *) override {}
    void Insert(const void *data, void *container, size_t size) override
    {
@@ -62,11 +87,14 @@ struct SimpleCollectionProxy : public TVirtualCollectionProxy {
    TStreamerInfoActions::TActionSequence *GetReadMemberWiseActions(Int_t /*version*/) override { return nullptr; }
    TStreamerInfoActions::TActionSequence *GetWriteMemberWiseActions() override { return nullptr; }
 
-   CreateIterators_t GetFunctionCreateIterators(Bool_t /*read*/ = kTRUE) override { return nullptr; }
+   CreateIterators_t GetFunctionCreateIterators(Bool_t /*read*/ = kTRUE) override { return &Func_CreateIterators; }
    CopyIterator_t GetFunctionCopyIterator(Bool_t /*read*/ = kTRUE) override { return nullptr; }
-   Next_t GetFunctionNext(Bool_t /*read*/ = kTRUE) override { return nullptr; }
+   Next_t GetFunctionNext(Bool_t /*read*/ = kTRUE) override { return &Func_Next; }
    DeleteIterator_t GetFunctionDeleteIterator(Bool_t /*read*/ = kTRUE) override { return nullptr; }
-   DeleteTwoIterators_t GetFunctionDeleteTwoIterators(Bool_t /*read*/ = kTRUE) override { return nullptr; }
+   DeleteTwoIterators_t GetFunctionDeleteTwoIterators(Bool_t /*read*/ = kTRUE) override
+   {
+      return &Func_DeleteTwoIterators;
+   }
 };
 } // namespace
 
