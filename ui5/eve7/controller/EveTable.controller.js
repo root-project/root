@@ -309,10 +309,11 @@ sap.ui.define([
          this.checkScenes();
       },
 
+      /*
       // function called from GuiPanelController
       onExit: function () {
          if (this.mgr) this.mgr.Unregister(this);
-      },
+      },*/
 
       onSceneCreate: function (element, id) {
          this.locateEveTable();

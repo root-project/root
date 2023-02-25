@@ -102,6 +102,21 @@ sap.ui.define([
         },
 
         UnselectElement: function (selection_obj, element_id) {
+        },
+        switchSingle: function () {
+            let oRouter = UIComponent.getRouterFor(this);
+            EVE.$eve7tmp = { mgr: this.mgr, eveViewerId: this.eveViewerId };
+
+            oRouter.navTo("Lego", { viewName: this.mgr.GetElement(this.eveViewerId).fName });
+        },
+
+        swap: function () {
+            this.mgr.controllers[0].switchViewSides(this.mgr.GetElement(this.eveViewerId));
+        },
+
+        detachViewer: function () {
+            this.mgr.controllers[0].removeView(this.mgr.GetElement(this.eveViewerId));
+            this.destroy();
         }
     });
 });

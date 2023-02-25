@@ -136,10 +136,11 @@ sap.ui.define(['sap/ui/core/Component',
          let staged = [];
          for (let n=0;n<viewers.length;++n) {
             let el = viewers[n];
+            // at startup show only mandatory views
             if (typeof el.subscribed == 'undefined')
                el.subscribed = el.Mandatory;
 
-            if (!el.$view_created) staged.push(el);
+            if (!el.$view_created && el.fRnrSelf) staged.push(el);
          }
          if (staged.length == 0) return;
 
