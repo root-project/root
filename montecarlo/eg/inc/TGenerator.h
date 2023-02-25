@@ -75,7 +75,7 @@
 //       MyGenerator(const MyGenerator& o) { ... }                      //
 //       MyGenerator& operator=(const MyGenerator& o) { ... }           //
 //       static MyGenerator* fgInstance;                                //
-//       ClassDef(MyGenerator,0);                                       //
+//       ClassDefOverride(MyGenerator,0);                               //
 //     };                                                               //
 //                                                                      //
 // Having multiple objects accessing the same common blocks is not      //
@@ -107,7 +107,7 @@
 //       ...                                                            //
 //     protected:                                                       //
 //       TGenerator* fGenerator;                                        //
-//       ClassDef(MyRun,0);                                             //
+//       ClassDefOverride(MyRun,0);                                     //
 //     };                                                               //
 //                                                                      //
 //     // Config.C                                                      //
@@ -162,21 +162,21 @@ public:
 
    TGenerator(): fPtCut(0), fShowNeutrons(kTRUE), fParticles(0) { } //Used by Dictionary
    TGenerator(const char *name, const char *title="Generator class");
-   virtual ~TGenerator();
-   virtual void            Browse(TBrowser *b);
-   virtual Int_t           DistancetoPrimitive(Int_t px, Int_t py);
-   virtual void            Draw(Option_t *option="");
-   virtual void            ExecuteEvent(Int_t event, Int_t px, Int_t py);
+   ~TGenerator() override;
+           void            Browse(TBrowser *b) override;
+           Int_t           DistancetoPrimitive(Int_t px, Int_t py) override;
+           void            Draw(Option_t *option="") override;
+           void            ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
    virtual void            GenerateEvent();
    virtual Double_t        GetParameter(const char* /*name*/) const { return 0.; }
    virtual Int_t           ImportParticles(TClonesArray *particles, Option_t *option="");
    virtual TObjArray      *ImportParticles(Option_t *option="");
    virtual TParticle      *GetParticle(Int_t i) const;
-   Int_t                   GetNumberOfParticles() const;
+           Int_t           GetNumberOfParticles() const;
    virtual TObjArray      *GetListOfParticles() const {return fParticles;}
    virtual TObjArray      *GetPrimaries(Option_t *option="") {return ImportParticles(option);}
-   Float_t                 GetPtCut() const {return fPtCut;}
-   virtual void            Paint(Option_t *option="");
+           Float_t         GetPtCut() const {return fPtCut;}
+           void            Paint(Option_t *option="") override;
    virtual void            SetParameter(const char* /*name*/,Double_t /*val*/){}
    virtual void            SetPtCut(Float_t ptcut=0); // *MENU*
    virtual void            SetViewRadius(Float_t rbox = 1000); // *MENU*
@@ -184,7 +184,7 @@ public:
                                        ,Float_t xmax=10000,Float_t ymax=10000,Float_t zmax=10000);  // *MENU*
    virtual void            ShowNeutrons(Bool_t show=1); // *MENU*
 
-   ClassDef(TGenerator,1)  //Event generator interface abstract baseclass
+   ClassDefOverride(TGenerator,1); //Event generator interface abstract baseclass
 };
 
 #endif
