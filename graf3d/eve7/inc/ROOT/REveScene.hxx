@@ -87,6 +87,7 @@ public:
    REveScene(const std::string &n = "REveScene", const std::string &t = "");
    virtual ~REveScene();
 
+   Int_t WriteCoreJson(nlohmann::json &cj, Int_t rnr_offset) override;
    Bool_t SingleRnrState() const override { return kTRUE; }
 
    void   SetHierarchical(Bool_t h) { fHierarchical = h; }
