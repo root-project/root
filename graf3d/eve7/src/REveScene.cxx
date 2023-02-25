@@ -54,7 +54,14 @@ REveScene::~REveScene()
    REX::gEve->GetViewers()->SceneDestructing(this);
    REX::gEve->GetScenes()->RemoveElement(this);
 }
+//------------------------------------------------------------------------------
 
+int REveScene::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
+{
+   j["Mandatory"] = fMandatory;
+
+   return REveElement::WriteCoreJson(j, rnr_offset);
+}
 //------------------------------------------------------------------------------
 
 void REveScene::AddSubscriber(std::unique_ptr<REveClient> &&sub)
