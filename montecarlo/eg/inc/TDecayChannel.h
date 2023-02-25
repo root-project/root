@@ -36,7 +36,7 @@ public:
                  Int_t     NDaughters,
                  Int_t*    DaughterPdgCode);
 
-   virtual ~TDecayChannel();
+   ~TDecayChannel() override;
    // ****** accessors
 
    Int_t     Number                () { return fNumber; }
@@ -45,7 +45,7 @@ public:
    Double_t  BranchingRatio        () { return fBranchingRatio; }
    Int_t     DaughterPdgCode(Int_t i) { return fDaughters.fArray[i]; }
 
-   ClassDef(TDecayChannel,1)   // Class describing a particle decay channel
+   ClassDefOverride(TDecayChannel,1)   // Class describing a particle decay channel
 };
 
 #endif

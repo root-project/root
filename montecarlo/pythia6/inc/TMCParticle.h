@@ -69,7 +69,7 @@ public:
                fLifetime(lifetime) { }
 
 
-   virtual             ~TMCParticle() { }
+               ~TMCParticle() override { }
 
    Int_t       GetKS() const {return fKS;}
    Int_t       GetKF() const {return fKF;}
@@ -88,7 +88,7 @@ public:
    Float_t     GetVz() const {return fVz;}
    Float_t     GetTime() const {return fTime;}
    Float_t     GetLifetime() const {return fLifetime;}
-   virtual const char     *GetName() const;
+   const char     *GetName() const override;
 
    virtual void        SetKS(Int_t kS) {fKS=kS;}
    virtual void        SetKF(Int_t kF) {fKF=kF;}
@@ -109,9 +109,9 @@ public:
    virtual void        SetLifetime(Float_t lifetime) {fLifetime=lifetime;}
 
 
-   virtual void        ls(Option_t* option) const;
+   void        ls(Option_t* option) const override;
 
-   ClassDef(TMCParticle,1)  // LUJETS particles data record.
+   ClassDefOverride(TMCParticle,1)  // LUJETS particles data record.
 };
 
 #endif

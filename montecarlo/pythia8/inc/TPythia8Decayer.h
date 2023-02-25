@@ -16,15 +16,15 @@ class TPythia8;
 class TPythia8Decayer : public TVirtualMCDecayer {
 public:
    TPythia8Decayer();
-   virtual ~TPythia8Decayer(){;}
-   virtual void    Init();
-   virtual void    Decay(Int_t pdg, TLorentzVector* p);
-   virtual Int_t   ImportParticles(TClonesArray *particles);
-   virtual void    SetForceDecay(Int_t type);
-   virtual void    ForceDecay();
-   virtual Float_t GetPartialBranchingRatio(Int_t ipart);
-   virtual Float_t GetLifetime(Int_t kf);
-   virtual void    ReadDecayTable();
+   ~TPythia8Decayer() override{;}
+   void    Init() override;
+   void    Decay(Int_t pdg, TLorentzVector* p) override;
+   Int_t   ImportParticles(TClonesArray *particles) override;
+   void    SetForceDecay(Int_t type) override;
+   void    ForceDecay() override;
+   Float_t GetPartialBranchingRatio(Int_t ipart) override;
+   Float_t GetLifetime(Int_t kf) override;
+   void    ReadDecayTable() override;
 
    virtual void    SetDebugLevel(Int_t debug) {fDebug = debug;}
 protected:
@@ -34,7 +34,7 @@ private:
    TPythia8* fPythia8;          // Pointer to pythia8
    Int_t     fDebug;            // Debug level
 
-   ClassDef(TPythia8Decayer, 1) // Particle Decayer using Pythia8
+   ClassDefOverride(TPythia8Decayer, 1) // Particle Decayer using Pythia8
 
 };
 #endif

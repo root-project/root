@@ -71,7 +71,7 @@ public:
 
    TParticle(const TParticle &part);
 
-   virtual ~TParticle();
+   ~TParticle() override;
 
    TParticle& operator=(const TParticle&);
 
@@ -170,16 +170,16 @@ public:
 
              // ****** overloaded functions of TObject
 
-   virtual void      Paint(Option_t *option = "");
-   virtual void      Print(Option_t *option = "") const;
-   virtual void      Sizeof3D() const;
-   virtual Int_t     DistancetoPrimitive(Int_t px, Int_t py);
-   virtual void      ExecuteEvent(Int_t event, Int_t px, Int_t py);
-   virtual const     char *GetName() const;
-   virtual const     char *GetTitle() const;
+   void      Paint(Option_t *option = "") override;
+   void      Print(Option_t *option = "") const override;
+   void      Sizeof3D() const override;
+   Int_t     DistancetoPrimitive(Int_t px, Int_t py) override;
+   void      ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
+   const     char *GetName() const override;
+   const     char *GetTitle() const override;
 
 
-   ClassDef(TParticle,2)  // TParticle vertex particle information
+   ClassDefOverride(TParticle,2)  // TParticle vertex particle information
 };
 
 #endif
