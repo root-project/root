@@ -78,7 +78,7 @@ class a singleton.  That is, something like
       MyGenerator(const MyGenerator& o) { ... }                      
       MyGenerator& operator=(const MyGenerator& o) { ... }           
       static MyGenerator* fgInstance;                                
-      ClassDef(MyGenerator,0);                                       
+      ClassDefOverride(MyGenerator,0);                                       
     };                                                               
 \endverbatim
                                                                      
@@ -112,7 +112,7 @@ ly used in compiled code:
       ...                                                            
     protected:                                                       
       TGenerator* fGenerator;                                        
-      ClassDef(MyRun,0);                                             
+      ClassDefOverride(MyRun,0);                                             
     };                                                               
                                                                      
     // Config.C                                                      

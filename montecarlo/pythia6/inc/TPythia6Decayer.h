@@ -72,18 +72,18 @@ protected:
 
 public:
    TPythia6Decayer();
-   virtual ~TPythia6Decayer() { }
-   virtual void    Init();
-   virtual void    Decay(Int_t idpart, TLorentzVector* p);
-   virtual Int_t   ImportParticles(TClonesArray *particles);
-   virtual void    SetForceDecay(Int_t type);
-   virtual void    ForceDecay();
+   ~TPythia6Decayer() override { }
+   void    Init() override;
+   void    Decay(Int_t idpart, TLorentzVector* p) override;
+   Int_t   ImportParticles(TClonesArray *particles) override;
+   void    SetForceDecay(Int_t type) override;
+   void    ForceDecay() override;
    void ForceParticleDecay(Int_t particle, Int_t* products,
                            Int_t* mult, Int_t npart);
    void ForceParticleDecay(Int_t particle, Int_t product, Int_t mult);
-   virtual Float_t GetPartialBranchingRatio(Int_t ipart);
-   virtual Float_t GetLifetime(Int_t kf);
-   virtual void    ReadDecayTable();
+   Float_t GetPartialBranchingRatio(Int_t ipart) override;
+   Float_t GetLifetime(Int_t kf) override;
+   void    ReadDecayTable() override;
    // Extension member functions
    virtual void    SetDecayTableFile(const char* name);
    virtual void    WriteDecayTable();
@@ -91,7 +91,7 @@ public:
 
    static  TPythia6Decayer *Instance();
 
-   ClassDef(TPythia6Decayer,1) // Particle Decayer Base Class
+   ClassDefOverride(TPythia6Decayer,1) // Particle Decayer Base Class
 };
 
 inline void TPythia6Decayer::SetDecayTableFile(const char *name)

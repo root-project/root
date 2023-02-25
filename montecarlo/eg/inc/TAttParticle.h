@@ -47,7 +47,7 @@ public:
                 Double_t DecayWidth, Double_t Charge, const char *Type,
                 Int_t MCnumber, Int_t granularity=90,
                 Double_t LowerCutOff=1.e-5, Double_t HighCutOff=1.e4);
-   virtual ~TAttParticle();
+   ~TAttParticle() override;
    static  THashList     *fgList;
    static  Int_t          ConvertISAtoPDG(Int_t isaNumber);
    static  void           DefinePDG();
@@ -62,11 +62,11 @@ public:
    static  TAttParticle  *GetParticle(Int_t mcnumber);
    virtual const char    *GetParticleType() const { return fParticleType.Data(); }
    virtual Bool_t         GetStable() const { return fPDGStable; }
-   virtual void           Print(Option_t *option="") const ;
+   void           Print(Option_t *option="") const override ;
    virtual Double_t       SampleMass() const ;
    virtual Double_t       SampleMass(Double_t widthcut) const ;
 
-   ClassDef(TAttParticle,1)  //Particle definition
+   ClassDefOverride(TAttParticle,1)  //Particle definition
 };
 
 #endif
