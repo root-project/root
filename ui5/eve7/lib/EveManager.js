@@ -515,7 +515,11 @@ sap.ui.define([], function() {
          // call controllers when all the last scene is imported
          let world     = this.map[1];
          let scenes    = world.childs[2];
-         let lastChild = scenes.childs.length -1;
+         let lastChild = 0;
+         for (let i = 0; i < scenes.childs.length; ++i){
+            if (scenes.childs[i].Mandatory)
+            lastChild = i;
+         }
 
          // AMT:: TODO rename nEveManagerInit in the controllers
          if (scenes.childs[lastChild].fElementId == msg.fSceneId)
