@@ -186,10 +186,9 @@ RooAbsArg::~RooAbsArg()
   bool first(true) ;
   for (auto client : clientListTmp) {
     client->setAttribute("ServerDied") ;
-    TString attr("ServerDied:");
-    attr.Append(GetName());
-    attr.Append(Form("(%zx)",(size_t)this)) ;
-    client->setAttribute(attr.Data());
+    std::stringstream attr;
+    attr << "ServerDied:" << GetName() << "(" << reinterpret_cast<std::size_t>(this) << ")";
+    client->setAttribute(attr.str().c_str());
     client->removeServer(*this,true);
 
     if (_verboseDirty) {
@@ -1102,7 +1101,7 @@ bool RooAbsArg::redirectServers(const RooAbsCollection& newSetOrig, bool mustRep
     bool ret2 = p->changePointer(*newSet,nameChange,false) ;
 
     if (mustReplaceAll && !ret2) {
-      auto ap = dynamic_cast<const RooArgProxy*>(p);
+      auto ap = static_cast<const RooArgProxy*>(p);
       coutE(LinkStateMgmt) << "RooAbsArg::redirectServers(" << GetName()
               << "): ERROR, proxy '" << p->name()
               << "' with arg '" << (ap ? ap->absArg()->GetName() : "<could not cast>") << "' could not be adjusted" << endl;
@@ -1129,7 +1128,7 @@ bool RooAbsArg::redirectServers(const RooAbsCollection& newSetOrig, bool mustRep
 /// \return Pointer to the new server or `nullptr` if there's no unique match.
 RooAbsArg *RooAbsArg::findNewServer(const RooAbsCollection &newSet, bool nameChange) const
 {
-  RooAbsArg *newServer = 0;
+  RooAbsArg *newServer = nullptr;
   if (!nameChange) {
     newServer = newSet.find(*this) ;
   }
@@ -1139,18 +1138,16 @@ RooAbsArg *RooAbsArg::findNewServer(const RooAbsCollection &newSet, bool nameCha
     TString nameAttrib("ORIGNAME:") ;
     nameAttrib.Append(GetName()) ;
 
-    RooArgSet* tmp = (RooArgSet*) newSet.selectByAttrib(nameAttrib,true) ;
-    if(0 != tmp) {
+    if (auto tmp = std::unique_ptr<RooAbsCollection>{newSet.selectByAttrib(nameAttrib,true)}) {
 
       // Check if any match was found
       if (tmp->empty()) {
-        delete tmp ;
-        return 0 ;
+        return nullptr;
       }
 
       // Check if match is unique
-      if(tmp->getSize()>1) {
-        coutF(LinkStateMgmt) << "RooAbsArg::redirectServers(" << GetName() << "): FATAL Error, " << tmp->getSize() << " servers with "
+      if(tmp->size()>1) {
+        coutF(LinkStateMgmt) << "RooAbsArg::redirectServers(" << GetName() << "): FATAL Error, " << tmp->size() << " servers with "
             << nameAttrib << " attribute" << endl ;
         tmp->Print("v") ;
         assert(0) ;
@@ -1158,7 +1155,6 @@ RooAbsArg *RooAbsArg::findNewServer(const RooAbsCollection &newSet, bool nameCha
 
       // use the unique element in the set
       newServer= tmp->first();
-      delete tmp ;
     }
   }
   return newServer;
@@ -1895,7 +1891,7 @@ void RooAbsArg::setOperMode(OperMode mode, bool recurseADirty)
   if (mode==_operMode) return ;
 
   _operMode = mode ;
-  _fast = ((mode==AClean) || dynamic_cast<RooRealVar*>(this)!=0 || dynamic_cast<RooConstVar*>(this)!=0 ) ;
+  _fast = ((mode==AClean) || dynamic_cast<RooRealVar*>(this) || dynamic_cast<RooConstVar*>(this) ) ;
   for (Int_t i=0 ;i<numCaches() ; i++) {
     getCache(i)->operModeHook() ;
   }
@@ -1980,7 +1976,7 @@ void RooAbsArg::printComponentTree(const char* indent, const char* namePat, Int_
 {
   if (nLevel==0) return ;
   if (isFundamental()) return ;
-  RooResolutionModel* rmodel = dynamic_cast<RooResolutionModel*>(this) ;
+  auto rmodel = dynamic_cast<RooResolutionModel*>(this) ;
   if (rmodel && rmodel->isConvolved()) return ;
   if (InheritsFrom("RooConstVar")) return ;
 
