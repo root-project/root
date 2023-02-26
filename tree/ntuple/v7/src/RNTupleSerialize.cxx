@@ -1421,10 +1421,12 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::Internal::RNTupleSerialize
    if (!result)
       return R__FORWARD_ERROR(result);
    bytes += result.Unwrap();
-   descBuilder.BeginHeaderExtension();
-   result = DeserializeSchemaDescription(bytes, fnFrameSizeLeft(), descBuilder);
-   if (!result)
-      return R__FORWARD_ERROR(result);
+   if (fnFrameSizeLeft() > 0) {
+      descBuilder.BeginHeaderExtension();
+      result = DeserializeSchemaDescription(bytes, fnFrameSizeLeft(), descBuilder);
+      if (!result)
+         return R__FORWARD_ERROR(result);
+   }
    bytes = frame + frameSize;
 
    std::uint32_t nColumnGroups;

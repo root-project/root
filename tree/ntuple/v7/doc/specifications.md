@@ -409,7 +409,7 @@ The footer envelope has the following structure:
 
 The header checksum can be used to cross-check that header and footer belong together.
 
-The schema extension record frame contains an additional schema description that is incremental with respect to the schema contained in the header (see Section Header Envelope).
+The schema extension record frame contains an additional schema description that is incremental with respect to the schema contained in the header (see Section Header Envelope). To allow for backward compatibility the record frame might be empty.
 The interpretation of the information contained therein should be identical as if it was found directly at the end of the header.
 This is necessary when fields have been added during writing.
 
