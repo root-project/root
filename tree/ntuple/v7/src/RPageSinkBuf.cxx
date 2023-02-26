@@ -37,9 +37,45 @@ void ROOT::Experimental::Detail::RPageSinkBuf::CreateImpl(const RNTupleModel &mo
                                                           unsigned char * /* serializedHeader */,
                                                           std::uint32_t /* length */)
 {
-   fBufferedColumns.resize(fDescriptorBuilder.GetDescriptor().GetNPhysicalColumns());
    fInnerModel = model.Clone();
    fInnerSink->Create(*fInnerModel);
+}
+
+void ROOT::Experimental::Detail::RPageSinkBuf::UpdateDescriptor(const RNTupleModelChangeset &changeset)
+{
+   RPageSink::UpdateDescriptor(changeset);
+   bool isIncremental = !fBufferedColumns.empty();
+   fBufferedColumns.resize(fDescriptorBuilder.GetDescriptor().GetNPhysicalColumns());
+   if (!isIncremental)
+      return;
+
+   // The buffered page sink maintains a copy of the RNTupleModel for the inner sink; replicate the changes there
+   auto cloneAddField = [&](const RFieldBase *field) {
+      auto cloned = field->Clone(field->GetName());
+      auto p = &(*cloned);
+      fInnerModel->AddField(std::move(cloned));
+      return p;
+   };
+   auto cloneAddProjectedField = [&](RFieldBase *field) {
+      auto cloned = field->Clone(field->GetName());
+      auto p = &(*cloned);
+      auto &projectedFields = changeset.fModel.GetProjectedFields();
+      RNTupleModel::RProjectedFields::FieldMap_t fieldMap;
+      fieldMap[p] = projectedFields.GetSourceField(field);
+      auto targetIt = cloned->begin();
+      for (auto &f : *field)
+         fieldMap[&(*targetIt++)] = projectedFields.GetSourceField(&f);
+      const_cast<RNTupleModel::RProjectedFields &>(fInnerModel->GetProjectedFields()).Add(std::move(cloned), fieldMap);
+      return p;
+   };
+   RNTupleModelChangeset innerChangeset{*fInnerModel};
+   fInnerModel->Unfreeze();
+   std::transform(changeset.fAddedFields.cbegin(), changeset.fAddedFields.cend(),
+                  std::back_inserter(innerChangeset.fAddedFields), cloneAddField);
+   std::transform(changeset.fAddedProjectedFields.cbegin(), changeset.fAddedProjectedFields.cend(),
+                  std::back_inserter(innerChangeset.fAddedProjectedFields), cloneAddProjectedField);
+   fInnerModel->Freeze();
+   fInnerSink->UpdateDescriptor(innerChangeset);
 }
 
 ROOT::Experimental::RNTupleLocator
