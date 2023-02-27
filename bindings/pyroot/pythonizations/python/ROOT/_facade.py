@@ -385,6 +385,20 @@ class ROOTFacade(types.ModuleType):
         del type(self).Numba
         return ns
 
+    @property
+    def NumbaExt(self):
+        if sys.version_info < (3, 7):
+            raise Exception("NumbaExt requires Python 3.7 or higher")
+
+        import numba
+        if not hasattr(numba, 'version_info') or numba.version_info < (0, 54):
+            raise Exception("NumbaExt requires Numba version 0.54 or higher")
+
+        import cppyy.numba_ext
+
+        # Return something as it is a property function
+        return self
+
     # Get TPyDispatcher for programming GUI callbacks
     @property
     def TPyDispatcher(self):
