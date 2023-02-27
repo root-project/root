@@ -54,17 +54,12 @@ if(dev)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -gsplit-dwarf")
   endif()
 
-  # Try faster linkers, prefer lld then gold.
+  # Try faster lld:
   execute_process(COMMAND ${CMAKE_C_COMPILER} -fuse-ld=lld -Wl,--version OUTPUT_VARIABLE stdout ERROR_QUIET)
   if("${stdout}" MATCHES "LLD ")
     set(SUPERIOR_LINKER "lld")
-  else()
-    execute_process(COMMAND ${CMAKE_C_COMPILER} -fuse-ld=gold -Wl,--version OUTPUT_VARIABLE stdout ERROR_QUIET)
-    if ("${stdout}" MATCHES "GNU gold")
-      set(SUPERIOR_LINKER "gold")
-    endif()
   endif()
-  # Only lld and gold support --gdb-index
+  # Only lld supports --gdb-index
   if(SUPERIOR_LINKER)
     set(LLVM_USE_LINKER "${SUPERIOR_LINKER}")
     if(_BUILD_TYPE_UPPER MATCHES "DEB")
