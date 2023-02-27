@@ -122,6 +122,49 @@ TEST(RNTuple, SchemaExtensionMultiple)
    EXPECT_EQ(0xaa, u8(1));
 }
 
+TEST(RNTuple, SchemaExtensionProject)
+{
+   FileRaii fileGuard("test_ntuple_schemaext_project.root");
+   std::vector<std::uint32_t> refVec{0x00, 0xff, 0x55, 0xaa};
+   {
+      auto model = RNTupleModel::Create();
+      auto fieldPt = model->MakeField<float>("pt", 42.0);
+
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "myNTuple", fileGuard.GetPath());
+      auto modelUpdater = ntuple->GetIncrementalModelUpdater();
+      modelUpdater->BeginUpdate();
+      std::vector<std::uint32_t> fieldVec;
+      modelUpdater->AddField<std::vector<std::uint32_t>>("vec", &fieldVec);
+      modelUpdater->CommitUpdate();
+
+      modelUpdater->BeginUpdate();
+      auto aliasVec = RFieldBase::Create("aliasVec", "std::vector<std::uint32_t>").Unwrap();
+      modelUpdater->AddProjectedField(std::move(aliasVec), [](const std::string &fieldName) {
+         if (fieldName == "aliasVec")
+            return "vec";
+         else
+            return "vec._0";
+      });
+      modelUpdater->CommitUpdate();
+
+      ntuple->Fill();
+      *fieldPt = 12.0;
+      fieldVec = refVec;
+      ntuple->Fill();
+   }
+
+   auto ntuple = RNTupleReader::Open("myNTuple", fileGuard.GetPath());
+   EXPECT_EQ(2U, ntuple->GetNEntries());
+   EXPECT_EQ(6U, ntuple->GetDescriptor()->GetNFields());
+
+   auto pt = ntuple->GetView<float>("pt");
+   auto aliasVec = ntuple->GetView<std::vector<std::uint32_t>>("aliasVec");
+   EXPECT_EQ(42.0, pt(0));
+   EXPECT_EQ(12.0, pt(1));
+   EXPECT_EQ(std::vector<std::uint32_t>{}, aliasVec(0));
+   EXPECT_EQ(refVec, aliasVec(1));
+}
+
 // Based on the RealWorld1 test in `ntuple_extended.cxx`, but here some fields are added after the fact
 TEST(RNTuple, SchemaExtensionRealWorld1)
 {
