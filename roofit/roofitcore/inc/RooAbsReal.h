@@ -506,15 +506,15 @@ protected:
   void fillTreeBranch(TTree& t) override ;
 
   friend class RooRealBinding ;
-  double _plotMin ;       ///< Minimum of plot range
-  double _plotMax ;       ///< Maximum of plot range
-  Int_t    _plotBins ;      ///< Number of plot bins
-  mutable double _value ; ///< Cache for current value of object
-  TString  _unit ;          ///< Unit for objects value
-  TString  _label ;         ///< Plot label for objects value
-  bool   _forceNumInt ;   ///< Force numerical integration if flag set
+  double _plotMin = 0.0;       ///< Minimum of plot range
+  double _plotMax = 0.0;       ///< Maximum of plot range
+  Int_t _plotBins = 100;       ///< Number of plot bins
+  mutable double _value = 0.0; ///< Cache for current value of object
+  TString _unit ;              ///< Unit for objects value
+  TString _label ;             ///< Plot label for objects value
+  bool _forceNumInt = false;   ///< Force numerical integration if flag set
 
-  RooNumIntConfig* _specIntegratorConfig ; // Numeric integrator configuration specific for this object
+  std::unique_ptr<RooNumIntConfig> _specIntegratorConfig; // Numeric integrator configuration specific for this object
 
   struct PlotOpt {
    PlotOpt() : drawOptions("L"), scaleFactor(1.0), stype(Relative), projData(nullptr), binProjData(false), projSet(nullptr), precision(1e-3),
@@ -584,7 +584,7 @@ protected:
   friend class RooAddModel ;
 
   static void globalSelectComp(bool flag) ;
-  bool _selectComp ;               //! Component selection flag for RooAbsPdf::plotCompOn
+  bool _selectComp = true;         //! Component selection flag for RooAbsPdf::plotCompOn
   static bool _globalSelectComp ;  // Global activation switch for component selection
   // This struct can be used to flip the global switch to select components.
   // Doing this with RAII prevents forgetting to reset the state.
@@ -604,10 +604,10 @@ protected:
   };
 
 
-  mutable RooArgSet* _lastNSet ; ///<!
+  mutable RooArgSet* _lastNSet = nullptr; ///<!
   static bool _hideOffset ;    ///< Offset hiding flag
 
-  ClassDefOverride(RooAbsReal,2) // Abstract real-valued variable
+  ClassDefOverride(RooAbsReal,3) // Abstract real-valued variable
 };
 
 
