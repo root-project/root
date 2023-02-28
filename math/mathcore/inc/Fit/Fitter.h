@@ -108,9 +108,13 @@ public:
 
 
    /**
-      Destructor
+      Destructor.
+      Make it virtual in case users derive from Fitter class to extend it by adding new methods.
+      This is needed to avoid a warning seen when doing from Python
+      (see ROOT issue [#12391](https://github.com/root-project/root/issues/12391) ).
+      Note that the Fitter class does not provide virtual functions to be re-implemented by derived classes.
    */
-   ~Fitter () {}
+   virtual ~Fitter () {}
 
    /**
       Copy constructor (disabled, class is not copyable)
@@ -518,10 +522,12 @@ protected:
    template <class ObjFuncType>
    bool GetDataFromFCN();
 
-   /// return pointer to used objective function
-   /// if using an external one use external, otherwise use the one stored
-   /// in shared ptr
-   const ROOT::Math::IMultiGenFunction * ObjFunction() const {
+   /// Return pointer to the used objective function for fitting.
+   /// If using an external function (e.g. given in SetFCN), return the cached pointer,
+   /// otherwise use the one stored as shared ptr and managed by the Fitter class
+   const ROOT::Math::IBaseFunctionMultiDimTempl<double> * ObjFunction() const {
+      // need to specify here full return type since when using the typedef (IMultiGenFunction)
+      // there is an error when using the class in Python (see issue #12391)
       return (fExtObjFunction) ? fExtObjFunction : fObjFunction.get();
    }
 
