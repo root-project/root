@@ -28,6 +28,8 @@ RooFuncWrapper::RooFuncWrapper(const char *name, const char *title, std::string 
    std::string requestName = funcName + "_req";
    std::string wrapperName = funcName + "_derivativeWrapper";
 
+   gInterpreter->Declare("#pragma cling optimize(2)");
+
    // Declare the function
    std::stringstream bodyWithSigStrm;
    bodyWithSigStrm << "double " << funcName << "(double* params, double* obs) {" << funcBody << "}";
@@ -44,12 +46,12 @@ RooFuncWrapper::RooFuncWrapper(const char *name, const char *title, std::string 
    gInterpreter->ProcessLine("#include <Math/CladDerivator.h>");
    // disable clang-format for making the following code unreadable.
    // clang-format off
-      std::stringstream requestFuncStrm;
-      requestFuncStrm << "#pragma clad ON\n"
-                         "void " << requestName << "() {\n"
-                         "  clad::gradient(" << funcName << ", \"params\");\n"
-                         "}\n"
-                         "#pragma clad OFF";
+   std::stringstream requestFuncStrm;
+   requestFuncStrm << "#pragma clad ON\n"
+                      "void " << requestName << "() {\n"
+                      "  clad::gradient(" << funcName << ", \"params\");\n"
+                      "}\n"
+                      "#pragma clad OFF";
    // clang-format on
    comp = gInterpreter->Declare(requestFuncStrm.str().c_str());
    if (!comp) {
@@ -87,14 +89,18 @@ RooFuncWrapper::RooFuncWrapper(const char *name, const char *title, std::string 
    // Build a wrapper over the derivative to hide clad specific types such as 'array_ref'.
    // disable clang-format for making the following code unreadable.
    // clang-format off
-      std::stringstream dWrapperStrm;
-      dWrapperStrm << "void " << wrapperName << "(double* params, double* obs, double* out) {\n"
-                      "  clad::array_ref<double> cladOut(out, " << _params.size() << ");\n"
-                      "  " << gradName << "(params, obs, cladOut);\n"
-                      "}";
+   std::stringstream dWrapperStrm;
+   dWrapperStrm << "void " << wrapperName << "(double* params, double* obs, double* out) {\n"
+                   "  clad::array_ref<double> cladOut(out, " << _params.size() << ");\n"
+                   "  " << gradName << "(params, obs, cladOut);\n"
+                   "}";
    // clang-format on
    gInterpreter->Declare(dWrapperStrm.str().c_str());
    _grad = reinterpret_cast<Grad>(gInterpreter->ProcessLine((wrapperName + ";").c_str()));
+
+   // Create the gradient and function functors to be used by the minimizer.
+   _funcFunctor = ROOT::Math::Functor(this, &RooFuncWrapper::doEval, _params.size());
+   _gradFunctor = ROOT::Math::GradFunctor(this, &RooFuncWrapper::doEval, &RooFuncWrapper::gradient, _params.size());
 }
 
 RooFuncWrapper::RooFuncWrapper(const RooFuncWrapper &other, const char *name /*=nullptr*/)
@@ -110,6 +116,7 @@ RooFuncWrapper::RooFuncWrapper(const RooFuncWrapper &other, const char *name /*=
 void RooFuncWrapper::getGradient(double *out) const
 {
    updateGradientVarBuffer();
+   std::fill(out, out + _params.size(), 0.0);
 
    _grad(_gradientVarBuffer.data(), _observables.data(), out);
 }
@@ -125,4 +132,16 @@ double RooFuncWrapper::evaluate() const
    updateGradientVarBuffer();
 
    return _func(_gradientVarBuffer.data(), _observables.data());
+}
+
+void RooFuncWrapper::gradient(const double *x, double *g) const
+{
+   std::fill(g, g + _params.size(), 0.0);
+
+   _grad(const_cast<double *>(x), _observables.data(), g);
+}
+
+double RooFuncWrapper::doEval(const double *x) const
+{
+   return _func(const_cast<double *>(x), _observables.data());
 }
