@@ -25,6 +25,7 @@ void toJSON(RooStats::HistFactory::Measurement &meas, std::string const &fname)
 
 std::unique_ptr<RooWorkspace> toWS(RooStats::HistFactory::Measurement &meas)
 {
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
    return std::unique_ptr<RooWorkspace>{RooStats::HistFactory::MakeModelAndMeasurementFast(meas)};
 }
 
@@ -39,6 +40,7 @@ std::unique_ptr<RooWorkspace> importToWS(std::string const &infile, std::string 
 std::unique_ptr<RooStats::HistFactory::Measurement>
 measurement(std::string const &inputFileName = "test_hs3_histfactory_json_input.root")
 {
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
    gROOT->SetBatch(true);
    auto meas = std::make_unique<RooStats::HistFactory::Measurement>("meas", "meas");
    meas->SetOutputFilePrefix("./results/example_");
@@ -46,7 +48,7 @@ measurement(std::string const &inputFileName = "test_hs3_histfactory_json_input.
    meas->AddConstantParam("Lumi");
    meas->SetLumi(1.0);
    meas->SetLumiRelErr(0.10);
-   meas->SetExportOnly(false);
+   meas->SetExportOnly(true);
    meas->SetBinHigh(2);
    // meas.AddConstantParam("syst1");
    RooStats::HistFactory::Channel chan{"channel1"};
@@ -80,6 +82,8 @@ TEST(TestHS3HistFactoryJSON, Create)
 
 TEST(TestHS3HistFactoryJSON, Closure)
 {
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
    std::unique_ptr<RooStats::HistFactory::Measurement> meas = measurement();
    toJSON(*meas, "hf.json");
    std::unique_ptr<RooWorkspace> ws = toWS(*meas);
@@ -120,6 +124,8 @@ TEST(TestHS3HistFactoryJSON, Closure)
 
 TEST(TestHS3HistFactoryJSON, ClosureLoop)
 {
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
    std::unique_ptr<RooStats::HistFactory::Measurement> meas = measurement();
    std::unique_ptr<RooWorkspace> ws = toWS(*meas);
 
