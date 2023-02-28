@@ -290,7 +290,11 @@ TEST_F(SimBinnedConstrainedTest, SubEventSections)
          {static_cast<double>(ix) / N_events_total, static_cast<double>(ix + 1) / N_events_total}, 0,
          likelihood->getNComponents());
    }
-   EXPECT_EQ(whole.Sum(), N_events_total_parts.Sum());
+   // We cannot EXPECT_EQ in this test, because we compare actually different
+   // calculations. The multiple additions and FMA operations involved in the
+   // calculation of the multiple parts introduces different rounding errors
+   // on the CPU level than the single calculation over all events at once.
+   EXPECT_DOUBLE_EQ(whole.Sum(), N_events_total_parts.Sum());
 
    // now let's do it again over a number of sections 3 times the number of events
    ROOT::Math::KahanSum<double> thrice_N_events_total_parts;
@@ -300,5 +304,5 @@ TEST_F(SimBinnedConstrainedTest, SubEventSections)
          {static_cast<double>(ix) / (3 * N_events_total), static_cast<double>(ix + 1) / (3 * N_events_total)}, 0,
          likelihood->getNComponents());
    }
-   EXPECT_EQ(whole.Sum(), thrice_N_events_total_parts.Sum());
+   EXPECT_DOUBLE_EQ(whole.Sum(), thrice_N_events_total_parts.Sum());
 }
