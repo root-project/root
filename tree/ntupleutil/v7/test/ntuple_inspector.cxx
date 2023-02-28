@@ -109,11 +109,11 @@ TEST(RNTupleInspector, SizeUncompressedSimple)
    auto ntuple = file->Get<RNTuple>("ntuple");
    auto inspector = RNTupleInspector::Create(ntuple);
 
-   EXPECT_EQ(sizeof(int32_t) * 5, inspector->GetUncompressedSize());
+   EXPECT_EQ(sizeof(int32_t) * 5, inspector->GetInMemorySize());
 
    // N.B. This property only holds for ntuples without Index fields, due to
    // the 64-bit in-memory vs. 32-bit on-disk optimization.
-   EXPECT_EQ(inspector->GetCompressedSize(), inspector->GetUncompressedSize());
+   EXPECT_EQ(inspector->GetOnDiskSize(), inspector->GetInMemorySize());
 }
 
 TEST(RNTupleInspector, SizeUncompressedComplex)
@@ -147,7 +147,7 @@ TEST(RNTupleInspector, SizeUncompressedComplex)
 
    // We need to add another 4 bytes per index column per event, due to the 64-bit
    // in-memory vs. 32-bit on-disk optimization.
-   EXPECT_EQ(inspector->GetCompressedSize() + 4 * nIndexCols * nEntries, inspector->GetUncompressedSize());
+   EXPECT_EQ(inspector->GetOnDiskSize() + 4 * nIndexCols * nEntries, inspector->GetInMemorySize());
 }
 
 TEST(RNTupleInspector, SizeCompressedInt)
@@ -171,9 +171,9 @@ TEST(RNTupleInspector, SizeCompressedInt)
    auto ntuple = file->Get<RNTuple>("ntuple");
    auto inspector = RNTupleInspector::Create(ntuple);
 
-   EXPECT_EQ(sizeof(int32_t) * 50, inspector->GetUncompressedSize());
-   EXPECT_GT(inspector->GetCompressedSize(), 0);
-   EXPECT_LT(inspector->GetCompressedSize(), inspector->GetUncompressedSize());
+   EXPECT_EQ(sizeof(int32_t) * 50, inspector->GetInMemorySize());
+   EXPECT_GT(inspector->GetOnDiskSize(), 0);
+   EXPECT_LT(inspector->GetOnDiskSize(), inspector->GetInMemorySize());
    EXPECT_GT(inspector->GetCompressionFactor(), 1);
 }
 
@@ -200,8 +200,8 @@ TEST(RNTupleInspector, SizeCompressedComplex)
    auto ntuple = file->Get<RNTuple>("ntuple");
    auto inspector = RNTupleInspector::Create(ntuple);
 
-   EXPECT_GT(inspector->GetCompressedSize(), 0);
-   EXPECT_LT(inspector->GetCompressedSize(), inspector->GetUncompressedSize());
+   EXPECT_GT(inspector->GetOnDiskSize(), 0);
+   EXPECT_LT(inspector->GetOnDiskSize(), inspector->GetInMemorySize());
    EXPECT_GT(inspector->GetCompressionFactor(), 1);
 }
 
@@ -217,8 +217,8 @@ TEST(RNTupleInspector, SizeEmpty)
    auto ntuple = file->Get<RNTuple>("ntuple");
    auto inspector = RNTupleInspector::Create(ntuple);
 
-   EXPECT_EQ(0, inspector->GetCompressedSize());
-   EXPECT_EQ(0, inspector->GetUncompressedSize());
+   EXPECT_EQ(0, inspector->GetOnDiskSize());
+   EXPECT_EQ(0, inspector->GetInMemorySize());
 }
 
 TEST(RNTupleInspector, FieldTypeFrequency)
@@ -296,13 +296,13 @@ TEST(RNTupleInspector, ColumnSize)
    auto reader = RNTupleReader::Open(ntuple);
 
    for (std::size_t i = 0; i < reader->GetDescriptor()->GetNLogicalColumns(); ++i) {
-      EXPECT_GT(inspector->GetCompressedColumnSize(i), 0);
-      EXPECT_GT(inspector->GetUncompressedColumnSize(i), 0);
-      EXPECT_LT(inspector->GetCompressedColumnSize(i), inspector->GetUncompressedColumnSize(i));
+      EXPECT_GT(inspector->GetOnDiskColumnSize(i), 0);
+      EXPECT_GT(inspector->GetInMemoryColumnSize(i), 0);
+      EXPECT_LT(inspector->GetOnDiskColumnSize(i), inspector->GetInMemoryColumnSize(i));
    }
 
-   EXPECT_EQ(inspector->GetCompressedColumnSize(-42), -1);
-   EXPECT_EQ(inspector->GetUncompressedColumnSize(-42), -1);
+   EXPECT_EQ(inspector->GetOnDiskColumnSize(-42), -1);
+   EXPECT_EQ(inspector->GetInMemoryColumnSize(-42), -1);
 }
 
 TEST(RNTupleInspector, FieldSize)
@@ -330,12 +330,12 @@ TEST(RNTupleInspector, FieldSize)
    auto ntuple = file->Get<RNTuple>("ntuple");
    auto inspector = RNTupleInspector::Create(ntuple);
 
-   EXPECT_GT(inspector->GetCompressedFieldSize("object"), 0);
-   EXPECT_EQ(inspector->GetUncompressedFieldSize("object"), inspector->GetUncompressedSize());
-   EXPECT_LT(inspector->GetCompressedFieldSize("object"), inspector->GetUncompressedFieldSize("object"));
+   EXPECT_GT(inspector->GetOnDiskFieldSize("object"), 0);
+   EXPECT_EQ(inspector->GetInMemoryFieldSize("object"), inspector->GetInMemorySize());
+   EXPECT_LT(inspector->GetOnDiskFieldSize("object"), inspector->GetInMemoryFieldSize("object"));
 
-   EXPECT_EQ(inspector->GetCompressedFieldSize("invalid_field"), -1);
-   EXPECT_EQ(inspector->GetUncompressedFieldSize("invalid_field"), -1);
+   EXPECT_EQ(inspector->GetOnDiskFieldSize("invalid_field"), -1);
+   EXPECT_EQ(inspector->GetInMemoryFieldSize("invalid_field"), -1);
 }
 
 TEST(RNTupleInspector, ColumnType)
