@@ -158,10 +158,30 @@ public:
    {}
 
    /// Construct from a pointer to member function and member function types for function and derivative evaluations.
-   template <class PtrObj, typename MemFn, typename GradMemFn>
-   GradFunctor(const PtrObj& p, MemFn memFn, GradMemFn gradFn, unsigned int dim )
-      : fDim{dim}, fFunc{std::bind(memFn, p, std::placeholders::_1)}, fDerivFunc{std::bind(gradFn, p, std::placeholders::_1, std::placeholders::_2)}
+   template <class PtrObj, typename MemFn, typename DerivMemFn,
+             std::enable_if_t<std::is_floating_point<decltype((std::declval<std::remove_pointer_t<PtrObj>>().*
+                                                               std::declval<DerivMemFn>())(
+                                 std::declval<const double *>(), std::declval<int>()))>::value,
+                              bool> = true>
+   GradFunctor(const PtrObj &p, MemFn memFn, DerivMemFn gradFn, unsigned int dim)
+      : fDim{dim},
+        fFunc{std::bind(memFn, p, std::placeholders::_1)},
+        fDerivFunc{std::bind(gradFn, p, std::placeholders::_1, std::placeholders::_2)}
    {}
+
+   /// Construct from a pointer to member function and member function, types for function and full derivative
+   /// evaluations.
+   template <
+      class PtrObj, typename MemFn, typename GradMemFn,
+      std::enable_if_t<std::is_void<decltype((std::declval<std::remove_pointer_t<PtrObj>>().*std::declval<GradMemFn>())(
+                          std::declval<const double *>(), std::declval<double *>()))>::value,
+                       bool> = true>
+   GradFunctor(const PtrObj &p, MemFn memFn, GradMemFn gradFn, unsigned int dim)
+      : fDim{dim},
+        fFunc{std::bind(memFn, p, std::placeholders::_1)},
+        fGradFunc{std::bind(gradFn, p, std::placeholders::_1, std::placeholders::_2)}
+   {
+   }
 
    /// Construct for Gradient Functions of multi-dimension Func gives the
    /// function evaluation, GradFunc the partial derivatives The function
