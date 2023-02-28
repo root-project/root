@@ -92,11 +92,11 @@ public:
 
    /// Get the on-disk, compressed size of the RNTuple being inspected, in bytes.
    /// Does **not** include the size of the header and footer.
-   std::uint64_t GetCompressedSize();
+   std::uint64_t GetOnDiskSize();
 
-   /// Get the total, uncompressed size of the RNTuple being inspected, in bytes.
+   /// Get the total, in-memory size of the RNTuple being inspected, in bytes.
    /// Does **not** include the size of the header and footer.
-   std::uint64_t GetUncompressedSize();
+   std::uint64_t GetInMemorySize();
 
    /// Get the compression factor of the RNTuple being inspected.
    float GetCompressionFactor();
@@ -108,18 +108,18 @@ public:
    int GetColumnTypeFrequency(EColumnType colType);
 
    /// Get the on-disk, compressed size of a given column.
-   std::uint64_t GetCompressedColumnSize(DescriptorId_t logicalId);
+   std::uint64_t GetOnDiskColumnSize(DescriptorId_t logicalId);
 
-   /// Get the total, uncompressed size of a given column.
-   std::uint64_t GetUncompressedColumnSize(DescriptorId_t logicalId);
+   /// Get the total, in-memory size of a given column.
+   std::uint64_t GetInMemoryColumnSize(DescriptorId_t logicalId);
 
    /// Get the on-disk, compressed size of a given field.
-   std::uint64_t GetCompressedFieldSize(DescriptorId_t fieldId);
-   std::uint64_t GetCompressedFieldSize(std::string fieldName);
+   std::uint64_t GetOnDiskFieldSize(DescriptorId_t fieldId);
+   std::uint64_t GetOnDiskFieldSize(std::string fieldName);
 
-   /// Get the total, uncompressed size of a given field.
-   std::uint64_t GetUncompressedFieldSize(DescriptorId_t fieldId);
-   std::uint64_t GetUncompressedFieldSize(std::string fieldName);
+   /// Get the total, in-memory size of a given field.
+   std::uint64_t GetInMemoryFieldSize(DescriptorId_t fieldId);
+   std::uint64_t GetInMemoryFieldSize(std::string fieldName);
 
    /// Get the type of a given column.
    EColumnType GetColumnType(DescriptorId_t logicalId);

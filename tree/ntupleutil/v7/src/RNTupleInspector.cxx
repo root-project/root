@@ -187,12 +187,12 @@ int ROOT::Experimental::RNTupleInspector::GetCompressionSettings()
    return fCompressionSettings;
 }
 
-std::uint64_t ROOT::Experimental::RNTupleInspector::GetCompressedSize()
+std::uint64_t ROOT::Experimental::RNTupleInspector::GetOnDiskSize()
 {
    return fCompressedSize;
 }
 
-std::uint64_t ROOT::Experimental::RNTupleInspector::GetUncompressedSize()
+std::uint64_t ROOT::Experimental::RNTupleInspector::GetInMemorySize()
 {
    return fUncompressedSize;
 }
@@ -232,8 +232,7 @@ int ROOT::Experimental::RNTupleInspector::GetColumnTypeFrequency(ROOT::Experimen
    return typeFrequency;
 }
 
-std::uint64_t
-ROOT::Experimental::RNTupleInspector::GetCompressedColumnSize(ROOT::Experimental::DescriptorId_t logicalId)
+std::uint64_t ROOT::Experimental::RNTupleInspector::GetOnDiskColumnSize(ROOT::Experimental::DescriptorId_t logicalId)
 {
    if (fColumnInfo.empty()) {
       CollectColumnData();
@@ -251,8 +250,7 @@ ROOT::Experimental::RNTupleInspector::GetCompressedColumnSize(ROOT::Experimental
    return fColumnInfo.at(physicalId).fCompressedSize;
 }
 
-std::uint64_t
-ROOT::Experimental::RNTupleInspector::GetUncompressedColumnSize(ROOT::Experimental::DescriptorId_t logicalId)
+std::uint64_t ROOT::Experimental::RNTupleInspector::GetInMemoryColumnSize(ROOT::Experimental::DescriptorId_t logicalId)
 {
    if (fColumnInfo.empty()) {
       CollectColumnData();
@@ -269,18 +267,18 @@ ROOT::Experimental::RNTupleInspector::GetUncompressedColumnSize(ROOT::Experiment
    return fColumnInfo.at(physicalId).fUncompressedSize;
 }
 
-std::uint64_t ROOT::Experimental::RNTupleInspector::GetCompressedFieldSize(ROOT::Experimental::DescriptorId_t fieldId)
+std::uint64_t ROOT::Experimental::RNTupleInspector::GetOnDiskFieldSize(ROOT::Experimental::DescriptorId_t fieldId)
 {
    std::uint64_t fieldSize = 0;
 
    for (const auto colId : GetColumnsForField(fieldId)) {
-      fieldSize += GetCompressedColumnSize(colId);
+      fieldSize += GetOnDiskColumnSize(colId);
    }
 
    return fieldSize;
 }
 
-std::uint64_t ROOT::Experimental::RNTupleInspector::GetCompressedFieldSize(std::string fieldName)
+std::uint64_t ROOT::Experimental::RNTupleInspector::GetOnDiskFieldSize(std::string fieldName)
 {
    auto descriptorGuard = fPageSource->GetSharedDescriptorGuard();
 
@@ -291,21 +289,21 @@ std::uint64_t ROOT::Experimental::RNTupleInspector::GetCompressedFieldSize(std::
       return -1;
    }
 
-   return GetCompressedFieldSize(fieldId);
+   return GetOnDiskFieldSize(fieldId);
 }
 
-std::uint64_t ROOT::Experimental::RNTupleInspector::GetUncompressedFieldSize(ROOT::Experimental::DescriptorId_t fieldId)
+std::uint64_t ROOT::Experimental::RNTupleInspector::GetInMemoryFieldSize(ROOT::Experimental::DescriptorId_t fieldId)
 {
    std::uint64_t fieldSize = 0;
 
    for (const auto colId : GetColumnsForField(fieldId)) {
-      fieldSize += GetUncompressedColumnSize(colId);
+      fieldSize += GetInMemoryColumnSize(colId);
    }
 
    return fieldSize;
 }
 
-std::uint64_t ROOT::Experimental::RNTupleInspector::GetUncompressedFieldSize(std::string fieldName)
+std::uint64_t ROOT::Experimental::RNTupleInspector::GetInMemoryFieldSize(std::string fieldName)
 {
    auto descriptorGuard = fPageSource->GetSharedDescriptorGuard();
 
@@ -316,7 +314,7 @@ std::uint64_t ROOT::Experimental::RNTupleInspector::GetUncompressedFieldSize(std
       return -1;
    }
 
-   return GetUncompressedFieldSize(fieldId);
+   return GetInMemoryFieldSize(fieldId);
 }
 
 ROOT::Experimental::EColumnType
