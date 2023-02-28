@@ -5,11 +5,35 @@ import os
 import subprocess
 import sys
 import textwrap
+from functools import wraps
 from http import HTTPStatus
-from typing import Dict, Tuple
+from typing import Callable, Dict, Tuple
 
 from openstack.connection import Connection
 from requests import get
+
+
+def github_log_group(title: str):
+    """ decorator that places function's stdout/stderr output in a
+        dropdown group when running on github workflows """
+    def group(func: Callable):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            print("::group::" + title)
+
+            try:
+                result = func(*args, **kwargs)
+            except Exception as e:
+                print("::endgroup::")
+                raise e
+            
+            print("::endgroup::")
+
+            return result
+
+        return wrapper if os.getenv("GITHUB_ACTIONS") else func
+
+    return group
 
 
 def print_fancy(*values, sgr=1, **kwargs) -> None:
@@ -21,11 +45,15 @@ def print_fancy(*values, sgr=1, **kwargs) -> None:
     print("\033[0m", **kwargs)
 
 
-def warning(*values, **kwargs):
+def print_info(*values, **kwargs):
+    print_fancy("Info: ", *values, sgr=90, **kwargs)
+
+
+def print_warning(*values, **kwargs):
     print_fancy("Warning: ", *values, sgr=33, **kwargs)
 
 
-def error(*values, **kwargs):
+def print_error(*values, **kwargs):
     print_fancy("Fatal error: ", *values, sgr=31, **kwargs)
 
 
@@ -45,7 +73,7 @@ def subprocess_with_log(command: str, log="") -> Tuple[int, str]:
 
 
 def die(code: int = 1, msg: str = "", log: str = "") -> None:
-    error(f"({code}) {msg}")
+    print_error(f"({code}) {msg}")
 
     print_shell_log(log)
 
@@ -73,7 +101,7 @@ def load_config(filename) -> dict:
     try:
         file = open(filename, 'r', encoding='utf-8')
     except OSError as err:
-        warning(f"couldn't load {filename}: {err.strerror}")
+        print_warning(f"couldn't load {filename}: {err.strerror}")
         return {}
 
     with file:
