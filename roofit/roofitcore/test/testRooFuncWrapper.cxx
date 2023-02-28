@@ -16,12 +16,15 @@
 #include <RooFuncWrapper.h>
 #include <RooGaussian.h>
 #include <RooHelpers.h>
+#include <RooMinimizer.h>
 #include <RooRealIntegral.h>
 #include <RooRealVar.h>
 
 #include <TROOT.h>
 #include <TSystem.h>
 #include <TMath.h>
+#include <Math/Factory.h>
+#include <Math/Minimizer.h>
 
 #include "gtest/gtest.h"
 
@@ -38,6 +41,43 @@ double getNumDerivative(const RooAbsReal &pdf, RooRealVar &var, const RooArgSet 
    var.setVal(orig);
 
    return (plus - minus) / (2 * eps);
+}
+
+std::unique_ptr<ROOT::Math::Minimizer>
+doMinimization(RooFuncWrapper const &inFunc, RooArgSet const &parameters, bool useAnalyticGradient)
+{
+   std::unique_ptr<ROOT::Math::Minimizer> myMinimizer{ROOT::Math::Factory::CreateMinimizer("Minuit2")};
+
+   myMinimizer->SetPrintLevel(-1);
+   myMinimizer->SetErrorDef(0.5);
+   myMinimizer->SetTolerance(1);
+   myMinimizer->SetMaxFunctionCalls(1000);
+   if (useAnalyticGradient)
+      myMinimizer->SetFunction(inFunc.getGradFunctor());
+   else
+      myMinimizer->SetFunction(inFunc.getFunctor());
+
+   int cnt = 0;
+   for (auto *param : parameters) {
+      auto realParam = static_cast<RooRealVar *>(param);
+      myMinimizer->SetLimitedVariable(cnt++, realParam->GetName(), realParam->getVal(), realParam->getError(),
+                                      realParam->getMin(), realParam->getMax());
+   }
+
+   myMinimizer->Minimize();
+
+   return myMinimizer;
+}
+
+void checkMinimizationResults(ROOT::Math::Minimizer const &minimizer, RooArgSet const &parameters, double eps = 1e-8)
+{
+   int cnt = 0;
+   for (auto *param : parameters) {
+      auto realParam = static_cast<RooRealVar *>(param);
+      EXPECT_NEAR(minimizer.X()[cnt], realParam->getVal(), eps);
+      EXPECT_NEAR(minimizer.Errors()[cnt], realParam->getError(), eps);
+      cnt++;
+   }
 }
 
 } // namespace
@@ -95,6 +135,9 @@ TEST(RooFuncWrapper, NllWithObservables)
    RooRealVar sigma("sigma", "sigma", 2.0, 0.01, 10);
    RooGaussian gauss{"gauss", "gauss", x, mu, sigma};
 
+   mu.setError(2);
+   sigma.setError(1);
+
    RooArgSet normSet{x};
 
    std::size_t nEvents = 10;
@@ -141,6 +184,20 @@ TEST(RooFuncWrapper, NllWithObservables)
    // Check if derivatives are equal
    EXPECT_NEAR(getNumDerivative(*nllRef, mu, normSet), dMyNLL[0], 1e-6);
    EXPECT_NEAR(getNumDerivative(*nllRef, sigma, normSet), dMyNLL[1], 1e-6);
+
+   // Minimize the RooFuncWrapper Implementation
+   // Compare reference with AD gradient based minimization and numerical gradient based minimization.
+   auto myMinimizer = doMinimization(nllFunc, paramsMyNLL, true);
+   auto myMinimizerNumDiff = doMinimization(nllFunc, paramsMyNLL, false);
+
+   // Minimize the reference NLL
+   RooMinimizer refMinimizer{*nllRef};
+   refMinimizer.setPrintLevel(-1);
+   refMinimizer.minimize("Minuit2");
+
+   // Compare minimization results
+   checkMinimizationResults(*myMinimizer, parameters, 1e-6);
+   checkMinimizationResults(*myMinimizerNumDiff, parameters);
 }
 
 namespace {
