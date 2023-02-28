@@ -750,11 +750,6 @@ void RooJSONFactoryWSTool::importFunction(const JSONNode &p, bool isPdf)
       }
    } catch (const RooJSONFactoryWSTool::DependencyMissingError &ex) {
       throw ex;
-   } catch (const std::exception &ex) {
-      std::stringstream ss;
-      ss << "RooJSONFactoryWSTool(): error importing " << name << ": " << ex.what() << ". skipping." << std::endl;
-      logInputArgumentsError(std::move(ss));
-      throw ex;
    }
 }
 
@@ -992,9 +987,18 @@ RooJSONFactoryWSTool::readBinnedData(const JSONNode &n, const std::string &name,
 {
    if (!n.has_child("contents"))
       RooJSONFactoryWSTool::error("no contents given");
-   if (!n["contents"].is_seq())
+
+   JSONNode const &contents = n["contents"];
+
+   if (!contents.is_seq())
       RooJSONFactoryWSTool::error("contents are not in list form");
-   auto &contents = n["contents"];
+
+   JSONNode const *errors = nullptr;
+   if (n.has_child("errors")) {
+      errors = &n["errors"];
+      if (!errors->is_seq())
+         RooJSONFactoryWSTool::error("errors are not in list form");
+   }
 
    auto bins = RooJSONFactoryWSTool::generateBinIndices(varlist);
    if (contents.num_children() != bins.size())
@@ -1012,7 +1016,8 @@ RooJSONFactoryWSTool::readBinnedData(const JSONNode &n, const std::string &name,
          RooRealVar *v = (RooRealVar *)(varlist.at(i));
          v->setBin(bins[ibin][i]);
       }
-      dh->add(varlist, contents[ibin].val_double());
+      const double err = errors ? (*errors)[ibin].val_double() : -1;
+      dh->add(varlist, contents[ibin].val_double(), err > 0 ? err * err : -1);
    }
    // re-enable dirty flag propagation
    for (size_t i = 0; i < varlist.size(); ++i) {
