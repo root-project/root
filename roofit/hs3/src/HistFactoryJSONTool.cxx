@@ -80,12 +80,7 @@ void exportSample(const RooStats::HistFactory::Sample &sample, JSONNode &s)
    tags["normalizeByTheory"] << sample.GetNormalizeByTheory();
 
    if (sample.GetStatError().GetActivate()) {
-      auto &modifiers = s["modifiers"];
-      modifiers.set_seq();
-      auto &node = modifiers.append_child();
-      node.set_map();
-      node["type"] << "staterror";
-      node["name"] << "mcstat";
+      RooStats::HistFactory::JSONTool::activateStatError(s);
    }
 
    auto &data = s["data"];
@@ -288,4 +283,14 @@ void RooStats::HistFactory::JSONTool::PrintYAML(std::string const &filename)
 {
    std::ofstream out(filename);
    this->PrintYAML(out);
+}
+
+void RooStats::HistFactory::JSONTool::activateStatError(JSONNode &sampleNode)
+{
+   auto &modifiers = sampleNode["modifiers"];
+   modifiers.set_seq();
+   auto &node = modifiers.append_child();
+   node.set_map();
+   node["type"] << "staterror";
+   node["name"] << "mcstat";
 }
