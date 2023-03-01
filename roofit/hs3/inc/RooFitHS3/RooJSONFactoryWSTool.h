@@ -13,15 +13,18 @@
 #ifndef RooFitHS3_RooJSONFactoryWSTool_h
 #define RooFitHS3_RooJSONFactoryWSTool_h
 
+#include <RooFit/Detail/JSONInterface.h>
+
+#include <RooArgList.h>
+#include <RooArgSet.h>
+
 #include <map>
 #include <memory>
 #include <stdexcept>
 #include <string>
 #include <vector>
 
-class RooArgList;
 class RooAbsData;
-class RooArgSet;
 class RooAbsArg;
 class RooAbsPdf;
 class RooDataHist;
@@ -35,10 +38,6 @@ namespace Detail {
 class Domains;
 }
 } // namespace JSONIO
-namespace Detail {
-class JSONNode;
-class JSONTree;
-} // namespace Detail
 } // namespace RooFit
 namespace RooStats {
 class ModelConfig;
@@ -60,6 +59,36 @@ public:
          return out;
       }
       throw DependencyMissingError(requestAuthor, objname, T::Class()->GetName());
+   }
+
+   template <class T, class Coll_t>
+   Coll_t requestCollection(const RooFit::Detail::JSONNode &node, const std::string &seqName)
+   {
+      std::string requestAuthor(RooJSONFactoryWSTool::name(node));
+      if (!node.has_child(seqName)) {
+         RooJSONFactoryWSTool::error("no \"" + seqName + "\" given in \"" + requestAuthor + "\"");
+      }
+      if (!node[seqName].is_seq()) {
+         RooJSONFactoryWSTool::error("\"" + seqName + "\" in \"" + requestAuthor + "\" is not a sequence");
+      }
+
+      Coll_t out;
+      for (const auto &elem : node[seqName].children()) {
+         out.add(*request<T>(elem.val(), requestAuthor));
+      }
+      return out;
+   }
+
+   template <class T>
+   RooArgSet requestArgSet(const RooFit::Detail::JSONNode &node, const std::string &seqName)
+   {
+      return requestCollection<T, RooArgSet>(node, seqName);
+   }
+
+   template <class T>
+   RooArgSet requestArgList(const RooFit::Detail::JSONNode &node, const std::string &seqName)
+   {
+      return requestCollection<T, RooArgList>(node, seqName);
    }
 
    RooJSONFactoryWSTool(RooWorkspace &ws);
