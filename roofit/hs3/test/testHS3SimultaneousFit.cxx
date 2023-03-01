@@ -11,6 +11,7 @@
 #include <RooDataSet.h>
 #include <RooFitResult.h>
 #include <RooGlobalFunc.h>
+#include <RooHelpers.h>
 #include <RooProdPdf.h>
 #include <RooRealVar.h>
 #include <RooWorkspace.h>
@@ -68,8 +69,6 @@ std::unique_ptr<RooFitResult> writeJSONAndFitModel(std::string &jsonStr)
 
    ws.import(modelConfig);
 
-   modelConfig.Print();
-
    RooRealVar &x1 = *ws.var("x_1");
    RooRealVar &x2 = *ws.var("x_2");
    x1.setBins(20);
@@ -121,6 +120,8 @@ std::unique_ptr<RooFitResult> readJSONAndFitModel(std::string const &jsonStr)
 
 TEST(RooFitHS3, SimultaneousFit)
 {
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
    using namespace RooFit;
 
    auto etcDir = std::string(TROOT::GetEtcDir());
