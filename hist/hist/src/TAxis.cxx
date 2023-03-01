@@ -311,7 +311,7 @@ Int_t TAxis::FindBin(Double_t x)
       return FindFixBin(x);
    } else {
       if (!fXbins.fN) {        //*-* fix bins
-         bin = 1 + int (fNbins*(x-fXmin)/(fXmax-fXmin) );
+         bin = 1 + round( (double)fNbins*((x-fXmin)/(fXmax-fXmin)) );
       } else {                  //*-* variable bin sizes
          //for (bin =1; x >= fXbins.fArray[bin]; bin++);
          bin = 1 + TMath::BinarySearch(fXbins.fN,fXbins.fArray,x);
@@ -425,9 +425,8 @@ Int_t TAxis::FindFixBin(Double_t x) const
       bin = fNbins+1;
    } else {
       if (!fXbins.fN) {        //*-* fix bins
-         bin = 1 + int (fNbins*(x-fXmin)/(fXmax-fXmin) );
+         bin = 1 + round( (double)fNbins*((x-fXmin)/(fXmax-fXmin)) );
       } else {                  //*-* variable bin sizes
-//         for (bin =1; x >= fXbins.fArray[bin]; bin++);
          bin = 1 + TMath::BinarySearch(fXbins.fN,fXbins.fArray,x);
       }
    }
