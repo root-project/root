@@ -74,44 +74,6 @@ private:
    std::map<std::string, RooAbsArg *> _objects;
 };
 
-inline void collectNames(const JSONNode &n, std::vector<std::string> &names)
-{
-   for (const auto &c : n.children()) {
-      names.push_back(RooJSONFactoryWSTool::name(c));
-   }
-}
-
-inline void stackError(const JSONNode &n, std::vector<double> &sumW, std::vector<double> &sumW2)
-{
-   if (!n.is_map())
-      return;
-   if (!n.has_child("contents"))
-      throw std::invalid_argument("no contents given");
-   JSONNode const &contents = n["contents"];
-   if (!contents.is_seq())
-      throw std::invalid_argument("contents are not in list form");
-   if (!n.has_child("errors"))
-      throw std::invalid_argument("no errors given");
-   if (!n["errors"].is_seq())
-      throw std::invalid_argument("errors are not in list form");
-   if (contents.num_children() != n["errors"].num_children()) {
-      throw std::invalid_argument("inconsistent bin numbers");
-   }
-   const size_t nbins = contents.num_children();
-   for (size_t ibin = 0; ibin < nbins; ++ibin) {
-      double w = contents[ibin].val_double();
-      double e = n["errors"][ibin].val_double();
-      if (ibin < sumW.size())
-         sumW[ibin] += w;
-      else
-         sumW.push_back(w);
-      if (ibin < sumW2.size())
-         sumW2[ibin] += e * e;
-      else
-         sumW2.push_back(e * e);
-   }
-}
-
 std::vector<std::string> getVarnames(const RooHistFunc *hf)
 {
    const RooDataHist &dh = hf->dataHist();
