@@ -11,10 +11,10 @@ if(NOT DEFINED ROOT_SOURCE_DIR)
    include(${ROOT_USE_FILE})
 endif()
 
-set(TestSource
-      testMinimizer.cxx
-      testADMinim.cxx
-)
+set(TestSource testMinimizer.cxx)
+if (clad)
+  list(APPEND TestSource testADMinim.cxx)
+endif()
 
 set(TestSourceMnTutorial
     MnTutorial/Quad1FMain.cxx
