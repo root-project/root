@@ -23,12 +23,13 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitHS3
     src/JSONFactories_HistFactory.cxx
   DICTIONARY_OPTIONS
     "-writeEmptyRootPCM"
+  DEPENDENCIES
+    RooFitCore
+    RooFitJSONInterface
   LIBRARIES
     RooFit
-    RooFitCore
     RooStats
     HistFactory
-    RooFitJSONInterface
 )
 
 ROOT_ADD_TEST_SUBDIRECTORY(test)
