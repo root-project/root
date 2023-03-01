@@ -101,6 +101,21 @@ using RooFit::Detail::JSONNode;
 using RooFit::JSONIO::Detail::Domains;
 
 namespace {
+const RooFit::Detail::JSONNode &dereference_helper(const RooFit::Detail::JSONNode &n,
+                                                   const std::vector<std::string> &keys,
+                                                   const RooFit::Detail::JSONNode &default_val, size_t idx)
+{
+   if (idx >= keys.size())
+      return n;
+   if (n.has_child(keys[idx]))
+      return dereference_helper(n[keys[idx]], keys, default_val, idx + 1);
+   return default_val;
+}
+const RooFit::Detail::JSONNode &dereference(const RooFit::Detail::JSONNode &n, const std::vector<std::string> &keys,
+                                            const RooFit::Detail::JSONNode &default_val)
+{
+   return dereference_helper(n, keys, default_val, 0);
+}
 
 bool isNumber(const std::string &str)
 {
@@ -1149,10 +1164,19 @@ void RooJSONFactoryWSTool::exportModelConfig(JSONNode &rootnode, RooStats::Model
    auto &analysisLikelihoods = analysisNode["likelihoods"];
    analysisLikelihoods.set_seq();
 
+   auto &miscinfo = rootnode["misc"];
+   miscinfo.set_map();
+   auto &rootinfo = miscinfo["ROOT_internal"];
+   rootinfo.set_map();
+   auto &modelConfigs = rootinfo["ModelConfigs"];
+   modelConfigs.set_map();
+   auto &modelConfigAux = modelConfigs[mc.GetPdf()->GetName()];
+   modelConfigAux.set_map();
+
    std::string basename = "obsData";
    if (auto s = pdf->getStringAttribute("combinedObservationName")) {
       basename = s;
-      analysisNode["combinedObservationName"] << s;
+      modelConfigAux["combinedObservationName"] << s;
    }
 
    for (auto const &item : pdf->indexCat()) {
@@ -1321,7 +1345,8 @@ bool RooJSONFactoryWSTool::exportYML(std::string const &filename)
 }
 
 void RooJSONFactoryWSTool::importAnalysis(const RooFit::Detail::JSONNode &analysisNode,
-                                          const RooFit::Detail::JSONNode &likelihoodsNode)
+                                          const RooFit::Detail::JSONNode &likelihoodsNode,
+                                          const RooFit::Detail::JSONNode &mcAuxNode)
 {
 
    // if this is a toplevel pdf, also create a modelConfig for it
@@ -1404,8 +1429,8 @@ void RooJSONFactoryWSTool::importAnalysis(const RooFit::Detail::JSONNode &analys
    }
 
    std::string name = "obsData"; // default name for the combined data if not specified in the JSON
-   if (analysisNode.has_child("combinedObservationName")) {
-      name = analysisNode["combinedObservationName"].val();
+   if (mcAuxNode.has_child("combinedObservationName")) {
+      name = mcAuxNode["combinedObservationName"].val();
    }
 
    pdf->setStringAttribute("combinedObservationName", name.c_str());
@@ -1456,7 +1481,8 @@ void RooJSONFactoryWSTool::importAllNodes(const RooFit::Detail::JSONNode &n)
    // Now, read in analyses and likelihoods if there are any
    if (n.has_child("analyses")) {
       for (JSONNode const &analysisNode : n["analyses"].children()) {
-         importAnalysis(analysisNode, n["likelihoods"]);
+         importAnalysis(analysisNode, n["likelihoods"],
+                        dereference(n, {"misc", "ROOT_internal", "ModelConfigs", analysisNode.key()}, n));
       }
    }
 }
