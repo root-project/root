@@ -44,25 +44,60 @@ using RooFit::Detail::JSONNode;
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
 namespace {
+/**
+ * Extracts arguments from a mathematical expression.
+ *
+ * This function takes a string representing a mathematical
+ * expression and extracts the arguments from it.  The arguments are
+ * defined as sequences of characters that do not contain digits,
+ * spaces, or parentheses, and that start with a letter. Function
+ * calls such as "exp( ... )", identified as being followed by an
+ * opening parenthesis, are not treated as arguments. The extracted
+ * arguments are returned as a vector of strings.
+ *
+ * @param expression A string representing a mathematical expression.
+ * @return A vector of strings representing the extracted arguments.
+ */
+std::vector<std::string> extract_arguments(const std::string &expression)
+{
+   std::vector<std::string> arguments;
+   size_t startidx = expression.size();
+   for (size_t i = 0; i < expression.size(); ++i) {
+      if (startidx >= expression.size()) {
+         if (isalpha(expression[i])) {
+            startidx = i;
+         }
+      } else {
+         if (!isdigit(expression[i]) && !isalpha(expression[i]) && expression[i] != '_') {
+            if (expression[i] == ' ')
+               continue;
+            if (expression[i] == '(') {
+               startidx = expression.size();
+               continue;
+            }
+            std::string arg(expression.substr(startidx, i - startidx));
+            startidx = expression.size();
+            arguments.push_back(arg);
+         }
+      }
+   }
+   if (startidx < expression.size())
+      arguments.push_back(expression.substr(startidx));
+   return arguments;
+}
 
 class RooGenericPdfFactory : public RooFit::JSONIO::Importer {
 public:
    bool importPdf(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
    {
       std::string name(RooJSONFactoryWSTool::name(p));
-      if (!p.has_child("arguments")) {
-         RooJSONFactoryWSTool::error("no arguments of '" + name + "'");
-      }
       if (!p.has_child("expression")) {
          RooJSONFactoryWSTool::error("no expression given for '" + name + "'");
       }
       TString formula(p["expression"].val());
       RooArgList dependents;
-      for (const auto &d : p["arguments"].children()) {
-         std::string key = d.key();
-         std::string objname = d.val();
-         TObject *obj = tool->workspace()->obj(objname);
-         formula.ReplaceAll(key, objname);
+      for (const auto &d : extract_arguments(formula.Data())) {
+         TObject *obj = tool->workspace()->obj(d);
          if (obj->InheritsFrom(RooAbsArg::Class())) {
             dependents.add(*static_cast<RooAbsArg *>(obj));
          }
@@ -78,19 +113,13 @@ public:
    bool importFunction(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
    {
       std::string name(RooJSONFactoryWSTool::name(p));
-      if (!p.has_child("arguments")) {
-         RooJSONFactoryWSTool::error("no arguments of '" + name + "'");
-      }
       if (!p.has_child("expression")) {
          RooJSONFactoryWSTool::error("no expression given for '" + name + "'");
       }
       TString formula(p["expression"].val());
       RooArgList dependents;
-      for (const auto &d : p["arguments"].children()) {
-         std::string key = d.key();
-         std::string objname = d.val();
-         TObject *obj = tool->workspace()->obj(objname);
-         formula.ReplaceAll(key, objname);
+      for (const auto &d : extract_arguments(formula.Data())) {
+         TObject *obj = tool->workspace()->obj(d);
          if (obj->InheritsFrom(RooAbsArg::Class())) {
             dependents.add(*static_cast<RooAbsArg *>(obj));
          }
@@ -438,11 +467,6 @@ public:
       const RooGenericPdf *pdf = static_cast<const RooGenericPdf *>(func);
       elem["type"] << key();
       elem["expression"] << pdf->expression();
-      auto &args = elem["arguments"];
-      args.set_map();
-      for (const auto &v : pdf->dependents()) {
-         args[v->GetName()] << v->GetName();
-      }
       return true;
    }
 };
@@ -476,11 +500,6 @@ public:
       const RooFormulaVar *var = static_cast<const RooFormulaVar *>(func);
       elem["type"] << key();
       elem["expression"] << var->expression();
-      auto &args = elem["arguments"];
-      args.set_map();
-      for (const auto &v : var->dependents()) {
-         args[v->GetName()] << v->GetName();
-      }
       return true;
    }
 };
@@ -540,21 +559,16 @@ public:
    {
       auto *pdf = static_cast<const RooTFnBinding *>(func);
       elem["type"] << key();
-      auto &vars = elem["arguments"];
-      vars.set_map();
-      if (pdf->observables().size() > 0) {
-         vars["x"] << pdf->observables()[0].GetName();
+
+      TString formula(pdf->function().GetExpFormula());
+      formula.ReplaceAll("x", pdf->observables()[0].GetName());
+      formula.ReplaceAll("y", pdf->observables()[1].GetName());
+      formula.ReplaceAll("z", pdf->observables()[2].GetName());
+      for (size_t i = 0; i < pdf->parameters().size(); ++i) {
+         TString pname(TString::Format("[%d]", (int)i));
+         formula.ReplaceAll(pname, pdf->parameters()[i].GetName());
       }
-      if (pdf->observables().size() > 1) {
-         vars["y"] << pdf->observables()[1].GetName();
-      }
-      if (pdf->observables().size() > 2) {
-         vars["z"] << pdf->observables()[2].GetName();
-      }
-      if (pdf->parameters().size() > 0) {
-         elem["parameters"].fill_seq(pdf->parameters(), [](auto const &item) { return item->GetName(); });
-      }
-      elem["expression"] << pdf->function().GetExpFormula().Data();
+      elem["expression"] << formula.Data();
       return true;
    }
 };
