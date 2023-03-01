@@ -15,13 +15,19 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       // the control API:
       metadata : {
          properties : {           // setter and getter are created behind the scenes, incl. data binding and type validation
-            "color" : {type: "sap.ui.core.CSSColor", defaultValue: "#fff"} // you can give a default value and more
+            "color" : { type: "sap.ui.core.CSSColor", defaultValue: "#fff"} // you can give a default value and more
          }
       },
 
       // the part creating the HTML:
       renderer : function(oRm, oControl) { // static function, so use the given "oControl" instance instead of "this" in the renderer function
          // if (!oControl.getVisible()) return;
+
+         if (oControl.getColor() == '#fff') return;
+
+         // change backround of parane instead
+         //oControl.getParent().$().css("background-color", oControl.getColor());
+         //return;
 
          oRm.write("<div");
          oRm.writeControlData(oControl);  // writes the Control ID and enables event handling - important!
@@ -124,7 +130,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                template: new HorizontalLayout({
                   content: [
                      //new mCheckBox({ enabled: true, visible: true, selected: "{node_visible}", select: vis_selected_handler }),
-                     //new geomColorBox({color:"{color}", visible: "{color_visible}"}),
+                     new geomColorBox({color: "{_elem/color}", visible: "{= !!${_elem/color}}"}),
                      new mText({text:"{name}", wrapping: false })
                   ]
                })
@@ -591,7 +597,6 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             if (dnode) {
                // here we can modify only node which was changed
                dnode.title = moditem.name;
-               dnode.color_visible = false;
                dnode.node_visible = moditem.vis != 0;
             } else {
                can_refresh = false;
@@ -616,16 +621,11 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
          let node = nodes[indx];
 
-         cache[indx] = tnode = { name: node.name, id: indx, color_visible: false, node_visible: node.vis != 0 };
+         cache[indx] = tnode = { name: node.name, id: indx, color: node.color, node_visible: node.vis != 0 };
 
          if (expand_lvl > 0) tnode.expanded = true;
 
-         if (node.color) {
-            tnode.color = "rgb(" + node.color + ")";
-            tnode.color_visisble = true;
-         }
-
-         if (node.chlds && (node.chlds.length>0)) {
+         if (node.chlds && (node.chlds.length > 0)) {
             tnode.childs = [];
             tnode.nchilds = node.chlds.length;
             for (let k = 0; k < tnode.nchilds; ++k)
@@ -678,7 +678,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
          let nodes = [];
          for (let k = 0; k < matches.length; ++k)
-             this.appendStackToTree(nodes, matches[k].stack, matches[k].color);
+            this.appendStackToTree(nodes, matches[k].stack, matches[k].color);
 
          br.setNoData("");
          br.setShowNoData(false);
@@ -696,7 +696,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             path.push(node.name);
             let tnode = tnodes[indx];
             if (!tnode)
-               tnodes[indx] = tnode = { name: node.name, path: path.slice(), id: indx, color_visible: false, node_visible: true };
+               tnodes[indx] = tnode = { name: node.name, path: path.slice(), id: indx, color: '', node_visible: true };
 
             if (prnt) {
                if (!prnt.childs) prnt.childs = [];
@@ -709,8 +709,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          }
 
          prnt.end_node = true;
-         prnt.color = color ? "rgb(" + color + ")" : "";
-         prnt.color_visible = prnt.color.length > 0;
+         prnt.color = color;
       },
 
       /** @summary Paint extra node - or remove them from painting */

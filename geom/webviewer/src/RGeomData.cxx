@@ -62,6 +62,8 @@ public:
 
    const std::string &GetName() const { return fDesc.fDesc[fNodeId].name; }
 
+   const std::string &GetColor() const { return fDesc.fDesc[fNodeId].color; }
+
    bool IsValid() const { return fNodeId >= 0; }
 
    int GetNodeId() const { return fNodeId; }
@@ -642,7 +644,7 @@ std::string RGeomDescription::ProcessBrowserRequest(const std::string &msg)
 
       res = "DESCR:"s + TBufferJSON::ToJSON(&vect,GetJsonComp()).Data();
    } else {
-      std::vector<Browsable::RItem> temp_nodes;
+      std::vector<RGeoItem> temp_nodes;
       bool toplevel = request->path.empty();
 
       // create temporary object for the short time
@@ -662,7 +664,7 @@ std::string RGeomDescription::ProcessBrowserRequest(const std::string &msg)
             }
 
             while (iter.IsValid() && (request->number > 0)) {
-               temp_nodes.emplace_back(iter.GetName(), iter.NumChilds());
+               temp_nodes.emplace_back(iter.GetName(), iter.NumChilds(), iter.GetColor());
                if (toplevel) temp_nodes.back().SetExpanded(true);
                request->number--;
                if (!iter.Next()) break;
@@ -844,7 +846,7 @@ void RGeomDescription::CopyMaterialProperties(TGeoVolume *volume, RGeomNode &nod
 {
    if (!volume) return;
 
-   TColor *col{nullptr};
+   TColor *col = nullptr;
 
    if ((volume->GetFillColor() > 1) && (volume->GetLineColor() == 1))
       col = gROOT->GetColor(volume->GetFillColor());
@@ -860,9 +862,9 @@ void RGeomDescription::CopyMaterialProperties(TGeoVolume *volume, RGeomNode &nod
    }
 
    if (col) {
-      node.color = std::to_string((int)(col->GetRed()*255)) + "," +
-                   std::to_string((int)(col->GetGreen()*255)) + "," +
-                   std::to_string((int)(col->GetBlue()*255));
+      TString colbuf;
+      colbuf.Form("#%02x%02x%02x", (int)(col->GetRed()*255), (int)(col->GetGreen()*255), (int) (col->GetBlue()*255));
+      node.color = colbuf.Data();
       if (node.opacity == 1.)
          node.opacity = col->GetAlpha();
    } else {
