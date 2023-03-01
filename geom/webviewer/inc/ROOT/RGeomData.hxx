@@ -17,6 +17,9 @@
 #include <functional>
 #include <memory>
 
+#include <ROOT/Browsable/RItem.hxx>
+
+
 class TGeoNode;
 class TGeoManager;
 class TGeoShape;
@@ -65,6 +68,33 @@ public:
    /** True when there is shape and it can be displayed */
    bool CanDisplay() const { return (vol > 0.) && (nfaces > 0); }
 };
+
+/** \class RSysFileItem
+\ingroup rbrowser
+\brief Representation of single item in the file browser
+*/
+
+class RGeoItem : public Browsable::RItem {
+
+protected:
+   // this is part for browser, visible for I/O
+   std::string color;    ///< color
+
+public:
+
+   /** Default constructor */
+   RGeoItem() = default;
+
+   RGeoItem(const std::string &_name, int _nchilds, const std::string &_color) : Browsable::RItem(_name, _nchilds), color(_color) {}
+
+   // should be here, one needs virtual table for correct streaming of RRootBrowserReply
+   virtual ~RGeoItem() = default;
+
+   void SetColor(const std::string &_color) { color  = _color; }
+
+   const std::string &GetColor() const { return color; }
+};
+
 
 /** Base class for render info block */
 class RGeomRenderInfo {
