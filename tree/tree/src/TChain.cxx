@@ -2153,6 +2153,8 @@ Long64_t TChain::Merge(TFile* file, Int_t basketsize, Option_t* option)
 /// \param[out] treename   the treename, which may be found in a url fragment section
 ///                        as a trailing part of the name (deprecated).
 ///                        If not found this will be empty.
+///                        Exception: a fragment containing the '=' character is _not_
+///                        interpreted as a treename
 /// \param[out] query      is the url query section, including the leading question
 ///                        mark. If not found or the query section is only followed by
 ///                        a fragment this will be empty.
@@ -2176,11 +2178,19 @@ void TChain::ParseTreeFilename(const char *name, TString &filename, TString &tre
    if (url.GetOptions() && (strlen(url.GetOptions()) > 0))
       query.Form("?%s", url.GetOptions());
    // The treename can be passed as anchor
-   if (url.GetAnchor() && (strlen(url.GetAnchor()) > 0)) {
+   const char *anchor = url.GetAnchor();
+   if (anchor && (strlen(anchor) > 0)) {
       // Support "?#tree_name" and "?query#tree_name"
       // "#tree_name" (no '?' is for tar archives)
+      // If the treename would contain a '=', treat the anchor as part of the query instead. This makes sure
+      // that Davix parameters are passed.
       if (!query.IsNull() || strstr(name, "?#")) {
-         treename = url.GetAnchor();
+         if (strstr(anchor, "=")) {
+            query.Append("#");
+            query.Append(anchor);
+         } else {
+            treename = anchor;
+         }
       } else {
          // The anchor is part of the file name
          fn = url.GetFileAndOptions();
