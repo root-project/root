@@ -580,7 +580,14 @@ if(NOT CMAKE_SOURCE_DIR STREQUAL CMAKE_INSTALL_PREFIX)
   else()
     install(DIRECTORY README DESTINATION ${CMAKE_INSTALL_DOCDIR})
   endif()
+  set(ETC_PATT_EXCL)
+  if(NOT roofit)
+    list(APPEND ETC_PATT_EXCL PATTERN HistFactorySchema.dtd EXCLUDE)
+    list(APPEND ETC_PATT_EXCL PATTERN RooFitHS3_wsexportkeys.json EXCLUDE)
+    list(APPEND ETC_PATT_EXCL PATTERN RooFitHS3_wsfactoryexpressions.json EXCLUDE)
+  endif()
   install(DIRECTORY etc/ DESTINATION ${CMAKE_INSTALL_SYSCONFDIR} USE_SOURCE_PERMISSIONS
+                         ${ETC_PATT_EXCL}
                          PATTERN "system.rootrc" EXCLUDE
                          PATTERN "system.rootauthrc" EXCLUDE
                          PATTERN "system.rootdaemonrc" EXCLUDE
@@ -601,8 +608,11 @@ if(NOT CMAKE_SOURCE_DIR STREQUAL CMAKE_INSTALL_PREFIX)
      set(MAN_PATT_EXCL PATTERN xproofd.1 EXCLUDE)
   endif()
   if(NOT fortran OR NOT CMAKE_Fortran_COMPILER)
-    set(MAN_PATT_EXCL ${MAN_PATT_EXCL} PATTERN h2root.1 EXCLUDE)
-    set(MAN_PATT_EXCL ${MAN_PATT_EXCL} PATTERN g2root.1 EXCLUDE)
+    list(APPEND MAN_PATT_EXCL PATTERN h2root.1 EXCLUDE)
+    list(APPEND MAN_PATT_EXCL PATTERN g2root.1 EXCLUDE)
+  endif()
+  if(NOT roofit)
+    list(APPEND MAN_PATT_EXCL PATTERN prepareHistFactory.1 EXCLUDE)
   endif()
   install(DIRECTORY man/    DESTINATION ${CMAKE_INSTALL_MANDIR} ${MAN_PATT_EXCL})
   install(DIRECTORY tutorials/ DESTINATION ${CMAKE_INSTALL_TUTDIR} COMPONENT tests)
