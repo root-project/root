@@ -98,7 +98,7 @@ public:
    RooWorkspace *workspace() { return &_workspace; }
 
    static void error(const char *s) { throw std::runtime_error(s); }
-   static void error(const std::string &s) { throw std::runtime_error(s); }
+   inline static void error(const std::string &s) { error(s.c_str()); }
    template <class T>
    static std::string concat(const T *items, const std::string &sep = ",")
    {
