@@ -334,8 +334,10 @@ sap.ui.define([
               let d = this._expanding_path;
               delete this._expanding_path;
               let index = this.expandNodeByPath(d);
-              if ((index > 0) && this.treeTable)
+              if ((index > 0) && this.treeTable) {
                  this.treeTable.setFirstVisibleRow(Math.max(0, index - Math.round(this.treeTable.getVisibleRowCount()/2)));
+                 this.refresh(true);
+              }
            }
 
         },
