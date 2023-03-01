@@ -12,6 +12,7 @@
 #include <RooWorkspace.h>
 #include <RooGlobalFunc.h>
 #include <RooGaussian.h>
+#include <RooHelpers.h>
 #include <RooRealVar.h>
 #include <RooSimultaneous.h>
 #include <RooProdPdf.h>
@@ -74,7 +75,7 @@ int validate(std::vector<std::string> const &expressions)
 int validate(RooAbsArg const &arg)
 {
    RooWorkspace ws;
-   ws.import(arg);
+   ws.import(arg, RooFit::Silence());
    return validate(ws, arg.GetName());
 }
 
@@ -115,6 +116,8 @@ TEST(RooFitHS3, RooGaussian)
 
 TEST(RooFitHS3, RooHistPdf)
 {
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
    RooRealVar x{"x", "x", 0.0, 0.02};
    x.setBins(2);
 
@@ -173,7 +176,7 @@ TEST(RooFitHS3, SimultaneousGaussians)
    // Export to JSON
    {
       RooWorkspace ws{"workspace"};
-      ws.import(simPdf);
+      ws.import(simPdf, RooFit::Silence());
       RooJSONFactoryWSTool tool{ws};
       tool.exportJSON("simPdf.json");
       // Output can be pretty-printed with `python -m json.tool simPdf.json`
