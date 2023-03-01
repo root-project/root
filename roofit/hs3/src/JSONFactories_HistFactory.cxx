@@ -472,12 +472,11 @@ public:
             comp["data"], fprefix + "_" + comp["name"].val() + "_dataHist", varlist);
          size_t nbins = dh->numEntries();
 
-         if (sumW.empty()) {
-            sumW.resize(nbins);
-            sumW2.resize(nbins);
-         }
-
          if (hasStaterror(comp)) {
+            if (sumW.empty()) {
+               sumW.resize(nbins);
+               sumW2.resize(nbins);
+            }
             for (size_t i = 0; i < nbins; ++i) {
                sumW[i] += dh->weight(i);
                sumW2[i] += dh->weightSquared(i);
@@ -486,10 +485,12 @@ public:
          data.emplace_back(std::move(dh));
       }
 
-      auto phf = createPHFMCStat(name, sumW, sumW2, ws, constraints, observables, statErrorThreshold, statErrorType);
-      if (phf) {
-         ws.import(*phf, RooFit::RecycleConflictNodes(), RooFit::Silence(true));
-         scope.setObject("mcstat", ws.function(phf->GetName()));
+      if (!sumW.empty()) {
+         auto phf = createPHFMCStat(name, sumW, sumW2, ws, constraints, observables, statErrorThreshold, statErrorType);
+         if (phf) {
+            ws.import(*phf, RooFit::RecycleConflictNodes(), RooFit::Silence(true));
+            scope.setObject("mcstat", ws.function(phf->GetName()));
+         }
       }
 
       int idx = 0;
@@ -670,6 +671,8 @@ bool tryExportHistFactory(const std::string &pdfname, const std::string chname, 
          samplename = samplename.substr(0, samplename.size() - 7);
       if (endsWith(samplename, "_" + chname))
          samplename = samplename.substr(0, samplename.size() - chname.size() - 1);
+      if (startsWith(samplename, pdfname + "_"))
+         samplename = samplename.substr(pdfname.size() + 1);
 
       RooArgSet elems;
       if (func->InheritsFrom(RooProduct::Class())) {

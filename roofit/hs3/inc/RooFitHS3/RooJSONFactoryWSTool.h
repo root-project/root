@@ -221,7 +221,8 @@ private:
    void importVariables(const RooFit::Detail::JSONNode &n);
    void importVariable(const RooFit::Detail::JSONNode &n);
    void importDependants(const RooFit::Detail::JSONNode &n);
-   void importAnalysis(const RooFit::Detail::JSONNode &analysisNode, const RooFit::Detail::JSONNode &likelihoodsNode);
+   void importAnalysis(const RooFit::Detail::JSONNode &analysisNode, const RooFit::Detail::JSONNode &likelihoodsNode,
+                       const RooFit::Detail::JSONNode &mcAux);
 
    bool find(const RooFit::Detail::JSONNode &n, const std::string &elem);
    void append(RooFit::Detail::JSONNode &n, const std::string &elem);

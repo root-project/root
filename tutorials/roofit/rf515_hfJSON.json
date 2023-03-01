@@ -1,4 +1,9 @@
 {
+    "misc" : { "ROOT_internal" : { "ModelConfigs" : {
+        "main": {
+            "combinedObservationName": "observed"
+        }
+    }}},
     "analyses": {
         "main": {
             "likelihoods": [
@@ -10,8 +15,7 @@
             "observables": [
                 "obs_x_channel1"
             ],
-            "InterpolationScheme": "",
-            "combinedObservationName": "observed"
+            "InterpolationScheme": ""
         }
     },
     "likelihoods": {
