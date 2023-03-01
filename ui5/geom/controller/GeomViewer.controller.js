@@ -1,14 +1,12 @@
 sap.ui.define(['sap/ui/core/mvc/Controller',
                'sap/ui/core/Control',
                'sap/m/Text',
-               'sap/ui/layout/HorizontalLayout',
                'sap/ui/table/Column',
                'sap/ui/model/json/JSONModel',
                'rootui5/browser/model/BrowserModel'
 ], function(Controller,
             CoreControl,
             mText,
-            HorizontalLayout,
             tableColumn,
             JSONModel,
             BrowserModel) {
@@ -29,10 +27,6 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          // if (!oControl.getVisible()) return;
 
          if (!oControl.getColor() || (oControl.getColor() == '#fff')) return;
-
-         // change backround of parent instead
-         // oControl.$().css("background-color", oControl.getColor());
-         // return;
 
          oRm.write("<div");
          oRm.writeControlData(oControl);  // writes the Control ID and enables event handling - important!
@@ -133,10 +127,12 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
             this.model.assignTreeTable(t);
 
+            this.getView().byId('expandMaster').setVisible(show_columns);
+
             t.addColumn(new tableColumn({
                label: "Description",
                tooltip: "Name of geometry nodes",
-               template: new mText({text:"{name}", wrapping: false })
+               template: new mText({text: "{name}", wrapping: false})
             }));
 
             if (show_columns) {
@@ -148,6 +144,12 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                   width: "2rem",
                   template: new geomColorBox({color: "{_elem/color}", visible: "{= !!${_elem/color}}"})
                }));
+               t.addColumn(new tableColumn({
+                  label: "Material",
+                  tooltip: "Material of the volumes",
+                  width: "6rem",
+                  template: new mText({text: "{_elem/material}", wrapping: false})
+               }));
             }
 
             // catch re-rendering of the table to assign handlers
@@ -157,7 +159,6 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
             if (this.isConnected)
                this.model.sendFirstRequest(this.websocket);
-
          }
 
          Promise.all([import(this.jsroot.source_dir + 'modules/geom/geobase.mjs'), import(this.jsroot.source_dir + 'modules/geom/TGeoPainter.mjs')]).then(arr => {
@@ -264,7 +265,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
             let ttt = ctxt.getProperty(path.substr(0,lastpos));
 
-            if (!ttt || (ttt.id===undefined)) {
+            if (ttt?.id === undefined) {
                // it is not an error - sometime TableTree does not have displayed items
                // console.error('Fail to extract node id for path ' + path.substr(0,lastpos) + ' full path ' + ctxt.getPath());
                return null;
@@ -635,7 +636,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
          let node = nodes[indx];
 
-         cache[indx] = tnode = { name: node.name, id: indx, color: node.color, node_visible: node.vis != 0 };
+         cache[indx] = tnode = { name: node.name, id: indx, color: node.color, material: node.material, node_visible: node.vis != 0 };
 
          if (expand_lvl > 0) tnode.expanded = true;
 
@@ -1005,6 +1006,14 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             ctrlmodel.refresh();
          }
 
+      },
+
+      onExpandMaster() {
+         const master = this.getView().byId('geomHierarchy').getParent();
+         master.toggleStyleClass('masterExpanded');
+         const expanded = master.hasStyleClass('masterExpanded');
+         const btn = this.getView().byId('expandMaster');
+         btn.setIcon(expanded ? "sap-icon://close-command-field" : "sap-icon://open-command-field");
       },
 
       /** Quit ROOT session */
