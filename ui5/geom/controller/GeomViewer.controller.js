@@ -662,7 +662,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
          if (visibles && visibles.length && (visibles.length < 100)) {
             let dflt = Math.max(this.geo_painter.ctrl.transparency, 0.98);
-            this.geo_painter.changedGlobalTransparency(function(node) {
+            this.geo_painter.changedGlobalTransparency(node => {
                if (node.stack)
                   for (let n = 0; n < visibles.length; ++n)
                      if (this.geo.isSameStack(node.stack, visibles[n].stack))
@@ -720,8 +720,10 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          let index = this.model.expandNodeByPath(itemnames[0]),
              tt = this.byId("treeTable");
 
-         if ((index > 0) && tt)
-            tt.setFirstVisibleRow(Math.max(0, index - Math.round(tt.getVisibleRowCount()/2)));
+         if ((index > 0) && tt) {
+            tt.setFirstVisibleRow(Math.max(0, Math.round(index - tt.getVisibleRowCount()/2)));
+            this.model.refresh(true);
+         }
       },
 
       /** @summary Submit node search query to server, ignore in offline case */
