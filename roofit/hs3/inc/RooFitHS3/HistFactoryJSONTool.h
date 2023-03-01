@@ -16,6 +16,12 @@
 #include <iostream>
 #include <string>
 
+namespace RooFit {
+namespace Detail {
+class JSONNode;
+} // namespace Detail
+} // namespace RooFit
+
 namespace RooStats {
 namespace HistFactory {
 
@@ -29,6 +35,8 @@ public:
    void PrintJSON(std::string const &filename);
    void PrintYAML(std::ostream &os = std::cout);
    void PrintYAML(std::string const &filename);
+
+   static void activateStatError(RooFit::Detail::JSONNode &sampleNode);
 
 private:
    RooStats::HistFactory::Measurement &_measurement;
