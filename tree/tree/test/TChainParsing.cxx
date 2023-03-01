@@ -10,13 +10,18 @@
 
 TEST(TChainParsing, RemoteAdd)
 {
-   TChain c;
+   TChain c("defaultname");
    c.Add("root://some.domain/path/to/file.root/treename");
    c.Add("root://some.domain//path/to/file.root/treename");
    c.Add("root://some.domain/path/to/foo.something/file.root/treename");
    c.Add("root://some.domain/path/to/foo.root/file.root/treename"); // ROOT-9344
    c.Add("root://some.domain/path//to/file.root/treename"); // ROOT-10494
    c.Add("root://some.domain//path//to//file.root//treename");
+   c.Add("https://some.domain:8443/path/to/file.root.1?#treename");
+   c.Add("https://some.domain:8443/path/to/file.root.1#anchor");
+   c.Add("https://some.domain:8443/path/to/file.root.1?a=b&x=y&");
+   c.Add("https://some.domain:8443/path/to/file.root.1?a=b&x=y&#treename");
+   c.Add("https://some.domain:8443/path/to/file.root.1?a=b&x=y&#X=Y");
    const auto files = c.GetListOfFiles();
 
    EXPECT_STREQ(files->At(0)->GetTitle(), "root://some.domain/path/to/file.root");
@@ -36,6 +41,21 @@ TEST(TChainParsing, RemoteAdd)
 
    EXPECT_STREQ(files->At(5)->GetTitle(), "root://some.domain//path/to/file.root");
    EXPECT_STREQ(files->At(5)->GetName(), "treename");
+
+   EXPECT_STREQ(files->At(6)->GetTitle(), "https://some.domain:8443/path/to/file.root.1");
+   EXPECT_STREQ(files->At(6)->GetName(), "treename");
+
+   EXPECT_STREQ(files->At(7)->GetTitle(), "https://some.domain:8443/path/to/file.root.1#anchor");
+   EXPECT_STREQ(files->At(7)->GetName(), "defaultname");
+
+   EXPECT_STREQ(files->At(8)->GetTitle(), "https://some.domain:8443/path/to/file.root.1?a=b&x=y&");
+   EXPECT_STREQ(files->At(8)->GetName(), "defaultname");
+
+   EXPECT_STREQ(files->At(9)->GetTitle(), "https://some.domain:8443/path/to/file.root.1?a=b&x=y&");
+   EXPECT_STREQ(files->At(9)->GetName(), "treename");
+
+   EXPECT_STREQ(files->At(10)->GetTitle(), "https://some.domain:8443/path/to/file.root.1?a=b&x=y&#X=Y");
+   EXPECT_STREQ(files->At(10)->GetName(), "defaultname");
 }
 
 TEST(TChainParsing, LocalAdd)
