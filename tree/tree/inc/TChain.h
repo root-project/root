@@ -48,7 +48,8 @@ protected:
 private:
    TChain(const TChain&);            // not implemented
    TChain& operator=(const TChain&); // not implemented
-   void ParseTreeFilename(const char *name, TString &filename, TString &treename, TString &query, TString &suffix, Bool_t wildcards) const;
+   void
+   ParseTreeFilename(const char *name, TString &filename, TString &treename, TString &query, TString &suffix) const;
 
 protected:
    void InvalidateCurrentTree();
