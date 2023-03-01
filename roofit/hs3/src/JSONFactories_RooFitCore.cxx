@@ -23,7 +23,6 @@
 #include <RooGenericPdf.h>
 #include <RooMultiVarGaussian.h>
 #include <RooTFnBinding.h>
-#include <TF1.h>
 #include <RooHistFunc.h>
 #include <RooHistPdf.h>
 #include <RooProdPdf.h>
@@ -33,6 +32,7 @@
 #include <RooRealVar.h>
 #include <RooWorkspace.h>
 
+#include <TF1.h>
 #include <TH1.h>
 
 #include "static_execute.h"

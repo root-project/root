@@ -801,7 +801,9 @@ std::map<std::string, std::unique_ptr<RooAbsData>> RooJSONFactoryWSTool::loadDat
          for (size_t i = 0; i < coords.num_children(); ++i) {
             auto &point = coords[i];
             if (!point.is_seq()) {
-               RooJSONFactoryWSTool::error(TString::Format("coordinate point '%d' is not a list!", (int)i).Data());
+               std::stringstream errMsg;
+               errMsg << "coordinate point '" << i << "' is not a list!";
+               RooJSONFactoryWSTool::error(errMsg.str());
             }
             if (point.num_children() != varlist.size()) {
                RooJSONFactoryWSTool::error("inconsistent number of entries and observables!");
@@ -1000,9 +1002,11 @@ RooJSONFactoryWSTool::readBinnedData(const JSONNode &n, const std::string &name,
    }
 
    auto bins = RooJSONFactoryWSTool::generateBinIndices(varlist);
-   if (contents.num_children() != bins.size())
-      RooJSONFactoryWSTool::error(TString::Format("inconsistent bin numbers: contents=%d, bins=%d",
-                                                  (int)contents.num_children(), (int)(bins.size())));
+   if (contents.num_children() != bins.size()) {
+      std::stringstream errMsg;
+      errMsg << "inconsistent bin numbers: contents=" << contents.num_children() << ", bins=" << bins.size();
+      RooJSONFactoryWSTool::error(errMsg.str());
+   }
    auto dh = std::make_unique<RooDataHist>(name.c_str(), name.c_str(), varlist);
    // temporarily disable dirty flag propagation when filling the RDH
    std::vector<double> initVals;
