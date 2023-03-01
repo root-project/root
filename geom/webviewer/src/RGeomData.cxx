@@ -584,15 +584,21 @@ int RGeomDescription::ScanNodes(bool only_visible, int maxlvl, RGeomScanFunc_t f
 /////////////////////////////////////////////////////////////////////
 /// Collect nodes which are used in visibles
 
-void RGeomDescription::CollectNodes(RGeomDrawing &drawing)
+void RGeomDescription::CollectNodes(RGeomDrawing &drawing, bool all_nodes)
 {
-   // TODO: for now reset all flags, later can be kept longer
-   for (auto &node : fDesc)
-      node.useflag = false;
-
    drawing.cfg = &fCfg;
 
    drawing.numnodes = fDesc.size();
+
+   if (all_nodes) {
+      for (auto &node : fDesc)
+         drawing.nodes.emplace_back(&node);
+      return;
+   }
+
+   // TODO: for now reset all flags, later can be kept longer
+   for (auto &node : fDesc)
+      node.useflag = false;
 
    for (auto &item : drawing.visibles) {
       int nodeid = 0;
@@ -893,6 +899,8 @@ void RGeomDescription::ResetRndrInfos()
 ///
 /// Collect all information required to draw geometry on the client
 /// This includes list of each visible nodes, meshes and matrixes
+/// If @param all_nodes is true, all existing nodes will be provided,
+/// which allows to create complete nodes hierarchy on client side
 ///
 /// Example of usage:
 ///
@@ -906,9 +914,10 @@ void RGeomDescription::ResetRndrInfos()
 ///  }
 ///
 ///  In JSROOT one loads data from JSON file and call `build` function to
-///  produce three.js model
+///  produce three.js model. Also see example in tutorials/webgui/geom/ folder
 
-std::string RGeomDescription::ProduceJson()
+
+std::string RGeomDescription::ProduceJson(bool all_nodes)
 {
    std::vector<int> viscnt(fDesc.size(), 0);
 
@@ -994,7 +1003,7 @@ std::string RGeomDescription::ProduceJson()
       return true;
    });
 
-   CollectNodes(drawing);
+   CollectNodes(drawing, all_nodes);
 
    return MakeDrawingJson(drawing, has_shape);
 }
