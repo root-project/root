@@ -255,7 +255,7 @@ class RGeomDescription {
 
    void CopyMaterialProperties(TGeoVolume *vol, RGeomNode &node);
 
-   void CollectNodes(RGeomDrawing &drawing);
+   void CollectNodes(RGeomDrawing &drawing, bool all_nodes = false);
 
    std::string MakeDrawingJson(RGeomDrawing &drawing, bool has_shapes = false);
 
@@ -303,7 +303,7 @@ public:
     * After get full description, client can do most operations without extra requests */
    bool IsPreferredOffline() const { return fPreferredOffline; }
 
-   std::string ProduceJson();
+   std::string ProduceJson(bool all_nodes = false);
 
    bool IsPrincipalEndNode(int nodeid);
 
