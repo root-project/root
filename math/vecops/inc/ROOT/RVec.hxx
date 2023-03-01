@@ -1247,8 +1247,12 @@ public:
          throw std::runtime_error(std::move(msg));
       }
 
+      size_type n_true = 0ull;
+      for (auto c : conds)
+         n_true += c; // relies on bool -> int conversion, faster than branching
+
       RVecN ret;
-      ret.reserve(n);
+      ret.reserve(n_true);
       size_type j = 0u;
       for (size_type i = 0u; i < n; ++i) {
          if (conds[i]) {
