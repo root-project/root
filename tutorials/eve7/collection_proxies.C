@@ -858,6 +858,7 @@ void collection_proxies(bool proj=true)
 
    auto tableScene = eveMng->SpawnNewScene ("Tables", "Tables");
    auto tableView  = eveMng->SpawnNewViewer("Table",  "Table View");
+   tableView->SetViewType("Table");
    tableView->AddScene(tableScene);
 
    // create event data from list

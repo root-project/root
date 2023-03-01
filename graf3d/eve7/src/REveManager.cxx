@@ -21,6 +21,7 @@
 #include <ROOT/RLogger.hxx>
 #include <ROOT/REveSystem.hxx>
 #include <ROOT/RWebWindowsManager.hxx>
+#include <ROOT/REveGeoTopNode.hxx>
 
 #include "TGeoManager.h"
 #include "TGeoMatrix.h"
@@ -874,6 +875,20 @@ void REveManager::WindowData(unsigned connid, const std::string &arg)
    {
       // file dialog
       ROOT::RWebWindow::EmbedFileDialog(fWebWindow, connid, arg);
+      return;
+   }
+   else if (arg.compare(0, 11, "SETCHANNEL:") == 0) {
+      std::string s = arg.substr(11);
+      auto p = s.find(",");
+      int eveid = std::stoi(s.substr(0, p));
+      int chid = std::stoi(s.substr(p+1));
+
+      printf("SETCHANNEL GEO %s EveId %d chid %d connid %u \n", arg.c_str(), eveid, chid, connid);
+
+      REveElement* n = FindElementById(eveid);
+      auto nn = dynamic_cast<REveGeoTopNodeData*>(n);
+      if (nn) nn->SetChannel(connid, chid);
+
       return;
    }
 

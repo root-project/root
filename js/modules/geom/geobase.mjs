@@ -3124,6 +3124,17 @@ class ClonedNodes {
       let node = this.nodes[0], three_prnt = toplevel, draw_depth = 0;
       const force = isObject(options) || (options === 'force');
 
+
+      /*
+      for (let lvl = 0; lvl <= stack.length; ++lvl) {
+         let nchld = (lvl > 0) ? stack[lvl-1] : 0;
+         // extract current node
+         if (lvl > 0)  node = this.nodes[node.chlds[nchld]];
+         if (!node) return null;
+         
+         let obj3d = undefined;
+*/
+
       for (let lvl = 0; lvl <= stack.length; ++lvl) {
          const nchld = (lvl > 0) ? stack[lvl-1] : 0,
                // extract current node
