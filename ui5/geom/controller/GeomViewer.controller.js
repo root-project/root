@@ -3,13 +3,13 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                'sap/m/Text',
                'sap/ui/table/Column',
                'sap/ui/model/json/JSONModel',
-               'rootui5/browser/model/BrowserModel'
+               'rootui5/geom/model/GeomBrowserModel'
 ], function(Controller,
             CoreControl,
             mText,
             tableColumn,
             JSONModel,
-            BrowserModel) {
+            GeomBrowserModel) {
 
    "use strict";
 
@@ -113,7 +113,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             this.byId("geomControl").setShowNavButton(false);
          } else {
             // create model only for browser - no need for anybody else
-            this.model = new BrowserModel();
+            this.model = new GeomBrowserModel();
 
             this.model.useIndexSuffix = false;
 
@@ -578,7 +578,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          br.setNoData("");
          br.setShowNoData(false);
 
-         let topnode = this.buildTreeNode(descr, [], 0, is_original ? 1 : 999);
+         let topnode = this.model.buildTree(descr, is_original ? 1 : 999);
          if (this.standalone)
             this.fullModel = topnode;
 
@@ -627,29 +627,6 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             // rebuild complete tree for TreeBrowser
          }
 */
-      },
-
-      buildTreeNode: function(nodes, cache, indx, expand_lvl) {
-         let tnode = cache[indx];
-         if (tnode) return tnode;
-         if (!expand_lvl) expand_lvl = 0;
-
-         let node = nodes[indx];
-
-         cache[indx] = tnode = { name: node.name, id: indx, color: node.color, material: node.material, node_visible: node.vis != 0 };
-
-         if (expand_lvl > 0) tnode.expanded = true;
-
-         if (node.chlds && (node.chlds.length > 0)) {
-            tnode.childs = [];
-            tnode.nchilds = node.chlds.length;
-            for (let k = 0; k < tnode.nchilds; ++k)
-               tnode.childs.push(this.buildTreeNode(nodes, cache, node.chlds[k], expand_lvl-1));
-         } else {
-            tnode.end_node = true; // TODO: no need for such flag
-         }
-
-         return tnode;
       },
 
       /** @summary search main drawn nodes for matches */
