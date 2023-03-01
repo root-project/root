@@ -1233,12 +1233,10 @@ public:
       size_type j = 0u;
       for (size_type i = 0u; i < n; ++i) {
          if (conds[i]) {
-            // the begin() is to go around the R__ASSERT in operator[]
-            ret.begin()[j] = this->operator[](i);
+            ret.push_back(this->operator[](i));
             ++j;
          }
       }
-      ret.set_size(j);
       return ret;
    }
 
