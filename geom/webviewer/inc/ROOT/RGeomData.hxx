@@ -44,7 +44,8 @@ public:
    int vis{0};              ///< visibility flag, 0 - off, 1 - only when level==0, 99 - always
    bool nochlds{false};     ///< how far in hierarchy depth should be scanned
 
-   std::string color;       ///< rgb code without rgb() prefix
+   std::string color;       ///< rgb code in hex format
+   std::string material;    ///< name of the material
    int sortid{0};           ///<! place in sorted array, to check cuts, or id of original node when used search structures
 
    RGeomNodeBase(int _id = 0) : id(_id) {}
@@ -69,30 +70,36 @@ public:
    bool CanDisplay() const { return (vol > 0.) && (nfaces > 0); }
 };
 
-/** \class RSysFileItem
+/** \class RGeoItem
 \ingroup rbrowser
-\brief Representation of single item in the file browser
+\brief Representation of single item in the geometry browser
 */
 
 class RGeoItem : public Browsable::RItem {
 
 protected:
    // this is part for browser, visible for I/O
-   std::string color;    ///< color
+   std::string color;      ///< color
+   std::string material;   ///< material
 
 public:
 
    /** Default constructor */
    RGeoItem() = default;
 
-   RGeoItem(const std::string &_name, int _nchilds, const std::string &_color) : Browsable::RItem(_name, _nchilds), color(_color) {}
+   RGeoItem(const std::string &_name, int _nchilds, const std::string &_color,
+         const std::string &_material = "") :
+         Browsable::RItem(_name, _nchilds), color(_color), material(_material) {
+   }
 
    // should be here, one needs virtual table for correct streaming of RRootBrowserReply
    virtual ~RGeoItem() = default;
 
    void SetColor(const std::string &_color) { color  = _color; }
+   void SetMaterial(const std::string &_material) { material  = _material; }
 
    const std::string &GetColor() const { return color; }
+   const std::string &GetMaterial() const { return material; }
 };
 
 
