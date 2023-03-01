@@ -12,7 +12,6 @@
 
 #include <RooFitHS3/JSONIO.h>
 #include <RooFitHS3/RooJSONFactoryWSTool.h>
-#include <RooFit/Detail/JSONInterface.h>
 
 #include <RooGlobalFunc.h>
 #include <RooConstVar.h>

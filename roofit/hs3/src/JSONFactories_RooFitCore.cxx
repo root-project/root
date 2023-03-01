@@ -106,19 +106,7 @@ public:
    bool importPdf(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
    {
       std::string name(RooJSONFactoryWSTool::name(p));
-      RooArgSet factors;
-      if (!p.has_child("pdfs")) {
-         RooJSONFactoryWSTool::error("no pdfs of '" + name + "'");
-      }
-      if (!p["pdfs"].is_seq()) {
-         RooJSONFactoryWSTool::error("pdfs '" + name + "' are not a list.");
-      }
-      for (const auto &comp : p["pdfs"].children()) {
-         std::string pdfname(comp.val());
-         RooAbsPdf *pdf = tool->request<RooAbsPdf>(pdfname, name);
-         factors.add(*pdf);
-      }
-      RooProdPdf prod(name.c_str(), name.c_str(), factors);
+      RooProdPdf prod(name.c_str(), name.c_str(), tool->requestArgSet<RooAbsPdf>(p, "pdfs"));
       tool->workspace()->import(prod, RooFit::RecycleConflictNodes(true), RooFit::Silence(true));
       return true;
    }
@@ -129,31 +117,8 @@ public:
    bool importPdf(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
    {
       std::string name(RooJSONFactoryWSTool::name(p));
-      RooArgList pdfs;
-      RooArgList coefs;
-      if (!p.has_child("summands")) {
-         RooJSONFactoryWSTool::error("no summands of '" + name + "'");
-      }
-      if (!p["summands"].is_seq()) {
-         RooJSONFactoryWSTool::error("summands '" + name + "' are not a list.");
-      }
-      if (!p.has_child("coefficients")) {
-         RooJSONFactoryWSTool::error("no coefficients of '" + name + "'");
-      }
-      if (!p["coefficients"].is_seq()) {
-         RooJSONFactoryWSTool::error("coefficients '" + name + "' are not a list.");
-      }
-      for (const auto &comp : p["summands"].children()) {
-         std::string pdfname(comp.val());
-         RooAbsPdf *pdf = tool->request<RooAbsPdf>(pdfname, name);
-         pdfs.add(*pdf);
-      }
-      for (const auto &comp : p["coefficients"].children()) {
-         std::string coefname(comp.val());
-         RooAbsReal *coef = tool->request<RooAbsReal>(coefname, name);
-         coefs.add(*coef);
-      }
-      RooAddPdf add(name.c_str(), name.c_str(), pdfs, coefs);
+      RooAddPdf add(name.c_str(), name.c_str(), tool->requestArgList<RooAbsPdf>(p, "summands"),
+                    tool->requestArgList<RooAbsReal>(p, "coefficients"));
       tool->workspace()->import(add, RooFit::RecycleConflictNodes(true), RooFit::Silence(true));
       return true;
    }
@@ -164,9 +129,8 @@ public:
    bool importFunction(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
    {
       std::string name(RooJSONFactoryWSTool::name(p));
-      bool divideByBinWidth = p["divideByBinWidth"].val_bool();
-      RooHistFunc *hf = dynamic_cast<RooHistFunc *>(tool->request<RooAbsReal>(p["histogram"].val(), name));
-      RooBinWidthFunction func(name.c_str(), name.c_str(), *hf, divideByBinWidth);
+      RooHistFunc *hf = static_cast<RooHistFunc *>(tool->request<RooAbsReal>(p["histogram"].val(), name));
+      RooBinWidthFunction func(name.c_str(), name.c_str(), *hf, p["divideByBinWidth"].val_bool());
       tool->workspace()->import(func, RooFit::RecycleConflictNodes(true), RooFit::Silence(true));
       return true;
    }
@@ -181,19 +145,18 @@ public:
       if (!p.has_child("pdf")) {
          RooJSONFactoryWSTool::error("no pdf given in '" + name + "'");
       }
-      std::string pdfname(p["pdf"].val());
-      RooAbsPdf *pdf = tool->request<RooAbsPdf>(pdfname, name);
+      RooAbsPdf *pdf = tool->request<RooAbsPdf>(p["pdf"].val(), name);
 
       if (!p.has_child("observable")) {
          RooJSONFactoryWSTool::error("no observable given in '" + name + "'");
       }
-      std::string obsname(p["observable"].val());
-      RooRealVar *obs = tool->request<RooRealVar>(obsname, name);
+      RooRealVar *obs = tool->request<RooRealVar>(p["observable"].val(), name);
 
       if (!pdf->dependsOn(*obs)) {
          pdf->Print("t");
-         RooJSONFactoryWSTool::error("pdf '" + pdfname + "' does not depend on observable '" + obsname +
-                                     "' as indicated by parent RooBinSamplingPdf '" + name + "', please check!");
+         RooJSONFactoryWSTool::error(std::string("pdf '") + pdf->GetName() + "' does not depend on observable '" +
+                                     obs->GetName() + "' as indicated by parent RooBinSamplingPdf '" + name +
+                                     "', please check!");
       }
 
       if (!p.has_child("epsilon")) {
@@ -213,28 +176,13 @@ public:
    bool importPdf(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
    {
       std::string name(RooJSONFactoryWSTool::name(p));
-      if (!p.has_child("samples")) {
-         RooJSONFactoryWSTool::error("no samples given in '" + name + "'");
-      }
-      if (!p.has_child("coefficients")) {
-         RooJSONFactoryWSTool::error("no coefficients given in '" + name + "'");
-      }
-      RooArgList samples;
-      for (const auto &sample : p["samples"].children()) {
-         RooAbsReal *s = tool->request<RooAbsReal>(sample.val(), name);
-         samples.add(*s);
-      }
-      RooArgList coefficients;
-      for (const auto &coef : p["coefficients"].children()) {
-         RooAbsReal *c = tool->request<RooAbsReal>(coef.val(), name);
-         coefficients.add(*c);
-      }
 
       bool extended = false;
       if (p.has_child("extended") && p["extended"].val_bool()) {
          extended = true;
       }
-      RooRealSumPdf thepdf(name.c_str(), name.c_str(), samples, coefficients, extended);
+      RooRealSumPdf thepdf(name.c_str(), name.c_str(), tool->requestArgList<RooAbsReal>(p, "samples"),
+                           tool->requestArgList<RooAbsReal>(p, "coefficients"), extended);
       tool->workspace()->import(thepdf, RooFit::RecycleConflictNodes(true), RooFit::Silence(true));
       return true;
    }
@@ -245,24 +193,8 @@ public:
    bool importFunction(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
    {
       std::string name(RooJSONFactoryWSTool::name(p));
-      if (!p.has_child("samples")) {
-         RooJSONFactoryWSTool::error("no samples given in '" + name + "'");
-      }
-      if (!p.has_child("coefficients")) {
-         RooJSONFactoryWSTool::error("no coefficients given in '" + name + "'");
-      }
-      RooArgList samples;
-      for (const auto &sample : p["samples"].children()) {
-         RooAbsReal *s = tool->request<RooAbsReal>(sample.val(), name);
-         samples.add(*s);
-      }
-      RooArgList coefficients;
-      for (const auto &coef : p["coefficients"].children()) {
-         RooAbsReal *c = tool->request<RooAbsReal>(coef.val(), name);
-         coefficients.add(*c);
-      }
-
-      RooRealSumFunc thefunc(name.c_str(), name.c_str(), samples, coefficients);
+      RooRealSumFunc thefunc(name.c_str(), name.c_str(), tool->requestArgList<RooAbsReal>(p, "samples"),
+                             tool->requestArgList<RooAbsReal>(p, "coefficients"));
       tool->workspace()->import(thefunc, RooFit::RecycleConflictNodes(true), RooFit::Silence(true));
       return true;
    }
@@ -308,28 +240,12 @@ public:
    bool importPdf(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
    {
       std::string name(RooJSONFactoryWSTool::name(p));
-      if (!p.has_child("x")) {
-         RooJSONFactoryWSTool::error("no x given in '" + name + "'");
-      }
-      if (!p.has_child("mean")) {
-         RooJSONFactoryWSTool::error("no mean given in '" + name + "'");
-      }
       bool has_cov = p.has_child("covariances");
       bool has_corr = p.has_child("correlations") && p.has_child("standard_deviations");
       if (!has_cov && !has_corr) {
          RooJSONFactoryWSTool::error("no covariances or correlations+standard_deviations given in '" + name + "'");
       }
 
-      RooArgList xVec;
-      for (const auto &x : p["x"].children()) {
-         RooAbsReal *xvar = tool->request<RooAbsReal>(x.val(), name);
-         xVec.add(*xvar);
-      }
-      RooArgList muVec;
-      for (const auto &mu : p["mean"].children()) {
-         RooAbsReal *muvar = tool->request<RooAbsReal>(mu.val(), name);
-         muVec.add(*muvar);
-      }
       TMatrixDSym covmat;
 
       if (has_cov) {
@@ -360,7 +276,8 @@ public:
             ++i;
          }
       }
-      RooMultiVarGaussian mvg(name.c_str(), name.c_str(), xVec, muVec, covmat);
+      RooMultiVarGaussian mvg(name.c_str(), name.c_str(), tool->requestArgList<RooAbsReal>(p, "x"),
+                              tool->requestArgList<RooAbsReal>(p, "mean"), covmat);
       tool->workspace()->import(mvg, RooFit::RecycleConflictNodes(true), RooFit::Silence(true));
       return true;
    }
