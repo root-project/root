@@ -86,7 +86,7 @@ public:
    }
 
    template <class T>
-   RooArgSet requestArgList(const RooFit::Detail::JSONNode &node, const std::string &seqName)
+   RooArgList requestArgList(const RooFit::Detail::JSONNode &node, const std::string &seqName)
    {
       return requestCollection<T, RooArgList>(node, seqName);
    }
