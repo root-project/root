@@ -64,6 +64,8 @@ public:
 
    const std::string &GetColor() const { return fDesc.fDesc[fNodeId].color; }
 
+   const std::string &GetMaterial() const { return fDesc.fDesc[fNodeId].material; }
+
    bool IsValid() const { return fNodeId >= 0; }
 
    int GetNodeId() const { return fNodeId; }
@@ -664,7 +666,7 @@ std::string RGeomDescription::ProcessBrowserRequest(const std::string &msg)
             }
 
             while (iter.IsValid() && (request->number > 0)) {
-               temp_nodes.emplace_back(iter.GetName(), iter.NumChilds(), iter.GetColor());
+               temp_nodes.emplace_back(iter.GetName(), iter.NumChilds(), iter.GetColor(), iter.GetMaterial());
                if (toplevel) temp_nodes.back().SetExpanded(true);
                request->number--;
                if (!iter.Next()) break;
@@ -856,9 +858,13 @@ void RGeomDescription::CopyMaterialProperties(TGeoVolume *volume, RGeomNode &nod
    if (volume->GetMedium() && (volume->GetMedium() != TGeoVolume::DummyMedium()) && volume->GetMedium()->GetMaterial()) {
       auto material = volume->GetMedium()->GetMaterial();
 
+      node.material = material->GetName();
+
       auto fillstyle = material->GetFillStyle();
       if ((fillstyle>=3000) && (fillstyle<=3100)) node.opacity = (3100 - fillstyle) / 100.;
       if (!col) col = gROOT->GetColor(material->GetFillColor());
+   } else {
+      node.material.clear();
    }
 
    if (col) {

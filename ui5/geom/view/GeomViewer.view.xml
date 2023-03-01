@@ -29,7 +29,9 @@
                      <Button icon="sap-icon://synchronize" type="Transparent"
                              tooltip="Reload geometry drawing" press="onRealoadPress" />
                      <Button icon="sap-icon://show" type="Transparent"
-                        tooltip="Toggle with info page" press="onInfoPress" />
+                             tooltip="Toggle with info page" press="onInfoPress" />
+                     <Button id="expandMaster" icon="sap-icon://open-command-field" type="Transparent"
+                             tooltip="Expand/shrink browse area" press="onExpandMaster"/>
                      <ToolbarSpacer />
                      <SearchField liveChange="onSearch" />
                   </Toolbar>
