@@ -10,6 +10,7 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)
  */
 
+#include <RooFitHS3/HistFactoryJSONTool.h>
 #include <RooFitHS3/RooJSONFactoryWSTool.h>
 #include <RooFitHS3/JSONIO.h>
 #include <RooFit/Detail/JSONInterface.h>
@@ -39,6 +40,12 @@
 using RooFit::Detail::JSONNode;
 
 namespace {
+
+// To avoid repeating the same string literals that can potentially get out of
+// sync.
+namespace Literals {
+constexpr auto staterror = "staterror";
+}
 
 static bool startsWith(std::string_view str, std::string_view prefix)
 {
@@ -299,7 +306,7 @@ bool has_staterror(const JSONNode &comp)
 {
    if (comp.has_child("modifiers")) {
       for (const auto &mod : comp["modifiers"].children()) {
-         if (mod["type"].val() == "staterror")
+         if (mod["type"].val() == ::Literals::staterror)
             return true;
       }
    }
@@ -481,8 +488,8 @@ public:
       std::vector<std::string> usesStatError;
       double statErrorThreshold = 0;
       std::string statErrorType = "Poisson";
-      if (p.has_child("statError")) {
-         auto &staterr = p["statError"];
+      if (p.has_child(::Literals::staterror)) {
+         auto &staterr = p[::Literals::staterror];
          if (staterr.has_child("relThreshold"))
             statErrorThreshold = staterr["relThreshold"].val_double();
          if (staterr.has_child("constraint"))
@@ -868,7 +875,7 @@ bool tryExportHistFactory(const std::string &pdfname, const std::string chname, 
       for (auto phf : phfs) {
          if (TString(phf->GetName()).BeginsWith("mc_stat_")) { // MC stat uncertainty
             has_mc_stat = true;
-            s["statError"] << 1;
+            RooStats::HistFactory::JSONTool::activateStatError(s);
             int idx = 0;
             for (const auto &g : phf->paramList()) {
                ++idx;
@@ -925,7 +932,6 @@ bool tryExportHistFactory(const std::string &pdfname, const std::string chname, 
       }
       if (!has_mc_stat) {
          nonbb_histograms[sampleidx] = std::move(hist);
-         s["statError"] << 0;
       }
    }
 
@@ -950,7 +956,7 @@ bool tryExportHistFactory(const std::string &pdfname, const std::string chname, 
       RooJSONFactoryWSTool::writeObservables(*hist.second, elem, varnames);
       RooJSONFactoryWSTool::exportHistogram(*hist.second, data, varnames, 0, false, true);
    }
-   auto &statError = elem["statError"];
+   auto &statError = elem[::Literals::staterror];
    statError.set_map();
    if (has_poisson_constraints) {
       statError["constraint"] << "Poisson";
