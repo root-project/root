@@ -270,7 +270,7 @@ std::unique_ptr<ParamHistFunc> createPHFMCStat(const std::string &name, const st
    return phf;
 }
 
-bool has_staterror(const JSONNode &comp)
+bool hasStaterror(const JSONNode &comp)
 {
    if (comp.has_child("modifiers")) {
       for (const auto &mod : comp["modifiers"].children()) {
@@ -279,19 +279,6 @@ bool has_staterror(const JSONNode &comp)
       }
    }
    return false;
-}
-
-RooDataHist *getBinnedData(RooWorkspace &ws, const JSONNode &p, const Scope &scope, std::string const &binnedDataName)
-{
-   RooArgSet varlist;
-   scope.getObservables(varlist);
-   auto *dh = dynamic_cast<RooDataHist *>(ws.embeddedData(binnedDataName));
-   if (!dh) {
-      auto dhForImport = RooJSONFactoryWSTool::readBinnedData(p["data"], binnedDataName, varlist);
-      ws.import(*dhForImport, RooFit::Silence(true), RooFit::Embedded());
-      dh = static_cast<RooDataHist *>(ws.embeddedData(dhForImport->GetName()));
-   }
-   return dh;
 }
 
 std::unique_ptr<ParamHistFunc> createPHFShapeSys(const JSONNode &p, const std::string &phfname, RooWorkspace &w,
@@ -326,7 +313,7 @@ bool importHistSample(RooWorkspace &ws, RooDataHist &dh, Scope &scope, const std
    ownedArgsStack.push(std::make_unique<RooBinWidthFunction>(bwfName.c_str(), bwfName.c_str(), *hf, true));
    shapeElems.add(*ownedArgsStack.top());
 
-   if (has_staterror(p)) {
+   if (hasStaterror(p)) {
       RooAbsArg *phf = scope.getObject("mcstat");
       if (phf) {
          shapeElems.add(*phf);
@@ -373,12 +360,14 @@ bool importHistSample(RooWorkspace &ws, RooDataHist &dh, Scope &scope, const std
                                                            : "alpha_" + sysname);
             RooAbsReal *par = ::getNP(ws, parname.c_str());
             histo_nps.add(*par);
-            RooDataHist *dh_low = getBinnedData(ws, p, scope, sysname + "Low_" + nameWithPrefix);
+            RooArgSet varlist;
+            scope.getObservables(varlist);
+            auto dh_low = RooJSONFactoryWSTool::readBinnedData(p["data"], sysname + "Low_" + nameWithPrefix, varlist);
             ownedArgsStack.push(std::make_unique<RooHistFunc>((sysname + "Low_" + nameWithPrefix).c_str(),
                                                               (sysname + "Low_" + nameWithPrefix).c_str(),
                                                               *(dh_low->get()), *dh_low));
             histo_low.add(*ownedArgsStack.top());
-            RooDataHist *dh_high = getBinnedData(ws, p, scope, sysname + "High_" + nameWithPrefix);
+            auto dh_high = RooJSONFactoryWSTool::readBinnedData(p["data"], sysname + "High_" + nameWithPrefix, varlist);
             ownedArgsStack.push(std::make_unique<RooHistFunc>((sysname + "High_" + nameWithPrefix).c_str(),
                                                               (sysname + "Low_" + nameWithPrefix).c_str(),
                                                               *(dh_high->get()), *dh_high));
@@ -403,7 +392,7 @@ bool importHistSample(RooWorkspace &ws, RooDataHist &dh, Scope &scope, const std
          }
       }
 
-      if (overall_nps.size() > 0) {
+      if (!overall_nps.empty()) {
          auto v = std::make_unique<RooStats::HistFactory::FlexibleInterpVar>(
             ("overallSys_" + nameWithPrefix).c_str(), ("overallSys_" + nameWithPrefix).c_str(), overall_nps, 1.,
             overall_low, overall_high);
@@ -411,7 +400,7 @@ bool importHistSample(RooWorkspace &ws, RooDataHist &dh, Scope &scope, const std
          normElems.add(*v);
          ownedArgsStack.push(std::move(v));
       }
-      if (histo_nps.size() > 0) {
+      if (!histo_nps.empty()) {
          auto v = std::make_unique<PiecewiseInterpolation>(("histoSys_" + nameWithPrefix).c_str(),
                                                            ("histoSys_" + nameWithPrefix).c_str(), *hf, histo_low,
                                                            histo_high, histo_nps, false);
@@ -474,28 +463,31 @@ public:
 
       std::string fprefix = name;
 
-      std::vector<RooDataHist *> data;
+      std::vector<std::unique_ptr<RooDataHist>> data;
       for (const auto &comp : p["samples"].children()) {
          if (observables.empty()) {
             RooJSONFactoryWSTool::getObservables(ws, comp["data"], fprefix, observables);
             scope.setObservables(observables);
          }
 
-         auto dh = getBinnedData(ws, comp, scope, fprefix + "_" + comp["name"].val() + "_dataHist");
+         RooArgSet varlist;
+         scope.getObservables(varlist);
+         std::unique_ptr<RooDataHist> dh = RooJSONFactoryWSTool::readBinnedData(
+            comp["data"], fprefix + "_" + comp["name"].val() + "_dataHist", varlist);
          size_t nbins = dh->numEntries();
 
-         if (sumW.size() == 0) {
+         if (sumW.empty()) {
             sumW.resize(nbins);
             sumW2.resize(nbins);
          }
 
-         if (has_staterror(comp)) {
+         if (hasStaterror(comp)) {
             for (size_t i = 0; i < nbins; ++i) {
                sumW[i] += dh->weight(i);
                sumW2[i] += dh->weightSquared(i);
             }
          }
-         data.push_back(dh);
+         data.emplace_back(std::move(dh));
       }
 
       auto phf = createPHFMCStat(name, sumW, sumW2, ws, constraints, observables, statErrorThreshold, statErrorType);
@@ -524,9 +516,7 @@ public:
          RooRealSumPdf sum((name + "_model").c_str(), name.c_str(), funcs, coefs, true);
          sum.setAttribute("BinnedLikelihood");
          ws.import(sum, RooFit::RecycleConflictNodes(true), RooFit::Silence(true));
-         RooArgList lhelems;
-         lhelems.add(sum);
-         RooProdPdf prod(name.c_str(), name.c_str(), RooArgSet(constraints), RooFit::Conditional(lhelems, observables));
+         RooProdPdf prod(name.c_str(), name.c_str(), RooArgSet(constraints), RooFit::Conditional(sum, observables));
          ws.import(prod, RooFit::RecycleConflictNodes(true), RooFit::Silence(true));
       }
       return true;
