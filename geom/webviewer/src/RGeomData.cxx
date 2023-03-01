@@ -1080,7 +1080,7 @@ int RGeomDescription::SearchVisibles(const std::string &find, std::string &hjson
       return nmatches;
    }
 
-   if (nmatches > 10 * GetMaxVisNodes()) {
+   if ((GetMaxVisNodes() > 0) && (nmatches > 10 * GetMaxVisNodes())) {
       hjson = "FOUND:Too many " + std::to_string(nmatches);
       return nmatches;
    }
