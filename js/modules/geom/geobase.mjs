@@ -2879,8 +2879,8 @@ class ClonedNodes {
 
       if (clone.kind === kindShape) {
          let prop = { name: clone.name, nname: clone.name, shape: null, material: null, chlds: null },
-            _opacity = entry.opacity || 1;
-         prop.fillcolor = new Color( entry.color ? `rgb(${entry.color})` : 'blue' );
+            _opacity = entry.opacity || 1, col = entry.color || '#0000FF';
+         prop.fillcolor = new Color(col[0] == '#' ? col : `rgb(${col})`);
          prop.material = new MeshLambertMaterial({ transparent: _opacity < 1,
                           opacity: _opacity, wireframe: false, color: prop.fillcolor,
                           side: FrontSide, vertexColors: false,
