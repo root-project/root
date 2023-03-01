@@ -462,8 +462,8 @@ private:
    private:
       class RIterator {
          const RCollectionIterableOnce &fOwner;
-         void *fIterator;
-         void *fElementPtr;
+         void *fIterator = nullptr;
+         void *fElementPtr = nullptr;
       public:
          using iterator_category = std::forward_iterator_tag;
          using iterator = RIterator;
