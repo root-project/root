@@ -1370,7 +1370,7 @@ TH1* RooAbsReal::createHistogram(const char *name, const RooAbsRealLValue& xvar,
 
   // If doExtended is two, selection is automatic, set to 1 of pdf is extended, to zero otherwise
   const RooAbsPdf* pdfSelf = dynamic_cast<const RooAbsPdf*>(this) ;
-  if (!pdfSelf && doExtended>0) {
+  if (!pdfSelf && doExtended == 1) {
     coutW(InputArguments) << "RooAbsReal::createHistogram(" << GetName() << ") WARNING extended mode requested for a non-pdf object, ignored" << std::endl ;
     doExtended=0 ;
   }
@@ -1380,6 +1380,8 @@ TH1* RooAbsReal::createHistogram(const char *name, const RooAbsRealLValue& xvar,
   }
   if (pdfSelf && doExtended==2) {
     doExtended = pdfSelf->extendMode()==RooAbsPdf::CanNotBeExtended ? 0 : 1 ;
+  } else if(!pdfSelf) {
+    doExtended = 0;
   }
 
   const char* compSpec = pc.getString("compSpec") ;
