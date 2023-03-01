@@ -22,75 +22,97 @@
     },
     "distributions": {
         "model_channel1": {
-            "type": "histfactory",
-            "variables": {
-                "obs_x_channel1": {
-                    "nbins": 2,
-                    "min": 1,
-                    "max": 2
-                }
-            },
-            "samples": {
-                "signal": {
-                    "overallSystematics": {
-                        "syst1": {
-                            "low": 0.95,
-                            "high": 1.05
+            "name": "model_channel1",
+            "samples": [
+                {
+                    "data": {
+                        "contents": [20, 10],
+                        "variables": {
+                            "obs_x_channel1": {
+                                "max": 2.0,
+                                "min": 1.0,
+                                "nbins": 2
+                            }
                         }
                     },
-                    "normFactors": [
-                        "mu"
+                    "modifiers": [
+                        {
+                            "data": {
+                                "hi": 1.05,
+                                "lo": 0.95
+                            },
+                            "name": "syst1",
+                            "type": "normsys"
+                        },
+                        {
+                            "name": "mu",
+                            "type": "normfactor"
+                        }
                     ],
-                    "statError": 0,
-                    "data": {
-                        "contents": [
-                            20,
-                            10
-                        ]
-                    }
+                    "name": "signal"
                 },
-                "background1": {
-                    "overallSystematics": {
-                        "syst2": {
-                            "low": 0.95,
-                            "high": 1.05
+                {
+                    "data": {
+                        "contents": [100, 0],
+                        "errors": [5, 0],
+                        "variables": {
+                            "obs_x_channel1": {
+                                "max": 2.0,
+                                "min": 1.0,
+                                "nbins": 2
+                            }
                         }
                     },
-                    "statError": 1,
-                    "data": {
-                        "contents": [
-                            100,
-                            0
-                        ],
-                        "errors": [
-                            5,
-                            0
-                        ]
-                    }
+                    "modifiers": [
+                        {
+                            "data": {
+                                "hi": 1.05,
+                                "lo": 0.95
+                            },
+                            "name": "syst2",
+                            "type": "normsys"
+                        },
+                        {
+                            "name": "mcstat",
+                            "type": "staterror"
+                        }
+                    ],
+                    "name": "background1"
                 },
-                "background2": {
-                    "overallSystematics": {
-                        "syst3": {
-                            "low": 0.95,
-                            "high": 1.05
+                {
+                    "data": {
+                        "contents": [0, 100],
+                        "errors": [0, 10],
+                        "variables": {
+                            "obs_x_channel1": {
+                                "max": 2.0,
+                                "min": 1.0,
+                                "nbins": 2
+                            }
                         }
                     },
-                    "dict": {
-                        "normalizeByTheory": 1
-                    },
-                    "statError": 1,
-                    "data": {
-                        "contents": [
-                            0,
-                            100
-                        ],
-                        "errors": [
-                            0,
-                            10
-                        ]
-                    }
+                    "modifiers": [
+                        {
+                            "data": {
+                                "hi": 1.05,
+                                "lo": 0.95
+                            },
+                            "name": "syst3",
+                            "type": "normsys"
+                        },
+                        {
+                            "name": "mcstat",
+                            "type": "staterror"
+                        }
+                    ],
+                    "name": "background2"
                 }
-            }
+            ],
+            "statError": {
+                "constraint": "Poisson",
+                "relThreshold": 0.01
+            },
+            "type": "histfactory_dist"
         }
     },
     "domains": {
@@ -121,10 +143,7 @@
                     "max": 2
                 }
             },
-            "contents": [
-                122,
-                112
-            ]
+            "contents": [122, 112]
         }
     }
 }
