@@ -507,11 +507,8 @@ public:
          importHistSample(ws, *data[idx], scope, fprefix, comp, constraints);
          ++idx;
 
-         RooAbsReal *func = tool->request<RooAbsReal>(fname.c_str(), name);
-         funcs.add(*func);
-
-         RooAbsReal *coef = tool->request<RooAbsReal>(coefname.c_str(), name);
-         coefs.add(*coef);
+         funcs.add(*tool->request<RooAbsReal>(fname, name));
+         coefs.add(*tool->request<RooAbsReal>(coefname, name));
       }
 
       if (constraints.empty()) {
@@ -581,44 +578,15 @@ public:
       RooWorkspace &ws = *tool->workspace();
 
       std::string name(RooJSONFactoryWSTool::name(p));
-      if (!p.has_child("vars")) {
-         RooJSONFactoryWSTool::error("no vars of '" + name + "'");
-      }
-      if (!p.has_child("high")) {
-         RooJSONFactoryWSTool::error("no high variations of '" + name + "'");
-      }
-      if (!p.has_child("low")) {
-         RooJSONFactoryWSTool::error("no low variations of '" + name + "'");
-      }
       if (!p.has_child("nom")) {
          RooJSONFactoryWSTool::error("no nominal variation of '" + name + "'");
       }
 
-      std::string nomname(p["nom"].val());
-      RooAbsReal *nominal = tool->request<RooAbsReal>(nomname, name);
+      RooArgList vars{tool->requestArgList<RooRealVar>(p, "vars")};
 
-      RooArgList vars;
-      for (const auto &d : p["vars"].children()) {
-         std::string objname(RooJSONFactoryWSTool::name(d));
-         RooRealVar *obj = tool->request<RooRealVar>(objname, name);
-         vars.add(*obj);
-      }
-
-      RooArgList high;
-      for (const auto &d : p["high"].children()) {
-         std::string objname(RooJSONFactoryWSTool::name(d));
-         RooAbsReal *obj = tool->request<RooAbsReal>(objname, name);
-         high.add(*obj);
-      }
-
-      RooArgList low;
-      for (const auto &d : p["low"].children()) {
-         std::string objname(RooJSONFactoryWSTool::name(d));
-         RooAbsReal *obj = tool->request<RooAbsReal>(objname, name);
-         low.add(*obj);
-      }
-
-      PiecewiseInterpolation pip(name.c_str(), name.c_str(), *nominal, low, high, vars);
+      PiecewiseInterpolation pip(name.c_str(), name.c_str(), *tool->request<RooAbsReal>(p["nom"].val(), name),
+                                 tool->requestArgList<RooAbsReal>(p, "low"),
+                                 tool->requestArgList<RooAbsReal>(p, "high"), vars);
 
       pip.setPositiveDefinite(p["positiveDefinite"].val_bool());
 
@@ -638,9 +606,6 @@ public:
    bool importFunction(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
    {
       std::string name(RooJSONFactoryWSTool::name(p));
-      if (!p.has_child("vars")) {
-         RooJSONFactoryWSTool::error("no vars of '" + name + "'");
-      }
       if (!p.has_child("high")) {
          RooJSONFactoryWSTool::error("no high variations of '" + name + "'");
       }
@@ -653,12 +618,7 @@ public:
 
       double nom(p["nom"].val_double());
 
-      RooArgList vars;
-      for (const auto &d : p["vars"].children()) {
-         std::string objname(RooJSONFactoryWSTool::name(d));
-         RooRealVar *obj = tool->request<RooRealVar>(objname, name);
-         vars.add(*obj);
-      }
+      RooArgList vars{tool->requestArgList<RooRealVar>(p, "vars")};
 
       std::vector<double> high;
       high << p["high"];
