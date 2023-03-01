@@ -98,6 +98,41 @@ public:
 };
 } // anonymous namespace
 
+TEST(RColumnElementEndian, Index32)
+{
+   using ClusterSize_t = ROOT::Experimental::ClusterSize_t;
+
+   ROOT::Experimental::Detail::RColumnElement<ClusterSize_t, EColumnType::kIndex32> element(nullptr);
+   EXPECT_EQ(element.IsMappable(), false);
+
+   RPageSinkMock sink1(element);
+   uint64_t buf1[] = {0x0a0b0c0d00010203, 0x0a0b0c0d04050607, 0x0a0b0c0d08090a0b, 0x0a0b0c0d0c0d0e0f};
+   RPage page1(0, buf1, 8, 4);
+   page1.GrowUnchecked(4);
+   sink1.CommitPageImpl(RPageStorage::ColumnHandle_t{}, page1);
+
+   EXPECT_EQ(
+      0, memcmp(sink1.GetPages()[0].fBuffer, "\x03\x02\x01\x00\x07\x06\x05\x04\x0b\x0a\x09\x08\x0f\x0e\x0d\x0c", 16));
+
+   RPageSourceMock source1(sink1.GetPages(), element);
+   auto page2 = source1.PopulatePage(RPageStorage::ColumnHandle_t{}, NTupleSize_t{0});
+   std::unique_ptr<unsigned char[]> buf2(static_cast<unsigned char *>(page2.GetBuffer())); // adopt buffer
+   EXPECT_EQ(0, memcmp(buf2.get(), "\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f", 16));
+
+   //   ROOT::Experimental::Detail::RColumnElement<ROOT::Experimental::ClusterSize_t, EColumnType::kSplitIndex32>
+   //   splitElement(nullptr); RPageSinkMock sink2(splitElement); RPage page3(0, buf1, 4, 4); page3.GrowUnchecked(4);
+   //   sink2.CommitPageImpl(RPageStorage::ColumnHandle_t{}, page3);
+   //
+   //   EXPECT_EQ(
+   //      0, memcmp(sink2.GetPages()[0].fBuffer, "\x03\x07\x0b\x0f\x02\x06\x0a\x0e\x01\x05\x09\x0d\x00\x04\x08\x0c",
+   //      16));
+   //
+   //   RPageSourceMock source2(sink2.GetPages(), splitElement);
+   //   auto page4 = source2.PopulatePage(RPageStorage::ColumnHandle_t{}, NTupleSize_t{0});
+   //   std::unique_ptr<unsigned char[]> buf3(static_cast<unsigned char *>(page4.GetBuffer())); // adopt buffer
+   //   EXPECT_EQ(0, memcmp(buf3.get(), "\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f", 16));
+}
+
 TEST(RColumnElementEndian, Double)
 {
    ROOT::Experimental::Detail::RColumnElement<double, EColumnType::kReal64> element(nullptr);

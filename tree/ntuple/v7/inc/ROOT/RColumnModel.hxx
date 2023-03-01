@@ -57,6 +57,7 @@ enum class EColumnType {
    kInt32,
    kInt16,
    kInt8,
+   kSplitIndex32,
    kSplitReal64,
    kSplitReal32,
    kSplitInt64,
@@ -79,7 +80,10 @@ private:
 
 public:
    RColumnModel() : fType(EColumnType::kUnknown), fIsSorted(false) {}
-   explicit RColumnModel(EColumnType type) : fType(type), fIsSorted(type == EColumnType::kIndex32) {}
+   explicit RColumnModel(EColumnType type)
+      : fType(type), fIsSorted(type == EColumnType::kIndex32 || type == EColumnType::kSplitIndex32)
+   {
+   }
    RColumnModel(EColumnType type, bool isSorted) : fType(type), fIsSorted(isSorted) {}
 
    EColumnType GetType() const { return fType; }

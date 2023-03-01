@@ -13,6 +13,12 @@ struct Helper {
    static constexpr ROOT::Experimental::EColumnType kColumnType = ColumnT;
 };
 
+template <ROOT::Experimental::EColumnType ColumnT>
+struct Helper<ROOT::Experimental::ClusterSize_t, ColumnT> {
+   using Pod_t = std::uint64_t;
+   static constexpr ROOT::Experimental::EColumnType kColumnType = ColumnT;
+};
+
 template <typename HelperT>
 class PackingInt : public ::testing::Test {
 public:
@@ -25,6 +31,16 @@ public:
    using Helper_t = HelperT;
 };
 
+template <typename HelperT>
+class PackingIndex : public ::testing::Test {
+public:
+   using Helper_t = HelperT;
+};
+
+using PackingRealTypes = ::testing::Types<Helper<double, ROOT::Experimental::EColumnType::kSplitReal64>,
+                                          Helper<float, ROOT::Experimental::EColumnType::kSplitReal32>>;
+TYPED_TEST_CASE(PackingReal, PackingRealTypes);
+
 using PackingIntTypes = ::testing::Types<Helper<std::int64_t, ROOT::Experimental::EColumnType::kSplitInt64>,
                                          Helper<std::uint64_t, ROOT::Experimental::EColumnType::kSplitInt64>,
                                          Helper<std::int32_t, ROOT::Experimental::EColumnType::kSplitInt32>,
@@ -36,6 +52,10 @@ TYPED_TEST_SUITE(PackingInt, PackingIntTypes);
 using PackingRealTypes = ::testing::Types<Helper<double, ROOT::Experimental::EColumnType::kSplitReal64>,
                                           Helper<float, ROOT::Experimental::EColumnType::kSplitReal32>>;
 TYPED_TEST_SUITE(PackingReal, PackingRealTypes);
+
+using PackingIndexTypes =
+   ::testing::Types<Helper<ROOT::Experimental::ClusterSize_t, ROOT::Experimental::EColumnType::kSplitIndex32>>;
+TYPED_TEST_SUITE(PackingIndex, PackingIndexTypes);
 
 TEST(Packing, Bitfield)
 {
@@ -131,6 +151,24 @@ TYPED_TEST(PackingInt, SplitInt)
    EXPECT_EQ(mem, cmp);
 }
 
+TYPED_TEST(PackingIndex, SplitIndex)
+{
+   using Pod_t = typename TestFixture::Helper_t::Pod_t;
+
+   ROOT::Experimental::Detail::RColumnElement<ClusterSize_t, TestFixture::Helper_t::kColumnType> element(nullptr);
+   element.Pack(nullptr, nullptr, 0);
+   element.Unpack(nullptr, nullptr, 0);
+
+   std::array<Pod_t, 5> mem{0, 1, 1, 42, std::numeric_limits<Pod_t>::max()};
+   std::array<Pod_t, 5> packed;
+   std::array<Pod_t, 5> cmp;
+
+   element.Pack(packed.data(), mem.data(), 5);
+   element.Unpack(cmp.data(), packed.data(), 5);
+
+   EXPECT_EQ(mem, cmp);
+}
+
 namespace {
 
 template <typename PodT, ROOT::Experimental::EColumnType ColumnT>
@@ -156,6 +194,7 @@ TEST(Packing, OnDiskEncoding)
    AddField<std::int64_t, ROOT::Experimental::EColumnType::kSplitInt64>(*model, "int64");
    AddField<float, ROOT::Experimental::EColumnType::kSplitReal32>(*model, "float");
    AddField<double, ROOT::Experimental::EColumnType::kSplitReal64>(*model, "double");
+   AddField<ClusterSize_t, ROOT::Experimental::EColumnType::kSplitIndex32>(*model, "index32");
    {
       RNTupleWriteOptions options;
       options.SetCompression(0);
@@ -167,6 +206,9 @@ TEST(Packing, OnDiskEncoding)
       *e->Get<std::int64_t>("int64") = 0x0001020304050607L;
       *e->Get<float>("float") = std::nextafterf(1.f, 2.f); // 0 01111111 00000000000000000000001 == 0x3f800001
       *e->Get<double>("double") = std::nextafter(1., 2.);  // 0x3ff0 0000 0000 0001
+      *e->Get<ClusterSize_t>("index32") = 39916801;        // 0x0261 1501
+
+      writer->CommitCluster();
 
       writer->Fill(*e);
 
@@ -175,6 +217,7 @@ TEST(Packing, OnDiskEncoding)
       *e->Get<std::int64_t>("int64") = 0x08090a0b0c0d0e0fL;
       *e->Get<float>("float") = std::nextafterf(1.f, 0.f);            // 0 01111110 11111111111111111111111 = 0x3f7fffff
       *e->Get<double>("double") = std::numeric_limits<double>::max(); // 0x7fef ffff ffff ffff
+      *e->Get<ClusterSize_t>("index32") = 39916808;                   // d(previous) == 7
 
       writer->Fill(*e);
    }
@@ -211,4 +254,8 @@ TEST(Packing, OnDiskEncoding)
    unsigned char expDouble[] = {0x01, 0xff, 0x00, 0xff, 0x00, 0xff, 0x00, 0xff,
                                 0x00, 0xff, 0x00, 0xff, 0xf0, 0xef, 0x3f, 0x7f};
    EXPECT_EQ(memcmp(sealedPage.fBuffer, expDouble, sizeof(expDouble)), 0);
+
+   source->LoadSealedPage(fnGetColumnId("index32"), RClusterIndex(0, 0), sealedPage);
+   unsigned char expIndex[] = {0x01, 0x07, 0x15, 0x00, 0x61, 0x00, 0x02, 0x00};
+   EXPECT_EQ(memcmp(sealedPage.fBuffer, expIndex, sizeof(expIndex)), 0);
 }
