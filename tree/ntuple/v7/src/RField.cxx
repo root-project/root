@@ -489,7 +489,9 @@ void ROOT::Experimental::Detail::RFieldBase::ConnectPageSink(RPageSink &pageSink
    /// Fix-up default encoding: if the ntuple is uncompressed, the default encoding should be non-split
    if ((pageSink.GetWriteOptions().GetCompression() == 0) && HasDefaultColumnRepresentative()) {
       const auto &rep = GetColumnRepresentative();
-      if (rep == ColumnRepresentation_t({EColumnType::kSplitReal64})) {
+      if (rep == ColumnRepresentation_t({EColumnType::kSplitIndex32})) {
+         SetColumnRepresentative({EColumnType::kIndex32});
+      } else if (rep == ColumnRepresentation_t({EColumnType::kSplitReal64})) {
          SetColumnRepresentative({EColumnType::kReal64});
       } else if (rep == ColumnRepresentation_t({EColumnType::kSplitReal32})) {
          SetColumnRepresentative({EColumnType::kReal32});
@@ -600,7 +602,7 @@ void ROOT::Experimental::RFieldZero::AcceptVisitor(Detail::RFieldVisitor &visito
 const ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations &
 ROOT::Experimental::RField<ROOT::Experimental::ClusterSize_t>::GetColumnRepresentations() const
 {
-   static RColumnRepresentations representations({{EColumnType::kIndex32}}, {{}});
+   static RColumnRepresentations representations({{EColumnType::kSplitIndex32}, {EColumnType::kIndex32}}, {{}});
    return representations;
 }
 
@@ -625,7 +627,7 @@ void ROOT::Experimental::RField<ROOT::Experimental::ClusterSize_t>::AcceptVisito
 const ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations &
 ROOT::Experimental::RField<ROOT::Experimental::RNTupleCardinality>::GetColumnRepresentations() const
 {
-   static RColumnRepresentations representations({{EColumnType::kIndex32}}, {{}});
+   static RColumnRepresentations representations({{EColumnType::kSplitIndex32}, {EColumnType::kIndex32}}, {{}});
    return representations;
 }
 
@@ -949,7 +951,8 @@ void ROOT::Experimental::RField<std::int64_t>::AcceptVisitor(Detail::RFieldVisit
 const ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations &
 ROOT::Experimental::RField<std::string>::GetColumnRepresentations() const
 {
-   static RColumnRepresentations representations({{EColumnType::kIndex32, EColumnType::kChar}}, {{}});
+   static RColumnRepresentations representations(
+      {{EColumnType::kSplitIndex32, EColumnType::kChar}, {EColumnType::kIndex32, EColumnType::kChar}}, {{}});
    return representations;
 }
 
@@ -1313,7 +1316,7 @@ void ROOT::Experimental::RCollectionClassField::ReadGlobalImpl(NTupleSize_t glob
 const ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations &
 ROOT::Experimental::RCollectionClassField::GetColumnRepresentations() const
 {
-   static RColumnRepresentations representations({{EColumnType::kIndex32}}, {{}});
+   static RColumnRepresentations representations({{EColumnType::kSplitIndex32}, {EColumnType::kIndex32}}, {{}});
    return representations;
 }
 
@@ -1572,7 +1575,7 @@ void ROOT::Experimental::RVectorField::ReadGlobalImpl(NTupleSize_t globalIndex, 
 const ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations &
 ROOT::Experimental::RVectorField::GetColumnRepresentations() const
 {
-   static RColumnRepresentations representations({{EColumnType::kIndex32}}, {{}});
+   static RColumnRepresentations representations({{EColumnType::kSplitIndex32}, {EColumnType::kIndex32}}, {{}});
    return representations;
 }
 
@@ -1743,7 +1746,7 @@ void ROOT::Experimental::RRVecField::ReadGlobalImpl(NTupleSize_t globalIndex, De
 const ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations &
 ROOT::Experimental::RRVecField::GetColumnRepresentations() const
 {
-   static RColumnRepresentations representations({{EColumnType::kIndex32}}, {{}});
+   static RColumnRepresentations representations({{EColumnType::kSplitIndex32}, {EColumnType::kIndex32}}, {{}});
    return representations;
 }
 
@@ -1930,7 +1933,7 @@ void ROOT::Experimental::RField<std::vector<bool>>::ReadGlobalImpl(NTupleSize_t 
 const ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations &
 ROOT::Experimental::RField<std::vector<bool>>::GetColumnRepresentations() const
 {
-   static RColumnRepresentations representations({{EColumnType::kIndex32}}, {{}});
+   static RColumnRepresentations representations({{EColumnType::kSplitIndex32}, {EColumnType::kIndex32}}, {{}});
    return representations;
 }
 
@@ -2417,7 +2420,7 @@ ROOT::Experimental::RCollectionField::RCollectionField(
 const ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations &
 ROOT::Experimental::RCollectionField::GetColumnRepresentations() const
 {
-   static RColumnRepresentations representations({{EColumnType::kIndex32}}, {{}});
+   static RColumnRepresentations representations({{EColumnType::kSplitIndex32}, {EColumnType::kIndex32}}, {{}});
    return representations;
 }
 
