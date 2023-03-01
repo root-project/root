@@ -105,7 +105,10 @@ void RGeomViewer::Show(const RWebDisplayArgs &args, bool always_start_new_browse
       return;
 
    std::string user_args = "";
-   if (!GetShowHierarchy()) user_args = "{ nobrowser: true }";
+   if (!GetShowHierarchy())
+      user_args = "{ nobrowser: true }";
+   else if (GetShowColumns())
+      user_args = "{ show_columns: true }";
    fWebWindow->SetUserArgs(user_args);
 
    if (args.GetWidgetKind().empty())

@@ -31,8 +31,9 @@ protected:
 
    TGeoManager *fGeoManager{nullptr};        ///<! geometry to show
    std::string fSelectedVolume;              ///<! name of selected volume
-   RGeomDescription fDesc;                ///<! geometry description, send to the client as first message
+   RGeomDescription fDesc;                   ///<! geometry description, send to the client as first message
    bool fShowHierarchy{true};                ///<! if hierarchy visible by default
+   bool fShowColumns{true};                  ///<! show columns in hierarchy
    std::string fTitle;                       ///<! title of geometry viewer
 
    std::shared_ptr<RWebWindow> fWebWindow;   ///<! web window to show geometry
@@ -82,6 +83,10 @@ public:
 
    /** Returns default hierarchy browser visibility */
    bool GetShowHierarchy() const { return fShowHierarchy; }
+
+   void SetShowColumns(bool on = true) { fShowColumns = on; }
+
+   bool GetShowColumns() const { return fShowColumns; }
 
    void SetDrawOptions(const std::string &opt);
 

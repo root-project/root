@@ -5,8 +5,13 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                'sap/ui/table/Column',
                'sap/ui/model/json/JSONModel',
                'rootui5/browser/model/BrowserModel'
-],function(Controller, CoreControl, mText,
-           HorizontalLayout, tableColumn, JSONModel, BrowserModel) {
+], function(Controller,
+            CoreControl,
+            mText,
+            HorizontalLayout,
+            tableColumn,
+            JSONModel,
+            BrowserModel) {
 
    "use strict";
 
@@ -23,11 +28,11 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       renderer : function(oRm, oControl) { // static function, so use the given "oControl" instance instead of "this" in the renderer function
          // if (!oControl.getVisible()) return;
 
-         if (oControl.getColor() == '#fff') return;
+         if (!oControl.getColor() || (oControl.getColor() == '#fff')) return;
 
-         // change backround of parane instead
-         //oControl.getParent().$().css("background-color", oControl.getColor());
-         //return;
+         // change backround of parent instead
+         // oControl.$().css("background-color", oControl.getColor());
+         // return;
 
          oRm.write("<div");
          oRm.writeControlData(oControl);  // writes the Control ID and enables event handling - important!
@@ -101,7 +106,8 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          this.cfg_model = new JSONModel(this.cfg);
          this.getView().setModel(this.cfg_model);
 
-         let nobrowser = this.websocket.getUserArgs('nobrowser') || this.jsroot.decodeUrl().has('nobrowser');
+         let nobrowser = this.websocket.getUserArgs('nobrowser') || this.jsroot.decodeUrl().has('nobrowser'),
+             show_columns = !nobrowser && this.websocket.getUserArgs('show_columns') || this.jsroot.decodeUrl().has('show_columns');
 
          if (nobrowser) {
             // remove main area - plain geometry drawing
@@ -121,20 +127,28 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
             t.setModel(this.model);
 
+            t.setRowHeight(20);
+
             // let vis_selected_handler = this.visibilitySelected.bind(this);
 
             this.model.assignTreeTable(t);
 
             t.addColumn(new tableColumn({
                label: "Description",
-               template: new HorizontalLayout({
-                  content: [
-                     //new mCheckBox({ enabled: true, visible: true, selected: "{node_visible}", select: vis_selected_handler }),
-                     new geomColorBox({color: "{_elem/color}", visible: "{= !!${_elem/color}}"}),
-                     new mText({text:"{name}", wrapping: false })
-                  ]
-               })
+               tooltip: "Name of geometry nodes",
+               template: new mText({text:"{name}", wrapping: false })
             }));
+
+            if (show_columns) {
+               //new mCheckBox({ enabled: true, visible: true, selected: "{node_visible}", select: vis_selected_handler }),
+               t.setColumnHeaderVisible(true);
+               t.addColumn(new tableColumn({
+                  label: "Color",
+                  tooltip: "Color of geometry volumes",
+                  width: "2rem",
+                  template: new geomColorBox({color: "{_elem/color}", visible: "{= !!${_elem/color}}"})
+               }));
+            }
 
             // catch re-rendering of the table to assign handlers
             t.addEventDelegate({
@@ -437,7 +451,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                this.extractRawShapes(msg, true);
 
                // after clones are existing - ensure geo painter is there
-               this.createGeoPainter(msg.cfg ? msg.cfg.drawopt : "");
+               this.createGeoPainter(msg.cfg?.drawopt ?? '');
 
                // assign configuration to the control
                if (msg.cfg) {
@@ -1012,7 +1026,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       },
 
       sendConfig: function() {
-         if (!this.standalone && this.geo_painter && this.geo_painter.ctrl.cfg) {
+         if (!this.standalone && this.geo_painter?.ctrl.cfg) {
             let cfg = this.geo_painter.ctrl.cfg;
             cfg.build_shapes = parseInt(cfg.build_shapes);
             this.websocket.send("CFG:" + this.jsroot.toJSON(cfg));
