@@ -346,20 +346,13 @@ class RooHistFuncFactory : public RooFit::JSONIO::Importer {
 public:
    bool importFunction(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
    {
-      RooWorkspace &ws = *tool->workspace();
-
       std::string name(RooJSONFactoryWSTool::name(p));
       if (!p.has_child("data")) {
          RooJSONFactoryWSTool::error("function '" + name + "' is of histogram type, but does not define a 'data' key");
       }
-      RooDataHist *dh = dynamic_cast<RooDataHist *>(ws.embeddedData(name));
-      if (!dh) {
-         auto dhForImport = RooJSONFactoryWSTool::readBinnedData(p["data"], name);
-         ws.import(*dhForImport, RooFit::Silence(true), RooFit::Embedded());
-         dh = static_cast<RooDataHist *>(ws.embeddedData(dhForImport->GetName()));
-      }
-      RooHistFunc hf(name.c_str(), name.c_str(), *(dh->get()), *dh);
-      ws.import(hf, RooFit::RecycleConflictNodes(true), RooFit::Silence(true));
+      std::unique_ptr<RooDataHist> dataHist = RooJSONFactoryWSTool::readBinnedData(p["data"], name);
+      RooHistFunc hf(name.c_str(), name.c_str(), *dataHist->get(), *dataHist);
+      tool->workspace()->import(hf, RooFit::RecycleConflictNodes(true), RooFit::Silence(true));
       return true;
    }
 };
@@ -392,13 +385,8 @@ public:
       if (!p.has_child("data")) {
          RooJSONFactoryWSTool::error("function '" + name + "' is of histogram type, but does not define a 'data' key");
       }
-      RooDataHist *dh = dynamic_cast<RooDataHist *>(tool->workspace()->embeddedData(name));
-      if (!dh) {
-         auto dhForImport = tool->readBinnedData(p["data"], name);
-         tool->workspace()->import(*dhForImport, RooFit::Silence(true), RooFit::Embedded());
-         dh = static_cast<RooDataHist *>(tool->workspace()->embeddedData(dhForImport->GetName()));
-      }
-      RooHistPdf hf(name.c_str(), name.c_str(), *(dh->get()), *dh);
+      std::unique_ptr<RooDataHist> dataHist = RooJSONFactoryWSTool::readBinnedData(p["data"], name);
+      RooHistPdf hf(name.c_str(), name.c_str(), *dataHist->get(), *dataHist);
       tool->workspace()->import(hf, RooFit::RecycleConflictNodes(true), RooFit::Silence(true));
       return true;
    }
