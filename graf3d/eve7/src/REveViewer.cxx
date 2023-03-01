@@ -122,6 +122,7 @@ void REveViewer::SetBlackBackground(bool x)
 /// Virtual from REveElement.
 int REveViewer::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
 {
+   j["ViewType"] = fViewType;
    std::string ct;
    switch (fCameraType)
    {

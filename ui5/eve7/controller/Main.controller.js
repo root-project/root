@@ -45,6 +45,7 @@ sap.ui.define(['sap/ui/core/Component',
       },
 
       initClientLog: function() {
+         return;
          let consoleObj = {};
          consoleObj.data = [];
 
@@ -173,11 +174,14 @@ sap.ui.define(['sap/ui/core/Component',
          // create missing view
          console.log("Creating view", viewid);
 
+         // TODO:: Introduce REveView view types
          let vtype = "rootui5.eve7.view.GL";
          if (elem.fName === "Table")
             vtype = "rootui5.eve7.view.EveTable"; // AMT temporary solution
          else if (elem.fName === "Lego")
             vtype = "rootui5.eve7.view.Lego"; // AMT temporary solution
+         else if (elem.fName === "GeoTable")
+               vtype = "rootui5.eve7.view.GeoTable";
 
          let oOwnerComponent = Component.getOwnerComponentFor(this.getView());
          let view = oOwnerComponent.runAsOwner(function() {
