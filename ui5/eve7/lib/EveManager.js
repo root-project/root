@@ -33,6 +33,8 @@ sap.ui.define([], function() {
 
          this.initialized = false;
          this.busyProcessingChanges = false;
+
+         EVE.mgr = this;
       }
 
       /** Returns element with given ID */
@@ -953,7 +955,7 @@ sap.ui.define([], function() {
    } // class EveManager
 
 
-   EVE.EveManager = EveManager;
+   EVE.EveManager = EveManager; // AMT ? why is this useful
 
    EVE.DebugSelection = 0;
 

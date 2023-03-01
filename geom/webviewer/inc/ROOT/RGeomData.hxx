@@ -360,6 +360,8 @@ public:
     * After get full description, client can do most operations without extra requests */
    bool IsPreferredOffline() const { TLockGuard lock(fMutex); return fPreferredOffline; }
 
+   /** Get top node path */
+   const std::vector<int>& GetSelectedStack() const { return fSelectedStack; }
 
    void Build(TGeoManager *mgr, const std::string &volname = "");
 

@@ -198,7 +198,7 @@ sap.ui.define([
          if (this.click_buttons == 1) {
             // handle left mouse button click
             if (this.click_intersect) {
-               let c = this.click_intersect.object.get_ctrl();
+               let c = this.getCtrlRec(this.click_intersect.object);//this.click_intersect.object.get_ctrl();
                c.event = this.click_event;
                c.elementSelected(c.extractIndex(this.click_intersect));
                this.highlighted_scene = this.click_intersect.object.scene;
@@ -434,6 +434,16 @@ sap.ui.define([
          }
       }
 
+      getCtrlRec(io)
+      {
+         if (io.get_ctrl)
+         return io.get_ctrl();
+         else if (io.parent)
+         return this.getCtrlRec(io.parent)
+         else
+         return null;
+      }
+
       /** Get three.js intersect object at specified mouse position */
       getIntersectAt(x, y) {
          let w = this.get_width();
@@ -448,12 +458,9 @@ sap.ui.define([
          let intersects = this.raycaster.intersectObjects(this.scene.children, true);
          for (let i = 0; i < intersects.length; ++i)
          {
-            if (!intersects[i].object.get_ctrl)
-               intersects[i].object = intersects[i].object.parent;
-
-            if (intersects[i].object.visible && intersects[i].object.get_ctrl)
+            let ctrl = this.getCtrlRec(intersects[i].object);
+            if (intersects[i].object.visible && ctrl)
             {
-               let ctrl = intersects[i].object.get_ctrl();
                if (ctrl && ctrl.obj3d && ctrl.obj3d.eve_el)
                {
                   let el = ctrl.obj3d.eve_el;
@@ -477,7 +484,7 @@ sap.ui.define([
          if (!intersect)
             return this.clearHighlight();
 
-         let c = intersect.object.get_ctrl();
+         let c = this.getCtrlRec(intersect.object);//intersect.object.get_ctrl();
 
          let mouse = intersect.mouse;
 
@@ -575,7 +582,6 @@ sap.ui.define([
 
       handleMouseSelect(event) {
          let intersect = this.getIntersectAt(event.offsetX, event.offsetY);
-
          if (intersect) {
             let c = intersect.object.get_ctrl();
             c.event = event;

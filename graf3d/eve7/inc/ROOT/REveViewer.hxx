@@ -34,6 +34,7 @@ private:
    REveViewer(const REveViewer&) = delete;
    REveViewer& operator=(const REveViewer&) = delete;
 
+   std::string fViewType{"GL"};
    ECameraType fCameraType{kCameraPerspXOZ};
    EAxesType fAxesType{kAxesNone};
    bool      fBlackBackground{false};
@@ -49,6 +50,9 @@ public:
 
    virtual void AddScene(REveScene* scene);
    // XXX Missing RemoveScene() ????
+ 
+   void SetViewType(const std::string& x) {fViewType = x;}
+   std::string GetViewType() {return fViewType;}
 
    void SetCameraType(ECameraType t) { fCameraType = t; }
    ECameraType GetCameraType() const { return fCameraType; }
