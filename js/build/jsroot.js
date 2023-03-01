@@ -11,7 +11,7 @@ let version_id = 'dev';
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-let version_date = '23/02/2023';
+let version_date = '1/03/2023';
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -84196,8 +84196,8 @@ class ClonedNodes {
 
       if (clone.kind === kindShape) {
          let prop = { name: clone.name, nname: clone.name, shape: null, material: null, chlds: null },
-            _opacity = entry.opacity || 1;
-         prop.fillcolor = new Color$1( entry.color ? `rgb(${entry.color})` : 'blue' );
+            _opacity = entry.opacity || 1, col = entry.color || '#0000FF';
+         prop.fillcolor = new Color$1(col[0] == '#' ? col : `rgb(${col})`);
          prop.material = new MeshLambertMaterial({ transparent: _opacity < 1,
                           opacity: _opacity, wireframe: false, color: prop.fillcolor,
                           side: FrontSide, vertexColors: false,
