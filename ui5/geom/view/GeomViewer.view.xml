@@ -40,6 +40,7 @@
                      enableSelectAll="false" selectionBehavior="RowOnly"
                      selectionMode="Single" visibleRowCountMode="Auto"
                      cellClick="onCellClick"
+                     cellContextmenu="onCellContextMenu"
                      rows="{/nodes}">
                      <t:layoutData>
                         <FlexItemData growFactor="1"/>

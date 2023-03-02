@@ -3,13 +3,23 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                'sap/ui/table/Column',
                'sap/ui/model/json/JSONModel',
                'rootui5/geom/model/GeomBrowserModel',
-               'rootui5/geom/lib/ColorBox'
+               'rootui5/geom/lib/ColorBox',
+               'sap/ui/Device',
+               'sap/ui/unified/Menu',
+               'sap/ui/unified/MenuItem',
+               'sap/ui/core/Popup',
+               'sap/m/MessageToast'
 ], function(Controller,
             mText,
             tableColumn,
             JSONModel,
             GeomBrowserModel,
-            GeomColorBox) {
+            GeomColorBox,
+            Device,
+            Menu,
+            MenuItem,
+            Popup,
+            MessageToast) {
 
    "use strict";
 
@@ -382,7 +392,6 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             this.queue.push(msg);
          }
 
-
          if (!this.geo ||                // complete JSROOT TGeo functionality is loaded
             !this.queue.length ||        // drawing messages are created
             !this.renderingDone) return; // UI5 rendering is performed
@@ -660,7 +669,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          if (append_more)
             this.geo_painter.appendMoreNodes(visibles || null);
 
-         if (visibles && visibles.length && (visibles.length < 100)) {
+         if (visibles?.length && (visibles.length < 100)) {
             let dflt = Math.max(this.geo_painter.ctrl.transparency, 0.98);
             this.geo_painter.changedGlobalTransparency(node => {
                if (node.stack)
@@ -789,6 +798,44 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             } else {
                this.sendViewerRequest("INFO", { path: prop.path });
             }
+      },
+
+      onCellContextMenu: function(oEvent) {
+         if (Device.support.touch) {
+            return; //Do not use context menus on touch devices
+         }
+
+         let ctxt = oEvent.getParameter("rowBindingContext"),
+             prop = ctxt?.getProperty(ctxt.getPath());
+
+         //if (oEvent.getParameter("columnId") != this.getView().createId("productId")) {
+         //   return; //Custom context menu for product id column only
+         //}
+
+         oEvent.preventDefault();
+
+         // var oRowContext = oEvent.getParameter("rowBindingContext");
+
+         if (!this._oIdContextMenu) {
+            this._oIdContextMenu = new Menu();
+            this.getView().addDependent(this._oIdContextMenu);
+         }
+
+         this._oIdContextMenu.destroyItems();
+         this._oIdContextMenu.addItem(new MenuItem({
+            text: 'Set as top',
+            select: () => {
+               if (this.standalone) {
+                  MessageToast.show('Set as top not supported in standalone mode');
+               } else {
+                  this.sendViewerRequest('SETTOP', { path: prop.path });
+               }
+            }
+         }));
+
+         //Open the menu on the cell
+         let oCellDomRef = oEvent.getParameter("cellDomRef");
+         this._oIdContextMenu.open(false, oCellDomRef, Popup.Dock.BeginTop, Popup.Dock.BeginBottom, oCellDomRef, "none none");
       },
 
       /** Try to provide as much info as possible offline */

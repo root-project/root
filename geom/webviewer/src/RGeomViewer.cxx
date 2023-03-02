@@ -244,7 +244,7 @@ void RGeomViewer::WebWindowCallback(unsigned connid, const std::string &arg)
       if (!json.empty())
          fWebWindow->Send(connid, json);
 
-   } else if (arg.compare(0,4,"GET:") == 0) {
+   } else if (arg.compare(0, 4, "GET:") == 0) {
       // provide exact shape
 
       auto stack = GetStackFromJson(arg.substr(4));
@@ -278,6 +278,13 @@ void RGeomViewer::WebWindowCallback(unsigned connid, const std::string &arg)
          // not request but different object type is send
          req.reset(nullptr);
 
+      } else if (req && (req->oper == "SETTOP")) {
+
+         if (fDesc.SelectTop(req->path))
+            SendGeometry(connid);
+
+         // not request but different object type is send
+         req.reset(nullptr);
       } else {
          req.reset(nullptr);
       }
