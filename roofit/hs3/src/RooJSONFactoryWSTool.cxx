@@ -612,10 +612,10 @@ JSONNode *RooJSONFactoryWSTool::exportObject(const RooAbsArg *func)
                 << " 2. " << cl->GetName()
                 << " is a ROOT class that nobody ever bothered to write a serialization definition for.\n"
                 << " 3. something is wrong with your setup, e.g. you might have called "
-                   "RooJSONFactoryWSTool::clearExportKeys() and/or never successfully read a file defining these "
-                   "keys with RooJSONFactoryWSTool::loadExportKeys(filename)\n"
+                   "RooFit::JSONIO::clearExportKeys() and/or never successfully read a file defining these "
+                   "keys with RooFit::JSONIO::loadExportKeys(filename)\n"
                 << "either way, please make sure that:\n"
-                << " 3: you are reading a file with export keys - call RooJSONFactoryWSTool::printExportKeys() to "
+                << " 3: you are reading a file with export keys - call RooFit::JSONIO::printExportKeys() to "
                    "see what is available\n"
                 << " 2 & 1: you might need to write a serialization definition yourself. check "
                    "https://github.com/root-project/root/blob/master/roofit/hs3/README.md to "
