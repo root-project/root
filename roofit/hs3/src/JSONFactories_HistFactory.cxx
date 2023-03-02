@@ -102,8 +102,8 @@ template <class T>
 T *findClient(RooAbsArg *gamma)
 {
    for (const auto &client : gamma->clients()) {
-      if (client->InheritsFrom(T::Class())) {
-         return static_cast<T *>(client);
+      if (auto casted = dynamic_cast<T *>(client)) {
+         return casted;
       } else {
          T *c = findClient<T>(client);
          if (c)
@@ -219,7 +219,7 @@ std::unique_ptr<ParamHistFunc> createPHF(const std::string &sysname, const std::
    }
    for (auto &g : gammas) {
       for (auto client : g->clients()) {
-         if (client->InheritsFrom(RooAbsPdf::Class()) && !constraints.find(*client)) {
+         if (dynamic_cast<RooAbsPdf *>(client) && !constraints.find(*client)) {
             constraints.add(*client);
          }
       }
@@ -631,14 +631,14 @@ public:
    }
 };
 
-void collectElements(RooArgSet &elems, RooProduct *prod)
+void collectElements(RooArgSet &elems, RooAbsArg *arg)
 {
-   for (const auto &e : prod->components()) {
-      if (e->InheritsFrom(RooProduct::Class())) {
-         collectElements(elems, (RooProduct *)e);
-      } else {
-         elems.add(*e);
+   if (auto prod = dynamic_cast<RooProduct *>(arg)) {
+      for (const auto &e : prod->components()) {
+         collectElements(elems, e);
       }
+   } else {
+      elems.add(*arg);
    }
 }
 
@@ -647,8 +647,8 @@ bool tryExportHistFactory(const std::string &pdfname, const std::string chname, 
 {
    if (!sumpdf)
       return false;
-   for (const auto &sample : sumpdf->funcList()) {
-      if (!sample->InheritsFrom(RooProduct::Class()) && !sample->InheritsFrom(RooRealSumPdf::Class()))
+   for (RooAbsArg *sample : sumpdf->funcList()) {
+      if (!dynamic_cast<RooProduct *>(sample) && !dynamic_cast<RooRealSumPdf *>(sample))
          return false;
    }
 
@@ -675,51 +675,41 @@ bool tryExportHistFactory(const std::string &pdfname, const std::string chname, 
          samplename = samplename.substr(pdfname.size() + 1);
 
       RooArgSet elems;
-      if (func->InheritsFrom(RooProduct::Class())) {
-         collectElements(elems, (RooProduct *)func);
-      } else {
-         elems.add(*func);
-      }
-      if (coef->InheritsFrom(RooProduct::Class())) {
-         collectElements(elems, (RooProduct *)coef);
-      } else {
-         elems.add(*coef);
-      }
+      collectElements(elems, func);
+      collectElements(elems, coef);
       std::unique_ptr<TH1> hist;
       std::vector<ParamHistFunc *> phfs;
       PiecewiseInterpolation *pip = nullptr;
       std::vector<const RooAbsArg *> norms;
 
       RooStats::HistFactory::FlexibleInterpVar *fip = nullptr;
-      for (const auto &e : elems) {
-         if (e->InheritsFrom(RooConstVar::Class())) {
-            if (((RooConstVar *)e)->getVal() == 1.)
+      for (RooAbsArg *e : elems) {
+         if (auto constVar = dynamic_cast<RooConstVar *>(e)) {
+            if (constVar->getVal() == 1.)
                continue;
             norms.push_back(e);
-         } else if (e->InheritsFrom(RooRealVar::Class())) {
+         } else if (dynamic_cast<RooRealVar *>(e)) {
             norms.push_back(e);
-         } else if (e->InheritsFrom(RooHistFunc::Class())) {
-            const RooHistFunc *hf = static_cast<const RooHistFunc *>(e);
+         } else if (auto hf = dynamic_cast<const RooHistFunc *>(e)) {
             if (varnames.empty()) {
                varnames = getVarnames(hf);
             }
             if (!hist) {
                hist = histFunc2TH1(hf);
             }
-         } else if (e->InheritsFrom(RooStats::HistFactory::FlexibleInterpVar::Class())) {
-            fip = static_cast<RooStats::HistFactory::FlexibleInterpVar *>(e);
-         } else if (e->InheritsFrom(PiecewiseInterpolation::Class())) {
-            pip = static_cast<PiecewiseInterpolation *>(e);
-         } else if (e->InheritsFrom(ParamHistFunc::Class())) {
-            phfs.push_back((ParamHistFunc *)e);
+         } else if (auto phf = dynamic_cast<ParamHistFunc *>(e)) {
+            phfs.push_back(phf);
+         } else {
+            fip = dynamic_cast<RooStats::HistFactory::FlexibleInterpVar *>(e);
+            pip = dynamic_cast<PiecewiseInterpolation *>(e);
          }
       }
       if (pip) {
-         if (!hist && pip->nominalHist()->InheritsFrom(RooHistFunc::Class())) {
-            hist = histFunc2TH1(static_cast<const RooHistFunc *>(pip->nominalHist()));
-         }
-         if (varnames.empty() && pip->nominalHist()->InheritsFrom(RooHistFunc::Class())) {
-            varnames = getVarnames(dynamic_cast<const RooHistFunc *>(pip->nominalHist()));
+         if (auto nh = dynamic_cast<RooHistFunc const *>(pip->nominalHist())) {
+            if (!hist)
+               hist = histFunc2TH1(nh);
+            if (varnames.empty())
+               varnames = getVarnames(nh);
          }
       }
       if (!hist) {
@@ -758,15 +748,11 @@ bool tryExportHistFactory(const std::string &pdfname, const std::string chname, 
             mod["name"] << sysname;
             auto &data = mod["data"];
             data.set_map();
-            auto &dataLow = data["lo"];
-            if (pip->lowList().at(i)->InheritsFrom(RooHistFunc::Class())) {
-               auto histLow = histFunc2TH1(static_cast<RooHistFunc *>(pip->lowList().at(i)));
-               RooJSONFactoryWSTool::exportHistogram(*histLow, dataLow, varnames, 0, false, false);
+            if (auto hf = dynamic_cast<RooHistFunc *>(pip->lowList().at(i))) {
+               RooJSONFactoryWSTool::exportHistogram(*histFunc2TH1(hf), data["lo"], varnames, 0, false, false);
             }
-            auto &dataHigh = data["hi"];
-            if (pip->highList().at(i)->InheritsFrom(RooHistFunc::Class())) {
-               auto histHigh = histFunc2TH1(static_cast<RooHistFunc *>(pip->highList().at(i)));
-               RooJSONFactoryWSTool::exportHistogram(*histHigh, dataHigh, varnames, 0, false, false);
+            if (auto hf = dynamic_cast<RooHistFunc *>(pip->highList().at(i))) {
+               RooJSONFactoryWSTool::exportHistogram(*histFunc2TH1(hf), data["hi"], varnames, 0, false, false);
             }
          }
       }
@@ -829,12 +815,10 @@ bool tryExportHistFactory(const std::string &pdfname, const std::string chname, 
             auto &vals = data["vals"];
             bool isPoisson = false;
             for (const auto &g : phf->paramList()) {
-               RooPoisson *constraint_p = findClient<RooPoisson>(g);
-               RooGaussian *constraint_g = findClient<RooGaussian>(g);
-               if (constraint_p) {
+               if (RooPoisson *constraint_p = findClient<RooPoisson>(g)) {
                   isPoisson = true;
                   vals.append_child() << constraint_p->getX().getVal();
-               } else if (constraint_g) {
+               } else if (RooGaussian *constraint_g = findClient<RooGaussian>(g)) {
                   isPoisson = false;
                   vals.append_child() << constraint_g->getSigma().getVal() / constraint_g->getMean().getVal();
                }
@@ -884,10 +868,8 @@ public:
    bool tryExport(const RooProdPdf *prodpdf, JSONNode &elem) const
    {
       RooRealSumPdf *sumpdf = nullptr;
-      for (const auto &v : prodpdf->pdfList()) {
-         if (v->InheritsFrom(RooRealSumPdf::Class())) {
-            sumpdf = static_cast<RooRealSumPdf *>(v);
-         }
+      for (RooAbsArg *v : prodpdf->pdfList()) {
+         sumpdf = dynamic_cast<RooRealSumPdf *>(v);
       }
       if (!sumpdf)
          return false;
@@ -908,11 +890,7 @@ public:
    }
    bool exportObject(RooJSONFactoryWSTool *, const RooAbsArg *p, JSONNode &elem) const override
    {
-      const RooProdPdf *prodpdf = static_cast<const RooProdPdf *>(p);
-      if (tryExport(prodpdf, elem)) {
-         return true;
-      }
-      return false;
+      return tryExport(static_cast<const RooProdPdf *>(p), elem);
    }
 };
 
@@ -939,11 +917,7 @@ public:
    }
    bool exportObject(RooJSONFactoryWSTool *, const RooAbsArg *p, JSONNode &elem) const override
    {
-      const RooRealSumPdf *sumpdf = static_cast<const RooRealSumPdf *>(p);
-      if (tryExport(sumpdf, elem)) {
-         return true;
-      }
-      return false;
+      return tryExport(static_cast<const RooRealSumPdf *>(p), elem);
    }
 };
 
