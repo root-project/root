@@ -169,8 +169,6 @@ std::unique_ptr<ParamHistFunc> createPHF(const std::string &sysname, const std::
                                          const RooArgSet &observables, const std::string &constraintType,
                                          RooArgList &gammas, double gamma_min, double gamma_max)
 {
-   RooArgList ownedComponents;
-
    std::string funcParams = "gamma_" + sysname;
    gammas.add(ParamHistFunc::createParamSet(w, funcParams.c_str(), observables, gamma_min, gamma_max));
    auto phf = std::make_unique<ParamHistFunc>(phfname.c_str(), phfname.c_str(), observables, gammas);
@@ -192,8 +190,8 @@ std::unique_ptr<ParamHistFunc> createPHF(const std::string &sysname, const std::
          auto g = static_cast<RooRealVar *>(gammas.at(i));
          auto gaus = std::make_unique<RooGaussian>(poisname.c_str(), poisname.c_str(), *nom, *g, *sigma);
          gaus->addOwnedComponents(std::move(nom), std::move(sigma));
-         constraints.add(*gaus, true);
-         ownedComponents.addOwned(std::move(gaus), true);
+         w.import(*gaus, RooFit::RecycleConflictNodes(true), RooFit::Silence(true));
+         constraints.add(*w.pdf(gaus->GetName()), true);
       }
    } else if (constraintType == "Poisson") {
       for (size_t i = 0; i < vals.size(); ++i) {
@@ -213,8 +211,8 @@ std::unique_ptr<ParamHistFunc> createPHF(const std::string &sysname, const std::
          auto pois = std::make_unique<RooPoisson>(poisname.c_str(), poisname.c_str(), *nom, *prod);
          pois->addOwnedComponents(std::move(tau), std::move(nom), std::move(prod));
          pois->setNoRounding(true);
-         constraints.add(*pois, true);
-         ownedComponents.addOwned(std::move(pois), true);
+         w.import(*pois, RooFit::RecycleConflictNodes(true), RooFit::Silence(true));
+         constraints.add(*w.pdf(pois->GetName()), true);
       }
    } else {
       RooJSONFactoryWSTool::error("unknown constraint type " + constraintType);
@@ -227,8 +225,6 @@ std::unique_ptr<ParamHistFunc> createPHF(const std::string &sysname, const std::
       }
    }
    phf->recursiveRedirectServers(observables);
-   // Transfer ownership of gammas and owned constraints to the ParamHistFunc
-   phf->addOwnedComponents(std::move(ownedComponents));
 
    return phf;
 }
