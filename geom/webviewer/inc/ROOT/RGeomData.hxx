@@ -227,7 +227,7 @@ class RGeomDescription {
    std::vector<TGeoNode *> fNodes;  ///<! flat list of all nodes
    std::vector<RGeomNode> fDesc;    ///<! converted description, send to client
    TGeoVolume *fDrawVolume{nullptr};///<! select volume independent from TGeoManager
-   int fSelectedNodeId{0};          ///<! selected node id
+   std::vector<int> fSelectedStack; ///<! selected branch of geometry by stack
 
    std::vector<int> fSortMap;       ///<! nodes in order large -> smaller volume
    std::vector<ShapeDescr> fShapes; ///<! shapes with created descriptions
