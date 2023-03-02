@@ -361,6 +361,8 @@ public:
    bool ChangeConfiguration(const std::string &json);
 
    std::unique_ptr<RGeomNodeInfo> MakeNodeInfo(const std::vector<std::string> &path);
+
+   bool SelectTop(const std::vector<std::string> &path);
 };
 
 
