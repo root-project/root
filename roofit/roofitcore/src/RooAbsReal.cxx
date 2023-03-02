@@ -1229,18 +1229,28 @@ RooDataHist* RooAbsReal::fillDataHist(RooDataHist *hist, const RooArgSet* normSe
 
 TH1* RooAbsReal::createHistogram(const char* varNameList, Int_t xbins, Int_t ybins, Int_t zbins) const
 {
-  // Parse std::list of variable names
-  char buf[1024] ;
-  strlcpy(buf,varNameList,1024) ;
-  char* varName = strtok(buf,",:") ;
-
   std::unique_ptr<RooArgSet> vars{getVariables()};
 
-  RooRealVar* xvar = (RooRealVar*) vars->find(varName) ;
-  varName = strtok(0,",") ;
-  RooRealVar* yvar = varName ? (RooRealVar*) vars->find(varName) : 0 ;
-  varName = strtok(0,",") ;
-  RooRealVar* zvar = varName ? (RooRealVar*) vars->find(varName) : 0 ;
+  auto varNames = ROOT::Split(std::string(varNameList), ",:");
+  std::vector<RooRealVar*> histVars(3, nullptr);
+
+  for(std::size_t iVar = 0; iVar < varNames.size(); ++iVar) {
+    if(varNames[iVar].empty()) continue;
+    if(iVar >= 3) {
+      std::stringstream errMsg;
+      errMsg << "RooAbsPdf::createHistogram(" << GetName() << ") ERROR more than three variable names passed, but maxumum number of supported variables is three";
+      coutE(Plotting) << errMsg.str() << std::endl;
+      throw std::invalid_argument(errMsg.str());
+    }
+    auto var = static_cast<RooRealVar*>(vars->find(varNames[iVar].c_str()));
+    if(!var) {
+      std::stringstream errMsg;
+      errMsg << "RooAbsPdf::createHistogram(" << GetName() << ") ERROR variable " << varNames[iVar] << " does not exist in argset: " << *vars;
+      coutE(Plotting) << errMsg.str() << std::endl;
+      throw std::runtime_error(errMsg.str());
+    }
+    histVars[iVar] = var;
+  }
 
   // Construct std::list of named arguments to pass to the implementation version of createHistogram()
 
@@ -1249,26 +1259,16 @@ TH1* RooAbsReal::createHistogram(const char* varNameList, Int_t xbins, Int_t ybi
     argList.Add(RooFit::Binning(xbins).Clone()) ;
   }
 
-  if (yvar) {
-    if (ybins>0) {
-      argList.Add(RooFit::YVar(*yvar,RooFit::Binning(ybins)).Clone()) ;
-    } else {
-      argList.Add(RooFit::YVar(*yvar).Clone()) ;
-    }
+  if (histVars[1]) {
+    argList.Add(RooFit::YVar(*histVars[1], ybins > 0 ? RooFit::Binning(ybins) : RooCmdArg::none()).Clone()) ;
   }
 
-
-  if (zvar) {
-    if (zbins>0) {
-      argList.Add(RooFit::ZVar(*zvar,RooFit::Binning(zbins)).Clone()) ;
-    } else {
-      argList.Add(RooFit::ZVar(*zvar).Clone()) ;
-    }
+  if (histVars[2]) {
+    argList.Add(RooFit::ZVar(*histVars[2], zbins > 0 ? RooFit::Binning(zbins) : RooCmdArg::none()).Clone()) ;
   }
-
 
   // Call implementation function
-  TH1* result = createHistogram(GetName(),*xvar,argList) ;
+  TH1* result = createHistogram(GetName(), *histVars[0], argList) ;
 
   // Delete temporary std::list of RooCmdArgs
   argList.Delete() ;
