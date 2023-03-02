@@ -319,20 +319,6 @@ void RGeomDescription::Build(TGeoManager *mgr, const std::string &volname)
    ClearDescription();
    if (!mgr) return;
 
-   auto topnode = mgr->GetTopNode();
-
-   if (!volname.empty()) {
-      auto vol = mgr->GetVolume(volname.c_str());
-      if (vol) {
-         TGeoNode *node;
-         TGeoIterator next(mgr->GetTopVolume());
-         while ((node = next()) != nullptr) {
-            if (node->GetVolume() == vol) break;
-         }
-         if (node) topnode = node;
-      }
-   }
-
    // by top node visibility always enabled and harm logic
    // later visibility can be controlled by other means
    // mgr->GetTopNode()->GetVolume()->SetVisibility(kFALSE);
@@ -342,9 +328,30 @@ void RGeomDescription::Build(TGeoManager *mgr, const std::string &volname)
    SetNSegments(mgr->GetNsegments());
    SetVisLevel(mgr->GetVisLevel());
    SetMaxVisNodes(maxnodes);
-   SetMaxVisFaces( (maxnodes > 5000 ? 5000 : (maxnodes < 1000 ? 1000 : maxnodes)) * 100);
+   SetMaxVisFaces((maxnodes > 5000 ? 5000 : (maxnodes < 1000 ? 1000 : maxnodes)) * 100);
+
+   auto topnode = mgr->GetTopNode();
 
    BuildDescription(topnode, topnode->GetVolume());
+
+   if (!volname.empty()) {
+      auto vol = mgr->GetVolume(volname.c_str());
+      if (vol) {
+         TGeoNode *node = nullptr;
+         TGeoIterator next(mgr->GetTopVolume());
+         while ((node = next()) != nullptr) {
+            if (node->GetVolume() == vol) break;
+         }
+         if (node) {
+            for (int id = 0; id < (int) fNodes.size(); id++)
+               if (fNodes[id] == node) {
+                  fSelectedNodeId = id;
+                  break;
+               }
+         }
+      }
+   }
+
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -358,6 +365,8 @@ void RGeomDescription::Build(TGeoVolume *vol)
    if (!vol) return;
 
    fDrawVolume = vol;
+
+   fSelectedNodeId = 0;
 
    BuildDescription(nullptr, fDrawVolume);
 }
@@ -373,6 +382,7 @@ void RGeomDescription::ClearDescription()
    ClearDrawData();
    fDrawIdCut = 0;
    fDrawVolume = nullptr;
+   fSelectedNodeId = 0;
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -402,7 +412,6 @@ void RGeomDescription::BuildDescription(TGeoNode *topnode, TGeoVolume *topvolume
    } while ((snode = iter()) != nullptr);
 
    fDesc.reserve(fNodes.size());
-   numbers.reserve(fNodes.size());
    fSortMap.reserve(fNodes.size());
 
    // array for sorting
@@ -449,10 +458,10 @@ void RGeomDescription::BuildDescription(TGeoNode *topnode, TGeoVolume *topvolume
    }
 
    // sort in volume descent order
-   std::sort(sortarr.begin(), sortarr.end(), [](RGeomNode *a, RGeomNode * b) { return a->vol > b->vol; });
+   std::sort(sortarr.begin(), sortarr.end(), [](RGeomNode *a, RGeomNode *b) { return a->vol > b->vol; });
 
    cnt = 0;
-   for (auto &elem: sortarr) {
+   for (auto &elem : sortarr) {
       fSortMap.emplace_back(elem->id);
       elem->sortid = cnt++; // keep place in sorted array to correctly apply cut
    }
@@ -542,16 +551,20 @@ int RGeomDescription::ScanNodes(bool only_visible, int maxlvl, RGeomScanFunc_t f
    stack.reserve(25); // reserve enough space for most use-cases
    int counter = 0;
 
-   using ScanFunc_t = std::function<int(int, int)>;
+   using ScanFunc_t = std::function<int(int, int, bool)>;
 
-   ScanFunc_t scan_func = [&, this](int nodeid, int lvl) {
+   ScanFunc_t scan_func = [&, this](int nodeid, int lvl, bool is_inside) {
+
+      if (nodeid == fSelectedNodeId)
+         is_inside = true;
+
       auto &desc = fDesc[nodeid];
       int res = 0;
 
       if (desc.nochlds && (lvl > 0)) lvl = 0;
 
       // same logic as in JSROOT ClonedNodes.scanVisible
-      bool is_visible = (lvl >= 0) && (desc.vis > lvl) && desc.CanDisplay();
+      bool is_visible = (lvl >= 0) && (desc.vis > lvl) && desc.CanDisplay() && is_inside;
 
       if (is_visible || !only_visible)
          if (func(desc, stack, is_visible, counter))
@@ -564,7 +577,7 @@ int RGeomDescription::ScanNodes(bool only_visible, int maxlvl, RGeomScanFunc_t f
          stack.emplace_back(0);
          for (unsigned k = 0; k < desc.chlds.size(); ++k) {
             stack[pos] = k; // stack provides index in list of childs
-            res += scan_func(desc.chlds[k], lvl - 1);
+            res += scan_func(desc.chlds[k], is_inside ? lvl - 1 : lvl, is_inside);
          }
          stack.pop_back();
       } else {
@@ -578,7 +591,7 @@ int RGeomDescription::ScanNodes(bool only_visible, int maxlvl, RGeomScanFunc_t f
    if (!maxlvl) maxlvl = 4;
    if (maxlvl > 97) maxlvl = 97; // check while vis property of node is 99 normally
 
-   return scan_func(0, maxlvl);
+   return scan_func(0, maxlvl, false);
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -612,6 +625,9 @@ void RGeomDescription::CollectNodes(RGeomDrawing &drawing, bool all_nodes)
             break;
          nodeid = node.chlds[chindx];
       }
+
+      if (nodeid != item.nodeid)
+         printf("Nodeid mismatch %d != %d when extracting nodes for visibles\n", nodeid, item.nodeid);
 
       auto &node = fDesc[nodeid];
       if (!node.useflag) {
@@ -986,7 +1002,8 @@ std::string RGeomDescription::ProduceJson(bool all_nodes)
    bool has_shape = false;
 
    ScanNodes(true, level, [&, this](RGeomNode &node, std::vector<int> &stack, bool, int seqid) {
-      if (node.sortid < fDrawIdCut) {
+      if ((node.sortid < fDrawIdCut) && (viscnt[node.id] > 0)) {
+
          drawing.visibles.emplace_back(node.id, seqid, stack);
 
          auto &item = drawing.visibles.back();
@@ -1036,7 +1053,7 @@ bool RGeomDescription::IsPrincipalEndNode(int nodeid)
 
    auto &desc = fDesc[nodeid];
 
-   return (desc.sortid < fDrawIdCut) && desc.IsVisible() && desc.CanDisplay() && (desc.chlds.size()==0);
+   return (desc.sortid < fDrawIdCut) && desc.IsVisible() && desc.CanDisplay() && (desc.chlds.size() == 0);
 }
 
 
@@ -1379,7 +1396,7 @@ bool RGeomDescription::ProduceDrawingFor(int nodeid, std::string &json, bool che
    });
 
    // no any visible nodes were done
-   if (drawing.visibles.size()==0) {
+   if (drawing.visibles.size() == 0) {
       json.append("NO");
       return false;
    }
