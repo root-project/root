@@ -1,5 +1,5 @@
 {
-    "Gaussian": {
+    "gaussian_dist": {
         "class": "RooGaussian",
         "arguments": [
             "x",
@@ -7,14 +7,14 @@
             "sigma"
         ]
     },
-    "Exponential": {
+    "exponential_dist": {
         "class": "RooExponential",
         "arguments": [
             "x",
             "c"
         ]
     },    
-    "Poisson": {
+    "poisson_dist": {
         "class": "RooPoisson",
         "arguments": [
             "x",
@@ -49,7 +49,7 @@
             "parameters"
         ]
     },
-    "ARGUS": {
+    "ARGUS_dist": {
         "class": "RooArgusBG",
         "arguments": [
             "mass",
@@ -58,14 +58,14 @@
             "power"
         ]
     },
-    "BernsteinPolynomial": {
+    "bernstein_poly_dist": {
         "class": "RooBernstein",
         "arguments": [
             "x",
             "coefficients"
         ]
     },
-    "CrystalBallShape": {
+    "crystalball_dist": {
         "class": "RooCBShape",
         "arguments": [
             "m",
@@ -75,7 +75,7 @@
 	    "n"
         ]
     },
-    "BifurkatedGaussian": {
+    "bifurkated_gaussian_dist": {
         "class": "RooBifurGauss",
         "arguments": [
             "x",
