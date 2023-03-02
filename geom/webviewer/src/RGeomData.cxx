@@ -146,12 +146,15 @@ public:
 
    bool NextNode()
    {
-      if (Enter()) return true;
+      if (Enter())
+         return true;
 
-      if (Next()) return true;
+      if (Next())
+         return true;
 
       while (Leave()) {
-         if (Next()) return true;
+         if (Next())
+            return true;
       }
 
       return false;
@@ -209,15 +212,28 @@ public:
       return true;
    }
 
+   /** Navigate to specified volume - find first occurence */
+   bool Navigate(TGeoVolume *vol)
+   {
+      Reset();
+
+      while (NextNode()) {
+         if (vol == fDesc.GetVolume(GetNodeId()))
+            return true;
+      }
+
+      return false;
+   }
 
    /// Returns array of ids to currently selected node
    std::vector<int> CurrentIds() const
    {
       std::vector<int> res;
       if (IsValid()) {
-         for (unsigned n=1;n<fStackParents.size();++n)
+         for (unsigned n = 1; n < fStackParents.size(); ++n)
             res.emplace_back(fStackParents[n]);
-         if (fParentId >= 0) res.emplace_back(fParentId);
+         if (fParentId >= 0)
+            res.emplace_back(fParentId);
          res.emplace_back(fNodeId);
       }
       return res;
@@ -336,20 +352,9 @@ void RGeomDescription::Build(TGeoManager *mgr, const std::string &volname)
 
    if (!volname.empty()) {
       auto vol = mgr->GetVolume(volname.c_str());
-      if (vol) {
-         TGeoNode *node = nullptr;
-         TGeoIterator next(mgr->GetTopVolume());
-         while ((node = next()) != nullptr) {
-            if (node->GetVolume() == vol) break;
-         }
-         if (node) {
-            for (int id = 0; id < (int) fNodes.size(); id++)
-               if (fNodes[id] == node) {
-                  fSelectedNodeId = id;
-                  break;
-               }
-         }
-      }
+      RGeomBrowserIter iter(*this);
+      if (vol && (vol != topnode->GetVolume()) && iter.Navigate(vol))
+         fSelectedStack = MakeStackByIds(iter.CurrentIds());
    }
 
 }
@@ -366,7 +371,7 @@ void RGeomDescription::Build(TGeoVolume *vol)
 
    fDrawVolume = vol;
 
-   fSelectedNodeId = 0;
+   fSelectedStack.clear();
 
    BuildDescription(nullptr, fDrawVolume);
 }
@@ -382,7 +387,7 @@ void RGeomDescription::ClearDescription()
    ClearDrawData();
    fDrawIdCut = 0;
    fDrawVolume = nullptr;
-   fSelectedNodeId = 0;
+   fSelectedStack.clear();
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -555,7 +560,7 @@ int RGeomDescription::ScanNodes(bool only_visible, int maxlvl, RGeomScanFunc_t f
 
    ScanFunc_t scan_func = [&, this](int nodeid, int lvl, bool is_inside) {
 
-      if (nodeid == fSelectedNodeId)
+      if (!is_inside && (fSelectedStack == stack))
          is_inside = true;
 
       auto &desc = fDesc[nodeid];
@@ -1532,18 +1537,16 @@ bool RGeomDescription::SelectTop(const std::vector<std::string> &path)
    if (!iter.Navigate(path))
       return false;
 
-   int nodeid = iter.GetNodeId();
-
-   if (nodeid == fSelectedNodeId)
+   auto stack = MakeStackByIds(iter.CurrentIds());
+   if (stack == fSelectedStack)
       return false;
 
-   fSelectedNodeId = nodeid;
+   fSelectedStack = stack;
 
    ClearDrawData();
 
    return true;
 }
-
 
 /////////////////////////////////////////////////////////////////////////////////
 /// Change configuration by client
