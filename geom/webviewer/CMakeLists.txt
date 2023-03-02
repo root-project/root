@@ -12,10 +12,12 @@ endif()
 ROOT_STANDARD_LIBRARY_PACKAGE(ROOTGeomViewer
   HEADERS
     ROOT/RGeomData.hxx
+    ROOT/RGeomHierarchy.hxx
     ROOT/RGeomViewer.hxx
     ROOT/RGeoPainter.hxx
   SOURCES
     src/RGeomData.cxx
+    src/RGeomHierarchy.cxx
     src/RGeomViewer.cxx
     src/RGeoPainter.cxx
   DEPENDENCIES

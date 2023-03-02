@@ -28,7 +28,7 @@
 #pragma link C++ class ROOT::Experimental::RGeomNodeInfo+;
 #pragma link C++ class ROOT::Experimental::RGeomConfig+;
 #pragma link C++ class ROOT::Experimental::RGeoPainter+;
+#pragma link C++ class ROOT::Experimental::RGeomHierarchy+;
 #pragma link C++ class ROOT::Experimental::RGeomViewer+;
-
 
 #endif

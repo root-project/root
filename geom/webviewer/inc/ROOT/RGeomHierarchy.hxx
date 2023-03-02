@@ -1,0 +1,48 @@
+// Author: Sergey Linev, 3.03.2023
+
+/*************************************************************************
+ * Copyright (C) 1995-2023, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
+#ifndef ROOT7_RGeomHierarchy
+#define ROOT7_RGeomHierarchy
+
+#include <ROOT/RWebDisplayArgs.hxx>
+#include <ROOT/RGeomData.hxx>
+
+#include <memory>
+
+class TGeoManager;
+class TGeoVolume;
+
+namespace ROOT {
+namespace Experimental {
+
+class RWebWindow;
+
+class RGeomHierarchy {
+
+protected:
+
+   RGeomDescription &fDesc;                  ///<! geometry description, shared with external
+   std::shared_ptr<RWebWindow> fWebWindow;   ///<! web window to show geometry
+
+   void WebWindowCallback(unsigned connid, const std::string &arg);
+
+public:
+
+   RGeomHierarchy(RGeomDescription &desc);
+   virtual ~RGeomHierarchy();
+
+   void Show(const RWebDisplayArgs &args = "");
+
+};
+
+} // namespace Experimental
+} // namespace ROOT
+
+#endif

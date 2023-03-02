@@ -1,8 +1,7 @@
-// @(#)root/eve7:$Id$
 // Author: Sergey Linev, 13.12.2018
 
 /*************************************************************************
- * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-203, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -11,6 +10,7 @@
 
 #include <ROOT/RGeomViewer.hxx>
 
+#include <ROOT/RGeomHierarchy.hxx>
 #include <ROOT/RLogger.hxx>
 #include <ROOT/RWebWindow.hxx>
 
@@ -28,6 +28,7 @@ using namespace std::string_literals;
 
 using namespace ROOT::Experimental;
 
+
 //////////////////////////////////////////////////////////////////////////////////////////////
 /// constructor
 
@@ -39,6 +40,8 @@ RGeomViewer::RGeomViewer(TGeoManager *mgr, const std::string &volname)
 
       // this is call-back, invoked when message received via websocket
       fWebWindow->SetDataCallBack([this](unsigned connid, const std::string &arg) { WebWindowCallback(connid, arg); });
+      fWebWindow->SetDisconnectCallBack([this](unsigned) { fWebHierarchy.reset(); });
+
       fWebWindow->SetGeometry(900, 700); // configure predefined window geometry
       fWebWindow->SetConnLimit(0); // allow any connections numbers at the same time
       fWebWindow->SetMaxQueueLength(30); // number of allowed entries in the window queue
@@ -218,7 +221,7 @@ void RGeomViewer::SaveImage(const std::string &fname, int width, int height)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
-/// receive data from client
+/// Process data from client
 
 void RGeomViewer::WebWindowCallback(unsigned connid, const std::string &arg)
 {
@@ -230,19 +233,11 @@ void RGeomViewer::WebWindowCallback(unsigned connid, const std::string &arg)
 
       fWebWindow->TerminateROOT();
 
-   } else if (arg.compare(0, 7, "SEARCH:") == 0) {
+   } else if (arg.compare(0, 9, "HCHANNEL:") == 0) {
 
-      std::string query = arg.substr(7);
-
-      std::string hjson, json;
-
-      /* auto nmatches = */ fDesc.SearchVisibles(query, hjson, json);
-
-      // send reply with appropriate header - NOFOUND, FOUND0:, FOUND1:
-      fWebWindow->Send(connid, hjson);
-
-      if (!json.empty())
-         fWebWindow->Send(connid, json);
+      int chid = std::stoi(arg.substr(9));
+      fWebHierarchy = std::make_shared<RGeomHierarchy>(fDesc);
+      fWebHierarchy->Show({ fWebWindow, chid });
 
    } else if (arg.compare(0, 4, "GET:") == 0) {
       // provide exact shape
@@ -327,14 +322,6 @@ void RGeomViewer::WebWindowCallback(unsigned connid, const std::string &arg)
             SendGeometry(connid);
          }
       }
-   } else if (arg.compare(0,6, "BRREQ:") == 0) {
-
-      // central place for processing browser requests
-
-      if (!fDesc.IsBuild()) fDesc.Build(fGeoManager);
-
-      auto json = fDesc.ProcessBrowserRequest(arg.substr(6));
-      if (json.length() > 0) fWebWindow->Send(connid, json);
    } else if (arg.compare(0,6, "IMAGE:") == 0) {
       auto separ = arg.find("::",6);
       if (separ == std::string::npos) return;
