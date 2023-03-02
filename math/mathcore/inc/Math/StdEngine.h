@@ -103,7 +103,8 @@ namespace ROOT {
             return StdEngineType<Generator>::Name();
          }
 
-         static uint64_t MaxInt() { return Generator::max(); }
+         static constexpr uint64_t MinInt() { return Generator::min(); }
+         static constexpr uint64_t MaxInt() { return Generator::max(); }
 
 
       private:

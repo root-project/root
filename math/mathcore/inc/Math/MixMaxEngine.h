@@ -19,6 +19,7 @@
 #include "Math/TRandomEngine.h"
 
 
+
 // struct rng_state_st;    /// forward declare generator state
 
 // typedef struct rng_state_st rng_state_t;
@@ -99,7 +100,7 @@ http://dx.doi.org/10.1016/j.chaos.2016.05.003
 */
 
       template<int N, int SkipNumber>
-      class MixMaxEngine : public TRandomEngine {
+      class MixMaxEngine final : public TRandomEngine {
 
       public:
 
@@ -113,6 +114,9 @@ http://dx.doi.org/10.1016/j.chaos.2016.05.003
 #endif
          typedef uint64_t Result_t;
 
+          // number of random bits generated
+          static constexpr uint32_t kNumberOfBits = 61;
+
 
          MixMaxEngine(uint64_t seed=1);
 
@@ -123,10 +127,10 @@ http://dx.doi.org/10.1016/j.chaos.2016.05.003
          static int Size();
 
          /// maximum integer that can be generated. For MIXMAX is 2^61-1
-         static uint64_t MaxInt();
+         static constexpr uint64_t MaxInt() { return  2305843009213693951ULL;}
 
          /// minimum integer that can be generated. For MIXMAX is 0
-         static uint64_t MinInt();
+         static constexpr uint64_t MinInt() { return 0;}
 
          /// set the generator seed
          void  SetSeed(Result_t seed);

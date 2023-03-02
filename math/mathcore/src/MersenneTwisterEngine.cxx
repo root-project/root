@@ -35,7 +35,13 @@ namespace Math {
 
    /// generate a random double number 
    double MersenneTwisterEngine::Rndm_impl() {
+      auto  y = IntRndm_impl();
+      // 2.3283064365386963e-10 == 1./(max<UINt_t>+1)  -> then returned value cannot be = 1.0
+      if (y) return ( (double) y * 2.3283064365386963e-10); // * Power(2,-32)
+      return Rndm_impl();
+  }
 
+  uint32_t MersenneTwisterEngine::IntRndm_impl()  {
       
       uint32_t y;
       
@@ -71,10 +77,7 @@ namespace Math {
       y ^= ((y << 15) & kTemperingMaskC );
       y ^=  (y >> 18);
       
-      // 2.3283064365386963e-10 == 1./(max<UINt_t>+1)  -> then returned value cannot be = 1.0
-      if (y) return ( (double) y * 2.3283064365386963e-10); // * Power(2,-32)
-      return Rndm_impl();
-      
+      return y;
    }
   
    } // namespace Math
