@@ -2173,7 +2173,7 @@ void TChain::ParseTreeFilename(const char *name, TString &filename, TString &tre
       query.Form("?%s", url.GetOptions());
    // The treename can be passed as anchor
    const char *anchor = url.GetAnchor();
-   if (anchor && (strlen(anchor) > 0)) {
+   if (anchor && anchor[0] != '\0') {
       // Support "?#tree_name" and "?query#tree_name"
       // "#tree_name" (no '?' is for tar archives)
       // If the treename would contain a '=', treat the anchor as part of the query instead. This makes sure
