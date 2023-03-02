@@ -1521,6 +1521,31 @@ std::unique_ptr<RGeomNodeInfo> RGeomDescription::MakeNodeInfo(const std::vector<
 }
 
 /////////////////////////////////////////////////////////////////////////////////
+/// Select top node by path
+/// Used by the client to change active node
+/// Returns true if selected node was changed
+
+bool RGeomDescription::SelectTop(const std::vector<std::string> &path)
+{
+   RGeomBrowserIter iter(*this);
+
+   if (!iter.Navigate(path))
+      return false;
+
+   int nodeid = iter.GetNodeId();
+
+   if (nodeid == fSelectedNodeId)
+      return false;
+
+   fSelectedNodeId = nodeid;
+
+   ClearDrawData();
+
+   return true;
+}
+
+
+/////////////////////////////////////////////////////////////////////////////////
 /// Change configuration by client
 /// Returns true if any parameter was really changed
 
@@ -1541,8 +1566,3 @@ bool RGeomDescription::ChangeConfiguration(const std::string &json)
 
    return true;
 }
-
-
-
-
-
