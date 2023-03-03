@@ -462,6 +462,21 @@ public:
    */
    bool ApplyWeightCorrection(const ROOT::Math::IMultiGenFunction & loglw2, bool minimizeW2L=false);
 
+   /// Set number of fit points when using an external FCN function
+   /// This function can be called after Fit to set the correct number of Ndf in FitResult
+   void SetNumberOfFitPoints(unsigned int npoints) {
+      if (fExtObjFunction) fDataSize = npoints;
+      if (!fResult->IsEmpty()) fResult->SetChi2AndNdf(-1,npoints);
+   }
+
+   /// Set the type of fit when using an external FCN
+   /// possible types are : 1 (least-square), 2 (unbinned-likelihood), 3 (binned-likelihood)
+   /// Note that in case of binned likelihood fit the chi2 will be computed as 2 * MinFCN()
+   /// Note this function should be called before fitting to have effect on th FitResult
+   void SetFitType(int type) {
+      if (fExtObjFunction) fFitType = type;
+   }
+
 
 protected:
 
@@ -533,7 +548,7 @@ private:
                             ///< in case of false the fit is unbinned or undefined)
                             ///< flag it is used to compute chi2 for binned likelihood fit
 
-   int fFitType = 0;   ///< type of fit   (0 undefined, 1 least square, 2 likelihood)
+   int fFitType = 0;   ///< type of fit   (0 undefined, 1 least square, 2 likelihood, 3 binned likelihood)
 
    int fDataSize = 0;  ///< size of data sets (need for Fumili or LM fitters)
 

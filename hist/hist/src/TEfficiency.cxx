@@ -2371,7 +2371,7 @@ Int_t TEfficiency::FindFixBin(Double_t x,Double_t y,Double_t z) const
    return GetGlobalBin(nx,ny,nz);
 }
 
-////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 /// Fits the efficiency using the TBinomialEfficiencyFitter class
 ///
 /// The resulting fit function is added to the list of associated functions.
@@ -2379,12 +2379,13 @@ Int_t TEfficiency::FindFixBin(Double_t x,Double_t y,Double_t z) const
 /// Options:
 /// - "+": previous fitted functions in the list are kept, by default
 ///   all functions in the list are deleted
+/// - "N": do not store fitted function
 /// - for more fitting options see TBinomialEfficiencyFitter::Fit
 
 TFitResultPtr TEfficiency::Fit(TF1* f1,Option_t* opt)
 {
    TString option = opt;
-   option.ToLower();
+   option.ToUpper();
 
    //replace existing functions in list with same name
    Bool_t bDeleteOld = true;
@@ -2398,24 +2399,26 @@ TFitResultPtr TEfficiency::Fit(TF1* f1,Option_t* opt)
    TFitResultPtr result = Fitter.Fit(f1,option.Data());
 
    //create copy which is appended to the list
-   TF1* pFunc = new TF1(*f1);
+   if (!option.Contains("N")) { // option "N" is not store fit function
+      TF1* pFunc = (TF1*)f1->IsA()->New();
+      f1->Copy(*pFunc);
 
-   if(bDeleteOld) {
-      TIter next(fFunctions);
-      TObject* obj = 0;
-      while((obj = next())) {
-         if(obj->InheritsFrom(TF1::Class())) {
-            fFunctions->Remove(obj);
-            delete obj;
+      if(bDeleteOld) {
+         TIter next(fFunctions);
+         TObject* obj = 0;
+         while((obj = next())) {
+            if(obj->InheritsFrom(TF1::Class())) {
+               fFunctions->Remove(obj);
+               delete obj;
+            }
          }
       }
+      // create list if necessary
+      if(!fFunctions)
+         fFunctions = new TList();
+
+      fFunctions->Add(pFunc);
    }
-
-   // create list if necessary
-   if(!fFunctions)
-      fFunctions = new TList();
-
-   fFunctions->Add(pFunc);
 
    return result;
 }
