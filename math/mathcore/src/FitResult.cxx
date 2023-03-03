@@ -98,7 +98,7 @@ FitResult::FitResult(const FitConfig & fconfig) :
 }
 
 void FitResult::FillResult(const std::shared_ptr<ROOT::Math::Minimizer> & min, const FitConfig & fconfig, const std::shared_ptr<IModelFunction> & func,
-                     bool isValid,  unsigned int sizeOfData, bool binnedFit, const  ROOT::Math::IMultiGenFunction * chi2func, unsigned int ncalls )
+                     bool isValid,  unsigned int sizeOfData, int fitType, const  ROOT::Math::IMultiGenFunction * chi2func, unsigned int ncalls )
 {
    // Fill the FitResult after minimization using result from Minimizers
 
@@ -176,7 +176,7 @@ void FitResult::FillResult(const std::shared_ptr<ROOT::Math::Minimizer> & min, c
    }
 
    // if flag is binned compute a chi2 when a chi2 function is given
-   if (binnedFit) {
+   if (fitType == 1) {
       if (chi2func == 0)
          fChi2 = fVal;
       else {
@@ -184,6 +184,10 @@ void FitResult::FillResult(const std::shared_ptr<ROOT::Math::Minimizer> & min, c
          // NB: empty bins are considered
          fChi2 = (*chi2func)(&fParams[0]);
       }
+   }
+   else if (fitType == 3) {
+      // case of binned likelihood fits (use Baker-Cousins chi2)
+      fChi2 = 2 * fVal;
    }
 
    // fill error matrix
@@ -235,7 +239,6 @@ bool FitResult::Update(const std::shared_ptr<ROOT::Math::Minimizer> & min, const
       MATH_ERROR_MSG("FitResult::Update","Invalid minimizer status ");
       return false;
    }
-   //fNFree = min->NFree();
    if (fNFree != min->NFree() ) {
       MATH_ERROR_MSG("FitResult::Update","Configuration has changed ");
       return false;
@@ -305,6 +308,14 @@ void FitResult::NormalizeErrors() {
    fNormalized = true;
 }
 
+void FitResult::SetChi2AndNdf(double chi2, unsigned int npoints) {
+   if (chi2 >= 0)
+      fChi2 = chi2;
+   if (npoints > fNFree )
+      fNdf = npoints - fNFree;
+   else
+      fNdf = 0;
+}
 
 double FitResult::Prob() const {
    // fit probability
@@ -383,7 +394,7 @@ void FitResult::Print(std::ostream & os, bool doCovMatrix) const {
       os << "<Empty FitResult>\n";
       return;
    }
-   os << "\n****************************************\n";
+   os << "****************************************\n";
    if (!fValid) {
       if (fStatus != gInitialResultStatus) {
          os << "         Invalid FitResult";

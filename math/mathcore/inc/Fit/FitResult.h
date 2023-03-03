@@ -76,7 +76,7 @@ public:
       Run also Minos if requested from the configuration
     */
    void FillResult(const std::shared_ptr<ROOT::Math::Minimizer> & min, const FitConfig & fconfig,  const std::shared_ptr<IModelFunction> & f,
-              bool isValid, unsigned int sizeOfData = 0, bool binFit = true, const ROOT::Math::IMultiGenFunction *chi2func = nullptr, unsigned int ncalls = 0);
+              bool isValid, unsigned int sizeOfData = 0, int fitType = 1, const ROOT::Math::IMultiGenFunction *chi2func = nullptr, unsigned int ncalls = 0);
 
 
    /**
@@ -187,6 +187,12 @@ public:
 
    /// set the Minos errors for parameter i (called by the Fitter class when running Minos)
    void SetMinosError(unsigned int i, double elow, double eup);
+
+   /// Set the chi2 and the ndf
+   /// This function should be called when using an external FCN for fitting
+   /// and one provides the chi2 and the number of fitting data points) to store
+   /// and have them printed in the FitResult class
+   void SetChi2AndNdf(double chi2, unsigned int npoints);
 
    /// query if parameter i has the Minos error
    bool HasMinosError(unsigned int i) const;

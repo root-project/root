@@ -803,7 +803,7 @@ bool Fitter::DoMinimization(const ROOT::Math::IMultiGenFunction * chi2func) {
 
    if (!fResult) fResult = std::make_shared<FitResult>();
 
-   fResult->FillResult(fMinimizer,fConfig, fFunc, isValid, fDataSize, fBinFit, chi2func );
+   fResult->FillResult(fMinimizer,fConfig, fFunc, isValid, fDataSize, fFitType, chi2func );
 
    // if requested run Minos after minimization
    if (isValid && fConfig.MinosErrors()) {
