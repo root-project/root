@@ -7079,7 +7079,13 @@ Int_t THistPainter::PaintInit()
       }
       if (Hparam.xlowedge <=0 ) {
          if (Hoption.Same) {
-            Hparam.xlowedge = TMath::Power(10, gPad->GetUxmin());
+            TH1 *h1;
+            TIter next(gPad->GetListOfPrimitives());
+            while ((h1 = (TH1 *)next())) {
+               if (!h1->InheritsFrom(TH1::Class())) continue;
+               Hparam.xlowedge = h1->GetXaxis()->GetBinLowEdge(h1->GetXaxis()->GetFirst());
+               break;
+            }
          } else {
             for (i=first; i<=last; i++) {
                Double_t binLow = fXaxis->GetBinLowEdge(i);
