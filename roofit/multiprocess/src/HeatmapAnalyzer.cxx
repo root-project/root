@@ -44,7 +44,7 @@ namespace MultiProcess {
 /// \param[in] logs_dir Directory where log files are stored in the format
 ///                     outputted by RooFit::MultiProcess::ProcessTimer.
 ///                     There can be other files in this directory as well.
-HeatmapAnalyzer::HeatmapAnalyzer(std::string const& logs_dir)
+HeatmapAnalyzer::HeatmapAnalyzer(std::string const &logs_dir)
 {
    TSystemDirectory dir(logs_dir.c_str(), logs_dir.c_str());
    TList *duration_files = dir.GetListOfFiles();
@@ -96,13 +96,14 @@ std::unique_ptr<TH2I> HeatmapAnalyzer::analyze(int analyzed_gradient)
    int gradient_start_t = gradients_["master:gradient"][analyzed_gradient * 2 - 2];
    int gradient_end_t = gradients_["master:gradient"][analyzed_gradient * 2 - 1];
 
-
-   std::unique_ptr<TH2I> total_matrix = std::make_unique<TH2I>("heatmap", "", eval_partitions_names_.size(), 0, 1, tasks_names_.size(), 0, 1);
+   std::unique_ptr<TH2I> total_matrix =
+      std::make_unique<TH2I>("heatmap", "", eval_partitions_names_.size(), 0, 1, tasks_names_.size(), 0, 1);
 
    // loop over all logfiles stored in durations_
    for (json &durations_json : durations_) {
       // partial heatmap is the heatmap that will be filled in for the current durations logfile
-      std::unique_ptr<TH2I> partial_matrix = std::make_unique<TH2I>("partial_heatmap", "", eval_partitions_names_.size(), 0, 1, tasks_names_.size(), 0, 1);
+      std::unique_ptr<TH2I> partial_matrix =
+         std::make_unique<TH2I>("partial_heatmap", "", eval_partitions_names_.size(), 0, 1, tasks_names_.size(), 0, 1);
 
       // remove unnecessary components (those that are out of range)
       for (auto &&el : durations_json.items()) {
@@ -135,8 +136,8 @@ std::unique_ptr<TH2I> HeatmapAnalyzer::analyze(int analyzed_gradient)
                find(eval_partitions_names_.begin(), eval_partitions_names_.end(), eval_partition_name) -
                eval_partitions_names_.begin() + 1;
             partial_matrix->SetBinContent(eval_partitions_idx, tasks_idx,
-                                         durations_json[eval_partition_name][idx + 1].get<int>() -
-                                            durations_json[eval_partition_name][idx].get<int>());
+                                          durations_json[eval_partition_name][idx + 1].get<int>() -
+                                             durations_json[eval_partition_name][idx].get<int>());
          }
       }
       // add all partial matrices to form one matrix with entire gradient evaluation information
