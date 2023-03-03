@@ -2373,7 +2373,8 @@ TFitResultPtr TEfficiency::Fit(TF1* f1,Option_t* opt)
    TFitResultPtr result = Fitter.Fit(f1,option.Data());
 
    //create copy which is appended to the list
-   TF1* pFunc = new TF1(*f1);
+   auto pFunc = static_cast<TF1*>(f1->IsA()->New());
+   f1->Copy(*pFunc);
 
    if(bDeleteOld) {
       TIter next(fFunctions);
