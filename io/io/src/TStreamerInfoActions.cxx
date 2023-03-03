@@ -237,7 +237,9 @@ namespace TStreamerInfoActions
       UInt_t *x = (UInt_t*)( ((char*)addr) + config->fOffset );
       // Idea: Implement buf.ReadBasic/Primitive to avoid the return value
       // Idea: This code really belongs inside TBuffer[File]
+      const UInt_t isonheap = *x & TObject::kIsOnHeap; // Record how this instance was actually allocated.
       buf >> *x;
+      *x |= isonheap | TObject::kNotDeleted;  // by definition de-serialized object are not yet deleted.
 
       if ((*x & kIsReferenced) != 0) {
          HandleReferencedTObject(buf,addr,config);
