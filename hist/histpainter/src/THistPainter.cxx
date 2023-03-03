@@ -7079,12 +7079,20 @@ Int_t THistPainter::PaintInit()
       }
       if (Hparam.xlowedge <=0 ) {
          if (Hoption.Same) {
-            TH1 *h1;
+            TH1* h1 = nullptr;
+            TObject *obj;
             TIter next(gPad->GetListOfPrimitives());
-            while ((h1 = (TH1 *)next())) {
-               if (!h1->InheritsFrom(TH1::Class())) continue;
+            while ((obj = (TObject *)next())) {
+               if (obj->InheritsFrom(TH1::Class()))         { h1 = (TH1*)(obj)                          ; break; }
+               if (obj->InheritsFrom(THStack::Class()))     { h1 = ((THStack*)(obj))->GetHistogram()    ; break; }
+               if (obj->InheritsFrom(TGraph::Class()))      { h1 = ((TGraph*)(obj))->GetHistogram()     ; break; }
+               if (obj->InheritsFrom(TMultiGraph::Class())) { h1 = ((TMultiGraph*)(obj))->GetHistogram(); break; }
+            }
+            if (h1) {
                Hparam.xlowedge = h1->GetXaxis()->GetBinLowEdge(h1->GetXaxis()->GetFirst());
-               break;
+            } else {
+               Error(where, "undefined user's coordinates. Cannot use option SAME");
+               return 0;
             }
          } else {
             for (i=first; i<=last; i++) {
