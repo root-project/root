@@ -14,6 +14,7 @@
 #include "TDirectory.h"
 #include "TF1.h"
 #include "TGraphAsymmErrors.h"
+#include "TGraph2DAsymmErrors.h"
 #include "TH1.h"
 #include "TH2.h"
 #include "TH3.h"
@@ -1623,7 +1624,6 @@ TGraphAsymmErrors * TEfficiency::CreateGraph(Option_t * opt) const
       return 0;
    }
 
-
    Int_t npoints = fTotalHistogram->GetNbinsX();
    TGraphAsymmErrors * graph = new TGraphAsymmErrors(npoints);
    graph->SetName("eff_graph");
@@ -1632,7 +1632,128 @@ TGraphAsymmErrors * TEfficiency::CreateGraph(Option_t * opt) const
    return graph;
 }
 
+///////////////////////////////////////////////////////////////////////////////
+/// Create the graph used be painted (for dim=1 TEfficiency)
+/// The return object is managed by the caller
 
+TGraph2DAsymmErrors * TEfficiency::CreateGraph2D(Option_t * opt) const
+{
+   if (GetDimension() != 2) {
+      Error("CreatePaintingGraph","Call this function only for dimension == 2");
+      return 0;
+   }
+
+   Int_t npoints = fTotalHistogram->GetNbinsX()*fTotalHistogram->GetNbinsY();
+   TGraph2DAsymmErrors * graph = new TGraph2DAsymmErrors(npoints);
+   graph->SetName("eff_graph");
+   FillGraph2D(graph,opt);
+
+   return graph;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Fill the graph to be painted with information from TEfficiency
+/// Internal method called by TEfficiency::Paint or TEfficiency::CreateGraph
+
+void TEfficiency::FillGraph2D(TGraph2DAsymmErrors * graph, Option_t * opt) const
+{
+   TString option = opt;
+   option.ToLower();
+
+   Bool_t plot0Bins = false;
+   if (option.Contains("e0") ) plot0Bins = true;
+
+   //point i corresponds to bin i+1 in histogram
+   // point j is point graph index
+   // LM: cannot use TGraph::SetPoint because it deletes the underlying
+   // histogram  each time (see TGraph::SetPoint)
+   // so use it only when extra points are added to the graph
+   int ipoint = 0;
+   double * px = graph->GetX();
+   double * py = graph->GetY();
+   double * pz = graph->GetZ();
+   double * exl = graph->GetEXlow();
+   double * exh = graph->GetEXhigh();
+   double * eyl = graph->GetEYlow();
+   double * eyh = graph->GetEYhigh();
+   double * ezl = graph->GetEZlow();
+   double * ezh = graph->GetEZhigh();
+   for (int i = 0; i < fTotalHistogram->GetNbinsX(); ++i) {
+      double x = fTotalHistogram->GetXaxis()->GetBinCenter(i+1);
+      double xlow = fTotalHistogram->GetXaxis()->GetBinCenter(i+1) - fTotalHistogram->GetXaxis()->GetBinLowEdge(i+1);
+      double xup = fTotalHistogram->GetXaxis()->GetBinWidth(i+1) - xlow;
+      for (int j = 0; j < fTotalHistogram->GetNbinsY(); ++j) {
+         if (!plot0Bins && fTotalHistogram->GetBinContent(i+1,j+1) == 0 )
+            continue;
+         double y = fTotalHistogram->GetYaxis()->GetBinCenter(j+1);
+         double ylow = fTotalHistogram->GetYaxis()->GetBinCenter(j+1) - fTotalHistogram->GetYaxis()->GetBinLowEdge(j+1);
+         double yup = fTotalHistogram->GetYaxis()->GetBinWidth(j+1) - ylow;
+
+         int ibin = GetGlobalBin(i+1,j+1);
+         double z = GetEfficiency(ibin);
+         double zlow = GetEfficiencyErrorLow(ibin);
+         double zup = GetEfficiencyErrorUp(ibin);
+         // in the case the graph already existed and extra points have been added
+         if (ipoint >= graph->GetN() ) {
+            graph->SetPoint(ipoint,x,y,z);
+            graph->SetPointError(ipoint,xlow,xup,ylow,yup,zlow,zup);
+         }
+         else {
+            px[ipoint] = x;
+            py[ipoint] = y;
+            pz[ipoint] = z;
+            exl[ipoint] = xlow;
+            exh[ipoint] = xup;
+            eyl[ipoint] = ylow;
+            eyh[ipoint] = yup;
+            ezl[ipoint] = zlow;
+            ezh[ipoint] = zup;
+         }
+         ipoint++;
+      }
+   }
+
+   // tell the graph the effective number of points
+   graph->Set(ipoint);
+   //refresh title before painting if changed
+   TString oldTitle = graph->GetTitle();
+   TString newTitle = GetTitle();
+   if (oldTitle != newTitle ) {
+      graph->SetTitle(newTitle);
+   }
+
+   // set the axis labels
+   TString xlabel = fTotalHistogram->GetXaxis()->GetTitle();
+   TString ylabel = fTotalHistogram->GetYaxis()->GetTitle();
+   TString zlabel = fTotalHistogram->GetZaxis()->GetTitle();
+   if (xlabel) graph->GetXaxis()->SetTitle(xlabel);
+   if (ylabel) graph->GetYaxis()->SetTitle(ylabel);
+   if (zlabel) graph->GetZaxis()->SetTitle(zlabel);
+
+   //copying style information
+   TAttLine::Copy(*graph);
+   TAttFill::Copy(*graph);
+   TAttMarker::Copy(*graph);
+
+   // copy axis bin labels if existing. Assume are there in the total histogram
+   if (fTotalHistogram->GetXaxis()->GetLabels() != nullptr) {
+      for (int ibin = 1; ibin <= fTotalHistogram->GetXaxis()->GetNbins(); ++ibin) {
+         // we need to fnd the right bin for the Histogram representing the xaxis of the graph
+         int grbin = graph->GetXaxis()->FindFixBin(fTotalHistogram->GetXaxis()->GetBinCenter(ibin));
+         graph->GetXaxis()->SetBinLabel(grbin, fTotalHistogram->GetXaxis()->GetBinLabel(ibin));
+      }
+   }
+   if (fTotalHistogram->GetYaxis()->GetLabels() != nullptr) {
+      for (int ibin = 1; ibin <= fTotalHistogram->GetYaxis()->GetNbins(); ++ibin) {
+         // we need to fnd the right bin for the Histogram representing the xaxis of the graph
+         int grbin = graph->GetYaxis()->FindFixBin(fTotalHistogram->GetYaxis()->GetBinCenter(ibin));
+         graph->GetYaxis()->SetBinLabel(grbin, fTotalHistogram->GetYaxis()->GetBinLabel(ibin));
+      }
+   }
+   // this method forces the graph to compute correctly the axis
+   // according to the given points
+   graph->GetHistogram();
+}
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill the graph to be painted with information from TEfficiency
 /// Internal method called by TEfficiency::Paint or TEfficiency::CreateGraph
@@ -2230,7 +2351,9 @@ Int_t TEfficiency::DistancetoPrimitive(Int_t px, Int_t py)
 /// \param[in] opt
 ///  - 1-dimensional case: same options as TGraphAsymmErrors::Draw()
 ///     but as default "AP" is used
-///  - 2-dimensional case: same options as TH2::Draw()
+///  - 2-dimensional case: by default use an histogram and in this case same options as TH2::Draw()
+///                        if using instad option "GRAPH" a TGraph2DAsymmErrors is used and
+///                        the same options as for TGraph2D applies
 ///  - 3-dimensional case: not yet supported
 ///
 /// Specific TEfficiency drawing options:
@@ -2379,12 +2502,13 @@ Int_t TEfficiency::FindFixBin(Double_t x,Double_t y,Double_t z) const
 /// Options:
 /// - "+": previous fitted functions in the list are kept, by default
 ///   all functions in the list are deleted
+/// - "N": do not store fitted function
 /// - for more fitting options see TBinomialEfficiencyFitter::Fit
 
 TFitResultPtr TEfficiency::Fit(TF1* f1,Option_t* opt)
 {
    TString option = opt;
-   option.ToLower();
+   option.ToUpper();
 
    //replace existing functions in list with same name
    Bool_t bDeleteOld = true;
@@ -2398,24 +2522,26 @@ TFitResultPtr TEfficiency::Fit(TF1* f1,Option_t* opt)
    TFitResultPtr result = Fitter.Fit(f1,option.Data());
 
    //create copy which is appended to the list
-   TF1* pFunc = new TF1(*f1);
+   if (!option.Contains("N")) { // option "N" is not store fit function
+      TF1* pFunc = (TF1*)f1->IsA()->New();
+      f1->Copy(*pFunc);
 
-   if(bDeleteOld) {
-      TIter next(fFunctions);
-      TObject* obj = 0;
-      while((obj = next())) {
-         if(obj->InheritsFrom(TF1::Class())) {
-            fFunctions->Remove(obj);
-            delete obj;
+      if(bDeleteOld) {
+         TIter next(fFunctions);
+         TObject* obj = 0;
+         while((obj = next())) {
+            if(obj->InheritsFrom(TF1::Class())) {
+               fFunctions->Remove(obj);
+               delete obj;
+            }
          }
       }
+      // create list if necessary
+      if(!fFunctions)
+         fFunctions = new TList();
+
+      fFunctions->Add(pFunc);
    }
-
-   // create list if necessary
-   if(!fFunctions)
-      fFunctions = new TList();
-
-   fFunctions->Add(pFunc);
 
    return result;
 }
@@ -2873,8 +2999,10 @@ TEfficiency& TEfficiency::operator=(const TEfficiency& rhs)
       //delete temporary paint objects
       delete fPaintHisto;
       delete fPaintGraph;
-      fPaintHisto = 0;
-      fPaintGraph = 0;
+      delete fPaintGraph2D;
+      fPaintHisto = nullptr;
+      fPaintGraph = nullptr;
+      fPaintGraph2D = nullptr;
 
       //copy style
       rhs.TAttLine::Copy(*this);
@@ -2910,6 +3038,9 @@ void TEfficiency::Paint(const Option_t* opt)
    if(!gPad)
       return;
 
+   TString option(opt);
+   option.ToUpper();
+
 
    //use TGraphAsymmErrors for painting
    if(GetDimension() == 1) {
@@ -2921,37 +3052,51 @@ void TEfficiency::Paint(const Option_t* opt)
          FillGraph(fPaintGraph, opt);
 
       //paint graph
-
       fPaintGraph->Paint(opt);
-
-      //paint all associated functions
-      if(fFunctions) {
-         //paint box with fit parameters
-         //the fit statistics will be painted if gStyle->SetOptFit(1) has been
-         // called by the user
+      // paint all associated functions
+      if (fFunctions) {
+         // paint box with fit parameters
+         // the fit statistics will be painted if gStyle->SetOptFit(1) has been
+         //  called by the user
          TIter next(fFunctions);
-         TObject* obj = 0;
-         while((obj = next())) {
-            if(obj->InheritsFrom(TF1::Class())) {
-               fPaintGraph->PaintStats((TF1*)obj);
-               ((TF1*)obj)->Paint("sameC");
+         TObject *obj = 0;
+         while ((obj = next())) {
+            if (obj->InheritsFrom(TF1::Class())) {
+               fPaintGraph->PaintStats((TF1 *)obj);
+               ((TF1 *)obj)->Paint("sameC");
             }
          }
       }
-
       return;
    }
-
-   //use TH2 for painting
+   //use TH2 or optionally a TGraph2DAsymmErrors for painting
    if(GetDimension() == 2) {
-      if(!fPaintHisto) {
-         fPaintHisto = CreateHistogram();
+      bool drawGraph2D = false;
+      if (option.Contains("GRAPH")) {
+         option.ReplaceAll("GRAPH","");
+         drawGraph2D = true;
       }
-      else
-         FillHistogram(fPaintHisto);
-
-      //paint histogram
-      fPaintHisto->Paint(opt);
+      if (drawGraph2D) {
+           //paint a TGraph2DAsymmErrors
+         if(!fPaintGraph2D)
+            fPaintGraph2D = CreateGraph2D(option);
+         else
+            FillGraph2D(fPaintGraph2D, option);
+         // set some sensible marker size and type
+         fPaintGraph2D->SetMarkerStyle(20);
+         fPaintGraph2D->SetMarkerSize(0.6);
+         // use PCOL Z as default option
+         if (option.IsNull()) option += "ERR PCOL Z";
+         fPaintGraph2D->Paint(option);
+      } else {
+         //paint histogram
+         if (!fPaintHisto)
+            fPaintHisto = CreateHistogram();
+         else
+            FillHistogram(fPaintHisto);
+         fPaintHisto->Paint(option);
+      }
+      // should we also paint the functions??
       return;
    }
    Warning("Paint","Painting 3D efficiency is not implemented");
