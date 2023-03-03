@@ -9,6 +9,7 @@
 
 
 if(MSVC)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -wd4624")
   set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/TClingCallbacks.cxx COMPILE_FLAGS -GR-)
   set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/TClingDiagnostics.cxx COMPILE_FLAGS -GR-)
   set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/TClingRdictModuleFileExtension.cxx COMPILE_FLAGS -GR-)
