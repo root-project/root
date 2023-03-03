@@ -48,6 +48,9 @@ target_include_directories(Dictgen PRIVATE
   ${CLING_INCLUDE_DIRS}
 )
 
+if(MSVC)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -wd4624")
+endif()
 # Register the llvm include directories after clangs. This instructs the compiler to resolve
 # headers from our builtin clang. That's an issue when we are building with bultin_llvm=Off
 # and we have installed clang headers, too.
