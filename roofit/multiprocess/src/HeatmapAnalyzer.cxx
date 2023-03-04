@@ -47,9 +47,9 @@ namespace MultiProcess {
 HeatmapAnalyzer::HeatmapAnalyzer(std::string const &logs_dir)
 {
    TSystemDirectory dir(logs_dir.c_str(), logs_dir.c_str());
-   TList *duration_files = dir.GetListOfFiles();
+   std::unique_ptr<TList> durationFiles{dir.GetListOfFiles()};
 
-   for (const auto &&file : *duration_files) {
+   for (TObject *file : *durationFiles) {
       if (std::string(file->GetName()).find("p_") == std::string::npos)
          continue;
 
@@ -81,8 +81,6 @@ HeatmapAnalyzer::HeatmapAnalyzer(std::string const &logs_dir)
    }
 
    sortTaskNames(tasks_names_);
-
-   duration_files->Delete();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
