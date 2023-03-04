@@ -676,7 +676,8 @@ public:
    /// hx["nominal"].Draw();
    /// hx["pt:down"].Draw("SAME");
    /// ~~~
-   /// The run-time of Vary does not scale linearly with the number of variations. This behaviour stems from Vary
+   /// The run-time of Vary does not scale linearly with the number of variations.
+   /// This behaviour stems from Vary
    /// booking the variations within a single event loop instead of multiple.
    template <typename F>
    RInterface<Proxied, DS_t> Vary(std::string_view colName, F &&expression, const ColumnNames_t &inputColumns,
