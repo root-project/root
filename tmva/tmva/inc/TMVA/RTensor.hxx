@@ -257,6 +257,7 @@ public:
    RTensor<Value_t, Container_t> Squeeze() const;
    RTensor<Value_t, Container_t> ExpandDims(int idx) const;
    RTensor<Value_t, Container_t> Reshape(const Shape_t &shape) const;
+   RTensor<Value_t, Container_t> Resize(const Shape_t &shape);
    RTensor<Value_t, Container_t> Slice(const Slice_t &slice);
 
    // Iterator class
@@ -483,6 +484,23 @@ inline RTensor<Value_t, Container_t> RTensor<Value_t, Container_t>::Reshape(cons
    // Create copy, replace and return
    RTensor<Value_t, Container_t> x(*this);
    x.ReshapeInplace(shape);
+   return x;
+}
+
+/// \brief Resize tensor
+/// \param[in] shape Shape vector
+/// \returns New RTensor
+/// Resize tensor into new shape
+template <typename Value_t, typename Container_t>
+inline RTensor<Value_t, Container_t> RTensor<Value_t, Container_t>::Resize(const Shape_t &shape)
+{
+   // Create new tensor with the specified shape
+   RTensor <Value_t, Container_t> x(shape, fLayout);
+   
+   // Copying contents from previous tensor
+   size_t n = (x.GetSize()>fSize) ? fSize : x.GetSize();
+   std::copy(this->GetData(), this->GetData() + n, x.GetData() );
+
    return x;
 }
 

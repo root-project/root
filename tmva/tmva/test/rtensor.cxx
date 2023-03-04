@@ -74,6 +74,36 @@ TEST(RTensor, Reshape)
    EXPECT_EQ(s3[0], 6u);
 }
 
+TEST(RTensor, Resize)
+{
+   float rtdata[3] = {0, 1, 2};
+   RTensor<float> x(rtdata, {1, 3});
+   const auto s = x.GetShape();
+   EXPECT_EQ(s.size(), 2u);
+   EXPECT_EQ(s[0], 1u);
+   EXPECT_EQ(s[1], 3u);
+
+   float count = 0;
+   for(size_t i = 0; i<3; ++i){
+         EXPECT_EQ(x(0,i), count);
+         ++count;
+   }
+
+   auto x2 = x.Resize({3, 2});
+   const auto s2 = x2.GetShape();
+   EXPECT_EQ(s2.size(), 2u);
+   EXPECT_EQ(s2[0], 3u);
+   EXPECT_EQ(s2[1], 2u);
+
+   count = -1;
+   for(size_t i = 0; i<3; ++i){
+      for(size_t j = 0; j<2; ++j){
+         count = ((i == 1 && j == 1) || (i == 2) ? 0 : count+1);
+         EXPECT_EQ(x2(i,j), count);
+      }
+   }
+}
+
 TEST(RTensor, ExpandDims)
 {
    RTensor<int> x({2, 3});
