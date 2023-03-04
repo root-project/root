@@ -2328,10 +2328,9 @@ RVec<T> Take(const RVec<T> &v, const RVec<typename RVec<T>::size_type> &i, const
    return r;
 }
 
-
 /// Return first or last `n` elements of an RVec
 ///
-/// if `n > 0` and last elements if `n < 0`.
+/// Returns first elements if `n > 0` and last elements if `n < 0`.
 ///
 /// Example code, at the ROOT prompt:
 /// ~~~{.cpp}
@@ -2364,6 +2363,47 @@ RVec<T> Take(const RVec<T> &v, const int n)
          r[k] = v[k];
    }
    return r;
+}
+
+/// Return first or last `n` elements of an RVec
+///
+/// Returns first elements if `n > 0` and last elements if `n < 0`.
+///
+/// This Take version defaults to a user-specified value
+/// `default_val` if the absolute value of `n` is
+/// greater than the size of the RVec `v`
+///
+/// Example code, at the ROOT prompt:
+/// ~~~{.cpp}
+/// using ROOT::VecOps::RVec;
+/// RVec<int> x{1,2,3,4};
+/// Take(x,-5,1)
+/// // (ROOT::VecOps::RVec<int>) { 1, 1, 2, 3, 4 }
+/// Take(x,5,20)
+/// // (ROOT::VecOps::RVec<int>) { 1, 2, 3, 4, 20 }
+/// Take(x,-1,1)
+/// // (ROOT::VecOps::RVec<int>) { 4 }
+/// Take(x,4,1)
+/// (ROOT::VecOps::RVec<int>) { 1, 2, 3, 4 }
+/// ~~~
+template <typename T>
+RVec<T> Take(const RVec<T> &v, const int n, const T default_val)
+{
+   auto size = static_cast<long>(v.size());
+   // Base case, can be handled by another overload of Take
+   if (n*n <= size*size) {
+      return Take(v, n);
+   }
+   RVec<T> temp = v;
+   // Case when n is positive and n > v.size()
+   if (n > size) {
+      temp.resize(n, default_val);
+      return temp;
+   }
+   // Case when n is negative and abs(n) > v.size()
+   size_t num_to_fill = -1*n - size;
+   ROOT::VecOps::RVec<T> fill_front(num_to_fill, default_val);
+   return Concatenate(fill_front, temp);
 }
 
 /// Return a copy of the container without the elements at the specified indices.
