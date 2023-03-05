@@ -23,7 +23,7 @@ not forced by other constraints:
 
   1. (Preferred way) Using the C++ range-based `for` or `begin()` / `end()`:
 ~~~ {.cpp}
-         for(const auto&& obj: *GetListOfPrimitives())
+         for(TObject *obj: *GetListOfPrimitives())
             obj->Write();
 ~~~
   2. Using the R__FOR_EACH macro:
