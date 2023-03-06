@@ -367,16 +367,18 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
          delete this.search_handler;
 
-         this.websocket.send("SEARCH:" + (query || ""));
+         if(query) {
+            this.websocket.send("SEARCH:" + (query || ""));
+         } else {
+            this.viewer?.paintFoundNodes(null); // remove all search results
+            this.doReload(false);
+         }
       },
 
       /** @summary when new query entered in the seach field */
       onSearch(oEvt) {
          let query = oEvt.getSource().getValue();
-         if (!query) {
-            this.viewer?.paintFoundNodes(null); // remove all search results
-            this.doReload(false);
-         } else if (!this.standalone) {
+         if (!this.standalone) {
             this.submitSearchQuery(query);
          } else if (this.viewer) {
             let lst = this.viewer.findMatchesFromDraw(node => { return node.name.indexOf(query) == 0; });

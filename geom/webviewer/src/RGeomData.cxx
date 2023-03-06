@@ -1181,6 +1181,7 @@ int RGeomDescription::SearchVisibles(const std::string &find, std::string &hjson
             found_desc.back().vis = fDesc[chldid].vis;
             found_desc.back().name = fDesc[chldid].name;
             found_desc.back().color = fDesc[chldid].color;
+            found_desc.back().material = fDesc[chldid].material;
          }
 
          auto pid = found_map[prntid];
