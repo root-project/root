@@ -60,25 +60,25 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
          this.model.assignTreeTable(t);
 
-         t.addColumn(new tableColumn({
-            label: "Description",
-            tooltip: "Name of geometry nodes",
+         t.addColumn(new tableColumn('columnName', {
+            label: 'Description',
+            tooltip: 'Name of geometry nodes',
             template: new mText({text: "{name}", wrapping: false})
          }));
 
          if (args.show_columns) {
             //new mCheckBox({ enabled: true, visible: true, selected: "{node_visible}", select: vis_selected_handler }),
             t.setColumnHeaderVisible(true);
-            t.addColumn(new tableColumn({
-               label: "Color",
-               tooltip: "Color of geometry volumes",
-               width: "2rem",
+            t.addColumn(new tableColumn('columnColor', {
+               label: 'Color',
+               tooltip: 'Color of geometry volumes',
+               width: '2rem',
                template: new GeomColorBox({color: "{_elem/color}", visible: "{= !!${_elem/color}}"})
             }));
-            t.addColumn(new tableColumn({
-               label: "Material",
-               tooltip: "Material of the volumes",
-               width: "6rem",
+            t.addColumn(new tableColumn('columnMaterial', {
+               label: 'Material',
+               tooltip: 'Material of the volumes',
+               width: '6rem',
                template: new mText({text: "{_elem/material}", wrapping: false})
             }));
          }
@@ -236,7 +236,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             this.modifyDescription(msg);
             break;
          default:
-            console.error('Non recognized msg ' + mhdr + ' len=' + msg.length);
+            console.error(`Non recognized msg ${mhdr} len=${msg.length}`);
          }
       },
 
@@ -376,8 +376,8 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       },
 
       /** @summary when new query entered in the seach field */
-      onSearch(oEvt) {
-         let query = oEvt.getSource().getValue();
+      onSearch(oEvt, direct) {
+         let query = (typeof oEvt == 'string' && direct) ? oEvt : oEvt.getSource().getValue();
          if (!this.standalone) {
             this.submitSearchQuery(query);
          } else if (this.viewer) {
@@ -440,6 +440,21 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                } else {
                   this.viewer?.sendViewerRequest('SETTOP', { path: prop.path });
                }
+            }
+         }));
+
+         let colid = oEvent.getParameter('columnId');
+
+         this._oIdContextMenu.addItem(new MenuItem({
+            text: 'Search for',
+            select: () => {
+               let value = prop._elem.name;
+               if ((colid == 'columnMaterial') && prop._elem.material)
+                  value = 'm:' + prop._elem.material;
+               else if ((colid == 'columnColor') && prop._elem.color)
+                  value = 'c:' + prop._elem.color;
+               this.byId('searchNode').setValue(value);
+               this.onSearch(value, true); // trigger search directly
             }
          }));
 

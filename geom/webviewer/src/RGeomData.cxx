@@ -41,6 +41,7 @@
 #include "TGeoBoolNode.h"
 #include "TBuffer3D.h"
 #include "TBufferJSON.h"
+#include "TRegexp.h"
 
 #include <algorithm>
 
@@ -1236,13 +1237,24 @@ int RGeomDescription::SearchVisibles(const std::string &find, std::string &hjson
    std::vector<int> nodescnt(fDesc.size(), 0), viscnt(fDesc.size(), 0);
 
    int nmatches = 0;
+   std::string test = find;
+   int kind = 0;
+   if (test.compare(0,2,"c:") == 0) {
+      test.erase(0,2);
+      kind = 1;
+   } else if (test.compare(0,2,"m:") == 0) {
+      test.erase(0,2);
+      kind = 2;
+   }
 
-   auto match_func = [&find](RGeomNode &node) {
-      return (node.vol > 0) && (node.name.compare(0, find.length(), find) == 0);
+   TRegexp regexp(test.c_str());
+
+   auto match_func = [&regexp,kind](RGeomNode &node) {
+      return (node.vol > 0) && (TString(node.GetArg(kind)).Index(regexp) >= 0);
    };
 
    // first count how many times each individual node appears
-   ScanNodes(false, 0, [&nodescnt,&viscnt,&match_func,&nmatches](RGeomNode &node, std::vector<int> &, bool is_vis, int) {
+   ScanNodes(false, 0, [&nodescnt, &viscnt, &match_func, &nmatches](RGeomNode &node, std::vector<int> &, bool is_vis, int) {
 
       if (match_func(node)) {
          nmatches++;
