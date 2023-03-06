@@ -24,6 +24,7 @@
 #include <cstring>
 #include <iostream>
 #include <algorithm>
+#include <deque>
 
 void ROOT::Experimental::RNTupleInspector::CollectNTupleData()
 {
@@ -85,28 +86,24 @@ void ROOT::Experimental::RNTupleInspector::CollectColumnData()
 std::vector<ROOT::Experimental::DescriptorId_t>
 ROOT::Experimental::RNTupleInspector::GetColumnsForField(ROOT::Experimental::DescriptorId_t fieldId)
 {
-   const RFieldDescriptor &fieldDescriptor = fDescriptor->GetFieldDescriptor(fieldId);
    std::vector<ROOT::Experimental::DescriptorId_t> colIds;
+   std::deque<ROOT::Experimental::DescriptorId_t> fieldIdQueue{fieldId};
 
-   switch (fieldDescriptor.GetStructure()) {
-   case kLeaf:
-      for (const auto &col : fDescriptor->GetColumnIterable(fieldDescriptor)) {
+   while (!fieldIdQueue.empty()) {
+      auto currId = fieldIdQueue.front();
+      fieldIdQueue.pop_front();
+
+      for (const auto &col : fDescriptor->GetColumnIterable(currId)) {
+         if (col.IsAliasColumn()) {
+            continue;
+         }
+
          colIds.emplace_back(col.GetPhysicalId());
       }
-      break;
-   case kCollection:
-      for (const auto &col : fDescriptor->GetColumnIterable(fieldDescriptor)) {
-         colIds.emplace_back(col.GetPhysicalId());
+
+      for (const auto &fld : fDescriptor->GetFieldIterable(currId)) {
+         fieldIdQueue.push_back(fld.GetId());
       }
-   case kRecord:
-      for (const auto &fld : fDescriptor->GetFieldIterable(fieldId)) {
-         auto rColIds = GetColumnsForField(fld.GetId());
-         colIds.insert(colIds.end(), rColIds.begin(), rColIds.end());
-      }
-      break;
-   default:
-      // TODO fdegeus
-      std::cerr << "structure type " << fieldDescriptor.GetStructure() << " not supported yet" << std::endl;
    }
 
    return colIds;
