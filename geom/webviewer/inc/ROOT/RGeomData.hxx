@@ -253,6 +253,10 @@ class RGeomDescription {
 
    ShapeDescr &MakeShapeDescr(TGeoShape *shape);
 
+   int GetUsedNSegments(int min = 20);
+
+   int CountShapeFaces(TGeoShape *shape);
+
    void CopyMaterialProperties(TGeoVolume *vol, RGeomNode &node);
 
    void CollectNodes(RGeomDrawing &drawing, bool all_nodes = false);
