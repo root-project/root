@@ -398,11 +398,11 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          let tt = this.byId("treeTable"),
              first = tt.getFirstVisibleRow() || 0,
              rowindx = oEvent.getParameters().rowIndex - first,
-             row = (rowindx >=0) ? tt.getRows()[rowindx] : null,
-             ctxt = row ? row.getBindingContext() : null,
-             prop = ctxt ? ctxt.getProperty(ctxt.getPath()) : null;
+             row = (rowindx >= 0) ? tt.getRows()[rowindx] : null,
+             ctxt = row?.getBindingContext(),
+             prop = ctxt?.getProperty(ctxt.getPath());
 
-         if(prop && this.isInfoPageActive())
+         if(prop && this.viewer?.isInfoPageActive())
             if (this.standalone) {
                this.viewer?.processInfoOffline(prop.path, prop.id);
             } else {

@@ -449,7 +449,7 @@ void RGeomDescription::BuildDescription(TGeoNode *topnode, TGeoVolume *topvolume
 
       auto shape = dynamic_cast<TGeoBBox *>(vol->GetShape());
       if (shape) {
-         desc.vol = shape->GetDX() * shape->GetDY() * shape->GetDZ();
+         desc.vol = TMath::Sqrt(shape->GetDX()*shape->GetDX() + shape->GetDY()*shape->GetDY() + shape->GetDZ()*shape->GetDZ());
          desc.nfaces = CountShapeFaces(shape);
       }
 
@@ -954,7 +954,6 @@ RGeomDescription::ShapeDescr &RGeomDescription::MakeShapeDescr(TGeoShape *shape)
          if (old_nsegm > 0 && gGeoManager)
             gGeoManager->SetNsegments(old_nsegm);
 
-
          Int_t num_vertices = mesh->NumberOfVertices(), num_polynoms = 0;
 
          for (unsigned polyIndex = 0; polyIndex < mesh->NumberOfPolys(); ++polyIndex) {
@@ -1193,6 +1192,15 @@ void RGeomDescription::ProduceDrawData()
 void RGeomDescription::ClearDrawData()
 {
    fDrawJson.clear();
+}
+
+/////////////////////////////////////////////////////////////////////
+/// Clear cached data.
+
+void RGeomDescription::ClearCache()
+{
+   ClearDrawData();
+   fShapes.clear();
 }
 
 /////////////////////////////////////////////////////////////////////
