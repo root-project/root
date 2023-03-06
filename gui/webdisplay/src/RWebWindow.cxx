@@ -78,8 +78,12 @@ RWebWindow::~RWebWindow()
 {
    StopThread();
 
-   if (fMaster)
+   if (fMaster) {
       fMaster->RemoveEmbedWindow(fMasterConnId, fMasterChannel);
+      fMaster.reset();
+      fMasterConnId = 0;
+      fMasterChannel = -1;
+   }
 
    if (fWSHandler)
       fWSHandler->SetDisabled();
@@ -98,8 +102,12 @@ RWebWindow::~RWebWindow()
 
       for (auto &conn : lst) {
          conn->fActive = false;
-         for (auto &elem: conn->fEmbed)
+         for (auto &elem: conn->fEmbed) {
             elem.second->fMaster.reset();
+            elem.second->fMasterConnId = 0;
+            elem.second->fMasterChannel = -1;
+         }
+         conn->fEmbed.clear();
       }
 
       fMgr->Unregister(*this);
@@ -300,9 +308,14 @@ std::shared_ptr<RWebWindow::WebConn> RWebWindow::RemoveConnection(unsigned wsid)
          }
    }
 
-   if (res)
-      for (auto &elem: res->fEmbed)
+   if (res) {
+      for (auto &elem: res->fEmbed) {
          elem.second->fMaster.reset();
+         elem.second->fMasterConnId = 0;
+         elem.second->fMasterChannel = -1;
+      }
+      res->fEmbed.clear();
+   }
 
    return res;
 }
@@ -1530,7 +1543,7 @@ unsigned RWebWindow::AddEmbedWindow(std::shared_ptr<RWebWindow> window, int chan
       return 0;
 
    // check if channel already occupied
-   if (arr[0]->fEmbed.find(channel) != arr[0]->fEmbed.end())
+   if (arr[0]->fEmbed.find(channel) != arr[0]->fEmbed.end()) 
       return 0;
 
    arr[0]->fEmbed[channel] = window;
@@ -1539,7 +1552,7 @@ unsigned RWebWindow::AddEmbedWindow(std::shared_ptr<RWebWindow> window, int chan
 }
 
 /////////////////////////////////////////////////////////////////////////////////
-/// Remove RWebWindow associated with the channel
+/// Remove RWebWindow associated with the channelfEmbed
 
 void RWebWindow::RemoveEmbedWindow(unsigned connid, int channel)
 {
