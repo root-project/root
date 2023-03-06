@@ -1039,6 +1039,16 @@ else()
   set(netx OFF)
 endif()
 
+#---make sure non-builtin xrootd is not using builtin_openssl-----------
+if(xrootd AND NOT builtin_xrootd AND builtin_openssl)
+  if(fail-on-missing)
+    message(FATAL_ERROR "Non-builtin XROOTD must not be used with builtin OpenSSL. If you want to use non-builtin XROOTD, please use the system OpenSSL")
+  else()
+    message(STATUS "Non-builtin XROOTD must not be used with builtin OpenSSL. Disabling the 'xrootd' option.")
+    set(xrootd OFF CACHE BOOL "Disabled because non-builtin xrootd cannot be used with builtin OpenSSL" FORCE)
+  endif()
+endif()
+
 #---Alien support----------------------------------------------------------------
 if(alien)
   find_package(Alien)
