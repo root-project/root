@@ -45,6 +45,7 @@
 #include "TGaxis.h"
 #include "TColor.h"
 #include "TPainter3dAlgorithms.h"
+#include "TGraph2D.h"
 #include "TGraph2DPainter.h"
 #include "TGraphDelaunay2D.h"
 #include "TView.h"
@@ -7087,6 +7088,8 @@ Int_t THistPainter::PaintInit()
                if (obj->InheritsFrom(THStack::Class()))     { h1 = ((THStack*)(obj))->GetHistogram()    ; break; }
                if (obj->InheritsFrom(TGraph::Class()))      { h1 = ((TGraph*)(obj))->GetHistogram()     ; break; }
                if (obj->InheritsFrom(TMultiGraph::Class())) { h1 = ((TMultiGraph*)(obj))->GetHistogram(); break; }
+               if (obj->InheritsFrom(TGraph2D::Class()))    { h1 = ((TGraph2D*)(obj))->GetHistogram(); break; }
+               if (obj->InheritsFrom(TF1::Class()))         { h1 = ((TF1*)(obj))->GetHistogram(); break; }
             }
             if (h1) {
                Hparam.xlowedge = h1->GetXaxis()->GetBinLowEdge(h1->GetXaxis()->GetFirst());
