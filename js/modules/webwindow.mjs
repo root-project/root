@@ -292,6 +292,7 @@ class WebWindowHandle {
    provideData(chid, _msg, _len) {
       if (this.wait_first_recv) {
          delete this.wait_first_recv;
+         this.state = 1;
          return this.invokeReceiver(false, 'onWebsocketOpened');
       }
 
@@ -450,6 +451,9 @@ class WebWindowHandle {
       // now server-side entity should be initialized and init message send from server side!
       return channel;
    }
+
+   /** @summary Returns true if socket connected */
+   isConnected() { return this.state > 0; }
 
    /** @summary Returns used channel ID, 1 by default */
    getChannelId() { return this.channelid && this.master ? this.channelid : 1; }

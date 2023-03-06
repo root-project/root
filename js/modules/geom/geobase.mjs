@@ -608,7 +608,7 @@ function create8edgesBuffer( v, faces_limit ) {
 
 /** @summary Creates PARA geometrey
   * @private */
-function createParaBuffer( shape, faces_limit ) {
+function createParaBuffer(shape, faces_limit) {
 
    if (faces_limit < 0) return 12;
 
@@ -627,7 +627,7 @@ function createParaBuffer( shape, faces_limit ) {
 
 /** @summary Creates Ttrapezoid geometrey
   * @private */
-function createTrapezoidBuffer( shape, faces_limit ) {
+function createTrapezoidBuffer(shape, faces_limit) {
 
    if (faces_limit < 0) return 12;
 
@@ -655,7 +655,7 @@ function createTrapezoidBuffer( shape, faces_limit ) {
 
 /** @summary Creates arb8 geometrey
   * @private */
-function createArb8Buffer( shape, faces_limit ) {
+function createArb8Buffer(shape, faces_limit) {
 
    if (faces_limit < 0) return 12;
 
@@ -764,7 +764,7 @@ function createArb8Buffer( shape, faces_limit ) {
 
 /** @summary Creates sphere geometrey
   * @private */
-function createSphereBuffer( shape, faces_limit ) {
+function createSphereBuffer(shape, faces_limit) {
    let radius = [shape.fRmax, shape.fRmin],
        phiStart = shape.fPhi1,
        phiLength = shape.fPhi2 - shape.fPhi1,
@@ -784,12 +784,10 @@ function createSphereBuffer( shape, faces_limit ) {
    }
 
    let numoutside = widthSegments * heightSegments * 2,
-       numtop = widthSegments * 2,
-       numbottom = widthSegments * 2,
-       numcut = phiLength === 360 ? 0 : heightSegments * (noInside ? 2 : 4),
+       numtop = widthSegments * (noInside ? 1 : 2),
+       numbottom = widthSegments * (noInside ? 1 : 2),
+       numcut = (phiLength === 360) ? 0 : heightSegments * (noInside ? 2 : 4),
        epsilon = 1e-10;
-
-   if (noInside) numbottom = numtop = widthSegments;
 
    if (faces_limit < 0) return numoutside * (noInside ? 1 : 2) + numtop + numbottom + numcut;
 
@@ -886,7 +884,7 @@ function createSphereBuffer( shape, faces_limit ) {
 
 /** @summary Creates tube geometrey
   * @private */
-function createTubeBuffer( shape, faces_limit) {
+function createTubeBuffer(shape, faces_limit) {
    let outerR, innerR; // inner/outer tube radius
    if ((shape._typename == clTGeoCone) || (shape._typename == clTGeoConeSeg)) {
       outerR = [ shape.fRmax2, shape.fRmax1 ];
@@ -1075,7 +1073,7 @@ function createEltuBuffer(shape, faces_limit) {
 
 /** @summary Creates torus geometrey
   * @private */
-function createTorusBuffer( shape, faces_limit ) {
+function createTorusBuffer(shape, faces_limit) {
    let radius = shape.fR,
        radialSegments = Math.max(6, Math.round(360/cfg.GradPerSegm)),
        tubularSegments = Math.max(8, Math.round(shape.fDphi/cfg.GradPerSegm)),
@@ -1166,7 +1164,7 @@ function createTorusBuffer( shape, faces_limit ) {
 
 /** @summary Creates polygon geometrey
   * @private */
-function createPolygonBuffer( shape, faces_limit ) {
+function createPolygonBuffer(shape, faces_limit) {
    let thetaStart = shape.fPhi1,
        thetaLength = shape.fDphi,
        radiusSegments, factor;
@@ -1343,7 +1341,7 @@ function createPolygonBuffer( shape, faces_limit ) {
 
 /** @summary Creates xtru geometrey
   * @private */
-function createXtruBuffer( shape, faces_limit ) {
+function createXtruBuffer(shape, faces_limit) {
    let nfaces = (shape.fNz-1) * shape.fNvert * 2;
 
    if (faces_limit < 0) return nfaces + shape.fNvert*3;
@@ -1401,7 +1399,7 @@ function createXtruBuffer( shape, faces_limit ) {
 
 /** @summary Creates para geometrey
   * @private */
-function createParaboloidBuffer( shape, faces_limit ) {
+function createParaboloidBuffer(shape, faces_limit) {
 
    let radiusSegments = Math.max(4, Math.round(360/cfg.GradPerSegm)),
        heightSegments = 30;
@@ -1414,7 +1412,15 @@ function createParaboloidBuffer( shape, faces_limit ) {
       }
    }
 
-   let zmin = -shape.fDZ, zmax = shape.fDZ, rmin = shape.fRlo, rmax = shape.fRhi;
+   let rmin = shape.fRlo, rmax = shape.fRhi,
+       numfaces = (heightSegments+1) * radiusSegments*2;
+
+   if (rmin === 0) numfaces -= radiusSegments*2; // complete layer
+   if (rmax === 0) numfaces -= radiusSegments*2; // complete layer
+
+   if (faces_limit < 0) return numfaces;
+
+   let zmin = -shape.fDZ, zmax = shape.fDZ;
 
    // if no radius at -z, find intersection
    if (shape.fA >= 0) {
@@ -1424,12 +1430,6 @@ function createParaboloidBuffer( shape, faces_limit ) {
    }
 
    let ttmin = Math.atan2(zmin, rmin), ttmax = Math.atan2(zmax, rmax);
-
-   let numfaces = (heightSegments+1)*radiusSegments*2;
-   if (rmin === 0) numfaces -= radiusSegments*2; // complete layer
-   if (rmax === 0) numfaces -= radiusSegments*2; // complete layer
-
-   if (faces_limit < 0) return numfaces;
 
    // calculate all sin/cos tables in advance
    let _sin = new Float32Array(radiusSegments+1),
@@ -1494,7 +1494,7 @@ function createParaboloidBuffer( shape, faces_limit ) {
 
 /** @summary Creates hype geometrey
   * @private */
-function createHypeBuffer( shape, faces_limit ) {
+function createHypeBuffer(shape, faces_limit) {
 
    if ((shape.fTin === 0) && (shape.fTout === 0))
       return createTubeBuffer(shape, faces_limit);
@@ -1566,15 +1566,10 @@ function createHypeBuffer( shape, faces_limit ) {
 
 /** @summary Creates tessalated geometrey
   * @private */
-function createTessellatedBuffer( shape, faces_limit) {
+function createTessellatedBuffer(shape, faces_limit) {
    let numfaces = 0;
-
-   for (let i = 0; i < shape.fFacets.length; ++i) {
-      let f = shape.fFacets[i];
-      if (f.fNvert == 4) numfaces += 2;
-                    else numfaces += 1;
-   }
-
+   for (let i = 0; i < shape.fFacets.length; ++i)
+      numfaces += (shape.fFacets[i].fNvert == 4) ? 2 : 1;
    if (faces_limit < 0) return numfaces;
 
    let creator = faces_limit ? new PolygonsCreator : new GeometryCreator(numfaces);
@@ -1850,11 +1845,11 @@ function countGeometryFaces(geom) {
 
 /** @summary Creates geometrey for composite shape
   * @private */
-function createComposite( shape, faces_limit ) {
+function createComposite(shape, faces_limit) {
 
    if (faces_limit < 0)
-      return createGeometry(shape.fNode.fLeft, -10) +
-             createGeometry(shape.fNode.fRight, -10);
+      return createGeometry(shape.fNode.fLeft, -1) +
+             createGeometry(shape.fNode.fRight, -1);
 
    let geom1, geom2, bsp1, bsp2, return_bsp = false,
        matrix1 = createMatrix(shape.fNode.fLeftMat),
@@ -2466,7 +2461,7 @@ class ClonedNodes {
             clone.fDX = shape.fDX;
             clone.fDY = shape.fDY;
             clone.fDZ = shape.fDZ;
-            clone.vol = shape.fDX * shape.fDY * shape.fDZ;
+            clone.vol = Math.sqrt(shape.fDX**2 + shape.fDY**2 + shape.fDZ**2);
             if (shape.$nfaces === undefined)
                shape.$nfaces = createGeometry(shape, -1);
             clone.nfaces = shape.$nfaces;
@@ -3226,16 +3221,16 @@ class ClonedNodes {
 
       let shapes = [];
 
-      for (let i=0;i<lst.length;++i) {
-         let entry = lst[i];
-         let shape = this.getNodeShape(entry.nodeid);
+      for (let i = 0; i < lst.length; ++i) {
+         let entry = lst[i],
+             shape = this.getNodeShape(entry.nodeid);
 
          if (!shape) continue; // strange, but avoid misleading
 
          if (shape._id === undefined) {
             shape._id = shapes.length;
 
-            shapes.push({ id: shape._id, shape: shape, vol: this.nodes[entry.nodeid].vol, refcnt: 1, factor: 1, ready: false });
+            shapes.push({ id: shape._id, shape, vol: this.nodes[entry.nodeid].vol, refcnt: 1, factor: 1, ready: false });
 
             // shapes.push( { obj: shape, vol: this.nodes[entry.nodeid].vol });
          } else {
