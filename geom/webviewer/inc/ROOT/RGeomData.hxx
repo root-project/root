@@ -318,6 +318,8 @@ public:
    const std::string &GetDrawJson() const { return fDrawJson; }
    void ClearDrawData();
 
+   void ClearCache();
+
    int SearchVisibles(const std::string &find, std::string &hjson, std::string &json);
 
    int FindNodeId(const std::vector<int> &stack);
