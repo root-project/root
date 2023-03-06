@@ -1,10 +1,10 @@
 
-Processing Run.C...
+Processing /local2/pcanal/cint_working/rootcling/root-ninja/roottest/root/io/treeForeign/Run.C...
 Warning in <TClass::Init>: no dictionary for class Wrapper is available
 Warning in <TClass::Init>: no dictionary for class MyClass is available
 ******************************************************************************
 *Tree    :T         : T                                                      *
-*Entries :        2 : Total =            4215 bytes  File  Size =       1508 *
+*Entries :        2 : Total =            4215 bytes  File  Size =       1503 *
 *        :          : Tree compression factor =   1.10                       *
 ******************************************************************************
 *Branch  :obj                                                                *
@@ -23,8 +23,8 @@ Warning in <TClass::Init>: no dictionary for class MyClass is available
 *Baskets :        1 : Basket Size=      32000 bytes  Compression=   1.03     *
 *............................................................................*
 *Br    3 :arr.fBits : UInt_t fBits[arr_]                                     *
-*Entries :        2 : Total  Size=        682 bytes  File Size  =        104 *
-*Baskets :        1 : Basket Size=      32000 bytes  Compression=   1.01     *
+*Entries :        2 : Total  Size=        682 bytes  File Size  =        102 *
+*Baskets :        1 : Basket Size=      32000 bytes  Compression=   1.03     *
 *............................................................................*
 *Br    4 :arr.chunk : MyClass* chunk[arr_]                                   *
 *Entries :        2 : Total  Size=        770 bytes  File Size  =        147 *
