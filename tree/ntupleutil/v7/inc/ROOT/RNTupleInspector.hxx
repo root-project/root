@@ -24,13 +24,14 @@
 
 #include <cstdlib>
 #include <memory>
+#include <vector>
 
 namespace ROOT {
 namespace Experimental {
 
 // clang-format off
 /**
-\class ROOT::Experimental::Detail::RNTupleInspector
+\class ROOT::Experimental::RNTupleInspector
 \ingroup NTuple
 \brief Inspect a given RNTuple
 
