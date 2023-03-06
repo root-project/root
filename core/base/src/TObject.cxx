@@ -909,12 +909,12 @@ void TObject::Streamer(TBuffer &R__b)
       R__b.WriteVersion(TObject::IsA());
       if (!TestBit(kIsReferenced)) {
          R__b << fUniqueID;
-         R__b << fBits;
+         R__b << (fBits & (~kIsOnHeap & ~kNotDeleted));
       } else {
          //if the object is referenced, we must save its address/file_pid
          UInt_t uid = fUniqueID & 0xffffff;
          R__b << uid;
-         R__b << fBits;
+         R__b << (fBits & (~kIsOnHeap & ~kNotDeleted));
          TProcessID *pid = TProcessID::GetProcessWithUID(fUniqueID,this);
          //add uid to the TRefTable if there is one
          TRefTable *table = TRefTable::GetRefTable();
