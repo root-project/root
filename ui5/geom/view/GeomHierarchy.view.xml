@@ -14,7 +14,8 @@
          <Button icon="sap-icon://show" type="Transparent" enabled="{/hasViewer}"
                  tooltip="Toggle with info page" press="onInfoPress"/>
          <ToolbarSpacer />
-         <SearchField liveChange="onSearch" />
+         <SearchField id="searchNode" liveChange="onSearch"
+                      tooltip="Type regexp for name or material with prefix m:"/>
       </Toolbar>
       <t:TreeTable id="treeTable"
          columnHeaderVisible="false" editable="false"
