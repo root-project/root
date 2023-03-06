@@ -457,13 +457,13 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          if (append_more)
             this.geo_painter.appendMoreNodes(visibles || null);
 
-         if (visibles?.length && (visibles.length < 100)) {
-            let dflt = Math.max(this.geo_painter.ctrl.transparency, 0.98);
+         if (visibles?.length) {
+            let dflt = Math.max(this.geo_painter.ctrl.transparency, 0.98), indx = 0;
             this.geo_painter.changedGlobalTransparency(node => {
-               if (node.stack)
-                  for (let n = 0; n < visibles.length; ++n)
-                     if (this.geo.isSameStack(node.stack, visibles[n].stack))
-                        return 0;
+               if (node.stack && (indx < visibles.length) &&  this.geo.isSameStack(node.stack, visibles[indx].stack)) {
+                  indx++;
+                  return 0;
+               }
                return dflt;
             });
 
@@ -497,8 +497,6 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       },
 
       checkSendRequest(force) {
-         console.log('check send request connected', this.isConnected, 'nobrowser', this.nobrowser, 'channel', this.send_channel);
-
          if (force) this.ask_getdraw = false;
 
          if (this.isConnected && !this.nobrowser && !this.send_channel) {
