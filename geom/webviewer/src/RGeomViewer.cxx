@@ -40,7 +40,7 @@ RGeomViewer::RGeomViewer(TGeoManager *mgr, const std::string &volname)
 
       // this is call-back, invoked when message received via websocket
       fWebWindow->SetDataCallBack([this](unsigned connid, const std::string &arg) { WebWindowCallback(connid, arg); });
-      fWebWindow->SetDisconnectCallBack([this](unsigned) { fWebHierarchy.reset(); });
+      fWebWindow->SetDisconnectCallBack([this](unsigned connid) { WebWindowDisconnect(connid); });
 
       fWebWindow->SetGeometry(900, 700); // configure predefined window geometry
       fWebWindow->SetConnLimit(0); // allow any connections numbers at the same time
@@ -353,4 +353,17 @@ void RGeomViewer::WebWindowCallback(unsigned connid, const std::string &arg)
 
       SendGeometry(connid);
    }
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+/// Process disconnect event
+/// Clear cache data and dependent connections
+
+
+void RGeomViewer::WebWindowDisconnect(unsigned)
+{
+   fWebHierarchy.reset();
+
+   fDesc.ClearCache();
+
 }

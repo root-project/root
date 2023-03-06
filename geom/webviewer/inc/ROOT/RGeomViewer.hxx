@@ -42,6 +42,8 @@ protected:
 
    void WebWindowCallback(unsigned connid, const std::string &arg);
 
+   void WebWindowDisconnect(unsigned connid);
+
    std::vector<int> GetStackFromJson(const std::string &json, bool node_ids = false);
 
    void SendGeometry(unsigned connid);
