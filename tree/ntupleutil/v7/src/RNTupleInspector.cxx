@@ -57,19 +57,13 @@ void ROOT::Experimental::RNTupleInspector::CollectNTupleData()
 void ROOT::Experimental::RNTupleInspector::CollectColumnData()
 {
    for (DescriptorId_t colId = 0; colId < fDescriptor->GetNPhysicalColumns(); ++colId) {
-      const ROOT::Experimental::RColumnDescriptor &colDescriptor = fDescriptor->GetColumnDescriptor(colId);
-
       RColumnInfo info;
-      info.fPhysicalColumnId = colId;
-      info.fLogicalColumnId = colDescriptor.GetLogicalId();
-      info.fFieldId = colDescriptor.GetFieldId();
-      info.fIndex = colDescriptor.GetIndex();
-      info.fType = colDescriptor.GetModel().GetType();
+      info.fColumnDescriptor = &(fDescriptor->GetColumnDescriptor(colId));
+      info.fType = info.fColumnDescriptor->GetModel().GetType();
 
       // We generate the default memory representation for the given column type in order
       // to report the size _in memory_ of column elements.
-      uint64_t elemSize =
-         ROOT::Experimental::Detail::RColumnElementBase::Generate(colDescriptor.GetModel().GetType())->GetSize();
+      uint64_t elemSize = ROOT::Experimental::Detail::RColumnElementBase::Generate(info.fType)->GetSize();
       info.fElementSize = elemSize;
 
       for (const auto &clusterDescriptor : fDescriptor->GetClusterIterable()) {
