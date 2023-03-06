@@ -50,6 +50,14 @@ public:
    RGeomNodeBase(int _id = 0) : id(_id) {}
 
    bool IsVisible() const { return vis > 0; }
+
+   /** Returns argument for regexp */
+   const char *GetArg(int kind)
+   {
+      if (kind == 1) return color.c_str();
+      if (kind == 2) return material.c_str();
+      return name.c_str();
+   }
 };
 
 /** Full node description including matrices and other attributes */
