@@ -21,12 +21,24 @@
 #include "TGeoNode.h"
 #include "TGeoVolume.h"
 #include "TGeoBBox.h"
+#include "TGeoSphere.h"
+#include "TGeoCone.h"
+#include "TGeoTube.h"
+#include "TGeoEltu.h"
+#include "TGeoTorus.h"
+#include "TGeoPcon.h"
+#include "TGeoPgon.h"
+#include "TGeoXtru.h"
+#include "TGeoParaboloid.h"
+#include "TGeoHype.h"
+#include "TGeoTessellated.h"
+#include "TGeoScaledShape.h"
+#include "TGeoCompositeShape.h"
 #include "TGeoManager.h"
 #include "TGeoMatrix.h"
 #include "TGeoMedium.h"
 #include "TGeoMaterial.h"
 #include "TGeoBoolNode.h"
-#include "TGeoCompositeShape.h"
 #include "TBuffer3D.h"
 #include "TBufferJSON.h"
 
@@ -438,7 +450,7 @@ void RGeomDescription::BuildDescription(TGeoNode *topnode, TGeoVolume *topvolume
       auto shape = dynamic_cast<TGeoBBox *>(vol->GetShape());
       if (shape) {
          desc.vol = shape->GetDX() * shape->GetDY() * shape->GetDZ();
-         desc.nfaces = 12; // TODO: get better value for each shape - excluding composite
+         desc.nfaces = CountShapeFaces(shape);
       }
 
       CopyMaterialProperties(vol, desc);
@@ -770,6 +782,143 @@ std::unique_ptr<RootCsg::TBaseMesh> MakeGeoMesh(TGeoMatrix *matr, TGeoShape *sha
    return res;
 }
 
+/////////////////////////////////////////////////////////////////////
+/// Returns really used number of cylindrical segments
+
+int RGeomDescription::GetUsedNSegments(int min)
+{
+   int nsegm = 0;
+
+   if (GetNSegments() > 0)
+      nsegm = GetNSegments();
+   else if (gGeoManager && (gGeoManager->GetNsegments() > 0))
+      nsegm = gGeoManager->GetNsegments();
+
+   return nsegm > min ? nsegm : min;
+}
+
+/////////////////////////////////////////////////////////////////////
+/// Count number of faces for the shape
+
+int RGeomDescription::CountShapeFaces(TGeoShape *shape)
+{
+   if (!shape) return 0;
+
+   auto countTubeFaces = [this](const std::array<Double_t, 2> &outerR, const std::array<Double_t, 2> &innerR,
+                                Double_t thetaLength = 360.) -> int {
+      auto hasrmin = (innerR[0] > 0) || (innerR[1] > 0);
+
+      int radiusSegments = TMath::Max(4, TMath::Nint(thetaLength / 360. * GetUsedNSegments()));
+
+      // external surface
+      int numfaces = radiusSegments * (((outerR[0] <= 0) || (outerR[1] <= 0)) ? 1 : 2);
+
+      // internal surface
+      if (hasrmin)
+         numfaces += radiusSegments * (((innerR[0] <= 0) || (innerR[1] <= 0)) ? 1 : 2);
+
+      // upper cap
+      if (outerR[0] > 0)
+         numfaces += radiusSegments * ((innerR[0] > 0) ? 2 : 1);
+      // bottom cup
+      if (outerR[1] > 0)
+         numfaces += radiusSegments * ((innerR[1] > 0) ? 2 : 1);
+
+      if (thetaLength < 360)
+         numfaces += ((outerR[0] > innerR[0]) ? 2 : 0) + ((outerR[1] > innerR[1]) ? 2 : 0);
+
+      return numfaces;
+   };
+
+   if (shape->IsA() == TGeoSphere::Class()) {
+      TGeoSphere *sphere = (TGeoSphere *) shape;
+      auto widthSegments = sphere->GetNumberOfDivisions();
+      auto heightSegments = sphere->GetNz();
+      auto phiLength = sphere->GetPhi2() - sphere->GetPhi1();
+      auto noInside = sphere->GetRmin() <= 0;
+
+      auto numoutside = widthSegments * heightSegments * 2;
+      auto numtop = widthSegments * (noInside ? 1 : 2);
+      auto numbottom = widthSegments * (noInside ? 1 : 2);
+      auto numcut = (phiLength == 360.) ? 0 : heightSegments * (noInside ? 2 : 4);
+
+      return numoutside * (noInside ? 1 : 2) + numtop + numbottom + numcut;
+   } else if (shape->IsA() == TGeoCone::Class()) {
+      auto cone = (TGeoCone *) shape;
+      return countTubeFaces({ cone->GetRmax2(), cone->GetRmax1() }, { cone->GetRmin2(), cone->GetRmin1() });
+   } else if (shape->IsA() == TGeoConeSeg::Class()) {
+      auto cone = (TGeoConeSeg *) shape;
+      return countTubeFaces({ cone->GetRmax2(), cone->GetRmax1() }, { cone->GetRmin2(), cone->GetRmin1() }, cone->GetPhi2() - cone->GetPhi1());
+   } else if (shape->IsA() == TGeoTube::Class()) {
+      auto tube = (TGeoTube *) shape;
+      return countTubeFaces({ tube->GetRmax(), tube->GetRmax() }, { tube->GetRmin(), tube->GetRmin() });
+   } else if (shape->IsA() == TGeoTubeSeg::Class()) {
+      auto tube = (TGeoTubeSeg *) shape;
+      return countTubeFaces({ tube->GetRmax(), tube->GetRmax() }, { tube->GetRmin(), tube->GetRmin() }, tube->GetPhi2() - tube->GetPhi1());
+   } else if (shape->IsA() == TGeoCtub::Class()) {
+      auto tube = (TGeoCtub *) shape;
+      return countTubeFaces({ tube->GetRmax(), tube->GetRmax() }, { tube->GetRmin(), tube->GetRmin() }, tube->GetPhi2() - tube->GetPhi1());
+   } else if (shape->IsA() == TGeoEltu::Class()) {
+      return GetUsedNSegments(4) * 4;
+   } else if (shape->IsA() == TGeoTorus::Class()) {
+      auto torus = (TGeoTorus *) shape;
+      auto radialSegments = GetUsedNSegments(6);
+      auto tubularSegments = TMath::Max(8, TMath::Nint(torus->GetDphi() / 360. * GetUsedNSegments()));
+      return (torus->GetRmin() > 0 ? 4 : 2) * radialSegments * (tubularSegments + (torus->GetDphi() != 360. ? 1 : 0));
+   } else if (shape->IsA() == TGeoPcon::Class()) {
+      auto pcon = (TGeoPcon *) shape;
+
+      bool hasrmin = false;
+      int radiusSegments = TMath::Max(5, TMath::Nint(pcon->GetDphi() / 360 * GetUsedNSegments()));
+      for (int layer = 0; layer < pcon->GetNz(); ++layer)
+         if (pcon->GetRmin(layer) > 0.)
+            hasrmin = true;
+      return (hasrmin ? 4 : 2) * radiusSegments * (pcon->GetNz()-1);
+   } else if (shape->IsA() == TGeoPgon::Class()) {
+      auto pgon = (TGeoPgon *) shape;
+
+      bool hasrmin = false;
+      int radiusSegments = TMath::Max(5, TMath::Nint(pgon->GetDphi() / 360 * GetUsedNSegments()));
+      for (int layer = 0; layer < pgon->GetNz(); ++layer)
+         if (pgon->GetRmin(layer) > 0.)
+            hasrmin = true;
+      return (hasrmin ? 4 : 2) * radiusSegments * (pgon->GetNz()-1);
+   } else if (shape->IsA() == TGeoXtru::Class()) {
+      auto xtru = (TGeoXtru *) shape;
+      return (xtru->GetNz()-1) * xtru->GetNvert() * 2  + xtru->GetNvert()*3;
+   } else if (shape->IsA() == TGeoParaboloid::Class()) {
+      auto para = (TGeoParaboloid *) shape;
+      int radiusSegments = GetUsedNSegments(4), heightSegments = 30;
+      int numfaces = (heightSegments+1) * radiusSegments*2;
+      if (para->GetRlo() == 0.) numfaces -= radiusSegments*2; // complete layer
+      if (para->GetRhi() == 0.) numfaces -= radiusSegments*2; // complete layer
+      return numfaces;
+   } else if (shape->IsA() == TGeoHype::Class()) {
+      TGeoHype *hype = (TGeoHype *) shape;
+      if ((hype->GetStIn() == 0) && (hype->GetStOut() == 0))
+         return countTubeFaces({ hype->GetRmax(), hype->GetRmax() }, { hype->GetRmin(), hype->GetRmin() });
+      int radiusSegments = GetUsedNSegments(4), heightSegments = 30;
+      return radiusSegments * (heightSegments + 1) * ((hype->GetRmin() > 0.) ? 4 : 2);
+   } else if (shape->IsA() == TGeoTessellated::Class()) {
+      auto tess = (TGeoTessellated *) shape;
+      int numfaces = 0;
+      for (int i = 0; i < tess->GetNfacets(); ++i) {
+         if (tess->GetFacet(i).GetNvert() == 4) numfaces += 2;
+                                           else numfaces += 1;
+      }
+      return numfaces;
+   } else if (shape->IsA() == TGeoScaledShape::Class()) {
+      auto scaled = (TGeoScaledShape *) shape;
+      return CountShapeFaces(scaled->GetShape());
+   } else if (shape->IsA() == TGeoCompositeShape::Class()) {
+      auto comp = (TGeoCompositeShape *) shape;
+      if (!comp->GetBoolNode()) return 0;
+      return CountShapeFaces(comp->GetBoolNode()->GetLeftShape()) + CountShapeFaces(comp->GetBoolNode()->GetRightShape());
+   }
+
+   // many of simple shapes have 12 faces
+   return 12;
+}
 
 /////////////////////////////////////////////////////////////////////
 /// Find description object and create render information
