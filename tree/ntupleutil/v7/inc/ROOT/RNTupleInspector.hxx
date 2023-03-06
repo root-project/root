@@ -59,6 +59,7 @@ class RNTupleInspector {
 private:
    std::unique_ptr<TFile> fSourceFile;
    std::unique_ptr<ROOT::Experimental::Detail::RPageSource> fPageSource;
+   std::unique_ptr<ROOT::Experimental::RNTupleDescriptor> fDescriptor;
    int fCompressionSettings;
    std::uint64_t fCompressedSize;
    std::uint64_t fUncompressedSize;
@@ -80,6 +81,12 @@ public:
    Create(std::unique_ptr<ROOT::Experimental::Detail::RPageSource> pageSource);
    static RResult<std::unique_ptr<RNTupleInspector>> Create(RNTuple *sourceNTuple);
    static RResult<std::unique_ptr<RNTupleInspector>> Create(std::string_view ntupleName, std::string_view storage);
+
+   /// Get the descriptor for the RNTuple being inspected.
+   /// Not that this contains a static copy of the descriptor at the time of
+   /// creation of the inspector. This means that if the inspected RNTuple changes,
+   /// these changes will not be propagated to the RNTupleInspector object!
+   RNTupleDescriptor *GetDescriptor();
 
    /// Get the name of the RNTuple being inspected.
    std::string GetName();
