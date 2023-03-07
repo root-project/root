@@ -48,7 +48,7 @@ Warning in <TClass::Init>: no dictionary for class Belle2::CalcMeanCov<2,double>
 *............................................................................*
 ******************************************************************************
 *Tree    :tree      : tree                                                   *
-*Entries :       10 : Total =           22683 bytes  File  Size =       5398 *
+*Entries :       10 : Total =           22683 bytes  File  Size =       5397 *
 *        :          : Tree compression factor =   1.18                       *
 ******************************************************************************
 *Br    0 :StrSimHits : Int_t StrSimHits_                                     *

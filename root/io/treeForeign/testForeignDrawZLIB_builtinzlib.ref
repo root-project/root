@@ -4,7 +4,7 @@ Warning in <TClass::Init>: no dictionary for class Wrapper is available
 Warning in <TClass::Init>: no dictionary for class MyClass is available
 ******************************************************************************
 *Tree    :T         : T                                                      *
-*Entries :        2 : Total =            4215 bytes  File  Size =       1460 *
+*Entries :        2 : Total =            4215 bytes  File  Size =       1470 *
 *        :          : Tree compression factor =   1.08                       *
 ******************************************************************************
 *Branch  :obj                                                                *
@@ -23,7 +23,7 @@ Warning in <TClass::Init>: no dictionary for class MyClass is available
 *Baskets :        1 : Basket Size=      32000 bytes  Compression=   1.01     *
 *............................................................................*
 *Br    3 :arr.fBits : UInt_t fBits[arr_]                                     *
-*Entries :        2 : Total  Size=        682 bytes  File Size  =        103 *
+*Entries :        2 : Total  Size=        682 bytes  File Size  =        104 *
 *Baskets :        1 : Basket Size=      32000 bytes  Compression=   1.01     *
 *............................................................................*
 *Br    4 :arr.chunk : MyClass* chunk[arr_]                                   *
