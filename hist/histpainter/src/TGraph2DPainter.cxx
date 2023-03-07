@@ -39,6 +39,9 @@ ClassImp(TGraph2DPainter);
 
 TGraph2DPainter paints a TGraphDelaunay using triangles or clouds of points.
 
+See documentation of TGraph2D, TGraph2DErrors and TGraph2DAsymmErrors to get the list of
+drawing options for these classes.
+
 */
 
 
