@@ -51,6 +51,8 @@ RGeomViewer::RGeomViewer(TGeoManager *mgr, const std::string &volname)
    fDesc.SetJsonComp(gEnv->GetValue("WebGui.JsonComp", TBufferJSON::kSkipTypeInfo + TBufferJSON::kNoSpaces));
    fDesc.SetBuildShapes(gEnv->GetValue("WebGui.GeomBuildShapes", 1));
 
+   fDesc.AddSignalHandler(this, [this](const std::string &kind) { ProcessSignal(kind); });
+
    if (mgr) SetGeometry(mgr, volname);
 }
 
@@ -273,15 +275,11 @@ void RGeomViewer::WebWindowCallback(unsigned connid, const std::string &arg)
          // not request but different object type is send
          req.reset(nullptr);
 
-      } else if (req && (req->oper == "SETTOP")) {
-
-         if (fDesc.SelectTop(req->path))
-            SendGeometry(connid);
-
-         // not request but different object type is send
-         req.reset(nullptr);
       } else {
+
          req.reset(nullptr);
+
+         printf("Fail to process request %s for visible\n", req->oper.c_str());
       }
 
       if (req)
@@ -359,11 +357,18 @@ void RGeomViewer::WebWindowCallback(unsigned connid, const std::string &arg)
 /// Process disconnect event
 /// Clear cache data and dependent connections
 
-
 void RGeomViewer::WebWindowDisconnect(unsigned)
 {
    fWebHierarchy.reset();
 
    fDesc.ClearCache();
-
 }
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+/// Process signal from geom description when it changed by any means
+void RGeomViewer::ProcessSignal(const std::string &kind)
+{
+   if (kind == "SelectTop")
+      SendGeometry();
+}
+

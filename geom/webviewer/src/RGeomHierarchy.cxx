@@ -12,6 +12,8 @@
 
 #include <ROOT/RWebWindow.hxx>
 
+#include "TBufferJSON.h"
+
 using namespace std::string_literals;
 
 using namespace ROOT::Experimental;
@@ -55,6 +57,11 @@ void RGeomHierarchy::WebWindowCallback(unsigned connid, const std::string &arg)
 
       if (!json.empty())
          fWebWindow->Send(connid, json);
+   } else if (arg.compare(0, 7, "SETTOP:") == 0) {
+      auto path = TBufferJSON::FromJSON<std::vector<std::string>>(arg.substr(7));
+      if (path && fDesc.SelectTop(*path)) {
+         fDesc.IssueSignal(this, "SelectTop");
+      }
    }
 
 }

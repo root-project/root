@@ -436,27 +436,59 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             text: 'Set as top',
             select: () => {
                if (this.standalone) {
-                  MessageToast.show('Set as top not supported in standalone mode');
+                  MessageToast.show('Set as top not yet supported in standalone mode');
                } else {
-                  this.viewer?.sendViewerRequest('SETTOP', { path: prop.path });
+                  this.websocket.send('SETTOP:' + JSON.stringify(prop.path));
                }
             }
          }));
 
-         let colid = oEvent.getParameter('columnId');
+         let colid = oEvent.getParameter('columnId'),
+             text = 'Search for ', value;
+         if ((colid == 'columnMaterial') && prop._elem.material) {
+            text += 'material';
+            value = 'm:' + prop._elem.material;
+         } else if ((colid == 'columnColor') && prop._elem.color) {
+            text += 'color';
+            value = 'c:' + prop._elem.color;
+         } else {
+            text += 'name';
+            value = prop._elem.name;
+         }
 
          this._oIdContextMenu.addItem(new MenuItem({
-            text: 'Search for',
+            text,
             select: () => {
-               let value = prop._elem.name;
-               if ((colid == 'columnMaterial') && prop._elem.material)
-                  value = 'm:' + prop._elem.material;
-               else if ((colid == 'columnColor') && prop._elem.color)
-                  value = 'c:' + prop._elem.color;
                this.byId('searchNode').setValue(value);
                this.onSearch(value, true); // trigger search directly
             }
          }));
+
+         this._oIdContextMenu.addItem(new MenuItem({
+            startsSection: true,
+            text: 'Show',
+            tooltip: 'Show selected physical node',
+            select: () => {
+               console.log('Show', JSON.stringify(prop._elem));
+            }
+         }));
+
+         this._oIdContextMenu.addItem(new MenuItem({
+            text: 'Hide',
+            tooltip: 'Hide selected physical node',
+            select: () => {
+               console.log('Hide', JSON.stringify(prop._elem));
+            }
+         }));
+
+         this._oIdContextMenu.addItem(new MenuItem({
+            text: 'Reset',
+            tooltip: 'Reset individual show/hide settings',
+            select: () => {
+               console.log('Reset', JSON.stringify(prop._elem));
+            }
+         }));
+
 
          //Open the menu on the cell
          let oCellDomRef = oEvent.getParameter("cellDomRef");

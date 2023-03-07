@@ -46,7 +46,9 @@ protected:
 
    std::vector<int> GetStackFromJson(const std::string &json, bool node_ids = false);
 
-   void SendGeometry(unsigned connid);
+   void SendGeometry(unsigned connid = 0);
+
+   void ProcessSignal(const std::string &);
 
 public:
 

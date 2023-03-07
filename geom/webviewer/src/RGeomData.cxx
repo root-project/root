@@ -260,6 +260,30 @@ using namespace ROOT::Experimental;
 
 using namespace std::string_literals;
 
+
+/////////////////////////////////////////////////////////////////////
+/// Issue signal, which distributed on all handlers - excluding source handler
+
+void RGeomDescription::IssueSignal(const void *handler, const std::string &kind)
+{
+   for (auto &pair : fSignals)
+      if (!handler || (pair.first != handler))
+         pair.second(kind);
+}
+
+/////////////////////////////////////////////////////////////////////
+/// Remove signal handler
+
+void RGeomDescription::RemoveSignalHanlder(const void *handler)
+{
+   for (auto iter = fSignals.begin(); iter != fSignals.end(); ++iter)
+      if (handler == iter->first) {
+         fSignals.erase(iter);
+         return;
+      }
+}
+
+
 /////////////////////////////////////////////////////////////////////
 /// Pack matrix into vector, which can be send to client
 /// Following sizes can be used for vector:
