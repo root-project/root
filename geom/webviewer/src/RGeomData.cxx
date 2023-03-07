@@ -266,9 +266,27 @@ using namespace std::string_literals;
 
 void RGeomDescription::IssueSignal(const void *handler, const std::string &kind)
 {
-   for (auto &pair : fSignals)
-      if (!handler || (pair.first != handler))
-         pair.second(kind);
+   std::vector<RGeomSignalFunc_t> funcs;
+
+   {
+      TLockGuard lock(fMutex);
+      for (auto &pair : fSignals)
+         if (!handler || (pair.first != handler))
+            funcs.emplace_back(pair.second);
+   }
+
+   // invoke signal outside locked mutex to avoid any locking
+   for (auto func : funcs)
+      func(kind);
+}
+
+/////////////////////////////////////////////////////////////////////
+/// Add signal handler
+
+void RGeomDescription::AddSignalHandler(const void *handler, RGeomSignalFunc_t func)
+{
+   TLockGuard lock(fMutex);
+   fSignals.emplace_back(handler, func);
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -276,13 +294,14 @@ void RGeomDescription::IssueSignal(const void *handler, const std::string &kind)
 
 void RGeomDescription::RemoveSignalHanlder(const void *handler)
 {
+   TLockGuard lock(fMutex);
+
    for (auto iter = fSignals.begin(); iter != fSignals.end(); ++iter)
       if (handler == iter->first) {
          fSignals.erase(iter);
          return;
       }
 }
-
 
 /////////////////////////////////////////////////////////////////////
 /// Pack matrix into vector, which can be send to client
@@ -371,6 +390,8 @@ void RGeomDescription::Build(TGeoManager *mgr, const std::string &volname)
    ClearDescription();
    if (!mgr) return;
 
+   TLockGuard lock(fMutex);
+
    // by top node visibility always enabled and harm logic
    // later visibility can be controlled by other means
    // mgr->GetTopNode()->GetVolume()->SetVisibility(kFALSE);
@@ -402,8 +423,9 @@ void RGeomDescription::Build(TGeoManager *mgr, const std::string &volname)
 void RGeomDescription::Build(TGeoVolume *vol)
 {
    ClearDescription();
-
    if (!vol) return;
+
+   TLockGuard lock(fMutex);
 
    fDrawVolume = vol;
 
@@ -417,6 +439,8 @@ void RGeomDescription::Build(TGeoVolume *vol)
 
 void RGeomDescription::ClearDescription()
 {
+   TLockGuard lock(fMutex);
+
    fDesc.clear();
    fNodes.clear();
    fSortMap.clear();
@@ -694,6 +718,8 @@ void RGeomDescription::CollectNodes(RGeomDrawing &drawing, bool all_nodes)
 
 std::string RGeomDescription::ProcessBrowserRequest(const std::string &msg)
 {
+   TLockGuard lock(fMutex);
+
    std::string res;
 
    auto request = TBufferJSON::FromJSON<RBrowserRequest>(msg);
@@ -1120,6 +1146,8 @@ void RGeomDescription::ResetRndrInfos()
 
 std::string RGeomDescription::ProduceJson(bool all_nodes)
 {
+   TLockGuard lock(fMutex);
+
    std::vector<int> viscnt(fDesc.size(), 0);
 
    int level = GetVisLevel();
@@ -1216,7 +1244,11 @@ std::string RGeomDescription::ProduceJson(bool all_nodes)
 
 void RGeomDescription::ProduceDrawData()
 {
-   fDrawJson = "GDRAW:"s + ProduceJson();
+   auto json = ProduceJson();
+
+   TLockGuard lock(fMutex);
+
+   fDrawJson = "GDRAW:"s + json;
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -1224,6 +1256,8 @@ void RGeomDescription::ProduceDrawData()
 
 void RGeomDescription::ClearDrawData()
 {
+   TLockGuard lock(fMutex);
+
    fDrawJson.clear();
 }
 
@@ -1233,6 +1267,8 @@ void RGeomDescription::ClearDrawData()
 void RGeomDescription::ClearCache()
 {
    ClearDrawData();
+
+   TLockGuard lock(fMutex);
    fShapes.clear();
 }
 
@@ -1242,6 +1278,8 @@ void RGeomDescription::ClearCache()
 
 bool RGeomDescription::IsPrincipalEndNode(int nodeid)
 {
+   TLockGuard lock(fMutex);
+
    if ((nodeid < 0) || (nodeid >= (int)fDesc.size()))
       return false;
 
@@ -1258,6 +1296,8 @@ bool RGeomDescription::IsPrincipalEndNode(int nodeid)
 
 int RGeomDescription::SearchVisibles(const std::string &find, std::string &hjson, std::string &json)
 {
+   TLockGuard lock(fMutex);
+
    hjson.clear();
    json.clear();
 
@@ -1435,6 +1475,8 @@ int RGeomDescription::SearchVisibles(const std::string &find, std::string &hjson
 
 int RGeomDescription::FindNodeId(const std::vector<int> &stack)
 {
+   TLockGuard lock(fMutex);
+
    int nodeid = 0;
 
    for (auto &chindx: stack) {
@@ -1451,6 +1493,8 @@ int RGeomDescription::FindNodeId(const std::vector<int> &stack)
 
 std::vector<int> RGeomDescription::MakeStackByIds(const std::vector<int> &ids)
 {
+   TLockGuard lock(fMutex);
+
    std::vector<int> stack;
 
    if (ids[0] != 0) {
@@ -1490,6 +1534,8 @@ std::vector<int> RGeomDescription::MakeStackByIds(const std::vector<int> &ids)
 
 std::vector<int> RGeomDescription::MakeStackByPath(const std::vector<std::string> &path)
 {
+   TLockGuard lock(fMutex);
+
    std::vector<int> res;
 
    RGeomBrowserIter iter(*this);
@@ -1506,6 +1552,8 @@ std::vector<int> RGeomDescription::MakeStackByPath(const std::vector<std::string
 
 std::vector<int> RGeomDescription::MakeIdsByStack(const std::vector<int> &stack)
 {
+   TLockGuard lock(fMutex);
+
    std::vector<int> ids;
 
    ids.emplace_back(0);
@@ -1534,6 +1582,8 @@ std::vector<int> RGeomDescription::MakeIdsByStack(const std::vector<int> &stack)
 
 std::vector<std::string> RGeomDescription::MakePathByStack(const std::vector<int> &stack)
 {
+   TLockGuard lock(fMutex);
+
    std::vector<std::string> path;
 
    auto ids = MakeIdsByStack(stack);
@@ -1550,6 +1600,8 @@ std::vector<std::string> RGeomDescription::MakePathByStack(const std::vector<int
 
 std::string RGeomDescription::ProduceModifyReply(int nodeid)
 {
+   TLockGuard lock(fMutex);
+
    std::vector<RGeomNodeBase *> nodes;
    auto vol = GetVolume(nodeid);
 
@@ -1572,6 +1624,8 @@ std::string RGeomDescription::ProduceModifyReply(int nodeid)
 
 bool RGeomDescription::ProduceDrawingFor(int nodeid, std::string &json, bool check_volume)
 {
+   TLockGuard lock(fMutex);
+
    // only this shape is interesting
 
    TGeoVolume *vol = (nodeid < 0) ? nullptr : GetVolume(nodeid);
@@ -1690,6 +1744,8 @@ bool RGeomDescription::ChangeNodeVisibility(int nodeid, bool selected)
 
 std::unique_ptr<RGeomNodeInfo> RGeomDescription::MakeNodeInfo(const std::vector<std::string> &path)
 {
+   TLockGuard lock(fMutex);
+
    std::unique_ptr<RGeomNodeInfo> res;
 
    RGeomBrowserIter iter(*this);
@@ -1733,6 +1789,8 @@ std::unique_ptr<RGeomNodeInfo> RGeomDescription::MakeNodeInfo(const std::vector<
 
 bool RGeomDescription::SelectTop(const std::vector<std::string> &path)
 {
+   TLockGuard lock(fMutex);
+
    RGeomBrowserIter iter(*this);
 
    if (!iter.Navigate(path))
@@ -1775,6 +1833,8 @@ int compare_stacks(const std::vector<int> &stack1, const std::vector<int> &stack
 
 bool RGeomDescription::SetNodeVisibility(const std::vector<std::string> &path, bool on)
 {
+   TLockGuard lock(fMutex);
+
    RGeomBrowserIter giter(*this);
 
    if (!giter.Navigate(path))
@@ -1811,6 +1871,8 @@ bool RGeomDescription::SetNodeVisibility(const std::vector<std::string> &path, b
 
 bool RGeomDescription::ClearNodeVisibility(const std::vector<std::string> &path)
 {
+   TLockGuard lock(fMutex);
+
    RGeomBrowserIter giter(*this);
 
    if (!giter.Navigate(path))
@@ -1833,6 +1895,8 @@ bool RGeomDescription::ClearNodeVisibility(const std::vector<std::string> &path)
 
 bool RGeomDescription::ClearAllVisibility()
 {
+   TLockGuard lock(fMutex);
+
    if (fVisibility.size() == 0)
       return false;
 
@@ -1849,6 +1913,8 @@ bool RGeomDescription::ChangeConfiguration(const std::string &json)
 {
    auto cfg = TBufferJSON::FromJSON<RGeomConfig>(json);
    if (!cfg) return false;
+
+   TLockGuard lock(fMutex);
 
    auto json1 = TBufferJSON::ToJSON(cfg.get());
    auto json2 = TBufferJSON::ToJSON(&fCfg);
