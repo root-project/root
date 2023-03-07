@@ -468,31 +468,39 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             startsSection: true,
             text: 'Show',
             tooltip: 'Show selected physical node',
-            select: () => {
-               console.log('Show', JSON.stringify(prop._elem));
-            }
+            select: () => this.changeNodeVisibility('SHOW', prop.path)
          }));
 
          this._oIdContextMenu.addItem(new MenuItem({
             text: 'Hide',
             tooltip: 'Hide selected physical node',
-            select: () => {
-               console.log('Hide', JSON.stringify(prop._elem));
-            }
+            select: () => this.changeNodeVisibility('HIDE', prop.path)
          }));
 
          this._oIdContextMenu.addItem(new MenuItem({
             text: 'Reset',
-            tooltip: 'Reset individual show/hide settings',
-            select: () => {
-               console.log('Reset', JSON.stringify(prop._elem));
-            }
+            tooltip: 'Reset node show/hide settings',
+            select: () => this.changeNodeVisibility('CLEAR', prop.path)
          }));
 
+         this._oIdContextMenu.addItem(new MenuItem({
+            text: 'Reset all',
+            tooltip: 'Reset all individual show/hide settings',
+            select: () => this.changeNodeVisibility('CLEARALL')
+         }));
 
          //Open the menu on the cell
          let oCellDomRef = oEvent.getParameter("cellDomRef");
          this._oIdContextMenu.open(false, oCellDomRef, Popup.Dock.BeginTop, Popup.Dock.BeginBottom, oCellDomRef, "none none");
+      },
+
+      changeNodeVisibility(cmd, path) {
+         if (this.standalone) {
+            MessageToast.show('Change of node visibility in standalone mode not yet supported');
+         } else {
+            if (path !== undefined) cmd += ':' + JSON.stringify(path);
+            this.websocket.send(cmd);
+         }
       },
 
       /** @summary Reload geometry description and base drawing, normally not required */
