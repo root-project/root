@@ -3843,7 +3843,7 @@ Long64_t TTree::Draw(const char* varexp, const TCut& selection, Option_t* option
 ///  - "e1:e2"        produces an unbinned 2-d scatter-plot (TGraph) of "e1"
 ///                   on the y-axis versus "e2" on the x-axis
 ///  - "e1:e2:e3"     produces an unbinned 3-d scatter-plot (TPolyMarker3D) of "e1"
-///                   vs “e2” vs “e3” on the z-, y-, x-axis, respectively
+///                   vs "e2" vs "e3" on the z-, y-, x-axis, respectively
 ///  - "e1:e2:e3:e4"  produces an unbinned 3-d scatter-plot (TPolyMarker3D) of "e1"
 ///                   vs "e2" vs "e3" and "e4" mapped on the current color palette.
 ///                   (to create histograms in the 2, 3, and 4 dimensional case,
