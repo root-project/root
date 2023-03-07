@@ -831,7 +831,7 @@ TEST(VecOps, TakeN)
    CheckEqual(res, {4}); // Check the contents of the output vector are correct
     
    res = Take(x,4,1);
-   CheckEqual(res, {1,2,3,4});
+   CheckEqual(res, {1,2,3,4}); // Check the contents of the output vector are correct
 }
 
 TEST(VecOps, TakeWithDefault)
