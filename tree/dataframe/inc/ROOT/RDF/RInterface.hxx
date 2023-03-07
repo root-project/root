@@ -676,9 +676,15 @@ public:
    /// hx["nominal"].Draw();
    /// hx["pt:down"].Draw("SAME");
    /// ~~~
-   /// The run-time of Vary does not scale linearly with the number of variations.
-   /// This behaviour stems from Vary
-   /// booking the variations within a single event loop instead of multiple.
+   /// RDataFrame computes all variations as part of a single loop over the data.
+   /// In particular, this means that I/O and computation of values shared
+   /// among variations only happen once for all variations. Thus, the event loop
+   /// run-time typically scales much better than linearly with the number of
+   /// variations.
+   ///
+   /// RDataFrame lazily computes the varied values required to produce the
+   /// outputs of VariationsFor(). If VariationsFor() was not called for a result,
+   /// the computations run are only for the nominal case.
    template <typename F>
    RInterface<Proxied, DS_t> Vary(std::string_view colName, F &&expression, const ColumnNames_t &inputColumns,
                                   const std::vector<std::string> &variationTags, std::string_view variationName = "")
