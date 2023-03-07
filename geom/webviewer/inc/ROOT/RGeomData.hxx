@@ -252,6 +252,8 @@ class RGeomDescription {
    std::vector<int> fSortMap;       ///<! nodes in order large -> smaller volume
    std::vector<ShapeDescr> fShapes; ///<! shapes with created descriptions
 
+   std::string fSearch;             ///<! search string in hierarchy
+   std::string fSearchJson;         ///<! drawing json for search
    std::string fDrawJson;           ///<! JSON with main nodes drawn by client
    int fDrawIdCut{0};               ///<! sortid used for selection of most-significant nodes
    int fActualLevel{0};             ///<! level can be reduced when selecting nodes
@@ -349,9 +351,11 @@ public:
 
    std::string ProcessBrowserRequest(const std::string &req = "");
 
-   bool HasDrawData() const { TLockGuard lock(fMutex); return (fDrawJson.length() > 0) && (fDrawIdCut > 0); }
+   bool HasDrawData() const;
    void ProduceDrawData();
-   const std::string GetDrawJson() const { TLockGuard lock(fMutex); return fDrawJson; }
+   void ProduceSearchData();
+   std::string GetDrawJson() const { TLockGuard lock(fMutex); return fDrawJson; }
+   std::string GetSearchJson() const { TLockGuard lock(fMutex); return fSearchJson; }
    void ClearDrawData();
 
    void ClearCache();
@@ -410,6 +414,8 @@ public:
    bool ClearNodeVisibility(const std::vector<std::string> &path);
 
    bool ClearAllVisibility();
+
+   bool SetSearch(const std::string &query, const std::string &json);
 };
 
 

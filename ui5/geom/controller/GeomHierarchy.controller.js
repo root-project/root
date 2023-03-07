@@ -221,9 +221,6 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          case "FESCR:":  // searching hierarchy
             this.parseDescription(msg, false);
             break;
-         case "FDRAW:": // drawing of found nodes
-            this.viewer?.checkDrawMsg("found", this.jsroot.parse(msg));
-            break;
          case "BREPL:":   // browser reply
             if (this.model)
                this.model.processResponse(JSON.parse(msg));
@@ -234,6 +231,9 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             break;
          case "MODIF:":
             this.modifyDescription(msg);
+            break;
+         case "RELOAD":
+            this.doReload(true);
             break;
          default:
             console.error(`Non recognized msg ${mhdr} len=${msg.length}`);
@@ -355,24 +355,24 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       },
 
       /** @summary Submit node search query to server, ignore in offline case */
-      submitSearchQuery(query, from_handler) {
+      submitSearchQuery(query, from_handler, no_reload) {
+
+         if (this.search_handler) {
+             clearTimeout(this.search_handler);
+             delete this.search_handler;
+         }
 
          if (!from_handler) {
             // do not submit immediately, but after very short timeout
             // if user types very fast - only last selection will be shown
-            if (this.search_handler) clearTimeout(this.search_handler);
             this.search_handler = setTimeout(() => this.submitSearchQuery(query, true), 1000);
             return;
          }
 
-         delete this.search_handler;
+         this.websocket.send('SEARCH:' + (query || ''));
 
-         if(query) {
-            this.websocket.send("SEARCH:" + (query || ""));
-         } else {
-            this.viewer?.paintFoundNodes(null); // remove all search results
+         if(!query && !no_reload)
             this.doReload(false);
-         }
       },
 
       /** @summary when new query entered in the seach field */
@@ -508,18 +508,25 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          this.doReload(true);
       },
 
-      doReload(force, only_this) {
+      doReload(force) {
          if (this.standalone) {
             this.showTextInBrowser();
             if (this.model)
                this.model.setFullModel(this.fullModel);
-         } else if (this.model) {
-            this.model.clearFullModel();
-            this.model.reloadMainModel(force);
-         }
+            if (!only_this)
+               this.viewer?.paintFoundNodes(null);
+         } else {
+            if (this.model) {
+               this.model.clearFullModel();
+               this.model.reloadMainModel(force);
+            }
 
-         if (!only_this)
-            this.viewer?.doReload(force, true);
+            let srch = this.byId('searchNode');
+            if (srch.getValue()) {
+               srch.setValue('');
+               submitSearchQuery('', true, true);
+            }
+         }
       },
 
       onInfoPress() {
