@@ -2367,7 +2367,7 @@ RVec<T> Take(const RVec<T> &v, const int n)
 
 /// Return first or last `n` elements of an RVec
 ///
-/// Returns first elements if `n > 0` and last elements if `n < 0`.
+/// Return first elements if `n > 0` and last elements if `n < 0`.
 ///
 /// This Take version defaults to a user-specified value
 /// `default_val` if the absolute value of `n` is
@@ -2389,9 +2389,11 @@ RVec<T> Take(const RVec<T> &v, const int n)
 template <typename T>
 RVec<T> Take(const RVec<T> &v, const int n, const T default_val)
 {
-   auto size = v.size();
+   using size_type = typename RVec<T>::size_type;
+   const size_type size = v.size();
+   const size_type absn = std::abs(n);
    // Base case, can be handled by another overload of Take
-   if (std::abs(n) <= size) {
+   if (absn <= size) {
       return Take(v, n);
    }
    RVec<T> temp = v;
@@ -2401,7 +2403,7 @@ RVec<T> Take(const RVec<T> &v, const int n, const T default_val)
       return temp;
    }
    // Case when n is negative and abs(n) > v.size()
-   auto num_to_fill = -1*n - size;
+   const auto num_to_fill = absn - size;
    ROOT::VecOps::RVec<T> fill_front(num_to_fill, default_val);
    return Concatenate(fill_front, temp);
 }
