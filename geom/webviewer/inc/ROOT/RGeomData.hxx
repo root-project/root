@@ -198,6 +198,7 @@ public:
 
 using RGeomScanFunc_t = std::function<bool(RGeomNode &, std::vector<int> &, bool, int)>;
 
+using RGeomSignalFunc_t = std::function<void(const std::string &)>;
 
 class RGeomDescription {
 
@@ -247,6 +248,8 @@ class RGeomDescription {
 
    RGeomConfig fCfg;                ///<! configuration parameter editable from GUI
 
+   std::vector<std::pair<const void *, RGeomSignalFunc_t>> fSignals; ///<! registered signals
+
    void PackMatrix(std::vector<float> &arr, TGeoMatrix *matr);
 
    int MarkVisible(bool on_screen = false);
@@ -279,6 +282,12 @@ class RGeomDescription {
 
 public:
    RGeomDescription() = default;
+
+   void AddSignalHandler(const void *handler, RGeomSignalFunc_t func) { fSignals.emplace_back(handler, func); }
+
+   void RemoveSignalHanlder(const void *handler);
+
+   void IssueSignal(const void *handler, const std::string &kind);
 
    void Build(TGeoManager *mgr, const std::string &volname = "");
 
@@ -376,6 +385,7 @@ public:
    std::unique_ptr<RGeomNodeInfo> MakeNodeInfo(const std::vector<std::string> &path);
 
    bool SelectTop(const std::vector<std::string> &path);
+
 };
 
 
