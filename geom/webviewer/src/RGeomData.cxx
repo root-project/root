@@ -591,6 +591,7 @@ int RGeomDescription::ScanNodes(bool only_visible, int maxlvl, RGeomScanFunc_t f
    std::vector<int> stack;
    stack.reserve(25); // reserve enough space for most use-cases
    int counter = 0;
+   auto viter = fVisibility.begin();
 
    using ScanFunc_t = std::function<int(int, int, bool)>;
 
@@ -604,8 +605,15 @@ int RGeomDescription::ScanNodes(bool only_visible, int maxlvl, RGeomScanFunc_t f
 
       if (desc.nochlds && (lvl > 0)) lvl = 0;
 
+      bool can_display = desc.CanDisplay(), scan_childs = true;
+
+      if ((viter != fVisibility.end()) && (viter->stack == stack)) {
+         can_display = scan_childs = viter->visible;
+         viter++;
+      }
+
       // same logic as in JSROOT ClonedNodes.scanVisible
-      bool is_visible = (lvl >= 0) && (desc.vis > lvl) && desc.CanDisplay() && is_inside;
+      bool is_visible = (lvl >= 0) && (desc.vis > lvl) && can_display && is_inside;
 
       if (is_visible || !only_visible)
          if (func(desc, stack, is_visible, counter))
@@ -613,7 +621,7 @@ int RGeomDescription::ScanNodes(bool only_visible, int maxlvl, RGeomScanFunc_t f
 
       counter++; // count sequence id of current position in scan, will be used later for merging drawing lists
 
-      if ((desc.chlds.size() > 0) && ((lvl > 0) || !only_visible)) {
+      if ((desc.chlds.size() > 0) && (((lvl > 0) && scan_childs) || !only_visible)) {
          auto pos = stack.size();
          stack.emplace_back(0);
          for (unsigned k = 0; k < desc.chlds.size(); ++k) {
@@ -1738,6 +1746,98 @@ bool RGeomDescription::SelectTop(const std::vector<std::string> &path)
 
    ClearDrawData();
 
+   return true;
+}
+
+
+int compare_stacks(const std::vector<int> &stack1, const std::vector<int> &stack2)
+{
+   unsigned len1 = stack1.size(),
+            len2 = stack2.size(),
+            len = (len1 < len2) ? len1 : len2,
+            indx = 0;
+   while (indx < len) {
+      if (stack1[indx] < stack2[indx]) return -1;
+      if (stack1[indx] > stack2[indx]) return 1;
+      ++indx;
+   }
+
+   if (len1 < len2) return -1;
+   if (len1 > len2) return 1;
+
+   return 0;
+}
+
+
+/////////////////////////////////////////////////////////////////////////////////
+/// Set visibility of physical node by path
+/// It overrules TGeo visibility flags - but only for specific physical node
+
+bool RGeomDescription::SetNodeVisibility(const std::vector<std::string> &path, bool on)
+{
+   RGeomBrowserIter giter(*this);
+
+   if (!giter.Navigate(path))
+      return false;
+
+   auto stack = MakeStackByIds(giter.CurrentIds());
+
+   for (auto iter = fVisibility.begin(); iter != fVisibility.end(); iter ++) {
+      auto res = compare_stacks(iter->stack, stack);
+
+      if (res == 0) {
+         bool changed = iter->visible != on;
+         if (changed) {
+            iter->visible = on;
+            ClearDrawData();
+         }
+         return changed;
+      }
+
+      if (res > 0) {
+         fVisibility.emplace(iter, stack, on);
+         ClearDrawData();
+         return true;
+      }
+   }
+
+   fVisibility.emplace_back(stack, on);
+   ClearDrawData();
+   return true;
+}
+
+/////////////////////////////////////////////////////////////////////////////////
+/// Reset custom visibility of physical node by path
+
+bool RGeomDescription::ClearNodeVisibility(const std::vector<std::string> &path)
+{
+   RGeomBrowserIter giter(*this);
+
+   if (!giter.Navigate(path))
+      return false;
+
+   auto stack = MakeStackByIds(giter.CurrentIds());
+
+   for (auto iter = fVisibility.begin(); iter != fVisibility.end(); iter ++)
+      if (compare_stacks(iter->stack, stack) == 0) {
+         fVisibility.erase(iter);
+         ClearDrawData();
+         return true;
+      }
+
+   return false;
+}
+
+/////////////////////////////////////////////////////////////////////////////////
+/// Reset all custom visibility settings
+
+bool RGeomDescription::ClearAllVisibility()
+{
+   if (fVisibility.size() == 0)
+      return false;
+
+   fVisibility.clear();
+   ClearDrawData();
    return true;
 }
 
