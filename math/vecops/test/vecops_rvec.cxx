@@ -822,16 +822,20 @@ TEST(VecOps, TakeN)
 {
    RVec<int> x = {1,2,3,4};
    auto res = Take(x,5,1);
-   CheckEqual(res, {1,2,3,4,1}); // Check the contents of the output vector are correct
+   RVec<int> expected = {1,2,3,4,1};
+   CheckEqual(res, expected); // Check the contents of the output vector are correct
     
    res = Take(x,-5,1);
-   CheckEqual(res, {1,1,2,3,4}); // Check the contents of the output vector are correct
+   expected = {1,1,2,3,4};
+   CheckEqual(res, expected); // Check the contents of the output vector are correct
     
    res = Take(x,-1,1);
-   CheckEqual(res, {4}); // Check the contents of the output vector are correct
+   expected = {4};
+   CheckEqual(res, expected); // Check the contents of the output vector are correct
     
    res = Take(x,4,1);
-   CheckEqual(res, {1,2,3,4}); // Check the contents of the output vector are correct
+   expected = {1,2,3,4};
+   CheckEqual(res, expected); // Check the contents of the output vector are correct
 }
 
 TEST(VecOps, TakeWithDefault)
