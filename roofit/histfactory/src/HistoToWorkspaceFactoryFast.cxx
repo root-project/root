@@ -239,6 +239,23 @@ namespace HistFactory{
   }
 
   RooWorkspace* HistoToWorkspaceFactoryFast::MakeCombinedModel( Measurement& measurement ) {
+    
+    // This function takes a fully configured measurement
+    // which may contain several channels and returns
+    // a workspace holding the combined model
+    //
+    // This can be used, for example, within a script to produce
+    // a combined workspace on-the-fly
+    //
+    // This is a static function (for now) to make
+    // it a one-liner
+
+    
+    Configuration config;
+    return MakeCombinedModel(measurement,config);
+  }
+  
+  RooWorkspace* HistoToWorkspaceFactoryFast::MakeCombinedModel( Measurement& measurement , const Configuration& config) {
 
     // This function takes a fully configured measurement
     // which may contain several channels and returns
@@ -250,10 +267,10 @@ namespace HistFactory{
     // This is a static function (for now) to make
     // it a one-liner
 
-      RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::INFO, 0u, RooFit::ObjectHandling, false);
+    RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::INFO, 0u, RooFit::ObjectHandling, false);
 
     // First, we create an instance of a HistFactory
-    HistoToWorkspaceFactoryFast factory( measurement );
+    HistoToWorkspaceFactoryFast factory( measurement , config);
 
     // Loop over the channels and create the individual workspaces
     vector<std::unique_ptr<RooWorkspace>> channel_workspaces;
@@ -1374,6 +1391,9 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
     // THis works and is natural, but the memory size of the simultaneous dataset grows exponentially with channels
     const char* weightName="weightVar";
     proto->factory(TString::Format("%s[0,-1e10,1e10]",weightName));
+    const char* weightErrName="weightErr";
+    proto->factory(TString::Format("%s[0,-1e10,1e10]",weightErrName));
+    
     proto->defineSet("obsAndWeight",TString::Format("%s,%s",weightName,observablesStr.c_str()));
 
     // New Asimov Generation: Use the code in the Asymptotic calculator
@@ -1389,9 +1409,15 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
     if(TH1 const* mnominal = channel.GetData().GetHisto()) {
       // This works and is natural, but the memory size of the simultaneous
       // dataset grows exponentially with channels.
-      RooDataSet dataset{"obsData","",*proto->set("obsAndWeight"),weightName};
-      ConfigureHistFactoryDataset( dataset, *mnominal, *proto, fObsNameVec );
-      proto->import(dataset);
+      if(!fCfg.storeDataError){
+	RooDataSet dataset{"obsData","",*proto->set("obsAndWeight"),weightName};
+	ConfigureHistFactoryDataset( dataset, *mnominal, *proto, fObsNameVec );
+	proto->import(dataset);
+      } else {
+	RooDataSet dataset{"obsData","",*proto->set("obsAndWeight"), RooFit::WeightVar(weightName), RooFit::StoreError(*proto->var(weightErrName))};
+	ConfigureHistFactoryDataset( dataset, *mnominal, *proto, fObsNameVec );
+	proto->import(dataset);
+      }
     } // End: Has non-null 'data' entry
 
 
@@ -1438,39 +1464,47 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
         return;
      }
 
-    TAxis const* ax = mnominal.GetXaxis();
-    TAxis const* ay = mnominal.GetYaxis();
-    TAxis const* az = mnominal.GetZaxis();
+     TAxis const* ax = mnominal.GetXaxis();
+     TAxis const* ay = mnominal.GetYaxis();
+     TAxis const* az = mnominal.GetZaxis();
 
-    for (int i=1; i<=ax->GetNbins(); ++i) { // 1 or more dimension
+     RooRealVar* err = proto.var("weightErr");
 
-      double xval = ax->GetBinCenter(i);
-      proto.var( obsNameVec[0] )->setVal( xval );
+     for (int i=1; i<=ax->GetNbins(); ++i) { // 1 or more dimension
 
-      if(obsNameVec.size()==1) {
-   double fval = mnominal.GetBinContent(i);
-   obsDataUnbinned.add( *proto.set("obsAndWeight"), fval );
-      } else { // 2 or more dimensions
+       double xval = ax->GetBinCenter(i);
+       proto.var( obsNameVec[0] )->setVal( xval );
 
-   for(int j=1; j<=ay->GetNbins(); ++j) {
-     double yval = ay->GetBinCenter(j);
-     proto.var( obsNameVec[1] )->setVal( yval );
+       if(obsNameVec.size()==1) {
+	 double fval = mnominal.GetBinContent(i);
+	 double ferr = mnominal.GetBinError(i);
+	 err->setVal(ferr);
+	 obsDataUnbinned.add( *proto.set("obsAndWeight"), fval );
+       } else { // 2 or more dimensions
 
-     if(obsNameVec.size()==2) {
-       double fval = mnominal.GetBinContent(i,j);
-       obsDataUnbinned.add( *proto.set("obsAndWeight"), fval );
-     } else { // 3 dimensions
+	 for(int j=1; j<=ay->GetNbins(); ++j) {
+	   double yval = ay->GetBinCenter(j);
+	   proto.var( obsNameVec[1] )->setVal( yval );
 
-       for(int k=1; k<=az->GetNbins(); ++k) {
-         double zval = az->GetBinCenter(k);
-         proto.var( obsNameVec[2] )->setVal( zval );
-         double fval = mnominal.GetBinContent(i,j,k);
-         obsDataUnbinned.add( *proto.set("obsAndWeight"), fval );
+	   if(obsNameVec.size()==2) {
+	     double fval = mnominal.GetBinContent(i,j);
+	     double ferr = mnominal.GetBinError(i,j);       
+	     err->setVal(ferr);
+	     obsDataUnbinned.add( *proto.set("obsAndWeight"), fval );
+	   } else { // 3 dimensions
+
+	     for(int k=1; k<=az->GetNbins(); ++k) {
+	       double zval = az->GetBinCenter(k);
+	       proto.var( obsNameVec[2] )->setVal( zval );
+	       double fval = mnominal.GetBinContent(i,j,k);
+	       double ferr = mnominal.GetBinError(i,j,k);	 
+	       err->setVal(ferr);
+	       obsDataUnbinned.add( *proto.set("obsAndWeight"), fval );
+	     }
+	   }
+	 }
        }
      }
-   }
-      }
-    }
   }
 
   void HistoToWorkspaceFactoryFast::GuessObsNameVec(const TH1* hist)
