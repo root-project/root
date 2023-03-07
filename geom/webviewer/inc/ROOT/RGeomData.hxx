@@ -185,6 +185,7 @@ public:
    std::vector<int> stack; ///< stack parameter, used with HIGHL
 };
 
+/** Node information including rendering data */
 class RGeomNodeInfo {
 public:
    std::vector<std::string> path;  ///< full path to node
@@ -194,6 +195,14 @@ public:
    std::string shape_name; ///< shape class name (if any)
 
    RGeomRenderInfo *ri{nullptr};  ///< rendering information (if applicable)
+};
+
+/** Node information including rendering data */
+class RGeomNodeVisibility {
+public:
+   std::vector<int> stack;        ///< path to the node
+   bool visible{false};           ///< visible flag
+   RGeomNodeVisibility(const std::vector<int> &_stack, bool _visible) : stack(_stack), visible(_visible) {}
 };
 
 using RGeomScanFunc_t = std::function<bool(RGeomNode &, std::vector<int> &, bool, int)>;
@@ -234,6 +243,8 @@ class RGeomDescription {
 
    std::vector<TGeoNode *> fNodes;  ///<! flat list of all nodes
    std::vector<RGeomNode> fDesc;    ///<! converted description, send to client
+   std::vector<RGeomNodeVisibility> fVisibility; ///<! custom visibility flags for physical nodes
+
    TGeoVolume *fDrawVolume{nullptr};///<! select volume independent from TGeoManager
    std::vector<int> fSelectedStack; ///<! selected branch of geometry by stack
 
@@ -353,8 +364,6 @@ public:
 
    bool ProduceDrawingFor(int nodeid, std::string &json, bool check_volume = false);
 
-   bool ChangeNodeVisibility(int nodeid, bool selected);
-
    /** Set number of segments for cylindrical shapes, if 0 - default value will be used */
    void SetNSegments(int n = 0) { fCfg.nsegm = n; }
    /** Return of segments for cylindrical shapes, if 0 - default value will be used */
@@ -384,8 +393,15 @@ public:
 
    std::unique_ptr<RGeomNodeInfo> MakeNodeInfo(const std::vector<std::string> &path);
 
+   bool ChangeNodeVisibility(int nodeid, bool selected);
+
    bool SelectTop(const std::vector<std::string> &path);
 
+   bool SetNodeVisibility(const std::vector<std::string> &path, bool on = true);
+
+   bool ClearNodeVisibility(const std::vector<std::string> &path);
+
+   bool ClearAllVisibility();
 };
 
 

@@ -368,7 +368,7 @@ void RGeomViewer::WebWindowDisconnect(unsigned)
 /// Process signal from geom description when it changed by any means
 void RGeomViewer::ProcessSignal(const std::string &kind)
 {
-   if (kind == "SelectTop")
+   if ((kind == "SelectTop") || (kind == "NodeVisibility"))
       SendGeometry();
 }
 
