@@ -2389,19 +2389,19 @@ RVec<T> Take(const RVec<T> &v, const int n)
 template <typename T>
 RVec<T> Take(const RVec<T> &v, const int n, const T default_val)
 {
-   auto size = static_cast<long>(v.size());
+   auto size = v.size();
    // Base case, can be handled by another overload of Take
-   if (n*n <= size*size) {
+   if (std::abs(n) <= size) {
       return Take(v, n);
    }
    RVec<T> temp = v;
    // Case when n is positive and n > v.size()
-   if (n > size) {
+   if (n > 0) {
       temp.resize(n, default_val);
       return temp;
    }
    // Case when n is negative and abs(n) > v.size()
-   size_t num_to_fill = -1*n - size;
+   auto num_to_fill = -1*n - size;
    ROOT::VecOps::RVec<T> fill_front(num_to_fill, default_val);
    return Concatenate(fill_front, temp);
 }
