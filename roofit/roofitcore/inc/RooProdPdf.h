@@ -96,8 +96,6 @@ public:
 
   RooArgSet* findPdfNSet(RooAbsPdf const& pdf) const ;
 
-  void writeCacheToStream(std::ostream& os, RooArgSet const* nset) const;
-
   std::unique_ptr<RooAbsArg> compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileContext & ctx) const override;
 
 private:

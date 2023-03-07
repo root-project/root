@@ -2324,10 +2324,6 @@ void RooProdPdf::CacheElem::writeToStream(std::ostream& os) const {
   }
 }
 
-void RooProdPdf::writeCacheToStream(std::ostream& os, RooArgSet const* nset) const {
-  getCacheElem(nset)->writeToStream(os);
-}
-
 std::unique_ptr<RooArgSet> RooProdPdf::fillNormSetForServer(RooArgSet const &normSet, RooAbsArg const &server) const
 {
    if (normSet.empty())
