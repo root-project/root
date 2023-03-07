@@ -40,6 +40,8 @@ public:
 
    void Show(const RWebDisplayArgs &args = "");
 
+   void Update();
+
 };
 
 } // namespace Experimental

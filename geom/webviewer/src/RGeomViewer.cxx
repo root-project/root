@@ -138,8 +138,13 @@ std::string RGeomViewer::GetWindowAddr() const
 
 void RGeomViewer::Update()
 {
-   if (fWebWindow)
-      fWebWindow->Send(0, "RELOAD");
+   fDesc.ClearCache();
+
+   // update hierarchy
+   if (fWebHierarchy)
+      fWebHierarchy->Update();
+
+   SendGeometry(0);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -163,17 +168,28 @@ std::vector<int> RGeomViewer::GetStackFromJson(const std::string &json, bool nod
 //////////////////////////////////////////////////////////////////////////////////////////////
 /// Send data for principal geometry draw
 
-void RGeomViewer::SendGeometry(unsigned connid)
+void RGeomViewer::SendGeometry(unsigned connid, bool first_time)
 {
    if (!fDesc.HasDrawData())
       fDesc.ProduceDrawData();
 
-   auto &json = fDesc.GetDrawJson();
+   // updates search data when necessary
+   fDesc.ProduceSearchData();
 
-   R__LOG_DEBUG(0, RGeomLog()) << "Produce geometry JSON len: " << json.length();
+   auto json0 = fDesc.GetDrawJson();
+   auto json1 = fDesc.GetSearchJson();
 
-   if (fWebWindow)
-      fWebWindow->Send(connid, json);
+   R__LOG_DEBUG(0, RGeomLog()) << "Produce geometry JSON len: " << json0.length();
+
+   if (!fWebWindow)
+      return;
+
+   // for the first time always send full drawing
+   if (first_time || json1.empty())
+      fWebWindow->Send(connid, json0);
+   else
+      fWebWindow->Send(connid, json1);
+
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -229,7 +245,7 @@ void RGeomViewer::WebWindowCallback(unsigned connid, const std::string &arg)
 {
    if (arg == "GETDRAW") {
 
-      SendGeometry(connid);
+      SendGeometry(connid, true);
 
    } else if (arg == "QUIT_ROOT") {
 
@@ -368,7 +384,8 @@ void RGeomViewer::WebWindowDisconnect(unsigned)
 /// Process signal from geom description when it changed by any means
 void RGeomViewer::ProcessSignal(const std::string &kind)
 {
-   if ((kind == "SelectTop") || (kind == "NodeVisibility"))
+   if ((kind == "SelectTop") || (kind == "NodeVisibility") || (kind == "ChangeSearch"))
       SendGeometry();
+   else if (kind == "ClearSearch")
+      fWebWindow->Send(0, "CLRSCH"); // 6 letters
 }
-

@@ -1239,6 +1239,33 @@ std::string RGeomDescription::ProduceJson(bool all_nodes)
 }
 
 /////////////////////////////////////////////////////////////////////
+/// Check if there is draw data available
+
+bool RGeomDescription::HasDrawData() const
+{
+   TLockGuard lock(fMutex);
+   return (fDrawJson.length() > 0) && (fDrawIdCut > 0);
+}
+
+/////////////////////////////////////////////////////////////////////
+/// Produces search data if necessary
+
+void RGeomDescription::ProduceSearchData()
+{
+   TLockGuard lock(fMutex);
+
+   if (fSearch.empty() || !fSearchJson.empty())
+      return;
+
+   std::string hjson;
+
+   SearchVisibles(fSearch, hjson, fSearchJson);
+
+   (void) hjson; // not used here
+}
+
+
+/////////////////////////////////////////////////////////////////////
 /// Collect all information required to draw geometry on the client
 /// This includes list of each visible nodes, meshes and matrixes
 
@@ -1259,10 +1286,11 @@ void RGeomDescription::ClearDrawData()
    TLockGuard lock(fMutex);
 
    fDrawJson.clear();
+   fSearchJson.clear();
 }
 
 /////////////////////////////////////////////////////////////////////
-/// Clear cached data.
+/// Clear cached data, need to be clear when connection broken
 
 void RGeomDescription::ClearCache()
 {
@@ -1270,6 +1298,7 @@ void RGeomDescription::ClearCache()
 
    TLockGuard lock(fMutex);
    fShapes.clear();
+   fSearch.clear();
 }
 
 /////////////////////////////////////////////////////////////////////
@@ -1927,4 +1956,18 @@ bool RGeomDescription::ChangeConfiguration(const std::string &json)
    ClearDrawData();
 
    return true;
+}
+
+/////////////////////////////////////////////////////////////////////////////////
+/// Change search query and belongs to it json string
+/// Returns true if any parameter was really changed
+
+bool RGeomDescription::SetSearch(const std::string &query, const std::string &json)
+{
+   TLockGuard lock(fMutex);
+
+   bool changed = (fSearch != query) || (fSearchJson != json);
+   fSearch = query;
+   fSearchJson = json;
+   return changed;
 }
