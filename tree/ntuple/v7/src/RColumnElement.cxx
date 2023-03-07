@@ -241,7 +241,7 @@ void ROOT::Experimental::Detail::RColumnElement<std::int64_t, ROOT::Experimental
    char *int32SplitArray = reinterpret_cast<char *>(src);
    std::int64_t *int64Array = reinterpret_cast<std::int64_t *>(dst);
    for (std::size_t i = 0; i < count; ++i) {
-      std::int32_t v;
+      std::int32_t v = 0;
       for (std::size_t b = 0; b < 4; ++b) {
          reinterpret_cast<char *>(&v)[b] = int32SplitArray[b * count + i];
       }
