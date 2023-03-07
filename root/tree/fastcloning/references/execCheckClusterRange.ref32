@@ -24,7 +24,7 @@ Cluster #16 starts at  570 and ends at  599
 Cluster Range #  Entry Start      Last Entry           Size   Number of clusters
 0                0                299                    50          6
 1                300              599                    30         10
-Total number of clusters: 16
+Total number of clusters: 16 
 Cluster # 1 starts at    0 and ends at   49
 Cluster # 2 starts at   50 and ends at   99
 Cluster # 3 starts at  100 and ends at  149
@@ -65,7 +65,7 @@ Cluster #37 starts at 1440 and ends at 1469
 Cluster #38 starts at 1470 and ends at 1499
 ******************************************************************************
 *Tree    :t1        :                                                        *
-*Entries :     1500 : Total =           29664 bytes  File  Size =      16413 *
+*Entries :     1500 : Total =           29664 bytes  File  Size =      16408 *
 *        :          : Tree compression factor =   1.66                       *
 ******************************************************************************
 Cluster Range #  Entry Start      Last Entry           Size   Number of clusters
@@ -74,7 +74,7 @@ Cluster Range #  Entry Start      Last Entry           Size   Number of clusters
 2                600              899                    50          6
 3                900              1199                   50          6
 4                1200             1499                   30         10
-Total number of clusters: 38
+Total number of clusters: 38 
 ******************************************************************************
 *Tree    :t2        :                                                        *
 *Entries :      300 : Total =            2732 bytes  File  Size =       2732 *
@@ -82,10 +82,10 @@ Total number of clusters: 38
 ******************************************************************************
 Cluster Range #  Entry Start      Last Entry           Size   Number of clusters
 0                0                299                    30         10
-Total number of clusters: 10
+Total number of clusters: 10 
 ******************************************************************************
 *Tree    :t1        :                                                        *
-*Entries :     1800 : Total =           29346 bytes  File  Size =      18283 *
+*Entries :     1800 : Total =           29346 bytes  File  Size =      18278 *
 *        :          : Tree compression factor =   1.59                       *
 ******************************************************************************
 *Br    0 :v1        : v1/I                                                   *
@@ -142,7 +142,7 @@ Cluster #47 starts at 1740 and ends at 1769
 Cluster #48 starts at 1770 and ends at 1799
 ******************************************************************************
 *Tree    :t1        :                                                        *
-*Entries :     1800 : Total =           29346 bytes  File  Size =      17988 *
+*Entries :     1800 : Total =           29346 bytes  File  Size =      17989 *
 *        :          : Tree compression factor =   1.59                       *
 ******************************************************************************
 Cluster Range #  Entry Start      Last Entry           Size   Number of clusters
@@ -151,7 +151,7 @@ Cluster Range #  Entry Start      Last Entry           Size   Number of clusters
 2                600              899                    50          6
 3                900              1199                   50          6
 4                1200             1799                   30         20
-Total number of clusters: 48
+Total number of clusters: 48 
 Cluster # 1 starts at    0 and ends at   49
 Cluster # 2 starts at   50 and ends at   99
 Cluster # 3 starts at  100 and ends at  149
@@ -222,7 +222,7 @@ Cluster #67 starts at 2340 and ends at 2369
 Cluster #68 starts at 2370 and ends at 2399
 ******************************************************************************
 *Tree    :t1        :                                                        *
-*Entries :     2400 : Total =           33566 bytes  File  Size =      20847 *
+*Entries :     2400 : Total =           33566 bytes  File  Size =      20848 *
 *        :          : Tree compression factor =   1.56                       *
 ******************************************************************************
 Cluster Range #  Entry Start      Last Entry           Size   Number of clusters
@@ -231,5 +231,5 @@ Cluster Range #  Entry Start      Last Entry           Size   Number of clusters
 2                600              899                    50          6
 3                900              1199                   50          6
 4                1200             2399                   30         40
-Total number of clusters: 68
+Total number of clusters: 68 
 (int) 0
