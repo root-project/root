@@ -48,15 +48,18 @@ void RGeomHierarchy::WebWindowCallback(unsigned connid, const std::string &arg)
 
       std::string query = arg.substr(7);
 
-      std::string hjson, json;
-
-      /* auto nmatches = */ fDesc.SearchVisibles(query, hjson, json);
-
-      // send reply with appropriate header - NOFOUND, FOUND0:, FOUND1:
-      fWebWindow->Send(connid, hjson);
-
-      if (!json.empty())
-         fWebWindow->Send(connid, json);
+      if (!query.empty()) {
+         std::string hjson, json;
+         fDesc.SearchVisibles(query, hjson, json);
+         // send reply with appropriate header - NOFOUND, FOUND0:, FOUND1:
+         fWebWindow->Send(connid, hjson);
+         // inform viewer that search is changed
+         if (fDesc.SetSearch(query, json))
+            fDesc.IssueSignal(this, "ChangeSearch");
+      } else {
+         fDesc.SetSearch(""s, ""s);
+         fDesc.IssueSignal(this, "ClearSearch");
+      }
    } else if (arg.compare(0, 7, "SETTOP:") == 0) {
       auto path = TBufferJSON::FromJSON<std::vector<std::string>>(arg.substr(7));
       if (path && fDesc.SelectTop(*path))
@@ -83,3 +86,13 @@ void RGeomHierarchy::Show(const RWebDisplayArgs &args)
 {
    RWebWindow::ShowWindow(fWebWindow, args);
 }
+
+/////////////////////////////////////////////////////////////////////////////////
+/// Update client - reload hierarchy
+
+void RGeomHierarchy::Update()
+{
+   if (fWebWindow)
+      fWebWindow->Send(0, "RELOAD");
+}
+

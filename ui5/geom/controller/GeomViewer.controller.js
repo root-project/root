@@ -339,6 +339,9 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          case "GDRAW:":   // normal drawing of geometry
             this.checkDrawMsg("draw", this.jsroot.parse(msg)); // use jsroot.parse while refs are used
             break;
+         case "FDRAW:": // drawing of found nodes
+            this.checkDrawMsg("found", this.jsroot.parse(msg));
+            break;
          case "APPND:":
             this.checkDrawMsg("append", this.jsroot.parse(msg));
             break;
@@ -348,9 +351,8 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          case "NINFO:":
             this.provideNodeInfo(this.jsroot.parse(msg));
             break;
-         case "RELOAD":
+         case "CLRSCH":
             this.paintFoundNodes(null);
-            this.doReload(true);
             break;
          case "DROPT:":
             this.applyDrawOptions(msg);
@@ -633,16 +635,6 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          let separ = dataUrl.indexOf("base64,");
          if ((separ>=0) && this.websocket && !this.standalone)
             this.websocket.send("IMAGE:" + name + "::" + dataUrl.substr(separ+7));
-      },
-
-      doReload(force, only_this) {
-         if (this.standalone)
-            this.paintFoundNodes(null);
-         else
-            this.checkSendRequest(force);
-
-         if (!only_this && !this.nobrowser)
-            this.byId('geomHierarchyPanel')?.getController().doReload(force, true);
       },
 
       isDrawPageActive() {
