@@ -13,7 +13,6 @@
 #include <RooFitHS3/JSONIO.h>
 #include <RooFitHS3/RooJSONFactoryWSTool.h>
 
-#include <RooGlobalFunc.h>
 #include <RooConstVar.h>
 #include <RooRealVar.h>
 #include <RooAbsCategory.h>
@@ -1100,7 +1099,7 @@ void RooJSONFactoryWSTool::importVariable(const JSONNode &p)
    RooRealVar v(name.c_str(), name.c_str(), 1.);
    configureVariable(*_domains, p, v);
    ::importAttributes(&v, p);
-   _workspace.import(v, RooFit::RecycleConflictNodes(true), RooFit::Silence(true));
+   wsImport(v);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
