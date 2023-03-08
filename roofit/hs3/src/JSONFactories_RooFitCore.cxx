@@ -353,7 +353,7 @@ public:
       const RooHistFunc *hf = static_cast<const RooHistFunc *>(func);
       elem["type"] << key();
       RooArgList vars(*std::unique_ptr<RooArgSet>{hf->getVariables()});
-      std::unique_ptr<TH1> hist{hf->createHistogram(RooJSONFactoryWSTool::concat(&vars).c_str())};
+      std::unique_ptr<TH1> hist{hf->createHistogram(RooJSONFactoryWSTool::concat(&vars))};
       if (!hist)
          return false;
       auto &data = elem["data"];
@@ -388,7 +388,7 @@ public:
       const RooHistPdf *hf = static_cast<const RooHistPdf *>(func);
       elem["type"] << key();
       RooArgList vars(*std::unique_ptr<RooArgSet>{hf->getVariables()});
-      std::unique_ptr<TH1> hist{hf->createHistogram(RooJSONFactoryWSTool::concat(&vars).c_str())};
+      std::unique_ptr<TH1> hist{hf->createHistogram(RooJSONFactoryWSTool::concat(&vars))};
       if (!hist)
          return false;
       auto &data = elem["data"];

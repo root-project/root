@@ -89,8 +89,8 @@ public:
   inline const std::map<std::string,RooArgSet>& sets() const { return _namedSets; }
 
   // Import, load and save parameter value snapshots
-  bool saveSnapshot(const char* name, const char* paramNames) ;
-  bool saveSnapshot(const char* name, const RooArgSet& params, bool importValues=false) ;
+  bool saveSnapshot(RooStringView, const char* paramNames) ;
+  bool saveSnapshot(RooStringView, const RooArgSet& params, bool importValues=false) ;
   bool loadSnapshot(const char* name) ;
   const RooArgSet* getSnapshot(const char* name) const ;
 

@@ -375,7 +375,7 @@ std::string generate(const RooFit::JSONIO::ImportExpression &ex, const JSONNode 
          std::stringstream err;
          err << "factory expression for class '" << ex.tclass->GetName() << "', which expects key '" << k
              << "' missing from input for object '" << name << "', skipping.";
-         RooJSONFactoryWSTool::error(err.str().c_str());
+         RooJSONFactoryWSTool::error(err.str());
       }
       if (p[k].is_seq()) {
          expression << "{";
@@ -483,7 +483,7 @@ bool RooJSONFactoryWSTool::find(const JSONNode &n, const std::string &elem)
       }
       return false;
    } else if (n.is_map()) {
-      return n.has_child(elem.c_str());
+      return n.has_child(elem);
    }
    return false;
 }
@@ -682,7 +682,7 @@ void RooJSONFactoryWSTool::importFunction(const JSONNode &p, bool isPdf)
       return;
    // if the function already exists, we don't need to do anything
    if (isPdf) {
-      if (_workspace.pdf(name.c_str()))
+      if (_workspace.pdf(name))
          return;
    } else {
       if (_workspace.function(name))
@@ -757,7 +757,7 @@ void RooJSONFactoryWSTool::importFunction(const JSONNode &p, bool isPdf)
       if (!func) {
          std::stringstream err;
          err << "something went wrong importing function '" << name << "'.";
-         RooJSONFactoryWSTool::error(err.str().c_str());
+         RooJSONFactoryWSTool::error(err.str());
       } else {
          ::importAttributes(func, p);
       }
@@ -791,7 +791,7 @@ std::map<std::string, std::unique_ptr<RooAbsData>> RooJSONFactoryWSTool::loadDat
       std::string name(RooJSONFactoryWSTool::name(p));
       if (name.empty())
          continue;
-      if (_workspace.data(name.c_str()))
+      if (_workspace.data(name))
          continue;
       if (!p.is_map())
          continue;
@@ -1183,7 +1183,7 @@ void RooJSONFactoryWSTool::exportModelConfig(JSONNode &rootnode, RooStats::Model
 
       auto &nllNode = likelihoodsNode[item.first];
       nllNode.set_map();
-      nllNode["dist"] << pdf->getPdf(item.first.c_str())->GetName();
+      nllNode["dist"] << pdf->getPdf(item.first)->GetName();
       nllNode["obs"] << basename + "_" + item.first;
    }
 
@@ -1469,7 +1469,7 @@ void RooJSONFactoryWSTool::importAllNodes(const RooFit::Detail::JSONNode &n)
             configureVariable(*_domains, var, *rrv);
             vars.add(*rrv);
          }
-         _workspace.saveSnapshot(name.c_str(), vars);
+         _workspace.saveSnapshot(name, vars);
       }
    }
    _workspace.loadSnapshot("fromJSON");
