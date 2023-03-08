@@ -236,7 +236,7 @@ private:
    void   LoadHandlerMacros(const char *path);
 
 public:
-   TPluginManager() : fHandlers(nullptr), fBasesLoaded(nullptr), fReadingDirs(kFALSE) { }
+   TPluginManager();
    ~TPluginManager();
 
    void   LoadHandlersFromEnv(TEnv *env);
