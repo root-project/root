@@ -515,15 +515,13 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             });
 
             this.websocket.send("HCHANNEL:" + websocket.getChannelId());
-
-            console.log('did send channel', websocket.getChannelId());
             this.send_channel = true;
          }
 
          if (this.isConnected && this.renderingDone) {
 
             if (this.geo && !this.ask_getdraw) {
-               this.websocket.send("GETDRAW");
+               this.websocket.send('GETDRAW');
                this.ask_getdraw = true;
             }
          }
@@ -532,8 +530,8 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       /** @summary method called from geom painter when specific node need to be activated in the browser
        * @desc Due to complex indexing in TreeTable it is not trivial to select special node */
       activateInTreeTable(itemnames, force) {
-         if (this.nobrowser) return;
-         this.byId('geomHierarchyPanel')?.getController().activateInTreeTable(itemnames, force);
+         if ((itemnames?.length > 0) && force)
+            this.websocket.send('ACTIVATE:' + itemnames[0]);
       },
 
       /** when new draw options send from server */

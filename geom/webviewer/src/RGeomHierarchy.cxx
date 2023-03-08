@@ -93,6 +93,14 @@ void RGeomHierarchy::Show(const RWebDisplayArgs &args)
 void RGeomHierarchy::Update()
 {
    if (fWebWindow)
-      fWebWindow->Send(0, "RELOAD");
+      fWebWindow->Send(0, "RELOAD"s);
 }
 
+/////////////////////////////////////////////////////////////////////////////////
+/// Let browse to specified location
+
+void RGeomHierarchy::BrowseTo(const std::string &itemname)
+{
+   if (fWebWindow)
+      fWebWindow->Send(0, "ACTIV:"s + itemname);
+}
