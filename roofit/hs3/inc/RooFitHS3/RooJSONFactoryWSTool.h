@@ -196,6 +196,9 @@ public:
       const char *what() const noexcept override { return _message.c_str(); }
    };
 
+   static void
+   writeCombinedDataName(RooFit::Detail::JSONNode &rootnode, std::string const &pdfName, std::string const &dataName);
+
 private:
    struct Config {
       static bool stripObservables;

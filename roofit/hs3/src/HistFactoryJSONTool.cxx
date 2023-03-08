@@ -33,7 +33,7 @@ void exportSample(const RooStats::HistFactory::Sample &sample, JSONNode &s)
    s.set_map();
    s["name"] << sample.GetName();
 
-   if (sample.GetOverallSysList().size() > 0) {
+   if (!sample.GetOverallSysList().empty()) {
       auto &modifiers = s["modifiers"];
       modifiers.set_seq();
       for (const auto &sys : sample.GetOverallSysList()) {
@@ -48,7 +48,7 @@ void exportSample(const RooStats::HistFactory::Sample &sample, JSONNode &s)
       }
    }
 
-   if (sample.GetNormFactorList().size() > 0) {
+   if (!sample.GetNormFactorList().empty()) {
       auto &modifiers = s["modifiers"];
       modifiers.set_seq();
       for (const auto &nf : sample.GetNormFactorList()) {
@@ -59,7 +59,7 @@ void exportSample(const RooStats::HistFactory::Sample &sample, JSONNode &s)
       }
    }
 
-   if (sample.GetHistoSysList().size() > 0) {
+   if (!sample.GetHistoSysList().empty()) {
       auto &modifiers = s["modifiers"];
       modifiers.set_seq();
       for (size_t i = 0; i < sample.GetHistoSysList().size(); ++i) {
@@ -242,6 +242,8 @@ void exportMeasurement(RooStats::HistFactory::Measurement &measurement, JSONNode
       RooJSONFactoryWSTool::exportHistogram(*c.GetData().GetHisto(), datalist[std::string("obsData_") + c.GetName()],
                                             obsnames);
    }
+
+   RooJSONFactoryWSTool::writeCombinedDataName(n, measurement.GetName(), "obsData");
 }
 
 } // namespace

@@ -1,7 +1,7 @@
 {
     "misc" : { "ROOT_internal" : { "ModelConfigs" : {
         "main": {
-            "combinedObservationName": "observed"
+            "combined_data_name": "observed"
         }
     }}},
     "analyses": {

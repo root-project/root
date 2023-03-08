@@ -1140,6 +1140,21 @@ std::string RooJSONFactoryWSTool::name(const JSONNode &n)
    return n.is_container() && n.has_child("name") ? n["name"].val() : (n.has_key() ? n.key() : n.val());
 }
 
+void RooJSONFactoryWSTool::writeCombinedDataName(JSONNode &rootnode, std::string const &pdfName,
+                                                 std::string const &dataName)
+{
+   auto &miscinfo = rootnode["misc"];
+   miscinfo.set_map();
+   auto &rootinfo = miscinfo["ROOT_internal"];
+   rootinfo.set_map();
+   auto &modelConfigs = rootinfo["ModelConfigs"];
+   modelConfigs.set_map();
+   auto &modelConfigAux = modelConfigs[pdfName];
+   modelConfigAux.set_map();
+
+   modelConfigAux["combined_data_name"] << dataName;
+}
+
 void RooJSONFactoryWSTool::exportModelConfig(JSONNode &rootnode, RooStats::ModelConfig const &mc)
 {
    auto pdf = dynamic_cast<RooSimultaneous const *>(mc.GetPdf());
@@ -1153,7 +1168,7 @@ void RooJSONFactoryWSTool::exportModelConfig(JSONNode &rootnode, RooStats::Model
    auto &likelihoodsNode = rootnode["likelihoods"];
    likelihoodsNode.set_map();
 
-   auto &analysisNode = analysesNode[mc.GetPdf()->GetName()];
+   auto &analysisNode = analysesNode[pdf->GetName()];
    analysisNode.set_map();
 
    auto &analysisDomains = analysisNode["domains"];
@@ -1163,20 +1178,14 @@ void RooJSONFactoryWSTool::exportModelConfig(JSONNode &rootnode, RooStats::Model
    auto &analysisLikelihoods = analysisNode["likelihoods"];
    analysisLikelihoods.set_seq();
 
-   auto &miscinfo = rootnode["misc"];
-   miscinfo.set_map();
-   auto &rootinfo = miscinfo["ROOT_internal"];
-   rootinfo.set_map();
-   auto &modelConfigs = rootinfo["ModelConfigs"];
-   modelConfigs.set_map();
-   auto &modelConfigAux = modelConfigs[mc.GetPdf()->GetName()];
-   modelConfigAux.set_map();
-
-   std::string basename = "obsData";
-   if (auto s = pdf->getStringAttribute("combinedObservationName")) {
+   std::string basename;
+   if (auto s = pdf->getStringAttribute("combined_data_name")) {
       basename = s;
-      modelConfigAux["combinedObservationName"] << s;
+   } else {
+      throw std::runtime_error("Any exported RooSimultaneous must have the combined_data_name attribute (for now)!");
    }
+
+   writeCombinedDataName(rootnode, pdf->GetName(), basename);
 
    for (auto const &item : pdf->indexCat()) {
       analysisLikelihoods.append_child() << item.first;
@@ -1427,12 +1436,12 @@ void RooJSONFactoryWSTool::importAnalysis(const RooFit::Detail::JSONNode &analys
       allVars.add(*channelData->get());
    }
 
-   std::string name = "obsData"; // default name for the combined data if not specified in the JSON
-   if (mcAuxNode.has_child("combinedObservationName")) {
-      name = mcAuxNode["combinedObservationName"].val();
+   if (!mcAuxNode.has_child("combined_data_name")) {
+      throw std::runtime_error("Any imported ModelConfig must have the combined_data_name attribute (for now)!");
    }
+   std::string name = mcAuxNode["combined_data_name"].val();
 
-   pdf->setStringAttribute("combinedObservationName", name.c_str());
+   pdf->setStringAttribute("combined_data_name", name.c_str());
 
    RooDataSet obsData{name.c_str(), name.c_str(), allVars, RooFit::Import(dsMap),
                       RooFit::Index(const_cast<RooCategory &>(static_cast<RooCategory const &>(pdf->indexCat())))};

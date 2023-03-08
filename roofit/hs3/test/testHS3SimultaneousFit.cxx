@@ -24,19 +24,6 @@
 
 namespace {
 
-/// Generating an unbinned dataset from a binned one.
-std::unique_ptr<RooDataSet> makeUnbinned(RooDataHist const &hist)
-{
-   RooArgSet obs(*hist.get());
-   RooRealVar weight{"weight", "weight", 1.0};
-   obs.add(weight, true);
-   auto data = std::make_unique<RooDataSet>(hist.GetName(), hist.GetTitle(), obs, RooFit::WeightVar(weight));
-   for (int i = 0; i < hist.numEntries(); ++i) {
-      data->add(*hist.get(i), hist.weight(i));
-   }
-   return data;
-}
-
 std::unique_ptr<RooFitResult> writeJSONAndFitModel(std::string &jsonStr)
 {
    using namespace RooFit;
@@ -77,29 +64,26 @@ std::unique_ptr<RooFitResult> writeJSONAndFitModel(std::string &jsonStr)
    RooAbsPdf &model_1 = *ws.pdf("model_1");
    RooAbsPdf &model_2 = *ws.pdf("model_2");
 
-   std::unique_ptr<RooDataHist> data1{model_1.generateBinned(x1)};
-   std::unique_ptr<RooDataHist> data2{model_2.generateBinned(x2)};
+   std::map<std::string, std::unique_ptr<RooAbsData>> datas;
+   datas["channel_1"] = std::unique_ptr<RooDataHist>{model_1.generateBinned(x1)};
+   datas["channel_2"] = std::unique_ptr<RooDataHist>{model_2.generateBinned(x2)};
 
-   data1->SetName("obsData_channel_1");
-   data2->SetName("obsData_channel_2");
+   datas["channel_1"]->SetName("obsData_channel_1");
+   datas["channel_2"]->SetName("obsData_channel_2");
 
-   ws.import(*data1);
-   ws.import(*data2);
+   RooDataSet obsData{"obsData", "obsData", {x1, x2}, Index(*ws.cat("channelCat")), Import(datas)};
+   ws.import(obsData);
 
-   RooJSONFactoryWSTool tool{ws};
+   auto &pdf = *ws.pdf("simPdf");
+   auto &data = *ws.data("obsData");
+
+   // For now, this is the way to tell the JSONIO what the combined datasets are
+   pdf.setStringAttribute("combined_data_name", data.GetName());
 
    // Export before fitting to keep the prefit values
-   jsonStr = tool.exportJSONtoString();
+   jsonStr = RooJSONFactoryWSTool{ws}.exportJSONtoString();
 
-   RooRealVar weight{"weight", "weight", 1.0};
-   RooDataSet obsData{"obsData",
-                      "obsData",
-                      {x1, x2, weight},
-                      Index(*ws.cat("channelCat")),
-                      Import({{"channel_1", makeUnbinned(*data1).get()}, {"channel_2", makeUnbinned(*data2).get()}}),
-                      WeightVar(weight)};
-
-   return std::unique_ptr<RooFitResult>{ws.pdf("simPdf")->fitTo(obsData, Save(), PrintLevel(-1), PrintEvalErrors(-1))};
+   return std::unique_ptr<RooFitResult>{pdf.fitTo(data, Save(), PrintLevel(-1), PrintEvalErrors(-1))};
 }
 
 std::unique_ptr<RooFitResult> readJSONAndFitModel(std::string const &jsonStr)
@@ -112,8 +96,9 @@ std::unique_ptr<RooFitResult> readJSONAndFitModel(std::string const &jsonStr)
    tool.importJSONfromString(jsonStr);
 
    auto &pdf = *ws.pdf("simPdf");
+   auto &data = *ws.data("obsData");
 
-   return std::unique_ptr<RooFitResult>{pdf.fitTo(*ws.data("obsData"), Save(), PrintLevel(-1), PrintEvalErrors(-1))};
+   return std::unique_ptr<RooFitResult>{pdf.fitTo(data, Save(), PrintLevel(-1), PrintEvalErrors(-1))};
 }
 
 } // namespace
