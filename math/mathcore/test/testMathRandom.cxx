@@ -3,6 +3,7 @@
 #include "Math/MersenneTwisterEngine.h"
 #include "Math/MixMaxEngine.h"
 #include "Math/RanluxppEngine.h"
+#include "Math/StdEngine.h"
 //#include "Math/MyMixMaxEngine.h"
 //#include "Math/GSLRndmEngines.h"
 #include "Math/GoFTest.h"
@@ -40,9 +41,16 @@ bool testInt()
 {
    Engine engine;
    bool ret = true;
-   static_assert((~0ULL) >> (64 - Engine::kNumberOfBits) == Engine::MaxInt());
-   static_assert(0 == Engine::MinInt());
-   static_assert(64 - Engine::kNumberOfBits == __builtin_clzll(Engine::MaxInt()));
+   static_assert((~0ULL) >> (64 - Engine::kNumberOfBits) == Engine::MaxInt(), "MaxInt inconsistent with kNumberOfBits");
+   static_assert(0 == Engine::MinInt(), "MinInt not 0");
+#ifdef _WIN64
+   static_assert(Engine::kNumberOfBits == _popcount64(Engine::MaxInt()), "MaxInt inconsistent with kNumberOfBits");
+#else
+   static_assert(Engine::kNumberOfBits == __builtin_popcountll(Engine::MaxInt()),
+                 "MaxInt inconsistent with kNumberOfBits");
+   static_assert(64 - Engine::kNumberOfBits == __builtin_clzll(Engine::MaxInt()),
+                 "MaxInt inconsistent with kNumberOfBits");
+#endif
 
    std::cout << "testing integer engine " << engine.Name() << std::endl;
    int N = 2 * 1000 * 1000;
@@ -245,6 +253,19 @@ bool test5()
    return ret;
 }
 
+bool test6()
+{
+
+   bool ret = true;
+   std::cout << "\nTesting std::mt19937_64  vs MIXMAX " << std::endl;
+
+   Random<StdEngine<std::mt19937_64>> rmt;
+   Random<MixMaxEngine240> rmx;
+   ret &= testUniform(rmx, rmt);
+   //    ret &= testGauss(rmx, rmt);
+   return ret;
+}
+
 bool testMathRandom()
 {
 
@@ -256,11 +277,13 @@ bool testMathRandom()
    ret &= test3();
    ret &= test4();
    ret &= test5();
+   ret &= test6();
 
    ret &= testInt<MersenneTwisterEngine>();
    ret &= testInt<RanluxppEngine2048>();
    ret &= testInt<MixMaxEngine17>();
    ret &= testInt<MixMaxEngine240>();
+   ret &= testInt<StdEngine<std::mt19937_64>>();
 
    if (!ret)
       Error("testMathRandom", "Test Failed");
