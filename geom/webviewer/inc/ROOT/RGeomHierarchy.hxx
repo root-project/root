@@ -42,6 +42,8 @@ public:
 
    void Update();
 
+   void BrowseTo(const std::string &itemname);
+
 };
 
 } // namespace Experimental

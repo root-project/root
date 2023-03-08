@@ -366,6 +366,12 @@ void RGeomViewer::WebWindowCallback(unsigned connid, const std::string &arg)
    } else if (arg == "RELOAD") {
 
       SendGeometry(connid);
+
+   } else if (arg.compare(0, 9, "ACTIVATE:") == 0) {
+
+      std::string itemname = arg.substr(9);
+      if (fWebHierarchy)
+         fWebHierarchy->BrowseTo(itemname);
    }
 }
 

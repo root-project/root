@@ -235,6 +235,9 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          case "RELOAD":
             this.doReload(true);
             break;
+         case "ACTIV:":
+            this.activateInTreeTable(msg);
+            break;
          default:
             console.error(`Non recognized msg ${mhdr} len=${msg.length}`);
          }
@@ -341,11 +344,11 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
       /** @summary method called from geom painter when specific node need to be activated in the browser
        * @desc Due to complex indexing in TreeTable it is not trivial to select special node */
-      activateInTreeTable(itemnames, force) {
+      activateInTreeTable(itemname) {
 
-         if (!force || !itemnames || !this.model) return;
+         if (!itemname || !this.model) return;
 
-         let index = this.model.expandNodeByPath(itemnames[0]),
+         let index = this.model.expandNodeByPath(itemname),
              tt = this.byId("treeTable");
 
          if ((index > 0) && tt) {
