@@ -91,10 +91,17 @@ public:
 
    RooWorkspace *workspace() { return &_workspace; }
 
-   template <class T>
-   void wsImport(T const &item)
+   template <class Obj_t>
+   void wsImport(Obj_t const &arg)
    {
-      _workspace.import(item, RooFit::RecycleConflictNodes(true), RooFit::Silence(true));
+      _workspace.import(arg, RooFit::RecycleConflictNodes(true), RooFit::Silence(true));
+   }
+
+   template <class Obj_t, typename... Args_t>
+   void wsEmplace(RooStringView name, RooStringView title, Args_t &&...args)
+   {
+      Obj_t arg{name, title, std::forward<Args_t>(args)...};
+      return wsImport(arg);
    }
 
    static void error(const char *s) { throw std::runtime_error(s); }

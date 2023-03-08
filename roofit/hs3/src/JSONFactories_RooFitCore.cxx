@@ -102,7 +102,7 @@ public:
             dependents.add(*static_cast<RooAbsArg *>(obj));
          }
       }
-      tool->wsImport(RooGenericPdf{name.c_str(), formula.Data(), dependents});
+      tool->wsEmplace<RooGenericPdf>(name, formula, dependents);
       return true;
    }
 };
@@ -123,7 +123,7 @@ public:
             dependents.add(*static_cast<RooAbsArg *>(obj));
          }
       }
-      tool->wsImport(RooFormulaVar{name.c_str(), formula.Data(), dependents});
+      tool->wsEmplace<RooFormulaVar>(name, formula, dependents);
       return true;
    }
 };
@@ -133,7 +133,7 @@ public:
    bool importPdf(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
    {
       std::string name(RooJSONFactoryWSTool::name(p));
-      tool->wsImport(RooProdPdf{name.c_str(), name.c_str(), tool->requestArgSet<RooAbsPdf>(p, "pdfs")});
+      tool->wsEmplace<RooProdPdf>(name, name, tool->requestArgSet<RooAbsPdf>(p, "pdfs"));
       return true;
    }
 };
@@ -143,8 +143,8 @@ public:
    bool importPdf(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
    {
       std::string name(RooJSONFactoryWSTool::name(p));
-      tool->wsImport(RooAddPdf{name.c_str(), name.c_str(), tool->requestArgList<RooAbsPdf>(p, "summands"),
-                                 tool->requestArgList<RooAbsReal>(p, "coefficients")});
+      tool->wsEmplace<RooAddPdf>(name, name, tool->requestArgList<RooAbsPdf>(p, "summands"),
+                                 tool->requestArgList<RooAbsReal>(p, "coefficients"));
       return true;
    }
 };
@@ -155,7 +155,7 @@ public:
    {
       std::string name(RooJSONFactoryWSTool::name(p));
       RooHistFunc *hf = static_cast<RooHistFunc *>(tool->request<RooAbsReal>(p["histogram"].val(), name));
-      tool->wsImport(RooBinWidthFunction{name.c_str(), name.c_str(), *hf, p["divideByBinWidth"].val_bool()});
+      tool->wsEmplace<RooBinWidthFunction>(name, name, *hf, p["divideByBinWidth"].val_bool());
       return true;
    }
 };
@@ -188,7 +188,7 @@ public:
       }
       double epsilon(p["epsilon"].val_double());
 
-      tool->wsImport(RooBinSamplingPdf{name.c_str(), name.c_str(), *obs, *pdf, epsilon});
+      tool->wsEmplace<RooBinSamplingPdf>(name, name, *obs, *pdf, epsilon);
 
       return true;
    }
@@ -204,8 +204,8 @@ public:
       if (p.has_child("extended") && p["extended"].val_bool()) {
          extended = true;
       }
-      tool->wsImport(RooRealSumPdf{name.c_str(), name.c_str(), tool->requestArgList<RooAbsReal>(p, "samples"),
-                                     tool->requestArgList<RooAbsReal>(p, "coefficients"), extended});
+      tool->wsEmplace<RooRealSumPdf>(name, name, tool->requestArgList<RooAbsReal>(p, "samples"),
+                                     tool->requestArgList<RooAbsReal>(p, "coefficients"), extended);
       return true;
    }
 };
@@ -215,8 +215,8 @@ public:
    bool importFunction(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
    {
       std::string name(RooJSONFactoryWSTool::name(p));
-      tool->wsImport(RooRealSumFunc{name.c_str(), name.c_str(), tool->requestArgList<RooAbsReal>(p, "samples"),
-                                      tool->requestArgList<RooAbsReal>(p, "coefficients")});
+      tool->wsEmplace<RooRealSumFunc>(name, name, tool->requestArgList<RooAbsReal>(p, "samples"),
+                                      tool->requestArgList<RooAbsReal>(p, "coefficients"));
       return true;
    }
 };
@@ -250,7 +250,7 @@ public:
          ++order;
       }
 
-      tool->wsImport(RooPolynomial{name.c_str(), name.c_str(), *x, coefs, lowestOrder});
+      tool->wsEmplace<RooPolynomial>(name, name, *x, coefs, lowestOrder);
       return true;
    }
 };
@@ -296,8 +296,8 @@ public:
             ++i;
          }
       }
-      tool->wsImport(RooMultiVarGaussian{name.c_str(), name.c_str(), tool->requestArgList<RooAbsReal>(p, "x"),
-                                           tool->requestArgList<RooAbsReal>(p, "mean"), covmat});
+      tool->wsEmplace<RooMultiVarGaussian>(name, name, tool->requestArgList<RooAbsReal>(p, "x"),
+                                           tool->requestArgList<RooAbsReal>(p, "mean"), covmat);
       return true;
    }
 };
@@ -371,7 +371,7 @@ public:
          RooJSONFactoryWSTool::error("function '" + name + "' is of histogram type, but does not define a 'data' key");
       }
       std::unique_ptr<RooDataHist> dataHist = RooJSONFactoryWSTool::readBinnedData(p["data"], name);
-      tool->wsImport(RooHistFunc{name.c_str(), name.c_str(), *dataHist->get(), *dataHist});
+      tool->wsEmplace<RooHistFunc>(name, name, *dataHist->get(), *dataHist);
       return true;
    }
 };
@@ -406,7 +406,7 @@ public:
          RooJSONFactoryWSTool::error("function '" + name + "' is of histogram type, but does not define a 'data' key");
       }
       std::unique_ptr<RooDataHist> dataHist = RooJSONFactoryWSTool::readBinnedData(p["data"], name);
-      tool->wsImport(RooHistPdf{name.c_str(), name.c_str(), *dataHist->get(), *dataHist});
+      tool->wsEmplace<RooHistPdf>(name, name, *dataHist->get(), *dataHist);
       return true;
    }
 };
