@@ -290,7 +290,7 @@ public:
            const RooArgSet* condObs=nullptr, bool setError=true) const;
 
   // Create 1,2, and 3D histograms from and fill it
-  TH1 *createHistogram(const char* varNameList, Int_t xbins=0, Int_t ybins=0, Int_t zbins=0) const ;
+  TH1 *createHistogram(RooStringView varNameList, Int_t xbins=0, Int_t ybins=0, Int_t zbins=0) const ;
   TH1* createHistogram(const char *name, const RooAbsRealLValue& xvar, RooLinkedList& argList) const ;
   TH1 *createHistogram(const char *name, const RooAbsRealLValue& xvar,
                        const RooCmdArg& arg1=RooCmdArg::none(), const RooCmdArg& arg2=RooCmdArg::none(),

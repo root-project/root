@@ -246,7 +246,7 @@ void RooSimultaneous::initialize(RooAbsCategoryLValue& inIndexCat, std::map<std:
         for (const auto& type : *citem.second.subIndex) {
           const_cast<RooAbsCategoryLValue*>(citem.second.subIndex)->setLabel(type.first.c_str());
           string superLabel = superIndex->getCurrentLabel() ;
-          RooAbsPdf* compPdf = citem.second.simPdf->getPdf(type.first.c_str());
+          RooAbsPdf* compPdf = citem.second.simPdf->getPdf(type.first);
           if (compPdf) {
             failure |= addPdf(*compPdf,superLabel.c_str()) ;
             cxcoutD(InputArguments) << "RooSimultaneous::initialize(" << GetName()
@@ -272,7 +272,7 @@ void RooSimultaneous::initialize(RooAbsCategoryLValue& inIndexCat, std::map<std:
           for (const auto& nameIdx : repliSuperCat) {
             repliSuperCat.setLabel(nameIdx.first) ;
             const string superLabel = superIndex->getCurrentLabel() ;
-            RooAbsPdf* compPdf = citem.second.simPdf->getPdf(stype.first.c_str());
+            RooAbsPdf* compPdf = citem.second.simPdf->getPdf(stype.first);
             if (compPdf) {
               failure |= addPdf(*compPdf,superLabel.c_str()) ;
               cxcoutD(InputArguments) << "RooSimultaneous::initialize(" << GetName()
@@ -333,10 +333,10 @@ RooSimultaneous::~RooSimultaneous()
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the p.d.f associated with the given index category name
 
-RooAbsPdf* RooSimultaneous::getPdf(const char* catName) const
+RooAbsPdf* RooSimultaneous::getPdf(RooStringView catName) const
 {
-  RooRealProxy* proxy = (RooRealProxy*) _pdfProxyList.FindObject(catName) ;
-  return proxy ? ((RooAbsPdf*)proxy->absArg()) : 0 ;
+  RooRealProxy* proxy = static_cast<RooRealProxy*>(_pdfProxyList.FindObject(catName));
+  return proxy ? static_cast<RooAbsPdf*>(proxy->absArg()) : nullptr;
 }
 
 
@@ -1053,7 +1053,7 @@ RooDataSet* RooSimultaneous::generateSimGlobal(const RooArgSet& whatVars, Int_t 
     for (const auto& nameIdx : indexCat()) {
 
       // Get pdf associated with state from simpdf
-      RooAbsPdf* pdftmp = getPdf(nameIdx.first.c_str());
+      RooAbsPdf* pdftmp = getPdf(nameIdx.first);
 
       // Generate only global variables defined by the pdf associated with this state
       RooArgSet* globtmp = pdftmp->getObservables(whatVars) ;
@@ -1087,7 +1087,7 @@ void RooSimultaneous::wrapPdfsInBinSamplingPdfs(RooAbsData const &data, double p
   for (auto const &item : this->indexCat()) {
 
     auto const &catName = item.first;
-    auto &pdf = *this->getPdf(catName.c_str());
+    auto &pdf = *this->getPdf(catName);
 
     if (auto newSamplingPdf = RooBinSamplingPdf::create(pdf, data, precision)) {
       // Set the "ORIGNAME" attribute the indicate to
@@ -1127,7 +1127,7 @@ void RooSimultaneous::wrapPdfsInBinSamplingPdfs(RooAbsData const &data,
   for (auto const &item : this->indexCat()) {
 
     auto const &catName = item.first;
-    auto &pdf = *this->getPdf(catName.c_str());
+    auto &pdf = *this->getPdf(catName);
     std::string pdfName = pdf.GetName();
 
     auto found = precisions.find(useCategoryNames ? catName : pdfName);

@@ -1119,7 +1119,7 @@ bool RooWorkspace::importClassCode(const char* pat, bool doReplace)
 /// Save snapshot of values and attributes (including "Constant") of given parameters.
 /// \param[in] name Name of the snapshot.
 /// \param[in] paramNames Comma-separated list of parameter names to be snapshot.
-bool RooWorkspace::saveSnapshot(const char* name, const char* paramNames)
+bool RooWorkspace::saveSnapshot(RooStringView name, const char* paramNames)
 {
   return saveSnapshot(name,argSet(paramNames),false) ;
 }
@@ -1134,7 +1134,7 @@ bool RooWorkspace::saveSnapshot(const char* name, const char* paramNames)
 /// saved. If importValues is TRUE, the values of the objects passed in the 'params'
 /// argument are saved
 
-bool RooWorkspace::saveSnapshot(const char* name, const RooArgSet& params, bool importValues)
+bool RooWorkspace::saveSnapshot(RooStringView name, const RooArgSet& params, bool importValues)
 {
   RooArgSet actualParams;
   _allOwnedNodes.selectCommon(params, actualParams);

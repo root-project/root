@@ -75,7 +75,7 @@ public:
            double precision=1e-3, bool shiftToZero=false, const RooArgSet* projDataSet=nullptr,
            double rangeLo=0.0, double rangeHi=0.0, RooCurve::WingMode wmode=RooCurve::Extended) const;
 
-  RooAbsPdf* getPdf(const char* catName) const ;
+  RooAbsPdf* getPdf(RooStringView catName) const ;
   const RooAbsCategoryLValue& indexCat() const { return (RooAbsCategoryLValue&) _indexCat.arg() ; }
 
 
