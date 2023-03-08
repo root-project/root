@@ -102,8 +102,7 @@ public:
             dependents.add(*static_cast<RooAbsArg *>(obj));
          }
       }
-      RooGenericPdf thepdf(name.c_str(), formula.Data(), dependents);
-      tool->workspace()->import(thepdf, RooFit::RecycleConflictNodes(true), RooFit::Silence(true));
+      tool->wsImport(RooGenericPdf{name.c_str(), formula.Data(), dependents});
       return true;
    }
 };
@@ -124,8 +123,7 @@ public:
             dependents.add(*static_cast<RooAbsArg *>(obj));
          }
       }
-      RooFormulaVar thevar(name.c_str(), formula.Data(), dependents);
-      tool->workspace()->import(thevar, RooFit::RecycleConflictNodes(true), RooFit::Silence(true));
+      tool->wsImport(RooFormulaVar{name.c_str(), formula.Data(), dependents});
       return true;
    }
 };
@@ -135,8 +133,7 @@ public:
    bool importPdf(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
    {
       std::string name(RooJSONFactoryWSTool::name(p));
-      RooProdPdf prod(name.c_str(), name.c_str(), tool->requestArgSet<RooAbsPdf>(p, "pdfs"));
-      tool->workspace()->import(prod, RooFit::RecycleConflictNodes(true), RooFit::Silence(true));
+      tool->wsImport(RooProdPdf{name.c_str(), name.c_str(), tool->requestArgSet<RooAbsPdf>(p, "pdfs")});
       return true;
    }
 };
@@ -146,9 +143,8 @@ public:
    bool importPdf(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
    {
       std::string name(RooJSONFactoryWSTool::name(p));
-      RooAddPdf add(name.c_str(), name.c_str(), tool->requestArgList<RooAbsPdf>(p, "summands"),
-                    tool->requestArgList<RooAbsReal>(p, "coefficients"));
-      tool->workspace()->import(add, RooFit::RecycleConflictNodes(true), RooFit::Silence(true));
+      tool->wsImport(RooAddPdf{name.c_str(), name.c_str(), tool->requestArgList<RooAbsPdf>(p, "summands"),
+                                 tool->requestArgList<RooAbsReal>(p, "coefficients")});
       return true;
    }
 };
@@ -159,8 +155,7 @@ public:
    {
       std::string name(RooJSONFactoryWSTool::name(p));
       RooHistFunc *hf = static_cast<RooHistFunc *>(tool->request<RooAbsReal>(p["histogram"].val(), name));
-      RooBinWidthFunction func(name.c_str(), name.c_str(), *hf, p["divideByBinWidth"].val_bool());
-      tool->workspace()->import(func, RooFit::RecycleConflictNodes(true), RooFit::Silence(true));
+      tool->wsImport(RooBinWidthFunction{name.c_str(), name.c_str(), *hf, p["divideByBinWidth"].val_bool()});
       return true;
    }
 };
@@ -193,8 +188,7 @@ public:
       }
       double epsilon(p["epsilon"].val_double());
 
-      RooBinSamplingPdf thepdf(name.c_str(), name.c_str(), *obs, *pdf, epsilon);
-      tool->workspace()->import(thepdf, RooFit::RecycleConflictNodes(true), RooFit::Silence(true));
+      tool->wsImport(RooBinSamplingPdf{name.c_str(), name.c_str(), *obs, *pdf, epsilon});
 
       return true;
    }
@@ -210,9 +204,8 @@ public:
       if (p.has_child("extended") && p["extended"].val_bool()) {
          extended = true;
       }
-      RooRealSumPdf thepdf(name.c_str(), name.c_str(), tool->requestArgList<RooAbsReal>(p, "samples"),
-                           tool->requestArgList<RooAbsReal>(p, "coefficients"), extended);
-      tool->workspace()->import(thepdf, RooFit::RecycleConflictNodes(true), RooFit::Silence(true));
+      tool->wsImport(RooRealSumPdf{name.c_str(), name.c_str(), tool->requestArgList<RooAbsReal>(p, "samples"),
+                                     tool->requestArgList<RooAbsReal>(p, "coefficients"), extended});
       return true;
    }
 };
@@ -222,9 +215,8 @@ public:
    bool importFunction(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
    {
       std::string name(RooJSONFactoryWSTool::name(p));
-      RooRealSumFunc thefunc(name.c_str(), name.c_str(), tool->requestArgList<RooAbsReal>(p, "samples"),
-                             tool->requestArgList<RooAbsReal>(p, "coefficients"));
-      tool->workspace()->import(thefunc, RooFit::RecycleConflictNodes(true), RooFit::Silence(true));
+      tool->wsImport(RooRealSumFunc{name.c_str(), name.c_str(), tool->requestArgList<RooAbsReal>(p, "samples"),
+                                      tool->requestArgList<RooAbsReal>(p, "coefficients")});
       return true;
    }
 };
@@ -258,8 +250,7 @@ public:
          ++order;
       }
 
-      RooPolynomial pdf(name.c_str(), name.c_str(), *x, coefs, lowestOrder);
-      tool->workspace()->import(pdf, RooFit::RecycleConflictNodes(true), RooFit::Silence(true));
+      tool->wsImport(RooPolynomial{name.c_str(), name.c_str(), *x, coefs, lowestOrder});
       return true;
    }
 };
@@ -305,9 +296,8 @@ public:
             ++i;
          }
       }
-      RooMultiVarGaussian mvg(name.c_str(), name.c_str(), tool->requestArgList<RooAbsReal>(p, "x"),
-                              tool->requestArgList<RooAbsReal>(p, "mean"), covmat);
-      tool->workspace()->import(mvg, RooFit::RecycleConflictNodes(true), RooFit::Silence(true));
+      tool->wsImport(RooMultiVarGaussian{name.c_str(), name.c_str(), tool->requestArgList<RooAbsReal>(p, "x"),
+                                           tool->requestArgList<RooAbsReal>(p, "mean"), covmat});
       return true;
    }
 };
@@ -381,8 +371,7 @@ public:
          RooJSONFactoryWSTool::error("function '" + name + "' is of histogram type, but does not define a 'data' key");
       }
       std::unique_ptr<RooDataHist> dataHist = RooJSONFactoryWSTool::readBinnedData(p["data"], name);
-      RooHistFunc hf(name.c_str(), name.c_str(), *dataHist->get(), *dataHist);
-      tool->workspace()->import(hf, RooFit::RecycleConflictNodes(true), RooFit::Silence(true));
+      tool->wsImport(RooHistFunc{name.c_str(), name.c_str(), *dataHist->get(), *dataHist});
       return true;
    }
 };
@@ -417,8 +406,7 @@ public:
          RooJSONFactoryWSTool::error("function '" + name + "' is of histogram type, but does not define a 'data' key");
       }
       std::unique_ptr<RooDataHist> dataHist = RooJSONFactoryWSTool::readBinnedData(p["data"], name);
-      RooHistPdf hf(name.c_str(), name.c_str(), *dataHist->get(), *dataHist);
-      tool->workspace()->import(hf, RooFit::RecycleConflictNodes(true), RooFit::Silence(true));
+      tool->wsImport(RooHistPdf{name.c_str(), name.c_str(), *dataHist->get(), *dataHist});
       return true;
    }
 };
