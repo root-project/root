@@ -1227,11 +1227,11 @@ RooDataHist* RooAbsReal::fillDataHist(RooDataHist *hist, const RooArgSet* normSe
 /// RooAbsReal::createHistogram(const char *, const RooAbsRealLValue&, const RooCmdArg&, const RooCmdArg&, const RooCmdArg&, const RooCmdArg&, const RooCmdArg&, const RooCmdArg&, const RooCmdArg&, const RooCmdArg&) const
 ///
 
-TH1* RooAbsReal::createHistogram(const char* varNameList, Int_t xbins, Int_t ybins, Int_t zbins) const
+TH1* RooAbsReal::createHistogram(RooStringView varNameList, Int_t xbins, Int_t ybins, Int_t zbins) const
 {
   std::unique_ptr<RooArgSet> vars{getVariables()};
 
-  auto varNames = ROOT::Split(std::string(varNameList), ",:");
+  auto varNames = ROOT::Split(varNameList, ",:");
   std::vector<RooRealVar*> histVars(3, nullptr);
 
   for(std::size_t iVar = 0; iVar < varNames.size(); ++iVar) {
