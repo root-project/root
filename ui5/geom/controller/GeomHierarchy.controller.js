@@ -170,17 +170,19 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          return path1.length == path2.length ? 1000 : len;
       },
 
-      /** @summary Highlights row with specified path */
+      /** @summary Highlights row with specified path. Path is array of strings */
       highlighRowWithPath(path) {
-         let rows = this.byId("treeTable").getRows(), best_cmp = 0, best_indx = 0;
+         let rows = this.byId("treeTable").getRows(),
+             best_cmp = 0, best_indx = 0,
+             only_clear = (path[0] == '__OFF__');
 
          for (let i = 0; i < rows.length; ++i) {
             rows[i].$().css("background-color", "");
-            if (path && (path[0] != "OFF")) {
+            if (!only_clear) {
                let ctxt = rows[i].getBindingContext(),
-                   prop = ctxt ? ctxt.getProperty(ctxt.getPath()) : null;
+                   prop = ctxt?.getProperty(ctxt.getPath());
 
-               if (prop && prop.path) {
+               if (prop?.path) {
                   let cmp = this.comparePaths(prop.path, path);
                   if (cmp > best_cmp) { best_cmp = cmp; best_indx = i; }
                }
@@ -237,6 +239,9 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             break;
          case "ACTIV:":
             this.activateInTreeTable(msg);
+            break;
+         case 'HIGHL:':
+            this.highlighRowWithPath(JSON.parse(msg)); //
             break;
          default:
             console.error(`Non recognized msg ${mhdr} len=${msg.length}`);
