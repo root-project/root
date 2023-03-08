@@ -1526,6 +1526,9 @@ std::vector<int> RGeomDescription::MakeStackByIds(const std::vector<int> &ids)
 
    std::vector<int> stack;
 
+   if (ids.size() == 0)
+      return stack;
+
    if (ids[0] != 0) {
       printf("Wrong first id\n");
       return stack;
@@ -1771,8 +1774,10 @@ bool RGeomDescription::ChangeNodeVisibility(int nodeid, bool selected)
 /// Change visibility for specified element
 /// Returns true if changes was performed
 
-std::unique_ptr<RGeomNodeInfo> RGeomDescription::MakeNodeInfo(const std::vector<std::string> &path)
+std::unique_ptr<RGeomNodeInfo> RGeomDescription::MakeNodeInfo(const std::vector<int> &stack)
 {
+   auto path = MakePathByStack(stack);
+
    TLockGuard lock(fMutex);
 
    std::unique_ptr<RGeomNodeInfo> res;

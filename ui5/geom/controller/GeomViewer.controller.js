@@ -62,42 +62,12 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          });
       },
 
-      /** @summary Send RGeomRequest data to geometry viewer */
-      sendViewerRequest(oper, args) {
-         let req = { oper, path: [], stack: [] };
-         Object.assign(req, args);
-         this.websocket.send("GVREQ:" + JSON.stringify(req));
-      },
-
-      /** Process reply on RGeomRequest */
-      processViewerReply(repl) {
-         if (!repl?.oper)
-            return false;
-
-         if (repl.oper == "HOVER") {
-
-            this._hover_stack = repl.stack || null;
-            if (this.geo_painter)
-               this.geo_painter.highlightMesh(null, 0x00ff00, null, undefined, this._hover_stack, true);
-
-         }
-      },
-
       /** @brief Handler for mouse-hover event, provided from hierarchy
         * @desc Used to highlight correspondent volume on geometry drawing */
       onRowHover(prop, is_enter) {
 
-         // ignore hover event when drawing not exists
-         if (!this.isDrawPageActive()) return;
-
-         if (!this.standalone) {
-            let req = is_enter && prop && prop.path && prop.isLeaf ? prop.path : [ "OFF" ];
-            // avoid multiple time submitting same request
-            if (this.comparePaths(this._last_hover_req, req) === 1000) return;
-
-            this._last_hover_req = req;
-            return this.sendViewerRequest("HOVER", { path: req });
-         }
+         // ignore hover event when drawing not exists or in not-standalone mode
+         if (!this.isDrawPageActive() || !this.standalone) return;
 
          if (this.geo_painter && this.geo_clones) {
             let strpath = "";
@@ -328,16 +298,13 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             this.modifyDescription(msg);
             break;
          case "GDRAW:":   // normal drawing of geometry
-            this.checkDrawMsg("draw", this.jsroot.parse(msg)); // use jsroot.parse while refs are used
+            this.checkDrawMsg('draw', this.jsroot.parse(msg)); // use jsroot.parse while refs are used
             break;
          case "FDRAW:": // drawing of found nodes
-            this.checkDrawMsg("found", this.jsroot.parse(msg));
+            this.checkDrawMsg('found', this.jsroot.parse(msg));
             break;
          case "APPND:":
-            this.checkDrawMsg("append", this.jsroot.parse(msg));
-            break;
-         case "GVRPL:":
-            this.processViewerReply(this.jsroot.parse(msg));
+            this.checkDrawMsg('append', this.jsroot.parse(msg));
             break;
          case "NINFO:":
             this.provideNodeInfo(this.jsroot.parse(msg));
@@ -348,11 +315,16 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          case "DROPT:":
             this.applyDrawOptions(msg);
             break;
-         case "IMAGE:":
+         case 'IMAGE:':
             this.produceImage(msg);
             break;
+         case 'HIGHL:':
+            this._hover_stack = JSON.parse(msg) || null;
+            if (this.geo_painter)
+               this.geo_painter.highlightMesh(null, 0x00ff00, null, undefined, this._hover_stack, true);
+            break;
          default:
-            console.error('Non recognized msg ' + mhdr + ' len=' + msg.length);
+            console.error(`Not recognized msg:${mhdr} len:${msg.length}`);
          }
       },
 
@@ -536,7 +508,10 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
       /** Try to provide as much info as possible offline */
       processInfoOffline(path, id) {
-         let model = new JSONModel({ path: path, strpath: path.join("/")  });
+         if (!this.isInfoPageActive() || !path)
+            return;
+
+         let model = new JSONModel({ path, strpath: path.join("/")  });
 
          this.byId("geomInfo").setModel(model);
 
@@ -571,10 +546,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
          this.byId("geomInfo").setModel(model);
 
-         let server_shape = null;
-
-         if (info.ri)
-            server_shape = this.geo.createServerGeometry(info.ri, 0);
+         let server_shape = info.ri ? this.geo.createServerGeometry(info.ri, 0) : null;
 
          this.drawNodeShape(server_shape, false);
       },
@@ -622,20 +594,20 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          let dataUrl = painter.createSnapshot(this.standalone ? "geometry.png" : "asis");
          if (!dataUrl) return;
          let separ = dataUrl.indexOf("base64,");
-         if ((separ>=0) && this.websocket && !this.standalone)
-            this.websocket.send("IMAGE:" + name + "::" + dataUrl.substr(separ+7));
+         if ((separ >= 0) && this.websocket && !this.standalone)
+            this.websocket.send('IMAGE:' + name + '::' + dataUrl.substr(separ+7));
       },
 
       isDrawPageActive() {
          let app = this.byId("geomViewerApp"),
-             curr = app ? app.getCurrentDetailPage() : null;
-         return curr ? curr.getId() == this.createId("geomDraw") : false;
+             curr = app?.getCurrentDetailPage();
+         return curr?.getId() == this.createId("geomDraw");
       },
 
       isInfoPageActive() {
          let app = this.byId("geomViewerApp"),
-             curr = app ? app.getCurrentDetailPage() : null;
-         return curr ? curr.getId() == this.createId("geomInfo") : false;
+             curr = app?.getCurrentDetailPage();
+         return curr?.getId() == this.createId("geomInfo");
       },
 
       onInfoPress() {
@@ -650,6 +622,8 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             this.node_painter_active = true;
             ctrlmodel = this.node_model;
          }
+
+         this.websocket.send(`INFOACTIVE:${this.node_painter_active}`);
 
          if (ctrlmodel) {
             this.byId("geomControl").setModel(ctrlmodel);

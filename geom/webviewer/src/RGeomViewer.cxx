@@ -275,33 +275,6 @@ void RGeomViewer::WebWindowCallback(unsigned connid, const std::string &arg)
       auto stack = TBufferJSON::FromJSON<std::vector<int>>(arg.substr(10));
       if (stack && fDesc.SetHighlightedItem(*stack))
          fDesc.IssueSignal(this, "HighlightItem");
-   } else if (arg.compare(0, 6, "GVREQ:") == 0) {
-
-      auto req = TBufferJSON::FromJSON<RGeomRequest>(arg.substr(6));
-
-      if (req && (req->oper == "HOVER")) {
-         if ((req->path.size() > 0 ) && (req->path[0] != "OFF"))
-            req->stack = fDesc.MakeStackByPath(req->path);
-         req->path.clear();
-      } else if (req && (req->oper == "INFO")) {
-
-         auto info = fDesc.MakeNodeInfo(req->path);
-         if (info)
-            fWebWindow->Send(connid, "NINFO:"s + TBufferJSON::ToJSON(info.get(), (fDesc.GetJsonComp() % 5) + TBufferJSON::kSameSuppression).Data());
-
-         // not request but different object type is send
-         req.reset(nullptr);
-
-      } else {
-
-         req.reset(nullptr);
-
-         printf("Fail to process request %s for visible\n", req->oper.c_str());
-      }
-
-      if (req)
-         fWebWindow->Send(connid, "GVRPL:"s + TBufferJSON::ToJSON(req.get(), TBufferJSON::kSkipTypeInfo + TBufferJSON::kNoSpaces).Data());
-
    } else if ((arg.compare(0, 7, "SETVI0:") == 0) || (arg.compare(0, 7, "SETVI1:") == 0)) {
       // change visibility for specified nodeid
 
@@ -373,7 +346,11 @@ void RGeomViewer::WebWindowCallback(unsigned connid, const std::string &arg)
       std::string itemname = arg.substr(9);
       if (fWebHierarchy)
          fWebHierarchy->BrowseTo(itemname);
+   } else if (arg.compare(0, 11, "INFOACTIVE:") == 0) {
+      fInfoActive = (arg.substr(11) == "true");
    }
+
+
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -385,6 +362,8 @@ void RGeomViewer::WebWindowDisconnect(unsigned)
    fWebHierarchy.reset();
 
    fDesc.ClearCache();
+
+   fInfoActive = false;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -395,4 +374,16 @@ void RGeomViewer::ProcessSignal(const std::string &kind)
       SendGeometry();
    else if (kind == "ClearSearch")
       fWebWindow->Send(0, "CLRSCH"); // 6 letters
+   else if (kind == "HighlightItem") {
+      auto stack = fDesc.GetHighlightedItem();
+      if (fWebWindow)
+         fWebWindow->Send(0, "HIGHL:"s + TBufferJSON::ToJSON(&stack).Data());
+   } else if (kind == "ClickItem") {
+      if (fInfoActive) {
+         auto stack = fDesc.GetClickedItem();
+         auto info = fDesc.MakeNodeInfo(stack);
+         if (info)
+            fWebWindow->Send(0, "NINFO:"s + TBufferJSON::ToJSON(info.get(), (fDesc.GetJsonComp() % 5) + TBufferJSON::kSameSuppression).Data());
+      }
+   }
 }

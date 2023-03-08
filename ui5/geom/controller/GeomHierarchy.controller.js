@@ -118,6 +118,12 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          let ctxt = row.getBindingContext(),
              prop = ctxt ? ctxt.getProperty(ctxt.getPath()) : null;
 
+         if (!this.standalone) {
+            let req = is_enter && prop?.path && prop?.isLeaf ? prop.path : [];
+
+            return this.websocket.sendLast('hover', 200, 'HOVER:' + JSON.stringify(req));
+         }
+
          this.viewer?.onRowHover(prop, is_enter);
       },
 
@@ -410,12 +416,11 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
              ctxt = row?.getBindingContext(),
              prop = ctxt?.getProperty(ctxt.getPath());
 
-         if(prop && this.viewer?.isInfoPageActive())
-            if (this.standalone) {
-               this.viewer?.processInfoOffline(prop.path, prop.id);
-            } else {
-               this.viewer?.sendViewerRequest("INFO", { path: prop.path });
-            }
+         if (this.standalone) {
+            this.viewer?.processInfoOffline(prop?.path, prop?.id);
+         } else if (prop) {
+            this.websocket.sendLast('click', 200, 'CLICK:' + JSON.stringify(prop.path));
+         }
       },
 
       onCellContextMenu(oEvent) {
@@ -536,10 +541,6 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             }
          }
       },
-
-      onInfoPress() {
-         this.viewer?.onInfoPress();
-      }
 
    });
 

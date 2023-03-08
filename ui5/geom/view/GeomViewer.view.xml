@@ -14,6 +14,8 @@
             <headerContent>
                <Button icon="sap-icon://log" type="Transparent" visible="{= !${/standalone} }"
                        tooltip="Quit ROOT session" press="onQuitRootPress" />
+               <Button icon="sap-icon://show" type="Transparent" enabled="{/hasViewer}"
+                       tooltip="Toggle with info page" press="onInfoPress"/>
                <Button icon="sap-icon://save" type="Transparent"
                        tooltip="Save drawing as png image" press="pressSaveButton" />
                <Button id="expandMaster" icon="sap-icon://open-command-field" type="Transparent"

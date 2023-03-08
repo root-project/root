@@ -67,6 +67,20 @@ void RGeomHierarchy::WebWindowCallback(unsigned connid, const std::string &arg)
       auto path = TBufferJSON::FromJSON<std::vector<std::string>>(arg.substr(7));
       if (path && fDesc.SelectTop(*path))
          fDesc.IssueSignal(this, "SelectTop");
+   } else if (arg.compare(0, 6, "HOVER:") == 0) {
+      auto path = TBufferJSON::FromJSON<std::vector<std::string>>(arg.substr(6));
+      if (path) {
+         auto stack = fDesc.MakeStackByPath(*path);
+         if (fDesc.SetHighlightedItem(stack))
+            fDesc.IssueSignal(this, "HighlightItem");
+      }
+   } else if (arg.compare(0, 6, "CLICK:") == 0) {
+      auto path = TBufferJSON::FromJSON<std::vector<std::string>>(arg.substr(6));
+      if (path) {
+         auto stack = fDesc.MakeStackByPath(*path);
+         if (fDesc.SetClickedItem(stack))
+            fDesc.IssueSignal(this, "ClickItem");
+      }
    } else if ((arg.compare(0, 5, "SHOW:") == 0) || (arg.compare(0, 5, "HIDE:") == 0)) {
       auto path = TBufferJSON::FromJSON<std::vector<std::string>>(arg.substr(5));
       if (path && fDesc.SetNodeVisibility(*path, arg.compare(0, 5, "SHOW:") == 0))
