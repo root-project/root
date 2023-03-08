@@ -144,7 +144,7 @@ Any importer should take the following form:
           int member2(p["<class member key #2>"].val_int());
 
           MyClass theobj(name.c_str(), member1, member2);
-          tool->workspace()->import(theobj, RooFit::RecycleConflictNodes(true), RooFit::Silence(true));
+          tool->wsImport(theobj);
           return true;
        }
     };

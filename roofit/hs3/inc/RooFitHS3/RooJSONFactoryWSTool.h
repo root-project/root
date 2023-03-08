@@ -17,20 +17,14 @@
 
 #include <RooArgList.h>
 #include <RooArgSet.h>
+#include <RooGlobalFunc.h>
+#include <RooWorkspace.h>
 
 #include <map>
 #include <memory>
 #include <stdexcept>
 #include <string>
 #include <vector>
-
-class RooAbsData;
-class RooAbsArg;
-class RooAbsPdf;
-class RooDataHist;
-class RooDataSet;
-class RooRealVar;
-class RooWorkspace;
 
 namespace RooFit {
 namespace JSONIO {
@@ -48,6 +42,10 @@ class TClass;
 
 class RooJSONFactoryWSTool {
 public:
+   RooJSONFactoryWSTool(RooWorkspace &ws);
+
+   ~RooJSONFactoryWSTool();
+
    static std::ostream &log(int level);
 
    static std::string name(const RooFit::Detail::JSONNode &n);
@@ -91,11 +89,13 @@ public:
       return requestCollection<T, RooArgList>(node, seqName);
    }
 
-   RooJSONFactoryWSTool(RooWorkspace &ws);
-
-   ~RooJSONFactoryWSTool();
-
    RooWorkspace *workspace() { return &_workspace; }
+
+   template <class T>
+   void wsImport(T const &item)
+   {
+      _workspace.import(item, RooFit::RecycleConflictNodes(true), RooFit::Silence(true));
+   }
 
    static void error(const char *s) { throw std::runtime_error(s); }
    inline static void error(const std::string &s) { error(s.c_str()); }
