@@ -1366,7 +1366,7 @@ int RGeomDescription::SearchVisibles(const std::string &find, std::string &hjson
    });
 
    // do not send too much data, limit could be made configurable later
-   if (nmatches==0) {
+   if (nmatches == 0) {
       hjson = "FOUND:NO";
       return nmatches;
    }

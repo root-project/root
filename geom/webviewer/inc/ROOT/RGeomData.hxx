@@ -350,6 +350,7 @@ public:
    void ProduceDrawData();
    void ProduceSearchData();
    std::string GetDrawJson() const { TLockGuard lock(fMutex); return fDrawJson; }
+   std::string GetSearch() const { TLockGuard lock(fMutex); return fSearch; }
    std::string GetSearchJson() const { TLockGuard lock(fMutex); return fSearchJson; }
    void ClearDrawData();
 

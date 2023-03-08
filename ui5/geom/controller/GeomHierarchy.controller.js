@@ -29,13 +29,12 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
     *    - RGeomDrawing object delivered from the server
     * Only after all this stages are completed, one could start to analyze  */
 
-   return Controller.extend("rootui5.geom.controller.GeomHierarchy", {
+   return Controller.extend('rootui5.geom.controller.GeomHierarchy', {
 
-      onInit: function () {
-
+      onInit() {
       },
 
-      configure: function(args) {
+      configure(args) {
 
          this.jsroot = args.jsroot;
 
@@ -87,19 +86,17 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          t.addEventDelegate({
             onAfterRendering: function() { this.assignRowHandlers(); }
          }, this);
-
-         this.model.setProperty('/hasViewer', this.viewer ? true : false);
       },
 
       /** @summary invoked when visibility checkbox clicked */
-      visibilitySelected: function(oEvent) {
+      visibilitySelected(oEvent) {
          let nodeid = this.getRowNodeId(oEvent.getSource());
          if (nodeid < 0) {
             console.error('Fail to identify nodeid');
             return;
          }
 
-         let msg = "SETVI" + (oEvent.getParameter("selected") ? "1:" : "0:") + JSON.stringify(nodeid);
+         let msg = "SETVI" + (oEvent.getParameter('selected') ? '1:' : '0:') + JSON.stringify(nodeid);
 
          // send info message to client to change visibility
          this.websocket.send(msg);
@@ -118,13 +115,12 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          let ctxt = row.getBindingContext(),
              prop = ctxt ? ctxt.getProperty(ctxt.getPath()) : null;
 
-         if (!this.standalone) {
+         if (this.standalone) {
+            this.viewer?.onRowHover(prop, is_enter);
+         } else {
             let req = is_enter && prop?.path && prop?.isLeaf ? prop.path : [];
-
             return this.websocket.sendLast('hover', 200, 'HOVER:' + JSON.stringify(req));
          }
-
-         this.viewer?.onRowHover(prop, is_enter);
       },
 
       /** @summary Return nodeid for the row */
@@ -157,25 +153,6 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          return ids;
       },
 
-      /** @summary try to produce stack out of row path */
-      getRowStack(row) {
-         let ids = this.getRowIds(row);
-         return ids ? this.viewer?.geo_clones.buildStackByIds(ids) : null;
-      },
-
-      /** @summary compare two paths to verify that both are the same
-        * @returns 1000 if both are equivalent or maximal match length */
-      comparePaths(path1, path2) {
-         if (!path1) path1 = [];
-         if (!path2) path2 = [];
-         let len = Math.min(path1.length, path2.length);
-         for (let i = 0; i < len; i++)
-            if (path1[i] != path2[i])
-               return i-1;
-
-         return path1.length == path2.length ? 1000 : len;
-      },
-
       /** @summary Highlights row with specified path. Path is array of strings */
       highlighRowWithPath(path) {
          let rows = this.byId("treeTable").getRows(),
@@ -189,7 +166,14 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                    prop = ctxt?.getProperty(ctxt.getPath());
 
                if (prop?.path) {
-                  let cmp = this.comparePaths(prop.path, path);
+                  let len = Math.min(prop.path.length, path.length), cmp = 0;
+                  for (let i = 0; i < len; i++) {
+                     if (prop.path[i] != path[i]) break;
+                     cmp++;
+                  }
+                  if ((cmp == len) && (prop.path.length == path.length))
+                     cmp = 1000; // full match
+
                   if (cmp > best_cmp) { best_cmp = cmp; best_indx = i; }
                }
             }
@@ -235,10 +219,6 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             break;
          case "FOUND:":  // text message for found query
             this.showTextInBrowser(msg);
-            this.viewer?.paintFoundNodes(null); // nothing can be shown
-            break;
-         case "MODIF:":
-            this.modifyDescription(msg);
             break;
          case "RELOAD":
             this.doReload(true);
@@ -273,50 +253,6 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          this.model.setFullModel(topnode);
       },
 
-      /** TO BE CHANGED !!! When single node element is modified on the server side */
-      modifyDescription(msg) {
-         let arr = JSON.parse(msg);
-         if (!arr || !this.viewer?.geo_clones) return;
-
-         console.error('modifyDescription should be changed');
-/*
-         let can_refresh = true;
-
-         for (let k=0;k<arr.length;++k) {
-            let moditem = arr[k];
-
-            this.geo.ClonedNodes.formatServerElement(moditem);
-
-            let item = this.geo_clones.nodes[moditem.id];
-
-            if (!item)
-               return console.error('Fail to find item ' + moditem.id);
-
-            item.vis = moditem.vis;
-            item.matrix = moditem.matrix;
-
-            let dnode = this.originalCache ? this.originalCache[moditem.id] : null;
-
-            if (dnode) {
-               // here we can modify only node which was changed
-               dnode.title = moditem.name;
-               dnode.node_visible = moditem.vis != 0;
-            } else {
-               can_refresh = false;
-            }
-
-            if (!moditem.vis && this.geo_painter)
-               this.geo_painter.removeDrawnNode(moditem.id);
-         }
-
-         if (can_refresh) {
-            this.model.refresh();
-         } else {
-            // rebuild complete tree for TreeBrowser
-         }
-*/
-      },
-
       /** @summary Show special message insted of nodes hierarchy */
       showTextInBrowser(text) {
          let br = this.byId("treeTable");
@@ -339,11 +275,9 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       /** @summary Show found nodes in the browser, used for offline */
       showFoundNodes(matches) {
 
-         if (!this.viewer) return;
-
          let br = this.byId("treeTable"), nodes = [];
          for (let k = 0; k < matches.length; ++k)
-            this.viewer.appendStackToTree(nodes, matches[k].stack, matches[k].color, matches[k].material);
+            this.viewer?.appendStackToTree(nodes, matches[k].stack, matches[k].color, matches[k].material);
 
          br.setNoData("");
          br.setShowNoData(false);
@@ -424,16 +358,12 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       },
 
       onCellContextMenu(oEvent) {
-         if (Device.support.touch) {
+         if (Device.support.touch)
             return; //Do not use context menus on touch devices
-         }
 
-         let ctxt = oEvent.getParameter("rowBindingContext"),
+         let ctxt = oEvent.getParameter('rowBindingContext'),
+             colid = oEvent.getParameter('columnId'),
              prop = ctxt?.getProperty(ctxt.getPath());
-
-         //if (oEvent.getParameter("columnId") != this.getView().createId("productId")) {
-         //   return; //Custom context menu for product id column only
-         //}
 
          oEvent.preventDefault();
 
@@ -456,8 +386,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             }
          }));
 
-         let colid = oEvent.getParameter('columnId'),
-             text = 'Search for ', value;
+         let text = 'Search for ', value;
          if ((colid == 'columnMaterial') && prop._elem.material) {
             text += 'material';
             value = 'm:' + prop._elem.material;
@@ -524,15 +453,11 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       doReload(force) {
          if (this.standalone) {
             this.showTextInBrowser();
-            if (this.model)
-               this.model.setFullModel(this.fullModel);
-            if (!only_this)
-               this.viewer?.paintFoundNodes(null);
+            this.model?.setFullModel(this.fullModel);
+            this.viewer?.paintFoundNodes(null);
          } else {
-            if (this.model) {
-               this.model.clearFullModel();
-               this.model.reloadMainModel(force);
-            }
+            this.model?.clearFullModel();
+            this.model?.reloadMainModel(force);
 
             let srch = this.byId('searchNode');
             if (srch.getValue()) {

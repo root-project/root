@@ -58,7 +58,7 @@ void RGeomHierarchy::WebWindowCallback(unsigned connid, const std::string &arg)
          fWebWindow->Send(connid, hjson);
          // inform viewer that search is changed
          if (fDesc.SetSearch(query, json))
-            fDesc.IssueSignal(this, "ChangeSearch");
+            fDesc.IssueSignal(this, json.empty() ? "ClearSearch" : "ChangeSearch");
       } else {
          fDesc.SetSearch(""s, ""s);
          fDesc.IssueSignal(this, "ClearSearch");

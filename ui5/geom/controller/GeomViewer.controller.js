@@ -32,12 +32,12 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          this.queue = []; // received draw messages
 
          // if true, most operations are performed locally without involving server
-         this.standalone = this.websocket.kind == "file";
+         this.standalone = (this.websocket.kind == 'file');
 
          if (!this.standalone && !this._embeded && this.websocket.addReloadKeyHandler)
             this.websocket.addReloadKeyHandler();
 
-         this.cfg = { standalone: this.websocket.kind == "file" };
+         this.cfg = { standalone: this.standalone };
          this.cfg_model = new JSONModel(this.cfg);
          this.getView().setModel(this.cfg_model);
 
@@ -86,23 +86,19 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       /** @summary Callback from geo painter when mesh object is highlighted. Use for update of TreeTable */
       highlightMesh(active_mesh, color, geo_object, geo_index, geo_stack) {
          if (!this.standalone) {
-            let req = geo_stack ? geo_stack : [];
-            // avoid multiple time submitting same request
-            if (this.geo.isSameStack(this._last_highlight_req, req)) return;
-            this._last_highlight_req = req;
             // send only last message from many during 200 ms
-            return this.websocket.sendLast('high', 200, 'HIGHLIGHT:' + JSON.stringify(req));
+            this.websocket.sendLast('high', 200, 'HIGHLIGHT:' + JSON.stringify(geo_stack || []));
+         } else {
+            let hpath = "";
+
+            if (this.geo_clones && geo_stack) {
+               let info = this.geo_clones.resolveStack(geo_stack);
+               if (info?.name) hpath = info.name;
+            }
+
+            if (!this.nobrowser)
+               this.byId('geomHierarchyPanel')?.getController()?.highlighRowWithPath(hpath.split('/'));
          }
-
-         let hpath = "";
-
-         if (this.geo_clones && geo_stack) {
-            let info = this.geo_clones.resolveStack(geo_stack);
-            if (info?.name) hpath = info.name;
-         }
-
-         if (!this.nobrowser)
-            this.byId('geomHierarchyPanel')?.getController()?.highlighRowWithPath(hpath.split('/'));
       },
 
       /** @summary compare two paths to verify that both are the same
@@ -462,8 +458,6 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       },
 
       checkSendRequest(force) {
-         if (force) this.ask_getdraw = false;
-
          if (this.isConnected && !this.nobrowser && !this.send_channel) {
             let h = this.byId('geomHierarchyPanel');
 
@@ -481,29 +475,24 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             this.send_channel = true;
          }
 
-         if (this.isConnected && this.renderingDone) {
-
-            if (this.geo && !this.ask_getdraw) {
-               this.websocket.send('GETDRAW');
-               this.ask_getdraw = true;
-            }
+         if (this.isConnected && this.renderingDone && this.geo && (force || !this.ask_getdraw)) {
+            this.ask_getdraw = true;
+            this.websocket.send('GETDRAW');
          }
       },
 
       /** @summary method called from geom painter when specific node need to be activated in the browser
-       * @desc Due to complex indexing in TreeTable it is not trivial to select special node */
+        * @desc Due to complex indexing in TreeTable it is not trivial to select special node */
       activateInTreeTable(itemnames, force) {
          if ((itemnames?.length > 0) && force)
             this.websocket.send('ACTIVATE:' + itemnames[0]);
       },
 
-      /** when new draw options send from server */
+      /** @summary when new draw options send from server */
       applyDrawOptions(opt) {
-         if (!this.geo_painter) return;
+         this.geo_painter?.setAxesDraw(opt.indexOf("axis") >= 0);
 
-         this.geo_painter.setAxesDraw(opt.indexOf("axis") >= 0);
-
-         this.geo_painter.setAutoRotate(opt.indexOf("rotate") >= 0);
+         this.geo_painter?.setAutoRotate(opt.indexOf("rotate") >= 0);
       },
 
       /** Try to provide as much info as possible offline */
@@ -582,7 +571,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          this.node_painter.prepareObjectDraw(server_shape, "");
       },
 
-      /** Save as png image */
+      /** @summary Save as png image */
       pressSaveButton() {
          this.produceImage("");
       },
@@ -658,21 +647,14 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          this.byId("geomViewerApp").toMaster(this.createId("geomControl"));
       },
 
-      sendConfig() {
+      /** @summary handler for configuration changes,
+        * @desc after short timeout send updated config to the server */
+      configChanged() {
          if (!this.standalone && this.geo_painter?.ctrl.cfg) {
             let cfg = this.geo_painter.ctrl.cfg;
             cfg.build_shapes = parseInt(cfg.build_shapes);
-            this.websocket.send("CFG:" + this.jsroot.toJSON(cfg));
+            this.websocket.sendLast('cfg', 500, 'CFG:' + this.jsroot.toJSON(cfg));
          }
-      },
-
-      /** @summary configuration handler changes,
-        * @desc after short timeout send updated config to server  */
-      configChanged() {
-         if (this.config_tmout)
-            clearTimeout(this.config_tmout);
-
-         this.config_tmout = setTimeout(this.sendConfig.bind(this), 500);
       },
 
       processPainterChange(func, arg) {
