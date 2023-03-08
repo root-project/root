@@ -212,13 +212,12 @@ std::string valName(RooAbsArg const &arg)
 
 std::string valToString(double val)
 {
-   auto s = std::to_string(val);
    // std::numeric_limits<double>::infinity() doesn't seem work with clad!
-   if (s == "inf")
+   if (val == std::numeric_limits<double>::infinity())
       return "1e30";
-   if (s == "-inf")
+   if (val == -std::numeric_limits<double>::infinity())
       return "-1e30";
-   return s;
+   return std::to_string(val);
 }
 
 std::string integralCode(RooRealIntegral const &integral)
@@ -270,7 +269,7 @@ std::string generateCode(RooAbsReal const &func, RooArgSet const &variables)
       auto var = dynamic_cast<RooRealVar *>(node);
       int idx = variables.index(node);
       if (var && idx >= 0) {
-         ss << "const double " << valName(*var) << " = x[" << idx << "];\n";
+         ss << "const double " << valName(*var) << " = params[" << idx << "];\n";
       } else if (var) {
          ss << "const double " << valName(*var) << " = " << var->getVal() << ";\n";
       } else if (auto gauss = dynamic_cast<RooGaussian *>(node)) {
@@ -290,7 +289,7 @@ std::string generateCode(RooAbsReal const &func, RooArgSet const &variables)
 
 } // namespace
 
-TEST(DISABLED_RooFuncWrapper, GaussianNormalized)
+TEST(RooFuncWrapper, GaussianNormalized)
 {
    using namespace RooFit;
 
