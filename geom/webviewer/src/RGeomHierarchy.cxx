@@ -26,6 +26,8 @@ RGeomHierarchy::RGeomHierarchy(RGeomDescription &desc) :
 {
    fWebWindow = RWebWindow::Create();
    fWebWindow->SetDataCallBack([this](unsigned connid, const std::string &arg) { WebWindowCallback(connid, arg); });
+
+   fDesc.AddSignalHandler(this, [this](const std::string &kind) { ProcessSignal(kind); });
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -33,6 +35,7 @@ RGeomHierarchy::RGeomHierarchy(RGeomDescription &desc) :
 
 RGeomHierarchy::~RGeomHierarchy()
 {
+   fDesc.RemoveSignalHandler(this);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -103,4 +106,19 @@ void RGeomHierarchy::BrowseTo(const std::string &itemname)
 {
    if (fWebWindow)
       fWebWindow->Send(0, "ACTIV:"s + itemname);
+}
+
+/////////////////////////////////////////////////////////////////////////////////
+/// Process signals from geometry description object
+
+void RGeomHierarchy::ProcessSignal(const std::string &kind)
+{
+   if (kind == "HighlightItem") {
+      auto stack = fDesc.GetHighlightedItem();
+      auto path = fDesc.MakePathByStack(stack);
+      if (stack.size() == 0)
+         path = { "__OFF__" }; // just clear highlight
+      if (fWebWindow)
+         fWebWindow->Send(0, "HIGHL:"s + TBufferJSON::ToJSON(&path).Data());
+   }
 }

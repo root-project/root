@@ -292,7 +292,7 @@ void RGeomDescription::AddSignalHandler(const void *handler, RGeomSignalFunc_t f
 /////////////////////////////////////////////////////////////////////
 /// Remove signal handler
 
-void RGeomDescription::RemoveSignalHanlder(const void *handler)
+void RGeomDescription::RemoveSignalHandler(const void *handler)
 {
    TLockGuard lock(fMutex);
 

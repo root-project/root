@@ -33,6 +33,8 @@ protected:
 
    void WebWindowCallback(unsigned connid, const std::string &arg);
 
+   void ProcessSignal(const std::string &kind);
+
 public:
 
    RGeomHierarchy(RGeomDescription &desc);
