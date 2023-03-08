@@ -194,7 +194,6 @@ sap.ui.define([
                     this.reset_nodes = true;
                     this._expanding_path = path;
                     this.submitRequest(false, curr, currpath, 'expanding');
-                    break;
                  }
                  return -1;
               }
@@ -251,13 +250,13 @@ sap.ui.define([
           * @param {Array} path - path as array of strings
           * @desc directly use web socket, later can be dedicated channel */
         submitRequest(force_reload, elem, path, first, number) {
-           if (first === 'expanding') {
-              first = 0;
-           } else {
-              delete this._expanding_path;
-           }
-
            if (!this._websocket || elem._requested || this.fullModel) return;
+
+           if (first === 'expanding')
+              first = 0;
+           else
+              delete this._expanding_path;
+
            elem._requested = true;
 
            this.loadDataCounter++;
