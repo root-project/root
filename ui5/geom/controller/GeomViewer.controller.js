@@ -572,7 +572,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       },
 
       /** @summary Save as png image */
-      pressSaveButton() {
+      pressSavePngButton() {
          this.produceImage("");
       },
 
@@ -585,6 +585,11 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          let separ = dataUrl.indexOf("base64,");
          if ((separ >= 0) && this.websocket && !this.standalone)
             this.websocket.send('IMAGE:' + name + '::' + dataUrl.substr(separ+7));
+      },
+
+      /** @summary Save as c++ macro */
+      pressSaveMacroButton() {
+         this.websocket.send('SAVEMACRO');
       },
 
       isDrawPageActive() {

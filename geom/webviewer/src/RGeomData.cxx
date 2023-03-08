@@ -1976,3 +1976,16 @@ bool RGeomDescription::SetSearch(const std::string &query, const std::string &js
    fSearchJson = json;
    return changed;
 }
+
+/////////////////////////////////////////////////////////////////////////////////
+/// Save geometry configuration as C++ macro
+
+void RGeomDescription::SavePrimitive(std::ostream &fs, const std::string &name)
+{
+   std::string prefix = "   ";
+
+   if (!fCfg.drawopt.empty())
+      fs << prefix << name << "SetDrawOptions(\"" << fCfg.drawopt << "\");" << std::endl;
+
+}
+
