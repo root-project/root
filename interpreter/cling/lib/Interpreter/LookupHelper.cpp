@@ -13,6 +13,7 @@
 #include "DeclUnloader.h"
 #include "cling/Interpreter/Interpreter.h"
 #include "cling/Utils/AST.h"
+#include "cling/Utils/Diagnostics.h"
 #include "cling/Utils/ParserStateRAII.h"
 
 #include "clang/AST/ASTContext.h"
@@ -1113,21 +1114,14 @@ namespace cling {
     }
 
     //
-    //  Tell the diagnostic engine to ignore all diagnostics.
+    //  Suppress printing of diagnostics (we cannot simply ignore them
+    // since then it is not possible the check for errors programmatically
+    // either)
     //
-    bool OldSuppressAllDiagnostics
-      = S.getDiagnostics().getSuppressAllDiagnostics();
-    S.getDiagnostics().setSuppressAllDiagnostics(
-        diagOnOff == LookupHelper::NoDiagnostics);
 
-    struct ResetDiagSuppression {
-      bool _Old;
-      Sema& _S;
-      ResetDiagSuppression(Sema &S, bool Old): _Old(Old), _S(S) {}
-      ~ResetDiagSuppression() {
-        _S.getDiagnostics().setSuppressAllDiagnostics(_Old);
-      }
-    } DiagSuppressionRAII(S, OldSuppressAllDiagnostics);
+    utils::DiagnosticsStore ds(S.getDiagnostics(), false, /*Own*/
+                               diagOnOff ==
+                                   LookupHelper::WithDiagnostics /*Report*/);
 
     //
     //  Construct the overload candidate set.
@@ -1215,6 +1209,9 @@ namespace cling {
           if (TheDecl->isTemplateInstantiation() && !TheDecl->isDefined()) {
             S.InstantiateFunctionDefinition(SourceLocation(), TheDecl,
                                             true /*recursive instantiation*/);
+          }
+          if (S.getDiagnostics().hasErrorOccurred()) {
+            TheDecl->setInvalidDecl();
           }
           if (TheDecl->isInvalidDecl()) {
             // if the decl is invalid try to clean up
@@ -1824,6 +1821,9 @@ namespace cling {
           if (!fdecl->isDefined())
             S.InstantiateFunctionDefinition(loc, fdecl,
                                             true /*recursive instantiation*/);
+          if (S.getDiagnostics().hasErrorOccurred()) {
+            fdecl->setInvalidDecl();
+          }
           if (fdecl->isInvalidDecl()) {
             // if the decl is invalid try to clean up
             UnloadDecl(&S, fdecl);
