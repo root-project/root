@@ -13,7 +13,7 @@ TTree *create() {
 void execmakeclass() {
    TTree *t = create();
    t->SetMakeClass(1);
-   Int_t bits;
+   Int_t bits = 0;
    t->Show(0);
    t->SetBranchAddress("data.TObject.fBits",&bits);
    t->Show(0);
