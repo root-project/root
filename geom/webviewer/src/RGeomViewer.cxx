@@ -168,6 +168,7 @@ std::vector<int> RGeomViewer::GetStackFromJson(const std::string &json, bool nod
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 /// Send data for principal geometry draw
+/// Should be used when essential settings were changed in geometry description
 
 void RGeomViewer::SendGeometry(unsigned connid, bool first_time)
 {
@@ -370,11 +371,17 @@ void RGeomViewer::WebWindowDisconnect(unsigned)
 /// Process signal from geom description when it changed by any means
 void RGeomViewer::ProcessSignal(const std::string &kind)
 {
-   if ((kind == "SelectTop") || (kind == "NodeVisibility") || (kind == "ChangeSearch"))
+   if ((kind == "SelectTop") || (kind == "NodeVisibility")) {
       SendGeometry();
-   else if (kind == "ClearSearch")
-      fWebWindow->Send(0, "CLRSCH"); // 6 letters
-   else if (kind == "HighlightItem") {
+   } else if (kind == "ChangeSearch") {
+      auto json = fDesc.GetSearchJson();
+      if (json.empty()) json = "CLRSCH";
+      if (fWebWindow)
+         fWebWindow->Send(0, json);
+   } else if (kind == "ClearSearch") {
+      if (fWebWindow)
+         fWebWindow->Send(0, "CLRSCH"); // 6 letters
+   } else if (kind == "HighlightItem") {
       auto stack = fDesc.GetHighlightedItem();
       if (fWebWindow)
          fWebWindow->Send(0, "HIGHL:"s + TBufferJSON::ToJSON(&stack).Data());
@@ -382,7 +389,7 @@ void RGeomViewer::ProcessSignal(const std::string &kind)
       if (fInfoActive) {
          auto stack = fDesc.GetClickedItem();
          auto info = fDesc.MakeNodeInfo(stack);
-         if (info)
+         if (info && fWebWindow)
             fWebWindow->Send(0, "NINFO:"s + TBufferJSON::ToJSON(info.get(), (fDesc.GetJsonComp() % 5) + TBufferJSON::kSameSuppression).Data());
       }
    }
