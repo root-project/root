@@ -35,6 +35,7 @@ protected:
    bool fShowHierarchy{true};                ///<! if hierarchy visible by default
    bool fShowColumns{true};                  ///<! show columns in hierarchy
    std::string fTitle;                       ///<! title of geometry viewer
+   bool fInfoActive{false};                  ///<! true when info page active and node info need to be provided
 
    std::shared_ptr<RWebWindow> fWebWindow;   ///<! web window to show geometry
 

@@ -178,14 +178,6 @@ public:
 };
 
 
-/** Request object send from client for different operations */
-class RGeomRequest {
-public:
-   std::string oper;  ///< operation like HIGHL or HOVER
-   std::vector<std::string> path;  ///< path parameter, used with HOVER
-   std::vector<int> stack; ///< stack parameter, used with HIGHL
-};
-
 /** Node information including rendering data */
 class RGeomNodeInfo {
 public:
@@ -250,6 +242,7 @@ class RGeomDescription {
    std::vector<int> fSelectedStack; ///<! selected branch of geometry by stack
 
    std::vector<int> fHighlightedStack; ///<! highlighted element by stack
+   std::vector<int> fClickedStack;     ///<! clicked element by stack
 
    std::vector<int> fSortMap;       ///<! nodes in order large -> smaller volume
    std::vector<ShapeDescr> fShapes; ///<! shapes with created descriptions
@@ -415,12 +408,26 @@ public:
    {
       TLockGuard lock(fMutex);
       return fHighlightedStack;
-
    }
+
+   bool SetClickedItem(const std::vector<int> &stack)
+   {
+      TLockGuard lock(fMutex);
+      bool changed = fClickedStack != stack;
+      fClickedStack = stack;
+      return changed;
+   }
+
+   std::vector<int> GetClickedItem() const
+   {
+      TLockGuard lock(fMutex);
+      return fClickedStack;
+   }
+
 
    bool ChangeConfiguration(const std::string &json);
 
-   std::unique_ptr<RGeomNodeInfo> MakeNodeInfo(const std::vector<std::string> &path);
+   std::unique_ptr<RGeomNodeInfo> MakeNodeInfo(const std::vector<int> &stack);
 
    bool ChangeNodeVisibility(int nodeid, bool selected);
 
