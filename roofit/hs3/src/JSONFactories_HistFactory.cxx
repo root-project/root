@@ -410,10 +410,9 @@ bool importHistSample(RooJSONFactoryWSTool &tool, RooDataHist &dh, Scope &scope,
       }
    }
 
-   tool.wsImport(RooProduct{(nameWithPrefix + "_shapes").c_str(), (nameWithPrefix + "_shapes").c_str(), shapeElems});
+   tool.wsEmplace<RooProduct>(nameWithPrefix + "_shapes", nameWithPrefix + "_shapes", shapeElems);
    if (!normElems.empty()) {
-      tool.wsImport(
-         RooProduct{(nameWithPrefix + "_scaleFactors").c_str(), (nameWithPrefix + "_scaleFactors").c_str(), normElems});
+      tool.wsEmplace<RooProduct>(nameWithPrefix + "_scaleFactors", nameWithPrefix + "_scaleFactors", normElems);
    } else {
       ws.factory("RooConstVar::" + nameWithPrefix + "_scaleFactors(1.)");
    }
@@ -512,7 +511,7 @@ public:
          RooRealSumPdf sum((name + "_model").c_str(), name.c_str(), funcs, coefs, true);
          sum.setAttribute("BinnedLikelihood");
          tool->wsImport(sum);
-         tool->wsImport(RooProdPdf{name.c_str(), name.c_str(), constraints, RooFit::Conditional(sum, observables)});
+         tool->wsEmplace<RooProdPdf>(name, name, constraints, RooFit::Conditional(sum, observables));
       }
       return true;
    }
