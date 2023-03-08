@@ -402,6 +402,18 @@ class WebWindowHandle {
       return true;
    }
 
+   /** @summary Send only last message of specified kind during defined time interval.
+     * @desc Idea is to prvent sending multiple messages of similar kind and overload connection
+     * Instead timeout is started after which only last specified message will be send
+     * @private */
+   sendLast(kind, tmout, msg) {
+      let d = this._delayed;
+      if (!d) d = this._delayed = {};
+      d[kind] = msg;
+      if (!d[`${kind}_handler`])
+         d[`${kind}_handler`] = setTimeout(() => { delete d[`${kind}_handler`]; this.send(d[kind]); }, tmout);
+   }
+
    /** @summary Inject message(s) into input queue, for debug purposes only
      * @private */
    inject(msg, chid, immediate) {
