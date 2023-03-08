@@ -31,6 +31,13 @@ if (imt)
   list(APPEND RDATAFRAME_EXTRA_DEPS Imt)
 endif(imt)
 
+if(cuda)
+  list(APPEND RDATAFRAME_EXTRA_HEADERS HistCUDA.h)
+  list(APPEND RDATAFRAME_EXTRA_DEPS ROOTDataFrame_CUDA)
+  ROOT_LINKER_LIBRARY(ROOTDataFrame_CUDA  src/HistCUDA.cu TYPE SHARED)
+  target_compile_options(ROOTDataFrame_CUDA  PRIVATE -DRF_ARCH=CUDA -lineinfo --expt-relaxed-constexpr)
+endif()
+
 set (EXTRA_DICT_OPTS)
 if (runtime_cxxmodules AND WIN32)
   set (EXTRA_DICT_OPTS NO_CXXMODULE)

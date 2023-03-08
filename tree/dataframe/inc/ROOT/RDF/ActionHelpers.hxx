@@ -59,6 +59,10 @@
 #include <iomanip>
 #include <numeric> // std::accumulate in MeanHelper
 
+#include "HistCUDA.h"
+#include <typeinfo>
+#include <type_traits>
+
 /// \cond HIDDEN_SYMBOLS
 
 namespace ROOT {
@@ -348,6 +352,21 @@ extern template void BufferedFillHelper::Exec(unsigned int, const std::vector<in
 extern template void
 BufferedFillHelper::Exec(unsigned int, const std::vector<unsigned int> &, const std::vector<unsigned int> &);
 
+// From here ...
+template<class T>
+struct has_getxaxis {
+    static std::false_type test(...);
+
+    template<class U>
+    static auto test(U) -> decltype(std::declval<U>().GetXaxis(), std::true_type{});
+
+    static constexpr bool value = decltype(test(std::declval<T>()))::value;
+};
+// to here is temporary stuff
+
+template<class T>
+inline constexpr bool has_getxaxis_v = has_getxaxis<T>::value;
+
 /// The generic Fill helper: it calls Fill on per-thread objects and then Merge to produce a final result.
 /// For one-dimensional histograms, if no axes are specified, RDataFrame uses BufferedFillHelper instead.
 template <typename HIST = Hist_t>
@@ -463,6 +482,8 @@ class R__CLING_PTRCHECK(off) FillHelper : public RActionImpl<FillHelper<HIST>> {
    }
 
 public:
+   HistCUDA *fCudaHist; // TODO: where to store this?
+
    FillHelper(FillHelper &&) = default;
    FillHelper(const FillHelper &) = delete;
 
@@ -474,11 +495,25 @@ public:
          fObjects[i] = new HIST(*fObjects[0]);
          UnsetDirectoryIfPossible(fObjects[i]);
       }
+
+      if constexpr(has_getxaxis_v<HIST>) {  // Avoid compilation errors for fObjects that aren't TH1Ds
+         auto nbins = fObjects[0]->GetXaxis()->GetNbins();
+         auto xlow = fObjects[0]->GetXaxis()->GetXmin();
+         auto xhigh = fObjects[0]->GetXaxis()->GetXmax();
+         fCudaHist = new HistCUDA(nbins, xlow, xhigh);
+         fCudaHist->AllocateH1D();
+      }
    }
 
    void InitTask(TTreeReader *, unsigned int) {}
 
-   // no container arguments
+   // TODO:
+   auto Exec(unsigned int slot, float x, double w)
+   {
+      // std::cout << "sending over " << x << "  " << w << std::endl;
+      fCudaHist->AddBinCUDA(fObjects[slot]->GetXaxis()->FindBin(x), w);
+   }
+
    template <typename... ValTypes, std::enable_if_t<!Disjunction<IsDataContainer<ValTypes>...>::value, int> = 0>
    auto Exec(unsigned int slot, const ValTypes &...x) -> decltype(fObjects[slot]->Fill(x...), void())
    {
