@@ -46,6 +46,8 @@ public:
 
    void BrowseTo(const std::string &itemname);
 
+   RGeomDescription &Description() { return fDesc; }
+
 };
 
 } // namespace Experimental

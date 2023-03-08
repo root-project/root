@@ -13,11 +13,13 @@
                showFooter="false" showSubHeader="false" showHeader="true" icon="sap-icon://action" class="sapUiStdPage">
             <headerContent>
                <Button icon="sap-icon://log" type="Transparent" visible="{= !${/standalone} }"
-                       tooltip="Quit ROOT session" press="onQuitRootPress" />
+                       tooltip="Quit ROOT session" press="onQuitRootPress"/>
                <Button icon="sap-icon://show" type="Transparent"
                        tooltip="Toggle with info page" press="onInfoPress"/>
                <Button icon="sap-icon://save" type="Transparent"
-                       tooltip="Save drawing as png image" press="pressSaveButton" />
+                       tooltip="Save drawing as png image" press="pressSavePngButton"/>
+               <Button icon="sap-icon://syntax" type="Transparent" visible="{= !${/standalone} }"
+                       tooltip="Save geometry settings as C++ code" press="pressSaveMacroButton"/>
                <Button id="expandMaster" icon="sap-icon://open-command-field" type="Transparent"
                        tooltip="Expand/shrink browse area" press="onExpandMaster"/>
                <Button icon="sap-icon://settings" type="Transparent"

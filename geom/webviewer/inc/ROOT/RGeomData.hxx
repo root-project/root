@@ -425,7 +425,6 @@ public:
       return fClickedStack;
    }
 
-
    bool ChangeConfiguration(const std::string &json);
 
    std::unique_ptr<RGeomNodeInfo> MakeNodeInfo(const std::vector<int> &stack);
@@ -441,6 +440,8 @@ public:
    bool ClearAllVisibility();
 
    bool SetSearch(const std::string &query, const std::string &json);
+
+   void SavePrimitive(std::ostream &fs, const std::string &name);
 };
 
 
