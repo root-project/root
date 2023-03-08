@@ -441,10 +441,13 @@ public:
       TObject *tobj = (TObject *) obj_class->DynamicCast(TObject::Class(), obj);
 
       if (tobj) {
-         if (dir->FindObject(tobj))
+         bool in_dir = dir->FindObject(tobj) != nullptr,
+              special_class = (fKeyClass == "TGeoManager"s) || (fKeyClass == "TTree"s) || (fKeyClass == "TNtuple"s);
+
+         if (in_dir && !special_class)
             dir->Remove(tobj);
 
-         return std::make_unique<TObjectHolder>(tobj, fKeyClass != "TGeoManager"s);
+         return std::make_unique<TObjectHolder>(tobj, !special_class);
       }
 
       return std::make_unique<RAnyObjectHolder>(obj_class, obj, true);
