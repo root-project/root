@@ -17,6 +17,7 @@
 #include "TSystem.h"
 #include "TBase64.h"
 #include "TROOT.h"
+#include "TFile.h"
 #include "TEnv.h"
 #include "THttpServer.h"
 #include "TBufferJSON.h"
@@ -349,8 +350,9 @@ void RGeomViewer::WebWindowCallback(unsigned connid, const std::string &arg)
          fWebHierarchy->BrowseTo(itemname);
    } else if (arg.compare(0, 11, "INFOACTIVE:") == 0) {
       fInfoActive = (arg.substr(11) == "true");
+   } else if (arg == "SAVEMACRO") {
+      SaveAsMacro("viewer.cxx");
    }
-
 
 }
 
@@ -369,6 +371,7 @@ void RGeomViewer::WebWindowDisconnect(unsigned)
 
 //////////////////////////////////////////////////////////////////////////////////////////////
 /// Process signal from geom description when it changed by any means
+
 void RGeomViewer::ProcessSignal(const std::string &kind)
 {
    if ((kind == "SelectTop") || (kind == "NodeVisibility")) {
@@ -394,3 +397,45 @@ void RGeomViewer::ProcessSignal(const std::string &kind)
       }
    }
 }
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+/// Save viewer configuration as macro
+
+void RGeomViewer::SaveAsMacro(const std::string &fname)
+{
+   std::ofstream fs(fname);
+   if (!fs) return;
+   std::string prefix = "   ";
+
+   auto p = fname.find(".");
+   if (p > 0) {
+      fs << "void " << fname.substr(0,p) << "() { " << std::endl;
+   } else {
+      fs << "{" << std::endl;
+   }
+
+   if ((fDesc.GetNumNodes() < 2000) && fGeoManager) {
+      fGeoManager->GetTopVolume()->SavePrimitive(fs);
+      fs << prefix << "gGeoManager->SetVisLevel(" << fGeoManager->GetVisLevel() << ");" << std::endl;
+   } else {
+      fs << prefix << "// geometry is too large, please provide import like:" << std::endl << std::endl;
+      fs << prefix << "// TGeoManager::Import(\"filename.root\");" << std::endl;
+   }
+
+   fs << std::endl;
+
+   fs << prefix << "using namespace ROOT::Experimental;" << std::endl << std::endl;
+
+   fs << prefix << "auto viewer = std::make_shared<RGeomViewer>(gGeoManager";
+   if (!fSelectedVolume.empty()) fs << ", \"" << fSelectedVolume << "\"";
+   fs << ");" << std::endl;
+
+   fDesc.SavePrimitive(fs, "viewer->Description().");
+
+   fs << prefix << "viewer->Show();" << std::endl << std::endl;
+
+   fs << prefix << "RDirectory::Heap().Add(\"geom_viewer\", viewer);" << std::endl;
+
+   fs << "}" << std::endl;
+}
+

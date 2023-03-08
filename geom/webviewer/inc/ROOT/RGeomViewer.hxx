@@ -103,6 +103,10 @@ public:
 
    void SaveImage(const std::string &fname = "geometry.png", int width = 0, int height = 0);
 
+   RGeomDescription &Description() { return fDesc; }
+
+   void SaveAsMacro(const std::string &fname);
+
 };
 
 } // namespace Experimental
