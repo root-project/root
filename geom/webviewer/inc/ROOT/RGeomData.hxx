@@ -249,6 +249,8 @@ class RGeomDescription {
    TGeoVolume *fDrawVolume{nullptr};///<! select volume independent from TGeoManager
    std::vector<int> fSelectedStack; ///<! selected branch of geometry by stack
 
+   std::vector<int> fHighlightedStack; ///<! highlighted element by stack
+
    std::vector<int> fSortMap;       ///<! nodes in order large -> smaller volume
    std::vector<ShapeDescr> fShapes; ///<! shapes with created descriptions
 
@@ -301,7 +303,7 @@ public:
 
    void AddSignalHandler(const void *handler, RGeomSignalFunc_t func);
 
-   void RemoveSignalHanlder(const void *handler);
+   void RemoveSignalHandler(const void *handler);
 
    void IssueSignal(const void *handler, const std::string &kind);
 
@@ -400,6 +402,21 @@ public:
    void SetBuildShapes(int lvl = 1) { TLockGuard lock(fMutex); fCfg.build_shapes = lvl; }
    /** Returns true if binary 3D model build already by C++ server (default) */
    int IsBuildShapes() const { TLockGuard lock(fMutex); return fCfg.build_shapes; }
+
+   bool SetHighlightedItem(const std::vector<int> &stack)
+   {
+      TLockGuard lock(fMutex);
+      bool changed = fHighlightedStack != stack;
+      fHighlightedStack = stack;
+      return changed;
+   }
+
+   std::vector<int> GetHighlightedItem() const
+   {
+      TLockGuard lock(fMutex);
+      return fHighlightedStack;
+
+   }
 
    bool ChangeConfiguration(const std::string &json);
 

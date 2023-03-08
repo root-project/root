@@ -80,10 +80,6 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             if (this.geo_painter)
                this.geo_painter.highlightMesh(null, 0x00ff00, null, undefined, this._hover_stack, true);
 
-         } else if (repl.oper == "HIGHL") {
-
-            this.highlighRowWithPath(repl.path);
-
          }
       },
 
@@ -124,17 +120,19 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             // avoid multiple time submitting same request
             if (this.geo.isSameStack(this._last_highlight_req, req)) return;
             this._last_highlight_req = req;
-            return this.sendViewerRequest("HIGHL", { stack: req });
+            // send only last message from many during 200 ms
+            return this.websocket.sendLast('high', 200, 'HIGHLIGHT:' + JSON.stringify(req));
          }
 
          let hpath = "";
 
          if (this.geo_clones && geo_stack) {
             let info = this.geo_clones.resolveStack(geo_stack);
-            if (info && info.name) hpath = info.name;
+            if (info?.name) hpath = info.name;
          }
 
-         this.highlighRowWithPath(hpath.split("/"));
+         if (!this.nobrowser)
+            this.byId('geomHierarchyPanel')?.getController()?.highlighRowWithPath(hpath.split('/'));
       },
 
       /** @summary compare two paths to verify that both are the same
@@ -148,13 +146,6 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                return i-1;
 
          return path1.length == path2.length ? 1000 : len;
-      },
-
-      /** @summary Highlights row with specified path */
-      highlighRowWithPath(path) {
-         if (this.nobrowser) return;
-
-         this.byId('geomHierarchyPanel')?.getController()?.highlighRowWithPath(path);
       },
 
       createGeoPainter(drawopt) {

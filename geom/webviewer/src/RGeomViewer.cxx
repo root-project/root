@@ -61,6 +61,7 @@ RGeomViewer::RGeomViewer(TGeoManager *mgr, const std::string &volname)
 
 RGeomViewer::~RGeomViewer()
 {
+   fDesc.RemoveSignalHandler(this);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
@@ -270,6 +271,10 @@ void RGeomViewer::WebWindowCallback(unsigned connid, const std::string &arg)
 
       fWebWindow->Send(connid, json);
 
+   } else if (arg.compare(0, 10, "HIGHLIGHT:") == 0) {
+      auto stack = TBufferJSON::FromJSON<std::vector<int>>(arg.substr(10));
+      if (stack && fDesc.SetHighlightedItem(*stack))
+         fDesc.IssueSignal(this, "HighlightItem");
    } else if (arg.compare(0, 6, "GVREQ:") == 0) {
 
       auto req = TBufferJSON::FromJSON<RGeomRequest>(arg.substr(6));
@@ -278,10 +283,6 @@ void RGeomViewer::WebWindowCallback(unsigned connid, const std::string &arg)
          if ((req->path.size() > 0 ) && (req->path[0] != "OFF"))
             req->stack = fDesc.MakeStackByPath(req->path);
          req->path.clear();
-      } else if (req && (req->oper == "HIGHL")) {
-         if (req->stack.size() > 0)
-            req->path = fDesc.MakePathByStack(req->stack);
-         req->stack.clear();
       } else if (req && (req->oper == "INFO")) {
 
          auto info = fDesc.MakeNodeInfo(req->path);
