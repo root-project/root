@@ -469,7 +469,7 @@ Int_t TDatime::GetGlobalDayFromDate(Int_t date)
 
 Int_t TDatime::GetDateFromGlobalDay(Int_t day)
 {
-   Long_t ld = day;
+   Long64_t ld = day;
    Int_t y = int((10000*ld + 14780)/3652425);
    Int_t ddd = day - (y*365 + y/4 - y/100 + y/400);
    if (ddd < 0) {
