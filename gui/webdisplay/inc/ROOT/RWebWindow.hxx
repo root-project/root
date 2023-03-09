@@ -160,6 +160,7 @@ private:
    std::string fProtocolPrefix;                     ///<! prefix for created files names
    std::string fProtocol;                           ///<! protocol
    std::string fUserArgs;                           ///<! arbitrary JSON code, which is accessible via conn.getUserArgs() method
+   std::shared_ptr<void> fClearOnClose;             ///<! entry which is cleared when last connection is closed
 
    std::shared_ptr<RWebWindowWSHandler> CreateWSHandler(std::shared_ptr<RWebWindowsManager> mgr, unsigned id, double tmout);
 
@@ -351,6 +352,8 @@ public:
    void SetDataCallBack(WebWindowDataCallback_t func);
 
    void SetDisconnectCallBack(WebWindowConnectCallback_t func);
+
+   void SetClearOnClose(const std::shared_ptr<void> &handle = nullptr);
 
    void AssignThreadId();
 
