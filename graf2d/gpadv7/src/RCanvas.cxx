@@ -206,15 +206,14 @@ void ROOT::Experimental::RCanvas::Remove()
    }
 }
 
-
 //////////////////////////////////////////////////////////////////////////////////////////////
 /// Set handle which will be cleared when connection is closed
 
 void ROOT::Experimental::RCanvas::ClearOnClose(const std::shared_ptr<void> &handle)
 {
-   fPainter->SetClearOnClose(handle);
+   if (fPainter)
+      fPainter->SetClearOnClose(handle);
 }
-
 
 //////////////////////////////////////////////////////////////////////////
 /// Run canvas functionality for the given time (in seconds)
