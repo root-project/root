@@ -130,6 +130,9 @@ private:
    DescriptorId_t fFieldId = kInvalidDescriptorId;
    /// A field can be serialized into several columns, which are numbered from zero to $n$
    std::uint32_t fIndex;
+   /// Specifies the index for the first stored element for this column. For deferred columns the value is greater
+   /// than 0
+   std::uint64_t fFirstElementIndex = 0U;
 
 public:
    RColumnDescriptor() = default;
@@ -148,6 +151,7 @@ public:
    std::uint32_t GetIndex() const { return fIndex; }
    DescriptorId_t GetFieldId() const { return fFieldId; }
    bool IsAliasColumn() const { return fPhysicalColumnId != fLogicalColumnId; }
+   std::uint64_t GetFirstElementIndex() const { return fFirstElementIndex; }
 };
 
 // clang-format off
@@ -816,6 +820,11 @@ public:
       fColumn.fIndex = index;
       return *this;
    }
+   RColumnDescriptorBuilder &FirstElementIndex(std::uint64_t firstElementIdx)
+   {
+      fColumn.fFirstElementIndex = firstElementIdx;
+      return *this;
+   }
    DescriptorId_t GetFieldId() const { return fColumn.fFieldId; }
    /// Attempt to make a column descriptor. This may fail if the column
    /// was not given enough information to make a proper descriptor.
@@ -1027,7 +1036,7 @@ public:
    RResult<void> AddFieldLink(DescriptorId_t fieldId, DescriptorId_t linkId);
 
    void AddColumn(DescriptorId_t logicalId, DescriptorId_t physicalId, DescriptorId_t fieldId,
-                  const RColumnModel &model, std::uint32_t index);
+                  const RColumnModel &model, std::uint32_t index, std::uint64_t firstElementIdx = 0U);
    RResult<void> AddColumn(RColumnDescriptor &&columnDesc);
 
    RResult<void> AddClusterSummary(DescriptorId_t clusterId, std::uint64_t firstEntry, std::uint64_t nEntries);

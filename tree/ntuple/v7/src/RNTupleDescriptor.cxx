@@ -106,6 +106,7 @@ ROOT::Experimental::RColumnDescriptor::Clone() const
    clone.fModel = fModel;
    clone.fFieldId = fFieldId;
    clone.fIndex = fIndex;
+   clone.fFirstElementIndex = fFirstElementIndex;
    return clone;
 }
 
@@ -622,7 +623,7 @@ ROOT::Experimental::RNTupleDescriptorBuilder::AddFieldLink(DescriptorId_t fieldI
 
 void ROOT::Experimental::RNTupleDescriptorBuilder::AddColumn(DescriptorId_t logicalId, DescriptorId_t physicalId,
                                                              DescriptorId_t fieldId, const RColumnModel &model,
-                                                             std::uint32_t index)
+                                                             std::uint32_t index, std::uint64_t firstElementIdx)
 {
    RColumnDescriptor c;
    c.fLogicalColumnId = logicalId;
@@ -630,6 +631,7 @@ void ROOT::Experimental::RNTupleDescriptorBuilder::AddColumn(DescriptorId_t logi
    c.fFieldId = fieldId;
    c.fModel = model;
    c.fIndex = index;
+   c.fFirstElementIndex = firstElementIdx;
    if (!c.IsAliasColumn())
       fDescriptor.fNPhysicalColumns++;
    if (fDescriptor.fHeaderExtension)
