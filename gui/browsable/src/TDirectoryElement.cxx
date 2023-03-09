@@ -215,12 +215,19 @@ protected:
 
    const TObject *CheckObject() const override
    {
+      // during TROOT destructor just forget about file reference
+      if (!gROOT || gROOT->TestBit(TObject::kInvalidObject)) {
+         ForgetObject();
+         return nullptr;
+      }
+
       if (!TObjectElement::CheckObject())
          return nullptr;
 
-      if (fIsFile && !gROOT->GetListOfFiles()->FindObject(fObj))
-         ForgetObject();
-      else if (!gROOT->GetListOfFiles()->FindObject(((TDirectory *) fObj)->GetFile()))
+      if (fIsFile) {
+         if (!gROOT->GetListOfFiles()->FindObject(fObj))
+            ForgetObject();
+      } else if (!gROOT->GetListOfFiles()->FindObject(((TDirectory *) fObj)->GetFile()))
          ForgetObject();
 
       return fObj;

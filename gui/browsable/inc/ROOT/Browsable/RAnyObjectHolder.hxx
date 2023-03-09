@@ -54,6 +54,13 @@ public:
          fClass->Destructor(fObj);
    }
 
+   void Forget() final
+   {
+      fClass = nullptr;
+      fObj = nullptr;
+      fOwner = false;
+   }
+
    const TClass *GetClass() const final { return fClass; }
    const void *GetObject() const final { return fObj; }
 };
