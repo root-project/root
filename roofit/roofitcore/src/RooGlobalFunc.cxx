@@ -167,7 +167,10 @@ namespace RooFit {
 
 
   // RooDataSet::ctor arguments
-  RooCmdArg WeightVar(const char* name, bool reinterpretAsWeight) { return RooCmdArg("WeightVarName",reinterpretAsWeight,0,0,0,name,0,0,0) ; }
+  RooCmdArg WeightVar(const char* name, bool reinterpretAsWeight) {
+      if(name == nullptr) return RooCmdArg::none(); // Passing a nullptr name means no weight variable
+      return RooCmdArg("WeightVarName",reinterpretAsWeight,0,0,0,name,0,0,0) ;
+  }
   RooCmdArg WeightVar(const RooRealVar& arg, bool reinterpretAsWeight)  { return RooCmdArg("WeightVar",reinterpretAsWeight,0,0,0,0,0,&arg,0) ; }
   RooCmdArg Link(const char* state, RooAbsData& data)   { return RooCmdArg("LinkDataSlice",0,0,0,0,state,0,&data,0) ;}
   RooCmdArg Import(const char* state, RooAbsData& data) { return RooCmdArg("ImportDataSlice",0,0,0,0,state,0,&data,0) ; }
