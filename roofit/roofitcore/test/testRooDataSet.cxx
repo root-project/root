@@ -282,7 +282,7 @@ TEST(RooDataSet, ReduceWithCompositeDataStore)
    RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
 
    RooWorkspace ws{};
-   ws.factory("Gaussian::gauss(x[-10,10], mean[3,-10,10], sig    ma[1,0.1,10])");
+   ws.factory("Gaussian::gauss(x[-10,10], mean[3,-10,10], sigma[1,0.1,10])");
    auto &gauss = *ws.pdf("gauss");
    auto &x = *ws.var("x");
 
@@ -293,8 +293,7 @@ TEST(RooDataSet, ReduceWithCompositeDataStore)
    auto &dataSet = *dataSetPtr;
 
    // Generate a new dataset with weight column
-   RooRealVar weight("weight", "weight", 0.5, 0.0, 1.0);
-   RooDataSet dataSetWeighted("dataSetWeighted", "dataSetWeighted", {x, weight}, "weight");
+   RooDataSet dataSetWeighted("dataSetWeighted", "dataSetWeighted", x, RooFit::WeightVar());
    for (std::size_t i = 0; i < nEvents; ++i) {
       dataSetWeighted.add(*dataSet.get(), 0.5);
    }
@@ -303,7 +302,7 @@ TEST(RooDataSet, ReduceWithCompositeDataStore)
    RooCategory sample("sample", "sample");
    sample.defineType("physics");
    RooDataSet dataSetComposite("hmaster", "hmaster", x, RooFit::Index(sample),
-                               RooFit::Link({{"physic    s", &dataSetWeighted}}));
+                               RooFit::Link({{"physics", &dataSetWeighted}}));
 
    // Reduce the dataset with the RooCompositeDataStore
    std::unique_ptr<RooAbsData> dataSetReducedPtr{dataSetComposite.reduce("true")};
@@ -376,4 +375,28 @@ TEST(RooDataSet, ImportDataHist)
       EXPECT_FLOAT_EQ(ds.weight(), dh.weight()) << "weight() is off in bin " << i;
       EXPECT_FLOAT_EQ(ds.weightSquared(), dh.weightSquared()) << "weightSquared() is off in bin " << i;
    }
+}
+
+// Test that splitting a RooDataSet by index category does preserve the weight
+// errors. Covers GitHub issue #12453.
+TEST(RooDataSet, SplitDataSetWithWeightErrors)
+{
+   using namespace RooFit;
+
+   RooRealVar x{"x", "x", 0, 10};
+   RooCategory cat{"cat", "cat", {{"sample_0", 0}}};
+   RooRealVar weight{"weight", "weight", 1.0};
+
+   RooDataSet data1{"data", "data", {x, cat, weight}, WeightVar(weight), StoreError(weight)};
+
+   data1.add({x, cat}, 2.0, 0.3);
+
+   std::unique_ptr<TList> dataList{data1.split(cat, true)};
+   auto &data2 = static_cast<RooDataSet &>(*dataList->At(0));
+
+   data1.Print();
+
+   data1.get(0);
+   data2.get(0);
+   EXPECT_DOUBLE_EQ(data2.weightError(), data1.weightError());
 }
