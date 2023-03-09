@@ -1266,6 +1266,7 @@ std::size_t ROOT::Experimental::RCollectionClassField::AppendImpl(const Detail::
 {
    std::size_t nbytes = 0;
    unsigned count = 0;
+   TVirtualCollectionProxy::TPushPop RAII(fProxy.get(), value.GetRawPtr());
    for (auto ptr : RCollectionIterableOnce{value.GetRawPtr(), fIFuncsRead, fProxy.get()}) {
       auto itemValue = fSubFields[0]->CaptureValue(ptr);
       nbytes += fSubFields[0]->Append(itemValue);
@@ -1324,6 +1325,7 @@ ROOT::Experimental::Detail::RFieldValue ROOT::Experimental::RCollectionClassFiel
 void ROOT::Experimental::RCollectionClassField::DestroyValue(const Detail::RFieldValue &value, bool dtorOnly)
 {
    if (fProperties & TVirtualCollectionProxy::kNeedDelete) {
+      TVirtualCollectionProxy::TPushPop RAII(fProxy.get(), value.GetRawPtr());
       for (auto ptr : RCollectionIterableOnce{value.GetRawPtr(), fIFuncsWrite, fProxy.get()}) {
          auto itemValue = fSubFields[0]->CaptureValue(ptr);
          fSubFields[0]->DestroyValue(itemValue, true /* dtorOnly */);
@@ -1343,6 +1345,7 @@ std::vector<ROOT::Experimental::Detail::RFieldValue>
 ROOT::Experimental::RCollectionClassField::SplitValue(const Detail::RFieldValue &value) const
 {
    std::vector<Detail::RFieldValue> result;
+   TVirtualCollectionProxy::TPushPop RAII(fProxy.get(), value.GetRawPtr());
    for (auto ptr : RCollectionIterableOnce{value.GetRawPtr(), fIFuncsRead, fProxy.get()}) {
       result.emplace_back(fSubFields[0]->CaptureValue(ptr));
    }
