@@ -169,10 +169,8 @@ protected:
              const RooArgSet& vars, const RooFormulaVar* cutVar, const char* cutRange,
              std::size_t nStart, std::size_t nStop);
 
-  RooArgSet addWgtVar(const RooArgSet& origVars, const RooAbsArg* wgtVar) ;
-
-  RooArgSet _varsNoWgt ;   ///< Vars without weight variable
-  RooRealVar* _wgtVar ;    ///< Pointer to weight variable (if set)
+  RooArgSet _varsNoWgt;          ///< Vars without weight variable
+  RooRealVar *_wgtVar = nullptr; ///< Pointer to weight variable (if set)
 
 private:
 
