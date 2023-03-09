@@ -270,8 +270,9 @@ public:
    virtual std::vector<RFieldValue> SplitValue(const RFieldValue &value) const;
    /// The number of bytes taken by a value of the appropriate type
    virtual size_t GetValueSize() const = 0;
-   /// For many types, the alignment requirement is equal to the size; otherwise override.
-   virtual size_t GetAlignment() const { return GetValueSize(); }
+   /// As a rule of thumb, the alignment is equal to the size of the type. There are, however, various exceptions
+   /// to this rule depending on OS and CPU architecture. So enforce the alignment to be explicitly spelled out.
+   virtual size_t GetAlignment() const = 0;
    int GetTraits() const { return fTraits; }
    bool HasReadCallbacks() const { return !fReadCallbacks.empty(); }
 
@@ -383,6 +384,7 @@ public:
    Detail::RFieldValue GenerateValue(void*) override { return Detail::RFieldValue(); }
    Detail::RFieldValue CaptureValue(void*) final { return Detail::RFieldValue(); }
    size_t GetValueSize() const final { return 0; }
+   size_t GetAlignment() const final { return 0; }
 
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
 };
@@ -889,6 +891,7 @@ public:
          Detail::RColumnElement<ClusterSize_t>(static_cast<ClusterSize_t*>(where)), this, where);
    }
    size_t GetValueSize() const final { return sizeof(ClusterSize_t); }
+   size_t GetAlignment() const final { return alignof(ClusterSize_t); }
    void CommitCluster() final;
 };
 
@@ -990,6 +993,7 @@ public:
          Detail::RColumnElement<ClusterSize_t>(static_cast<ClusterSize_t*>(where)), this, where);
    }
    size_t GetValueSize() const final { return sizeof(ClusterSize_t); }
+   size_t GetAlignment() const final { return alignof(ClusterSize_t); }
 
    /// Special help for offset fields
    void GetCollectionInfo(NTupleSize_t globalIndex, RClusterIndex *collectionStart, ClusterSize_t *size) {
@@ -1039,6 +1043,7 @@ public:
       return Detail::RFieldValue(true /* captureFlag */, this, where);
    }
    size_t GetValueSize() const final { return sizeof(RNTupleCardinality); }
+   size_t GetAlignment() const final { return alignof(RNTupleCardinality); }
 
    /// Get the number of elements of the collection identified by globalIndex
    void ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue *value) final
@@ -1110,6 +1115,7 @@ public:
          Detail::RColumnElement<bool>(static_cast<bool*>(where)), this, where);
    }
    size_t GetValueSize() const final { return sizeof(bool); }
+   size_t GetAlignment() const final { return alignof(bool); }
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
 };
 
@@ -1162,6 +1168,7 @@ public:
          Detail::RColumnElement<float>(static_cast<float*>(where)), this, where);
    }
    size_t GetValueSize() const final { return sizeof(float); }
+   size_t GetAlignment() const final { return alignof(float); }
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
 };
 
@@ -1215,6 +1222,7 @@ public:
          Detail::RColumnElement<double>(static_cast<double*>(where)), this, where);
    }
    size_t GetValueSize() const final { return sizeof(double); }
+   size_t GetAlignment() const final { return alignof(double); }
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
 };
 
@@ -1267,6 +1275,7 @@ public:
          Detail::RColumnElement<char>(static_cast<char*>(where)), this, where);
    }
    size_t GetValueSize() const final { return sizeof(char); }
+   size_t GetAlignment() const final { return alignof(char); }
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
 };
 
@@ -1319,6 +1328,7 @@ public:
          Detail::RColumnElement<std::int8_t>(static_cast<std::int8_t*>(where)), this, where);
    }
    size_t GetValueSize() const final { return sizeof(std::int8_t); }
+   size_t GetAlignment() const final { return alignof(std::int8_t); }
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
 };
 
@@ -1371,6 +1381,7 @@ public:
          Detail::RColumnElement<std::uint8_t>(static_cast<std::uint8_t*>(where)), this, where);
    }
    size_t GetValueSize() const final { return sizeof(std::uint8_t); }
+   size_t GetAlignment() const final { return alignof(std::uint8_t); }
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
 };
 
@@ -1423,6 +1434,7 @@ public:
          Detail::RColumnElement<std::int16_t>(static_cast<std::int16_t*>(where)), this, where);
    }
    size_t GetValueSize() const final { return sizeof(std::int16_t); }
+   size_t GetAlignment() const final { return alignof(std::int16_t); }
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
 };
 
@@ -1475,6 +1487,7 @@ public:
          Detail::RColumnElement<std::uint16_t>(static_cast<std::uint16_t*>(where)), this, where);
    }
    size_t GetValueSize() const final { return sizeof(std::uint16_t); }
+   size_t GetAlignment() const final { return alignof(std::uint16_t); }
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
 };
 
@@ -1527,6 +1540,7 @@ public:
          Detail::RColumnElement<std::int32_t>(static_cast<std::int32_t*>(where)), this, where);
    }
    size_t GetValueSize() const final { return sizeof(std::int32_t); }
+   size_t GetAlignment() const final { return alignof(std::int32_t); }
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
 };
 
@@ -1579,6 +1593,7 @@ public:
          Detail::RColumnElement<std::uint32_t>(static_cast<std::uint32_t*>(where)), this, where);
    }
    size_t GetValueSize() const final { return sizeof(std::uint32_t); }
+   size_t GetAlignment() const final { return alignof(std::uint32_t); }
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
 };
 
@@ -1631,6 +1646,7 @@ public:
          Detail::RColumnElement<std::uint64_t>(static_cast<std::uint64_t*>(where)), this, where);
    }
    size_t GetValueSize() const final { return sizeof(std::uint64_t); }
+   size_t GetAlignment() const final { return alignof(std::uint64_t); }
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
 };
 
@@ -1683,6 +1699,7 @@ public:
          Detail::RColumnElement<std::int64_t>(static_cast<std::int64_t*>(where)), this, where);
    }
    size_t GetValueSize() const final { return sizeof(std::int64_t); }
+   size_t GetAlignment() const final { return alignof(std::int64_t); }
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
 };
 

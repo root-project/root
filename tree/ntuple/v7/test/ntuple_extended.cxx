@@ -123,8 +123,8 @@ TEST(RNTuple, LargeFile1)
       RNTupleWriteOptions options;
       options.SetCompression(0);
       auto ntuple = RNTupleWriter::Recreate(std::move(modelWrite), "myNTuple", fileGuard.GetPath(), options);
-      constexpr unsigned long nEvents = 1024 * 1024 * 256; // Exceed 2GB file size
-      for (unsigned int i = 0; i < nEvents; ++i) {
+      constexpr std::uint64_t nEvents = 1024 * 1024 * 256; // Exceed 2GB file size
+      for (std::uint64_t i = 0; i < nEvents; ++i) {
          wrEnergy = rnd.Rndm();
          chksumWrite += wrEnergy;
          ntuple->Fill();
@@ -195,8 +195,8 @@ TEST(RNTuple, LargeFile2)
 
    TRandom3 rnd(42);
    double chksumWrite = 0.0;
-   constexpr unsigned long nEvents = 1024 * 1024 * 256; // Exceed 2GB file size
-   for (unsigned int i = 0; i < nEvents; ++i) {
+   constexpr std::uint64_t nEvents = 1024 * 1024 * 256; // Exceed 2GB file size
+   for (std::uint64_t i = 0; i < nEvents; ++i) {
       *E = rnd.Rndm();
       chksumWrite += *E;
       writer->Fill();
