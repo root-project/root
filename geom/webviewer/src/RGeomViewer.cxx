@@ -444,3 +444,13 @@ void RGeomViewer::SaveAsMacro(const std::string &fname)
    fs << "}" << std::endl;
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////////
+/// Set handle which will be cleared when connection is closed
+/// Must be called after window is shown
+
+void RGeomViewer::ClearOnClose(const std::shared_ptr<void> &handle)
+{
+   if (fWebWindow)
+      fWebWindow->SetClearOnClose(handle);
+
+}
