@@ -94,6 +94,7 @@ public:
       return ROOT::Experimental::Detail::RFieldValue(true /* captureFlag */, this, where);
    }
    size_t GetValueSize() const final { return sizeof(std::size_t); }
+   size_t GetAlignment() const final { return alignof(std::size_t); }
 
    /// Get the number of elements of the collection identified by globalIndex
    void
