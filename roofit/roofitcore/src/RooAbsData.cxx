@@ -1611,12 +1611,7 @@ SplittingSetup initSplit(RooAbsData const &data, RooAbsCategory const &splitCat)
 
    // Add weight variable explicitly if dataset has weights, but no top-level weight
    // variable exists (can happen with composite datastores)
-   if (data.isWeighted() && !data.IsA()->InheritsFrom(RooDataHist::Class())) {
-      auto newweight = std::make_unique<RooRealVar>("weight", "weight", -1e9, 1e9);
-      setup.subsetVars.add(*newweight);
-      setup.addWeightVar = true;
-      setup.ownedSet.addOwned(std::move(newweight));
-   }
+   setup.addWeightVar = data.isWeighted();
 
    return setup;
 }
@@ -1629,8 +1624,7 @@ TList *splitImpl(RooAbsData const &data, const RooAbsCategory &cloneCat, bool cr
    // If createEmptyDataSets is true, prepopulate with empty sets corresponding to all states
    if (createEmptyDataSets) {
       for (const auto &nameIdx : cloneCat) {
-         RooAbsData *subset = createEmptyData(nameIdx.first.c_str());
-         dsetList->Add((RooAbsArg *)subset);
+         dsetList->Add(createEmptyData(nameIdx.first.c_str()));
       }
    }
 
@@ -1641,7 +1635,7 @@ TList *splitImpl(RooAbsData const &data, const RooAbsCategory &cloneCat, bool cr
       RooAbsData *subset = (RooAbsData *)dsetList->FindObject(cloneCat.getCurrentLabel());
       if (!subset) {
          subset = createEmptyData(cloneCat.getCurrentLabel());
-         dsetList->Add((RooAbsArg *)subset);
+         dsetList->Add(subset);
       }
       subset->add(*row, data.weight(), propWeightSquared ? data.weightSquared() : 0.0);
    }
