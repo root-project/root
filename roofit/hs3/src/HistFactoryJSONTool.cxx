@@ -142,10 +142,8 @@ void exportMeasurement(RooStats::HistFactory::Measurement &measurement, JSONNode
    // preprocess functions
    if (!measurement.GetFunctionObjects().empty()) {
       auto &funclist = n["functions"];
-      funclist.set_map();
       for (const auto &func : measurement.GetFunctionObjects()) {
-         auto &f = funclist[func.GetName()];
-         f.set_map();
+         auto &f = RooJSONFactoryWSTool::appendNamedChild(funclist, func.GetName());
          f["name"] << func.GetName();
          f["expression"] << func.GetExpression();
          f["dependents"] << func.GetDependents();
@@ -154,7 +152,6 @@ void exportMeasurement(RooStats::HistFactory::Measurement &measurement, JSONNode
    }
 
    auto &pdflist = n["distributions"];
-   pdflist.set_map();
 
    auto &analysisNode = RooJSONFactoryWSTool::appendNamedChild(n["analyses"], measurement.GetName());
    analysisNode.set_map();
@@ -186,7 +183,7 @@ void exportMeasurement(RooStats::HistFactory::Measurement &measurement, JSONNode
       likelihoodNode["dist"] << pdfName;
       likelihoodNode["obs"] << std::string("obsData_") + c.GetName();
       likelihoods.append_child() << c.GetName();
-      exportChannel(c, pdflist[pdfName]);
+      exportChannel(c, RooJSONFactoryWSTool::appendNamedChild(pdflist, pdfName));
    }
 
    // the variables
