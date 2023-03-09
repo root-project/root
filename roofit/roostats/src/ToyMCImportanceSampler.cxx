@@ -104,13 +104,7 @@ RooDataSet* ToyMCImportanceSampler::GetSamplingDistributionsSingleWorker(RooArgS
       }
 
       if( !fullResult ) {
-         RooArgSet columns( *result->get() );
-         RooRealVar weightVar ( "weight", "weight", 1.0 );
-         columns.add( weightVar );
-//       cout << endl << endl << "Reweighted data columns: " << endl;
-//       columns.Print("v");
-//       cout << endl;
-         fullResult = new RooDataSet( result->GetName(), result->GetTitle(), columns, "weight" );
+         fullResult = new RooDataSet( result->GetName(), result->GetTitle(), *result->get(), RooFit::WeightVar());
       }
 
       for( int j=0; j < result->numEntries(); j++ ) {
