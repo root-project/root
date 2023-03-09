@@ -1554,15 +1554,14 @@ TList *splitImpl(RooAbsData const &data, const RooAbsCategory &cloneCat, bool cr
    }
 
    // Loop over dataset and copy event to matching subset
-   const bool propWeightSquared = data.isWeighted();
    for (Int_t i = 0; i < data.numEntries(); ++i) {
       const RooArgSet *row = data.get(i);
-      RooAbsData *subset = (RooAbsData *)dsetList->FindObject(cloneCat.getCurrentLabel());
+      auto subset = static_cast<RooAbsData *>(dsetList->FindObject(cloneCat.getCurrentLabel()));
       if (!subset) {
          subset = createEmptyData(cloneCat.getCurrentLabel());
          dsetList->Add(subset);
       }
-      subset->add(*row, data.weight(), propWeightSquared ? data.weightSquared() : 0.0);
+      subset->add(*row, data.weight(), data.weightError());
    }
 
    return dsetList;
