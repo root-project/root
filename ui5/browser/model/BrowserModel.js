@@ -273,7 +273,7 @@ sap.ui.define([
               sort: this.sortMethod || '',
               reverse: this.reverseOrder || false,
               hidden: this.showHidden ? true : false,
-              lastcycle: this.onlyLastCycle,
+              lastcycle: this.onlyLastCycle ?? 0,
               reload: force_reload ? true : false,  // rescan items by server even when path was not changed
               regex
            };
