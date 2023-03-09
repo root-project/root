@@ -693,6 +693,7 @@ bool RWebWindow::ProcessWS(THttpCallArg &arg)
 
       if (conn) {
          ProvideQueueEntry(conn->fConnId, kind_Disconnect, ""s);
+         bool do_clear_on_close = false;
          if (conn->fKeyUsed < 0) {
             // case when same handle want to be reused by client with new key
             std::lock_guard<std::mutex> grd(fConnMutex);
@@ -700,7 +701,13 @@ bool RWebWindow::ProcessWS(THttpCallArg &arg)
             conn->fConnId = ++fConnCnt; // change connection id to avoid confusion
             conn->ResetData();
             fPendingConn.emplace_back(conn);
+         } else {
+            std::lock_guard<std::mutex> grd(fConnMutex);
+            do_clear_on_close = (fPendingConn.size() == 0) && (fConn.size() == 0);
          }
+
+         if (do_clear_on_close)
+            fClearOnClose.reset();
       }
 
       return true;
@@ -1458,6 +1465,15 @@ void RWebWindow::SetDisconnectCallBack(WebWindowConnectCallback_t func)
 }
 
 /////////////////////////////////////////////////////////////////////////////////
+/// Set handle which is cleared when last active connection is closed
+/// Typically can be used to destroy web-based widget at such moment
+
+void RWebWindow::SetClearOnClose(const std::shared_ptr<void> &handle)
+{
+   fClearOnClose = handle;
+}
+
+/////////////////////////////////////////////////////////////////////////////////
 /// Set call-backs function for connect, data and disconnect events
 
 void RWebWindow::SetCallBacks(WebWindowConnectCallback_t conn, WebWindowDataCallback_t data, WebWindowConnectCallback_t disconn)
@@ -1543,7 +1559,7 @@ unsigned RWebWindow::AddEmbedWindow(std::shared_ptr<RWebWindow> window, int chan
       return 0;
 
    // check if channel already occupied
-   if (arr[0]->fEmbed.find(channel) != arr[0]->fEmbed.end()) 
+   if (arr[0]->fEmbed.find(channel) != arr[0]->fEmbed.end())
       return 0;
 
    arr[0]->fEmbed[channel] = window;
