@@ -148,7 +148,7 @@ void ROOT::Experimental::RNTupleModel::RUpdater::CommitUpdate()
    Detail::RNTupleModelChangeset toCommit{fOpenChangeset.fModel};
    std::swap(fOpenChangeset.fAddedFields, toCommit.fAddedFields);
    std::swap(fOpenChangeset.fAddedProjectedFields, toCommit.fAddedProjectedFields);
-   fWriter.fSink->UpdateSchema(toCommit);
+   fWriter.fSink->UpdateSchema(toCommit, fWriter.fNEntries);
 }
 
 void ROOT::Experimental::RNTupleModel::RUpdater::AddField(std::unique_ptr<Detail::RFieldBase> field)

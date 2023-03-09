@@ -146,6 +146,16 @@ private:
          func(value);
    }
 
+   /// Translate an entry index to a column element index of the principal column and viceversa.  These functions
+   /// take into account the role and number of repetitions on each level of the field hierarchy as follows:
+   /// - Top level fields: element index == entry index
+   /// - Record fields: propagate their principal column index to the principal columns of direct descendant fields
+   /// - Collection and variant fields: set the principal column index of their childs to 0
+   ///
+   /// The column element index also depends on the number of repetitions of each field in the hierarchy, e.g., given a
+   /// field with type `std::array<std::array<float, 4>, 2>`, this function returns 8 for the inner-most field.
+   NTupleSize_t EntryToColumnElementIndex(NTupleSize_t globalIndex) const;
+
 protected:
    /// Collections and classes own sub fields
    std::vector<std::unique_ptr<RFieldBase>> fSubFields;
@@ -360,7 +370,8 @@ public:
 
    /// Fields and their columns live in the void until connected to a physical page storage.  Only once connected, data
    /// can be read or written.  In order to find the field in the page storage, the field's on-disk ID has to be set.
-   void ConnectPageSink(RPageSink &pageSink);
+   /// \param firstEntry The global index of the first entry with on-disk data for the connected field
+   void ConnectPageSink(RPageSink &pageSink, NTupleSize_t firstEntry = 0);
    void ConnectPageSource(RPageSource &pageSource);
 
    /// Indicates an evolution of the mapping scheme from C++ type to columns
