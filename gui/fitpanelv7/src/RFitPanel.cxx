@@ -973,3 +973,12 @@ bool RFitPanel::DoDraw()
 
    return true;
 }
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+/// Set handle which will be cleared when connection is closed
+
+void RFitPanel::ClearOnClose(const std::shared_ptr<void> &handle)
+{
+   GetWindow()->SetClearOnClose(handle);
+}

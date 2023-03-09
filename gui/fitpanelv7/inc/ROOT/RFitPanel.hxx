@@ -115,6 +115,8 @@ public:
 
    /// hide FitPanel
    void Hide();
+
+   void ClearOnClose(const std::shared_ptr<void> &handle);
 };
 
 } // namespace Experimental
