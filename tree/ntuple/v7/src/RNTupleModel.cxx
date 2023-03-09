@@ -135,8 +135,6 @@ ROOT::Experimental::RNTupleModel::RUpdater::RUpdater(RNTupleWriter &writer)
 
 void ROOT::Experimental::RNTupleModel::RUpdater::BeginUpdate()
 {
-   if (fWriter.fNEntries > 0)
-      throw RException(R__FAIL("invalid attempt to alter model (fWriter.fNEntries > 0)"));
    fOpenChangeset.fModel.Unfreeze();
 }
 
