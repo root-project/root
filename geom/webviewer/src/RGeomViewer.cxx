@@ -432,6 +432,11 @@ void RGeomViewer::SaveAsMacro(const std::string &fname)
 
    fDesc.SavePrimitive(fs, "viewer->Description().");
 
+   fs << prefix << "viewer->SetShowHierarchy(" << (fShowHierarchy ? "true" : "false") << ");" << std::endl;
+   fs << prefix << "viewer->SetShowColumns(" << (fShowColumns ? "true" : "false") << ");" << std::endl;
+
+   fs << std::endl;
+
    fs << prefix << "viewer->Show();" << std::endl << std::endl;
 
    fs << prefix << "RDirectory::Heap().Add(\"geom_viewer\", viewer);" << std::endl;
