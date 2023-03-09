@@ -74,6 +74,8 @@ public:
 
    virtual bool AddPanel(std::shared_ptr<RWebWindow>) { return false; }
 
+   virtual void SetClearOnClose(const std::shared_ptr<void> &) {}
+
    /// Loads the plugin that implements this class.
    static std::unique_ptr<RVirtualCanvasPainter> Create(RCanvas &canv);
 };
