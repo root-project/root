@@ -155,6 +155,7 @@ private:
    /// The column element index also depends on the number of repetitions of each field in the hierarchy, e.g., given a
    /// field with type `std::array<std::array<float, 4>, 2>`, this function returns 8 for the inner-most field.
    NTupleSize_t EntryToColumnElementIndex(NTupleSize_t globalIndex) const;
+   NTupleSize_t ColumnElementIndexToEntry(NTupleSize_t columnElementIndex) const;
 
 protected:
    /// Collections and classes own sub fields
@@ -345,6 +346,9 @@ public:
    ENTupleStructure GetStructure() const { return fStructure; }
    std::size_t GetNRepetitions() const { return fNRepetitions; }
    NTupleSize_t GetNElements() const { return fPrincipalColumn->GetNElements(); }
+   /// Returns the global index of the first entry that has a stored on-disk value. For late added fields, this allows
+   /// for differentiating zero-initialized values read before the addition of the field from actual stored data.
+   NTupleSize_t GetFirstEntry() const;
    RFieldBase *GetParent() const { return fParent; }
    std::vector<RFieldBase *> GetSubFields() const;
    bool IsSimple() const { return fIsSimple; }
