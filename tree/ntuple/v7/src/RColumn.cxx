@@ -20,8 +20,6 @@
 
 #include <TError.h>
 
-#include <iostream>
-
 ROOT::Experimental::Detail::RColumn::RColumn(const RColumnModel& model, std::uint32_t index)
    : fModel(model), fIndex(index)
 {
