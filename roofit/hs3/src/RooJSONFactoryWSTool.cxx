@@ -775,19 +775,6 @@ void RooJSONFactoryWSTool::importFunction(const JSONNode &p, bool isPdf)
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
-// generating an unbinned dataset from a binned one
-
-std::unique_ptr<RooDataSet> RooJSONFactoryWSTool::unbinned(RooDataHist const &hist)
-{
-   RooArgSet obs(*hist.get());
-   auto data = std::make_unique<RooDataSet>(hist.GetName(), hist.GetTitle(), obs, RooFit::WeightVar());
-   for (int i = 0; i < hist.numEntries(); ++i) {
-      data->add(*hist.get(i), hist.weight(i));
-   }
-   return data;
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////
 // importing data
 std::map<std::string, std::unique_ptr<RooAbsData>> RooJSONFactoryWSTool::loadData(const JSONNode &rootnode)
 {
@@ -1390,19 +1377,11 @@ void RooJSONFactoryWSTool::importAnalysis(const RooFit::Detail::JSONNode &analys
    mc.SetGlobalObservables(globs);
 
    // Create the combined dataset for RooFit
-   std::map<std::string, RooDataSet *> dsMap;
-   std::stack<std::unique_ptr<RooDataSet>> ownedDataSets;
+   std::map<std::string, RooAbsData *> dsMap;
    RooArgSet allVars{pdf->indexCat()};
-   RooDataSet *channelData = nullptr;
    for (auto const &child : analysisNode["likelihoods"].children()) {
       auto &nllNode = *findNamedChild(likelihoodsNode, child.val());
-      RooAbsData *originalChannelData = _workspace.data(nllNode["obs"].val());
-      if (originalChannelData->InheritsFrom(RooDataHist::Class())) {
-         ownedDataSets.push(unbinned(static_cast<RooDataHist const &>(*originalChannelData)));
-         channelData = ownedDataSets.top().get();
-      } else {
-         channelData = static_cast<RooDataSet *>(originalChannelData);
-      }
+      RooAbsData *channelData = _workspace.data(nllNode["obs"].val());
       dsMap.insert({child.val(), channelData});
       allVars.add(*channelData->get());
    }
