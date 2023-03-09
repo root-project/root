@@ -191,6 +191,7 @@ TEST(RFieldDescriptorBuilder, HeaderExtension)
                             .Model(RColumnModel{EColumnType::kInt64, false})
                             .FieldId(3)
                             .Index(0)
+                            .FirstElementIndex(1002)
                             .MakeDescriptor()
                             .Unwrap());
    descBuilder.AddFieldLink(2, 3);
@@ -208,6 +209,7 @@ TEST(RFieldDescriptorBuilder, HeaderExtension)
                             .Model(RColumnModel{EColumnType::kBit, false})
                             .FieldId(4)
                             .Index(0)
+                            .FirstElementIndex(1100)
                             .MakeDescriptor()
                             .Unwrap());
    descBuilder.AddFieldLink(0, 4);
@@ -248,6 +250,9 @@ TEST(RFieldDescriptorBuilder, HeaderExtension)
       for (auto child_field : xHeader->GetTopLevelFields(desc))
          EXPECT_EQ(desc.GetFieldDescriptor(child_field).GetFieldName(), child_names[i++]);
    }
+   EXPECT_EQ(desc.GetColumnDescriptor(0).GetFirstElementIndex(), 0U);
+   EXPECT_EQ(desc.GetColumnDescriptor(1).GetFirstElementIndex(), 1002U);
+   EXPECT_EQ(desc.GetColumnDescriptor(2).GetFirstElementIndex(), 1100U);
 }
 
 TEST(RNTupleDescriptor, QualifiedFieldName)
