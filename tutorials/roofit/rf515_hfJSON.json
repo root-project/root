@@ -4,8 +4,9 @@
             "combined_data_name": "observed"
         }
     }}},
-    "analyses": {
-        "main": {
+    "analyses": [
+        {
+            "name": "main",
             "likelihoods": [
                 "channel1"
             ],
@@ -17,13 +18,14 @@
             ],
             "InterpolationScheme": ""
         }
-    },
-    "likelihoods": {
-        "channel1": {
+    ],
+    "likelihoods": [
+        {
+            "name": "channel1",
             "dist": "model_channel1",
             "obs": "observed_channel1"
         }
-    },
+    ],
     "distributions": {
         "model_channel1": {
             "name": "model_channel1",
@@ -119,8 +121,9 @@
             "type": "histfactory_dist"
         }
     },
-    "domains": {
-        "default_domain": {
+    "domains": [
+        {
+            "name": "default_domain",
             "type": "product_domain",
             "variables": [
                 {
@@ -130,16 +133,18 @@
                 }
             ]
         }
-    },
-    "parameter_points": {
-        "default_values": {
+    ],
+    "parameter_points": [
+        {
+            "name": "default_values",
             "mu": {
                 "value": 1
             }
         }
-    },
-    "data": {
-        "observed_channel1": {
+    ],
+    "data": [
+        {
+            "name": "observed_channel1",
             "variables": {
                 "obs_x_channel1": {
                     "nbins": 2,
@@ -149,5 +154,5 @@
             },
             "contents": [122, 112]
         }
-    }
+    ]
 }
