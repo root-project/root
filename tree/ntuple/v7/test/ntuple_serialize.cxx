@@ -673,8 +673,8 @@ TEST(RNTuple, SerializeFooterXHeader)
    builder.AddFieldLink(0, 43);
    builder.AddFieldLink(43, 44);
    builder.AddFieldLink(0, 45);
-   builder.AddColumn(18, 18, 44, RColumnModel(EColumnType::kReal32, true), 0);
-   builder.AddColumn(19, 19, 45, RColumnModel(EColumnType::kInt64, true), 0);
+   builder.AddColumn(18, 18, 44, RColumnModel(EColumnType::kReal32, true), 0, /*firstElementIdx=*/4200);
+   builder.AddColumn(19, 19, 45, RColumnModel(EColumnType::kInt64, true), 0, /*firstElementIdx=*/10000);
 
    builder.AddField(RFieldDescriptorBuilder()
                        .FieldId(46)
@@ -709,8 +709,22 @@ TEST(RNTuple, SerializeFooterXHeader)
    EXPECT_EQ(3u, xHeader->GetNLogicalColumns());
    EXPECT_EQ(2u, xHeader->GetNPhysicalColumns());
    auto fldIdStruct = desc.FindFieldId("struct");
+   auto fldIdF = desc.FindFieldId("f", fldIdStruct);
+   auto fldIdI64 = desc.FindFieldId("i64");
    EXPECT_EQ(1, fldIdStruct);
-   EXPECT_EQ(2, desc.FindFieldId("f", fldIdStruct));
-   EXPECT_EQ(3, desc.FindFieldId("i64"));
+   EXPECT_EQ(2, fldIdF);
+   EXPECT_EQ(3, fldIdI64);
    EXPECT_EQ(4, desc.FindFieldId("projected"));
+
+   unsigned int counter = 0;
+   for (const auto &c : desc.GetColumnIterable(fldIdF)) {
+      EXPECT_EQ(c.GetFirstElementIndex(), 4200U);
+      counter++;
+   }
+   EXPECT_EQ(1U, counter);
+   for (const auto &c : desc.GetColumnIterable(fldIdI64)) {
+      EXPECT_EQ(c.GetFirstElementIndex(), 10000U);
+      counter++;
+   }
+   EXPECT_EQ(2U, counter);
 }
