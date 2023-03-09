@@ -218,7 +218,6 @@ private:
    };
 
    std::map<std::string, std::unique_ptr<RooAbsData>> loadData(const RooFit::Detail::JSONNode &rootnode);
-   std::unique_ptr<RooDataSet> unbinned(RooDataHist const &hist);
    static RooRealVar *createObservable(RooWorkspace &ws, const std::string &name, const RooJSONFactoryWSTool::Var &var);
 
    template <class T>
