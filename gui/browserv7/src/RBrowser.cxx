@@ -884,4 +884,10 @@ bool RBrowser::ActivateWidget(const std::string &title, const std::string &kind)
    return false;
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////////
+/// Set handle which will be cleared when connection is closed
 
+void RBrowser::ClearOnClose(const std::shared_ptr<void> &handle)
+{
+   fWebWindow->SetClearOnClose(handle);
+}
