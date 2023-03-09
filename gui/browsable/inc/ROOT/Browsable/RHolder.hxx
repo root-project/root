@@ -54,6 +54,9 @@ public:
    /** Returns direct (temporary) object pointer */
    virtual const void *GetObject() const = 0;
 
+   /** Clear all pointers without performing cleanup */
+   virtual void Forget() {}
+
    template <class T>
    bool InheritsFrom() const
    {
