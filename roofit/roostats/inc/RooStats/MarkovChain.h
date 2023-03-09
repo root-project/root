@@ -102,7 +102,7 @@ namespace RooStats {
 
       /// get a clone of the weight variable
       virtual RooRealVar* GetWeightVar() const
-      { return (RooRealVar*)fWeight->Clone(); }
+      { return static_cast<RooRealVar*>(fChain->weightVar()->Clone()); }
 
       ~MarkovChain() override
       {
@@ -116,9 +116,8 @@ namespace RooStats {
       RooArgSet * fDataEntry;
       RooDataSet* fChain;
       RooRealVar* fNLL;
-      RooRealVar* fWeight;
 
-      ClassDefOverride(MarkovChain,1);
+      ClassDefOverride(MarkovChain,2);
    };
 }
 

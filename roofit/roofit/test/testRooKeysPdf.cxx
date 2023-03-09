@@ -19,13 +19,12 @@ TEST(RooKeysPdf, WeightedDataset)
    // this validates that dataset weights are correctly dealt with.
 
    RooRealVar x("x", "x", 0, 20);
-   RooRealVar weight("weight", "weight", 0, 2000);
 
    const std::size_t nEvents0 = 100;
    const std::size_t nEvents1 = 400;
 
    RooDataSet data1{"data1", "data1", x};
-   RooDataSet data2{"data2", "data2", {x, weight}, "weight"};
+   RooDataSet data2{"data2", "data2", x, RooFit::WeightVar()};
 
    x.setVal(5);
    for (std::size_t i = 0; i < nEvents0; ++i) {
