@@ -19,7 +19,6 @@
 #include "ROOT/RHistDrawable.hxx"
 #include "ROOT/RCanvas.hxx"
 #include "ROOT/RFitPanel.hxx"
-#include "ROOT/RDirectory.hxx"
 
 using namespace ROOT::Experimental;
 
@@ -43,9 +42,6 @@ void fitpanel() {
 
    auto panel = std::make_shared<RFitPanel>("FitPanel Title");
 
-   RDirectory::Heap().Add("fitpanel", panel);
-   RDirectory::Heap().Add("firsthisto", pHist);
-
    // TODO: how combine there methods together
    // here std::shread_ptr<> on both sides
 
@@ -53,5 +49,7 @@ void fitpanel() {
    panel->AssignHistogram(pHist);
 
    canvas->AddPanel(panel);
-}
 
+   // preserve panel alive until connection is closed
+   canvas->ClearOnClose(panel);
+}

@@ -174,6 +174,8 @@ public:
 
    void ResolveSharedPtrs();
 
+   void ClearOnClose(const std::shared_ptr<void> &handle);
+
    static const std::vector<std::shared_ptr<RCanvas>> GetCanvases();
 
    static void ReleaseHeldCanvases();
