@@ -437,6 +437,18 @@ void ROOT::Experimental::Detail::RFieldBase::Attach(
    fSubFields.emplace_back(std::move(child));
 }
 
+ROOT::Experimental::NTupleSize_t
+ROOT::Experimental::Detail::RFieldBase::EntryToColumnElementIndex(ROOT::Experimental::NTupleSize_t globalIndex) const
+{
+   std::size_t result = globalIndex;
+   for (auto f = this; f != nullptr; f = f->GetParent()) {
+      auto parent = f->GetParent();
+      if (parent && (parent->GetStructure() == kCollection || parent->GetStructure() == kVariant))
+         return 0U;
+      result *= std::max(f->GetNRepetitions(), std::size_t{1U});
+   }
+   return result;
+}
 
 std::vector<ROOT::Experimental::Detail::RFieldBase *> ROOT::Experimental::Detail::RFieldBase::GetSubFields() const
 {
@@ -547,7 +559,7 @@ void ROOT::Experimental::Detail::RFieldBase::AutoAdjustColumnTypes(const RNTuple
       SetColumnRepresentative({EColumnType::kSplitReal32});
 }
 
-void ROOT::Experimental::Detail::RFieldBase::ConnectPageSink(RPageSink &pageSink)
+void ROOT::Experimental::Detail::RFieldBase::ConnectPageSink(RPageSink &pageSink, NTupleSize_t firstEntry)
 {
    R__ASSERT(fColumns.empty());
 
@@ -556,8 +568,10 @@ void ROOT::Experimental::Detail::RFieldBase::ConnectPageSink(RPageSink &pageSink
    GenerateColumnsImpl();
    if (!fColumns.empty())
       fPrincipalColumn = fColumns[0].get();
-   for (auto& column : fColumns)
-      column->Connect(fOnDiskId, &pageSink);
+   for (auto &column : fColumns) {
+      auto firstElementIndex = (column.get() == fPrincipalColumn) ? EntryToColumnElementIndex(firstEntry) : 0;
+      column->Connect(fOnDiskId, &pageSink, firstElementIndex);
+   }
 }
 
 

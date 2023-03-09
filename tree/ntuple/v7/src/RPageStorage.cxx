@@ -302,11 +302,13 @@ ROOT::Experimental::Detail::RPageStorage::ColumnHandle_t
 ROOT::Experimental::Detail::RPageSink::AddColumn(DescriptorId_t fieldId, const RColumn &column)
 {
    auto columnId = fDescriptorBuilder.GetDescriptor().GetNPhysicalColumns();
-   fDescriptorBuilder.AddColumn(columnId, columnId, fieldId, column.GetModel(), column.GetIndex());
+   fDescriptorBuilder.AddColumn(columnId, columnId, fieldId, column.GetModel(), column.GetIndex(),
+                                column.GetFirstElementIndex());
    return ColumnHandle_t{columnId, &column};
 }
 
-void ROOT::Experimental::Detail::RPageSink::UpdateSchema(const RNTupleModelChangeset &changeset)
+void ROOT::Experimental::Detail::RPageSink::UpdateSchema(const RNTupleModelChangeset &changeset,
+                                                         NTupleSize_t firstEntry)
 {
    const auto &descriptor = fDescriptorBuilder.GetDescriptor();
    auto addField = [&](RFieldBase &f) {
@@ -314,7 +316,7 @@ void ROOT::Experimental::Detail::RPageSink::UpdateSchema(const RNTupleModelChang
       fDescriptorBuilder.AddField(RFieldDescriptorBuilder::FromField(f).FieldId(fieldId).MakeDescriptor().Unwrap());
       fDescriptorBuilder.AddFieldLink(f.GetParent()->GetOnDiskId(), fieldId);
       f.SetOnDiskId(fieldId);
-      f.ConnectPageSink(*this); // issues in turn one or several calls to AddColumn()
+      f.ConnectPageSink(*this, firstEntry); // issues in turn one or several calls to `AddColumn()`
    };
    auto addProjectedField = [&](RFieldBase &f) {
       auto fieldId = descriptor.GetNFields();
@@ -328,6 +330,7 @@ void ROOT::Experimental::Detail::RPageSink::UpdateSchema(const RNTupleModelChang
       }
    };
 
+   R__ASSERT(firstEntry >= fPrevClusterNEntries);
    const auto nColumnsBeforeUpdate = descriptor.GetNPhysicalColumns();
    for (auto f : changeset.fAddedFields) {
       addField(*f);
@@ -344,7 +347,7 @@ void ROOT::Experimental::Detail::RPageSink::UpdateSchema(const RNTupleModelChang
    for (DescriptorId_t i = nColumnsBeforeUpdate; i < nColumns; ++i) {
       RClusterDescriptor::RColumnRange columnRange;
       columnRange.fPhysicalColumnId = i;
-      columnRange.fFirstElementIndex = 0;
+      columnRange.fFirstElementIndex = descriptor.GetColumnDescriptor(i).GetFirstElementIndex();
       columnRange.fNElements = 0;
       columnRange.fCompressionSettings = GetWriteOptions().GetCompression();
       fOpenColumnRanges.emplace_back(columnRange);
@@ -374,7 +377,7 @@ void ROOT::Experimental::Detail::RPageSink::Create(RNTupleModel &model)
       initialChangeset.fAddedFields.emplace_back(f);
    for (auto f : model.GetProjectedFields().GetFieldZero()->GetSubFields())
       initialChangeset.fAddedProjectedFields.emplace_back(f);
-   UpdateSchema(initialChangeset);
+   UpdateSchema(initialChangeset, 0U);
 
    fSerializationContext = Internal::RNTupleSerializer::SerializeHeaderV1(nullptr, descriptor);
    auto buffer = std::make_unique<unsigned char[]>(fSerializationContext.GetHeaderSize());
