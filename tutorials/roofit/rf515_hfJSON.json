@@ -26,8 +26,8 @@
             "obs": "observed_channel1"
         }
     ],
-    "distributions": {
-        "model_channel1": {
+    "distributions": [
+        {
             "name": "model_channel1",
             "samples": [
                 {
@@ -120,7 +120,7 @@
             },
             "type": "histfactory_dist"
         }
-    },
+    ],
     "domains": [
         {
             "name": "default_domain",
