@@ -342,7 +342,13 @@ The flags field can have one of the following bits set
 | 0x01     | Elements in the column are sorted (monotonically increasing) |
 | 0x02     | Elements in the column are sorted (monotonically decreasing) |
 | 0x04     | Elements have only non-negative values                       |
+| 0x08     | Index of first element in the column is not zero             |
 
+If flag 0x08 (deferred column) is set, the index of the first element in this column is not zero, which happens if the column is added at a later point during write.
+In this case, an additional 64bit integer containing the first element index follows the flags field.
+Compliant implementations should yield synthetic data pages made up of 0x00 bytes when trying to read back elements in the range $[0, firstElementIndex-1]$.
+This results in zero-initialized values in the aforementioned range for fields of any supported C++ type, including `std::variant<Ts...>` and collections such as `std::vector<T>`.
+Deferred columns can only appear in the schema extension record frame (see Section Footer Envelope).
 
 #### Alias columns
 
@@ -459,7 +465,7 @@ The cluster summary record frame contains the entry range of a cluster:
 If flag 0x01 (sharded cluster) is set,
 an additional 32bit integer containing the column group ID follows the flags field.
 If flags is zero, the cluster stores the event range of _all_ the original columns
-_excluding_ the columns from extension headers.
+_including_ the columns from extension headers.
 
 The order of the cluster summaries defines the cluster IDs, starting from zero.
 
