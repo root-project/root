@@ -107,6 +107,8 @@ public:
 
    void SaveAsMacro(const std::string &fname);
 
+   void ClearOnClose(const std::shared_ptr<void> &handle);
+
 };
 
 } // namespace Experimental
