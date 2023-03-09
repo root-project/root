@@ -16,7 +16,6 @@
  *************************************************************************/
 
 #include <ROOT/RFitPanel.hxx>
-#include "ROOT/RDirectory.hxx"
 #include "TH1.h"
 #include "TFile.h"
 
@@ -33,7 +32,6 @@ void fitpanel6()
 
    // create panel
    auto panel = std::make_shared<RFitPanel>("FitPanel");
-   RDirectory::Heap().Add("fitpanel", panel);
 
    TH1F *test = new TH1F("test","This is test histogram",100,-4,4);
    test->FillRandom("gaus", 10000);
@@ -41,5 +39,7 @@ void fitpanel6()
    panel->AssignHistogram(test);
 
    panel->Show();
+
+   panel->ClearOnClose(panel);
 }
 
