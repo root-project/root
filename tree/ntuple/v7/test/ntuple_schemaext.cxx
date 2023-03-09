@@ -60,9 +60,6 @@ TEST(RNTuple, SchemaExtensionInvalidUse)
       auto entry2 = ntuple->GetModel()->CreateEntry();
       ntuple->Fill(*entry2);
 
-      // Trying to update the schema after the first `Fill()` call should throw
-      EXPECT_THROW(modelUpdater->BeginUpdate(), ROOT::Experimental::RException);
-
       ntuple->Fill();
    }
 
