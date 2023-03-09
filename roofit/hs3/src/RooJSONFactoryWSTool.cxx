@@ -201,9 +201,8 @@ RooAbsPdf *RooJSONFactoryWSTool::requestImpl<RooAbsPdf>(const std::string &objna
    if (RooAbsPdf *retval = _workspace.pdf(objname))
       return retval;
    if (_rootnodeInput->has_child("distributions")) {
-      const JSONNode &pdfs = (*_rootnodeInput)["distributions"];
-      if (pdfs.has_child(objname)) {
-         this->importFunction(pdfs[objname], true);
+      if (auto child = findNamedChild((*_rootnodeInput)["distributions"], objname)) {
+         this->importFunction(*child, true);
          if (RooAbsPdf *retval = _workspace.pdf(objname))
             return retval;
       }
@@ -223,9 +222,8 @@ RooAbsReal *RooJSONFactoryWSTool::requestImpl<RooAbsReal>(const std::string &obj
    if (RooRealVar *var = requestImpl<RooRealVar>(objname))
       return var;
    if (_rootnodeInput->has_child("functions")) {
-      const JSONNode &funcs = (*_rootnodeInput)["functions"];
-      if (funcs.has_child(objname)) {
-         this->importFunction(funcs[objname], false);
+      if (auto child = findNamedChild((*_rootnodeInput)["functions"], objname)) {
+         this->importFunction(*child, false);
          if (RooAbsReal *retval = _workspace.function(objname))
             return retval;
       }
@@ -237,7 +235,7 @@ namespace {
 
 void logInputArgumentsError(std::stringstream &&ss)
 {
-   oocoutE(nullptr, InputArguments) << ss.str();
+   oocoutE(nullptr, InputArguments) << ss.str() << std::endl;
 }
 
 } // namespace
@@ -506,21 +504,21 @@ void RooJSONFactoryWSTool::append(JSONNode &n, const std::string &elem)
    }
 }
 
-void RooJSONFactoryWSTool::exportAttributes(const RooAbsArg *arg, JSONNode &n)
+void RooJSONFactoryWSTool::exportAttributes(const RooAbsArg *arg, JSONNode &node)
 {
    // export all string attributes of an object
    if (!arg->stringAttributes().empty()) {
       for (const auto &it : arg->stringAttributes()) {
-         // We don't want to span the JSON with the factory tags
+         // We don't want to spam the JSON with the factory tags
          if (it.first == "factory_tag")
             continue;
-         auto &dict = n["dict"];
+         auto &dict = node["dict"];
          dict.set_map();
          dict[it.first] << it.second;
       }
    }
    if (!arg->attributes().empty()) {
-      auto &tags = n["tags"];
+      auto &tags = node["tags"];
       for (const auto &it : arg->attributes()) {
          RooJSONFactoryWSTool::append(tags, it);
       }
@@ -581,14 +579,13 @@ JSONNode *RooJSONFactoryWSTool::exportObject(const RooAbsArg *func)
       return nullptr;
    }
 
-   auto &n = (*_rootnodeOutput)[func->InheritsFrom(RooAbsPdf::Class()) ? "distributions" : "functions"];
-   n.set_map();
+   auto &collectionNode = (*_rootnodeOutput)[func->InheritsFrom(RooAbsPdf::Class()) ? "distributions" : "functions"];
 
    const char *name = func->GetName();
 
    // if this element already exists, skip
-   if (n.has_child(name))
-      return &n[name];
+   if (auto child = findNamedChild(collectionNode, name))
+      return const_cast<JSONNode *>(child);
 
    auto const &exporters = RooFit::JSONIO::exporters();
    auto const &exportKeys = RooFit::JSONIO::exportKeys();
@@ -598,15 +595,14 @@ JSONNode *RooJSONFactoryWSTool::exportObject(const RooAbsArg *func)
    auto it = exporters.find(cl);
    if (it != exporters.end()) { // check if we have a specific exporter available
       for (auto &exp : it->second) {
-         auto &elem = n[name];
-         elem.set_map();
+         auto &elem = appendNamedChild(collectionNode, name);
          if (!exp->exportObject(this, func, elem)) {
             continue;
          }
          if (exp->autoExportDependants()) {
             RooJSONFactoryWSTool::exportDependants(func);
          }
-         RooJSONFactoryWSTool::exportAttributes(func, elem);
+         // RooJSONFactoryWSTool::exportAttributes(func, elem);
          return &elem;
       }
    }
@@ -633,8 +629,7 @@ JSONNode *RooJSONFactoryWSTool::exportObject(const RooAbsArg *func)
 
    RooJSONFactoryWSTool::exportDependants(func);
 
-   auto &elem = n[name];
-   elem.set_map();
+   auto &elem = appendNamedChild(collectionNode, name);
    elem["type"] << dict->second.type;
 
    size_t nprox = func->numProxies();
@@ -659,7 +654,7 @@ JSONNode *RooJSONFactoryWSTool::exportObject(const RooAbsArg *func)
          elem[k->second] << r->arg().GetName();
       }
    }
-   RooJSONFactoryWSTool::exportAttributes(func, elem);
+   // RooJSONFactoryWSTool::exportAttributes(func, elem);
 
    return &elem;
 }
@@ -669,8 +664,6 @@ JSONNode *RooJSONFactoryWSTool::exportObject(const RooAbsArg *func)
 void RooJSONFactoryWSTool::importFunctions(const JSONNode &n)
 {
    // import a list of RooAbsReal objects
-   if (!n.is_map())
-      return;
    for (const auto &p : n.children()) {
       importFunction(p, false);
    }
@@ -686,9 +679,7 @@ void RooJSONFactoryWSTool::importFunction(const JSONNode &p, bool isPdf)
 
    // some preparations: what type of function are we dealing with here?
    std::string name(RooJSONFactoryWSTool::name(p));
-   // if it's an empty name, it's a lost cause, let's just skip it
-   if (name.empty())
-      return;
+
    // if the function already exists, we don't need to do anything
    if (isPdf) {
       if (_workspace.pdf(name))
@@ -1091,8 +1082,8 @@ void RooJSONFactoryWSTool::importVariable(const JSONNode &p)
       return;
    if (!p.is_map()) {
       std::stringstream ss;
-      ss << "RooJSONFactoryWSTool() node '" << name << "' is not a map, skipping." << std::endl;
-      logInputArgumentsError(std::move(ss));
+      ss << "RooJSONFactoryWSTool() node '" << name << "' is not a map, skipping.";
+      oocoutE(nullptr, InputArguments) << ss.str() << std::endl;
       return;
    }
    RooRealVar v(name.c_str(), name.c_str(), 1.);
@@ -1124,11 +1115,7 @@ void RooJSONFactoryWSTool::importDependants(const JSONNode &n)
       this->importFunctions(n["functions"]);
    }
    if (n.has_child("distributions")) {
-      JSONNode const &pdfNode = n["distributions"];
-      // import a list of RooAbsPdf objects
-      if (!pdfNode.is_map())
-         return;
-      for (const auto &p : pdfNode.children()) {
+      for (const auto &p : n["distributions"].children()) {
          this->importFunction(p, true);
       }
    }
