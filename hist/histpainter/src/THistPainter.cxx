@@ -6893,18 +6893,16 @@ void THistPainter::PaintHist(Option_t *)
 
    //         Code option for GrapHist
 
-   if (Hoption.Line) chopth[0] = 'L';
-   if (Hoption.Star) chopth[1] = '*';
-   if (Hoption.Mark) chopth[2] = 'P';
+   if (Hoption.Line)       chopth[0] = 'L';
+   if (Hoption.Star)       chopth[1] = '*';
+   if (Hoption.Mark)       chopth[2] = 'P';
    if (Hoption.Mark == 10) chopth[3] = '0';
    if (Hoption.Line || Hoption.Curve || Hoption.Hist || Hoption.Bar) {
       if (Hoption.Curve)    chopth[3] = 'C';
       if (Hoption.Hist > 0) chopth[4] = 'H';
       else if (Hoption.Bar) chopth[5] = 'B';
+      if (Hoption.Logy) chopth[6] = '1';
       if (fH->GetFillColor() && htype) {
-         if (Hoption.Logy) {
-            chopth[6] = '1';
-         }
          if (Hoption.Hist > 0 || Hoption.Curve || Hoption.Line) {
             chopth[7] = 'F';
          }
