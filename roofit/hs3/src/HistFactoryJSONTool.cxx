@@ -156,13 +156,7 @@ void exportMeasurement(RooStats::HistFactory::Measurement &measurement, JSONNode
    auto &pdflist = n["distributions"];
    pdflist.set_map();
 
-   auto &likelihoodlist = n["likelihoods"];
-   likelihoodlist.set_map();
-
-   auto &analysislist = n["analyses"];
-   analysislist.set_map();
-
-   auto &analysisNode = analysislist[measurement.GetName()];
+   auto &analysisNode = RooJSONFactoryWSTool::appendNamedChild(n["analyses"], measurement.GetName());
    analysisNode.set_map();
    analysisNode["InterpolationScheme"] << measurement.GetInterpolationScheme();
    auto &analysisDomains = analysisNode["domains"];
@@ -185,7 +179,7 @@ void exportMeasurement(RooStats::HistFactory::Measurement &measurement, JSONNode
    // the simpdf
    for (const auto &c : measurement.GetChannels()) {
 
-      auto &likelihoodNode = likelihoodlist[c.GetName()];
+      auto &likelihoodNode = RooJSONFactoryWSTool::appendNamedChild(n["likelihoods"], c.GetName());
       auto pdfName = std::string("model_") + c.GetName();
       likelihoodNode.set_map();
 
@@ -229,18 +223,16 @@ void exportMeasurement(RooStats::HistFactory::Measurement &measurement, JSONNode
    }
 
    // the data
-   auto &datalist = n["data"];
-   datalist.set_map();
-
    for (const auto &c : measurement.GetChannels()) {
+      JSONNode &dataOutput = RooJSONFactoryWSTool::appendNamedChild(n["data"], std::string("obsData_") + c.GetName());
+
       const std::vector<std::string> obsnames{"obs_x_" + c.GetName(), "obs_y_" + c.GetName(), "obs_z_" + c.GetName()};
 
       for (int i = 0; i < c.GetData().GetHisto()->GetDimension(); ++i) {
          analysisObservables.append_child() << obsnames[i];
       }
 
-      RooJSONFactoryWSTool::exportHistogram(*c.GetData().GetHisto(), datalist[std::string("obsData_") + c.GetName()],
-                                            obsnames);
+      RooJSONFactoryWSTool::exportHistogram(*c.GetData().GetHisto(), dataOutput, obsnames);
    }
 
    RooJSONFactoryWSTool::writeCombinedDataName(n, measurement.GetName(), "obsData");
