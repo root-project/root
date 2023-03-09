@@ -1260,8 +1260,8 @@ double RooNDKeysPdf::analyticalIntegral(Int_t code, const char* rangeName) const
 
 RooDataSet* RooNDKeysPdf::createDatasetFromHist(const RooArgList &varList, const TH1 &hist) const
 {
+   RooArgSet varSet{varList};
    std::vector<RooRealVar *> varVec;
-   RooArgSet varsAndWeightSet;
 
    for (const auto var : varList) {
       if (!dynamic_cast<RooRealVar *>(var)) {
@@ -1269,13 +1269,8 @@ RooDataSet* RooNDKeysPdf::createDatasetFromHist(const RooArgList &varList, const
                                << var->GetName() << " is not of type RooRealVar. Skip." << endl;
          continue;
       }
-      varsAndWeightSet.add(*var);                       // used for dataset creation
       varVec.push_back(static_cast<RooRealVar *>(var)); // used for setting the variables.
    }
-
-   /// Add weight
-   RooRealVar weight("weight", "event weight", 0);
-   varsAndWeightSet.add(weight);
 
    /// determine histogram dimensionality
    unsigned int histndim(0);
@@ -1296,7 +1291,7 @@ RooDataSet* RooNDKeysPdf::createDatasetFromHist(const RooArgList &varList, const
    }
 
    /// dataset creation
-   RooDataSet *dataFromHist = new RooDataSet("datasetFromHist", "datasetFromHist", varsAndWeightSet, weight.GetName());
+   RooDataSet *dataFromHist = new RooDataSet("datasetFromHist", "datasetFromHist", varSet, RooFit::WeightVar());
 
    /// dataset filling
    for (int i = 1; i <= hist.GetXaxis()->GetNbins(); ++i) {
@@ -1307,8 +1302,7 @@ RooDataSet* RooNDKeysPdf::createDatasetFromHist(const RooArgList &varList, const
 
       if (varVec.size() == 1) {
          double fval = hist.GetBinContent(i);
-         weight.setVal(fval);
-         dataFromHist->add(varsAndWeightSet, fval);
+         dataFromHist->add(varSet, fval);
       } else { // 2 or more dimensions
 
          for (int j = 1; j <= hist.GetYaxis()->GetNbins(); ++j) {
@@ -1317,8 +1311,7 @@ RooDataSet* RooNDKeysPdf::createDatasetFromHist(const RooArgList &varList, const
 
             if (varVec.size() == 2) {
                double fval = hist.GetBinContent(i, j);
-               weight.setVal(fval);
-               dataFromHist->add(varsAndWeightSet, fval);
+               dataFromHist->add(varSet, fval);
             } else { // 3 dimensions
 
                for (int k = 1; k <= hist.GetZaxis()->GetNbins(); ++k) {
@@ -1326,8 +1319,7 @@ RooDataSet* RooNDKeysPdf::createDatasetFromHist(const RooArgList &varList, const
                   varVec[2]->setVal(zval);
 
                   double fval = hist.GetBinContent(i, j, k);
-                  weight.setVal(fval);
-                  dataFromHist->add(varsAndWeightSet, fval);
+                  dataFromHist->add(varSet, fval);
                }
             }
          }

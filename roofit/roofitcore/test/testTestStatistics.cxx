@@ -447,8 +447,7 @@ TEST_P(OffsetBinTest, CrossCheck)
    // it correctly.
    {
       // Create weighted dataset and hist to test SumW2 feature
-      RooRealVar weight("weight", "weight", 0.5, 0.0, 1.0);
-      auto dataW = std::make_unique<RooDataSet>("dataW", "dataW", RooArgSet{x, weight}, "weight");
+      auto dataW = std::make_unique<RooDataSet>("dataW", "dataW", x, RooFit::WeightVar());
       for (int i = 0; i < data->numEntries(); ++i) {
          dataW->add(*data->get(i), 0.5);
       }

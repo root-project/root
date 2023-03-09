@@ -49,7 +49,6 @@ MarkovChain::MarkovChain() :
    fDataEntry = nullptr;
    fChain = nullptr;
    fNLL = nullptr;
-   fWeight = nullptr;
 }
 
 MarkovChain::MarkovChain(RooArgSet& parameters) :
@@ -59,7 +58,6 @@ MarkovChain::MarkovChain(RooArgSet& parameters) :
    fDataEntry = nullptr;
    fChain = nullptr;
    fNLL = nullptr;
-   fWeight = nullptr;
    SetParameters(parameters);
 }
 
@@ -70,7 +68,6 @@ MarkovChain::MarkovChain(const char* name, const char* title,
    fDataEntry = nullptr;
    fChain = nullptr;
    fNLL = nullptr;
-   fWeight = nullptr;
    SetParameters(parameters);
 }
 
@@ -87,16 +84,13 @@ void MarkovChain::SetParameters(RooArgSet& parameters)
    // to see if that makes it possible to get values of variables without
    // doing string comparison
    RooRealVar nll(NLL_NAME, "-log Likelihood", 0);
-   RooRealVar weight(WEIGHT_NAME, "weight", 0);
 
    fDataEntry = new RooArgSet();
    fDataEntry->addClone(parameters);
    fDataEntry->addClone(nll);
-   fDataEntry->addClone(weight);
    fNLL = (RooRealVar*)fDataEntry->find(NLL_NAME);
-   fWeight = (RooRealVar*)fDataEntry->find(WEIGHT_NAME);
 
-   fChain = new RooDataSet(DATASET_NAME, "Markov Chain", *fDataEntry,WEIGHT_NAME);
+   fChain = new RooDataSet(DATASET_NAME, "Markov Chain", *fDataEntry, RooFit::WeightVar(WEIGHT_NAME));
 }
 
 void MarkovChain::Add(RooArgSet& entry, double nllValue, double weight)
@@ -106,7 +100,6 @@ void MarkovChain::Add(RooArgSet& entry, double nllValue, double weight)
    RooStats::SetParameters(&entry, fDataEntry);
    fNLL->setVal(nllValue);
    //kbelasco: this is stupid, but some things might require it, so be doubly sure
-   fWeight->setVal(weight);
    fChain->add(*fDataEntry, weight);
    //fChain->add(*fDataEntry);
 }
@@ -147,7 +140,6 @@ void MarkovChain::AddFast(RooArgSet& entry, double nllValue, double weight)
    RooStats::SetParameters(&entry, fDataEntry);
    fNLL->setVal(nllValue);
    //kbelasco: this is stupid, but some things might require it, so be doubly sure
-   fWeight->setVal(weight);
    fChain->addFast(*fDataEntry, weight);
    //fChain->addFast(*fDataEntry);
 }
