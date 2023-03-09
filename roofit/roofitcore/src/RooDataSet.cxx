@@ -579,17 +579,11 @@ RooDataSet::RooDataSet(RooStringView name, RooStringView title, const RooArgSet&
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor of an empty data set from a RooArgSet defining the dimensions
 /// of the data space.
+/// \deprecated Use the more explicit `RooDataSet(name, title, vars, RooFit::WeightVar(wgtVarName))`.
 
-RooDataSet::RooDataSet(RooStringView name, RooStringView title, const RooArgSet& vars, const char* wgtVarName) :
-  RooAbsData(name,title,vars)
+RooDataSet::RooDataSet(RooStringView name, RooStringView title, const RooArgSet& vars, const char* wgtVarName)
+  : RooDataSet(name,title,vars, RooFit::WeightVar(wgtVarName))
 {
-//   cout << "RooDataSet::ctor(" << this << ") storageType = " << ((defaultStorageType==Tree)?"Tree":"Vector") << endl ;
-  _dstore = defaultStorageType==Tree ? static_cast<std::unique_ptr<RooAbsDataStore>>(std::make_unique<RooTreeDataStore>(name,title,_vars,wgtVarName)) :
-                                       static_cast<std::unique_ptr<RooAbsDataStore>>(std::make_unique<RooVectorDataStore>(name,title,_vars,wgtVarName)) ;
-
-  appendToDir(this,true) ;
-  initialize(wgtVarName) ;
-  TRACE_CREATE;
 }
 
 
@@ -1886,9 +1880,9 @@ namespace {
   const char * cstr = "cstr";
   RooRealVar x{"x", "x", 1.0};
   RooArgSet vars{x};
-  RooDataSet d1(tstr, tstr, vars, nullptr);
-  RooDataSet d2(tstr, cstr, vars, nullptr);
-  RooDataSet d3(cstr, tstr, vars, nullptr);
+  RooDataSet d1(tstr, tstr, vars);
+  RooDataSet d2(tstr, cstr, vars);
+  RooDataSet d3(cstr, tstr, vars);
 
 } // namespace
 
