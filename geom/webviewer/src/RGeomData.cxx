@@ -1984,8 +1984,30 @@ void RGeomDescription::SavePrimitive(std::ostream &fs, const std::string &name)
 {
    std::string prefix = "   ";
 
+   if (fCfg.vislevel != 0)
+      fs << prefix << name << "SetVisLevel(" << fCfg.vislevel << ");" << std::endl;
+   if (fCfg.maxnumnodes != 0)
+      fs << prefix << name << "SetMaxVisNodes(" << fCfg.maxnumnodes << ");" << std::endl;
+   if (fCfg.maxnumfaces != 0)
+      fs << prefix << name << "SetMaxVisFaces(" << fCfg.maxnumfaces << ");" << std::endl;
+   if (fCfg.showtop)
+      fs << prefix << name << "SetTopVisible(true);" << std::endl;
+   if (fCfg.build_shapes != 1)
+      fs << prefix << name << "SetBuildShapes(" << fCfg.build_shapes << ");" << std::endl;
+   if (fCfg.nsegm != 0)
+      fs << prefix << name << "SetNSegments(" << fCfg.nsegm << ");" << std::endl;
    if (!fCfg.drawopt.empty())
       fs << prefix << name << "SetDrawOptions(\"" << fCfg.drawopt << "\");" << std::endl;
+   if (fJsonComp != 0)
+      fs << prefix << name << "SetJsonComp(" << fJsonComp << ");" << std::endl;
+
+   // store custom visibility flags
+   for (auto &item : fVisibility) {
+      auto path = MakePathByStack(item.stack);
+      fs << prefix << name << "SetNodeVisibility(";
+      for (int i = 0; i < (int) path.size(); ++i)
+         fs << (i == 0 ? "{\"" : ", \"") << path[i] << "\"";
+      fs << "}, " << (item.visible ? "true" : "false") << ");" << std::endl;
+   }
 
 }
-
