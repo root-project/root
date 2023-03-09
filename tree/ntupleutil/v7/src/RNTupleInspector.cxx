@@ -25,57 +25,46 @@
 #include <iostream>
 #include <algorithm>
 #include <deque>
+#include <exception>
 
-void ROOT::Experimental::RNTupleInspector::CollectNTupleData()
+ROOT::Experimental::RNTupleInspector::RNTupleInspector(
+   std::unique_ptr<ROOT::Experimental::Detail::RPageSource> pageSource)
+   : fPageSource(std::move(pageSource))
 {
-   int compressionSettings = -1;
-   std::uint64_t compressedSize = 0;
-   std::uint64_t uncompressedSize = 0;
-
-   for (const auto &clusterDescriptor : fDescriptor->GetClusterIterable()) {
-      compressedSize += clusterDescriptor.GetBytesOnStorage();
-
-      if (compressionSettings == -1) {
-         compressionSettings = clusterDescriptor.GetColumnRange(0).fCompressionSettings;
-      }
-   }
-
-   for (uint64_t colId = 0; colId < fDescriptor->GetNPhysicalColumns(); ++colId) {
-      const ROOT::Experimental::RColumnDescriptor &colDescriptor = fDescriptor->GetColumnDescriptor(colId);
-
-      uint64_t elemSize =
-         ROOT::Experimental::Detail::RColumnElementBase::Generate(colDescriptor.GetModel().GetType())->GetSize();
-
-      uint64_t nElems = fDescriptor->GetNElements(colId);
-      uncompressedSize += nElems * elemSize;
-   }
-
-   fCompressionSettings = compressionSettings;
-   fCompressedSize = compressedSize;
-   fUncompressedSize = uncompressedSize;
+   fPageSource->Attach();
+   auto descriptorGuard = fPageSource->GetSharedDescriptorGuard();
+   fDescriptor = descriptorGuard->Clone();
 }
 
-void ROOT::Experimental::RNTupleInspector::CollectColumnData()
+void ROOT::Experimental::RNTupleInspector::CollectColumnInfo()
 {
    for (DescriptorId_t colId = 0; colId < fDescriptor->GetNPhysicalColumns(); ++colId) {
       RColumnInfo info;
       info.fColumnDescriptor = &(fDescriptor->GetColumnDescriptor(colId));
-      info.fType = info.fColumnDescriptor->GetModel().GetType();
 
       // We generate the default memory representation for the given column type in order
       // to report the size _in memory_ of column elements.
-      uint64_t elemSize = ROOT::Experimental::Detail::RColumnElementBase::Generate(info.fType)->GetSize();
-      info.fElementSize = elemSize;
+      info.fElementSize = ROOT::Experimental::Detail::RColumnElementBase::Generate(info.GetType())->GetSize();
 
       for (const auto &clusterDescriptor : fDescriptor->GetClusterIterable()) {
+         if (!clusterDescriptor.ContainsColumn(colId)) {
+            continue;
+         }
+
          auto columnRange = clusterDescriptor.GetColumnRange(colId);
          info.fNElements += columnRange.fNElements;
+
+         if (fCompressionSettings == -1) {
+            fCompressionSettings = columnRange.fCompressionSettings;
+         }
 
          const auto &pageRange = clusterDescriptor.GetPageRange(colId);
 
          for (const auto &page : pageRange.fPageInfos) {
-            info.fCompressedSize += page.fLocator.fBytesOnStorage;
-            info.fUncompressedSize += page.fNElements * elemSize;
+            info.fOnDiskSize += page.fLocator.fBytesOnStorage;
+            info.fInMemorySize += page.fNElements * info.fElementSize;
+            fOnDiskSize += info.fOnDiskSize;
+            fInMemorySize += info.fInMemorySize;
          }
       }
 
@@ -83,11 +72,35 @@ void ROOT::Experimental::RNTupleInspector::CollectColumnData()
    }
 }
 
-std::vector<ROOT::Experimental::DescriptorId_t>
-ROOT::Experimental::RNTupleInspector::GetColumnsForField(ROOT::Experimental::DescriptorId_t fieldId)
+void ROOT::Experimental::RNTupleInspector::CollectFieldInfo()
 {
-   std::vector<ROOT::Experimental::DescriptorId_t> colIds;
-   std::deque<ROOT::Experimental::DescriptorId_t> fieldIdQueue{fieldId};
+   std::deque<DescriptorId_t> fieldIdQueue{fDescriptor->GetFieldZeroId()};
+
+   while (!fieldIdQueue.empty()) {
+      auto currId = fieldIdQueue.front();
+      fieldIdQueue.pop_front();
+
+      for (const auto &fieldDescriptor : fDescriptor->GetFieldIterable(currId)) {
+         RFieldInfo info;
+         info.fFieldDescriptor = &fieldDescriptor;
+
+         for (const auto colId : GetColumnsForFieldTree(fieldDescriptor.GetId())) {
+            auto colInfo = GetColumnInfo(colId);
+            info.fOnDiskSize += colInfo.fOnDiskSize;
+            info.fInMemorySize += colInfo.fInMemorySize;
+         }
+
+         fFieldInfo.emplace_back(info);
+         fieldIdQueue.push_back(fieldDescriptor.GetId());
+      }
+   }
+}
+
+std::vector<ROOT::Experimental::DescriptorId_t>
+ROOT::Experimental::RNTupleInspector::GetColumnsForFieldTree(DescriptorId_t fieldId)
+{
+   std::vector<DescriptorId_t> colIds;
+   std::deque<DescriptorId_t> fieldIdQueue{fieldId};
 
    while (!fieldIdQueue.empty()) {
       auto currId = fieldIdQueue.front();
@@ -109,15 +122,12 @@ ROOT::Experimental::RNTupleInspector::GetColumnsForField(ROOT::Experimental::Des
    return colIds;
 }
 
-//------------------------------------------------------------------------------
-
 std::unique_ptr<ROOT::Experimental::RNTupleInspector>
 ROOT::Experimental::RNTupleInspector::Create(std::unique_ptr<ROOT::Experimental::Detail::RPageSource> pageSource)
 {
    auto inspector = std::unique_ptr<RNTupleInspector>(new RNTupleInspector(std::move(pageSource)));
 
-   // TODO Memoize instead of calling everything in the constructor?
-   inspector->CollectNTupleData();
+   inspector->CollectColumnInfo();
 
    return inspector;
 }
@@ -160,16 +170,6 @@ ROOT::Experimental::RNTupleDescriptor *ROOT::Experimental::RNTupleInspector::Get
    return fDescriptor.get();
 }
 
-std::string ROOT::Experimental::RNTupleInspector::GetName()
-{
-   return fDescriptor->GetName();
-}
-
-std::uint64_t ROOT::Experimental::RNTupleInspector::GetNEntries()
-{
-   return fDescriptor->GetNEntries();
-}
-
 int ROOT::Experimental::RNTupleInspector::GetCompressionSettings()
 {
    return fCompressionSettings;
@@ -177,131 +177,134 @@ int ROOT::Experimental::RNTupleInspector::GetCompressionSettings()
 
 std::uint64_t ROOT::Experimental::RNTupleInspector::GetOnDiskSize()
 {
-   return fCompressedSize;
+   return fOnDiskSize;
 }
 
 std::uint64_t ROOT::Experimental::RNTupleInspector::GetInMemorySize()
 {
-   return fUncompressedSize;
+   return fInMemorySize;
 }
 
 float ROOT::Experimental::RNTupleInspector::GetCompressionFactor()
 {
-   return (float)fUncompressedSize / (float)fCompressedSize;
+   return (float)fInMemorySize / (float)fOnDiskSize;
 }
 
-int ROOT::Experimental::RNTupleInspector::GetFieldTypeFrequency(std::string className)
+int ROOT::Experimental::RNTupleInspector::GetFieldTypeCount(const std::string typeName, bool includeSubFields)
 {
-   if (fFieldTypeFrequencies.empty()) {
+   if (fFieldInfo.empty()) {
+      CollectFieldInfo();
+   }
 
-      for (const auto &fieldDescriptor : fDescriptor->GetTopLevelFields()) {
-         fFieldTypeFrequencies[fieldDescriptor.GetTypeName()]++;
+   int typeCount = 0;
+
+   for (const auto &fldInfo : fFieldInfo) {
+      if (!includeSubFields && fldInfo.fFieldDescriptor->GetParentId() != fDescriptor->GetFieldZeroId()) {
+         continue;
+      }
+
+      if (typeName == fldInfo.fFieldDescriptor->GetTypeName()) {
+         typeCount++;
       }
    }
 
-   return fFieldTypeFrequencies[className];
+   return typeCount;
 }
 
-int ROOT::Experimental::RNTupleInspector::GetColumnTypeFrequency(ROOT::Experimental::EColumnType colType)
+int ROOT::Experimental::RNTupleInspector::GetColumnTypeCount(ROOT::Experimental::EColumnType colType)
 {
-   if (fColumnInfo.empty()) {
-      CollectColumnData();
-   }
+   int typeCount = 0;
 
-   int typeFrequency = 0;
-
-   for (auto const &colInfo : fColumnInfo) {
-      if (colInfo.fType == colType) {
-         ++typeFrequency;
+   for (const auto &colInfo : fColumnInfo) {
+      if (colInfo.fColumnDescriptor->GetModel().GetType() == colType) {
+         ++typeCount;
       }
    }
 
-   return typeFrequency;
+   return typeCount;
 }
 
-std::uint64_t ROOT::Experimental::RNTupleInspector::GetOnDiskColumnSize(ROOT::Experimental::DescriptorId_t logicalId)
+ROOT::Experimental::RNTupleInspector::RColumnInfo
+ROOT::Experimental::RNTupleInspector::GetColumnInfo(DescriptorId_t physicalColumnId)
 {
-   if (fColumnInfo.empty()) {
-      CollectColumnData();
+   if (physicalColumnId > fDescriptor->GetNPhysicalColumns()) {
+      throw RException(R__FAIL("No column with physical ID " + std::to_string(physicalColumnId) + " present"));
    }
 
-   if (logicalId > fDescriptor->GetNLogicalColumns()) {
-      std::cerr << "no column with id " << logicalId << " present" << std::endl;
-      return -1;
-   }
-
-   ROOT::Experimental::DescriptorId_t physicalId = fDescriptor->GetColumnDescriptor(logicalId).GetPhysicalId();
-
-   return fColumnInfo.at(physicalId).fCompressedSize;
+   return fColumnInfo.at(physicalColumnId);
 }
 
-std::uint64_t ROOT::Experimental::RNTupleInspector::GetInMemoryColumnSize(ROOT::Experimental::DescriptorId_t logicalId)
+ROOT::Experimental::RNTupleInspector::RFieldInfo
+ROOT::Experimental::RNTupleInspector::GetFieldInfo(DescriptorId_t fieldId)
 {
-   if (fColumnInfo.empty()) {
-      CollectColumnData();
+   if (fFieldInfo.empty()) {
+      CollectFieldInfo();
    }
 
-   if (logicalId > fDescriptor->GetNLogicalColumns()) {
-      std::cerr << "no column with id " << logicalId << " present" << std::endl;
-      return -1;
-   }
-
-   ROOT::Experimental::DescriptorId_t physicalId = fDescriptor->GetColumnDescriptor(logicalId).GetPhysicalId();
-   return fColumnInfo.at(physicalId).fUncompressedSize;
+   return fFieldInfo.at(fieldId);
 }
 
-std::uint64_t ROOT::Experimental::RNTupleInspector::GetOnDiskFieldSize(ROOT::Experimental::DescriptorId_t fieldId)
+ROOT::Experimental::RNTupleInspector::RFieldInfo
+ROOT::Experimental::RNTupleInspector::GetFieldInfo(const std::string fieldName)
 {
-   std::uint64_t fieldSize = 0;
-
-   for (const auto colId : GetColumnsForField(fieldId)) {
-      fieldSize += GetOnDiskColumnSize(colId);
-   }
-
-   return fieldSize;
-}
-
-std::uint64_t ROOT::Experimental::RNTupleInspector::GetOnDiskFieldSize(std::string fieldName)
-{
-   ROOT::Experimental::DescriptorId_t fieldId = fDescriptor->FindFieldId(fieldName);
+   DescriptorId_t fieldId = fDescriptor->FindFieldId(fieldName);
 
    if (fieldId == kInvalidDescriptorId) {
-      std::cerr << "could not find field \"" + fieldName + "\"." << std::endl;
-      return -1;
+      throw RException(R__FAIL("Could not find field `" + fieldName + "`"));
    }
 
-   return GetOnDiskFieldSize(fieldId);
+   return GetFieldInfo(fieldId);
 }
 
-std::uint64_t ROOT::Experimental::RNTupleInspector::GetInMemoryFieldSize(ROOT::Experimental::DescriptorId_t fieldId)
+//------------------------------------------------------------------------------
+
+const ROOT::Experimental::RColumnDescriptor *ROOT::Experimental::RNTupleInspector::RColumnInfo::GetDescriptor()
 {
-   std::uint64_t fieldSize = 0;
-
-   for (const auto colId : GetColumnsForField(fieldId)) {
-      fieldSize += GetInMemoryColumnSize(colId);
-   }
-
-   return fieldSize;
+   return fColumnDescriptor;
 }
 
-std::uint64_t ROOT::Experimental::RNTupleInspector::GetInMemoryFieldSize(std::string fieldName)
+std::uint64_t ROOT::Experimental::RNTupleInspector::RColumnInfo::GetOnDiskSize()
 {
-   ROOT::Experimental::DescriptorId_t fieldId = fDescriptor->FindFieldId(fieldName);
-
-   if (fieldId == kInvalidDescriptorId) {
-      std::cerr << "could not find field \"" + fieldName + "\"." << std::endl;
-      return -1;
-   }
-
-   return GetInMemoryFieldSize(fieldId);
+   return fOnDiskSize;
 }
 
-ROOT::Experimental::EColumnType
-ROOT::Experimental::RNTupleInspector::GetColumnType(ROOT::Experimental::DescriptorId_t logicalId)
+std::uint64_t ROOT::Experimental::RNTupleInspector::RColumnInfo::GetInMemorySize()
 {
-   if (fColumnInfo.empty()) {
-      CollectColumnData();
+   return fInMemorySize;
+}
+
+std::uint64_t ROOT::Experimental::RNTupleInspector::RColumnInfo::GetElementSize()
+{
+   return fElementSize;
+}
+
+std::uint64_t ROOT::Experimental::RNTupleInspector::RColumnInfo::GetNElements()
+{
+   return fNElements;
+}
+
+ROOT::Experimental::EColumnType ROOT::Experimental::RNTupleInspector::RColumnInfo::GetType()
+{
+   if (!fColumnDescriptor) {
+      return ROOT::Experimental::EColumnType::kUnknown;
    }
 
-   return fDescriptor->GetColumnDescriptor(logicalId).GetModel().GetType();
+   return fColumnDescriptor->GetModel().GetType();
+}
+
+//------------------------------------------------------------------------------
+
+const ROOT::Experimental::RFieldDescriptor *ROOT::Experimental::RNTupleInspector::RFieldInfo::GetDescriptor()
+{
+   return fFieldDescriptor;
+}
+
+std::uint64_t ROOT::Experimental::RNTupleInspector::RFieldInfo::GetOnDiskSize()
+{
+   return fOnDiskSize;
+}
+
+std::uint64_t ROOT::Experimental::RNTupleInspector::RFieldInfo::GetInMemorySize()
+{
+   return fInMemorySize;
 }
