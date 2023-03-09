@@ -12,6 +12,7 @@
 
 #include "Domains.h"
 
+#include <RooFitHS3/RooJSONFactoryWSTool.h>
 #include <RooNumber.h>
 #include <RooRealVar.h>
 
@@ -36,14 +37,12 @@ void Domains::writeVariable(RooRealVar &var) const
 
 void Domains::readJSON(RooFit::Detail::JSONNode const &node)
 {
-   _map["default_domain"].readJSON(node["default_domain"]);
+   _map["default_domain"].readJSON(*RooJSONFactoryWSTool::findNamedChild(node, "default_domain"));
 }
 void Domains::writeJSON(RooFit::Detail::JSONNode &node) const
 {
-   node.set_map();
-
    for (auto const &domain : _map) {
-      domain.second.writeJSON(node[domain.first]);
+      domain.second.writeJSON(RooJSONFactoryWSTool::appendNamedChild(node, domain.first));
    }
 }
 void Domains::ProductDomain::readVariable(const char *name, double min, double max)
