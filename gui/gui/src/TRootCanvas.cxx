@@ -1535,8 +1535,8 @@ void TRootCanvas::ShowEditor(Bool_t show)
          }
          if (show) browser->GetTabLeft()->SetTab("Pad Editor");
       } else {
-        lambda_show(show);
-        main->Layout();
+         lambda_show(show);
+         main->Layout();
       }
    }
    else {
