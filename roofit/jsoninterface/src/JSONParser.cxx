@@ -239,6 +239,11 @@ void TJSONTree::Node::set_seq()
    }
 }
 
+void TJSONTree::Node::clear()
+{
+   node->get().clear();
+}
+
 std::string TJSONTree::Node::key() const
 {
    return node->key();
