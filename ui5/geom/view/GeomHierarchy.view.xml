@@ -15,10 +15,14 @@
          <SearchField id="searchNode" liveChange="onSearch"
                       tooltip="Type regexp for name or material with prefix m:"/>
       </Toolbar>
-      <t:TreeTable id="treeTable"
-         columnHeaderVisible="false" editable="false"
-         enableSelectAll="false" selectionBehavior="RowOnly"
-         selectionMode="Single" visibleRowCountMode="Auto"
+      <t:TreeTable
+         id="treeTable"
+         columnHeaderVisible="false"
+         editable="false"
+         enableSelectAll="false"
+         selectionBehavior="RowOnly"
+         selectionMode="Single"
+         visibleRowCountMode="Auto"
          cellClick="onCellClick"
          cellContextmenu="onCellContextMenu"
          rows="{/nodes}">
