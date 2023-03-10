@@ -449,7 +449,7 @@ public:
       std::vector<std::string> funcnames;
       std::vector<std::string> coefnames;
       RooArgSet observables;
-      if (p.has_child("variables")) {
+      if (p.has_child("axes")) {
          RooJSONFactoryWSTool::getObservables(ws, p, name, observables);
          scope.setObservables(observables);
       }
