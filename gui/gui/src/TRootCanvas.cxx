@@ -1477,7 +1477,7 @@ void TRootCanvas::ShowEditor(Bool_t show)
       if (show) {
          if (!fEditor)
             CreateEditor();
-         TVirtualPadEditor* gged = TVirtualPadEditor::GetPadEditor(kFALSE);
+         TVirtualPadEditor *gged = TVirtualPadEditor::GetPadEditor(kFALSE);
          if (gged && gged->GetCanvas() == fCanvas) {
             gged->Hide();
          }
