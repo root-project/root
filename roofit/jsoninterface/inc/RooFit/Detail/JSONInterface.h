@@ -93,6 +93,7 @@ public:
    virtual bool is_seq() const = 0;
    virtual void set_map() = 0;
    virtual void set_seq() = 0;
+   virtual void clear() = 0;
 
    virtual std::string key() const = 0;
    virtual std::string val() const = 0;
