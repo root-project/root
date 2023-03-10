@@ -1473,6 +1473,33 @@ void TRootCanvas::ShowEditor(Bool_t show)
    UInt_t h = GetHeight();
    UInt_t s = fHorizontal1->GetHeight();
 
+   auto lambda_show = [&, this](Bool_t show) {
+      if (show) {
+         if (!fEditor) CreateEditor();
+         TVirtualPadEditor* gged = TVirtualPadEditor::GetPadEditor(kFALSE);
+         if(gged && gged->GetCanvas() == fCanvas){
+            gged->Hide();
+         }
+         if (!fViewMenu->IsEntryChecked(kViewToolbar) || fToolDock->IsUndocked()) {
+            ShowFrame(fHorizontal1);
+            h = h + s;
+         }
+         fMainFrame->ShowFrame(fEditorFrame);
+         fEditor->Show();
+         fViewMenu->CheckEntry(kViewEditor);
+         w = w + e;
+      } else {
+         if (!fViewMenu->IsEntryChecked(kViewToolbar) || fToolDock->IsUndocked()) {
+            HideFrame(fHorizontal1);
+            h = h - s;
+         }
+         if (fEditor) fEditor->Hide();
+         fMainFrame->HideFrame(fEditorFrame);
+         fViewMenu->UnCheckEntry(kViewEditor);
+         w = w - e;
+      }
+   };
+
    if (fParent && fParent != fClient->GetDefaultRoot()) {
       TGMainFrame *main = (TGMainFrame *)fParent->GetMainFrame();
       fMainFrame->HideFrame(fEditorFrame);
@@ -1507,34 +1534,13 @@ void TRootCanvas::ShowEditor(Bool_t show)
                fEditor = TVirtualPadEditor::GetPadEditor(kFALSE);
          }
          if (show) browser->GetTabLeft()->SetTab("Pad Editor");
+      } else {
+        lambda_show(show);
+        main->Layout();
       }
    }
    else {
-      if (show) {
-         if (!fEditor) CreateEditor();
-         TVirtualPadEditor* gged = TVirtualPadEditor::GetPadEditor(kFALSE);
-         if(gged && gged->GetCanvas() == fCanvas){
-            gged->Hide();
-         }
-         if (!fViewMenu->IsEntryChecked(kViewToolbar) || fToolDock->IsUndocked()) {
-            ShowFrame(fHorizontal1);
-            h = h + s;
-         }
-         fMainFrame->ShowFrame(fEditorFrame);
-         fEditor->Show();
-         fViewMenu->CheckEntry(kViewEditor);
-         w = w + e;
-      } else {
-         if (!fViewMenu->IsEntryChecked(kViewToolbar) || fToolDock->IsUndocked()) {
-            HideFrame(fHorizontal1);
-            h = h - s;
-         }
-         if (fEditor) fEditor->Hide();
-         fMainFrame->HideFrame(fEditorFrame);
-         fViewMenu->UnCheckEntry(kViewEditor);
-         w = w - e;
-      }
-      Resize(w, h);
+      lambda_show(show);
    }
 }
 
