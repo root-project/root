@@ -1473,8 +1473,8 @@ void TRootCanvas::ShowEditor(Bool_t show)
    UInt_t h = GetHeight();
    UInt_t s = fHorizontal1->GetHeight();
 
-   auto lambda_show = [&, this](Bool_t show) {
-      if (show) {
+   auto lambda_show = [&, this](Bool_t display) {
+      if (display) {
          if (!fEditor)
             CreateEditor();
          TVirtualPadEditor *gged = TVirtualPadEditor::GetPadEditor(kFALSE);
