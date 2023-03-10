@@ -13,7 +13,7 @@
             "x",
             "c"
         ]
-    },    
+    },
     "poisson_dist": {
         "class": "RooPoisson",
         "arguments": [
@@ -21,8 +21,14 @@
             "mean"
         ]
     },
-    "prod": {
+    "product": {
         "class": "RooProduct",
+        "arguments": [
+            "factors"
+        ]
+    },
+    "product_dist": {
+        "class": "RooProdPdf",
         "arguments": [
             "factors"
         ]
@@ -41,7 +47,7 @@
         "arguments": [
             "summands"
         ]
-    },    
+    },
     "paramhist": {
         "class": "ParamHistFunc",
         "arguments": [
@@ -72,7 +78,7 @@
             "m0",
             "sigma",
             "alpha",
-	    "n"
+            "n"
         ]
     },
     "bifurkated_gaussian_dist": {
@@ -81,7 +87,7 @@
             "x",
             "mean",
             "sigmaL",
-            "sigmaR"	    
+            "sigmaR"
         ]
     }
 }

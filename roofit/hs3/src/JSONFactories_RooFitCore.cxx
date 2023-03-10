@@ -128,16 +128,6 @@ public:
    }
 };
 
-class RooProdPdfFactory : public RooFit::JSONIO::Importer {
-public:
-   bool importPdf(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
-   {
-      std::string name(RooJSONFactoryWSTool::name(p));
-      tool->wsEmplace<RooProdPdf>(name, name, tool->requestArgSet<RooAbsPdf>(p, "pdfs"));
-      return true;
-   }
-};
-
 class RooAddPdfFactory : public RooFit::JSONIO::Importer {
 public:
    bool importPdf(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
@@ -429,22 +419,6 @@ public:
    }
 };
 
-class RooProdPdfStreamer : public RooFit::JSONIO::Exporter {
-public:
-   std::string const &key() const override
-   {
-      static const std::string keystring = "product_dist";
-      return keystring;
-   }
-   bool exportObject(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem) const override
-   {
-      const RooProdPdf *pdf = static_cast<const RooProdPdf *>(func);
-      elem["type"] << key();
-      elem["pdfs"].fill_seq(pdf->pdfList(), [](auto const &f) { return f->GetName(); });
-      return true;
-   }
-};
-
 class RooGenericPdfStreamer : public RooFit::JSONIO::Exporter {
 public:
    std::string const &key() const override
@@ -570,7 +544,6 @@ public:
 STATIC_EXECUTE([]() {
    using namespace RooFit::JSONIO;
 
-   registerImporter<RooProdPdfFactory>("product_dist", false);
    registerImporter<RooGenericPdfFactory>("generic_dist", false);
    registerImporter<RooFormulaVarFactory>("generic_function", false);
    registerImporter<RooBinSamplingPdfFactory>("binsampling", false);
@@ -584,7 +557,6 @@ STATIC_EXECUTE([]() {
    registerImporter<RooMultiVarGaussianFactory>("multinormal_dist", false);
 
    registerExporter<RooBinWidthFunctionStreamer>(RooBinWidthFunction::Class(), false);
-   registerExporter<RooProdPdfStreamer>(RooProdPdf::Class(), false);
    registerExporter<RooBinSamplingPdfStreamer>(RooBinSamplingPdf::Class(), false);
    registerExporter<RooHistFuncStreamer>(RooHistFunc::Class(), false);
    registerExporter<RooHistPdfStreamer>(RooHistPdf::Class(), false);
