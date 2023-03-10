@@ -428,15 +428,14 @@ std::vector<std::vector<int>> RooJSONFactoryWSTool::generateBinIndices(const Roo
 
 void RooJSONFactoryWSTool::writeObservables(const TH1 &h, JSONNode &n, const std::vector<std::string> &varnames)
 {
-   auto &observables = n["variables"];
-   observables.set_map();
-   auto &x = observables[varnames[0]];
+   auto &observables = n["axes"];
+   auto &x = appendNamedChild(observables, varnames[0]);
    writeAxis(x, *(h.GetXaxis()));
    if (h.GetDimension() > 1) {
-      auto &y = observables[varnames[1]];
+      auto &y = appendNamedChild(observables, varnames[1]);
       writeAxis(y, *(h.GetYaxis()));
       if (h.GetDimension() > 2) {
-         auto &z = observables[varnames[2]];
+         auto &z = appendNamedChild(observables, varnames[2]);
          writeAxis(z, *(h.GetZaxis()));
       }
    }
@@ -886,11 +885,9 @@ void RooJSONFactoryWSTool::exportData(RooAbsData &data)
    // this is a binned dataset
    if (dynamic_cast<RooDataHist const *>(&data)) {
 
-      auto &observablesNode = output["variables"];
-      observablesNode.set_map();
+      auto &observablesNode = output["axes"];
       for (RooRealVar *var : static_range_cast<RooRealVar *>(*data.get())) {
-         auto &observableNode = observablesNode[var->GetName()];
-         observableNode.set_map();
+         auto &observableNode = appendNamedChild(observablesNode, var->GetName());
          observableNode["min"] << var->getMin();
          observableNode["max"] << var->getMax();
          observableNode["nbins"] << var->numBins();
@@ -934,7 +931,7 @@ void RooJSONFactoryWSTool::exportData(RooAbsData &data)
       reduced_obs.add(*data.get());
    }
    if (!reduced_obs.empty()) {
-      exportVariables(reduced_obs, output["variables"]);
+      exportVariables(reduced_obs, output["axes"]);
    }
    auto &weights = singlePoint && Config::stripObservables ? output["contents"] : output["weights"];
    weights.set_seq();
@@ -984,10 +981,10 @@ std::unique_ptr<RooDataHist> RooJSONFactoryWSTool::readBinnedData(const JSONNode
 {
    RooArgList varlist;
 
-   for (JSONNode const &obsNode : n["variables"].children()) {
-      auto var = std::make_unique<RooRealVar>(obsNode.key().c_str(), obsNode.key().c_str(), obsNode["min"].val_double(),
-                                              obsNode["max"].val_double());
-      var->setBins(obsNode["nbins"].val_double());
+   for (JSONNode const &nd : n["axes"].children()) {
+      const std::string nm = nd["name"].val();
+      auto var = std::make_unique<RooRealVar>(nm.c_str(), nm.c_str(), nd["min"].val_double(), nd["max"].val_double());
+      var->setBins(nd["nbins"].val_double());
       varlist.addOwned(std::move(var));
    }
 
@@ -1049,18 +1046,13 @@ std::map<std::string, RooJSONFactoryWSTool::Var>
 RooJSONFactoryWSTool::readObservables(const JSONNode &node, const std::string &obsnamecomp)
 {
    std::map<std::string, RooJSONFactoryWSTool::Var> vars;
-   if (!node.has_child("variables")) {
+   if (!node.has_child("axes")) {
       vars.emplace("obs_x_" + obsnamecomp, RooJSONFactoryWSTool::Var(node["contents"].num_children()));
       return vars;
    }
 
-   auto &observables = node["variables"];
-   if (observables.has_child("nbins")) {
-      vars.emplace("obs_x_" + obsnamecomp, RooJSONFactoryWSTool::Var(observables));
-   } else {
-      for (const auto &p : observables.children()) {
-         vars.emplace(RooJSONFactoryWSTool::name(p), RooJSONFactoryWSTool::Var(p));
-      }
+   for (const auto &p : node["axes"].children()) {
+      vars.emplace(RooJSONFactoryWSTool::name(p), RooJSONFactoryWSTool::Var(p));
    }
 
    return vars;
