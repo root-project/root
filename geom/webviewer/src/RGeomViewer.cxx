@@ -277,41 +277,6 @@ void RGeomViewer::WebWindowCallback(unsigned connid, const std::string &arg)
       auto stack = TBufferJSON::FromJSON<std::vector<int>>(arg.substr(10));
       if (stack && fDesc.SetHighlightedItem(*stack))
          fDesc.IssueSignal(this, "HighlightItem");
-   } else if ((arg.compare(0, 7, "SETVI0:") == 0) || (arg.compare(0, 7, "SETVI1:") == 0)) {
-      // change visibility for specified nodeid
-
-      auto nodeid = std::stoi(arg.substr(7));
-
-      bool selected = (arg[5] == '1');
-
-      if (fDesc.ChangeNodeVisibility(nodeid, selected)) {
-
-         // send only modified entries, includes all nodes with same volume
-         std::string json0 = fDesc.ProduceModifyReply(nodeid);
-
-         // when visibility disabled, client will automatically remove node from drawing
-         fWebWindow->Send(connid, json0);
-
-         if (selected && fDesc.IsPrincipalEndNode(nodeid)) {
-            // we need to send changes in drawing elements
-            // there can be many elements, which reference same volume
-
-            std::string json{"APPND:"};
-
-            if (fDesc.ProduceDrawingFor(nodeid, json, true))
-               fWebWindow->Send(connid, json);
-         } else if (selected) {
-
-            // just resend full geometry
-            // TODO: one can improve here and send only nodes which are not exists on client
-            // TODO: for that one should remember all information send to client
-
-            auto json = fDesc.ProcessBrowserRequest();
-            if (json.length() > 0) fWebWindow->Send(connid, json);
-
-            SendGeometry(connid);
-         }
-      }
    } else if (arg.compare(0,6, "IMAGE:") == 0) {
       auto separ = arg.find("::",6);
       if (separ == std::string::npos) return;

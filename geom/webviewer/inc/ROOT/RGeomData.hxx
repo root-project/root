@@ -87,27 +87,24 @@ class RGeoItem : public Browsable::RItem {
 
 protected:
    // this is part for browser, visible for I/O
+   int id{0};              ///< node id
    std::string color;      ///< color
    std::string material;   ///< material
+   int vis{0};             ///< visibility of logical node
+   int pvis{0};            ///< visibility of physical node
 
 public:
 
    /** Default constructor */
    RGeoItem() = default;
 
-   RGeoItem(const std::string &_name, int _nchilds, const std::string &_color,
-         const std::string &_material = "") :
-         Browsable::RItem(_name, _nchilds), color(_color), material(_material) {
+   RGeoItem(const std::string &_name, int _nchilds, int _nodeid, const std::string &_color,
+         const std::string &_material = "", int _vis = 0, int _pvis = 0) :
+         Browsable::RItem(_name, _nchilds), id(_nodeid), color(_color), material(_material), vis(_vis), pvis(_pvis) {
    }
 
    // should be here, one needs virtual table for correct streaming of RRootBrowserReply
    virtual ~RGeoItem() = default;
-
-   void SetColor(const std::string &_color) { color  = _color; }
-   void SetMaterial(const std::string &_material) { material  = _material; }
-
-   const std::string &GetColor() const { return color; }
-   const std::string &GetMaterial() const { return material; }
 };
 
 
@@ -190,7 +187,7 @@ public:
    RGeomRenderInfo *ri{nullptr};  ///< rendering information (if applicable)
 };
 
-/** Node information including rendering data */
+/** Custom settings for physical Node visibility */
 class RGeomNodeVisibility {
 public:
    std::vector<int> stack;        ///< path to the node
@@ -290,6 +287,8 @@ class RGeomDescription {
    void BuildDescription(TGeoNode *topnode, TGeoVolume *topvolume);
 
    TGeoVolume *GetVolume(int nodeid);
+
+   int IsPhysNodeVisible(const std::vector<int> &stack);
 
 public:
    RGeomDescription() = default;
@@ -426,15 +425,15 @@ public:
 
    std::unique_ptr<RGeomNodeInfo> MakeNodeInfo(const std::vector<int> &stack);
 
-   bool ChangeNodeVisibility(int nodeid, bool selected);
+   bool ChangeNodeVisibility(const std::vector<std::string> &path, bool on);
 
    bool SelectTop(const std::vector<std::string> &path);
 
-   bool SetNodeVisibility(const std::vector<std::string> &path, bool on = true);
+   bool SetPhysNodeVisibility(const std::vector<std::string> &path, bool on = true);
 
-   bool ClearNodeVisibility(const std::vector<std::string> &path);
+   bool ClearPhysNodeVisibility(const std::vector<std::string> &path);
 
-   bool ClearAllVisibility();
+   bool ClearAllPhysVisibility();
 
    bool SetSearch(const std::string &query, const std::string &json);
 
