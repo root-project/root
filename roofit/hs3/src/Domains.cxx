@@ -72,7 +72,7 @@ void Domains::ProductDomain::writeVariable(RooRealVar &var) const
 void Domains::ProductDomain::readJSON(RooFit::Detail::JSONNode const &node)
 {
    // In the future, throw an exception if the type is not product domain
-   auto const &variablesNode = node["variables"];
+   auto const &variablesNode = node["axes"];
    for (size_t i = 0; i < variablesNode.num_children(); ++i) {
       auto const &varNode = variablesNode[i];
       auto &elem = _map[varNode["name"].val()];
@@ -92,7 +92,7 @@ void Domains::ProductDomain::writeJSON(RooFit::Detail::JSONNode &node) const
    node.set_map();
    node["type"] << "product_domain";
 
-   auto &variablesNode = node["variables"];
+   auto &variablesNode = node["axes"];
    variablesNode.set_seq();
 
    for (auto const &item : _map) {
