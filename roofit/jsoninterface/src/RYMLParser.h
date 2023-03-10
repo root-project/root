@@ -53,6 +53,7 @@ public:
       bool is_seq() const override;
       void set_map() override;
       void set_seq() override;
+      void clear() override;
       std::string key() const override;
       std::string val() const override;
       bool has_key() const override;
