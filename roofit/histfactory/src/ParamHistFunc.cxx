@@ -50,6 +50,7 @@
 
 #include "TH1.h"
 
+#include <array>
 #include <sstream>
 #include <stdexcept>
 #include <iostream>
