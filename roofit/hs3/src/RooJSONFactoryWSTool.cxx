@@ -168,12 +168,18 @@ JSONNode const *RooJSONFactoryWSTool::findNamedChild(JSONNode const &node, std::
 
 JSONNode &RooJSONFactoryWSTool::makeVariablesNode(JSONNode &rootNode)
 {
-   return appendNamedChild(rootNode["parameter_points"], "default_values");
+   JSONNode &container = appendNamedChild(rootNode["parameter_points"], "default_values");
+   JSONNode &list = container["parameters"];
+   list.set_seq();
+   return list;
 }
 
 JSONNode const *RooJSONFactoryWSTool::getVariablesNode(JSONNode const &rootNode)
 {
-   return findNamedChild(rootNode["parameter_points"], "default_values");
+   auto out = findNamedChild(rootNode["parameter_points"], "default_values");
+   if (out == nullptr)
+      return nullptr;
+   return &((*out)["parameters"]);
 }
 
 RooJSONFactoryWSTool::RooJSONFactoryWSTool(RooWorkspace &ws) : _workspace{ws} {}
@@ -289,7 +295,7 @@ inline void genIndicesHelper(std::vector<std::vector<int>> &combinations, std::v
 {
    if (curridx == vars_numbins.size()) {
       // we have filled a combination. Copy it.
-      combinations.push_back(std::vector<int>(curr_comb));
+      combinations.emplace_back(curr_comb);
    } else {
       for (int i = 0; i < vars_numbins[curridx]; ++i) {
          curr_comb[curridx] = i;
@@ -537,10 +543,8 @@ void RooJSONFactoryWSTool::exportVariable(const RooAbsArg *v, JSONNode &n)
       return;
    }
 
-   n.set_map();
+   JSONNode &var = appendNamedChild(n, v->GetName());
 
-   JSONNode &var = n[v->GetName()];
-   var.set_map();
    if (cv) {
       var["value"] << cv->getVal();
       var["const"] << true;
@@ -942,10 +946,10 @@ void RooJSONFactoryWSTool::exportData(RooAbsData &data)
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 // create several observables
-void RooJSONFactoryWSTool::getObservables(RooWorkspace &ws, const JSONNode &n, const std::string &obsnamecomp,
+void RooJSONFactoryWSTool::getObservables(RooWorkspace &ws, const JSONNode &node, const std::string &obsnamecomp,
                                           RooArgSet &out)
 {
-   auto vars = RooJSONFactoryWSTool::readObservables(n, obsnamecomp);
+   auto vars = RooJSONFactoryWSTool::readObservables(node, obsnamecomp);
    for (auto v : vars) {
       std::string name(v.first);
       if (ws.var(name)) {
@@ -1016,7 +1020,7 @@ RooJSONFactoryWSTool::readBinnedData(const JSONNode &n, const std::string &name,
    std::vector<double> initVals;
    for (auto &v : varlist) {
       v->setDirtyInhibit(true);
-      initVals.push_back(((RooRealVar *)v)->getVal());
+      initVals.push_back(static_cast<RooAbsReal const *>(v)->getVal());
    }
    for (size_t ibin = 0; ibin < bins.size(); ++ibin) {
       for (size_t i = 0; i < bins[ibin].size(); ++i) {
@@ -1028,7 +1032,7 @@ RooJSONFactoryWSTool::readBinnedData(const JSONNode &n, const std::string &name,
    }
    // re-enable dirty flag propagation
    for (size_t i = 0; i < varlist.size(); ++i) {
-      RooRealVar *v = (RooRealVar *)(varlist.at(i));
+      auto v = static_cast<RooRealVar *>(varlist.at(i));
       v->setVal(initVals[i]);
       v->setDirtyInhibit(false);
    }
@@ -1038,25 +1042,23 @@ RooJSONFactoryWSTool::readBinnedData(const JSONNode &n, const std::string &name,
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 // read observables
 std::map<std::string, RooJSONFactoryWSTool::Var>
-RooJSONFactoryWSTool::readObservables(const JSONNode &n, const std::string &obsnamecomp)
+RooJSONFactoryWSTool::readObservables(const JSONNode &node, const std::string &obsnamecomp)
 {
    std::map<std::string, RooJSONFactoryWSTool::Var> vars;
-   if (!n.is_map())
+   if (!node.has_child("variables")) {
+      vars.emplace("obs_x_" + obsnamecomp, RooJSONFactoryWSTool::Var(node["contents"].num_children()));
       return vars;
-   if (n.has_child("variables")) {
-      auto &observables = n["variables"];
-      if (!observables.is_map())
-         return vars;
-      if (observables.has_child("nbins")) {
-         vars.emplace(std::make_pair("obs_x_" + obsnamecomp, RooJSONFactoryWSTool::Var(observables)));
-      } else {
-         for (const auto &p : observables.children()) {
-            vars.emplace(std::make_pair(RooJSONFactoryWSTool::name(p), RooJSONFactoryWSTool::Var(p)));
-         }
-      }
-   } else {
-      vars.emplace(std::make_pair("obs_x_" + obsnamecomp, RooJSONFactoryWSTool::Var(n["contents"].num_children())));
    }
+
+   auto &observables = node["variables"];
+   if (observables.has_child("nbins")) {
+      vars.emplace("obs_x_" + obsnamecomp, RooJSONFactoryWSTool::Var(observables));
+   } else {
+      for (const auto &p : observables.children()) {
+         vars.emplace(RooJSONFactoryWSTool::name(p), RooJSONFactoryWSTool::Var(p));
+      }
+   }
+
    return vars;
 }
 
@@ -1064,9 +1066,6 @@ RooJSONFactoryWSTool::readObservables(const JSONNode &n, const std::string &obsn
 // importing variables
 void RooJSONFactoryWSTool::importVariables(const JSONNode &n)
 {
-   // import a list of RooRealVar objects
-   if (!n.is_map())
-      return;
    for (const auto &p : n.children()) {
       importVariable(p);
    }
@@ -1202,7 +1201,7 @@ void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
    std::vector<RooStats::ModelConfig *> mcs;
    std::vector<RooAbsPdf *> toplevel;
    _rootnodeOutput = &n;
-   for (auto obj : _workspace.allGenericObjects()) {
+   for (TObject *obj : _workspace.allGenericObjects()) {
       if (obj->InheritsFrom(RooStats::ModelConfig::Class())) {
          mcs.push_back(static_cast<RooStats::ModelConfig *>(obj));
          exportModelConfig(n, *mcs.back());
@@ -1224,7 +1223,7 @@ void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
       this->exportData(*d);
    }
    for (auto *snsh : static_range_cast<RooArgSet const *>(_workspace.getSnapshots())) {
-      this->exportVariables(*snsh, appendNamedChild(n["parameter_points"], snsh->GetName()));
+      this->exportVariables(*snsh, appendNamedChild(n["parameter_points"], snsh->GetName())["parameters"]);
    }
    for (const auto &mc : mcs) {
       RooJSONFactoryWSTool::exportObject(mc->GetPdf());
