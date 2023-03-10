@@ -186,37 +186,41 @@ void exportMeasurement(RooStats::HistFactory::Measurement &measurement, JSONNode
       exportChannel(c, RooJSONFactoryWSTool::appendNamedChild(pdflist, pdfName));
    }
 
-   // the variables
-   JSONNode &varlist = RooJSONFactoryWSTool::makeVariablesNode(n);
+   struct VariableInfo {
+      double val = 0.0;
+      double minVal = -5.0;
+      double maxVal = 5.0;
+      bool isConstant = false;
+   };
+   std::unordered_map<std::string, VariableInfo> variables;
+
    for (const auto &channel : measurement.GetChannels()) {
       for (const auto &sample : channel.GetSamples()) {
          for (const auto &norm : sample.GetNormFactorList()) {
-            if (!varlist.has_child(norm.GetName())) {
-               auto &v = varlist[norm.GetName()];
-               v.set_map();
-               v["value"] << norm.GetVal();
-               domains.readVariable(norm.GetName().c_str(), norm.GetLow(), norm.GetHigh());
-            }
+            auto &info = variables[norm.GetName()];
+            info.val = norm.GetVal();
+            info.minVal = norm.GetLow();
+            info.maxVal = norm.GetHigh();
          }
          for (const auto &sys : sample.GetOverallSysList()) {
-            std::string parname("alpha_");
-            parname += sys.GetName();
-            if (!varlist.has_child(parname)) {
-               auto &v = varlist[parname];
-               v.set_map();
-               v["value"] << 0.;
-               domains.readVariable(parname.c_str(), -5., 5.);
-            }
+            variables[std::string("alpha_") + sys.GetName()] = VariableInfo{};
          }
       }
    }
    for (const auto &sys : measurement.GetConstantParams()) {
-      std::string parname = "alpha_" + sys;
-      if (!varlist.has_child(parname)) {
-         auto &v = varlist[parname];
-         v.set_map();
-      }
-      varlist[parname]["const"] << true;
+      variables[std::string("alpha_") + sys].isConstant = true;
+   }
+
+   JSONNode &varlist = RooJSONFactoryWSTool::makeVariablesNode(n);
+   for (auto const &item : variables) {
+      std::string const &parname = item.first;
+      VariableInfo const &info = item.second;
+
+      auto &v = RooJSONFactoryWSTool::appendNamedChild(varlist, parname);
+      v["value"] << info.val;
+      if (info.isConstant)
+         v["const"] << true;
+      domains.readVariable(parname.c_str(), info.minVal, info.maxVal);
    }
 
    // the data
