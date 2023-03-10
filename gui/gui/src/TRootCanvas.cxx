@@ -1475,7 +1475,8 @@ void TRootCanvas::ShowEditor(Bool_t show)
 
    auto lambda_show = [&, this](Bool_t show) {
       if (show) {
-         if (!fEditor) CreateEditor();
+         if (!fEditor)
+            CreateEditor();
          TVirtualPadEditor* gged = TVirtualPadEditor::GetPadEditor(kFALSE);
          if(gged && gged->GetCanvas() == fCanvas){
             gged->Hide();
@@ -1493,7 +1494,8 @@ void TRootCanvas::ShowEditor(Bool_t show)
             HideFrame(fHorizontal1);
             h = h - s;
          }
-         if (fEditor) fEditor->Hide();
+         if (fEditor)
+            fEditor->Hide();
          fMainFrame->HideFrame(fEditorFrame);
          fViewMenu->UnCheckEntry(kViewEditor);
          w = w - e;
