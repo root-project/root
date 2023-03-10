@@ -61,6 +61,7 @@ describe the same process or not.
 #include "TRandom3.h"
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <cstddef>
 #include <iostream>

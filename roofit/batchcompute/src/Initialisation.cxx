@@ -18,6 +18,7 @@
 
 #include <string>
 #include <exception>
+#include <stdexcept>
 
 // First initialisation of the pointers. When implementations of the batch compute library
 // are loaded, they will overwrite the pointers.
