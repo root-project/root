@@ -20,9 +20,9 @@
             "x": "x",
             "c": "c"
         }
-    },    
+    },
     "RooProduct": {
-        "type": "prod",
+        "type": "product",
         "proxies": {
             "compRSet": "factors",
             "compCSet": "factors"

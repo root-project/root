@@ -585,7 +585,7 @@ JSONNode *RooJSONFactoryWSTool::exportObject(const RooAbsArg *func)
 
    auto &collectionNode = (*_rootnodeOutput)[func->InheritsFrom(RooAbsPdf::Class()) ? "distributions" : "functions"];
 
-   const char *name = func->GetName();
+   const std::string name = func->GetName();
 
    // if this element already exists, skip
    if (auto child = findNamedChild(collectionNode, name))
@@ -598,15 +598,20 @@ JSONNode *RooJSONFactoryWSTool::exportObject(const RooAbsArg *func)
 
    auto it = exporters.find(cl);
    if (it != exporters.end()) { // check if we have a specific exporter available
+      auto &elem = appendNamedChild(collectionNode, name);
       for (auto &exp : it->second) {
-         auto &elem = appendNamedChild(collectionNode, name);
          if (!exp->exportObject(this, func, elem)) {
+            // The exporter might have messed with the content of the node
+            // before failing. That's why we clear it and only reset the name.
+            elem.clear();
+            elem.set_map();
+            elem["name"] << name;
             continue;
          }
          if (exp->autoExportDependants()) {
             RooJSONFactoryWSTool::exportDependants(func);
          }
-         // RooJSONFactoryWSTool::exportAttributes(func, elem);
+         RooJSONFactoryWSTool::exportAttributes(func, elem);
          return &elem;
       }
    }
@@ -658,7 +663,7 @@ JSONNode *RooJSONFactoryWSTool::exportObject(const RooAbsArg *func)
          elem[k->second] << r->arg().GetName();
       }
    }
-   // RooJSONFactoryWSTool::exportAttributes(func, elem);
+   RooJSONFactoryWSTool::exportAttributes(func, elem);
 
    return &elem;
 }
@@ -1024,8 +1029,7 @@ RooJSONFactoryWSTool::readBinnedData(const JSONNode &n, const std::string &name,
    }
    for (size_t ibin = 0; ibin < bins.size(); ++ibin) {
       for (size_t i = 0; i < bins[ibin].size(); ++i) {
-         RooRealVar *v = (RooRealVar *)(varlist.at(i));
-         v->setBin(bins[ibin][i]);
+         static_cast<RooRealVar *>(varlist.at(i))->setBin(bins[ibin][i]);
       }
       const double err = errors ? (*errors)[ibin].val_double() : -1;
       dh->add(varlist, contents[ibin].val_double(), err > 0 ? err * err : -1);
