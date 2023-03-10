@@ -137,9 +137,12 @@
     "parameter_points": [
         {
             "name": "default_values",
-            "mu": {
-                "value": 1
-            }
+            "parameters": [
+                {
+                    "name": "mu",
+                    "value": 1
+                }
+            ]
         }
     ],
     "data": [
