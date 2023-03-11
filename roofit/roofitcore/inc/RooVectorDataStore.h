@@ -346,8 +346,8 @@ public:
       RealVector(arg,initialCapacity) {}
 
     RealFullVector(const RealFullVector& other, RooAbsReal* real=nullptr) : RealVector(other,real),
-      _bufE(other._bufE), _bufEL(other._bufEL), _bufEH(other._bufEH),
-      _nativeBufE(other._nativeBufE), _nativeBufEL(other._nativeBufEL), _nativeBufEH(other._nativeBufEH) {
+      _bufE(other._bufE), _bufEL(other._bufEL), _bufEH(other._bufEH)
+    {
       if (other._vecE) _vecE = std::make_unique<std::vector<double>>(*other._vecE);
       if (other._vecEL) _vecEL = std::make_unique<std::vector<double>>(*other._vecEL);
       if (other._vecEH) _vecEH = std::make_unique<std::vector<double>>(*other._vecEH);
@@ -362,7 +362,6 @@ public:
       _bufE = newBuf ;
       if (!_vecE) _vecE = std::make_unique<std::vector<double>>();
       _vecE->reserve(_vec.capacity()) ;
-      if (!_nativeBufE) _nativeBufE = _bufE ;
     }
     void setAsymErrorBuffer(double* newBufL, double* newBufH) {
       _bufEL = newBufL ; _bufEH = newBufH ;
@@ -371,10 +370,6 @@ public:
         _vecEH = std::make_unique<std::vector<double>>();
         _vecEL->reserve(_vec.capacity()) ;
         _vecEH->reserve(_vec.capacity()) ;
-      }
-      if (!_nativeBufEL) {
-        _nativeBufEL = _bufEL ;
-        _nativeBufEH = _bufEH ;
       }
     }
 
@@ -412,15 +407,12 @@ public:
       RealVector::load(idx) ;
       if (_vecE) {
         *_bufE = (*_vecE)[idx];
-        *_nativeBufE = (*_vecE)[idx] ;
       }
       if (_vecEL) {
         *_bufEL = (*_vecEL)[idx] ;
-        *_nativeBufEL = (*_vecEL)[idx] ;
       }
       if (_vecEH) {
         *_bufEH = (*_vecEH)[idx] ;
-        *_nativeBufEH = (*_vecEH)[idx] ;
       }
     }
 
@@ -462,9 +454,6 @@ public:
     double *_bufE = nullptr; ///<!
     double *_bufEL = nullptr; ///<!
     double *_bufEH = nullptr; ///<!
-    double *_nativeBufE = nullptr; ///<!
-    double *_nativeBufEL = nullptr; ///<!
-    double *_nativeBufEH = nullptr; ///<!
     std::unique_ptr<std::vector<double>> _vecE;
     std::unique_ptr<std::vector<double>> _vecEL;
     std::unique_ptr<std::vector<double>> _vecEH ;
