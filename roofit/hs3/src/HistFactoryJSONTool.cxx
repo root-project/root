@@ -170,19 +170,19 @@ void exportMeasurement(RooStats::HistFactory::Measurement &measurement, JSONNode
       analysisPois.append_child() << poi;
    }
 
-   auto &likelihoods = analysisNode["likelihoods"];
-   likelihoods.set_seq();
+   analysisNode["likelihood"] << measurement.GetName();
+
+   auto &likelihoodNode = RooJSONFactoryWSTool::appendNamedChild(n["likelihoods"], measurement.GetName());
+   likelihoodNode["distributions"].set_seq();
+   likelihoodNode["data"].set_seq();
 
    // the simpdf
    for (const auto &c : measurement.GetChannels()) {
 
-      auto &likelihoodNode = RooJSONFactoryWSTool::appendNamedChild(n["likelihoods"], c.GetName());
       auto pdfName = std::string("model_") + c.GetName();
-      likelihoodNode.set_map();
 
-      likelihoodNode["dist"] << pdfName;
-      likelihoodNode["obs"] << std::string("obsData_") + c.GetName();
-      likelihoods.append_child() << c.GetName();
+      likelihoodNode["distributions"].append_child() << pdfName;
+      likelihoodNode["data"].append_child() << std::string("obsData_") + c.GetName();
       exportChannel(c, RooJSONFactoryWSTool::appendNamedChild(pdflist, pdfName));
    }
 
