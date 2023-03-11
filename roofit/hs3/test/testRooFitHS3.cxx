@@ -25,6 +25,13 @@
 
 namespace {
 
+void setupKeys()
+{
+   auto etcDir = std::string(TROOT::GetEtcDir());
+   RooFit::JSONIO::loadExportKeys(etcDir + "/RooFitHS3_wsexportkeys.json");
+   RooFit::JSONIO::loadFactoryExpressions(etcDir + "/RooFitHS3_wsfactoryexpressions.json");
+}
+
 // Validate the JSON IO for a given RooAbsReal in a RooWorkspace. The workspace
 // will be written out and read back, and then the values of the old and new
 // RooAbsReal will be compared for equality in each bin of the observable that
@@ -33,14 +40,7 @@ int validate(RooWorkspace &ws1, std::string const &argName)
 {
    RooWorkspace ws2;
 
-   auto etcDir = std::string(TROOT::GetEtcDir());
-   RooFit::JSONIO::loadExportKeys(etcDir + "/RooFitHS3_wsexportkeys.json");
-   RooFit::JSONIO::loadFactoryExpressions(etcDir + "/RooFitHS3_wsfactoryexpressions.json");
-
-   RooJSONFactoryWSTool tool1{ws1};
-   RooJSONFactoryWSTool tool2{ws2};
-
-   tool2.importJSONfromString(tool1.exportJSONtoString());
+   RooJSONFactoryWSTool{ws2}.importJSONfromString(RooJSONFactoryWSTool{ws1}.exportJSONtoString());
 
    RooRealVar &x1 = *ws1.var("x");
    RooRealVar &x2 = *ws2.var("x");
@@ -81,6 +81,38 @@ int validate(RooAbsArg const &arg)
 }
 
 } // namespace
+
+// Test that the IO of attributes and string attributes works.
+TEST(RooFitHS3, AttributesIO)
+{
+   setupKeys();
+
+   std::string jsonString;
+
+   // Export to JSON
+   {
+      RooWorkspace ws{"workspace"};
+      ws.factory("Gaussian::pdf(x[0, 10], mean[5], sigma[1.0, 0.1, 10])");
+      RooAbsPdf &pdf = *ws.pdf("pdf");
+
+      // set attributes
+      pdf.setAttribute("attr0");
+      pdf.setStringAttribute("key0", "val0");
+
+      jsonString = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+   }
+
+   // Import JSON
+   RooWorkspace ws{"workspace"};
+   RooJSONFactoryWSTool{ws}.importJSONfromString(jsonString);
+   RooAbsPdf &pdf = *ws.pdf("pdf");
+
+   EXPECT_TRUE(pdf.getAttribute("attr0")) << "IO of attribute didn't work!";
+   EXPECT_FALSE(pdf.getAttribute("attr1")) << "unexpected attribute found!";
+
+   EXPECT_STREQ(pdf.getStringAttribute("key0"), "val0") << "IO of string attribute didn't work!";
+   EXPECT_STREQ(pdf.getStringAttribute("key1"), nullptr) << "unexpected string attribute found!";
+}
 
 TEST(RooFitHS3, RooAddPdf)
 {
@@ -189,17 +221,13 @@ TEST(RooFitHS3, SimultaneousGaussians)
    {
       RooWorkspace ws{"workspace"};
       ws.import(simPdf, RooFit::Silence());
-      RooJSONFactoryWSTool tool{ws};
-      jsonString = tool.exportJSONtoString();
+      jsonString = RooJSONFactoryWSTool{ws}.exportJSONtoString();
    }
 
    // Import JSON
-   {
-      RooWorkspace ws{"workspace"};
-      RooJSONFactoryWSTool tool{ws};
-      tool.importJSONfromString(jsonString);
+   RooWorkspace ws{"workspace"};
+   RooJSONFactoryWSTool{ws}.importJSONfromString(jsonString);
 
-      ASSERT_TRUE(ws.pdf("g1"));
-      ASSERT_TRUE(ws.pdf("g2"));
-   }
+   EXPECT_TRUE(ws.pdf("g1"));
+   EXPECT_TRUE(ws.pdf("g2"));
 }
