@@ -7,9 +7,7 @@
     "analyses": [
         {
             "name": "main",
-            "likelihoods": [
-                "channel1"
-            ],
+            "likelihood": "channel1",
             "pois": [
                 "mu"
             ],
@@ -22,8 +20,8 @@
     "likelihoods": [
         {
             "name": "channel1",
-            "dist": "model_channel1",
-            "obs": "observed_channel1"
+            "distributions": ["model_channel1"],
+            "data": ["observed_channel1"]
         }
     ],
     "distributions": [

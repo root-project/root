@@ -1145,8 +1145,7 @@ void RooJSONFactoryWSTool::exportModelConfig(JSONNode &rootnode, RooStats::Model
    analysisDomains.set_seq();
    analysisDomains.append_child() << "default_domain";
 
-   auto &analysisLikelihoods = analysisNode["likelihoods"];
-   analysisLikelihoods.set_seq();
+   analysisNode["likelihood"] << pdf->GetName();
 
    std::string basename;
    if (auto s = pdf->getStringAttribute("combined_data_name")) {
@@ -1157,13 +1156,13 @@ void RooJSONFactoryWSTool::exportModelConfig(JSONNode &rootnode, RooStats::Model
 
    writeCombinedDataName(rootnode, pdf->GetName(), basename);
 
-   for (auto const &item : pdf->indexCat()) {
-      analysisLikelihoods.append_child() << item.first;
+   auto &nllNode = appendNamedChild(rootnode["likelihoods"], pdf->GetName());
+   nllNode["distributions"].set_seq();
+   nllNode["data"].set_seq();
 
-      auto &nllNode = appendNamedChild(rootnode["likelihoods"], item.first);
-      nllNode.set_map();
-      nllNode["dist"] << pdf->getPdf(item.first)->GetName();
-      nllNode["obs"] << basename + "_" + item.first;
+   for (auto const &item : pdf->indexCat()) {
+      nllNode["distributions"].append_child() << pdf->getPdf(item.first)->GetName();
+      nllNode["data"].append_child() << basename + "_" + item.first;
    }
 
    auto writeList = [&](const char *name, RooArgSet const *args) {
@@ -1337,26 +1336,36 @@ void RooJSONFactoryWSTool::importAnalysis(const RooFit::Detail::JSONNode &analys
       _workspace.import(mc);
    }
 
+   std::vector<std::string> nllDistNames;
+   std::vector<std::string> nllDataNames;
+
+   auto *nllNode = findNamedChild(likelihoodsNode, analysisNode["likelihood"].val());
+   if (!nllNode) {
+      throw std::runtime_error("likelihood node not found!");
+   }
+   for (auto &nameNode : (*nllNode)["distributions"].children()) {
+      nllDistNames.push_back(nameNode.val());
+   }
+   for (auto &nameNode : (*nllNode)["data"].children()) {
+      nllDataNames.push_back(nameNode.val());
+   }
+
    std::stringstream ss;
    ss << "SIMUL::" << analysisNode["name"].val() << "(channelCat[";
-   {
-      std::size_t iNLL = 0;
-      std::size_t nNLL = analysisNode["likelihoods"].num_children();
-      for (auto const &child : analysisNode["likelihoods"].children()) {
-         ss << child.val() << "=" << iNLL;
-         if (iNLL < nNLL - 1) {
-            ss << ",";
-         }
-         ++iNLL;
+   for (std::size_t iChannel = 0; iChannel < nllDistNames.size(); ++iChannel) {
+      ss << "channel_" << iChannel << "=" << iChannel;
+      if (iChannel < nllDistNames.size() - 1) {
+         ss << ",";
       }
    }
    ss << "]";
-   for (auto const &child : analysisNode["likelihoods"].children()) {
-      auto &nllNode = *findNamedChild(likelihoodsNode, child.val());
-      ss << ", " << child.val() << "=" << nllNode["dist"].val();
+
+   for (std::size_t iChannel = 0; iChannel < nllDistNames.size(); ++iChannel) {
+      ss << ", "
+         << "channel_" << iChannel << "=" << nllDistNames[iChannel];
    }
    ss << ")";
-   RooSimultaneous *pdf = static_cast<RooSimultaneous *>(_workspace.factory(ss.str()));
+   auto pdf = static_cast<RooSimultaneous *>(_workspace.factory(ss.str()));
    if (!pdf) {
       throw std::runtime_error("unable to import simultaneous pdf!");
    }
@@ -1395,10 +1404,9 @@ void RooJSONFactoryWSTool::importAnalysis(const RooFit::Detail::JSONNode &analys
    // Create the combined dataset for RooFit
    std::map<std::string, RooAbsData *> dsMap;
    RooArgSet allVars{pdf->indexCat()};
-   for (auto const &child : analysisNode["likelihoods"].children()) {
-      auto &nllNode = *findNamedChild(likelihoodsNode, child.val());
-      RooAbsData *channelData = _workspace.data(nllNode["obs"].val());
-      dsMap.insert({child.val(), channelData});
+   for (std::size_t iChannel = 0; iChannel < nllDataNames.size(); ++iChannel) {
+      RooAbsData *channelData = _workspace.data(nllDataNames[iChannel]);
+      dsMap.insert({"channel_" + std::to_string(iChannel), channelData});
       allVars.add(*channelData->get());
    }
 
