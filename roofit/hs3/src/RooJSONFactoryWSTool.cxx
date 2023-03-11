@@ -288,10 +288,13 @@ std::string RooJSONFactoryWSTool::genPrefix(const JSONNode &p, bool trailing_und
    return prefix;
 }
 
+bool RooJSONFactoryWSTool::Config::stripObservables = true;
+
 namespace {
+
 // helpers for serializing / deserializing binned datasets
-inline void genIndicesHelper(std::vector<std::vector<int>> &combinations, std::vector<int> &curr_comb,
-                             const std::vector<int> &vars_numbins, size_t curridx)
+void genIndicesHelper(std::vector<std::vector<int>> &combinations, std::vector<int> &curr_comb,
+                      const std::vector<int> &vars_numbins, size_t curridx)
 {
    if (curridx == vars_numbins.size()) {
       // we have filled a combination. Copy it.
@@ -304,32 +307,31 @@ inline void genIndicesHelper(std::vector<std::vector<int>> &combinations, std::v
    }
 }
 
-} // namespace
-
-bool RooJSONFactoryWSTool::Config::stripObservables = true;
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////
-// helper functions specific to JSON
-///////////////////////////////////////////////////////////////////////////////////////////////////////
-
-namespace {
-
-inline void importAttributes(RooAbsArg *arg, const JSONNode &n)
+void importAttributes(RooAbsArg *arg, JSONNode const &rootnode)
 {
-   if (!n.is_map())
+   JSONNode const &attributesNode = dereference(rootnode, {"misc", "ROOT_internal", "attributes"}, rootnode);
+
+   // If the attributes node was not found, it will not be a sequence node
+   if (!attributesNode.is_seq())
       return;
-   if (n.has_child("dict") && n["dict"].is_map()) {
-      for (const auto &attr : n["dict"].children()) {
+
+   JSONNode const *node = RooJSONFactoryWSTool::findNamedChild(attributesNode, arg->GetName());
+   if (node == nullptr)
+      return;
+
+   if (node->has_child("dict")) {
+      for (const auto &attr : (*node)["dict"].children()) {
          arg->setStringAttribute(RooJSONFactoryWSTool::name(attr).c_str(), attr.val().c_str());
       }
    }
-   if (n.has_child("tags") && n["tags"].is_seq()) {
-      for (const auto &attr : n["tags"].children()) {
+   if (node->has_child("tags")) {
+      for (const auto &attr : (*node)["tags"].children()) {
          arg->setAttribute(attr.val().c_str());
       }
    }
 }
-inline bool checkRegularBins(const TAxis &ax)
+
+bool checkRegularBins(const TAxis &ax)
 {
    double w = ax.GetXmax() - ax.GetXmin();
    double bw = w / ax.GetNbins();
@@ -339,6 +341,7 @@ inline bool checkRegularBins(const TAxis &ax)
    }
    return true;
 }
+
 inline void writeAxis(JSONNode &bounds, const TAxis &ax)
 {
    bool regular = (!ax.IsVariableBinSize()) || checkRegularBins(ax);
@@ -354,13 +357,8 @@ inline void writeAxis(JSONNode &bounds, const TAxis &ax)
       }
    }
 }
-} // namespace
 
-///////////////////////////////////////////////////////////////////////////////////////////////////////
 // RooWSFactoryTool expression handling
-///////////////////////////////////////////////////////////////////////////////////////////////////////
-
-namespace {
 std::string generate(const RooFit::JSONIO::ImportExpression &ex, const JSONNode &p, RooJSONFactoryWSTool *tool)
 {
    std::string name(RooJSONFactoryWSTool::name(p));
@@ -411,7 +409,8 @@ std::string generate(const RooFit::JSONIO::ImportExpression &ex, const JSONNode 
    expression << ")";
    return expression.str();
 }
-}; // namespace
+
+} // namespace
 
 std::vector<std::vector<int>> RooJSONFactoryWSTool::generateBinIndices(const RooArgList &vars)
 {
@@ -485,7 +484,9 @@ void RooJSONFactoryWSTool::exportHistogram(const TH1 &h, JSONNode &n, const std:
 // helper namespace
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
-bool RooJSONFactoryWSTool::find(const JSONNode &n, const std::string &elem)
+namespace {
+
+bool find(const JSONNode &n, const std::string &elem)
 {
    // find an attribute
    if (n.is_seq()) {
@@ -500,7 +501,7 @@ bool RooJSONFactoryWSTool::find(const JSONNode &n, const std::string &elem)
    return false;
 }
 
-void RooJSONFactoryWSTool::append(JSONNode &n, const std::string &elem)
+void append(JSONNode &n, const std::string &elem)
 {
    // append an attribute
    n.set_seq();
@@ -509,26 +510,40 @@ void RooJSONFactoryWSTool::append(JSONNode &n, const std::string &elem)
    }
 }
 
-void RooJSONFactoryWSTool::exportAttributes(const RooAbsArg *arg, JSONNode &node)
+void exportAttributes(const RooAbsArg *arg, JSONNode &rootnode)
 {
+   JSONNode *node = nullptr;
+
+   auto initializeNode = [&]() {
+      if (node)
+         return;
+
+      auto &miscinfo = rootnode["misc"];
+      miscinfo.set_map();
+      auto &rootinfo = miscinfo["ROOT_internal"];
+      rootinfo.set_map();
+      auto &attributesNode = rootinfo["attributes"];
+      node = &RooJSONFactoryWSTool::appendNamedChild(attributesNode, arg->GetName());
+   };
+
    // export all string attributes of an object
    if (!arg->stringAttributes().empty()) {
       for (const auto &it : arg->stringAttributes()) {
-         // We don't want to spam the JSON with the factory tags
-         if (it.first == "factory_tag")
-            continue;
-         auto &dict = node["dict"];
+         initializeNode();
+         auto &dict = (*node)["dict"];
          dict.set_map();
          dict[it.first] << it.second;
       }
    }
    if (!arg->attributes().empty()) {
-      auto &tags = node["tags"];
       for (const auto &it : arg->attributes()) {
-         RooJSONFactoryWSTool::append(tags, it);
+         initializeNode();
+         append((*node)["tags"], it);
       }
    }
 }
+
+} // namespace
 
 void RooJSONFactoryWSTool::exportVariable(const RooAbsArg *v, JSONNode &n)
 {
@@ -557,7 +572,6 @@ void RooJSONFactoryWSTool::exportVariable(const RooAbsArg *v, JSONNode &n)
       }
       _domains->readVariable(*rrv);
    }
-   RooJSONFactoryWSTool::exportAttributes(v, var);
 }
 
 void RooJSONFactoryWSTool::exportVariables(const RooArgSet &allElems, JSONNode &n)
@@ -610,7 +624,6 @@ JSONNode *RooJSONFactoryWSTool::exportObject(const RooAbsArg *func)
          if (exp->autoExportDependants()) {
             RooJSONFactoryWSTool::exportDependants(func);
          }
-         RooJSONFactoryWSTool::exportAttributes(func, elem);
          return &elem;
       }
    }
@@ -662,7 +675,6 @@ JSONNode *RooJSONFactoryWSTool::exportObject(const RooAbsArg *func)
          elem[k->second] << r->arg().GetName();
       }
    }
-   RooJSONFactoryWSTool::exportAttributes(func, elem);
 
    return &elem;
 }
@@ -766,8 +778,6 @@ void RooJSONFactoryWSTool::importFunction(const JSONNode &p, bool isPdf)
          std::stringstream err;
          err << "something went wrong importing function '" << name << "'.";
          RooJSONFactoryWSTool::error(err.str());
-      } else {
-         ::importAttributes(func, p);
       }
    } catch (const RooJSONFactoryWSTool::DependencyMissingError &ex) {
       throw ex;
@@ -1070,7 +1080,6 @@ void RooJSONFactoryWSTool::importVariable(const JSONNode &p)
    }
    RooRealVar v(name.c_str(), name.c_str(), 1.);
    configureVariable(*_domains, p, v);
-   ::importAttributes(&v, p);
    wsImport(v);
 }
 
@@ -1172,6 +1181,11 @@ void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
 {
    _domains = std::make_unique<Domains>();
 
+   // export all attributes
+   for (RooAbsArg const *arg : _workspace.components()) {
+      exportAttributes(arg, n);
+   }
+
    // export all RooRealVars and RooConstVars
    {
       JSONNode &vars = makeVariablesNode(n);
@@ -1218,7 +1232,7 @@ void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
       if (!pdfNode)
          continue;
       if (!pdf->getAttribute("toplevel"))
-         RooJSONFactoryWSTool::append((*pdfNode)["tags"], "toplevel");
+         append((*pdfNode)["tags"], "toplevel");
    }
    _domains->writeJSON(n["domains"]);
    _domains.reset();
@@ -1431,6 +1445,11 @@ void RooJSONFactoryWSTool::importAllNodes(const RooFit::Detail::JSONNode &n)
       }
    }
    _workspace.loadSnapshot("fromJSON");
+
+   // Import attributes
+   for (RooAbsArg *arg : _workspace.components()) {
+      importAttributes(arg, *_rootnodeInput);
+   }
 
    _rootnodeInput = nullptr;
    _domains.reset();

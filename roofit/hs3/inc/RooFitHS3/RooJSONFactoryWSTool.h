@@ -236,10 +236,6 @@ private:
    void importAnalysis(const RooFit::Detail::JSONNode &analysisNode, const RooFit::Detail::JSONNode &likelihoodsNode,
                        const RooFit::Detail::JSONNode &mcAux);
 
-   bool find(const RooFit::Detail::JSONNode &n, const std::string &elem);
-   void append(RooFit::Detail::JSONNode &n, const std::string &elem);
-
-   void exportAttributes(const RooAbsArg *arg, RooFit::Detail::JSONNode &n);
    void exportVariable(const RooAbsArg *v, RooFit::Detail::JSONNode &n);
    void exportVariables(const RooArgSet &allElems, RooFit::Detail::JSONNode &n);
 
