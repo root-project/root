@@ -1141,9 +1141,9 @@ void RooVectorDataStore::RealFullVector::Streamer(TBuffer &R__b)
      // WVE - It seems that ROOT persistence turns null pointers to vectors into pointers to null-sized vectors
      //       Intervene here to remove those null-sized vectors and replace with null pointers to not break
      //       assumptions made elsewhere in this class
-     if (_vecE  && _vecE->empty()) { delete _vecE   ; _vecE = 0 ; }
-     if (_vecEL && _vecEL->empty()) { delete _vecEL ; _vecEL = 0 ; }
-     if (_vecEH && _vecEH->empty()) { delete _vecEH ; _vecEH = 0 ; }
+     if (_vecE  && _vecE->empty()) { _vecE.reset(); }
+     if (_vecEL && _vecEL->empty()) { _vecEL.reset(); }
+     if (_vecEH && _vecEH->empty()) { _vecEH.reset(); }
    } else {
      R__b.WriteClassBuffer(RooVectorDataStore::RealFullVector::Class(),this);
    }
