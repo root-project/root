@@ -16,6 +16,7 @@
 #include <RooRealVar.h>
 #include <RooSimultaneous.h>
 #include <RooProdPdf.h>
+#include <RooPoisson.h>
 #include <RooCategory.h>
 
 #include <TROOT.h>
@@ -108,6 +109,15 @@ TEST(RooFitHS3, RooCBShape)
    EXPECT_EQ(status, 0);
 }
 
+/// Test that the IO of pdfs that contain RooConstVars works.
+TEST(RooFitHS3, RooConstVar)
+{
+   RooRealVar x{"x", "x", 100, 0, 1000};
+   RooConstVar mean{"mean", "mean", 100};
+   int status = validate(RooPoisson{"pdf_with_const_var", "pdf_with_const_var", x, mean});
+   EXPECT_EQ(status, 0);
+}
+
 TEST(RooFitHS3, RooGaussian)
 {
    int status = validate({"Gaussian::gaussian(x[0, 10], mean[5], sigma[1.0, 0.1, 10])"});
@@ -173,20 +183,21 @@ TEST(RooFitHS3, SimultaneousGaussians)
    // this is a handy way of triggering the creation of a ModelConfig upon re-import
    simPdf.setAttribute("toplevel");
 
+   std::string jsonString;
+
    // Export to JSON
    {
       RooWorkspace ws{"workspace"};
       ws.import(simPdf, RooFit::Silence());
       RooJSONFactoryWSTool tool{ws};
-      tool.exportJSON("simPdf.json");
-      // Output can be pretty-printed with `python -m json.tool simPdf.json`
+      jsonString = tool.exportJSONtoString();
    }
 
    // Import JSON
    {
       RooWorkspace ws{"workspace"};
       RooJSONFactoryWSTool tool{ws};
-      tool.importJSON("simPdf.json");
+      tool.importJSONfromString(jsonString);
 
       ASSERT_TRUE(ws.pdf("g1"));
       ASSERT_TRUE(ws.pdf("g2"));

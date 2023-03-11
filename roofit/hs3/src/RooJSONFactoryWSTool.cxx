@@ -570,19 +570,19 @@ void RooJSONFactoryWSTool::exportVariables(const RooArgSet &allElems, JSONNode &
 
 JSONNode *RooJSONFactoryWSTool::exportObject(const RooAbsArg *func)
 {
-   if (func->InheritsFrom(RooSimultaneous::Class())) {
+   if (dynamic_cast<RooSimultaneous const *>(func)) {
       // RooSimultaneous is not used in the HS3 standard, we only export the dependents
       RooJSONFactoryWSTool::exportDependants(func);
       return nullptr;
-   } else if (func->InheritsFrom(RooAbsCategory::Class())) {
+   } else if (dynamic_cast<RooAbsCategory const *>(func)) {
       // categories are created by the respective RooSimultaneous, so we're skipping the export here
       return nullptr;
-   } else if (func->InheritsFrom(RooRealVar::Class()) || func->InheritsFrom(RooConstVar::Class())) {
+   } else if (dynamic_cast<RooRealVar const *>(func) || dynamic_cast<RooConstVar const *>(func)) {
       // for variables, skip it because they are all exported in the beginning
       return nullptr;
    }
 
-   auto &collectionNode = (*_rootnodeOutput)[func->InheritsFrom(RooAbsPdf::Class()) ? "distributions" : "functions"];
+   auto &collectionNode = (*_rootnodeOutput)[dynamic_cast<RooAbsPdf const *>(func) ? "distributions" : "functions"];
 
    const std::string name = func->GetName();
 
@@ -841,8 +841,8 @@ void RooJSONFactoryWSTool::exportData(RooAbsData &data)
 {
    // find category observables
    RooAbsCategory *cat = nullptr;
-   for (const auto &obs : *data.get()) {
-      if (obs->InheritsFrom(RooAbsCategory::Class())) {
+   for (RooAbsArg *obs : *data.get()) {
+      if (dynamic_cast<RooAbsCategory *>(obs)) {
          if (cat) {
             RooJSONFactoryWSTool::error("dataset '" + std::string(data.GetName()) +
                                         " has several category observables!");
@@ -1172,11 +1172,13 @@ void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
 {
    _domains = std::make_unique<Domains>();
 
-   // export all variables
+   // export all RooRealVars and RooConstVars
    {
       JSONNode &vars = makeVariablesNode(n);
-      for (RooAbsArg *arg : _workspace.allVars()) {
-         exportVariable(arg, vars);
+      for (RooAbsArg *arg : _workspace.components()) {
+         if (dynamic_cast<RooRealVar const *>(arg) || dynamic_cast<RooConstVar const *>(arg)) {
+            exportVariable(arg, vars);
+         }
       }
    }
 
@@ -1185,8 +1187,8 @@ void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
    std::vector<RooAbsPdf *> toplevel;
    _rootnodeOutput = &n;
    for (TObject *obj : _workspace.allGenericObjects()) {
-      if (obj->InheritsFrom(RooStats::ModelConfig::Class())) {
-         mcs.push_back(static_cast<RooStats::ModelConfig *>(obj));
+      if (auto mc = dynamic_cast<RooStats::ModelConfig *>(obj)) {
+         mcs.push_back(mc);
          exportModelConfig(n, *mcs.back());
       }
    }
