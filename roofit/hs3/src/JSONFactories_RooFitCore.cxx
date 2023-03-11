@@ -97,9 +97,8 @@ public:
       TString formula(p["expression"].val());
       RooArgList dependents;
       for (const auto &d : extract_arguments(formula.Data())) {
-         TObject *obj = tool->workspace()->obj(d);
-         if (obj->InheritsFrom(RooAbsArg::Class())) {
-            dependents.add(*static_cast<RooAbsArg *>(obj));
+         if (auto arg = dynamic_cast<RooAbsArg *>(tool->workspace()->obj(d))) {
+            dependents.add(*arg);
          }
       }
       tool->wsEmplace<RooGenericPdf>(name, formula, dependents);
@@ -118,9 +117,8 @@ public:
       TString formula(p["expression"].val());
       RooArgList dependents;
       for (const auto &d : extract_arguments(formula.Data())) {
-         TObject *obj = tool->workspace()->obj(d);
-         if (obj->InheritsFrom(RooAbsArg::Class())) {
-            dependents.add(*static_cast<RooAbsArg *>(obj));
+         if (auto arg = dynamic_cast<RooAbsArg *>(tool->workspace()->obj(d))) {
+            dependents.add(*arg);
          }
       }
       tool->wsEmplace<RooFormulaVar>(name, formula, dependents);
