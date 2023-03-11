@@ -340,87 +340,35 @@ public:
 
   class RealFullVector : public RealVector {
   public:
-    RealFullVector(UInt_t initialCapacity=(VECTOR_BUFFER_SIZE / sizeof(double))) : RealVector(initialCapacity),
-      _bufE(nullptr), _bufEL(nullptr), _bufEH(nullptr),
-      _nativeBufE(nullptr), _nativeBufEL(nullptr), _nativeBufEH(nullptr),
-      _vecE(nullptr), _vecEL(nullptr), _vecEH(nullptr) {
-    }
+    RealFullVector(UInt_t initialCapacity=(VECTOR_BUFFER_SIZE / sizeof(double))) : RealVector(initialCapacity) {}
 
     RealFullVector(RooAbsReal* arg, UInt_t initialCapacity=(VECTOR_BUFFER_SIZE / sizeof(double))) :
-      RealVector(arg,initialCapacity),
-      _bufE(nullptr), _bufEL(nullptr), _bufEH(nullptr),
-      _nativeBufE(nullptr), _nativeBufEL(nullptr), _nativeBufEH(nullptr),
-      _vecE(nullptr), _vecEL(nullptr), _vecEH(nullptr) {
-    }
-
-    ~RealFullVector() override {
-      if (_vecE) delete _vecE ;
-      if (_vecEL) delete _vecEL ;
-      if (_vecEH) delete _vecEH ;
-    }
+      RealVector(arg,initialCapacity) {}
 
     RealFullVector(const RealFullVector& other, RooAbsReal* real=nullptr) : RealVector(other,real),
       _bufE(other._bufE), _bufEL(other._bufEL), _bufEH(other._bufEH),
       _nativeBufE(other._nativeBufE), _nativeBufEL(other._nativeBufEL), _nativeBufEH(other._nativeBufEH) {
-      _vecE = (other._vecE) ? new std::vector<double>(*other._vecE) : nullptr ;
-      _vecEL = (other._vecEL) ? new std::vector<double>(*other._vecEL) : nullptr ;
-      _vecEH = (other._vecEH) ? new std::vector<double>(*other._vecEH) : nullptr ;
+      if (other._vecE) _vecE = std::make_unique<std::vector<double>>(*other._vecE);
+      if (other._vecEL) _vecEL = std::make_unique<std::vector<double>>(*other._vecEL);
+      if (other._vecEH) _vecEH = std::make_unique<std::vector<double>>(*other._vecEH);
     }
 
-    RealFullVector(const RealVector& other, RooAbsReal* real=nullptr) : RealVector(other,real),
-      _bufE(nullptr), _bufEL(nullptr), _bufEH(nullptr),
-      _nativeBufE(nullptr), _nativeBufEL(nullptr), _nativeBufEH(nullptr) {
-      _vecE = nullptr ;
-      _vecEL = nullptr ;
-      _vecEH = nullptr ;
-    }
+    RealFullVector(const RealVector& other, RooAbsReal* real=nullptr) : RealVector(other,real) {}
 
-    RealFullVector& operator=(const RealFullVector& other) {
-      if (&other==this) return *this;
-      RealVector::operator=(other);
-      _bufE = other._bufE;
-      _bufEL = other._bufEL;
-      _bufEH = other._bufEH;
-      _nativeBufE = other._nativeBufE;
-      _nativeBufEL = other._nativeBufEL;
-      _nativeBufEH = other._nativeBufEH;
-      std::vector<double>* src[3] = { other._vecE, other._vecEL, other._vecEH };
-      std::vector<double>* dst[3] = { _vecE, _vecEL, _vecEH };
-      for (unsigned i = 0; i < 3; ++i) {
-        if (src[i]) {
-          if (dst[i]) {
-            if (dst[i]->size() <= src[i]->capacity() / 2 &&
-                src[i]->capacity() > (VECTOR_BUFFER_SIZE / sizeof(double))) {
-              std::vector<double> tmp;
-              tmp.reserve(std::max(src[i]->size(), VECTOR_BUFFER_SIZE / sizeof(double)));
-              tmp.assign(src[i]->begin(), src[i]->end());
-              dst[i]->swap(tmp);
-            } else {
-              *dst[i] = *src[i];
-            }
-          } else {
-            dst[i] = new std::vector<double>(*src[i]);
-          }
-        } else {
-          delete dst[i];
-          dst[i] = nullptr;
-        }
-      }
-      return *this;
-    }
+    RealFullVector& operator=(RealFullVector const& other) = delete;
 
     void setErrorBuffer(double* newBuf) {
       /*       std::cout << "setErrorBuffer(" << _nativeReal->GetName() << ") newBuf = " << newBuf << std::endl ; */
       _bufE = newBuf ;
-      if (!_vecE) _vecE = new std::vector<double> ;
+      if (!_vecE) _vecE = std::make_unique<std::vector<double>>();
       _vecE->reserve(_vec.capacity()) ;
       if (!_nativeBufE) _nativeBufE = _bufE ;
     }
     void setAsymErrorBuffer(double* newBufL, double* newBufH) {
       _bufEL = newBufL ; _bufEH = newBufH ;
       if (!_vecEL) {
-        _vecEL = new std::vector<double> ;
-        _vecEH = new std::vector<double> ;
+        _vecEL = std::make_unique<std::vector<double>>();
+        _vecEH = std::make_unique<std::vector<double>>();
         _vecEL->reserve(_vec.capacity()) ;
         _vecEH->reserve(_vec.capacity()) ;
       }
@@ -478,9 +426,8 @@ public:
 
     void resize(Int_t siz) {
       RealVector::resize(siz);
-      std::vector<double>* vlist[3] = { _vecE, _vecEL, _vecEH };
+      std::vector<double>* vlist[3] = {_vecE.get(), _vecEL.get(), _vecEH.get()};
       for (unsigned i = 0; i < 3; ++i) {
-        if (!vlist[i]) continue;
         if (vlist[i]) {
           if (siz < Int_t(vlist[i]->capacity()) / 2 && vlist[i]->capacity() > (VECTOR_BUFFER_SIZE / sizeof(double))) {
             // if we gain a factor of 2 in memory, we copy and swap
@@ -506,21 +453,23 @@ public:
       if (_vecEH) _vecEH->reserve(siz);
     }
 
-    std::vector<double>* dataE() { return _vecE; }
-    std::vector<double>* dataEL() { return _vecEL; }
-    std::vector<double>* dataEH() { return _vecEH; }
+    std::vector<double>* dataE() { return _vecE.get(); }
+    std::vector<double>* dataEL() { return _vecEL.get(); }
+    std::vector<double>* dataEH() { return _vecEH.get(); }
 
   private:
     friend class RooVectorDataStore ;
-    double *_bufE ; ///<!
-    double *_bufEL ; ///<!
-    double *_bufEH ; ///<!
-    double *_nativeBufE ; ///<!
-    double *_nativeBufEL ; ///<!
-    double *_nativeBufEH ; ///<!
-    std::vector<double> *_vecE, *_vecEL, *_vecEH ;
-    ClassDefOverride(RealFullVector,1) // STL-vector-based Data Storage class
-  } ;
+    double *_bufE = nullptr; ///<!
+    double *_bufEL = nullptr; ///<!
+    double *_bufEH = nullptr; ///<!
+    double *_nativeBufE = nullptr; ///<!
+    double *_nativeBufEL = nullptr; ///<!
+    double *_nativeBufEH = nullptr; ///<!
+    std::unique_ptr<std::vector<double>> _vecE;
+    std::unique_ptr<std::vector<double>> _vecEL;
+    std::unique_ptr<std::vector<double>> _vecEH ;
+    ClassDefOverride(RealFullVector,2); // STL-vector-based Data Storage class
+  };
 
 
   class CatVector {
