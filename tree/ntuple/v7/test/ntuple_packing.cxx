@@ -7,15 +7,17 @@
 #include <type_traits>
 #include <utility>
 
-template <typename PodT, ROOT::Experimental::EColumnType ColumnT>
+template <typename PodT, typename NarrowT, ROOT::Experimental::EColumnType ColumnT>
 struct Helper {
    using Pod_t = PodT;
+   using Narrow_t = NarrowT;
    static constexpr ROOT::Experimental::EColumnType kColumnType = ColumnT;
 };
 
-template <ROOT::Experimental::EColumnType ColumnT>
-struct Helper<ROOT::Experimental::ClusterSize_t, ColumnT> {
+template <typename NarrowT, ROOT::Experimental::EColumnType ColumnT>
+struct Helper<ROOT::Experimental::ClusterSize_t, NarrowT, ColumnT> {
    using Pod_t = std::uint64_t;
+   using Narrow_t = NarrowT;
    static constexpr ROOT::Experimental::EColumnType kColumnType = ColumnT;
 };
 
@@ -37,24 +39,21 @@ public:
    using Helper_t = HelperT;
 };
 
-using PackingRealTypes = ::testing::Types<Helper<double, ROOT::Experimental::EColumnType::kSplitReal64>,
-                                          Helper<float, ROOT::Experimental::EColumnType::kSplitReal32>>;
-TYPED_TEST_CASE(PackingReal, PackingRealTypes);
-
-using PackingIntTypes = ::testing::Types<Helper<std::int64_t, ROOT::Experimental::EColumnType::kSplitInt64>,
-                                         Helper<std::uint64_t, ROOT::Experimental::EColumnType::kSplitInt64>,
-                                         Helper<std::int32_t, ROOT::Experimental::EColumnType::kSplitInt32>,
-                                         Helper<std::uint32_t, ROOT::Experimental::EColumnType::kSplitInt32>,
-                                         Helper<std::int16_t, ROOT::Experimental::EColumnType::kSplitInt16>,
-                                         Helper<std::uint16_t, ROOT::Experimental::EColumnType::kSplitInt16>>;
-TYPED_TEST_SUITE(PackingInt, PackingIntTypes);
-
-using PackingRealTypes = ::testing::Types<Helper<double, ROOT::Experimental::EColumnType::kSplitReal64>,
-                                          Helper<float, ROOT::Experimental::EColumnType::kSplitReal32>>;
+using PackingRealTypes = ::testing::Types<Helper<double, double, ROOT::Experimental::EColumnType::kSplitReal64>,
+                                          Helper<float, float, ROOT::Experimental::EColumnType::kSplitReal32>>;
 TYPED_TEST_SUITE(PackingReal, PackingRealTypes);
 
-using PackingIndexTypes =
-   ::testing::Types<Helper<ROOT::Experimental::ClusterSize_t, ROOT::Experimental::EColumnType::kSplitIndex32>>;
+using PackingIntTypes =
+   ::testing::Types<Helper<std::int64_t, std::int64_t, ROOT::Experimental::EColumnType::kSplitInt64>,
+                    Helper<std::uint64_t, std::uint64_t, ROOT::Experimental::EColumnType::kSplitInt64>,
+                    Helper<std::int32_t, std::int32_t, ROOT::Experimental::EColumnType::kSplitInt32>,
+                    Helper<std::uint32_t, std::uint32_t, ROOT::Experimental::EColumnType::kSplitInt32>,
+                    Helper<std::int16_t, std::int16_t, ROOT::Experimental::EColumnType::kSplitInt16>,
+                    Helper<std::uint16_t, std::uint16_t, ROOT::Experimental::EColumnType::kSplitInt16>>;
+TYPED_TEST_SUITE(PackingInt, PackingIntTypes);
+
+using PackingIndexTypes = ::testing::Types<
+   Helper<ROOT::Experimental::ClusterSize_t, std::uint32_t, ROOT::Experimental::EColumnType::kSplitIndex32>>;
 TYPED_TEST_SUITE(PackingIndex, PackingIndexTypes);
 
 TEST(Packing, Bitfield)
@@ -111,6 +110,7 @@ TEST(Packing, RColumnSwitch)
 TYPED_TEST(PackingReal, SplitReal)
 {
    using Pod_t = typename TestFixture::Helper_t::Pod_t;
+   using Narrow_t = typename TestFixture::Helper_t::Narrow_t;
 
    ROOT::Experimental::Detail::RColumnElement<Pod_t, TestFixture::Helper_t::kColumnType> element(nullptr);
    element.Pack(nullptr, nullptr, 0);
@@ -118,11 +118,11 @@ TYPED_TEST(PackingReal, SplitReal)
 
    std::array<Pod_t, 7> mem{0.0,
                             42.0,
-                            std::numeric_limits<Pod_t>::min(),
-                            std::numeric_limits<Pod_t>::max(),
-                            std::numeric_limits<Pod_t>::lowest(),
-                            std::numeric_limits<Pod_t>::infinity(),
-                            std::numeric_limits<Pod_t>::denorm_min()};
+                            std::numeric_limits<Narrow_t>::min(),
+                            std::numeric_limits<Narrow_t>::max(),
+                            std::numeric_limits<Narrow_t>::lowest(),
+                            std::numeric_limits<Narrow_t>::infinity(),
+                            std::numeric_limits<Narrow_t>::denorm_min()};
    std::array<Pod_t, 7> packed;
    std::array<Pod_t, 7> cmp;
 
@@ -135,13 +135,14 @@ TYPED_TEST(PackingReal, SplitReal)
 TYPED_TEST(PackingInt, SplitInt)
 {
    using Pod_t = typename TestFixture::Helper_t::Pod_t;
+   using Narrow_t = typename TestFixture::Helper_t::Narrow_t;
 
    ROOT::Experimental::Detail::RColumnElement<Pod_t, TestFixture::Helper_t::kColumnType> element(nullptr);
    element.Pack(nullptr, nullptr, 0);
    element.Unpack(nullptr, nullptr, 0);
 
-   std::array<Pod_t, 5> mem{0, std::is_signed_v<Pod_t> ? -42 : 1, 42, std::numeric_limits<Pod_t>::min(),
-                            std::numeric_limits<Pod_t>::max()};
+   std::array<Pod_t, 5> mem{0, std::is_signed_v<Pod_t> ? -42 : 1, 42, std::numeric_limits<Narrow_t>::min(),
+                            std::numeric_limits<Narrow_t>::max()};
    std::array<Pod_t, 5> packed;
    std::array<Pod_t, 5> cmp;
 
@@ -154,12 +155,13 @@ TYPED_TEST(PackingInt, SplitInt)
 TYPED_TEST(PackingIndex, SplitIndex)
 {
    using Pod_t = typename TestFixture::Helper_t::Pod_t;
+   using Narrow_t = typename TestFixture::Helper_t::Narrow_t;
 
    ROOT::Experimental::Detail::RColumnElement<ClusterSize_t, TestFixture::Helper_t::kColumnType> element(nullptr);
    element.Pack(nullptr, nullptr, 0);
    element.Unpack(nullptr, nullptr, 0);
 
-   std::array<Pod_t, 5> mem{0, 1, 1, 42, std::numeric_limits<Pod_t>::max()};
+   std::array<Pod_t, 5> mem{0, 1, 1, 42, std::numeric_limits<Narrow_t>::max()};
    std::array<Pod_t, 5> packed;
    std::array<Pod_t, 5> cmp;
 
@@ -208,8 +210,6 @@ TEST(Packing, OnDiskEncoding)
       *e->Get<double>("double") = std::nextafter(1., 2.);  // 0x3ff0 0000 0000 0001
       *e->Get<ClusterSize_t>("index32") = 39916801;        // 0x0261 1501
 
-      writer->CommitCluster();
-
       writer->Fill(*e);
 
       *e->Get<std::int16_t>("int16") = -2;
@@ -256,6 +256,10 @@ TEST(Packing, OnDiskEncoding)
    EXPECT_EQ(memcmp(sealedPage.fBuffer, expDouble, sizeof(expDouble)), 0);
 
    source->LoadSealedPage(fnGetColumnId("index32"), RClusterIndex(0, 0), sealedPage);
+   for (unsigned i = 0; i < sealedPage.fSize; ++i) {
+      printf("0x%02x ", reinterpret_cast<const char *>(sealedPage.fBuffer)[i]);
+   }
+   printf("\n");
    unsigned char expIndex[] = {0x01, 0x07, 0x15, 0x00, 0x61, 0x00, 0x02, 0x00};
    EXPECT_EQ(memcmp(sealedPage.fBuffer, expIndex, sizeof(expIndex)), 0);
 }
