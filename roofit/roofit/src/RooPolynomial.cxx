@@ -32,20 +32,12 @@ RooPolynomial::RooPolynomial(const char*, const char*, RooAbsReal&, const RooArg
 #include "RooPolynomial.h"
 #include "RooArgList.h"
 #include "RooMsgService.h"
-#include "RooBatchCompute.h"
+#include "RooPolyVar.h"
 
 #include "TError.h"
 #include <vector>
-using namespace std;
 
 ClassImp(RooPolynomial);
-
-////////////////////////////////////////////////////////////////////////////////
-/// coverity[UNINIT_CTOR]
-
-RooPolynomial::RooPolynomial()
-{
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a polynomial in the variable `x`.
@@ -78,14 +70,14 @@ RooPolynomial::RooPolynomial(const char* name, const char* title,
   // Check lowest order
   if (_lowestOrder<0) {
     coutE(InputArguments) << "RooPolynomial::ctor(" << GetName()
-           << ") WARNING: lowestOrder must be >=0, setting value to 0" << endl ;
+           << ") WARNING: lowestOrder must be >=0, setting value to 0" << std::endl;
     _lowestOrder=0 ;
   }
 
   for (auto *coef : coefList) {
     if (!dynamic_cast<RooAbsReal*>(coef)) {
       coutE(InputArguments) << "RooPolynomial::ctor(" << GetName() << ") ERROR: coefficient " << coef->GetName()
-             << " is not of type RooAbsReal" << endl ;
+             << " is not of type RooAbsReal" << std::endl;
       R__ASSERT(0) ;
     }
     _coefList.add(*coef) ;
@@ -113,12 +105,6 @@ RooPolynomial::RooPolynomial(const RooPolynomial& other, const char* name) :
 { }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooPolynomial::~RooPolynomial()
-{ }
-
-////////////////////////////////////////////////////////////////////////////////
 
 double RooPolynomial::evaluate() const
 {
@@ -141,21 +127,12 @@ double RooPolynomial::evaluate() const
   return retVal * std::pow(x, lowestOrder) + (lowestOrder ? 1.0 : 0.0);
 }
 
-// The batch mode support for RooPolynomial was commented out, because that
-// implementation can't deal with observables used as polynomial coefficients
-// yet.
-
-//////////////////////////////////////////////////////////////////////////////////
-///// Compute multiple values of Polynomial.
-//void RooPolynomial::computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooFit::DataMap& dataMap) const
-//{
-  //RooBatchCompute::ArgVector extraArgs;
-  //for (auto* coef:_coefList)
-    //extraArgs.push_back( static_cast<const RooAbsReal*>(coef)->getVal() );
-  //extraArgs.push_back(_lowestOrder);
-  //auto dispatch = stream ? RooBatchCompute::dispatchCUDA : RooBatchCompute::dispatchCPU;
-  //dispatch->compute(stream, RooBatchCompute::Polynomial, output, nEvents, dataMap, {&*_x,&*_norm}, extraArgs);
-//}
+/// Compute multiple values of Polynomial.
+void RooPolynomial::computeBatch(cudaStream_t *stream, double *output, size_t nEvents,
+                                 RooFit::Detail::DataMap const &dataMap) const
+{
+   return RooPolyVar::computeBatchImpl(stream, output, nEvents, dataMap, _x.arg(), _coefList, _lowestOrder);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Advertise to RooFit that this function can be analytically integrated.
