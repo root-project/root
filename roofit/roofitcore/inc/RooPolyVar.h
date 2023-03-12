@@ -16,26 +16,22 @@
 #ifndef ROO_POLY_VAR
 #define ROO_POLY_VAR
 
+#include <RooAbsReal.h>
+#include <RooRealProxy.h>
+#include <RooListProxy.h>
+
 #include <vector>
-
-#include "RooAbsReal.h"
-#include "RooRealProxy.h"
-#include "RooListProxy.h"
-
-class RooRealVar;
-class RooArgList ;
 
 class RooPolyVar : public RooAbsReal {
 public:
 
-  RooPolyVar() ;
+  RooPolyVar() {}
   RooPolyVar(const char* name, const char* title, RooAbsReal& x) ;
   RooPolyVar(const char *name, const char *title,
       RooAbsReal& _x, const RooArgList& _coefList, Int_t lowestOrder=0) ;
 
   RooPolyVar(const RooPolyVar& other, const char *name = nullptr);
   TObject* clone(const char* newname) const override { return new RooPolyVar(*this, newname); }
-  ~RooPolyVar() override ;
 
   Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=nullptr) const override ;
   double analyticalIntegral(Int_t code, const char* rangeName=nullptr) const override ;
@@ -44,13 +40,25 @@ protected:
 
   RooRealProxy _x;
   RooListProxy _coefList ;
-  Int_t _lowestOrder ;
+  Int_t _lowestOrder  = 0;
 
   mutable std::vector<double> _wksp; ///<! do not persist
 
   double evaluate() const override;
+  void computeBatch(cudaStream_t*, double* output, size_t nEvents, RooFit::Detail::DataMap const&) const override;
 
-  ClassDefOverride(RooPolyVar,1) // Polynomial function
+  // It doesn't make sense to use the GPU if the polynomial has no terms.
+  inline bool canComputeBatchWithCuda() const override { return !_coefList.empty(); }
+
+private:
+
+  friend class RooPolynomial;
+
+  static void computeBatchImpl(cudaStream_t *, double *output, size_t nEvents, RooFit::Detail::DataMap const &,
+                               RooAbsReal const &x, RooArgList const &coefs, int lowestOrder);
+
+
+  ClassDefOverride(RooPolyVar,1); // Polynomial function
 };
 
 #endif
