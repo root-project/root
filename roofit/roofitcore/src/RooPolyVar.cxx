@@ -31,22 +31,11 @@ it can define.
 #include "RooPolyVar.h"
 #include "RooArgList.h"
 #include "RooMsgService.h"
-//#include "Riostream.h"
+#include "RooBatchCompute.h"
 
 #include "TError.h"
 
-using namespace std;
-
 ClassImp(RooPolyVar);
-;
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Default constructor
-
-RooPolyVar::RooPolyVar() : _lowestOrder(0)
-{ }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct polynomial in x with coefficients in coefList. If
@@ -63,14 +52,14 @@ RooPolyVar::RooPolyVar(const char* name, const char* title,
   // Check lowest order
   if (_lowestOrder<0) {
     coutE(InputArguments) << "RooPolyVar::ctor(" << GetName()
-           << ") WARNING: lowestOrder must be >=0, setting value to 0" << endl ;
+           << ") WARNING: lowestOrder must be >=0, setting value to 0" << std::endl;
     _lowestOrder=0 ;
   }
 
   for(RooAbsArg * coef : coefList) {
     if (!dynamic_cast<RooAbsReal*>(coef)) {
       coutE(InputArguments) << "RooPolyVar::ctor(" << GetName() << ") ERROR: coefficient " << coef->GetName()
-             << " is not of type RooAbsReal" << endl ;
+             << " is not of type RooAbsReal" << std::endl;
       R__ASSERT(0) ;
     }
     _coefList.add(*coef) ;
@@ -102,17 +91,6 @@ RooPolyVar::RooPolyVar(const RooPolyVar& other, const char* name) :
 { }
 
 
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooPolyVar::~RooPolyVar()
-{ }
-
-
-
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate and return value of polynomial
 
@@ -136,7 +114,41 @@ double RooPolyVar::evaluate() const
   return retVal * std::pow(x, lowestOrder);
 }
 
+void RooPolyVar::computeBatchImpl(cudaStream_t *stream, double *output, size_t nEvents,
+                                  RooFit::Detail::DataMap const &dataMap, RooAbsReal const &x, RooArgList const &coefs,
+                                  int lowestOrder)
+{
+   if (coefs.empty()) {
+      output[0] = lowestOrder ? 1.0 : 0.0;
+      return;
+   }
 
+   RooBatchCompute::VarVector vars;
+   vars.reserve(coefs.size() + 2);
+
+   // Fill the coefficients for the skipped orders. By a conventions started in
+   // RooPolynomial, if the zero-th order is skipped, it implies a coefficient
+   // for the constant term of one.
+   const double zero = 1.0;
+   const double one = 1.0;
+   for(int i = lowestOrder - 1; i >= 0; --i) {
+      vars.push_back(i == 0 ? RooSpan<const double>{&one, 1} : RooSpan<const double>{&zero, 1});
+   }
+
+   for (RooAbsArg *coef : coefs) {
+      vars.push_back(dataMap.at(coef));
+   }
+   vars.push_back(dataMap.at(&x));
+   auto dispatch = stream ? RooBatchCompute::dispatchCUDA : RooBatchCompute::dispatchCPU;
+   dispatch->compute(stream, RooBatchCompute::Polynomial, output, nEvents, vars, {double(vars.size() - 1)});
+}
+
+/// Compute multiple values of Polynomial.
+void RooPolyVar::computeBatch(cudaStream_t *stream, double *output, size_t nEvents,
+                              RooFit::Detail::DataMap const &dataMap) const
+{
+   computeBatchImpl(stream, output, nEvents, dataMap, _x.arg(), _coefList, _lowestOrder);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Advertise that we can internally integrate over x

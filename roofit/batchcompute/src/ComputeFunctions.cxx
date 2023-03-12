@@ -546,41 +546,19 @@ __rooglobal__ void computePoisson(BatchesHandle batches)
 
 __rooglobal__ void computePolynomial(BatchesHandle batches)
 {
-   Batch X = batches[0];
-   const int nCoef = batches.getNExtraArgs() - 1;
-   const int lowestOrder = batches.extraArg(nCoef);
-   if (nCoef == 0) {
-      for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP)
-         batches._output[i] = (lowestOrder > 0.0);
-      return;
-   } else
-      for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP)
-         batches._output[i] = batches.extraArg(nCoef - 1);
+   const int nCoef = batches.extraArg(0);
+   const std::size_t nEvents = batches.getNEvents();
+   Batch x = batches[nCoef];
 
-   /* Indexes are in range 0..nCoef-1 but coefList[nCoef-1]
-    * has already been processed. In order to traverse the list,
-    * with step of 2 we have to start at index nCoef-3 and use
-    * coefList[k+1] and coefList[k]
-    */
-   for (int k = nCoef - 3; k >= 0; k -= 2)
-      for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP)
-         batches._output[i] = X[i] * (batches._output[i] * X[i] + batches.extraArg(k + 1)) + batches.extraArg(k);
+   for (size_t i = BEGIN; i < nEvents; i += STEP) {
+      batches._output[i] = batches[nCoef - 1][i];
+   }
 
-   // If nCoef is even, then the coefList[0] didn't get processed
-   if (nCoef % 2 == 0)
-      for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP)
-         batches._output[i] = batches._output[i] * X[i] + batches.extraArg(0);
-
-   // Increase the order of the polynomial, first by myltiplying with X[i]^2
-   if (lowestOrder != 0) {
-      for (int k = 2; k <= lowestOrder; k += 2)
-         for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP)
-            batches._output[i] *= X[i] * X[i];
-
-      for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
-         if (lowestOrder % 2 == 1)
-            batches._output[i] *= X[i];
-         batches._output[i] += 1.0;
+   // Indexes are in range 0..nCoef-1 but coefList[nCoef-1] has already been
+   // processed.
+   for (int k = nCoef - 2; k >= 0; k--) {
+      for (size_t i = BEGIN; i < nEvents; i += STEP) {
+         batches._output[i] = batches[k][i] + x[i] * batches._output[i];
       }
    }
 }
