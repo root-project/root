@@ -63,8 +63,8 @@ public:
   }
 
   /// Add `wgt` to the bin content enclosed by the coordinates passed in `row`.
-  virtual void add(const RooArgSet& row, double wgt=1.0) { add(row,wgt,-1.); }
-  void add(const RooArgSet& row, double weight, double sumw2) override ;
+  void add(const RooArgSet& row, double wgt=1.0) override { add(row,wgt,-1.); }
+  void add(const RooArgSet& row, double weight, double sumw2);
   void set(std::size_t binNumber, double weight, double wgtErr);
   void set(const RooArgSet& row, double weight, double wgtErr=-1.) ;
   void set(const RooArgSet& row, double weight, double wgtErrLo, double wgtErrHi) ;
