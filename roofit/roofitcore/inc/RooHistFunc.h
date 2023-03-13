@@ -74,6 +74,8 @@ public:
   Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=nullptr) const override ;
   double analyticalIntegral(Int_t code, const char* rangeName=nullptr) const override ;
 
+  bool forceAnalyticalInt(const RooAbsArg& dep) const override;
+
   /// Set use of special boundary conditions for c.d.f.s
   void setCdfBoundaries(bool flag) {
     _cdfBoundaries = flag ;
