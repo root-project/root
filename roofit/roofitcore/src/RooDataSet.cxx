@@ -180,9 +180,9 @@ void RooDataSet::operator delete (void* ptr)
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor for persistence
 
-RooDataSet::RooDataSet() : _wgtVar(0)
+RooDataSet::RooDataSet()
 {
-  TRACE_CREATE
+  TRACE_CREATE;
 }
 
 namespace {
@@ -375,8 +375,9 @@ RooDataSet::RooDataSet(RooStringView name, RooStringView title, const RooArgSet&
   // Process & check varargs
   pc.process(l) ;
   if (!pc.ok(true)) {
-    assert(0) ;
-    return ;
+    const std::string errMsg = "Error in RooDataSet constructor: command argument list could not be processed";
+    coutE(InputArguments) << errMsg << std::endl;
+    throw std::invalid_argument(errMsg);
   }
 
   if(pc.getSet("glObs")) setGlobalObservables(*pc.getSet("glObs"));
@@ -578,17 +579,11 @@ RooDataSet::RooDataSet(RooStringView name, RooStringView title, const RooArgSet&
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor of an empty data set from a RooArgSet defining the dimensions
 /// of the data space.
+/// \deprecated Use the more explicit `RooDataSet(name, title, vars, RooFit::WeightVar(wgtVarName))`.
 
-RooDataSet::RooDataSet(RooStringView name, RooStringView title, const RooArgSet& vars, const char* wgtVarName) :
-  RooAbsData(name,title,vars)
+RooDataSet::RooDataSet(RooStringView name, RooStringView title, const RooArgSet& vars, const char* wgtVarName)
+  : RooDataSet(name,title,vars, RooFit::WeightVar(wgtVarName))
 {
-//   cout << "RooDataSet::ctor(" << this << ") storageType = " << ((defaultStorageType==Tree)?"Tree":"Vector") << endl ;
-  _dstore = defaultStorageType==Tree ? static_cast<std::unique_ptr<RooAbsDataStore>>(std::make_unique<RooTreeDataStore>(name,title,_vars,wgtVarName)) :
-                                       static_cast<std::unique_ptr<RooAbsDataStore>>(std::make_unique<RooVectorDataStore>(name,title,_vars,wgtVarName)) ;
-
-  appendToDir(this,true) ;
-  initialize(wgtVarName) ;
-  TRACE_CREATE
 }
 
 
@@ -641,10 +636,10 @@ RooDataSet::RooDataSet(RooStringView name, RooStringView title, RooDataSet *dset
       // Use the weight column of the source data set
       initialize(dset->_wgtVar->GetName()) ;
     } else {
-      initialize(0) ;
+      initialize(nullptr);
     }
   }
-  TRACE_CREATE
+  TRACE_CREATE;
 }
 
 
@@ -729,7 +724,7 @@ RooDataSet::RooDataSet(RooStringView name, RooStringView title, TTree* theTree,
   appendToDir(this,true) ;
 
   initialize(wgtVarName) ;
-  TRACE_CREATE
+  TRACE_CREATE;
 }
 
 
@@ -741,8 +736,8 @@ RooDataSet::RooDataSet(RooDataSet const & other, const char* newname) :
   RooAbsData(other,newname), RooDirItem()
 {
   appendToDir(this,true) ;
-  initialize(other._wgtVar?other._wgtVar->GetName():0) ;
-  TRACE_CREATE
+  initialize(other._wgtVar?other._wgtVar->GetName():nullptr);
+  TRACE_CREATE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -758,20 +753,8 @@ RooDataSet::RooDataSet(RooStringView name, RooStringView title, RooDataSet *dset
    _cachedVars.add(_dstore->cachedVars());
 
    appendToDir(this, true);
-   initialize(dset->_wgtVar ? dset->_wgtVar->GetName() : 0);
-   TRACE_CREATE
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Helper function for constructor that adds optional weight variable to construct
-/// total set of observables
-
-RooArgSet RooDataSet::addWgtVar(const RooArgSet& origVars, const RooAbsArg* wgtVar)
-{
-  RooArgSet tmp(origVars) ;
-  if (wgtVar) tmp.add(*wgtVar) ;
-  return tmp ;
+   initialize(dset->_wgtVar ? dset->_wgtVar->GetName() : nullptr);
+   TRACE_CREATE;
 }
 
 
@@ -781,25 +764,38 @@ RooArgSet RooDataSet::addWgtVar(const RooArgSet& origVars, const RooAbsArg* wgtV
 
 RooAbsData* RooDataSet::emptyClone(const char* newName, const char* newTitle, const RooArgSet* vars, const char* wgtVarName) const
 {
-  // If variables are given, be sure to include weight variable if it exists and is not included
-  RooArgSet vars2 ;
-  RooRealVar* tmpWgtVar = _wgtVar ;
-  if (wgtVarName && vars && !_wgtVar) {
-    tmpWgtVar = (RooRealVar*) vars->find(wgtVarName) ;
-  }
+   bool useOldWeight = _wgtVar && (wgtVarName == nullptr || strcmp(wgtVarName, _wgtVar->GetName()) == 0);
 
-  if (vars) {
-    vars2.add(*vars) ;
-    if (_wgtVar && !vars2.find(_wgtVar->GetName())) {
-      vars2.add(*_wgtVar) ;
-    }
-  } else {
-    vars2.add(_vars) ;
-  }
+   if(newName == nullptr) newName = GetName();
+   if(newTitle == nullptr) newTitle = GetTitle();
+   if(useOldWeight) wgtVarName = _wgtVar->GetName();
 
-  RooDataSet* dset = new RooDataSet(newName?newName:GetName(),newTitle?newTitle:GetTitle(),vars2,tmpWgtVar?tmpWgtVar->GetName():0) ;
-  //if (_wgtVar) dset->setWeightVar(_wgtVar->GetName()) ;
-  return dset ;
+   RooArgSet vars2;
+   if(vars == nullptr) {
+      vars2.add(_vars);
+   } else {
+      for(RooAbsArg *var : *vars) {
+         // We should take the variables from the original dataset if
+         // available, such that we can query the "StoreError" and
+         // "StoreAsymError" attributes.
+         auto varInData = _vars.find(*var);
+         vars2.add(varInData ? *varInData : *var);
+      }
+      // We also need to add the weight variable of the original dataset if
+      // it's not added yet, again to query the error attributes correctly.
+      if(useOldWeight && !vars2.find(wgtVarName)) vars2.add(*_wgtVar);
+   }
+
+   RooArgSet errorSet;
+   RooArgSet asymErrorSet;
+
+   for(RooAbsArg *var : vars2) {
+      if(var->getAttribute("StoreError")) errorSet.add(*var);;
+      if(var->getAttribute("StoreAsymError")) asymErrorSet.add(*var);;
+   }
+
+   using namespace RooFit;
+   return new RooDataSet(newName, newTitle, vars2, WeightVar(wgtVarName), StoreError(errorSet), StoreAsymError(asymErrorSet));
 }
 
 
@@ -875,7 +871,7 @@ RooAbsData* RooDataSet::reduceEng(const RooArgSet& varSubset, const RooFormulaVa
 RooDataSet::~RooDataSet()
 {
   removeFromDir(this) ;
-  TRACE_DESTROY
+  TRACE_DESTROY;
 }
 
 
@@ -1884,9 +1880,9 @@ namespace {
   const char * cstr = "cstr";
   RooRealVar x{"x", "x", 1.0};
   RooArgSet vars{x};
-  RooDataSet d1(tstr, tstr, vars, nullptr);
-  RooDataSet d2(tstr, cstr, vars, nullptr);
-  RooDataSet d3(cstr, tstr, vars, nullptr);
+  RooDataSet d1(tstr, tstr, vars);
+  RooDataSet d2(tstr, cstr, vars);
+  RooDataSet d3(cstr, tstr, vars);
 
 } // namespace
 

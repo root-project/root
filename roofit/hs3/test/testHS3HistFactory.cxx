@@ -129,21 +129,23 @@ TEST(TestHS3HistFactoryJSON, ClosureLoop)
    std::unique_ptr<RooStats::HistFactory::Measurement> meas = measurement();
    std::unique_ptr<RooWorkspace> ws = toWS(*meas);
 
-   RooJSONFactoryWSTool tool{*ws};
-   std::string const &js = tool.exportJSONtoString();
+   auto *mc = dynamic_cast<RooStats::ModelConfig *>(ws->obj("ModelConfig"));
+   EXPECT_TRUE(mc != nullptr);
+
+   RooAbsPdf *pdf = mc->GetPdf();
+   EXPECT_TRUE(pdf != nullptr);
+
+   // For now, this is the way to tell the JSONIO what the combined datasets are
+   pdf->setStringAttribute("combined_data_name", "obsData");
+
+   std::string const &js = RooJSONFactoryWSTool{*ws}.exportJSONtoString();
 
    RooWorkspace newws("new");
    RooJSONFactoryWSTool newtool{newws};
    newtool.importJSONfromString(js);
 
-   auto *mc = dynamic_cast<RooStats::ModelConfig *>(ws->obj("ModelConfig"));
-   EXPECT_TRUE(mc != nullptr);
-
    auto *newmc = dynamic_cast<RooStats::ModelConfig *>(newws.obj("ModelConfig"));
    EXPECT_TRUE(newmc != nullptr);
-
-   RooAbsPdf *pdf = mc->GetPdf();
-   EXPECT_TRUE(pdf != nullptr);
 
    RooAbsPdf *newpdf = newmc->GetPdf();
    EXPECT_TRUE(newpdf != nullptr);

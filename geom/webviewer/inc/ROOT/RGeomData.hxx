@@ -1,8 +1,7 @@
-// @(#)root/geom/webviewer:$Id$
 // Author: Sergey Linev, 14.12.2018
 
 /*************************************************************************
- * Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2023, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -16,6 +15,10 @@
 #include <string>
 #include <functional>
 #include <memory>
+
+#include <ROOT/Browsable/RItem.hxx>
+
+#include "TVirtualMutex.h"
 
 class TGeoNode;
 class TGeoManager;
@@ -41,12 +44,21 @@ public:
    int vis{0};              ///< visibility flag, 0 - off, 1 - only when level==0, 99 - always
    bool nochlds{false};     ///< how far in hierarchy depth should be scanned
 
-   std::string color;       ///< rgb code without rgb() prefix
+   std::string color;       ///< rgb code in hex format
+   std::string material;    ///< name of the material
    int sortid{0};           ///<! place in sorted array, to check cuts, or id of original node when used search structures
 
    RGeomNodeBase(int _id = 0) : id(_id) {}
 
    bool IsVisible() const { return vis > 0; }
+
+   /** Returns argument for regexp */
+   const char *GetArg(int kind)
+   {
+      if (kind == 1) return color.c_str();
+      if (kind == 2) return material.c_str();
+      return name.c_str();
+   }
 };
 
 /** Full node description including matrices and other attributes */
@@ -65,6 +77,39 @@ public:
    /** True when there is shape and it can be displayed */
    bool CanDisplay() const { return (vol > 0.) && (nfaces > 0); }
 };
+
+/** \class RGeoItem
+\ingroup rbrowser
+\brief Representation of single item in the geometry browser
+*/
+
+class RGeoItem : public Browsable::RItem {
+
+protected:
+   // this is part for browser, visible for I/O
+   std::string color;      ///< color
+   std::string material;   ///< material
+
+public:
+
+   /** Default constructor */
+   RGeoItem() = default;
+
+   RGeoItem(const std::string &_name, int _nchilds, const std::string &_color,
+         const std::string &_material = "") :
+         Browsable::RItem(_name, _nchilds), color(_color), material(_material) {
+   }
+
+   // should be here, one needs virtual table for correct streaming of RRootBrowserReply
+   virtual ~RGeoItem() = default;
+
+   void SetColor(const std::string &_color) { color  = _color; }
+   void SetMaterial(const std::string &_material) { material  = _material; }
+
+   const std::string &GetColor() const { return color; }
+   const std::string &GetMaterial() const { return material; }
+};
+
 
 /** Base class for render info block */
 class RGeomRenderInfo {
@@ -133,14 +178,7 @@ public:
 };
 
 
-/** Request object send from client for different operations */
-class RGeomRequest {
-public:
-   std::string oper;  ///< operation like HIGHL or HOVER
-   std::vector<std::string> path;  ///< path parameter, used with HOVER
-   std::vector<int> stack; ///< stack parameter, used with HIGHL
-};
-
+/** Node information including rendering data */
 class RGeomNodeInfo {
 public:
    std::vector<std::string> path;  ///< full path to node
@@ -152,8 +190,17 @@ public:
    RGeomRenderInfo *ri{nullptr};  ///< rendering information (if applicable)
 };
 
+/** Node information including rendering data */
+class RGeomNodeVisibility {
+public:
+   std::vector<int> stack;        ///< path to the node
+   bool visible{false};           ///< visible flag
+   RGeomNodeVisibility(const std::vector<int> &_stack, bool _visible) : stack(_stack), visible(_visible) {}
+};
+
 using RGeomScanFunc_t = std::function<bool(RGeomNode &, std::vector<int> &, bool, int)>;
 
+using RGeomSignalFunc_t = std::function<void(const std::string &)>;
 
 class RGeomDescription {
 
@@ -188,12 +235,20 @@ class RGeomDescription {
    };
 
    std::vector<TGeoNode *> fNodes;  ///<! flat list of all nodes
-   std::vector<RGeomNode> fDesc; ///< converted description, send to client
-   TGeoVolume *fDrawVolume{nullptr}; ///<! select volume independent from TGeoMaanger
+   std::vector<RGeomNode> fDesc;    ///<! converted description, send to client
+   std::vector<RGeomNodeVisibility> fVisibility; ///<! custom visibility flags for physical nodes
+
+   TGeoVolume *fDrawVolume{nullptr};///<! select volume independent from TGeoManager
+   std::vector<int> fSelectedStack; ///<! selected branch of geometry by stack
+
+   std::vector<int> fHighlightedStack; ///<! highlighted element by stack
+   std::vector<int> fClickedStack;     ///<! clicked element by stack
 
    std::vector<int> fSortMap;       ///<! nodes in order large -> smaller volume
    std::vector<ShapeDescr> fShapes; ///<! shapes with created descriptions
 
+   std::string fSearch;             ///<! search string in hierarchy
+   std::string fSearchJson;         ///<! drawing json for search
    std::string fDrawJson;           ///<! JSON with main nodes drawn by client
    int fDrawIdCut{0};               ///<! sortid used for selection of most-significant nodes
    int fActualLevel{0};             ///<! level can be reduced when selecting nodes
@@ -201,6 +256,10 @@ class RGeomDescription {
    int fJsonComp{0};                ///<! default JSON compression
 
    RGeomConfig fCfg;                ///<! configuration parameter editable from GUI
+
+   TVirtualMutex *fMutex{nullptr};  ///<! external mutex used to protect all data
+
+   std::vector<std::pair<const void *, RGeomSignalFunc_t>> fSignals; ///<! registered signals
 
    void PackMatrix(std::vector<float> &arr, TGeoMatrix *matr);
 
@@ -216,9 +275,13 @@ class RGeomDescription {
 
    ShapeDescr &MakeShapeDescr(TGeoShape *shape);
 
+   int GetUsedNSegments(int min = 20);
+
+   int CountShapeFaces(TGeoShape *shape);
+
    void CopyMaterialProperties(TGeoVolume *vol, RGeomNode &node);
 
-   void CollectNodes(RGeomDrawing &drawing);
+   void CollectNodes(RGeomDrawing &drawing, bool all_nodes = false);
 
    std::string MakeDrawingJson(RGeomDrawing &drawing, bool has_shapes = false);
 
@@ -231,51 +294,89 @@ class RGeomDescription {
 public:
    RGeomDescription() = default;
 
+   void AddSignalHandler(const void *handler, RGeomSignalFunc_t func);
+
+   void RemoveSignalHandler(const void *handler);
+
+   void IssueSignal(const void *handler, const std::string &kind);
+
+   /** Set mutex, it must be recursive one */
+   void SetMutex(TVirtualMutex *mutex) { fMutex = mutex; }
+   /** Return currently used mutex */
+   TVirtualMutex *GetMutex() const { return fMutex; }
+
+   /** Set maximal number of nodes which should be selected for drawing */
+   void SetMaxVisNodes(int cnt) { TLockGuard lock(fMutex); fCfg.maxnumnodes = cnt; }
+   /** Returns maximal visible number of nodes, ignored when non-positive */
+   int GetMaxVisNodes() const { TLockGuard lock(fMutex); return fCfg.maxnumnodes; }
+
+   /** Set maximal number of faces which should be selected for drawing */
+   void SetMaxVisFaces(int cnt) { TLockGuard lock(fMutex); fCfg.maxnumfaces = cnt; }
+   /** Returns maximal visible number of faces, ignored when non-positive */
+   int GetMaxVisFaces() const { TLockGuard lock(fMutex); return fCfg.maxnumfaces; }
+
+   /** Set maximal visible level */
+   void SetVisLevel(int lvl = 3) { TLockGuard lock(fMutex); fCfg.vislevel = lvl; }
+   /** Returns maximal visible level */
+   int GetVisLevel() const { TLockGuard lock(fMutex); return fCfg.vislevel; }
+
+   /** Set draw options as string for JSROOT TGeoPainter */
+   void SetTopVisible(bool on = true) { TLockGuard lock(fMutex); fCfg.showtop = on; }
+   /** Returns draw options, used for JSROOT TGeoPainter */
+   bool GetTopVisible() const { TLockGuard lock(fMutex); return fCfg.showtop; }
+
+   /** Instruct to build binary 3D model already on the server (true) or send TGeoShape as is to client, which can build model itself */
+   void SetBuildShapes(int lvl = 1) { TLockGuard lock(fMutex); fCfg.build_shapes = lvl; }
+   /** Returns true if binary 3D model build already by C++ server (default) */
+   int IsBuildShapes() const { TLockGuard lock(fMutex); return fCfg.build_shapes; }
+
+   /** Set number of segments for cylindrical shapes, if 0 - default value will be used */
+   void SetNSegments(int n = 0) { TLockGuard lock(fMutex); fCfg.nsegm = n; }
+   /** Return of segments for cylindrical shapes, if 0 - default value will be used */
+   int GetNSegments() const { TLockGuard lock(fMutex); return fCfg.nsegm; }
+
+   /** Set draw options as string for JSROOT TGeoPainter */
+   void SetDrawOptions(const std::string &opt = "") { TLockGuard lock(fMutex); fCfg.drawopt = opt; }
+   /** Returns draw options, used for JSROOT TGeoPainter */
+   std::string GetDrawOptions() const { TLockGuard lock(fMutex); return fCfg.drawopt; }
+
+   /** Set JSON compression level for data transfer */
+   void SetJsonComp(int comp = 0) { TLockGuard lock(fMutex); fJsonComp = comp; }
+   /** Returns JSON compression level for data transfer */
+   int GetJsonComp() const  { TLockGuard lock(fMutex); return fJsonComp; }
+
+   /** Set preference of offline operations.
+    * Server provides more info to client from the begin on to avoid communication */
+   void SetPreferredOffline(bool on) { TLockGuard lock(fMutex); fPreferredOffline = on; }
+   /** Is offline operations preferred.
+    * After get full description, client can do most operations without extra requests */
+   bool IsPreferredOffline() const { TLockGuard lock(fMutex); return fPreferredOffline; }
+
+
    void Build(TGeoManager *mgr, const std::string &volname = "");
 
    void Build(TGeoVolume *vol);
 
    /** Number of unique nodes in the geometry */
-   int GetNumNodes() const { return fDesc.size(); }
+   int GetNumNodes() const { TLockGuard lock(fMutex); return fDesc.size(); }
 
    bool IsBuild() const { return GetNumNodes() > 0; }
 
-   /** Set maximal number of nodes which should be selected for drawing */
-   void SetMaxVisNodes(int cnt) { fCfg.maxnumnodes = cnt; }
-
-   /** Returns maximal visible number of nodes, ignored when non-positive */
-   int GetMaxVisNodes() const { return fCfg.maxnumnodes; }
-
-   /** Set maximal number of faces which should be selected for drawing */
-   void SetMaxVisFaces(int cnt) { fCfg.maxnumfaces = cnt; }
-
-   /** Returns maximal visible number of faces, ignored when non-positive */
-   int GetMaxVisFaces() const { return fCfg.maxnumfaces; }
-
-   /** Set maximal visible level */
-   void SetVisLevel(int lvl = 3) { fCfg.vislevel = lvl; }
-
-   /** Returns maximal visible level */
-   int GetVisLevel() const { return fCfg.vislevel; }
-
-   /** Set preference of offline operations.
-    * Server provides more info to client from the begin on to avoid communication */
-   void SetPreferredOffline(bool on) { fPreferredOffline = on; }
-
-   /** Is offline operations preferred.
-    * After get full description, client can do most operations without extra requests */
-   bool IsPreferredOffline() const { return fPreferredOffline; }
-
-   std::string ProduceJson();
+   std::string ProduceJson(bool all_nodes = false);
 
    bool IsPrincipalEndNode(int nodeid);
 
    std::string ProcessBrowserRequest(const std::string &req = "");
 
-   bool HasDrawData() const { return (fDrawJson.length() > 0) && (fDrawIdCut > 0); }
+   bool HasDrawData() const;
    void ProduceDrawData();
-   const std::string &GetDrawJson() const { return fDrawJson; }
+   void ProduceSearchData();
+   std::string GetDrawJson() const { TLockGuard lock(fMutex); return fDrawJson; }
+   std::string GetSearch() const { TLockGuard lock(fMutex); return fSearch; }
+   std::string GetSearchJson() const { TLockGuard lock(fMutex); return fSearchJson; }
    void ClearDrawData();
+
+   void ClearCache();
 
    int SearchVisibles(const std::string &find, std::string &hjson, std::string &json);
 
@@ -293,36 +394,51 @@ public:
 
    bool ProduceDrawingFor(int nodeid, std::string &json, bool check_volume = false);
 
-   bool ChangeNodeVisibility(int nodeid, bool selected);
+   bool SetHighlightedItem(const std::vector<int> &stack)
+   {
+      TLockGuard lock(fMutex);
+      bool changed = fHighlightedStack != stack;
+      fHighlightedStack = stack;
+      return changed;
+   }
 
-   /** Set number of segments for cylindrical shapes, if 0 - default value will be used */
-   void SetNSegments(int n = 0) { fCfg.nsegm = n; }
-   /** Return of segments for cylindrical shapes, if 0 - default value will be used */
-   int GetNSegments() const { return fCfg.nsegm; }
+   std::vector<int> GetHighlightedItem() const
+   {
+      TLockGuard lock(fMutex);
+      return fHighlightedStack;
+   }
 
-   /** Set JSON compression level for data transfer */
-   void SetJsonComp(int comp = 0) { fJsonComp = comp; }
-   /** Returns JSON compression level for data transfer */
-   int GetJsonComp() const  { return fJsonComp; }
+   bool SetClickedItem(const std::vector<int> &stack)
+   {
+      TLockGuard lock(fMutex);
+      bool changed = fClickedStack != stack;
+      fClickedStack = stack;
+      return changed;
+   }
 
-   /** Set draw options as string for JSROOT TGeoPainter */
-   void SetDrawOptions(const std::string &opt = "") { fCfg.drawopt = opt; }
-   /** Returns draw options, used for JSROOT TGeoPainter */
-   std::string GetDrawOptions() const { return fCfg.drawopt; }
-
-   /** Set draw options as string for JSROOT TGeoPainter */
-   void SetTopVisible(bool on = true) { fCfg.showtop = on; }
-   /** Returns draw options, used for JSROOT TGeoPainter */
-   bool GetTopVisible() const { return fCfg.showtop; }
-
-   /** Instruct to build binary 3D model already on the server (true) or send TGeoShape as is to client, which can build model itself */
-   void SetBuildShapes(int lvl = 1) { fCfg.build_shapes = lvl; }
-   /** Returns true if binary 3D model build already by C++ server (default) */
-   int IsBuildShapes() const { return fCfg.build_shapes; }
+   std::vector<int> GetClickedItem() const
+   {
+      TLockGuard lock(fMutex);
+      return fClickedStack;
+   }
 
    bool ChangeConfiguration(const std::string &json);
 
-   std::unique_ptr<RGeomNodeInfo> MakeNodeInfo(const std::vector<std::string> &path);
+   std::unique_ptr<RGeomNodeInfo> MakeNodeInfo(const std::vector<int> &stack);
+
+   bool ChangeNodeVisibility(int nodeid, bool selected);
+
+   bool SelectTop(const std::vector<std::string> &path);
+
+   bool SetNodeVisibility(const std::vector<std::string> &path, bool on = true);
+
+   bool ClearNodeVisibility(const std::vector<std::string> &path);
+
+   bool ClearAllVisibility();
+
+   bool SetSearch(const std::string &query, const std::string &json);
+
+   void SavePrimitive(std::ostream &fs, const std::string &name);
 };
 
 

@@ -169,6 +169,8 @@ public:
 
    bool AddPanel(std::shared_ptr<RWebWindow>) final;
 
+   void SetClearOnClose(const std::shared_ptr<void> &) final;
+
    /** \class CanvasPainterGenerator
           Creates RCanvasPainter objects.
         */
@@ -706,6 +708,15 @@ bool RCanvasPainter::AddPanel(std::shared_ptr<RWebWindow> win)
    DoWhenReady(cmd, "AddPanel", true, nullptr);
 
    return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set handle to window which will be cleared when connection is closed
+
+void RCanvasPainter::SetClearOnClose(const std::shared_ptr<void> &handle)
+{
+   if (fWindow)
+      fWindow->SetClearOnClose(handle);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -92,6 +92,8 @@ public:
 
    bool ActivateWidget(const std::string &title, const std::string &kind = "");
 
+   void ClearOnClose(const std::shared_ptr<void> &handle);
+
 };
 
 } // namespace Experimental

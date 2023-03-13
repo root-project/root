@@ -194,7 +194,6 @@ sap.ui.define([
                     this.reset_nodes = true;
                     this._expanding_path = path;
                     this.submitRequest(false, curr, currpath, 'expanding');
-                    break;
                  }
                  return -1;
               }
@@ -251,13 +250,13 @@ sap.ui.define([
           * @param {Array} path - path as array of strings
           * @desc directly use web socket, later can be dedicated channel */
         submitRequest(force_reload, elem, path, first, number) {
-           if (first === 'expanding') {
-              first = 0;
-           } else {
-              delete this._expanding_path;
-           }
-
            if (!this._websocket || elem._requested || this.fullModel) return;
+
+           if (first === 'expanding')
+              first = 0;
+           else
+              delete this._expanding_path;
+
            elem._requested = true;
 
            this.loadDataCounter++;
@@ -274,7 +273,7 @@ sap.ui.define([
               sort: this.sortMethod || '',
               reverse: this.reverseOrder || false,
               hidden: this.showHidden ? true : false,
-              lastcycle: this.onlyLastCycle,
+              lastcycle: this.onlyLastCycle ?? 0,
               reload: force_reload ? true : false,  // rescan items by server even when path was not changed
               regex
            };
@@ -334,8 +333,10 @@ sap.ui.define([
               let d = this._expanding_path;
               delete this._expanding_path;
               let index = this.expandNodeByPath(d);
-              if ((index > 0) && this.treeTable)
+              if ((index > 0) && this.treeTable) {
                  this.treeTable.setFirstVisibleRow(Math.max(0, index - Math.round(this.treeTable.getVisibleRowCount()/2)));
+                 this.refresh(true);
+              }
            }
 
         },

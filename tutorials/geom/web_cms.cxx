@@ -7,7 +7,6 @@
 /// \author Sergey Linev
 
 #include <ROOT/RGeomViewer.hxx>
-#include <ROOT/RDirectory.hxx>
 
 #include "TGeoManager.h"
 #include "TGeoVolume.h"
@@ -53,6 +52,6 @@ void web_cms()
    // start browser
    viewer->Show();
 
-   // add to global heap to avoid immediate destroy of RGeomViewer
-   RDirectory::Heap().Add("geom_viewer", viewer);
+   // destroy viewer only when connection to client is closed
+   viewer->ClearOnClose(viewer);
 }

@@ -17,20 +17,14 @@
 
 #include <RooArgList.h>
 #include <RooArgSet.h>
+#include <RooGlobalFunc.h>
+#include <RooWorkspace.h>
 
 #include <map>
 #include <memory>
 #include <stdexcept>
 #include <string>
 #include <vector>
-
-class RooAbsData;
-class RooAbsArg;
-class RooAbsPdf;
-class RooDataHist;
-class RooDataSet;
-class RooRealVar;
-class RooWorkspace;
 
 namespace RooFit {
 namespace JSONIO {
@@ -48,9 +42,16 @@ class TClass;
 
 class RooJSONFactoryWSTool {
 public:
+   RooJSONFactoryWSTool(RooWorkspace &ws);
+
+   ~RooJSONFactoryWSTool();
+
    static std::ostream &log(int level);
 
    static std::string name(const RooFit::Detail::JSONNode &n);
+
+   static RooFit::Detail::JSONNode &appendNamedChild(RooFit::Detail::JSONNode &node, std::string const &name);
+   static RooFit::Detail::JSONNode const *findNamedChild(RooFit::Detail::JSONNode const &node, std::string const &name);
 
    template <class T>
    T *request(const std::string &objname, const std::string &requestAuthor)
@@ -91,11 +92,20 @@ public:
       return requestCollection<T, RooArgList>(node, seqName);
    }
 
-   RooJSONFactoryWSTool(RooWorkspace &ws);
-
-   ~RooJSONFactoryWSTool();
-
    RooWorkspace *workspace() { return &_workspace; }
+
+   template <class Obj_t>
+   void wsImport(Obj_t const &arg)
+   {
+      _workspace.import(arg, RooFit::RecycleConflictNodes(true), RooFit::Silence(true));
+   }
+
+   template <class Obj_t, typename... Args_t>
+   void wsEmplace(RooStringView name, RooStringView title, Args_t &&...args)
+   {
+      Obj_t arg{name, title, std::forward<Args_t>(args)...};
+      return wsImport(arg);
+   }
 
    static void error(const char *s) { throw std::runtime_error(s); }
    inline static void error(const std::string &s) { error(s.c_str()); }
@@ -189,6 +199,9 @@ public:
       const char *what() const noexcept override { return _message.c_str(); }
    };
 
+   static void
+   writeCombinedDataName(RooFit::Detail::JSONNode &rootnode, std::string const &pdfName, std::string const &dataName);
+
 private:
    struct Config {
       static bool stripObservables;
@@ -204,14 +217,14 @@ private:
       Var(const RooFit::Detail::JSONNode &val);
    };
 
-   std::map<std::string, std::unique_ptr<RooAbsData>> loadData(const RooFit::Detail::JSONNode &n);
+   std::map<std::string, std::unique_ptr<RooAbsData>> loadData(const RooFit::Detail::JSONNode &rootnode);
    std::unique_ptr<RooDataSet> unbinned(RooDataHist const &hist);
    static RooRealVar *createObservable(RooWorkspace &ws, const std::string &name, const RooJSONFactoryWSTool::Var &var);
 
    template <class T>
    T *requestImpl(const std::string &objname);
 
-   void exportData(RooAbsData *data, RooFit::Detail::JSONNode &n);
+   void exportData(RooAbsData &data);
    static std::vector<std::vector<int>> generateBinIndices(const RooArgList &vars);
    static std::map<std::string, RooJSONFactoryWSTool::Var>
    readObservables(const RooFit::Detail::JSONNode &n, const std::string &obsnamecomp);

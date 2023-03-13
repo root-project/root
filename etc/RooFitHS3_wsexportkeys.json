@@ -1,6 +1,6 @@
 {
     "RooGaussian": {
-        "type": "Gaussian",
+        "type": "gaussian_dist",
         "proxies": {
             "x": "x",
             "mean": "mean",
@@ -8,28 +8,28 @@
         }
     },
     "RooPoisson": {
-        "type": "Poisson",
+        "type": "poisson_dist",
         "proxies": {
             "x": "x",
             "mean": "mean"
         }
     },
     "RooExponential": {
-        "type": "Exponential",
+        "type": "exponential_dist",
         "proxies": {
             "x": "x",
             "c": "c"
         }
-    },    
+    },
     "RooProduct": {
-        "type": "prod",
+        "type": "product",
         "proxies": {
             "compRSet": "factors",
             "compCSet": "factors"
         }
     },
     "RooProdPdf": {
-        "type": "pdfprod",
+        "type": "product_dist",
         "proxies": {
             "pdfs": "factors"
         }
@@ -42,7 +42,7 @@
         }
     },
     "RooAddPdf": {
-        "type": "pdfsum",
+        "type": "sum_dist",
         "proxies": {
             "refCoefNorm": "coefnormset",
             "pdfs": "summands",
@@ -56,14 +56,14 @@
         }
     },
     "RooBernstein": {
-        "type": "BernsteinPolynomial",
+        "type": "bernstein_poly_dist",
         "proxies": {
             "coefList": "coefficients",
             "x": "x"	    
         }
     },        
     "RooArgusBG": {
-        "type": "ARGUS",
+        "type": "ARGUS_dist",
         "proxies": {
             "m": "mass",
             "m0": "resonance",
@@ -72,7 +72,7 @@
         }
     },
     "RooCBShape": {
-        "type": "CrystalBallShape",
+        "type": "crystalball_dist",
         "proxies": {
             "alpha": "alpha",
             "m": "m",
@@ -82,7 +82,7 @@
         }
     },
     "RooBifurGauss": {
-        "type": "BifurkatedGaussian",
+        "type": "bifurkated_gaussian_dist",
         "proxies": {
             "x": "x",
             "mean": "mean",

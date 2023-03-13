@@ -1,11 +1,12 @@
 {
     "misc" : { "ROOT_internal" : { "ModelConfigs" : {
         "main": {
-            "combinedObservationName": "observed"
+            "combined_data_name": "observed"
         }
     }}},
-    "analyses": {
-        "main": {
+    "analyses": [
+        {
+            "name": "main",
             "likelihoods": [
                 "channel1"
             ],
@@ -17,27 +18,29 @@
             ],
             "InterpolationScheme": ""
         }
-    },
-    "likelihoods": {
-        "channel1": {
+    ],
+    "likelihoods": [
+        {
+            "name": "channel1",
             "dist": "model_channel1",
             "obs": "observed_channel1"
         }
-    },
-    "distributions": {
-        "model_channel1": {
+    ],
+    "distributions": [
+        {
             "name": "model_channel1",
             "samples": [
                 {
                     "data": {
                         "contents": [20, 10],
-                        "variables": {
-                            "obs_x_channel1": {
+                        "axes": [
+                            {
+                                "name": "obs_x_channel1",
                                 "max": 2.0,
                                 "min": 1.0,
                                 "nbins": 2
                             }
-                        }
+                        ]
                     },
                     "modifiers": [
                         {
@@ -59,13 +62,14 @@
                     "data": {
                         "contents": [100, 0],
                         "errors": [5, 0],
-                        "variables": {
-                            "obs_x_channel1": {
+                        "axes": [
+                            {
+                                "name": "obs_x_channel1",
                                 "max": 2.0,
                                 "min": 1.0,
                                 "nbins": 2
                             }
-                        }
+                        ]
                     },
                     "modifiers": [
                         {
@@ -87,13 +91,14 @@
                     "data": {
                         "contents": [0, 100],
                         "errors": [0, 10],
-                        "variables": {
-                            "obs_x_channel1": {
+                        "axes": [
+                            {
+                                "name": "obs_x_channel1",
                                 "max": 2.0,
                                 "min": 1.0,
                                 "nbins": 2
                             }
-                        }
+                        ]
                     },
                     "modifiers": [
                         {
@@ -118,11 +123,12 @@
             },
             "type": "histfactory_dist"
         }
-    },
-    "domains": {
-        "default_domain": {
+    ],
+    "domains": [
+        {
+            "name": "default_domain",
             "type": "product_domain",
-            "variables": [
+            "axes": [
                 {
                     "max": 5.0,
                     "min": -3.0,
@@ -130,24 +136,30 @@
                 }
             ]
         }
-    },
-    "parameter_points": {
-        "default_values": {
-            "mu": {
-                "value": 1
-            }
+    ],
+    "parameter_points": [
+        {
+            "name": "default_values",
+            "parameters": [
+                {
+                    "name": "mu",
+                    "value": 1
+                }
+            ]
         }
-    },
-    "data": {
-        "observed_channel1": {
-            "variables": {
-                "obs_x_channel1": {
+    ],
+    "data": [
+        {
+            "name": "observed_channel1",
+            "axes": [
+                {
+                    "name": "obs_x_channel1",
                     "nbins": 2,
                     "min": 1,
                     "max": 2
                 }
-            },
+            ],
             "contents": [122, 112]
         }
-    }
+    ]
 }

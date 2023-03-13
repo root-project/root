@@ -35,8 +35,7 @@ TEST(SumW2Error, BatchMode)
    params.snapshot(initialParams);
 
    // these datasets will be filled with a weight that is not unity
-   RooRealVar weight("weight", "weight", 0.5, 0.0, 1.0);
-   RooDataSet dataSetWeighted("dataSetWeighted", "dataSetWeighted", {*dataSet->get(), weight}, "weight");
+   RooDataSet dataSetWeighted("dataSetWeighted", "dataSetWeighted", *dataSet->get(), RooFit::WeightVar());
 
    for (int i = 0; i < dataSet->numEntries(); ++i) {
       dataSetWeighted.add(*dataSet->get(i), 0.5);

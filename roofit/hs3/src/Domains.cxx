@@ -12,6 +12,7 @@
 
 #include "Domains.h"
 
+#include <RooFitHS3/RooJSONFactoryWSTool.h>
 #include <RooNumber.h>
 #include <RooRealVar.h>
 
@@ -36,14 +37,12 @@ void Domains::writeVariable(RooRealVar &var) const
 
 void Domains::readJSON(RooFit::Detail::JSONNode const &node)
 {
-   _map["default_domain"].readJSON(node["default_domain"]);
+   _map["default_domain"].readJSON(*RooJSONFactoryWSTool::findNamedChild(node, "default_domain"));
 }
 void Domains::writeJSON(RooFit::Detail::JSONNode &node) const
 {
-   node.set_map();
-
    for (auto const &domain : _map) {
-      domain.second.writeJSON(node[domain.first]);
+      domain.second.writeJSON(RooJSONFactoryWSTool::appendNamedChild(node, domain.first));
    }
 }
 void Domains::ProductDomain::readVariable(const char *name, double min, double max)
@@ -73,7 +72,7 @@ void Domains::ProductDomain::writeVariable(RooRealVar &var) const
 void Domains::ProductDomain::readJSON(RooFit::Detail::JSONNode const &node)
 {
    // In the future, throw an exception if the type is not product domain
-   auto const &variablesNode = node["variables"];
+   auto const &variablesNode = node["axes"];
    for (size_t i = 0; i < variablesNode.num_children(); ++i) {
       auto const &varNode = variablesNode[i];
       auto &elem = _map[varNode["name"].val()];
@@ -93,7 +92,7 @@ void Domains::ProductDomain::writeJSON(RooFit::Detail::JSONNode &node) const
    node.set_map();
    node["type"] << "product_domain";
 
-   auto &variablesNode = node["variables"];
+   auto &variablesNode = node["axes"];
    variablesNode.set_seq();
 
    for (auto const &item : _map) {

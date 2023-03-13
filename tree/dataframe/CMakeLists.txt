@@ -73,7 +73,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
     ROOT/RDF/RDSColumnReader.hxx
     ROOT/RDF/RColumnReaderBase.hxx
     ROOT/RDF/RCutFlowReport.hxx
-    ROOT/RDF/RDatasetGroup.hxx
     ROOT/RDF/RDatasetSpec.hxx
     ROOT/RDF/RDisplay.hxx
     ROOT/RDF/RFilterBase.hxx
@@ -92,6 +91,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
     ROOT/RDF/RRangeBase.hxx
     ROOT/RDF/RRange.hxx
     ROOT/RDF/RResultMap.hxx
+    ROOT/RDF/RSample.hxx
     ROOT/RDF/RTreeColumnReader.hxx
     ROOT/RDF/RVariation.hxx
     ROOT/RDF/RVariationBase.hxx
@@ -108,7 +108,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
     src/RDefineBase.cxx
     src/RCutFlowReport.cxx
     src/RDataFrame.cxx
-    src/RDatasetGroup.cxx
     src/RDatasetSpec.cxx
     src/RDFActionHelpers.cxx
     src/RDFColumnRegister.cxx
@@ -128,6 +127,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
     src/RLoopManager.cxx
     src/RMetaData.cxx
     src/RRangeBase.cxx
+    src/RSample.cxx
     src/RVariationBase.cxx
     src/RVariationsDescription.cxx
     src/RRootDS.cxx

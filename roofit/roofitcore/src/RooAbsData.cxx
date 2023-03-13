@@ -820,8 +820,7 @@ Roo1DTable* RooAbsData::table(const RooArgSet& catSet, const char* cuts, const c
   string prodName("(") ;
   for(auto * arg : catSet) {
     if (dynamic_cast<RooAbsCategory*>(arg)) {
-      RooAbsCategory* varsArg = dynamic_cast<RooAbsCategory*>(_vars.find(arg->GetName())) ;
-      if (varsArg != 0) catSet2.add(*varsArg) ;
+      if (auto varsArg = dynamic_cast<RooAbsCategory*>(_vars.find(arg->GetName()))) catSet2.add(*varsArg) ;
       else catSet2.add(*arg) ;
       if (prodName.length()>1) {
    prodName += " x " ;
@@ -1345,7 +1344,7 @@ TH1 *RooAbsData::fillHistogram(TH1 *hist, const RooArgList &plotVars, const char
   for(std::size_t index= 0; index < plotVars.size(); index++) {
     const RooAbsArg *var= plotVars.at(index);
     const RooAbsReal *realVar= dynamic_cast<const RooAbsReal*>(var);
-    if(0 == realVar) {
+    if(realVar == nullptr) {
       coutE(InputArguments) << ClassName() << "::" << GetName() << ":fillHistogram: cannot plot variable \"" << var->GetName()
       << "\" of type " << var->ClassName() << endl;
       return nullptr;
@@ -1537,12 +1536,7 @@ SplittingSetup initSplit(RooAbsData const &data, RooAbsCategory const &splitCat)
 
    // Add weight variable explicitly if dataset has weights, but no top-level weight
    // variable exists (can happen with composite datastores)
-   if (data.isWeighted() && !data.IsA()->InheritsFrom(RooDataHist::Class())) {
-      auto newweight = std::make_unique<RooRealVar>("weight", "weight", -1e9, 1e9);
-      setup.subsetVars.add(*newweight);
-      setup.addWeightVar = true;
-      setup.ownedSet.addOwned(std::move(newweight));
-   }
+   setup.addWeightVar = data.isWeighted();
 
    return setup;
 }
@@ -1555,21 +1549,19 @@ TList *splitImpl(RooAbsData const &data, const RooAbsCategory &cloneCat, bool cr
    // If createEmptyDataSets is true, prepopulate with empty sets corresponding to all states
    if (createEmptyDataSets) {
       for (const auto &nameIdx : cloneCat) {
-         RooAbsData *subset = createEmptyData(nameIdx.first.c_str());
-         dsetList->Add((RooAbsArg *)subset);
+         dsetList->Add(createEmptyData(nameIdx.first.c_str()));
       }
    }
 
    // Loop over dataset and copy event to matching subset
-   const bool propWeightSquared = data.isWeighted();
    for (Int_t i = 0; i < data.numEntries(); ++i) {
       const RooArgSet *row = data.get(i);
-      RooAbsData *subset = (RooAbsData *)dsetList->FindObject(cloneCat.getCurrentLabel());
+      auto subset = static_cast<RooAbsData *>(dsetList->FindObject(cloneCat.getCurrentLabel()));
       if (!subset) {
          subset = createEmptyData(cloneCat.getCurrentLabel());
-         dsetList->Add((RooAbsArg *)subset);
+         dsetList->Add(subset);
       }
-      subset->add(*row, data.weight(), propWeightSquared ? data.weightSquared() : 0.0);
+      subset->add(*row, data.weight(), data.weightError());
    }
 
    return dsetList;

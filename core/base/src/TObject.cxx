@@ -886,8 +886,9 @@ void TObject::Streamer(TBuffer &R__b)
    if (R__b.IsReading()) {
       R__b.SkipVersion(); // Version_t R__v = R__b.ReadVersion(); if (R__v) { }
       R__b >> fUniqueID;
+      const UInt_t isonheap = fBits & kIsOnHeap; // Record how this instance was actually allocated.
       R__b >> fBits;
-      fBits |= kIsOnHeap;  // by definition de-serialized object is on heap
+      fBits |= isonheap | kNotDeleted;  // by definition de-serialized object are not yet deleted.
       if (TestBit(kIsReferenced)) {
          //if the object is referenced, we must read its old address
          //and store it in the ProcessID map in gROOT
@@ -908,12 +909,12 @@ void TObject::Streamer(TBuffer &R__b)
       R__b.WriteVersion(TObject::IsA());
       if (!TestBit(kIsReferenced)) {
          R__b << fUniqueID;
-         R__b << fBits;
+         R__b << (fBits & (~kIsOnHeap & ~kNotDeleted));
       } else {
          //if the object is referenced, we must save its address/file_pid
          UInt_t uid = fUniqueID & 0xffffff;
          R__b << uid;
-         R__b << fBits;
+         R__b << (fBits & (~kIsOnHeap & ~kNotDeleted));
          TProcessID *pid = TProcessID::GetProcessWithUID(fUniqueID,this);
          //add uid to the TRefTable if there is one
          TRefTable *table = TRefTable::GetRefTable();

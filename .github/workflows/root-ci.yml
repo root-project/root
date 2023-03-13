@@ -1,5 +1,5 @@
 
-name: 'Rebase and Build'
+name: 'ROOT CI'
 
 on:
   schedule:
@@ -12,7 +12,7 @@ on:
     paths-ignore:
       - 'doc/**'
       - 'documentation/**'
-  
+
   push:
     branches: 
       - 'master'
@@ -70,17 +70,37 @@ jobs:
       contents: read
 
     strategy:
-      matrix:
-        image: ["fedora37", "centos8", "ubuntu18", "ubuntu20", "ubuntu22"]
-        config: ["Release"]
-        #, "Debug", "RelWithDebInfo"]
       fail-fast: false
+      matrix:
+        # Specify image + config + (optional) build option overrides
+        #
+        # Available images: https://github.com/root-project/root-ci-images
+        # Common configs: {Release,Debug,RelWithDebInfo)
+        # Build options: https://root.cern/install/build_from_source/#all-build-options
+        include:
+          - image: fedora37
+            config: Debug
+
+          - image: centos8
+            config: Release
+
+          - image: ubuntu20
+            config: Release
+
+          - image: ubuntu22
+            config: Release
+            overrides: ["testing=Off", "roottest=Off"]
+
+          - image: ubuntu22
+            config: Debug
+            overrides: ["DLLVM_BUILD_TYPE=Debug", "soversion=On"]
 
     runs-on: [self-hosted, linux, x64]
+    name: ${{ matrix.image }} ${{ matrix.config }} ${{ join( matrix.overrides, ', ' ) }}
 
     container:
       image: registry.cern.ch/root-ci/${{ matrix.image }}:buildready
-      options: '--security-opt label=disable'
+      options: '--security-opt label=disable --rm'
       env:
         OS_APPLICATION_CREDENTIAL_ID: '7f5b64a265244623a3a933308569bdba'
         OS_APPLICATION_CREDENTIAL_SECRET: ${{ secrets.OS_APPLICATION_CREDENTIAL_SECRET }}
@@ -105,18 +125,45 @@ jobs:
                ls -la
               '
 
+      - name: Apply option overrides from matrix for this job
+        if: ${{ matrix.overrides != NaN }}
+        env:
+          OVERRIDES: ${{ join( matrix.overrides, ' ') }}
+          FILE: .github/workflows/root-ci-config/buildconfig/${{ matrix.image }}.txt
+        shell: bash
+        run: |
+          set -x
+
+          echo '' >> "$FILE"
+
+          for ENTRY in $OVERRIDES; do
+              KEY=$( echo "$ENTRY" | cut -d '=' -f 1 )
+              
+              # Add entry to file if not exists, otherwise replace
+
+              if grep -q "$KEY=" "$FILE"; then
+                  sed -i "s/$KEY=.*\$/$ENTRY/" "$FILE"
+              else
+                  echo "$ENTRY" >> "$FILE"
+              fi
+          done
+
+          cat "$FILE" || true
+
       - name: Pull Request Build
-        if:   github.event_name == 'pull_request' || github.event_name == 'pull_request_target'
+        if: github.event_name == 'pull_request'
+        env:
+          INCREMENTAL: ${{ !contains(github.event.pull_request.labels.*.name, 'clean build') }}
         run: ".github/workflows/root-ci-config/build_root.py
                     --buildtype      ${{ matrix.config }}
                     --platform       ${{ matrix.image }}
-                    --incremental    true
+                    --incremental    $INCREMENTAL
                     --base_ref       ${{ github.base_ref }}
                     --head_ref       refs/pull/${{ github.event.pull_request.number }}/head
                     --repository     ${{ github.server_url }}/${{ github.repository }}
               "
 
-      - name: Workflow dispatch/call
+      - name: Workflow dispatch
         if:   github.event_name == 'workflow_dispatch'
         run: ".github/workflows/root-ci-config/build_root.py
                     --buildtype      ${{ matrix.config }}
@@ -146,3 +193,19 @@ jobs:
                     --base_ref       ${{ github.ref_name }}
                     --repository     ${{ github.server_url }}/${{ github.repository }}
               "
+        
+      - name: Upload test results
+        uses: actions/upload-artifact@v3
+        with:
+          name:  Test Results ${{ matrix.image }} ${{ matrix.config }}
+          path: /tmp/workspace/build/TestResults.xml
+
+  event_file:
+    name: "Upload Event Payload"
+    runs-on: ubuntu-latest
+    steps:
+    - name: Upload
+      uses: actions/upload-artifact@v3
+      with:
+        name: Event File
+        path: ${{ github.event_path }}

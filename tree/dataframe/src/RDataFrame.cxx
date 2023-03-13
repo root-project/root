@@ -1477,27 +1477,57 @@ namespace Experimental {
 ROOT::RDataFrame FromSpec(const std::string &jsonFile)
 {
    const nlohmann::json fullData = nlohmann::json::parse(std::ifstream(jsonFile));
-   RDatasetSpec spec;
+   if (!fullData.contains("samples") || fullData["samples"].size() == 0) {
+      throw std::runtime_error(
+         R"(The input specification does not contain any samples. Please provide the samples in the specification like:
+{
+   "samples": {
+      "sampleA": {
+         "trees": ["tree1", "tree2"],
+         "files": ["file1.root", "file2.root"],
+         "metadata": {"lumi": 1.0, }
+      },
+      "sampleB": {
+         "trees": ["tree3", "tree4"],
+         "files": ["file3.root", "file4.root"],
+         "metadata": {"lumi": 0.5, }
+      },
+      ...
+    },
+})");
+   }
 
-   for (const auto &groups : fullData["groups"]) {
-      std::string tag = groups["tag"];
+   RDatasetSpec spec;
+   for (const auto &keyValue : fullData["samples"].items()) {
+      const std::string &sampleName = keyValue.key();
+      const auto &sample = keyValue.value();
       // TODO: if requested in https://github.com/root-project/root/issues/11624
       // allow union-like types for trees and files, see: https://github.com/nlohmann/json/discussions/3815
-      std::vector<std::string> trees = groups["trees"];
-      std::vector<std::string> files = groups["files"];
-      RMetaData m;
-      for (const auto &metadata : groups["metadata"].items()) {
-         const auto &val = metadata.value();
-         if (val.is_string())
-            m.Add(metadata.key(), val.get<std::string>());
-         else if (val.is_number_integer())
-            m.Add(metadata.key(), val.get<int>());
-         else if (val.is_number_float())
-            m.Add(metadata.key(), val.get<double>());
-         else
-            throw std::logic_error("The metadata keys can only be of type [string|int|double].");
+      if (!sample.contains("trees")) {
+         throw std::runtime_error("A list of tree names must be provided for sample " + sampleName + ".");
       }
-      spec.AddGroup(RDatasetGroup{tag, trees, files, m});
+      std::vector<std::string> trees = sample["trees"];
+      if (!sample.contains("files")) {
+         throw std::runtime_error("A list of files must be provided for sample " + sampleName + ".");
+      }
+      std::vector<std::string> files = sample["files"];
+      if (!sample.contains("metadata")) {
+         spec.AddSample(RSample{sampleName, trees, files});
+      } else {
+         RMetaData m;
+         for (const auto &metadata : sample["metadata"].items()) {
+            const auto &val = metadata.value();
+            if (val.is_string())
+               m.Add(metadata.key(), val.get<std::string>());
+            else if (val.is_number_integer())
+               m.Add(metadata.key(), val.get<int>());
+            else if (val.is_number_float())
+               m.Add(metadata.key(), val.get<double>());
+            else
+               throw std::logic_error("The metadata keys can only be of type [string|int|double].");
+         }
+         spec.AddSample(RSample{sampleName, trees, files, m});
+      }
    }
    if (fullData.contains("friends")) {
       for (const auto &friends : fullData["friends"].items()) {

@@ -314,7 +314,12 @@ void TObjectElement::SetObject(TObject *obj)
 
 void TObjectElement::ForgetObject() const
 {
-   const_cast<TObjectElement *>(this)->fObj = nullptr;
+   auto elem = const_cast<TObjectElement *>(this);
+   elem->fObj = nullptr;
+   if (elem->fObject) {
+      elem->fObject->Forget();
+      elem->fObject.reset();
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

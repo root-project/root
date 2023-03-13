@@ -74,76 +74,40 @@ INSTANTIATE_TEST_SUITE_P(RooProdPdf, TestProdPdf,
                             return ss.str();
                          });
 
-std::vector<std::vector<RooAbsArg *>> allPossibleSubset(RooAbsCollection const &arr)
-{
-   std::vector<std::vector<RooAbsArg *>> out;
-   std::size_t n = arr.size();
-
-   std::size_t count = std::pow(2, n);
-   for (std::size_t i = 0; i < count; i++) {
-      out.emplace_back();
-      auto &back = out.back();
-      for (std::size_t j = 0; j < n; j++) {
-         if ((i & (1 << j)) != 0) {
-            back.push_back(arr[j]);
-         }
-      }
-   }
-   return out;
-}
-
-// Hash the integral configuration for all possible normalization sets.
-unsigned int hashRooProduct(RooProdPdf const &prod)
-{
-   RooArgSet params;
-   prod.getParameters(nullptr, params);
-   auto subsets = allPossibleSubset(params);
-
-   std::stringstream ss;
-
-   for (auto const &subset : subsets) {
-      // this can't be on the stack, otherwise we will always get the same
-      // address and therefore get wrong cache hits!
-      auto nset = std::make_unique<RooArgSet>(subset.begin(), subset.end());
-      prod.writeCacheToStream(ss, nset.get());
-   }
-
-   std::string s = ss.str();
-   return TString::Hash(s.c_str(), s.size());
-}
-
 TEST(RooProdPdf, TestGetPartIntList)
 {
+   RooHelpers::LocalChangeMsgLevel chmsglvl1{RooFit::ERROR, 0u, RooFit::InputArguments, true};
+   RooHelpers::LocalChangeMsgLevel chmsglvl2{RooFit::WARNING, 0u, RooFit::NumIntegration, true};
+
    // This test checks if RooProdPdf::getPartIntList factorizes the integrals
-   // as expected.
-   // Instead of trying to construct tests for all possible cases by hand,
-   // this test creates a product where the factors have different patters of
-   // overlapping parameters. To make sure all possible cases are covered, we
-   // are using all possible subsets of the parameters one after the other to
-   // create the reference test result.
+   // as expected, for the example of a three dimensional RooProdPdf.
 
-   RooRealVar x{"x", "x", 1., 0, 10};
-   RooRealVar y{"y", "y", 1., 0, 10};
-   RooRealVar z{"z", "z", 1., 0, 10};
+   RooWorkspace ws;
 
-   RooRealVar m1{"m1", "m1", 1., 0, 10};
-   RooRealVar m2{"m2", "m2", 1., 0, 10};
-   RooRealVar m3{"m3", "m3", 1., 0, 10};
+   double a = 10.;
+   double b = 4.;
+   double c = 2.5;
 
-   RooGenericPdf gauss1{"gauss1", "gauss1", "x+m1", {x, m1}};
-   RooGenericPdf gauss2{"gauss2", "gauss2", "x+m2", {x, m2}};
-   RooGenericPdf gauss3{"gauss3", "gauss3", "y+m3", {y, m3}};
-   RooGenericPdf gauss4{"gauss4", "gauss4", "z+m1", {z, m1}};
-   RooGenericPdf gauss5{"gauss5", "gauss5", "x+m1", {x, m1}};
+   auto &x = static_cast<RooRealVar &>(*ws.factory("x[0, 0, " + std::to_string(a) + "]"));
+   auto &y = static_cast<RooRealVar &>(*ws.factory("y[0, 0, " + std::to_string(b) + "]"));
+   auto &z = static_cast<RooRealVar &>(*ws.factory("z[0, 0, " + std::to_string(c) + "]"));
+
+   // Factorize the product in one 1D and one 2D pdf to get a more complicated
+   // and complete test case.
+   ws.factory("Uniform::pdf1({x})");
+   ws.factory("Uniform::pdf2({y, z})");
 
    // Product of all the pdfs.
-   RooProdPdf prod{"prod", "prod", RooArgList{gauss1, gauss2, gauss3, gauss4, gauss5}};
+   auto &prod = static_cast<RooProdPdf &>(*ws.factory("PROD::prod(pdf1, pdf2)"));
 
-   // We hash the string serializations of caches for all possible
-   // normalization sets and compare it to the expected hash.
-   // This value must be updated if the convention for integral names in
-   // RooProdPdf changes.
-   EXPECT_EQ(hashRooProduct(prod), 2448666198);
+   EXPECT_DOUBLE_EQ(prod.getVal({}), 1.0);
+   EXPECT_DOUBLE_EQ(prod.getVal({x}), 1. / a);
+   EXPECT_DOUBLE_EQ(prod.getVal({y}), 1. / b);
+   EXPECT_DOUBLE_EQ(prod.getVal({z}), 1. / c);
+   EXPECT_DOUBLE_EQ(prod.getVal({x, y}), 1. / a / b);
+   EXPECT_DOUBLE_EQ(prod.getVal({x, z}), 1. / a / c);
+   EXPECT_DOUBLE_EQ(prod.getVal({y, z}), 1. / b / c);
+   EXPECT_DOUBLE_EQ(prod.getVal({x, y, z}), 1. / a / b / c);
 }
 
 TEST(RooProdPdf, TestDepsAreCond)
