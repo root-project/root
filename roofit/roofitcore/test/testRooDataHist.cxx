@@ -402,14 +402,20 @@ TEST(RooDataHist, BatchDataAccessWithCategoriesAndFitRange)
    EXPECT_TRUE(std::none_of(weights.begin(), weights.end(), [](double arg) { return arg == 0.; }));
 }
 
-double integrate(RooAbsReal &absReal, const RooArgSet &iset, const RooArgSet &nset, const char *rangeName = 0)
+double integrate(RooAbsReal &absReal, const RooArgSet &iset, const RooArgSet &nset, const char *rangeName = nullptr)
 {
-   return absReal.createIntegral(iset, nset, rangeName)->getVal();
+   return std::unique_ptr<RooAbsReal>
+   {
+      absReal.createIntegral(iset, nset, rangeName)
+      } -> getVal();
 }
 
-double integrate(RooAbsReal &absReal, const RooArgSet &iset, const char *rangeName = 0)
+double integrate(RooAbsReal &absReal, const RooArgSet &iset, const char *rangeName = nullptr)
 {
-   return absReal.createIntegral(iset, rangeName)->getVal();
+   return std::unique_ptr<RooAbsReal>
+   {
+      absReal.createIntegral(iset, rangeName)
+      } -> getVal();
 }
 
 double integrateTH1DAsFunction(TH1D &hist)
@@ -758,3 +764,31 @@ INSTANTIATE_TEST_SUITE_P(RooDataHist, WeightsTest,
                             ss << (std::get<3>(paramInfo.param) ? "UniformBins" : "");
                             return ss.str();
                          });
+
+// Test that splitting a RooDataSet by index category does preserve the sum of
+// weights squared and weight errors.
+TEST(RooDataHist, SplitDataHistWithSumW2)
+{
+   using namespace RooFit;
+
+   RooRealVar x{"x", "x", 0, 0, 10};
+   RooCategory cat{"cat", "cat", {{"sample_0", 0}}};
+   RooRealVar weight{"weight", "weight", 1.0};
+
+   RooDataHist data1{"data", "data", {x, cat}};
+
+   data1.add({x, cat}, 2.0, 0.3);
+
+   std::unique_ptr<TList> dataList{data1.split(cat, true)};
+   auto &data2 = static_cast<RooDataHist &>(*dataList->At(0));
+
+   data1.get(0);
+   data2.get(0);
+   EXPECT_DOUBLE_EQ(data2.weightSquared(), data1.weightSquared());
+   EXPECT_DOUBLE_EQ(data2.weightError(), data1.weightError());
+
+   data1.get(1);
+   data2.get(1);
+   EXPECT_DOUBLE_EQ(data2.weightSquared(), data1.weightSquared());
+   EXPECT_DOUBLE_EQ(data2.weightError(), data1.weightError());
+}

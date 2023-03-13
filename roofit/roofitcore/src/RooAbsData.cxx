@@ -93,6 +93,7 @@ observable snapshots are stored in the dataset.
 #include "RooVectorDataStore.h"
 #include "RooTreeDataStore.h"
 #include "RooDataHist.h"
+#include "RooDataSet.h"
 #include "RooCompositeDataStore.h"
 #include "RooCategory.h"
 #include "RooTrace.h"
@@ -1553,6 +1554,8 @@ TList *splitImpl(RooAbsData const &data, const RooAbsCategory &cloneCat, bool cr
       }
    }
 
+   bool isDataHist = dynamic_cast<RooDataHist const*>(&data);
+
    // Loop over dataset and copy event to matching subset
    for (Int_t i = 0; i < data.numEntries(); ++i) {
       const RooArgSet *row = data.get(i);
@@ -1561,7 +1564,14 @@ TList *splitImpl(RooAbsData const &data, const RooAbsCategory &cloneCat, bool cr
          subset = createEmptyData(cloneCat.getCurrentLabel());
          dsetList->Add(subset);
       }
-      subset->add(*row, data.weight(), data.weightError());
+
+      // For datasets with weight errors or sumW2, the interface to fill
+      // RooDataHist and RooDataSet is not the same.
+      if (isDataHist) {
+         static_cast<RooDataHist*>(subset)->add(*row, data.weight(), data.weightSquared());
+      } else {
+         static_cast<RooDataSet*>(subset)->add(*row, data.weight(), data.weightError());
+      }
    }
 
    return dsetList;
