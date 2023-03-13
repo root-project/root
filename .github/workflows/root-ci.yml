@@ -180,7 +180,7 @@ jobs:
                     --buildtype      ${{ matrix.config }}
                     --platform       ${{ matrix.image }}
                     --incremental    false
-                    --base_ref       ${{ github.base_ref }}
+                    --base_ref       ${{ github.ref_name }}
                     --repository     ${{ github.server_url }}/${{ github.repository }}
               "
 
