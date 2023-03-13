@@ -208,6 +208,7 @@ private:
 
    RNTupleImporter() = default;
 
+   std::unique_ptr<TFile> fSourceFile;
    std::unique_ptr<TTree> fSourceTree;
 
    std::string fDestFileName;
@@ -230,6 +231,8 @@ private:
    std::vector<std::unique_ptr<RImportTransformation>> fImportTransformations;
    std::unique_ptr<RNTupleModel> fModel;
    std::unique_ptr<REntry> fEntry;
+
+   ROOT::Experimental::RResult<void> SetupDestination(std::string_view destFileName);
 
    void ResetSchema();
    /// Sets up the connection from TTree branches to RNTuple fields, including initialization of the memory
