@@ -132,7 +132,8 @@ public:
   RooSpan<const double> getWeightBatch(std::size_t first, std::size_t len, bool sumW2) const override;
 
   /// Add one ore more rows of data
-  void add(const RooArgSet& row, double weight=1.0, double weightError=0.0) override;
+  void add(const RooArgSet& row, double weight, double weightError);
+  void add(const RooArgSet& row, double weight=1.0) override { add(row, weight, 0.0); }
   virtual void add(const RooArgSet& row, double weight, double weightErrorLo, double weightErrorHi);
 
   virtual void addFast(const RooArgSet& row, double weight=1.0, double weightError=0.0);
