@@ -314,6 +314,11 @@ double RooHistFunc::analyticalIntegral(Int_t code, const char* rangeName) const
     return RooHistPdf::analyticalIntegral(code, rangeName, _histObsList, _depList, *_dataHist, true);
 }
 
+bool RooHistFunc::forceAnalyticalInt(const RooAbsArg& dep) const
+{
+   return RooHistPdf::forceAnalyticalInt(_depList, dep);
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return sampling hint for making curves of (projections) of this function
