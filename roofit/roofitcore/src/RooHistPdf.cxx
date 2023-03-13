@@ -261,6 +261,7 @@ double RooHistPdf::totVolume() const
 }
 
 namespace {
+
 bool fullRange(const RooAbsArg& x, const RooAbsArg& y ,const char* range)
 {
   const RooAbsRealLValue *_x = dynamic_cast<const RooAbsRealLValue*>(&x);
@@ -276,15 +277,34 @@ bool fullRange(const RooAbsArg& x, const RooAbsArg& y ,const char* range)
   }
   return (_x->getMin(range) == _y->getMin() && _x->getMax(range) == _y->getMax());
 }
+
+bool okayForAnalytical(RooAbsArg const& obs, RooArgSet const& allVars)
+{
+   auto lobs = dynamic_cast<RooAbsRealLValue const*>(&obs);
+   if(lobs == nullptr) return false;
+
+   bool isOkayForAnalyticalInt = false;
+
+   for(RooAbsArg *var : allVars) {
+      if(obs.dependsOn(*var)) {
+         if(!lobs->isJacobianOK(*var)) return false;
+         isOkayForAnalyticalInt = true;
+      }
+   }
+
+   return isOkayForAnalyticalInt;
 }
+
+} // namespace
 
 
 Int_t RooHistPdf::getAnalyticalIntegral(RooArgSet& allVars,
                                         RooArgSet& analVars,
                                         const char* rangeName,
                                         RooArgSet const& histObsList,
-                                        RooSetProxy const& pdfObsList,
-                                        Int_t intOrder) {
+                                        RooArgSet const& pdfObsList,
+                                        Int_t intOrder)
+{
   // First make list of pdf observables to histogram observables
   // and select only those for which the integral is over the full range
 
@@ -294,7 +314,7 @@ Int_t RooHistPdf::getAnalyticalIntegral(RooArgSet& allVars,
     const auto pa = pdfObsList[n];
     const auto ha = histObsList[n];
 
-    if (allVars.find(*pa)) {
+    if (okayForAnalytical(*pa, allVars)) {
       code |= 2 << n;
       analVars.add(*pa);
       if (fullRange(*pa, *ha, rangeName)) {
@@ -323,7 +343,7 @@ Int_t RooHistPdf::getAnalyticalIntegral(RooArgSet& allVars,
 double RooHistPdf::analyticalIntegral(Int_t code,
                                         const char* rangeName,
                                         RooArgSet const& histObsList,
-                                        RooSetProxy const& pdfObsList,
+                                        RooArgSet const& pdfObsList,
                                         RooDataHist& dataHist,
                                         bool histFuncMode) {
   // Simplest scenario, full-range integration over all dependents
@@ -380,6 +400,30 @@ Int_t RooHistPdf::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars,
 double RooHistPdf::analyticalIntegral(Int_t code, const char* rangeName) const
 {
     return analyticalIntegral(code, rangeName, _histObsList, _pdfObsList, *_dataHist, false);
+}
+
+
+bool RooHistPdf::forceAnalyticalInt(RooArgSet const& pdfObsList, const RooAbsArg& dep)
+{
+   bool isOkayForAnalyticalInt = false;
+
+   for (RooAbsArg * obs : pdfObsList) {
+      if(obs->dependsOn(dep)) {
+         // If the observable doesn't depend linearly on the integration
+         // variable we will not do analytical integration.
+         auto lvalue = dynamic_cast<RooAbsRealLValue const*>(obs);
+         if(!(lvalue && lvalue->isJacobianOK(dep))) return false;
+         isOkayForAnalyticalInt = true;
+      }
+   }
+
+   return isOkayForAnalyticalInt;
+}
+
+
+bool RooHistPdf::forceAnalyticalInt(const RooAbsArg& dep) const
+{
+   return forceAnalyticalInt(_pdfObsList, dep);
 }
 
 
@@ -611,4 +655,3 @@ void RooHistPdf::Streamer(TBuffer &R__b)
       R__b.WriteClassBuffer(RooHistPdf::Class(),this);
    }
 }
-
