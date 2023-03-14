@@ -3102,6 +3102,17 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent, size_t hi
       loadedcl = LoadClassDefault(normalizedName.c_str(),silent);
    } else {
       if (gInterpreter->AutoLoad(normalizedName.c_str(),kTRUE)) {
+         // At this point more infomration has been loaded.  This
+         // information might be pertinent ot the normalization of the name.
+         // For example it might contain or be a typedef for which we don't
+         // have a forward declaration (eg. typedef to instance of class
+         // template with default paramters).  So let's redo the normalization
+         // as the new information (eg typedef in TROOT::GetListOfTypes) might
+         // lead to a different value.
+         {
+            TInterpreter::SuspendAutoLoadingRAII autoloadOff(gInterpreter);
+            TClassEdit::GetNormalizedName(normalizedName, name);
+         }
          loadedcl = LoadClassDefault(normalizedName.c_str(),silent);
       }
       auto e = TEnum::GetEnum(normalizedName.c_str(), TEnum::kNone);
