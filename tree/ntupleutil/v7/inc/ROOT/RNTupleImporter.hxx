@@ -233,7 +233,8 @@ private:
    std::unique_ptr<RNTupleModel> fModel;
    std::unique_ptr<REntry> fEntry;
 
-   ROOT::Experimental::RResult<void> SetupDestination(std::string_view destFileName);
+   static RResult<std::unique_ptr<RNTupleImporter>>
+   InitDestination(std::unique_ptr<RNTupleImporter> importer, std::string_view destFileName);
 
    void ResetSchema();
    /// Sets up the connection from TTree branches to RNTuple fields, including initialization of the memory
