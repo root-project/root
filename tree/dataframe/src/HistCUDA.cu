@@ -1,15 +1,11 @@
 #include <cuda.h>
-#include <stdlib.h>
-#include <iostream>
-#include <random>
-#include <algorithm>
-#include <iterator>
 #include <vector>
-#include <sstream>
+#include <stdio.h>
 #include <string>
 
 #include "HistCUDA.h"
 #include "TError.h"
+#include "TAxis.h" // TODO: this is terrible
 
 
 using namespace std;
@@ -21,119 +17,142 @@ using namespace std;
 inline static void __checkCudaErrors(cudaError_t error, std::string func, std::string file, int line)
 {
    if (error != cudaSuccess) {
-      // Fatal((func + "(), " + file + ":" + std::to_string(line)).c_str(), "%s", cudaGetErrorString(error));
-      fprintf(stderr, "cuda error!! %s %s", std::to_string(line).c_str(), cudaGetErrorString(error));
+      Fatal((func + "(), " + file + ":" + std::to_string(line)).c_str(), "%s", cudaGetErrorString(error));
       throw std::bad_alloc();
    }
 }
 #endif
 
 __rooglobal__ void
-Hist1DKernel(Double_t *histogram, Int_t bin, Double_t *w)
+H1DKernel(Double_t *histogram, Int_t nbins, Int_t *bins, Double_t *w, Size_t bufferSize)
 {
    extern __shared__ Double_t block_histogram[];
-   // int tid = threadIdx.x + blockDim.x * blockIdx.x;
-   // int local_tid = threadIdx.x;
-   // int stride = blockDim.x * gridDim.x;
+   int tid = threadIdx.x + blockDim.x * blockIdx.x;
+   int local_tid = threadIdx.x;
+   int stride = blockDim.x * gridDim.x;
 
    // Initialize a local per-block histogram
-   // if (local_tid < nbins)
-   //    block_histogram[local_tid] = 0;
-   // __syncthreads();
+   if (local_tid < nbins)
+      block_histogram[local_tid] = 0;
+   __syncthreads();
 
    // // Fill local histogram
-   // for (int i = tid; i < numVals; i += stride) {
-   //    int bin = (vals[i] - xlow) / binSize;
-   //    atomicAdd(&block_histogram[bin], 1);
-   // }
-   // __syncthreads();
+   for (int i = tid; i < bufferSize; i += stride) {
+      atomicAdd(&block_histogram[bins[i]], w[i]);
+   }
+   __syncthreads();
 
    // Merge results in global histogram
-   // if (local_tid < nbins)
-   //    atomicAdd(&histogram[local_tid], block_histogram[local_tid]);
-
-   // if (tid == bin) {
-      // printf("adding %f to bin %d on GPU!!\n", w[0], bin);
-      atomicAdd(&histogram[bin], w[0]);
-   // }
+   if (local_tid < nbins) {
+      atomicAdd(&histogram[local_tid], block_histogram[local_tid]);
+      // printf("%d: Add %f to %f\n", local_tid, histogram[local_tid], block_histogram[local_tid]);
+   }
 }
 
-// __rooglobal__ void
-// Hist1DKernel(Double_t *vals, int numVals, UInt_t *histogram, Double_t xlow, int binSize, int nbins)
-// {
-//    extern __shared__ UInt_t block_histogram[];
-//    int tid = threadIdx.x + blockDim.x * blockIdx.x;
-//    int local_tid = threadIdx.x;
-//    int stride = blockDim.x * gridDim.x;
+__rooglobal__ void
+H1DKernelGlobal(Double_t *histogram, Int_t nbins, Int_t *bins, Double_t *w, Size_t bufferSize)
+{
+   int tid = threadIdx.x + blockDim.x * blockIdx.x;
+   int stride = blockDim.x * gridDim.x;
 
-//    // Initialize a local per-block histogram
-   // if (local_tid < nbins)
-   //    block_histogram[local_tid] = 0;
-   // __syncthreads();
-
-//    // Fill local histogram
-//    for (int i = tid; i < numVals; i += stride) {
-//       int bin = (vals[i] - xlow) / binSize;
-//       atomicAdd(&block_histogram[bin], 1);
-//    }
-//    __syncthreads();
-
-//    // Merge results in global histogram
-//    if (local_tid < nbins)
-//       atomicAdd(&histogram[local_tid], block_histogram[local_tid]);
-// }
+   // Fill histogram
+   for (int i = tid; i < bufferSize; i += stride) {
+      // printf("%d: add %f to bin %d\n", tid, w[i], bins[i]);
+      atomicAdd(&histogram[bins[i]], w[i]);
+   }
+}
 
 // Default constructor
 HistCUDA::HistCUDA() {
-   deviceHisto = NULL;
    threadBlockSize = 512;
-   nbins = 0;
-   xlow = 0;
+   bufferSize = 10000;
+   deviceHisto = NULL;
+   deviceCells = NULL;
+   deviceWeights = NULL;
+   ncells = 0;
+   fXaxis = NULL;
+   fYaxis = NULL;
 }
 
-HistCUDA::HistCUDA(Int_t _nbins, Double_t _xlow, Double_t _xhigh) {
-   deviceHisto = NULL;
-   deviceW = NULL;
-   threadBlockSize = 512;
-   nbins = _nbins;
-   xlow = _xlow;
-   xhigh = _xhigh;
+// HistCUDA::HistCUDA(Int_t _ncells) : HistCUDA() {
+HistCUDA::HistCUDA(Int_t _ncells, TAxis *_xaxis, TAxis *_yaxis) : HistCUDA() {
+   ncells = _ncells;
+   fXaxis = _xaxis;
+   fYaxis = _yaxis;
 }
 
 // Allocate buffers for histogram on GPU
 void HistCUDA::AllocateH1D()
 {
-   // histogram = (Double_t *)calloc(nbins, sizeof(Double_t));
+   // Allocate histogram on GPU
+   ERRCHECK(cudaMalloc((void **)&deviceHisto, ncells * sizeof(Double_t)));
+   ERRCHECK(cudaMemset(deviceHisto, 0, ncells * sizeof(Double_t)));
 
-   // allocate the vectors on the GPU
-   // ERRCHECK(cudaMalloc((void **)&deviceVals, numVals * sizeof(Double_t)));
-   ERRCHECK(cudaMalloc((void **)&deviceHisto, nbins * sizeof(Double_t)));
-   ERRCHECK(cudaMalloc((void **)&deviceW, sizeof(Double_t)));
+   // Allocate weights array on GPU
+   ERRCHECK(cudaMalloc((void **)&deviceWeights, bufferSize * sizeof(Double_t)));
+
+   // Allocate bins array on GPU
+   ERRCHECK(cudaMalloc((void **)&deviceCells, bufferSize * sizeof(Int_t)));
 
    // copy the original vectors to the GPU
    // ERRCHECK(cudaMemcpy(deviceVals, vals, numVals * sizeof(Double_t), cudaMemcpyHostToDevice));
 }
 
-void HistCUDA::ExecuteCUDAHist1D(Double_t *vals, Int_t numVals)
+void HistCUDA::ExecuteCUDAH1D()
 {
-   // Hist1DKernel<<<numVals / threadBlockSize + 1, threadBlockSize, nbins * sizeof(Double_t)>>>(
-   //    deviceVals, numVals, deviceHisto, xlow, binSize, nbins);
-   // ERRCHECK(cudaGetLastError());
+   Size_t size = fmin(bufferSize, cells.size());
+   // printf("cellsize:%lu buffersize:%f Size:%f nCells:%d\n", cells.size(), bufferSize, size, ncells);
+
+   ERRCHECK(cudaMemcpy(deviceCells, cells.data(), size * sizeof(Int_t), cudaMemcpyHostToDevice));
+   ERRCHECK(cudaMemcpy(deviceWeights, weights.data(), size * sizeof(Double_t), cudaMemcpyHostToDevice));
+
+   H1DKernel<<<size / threadBlockSize + 1, threadBlockSize, ncells * sizeof(Double_t)>>>(deviceHisto, ncells, deviceCells, deviceWeights, size);
+   ERRCHECK(cudaGetLastError());
+
+   cells.clear();
+   weights.clear();
 }
 
 // template <<typename... ValTypes, std::enable_if_t<!Disjunction<IsDataContainer<ValTypes>...>::value, int> = 0>
 void HistCUDA::AddBinCUDA(Int_t bin, Double_t w)
 {
-   // cout << "received in AddBinCUDA: " << bin << "  " << w << endl;
-   ERRCHECK(cudaMemcpy(deviceW, &w, sizeof(Double_t), cudaMemcpyHostToDevice));
-   Hist1DKernel<<<1, 1, nbins * sizeof(Double_t)>>>(deviceHisto, bin, deviceW);
-   ERRCHECK(cudaGetLastError());
+   if (bin < 0) return;
+
+   cells.push_back(bin);
+   weights.push_back(w);
+
+   if (cells.size() == bufferSize) {
+      ExecuteCUDAH1D();
+   }
 }
+
+void HistCUDA::AddBinCUDA(Int_t bin)
+{
+   AddBinCUDA(bin, 1.0);
+}
+
+
+void HistCUDA::AddBinCUDA(Double_t x, Double_t y)
+{
+   Int_t binx, biny, bin;
+   binx = fXaxis->FindBin(x);
+   biny = fYaxis->FindBin(y);
+   if (binx <0 || biny <0) return;
+   bin  = biny*(fXaxis->GetNbins()+2) + binx;
+   AddBinCUDA(bin);
+   return;
+}
+
 
 void HistCUDA::RetrieveResults(Double_t *result)
 {
-   ERRCHECK(cudaMemcpy(result, deviceHisto, nbins * sizeof(Double_t), cudaMemcpyDeviceToHost));
+   // Fill remaning values in the histogram.
+   if (cells.size() > 0) {
+      ExecuteCUDAH1D();
+   }
+
+   ERRCHECK(cudaMemcpy(result, deviceHisto, ncells * sizeof(Double_t), cudaMemcpyDeviceToHost));
    // ERRCHECK(cudaFree(deviceVals));
-   ERRCHECK(cudaFree(deviceHisto));
+   // ERRCHECK(cudaFree(deviceHisto));
 }
 

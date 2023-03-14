@@ -1,3 +1,4 @@
+
 /**
  \file ROOT/RDF/ActionHelpers.hxx
  \ingroup dataframe
@@ -362,16 +363,17 @@ struct has_getxaxis {
 
     static constexpr bool value = decltype(test(std::declval<T>()))::value;
 };
-// to here is temporary stuff
 
 template<class T>
 inline constexpr bool has_getxaxis_v = has_getxaxis<T>::value;
+// to here is temporary stuff
 
 /// The generic Fill helper: it calls Fill on per-thread objects and then Merge to produce a final result.
 /// For one-dimensional histograms, if no axes are specified, RDataFrame uses BufferedFillHelper instead.
 template <typename HIST = Hist_t>
 class R__CLING_PTRCHECK(off) FillHelper : public RActionImpl<FillHelper<HIST>> {
    std::vector<HIST *> fObjects;
+   std::vector<HistCUDA *> fCudaHist; // TODO: where to store this?
 
    template <typename H = HIST, typename = decltype(std::declval<H>().Reset())>
    void ResetIfPossible(H *h)
@@ -482,36 +484,67 @@ class R__CLING_PTRCHECK(off) FillHelper : public RActionImpl<FillHelper<HIST>> {
    }
 
 public:
-   HistCUDA *fCudaHist; // TODO: where to store this?
-
    FillHelper(FillHelper &&) = default;
    FillHelper(const FillHelper &) = delete;
 
-   FillHelper(const std::shared_ptr<HIST> &h, const unsigned int nSlots) : fObjects(nSlots, nullptr)
+   FillHelper(const std::shared_ptr<HIST> &h, const unsigned int nSlots) : fObjects(nSlots, nullptr), fCudaHist(nSlots, nullptr)
    {
       fObjects[0] = h.get();
+      if constexpr(has_getxaxis_v<HIST>) {  // Avoid compilation errors for fObjects that aren't TH1Ds
+         Int_t nbins = fObjects[0]->GetNcells();
+         fCudaHist[0] = new HistCUDA(nbins, fObjects[0]->GetXaxis(), fObjects[0]->GetYaxis());
+         fCudaHist[0]->AllocateH1D();
+         // printf("nbins: %d\n", nbins);
+      }
+
       // Initialize all other slots
       for (unsigned int i = 1; i < nSlots; ++i) {
          fObjects[i] = new HIST(*fObjects[0]);
          UnsetDirectoryIfPossible(fObjects[i]);
-      }
 
-      if constexpr(has_getxaxis_v<HIST>) {  // Avoid compilation errors for fObjects that aren't TH1Ds
-         auto nbins = fObjects[0]->GetXaxis()->GetNbins();
-         auto xlow = fObjects[0]->GetXaxis()->GetXmin();
-         auto xhigh = fObjects[0]->GetXaxis()->GetXmax();
-         fCudaHist = new HistCUDA(nbins, xlow, xhigh);
-         fCudaHist->AllocateH1D();
+         if constexpr(has_getxaxis_v<HIST>) {  // Avoid compilation errors for fObjects that aren't TH1Ds
+            Int_t nbins = fObjects[i]->GetNcells();
+            fCudaHist[i] = new HistCUDA(nbins, fObjects[i]->GetXaxis(), fObjects[i]->GetYaxis());
+            fCudaHist[i]->AllocateH1D();
+         }
       }
    }
 
    void InitTask(TTreeReader *, unsigned int) {}
 
-   // TODO:
-   auto Exec(unsigned int slot, float x, double w)
+   auto Exec(unsigned int slot, Double_t x)
    {
-      // std::cout << "sending over " << x << "  " << w << std::endl;
-      fCudaHist->AddBinCUDA(fObjects[slot]->GetXaxis()->FindBin(x), w);
+      if constexpr(has_getxaxis_v<HIST>) {  // temp fix to avoid compilation errors for fObjects that don't have GetXaxis
+         fCudaHist[slot]->AddBinCUDA(fObjects[slot]->GetXaxis()->FindBin(x));
+      }
+   }
+
+   auto Exec(unsigned int slot, Float_t x, Double_t w)
+   {
+      fCudaHist[slot]->AddBinCUDA(fObjects[slot]->GetXaxis()->FindBin(x), w);
+   }
+
+   auto Exec(unsigned int slot, Double_t x, Double_t y)
+   {
+      // Int_t binx, biny;
+      // TAxis *fXaxis, *fYaxis;
+      // fXaxis = fObjects[slot]->GetXaxis();
+      // fYaxis = fObjects[slot]->GetYaxis();
+      // binx = fXaxis->FindBin(x);
+      // biny = fYaxis->FindBin(y);
+      // auto bin = biny*(fXaxis->GetNbins()+2) + binx;
+      // printf("binx: %d biny:%d bin:%d\n", binx, biny, bin);
+      // fCudaHist[slot]->AddBinCUDA(bin);
+
+      fObjects[slot]->SetEntries(fObjects[slot]->GetEntries() + 1);
+      fCudaHist[slot]->AddBinCUDA(x, y);
+   }
+
+   auto Exec(unsigned int slot, Int_t x)
+   {
+      if constexpr(has_getxaxis_v<HIST>) {  // temp fix to avoid compilation errors for fObjects that don't have GetXaxis
+         fCudaHist[slot]->AddBinCUDA(fObjects[slot]->GetXaxis()->FindBin(x));
+      }
    }
 
    template <typename... ValTypes, std::enable_if_t<!Disjunction<IsDataContainer<ValTypes>...>::value, int> = 0>
@@ -557,8 +590,16 @@ public:
 
    void Initialize() { /* noop */}
 
+   // TODO:
    void Finalize()
    {
+      for (unsigned int i = 0; i < fObjects.size(); ++i) {
+         if constexpr(has_getxaxis_v<HIST>) {  // temp fix to avoid compilation errors for fObjects that don't have GetArray
+            fCudaHist[i]->RetrieveResults(fObjects[i]->GetArray());
+            // printf("%d %d??\n", fObjects[i]->GetArray()->size(), fObjects[i]->GetXaxis()->GetNbins());
+         }
+      }
+
       if (fObjects.size() == 1)
          return;
 

@@ -2,6 +2,8 @@
 #define HIST_CUDA
 
 #include "RtypesCore.h"
+#include "TAxis.h"
+#include <vector>
 
 // TODO: reuse from RioBatchComputeTypes.h.
 #ifdef __CUDACC__
@@ -18,30 +20,41 @@ struct cudaStream_t;
 
 class HistCUDA {
 private:
-   Int_t threadBlockSize;
-   Double_t *deviceHisto;
-   Double_t *deviceW;
-   Double_t *histogram;
-   Int_t nbins;
-   Int_t binSize;
-   Double_t xlow, xhigh;
+   Int_t                  threadBlockSize;
+
+   Double_t              *deviceHisto;      // Pointer to histogram buffer on the GPU.
+   Int_t                  ncells;            // Number of bins(1D)
+
+   Size_t                 bufferSize;       // Number of bins to buffer.
+   std::vector<Int_t>     cells;             // Buffer of bins to fill. TODO: vector or just int*?
+   std::vector<Double_t>  weights;          // Buffer of weigths for each bin.
+   Int_t                 *deviceCells;       // Pointer to array of bins to fill on the GPU.
+   Double_t              *deviceWeights;    // Pointer to array of weights on the GPU.
+
+   TAxis                 *fXaxis, *fYaxis;
 
 public:
    HistCUDA();
 
-   HistCUDA(Int_t _nbins, Double_t _xlow, Double_t _xup);
+   // HistCUDA(Int_t _nbins);
+   HistCUDA(Int_t _ncells, TAxis *_xaxis, TAxis *_yaxis);
 
    void AllocateH1D();
-   void ExecuteCUDAHist1D(Double_t *vals, Int_t nbins);
-   void AddBinCUDA(Int_t bin, Double_t w);
    void RetrieveResults(Double_t *result);
+
+   void AddBinCUDA(Int_t bin, Double_t w);
+   void AddBinCUDA(Int_t bin);
+   void AddBinCUDA(Double_t x, Double_t y);
 
    template <typename... ValTypes>
    // template <typename... ValTypes, std::enable_if_t<std::conjunction<std::is_floating_point<ValTypes>...>::value, bool> = true>
-   void AddBinCUDA( const ValTypes &...x)
+   void AddBinCUDA(const ValTypes &...x)
    {
 
    }
+
+protected:
+   void ExecuteCUDAH1D();
 };
 
 #endif
