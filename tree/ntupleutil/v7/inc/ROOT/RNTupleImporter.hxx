@@ -209,8 +209,7 @@ private:
    RNTupleImporter() = default;
 
    std::unique_ptr<TFile> fSourceFile;
-   std::unique_ptr<TTree> fSourceTree;
-   TTree *fSourceTreePtr;
+   TTree *fSourceTree;
 
    std::string fDestFileName;
    std::string fNTupleName;
