@@ -1473,8 +1473,8 @@ void TRootCanvas::ShowEditor(Bool_t show)
    UInt_t h = GetHeight();
    UInt_t s = fHorizontal1->GetHeight();
 
-   auto lambda_show = [&, this](Bool_t display) {
-      if (display) {
+   auto lambda_show = [&, this]() {
+      if (show) {
          if (!fEditor)
             CreateEditor();
          TVirtualPadEditor *gged = TVirtualPadEditor::GetPadEditor(kFALSE);
@@ -1488,17 +1488,17 @@ void TRootCanvas::ShowEditor(Bool_t show)
          fMainFrame->ShowFrame(fEditorFrame);
          fEditor->Show();
          fViewMenu->CheckEntry(kViewEditor);
-         w = w + e;
+         w += e;
       } else {
          if (!fViewMenu->IsEntryChecked(kViewToolbar) || fToolDock->IsUndocked()) {
             HideFrame(fHorizontal1);
-            h = h - s;
+            h -= s;
          }
          if (fEditor)
             fEditor->Hide();
          fMainFrame->HideFrame(fEditorFrame);
          fViewMenu->UnCheckEntry(kViewEditor);
-         w = w - e;
+         w -= e;
       }
    };
 
@@ -1537,12 +1537,12 @@ void TRootCanvas::ShowEditor(Bool_t show)
          }
          if (show) browser->GetTabLeft()->SetTab("Pad Editor");
       } else {
-         lambda_show(show);
+         lambda_show();
          main->Layout();
       }
    }
    else {
-      lambda_show(show);
+      lambda_show();
    }
 }
 
