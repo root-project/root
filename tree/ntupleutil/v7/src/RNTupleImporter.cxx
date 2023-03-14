@@ -26,6 +26,7 @@
 #include <TBranch.h>
 #include <TClass.h>
 #include <TDataType.h>
+#include <TKey.h>
 #include <TLeaf.h>
 #include <TLeafC.h>
 #include <TLeafElement.h>
@@ -85,19 +86,62 @@ ROOT::Experimental::RNTupleImporter::Create(std::string_view sourceFileName, std
                                             std::string_view destFileName)
 {
    auto importer = std::unique_ptr<RNTupleImporter>(new RNTupleImporter());
-   importer->fNTupleName = treeName;
+   importer->fNTupleNames[treeName] = treeName;
    importer->fSourceFile = std::unique_ptr<TFile>(TFile::Open(std::string(sourceFileName).c_str()));
    if (!importer->fSourceFile || importer->fSourceFile->IsZombie()) {
       return R__FAIL("cannot open source file " + std::string(sourceFileName));
    }
 
-   importer->fSourceTree = importer->fSourceFile->Get<TTree>(std::string(treeName).c_str());
-   if (!importer->fSourceTree) {
+   auto sourceTree = importer->fSourceFile->Get<TTree>(std::string(treeName).c_str());
+   if (!sourceTree) {
       return R__FAIL("cannot read TTree " + std::string(treeName) + " from " + std::string(sourceFileName));
    }
-
    // If we have IMT enabled, its best use is for parallel page compression
-   importer->fSourceTree->SetImplicitMT(false);
+   sourceTree->SetImplicitMT(false);
+   importer->fSourceTrees.emplace_back(sourceTree);
+
+   auto result = importer->InitDestination(destFileName);
+
+   if (!result)
+      return R__FORWARD_ERROR(result);
+
+   return importer;
+}
+
+ROOT::Experimental::RResult<std::unique_ptr<ROOT::Experimental::RNTupleImporter>>
+ROOT::Experimental::RNTupleImporter::Create(std::string_view sourceFileName, std::string_view destFileName)
+{
+   auto importer = std::unique_ptr<RNTupleImporter>(new RNTupleImporter());
+   importer->fSourceFile = std::unique_ptr<TFile>(TFile::Open(std::string(sourceFileName).c_str()));
+   if (!importer->fSourceFile || importer->fSourceFile->IsZombie()) {
+      return R__FAIL("cannot open source file " + std::string(sourceFileName));
+   }
+
+   auto objLink = importer->fSourceFile->GetListOfKeys()->FirstLink();
+   while (objLink) {
+      auto key = (TKey *)objLink->GetObject();
+      auto keyName = key->GetName();
+      // NOTE: Do we also want to support TNTuples?
+      bool isTree = strcmp(key->GetClassName(), "TTree") == 0;
+      // The actual current cycle number doesn't matter since TFile::Get will automatically get it from the tree name.
+      // We just need to make sure each tree is only added once.
+      bool isFirstOccurrence = key->GetCycle() == 1;
+
+      if (isTree && isFirstOccurrence) {
+         importer->fNTupleNames[keyName] = keyName;
+
+         auto sourceTree = importer->fSourceFile->Get<TTree>(keyName);
+         if (!sourceTree) {
+            return R__FAIL("cannot read TTree " + std::string(keyName) + " from " + std::string(sourceFileName));
+         }
+         // If we have IMT enabled, its best use is for parallel page compression
+         sourceTree->SetImplicitMT(false);
+         importer->fSourceTrees.emplace_back(sourceTree);
+      }
+
+      objLink = objLink->Next();
+   }
+
    auto result = importer->InitDestination(destFileName);
 
    if (!result)
@@ -110,11 +154,12 @@ ROOT::Experimental::RResult<std::unique_ptr<ROOT::Experimental::RNTupleImporter>
 ROOT::Experimental::RNTupleImporter::Create(TTree *sourceTree, std::string_view destFileName)
 {
    auto importer = std::unique_ptr<RNTupleImporter>(new RNTupleImporter());
-   importer->fNTupleName = sourceTree->GetName();
-   importer->fSourceTree = sourceTree;
+   auto treeName = sourceTree->GetName();
+   importer->fNTupleNames[treeName] = treeName;
+   importer->fSourceTrees.emplace_back(sourceTree);
 
    // If we have IMT enabled, its best use is for parallel page compression
-   importer->fSourceTree->SetImplicitMT(false);
+   importer->fSourceTrees.at(0)->SetImplicitMT(false);
    auto result = importer->InitDestination(destFileName);
 
    if (!result)
@@ -152,14 +197,14 @@ void ROOT::Experimental::RNTupleImporter::ResetSchema()
    fEntry = nullptr;
 }
 
-ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::PrepareSchema()
+ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::PrepareSchema(TTree *sourceTree)
 {
    ResetSchema();
 
    // Browse through all branches and their leaves, create corresponding fields and prepare the memory buffers for
    // reading and writing. Usually, reading and writing share the same memory buffer, i.e. the object is read from TTree
    // and written as-is to the RNTuple. There are exceptions, e.g. for leaf count arrays and C strings.
-   for (auto b : TRangeDynCast<TBranch>(*fSourceTree->GetListOfBranches())) {
+   for (auto b : TRangeDynCast<TBranch>(sourceTree->GetListOfBranches())) {
       assert(b);
       const auto firstLeaf = static_cast<TLeaf *>(b->GetListOfLeaves()->First());
       assert(firstLeaf);
@@ -187,7 +232,7 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::PrepareSc
          c.fMaxLength = firstLeaf->GetMaximum();
          c.fCountVal = std::make_unique<Int_t>(); // count leafs are integers
          // Casting to void * makes it work for both Int_t and UInt_t
-         fSourceTree->SetBranchAddress(b->GetName(), static_cast<void *>(c.fCountVal.get()));
+         sourceTree->SetBranchAddress(b->GetName(), static_cast<void *>(c.fCountVal.get()));
          fLeafCountCollections.emplace(firstLeaf->GetName(), std::move(c));
          continue;
       }
@@ -283,9 +328,9 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::PrepareSc
                            std::string(b->GetName()));
          }
          auto ptrBuf = reinterpret_cast<void **>(ib.fBranchBuffer.get());
-         fSourceTree->SetBranchAddress(b->GetName(), ptrBuf, klass, EDataType::kOther_t, true /* isptr*/);
+         sourceTree->SetBranchAddress(b->GetName(), ptrBuf, klass, EDataType::kOther_t, true /* isptr*/);
       } else {
-         fSourceTree->SetBranchAddress(b->GetName(), reinterpret_cast<void *>(ib.fBranchBuffer.get()));
+         sourceTree->SetBranchAddress(b->GetName(), reinterpret_cast<void *>(ib.fBranchBuffer.get()));
       }
 
       // If the TTree branch type and the RNTuple field type match, use the branch read buffer as RNTuple write buffer
@@ -350,12 +395,22 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::PrepareSc
 
 ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::Import()
 {
-   if (fDestFile->FindKey(fNTupleName.c_str()) != nullptr)
-      return R__FAIL("Key '" + fNTupleName + "' already exists in file " + fDestFileName);
+   for (const auto &sourceTree : fSourceTrees) {
+      Import(sourceTree);
+   }
 
-   PrepareSchema();
+   return RResult<void>::Success();
+}
 
-   auto sink = std::make_unique<Detail::RPageSinkFile>(fNTupleName, *fDestFile, fWriteOptions);
+ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::Import(TTree *sourceTree)
+{
+   std::string ntupleName = fNTupleNames.at(std::string_view(sourceTree->GetName()));
+   if (fDestFile->FindKey(ntupleName.c_str()) != nullptr)
+      return R__FAIL("Key '" + ntupleName + "' already exists in file " + fDestFileName);
+
+   PrepareSchema(sourceTree);
+
+   auto sink = std::make_unique<Detail::RPageSinkFile>(ntupleName, *fDestFile, fWriteOptions);
    sink->GetMetrics().Enable();
    auto ctrZippedBytes = sink->GetMetrics().GetCounter("RPageSinkFile.szWritePayload");
 
@@ -364,14 +419,14 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::Import()
 
    fProgressCallback = fIsQuiet ? nullptr : std::make_unique<RDefaultProgressCallback>();
 
-   auto nEntries = fSourceTree->GetEntries();
+   auto nEntries = sourceTree->GetEntries();
 
    if (fMaxEntries >= 0 && fMaxEntries < nEntries) {
       nEntries = fMaxEntries;
    }
 
    for (decltype(nEntries) i = 0; i < nEntries; ++i) {
-      fSourceTree->GetEntry(i);
+      sourceTree->GetEntry(i);
 
       for (const auto &[_, c] : fLeafCountCollections) {
          for (Int_t l = 0; l < *c.fCountVal; ++l) {
@@ -401,5 +456,16 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::Import()
    if (fProgressCallback)
       fProgressCallback->Finish(ctrZippedBytes->GetValueAsInt(), nEntries);
 
+   return RResult<void>::Success();
+}
+
+ROOT::Experimental::RResult<void>
+ROOT::Experimental::RNTupleImporter::SetNTupleName(std::string_view treeName, const std::string &ntupleName)
+{
+   if (fNTupleNames.find(treeName) == fNTupleNames.end()) {
+      return R__FAIL("Tree '" + std::string(treeName) + "' not present in " + std::string(fSourceFile->GetName()));
+   }
+
+   fNTupleNames[treeName] = ntupleName;
    return RResult<void>::Success();
 }

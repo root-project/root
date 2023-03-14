@@ -209,10 +209,11 @@ private:
    RNTupleImporter() = default;
 
    std::unique_ptr<TFile> fSourceFile;
-   TTree *fSourceTree;
+   std::vector<TTree *> fSourceTrees;
 
+   /// Maps the name of the original TTree to the desired RNTuple name.
+   std::map<std::string_view, std::string> fNTupleNames;
    std::string fDestFileName;
-   std::string fNTupleName;
    std::unique_ptr<TFile> fDestFile;
    RNTupleWriteOptions fWriteOptions;
 
@@ -237,8 +238,10 @@ private:
    void ResetSchema();
    /// Sets up the connection from TTree branches to RNTuple fields, including initialization of the memory
    /// buffers used for reading and writing.
-   RResult<void> PrepareSchema();
+   RResult<void> PrepareSchema(TTree *sourceTree);
    void ReportSchema();
+
+   RResult<void> Import(TTree *sourceTree);
 
 public:
    RNTupleImporter(const RNTupleImporter &other) = delete;
@@ -254,10 +257,14 @@ public:
    /// Directly uses the provided tree and opens the output file for writing (update).
    static RResult<std::unique_ptr<RNTupleImporter>> Create(TTree *sourceTree, std::string_view destFileName);
 
+   /// Imports all TTree objects present in `sourceFile` as RNTuple objects to `destFile`.
+   static RResult<std::unique_ptr<RNTupleImporter>> Create(std::string_view sourceFile, std::string_view destFile);
+
    RNTupleWriteOptions GetWriteOptions() const { return fWriteOptions; }
    void SetWriteOptions(RNTupleWriteOptions options) { fWriteOptions = options; }
-   void SetNTupleName(const std::string &name) { fNTupleName = name; }
-   void SetMaxEntries(std::uint64_t maxEntries) { fMaxEntries = maxEntries; };
+   void SetMaxEntries(std::uint64_t maxEntries) { fMaxEntries = maxEntries; }
+
+   ROOT::Experimental::RResult<void> SetNTupleName(std::string_view treeName, const std::string &ntupleName);
 
    /// Whether or not information and progress is printed to stdout.
    void SetIsQuiet(bool value) { fIsQuiet = value; }

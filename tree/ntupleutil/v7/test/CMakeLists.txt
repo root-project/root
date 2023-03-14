@@ -19,5 +19,5 @@ if(MSVC)
                                      ${CMAKE_CURRENT_BINARY_DIR}/libCustomStructUtil.dll)
 endif()
 
-ROOT_ADD_GTEST(ntuple_importer ntuple_importer.cxx LIBRARIES ROOTNTupleUtil CustomStructUtil)
+ROOT_ADD_GTEST(ntuple_importer ntuple_importer.cxx LIBRARIES ROOTNTupleUtil CustomStructUtil Hist)
 ROOT_ADD_GTEST(ntuple_inspector ntuple_inspector.cxx LIBRARIES ROOTNTupleUtil)

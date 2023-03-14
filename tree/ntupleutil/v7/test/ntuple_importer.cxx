@@ -3,6 +3,7 @@
 #include <TFile.h>
 #include <TTree.h>
 #include <TChain.h>
+#include <TH1.h>
 
 #include <cstdio>
 #include <string>
@@ -28,16 +29,43 @@ TEST(RNTupleImporter, Empty)
    auto importer = RNTupleImporter::Create(fileGuard.GetPath(), "tree", fileGuard.GetPath()).Unwrap();
    importer->SetIsQuiet(true);
    EXPECT_THROW(importer->Import(), ROOT::Experimental::RException);
-   importer->SetNTupleName("ntuple");
+   importer->SetNTupleName("tree", "ntuple");
    importer->Import();
    auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
    EXPECT_EQ(0U, reader->GetNEntries());
    EXPECT_THROW(importer->Import(), ROOT::Experimental::RException);
 }
 
+TEST(RNTUpleImporter, SetNTupleName)
+{
+   FileRaii treeFileGuard("test_ntuple_importer_set_ntuple_name_tree.root");
+   FileRaii ntupleFileGuard("test_ntuple_importer_set_ntuple_name_ntuple.root");
+   {
+      std::unique_ptr<TFile> file(TFile::Open(treeFileGuard.GetPath().c_str(), "RECREATE"));
+      auto tree = std::make_unique<TTree>("tree", "");
+
+      tree->Write();
+   }
+
+   auto importer = RNTupleImporter::Create(treeFileGuard.GetPath(), "tree", ntupleFileGuard.GetPath()).Unwrap();
+
+   // Base case, we don't touch the name so it should be the same as the tree.
+   importer->SetIsQuiet(true);
+   importer->Import();
+   EXPECT_NO_THROW(RNTupleReader::Open("tree", ntupleFileGuard.GetPath()));
+
+   // Good weather, the tree exists and the imported ntuple should have the desired name.
+   importer->SetNTupleName("tree", "ntuple");
+   importer->Import();
+   EXPECT_NO_THROW(RNTupleReader::Open("ntuple", ntupleFileGuard.GetPath()));
+
+   // Bad weather, trying to set the name of a tree that does not exist should yield an exception.
+   EXPECT_THROW(importer->SetNTupleName("treee", "ntuple"), ROOT::Experimental::RException);
+}
+
 TEST(RNTupleImporter, CreateFromTree)
 {
-   FileRaii fileGuard("test_ntuple_importer_empty.root");
+   FileRaii fileGuard("test_ntuple_create_from_tree.root");
    {
       std::unique_ptr<TFile> file(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
       auto tree = std::make_unique<TTree>("tree", "");
@@ -50,7 +78,7 @@ TEST(RNTupleImporter, CreateFromTree)
    auto importer = RNTupleImporter::Create(tree, fileGuard.GetPath()).Unwrap();
    importer->SetIsQuiet(true);
    EXPECT_THROW(importer->Import(), ROOT::Experimental::RException);
-   importer->SetNTupleName("ntuple");
+   importer->SetNTupleName("tree", "ntuple");
    importer->Import();
    auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
    EXPECT_EQ(0U, reader->GetNEntries());
@@ -88,7 +116,7 @@ TEST(RNTupleImporter, CreateFromChain)
    auto importer = RNTupleImporter::Create(chain, fileGuard1.GetPath()).Unwrap();
    importer->SetIsQuiet(true);
    EXPECT_THROW(importer->Import(), ROOT::Experimental::RException);
-   importer->SetNTupleName("ntuple");
+   importer->SetNTupleName("tree", "ntuple");
    importer->Import();
 
    auto reader = RNTupleReader::Open("ntuple", fileGuard1.GetPath());
@@ -136,7 +164,7 @@ TEST(RNTupleImporter, Simple)
 
    auto importer = RNTupleImporter::Create(fileGuard.GetPath(), "tree", fileGuard.GetPath()).Unwrap();
    importer->SetIsQuiet(true);
-   importer->SetNTupleName("ntuple");
+   importer->SetNTupleName("tree", "ntuple");
    importer->Import();
    auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
    EXPECT_EQ(1U, reader->GetNEntries());
@@ -169,7 +197,7 @@ TEST(RNTupleImporter, FieldName)
 
    auto importer = RNTupleImporter::Create(fileGuard.GetPath(), "tree", fileGuard.GetPath()).Unwrap();
    importer->SetIsQuiet(true);
-   importer->SetNTupleName("ntuple");
+   importer->SetNTupleName("tree", "ntuple");
    importer->Import();
    auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
    EXPECT_EQ(1U, reader->GetNEntries());
@@ -197,7 +225,7 @@ TEST(RNTupleImporter, CString)
 
    auto importer = RNTupleImporter::Create(fileGuard.GetPath(), "tree", fileGuard.GetPath()).Unwrap();
    importer->SetIsQuiet(true);
-   importer->SetNTupleName("ntuple");
+   importer->SetNTupleName("tree", "ntuple");
    importer->Import();
    auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
    EXPECT_EQ(3U, reader->GetNEntries());
@@ -226,7 +254,7 @@ TEST(RNTupleImporter, Leaflist)
 
    auto importer = RNTupleImporter::Create(fileGuard.GetPath(), "tree", fileGuard.GetPath()).Unwrap();
    importer->SetIsQuiet(true);
-   importer->SetNTupleName("ntuple");
+   importer->SetNTupleName("tree", "ntuple");
    importer->Import();
 
    auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
@@ -262,7 +290,7 @@ TEST(RNTupleImporter, FixedSizeArray)
 
    auto importer = RNTupleImporter::Create(fileGuard.GetPath(), "tree", fileGuard.GetPath()).Unwrap();
    importer->SetIsQuiet(true);
-   importer->SetNTupleName("ntuple");
+   importer->SetNTupleName("tree", "ntuple");
    importer->Import();
 
    auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
@@ -331,7 +359,7 @@ TEST(RNTupleImporter, LeafCountArray)
 
    auto importer = RNTupleImporter::Create(fileGuard.GetPath(), "tree", fileGuard.GetPath()).Unwrap();
    importer->SetIsQuiet(true);
-   importer->SetNTupleName("ntuple");
+   importer->SetNTupleName("tree", "ntuple");
    importer->Import();
 
    auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
@@ -420,7 +448,7 @@ TEST(RNTupleImporter, STL)
 
    auto importer = RNTupleImporter::Create(fileGuard.GetPath(), "tree", fileGuard.GetPath()).Unwrap();
    importer->SetIsQuiet(true);
-   importer->SetNTupleName("ntuple");
+   importer->SetNTupleName("tree", "ntuple");
    importer->Import();
    auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
    EXPECT_EQ(1U, reader->GetNEntries());
@@ -461,7 +489,7 @@ TEST(RNTupleImporter, CustomClass)
 
    auto importer = RNTupleImporter::Create(fileGuard.GetPath(), "tree", fileGuard.GetPath()).Unwrap();
    importer->SetIsQuiet(true);
-   importer->SetNTupleName("ntuple");
+   importer->SetNTupleName("tree", "ntuple");
    importer->Import();
 
    auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
@@ -504,7 +532,7 @@ TEST(RNTupleImporter, ComplexClass)
 
       auto importer = RNTupleImporter::Create(fileGuard.GetPath(), "tree", fileGuard.GetPath()).Unwrap();
       importer->SetIsQuiet(true);
-      importer->SetNTupleName("ntuple");
+      importer->SetNTupleName("tree", "ntuple");
       importer->Import();
 
       auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
@@ -546,7 +574,7 @@ TEST(RNTupleImporter, CollectionProxyClass)
 
       auto importer = RNTupleImporter::Create(fileGuard.GetPath(), "tree", fileGuard.GetPath()).Unwrap();
       importer->SetIsQuiet(true);
-      importer->SetNTupleName("ntuple");
+      importer->SetNTupleName("tree", "ntuple");
       importer->Import();
 
       auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
@@ -569,7 +597,7 @@ TEST(RNTUpleImporter, MaxEntries)
       std::unique_ptr<TFile> file(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
       auto tree = std::make_unique<TTree>("tree", "");
       Int_t a = 42;
-      // For single-leaf branches, use branch name, not leaf name
+
       tree->Branch("a", &a);
 
       for (int i = 0; i < 5; ++i) {
@@ -583,7 +611,7 @@ TEST(RNTUpleImporter, MaxEntries)
 
    // Base case, we don't do anything with `SetMaxEntries`.
    importer->SetIsQuiet(true);
-   importer->SetNTupleName("ntuple1");
+   importer->SetNTupleName("tree", "ntuple1");
    importer->Import();
 
    auto reader = RNTupleReader::Open("ntuple1", fileGuard.GetPath());
@@ -591,7 +619,7 @@ TEST(RNTUpleImporter, MaxEntries)
 
    // We only want to import 3 entries, which should happen.
    importer->SetMaxEntries(3);
-   importer->SetNTupleName("ntuple2");
+   importer->SetNTupleName("tree", "ntuple2");
    importer->Import();
 
    reader = RNTupleReader::Open("ntuple2", fileGuard.GetPath());
@@ -599,7 +627,7 @@ TEST(RNTUpleImporter, MaxEntries)
 
    // Now we want to import 15 entries, while the original tree only has 5 entries.
    importer->SetMaxEntries(15);
-   importer->SetNTupleName("ntuple3");
+   importer->SetNTupleName("tree", "ntuple3");
    importer->Import();
 
    reader = RNTupleReader::Open("ntuple3", fileGuard.GetPath());
@@ -607,9 +635,54 @@ TEST(RNTUpleImporter, MaxEntries)
 
    // Negative fMaxEntry values should be ignored.
    importer->SetMaxEntries(-15);
-   importer->SetNTupleName("ntuple4");
+   importer->SetNTupleName("tree", "ntuple4");
    importer->Import();
 
    reader = RNTupleReader::Open("ntuple4", fileGuard.GetPath());
    EXPECT_EQ(5U, reader->GetNEntries());
+}
+
+TEST(RNTUpleImporter, MultipleTrees)
+{
+   FileRaii fileGuardTree("test_ntuple_importer_multiple_trees_tree.root");
+   FileRaii fileGuardNTuple("test_ntuple_importer_multiple_trees_ntuple.root");
+   {
+      std::unique_ptr<TFile> file(TFile::Open(fileGuardTree.GetPath().c_str(), "RECREATE"));
+      auto tree1 = std::make_unique<TTree>("tree1", "");
+      Int_t a = 42;
+      tree1->Branch("a", &a);
+      tree1->Fill();
+      tree1->Write();
+
+      auto tree2 = std::make_unique<TTree>("tree2", "");
+      Int_t b = 43;
+      tree2->Branch("b", &b);
+      tree2->Fill();
+      tree2->Write();
+
+      auto hist = std::make_unique<TH1F>("hist", "hist", 10, 5, 5);
+      hist->Write();
+   }
+
+   auto importer = RNTupleImporter::Create(fileGuardTree.GetPath(), fileGuardNTuple.GetPath()).Unwrap();
+   importer->SetIsQuiet(true);
+
+   importer->SetNTupleName("tree1", "ntuple1");
+   importer->SetNTupleName("tree2", "ntuple2");
+
+   importer->Import();
+
+   auto reader1 = RNTupleReader::Open("ntuple1", fileGuardNTuple.GetPath());
+   auto aView = reader1->GetView<int>("a");
+   EXPECT_EQ(1U, reader1->GetNEntries());
+   EXPECT_EQ(42, aView(0));
+
+   auto reader2 = RNTupleReader::Open("ntuple2", fileGuardNTuple.GetPath());
+   auto bView = reader2->GetView<int>("b");
+   EXPECT_EQ(1U, reader2->GetNEntries());
+   EXPECT_EQ(43, bView(0));
+
+   // Non-TTree objects should not be imported.
+   std::unique_ptr<TFile> file(TFile::Open(fileGuardNTuple.GetPath().c_str()));
+   EXPECT_EQ(NULL, file->Get<TH1F>("hist"));
 }
