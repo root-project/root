@@ -27,18 +27,18 @@
     "distributions": [
         {
             "name": "model_channel1",
+            "axes": [
+                {
+                    "name": "obs_x_channel1",
+                    "max": 2.0,
+                    "min": 1.0,
+                    "nbins": 2
+                }
+            ],
             "samples": [
                 {
                     "data": {
-                        "contents": [20, 10],
-                        "axes": [
-                            {
-                                "name": "obs_x_channel1",
-                                "max": 2.0,
-                                "min": 1.0,
-                                "nbins": 2
-                            }
-                        ]
+                        "contents": [20, 10]
                     },
                     "modifiers": [
                         {
@@ -59,15 +59,7 @@
                 {
                     "data": {
                         "contents": [100, 0],
-                        "errors": [5, 0],
-                        "axes": [
-                            {
-                                "name": "obs_x_channel1",
-                                "max": 2.0,
-                                "min": 1.0,
-                                "nbins": 2
-                            }
-                        ]
+                        "errors": [5, 0]
                     },
                     "modifiers": [
                         {
@@ -88,15 +80,7 @@
                 {
                     "data": {
                         "contents": [0, 100],
-                        "errors": [0, 10],
-                        "axes": [
-                            {
-                                "name": "obs_x_channel1",
-                                "max": 2.0,
-                                "min": 1.0,
-                                "nbins": 2
-                            }
-                        ]
+                        "errors": [0, 10]
                     },
                     "modifiers": [
                         {

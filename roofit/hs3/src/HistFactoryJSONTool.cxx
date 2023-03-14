@@ -25,22 +25,22 @@ using RooFit::Detail::JSONTree;
 
 namespace {
 
-void exportSample(const RooStats::HistFactory::Sample &sample, JSONNode &s)
+void exportSample(const RooStats::HistFactory::Sample &sample, JSONNode &channelNode)
 {
-   const std::vector<std::string> obsnames{"obs_x_" + sample.GetChannelName(), "obs_y_" + sample.GetChannelName(),
-                                           "obs_z_" + sample.GetChannelName()};
+   auto &s = RooJSONFactoryWSTool::appendNamedChild(channelNode["samples"], sample.GetName());
 
-   s.set_map();
-   s["name"] << sample.GetName();
+   std::vector<std::string> obsnames{"obs_x_" + sample.GetChannelName()};
+   int nDim = sample.GetHisto()->GetDimension();
+   if (nDim > 1)
+      obsnames.push_back("obs_y_" + sample.GetChannelName());
+   if (nDim > 2)
+      obsnames.push_back("obs_z_" + sample.GetChannelName());
 
    if (!sample.GetOverallSysList().empty()) {
       auto &modifiers = s["modifiers"];
-      modifiers.set_seq();
       for (const auto &sys : sample.GetOverallSysList()) {
-         auto &node = modifiers.append_child();
-         node.set_map();
+         auto &node = RooJSONFactoryWSTool::appendNamedChild(modifiers, sys.GetName());
          node["type"] << "normsys";
-         node["name"] << sys.GetName();
          auto &data = node["data"];
          data.set_map();
          data["lo"] << sys.GetLow();
@@ -50,28 +50,21 @@ void exportSample(const RooStats::HistFactory::Sample &sample, JSONNode &s)
 
    if (!sample.GetNormFactorList().empty()) {
       auto &modifiers = s["modifiers"];
-      modifiers.set_seq();
       for (const auto &nf : sample.GetNormFactorList()) {
-         auto &node = modifiers.append_child();
-         node.set_map();
-         node["type"] << "normfactor";
-         node["name"] << nf.GetName();
+         RooJSONFactoryWSTool::appendNamedChild(modifiers, nf.GetName())["type"] << "normfactor";
       }
    }
 
    if (!sample.GetHistoSysList().empty()) {
       auto &modifiers = s["modifiers"];
-      modifiers.set_seq();
       for (size_t i = 0; i < sample.GetHistoSysList().size(); ++i) {
          auto &sys = sample.GetHistoSysList()[i];
-         auto &node = modifiers.append_child();
-         node.set_map();
+         auto &node = RooJSONFactoryWSTool::appendNamedChild(modifiers, sys.GetName());
          node["type"] << "histosys";
-         node["name"] << sys.GetName();
          auto &data = node["data"];
          data.set_map();
-         RooJSONFactoryWSTool::exportHistogram(*(sys.GetHistoLow()), data["lo"], obsnames);
-         RooJSONFactoryWSTool::exportHistogram(*(sys.GetHistoHigh()), data["hi"], obsnames);
+         RooJSONFactoryWSTool::exportHistogram(*(sys.GetHistoLow()), data["lo"], obsnames, nullptr, false);
+         RooJSONFactoryWSTool::exportHistogram(*(sys.GetHistoHigh()), data["hi"], obsnames, nullptr, false);
       }
    }
 
@@ -84,10 +77,14 @@ void exportSample(const RooStats::HistFactory::Sample &sample, JSONNode &s)
    }
 
    auto &data = s["data"];
-   RooJSONFactoryWSTool::exportHistogram(*sample.GetHisto(), data, obsnames,
-                                         sample.GetStatError().GetActivate() && sample.GetStatError().GetUseHisto()
-                                            ? sample.GetStatError().GetErrorHist()
-                                            : nullptr);
+   TH1 const *errH = sample.GetStatError().GetActivate() && sample.GetStatError().GetUseHisto()
+                        ? sample.GetStatError().GetErrorHist()
+                        : nullptr;
+
+   if (!channelNode.has_child("axes")) {
+      RooJSONFactoryWSTool::writeObservables(*sample.GetHisto(), channelNode, obsnames);
+   }
+   RooJSONFactoryWSTool::exportHistogram(*sample.GetHisto(), data, obsnames, errH, false);
 }
 
 void exportChannel(const RooStats::HistFactory::Channel &c, JSONNode &ch)
@@ -101,11 +98,8 @@ void exportChannel(const RooStats::HistFactory::Channel &c, JSONNode &ch)
    staterr["relThreshold"] << c.GetStatErrorConfig().GetRelErrorThreshold();
    staterr["constraint"] << RooStats::HistFactory::Constraint::Name(c.GetStatErrorConfig().GetConstraintType());
 
-   auto &samples = ch["samples"];
-   samples.set_seq();
    for (const auto &s : c.GetSamples()) {
-      auto &sample = samples.append_child();
-      exportSample(s, sample);
+      exportSample(s, ch);
    }
 }
 
