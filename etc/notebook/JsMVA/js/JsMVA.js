@@ -16,30 +16,9 @@
 
 (function(factory){
 
-    var JSROOT_source_dir = "https://root.cern/js/7.3.0/";
-
-    var url = "";
-    if (requirejs.s.contexts.hasOwnProperty("_")) {
-        url = requirejs.s.contexts._.config.paths["JsMVA"];
-        if (url.lastIndexOf('JsMVA') == url.length - 5)
-           url = url.slice(0, url.length - 5);
-        else
-           url = url.replace('JsMVA.min', '');
-    }
-    if ((console !== undefined) && (typeof console.log == 'function')) {
-        if (url!=""){
-            console.log("JsMVA source dir: " + url);
-        } else {
-            console.log("JsMVA source dir can't be resolved, requireJS doesn't have context '_', this will be a problem!");
-        }
-    }
-
     require.config({
         paths: {
-            'JsRootCore': JSROOT_source_dir+'build/jsroot',
-            'nn': url+'NeuralNetwork.min',
-            'dtree': url+'DecisionTree.min',
-            'NetworkDesigner': url+'NetworkDesigner.min'
+            'JsRootCore': '/static/build/jsroot'
         }
     });
 
