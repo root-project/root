@@ -820,9 +820,9 @@ double RooRealIntegral::getValV(const RooArgSet* nset) const
 //     return _value ;
 //   }
 
-  if (nset && nset!=_lastNSet) {
-    ((RooAbsReal*) this)->setProxyNormSet(nset) ;
-    _lastNSet = (RooArgSet*) nset ;
+  if (nset && nset->uniqueId().value() != _lastNormSetId) {
+    const_cast<RooRealIntegral*>(this)->setProxyNormSet(nset);
+    _lastNormSetId = nset->uniqueId().value();
   }
 
   if (isValueOrShapeDirtyAndClear()) {

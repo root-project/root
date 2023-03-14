@@ -227,9 +227,9 @@ TString RooAbsReal::getTitle(bool appendUnit) const
 
 double RooAbsReal::getValV(const RooArgSet* nset) const
 {
-  if (nset && nset!=_lastNSet) {
-    ((RooAbsReal*) this)->setProxyNormSet(nset) ;
-    _lastNSet = (RooArgSet*) nset ;
+  if (nset && nset->uniqueId().value() != _lastNormSetId) {
+    const_cast<RooAbsReal*>(this)->setProxyNormSet(nset);
+    _lastNormSetId = nset->uniqueId().value();
   }
 
   if (isValueDirtyAndClear()) {
@@ -263,8 +263,6 @@ RooSpan<const double> RooAbsReal::getValues(RooBatchCompute::RunContext& evalDat
   if (item != evalData.spans.end()) {
     return item->second;
   }
-
-  normSet = normSet ? normSet : _lastNSet;
 
   std::map<RooFit::Detail::DataKey, RooSpan<const double>> dataSpans;
   for (auto const &evalDataItem : evalData.spans) {
@@ -4845,7 +4843,7 @@ void RooAbsReal::checkBatchComputation(const RooBatchCompute::RunContext& evalDa
 bool RooAbsReal::redirectServersHook(const RooAbsCollection & newServerList, bool mustReplaceAll,
                                     bool nameChange, bool isRecursiveStep)
 {
-  _lastNSet = nullptr ;
+  _lastNormSetId = RooFit::UniqueId<RooArgSet>::nullval;
   return RooAbsArg::redirectServersHook(newServerList, mustReplaceAll, nameChange, isRecursiveStep);
 }
 
