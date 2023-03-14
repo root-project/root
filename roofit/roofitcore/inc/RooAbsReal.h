@@ -604,7 +604,7 @@ protected:
   };
 
 
-  mutable RooArgSet* _lastNSet = nullptr; ///<!
+  mutable RooFit::UniqueId<RooArgSet>::Value_t _lastNormSetId = RooFit::UniqueId<RooArgSet>::nullval; ///<!
   static bool _hideOffset ;    ///< Offset hiding flag
 
   ClassDefOverride(RooAbsReal,3) // Abstract real-valued variable
