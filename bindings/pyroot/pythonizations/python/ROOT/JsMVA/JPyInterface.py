@@ -197,7 +197,8 @@ class functions:
 ## Class for creating the output scripts and inserting them to cell output
 class JsDraw:
     ## Base repository
-    __jsMVARepo = "https://root.cern/js/jsmva/latest"
+    #    __jsMVARepo = "https://root.cern/js/jsmva/latest"
+    __jsMVARepo = "/static/mva"
 
     ## String containing the link to JavaScript files
     __jsMVASourceDir = __jsMVARepo + "/js"
@@ -230,7 +231,10 @@ class JsDraw:
     <script type="text/javascript">
         require.config({
             paths: {
-                'JsMVA':'$PATH/JsMVA.min'
+                'JsMVA':'$PATH/JsMVA',
+                'nn': '$PATH/NeuralNetwork',
+                'dtree': '$PATH/DecisionTree',
+                'NetworkDesigner': '$PATH/NetworkDesigner'
             }
         });
     </script>
@@ -259,13 +263,10 @@ jsmva.$funcName('$divid', '$dat');
     ## Inserts initialization codes to notebook
     @staticmethod
     def InitJsMVA():
-        display(
-            HTML(
-                JsDraw.__JsMVAInitCode.substitute(
-                    {"PATH": JsDraw.__jsMVASourceDir, "CSSFile": JsDraw.__jsMVACSSDir + "/TMVAHTMLOutput.min.css"}
-                )
-            )
-        )
+        display(HTML(JsDraw.__JsMVAInitCode.substitute({
+            'PATH': JsDraw.__jsMVASourceDir,
+            'CSSFile': JsDraw.__jsMVACSSDir + '/TMVAHTMLOutput.css'
+        })))
 
     ## Inserts the draw area and drawing JavaScript to output
     # @param obj ROOT object (will be converted to JSON) or JSON string containing the data to be drawed
