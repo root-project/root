@@ -1483,7 +1483,7 @@ void TRootCanvas::ShowEditor(Bool_t show)
          }
          if (!fViewMenu->IsEntryChecked(kViewToolbar) || fToolDock->IsUndocked()) {
             ShowFrame(fHorizontal1);
-            h = h + s;
+            h += s;
          }
          fMainFrame->ShowFrame(fEditorFrame);
          fEditor->Show();
