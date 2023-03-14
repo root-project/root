@@ -429,7 +429,7 @@ void RooJSONFactoryWSTool::writeObservables(const TH1 &h, JSONNode &n, const std
 {
    auto &observables = n["axes"];
    auto &x = appendNamedChild(observables, varnames[0]);
-   writeAxis(x, *(h.GetXaxis()));
+   writeAxis(x, *h.GetXaxis());
    if (h.GetDimension() > 1) {
       auto &y = appendNamedChild(observables, varnames[1]);
       writeAxis(y, *(h.GetYaxis()));
@@ -991,7 +991,7 @@ std::unique_ptr<RooDataHist> RooJSONFactoryWSTool::readBinnedData(const JSONNode
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 // reading binned data
 std::unique_ptr<RooDataHist>
-RooJSONFactoryWSTool::readBinnedData(const JSONNode &n, const std::string &name, RooArgList varlist)
+RooJSONFactoryWSTool::readBinnedData(const JSONNode &n, const std::string &name, RooArgList const &varlist)
 {
    if (!n.has_child("contents"))
       RooJSONFactoryWSTool::error("no contents given");

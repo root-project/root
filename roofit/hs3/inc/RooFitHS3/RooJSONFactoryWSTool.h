@@ -155,7 +155,7 @@ public:
 
    static std::unique_ptr<RooDataHist> readBinnedData(const RooFit::Detail::JSONNode &n, const std::string &namecomp);
    static std::unique_ptr<RooDataHist>
-   readBinnedData(const RooFit::Detail::JSONNode &n, const std::string &namecomp, RooArgList varlist);
+   readBinnedData(const RooFit::Detail::JSONNode &n, const std::string &namecomp, RooArgList const &varlist);
 
    static void
    getObservables(RooWorkspace &ws, const RooFit::Detail::JSONNode &n, const std::string &obsnamecomp, RooArgSet &out);

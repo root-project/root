@@ -458,11 +458,6 @@ public:
 
       std::vector<std::unique_ptr<RooDataHist>> data;
       for (const auto &comp : p["samples"].children()) {
-         if (observables.empty()) {
-            RooJSONFactoryWSTool::getObservables(ws, comp["data"], fprefix, observables);
-            scope.setObservables(observables);
-         }
-
          RooArgSet varlist;
          scope.getObservables(varlist);
          std::unique_ptr<RooDataHist> dh = RooJSONFactoryWSTool::readBinnedData(
@@ -826,15 +821,20 @@ bool tryExportHistFactory(const std::string &pdfname, const std::string chname, 
       }
    }
 
-   auto &samples = elem["samples"];
+   bool observablesWritten = false;
+   auto writeSample = [&observablesWritten, &varnames, &elem](auto const &hist, bool writeErrors) {
+      if (!observablesWritten) {
+         RooJSONFactoryWSTool::writeObservables(*hist.second, elem, varnames);
+         observablesWritten = true;
+      }
+      auto &data = elem["samples"][hist.first]["data"];
+      RooJSONFactoryWSTool::exportHistogram(*hist.second, data, varnames, 0, false, writeErrors);
+   };
+
    for (const auto &hist : nonbb_histograms) {
-      auto &s = samples[hist.first];
-      auto &data = s["data"];
-      RooJSONFactoryWSTool::writeObservables(*hist.second, elem, varnames);
-      RooJSONFactoryWSTool::exportHistogram(*hist.second, data, varnames, 0, false, false);
+      writeSample(hist, false);
    }
    for (const auto &hist : bb_histograms) {
-      auto &s = samples[hist.first];
       for (auto bin : rel_errors) {
          // reverse engineering the correct partial error
          // the (arbitrary) convention used here is that all samples should have the same relative error
@@ -843,9 +843,7 @@ bool tryExportHistFactory(const std::string &pdfname, const std::string chname, 
          const double count = hist.second->GetBinContent(i);
          hist.second->SetBinError(i, relerr_tot * tot_yield[i] / std::sqrt(tot_yield2[i]) * count);
       }
-      auto &data = s["data"];
-      RooJSONFactoryWSTool::writeObservables(*hist.second, elem, varnames);
-      RooJSONFactoryWSTool::exportHistogram(*hist.second, data, varnames, 0, false, true);
+      writeSample(hist, true);
    }
    auto &statError = elem[::Literals::staterror];
    statError.set_map();
