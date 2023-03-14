@@ -210,6 +210,7 @@ private:
 
    std::unique_ptr<TFile> fSourceFile;
    std::unique_ptr<TTree> fSourceTree;
+   TTree *fSourceTreePtr;
 
    std::string fDestFileName;
    std::string fNTupleName;

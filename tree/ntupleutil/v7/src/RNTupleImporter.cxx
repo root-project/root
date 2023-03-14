@@ -94,8 +94,9 @@ ROOT::Experimental::RNTupleImporter::Create(std::string_view sourceFileName, std
    if (!importer->fSourceTree) {
       return R__FAIL("cannot read TTree " + std::string(treeName) + " from " + std::string(sourceFileName));
    }
+   importer->fSourceTreePtr = importer->fSourceTree.get();
    // If we have IMT enabled, its best use is for parallel page compression
-   importer->fSourceTree->SetImplicitMT(false);
+   importer->fSourceTreePtr->SetImplicitMT(false);
 
    importer->SetupDestination(destFileName);
 
@@ -107,10 +108,10 @@ ROOT::Experimental::RNTupleImporter::Create(TTree *sourceTree, std::string_view 
 {
    auto importer = std::unique_ptr<RNTupleImporter>(new RNTupleImporter());
    importer->fNTupleName = sourceTree->GetName();
-   importer->fSourceTree = std::unique_ptr<TTree>(sourceTree);
+   importer->fSourceTreePtr = sourceTree;
 
    // If we have IMT enabled, its best use is for parallel page compression
-   importer->fSourceTree->SetImplicitMT(false);
+   importer->fSourceTreePtr->SetImplicitMT(false);
 
    importer->SetupDestination(destFileName);
 
@@ -153,7 +154,7 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::PrepareSc
    // Browse through all branches and their leaves, create corresponding fields and prepare the memory buffers for
    // reading and writing. Usually, reading and writing share the same memory buffer, i.e. the object is read from TTree
    // and written as-is to the RNTuple. There are exceptions, e.g. for leaf count arrays and C strings.
-   for (auto b : TRangeDynCast<TBranch>(*fSourceTree->GetListOfBranches())) {
+   for (auto b : TRangeDynCast<TBranch>(*fSourceTreePtr->GetListOfBranches())) {
       assert(b);
       const auto firstLeaf = static_cast<TLeaf *>(b->GetListOfLeaves()->First());
       assert(firstLeaf);
@@ -181,7 +182,7 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::PrepareSc
          c.fMaxLength = firstLeaf->GetMaximum();
          c.fCountVal = std::make_unique<Int_t>(); // count leafs are integers
          // Casting to void * makes it work for both Int_t and UInt_t
-         fSourceTree->SetBranchAddress(b->GetName(), static_cast<void *>(c.fCountVal.get()));
+         fSourceTreePtr->SetBranchAddress(b->GetName(), static_cast<void *>(c.fCountVal.get()));
          fLeafCountCollections.emplace(firstLeaf->GetName(), std::move(c));
          continue;
       }
@@ -277,9 +278,9 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::PrepareSc
                            std::string(b->GetName()));
          }
          auto ptrBuf = reinterpret_cast<void **>(ib.fBranchBuffer.get());
-         fSourceTree->SetBranchAddress(b->GetName(), ptrBuf, klass, EDataType::kOther_t, true /* isptr*/);
+         fSourceTreePtr->SetBranchAddress(b->GetName(), ptrBuf, klass, EDataType::kOther_t, true /* isptr*/);
       } else {
-         fSourceTree->SetBranchAddress(b->GetName(), reinterpret_cast<void *>(ib.fBranchBuffer.get()));
+         fSourceTreePtr->SetBranchAddress(b->GetName(), reinterpret_cast<void *>(ib.fBranchBuffer.get()));
       }
 
       // If the TTree branch type and the RNTuple field type match, use the branch read buffer as RNTuple write buffer
@@ -365,7 +366,7 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::Import()
    }
 
    for (decltype(nEntries) i = 0; i < nEntries; ++i) {
-      fSourceTree->GetEntry(i);
+      fSourceTreePtr->GetEntry(i);
 
       for (const auto &[_, c] : fLeafCountCollections) {
          for (Int_t l = 0; l < *c.fCountVal; ++l) {
