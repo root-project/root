@@ -58,7 +58,7 @@ that were deprecated in v6.02/00.
 The `TMath::AreEqualAbs()` compares two numbers for equality within a certain absolute range.
 So far, it would tell you that `inf != inf` if you define `inf` as `std::numeric_limits<double>::infinity()`, which is inconsistent with the regular `==` operator.
 
-This is unexpected, because one would expect that if two numbers are considered exactly equal, they would also be considered equal within any range. 
+This is unexpected, because one would expect that if two numbers are considered exactly equal, they would also be considered equal within any range.
 Therefore, the behavior of `TMath::AreEqualAbs()` was changed to return always `true` if the `==` comparision would return `true`.
 
 ## RooFit Libraries
@@ -103,6 +103,18 @@ RooFit has its internal representation of infinity in `RooNumber::infinity()`, w
 Now, it is defined as `std::numeric_limits<double>::infinity()`, to be consistent with the C++ standard library and other code.
 
 This change also affects the `RooNumber::isInfinite()` function.
+
+### Remove `add(row, weight, weightError)` from RooAbsData interface
+
+It was not good to have this signature in RooAbsData, because the
+implementations in the two derived classes RooDataHist and RooDataSet were
+inconsistent.
+
+The RooDataSet indeed took the weight error as the third argument, but
+the RooDataHist version instead took the sum of weights squared, which
+is equivalent to the squared weight error.
+
+Therefore, the virtual `RooAbsData::add(row, weight, weightError)` function was removed.
 
 ## 2D Graphics Libraries
 
