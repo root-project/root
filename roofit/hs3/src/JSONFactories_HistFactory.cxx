@@ -739,10 +739,10 @@ bool tryExportHistFactory(const std::string &pdfname, const std::string chname, 
             auto &data = mod["data"];
             data.set_map();
             if (auto hf = dynamic_cast<RooHistFunc *>(pip->lowList().at(i))) {
-               RooJSONFactoryWSTool::exportHistogram(*histFunc2TH1(hf), data["lo"], varnames, 0, false, false);
+               RooJSONFactoryWSTool::exportHistogram(*histFunc2TH1(hf), data["lo"], varnames, nullptr, false, false);
             }
             if (auto hf = dynamic_cast<RooHistFunc *>(pip->highList().at(i))) {
-               RooJSONFactoryWSTool::exportHistogram(*histFunc2TH1(hf), data["hi"], varnames, 0, false, false);
+               RooJSONFactoryWSTool::exportHistogram(*histFunc2TH1(hf), data["hi"], varnames, nullptr, false, false);
             }
          }
       }
@@ -822,13 +822,13 @@ bool tryExportHistFactory(const std::string &pdfname, const std::string chname, 
    }
 
    bool observablesWritten = false;
-   auto writeSample = [&observablesWritten, &varnames, &elem](auto const &hist, bool writeErrors) {
+   auto writeSample = [&observablesWritten, &varnames, &elem](auto const &item, bool writeErrors) {
       if (!observablesWritten) {
-         RooJSONFactoryWSTool::writeObservables(*hist.second, elem, varnames);
+         RooJSONFactoryWSTool::writeObservables(*item.second, elem, varnames);
          observablesWritten = true;
       }
-      auto &data = elem["samples"][hist.first]["data"];
-      RooJSONFactoryWSTool::exportHistogram(*hist.second, data, varnames, 0, false, writeErrors);
+      auto &data = elem["samples"][item.first]["data"];
+      RooJSONFactoryWSTool::exportHistogram(*item.second, data, varnames, 0, false, writeErrors);
    };
 
    for (const auto &hist : nonbb_histograms) {

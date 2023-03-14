@@ -609,9 +609,10 @@ JSONNode *RooJSONFactoryWSTool::exportObject(const RooAbsArg *func)
 
    TClass *cl = func->IsA();
 
+   auto &elem = appendNamedChild(collectionNode, name);
+
    auto it = exporters.find(cl);
    if (it != exporters.end()) { // check if we have a specific exporter available
-      auto &elem = appendNamedChild(collectionNode, name);
       for (auto &exp : it->second) {
          if (!exp->exportObject(this, func, elem)) {
             // The exporter might have messed with the content of the node
@@ -624,7 +625,10 @@ JSONNode *RooJSONFactoryWSTool::exportObject(const RooAbsArg *func)
          if (exp->autoExportDependants()) {
             RooJSONFactoryWSTool::exportDependants(func);
          }
-         return &elem;
+         // Exporting the dependants will invalidate the iterator in "elem". So
+         // instead of returning elem, we have to find again the element with
+         // the right name.
+         return const_cast<JSONNode*>(findNamedChild(collectionNode, name));
       }
    }
 
@@ -648,9 +652,6 @@ JSONNode *RooJSONFactoryWSTool::exportObject(const RooAbsArg *func)
       return nullptr;
    }
 
-   RooJSONFactoryWSTool::exportDependants(func);
-
-   auto &elem = appendNamedChild(collectionNode, name);
    elem["type"] << dict->second.type;
 
    size_t nprox = func->numProxies();
@@ -676,7 +677,12 @@ JSONNode *RooJSONFactoryWSTool::exportObject(const RooAbsArg *func)
       }
    }
 
-   return &elem;
+   RooJSONFactoryWSTool::exportDependants(func);
+
+   // Exporting the dependants will invalidate the iterator in "elem". So
+   // instead of returning elem, we have to find again the element with the
+   // right name.
+   return const_cast<JSONNode*>(findNamedChild(collectionNode, name));
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
