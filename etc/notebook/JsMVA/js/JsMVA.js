@@ -16,15 +16,19 @@
 
 (function(factory){
 
-    var JSROOT_source_dir = "https://root.cern/js/5.9.1/scripts/";
+    var JSROOT_source_dir = "https://root.cern/js/7.3.0/";
 
     var url = "";
     if (requirejs.s.contexts.hasOwnProperty("_")) {
-        url = requirejs.s.contexts._.config.paths["JsMVA"].replace("JsMVA.min","");
+        url = requirejs.s.contexts._.config.paths["JsMVA"];
+        if (url.lastIndexOf('JsMVA') == url.length - 5)
+           url = url.slice(0, url.length - 5);
+        else
+           url = url.replace('JsMVA.min', '');
     }
-    if ((console!==undefined) && (typeof console.log == 'function')) {
+    if ((console !== undefined) && (typeof console.log == 'function')) {
         if (url!=""){
-            console.log("JsMVA source dir:" + url.substring(0, url.length-1));
+            console.log("JsMVA source dir: " + url);
         } else {
             console.log("JsMVA source dir can't be resolved, requireJS doesn't have context '_', this will be a problem!");
         }
@@ -32,8 +36,7 @@
 
     require.config({
         paths: {
-            'd3': JSROOT_source_dir+'d3.min',
-            'JsRootCore': JSROOT_source_dir+'JSRootCore.min',
+            'JsRootCore': JSROOT_source_dir+'build/jsroot',
             'nn': url+'NeuralNetwork.min',
             'dtree': url+'DecisionTree.min',
             'NetworkDesigner': url+'NetworkDesigner.min'
@@ -48,17 +51,17 @@
 
     JsMVA.drawTH2 = function(divid, dat_json){
         var obj = JSROOT.parse(dat_json);
-        JSROOT.draw(divid, obj, "colz;PAL50;text");
+        return JSROOT.draw(divid, obj, "colz;PAL50;text");
     };
 
     JsMVA.drawDNNMap = function(divid, dat_json){
         var obj = JSROOT.parse(dat_json);
-        JSROOT.draw(divid, obj, "colz;PAL50");
+        return JSROOT.draw(divid, obj, "colz;PAL50");
     };
 
     JsMVA.draw = function(divid, dat_json){
         var obj = JSROOT.parse(dat_json);
-        JSROOT.draw(divid, obj);
+        return JSROOT.draw(divid, obj);
     };
 
     JsMVA.drawNeuralNetwork = function(divid, dat_json){
@@ -75,65 +78,62 @@
         });
     };
 
-    var drawLabel = function(divid, obj){
-        require(['d3'], function(d3){
-            var csvg = d3.select("#"+divid+">.interactivePlot_Labels")[0][0];
-            if (csvg!=null) return;
-            var div = d3.select("#"+divid).style("position", "relative");
-            var svg = div.append("svg").attr("class", "interactivePlot_Labels")
-                .attr("width", "200px")
-                .attr("height", "50px")
-                .style({"position":"absolute", "top": "8px", "right": "8px"});
-            var attr = {
-                "pos": {"x": 150, "y": 0},
-                "rect": {"width": 10, "height":10},
-                "dy": 20,
-                "padding": 10
-            };
-            canvas = {
-                width:  160,
-                height: 70
-            };
-            var container = svg.append("g").attr("id", "legend");
-            container.selectAll("g")
-                .data(obj.fGraphs.arr)
-                .enter()
-                .append("g")
-                .each(function(d, i){
-                    var g = d3.select(this);
-                    g.append("rect")
-                        .attr("x", canvas.width-attr.pos.x)
-                        .attr("y", attr.pos.y+i*attr.dy)
-                        .attr("width", attr.rect.width)
-                        .attr("height", attr.rect.height)
-                        .style("fill", function(d){return JSROOT.Painter.root_colors[d.fFillColor];});
-                    g.append("text")
-                        .attr("x", canvas.width-attr.pos.x+attr.rect.width+attr.padding)
-                        .attr("y", attr.pos.y+i*attr.dy+attr.rect.height)
-                        .text(function(d){return d.fTitle;})
-                        .style("fill", function(d){return JSROOT.Painter.root_colors[d.fFillColor];});
-                });
-            div.append("svg").attr("width", "55px").attr("height", "20px")
-                .style({"position":"absolute", "bottom": "15px", "right": "40px"})
-                .append("text")
-                .attr("x", "5px")
-                .attr("y", "15px")
-                .text(obj.fGraphs.arr[0].fTitle.indexOf("Error on training set")!=-1 ? "Epoch" : "#tree")
-                .style({"font-size": "16px"});
-        });
+    function drawLabel(divid, obj, objp){
+         var d3_select = JSROOT.d3_select;
+         var csvg = d3_select("#"+divid+">.interactivePlot_Labels")[0][0];
+         if (csvg!=null) return;
+         var div = d3_select("#"+divid).style("position", "relative");
+         var svg = div.append("svg").attr("class", "interactivePlot_Labels")
+             .attr("width", "200px")
+             .attr("height", "50px")
+             .style({"position":"absolute", "top": "8px", "right": "8px"});
+         var attr = {
+             "pos": {"x": 150, "y": 0},
+             "rect": {"width": 10, "height":10},
+             "dy": 20,
+             "padding": 10
+         };
+         var canvas = {
+             width:  160,
+             height: 70
+         };
+         var container = svg.append("g").attr("id", "legend");
+         container.selectAll("g")
+             .data(obj.fGraphs.arr)
+             .enter()
+             .append("g")
+             .each(function(d, i){
+                 var g = d3_select(this);
+                 g.append("rect")
+                     .attr("x", canvas.width-attr.pos.x)
+                     .attr("y", attr.pos.y+i*attr.dy)
+                     .attr("width", attr.rect.width)
+                     .attr("height", attr.rect.height)
+                     .style("fill", function(d){return objp.getColor(d.fFillColor);});
+                 g.append("text")
+                     .attr("x", canvas.width-attr.pos.x+attr.rect.width+attr.padding)
+                     .attr("y", attr.pos.y+i*attr.dy+attr.rect.height)
+                     .text(function(d){return d.fTitle;})
+                     .style("fill", function(d){return objp.getColor(d.fFillColor);});
+             });
+         div.append("svg").attr("width", "55px").attr("height", "20px")
+             .style({"position":"absolute", "bottom": "15px", "right": "40px"})
+             .append("text")
+             .attr("x", "5px")
+             .attr("y", "15px")
+             .text(obj.fGraphs.arr[0].fTitle.indexOf("Error on training set") != -1 ? "Epoch" : "#tree")
+             .style({"font-size": "16px"});
     };
 
 
     JsMVA.drawTrainingTestingErrors = function(divid, dat_json){
         var obj = JSROOT.parse(dat_json);
-        JSROOT.draw(divid, obj);
-        drawLabel(divid, obj);
+        return JSROOT.draw(divid, obj).then(objp => drawLabel(divid, obj, objp));
     };
 
     JsMVA.updateTrainingTestingErrors = function(divid, dat_json){
         var obj = JSROOT.parse(dat_json);
-        JSROOT.redraw(divid, obj);
-        drawLabel(divid, obj);
+        return JSROOT.redraw(divid, obj).then(objp => drawLabel(divid, obj, objp));
     };
 
     JsMVA.NetworkDesigner = function(divid, dat_json){
