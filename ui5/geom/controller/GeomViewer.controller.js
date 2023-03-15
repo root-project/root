@@ -137,6 +137,8 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
          this.geo_painter.activateInBrowser = this.activateInTreeTable.bind(this);
 
+         this.geo_painter.hidePhysicalNode = this.hidePhysicalNode.bind(this);
+
          this.geo_painter.assignClones(this.geo_clones);
       },
 
@@ -481,11 +483,16 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          }
       },
 
-      /** @summary method called from geom painter when specific node need to be activated in the browser
-        * @desc Due to complex indexing in TreeTable it is not trivial to select special node */
+      /** @summary method called from geom painter when specific node need to be activated in the browser */
       activateInTreeTable(itemnames, force) {
          if ((itemnames?.length > 0) && force)
             this.websocket.send('ACTIVATE:' + itemnames[0]);
+      },
+
+      /** @summary Hide physical (seen in graphics) node */
+      hidePhysicalNode(itemnames) {
+         if (itemnames?.length > 0)
+            this.websocket.send('HIDE_ITEMS:' + JSON.stringify(itemnames));
       },
 
       /** @summary when new draw options send from server */
