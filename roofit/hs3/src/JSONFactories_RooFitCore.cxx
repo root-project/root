@@ -298,7 +298,7 @@ class RooRealSumPdfStreamer : public RooFit::JSONIO::Exporter {
 public:
    std::string const &key() const override
    {
-      const static std::string keystring = "sumpdf";
+      const static std::string keystring = "weighted_sum_dist";
       return keystring;
    }
    bool exportObject(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem) const override
@@ -316,7 +316,7 @@ class RooRealSumFuncStreamer : public RooFit::JSONIO::Exporter {
 public:
    std::string const &key() const override
    {
-      const static std::string keystring = "sumfunc";
+      const static std::string keystring = "weighted_sum";
       return keystring;
    }
    bool exportObject(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem) const override
@@ -368,7 +368,7 @@ class RooHistPdfStreamer : public RooFit::JSONIO::Exporter {
 public:
    std::string const &key() const override
    {
-      static const std::string keystring = "histogramPdf";
+      static const std::string keystring = "histogram_dist";
       return keystring;
    }
    bool exportObject(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem) const override
@@ -544,13 +544,13 @@ STATIC_EXECUTE([]() {
 
    registerImporter<RooGenericPdfFactory>("generic_dist", false);
    registerImporter<RooFormulaVarFactory>("generic_function", false);
-   registerImporter<RooBinSamplingPdfFactory>("binsampling", false);
-   registerImporter<RooAddPdfFactory>("sum_dist", false);
+   registerImporter<RooBinSamplingPdfFactory>("binsampling_dist", false);
+   registerImporter<RooAddPdfFactory>("mixture_dist", false);
    registerImporter<RooHistFuncFactory>("histogram", false);
-   registerImporter<RooHistPdfFactory>("histogramPdf", false);
+   registerImporter<RooHistPdfFactory>("histogram_dist", false);
    registerImporter<RooBinWidthFunctionFactory>("binwidth", false);
-   registerImporter<RooRealSumPdfFactory>("sumpdf", false);
-   registerImporter<RooRealSumFuncFactory>("sumfunc", false);
+   registerImporter<RooRealSumPdfFactory>("weighted_sum_dist", false);
+   registerImporter<RooRealSumFuncFactory>("weighted_sum", false);
    registerImporter<RooPolynomialFactory>("polynomial_dist", false);
    registerImporter<RooMultiVarGaussianFactory>("multinormal_dist", false);
 
