@@ -35,14 +35,14 @@
         }
     },
     "ParamHistFunc": {
-        "type": "paramhist",
+        "type": "step",
         "proxies": {
-            "dataVars": "observables",
+            "dataVars": "variables",
             "paramSet": "parameters"
         }
     },
     "RooAddPdf": {
-        "type": "sum_dist",
+        "type": "mixture_dist",
         "proxies": {
             "refCoefNorm": "coefnormset",
             "pdfs": "summands",

@@ -48,10 +48,10 @@
             "summands"
         ]
     },
-    "paramhist": {
+    "step": {
         "class": "ParamHistFunc",
         "arguments": [
-            "observables",
+            "variables",
             "parameters"
         ]
     },
