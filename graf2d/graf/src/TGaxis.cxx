@@ -37,7 +37,6 @@
 #include "snprintf.h"
 
 Int_t   TGaxis::fgMaxDigits = 5;
-
 Float_t TGaxis::fXAxisExpXOffset = 0.;
 Float_t TGaxis::fXAxisExpYOffset = 0.;
 Float_t TGaxis::fYAxisExpXOffset = 0.;
@@ -2154,7 +2153,6 @@ L110:
                   xx = xx + fZAxisExpXOffset;
                   yy = yy + fZAxisExpYOffset;
                }
-
                typolabel = label;
                typolabel.ReplaceAll("-", "#minus");
                textaxis.PaintLatex(gPad->GetX1() + xx*(gPad->GetX2() - gPad->GetX1()),
@@ -2949,7 +2947,6 @@ void TGaxis::SetExponentOffset(Float_t xoff, Float_t yoff, Option_t *axis)
       fZAxisExpXOffset = xoff;
       fZAxisExpYOffset = yoff;
    }
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
