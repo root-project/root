@@ -606,7 +606,12 @@ public:
       high << p["high"];
 
       std::vector<double> low;
-      high << p["low"];
+      low << p["low"];
+
+      if (vars.size() != low.size() || vars.size() != high.size()) {
+         RooJSONFactoryWSTool::error("FlexibleInterpVar '" + name +
+                                     "' has non-matching lengths of 'vars', 'high' and 'low'!");
+      }
 
       auto fip = makeUnique<RooStats::HistFactory::FlexibleInterpVar>(name, vars, nom, low, high);
 
