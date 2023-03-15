@@ -65,7 +65,11 @@ public:
       }
    }
    void setObject(const std::string &name, RooAbsArg *obj) { _objects[name] = obj; }
-   RooAbsArg *getObject(const std::string &name) const { return _objects.at(name); }
+   RooAbsArg *getObject(const std::string &name) const
+   {
+      auto f = _objects.find(name);
+      return f == _objects.end() ? nullptr : f->second;
+   }
 
    void getObservables(RooArgSet &out) const { out.add(_observables.begin(), _observables.end()); }
 
@@ -312,11 +316,15 @@ bool importHistSample(RooJSONFactoryWSTool &tool, RooDataHist &dh, Scope &scope,
    }
 
    std::stack<std::unique_ptr<RooAbsArg>> ownedArgsStack;
-   RooArgSet shapeElems;
-   RooArgSet normElems;
+   RooArgList shapeElems;
+   RooArgList normElems;
+
+   RooArgSet varlist;
+   scope.getObservables(varlist);
 
    auto hf = std::make_unique<RooHistFunc>(("hist_" + nameWithPrefix).c_str(), RooJSONFactoryWSTool::name(p).c_str(),
-                                           *dh.get(), dh);
+                                           varlist, dh);
+
    ownedArgsStack.push(makeUnique<RooBinWidthFunction>(nameWithPrefix + "_binWidth", *hf, true));
    shapeElems.add(*ownedArgsStack.top());
 
@@ -366,13 +374,14 @@ bool importHistSample(RooJSONFactoryWSTool &tool, RooDataHist &dh, Scope &scope,
                                                            : "alpha_" + sysname);
             RooAbsReal *par = ::getNP(ws, parname);
             histo_nps.add(*par);
-            RooArgSet varlist;
-            scope.getObservables(varlist);
-            auto dh_low = RooJSONFactoryWSTool::readBinnedData(p["data"], sysname + "Low_" + nameWithPrefix, varlist);
-            ownedArgsStack.push(makeUnique<RooHistFunc>(sysname + "Low_" + nameWithPrefix, *dh_low->get(), *dh_low));
+            auto &data = mod["data"];
+            ownedArgsStack.push(makeUnique<RooHistFunc>(
+               sysname + "Low_" + nameWithPrefix, varlist,
+               RooJSONFactoryWSTool::readBinnedData(data["lo"], sysname + "Low_" + nameWithPrefix, varlist)));
             histo_low.add(*ownedArgsStack.top());
-            auto dh_high = RooJSONFactoryWSTool::readBinnedData(p["data"], sysname + "High_" + nameWithPrefix, varlist);
-            ownedArgsStack.push(makeUnique<RooHistFunc>(sysname + "High_" + nameWithPrefix, *dh_high->get(), *dh_high));
+            ownedArgsStack.push(makeUnique<RooHistFunc>(
+               sysname + "High_" + nameWithPrefix, varlist,
+               RooJSONFactoryWSTool::readBinnedData(data["hi"], sysname + "High_" + nameWithPrefix, varlist)));
             histo_high.add(*ownedArgsStack.top());
             constraints.add(*getConstraint(ws, sysname, parname));
          } else if (modtype == "shapesys") {
@@ -380,12 +389,9 @@ bool importHistSample(RooJSONFactoryWSTool &tool, RooDataHist &dh, Scope &scope,
             std::string funcName = nameWithPrefix + "_" + sysname + "_ShapeSys";
             RooAbsArg *phf = scope.getObject(funcName);
             if (!phf) {
-               RooArgSet varlist;
-               scope.getObservables(varlist);
                tool.wsImport(*createPHFShapeSys(mod, funcName, tool, constraints, varlist));
-               scope.setObject(funcName, ws.function(funcName));
-               RooJSONFactoryWSTool::error("PHF '" + funcName +
-                                           "' should have been created but cannot be found in scope.");
+               phf = ws.function(funcName);
+               scope.setObject(funcName, phf);
             }
             shapeElems.add(*phf);
          }
@@ -642,9 +648,11 @@ bool tryExportHistFactory(const std::string &pdfname, const std::string chname, 
 {
    if (!sumpdf)
       return false;
+
    for (RooAbsArg *sample : sumpdf->funcList()) {
-      if (!dynamic_cast<RooProduct *>(sample) && !dynamic_cast<RooRealSumPdf *>(sample))
+      if (!dynamic_cast<RooProduct *>(sample) && !dynamic_cast<RooRealSumPdf *>(sample)) {
          return false;
+      }
    }
 
    bool has_poisson_constraints = false;
@@ -672,12 +680,14 @@ bool tryExportHistFactory(const std::string &pdfname, const std::string chname, 
       RooArgSet elems;
       collectElements(elems, func);
       collectElements(elems, coef);
+
       std::unique_ptr<TH1> hist;
       std::vector<ParamHistFunc *> phfs;
-      PiecewiseInterpolation *pip = nullptr;
       std::vector<const RooAbsArg *> norms;
 
       RooStats::HistFactory::FlexibleInterpVar *fip = nullptr;
+      PiecewiseInterpolation *pip = nullptr;
+
       for (RooAbsArg *e : elems) {
          if (auto constVar = dynamic_cast<RooConstVar *>(e)) {
             if (constVar->getVal() == 1.)
@@ -695,8 +705,12 @@ bool tryExportHistFactory(const std::string &pdfname, const std::string chname, 
          } else if (auto phf = dynamic_cast<ParamHistFunc *>(e)) {
             phfs.push_back(phf);
          } else {
-            fip = dynamic_cast<RooStats::HistFactory::FlexibleInterpVar *>(e);
-            pip = dynamic_cast<PiecewiseInterpolation *>(e);
+            if (!fip) {
+               fip = dynamic_cast<RooStats::HistFactory::FlexibleInterpVar *>(e);
+            }
+            if (!pip) {
+               pip = dynamic_cast<PiecewiseInterpolation *>(e);
+            }
          }
       }
       if (pip) {
