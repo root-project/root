@@ -31,11 +31,11 @@ using PackingIntTypes = ::testing::Types<Helper<std::int64_t, ROOT::Experimental
                                          Helper<std::uint32_t, ROOT::Experimental::EColumnType::kSplitInt32>,
                                          Helper<std::int16_t, ROOT::Experimental::EColumnType::kSplitInt16>,
                                          Helper<std::uint16_t, ROOT::Experimental::EColumnType::kSplitInt16>>;
-TYPED_TEST_CASE(PackingInt, PackingIntTypes);
+TYPED_TEST_SUITE(PackingInt, PackingIntTypes);
 
 using PackingRealTypes = ::testing::Types<Helper<double, ROOT::Experimental::EColumnType::kSplitReal64>,
                                           Helper<float, ROOT::Experimental::EColumnType::kSplitReal32>>;
-TYPED_TEST_CASE(PackingReal, PackingRealTypes);
+TYPED_TEST_SUITE(PackingReal, PackingRealTypes);
 
 TEST(Packing, Bitfield)
 {

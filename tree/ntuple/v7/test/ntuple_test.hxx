@@ -34,6 +34,11 @@
 #include "gmock/gmock.h"
 #include "gtest/gtest.h"
 
+// Backward compatibility for gtest version < 1.10.0
+#ifndef TYPED_TEST_SUITE
+#define TYPED_TEST_SUITE TYPED_TEST_CASE
+#endif
+
 #include "CustomStruct.hxx"
 
 #include <array>
