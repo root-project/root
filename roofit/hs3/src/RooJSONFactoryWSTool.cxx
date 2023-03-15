@@ -1217,7 +1217,10 @@ void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
       this->exportData(*d);
    }
    for (auto *snsh : static_range_cast<RooArgSet const *>(_workspace.getSnapshots())) {
-      this->exportVariables(*snsh, appendNamedChild(n["parameter_points"], snsh->GetName())["parameters"]);
+      std::string name(snsh->GetName());
+      if (name != "default_values") {
+         this->exportVariables(*snsh, appendNamedChild(n["parameter_points"], name)["parameters"]);
+      }
    }
    for (const auto &mc : mcs) {
       RooJSONFactoryWSTool::exportObject(mc->GetPdf());
