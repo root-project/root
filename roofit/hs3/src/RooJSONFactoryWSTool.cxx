@@ -307,25 +307,15 @@ void genIndicesHelper(std::vector<std::vector<int>> &combinations, std::vector<i
    }
 }
 
-void importAttributes(RooAbsArg *arg, JSONNode const &rootnode)
+void importAttributes(RooAbsArg *arg, JSONNode const &node)
 {
-   JSONNode const &attributesNode = dereference(rootnode, {"misc", "ROOT_internal", "attributes"}, rootnode);
-
-   // If the attributes node was not found, it will not be a sequence node
-   if (!attributesNode.is_seq())
-      return;
-
-   JSONNode const *node = RooJSONFactoryWSTool::findNamedChild(attributesNode, arg->GetName());
-   if (node == nullptr)
-      return;
-
-   if (node->has_child("dict")) {
-      for (const auto &attr : (*node)["dict"].children()) {
+   if (node.has_child("dict")) {
+      for (const auto &attr : (node)["dict"].children()) {
          arg->setStringAttribute(RooJSONFactoryWSTool::name(attr).c_str(), attr.val().c_str());
       }
    }
-   if (node->has_child("tags")) {
-      for (const auto &attr : (*node)["tags"].children()) {
+   if (node.has_child("tags")) {
+      for (const auto &attr : (node)["tags"].children()) {
          arg->setAttribute(attr.val().c_str());
       }
    }
@@ -628,7 +618,7 @@ JSONNode *RooJSONFactoryWSTool::exportObject(const RooAbsArg *func)
          // Exporting the dependants will invalidate the iterator in "elem". So
          // instead of returning elem, we have to find again the element with
          // the right name.
-         return const_cast<JSONNode*>(findNamedChild(collectionNode, name));
+         return const_cast<JSONNode *>(findNamedChild(collectionNode, name));
       }
    }
 
@@ -682,7 +672,7 @@ JSONNode *RooJSONFactoryWSTool::exportObject(const RooAbsArg *func)
    // Exporting the dependants will invalidate the iterator in "elem". So
    // instead of returning elem, we have to find again the element with the
    // right name.
-   return const_cast<JSONNode*>(findNamedChild(collectionNode, name));
+   return const_cast<JSONNode *>(findNamedChild(collectionNode, name));
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1388,7 +1378,9 @@ void RooJSONFactoryWSTool::importAnalysis(const RooFit::Detail::JSONNode &analys
    RooArgSet nps;
    RooArgSet pois;
    for (auto const &child : analysisNode["pois"].children()) {
-      pois.add(*_workspace.var(child.val()));
+      if (auto var = _workspace.var(child.val())) {
+         pois.add(*var);
+      }
    }
    RooArgSet globs;
    std::unique_ptr<RooArgSet> pdfVars{pdf->getVariables()};
@@ -1461,8 +1453,13 @@ void RooJSONFactoryWSTool::importAllNodes(const RooFit::Detail::JSONNode &n)
    _workspace.loadSnapshot("fromJSON");
 
    // Import attributes
-   for (RooAbsArg *arg : _workspace.components()) {
-      importAttributes(arg, *_rootnodeInput);
+   JSONNode const &attributesNode =
+      dereference(*_rootnodeInput, {"misc", "ROOT_internal", "attributes"}, *_rootnodeInput);
+   if (attributesNode.is_seq()) {
+      for (const auto &elem : attributesNode.children()) {
+         if (RooAbsArg *arg = _workspace.arg(elem["name"].val()))
+            importAttributes(arg, elem);
+      }
    }
 
    _rootnodeInput = nullptr;
