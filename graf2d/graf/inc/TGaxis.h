@@ -50,6 +50,8 @@ protected:
    static Float_t fXAxisExpYOffset; ///<! Exponent Y offset for the X axis
    static Float_t fYAxisExpXOffset; ///<! Exponent X offset for the Y axis
    static Float_t fYAxisExpYOffset; ///<! Exponent Y offset for the Y axis
+   static Float_t fZAxisExpXOffset; ///<! Exponent X offset for the Z axis
+   static Float_t fZAxisExpYOffset; ///<! Exponent Y offset for the Z axis
 
    TGaxis(const TGaxis&);
    TGaxis& operator=(const TGaxis&);
@@ -130,7 +132,7 @@ public:
    void                SetTitleColor(Int_t titlecolor) {SetTextColor(titlecolor);} // *MENU*
    void                SetWmin(Double_t wmin) {fWmin = wmin;}
    void                SetWmax(Double_t wmax) {fWmax = wmax;}
-   static void         SetExponentOffset(Float_t xoff=0., Float_t yoff=0., Option_t *axis="xy");
+   static void         SetExponentOffset(Float_t xoff=0., Float_t yoff=0., Option_t *axis="xyz");
 
    ClassDefOverride(TGaxis,6)  //Graphics axis
 };

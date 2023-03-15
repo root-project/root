@@ -37,10 +37,14 @@
 #include "snprintf.h"
 
 Int_t   TGaxis::fgMaxDigits = 5;
+
 Float_t TGaxis::fXAxisExpXOffset = 0.;
 Float_t TGaxis::fXAxisExpYOffset = 0.;
 Float_t TGaxis::fYAxisExpXOffset = 0.;
 Float_t TGaxis::fYAxisExpYOffset = 0.;
+Float_t TGaxis::fZAxisExpXOffset = 0.;
+Float_t TGaxis::fZAxisExpYOffset = 0.;
+
 const Int_t kHori = BIT(9);
 
 ClassImp(TGaxis);
@@ -2146,6 +2150,11 @@ L110:
                   xx = xx + fYAxisExpXOffset;
                   yy = yy + fYAxisExpYOffset;
                }
+               if (fAxis && !strcmp(fAxis->GetName(),"zaxis")) {
+                  xx = xx + fZAxisExpXOffset;
+                  yy = yy + fZAxisExpYOffset;
+               }
+
                typolabel = label;
                typolabel.ReplaceAll("-", "#minus");
                textaxis.PaintLatex(gPad->GetX1() + xx*(gPad->GetX2() - gPad->GetX1()),
@@ -2936,6 +2945,11 @@ void TGaxis::SetExponentOffset(Float_t xoff, Float_t yoff, Option_t *axis)
       fYAxisExpXOffset = xoff;
       fYAxisExpYOffset = yoff;
    }
+   if (opt.Contains("z")) {
+      fZAxisExpXOffset = xoff;
+      fZAxisExpYOffset = yoff;
+   }
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
