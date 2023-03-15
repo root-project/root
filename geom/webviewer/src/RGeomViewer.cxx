@@ -309,12 +309,22 @@ void RGeomViewer::WebWindowCallback(unsigned connid, const std::string &arg)
       SendGeometry(connid);
 
    } else if (arg.compare(0, 9, "ACTIVATE:") == 0) {
-
       std::string itemname = arg.substr(9);
       if (fWebHierarchy)
          fWebHierarchy->BrowseTo(itemname);
    } else if (arg.compare(0, 11, "INFOACTIVE:") == 0) {
       fInfoActive = (arg.substr(11) == "true");
+   } else if (arg.compare(0, 11, "HIDE_ITEMS:") == 0) {
+      auto items = TBufferJSON::FromJSON<std::vector<std::string>>(arg.substr(11));
+      bool changed = false;
+      if (items)
+         for (auto &itemname : *items)
+            if (fDesc.SetPhysNodeVisibility(itemname, false))
+               changed = true;
+      if (changed) {
+         SendGeometry(connid);
+         fDesc.IssueSignal(this, "NodeVisibility");
+      }
    } else if (arg == "SAVEMACRO") {
       SaveAsMacro("viewer.cxx");
    }

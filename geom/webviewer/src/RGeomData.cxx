@@ -1944,6 +1944,33 @@ bool RGeomDescription::SetPhysNodeVisibility(const std::vector<std::string> &pat
 }
 
 /////////////////////////////////////////////////////////////////////////////////
+/// Set visibility of physical node by itemname
+/// itemname in string with path like "/TOP_1/SUB_2/NODE_3"
+
+bool RGeomDescription::SetPhysNodeVisibility(const std::string &itemname, bool on)
+{
+   std::vector<std::string> path;
+   std::string::size_type p1 = 0;
+
+   while (p1 < itemname.length()) {
+      if (itemname[p1] == '/') {
+         p1++; continue;
+      }
+      auto p = itemname.find("/", p1);
+      if (p == std::string::npos) {
+         path.emplace_back(itemname.substr(p1));
+         p1 = itemname.length();
+      } else {
+         path.emplace_back(itemname.substr(p1, p-p1));
+         p1 = p + 1;
+      }
+   }
+
+   return SetPhysNodeVisibility(path, on);
+}
+
+
+/////////////////////////////////////////////////////////////////////////////////
 /// Check if there special settings for specified physical node
 /// returns -1 if nothing is found
 
