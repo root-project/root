@@ -431,6 +431,8 @@ public:
 
    bool SetPhysNodeVisibility(const std::vector<std::string> &path, bool on = true);
 
+   bool SetPhysNodeVisibility(const std::string &path, bool on = true);
+
    bool ClearPhysNodeVisibility(const std::vector<std::string> &path);
 
    bool ClearAllPhysVisibility();

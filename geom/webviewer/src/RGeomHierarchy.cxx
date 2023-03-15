@@ -144,5 +144,8 @@ void RGeomHierarchy::ProcessSignal(const std::string &kind)
          path = { "__OFF__" }; // just clear highlight
       if (fWebWindow)
          fWebWindow->Send(0, "HIGHL:"s + TBufferJSON::ToJSON(&path).Data());
+   } else if (kind == "NodeVisibility") {
+      // visibility changed from RGeomViewer
+      Update();
    }
 }
