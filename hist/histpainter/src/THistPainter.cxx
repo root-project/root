@@ -238,7 +238,7 @@ using `TH1::GetOption`:
 | "LEGO3"  | Draw a lego plot with hidden surface removal, like LEGO1 but the border lines of each lego-bar are not drawn.|
 | "LEGO4"  | Draw a lego plot with hidden surface removal, like LEGO1 but without the shadow effect on each lego-bar.|
 | "TEXT"   | Draw bin contents as text (format set via `gStyle->SetPaintTextFormat`).|
-| "TEXTnn" | Draw bin contents as text at angle nn (0 < nn < 90). |
+| "TEXTnn" | Draw bin contents as text at angle nn (0 < nn <= 90). |
 | "X+"     | The X-axis is drawn on the top side of the plot. |
 | "Y+"     | The Y-axis is drawn on the right side of the plot. |
 | "MIN0"   | Set minimum value for the Y axis to 0, equivalent to gStyle->SetHistMinimumZero(). |
@@ -1634,7 +1634,7 @@ By default the format `g` is used. This format can be redefined
 by calling `gStyle->SetPaintTextFormat()`.
 
 It is also possible to use `TEXTnn` in order to draw the text with
-the angle `nn` (`0 < nn < 90`).
+the angle `nn` (`0 < nn <= 90`).
 
 For 2D histograms the text is plotted in the center of each non empty cells.
 It is possible to plot empty cells by calling `gStyle->SetHistMinimumZero()`
@@ -2337,7 +2337,7 @@ The following options are supported:
 | "0"      | When used with any COL options, the empty bins are not drawn.|
 | "TEXT"   | Draw bin contents as text (format set via `gStyle->SetPaintTextFormat`).|
 | "TEXTN"  | Draw bin names as text.|
-| "TEXTnn" | Draw bin contents as text at angle nn (0 < nn < 90).|
+| "TEXTnn" | Draw bin contents as text at angle nn (0 < nn <= 90).|
 | "L"      | Draw the bins boundaries as lines. The lines attributes are the TGraphs ones.|
 | "P"      | Draw the bins boundaries as markers. The markers attributes are the TGraphs ones.|
 | "F"      | Draw the bins boundaries as filled polygons.  The filled polygons attributes are the TGraphs ones.|
