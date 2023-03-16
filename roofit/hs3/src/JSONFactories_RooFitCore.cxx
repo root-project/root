@@ -152,15 +152,8 @@ public:
    {
       std::string name(RooJSONFactoryWSTool::name(p));
 
-      if (!p.has_child("pdf")) {
-         RooJSONFactoryWSTool::error("no pdf given in '" + name + "'");
-      }
-      RooAbsPdf *pdf = tool->request<RooAbsPdf>(p["pdf"].val(), name);
-
-      if (!p.has_child("observable")) {
-         RooJSONFactoryWSTool::error("no observable given in '" + name + "'");
-      }
-      RooRealVar *obs = tool->request<RooRealVar>(p["observable"].val(), name);
+      RooAbsPdf *pdf = tool->requestArg<RooAbsPdf>(p, "pdf");
+      RooRealVar *obs = tool->requestArg<RooRealVar>(p, "observable");
 
       if (!pdf->dependsOn(*obs)) {
          pdf->Print("t");
@@ -212,13 +205,10 @@ public:
    bool importPdf(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
    {
       std::string name(RooJSONFactoryWSTool::name(p));
-      if (!p.has_child("x")) {
-         RooJSONFactoryWSTool::error("no x given in '" + name + "'");
-      }
       if (!p.has_child("coefficients")) {
          RooJSONFactoryWSTool::error("no coefficients given in '" + name + "'");
       }
-      RooAbsReal *x = tool->request<RooAbsReal>(p["x"].val(), name);
+      RooAbsReal *x = tool->requestArg<RooAbsReal>(p, "x");
       RooArgList coefs;
       int order = 0;
       int lowestOrder = 0;
@@ -338,12 +328,12 @@ public:
    {
       const RooHistFunc *hf = static_cast<const RooHistFunc *>(func);
       elem["type"] << key();
-      RooArgList vars(*std::unique_ptr<RooArgSet>{hf->getVariables()});
-      std::unique_ptr<TH1> hist{hf->createHistogram(RooJSONFactoryWSTool::concat(&vars))};
+      std::unique_ptr<RooArgSet> vars{hf->getVariables()};
+      std::unique_ptr<TH1> hist{hf->createHistogram(RooJSONFactoryWSTool::concat(vars.get()))};
       if (!hist)
          return false;
       auto &data = elem["data"];
-      RooJSONFactoryWSTool::exportHistogram(*hist, data, RooJSONFactoryWSTool::names(&vars));
+      RooJSONFactoryWSTool::exportHistogram(*hist, data, RooJSONFactoryWSTool::names(*vars));
       return true;
    }
 };
@@ -373,12 +363,12 @@ public:
    {
       const RooHistPdf *hf = static_cast<const RooHistPdf *>(func);
       elem["type"] << key();
-      RooArgList vars(*std::unique_ptr<RooArgSet>{hf->getVariables()});
-      std::unique_ptr<TH1> hist{hf->createHistogram(RooJSONFactoryWSTool::concat(&vars))};
+      std::unique_ptr<RooArgSet> vars{hf->getVariables()};
+      std::unique_ptr<TH1> hist{hf->createHistogram(RooJSONFactoryWSTool::concat(vars.get()))};
       if (!hist)
          return false;
       auto &data = elem["data"];
-      RooJSONFactoryWSTool::exportHistogram(*hist, data, RooJSONFactoryWSTool::names(&vars));
+      RooJSONFactoryWSTool::exportHistogram(*hist, data, RooJSONFactoryWSTool::names(*vars));
       return true;
    }
 };

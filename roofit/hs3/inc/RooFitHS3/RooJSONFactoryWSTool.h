@@ -62,6 +62,16 @@ public:
       throw DependencyMissingError(requestAuthor, objname, T::Class()->GetName());
    }
 
+   template <class T>
+   T *requestArg(const RooFit::Detail::JSONNode &node, const std::string &key)
+   {
+      std::string requestAuthor(RooJSONFactoryWSTool::name(node));
+      if (!node.has_child(key)) {
+         RooJSONFactoryWSTool::error("no \"" + key + "\" given in \"" + requestAuthor + "\"");
+      }
+      return request<T>(node[key].val(), requestAuthor);
+   }
+
    template <class T, class Coll_t>
    Coll_t requestCollection(const RooFit::Detail::JSONNode &node, const std::string &seqName)
    {
@@ -133,17 +143,14 @@ public:
       return text;
    }
    template <class T>
-   static std::vector<std::string> names(const T *items)
+   static std::vector<std::string> names(T const &items)
    {
       // Returns a string being the concatenation of strings in input list <items>
       // (names of objects obtained using GetName()) separated by string <sep>.
       std::vector<std::string> names;
       // iterate over strings in list
-      for (auto it : *items) {
-         if (!it)
-            names.push_back("nullptr");
-         else
-            names.push_back(it->GetName());
+      for (auto it : items) {
+         names.push_back(it ? it->GetName() : "nullptr");
       }
       return names;
    }
