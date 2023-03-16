@@ -1276,6 +1276,10 @@ void RWebWindow::SubmitData(unsigned connid, bool txt, std::string &&data, int c
             std::string fname = fProtocolPrefix;
             fname.append("msg");
             fname.append(std::to_string(fProtocolCnt++));
+            if (chid > 1) {
+               fname.append("_ch");
+               fname.append(std::to_string(chid));
+            }
             fname.append(txt ? ".txt" : ".bin");
 
             std::ofstream ofs(fname);
