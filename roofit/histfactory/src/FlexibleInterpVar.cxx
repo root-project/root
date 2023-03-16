@@ -189,15 +189,15 @@ void FlexibleInterpVar::setInterpCode(RooAbsReal& param, int code){
   int index = _paramList.index(&param);
   if(index<0){
       coutE(InputArguments) << "FlexibleInterpVar::setInterpCode ERROR:  " << param.GetName()
-             << " is not in list" << endl ;
-  } else {
-      coutW(InputArguments) << "FlexibleInterpVar::setInterpCode :  " << param.GetName()
-             << " is now " << code << endl ;
-    _interpCode.at(index) = code;
+                            << " is not in list" << std::endl;
+  } else if(_interpCode.at(index) != code){
+      coutI(InputArguments) << "FlexibleInterpVar::setInterpCode :  " << param.GetName()
+                            << " is now " << code << std::endl;
+      _interpCode.at(index) = code;
+      // GHL: Adding suggestion by Swagato:
+      _logInit = false ;
+      setValueDirty();
   }
-  // GHL: Adding suggestion by Swagato:
-  _logInit = false ;
-  setValueDirty();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
