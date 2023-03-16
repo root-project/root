@@ -351,49 +351,26 @@ inline void writeAxis(JSONNode &bounds, const TAxis &ax)
 // RooWSFactoryTool expression handling
 std::string generate(const RooFit::JSONIO::ImportExpression &ex, const JSONNode &p, RooJSONFactoryWSTool *tool)
 {
-   std::string name(RooJSONFactoryWSTool::name(p));
    std::stringstream expression;
    std::string classname(ex.tclass->GetName());
    size_t colon = classname.find_last_of(":");
-   if (colon < classname.size()) {
-      expression << classname.substr(colon + 1);
-   } else {
-      expression << classname;
-   }
-   expression << "::" << name << "(";
+   expression << (colon < classname.size() ? classname.substr(colon + 1) : classname);
    bool first = true;
    for (auto k : ex.arguments) {
-      if (!first)
-         expression << ",";
+      expression << (first ? "::" + RooJSONFactoryWSTool::name(p) + "(" : ",");
       first = false;
-      if (k == "true") {
-         expression << "1";
-         continue;
-      } else if (k == "false") {
-         expression << "0";
-         continue;
-      } else if (!p.has_child(k)) {
-         std::stringstream err;
-         err << "factory expression for class '" << ex.tclass->GetName() << "', which expects key '" << k
-             << "' missing from input for object '" << name << "', skipping.";
-         RooJSONFactoryWSTool::error(err.str());
-      }
-      if (p[k].is_seq()) {
-         expression << "{";
+      if (k == "true" || k == "false") {
+         expression << (k == "true" ? "1" : "0");
+      } else if (p[k].is_seq()) {
          bool f = true;
-         for (const auto &x : p[k].children()) {
-            if (!f)
-               expression << ",";
+         for (RooAbsArg *arg : tool->requestArgList<RooAbsReal>(p, p[k].key())) {
+            expression << (f ? "{" : ",") << arg->GetName();
             f = false;
-            std::string obj(x.val());
-            tool->request<RooAbsReal>(obj, name);
-            expression << obj;
          }
          expression << "}";
       } else {
-         std::string obj(p[k].val());
-         tool->request<RooAbsReal>(obj, name);
-         expression << obj;
+         tool->requestArg<RooAbsReal>(p, p[k].key());
+         expression << p[k].val();
       }
    }
    expression << ")";
