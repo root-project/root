@@ -98,7 +98,7 @@ ROOT::Experimental::RNTupleImporter::Create(std::string_view sourceFileName, std
 
    // If we have IMT enabled, its best use is for parallel page compression
    importer->fSourceTree->SetImplicitMT(false);
-   importer = InitDestination(std::move(importer), destFileName).Unwrap();
+   importer->InitDestination(destFileName);
 
    return importer;
 }
@@ -112,23 +112,21 @@ ROOT::Experimental::RNTupleImporter::Create(TTree *sourceTree, std::string_view 
 
    // If we have IMT enabled, its best use is for parallel page compression
    importer->fSourceTree->SetImplicitMT(false);
-   importer = InitDestination(std::move(importer), destFileName).Unwrap();
+   importer->InitDestination(destFileName);
 
    return importer;
 }
 
-ROOT::Experimental::RResult<std::unique_ptr<ROOT::Experimental::RNTupleImporter>>
-ROOT::Experimental::RNTupleImporter::InitDestination(std::unique_ptr<RNTupleImporter> importer,
-                                                     std::string_view destFileName)
+ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::InitDestination(std::string_view destFileName)
 {
-   importer->fDestFileName = destFileName;
-   importer->fWriteOptions.SetCompression(kDefaultCompressionSettings);
-   importer->fDestFile = std::unique_ptr<TFile>(TFile::Open(importer->fDestFileName.c_str(), "UPDATE"));
-   if (!importer->fDestFile || importer->fDestFile->IsZombie()) {
-      return R__FAIL("cannot open dest file " + std::string(importer->fDestFileName));
+   fDestFileName = destFileName;
+   fWriteOptions.SetCompression(kDefaultCompressionSettings);
+   fDestFile = std::unique_ptr<TFile>(TFile::Open(fDestFileName.c_str(), "UPDATE"));
+   if (!fDestFile || fDestFile->IsZombie()) {
+      return R__FAIL("cannot open dest file " + std::string(fDestFileName));
    }
 
-   return importer;
+   return RResult<void>::Success();
 }
 
 void ROOT::Experimental::RNTupleImporter::ReportSchema()
