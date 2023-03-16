@@ -1689,9 +1689,8 @@ Begin_Macro(source)
    htext4->SetMarkerSize(1.8);
    htext5->SetMarkerSize(1.8);
    htext5->SetMarkerColor(kRed);
-   htext3->Draw("COL");
    htext4->SetBarOffset(0.2);
-   htext4->Draw("TEXT SAME");
+   htext4->Draw("COL TEXT SAME");
    htext5->SetBarOffset(-0.2);
    htext5->Draw("TEXT SAME");
 }
@@ -4252,6 +4251,21 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
          Hoption.Hist = 1;
       }
    }
+   l = strstr(chopt,"TEXT");
+   if (l) {
+      Int_t angle;
+      if (sscanf(&l[4],"%d",&angle) > 0) {
+         if (angle < 0)  angle=0;
+         if (angle > 90) angle=90;
+         Hoption.Text = 1000+angle;
+      } else {
+         Hoption.Text = 1;
+      }
+      memcpy(l,"    ", 4);
+      l = strstr(chopt,"N");
+      if (l && fH->InheritsFrom(TH2Poly::Class())) Hoption.Text += 3000;
+      Hoption.Scat = 0;
+   }
    l = strstr(chopt,"COLZ");
    if (l) {
       memcpy(l,"    ",4);
@@ -4284,21 +4298,6 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
    l = strstr(chopt,"AXIS"); if (l) { Hoption.Axis   = 1; memcpy(l,"    ",4); }
    l = strstr(chopt,"AXIG"); if (l) { Hoption.Axis   = 2; memcpy(l,"    ",4); }
    l = strstr(chopt,"SCAT"); if (l) { Hoption.Scat   = 1; memcpy(l,"    ",4); }
-   l = strstr(chopt,"TEXT");
-   if (l) {
-      Int_t angle;
-      if (sscanf(&l[4],"%d",&angle) > 0) {
-         if (angle < 0)  angle=0;
-         if (angle > 90) angle=90;
-         Hoption.Text = 1000+angle;
-      } else {
-         Hoption.Text = 1;
-      }
-      memcpy(l,"    ", 4);
-      l = strstr(chopt,"N");
-      if (l && fH->InheritsFrom(TH2Poly::Class())) Hoption.Text += 3000;
-      Hoption.Scat = 0;
-   }
    l = strstr(chopt,"POL");  if (l) { Hoption.System = kPOLAR;       memcpy(l,"   ",3); }
    l = strstr(chopt,"CYL");  if (l) { Hoption.System = kCYLINDRICAL; memcpy(l,"   ",3); }
    l = strstr(chopt,"SPH");  if (l) { Hoption.System = kSPHERICAL;   memcpy(l,"   ",3); }
