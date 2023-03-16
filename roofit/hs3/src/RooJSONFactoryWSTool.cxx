@@ -1199,31 +1199,42 @@ void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
       }
    }
 
+   _rootnodeOutput = &n;
+   // export all datasets
+   std::vector<RooAbsData *> alldata;
+   for (auto &d : _workspace.allData()) {
+      alldata.push_back(d);
+   }
+   std::sort(alldata.begin(), alldata.end(), [](auto l, auto r) { return strcmp(l->GetName(), r->GetName()) < 0; });
+   for (auto &d : alldata) {
+      this->exportData(*d);
+   }
+
+   _rootnodeOutput = &n;
+   // export all toplevel pdfs
+   std::vector<RooAbsPdf *> allpdfs;
+   for (auto &arg : _workspace.allPdfs()) {
+      if (!arg->hasClients()) {
+         if (auto *pdf = dynamic_cast<RooAbsPdf *>(arg)) {
+            allpdfs.push_back(pdf);
+         }
+      }
+   }
+   std::sort(allpdfs.begin(), allpdfs.end(), [](auto l, auto r) { return strcmp(l->GetName(), r->GetName()) < 0; });
+   for (auto &p : allpdfs) {
+      this->exportObject(p);
+   }
+
+   _rootnodeOutput = &n;
    // export all ModelConfig objects and attached Pdfs
    std::vector<RooStats::ModelConfig *> mcs;
-   std::vector<RooAbsPdf *> toplevel;
-   _rootnodeOutput = &n;
    for (TObject *obj : _workspace.allGenericObjects()) {
       if (auto mc = dynamic_cast<RooStats::ModelConfig *>(obj)) {
          mcs.push_back(mc);
          exportModelConfig(n, *mcs.back());
       }
    }
-   for (RooAbsArg *pdf : _workspace.allPdfs()) {
 
-      if (!pdf->hasClients() || pdf->getAttribute("toplevel")) {
-         bool hasMC = false;
-         for (const auto &mc : mcs) {
-            if (mc->GetPdf() == pdf)
-               hasMC = true;
-         }
-         if (!hasMC)
-            toplevel.push_back(static_cast<RooAbsPdf *>(pdf));
-      }
-   }
-   for (auto d : _workspace.allData()) {
-      this->exportData(*d);
-   }
    for (auto *snsh : static_range_cast<RooArgSet const *>(_workspace.getSnapshots())) {
       std::string name(snsh->GetName());
       if (name != "default_values") {
@@ -1232,13 +1243,6 @@ void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
    }
    for (const auto &mc : mcs) {
       RooJSONFactoryWSTool::exportObject(mc->GetPdf());
-   }
-   for (const auto &pdf : toplevel) {
-      auto *pdfNode = RooJSONFactoryWSTool::exportObject(pdf);
-      if (!pdfNode)
-         continue;
-      if (!pdf->getAttribute("toplevel"))
-         append((*pdfNode)["tags"], "toplevel");
    }
    _domains->writeJSON(n["domains"]);
    _domains.reset();
