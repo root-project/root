@@ -117,9 +117,7 @@ public:
       TString formula(p["expression"].val());
       RooArgList dependents;
       for (const auto &d : extract_arguments(formula.Data())) {
-         if (auto arg = dynamic_cast<RooAbsArg *>(tool->workspace()->obj(d))) {
-            dependents.add(*arg);
-         }
+         dependents.add(*tool->request<RooAbsReal>(d, name));
       }
       tool->wsEmplace<RooFormulaVar>(name, formula, dependents);
       return true;
