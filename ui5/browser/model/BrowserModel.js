@@ -202,6 +202,7 @@ sap.ui.define([
                  if (curr.childs[k].name == name) {
                     this.reset_nodes = true;
                     curr.expanded = true;
+                    this.processExpandedList(currpath, 'add');
                     curr = curr.childs[k];
                     find = true;
                     break;
@@ -421,23 +422,30 @@ sap.ui.define([
            let scan = (lvl, elem, path) => {
 
               // create elements with safety margin
-              if ((lvl >= 0) && (nodes !== null) && !nodes[id] && (id >= args.begin - threshold2) && (id < args.end + threshold2)) {
-                 nodes[id] = {
-                    name: elem.name,
-                    path: path.slice(), // make array copy
-                    index: id,
-                    _elem: elem,
-                    isLeaf: !elem.nchilds,
-                    // these are required by list binding, should be eliminated in the future
-                    type: elem.nchilds ? 'folder' : 'file',
-                    level: lvl,
-                    context: this.getContext('/nodes/' + id),
-                    nodeState: {
-                       expanded: !!elem.expanded,
-                       selected: !!elem.selected,
-                       sum: false // ????
-                    }
-                 };
+              if ((lvl >= 0) && (nodes !== null) && (id >= args.begin - threshold2) && (id < args.end + threshold2)) {
+                 if (!nodes[id])
+                    nodes[id] = {
+                       name: elem.name,
+                       path: path.slice(), // make array copy
+                       index: id,
+                       _elem: elem,
+                       isLeaf: !elem.nchilds,
+                       // these are required by list binding, should be eliminated in the future
+                       type: elem.nchilds ? 'folder' : 'file',
+                       level: lvl,
+                       context: this.getContext('/nodes/' + id),
+                       nodeState: {
+                          expanded: !!elem.expanded,
+                          selected: !!elem.selected,
+                          sum: false // ????
+                       }
+                    };
+                 else {
+                    nodes[id].nodeState.expanded = !!elem.expanded;
+                    nodes[id].nodeState.selected = !!elem.selected;
+                 }
+
+                 // always provide nodes attributes
                  if (typeof this.addNodeAttributes == 'function')
                     this.addNodeAttributes(nodes[id], elem);
               }
@@ -482,6 +490,7 @@ sap.ui.define([
 
               let subpath = path.slice(), // make copy to avoid changes in argument
                   subindx = subpath.push('') - 1;
+
               for (let k = 0; k < elem.childs.length; ++k) {
                  subpath[subindx] = elem.childs[k].name + this.codeIndex((elem.first || 0) + k);
                  scan(lvl+1, elem.childs[k], subpath);
@@ -490,8 +499,8 @@ sap.ui.define([
               // check if more elements are required
 
               if (!this.fullModel) {
-                 let _last = (elem.first || 0) + elem.childs.length;
-                 let _remains = elem.nchilds  - _last;
+                 let _last = (elem.first || 0) + elem.childs.length,
+                     _remains = elem.nchilds  - _last;
 
                  if (_remains > 0) {
                     if (args.end + threshold2 > id) {
@@ -515,10 +524,8 @@ sap.ui.define([
            // start scan from very top
            scan(-1, this.h, []);
 
-           if (this.getProperty('/length') != id) {
-              // console.error('LENGTH MISMATCH', this.getProperty('/length'), id);
+           if (this.getProperty('/length') != id)
               this.setProperty('/length', id); // update length property
-           }
 
            if (this.reset_nodes) {
               this.setProperty('/nodes', nodes);
@@ -532,34 +539,37 @@ sap.ui.define([
            if (action == 'cleanup') {
                delete this._last_expands;
                return true;
-            }
+           }
 
-           const exact = (action != 'remove'), len = path.length;
-           const match = test => {
-              if ((len > test.length) || (exact && (len != test.length)))
-                 return false;
-              for (let k = 0; k < len; ++k)
-                 if (test[k] != path[k])
-                    return false;
-              return true;
-           };
+           const exact = action != 'remove', len = path?.length;
+           if (!len) return false;
+
            if (!this._last_expands)
               this._last_expands = [];
-           for (let n = 0; n < this._last_expands.length; ++n)
-              if (match(this._last_expands[n])) {
+           for (let n = 0; n < this._last_expands.length; ++n) {
+              let test = this._last_expands[n], match = true;
+              if ((len > test.length) || (exact && (len != test.length)))
+                 continue;
+              for (let k = 0; k < len; ++k)
+                 if (test[k] != path[k]) {
+                    match = false;
+                    break;
+                 }
+
+              if (match) {
                  if (action == 'remove')
                     this._last_expands.splice(n--, 1);
                  else
-                     return true;
+                    return true;
               }
+           }
            if (action == 'add')
-              this._last_expands.push(path);
+              this._last_expands.push(path.slice());
            return false;
         },
 
         /** @summary toggle expand state of specified node */
         toggleNode(index, do_expand) {
-
            let node = this.getNodeByIndex(index),
                elem = this.getElementByIndex(index);
 
