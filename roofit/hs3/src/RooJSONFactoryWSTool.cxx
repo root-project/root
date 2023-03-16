@@ -1084,7 +1084,15 @@ void RooJSONFactoryWSTool::importVariable(const JSONNode &p)
 void RooJSONFactoryWSTool::exportDependants(const RooAbsArg *source)
 {
    // export all the servers of a given RooAbsArg
-   auto servers(source->servers());
+   std::vector<RooAbsArg *> servers;
+   for (auto &s : source->servers()) {
+      servers.push_back(s);
+   }
+   std::sort(servers.begin(), servers.end(), [](auto const &l, auto const &r) {
+      if (l->dependsOn(*r))
+         return true;
+      return r->dependsOn(*l) ? false : strcmp(l->GetName(), r->GetName()) < 0;
+   });
    for (auto s : servers) {
       this->exportObject(s);
    }
