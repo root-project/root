@@ -256,10 +256,6 @@ TEST(Packing, OnDiskEncoding)
    EXPECT_EQ(memcmp(sealedPage.fBuffer, expDouble, sizeof(expDouble)), 0);
 
    source->LoadSealedPage(fnGetColumnId("index32"), RClusterIndex(0, 0), sealedPage);
-   for (unsigned i = 0; i < sealedPage.fSize; ++i) {
-      printf("0x%02x ", reinterpret_cast<const char *>(sealedPage.fBuffer)[i]);
-   }
-   printf("\n");
    unsigned char expIndex[] = {0x01, 0x07, 0x15, 0x00, 0x61, 0x00, 0x02, 0x00};
    EXPECT_EQ(memcmp(sealedPage.fBuffer, expIndex, sizeof(expIndex)), 0);
 }
