@@ -92,7 +92,12 @@ TEST(RNTupleImporter, CreateFromChain)
    importer->Import();
 
    auto reader = RNTupleReader::Open("ntuple", fileGuard1.GetPath());
+   auto viewA = reader->GetView<std::int32_t>("a");
+
    EXPECT_EQ(2U, reader->GetNEntries());
+   EXPECT_EQ(42, viewA(0));
+   EXPECT_EQ(43, viewA(1));
+
    EXPECT_THROW(importer->Import(), ROOT::Experimental::RException);
 }
 
