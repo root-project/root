@@ -46,7 +46,7 @@ namespace {
 // The following conversions and encodings exist:
 //
 //   - Byteswap:  on big endian machines, ints and floats are byte-swapped to the little endian on-disk format
-//   - Casting:   in-memory values can be stored in narrower on-disk columns.  Currently without bounds checks.
+//   - Cast:      in-memory values can be stored in narrower on-disk columns.  Currently without bounds checks.
 //                For instance, for Double32_t, an in-memory double value is stored as a float on disk.
 //   - Split:     rearranges the bytes of an array of elements such that all the first bytes are stored first,
 //                followed by all the second bytes, etc. This often clusters similar values, e.g. all the zero bytes
