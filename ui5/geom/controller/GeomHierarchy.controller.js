@@ -265,13 +265,16 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             if (this.model)
                this.model.processResponse(bresp);
             if (bresp?.path?.length == 0)
-               this.byId("treeTable").autoResizeColumn(1);
+               this.byId("treeTable").autoResizeColumn(0);
             break;
          case "FOUND:":  // text message for found query
             this.showTextInBrowser(msg);
             break;
          case "RELOAD":
             this.doReload(true);
+            break;
+         case "UPDATE":
+            this.doReload(false);
             break;
          case "ACTIV:":
             this.activateInTreeTable(msg);
@@ -344,9 +347,6 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             return;
 
          let stack = this.getStackByPath(this.fullModel, path);
-
-         console.log('getPhysVisibilityEntry ', JSON.stringify(path), 'stack', JSON.stringify(stack), this.fullModel);
-
          if (stack === null)
             return;
 
@@ -581,7 +581,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             this.viewer?.paintFoundNodes(null);
          } else {
             this.model?.clearFullModel();
-            this.model?.reloadMainModel(force);
+            this.model?.reloadMainModel(force, true);
 
             let srch = this.byId('searchNode');
             if (srch.getValue()) {

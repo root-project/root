@@ -145,7 +145,8 @@ void RGeomHierarchy::ProcessSignal(const std::string &kind)
       if (fWebWindow)
          fWebWindow->Send(0, "HIGHL:"s + TBufferJSON::ToJSON(&path).Data());
    } else if (kind == "NodeVisibility") {
-      // visibility changed from RGeomViewer
-      Update();
+      // visibility changed from RGeomViewer, update hierarchy
+      if (fWebWindow)
+         fWebWindow->Send(0, "UPDATE"s);
    }
 }
