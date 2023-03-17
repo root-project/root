@@ -930,7 +930,7 @@ class TGeoPainter extends ObjectPainter {
 
                let m2 = this.getmatrix();
 
-               let entry = this.CopyStack();
+               let entry = this.copyStack();
 
                let mesh = this._clones.createObject3D(entry.stack, this._toplevel, 'mesh');
 
@@ -1017,8 +1017,9 @@ class TGeoPainter extends ObjectPainter {
      * @param {boolean} [skip_render] - if specified, do not perform rendering */
    changedGlobalTransparency(transparency, skip_render) {
       let func = isFunc(transparency) ? transparency : null;
-      if (func || (transparency === undefined)) transparency = this.ctrl.transparency;
-      this._toplevel.traverse( node => {
+      if (func || (transparency === undefined))
+         transparency = this.ctrl.transparency;
+      this._toplevel.traverse(node => {
          if (node?.material?.inherentOpacity !== undefined) {
             let t = func ? func(node) : undefined;
             if (t !== undefined)
@@ -1415,8 +1416,9 @@ class TGeoPainter extends ObjectPainter {
          let numitems = 0, numnodes = 0, cnt = 0;
          if (intersects)
             for (let n = 0; n < intersects.length; ++n) {
-               if (intersects[n].object.stack) numnodes++;
-               if (intersects[n].object.geo_name) numitems++;
+               let obj = intersects[n].object;
+               if (obj.stack) numnodes++;
+               if (obj.geo_name) numitems++;
             }
 
          if (numnodes + numitems === 0) {
@@ -1448,8 +1450,11 @@ class TGeoPainter extends ObjectPainter {
                   else if (!hdr)
                      hdr = 'header';
 
-               } else
+               } else {
                   continue;
+               }
+
+               cnt++;
 
                menu.add((many ? 'sub:' : 'header:') + hdr, itemname, arg => this.activateInBrowser([arg], true));
 
@@ -1458,13 +1463,23 @@ class TGeoPainter extends ObjectPainter {
                if (this._hpainter)
                   menu.add('Inspect', itemname, arg => this._hpainter.display(arg, 'inspect'));
 
-               if (obj.geo_name) {
+               if (isFunc(this.hidePhysicalNode)) {
+                  menu.add('Hide', itemname, arg => this.hidePhysicalNode([arg]));
+                  if (cnt > 1)
+                     menu.add('Hide all before', n, indx => {
+                        let items = [];
+                        for (let i = 0; i < indx; ++i)
+                           if (intersects[i].object.stack)
+                              items.push(this.getStackFullName(intersects[i].object.stack));
+                        this.hidePhysicalNode(items);
+                     });
+               } else if (obj.geo_name) {
                   menu.add('Hide', n, indx => {
                      let mesh = intersects[indx].object;
                      mesh.visible = false; // just disable mesh
                      if (mesh.geo_object) mesh.geo_object.$hidden_via_menu = true; // and hide object for further redraw
                      menu.painter.render3D();
-                  });
+                  }, 'Hide this physical node');
 
                   if (many) menu.add('endsub:');
 
@@ -1480,7 +1495,7 @@ class TGeoPainter extends ObjectPainter {
                      this.render3D();
                   });
 
-               if (++cnt > 1)
+               if (cnt > 1)
                   menu.add('Manifest', n, function(indx) {
 
                      if (this._last_manifest)
@@ -1508,19 +1523,30 @@ class TGeoPainter extends ObjectPainter {
                   this.focusCamera(intersects[indx].object);
                });
 
-               if (!this._geom_viewer)
-               menu.add('Hide', n, function(indx) {
-                  let resolve = menu.painter._clones.resolveStack(intersects[indx].object.stack);
-                  if (resolve.obj && (resolve.node.kind === kindGeo) && resolve.obj.fVolume) {
-                     setGeoBit(resolve.obj.fVolume, geoBITS.kVisThis, false);
-                     updateBrowserIcons(resolve.obj.fVolume, this._hpainter);
-                  } else if (resolve.obj && (resolve.node.kind === kindEve)) {
-                     resolve.obj.fRnrSelf = false;
-                     updateBrowserIcons(resolve.obj, this._hpainter);
-                  }
+               if (!this._geom_viewer) {
+                  menu.add('Hide', n, function(indx) {
+                     let resolve = this._clones.resolveStack(intersects[indx].object.stack);
+                     if (resolve.obj && (resolve.node.kind === kindGeo) && resolve.obj.fVolume) {
+                        setGeoBit(resolve.obj.fVolume, geoBITS.kVisThis, false);
+                        updateBrowserIcons(resolve.obj.fVolume, this._hpainter);
+                     } else if (resolve.obj && (resolve.node.kind === kindEve)) {
+                        resolve.obj.fRnrSelf = false;
+                        updateBrowserIcons(resolve.obj, this._hpainter);
+                     }
 
-                  this.testGeomChanges();// while many volumes may disappear, recheck all of them
-               });
+                     this.testGeomChanges();// while many volumes may disappear, recheck all of them
+                  }, 'Hide all logical nodes of that kind');
+                  menu.add('Hide only this', n, function(indx) {
+                     this._clones.setPhysNodeVisibility(intersects[indx].object?.stack, false);
+                     this.testGeomChanges();
+                  }, 'Hide only this physical node');
+                  if (n > 1)
+                     menu.add('Hide all before', n, function(indx) {
+                        for (let k = 0; k < indx; ++k)
+                           this._clones.setPhysNodeVisibility(intersects[k].object?.stack, false);
+                        this.testGeomChanges();
+                     }, 'Hide all physical nodes before that');
+               }
 
                if (many) menu.add('endsub:');
             }
@@ -1532,7 +1558,8 @@ class TGeoPainter extends ObjectPainter {
    /** @summary Filter some objects from three.js intersects array */
    filterIntersects(intersects) {
 
-      if (!intersects.length) return intersects;
+      if (!intersects?.length)
+         return intersects;
 
       // check redirections
       for (let n = 0; n < intersects.length; ++n)
@@ -1544,7 +1571,7 @@ class TGeoPainter extends ObjectPainter {
       for (let n = intersects.length - 1; n >= 0; --n) {
 
          let obj = intersects[n].object,
-            unique = (obj.stack !== undefined) || (obj.geo_name !== undefined);
+            unique = obj.visible && ((obj.stack !== undefined) || (obj.geo_name !== undefined));
 
          if (unique && obj.material && (obj.material.opacity !== undefined))
             unique = (obj.material.opacity >= 0.1);
@@ -1552,7 +1579,8 @@ class TGeoPainter extends ObjectPainter {
          if (obj.jsroot_special) unique = false;
 
          for (let k = 0; (k < n) && unique;++k)
-            if (intersects[k].object === obj) unique = false;
+            if (intersects[k].object === obj)
+               unique = false;
 
          if (!unique) intersects.splice(n,1);
       }
@@ -1603,7 +1631,8 @@ class TGeoPainter extends ObjectPainter {
    getStackFullName(stack) {
       let mainitemname = this.getItemName(),
           sub = this.resolveStack(stack);
-      if (!sub || !sub.name) return mainitemname;
+      if (!sub || !sub.name)
+         return mainitemname;
       return mainitemname ? mainitemname + '/' + sub.name : sub.name;
    }
 
@@ -1751,7 +1780,7 @@ class TGeoPainter extends ObjectPainter {
          // try to find mesh from intersections
          for (let k = 0; k < intersects.length; ++k) {
             let obj = intersects[k].object, info = null;
-            if (!obj) continue;
+            if (!obj || !obj.visible) continue;
             if (obj.geo_object)
                info = obj.geo_name;
             else if (obj.stack)
@@ -1807,7 +1836,7 @@ class TGeoPainter extends ObjectPainter {
             delete this._last_manifest;
             this.render3D();
          } else {
-            this.adjustCameraPosition();
+            this.adjustCameraPosition(true);
          }
       }
    }
@@ -2581,9 +2610,13 @@ class TGeoPainter extends ObjectPainter {
       return 0;
    }
 
-   /** @summary Place camera to default position */
-   adjustCameraPosition(first_time, keep_zoom) {
+   /** @summary Place camera to default position,
+     * @param arg - true forces camera readjustment, 'first' is called when suppose to be first after complete drawing
+     * @param keep_zoom - tries to keep zomming factor of the camera */
+   adjustCameraPosition(arg, keep_zoom) {
       if (!this._toplevel) return;
+
+      let force = (arg === true), first_time = (arg == 'first') || force;
 
       let box = this.getGeomBoundingBox(this._toplevel);
 
@@ -2600,6 +2633,22 @@ class TGeoPainter extends ObjectPainter {
           midx = (box.max.x + box.min.x)/2,
           midy = (box.max.y + box.min.y)/2,
           midz = (box.max.z + box.min.z)/2;
+
+      if (this._scene_size && !force) {
+         const d = this._scene_size, test = (v1, v2, scale) => {
+            if (!scale) scale = Math.abs((v1+v2)/2);
+            return scale <= 1e-20 ? true : Math.abs(v2-v1)/scale > 0.01;
+         };
+         let large_change = test(sizex, d.sizex) || test(sizey, d.sizey) || test(sizez, d.sizez) ||
+                            test(midx, d.midx, d.sizex) || test(midy, d.midy, d.sizey) || test(midz, d.midz, d.sizez);
+         if (!large_change) {
+            if (this.ctrl.select_in_view)
+               this.startDrawGeometry();
+            return;
+         }
+      }
+
+      this._scene_size = { sizex, sizey, sizez, midx, midy, midz };
 
       this._overall_size = 2 * Math.max(sizex, sizey, sizez);
 
@@ -3013,7 +3062,8 @@ class TGeoPainter extends ObjectPainter {
           res = obj.$hidden_via_menu ? false : true;
 
       if (toggle) {
-         obj.$hidden_via_menu = res; res = !res;
+         obj.$hidden_via_menu = res;
+         res = !res;
 
          let mesh = null;
          // either found painted object or just draw once again
@@ -4260,14 +4310,14 @@ class TGeoPainter extends ObjectPainter {
       return promise.then(() => {
 
          if (this._full_redrawing) {
-            this.adjustCameraPosition(true);
+            this.adjustCameraPosition('first');
             this._full_redrawing = false;
             full_redraw = true;
             this.changedDepthMethod('norender');
          }
 
          if (this._first_drawing) {
-            this.adjustCameraPosition(true);
+            this.adjustCameraPosition('first');
             this.showDrawInfo();
             this._first_drawing = false;
             first_time = true;
@@ -4462,6 +4512,7 @@ class TGeoPainter extends ObjectPainter {
       cleanupRender3D(this._renderer);
 
       delete this._scene;
+      delete this._scene_size;
       this._scene_width = 0;
       this._scene_height = 0;
       this._renderer = null;
@@ -4873,16 +4924,12 @@ function provideMenu(menu, item, hpainter) {
       findItemWithPainter(item, 'testGeomChanges');
    };
 
-   if ((item._geoobj._typename.indexOf(clTGeoNode) === 0) && findItemWithPainter(item))
-      menu.add('Focus', function() {
+   let drawitem = findItemWithPainter(item),
+       fullname = drawitem ? hpainter.itemFullName(item, drawitem) : '';
 
-        let drawitem = findItemWithPainter(item);
-
-        if (!drawitem) return;
-
-        let fullname = hpainter.itemFullName(item, drawitem);
-
-        if (isFunc(drawitem._painter?.focusOnItem))
+   if ((item._geoobj._typename.indexOf(clTGeoNode) === 0) && drawitem)
+      menu.add('Focus', () => {
+        if (drawitem && isFunc(drawitem._painter?.focusOnItem))
            drawitem._painter.focusOnItem(fullname);
       });
 
@@ -4892,12 +4939,31 @@ function provideMenu(menu, item, hpainter) {
       if (res.hidden + res.visible > 0)
          menu.addchk((res.hidden == 0), 'Daughters', res.hidden !== 0 ? 'true' : 'false', ToggleEveVisibility);
    } else {
+
+      let stack = drawitem?._painter?._clones?.findStackByName(fullname),
+          phys_vis = stack ? drawitem._painter._clones.getPhysNodeVisibility(stack) : null,
+          is_visible = testGeoBit(vol, geoBITS.kVisThis);
+
       menu.addchk(testGeoBit(vol, geoBITS.kVisNone), 'Invisible',
             geoBITS.kVisNone, ToggleMenuBit);
-      menu.addchk(testGeoBit(vol, geoBITS.kVisThis), 'Visible',
-            geoBITS.kVisThis, ToggleMenuBit);
+      if (stack) {
+         const changePhysVis = arg => {
+            drawitem._painter._clones.setPhysNodeVisibility(stack, (arg == 'off') ? false : arg);
+            findItemWithPainter(item, 'testGeomChanges');
+         };
+
+         menu.add('sub:Physical vis', 'Physical node visibility - only for this instance');
+         menu.addchk(phys_vis?.visible, 'on', 'on', changePhysVis, 'Enable visibility of phys node');
+         menu.addchk(phys_vis && !phys_vis.visible, 'off', 'off', changePhysVis, 'Disable visibility of physical node');
+         menu.addchk(!phys_vis, 'reset', 'clear', changePhysVis, 'Reset visibility of physical node');
+         menu.add('reset all', 'clearall', changePhysVis, 'Reset all custom settings for all nodes');
+         menu.add('endsub:');
+      }
+
+      menu.addchk(is_visible, 'Lofical vis',
+            geoBITS.kVisThis, ToggleMenuBit, 'Logical node visibility - all instances');
       menu.addchk(testGeoBit(vol, geoBITS.kVisDaughters), 'Daughters',
-            geoBITS.kVisDaughters, ToggleMenuBit);
+            geoBITS.kVisDaughters, ToggleMenuBit, 'Logical node daugthers visibility');
    }
 
    return true;
