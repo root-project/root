@@ -9,6 +9,7 @@
 #include <RooHelpers.h>
 #include <RooCategory.h>
 #include <RooWorkspace.h>
+#include <RooVectorDataStore.h>
 
 #include <TFile.h>
 #include <TTree.h>
@@ -399,4 +400,67 @@ TEST(RooDataSet, SplitDataSetWithWeightErrors)
    data1.get(0);
    data2.get(0);
    EXPECT_DOUBLE_EQ(data2.weightError(), data1.weightError());
+}
+
+// The version number of the RooVectorDataStore::RealFullVector was increased
+// in the 6.30 development cycle. The RealFullVector is used to store columns
+// with errors, both symmetric and asymmetric.
+//
+// The reference file was created with the following code with ROOT 6.26.10:
+//
+// ```c++
+// using namespace RooFit;
+//
+// RooRealVar x{"x", "x", 0, 10};
+// RooRealVar y{"y", "y", 0, 10};
+//
+// RooDataSet data{"data", "data", {x, y}, StoreError(x), StoreAsymError(y)};
+//
+// x.setVal(5.0);
+// x.setError(2.0);
+// y.setVal(9.0);
+// y.setAsymError(-4.0, 3.0);
+//
+// data.add({x, y});
+//
+// x.setVal(7.0);
+// x.setError(3.0);
+// y.setVal(4.0);
+// y.setAsymError(-2.0, 1.0);
+//
+// data.add({x, y});
+//
+// std::unique_ptr<TFile> file{TFile::Open("dataSet_with_errors_6_26_10.root", "RECREATE")};
+//
+// file->WriteObject(&data, data.GetName());
+// ```
+TEST(RooDataSet, ReadDataSetWithErrors626)
+{
+   std::unique_ptr<TFile> file{TFile::Open("dataSet_with_errors_6_26_10.root", "READ")};
+
+   auto data = file->Get<RooDataSet>("data");
+
+   auto &x = static_cast<RooRealVar &>((*data->get())["x"]);
+   auto &y = static_cast<RooRealVar &>((*data->get())["y"]);
+
+   // Make sure the dataset is really using a RooVectorDataStore
+   EXPECT_TRUE(dynamic_cast<RooVectorDataStore const *>(data->store()));
+
+   data->get(0);
+
+   EXPECT_DOUBLE_EQ(x.getVal(), 5.0);
+   EXPECT_DOUBLE_EQ(x.getError(), 2.0);
+
+   EXPECT_DOUBLE_EQ(y.getVal(), 9.0);
+   EXPECT_DOUBLE_EQ(y.getAsymErrorLo(), -4.0);
+   EXPECT_DOUBLE_EQ(y.getAsymErrorHi(), 3.0);
+
+   data->get(1);
+
+   EXPECT_DOUBLE_EQ(x.getVal(), 7.0);
+   EXPECT_DOUBLE_EQ(x.getError(), 3.0);
+
+   EXPECT_DOUBLE_EQ(y.getVal(), 4.0);
+   EXPECT_DOUBLE_EQ(y.getAsymErrorLo(), -2.0);
+   EXPECT_DOUBLE_EQ(y.getAsymErrorHi(), 1.0);
 }
