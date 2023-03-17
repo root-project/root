@@ -13,8 +13,7 @@
             ],
             "observables": [
                 "obs_x_channel1"
-            ],
-            "InterpolationScheme": ""
+            ]
         }
     ],
     "likelihoods": [
@@ -99,35 +98,7 @@
                     "name": "background2"
                 }
             ],
-            "statError": {
-                "constraint": "Poisson",
-                "relThreshold": 0.01
-            },
             "type": "histfactory_dist"
-        }
-    ],
-    "domains": [
-        {
-            "name": "default_domain",
-            "type": "product_domain",
-            "axes": [
-                {
-                    "max": 5.0,
-                    "min": -3.0,
-                    "name": "mu"
-                }
-            ]
-        }
-    ],
-    "parameter_points": [
-        {
-            "name": "default_values",
-            "parameters": [
-                {
-                    "name": "mu",
-                    "value": 1
-                }
-            ]
         }
     ],
     "data": [
