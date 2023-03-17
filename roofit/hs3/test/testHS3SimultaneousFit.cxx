@@ -95,6 +95,11 @@ std::unique_ptr<RooFitResult> readJSONAndFitModel(std::string const &jsonStr)
 
    tool.importJSONfromString(jsonStr);
 
+   // Make sure that there is exactly one dataset in the new workspace, and
+   // that there are no spurious datasets left over from first importing the
+   // channel datasets that later get merged to the combined dataset
+   EXPECT_EQ(ws.allData().size(), 1) << "Unexpected number of datasets in the new workspace";
+
    auto &pdf = *ws.pdf("simPdf");
    auto &data = *ws.data("obsData");
 
