@@ -224,7 +224,6 @@ private:
       Var(const RooFit::Detail::JSONNode &val);
    };
 
-   std::map<std::string, std::unique_ptr<RooAbsData>> loadData(const RooFit::Detail::JSONNode &rootnode);
    static RooRealVar *createObservable(RooWorkspace &ws, const std::string &name, const RooJSONFactoryWSTool::Var &var);
 
    template <class T>

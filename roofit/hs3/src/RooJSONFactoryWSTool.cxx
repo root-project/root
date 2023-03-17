@@ -413,36 +413,21 @@ void RooJSONFactoryWSTool::exportHistogram(const TH1 &h, JSONNode &n, const std:
    n.set_map();
    auto &weights = n["contents"];
    weights.set_seq();
+   JSONNode *errors = nullptr;
    if (writeErrors) {
-      n["errors"].set_seq();
+      errors = &n["errors"];
+      errors->set_seq();
    }
    if (writeObservables) {
       RooJSONFactoryWSTool::writeObservables(h, n, varnames);
    }
-   for (int i = 1; i <= h.GetNbinsX(); ++i) {
-      if (h.GetDimension() == 1) {
-         weights.append_child() << h.GetBinContent(i);
-         if (writeErrors) {
-            n["errors"].append_child() << (errH ? h.GetBinContent(i) * errH->GetBinContent(i) : h.GetBinError(i));
-         }
-      } else {
-         for (int j = 1; j <= h.GetNbinsY(); ++j) {
-            if (h.GetDimension() == 2) {
-               weights.append_child() << h.GetBinContent(i, j);
-               if (writeErrors) {
-                  n["errors"].append_child()
-                     << (errH ? h.GetBinContent(i, j) * errH->GetBinContent(i, j) : h.GetBinError(i, j));
-               }
-            } else {
-               for (int k = 1; k <= h.GetNbinsZ(); ++k) {
-                  weights.append_child() << h.GetBinContent(i, j, k);
-                  if (writeErrors) {
-                     n["errors"].append_child()
-                        << (errH ? h.GetBinContent(i, j, k) * errH->GetBinContent(i, j, k) : h.GetBinError(i, j, k));
-                  }
-               }
-            }
-         }
+   const int nBins = h.GetNbinsX() * h.GetNbinsY() * h.GetNbinsZ();
+   for (int i = 1; i <= nBins; ++i) {
+      const double val = h.GetBinContent(i);
+      weights.append_child() << val;
+      if (writeErrors) {
+         const double err = errH ? val * errH->GetBinContent(i) : h.GetBinError(i);
+         errors->append_child() << err;
       }
    }
 }
@@ -757,66 +742,60 @@ void RooJSONFactoryWSTool::importFunction(const JSONNode &p, bool isPdf)
    }
 }
 
+namespace {
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 // importing data
-std::map<std::string, std::unique_ptr<RooAbsData>> RooJSONFactoryWSTool::loadData(const JSONNode &rootnode)
+std::unique_ptr<RooAbsData> loadData(const JSONNode &p, RooWorkspace &workspace)
 {
-   std::map<std::string, std::unique_ptr<RooAbsData>> dataMap;
-
-   if (!rootnode.has_child("data")) {
-      return dataMap;
-   }
-
-   for (const auto &p : rootnode["data"].children()) {
-      std::string name(RooJSONFactoryWSTool::name(p));
-      if (name.empty())
-         continue;
-      if (_workspace.data(name))
-         continue;
-      if (!p.is_map())
-         continue;
-      if (p.has_child("contents")) {
-         // binned
-         dataMap[name] = this->readBinnedData(p, name);
-      } else if (p.has_child("entries")) {
-         // unbinned
-         RooArgSet vars;
-         this->getObservables(_workspace, p, name, vars);
-         RooArgList varlist(vars);
-         auto data = std::make_unique<RooDataSet>(name, name, vars, RooFit::WeightVar());
-         auto &coords = p["entries"];
-         auto &weights = p["weights"];
-         if (coords.num_children() != weights.num_children()) {
-            RooJSONFactoryWSTool::error("inconsistent number of entries and weights!");
-         }
-         if (!coords.is_seq()) {
-            RooJSONFactoryWSTool::error("key 'entries' is not a list!");
-         }
-         for (size_t i = 0; i < coords.num_children(); ++i) {
-            auto &point = coords[i];
-            if (!point.is_seq()) {
-               std::stringstream errMsg;
-               errMsg << "coordinate point '" << i << "' is not a list!";
-               RooJSONFactoryWSTool::error(errMsg.str());
-            }
-            if (point.num_children() != varlist.size()) {
-               RooJSONFactoryWSTool::error("inconsistent number of entries and observables!");
-            }
-            for (size_t j = 0; j < point.num_children(); ++j) {
-               auto *v = static_cast<RooRealVar *>(varlist.at(j));
-               v->setVal(point[j].val_double());
-            }
-            data->add(vars, weights[i].val_double());
-         }
-         dataMap[name] = std::move(data);
-      } else {
-         std::stringstream ss;
-         ss << "RooJSONFactoryWSTool() failed to create dataset " << name << std::endl;
-         logInputArgumentsError(std::move(ss));
+   std::string name(RooJSONFactoryWSTool::name(p));
+   if (name.empty())
+      return nullptr;
+   if (!p.is_map())
+      return nullptr;
+   if (p.has_child("contents")) {
+      // binned
+      return RooJSONFactoryWSTool::readBinnedData(p, name);
+   } else if (p.has_child("entries")) {
+      // unbinned
+      RooArgSet vars;
+      RooJSONFactoryWSTool::getObservables(workspace, p, name, vars);
+      RooArgList varlist(vars);
+      auto data = std::make_unique<RooDataSet>(name, name, vars, RooFit::WeightVar());
+      auto &coords = p["entries"];
+      auto &weights = p["weights"];
+      if (coords.num_children() != weights.num_children()) {
+         RooJSONFactoryWSTool::error("inconsistent number of entries and weights!");
       }
+      if (!coords.is_seq()) {
+         RooJSONFactoryWSTool::error("key 'entries' is not a list!");
+      }
+      for (size_t i = 0; i < coords.num_children(); ++i) {
+         auto &point = coords[i];
+         if (!point.is_seq()) {
+            std::stringstream errMsg;
+            errMsg << "coordinate point '" << i << "' is not a list!";
+            RooJSONFactoryWSTool::error(errMsg.str());
+         }
+         if (point.num_children() != varlist.size()) {
+            RooJSONFactoryWSTool::error("inconsistent number of entries and observables!");
+         }
+         for (size_t j = 0; j < point.num_children(); ++j) {
+            auto *v = static_cast<RooRealVar *>(varlist.at(j));
+            v->setVal(point[j].val_double());
+         }
+         data->add(vars, weights[i].val_double());
+      }
+      return data;
    }
-   return dataMap;
+
+   std::stringstream ss;
+   ss << "RooJSONFactoryWSTool() failed to create dataset " << name << std::endl;
+   logInputArgumentsError(std::move(ss));
+   return nullptr;
 }
+
+} // namespace
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 // exporting data
@@ -1420,8 +1399,12 @@ void RooJSONFactoryWSTool::importAllNodes(const RooFit::Detail::JSONNode &n)
    _rootnodeInput = &n;
    this->importDependants(n);
 
-   for (const auto &d : loadData(n)) {
-      _workspace.import(*d.second);
+   if (n.has_child("data")) {
+      for (const auto &p : n["data"].children()) {
+         if (auto d = loadData(p, _workspace)) {
+            _workspace.import(*d);
+         }
+      }
    }
 
    _workspace.saveSnapshot("fromJSON", _workspace.allVars());
