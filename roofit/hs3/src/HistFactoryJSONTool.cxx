@@ -25,16 +25,17 @@ using RooFit::Detail::JSONTree;
 
 namespace {
 
-void exportSample(const RooStats::HistFactory::Sample &sample, JSONNode &channelNode)
+std::vector<std::string> getObsnames(RooStats::HistFactory::Channel const &c)
+{
+   std::vector<std::string> obsnames{"obs_x_" + c.GetName(), "obs_y_" + c.GetName(), "obs_z_" + c.GetName()};
+   obsnames.resize(c.GetData().GetHisto()->GetDimension());
+   return obsnames;
+}
+
+void exportSample(const RooStats::HistFactory::Sample &sample, JSONNode &channelNode,
+                  std::vector<std::string> const &obsnames)
 {
    auto &s = RooJSONFactoryWSTool::appendNamedChild(channelNode["samples"], sample.GetName());
-
-   std::vector<std::string> obsnames{"obs_x_" + sample.GetChannelName()};
-   int nDim = sample.GetHisto()->GetDimension();
-   if (nDim > 1)
-      obsnames.push_back("obs_y_" + sample.GetChannelName());
-   if (nDim > 2)
-      obsnames.push_back("obs_z_" + sample.GetChannelName());
 
    if (!sample.GetOverallSysList().empty()) {
       auto &modifiers = s["modifiers"];
@@ -98,8 +99,10 @@ void exportChannel(const RooStats::HistFactory::Channel &c, JSONNode &ch)
    staterr["relThreshold"] << c.GetStatErrorConfig().GetRelErrorThreshold();
    staterr["constraint"] << RooStats::HistFactory::Constraint::Name(c.GetStatErrorConfig().GetConstraintType());
 
+   const std::vector<std::string> obsnames = getObsnames(c);
+
    for (const auto &s : c.GetSamples()) {
-      exportSample(s, ch);
+      exportSample(s, ch, obsnames);
    }
 }
 
@@ -221,10 +224,10 @@ void exportMeasurement(RooStats::HistFactory::Measurement &measurement, JSONNode
    for (const auto &c : measurement.GetChannels()) {
       JSONNode &dataOutput = RooJSONFactoryWSTool::appendNamedChild(n["data"], std::string("obsData_") + c.GetName());
 
-      const std::vector<std::string> obsnames{"obs_x_" + c.GetName(), "obs_y_" + c.GetName(), "obs_z_" + c.GetName()};
+      const std::vector<std::string> obsnames = getObsnames(c);
 
-      for (int i = 0; i < c.GetData().GetHisto()->GetDimension(); ++i) {
-         analysisObservables.append_child() << obsnames[i];
+      for (auto const &obsname : obsnames) {
+         analysisObservables.append_child() << obsname;
       }
 
       RooJSONFactoryWSTool::exportHistogram(*c.GetData().GetHisto(), dataOutput, obsnames);

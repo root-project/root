@@ -115,35 +115,35 @@ T *findClient(RooAbsArg *gamma)
    return nullptr;
 }
 
-template <class Arg_t>
-Arg_t &getOrCreate(RooWorkspace &ws, std::string const &name, std::string const &expr)
+template <class Arg_t, class... Params_t>
+Arg_t &getOrCreate(RooWorkspace &ws, std::string const &name, Params_t &&...params)
 {
    Arg_t *arg = static_cast<Arg_t *>(ws.obj(name));
-   return arg ? *arg : static_cast<Arg_t &>(*ws.factory(name + expr));
+   if (arg)
+      return *arg;
+   Arg_t newArg(name.c_str(), name.c_str(), std::forward<Params_t>(params)...);
+   ws.import(newArg, RooFit::RecycleConflictNodes(true), RooFit::Silence(true));
+   return *static_cast<Arg_t *>(ws.obj(name));
 }
 
 RooRealVar &getNP(RooWorkspace &ws, std::string const &parname)
 {
-   RooRealVar &par = getOrCreate<RooRealVar>(ws, parname, "[0.,-5,5]");
+   RooRealVar &par = getOrCreate<RooRealVar>(ws, parname, 0., -5, 5);
    par.setAttribute("np");
    std::string globname = "nom_" + parname;
-   RooRealVar &nom = getOrCreate<RooRealVar>(ws, globname, "[0.]");
+   RooRealVar &nom = getOrCreate<RooRealVar>(ws, globname, 0.);
    nom.setAttribute("glob");
    nom.setRange(-5, 5);
    nom.setConstant(true);
-   RooRealVar &sigma = getOrCreate<RooRealVar>(ws, "sigma_" + parname, "[1.]");
+   RooRealVar &sigma = getOrCreate<RooRealVar>(ws, "sigma_" + parname, 1.);
    sigma.setRange(sigma.getVal(), sigma.getVal());
    sigma.setConstant(true);
    return par;
 }
 RooAbsPdf &getConstraint(RooWorkspace &ws, const std::string &sysname, const std::string &pname)
 {
-   RooAbsPdf *pdf = ws.pdf(sysname + "_constraint");
-   if (pdf)
-      return *pdf;
-   std::stringstream expr;
-   expr << "RooGaussian::" << sysname << "_constraint(" << pname << ",nom_" << pname << ",sigma_" << pname << ")";
-   return static_cast<RooAbsPdf &>(*ws.factory(expr.str()));
+   return getOrCreate<RooGaussian>(ws, sysname + "_constraint", *ws.var(pname), *ws.var("nom_" + pname),
+                                   *ws.var("sigma_" + pname));
 }
 
 /// Convenient alternative to std::make_unique if you construct a RooFit
@@ -316,7 +316,7 @@ bool importHistSample(RooJSONFactoryWSTool &tool, RooDataHist &dh, Scope &scope,
       for (const auto &mod : p["modifiers"].children()) {
          std::string modtype = mod["type"].val();
          if (modtype == "normfactor") {
-            normElems.add(getOrCreate<RooRealVar>(ws, mod["name"].val(), "[1.]"));
+            normElems.add(getOrCreate<RooRealVar>(ws, mod["name"].val(), 1., -3, 5));
          } else if (modtype == "normsys") {
             std::string sysname(mod["name"].val());
             std::string parname(mod.has_child("parameter") ? RooJSONFactoryWSTool::name(mod["parameter"])
@@ -410,10 +410,13 @@ public:
       std::vector<std::string> funcnames;
       std::vector<std::string> coefnames;
       RooArgSet observables;
-      if (p.has_child("axes")) {
-         RooJSONFactoryWSTool::getObservables(ws, p, name, observables);
-         scope.setObservables(observables);
+      for (auto const &obsNode : p["axes"].children()) {
+         RooRealVar &obs = getOrCreate<RooRealVar>(ws, obsNode["name"].val(), obsNode["min"].val_double(),
+                                                   obsNode["max"].val_double());
+         obs.setBins(obsNode["nbins"].val_int());
+         observables.add(obs);
       }
+      scope.setObservables(observables);
 
       std::string fprefix = name;
 
