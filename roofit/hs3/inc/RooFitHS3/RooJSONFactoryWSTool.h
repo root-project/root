@@ -117,7 +117,7 @@ public:
       return wsImport(arg);
    }
 
-   static void error(const char *s) { throw std::runtime_error(s); }
+   static void error(const char *s);
    inline static void error(const std::string &s) { error(s.c_str()); }
    template <class T>
    static std::string concat(const T *items, const std::string &sep = ",")
@@ -163,9 +163,6 @@ public:
    static std::unique_ptr<RooDataHist> readBinnedData(const RooFit::Detail::JSONNode &n, const std::string &namecomp);
    static std::unique_ptr<RooDataHist>
    readBinnedData(const RooFit::Detail::JSONNode &n, const std::string &namecomp, RooArgList const &varlist);
-
-   static void
-   getObservables(RooWorkspace &ws, const RooFit::Detail::JSONNode &n, const std::string &obsnamecomp, RooArgSet &out);
 
    bool importJSON(std::string const &filename);
    bool importYML(std::string const &filename);
@@ -214,25 +211,11 @@ private:
       static bool stripObservables;
    };
 
-   struct Var {
-      int nbins;
-      double min;
-      double max;
-      std::vector<double> bounds;
-
-      Var(int n) : nbins(n), min(0), max(n) {}
-      Var(const RooFit::Detail::JSONNode &val);
-   };
-
-   static RooRealVar *createObservable(RooWorkspace &ws, const std::string &name, const RooJSONFactoryWSTool::Var &var);
-
    template <class T>
    T *requestImpl(const std::string &objname);
 
    void exportData(RooAbsData &data);
    static std::vector<std::vector<int>> generateBinIndices(const RooArgList &vars);
-   static std::map<std::string, RooJSONFactoryWSTool::Var>
-   readObservables(const RooFit::Detail::JSONNode &n, const std::string &obsnamecomp);
 
    void importAllNodes(const RooFit::Detail::JSONNode &n);
 
