@@ -12,7 +12,7 @@
 #include "TGeoVolume.h"
 #include "TFile.h"
 
-void web_cms()
+void web_cms(bool split = false)
 {
    TFile::SetCacheFileDir(".");
 
@@ -49,9 +49,23 @@ void web_cms()
    // when viewer created, initial values exported from TGeoManager
    viewer->SetLimits();
 
-   // start browser
+   viewer->SetShowHierarchy(!split);
+
+   // start web browser
    viewer->Show();
 
    // destroy viewer only when connection to client is closed
    viewer->ClearOnClose(viewer);
+
+   if (split) {
+      // create separate widget with geometry hierarchy only
+      auto hier = std::make_shared<RGeomHierarchy>(viewer->Description());
+
+      // start web browser with hierarchy
+      hier->Show();
+
+      // destroy widget only when connection to client is closed
+      hier->ClearOnClose(hier);
+   }
+
 }

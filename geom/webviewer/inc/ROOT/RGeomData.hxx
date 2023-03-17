@@ -251,6 +251,7 @@ class RGeomDescription {
    int fActualLevel{0};             ///<! level can be reduced when selecting nodes
    bool fPreferredOffline{false};   ///<! indicates that full description should be provided to client
    int fJsonComp{0};                ///<! default JSON compression
+   std::string fActiveItemName;     ///<! name of item which should be activated in hieararchy
 
    RGeomConfig fCfg;                ///<! configuration parameter editable from GUI
 
@@ -419,6 +420,20 @@ public:
    {
       TLockGuard lock(fMutex);
       return fClickedStack;
+   }
+
+   bool SetActiveItem(const std::string &itemname)
+   {
+      TLockGuard lock(fMutex);
+      bool changed = (fActiveItemName != itemname);
+      fActiveItemName = itemname;
+      return changed;
+   }
+
+   std::string GetActiveItem() const
+   {
+      TLockGuard lock(fMutex);
+      return fActiveItemName;
    }
 
    bool ChangeConfiguration(const std::string &json);

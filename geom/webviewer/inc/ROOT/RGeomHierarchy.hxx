@@ -48,6 +48,7 @@ public:
 
    RGeomDescription &Description() { return fDesc; }
 
+   void ClearOnClose(const std::shared_ptr<void> &handle);
 };
 
 } // namespace Experimental

@@ -226,7 +226,7 @@ public:
       return true;
    }
 
-   /** Navigate to specified volume - find first occurence */
+   /** Navigate to specified volume - find first occurrence */
    bool Navigate(TGeoVolume *vol)
    {
       Reset();
@@ -254,6 +254,7 @@ public:
    }
 
 };
+
 } // namespace Experimental
 } // namespace ROOT
 

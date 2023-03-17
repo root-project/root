@@ -27,6 +27,9 @@ RGeomHierarchy::RGeomHierarchy(RGeomDescription &desc) :
    fWebWindow = RWebWindow::Create();
    fWebWindow->SetDataCallBack([this](unsigned connid, const std::string &arg) { WebWindowCallback(connid, arg); });
 
+   fWebWindow->SetDefaultPage("file:rootui5sys/geom/index.html");
+   fWebWindow->SetGeometry(600, 900); // configure predefined window geometry
+
    fDesc.AddSignalHandler(this, [this](const std::string &kind) { ProcessSignal(kind); });
 }
 
@@ -111,6 +114,10 @@ void RGeomHierarchy::WebWindowCallback(unsigned connid, const std::string &arg)
 
 void RGeomHierarchy::Show(const RWebDisplayArgs &args)
 {
+   if (args.GetWidgetKind().empty())
+      const_cast<RWebDisplayArgs *>(&args)->SetWidgetKind("RGeomHierarchy");
+
+   fWebWindow->SetUserArgs("{ show_columns: true, only_hierarchy: true }");
    RWebWindow::ShowWindow(fWebWindow, args);
 }
 
@@ -148,5 +155,17 @@ void RGeomHierarchy::ProcessSignal(const std::string &kind)
       // visibility changed from RGeomViewer, update hierarchy
       if (fWebWindow)
          fWebWindow->Send(0, "UPDATE"s);
+   } else if (kind == "ActiveItem") {
+      BrowseTo(fDesc.GetActiveItem());
    }
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+/// Set handle which will be cleared when connection is closed
+/// Must be called after window is shown
+
+void RGeomHierarchy::ClearOnClose(const std::shared_ptr<void> &handle)
+{
+   if (fWebWindow)
+      fWebWindow->SetClearOnClose(handle);
 }

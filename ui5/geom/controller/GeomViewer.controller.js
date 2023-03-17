@@ -274,7 +274,6 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       onWebsocketClosed() {
          // when connection closed, close panel as well
          if (window && !this._embeded) window.close();
-
          this.isConnected = false;
       },
 

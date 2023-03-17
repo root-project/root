@@ -309,9 +309,8 @@ void RGeomViewer::WebWindowCallback(unsigned connid, const std::string &arg)
       SendGeometry(connid);
 
    } else if (arg.compare(0, 9, "ACTIVATE:") == 0) {
-      std::string itemname = arg.substr(9);
-      if (fWebHierarchy)
-         fWebHierarchy->BrowseTo(itemname);
+      fDesc.SetActiveItem(arg.substr(9));
+      fDesc.IssueSignal(this, "ActiveItem");
    } else if (arg.compare(0, 11, "INFOACTIVE:") == 0) {
       fInfoActive = (arg.substr(11) == "true");
    } else if (arg.compare(0, 11, "HIDE_ITEMS:") == 0) {
@@ -427,5 +426,4 @@ void RGeomViewer::ClearOnClose(const std::shared_ptr<void> &handle)
 {
    if (fWebWindow)
       fWebWindow->SetClearOnClose(handle);
-
 }

@@ -54,9 +54,13 @@
         ui5: true,
         openui5libs: "sap.m, sap.ui.layout, sap.ui.unified, sap.ui.table" // customize openui5 libs later
      }).then(handle => {
+        let is_hierarchy = handle?.getUserArgs('only_hierarchy');
+        if (is_hierarchy && document)
+           document.title = 'Geometry hierarchy';
+
          sap.ui.require(["sap/ui/core/mvc/XMLView"], XMLView => {
              XMLView.create({
-                viewName: "rootui5.geom.view.GeomViewer",
+                viewName: is_hierarchy ? "rootui5.geom.view.GeomHierarchy" : "rootui5.geom.view.GeomViewer",
                 viewData: { conn_handle: handle, jsroot: { parse, decodeUrl, toJSON, source_dir } }
              }).then(oView => oView.placeAt("GeomDiv"));
           });
