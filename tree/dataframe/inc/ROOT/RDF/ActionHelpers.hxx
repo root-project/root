@@ -60,7 +60,7 @@
 #include <iomanip>
 #include <numeric> // std::accumulate in MeanHelper
 
-#include "HistCUDA.h"
+#include "RH1CUDA.h"
 #include <typeinfo>
 #include <type_traits>
 
@@ -373,7 +373,7 @@ inline constexpr bool has_getxaxis_v = has_getxaxis<T>::value;
 template <typename HIST = Hist_t>
 class R__CLING_PTRCHECK(off) FillHelper : public RActionImpl<FillHelper<HIST>> {
    std::vector<HIST *> fObjects;
-   std::vector<HistCUDA *> fCudaHist; // TODO: where to store this?
+   std::vector<RHnCUDA *> fCudaHist; // TODO: where to store this?
 
    template <typename H = HIST, typename = decltype(std::declval<H>().Reset())>
    void ResetIfPossible(H *h)
@@ -490,67 +490,43 @@ public:
    FillHelper(const std::shared_ptr<HIST> &h, const unsigned int nSlots) : fObjects(nSlots, nullptr), fCudaHist(nSlots, nullptr)
    {
       fObjects[0] = h.get();
-      if constexpr(has_getxaxis_v<HIST>) {  // Avoid compilation errors for fObjects that aren't TH1Ds
-         Int_t nbins = fObjects[0]->GetNcells();
-         fCudaHist[0] = new HistCUDA(nbins, fObjects[0]->GetXaxis(), fObjects[0]->GetYaxis());
-         fCudaHist[0]->AllocateH1D();
-         // printf("nbins: %d\n", nbins);
-      }
+      if (getenv("CUDA_HIST")) { if constexpr(has_getxaxis_v<HIST>) {  // Avoid compilation errors for fObjects that aren't TH1Ds
+            auto nbins = fObjects[0]->GetNcells();
+            auto xlow = fObjects[0]->GetXaxis()->GetXmin();
+            auto xhigh = fObjects[0]->GetXaxis()->GetXmax();
+            fCudaHist[0] = new RHnCUDA(nbins, xlow, xhigh, fObjects[0]->GetXaxis()->IsVariableBinSize() ? fObjects[0]->GetXaxis()->GetXbins()->GetArray() : NULL);
+            fCudaHist[0]->AllocateH1D();
+            printf("hist 0 --- nbins: %d xlow: %f xhigh: %f\n", nbins, xlow, xhigh);
+      } }
 
       // Initialize all other slots
       for (unsigned int i = 1; i < nSlots; ++i) {
          fObjects[i] = new HIST(*fObjects[0]);
          UnsetDirectoryIfPossible(fObjects[i]);
 
-         if constexpr(has_getxaxis_v<HIST>) {  // Avoid compilation errors for fObjects that aren't TH1Ds
-            Int_t nbins = fObjects[i]->GetNcells();
-            fCudaHist[i] = new HistCUDA(nbins, fObjects[i]->GetXaxis(), fObjects[i]->GetYaxis());
+         if (getenv("CUDA_HIST")) { if constexpr(has_getxaxis_v<HIST>) {  // Avoid compilation errors for fObjects that aren't TH1Ds
+            auto nbins = fObjects[i]->GetNcells();
+            auto xlow = fObjects[i]->GetXaxis()->GetXmin();
+            auto xhigh = fObjects[i]->GetXaxis()->GetXmax();
+            printf("hist %d --- nbins: %d xlow: %f xhigh: %f\n", i, nbins, xlow, xhigh);
+
+            fCudaHist[i] = new RHnCUDA(nbins, xlow, xhigh, fObjects[i]->GetXaxis()->IsVariableBinSize() ? fObjects[i]->GetXaxis()->GetXbins()->GetArray() : NULL);
             fCudaHist[i]->AllocateH1D();
-         }
+         } }
       }
    }
 
    void InitTask(TTreeReader *, unsigned int) {}
 
-   auto Exec(unsigned int slot, Double_t x)
-   {
-      if constexpr(has_getxaxis_v<HIST>) {  // temp fix to avoid compilation errors for fObjects that don't have GetXaxis
-         fCudaHist[slot]->AddBinCUDA(fObjects[slot]->GetXaxis()->FindBin(x));
-      }
-   }
-
-   auto Exec(unsigned int slot, Float_t x, Double_t w)
-   {
-      fCudaHist[slot]->AddBinCUDA(fObjects[slot]->GetXaxis()->FindBin(x), w);
-   }
-
-   auto Exec(unsigned int slot, Double_t x, Double_t y)
-   {
-      // Int_t binx, biny;
-      // TAxis *fXaxis, *fYaxis;
-      // fXaxis = fObjects[slot]->GetXaxis();
-      // fYaxis = fObjects[slot]->GetYaxis();
-      // binx = fXaxis->FindBin(x);
-      // biny = fYaxis->FindBin(y);
-      // auto bin = biny*(fXaxis->GetNbins()+2) + binx;
-      // printf("binx: %d biny:%d bin:%d\n", binx, biny, bin);
-      // fCudaHist[slot]->AddBinCUDA(bin);
-
-      fObjects[slot]->SetEntries(fObjects[slot]->GetEntries() + 1);
-      fCudaHist[slot]->AddBinCUDA(x, y);
-   }
-
-   auto Exec(unsigned int slot, Int_t x)
-   {
-      if constexpr(has_getxaxis_v<HIST>) {  // temp fix to avoid compilation errors for fObjects that don't have GetXaxis
-         fCudaHist[slot]->AddBinCUDA(fObjects[slot]->GetXaxis()->FindBin(x));
-      }
-   }
-
    template <typename... ValTypes, std::enable_if_t<!Disjunction<IsDataContainer<ValTypes>...>::value, int> = 0>
    auto Exec(unsigned int slot, const ValTypes &...x) -> decltype(fObjects[slot]->Fill(x...), void())
    {
-      fObjects[slot]->Fill(x...);
+      // if (std::is_same<HIST, TH1D>::value) {  // temp fix to avoid compilation errors for fObjects that don't have GetXaxis
+      if (getenv("CUDA_HIST")) {
+         fCudaHist[slot]->Fill(x...);
+      } else {
+         fObjects[slot]->Fill(x...);
+      }
    }
 
    // at least one container argument
@@ -593,11 +569,20 @@ public:
    // TODO:
    void Finalize()
    {
-      for (unsigned int i = 0; i < fObjects.size(); ++i) {
-         if constexpr(has_getxaxis_v<HIST>) {  // temp fix to avoid compilation errors for fObjects that don't have GetArray
-            fCudaHist[i]->RetrieveResults(fObjects[i]->GetArray());
-            // printf("%d %d??\n", fObjects[i]->GetArray()->size(), fObjects[i]->GetXaxis()->GetNbins());
+      if (getenv("CUDA_HIST")) {
+         for (unsigned int i = 0; i < fObjects.size(); ++i) {
+            if constexpr(has_getxaxis_v<HIST>) {  // temp fix to avoid compilation errors for fObjects that don't have GetArray
+               fCudaHist[i]->RetrieveResults(fObjects[i]->GetArray());
+               // printf("%d %d??\n", fObjects[i]->GetArray()->size(), fObjects[i]->GetXaxis()->GetNbins());
+            }
          }
+      }
+
+      if constexpr(has_getxaxis_v<HIST>) {  // temp fix to avoid compilation errors for fObjects that don't have GetArray
+         for (int j = 0; j < fObjects[0]->GetNcells(); ++j) {
+            printf("%f ", fObjects[0]->GetArray()[j]);
+         }
+         printf("\n");
       }
 
       if (fObjects.size() == 1)
