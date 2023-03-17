@@ -98,7 +98,10 @@ ROOT::Experimental::RNTupleImporter::Create(std::string_view sourceFileName, std
 
    // If we have IMT enabled, its best use is for parallel page compression
    importer->fSourceTree->SetImplicitMT(false);
-   importer->InitDestination(destFileName);
+   auto result = importer->InitDestination(destFileName);
+
+   if (!result)
+      return R__FORWARD_ERROR(result);
 
    return importer;
 }
@@ -112,7 +115,10 @@ ROOT::Experimental::RNTupleImporter::Create(TTree *sourceTree, std::string_view 
 
    // If we have IMT enabled, its best use is for parallel page compression
    importer->fSourceTree->SetImplicitMT(false);
-   importer->InitDestination(destFileName);
+   auto result = importer->InitDestination(destFileName);
+
+   if (!result)
+      return R__FORWARD_ERROR(result);
 
    return importer;
 }
