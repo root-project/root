@@ -16,7 +16,7 @@
                        tooltip="Quit ROOT session" press="onQuitRootPress"/>
                <Button icon="sap-icon://show" type="Transparent"
                        tooltip="Toggle with info page" press="onInfoPress"/>
-               <Button icon="sap-icon://save" type="Transparent"
+               <Button icon="sap-icon://save" type="Transparent" visible="{= !${/standalone} }"
                        tooltip="Save drawing as png image" press="pressSavePngButton"/>
                <Button icon="sap-icon://syntax" type="Transparent" visible="{= !${/standalone} }"
                        tooltip="Save geometry settings as C++ code" press="pressSaveMacroButton"/>

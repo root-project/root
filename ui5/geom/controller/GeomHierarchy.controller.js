@@ -46,6 +46,8 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
          this.viewer = args.viewer;
 
+         this.standalone = args.standalone;
+
          this.websocket.setReceiver(this);
 
          // create model only for browser - no need for anybody else
@@ -116,6 +118,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       /** @summary invoked when visibility checkbox clicked */
       changeVisibility(oEvent, physical) {
          let row = oEvent.getSource(),
+             flag = oEvent.getParameter('selected'),
              ctxt = row?.getBindingContext(),
              ttt = ctxt?.getProperty(ctxt?.getPath());
 
@@ -123,9 +126,9 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             return console.error('Fail to get path');
 
          if (this.standalone) {
-            console.warn('implement standlone visibility change');
+            this.viewer?.changeNodeVisibilityOffline(ttt.path.join('/'), physical, flag);
          } else {
-            let msg = '', flag = oEvent.getParameter('selected');
+            let msg = '';
 
             if (physical) {
                msg = flag ? 'SHOW' : 'HIDE';
@@ -451,16 +454,17 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          } else if (this.viewer) {
             let lst = this.viewer.findMatchesFromDraw(node => { return node.name.indexOf(query) == 0; });
 
-            if (lst?.length) {
+            if (lst) {
                this.showFoundNodes(lst);
-               this.viewer?.paintFoundNodes(lst);
+               this.viewer.paintFoundNodes(lst);
             } else {
                this.showTextInBrowser("No found nodes");
-               this.viewer?.paintFoundNodes(null);
+               this.viewer.paintFoundNodes(null);
             }
          }
       },
 
+      /** @summary when click cell on tree table */
       onCellClick(oEvent) {
 
          let tt = this.byId("treeTable"),
