@@ -36,19 +36,37 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
    return Controller.extend('rootui5.geom.controller.GeomHierarchy', {
 
       onInit() {
+         let viewData = this.getView().getViewData();
+
+         if (!viewData?.conn_handle?.getUserArgs('only_hierarchy')) return;
+
+         // standalone running hierarchy only
+
+         this.websocket = viewData.conn_handle;
+         this.jsroot = viewData.jsroot;
+
+         this.standalone = (this.websocket.kind == 'file');
+
+         this.websocket.setReceiver(this);
+         this.websocket.connect(viewData.conn_href);
+
+         this._embeded = false;
+
+         this.configureTable(true);
       },
 
       configure(args) {
-
          this.jsroot = args.jsroot;
-
          this.websocket = args.websocket; // special channel created from main conection
-
          this.viewer = args.viewer;
-
          this.standalone = args.standalone;
-
          this.websocket.setReceiver(this);
+         this._embeded = true;
+
+         this.configureTable(args.show_columns);
+      },
+
+      configureTable(show_columns) {
 
          // create model only for browser - no need for anybody else
          this.model = new GeomBrowserModel();
@@ -73,7 +91,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             template: new mText({text: "{name}", tooltip: "{name}", wrapping: false})
          }));
 
-         if (args.show_columns) {
+         if (show_columns) {
             //new mCheckBox({ enabled: true, visible: true, selected: "{node_visible}", select: vis_selected_handler }),
             t.setColumnHeaderVisible(true);
 
@@ -240,6 +258,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
       onWebsocketClosed() {
          // when connection closed, close panel as well
+         if (window && !this._embeded) window.close();
          this.isConnected = false;
       },
 
@@ -254,7 +273,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          let mhdr = msg.slice(0,6);
          msg = msg.slice(6);
 
-         // console.log(`RECV ${mhdr} len: ${msg.length} ${msg.slice(0,70)} ...`);
+         console.log(`RECV ${mhdr} len: ${msg.length} ${msg.slice(0,70)} ...`);
 
          switch (mhdr) {
          case "DESCR:":  // browser hierarchy
