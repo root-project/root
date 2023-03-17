@@ -488,20 +488,19 @@ void ROOT::Experimental::Detail::RFieldBase::ConnectPageSink(RPageSink &pageSink
 
    /// Fix-up default encoding: if the ntuple is uncompressed, the default encoding should be non-split
    if ((pageSink.GetWriteOptions().GetCompression() == 0) && HasDefaultColumnRepresentative()) {
-      const auto &rep = GetColumnRepresentative();
-      if (rep == ColumnRepresentation_t({EColumnType::kSplitIndex32})) {
-         SetColumnRepresentative({EColumnType::kIndex32});
-      } else if (rep == ColumnRepresentation_t({EColumnType::kSplitReal64})) {
-         SetColumnRepresentative({EColumnType::kReal64});
-      } else if (rep == ColumnRepresentation_t({EColumnType::kSplitReal32})) {
-         SetColumnRepresentative({EColumnType::kReal32});
-      } else if (rep == ColumnRepresentation_t({EColumnType::kSplitInt64})) {
-         SetColumnRepresentative({EColumnType::kInt64});
-      } else if (rep == ColumnRepresentation_t({EColumnType::kSplitInt32})) {
-         SetColumnRepresentative({EColumnType::kInt32});
-      } else if (rep == ColumnRepresentation_t({EColumnType::kSplitInt16})) {
-         SetColumnRepresentative({EColumnType::kInt16});
+      ColumnRepresentation_t rep = GetColumnRepresentative();
+      for (auto &colType : rep) {
+         switch (colType) {
+         case EColumnType::kSplitIndex32: colType = EColumnType::kIndex32; break;
+         case EColumnType::kSplitReal64: colType = EColumnType::kReal64; break;
+         case EColumnType::kSplitReal32: colType = EColumnType::kReal32; break;
+         case EColumnType::kSplitInt64: colType = EColumnType::kInt64; break;
+         case EColumnType::kSplitInt32: colType = EColumnType::kInt32; break;
+         case EColumnType::kSplitInt16: colType = EColumnType::kInt16; break;
+         default: break;
+         }
       }
+      SetColumnRepresentative(rep);
    }
 
    GenerateColumnsImpl();
@@ -522,6 +521,15 @@ void ROOT::Experimental::Detail::RFieldBase::ConnectPageSource(RPageSource &page
       const auto descriptorGuard = pageSource.GetSharedDescriptorGuard();
       const RNTupleDescriptor &desc = descriptorGuard.GetRef();
       GenerateColumnsImpl(desc);
+      ColumnRepresentation_t onDiskColumnTypes;
+      for (const auto &c : fColumns) {
+         onDiskColumnTypes.emplace_back(c->GetModel().GetType());
+      }
+      for (const auto &t : GetColumnRepresentations().GetDeserializationTypes()) {
+         if (t == onDiskColumnTypes)
+            fColumnRepresentative = &t;
+      }
+      R__ASSERT(fColumnRepresentative);
       if (fOnDiskId != kInvalidDescriptorId)
          fOnDiskTypeVersion = desc.GetFieldDescriptor(fOnDiskId).GetTypeVersion();
    }
