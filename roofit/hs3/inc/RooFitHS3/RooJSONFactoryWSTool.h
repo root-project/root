@@ -155,7 +155,6 @@ public:
       return names;
    }
 
-   static std::string genPrefix(const RooFit::Detail::JSONNode &p, bool trailing_underscore);
    static void exportHistogram(const TH1 &h, RooFit::Detail::JSONNode &n, const std::vector<std::string> &obsnames,
                                const TH1 *errH = nullptr, bool writeObservables = true, bool writeErrors = true);
    static void writeObservables(const TH1 &h, RooFit::Detail::JSONNode &n, const std::vector<std::string> &varnames);
@@ -178,14 +177,12 @@ public:
    bool importJSONfromString(const std::string &s);
    bool importYMLfromString(const std::string &s);
 
-   void importFunctions(const RooFit::Detail::JSONNode &n);
    void importFunction(const RooFit::Detail::JSONNode &n, bool isPdf);
    RooFit::Detail::JSONNode *exportObject(const RooAbsArg *func);
 
    static std::unique_ptr<RooFit::Detail::JSONTree> createNewJSONTree();
 
    static RooFit::Detail::JSONNode &makeVariablesNode(RooFit::Detail::JSONNode &rootNode);
-   static RooFit::Detail::JSONNode const *getVariablesNode(RooFit::Detail::JSONNode const &rootNode);
 
    // error handling helpers
    class DependencyMissingError : public std::exception {
@@ -215,7 +212,6 @@ private:
    T *requestImpl(const std::string &objname);
 
    void exportData(RooAbsData &data);
-   static std::vector<std::vector<int>> generateBinIndices(const RooArgList &vars);
 
    void importAllNodes(const RooFit::Detail::JSONNode &n);
 
