@@ -41,6 +41,17 @@ using RooFit::Detail::JSONNode;
 
 namespace {
 
+double round_prec(double d, int nSig)
+{
+   if (d == 0.0)
+      return 0.0;
+   int ndigits = floor(log10(std::abs(d))) + 1 - nSig;
+   double sf = pow(10, ndigits);
+   if (std::abs(d / sf) < 2)
+      ndigits--;
+   return sf * round(d / sf);
+}
+
 // To avoid repeating the same string literals that can potentially get out of
 // sync.
 namespace Literals {
@@ -258,19 +269,6 @@ bool hasStaterror(const JSONNode &comp)
    return false;
 }
 
-std::unique_ptr<ParamHistFunc> createPHFShapeSys(const JSONNode &p, const std::string &phfname,
-                                                 RooJSONFactoryWSTool &tool, RooArgList &constraints,
-                                                 const RooArgSet &observables)
-{
-   std::vector<double> vals;
-   for (const auto &v : p["data"]["vals"].children()) {
-      vals.push_back(v.val_double());
-   }
-   RooArgList gammas;
-   return createPHF(RooJSONFactoryWSTool::name(p), phfname, vals, tool, constraints, observables, p["constraint"].val(),
-                    gammas, 0, 1000);
-}
-
 bool importHistSample(RooJSONFactoryWSTool &tool, RooDataHist &dh, Scope &scope, const std::string &fprefix,
                       const JSONNode &p, RooArgList &constraints)
 {
@@ -344,12 +342,14 @@ bool importHistSample(RooJSONFactoryWSTool &tool, RooDataHist &dh, Scope &scope,
          } else if (modtype == "shapesys") {
             std::string sysname(mod["name"].val());
             std::string funcName = prefixedName + "_" + sysname + "_ShapeSys";
-            RooAbsArg *phf = scope.getObject(funcName);
-            if (!phf) {
-               tool.wsImport(*createPHFShapeSys(mod, funcName, tool, constraints, varlist));
-               phf = ws.function(funcName);
-               scope.setObject(funcName, phf);
+            std::vector<double> vals;
+            for (const auto &v : mod["data"]["vals"].children()) {
+               vals.push_back(v.val_double());
             }
+            RooArgList gammas;
+            tool.wsImport(*createPHF(sysname, funcName, vals, tool, constraints, varlist, mod["constraint"].val(),
+                                     gammas, 0, 1000));
+            auto phf = ws.function(funcName);
             shapeElems.add(*phf);
          }
       }
@@ -703,7 +703,8 @@ bool tryExportHistFactory(const std::string &pdfname, const std::string chname, 
       }
 
       // sort and configure norms
-      std::sort(sample.norms.begin(), sample.norms.end());
+      std::sort(sample.norms.begin(), sample.norms.end(),
+                [](auto &l, auto &r) { return strcmp(l->GetName(), r->GetName()) < 0; });
 
       // sort and configure the normsys
       if (fip) {
@@ -767,8 +768,24 @@ bool tryExportHistFactory(const std::string &pdfname, const std::string chname, 
             sample.dobb = true;
          } else { // other ShapeSys
             ShapeSys sys(phf->GetName());
-            sys.name.erase(sys.name.find("_ShapeSys"));
-            sys.name.erase(0, chname.size() + 1);
+            if (endsWith(sys.name, "_ShapeSys")) {
+               sys.name.erase(sys.name.size() - 9);
+            }
+            if (startsWith(sys.name, "model_" + chname + "_")) {
+               sys.name.erase(0, chname.size() + 7);
+            }
+            if (startsWith(sys.name, chname + "_")) {
+               sys.name.erase(0, chname.size() + 1);
+            }
+            if (startsWith(sys.name, sample.name + "_")) {
+               sys.name.erase(0, sample.name.size() + 1);
+            }
+            if (endsWith(sys.name, "_" + chname)) {
+               sys.name.erase(sys.name.size() - chname.size() - 1);
+            }
+            if (endsWith(sys.name, "_" + sample.name)) {
+               sys.name.erase(sys.name.size() - sample.name.size() - 1);
+            }
 
             for (const auto &g : phf->paramList()) {
                if (RooPoisson *constraint_p = findClient<RooPoisson>(g)) {
@@ -798,7 +815,9 @@ bool tryExportHistFactory(const std::string &pdfname, const std::string chname, 
             const int i = bin.first;
             const double relerr_tot = bin.second;
             const double count = sample.hist->GetBinContent(i);
-            sample.hist->SetBinError(i, relerr_tot * tot_yield[i] / std::sqrt(tot_yield2[i]) * count);
+            // this reconstruction is inherently unprecise, so we truncate it at some decimal places to make sure that
+            // we don't carry around too many useless digits
+            sample.hist->SetBinError(i, round_prec(relerr_tot * tot_yield[i] / std::sqrt(tot_yield2[i]) * count, 7));
          }
       }
    }
@@ -856,7 +875,7 @@ bool tryExportHistFactory(const std::string &pdfname, const std::string chname, 
          observablesWritten = true;
       }
       auto &data = s["data"];
-      RooJSONFactoryWSTool::exportHistogram(*sample.hist, data, varnames, 0, false, sample.dobb);
+      RooJSONFactoryWSTool::exportHistogram(*sample.hist, data, varnames, nullptr, false, sample.dobb);
    }
    return true;
 }
