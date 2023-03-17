@@ -346,11 +346,9 @@ public:
       RealVector(arg,initialCapacity) {}
 
     RealFullVector(const RealFullVector& other, RooAbsReal* real=nullptr) : RealVector(other,real),
-      _bufE(other._bufE), _bufEL(other._bufEL), _bufEH(other._bufEH)
+      _bufE(other._bufE), _bufEL(other._bufEL), _bufEH(other._bufEH),
+      _vecE{other._vecE}, _vecEL{other._vecEL}, _vecEH{other._vecEH}
     {
-      if (other._vecE) _vecE = std::make_unique<std::vector<double>>(*other._vecE);
-      if (other._vecEL) _vecEL = std::make_unique<std::vector<double>>(*other._vecEL);
-      if (other._vecEH) _vecEH = std::make_unique<std::vector<double>>(*other._vecEH);
     }
 
     RealFullVector(const RealVector& other, RooAbsReal* real=nullptr) : RealVector(other,real) {}
@@ -358,105 +356,74 @@ public:
     RealFullVector& operator=(RealFullVector const& other) = delete;
 
     void setErrorBuffer(double* newBuf) {
-      /*       std::cout << "setErrorBuffer(" << _nativeReal->GetName() << ") newBuf = " << newBuf << std::endl ; */
       _bufE = newBuf ;
-      if (!_vecE) _vecE = std::make_unique<std::vector<double>>();
-      _vecE->reserve(_vec.capacity()) ;
+      _vecE.reserve(_vec.capacity()) ;
     }
     void setAsymErrorBuffer(double* newBufL, double* newBufH) {
-      _bufEL = newBufL ; _bufEH = newBufH ;
-      if (!_vecEL) {
-        _vecEL = std::make_unique<std::vector<double>>();
-        _vecEH = std::make_unique<std::vector<double>>();
-        _vecEL->reserve(_vec.capacity()) ;
-        _vecEH->reserve(_vec.capacity()) ;
-      }
+      _bufEL = newBufL;
+      _bufEH = newBufH;
+      _vecEL.reserve(_vec.capacity()) ;
+      _vecEH.reserve(_vec.capacity()) ;
     }
 
     void fill() {
       RealVector::fill() ;
-      if (_vecE) _vecE->push_back(*_bufE) ;
-      if (_vecEL) _vecEL->push_back(*_bufEL) ;
-      if (_vecEH) _vecEH->push_back(*_bufEH) ;
+      if (_bufE) _vecE.push_back(*_bufE) ;
+      if (_bufEL) _vecEL.push_back(*_bufEL) ;
+      if (_bufEH) _vecEH.push_back(*_bufEH) ;
     } ;
 
     void write(Int_t i) {
       RealVector::write(i) ;
-      if (_vecE) (*_vecE)[i] = *_bufE ;
-      if (_vecEL) (*_vecEL)[i] = *_bufEL ;
-      if (_vecEH) (*_vecEH)[i] = *_bufEH ;
+      if (_bufE) _vecE[i] = *_bufE ;
+      if (_bufEL) _vecEL[i] = *_bufEL ;
+      if (_bufEH) _vecEH[i] = *_bufEH ;
     }
 
     void reset() {
       RealVector::reset();
-      if (_vecE) {
-        std::vector<double> tmp;
-        _vecE->swap(tmp);
-      }
-      if (_vecEL) {
-        std::vector<double> tmp;
-        _vecEL->swap(tmp);
-      }
-      if (_vecEH) {
-        std::vector<double> tmp;
-        _vecEH->swap(tmp);
-      }
+      _vecE.clear();
+      _vecEL.clear();
+      _vecEH.clear();
     }
 
     inline void load(Int_t idx) const {
       RealVector::load(idx) ;
-      if (_vecE) {
-        *_bufE = (*_vecE)[idx];
-      }
-      if (_vecEL) {
-        *_bufEL = (*_vecEL)[idx] ;
-      }
-      if (_vecEH) {
-        *_bufEH = (*_vecEH)[idx] ;
-      }
+      if (_bufE) *_bufE = _vecE[idx];
+      if (_bufEL) *_bufEL = _vecEL[idx];
+      if (_bufEH) *_bufEH = _vecEH[idx];
     }
 
     void resize(Int_t siz) {
       RealVector::resize(siz);
-      std::vector<double>* vlist[3] = {_vecE.get(), _vecEL.get(), _vecEH.get()};
-      for (unsigned i = 0; i < 3; ++i) {
-        if (vlist[i]) {
-          if (siz < Int_t(vlist[i]->capacity()) / 2 && vlist[i]->capacity() > (VECTOR_BUFFER_SIZE / sizeof(double))) {
-            // if we gain a factor of 2 in memory, we copy and swap
-            std::vector<double> tmp;
-            tmp.reserve(std::max(siz, Int_t(VECTOR_BUFFER_SIZE / sizeof(double))));
-            if (!vlist[i]->empty())
-              tmp.assign(vlist[i]->begin(),
-                  std::min(_vec.end(), _vec.begin() + siz));
-            if (Int_t(tmp.size()) != siz)
-              tmp.resize(siz);
-            vlist[i]->swap(tmp);
-          } else {
-            vlist[i]->resize(siz);
-          }
-        }
-      }
+      if(_bufE) _vecE.resize(siz);
+      if(_bufEL) _vecEL.resize(siz);
+      if(_bufEH) _vecEH.resize(siz);
     }
 
     void reserve(Int_t siz) {
       RealVector::reserve(siz);
-      if (_vecE) _vecE->reserve(siz);
-      if (_vecEL) _vecEL->reserve(siz);
-      if (_vecEH) _vecEH->reserve(siz);
+      if(_bufE) _vecE.reserve(siz);
+      if(_bufEL) _vecEL.reserve(siz);
+      if(_bufEH) _vecEH.reserve(siz);
     }
 
-    std::vector<double>* dataE() { return _vecE.get(); }
-    std::vector<double>* dataEL() { return _vecEL.get(); }
-    std::vector<double>* dataEH() { return _vecEH.get(); }
+    double* bufE() const { return _bufE; }
+    double* bufEL() const { return _bufEL; }
+    double* bufEH() const { return _bufEH; }
+
+    std::vector<double> const& dataE() const { return _vecE; }
+    std::vector<double> const& dataEL() const { return _vecEL; }
+    std::vector<double> const& dataEH() const { return _vecEH; }
 
   private:
-    friend class RooVectorDataStore ;
+
     double *_bufE = nullptr; ///<!
     double *_bufEL = nullptr; ///<!
     double *_bufEH = nullptr; ///<!
-    std::unique_ptr<std::vector<double>> _vecE;
-    std::unique_ptr<std::vector<double>> _vecEL;
-    std::unique_ptr<std::vector<double>> _vecEH ;
+    std::vector<double> _vecE;
+    std::vector<double> _vecEL;
+    std::vector<double> _vecEH;
     ClassDefOverride(RealFullVector,2); // STL-vector-based Data Storage class
   };
 
