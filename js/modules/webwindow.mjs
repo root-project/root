@@ -213,6 +213,7 @@ class FileDumpSocket {
       // when file request running - just ignore
       if (this.wait_for_file) return;
       let fname = this.protocol[this.cnt];
+
       if (!fname) return;
       if (fname == 'send') return; // waiting for send
       this.wait_for_file = true;
@@ -220,8 +221,11 @@ class FileDumpSocket {
       httpRequest(fname, (fname.indexOf('.bin') > 0 ? 'buf' : 'text')).then(res => {
          this.wait_for_file = false;
          if (!res) return;
-         if (this.receiver.provideData)
-            this.receiver.provideData(1, res, 0);
+         let chid = 1, p = fname.indexOf('_ch');
+         if (p > 0)
+            chid = Number.parseInt(fname.slice(p+3, fname.indexOf('.', p)));
+         if (isFunc(this.receiver.provideData))
+            this.receiver.provideData(chid, res, 0);
          setTimeout(() => this.nextOperation(), 10);
       });
    }
@@ -289,8 +293,9 @@ class WebWindowHandle {
 
    /** @summary Provide data for receiver. When no queue - do it directly.
     * @private */
-   provideData(chid, _msg, _len) {
+   provideData(chid, msg, len) {
       if (this.wait_first_recv) {
+         // here dummy first recv like EMBED_DONE is handled
          delete this.wait_first_recv;
          this.state = 1;
          return this.invokeReceiver(false, 'onWebsocketOpened');
@@ -299,18 +304,17 @@ class WebWindowHandle {
       if ((chid > 1) && this.channels) {
          const channel = this.channels[chid];
          if (channel)
-            return channel.provideData(1, _msg, _len);
+            return channel.provideData(1, msg, len);
       }
 
-      const force_queue = _len && (_len < 0);
-
+      const force_queue = len && (len < 0);
       if (!force_queue && (!this.msgqueue || !this.msgqueue.length))
-         return this.invokeReceiver(false, 'onWebsocketMsg', _msg, _len);
+         return this.invokeReceiver(false, 'onWebsocketMsg', msg, len);
 
       if (!this.msgqueue) this.msgqueue = [];
-      if (force_queue) _len = undefined;
+      if (force_queue) len = undefined;
 
-      this.msgqueue.push({ ready: true, msg: _msg, len: _len });
+      this.msgqueue.push({ ready: true, msg, len });
    }
 
    /** @summary Reserve entry in queue for data, which is not yet decoded.
