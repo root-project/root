@@ -455,10 +455,12 @@ std::unique_ptr<RooAbsData> loadData(const JSONNode &p, RooWorkspace &workspace)
    return nullptr;
 }
 
-void importAnalysis(const RooFit::Detail::JSONNode &analysisNode, const RooFit::Detail::JSONNode &likelihoodsNode,
-                    const RooFit::Detail::JSONNode &mcAuxNode, RooWorkspace &workspace,
+void importAnalysis(const RooFit::Detail::JSONNode &rootnode, const RooFit::Detail::JSONNode &analysisNode,
+                    const RooFit::Detail::JSONNode &likelihoodsNode, RooWorkspace &workspace,
                     std::vector<std::unique_ptr<RooAbsData>> &datas)
 {
+   const RooFit::Detail::JSONNode &mcAuxNode =
+      dereference(rootnode, {"misc", "ROOT_internal", "ModelConfigs", analysisNode["name"].val()}, rootnode);
 
    // if this is a toplevel pdf, also create a modelConfig for it
    std::string mcname = "ModelConfig";
@@ -481,10 +483,19 @@ void importAnalysis(const RooFit::Detail::JSONNode &analysisNode, const RooFit::
       nllDataNames.push_back(nameNode.val());
    }
 
+   std::string const &pdfName = analysisNode["name"].val();
+
+   std::vector<std::string> channelNames;
+   JSONNode const &channelNamesNode =
+      dereference(rootnode, {"misc", "ROOT_internal", "channel_names", pdfName}, rootnode);
+   for (auto &n : channelNamesNode.children()) {
+      channelNames.push_back(n.val());
+   }
+
    std::stringstream ss;
-   ss << "SIMUL::" << analysisNode["name"].val() << "(channelCat[";
+   ss << "SIMUL::" << pdfName << "(channelCat[";
    for (std::size_t iChannel = 0; iChannel < nllDistNames.size(); ++iChannel) {
-      ss << "channel_" << iChannel << "=" << iChannel;
+      ss << channelNames[iChannel] << "=" << iChannel;
       if (iChannel < nllDistNames.size() - 1) {
          ss << ",";
       }
@@ -492,8 +503,7 @@ void importAnalysis(const RooFit::Detail::JSONNode &analysisNode, const RooFit::
    ss << "]";
 
    for (std::size_t iChannel = 0; iChannel < nllDistNames.size(); ++iChannel) {
-      ss << ", "
-         << "channel_" << iChannel << "=" << nllDistNames[iChannel];
+      ss << ", " << channelNames[iChannel] << "=" << nllDistNames[iChannel];
    }
    ss << ")";
    auto pdf = static_cast<RooSimultaneous *>(workspace.factory(ss.str()));
@@ -543,7 +553,7 @@ void importAnalysis(const RooFit::Detail::JSONNode &analysisNode, const RooFit::
       std::unique_ptr<RooAbsData> &channelData = *std::find_if(
          datas.begin(), datas.end(), [&](auto &d) { return d && d->GetName() == nllDataNames[iChannel]; });
       allVars.add(*channelData->get());
-      dsMap.insert({"channel_" + std::to_string(iChannel), std::move(channelData)});
+      dsMap.insert({channelNames[iChannel], std::move(channelData)});
    }
 
    if (!mcAuxNode.has_child("combined_data_name")) {
@@ -720,11 +730,35 @@ void RooJSONFactoryWSTool::exportVariables(const RooArgSet &allElems, JSONNode &
    }
 }
 
+void RooJSONFactoryWSTool::writeChannelNames(JSONNode &rootnode, std::string const &simPdfName,
+                                             std::vector<std::string> const &channelNames)
+{
+   auto &miscinfo = rootnode["misc"];
+   miscinfo.set_map();
+   auto &rootinfo = miscinfo["ROOT_internal"];
+   rootinfo.set_map();
+   auto &categoriesinfo = rootinfo["channel_names"];
+   categoriesinfo.set_map();
+   // Avoid repeated filling
+   if (!categoriesinfo.has_child(simPdfName)) {
+      auto &catinfo = categoriesinfo[simPdfName];
+      catinfo.fill_seq(channelNames);
+   }
+}
+
 JSONNode *RooJSONFactoryWSTool::exportObject(const RooAbsArg *func)
 {
-   if (dynamic_cast<RooSimultaneous const *>(func)) {
-      // RooSimultaneous is not used in the HS3 standard, we only export the dependents
+   if (auto simPdf = dynamic_cast<RooSimultaneous const *>(func)) {
+      // RooSimultaneous is not used in the HS3 standard, we only export the
+      // dependents and some ROOT internal information.
       RooJSONFactoryWSTool::exportDependants(func);
+
+      std::vector<std::string> channelNames;
+      for (auto const &item : simPdf->indexCat()) {
+         channelNames.push_back(item.first);
+      }
+      writeChannelNames(*_rootnodeOutput, simPdf->GetName(), channelNames);
+
       return nullptr;
    } else if (dynamic_cast<RooAbsCategory const *>(func)) {
       // categories are created by the respective RooSimultaneous, so we're skipping the export here
@@ -1425,17 +1459,15 @@ void RooJSONFactoryWSTool::importAllNodes(const RooFit::Detail::JSONNode &n)
       }
    }
 
-   _rootnodeInput = nullptr;
-   _domains.reset();
-
    // Now, read in analyses and likelihoods if there are any
    if (n.has_child("analyses")) {
       for (JSONNode const &analysisNode : n["analyses"].children()) {
-         importAnalysis(analysisNode, n["likelihoods"],
-                        dereference(n, {"misc", "ROOT_internal", "ModelConfigs", analysisNode["name"].val()}, n),
-                        _workspace, datas);
+         importAnalysis(*_rootnodeInput, analysisNode, n["likelihoods"], _workspace, datas);
       }
    }
+
+   _rootnodeInput = nullptr;
+   _domains.reset();
 
    for (auto const &d : datas) {
       if (d)
