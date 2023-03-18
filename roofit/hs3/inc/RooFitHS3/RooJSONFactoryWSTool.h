@@ -203,6 +203,9 @@ public:
    static void
    writeCombinedDataName(RooFit::Detail::JSONNode &rootnode, std::string const &pdfName, std::string const &dataName);
 
+   static void writeChannelNames(RooFit::Detail::JSONNode &rootnode, std::string const &simPdfName,
+                                 std::vector<std::string> const &channelNames);
+
 private:
    struct Config {
       static bool stripObservables;
