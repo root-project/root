@@ -133,7 +133,7 @@ RooRealVar &getNP(RooWorkspace &ws, std::string const &parname)
    std::string globname = "nom_" + parname;
    RooRealVar &nom = getOrCreate<RooRealVar>(ws, globname, 0.);
    nom.setAttribute("glob");
-   nom.setRange(-5, 5);
+   nom.setRange(-10, 10);
    nom.setConstant(true);
    return par;
 }
