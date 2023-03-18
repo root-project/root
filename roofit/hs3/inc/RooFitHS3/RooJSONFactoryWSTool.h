@@ -229,6 +229,7 @@ private:
 
    // member variables
    const RooFit::Detail::JSONNode *_rootnodeInput = nullptr;
+   const RooFit::Detail::JSONNode *_attributesNode = nullptr;
    RooFit::Detail::JSONNode *_rootnodeOutput = nullptr;
    RooWorkspace &_workspace;
 
