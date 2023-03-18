@@ -221,6 +221,7 @@ void exportMeasurement(RooStats::HistFactory::Measurement &measurement, JSONNode
    }
 
    // the data
+   std::vector<std::string> channelNames;
    for (const auto &c : measurement.GetChannels()) {
       JSONNode &dataOutput = RooJSONFactoryWSTool::appendNamedChild(n["data"], std::string("obsData_") + c.GetName());
 
@@ -231,9 +232,11 @@ void exportMeasurement(RooStats::HistFactory::Measurement &measurement, JSONNode
       }
 
       RooJSONFactoryWSTool::exportHistogram(*c.GetData().GetHisto(), dataOutput, obsnames);
+      channelNames.push_back(c.GetName());
    }
 
    RooJSONFactoryWSTool::writeCombinedDataName(n, measurement.GetName(), "obsData");
+   RooJSONFactoryWSTool::writeChannelNames(n, measurement.GetName(), channelNames);
 }
 
 } // namespace

@@ -1,13 +1,18 @@
 {
-    "misc" : { "ROOT_internal" : { "ModelConfigs" : {
-        "main": {
-            "combined_data_name": "observed"
+    "misc" : { "ROOT_internal" : {
+        "ModelConfigs" : {
+            "main": {
+                "combined_data_name": "observed"
+            }
+        },
+        "channel_names" : {
+            "main": ["channel1"]
         }
-    }}},
+    }},
     "analyses": [
         {
             "name": "main",
-            "likelihood": "channel1",
+            "likelihood": "main_likelihood",
             "pois": [
                 "mu"
             ],
@@ -18,7 +23,7 @@
     ],
     "likelihoods": [
         {
-            "name": "channel1",
+            "name": "main_likelihood",
             "distributions": ["model_channel1"],
             "data": ["observed_channel1"]
         }
