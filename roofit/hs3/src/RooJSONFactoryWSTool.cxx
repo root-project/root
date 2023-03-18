@@ -351,6 +351,14 @@ void exportAttributes(const RooAbsArg *arg, JSONNode &rootnode)
       node = &RooJSONFactoryWSTool::appendNamedChild(attributesNode, arg->GetName());
    };
 
+   // We have to remember if the variable was a constant RooRealVar or a
+   // RooConstVar is RooFit to reconstruct the workspace correctly. The HS3
+   // standard does not make this distinction.
+   if (dynamic_cast<RooConstVar const *>(arg)) {
+      initializeNode();
+      (*node)["is_const_var"] << 1;
+   }
+
    // export all string attributes of an object
    if (!arg->stringAttributes().empty()) {
       for (const auto &it : arg->stringAttributes()) {
@@ -1090,6 +1098,16 @@ void RooJSONFactoryWSTool::importVariable(const JSONNode &p)
       oocoutE(nullptr, InputArguments) << ss.str() << std::endl;
       return;
    }
+   if (_attributesNode) {
+      if (auto *attrNode = findNamedChild(*_attributesNode, name)) {
+         // We should not create RooRealVar objects for RooConstVars!
+         if (attrNode->has_child("is_const_var") && (*attrNode)["is_const_var"].val_int() == 1) {
+            RooConstVar v(name.c_str(), name.c_str(), p["value"].val_double());
+            wsImport(v);
+            return;
+         }
+      }
+   }
    RooRealVar v(name.c_str(), name.c_str(), 1.);
    configureVariable(*_domains, p, v);
    wsImport(v);
@@ -1360,6 +1378,12 @@ void RooJSONFactoryWSTool::importAllNodes(const RooFit::Detail::JSONNode &n)
       _domains->readJSON(n["domains"]);
 
    _rootnodeInput = &n;
+
+   _attributesNode = &dereference(*_rootnodeInput, {"misc", "ROOT_internal", "attributes"}, *_rootnodeInput);
+   if (!_attributesNode->is_seq()) {
+      _attributesNode = nullptr;
+   }
+
    this->importDependants(n);
 
    _workspace.saveSnapshot("fromJSON", _workspace.allVars());
@@ -1381,14 +1405,14 @@ void RooJSONFactoryWSTool::importAllNodes(const RooFit::Detail::JSONNode &n)
    _workspace.loadSnapshot("fromJSON");
 
    // Import attributes
-   JSONNode const &attributesNode =
-      dereference(*_rootnodeInput, {"misc", "ROOT_internal", "attributes"}, *_rootnodeInput);
-   if (attributesNode.is_seq()) {
-      for (const auto &elem : attributesNode.children()) {
+   if (_attributesNode) {
+      for (const auto &elem : _attributesNode->children()) {
          if (RooAbsArg *arg = _workspace.arg(elem["name"].val()))
             importAttributes(arg, elem);
       }
    }
+
+   _attributesNode = nullptr;
 
    // We delay the import of the data to after importAnalysis(), because it
    // might be that some datasets are merged to combined datasets there. In

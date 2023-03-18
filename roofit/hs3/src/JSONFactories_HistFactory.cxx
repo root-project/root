@@ -217,13 +217,17 @@ createPHF(const std::string &sysname, const std::string &phfname, const std::vec
    return phf;
 }
 
-std::unique_ptr<ParamHistFunc> createPHFMCStat(const std::string &name, const std::vector<double> &sumW,
+std::unique_ptr<ParamHistFunc> createPHFMCStat(std::string name, const std::vector<double> &sumW,
                                                const std::vector<double> &sumW2, RooJSONFactoryWSTool &tool,
                                                RooArgList &constraints, const RooArgSet &observables,
                                                double statErrorThreshold, const std::string &statErrorType)
 {
    if (sumW.empty())
       return nullptr;
+
+   if (startsWith(name, "model_")) {
+      name.erase(0, 6);
+   }
 
    RooArgList gammas;
    std::string phfname = std::string("mc_stat_") + name;
