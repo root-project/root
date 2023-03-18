@@ -1214,8 +1214,7 @@ namespace cling {
             TheDecl->setInvalidDecl();
           }
           if (TheDecl->isInvalidDecl()) {
-            // if the decl is invalid try to clean up
-            UnloadDecl(&S, const_cast<FunctionDecl*>(TheDecl));
+            // don't unload the decl, it will be done by failing the transaction
             return 0;
           }
        }
@@ -1584,10 +1583,13 @@ namespace cling {
     if (!inputEval(GivenArgs,funcArgs,diagOnOff,P,Interp,LH)) return 0;
 
     Interpreter::PushTransactionRAII pushedT(Interp);
-    return findFunction(foundDC,
-                        funcName, GivenArgs, objectIsConst,
-                        Context, Interp, functionSelector,
-                        diagOnOff);
+    auto res = findFunction(foundDC, funcName, GivenArgs, objectIsConst,
+                            Context, Interp, functionSelector, diagOnOff);
+    if (!res) {
+      auto* T = const_cast<Transaction*>(Interp->getCurrentTransaction());
+      T->setIssuedDiags(Transaction::kErrors);
+    }
+    return res;
   }
 
   struct NoParse {
@@ -1825,8 +1827,7 @@ namespace cling {
             fdecl->setInvalidDecl();
           }
           if (fdecl->isInvalidDecl()) {
-            // if the decl is invalid try to clean up
-            UnloadDecl(&S, fdecl);
+            // don't unload the decl, it will be done by failing the transaction
             return 0;
           }
           return fdecl;
