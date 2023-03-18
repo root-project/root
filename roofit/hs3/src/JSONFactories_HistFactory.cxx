@@ -135,15 +135,11 @@ RooRealVar &getNP(RooWorkspace &ws, std::string const &parname)
    nom.setAttribute("glob");
    nom.setRange(-5, 5);
    nom.setConstant(true);
-   RooRealVar &sigma = getOrCreate<RooRealVar>(ws, "sigma_" + parname, 1.);
-   sigma.setRange(sigma.getVal(), sigma.getVal());
-   sigma.setConstant(true);
    return par;
 }
 RooAbsPdf &getConstraint(RooWorkspace &ws, const std::string &sysname, const std::string &pname)
 {
-   return getOrCreate<RooGaussian>(ws, sysname + "_constraint", *ws.var(pname), *ws.var("nom_" + pname),
-                                   *ws.var("sigma_" + pname));
+   return getOrCreate<RooGaussian>(ws, sysname + "_constraint", *ws.var(pname), *ws.var("nom_" + pname), RooFit::RooConst(1.));
 }
 
 /// Convenient alternative to std::make_unique if you construct a RooFit
