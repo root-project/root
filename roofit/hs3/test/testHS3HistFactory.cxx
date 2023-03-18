@@ -145,11 +145,19 @@ TEST(TestHS3HistFactoryJSON, Closure)
 
    using namespace RooFit;
 
-   pdf->fitTo(*data, Strategy(1), Minos(*mc->GetParametersOfInterest()), GlobalObservables(*mc->GetGlobalObservables()),
-              PrintLevel(-1));
+   std::unique_ptr<RooFitResult> result{pdf->fitTo(*data, Strategy(1), Minos(*mc->GetParametersOfInterest()),
+                                                   GlobalObservables(*mc->GetGlobalObservables()), PrintLevel(-1),
+                                                   Save())};
 
-   pdfFromJson->fitTo(*dataFromJson, Strategy(1), Minos(*mcFromJson->GetParametersOfInterest()),
-                      GlobalObservables(*mcFromJson->GetGlobalObservables()), PrintLevel(-1));
+   std::unique_ptr<RooFitResult> resultFromJson{
+      pdfFromJson->fitTo(*dataFromJson, Strategy(1), Minos(*mcFromJson->GetParametersOfInterest()),
+                         GlobalObservables(*mcFromJson->GetGlobalObservables()), PrintLevel(-1), Save())};
+
+   // TODO:
+   //   * fix issues that prevent us from increasing precision
+   //   * do also the reverse comparison to check that the set of constant parameters matches
+   // EXPECT_TRUE(result->isIdenticalNoCov(*resultFromJSON, 1.0, 0.01));
+   EXPECT_TRUE(resultFromJson->isIdenticalNoCov(*result, 1.0, 0.01));
 
    const double muVal = ws->var("mu")->getVal();
    const double muJsonVal = wsFromJson->var("mu")->getVal();
@@ -194,11 +202,19 @@ TEST(TestHS3HistFactoryJSON, ClosureLoop)
 
    using namespace RooFit;
 
-   pdf->fitTo(*data, Strategy(1), Minos(*mc->GetParametersOfInterest()), GlobalObservables(*mc->GetGlobalObservables()),
-              PrintLevel(-1));
+   std::unique_ptr<RooFitResult> result{pdf->fitTo(*data, Strategy(1), Minos(*mc->GetParametersOfInterest()),
+                                                   GlobalObservables(*mc->GetGlobalObservables()), PrintLevel(-1),
+                                                   Save())};
 
-   newpdf->fitTo(*newdata, Strategy(1), Minos(*newmc->GetParametersOfInterest()),
-                 GlobalObservables(*newmc->GetGlobalObservables()), PrintLevel(-1));
+   std::unique_ptr<RooFitResult> newresult{
+      newpdf->fitTo(*newdata, Strategy(1), Minos(*newmc->GetParametersOfInterest()),
+                    GlobalObservables(*newmc->GetGlobalObservables()), PrintLevel(-1), Save())};
+
+   // TODO:
+   //   * fix issues that prevent us from increasing precision
+   //   * do also the reverse comparison to check that the set of constant parameters matches
+   // EXPECT_TRUE(result->isIdenticalNoCov(*newresult, 1.0, 0.01));
+   EXPECT_TRUE(newresult->isIdenticalNoCov(*result, 1.0, 0.01));
 
    const double muVal = ws->var("mu")->getVal();
    const double muNewVal = newws.var("mu")->getVal();
