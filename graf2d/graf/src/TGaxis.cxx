@@ -36,11 +36,6 @@
 #include "strlcpy.h"
 #include "snprintf.h"
 
-Int_t   TGaxis::fgMaxDigits = 5;
-Float_t TGaxis::fXAxisExpXOffset = 0.;
-Float_t TGaxis::fXAxisExpYOffset = 0.;
-Float_t TGaxis::fYAxisExpXOffset = 0.;
-Float_t TGaxis::fYAxisExpYOffset = 0.;
 const Int_t kHori = BIT(9);
 
 ClassImp(TGaxis);
@@ -390,7 +385,7 @@ And other signature is also allowed:
 \anchor GA12
 ## Maximum Number of Digits for the axis labels
 
-The static function `TGaxis::SetMaxDigits` sets the maximum number of
+The static method `TGaxis::SetMaxDigits` sets the maximum number of
 digits permitted for the axis labels above which the notation with 10^N is used.
 For example, to accept 6 digits number like 900000 on an axis call
 `TGaxis::SetMaxDigits(6)`. The default value is 5.
@@ -947,12 +942,11 @@ TGaxis *TGaxis::DrawAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t y
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Static function returning fgMaxDigits (See SetMaxDigits).
+/// Static function returning `gStyle->GetAxisMaxDigits()`.
 
 Int_t TGaxis::GetMaxDigits()
 {
-
-   return fgMaxDigits;
+   return gStyle->GetAxisMaxDigits();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1257,7 +1251,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
    nn1       = TMath::Max(n1a,1)*nn2+1;
    nticks    = nn1;
    maxDigits = (ndiv/1000000);
-   if (maxDigits==0) maxDigits = fgMaxDigits;
+   if (maxDigits==0) maxDigits = gStyle->GetAxisMaxDigits();
 
 // Axis bining optimisation is ignored if:
 //   - the first and the last label are equal
@@ -2139,12 +2133,16 @@ L110:
                if (GetLabelFont()%10 < 2) // force TLatex mode in PaintLatex
                   textaxis.SetTextFont((Int_t)(GetLabelFont()/10)*10+2);
                if (fAxis && !strcmp(fAxis->GetName(),"xaxis")) {
-                  xx = xx + fXAxisExpXOffset;
-                  yy = yy + fXAxisExpYOffset;
+                  Float_t xoff = 0., yoff = 0.;
+                  gStyle->GetExponentOffset(xoff, yoff, "x");
+                  xx += xoff;
+                  yy += yoff;
                }
                if (fAxis && !strcmp(fAxis->GetName(),"yaxis")) {
-                  xx = xx + fYAxisExpXOffset;
-                  yy = yy + fYAxisExpYOffset;
+                  Float_t xoff = 0., yoff = 0.;
+                  gStyle->GetExponentOffset(xoff, yoff, "y");
+                  xx += xoff;
+                  yy += yoff;
                }
                typolabel = label;
                typolabel.ReplaceAll("-", "#minus");
@@ -2786,8 +2784,7 @@ void TGaxis::ResetLabelAttributes(TLatex* t)
 
 void TGaxis::SetMaxDigits(Int_t maxd)
 {
-   fgMaxDigits = maxd;
-   if (maxd < 1) fgMaxDigits = 1;
+   gStyle->SetAxisMaxDigits(maxd);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2917,25 +2914,16 @@ void TGaxis::SetTimeOffset(Double_t toffset, Option_t *option)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Static function to set X and Y offset of the axis 10^n notation.
+/// Static method to set X and Y offset of the axis 10^n notation.
 /// It applies on axis belonging to an histogram (TAxis). It has no effect on standalone TGaxis.
 /// It is in % of the pad size. It can be negative.
 /// axis specifies which axis ("x","y"), default = "x"
 /// if axis="xz" set the two axes
+/// Redirected to TStyle::SetExponentOffset
 
 void TGaxis::SetExponentOffset(Float_t xoff, Float_t yoff, Option_t *axis)
 {
-   TString opt = axis;
-   opt.ToLower();
-
-   if (opt.Contains("x")) {
-      fXAxisExpXOffset = xoff;
-      fXAxisExpYOffset = yoff;
-   }
-   if (opt.Contains("y")) {
-      fYAxisExpXOffset = xoff;
-      fYAxisExpYOffset = yoff;
-   }
+   gStyle->SetExponentOffset(xoff, yoff, axis);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

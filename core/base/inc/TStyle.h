@@ -141,6 +141,11 @@ private:
    Double_t      fCandleBoxRange;    ///< Candle plot, The fraction which is covered by the box (0 < x < 1), default 0.5
    Bool_t        fCandleScaled;      ///< Candle plot, shall the box-width be scaled to each other by the integral of a box?
    Bool_t        fViolinScaled;      ///< Violin plot, shall the violin or histos be scaled to each other by the maximum height?
+   Float_t       fXAxisExpXOffset;   ///< X axis exponent label X offset
+   Float_t       fXAxisExpYOffset;   ///< X axis exponent label Y offset
+   Float_t       fYAxisExpXOffset;   ///< Y axis exponent label X offset
+   Float_t       fYAxisExpYOffset;   ///< Y axis exponent label Y offset
+   Int_t         fAxisMaxDigits;     ///< Number of digits above which the 10^N notation is used for axis
 
 public:
    enum EPaperSize { kA4, kUSLetter };
@@ -175,6 +180,8 @@ public:
    Float_t          GetTitleOffset(Option_t *axis="X") const; //return axis title offset
    Float_t          GetTitleSize(Option_t *axis="X") const;   //return axis title size
    Float_t          GetTickLength(Option_t *axis="X") const;
+   void             GetExponentOffset(Float_t &xoff, Float_t &yoff, Option_t *axis = "X");
+   Int_t            GetAxisMaxDigits();
 
    Float_t          GetBarOffset() const {return fBarOffset;}
    Float_t          GetBarWidth() const {return fBarWidth;}
@@ -315,6 +322,8 @@ public:
    void             SetTitleFont(Style_t font=62, Option_t *axis="X"); //set axis title font or pad title font
    void             SetTitleOffset(Float_t offset=1, Option_t *axis="X"); //set axis title offset
    void             SetTitleSize(Float_t size=0.02, Option_t *axis="X");  //set axis title size or pad title size
+   void             SetExponentOffset(Float_t xoff=0., Float_t yoff=0., Option_t *axis="XY");
+   void             SetAxisMaxDigits(Int_t maxd=5);
    void             SetNumberContours(Int_t number=20);
    void             SetOptDate(Int_t datefl=1);
    void             SetOptFile(Int_t file=1) {fOptFile = file;}
@@ -420,7 +429,7 @@ public:
    void             SavePrimitive(std::ostream &out, Option_t * = "") override;
    void             SaveSource(const char *filename, Option_t *option = nullptr);
 
-   ClassDefOverride(TStyle, 20);  //A collection of all graphics attributes
+   ClassDefOverride(TStyle, 21);  //A collection of all graphics attributes
 };
 
 
