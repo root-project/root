@@ -3,6 +3,7 @@
 #include "ROOT/TestSupport.hxx"
 #include "TInterpreter.h"
 
+#include <bitset>
 #include <cstring>
 #include <limits>
 
@@ -456,6 +457,39 @@ TEST(RNTuple, Float)
    reader->LoadEntry(0);
    EXPECT_FLOAT_EQ(1.0, *reader->GetModel()->GetDefaultEntry()->Get<float>("f1"));
    EXPECT_FLOAT_EQ(2.0, *reader->GetModel()->GetDefaultEntry()->Get<float>("f2"));
+}
+
+TEST(RNTuple, Bitset)
+{
+   FileRaii fileGuard("test_ntuple_bitset.root");
+
+   auto model = RNTupleModel::Create();
+
+   auto f1 = model->MakeField<std::bitset<66>>("f1");
+   EXPECT_EQ(std::string("std::bitset<66>"), model->GetField("f1")->GetType());
+   auto f2 = model->MakeField<std::bitset<8>>("f2", "10101010");
+
+   {
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
+      writer->Fill();
+      f1->set(0);
+      f1->set(3);
+      f1->set(33);
+      f1->set(65);
+      f2->flip();
+      writer->Fill();
+   }
+
+   auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
+   EXPECT_EQ(std::string("std::bitset<66>"), reader->GetModel()->GetField("f1")->GetType());
+   auto bs1 = reader->GetModel()->GetDefaultEntry()->Get<std::bitset<66>>("f1");
+   auto bs2 = reader->GetModel()->GetDefaultEntry()->Get<std::bitset<8>>("f2");
+   reader->LoadEntry(0);
+   EXPECT_EQ("000000000000000000000000000000000000000000000000000000000000000000", bs1->to_string());
+   EXPECT_EQ("10101010", bs2->to_string());
+   reader->LoadEntry(1);
+   EXPECT_EQ("100000000000000000000000000000001000000000000000000000000000001001", bs1->to_string());
+   EXPECT_EQ("01010101", bs2->to_string());
 }
 
 TEST(RNTuple, UnsupportedStdTypes)
