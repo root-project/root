@@ -768,12 +768,16 @@ std::string RGeomDescription::ProcessBrowserRequest(const std::string &msg)
       for (auto &item : fDesc)
          vect[cnt++]= &item;
 
-      res = "DESCR:"s + TBufferJSON::ToJSON(&vect,GetJsonComp()).Data();
+      res = "DESCR:"s + TBufferJSON::ToJSON(&vect, GetJsonComp()).Data();
 
       if (fVisibility.size() > 0) {
          res += ":__PHYSICAL_VISIBILITY__:";
-         res += TBufferJSON::ToJSON(&fVisibility,GetJsonComp()).Data();
+         res += TBufferJSON::ToJSON(&fVisibility, GetJsonComp()).Data();
       }
+
+      res += ":__SELECTED_STACK__:";
+      res += TBufferJSON::ToJSON(&fSelectedStack, GetJsonComp()).Data();
+
    } else {
       std::vector<RGeoItem> temp_nodes;
       bool toplevel = request->path.empty();
@@ -801,7 +805,10 @@ std::string RGeomDescription::ProcessBrowserRequest(const std::string &msg)
                int pvis = IsPhysNodeVisible(stack);
                temp_nodes.emplace_back(iter.GetName(), iter.NumChilds(),
                                        iter.GetNodeId(), iter.GetColor(), iter.GetMaterial(), iter.GetVisible(), pvis < 0 ? iter.GetVisible() : pvis);
-               if (toplevel) temp_nodes.back().SetExpanded(true);
+               if (toplevel)
+                  temp_nodes.back().SetExpanded(true);
+               if (stack == fSelectedStack)
+                  temp_nodes.back().SetTop(true);
                request->number--;
 
                if (stack.size() > 0)
