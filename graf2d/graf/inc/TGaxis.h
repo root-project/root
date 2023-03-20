@@ -45,12 +45,6 @@ protected:
    TAxis     *fAxis;                ///<! Pointer to original TAxis axis (if any)
    TList     *fModLabs;             ///<  List of modified labels.
 
-   static Int_t fgMaxDigits;        ///<! Number of digits above which the 10>N notation is used
-   static Float_t fXAxisExpXOffset; ///<! Exponent X offset for the X axis
-   static Float_t fXAxisExpYOffset; ///<! Exponent Y offset for the X axis
-   static Float_t fYAxisExpXOffset; ///<! Exponent X offset for the Y axis
-   static Float_t fYAxisExpYOffset; ///<! Exponent Y offset for the Y axis
-
    TGaxis(const TGaxis&);
    TGaxis& operator=(const TGaxis&);
 

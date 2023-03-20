@@ -800,6 +800,11 @@ void TStyle::Reset(Option_t *opt)
    fCandleBoxRange      = 0.5;
    fCandleScaled = kFALSE;
    fViolinScaled = kTRUE;
+   fXAxisExpXOffset = 0;
+   fXAxisExpYOffset = 0;
+   fYAxisExpXOffset = 0;
+   fYAxisExpYOffset = 0;
+   fAxisMaxDigits = 5;
 
    TString style_name = opt;
 
@@ -1110,6 +1115,14 @@ Float_t TStyle::GetLabelSize( Option_t *axis) const
    if (ax == 2) return fYaxis.GetLabelSize();
    if (ax == 3) return fZaxis.GetLabelSize();
    return 0;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Method returns maximum number of digits permitted for the axis labels above which the
+/// notation with 10^N is used. See @ref SetAxisMaxDigits for more details
+Int_t TStyle::GetAxisMaxDigits()
+{
+   return fAxisMaxDigits;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1781,6 +1794,63 @@ void TStyle::SetTitleSize(Float_t size, Option_t *axis)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Method set X and Y offset of the axis 10^n notation.
+/// It applies on axis belonging to an histogram (TAxis). It has no effect on standalone TGaxis.
+/// It is in % of the pad size. It can be negative.
+/// axis specifies which axis ("x","y"), default = "x"
+/// if axis="xz" set the two axes
+
+void TStyle::SetExponentOffset(Float_t xoff, Float_t yoff, Option_t *axis)
+{
+   TString opt = axis;
+   opt.ToLower();
+
+   if (opt.Contains("x")) {
+      fXAxisExpXOffset = xoff;
+      fXAxisExpYOffset = yoff;
+   }
+   if (opt.Contains("y")) {
+      fYAxisExpXOffset = xoff;
+      fYAxisExpYOffset = yoff;
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Method returns X and Y offset of the axis 10^n notation.
+/// It applies on axis belonging to an histogram (TAxis)
+
+void TStyle::GetExponentOffset(Float_t &xoff, Float_t &yoff, Option_t *axis)
+{
+   TString opt = axis;
+   opt.ToLower();
+
+   if (opt.Contains("x")) {
+      xoff = fXAxisExpXOffset;
+      yoff = fXAxisExpYOffset;
+   } else if (opt.Contains("y")) {
+      xoff = fYAxisExpXOffset;
+      yoff = fYAxisExpYOffset;
+   } else {
+      xoff = yoff = 0.;
+   }
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Method set maximum number of digits permitted for the axis labels above which the
+/// notation with 10^N is used. For example, to accept 6 digits number like 900000
+/// on an axis call `gStyle->SetAxisMaxDigits(6)`. The default value is 5.
+/// Warning: this function changes the max number of digits in all axes.
+/// If you only want to change the digits of the current TGaxis instance, use
+/// axis->SetNdivisions(N*1000000 + (axis->GetNdiv()%1000000))
+/// instead of gStyle->SetAxisMaxDigits(N).
+
+void TStyle::SetAxisMaxDigits(Int_t maxd)
+{
+   fAxisMaxDigits = (maxd > 1) ? maxd : 1;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// See TColor::SetPalette.
 
 void TStyle::SetPalette(Int_t ncolors, Int_t *colors, Float_t alpha)
@@ -1968,6 +2038,10 @@ void TStyle::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
    out<<pre<<"tmpStyle->SetTitleFont("  <<GetTitleFont("x")  <<", \"x\");"<<std::endl;
    out<<pre<<"tmpStyle->SetTitleFont("  <<GetTitleFont("y")  <<", \"y\");"<<std::endl;
    out<<pre<<"tmpStyle->SetTitleFont("  <<GetTitleFont("z")  <<", \"z\");"<<std::endl;
+
+   out<<pre<<"tmpStyle->SetExponentOffset(" <<fXAxisExpXOffset<<", "<<fXAxisExpYOffset<<", \"x\");"<<std::endl;
+   out<<pre<<"tmpStyle->SetExponentOffset(" <<fYAxisExpXOffset<<", "<<fYAxisExpYOffset<<", \"y\");"<<std::endl;
+   out<<pre<<"tmpStyle->SetAxisMaxDigits(" << GetAxisMaxDigits() << ");"<<std::endl;
 
    out<<pre<<"tmpStyle->SetBarWidth("       <<GetBarWidth()       <<");"<<std::endl;
    out<<pre<<"tmpStyle->SetBarOffset("      <<GetBarOffset()      <<");"<<std::endl;
