@@ -23,8 +23,9 @@ Plain Gaussian p.d.f
 #include "RooGaussian.h"
 #include "RooBatchCompute.h"
 #include "RooHelpers.h"
-#include "RooMath.h"
 #include "RooRandom.h"
+
+#include <RooFit/Detail/AnalyticalIntegrals.h>
 
 #include <vector>
 
@@ -83,38 +84,13 @@ Int_t RooGaussian::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars
 
 double RooGaussian::analyticalIntegral(Int_t code, const char* rangeName) const
 {
-  assert(code==1 || code==2);
-
-  //The normalisation constant 1./sqrt(2*pi*sigma^2) is left out in evaluate().
-  //Therefore, the integral is scaled up by that amount to make RooFit normalise
-  //correctly.
-  const double resultScale = std::sqrt(TMath::TwoPi()) * sigma;
-
-  //Here everything is scaled and shifted into a standard normal distribution:
-  const double xscale = TMath::Sqrt2() * sigma;
-  double max = 0.;
-  double min = 0.;
-  if (code == 1){
-    max = (x.max(rangeName)-mean)/xscale;
-    min = (x.min(rangeName)-mean)/xscale;
-  } else { //No == 2 test because of assert
-    max = (mean.max(rangeName)-x)/xscale;
-    min = (mean.min(rangeName)-x)/xscale;
+  using namespace RooFit::Detail::AnalyticalIntegrals;
+  if (code == 2) {
+     // Integration over mean if the code was "2"
+     return gaussianIntegral(mean.min(rangeName), mean.max(rangeName), x, sigma);
   }
-
-
-  //Here we go for maximum precision: We compute all integrals in the UPPER
-  //tail of the Gaussian, because erfc has the highest precision there.
-  //Therefore, the different cases for range limits in the negative hemisphere are mapped onto
-  //the equivalent points in the upper hemisphere using erfc(-x) = 2. - erfc(x)
-  const double ecmin = std::erfc(std::abs(min));
-  const double ecmax = std::erfc(std::abs(max));
-
-
-  return resultScale * 0.5 * (
-      min*max < 0.0 ? 2.0 - (ecmin + ecmax)
-                    : max <= 0. ? ecmax - ecmin : ecmin - ecmax
-  );
+  // Integration over x otherwise
+  return gaussianIntegral(x.min(rangeName), x.max(rangeName), mean, sigma);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

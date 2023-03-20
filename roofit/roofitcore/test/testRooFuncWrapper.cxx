@@ -232,8 +232,9 @@ std::string integralCode(RooRealIntegral const &integral)
    if (code == 1) {
       auto gauss = dynamic_cast<RooGaussian const *>(&integral.integrand());
       RooRealVar const &x = static_cast<RooRealVar const &>(gauss->getX());
-      ss << "GaussianEvalIntegralOverX(" << valToString(x.getMin(range)) << "," << valToString(x.getMax()) << ", "
-         << valName(gauss->getMean()) << ", " << valName(gauss->getSigma()) << ")";
+      RooRealVar const &mean = static_cast<RooRealVar const &>(gauss->getMean());
+      ss << "RooFit::Detail::AnalyticalIntegrals::gaussianIntegral(" << valToString(x.getMin(range)) << ", "
+         << valToString(x.getMax(range)) << ", " << valName(mean) << ", " << valName(gauss->getSigma()) << ")";
    }
    return ss.str();
 }
@@ -300,17 +301,10 @@ TEST(RooFuncWrapper, GaussianNormalized)
    "   const double arg = x - mean;"
    "   return std::exp(-0.5 * arg * arg / (sigma * sigma));"
    "}"
-   ""
-   "double GaussianEvalIntegralOverX(double /*xMin*/, double /*xMax*/, double mean, double sigma)"
-   "{"
-       // With clad, we can't use std::erfc yet, so we hardcode integration over infinity"
-   "   return std::sqrt(TMath::TwoPi()) * sigma;"
-   "}"
    );
    // clang-format on
 
-   auto inf = std::numeric_limits<double>::infinity();
-   RooRealVar x("x", "x", 0, -inf, inf);
+   RooRealVar x("x", "x", 0, -10, 10);
    RooRealVar mu("mu", "mu", 0, -10, 10);
    RooRealVar sigma("sigma", "sigma", 2.0, 0.01, 10);
    RooGaussian gauss{"gauss", "gauss", x, mu, sigma};
