@@ -1,0 +1,6 @@
+# roottest requirements for third-party Python packages
+# These are in addition to ROOT's requirements.txt!
+
+IPython
+jupyter
+pytest
