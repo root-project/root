@@ -4634,11 +4634,11 @@ void TGraphPainter::PaintStats(TGraph *theGraph, TF1 *fit)
    char textstats[50];
    Int_t ndf = fit->GetNDF();
    snprintf(textstats,50,"#chi^{2} / ndf = %s%s / %d","%",stats->GetFitFormat(),ndf);
-   snprintf(t,64,textstats,(Float_t)fit->GetChisquare());
+   snprintf(t,64,textstats,fit->GetChisquare());
    if (print_fchi2) stats->AddText(t);
    if (print_fprob) {
       snprintf(textstats,50,"Prob  = %s%s","%",stats->GetFitFormat());
-      snprintf(t,64,textstats,(Float_t)TMath::Prob(fit->GetChisquare(),ndf));
+      snprintf(t,64,textstats,TMath::Prob(fit->GetChisquare(),ndf));
       stats->AddText(t);
    }
    if (print_fval || print_ferrors) {
@@ -4648,11 +4648,11 @@ void TGraphPainter::PaintStats(TGraph *theGraph, TF1 *fit)
          if (print_fval < 2 && parmin*parmax != 0 && parmin >= parmax) continue;
          if (print_ferrors) {
             snprintf(textstats,50,"%-8s = %s%s #pm %s%s ",fit->GetParName(ipar),"%",stats->GetFitFormat(),"%",stats->GetFitFormat());
-            snprintf(t,64,textstats,(Float_t)fit->GetParameter(ipar)
-                            ,(Float_t)fit->GetParError(ipar));
+            snprintf(t,64,textstats,fit->GetParameter(ipar)
+                            ,fit->GetParError(ipar));
          } else {
             snprintf(textstats,50,"%-8s = %s%s ",fit->GetParName(ipar),"%",stats->GetFitFormat());
-            snprintf(t,64,textstats,(Float_t)fit->GetParameter(ipar));
+            snprintf(t,64,textstats,fit->GetParameter(ipar));
          }
          t[63] = 0;
          stats->AddText(t);

@@ -8708,11 +8708,11 @@ void THistPainter::PaintStat(Int_t dostat, TF1 *fit)
    if (fit) {
       Int_t ndf = fit->GetNDF();
       tf.Form("#chi^{2} / ndf = %s%s / %d","%",stats->GetFitFormat(),ndf);
-      tt.Form(tf.Data(),(Float_t)fit->GetChisquare());
+      tt.Form(tf.Data(),fit->GetChisquare());
       if (print_fchi2) stats->AddText(tt.Data());
       if (print_fprob) {
          tf.Form("Prob  = %s%s","%",stats->GetFitFormat());
-         tt.Form(tf.Data(),(Float_t)TMath::Prob(fit->GetChisquare(),ndf));
+         tt.Form(tf.Data(),TMath::Prob(fit->GetChisquare(),ndf));
          stats->AddText(tt.Data());
       }
       if (print_fval || print_ferrors) {
@@ -8723,11 +8723,11 @@ void THistPainter::PaintStat(Int_t dostat, TF1 *fit)
             if (print_ferrors) {
                tf.Form("%-8s = %s%s #pm %s ", fit->GetParName(ipar), "%",stats->GetFitFormat(),
                        GetBestFormat(fit->GetParameter(ipar), fit->GetParError(ipar), stats->GetFitFormat()));
-               tt.Form(tf.Data(),(Float_t)fit->GetParameter(ipar)
-                               ,(Float_t)fit->GetParError(ipar));
+               tt.Form(tf.Data(),fit->GetParameter(ipar)
+                               ,fit->GetParError(ipar));
             } else {
                tf.Form("%-8s = %s%s ",fit->GetParName(ipar), "%",stats->GetFitFormat());
-               tt.Form(tf.Data(),(Float_t)fit->GetParameter(ipar));
+               tt.Form(tf.Data(),fit->GetParameter(ipar));
             }
             stats->AddText(tt.Data());
          }
@@ -8937,12 +8937,12 @@ void THistPainter::PaintStat2(Int_t dostat, TF1 *fit)
    // Draw Fit parameters
    if (fit) {
       Int_t ndf = fit->GetNDF();
-      tt.Form("#chi^{2} / ndf = %6.4g / %d",(Float_t)fit->GetChisquare(),ndf);
+      tt.Form("#chi^{2} / ndf = %6.4g / %d",fit->GetChisquare(),ndf);
       stats->AddText(tt.Data());
       for (Int_t ipar=0;ipar<fit->GetNpar();ipar++) {
          tt.Form("%-8s = %5.4g #pm %5.4g ",fit->GetParName(ipar)
-                                   ,(Float_t)fit->GetParameter(ipar)
-                                   ,(Float_t)fit->GetParError(ipar));
+                                   ,fit->GetParameter(ipar)
+                                   ,fit->GetParError(ipar));
          stats->AddText(tt.Data());
       }
    }
@@ -9151,12 +9151,12 @@ void THistPainter::PaintStat3(Int_t dostat, TF1 *fit)
    // Draw Fit parameters
    if (fit) {
       Int_t ndf = fit->GetNDF();
-      tt.Form("#chi^{2} / ndf = %6.4g / %d",(Float_t)fit->GetChisquare(),ndf);
+      tt.Form("#chi^{2} / ndf = %6.4g / %d",fit->GetChisquare(),ndf);
       stats->AddText(tt.Data());
       for (Int_t ipar=0;ipar<fit->GetNpar();ipar++) {
          tt.Form("%-8s = %5.4g #pm %5.4g ",fit->GetParName(ipar)
-                                   ,(Float_t)fit->GetParameter(ipar)
-                                   ,(Float_t)fit->GetParError(ipar));
+                                   ,fit->GetParameter(ipar)
+                                   ,fit->GetParError(ipar));
          stats->AddText(tt.Data());
       }
    }
