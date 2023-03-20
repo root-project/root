@@ -81,9 +81,11 @@ sap.ui.define([
          if (item.pvis !== undefined) {
             // this is RGeoItem with physical node settings
             node.pvisible = item.pvis != 0;
+            node.top = item.top;
          } else {
             // this is full model
             node.pvisible = this.hController?.getPhysVisibilityEntry(node.path)?.visible ?? node._node.visible;
+            node.top = this.hController?.getPhysTopNode(node.path) ?? false;
          }
       }
 
