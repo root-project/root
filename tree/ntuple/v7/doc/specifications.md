@@ -648,6 +648,12 @@ The child fileds are named `_0` and `_1`.
 A tuple is stored using an empty mother field with $n$ subfields of type `T1`, `T2`, ..., `Tn`. All types must have RNTuple I/O support.
 The child fileds are named `_0`, `_1`, ...
 
+#### std::bitset<N>
+
+A bitset is stored as a repetitive leaf field with an attached `Bit` column.
+The bitset size `N` is stored as repetition parameter in the field meta-data.
+Within the repetition blocks, bits are stored in little-endian order, i.e. the least significant bits come first.
+
 ### User-defined classes
 
 User-defined classes might behave either as a record or as a collection of elements of a given type.

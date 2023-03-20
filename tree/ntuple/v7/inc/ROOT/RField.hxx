@@ -31,6 +31,7 @@
 
 #include <algorithm>
 #include <array>
+#include <bitset>
 #include <cstddef>
 #include <functional>
 #include <iostream>
@@ -712,6 +713,47 @@ public:
    size_t GetValueSize() const final { return fItemSize * fArrayLength; }
    size_t GetAlignment() const final { return fSubFields[0]->GetAlignment(); }
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
+};
+
+/// The generic field an std::bitset<N>. All compilers we care about store the bits in an array of unsigned long.
+/// TODO(jblomer): reading and writing efficiency should be improved; currently it is one bit at a time
+/// with an array of bools on the page level.
+class RBitsetField : public Detail::RFieldBase {
+protected:
+   std::size_t fN;
+
+protected:
+   std::unique_ptr<Detail::RFieldBase> CloneImpl(std::string_view newName) const final
+   {
+      return std::make_unique<RBitsetField>(newName, fN);
+   }
+   const RColumnRepresentations &GetColumnRepresentations() const final;
+   void GenerateColumnsImpl() final;
+   void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
+   std::size_t AppendImpl(const Detail::RFieldValue &value) final;
+   void ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue *value) final;
+
+public:
+   RBitsetField(std::string_view fieldName, std::size_t N);
+   RBitsetField(RBitsetField &&other) = default;
+   RBitsetField &operator=(RBitsetField &&other) = default;
+   ~RBitsetField() override = default;
+
+   using Detail::RFieldBase::GenerateValue;
+   Detail::RFieldValue GenerateValue(void *where) final
+   {
+      memset(where, 0, GetValueSize());
+      return Detail::RFieldValue(true /* captureFlag */, this, where);
+   }
+   Detail::RFieldValue CaptureValue(void *where) final
+   {
+      return Detail::RFieldValue(true /* captureFlag */, this, where);
+   }
+   size_t GetValueSize() const final { return (fN + sizeof(unsigned long) * 8 - 1) / 8; }
+   size_t GetAlignment() const final { return alignof(unsigned long); }
+   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
+
+   std::size_t GetN() const { return fN; }
 };
 
 /// The generic field for std::variant types
@@ -2113,6 +2155,24 @@ public:
       reinterpret_cast<ContainerT *>(value.GetRawPtr())->~tuple();
       if (!dtorOnly)
          free(reinterpret_cast<ContainerT *>(value.GetRawPtr()));
+   }
+};
+
+template <std::size_t N>
+class RField<std::bitset<N>> : public RBitsetField {
+public:
+   static std::string TypeName() { return "std::bitset<" + std::to_string(N) + ">"; }
+   explicit RField(std::string_view name) : RBitsetField(name, N) {}
+   RField(RField &&other) = default;
+   RField &operator=(RField &&other) = default;
+   ~RField() override = default;
+
+   using Detail::RFieldBase::GenerateValue;
+   template <typename... ArgsT>
+   ROOT::Experimental::Detail::RFieldValue GenerateValue(void *where, ArgsT &&...args)
+   {
+      return Detail::RFieldValue(Detail::RColumnElement<std::bitset<N>>(static_cast<float *>(where)), this,
+                                 static_cast<std::bitset<N> *>(where), std::forward<ArgsT>(args)...);
    }
 };
 

@@ -160,6 +160,8 @@ std::string GetNormalizedType(const std::string &typeName) {
    if (normalizedType.substr(0, 8) == "variant<") normalizedType = "std::" + normalizedType;
    if (normalizedType.substr(0, 5) == "pair<") normalizedType = "std::" + normalizedType;
    if (normalizedType.substr(0, 6) == "tuple<") normalizedType = "std::" + normalizedType;
+   if (normalizedType.substr(0, 7) == "bitset<")
+      normalizedType = "std::" + normalizedType;
 
    return normalizedType;
 }
@@ -308,6 +310,10 @@ ROOT::Experimental::Detail::RFieldBase::Create(const std::string &fieldName, con
          items.emplace_back(Create("_" + std::to_string(i), innerTypes[i]).Unwrap());
       }
       result = std::make_unique<RTupleField>(fieldName, items);
+   }
+   if (normalizedType.substr(0, 12) == "std::bitset<") {
+      auto size = std::stoull(normalizedType.substr(12, normalizedType.length() - 13));
+      result = std::make_unique<RBitsetField>(fieldName, size);
    }
    // TODO: create an RCollectionField?
    if (normalizedType == ":Collection:")
@@ -2062,6 +2068,69 @@ ROOT::Experimental::RArrayField::SplitValue(const Detail::RFieldValue &value) co
 void ROOT::Experimental::RArrayField::AcceptVisitor(Detail::RFieldVisitor &visitor) const
 {
    visitor.VisitArrayField(*this);
+}
+
+//------------------------------------------------------------------------------
+
+ROOT::Experimental::RBitsetField::RBitsetField(std::string_view fieldName, std::size_t N)
+   : ROOT::Experimental::Detail::RFieldBase(fieldName, "std::bitset<" + std::to_string(N) + ">",
+                                            ENTupleStructure::kLeaf, false /* isSimple */, N),
+     fN(N)
+{
+   fTraits |= kTraitTriviallyDestructible;
+}
+
+const ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations &
+ROOT::Experimental::RBitsetField::GetColumnRepresentations() const
+{
+   static RColumnRepresentations representations({{EColumnType::kBit}}, {});
+   return representations;
+}
+
+void ROOT::Experimental::RBitsetField::GenerateColumnsImpl()
+{
+   fColumns.emplace_back(Detail::RColumn::Create<bool>(RColumnModel(GetColumnRepresentative()[0]), 0));
+}
+
+void ROOT::Experimental::RBitsetField::GenerateColumnsImpl(const RNTupleDescriptor &desc)
+{
+   auto onDiskTypes = EnsureCompatibleColumnTypes(desc);
+   fColumns.emplace_back(Detail::RColumn::Create<bool>(RColumnModel(onDiskTypes[0]), 0));
+}
+
+std::size_t ROOT::Experimental::RBitsetField::AppendImpl(const Detail::RFieldValue &value)
+{
+   constexpr auto nBitsULong = sizeof(unsigned long) * 8;
+   const auto *asULongArray = value.Get<unsigned long>();
+   bool elementValue;
+   Detail::RColumnElement<bool> element(&elementValue);
+   std::size_t i = 0;
+   for (std::size_t word = 0; word < (fN + nBitsULong - 1) / nBitsULong; ++word) {
+      for (std::size_t mask = 0; (mask < nBitsULong) && (i < fN); ++mask, ++i) {
+         elementValue = (asULongArray[word] & (static_cast<unsigned long>(1) << mask)) != 0;
+         fColumns[0]->Append(element);
+      }
+   }
+   return fN;
+}
+
+void ROOT::Experimental::RBitsetField::ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue *value)
+{
+   constexpr auto nBitsULong = sizeof(unsigned long) * 8;
+   auto *asULongArray = value->Get<unsigned long>();
+   bool elementValue;
+   Detail::RColumnElement<bool> element(&elementValue);
+   for (std::size_t i = 0; i < fN; ++i) {
+      fColumns[0]->Read(globalIndex * fN + i, &element);
+      unsigned long mask = static_cast<unsigned long>(1) << (i % nBitsULong);
+      unsigned long bit = static_cast<unsigned long>(elementValue) << (i % nBitsULong);
+      asULongArray[i / nBitsULong] = (asULongArray[i / nBitsULong] & ~mask) | bit;
+   }
+}
+
+void ROOT::Experimental::RBitsetField::AcceptVisitor(Detail::RFieldVisitor &visitor) const
+{
+   visitor.VisitBitsetField(*this);
 }
 
 //------------------------------------------------------------------------------
