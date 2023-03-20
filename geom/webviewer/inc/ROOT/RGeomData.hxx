@@ -92,6 +92,7 @@ protected:
    std::string material;   ///< material
    int vis{0};             ///< visibility of logical node
    int pvis{0};            ///< visibility of physical node
+   bool top{false};        ///< indicates if node selected as top
 
 public:
 
@@ -105,6 +106,8 @@ public:
 
    // should be here, one needs virtual table for correct streaming of RRootBrowserReply
    virtual ~RGeoItem() = default;
+
+   void SetTop(bool on = true) { top = on; }
 };
 
 
@@ -251,7 +254,7 @@ class RGeomDescription {
    int fActualLevel{0};             ///<! level can be reduced when selecting nodes
    bool fPreferredOffline{false};   ///<! indicates that full description should be provided to client
    int fJsonComp{0};                ///<! default JSON compression
-   std::string fActiveItemName;     ///<! name of item which should be activated in hieararchy
+   std::string fActiveItemName;     ///<! name of item which should be activated in hierarchy
 
    RGeomConfig fCfg;                ///<! configuration parameter editable from GUI
 
