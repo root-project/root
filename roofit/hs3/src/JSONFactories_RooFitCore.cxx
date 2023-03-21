@@ -101,7 +101,7 @@ public:
             dependents.add(*arg);
          }
       }
-      tool->wsEmplace<RooGenericPdf>(name, formula, dependents);
+      tool->wsImport(RooGenericPdf{name.c_str(), formula, dependents});
       return true;
    }
 };
@@ -119,7 +119,7 @@ public:
       for (const auto &d : extract_arguments(formula.Data())) {
          dependents.add(*tool->request<RooAbsReal>(d, name));
       }
-      tool->wsEmplace<RooFormulaVar>(name, formula, dependents);
+      tool->wsImport(RooFormulaVar{name.c_str(), formula, dependents});
       return true;
    }
 };
@@ -129,7 +129,7 @@ public:
    bool importPdf(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
    {
       std::string name(RooJSONFactoryWSTool::name(p));
-      tool->wsEmplace<RooAddPdf>(name, name, tool->requestArgList<RooAbsPdf>(p, "summands"),
+      tool->wsEmplace<RooAddPdf>(name, tool->requestArgList<RooAbsPdf>(p, "summands"),
                                  tool->requestArgList<RooAbsReal>(p, "coefficients"));
       return true;
    }
@@ -141,7 +141,7 @@ public:
    {
       std::string name(RooJSONFactoryWSTool::name(p));
       RooHistFunc *hf = static_cast<RooHistFunc *>(tool->request<RooAbsReal>(p["histogram"].val(), name));
-      tool->wsEmplace<RooBinWidthFunction>(name, name, *hf, p["divideByBinWidth"].val_bool());
+      tool->wsEmplace<RooBinWidthFunction>(name, *hf, p["divideByBinWidth"].val_bool());
       return true;
    }
 };
@@ -167,7 +167,7 @@ public:
       }
       double epsilon(p["epsilon"].val_double());
 
-      tool->wsEmplace<RooBinSamplingPdf>(name, name, *obs, *pdf, epsilon);
+      tool->wsEmplace<RooBinSamplingPdf>(name, *obs, *pdf, epsilon);
 
       return true;
    }
@@ -183,7 +183,7 @@ public:
       if (p.has_child("extended") && p["extended"].val_bool()) {
          extended = true;
       }
-      tool->wsEmplace<RooRealSumPdf>(name, name, tool->requestArgList<RooAbsReal>(p, "samples"),
+      tool->wsEmplace<RooRealSumPdf>(name, tool->requestArgList<RooAbsReal>(p, "samples"),
                                      tool->requestArgList<RooAbsReal>(p, "coefficients"), extended);
       return true;
    }
@@ -194,7 +194,7 @@ public:
    bool importFunction(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
    {
       std::string name(RooJSONFactoryWSTool::name(p));
-      tool->wsEmplace<RooRealSumFunc>(name, name, tool->requestArgList<RooAbsReal>(p, "samples"),
+      tool->wsEmplace<RooRealSumFunc>(name, tool->requestArgList<RooAbsReal>(p, "samples"),
                                       tool->requestArgList<RooAbsReal>(p, "coefficients"));
       return true;
    }
@@ -226,7 +226,7 @@ public:
          ++order;
       }
 
-      tool->wsEmplace<RooPolynomial>(name, name, *x, coefs, lowestOrder);
+      tool->wsEmplace<RooPolynomial>(name, *x, coefs, lowestOrder);
       return true;
    }
 };
@@ -272,7 +272,7 @@ public:
             ++i;
          }
       }
-      tool->wsEmplace<RooMultiVarGaussian>(name, name, tool->requestArgList<RooAbsReal>(p, "x"),
+      tool->wsEmplace<RooMultiVarGaussian>(name, tool->requestArgList<RooAbsReal>(p, "x"),
                                            tool->requestArgList<RooAbsReal>(p, "mean"), covmat);
       return true;
    }
@@ -347,7 +347,7 @@ public:
          RooJSONFactoryWSTool::error("function '" + name + "' is of histogram type, but does not define a 'data' key");
       }
       std::unique_ptr<RooDataHist> dataHist = RooJSONFactoryWSTool::readBinnedData(p["data"], name);
-      tool->wsEmplace<RooHistFunc>(name, name, *dataHist->get(), *dataHist);
+      tool->wsEmplace<RooHistFunc>(name, *dataHist->get(), *dataHist);
       return true;
    }
 };
@@ -382,7 +382,7 @@ public:
          RooJSONFactoryWSTool::error("function '" + name + "' is of histogram type, but does not define a 'data' key");
       }
       std::unique_ptr<RooDataHist> dataHist = RooJSONFactoryWSTool::readBinnedData(p["data"], name);
-      tool->wsEmplace<RooHistPdf>(name, name, *dataHist->get(), *dataHist);
+      tool->wsEmplace<RooHistPdf>(name, *dataHist->get(), *dataHist);
       return true;
    }
 };
