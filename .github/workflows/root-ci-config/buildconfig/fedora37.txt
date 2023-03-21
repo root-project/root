@@ -1,2 +1,3 @@
 tmva-pymva=Off
 test_distrdf_pyspark=OFF
+CMAKE_CXX_STANDARD=20
