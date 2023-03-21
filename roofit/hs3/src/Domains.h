@@ -14,7 +14,7 @@
 #define RooFit_JSONIO_Detail_Domains_h
 
 #include <string>
-#include <unordered_map>
+#include <map>
 #include <vector>
 
 class RooRealVar;
@@ -56,10 +56,10 @@ private:
          double max = 0.0;
       };
 
-      std::unordered_map<std::string, ProductDomainElement> _map;
+      std::map<std::string, ProductDomainElement> _map;
    };
 
-   std::unordered_map<std::string, ProductDomain> _map;
+   std::map<std::string, ProductDomain> _map;
 };
 
 } // namespace Detail
