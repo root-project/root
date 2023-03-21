@@ -1053,7 +1053,7 @@ void TStyle::Reset(Option_t *opt)
 ////////////////////////////////////////////////////////////////////////////////
 /// Return number of divisions.
 
-Int_t TStyle::GetNdivisions( Option_t *axis) const
+Int_t TStyle::GetNdivisions(Option_t *axis) const
 {
    Int_t ax = AxisChoice(axis);
    if (ax == 1) return fXaxis.GetNdivisions();
@@ -1065,7 +1065,7 @@ Int_t TStyle::GetNdivisions( Option_t *axis) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the axis color number in the axis.
 
-Color_t TStyle::GetAxisColor( Option_t *axis) const
+Color_t TStyle::GetAxisColor(Option_t *axis) const
 {
    Int_t ax = AxisChoice(axis);
    if (ax == 1) return fXaxis.GetAxisColor();
@@ -1085,7 +1085,7 @@ Int_t TStyle::GetColorPalette(Int_t i) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the label color number in the axis.
 
-Color_t TStyle::GetLabelColor( Option_t *axis) const
+Color_t TStyle::GetLabelColor(Option_t *axis) const
 {
    Int_t ax = AxisChoice(axis);
    if (ax == 1) return fXaxis.GetLabelColor();
@@ -1097,7 +1097,7 @@ Color_t TStyle::GetLabelColor( Option_t *axis) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Return label font.
 
-Style_t TStyle::GetLabelFont( Option_t *axis) const
+Style_t TStyle::GetLabelFont(Option_t *axis) const
 {
    Int_t ax = AxisChoice(axis);
    if (ax == 1) return fXaxis.GetLabelFont();
@@ -1109,7 +1109,7 @@ Style_t TStyle::GetLabelFont( Option_t *axis) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Return label offset.
 
-Float_t TStyle::GetLabelOffset( Option_t *axis) const
+Float_t TStyle::GetLabelOffset(Option_t *axis) const
 {
    Int_t ax = AxisChoice(axis);
    if (ax == 1) return fXaxis.GetLabelOffset();
@@ -1121,7 +1121,7 @@ Float_t TStyle::GetLabelOffset( Option_t *axis) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Return label size.
 
-Float_t TStyle::GetLabelSize( Option_t *axis) const
+Float_t TStyle::GetLabelSize(Option_t *axis) const
 {
    Int_t ax = AxisChoice(axis);
    if (ax == 1) return fXaxis.GetLabelSize();
@@ -1133,7 +1133,7 @@ Float_t TStyle::GetLabelSize( Option_t *axis) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Method returns maximum number of digits permitted for the axis labels above which the
 /// notation with 10^N is used. See @ref SetAxisMaxDigits for more details
-Int_t TStyle::GetAxisMaxDigits()
+Int_t TStyle::GetAxisMaxDigits() const
 {
    return fAxisMaxDigits;
 }
@@ -1156,7 +1156,6 @@ Int_t TStyle::GetNumberOfColors() const
    return TColor::GetNumberOfColors();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Set paper size for PostScript output.
 
@@ -1169,7 +1168,7 @@ void TStyle::GetPaperSize(Float_t &xsize, Float_t &ysize) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Return tick length.
 
-Float_t TStyle::GetTickLength( Option_t *axis) const
+Float_t TStyle::GetTickLength(Option_t *axis) const
 {
    Int_t ax = AxisChoice(axis);
    if (ax == 1) return fXaxis.GetTickLength();
@@ -1181,7 +1180,7 @@ Float_t TStyle::GetTickLength( Option_t *axis) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Return title color.
 
-Color_t TStyle::GetTitleColor( Option_t *axis) const
+Color_t TStyle::GetTitleColor(Option_t *axis) const
 {
    Int_t ax = AxisChoice(axis);
    if (ax == 1) return fXaxis.GetTitleColor();
@@ -1193,7 +1192,7 @@ Color_t TStyle::GetTitleColor( Option_t *axis) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Return title font.
 
-Style_t TStyle::GetTitleFont( Option_t *axis) const
+Style_t TStyle::GetTitleFont(Option_t *axis) const
 {
    Int_t ax = AxisChoice(axis);
    if (ax == 1) return fXaxis.GetTitleFont();
@@ -1205,7 +1204,7 @@ Style_t TStyle::GetTitleFont( Option_t *axis) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Return title offset.
 
-Float_t TStyle::GetTitleOffset( Option_t *axis) const
+Float_t TStyle::GetTitleOffset(Option_t *axis) const
 {
    Int_t ax = AxisChoice(axis);
    if (ax == 1) return fXaxis.GetTitleOffset();
@@ -1217,7 +1216,7 @@ Float_t TStyle::GetTitleOffset( Option_t *axis) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Return title size.
 
-Float_t TStyle::GetTitleSize( Option_t *axis) const
+Float_t TStyle::GetTitleSize(Option_t *axis) const
 {
    Int_t ax = AxisChoice(axis);
    if (ax == 1) return fXaxis.GetTitleSize();
@@ -1526,7 +1525,7 @@ void TStyle::SetNumberContours(Int_t number)
 void TStyle::SetOptDate(Int_t optdate)
 {
    fOptDate = optdate;
-   Int_t mode = optdate%10;
+   Int_t mode = optdate % 10;
    if (mode == 1) {
       SetDateX(0.01);
       SetDateY(0.01);
@@ -1655,7 +1654,7 @@ void TStyle::SetOptStat(Int_t mode)
 
 void TStyle::SetOptStat(Option_t *stat)
 {
-   Int_t mode=0;
+   Int_t mode = 0;
 
    TString opt = stat;
 
@@ -1737,9 +1736,9 @@ void TStyle::SetTitleColor(Color_t color, Option_t *axis)
    opt.ToLower();
 
    Bool_t set = kFALSE;
-   if (opt.Contains("x")) {fXaxis.SetTitleColor(color); set = kTRUE;}
-   if (opt.Contains("y")) {fYaxis.SetTitleColor(color); set = kTRUE;}
-   if (opt.Contains("z")) {fZaxis.SetTitleColor(color); set = kTRUE;}
+   if (opt.Contains("x")) { fXaxis.SetTitleColor(color); set = kTRUE; }
+   if (opt.Contains("y")) { fYaxis.SetTitleColor(color); set = kTRUE; }
+   if (opt.Contains("z")) { fZaxis.SetTitleColor(color); set = kTRUE; }
    if (!set) fTitleColor = color;
 }
 
@@ -1758,9 +1757,9 @@ void TStyle::SetTitleFont(Style_t font, Option_t *axis)
    opt.ToLower();
 
    Bool_t set = kFALSE;
-   if (opt.Contains("x")) {fXaxis.SetTitleFont(font); set = kTRUE;}
-   if (opt.Contains("y")) {fYaxis.SetTitleFont(font); set = kTRUE;}
-   if (opt.Contains("z")) {fZaxis.SetTitleFont(font); set = kTRUE;}
+   if (opt.Contains("x")) { fXaxis.SetTitleFont(font); set = kTRUE; }
+   if (opt.Contains("y")) { fYaxis.SetTitleFont(font); set = kTRUE; }
+   if (opt.Contains("z")) { fZaxis.SetTitleFont(font); set = kTRUE; }
    if (!set) fTitleFont = font;
 }
 
@@ -1800,9 +1799,9 @@ void TStyle::SetTitleSize(Float_t size, Option_t *axis)
    opt.ToLower();
 
    Bool_t set = kFALSE;
-   if (opt.Contains("x")) {fXaxis.SetTitleSize(size); set = kTRUE;}
-   if (opt.Contains("y")) {fYaxis.SetTitleSize(size); set = kTRUE;}
-   if (opt.Contains("z")) {fZaxis.SetTitleSize(size); set = kTRUE;}
+   if (opt.Contains("x")) { fXaxis.SetTitleSize(size); set = kTRUE; }
+   if (opt.Contains("y")) { fYaxis.SetTitleSize(size); set = kTRUE; }
+   if (opt.Contains("z")) { fZaxis.SetTitleSize(size); set = kTRUE; }
    if (!set) fTitleFontSize = size;
 }
 
@@ -1832,7 +1831,7 @@ void TStyle::SetExponentOffset(Float_t xoff, Float_t yoff, Option_t *axis)
 /// Method returns X and Y offset of the axis 10^n notation.
 /// It applies on axis belonging to an histogram (TAxis)
 
-void TStyle::GetExponentOffset(Float_t &xoff, Float_t &yoff, Option_t *axis)
+void TStyle::GetExponentOffset(Float_t &xoff, Float_t &yoff, Option_t *axis) const
 {
    TString opt = axis;
    opt.ToLower();
@@ -1847,7 +1846,6 @@ void TStyle::GetExponentOffset(Float_t &xoff, Float_t &yoff, Option_t *axis)
       xoff = yoff = 0.;
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Method set maximum number of digits permitted for the axis labels above which the
