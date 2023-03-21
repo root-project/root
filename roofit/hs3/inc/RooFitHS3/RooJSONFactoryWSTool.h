@@ -21,10 +21,7 @@
 #include <RooWorkspace.h>
 
 #include <map>
-#include <memory>
 #include <stdexcept>
-#include <string>
-#include <vector>
 
 namespace RooFit {
 namespace JSONIO {
@@ -105,16 +102,16 @@ public:
    RooWorkspace *workspace() { return &_workspace; }
 
    template <class Obj_t>
-   void wsImport(Obj_t const &arg)
+   Obj_t &wsImport(Obj_t const &obj)
    {
-      _workspace.import(arg, RooFit::RecycleConflictNodes(true), RooFit::Silence(true));
+      _workspace.import(obj, RooFit::RecycleConflictNodes(true), RooFit::Silence(true));
+      return *static_cast<Obj_t *>(_workspace.obj(obj.GetName()));
    }
 
    template <class Obj_t, typename... Args_t>
-   void wsEmplace(RooStringView name, RooStringView title, Args_t &&...args)
+   Obj_t &wsEmplace(RooStringView name, Args_t &&...args)
    {
-      Obj_t arg{name, title, std::forward<Args_t>(args)...};
-      return wsImport(arg);
+      return wsImport(Obj_t(name, name, std::forward<Args_t>(args)...));
    }
 
    static void error(const char *s);
