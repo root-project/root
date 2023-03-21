@@ -459,13 +459,21 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::Import(TT
    return RResult<void>::Success();
 }
 
+ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::SetNTupleName(const std::string &ntupleName)
+{
+   if (fSourceTrees.size() > 1) {
+      return R__FAIL("Multiple trees are being imported, please specify the source tree name");
+   }
+   fNTupleNames.at(fSourceTrees.at(0)->GetName()) = ntupleName;
+   return RResult<void>::Success();
+}
+
 ROOT::Experimental::RResult<void>
 ROOT::Experimental::RNTupleImporter::SetNTupleName(std::string_view treeName, const std::string &ntupleName)
 {
    if (fNTupleNames.find(treeName) == fNTupleNames.end()) {
       return R__FAIL("Tree '" + std::string(treeName) + "' not present in " + std::string(fSourceFile->GetName()));
    }
-
-   fNTupleNames[treeName] = ntupleName;
+   fNTupleNames.at(treeName) = ntupleName;
    return RResult<void>::Success();
 }

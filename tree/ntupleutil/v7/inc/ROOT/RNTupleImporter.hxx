@@ -264,6 +264,8 @@ public:
    void SetWriteOptions(RNTupleWriteOptions options) { fWriteOptions = options; }
    void SetMaxEntries(std::uint64_t maxEntries) { fMaxEntries = maxEntries; }
 
+   /// Throws an exception in case multiple TTrees are imported simultaneously.
+   ROOT::Experimental::RResult<void> SetNTupleName(const std::string &ntupleName);
    ROOT::Experimental::RResult<void> SetNTupleName(std::string_view treeName, const std::string &ntupleName);
 
    /// Whether or not information and progress is printed to stdout.
