@@ -127,6 +127,7 @@ ROOT::Experimental::RNTupleImporter::Create(std::string_view sourceFileName, std
       // We just need to make sure each tree is only added once.
       bool isFirstOccurrence = key->GetCycle() == 1;
 
+      // TODO: Copy/clone non-TTree objects to the destination file, if desired by the user.
       if (isTree && isFirstOccurrence) {
          importer->fNTupleNames[keyName] = keyName;
 

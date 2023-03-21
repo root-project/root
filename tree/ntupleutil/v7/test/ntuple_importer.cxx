@@ -36,68 +36,6 @@ TEST(RNTupleImporter, Empty)
    EXPECT_THROW(importer->Import(), ROOT::Experimental::RException);
 }
 
-TEST(RNTUpleImporter, SetNTupleNameSingle)
-{
-   FileRaii treeFileGuard("test_ntuple_importer_set_ntuple_name_single_tree.root");
-   FileRaii ntupleFileGuard("test_ntuple_importer_set_ntuple_name_single_ntuple.root");
-   {
-      std::unique_ptr<TFile> file(TFile::Open(treeFileGuard.GetPath().c_str(), "RECREATE"));
-
-      auto tree = std::make_unique<TTree>("tree", "");
-      tree->Write();
-   }
-
-   auto importer = RNTupleImporter::Create(treeFileGuard.GetPath(), "tree", ntupleFileGuard.GetPath()).Unwrap();
-
-   // Base case, we don't touch the name so it should be the same as the tree.
-   importer->SetIsQuiet(true);
-   importer->Import();
-   EXPECT_NO_THROW(RNTupleReader::Open("tree", ntupleFileGuard.GetPath()));
-
-   importer->SetNTupleName("ntuple");
-   importer->Import();
-   EXPECT_NO_THROW(RNTupleReader::Open("ntuple", ntupleFileGuard.GetPath()));
-
-   // Bad weather, trying to set the name of a tree that does not exist should yield an exception.
-   EXPECT_THROW(importer->SetNTupleName("treee", "ntuple"), ROOT::Experimental::RException);
-}
-
-TEST(RNTUpleImporter, SetNTupleNameMultiple)
-{
-   FileRaii treeFileGuard("test_ntuple_importer_set_ntuple_name_multiple_tree.root");
-   FileRaii ntupleFileGuard("test_ntuple_importer_set_ntuple_name_multiple_ntuple.root");
-   {
-      std::unique_ptr<TFile> file(TFile::Open(treeFileGuard.GetPath().c_str(), "RECREATE"));
-
-      auto tree1 = std::make_unique<TTree>("tree1", "");
-      tree1->Write();
-
-      auto tree2 = std::make_unique<TTree>("tree2", "");
-      tree2->Write();
-   }
-
-   auto importer = RNTupleImporter::Create(treeFileGuard.GetPath(), ntupleFileGuard.GetPath()).Unwrap();
-
-   // Base case, we don't touch the name so it should be the same as the tree.
-   importer->SetIsQuiet(true);
-   importer->Import();
-   EXPECT_NO_THROW(RNTupleReader::Open("tree1", ntupleFileGuard.GetPath()));
-   EXPECT_NO_THROW(RNTupleReader::Open("tree2", ntupleFileGuard.GetPath()));
-
-   // Good weather, the tree exists and the imported ntuple should have the desired name.
-   importer->SetNTupleName("tree1", "ntuple1");
-   importer->SetNTupleName("tree2", "ntuple2");
-   importer->Import();
-   EXPECT_NO_THROW(RNTupleReader::Open("ntuple1", ntupleFileGuard.GetPath()));
-   EXPECT_NO_THROW(RNTupleReader::Open("ntuple2", ntupleFileGuard.GetPath()));
-
-   // Bad weather, trying to set the name of a tree that does not exist should yield an exception.
-   EXPECT_THROW(importer->SetNTupleName("tree3", "ntuple3"), ROOT::Experimental::RException);
-
-   // Bad weather, trying to set the name without specifying the source tree.
-   EXPECT_THROW(importer->SetNTupleName("ntuple"), ROOT::Experimental::RException);
-}
-
 TEST(RNTupleImporter, CreateFromTree)
 {
    FileRaii fileGuard("test_ntuple_create_from_tree.root");
@@ -625,7 +563,7 @@ TEST(RNTupleImporter, CollectionProxyClass)
    }
 }
 
-TEST(RNTUpleImporter, MaxEntries)
+TEST(RNTupleImporter, MaxEntries)
 {
    FileRaii fileGuard("test_ntuple_importer_max_entries.root");
    {
@@ -677,7 +615,7 @@ TEST(RNTUpleImporter, MaxEntries)
    EXPECT_EQ(5U, reader->GetNEntries());
 }
 
-TEST(RNTUpleImporter, MultipleTrees)
+TEST(RNTupleImporter, MultipleTrees)
 {
    FileRaii fileGuardTree("test_ntuple_importer_multiple_trees_tree.root");
    FileRaii fileGuardNTuple("test_ntuple_importer_multiple_trees_ntuple.root");
@@ -704,6 +642,12 @@ TEST(RNTUpleImporter, MultipleTrees)
 
    importer->SetNTupleName("tree1", "ntuple1");
    importer->SetNTupleName("tree2", "ntuple2");
+
+   // Bad weather, trying to set the name of a tree that does not exist should yield an exception.
+   EXPECT_THROW(importer->SetNTupleName("tree3", "ntuple3"), ROOT::Experimental::RException);
+
+   // Bad weather, trying to set the name without specifying the source tree.
+   EXPECT_THROW(importer->SetNTupleName("ntuple"), ROOT::Experimental::RException);
 
    importer->Import();
 
