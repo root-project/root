@@ -226,8 +226,8 @@ namespace Cppyy {
     RPY_EXPORTED
     bool        IsMethodTemplate(TCppScope_t scope, TCppIndex_t imeth);
     RPY_EXPORTED
-    TCppMethod_t GetMethodTemplate(
-        TCppScope_t scope, const std::string& name, const std::string& proto);
+    TCppMethod_t
+    GetMethodTemplate(TCppScope_t scope, const std::string &name, const std::string &proto, std::ostream &diagnostics);
 
     RPY_EXPORTED
     TCppIndex_t  GetGlobalOperator(

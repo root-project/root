@@ -2108,8 +2108,8 @@ bool template_compare(std::string n1, std::string n2) {
     return n2.compare(0, n1.size(), n1) == 0;
 }
 
-Cppyy::TCppMethod_t Cppyy::GetMethodTemplate(
-    TCppScope_t scope, const std::string& name, const std::string& proto)
+Cppyy::TCppMethod_t Cppyy::GetMethodTemplate(TCppScope_t scope, const std::string &name, const std::string &proto,
+                                             std::ostream &diagnostics)
 {
 // There is currently no clean way of extracting a templated method out of ROOT/meta
 // for a variety of reasons, none of them fundamental. The game played below is to
@@ -2117,33 +2117,47 @@ Cppyy::TCppMethod_t Cppyy::GetMethodTemplate(
 // to do an explicit lookup that ignores the prototype (i.e. the full name should be
 // enough), and finally to ignore the template arguments part of the name as this fails
 // in cling if there are default parameters.
-    TFunction* func = nullptr; ClassInfo_t* cl = nullptr;
+
+// It would be possible to get the prototype from the created functions and use that to
+// do a new lookup, after which ROOT/meta will manage the function. However, neither
+// TFunction::GetPrototype() nor TFunction::GetSignature() is of the proper form, so
+// we'll/ manage the new TFunctions instead and will assume that they are cached on the
+// calling side to prevent multiple creations.
+
+// redirect diagnostics, taking the lock to make sure no other calls pollute the results
+    R__WRITE_LOCKGUARD(ROOT::gCoreMutex);
+
+    TInterpreter::RedirectDiagnostics redirectRAII(gInterpreter, diagnostics, /*enableColors*/ true, /*indent*/ 4);
+
+    TFunction *func = nullptr;
+    ClassInfo_t *cl = nullptr;
     if (scope == (TCppScope_t)GLOBAL_HANDLE) {
-        func = gROOT->GetGlobalFunctionWithPrototype(name.c_str(), proto.c_str());
-        if (func && name.back() == '>') {
-        // make sure that all template parameters match (more are okay, e.g. defaults or
-        // ones derived from the arguments or variadic templates)
-            if (!template_compare(name, func->GetName()))
-                func = nullptr;  // happens if implicit conversion matches the overload
-        }
+    func = gROOT->GetGlobalFunctionWithPrototype(name.c_str(), proto.c_str());
+    if (func && name.back() == '>') {
+    // make sure that all template parameters match (more are okay, e.g. defaults or
+    // ones derived from the arguments or variadic templates)
+        if (!template_compare(name, func->GetName()))
+            func = nullptr;  // happens if implicit conversion matches the overload
+    }
     } else {
-        TClassRef& cr = type_from_handle(scope);
-        if (cr.GetClass()) {
-            func = cr->GetMethodWithPrototype(name.c_str(), proto.c_str());
-            if (!func) {
-                cl = cr->GetClassInfo();
+    TClassRef &cr = type_from_handle(scope);
+    if (cr.GetClass()) {
+        func = cr->GetMethodWithPrototype(name.c_str(), proto.c_str());
+        if (!func) {
+            cl = cr->GetClassInfo();
             // try base classes to cover a common 'using' case (TODO: this is stupid and misses
             // out on base classes; fix that with improved access to Cling)
-                TCppIndex_t nbases = GetNumBases(scope);
-                for (TCppIndex_t i = 0; i < nbases; ++i) {
-                    TClassRef& base = type_from_handle(GetScope(GetBaseName(scope, i)));
-                    if (base.GetClass()) {
-                        func = base->GetMethodWithPrototype(name.c_str(), proto.c_str());
-                        if (func) break;
-                    }
+            TCppIndex_t nbases = GetNumBases(scope);
+            for (TCppIndex_t i = 0; i < nbases; ++i) {
+                TClassRef &base = type_from_handle(GetScope(GetBaseName(scope, i)));
+                if (base.GetClass()) {
+                func = base->GetMethodWithPrototype(name.c_str(), proto.c_str());
+                if (func)
+                    break;
                 }
             }
         }
+    }
     }
 
     if (!func && name.back() == '>' && (cl || scope == (TCppScope_t)GLOBAL_HANDLE)) {
@@ -2172,7 +2186,7 @@ Cppyy::TCppMethod_t Cppyy::GetMethodTemplate(
     if (name.back() == '>') {
         auto pos = name.find('<');
         if (pos != std::string::npos) {
-            TCppMethod_t cppmeth = GetMethodTemplate(scope, name.substr(0, pos), proto);
+            TCppMethod_t cppmeth = GetMethodTemplate(scope, name.substr(0, pos), proto, diagnostics);
             if (cppmeth) {
             // allow if requested template names match up to the result
                 const std::string& alt = GetMethodFullName(cppmeth);
@@ -2643,5 +2657,3 @@ long long Cppyy::GetEnumDataValue(TCppEnum_t etype, TCppIndex_t idata)
      TEnumConstant* ecst = (TEnumConstant*)((TEnum*)etype)->GetConstants()->At((int)idata);
      return (long long)ecst->GetValue();
 }
-
-

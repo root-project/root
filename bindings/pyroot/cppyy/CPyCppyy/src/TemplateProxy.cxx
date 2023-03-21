@@ -12,7 +12,7 @@
 
 // Standard
 #include <algorithm>
-
+#include <sstream>
 
 namespace CPyCppyy {
 
@@ -177,9 +177,11 @@ PyObject* TemplateProxy::Instantiate(const std::string& fname,
             proto = name_v1.substr(1, name_v1.size()-2);
     }
 
-// the following causes instantiation as necessary
+    std::ostringstream diagnostics;
+
+    // the following causes instantiation as necessary
     Cppyy::TCppScope_t scope = ((CPPClass*)fTI->fPyClass)->fCppType;
-    Cppyy::TCppMethod_t cppmeth = Cppyy::GetMethodTemplate(scope, fname, proto);
+    Cppyy::TCppMethod_t cppmeth = Cppyy::GetMethodTemplate(scope, fname, proto, diagnostics);
     if (cppmeth) {    // overload stops here
     // A successful instantiation needs to be cached to pre-empt future instantiations. There
     // are two names involved, the original asked (which may be partial) and the received.
@@ -203,12 +205,12 @@ PyObject* TemplateProxy::Instantiate(const std::string& fname,
                 pos = proto.find("initializer_list", pos + 6);
             }
 
-            Cppyy::TCppMethod_t m2 = Cppyy::GetMethodTemplate(scope, fname, proto);
+            Cppyy::TCppMethod_t m2 = Cppyy::GetMethodTemplate(scope, fname, proto, diagnostics);
             if (m2 && m2 != cppmeth) {
-            // replace if the new method with vector was found; otherwise just continue
-            // with the previously found method with initializer_list.
-                cppmeth = m2;
-                resname = Cppyy::GetMethodFullName(cppmeth);
+               // replace if the new method with vector was found; otherwise just continue
+               // with the previously found method with initializer_list.
+               cppmeth = m2;
+               resname = Cppyy::GetMethodFullName(cppmeth);
             }
         }
 
@@ -296,10 +298,16 @@ PyObject* TemplateProxy::Instantiate(const std::string& fname,
         PyObject* pymeth =
             CPPOverload_Type.tp_descr_get(pyol, bNeedsRebind ? fSelf : nullptr, (PyObject*)&CPPOverload_Type);
         Py_DECREF(pyol);
+        bool empty = diagnostics.str().find_first_not_of(' ') == diagnostics.str().npos;
+        if (!empty) {
+           PyErr_WarnFormat(PyExc_Warning, 1, "Compiler warnings during instantiation of \"%s(%s)\"\n%s", fname.c_str(),
+                            proto.c_str(), diagnostics.str().c_str());
+        }
         return pymeth;
     }
 
-    PyErr_Format(PyExc_TypeError, "Failed to instantiate \"%s(%s)\"", fname.c_str(), proto.c_str());
+    PyErr_Format(PyExc_TypeError, "Failed to instantiate \"%s(%s)\"\n%s", fname.c_str(), proto.c_str(),
+                 diagnostics.str().c_str());
     return nullptr;
 }
 
