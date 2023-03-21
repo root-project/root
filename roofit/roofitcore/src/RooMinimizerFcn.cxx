@@ -52,10 +52,14 @@ RooArgSet getParameters(RooAbsReal const &funct)
 
 // use reference wrapper for the Functor, such that the functor points to this RooMinimizerFcn by reference.
 RooMinimizerFcn::RooMinimizerFcn(RooAbsReal *funct, RooMinimizer *context)
-   : RooAbsMinimizerFcn(getParameters(*funct), context),
-     _funct(funct),
-     _multiGenFcn{std::make_unique<ROOT::Math::Functor>(std::cref(*this), getNDim())}
+   : RooAbsMinimizerFcn(getParameters(*funct), context), _funct(funct)
 {
+   if (context->_cfg.gradFunc) {
+      _multiGenFcn = std::make_unique<ROOT::Math::GradFunctor>(this, &RooMinimizerFcn::operator(),
+                                                               &RooMinimizerFcn::evaluateGradient, getNDim());
+   } else {
+      _multiGenFcn = std::make_unique<ROOT::Math::Functor>(std::cref(*this), getNDim());
+   }
 }
 
 void RooMinimizerFcn::setOptimizeConstOnFunction(RooAbsArg::ConstOpCode opcode, bool doAlsoTrackingOpt)
@@ -66,7 +70,6 @@ void RooMinimizerFcn::setOptimizeConstOnFunction(RooAbsArg::ConstOpCode opcode, 
 /// Evaluate function given the parameters in `x`.
 double RooMinimizerFcn::operator()(const double *x) const
 {
-
    // Set the parameter values for this iteration
    for (unsigned index = 0; index < _nDim; index++) {
       if (_logfile)
@@ -111,6 +114,26 @@ double RooMinimizerFcn::operator()(const double *x) const
    finishDoEval();
 
    return fvalue;
+}
+
+void RooMinimizerFcn::evaluateGradient(const double *x, double *out) const
+{
+   // Set the parameter values for this iteration
+   for (unsigned index = 0; index < _nDim; index++) {
+      if (_logfile)
+         (*_logfile) << x[index] << " ";
+      SetPdfParamVal(index, x[index]);
+   }
+
+   _context->_cfg.gradFunc(out);
+
+   // Optional logging
+   if (cfg().verbose) {
+      std::cout << "\n    gradient = ";
+      for (std::size_t i = 0; i < getNDim(); ++i) {
+         std::cout << out[i] << ", ";
+      }
+   }
 }
 
 std::string RooMinimizerFcn::getFunctionName() const

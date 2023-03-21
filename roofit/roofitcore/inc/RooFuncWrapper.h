@@ -13,10 +13,8 @@
 #ifndef RooFit_RooFuncWrapper_h
 #define RooFit_RooFuncWrapper_h
 
-#include "RooAbsReal.h"
-#include "RooListProxy.h"
-
-#include "Math/Functor.h"
+#include <RooAbsReal.h>
+#include <RooListProxy.h>
 
 #include <memory>
 #include <string>
@@ -40,26 +38,18 @@ public:
 
    void gradient(const double *x, double *g) const;
 
-   const ROOT::Math::GradFunctor &getGradFunctor() const { return _gradFunctor; }
-
-   const ROOT::Math::Functor &getFunctor() const { return _funcFunctor; }
-
 protected:
-   void updateGradientVarBuffer() const;
-
    double evaluate() const override;
 
 private:
+   void updateGradientVarBuffer() const;
+
    using Func = double (*)(double *, double *);
    using Grad = void (*)(double *, double *, double *);
 
-   double doEval(const double *x) const;
-
    RooListProxy _params;
    Func _func;
-   ROOT::Math::Functor _funcFunctor;
    Grad _grad;
-   ROOT::Math::GradFunctor _gradFunctor;
    mutable std::vector<double> _gradientVarBuffer;
    mutable std::vector<double> _observables;
 };
