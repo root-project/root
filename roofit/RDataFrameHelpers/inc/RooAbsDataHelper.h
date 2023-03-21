@@ -83,6 +83,15 @@ public:
       ExecImpl(sizeof...(values), vector);
    }
 
+   // 0 column version
+   void Exec(unsigned int)
+   {
+      if (_eventSize) {
+         throw std::invalid_argument(std::string("RooDataSet can hold ") + std::to_string(_eventSize) +
+                                     " variables per event, but RDataFrame passed 0 columns.");
+      }
+   }
+
    RooAbsData &GetAbsData() override { return *_dataset; }
 
 private:
