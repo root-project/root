@@ -483,18 +483,31 @@ TStyle::~TStyle()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Copy constructor and assignment operator.
+/// Copy constructor
 
 TStyle::TStyle(const TStyle &style) : TNamed(style), TAttLine(style), TAttFill(style), TAttMarker(style), TAttText(style)
 {
    style.TStyle::Copy(*this);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Assignment operator.
+
 TStyle& TStyle::operator=(const TStyle& style)
 {
    if (this != &style)
       style.TStyle::Copy(*this);
    return *this;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Return axis number (1 for X, 2 for Y, 3 for Z), otherwise 0
+
+Int_t TStyle::AxisChoice(Option_t *axis) const
+{
+   UChar_t a = axis ? *axis : 0;
+   a -= (a >= 'x') ? 'x' : 'X'; // toupper and a-='X'; intentional underflow
+   return (a > 2) ? 0 : (Int_t)(a+1);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
