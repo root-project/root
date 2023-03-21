@@ -874,9 +874,26 @@ with TDirectory.TContext():
 * [[ROOT-10088](https://sft.its.cern.ch/jira/browse/ROOT-10088)] - lsb_release is not specified as a ROOT dependency
 * [[ROOT-11023](https://sft.its.cern.ch/jira/browse/ROOT-11023)] - [RDataFrame] Remove global state in `ROOT::RDF::SaveGraph`
 
+## Release 6.28/02
+
+Published on March 21, 2023
+
+### Bugs and Issues fixed in this release
+
+* [[#12224](https://github.com/root-project/root/issues/12224)] - `rootreadspeed --help` has "random" linebreaks
+* [[#12148](https://github.com/root-project/root/issues/12148)] - Failing tests with numpy 1.24
+* [[#12293](https://github.com/root-project/root/issues/12293)] - ROOT 6.28.00 fails on s390x: Added modules have incompatible data layouts
+* [[#11483](https://github.com/root-project/root/issues/11483)] - Cannot use globs with `?#` syntax in TChain::Add
+* [[#12260](https://github.com/root-project/root/issues/12260)] - [DF] Bogus data read from indexed friend trees in multi-thread runs
+* [[#12294](https://github.com/root-project/root/issues/12294)] - ROOT 6.28.00 fails on aarch64: cling JIT session error: Failed to materialize symbols
+* [[#12398](https://github.com/root-project/root/issues/12398)] - [VecOps] Masking `RVec<T>` is broken for non-trivially-constructible Ts
+* [[#11212](https://github.com/root-project/root/issues/11212)] - [TH1] Wrong data are drawn when `gPad->SetLogx` is combined with `Draw("same")`
+* [[#12394](https://github.com/root-project/root/issues/12394)] - defect when drawing multiple histograms with Log Y axis
+* [[#12409](https://github.com/root-project/root/issues/12409)] - ROOT does not work when launched from non-accessible folder
+* [[#12498](https://github.com/root-project/root/issues/12498)] - `TTime` class is not splitable
 
 ## HEAD of the v6-28-00-patches branch
 
-These changes will be part of a future 6.28/02.
+These changes will be part of a future 6.28/04.
 
 - None so far.
