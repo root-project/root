@@ -1262,7 +1262,7 @@ long TClingClassInfo::Property() const
 
    const clang::DeclContext *ctxt = GetDecl()->getDeclContext();
    clang::NamespaceDecl *std_ns =fInterp->getSema().getStdNamespace();
-   while (! ctxt->isTranslationUnit())  {
+   while (ctxt && ! ctxt->isTranslationUnit())  {
       if (ctxt->Equals(std_ns)) {
          property |= kIsDefinedInStd;
          break;
