@@ -13,6 +13,7 @@
 
 #include <RooAbsPdf.h>
 #include <RooDataSet.h>
+#include <RooFitResult.h>
 #include <RooFuncWrapper.h>
 #include <RooGaussian.h>
 #include <RooHelpers.h>
@@ -41,43 +42,6 @@ double getNumDerivative(const RooAbsReal &pdf, RooRealVar &var, const RooArgSet 
    var.setVal(orig);
 
    return (plus - minus) / (2 * eps);
-}
-
-std::unique_ptr<ROOT::Math::Minimizer>
-doMinimization(RooFuncWrapper const &inFunc, RooArgSet const &parameters, bool useAnalyticGradient)
-{
-   std::unique_ptr<ROOT::Math::Minimizer> myMinimizer{ROOT::Math::Factory::CreateMinimizer("Minuit2")};
-
-   myMinimizer->SetPrintLevel(-1);
-   myMinimizer->SetErrorDef(0.5);
-   myMinimizer->SetTolerance(1);
-   myMinimizer->SetMaxFunctionCalls(1000);
-   if (useAnalyticGradient)
-      myMinimizer->SetFunction(inFunc.getGradFunctor());
-   else
-      myMinimizer->SetFunction(inFunc.getFunctor());
-
-   int cnt = 0;
-   for (auto *param : parameters) {
-      auto realParam = static_cast<RooRealVar *>(param);
-      myMinimizer->SetLimitedVariable(cnt++, realParam->GetName(), realParam->getVal(), realParam->getError(),
-                                      realParam->getMin(), realParam->getMax());
-   }
-
-   myMinimizer->Minimize();
-
-   return myMinimizer;
-}
-
-void checkMinimizationResults(ROOT::Math::Minimizer const &minimizer, RooArgSet const &parameters, double eps = 1e-8)
-{
-   int cnt = 0;
-   for (auto *param : parameters) {
-      auto realParam = static_cast<RooRealVar *>(param);
-      EXPECT_NEAR(minimizer.X()[cnt], realParam->getVal(), eps);
-      EXPECT_NEAR(minimizer.Errors()[cnt], realParam->getError(), eps);
-      cnt++;
-   }
 }
 
 } // namespace
@@ -185,19 +149,43 @@ TEST(RooFuncWrapper, NllWithObservables)
    EXPECT_NEAR(getNumDerivative(*nllRef, mu, normSet), dMyNLL[0], 1e-6);
    EXPECT_NEAR(getNumDerivative(*nllRef, sigma, normSet), dMyNLL[1], 1e-6);
 
+   // Remember parameter state before minimization
+   RooArgSet parametersOrig;
+   parameters.snapshot(parametersOrig);
+
+   auto runMinimizer = [&](RooAbsReal &absReal, RooMinimizer::Config cfg = {}) -> std::unique_ptr<RooFitResult> {
+      RooMinimizer m{absReal, cfg};
+      m.setPrintLevel(-1);
+      m.setStrategy(0);
+      m.minimize("Minuit2");
+      auto result = std::unique_ptr<RooFitResult>{m.save()};
+      // reset parameters
+      parameters.assign(parametersOrig);
+      return result;
+   };
+
    // Minimize the RooFuncWrapper Implementation
-   // Compare reference with AD gradient based minimization and numerical gradient based minimization.
-   auto myMinimizer = doMinimization(nllFunc, paramsMyNLL, true);
-   auto myMinimizerNumDiff = doMinimization(nllFunc, paramsMyNLL, false);
+   auto result = runMinimizer(nllFunc);
+
+   // Minimize the RooFuncWrapper Implementation with AD
+   RooMinimizer::Config minimizerCfgAd;
+   std::size_t nGradientCalls = 0;
+   minimizerCfgAd.gradFunc = [&](double *out) {
+      nllFunc.getGradient(out);
+      ++nGradientCalls;
+   };
+   auto resultAd = runMinimizer(nllFunc, minimizerCfgAd);
+   EXPECT_GE(nGradientCalls, 1); // make sure the gradient function was actually called
 
    // Minimize the reference NLL
-   RooMinimizer refMinimizer{*nllRef};
-   refMinimizer.setPrintLevel(-1);
-   refMinimizer.minimize("Minuit2");
+   auto resultRef = runMinimizer(*nllRef);
 
    // Compare minimization results
-   checkMinimizationResults(*myMinimizer, parameters, 1e-6);
-   checkMinimizationResults(*myMinimizerNumDiff, parameters);
+   // TODO: the (global) correlation coefficients are still wrong. This needs
+   // to be understood next, and then we can also use the regular
+   // isIdentical().
+   EXPECT_TRUE(result->isIdenticalNoCov(*resultRef, 1e-5));
+   EXPECT_TRUE(resultAd->isIdenticalNoCov(*resultRef, 1e-5));
 }
 
 namespace {

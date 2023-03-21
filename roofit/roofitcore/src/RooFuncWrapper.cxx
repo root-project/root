@@ -97,10 +97,6 @@ RooFuncWrapper::RooFuncWrapper(const char *name, const char *title, std::string 
    // clang-format on
    gInterpreter->Declare(dWrapperStrm.str().c_str());
    _grad = reinterpret_cast<Grad>(gInterpreter->ProcessLine((wrapperName + ";").c_str()));
-
-   // Create the gradient and function functors to be used by the minimizer.
-   _funcFunctor = ROOT::Math::Functor(this, &RooFuncWrapper::doEval, _params.size());
-   _gradFunctor = ROOT::Math::GradFunctor(this, &RooFuncWrapper::doEval, &RooFuncWrapper::gradient, _params.size());
 }
 
 RooFuncWrapper::RooFuncWrapper(const RooFuncWrapper &other, const char *name /*=nullptr*/)
@@ -139,9 +135,4 @@ void RooFuncWrapper::gradient(const double *x, double *g) const
    std::fill(g, g + _params.size(), 0.0);
 
    _grad(const_cast<double *>(x), _observables.data(), g);
-}
-
-double RooFuncWrapper::doEval(const double *x) const
-{
-   return _func(const_cast<double *>(x), _observables.data());
 }
