@@ -5697,30 +5697,25 @@ void TPad::SavePrimitive(std::ostream &out, Option_t * option /*= ""*/)
 
    char quote = '"';
 
-   static Int_t pcounter = 0;
    TString padName = GetName();
+
+   // check for space in the pad name
+   auto p = padName.Index(" ");
+   if (p != kNPOS) padName.Resize(p);
 
    TString opt = option;
    if (!opt.Contains("toplevel")) {
-      pcounter++;
-      padName += "__";
-      padName += pcounter;
-      padName = gInterpreter-> MapCppName(padName);
+      static Int_t pcounter = 0;
+      padName += TString::Format("__%d", pcounter++);
+      padName = gInterpreter->MapCppName(padName);
    }
-   const char *pname = padName.Data();
-   if (!strlen(pname)) pname = "unnamed";
 
-   char lcname[100];
+   const char *pname = padName.Data();
    const char *cname = padName.Data();
-   size_t nch = strlen(cname);
-   if (nch < sizeof(lcname)) {
-      strlcpy(lcname, cname, sizeof(lcname));
-      for(size_t k = 0; k < nch; k++)
-         if (lcname[k] == ' ')
-            lcname[k] = 0;
-      if (lcname[0] != 0)
-         cname = lcname;
-      else if (this == gPad->GetCanvas())
+
+   if (padName.Length() == 0) {
+      pname = "unnamed";
+      if (this == gPad->GetCanvas())
          cname = "c1";
       else
          cname = "pad";
@@ -5731,8 +5726,7 @@ void TPad::SavePrimitive(std::ostream &out, Option_t * option /*= ""*/)
       out <<"  "<<std::endl;
       out <<"// ------------>Primitives in pad: "<<GetName()<<std::endl;
 
-      out<<"   TPad *"<<cname<<" = new TPad("<<quote<<pname<<quote<<", "<<quote<<GetTitle()
-      <<quote
+      out<<"   TPad *"<<cname<<" = new TPad("<<quote<<GetName()<<quote<<", "<<quote<<GetTitle()<<quote
       <<","<<fXlowNDC
       <<","<<fYlowNDC
       <<","<<fXlowNDC+fWNDC

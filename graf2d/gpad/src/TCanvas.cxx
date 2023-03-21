@@ -1807,7 +1807,7 @@ void TCanvas::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 /// The precision can be changed (via system.rootrc) by changing the value
 /// of the environment variable "Canvas.SavePrecision"
 
-void TCanvas::SaveSource(const char *filename, Option_t *option)
+void TCanvas::SaveSource(const char *filename, Option_t * /*option*/)
 {
    //    reset bit TClass::kClassSaved for all classes
    TIter next(gROOT->GetListOfClasses());
