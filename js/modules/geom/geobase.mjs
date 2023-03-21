@@ -2992,13 +2992,13 @@ class ClonedNodes {
 
       if (clone.kind === kindShape) {
          let prop = { name: clone.name, nname: clone.name, shape: null, material: null, chlds: null },
-            _opacity = entry.opacity || 1, col = entry.color || '#0000FF';
+             opacity = entry.opacity || 1, col = entry.color || '#0000FF';
          prop.fillcolor = new Color(col[0] == '#' ? col : `rgb(${col})`);
-         prop.material = new MeshLambertMaterial({ transparent: _opacity < 1,
-                          opacity: _opacity, wireframe: false, color: prop.fillcolor,
+         prop.material = new MeshLambertMaterial({ transparent: opacity < 1,
+                          opacity, wireframe: false, color: prop.fillcolor,
                           side: FrontSide, vertexColors: false,
-                          depthWrite: _opacity == 1 });
-         prop.material.inherentOpacity = _opacity;
+                          depthWrite: opacity == 1 });
+         prop.material.inherentOpacity = opacity;
 
          return prop;
       }
@@ -3021,8 +3021,8 @@ class ClonedNodes {
             let opacity = Math.min(1, node.fRGBA[3]);
             prop.fillcolor = new Color( node.fRGBA[0], node.fRGBA[1], node.fRGBA[2] );
             prop.material = new MeshLambertMaterial({ transparent: opacity < 1,
-                             opacity, wireframe: false, color: prop.fillcolor,
-                             side: FrontSide, vertexColors: false, depthWrite: opacity == 1 });
+                                                      opacity, wireframe: false, color: prop.fillcolor,
+                                                      side: FrontSide, vertexColors: false, depthWrite: opacity == 1 });
             prop.material.inherentOpacity = opacity;
          }
 
@@ -3040,7 +3040,7 @@ class ClonedNodes {
       if (visible) {
 
          // TODO: maybe correctly extract ROOT colors here?
-         let _opacity = 1.0;
+         let opacity = 1.0;
          if (!root_colors) root_colors = ['white', 'black', 'red', 'green', 'blue', 'yellow', 'magenta', 'cyan'];
 
          if (entry.custom_color)
@@ -3063,18 +3063,18 @@ class ClonedNodes {
             }
 
             if (transparency > 0)
-               _opacity = (100.0 - transparency) / 100.0;
+               opacity = (100.0 - transparency) / 100.0;
             if (prop.fillcolor === undefined)
                prop.fillcolor = root_colors[mat.fFillColor];
          }
          if (prop.fillcolor === undefined)
             prop.fillcolor = 'lightgrey';
 
-         prop.material = new MeshLambertMaterial({ transparent: _opacity < 1,
-                              opacity: _opacity, wireframe: false, color: prop.fillcolor,
-                              side: FrontSide, vertexColors: false,
-                              depthWrite: _opacity == 1 });
-         prop.material.inherentOpacity = _opacity;
+         prop.material = new MeshLambertMaterial({ transparent: opacity < 1,
+                                                   opacity, wireframe: false, color: prop.fillcolor,
+                                                   side: FrontSide, vertexColors: false,
+                                                   depthWrite: opacity == 1 });
+         prop.material.inherentOpacity = opacity;
       }
 
       return prop;
