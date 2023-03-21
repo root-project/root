@@ -119,6 +119,16 @@ public:
   ///
   /// \param slot When IMT is used, this is a number in the range [0, nSlots) to fill lock free.
   /// \param values x, y, z, ... coordinates of the event.
+
+  // 0 column version
+  void Exec(unsigned int)
+  {
+     if (_eventSize) {
+        throw std::invalid_argument(std::string("RooDataSet can hold ") + std::to_string(_eventSize) +
+                                    " variables per event, but RDataFrame passed 0 columns.");
+     }
+  }
+
   template <typename... ColumnTypes>
   void Exec(unsigned int slot, ColumnTypes... values)
   {
