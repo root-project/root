@@ -1,37 +1,22 @@
-#ifndef HIST_CUDA
-#define HIST_CUDA
+#ifndef RH1CUDA_H
+#define RH1CUDA_H
 
 #include "RtypesCore.h"
 #include "TError.h"
+
 #include <vector>
 #include <utility>
 #include <iostream>
 
-// TODO: reuse from RooBatchComputeTypes.h.
-#ifdef __CUDACC__
-#define __roodevice__ __device__
-#define __roohost__ __host__
-#define __rooglobal__ __global__
-#else
-#define __roodevice__
-#define __roohost__
-#define __rooglobal__
-struct cudaEvent_t;
-struct cudaStream_t;
-#endif // #indef __CUDACC__
-
 struct HistStats {
-   Double_t      fEntries;         ///<  Number of entries
    Double_t      fTsumw;           ///<  Total Sum of weights
    Double_t      fTsumw2;          ///<  Total Sum of squares of weights
    Double_t      fTsumwx;          ///<  Total Sum of weight*X
    Double_t      fTsumwx2;         ///<  Total Sum of weight*X*X
-   Double_t      fMaximum;         ///<  Maximum value for plotting
-   Double_t      fMinimum;         ///<  Minimum value for plotting
    Double_t     *fSumw2;           ///<  Array of sum of squares of weights
 };
 
-class RHnCUDA {
+class RH1CUDA  {
 private:
    Int_t                  fThreadBlockSize;
 
@@ -42,23 +27,24 @@ private:
    Double_t               fXmin;             // Low edge of first bin
    Double_t               fXmax;             // Upper edge of last bin
 
+   Double_t               fEntries;          /// Number of entries
    HistStats              fStats;
    HistStats             *fDeviceStats;
 
-   Size_t                 fBufferSize;       // Number of bins to buffer.
+   UInt_t                 fBufferSize;       // Number of bins to buffer.
    std::vector<Double_t>  fCells;            // Buffer of bins to fill. TODO: vector or just int*?
    std::vector<Double_t>  fWeights;          // Buffer of weigths for each bin.
    Double_t              *fDeviceCells;      // Pointer to array of bins to fill on the GPU.
    Double_t              *fDeviceWeights;    // Pointer to array of weights on the GPU.
 
 public:
-   RHnCUDA();
+   RH1CUDA();
 
    // RH1CUDA(Int_t _nbins);
-   RHnCUDA(Int_t ncells, Double_t xlow, Double_t xhigh, const Double_t *binEdges);
+   RH1CUDA(Int_t ncells, Double_t xlow, Double_t xhigh, const Double_t *binEdges);
 
    void AllocateH1D();
-   void RetrieveResults(Double_t *result);
+   void RetrieveResults(Double_t *histResult, HistStats stats);
 
    void Fill(Double_t x);
    void Fill(Double_t x, Double_t w);
