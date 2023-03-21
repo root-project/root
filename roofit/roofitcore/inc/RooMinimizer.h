@@ -44,7 +44,11 @@ class RooMinimizer : public TObject {
 public:
    /// Config argument to RooMinimizer ctor
    struct Config {
+
       Config() {}
+
+      std::function<void(double *)> gradFunc;
+
       double recoverFromNaN = 10.; // RooAbsMinimizerFcn config
       int printEvalErrors = 10;    // RooAbsMinimizerFcn config
       int doEEWall = 1;            // RooAbsMinimizerFcn config
@@ -151,6 +155,7 @@ public:
 
 private:
    friend class RooAbsMinimizerFcn;
+   friend class RooMinimizerFcn;
 
    std::unique_ptr<RooAbsReal::EvalErrorContext> makeEvalErrorContext() const;
 
