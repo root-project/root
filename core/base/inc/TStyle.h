@@ -155,13 +155,7 @@ public:
    TStyle(const TStyle &style);
    TStyle& operator=(const TStyle& style);
    virtual          ~TStyle();
-   inline Int_t     AxisChoice(Option_t *axis) const
-   {
-      // Return axis number (1 for X, 2 for Y, 3 for Z)
-      UChar_t a = *axis;
-      a -= (a >= 'x') ? 'x' : 'X'; // toupper and a-='X'; intentional underflow
-      return (a > 2) ? 0 : (Int_t)(a+1);
-   }
+   Int_t            AxisChoice(Option_t *axis) const;
    void             Browse(TBrowser *b) override;
    static  void     BuildStyles();
    void             Copy(TObject &style) const override;
