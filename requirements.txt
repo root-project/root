@@ -4,3 +4,6 @@
 IPython
 jupyter
 pytest
+
+# Needed by tutorials (run as part of roottest)
+pandas
