@@ -298,10 +298,13 @@ PyObject* TemplateProxy::Instantiate(const std::string& fname,
         PyObject* pymeth =
             CPPOverload_Type.tp_descr_get(pyol, bNeedsRebind ? fSelf : nullptr, (PyObject*)&CPPOverload_Type);
         Py_DECREF(pyol);
-        bool empty = diagnostics.str().find_first_not_of(' ') == diagnostics.str().npos;
-        if (!empty) {
-           PyErr_WarnFormat(PyExc_Warning, 1, "Compiler warnings during instantiation of \"%s(%s)\"\n%s", fname.c_str(),
-                            proto.c_str(), diagnostics.str().c_str());
+        // check if diagnostics contains only spaces since this can happen as a result of clang indenting
+        const bool emptydiag = diagnostics.str().find_first_not_of(' ') == diagnostics.str().npos;
+        if (!emptydiag) {
+           std::ostringstream warnmsg;
+           warnmsg << "Compiler warnings during instantiation of \"" << fname << "(" << proto << ")\"\n"
+                   << diagnostics.str();
+           PyErr_WarnEx(PyExc_Warning, warnmsg.str().c_str(), 1);
         }
         return pymeth;
     }
