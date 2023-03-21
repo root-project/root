@@ -273,6 +273,14 @@ def build(options, buildtype, shell_log):
 
         if result != 0:
             die(result, "Failed cmake generation step", shell_log)
+    else:
+        # Print CMake cached config
+        result, shell_log = subprocess_with_log(f"""
+            cmake -S '{workdir}/src' -B '{workdir}/build' -N -L
+        """, shell_log)
+
+        if result != 0:
+            die(result, "Failed cmake cache print step", shell_log)
 
     result, shell_log = subprocess_with_log(f"""
         cmake --build '{WORKDIR}/build' --config '{buildtype}' --parallel '{os.cpu_count()}' {generator_flags}
