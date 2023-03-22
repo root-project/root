@@ -142,7 +142,7 @@ TEST_P(RDFRegressionTests, UniqueEntryNumbers)
    const auto fname = "df_uniqueentrynumbers.root";
    ROOT::RDataFrame(10).Snapshot<unsigned int>(treename, fname, {"rdfslot_"}); // does not matter what column we write
 
-   ROOT::RDataFrame df(treename, {fname, fname});
+   ROOT::RDataFrame df(treename, {{fname}, {fname}});
    auto entries = *df.Take<ULong64_t>("rdfentry_");
    std::sort(entries.begin(), entries.end());
    const auto nEntries = entries.size();

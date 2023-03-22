@@ -453,7 +453,7 @@ TEST(TreeProcessorMT, SetNThreads)
    EXPECT_EQ(ROOT::GetThreadPoolSize(), 0u);
 
    {
-      ROOT::TTreeProcessorMT p({"somefile", "some_other"}, "sometree", 1u);
+      ROOT::TTreeProcessorMT p({{"somefile"}, {"some_other"}}, "sometree", 1u);
       EXPECT_EQ(ROOT::GetThreadPoolSize(), 1u);
    }
 

@@ -73,7 +73,7 @@ void concurrentHistFill(Experimental::RH2D &hist)
 void concurrentfill()
 {
    // This histogram will be filled from several threads.
-   Experimental::RH2D hist{{100, 0., 1.}, {{0., 1., 2., 3., 10.}}};
+   Experimental::RH2D hist{{{100, 0., 1.}}, {{0., 1., 2., 3., 10.}}};
 
    concurrentHistFill(hist);
 

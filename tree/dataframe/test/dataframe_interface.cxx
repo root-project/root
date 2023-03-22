@@ -36,7 +36,7 @@ TEST(RDataFrameInterface, CreateFromContainer)
 
 TEST(RDataFrameInterface, CreateFromInitList)
 {
-   RDataFrame tdf("t", {"f1", "f2"});
+   RDataFrame tdf("t", {{"f1"}, {"f2"}});
 }
 
 TEST(RDataFrameInterface, CreateFromNullTDirectory)
@@ -716,7 +716,7 @@ TEST(RDataFrameInterface, DescribeShortFormat)
       TTree t("myTree", "foo");
       t.Write();
    }
-   ROOT::RDataFrame df2d("myTree", {"testDescribeDataset1.root", "testDescribeDataset2.root"});
+   ROOT::RDataFrame df2d("myTree", {{"testDescribeDataset1.root"}, {"testDescribeDataset2.root"}});
    std::string ss2 = "Dataframe from TChain myTree in files\n  testDescribeDataset1.root\n  testDescribeDataset2.root";
    EXPECT_EQ(df2d.Describe().AsString(/*shortFormat =*/true), ss2);
 

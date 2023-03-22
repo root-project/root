@@ -56,7 +56,7 @@ TEST(RDFVary, VaryTwiceTheSameColumn)
    EXPECT_THROW(
       try {
          df.Vary(
-            {"x", "x"},
+            {{"x"}, {"x"}},
             [] {
                return ROOT::RVec<ROOT::RVecI>{{0}, {0}};
             },
@@ -71,7 +71,7 @@ TEST(RDFVary, VaryTwiceTheSameColumn)
    // and now the jitted version
    EXPECT_THROW(
       try {
-         df.Vary({"x", "x"}, "ROOT::RVec<ROOT::RVecI>{{0}, {0}}", 1, "broken");
+         df.Vary({{"x"}, {"x"}}, "ROOT::RVec<ROOT::RVecI>{{0}, {0}}", 1, "broken");
       } catch (const std::logic_error &err) {
          const auto msg = "A column name was passed to the same Vary invocation multiple times.";
          EXPECT_STREQ(err.what(), msg);
@@ -97,7 +97,7 @@ TEST(RDFVary, RequireVariationsHaveConsistentType)
    EXPECT_THROW(
       try {
          df2.Vary(
-            {"x", "z"},
+            {{"x"}, {"z"}},
             [] {
                return ROOT::RVec<ROOT::RVecI>{{0}, {1}};
             },
@@ -114,7 +114,7 @@ TEST(RDFVary, RequireVariationsHaveConsistentType)
    EXPECT_THROW(
       try {
          df3.Vary(
-            {"x", "y"},
+            {{"x"}, {"y"}},
             [] {
                return ROOT::RVec<ROOT::RVecF>{{0.f}, {1.f}};
             },
@@ -151,7 +151,7 @@ TEST(RDFVary, RequireVariationsHaveConsistentTypeJitted)
    // non-jitted Define, jitted Vary with incompatible type (multiple columns varied simultaneously
    {
       auto s2 = df.Define("y", [] { return 1; })
-                   .Vary({"x", "y"}, "ROOT::RVec<ROOT::RVecD>{{x*0.1}, {y*0.1}}", 1, "broken")
+                   .Vary({{"x"}, {"y"}}, "ROOT::RVec<ROOT::RVecD>{{x*0.1}, {y*0.1}}", 1, "broken")
                    .Sum("y");
       auto ss2 = VariationsFor(s2);
       // before starting the event loop, we jit and notice the mismatch in types
@@ -260,7 +260,7 @@ TEST(RDFVary, GetVariations)
    auto df = ROOT::RDataFrame(10).Define("x", [] { return 0; }).Define("y", [] { return 10; });
    auto df2 = df.Vary("x", SimpleVariation, {}, 2)
                  .Vary(
-                    {"x", "y"},
+                    {{"x"}, {"y"}},
                     [] {
                        return ROOT::RVec<ROOT::RVecI>{{-1, 1}, {9, 11}};
                     },
@@ -329,7 +329,7 @@ TEST(RDFVary, VaryAnAlias)
    EXPECT_THROW(
       try {
          df.Vary(
-            {"x", "y"},
+            {{"x"}, {"y"}},
             [] {
                return ROOT::RVec<ROOT::RVecI>{{0}, {0}};
             },
@@ -573,7 +573,7 @@ TEST_P(RDFVary, SimultaneousVariations)
 {
    auto df = ROOT::RDataFrame(10).Define("x", [] { return 1; }).Define("y", [] { return 42; });
    auto h = df.Vary(
-                 {"x", "y"},
+                 {{"x"}, {"y"}},
                  [] {
                     return ROOT::RVec<ROOT::RVecI>{{-1, 2, 3}, {41, 43, 44}};
                  },
@@ -1554,7 +1554,7 @@ TEST_P(RDFVary, MoreVariedColumnsThanVariations)
                .Define("x", [] { return 0; })
                .Define("y", [] { return 0; })
                .Vary(
-                  {"x", "y"},
+                  {{"x"}, {"y"}},
                   [] {
                      return ROOT::RVec<ROOT::RVecI>{{1}, {2}};
                   },
@@ -1575,7 +1575,7 @@ TEST_P(RDFVary, ManyVariationsManyColumns)
                .Define("x", [] { return 0; })
                .Define("y", [] { return 0; })
                .Vary(
-                  {"x", "y"},
+                  {{"x"}, {"y"}},
                   [] {
                      return ROOT::RVec<ROOT::RVecI>{ROOT::RVecI(100, 42), ROOT::RVecI(100, 8)};
                   },

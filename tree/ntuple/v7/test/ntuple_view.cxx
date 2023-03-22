@@ -98,7 +98,7 @@ TEST(RNTuple, BulkViewCollection)
    FileRaii fileGuard("test_ntuple_bulk_view_collection.root");
 
    auto model = RNTupleModel::Create();
-   auto fieldVec = model->MakeField<std::vector<double>>({"vec", "some data"});
+   auto fieldVec = model->MakeField<std::vector<double>>({{"vec"}, {"some data"}});
    auto pageSize = 80 * 1024;
    {
       RNTupleWriteOptions opt;

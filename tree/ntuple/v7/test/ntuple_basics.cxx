@@ -258,7 +258,7 @@ TEST(RNTuple, ClusterEntries)
 {
    FileRaii fileGuard("test_ntuple_cluster_entries.root");
    auto model = RNTupleModel::Create();
-   auto field = model->MakeField<float>({"pt", "transverse momentum"}, 42.0);
+   auto field = model->MakeField<float>({{"pt"}, {"transverse momentum"}}, 42.0);
 
    {
       RNTupleWriteOptions opt;
@@ -279,7 +279,7 @@ TEST(RNTuple, PageSize)
 {
    FileRaii fileGuard("test_ntuple_elements_per_page.root");
    auto model = RNTupleModel::Create();
-   auto field = model->MakeField<float>({"pt", "transverse momentum"}, 42.0);
+   auto field = model->MakeField<float>({{"pt"}, {"transverse momentum"}}, 42.0);
 
    {
       RNTupleWriteOptions opt;
@@ -359,10 +359,10 @@ TEST(RNTupleModel, FieldDescriptions)
    FileRaii fileGuard("test_ntuple_field_descriptions.root");
    auto model = RNTupleModel::Create();
 
-   auto pt = model->MakeField<float>({"pt", "transverse momentum"}, 42.0);
+   auto pt = model->MakeField<float>({{"pt"}, {"transverse momentum"}}, 42.0);
 
    float num = 10.0;
-   model->AddField({"mass", "mass"}, &num);
+   model->AddField({{"mass"}, {"mass"}}, &num);
 
    auto charge = std::make_unique<RField<float>>(RField<float>("charge"));
    charge->SetDescription("electric charge");
