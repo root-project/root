@@ -4005,9 +4005,9 @@ void TCling::SetClassInfo(TClass* cl, Bool_t reload)
    // details and just overlay a 'simpler'/'simplistic' version that is easy
    // for the I/O to understand and handle.
    if (strncmp(cl->GetName(),"tuple<",strlen("tuple<"))==0) {
-
-      name = AlternateTuple(cl->GetName(), fInterpreter->getLookupHelper());
-      if (name.empty()) {
+      if (!reload)
+         name = AlternateTuple(cl->GetName(), fInterpreter->getLookupHelper());
+      if (reload || name.empty()) {
          // We could not generate the alternate
          SetWithoutClassInfoState(cl);
          return;
