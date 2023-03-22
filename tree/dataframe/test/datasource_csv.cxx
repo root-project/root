@@ -322,9 +322,9 @@ TEST(RCsvDS, ProgressiveReadingRDFMT)
 
 TEST(RCsvDS, SpecifyColumnTypes)
 {
-   RCsvDS tds0(fileName0, true, ',', -1LL, {{"Age", 'D'}, {"Height", 'T'}}); // with headers
+   RCsvDS tds0(fileName0, true, ',', -1LL, {{"Age", 'D'}, {"Name", 'T'}}); // with headers
    EXPECT_STREQ("double", tds0.GetTypeName("Age").c_str());
-   EXPECT_STREQ("std::string", tds0.GetTypeName("Height").c_str());
+   EXPECT_STREQ("std::string", tds0.GetTypeName("Name").c_str());
 
    RCsvDS tds1(fileName1, false, ',', -1LL, {{"Col1", 'T'}}); // without headers (Col0, ...)
    EXPECT_STREQ("std::string", tds1.GetTypeName("Col1").c_str());
