@@ -8,7 +8,7 @@
 # CMakeLists.txt file for building ROOT core/macosx package
 ############################################################################
 
-if(NOT APPLE)
+if(NOT (APPLE AND cocoa))
   return()
 endif()
 
@@ -20,19 +20,16 @@ target_link_libraries(Core PRIVATE
   "-F/System/Library/PrivateFrameworks -framework CoreSymbolication"
 )
 
-if(cocoa)
-  target_link_libraries(Core PRIVATE "-framework Cocoa")
+target_link_libraries(Core PRIVATE "-framework Cocoa")
 
-  ROOT_OBJECT_LIBRARY(Macosx
-    src/CocoaUtils.mm
-    src/TMacOSXSystem.mm
-  )
+ROOT_OBJECT_LIBRARY(Macosx
+  src/CocoaUtils.mm
+  src/TMacOSXSystem.mm
+)
 
-  target_compile_options(Macosx PRIVATE -ObjC++)
-  target_include_directories(Macosx PRIVATE ../unix/inc)
+target_compile_options(Macosx PRIVATE -ObjC++)
+target_include_directories(Macosx PRIVATE ../unix/inc)
 
-  target_sources(Core PRIVATE $<TARGET_OBJECTS:Macosx>)
-
-endif()
+target_sources(Core PRIVATE $<TARGET_OBJECTS:Macosx>)
 
 ROOT_INSTALL_HEADERS()
