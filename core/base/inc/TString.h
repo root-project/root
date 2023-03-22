@@ -56,6 +56,9 @@ Bool_t  operator==(const TString &s1, const char *s2);
 Bool_t  operator==(const TSubString &s1, const TSubString &s2);
 Bool_t  operator==(const TSubString &s1, const TString &s2);
 Bool_t  operator==(const TSubString &s1, const char *s2);
+#if (__cplusplus >= 202002L)
+std::strong_ordering operator<=>(const TString &s1, const TString &s2);
+#endif
 /*
 template<class T>
 struct is_signed_numeral : std::integral_constant<bool,
@@ -166,6 +169,9 @@ operator+(T f, const TString &s);
 
 friend Bool_t  operator==(const TString &s1, const TString &s2);
 friend Bool_t  operator==(const TString &s1, const char *s2);
+#if (__cplusplus >= 202002L)
+friend std::strong_ordering operator<=>(const TString &s1, const TString &s2);
+#endif
 
 private:
 #ifdef R__BYTESWAP
@@ -845,6 +851,15 @@ inline Bool_t operator==(const char *s1, const std::string_view &s2)
 inline Bool_t operator==(const std::string_view &s1, const char *s2)
 {
   return s1 == std::string_view(s2);
+}
+#endif
+
+#if (__cplusplus >= 202002L)
+inline std::strong_ordering operator<=>(const TString &s1, const TString &s2)
+{
+   if (s1 == s2) return std::strong_ordering::equal;
+   else if (s1 < s2) return std::strong_ordering::less;
+   return std::strong_ordering::greater;
 }
 #endif
 
