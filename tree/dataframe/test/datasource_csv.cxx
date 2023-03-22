@@ -350,6 +350,12 @@ TEST(RCsvDS, SpecifyColumnTypes)
          throw;
       },
       std::runtime_error);
+
+   auto df = ROOT::RDF::FromCSV(fileName0, true, ',', -1LL, {{"Age", 'L'}, {"Height", 'D'}});
+   auto maxHeight = df.Max<double>("Height");
+   auto maxAge = df.Max<Long64_t>("Age");
+   EXPECT_DOUBLE_EQ(maxHeight.GetValue(), 200.5);
+   EXPECT_EQ(maxAge.GetValue(), 60);
 }
 
 TEST(RCsvDS, NaNTypeIndentification)
