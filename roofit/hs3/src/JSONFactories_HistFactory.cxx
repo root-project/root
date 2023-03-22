@@ -718,7 +718,6 @@ bool tryExportHistFactory(RooWorkspace *ws, const std::string &pdfname, const st
 
       // sort and configure the histosys
       if (pip) {
-         std::vector<HistoSys> histosys;
          for (size_t i = 0; i < pip->paramList().size(); ++i) {
             RooAbsArg *var = pip->paramList().at(i);
             std::string sysname(var->GetName());
@@ -727,7 +726,7 @@ bool tryExportHistFactory(RooWorkspace *ws, const std::string &pdfname, const st
             }
             if (auto lo = dynamic_cast<RooHistFunc *>(pip->lowList().at(i))) {
                if (auto hi = dynamic_cast<RooHistFunc *>(pip->highList().at(i))) {
-                  histosys.emplace_back(HistoSys(sysname, lo, hi, findConstraint(var)->IsA()));
+                  sample.histosys.emplace_back(sysname, lo, hi, findConstraint(var)->IsA());
                }
             }
          }
