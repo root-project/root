@@ -44,6 +44,7 @@
 #include "TRegexp.h"
 
 #include <algorithm>
+#include <array>
 
 namespace ROOT {
 namespace Experimental {
