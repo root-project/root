@@ -245,7 +245,11 @@ jobs:
             config: Debug
             overrides: ["DLLVM_BUILD_TYPE=Debug", "soversion=On"]
 
-    runs-on: [self-hosted, linux, x64]
+    runs-on:
+      - self-hosted
+      - linux
+      - x64
+
     name: ${{ matrix.image }} ${{ matrix.config }} ${{ join( matrix.overrides, ', ' ) }}
 
     container:
