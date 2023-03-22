@@ -224,9 +224,11 @@ void RCsvDS::InferColTypes(std::vector<std::string> &columns)
    const auto second_line = fCsvFile->GetFilePos();
 
    for (auto i = 0u; i < columns.size(); ++i) {
-
-      if (fColTypes.find(fHeaders[i]) != fColTypes.end())
-         continue; // type was manually specified, nothing to do
+      const auto userSpecifiedType = fColTypes.find(fHeaders[i]);
+      if (userSpecifiedType != fColTypes.end()) {
+         fColTypesList.push_back(userSpecifiedType->second);
+         continue;
+      }
 
       // read <=10 extra lines until a non-empty cell on this column is found, so that type is determined
       for (auto extraRowsRead = 0u; extraRowsRead < 10u && columns[i] == "nan"; ++extraRowsRead) {
