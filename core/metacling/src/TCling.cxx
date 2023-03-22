@@ -3991,13 +3991,27 @@ void TCling::SetClassInfo(TClass* cl, Bool_t reload)
    cl->fClassInfo = nullptr;
    std::string name(cl->GetName());
 
+   auto SetWithoutClassInfoState = [](TClass *cl)
+   {
+      if (cl->fState != TClass::kHasTClassInit) {
+         if (cl->fStreamerInfo->GetEntries() != 0) {
+            cl->fState = TClass::kEmulated;
+         } else {
+            cl->fState = TClass::kForwardDeclared;
+         }
+      }
+   };
    // Handle the special case of 'tuple' where we ignore the real implementation
    // details and just overlay a 'simpler'/'simplistic' version that is easy
    // for the I/O to understand and handle.
    if (strncmp(cl->GetName(),"tuple<",strlen("tuple<"))==0) {
 
       name = AlternateTuple(cl->GetName(), fInterpreter->getLookupHelper());
-
+      if (name.empty()) {
+         // We could not generate the alternate
+         SetWithoutClassInfoState(cl);
+         return;
+      }
    }
 
    bool instantiateTemplate = !cl->TestBit(TClass::kUnloading);
@@ -4007,13 +4021,7 @@ void TCling::SetClassInfo(TClass* cl, Bool_t reload)
    //      TClingClassInfoReadOnly.
    TClingClassInfo* info = new TClingClassInfo(GetInterpreterImpl(), name.c_str(), instantiateTemplate);
    if (!info->IsValid()) {
-      if (cl->fState != TClass::kHasTClassInit) {
-         if (cl->fStreamerInfo->GetEntries() != 0) {
-            cl->fState = TClass::kEmulated;
-         } else {
-            cl->fState = TClass::kForwardDeclared;
-         }
-      }
+      SetWithoutClassInfoState(cl);
       delete info;
       return;
    }
