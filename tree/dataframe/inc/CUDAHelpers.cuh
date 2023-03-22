@@ -20,6 +20,41 @@ inline static void __checkCudaErrors(cudaError_t error, std::string func, std::s
 }
 
 namespace CUDAHelpers {
+   ////////////////////////////////////////////////////////////////////////////////
+   /// Reduction operations.
+   template <typename T = void>
+   struct plus {
+      // Function call operator. The return value is <tt>lhs + rhs</tt>.
+      __host__ __device__ constexpr T operator()(const T &lhs, const T &rhs) const { return lhs + rhs; }
+   };
+
+   template <typename T = void>
+   struct squared_plus {
+      // Function call operator.
+      __host__ __device__ constexpr T operator()(const T &lhs, const T &rhs) const { return lhs + (rhs * rhs); }
+   };
+
+   ////////////////////////////////////////////////////////////////////////////////
+   /// CUDA Kernels
+
+   template <UInt_t BlockSize, typename Op, typename ValType>
+   __device__ inline void UnrolledReduce(ValType *sdata, UInt_t tid)
+   {
+      Op operation;
+
+      if (BlockSize >= 512 && tid < 256) { sdata[tid] = operation(sdata[tid], sdata[tid + 256]); } __syncthreads();
+      if (BlockSize >= 256 && tid < 128) { sdata[tid] = operation(sdata[tid], sdata[tid + 128]); } __syncthreads();
+      if (BlockSize >= 128 && tid < 64)  { sdata[tid] = operation(sdata[tid], sdata[tid + 64]);  } __syncthreads();
+
+      // Reduction within a warp
+      if (BlockSize >= 64 && tid < 32)  { sdata[tid] = operation(sdata[tid], sdata[tid + 32]); } __syncthreads();
+      if (BlockSize >= 32 && tid < 16)  { sdata[tid] = operation(sdata[tid], sdata[tid + 16]); } __syncthreads();
+      if (BlockSize >= 16 && tid < 8)   { sdata[tid] = operation(sdata[tid], sdata[tid + 8]);  } __syncthreads();
+      if (BlockSize >= 8  && tid < 4)   { sdata[tid] = operation(sdata[tid], sdata[tid + 4]);  } __syncthreads();
+      if (BlockSize >= 4  && tid < 2)   { sdata[tid] = operation(sdata[tid], sdata[tid + 2]);  } __syncthreads();
+      if (BlockSize >= 2  && tid < 1)   { sdata[tid] = operation(sdata[tid], sdata[tid + 1]);  } __syncthreads();
+   }
+
    // See https://developer.download.nvidia.com/assets/cuda/files/reduction.pdf
    //     https://github.com/zchee/cuda-sample/blob/master/6_Advanced/reduction/reduction_kernel.cu
    template <UInt_t BlockSize, typename Op, typename ValType, Bool_t Overwrite>
@@ -46,18 +81,9 @@ namespace CUDAHelpers {
       sdata[tid] = r;
       __syncthreads();
 
-      if (BlockSize >= 512 && tid < 256) { sdata[tid] = operation(sdata[tid], sdata[tid + 256]); } __syncthreads();
-      if (BlockSize >= 256 && tid < 128) { sdata[tid] = operation(sdata[tid], sdata[tid + 128]); } __syncthreads();
-      if (BlockSize >= 128 && tid < 64)  { sdata[tid] = operation(sdata[tid], sdata[tid + 64]);  } __syncthreads();
+      UnrolledReduce<BlockSize, Op, ValType>(sdata, tid);
 
-      // WarpReduce
-      if (BlockSize >= 64 && tid < 32)  { sdata[tid] = operation(sdata[tid], sdata[tid + 32]); } __syncthreads();
-      if (BlockSize >= 32 && tid < 16)  { sdata[tid] = operation(sdata[tid], sdata[tid + 16]); } __syncthreads();
-      if (BlockSize >= 16 && tid < 8)   { sdata[tid] = operation(sdata[tid], sdata[tid + 8]);  } __syncthreads();
-      if (BlockSize >= 8  && tid < 4)   { sdata[tid] = operation(sdata[tid], sdata[tid + 4]);  } __syncthreads();
-      if (BlockSize >= 4  && tid < 2)   { sdata[tid] = operation(sdata[tid], sdata[tid + 2]);  } __syncthreads();
-      if (BlockSize >= 2  && tid < 1)   { sdata[tid] = operation(sdata[tid], sdata[tid + 1]);  } __syncthreads();
-
+      // The first thread of each block writes the sum of the block into the global device array.
       if (tid == 0) {
          if (Overwrite) {
             g_odata[blockIdx.x] = sdata[0];
@@ -84,8 +110,8 @@ namespace CUDAHelpers {
    }
 
 
-   template <UInt_t BlockSize, typename Op, typename ValType, Bool_t Overwrite>
-   void Reduce(ValType *input, ValType *output, UInt_t n)
+   template <UInt_t BlockSize, typename Op, typename ValType>
+   void Reduce(ValType *input, ValType *output, UInt_t n, ValType init)
    {
       Int_t smemSize = (BlockSize <= 32) ? 2 * BlockSize : BlockSize;
       UInt_t numBlocks = fmax(1, ceil(n / BlockSize / 2.)); // Number of blocks in grid is halved!
@@ -93,19 +119,18 @@ namespace CUDAHelpers {
       ValType *intermediate = NULL;
       ERRCHECK(cudaMalloc((void **)&intermediate, numBlocks * sizeof(ValType)));
 
-      CUDAHelpers::ReductionKernel<BlockSize, Op, ValType, Overwrite>
-         <<<numBlocks, BlockSize, smemSize * sizeof(ValType)>>>(input, intermediate, n, 0.);
+      CUDAHelpers::ReductionKernel<BlockSize, Op, ValType, true>
+         <<<numBlocks, BlockSize, smemSize * sizeof(ValType)>>>(input, intermediate, n, init);
       ERRCHECK(cudaGetLastError());
 
       // TODO: in some cases the final reduction requires multiple passes?
       // OPTIMIZATION: final reduction on CPU under certain threshold?
-      CUDAHelpers::ReductionKernel<BlockSize, Op, ValType, Overwrite>
-         <<<1, BlockSize, smemSize * sizeof(ValType)>>>(intermediate, output, numBlocks, 0.);
+      CUDAHelpers::ReductionKernel<BlockSize, Op, ValType, false>
+         <<<1, BlockSize, smemSize * sizeof(ValType)>>>(intermediate, output, numBlocks, init);
       ERRCHECK(cudaGetLastError());
 
       ERRCHECK(cudaFree(intermediate));
    }
-
 }
 
 #endif

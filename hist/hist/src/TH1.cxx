@@ -616,7 +616,7 @@ TH1::TH1(): TNamed(), TAttLine(), TAttFill(), TAttMarker()
    fYaxis.SetParent(this);
    fZaxis.SetParent(this);
    UseCurrentStyle();
-}
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Histogram default destructor.
@@ -8872,6 +8872,19 @@ void TH1::SetStats(Bool_t stats)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+///
+
+void TH1::SetStatsData(Double_t _fTsumw, Double_t _fTsumw2, Double_t _fTsumwx, Double_t _fTsumwx2)
+{
+   if (getenv("CUDA_HIST")) {
+      fTsumw = _fTsumw;
+      fTsumw2 = _fTsumw2;
+      fTsumwx = _fTsumwx;
+      fTsumwx2 = _fTsumwx2;
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Create structure to store sum of squares of weights.
 ///
 /// if histogram is already filled, the sum of squares of weights
@@ -10081,6 +10094,7 @@ TH1D::TH1D(): TH1(), TArrayD()
 /// Create a 1-Dim histogram with fix bins of type double
 /// (see TH1::TH1 for explanation of parameters)
 
+//TODO:
 TH1D::TH1D(const char *name,const char *title,Int_t nbins,Double_t xlow,Double_t xup)
 : TH1(name,title,nbins,xlow,xup)
 {

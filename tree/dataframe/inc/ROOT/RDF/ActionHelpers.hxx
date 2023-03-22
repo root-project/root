@@ -373,7 +373,7 @@ inline constexpr bool has_getxaxis_v = has_getxaxis<T>::value;
 template <typename HIST = Hist_t>
 class R__CLING_PTRCHECK(off) FillHelper : public RActionImpl<FillHelper<HIST>> {
    std::vector<HIST *> fObjects;
-   std::vector<RHnCUDA *> fCudaHist; // TODO: where to store this?
+   std::vector<RH1CUDA *> fCudaHist; // TODO: where to store this?
 
    template <typename H = HIST, typename = decltype(std::declval<H>().Reset())>
    void ResetIfPossible(H *h)
@@ -494,7 +494,7 @@ public:
             auto nbins = fObjects[0]->GetNcells();
             auto xlow = fObjects[0]->GetXaxis()->GetXmin();
             auto xhigh = fObjects[0]->GetXaxis()->GetXmax();
-            fCudaHist[0] = new RHnCUDA(nbins, xlow, xhigh, fObjects[0]->GetXaxis()->IsVariableBinSize() ? fObjects[0]->GetXaxis()->GetXbins()->GetArray() : NULL);
+            fCudaHist[0] = new RH1CUDA(nbins, xlow, xhigh, fObjects[0]->GetXaxis()->IsVariableBinSize() ? fObjects[0]->GetXaxis()->GetXbins()->GetArray() : NULL);
             fCudaHist[0]->AllocateH1D();
             printf("hist 0 --- nbins: %d xlow: %f xhigh: %f\n", nbins, xlow, xhigh);
       } }
@@ -510,7 +510,7 @@ public:
             auto xhigh = fObjects[i]->GetXaxis()->GetXmax();
             printf("hist %d --- nbins: %d xlow: %f xhigh: %f\n", i, nbins, xlow, xhigh);
 
-            fCudaHist[i] = new RHnCUDA(nbins, xlow, xhigh, fObjects[i]->GetXaxis()->IsVariableBinSize() ? fObjects[i]->GetXaxis()->GetXbins()->GetArray() : NULL);
+            fCudaHist[i] = new RH1CUDA(nbins, xlow, xhigh, fObjects[i]->GetXaxis()->IsVariableBinSize() ? fObjects[i]->GetXaxis()->GetXbins()->GetArray() : NULL);
             fCudaHist[i]->AllocateH1D();
          } }
       }
@@ -572,13 +572,22 @@ public:
       if (getenv("CUDA_HIST")) {
          for (unsigned int i = 0; i < fObjects.size(); ++i) {
             if constexpr(has_getxaxis_v<HIST>) {  // temp fix to avoid compilation errors for fObjects that don't have GetArray
-               fCudaHist[i]->RetrieveResults(fObjects[i]->GetArray());
+               HIST *h = fObjects[i];
+               double_t stats[4];
+               Int_t entries = fCudaHist[i]->RetrieveResults(h->GetArray(), stats);
+               h->SetStatsData(stats[0], stats[1], stats[2], stats[3]);
+               h->SetEntries(entries);
                // printf("%d %d??\n", fObjects[i]->GetArray()->size(), fObjects[i]->GetXaxis()->GetNbins());
             }
          }
       }
 
+
       if constexpr(has_getxaxis_v<HIST>) {  // temp fix to avoid compilation errors for fObjects that don't have GetArray
+         double_t stats[4];
+         fObjects[0]->GetStats(stats);
+         printf("stats: %f %f %f %f\n", stats[0], stats[1], stats[2], stats[3]);
+
          for (int j = 0; j < fObjects[0]->GetNcells(); ++j) {
             printf("%f ", fObjects[0]->GetArray()[j]);
          }

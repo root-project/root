@@ -44,7 +44,7 @@ public:
    RH1CUDA(Int_t ncells, Double_t xlow, Double_t xhigh, const Double_t *binEdges);
 
    void AllocateH1D();
-   void RetrieveResults(Double_t *histResult, HistStats stats);
+   Int_t RetrieveResults(Double_t *histResult, Double_t *stats);
 
    void Fill(Double_t x);
    void Fill(Double_t x, Double_t w);
@@ -58,6 +58,7 @@ public:
    }
 
 protected:
+   void GetStats(UInt_t size);
    void ExecuteCUDAH1D();
 };
 
