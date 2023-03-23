@@ -471,8 +471,8 @@ class THistDrawOptions {
       if (this.Proj > 0) this.Contour = 14;
 
       if (d.check('PROJXY', true)) this.Project = 'XY' + d.partAsInt(0,1);
-      if (d.check('PROJX', true)) this.Project = 'X' + d.partAsInt(0,1);
-      if (d.check('PROJY', true)) this.Project = 'Y' + d.partAsInt(0,1);
+      if (d.check('PROJX', true)) this.Project = 'X' + d.part;
+      if (d.check('PROJY', true)) this.Project = 'Y' + d.part;
       if (d.check('PROJ')) this.Project = 'Y1';
 
       if (check3dbox) {
