@@ -475,11 +475,11 @@ private:
          RIterator(const RCollectionIterableOnce &owner) : fOwner(owner) {}
          RIterator(const RCollectionIterableOnce &owner, void *iter) : fOwner(owner), fIterator(iter)
          {
-            fElementPtr = fOwner.fIFuncs.fNext(&fIterator, &fOwner.fEnd);
+            fElementPtr = fOwner.fIFuncs.fNext(fIterator, fOwner.fEnd);
          }
          iterator operator++()
          {
-            fElementPtr = fOwner.fIFuncs.fNext(&fIterator, &fOwner.fEnd);
+            fElementPtr = fOwner.fIFuncs.fNext(fIterator, fOwner.fEnd);
             return *this;
          }
          pointer operator*() const { return fElementPtr; }
@@ -498,7 +498,7 @@ private:
       {
          fIFuncs.fCreateIterators(collection, &fBegin, &fEnd, proxy);
       }
-      ~RCollectionIterableOnce() { fIFuncs.fDeleteTwoIterators(&fBegin, &fEnd); }
+      ~RCollectionIterableOnce() { fIFuncs.fDeleteTwoIterators(fBegin, fEnd); }
 
       RIterator begin() { return RIterator(*this, fBegin); }
       RIterator end() { return RIterator(*this); }

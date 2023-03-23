@@ -7,27 +7,33 @@ namespace {
 /// Simple collection proxy for `StructUsingCollectionProxy<T>`
 template <typename CollectionT>
 class SimpleCollectionProxy : public TVirtualCollectionProxy {
-   CollectionT *fObject = nullptr;
+   /// The internal representation of an iterator, which in this simple test only contains a pointer to an element
+   struct IteratorData {
+      typename CollectionT::ValueType *ptr;
+   };
 
    static void
    Func_CreateIterators(void *collection, void **begin_arena, void **end_arena, TVirtualCollectionProxy * /*proxy*/)
    {
-      static_assert(sizeof(void *) <= TVirtualCollectionProxy::fgIteratorArenaSize);
+      static_assert(sizeof(IteratorData) <= TVirtualCollectionProxy::fgIteratorArenaSize);
       auto &vec = static_cast<CollectionT *>(collection)->v;
-      *begin_arena = &(*vec.begin());
-      *end_arena = &(*vec.end());
+      static_cast<IteratorData *>(*begin_arena)->ptr = &(*vec.begin());
+      static_cast<IteratorData *>(*end_arena)->ptr = &(*vec.end());
    }
 
    static void *Func_Next(void *iter, const void *end)
    {
-      auto &_iter = *static_cast<typename CollectionT::ValueType **>(iter);
-      auto _end = *static_cast<typename CollectionT::ValueType *const *>(end);
-      if (_iter >= _end)
+      auto _iter = static_cast<IteratorData *>(iter);
+      auto _end = static_cast<const IteratorData *>(end);
+      if (_iter->ptr >= _end->ptr)
          return nullptr;
-      return _iter++;
+      return _iter->ptr++;
    }
 
    static void Func_DeleteTwoIterators(void * /*begin*/, void * /*end*/) {}
+
+private:
+   CollectionT *fObject = nullptr;
 
 public:
    SimpleCollectionProxy()
