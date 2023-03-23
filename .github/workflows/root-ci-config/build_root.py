@@ -38,7 +38,11 @@ from build_utils import (
 
 S3CONTAINER = 'ROOT-build-artifacts'  # Used for uploads
 S3URL = 'https://s3.cern.ch/swift/v1/' + S3CONTAINER  # Used for downloads
-CONNECTION = openstack.connect(cloud='envvars') if os.getenv('OS_REGION_NAME') else None
+
+try:
+    CONNECTION = openstack.connect(cloud='envvars')
+except:
+    CONNECTION = None
 
 WINDOWS = (os.name == 'nt')
 WORKDIR = '/tmp/workspace' if not WINDOWS else 'C:/ROOT-CI'
@@ -139,7 +143,8 @@ def main():
 
         shell_log = run_ctest(shell_log, extra_ctest_flags)
 
-    archive_and_upload(yyyy_mm_dd, obj_prefix)
+    if CONNECTION:
+        archive_and_upload(yyyy_mm_dd, obj_prefix)
 
     print_shell_log(shell_log)
 
