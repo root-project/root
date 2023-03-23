@@ -36,22 +36,37 @@ class TH2Painter extends THistPainter {
       if ((kind == 'Projections') || (kind == 'Off'))
          kind = '';
 
+      let widthX = width, widthY = width;
+
       if (isStr(kind) && (kind.indexOf('XY') == 0)) {
-         if (kind.length > 2)
-            width = parseInt(kind.slice(2));
+         let ws = (kind.length > 2) ? kind.slice(2) : '';
          kind = 'XY';
+         widthX = widthY = parseInt(ws) || 1;
       } else if (isStr(kind) && (kind.length > 1)) {
-         width = parseInt(kind.slice(1));
-         kind = kind[0];
+         let ps = kind.indexOf('_');
+         if ((ps > 0) && (kind[0] == 'X') && (kind[ps+1] == 'Y')) {
+            widthX = parseInt(kind.slice(1, ps)) || 1;
+            widthY = parseInt(kind.slice(ps+2)) || 1;
+            kind = 'XY';
+         } else if ((ps > 0) && (kind[0] == 'Y') && (kind[ps+1] == 'X')) {
+            widthY = parseInt(kind.slice(1, ps)) || 1;
+            widthX = parseInt(kind.slice(ps+2)) || 1;
+            kind = 'XY';
+         } else {
+            widthX = widthY = parseInt(kind.slice(1)) || 1;
+            kind = kind[0];
+         }
       }
 
-      if (!width) width = 1;
+      if (!widthX && !widthY)
+         widthX = widthY = 1;
 
       if (kind && (this.is_projection == kind)) {
-         if (this.projection_width === width) {
+         if ((this.projection_widthX === widthX) && (this.projection_widthY === widthY)) {
             kind = '';
          } else {
-            this.projection_width = width;
+            this.projection_widthX = widthX;
+            this.projection_widthY = widthY;
             return;
          }
       }
@@ -59,7 +74,8 @@ class TH2Painter extends THistPainter {
       delete this.proj_hist;
 
       let new_proj = (this.is_projection === kind) ? '' : kind;
-      this.projection_width = width;
+      this.projection_widthX = widthX;
+      this.projection_widthY = widthY;
       this.is_projection = ''; // avoid projection handling until area is created
 
       this.provideSpecialDrawArea(new_proj).then(() => { this.is_projection = new_proj; return this.redrawProjection(); });
@@ -188,11 +204,15 @@ class TH2Painter extends THistPainter {
    /** @summary Fill histogram context menu */
    fillHistContextMenu(menu) {
       if (!this.isTH2Poly()) {
-         menu.add('sub:Projections', () => this.toggleProjection());
          let kind = this.is_projection || '';
-         if (kind) kind += this.projection_width;
+         if (kind) kind += this.projection_widthX;
+         if ((this.projection_widthX != this.projection_widthY) && (this.is_projection == 'XY'))
+            kind = `X${this.projection_widthX}_Y${this.projection_widthY}`;
+
          const kinds = ['X1', 'X2', 'X3', 'X5', 'X10', 'Y1', 'Y2', 'Y3', 'Y5', 'Y10', 'XY1', 'XY2', 'XY3', 'XY5', 'XY10'];
-         if (this.is_projection) kinds.push('Off');
+         if (kind) kinds.unshift('Off');
+
+         menu.add('sub:Projections', () => menu.input('Input projection kind X1 or XY2', kind, 'string').then(val => this.toggleProjection(val)));
          for (let k = 0; k < kinds.length; ++k)
             menu.addchk(kind==kinds[k], kinds[k], kinds[k], arg => this.toggleProjection(arg));
          menu.add('endsub:');
@@ -2638,14 +2658,15 @@ class TH2Painter extends THistPainter {
          let binid = i*10000 + j, path;
 
          if (this.is_projection) {
-            let pw = this.projection_width || 1, dd = (pw - 1) / 2;
-            if ((this.is_projection.indexOf('X')) >= 0 && (pw > 1)) {
-               if (j2+dd >= h.j2) { j2 = Math.min(Math.round(j2+dd), h.j2); j1 = Math.max(j2 - pw, h.j1); }
-                             else { j1 = Math.max(Math.round(j1-dd), h.j1); j2 = Math.min(j1 + pw, h.j2); }
+            let pwx = this.projection_widthX || 1, ddx = (pwx - 1) / 2;
+            if ((this.is_projection.indexOf('X')) >= 0 && (pwx > 1)) {
+               if (j2+ddx >= h.j2) { j2 = Math.min(Math.round(j2+ddx), h.j2); j1 = Math.max(j2-pwx, h.j1); }
+                              else { j1 = Math.max(Math.round(j1-ddx), h.j1); j2 = Math.min(j1+pwx, h.j2); }
             }
-            if ((this.is_projection.indexOf('Y')) >= 0 && (pw > 1)) {
-               if (i2+dd >= h.i2) { i2 = Math.min(Math.round(i2+dd), h.i2); i1 = Math.max(i2 - pw, h.i1); }
-                             else { i1 = Math.max(Math.round(i1-dd), h.i1); i2 = Math.min(i1 + pw, h.i2); }
+            let pwy = this.projection_widthY || 1, ddy = (pwy - 1) / 2;
+            if ((this.is_projection.indexOf('Y')) >= 0 && (pwy > 1)) {
+               if (i2+ddy >= h.i2) { i2 = Math.min(Math.round(i2+ddy), h.i2); i1 = Math.max(i2-pwy, h.i1); }
+                              else { i1 = Math.max(Math.round(i1-ddy), h.i1); i2 = Math.min(i1+pwy, h.i2); }
             }
          }
 
