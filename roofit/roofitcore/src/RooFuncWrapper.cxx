@@ -56,7 +56,7 @@ RooFuncWrapper::RooFuncWrapper(const char *name, const char *title, std::string 
    comp = gInterpreter->Declare(requestFuncStrm.str().c_str());
    if (!comp) {
       std::stringstream errorMsg;
-      errorMsg << "Function " << funcName << " could not be be differentiated. See above for details.";
+      errorMsg << "Function " << funcName << " could not be differentiated. See above for details.";
       coutE(InputArguments) << errorMsg.str() << std::endl;
       throw std::runtime_error(errorMsg.str().c_str());
    }
