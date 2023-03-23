@@ -134,7 +134,8 @@ def main():
         extra_ctest_flags = ""
         
         if WINDOWS:
-            extra_ctest_flags += " -C" + args.buildtype
+            extra_ctest_flags += "--repeat until-pass:3 "
+            extra_ctest_flags += "--build-config " + args.buildtype
 
         shell_log = run_ctest(shell_log, extra_ctest_flags)
 
@@ -223,7 +224,7 @@ def download_artifacts(obj_prefix: str, shell_log: str):
 def run_ctest(shell_log: str, extra_ctest_flags: str) -> str:
     result, shell_log = subprocess_with_log(f"""
         cd '{WORKDIR}/build'
-        ctest -j{os.cpu_count()} --output-junit TestResults.xml {extra_ctest_flags}
+        ctest --parallel {os.cpu_count()} --output-junit TestResults.xml {extra_ctest_flags}
     """, shell_log)
     
     if result != 0:
