@@ -1,7 +1,8 @@
 sap.ui.define([
    'sap/ui/core/mvc/Controller',
    'sap/ui/core/ResizeHandler'
-], function (Controller, ResizeHandler) {
+], function (Controller,
+             ResizeHandler) {
    "use strict";
 
    return Controller.extend('rootui5.canv.controller.CanvasPanel', {

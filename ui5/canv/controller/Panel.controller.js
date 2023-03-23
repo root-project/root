@@ -11,30 +11,22 @@ sap.ui.define([
       },
 
       onExit() {
-         if (this.object_painter) {
-            this.object_painter.cleanup();
-            delete this.object_painter;
-         }
+         this.object_painter?.cleanup();
+         delete this.object_painter;
       },
 
       onBeforeRendering() {
-         if (this.object_painter) {
-            this.object_painter.cleanup();
-            delete this.object_painter;
-         }
+         this.object_painter?.cleanup();
+         delete this.object_painter;
          this.rendering_perfromed = false;
       },
 
       onAfterRendering() {
-
          ResizeHandler.register(this.getView(), () => this.onResize());
-
          this.rendering_perfromed = true;
-
          let arr = this.renderFuncs;
          delete this.renderFuncs;
-         if (arr)
-            arr.forEach(func => func(this.getView().getDomRef()));
+         arr?.forEach(func => func(this.getView().getDomRef()));
       },
 
       setObjectPainter(painter) {
@@ -59,8 +51,7 @@ sap.ui.define([
 
       onResizeTimeout() {
          delete this.resize_tmout;
-         if (this.object_painter)
-            this.object_painter.checkResize();
+         this.object_painter?.checkResize();
       }
 
    });
