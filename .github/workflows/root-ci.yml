@@ -359,6 +359,7 @@ jobs:
           path: /tmp/workspace/build/TestResults.xml
 
   event_file:
+    if: github.repository_owner == 'root-project'
     name: "Upload Event Payload"
     runs-on: ubuntu-latest
     steps:
