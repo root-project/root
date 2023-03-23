@@ -1407,7 +1407,7 @@ class ObjectPainter extends BasePainter {
    }
 
    /** @summary Provide projection areas
-     * @param kind - 'X', 'Y' or ''
+     * @param kind - 'X', 'Y', 'XY' or ''
      * @private */
    async provideSpecialDrawArea(kind) {
       if (kind == this._special_draw_area)
@@ -1419,13 +1419,15 @@ class ObjectPainter extends BasePainter {
       });
    }
 
-   /** @summary Provide projection areas
-     * @param kind - 'X', 'Y' or ''
+   /** @summary Draw in special projection areas
+     * @param obj - object to draw
+     * @param opt - draw option
+     * @param kind - '', 'X', 'Y'
      * @private */
-   async drawInSpecialArea(obj, opt) {
+   async drawInSpecialArea(obj, opt, kind) {
       let canp = this.getCanvPainter();
       if (this._special_draw_area && isFunc(canp?.drawProjection))
-         return canp.drawProjection(this._special_draw_area, obj, opt);
+         return canp.drawProjection(kind || this._special_draw_area, obj, opt);
 
       return false;
    }

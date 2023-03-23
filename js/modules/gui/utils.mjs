@@ -79,12 +79,13 @@ function tryOpenOpenUI(sources, args) {
    // use nojQuery while we are already load jquery and jquery-ui, later one can use directly sap-ui-core.js
 
    // this is location of openui5 scripts when working with THttpServer or when scripts are installed inside JSROOT
-   element.setAttribute('src', src + 'resources/sap-ui-core.js'); // latest openui5 version
+   element.setAttribute('src', src + (args.ui5dbg ? 'resources/sap-ui-core-dbg.js' : 'resources/sap-ui-core.js')); // latest openui5 version
 
    element.setAttribute('data-sap-ui-libs', args.openui5libs ?? 'sap.m, sap.ui.layout, sap.ui.unified, sap.ui.commons');
 
    element.setAttribute('data-sap-ui-theme', args.openui5theme || 'sap_belize');
    element.setAttribute('data-sap-ui-compatVersion', 'edge');
+   element.setAttribute('data-sap-ui-async', 'true');
    // element.setAttribute('data-sap-ui-bindingSyntax', 'complex');
 
    element.setAttribute('data-sap-ui-preload', 'async'); // '' to disable Component-preload.js
@@ -137,10 +138,14 @@ async function loadOpenui5(args) {
          case 'jsroot': openui5_sources.push(openui5_root); openui5_root = ''; break;
          default: openui5_sources.push(args.openui5src); break;
       }
+   } else if (args.ui5dbg) {
+      openui5_root = ''; // exclude ROOT version in debug mode
    }
 
-   if (openui5_root && (openui5_sources.indexOf(openui5_root) < 0)) openui5_sources.push(openui5_root);
-   if (openui5_dflt && (openui5_sources.indexOf(openui5_dflt) < 0)) openui5_sources.push(openui5_dflt);
+   if (openui5_root && (openui5_sources.indexOf(openui5_root) < 0))
+      openui5_sources.push(openui5_root);
+   if (openui5_dflt && (openui5_sources.indexOf(openui5_dflt) < 0))
+      openui5_sources.push(openui5_dflt);
 
    return new Promise((resolve, reject) => {
 

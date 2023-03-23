@@ -399,17 +399,19 @@ class TPadPainter extends ObjectPainter {
 
       if (check_resize > 0) {
 
-         if (this._fixed_size) return check_resize > 1; // flag used to force re-drawing of all subpads
+         if (this._fixed_size)
+            return check_resize > 1; // flag used to force re-drawing of all subpads
 
          svg = this.getCanvSvg();
-
-         if (svg.empty()) return false;
+         if (svg.empty())
+            return false;
 
          factor = svg.property('height_factor');
 
          rect = this.testMainResize(check_resize, null, factor);
 
-         if (!rect.changed) return false;
+         if (!rect.changed && (check_resize == 1))
+            return false;
 
          if (!isBatchMode())
             btns = this.getLayerSvg('btns_layer', this.this_pad_name);
@@ -1001,22 +1003,25 @@ class TPadPainter extends ObjectPainter {
             this.interactiveRedraw('pad', arg.slice(1));
          }
 
-         menu.addchk(this.pad.fGridx, 'Grid x', (this.pad.fGridx ? '0' : '1') + 'fGridx', SetPadField);
-         menu.addchk(this.pad.fGridy, 'Grid y', (this.pad.fGridy ? '0' : '1') + 'fGridy', SetPadField);
+         menu.addchk(this.pad?.fGridx, 'Grid x', (this.pad?.fGridx ? '0' : '1') + 'fGridx', SetPadField);
+         menu.addchk(this.pad?.fGridy, 'Grid y', (this.pad?.fGridy ? '0' : '1') + 'fGridy', SetPadField);
          menu.add('sub:Ticks x');
-         menu.addchk(this.pad.fTickx == 0, 'normal', '0fTickx', SetPadField);
-         menu.addchk(this.pad.fTickx == 1, 'ticks on both sides', '1fTickx', SetPadField);
-         menu.addchk(this.pad.fTickx == 2, 'labels on both sides', '2fTickx', SetPadField);
+         menu.addchk(this.pad?.fTickx == 0, 'normal', '0fTickx', SetPadField);
+         menu.addchk(this.pad?.fTickx == 1, 'ticks on both sides', '1fTickx', SetPadField);
+         menu.addchk(this.pad?.fTickx == 2, 'labels on both sides', '2fTickx', SetPadField);
          menu.add('endsub:');
          menu.add('sub:Ticks y');
-         menu.addchk(this.pad.fTicky == 0, 'normal', '0fTicky', SetPadField);
-         menu.addchk(this.pad.fTicky == 1, 'ticks on both sides', '1fTicky', SetPadField);
-         menu.addchk(this.pad.fTicky == 2, 'labels on both sides', '2fTicky', SetPadField);
+         menu.addchk(this.pad?.fTicky == 0, 'normal', '0fTicky', SetPadField);
+         menu.addchk(this.pad?.fTicky == 1, 'ticks on both sides', '1fTicky', SetPadField);
+         menu.addchk(this.pad?.fTicky == 2, 'labels on both sides', '2fTicky', SetPadField);
          menu.add('endsub:');
 
          menu.addAttributesMenu(this);
          menu.add('Save to gStyle', function() {
-            if (this.fillatt) this.fillatt.saveToStyle(this.iscan ? 'fCanvasColor' : 'fPadColor');
+            if (!this.pad)
+               return;
+            if (this.fillatt)
+               this.fillatt.saveToStyle(this.iscan ? 'fCanvasColor' : 'fPadColor');
             gStyle.fPadGridX = this.pad.fGridX;
             gStyle.fPadGridY = this.pad.fGridX;
             gStyle.fPadTickX = this.pad.fTickx;
