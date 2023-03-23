@@ -12,14 +12,26 @@ sap.ui.define([
    'sap/m/ButtonType',
    'sap/ui/layout/Splitter',
    'sap/ui/layout/SplitterLayoutData'
-], function (Controller, Component, JSONModel, XMLView, MessageToast, Dialog, List, InputListItem, Input, Button, ButtonType, Splitter, SplitterLayoutData) {
+], function (Controller,
+             Component,
+             JSONModel,
+             XMLView,
+             MessageToast,
+             Dialog,
+             List,
+             InputListItem,
+             Input,
+             Button,
+             ButtonType,
+             Splitter,
+             SplitterLayoutData) {
    "use strict";
 
    function chk_icon(flag) {
       return flag ? "sap-icon://accept" : "sap-icon://decline";
    }
 
-   let CController = Controller.extend("rootui5.canv.controller.Canvas", {
+   return Controller.extend('rootui5.canv.controller.Canvas', {
 
       onInit() {
          this._Page = this.getView().byId("CanvasMainPage");
@@ -280,18 +292,15 @@ sap.ui.define([
       },
 
       onInterruptPress() {
-         let p = this.getCanvasPainter();
-         if (p) p.sendWebsocket("INTERRUPT");
+         this.getCanvasPainter()?.sendWebsocket("INTERRUPT");
       },
 
       onQuitRootPress() {
-         let p = this.getCanvasPainter();
-         if (p) p.sendWebsocket("QUIT");
+         this.getCanvasPainter()?.sendWebsocket("QUIT");
       },
 
       onReloadPress() {
-         let p = this.getCanvasPainter();
-         if (p) p.sendWebsocket("RELOAD");
+         this.getCanvasPainter()?.sendWebsocket("RELOAD");
       },
 
       isGedEditor() {
@@ -394,12 +403,10 @@ sap.ui.define([
 
       getBottomController() {
          if (!this.bottomVisible) return null;
-         let split = this.getView().byId("MainAreaSplitter"),
+         let split = this.getView().byId('BottomAreaSplitter'),
              cont = split.getContentAreas(),
-             vsplit = cont[cont.length-1],
-             vcont = vsplit.getContentAreas(),
-             bottom = vcont[vcont.length-1];
-         return bottom ? bottom.getController() : null;
+             bottom = cont[cont.length-1];
+         return bottom?.getController();
       },
 
       drawInProjectionArea(obj, opt, kind) {
@@ -444,7 +451,8 @@ sap.ui.define([
          if (fullHeight && sz[0]) {
             // ctrl.getView().setHeight(Math.round(sz[0]/fullHeight) + '%');
             ctrl.getView().$().height(sz[0] + 'px');
-            ctrl.invokeResizeTimeout(10);
+            if (typeof ctrl.invokeResizeTimeout == 'function')
+               ctrl.invokeResizeTimeout(10);
          }
       },
 
@@ -453,7 +461,7 @@ sap.ui.define([
          if (this.bottomVisible == is_on)
             return Promise.resolve(this.getBottomController());
 
-         let split = this.getView().byId("MainAreaSplitter");
+         let split = this.getView().byId("BottomAreaSplitter");
          if (!split) return Promise.resolve(null);
 
          let cont = split.getContentAreas();
@@ -461,24 +469,10 @@ sap.ui.define([
          this.bottomVisible = !this.bottomVisible;
 
          if (!this.bottomVisible) {
-            // vertical splitter exists - toggle it
-            let vsplit = cont[cont.length-1],
-                main = vsplit.removeContentArea(0);
-
-            vsplit.destroyContentAreas();
-            split.removeContentArea(vsplit);
-            split.addContentArea(main);
+            // just remove bottom controller
+            split.removeContentArea(cont.length-1);
             return Promise.resolve(null);
          }
-
-         // remove panel with normal drawing
-         let mainPanel = split.removeContentArea(cont.length-1);
-
-         let vsplit = new Splitter({ orientation: 'Vertical' });
-
-         split.addContentArea(vsplit);
-
-         vsplit.addContentArea(mainPanel);
 
          let h = this.getView().$().height();
 
@@ -488,9 +482,9 @@ sap.ui.define([
             layoutData: new SplitterLayoutData({ resizable: true, size: Math.round(h*0.25) + 'px'}),
             height: '100%'
          }).then(oView => {
-            vsplit.addContentArea(oView);
+            split.addContentArea(oView);
             if (with_handler)
-               vsplit.attachResize(null, this.handleBottomResize, this);
+               split.attachResize(null, this.handleBottomResize, this);
             return oView.getController();
          });
       },
@@ -660,7 +654,5 @@ sap.ui.define([
          return Promise.resolve(true);
       }
    });
-
-   return CController;
 
 });
