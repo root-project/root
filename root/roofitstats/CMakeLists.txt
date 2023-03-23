@@ -1,8 +1,10 @@
 if(ROOT_roofit_FOUND)
-  ROOTTEST_ADD_TEST(read-scientificnotation
-                    MACRO read_scientific_notation.py
-                    OUTCNVCMD grep -v -e "Wouter"
-                    OUTREF read_scientific_notation.ref)
+  if(ROOT_pyroot_FOUND)
+    ROOTTEST_ADD_TEST(read-scientificnotation
+                      MACRO read_scientific_notation.py
+                      OUTCNVCMD grep -v -e "Wouter"
+                      OUTREF read_scientific_notation.ref)
+  endif()
 
   ROOTTEST_ADD_TEST(RooDataSet_ASCII_in
                     MACRO ${CMAKE_CURRENT_SOURCE_DIR}/ASCII-in-out.C
