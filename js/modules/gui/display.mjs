@@ -208,7 +208,7 @@ class GridDisplay extends MDIDisplay {
       this.simple_layout = false;
 
       let dom = this.selectDom();
-      dom.style('overflow','hidden');
+      dom.style('overflow', 'hidden');
 
       if (kind === 'simple') {
          this.simple_layout = true;
@@ -217,9 +217,17 @@ class GridDisplay extends MDIDisplay {
          return;
       }
 
-      let num = 2, arr = undefined, sizes = undefined;
+      let num = 2, arr, sizes, chld_sizes;
 
-      if ((kind.indexOf('grid') == 0) || kind2) {
+      if (kind == 'projxy') {
+         this.vertical = false;
+         this.use_separarators = true;
+         arr = [2, 2];
+         sizes = [1,3];
+         chld_sizes = [[3,1], [3,1]];
+         kind = '';
+         this.match_sizes = true;
+      } else if ((kind.indexOf('grid') == 0) || kind2) {
          if (kind2) kind = kind + 'x' + kind2;
                else kind = kind.slice(4).trim();
          this.use_separarators = false;
@@ -285,20 +293,23 @@ class GridDisplay extends MDIDisplay {
          }
       }
 
-      if (sizes && (sizes.length!==num)) sizes = undefined;
+      if (sizes?.length !== num)
+         sizes = undefined;
+      if (chld_sizes?.length !== num)
+         chld_sizes = undefined;
 
       if (!this.simple_layout) {
          injectStyle(
             `.jsroot_vline:after { content:""; position: absolute; top: 0; bottom: 0; left: 50%; border-left: 1px dotted #ff0000; }
              .jsroot_hline:after { content:""; position: absolute; left: 0; right: 0; top: 50%; border-top: 1px dotted #ff0000; }
              .jsroot_separator { pointer-events: all; border: 0; margin: 0; padding: 0; }`, dom.node(), 'grid_style');
-         this.createGroup(this, dom, num, arr, sizes);
+         this.createGroup(this, dom, num, arr, sizes, chld_sizes);
       }
    }
 
    /** @summary Create frames group
      * @private */
-   createGroup(handle, main, num, childs, sizes) {
+   createGroup(handle, main, num, childs, sizes, childs_sizes) {
 
       if (!sizes) sizes = new Array(num);
       let sum1 = 0, sum2 = 0;
@@ -311,20 +322,25 @@ class GridDisplay extends MDIDisplay {
       }
 
       for (let cnt = 0; cnt < num; ++cnt) {
-         let group = { id: cnt, drawid: -1, position: 0, size: sizes[cnt] };
+         let group = { id: cnt, drawid: -1, position: 0, size: sizes[cnt], parent: handle };
          if (cnt > 0) group.position = handle.groups[cnt-1].position + handle.groups[cnt-1].size;
          group.position0 = group.position;
 
-         if (!childs || !childs[cnt] || childs[cnt]<2) group.drawid = this.framecnt++;
+         if (!childs || !childs[cnt] || childs[cnt] < 2)
+            group.drawid = this.framecnt++;
 
          handle.groups.push(group);
 
          let elem = main.append('div').attr('groupid', group.id);
 
+         // remember HTML node only when need to match sizes of different groups
+         if (handle.match_sizes)
+            group.node = elem.node();
+
          if (handle.vertical)
-            elem.style('float', 'bottom').style('height',group.size+'%').style('width','100%');
+            elem.style('float', 'bottom').style('height', group.size.toFixed(2)+'%').style('width','100%');
          else
-            elem.style('float', 'left').style('width',group.size+'%').style('height','100%');
+            elem.style('float', 'left').style('width', group.size.toFixed(2)+'%').style('height','100%');
 
          if (group.drawid >= 0) {
             elem.classed('jsroot_newgrid', true);
@@ -334,15 +350,15 @@ class GridDisplay extends MDIDisplay {
             elem.style('display','flex').style('flex-direction', handle.vertical ? 'row' : 'column');
          }
 
-         if (childs && (childs[cnt]>1)) {
+         if (childs && (childs[cnt] > 1)) {
             group.vertical = !handle.vertical;
             group.groups = [];
             elem.style('overflow','hidden');
-            this.createGroup(group, elem, childs[cnt]);
+            this.createGroup(group, elem, childs[cnt], null, childs_sizes ? childs_sizes[cnt] : null);
          }
       }
 
-      if (this.use_separarators && this.createSeparator)
+      if (this.use_separarators && isFunc(this.createSeparator))
          for (let cnt = 1; cnt < num; ++cnt)
             this.createSeparator(handle, main, handle.groups[cnt]);
    }
@@ -350,31 +366,36 @@ class GridDisplay extends MDIDisplay {
    /** @summary Handle interactive sepearator movement
      * @private */
    handleSeparator(elem, action) {
-      let separ = d3_select(elem),
-          parent = elem.parentNode,
-          handle = separ.property('handle'),
-          id = separ.property('separator_id'),
-          group = handle.groups[id];
 
-       const findGroup = grid => {
-         let chld = parent.firstChild;
+      const findGroup = (node, grid) => {
+         let chld = node?.firstChild;
          while (chld) {
             if (chld.getAttribute('groupid') == grid)
                return d3_select(chld);
             chld = chld.nextSibling;
          }
          // should never happen, but keep it here like
-         return d3_select(parent).select(`[groupid='${grid}']`);
-       }, setGroupSize = grid => {
-          let name = handle.vertical ? 'height' : 'width',
-              size = handle.groups[grid].size+'%';
-          findGroup(grid).style(name, size)
-                         .selectAll('.jsroot_separator').style(name, size);
-       }, resizeGroup = grid => {
-          let sel = findGroup(grid);
-          if (!sel.classed('jsroot_newgrid')) sel = sel.select('.jsroot_newgrid');
-          sel.each(function() { resize(this); });
-       };
+         return d3_select(node).select(`[groupid='${grid}']`);
+      }, setGroupSize = (h, node, grid) => {
+         let name = h.vertical ? 'height' : 'width',
+             size = h.groups[grid].size.toFixed(2)+'%';
+         findGroup(node, grid).style(name, size)
+                              .selectAll('.jsroot_separator').style(name, size);
+      }, resizeGroup = (node, grid) => {
+         let sel = findGroup(node, grid);
+         if (!sel.classed('jsroot_newgrid'))
+            sel = sel.select('.jsroot_newgrid');
+         sel.each(function() { resize(this); });
+      }, posSepar = (h, group, separ) => {
+         separ.style(h.vertical ? 'top' : 'left', `calc(${group.position.toFixed(2)}% - 2px)`);
+      };
+
+      let separ = d3_select(elem),
+          parent = elem.parentNode,
+          handle = separ.property('handle'),
+          id = separ.property('separator_id'),
+          group = handle.groups[id],
+          needResize = false, needSetSize = false;
 
       if (action == 'start') {
          group.startpos = group.position;
@@ -383,43 +404,73 @@ class GridDisplay extends MDIDisplay {
       }
 
       if (action == 'end') {
-         if (Math.abs(group.startpos - group.position) >= 0.5) {
-            resizeGroup(id-1);
-            resizeGroup(id);
-          }
-          return;
-      }
-
-      let pos;
-      if (action == 'restore') {
-          pos = group.position0;
-      } else if (handle.vertical) {
-          group.acc_drag += action.dy;
-          pos = group.startpos + ((group.acc_drag + 2) / parent.clientHeight) * 100;
+         if (Math.abs(group.startpos - group.position) < 0.5)
+            return;
+         needResize = true;
       } else {
-          group.acc_drag += action.dx;
-          pos = group.startpos + ((group.acc_drag + 2) / parent.clientWidth) * 100;
+
+         let pos;
+         if (action == 'restore') {
+             pos = group.position0;
+         } else if (handle.vertical) {
+             group.acc_drag += action.dy;
+             pos = group.startpos + ((group.acc_drag + 2) / parent.clientHeight) * 100;
+         } else {
+             group.acc_drag += action.dx;
+             pos = group.startpos + ((group.acc_drag + 2) / parent.clientWidth) * 100;
+         }
+
+         let diff = group.position - pos;
+
+         if (Math.abs(diff) < 0.3) return; // if no significant change, do nothing
+
+         // do not change if size too small
+         if (Math.min(handle.groups[id-1].size - diff, group.size+diff) < 3) return;
+
+         handle.groups[id-1].size -= diff;
+         group.size += diff;
+         group.position = pos;
+
+         posSepar(handle, group, separ);
+
+         needSetSize = true;
+         needResize = (action == 'restore');
       }
 
-      let diff = group.position - pos;
+      if (needSetSize) {
+         setGroupSize(handle, parent, id-1);
+         setGroupSize(handle, parent, id);
+      }
 
-      if (Math.abs(diff) < 0.3) return; // if no significant change, do nothing
+      if (needResize) {
+         resizeGroup(parent, id-1);
+         resizeGroup(parent, id);
+      }
 
-      // do not change if size too small
-      if (Math.min(handle.groups[id-1].size-diff, group.size+diff) < 3) return;
+      // now handling match of the sizes
+      if (!handle.parent?.match_sizes)
+         return;
 
-      handle.groups[id-1].size -= diff;
-      group.size += diff;
-      group.position = pos;
-
-      separ.style(handle.vertical ? 'top' : 'left', `calc(${pos}% - 2px)`);
-
-      setGroupSize(id-1);
-      setGroupSize(id);
-
-      if (action == 'restore') {
-          resizeGroup(id-1);
-          resizeGroup(id);
+      for (let k = 0; k < handle.parent.groups.length; ++k) {
+         let hh = handle.parent.groups[k];
+         if ((hh === handle) || !hh.node) continue;
+         hh.groups[id].size = handle.groups[id].size;
+         hh.groups[id].position = handle.groups[id].position;
+         hh.groups[id-1].size = handle.groups[id-1].size;
+         hh.groups[id-1].position = handle.groups[id-1].position;
+         if (needSetSize) {
+            d3_select(hh.node).selectAll('.jsroot_separator').each(function() {
+               let s = d3_select(this);
+               if (s.property('separator_id') === id)
+                  posSepar(hh, hh.groups[id], s);
+            });
+            setGroupSize(hh, hh.node, id-1);
+            setGroupSize(hh, hh.node, id);
+         }
+         if (needResize) {
+            resizeGroup(hh.node, id-1);
+            resizeGroup(hh.node, id);
+          }
       }
    }
 
@@ -433,8 +484,8 @@ class GridDisplay extends MDIDisplay {
            .property('handle', handle)
            .property('separator_id', group.id)
            .style('position', 'absolute')
-           .style(handle.vertical ? 'top' : 'left', `calc(${group.position}% - 2px)`)
-           .style(handle.vertical ? 'width' : 'height', (handle.size || 100)+'%')
+           .style(handle.vertical ? 'top' : 'left', `calc(${group.position.toFixed(2)}% - 2px)`)
+           .style(handle.vertical ? 'width' : 'height', (handle.size?.toFixed(2) || 100)+'%')
            .style(handle.vertical ? 'height' : 'width', '5px')
            .style('cursor', handle.vertical ? 'ns-resize' : 'ew-resize');
 
@@ -447,7 +498,7 @@ class GridDisplay extends MDIDisplay {
 
       // need to get touches events handling in drag
       if (browser.touches && !main.on('touchmove'))
-         main.on('touchmove', function() { });
+         main.on('touchmove', function() {});
    }
 
 
