@@ -24,6 +24,7 @@ RooConstVar represent a constant real-valued object
 
 #include "RooConstVar.h"
 #include "RunContext.h"
+#include "RooNumber.h"
 
 using namespace std;
 
@@ -71,3 +72,17 @@ void RooConstVar::writeToStream(ostream& os, bool /*compact*/) const
   os << _value ;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+void RooConstVar::translate(RooFit::Detail::CodeSquashContext &ctx) const
+{
+   // Just return a stringy-fied version of the const value.
+   // Formats to the maximum precision.
+   constexpr auto max_precision{std::numeric_limits<double>::digits10 + 1};
+   std::stringstream ss;
+   ss.precision(max_precision);
+   // Just use toString to make sure we do not ouput 'inf'.
+   // This is really ugly for large numbers...
+   ss << std::fixed << RooNumber::toString(_value);
+   ctx.addResult(this, ss.str());
+}
