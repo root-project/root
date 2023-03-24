@@ -81,6 +81,7 @@ public:
   void setAllowComponentSelection(bool allow);
   bool getAllowComponentSelection() const;
 
+  void translate(RooFit::Detail::CodeSquashContext &ctx) const override;
 protected:
 
   mutable bool _valid = false;

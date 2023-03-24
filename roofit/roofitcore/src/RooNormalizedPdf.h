@@ -58,6 +58,8 @@ public:
       return static_cast<RooAbsPdf &>(*_pdf).expectedEvents(&_normSet);
    }
 
+   void translate(RooFit::Detail::CodeSquashContext &ctx) const override;
+
 protected:
    void computeBatch(cudaStream_t *, double *output, size_t size, RooFit::Detail::DataMap const &) const override;
    double evaluate() const override
