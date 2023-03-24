@@ -89,11 +89,11 @@ jobs:
 
           - image: ubuntu22
             config: Release
-            overrides: ["testing=Off", "roottest=Off"]
+            overrides: ["CMAKE_CXX_STANDARD=17", "soversion=On"]
 
           - image: ubuntu22
             config: Debug
-            overrides: ["DLLVM_BUILD_TYPE=Debug", "soversion=On"]
+            overrides: ["LLVM_BUILD_TYPE=Debug", "imt=Off"]
 
     runs-on: [self-hosted, linux, x64]
     name: ${{ matrix.image }} ${{ matrix.config }} ${{ join( matrix.overrides, ', ' ) }}
