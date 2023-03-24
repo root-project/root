@@ -7,3 +7,6 @@ pytest
 
 # Needed by tutorials (run as part of roottest)
 pandas
+
+# Needed by pyroot/tests
+setuptools # for pkg_resources
