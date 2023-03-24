@@ -24,15 +24,13 @@
 
 AddCacheElem::AddCacheElem(RooAbsPdf const &addPdf, RooArgList const &pdfList, RooArgList const &coefList,
                            const RooArgSet *nset, const RooArgSet *iset, RooArgSet const &refCoefNormSet,
-                           std::string const &refCoefNormRange, int /*verboseEval*/)
+                           std::string const &refCoefNormRange)
 {
    // We put the normRange into a std::string to not have to deal with
    // nullptr vs. "" ambiguities
    const std::string normRange = addPdf.normRange() ? addPdf.normRange() : "";
 
-   _suppNormList.reserve(pdfList.size());
-
-   // *** PART 1 : Create supplemental normalization list ***
+   _list.reserve(pdfList.size());
 
    // Retrieve the combined set of dependents of this PDF ;
    RooArgSet fullDepList;
@@ -68,12 +66,16 @@ AddCacheElem::AddCacheElem(RooAbsPdf const &addPdf, RooArgList const &pdfList, R
       }
    }
 
-   requiresProjection = !nset2.equals(refCoefNormSet) || projectCoefsForRangeReasons;
+   _doProjection = !nset2.equals(refCoefNormSet) || projectCoefsForRangeReasons;
 
    // Fill with dummy unit RRVs for now
    for (std::size_t i = 0; i < pdfList.size(); ++i) {
       auto pdf = static_cast<const RooAbsPdf *>(pdfList.at(i));
       auto coef = static_cast<const RooAbsReal *>(coefList.at(i));
+
+      auto &item = _list.emplace_back();
+
+      // *** PART 1 : Create supplemental normalization list ***
 
       // Start with full list of dependents
       RooArgSet supNSet(fullDepList);
@@ -108,12 +110,12 @@ AddCacheElem::AddCacheElem(RooAbsPdf const &addPdf, RooArgList const &pdfList, R
             snorm = std::move(snormTerm);
          }
       }
-      _suppNormList.emplace_back(std::move(snorm));
+      item.suppNorm = std::move(snorm);
 
       // *** PART 2 : Create projection coefficients ***
 
       // If no projections required stop here
-      if (!requiresProjection) {
+      if (!_doProjection) {
          continue;
       }
 
@@ -131,7 +133,7 @@ AddCacheElem::AddCacheElem(RooAbsPdf const &addPdf, RooArgList const &pdfList, R
                                      << ") PP = " << pdfProj->GetName() << std::endl;
       }
 
-      _projList.emplace_back(std::move(pdfProj));
+      item.proj = std::move(pdfProj);
 
       // Calculation optional supplemental normalization term
       RooArgSet supNormSet(refCoefNormSet);
@@ -147,7 +149,7 @@ AddCacheElem::AddCacheElem(RooAbsPdf const &addPdf, RooArgList const &pdfList, R
          oocxcoutD(&addPdf, Caching) << " " << addPdf.ClassName() << "::syncCoefProjList(" << addPdf.GetName()
                                      << ") SN = " << sProjNorm->GetName() << std::endl;
       }
-      _suppProjList.emplace_back(std::move(sProjNorm));
+      item.suppProj = std::move(sProjNorm);
 
       // Calculate range adjusted projection integral
       std::unique_ptr<RooAbsReal> rangeProj2;
@@ -160,27 +162,8 @@ AddCacheElem::AddCacheElem(RooAbsPdf const &addPdf, RooArgList const &pdfList, R
          rangeProj2->addOwnedComponents(std::move(int1), std::move(int2));
       }
 
-      _rangeProjList.emplace_back(std::move(rangeProj2));
+      item.rangeProj = std::move(rangeProj2);
    }
-}
-
-void AddCacheElem::print() const
-{
-   auto printVector = [](auto const &vec, const char *name) {
-      std::cout << "+++ " << name << ":" << std::endl;
-      for (auto const &arg : vec) {
-         std::cout << "    ";
-         if (arg)
-            arg->Print();
-         else
-            std::cout << "nullptr" << std::endl;
-      }
-   };
-
-   printVector(_suppNormList, "_suppNormList");
-   printVector(_projList, "_projList");
-   printVector(_suppProjList, "_suppProjList");
-   printVector(_rangeProjList, "_rangeProjList");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -190,17 +173,13 @@ RooArgList AddCacheElem::containedArgs(Action)
 {
    RooArgList allNodes;
    // need to iterate manually because _suppProjList can contain nullptr
-   for (auto const &arg : _projList) {
-      if (arg)
-         allNodes.add(*arg);
-   }
-   for (auto const &arg : _suppProjList) {
-      if (arg)
-         allNodes.add(*arg);
-   }
-   for (auto const &arg : _rangeProjList) {
-      if (arg)
-         allNodes.add(*arg);
+   for (auto const &item : _list) {
+      if (item.proj)
+         allNodes.add(*item.proj);
+      if (item.suppProj)
+         allNodes.add(*item.suppProj);
+      if (item.rangeProj)
+         allNodes.add(*item.rangeProj);
    }
 
    return allNodes;

@@ -362,8 +362,7 @@ AddCacheElem* RooAddPdf::getProjCache(const RooArgSet* nset, const RooArgSet* is
 
   //Create new cache
   cache = new AddCacheElem{*this, _pdfList, _coefList, nset, iset, _refCoefNorm,
-                           _refCoefRangeName ? RooNameReg::str(_refCoefRangeName) : "",
-                           _verboseEval};
+                           _refCoefRangeName ? RooNameReg::str(_refCoefRangeName) : ""};
   //std::cout << std::endl;
   //cache->print();
   //std::cout << std::endl;

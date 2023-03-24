@@ -21,36 +21,41 @@ class RooArgSet;
 class AddCacheElem : public RooAbsCacheElement {
 public:
    AddCacheElem(RooAbsPdf const &addPdf, RooArgList const &pdfList, RooArgList const &coefList, const RooArgSet *nset,
-                const RooArgSet *iset, RooArgSet const &refCoefNormSet, std::string const &refCoefNormRange,
-                int verboseEval);
+                const RooArgSet *iset, RooArgSet const &refCoefNormSet, std::string const &refCoefNormRange);
 
    RooArgList containedArgs(Action) override;
 
-   inline double suppNormVal(std::size_t idx) const { return _suppNormList[idx] ? _suppNormList[idx]->getVal() : 1.0; }
+   inline double suppNormVal(std::size_t idx) const
+   {
+      return _list[idx].suppNorm ? _list[idx].suppNorm->getVal() : 1.0;
+   }
 
-   inline bool doProjection() const { return !_projList.empty(); }
+   inline bool doProjection() const { return _doProjection; }
 
-   inline double projVal(std::size_t idx) const { return _projList[idx] ? _projList[idx]->getVal() : 1.0; }
+   inline double projVal(std::size_t idx) const { return _list[idx].proj ? _list[idx].proj->getVal() : 1.0; }
 
    inline double projSuppNormVal(std::size_t idx) const
    {
-      return _suppProjList[idx] ? _suppProjList[idx]->getVal() : 1.0;
+      return _list[idx].suppProj ? _list[idx].suppProj->getVal() : 1.0;
    }
 
    inline double rangeProjScaleFactor(std::size_t idx) const
    {
-      return _rangeProjList[idx] ? _rangeProjList[idx]->getVal() : 1.0;
+      return _list[idx].rangeProj ? _list[idx].rangeProj->getVal() : 1.0;
    }
 
-   void print() const;
+   struct Item {
+      std::unique_ptr<RooAbsReal> suppNorm; ///< Supplemental normalization
+      std::unique_ptr<RooAbsReal> proj;     ///< Projection integral to be multiplied with coefficient
+      std::unique_ptr<RooAbsReal>
+         suppProj; ///< Projection integral to multiply with coefficient for supplemental normalization
+      std::unique_ptr<RooAbsReal>
+         rangeProj; ///< Range integral to be multiplied with coefficient (reference to target range)
+   };
 
 private:
-   using OwningArgVector = std::vector<std::unique_ptr<RooAbsReal>>;
-
-   OwningArgVector _suppNormList; ///< Supplemental normalization list
-   OwningArgVector _projList;     ///< Projection integrals to be multiplied with coefficients
-   OwningArgVector _suppProjList; ///< Projection integrals to multiply with coefficients for supplemental normalization
-   OwningArgVector _rangeProjList; ///< Range integrals to be multiplied with coefficients (reference to target range)
+   std::vector<Item> _list;
+   bool _doProjection = false;
 };
 
 class RooAddHelpers {

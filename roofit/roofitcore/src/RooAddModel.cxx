@@ -316,8 +316,7 @@ AddCacheElem* RooAddModel::getProjCache(const RooArgSet* nset, const RooArgSet* 
 
   //Create new cache
   cache = new AddCacheElem{*this, _pdfList, _coefList, nset, iset, _refCoefNorm,
-                           _refCoefRangeName ? RooNameReg::str(_refCoefRangeName) : "",
-                           _verboseEval};
+                           _refCoefRangeName ? RooNameReg::str(_refCoefRangeName) : ""};
 
   _projCacheMgr.setObj(nset,iset,cache,RooNameReg::ptr(normRange())) ;
 
