@@ -32,11 +32,11 @@ if (imt)
 endif(imt)
 
 if(cuda)
-  list(APPEND RDATAFRAME_EXTRA_HEADERS RH1CUDA.h)
+  list(APPEND RDATAFRAME_EXTRA_HEADERS RHnCUDA.h)
   list(APPEND RDATAFRAME_EXTRA_DEPS ROOTDataFrame_CUDA)
   # list(APPEND RDATAFRAME_EXTRA_INCLUDES -I${CUDA_INCLUDE_DIRS})
 
-  ROOT_LINKER_LIBRARY(ROOTDataFrame_CUDA  src/RH1CUDA.cu inc/CUDAHelpers.cuh TYPE SHARED DEPENDENCIES MathCore)
+  ROOT_LINKER_LIBRARY(ROOTDataFrame_CUDA  src/RHnCUDA.cu inc/CUDAHelpers.cuh TYPE SHARED DEPENDENCIES MathCore)
   # ROOT_LINKER_LIBRARY(ROOTDataFrame_CUDA  src/RH1CUDA.cu src/CUDAHelpers.cu inc/CUDAHelpers.cuh TYPE SHARED DEPENDENCIES MathCore)
   target_compile_options(ROOTDataFrame_CUDA  PRIVATE -DRF_ARCH=CUDA -rdc=true -lineinfo --expt-relaxed-constexpr)
   # target_include_directories(ROOTDataFrame_CUDA PRIVATE ${CUDA_INCLUDE_DIRS})
