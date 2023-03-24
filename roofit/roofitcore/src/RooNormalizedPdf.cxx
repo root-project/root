@@ -36,3 +36,9 @@ void RooNormalizedPdf::computeBatch(cudaStream_t * /*stream*/, double *output, s
       }
    }
 }
+
+void RooNormalizedPdf::translate(RooFit::Detail::CodeSquashContext &ctx) const
+{
+   // For now just return function/normalization integral.
+   ctx.addResult(this, ctx.getResult(&_pdf.arg()) + "/" + ctx.getResult(&_normIntegral.arg()));
+}

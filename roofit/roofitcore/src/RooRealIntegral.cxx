@@ -1086,6 +1086,18 @@ void RooRealIntegral::setAllowComponentSelection(bool allow){
   _respectCompSelect = allow;
 }
 
+void RooRealIntegral::translate(RooFit::Detail::CodeSquashContext &ctx) const
+{
+   if (!_sumList.empty() || !_intList.empty()) {
+      std::stringstream errorMsg;
+      errorMsg << "Only analytical integrals are supported for AD for class" << _function.GetName();
+      coutE(Minimization) << errorMsg.str() << std::endl;
+      throw std::runtime_error(errorMsg.str().c_str());
+   }
+
+   ctx.addResult(this, _function.arg().buildCallToAnalyticIntegral(_mode, RooNameReg::str(_rangeName), ctx));
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Customized printing of arguments of a RooRealIntegral to more intuitively reflect the contents of the
 /// integration operation

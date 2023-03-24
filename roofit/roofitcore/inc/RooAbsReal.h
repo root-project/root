@@ -25,6 +25,7 @@
 #include "RooSpan.h"
 #include "RooBatchComputeTypes.h"
 #include "RooFit/Detail/DataMap.h"
+#include "RooFit/Detail/CodeSquashContext.h"
 
 class RooDataSet ;
 class RooPlot;
@@ -425,6 +426,10 @@ protected:
   const RooAbsReal *createPlotProjection(const RooArgSet &dependentVars, const RooArgSet *projectedVars,
                      RooArgSet *&cloneSet, const char* rangeName=nullptr, const RooArgSet* condObs=nullptr) const;
   virtual void computeBatch(cudaStream_t*, double* output, size_t size, RooFit::Detail::DataMap const&) const;
+
+  virtual void translate(RooFit::Detail::CodeSquashContext &ctx) const;
+  virtual std::string
+  buildCallToAnalyticIntegral(Int_t code, const char *rangeName, RooFit::Detail::CodeSquashContext &ctx) const;
 
  protected:
 

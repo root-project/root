@@ -56,6 +56,8 @@ public:
 
   void computeBatch(cudaStream_t*, double* output, size_t nEvents, RooFit::Detail::DataMap const&) const override;
 
+  void translate(RooFit::Detail::CodeSquashContext &ctx) const override;
+
 protected:
 
   RooArgList   _ownedList ;      ///< List of owned components

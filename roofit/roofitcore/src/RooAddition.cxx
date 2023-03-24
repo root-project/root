@@ -173,6 +173,46 @@ void RooAddition::computeBatch(cudaStream_t* stream, double* output, size_t nEve
   dispatch->compute(stream, RooBatchCompute::AddPdf, output, nEvents, pdfs, coefs);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+void RooAddition::translate(RooFit::Detail::CodeSquashContext &ctx) const
+{
+   // If the number of elements to sum is less than 3, just build a sum expression.
+   // else build a loop to sum over the values.
+   unsigned int eleSize = _set.size();
+   std::string result;
+   if (eleSize > 3) {
+      std::string className = GetName();
+      std::string varName = "elements" + className;
+      std::string sumName = "sum" + className;
+      std::string code = "";
+      std::string decl = "double " + varName + "[" + std::to_string(eleSize) + "]{";
+      int idx = 0;
+      for (RooAbsArg *it : _set) {
+         decl += ctx.getResult(it) + ",";
+         ctx.addResult(it, varName + "[" + std::to_string(idx) + "]");
+         idx++;
+      }
+      decl.back() = '}';
+      code += decl + ";\n";
+
+      ctx.addToGlobalScope("double " + sumName + " = 0;\n");
+      std::string iterator = "i_" + className;
+      code += "for(int " + iterator + " = 0; " + iterator + " < " + std::to_string(eleSize) + "; " + iterator +
+              "++) {\n" + sumName + " += " + varName + "[i];\n}\n";
+      result = sumName;
+      ctx.addResult(this, result);
+
+      ctx.addToCodeBody(code);
+   }
+
+   result = "(";
+   for (RooAbsArg *it : _set) {
+      result += ctx.getResult(it) + '+';
+   }
+   result.back() = ')';
+   ctx.addResult(this, result);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the default error level for MINUIT error analysis

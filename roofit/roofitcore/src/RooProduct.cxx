@@ -493,9 +493,19 @@ void RooProduct::setCacheAndTrackHints(RooArgSet& trackNodes)
   }
 }
 
+////////////////////////////////////////////////////////////////////////////////
 
-
-
+void RooProduct::translate(RooFit::Detail::CodeSquashContext &ctx) const
+{
+   std::string result;
+   // Build a (node1 * node2 * node3 * ...) like expression.
+   result = '(';
+   for (const auto item : _compRSet) {
+      result += ctx.getResult(item) + "*";
+   }
+   result.back() = ')';
+   ctx.addResult(this, result);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Customized printing of arguments of a RooProduct to more intuitively reflect the contents of the

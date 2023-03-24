@@ -4725,8 +4725,39 @@ void RooAbsReal::computeBatch(cudaStream_t*, double* output, size_t nEvents, Roo
   }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// This function defines a translation for each RooAbsReal based object that can be used
+/// to express the class as simple C++ code. The function adds the code represented by
+/// each class as an std::string (that is later concatenated with code strings from translate calls)
+/// to form the C++ code that AD tools can understand. Any class that wants to support AD, has to
+/// implement this function.
+///
+/// \param[in] ctx An object to manage auxilary information for code-squashing. Also takes the
+/// code string that this class outputs into the squashed code through the 'addToCodeBody' function.
+void RooAbsReal::translate(RooFit::Detail::CodeSquashContext & /*ctx*/) const
+{
+   std::stringstream errorMsg;
+   errorMsg << "Translate function for class " << GetName() << " has not yet been implemented.";
+   coutE(Minimization) << errorMsg.str() << std::endl;
+   throw std::runtime_error(errorMsg.str().c_str());
+}
 
-
+////////////////////////////////////////////////////////////////////////////////
+/// This function defines the analytical integral translation for the class.
+///
+/// \param[in] code The code that decides the integrands.
+/// \param[in] rangeName Name of the normalization range.
+/// \param[in] ctx An object to manage auxilary information for code-squashing.
+///
+/// \returns The representative code string of the integral for the given object.
+std::string RooAbsReal::buildCallToAnalyticIntegral(Int_t /* code */, const char * /* rangeName */,
+                                                    RooFit::Detail::CodeSquashContext & /*ctx*/) const
+{
+   std::stringstream errorMsg;
+   errorMsg << "An analytical integral function for class " << GetName() << " has not yet been implemented.";
+   coutE(Minimization) << errorMsg.str() << std::endl;
+   throw std::runtime_error(errorMsg.str().c_str());
+}
 
 double RooAbsReal::_DEBUG_getVal(const RooArgSet* normalisationSet) const {
 

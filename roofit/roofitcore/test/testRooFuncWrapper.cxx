@@ -12,12 +12,15 @@
  */
 
 #include <RooAbsPdf.h>
+#include <RooAddition.h>
+#include <RooConstVar.h>
 #include <RooDataSet.h>
 #include <RooFitResult.h>
 #include <RooFuncWrapper.h>
 #include <RooGaussian.h>
 #include <RooHelpers.h>
 #include <RooMinimizer.h>
+#include <RooProduct.h>
 #include <RooRealIntegral.h>
 #include <RooRealVar.h>
 
@@ -188,135 +191,34 @@ TEST(RooFuncWrapper, NllWithObservables)
    EXPECT_TRUE(resultAd->isIdenticalNoCov(*resultRef, 1e-5));
 }
 
-namespace {
-
-std::string valName(RooAbsArg const &arg)
-{
-   std::string name = arg.GetName();
-   std::replace(name.begin(), name.end(), '[', '_');
-   std::replace(name.begin(), name.end(), ']', '_');
-   return name + "Val";
-}
-
-std::string valToString(double val)
-{
-   // std::numeric_limits<double>::infinity() doesn't seem work with clad!
-   if (val == std::numeric_limits<double>::infinity())
-      return "1e30";
-   if (val == -std::numeric_limits<double>::infinity())
-      return "-1e30";
-   return std::to_string(val);
-}
-
-std::string integralCode(RooRealIntegral const &integral)
-{
-   std::stringstream ss;
-   // TODO: assert also that numIntCatVars() and numIntRealVars() are empty
-
-   RooArgSet anaIntVars{integral.anaIntVars()};
-   RooArgSet empty;
-   auto range = integral.intRange();
-   const int code = integral.integrand().getAnalyticalIntegralWN(anaIntVars, empty, nullptr, range);
-   if (code == 1) {
-      auto gauss = dynamic_cast<RooGaussian const *>(&integral.integrand());
-      RooRealVar const &x = static_cast<RooRealVar const &>(gauss->getX());
-      RooRealVar const &mean = static_cast<RooRealVar const &>(gauss->getMean());
-      ss << "RooFit::Detail::AnalyticalIntegrals::gaussianIntegral(" << valToString(x.getMin(range)) << ", "
-         << valToString(x.getMax(range)) << ", " << valName(mean) << ", " << valName(gauss->getSigma()) << ")";
-   }
-   return ss.str();
-}
-
-std::string gaussianCode(RooGaussian const &gauss)
-{
-   std::stringstream ss;
-
-   ss << "GaussianEval(" << valName(gauss.getX()) << ", " << valName(gauss.getMean()) << ", "
-      << valName(gauss.getSigma()) << ")";
-
-   return ss.str();
-}
-
-std::string normalizedPdfCode(RooAbsArg const &pdf)
-{
-   std::stringstream ss;
-
-   ss << valName(*pdf.servers()[0]) << " / " << valName(*pdf.servers()[1]);
-
-   return ss.str();
-}
-
-std::string generateCode(RooAbsReal const &func, RooArgSet const &variables)
-{
-
-   RooArgSet nodes;
-   RooHelpers::getSortedComputationGraph(func, nodes);
-
-   std::stringstream ss;
-
-   for (RooAbsArg *node : nodes) {
-      auto var = dynamic_cast<RooRealVar *>(node);
-      int idx = variables.index(node);
-      if (var && idx >= 0) {
-         ss << "const double " << valName(*var) << " = params[" << idx << "];\n";
-      } else if (var) {
-         ss << "const double " << valName(*var) << " = " << var->getVal() << ";\n";
-      } else if (auto gauss = dynamic_cast<RooGaussian *>(node)) {
-         ss << "const double " << valName(*gauss) << " = " << gaussianCode(*gauss) << ";\n";
-      } else if (auto integral = dynamic_cast<RooRealIntegral *>(node)) {
-         ss << "const double " << valName(*integral) << " = " << integralCode(*integral) << ";\n";
-      } else if (node == &func) {
-         ss << "const double " << valName(*node) << " = " << normalizedPdfCode(*node) << ";\n";
-      }
-   }
-   ss << "return " << valName(func) << ";\n";
-
-   std::string out = ss.str();
-
-   return out;
-}
-
-} // namespace
-
 TEST(RooFuncWrapper, GaussianNormalized)
 {
    using namespace RooFit;
 
-   // clang-format off
-   gInterpreter->Declare(
-   "double GaussianEval(double x, double mean, double sigma)"
-   "{"
-   "   const double arg = x - mean;"
-   "   return std::exp(-0.5 * arg * arg / (sigma * sigma));"
-   "}"
-   );
-   // clang-format on
+   RooRealVar x("x", "x", 0, -10, std::numeric_limits<double>::infinity());
 
-   RooRealVar x("x", "x", 0, -10, 10);
    RooRealVar mu("mu", "mu", 0, -10, 10);
+   RooRealVar shift("shift", "shift", 1.0, -10, 10);
+   RooAddition muShifted("mu_shifted", "mu_shifted", {mu, shift});
+
    RooRealVar sigma("sigma", "sigma", 2.0, 0.01, 10);
-   RooGaussian gauss{"gauss", "gauss", x, mu, sigma};
+   RooConstVar scale("scale", "scale", 1.5);
+   RooProduct sigmaScaled("sigma_scaled", "sigma_scaled", sigma, scale);
+
+   RooGaussian gauss{"gauss", "gauss", x, muShifted, sigmaScaled};
 
    RooArgSet normSet{x};
 
-   // Compile the computation graph for the norm set, such that we also get the
-   // integrals explicitly in the graph
-   std::unique_ptr<RooAbsReal> pdf{RooFit::Detail::compileForNormSet(gauss, normSet)};
+   RooFuncWrapper gaussFunc("myGauss3", "myGauss3", gauss, normSet);
 
    RooArgSet paramsGauss;
-   pdf->getParameters(nullptr, paramsGauss);
-
-   // The code generation in this test is a rough prototype for how the code
-   // generation might work like in the end
-   std::string func = generateCode(*pdf, paramsGauss);
-
-   RooFuncWrapper gaussFunc("myGauss2", "myGauss2", func, paramsGauss, {});
+   gauss.getParameters(nullptr, paramsGauss);
 
    // Check if functions results are the same even after changing parameters.
-   EXPECT_NEAR(pdf->getVal(normSet), gaussFunc.getVal(), 1e-8);
+   EXPECT_NEAR(gauss.getVal(normSet), gaussFunc.getVal(), 1e-8);
 
    mu.setVal(1);
-   EXPECT_NEAR(pdf->getVal(normSet), gaussFunc.getVal(), 1e-8);
+   EXPECT_NEAR(gauss.getVal(normSet), gaussFunc.getVal(), 1e-8);
 
    // Get AD based derivative
    double dMyGauss[3] = {};
@@ -324,6 +226,6 @@ TEST(RooFuncWrapper, GaussianNormalized)
 
    // Check if derivatives are equal
    for (std::size_t i = 0; i < paramsGauss.size(); ++i) {
-      EXPECT_NEAR(getNumDerivative(*pdf, static_cast<RooRealVar &>(*paramsGauss[i]), normSet), dMyGauss[i], 1e-8);
+      EXPECT_NEAR(getNumDerivative(gauss, static_cast<RooRealVar &>(*paramsGauss[i]), normSet), dMyGauss[i], 1e-8);
    }
 }
