@@ -72,98 +72,97 @@ AddCacheElem::AddCacheElem(RooAbsPdf const &addPdf, RooArgList const &pdfList, R
    for (std::size_t i = 0; i < pdfList.size(); ++i) {
       auto pdf = static_cast<const RooAbsPdf *>(pdfList.at(i));
       auto coef = static_cast<const RooAbsReal *>(coefList.at(i));
-
-      auto &item = _list.emplace_back();
-
-      // *** PART 1 : Create supplemental normalization list ***
-
-      // Start with full list of dependents
-      RooArgSet supNSet(fullDepList);
-
-      // Remove PDF dependents
-      if (auto pdfDeps = std::unique_ptr<RooArgSet>{pdf->getObservables(nset)}) {
-         supNSet.remove(*pdfDeps, true, true);
-      }
-
-      // Remove coef dependents
-      if (auto coefDeps = std::unique_ptr<RooArgSet>{coef ? coef->getObservables(nset) : nullptr}) {
-         supNSet.remove(*coefDeps, true, true);
-      }
-
-      std::unique_ptr<RooAbsReal> snorm;
-      auto name = std::string(addPdf.GetName()) + "_" + pdf->GetName() + "_SupNorm";
-      if (!supNSet.empty()) {
-         snorm = std::make_unique<RooRealIntegral>(name.c_str(), "Supplemental normalization integral",
-                                                   RooRealConstant::value(1.0), supNSet);
-         oocxcoutD(&addPdf, Caching) << addPdf.ClassName() << " " << addPdf.GetName()
-                                     << " making supplemental normalization set " << supNSet << " for pdf component "
-                                     << pdf->GetName() << std::endl;
-      }
-
-      if (!normRange.empty()) {
-         auto snormTerm = std::unique_ptr<RooAbsReal>(pdf->createIntegral(*nset, *nset, normRange.c_str()));
-         if (snorm) {
-            auto oldSnorm = std::move(snorm);
-            snorm = std::make_unique<RooProduct>("snorm", "snorm", *oldSnorm.get(), *snormTerm.get());
-            snorm->addOwnedComponents(std::move(snormTerm), std::move(oldSnorm));
-         } else {
-            snorm = std::move(snormTerm);
-         }
-      }
-      item.suppNorm = std::move(snorm);
-
-      // *** PART 2 : Create projection coefficients ***
-
-      // If no projections required stop here
-      if (!_doProjection) {
-         continue;
-      }
-
-      // Recalculate projection integrals of PDFs
-
-      // Calculate projection integral
-      std::unique_ptr<RooAbsReal> pdfProj;
-      if (!refCoefNormSet.empty() && !nset2.equals(refCoefNormSet)) {
-         pdfProj = std::unique_ptr<RooAbsReal>{pdf->createIntegral(nset2, refCoefNormSet, normRange.c_str())};
-         pdfProj->setOperMode(addPdf.operMode());
-         oocxcoutD(&addPdf, Caching) << addPdf.ClassName() << "(" << addPdf.GetName() << ")::getPC nset2(" << nset2
-                                     << ")!=_refCoefNormSet(" << refCoefNormSet
-                                     << ") --> pdfProj = " << pdfProj->GetName() << std::endl;
-         oocxcoutD(&addPdf, Caching) << " " << addPdf.ClassName() << "::syncCoefProjList(" << addPdf.GetName()
-                                     << ") PP = " << pdfProj->GetName() << std::endl;
-      }
-
-      item.proj = std::move(pdfProj);
-
-      // Calculation optional supplemental normalization term
-      RooArgSet supNormSet(refCoefNormSet);
-      auto deps = std::unique_ptr<RooArgSet>{pdf->getParameters(RooArgSet())};
-      supNormSet.remove(*deps, true, true);
-
-      std::unique_ptr<RooAbsReal> sProjNorm;
-      auto sProjNormName = std::string(addPdf.GetName()) + "_" + pdf->GetName() + "_ProjSupNorm";
-      if (!supNormSet.empty() && !nset2.equals(refCoefNormSet)) {
-         sProjNorm =
-            std::make_unique<RooRealIntegral>(sProjNormName.c_str(), "Projection Supplemental normalization integral",
-                                              RooRealConstant::value(1.0), supNormSet);
-         oocxcoutD(&addPdf, Caching) << " " << addPdf.ClassName() << "::syncCoefProjList(" << addPdf.GetName()
-                                     << ") SN = " << sProjNorm->GetName() << std::endl;
-      }
-      item.suppProj = std::move(sProjNorm);
-
-      // Calculate range adjusted projection integral
-      std::unique_ptr<RooAbsReal> rangeProj2;
-      if (normRange != refCoefNormRange) {
-         RooArgSet tmp;
-         pdf->getObservables(refCoefNormSet.empty() ? nset : &refCoefNormSet, tmp);
-         auto int1 = std::unique_ptr<RooAbsReal>{pdf->createIntegral(tmp, tmp, normRange.c_str())};
-         auto int2 = std::unique_ptr<RooAbsReal>{pdf->createIntegral(tmp, tmp, refCoefNormRange.c_str())};
-         rangeProj2 = std::make_unique<RooRatio>("rangeProj", "rangeProj", *int1, *int2);
-         rangeProj2->addOwnedComponents(std::move(int1), std::move(int2));
-      }
-
-      item.rangeProj = std::move(rangeProj2);
+      processPdf(addPdf, pdf, coef, fullDepList, nset, nset2, normRange, refCoefNormSet, refCoefNormRange);
    }
+}
+
+void AddCacheElem::processPdf(RooAbsPdf const &addPdf, const RooAbsPdf *pdf, const RooAbsReal *coef,
+                              RooArgSet const &fullDepList, RooArgSet const *nset, RooArgSet const &nset2,
+                              std::string const &normRange, RooArgSet const &refCoefNormSet,
+                              std::string const &refCoefNormRange)
+{
+   std::string addPdfName = addPdf.GetName();
+
+   auto &item = _list.emplace_back();
+
+   // *** PART 1 : Create supplemental normalization list ***
+
+   // Start with full list of dependents
+   RooArgSet supNSet(fullDepList);
+
+   // Remove PDF dependents
+   if (auto pdfDeps = std::unique_ptr<RooArgSet>{pdf->getObservables(nset)}) {
+      supNSet.remove(*pdfDeps, true, true);
+   }
+
+   // Remove coef dependents
+   if (auto coefDeps = std::unique_ptr<RooArgSet>{coef ? coef->getObservables(nset) : nullptr}) {
+      supNSet.remove(*coefDeps, true, true);
+   }
+
+   std::unique_ptr<RooAbsReal> snorm;
+   auto name = addPdfName + "_" + pdf->GetName() + "_SupNorm";
+   if (!supNSet.empty()) {
+      snorm = std::make_unique<RooRealIntegral>(name.c_str(), "Supplemental normalization integral",
+                                                RooRealConstant::value(1.0), supNSet);
+   }
+
+   if (!normRange.empty()) {
+      auto snormTerm = std::unique_ptr<RooAbsReal>(pdf->createIntegral(*nset, *nset, normRange.c_str()));
+      if (snorm) {
+         auto oldSnorm = std::move(snorm);
+         snorm = std::make_unique<RooProduct>("snorm", "snorm", *oldSnorm.get(), *snormTerm.get());
+         snorm->addOwnedComponents(std::move(snormTerm), std::move(oldSnorm));
+      } else {
+         snorm = std::move(snormTerm);
+      }
+   }
+   item.suppNorm = std::move(snorm);
+
+   // *** PART 2 : Create projection coefficients ***
+
+   // If no projections required stop here
+   if (!_doProjection) {
+      return;
+   }
+
+   // Recalculate projection integrals of PDFs
+
+   // Calculate projection integral
+   std::unique_ptr<RooAbsReal> pdfProj;
+   if (!refCoefNormSet.empty() && !nset2.equals(refCoefNormSet)) {
+      pdfProj = std::unique_ptr<RooAbsReal>{pdf->createIntegral(nset2, refCoefNormSet, normRange.c_str())};
+      pdfProj->setOperMode(addPdf.operMode());
+   }
+
+   item.proj = std::move(pdfProj);
+
+   // Calculation optional supplemental normalization term
+   RooArgSet supNormSet(refCoefNormSet);
+   auto deps = std::unique_ptr<RooArgSet>{pdf->getParameters(RooArgSet())};
+   supNormSet.remove(*deps, true, true);
+
+   std::unique_ptr<RooAbsReal> sProjNorm;
+   auto sProjNormName = std::string(addPdf.GetName()) + "_" + pdf->GetName() + "_ProjSupNorm";
+   if (!supNormSet.empty() && !nset2.equals(refCoefNormSet)) {
+      sProjNorm =
+         std::make_unique<RooRealIntegral>(sProjNormName.c_str(), "Projection Supplemental normalization integral",
+                                           RooRealConstant::value(1.0), supNormSet);
+   }
+   item.suppProj = std::move(sProjNorm);
+
+   // Calculate range adjusted projection integral
+   std::unique_ptr<RooAbsReal> rangeProj2;
+   if (normRange != refCoefNormRange) {
+      RooArgSet tmp;
+      pdf->getObservables(refCoefNormSet.empty() ? nset : &refCoefNormSet, tmp);
+      auto int1 = std::unique_ptr<RooAbsReal>{pdf->createIntegral(tmp, tmp, normRange.c_str())};
+      auto int2 = std::unique_ptr<RooAbsReal>{pdf->createIntegral(tmp, tmp, refCoefNormRange.c_str())};
+      rangeProj2 = std::make_unique<RooRatio>("rangeProj", "rangeProj", *int1, *int2);
+      rangeProj2->addOwnedComponents(std::move(int1), std::move(int2));
+   }
+
+   item.rangeProj = std::move(rangeProj2);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

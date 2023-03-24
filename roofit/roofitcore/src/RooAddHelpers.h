@@ -44,6 +44,7 @@ public:
       return _list[idx].rangeProj ? _list[idx].rangeProj->getVal() : 1.0;
    }
 
+private:
    struct Item {
       std::unique_ptr<RooAbsReal> suppNorm; ///< Supplemental normalization
       std::unique_ptr<RooAbsReal> proj;     ///< Projection integral to be multiplied with coefficient
@@ -53,7 +54,10 @@ public:
          rangeProj; ///< Range integral to be multiplied with coefficient (reference to target range)
    };
 
-private:
+   void processPdf(RooAbsPdf const &addPdfName, const RooAbsPdf *pdf, const RooAbsReal *coef,
+                   RooArgSet const &fullDepList, RooArgSet const *nset, RooArgSet const &nset2,
+                   std::string const &normRange, RooArgSet const &refCoefNormSet, std::string const &refCoefNormRange);
+
    std::vector<Item> _list;
    bool _doProjection = false;
 };
