@@ -36,7 +36,7 @@ ClassImp(TScatter);
     \ingroup Graphs
 A TScatter is a TGraph able to draw four variables on a single plot. The two first
 variables are the x and y position of the markers and the 3rd is mapped on the current
-color map et the 4th on the marker size.
+color map and the 4th on the marker size.
 
 The following example demonstrates how it works:
 
