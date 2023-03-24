@@ -139,6 +139,33 @@ TPaletteAxis::TPaletteAxis(Double_t x1, Double_t y1, Double_t x2, Double_t  y2, 
 
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Palette normal constructor.
+
+TPaletteAxis::TPaletteAxis(Double_t x1, Double_t y1, Double_t x2, Double_t  y2, Double_t min, Double_t max)
+   : TPave(x1, y1, x2, y2)
+{
+   fH    = 0;
+   fAxis.SetWmin(min);
+   fAxis.SetWmax(max);
+   SetName("palette");
+   if (gPad->GetView()) SetBit(kHasView);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Palette normal constructor.
+
+TPaletteAxis::TPaletteAxis(Double_t x1, Double_t y1, Double_t x2, Double_t  y2, TAxis *ax)
+   : TPave(x1, y1, x2, y2)
+{
+   fH = 0;
+   SetName("palette");
+   fAxis.ImportAxisAttributes(ax);
+   if (gPad->GetView()) SetBit(kHasView);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
 /// Palette destructor.
 
 TPaletteAxis::~TPaletteAxis()
@@ -405,9 +432,6 @@ Int_t TPaletteAxis::GetValueColor(Double_t zc)
 
 void TPaletteAxis::Paint(Option_t *)
 {
-
-   if (!fH) return;
-
    ConvertNDCtoPad();
 
    SetFillStyle(1001);
@@ -415,8 +439,14 @@ void TPaletteAxis::Paint(Option_t *)
    Double_t ymax = fY2;
    Double_t xmin = fX1;
    Double_t xmax = fX2;
-   Double_t wmin = fH->GetMinimum();
-   Double_t wmax = fH->GetMaximum();
+   Double_t wmin, wmax;
+   if (fH) {
+      wmin = fH->GetMinimum();
+      wmax = fH->GetMaximum();
+   } else {
+      wmin = fAxis.GetWmin();
+      wmax = fAxis.GetWmax();
+   }
    Double_t wlmin = wmin;
    Double_t wlmax = wmax;
    Double_t b1, b2, w1, w2, zc;
@@ -440,43 +470,50 @@ void TPaletteAxis::Paint(Option_t *)
    }
    Double_t ws    = wlmax - wlmin;
    Int_t ncolors = gStyle->GetNumberOfColors();
-   Int_t ndivz = fH->GetContour();
+   Int_t ndivz;
+   if (fH) ndivz = fH->GetContour();
+   else    ndivz = ncolors;
    if (ndivz == 0) return;
    ndivz = TMath::Abs(ndivz);
    Int_t theColor, color;
    // import Attributes already here since we might need them for CJUST
-   if (fH->GetDimension() == 2) fAxis.ImportAxisAttributes(fH->GetZaxis());
+   if (fH && fH->GetDimension() == 2) fAxis.ImportAxisAttributes(fH->GetZaxis());
    // for 3D histograms there is no palette's title
-   if (fH->GetDimension() >  2) fAxis.SetTitle("");
+   if (fH && fH->GetDimension() >  2) fAxis.SetTitle("");
    // case option "CJUST": put labels directly at color boundaries
    TLatex *label = nullptr;
    TLine *line = nullptr;
    Double_t prevlab = 0;
-   TString opt(fH->GetDrawOption());
-   if (opt.Contains("CJUST", TString::kIgnoreCase)) {
-      label = new TLatex();
-      label->SetTextFont(fAxis.GetLabelFont());
-      label->SetTextColor(fAxis.GetLabelColor());
-      if (kHorizontal) label->SetTextAlign(kHAlignCenter+kVAlignTop);
-      else             label->SetTextAlign(kHAlignLeft+kVAlignCenter);
-      line = new TLine();
-      line->SetLineColor(fAxis.GetLineColor());
-      if (kHorizontal) line->PaintLine(xmin, ymin, xmax, ymin);
-      else             line->PaintLine(xmax, ymin, xmax, ymax);
+   if (fH) {
+      TString opt(fH->GetDrawOption());
+      if (opt.Contains("CJUST", TString::kIgnoreCase)) {
+         label = new TLatex();
+         label->SetTextFont(fAxis.GetLabelFont());
+         label->SetTextColor(fAxis.GetLabelColor());
+         if (kHorizontal) label->SetTextAlign(kHAlignCenter+kVAlignTop);
+         else             label->SetTextAlign(kHAlignLeft+kVAlignCenter);
+         line = new TLine();
+         line->SetLineColor(fAxis.GetLineColor());
+         if (kHorizontal) line->PaintLine(xmin, ymin, xmax, ymin);
+         else             line->PaintLine(xmax, ymin, xmax, ymax);
+      }
    }
    Double_t scale = ndivz / (wlmax - wlmin);
+   Double_t dw = (wlmax - wlmin) / ndivz;
    for (Int_t i = 0; i < ndivz; i++) {
 
-      zc = fH->GetContourLevel(i);
-      if (fH->TestBit(TH1::kUserContour) && gPad->GetLogz())
+      if (fH) zc = fH->GetContourLevel(i);
+      else    zc = wlmin + i*dw;
+      if (fH && fH->TestBit(TH1::kUserContour) && gPad->GetLogz())
          zc = TMath::Log10(zc);
       w1 = zc;
       if (w1 < wlmin) w1 = wlmin;
 
       w2 = wlmax;
       if (i < ndivz - 1) {
-         zc = fH->GetContourLevel(i + 1);
-         if (fH->TestBit(TH1::kUserContour) && gPad->GetLogz())
+         if (fH) zc = fH->GetContourLevel(i + 1);
+         else    zc = zc = wlmin + (i+1)*dw;
+         if (fH && fH->TestBit(TH1::kUserContour) && gPad->GetLogz())
             zc = TMath::Log10(zc);
          w2 = zc;
       }
@@ -490,7 +527,7 @@ void TPaletteAxis::Paint(Option_t *)
          b2 = ymin + (w2 - wlmin) * (ymax - ymin) / ws;
       }
 
-      if (fH->TestBit(TH1::kUserContour)) {
+      if (fH && fH->TestBit(TH1::kUserContour)) {
          color = i;
       } else {
          color = Int_t(0.01 + (w1 - wlmin) * scale);
@@ -502,7 +539,7 @@ void TPaletteAxis::Paint(Option_t *)
       if (kHorizontal) gPad->PaintBox(b1, ymin, b2, ymax);
       else             gPad->PaintBox(xmin, b1, xmax, b2);
       // case option "CJUST": put labels directly
-      if (label) {
+      if (fH && label) {
          Double_t lof = fAxis.GetLabelOffset()*(gPad->GetUxmax()-gPad->GetUxmin());
          // the following assumes option "S"
          Double_t tlength = fAxis.GetTickSize() * (gPad->GetUxmax()-gPad->GetUxmin());
@@ -522,7 +559,7 @@ void TPaletteAxis::Paint(Option_t *)
          else             line->PaintLine(xmax-tlength, b1, xmax, b1);
          if (i == ndivz-1) {
             // label + tick at top of axis
-            if ((b2 - prevlab > 1.5*lsize_user)) {
+            if (fH && (b2 - prevlab > 1.5*lsize_user)) {
                if (kHorizontal) label->PaintLatex(b2, ymin - lof, 0, lsize, Form("%g",fH->GetMaximum()));
                else             label->PaintLatex(xmax + lof, b2, 0, lsize, Form("%g",fH->GetMaximum()));
             }
@@ -533,7 +570,9 @@ void TPaletteAxis::Paint(Option_t *)
    }
 
    // Take primary divisions only
-   Int_t ndiv = fH->GetZaxis()->GetNdivisions();
+   Int_t ndiv;
+   if (fH) ndiv = fH->GetZaxis()->GetNdivisions();
+   else    ndiv = fAxis.GetNdiv();
    Bool_t isOptimized = ndiv>0;
    Int_t absDiv = abs(ndiv);
    Int_t maxD = absDiv/1000000;

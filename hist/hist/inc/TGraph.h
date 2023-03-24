@@ -119,7 +119,7 @@ public:
    virtual void          FitPanel(); // *MENU*
    Bool_t                GetEditable() const;
    TF1                  *GetFunction(const char *name) const;
-   TH1F                 *GetHistogram() const;
+   virtual TH1F         *GetHistogram() const;
    TList                *GetListOfFunctions() const { return fFunctions; }
    virtual Double_t      GetCorrelationFactor() const;
    virtual Double_t      GetCovariance() const;
