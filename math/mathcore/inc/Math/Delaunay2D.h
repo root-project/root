@@ -21,7 +21,7 @@
 //#define THREAD_SAFE
 
 
-#include "RtypesCore.h"
+//#include "RtypesCore.h"
 
 #include <map>
 #include <vector>
@@ -64,6 +64,50 @@ namespace ROOT {
 
    See [http://www.cs.cmu.edu/~quake/triangle.html]
 
+   After having found the triangles using the above library,  barycentric coordinates are used
+   to test whether a point is inside a triangle (inTriangle test) and for interpolation.
+   All this below is implemented in the DoInterpolateNormalized function.
+
+   Given triangle ABC and point P, P can be expressed by
+
+     P.x = la * A.x + lb * B.x + lc * C.x
+     P.y = la * A.y + lb * B.y + lc * C.y
+
+   with lc = 1 - la - lb
+
+     P.x = la * A.x + lb * B.x + (1-la-lb) * C.x
+     P.y = la * A.y + lb * B.y + (1-la-lb) * C.y
+
+   Rearranging yields
+
+     la * (A.x - C.x) + lb * (B.x - C.x) = P.x - C.x
+     la * (A.y - C.y) + lb * (B.y - C.y) = P.y - C.y
+
+   Thus
+
+     la = ( (B.y - C.y)*(P.x - C.x) + (C.x - B.x)*(P.y - C.y) ) / ( (B.y - C.y)*(A.x - C.x) + (C.x - B.x)*(A.y - C.y) )
+     lb = ( (C.y - A.y)*(P.x - C.x) + (A.x - C.x)*(P.y - C.y) ) / ( (B.y - C.y)*(A.x - C.x) + (C.x - B.x)*(A.y - C.y) )
+     lc = 1 - la - lb
+
+   We save the inverse denominator to speedup computation
+
+     invDenom = 1 / ( (B.y - C.y)*(A.x - C.x) + (C.x - B.x)*(A.y - C.y) )
+
+     P is in triangle (including edges if
+
+     0 <= [la, lb, lc] <= 1
+
+     The interpolation of P.z is
+
+     P.z = la * A.z + lb * B.z + lc * C.z
+
+   To speed up localisation of points (to see to which triangle belong) a grid is layed over the internal coordinate space.
+   A reference to triangle ABC is added to _all_ grid cells that include ABC's bounding box.
+   The size of the grid is defined to be 25x25
+
+   Optionally (if the compiler macro `HAS_GCAL` is defined ) the triangle findings and interpolation can be computed
+   using the GCAL library. This is however not supported when using the class within ROOT
+
    \ingroup MathCore
  */
 
@@ -73,12 +117,12 @@ class Delaunay2D  {
 public:
 
    struct Triangle {
-      double x[3];
-      double y[3];
-      UInt_t idx[3];
+      double x[3];           // x of triangle vertices
+      double y[3];           // y of triangle vertices
+      unsigned int idx[3];   // point corresponding to vertices
 
       #ifndef HAS_CGAL
-      double invDenom; //see comment below in CGAL fall back section
+      double invDenom; // cached inv denominator for computing barycentric coordinates (see above)
       #endif
    };
 
@@ -92,16 +136,17 @@ public:
    /// set the input points for building the graph
    void SetInputPoints(int n, const double *x, const double * y, const double * z, double xmin=0, double xmax=0, double ymin=0, double ymax=0);
 
-   /// Return the Interpolated z value corresponding to the given (x,y) point
+   /// Return the Interpolated z value corresponding to the given (x,y) point.
    /// Note that in case no Delaunay triangles are found, for example when the
-   /// points are aligned, then a default value of zero is always return
+   /// points are aligned, then a default value of zero is always return.
+   /// See the class documentation for  how the interpolation is computed.
    double  Interpolate(double x, double y);
 
    /// Find all triangles
    void      FindAllTriangles();
 
    /// return the number of triangles
-   Int_t     NumberOfTriangles() const {return fNdt;}
+   int    NumberOfTriangles() const {return fNdt;}
 
    double  XMin() const {return fXNmin;}
    double  XMax() const {return fXNmax;}
@@ -128,7 +173,8 @@ private:
       return (x+offset)*factor;
    }
 
-   /// internal function to normalize the points
+   /// internal function to normalize the points.
+   /// See the class documentation for the details on how it is computed.
    void DoNormalizePoints();
 
    /// internal function to find the triangle
@@ -147,8 +193,8 @@ private:
 
 protected:
 
-   Int_t       fNdt;           ///<! Number of Delaunay triangles found
-   Int_t       fNpoints;       ///<! Number of data points
+   int         fNdt;           ///<! Number of Delaunay triangles found
+   int         fNpoints;       ///<! Number of data points
 
    const double   *fX;         ///<! Pointer to X array (managed externally)
    const double   *fY;         ///<! Pointer to Y array
@@ -167,21 +213,38 @@ protected:
 
    double    fZout;            ///<! Height for points lying outside the convex hull
 
-#ifdef THREAD_SAFE
-
-   enum class Initialization : char {UNINITIALIZED, INITIALIZING, INITIALIZED};
-   std::atomic<Initialization> fInit; ///<! Indicate initialization state
-
-#else
-   Bool_t      fInit;          ///<! True if FindAllTriangles() has been performed
-#endif
+   bool      fInit;            ///<! True if FindAllTriangles() has been performed
 
 
    Triangles   fTriangles;     ///<! Triangles of Triangulation
 
-#ifdef HAS_CGAL
+#ifndef HAS_CGAL
 
-   //Functor class for accessing the function values/gradients
+   //using triangle library
+
+   std::vector<double> fXN; ///<! normalized X
+   std::vector<double> fYN; ///<! normalized Y
+
+   static const int fNCells = 25; ///<! number of cells to divide the normalized space
+   double fXCellStep; ///<! inverse denominator to calculate X cell = fNCells / (fXNmax - fXNmin)
+   double fYCellStep; ///<! inverse denominator to calculate X cell = fNCells / (fYNmax - fYNmin)
+   std::set<unsigned int> fCells[(fNCells+1)*(fNCells+1)]; ///<! grid cells with containing triangles
+
+   inline unsigned int Cell(unsigned int x, unsigned int y) const {
+      return x*(fNCells+1) + y;
+   }
+
+   inline int CellX(double x) const {
+      return (x - fXNmin) * fXCellStep;
+   }
+
+   inline int CellY(double y) const {
+      return (y - fYNmin) * fYCellStep;
+   }
+
+#else // HAS_CGAL
+      // case of using GCAL
+      //Functor class for accessing the function values/gradients
       template< class PointWithInfoMap, typename ValueType >
       struct Data_access : public std::unary_function< typename PointWithInfoMap::key_type,
                 std::pair<ValueType, bool> >
@@ -214,71 +277,6 @@ protected:
 
    Delaunay fCGALdelaunay; //! CGAL delaunay triangulation object
    PointWithInfoMap fNormalizedPoints; //! Normalized function values
-
-#else // HAS_CGAL
-   //fallback to triangle library
-
-   /* Using barycentric coordinates for inTriangle test and interpolation
-    *
-    * Given triangle ABC and point P, P can be expressed by
-    *
-    * P.x = la * A.x + lb * B.x + lc * C.x
-    * P.y = la * A.y + lb * B.y + lc * C.y
-    *
-    * with lc = 1 - la - lb
-    *
-    * P.x = la * A.x + lb * B.x + (1-la-lb) * C.x
-    * P.y = la * A.y + lb * B.y + (1-la-lb) * C.y
-    *
-    * Rearranging yields
-    *
-    * la * (A.x - C.x) + lb * (B.x - C.x) = P.x - C.x
-    * la * (A.y - C.y) + lb * (B.y - C.y) = P.y - C.y
-    *
-    * Thus
-    *
-    * la = ( (B.y - C.y)*(P.x - C.x) + (C.x - B.x)*(P.y - C.y) ) / ( (B.y - C.y)*(A.x - C.x) + (C.x - B.x)*(A.y - C.y) )
-    * lb = ( (C.y - A.y)*(P.x - C.x) + (A.x - C.x)*(P.y - C.y) ) / ( (B.y - C.y)*(A.x - C.x) + (C.x - B.x)*(A.y - C.y) )
-    * lc = 1 - la - lb
-    *
-    * We save the inverse denominator to speedup computation
-    *
-    * invDenom = 1 / ( (B.y - C.y)*(A.x - C.x) + (C.x - B.x)*(A.y - C.y) )
-    *
-    * P is in triangle (including edges if
-    *
-    * 0 <= [la, lb, lc] <= 1
-    *
-    * The interpolation of P.z is
-    *
-    * P.z = la * A.z + lb * B.z + lc * C.z
-    *
-    */
-
-   std::vector<double> fXN; ///<! normalized X
-   std::vector<double> fYN; ///<! normalized Y
-
-   /* To speed up localisation of points a grid is layed over normalized space
-    *
-    * A reference to triangle ABC is added to _all_ grid cells that include ABC's bounding box
-    */
-
-   static const int fNCells = 25; ///<! number of cells to divide the normalized space
-   double fXCellStep; ///<! inverse denominator to calculate X cell = fNCells / (fXNmax - fXNmin)
-   double fYCellStep; ///<! inverse denominator to calculate X cell = fNCells / (fYNmax - fYNmin)
-   std::set<UInt_t> fCells[(fNCells+1)*(fNCells+1)]; ///<! grid cells with containing triangles
-
-   inline unsigned int Cell(UInt_t x, UInt_t y) const {
-      return x*(fNCells+1) + y;
-   }
-
-   inline int CellX(double x) const {
-      return (x - fXNmin) * fXCellStep;
-   }
-
-   inline int CellY(double y) const {
-      return (y - fYNmin) * fYCellStep;
-   }
 
 #endif //HAS_CGAL
 
