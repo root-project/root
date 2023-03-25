@@ -244,7 +244,7 @@ jobs:
 
           - image: ubuntu22
             config: Debug
-            overrides: ["LLVM_BUILD_TYPE=Debug", "imt=Off"]
+            overrides: ["imt=Off"]
 
     runs-on:
       - self-hosted
