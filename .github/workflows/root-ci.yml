@@ -81,7 +81,7 @@ jobs:
           - image: fedora37
             config: Debug
 
-          - image: centos8
+          - image: alma8
             config: Release
 
           - image: ubuntu20
