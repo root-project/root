@@ -93,7 +93,7 @@ jobs:
 
           - image: ubuntu22
             config: Debug
-            overrides: ["LLVM_BUILD_TYPE=Debug", "imt=Off"]
+            overrides: ["imt=Off"]
 
     runs-on: [self-hosted, linux, x64]
     name: ${{ matrix.image }} ${{ matrix.config }} ${{ join( matrix.overrides, ', ' ) }}
