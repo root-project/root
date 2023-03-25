@@ -804,6 +804,29 @@ public:
    void CommitCluster() final;
 };
 
+/// The field for values that may or may not be present in an entry. Parent class for unique pointer field and
+/// optional field. A nullable field cannot be instantiated itself but only its descendants.
+class RNullableField : public Detail::RFieldBase {
+protected:
+   const Detail::RFieldBase::RColumnRepresentations &GetColumnRepresentations() const final;
+   void GenerateColumnsImpl() final;
+   void GenerateColumnsImpl(const RNTupleDescriptor &) final;
+
+   std::size_t AppendNull();
+   std::size_t AppendValue(const Detail::RFieldValue &value);
+   bool IsNull(NTupleSize_t globalIndex);
+   void ReadValue(NTupleSize_t globalIndex, Detail::RFieldValue *value);
+
+   RNullableField(std::string_view fieldName, std::string_view typeName,
+                  std::unique_ptr<Detail::RFieldBase> &&itemField);
+
+public:
+   RNullableField(RNullableField &&other) = default;
+   RNullableField &operator=(RNullableField &&other) = default;
+   ~RNullableField() override = default;
+
+   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
+};
 
 /// Classes with dictionaries that can be inspected by TClass
 template <typename T, typename=void>

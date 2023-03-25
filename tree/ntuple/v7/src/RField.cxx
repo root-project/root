@@ -2321,6 +2321,45 @@ void ROOT::Experimental::RVariantField::CommitCluster()
 
 //------------------------------------------------------------------------------
 
+ROOT::Experimental::RNullableField::RNullableField(std::string_view fieldName, std::string_view typeName,
+                                                   std::unique_ptr<Detail::RFieldBase> &&itemField)
+   : ROOT::Experimental::Detail::RFieldBase(fieldName, typeName, ENTupleStructure::kVariant, false /* isSimple */)
+{
+   Attach(std::move(itemField));
+}
+
+const ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations &
+ROOT::Experimental::RNullableField::GetColumnRepresentations() const
+{
+   static RColumnRepresentations representations({{EColumnType::kBit}, {EColumnType::kSwitch}}, {});
+   return representations;
+}
+
+void ROOT::Experimental::RNullableField::GenerateColumnsImpl() {}
+
+void ROOT::Experimental::RNullableField::GenerateColumnsImpl(const RNTupleDescriptor &) {}
+
+std::size_t ROOT::Experimental::RNullableField::AppendNull()
+{
+   return 0;
+}
+
+std::size_t ROOT::Experimental::RNullableField::AppendValue(const Detail::RFieldValue &value)
+{
+   return 0;
+}
+
+bool ROOT::Experimental::RNullableField::IsNull(NTupleSize_t globalIndex) {}
+
+void ROOT::Experimental::RNullableField::ReadValue(NTupleSize_t globalIndex, Detail::RFieldValue *value) {}
+
+void ROOT::Experimental::RNullableField::AcceptVisitor(Detail::RFieldVisitor &visitor) const
+{
+   visitor.VisitNullableField(*this);
+}
+
+//------------------------------------------------------------------------------
+
 std::string ROOT::Experimental::RPairField::RPairField::GetTypeList(
    const std::array<std::unique_ptr<Detail::RFieldBase>, 2> &itemFields)
 {
