@@ -824,6 +824,9 @@ protected:
 
    std::size_t AppendNull();
    std::size_t AppendValue(const Detail::RFieldValue &value);
+   /// Given the index of the nullable field, returns the corresponding global index of the subfield or,
+   /// if it is null, returns kInvalidClusterIndex
+   RClusterIndex GetItemIndex(NTupleSize_t globalIndex);
 
    RNullableField(std::string_view fieldName, std::string_view typeName,
                   std::unique_ptr<Detail::RFieldBase> &&itemField);
@@ -841,6 +844,26 @@ public:
    void CommitCluster() final { fNWritten = 0; }
 
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
+};
+
+class RUniquePtrField : public RNullableField {
+protected:
+   std::unique_ptr<Detail::RFieldBase> CloneImpl(std::string_view newName) const final;
+   std::size_t AppendImpl(const Detail::RFieldValue &value) final;
+   void ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue *value) final;
+
+public:
+   RUniquePtrField(std::string_view fieldName, std::unique_ptr<Detail::RFieldBase> &&itemField);
+   RUniquePtrField(RUniquePtrField &&other) = default;
+   RUniquePtrField &operator=(RUniquePtrField &&other) = default;
+   ~RUniquePtrField() = default;
+
+   using Detail::RFieldBase::GenerateValue;
+   Detail::RFieldValue GenerateValue(void *where) override;
+   void DestroyValue(const Detail::RFieldValue &value, bool dtorOnly = false) final;
+   Detail::RFieldValue CaptureValue(void *where) final;
+   size_t GetValueSize() const final { return sizeof(std::unique_ptr<char>); }
+   size_t GetAlignment() const final { return alignof(std::unique_ptr<char>); }
 };
 
 /// Classes with dictionaries that can be inspected by TClass
