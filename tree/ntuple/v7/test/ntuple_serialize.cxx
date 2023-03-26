@@ -675,6 +675,8 @@ TEST(RNTuple, SerializeFooterXHeader)
    builder.AddFieldLink(0, 45);
    builder.AddColumn(18, 18, 44, RColumnModel(EColumnType::kReal32, true), 0);
    builder.AddColumn(19, 19, 45, RColumnModel(EColumnType::kInt64, true), 0);
+   // Make sure late-added fields and the corresponding columns get an on-disk ID
+   context.MapSchema(builder.GetDescriptor(), /*forHeaderExtension=*/true);
 
    auto desc = builder.MoveDescriptor();
    auto sizeFooter = RNTupleSerializer::SerializeFooterV1(nullptr, desc, context);
@@ -697,6 +699,6 @@ TEST(RNTuple, SerializeFooterXHeader)
    EXPECT_EQ(2u, xHeader->GetNPhysicalColumns());
    auto fldIdStruct = desc.FindFieldId("struct");
    EXPECT_EQ(1, fldIdStruct);
-   EXPECT_EQ(2, desc.FindFieldId("i64"));
-   EXPECT_EQ(3, desc.FindFieldId("f", fldIdStruct));
+   EXPECT_EQ(2, desc.FindFieldId("f", fldIdStruct));
+   EXPECT_EQ(3, desc.FindFieldId("i64"));
 }

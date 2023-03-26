@@ -356,10 +356,10 @@ void ROOT::Experimental::Detail::RPageSink::UpdateSchema(const RNTupleModelChang
       fOpenPageRanges.emplace_back(std::move(pageRange));
    }
 
-   // Mapping of memory to on-disk column IDs usually happens during serialization of the schema description. If the
+   // Mapping of memory to on-disk column IDs usually happens during serialization of the ntuple header. If the
    // header was already serialized, this has to be done manually as it is required for page list serialization.
    if (fSerializationContext.GetHeaderSize() > 0)
-      fSerializationContext.MapLateAddedColumns(descriptor);
+      fSerializationContext.MapSchema(descriptor, /*forHeaderExtension=*/true);
 }
 
 void ROOT::Experimental::Detail::RPageSink::Create(RNTupleModel &model)
