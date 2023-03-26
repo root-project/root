@@ -392,7 +392,39 @@ writte struct. This allows for forward and backward compatibility when the meta-
 class RNTupleDescriptor {
    friend class RNTupleDescriptorBuilder;
 
+public:
+   class RHeaderExtension;
+
 private:
+   /// The ntuple name needs to be unique in a given storage location (file)
+   std::string fName;
+   /// Free text from the user
+   std::string fDescription;
+
+   std::uint64_t fOnDiskHeaderSize = 0; ///< Set by the descriptor builder when deserialized
+   std::uint64_t fOnDiskFooterSize = 0; ///< Like fOnDiskHeaderSize, contains both cluster summaries and page locations
+
+   std::uint64_t fNEntries = 0; ///< Updated by the descriptor builder when the cluster summaries are added
+   std::uint64_t fNPhysicalColumns = 0; ///< Updated by the descriptor builder when columns are added
+
+   /**
+    * Once constructed by an RNTupleDescriptorBuilder, the descriptor is mostly immutable except for set of
+    * active the page locations.  During the lifetime of the descriptor, page location information for clusters
+    * can be added or removed.  When this happens, the generation should be increased, so that users of the
+    * descriptor know that the information changed.  The generation is increased, e.g., by the page source's
+    * exclusive lock guard around the descriptor.  It is used, e.g., by the descriptor cache in RNTupleReader.
+    */
+   std::uint64_t fGeneration = 0;
+
+   std::unordered_map<DescriptorId_t, RFieldDescriptor> fFieldDescriptors;
+   std::unordered_map<DescriptorId_t, RColumnDescriptor> fColumnDescriptors;
+   std::unordered_map<DescriptorId_t, RClusterGroupDescriptor> fClusterGroupDescriptors;
+   /// May contain only a subset of all the available clusters, e.g. the clusters of the current file
+   /// from a chain of files
+   std::unordered_map<DescriptorId_t, RClusterDescriptor> fClusterDescriptors;
+   std::unique_ptr<RHeaderExtension> fHeaderExtension;
+
+public:
    // clang-format off
    /**
    \class ROOT::Experimental::RNTupleDescriptor::RHeaderExtension
@@ -427,35 +459,6 @@ private:
       std::vector<DescriptorId_t> GetTopLevelFields(const RNTupleDescriptor &desc) const;
    };
 
-   /// The ntuple name needs to be unique in a given storage location (file)
-   std::string fName;
-   /// Free text from the user
-   std::string fDescription;
-
-   std::uint64_t fOnDiskHeaderSize = 0; ///< Set by the descriptor builder when deserialized
-   std::uint64_t fOnDiskFooterSize = 0; ///< Like fOnDiskHeaderSize, contains both cluster summaries and page locations
-
-   std::uint64_t fNEntries = 0; ///< Updated by the descriptor builder when the cluster summaries are added
-   std::uint64_t fNPhysicalColumns = 0; ///< Updated by the descriptor builder when columns are added
-
-   /**
-    * Once constructed by an RNTupleDescriptorBuilder, the descriptor is mostly immutable except for set of
-    * active the page locations.  During the lifetime of the descriptor, page location information for clusters
-    * can be added or removed.  When this happens, the generation should be increased, so that users of the
-    * descriptor know that the information changed.  The generation is increased, e.g., by the page source's
-    * exclusive lock guard around the descriptor.  It is used, e.g., by the descriptor cache in RNTupleReader.
-    */
-   std::uint64_t fGeneration = 0;
-
-   std::unordered_map<DescriptorId_t, RFieldDescriptor> fFieldDescriptors;
-   std::unordered_map<DescriptorId_t, RColumnDescriptor> fColumnDescriptors;
-   std::unordered_map<DescriptorId_t, RClusterGroupDescriptor> fClusterGroupDescriptors;
-   /// May contain only a subset of all the available clusters, e.g. the clusters of the current file
-   /// from a chain of files
-   std::unordered_map<DescriptorId_t, RClusterDescriptor> fClusterDescriptors;
-   std::unique_ptr<RHeaderExtension> fHeaderExtension;
-
-public:
    // clang-format off
    /**
    \class ROOT::Experimental::RNTupleDescriptor::RColumnDescriptorIterable
