@@ -41,9 +41,9 @@ void ROOT::Experimental::Detail::RPageSinkBuf::CreateImpl(const RNTupleModel &mo
    fInnerSink->Create(*fInnerModel);
 }
 
-void ROOT::Experimental::Detail::RPageSinkBuf::UpdateDescriptor(const RNTupleModelChangeset &changeset)
+void ROOT::Experimental::Detail::RPageSinkBuf::UpdateSchema(const RNTupleModelChangeset &changeset)
 {
-   RPageSink::UpdateDescriptor(changeset);
+   RPageSink::UpdateSchema(changeset);
    bool isIncremental = !fBufferedColumns.empty();
    fBufferedColumns.resize(fDescriptorBuilder.GetDescriptor().GetNPhysicalColumns());
    if (!isIncremental)
@@ -76,7 +76,7 @@ void ROOT::Experimental::Detail::RPageSinkBuf::UpdateDescriptor(const RNTupleMod
    std::transform(changeset.fAddedProjectedFields.cbegin(), changeset.fAddedProjectedFields.cend(),
                   std::back_inserter(innerChangeset.fAddedProjectedFields), cloneAddProjectedField);
    fInnerModel->Freeze();
-   fInnerSink->UpdateDescriptor(innerChangeset);
+   fInnerSink->UpdateSchema(innerChangeset);
 }
 
 ROOT::Experimental::RNTupleLocator

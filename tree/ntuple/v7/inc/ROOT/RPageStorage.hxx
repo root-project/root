@@ -268,7 +268,7 @@ public:
    void Create(RNTupleModel &model);
    /// Incorporate incremental changes to the model into the ntuple descriptor. This happens, e.g. if new fields were
    /// added after the initial call to `RPageSink::Create(RNTupleModel &)`
-   virtual void UpdateDescriptor(const RNTupleModelChangeset &changeset);
+   virtual void UpdateSchema(const RNTupleModelChangeset &changeset);
 
    /// Write a page to the storage. The column must have been added before.
    void CommitPage(ColumnHandle_t columnHandle, const RPage &page);
