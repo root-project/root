@@ -50,6 +50,7 @@ void ROOT::Experimental::Detail::RPageSinkBuf::UpdateDescriptor(const RNTupleMod
       return;
 
    // The buffered page sink maintains a copy of the RNTupleModel for the inner sink; replicate the changes there
+   // TODO(jalopezg): we should be able, in general, to simplify the buffered sink.
    auto cloneAddField = [&](const RFieldBase *field) {
       auto cloned = field->Clone(field->GetName());
       auto p = &(*cloned);
