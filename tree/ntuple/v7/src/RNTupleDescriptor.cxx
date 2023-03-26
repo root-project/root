@@ -321,7 +321,7 @@ ROOT::Experimental::RNTupleDescriptor::FindPrevClusterId(DescriptorId_t clusterI
    return kInvalidDescriptorId;
 }
 
-ROOT::Experimental::RNTupleDescriptor::RFieldDescriptorIterable
+std::vector<ROOT::Experimental::DescriptorId_t>
 ROOT::Experimental::RNTupleDescriptor::RHeaderExtension::GetTopLevelFields(const RNTupleDescriptor &desc) const
 {
    std::vector<DescriptorId_t> fields{fFields.begin(), fFields.end()};
@@ -332,7 +332,7 @@ ROOT::Experimental::RNTupleDescriptor::RHeaderExtension::GetTopLevelFields(const
                                   return desc.GetFieldDescriptor(fieldId).GetParentId() != fieldZeroId;
                                }),
                 fields.end());
-   return RFieldDescriptorIterable(desc, std::move(fields));
+   return fields;
 }
 
 ROOT::Experimental::RResult<void>

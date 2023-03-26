@@ -229,8 +229,8 @@ TEST(RFieldDescriptorBuilder, HeaderExtension)
    {
       std::string_view child_names[] = {"topLevel1", "topLevel2"};
       unsigned i = 0;
-      for (auto &child_field : xHeader->GetTopLevelFields(desc))
-         EXPECT_EQ(child_field.GetFieldName(), child_names[i++]);
+      for (auto child_field : xHeader->GetTopLevelFields(desc))
+         EXPECT_EQ(desc.GetFieldDescriptor(child_field).GetFieldName(), child_names[i++]);
    }
 }
 

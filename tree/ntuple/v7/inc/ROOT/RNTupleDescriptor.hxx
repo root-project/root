@@ -392,9 +392,6 @@ writte struct. This allows for forward and backward compatibility when the meta-
 class RNTupleDescriptor {
    friend class RNTupleDescriptorBuilder;
 
-public:
-   class RFieldDescriptorIterable;
-
 private:
    // clang-format off
    /**
@@ -426,8 +423,8 @@ private:
       std::size_t GetNFields() const { return fFields.size(); }
       std::size_t GetNLogicalColumns() const { return fNLogicalColumns; }
       std::size_t GetNPhysicalColumns() const { return fNPhysicalColumns; }
-      /// Return an iterator over the top-level fields defined in the extension header
-      RFieldDescriptorIterable GetTopLevelFields(const RNTupleDescriptor &desc) const;
+      /// Return a vector containing the IDs of the top-level fields defined in the extension header
+      std::vector<DescriptorId_t> GetTopLevelFields(const RNTupleDescriptor &desc) const;
    };
 
    /// The ntuple name needs to be unique in a given storage location (file)
@@ -518,19 +515,12 @@ public:
    */
    // clang-format on
    class RFieldDescriptorIterable {
-      friend class RNTupleDescriptor;
-
    private:
       /// The associated NTuple for this range.
       const RNTupleDescriptor& fNTuple;
       /// The descriptor ids of the child fields. These may be sorted using
       /// a comparison function.
       std::vector<DescriptorId_t> fFieldChildren = {};
-
-      RFieldDescriptorIterable(const RNTupleDescriptor &ntuple, std::vector<DescriptorId_t> &&fields)
-         : fNTuple(ntuple), fFieldChildren(fields)
-      {
-      }
 
    public:
       class RIterator {
