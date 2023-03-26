@@ -57,8 +57,8 @@ public:
       Nd &operator*() const { return it->current(); }
       Nd &operator->() const { return it->current(); }
 
-      bool operator!=(const child_iterator_t &that) const { return !this->it->equal(*that.it); }
-      bool operator==(const child_iterator_t &that) const { return this->it->equal(*that.it); }
+      friend bool operator!=(child_iterator_t const &lhs, child_iterator_t const &rhs) { return !lhs.it->equal(*rhs.it); }
+      friend bool operator==(child_iterator_t const &lhs, child_iterator_t const &rhs) { return lhs.it->equal(*rhs.it); }
    };
 
    using child_iterator = child_iterator_t<JSONNode>;

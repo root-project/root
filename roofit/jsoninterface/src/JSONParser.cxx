@@ -336,7 +336,9 @@ public:
    }
    bool equal(const typename child_iterator::Impl &other) const override
    {
-      auto it = dynamic_cast<const ChildItImpl<Nd, NdType, json_it> *>(&other);
+      // We can use static_cast here because we never compare Iterators for
+      // different JSON node types.
+      auto it = static_cast<const ChildItImpl<Nd, NdType, json_it> *>(&other);
       return it && it->iter == this->iter;
    }
 
