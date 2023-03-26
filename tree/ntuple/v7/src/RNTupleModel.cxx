@@ -342,6 +342,13 @@ std::unique_ptr<ROOT::Experimental::REntry> ROOT::Experimental::RNTupleModel::Cr
    return entry;
 }
 
+void ROOT::Experimental::RNTupleModel::Unfreeze()
+{
+   if (!IsFrozen())
+      throw RException(R__FAIL("invalid attempt to unfreeze an unfrozen model"));
+   fModelId = 0;
+}
+
 void ROOT::Experimental::RNTupleModel::Freeze()
 {
    if (IsFrozen())

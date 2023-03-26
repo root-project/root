@@ -302,7 +302,7 @@ public:
    const RProjectedFields &GetProjectedFields() const { return *fProjectedFields; }
 
    void Freeze();
-   void Unfreeze() { fModelId = 0; }
+   void Unfreeze();
    bool IsFrozen() const { return fModelId != 0; }
    std::uint64_t GetModelId() const { return fModelId; }
 
