@@ -163,7 +163,8 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleModel::RIncremental
 {
    auto fieldp = field.get();
    auto result = fOpenChangeset.fModel.AddProjectedField(std::move(field), mapping);
-   fOpenChangeset.fAddedProjectedFields.emplace_back(fieldp);
+   if (result)
+      fOpenChangeset.fAddedProjectedFields.emplace_back(fieldp);
    return R__FORWARD_RESULT(result);
 }
 
