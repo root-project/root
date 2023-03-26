@@ -2328,6 +2328,13 @@ ROOT::Experimental::RNullableField::RNullableField(std::string_view fieldName, s
    Attach(std::move(itemField));
 }
 
+ROOT::Experimental::RNullableField::~RNullableField()
+{
+   if (fDefaultItemValue.GetField()) {
+      fDefaultItemValue.GetField()->DestroyValue(fDefaultItemValue);
+   }
+}
+
 const ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations &
 ROOT::Experimental::RNullableField::GetColumnRepresentations() const
 {
@@ -2335,23 +2342,69 @@ ROOT::Experimental::RNullableField::GetColumnRepresentations() const
    return representations;
 }
 
-void ROOT::Experimental::RNullableField::GenerateColumnsImpl() {}
+void ROOT::Experimental::RNullableField::GenerateColumnsImpl()
+{
+   if (HasDefaultColumnRepresentative()) {
+      if (fSubFields[0]->GetValueSize() > sizeof(RColumnSwitch)) {
+         SetColumnRepresentative({EColumnType::kSwitch});
+      }
+   }
+   switch (GetColumnRepresentative()[0]) {
+   case EColumnType::kBit:
+      fDefaultItemValue = fSubFields[0]->GenerateValue();
+      fColumns.emplace_back(Detail::RColumn::Create<bool>(RColumnModel(EColumnType::kBit), 0));
+      break;
+   case EColumnType::kSwitch:
+      fColumns.emplace_back(Detail::RColumn::Create<RColumnSwitch>(RColumnModel(EColumnType::kSwitch), 0));
+      break;
+   default: throw RException(R__FAIL("internal error: invalid column type for nullable field"));
+   }
+}
 
-void ROOT::Experimental::RNullableField::GenerateColumnsImpl(const RNTupleDescriptor &) {}
+void ROOT::Experimental::RNullableField::GenerateColumnsImpl(const RNTupleDescriptor &desc)
+{
+   auto onDiskTypes = EnsureCompatibleColumnTypes(desc);
+   switch (onDiskTypes[0]) {
+   case EColumnType::kBit:
+      fColumns.emplace_back(Detail::RColumn::Create<bool>(RColumnModel(EColumnType::kBit), 0));
+      break;
+   case EColumnType::kSwitch:
+      fColumns.emplace_back(Detail::RColumn::Create<RColumnSwitch>(RColumnModel(EColumnType::kSwitch), 0));
+      break;
+   default: throw RException(R__FAIL("internal error: invalid column type for nullable field"));
+   }
+}
 
 std::size_t ROOT::Experimental::RNullableField::AppendNull()
 {
-   return 0;
+   if (IsDense()) {
+      bool mask = false;
+      Detail::RColumnElement<bool> maskElement(&mask);
+      fColumns[0]->Append(maskElement);
+      return 1 + fSubFields[0]->Append(fDefaultItemValue);
+   } else {
+      RColumnSwitch switchValue(ClusterSize_t(0), 0);
+      Detail::RColumnElement<RColumnSwitch> switchElement(&switchValue);
+      fColumns[0]->Append(switchElement);
+      return sizeof(RColumnSwitch);
+   }
 }
 
 std::size_t ROOT::Experimental::RNullableField::AppendValue(const Detail::RFieldValue &value)
 {
-   return 0;
+   auto nbytesItem = fSubFields[0]->Append(value);
+   if (IsDense()) {
+      bool mask = true;
+      Detail::RColumnElement<bool> maskElement(&mask);
+      fColumns[0]->Append(maskElement);
+      return 1 + nbytesItem;
+   } else {
+      RColumnSwitch switchValue(ClusterSize_t(fNWritten++), 1);
+      Detail::RColumnElement<RColumnSwitch> switchElement(&switchValue);
+      fColumns[0]->Append(switchElement);
+      return sizeof(RColumnSwitch) + nbytesItem;
+   }
 }
-
-bool ROOT::Experimental::RNullableField::IsNull(NTupleSize_t globalIndex) {}
-
-void ROOT::Experimental::RNullableField::ReadValue(NTupleSize_t globalIndex, Detail::RFieldValue *value) {}
 
 void ROOT::Experimental::RNullableField::AcceptVisitor(Detail::RFieldVisitor &visitor) const
 {
