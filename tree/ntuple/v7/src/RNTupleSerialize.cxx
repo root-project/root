@@ -1175,7 +1175,7 @@ ROOT::Experimental::Internal::RNTupleSerializer::DeserializeSchemaDescription(co
       R__LOG_WARNING(NTupleLog()) << "Extra type information is still unsupported! ";
    bytes = frame + frameSize;
 
-   return bytes - reinterpret_cast<const unsigned char *>(buffer);
+   return bytes - base;
 }
 
 ROOT::Experimental::Internal::RNTupleSerializer::RContext
