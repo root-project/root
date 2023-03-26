@@ -309,7 +309,7 @@ ROOT::Experimental::Detail::RPageSink::AddColumn(DescriptorId_t fieldId, const R
    return ColumnHandle_t{columnId, &column};
 }
 
-void ROOT::Experimental::Detail::RPageSink::UpdateDescriptor(const RNTupleModelChangeset &changeset)
+void ROOT::Experimental::Detail::RPageSink::UpdateSchema(const RNTupleModelChangeset &changeset)
 {
    const auto &descriptor = fDescriptorBuilder.GetDescriptor();
    auto addField = [&](RFieldBase &f) {
@@ -377,7 +377,7 @@ void ROOT::Experimental::Detail::RPageSink::Create(RNTupleModel &model)
       initialChangeset.fAddedFields.emplace_back(f);
    for (auto f : model.GetProjectedFields().GetFieldZero()->GetSubFields())
       initialChangeset.fAddedProjectedFields.emplace_back(f);
-   UpdateDescriptor(initialChangeset);
+   UpdateSchema(initialChangeset);
 
    fSerializationContext = Internal::RNTupleSerializer::SerializeHeaderV1(nullptr, descriptor);
    auto buffer = std::make_unique<unsigned char[]>(fSerializationContext.GetHeaderSize());
