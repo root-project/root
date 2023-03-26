@@ -68,7 +68,7 @@ std::uint32_t SerializeFieldV1(const ROOT::Experimental::RFieldDescriptor &field
 std::uint32_t SerializeFieldList(const ROOT::Experimental::RNTupleDescriptor &desc,
                                  std::span<const ROOT::Experimental::DescriptorId_t> fieldList,
                                  std::size_t firstOnDiskId,
-                                 ROOT::Experimental::Internal::RNTupleSerializer::RContext &context, void *buffer)
+                                 const ROOT::Experimental::Internal::RNTupleSerializer::RContext &context, void *buffer)
 {
    auto base = reinterpret_cast<unsigned char *>(buffer);
    auto pos = base;
@@ -160,7 +160,8 @@ RResult<std::uint32_t> DeserializeFieldV1(
 
 std::uint32_t SerializeColumnListV1(const ROOT::Experimental::RNTupleDescriptor &desc,
                                     std::span<const ROOT::Experimental::DescriptorId_t> fieldList,
-                                    ROOT::Experimental::Internal::RNTupleSerializer::RContext &context, void *buffer)
+                                    const ROOT::Experimental::Internal::RNTupleSerializer::RContext &context,
+                                    void *buffer)
 {
    using RColumnElementBase = ROOT::Experimental::Detail::RColumnElementBase;
 
@@ -277,7 +278,8 @@ void DeserializeLocatorPayloadObject64(const unsigned char *buffer, ROOT::Experi
 
 std::uint32_t SerializeAliasColumnList(const ROOT::Experimental::RNTupleDescriptor &desc,
                                        std::span<const ROOT::Experimental::DescriptorId_t> fieldList,
-                                       ROOT::Experimental::Internal::RNTupleSerializer::RContext &context, void *buffer)
+                                       const ROOT::Experimental::Internal::RNTupleSerializer::RContext &context,
+                                       void *buffer)
 {
    auto base = reinterpret_cast<unsigned char *>(buffer);
    auto pos = base;
@@ -1009,9 +1011,10 @@ void ROOT::Experimental::Internal::RNTupleSerializer::RContext::MapSchema(const 
       BeginHeaderExtension();
 }
 
-std::uint32_t
-ROOT::Experimental::Internal::RNTupleSerializer::SerializeSchemaDescription(void *buffer, const RNTupleDescriptor &desc,
-                                                                            RContext &context, bool forHeaderExtension)
+std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeSchemaDescription(void *buffer,
+                                                                                          const RNTupleDescriptor &desc,
+                                                                                          const RContext &context,
+                                                                                          bool forHeaderExtension)
 {
    auto base = reinterpret_cast<unsigned char *>(buffer);
    auto pos = base;
@@ -1252,7 +1255,7 @@ std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializePageList
 std::uint32_t
 ROOT::Experimental::Internal::RNTupleSerializer::SerializeFooterV1(void *buffer,
                                                                    const ROOT::Experimental::RNTupleDescriptor &desc,
-                                                                   RContext &context)
+                                                                   const RContext &context)
 {
    auto base = reinterpret_cast<unsigned char *>(buffer);
    auto pos = base;

@@ -234,7 +234,7 @@ public:
 
    /// Serialize the schema description in `desc` into `buffer`. If `forHeaderExtension` is true, serialize only the
    /// fields and columns tagged as part of the header extension (see `RNTupleDescriptorBuilder::BeginHeaderExtension`).
-   static std::uint32_t SerializeSchemaDescription(void *buffer, const RNTupleDescriptor &desc, RContext &context,
+   static std::uint32_t SerializeSchemaDescription(void *buffer, const RNTupleDescriptor &desc, const RContext &context,
                                                    bool forHeaderExtension = false);
    static RResult<std::uint32_t>
    DeserializeSchemaDescription(const void *buffer, std::uint32_t bufSize, RNTupleDescriptorBuilder &descBuilder);
@@ -244,7 +244,7 @@ public:
                                             const RNTupleDescriptor &desc,
                                             std::span<DescriptorId_t> physClusterIDs,
                                             const RContext &context);
-   static std::uint32_t SerializeFooterV1(void *buffer, const RNTupleDescriptor &desc, RContext &context);
+   static std::uint32_t SerializeFooterV1(void *buffer, const RNTupleDescriptor &desc, const RContext &context);
 
    static RResult<void> DeserializeHeaderV1(const void *buffer,
                                             std::uint32_t bufSize,
