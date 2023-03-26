@@ -98,6 +98,7 @@ public:
       std::vector<DescriptorId_t> fOnDisk2MemColumnIDs;
       std::vector<DescriptorId_t> fOnDisk2MemClusterIDs;
       std::vector<DescriptorId_t> fOnDisk2MemClusterGroupIDs;
+      std::size_t fHeaderExtensionOffset = -1U;
 
    public:
       void SetHeaderSize(std::uint32_t size) { fHeaderSize = size; }
@@ -139,6 +140,7 @@ public:
       /// during header serialization.  This function must be manually called after an incremental schema update as page
       /// list serialization requires all columns to be mapped.
       void MapSchema(const RNTupleDescriptor &desc, bool forHeaderExtension);
+
       DescriptorId_t GetOnDiskFieldId(DescriptorId_t memId) const { return fMem2OnDiskFieldIDs.at(memId); }
       DescriptorId_t GetOnDiskColumnId(DescriptorId_t memId) const { return fMem2OnDiskColumnIDs.at(memId); }
       DescriptorId_t GetOnDiskClusterId(DescriptorId_t memId) const { return fMem2OnDiskClusterIDs.at(memId); }
@@ -153,6 +155,14 @@ public:
       {
          return fOnDisk2MemClusterGroupIDs[onDiskId];
       }
+
+      /// Return a vector containing the in-memory field ID for each on-disk counterpart, in order, i.e. the `i`-th
+      /// value corresponds to the in-memory field ID for `i`-th on-disk ID
+      const std::vector<DescriptorId_t> &GetOnDiskFieldList() const { return fOnDisk2MemFieldIDs; }
+      /// Mark the first on-disk field ID that is part of the schema extension
+      void BeginHeaderExtension() { fHeaderExtensionOffset = fOnDisk2MemFieldIDs.size(); }
+      /// Return the offset of the first element in `fOnDisk2MemFieldIDs` that is part of the schema extension
+      std::size_t GetHeaderExtensionOffset() const { return fHeaderExtensionOffset; }
    };
 
    /// Writes a CRC32 checksum of the byte range given by data and length.
