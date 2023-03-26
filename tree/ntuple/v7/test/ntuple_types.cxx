@@ -467,6 +467,7 @@ TEST(RNTuple, Bitset)
 
    auto f1 = model->MakeField<std::bitset<66>>("f1");
    EXPECT_EQ(std::string("std::bitset<66>"), model->GetField("f1")->GetType());
+   EXPECT_EQ(sizeof(std::bitset<66>), model->GetField("f1")->GetValueSize());
    auto f2 = model->MakeField<std::bitset<8>>("f2", "10101010");
 
    {

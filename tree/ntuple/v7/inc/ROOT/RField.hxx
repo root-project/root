@@ -719,6 +719,10 @@ public:
 /// TODO(jblomer): reading and writing efficiency should be improved; currently it is one bit at a time
 /// with an array of bools on the page level.
 class RBitsetField : public Detail::RFieldBase {
+   using Word_t = unsigned long;
+   static constexpr std::size_t kWordSize = sizeof(Word_t);
+   static constexpr std::size_t kBitsPerWord = kWordSize * 8;
+
 protected:
    std::size_t fN;
 
@@ -749,10 +753,11 @@ public:
    {
       return Detail::RFieldValue(true /* captureFlag */, this, where);
    }
-   size_t GetValueSize() const final { return (fN + sizeof(unsigned long) * 8 - 1) / 8; }
-   size_t GetAlignment() const final { return alignof(unsigned long); }
+   size_t GetValueSize() const final { return kWordSize * (fN + kBitsPerWord - 1) / kBitsPerWord; }
+   size_t GetAlignment() const final { return alignof(Word_t); }
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
 
+   /// Get the number of bits in the bitset, i.e. the N in std::bitset<N>
    std::size_t GetN() const { return fN; }
 };
 
