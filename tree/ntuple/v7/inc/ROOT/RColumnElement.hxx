@@ -97,6 +97,7 @@ void ByteSwapIfNecessary(T &value)
 template <typename DestT, typename SourceT>
 static void CastPack(void *destination, const void *source, std::size_t count)
 {
+   static_assert(std::is_convertible_v<SourceT, DestT>);
    auto dst = reinterpret_cast<DestT *>(destination);
    auto src = reinterpret_cast<const SourceT *>(source);
    for (std::size_t i = 0; i < count; ++i) {
@@ -158,9 +159,9 @@ static void CastSplitUnpack(void *destination, const void *source, std::size_t c
    }
 }
 
-/// \brief Packing of index columns with delta + split encoding
+/// \brief Packing of columns with delta + split encoding
 ///
-/// Apply split encoding to delta-encoded index values
+/// Apply split encoding to delta-encoded values, currently used only for index columns
 template <typename DestT, typename SourceT>
 static void CastDeltaSplitPack(void *destination, const void *source, std::size_t count)
 {
@@ -178,7 +179,7 @@ static void CastDeltaSplitPack(void *destination, const void *source, std::size_
 
 /// \brief Unsplit and unwind delta encoding
 ///
-/// Unsplit an index column and reverse the delta encoding
+/// Unsplit a column and reverse the delta encoding, currently used only for index columns
 template <typename DestT, typename SourceT>
 static void CastDeltaSplitUnpack(void *destination, const void *source, std::size_t count)
 {
@@ -664,7 +665,6 @@ public:
 template <>
 class RColumnElement<std::int64_t, EColumnType::kInt32> : public RColumnElementCastLE<std::int64_t, std::int32_t> {
 public:
-   static constexpr bool kIsMappable = false;
    static constexpr std::size_t kSize = sizeof(std::int64_t);
    static constexpr std::size_t kBitsOnStorage = 32;
    explicit RColumnElement(std::int64_t *value) : RColumnElementCastLE(value, kSize) {}
@@ -676,7 +676,6 @@ template <>
 class RColumnElement<std::int64_t, EColumnType::kSplitInt32>
    : public RColumnElementSplitLE<std::int64_t, std::int32_t> {
 public:
-   static constexpr bool kIsMappable = false;
    static constexpr std::size_t kSize = sizeof(std::int64_t);
    static constexpr std::size_t kBitsOnStorage = 32;
    explicit RColumnElement(std::int64_t *value) : RColumnElementSplitLE(value, kSize) {}
@@ -748,7 +747,6 @@ public:
 template <>
 class RColumnElement<ClusterSize_t, EColumnType::kIndex32> : public RColumnElementCastLE<std::uint64_t, std::uint32_t> {
 public:
-   static constexpr bool kIsMappable = false;
    static constexpr std::size_t kSize = sizeof(ClusterSize_t);
    static constexpr std::size_t kBitsOnStorage = 32;
    explicit RColumnElement(ClusterSize_t *value) : RColumnElementCastLE(value, kSize) {}
