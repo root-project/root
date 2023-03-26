@@ -396,6 +396,13 @@ public:
    class RFieldDescriptorIterable;
 
 private:
+   // clang-format off
+   /**
+   \class ROOT::Experimental::RNTupleDescriptor::RHeaderExtension
+   \ingroup NTuple
+   \brief Summarizes information about fields and the corresponding columns that were added after the header has been serialized
+   */
+   // clang-format on
    class RHeaderExtension {
       friend class RNTupleDescriptorBuilder;
 

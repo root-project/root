@@ -104,6 +104,8 @@ public:
       std::uint32_t GetHeaderSize() const { return fHeaderSize; }
       void SetHeaderCRC32(std::uint32_t crc32) { fHeaderCrc32 = crc32; }
       std::uint32_t GetHeaderCRC32() const { return fHeaderCrc32; }
+      /// Map an in-memory field ID to its on-disk counterpart. It is allowed to call this function multiple times for
+      /// the same `memId`, in which case the return value is the on-disk ID assigned on the first call.
       DescriptorId_t MapFieldId(DescriptorId_t memId) {
          auto onDiskId = fOnDisk2MemFieldIDs.size();
          const auto &p = fMem2OnDiskFieldIDs.try_emplace(memId, onDiskId);
@@ -111,6 +113,8 @@ public:
             fOnDisk2MemFieldIDs.push_back(memId);
          return (*p.first).second;
       }
+      /// Map an in-memory column ID to its on-disk counterpart. It is allowed to call this function multiple times for
+      /// the same `memId`, in which case the return value is the on-disk ID assigned on the first call.
       DescriptorId_t MapColumnId(DescriptorId_t memId) {
          auto onDiskId = fOnDisk2MemColumnIDs.size();
          const auto &p = fMem2OnDiskColumnIDs.try_emplace(memId, onDiskId);

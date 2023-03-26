@@ -53,7 +53,9 @@ You will not normally use this directly; see `RNTupleModel::RIncrementalUpdater`
 // clang-format on
 struct RNTupleModelChangeset {
    RNTupleModel &fModel;
+   /// Points to the fields in fModel that were added as part of an updater transaction
    std::vector<RFieldBase *> fAddedFields;
+   /// Points to the projected fields in fModel that were added as part of an updater transaction
    std::vector<RFieldBase *> fAddedProjectedFields;
 
    RNTupleModelChangeset(RNTupleModel &model) : fModel(model) {}
@@ -130,7 +132,7 @@ public:
       bool IsEmpty() const { return fFieldZero->begin() == fFieldZero->end(); }
    };
 
-   /// A model is usually immutable after giving up on it, e.g. to construct a `RNTupleWriter`. However, for the rare
+   /// A model is usually immutable after passing it to an `RNTupleWriter`. However, for the rare
    /// cases that require changing the model after the fact, `RIncrementalUpdater` provides limited support for
    /// incremental updates, e.g. addition of new fields.
    ///
