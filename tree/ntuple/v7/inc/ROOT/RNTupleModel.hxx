@@ -48,7 +48,7 @@ namespace Detail {
 
 Represents a set of alterations to a `RNTupleModel` that happened after the model is used to initialize a `RPageSink`
 instance. This object can be used to communicate metadata updates to a `RPageSink`.
-You will not normally use this directly; see `RNTupleModel::RIncrementalUpdater` instead.
+You will not normally use this directly; see `RNTupleModel::RUpdater` instead.
 */
 // clang-format on
 struct RNTupleModelChangeset {
@@ -133,21 +133,21 @@ public:
    };
 
    /// A model is usually immutable after passing it to an `RNTupleWriter`. However, for the rare
-   /// cases that require changing the model after the fact, `RIncrementalUpdater` provides limited support for
+   /// cases that require changing the model after the fact, `RUpdater` provides limited support for
    /// incremental updates, e.g. addition of new fields.
    ///
-   /// See `RNTupleWriter::GetIncrementalModelUpdater()` for an example.
-   class RIncrementalUpdater {
+   /// See `RNTupleWriter::GetModelUpdater()` for an example.
+   class RUpdater {
       friend class RNTupleWriter;
 
    private:
       RNTupleWriter &fWriter;
       Detail::RNTupleModelChangeset fOpenChangeset;
 
-      RIncrementalUpdater(RNTupleWriter &writer);
+      RUpdater(RNTupleWriter &writer);
 
    public:
-      ~RIncrementalUpdater() { CommitUpdate(); }
+      ~RUpdater() { CommitUpdate(); }
       /// Begin a new set of alterations to the underlying model. As a side effect, all `REntry` instances related to
       /// the model are invalidated.
       void BeginUpdate();
