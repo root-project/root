@@ -138,15 +138,12 @@ public:
    ///
    /// See `RNTupleWriter::GetModelUpdater()` for an example.
    class RUpdater {
-      friend class RNTupleWriter;
-
    private:
       RNTupleWriter &fWriter;
       Detail::RNTupleModelChangeset fOpenChangeset;
 
-      RUpdater(RNTupleWriter &writer);
-
    public:
+      explicit RUpdater(RNTupleWriter &writer);
       ~RUpdater() { CommitUpdate(); }
       /// Begin a new set of alterations to the underlying model. As a side effect, all `REntry` instances related to
       /// the model are invalidated.
