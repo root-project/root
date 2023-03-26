@@ -155,11 +155,16 @@ std::string GetNormalizedType(const std::string &typeName) {
    if (translatedType != typeTranslationMap.end())
       normalizedType = translatedType->second;
 
-   if (normalizedType.substr(0, 7) == "vector<") normalizedType = "std::" + normalizedType;
-   if (normalizedType.substr(0, 6) == "array<") normalizedType = "std::" + normalizedType;
-   if (normalizedType.substr(0, 8) == "variant<") normalizedType = "std::" + normalizedType;
-   if (normalizedType.substr(0, 5) == "pair<") normalizedType = "std::" + normalizedType;
-   if (normalizedType.substr(0, 6) == "tuple<") normalizedType = "std::" + normalizedType;
+   if (normalizedType.substr(0, 7) == "vector<")
+      normalizedType = "std::" + normalizedType;
+   if (normalizedType.substr(0, 6) == "array<")
+      normalizedType = "std::" + normalizedType;
+   if (normalizedType.substr(0, 8) == "variant<")
+      normalizedType = "std::" + normalizedType;
+   if (normalizedType.substr(0, 5) == "pair<")
+      normalizedType = "std::" + normalizedType;
+   if (normalizedType.substr(0, 6) == "tuple<")
+      normalizedType = "std::" + normalizedType;
    if (normalizedType.substr(0, 7) == "bitset<")
       normalizedType = "std::" + normalizedType;
 
@@ -2100,14 +2105,13 @@ void ROOT::Experimental::RBitsetField::GenerateColumnsImpl(const RNTupleDescript
 
 std::size_t ROOT::Experimental::RBitsetField::AppendImpl(const Detail::RFieldValue &value)
 {
-   constexpr auto nBitsULong = sizeof(unsigned long) * 8;
-   const auto *asULongArray = value.Get<unsigned long>();
+   const auto *asULongArray = value.Get<Word_t>();
    bool elementValue;
    Detail::RColumnElement<bool> element(&elementValue);
    std::size_t i = 0;
-   for (std::size_t word = 0; word < (fN + nBitsULong - 1) / nBitsULong; ++word) {
-      for (std::size_t mask = 0; (mask < nBitsULong) && (i < fN); ++mask, ++i) {
-         elementValue = (asULongArray[word] & (static_cast<unsigned long>(1) << mask)) != 0;
+   for (std::size_t word = 0; word < (fN + kBitsPerWord - 1) / kBitsPerWord; ++word) {
+      for (std::size_t mask = 0; (mask < kBitsPerWord) && (i < fN); ++mask, ++i) {
+         elementValue = (asULongArray[word] & (static_cast<Word_t>(1) << mask)) != 0;
          fColumns[0]->Append(element);
       }
    }
@@ -2116,15 +2120,14 @@ std::size_t ROOT::Experimental::RBitsetField::AppendImpl(const Detail::RFieldVal
 
 void ROOT::Experimental::RBitsetField::ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue *value)
 {
-   constexpr auto nBitsULong = sizeof(unsigned long) * 8;
-   auto *asULongArray = value->Get<unsigned long>();
+   auto *asULongArray = value->Get<Word_t>();
    bool elementValue;
    Detail::RColumnElement<bool> element(&elementValue);
    for (std::size_t i = 0; i < fN; ++i) {
       fColumns[0]->Read(globalIndex * fN + i, &element);
-      unsigned long mask = static_cast<unsigned long>(1) << (i % nBitsULong);
-      unsigned long bit = static_cast<unsigned long>(elementValue) << (i % nBitsULong);
-      asULongArray[i / nBitsULong] = (asULongArray[i / nBitsULong] & ~mask) | bit;
+      Word_t mask = static_cast<Word_t>(1) << (i % kBitsPerWord);
+      Word_t bit = static_cast<Word_t>(elementValue) << (i % kBitsPerWord);
+      asULongArray[i / kBitsPerWord] = (asULongArray[i / kBitsPerWord] & ~mask) | bit;
    }
 }
 
