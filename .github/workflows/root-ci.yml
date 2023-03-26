@@ -358,6 +358,11 @@ jobs:
         with:
           name:  Test Results ${{ matrix.image }} ${{ matrix.config }}
           path: /tmp/workspace/build/TestResults.xml
+      - name: Setup tmate session
+        if: ${{ failure() }}
+        uses: mxschmitt/action-tmate@v3
+        # When debugging increase to a suitable value!
+        timeout-minutes: ${{ github.event.pull_request && 40 || 20 }}
 
   event_file:
     if: github.repository_owner == 'root-project' || github.event_name == 'pull_request'
