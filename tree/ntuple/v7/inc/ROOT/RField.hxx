@@ -806,7 +806,17 @@ public:
 
 /// The field for values that may or may not be present in an entry. Parent class for unique pointer field and
 /// optional field. A nullable field cannot be instantiated itself but only its descendants.
+/// The RNullableField takes care of the on-disk representation. Child classes are charged with the in-memory
+/// representation.  The on-disk representation can be "dense" or "sparse". Dense nullable fields have a bitmask
+/// (true: item available, false: item missing) and serialize a default-constructed item for missing items.
+/// Sparse nullable fields use a switch column to point to the available items.
+/// By default, items whose size is smaller or equal to 8 bytes (size of switch column element) are stored densely.
 class RNullableField : public Detail::RFieldBase {
+   /// For a dense nullable field, used to write a default-constructed item for missing ones.
+   Detail::RFieldValue fDefaultItemValue;
+   /// For a sparse nullable field, the number of written non-null items in this cluster
+   ClusterSize_t::ValueType fNWritten;
+
 protected:
    const Detail::RFieldBase::RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumnsImpl() final;
@@ -814,8 +824,6 @@ protected:
 
    std::size_t AppendNull();
    std::size_t AppendValue(const Detail::RFieldValue &value);
-   bool IsNull(NTupleSize_t globalIndex);
-   void ReadValue(NTupleSize_t globalIndex, Detail::RFieldValue *value);
 
    RNullableField(std::string_view fieldName, std::string_view typeName,
                   std::unique_ptr<Detail::RFieldBase> &&itemField);
@@ -823,7 +831,14 @@ protected:
 public:
    RNullableField(RNullableField &&other) = default;
    RNullableField &operator=(RNullableField &&other) = default;
-   ~RNullableField() override = default;
+   ~RNullableField() override;
+
+   bool IsDense() const { return GetColumnRepresentative() == ColumnRepresentation_t({EColumnType::kBit}); }
+   bool IsSparse() const { return !IsDense(); }
+   void SetDense() { SetColumnRepresentative({EColumnType::kBit}); }
+   void SetSparse() { SetColumnRepresentative({EColumnType::kSwitch}); }
+
+   void CommitCluster() final { fNWritten = 0; }
 
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
 };
