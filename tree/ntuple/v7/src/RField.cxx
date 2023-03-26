@@ -2380,12 +2380,12 @@ std::size_t ROOT::Experimental::RNullableField::AppendNull()
    if (IsDense()) {
       bool mask = false;
       Detail::RColumnElement<bool> maskElement(&mask);
-      fColumns[0]->Append(maskElement);
+      fPrincipalColumn->Append(maskElement);
       return 1 + fSubFields[0]->Append(fDefaultItemValue);
    } else {
       RColumnSwitch switchValue(ClusterSize_t(0), 0);
       Detail::RColumnElement<RColumnSwitch> switchElement(&switchValue);
-      fColumns[0]->Append(switchElement);
+      fPrincipalColumn->Append(switchElement);
       return sizeof(RColumnSwitch);
    }
 }
@@ -2396,19 +2396,106 @@ std::size_t ROOT::Experimental::RNullableField::AppendValue(const Detail::RField
    if (IsDense()) {
       bool mask = true;
       Detail::RColumnElement<bool> maskElement(&mask);
-      fColumns[0]->Append(maskElement);
+      fPrincipalColumn->Append(maskElement);
       return 1 + nbytesItem;
    } else {
       RColumnSwitch switchValue(ClusterSize_t(fNWritten++), 1);
       Detail::RColumnElement<RColumnSwitch> switchElement(&switchValue);
-      fColumns[0]->Append(switchElement);
+      fPrincipalColumn->Append(switchElement);
       return sizeof(RColumnSwitch) + nbytesItem;
+   }
+}
+
+ROOT::Experimental::RClusterIndex ROOT::Experimental::RNullableField::GetItemIndex(NTupleSize_t globalIndex)
+{
+   RClusterIndex nullIndex;
+   if (IsDense()) {
+      return fPrincipalColumn->Map<bool>(globalIndex) ? nullIndex : fPrincipalColumn->GetClusterIndex(globalIndex);
+   } else {
+      RClusterIndex variantIndex;
+      std::uint32_t tag;
+      fPrincipalColumn->GetSwitchInfo(globalIndex, &variantIndex, &tag);
+      return (tag == 0) ? nullIndex : variantIndex;
    }
 }
 
 void ROOT::Experimental::RNullableField::AcceptVisitor(Detail::RFieldVisitor &visitor) const
 {
    visitor.VisitNullableField(*this);
+}
+
+//------------------------------------------------------------------------------
+
+ROOT::Experimental::RUniquePtrField::RUniquePtrField(std::string_view fieldName,
+                                                     std::unique_ptr<Detail::RFieldBase> &&itemField)
+   : RNullableField(fieldName, "std::unique_ptr<" + itemField->GetType() + ">", std::move(itemField))
+{
+}
+
+std::unique_ptr<ROOT::Experimental::Detail::RFieldBase>
+ROOT::Experimental::RUniquePtrField::CloneImpl(std::string_view newName) const
+{
+   auto newItemField = fSubFields[0]->Clone(fSubFields[0]->GetName());
+   return std::make_unique<RUniquePtrField>(newName, std::move(newItemField));
+}
+
+std::size_t ROOT::Experimental::RUniquePtrField::AppendImpl(const Detail::RFieldValue &value)
+{
+   auto typedValue = value.Get<std::unique_ptr<char>>();
+   if (typedValue) {
+      auto itemValue = fSubFields[0]->CaptureValue(typedValue->get());
+      return AppendValue(itemValue);
+   } else {
+      return AppendNull();
+   }
+}
+
+void ROOT::Experimental::RUniquePtrField::ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue *value)
+{
+   auto ptr = value->Get<std::unique_ptr<char>>();
+   bool isValidValue = !(*ptr);
+
+   auto itemIndex = GetItemIndex(globalIndex);
+   bool isValidItem = itemIndex.GetIndex() != kInvalidClusterIndex;
+
+   Detail::RFieldValue itemValue;
+   if (isValidValue)
+      itemValue = fSubFields[0]->CaptureValue(ptr->get());
+
+   if (isValidValue && !isValidItem) {
+      ptr->release();
+      fSubFields[0]->DestroyValue(itemValue, false /* dtorOnly */);
+      return;
+   }
+
+   if (!isValidValue && isValidItem) {
+      itemValue = fSubFields[0]->GenerateValue();
+      ptr->reset(itemValue.Get<char>());
+   }
+
+   if (isValidItem)
+      fSubFields[0]->Read(itemIndex, &itemValue);
+}
+
+ROOT::Experimental::Detail::RFieldValue ROOT::Experimental::RUniquePtrField::GenerateValue(void *where)
+{
+   return Detail::RFieldValue(this, reinterpret_cast<std::unique_ptr<char> *>(where));
+}
+
+void ROOT::Experimental::RUniquePtrField::DestroyValue(const Detail::RFieldValue &value, bool dtorOnly)
+{
+   auto ptr = value.Get<std::unique_ptr<char>>();
+   if (!(fSubFields[0]->GetTraits() & kTraitTriviallyDestructible)) {
+      auto itemValue = fSubFields[0]->CaptureValue(ptr->get());
+      fSubFields[0]->DestroyValue(itemValue, dtorOnly);
+   }
+   if (!dtorOnly)
+      free(ptr);
+}
+
+ROOT::Experimental::Detail::RFieldValue ROOT::Experimental::RUniquePtrField::CaptureValue(void *where)
+{
+   return Detail::RFieldValue(true /* captureFlag */, this, where);
 }
 
 //------------------------------------------------------------------------------
