@@ -366,7 +366,7 @@ triggered by Flush() or by destructing the ntuple.  On I/O errors, an exception 
 */
 // clang-format on
 class RNTupleWriter {
-   friend RNTupleModel::RIncrementalUpdater;
+   friend RNTupleModel::RUpdater;
 
 private:
    /// The page sink's parallel page compression scheduler if IMT is on.
@@ -441,7 +441,7 @@ public:
 
    const RNTupleModel *GetModel() const { return fModel.get(); }
 
-   /// Get a `RNTupleModel::RIncrementalUpdater` that provides limited support for incremental updates to the underlying
+   /// Get a `RNTupleModel::RUpdater` that provides limited support for incremental updates to the underlying
    /// model, e.g. addition of new fields.
    ///
    /// **Example: add a new field after the model has been used to construct a `RNTupleWriter` object**
@@ -453,16 +453,16 @@ public:
    /// auto model = RNTupleModel::Create();
    /// auto fldFloat = model->MakeField<float>("fldFloat");
    /// auto ntuple = RNTupleWriter::Recreate(std::move(model), "myNTuple", "some/file.root");
-   /// auto updater = ntuple->GetIncrementalModelUpdater();
+   /// auto updater = ntuple->GetModelUpdater();
    /// updater->BeginUpdate();
    /// updater->AddField(std::make_unique<RField<float>>("pt"));
    /// updater->CommitUpdate();
    ///
    /// // ...
    /// ~~~
-   std::unique_ptr<RNTupleModel::RIncrementalUpdater> GetIncrementalModelUpdater()
+   std::unique_ptr<RNTupleModel::RUpdater> GetModelUpdater()
    {
-      return std::unique_ptr<RNTupleModel::RIncrementalUpdater>(new RNTupleModel::RIncrementalUpdater(*this));
+      return std::unique_ptr<RNTupleModel::RUpdater>(new RNTupleModel::RUpdater(*this));
    }
 };
 

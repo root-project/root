@@ -128,19 +128,19 @@ ROOT::Experimental::RNTupleModel::RProjectedFields::Clone(const RNTupleModel *ne
    return clone;
 }
 
-ROOT::Experimental::RNTupleModel::RIncrementalUpdater::RIncrementalUpdater(RNTupleWriter &writer)
+ROOT::Experimental::RNTupleModel::RUpdater::RUpdater(RNTupleWriter &writer)
    : fWriter(writer), fOpenChangeset(*fWriter.fModel)
 {
 }
 
-void ROOT::Experimental::RNTupleModel::RIncrementalUpdater::BeginUpdate()
+void ROOT::Experimental::RNTupleModel::RUpdater::BeginUpdate()
 {
    if (fWriter.fNEntries > 0)
       throw RException(R__FAIL("invalid attempt to alter model (fWriter.fNEntries > 0)"));
    fOpenChangeset.fModel.Unfreeze();
 }
 
-void ROOT::Experimental::RNTupleModel::RIncrementalUpdater::CommitUpdate()
+void ROOT::Experimental::RNTupleModel::RUpdater::CommitUpdate()
 {
    fOpenChangeset.fModel.Freeze();
    if (fOpenChangeset.IsEmpty())
@@ -151,15 +151,16 @@ void ROOT::Experimental::RNTupleModel::RIncrementalUpdater::CommitUpdate()
    fWriter.fSink->UpdateDescriptor(toCommit);
 }
 
-void ROOT::Experimental::RNTupleModel::RIncrementalUpdater::AddField(std::unique_ptr<Detail::RFieldBase> field)
+void ROOT::Experimental::RNTupleModel::RUpdater::AddField(std::unique_ptr<Detail::RFieldBase> field)
 {
    auto fieldp = field.get();
    fOpenChangeset.fModel.AddField(std::move(field));
    fOpenChangeset.fAddedFields.emplace_back(fieldp);
 }
 
-ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleModel::RIncrementalUpdater::AddProjectedField(
-   std::unique_ptr<Detail::RFieldBase> field, std::function<std::string(const std::string &)> mapping)
+ROOT::Experimental::RResult<void>
+ROOT::Experimental::RNTupleModel::RUpdater::AddProjectedField(std::unique_ptr<Detail::RFieldBase> field,
+                                                              std::function<std::string(const std::string &)> mapping)
 {
    auto fieldp = field.get();
    auto result = fOpenChangeset.fModel.AddProjectedField(std::move(field), mapping);
