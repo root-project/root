@@ -65,30 +65,23 @@ std::uint32_t SerializeFieldV1(const ROOT::Experimental::RFieldDescriptor &field
    return size;
 }
 
-std::uint32_t SerializeFieldTree(const ROOT::Experimental::RNTupleDescriptor &desc,
-                                 ROOT::Experimental::Internal::RNTupleSerializer::RContext &context, void *buffer,
-                                 std::span<ROOT::Experimental::DescriptorId_t> subtrees)
+std::uint32_t SerializeFieldList(const ROOT::Experimental::RNTupleDescriptor &desc,
+                                 std::span<const ROOT::Experimental::DescriptorId_t> fieldList,
+                                 std::size_t firstOnDiskId,
+                                 ROOT::Experimental::Internal::RNTupleSerializer::RContext &context, void *buffer)
 {
    auto base = reinterpret_cast<unsigned char *>(buffer);
    auto pos = base;
    void** where = (buffer == nullptr) ? &buffer : reinterpret_cast<void**>(&pos);
 
    auto fieldZeroId = desc.GetFieldZeroId();
-   std::deque<ROOT::Experimental::DescriptorId_t> idQueue{subtrees.begin(), subtrees.end()};
-   while (!idQueue.empty()) {
-      auto fieldId = idQueue.front();
-      idQueue.pop_front();
-      unsigned i = 0;
-      for (const auto &f : desc.GetFieldIterable(fieldId))
-         idQueue.insert(idQueue.begin() + i++, f.GetId());
-
-      if (fieldId == fieldZeroId)
-         continue;
+   ROOT::Experimental::DescriptorId_t onDiskFieldId = firstOnDiskId;
+   for (auto fieldId : fieldList) {
       const auto &f = desc.GetFieldDescriptor(fieldId);
-      const auto onDiskFieldId = context.GetOnDiskFieldId(fieldId);
       auto onDiskParentId =
          (f.GetParentId() == fieldZeroId) ? onDiskFieldId : context.GetOnDiskFieldId(f.GetParentId());
       pos += SerializeFieldV1(f, onDiskParentId, *where);
+      ++onDiskFieldId;
    }
 
    return pos - base;
@@ -166,8 +159,8 @@ RResult<std::uint32_t> DeserializeFieldV1(
 }
 
 std::uint32_t SerializeColumnListV1(const ROOT::Experimental::RNTupleDescriptor &desc,
-                                    ROOT::Experimental::Internal::RNTupleSerializer::RContext &context, void *buffer,
-                                    std::span<ROOT::Experimental::DescriptorId_t> subtrees)
+                                    std::span<const ROOT::Experimental::DescriptorId_t> fieldList,
+                                    ROOT::Experimental::Internal::RNTupleSerializer::RContext &context, void *buffer)
 {
    using RColumnElementBase = ROOT::Experimental::Detail::RColumnElementBase;
 
@@ -175,11 +168,7 @@ std::uint32_t SerializeColumnListV1(const ROOT::Experimental::RNTupleDescriptor 
    auto pos = base;
    void** where = (buffer == nullptr) ? &buffer : reinterpret_cast<void**>(&pos);
 
-   std::deque<ROOT::Experimental::DescriptorId_t> idQueue{subtrees.begin(), subtrees.end()};
-   while (!idQueue.empty()) {
-      auto parentId = idQueue.front();
-      idQueue.pop_front();
-
+   for (auto parentId : fieldList) {
       for (const auto &c : desc.GetColumnIterable(parentId)) {
          if (c.IsAliasColumn())
             continue;
@@ -202,10 +191,6 @@ std::uint32_t SerializeColumnListV1(const ROOT::Experimental::RNTupleDescriptor 
 
          pos += RNTupleSerializer::SerializeFramePostscript(buffer ? frame : nullptr, pos - frame);
       }
-
-      unsigned i = 0;
-      for (const auto &f : desc.GetFieldIterable(parentId))
-         idQueue.insert(idQueue.begin() + i++, f.GetId());
    }
 
    return pos - base;
@@ -291,17 +276,14 @@ void DeserializeLocatorPayloadObject64(const unsigned char *buffer, ROOT::Experi
 }
 
 std::uint32_t SerializeAliasColumnList(const ROOT::Experimental::RNTupleDescriptor &desc,
-                                       ROOT::Experimental::Internal::RNTupleSerializer::RContext &context, void *buffer,
-                                       std::span<ROOT::Experimental::DescriptorId_t> subtrees)
+                                       std::span<const ROOT::Experimental::DescriptorId_t> fieldList,
+                                       ROOT::Experimental::Internal::RNTupleSerializer::RContext &context, void *buffer)
 {
    auto base = reinterpret_cast<unsigned char *>(buffer);
    auto pos = base;
    void **where = (buffer == nullptr) ? &buffer : reinterpret_cast<void **>(&pos);
 
-   std::deque<ROOT::Experimental::DescriptorId_t> idQueue{subtrees.begin(), subtrees.end()};
-   while (!idQueue.empty()) {
-      auto parentId = idQueue.front();
-      idQueue.pop_front();
+   for (auto parentId : fieldList) {
       for (const auto &c : desc.GetColumnIterable(parentId)) {
          if (!c.IsAliasColumn())
             continue;
@@ -314,10 +296,6 @@ std::uint32_t SerializeAliasColumnList(const ROOT::Experimental::RNTupleDescript
 
          pos += RNTupleSerializer::SerializeFramePostscript(buffer ? frame : nullptr, pos - frame);
       }
-
-      unsigned i = 0;
-      for (const auto &f : desc.GetFieldIterable(parentId))
-         idQueue.insert(idQueue.begin() + i++, f.GetId());
    }
 
    return pos - base;
@@ -1005,6 +983,9 @@ void ROOT::Experimental::Internal::RNTupleSerializer::RContext::MapSchema(const 
    };
 
    R__ASSERT(desc.GetNFields() > 0); // we must have at least a zero field
+   if (!forHeaderExtension)
+      R__ASSERT(GetHeaderExtensionOffset() == -1U);
+
    std::vector<DescriptorId_t> fieldTrees;
    if (!forHeaderExtension) {
       fieldTrees.emplace_back(fieldZeroId);
@@ -1022,6 +1003,10 @@ void ROOT::Experimental::Internal::RNTupleSerializer::RContext::MapSchema(const 
          if (c.IsAliasColumn())
             MapColumnId(c.GetLogicalId());
    });
+
+   // Anything added after this point is accounted for the header extension
+   if (!forHeaderExtension)
+      BeginHeaderExtension();
 }
 
 std::uint32_t
@@ -1032,35 +1017,36 @@ ROOT::Experimental::Internal::RNTupleSerializer::SerializeSchemaDescription(void
    auto pos = base;
    void** where = (buffer == nullptr) ? &buffer : reinterpret_cast<void**>(&pos);
 
-   std::size_t nFields = 0, nColumns = 0, nAliasColumns = 0;
+   std::size_t nFields = 0, nColumns = 0, nAliasColumns = 0, fieldListOffset = 0;
    std::vector<DescriptorId_t> subtrees;
    if (forHeaderExtension) {
       if (auto xHeader = desc.GetHeaderExtension()) {
          nFields = xHeader->GetNFields();
          nColumns = xHeader->GetNPhysicalColumns();
          nAliasColumns = xHeader->GetNLogicalColumns() - xHeader->GetNPhysicalColumns();
-         subtrees = xHeader->GetTopLevelFields(desc);
+         fieldListOffset = context.GetHeaderExtensionOffset();
       }
    } else {
       nFields = desc.GetNFields() - 1;
       nColumns = desc.GetNPhysicalColumns();
       nAliasColumns = desc.GetNLogicalColumns() - desc.GetNPhysicalColumns();
-      subtrees.emplace_back(desc.GetFieldZeroId());
    }
+   const auto &onDiskFields = context.GetOnDiskFieldList();
+   std::span<const DescriptorId_t> fieldList{onDiskFields.begin() + fieldListOffset, onDiskFields.end()};
 
    auto frame = pos;
    pos += SerializeListFramePreamble(nFields, *where);
-   pos += SerializeFieldTree(desc, context, *where, subtrees);
+   pos += SerializeFieldList(desc, fieldList, /*firstOnDiskId=*/fieldListOffset, context, *where);
    pos += SerializeFramePostscript(buffer ? frame : nullptr, pos - frame);
 
    frame = pos;
    pos += SerializeListFramePreamble(nColumns, *where);
-   pos += SerializeColumnListV1(desc, context, *where, subtrees);
+   pos += SerializeColumnListV1(desc, fieldList, context, *where);
    pos += SerializeFramePostscript(buffer ? frame : nullptr, pos - frame);
 
    frame = pos;
    pos += SerializeListFramePreamble(nAliasColumns, *where);
-   pos += SerializeAliasColumnList(desc, context, *where, subtrees);
+   pos += SerializeAliasColumnList(desc, fieldList, context, *where);
    pos += SerializeFramePostscript(buffer ? frame : nullptr, pos - frame);
 
    // We don't use extra type information yet
