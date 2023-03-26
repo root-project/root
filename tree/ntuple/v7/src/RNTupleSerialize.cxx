@@ -1006,9 +1006,7 @@ void ROOT::Experimental::Internal::RNTupleSerializer::RContext::MapLateAddedColu
    };
 
    if (auto xHeader = desc.GetHeaderExtension()) {
-      std::vector<DescriptorId_t> fieldIDs;
-      for (const auto &field : xHeader->GetTopLevelFields(desc))
-         fieldIDs.emplace_back(field.GetId());
+      auto fieldIDs = xHeader->GetTopLevelFields(desc);
       mapColumns(fieldIDs, /*forAliasColumns=*/false);
       mapColumns(fieldIDs, /*forAliasColumns=*/true);
    }
@@ -1029,8 +1027,7 @@ ROOT::Experimental::Internal::RNTupleSerializer::SerializeSchemaDescription(void
          nFields = xHeader->GetNFields();
          nColumns = xHeader->GetNPhysicalColumns();
          nAliasColumns = xHeader->GetNLogicalColumns() - xHeader->GetNPhysicalColumns();
-         for (const auto &field : xHeader->GetTopLevelFields(desc))
-            subtrees.emplace_back(field.GetId());
+         subtrees = xHeader->GetTopLevelFields(desc);
       }
    } else {
       nFields = desc.GetNFields() - 1;
