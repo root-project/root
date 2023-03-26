@@ -78,14 +78,14 @@ std::uint32_t SerializeFieldTree(const ROOT::Experimental::RNTupleDescriptor &de
    while (!idQueue.empty()) {
       auto fieldId = idQueue.front();
       idQueue.pop_front();
-      for (const auto &f : desc.GetFieldIterable(fieldId)) {
-         idQueue.push_back(f.GetId());
-      }
+      unsigned i = 0;
+      for (const auto &f : desc.GetFieldIterable(fieldId))
+         idQueue.insert(idQueue.begin() + i++, f.GetId());
 
       if (fieldId == fieldZeroId)
          continue;
       const auto &f = desc.GetFieldDescriptor(fieldId);
-      const auto onDiskFieldId = context.MapFieldId(fieldId);
+      const auto onDiskFieldId = context.GetOnDiskFieldId(fieldId);
       auto onDiskParentId =
          (f.GetParentId() == fieldZeroId) ? onDiskFieldId : context.GetOnDiskFieldId(f.GetParentId());
       pos += SerializeFieldV1(f, onDiskParentId, *where);
@@ -201,12 +201,11 @@ std::uint32_t SerializeColumnListV1(const ROOT::Experimental::RNTupleDescriptor 
          pos += RNTupleSerializer::SerializeUInt32(flags, *where);
 
          pos += RNTupleSerializer::SerializeFramePostscript(buffer ? frame : nullptr, pos - frame);
-
-         context.MapColumnId(c.GetLogicalId());
       }
 
+      unsigned i = 0;
       for (const auto &f : desc.GetFieldIterable(parentId))
-         idQueue.push_front(f.GetId());
+         idQueue.insert(idQueue.begin() + i++, f.GetId());
    }
 
    return pos - base;
@@ -314,12 +313,11 @@ std::uint32_t SerializeAliasColumnList(const ROOT::Experimental::RNTupleDescript
          pos += RNTupleSerializer::SerializeUInt32(context.GetOnDiskFieldId(c.GetFieldId()), *where);
 
          pos += RNTupleSerializer::SerializeFramePostscript(buffer ? frame : nullptr, pos - frame);
-
-         context.MapColumnId(c.GetLogicalId());
       }
 
+      unsigned i = 0;
       for (const auto &f : desc.GetFieldIterable(parentId))
-         idQueue.push_front(f.GetId());
+         idQueue.insert(idQueue.begin() + i++, f.GetId());
    }
 
    return pos - base;
@@ -989,27 +987,41 @@ RResult<std::uint32_t> ROOT::Experimental::Internal::RNTupleSerializer::Deserial
    return frameSize;
 }
 
-void ROOT::Experimental::Internal::RNTupleSerializer::RContext::MapLateAddedColumns(const RNTupleDescriptor &desc)
+void ROOT::Experimental::Internal::RNTupleSerializer::RContext::MapSchema(const RNTupleDescriptor &desc,
+                                                                          bool forHeaderExtension)
 {
-   auto mapColumns = [&](std::span<DescriptorId_t> fieldIDs, bool forAliasColumns) {
-      std::deque<DescriptorId_t> idQueue{fieldIDs.begin(), fieldIDs.end()};
+   auto fieldZeroId = desc.GetFieldZeroId();
+   auto depthFirstTraversal = [&](std::span<DescriptorId_t> fieldTrees, auto doForEachField) {
+      std::deque<DescriptorId_t> idQueue{fieldTrees.begin(), fieldTrees.end()};
       while (!idQueue.empty()) {
-         auto parentId = idQueue.front();
+         auto fieldId = idQueue.front();
          idQueue.pop_front();
-         for (const auto &c : desc.GetColumnIterable(parentId)) {
-            if (c.IsAliasColumn() == forAliasColumns)
-               MapColumnId(c.GetLogicalId());
-         }
-         for (const auto &f : desc.GetFieldIterable(parentId))
-            idQueue.push_front(f.GetId());
+         if (fieldId != fieldZeroId)
+            doForEachField(fieldId);
+         unsigned i = 0;
+         for (const auto &f : desc.GetFieldIterable(fieldId))
+            idQueue.insert(idQueue.begin() + i++, f.GetId());
       }
    };
 
-   if (auto xHeader = desc.GetHeaderExtension()) {
-      auto fieldIDs = xHeader->GetTopLevelFields(desc);
-      mapColumns(fieldIDs, /*forAliasColumns=*/false);
-      mapColumns(fieldIDs, /*forAliasColumns=*/true);
+   R__ASSERT(desc.GetNFields() > 0); // we must have at least a zero field
+   std::vector<DescriptorId_t> fieldTrees;
+   if (!forHeaderExtension) {
+      fieldTrees.emplace_back(fieldZeroId);
+   } else if (auto xHeader = desc.GetHeaderExtension()) {
+      fieldTrees = xHeader->GetTopLevelFields(desc);
    }
+   depthFirstTraversal(fieldTrees, [&](DescriptorId_t fieldId) { MapFieldId(fieldId); });
+   depthFirstTraversal(fieldTrees, [&](DescriptorId_t fieldId) {
+      for (const auto &c : desc.GetColumnIterable(fieldId))
+         if (!c.IsAliasColumn())
+            MapColumnId(c.GetLogicalId());
+   });
+   depthFirstTraversal(fieldTrees, [&](DescriptorId_t fieldId) {
+      for (const auto &c : desc.GetColumnIterable(fieldId))
+         if (c.IsAliasColumn())
+            MapColumnId(c.GetLogicalId());
+   });
 }
 
 std::uint32_t
@@ -1193,7 +1205,7 @@ ROOT::Experimental::Internal::RNTupleSerializer::SerializeHeaderV1(void *buffer,
    pos += SerializeString(desc.GetDescription(), *where);
    pos += SerializeString(std::string("ROOT v") + ROOT_RELEASE, *where);
 
-   R__ASSERT(desc.GetNFields() > 0); // we must have at least a zero field
+   context.MapSchema(desc, /*forHeaderExtension=*/false);
    pos += SerializeSchemaDescription(*where, desc, context);
 
    std::uint32_t size = pos - base;
