@@ -4,29 +4,28 @@ sap.ui.define([
 ], function (Control, ResizeHandler) {
    "use strict";
 
-   return Control.extend("rootui5.canv.controller.SVGSample", {
+   return Control.extend('rootui5.canv.controller.SVGSample', {
       metadata: {
          properties: {
-            svgsample : { type: "object", group: "Misc", defaultValue: null }
+            svgsample : { type: 'object', group: 'Misc', defaultValue: null }
          },
          defaultAggregation: null
       },
 
-      init: function() {
+      init() {
          this.attachModelContextChange({}, this.modelChanged, this);
 
          this.resize_id = ResizeHandler.register(this, this.onResize.bind(this));
       },
 
-      exit: function() {
-         console.log('destroy SVGSample');
+      exit() {
       },
 
-      onAfterRendering: function() {
+      onAfterRendering() {
          this._setSVG();
       },
 
-      renderer: function(oRm, oControl){
+      renderer(oRm, oControl){
          //first up, render a div for the ShadowBox
          oRm.write("<div");
 
@@ -59,6 +58,7 @@ sap.ui.define([
         if (!dom) return;
 
         let w = dom.innerWidth(), h = dom.innerHeight();
+        if (!w || !h) return;
         dom.empty();
 
         let svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
@@ -78,15 +78,15 @@ sap.ui.define([
         }
      },
 
-     onResize: function() {
+     onResize() {
         this._setSVG();
      },
 
-     modelPropertyChanged: function() {
+     modelPropertyChanged() {
         this._setSVG();
      },
 
-     modelChanged: function() {
+     modelChanged() {
         if (this._lastModel !== this.getModel()) {
            this._lastModel = this.getModel();
            this.getModel().attachPropertyChange({}, this.modelPropertyChanged, this);

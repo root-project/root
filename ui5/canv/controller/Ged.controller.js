@@ -60,12 +60,12 @@ sap.ui.define([
 
          if (!fragm)
             return Fragment.load({
-               name: "rootui5.canv.view." + kind,
-               type: "XML",
+               name: `rootui5.canv.view.${kind}`,
+               type: 'XML',
                controller: this
             }).then(function(_page, _kind, _model, oFragm) {
                this.gedFragments[_kind] = oFragm;
-               this.addFragment(_page, _kind, _model);
+               return this.addFragment(_page, _kind, _model);
             }.bind(this, page, kind, model));
 
          fragm.ged_fragment = true; // mark as ged fragment
@@ -76,7 +76,11 @@ sap.ui.define([
          page.addContent(html);
 
          fragm.setModel(model);
+         fragm.setTooltip(kind);
          page.addContent(fragm);
+
+         return Promise.resolve(false);
+
       },
 
       /// function called when user changes model property
@@ -306,8 +310,7 @@ sap.ui.define([
             this.currentPainter.interactiveRedraw("pad","drawopt");
       },
 
-
-      onObjectSelect(padpainter, painter, place) {
+      async onObjectSelect(padpainter, painter, place) {
 
          if ((this.currentPainter === painter) && (place === this.currentPlace)) return;
 
@@ -335,31 +338,30 @@ sap.ui.define([
          let oPage = this.getView().byId("ged_page");
          oPage.removeAllContent();
 
-
          if (selectedClass == "RAttrAxis") {
             let model = new JSONModel({});
             this.setRAxisModel(model);
-            this.addFragment(oPage, "RAxis", model);
             model.attachPropertyChange({ _kind: "RAttrAxis" }, this.processRAxisModelChange, this);
+            await this.addFragment(oPage, 'RAxis', model);
             return;
          }
 
          if (painter.lineatt?.used && !painter.lineatt.not_standard) {
             let model = new JSONModel( { attline: painter.lineatt } );
             model.attachPropertyChange({ _kind: 'TAttLine', _painter: painter, _handle: painter.lineatt }, this.modelPropertyChange, this);
-            this.addFragment(oPage, 'TAttLine', model);
+            await this.addFragment(oPage, 'TAttLine', model);
          }
 
          if (painter.fillatt?.used) {
             let model = new JSONModel( { attfill: painter.fillatt } );
             model.attachPropertyChange({ _kind: 'TAttFill', _painter: painter, _handle: painter.fillatt }, this.modelPropertyChange, this);
-            this.addFragment(oPage, 'TAttFill', model);
+            await this.addFragment(oPage, 'TAttFill', model);
          }
 
          if (painter.markeratt?.used) {
             let model = new JSONModel( { attmark: painter.markeratt } );
             model.attachPropertyChange({ _kind: 'TAttMarker', _painter: painter, _handle: painter.markeratt }, this.modelPropertyChange, this);
-            this.addFragment(oPage, 'TAttMarker', model);
+            await this.addFragment(oPage, 'TAttMarker', model);
          }
 
          if (painter.textatt) {
@@ -368,31 +370,30 @@ sap.ui.define([
 
             let model = new JSONModel( { atttext: painter.textatt } );
             model.attachPropertyChange({ _kind: 'TAttText', _painter: painter, _handle: painter.textatt }, this.modelPropertyChange, this);
-            this.addFragment(oPage, 'TAttText', model);
+            await this.addFragment(oPage, 'TAttText', model);
          }
 
          if (typeof painter.processTitleChange == 'function') {
-            let tobj = painter.processTitleChange("check");
+            let tobj = painter.processTitleChange('check');
             if (tobj) {
                let model = new JSONModel({ tnamed: tobj });
                model.attachPropertyChange( {}, painter.processTitleChange, painter );
-               this.addFragment(oPage, "TNamed", model);
+               await this.addFragment(oPage, 'TNamed', model);
             }
          }
 
          if (selectedClass == 'TAxis') {
             let model = new JSONModel({});
             this.setAxisModel(model);
-            this.addFragment(oPage, 'Axis', model);
             model.attachPropertyChange({ _kind: 'TAxis' }, this.processAxisModelChange, this);
+            await this.addFragment(oPage, 'Axis', model);
          }
 
          if (typeof painter.getHisto == 'function') {
             painter.options.Mode3Dindx = painter.options.Mode3D ? 1 : 0;
             let model = new JSONModel({ opts : painter.options });
-            // model.attachPropertyChange({}, painter.processTitleChange, painter);
-            this.addFragment(oPage, "Hist", model);
             model.attachPropertyChange({ options: painter.options }, this.processHistModelChange, this);
+            await this.addFragment(oPage, 'Hist', model);
          }
       },
 
