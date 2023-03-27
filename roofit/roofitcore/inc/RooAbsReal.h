@@ -471,22 +471,6 @@ protected:
   /// Evaluate this PDF / function / constant. Needs to be overridden by all derived classes.
   virtual double evaluate() const = 0;
 
-  /// \deprecated evaluateBatch() has been removed in favour of the faster evaluateSpan(). If your code is affected
-  /// by this change, please consult the release notes for ROOT 6.24 for guidance on how to make this transition.
-  /// https://root.cern/doc/v624/release-notes.html
-#ifndef R__MACOSX
-  virtual RooSpan<double> evaluateBatch(std::size_t /*begin*/, std::size_t /*maxSize*/) = delete;
-#else
-  //AppleClang in MacOS10.14 has a linker bug and fails to link programs that create objects of classes containing virtual deleted methods.
-  //This can be safely deleted when MacOS10.14 is no longer supported by ROOT. See https://reviews.llvm.org/D37830
-  virtual RooSpan<double> evaluateBatch(std::size_t /*begin*/, std::size_t /*maxSize*/) final {
-    throw std::logic_error("Deprecated evaluatedBatch() has been removed in favour of the faster evaluateSpan(). If your code is affected by this change, please consult the release notes for ROOT 6.24 for guidance on how to make this transition. https://root.cern/doc/v624/release-notes.html");
-  }
-#endif
-
-  virtual RooSpan<double> evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const;
-
-
   //---------- Interface to access batch data ---------------------------
   //
   friend class BatchInterfaceAccessor;

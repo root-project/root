@@ -488,43 +488,42 @@ void compute(RooSpan<double> output, RooSpan<const double> x,
 
 }
 
-RooSpan<double> RooHypatia2::evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const {
+void RooHypatia2::computeBatch(cudaStream_t*, double* output, size_t size, RooFit::Detail::DataMap const& dataMap) const
+{
   using namespace RooBatchCompute;
 
-  auto x = _x->getValues(evalData, normSet);
-  auto lambda = _lambda->getValues(evalData, normSet);
-  auto zeta = _zeta->getValues(evalData, normSet);
-  auto beta = _beta->getValues(evalData, normSet);
-  auto sig = _sigma->getValues(evalData, normSet);
-  auto mu = _mu->getValues(evalData, normSet);
-  auto a = _a->getValues(evalData, normSet);
-  auto n = _n->getValues(evalData, normSet);
-  auto a2 = _a2->getValues(evalData, normSet);
-  auto n2 = _n2->getValues(evalData, normSet);
+  auto x = dataMap.at(_x);
+  auto lambda = dataMap.at(_lambda);
+  auto zeta = dataMap.at(_zeta);
+  auto beta = dataMap.at(_beta);
+  auto sig = dataMap.at(_sigma);
+  auto mu = dataMap.at(_mu);
+  auto a = dataMap.at(_a);
+  auto n = dataMap.at(_n);
+  auto a2 = dataMap.at(_a2);
+  auto n2 = dataMap.at(_n2);
 
-  size_t paramSizeSum=0, batchSize = x.size();
+  size_t paramSizeSum=0;
   for (const auto& i:{lambda, zeta, beta, sig, mu, a, n, a2, n2}) {
     paramSizeSum += i.size();
-    batchSize = std::max(batchSize, i.size());
   }
-  RooSpan<double> output = evalData.makeBatch(this, batchSize);
+  RooSpan<double> outputSpan{output, size};
 
   // Run high performance compute if only x has multiple values
   if (x.size()>1 && paramSizeSum==9) {
-    compute(output, x,
+    compute(outputSpan, x,
         BracketAdapter<double>(_lambda), BracketAdapter<double>(_zeta),
         BracketAdapter<double>(_beta), BracketAdapter<double>(_sigma), BracketAdapter<double>(_mu),
         BracketAdapter<double>(_a), BracketAdapter<double>(_n),
         BracketAdapter<double>(_a2), BracketAdapter<double>(_n2));
   } else {
-    compute(output, BracketAdapterWithMask(_x, x),
+    compute(outputSpan, BracketAdapterWithMask(_x, x),
         BracketAdapterWithMask(_lambda, lambda), BracketAdapterWithMask(_zeta, zeta),
         BracketAdapterWithMask(_beta, beta), BracketAdapterWithMask(_sigma, sig),
         BracketAdapterWithMask(_mu, mu),
         BracketAdapterWithMask(_a, a), BracketAdapterWithMask(_n, n),
         BracketAdapterWithMask(_a2, a2), BracketAdapterWithMask(_n2, n2));
   }
-  return output;
 }
 
 

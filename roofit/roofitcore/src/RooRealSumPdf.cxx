@@ -301,7 +301,7 @@ void RooRealSumPdf::computeBatch(cudaStream_t* /*stream*/, double* output, size_
     // Warn about degeneration of last coefficient
     if (coef == nullptr && (coefVal < 0 || coefVal > 1.)) {
       if (!_haveWarned) {
-        coutW(Eval) << "RooRealSumPdf::evaluateSpan(" << GetName()
+        coutW(Eval) << "RooRealSumPdf::computeBatch(" << GetName()
             << ") WARNING: sum of FUNC coefficients not in range [0-1], value="
             << sumCoeff << ". This means that the PDF is not properly normalised. If the PDF was meant to be extended, provide as many coefficients as functions." << endl ;
         _haveWarned = true;

@@ -53,7 +53,7 @@ private:
   RooRealProxy _n2;
 
   double evaluate() const override;
-  RooSpan<double> evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const override;
+  void computeBatch(cudaStream_t*, double* output, size_t size, RooFit::Detail::DataMap const&) const override;
 
   /// \cond CLASS_DEF_DOXY
   ClassDefOverride(RooHypatia2, 1);

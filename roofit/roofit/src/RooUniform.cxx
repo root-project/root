@@ -52,28 +52,6 @@ double RooUniform::evaluate() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///Compute multiple values of the uniform distribution (effectively return a span with ones)
-RooSpan<double> RooUniform::evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* /*normSet*/) const
-{
-  size_t nEvents = 1;
-  for (auto elm : x) {
-    size_t nEventsCurrent = static_cast<const RooAbsReal*>(elm)->getValues(evalData).size();
-    if(nEventsCurrent != 1 && nEvents != 1 && nEventsCurrent != nEvents) {
-      auto errorMsg = std::string("RooUniform::evaluateSpan(): number of entries for input variables does not match")
-                      + "in RooUniform with name \"" + GetName() + "\".";
-      coutE(FastEvaluations) << errorMsg << std::endl ;
-      throw std::runtime_error(errorMsg);
-    }
-    nEvents = std::max(nEvents, nEventsCurrent);
-  }
-  RooSpan<double> values = evalData.makeBatch(this, nEvents);
-  for (size_t i=0; i<nEvents; i++) {
-    values[i] = 1.0;
-  }
-  return values;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Advertise analytical integral
 
 Int_t RooUniform::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* /*rangeName*/) const

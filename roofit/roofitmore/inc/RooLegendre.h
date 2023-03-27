@@ -42,7 +42,7 @@ protected: // allow RooSpHarmonic access...
   int _l2,_m2;
 
   double evaluate() const override;
-  RooSpan<double> evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const override;
+  void computeBatch(cudaStream_t*, double* output, size_t size, RooFit::Detail::DataMap const&) const override;
 
   ClassDefOverride(RooLegendre,1) // Legendre polynomial
 };

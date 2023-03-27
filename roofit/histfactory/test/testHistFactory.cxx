@@ -515,7 +515,7 @@ TEST_P(HFFixture, Fit) {
   ASSERT_NE(mc, nullptr);
 
   for (bool batchFit : {true, false}) {
-    for (bool constTermOptimisation : {true, false}) { // This tests both correct pre-caching of constant terms and (if false) that all evaluateSpan() are correct.
+    for (bool constTermOptimisation : {true, false}) { // This tests both correct pre-caching of constant terms and (if false) that all computeBatch() are correct.
       SCOPED_TRACE(batchFit ? "Batch fit" : "Normal fit");
       SCOPED_TRACE(constTermOptimisation ? "const term optimisation" : "No const term optimisation");
 

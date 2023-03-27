@@ -245,7 +245,7 @@ double RooAbsReal::getValV(const RooArgSet* nset) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute batch of values for input data stored in `evalData`.
 ///
-/// This is a faster, multi-value version of getVal(). It calls evaluateSpan() to trigger computations, and
+/// This is a faster, multi-value version of getVal(). It calls computeBatch() to trigger computations, and
 /// finalises those (e.g. error checking or automatic normalisation) before returning a span with the results.
 /// This span will also be stored in `evalData`, so subsquent calls of getValues() will return immediately.
 ///
@@ -4557,95 +4557,6 @@ void RooAbsReal::setParameterizeIntegral(const RooArgSet& paramVars)
     plist += arg->GetName() ;
   }
   setStringAttribute("CACHEPARAMINT",plist.c_str()) ;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Evaluate this object for a batch/span of data points.
-/// This is the backend used by getValues() to perform computations. A span pointing to the computation results
-/// will be stored in `evalData`, and also be returned to getValues(), which then finalises the computation.
-///
-/// \note Derived classes should override this function to reach maximal performance. If this function is not overridden, the slower,
-/// single-valued evaluate() will be called in a loop.
-///
-/// A computation proceeds as follows:
-/// - Request input data from all our servers using `getValues(evalData, normSet)`. Those will return
-///   - batches of size 1 if their value is constant over the entire dataset.
-///   - batches of the size of the dataset stored in `evalData` otherwise.
-///   If `evalData` already contains values for those objects, these will return data
-///   without recomputing those.
-/// - Create a new batch in `evalData` of the same size as those returned from the servers.
-/// - Use the input data to perform the computations, and store those in the batch.
-///
-/// \note Error checking and normalisation (of PDFs) will be performed in getValues().
-///
-/// \param[in,out] evalData Object holding data that should be used in computations.
-/// Computation results have to be stored here.
-/// \param[in]  normSet  Optional normalisation set passed down to the servers of this object.
-/// \return     Span pointing to the results. The memory is owned by `evalData`.
-RooSpan<double> RooAbsReal::evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const {
-
-  // Find all servers that are serving real numbers to us, retrieve their batch data,
-  // and switch them into "always clean" operating mode, so they return always the last-set value.
-  struct ServerData {
-    RooAbsReal* server;
-    RooSpan<const double> batch;
-    double oldValue;
-    RooAbsArg::OperMode oldOperMode;
-  };
-  std::vector<ServerData> ourServers;
-  std::size_t dataSize = 1;
-
-  for (auto absArgServer : servers()) {
-    if (absArgServer->IsA()->InheritsFrom(RooAbsReal::Class()) && absArgServer->isValueServer(*this)) {
-      auto server = static_cast<RooAbsReal*>(absArgServer);
-      ourServers.push_back({server,
-          server->getValues(evalData, normSet),
-          server->getVal(normSet),
-          server->operMode()});
-      // Prevent the server from evaluating; just return cached result, which we will side load:
-      server->setOperMode(RooAbsArg::AClean);
-      dataSize = std::max(dataSize, ourServers.back().batch.size());
-    }
-  }
-
-
-  // Make sure that we restore all state when we finish:
-  struct RestoreStateRAII {
-    RestoreStateRAII(std::vector<ServerData>& servers) :
-      _servers{servers} { }
-
-    ~RestoreStateRAII() {
-      for (auto& serverData : _servers) {
-        serverData.server->setCachedValue(serverData.oldValue, true);
-        serverData.server->setOperMode(serverData.oldOperMode);
-      }
-    }
-
-    std::vector<ServerData>& _servers;
-  } restoreState{ourServers};
-
-
-  // Advising to implement the batch interface makes only sense if the batch was not a scalar.
-  // Otherwise, there would be no speedup benefit.
-  if(dataSize > 1 && RooMsgService::instance().isActive(this, RooFit::FastEvaluations, RooFit::INFO)) {
-    coutI(FastEvaluations) << "The class " << ClassName() << " does not implement the faster batch evaluation interface."
-        << " Consider requesting or implementing it to benefit from a speed up." << std::endl;
-  }
-
-
-  // For each event, write temporary values into our servers' caches, and run a single-value computation.
-  auto outputData = evalData.makeBatch(this, dataSize);
-
-  for (std::size_t i=0; i < outputData.size(); ++i) {
-    for (auto& serv : ourServers) {
-      serv.server->setCachedValue(serv.batch[std::min(i, serv.batch.size()-1)], /*notifyClients=*/ false);
-    }
-
-    outputData[i] = evaluate();
-  }
-
-  return outputData;
 }
 
 
