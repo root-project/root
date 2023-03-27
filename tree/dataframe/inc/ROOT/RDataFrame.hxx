@@ -23,6 +23,7 @@ ROOT's RDataFrame allows to analyse data stored in TTrees with a high level inte
 #include "ROOT/RStringView.hxx"
 #include "RtypesCore.h"
 
+#include <initializer_list>
 #include <memory>
 #include <string>
 #include <vector>
