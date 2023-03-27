@@ -224,8 +224,8 @@ TClassTable::TClassTable()
    fgTable = new TClassRec* [fgSize];
    fgAlternate = new TClassAlt* [fgSize];
    fgIdMap = new IdMap_t;
-   memset(fgTable, 0, fgSize*sizeof(TClassRec*));
-   memset(fgAlternate, 0, fgSize*sizeof(TClassAlt*));
+   memset(fgTable, 0, fgSize * sizeof(TClassRec*));
+   memset(fgAlternate, 0, fgSize * sizeof(TClassAlt*));
    gClassTable = this;
 
    for (auto &&r : GetDelayedAddClass()) {
@@ -323,7 +323,8 @@ char *TClassTable::At(UInt_t index)
    SortTable();
    if (index < fgTally) {
       TClassRec *r = fgSortedTable[index];
-      if (r) return r->fName;
+      if (r)
+         return r->fName;
    }
    return 0;
 }
@@ -351,8 +352,8 @@ void TClassTable::Add(const char *cname, Version_t id,  const std::type_info &in
    // check if already in table, if so return
    TClassRec *r = FindElementImpl(cname, kTRUE);
    if (r->fName && r->fInfo) {
-      if ( strcmp(r->fInfo->name(),typeid(ROOT::TForNamespace).name())==0
-           && strcmp(info.name(),typeid(ROOT::TForNamespace).name())==0 ) {
+      if ( strcmp(r->fInfo->name(), typeid(ROOT::TForNamespace).name()) ==0
+           && strcmp(info.name(), typeid(ROOT::TForNamespace).name()) ==0 ) {
          // We have a namespace being reloaded.
          // This okay we just keep the old one.
          return;
@@ -375,11 +376,12 @@ void TClassTable::Add(const char *cname, Version_t id,  const std::type_info &in
          // was able to make with the library containing the TClass Init.
          // Because it is already known to the interpreter, the update class info
          // will not be triggered, we need to force it.
-         gCling->RegisterTClassUpdate(oldcl,dict);
+         gCling->RegisterTClassUpdate(oldcl, dict);
       }
    }
 
-   if (!r->fName) r->fName = StrDup(cname);
+   if (!r->fName)
+      r->fName = StrDup(cname);
    r->fId   = id;
    r->fBits = pragmabits;
    r->fDict = dict;
@@ -460,7 +462,8 @@ void TClassTable::AddAlternate(const char *normName, const char *alternate)
 
 Bool_t TClassTable::Check(const char *cname, std::string &normname)
 {
-   if (!CheckClassTableInit()) return kFALSE;
+   if (!CheckClassTableInit())
+      return kFALSE;
 
    UInt_t slot = ROOT::ClassTableHash(cname, fgSize);
 
@@ -485,9 +488,10 @@ Bool_t TClassTable::Check(const char *cname, std::string &normname)
 
 void TClassTable::Remove(const char *cname)
 {
-   if (!CheckClassTableInit()) return;
+   if (!CheckClassTableInit())
+      return;
 
-   UInt_t slot = ROOT::ClassTableHash(cname,fgSize);
+   UInt_t slot = ROOT::ClassTableHash(cname, fgSize);
 
    TClassRec *r;
    TClassRec *prev = 0;
@@ -518,9 +522,11 @@ TClassRec *TClassTable::FindElementImpl(const char *cname, Bool_t insert)
    UInt_t slot = ROOT::ClassTableHash(cname,fgSize);
 
    for (TClassRec *r = fgTable[slot]; r; r = r->fNext)
-      if (strcmp(cname,r->fName)==0) return r;
+      if (strcmp(cname, r->fName) == 0)
+         return r;
 
-   if (!insert) return 0;
+   if (!insert)
+      return nullptr;
 
    fgTable[slot] = new TClassRec(fgTable[slot]);
 
@@ -537,7 +543,8 @@ TClassRec *TClassTable::FindElementImpl(const char *cname, Bool_t insert)
 
 TClassRec *TClassTable::FindElement(const char *cname, Bool_t insert)
 {
-   if (!CheckClassTableInit()) return nullptr;
+   if (!CheckClassTableInit())
+      return nullptr;
 
    // The recorded name is normalized, let's make sure we convert the
    // input accordingly.
@@ -553,7 +560,8 @@ TClassRec *TClassTable::FindElement(const char *cname, Bool_t insert)
 Version_t TClassTable::GetID(const char *cname)
 {
    TClassRec *r = FindElement(cname);
-   if (r) return r->fId;
+   if (r)
+      return r->fId;
    return -1;
 }
 
@@ -563,7 +571,8 @@ Version_t TClassTable::GetID(const char *cname)
 Int_t TClassTable::GetPragmaBits(const char *cname)
 {
    TClassRec *r = FindElement(cname);
-   if (r) return r->fBits;
+   if (r)
+      return r->fBits;
    return 0;
 }
 
@@ -579,8 +588,9 @@ DictFuncPtr_t TClassTable::GetDict(const char *cname)
    }
 
    TClassRec *r = FindElement(cname);
-   if (r) return r->fDict;
-   return 0;
+   if (r)
+      return r->fDict;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -589,7 +599,8 @@ DictFuncPtr_t TClassTable::GetDict(const char *cname)
 
 DictFuncPtr_t TClassTable::GetDict(const std::type_info& info)
 {
-   if (!CheckClassTableInit()) return nullptr;
+   if (!CheckClassTableInit())
+      return nullptr;
 
    if (gDebug > 9) {
       ::Info("GetDict", "searches for %s at 0x%zx", info.name(), (size_t)&info);
@@ -597,8 +608,9 @@ DictFuncPtr_t TClassTable::GetDict(const std::type_info& info)
    }
 
    TClassRec *r = fgIdMap->Find(info.name());
-   if (r) return r->fDict;
-   return 0;
+   if (r)
+      return r->fDict;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -607,16 +619,18 @@ DictFuncPtr_t TClassTable::GetDict(const std::type_info& info)
 
 DictFuncPtr_t TClassTable::GetDictNorm(const char *cname)
 {
-   if (!CheckClassTableInit()) return nullptr;
+   if (!CheckClassTableInit())
+      return nullptr;
 
    if (gDebug > 9) {
       ::Info("GetDict", "searches for %s", cname);
       fgIdMap->Print();
    }
 
-   TClassRec *r = FindElementImpl(cname,kFALSE);
-   if (r) return r->fDict;
-   return 0;
+   TClassRec *r = FindElementImpl(cname, kFALSE);
+   if (r)
+      return r->fDict;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -629,7 +643,8 @@ TProtoClass *TClassTable::GetProto(const char *cname)
       ::Info("GetDict", "searches for %s", cname);
    }
 
-   if (!CheckClassTableInit()) return nullptr;
+   if (!CheckClassTableInit())
+      return nullptr;
 
    if (gDebug > 9) {
       ::Info("GetDict", "searches for %s", cname);
@@ -637,8 +652,9 @@ TProtoClass *TClassTable::GetProto(const char *cname)
    }
 
    TClassRec *r = FindElement(cname);
-   if (r) return r->fProto;
-   return 0;
+   if (r)
+      return r->fProto;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -651,15 +667,17 @@ TProtoClass *TClassTable::GetProtoNorm(const char *cname)
       ::Info("GetDict", "searches for %s", cname);
    }
 
-   if (!CheckClassTableInit()) return nullptr;
+   if (!CheckClassTableInit())
+      return nullptr;
 
    if (gDebug > 9) {
       fgIdMap->Print();
    }
 
-   TClassRec *r = FindElementImpl(cname,kFALSE);
-   if (r) return r->fProto;
-   return 0;
+   TClassRec *r = FindElementImpl(cname, kFALSE);
+   if (r)
+      return r->fProto;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -807,9 +825,11 @@ void ROOT::AddClassAlternate(const char *normName, const char *alternate)
 
 void ROOT::ResetClassVersion(TClass *cl, const char *cname, Short_t newid)
 {
-   if (cname && cname!=(void*)-1) {
-      TClassRec *r = TClassTable::FindElement(cname,kFALSE);
-      if (r) r->fId = newid;
+
+   if (cname && cname != (void*)-1) {
+      TClassRec *r = TClassTable::FindElement(cname, kFALSE);
+      if (r)
+         r->fId = newid;
    }
    if (cl) {
       if (cl->fVersionUsed) {
@@ -849,9 +869,10 @@ void ROOT::RemoveClass(const char *cname)
       // get to the TStreamerInfo.
       if (gROOT && gROOT->GetListOfClasses()) {
          TObject *pcname;
-         if ((pcname=gROOT->GetListOfClasses()->FindObject(cname))) {
+         if ((pcname = gROOT->GetListOfClasses()->FindObject(cname))) {
             TClass *cl = dynamic_cast<TClass*>(pcname);
-            if (cl) cl->SetUnloaded();
+            if (cl)
+               cl->SetUnloaded();
          }
       }
       TClassTable::Remove(cname);
