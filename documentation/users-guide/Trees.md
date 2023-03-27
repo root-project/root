@@ -767,10 +767,6 @@ differently. Here are the rules that apply when splitting a branch.
    deque<pair<float,float> > fDequePair;
 ```
 
--   As of ROOT 4.01/00, only `std::vector` of objects can be split.
-    Support for splitting the other type of STL containers will be
-    introduced in the near future.
-
 -   C-structure data members are not supported in split mode.
 
 -   An object that is not split may be slow to browse.
