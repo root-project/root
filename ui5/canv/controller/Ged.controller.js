@@ -52,7 +52,6 @@ sap.ui.define([
          this.currentPlace = undefined;
 
          // TODO: deregsiter for all events
-
       },
 
       addFragment(page, kind, model) {
@@ -155,12 +154,25 @@ sap.ui.define([
       },
 
       setAxisModel(model) {
-         let obj =  this.currentPainter.getObject(this.currentPlace),
-             painter = this.getAxisHandle();
+
+         let obj, painter, is_gaxis = !this.currentPlace, axis_chopt = '', axis_ticksize = 0;
+         if (is_gaxis) {
+            painter = this.currentPainter;
+            obj = painter.getObject();
+            axis_chopt = obj.fChopt;
+            axis_ticksize = obj.fTickSize;
+         } else {
+            obj = this.currentPainter.getObject(this.currentPlace);
+            painter = this.getAxisHandle();
+            axis_ticksize = obj.fTickLength;
+         }
 
          let data = {
+             is_gaxis,
              specialRefresh: 'setAxisModel',
              axis: obj,
+             axis_chopt,
+             axis_ticksize,
              axiscolor: painter.lineatt.color,
              color_label: this.currentPadPainter.getColor(obj.fLabelColor),
              center_label: obj.TestBit(this.getAxisBit('kCenterLabels')),
@@ -179,74 +191,89 @@ sap.ui.define([
              exec = "",
              painter = this.currentPainter,
              kind = this.currentPlace,
+             is_gaxis = !kind,
              axis = painter.getObject(kind);
 
          // while axis painter is temporary object, we should not try change it attributes
 
          if (!this.currentPadPainter || !axis) return;
 
-         if ((typeof kind == 'string') && (kind.indexOf("axis")==1))
+         if (!is_gaxis && (typeof kind == 'string') && (kind.indexOf("axis") == 1))
             kind = kind.slice(0,1);
+         else
+            kind = '';
 
-         console.log(`Change axis ${kind} item ${item} value ${pars.value}`);
+         // console.log(`Change axis ${kind} item ${item} value ${pars.value}  axis ${axis._typename}`);
 
          switch(item) {
-            case "axis/fTitle":
+            case 'axis/fTitle':
                exec = `exec:SetTitle("${pars.value}")`;
                break;
-            case "axiscolor":
-               axis.fAxisColor = this.currentPadPainter.addColor(pars.value);
-               exec = this.getColorExec(painter, pars.value, "SetAxisColor");
+            case 'axiscolor':
+               let col = this.currentPadPainter.addColor(pars.value);
+               if (is_gaxis)
+                  axis.fLineColor = col;
+               else
+                  axis.fAxisColor = col;
+               exec = this.getColorExec(painter, pars.value, is_gaxis ? 'SetLineColor' : 'SetAxisColor');
                break;
-            case "color_label":
+            case 'color_label':
                axis.fLabelColor = this.currentPadPainter.addColor(pars.value);
-               exec = this.getColorExec(painter, pars.value, "SetLabelColor");
+               exec = this.getColorExec(painter, pars.value, 'SetLabelColor');
                break;
-            case "center_label":
+            case 'center_label':
                axis.InvertBit(this.getAxisBit('kCenterLabels'));
                exec = `exec:CenterLabels(${pars.value ? true : false})`;
                break;
-            case "vert_label":
+            case 'vert_label':
                axis.InvertBit(this.getAxisBit('kLabelsVert'));
-               exec = `exec:SetBit(TAxis::kLabelsVert,${pars.value ? true : false})`;
+               exec = `exec:SetBit(TAxis::kLabelsVert, ${pars.value ? true : false})`;
                break;
-            case "axis/fLabelOffset":
+            case 'axis/fLabelOffset':
                exec = `exec:SetLabelOffset(${pars.value})`;
                break;
-            case "axis/fLabelSize":
+            case 'axis/fLabelSize':
                exec = `exec:SetLabelSize(${pars.value})`;
                break;
-            case "color_title":
+            case 'color_title':
                axis.fLabelColor = this.currentPadPainter.addColor(pars.value);
-               exec = this.getColorExec(painter, pars.value, "SetTitleColor");
+               exec = this.getColorExec(painter, pars.value, 'SetTitleColor');
                break;
-            case "center_title":
+            case 'center_title':
                axis.InvertBit(this.getAxisBit('kCenterTitle'));
                exec = `exec:CenterTitle(${pars.value ? true : false})`;
                break;
-            case "rotate_title":
+            case 'rotate_title':
                axis.InvertBit(this.getAxisBit('kRotateTitle'));
-               exec = `exec:RotateTitle(${pars.value ? true : false})`;
+               exec = is_gaxis ? `exec:SetBit(TAxis::kRotateTitle, ${pars.value ? true : false})` : `exec:RotateTitle(${pars.value ? true : false})`;
                break;
-            case "axis/fTickLength":
+            case 'axis_ticksize':
+               if (is_gaxis)
+                  axis.fTickSize = pars.value;
+               else
+                  axis.fTickLength = pars.value;
                exec = `exec:SetTickLength(${pars.value})`;
                break;
-            case "axis/fTitleOffset":
+            case 'axis/fTitleOffset':
                exec = `exec:SetTitleOffset(${pars.value})`;
                break;
-            case "axis/fTitleSize":
+            case 'axis/fTitleSize':
                exec = `exec:SetTitleSize(${pars.value})`;
+               break;
+            case 'axis_chopt':
+               axis.fChopt = pars.value;
+               console.log('axis chopt = ', axis.fChopt);
+               exec = `exec:SetOption("${pars.value}")`;
                break;
          }
 
          // TAxis belongs to main painter like TH1, therefore submit commands there
-         let main = this.currentPainter.getMainPainter(true);
+         let main = is_gaxis ? painter : this.currentPainter.getMainPainter(true);
 
-         if (main?.snapid) {
-            main.interactiveRedraw("pad", exec, kind);
-         } else {
+         if (main?.snapid)
+            main.interactiveRedraw('pad', exec, kind);
+         else
             this.currentPadPainter.redraw();
-         }
       },
 
       setRAxisModel(model) {
@@ -320,13 +347,13 @@ sap.ui.define([
 
          let obj = painter.getObject(place), selectedClass = "";
 
-         if (place == "xaxis" && painter.x_handle) {
+         if (place == 'xaxis' && painter.x_handle) {
             painter = painter.x_handle;
             selectedClass = painter.getAxisType();
-         } else if (place == "yaxis" && painter.y_handle) {
+         } else if (place == 'yaxis' && painter.y_handle) {
             painter = painter.y_handle;
             selectedClass = painter.getAxisType();
-         } else if (place == "zaxis" && painter.z_handle) {
+         } else if (place == 'zaxis' && painter.z_handle) {
             painter = painter.z_handle;
             selectedClass = painter.getAxisType();
          } else {
@@ -383,9 +410,16 @@ sap.ui.define([
          }
 
          if (selectedClass == 'TAxis') {
-            let model = new JSONModel({});
+            let model = new JSONModel({ is_taxis: true });
             this.setAxisModel(model);
             model.attachPropertyChange({ _kind: 'TAxis' }, this.processAxisModelChange, this);
+            await this.addFragment(oPage, 'Axis', model);
+         }
+
+         if (selectedClass == 'TGaxis') {
+            let model = new JSONModel({ is_taxis: false });
+            this.setAxisModel(model);
+            model.attachPropertyChange({ _kind: 'TGaxis' }, this.processAxisModelChange, this);
             await this.addFragment(oPage, 'Axis', model);
          }
 
@@ -409,8 +443,8 @@ sap.ui.define([
             if (cont[n] && cont[n].ged_fragment) {
                let model = cont[n].getModel();
 
-               let func = model.getProperty("/specialRefresh");
-               if (func)
+               let func = model.getProperty('/specialRefresh');
+               if (func && (typeof func == 'function'))
                   this[func](model);
                else
                   model.refresh();
