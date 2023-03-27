@@ -212,7 +212,7 @@ private:
    std::vector<TTree *> fSourceTrees;
 
    /// Maps the name of the original TTree to the desired RNTuple name.
-   std::map<std::string_view, std::string> fNTupleNames;
+   std::map<std::string, std::string> fNTupleNames;
    std::string fDestFileName;
    std::unique_ptr<TFile> fDestFile;
    RNTupleWriteOptions fWriteOptions;
@@ -265,8 +265,8 @@ public:
    void SetMaxEntries(std::uint64_t maxEntries) { fMaxEntries = maxEntries; }
 
    /// Throws an exception in case multiple TTrees are imported simultaneously.
-   ROOT::Experimental::RResult<void> SetNTupleName(const std::string &ntupleName);
-   ROOT::Experimental::RResult<void> SetNTupleName(std::string_view treeName, const std::string &ntupleName);
+   ROOT::Experimental::RResult<void> SetNTupleName(std::string_view ntupleName);
+   ROOT::Experimental::RResult<void> SetNTupleName(std::string_view treeName, std::string_view ntupleName);
 
    /// Whether or not information and progress is printed to stdout.
    void SetIsQuiet(bool value) { fIsQuiet = value; }

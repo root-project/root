@@ -86,7 +86,7 @@ ROOT::Experimental::RNTupleImporter::Create(std::string_view sourceFileName, std
                                             std::string_view destFileName)
 {
    auto importer = std::unique_ptr<RNTupleImporter>(new RNTupleImporter());
-   importer->fNTupleNames[treeName] = treeName;
+   importer->fNTupleNames[std::string(treeName)] = treeName;
    importer->fSourceFile = std::unique_ptr<TFile>(TFile::Open(std::string(sourceFileName).c_str()));
    if (!importer->fSourceFile || importer->fSourceFile->IsZombie()) {
       return R__FAIL("cannot open source file " + std::string(sourceFileName));
@@ -405,7 +405,7 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::Import()
 
 ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::Import(TTree *sourceTree)
 {
-   std::string ntupleName = fNTupleNames.at(std::string_view(sourceTree->GetName()));
+   std::string ntupleName = fNTupleNames.at(sourceTree->GetName());
    if (fDestFile->FindKey(ntupleName.c_str()) != nullptr)
       return R__FAIL("Key '" + ntupleName + "' already exists in file " + fDestFileName);
 
@@ -460,7 +460,7 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::Import(TT
    return RResult<void>::Success();
 }
 
-ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::SetNTupleName(const std::string &ntupleName)
+ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::SetNTupleName(std::string_view ntupleName)
 {
    if (fSourceTrees.size() > 1) {
       return R__FAIL("Multiple trees are being imported, please specify the source tree name");
@@ -470,11 +470,11 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::SetNTuple
 }
 
 ROOT::Experimental::RResult<void>
-ROOT::Experimental::RNTupleImporter::SetNTupleName(std::string_view treeName, const std::string &ntupleName)
+ROOT::Experimental::RNTupleImporter::SetNTupleName(std::string_view treeName, std::string_view ntupleName)
 {
-   if (fNTupleNames.find(treeName) == fNTupleNames.end()) {
+   if (fNTupleNames.find(std::string(treeName)) == fNTupleNames.end()) {
       return R__FAIL("Tree '" + std::string(treeName) + "' not present in " + std::string(fSourceFile->GetName()));
    }
-   fNTupleNames.at(treeName) = ntupleName;
+   fNTupleNames.at(std::string(treeName)) = ntupleName;
    return RResult<void>::Success();
 }
