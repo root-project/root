@@ -274,6 +274,8 @@ void ModuleMap::resolveHeader(Module *Mod,
     // this was supposed to modularize the builtin header alone.
   } else if (Header.Kind == Module::HK_Excluded) {
     // Ignore missing excluded header files. They're optional anyway.
+  } else if (Mod->IsOptional) {
+     // Optional submodules can have missing headers.
   } else {
     // If we find a module that has a missing header, we mark this module as
     // unavailable and store the header directive for displaying diagnostics.
@@ -1037,6 +1039,7 @@ Module *ModuleMap::inferFrameworkModule(const DirectoryEntry *FrameworkDir,
   Result->IsExternC |= Attrs.IsExternC;
   Result->ConfigMacrosExhaustive |= Attrs.IsExhaustive;
   Result->NoUndeclaredIncludes |= Attrs.NoUndeclaredIncludes;
+  Result->IsOptional |= Attrs.IsOptional;
   Result->Directory = FrameworkDir;
 
   // Chop off the first framework bit, as that is implied.
@@ -1749,7 +1752,10 @@ namespace {
     AT_exhaustive,
 
     /// The 'no_undeclared_includes' attribute.
-    AT_no_undeclared_includes
+    AT_no_undeclared_includes,
+
+    /// The 'optional' attribute.
+    AT_optional
   };
 
 } // namespace
@@ -2005,6 +2011,8 @@ void ModuleMapParser::parseModuleDecl() {
     ActiveModule->IsSystem = true;
   if (Attrs.IsExternC)
     ActiveModule->IsExternC = true;
+  if (Attrs.IsOptional)
+    ActiveModule->IsOptional = true;
   if (Attrs.NoUndeclaredIncludes ||
       (!ActiveModule->Parent && ModuleName == "Darwin"))
     ActiveModule->NoUndeclaredIncludes = true;
@@ -2905,6 +2913,7 @@ bool ModuleMapParser::parseOptionalAttributes(Attributes &Attrs) {
           .Case("exhaustive", AT_exhaustive)
           .Case("extern_c", AT_extern_c)
           .Case("no_undeclared_includes", AT_no_undeclared_includes)
+          .Case("optional", AT_optional)
           .Case("system", AT_system)
           .Default(AT_unknown);
     switch (Attribute) {
@@ -2927,6 +2936,10 @@ bool ModuleMapParser::parseOptionalAttributes(Attributes &Attrs) {
 
     case AT_no_undeclared_includes:
       Attrs.NoUndeclaredIncludes = true;
+      break;
+
+    case AT_optional:
+      Attrs.IsOptional = true;
       break;
     }
     consumeToken();

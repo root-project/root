@@ -241,9 +241,12 @@ private:
     /// and headers from used modules.
     unsigned NoUndeclaredIncludes : 1;
 
+    /// Whether we can have a submodule with missing header files.
+    unsigned IsOptional : 1;
+
     Attributes()
         : IsSystem(false), IsExternC(false), IsExhaustive(false),
-          NoUndeclaredIncludes(false) {}
+          NoUndeclaredIncludes(false), IsOptional(false) {}
   };
 
   /// A directory for which framework modules can be inferred.
