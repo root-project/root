@@ -14,10 +14,15 @@
 #ifndef RooFit_Detail_CodeSquashContext_h
 #define RooFit_Detail_CodeSquashContext_h
 
-#include "RooAbsArg.h"
+#include <RooAbsArg.h>
+#include <RooNumber.h>
 
+#include <sstream>
 #include <string>
 #include <unordered_map>
+
+template <class T>
+class RooTemplateProxy;
 
 namespace RooFit {
 
@@ -34,7 +39,13 @@ public:
    /// @brief Gets the result for the given node using the node name.
    /// @param key The node to get the result string for.
    /// @return String representing the result of this node.
-   inline std::string const &getResult(RooAbsArg const *key) const { return _nodeNames.at(key->namePtr()); }
+   inline std::string const &getResult(RooAbsArg const &key) const { return _nodeNames.at(key.namePtr()); }
+
+   template <class T>
+   std::string const &getResult(RooTemplateProxy<T> const &key) const
+   {
+      return getResult(key.arg());
+   }
 
    /// @brief Checks if the current node has a result string already assigned.
    /// @param key The node to get the result string for.
@@ -69,7 +80,40 @@ public:
    /// @param in String to add to the squashed code.
    inline void addToCodeBody(std::string const &in) { _code += in; }
 
+   /// @brief Build the code to call the function with name `funcname`, passing some arguments.
+   /// The arguments can either be doubles or some RooFit arguments whose
+   /// results will be looked up in the context.
+   template <typename... Args_t>
+   std::string buildCall(std::string const &funcname, Args_t const &...args) const
+   {
+      std::stringstream ss;
+      ss << funcname << "(" << buildArgs(args...) << ")" << std::endl;
+      return ss.str();
+   }
+
 private:
+   std::string buildArg(double x) const { return RooNumber::toString(x); }
+
+   template <class T>
+   std::string buildArg(T const &arg) const
+   {
+      return getResult(arg);
+   }
+
+   std::string buildArgs() const { return ""; }
+
+   template <class Arg_t>
+   std::string buildArgs(Arg_t const &arg) const
+   {
+      return buildArg(arg);
+   }
+
+   template <typename Arg_t, typename... Args_t>
+   std::string buildArgs(Arg_t const &arg, Args_t const &...args) const
+   {
+      return buildArg(arg) + ", " + buildArgs(args...);
+   }
+
    /// @brief Map of node names to their result strings.
    std::unordered_map<const TNamed *, std::string> _nodeNames;
    /// @brief Block of code that is placed before the rest of the function body.

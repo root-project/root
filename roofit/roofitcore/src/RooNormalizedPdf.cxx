@@ -20,7 +20,7 @@
  */
 
 void RooNormalizedPdf::computeBatch(cudaStream_t * /*stream*/, double *output, size_t nEvents,
-                                    RooFit::Detail::DataMap const& dataMap) const
+                                    RooFit::Detail::DataMap const &dataMap) const
 {
    auto nums = dataMap.at(_pdf);
    auto integralSpan = dataMap.at(_normIntegral);
@@ -40,5 +40,5 @@ void RooNormalizedPdf::computeBatch(cudaStream_t * /*stream*/, double *output, s
 void RooNormalizedPdf::translate(RooFit::Detail::CodeSquashContext &ctx) const
 {
    // For now just return function/normalization integral.
-   ctx.addResult(this, ctx.getResult(&_pdf.arg()) + "/" + ctx.getResult(&_normIntegral.arg()));
+   ctx.addResult(this, ctx.getResult(_pdf) + "/" + ctx.getResult(_normIntegral));
 }
