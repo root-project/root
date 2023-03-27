@@ -131,7 +131,18 @@ public:
    /// A bare model has no default entry
    static std::unique_ptr<RNTupleModel> CreateBare();
 
-   /// Creates a new field and a corresponding tree value that is managed by a shared pointer.
+   struct NameWithDescription_t {
+      NameWithDescription_t(const char* name): fName(name) {}
+      NameWithDescription_t(std::string_view name): fName(name) {}
+      NameWithDescription_t(std::string_view name, std::string_view descr):
+      fName(name), fDescription(descr) {}
+
+      std::string_view fName;
+      std::string_view fDescription = "";
+   };
+
+   /// Creates a new field given a `name` or `{name, description}` pair and a
+   /// corresponding tree value that is managed by a shared pointer.
    ///
    /// **Example: create some fields and fill an %RNTuple**
    /// ~~~ {.cpp}
@@ -155,6 +166,7 @@ public:
    ///    }
    /// }
    /// ~~~
+   ///
    /// **Example: create a field with an initial value**
    /// ~~~ {.cpp}
    /// #include <ROOT/RNTuple.hxx>
@@ -164,14 +176,6 @@ public:
    /// // pt's initial value is 42.0
    /// auto pt = model->MakeField<float>("pt", 42.0);
    /// ~~~
-   template <typename T, typename... ArgsT>
-   std::shared_ptr<T> MakeField(std::string_view fieldName, ArgsT&&... args) {
-      return MakeField<T>({fieldName, ""}, std::forward<ArgsT>(args)...);
-   }
-
-   /// Creates a new field given a `{name, description}` pair and a corresponding tree value that
-   /// is managed by a shared pointer.
-   ///
    /// **Example: create a field with a description**
    /// ~~~ {.cpp}
    /// #include <ROOT/RNTuple.hxx>
@@ -183,13 +187,13 @@ public:
    /// });
    /// ~~~
    template <typename T, typename... ArgsT>
-   std::shared_ptr<T> MakeField(std::pair<std::string_view, std::string_view> fieldNameDesc,
+   std::shared_ptr<T> MakeField(const NameWithDescription_t &fieldNameDesc,
       ArgsT&&... args)
    {
       EnsureNotFrozen();
-      EnsureValidFieldName(fieldNameDesc.first);
-      auto field = std::make_unique<RField<T>>(fieldNameDesc.first);
-      field->SetDescription(fieldNameDesc.second);
+      EnsureValidFieldName(fieldNameDesc.fName);
+      auto field = std::make_unique<RField<T>>(fieldNameDesc.fName);
+      field->SetDescription(fieldNameDesc.fDescription);
       std::shared_ptr<T> ptr;
       if (fDefaultEntry)
          ptr = fDefaultEntry->AddValue<T>(field.get(), std::forward<ArgsT>(args)...);
@@ -204,21 +208,15 @@ public:
 
    /// Throws an exception if fromWhere is null.
    template <typename T>
-   void AddField(std::string_view fieldName, T* fromWhere) {
-      AddField<T>({fieldName, ""}, fromWhere);
-   }
-
-   /// Throws an exception if fromWhere is null.
-   template <typename T>
-   void AddField(std::pair<std::string_view, std::string_view> fieldNameDesc, T* fromWhere) {
+   void AddField(const NameWithDescription_t &fieldNameDesc, T* fromWhere) {
       EnsureNotFrozen();
       EnsureNotBare();
       if (!fromWhere)
          throw RException(R__FAIL("null field fromWhere"));
-      EnsureValidFieldName(fieldNameDesc.first);
+      EnsureValidFieldName(fieldNameDesc.fName);
 
-      auto field = std::make_unique<RField<T>>(fieldNameDesc.first);
-      field->SetDescription(fieldNameDesc.second);
+      auto field = std::make_unique<RField<T>>(fieldNameDesc.fName);
+      field->SetDescription(fieldNameDesc.fDescription);
       fDefaultEntry->CaptureValue(field->CaptureValue(fromWhere));
       fFieldZero->Attach(std::move(field));
    }
