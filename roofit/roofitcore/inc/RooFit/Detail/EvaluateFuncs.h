@@ -23,7 +23,7 @@ namespace Detail {
 namespace EvaluateFuncs {
 
 /// @brief Function to evaluate an un-normalized RooGaussian.
-inline double gaussEvaluate(double x, double mean, double sigma)
+inline double gaussianEvaluate(double x, double mean, double sigma)
 {
    const double arg = x - mean;
    const double sig = sigma;

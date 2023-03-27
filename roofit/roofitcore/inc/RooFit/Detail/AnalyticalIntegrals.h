@@ -16,6 +16,8 @@
 
 #include <TMath.h>
 
+#include <cmath>
+
 namespace RooFit {
 
 namespace Detail {
@@ -61,6 +63,15 @@ inline double gaussianIntegral(double xMin, double xMax, double mean, double sig
    else
       cond = ecmin - ecmax;
    return resultScale * 0.5 * cond;
+}
+
+inline double exponentialIntegral(double xMin, double xMax, double constant)
+{
+   if (constant == 0.0) {
+      return xMax - xMin;
+   }
+
+   return (std::exp(constant * xMax) - std::exp(constant * xMin)) / constant;
 }
 
 } // namespace AnalyticalIntegrals
