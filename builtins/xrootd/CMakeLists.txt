@@ -76,7 +76,7 @@ set(XROOTD_LIBRARY ${XROOTD_PREFIX}/${XROOTD_LIBDIR}/${XROOTD_LIBNAME} CACHE INT
 set(XROOTD_LIBRARIES ${XROOTD_LIBRARIES} CACHE INTERNAL "" FORCE)
 
 add_library(xrootd INTERFACE)
-foreach(dir ${XROOT_INCLUDE_DIR})
+foreach(dir ${XROOTD_INCLUDE_DIR})
   target_include_directories(xrootd INTERFACE $<BUILD_INTERFACE:${dir}>)
 endforeach()
 target_link_libraries(xrootd INTERFACE $<BUILD_INTERFACE:${XROOTD_LIBRARIES}>)
