@@ -16,12 +16,11 @@
 #include <RooConstVar.h>
 #include <RooDataSet.h>
 #include <RooFitResult.h>
+#include <RooExponential.h>
 #include <RooFuncWrapper.h>
 #include <RooGaussian.h>
-#include <RooHelpers.h>
 #include <RooMinimizer.h>
 #include <RooProduct.h>
-#include <RooRealIntegral.h>
 #include <RooRealVar.h>
 
 #include <TROOT.h>
@@ -38,6 +37,12 @@ namespace {
 double getNumDerivative(const RooAbsReal &pdf, RooRealVar &var, const RooArgSet &normSet, double eps = 1e-8)
 {
    double orig = var.getVal();
+   if (!var.inRange(orig + eps, nullptr)) {
+      throw std::runtime_error("getNumDerivative(): positive variation outside of range!");
+   }
+   if (!var.inRange(orig - eps, nullptr)) {
+      throw std::runtime_error("getNumDerivative(): negative variation outside of range!");
+   }
    var.setVal(orig + eps);
    double plus = pdf.getVal(normSet);
    var.setVal(orig - eps);
@@ -193,8 +198,6 @@ TEST(RooFuncWrapper, NllWithObservables)
 
 TEST(RooFuncWrapper, GaussianNormalized)
 {
-   using namespace RooFit;
-
    RooRealVar x("x", "x", 0, -10, std::numeric_limits<double>::infinity());
 
    RooRealVar mu("mu", "mu", 0, -10, 10);
@@ -227,5 +230,32 @@ TEST(RooFuncWrapper, GaussianNormalized)
    // Check if derivatives are equal
    for (std::size_t i = 0; i < paramsGauss.size(); ++i) {
       EXPECT_NEAR(getNumDerivative(gauss, static_cast<RooRealVar &>(*paramsGauss[i]), normSet), dMyGauss[i], 1e-8);
+   }
+}
+
+TEST(RooFuncWrapper, Exponential)
+{
+   RooRealVar x("x", "x", 1.0, 0, 10);
+   RooRealVar c("c", "c", 0.1, 0, 10);
+
+   RooExponential expo("expo", "expo", x, c);
+
+   RooArgSet normSet{x};
+
+   RooFuncWrapper expoFunc("expo", "expo", expo, normSet);
+
+   RooArgSet params;
+   expo.getParameters(nullptr, params);
+
+   EXPECT_NEAR(expo.getVal(normSet), expoFunc.getVal(), 1e-8);
+
+   // Get AD based derivative
+   double dExpo[2] = {};
+   expoFunc.getGradient(dExpo);
+
+   // Check if derivatives are equal
+   for (std::size_t i = 0; i < params.size(); ++i) {
+      EXPECT_NEAR(getNumDerivative(expo, static_cast<RooRealVar &>(*params[i]), normSet), dExpo[i], 1e-8)
+         << params[i]->GetName();
    }
 }

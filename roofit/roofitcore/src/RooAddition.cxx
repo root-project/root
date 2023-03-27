@@ -189,7 +189,7 @@ void RooAddition::translate(RooFit::Detail::CodeSquashContext &ctx) const
       std::string decl = "double " + varName + "[" + std::to_string(eleSize) + "]{";
       int idx = 0;
       for (RooAbsArg *it : _set) {
-         decl += ctx.getResult(it) + ",";
+         decl += ctx.getResult(*it) + ",";
          ctx.addResult(it, varName + "[" + std::to_string(idx) + "]");
          idx++;
       }
@@ -208,7 +208,7 @@ void RooAddition::translate(RooFit::Detail::CodeSquashContext &ctx) const
 
    result = "(";
    for (RooAbsArg *it : _set) {
-      result += ctx.getResult(it) + '+';
+      result += ctx.getResult(*it) + '+';
    }
    result.back() = ')';
    ctx.addResult(this, result);

@@ -43,11 +43,11 @@ RooFuncWrapper::RooFuncWrapper(const char *name, const char *title, RooAbsReal c
    std::unique_ptr<RooAbsReal> pdf{RooFit::Detail::compileForNormSet(obj, normSet)};
    // Get the parameters.
    RooArgSet paramSet;
-   pdf->getParameters(data ? data->get() : nullptr, paramSet);
+   obj.getParameters(data ? data->get() : nullptr, paramSet);
    // Get the observable if we have a valid dataset.
    RooArgSet obsSet;
    if (data)
-      pdf->getObservables(data->get(), obsSet);
+      obj.getObservables(data->get(), obsSet);
 
    // Load the parameters and observables.
    loadParamsAndObs(name, paramSet, obsSet, data);
@@ -58,7 +58,7 @@ RooFuncWrapper::RooFuncWrapper(const char *name, const char *title, RooAbsReal c
    declareAndDiffFunction(name, func);
 }
 
-RooFuncWrapper::RooFuncWrapper(const RooFuncWrapper &other, const char *name /*=nullptr*/)
+RooFuncWrapper::RooFuncWrapper(const RooFuncWrapper &other, const char *name)
    : RooAbsReal(other, name),
      _params("!params", this, other._params),
      _func(other._func),
@@ -177,8 +177,8 @@ void RooFuncWrapper::gradient(const double *x, double *g) const
    _grad(const_cast<double *>(x), _observables.data(), g);
 }
 
-std::string RooFuncWrapper::buildCode(RooAbsReal const &head, RooArgSet const & /* paramSet */,
-                               RooArgSet const &obsSet, const RooAbsData *data)
+std::string RooFuncWrapper::buildCode(RooAbsReal const &head, RooArgSet const & /* paramSet */, RooArgSet const &obsSet,
+                                      const RooAbsData *data)
 {
    RooFit::Detail::CodeSquashContext ctx;
 
@@ -224,5 +224,5 @@ std::string RooFuncWrapper::buildCode(RooAbsReal const &head, RooArgSet const & 
       curr->translate(ctx);
    }
 
-   return ctx.assembleCode(ctx.getResult(&head));
+   return ctx.assembleCode(ctx.getResult(head));
 }
