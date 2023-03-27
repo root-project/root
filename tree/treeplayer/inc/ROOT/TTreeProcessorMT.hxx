@@ -100,6 +100,9 @@ public:
    TTreeProcessorMT(const std::vector<std::string_view> &filenames, std::string_view treename = "",
                     UInt_t nThreads = 0u,
                     const std::pair<Long64_t, Long64_t> &globalRange = {0, std::numeric_limits<Long64_t>::max()});
+   TTreeProcessorMT(std::initializer_list<std::string_view> filenames, std::string_view treename = "", UInt_t nThreads = 0u,
+                    const std::pair<Long64_t, Long64_t> &globalRange = {0, std::numeric_limits<Long64_t>::max()}):
+                    TTreeProcessorMT(std::vector<std::string_view>(filenames), treename, nThreads, globalRange) {}
    TTreeProcessorMT(TTree &tree, const TEntryList &entries, UInt_t nThreads = 0u);
    TTreeProcessorMT(TTree &tree, UInt_t nThreads = 0u,
                     const std::pair<Long64_t, Long64_t> &globalRange = {0, std::numeric_limits<Long64_t>::max()});
