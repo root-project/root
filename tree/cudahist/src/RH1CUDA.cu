@@ -84,6 +84,7 @@ __global__ void HistoKernel(Double_t *histogram, Double_t *binEdges, Double_t xM
    // Fill local histogram
    for (int i = tid; i < bufferSize; i += stride) {
       auto bin = FindFixBin(cells[i], binEdges, nCells, xMin, xMax);
+      printf("bin:%d x:%f ncells:%d min:%f max:%f\n", bin, cells[i], nCells, xMin, xMax);
       atomicAdd(&smem[bin], w[i]);
 
       // Don't include u/overflow bins in stats.
@@ -185,10 +186,12 @@ RH1CUDA::RH1CUDA()
    fNcells = 0;
    fXmin = 0;
    fXmax = 1;
+   fEntries = 0;
 
    fDeviceCells = NULL;
    fDeviceWeights = NULL;
    fDeviceBinEdges = NULL;
+   fDeviceStats = NULL;
    fBinEdges = NULL;
 }
 

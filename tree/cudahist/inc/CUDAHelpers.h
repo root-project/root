@@ -2,6 +2,7 @@
 #define CUDA_HELPERS_H
 
 #include <string>
+
 #include "RtypesCore.h"
 #include "TError.h"
 #include "cuda.h"
@@ -17,7 +18,7 @@ inline static void __checkCudaErrors(cudaError_t error, std::string func, std::s
 }
 
 
-namespace CUDAHelperKernels {
+namespace CUDAHelpers {
    // See https://developer.download.nvidia.com/assets/cuda/files/reduction.pdf
    //     https://github.com/zchee/cuda-sample/blob/master/6_Advanced/reduction/reduction_kernel.cu
    template <UInt_t BlockSize, typename Op, typename ValType, Bool_t Overwrite=true>
@@ -25,12 +26,9 @@ namespace CUDAHelperKernels {
 
    template <typename T>
    __device__ Long64_t BinarySearchCUDA(Long64_t n, const T  *array, T value);
-}
 
-class CUDAHelper {
-public:
-   template <typename ValType, Bool_t Overwrite=true>
-   void ReduceSum(ValType *input, ValType *output, UInt_t n);
-};
+   template <UInt_t BlockSize, typename Op, typename ValType, Bool_t Overwrite>
+   void Reduce(ValType *input, ValType *output, UInt_t n);
+}
 
 #endif

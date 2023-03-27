@@ -38,12 +38,13 @@ __device__ inline Int_t GetBin(Int_t i, Int_t dim, RHnCUDA::RAxis *axes, Double_
    auto *x = &cells[i * dim];
 
    auto d = dim-1;
-   auto bin = FindFixBin(x[d], axes[d].fBinEdges, axes[d].fNcells - 2, axes[d].fMin, axes[d].fMax);
-   printf("dim:%d  bin:%d x:%f ncells:%d min:%f max:%f\n", d, bin, x[d], axes[d].fNcells, axes[d].fMin, axes[d].fMax);
+   auto bin = FindFixBin(x[d], axes[d].kBinEdges, axes[d].fNcells - 2, axes[d].fMin, axes[d].fMax);
+   // printf("dim:%d  bin:%d x:%f ncells:%d min:%f max:%f\n", d, bin, x[d], axes[d].fNcells, axes[d].fMin, axes[d].fMax);
 
    for (d--; d >= 0; d--) {
-      auto binD = FindFixBin(x[d], axes[d].fBinEdges, axes[d].fNcells - 2, axes[d].fMin, axes[d].fMax);
-      printf("dim:%d  bin:%d x:%f ncells:%d min:%f max:%f\n", d, bin, x[d], axes[d].fNcells, axes[d].fMin, axes[d].fMax);
+      auto binD = FindFixBin(x[d], axes[d].kBinEdges, axes[d].fNcells - 2, axes[d].fMin, axes[d].fMax);
+      if (binD < 0) return -1;
+      // printf("dim:%d  bin:%d x:%f ncells:%d min:%f max:%f\n", d, bin, x[d], axes[d].fNcells, axes[d].fMin, axes[d].fMax);
       bin = bin * axes[d].fNcells + binD;
    }
 
@@ -66,7 +67,7 @@ __global__ void HistoKernel(Double_t *histogram, Int_t dim, RHnCUDA::RAxis *axes
    // Fill local histogram
    for (int i = tid; i < bufferSize; i += stride) {
       auto bin = GetBin(i, dim, axes, cells);
-      printf("%d: add %f to bin %d\n", tid, w[i], bin);
+      // printf("%d: add %f to bin %d\n", tid, w[i], bin);
       if (bin < 0) continue;
       atomicAdd(&smem[bin], w[i]);
 
@@ -163,7 +164,7 @@ __global__ void HistoKernel(Double_t *histogram, Int_t dim, RHnCUDA::RAxis *axes
 ////////////////////////////////////////////////////////////////////////////////
 /// RHnCUDA constructor
 
-RHnCUDA::RHnCUDA(Int_t dim, Int_t *ncells, Double_t *xlow, Double_t *xhigh, const Double_t **binEdges) : fDim(dim)
+RHnCUDA::RHnCUDA(Int_t dim, Int_t *ncells, Double_t *xlow, Double_t *xhigh, const Double_t **binEdges) : kDim(dim)
 {
    fThreadBlockSize = 512;
    fBufferSize = 10000;
@@ -180,13 +181,13 @@ RHnCUDA::RHnCUDA(Int_t dim, Int_t *ncells, Double_t *xlow, Double_t *xhigh, cons
       axis.fNcells = ncells[i];
       axis.fMin = xlow[i];
       axis.fMax = xhigh[i];
-      axis.fBinEdges = binEdges[i];
+      axis.kBinEdges = binEdges[i];
       fAxes.push_back(axis);
 
       fNbins *= ncells[i];
       printf("ncells:%d min:%f max:%f ", axis.fNcells, axis.fMin, axis.fMax);
    }
-   printf("nbins:%d dim:%d\n", fNbins, fDim);
+   printf("nbins:%d dim:%d\n", fNbins, kDim);
 }
 
 // Allocate buffers for histogram on GPU
@@ -200,23 +201,23 @@ void RHnCUDA::AllocateH1D()
    ERRCHECK(cudaMalloc((void **)&fDeviceWeights, fBufferSize * sizeof(Double_t)));
 
    // Allocate array of cells to fill on GPU
-   ERRCHECK(cudaMalloc((void **)&fDeviceCells, fDim * fBufferSize * sizeof(Double_t)));
+   ERRCHECK(cudaMalloc((void **)&fDeviceCells, kDim * fBufferSize * sizeof(Double_t)));
 
    // Allocate axes on the GPU
    ERRCHECK(cudaMalloc((void **)&fDeviceAxes, fBufferSize * sizeof(RAxis)));
-   ERRCHECK(cudaMemcpy(fDeviceAxes, fAxes.data(), fDim * sizeof(RAxis), cudaMemcpyHostToDevice));
-   for (int i = 0; i < fDim; i++) {
+   ERRCHECK(cudaMemcpy(fDeviceAxes, fAxes.data(), kDim * sizeof(RAxis), cudaMemcpyHostToDevice));
+   for (int i = 0; i < kDim; i++) {
       // Allocate memory for BinEdges array.
-      if (fAxes[i].fBinEdges != NULL) {
+      if (fAxes[i].kBinEdges != NULL) {
          // ERRCHECK(cudaMalloc((void **)fDeviceAxes[i].fBinEdges, fAxes[i].fNcells * sizeof(Double_t)));
          // ERRCHECK(cudaMemcpy(&fDeviceAxes[i].fBinEdges, fAxes[i].fBinEdges, fAxes[i].fNcells * sizeof(Double_t),
          //                     cudaMemcpyHostToDevice));
 
          Double_t *deviceBinEdges;
          ERRCHECK(cudaMalloc((void **)&deviceBinEdges, fAxes[i].fNcells * sizeof(Double_t)));
-         ERRCHECK(cudaMemcpy(deviceBinEdges, fAxes[i].fBinEdges, fAxes[i].fNcells * sizeof(Double_t),
+         ERRCHECK(cudaMemcpy(deviceBinEdges, fAxes[i].kBinEdges, fAxes[i].fNcells * sizeof(Double_t),
                              cudaMemcpyHostToDevice));
-         ERRCHECK(cudaMemcpy(&fDeviceAxes[i].fBinEdges, &deviceBinEdges, sizeof(Double_t *), cudaMemcpyHostToDevice));
+         ERRCHECK(cudaMemcpy(&fDeviceAxes[i].kBinEdges, &deviceBinEdges, sizeof(Double_t *), cudaMemcpyHostToDevice));
       }
    }
 
@@ -271,11 +272,11 @@ void RHnCUDA::ExecuteCUDAH1D()
 
    fEntries += size;
 
-   ERRCHECK(cudaMemcpy(fDeviceCells, fCells.data(), fDim * size * sizeof(Double_t), cudaMemcpyHostToDevice));
+   ERRCHECK(cudaMemcpy(fDeviceCells, fCells.data(), kDim * size * sizeof(Double_t), cudaMemcpyHostToDevice));
    ERRCHECK(cudaMemcpy(fDeviceWeights, fWeights.data(), size * sizeof(Double_t), cudaMemcpyHostToDevice));
 
    HistoKernel<<<size / fThreadBlockSize + 1, fThreadBlockSize, fNbins * sizeof(Double_t)>>>(
-      fDeviceHisto, fDim, fDeviceAxes, fNbins, fDeviceCells, fDeviceWeights, size, fDeviceStats);
+      fDeviceHisto, kDim, fDeviceAxes, fNbins, fDeviceCells, fDeviceWeights, size, fDeviceStats);
    ERRCHECK(cudaGetLastError());
    GetStats(size);
 
@@ -285,7 +286,7 @@ void RHnCUDA::ExecuteCUDAH1D()
 
 void RHnCUDA::Fill(std::vector<Double_t> x, Double_t w)
 {
-   if (x.size() != fDim)
+   if (x.size() != kDim)
       return;
 
    fCells.insert(fCells.end(), x.begin(), x.end());

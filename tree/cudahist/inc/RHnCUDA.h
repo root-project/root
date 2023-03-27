@@ -25,7 +25,7 @@ public:
       Double_t               fMin;              ///< Low edge of first bin
       Double_t               fMax;              ///< Upper edge of last bin
 
-      const Double_t        *fBinEdges;         ///< Bin edges array.
+      const Double_t        *kBinEdges;         ///< Bin edges array.
    };
 
 private:
@@ -33,7 +33,7 @@ private:
    Int_t                  fNbins;               ///< Total number of bins in the histogram
 
    Int_t                  fThreadBlockSize;
-   const Int_t            fDim;
+   const Int_t            kDim;
    std::vector<RAxis>     fAxes;
    RAxis                 *fDeviceAxes;
 
@@ -60,9 +60,9 @@ public:
    void Fill(std::vector<Double_t> x, Double_t w);
 
    void Fill(Double_t a, Double_t b) {
-      if (fDim == 1) {
+      if (kDim == 1) {
          Fill(std::vector<Double_t> {a}, (Double_t) b);
-      } else if (fDim == 2) {
+      } else if (kDim == 2) {
          Fill(std::vector<Double_t> {a, b}, 1.0);
       }
    }

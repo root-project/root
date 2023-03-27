@@ -1,5 +1,5 @@
-#ifndef RH1CUDA_H
-#define RH1CUDA_H
+#ifndef RH2CUDA_H
+#define RH2CUDA_H
 
 #include "RtypesCore.h"
 #include "TError.h"
@@ -16,7 +16,7 @@ struct HistStats {
    Double_t     *fSumw2;           ///<  Array of sum of squares of weights
 };
 
-class RH1CUDA  {
+class RH2CUDA  {
 private:
    Int_t                  fThreadBlockSize;
 
@@ -32,28 +32,30 @@ private:
    HistStats             *fDeviceStats;
 
    UInt_t                 fBufferSize;       // Number of bins to buffer.
-   std::vector<Double_t>  fCells;            // Buffer of bins to fill. TODO: vector or just int*?
+   std::vector<Double_t>  fCellsX;            // Buffer of bins to fill. TODO: vector or just int*?
+   std::vector<Double_t>  fCellsY;            // Buffer of bins to fill. TODO: vector or just int*?
    std::vector<Double_t>  fWeights;          // Buffer of weigths for each bin.
    Double_t              *fDeviceCells;      // Pointer to array of bins to fill on the GPU.
    Double_t              *fDeviceWeights;    // Pointer to array of weights on the GPU.
 
 public:
-   RH1CUDA();
+   RH2CUDA();
 
-   // RH1CUDA(Int_t _nbins);
-   RH1CUDA(Int_t ncells, Double_t xlow, Double_t xhigh, const Double_t *binEdges);
+   // RH2CUDA(Int_t _nbins);
+   RH2CUDA(Int_t ncells, Double_t xlow, Double_t xhigh, const Double_t *binEdges);
 
    void AllocateH1D();
    Int_t RetrieveResults(Double_t *histResult, Double_t *stats);
 
    void Fill(Double_t x);
    void Fill(Double_t x, Double_t w);
+   void Fill(Float_t x, Double_t w) { Fill((Double_t)x, (Double_t) w); }
    void Fill(const char *namex, Double_t w);
 
    template <typename... ValTypes>
    void Fill(const ValTypes &...x)
    {
-      // ( (std::cout << ", " << x), ...) << std::endl;
+     // ( (std::cout << ", " << x), ...) << std::endl;
       Fatal("Fill", "Cuda version not implemented yet");
    }
 
