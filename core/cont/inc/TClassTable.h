@@ -24,6 +24,8 @@
 
 #include "TObject.h"
 #include <string>
+#include <atomic>
+#include <mutex>
 
 class TProtoClass;
 
@@ -40,13 +42,15 @@ friend  class TROOT;
 
 private:
    typedef ROOT::TMapTypeToClassRec IdMap_t;
+   using atomic_uint = std::atomic<UInt_t>;
+   class LockAndNormalize;
 
    static ROOT::TClassAlt **fgAlternate;
    static ROOT::TClassRec **fgTable;
    static ROOT::TClassRec **fgSortedTable;
    static IdMap_t     *fgIdMap;
    static UInt_t       fgSize;
-   static UInt_t       fgTally;
+   static atomic_uint  fgTally;
    static Bool_t       fgSorted;
    static UInt_t       fgCursor;
 

@@ -47,12 +47,44 @@ TClassAlt  **TClassTable::fgAlternate;
 TClassRec  **TClassTable::fgTable;
 TClassRec  **TClassTable::fgSortedTable;
 UInt_t       TClassTable::fgSize;
-UInt_t       TClassTable::fgTally;
+std::atomic<UInt_t>  TClassTable::fgTally;
 Bool_t       TClassTable::fgSorted;
 UInt_t       TClassTable::fgCursor;
 TClassTable::IdMap_t *TClassTable::fgIdMap;
 
 ClassImp(TClassTable);
+
+static std::mutex &GetClassTableMutex()
+{
+   static std::mutex sMutex;
+   return sMutex;
+}
+
+class TClassTable::LockAndNormalize {
+   std::string fNormalizedName;
+
+public:
+
+   LockAndNormalize(const char *cname)
+   {
+      if (!TClassTable::CheckClassTableInit())
+         return;
+
+      // The recorded name is normalized, let's make sure we convert the
+      // input accordingly.
+      TClassEdit::GetNormalizedName(fNormalizedName, cname);
+
+      GetClassTableMutex().lock();
+   }
+
+   ~LockAndNormalize() {
+      GetClassTableMutex().unlock();
+   }
+
+   const std::string &GetNormalizedName() const {
+      return fNormalizedName;
+   }
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -282,6 +314,8 @@ void TClassTable::Print(Option_t *option) const
    if (fgTally == 0 || !fgTable)
       return;
 
+   std::lock_guard<std::mutex> lock(GetClassTableMutex());
+
    SortTable();
 
    int n = 0, ninit = 0, nl = 0;
@@ -321,8 +355,10 @@ void TClassTable::Print(Option_t *option) const
 
 char *TClassTable::At(UInt_t index)
 {
-   SortTable();
    if (index < fgTally) {
+      std::lock_guard<std::mutex> lock(GetClassTableMutex());
+
+      SortTable();
       TClassRec *r = fgSortedTable[index];
       if (r)
          return r->fName;
@@ -344,11 +380,13 @@ namespace ROOT { class TForNamespace {}; } // Dummy class to give a typeid to na
 void TClassTable::Add(const char *cname, Version_t id,  const std::type_info &info,
                       DictFuncPtr_t dict, Int_t pragmabits)
 {
-   if (!gClassTable)
-      new TClassTable;
-
    if (!cname || *cname == 0)
       ::Fatal("TClassTable::Add()", "Failed to deduce type for '%s'", info.name());
+
+   std::lock_guard<std::mutex> lock(GetClassTableMutex());
+
+   if (!gClassTable)
+      new TClassTable;
 
    // check if already in table, if so return
    TClassRec *r = FindElementImpl(cname, kTRUE);
@@ -398,6 +436,8 @@ void TClassTable::Add(const char *cname, Version_t id,  const std::type_info &in
 
 void TClassTable::Add(TProtoClass *proto)
 {
+   std::lock_guard<std::mutex> lock(GetClassTableMutex());
+
    if (!gClassTable)
       new TClassTable;
 
@@ -440,6 +480,8 @@ void TClassTable::Add(TProtoClass *proto)
 
 void TClassTable::AddAlternate(const char *normName, const char *alternate)
 {
+   std::lock_guard<std::mutex> lock(GetClassTableMutex());
+
    if (!gClassTable)
       new TClassTable;
 
@@ -466,6 +508,8 @@ Bool_t TClassTable::Check(const char *cname, std::string &normname)
    if (!CheckClassTableInit())
       return kFALSE;
 
+   std::lock_guard<std::mutex> lock(GetClassTableMutex());
+
    UInt_t slot = ROOT::ClassTableHash(cname, fgSize);
 
    // Check if 'cname' is a known normalized name.
@@ -491,6 +535,8 @@ void TClassTable::Remove(const char *cname)
 {
    if (!CheckClassTableInit())
       return;
+
+   std::lock_guard<std::mutex> lock(GetClassTableMutex());
 
    UInt_t slot = ROOT::ClassTableHash(cname, fgSize);
 
@@ -520,7 +566,9 @@ void TClassTable::Remove(const char *cname)
 
 TClassRec *TClassTable::FindElementImpl(const char *cname, Bool_t insert)
 {
-   UInt_t slot = ROOT::ClassTableHash(cname,fgSize);
+   // Internal routine, no explicit lock needed here.
+
+   UInt_t slot = ROOT::ClassTableHash(cname, fgSize);
 
    for (TClassRec *r = fgTable[slot]; r; r = r->fNext)
       if (strcmp(cname, r->fName) == 0)
@@ -560,7 +608,9 @@ TClassRec *TClassTable::FindElement(const char *cname, Bool_t insert)
 
 Version_t TClassTable::GetID(const char *cname)
 {
-   TClassRec *r = FindElement(cname);
+   LockAndNormalize guard(cname);
+
+   TClassRec *r = FindElementImpl(guard.GetNormalizedName().c_str(), kFALSE);
    if (r)
       return r->fId;
    return -1;
@@ -571,7 +621,9 @@ Version_t TClassTable::GetID(const char *cname)
 
 Int_t TClassTable::GetPragmaBits(const char *cname)
 {
-   TClassRec *r = FindElement(cname);
+   LockAndNormalize guard(cname);
+
+   TClassRec *r = FindElementImpl(guard.GetNormalizedName().c_str(), kFALSE);
    if (r)
       return r->fBits;
    return 0;
@@ -587,8 +639,9 @@ DictFuncPtr_t TClassTable::GetDict(const char *cname)
       ::Info("GetDict", "searches for %s", cname);
       fgIdMap->Print();
    }
+   LockAndNormalize guard(cname);
 
-   TClassRec *r = FindElement(cname);
+   TClassRec *r = FindElementImpl(guard.GetNormalizedName().c_str(), kFALSE);
    if (r)
       return r->fDict;
    return nullptr;
@@ -602,6 +655,8 @@ DictFuncPtr_t TClassTable::GetDict(const std::type_info& info)
 {
    if (!CheckClassTableInit())
       return nullptr;
+
+   std::lock_guard<std::mutex> lock(GetClassTableMutex());
 
    if (gDebug > 9) {
       ::Info("GetDict", "searches for %s at 0x%zx", info.name(), (size_t)&info);
@@ -622,6 +677,8 @@ DictFuncPtr_t TClassTable::GetDictNorm(const char *cname)
 {
    if (!CheckClassTableInit())
       return nullptr;
+
+   std::lock_guard<std::mutex> lock(GetClassTableMutex());
 
    if (gDebug > 9) {
       ::Info("GetDict", "searches for %s", cname);
@@ -652,7 +709,9 @@ TProtoClass *TClassTable::GetProto(const char *cname)
       fgIdMap->Print();
    }
 
-   TClassRec *r = FindElement(cname);
+   LockAndNormalize guard(cname);
+
+   TClassRec *r = FindElementImpl(guard.GetNormalizedName().c_str(), kFALSE);
    if (r)
       return r->fProto;
    return nullptr;
@@ -670,6 +729,8 @@ TProtoClass *TClassTable::GetProtoNorm(const char *cname)
 
    if (!CheckClassTableInit())
       return nullptr;
+
+   std::lock_guard<std::mutex> lock(GetClassTableMutex());
 
    if (gDebug > 9) {
       fgIdMap->Print();
@@ -699,6 +760,8 @@ extern "C" {
 
 char *TClassTable::Next()
 {
+   std::lock_guard<std::mutex> lock(GetClassTableMutex());
+
    if (fgCursor < fgTally) {
       TClassRec *r = fgSortedTable[fgCursor++];
       return r->fName;
@@ -715,6 +778,8 @@ void TClassTable::PrintTable()
 {
    if (fgTally == 0 || !fgTable)
       return;
+
+   std::lock_guard<std::mutex> lock(GetClassTableMutex());
 
    SortTable();
 
@@ -745,6 +810,8 @@ void TClassTable::PrintTable()
 
 void TClassTable::SortTable()
 {
+   // Internal routine.
+
    if (!fgSorted) {
       delete [] fgSortedTable;
       fgSortedTable = new TClassRec* [fgTally];
@@ -828,8 +895,9 @@ void ROOT::AddClassAlternate(const char *normName, const char *alternate)
 void ROOT::ResetClassVersion(TClass *cl, const char *cname, Short_t newid)
 {
 
-   if (cname && cname != (void*)-1) {
-      TClassRec *r = TClassTable::FindElement(cname, kFALSE);
+   if (cname && cname != (void*)-1 && TClassTable::CheckClassTableInit()) {
+      TClassTable::LockAndNormalize guard(cname);
+      TClassRec *r = TClassTable::FindElementImpl(guard.GetNormalizedName().c_str(), kFALSE);
       if (r)
          r->fId = newid;
    }
@@ -889,11 +957,12 @@ TNamed *ROOT::RegisterClassTemplate(const char *name, const char *file,
                                     Int_t line)
 {
    static TList table;
-   static Bool_t isInit = kFALSE;
-   if (!isInit) {
+   static Bool_t isInit = []() {
       table.SetOwner(kTRUE);
-      isInit = kTRUE;
-   }
+      table.UseRWLock();
+      return true;
+   }();
+   (void)isInit;
 
    TString classname(name);
    Ssiz_t loc = classname.Index("<");
