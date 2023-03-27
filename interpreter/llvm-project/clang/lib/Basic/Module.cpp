@@ -44,7 +44,7 @@ Module::Module(ModuleConstructorTag, StringRef Name,
       IsSystem(false), IsExternC(false), IsInferred(false),
       InferSubmodules(false), InferExplicitSubmodules(false),
       InferExportWildcard(false), ConfigMacrosExhaustive(false),
-      NoUndeclaredIncludes(false), ModuleMapIsPrivate(false),
+      NoUndeclaredIncludes(false), IsOptional(false), ModuleMapIsPrivate(false),
       NamedModuleHasInit(true), NameVisibility(Hidden) {
   if (Parent) {
     IsAvailable = Parent->isAvailable();
@@ -52,6 +52,7 @@ Module::Module(ModuleConstructorTag, StringRef Name,
     IsSystem = Parent->IsSystem;
     IsExternC = Parent->IsExternC;
     NoUndeclaredIncludes = Parent->NoUndeclaredIncludes;
+    IsOptional = Parent->IsOptional;
     ModuleMapIsPrivate = Parent->ModuleMapIsPrivate;
 
     Parent->SubModules.push_back(this);
