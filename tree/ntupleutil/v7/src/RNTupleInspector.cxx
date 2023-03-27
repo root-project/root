@@ -39,12 +39,15 @@ ROOT::Experimental::RNTupleInspector::RNTupleInspector(
 void ROOT::Experimental::RNTupleInspector::CollectColumnInfo()
 {
    for (DescriptorId_t colId = 0; colId < fDescriptor->GetNPhysicalColumns(); ++colId) {
-      RColumnInfo info;
-      info.fColumnDescriptor = &(fDescriptor->GetColumnDescriptor(colId));
+      const RColumnDescriptor &colDesc = fDescriptor->GetColumnDescriptor(colId);
 
       // We generate the default memory representation for the given column type in order
       // to report the size _in memory_ of column elements.
-      info.fElementSize = ROOT::Experimental::Detail::RColumnElementBase::Generate(info.GetType())->GetSize();
+      auto colType = colDesc.GetModel().GetType();
+      std::uint32_t elemSize = ROOT::Experimental::Detail::RColumnElementBase::Generate(colType)->GetSize();
+      std::uint64_t nElems = 0;
+      std::uint64_t onDiskSize = 0;
+      std::uint64_t inMemSize = 0;
 
       for (const auto &clusterDescriptor : fDescriptor->GetClusterIterable()) {
          if (!clusterDescriptor.ContainsColumn(colId)) {
@@ -52,23 +55,25 @@ void ROOT::Experimental::RNTupleInspector::CollectColumnInfo()
          }
 
          auto columnRange = clusterDescriptor.GetColumnRange(colId);
-         info.fNElements += columnRange.fNElements;
+         nElems += columnRange.fNElements;
 
          if (fCompressionSettings == -1) {
             fCompressionSettings = columnRange.fCompressionSettings;
+         } else {
+            R__ASSERT(columnRange.fCompressionSettings == fCompressionSettings);
          }
 
          const auto &pageRange = clusterDescriptor.GetPageRange(colId);
 
          for (const auto &page : pageRange.fPageInfos) {
-            info.fOnDiskSize += page.fLocator.fBytesOnStorage;
-            info.fInMemorySize += page.fNElements * info.fElementSize;
-            fOnDiskSize += info.fOnDiskSize;
-            fInMemorySize += info.fInMemorySize;
+            onDiskSize += page.fLocator.fBytesOnStorage;
+            inMemSize += page.fNElements * elemSize;
+            fOnDiskSize += onDiskSize;
+            fInMemorySize += inMemSize;
          }
       }
 
-      fColumnInfo.emplace_back(info);
+      fColumnInfo.emplace_back(RColumnInfo(colDesc, onDiskSize, inMemSize, elemSize, nElems));
    }
 }
 
@@ -81,16 +86,16 @@ void ROOT::Experimental::RNTupleInspector::CollectFieldInfo()
       fieldIdQueue.pop_front();
 
       for (const auto &fieldDescriptor : fDescriptor->GetFieldIterable(currId)) {
-         RFieldInfo info;
-         info.fFieldDescriptor = &fieldDescriptor;
+         std::uint64_t onDiskSize = 0;
+         std::uint64_t inMemSize = 0;
 
          for (const auto colId : GetColumnsForFieldTree(fieldDescriptor.GetId())) {
             auto colInfo = GetColumnInfo(colId);
-            info.fOnDiskSize += colInfo.fOnDiskSize;
-            info.fInMemorySize += colInfo.fInMemorySize;
+            onDiskSize += colInfo.GetOnDiskSize();
+            inMemSize += colInfo.GetInMemorySize();
          }
 
-         fFieldInfo.emplace_back(info);
+         fFieldInfo.emplace_back(RFieldInfo(fieldDescriptor, onDiskSize, inMemSize));
          fieldIdQueue.push_back(fieldDescriptor.GetId());
       }
    }
@@ -190,7 +195,7 @@ float ROOT::Experimental::RNTupleInspector::GetCompressionFactor()
    return (float)fInMemorySize / (float)fOnDiskSize;
 }
 
-int ROOT::Experimental::RNTupleInspector::GetFieldTypeCount(const std::string typeName, bool includeSubFields)
+int ROOT::Experimental::RNTupleInspector::GetFieldTypeCount(std::string_view typeName, bool includeSubFields)
 {
    if (fFieldInfo.empty()) {
       CollectFieldInfo();
@@ -198,12 +203,12 @@ int ROOT::Experimental::RNTupleInspector::GetFieldTypeCount(const std::string ty
 
    int typeCount = 0;
 
-   for (const auto &fldInfo : fFieldInfo) {
-      if (!includeSubFields && fldInfo.fFieldDescriptor->GetParentId() != fDescriptor->GetFieldZeroId()) {
+   for (auto &fldInfo : fFieldInfo) {
+      if (!includeSubFields && fldInfo.GetDescriptor().GetParentId() != fDescriptor->GetFieldZeroId()) {
          continue;
       }
 
-      if (typeName == fldInfo.fFieldDescriptor->GetTypeName()) {
+      if (typeName == fldInfo.GetDescriptor().GetTypeName()) {
          typeCount++;
       }
    }
@@ -215,8 +220,8 @@ int ROOT::Experimental::RNTupleInspector::GetColumnTypeCount(ROOT::Experimental:
 {
    int typeCount = 0;
 
-   for (const auto &colInfo : fColumnInfo) {
-      if (colInfo.fColumnDescriptor->GetModel().GetType() == colType) {
+   for (auto &colInfo : fColumnInfo) {
+      if (colInfo.GetType() == colType) {
          ++typeCount;
       }
    }
@@ -224,7 +229,7 @@ int ROOT::Experimental::RNTupleInspector::GetColumnTypeCount(ROOT::Experimental:
    return typeCount;
 }
 
-ROOT::Experimental::RNTupleInspector::RColumnInfo
+const ROOT::Experimental::RNTupleInspector::RColumnInfo &
 ROOT::Experimental::RNTupleInspector::GetColumnInfo(DescriptorId_t physicalColumnId)
 {
    if (physicalColumnId > fDescriptor->GetNPhysicalColumns()) {
@@ -234,9 +239,13 @@ ROOT::Experimental::RNTupleInspector::GetColumnInfo(DescriptorId_t physicalColum
    return fColumnInfo.at(physicalColumnId);
 }
 
-ROOT::Experimental::RNTupleInspector::RFieldInfo
+const ROOT::Experimental::RNTupleInspector::RFieldInfo &
 ROOT::Experimental::RNTupleInspector::GetFieldInfo(DescriptorId_t fieldId)
 {
+   if (fieldId >= fDescriptor->GetNFields()) {
+      throw RException(R__FAIL("No field with ID " + std::to_string(fieldId) + " present"));
+   }
+
    if (fFieldInfo.empty()) {
       CollectFieldInfo();
    }
@@ -244,67 +253,14 @@ ROOT::Experimental::RNTupleInspector::GetFieldInfo(DescriptorId_t fieldId)
    return fFieldInfo.at(fieldId);
 }
 
-ROOT::Experimental::RNTupleInspector::RFieldInfo
-ROOT::Experimental::RNTupleInspector::GetFieldInfo(const std::string fieldName)
+const ROOT::Experimental::RNTupleInspector::RFieldInfo &
+ROOT::Experimental::RNTupleInspector::GetFieldInfo(std::string_view fieldName)
 {
    DescriptorId_t fieldId = fDescriptor->FindFieldId(fieldName);
 
    if (fieldId == kInvalidDescriptorId) {
-      throw RException(R__FAIL("Could not find field `" + fieldName + "`"));
+      throw RException(R__FAIL("Could not find field `" + std::string(fieldName) + "`"));
    }
 
    return GetFieldInfo(fieldId);
-}
-
-//------------------------------------------------------------------------------
-
-const ROOT::Experimental::RColumnDescriptor *ROOT::Experimental::RNTupleInspector::RColumnInfo::GetDescriptor()
-{
-   return fColumnDescriptor;
-}
-
-std::uint64_t ROOT::Experimental::RNTupleInspector::RColumnInfo::GetOnDiskSize()
-{
-   return fOnDiskSize;
-}
-
-std::uint64_t ROOT::Experimental::RNTupleInspector::RColumnInfo::GetInMemorySize()
-{
-   return fInMemorySize;
-}
-
-std::uint64_t ROOT::Experimental::RNTupleInspector::RColumnInfo::GetElementSize()
-{
-   return fElementSize;
-}
-
-std::uint64_t ROOT::Experimental::RNTupleInspector::RColumnInfo::GetNElements()
-{
-   return fNElements;
-}
-
-ROOT::Experimental::EColumnType ROOT::Experimental::RNTupleInspector::RColumnInfo::GetType()
-{
-   if (!fColumnDescriptor) {
-      return ROOT::Experimental::EColumnType::kUnknown;
-   }
-
-   return fColumnDescriptor->GetModel().GetType();
-}
-
-//------------------------------------------------------------------------------
-
-const ROOT::Experimental::RFieldDescriptor *ROOT::Experimental::RNTupleInspector::RFieldInfo::GetDescriptor()
-{
-   return fFieldDescriptor;
-}
-
-std::uint64_t ROOT::Experimental::RNTupleInspector::RFieldInfo::GetOnDiskSize()
-{
-   return fOnDiskSize;
-}
-
-std::uint64_t ROOT::Experimental::RNTupleInspector::RFieldInfo::GetInMemorySize()
-{
-   return fInMemorySize;
 }
