@@ -47,6 +47,13 @@ struct alignas(std::uint64_t) TestEBO : public EmptyBase {
    std::uint64_t u64;
 };
 
+template <typename T>
+class EdmWrapper {
+public:
+   bool fIsPresent = true;
+   T fMember;
+};
+
 /// The classes below are based on an excerpt provided by Marcin Nowak (EP-UAT)
 ///
 struct IAuxSetOption {};

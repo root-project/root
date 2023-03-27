@@ -659,12 +659,45 @@ TEST(RNTuple, TClassEBO)
    }
 }
 
-TEST(RNTuple, TClassTemplatedBase)
+TEST(RNTuple, TClassTemplateBased)
+{
+   FileRaii fileGuard("test_ntuple_tclass_templatebased.ntuple");
+   {
+      auto model = RNTupleModel::Create();
+      auto fieldKlass = model->MakeField<EdmWrapper<CustomStruct>>("klass");
+      auto writer = RNTupleWriter::Recreate(std::move(model), "f", fileGuard.GetPath());
+      writer->Fill();
+      fieldKlass->fMember.a = 42.0;
+      fieldKlass->fMember.v1.push_back(1.0);
+      fieldKlass->fMember.s = "x";
+      writer->Fill();
+      fieldKlass->fIsPresent = false;
+      writer->Fill();
+   }
+
+   auto reader = RNTupleReader::Open("f", fileGuard.GetPath());
+
+   auto fieldKlass = reader->GetModel()->GetField("klass");
+   EXPECT_EQ("EdmWrapper<CustomStruct>", fieldKlass->GetType());
+   auto klass = reader->GetModel()->GetDefaultEntry()->Get<EdmWrapper<CustomStruct>>("klass");
+   reader->LoadEntry(0);
+   EXPECT_TRUE(klass->fIsPresent);
+   reader->LoadEntry(1);
+   EXPECT_TRUE(klass->fIsPresent);
+   EXPECT_FLOAT_EQ(42.0, klass->fMember.a);
+   EXPECT_EQ(1u, klass->fMember.v1.size());
+   EXPECT_FLOAT_EQ(1.0, klass->fMember.v1[0]);
+   EXPECT_EQ("x", klass->fMember.s);
+   reader->LoadEntry(2);
+   EXPECT_FALSE(klass->fIsPresent);
+}
+
+TEST(RNTuple, TClassStlDerived)
 {
    // For non-cxxmodules builds, cling needs to parse the header for the `SG::sgkey_t` type to be known
    gInterpreter->ProcessLine("#include \"CustomStruct.hxx\"");
 
-   FileRaii fileGuard("test_ntuple_tclass_templatebase.ntuple");
+   FileRaii fileGuard("test_ntuple_tclass_stlderived.ntuple");
    {
       auto model = RNTupleModel::Create();
       auto fieldKlass = model->MakeField<PackedContainer<int>>("klass");
