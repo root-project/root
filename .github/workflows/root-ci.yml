@@ -168,7 +168,7 @@ jobs:
         shell: cmd
         run: "C:\\setenv.bat ${{ matrix.target_arch }} &&
               python .github/workflows/root-ci-config/build_root.py
-                    --buildtype    ${{ matrix.config }}
+                    --buildtype    Release
                     --platform     windows10
                     --incremental  $INCREMENTAL
                     --base_ref     ${{ github.base_ref }}
