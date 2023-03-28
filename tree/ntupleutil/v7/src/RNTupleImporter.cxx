@@ -182,7 +182,7 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::InitDesti
 void ROOT::Experimental::RNTupleImporter::ReportSchema()
 {
    for (const auto &f : fImportFields) {
-      std::cout << "Importing '" << f.fField->GetName() << "' [" << f.fField->GetType() << ']' << std::endl;
+      std::cout << "* Importing field '" << f.fField->GetName() << "' [" << f.fField->GetType() << ']' << std::endl;
    }
 }
 
@@ -386,8 +386,9 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::PrepareSc
       fEntry->CaptureValueUnsafe(c.fFieldName, c.fCollectionWriter->GetOffsetPtr());
    }
 
-   if (!fIsQuiet)
+   if (!fIsQuiet) {
       ReportSchema();
+   }
 
    return RResult<void>::Success();
 }
@@ -395,13 +396,19 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::PrepareSc
 ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::Import()
 {
    for (const auto &sourceTree : fSourceTrees) {
-      Import(sourceTree);
+      auto importResult = Import(sourceTree);
+
+      if (!importResult)
+         return R__FORWARD_ERROR(importResult);
    }
 
    // Since TFileMerger _has_ to take ownership of the destination file and deletes it afterwards, the copying of
    // non-TTree objects has to happen after the RNTuples are imported.
    if (fCopyNonTrees) {
-      CopyNonTrees();
+      auto copyResult = CopyNonTrees();
+
+      if (!copyResult)
+         return R__FORWARD_ERROR(copyResult);
    }
 
    return RResult<void>::Success();
@@ -412,6 +419,10 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::Import(TT
    std::string ntupleName = fNTupleNames.at(sourceTree->GetName());
    if (fDestFile->FindKey(ntupleName.c_str()) != nullptr)
       return R__FAIL("Key '" + ntupleName + "' already exists in file " + fDestFileName);
+
+   if (!fIsQuiet) {
+      std::cout << "Importing '" << ntupleName << "'" << std::endl;
+   }
 
    PrepareSchema(sourceTree);
 
@@ -466,11 +477,21 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::Import(TT
 
 ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::CopyNonTrees()
 {
+   if (!fIsQuiet)
+      std::cout << "Importing remaining non-TTree files" << std::endl;
+
    auto fileMerger = std::make_unique<TFileMerger>();
    fileMerger->SetNotrees(true);
-   fileMerger->OutputFile(std::move(fDestFile));
-   fileMerger->AddFile(fSourceFile.get());
-   fileMerger->PartialMerge(TFileMerger::kAll | TFileMerger::kRegular | TFileMerger::kKeepCompression);
+   if (!fileMerger->OutputFile(std::move(fDestFile)))
+      return R__FAIL("Error opening destination file for non-TTree object copying");
+   if (!fileMerger->AddFile(fSourceFile.get(), kFALSE))
+      return R__FAIL("Error opening source file for non-TTree object copying");
+   if (!fileMerger->PartialMerge(TFileMerger::kAll | TFileMerger::kRegular | TFileMerger::kKeepCompression))
+      return R__FAIL("Error copying non-TTree objects");
+
+   if (!fIsQuiet)
+      std::cout << "Done" << std::endl;
+
    return RResult<void>::Success();
 }
 
