@@ -162,13 +162,13 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Pull Request Build
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && matrix.config == 'Release'
         env:
           INCREMENTAL: ${{ !contains(github.event.pull_request.labels.*.name, 'clean build') }}
         shell: cmd
         run: "C:\\setenv.bat ${{ matrix.target_arch }} &&
               python .github/workflows/root-ci-config/build_root.py
-                    --buildtype    Release
+                    --buildtype    ${{ matrix.config }}
                     --platform     windows10
                     --incremental  $INCREMENTAL
                     --base_ref     ${{ github.base_ref }}
