@@ -139,8 +139,8 @@ TEST(RColumnElementEndian, Cast)
    auto page2 = source1.PopulatePage(RPageStorage::ColumnHandle_t{}, NTupleSize_t{0});
    std::unique_ptr<unsigned char[]> buf2(static_cast<unsigned char *>(page2.GetBuffer())); // adopt buffer
    EXPECT_EQ(0, memcmp(buf2.get(),
-                       "\x00\x00\x00\x00\x00\x01\x02\x03\x00\x00\x00\x00\x04\x05\x06\x07"
-                       "\x00\x00\x00\x00\x08\x09\x0a\x0b\x00\x00\x00\x00\x0c\x0d\x0e\x0f",
+                       "\x00\x01\x02\x03\x00\x00\x00\x00\x04\x05\x06\x07\x00\x00\x00\x00"
+                       "\x08\x09\x0a\x0b\x00\x00\x00\x00\x0c\x0d\x0e\x0f\x00\x00\x00\x00",
                        32));
 }
 
