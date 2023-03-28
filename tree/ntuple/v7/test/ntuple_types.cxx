@@ -664,14 +664,14 @@ TEST(RNTuple, TClassTemplateBased)
    FileRaii fileGuard("test_ntuple_tclass_templatebased.ntuple");
    {
       auto model = RNTupleModel::Create();
-      auto fieldKlass = model->MakeField<EdmWrapper<CustomStruct>>("klass");
+      auto fieldObject = model->MakeField<EdmWrapper<CustomStruct>>("klass");
       auto writer = RNTupleWriter::Recreate(std::move(model), "f", fileGuard.GetPath());
       writer->Fill();
-      fieldKlass->fMember.a = 42.0;
-      fieldKlass->fMember.v1.push_back(1.0);
-      fieldKlass->fMember.s = "x";
+      fieldObject->fMember.a = 42.0;
+      fieldObject->fMember.v1.push_back(1.0);
+      fieldObject->fMember.s = "x";
       writer->Fill();
-      fieldKlass->fIsPresent = false;
+      fieldObject->fIsPresent = false;
       writer->Fill();
    }
 
