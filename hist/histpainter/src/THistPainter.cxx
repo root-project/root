@@ -3203,6 +3203,7 @@ THistPainter::THistPainter()
    fNcuts = 0;
    fStack = 0;
    fShowProjection = 0;
+   fShowProjection2 = 0;
    fShowOption = "";
    for (int i=0; i<kMaxCuts; i++) {
       fCuts[i] = nullptr;
@@ -10748,6 +10749,35 @@ void THistPainter::SetShowProjection(const char *option,Int_t nbins)
    gPad->SetGrid();
 }
 
+void THistPainter::SetShowProjection(const char *option,Int_t nbinsY,Int_t nbinsX)
+{
+
+   if (fShowProjection2) return;
+   TString opt = option;
+   opt.ToLower();
+   Int_t projection = 0;
+   if (opt.Contains("x"))  projection = 1;
+   if (opt.Contains("y"))  projection = 2;
+   if (opt.Contains("z"))  projection = 3;
+   if (opt.Contains("xy")) projection = 4;
+   if (opt.Contains("yx")) projection = 5;
+   if (opt.Contains("xz")) projection = 6;
+   if (opt.Contains("zx")) projection = 7;
+   if (opt.Contains("yz")) projection = 8;
+   if (opt.Contains("zy")) projection = 9;
+   if (projection < 4) fShowOption = option+1;
+   else                fShowOption = option+2;
+   fShowProjection = projection+100*nbinsY;
+   fShowProjection2 = projection+100*nbinsX;
+   gROOT->MakeDefCanvas();
+   gPad->SetName(TString::Format("c_%zx_projection_%d", (size_t)fH, fShowProjection).Data());
+   gPad->SetGrid();
+   gROOT->MakeDefCanvas();
+   gPad->SetName(TString::Format("c_%zx_projection2_%d", (size_t)fH, fShowProjection2).Data());
+   gPad->SetGrid();
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Show projection onto X.
 
@@ -10785,6 +10815,7 @@ void THistPainter::ShowProjectionX(Int_t /*px*/, Int_t py)
       c->Clear();
    } else {
       fShowProjection = 0;
+      fShowProjection2 = 0;
       pyold1 = 0;
       pyold2 = 0;
       return;
@@ -10837,6 +10868,8 @@ void THistPainter::ShowProjectionY(Int_t px, Int_t /*py*/)
 {
 
    Int_t nbins = (Int_t)fShowProjection/100;
+   if (fShowProjection2)
+       nbins = (Int_t)fShowProjection2/100;
    gPad->SetDoubleBuffer(0);             // turn off double buffer mode
    gVirtualX->SetDrawMode(TVirtualX::kInvert);  // set the drawing mode to XOR mode
 
@@ -10862,12 +10895,13 @@ void THistPainter::ShowProjectionY(Int_t px, Int_t /*py*/)
    // Create or set the new canvas proj y
    TVirtualPad::TContext ctxt(true);
 
-   TVirtualPad *c = (TVirtualPad*)gROOT->GetListOfCanvases()->FindObject(TString::Format("c_%zx_projection_%d",
+   TVirtualPad *c = (TVirtualPad*)gROOT->GetListOfCanvases()->FindObject(TString::Format(fShowProjection2 ? "c_%zx_projection2_%d" : "c_%zx_projection_%d",
                                                                               (size_t)fH, fShowProjection).Data());
    if (c) {
       c->Clear();
    } else {
       fShowProjection = 0;
+      fShowProjection2 = 0;
       pxold1 = 0;
       pxold2 = 0;
       return;
@@ -10908,7 +10942,7 @@ void THistPainter::ShowProjectionY(Int_t px, Int_t /*py*/)
       }
       hp->SetXTitle(fH->GetYaxis()->GetTitle());
       hp->SetYTitle("Number of Entries");
-      hp->Draw();
+      hp->Draw(fShowProjection2 ? "hbar" : "");
       c->Update();
    }
 }
@@ -10926,6 +10960,7 @@ void THistPainter::ShowProjection3(Int_t px, Int_t py)
 
    Int_t nbins=(Int_t)fShowProjection/100; //decode nbins
    if (fH->GetDimension() < 3) {
+      if (fShowProjection2%100 == 1) {ShowProjectionY(px,py);}
       if (fShowProjection%100 == 1) {ShowProjectionX(px,py); return;}
       if (fShowProjection%100 == 2) {ShowProjectionY(px,py); return;}
    }
