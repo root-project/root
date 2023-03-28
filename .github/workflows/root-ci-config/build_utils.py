@@ -198,6 +198,6 @@ def download_latest(url: str, prefix: str, destination: str, shell_log: str) -> 
     if os.name == 'nt':
         shell_log += f"\nInvoke-WebRequest {url}/{latest} -OutFile {destination}\\artifacts.tar.gz"
     else:
-        shell_log += f"\nwget -x -O artifacts.tar.gz {url}/{latest}\n"
+        shell_log += f"\nwget -x -O {destination}/artifacts.tar.gz {url}/{latest}\n"
 
     return f"{destination}/artifacts.tar.gz", shell_log
