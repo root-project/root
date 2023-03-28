@@ -10749,7 +10749,7 @@ void THistPainter::SetShowProjection(const char *option,Int_t nbins)
    gPad->SetGrid();
 }
 
-void THistPainter::SetShowProjection(const char *option,Int_t nbinsY,Int_t nbinsX)
+void THistPainter::SetShowProjectionXY(const char *option,Int_t nbinsY,Int_t nbinsX)
 {
 
    if (fShowProjection2) return;

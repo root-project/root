@@ -147,7 +147,7 @@ public:
    void       SetHistogram(TH1 *h) override;
    void       SetStack(TList *stack) override {fStack = stack;}
    void       SetShowProjection(const char *option,Int_t nbins) override;
-   void       SetShowProjection(const char *option,Int_t nbinsY,Int_t nbinsX) override;
+   void       SetShowProjectionXY(const char *option,Int_t nbinsY,Int_t nbinsX) override;
    virtual void       ShowProjectionX(Int_t px, Int_t py);
    virtual void       ShowProjectionY(Int_t px, Int_t py);
    virtual void       ShowProjection3(Int_t px, Int_t py);
