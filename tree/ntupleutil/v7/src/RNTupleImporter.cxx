@@ -123,9 +123,7 @@ ROOT::Experimental::RNTupleImporter::Create(std::string_view sourceFileName, std
       auto key = (TKey *)objLink->GetObject();
       auto keyName = key->GetName();
       bool isTree = TClass::GetClass(key->GetClassName())->GetBaseClass("TTree");
-      // The actual current cycle number doesn't matter since TFile::Get will automatically get it from
-      // the tree name. We just need to make sure each tree is only added once.
-      bool isFirstOccurrence = key->GetCycle() == 1;
+      bool isFirstOccurrence = importer->fNTupleNames.find(keyName) == importer->fNTupleNames.end();
 
       // TODO: Copy/clone non-TTree objects to the destination file, if desired by the user.
       if (isTree && isFirstOccurrence) {
