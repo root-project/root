@@ -372,6 +372,8 @@ void TGraphPolargram::Paint(Option_t * chopt)
 void TGraphPolargram::PaintCircle(Double_t x1, Double_t y1, Double_t r,
                             Double_t phimin, Double_t phimax, Double_t theta)
 {
+   if (!gPad) return;
+
    Int_t i;
    const Int_t np = 200; // Number of point to draw circle
    static Double_t x[np+3], y[np+3];
@@ -404,8 +406,8 @@ void TGraphPolargram::PaintCircle(Double_t x1, Double_t y1, Double_t r,
 
 void TGraphPolargram::PaintPolarDivisions(Bool_t optionLabels)
 {
-   Int_t i, j, rnum, rden, first, last;
    if (!gPad) return ;
+   Int_t i, j, rnum, rden, first, last;
 
    gPad->RangeAxis(-1,-1,1,1);
    gPad->Range(-1.25,-1.25,1.25,1.25);
@@ -621,6 +623,8 @@ void TGraphPolargram::PaintPolarDivisions(Bool_t optionLabels)
 
 void TGraphPolargram::PaintRadialDivisions(Bool_t drawaxis)
 {
+   if (!gPad) return ;
+
    static char chopt[8] = "";
    Int_t i,j;
    Int_t ndiv      = TMath::Abs(fNdivRad);
@@ -632,7 +636,6 @@ void TGraphPolargram::PaintRadialDivisions(Bool_t drawaxis)
    THLimitsFinder::Optimize(fRwrmin,fRwrmax,ndivMajor,frwrmin,
                                frwrmax, ndivmajor,binWidth,"");
 
-   if (!gPad) return ;
    if (!gPad->GetLogx()) {
       gPad->RangeAxis(-1,-1,1,1);
       gPad->Range(-1.25,-1.25,1.25,1.25);

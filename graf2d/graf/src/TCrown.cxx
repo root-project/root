@@ -178,6 +178,7 @@ void TCrown::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
 void TCrown::Paint(Option_t *)
 {
+   if (!gPad) return;
 
    const Double_t kPI = TMath::Pi();
    const Int_t np = 40;

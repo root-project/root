@@ -398,7 +398,8 @@ Rectangle_t TMarker::GetBBox()
 {
    Double_t size = this->GetMarkerSize();
 
-   Rectangle_t BBox;
+   Rectangle_t BBox{0,0,0,0};
+   if (!gPad) return BBox;
    BBox.fX = gPad->XtoPixel(fX)+(Int_t)(2*size);
    BBox.fY = gPad->YtoPixel(fY)-(Int_t)(2*size);
    BBox.fWidth = 2*size;
@@ -411,7 +412,7 @@ Rectangle_t TMarker::GetBBox()
 
 TPoint TMarker::GetBBoxCenter()
 {
-   TPoint p;
+   TPoint p(0,0);
    if (!gPad) return (p);
    p.SetX(gPad->XtoPixel(fX));
    p.SetY(gPad->YtoPixel(fY));

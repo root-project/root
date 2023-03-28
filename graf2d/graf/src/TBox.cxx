@@ -676,6 +676,8 @@ void TBox::Paint(Option_t *option)
 
 void TBox::PaintBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Option_t *option)
 {
+   if (!gPad) return;
+
    TAttLine::Modify();  //Change line attributes only if necessary
    TAttFill::Modify();  //Change fill area attributes only if necessary
 
@@ -776,7 +778,8 @@ void TBox::Streamer(TBuffer &R__b)
 
 Rectangle_t TBox::GetBBox()
 {
-   Rectangle_t BBox;
+   Rectangle_t BBox{0,0,0,0};
+   if (!gPad) return BBox;
    Int_t px1, py1, px2, py2;
    px1 = gPad->XtoPixel(fX1);
    px2 = gPad->XtoPixel(fX2);
@@ -800,7 +803,7 @@ Rectangle_t TBox::GetBBox()
 
 TPoint TBox::GetBBoxCenter()
 {
-   TPoint p;
+   TPoint p(0,0);
    if (!gPad) return (p);
    p.SetX(gPad->XtoPixel(TMath::Min(fX1,fX2)+0.5*(TMath::Max(fX1, fX2)-TMath::Min(fX1, fX2))));
    p.SetY(gPad->YtoPixel(TMath::Min(fY1,fY2)+0.5*(TMath::Max(fY1, fY2)-TMath::Min(fY1, fY2))));

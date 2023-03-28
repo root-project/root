@@ -530,6 +530,7 @@ void TEllipse::PaintEllipse(Double_t x1, Double_t y1, Double_t r1, Double_t r2,
                             Double_t phimin, Double_t phimax, Double_t theta,
                             Option_t *option)
 {
+   if (!gPad) return;
    const Int_t np = 200;
    static Double_t x[np+3], y[np+3];
    TAttLine::Modify();  //Change line attributes only if necessary
@@ -663,7 +664,8 @@ void TEllipse::Streamer(TBuffer &R__b)
 
 Rectangle_t TEllipse::GetBBox()
 {
-   Rectangle_t BBox;
+   Rectangle_t BBox{0,0,0,0};
+   if (!gPad) return BBox;
    if (!gPad) return (BBox);
    BBox.fX = gPad->XtoPixel(fX1-fR1);
    BBox.fY = gPad->YtoPixel(fY1+fR2);
@@ -677,7 +679,8 @@ Rectangle_t TEllipse::GetBBox()
 
 TPoint TEllipse::GetBBoxCenter()
 {
-   TPoint p;
+   TPoint p(0,0);
+   if (!gPad) return (p);
    if (!gPad) return (p);
    p.SetX(gPad->XtoPixel(fX1));
    p.SetY(gPad->YtoPixel(fY1));
@@ -718,6 +721,7 @@ void TEllipse::SetBBoxCenterY(const Int_t y)
 
 void TEllipse::SetBBoxX1(const Int_t x)
 {
+   if (!gPad) return;
    Double_t x1 = gPad->PixeltoX(x);
    if (x1>fX1+fR1) return;
 
