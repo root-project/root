@@ -507,9 +507,12 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::SetNTuple
 ROOT::Experimental::RResult<void>
 ROOT::Experimental::RNTupleImporter::SetNTupleName(std::string_view treeName, std::string_view ntupleName)
 {
-   if (fNTupleNames.find(std::string(treeName)) == fNTupleNames.end()) {
+   auto it = fNTupleNames.find(std::string(treeName));
+
+   if (it == fNTupleNames.end()) {
       return R__FAIL("Tree '" + std::string(treeName) + "' not present in " + std::string(fSourceFile->GetName()));
    }
-   fNTupleNames.at(std::string(treeName)) = ntupleName;
+
+   (*it).second = ntupleName;
    return RResult<void>::Success();
 }
