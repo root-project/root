@@ -1562,8 +1562,6 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
     combined->defineSet("globalObservables",globalObs);
     combined_config->SetGlobalObservables(*combined->set("globalObservables"));
 
-    combined->factory("weightVar[0,-1e10,1e10]");
-    obsList.add(*combined->var("weightVar"));
     combined->defineSet("observables",{obsList, *channelCat}, /*importMissing=*/true);
     combined_config->SetObservables(*combined->set("observables"));
 
