@@ -2,6 +2,7 @@
 
 #include <TFile.h>
 #include <TTree.h>
+#include <TNtuple.h>
 #include <TChain.h>
 #include <TH1.h>
 
@@ -633,6 +634,10 @@ TEST(RNTupleImporter, MultipleTrees)
       tree2->Fill();
       tree2->Write();
 
+      auto tntuple = std::make_unique<TNtuple>("tntuple", "", "c");
+      tntuple->Fill(3.14);
+      tntuple->Write();
+
       auto hist = std::make_unique<TH1F>("hist", "hist", 10, 5, 5);
       hist->Write();
    }
@@ -642,6 +647,7 @@ TEST(RNTupleImporter, MultipleTrees)
 
    importer->SetNTupleName("tree1", "ntuple1");
    importer->SetNTupleName("tree2", "ntuple2");
+   importer->SetNTupleName("tntuple", "ntuple3");
 
    // Bad weather, trying to set the name of a tree that does not exist should yield an exception.
    EXPECT_THROW(importer->SetNTupleName("tree3", "ntuple3"), ROOT::Experimental::RException);
@@ -660,6 +666,11 @@ TEST(RNTupleImporter, MultipleTrees)
    auto bView = reader2->GetView<int>("b");
    EXPECT_EQ(1U, reader2->GetNEntries());
    EXPECT_EQ(43, bView(0));
+
+   auto reader3 = RNTupleReader::Open("ntuple3", fileGuardNTuple.GetPath());
+   auto cView = reader3->GetView<float>("c");
+   EXPECT_EQ(1U, reader3->GetNEntries());
+   EXPECT_FLOAT_EQ(3.14, cView(0));
 
    // Non-TTree objects should not be imported.
    std::unique_ptr<TFile> file(TFile::Open(fileGuardNTuple.GetPath().c_str()));
