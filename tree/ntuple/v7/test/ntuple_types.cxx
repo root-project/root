@@ -677,19 +677,19 @@ TEST(RNTuple, TClassTemplateBased)
 
    auto reader = RNTupleReader::Open("f", fileGuard.GetPath());
 
-   auto fieldKlass = reader->GetModel()->GetField("klass");
-   EXPECT_EQ("EdmWrapper<CustomStruct>", fieldKlass->GetType());
-   auto klass = reader->GetModel()->GetDefaultEntry()->Get<EdmWrapper<CustomStruct>>("klass");
+   auto fieldObject = reader->GetModel()->GetField("klass");
+   EXPECT_EQ("EdmWrapper<CustomStruct>", fieldObject->GetType());
+   auto object = reader->GetModel()->GetDefaultEntry()->Get<EdmWrapper<CustomStruct>>("klass");
    reader->LoadEntry(0);
-   EXPECT_TRUE(klass->fIsPresent);
+   EXPECT_TRUE(object->fIsPresent);
    reader->LoadEntry(1);
-   EXPECT_TRUE(klass->fIsPresent);
-   EXPECT_FLOAT_EQ(42.0, klass->fMember.a);
-   EXPECT_EQ(1u, klass->fMember.v1.size());
-   EXPECT_FLOAT_EQ(1.0, klass->fMember.v1[0]);
-   EXPECT_EQ("x", klass->fMember.s);
+   EXPECT_TRUE(object->fIsPresent);
+   EXPECT_FLOAT_EQ(42.0, object->fMember.a);
+   EXPECT_EQ(1u, object->fMember.v1.size());
+   EXPECT_FLOAT_EQ(1.0, object->fMember.v1[0]);
+   EXPECT_EQ("x", object->fMember.s);
    reader->LoadEntry(2);
-   EXPECT_FALSE(klass->fIsPresent);
+   EXPECT_FALSE(object->fIsPresent);
 }
 
 TEST(RNTuple, TClassStlDerived)
