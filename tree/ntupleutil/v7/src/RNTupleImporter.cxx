@@ -80,7 +80,7 @@ ROOT::Experimental::RNTupleImporter::RLeafArrayTransformation::Transform(const R
    return RResult<void>::Success();
 }
 
-ROOT::Experimental::RResult<std::unique_ptr<ROOT::Experimental::RNTupleImporter>>
+std::unique_ptr<ROOT::Experimental::RNTupleImporter>
 ROOT::Experimental::RNTupleImporter::Create(std::string_view sourceFileName, std::string_view treeName,
                                             std::string_view destFileName)
 {
@@ -88,12 +88,12 @@ ROOT::Experimental::RNTupleImporter::Create(std::string_view sourceFileName, std
    importer->fNTupleName = treeName;
    importer->fSourceFile = std::unique_ptr<TFile>(TFile::Open(std::string(sourceFileName).c_str()));
    if (!importer->fSourceFile || importer->fSourceFile->IsZombie()) {
-      return R__FAIL("cannot open source file " + std::string(sourceFileName));
+      throw RException(R__FAIL("cannot open source file " + std::string(sourceFileName)));
    }
 
    importer->fSourceTree = importer->fSourceFile->Get<TTree>(std::string(treeName).c_str());
    if (!importer->fSourceTree) {
-      return R__FAIL("cannot read TTree " + std::string(treeName) + " from " + std::string(sourceFileName));
+      throw RException(R__FAIL("cannot read TTree " + std::string(treeName) + " from " + std::string(sourceFileName)));
    }
 
    // If we have IMT enabled, its best use is for parallel page compression
@@ -101,12 +101,12 @@ ROOT::Experimental::RNTupleImporter::Create(std::string_view sourceFileName, std
    auto result = importer->InitDestination(destFileName);
 
    if (!result)
-      return R__FORWARD_ERROR(result);
+      throw RException(R__FORWARD_ERROR(result));
 
    return importer;
 }
 
-ROOT::Experimental::RResult<std::unique_ptr<ROOT::Experimental::RNTupleImporter>>
+std::unique_ptr<ROOT::Experimental::RNTupleImporter>
 ROOT::Experimental::RNTupleImporter::Create(TTree *sourceTree, std::string_view destFileName)
 {
    auto importer = std::unique_ptr<RNTupleImporter>(new RNTupleImporter());
@@ -118,7 +118,7 @@ ROOT::Experimental::RNTupleImporter::Create(TTree *sourceTree, std::string_view 
    auto result = importer->InitDestination(destFileName);
 
    if (!result)
-      return R__FORWARD_ERROR(result);
+      throw RException(R__FORWARD_ERROR(result));
 
    return importer;
 }
@@ -348,10 +348,10 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::PrepareSc
    return RResult<void>::Success();
 }
 
-ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::Import()
+void ROOT::Experimental::RNTupleImporter::Import()
 {
    if (fDestFile->FindKey(fNTupleName.c_str()) != nullptr)
-      return R__FAIL("Key '" + fNTupleName + "' already exists in file " + fDestFileName);
+      throw RException(R__FAIL("Key '" + fNTupleName + "' already exists in file " + fDestFileName));
 
    PrepareSchema();
 
@@ -378,7 +378,7 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::Import()
             for (auto &t : c.fTransformations) {
                auto result = t->Transform(fImportBranches[t->fImportBranchIdx], fImportFields[t->fImportFieldIdx]);
                if (!result)
-                  return R__FORWARD_ERROR(result);
+                  throw RException(R__FORWARD_ERROR(result));
             }
             c.fCollectionWriter->Fill(c.fCollectionEntry.get());
          }
@@ -389,7 +389,7 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::Import()
       for (auto &t : fImportTransformations) {
          auto result = t->Transform(fImportBranches[t->fImportBranchIdx], fImportFields[t->fImportFieldIdx]);
          if (!result)
-            return R__FORWARD_ERROR(result);
+            throw RException(R__FORWARD_ERROR(result));
          t->ResetEntry();
       }
 
@@ -400,6 +400,4 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::Import()
    }
    if (fProgressCallback)
       fProgressCallback->Finish(ctrZippedBytes->GetValueAsInt(), nEntries);
-
-   return RResult<void>::Success();
 }
