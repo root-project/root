@@ -753,7 +753,7 @@ public:
    {
       return Detail::RFieldValue(true /* captureFlag */, this, where);
    }
-   size_t GetValueSize() const final { return kWordSize * (fN + kBitsPerWord - 1) / kBitsPerWord; }
+   size_t GetValueSize() const final { return kWordSize * ((fN + kBitsPerWord - 1) / kBitsPerWord); }
    size_t GetAlignment() const final { return alignof(Word_t); }
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
 
