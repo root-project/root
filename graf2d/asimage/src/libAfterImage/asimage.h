@@ -565,7 +565,7 @@ Bool asimage_replace (ASImage *im, ASImage *from);
  * set_asimage_vector() This function replaces contents of the vector 
  * member of ASImage structure with new double precision data.
  * SYNOPSIS
- * set_asimage_vector( ASImage *im, register double *vector );
+ * set_asimage_vector( ASImage *im, double *vector );
  * INPUTS
  * im				- pointer to valid ASImage structure.
  * vector           - scientific data to attach to the image.
@@ -573,7 +573,7 @@ Bool asimage_replace (ASImage *im, ASImage *from);
  * Data must have size of width*height ahere width and height are size of 
  * the ASImage.
  *********/
-Bool set_asimage_vector( ASImage *im, register double *vector );
+Bool set_asimage_vector( ASImage *im, double *vector );
 /****f* libAfterImage/asimage/vectorize_asimage()
  * NAME
  * vectorize_asimage() This function replaces contents of the vector 
@@ -792,7 +792,7 @@ ASGradient *flip_gradient( ASGradient *orig, int flip );
  * NAME 
  * init_image_layers()    - initialize set of ASImageLayer structures.
  * SYNOPSIS
- * void init_image_layers( register ASImageLayer *l, int count );
+ * void init_image_layers(ASImageLayer *l, int count );
  * INPUTS
  * l              - pointer to valid ASImageLayer structure.
  * count          - number of elements to initialize.
@@ -800,7 +800,7 @@ ASGradient *flip_gradient( ASGradient *orig, int flip );
  * Initializes array on ASImageLayer structures to sensible defaults.
  * Basically - all zeros and merge_scanlines == alphablend_scanlines.
  *********/
-void init_image_layers( register ASImageLayer *l, int count );
+void init_image_layers(ASImageLayer *l, int count );
 /****f* libAfterImage/asimage/create_image_layers()
  * NAME 
  * create_image_layers()  - allocate and initialize set of ASImageLayer's.
@@ -822,7 +822,7 @@ ASImageLayer *create_image_layers( int count );
  * NAME 
  * destroy_image_layers() - destroy set of ASImageLayer structures.
  * SYNOPSIS
- * void destroy_image_layers( register ASImageLayer *l,
+ * void destroy_image_layers(ASImageLayer *l,
  *                            int count,
  *                            Bool reusable );
  * INPUTS
@@ -836,7 +836,7 @@ ASImageLayer *create_image_layers( int count );
  * If there was ASImage and/or ASImageBevel attached to it - it will be
  * deallocated as well.
  *********/
-void destroy_image_layers( register ASImageLayer *l, int count, Bool reusable );
+void destroy_image_layers(ASImageLayer *l, int count, Bool reusable );
 
 /****f* libAfterImage/asimage/asimage_add_line()
  * NAME
@@ -945,7 +945,7 @@ void destroy_image_layers( register ASImageLayer *l, int count, Bool reusable );
  *********/
 size_t asimage_add_line (ASImage * im, ColorPart color, CARD32 * data, unsigned int y);
 size_t asimage_add_line_mono (ASImage * im, ColorPart color, CARD8 value, unsigned int y);
-size_t asimage_add_line_bgra (ASImage * im, register CARD32 * data, unsigned int y);
+size_t asimage_add_line_bgra (ASImage * im, CARD32 * data, unsigned int y);
 
 ASFlagType get_asimage_chanmask( ASImage *im);
 int check_asimage_alpha (ASVisual *asv, ASImage *im );
@@ -1076,7 +1076,7 @@ do{	f((c1).red,(c2).red,(c3).red,(c4).red,(o1).red,(o2).red,(p),(len+(len&0x01))
 #define QUANT_ERR_BITS  	8
 #define QUANT_ERR_MASK  	0x000000FF
 
-void copy_component( register CARD32 *src, register CARD32 *dst, int *unused, int len );
+void copy_component(CARD32 *src, CARD32 *dst, int *unused, int len );
 
 #ifdef X_DISPLAY_MISSING
 typedef struct XRectangle
@@ -1110,7 +1110,7 @@ XRectangle*
 get_asimage_channel_rects( ASImage *src, int channel, unsigned int threshold, unsigned int *rects_count_ret );
 
 void
-raw2scanline( register CARD8 *row, struct ASScanline *buf, CARD8 *gamma_table, unsigned int width, Bool grayscale, Bool do_alpha );
+raw2scanline(CARD8 *row, struct ASScanline *buf, CARD8 *gamma_table, unsigned int width, Bool grayscale, Bool do_alpha );
 
 #ifdef __cplusplus
 }
