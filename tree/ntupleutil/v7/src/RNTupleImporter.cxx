@@ -26,6 +26,7 @@
 #include <TBranch.h>
 #include <TClass.h>
 #include <TDataType.h>
+#include <TFileMerger.h>
 #include <TKey.h>
 #include <TLeaf.h>
 #include <TLeafC.h>
@@ -399,6 +400,12 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::Import()
       Import(sourceTree);
    }
 
+   // Since TFileMerger _has_ to take ownership of the destination file and deletes it afterwards, the copying of
+   // non-TTree objects has to happen after the RNTuples are imported.
+   if (fCopyNonTrees) {
+      CopyNonTrees();
+   }
+
    return RResult<void>::Success();
 }
 
@@ -456,6 +463,16 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::Import(TT
    if (fProgressCallback)
       fProgressCallback->Finish(ctrZippedBytes->GetValueAsInt(), nEntries);
 
+   return RResult<void>::Success();
+}
+
+ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::CopyNonTrees()
+{
+   auto fileMerger = std::make_unique<TFileMerger>();
+   fileMerger->SetNotrees(true);
+   fileMerger->OutputFile(std::move(fDestFile));
+   fileMerger->AddFile(fSourceFile.get());
+   fileMerger->PartialMerge(TFileMerger::kAll | TFileMerger::kRegular | TFileMerger::kKeepCompression);
    return RResult<void>::Success();
 }
 

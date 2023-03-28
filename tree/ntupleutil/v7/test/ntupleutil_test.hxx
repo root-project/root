@@ -2,6 +2,7 @@
 #define ROOT7_RNTupleUtil_Test
 
 #include "gtest/gtest.h"
+#include "gmock/gmock.h"
 
 #include <ROOT/RNTuple.hxx>
 #include <ROOT/RNTupleModel.hxx>

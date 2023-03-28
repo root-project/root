@@ -217,6 +217,10 @@ private:
    std::unique_ptr<TFile> fDestFile;
    RNTupleWriteOptions fWriteOptions;
 
+   /// Whether non-TTree should be copied to the destination file, in case the importer is created by only specifying
+   /// the source file.
+   bool fCopyNonTrees;
+
    /// The maximum number of entries to import. When this value is -1 (default), import all entries.
    std::int64_t fMaxEntries = -1;
 
@@ -243,6 +247,8 @@ private:
 
    RResult<void> Import(TTree *sourceTree);
 
+   RResult<void> CopyNonTrees();
+
 public:
    RNTupleImporter(const RNTupleImporter &other) = delete;
    RNTupleImporter &operator=(const RNTupleImporter &other) = delete;
@@ -263,6 +269,7 @@ public:
    RNTupleWriteOptions GetWriteOptions() const { return fWriteOptions; }
    void SetWriteOptions(RNTupleWriteOptions options) { fWriteOptions = options; }
    void SetMaxEntries(std::uint64_t maxEntries) { fMaxEntries = maxEntries; }
+   void SetCopyNonTrees(bool copyNonTrees) { fCopyNonTrees = copyNonTrees; }
 
    /// Throws an exception in case multiple TTrees are imported simultaneously.
    ROOT::Experimental::RResult<void> SetNTupleName(std::string_view ntupleName);

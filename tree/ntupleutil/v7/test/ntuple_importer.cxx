@@ -672,7 +672,25 @@ TEST(RNTupleImporter, MultipleTrees)
    EXPECT_EQ(1U, reader3->GetNEntries());
    EXPECT_FLOAT_EQ(3.14, cView(0));
 
-   // Non-TTree objects should not be imported.
+   // Non-TTree objects should not be imported...
    std::unique_ptr<TFile> file(TFile::Open(fileGuardNTuple.GetPath().c_str()));
-   EXPECT_EQ(NULL, file->Get<TH1F>("hist"));
+   EXPECT_THAT(file->Get<TH1F>("hist"), testing::IsNull());
+
+   // ...Unless explicitly specified:
+   FileRaii fileGuardNTupleCopy("test_ntuple_importer_multiple_trees_ntuple_copy.root");
+   auto importerCopy = RNTupleImporter::Create(fileGuardTree.GetPath(), fileGuardNTupleCopy.GetPath()).Unwrap();
+   importerCopy->SetIsQuiet(true);
+
+   importerCopy->SetNTupleName("tree1", "ntuple1");
+   importerCopy->SetNTupleName("tree2", "ntuple2");
+   importerCopy->SetNTupleName("tntuple", "ntuple3");
+
+   importerCopy->SetCopyNonTrees(true);
+   importerCopy->Import();
+
+   std::unique_ptr<TFile> fileCopy(TFile::Open(fileGuardNTupleCopy.GetPath().c_str()));
+   // Check if th imported RNTuple is present...
+   EXPECT_THAT(fileCopy->Get<ROOT::Experimental::RNTuple>("ntuple1"), testing::NotNull());
+   // ...As well as the histogram from the original file.
+   EXPECT_THAT(fileCopy->Get<TH1F>("hist"), testing::NotNull());
 }
