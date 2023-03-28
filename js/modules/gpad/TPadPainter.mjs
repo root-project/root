@@ -1,7 +1,7 @@
 import { gStyle, settings, constants, internals, btoa_func,
          create, toJSON, isBatchMode, loadScript, injectCode, isPromise, getPromise, isObject, isFunc, isStr,
          clTObjArray, clTPaveText, clTColor, clTPad, clTStyle } from '../core.mjs';
-import { color as d3_color, pointer as d3_pointer, select as d3_select } from '../d3.mjs';
+import { color as d3_color, pointer as d3_pointer, select as d3_select, rgb as d3_rgb } from '../d3.mjs';
 import { ColorPalette, adoptRootColors, extendRootColors, getRGBfromTColor } from '../base/colors.mjs';
 import { getElementRect, getAbsPosInCanvas, DrawOptions, compressSVG, makeTranslate, svgToImage } from '../base/BasePainter.mjs';
 import { ObjectPainter, selectActivePad, getActivePad } from '../base/ObjectPainter.mjs';
@@ -615,13 +615,13 @@ class TPadPainter extends ObjectPainter {
           h = Math.round(this.pad.fAbsHNDC * height),
           x = Math.round(this.pad.fAbsXlowNDC * width),
           y = Math.round(height * (1 - this.pad.fAbsYlowNDC)) - h,
-          svg_pad = null, svg_rect = null, btns = null;
+          svg_pad, svg_border, btns;
 
       if (pad_enlarged === this.pad) { w = width; h = height; x = y = 0; }
 
       if (only_resize) {
          svg_pad = this.svg_this_pad();
-         svg_rect = svg_pad.select('.root_pad_border');
+         svg_border = svg_pad.select('.root_pad_border');
          if (!isBatchMode())
             btns = this.getLayerSvg('btns_layer', this.this_pad_name);
       } else {
@@ -636,14 +636,14 @@ class TPadPainter extends ObjectPainter {
 
          // need to check attributes directly while attributes objects will be created later
          if (!isBatchMode() || (this.pad.fFillStyle > 0) || ((this.pad.fLineStyle > 0) && (this.pad.fLineColor > 0)))
-            svg_rect = svg_pad.append('svg:path').attr('class', 'root_pad_border');
+            svg_border = svg_pad.append('svg:path').attr('class', 'root_pad_border');
 
          if (!isBatchMode())
-            svg_rect.style('pointer-events', 'visibleFill') // get events also for not visible rect
-                    .on('dblclick', evnt => this.enlargePad(evnt, true))
-                    .on('click', () => this.selectObjectPainter())
-                    .on('mouseenter', () => this.showObjectStatus())
-                    .on('contextmenu', settings.ContextMenu ? evnt => this.padContextMenu(evnt) : null);
+            svg_border.style('pointer-events', 'visibleFill') // get events also for not visible rect
+                      .on('dblclick', evnt => this.enlargePad(evnt, true))
+                      .on('click', () => this.selectObjectPainter())
+                      .on('mouseenter', () => this.showObjectStatus())
+                      .on('contextmenu', settings.ContextMenu ? evnt => this.padContextMenu(evnt) : null);
 
          svg_pad.append('svg:g').attr('class','primitives_layer');
          if (!isBatchMode())
@@ -654,7 +654,7 @@ class TPadPainter extends ObjectPainter {
       }
 
       this.createAttFill({ attr: this.pad });
-      this.createAttLine({ attr: this.pad, color0: this.pad.fBorderMode == 0 ? 'none' : '' });
+      this.createAttLine({ attr: this.pad, color0: !this.pad.fBorderMode ? 'none' : '' });
 
       svg_pad.style('display', pad_visible ? null : 'none')
              .attr('viewBox', `0 0 ${w} ${h}`) // due to svg
@@ -673,12 +673,36 @@ class TPadPainter extends ObjectPainter {
       this._pad_width = w;
       this._pad_height = h;
 
-      if (svg_rect) {
-         svg_rect.attr('d', `M0,0H${w}V${h}H0Z`)
-                 .call(this.fillatt.func)
-                 .call(this.lineatt.func);
+      if (svg_border) {
+         svg_border.attr('d', `M0,0H${w}V${h}H0Z`)
+                   .call(this.fillatt.func)
+                   .call(this.lineatt.func);
+         this.drawActiveBorder(svg_border);
 
-         this.drawActiveBorder(svg_rect);
+         let svg_border1 = svg_pad.select('.root_pad_border1'),
+             svg_border2 = svg_pad.select('.root_pad_border2');
+
+         if (this.pad.fBorderMode && this.pad.fBorderSize) {
+            let pw = this.pad.fBorderSize, ph = this.pad.fBorderSize,
+                side1 = `M0,0h${w}l${-pw},${ph}h${2*pw-w}v${h-2*ph}l${-pw},${ph}z`,
+                side2 = `M${w},${h}v${-h}l${-pw},${ph}v${h-2*ph}h${2*pw-w}l${-pw},${ph}z`;
+
+            if (svg_border2.empty())
+               svg_border2 = svg_pad.insert('svg:path', '.primitives_layer').attr('class', 'root_pad_border2');
+            if (svg_border1.empty())
+               svg_border1 = svg_pad.insert('svg:path', '.primitives_layer').attr('class', 'root_pad_border1');
+
+            svg_border1.attr('d', this.pad.fBorderMode > 0 ? side1 : side2)
+                       .call(this.fillatt.func)
+                       .style('fill', d3_rgb(this.fillatt.color).brighter(0.5).formatHex());
+            svg_border2.attr('d', this.pad.fBorderMode > 0 ? side2 : side1)
+                       .call(this.fillatt.func)
+                       .style('fill', d3_rgb(this.fillatt.color).darker(0.5).formatHex());
+         } else {
+            svg_border1.remove();
+            svg_border2.remove();
+         }
+
       }
 
       this._fast_drawing = settings.SmallPad && ((w * (1 - this.pad.fLeftMargin-this.pad.fRightMargin) < settings.SmallPad.width) || (h * (1 - this.pad.fBottomMargin - this.pad.fTopMargin) < settings.SmallPad.height));
