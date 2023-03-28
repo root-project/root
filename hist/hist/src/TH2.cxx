@@ -2605,7 +2605,7 @@ void TH2::SetShowProjectionY(Int_t nbins)
 void TH2::SetShowProjectionXY(Int_t nbinsY, Int_t nbinsX)
 {
    GetPainter();
-   if (fPainter) fPainter->SetShowProjection("x",nbinsY,nbinsX);
+   if (fPainter) fPainter->SetShowProjectionXY("x",nbinsY,nbinsX);
 }
 
 
