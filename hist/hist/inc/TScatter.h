@@ -51,7 +51,7 @@ public:
    void      SavePrimitive(std::ostream &out, Option_t *option = "") override;
 
 
-   ClassDefOverride(TScatter,0)  //A scatter plot
+   ClassDefOverride(TScatter,1)  //A scatter plot
 };
 #endif
 
