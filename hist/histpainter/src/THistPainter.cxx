@@ -10855,7 +10855,7 @@ void THistPainter::ShowProjectionX(Int_t /*px*/, Int_t py)
          }
       }
       hp->SetXTitle(fH->GetXaxis()->GetTitle());
-      hp->SetYTitle("Number of Entries");
+      hp->SetYTitle(((TH2*)fH)->GetZaxis()->GetTitle() ? ((TH2*)fH)->GetZaxis()->GetTitle() : "Number of Entries");
       hp->Draw();
       c->Update();
    }
@@ -10941,7 +10941,7 @@ void THistPainter::ShowProjectionY(Int_t px, Int_t /*py*/)
          }
       }
       hp->SetXTitle(fH->GetYaxis()->GetTitle());
-      hp->SetYTitle("Number of Entries");
+      hp->SetYTitle(((TH2*)fH)->GetZaxis()->GetTitle() ? ((TH2*)fH)->GetZaxis()->GetTitle() : "Number of Entries");
       hp->Draw(fShowProjection2 ? "hbar" : "");
       c->Update();
    }
