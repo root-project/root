@@ -26,7 +26,7 @@ def github_log_group(title: str):
             except Exception as e:
                 print("::endgroup::")
                 raise e
-            
+
             print("::endgroup::")
 
             return result
@@ -82,13 +82,17 @@ def die(code: int = 1, msg: str = "", log: str = "") -> None:
 
 def print_shell_log(log: str) -> None:
     if log != "":
-        shell_log = textwrap.dedent(f"""\
-            ######################################
-            #    To replicate build locally     #
-            ######################################
-            
-            {log}
-        """)
+        shell_log = f"""\
+######################################
+#    To replicate build locally     #
+######################################
+
+For Linux, grab the image:
+$ docker run --rm -it registry.cern.ch/root-ci/<image>:buildready
+Then:
+
+{log}
+"""
 
         print(shell_log)
 
@@ -183,7 +187,7 @@ def download_latest(url: str, prefix: str, destination: str, shell_log: str) -> 
     with get(f"{url}/?prefix={prefix}&format=json", timeout=20) as r:
         if r.status_code == HTTPStatus.NO_CONTENT or r.content == b'[]':
             raise Exception(f"No object found with prefix: {prefix}")
-            
+
         result = json.loads(r.content)
         artifacts = [x['name'] for x in result if 'content_type' in x]
 
