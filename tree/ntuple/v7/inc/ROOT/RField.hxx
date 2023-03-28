@@ -815,7 +815,7 @@ class RNullableField : public Detail::RFieldBase {
    /// For a dense nullable field, used to write a default-constructed item for missing ones.
    Detail::RFieldValue fDefaultItemValue;
    /// For a sparse nullable field, the number of written non-null items in this cluster
-   ClusterSize_t::ValueType fNWritten;
+   ClusterSize_t::ValueType fNWritten{0};
 
 protected:
    const Detail::RFieldBase::RColumnRepresentations &GetColumnRepresentations() const final;
@@ -2244,6 +2244,23 @@ public:
    {
       return Detail::RFieldValue(Detail::RColumnElement<std::bitset<N>>(static_cast<float *>(where)), this,
                                  static_cast<std::bitset<N> *>(where), std::forward<ArgsT>(args)...);
+   }
+};
+
+template <typename ItemT>
+class RField<std::unique_ptr<ItemT>> : public RUniquePtrField {
+public:
+   static std::string TypeName() { return "std::unique_ptr<" + RField<ItemT>::TypeName() + ">"; }
+   explicit RField(std::string_view name) : RUniquePtrField(name, std::make_unique<RField<ItemT>>("_0")) {}
+   RField(RField &&other) = default;
+   RField &operator=(RField &&other) = default;
+   ~RField() override = default;
+
+   using Detail::RFieldBase::GenerateValue;
+   template <typename... ArgsT>
+   ROOT::Experimental::Detail::RFieldValue GenerateValue(void *where, ArgsT &&...args)
+   {
+      return Detail::RFieldValue(this, static_cast<ItemT *>(where), std::forward<ArgsT>(args)...);
    }
 };
 

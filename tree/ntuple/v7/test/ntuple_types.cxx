@@ -6,6 +6,9 @@
 #include <bitset>
 #include <cstring>
 #include <limits>
+#include <memory>
+#include <type_traits>
+#include <utility>
 
 TEST(RNTuple, TypeName) {
    EXPECT_STREQ("float", ROOT::Experimental::RField<float>::TypeName().c_str());
@@ -491,6 +494,146 @@ TEST(RNTuple, Bitset)
    reader->LoadEntry(1);
    EXPECT_EQ("100000000000000000000000000000001000000000000000000000000000001001", bs1->to_string());
    EXPECT_EQ("01010101", bs2->to_string());
+}
+
+struct RTagNullableFieldDefault {};
+struct RTagNullableFieldSparse {};
+struct RTagNullableFieldDense {};
+using UniquePtrTags = ::testing::Types<RTagNullableFieldDefault, RTagNullableFieldSparse, RTagNullableFieldDense>;
+
+template <typename TagT>
+class UniquePtr : public ::testing::Test {
+public:
+   using Tag_t = TagT;
+};
+
+TYPED_TEST_SUITE(UniquePtr, UniquePtrTags);
+
+template <typename TypeT, typename TagT>
+static void AddUniquePtrField(RNTupleModel &model, const std::string &fieldName)
+{
+   auto fld = std::make_unique<RField<std::unique_ptr<TypeT>>>(fieldName);
+   if constexpr (std::is_same_v<TagT, RTagNullableFieldSparse>) {
+      fld->SetSparse();
+   }
+   if constexpr (std::is_same_v<TagT, RTagNullableFieldDense>) {
+      fld->SetDense();
+   }
+   model.AddField(std::move(fld));
+}
+
+TYPED_TEST(UniquePtr, Basics)
+{
+   using RUniquePtrField = ROOT::Experimental::RUniquePtrField;
+
+   FileRaii fileGuard("test_ntuple_unique_ptr.root");
+
+   {
+      auto model = RNTupleModel::Create();
+
+      AddUniquePtrField<bool, typename TestFixture::Tag_t>(*model, "PBool");
+      AddUniquePtrField<CustomStruct, typename TestFixture::Tag_t>(*model, "PCustomStruct");
+      AddUniquePtrField<std::unique_ptr<std::string>, typename TestFixture::Tag_t>(*model, "PPString");
+      AddUniquePtrField<std::array<char, 2>, typename TestFixture::Tag_t>(*model, "PArray");
+
+      EXPECT_EQ("std::unique_ptr<bool>", model->GetField("PBool")->GetType());
+      EXPECT_EQ(std::string("std::unique_ptr<CustomStruct>"), model->GetField("PCustomStruct")->GetType());
+      EXPECT_EQ(std::string("std::unique_ptr<std::unique_ptr<std::string>>"), model->GetField("PPString")->GetType());
+      EXPECT_EQ(std::string("std::unique_ptr<std::array<char,2>>"), model->GetField("PArray")->GetType());
+
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
+
+      if constexpr (std::is_same_v<typename TestFixture::Tag_t, RTagNullableFieldDefault>) {
+         EXPECT_TRUE(dynamic_cast<const RUniquePtrField *>(writer->GetModel()->GetField("PBool"))->IsDense());
+         EXPECT_TRUE(dynamic_cast<const RUniquePtrField *>(writer->GetModel()->GetField("PCustomStruct"))->IsSparse());
+         EXPECT_TRUE(dynamic_cast<const RUniquePtrField *>(writer->GetModel()->GetField("PArray"))->IsDense());
+      }
+      if constexpr (std::is_same_v<typename TestFixture::Tag_t, RTagNullableFieldSparse>) {
+         EXPECT_TRUE(dynamic_cast<const RUniquePtrField *>(writer->GetModel()->GetField("PBool"))->IsSparse());
+         EXPECT_TRUE(dynamic_cast<const RUniquePtrField *>(writer->GetModel()->GetField("PCustomStruct"))->IsSparse());
+         EXPECT_TRUE(dynamic_cast<const RUniquePtrField *>(writer->GetModel()->GetField("PPString"))->IsSparse());
+         EXPECT_TRUE(dynamic_cast<const RUniquePtrField *>(writer->GetModel()->GetField("PArray"))->IsSparse());
+      }
+      if constexpr (std::is_same_v<typename TestFixture::Tag_t, RTagNullableFieldDense>) {
+         EXPECT_TRUE(dynamic_cast<const RUniquePtrField *>(writer->GetModel()->GetField("PBool"))->IsDense());
+         EXPECT_TRUE(dynamic_cast<const RUniquePtrField *>(writer->GetModel()->GetField("PCustomStruct"))->IsDense());
+         EXPECT_TRUE(dynamic_cast<const RUniquePtrField *>(writer->GetModel()->GetField("PPString"))->IsDense());
+         EXPECT_TRUE(dynamic_cast<const RUniquePtrField *>(writer->GetModel()->GetField("PArray"))->IsDense());
+      }
+
+      auto pBool = writer->GetModel()->Get<std::unique_ptr<bool>>("PBool");
+      auto pCustomStruct = writer->GetModel()->Get<std::unique_ptr<CustomStruct>>("PCustomStruct");
+      auto ppString = writer->GetModel()->Get<std::unique_ptr<std::unique_ptr<std::string>>>("PPString");
+      auto pArray = writer->GetModel()->Get<std::unique_ptr<std::array<char, 2>>>("PArray");
+
+      *pBool = std::make_unique<bool>(true);
+      EXPECT_EQ(nullptr, pCustomStruct->get());
+      EXPECT_EQ(nullptr, ppString->get());
+      EXPECT_EQ(nullptr, pArray->get());
+      writer->Fill();
+      *pBool = nullptr;
+      *pCustomStruct = std::make_unique<CustomStruct>();
+      *ppString = std::make_unique<std::unique_ptr<std::string>>(std::make_unique<std::string>());
+      *pArray = std::make_unique<std::array<char, 2>>();
+      writer->Fill();
+      (*pCustomStruct)->a = 42.0;
+      (*(*ppString))->assign("abc");
+      (*pArray)->at(1) = 'x';
+      writer->Fill();
+      *pBool = std::make_unique<bool>(false);
+      *pCustomStruct = nullptr;
+      *ppString = nullptr;
+      *pArray = nullptr;
+      writer->Fill();
+      writer->CommitCluster();
+      *ppString = std::make_unique<std::unique_ptr<std::string>>(std::make_unique<std::string>("de"));
+      writer->Fill();
+   }
+
+   auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
+   auto model = reader->GetModel();
+   EXPECT_EQ("std::unique_ptr<bool>", model->GetField("PBool")->GetType());
+   EXPECT_EQ(std::string("std::unique_ptr<CustomStruct>"), model->GetField("PCustomStruct")->GetType());
+   EXPECT_EQ(std::string("std::unique_ptr<std::unique_ptr<std::string>>"), model->GetField("PPString")->GetType());
+   EXPECT_EQ(std::string("std::unique_ptr<std::array<char,2>>"), model->GetField("PArray")->GetType());
+
+   auto entry = reader->GetModel()->GetDefaultEntry();
+   auto pBool = entry->Get<std::unique_ptr<bool>>("PBool");
+   auto pCustomStruct = entry->Get<std::unique_ptr<CustomStruct>>("PCustomStruct");
+   auto ppString = entry->Get<std::unique_ptr<std::unique_ptr<std::string>>>("PPString");
+   auto pArray = entry->Get<std::unique_ptr<std::array<char, 2>>>("PArray");
+
+   reader->LoadEntry(0);
+   EXPECT_TRUE(*(pBool->get()));
+   EXPECT_EQ(nullptr, pCustomStruct->get());
+   EXPECT_EQ(nullptr, ppString->get());
+   EXPECT_EQ(nullptr, pArray->get());
+
+   reader->LoadEntry(1);
+   EXPECT_EQ(nullptr, pBool->get());
+   EXPECT_FLOAT_EQ(0.0, pCustomStruct->get()->a);
+   EXPECT_TRUE(ppString->get()->get()->empty());
+   EXPECT_EQ(0, pArray->get()->at(0));
+   EXPECT_EQ(0, pArray->get()->at(1));
+
+   reader->LoadEntry(2);
+   EXPECT_EQ(nullptr, pBool->get());
+   EXPECT_FLOAT_EQ(42.0, pCustomStruct->get()->a);
+   EXPECT_EQ("abc", *(ppString->get()->get()));
+   EXPECT_EQ(0, pArray->get()->at(0));
+   EXPECT_EQ('x', pArray->get()->at(1));
+
+   reader->LoadEntry(3);
+   EXPECT_FALSE(*(pBool->get()));
+   EXPECT_EQ(nullptr, pCustomStruct->get());
+   EXPECT_EQ(nullptr, ppString->get());
+   EXPECT_EQ(nullptr, pArray->get());
+
+   reader->LoadEntry(4);
+   EXPECT_FALSE(*(pBool->get()));
+   EXPECT_EQ(nullptr, pCustomStruct->get());
+   EXPECT_EQ("de", *(ppString->get()->get()));
+   EXPECT_EQ(nullptr, pArray->get());
 }
 
 TEST(RNTuple, UnsupportedStdTypes)
