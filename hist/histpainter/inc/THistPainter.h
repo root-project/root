@@ -65,7 +65,7 @@ protected:
    TCutG                *fCuts[kMaxCuts];         ///< Pointers to graphical cuts
    TList                *fStack;                  ///< Pointer to stack of histograms (if any)
    Int_t                 fShowProjection;         ///< True if a projection must be drawn
-   Int_t                 fShowProjection2;        ///< True if a second projection must be drawn
+   Int_t                 fShowProjection2;        ///< True if a second projection must be drawn (when calling SetShowProjectionXY on a TH2)
    TString               fShowOption;             ///< Option to draw the projection
    Int_t                 fXHighlightBin;          ///< X highlight bin
    Int_t                 fYHighlightBin;          ///< Y highlight bin
