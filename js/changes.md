@@ -1,10 +1,15 @@
 # JSROOT changelog
 
-## Changes in 7.3.x
+## Changes in 7.3.1
 1. Fix - TGeo update in the TWebCanvas
 2. Fix - several tutorials with three.js modules loading
 3. Fix - redraw pad when change text align attributes
 4. Fix - pad ranges for TWebCanvas, handle log2 scales
+5. Fix - support candle and violin options when creating string draw option
+6. Fix - labels and tooltips on reversed axes
+7. Fix - zooming on TRatioPlot
+8. Fix - pad ranges calculations for TWebCanvas
+9. Fix - set proper background for geo drawing
 
 
 ## Changes in 7.3.0

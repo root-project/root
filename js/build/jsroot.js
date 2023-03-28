@@ -7,11 +7,11 @@ typeof define === 'function' && define.amd ? define(['exports'], factory) :
 
 /** @summary version id
   * @desc For the JSROOT release the string in format 'major.minor.patch' like '7.0.0' */
-let version_id = '7.3.x';
+let version_id = '7.3.1';
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-let version_date = '23/02/2023';
+let version_date = '28/03/2023';
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -64163,7 +64163,7 @@ class TH2Painter$2 extends THistPainter {
                if (i2+dd >= h.i2) { i2 = Math.min(Math.round(i2+dd), h.i2); i1 = Math.max(i2 - this.projection_width, h.i1); }
                              else { i1 = Math.max(Math.round(i1-dd), h.i1); i2 = Math.min(i1 + this.projection_width, h.i2); }
             }
-            x1 = h.grx[i1], x2 = h.grx[i2],
+            x1 = h.grx[i1]; x2 = h.grx[i2];
             binid = i1*777 + i2*333;
          }
 
@@ -70860,7 +70860,8 @@ class TGeoPainter extends ObjectPainter {
    changedBackground(val) {
       if (val !== undefined)
          this.ctrl.background = val;
-      this._renderer.setClearColor(this.ctrl.background, 1);
+      this._scene.background = new Color$1(this.ctrl.background);
+      this._renderer.setClearColor(this._scene.background, 1);
       this.render3D(0);
 
       if (this._toolbar) {
@@ -72165,6 +72166,8 @@ class TGeoPainter extends ObjectPainter {
 
       this._scene.add(this._toplevel);
 
+      this._scene.background = new Color$1(this.ctrl.background);
+
       return createRender3D(w, h, this.options.Render3D, { antialias: true, logarithmicDepthBuffer: false, preserveDrawingBuffer: true }).then(r => {
 
          this._renderer = r;
@@ -72176,7 +72179,7 @@ class TGeoPainter extends ObjectPainter {
          this._renderer.setSize(w, h, !this._fit_main_area);
          this._renderer.localClippingEnabled = true;
 
-         this._renderer.setClearColor(this.ctrl.background, 1);
+         this._renderer.setClearColor(this._scene.background, 1);
 
          if (this._fit_main_area && this._webgl) {
             this._renderer.domElement.style.width = '100%';
