@@ -35,6 +35,9 @@
 #include <cstdio>
 #include <cstring>
 #include <string>
+#if __has_include(<compare>)
+#  include <compare>
+#endif
 
 class TRegexp;
 class TPRegexp;
@@ -56,7 +59,7 @@ Bool_t  operator==(const TString &s1, const char *s2);
 Bool_t  operator==(const TSubString &s1, const TSubString &s2);
 Bool_t  operator==(const TSubString &s1, const TString &s2);
 Bool_t  operator==(const TSubString &s1, const char *s2);
-#ifdef __cpp_impl_three_way_comparison
+#ifdef __cpp_lib_three_way_comparison
 std::strong_ordering operator<=>(const TString &s1, const TString &s2);
 #endif
 /*
@@ -169,7 +172,7 @@ operator+(T f, const TString &s);
 
 friend Bool_t  operator==(const TString &s1, const TString &s2);
 friend Bool_t  operator==(const TString &s1, const char *s2);
-#ifdef __cpp_impl_three_way_comparison
+#ifdef __cpp_lib_three_way_comparison
 friend std::strong_ordering operator<=>(const TString &s1, const TString &s2);
 #endif
 
@@ -854,7 +857,7 @@ inline Bool_t operator==(const std::string_view &s1, const char *s2)
 }
 #endif
 
-#ifdef __cpp_impl_three_way_comparison
+#ifdef __cpp_lib_three_way_comparison
 inline std::strong_ordering operator<=>(const TString &s1, const TString &s2)
 {
    if (s1 == s2) return std::strong_ordering::equal;
