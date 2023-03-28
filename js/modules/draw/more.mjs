@@ -13,10 +13,10 @@ async function drawText() {
        w = pp.getPadWidth(),
        h = pp.getPadHeight(),
        pos_x = text.fX, pos_y = text.fY,
-       tcolor = this.getColor(text.fTextColor),
        use_frame = false,
-       fact = 1., textsize = text.fTextSize || 0.05,
-       main = this.getFramePainter();
+       fact = 1., main = this.getFramePainter();
+
+   this.createAttText({ attr: text });
 
    if (text.TestBit(BIT(14))) {
       // NDC coordinates
@@ -33,7 +33,6 @@ async function drawText() {
       this.isndc = true;
       pos_x = pos_y = 0.5;
       text.fTextAlign = 22;
-      if (!tcolor) tcolor = 'black';
    }
 
    this.createG(use_frame);
@@ -43,9 +42,7 @@ async function drawText() {
    this.pos_x = this.axisToSvg('x', pos_x, this.isndc);
    this.pos_y = this.axisToSvg('y', pos_y, this.isndc);
 
-   let arg = { align: text.fTextAlign, x: this.pos_x, y: this.pos_y, text: text.fTitle, color: tcolor, latex: 0 };
-
-   if (text.fTextAngle) arg.rotate = -text.fTextAngle;
+   let arg = this.textatt.createArg({ x: this.pos_x, y: this.pos_y, text: text.fTitle, latex: 0 });
 
    if (text._typename == clTLatex) {
       arg.latex = 1;
@@ -55,7 +52,7 @@ async function drawText() {
       fact = 0.8;
    }
 
-   this.startTextDrawing(text.fTextFont, Math.round((textsize > 1) ? textsize : textsize*Math.min(w,h)*fact));
+   this.startTextDrawing(this.textatt.font, this.textatt.getSize(w, h, fact, 0.05));
 
    this.drawText(arg);
 

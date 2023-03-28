@@ -1287,7 +1287,7 @@ class HierarchyPainter extends BasePainter {
    }
 
    /** @summary Toggle open state of the item
-     * @desc Used with 'open all' / 'close all' buttons in normal GUI
+     * @desc Used with 'expand all' / 'collapse all' buttons in normal GUI
      * @param {boolean} isopen - if items should be expand or closed
      * @return {boolean} true when any item was changed */
    toggleOpenState(isopen, h) {
@@ -1368,35 +1368,35 @@ class HierarchyPainter extends BasePainter {
       }
 
       let d3btns = d3elem.append('p').attr('class', 'jsroot').style('margin-bottom','3px').style('margin-top',0);
-      d3btns.append('a').attr('class', 'h_button').text('open all')
-            .attr('title','open all items in the browser').on('click', () => this.toggleOpenState(true));
+      d3btns.append('a').attr('class', 'h_button').text('expand all')
+            .attr('title', 'expand all items in the browser').on('click', () => this.toggleOpenState(true));
       d3btns.append('text').text(' | ');
-      d3btns.append('a').attr('class', 'h_button').text('close all')
-            .attr('title','close all items in the browser').on('click', () => this.toggleOpenState(false));
+      d3btns.append('a').attr('class', 'h_button').text('collapse all')
+            .attr('title', 'collapse all items in the browser').on('click', () => this.toggleOpenState(false));
 
       if (isFunc(this.removeInspector)) {
          d3btns.append('text').text(' | ');
          d3btns.append('a').attr('class', 'h_button').text('remove')
-               .attr('title','remove inspector').on('click', () => this.removeInspector());
+               .attr('title', 'remove inspector').on('click', () => this.removeInspector());
       }
 
       if ('_online' in this.h) {
          d3btns.append('text').text(' | ');
          d3btns.append('a').attr('class', 'h_button').text('reload')
-               .attr('title','reload object list from the server').on('click', () => this.reload());
+               .attr('title', 'reload object list from the server').on('click', () => this.reload());
       }
 
       if ('disp_kind' in this) {
          d3btns.append('text').text(' | ');
          d3btns.append('a').attr('class', 'h_button').text('clear')
-               .attr('title','clear all drawn objects').on('click', () => this.clearHierarchy(false));
+               .attr('title', 'clear all drawn objects').on('click', () => this.clearHierarchy(false));
       }
 
       let maindiv =
          d3elem.append('div')
                .attr('class', 'jsroot')
                .style('font-size', this.with_icons ? '12px' : '15px')
-               .style('flex','1');
+               .style('flex', '1');
 
       if (!this.show_overflow)
          maindiv.style('overflow','auto');

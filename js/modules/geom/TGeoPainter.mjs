@@ -1110,7 +1110,8 @@ class TGeoPainter extends ObjectPainter {
    changedBackground(val) {
       if (val !== undefined)
          this.ctrl.background = val;
-      this._renderer.setClearColor(this.ctrl.background, 1);
+      this._scene.background = new Color(this.ctrl.background);
+      this._renderer.setClearColor(this._scene.background, 1);
       this.render3D(0);
 
       if (this._toolbar) {
@@ -2444,6 +2445,8 @@ class TGeoPainter extends ObjectPainter {
 
       this._scene.add(this._toplevel);
 
+      this._scene.background = new Color(this.ctrl.background);
+
       return createRender3D(w, h, this.options.Render3D, { antialias: true, logarithmicDepthBuffer: false, preserveDrawingBuffer: true }).then(r => {
 
          this._renderer = r;
@@ -2455,7 +2458,7 @@ class TGeoPainter extends ObjectPainter {
          this._renderer.setSize(w, h, !this._fit_main_area);
          this._renderer.localClippingEnabled = true;
 
-         this._renderer.setClearColor(this.ctrl.background, 1);
+         this._renderer.setClearColor(this._scene.background, 1);
 
          if (this._fit_main_area && this._webgl) {
             this._renderer.domElement.style.width = '100%';
