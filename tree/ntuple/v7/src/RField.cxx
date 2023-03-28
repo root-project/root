@@ -169,6 +169,8 @@ std::string GetNormalizedType(const std::string &typeName) {
       normalizedType = "std::" + normalizedType;
    if (normalizedType.substr(0, 7) == "bitset<")
       normalizedType = "std::" + normalizedType;
+   if (normalizedType.substr(0, 11) == "unique_ptr<")
+      normalizedType = "std::" + normalizedType;
 
    return normalizedType;
 }
@@ -321,6 +323,11 @@ ROOT::Experimental::Detail::RFieldBase::Create(const std::string &fieldName, con
    if (normalizedType.substr(0, 12) == "std::bitset<") {
       auto size = std::stoull(normalizedType.substr(12, normalizedType.length() - 13));
       result = std::make_unique<RBitsetField>(fieldName, size);
+   }
+   if (normalizedType.substr(0, 16) == "std::unique_ptr<") {
+      std::string itemTypeName = normalizedType.substr(16, normalizedType.length() - 17);
+      auto itemField = Create("_0", itemTypeName);
+      result = std::make_unique<RUniquePtrField>(fieldName, itemField.Unwrap());
    }
    // TODO: create an RCollectionField?
    if (normalizedType == ":Collection:")
@@ -2410,7 +2417,8 @@ ROOT::Experimental::RClusterIndex ROOT::Experimental::RNullableField::GetItemInd
 {
    RClusterIndex nullIndex;
    if (IsDense()) {
-      return fPrincipalColumn->Map<bool>(globalIndex) ? nullIndex : fPrincipalColumn->GetClusterIndex(globalIndex);
+      const bool isValidItem = *fPrincipalColumn->Map<bool>(globalIndex);
+      return isValidItem ? fPrincipalColumn->GetClusterIndex(globalIndex) : nullIndex;
    } else {
       RClusterIndex variantIndex;
       std::uint32_t tag;
@@ -2442,7 +2450,7 @@ ROOT::Experimental::RUniquePtrField::CloneImpl(std::string_view newName) const
 std::size_t ROOT::Experimental::RUniquePtrField::AppendImpl(const Detail::RFieldValue &value)
 {
    auto typedValue = value.Get<std::unique_ptr<char>>();
-   if (typedValue) {
+   if (*typedValue) {
       auto itemValue = fSubFields[0]->CaptureValue(typedValue->get());
       return AppendValue(itemValue);
    } else {
@@ -2453,7 +2461,7 @@ std::size_t ROOT::Experimental::RUniquePtrField::AppendImpl(const Detail::RField
 void ROOT::Experimental::RUniquePtrField::ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue *value)
 {
    auto ptr = value->Get<std::unique_ptr<char>>();
-   bool isValidValue = !(*ptr);
+   bool isValidValue = !!(*ptr);
 
    auto itemIndex = GetItemIndex(globalIndex);
    bool isValidItem = itemIndex.GetIndex() != kInvalidClusterIndex;
@@ -2485,9 +2493,10 @@ ROOT::Experimental::Detail::RFieldValue ROOT::Experimental::RUniquePtrField::Gen
 void ROOT::Experimental::RUniquePtrField::DestroyValue(const Detail::RFieldValue &value, bool dtorOnly)
 {
    auto ptr = value.Get<std::unique_ptr<char>>();
-   if (!(fSubFields[0]->GetTraits() & kTraitTriviallyDestructible)) {
+   if (*ptr) {
       auto itemValue = fSubFields[0]->CaptureValue(ptr->get());
-      fSubFields[0]->DestroyValue(itemValue, dtorOnly);
+      fSubFields[0]->DestroyValue(itemValue, false /* dtorOnly */);
+      ptr->release();
    }
    if (!dtorOnly)
       free(ptr);
