@@ -478,9 +478,9 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
   DICTIONARY_OPTIONS
     "-writeEmptyRootPCM"
   LIBRARIES
+    RooBatchCompute
     RooFitCommon
   DEPENDENCIES
-    RooBatchCompute
     Core
     Hist
     Graf
