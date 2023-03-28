@@ -127,7 +127,7 @@ def main():
 
     if testing:
         extra_ctest_flags = ""
-        
+
         if WINDOWS:
             extra_ctest_flags += "--repeat until-pass:3 "
             extra_ctest_flags += "--build-config " + args.buildtype
@@ -165,7 +165,7 @@ def cleanup_previous_build(shell_log):
 
     if result != 0:
         die(result, "Failed to clean up previous artifacts", shell_log)
-    
+
     return shell_log
 
 
@@ -191,7 +191,7 @@ def git_pull(repository:str, branch: str, shell_log: str):
 
     if returncode != 0:
         die(returncode, f"Failed to pull {branch}", shell_log)
-    
+
     return shell_log
 
 
@@ -212,7 +212,7 @@ def download_artifacts(obj_prefix: str, shell_log: str):
         shutil.rmtree(f'{WORKDIR}/src', ignore_errors=True)
         shutil.rmtree(f'{WORKDIR}/build', ignore_errors=True)
         raise err
-    
+
     return shell_log
 
 
@@ -222,10 +222,10 @@ def run_ctest(shell_log: str, extra_ctest_flags: str) -> str:
         cd '{WORKDIR}/build'
         ctest --parallel {os.cpu_count()} --output-junit TestResults.xml {extra_ctest_flags}
     """, shell_log)
-    
+
     if result != 0:
         print_warning("Some tests failed")
-    
+
     return shell_log
 
 
@@ -271,25 +271,25 @@ def build(options, buildtype, shell_log):
 
     if result != 0:
         die(result, "Failed to build", shell_log)
-    
+
     return shell_log
 
 
 @github_log_group("Rebase")
 def rebase(base_ref, head_ref, shell_log) -> str:
-    # This mental gymnastics is neccessary because the the CMake build fetches 
+    # This mental gymnastics is neccessary because the the CMake build fetches
     # roottest based on the current branch name of ROOT
     #
     # rebase fails unless user.email and user.name is set
     result, shell_log = subprocess_with_log(f"""
         cd '{WORKDIR}/src'
-        
+
         git config user.email "rootci@root.cern"
         git config user.name 'ROOT Continous Integration'
-        
+
         git fetch origin {head_ref}:__tmp
         git checkout __tmp
-        
+
         git rebase {base_ref}
         git checkout {base_ref}
         git reset --hard __tmp
