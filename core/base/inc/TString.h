@@ -35,7 +35,7 @@
 #include <cstdio>
 #include <cstring>
 #include <string>
-#if __has_include(<compare>)
+#if (__cplusplus >= 202002L)
 #  include <compare>
 #endif
 
