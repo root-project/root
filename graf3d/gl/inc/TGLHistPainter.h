@@ -76,6 +76,7 @@ public:
    void           SetStack(TList *stack) override;
    Int_t          MakeCuts(char *cutsOpt) override;
    void           SetShowProjection(const char *option, Int_t nbins) override;
+   void           SetShowProjectionXY(const char *option, Int_t nbinsY, Int_t nbinsX) override;
 
    TGLPlotPainter *GetRealPainter(){return fGLPainter.get();}
 private:
