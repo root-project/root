@@ -360,6 +360,8 @@ jobs:
       - name: Setup tmate session
         if: ${{ failure() }}
         uses: mxschmitt/action-tmate@v3
+        with:
+          sudo: false
         # When debugging increase to a suitable value!
         timeout-minutes: ${{ github.event.pull_request && 40 || 20 }}
 
