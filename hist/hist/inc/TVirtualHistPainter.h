@@ -51,6 +51,7 @@ public:
    virtual void       SetStack(TList *stack) = 0;
    virtual Int_t      MakeCuts(char *cutsopt) = 0;
    virtual void       SetShowProjection(const char *option, Int_t nbins) = 0;
+   virtual void       SetShowProjection(const char *option, Int_t nbinsY, Int_t nbinsX) = 0;
 
    static TVirtualHistPainter *HistPainter(TH1 *obj);
    static void                 SetPainter(const char *painter);

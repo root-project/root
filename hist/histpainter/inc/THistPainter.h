@@ -65,6 +65,7 @@ protected:
    TCutG                *fCuts[kMaxCuts];         ///< Pointers to graphical cuts
    TList                *fStack;                  ///< Pointer to stack of histograms (if any)
    Int_t                 fShowProjection;         ///< True if a projection must be drawn
+   Int_t                 fShowProjection2;        ///< True if a second projection must be drawn
    TString               fShowOption;             ///< Option to draw the projection
    Int_t                 fXHighlightBin;          ///< X highlight bin
    Int_t                 fYHighlightBin;          ///< Y highlight bin
@@ -146,6 +147,7 @@ public:
    void       SetHistogram(TH1 *h) override;
    void       SetStack(TList *stack) override {fStack = stack;}
    void       SetShowProjection(const char *option,Int_t nbins) override;
+   void       SetShowProjection(const char *option,Int_t nbinsY,Int_t nbinsX) override;
    virtual void       ShowProjectionX(Int_t px, Int_t py);
    virtual void       ShowProjectionY(Int_t px, Int_t py);
    virtual void       ShowProjection3(Int_t px, Int_t py);

@@ -2567,6 +2567,7 @@ void TH2::SetBinContent(Int_t bin, Double_t content)
 /// mouse position along Y.
 /// To stop the generation of the projections, delete the canvas
 /// containing the projection.
+/// \param nbins number of bins in Y to sum across for the projection
 
 void TH2::SetShowProjectionX(Int_t nbins)
 {
@@ -2582,12 +2583,29 @@ void TH2::SetShowProjectionX(Int_t nbins)
 /// mouse position along X.
 /// To stop the generation of the projections, delete the canvas
 /// containing the projection.
+/// \param nbins number of bins in X to sum across for the projection
 
 void TH2::SetShowProjectionY(Int_t nbins)
 {
    GetPainter();
 
    if (fPainter) fPainter->SetShowProjection("y",nbins);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// When the mouse is moved in a pad containing a 2-d view of this histogram
+/// two canvases show the projection along X and Y corresponding to the
+/// mouse position along Y and X, respectively.
+/// To stop the generation of the projections, delete the canvas
+/// containing the projection.
+/// \param nbinsY number of bins in Y to sum across for the x projection
+/// \param nbinsX number of bins in X to sum across for the y projection
+
+void TH2::SetShowProjectionXY(Int_t nbinsY, Int_t nbinsX)
+{
+   GetPainter();
+   if (fPainter) fPainter->SetShowProjection("x",nbinsY,nbinsX);
 }
 
 
