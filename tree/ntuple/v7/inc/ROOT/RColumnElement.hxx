@@ -116,7 +116,7 @@ static void CastUnpack(void *destination, const void *source, std::size_t count)
    auto dst = reinterpret_cast<DestT *>(destination);
    auto src = reinterpret_cast<const SourceT *>(source);
    for (std::size_t i = 0; i < count; ++i) {
-      DestT val = src[i];
+      SourceT val = src[i];
       ByteSwapIfNecessary(val);
       dst[i] = val;
    }
