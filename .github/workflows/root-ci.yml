@@ -14,7 +14,7 @@ on:
       - 'documentation/**'
 
   push:
-    branches: 
+    branches:
       - 'master'
       - 'v*-*-*-patches'
 
@@ -69,7 +69,7 @@ jobs:
 
     permissions:
       contents: read
-    
+
     strategy:
       fail-fast: false
       matrix:
@@ -77,7 +77,7 @@ jobs:
           - platform: mac13
             arch: ARM64
             config: Release
-    
+
     name: ${{ matrix.platform }} ${{ matrix.arch }} ${{ matrix.config }}
 
     runs-on: # Using '[self-hosted, ..., ...]' does not work for some reason :)
@@ -292,7 +292,7 @@ jobs:
 
           for ENTRY in $OVERRIDES; do
               KEY=$( echo "$ENTRY" | cut -d '=' -f 1 )
-              
+
               # Add entry to file if not exists, otherwise replace
 
               if grep -q "$KEY=" "$FILE"; then
@@ -351,7 +351,7 @@ jobs:
                     --base_ref       ${{ github.ref_name }}
                     --repository     ${{ github.server_url }}/${{ github.repository }}
               "
-        
+
       - name: Upload test results
         uses: actions/upload-artifact@v3
         with:
