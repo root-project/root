@@ -32,7 +32,7 @@ if (imt)
 endif(imt)
 
 if(cuda)
-  list(APPEND RDATAFRAME_EXTRA_DEPS CUDA_HIST)
+  list(APPEND RDATAFRAME_EXTRA_DEPS CUDAHist)
 endif()
 
 set (EXTRA_DICT_OPTS)

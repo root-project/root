@@ -59,6 +59,7 @@ public:
    void Fill(std::vector<Double_t> x);
    void Fill(std::vector<Double_t> x, Double_t w);
 
+   // TODO: how to distinguish between different THn fills...
    void Fill(Double_t a, Double_t b) {
       if (kDim == 1) {
          Fill(std::vector<Double_t> {a}, (Double_t) b);

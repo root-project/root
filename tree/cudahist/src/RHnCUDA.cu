@@ -185,9 +185,9 @@ RHnCUDA::RHnCUDA(Int_t dim, Int_t *ncells, Double_t *xlow, Double_t *xhigh, cons
       fAxes.push_back(axis);
 
       fNbins *= ncells[i];
-      printf("ncells:%d min:%f max:%f ", axis.fNcells, axis.fMin, axis.fMax);
+      if (getenv("DBG")) printf("ncells:%d min:%f max:%f ", axis.fNcells, axis.fMin, axis.fMax);
    }
-   printf("nbins:%d dim:%d\n", fNbins, kDim);
+   if (getenv("DBG")) printf("nbins:%d dim:%d\n", fNbins, kDim);
 }
 
 // Allocate buffers for histogram on GPU
@@ -275,6 +275,7 @@ void RHnCUDA::ExecuteCUDAH1D()
    ERRCHECK(cudaMemcpy(fDeviceCells, fCells.data(), kDim * size * sizeof(Double_t), cudaMemcpyHostToDevice));
    ERRCHECK(cudaMemcpy(fDeviceWeights, fWeights.data(), size * sizeof(Double_t), cudaMemcpyHostToDevice));
 
+   // TODO: this fails with invalid argument when  fNbins * sizeof(Double_t) exceeds max shared mem size.
    HistoKernel<<<size / fThreadBlockSize + 1, fThreadBlockSize, fNbins * sizeof(Double_t)>>>(
       fDeviceHisto, kDim, fDeviceAxes, fNbins, fDeviceCells, fDeviceWeights, size, fDeviceStats);
    ERRCHECK(cudaGetLastError());
