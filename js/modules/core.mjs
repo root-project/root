@@ -5,7 +5,7 @@ let version_id = 'dev';
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-let version_date = '23/03/2023';
+let version_date = '28/03/2023';
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -1060,7 +1060,7 @@ function create(typename, target) {
                        fCornerRadius: 0, fOption: 'brNDC', fName: 'title' });
          break;
       case clTAttText:
-         extend(obj, { fTextAngle: 0, fTextSize: 0, fTextAlign: 22, fTextColor: 1, fTextFont: 42});
+         extend(obj, { fTextAngle: 0, fTextSize: 0, fTextAlign: 22, fTextColor: 1, fTextFont: 42 });
          break;
       case clTPaveText:
          create(clTPave, obj);
@@ -1090,7 +1090,7 @@ function create(typename, target) {
          create(clTAttLine, obj);
          create(clTAttFill, obj);
          create(clTAttMarker, obj);
-         extend(obj, { fLabel: '', fObject: null, fOption: '' });
+         extend(obj, { fLabel: '', fObject: null, fOption: '', fTextAlign: 0, fTextColor: 0, fTextFont: 0 });
          break;
       case clTText:
          create(clTNamed, obj);

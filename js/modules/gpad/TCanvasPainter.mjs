@@ -570,7 +570,7 @@ class TCanvasPainter extends TPadPainter {
       this.showSection('ToolTips', this.pad.TestBit(TCanvasStatusBits.kShowToolTips) || this._highlight_connect);
    }
 
-   /** @summary Handle highlight in canvas - delver information to server
+   /** @summary Handle highlight in canvas - deliver information to server
      * @private */
    processHighlightConnect(hints) {
       if (!hints || hints.length == 0 || !this._highlight_connect ||

@@ -1,5 +1,5 @@
 import { gStyle, settings, constants, isBatchMode, clTGaxis, clTAxis } from '../core.mjs';
-import { select as d3_select, drag as d3_drag, timeFormat as d3_timeFormat,
+import { select as d3_select, drag as d3_drag, timeFormat as d3_timeFormat, pointer as d3_pointer,
          scaleTime as d3_scaleTime, scaleSymlog as d3_scaleSymlog,
          scaleLog as d3_scaleLog, scaleLinear as d3_scaleLinear } from '../d3.mjs';
 import { floatToString, makeTranslate } from '../base/BasePainter.mjs';
@@ -1142,9 +1142,9 @@ class TAxisPainter extends ObjectPainter {
       this.lineatt.not_standard = true;
 
       if (!is_gaxis || (this.name === 'zaxis')) {
-         axis_g = layer.select('.' + this.name + '_container');
+         axis_g = layer.select(`.${this.name}_container`);
          if (axis_g.empty())
-            axis_g = layer.append('svg:g').attr('class',this.name + '_container');
+            axis_g = layer.append('svg:g').attr('class', `${this.name}_container`);
          else
             axis_g.selectAll('*').remove();
       }
@@ -1271,6 +1271,16 @@ class TAxisPainter extends ObjectPainter {
             title_g.attr('transform', makeTranslate(title_shift_x, title_shift_y))
                    .property('shift_x', title_shift_x)
                    .property('shift_y', title_shift_y);
+         }
+
+         if (is_gaxis && !this.embedded && !isBatchMode()) {
+            this.draw_g.on('click', evnt => {
+               let pp = this.getPadPainter();
+               if (!pp) return;
+               evnt.preventDefault();
+               let m = d3_pointer(evnt, pp.getPadSvg().node());
+               pp.selectObjectPainter(this, { x: m[0], y: m[1] });
+            });
          }
 
          return this;
