@@ -248,11 +248,11 @@ public:
    ~RNTupleImporter() = default;
 
    /// Opens the input file for reading and the output file for writing (update).
-   static RResult<std::unique_ptr<RNTupleImporter>>
+   static std::unique_ptr<RNTupleImporter>
    Create(std::string_view sourceFileName, std::string_view treeName, std::string_view destFileName);
 
    /// Directly uses the provided tree and opens the output file for writing (update).
-   static RResult<std::unique_ptr<RNTupleImporter>> Create(TTree *sourceTree, std::string_view destFileName);
+   static std::unique_ptr<RNTupleImporter> Create(TTree *sourceTree, std::string_view destFileName);
 
    RNTupleWriteOptions GetWriteOptions() const { return fWriteOptions; }
    void SetWriteOptions(RNTupleWriteOptions options) { fWriteOptions = options; }
@@ -267,7 +267,7 @@ public:
    ///    fields and the model
    /// 2. An event loop reads every entry from the TTree, applies transformations where necessary, and writes the
    ///    output entry to the RNTuple.
-   RResult<void> Import();
+   void Import();
 }; // class RNTupleImporter
 
 } // namespace Experimental
