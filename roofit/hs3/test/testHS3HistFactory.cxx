@@ -181,9 +181,6 @@ TEST(TestHS3HistFactoryJSON, ClosureLoop)
    RooAbsPdf *pdf = mc->GetPdf();
    EXPECT_TRUE(pdf != nullptr);
 
-   // For now, this is the way to tell the JSONIO what the combined datasets are
-   pdf->setStringAttribute("combined_data_name", "obsData");
-
    std::string const &js = RooJSONFactoryWSTool{*ws}.exportJSONtoString();
    if (writeJsonFiles) {
       RooJSONFactoryWSTool{*ws}.exportJSON("hf2.json");

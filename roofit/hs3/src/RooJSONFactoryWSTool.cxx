@@ -481,14 +481,11 @@ void importAnalysis(const RooFit::Detail::JSONNode &rootnode, const RooFit::Deta
    mc.SetNuisanceParameters(nps);
    mc.SetGlobalObservables(globs);
 
-   auto *mcAuxNode = findRooFitInternal(rootnode, "ModelConfigs", analysisNode["name"].val());
-
-   if (mcAuxNode == nullptr || !mcAuxNode->has_child("combined_data_name")) {
-      throw std::runtime_error("Any imported ModelConfig must have the combined_data_name attribute (for now)!");
+   if(auto *mcAuxNode = findRooFitInternal(rootnode, "ModelConfigs", analysisNode["name"].val())) {
+      if (auto found = mcAuxNode->find("combined_data_name")) {
+         pdf->setStringAttribute("combined_data_name", found->val().c_str());
+      }
    }
-   std::string name = (*mcAuxNode)["combined_data_name"].val();
-
-   pdf->setStringAttribute("combined_data_name", name.c_str());
 }
 
 void combinePdfs(const RooFit::Detail::JSONNode &rootnode, RooWorkspace &ws)
@@ -1231,22 +1228,23 @@ void RooJSONFactoryWSTool::exportModelConfig(JSONNode &rootnode, RooStats::Model
 
    analysisNode["likelihood"] << pdf->GetName();
 
-   std::string basename;
+   std::string combinedDataName;
    if (auto s = pdf->getStringAttribute("combined_data_name")) {
-      basename = s;
-   } else {
-      throw std::runtime_error("Any exported RooSimultaneous must have the combined_data_name attribute (for now)!");
+      combinedDataName = s;
+      writeCombinedDataName(rootnode, pdf->GetName(), s);
    }
-
-   writeCombinedDataName(rootnode, pdf->GetName(), basename);
 
    auto &nllNode = appendNamedChild(rootnode["likelihoods"], pdf->GetName());
    nllNode["distributions"].set_seq();
-   nllNode["data"].set_seq();
+      if(!combinedDataName.empty()) {
+         nllNode["data"].set_seq();
+      }
 
    for (auto const &item : pdf->indexCat()) {
       nllNode["distributions"].append_child() << pdf->getPdf(item.first)->GetName();
-      nllNode["data"].append_child() << basename + "_" + item.first;
+      if(!combinedDataName.empty()) {
+         nllNode["data"].append_child() << combinedDataName + "_" + item.first;
+      }
    }
 
    auto writeList = [&](const char *name, RooArgSet const *args) {
