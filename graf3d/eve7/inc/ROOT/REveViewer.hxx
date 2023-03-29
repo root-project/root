@@ -28,12 +28,15 @@ class REveViewer : public REveElement
 {
 public:
    enum ECameraType { kCameraPerspXOZ, kCameraOrthoXOY };
+   enum EAxesType {kAxesNone, kAxesOrigin, kAxesEdge };
 
 private:
    REveViewer(const REveViewer&) = delete;
    REveViewer& operator=(const REveViewer&) = delete;
 
    ECameraType fCameraType{kCameraPerspXOZ};
+   EAxesType fAxesType{kAxesNone};
+   bool      fBlackBackground{false};
 
    bool fMandatory{true};
    std::string fPostStreamFlag;
@@ -49,6 +52,9 @@ public:
 
    void SetCameraType(ECameraType t) { fCameraType = t; }
    ECameraType GetCameraType() const { return fCameraType; }
+
+   void SetAxesType(int);
+   void SetBlackBackground(bool);
 
    void DisconnectClient();
    void ConnectClient();
