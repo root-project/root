@@ -52,20 +52,22 @@ public:
    /// @brief Gets the result for the given node using the node name.
    /// @param key The node to get the result string for.
    /// @return String representing the result of this node.
-   inline std::string const &getResult(RooAbsArg const &key) const { return _nodeNames.at(key.namePtr()); }
-
-   template <class T>
-   std::string const &getResult(RooTemplateProxy<T> const &key) const
+   inline std::string const &getResult(RooAbsArg const &arg)
    {
-      return getResult(key.arg());
+
+      auto found = _nodeNames.find(arg.namePtr());
+      if (found != _nodeNames.end())
+         return found->second;
+
+      arg.translate(*this);
+
+      return _nodeNames.at(arg.namePtr());
    }
 
-   /// @brief Checks if the current node has a result string already assigned.
-   /// @param key The node to get the result string for.
-   /// @return True if the node was assigned a result string, false otherwise.
-   inline bool isResultAssigned(RooAbsArg const *key) const
+   template <class T>
+   std::string const &getResult(RooTemplateProxy<T> const &key)
    {
-      return _nodeNames.find(key->namePtr()) != _nodeNames.end();
+      return getResult(key.arg());
    }
 
    /// @brief Adds the given string to the string block that will be emitted at the top of the squashed function. Useful
@@ -113,7 +115,7 @@ public:
    /// The arguments can either be doubles or some RooFit arguments whose
    /// results will be looked up in the context.
    template <typename... Args_t>
-   std::string buildCall(std::string const &funcname, Args_t const &...args) const
+   std::string buildCall(std::string const &funcname, Args_t const &...args)
    {
       std::stringstream ss;
       ss << funcname << "(" << buildArgs(args...) << ")" << std::endl;
@@ -121,24 +123,24 @@ public:
    }
 
 private:
-   std::string buildArg(double x) const { return RooNumber::toString(x); }
+   std::string buildArg(double x) { return RooNumber::toString(x); }
 
    template <class T>
-   std::string buildArg(T const &arg) const
+   std::string buildArg(T const &arg)
    {
       return getResult(arg);
    }
 
-   std::string buildArgs() const { return ""; }
+   std::string buildArgs() { return ""; }
 
    template <class Arg_t>
-   std::string buildArgs(Arg_t const &arg) const
+   std::string buildArgs(Arg_t const &arg)
    {
       return buildArg(arg);
    }
 
    template <typename Arg_t, typename... Args_t>
-   std::string buildArgs(Arg_t const &arg, Args_t const &...args) const
+   std::string buildArgs(Arg_t const &arg, Args_t const &...args)
    {
       return buildArg(arg) + ", " + buildArgs(args...);
    }

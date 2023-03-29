@@ -232,26 +232,5 @@ std::string RooFuncWrapper::buildCode(RooAbsReal const &head, RooArgSet const & 
          ctx.addResult(weightName, "1");
    }
 
-   BuildCodeRecur(ctx, head);
-
    return ctx.assembleCode(ctx.getResult(head));
-}
-
-void RooFuncWrapper::BuildCodeRecur(RooFit::Detail::CodeSquashContext &ctx, RooAbsReal const &head)
-{
-   if (head.isReducerNode())
-      head.buildLoopBegin(ctx);
-
-   for (auto pcurr : head.servers()) {
-      RooAbsReal *curr = dynamic_cast<RooAbsReal *>(pcurr);
-      if (!curr) {
-         std::stringstream errorMsg;
-         errorMsg << "Translate is only supported for RooAbsReal derived objects.";
-         oocoutE(nullptr, Minimization) << errorMsg.str() << std::endl;
-         throw std::runtime_error(errorMsg.str().c_str());
-      }
-      BuildCodeRecur(ctx, *curr);
-   }
-
-   head.translate(ctx);
 }

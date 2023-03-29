@@ -48,8 +48,6 @@ private:
    std::string
    buildCode(RooAbsReal const &head, RooArgSet const & /* paramSet */, RooArgSet const &obsSet, const RooAbsData *data);
 
-   void BuildCodeRecur(RooFit::Detail::CodeSquashContext &ctx, RooAbsReal const &head);
-
    void updateGradientVarBuffer() const;
 
    void
