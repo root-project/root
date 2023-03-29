@@ -150,7 +150,7 @@ void exportMeasurement(RooStats::HistFactory::Measurement &measurement, JSONNode
 
    auto &pdflist = n["distributions"];
 
-   auto &analysisNode = RooJSONFactoryWSTool::appendNamedChild(n["analyses"], measurement.GetName());
+   auto &analysisNode = RooJSONFactoryWSTool::appendNamedChild(n["analyses"], "simPdf");
    analysisNode.set_map();
    analysisNode["InterpolationScheme"] << measurement.GetInterpolationScheme();
    auto &analysisDomains = analysisNode["domains"];
@@ -221,17 +221,31 @@ void exportMeasurement(RooStats::HistFactory::Measurement &measurement, JSONNode
    }
 
    // the data
-   auto &child = RooJSONFactoryWSTool::appendNamedChild(n.get("misc", "ROOT_internal", "combined_datasets"), "obsData");
-   child["index_cat"] << "channelCat";
-   auto &labels = child["labels"];
-   labels.set_seq();
-   auto &indices = child["indices"];
-   indices.set_seq();
+   auto &child1 = RooJSONFactoryWSTool::appendNamedChild(n.get("misc", "ROOT_internal", "combined_datas"), "obsData");
+   auto &child2 =
+      RooJSONFactoryWSTool::appendNamedChild(n.get("misc", "ROOT_internal", "combined_distributions"), "simPdf");
+
+   child1["index_cat"] << "channelCat";
+   auto &labels1 = child1["labels"];
+   labels1.set_seq();
+   auto &indices1 = child1["indices"];
+   indices1.set_seq();
+
+   child2["index_cat"] << "channelCat";
+   auto &labels2 = child2["labels"];
+   labels2.set_seq();
+   auto &indices2 = child2["indices"];
+   indices2.set_seq();
+   auto &pdfs2 = child2["distributions"];
+   pdfs2.set_seq();
 
    std::vector<std::string> channelNames;
    for (const auto &c : measurement.GetChannels()) {
-      labels.append_child() << c.GetName();
-      indices.append_child() << int(channelNames.size());
+      labels1.append_child() << c.GetName();
+      indices1.append_child() << int(channelNames.size());
+      labels2.append_child() << c.GetName();
+      indices2.append_child() << int(channelNames.size());
+      pdfs2.append_child() << (std::string("model_") + c.GetName());
 
       JSONNode &dataOutput = RooJSONFactoryWSTool::appendNamedChild(n["data"], std::string("obsData_") + c.GetName());
 
@@ -245,8 +259,7 @@ void exportMeasurement(RooStats::HistFactory::Measurement &measurement, JSONNode
       channelNames.push_back(c.GetName());
    }
 
-   RooJSONFactoryWSTool::writeCombinedDataName(n, measurement.GetName(), "obsData");
-   RooJSONFactoryWSTool::writeChannelNames(n, measurement.GetName(), channelNames);
+   RooJSONFactoryWSTool::writeCombinedDataName(n, "simPdf", "obsData");
 }
 
 } // namespace
