@@ -221,11 +221,7 @@ void exportMeasurement(RooStats::HistFactory::Measurement &measurement, JSONNode
    }
 
    // the data
-   auto &miscinfo = n["misc"];
-   miscinfo.set_map();
-   auto &rootinfo = miscinfo["ROOT_internal"];
-   rootinfo.set_map();
-   auto &child = RooJSONFactoryWSTool::appendNamedChild(rootinfo["combined_datasets"], "obsData");
+   auto &child = RooJSONFactoryWSTool::appendNamedChild(n.get("misc", "ROOT_internal", "combined_datasets"), "obsData");
    child["index_cat"] << "channelCat";
    auto &labels = child["labels"];
    labels.set_seq();
