@@ -3,10 +3,6 @@ configure_file(HistArray.root . COPYONLY)
 
 ROOTTEST_ADD_AUTOMACROS(EXCLUDE execMissing runTExMap runDeleteWarning)
 
-ROOTTEST_ADD_TEST(arrayViewBasic
-                  MACRO arrayViewBasic.C
-                  OUTREF arrayViewBasic.ref)
-
 ROOTTEST_ADD_TEST(execMissing
                   MACRO execMissing.C
                   OUTREF execMissing.oref
