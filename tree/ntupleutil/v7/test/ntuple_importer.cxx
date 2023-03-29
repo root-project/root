@@ -689,8 +689,10 @@ TEST(RNTupleImporter, MultipleTrees)
    importerCopy->Import();
 
    std::unique_ptr<TFile> fileCopy(TFile::Open(fileGuardNTupleCopy.GetPath().c_str()));
-   // Check if th imported RNTuple is present...
+   // Check if the imported RNTuples are present...
    EXPECT_THAT(fileCopy->Get<ROOT::Experimental::RNTuple>("ntuple1"), testing::NotNull());
+   EXPECT_THAT(fileCopy->Get<ROOT::Experimental::RNTuple>("ntuple2"), testing::NotNull());
+   EXPECT_THAT(fileCopy->Get<ROOT::Experimental::RNTuple>("ntuple3"), testing::NotNull());
    // ...As well as the histogram from the original file.
    EXPECT_THAT(fileCopy->Get<TH1F>("hist"), testing::NotNull());
 }
