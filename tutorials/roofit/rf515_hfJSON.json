@@ -1,36 +1,38 @@
 {
-    "misc" : { "ROOT_internal" : {
-        "ModelConfigs" : {
-            "main": {
-                "combined_data_name": "observed"
-            }
-        },
-        "channel_names" : {
-            "main": ["channel1"]
-        },
-        "combined_datasets": [
-            {
-                "index_cat": "channelCat",
-                "indices": [
-                    0
-                ],
-                "labels": [
-                    "channel1"
-                ],
-                "name": "observed"
-            }
-        ]
-    }},
+    "misc": {
+        "ROOT_internal": {
+            "ModelConfigs": {
+                "main": {
+                    "combined_data_name": "observed"
+                }
+            },
+            "combined_datas": [
+                {
+                    "index_cat": "channelCat",
+                    "indices": [0],
+                    "labels": ["channel1"],
+                    "name": "observed"
+                }
+            ],
+            "combined_distributions": [
+                {
+                    "distributions": [
+                        "model_channel1"
+                    ],
+                    "index_cat": "channelCat",
+                    "indices": [0],
+                    "labels": ["channel1"],
+                    "name": "main"
+                }
+            ]
+        }
+    },
     "analyses": [
         {
             "name": "main",
             "likelihood": "main_likelihood",
-            "pois": [
-                "mu"
-            ],
-            "observables": [
-                "obs_x_channel1"
-            ]
+            "pois": ["mu"],
+            "observables": ["obs_x_channel1"]
         }
     ],
     "likelihoods": [

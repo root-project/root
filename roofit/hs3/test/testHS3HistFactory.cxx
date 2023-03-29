@@ -136,7 +136,7 @@ TEST(TestHS3HistFactoryJSON, Closure)
    RooAbsPdf *pdf = mc->GetPdf();
    EXPECT_TRUE(pdf != nullptr);
 
-   RooAbsPdf *pdfFromJson = wsFromJson.pdf(meas->GetName());
+   RooAbsPdf *pdfFromJson = mcFromJson->GetPdf();
    EXPECT_TRUE(pdfFromJson != nullptr);
 
    RooAbsData *data = ws->data("obsData");

@@ -295,6 +295,18 @@ std::vector<std::vector<int>> generateBinIndices(const RooArgList &vars)
    return combinations;
 }
 
+template <typename... Keys_t>
+JSONNode const *findRooFitInternal(JSONNode const &node, Keys_t const &...keys)
+{
+   return node.find("misc", "ROOT_internal", keys...);
+}
+
+template <typename... Keys_t>
+JSONNode &getRooFitInternal(JSONNode &node, Keys_t const &...keys)
+{
+   return node.get("misc", "ROOT_internal", keys...);
+}
+
 void exportAttributes(const RooAbsArg *arg, JSONNode &rootnode)
 {
    JSONNode *node = nullptr;
@@ -303,8 +315,7 @@ void exportAttributes(const RooAbsArg *arg, JSONNode &rootnode)
       if (node)
          return;
 
-      node =
-         &RooJSONFactoryWSTool::appendNamedChild(rootnode.get("misc", "ROOT_internal", "attributes"), arg->GetName());
+      node = &RooJSONFactoryWSTool::appendNamedChild(getRooFitInternal(rootnode, "attributes"), arg->GetName());
    };
 
    // We have to remember if the variable was a constant RooRealVar or a
@@ -435,29 +446,7 @@ void importAnalysis(const RooFit::Detail::JSONNode &rootnode, const RooFit::Deta
 
    std::string const &pdfName = analysisNode["name"].val();
 
-   std::vector<std::string> channelNames;
-   for (auto &n : rootnode.find("misc", "ROOT_internal", "channel_names", pdfName)->children()) {
-      channelNames.push_back(n.val());
-   }
-
-   std::stringstream ss;
-   ss << "SIMUL::" << pdfName << "(channelCat[";
-   for (std::size_t iChannel = 0; iChannel < nllDistNames.size(); ++iChannel) {
-      ss << channelNames[iChannel] << "=" << iChannel;
-      if (iChannel < nllDistNames.size() - 1) {
-         ss << ",";
-      }
-   }
-   ss << "]";
-
-   for (std::size_t iChannel = 0; iChannel < nllDistNames.size(); ++iChannel) {
-      ss << ", " << channelNames[iChannel] << "=" << nllDistNames[iChannel];
-   }
-   ss << ")";
-   auto pdf = static_cast<RooSimultaneous *>(workspace.factory(ss.str()));
-   if (!pdf) {
-      throw std::runtime_error("unable to import simultaneous pdf!");
-   }
+   auto *pdf = static_cast<RooSimultaneous *>(workspace.pdf(pdfName));
 
    auto &mc = *static_cast<RooStats::ModelConfig *>(workspace.obj(mcname));
    mc.SetWS(workspace);
@@ -492,7 +481,7 @@ void importAnalysis(const RooFit::Detail::JSONNode &rootnode, const RooFit::Deta
    mc.SetNuisanceParameters(nps);
    mc.SetGlobalObservables(globs);
 
-   auto *mcAuxNode = rootnode.find("misc", "ROOT_internal", "ModelConfigs", analysisNode["name"].val());
+   auto *mcAuxNode = findRooFitInternal(rootnode, "ModelConfigs", analysisNode["name"].val());
 
    if (mcAuxNode == nullptr || !mcAuxNode->has_child("combined_data_name")) {
       throw std::runtime_error("Any imported ModelConfig must have the combined_data_name attribute (for now)!");
@@ -502,9 +491,49 @@ void importAnalysis(const RooFit::Detail::JSONNode &rootnode, const RooFit::Deta
    pdf->setStringAttribute("combined_data_name", name.c_str());
 }
 
+void combinePdfs(const RooFit::Detail::JSONNode &rootnode, RooWorkspace &ws)
+{
+   auto *combinedPdfInfoNode = findRooFitInternal(rootnode, "combined_distributions");
+
+   // If there is no info on combining pdfs
+   if (combinedPdfInfoNode == nullptr) {
+      return;
+   }
+
+   for (auto &info : combinedPdfInfoNode->children()) {
+
+      // parse the information
+      std::string combinedName = info["name"].val();
+      std::string indexCatName = info["index_cat"].val();
+      std::vector<std::string> labels;
+      std::vector<int> indices;
+      std::vector<std::string> pdfNames;
+      for (auto &n : info["indices"].children()) {
+         indices.push_back(n.val_int());
+      }
+      for (auto &n : info["labels"].children()) {
+         labels.push_back(n.val());
+      }
+      for (auto &n : info["distributions"].children()) {
+         pdfNames.push_back(n.val());
+      }
+
+      RooCategory indexCat{indexCatName.c_str(), indexCatName.c_str()};
+      std::map<std::string, RooAbsPdf *> pdfMap;
+
+      for (std::size_t iChannel = 0; iChannel < labels.size(); ++iChannel) {
+         indexCat.defineType(labels[iChannel], indices[iChannel]);
+         pdfMap[labels[iChannel]] = ws.pdf(pdfNames[iChannel]);
+      }
+
+      RooSimultaneous simPdf{combinedName.c_str(), combinedName.c_str(), pdfMap, indexCat};
+      ws.import(simPdf, RooFit::RecycleConflictNodes(true), RooFit::Silence(true));
+   }
+}
+
 void combineDatasets(const RooFit::Detail::JSONNode &rootnode, std::vector<std::unique_ptr<RooAbsData>> &datas)
 {
-   auto *combinedDataInfoNode = rootnode.find("misc", "ROOT_internal", "combined_datasets");
+   auto *combinedDataInfoNode = findRooFitInternal(rootnode, "combined_datas");
 
    // If there is no info on combining datasets
    if (combinedDataInfoNode == nullptr) {
@@ -708,18 +737,6 @@ void RooJSONFactoryWSTool::exportVariables(const RooArgSet &allElems, JSONNode &
    }
 }
 
-void RooJSONFactoryWSTool::writeChannelNames(JSONNode &rootnode, std::string const &simPdfName,
-                                             std::vector<std::string> const &channelNames)
-{
-   auto &categoriesinfo = rootnode.get("misc", "ROOT_internal", "channel_names");
-   categoriesinfo.set_map();
-   // Avoid repeated filling
-   if (!categoriesinfo.has_child(simPdfName)) {
-      auto &catinfo = categoriesinfo[simPdfName];
-      catinfo.fill_seq(channelNames);
-   }
-}
-
 JSONNode *RooJSONFactoryWSTool::exportObject(const RooAbsArg *func)
 {
    if (auto simPdf = dynamic_cast<RooSimultaneous const *>(func)) {
@@ -731,7 +748,17 @@ JSONNode *RooJSONFactoryWSTool::exportObject(const RooAbsArg *func)
       for (auto const &item : simPdf->indexCat()) {
          channelNames.push_back(item.first);
       }
-      writeChannelNames(*_rootnodeOutput, simPdf->GetName(), channelNames);
+
+      auto &infoNode = getRooFitInternal(*_rootnodeOutput, "combined_distributions");
+      if (!findNamedChild(infoNode, simPdf->GetName())) {
+         auto &child = appendNamedChild(infoNode, simPdf->GetName());
+         child["index_cat"] << simPdf->indexCat().GetName();
+         exportCategory(simPdf->indexCat(), child);
+         child["distributions"].set_seq();
+         for (auto const &item : simPdf->indexCat()) {
+            child["distributions"].append_child() << simPdf->getPdf(item.first.c_str())->GetName();
+         }
+      }
 
       return nullptr;
    } else if (dynamic_cast<RooAbsCategory const *>(func)) {
@@ -945,6 +972,19 @@ void RooJSONFactoryWSTool::exportDataHist(RooDataHist const &dataHist, RooFit::D
    }
 }
 
+void RooJSONFactoryWSTool::exportCategory(RooAbsCategory const &cat, RooFit::Detail::JSONNode &node)
+{
+   auto &labels = node["labels"];
+   labels.set_seq();
+   auto &indices = node["indices"];
+   indices.set_seq();
+
+   for (auto const &item : cat) {
+      labels.append_child() << item.first;
+      indices.append_child() << item.second;
+   }
+}
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 // exporting data
 void RooJSONFactoryWSTool::exportData(RooAbsData const &data)
@@ -963,18 +1003,12 @@ void RooJSONFactoryWSTool::exportData(RooAbsData const &data)
 
    if (cat) {
       // this is a combined dataset
-      auto &child =
-         appendNamedChild(_rootnodeOutput->get("misc", "ROOT_internal", "combined_datasets"), data.GetName());
+      auto &child = appendNamedChild(getRooFitInternal(*_rootnodeOutput, "combined_datas"), data.GetName());
       child["index_cat"] << cat->GetName();
-      auto &labels = child["labels"];
-      labels.set_seq();
-      auto &indices = child["indices"];
-      indices.set_seq();
+      exportCategory(*cat, child);
 
       std::unique_ptr<TList> dataList{data.split(*cat, true)};
       for (RooAbsData *absData : static_range_cast<RooAbsData *>(*dataList)) {
-         labels.append_child() << absData->GetName();
-         indices.append_child() << cat->lookupIndex(absData->GetName());
          absData->SetName((std::string(data.GetName()) + "_" + absData->GetName()).c_str());
          this->exportData(*absData);
       }
@@ -1176,13 +1210,7 @@ std::string RooJSONFactoryWSTool::name(const JSONNode &n)
 void RooJSONFactoryWSTool::writeCombinedDataName(JSONNode &rootnode, std::string const &pdfName,
                                                  std::string const &dataName)
 {
-   auto &miscinfo = rootnode["misc"];
-   miscinfo.set_map();
-   auto &rootinfo = miscinfo["ROOT_internal"];
-   rootinfo.set_map();
-   auto &modelConfigs = rootinfo["ModelConfigs"];
-   modelConfigs.set_map();
-   auto &modelConfigAux = modelConfigs[pdfName];
+   auto &modelConfigAux = getRooFitInternal(rootnode, "ModelConfigs", pdfName);
    modelConfigAux.set_map();
 
    modelConfigAux["combined_data_name"] << dataName;
@@ -1395,7 +1423,7 @@ void RooJSONFactoryWSTool::importAllNodes(const RooFit::Detail::JSONNode &n)
 
    _rootnodeInput = &n;
 
-   _attributesNode = _rootnodeInput->find("misc", "ROOT_internal", "attributes");
+   _attributesNode = findRooFitInternal(*_rootnodeInput, "attributes");
    if (_attributesNode && !_attributesNode->is_seq()) {
       _attributesNode = nullptr;
    }
@@ -1429,6 +1457,8 @@ void RooJSONFactoryWSTool::importAllNodes(const RooFit::Detail::JSONNode &n)
    }
 
    _attributesNode = nullptr;
+
+   combinePdfs(*_rootnodeInput, _workspace);
 
    // We delay the import of the data to after combineDatasets(), because it
    // might be that some datasets are merged to combined datasets there. In
@@ -1508,6 +1538,5 @@ std::ostream &RooJSONFactoryWSTool::log(int level)
 void RooJSONFactoryWSTool::error(const char *s)
 {
    RooMsgService::instance().log(nullptr, RooFit::MsgLevel::ERROR, RooFit::IO) << s << std::endl;
-   ;
    throw std::runtime_error(s);
 }

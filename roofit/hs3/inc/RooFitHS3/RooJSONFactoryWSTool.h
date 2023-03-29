@@ -165,10 +165,9 @@ public:
    static void
    writeCombinedDataName(RooFit::Detail::JSONNode &rootnode, std::string const &pdfName, std::string const &dataName);
 
-   static void writeChannelNames(RooFit::Detail::JSONNode &rootnode, std::string const &simPdfName,
-                                 std::vector<std::string> const &channelNames);
-
    static void exportDataHist(RooDataHist const &dataHist, RooFit::Detail::JSONNode &node);
+
+   static void exportCategory(RooAbsCategory const &cat, RooFit::Detail::JSONNode &node);
 
 private:
    struct Config {
