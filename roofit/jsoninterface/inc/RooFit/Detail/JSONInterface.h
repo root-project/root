@@ -146,6 +146,33 @@ public:
          }
       }
    }
+
+   JSONNode const *find(std::string const &key) const
+   {
+      auto &n = *this;
+      return n.has_child(key) ? &n[key] : nullptr;
+   }
+
+   template <typename... Keys_t>
+   JSONNode const *find(std::string const &key, Keys_t const &...keys) const
+   {
+      auto &n = *this;
+      return n.has_child(key) ? n[key].find(keys...) : nullptr;
+   }
+
+   JSONNode &get(std::string const &key)
+   {
+      auto &n = *this;
+      return n[key];
+   }
+
+   template <typename... Keys_t>
+   JSONNode &get(std::string const &key, Keys_t const &...keys)
+   {
+      auto &next = get(key);
+      next.set_map();
+      return next.get(keys...);
+   }
 };
 
 class JSONTree {
