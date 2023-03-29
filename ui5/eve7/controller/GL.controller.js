@@ -270,6 +270,13 @@ sap.ui.define([
       {
          this.mgr.controllers[0].removeView(this.mgr.GetElement(this.eveViewerId));
          this.destroy();
+      },
+
+      updateViewerAttributes : function()
+      {
+         if (this.viewer) {
+            this.viewer.updateViewerAttributes();
+         }
       }
 
    });

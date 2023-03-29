@@ -102,6 +102,22 @@ List of Viewers providing common operations on REveViewer collections.
 */
 
 ////////////////////////////////////////////////////////////////////////////////
+//
+void REveViewer::SetAxesType(int at)
+{
+   fAxesType = (EAxesType)at;
+   StampObjProps();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+//
+void REveViewer::SetBlackBackground(bool x)
+{
+   fBlackBackground = x;
+   StampObjProps();
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Stream Camera Info.
 /// Virtual from REveElement.
 int REveViewer::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
@@ -114,8 +130,10 @@ int REveViewer::WriteCoreJson(nlohmann::json &j, Int_t rnr_offset)
    }
    j["CameraType"] = ct;
    j["Mandatory"] = fMandatory;
+   j["AxesType"] = fAxesType;
+   j["BlackBg"] = fBlackBackground;
 
-   j["UT_PostStream"] = "UT_EveViewSubscribed";
+   j["UT_PostStream"] = "UT_EveViewerUpdate";
 
    return REveElement::WriteCoreJson(j, rnr_offset);
 }

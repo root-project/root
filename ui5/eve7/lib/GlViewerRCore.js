@@ -47,14 +47,6 @@ sap.ui.define([
 
          let pthis = this;
 
-         if (!datGUI) {
-            datGUI = new EVE.JSR.gui.GUI({ autoPlace: false, width: 220 });
-            datGUI.domElement.id = 'posDatGUI';
-            pthis.datGUIFolder = datGUI.addFolder("background")
-            let dome = this.controller.getView().getParent().getParent();
-            dome.getDomRef().appendChild(datGUI.domElement);
-         }
-
          // For offline mode, one needs a a full URL or the request
          // gets forwarded to openi5.hana.ondemand.com.
          // This has to be understood and fixed. Loading of shaders
@@ -89,6 +81,9 @@ sap.ui.define([
          this.setupEventHandlers();
 
          this.controller.glViewerInitDone();
+
+         let eveView = this.controller.mgr.GetElement(this.controller.eveViewerId);
+         if (eveView.AxesType > 0) this.makeAxis();
       }
 
       cleanup() {
@@ -130,29 +125,24 @@ sap.ui.define([
          this.renderer = new RC.MeshRenderer(this.canvas, RC.WEBGL2,
                                              { antialias: false, stencil: false });
          this.renderer._logLevel = 0;
-         this.renderer.clearColor = "#FFFFFF00"; // "#00000000";
          this.renderer.addShaderLoaderUrls(this.eve_path + RC.REveShaderPath);
          this.renderer.pickObject3D = true;
 
          // add dat GUI option to set background
          let eveView = this.controller.mgr.GetElement(this.controller.eveViewerId);
-         let name = eveView.fName;
-         name = name.substring(0, 3);
-         let parName = name + "_WhiteBG";
-         let conf = {}; conf[parName] = true;
-         let pr = this;
-         if (this.controller.getView().getViewData()) {
-            datGUI.__folders.background.add(conf, parName).onChange(function (wbg) {
-               conf[parName] = wbg;
-               eveView.clearColor = wbg ? "#FFFFFF00" : "#00000000";
-               pr.renderer.clearColor = eveView.clearColor;
-               pr.request_render();
-            });
+         if (eveView.BlackBg)
+         {
+            this.fgCol =  new RC.Color(0,0,0);
+            this.bgCol = new RC.Color(1,1,1);
          }
-         else if (eveView.clearColor) {
-            pr.renderer.clearColor = eveView.clearColor;
+         else
+         {
+            this.bgCol = new RC.Color(1,1,1);
+            this.fgCol = new RC.Color(0,0,0);
          }
 
+
+         this.renderer.clearColor = '#' +  this.bgCol.getHexString() + '00';
          this.scene = new RC.Scene();
 
          this.lights = new RC.Group;
@@ -165,6 +155,11 @@ sap.ui.define([
          let light_3d_ctor = function(col, int, dist, decay, args) { return new RC.PointLight(col, int, dist, decay, args); };
          // let light_3d_ctor = function(col, int, dist, decay, args) { return new RC.DirectionalLight(col, int); };
          let light_2d_ctor = function(col, int) { return new RC.DirectionalLight(col, int); };
+
+         // guides
+         this.axis = new RC.Group();
+         this.axis.name = "Axis";
+         this.scene.add(this.axis);
 
          if (this.controller.isEveCameraPerspective())
          {
@@ -456,6 +451,95 @@ sap.ui.define([
          this.controls.setFromBBox(sbbox);
 
          this.controls.update();
+      }
+
+
+      updateViewerAttributes()
+      {
+         let eveView = this.controller.mgr.GetElement(this.controller.eveViewerId);
+         if (eveView.BlackBg)
+         {
+            this.fgCol = new RC.Color(1, 1, 1);//"#FFFFFF00";
+            this.bgCol = new RC.Color(0, 0, 0);
+         }
+         else
+         {
+            this.bgCol =  new RC.Color(1, 1, 1);//"#FFFFFF00";
+            this.fgCol = new RC.Color(0,0,0);
+         }
+
+         this.axis.clear();
+         if (eveView.AxesType > 0)
+            this.makeAxis();
+
+       this.renderer.clearColor = '#' +  this.bgCol.getHexString() + '00';
+         this.request_render();
+      }
+
+      makeAxis() {
+         function formatFloat(val) {
+            if (Math.abs(val) > 10)
+               return (val).toFixed(0);
+            else
+               return val.toFixed(2);
+         }
+
+         let bb = new RC.Box3();
+         bb.setFromObject(this.scene);
+
+         let lines = [];
+         let test = ~bb.min.x;
+         lines.push({ "p": new RC.Vector3(bb.min.x, 0, 0), "c": 0xff0000, "text": "X " + formatFloat(bb.min.x) });
+         lines.push({ "p": new RC.Vector3(bb.max.x, 0, 0), "c": 0xff0000, "text": "X " + formatFloat(bb.max.x) });
+         lines.push({ "p": new RC.Vector3(0, bb.min.y, 0), "c": 0x00ff00, "text": "Y " + formatFloat(bb.min.y) });
+         lines.push({ "p": new RC.Vector3(0, bb.max.y, 0), "c": 0x00ff00, "text": "Y " + formatFloat(bb.max.y) });
+         lines.push({ "p": new RC.Vector3(0, 0, bb.min.z), "c": 0x0000ff, "text": "Z " + formatFloat(bb.min.z) });
+         lines.push({ "p": new RC.Vector3(0, 0, bb.max.z), "c": 0x0000ff, "text": "Z " + formatFloat(bb.max.z) });
+
+
+         for (const ax of lines) {
+            let ss = new RC.Stripe([0, 0, 0, ax.p.x, ax.p.y, ax.p.z]);
+            ss.material.lineWidth = 2;
+            ss.material.color = new RC.Color(ax.c);
+            this.axis.add(ss);
+         }
+
+         let ag = this.axis;
+         let fgCol = this.fgCol;
+         const fontImgLoader = new RC.ImageLoader();
+         let tname = this.eve_path + "textures/font2.png";
+         fontImgLoader.load(tname, function (image) {
+            const fontTexture = new RC.Texture(
+               image,
+               RC.Texture.WRAPPING.ClampToEdgeWrapping,
+               RC.Texture.WRAPPING.ClampToEdgeWrapping,
+               RC.Texture.FILTER.NearestFilter,
+               RC.Texture.FILTER.NearestFilter,
+               RC.Texture.FORMAT.RGBA,
+               RC.Texture.FORMAT.RGBA,
+               RC.Texture.TYPE.UNSIGNED_BYTE,
+               128,
+               256
+            );
+
+            fontTexture._generateMipmaps = false;
+            for (const ax of lines) {
+               const text = new RC.Text2D(
+                  {
+                     text: ax.text,
+                     fontTexture: fontTexture,
+                     xPos: 0,
+                     yPos: 0,
+                     fontSize: 128,
+                     cellAspect: 8 / 16,
+                     mode: RC.TEXT2D_SPACE_WORLD
+                  }
+               );
+               text.position.copy(ax.p);
+               text.material.color = fgCol;
+               ag.add(text);
+            }
+         });
       }
 
       //==============================================================================
