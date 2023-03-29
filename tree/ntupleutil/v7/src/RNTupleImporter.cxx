@@ -122,14 +122,13 @@ ROOT::Experimental::RNTupleImporter::Create(std::string_view sourceFileName, std
    while (objLink) {
       auto key = (TKey *)objLink->GetObject();
       auto keyName = key->GetName();
-      bool isTree = TClass::GetClass(key->GetClassName())->GetBaseClass("TTree");
+      bool isTree = TClass::GetClass(key->GetClassName())->InheritsFrom(TTree::Class());
       bool isFirstOccurrence = importer->fNTupleNames.find(keyName) == importer->fNTupleNames.end();
 
-      // TODO: Copy/clone non-TTree objects to the destination file, if desired by the user.
       if (isTree && isFirstOccurrence) {
          importer->fNTupleNames[keyName] = keyName;
 
-         auto sourceTree = importer->fSourceFile->Get<TTree>(keyName);
+         auto sourceTree = key->ReadObject<TTree>();
          if (!sourceTree) {
             return R__FAIL("cannot read TTree " + std::string(keyName) + " from " + std::string(sourceFileName));
          }
@@ -158,7 +157,7 @@ ROOT::Experimental::RNTupleImporter::Create(TTree *sourceTree, std::string_view 
    importer->fSourceTrees.emplace_back(sourceTree);
 
    // If we have IMT enabled, its best use is for parallel page compression
-   importer->fSourceTrees.at(0)->SetImplicitMT(false);
+   sourceTree->SetImplicitMT(false);
    auto result = importer->InitDestination(destFileName);
 
    if (!result)
