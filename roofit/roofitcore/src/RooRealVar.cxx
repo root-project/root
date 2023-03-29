@@ -85,8 +85,7 @@ void RooRealVar::cleanup()
 
 void RooRealVar::translate(RooFit::Detail::CodeSquashContext &ctx) const
 {
-   if (!ctx.isResultAssigned(this))
-      ctx.addResult(this, GetName());
+   ctx.addResult(this, GetName());
 }
 
 /// Return a dummy object to use when properties are not initialised.

@@ -50,6 +50,11 @@ using RooSetProxy = RooCollectionProxy<RooArgSet>;
 using RooListProxy = RooCollectionProxy<RooArgList>;
 class RooExpensiveObjectCache ;
 class RooWorkspace ;
+namespace RooFit {
+namespace Detail {
+class CodeSquashContext;
+}
+}
 
 class RooRefArray : public TObjArray {
  public:
@@ -584,6 +589,8 @@ public:
   virtual std::unique_ptr<RooAbsArg> compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileContext & ctx) const;
 
   virtual bool isCategory() const { return false; }
+
+  virtual void translate(RooFit::Detail::CodeSquashContext &ctx) const;
 
 protected:
    void graphVizAddConnections(std::set<std::pair<RooAbsArg*,RooAbsArg*> >&) ;
