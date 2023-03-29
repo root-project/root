@@ -7,7 +7,19 @@
         },
         "channel_names" : {
             "main": ["channel1"]
-        }
+        },
+        "combined_datasets": [
+            {
+                "index_cat": "channelCat",
+                "indices": [
+                    0
+                ],
+                "labels": [
+                    "channel1"
+                ],
+                "name": "observed"
+            }
+        ]
     }},
     "analyses": [
         {

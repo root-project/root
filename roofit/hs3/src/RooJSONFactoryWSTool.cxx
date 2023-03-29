@@ -456,8 +456,7 @@ std::unique_ptr<RooAbsData> loadData(const JSONNode &p, RooWorkspace &workspace)
 }
 
 void importAnalysis(const RooFit::Detail::JSONNode &rootnode, const RooFit::Detail::JSONNode &analysisNode,
-                    const RooFit::Detail::JSONNode &likelihoodsNode, RooWorkspace &workspace,
-                    std::vector<std::unique_ptr<RooAbsData>> &datas)
+                    const RooFit::Detail::JSONNode &likelihoodsNode, RooWorkspace &workspace)
 {
    const RooFit::Detail::JSONNode &mcAuxNode =
       dereference(rootnode, {"misc", "ROOT_internal", "ModelConfigs", analysisNode["name"].val()}, rootnode);
@@ -544,28 +543,56 @@ void importAnalysis(const RooFit::Detail::JSONNode &rootnode, const RooFit::Deta
    mc.SetNuisanceParameters(nps);
    mc.SetGlobalObservables(globs);
 
-   // Create the combined dataset for RooFit
-   std::map<std::string, std::unique_ptr<RooAbsData>> dsMap;
-   RooArgSet allVars{pdf->indexCat()};
-   for (std::size_t iChannel = 0; iChannel < nllDataNames.size(); ++iChannel) {
-      // We move the found channel data out of the "datas" vector, such that
-      // the data components don't get imported anymore.
-      std::unique_ptr<RooAbsData> &channelData = *std::find_if(
-         datas.begin(), datas.end(), [&](auto &d) { return d && d->GetName() == nllDataNames[iChannel]; });
-      allVars.add(*channelData->get());
-      dsMap.insert({channelNames[iChannel], std::move(channelData)});
-   }
-
    if (!mcAuxNode.has_child("combined_data_name")) {
       throw std::runtime_error("Any imported ModelConfig must have the combined_data_name attribute (for now)!");
    }
    std::string name = mcAuxNode["combined_data_name"].val();
 
    pdf->setStringAttribute("combined_data_name", name.c_str());
+}
 
-   RooDataSet obsData{name.c_str(), name.c_str(), allVars, RooFit::Import(dsMap),
-                      RooFit::Index(const_cast<RooCategory &>(static_cast<RooCategory const &>(pdf->indexCat())))};
-   workspace.import(obsData);
+void combineDatasets(const RooFit::Detail::JSONNode &rootnode, std::vector<std::unique_ptr<RooAbsData>> &datas)
+{
+   auto &combinedDataInfoNode = dereference(rootnode, {"misc", "ROOT_internal", "combined_datasets"}, rootnode);
+
+   // If there is no info on combining datasets
+   if (&combinedDataInfoNode == &rootnode) {
+      return;
+   }
+
+   for (auto &info : combinedDataInfoNode.children()) {
+
+      // parse the information
+      std::string combinedName = info["name"].val();
+      std::string indexCatName = info["index_cat"].val();
+      std::vector<std::string> labels;
+      std::vector<int> indices;
+      for (auto &n : info["indices"].children()) {
+         indices.push_back(n.val_int());
+      }
+      for (auto &n : info["labels"].children()) {
+         labels.push_back(n.val());
+      }
+
+      // Create the combined dataset for RooFit
+      std::map<std::string, std::unique_ptr<RooAbsData>> dsMap;
+      RooCategory indexCat{indexCatName.c_str(), indexCatName.c_str()};
+      RooArgSet allVars{indexCat};
+      for (std::size_t iChannel = 0; iChannel < labels.size(); ++iChannel) {
+         auto componentName = combinedName + "_" + labels[iChannel];
+         // We move the found channel data out of the "datas" vector, such that
+         // the data components don't get imported anymore.
+         std::unique_ptr<RooAbsData> &component =
+            *std::find_if(datas.begin(), datas.end(), [&](auto &d) { return d && d->GetName() == componentName; });
+         allVars.add(*component->get());
+         dsMap.insert({labels[iChannel], std::move(component)});
+         indexCat.defineType(labels[iChannel], indices[iChannel]);
+      }
+
+      auto combined = std::make_unique<RooDataSet>(combinedName.c_str(), combinedName.c_str(), allVars,
+                                                   RooFit::Import(dsMap), RooFit::Index(indexCat));
+      datas.emplace_back(std::move(combined));
+   }
 }
 
 } // namespace
@@ -950,7 +977,7 @@ void RooJSONFactoryWSTool::importFunction(const JSONNode &p, bool isPdf)
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 // exporting data
-void RooJSONFactoryWSTool::exportData(RooAbsData &data)
+void RooJSONFactoryWSTool::exportData(RooAbsData const &data)
 {
    // find category observables
    RooAbsCategory *cat = nullptr;
@@ -959,20 +986,28 @@ void RooJSONFactoryWSTool::exportData(RooAbsData &data)
          if (cat) {
             RooJSONFactoryWSTool::error("dataset '" + std::string(data.GetName()) +
                                         " has several category observables!");
-         } else {
-            cat = static_cast<RooAbsCategory *>(obs);
          }
+         cat = static_cast<RooAbsCategory *>(obs);
       }
    }
 
    if (cat) {
-      // this is a composite dataset
-      std::unique_ptr<TList> dataList{data.split(*(cat), true)};
-      if (!dataList) {
-         RooJSONFactoryWSTool::error("unable to split dataset '" + std::string(data.GetName()) + "' at '" +
-                                     std::string(cat->GetName()) + "'");
-      }
+      // this is a combined dataset
+      auto &miscinfo = (*_rootnodeOutput)["misc"];
+      miscinfo.set_map();
+      auto &rootinfo = miscinfo["ROOT_internal"];
+      rootinfo.set_map();
+      auto &child = appendNamedChild(rootinfo["combined_datasets"], data.GetName());
+      child["index_cat"] << cat->GetName();
+      auto &labels = child["labels"];
+      labels.set_seq();
+      auto &indices = child["indices"];
+      indices.set_seq();
+
+      std::unique_ptr<TList> dataList{data.split(*cat, true)};
       for (RooAbsData *absData : static_range_cast<RooAbsData *>(*dataList)) {
+         labels.append_child() << absData->GetName();
+         indices.append_child() << cat->lookupIndex(absData->GetName());
          absData->SetName((std::string(data.GetName()) + "_" + absData->GetName()).c_str());
          this->exportData(*absData);
       }
@@ -1448,7 +1483,7 @@ void RooJSONFactoryWSTool::importAllNodes(const RooFit::Detail::JSONNode &n)
 
    _attributesNode = nullptr;
 
-   // We delay the import of the data to after importAnalysis(), because it
+   // We delay the import of the data to after combineDatasets(), because it
    // might be that some datasets are merged to combined datasets there. In
    // that case, we will remove the components from the "datas" vector so they
    // don't get imported.
@@ -1459,10 +1494,12 @@ void RooJSONFactoryWSTool::importAllNodes(const RooFit::Detail::JSONNode &n)
       }
    }
 
+   combineDatasets(*_rootnodeInput, datas);
+
    // Now, read in analyses and likelihoods if there are any
    if (n.has_child("analyses")) {
       for (JSONNode const &analysisNode : n["analyses"].children()) {
-         importAnalysis(*_rootnodeInput, analysisNode, n["likelihoods"], _workspace, datas);
+         importAnalysis(*_rootnodeInput, analysisNode, n["likelihoods"], _workspace);
       }
    }
 
