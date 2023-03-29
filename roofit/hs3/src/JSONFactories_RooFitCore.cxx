@@ -324,16 +324,11 @@ public:
       static const std::string keystring = "histogram";
       return keystring;
    }
-   bool exportObject(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem) const override
+   bool exportObject(RooJSONFactoryWSTool *tool, const RooAbsArg *func, JSONNode &elem) const override
    {
       const RooHistFunc *hf = static_cast<const RooHistFunc *>(func);
       elem["type"] << key();
-      std::unique_ptr<RooArgSet> vars{hf->getVariables()};
-      std::unique_ptr<TH1> hist{hf->createHistogram(RooJSONFactoryWSTool::concat(vars.get()))};
-      if (!hist)
-         return false;
-      auto &data = elem["data"];
-      RooJSONFactoryWSTool::exportHistogram(*hist, data, RooJSONFactoryWSTool::names(*vars));
+      tool->exportDataHist(hf->dataHist(), elem["data"]);
       return true;
    }
 };
@@ -359,16 +354,11 @@ public:
       static const std::string keystring = "histogram_dist";
       return keystring;
    }
-   bool exportObject(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem) const override
+   bool exportObject(RooJSONFactoryWSTool *tool, const RooAbsArg *func, JSONNode &elem) const override
    {
       const RooHistPdf *hf = static_cast<const RooHistPdf *>(func);
       elem["type"] << key();
-      std::unique_ptr<RooArgSet> vars{hf->getVariables()};
-      std::unique_ptr<TH1> hist{hf->createHistogram(RooJSONFactoryWSTool::concat(vars.get()))};
-      if (!hist)
-         return false;
-      auto &data = elem["data"];
-      RooJSONFactoryWSTool::exportHistogram(*hist, data, RooJSONFactoryWSTool::names(*vars));
+      tool->exportDataHist(hf->dataHist(), elem["data"]);
       return true;
    }
 };
