@@ -4759,6 +4759,22 @@ std::string RooAbsReal::buildCallToAnalyticIntegral(Int_t /* code */, const char
    throw std::runtime_error(errorMsg.str().c_str());
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// This function defines how to build the beginning of a loop. Only applicable
+/// to classes/objects that produce loops (i.e. are reducer nodes).
+///
+/// \param[in] ctx An object to manage auxilary information for code-squashing.
+/// Also takes the code string that this class outputs into the squashed code
+/// through the 'addToCodeBody' function.
+void RooAbsReal::buildLoopBegin(RooFit::Detail::CodeSquashContext & /* ctx */) const
+{
+   std::stringstream errorMsg;
+   errorMsg << "Class " << GetName()
+            << "does not yet define how to build a loop begining despite being a reducer node.";
+   coutE(Minimization) << errorMsg.str() << std::endl;
+   throw std::runtime_error(errorMsg.str().c_str());
+}
+
 double RooAbsReal::_DEBUG_getVal(const RooArgSet* normalisationSet) const {
 
   const bool tmpFast = _fast;

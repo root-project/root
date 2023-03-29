@@ -17,6 +17,7 @@
 #include "RooAbsData.h"
 #include "RooGlobalFunc.h"
 #include "RooMsgService.h"
+#include "RooNLLVarNew.h"
 #include "RooRealVar.h"
 #include "RooHelpers.h"
 #include "RooFit/Detail/CodeSquashContext.h"
@@ -92,6 +93,16 @@ void RooFuncWrapper::loadParamsAndObs(std::string funcName, RooArgSet const &par
          RooSpan<const double> span{dataSpans.at(obs)};
          for (int i = 0; i < data->numEntries(); ++i) {
             _observables.push_back(span[i]);
+         }
+      }
+   }
+
+   // Get weights
+   if (data) {
+      auto weight = data->getWeightBatch(0, data->numEntries(), /*sumW2=*/false);
+      if (!weight.empty()) {
+         for (int i = 0; i < data->numEntries(); ++i) {
+            _observables.push_back(weight[i]);
          }
       }
    }
@@ -180,7 +191,7 @@ void RooFuncWrapper::gradient(const double *x, double *g) const
 std::string RooFuncWrapper::buildCode(RooAbsReal const &head, RooArgSet const & /* paramSet */, RooArgSet const &obsSet,
                                       const RooAbsData *data)
 {
-   RooFit::Detail::CodeSquashContext ctx;
+   RooFit::Detail::CodeSquashContext ctx(data);
 
    // First update the result variable of params in the compute graph to in[<position>].
    int idx = 0;
@@ -201,28 +212,46 @@ std::string RooFuncWrapper::buildCode(RooAbsReal const &head, RooArgSet const & 
          // defined by a loop producing parent node.
          if (data->numEntries() == 1)
             ctx.addResult(obs, "obs[" + std::to_string(idx) + "]");
-         else
+         else {
+            ctx.addResult(obs, "obs");
             ctx.addVecObs(obs, idx);
+         }
          idx += data->numEntries();
       }
    }
 
-   // This will not work for nodes that produce loops as we need to keep track of the subtree of the loop producing
-   // node. A better approach is to have 2 stacks and perform an iterative post order traversal on the graph/resolved
-   // tree.
-   RooArgSet nodes;
-   RooHelpers::getSortedComputationGraph(head, nodes);
+   // Update weight vars...
+   if (data) {
+      auto weight = data->getWeightBatch(0, data->numEntries(), /*sumW2=*/false);
+      auto weightName = ROOT::Experimental::RooNLLVarNew::weightVarName;
+      if (!weight.empty()) {
+         ctx.addResult(weightName, "obs");
+         ctx.addVecObs(weightName, idx);
+         idx += data->numEntries();
+      } else
+         ctx.addResult(weightName, "1");
+   }
 
-   for (RooAbsArg *node : nodes) {
-      RooAbsReal *curr = dynamic_cast<RooAbsReal *>(node);
+   BuildCodeRecur(ctx, head);
+
+   return ctx.assembleCode(ctx.getResult(head));
+}
+
+void RooFuncWrapper::BuildCodeRecur(RooFit::Detail::CodeSquashContext &ctx, RooAbsReal const &head)
+{
+   if (head.isReducerNode())
+      head.buildLoopBegin(ctx);
+
+   for (auto pcurr : head.servers()) {
+      RooAbsReal *curr = dynamic_cast<RooAbsReal *>(pcurr);
       if (!curr) {
          std::stringstream errorMsg;
          errorMsg << "Translate is only supported for RooAbsReal derived objects.";
          oocoutE(nullptr, Minimization) << errorMsg.str() << std::endl;
          throw std::runtime_error(errorMsg.str().c_str());
       }
-      curr->translate(ctx);
+      BuildCodeRecur(ctx, *curr);
    }
 
-   return ctx.assembleCode(ctx.getResult(head));
+   head.translate(ctx);
 }
