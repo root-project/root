@@ -60,7 +60,8 @@ private:
    std::uint64_t fCompressedSize;
    std::uint64_t fUncompressedSize;
 
-   RNTupleInspector(std::unique_ptr<ROOT::Experimental::Detail::RPageSource> pageSource) : fPageSource(std::move(pageSource)) {};
+   RNTupleInspector(std::unique_ptr<ROOT::Experimental::Detail::RPageSource> pageSource)
+      : fPageSource(std::move(pageSource)){};
 
    void CollectSizeData();
 
@@ -72,8 +73,10 @@ public:
    ~RNTupleInspector() = default;
 
    /// Creates a new inspector for a given RNTuple.
-   static RResult<std::unique_ptr<RNTupleInspector>> Create(std::unique_ptr<ROOT::Experimental::Detail::RPageSource> pageSource);
+   static RResult<std::unique_ptr<RNTupleInspector>>
+   Create(std::unique_ptr<ROOT::Experimental::Detail::RPageSource> pageSource);
    static RResult<std::unique_ptr<RNTupleInspector>> Create(RNTuple *sourceNTuple);
+   static RResult<std::unique_ptr<RNTupleInspector>> Create(std::string_view ntupleName, std::string_view storage);
 
    /// Get the name of the RNTuple being inspected.
    std::string GetName();
