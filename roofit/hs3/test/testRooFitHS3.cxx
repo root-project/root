@@ -164,8 +164,8 @@ TEST(RooFitHS3, RooHistPdf)
    x.setBins(2);
 
    RooDataHist dataHist{"myDataHist", "myDataHist", x};
-   dataHist.set(0, 25.0, 5.0);
-   dataHist.set(1, 25.0, 5.0);
+   dataHist.set(0, 23, -1);
+   dataHist.set(1, 17, -1);
 
    int status = validate(RooHistPdf{"histPdf", "histPdf", x, dataHist});
    EXPECT_EQ(status, 0);
@@ -211,9 +211,6 @@ TEST(RooFitHS3, SimultaneousGaussians)
    RooSimultaneous simPdf("simPdf", "simultaneous pdf", sample);
    simPdf.addPdf(model, "physics");
    simPdf.addPdf(model_ctl, "control");
-
-   // this is a handy way of triggering the creation of a ModelConfig upon re-import
-   simPdf.setAttribute("toplevel");
 
    std::string jsonString;
 
