@@ -108,7 +108,7 @@ void TCrown::Copy(TObject &crown) const
 
 Int_t TCrown::DistancetoPrimitive(Int_t px, Int_t py)
 {
-
+   if (!gPad) return 9999;
    const Double_t kPI = TMath::Pi();
    Double_t x = gPad->PadtoX(gPad->AbsPixeltoX(px)) - fX1;
    Double_t y = gPad->PadtoY(gPad->AbsPixeltoY(py)) - fY1;

@@ -171,6 +171,7 @@ void TMarker::DisplayMarkerLineWidths()
 
 Int_t TMarker::DistancetoPrimitive(Int_t px, Int_t py)
 {
+   if (!gPad) return 9999;
    Int_t pxm, pym;
    if (TestBit(kMarkerNDC)) {
       pxm = gPad->UtoPixel(fX);

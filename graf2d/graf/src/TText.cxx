@@ -143,6 +143,7 @@ const void *TText::GetWcsTitle(void) const
 
 Int_t TText::DistancetoPrimitive(Int_t px, Int_t py)
 {
+   if (!gPad) return 9999;
    Int_t ptx, pty;
 
    TAttText::Modify();  // change text attributes only if necessary

@@ -134,6 +134,7 @@ void TBox::Copy(TObject &obj) const
 
 Int_t TBox::DistancetoPrimitive(Int_t px, Int_t py)
 {
+   if (!gPad) return 9999;
    Int_t pxl, pyl, pxt, pyt;
    Int_t px1 = gPad->XtoAbsPixel(fX1);
    Int_t py1 = gPad->YtoAbsPixel(fY1);

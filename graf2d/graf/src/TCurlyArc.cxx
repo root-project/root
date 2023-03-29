@@ -122,6 +122,7 @@ void TCurlyArc::Build()
 
 Int_t TCurlyArc::DistancetoPrimitive(Int_t px, Int_t py)
 {
+   if (!gPad) return 9999;
    // Compute distance of point to center of arc
    Int_t pxc    = gPad->XtoAbsPixel(fX1);
    Int_t pyc    = gPad->YtoAbsPixel(fY1);

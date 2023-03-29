@@ -88,6 +88,7 @@ void TLine::Copy(TObject &obj) const
 
 Int_t TLine::DistancetoPrimitive(Int_t px, Int_t py)
 {
+   if (!gPad) return 9999;
    if (!TestBit(kLineNDC)) return DistancetoLine(px,py,gPad->XtoPad(fX1),gPad->YtoPad(fY1),gPad->XtoPad(fX2),gPad->YtoPad(fY2));
    Double_t x1 = gPad->GetX1() + fX1*(gPad->GetX2()-gPad->GetX1());
    Double_t y1 = gPad->GetY1() + fY1*(gPad->GetY2()-gPad->GetY1());

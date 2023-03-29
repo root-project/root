@@ -111,6 +111,7 @@ void TGraphPolargram::ChangeRangePolar(Double_t tmin, Double_t tmax)
 
 Int_t TGraphPolargram::DistancetoPrimitive(Int_t px, Int_t py)
 {
+   if (!gPad) return 9999;
    Int_t i;
    Double_t x = gPad->AbsPixeltoX(px);
    Double_t y = gPad->AbsPixeltoY(py);

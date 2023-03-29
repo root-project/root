@@ -132,6 +132,7 @@ void TEllipse::Copy(TObject &obj) const
 
 Int_t TEllipse::DistancetoPrimitive(Int_t px, Int_t py)
 {
+   if (!gPad) return 9999;
    Double_t x = gPad->PadtoX(gPad->AbsPixeltoX(px));
    Double_t y = gPad->PadtoY(gPad->AbsPixeltoY(py));
 
