@@ -21,7 +21,6 @@ import tarfile
 from hashlib import sha1
 
 import openstack
-import ctypes
 
 from build_utils import (
     cmake_options_from_dict,
@@ -50,14 +49,6 @@ COMPRESSIONLEVEL = 6 if not WINDOWS else 1
 
 def main():
     # openstack.enable_logging(debug=True)
-
-    try:
-        sudo = (os.getuid() == 0)
-    except AttributeError:
-        sudo = ctypes.windll.shell32.IsUserAnAdmin() != 0
-    
-    if sudo:
-        die(os.EX_USAGE, "Script should not be run with sudo/admin")
 
     # accumulates commands executed so they can be displayed as a script on build failure
     shell_log = ""
