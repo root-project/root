@@ -31,8 +31,8 @@ namespace CUDAHelpers {
    ////////////////////////////////////////////////////////////////////////////////
    /// CUDA Kernels
 
-   template <UInt_t ABlockSize, typename AOp, typename AValType>
-   __device__ inline void UnrolledReduce(AValType *sdata, UInt_t tid)
+   template <unsigned int ABlockSize, typename AOp, typename AValType>
+   __device__ inline void UnrolledReduce(AValType *sdata, unsigned int tid)
    {
       AOp operation;
 
@@ -51,14 +51,14 @@ namespace CUDAHelpers {
 
    // See https://developer.download.nvidia.com/assets/cuda/files/reduction.pdf
    //     https://github.com/zchee/cuda-sample/blob/master/6_Advanced/reduction/reduction_kernel.cu
-   template <UInt_t ABlockSize, typename AOp, typename AValType, Bool_t AOverwrite>
-   __global__ void ReductionKernel(AValType *g_idata, AValType *g_odata, UInt_t n, AValType init) {
+   template <unsigned int ABlockSize, typename AOp, typename AValType, Bool_t AOverwrite>
+   __global__ void ReductionKernel(AValType *g_idata, AValType *g_odata, unsigned int n, AValType init) {
       extern __shared__ AValType sdata[];
       AOp operation;
 
-      UInt_t tid = threadIdx.x;
-      UInt_t i = blockIdx.x*(ABlockSize*2) + tid;
-      UInt_t gridSize = (ABlockSize*2)*gridDim.x;
+      unsigned int tid = threadIdx.x;
+      unsigned int i = blockIdx.x*(ABlockSize*2) + tid;
+      unsigned int gridSize = (ABlockSize*2)*gridDim.x;
 
       // if (i == 0) {
       //    printf("blockdim:%d griddim:%d gridsize:%d\n", blockDim.x, gridDim.x, gridSize);
@@ -87,6 +87,7 @@ namespace CUDAHelpers {
       }
    }
 
+   // CUDA version of TMath::BinarySearchCUDA
    template <typename T>
    __device__ Long64_t BinarySearchCUDA(Long64_t n, const T  *array, T value)
    {

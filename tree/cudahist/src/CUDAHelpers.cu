@@ -11,14 +11,14 @@
 namespace CUDAHelpers {
    // See https://developer.download.nvidia.com/assets/cuda/files/reduction.pdf
    //     https://github.com/zchee/cuda-sample/blob/master/6_Advanced/reduction/reduction_kernel.cu
-   template <UInt_t BlockSize, typename Op, typename ValType, Bool_t Overwrite>
-   __global__ void ReductionKernel(ValType *g_idata, ValType *g_odata, UInt_t n, ValType init) {
+   template <unsigned int BlockSize, typename Op, typename ValType, bool Overwrite>
+   __global__ void ReductionKernel(ValType *g_idata, ValType *g_odata, unsigned int n, ValType init) {
       extern __shared__ ValType sdata[];
       Op operation;
 
-      UInt_t tid = threadIdx.x;
-      UInt_t i = blockIdx.x*(BlockSize*2) + tid;
-      UInt_t gridSize = (BlockSize*2)*gridDim.x;
+      unsigned int tid = threadIdx.x;
+      unsigned int i = blockIdx.x*(BlockSize*2) + tid;
+      unsigned int gridSize = (BlockSize*2)*gridDim.x;
 
       if (i == 0) {
          printf("blockdim:%d griddim:%d gridsize:%d\n", blockDim.x, gridDim.x, gridSize);
@@ -73,11 +73,11 @@ namespace CUDAHelpers {
    }
 
 
-   template <UInt_t BlockSize, typename Op, typename ValType, Bool_t Overwrite>
-   void Reduce(ValType *input, ValType *output, UInt_t n)
+   template <unsigned int BlockSize, typename Op, typename ValType, bool Overwrite>
+   void Reduce(ValType *input, ValType *output, unsigned int n)
    {
       Int_t smemSize = (BlockSize <= 32) ? 2 * BlockSize : BlockSize;
-      UInt_t numBlocks = fmax(1, ceil(n / BlockSize / 2.)); // Number of blocks in grid is halved!
+      unsigned int numBlocks = fmax(1, ceil(n / BlockSize / 2.)); // Number of blocks in grid is halved!
 
       ValType *intermediate = NULL;
       ERRCHECK(cudaMalloc((void **)&intermediate, numBlocks * sizeof(ValType)));
@@ -103,6 +103,6 @@ namespace CUDAHelpers {
    template __device__ Long64_t BinarySearchCUDA<Double_t>(Long64_t n, const Double_t  *array, Double_t value);
 
    // Sum reduction with doubles.
-   template void Reduce<512, thrust::plus<Double_t>, Double_t, false>(Double_t *input, Double_t *output, UInt_t n);
+   template void Reduce<512, thrust::plus<Double_t>, Double_t, false>(Double_t *input, Double_t *output, unsigned int n);
 
 }

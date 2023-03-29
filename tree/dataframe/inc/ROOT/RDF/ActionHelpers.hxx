@@ -38,6 +38,8 @@
 #include "TError.h" // for R__ASSERT, Warning
 #include "TFile.h" // for SnapshotHelper
 #include "TH1.h"
+#include "TH2.h"
+#include "TH3.h"
 #include "TGraph.h"
 #include "TGraphAsymmErrors.h"
 #include "TLeaf.h"
@@ -366,7 +368,7 @@ struct has_getxaxis {
 
 template<class T>
 inline constexpr bool has_getxaxis_v = has_getxaxis<T>::value;
-// to here is temporary stuff
+// to here is temporary stuff to avoid compilation errors with CustomFiller
 
 /// The generic Fill helper: it calls Fill on per-thread objects and then Merge to produce a final result.
 /// For one-dimensional histograms, if no axes are specified, RDataFrame uses BufferedFillHelper instead.
@@ -487,9 +489,10 @@ public:
    FillHelper(FillHelper &&) = default;
    FillHelper(const FillHelper &) = delete;
 
+   // Initialize fCudaHist
    inline void init_cuda(HIST *obj, int i) {
-      if (getenv("CUDA_HIST")) { if constexpr(has_getxaxis_v<HIST>) {  // Avoid compilation errors for fObjects that aren't TH1Ds
-         printf("Init cuda hist %d\n", i);
+      if (getenv("CUDA_HIST")) { if constexpr(has_getxaxis_v<HIST>) {  // Avoid compilation errors for fObjects without GetXaxis()
+         if (getenv("DBG")) printf("Init cuda hist %d\n", i);
          auto dims = obj->GetDimension();
          std::vector<Int_t> ncells;
          std::vector<Double_t> xlow;
@@ -510,12 +513,10 @@ public:
             xlow.push_back(ax->GetXmin());
             xhigh.push_back(ax->GetXmax());
             binEdges.push_back(ax->GetXbins()->GetArray());
-            printf("\tdim %d --- nbins: %d xlow: %f xhigh: %f\n", d, ncells[d], xlow[d], xhigh[d]);
-
+            if (getenv("DBG")) printf("\tdim %d --- nbins: %d xlow: %f xhigh: %f\n", d, ncells[d], xlow[d], xhigh[d]);
          }
 
          fCudaHist[i] = new RHnCUDA(dims, ncells.data(), xlow.data(), xhigh.data(), binEdges.data());
-         // fCudaHist[i] = new RH1CUDA(ax->GetNbins(), ax->GetXmin(), ax->GetXmax(), ax->GetXbins()->GetArray());
          fCudaHist[i]->AllocateH1D();
       } }
    }
@@ -535,15 +536,35 @@ public:
 
    void InitTask(TTreeReader *, unsigned int) {}
 
+   template<int DIMW>
+   void FillWithWeight(unsigned int slot, const std::array<double, DIMW>& v) {
+      double w = v.back();
+      fCudaHist[slot]->Fill({v.begin(), v.end() - 1}, w);
+   }
+
+   template <typename... Coords>
+   void FillWithoutWeight(unsigned int slot, const Coords &...x) {
+      fCudaHist[slot]->Fill({x...});
+   }
+
+   static constexpr size_t getHistDim(TH3*) { return 3; }
+   static constexpr size_t getHistDim(TH2*) { return 2; }
+   static constexpr size_t getHistDim(TH1*) { return 1; }
+
    template <typename... ValTypes, std::enable_if_t<!Disjunction<IsDataContainer<ValTypes>...>::value, int> = 0>
    auto Exec(unsigned int slot, const ValTypes &...x) -> decltype(fObjects[slot]->Fill(x...), void())
    {
-      // if (std::is_same<HIST, TH1D>::value) {  // temp fix to avoid compilation errors for fObjects that don't have GetXaxis
-      if (getenv("CUDA_HIST")) {
-         fCudaHist[slot]->Fill(x...);
-      } else {
-         fObjects[slot]->Fill(x...);
+      if constexpr(has_getxaxis_v<HIST>) {
+         if (getenv("CUDA_HIST")) {
+            if constexpr (sizeof...(ValTypes) > getHistDim((HIST*) nullptr))
+               FillWithWeight<getHistDim((HIST*) nullptr) + 1>(slot, {((Double_t)x)...});
+            else
+               FillWithoutWeight(slot, x...);
+            return;
+         }
       }
+
+      fObjects[slot]->Fill(x...);
    }
 
    // at least one container argument
@@ -583,14 +604,13 @@ public:
 
    void Initialize() { /* noop */}
 
-   // TODO:
    void Finalize()
    {
       if (getenv("CUDA_HIST")) {
          Double_t stats[100];
 
          for (unsigned int i = 0; i < fObjects.size(); ++i) {
-            if constexpr(has_getxaxis_v<HIST>) {  // temp fix to avoid compilation errors for fObjects that don't have GetArray
+            if constexpr(has_getxaxis_v<HIST>) {  // fix to avoid compilation errors for CustomFiller
                HIST *h = fObjects[i];
                Int_t entries = fCudaHist[i]->RetrieveResults(h->GetArray(), stats);
                h->SetStatsData(stats[0], stats[1], stats[2], stats[3]);
@@ -600,16 +620,16 @@ public:
          }
       }
 
-
-      if constexpr(has_getxaxis_v<HIST>) {  // temp fix to avoid compilation errors for fObjects that don't have GetArray
+      if constexpr(has_getxaxis_v<HIST>) {
          Double_t stats[100];
          fObjects[0]->GetStats(stats);
-         printf("stats: %f %f %f %f\n", stats[0], stats[1], stats[2], stats[3]);
-
-         for (int j = 0; j < fObjects[0]->GetNcells(); ++j) {
-            printf("%f ", fObjects[0]->GetArray()[j]);
+         if (getenv("DBG")) {
+            printf("stats: %f %f %f %f %f\n", stats[0], stats[1], stats[2], stats[3], fObjects[0]->GetEntries());
+            for (int j = 0; j < fObjects[0]->GetNcells(); ++j) {
+               printf("%f ", fObjects[0]->GetArray()[j]);
+            }
+            printf("\n");
          }
-         printf("\n");
       }
 
       if (fObjects.size() == 1)

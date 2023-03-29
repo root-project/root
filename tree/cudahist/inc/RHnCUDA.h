@@ -9,79 +9,63 @@
 #include <iostream>
 
 
-
 class RHnCUDA  {
 public:
    struct Stats {
-      Double_t      fTsumw;           ///<  Total Sum of weights
-      Double_t      fTsumw2;          ///<  Total Sum of squares of weights
-      Double_t      fTsumwx;          ///<  Total Sum of weight*X
-      Double_t      fTsumwx2;         ///<  Total Sum of weight*X*X
-      Double_t     *fSumw2;           ///<  Array of sum of squares of weights
+      double      fTsumw;           ///<  Total Sum of weights
+      double      fTsumw2;          ///<  Total Sum of squares of weights
+      double      fTsumwx;          ///<  Total Sum of weight*X
+      double      fTsumwx2;         ///<  Total Sum of weight*X*X
+      double     *fSumw2;           ///<  Array of sum of squares of weights
    };
 
    struct RAxis {
-      Int_t                  fNcells;           ///< Number of bins(1D) WITH u/overflow
-      Double_t               fMin;              ///< Low edge of first bin
-      Double_t               fMax;              ///< Upper edge of last bin
+      int                  fNcells;       ///< Number of bins(1D) WITH u/overflow
+      double               fMin;          ///< Low edge of first bin
+      double               fMax;          ///< Upper edge of last bin
 
-      const Double_t        *kBinEdges;         ///< Bin edges array.
+      const double        *kBinEdges;     ///< Bin edges array, can be NULL
    };
 
 private:
-   Double_t              *fDeviceHisto;         ///< Pointer to histogram buffer on the GPU.
-   Int_t                  fNbins;               ///< Total number of bins in the histogram
+   double              *fDeviceHisto;     ///< Pointer to histogram buffer on the GPU.
+   int                  fNbins;           ///< Total number of bins in the histogram WITH u/overflow
 
-   Int_t                  fThreadBlockSize;
-   const Int_t            kDim;
-   std::vector<RAxis>     fAxes;
-   RAxis                 *fDeviceAxes;
+   int                  fThreadBlockSize; ///< Block size used in CUDA kernels
+   const int            kDim;             ///< Dimension of the histogram
+   std::vector<RAxis>   fAxes;            ///< Vector of kDim axis descriptors
+   RAxis               *fDeviceAxes;      ///< Pointer to axis descriptors on the GPU.
 
-   std::vector<Double_t>  fCells;               ///< Buffer of bins to fill. TODO: vector or just int*?
-   std::vector<Double_t>  fWeights;             ///< Buffer of weigths for each bin.
-   Double_t              *fDeviceCells;         ///< Pointer to array of bins to fill on the GPU.
-   Double_t              *fDeviceWeights;       ///< Pointer to array of weights on the GPU.
+   std::vector<double>  fCells;           ///< 1D buffer with bufferSize number of kDim-dimensional coordinates to fill.
+   std::vector<double>  fWeights;         ///< Buffer of weigths for each bin.
+   double              *fDeviceCells;     ///< Pointer to array of bins to fill on the GPU.
+   double              *fDeviceWeights;   ///< Pointer to array of weights on the GPU.
 
-   Double_t               fEntries;             ///< Number of entries
-   Stats                 *fDeviceStats;
-   UInt_t                 fBufferSize;          ///< Number of bins to buffer.
+   double               fEntries;         ///< Number of entries that have been filled.
+   Stats               *fDeviceStats;     ///< Pointer to statistics on the GPU.
+   unsigned int         fBufferSize;      ///< Number of bins to buffer.
 
 
 public:
    RHnCUDA() = delete;
 
-   // RHnCUDA(Int_t _nbins);
-   RHnCUDA(Int_t dim, Int_t *ncells, Double_t *xlow, Double_t *xhigh, const Double_t **binEdges);
+   RHnCUDA(int dim, int *ncells, double *xlow, double *xhigh, const double **binEdges);
 
    void AllocateH1D();
-   Int_t RetrieveResults(Double_t *histResult, Double_t *stats);
+   int RetrieveResults(double *histResult, double *stats);
 
-   void Fill(std::vector<Double_t> x);
-   void Fill(std::vector<Double_t> x, Double_t w);
+   void Fill(const std::vector<double> x);
+   void Fill(const std::vector<double> x, double w);
 
-   // TODO: how to distinguish between different THn fills...
-   void Fill(Double_t a, Double_t b) {
-      if (kDim == 1) {
-         Fill(std::vector<Double_t> {a}, (Double_t) b);
-      } else if (kDim == 2) {
-         Fill(std::vector<Double_t> {a, b}, 1.0);
-      }
-   }
-
-   void Fill(Double_t x) { Fill( std::vector<Double_t> {x}); }
-
-   void Fill(Float_t x, Double_t w) { Fill((Double_t)x, (Double_t) w); }
-   void Fill(const char *namex, Double_t w);
-
-   template <typename... ValTypes>
-   void Fill(const ValTypes &...x)
-   {
-   // ( (std::cout << ", " << x), ...) << std::endl;
-      Fatal("Fill", "Cuda version not implemented yet");
-   }
+   // Temporary catch-all
+   // template <typename... ValTypes>
+   // void Fill(const ValTypes &...x)
+   // {
+   //    Fatal("Fill", "Cuda version not implemented yet");
+   // }
 
 protected:
-   void GetStats(UInt_t size);
+   void GetStats(unsigned int size);
    void ExecuteCUDAH1D();
 };
 
