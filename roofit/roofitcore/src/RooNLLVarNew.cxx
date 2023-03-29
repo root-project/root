@@ -78,8 +78,11 @@ RooRealVar *dummyVar(const char *name)
 **/
 RooNLLVarNew::RooNLLVarNew(const char *name, const char *title, RooAbsPdf &pdf, RooArgSet const &observables,
                            bool isExtended, RooFit::OffsetMode offsetMode)
-   : RooAbsReal(name, title), _pdf{"pdf", "pdf", this, pdf}, _observables{getObs(pdf, observables)},
-     _isExtended{isExtended}, _binnedL{pdf.getAttribute("BinnedLikelihoodActive")},
+   : RooAbsReal(name, title),
+     _pdf{"pdf", "pdf", this, pdf},
+     _observables{getObs(pdf, observables)},
+     _isExtended{isExtended},
+     _binnedL{pdf.getAttribute("BinnedLikelihoodActive")},
      _weightVar{"weightVar", "weightVar", this, *dummyVar(weightVarName), true, false, true},
      _weightSquaredVar{weightVarNameSumW2, weightVarNameSumW2, this, *dummyVar("weightSquardVar"), true, false, true},
      _binVolumeVar{"binVolumeVar", "binVolumeVar", this, *dummyVar("_bin_volume"), true, false, true}
@@ -94,11 +97,17 @@ RooNLLVarNew::RooNLLVarNew(const char *name, const char *title, RooAbsPdf &pdf, 
 }
 
 RooNLLVarNew::RooNLLVarNew(const RooNLLVarNew &other, const char *name)
-   : RooAbsReal(other, name), _pdf{"pdf", this, other._pdf}, _observables{other._observables},
-     _isExtended{other._isExtended}, _weightSquared{other._weightSquared}, _binnedL{other._binnedL},
-     _doOffset{other._doOffset}, _simCount{other._simCount}, _prefix{other._prefix},
-     _weightVar{"weightVar", this, other._weightVar}, _weightSquaredVar{"weightSquaredVar", this,
-                                                                        other._weightSquaredVar}
+   : RooAbsReal(other, name),
+     _pdf{"pdf", this, other._pdf},
+     _observables{other._observables},
+     _isExtended{other._isExtended},
+     _weightSquared{other._weightSquared},
+     _binnedL{other._binnedL},
+     _doOffset{other._doOffset},
+     _simCount{other._simCount},
+     _prefix{other._prefix},
+     _weightVar{"weightVar", this, other._weightVar},
+     _weightSquaredVar{"weightSquaredVar", this, other._weightSquaredVar}
 {
 }
 
@@ -290,22 +299,6 @@ double RooNLLVarNew::finalizeResult(ROOT::Math::KahanSum<double> &&result, doubl
 
 void RooNLLVarNew::translate(RooFit::Detail::CodeSquashContext &ctx) const
 {
-   std::string className = GetName();
-   std::string resName = className + "Result";
-   ctx.addResult(this, resName);
-   ctx.addToGlobalScope("double " + resName + " = 0;\n");
-
-   std::string tmpName = className + "Temp";
-   std::string code = "double " + tmpName + ";\n";
-   code += tmpName + " = std::log(" + ctx.getResult(_pdf.arg()) + ");\n";
-   code += resName + " -= " + ctx.getResult(_weightVar.arg()) + " * " + tmpName + ";\n";
-   ctx.addToCodeBody(code);
-   // Close the loop
-   ctx.addToCodeBody("}\n");
-}
-
-void RooNLLVarNew::buildLoopBegin(RooFit::Detail::CodeSquashContext &ctx) const
-{
    std::string loopIdx = GetName();
    loopIdx += "_i";
    for (auto *it : _observables) {
@@ -325,4 +318,17 @@ void RooNLLVarNew::buildLoopBegin(RooFit::Detail::CodeSquashContext &ctx) const
    // Here numEntries is a 'key' word defined by the upper level code squasher.
    ctx.addToCodeBody("for(int " + loopIdx + " = 0; " + loopIdx + " < " + std::to_string(ctx.numEntries) + "; " +
                      loopIdx + "++) {\n");
+
+   std::string className = GetName();
+   std::string resName = className + "Result";
+   ctx.addResult(this, resName);
+   ctx.addToGlobalScope("double " + resName + " = 0;\n");
+
+   std::string tmpName = className + "Temp";
+   std::string code = "double " + tmpName + ";\n";
+   code += tmpName + " = std::log(" + ctx.getResult(_pdf.arg()) + ");\n";
+   code += resName + " -= " + ctx.getResult(_weightVar.arg()) + " * " + tmpName + ";\n";
+   ctx.addToCodeBody(code);
+   // Close the loop
+   ctx.addToCodeBody("}\n");
 }

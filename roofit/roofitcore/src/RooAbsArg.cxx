@@ -2499,3 +2499,21 @@ std::unique_ptr<RooAbsArg> RooAbsArg::compileForNormSet(RooArgSet const & normSe
    ctx.compileServers(*newArg, normSet);
    return newArg;
 }
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// This function defines a translation for each RooAbsReal based object that can be used
+/// to express the class as simple C++ code. The function adds the code represented by
+/// each class as an std::string (that is later concatenated with code strings from translate calls)
+/// to form the C++ code that AD tools can understand. Any class that wants to support AD, has to
+/// implement this function.
+///
+/// \param[in] ctx An object to manage auxilary information for code-squashing. Also takes the
+/// code string that this class outputs into the squashed code through the 'addToCodeBody' function.
+void RooAbsArg::translate(RooFit::Detail::CodeSquashContext & /*ctx*/) const
+{
+   std::stringstream errorMsg;
+   errorMsg << "Translate function for class \"" << ClassName() << "\" has not yet been implemented.";
+   coutE(Minimization) << errorMsg.str() << std::endl;
+   throw std::runtime_error(errorMsg.str().c_str());
+}
