@@ -1,11 +1,6 @@
 {
     "misc": {
         "ROOT_internal": {
-            "ModelConfigs": {
-                "main": {
-                    "combined_data_name": "observed"
-                }
-            },
             "combined_datas": [
                 {
                     "index_cat": "channelCat",
