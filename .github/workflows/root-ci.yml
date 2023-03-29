@@ -255,7 +255,7 @@ jobs:
 
     container:
       image: registry.cern.ch/root-ci/${{ matrix.image }}:buildready
-      options: '--security-opt label=disable --rm --userns=keep-id'
+      options: '--security-opt label=disable --rm'
       env:
         OS_APPLICATION_CREDENTIAL_ID: '7f5b64a265244623a3a933308569bdba'
         OS_APPLICATION_CREDENTIAL_SECRET: ${{ secrets.OS_APPLICATION_CREDENTIAL_SECRET }}
