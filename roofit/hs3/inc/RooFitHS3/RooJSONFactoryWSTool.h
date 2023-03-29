@@ -211,7 +211,7 @@ private:
    template <class T>
    T *requestImpl(const std::string &objname);
 
-   void exportData(RooAbsData &data);
+   void exportData(RooAbsData const &data);
 
    void importAllNodes(const RooFit::Detail::JSONNode &n);
 

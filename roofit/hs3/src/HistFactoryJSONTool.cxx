@@ -221,8 +221,22 @@ void exportMeasurement(RooStats::HistFactory::Measurement &measurement, JSONNode
    }
 
    // the data
+   auto &miscinfo = n["misc"];
+   miscinfo.set_map();
+   auto &rootinfo = miscinfo["ROOT_internal"];
+   rootinfo.set_map();
+   auto &child = RooJSONFactoryWSTool::appendNamedChild(rootinfo["combined_datasets"], "obsData");
+   child["index_cat"] << "channelCat";
+   auto &labels = child["labels"];
+   labels.set_seq();
+   auto &indices = child["indices"];
+   indices.set_seq();
+
    std::vector<std::string> channelNames;
    for (const auto &c : measurement.GetChannels()) {
+      labels.append_child() << c.GetName();
+      indices.append_child() << int(channelNames.size());
+
       JSONNode &dataOutput = RooJSONFactoryWSTool::appendNamedChild(n["data"], std::string("obsData_") + c.GetName());
 
       const std::vector<std::string> obsnames = getObsnames(c);
