@@ -646,26 +646,26 @@ void RooJSONFactoryWSTool::writeObservables(const TH1 &h, JSONNode &n, const std
    }
 }
 
-void RooJSONFactoryWSTool::exportHistogram(const TH1 &h, JSONNode &n, const std::vector<std::string> &varnames,
+void RooJSONFactoryWSTool::exportHistogram(const TH1 &histo, JSONNode &node, const std::vector<std::string> &varnames,
                                            const TH1 *errH, bool writeObservables, bool writeErrors)
 {
-   n.set_map();
-   auto &weights = n["contents"];
+   node.set_map();
+   auto &weights = node["contents"];
    weights.set_seq();
    JSONNode *errors = nullptr;
    if (writeErrors) {
-      errors = &n["errors"];
+      errors = &node["errors"];
       errors->set_seq();
    }
    if (writeObservables) {
-      RooJSONFactoryWSTool::writeObservables(h, n, varnames);
+      RooJSONFactoryWSTool::writeObservables(histo, node, varnames);
    }
-   const int nBins = h.GetNbinsX() * h.GetNbinsY() * h.GetNbinsZ();
+   const int nBins = histo.GetNbinsX() * histo.GetNbinsY() * histo.GetNbinsZ();
    for (int i = 1; i <= nBins; ++i) {
-      const double val = h.GetBinContent(i);
+      const double val = histo.GetBinContent(i);
       weights.append_child() << val;
       if (writeErrors) {
-         const double err = errH ? val * errH->GetBinContent(i) : h.GetBinError(i);
+         const double err = errH ? val * errH->GetBinContent(i) : histo.GetBinError(i);
          errors->append_child() << err;
       }
    }
@@ -922,6 +922,29 @@ void RooJSONFactoryWSTool::importFunction(const JSONNode &p, bool isPdf)
    }
 }
 
+void RooJSONFactoryWSTool::exportDataHist(RooDataHist const &dataHist, RooFit::Detail::JSONNode &output)
+{
+   auto &observablesNode = output["axes"];
+   for (RooRealVar *var : static_range_cast<RooRealVar *>(*dataHist.get())) {
+      auto &observableNode = appendNamedChild(observablesNode, var->GetName());
+      observableNode["min"] << var->getMin();
+      observableNode["max"] << var->getMax();
+      observableNode["nbins"] << var->numBins();
+   }
+
+   auto &weights = output["contents"];
+   weights.set_seq();
+   for (int i = 0; i < dataHist.numEntries(); ++i) {
+      double w = dataHist.weight(i);
+      // To make sure there are no unnecessary floating points in the JSON
+      if (int(w) == w) {
+         weights.append_child() << int(w);
+      } else {
+         weights.append_child() << w;
+      }
+   }
+}
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 // exporting data
 void RooJSONFactoryWSTool::exportData(RooAbsData const &data)
@@ -962,28 +985,8 @@ void RooJSONFactoryWSTool::exportData(RooAbsData const &data)
    JSONNode &output = appendNamedChild((*_rootnodeOutput)["data"], data.GetName());
 
    // this is a binned dataset
-   if (dynamic_cast<RooDataHist const *>(&data)) {
-
-      auto &observablesNode = output["axes"];
-      for (RooRealVar *var : static_range_cast<RooRealVar *>(*data.get())) {
-         auto &observableNode = appendNamedChild(observablesNode, var->GetName());
-         observableNode["min"] << var->getMin();
-         observableNode["max"] << var->getMax();
-         observableNode["nbins"] << var->numBins();
-      }
-
-      auto &weights = output["contents"];
-      weights.set_seq();
-      for (int i = 0; i < data.numEntries(); ++i) {
-         double w = static_cast<RooDataHist const &>(data).weight(i);
-         // To make sure there are no unnecessary floating points in the JSON
-         if (int(w) == w) {
-            weights.append_child() << int(w);
-         } else {
-            weights.append_child() << w;
-         }
-      }
-      return;
+   if (auto dh = dynamic_cast<RooDataHist const *>(&data)) {
+      return exportDataHist(*dh, output);
    }
 
    // this is a regular unbinned dataset

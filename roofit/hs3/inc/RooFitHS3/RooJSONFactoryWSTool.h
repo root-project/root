@@ -116,41 +116,6 @@ public:
 
    static void error(const char *s);
    inline static void error(const std::string &s) { error(s.c_str()); }
-   template <class T>
-   static std::string concat(const T *items, const std::string &sep = ",")
-   {
-      // Returns a string being the concatenation of strings in input list <items>
-      // (names of objects obtained using GetName()) separated by string <sep>.
-      bool first = true;
-      std::string text;
-
-      // iterate over strings in list
-      for (auto it : *items) {
-         if (!first) {
-            // insert separator string
-            text += sep;
-         } else {
-            first = false;
-         }
-         if (!it)
-            text += "nullptr";
-         else
-            text += it->GetName();
-      }
-      return text;
-   }
-   template <class T>
-   static std::vector<std::string> names(T const &items)
-   {
-      // Returns a string being the concatenation of strings in input list <items>
-      // (names of objects obtained using GetName()) separated by string <sep>.
-      std::vector<std::string> names;
-      // iterate over strings in list
-      for (auto it : items) {
-         names.push_back(it ? it->GetName() : "nullptr");
-      }
-      return names;
-   }
 
    static void exportHistogram(const TH1 &h, RooFit::Detail::JSONNode &n, const std::vector<std::string> &obsnames,
                                const TH1 *errH = nullptr, bool writeObservables = true, bool writeErrors = true);
@@ -202,6 +167,8 @@ public:
 
    static void writeChannelNames(RooFit::Detail::JSONNode &rootnode, std::string const &simPdfName,
                                  std::vector<std::string> const &channelNames);
+
+   static void exportDataHist(RooDataHist const &dataHist, RooFit::Detail::JSONNode &node);
 
 private:
    struct Config {

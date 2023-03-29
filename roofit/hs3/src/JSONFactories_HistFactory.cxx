@@ -42,6 +42,42 @@ using RooFit::Detail::JSONNode;
 
 namespace {
 
+template <class T>
+std::string concat(const T *items, const std::string &sep = ",")
+{
+   // Returns a string being the concatenation of strings in input list <items>
+   // (names of objects obtained using GetName()) separated by string <sep>.
+   bool first = true;
+   std::string text;
+
+   // iterate over strings in list
+   for (auto it : *items) {
+      if (!first) {
+         // insert separator string
+         text += sep;
+      } else {
+         first = false;
+      }
+      if (!it)
+         text += "nullptr";
+      else
+         text += it->GetName();
+   }
+   return text;
+}
+template <class T>
+std::vector<std::string> names(T const &items)
+{
+   // Returns a string being the concatenation of strings in input list <items>
+   // (names of objects obtained using GetName()) separated by string <sep>.
+   std::vector<std::string> names;
+   // iterate over strings in list
+   for (auto it : items) {
+      names.push_back(it ? it->GetName() : "nullptr");
+   }
+   return names;
+}
+
 double round_prec(double d, int nSig)
 {
    if (d == 0.0)
@@ -59,11 +95,11 @@ namespace Literals {
 constexpr auto staterror = "staterror";
 }
 
-static bool startsWith(std::string_view str, std::string_view prefix)
+bool startsWith(std::string_view str, std::string_view prefix)
 {
    return str.size() >= prefix.size() && 0 == str.compare(0, prefix.size(), prefix);
 }
-static bool endsWith(std::string_view str, std::string_view suffix)
+bool endsWith(std::string_view str, std::string_view suffix)
 {
    return str.size() >= suffix.size() && 0 == str.compare(str.size() - suffix.size(), suffix.size(), suffix);
 }
@@ -91,7 +127,7 @@ std::unique_ptr<TH1> histFunc2TH1(const RooHistFunc *hf)
       RooJSONFactoryWSTool::error("null pointer passed to histFunc2TH1");
    const RooDataHist &dh = hf->dataHist();
    std::unique_ptr<RooArgSet> vars{hf->getVariables()};
-   std::unique_ptr<TH1> hist{hf->createHistogram(RooJSONFactoryWSTool::concat(vars.get()))};
+   std::unique_ptr<TH1> hist{hf->createHistogram(concat(vars.get()))};
    hist->SetDirectory(nullptr);
    auto volumes = dh.binVolumes(0, dh.numEntries());
    for (size_t i = 0; i < volumes.size(); ++i) {
@@ -672,7 +708,7 @@ bool tryExportHistFactory(RooWorkspace *ws, const std::string &pdfname, const st
             sample.norms.push_back(e);
          } else if (auto hf = dynamic_cast<const RooHistFunc *>(e)) {
             if (varnames.empty()) {
-               varnames = RooJSONFactoryWSTool::names(*hf->dataHist().get());
+               varnames = names(*hf->dataHist().get());
             }
             if (!sample.hist) {
                sample.hist = histFunc2TH1(hf);
@@ -695,7 +731,7 @@ bool tryExportHistFactory(RooWorkspace *ws, const std::string &pdfname, const st
             if (!sample.hist)
                sample.hist = histFunc2TH1(nh);
             if (varnames.empty())
-               varnames = RooJSONFactoryWSTool::names(*nh->dataHist().get());
+               varnames = names(*nh->dataHist().get());
          }
       }
 
