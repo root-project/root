@@ -58,6 +58,10 @@ public:
 
    void setSimCount(int simCount) { _simCount = simCount; }
 
+   void translate(RooFit::Detail::CodeSquashContext &ctx) const override;
+
+   void buildLoopBegin(RooFit::Detail::CodeSquashContext &ctx) const override;
+
 private:
    double evaluate() const override { return _value; }
    void resetWeightVarNames();

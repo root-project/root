@@ -16,6 +16,7 @@
 
 #include <RooAbsArg.h>
 #include <RooNumber.h>
+#include <RooAbsData.h>
 
 #include <sstream>
 #include <string>
@@ -31,10 +32,22 @@ namespace Detail {
 /// @brief A class to maintain the context for squashing of RooFit models into code.
 class CodeSquashContext {
 public:
+   /// @brief A crude way of keeping track of loop ranges for nodes like NLLs.
+   const std::size_t numEntries;
+
+   CodeSquashContext(const RooAbsData *data = nullptr) : numEntries(data ? data->numEntries() : 0) {}
+
    /// @brief Adds (or overwrites) the string representing the result of a node.
    /// @param key The node to add the result for.
    /// @param value The new name to assign/overwrite.
    inline void addResult(RooAbsArg const *key, std::string value) { _nodeNames[key->namePtr()] = value; }
+
+   inline void addResult(const char *key, std::string value)
+   {
+      const TNamed *namePtr = RooNameReg::known(key);
+      if (namePtr)
+         _nodeNames[namePtr] = value;
+   }
 
    /// @brief Gets the result for the given node using the node name.
    /// @param key The node to get the result string for.
@@ -74,6 +87,22 @@ public:
    /// @param key The node representing the vector valued observable.
    /// @param idx The start index (or relative position of the observable in the set of all observables).
    inline void addVecObs(RooAbsArg const *key, int idx) { _vecObsIndices[key->namePtr()] = idx; }
+
+   inline void addVecObs(const char *key, int idx)
+   {
+      const TNamed *namePtr = RooNameReg::known(key);
+      if (namePtr)
+         _vecObsIndices[namePtr] = idx;
+   }
+
+   /// @brief Get the start index of the node representing the key. If the key is not found (in the case the key is
+   /// scalar), return -1.
+   /// @param key The node to perform a lookup for.
+   /// @return The start index of the observable if found, otherwise -1.
+   inline int getVecObsStartIdx(RooAbsArg const *key)
+   {
+      return _vecObsIndices.find(key->namePtr()) == _vecObsIndices.end() ? -1 : _vecObsIndices[key->namePtr()];
+   }
 
    /// @brief Adds the input string to the squashed code body. If a class implements a translate function that wants to
    /// emit something to the squashed code body, it must call this function with the code it wants to emit.
@@ -118,7 +147,7 @@ private:
    std::unordered_map<const TNamed *, std::string> _nodeNames;
    /// @brief Block of code that is placed before the rest of the function body.
    std::string _globalScope;
-   /// @brief a map to keep track of the observable indices if they are non scalar.
+   /// @brief A map to keep track of the observable indices if they are non scalar.
    std::unordered_map<const TNamed *, int> _vecObsIndices;
    /// @brief Stores the squashed code body.
    std::string _code;

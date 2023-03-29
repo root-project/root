@@ -21,7 +21,7 @@
 
 /// @brief  A wrapper class to store a C++ function of type 'double (*)(double*, double*)'.
 /// The parameters can be accessed as params[<relative position of param in paramSet>] in the function body.
-/// The observables can be accessed as obs[i * num_entries + j], where i represents the observable position and j
+/// The observables can be accessed as obs[i + j], where i represents the observable position and j
 /// represents the data entry.
 class RooFuncWrapper final : public RooAbsReal {
 public:
@@ -47,6 +47,8 @@ protected:
 private:
    std::string
    buildCode(RooAbsReal const &head, RooArgSet const & /* paramSet */, RooArgSet const &obsSet, const RooAbsData *data);
+
+   void BuildCodeRecur(RooFit::Detail::CodeSquashContext &ctx, RooAbsReal const &head);
 
    void updateGradientVarBuffer() const;
 

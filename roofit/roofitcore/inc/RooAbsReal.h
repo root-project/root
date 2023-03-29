@@ -430,6 +430,7 @@ protected:
   virtual void translate(RooFit::Detail::CodeSquashContext &ctx) const;
   virtual std::string
   buildCallToAnalyticIntegral(Int_t code, const char *rangeName, RooFit::Detail::CodeSquashContext &ctx) const;
+  virtual void buildLoopBegin(RooFit::Detail::CodeSquashContext &ctx) const;
 
  protected:
 

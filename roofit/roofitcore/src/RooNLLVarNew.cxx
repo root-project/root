@@ -287,3 +287,42 @@ double RooNLLVarNew::finalizeResult(ROOT::Math::KahanSum<double> &&result, doubl
    }
    return result.Sum();
 }
+
+void RooNLLVarNew::translate(RooFit::Detail::CodeSquashContext &ctx) const
+{
+   std::string className = GetName();
+   std::string resName = className + "Result";
+   ctx.addResult(this, resName);
+   ctx.addToGlobalScope("double " + resName + " = 0;\n");
+
+   std::string tmpName = className + "Temp";
+   std::string code = "double " + tmpName + ";\n";
+   code += tmpName + " = std::log(" + ctx.getResult(_pdf.arg()) + ");\n";
+   code += resName + " -= " + ctx.getResult(_weightVar.arg()) + " * " + tmpName + ";\n";
+   ctx.addToCodeBody(code);
+   // Close the loop
+   ctx.addToCodeBody("}\n");
+}
+
+void RooNLLVarNew::buildLoopBegin(RooFit::Detail::CodeSquashContext &ctx) const
+{
+   std::string loopIdx = GetName();
+   loopIdx += "_i";
+   for (auto *it : _observables) {
+      int startIdx = ctx.getVecObsStartIdx(it);
+      if (startIdx == -1)
+         continue;
+      std::string const &varName = ctx.getResult(*it);
+      // create the obs[start + loopIdx] expression.
+      ctx.addResult(it, varName + "[" + std::to_string(startIdx) + " + " + loopIdx + "]");
+   }
+   // Also add weights
+   RooAbsArg const *weights = &_weightVar.arg();
+   std::string const &weightName = ctx.getResult(*weights);
+   if (weightName != "1")
+      ctx.addResult(weights, weightName + "[" + std::to_string(ctx.getVecObsStartIdx(weights)) + " + " + loopIdx + "]");
+
+   // Here numEntries is a 'key' word defined by the upper level code squasher.
+   ctx.addToCodeBody("for(int " + loopIdx + " = 0; " + loopIdx + " < " + std::to_string(ctx.numEntries) + "; " +
+                     loopIdx + "++) {\n");
+}
