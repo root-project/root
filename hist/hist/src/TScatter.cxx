@@ -132,14 +132,13 @@ Bool_t TScatter::CtorAllocate()
 
 TH1F *TScatter::GetHistogram() const
 {
-//   TH1F *h;
    if (!fHistogram) {
       double rwxmin, rwymin, rwxmax, rwymax;
       int npt = 100;
       ComputeRange(rwxmin, rwymin, rwxmax, rwymax);
       double dx = (rwxmax-rwxmin)*fMargin;
       double dy = (rwymax-rwymin)*fMargin;
-      auto h = new TH1F(Form("%s_h",GetName()),GetTitle(),npt,rwxmin,rwxmax);
+      auto h = new TH1F(TString::Format("%s_h",GetName()),GetTitle(),npt,rwxmin,rwxmax);
       h->SetMinimum(rwymin-dy);
       h->SetMaximum(rwymax+dy);
       h->GetXaxis()->SetLimits(rwxmin-dx,rwxmax+dx);
@@ -208,10 +207,10 @@ void TScatter::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    frameNumber++;
 
    Int_t i;
-   TString fXName  = TString(GetName()) + Form("_fx%d",frameNumber);
-   TString fYName  = TString(GetName()) + Form("_fy%d",frameNumber);
-   TString fColorName = TString(GetName()) + Form("_fcolor%d",frameNumber);
-   TString fSizeName = TString(GetName()) + Form("_fsize%d",frameNumber);
+   TString fXName  = TString(GetName()) + TString::Format("_fx%d",frameNumber);
+   TString fYName  = TString(GetName()) + TString::Format("_fy%d",frameNumber);
+   TString fColorName = TString(GetName()) + TString::Format("_fcolor%d",frameNumber);
+   TString fSizeName = TString(GetName()) + TString::Format("_fsize%d",frameNumber);
    out << "   Double_t " << fXName << "[" << fNpoints << "] = {" << std::endl;
    for (i = 0; i < fNpoints-1; i++) out << "   " << fX[i] << "," << std::endl;
    out << "   " << fX[fNpoints-1] << "};" << std::endl;
@@ -242,7 +241,7 @@ void TScatter::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    if (fHistogram) {
       TString hname = fHistogram->GetName();
       hname += frameNumber;
-      fHistogram->SetName(Form("Graph_%s", hname.Data()));
+      fHistogram->SetName(TString::Format("Graph_%s", hname.Data()));
       fHistogram->SavePrimitive(out, "nodraw");
       out << "   scat->SetHistogram(" << fHistogram->GetName() << ");" << std::endl;
       out << "   " << std::endl;
