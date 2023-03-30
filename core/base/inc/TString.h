@@ -171,8 +171,9 @@ friend Bool_t  operator==(const TString &s1, const TString &s2);
 friend Bool_t  operator==(const TString &s1, const char *s2);
 #ifdef __cpp_lib_three_way_comparison
 friend std::strong_ordering operator<=>(const TString &s1, const TString &s2) {
-   if (s1 == s2) return std::strong_ordering::equal;
-   else if (s1 < s2) return std::strong_ordering::less;
+   const int cmp = s1.CompareTo(s2);
+   if (cmp == 0) return std::strong_ordering::equal;
+   if (cmp < 0) return std::strong_ordering::less;
    return std::strong_ordering::greater;
 }
 #endif
