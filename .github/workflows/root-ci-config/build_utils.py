@@ -64,6 +64,9 @@ def subprocess_with_log(command: str, log="") -> Tuple[int, str]:
 
     print("\033[90m", end='')
 
+    if os.name == 'nt':
+        command = "$env:comspec = 'cmd.exe'; " + command
+
     result = subprocess.run(command, shell=True, check=False, stderr=subprocess.STDOUT)
 
     print("\033[0m", end='')
