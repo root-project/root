@@ -494,6 +494,7 @@ std::uint16_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeColumnTy
 {
    using EColumnType = ROOT::Experimental::EColumnType;
    switch (type) {
+   case EColumnType::kIndex64: return SerializeUInt16(0x01, buffer);
    case EColumnType::kIndex32: return SerializeUInt16(0x02, buffer);
    case EColumnType::kSwitch: return SerializeUInt16(0x03, buffer);
    case EColumnType::kByte: return SerializeUInt16(0x04, buffer);
@@ -506,6 +507,7 @@ std::uint16_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeColumnTy
    case EColumnType::kInt32: return SerializeUInt16(0x0B, buffer);
    case EColumnType::kInt16: return SerializeUInt16(0x0C, buffer);
    case EColumnType::kInt8: return SerializeUInt16(0x0D, buffer);
+   case EColumnType::kSplitIndex64: return SerializeUInt16(0x0E, buffer);
    case EColumnType::kSplitIndex32: return SerializeUInt16(0x0F, buffer);
    case EColumnType::kSplitReal64: return SerializeUInt16(0x10, buffer);
    case EColumnType::kSplitReal32: return SerializeUInt16(0x11, buffer);
@@ -524,6 +526,7 @@ RResult<std::uint16_t> ROOT::Experimental::Internal::RNTupleSerializer::Deserial
    std::uint16_t onDiskType;
    auto result = DeserializeUInt16(buffer, onDiskType);
    switch (onDiskType) {
+   case 0x01: type = EColumnType::kIndex64; break;
    case 0x02: type = EColumnType::kIndex32; break;
    case 0x03: type = EColumnType::kSwitch; break;
    case 0x04: type = EColumnType::kByte; break;
@@ -536,6 +539,7 @@ RResult<std::uint16_t> ROOT::Experimental::Internal::RNTupleSerializer::Deserial
    case 0x0B: type = EColumnType::kInt32; break;
    case 0x0C: type = EColumnType::kInt16; break;
    case 0x0D: type = EColumnType::kInt8; break;
+   case 0x0E: type = EColumnType::kSplitIndex64; break;
    case 0x0F: type = EColumnType::kSplitIndex32; break;
    case 0x10: type = EColumnType::kSplitReal64; break;
    case 0x11: type = EColumnType::kSplitReal32; break;

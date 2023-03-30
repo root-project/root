@@ -745,11 +745,32 @@ public:
 };
 
 template <>
+class RColumnElement<ClusterSize_t, EColumnType::kIndex64> : public RColumnElementLE<std::uint64_t> {
+public:
+   static constexpr std::size_t kSize = sizeof(ClusterSize_t);
+   static constexpr std::size_t kBitsOnStorage = 64;
+   explicit RColumnElement(ClusterSize_t *value) : RColumnElementLE(value, kSize) {}
+   bool IsMappable() const final { return kIsMappable; }
+   std::size_t GetBitsOnStorage() const final { return kBitsOnStorage; }
+};
+
+template <>
 class RColumnElement<ClusterSize_t, EColumnType::kIndex32> : public RColumnElementCastLE<std::uint64_t, std::uint32_t> {
 public:
    static constexpr std::size_t kSize = sizeof(ClusterSize_t);
    static constexpr std::size_t kBitsOnStorage = 32;
    explicit RColumnElement(ClusterSize_t *value) : RColumnElementCastLE(value, kSize) {}
+   bool IsMappable() const final { return kIsMappable; }
+   std::size_t GetBitsOnStorage() const final { return kBitsOnStorage; }
+};
+
+template <>
+class RColumnElement<ClusterSize_t, EColumnType::kSplitIndex64>
+   : public RColumnElementDeltaSplitLE<std::uint64_t, std::uint64_t> {
+public:
+   static constexpr std::size_t kSize = sizeof(ClusterSize_t);
+   static constexpr std::size_t kBitsOnStorage = 64;
+   explicit RColumnElement(ClusterSize_t *value) : RColumnElementDeltaSplitLE(value, kSize) {}
    bool IsMappable() const final { return kIsMappable; }
    std::size_t GetBitsOnStorage() const final { return kBitsOnStorage; }
 };
@@ -808,6 +829,7 @@ template <typename CppT>
 std::unique_ptr<RColumnElementBase> RColumnElementBase::Generate(EColumnType type)
 {
    switch (type) {
+   case EColumnType::kIndex64: return std::make_unique<RColumnElement<CppT, EColumnType::kIndex64>>(nullptr);
    case EColumnType::kIndex32: return std::make_unique<RColumnElement<CppT, EColumnType::kIndex32>>(nullptr);
    case EColumnType::kSwitch: return std::make_unique<RColumnElement<CppT, EColumnType::kSwitch>>(nullptr);
    case EColumnType::kByte: return std::make_unique<RColumnElement<CppT, EColumnType::kByte>>(nullptr);
@@ -819,6 +841,7 @@ std::unique_ptr<RColumnElementBase> RColumnElementBase::Generate(EColumnType typ
    case EColumnType::kInt32: return std::make_unique<RColumnElement<CppT, EColumnType::kInt32>>(nullptr);
    case EColumnType::kInt16: return std::make_unique<RColumnElement<CppT, EColumnType::kInt16>>(nullptr);
    case EColumnType::kInt8: return std::make_unique<RColumnElement<CppT, EColumnType::kInt8>>(nullptr);
+   case EColumnType::kSplitIndex64: return std::make_unique<RColumnElement<CppT, EColumnType::kSplitIndex64>>(nullptr);
    case EColumnType::kSplitIndex32: return std::make_unique<RColumnElement<CppT, EColumnType::kSplitIndex32>>(nullptr);
    case EColumnType::kSplitReal64: return std::make_unique<RColumnElement<CppT, EColumnType::kSplitReal64>>(nullptr);
    case EColumnType::kSplitReal32: return std::make_unique<RColumnElement<CppT, EColumnType::kSplitReal32>>(nullptr);
