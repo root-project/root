@@ -29,6 +29,7 @@
 #include "TObjArray.h"
 #include "TArrayI.h"
 #include "TList.h"
+#include "TF1.h"
 #include "TH1.h"
 #include "TH1K.h"
 #include "THStack.h"
@@ -36,6 +37,7 @@
 #include "TEnv.h"
 #include "TError.h"
 #include "TGraph.h"
+#include "TGaxis.h"
 #include "TCutG.h"
 #include "TBufferJSON.h"
 #include "TBase64.h"
@@ -583,6 +585,14 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
          if (funcs)
             fPrimitivesLists.Add(funcs);
          first_obj = false;
+      } else if (obj->InheritsFrom(TGaxis::Class())) {
+         flush_master();
+         auto gaxis = static_cast<TGaxis *> (obj);
+         auto func = gaxis->GetFunction();
+         if (func)
+            paddata.NewPrimitive(func, "__ignore_drawing__").SetSnapshot(TWebSnapshot::kObject, func);
+
+         paddata.NewPrimitive(obj, iter.GetOption()).SetSnapshot(TWebSnapshot::kObject, obj);
       } else if (IsJSSupportedClass(obj, usemaster)) {
          flush_master();
          paddata.NewPrimitive(obj, iter.GetOption()).SetSnapshot(TWebSnapshot::kObject, obj);
