@@ -73,7 +73,9 @@ public:
 
    const RColumnRepresentations &GetColumnRepresentations() const final
    {
-      static RColumnRepresentations representations({{EColumnType::kSplitIndex32}, {EColumnType::kIndex32}}, {{}});
+      static RColumnRepresentations representations(
+         {{EColumnType::kSplitIndex32}, {EColumnType::kIndex32}, {EColumnType::kSplitIndex64}, {EColumnType::kIndex64}},
+         {});
       return representations;
    }
    // Field is only used for reading
