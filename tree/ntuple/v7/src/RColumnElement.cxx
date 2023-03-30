@@ -28,6 +28,7 @@ std::unique_ptr<ROOT::Experimental::Detail::RColumnElementBase>
 ROOT::Experimental::Detail::RColumnElementBase::Generate<void>(EColumnType type)
 {
    switch (type) {
+   case EColumnType::kIndex64: return std::make_unique<RColumnElement<ClusterSize_t, EColumnType::kIndex64>>(nullptr);
    case EColumnType::kIndex32: return std::make_unique<RColumnElement<ClusterSize_t, EColumnType::kIndex32>>(nullptr);
    case EColumnType::kSwitch: return std::make_unique<RColumnElement<RColumnSwitch, EColumnType::kSwitch>>(nullptr);
    case EColumnType::kByte: return std::make_unique<RColumnElement<std::uint8_t, EColumnType::kByte>>(nullptr);
@@ -39,6 +40,8 @@ ROOT::Experimental::Detail::RColumnElementBase::Generate<void>(EColumnType type)
    case EColumnType::kInt32: return std::make_unique<RColumnElement<std::int32_t, EColumnType::kInt32>>(nullptr);
    case EColumnType::kInt16: return std::make_unique<RColumnElement<std::int16_t, EColumnType::kInt16>>(nullptr);
    case EColumnType::kInt8: return std::make_unique<RColumnElement<std::int8_t, EColumnType::kInt8>>(nullptr);
+   case EColumnType::kSplitIndex64:
+      return std::make_unique<RColumnElement<ClusterSize_t, EColumnType::kSplitIndex64>>(nullptr);
    case EColumnType::kSplitIndex32:
       return std::make_unique<RColumnElement<ClusterSize_t, EColumnType::kSplitIndex32>>(nullptr);
    case EColumnType::kSplitReal64: return std::make_unique<RColumnElement<double, EColumnType::kSplitReal64>>(nullptr);
@@ -57,6 +60,7 @@ ROOT::Experimental::Detail::RColumnElementBase::Generate<void>(EColumnType type)
 
 std::size_t ROOT::Experimental::Detail::RColumnElementBase::GetBitsOnStorage(EColumnType type) {
    switch (type) {
+   case EColumnType::kIndex64: return 64;
    case EColumnType::kIndex32: return 32;
    case EColumnType::kSwitch: return 64;
    case EColumnType::kByte: return 8;
@@ -68,6 +72,7 @@ std::size_t ROOT::Experimental::Detail::RColumnElementBase::GetBitsOnStorage(ECo
    case EColumnType::kInt32: return 32;
    case EColumnType::kInt16: return 16;
    case EColumnType::kInt8: return 8;
+   case EColumnType::kSplitIndex64: return 64;
    case EColumnType::kSplitIndex32: return 32;
    case EColumnType::kSplitReal64: return 64;
    case EColumnType::kSplitReal32: return 32;
@@ -82,6 +87,7 @@ std::size_t ROOT::Experimental::Detail::RColumnElementBase::GetBitsOnStorage(ECo
 
 std::string ROOT::Experimental::Detail::RColumnElementBase::GetTypeName(EColumnType type) {
    switch (type) {
+   case EColumnType::kIndex64: return "Index64";
    case EColumnType::kIndex32: return "Index32";
    case EColumnType::kSwitch: return "Switch";
    case EColumnType::kByte: return "Byte";
@@ -93,6 +99,7 @@ std::string ROOT::Experimental::Detail::RColumnElementBase::GetTypeName(EColumnT
    case EColumnType::kInt32: return "Int32";
    case EColumnType::kInt16: return "Int16";
    case EColumnType::kInt8: return "Int8";
+   case EColumnType::kSplitIndex64: return "SplitIndex64";
    case EColumnType::kSplitIndex32: return "SplitIndex32";
    case EColumnType::kSplitReal64: return "SplitReal64";
    case EColumnType::kSplitReal32: return "SplitReal32";
