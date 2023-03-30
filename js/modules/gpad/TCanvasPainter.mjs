@@ -823,17 +823,6 @@ async function drawTPadSnapshot(dom, snap /*, opt*/) {
 
 /** @summary draw TGaxis object
   * @private */
-function drawTGaxis(dom, obj, opt) {
-   let painter = new TAxisPainter(dom, obj, false);
-   painter.disable_zooming = true;
-   return ensureTCanvas(painter, false).then(() => {
-      if (opt) painter.convertTo(opt);
-      return painter.redraw();
-   }).then(() => painter);
-}
-
-/** @summary draw TGaxis object
-  * @private */
 function drawTFrame(dom, obj, opt) {
    let fp = new TFramePainter(dom, obj);
    return ensureTCanvas(fp, false).then(() => {
@@ -842,5 +831,4 @@ function drawTFrame(dom, obj, opt) {
    });
 }
 
-export { ensureTCanvas, drawTPadSnapshot, drawTGaxis, drawTFrame,
-         TPadPainter, TCanvasPainter };
+export { ensureTCanvas, drawTPadSnapshot, drawTFrame, TPadPainter, TCanvasPainter };

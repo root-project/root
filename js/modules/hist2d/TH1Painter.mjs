@@ -1,6 +1,6 @@
 import { gStyle, settings, isBatchMode, clTF1, kNoZoom } from '../core.mjs';
 import { rgb as d3_rgb } from '../d3.mjs';
-import { floatToString, buildSvgCurve } from '../base/BasePainter.mjs';
+import { floatToString, buildSvgCurve, addHighlightStyle } from '../base/BasePainter.mjs';
 import { THistPainter } from './THistPainter.mjs';
 
 
@@ -976,8 +976,9 @@ class TH1Painter extends THistPainter {
 
          if (ttrect.empty())
             ttrect = this.draw_g.append('svg:rect')
-                                .attr('class', 'tooltip_bin h1bin')
-                                .style('pointer-events', 'none');
+                                .attr('class', 'tooltip_bin')
+                                .style('pointer-events', 'none')
+                                .call(addHighlightStyle);
 
          res.changed = ttrect.property('current_bin') !== findbin;
 

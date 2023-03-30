@@ -104,7 +104,7 @@ function floatToString(value, fmt, ret_fmt) {
 
       let se = value.toExponential(prec);
 
-      return ret_fmt ? [se, '5.'+prec+'e'] : se;
+      return ret_fmt ? [se, `5.${prec}e`] : se;
    }
 
    let sg = value.toFixed(prec);
@@ -117,7 +117,7 @@ function floatToString(value, fmt, ret_fmt) {
       }
 
       let l = 0;
-      while ((l<sg.length) && (sg[l] == '0' || sg[l] == '-' || sg[l] == '.')) l++;
+      while ((l < sg.length) && (sg[l] == '0' || sg[l] == '-' || sg[l] == '.')) l++;
 
       let diff = sg.length - l - prec;
       if (sg.indexOf('.') > l) diff--;
@@ -220,7 +220,8 @@ class TRandom {
   * @private */
 function buildSvgCurve(p, args) {
 
-   if (!args) args = { };
+   if (!args)
+      args = {};
    if (!args.line)
       args.calc = true;
    else if (args.ndig === undefined)
@@ -686,11 +687,21 @@ async function _loadJSDOM() {
 /** @summary Return translate string for transform attribute of some svg element
   * @return string or null if x and y are zeros
   * @private */
-function makeTranslate(x,y)
-{
+function makeTranslate(x,y) {
    if (y) return `translate(${x},${y})`;
    if (x) return `translate(${x})`;
    return null;
+}
+
+/** @summary Configure special style used for highlight or dragging elements */
+function addHighlightStyle(elem, drag) {
+   if (drag)
+      elem.style('stroke', 'steelblue')
+          .style('fill-opacity', '0.1');
+   else
+      elem.style('stroke', '#4572A7')
+          .style('fill', '#4572A7')
+          .style('opacity', '0');
 }
 
 /** @summary Create image based on SVG
@@ -749,4 +760,4 @@ async function svgToImage(svg, image_format) {
 
 export { getElementRect, getAbsPosInCanvas,
          DrawOptions, TRandom, floatToString, buildSvgCurve, compressSVG,
-         BasePainter, _loadJSDOM, makeTranslate, svgToImage };
+         BasePainter, _loadJSDOM, makeTranslate, addHighlightStyle, svgToImage };

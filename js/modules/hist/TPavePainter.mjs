@@ -27,12 +27,11 @@ class TPavePainter extends ObjectPainter {
       super(dom, pave);
       this.Enabled = true;
       this.UseContextMenu = true;
-      this.UseTextColor = false; // indicates if text color used, enabled menu entry
    }
 
    /** @summary Autoplace legend on the frame
-     * @return {Promise} */
-   async autoPlaceLegend(pt, pad) {
+     * @return {Promise} with boolean flag if position was changed  */
+   async autoPlaceLegend(pt, pad, keep_origin) {
       let main_svg = this.getFrameSvg().select('.main_layer'),
           svg_code = main_svg.node().outerHTML;
 
@@ -48,11 +47,8 @@ class TPavePainter extends ObjectPainter {
       return svgToImage(svg_code).then(canvas => {
          if (!canvas) return false;
 
-         const context = canvas.getContext("2d");
-
-         let data = context.getImageData(0, 0, canvas.width, canvas.height);
-
-         let arr = data.data;
+         const context = canvas.getContext('2d'),
+               arr = context.getImageData(0, 0, canvas.width, canvas.height).data;
 
          let nX = 100, nY = 100,
              boxW = Math.floor(canvas.width / nX), boxH = Math.floor(canvas.height / nY),
@@ -89,7 +85,7 @@ class TPavePainter extends ObjectPainter {
                for (let iy = y; iy < y + needH; ++iy)
                   if (raster[iy * nX + ix]) return false;
             return true;
-         }
+         };
 
          for (let ix = 0; ix < (nX - needW); ++ix)
             for (let iy = nY-needH-1; iy >= 0; --iy)
@@ -101,21 +97,21 @@ class TPavePainter extends ObjectPainter {
                   return true;
                }
       }).then(res => {
-         if (!res) {
-            pt.fX1NDC = Math.max(lm ?? 0, pt.fX2NDC - 0.3);
-            pt.fX2NDC = Math.min(pt.fX1NDC + 0.3, 1 - rm);
-            let h0 = Math.max(pt.fPrimitives ? pt.fPrimitives.arr.length*0.05 : 0, 0.2);
-            pt.fY2NDC = Math.min(1 - tm, pt.fY1NDC + h0);
-            pt.fY1NDC = Math.max(pt.fY2NDC - h0, bm);
-         }
+         if (res || keep_origin)
+            return res;
+
+         pt.fX1NDC = Math.max(lm ?? 0, pt.fX2NDC - 0.3);
+         pt.fX2NDC = Math.min(pt.fX1NDC + 0.3, 1 - rm);
+         let h0 = Math.max(pt.fPrimitives ? pt.fPrimitives.arr.length*0.05 : 0, 0.2);
+         pt.fY2NDC = Math.min(1 - tm, pt.fY1NDC + h0);
+         pt.fY1NDC = Math.max(pt.fY2NDC - h0, bm);
+         return true;
       });
    }
 
    /** @summary Draw pave and content
      * @return {Promise} */
    async drawPave(arg) {
-
-      this.UseTextColor = false;
 
       if (!this.Enabled) {
          this.removeG();
@@ -332,8 +328,6 @@ class TPavePainter extends ObjectPainter {
       if (!pave.fLabel || !pave.fLabel.trim())
          return this;
 
-      this.UseTextColor = true;
-
       this.createAttText({ attr: pave });
 
       this.startTextDrawing(this.textatt.font, height/1.2);
@@ -374,12 +368,9 @@ class TPavePainter extends ObjectPainter {
       // for characters like 'p' or 'y' several more pixels required to stay in the box when drawn in last line
       let stepy = height / nlines, has_head = false, margin_x = pt.fMargin * width;
 
-
       this.createAttText({ attr: pt });
 
       this.startTextDrawing(this.textatt.font, height/(nlines * 1.2));
-
-      this.UseTextColor = true;
 
       if (nlines == 1) {
          this.drawText(this.textatt.createArg({ width, height, text: lines[0], latex: 1, norotate: true }));
@@ -479,10 +470,7 @@ class TPavePainter extends ObjectPainter {
                   let x = entry.fX ? entry.fX*width : margin_x,
                       y = entry.fY ? (1 - entry.fY)*height : texty,
                       color = entry.fTextColor ? this.getColor(entry.fTextColor) : '';
-                  if (!color) {
-                     color = this.textatt.color;
-                     this.UseTextColor = true;
-                  }
+                  if (!color) color = this.textatt.color;
 
                   let sub_g = text_g.append('svg:g');
 
@@ -510,7 +498,7 @@ class TPavePainter extends ObjectPainter {
                      if (entry.fTextColor) arg.color = this.getColor(entry.fTextColor);
                      if (entry.fTextSize) arg.font_size = this.textatt.getAltSize(entry.fTextSize, pad_height);
                   }
-                  if (!arg.color) { this.UseTextColor = true; arg.color = this.textatt.color; }
+                  if (!arg.color) arg.color = this.textatt.color;
                   this.drawText(arg);
                }
                break;
@@ -559,8 +547,6 @@ class TPavePainter extends ObjectPainter {
          this.drawText({ align: 22, x, y, width: w, height: h, text: pt.fLabel, color: this.textatt.color, draw_g: lbl_g });
 
          promises.push(this.finishTextDrawing(lbl_g));
-
-         this.UseTextColor = true;
       }
 
       return Promise.all(promises).then(() => this);
@@ -984,7 +970,7 @@ class TPavePainter extends ObjectPainter {
 
       menu.add(`header: ${pave._typename}::${pave.fName}`);
       if (this.isStats()) {
-         menu.add('Default position', function() {
+         menu.add('Default position', () => {
             pave.fX2NDC = gStyle.fStatX;
             pave.fX1NDC = pave.fX2NDC - gStyle.fStatW;
             pave.fY2NDC = gStyle.fStatY;
@@ -1028,7 +1014,7 @@ class TPavePainter extends ObjectPainter {
          function AddStatOpt(pos, name) {
             let opt = (pos<10) ? pave.fOptStat : pave.fOptFit;
             opt = parseInt(parseInt(opt) / parseInt(Math.pow(10,pos % 10))) % 10;
-            menu.addchk(opt, name, opt * 100 + pos, function(arg) {
+            menu.addchk(opt, name, opt * 100 + pos, arg => {
                let newopt = (arg % 100 < 10) ? pave.fOptStat : pave.fOptFit,
                    oldopt = parseInt(arg / 100);
                newopt -= (oldopt > 0 ? oldopt : -1) * parseInt(Math.pow(10, arg % 10));
@@ -1067,7 +1053,7 @@ class TPavePainter extends ObjectPainter {
 
          menu.add('separator');
       } else if (pave.fName === 'title') {
-         menu.add('Default position', function() {
+         menu.add('Default position', () => {
             pave.fX1NDC = gStyle.fTitleW > 0 ? gStyle.fTitleX - gStyle.fTitleW/2 : gStyle.fPadLeftMargin;
             pave.fY1NDC = gStyle.fTitleY - Math.min(gStyle.fTitleFontSize*1.1, 0.06);
             pave.fX2NDC = gStyle.fTitleW > 0 ? gStyle.fTitleX + gStyle.fTitleW/2 : 1 - gStyle.fPadRightMargin;
@@ -1076,7 +1062,7 @@ class TPavePainter extends ObjectPainter {
             this.interactiveRedraw(true, 'pave_moved');
          });
 
-         menu.add('Save to gStyle', function() {
+         menu.add('Save to gStyle', () => {
             gStyle.fTitleX = (pave.fX2NDC + pave.fX1NDC)/2;
             gStyle.fTitleY = pave.fY2NDC;
             if (this.fillatt) this.fillatt.saveToStyle('fTitleColor', 'fTitleStyle');
@@ -1084,10 +1070,13 @@ class TPavePainter extends ObjectPainter {
             gStyle.fTitleFontSize = pave.fTextSize;
             gStyle.fTitleFont = pave.fTextFont;
          }, 'Store title position and graphical attributes to gStyle');
+      } else if (pave._typename === clTLegend) {
+         menu.add('Autoplace', () => {
+            this.autoPlaceLegend(pave, this.getPadPainter()?.getRootPad(true), true).then(res => {
+               if (res) this.interactiveRedraw(true, 'pave_moved');
+            });
+         });
       }
-
-      if (this.UseTextColor)
-         menu.addTextAttributesMenu(this);
 
       menu.addAttributesMenu(this);
 
