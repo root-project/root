@@ -389,7 +389,7 @@ void TClassTable::Add(const char *cname, Version_t id,  const std::type_info &in
       new TClassTable;
 
    // check if already in table, if so return
-   TClassRec *r = FindElementImpl(cname, kTRUE);
+   TClassRec *r = FindElement(cname, kTRUE);
    if (r->fName && r->fInfo) {
       if ( strcmp(r->fInfo->name(), typeid(ROOT::TForNamespace).name()) ==0
            && strcmp(info.name(), typeid(ROOT::TForNamespace).name()) ==0 ) {
@@ -446,7 +446,7 @@ void TClassTable::Add(TProtoClass *proto)
    const char *cname = proto->GetName();
 
    // check if already in table, if so return
-   TClassRec *r = FindElementImpl(cname, kTRUE);
+   TClassRec *r = FindElement(cname, kTRUE);
    if (r->fName) {
       if (r->fProto) delete r->fProto;
       r->fProto = proto;
@@ -564,7 +564,7 @@ void TClassTable::Remove(const char *cname)
 /// 0 if the class is not in the table. Unless arguments insert is true in
 /// which case a new entry is created and returned.
 
-TClassRec *TClassTable::FindElementImpl(const char *cname, Bool_t insert)
+TClassRec *TClassTable::FindElement(const char *cname, Bool_t insert)
 {
    // Internal routine, no explicit lock needed here.
 
@@ -584,33 +584,13 @@ TClassRec *TClassTable::FindElementImpl(const char *cname, Bool_t insert)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Find a class by name in the class table (using hash of name). Returns
-/// 0 if the class is not in the table. Unless arguments insert is true in
-/// which case a new entry is created and returned.
-/// cname can be any spelling of the class name.  See FindElementImpl if the
-/// name is already normalized.
-
-TClassRec *TClassTable::FindElement(const char *cname, Bool_t insert)
-{
-   if (!CheckClassTableInit())
-      return nullptr;
-
-   // The recorded name is normalized, let's make sure we convert the
-   // input accordingly.
-   std::string normalized;
-   TClassEdit::GetNormalizedName(normalized,cname);
-
-   return FindElementImpl(normalized.c_str(), insert);
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Returns the ID of a class.
 
 Version_t TClassTable::GetID(const char *cname)
 {
    LockAndNormalize guard(cname);
 
-   TClassRec *r = FindElementImpl(guard.GetNormalizedName().c_str(), kFALSE);
+   TClassRec *r = FindElement(guard.GetNormalizedName().c_str(), kFALSE);
    if (r)
       return r->fId;
    return -1;
@@ -623,7 +603,7 @@ Int_t TClassTable::GetPragmaBits(const char *cname)
 {
    LockAndNormalize guard(cname);
 
-   TClassRec *r = FindElementImpl(guard.GetNormalizedName().c_str(), kFALSE);
+   TClassRec *r = FindElement(guard.GetNormalizedName().c_str(), kFALSE);
    if (r)
       return r->fBits;
    return 0;
@@ -641,7 +621,7 @@ DictFuncPtr_t TClassTable::GetDict(const char *cname)
    }
    LockAndNormalize guard(cname);
 
-   TClassRec *r = FindElementImpl(guard.GetNormalizedName().c_str(), kFALSE);
+   TClassRec *r = FindElement(guard.GetNormalizedName().c_str(), kFALSE);
    if (r)
       return r->fDict;
    return nullptr;
@@ -685,7 +665,7 @@ DictFuncPtr_t TClassTable::GetDictNorm(const char *cname)
       fgIdMap->Print();
    }
 
-   TClassRec *r = FindElementImpl(cname, kFALSE);
+   TClassRec *r = FindElement(cname, kFALSE);
    if (r)
       return r->fDict;
    return nullptr;
@@ -711,7 +691,7 @@ TProtoClass *TClassTable::GetProto(const char *cname)
 
    LockAndNormalize guard(cname);
 
-   TClassRec *r = FindElementImpl(guard.GetNormalizedName().c_str(), kFALSE);
+   TClassRec *r = FindElement(guard.GetNormalizedName().c_str(), kFALSE);
    if (r)
       return r->fProto;
    return nullptr;
@@ -736,7 +716,7 @@ TProtoClass *TClassTable::GetProtoNorm(const char *cname)
       fgIdMap->Print();
    }
 
-   TClassRec *r = FindElementImpl(cname, kFALSE);
+   TClassRec *r = FindElement(cname, kFALSE);
    if (r)
       return r->fProto;
    return nullptr;
@@ -897,7 +877,7 @@ void ROOT::ResetClassVersion(TClass *cl, const char *cname, Short_t newid)
 
    if (cname && cname != (void*)-1 && TClassTable::CheckClassTableInit()) {
       TClassTable::LockAndNormalize guard(cname);
-      TClassRec *r = TClassTable::FindElementImpl(guard.GetNormalizedName().c_str(), kFALSE);
+      TClassRec *r = TClassTable::FindElement(guard.GetNormalizedName().c_str(), kFALSE);
       if (r)
          r->fId = newid;
    }
