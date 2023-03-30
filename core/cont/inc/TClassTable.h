@@ -56,8 +56,7 @@ private:
 
    TClassTable();
 
-   static ROOT::TClassRec   *FindElementImpl(const char *cname, Bool_t insert);
-   static ROOT::TClassRec   *FindElement(const char *cname, Bool_t insert=kFALSE);
+   static ROOT::TClassRec   *FindElement(const char *cname, Bool_t insert);
    static void         SortTable();
 
    static Bool_t CheckClassTableInit();
