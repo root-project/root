@@ -411,8 +411,8 @@ async function createRender3D(width, height, render3d, args) {
       // try to use WebGL inside node.js - need to create headless context
       promise = import('canvas').then(node_canvas => {
          args.canvas = node_canvas.default.createCanvas(width, height);
-         args.canvas.addEventListener = function() { }; // dummy
-         args.canvas.removeEventListener = function() { }; // dummy
+         args.canvas.addEventListener = () => {}; // dummy
+         args.canvas.removeEventListener = () => {}; // dummy
          args.canvas.style = {};
          return import('gl');
       }).then(node_gl => {

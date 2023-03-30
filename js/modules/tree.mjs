@@ -939,7 +939,7 @@ class TDrawSelector extends TSelector {
    }
 
    /** @summary Show progress */
-   ShowProgress(/*value*/) { }
+   ShowProgress(/*value*/) {}
 
    /** @summary Get bins for bits histogram */
    getBitsBins(nbits, res) {

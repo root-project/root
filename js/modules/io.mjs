@@ -1258,7 +1258,7 @@ function createMemberStreamer(element, file) {
       default:
          console.error(`fail to provide function for ${element.fName} (${element.fTypeName})  typ = ${element.fType}`);
 
-         member.func = function(/*buf, obj*/) { };  // do nothing, fix in the future
+         member.func = function(/*buf, obj*/) {};  // do nothing, fix in the future
    }
 
    return member;
@@ -2618,7 +2618,7 @@ class TDirectory {
       let bestkey = null;
       for (let i = 0; i < this.fKeys.length; ++i) {
          const key = this.fKeys[i];
-         if (!key || (key.fName!==keyname)) continue;
+         if (!key || (key.fName !== keyname)) continue;
          if (key.fCycle == cycle) { bestkey = key; break; }
          if ((cycle < 0) && (!bestkey || (key.fCycle > bestkey.fCycle))) bestkey = key;
       }
@@ -2791,7 +2791,7 @@ class TFile {
          if (file.fUseStampPar) fullurl += ((fullurl.indexOf('?') < 0) ? '?' : '&') + file.fUseStampPar;
 
          for (let n = first; n < last; n += 2) {
-            ranges += (n > first ? ',' : '=') + (place[n] + '-' + (place[n] + place[n + 1] - 1));
+            ranges += (n > first ? ',' : '=') + `${place[n]}-${place[n]+place[n+1]-1}`;
             totalsz += place[n + 1]; // accumulated total size
          }
          if (last - first > 2)
@@ -2804,7 +2804,7 @@ class TFile {
                xhr.expected_size = Math.max(Math.round(1.1 * totalsz), totalsz + 200); // 200 if offset for the potential gzip
             }
 
-            if (progress_callback && isFunc(xhr.addEventListener)) {
+            if (isFunc(progress_callback) && isFunc(xhr.addEventListener)) {
                let sum1 = 0, sum2 = 0, sum_total = 0;
                for (let n = 1; n < place.length; n += 2) {
                   sum_total += place[n];
@@ -2814,7 +2814,7 @@ class TFile {
                if (!sum_total) sum_total = 1;
 
                let progress_offest = sum1 / sum_total, progress_this = (sum2 - sum1) / sum_total;
-               xhr.addEventListener('progress', function(oEvent) {
+               xhr.addEventListener('progress', oEvent => {
                   if (oEvent.lengthComputable)
                      progress_callback(progress_offest + progress_this * oEvent.loaded / oEvent.total);
                });

@@ -1441,7 +1441,7 @@ class TGeoPainter extends ObjectPainter {
                   if (!name) name = itemname;
                   hdr = name;
                } else if (obj.stack) {
-                  name = this._clones.resolveStack(obj.stack).name;
+                  name = this._clones.getStackName(obj.stack);
                   itemname = this.getStackFullName(obj.stack);
                   hdr = this.getItemName();
                   if (name.indexOf('Nodes/') === 0)
@@ -1813,7 +1813,7 @@ class TGeoPainter extends ObjectPainter {
             this.activateInBrowser(names);
          }
 
-         if (!resolve || !resolve.obj) return tooltip;
+         if (!resolve?.obj) return tooltip;
 
          let lines = provideObjectInfo(resolve.obj);
          lines.unshift(tooltip);
@@ -2766,7 +2766,7 @@ class TGeoPainter extends ObjectPainter {
    }
 
    /** @summary focus camera on speicifed position */
-   focusCamera( focus, autoClip ) {
+   focusCamera(focus, autoClip) {
 
       if (this.ctrl.project || this.ctrl.ortho_camera)
          return this.adjustCameraPosition();
@@ -5291,6 +5291,7 @@ function build(obj, opt) {
    clones.buildShapes(shapes, opt.numfaces);
 
    let toplevel = new Object3D();
+   toplevel.clones = clones; // keep reference on JSROOT data
 
    for (let n = 0; n < visibles.length; ++n) {
       let entry = visibles[n];
@@ -5330,6 +5331,7 @@ function build(obj, opt) {
       }
 
       mesh.name = clones.getNodeName(entry.nodeid);
+      mesh.stack = entry.stack;
 
       obj3d.add(mesh);
 

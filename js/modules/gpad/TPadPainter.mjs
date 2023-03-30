@@ -98,17 +98,16 @@ let PadButtonsHandler = {
           x = group.property('leftside') ? getButtonSize(this, 1.25) : 0, y = 0;
 
       if (this._fast_drawing) {
-         ctrl = ToolbarIcons.createSVG(group, ToolbarIcons.circle, getButtonSize(this), 'enlargePad');
-         ctrl.attr('name', 'Enlarge').attr('x', 0).attr('y', 0)
-             .on('click', evnt => this.clickPadButton('enlargePad', evnt));
+         ctrl = ToolbarIcons.createSVG(group, ToolbarIcons.circle, getButtonSize(this), 'enlargePad')
+                            .attr('name', 'Enlarge').attr('x', 0).attr('y', 0)
+                            .on('click', evnt => this.clickPadButton('enlargePad', evnt));
       } else {
-         ctrl = ToolbarIcons.createSVG(group, ToolbarIcons.rect, getButtonSize(this), 'Toggle tool buttons');
-
-         ctrl.attr('name', 'Toggle').attr('x', 0).attr('y', 0)
-             .property('buttons_state', (settings.ToolBar !== 'popup'))
-             .on('click', () => toggleButtonsVisibility(this, 'toggle'))
-             .on('mouseenter', () => toggleButtonsVisibility(this, 'enable'))
-             .on('mouseleave', () => toggleButtonsVisibility(this, 'disable'));
+         ctrl = ToolbarIcons.createSVG(group, ToolbarIcons.rect, getButtonSize(this), 'Toggle tool buttons')
+                            .attr('name', 'Toggle').attr('x', 0).attr('y', 0)
+                            .property('buttons_state', (settings.ToolBar !== 'popup'))
+                            .on('click', () => toggleButtonsVisibility(this, 'toggle'))
+                            .on('mouseenter', () => toggleButtonsVisibility(this, 'enable'))
+                            .on('mouseleave', () => toggleButtonsVisibility(this, 'disable'));
 
          for (let k = 0; k < this._buttons.length; ++k) {
             let item = this._buttons[k], btn = item.btn;
@@ -119,7 +118,7 @@ let PadButtonsHandler = {
                btn = ToolbarIcons.circle;
 
             let svg = ToolbarIcons.createSVG(group, btn, getButtonSize(this),
-                        item.tooltip + (iscan ? '' : (' on pad ' + this.this_pad_name)) + (item.keyname ? ' (keyshortcut ' + item.keyname + ')' : ''));
+                        item.tooltip + (iscan ? '' : (` on pad ${this.this_pad_name}`)) + (item.keyname ? ` (keyshortcut ${item.keyname})` : ''));
 
             if (group.property('vertical'))
                 svg.attr('x', y).attr('y', x);
@@ -796,15 +795,12 @@ class TPadPainter extends ObjectPainter {
      * @desc used to find title drawing
      * @private */
    findInPrimitives(objname, objtype) {
-      let match = obj => (obj.fName == objname) && (objtype ? (obj._typename == objtype) : true);
+      const match = obj => obj && (obj?.fName == objname) && (objtype ? (obj?._typename == objtype) : true);
 
-      if (this._snap_primitives) {
-         let snap = this._snap_primitives.find(snap => (snap.fKind === webSnapIds.kObject) ? match(snap.fSnapshot) : false);
-         if (snap) return snap.fSnapshot;
-      }
+      let snap = this._snap_primitives?.find(snap => match((snap.fKind === webSnapIds.kObject) ? snap.fSnapshot : null));
+      if (snap) return snap.fSnapshot;
 
-      let arr = this.pad?.fPrimitives?.arr;
-      return arr ? arr.find(match) : null;
+      return this.pad?.fPrimitives?.arr.find(match);
    }
 
    /** @summary Try to find painter for specified object

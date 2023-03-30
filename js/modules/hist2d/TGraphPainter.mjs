@@ -1,7 +1,7 @@
 import { gStyle, BIT, settings, create, createHistogram, isBatchMode, isFunc, isStr,
          clTPaveStats, clTCutG, clTF1, clTF2, kNoZoom, kNoStats } from '../core.mjs';
 import { select as d3_select } from '../d3.mjs';
-import { DrawOptions, buildSvgCurve, makeTranslate } from '../base/BasePainter.mjs';
+import { DrawOptions, buildSvgCurve, makeTranslate, addHighlightStyle } from '../base/BasePainter.mjs';
 import { ObjectPainter } from '../base/ObjectPainter.mjs';
 import { TH1Painter, setHistTitle, PadDrawOptions } from './TH1Painter.mjs';
 import { TAttLineHandler } from '../base/TAttLineHandler.mjs';
@@ -979,8 +979,9 @@ class TGraphPainter extends ObjectPainter {
 
       if (ttrect.empty())
          ttrect = this.draw_g.append('svg:rect')
-                             .attr('class', 'tooltip_bin h1bin')
-                             .style('pointer-events', 'none');
+                             .attr('class', 'tooltip_bin')
+                             .style('pointer-events', 'none')
+                             .call(addHighlightStyle);
 
       hint.changed = ttrect.property('current_bin') !== hint.d3bin;
 
@@ -1179,8 +1180,8 @@ class TGraphPainter extends ObjectPainter {
 
          if (hint.ismark) {
             ttbin.append('svg:rect')
-                 .attr('class','h1bin')
-                 .style('pointer-events','none')
+                 .style('pointer-events', 'none')
+                 .call(addHighlightStyle)
                  .style('opacity', '0.3')
                  .attr('x', Math.round(hint.x - hint.radius))
                  .attr('y', Math.round(hint.y - hint.radius))

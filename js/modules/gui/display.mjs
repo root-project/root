@@ -1465,7 +1465,7 @@ class BrowserLayout {
 
       // need to get touches events handling in drag
       if (browser.touches && !main.on('touchmove'))
-         main.on('touchmove', function() { });
+         main.on('touchmove', () => {});
 
       if (!height || isStr(height)) height = this.last_hsepar_height || 20;
 
@@ -1768,7 +1768,7 @@ class BrowserLayout {
 
         // need to get touches events handling in drag
         if (browser.touches && !main.on('touchmove'))
-           main.on('touchmove', function() { });
+           main.on('touchmove', () => {});
 
         this.adjustSeparators(250, null, true, true);
      }

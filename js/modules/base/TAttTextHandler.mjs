@@ -2,7 +2,7 @@ import { getColor } from './colors.mjs';
 
 
 /**
-  * @summary Handle for line attributes
+  * @summary Handle for text attributes
   * @private
   */
 
@@ -101,19 +101,21 @@ class TAttTextHandler {
 
    /** @summary Returns alternating size - which defined by sz1 variable */
    getAltSize(sz1, h) {
-      if (!sz1) sz1 = this.size ;
+      if (!sz1) sz1 = this.size;
       return Math.round(sz1 >= 1 ? sz1 : sz1 * h);
    }
+
+   /** @summary Get font index - without precision */
+   getGedFont() { return Math.floor(this.font/10); }
 
    /** @summary Change text font from GED */
    setGedFont(value) {
       let v = parseInt(value);
       if ((v > 0) && (v < 17))
-         this.font = v*10 + (this.font % 10);
+         this.change(v*10 + (this.font % 10));
       return this.font;
    }
 
 } // class TAttTextHandler
-
 
 export { TAttTextHandler };

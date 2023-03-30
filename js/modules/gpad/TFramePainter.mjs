@@ -1,9 +1,9 @@
 import { gStyle, settings, isBatchMode, isFunc, isStr, browser, clTAxis, kNoZoom } from '../core.mjs';
 import { select as d3_select, pointer as d3_pointer, pointers as d3_pointers, drag as d3_drag } from '../d3.mjs';
+import { getElementRect, getAbsPosInCanvas, makeTranslate, addHighlightStyle } from '../base/BasePainter.mjs';
 import { getActivePad, ObjectPainter, EAxisBits } from '../base/ObjectPainter.mjs';
 import { getSvgLineStyle } from '../base/TAttLineHandler.mjs';
 import { TAxisPainter } from './TAxisPainter.mjs';
-import { getElementRect, getAbsPosInCanvas, makeTranslate } from '../base/BasePainter.mjs';
 import { FontHandler } from '../base/FontHandler.mjs';
 import { createMenu, closeMenu } from '../gui/menu.mjs';
 import { detectRightButton, injectStyle } from '../gui/utils.mjs';
@@ -115,13 +115,6 @@ function addDragHandler(_painter, arg) {
       return change_size || change_pos;
    };
 
-   // add interactive styles when frame painter not there
-   if (_painter) {
-      let fp = _painter.getFramePainter();
-      if (!fp || fp.mode3d)
-         injectFrameStyle(_painter.draw_g);
-   }
-
    let drag_move = d3_drag().subject(Object);
 
    drag_move
@@ -149,11 +142,11 @@ function addDragHandler(_painter, arg) {
          drag_painter = painter;
          drag_kind = 'move';
          drag_rect = d3_select(painter.draw_g.node().parentNode).append('path')
-            .classed('zoom', true)
             .attr('d', `M${handle.acc_x1},${handle.acc_y1}${handle.path}`)
             .style('cursor', 'move')
             .style('pointer-events', 'none') // let forward double click to underlying elements
-            .property('drag_handle', handle);
+            .property('drag_handle', handle)
+            .call(addHighlightStyle, true);
 
       }).on('drag', function(evnt) {
          if (!is_dragging(painter, 'move')) return;
@@ -202,9 +195,8 @@ function addDragHandler(_painter, arg) {
 
          setPainterTooltipEnabled(painter, false); // disable tooltip
 
-         let pad_rect = pp.getPadRect();
-
-         let handle = {
+         let pad_rect = pp.getPadRect(),
+             handle = {
             x: arg.x, y: arg.y, width: arg.width, height: arg.height,
             acc_x1: arg.x, acc_y1: arg.y,
             acc_x2: arg.x + arg.width, acc_y2: arg.y + arg.height,
@@ -215,13 +207,13 @@ function addDragHandler(_painter, arg) {
          drag_kind = 'resize';
          drag_rect = d3_select(painter.draw_g.node().parentNode)
             .append('rect')
-            .classed('zoom', true)
             .style('cursor', d3_select(this).style('cursor'))
             .attr('x', handle.acc_x1)
             .attr('y', handle.acc_y1)
             .attr('width', handle.acc_x2 - handle.acc_x1)
             .attr('height', handle.acc_y2 - handle.acc_y1)
-            .property('drag_handle', handle);
+            .property('drag_handle', handle)
+            .call(addHighlightStyle, true);
 
       }).on('drag', function(evnt) {
          if (!is_dragging(painter, 'resize')) return;
@@ -605,14 +597,6 @@ const TooltipHandler = {
 } // TooltipHandler
 
 
-function injectFrameStyle(draw_g) {
-   injectStyle(`
-.jsroot rect.h1bin { stroke: #4572A7; fill: #4572A7; opacity: 0; }
-.jsroot rect.zoom { stroke: steelblue; fill-opacity: 0.1; }
-.jsroot path.zoom { stroke: steelblue; fill-opacity: 0.1; }
-.jsroot svg:not(:root) { overflow: hidden; }`, draw_g.node());
-}
-
 /** @summary Set of frame interactivity methods
   * @private */
 
@@ -626,8 +610,6 @@ const FrameInteractive = {
       if (!this._frame_rotate && !this._frame_fixpos)
          addDragHandler(this, { obj: this, x: this._frame_x, y: this._frame_y, width: this.getFrameWidth(), height: this.getFrameHeight(),
                                 only_resize: true, minwidth: 20, minheight: 20, redraw: () => this.sizeChanged() });
-
-      injectFrameStyle(this.draw_g);
 
       let main_svg = this.draw_g.select('.main_layer');
 

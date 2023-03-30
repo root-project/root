@@ -1,8 +1,9 @@
 import { gStyle, settings, constants, isBatchMode } from '../core.mjs';
 import { rgb as d3_rgb } from '../d3.mjs';
-import { floatToString, DrawOptions, buildSvgCurve } from '../base/BasePainter.mjs';
+import { floatToString, DrawOptions, buildSvgCurve, addHighlightStyle } from '../base/BasePainter.mjs';
 import { RHistPainter } from './RHistPainter.mjs';
 import { ensureRCanvas } from '../gpad/RCanvasPainter.mjs';
+
 
 /**
  * @summary Painter for RH1 classes
@@ -805,8 +806,9 @@ class RH1Painter extends RHistPainter {
 
          if (ttrect.empty())
             ttrect = this.draw_g.append('svg:rect')
-                                .attr('class','tooltip_bin h1bin')
-                                .style('pointer-events','none');
+                                .attr('class','tooltip_bin')
+                                .style('pointer-events', 'none')
+                                .call(addHighlightStyle);
 
          res.changed = ttrect.property('current_bin') !== findbin;
 
