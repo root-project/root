@@ -89,7 +89,12 @@ ROOT::Experimental::RNTupleInspector::Create(std::string_view ntupleName, std::s
       return R__FAIL("cannot read RNTuple " + std::string(ntupleName) + " from " + std::string(sourceFileName));
    }
 
-   return ROOT::Experimental::RNTupleInspector::Create(ntuple.get());
+   auto inspector = std::unique_ptr<RNTupleInspector>(new RNTupleInspector(ntuple->MakePageSource()));
+   inspector->fSourceFile = std::move(sourceFile);
+
+   inspector->CollectSizeData();
+
+   return inspector;
 }
 
 std::string ROOT::Experimental::RNTupleInspector::GetName()
