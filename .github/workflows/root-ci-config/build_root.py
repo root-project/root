@@ -134,6 +134,8 @@ def main():
 
         shell_log = run_ctest(shell_log, extra_ctest_flags)
 
+    # Build artifacts should only be uploaded for full builds, and only for "official" branches
+    # (master, v?-??-??-patches), i.e. not for pull_request
     if not pull_request and not args.incremenetal:
         archive_and_upload(yyyy_mm_dd, obj_prefix)
 
