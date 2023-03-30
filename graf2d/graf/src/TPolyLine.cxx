@@ -180,6 +180,7 @@ void TPolyLine::Copy(TObject &obj) const
 Int_t TPolyLine::DistancetoPrimitive(Int_t px, Int_t py)
 {
    const Int_t big = 9999;
+   if (!gPad) return big;
    const Int_t kMaxDiff = 10;
 
    // check if point is near one of the points

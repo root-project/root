@@ -985,6 +985,7 @@ void TGaxis::ImportAxisAttributes(TAxis *axis)
 
 void TGaxis::Paint(Option_t *)
 {
+   if (!gPad) return;
 
    Double_t wmin = fWmin;
    Double_t wmax = fWmax;
@@ -1008,6 +1009,7 @@ void TGaxis::PaintAxis(Double_t xmin, Double_t ymin, Double_t xmax, Double_t yma
                        Double_t &wmin, Double_t &wmax, Int_t &ndiv,   Option_t *chopt,
                        Double_t gridlength, Bool_t drawGridOnly)
 {
+   if (!gPad) return;
 
    const char *where = "PaintAxis";
 
