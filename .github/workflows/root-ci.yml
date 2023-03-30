@@ -126,7 +126,7 @@ jobs:
         run: ".github/workflows/root-ci-config/build_root.py
                     --buildtype      ${{ matrix.config }}
                     --platform       ${{ matrix.platform }}
-                    --incremental    true
+                    --incremental    false
                     --base_ref       ${{ github.ref_name }}
                     --repository     ${{ github.server_url }}/${{ github.repository }}"
 
@@ -208,7 +208,7 @@ jobs:
               python .github/workflows/root-ci-config/build_root.py
                     --buildtype      ${{ matrix.config }}
                     --platform       windows10
-                    --incremental    true
+                    --incremental    false
                     --base_ref       ${{ github.ref_name }}
                     --repository     ${{ github.server_url }}/${{ github.repository }}
                     --architecture   ${{ matrix.target_arch }}  "
@@ -348,7 +348,7 @@ jobs:
         run: ".github/workflows/root-ci-config/build_root.py
                     --buildtype      ${{ matrix.config }}
                     --platform       ${{ matrix.image }}
-                    --incremental    true
+                    --incremental    false
                     --base_ref       ${{ github.ref_name }}
                     --repository     ${{ github.server_url }}/${{ github.repository }}
               "
