@@ -136,7 +136,7 @@ def main():
 
     # Build artifacts should only be uploaded for full builds, and only for "official" branches
     # (master, v?-??-??-patches), i.e. not for pull_request
-    if not pull_request and not args.incremenetal:
+    if not pull_request and not args.incremental:
         archive_and_upload(yyyy_mm_dd, obj_prefix)
 
     print_shell_log(shell_log)
