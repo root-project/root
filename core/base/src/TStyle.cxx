@@ -609,6 +609,7 @@ void TStyle::Copy(TObject &obj) const
    ((TStyle&)obj).fOptLogy          = fOptLogy;
    ((TStyle&)obj).fOptLogz          = fOptLogz;
    ((TStyle&)obj).fOptDate          = fOptDate;
+   ((TStyle&)obj).fOptFile          = fOptFile;
    ((TStyle&)obj).fOptFit           = fOptFit;
    ((TStyle&)obj).fOptStat          = fOptStat;
    ((TStyle&)obj).fOptTitle         = fOptTitle;
@@ -662,6 +663,16 @@ void TStyle::Copy(TObject &obj) const
    ((TStyle&)obj).fColorModelPS   = fColorModelPS;
    ((TStyle&)obj).fTimeOffset     = fTimeOffset;
    ((TStyle&)obj).fImageScaling   = fImageScaling;
+
+   ((TStyle&)obj).fCandleWhiskerRange = fCandleWhiskerRange;
+   ((TStyle&)obj).fCandleBoxRange     = fCandleBoxRange;
+   ((TStyle&)obj).fCandleScaled       = fCandleScaled;
+   ((TStyle&)obj).fViolinScaled       = fViolinScaled;
+   ((TStyle&)obj).fXAxisExpXOffset    = fXAxisExpXOffset;
+   ((TStyle&)obj).fXAxisExpYOffset    = fXAxisExpYOffset;
+   ((TStyle&)obj).fYAxisExpXOffset    = fYAxisExpXOffset;
+   ((TStyle&)obj).fYAxisExpYOffset    = fYAxisExpYOffset;
+   ((TStyle&)obj).fAxisMaxDigits      = fAxisMaxDigits;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
