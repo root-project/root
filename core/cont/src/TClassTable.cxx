@@ -60,24 +60,30 @@ static std::mutex &GetClassTableMutex()
    return sMutex;
 }
 
-class TClassTable::LockAndNormalize {
+// RAII to first normalize the input classname (operation that
+// both requires the ROOT global lock and might call `TClassTable
+// resursively) and then acquire a lock on `TClassTable` local
+// mutex.
+class TClassTable::NormalizeThenLock {
    std::string fNormalizedName;
 
 public:
 
-   LockAndNormalize(const char *cname)
+   NormalizeThenLock(const char *cname)
    {
       if (!TClassTable::CheckClassTableInit())
          return;
 
       // The recorded name is normalized, let's make sure we convert the
-      // input accordingly.
+      // input accordingly.  This operation will take the ROOT global lock
+      // and might call recursively `TClassTable`, so this must be done
+      // outside of the `TClassTable` critical section.
       TClassEdit::GetNormalizedName(fNormalizedName, cname);
 
       GetClassTableMutex().lock();
    }
 
-   ~LockAndNormalize() {
+   ~NormalizeThenLock() {
       GetClassTableMutex().unlock();
    }
 
@@ -588,7 +594,7 @@ TClassRec *TClassTable::FindElement(const char *cname, Bool_t insert)
 
 Version_t TClassTable::GetID(const char *cname)
 {
-   LockAndNormalize guard(cname);
+   NormalizeThenLock guard(cname);
 
    TClassRec *r = FindElement(guard.GetNormalizedName().c_str(), kFALSE);
    if (r)
@@ -601,7 +607,7 @@ Version_t TClassTable::GetID(const char *cname)
 
 Int_t TClassTable::GetPragmaBits(const char *cname)
 {
-   LockAndNormalize guard(cname);
+   NormalizeThenLock guard(cname);
 
    TClassRec *r = FindElement(guard.GetNormalizedName().c_str(), kFALSE);
    if (r)
@@ -619,7 +625,7 @@ DictFuncPtr_t TClassTable::GetDict(const char *cname)
       ::Info("GetDict", "searches for %s", cname);
       fgIdMap->Print();
    }
-   LockAndNormalize guard(cname);
+   NormalizeThenLock guard(cname);
 
    TClassRec *r = FindElement(guard.GetNormalizedName().c_str(), kFALSE);
    if (r)
@@ -689,7 +695,7 @@ TProtoClass *TClassTable::GetProto(const char *cname)
       fgIdMap->Print();
    }
 
-   LockAndNormalize guard(cname);
+   NormalizeThenLock guard(cname);
 
    TClassRec *r = FindElement(guard.GetNormalizedName().c_str(), kFALSE);
    if (r)
@@ -876,7 +882,7 @@ void ROOT::ResetClassVersion(TClass *cl, const char *cname, Short_t newid)
 {
 
    if (cname && cname != (void*)-1 && TClassTable::CheckClassTableInit()) {
-      TClassTable::LockAndNormalize guard(cname);
+      TClassTable::NormalizeThenLock guard(cname);
       TClassRec *r = TClassTable::FindElement(guard.GetNormalizedName().c_str(), kFALSE);
       if (r)
          r->fId = newid;

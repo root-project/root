@@ -43,7 +43,7 @@ friend  class TROOT;
 private:
    typedef ROOT::TMapTypeToClassRec IdMap_t;
    using atomic_uint = std::atomic<UInt_t>;
-   class LockAndNormalize;
+   class NormalizeThenLock;
 
    static ROOT::TClassAlt **fgAlternate;
    static ROOT::TClassRec **fgTable;
