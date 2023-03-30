@@ -48,15 +48,16 @@ specific value. Examples:
 
 #include <sstream>
 
-
 ClassImp(RooStats::ModelConfig);
 
 namespace {
 
-void removeConstantParameters(RooAbsCollection& coll){
+void removeConstantParameters(RooAbsCollection &coll)
+{
    RooArgSet constSet;
    for (auto const *myarg : static_range_cast<RooRealVar *>(coll)) {
-      if(myarg->isConstant()) constSet.add(*myarg);
+      if (myarg->isConstant())
+         constSet.add(*myarg);
    }
    coll.remove(constSet);
 }
@@ -80,22 +81,23 @@ namespace RooStats {
 /// We use nullptr to mean not set, so we don't want to fill
 /// with empty RooArgSets.
 
-void ModelConfig::GuessObsAndNuisance(const RooAbsData& data, bool printModelConfig) {
+void ModelConfig::GuessObsAndNuisance(const RooAbsData &data, bool printModelConfig)
+{
 
    // observables
-  if (!GetObservables()) {
-     const RooArgSet * obs = GetPdf()->getObservables(data);
-     SetObservables(*obs);
-     delete obs;
+   if (!GetObservables()) {
+      const RooArgSet *obs = GetPdf()->getObservables(data);
+      SetObservables(*obs);
+      delete obs;
    }
-  // global observables
+   // global observables
    if (!GetGlobalObservables()) {
       RooArgSet co(*GetObservables());
-      const RooArgSet * obs = GetPdf()->getObservables(data);
+      const RooArgSet *obs = GetPdf()->getObservables(data);
       co.remove(*obs);
       removeConstantParameters(co);
-      if(co.getSize()>0)
-   SetGlobalObservables(co);
+      if (co.getSize() > 0)
+         SetGlobalObservables(co);
 
       // TODO BUG This does not work as observables with the same name are already in the workspace.
       /*
@@ -111,21 +113,21 @@ void ModelConfig::GuessObsAndNuisance(const RooAbsData& data, bool printModelCon
    //      SetParametersOfInterest(RooArgSet());
    //   }
    if (!GetNuisanceParameters()) {
-      const RooArgSet * params = GetPdf()->getParameters(data);
+      const RooArgSet *params = GetPdf()->getParameters(data);
       RooArgSet p(*params);
       p.remove(*GetParametersOfInterest());
       removeConstantParameters(p);
-      if(p.getSize()>0)
-   SetNuisanceParameters(p);
+      if (p.getSize() > 0)
+         SetNuisanceParameters(p);
       delete params;
    }
 
    // print Modelconfig as an info message
 
    if (printModelConfig) {
-     std::ostream& oldstream = RooPrintable::defaultPrintStream(&ccoutI(InputArguments));
-     Print();
-     RooPrintable::defaultPrintStream(&oldstream);
+      std::ostream &oldstream = RooPrintable::defaultPrintStream(&ccoutI(InputArguments));
+      Print();
+      RooPrintable::defaultPrintStream(&oldstream);
    }
 }
 
@@ -133,55 +135,55 @@ void ModelConfig::GuessObsAndNuisance(const RooAbsData& data, bool printModelCon
 /// print contents of Model on the default print stream
 /// It can be changed using RooPrintable
 
-void ModelConfig::Print(Option_t*) const {
-   ostream& os = RooPrintable::defaultPrintStream();
+void ModelConfig::Print(Option_t *) const
+{
+   ostream &os = RooPrintable::defaultPrintStream();
 
    os << endl << "=== Using the following for " << GetName() << " ===" << endl;
 
-
    // args
-   if(GetObservables()){
+   if (GetObservables()) {
       os << "Observables:             ";
       GetObservables()->Print("");
    }
-   if(GetParametersOfInterest()) {
+   if (GetParametersOfInterest()) {
       os << "Parameters of Interest:  ";
       GetParametersOfInterest()->Print("");
    }
-   if(GetNuisanceParameters()){
+   if (GetNuisanceParameters()) {
       os << "Nuisance Parameters:     ";
       GetNuisanceParameters()->Print("");
    }
-   if(GetGlobalObservables()){
+   if (GetGlobalObservables()) {
       os << "Global Observables:      ";
       GetGlobalObservables()->Print("");
    }
-   if(GetConstraintParameters()){
+   if (GetConstraintParameters()) {
       os << "Constraint Parameters:   ";
       GetConstraintParameters()->Print("");
    }
-   if(GetConditionalObservables()){
+   if (GetConditionalObservables()) {
       os << "Conditional Observables: ";
       GetConditionalObservables()->Print("");
    }
-   if(GetProtoData()){
+   if (GetProtoData()) {
       os << "Proto Data:              ";
       GetProtoData()->Print("");
    }
 
    // pdfs
-   if(GetPdf()) {
+   if (GetPdf()) {
       os << "PDF:                     ";
       GetPdf()->Print("");
    }
-   if(GetPriorPdf()) {
+   if (GetPriorPdf()) {
       os << "Prior PDF:               ";
       GetPriorPdf()->Print("");
    }
 
    // snapshot
-   const RooArgSet * snapshot = GetSnapshot();
-   if(snapshot) {
+   const RooArgSet *snapshot = GetSnapshot();
+   if (snapshot) {
       os << "Snapshot:                " << endl;
       snapshot->Print("v");
       delete snapshot;
@@ -194,25 +196,26 @@ void ModelConfig::Print(Option_t*) const {
 /// If a workspace already exists in this ModelConfig, RooWorkspace::merge(ws) will be called
 /// on the existing workspace.
 
-void ModelConfig::SetWS(RooWorkspace & ws) {
-   if( !fRefWS.GetObject() ) {
+void ModelConfig::SetWS(RooWorkspace &ws)
+{
+   if (!fRefWS.GetObject()) {
       fRefWS = &ws;
       fWSName = ws.GetName();
-   }
-   else{
+   } else {
       RooFit::MsgLevel level = RooMsgService::instance().globalKillBelow();
-      RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR) ;
+      RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR);
       GetWS()->merge(ws);
-      RooMsgService::instance().setGlobalKillBelow(level) ;
+      RooMsgService::instance().setGlobalKillBelow(level);
    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// get from TRef
 
-RooWorkspace * ModelConfig::GetWS() const {
-   RooWorkspace *ws = dynamic_cast<RooWorkspace *>(fRefWS.GetObject() );
-   if(!ws) {
+RooWorkspace *ModelConfig::GetWS() const
+{
+   RooWorkspace *ws = dynamic_cast<RooWorkspace *>(fRefWS.GetObject());
+   if (!ws) {
       coutE(ObjectHandling) << "workspace not set" << endl;
       return nullptr;
    }
@@ -223,15 +226,19 @@ RooWorkspace * ModelConfig::GetWS() const {
 /// save snapshot in the workspace
 /// and use values passed with the set
 
-void ModelConfig::SetSnapshot(const RooArgSet& set) {
-   if ( !GetWS() ) return;
+void ModelConfig::SetSnapshot(const RooArgSet &set)
+{
+   if (!GetWS())
+      return;
 
    fSnapshotName = GetName();
-   if (fSnapshotName.size()  > 0) fSnapshotName += "_";
+   if (fSnapshotName.size() > 0)
+      fSnapshotName += "_";
    fSnapshotName += set.GetName();
-   if (fSnapshotName.size()  > 0) fSnapshotName += "_";
+   if (fSnapshotName.size() > 0)
+      fSnapshotName += "_";
    fSnapshotName += "snapshot";
-   GetWS()->saveSnapshot(fSnapshotName.c_str(), set, true);  // import also the given parameter values
+   GetWS()->saveSnapshot(fSnapshotName.c_str(), set, true); // import also the given parameter values
    DefineSetInWS(fSnapshotName.c_str(), set);
 }
 
@@ -239,21 +246,27 @@ void ModelConfig::SetSnapshot(const RooArgSet& set) {
 /// Load the snapshot from ws and return the corresponding set with the snapshot values.
 /// User must delete returned RooArgSet.
 
-const RooArgSet * ModelConfig::GetSnapshot() const{
-   if ( !GetWS() ) return 0;
-   if (!fSnapshotName.length()) return 0;
+const RooArgSet *ModelConfig::GetSnapshot() const
+{
+   if (!GetWS())
+      return 0;
+   if (!fSnapshotName.length())
+      return 0;
    // calling loadSnapshot will also copy the current parameter values in the workspaces
    // since we do not want to change the model parameters - we restore the previous ones
-   if (! GetWS()->set(fSnapshotName.c_str() ) )return 0;
-   RooArgSet snapshotVars(*GetWS()->set(fSnapshotName.c_str() ) );
-   if (snapshotVars.empty()) return 0;
+   if (!GetWS()->set(fSnapshotName.c_str()))
+      return 0;
+   RooArgSet snapshotVars(*GetWS()->set(fSnapshotName.c_str()));
+   if (snapshotVars.empty())
+      return 0;
    // make my snapshot which will contain a copy of the snapshot variables
    RooArgSet tempSnapshot;
    snapshotVars.snapshot(tempSnapshot);
    // load snapshot value from the workspace
-   if (!(GetWS()->loadSnapshot(fSnapshotName.c_str())) ) return 0;
+   if (!(GetWS()->loadSnapshot(fSnapshotName.c_str())))
+      return 0;
    // by doing this snapshotVars will have the snapshot values - make the snapshot to return
-   const RooArgSet * modelSnapshot = dynamic_cast<const RooArgSet*>( snapshotVars.snapshot());
+   const RooArgSet *modelSnapshot = dynamic_cast<const RooArgSet *>(snapshotVars.snapshot());
    // restore now the variables of snapshot in ws to their original values
    // need to const cast since assign is not const (but in reality in just assign values and does not change the set)
    // and anyway the set is const
@@ -264,20 +277,24 @@ const RooArgSet * ModelConfig::GetSnapshot() const{
 ////////////////////////////////////////////////////////////////////////////////
 /// load the snapshot from ws if it exists
 
-void ModelConfig::LoadSnapshot() const{
-   if ( !GetWS() ) return;
+void ModelConfig::LoadSnapshot() const
+{
+   if (!GetWS())
+      return;
    GetWS()->loadSnapshot(fSnapshotName.c_str());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// helper functions to avoid code duplication
 
-void ModelConfig::DefineSetInWS(const char* name, const RooArgSet& set) {
-   if ( !GetWS() ) return;
+void ModelConfig::DefineSetInWS(const char *name, const RooArgSet &set)
+{
+   if (!GetWS())
+      return;
 
-   const RooArgSet * prevSet = GetWS()->set(name);
-   if (  prevSet ) {
-      //be careful not to remove passed set in case it is the same updated
+   const RooArgSet *prevSet = GetWS()->set(name);
+   if (prevSet) {
+      // be careful not to remove passed set in case it is the same updated
       if (prevSet != &set)
          GetWS()->removeSet(name);
    }
@@ -285,58 +302,61 @@ void ModelConfig::DefineSetInWS(const char* name, const RooArgSet& set) {
    // suppress warning when we re-define a previously defined set (when set == prevSet )
    // and set is not removed in that case
    RooFit::MsgLevel level = RooMsgService::instance().globalKillBelow();
-   RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR) ;
+   RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR);
 
+   GetWS()->defineSet(name, set, true);
 
-   GetWS()->defineSet(name, set,true);
-
-   RooMsgService::instance().setGlobalKillBelow(level) ;
-
+   RooMsgService::instance().setGlobalKillBelow(level);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// internal function to import Pdf in WS
 
-void ModelConfig::ImportPdfInWS(const RooAbsPdf & pdf) {
-   if ( !GetWS() ) return;
+void ModelConfig::ImportPdfInWS(const RooAbsPdf &pdf)
+{
+   if (!GetWS())
+      return;
 
-   if (! GetWS()->pdf( pdf.GetName() ) ){
+   if (!GetWS()->pdf(pdf.GetName())) {
       RooFit::MsgLevel level = RooMsgService::instance().globalKillBelow();
-      RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR) ;
+      RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR);
       GetWS()->import(pdf, RooFit::RecycleConflictNodes());
-      RooMsgService::instance().setGlobalKillBelow(level) ;
+      RooMsgService::instance().setGlobalKillBelow(level);
    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// internal function to import data in WS
 
-void ModelConfig::ImportDataInWS(RooAbsData & data) {
-   if ( !GetWS() ) return;
+void ModelConfig::ImportDataInWS(RooAbsData &data)
+{
+   if (!GetWS())
+      return;
 
-   if (! GetWS()->data( data.GetName() ) ){
+   if (!GetWS()->data(data.GetName())) {
       RooFit::MsgLevel level = RooMsgService::instance().globalKillBelow();
-      RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR) ;
+      RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR);
       GetWS()->import(data);
-      RooMsgService::instance().setGlobalKillBelow(level) ;
+      RooMsgService::instance().setGlobalKillBelow(level);
    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool ModelConfig::SetHasOnlyParameters(const RooArgSet& set, const char* errorMsgPrefix) {
+bool ModelConfig::SetHasOnlyParameters(const RooArgSet &set, const char *errorMsgPrefix)
+{
 
-    RooArgSet nonparams ; 
-    for (auto const *arg : set) {
+   RooArgSet nonparams;
+   for (auto const *arg : set) {
       if (!arg->isFundamental()) {
-         nonparams.add(*arg) ;
+         nonparams.add(*arg);
       }
-    }
+   }
 
-    if (errorMsgPrefix && nonparams.getSize()>0) {
-      cout << errorMsgPrefix << " ERROR: specified set contains non-parameters: " << nonparams << endl ;
-    }
-    return (nonparams.empty()) ;
-  }
+   if (errorMsgPrefix && nonparams.getSize() > 0) {
+      cout << errorMsgPrefix << " ERROR: specified set contains non-parameters: " << nonparams << endl;
+   }
+   return (nonparams.empty());
+}
 
 } // end namespace RooStats
