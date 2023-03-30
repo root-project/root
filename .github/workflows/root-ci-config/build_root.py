@@ -134,7 +134,7 @@ def main():
 
         shell_log = run_ctest(shell_log, extra_ctest_flags)
 
-    if CONNECTION:
+    if not pull_request and not args.incremenetal:
         archive_and_upload(yyyy_mm_dd, obj_prefix)
 
     print_shell_log(shell_log)
