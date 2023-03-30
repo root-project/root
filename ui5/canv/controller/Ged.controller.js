@@ -155,16 +155,18 @@ sap.ui.define([
 
       setAxisModel(model) {
 
-         let obj, painter, is_gaxis = !this.currentPlace, axis_chopt = '', axis_ticksize = 0;
+         let obj, painter, is_gaxis = !this.currentPlace, axis_chopt = '', axis_ticksize = 0, color_title = '';
          if (is_gaxis) {
             painter = this.currentPainter;
             obj = painter.getObject();
             axis_chopt = obj.fChopt;
             axis_ticksize = obj.fTickSize;
+            color_title = this.currentPadPainter.getColor(obj.fTextColor);
          } else {
             obj = this.currentPainter.getObject(this.currentPlace);
             painter = this.getAxisHandle();
             axis_ticksize = obj.fTickLength;
+            color_title = this.currentPadPainter.getColor(obj.fTitleColor);
          }
 
          let data = {
@@ -177,7 +179,7 @@ sap.ui.define([
              color_label: this.currentPadPainter.getColor(obj.fLabelColor),
              center_label: obj.TestBit(this.getAxisBit('kCenterLabels')),
              vert_label: obj.TestBit(this.getAxisBit('kLabelsVert')),
-             color_title: this.currentPadPainter.getColor(obj.fTitleColor),
+             color_title,
              center_title: obj.TestBit(this.getAxisBit('kCenterTitle')),
              rotate_title: obj.TestBit(this.getAxisBit('kRotateTitle')),
          };
@@ -192,7 +194,8 @@ sap.ui.define([
              painter = this.currentPainter,
              kind = this.currentPlace,
              is_gaxis = !kind,
-             axis = painter.getObject(kind);
+             axis = painter.getObject(kind),
+             col;
 
          // while axis painter is temporary object, we should not try change it attributes
 
@@ -210,7 +213,7 @@ sap.ui.define([
                exec = `exec:SetTitle("${pars.value}")`;
                break;
             case 'axiscolor':
-               let col = this.currentPadPainter.addColor(pars.value);
+               col = this.currentPadPainter.addColor(pars.value);
                if (is_gaxis)
                   axis.fLineColor = col;
                else
@@ -236,7 +239,11 @@ sap.ui.define([
                exec = `exec:SetLabelSize(${pars.value})`;
                break;
             case 'color_title':
-               axis.fLabelColor = this.currentPadPainter.addColor(pars.value);
+               col = this.currentPadPainter.addColor(pars.value);
+               if (is_gaxis)
+                  axis.fTextColor = col;
+               else
+                  axis.fTitleColor = col;
                exec = this.getColorExec(painter, pars.value, 'SetTitleColor');
                break;
             case 'center_title':
@@ -262,7 +269,6 @@ sap.ui.define([
                break;
             case 'axis_chopt':
                axis.fChopt = pars.value;
-               console.log('axis chopt = ', axis.fChopt);
                exec = `exec:SetOption("${pars.value}")`;
                break;
          }
