@@ -15,8 +15,7 @@
 #include <RooProdPdf.h>
 #include <RooRealVar.h>
 #include <RooWorkspace.h>
-
-#include <RooStats/ModelConfig.h>
+#include <RooFit/ModelConfig.h>
 
 #include <TROOT.h>
 

@@ -103,7 +103,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooStats
     src/MCMCInterval.cxx
     src/MCMCIntervalPlot.cxx
     src/MetropolisHastings.cxx
-    src/ModelConfig.cxx
     src/NeymanConstruction.cxx
     src/NumberCountingPdfFactory.cxx
     src/NumberCountingUtils.cxx
