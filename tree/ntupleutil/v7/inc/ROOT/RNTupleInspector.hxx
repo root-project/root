@@ -55,6 +55,7 @@ std::cout << "The compression factor is " << std::fixed << std::setprecision(2)
 // clang-format on
 class RNTupleInspector {
 private:
+   std::unique_ptr<TFile> fSourceFile;
    std::unique_ptr<ROOT::Experimental::Detail::RPageSource> fPageSource;
    int fCompressionSettings;
    std::uint64_t fCompressedSize;
