@@ -62,7 +62,10 @@
 #include <iomanip>
 #include <numeric> // std::accumulate in MeanHelper
 
+#ifdef RH_CUDA
 #include "RHnCUDA.h"
+#endif
+
 #include <typeinfo>
 #include <type_traits>
 
@@ -375,7 +378,9 @@ inline constexpr bool has_getxaxis_v = has_getxaxis<T>::value;
 template <typename HIST = Hist_t>
 class R__CLING_PTRCHECK(off) FillHelper : public RActionImpl<FillHelper<HIST>> {
    std::vector<HIST *> fObjects;
+#ifdef RH_CUDA
    std::vector<RHnCUDA *> fCudaHist; // TODO: where to store this?
+#endif
 
    template <typename H = HIST, typename = decltype(std::declval<H>().Reset())>
    void ResetIfPossible(H *h)
@@ -489,6 +494,7 @@ public:
    FillHelper(FillHelper &&) = default;
    FillHelper(const FillHelper &) = delete;
 
+#ifdef RH_CUDA
    // Initialize fCudaHist
    inline void init_cuda(HIST *obj, int i) {
       if (getenv("CUDA_HIST")) { if constexpr(has_getxaxis_v<HIST>) {  // Avoid compilation errors for fObjects without GetXaxis()
@@ -566,6 +572,28 @@ public:
 
       fObjects[slot]->Fill(x...);
    }
+#else
+   FillHelper(const std::shared_ptr<HIST> &h, const unsigned int nSlots) : fObjects(nSlots, nullptr)
+   {
+      printf("no cuda???\n");
+      fObjects[0] = h.get();
+      // Initialize all other slots
+      for (unsigned int i = 1; i < nSlots; ++i) {
+         fObjects[i] = new HIST(*fObjects[0]);
+         UnsetDirectoryIfPossible(fObjects[i]);
+      }
+   }
+
+   void InitTask(TTreeReader *, unsigned int) {}
+
+   // no container arguments
+   template <typename... ValTypes, std::enable_if_t<!Disjunction<IsDataContainer<ValTypes>...>::value, int> = 0>
+   auto Exec(unsigned int slot, const ValTypes &...x) -> decltype(fObjects[slot]->Fill(x...), void())
+   {
+      fObjects[slot]->Fill(x...);
+   }
+#endif
+
 
    // at least one container argument
    template <typename... Xs, std::enable_if_t<Disjunction<IsDataContainer<Xs>...>::value, int> = 0>
@@ -606,6 +634,7 @@ public:
 
    void Finalize()
    {
+#ifdef RH_CUDA
       if (getenv("CUDA_HIST")) {
          Double_t stats[100];
 
@@ -631,6 +660,7 @@ public:
             printf("\n");
          }
       }
+#endif
 
       if (fObjects.size() == 1)
          return;

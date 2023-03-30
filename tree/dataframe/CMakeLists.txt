@@ -18,6 +18,10 @@ if(arrow)
   list(APPEND RDATAFRAME_EXTRA_INCLUDES -I${ARROW_INCLUDE_DIR})
 endif()
 
+if (cuda)
+  list(APPEND RDATAFRAME_EXTRA_DEPS CUDAHist)
+endif()
+
 if(sqlite)
   list(APPEND RDATAFRAME_EXTRA_HEADERS ROOT/RSqliteDS.hxx)
 endif()
@@ -30,10 +34,6 @@ endif()
 if (imt)
   list(APPEND RDATAFRAME_EXTRA_DEPS Imt)
 endif(imt)
-
-if(cuda)
-  list(APPEND RDATAFRAME_EXTRA_DEPS CUDAHist)
-endif()
 
 set (EXTRA_DICT_OPTS)
 if (runtime_cxxmodules AND WIN32)
@@ -147,6 +147,10 @@ if(arrow)
   target_sources(ROOTDataFrame PRIVATE src/RArrowDS.cxx)
   target_include_directories(ROOTDataFrame PRIVATE ${ARROW_INCLUDE_DIR})
   target_link_libraries(ROOTDataFrame PRIVATE ${ARROW_SHARED_LIB})
+endif()
+
+if (cuda)
+  target_compile_definitions(ROOTDataFrame PRIVATE RH_CUDA)
 endif()
 
 if(sqlite)
