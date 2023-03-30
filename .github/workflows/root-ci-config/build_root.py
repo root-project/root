@@ -148,7 +148,6 @@ def cleanup_previous_build(shell_log):
 
     if WINDOWS:
         # windows
-        prevComSpec = os.environ['COMSPEC']
         os.environ['COMSPEC'] = 'powershell.exe'
         result, shell_log = subprocess_with_log(f"""
             $ErrorActionPreference = 'Stop'
@@ -157,7 +156,6 @@ def cleanup_previous_build(shell_log):
             }}
             New-Item -Force -Type directory -Path {WORKDIR}
         """, shell_log)
-        os.environ['COMSPEC'] = prevComSpec
     else:
         # mac/linux/POSIX
         result, shell_log = subprocess_with_log(f"""
