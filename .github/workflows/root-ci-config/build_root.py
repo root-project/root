@@ -121,6 +121,9 @@ def main():
     if pull_request:
         shell_log = rebase(args.base_ref, args.head_ref, shell_log)
 
+    if not WINDOWS:
+        shell_log = show_node_state(shell_log, options)
+
     shell_log = build(options, args.buildtype, shell_log)
 
     testing: bool = options_dict['testing'].lower() == "on" and options_dict['roottest'].lower() == "on"
@@ -218,6 +221,26 @@ def download_artifacts(obj_prefix: str, shell_log: str):
     return shell_log
 
 
+@github_log_group("Node state")
+def show_node_state(shell_log: str, options: str) -> str:
+    result, shell_log = subprocess_with_log(f"""
+        which cmake
+        cmake --version
+        which c++ || true
+        c++ --version || true
+        uname -a || true
+        cat /etc/os-release || true
+        sw_vers || true
+        uptime || true
+        df || true
+    """, shell_log)
+
+    if result != 0:
+        print_warning("Failed to extract node state")
+
+    return shell_log
+
+
 @github_log_group("Run tests")
 def run_ctest(shell_log: str, extra_ctest_flags: str) -> str:
     result, shell_log = subprocess_with_log(f"""
@@ -266,6 +289,8 @@ def build(options, buildtype, shell_log):
 
         if result != 0:
             die(result, "Failed cmake generation step", shell_log)
+
+    shell_log += f"\nBUILD OPTIONS: {options}"
 
     result, shell_log = subprocess_with_log(f"""
         cmake --build '{WORKDIR}/build' --config '{buildtype}' --parallel '{os.cpu_count()}' {generator_flags}
