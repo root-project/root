@@ -207,10 +207,10 @@ void TScatter::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    frameNumber++;
 
    Int_t i;
-   TString fXName  = TString(GetName()) + TString::Format("_fx%d",frameNumber);
-   TString fYName  = TString(GetName()) + TString::Format("_fy%d",frameNumber);
-   TString fColorName = TString(GetName()) + TString::Format("_fcolor%d",frameNumber);
-   TString fSizeName = TString(GetName()) + TString::Format("_fsize%d",frameNumber);
+   TString fXName     = TString::Format("%s_fx%d",GetName(),frameNumber);
+   TString fYName     = TString::Format("%s_fy%d", GetName(),frameNumber);
+   TString fColorName = TString::Format("%s_fcolor%d",GetName(),frameNumber);
+   TString fSizeName  = TString::Format("%s_fsize%d",GetName(),frameNumber);
    out << "   Double_t " << fXName << "[" << fNpoints << "] = {" << std::endl;
    for (i = 0; i < fNpoints-1; i++) out << "   " << fX[i] << "," << std::endl;
    out << "   " << fX[fNpoints-1] << "};" << std::endl;
