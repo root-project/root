@@ -1,12 +1,18 @@
-// @(#)root/roostats:$Id$
-// Author: Kyle Cranmer, Lorenzo Moneta, Gregory Schott, Wouter Verkerke, Sven Kreiss
-/*************************************************************************
- * Copyright (C) 1995-2008, Rene Brun and Fons Rademakers.               *
- * All rights reserved.                                                  *
- *                                                                       *
- * For the licensing terms see $ROOTSYS/LICENSE.                         *
- * For the list of contributors see $ROOTSYS/README/CREDITS.             *
- *************************************************************************/
+/*
+ * Project: RooFit
+ * Authors:
+ *   Kyle Cranmer,
+ *   Lorenzo Moneta,
+ *   Gregory Schott,
+ *   Wouter Verkerke,
+ *   Sven Kreiss
+ *
+ * Copyright (c) 2023, CERN
+ *
+ * Redistribution and use in source and binary forms,
+ * with or without modification, are permitted according to the terms
+ * listed in LICENSE (http://roofit.sourceforge.net/license.txt)
+ */
 
 /** \class RooStats::ModelConfig
     \ingroup Roostats
@@ -35,16 +41,27 @@ specific value. Examples:
 \f]
 */
 
-#include "RooStats/ModelConfig.h"
+#include <RooFit/ModelConfig.h>
 
-#include "RooMsgService.h"
-
-#include "RooStats/RooStatsUtils.h"
+#include <RooMsgService.h>
+#include <RooRealVar.h>
 
 #include <sstream>
 
 
 ClassImp(RooStats::ModelConfig);
+
+namespace {
+
+void removeConstantParameters(RooAbsCollection& coll){
+   RooArgSet constSet;
+   for (auto const *myarg : static_range_cast<RooRealVar *>(coll)) {
+      if(myarg->isConstant()) constSet.add(*myarg);
+   }
+   coll.remove(constSet);
+}
+
+} // namespace
 
 using namespace std;
 
@@ -76,7 +93,7 @@ void ModelConfig::GuessObsAndNuisance(const RooAbsData& data, bool printModelCon
       RooArgSet co(*GetObservables());
       const RooArgSet * obs = GetPdf()->getObservables(data);
       co.remove(*obs);
-      RemoveConstantParameters(&co);
+      removeConstantParameters(co);
       if(co.getSize()>0)
    SetGlobalObservables(co);
 
@@ -97,7 +114,7 @@ void ModelConfig::GuessObsAndNuisance(const RooAbsData& data, bool printModelCon
       const RooArgSet * params = GetPdf()->getParameters(data);
       RooArgSet p(*params);
       p.remove(*GetParametersOfInterest());
-      RemoveConstantParameters(&p);
+      removeConstantParameters(p);
       if(p.getSize()>0)
    SetNuisanceParameters(p);
       delete params;

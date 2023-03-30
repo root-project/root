@@ -16,8 +16,8 @@
 #include "RooCategory.h"
 #include "RooSimultaneous.h"
 #include "RooWorkspace.h"
+#include "RooFit/ModelConfig.h"
 
-#include "RooStats/ModelConfig.h"
 #include "RooStats/HistFactory/HistFactoryNavigation.h"
 #include "RooStats/HistFactory/HistFactoryException.h"
 

@@ -343,6 +343,7 @@
 #pragma link C++ class RooMoment+ ;
 #pragma link C++ class RooFirstMoment+ ;
 #pragma link C++ class RooSecondMoment+ ;
+#pragma link C++ class RooStats::ModelConfig+;
 #pragma link C++ class RooStudyManager+ ;
 #pragma link C++ class RooStudyPackage+ ;
 #pragma link C++ class RooAbsStudy+ ;
