@@ -379,6 +379,7 @@ void TDiamond::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
 void TDiamond::Paint(Option_t *)
 {
+   if (!gPad) return;
    Double_t x[7],y[7],depx,depy;
    Double_t x1 = fX1;
    Double_t y1 = fY1;

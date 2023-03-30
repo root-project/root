@@ -86,6 +86,7 @@ void TPavesText::Draw(Option_t *option)
 
 void TPavesText::Paint(Option_t *option)
 {
+   if (!gPad) return;
    // Draw the fNpaves-1 stacked paves
    // The spacing between paves is set to 3 times the bordersize
    Int_t bordersize = GetBorderSize();

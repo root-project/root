@@ -138,6 +138,7 @@ void TWbox::PaintFrame(Double_t x1, Double_t y1,Double_t x2, Double_t  y2,
                        Color_t color, Short_t bordersize, Short_t bordermode,
                        Bool_t tops)
 {
+   if (!gPad) return;
    if (bordermode == 0) return;
    if (bordersize <= 0) bordersize = 2;
 

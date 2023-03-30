@@ -1953,6 +1953,7 @@ TLatex *TLatex::DrawLatexNDC(Double_t x, Double_t y, const char *text)
 
 void TLatex::DrawLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2, TextSpec_t spec)
 {
+   if (!gPad) return ;
    Double_t sinang  = TMath::Sin(spec.fAngle/180*kPI);
    Double_t cosang  = TMath::Cos(spec.fAngle/180*kPI);
    Double_t xOrigin = (Double_t)gPad->XtoAbsPixel(fX);
@@ -1973,6 +1974,7 @@ void TLatex::DrawLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2, TextSp
 
 void TLatex::DrawCircle(Double_t x1, Double_t y1, Double_t r, TextSpec_t spec )
 {
+   if (!gPad) return ;
    if (r < 1) r = 1;
    Double_t sinang  = TMath::Sin(spec.fAngle/180*kPI);
    Double_t cosang  = TMath::Cos(spec.fAngle/180*kPI);
@@ -2003,6 +2005,7 @@ void TLatex::DrawCircle(Double_t x1, Double_t y1, Double_t r, TextSpec_t spec )
 void TLatex::DrawParenthesis(Double_t x1, Double_t y1, Double_t r1, Double_t r2,
                      Double_t  phimin, Double_t  phimax, TextSpec_t spec )
 {
+   if (!gPad) return ;
    if (r1 < 1) r1 = 1;
    if (r2 < 1) r2 = 1;
    Double_t sinang  = TMath::Sin(spec.fAngle/180*kPI);
@@ -2033,6 +2036,7 @@ void TLatex::DrawParenthesis(Double_t x1, Double_t y1, Double_t r1, Double_t r2,
 
 void TLatex::Paint(Option_t *)
 {
+   if (!gPad) return ;
    Double_t xsave = fX;
    Double_t ysave = fY;
    if (TestBit(kTextNDC)) {
@@ -2147,6 +2151,7 @@ void TLatex::PaintLatex(Double_t x, Double_t y, Double_t angle, Double_t size, c
 
 Int_t TLatex::PaintLatex1(Double_t x, Double_t y, Double_t angle, Double_t size, const Char_t *text1)
 {
+   if (!gPad) return 0;
    TString newText = text1;
    if( newText.Length() == 0) return 0;
    newText.ReplaceAll("#hbox","#mbox");
@@ -2489,6 +2494,7 @@ TLatex::TLatexFormSize TLatex::FirstParse(Double_t angle, Double_t size, const C
 
 Double_t TLatex::GetHeight() const
 {
+   if (!gPad) return 0.;
    Double_t w = gPad->GetAbsWNDC()*Double_t(gPad->GetWw());
    Double_t h = gPad->GetAbsHNDC()*Double_t(gPad->GetWh());
    if (w < h)
@@ -2503,7 +2509,7 @@ Double_t TLatex::GetHeight() const
 
 Double_t TLatex::GetXsize()
 {
-   if (!gPad) return 0;
+   if (!gPad) return 0.;
    TString newText = GetTitle();
    if( newText.Length() == 0) return 0;
 
@@ -2591,7 +2597,7 @@ void TLatex::GetBoundingBox(UInt_t &w, UInt_t &h, Bool_t angle)
 
 Double_t TLatex::GetYsize()
 {
-   if (!gPad) return 0;
+   if (!gPad) return 0.;
    TString newText = GetTitle();
    if( newText.Length() == 0) return 0;
 

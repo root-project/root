@@ -477,6 +477,7 @@ void TMathText::GetAlignPoint(Double_t &x0, Double_t &y0,
 
 void TMathText::GetBoundingBox(UInt_t &w, UInt_t &h, Bool_t /*angle*/)
 {
+   if (!gPad) return;
    const TString newText = GetTitle();
    const Int_t length = newText.Length();
    const Char_t *text = newText.Data();
@@ -555,6 +556,7 @@ TMathText *TMathText::DrawMathText(Double_t x, Double_t y, const char *text)
 
 void TMathText::Paint(Option_t *)
 {
+   if (!gPad) return;
    Double_t xsave = fX;
    Double_t ysave = fY;
 
@@ -576,6 +578,7 @@ void TMathText::Paint(Option_t *)
 void TMathText::PaintMathText(Double_t x, Double_t y, Double_t angle,
                               Double_t size, const Char_t *text1)
 {
+   if (!gPad) return;
    Double_t saveSize = size;
    Int_t saveFont    = fTextFont;
    Short_t saveAlign = fTextAlign;

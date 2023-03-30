@@ -665,6 +665,8 @@ void TCandle::Calculate() {
 
 void TCandle::Paint(Option_t *)
 {
+   if (!gPad) return;
+
    //If something was changed before, we need to recalculate some values
    if (!fIsCalculated) Calculate();
 
@@ -856,6 +858,8 @@ bool TCandle::IsOption(CandleOption opt) const {
 
 void TCandle::PaintBox(Int_t nPoints, Double_t *x, Double_t *y, Bool_t swapXY)
 {
+   if (!gPad) return;
+
    Bool_t doLogY = (!(swapXY) && fLogY) || (swapXY && fLogX);
    Bool_t doLogX = (!(swapXY) && fLogX) || (swapXY && fLogY);
    if (doLogY) {
@@ -884,6 +888,8 @@ void TCandle::PaintBox(Int_t nPoints, Double_t *x, Double_t *y, Bool_t swapXY)
 
 void TCandle::PaintLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2, Bool_t swapXY)
 {
+   if (!gPad) return;
+
    Bool_t doLogY = (!(swapXY) && fLogY) || (swapXY && fLogX);
    Bool_t doLogX = (!(swapXY) && fLogX) || (swapXY && fLogY);
    if (doLogY) {

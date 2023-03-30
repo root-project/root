@@ -189,6 +189,7 @@ Int_t TPie::DistancetoPrimitive(Int_t px, Int_t py)
 
 Int_t TPie::DistancetoSlice(Int_t px, Int_t py)
 {
+   if (!gPad) return 9999;
    MakeSlices();
 
    Int_t result(-1);
