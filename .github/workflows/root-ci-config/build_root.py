@@ -276,7 +276,7 @@ def build(options, buildtype, shell_log):
     else:
         # Print CMake cached config
         result, shell_log = subprocess_with_log(f"""
-            cmake -S '{workdir}/src' -B '{workdir}/build' -N -L
+            cmake -S '{WORKDIR}/src' -B '{WORKDIR}/build' -N -L
         """, shell_log)
 
         if result != 0:
