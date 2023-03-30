@@ -635,8 +635,11 @@ Multi-dimensional arrays of the form `T[N][M]...` are currently not supported.
 #### std::variant<T1, T2, ..., Tn>
 
 Variants are stored in $n+1$ fields:
-  - Variant mother field of type Switch; the dispatch tag points to the principle column of the active type
+  - Variant mother field with one column of type Switch; the dispatch tag points to the principal column of the active type
   - Child fields of types `T1`, ..., `Tn`; their names are `_0`, `_1`, ...
+
+The dispatch tag ranges from 1 to $n$.
+A value of 0 indicates that the variant is in the invalid state, i.e., it does not hold any of the valid alternatives.
 
 #### std::pair<T1, T2>
 
