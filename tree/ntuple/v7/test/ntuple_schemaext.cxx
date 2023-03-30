@@ -9,6 +9,10 @@ TEST(RNTuple, SchemaExtensionSimple)
       auto fieldPt = model->MakeField<float>("pt", 42.0);
 
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "myNTuple", fileGuard.GetPath());
+      ntuple->Fill();
+      *fieldPt = 12.0;
+      ntuple->Fill();
+
       auto modelUpdater = ntuple->CreateModelUpdater();
       modelUpdater->BeginUpdate();
       std::array<double, 2> fieldArray = refArray;
@@ -16,21 +20,29 @@ TEST(RNTuple, SchemaExtensionSimple)
       modelUpdater->CommitUpdate();
 
       ntuple->Fill();
-      *fieldPt = 12.0;
+      *fieldPt = 1.0;
       fieldArray[1] = 1337.0;
       ntuple->Fill();
    }
 
    auto ntuple = RNTupleReader::Open("myNTuple", fileGuard.GetPath());
-   EXPECT_EQ(2U, ntuple->GetNEntries());
+   EXPECT_EQ(4U, ntuple->GetNEntries());
    EXPECT_EQ(4U, ntuple->GetDescriptor()->GetNFields());
+   EXPECT_EQ(0U, ntuple->GetModel()->GetField("pt")->GetFirstEntry());
+   EXPECT_EQ(2U, ntuple->GetModel()->GetField("array")->GetFirstEntry());
 
    auto pt = ntuple->GetView<float>("pt");
    auto array = ntuple->GetView<std::array<double, 2>>("array");
    EXPECT_EQ(42.0, pt(0));
    EXPECT_EQ(12.0, pt(1));
-   EXPECT_EQ(refArray, array(0));
-   EXPECT_EQ(1337.0, array(1)[1]);
+   EXPECT_EQ(12.0, pt(2));
+   EXPECT_EQ(1.0, pt(3));
+
+   // There is no on-disk data for this field before entry 2, i.e., entry range [0..1] yields zeroes
+   EXPECT_EQ((std::array<double, 2>{0.0, 0.0}), array(0));
+   EXPECT_EQ((std::array<double, 2>{0.0, 0.0}), array(1));
+   EXPECT_EQ(refArray, array(2));
+   EXPECT_EQ(1337.0, array(3)[1]);
 }
 
 TEST(RNTuple, SchemaExtensionInvalidUse)
@@ -77,9 +89,15 @@ TEST(RNTuple, SchemaExtensionMultiple)
       auto fieldPt = model->MakeField<float>("pt", 42.0);
 
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "myNTuple", fileGuard.GetPath());
+      ntuple->Fill();
+      *fieldPt = 2.0;
+      ntuple->Fill();
+      *fieldPt = 4.0;
+      ntuple->Fill();
+
       auto modelUpdater = ntuple->CreateModelUpdater();
       modelUpdater->BeginUpdate();
-      std::vector<std::uint32_t> fieldVec;
+      std::vector<std::uint32_t> fieldVec{0x11223344};
       modelUpdater->AddField<std::vector<std::uint32_t>>("vec", &fieldVec);
       modelUpdater->CommitUpdate();
 
@@ -90,7 +108,9 @@ TEST(RNTuple, SchemaExtensionMultiple)
 
       modelUpdater->BeginUpdate();
       std::uint8_t u8 = 0x7f;
+      std::string str{"default"};
       modelUpdater->AddField<std::uint8_t>("u8", &u8);
+      modelUpdater->AddField<std::string>("str", &str);
       modelUpdater->CommitUpdate();
 
       ntuple->Fill();
@@ -98,25 +118,53 @@ TEST(RNTuple, SchemaExtensionMultiple)
       fieldFloat = 1.0;
       fieldVec = refVec;
       u8 = 0xaa;
+      str = "abcdefABCDEF1234567890!@#$%^&*()";
       ntuple->Fill();
    }
 
    auto ntuple = RNTupleReader::Open("myNTuple", fileGuard.GetPath());
-   EXPECT_EQ(2U, ntuple->GetNEntries());
-   EXPECT_EQ(6U, ntuple->GetDescriptor()->GetNFields());
+   EXPECT_EQ(5U, ntuple->GetNEntries());
+   EXPECT_EQ(7U, ntuple->GetDescriptor()->GetNFields());
+   EXPECT_EQ(0U, ntuple->GetModel()->GetField("pt")->GetFirstEntry());
+   EXPECT_EQ(3U, ntuple->GetModel()->GetField("vec")->GetFirstEntry());
+   EXPECT_EQ(3U, ntuple->GetModel()->GetField("f")->GetFirstEntry());
+   EXPECT_EQ(3U, ntuple->GetModel()->GetField("u8")->GetFirstEntry());
+   EXPECT_EQ(3U, ntuple->GetModel()->GetField("str")->GetFirstEntry());
 
    auto pt = ntuple->GetView<float>("pt");
    auto vec = ntuple->GetView<std::vector<std::uint32_t>>("vec");
    auto f = ntuple->GetView<float>("f");
    auto u8 = ntuple->GetView<std::uint8_t>("u8");
+   auto str = ntuple->GetView<std::string>("str");
    EXPECT_EQ(42.0, pt(0));
-   EXPECT_EQ(12.0, pt(1));
+   EXPECT_EQ(2.0, pt(1));
+   EXPECT_EQ(4.0, pt(2));
+   EXPECT_EQ(4.0, pt(3));
+   EXPECT_EQ(12.0, pt(4));
+
    EXPECT_EQ(std::vector<std::uint32_t>{}, vec(0));
-   EXPECT_EQ(refVec, vec(1));
-   EXPECT_EQ(10.0, f(0));
-   EXPECT_EQ(1.0, f(1));
-   EXPECT_EQ(0x7f, u8(0));
-   EXPECT_EQ(0xaa, u8(1));
+   EXPECT_EQ(std::vector<std::uint32_t>{}, vec(1));
+   EXPECT_EQ(std::vector<std::uint32_t>{}, vec(2));
+   EXPECT_EQ(std::vector<std::uint32_t>{0x11223344}, vec(3));
+   EXPECT_EQ(refVec, vec(4));
+
+   EXPECT_EQ(0.0, f(0));
+   EXPECT_EQ(0.0, f(1));
+   EXPECT_EQ(0.0, f(2));
+   EXPECT_EQ(10.0, f(3));
+   EXPECT_EQ(1.0, f(4));
+
+   EXPECT_EQ(0x00, u8(0));
+   EXPECT_EQ(0x00, u8(1));
+   EXPECT_EQ(0x00, u8(2));
+   EXPECT_EQ(0x7f, u8(3));
+   EXPECT_EQ(0xaa, u8(4));
+
+   EXPECT_TRUE(str(0).empty());
+   EXPECT_TRUE(str(1).empty());
+   EXPECT_TRUE(str(2).empty());
+   EXPECT_EQ("default", str(3));
+   EXPECT_EQ("abcdefABCDEF1234567890!@#$%^&*()", str(4));
 }
 
 TEST(RNTuple, SchemaExtensionProject)
@@ -234,6 +282,109 @@ TEST(RNTuple, SchemaExtensionRealWorld1)
          chksumRead += t;
       for (auto ind : *rdIndices)
          chksumRead += double(ind);
+   }
+
+   // The floating point arithmetic should have been executed in the same order for reading and writing,
+   // thus we expect the checksums to be bitwise identical
+   EXPECT_EQ(chksumRead, chksumWrite);
+}
+
+TEST(RNTuple, SchemaExtensionComplex)
+{
+   using doubleAoA_t = std::array<std::array<double, 2>, 2>;
+   ROOT::EnableImplicitMT();
+   FileRaii fileGuard("test_ntuple_schemaext_complex.root");
+
+   TRandom3 rnd(42);
+   double chksumWrite = 0.0;
+   auto updateInitialFields = [&](unsigned entryId, std::uint32_t &u32, double &dbl) {
+      u32 = entryId;
+      dbl = rnd.Rndm() * 1000.;
+      chksumWrite += static_cast<double>(u32);
+      chksumWrite += dbl;
+   };
+   auto updateLateFields1 = [&](unsigned entryId, std::vector<double> &vec, doubleAoA_t &aoa) {
+      auto size = 1 + floor(rnd.Rndm() * 1000.);
+      vec.resize(size);
+      for (unsigned i = 0; i < size; ++i) {
+         vec[i] = 1 + rnd.Rndm() * 1000. - 500.;
+         chksumWrite += vec[i];
+      }
+      aoa = {{{0.0, static_cast<double>(entryId)}, {42.0, static_cast<double>(entryId)}}};
+      chksumWrite += (aoa[0][0] + aoa[0][1]) + (aoa[1][0] + aoa[1][1]);
+   };
+   auto updateLateFields2 = [&](unsigned entryId, std::variant<std::uint64_t, double> &var) {
+      if ((entryId % 2) == 0) {
+         std::uint64_t value = entryId + 1;
+         var = value;
+         chksumWrite += static_cast<double>(value);
+      } else {
+         double value = entryId;
+         var = value;
+         chksumWrite += value;
+      }
+   };
+
+   {
+      auto modelWrite = RNTupleModel::Create();
+      auto u32 = modelWrite->MakeField<std::uint32_t>("u32");
+      auto dbl = modelWrite->MakeField<double>("dbl");
+      auto ntuple = RNTupleWriter::Recreate(std::move(modelWrite), "myNTuple", fileGuard.GetPath());
+      // The model is to be extended below with new fields every 10000 entries
+      auto modelUpdater = ntuple->CreateModelUpdater();
+      for (unsigned int i = 0; i < 10000; ++i) {
+         updateInitialFields(i, *u32, *dbl);
+         ntuple->Fill();
+      }
+
+      modelUpdater->BeginUpdate();
+      std::vector<double> dblVec;
+      doubleAoA_t doubleAoA;
+      modelUpdater->AddField<std::vector<double>>("dblVec", &dblVec);
+      modelUpdater->AddField<doubleAoA_t>("doubleAoA", &doubleAoA);
+      modelUpdater->CommitUpdate();
+      for (unsigned int i = 10000; i < 20000; ++i) {
+         updateInitialFields(i, *u32, *dbl);
+         updateLateFields1(i, dblVec, doubleAoA);
+         ntuple->Fill();
+      }
+
+      modelUpdater->BeginUpdate();
+      std::variant<std::uint64_t, double> var;
+      modelUpdater->AddField<std::variant<std::uint64_t, double>>("var", &var);
+      modelUpdater->CommitUpdate();
+      for (unsigned int i = 20000; i < 30000; ++i) {
+         updateInitialFields(i, *u32, *dbl);
+         updateLateFields1(i, dblVec, doubleAoA);
+         updateLateFields2(i, var);
+         ntuple->Fill();
+      }
+   }
+
+   auto modelRead = RNTupleModel::Create();
+   auto u32 = modelRead->MakeField<std::uint32_t>("u32");
+   auto dbl = modelRead->MakeField<double>("dbl");
+   auto dblVec = modelRead->MakeField<std::vector<double>>("dblVec");
+   auto doubleAoA = modelRead->MakeField<doubleAoA_t>("doubleAoA");
+   auto var = modelRead->MakeField<std::variant<std::uint64_t, double>>("var");
+
+   double chksumRead = 0.0;
+   auto ntuple = RNTupleReader::Open(std::move(modelRead), "myNTuple", fileGuard.GetPath());
+   for (auto entryId : *ntuple) {
+      ntuple->LoadEntry(entryId);
+      chksumRead += static_cast<double>(*u32) + *dbl;
+      for (auto d : *dblVec)
+         chksumRead += d;
+      chksumRead += ((*doubleAoA)[0][0] + (*doubleAoA)[0][1]) + ((*doubleAoA)[1][0] + (*doubleAoA)[1][1]);
+      if (entryId < 20000) {
+         EXPECT_FALSE(std::holds_alternative<std::uint64_t>(*var) || std::holds_alternative<double>(*var));
+         continue;
+      }
+      if ((entryId % 2) == 0) {
+         chksumRead += std::get<std::uint64_t>(*var);
+      } else {
+         chksumRead += std::get<double>(*var);
+      }
    }
 
    // The floating point arithmetic should have been executed in the same order for reading and writing,
