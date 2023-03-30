@@ -2343,10 +2343,14 @@ void ROOT::Experimental::RVariantField::ReadGlobalImpl(NTupleSize_t globalIndex,
    RClusterIndex variantIndex;
    std::uint32_t tag;
    fPrincipalColumn->GetSwitchInfo(globalIndex, &variantIndex, &tag);
-   R__ASSERT(tag > 0); // TODO(jblomer): deal with invalid variants
 
-   auto itemValue = fSubFields[tag - 1]->GenerateValue(value->GetRawPtr());
-   fSubFields[tag - 1]->Read(variantIndex, &itemValue);
+   // If `tag` equals 0, the variant is in the invalid state, i.e, it does not hold any of the valid alternatives in
+   // the type list.  This happens, e.g., if the field was late added; in this case, keep the invalid tag, which makes
+   // any `std::holds_alternative<T>` check fail later.
+   if (R__likely(tag > 0)) {
+      auto itemValue = fSubFields[tag - 1]->GenerateValue(value->GetRawPtr());
+      fSubFields[tag - 1]->Read(variantIndex, &itemValue);
+   }
    SetTag(value->GetRawPtr(), tag);
 }
 
