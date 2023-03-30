@@ -3,9 +3,10 @@ import { gStyle, createHistogram, createTPolyLine, isBatchMode, isFunc, isStr,
 import { rgb as d3_rgb, chord as d3_chord, arc as d3_arc, ribbon as d3_ribbon } from '../d3.mjs';
 import { TAttLineHandler } from '../base/TAttLineHandler.mjs';
 import { TAttMarkerHandler } from '../base/TAttMarkerHandler.mjs';
-import { TRandom, floatToString, makeTranslate } from '../base/BasePainter.mjs';
+import { TRandom, floatToString, makeTranslate, addHighlightStyle } from '../base/BasePainter.mjs';
 import { EAxisBits } from '../base/ObjectPainter.mjs';
 import { THistPainter } from './THistPainter.mjs';
+
 
 /**
  * @summary Painter for TH2 classes
@@ -203,7 +204,7 @@ class TH2Painter extends THistPainter {
 
    /** @summary Fill histogram context menu */
    fillHistContextMenu(menu) {
-      if (!this.isTH2Poly()) {
+      if (!this.isTH2Poly() && this.getPadPainter()?.iscan) {
          let kind = this.is_projection || '';
          if (kind) kind += this.projection_widthX;
          if ((this.projection_widthX != this.projection_widthY) && (this.is_projection == 'XY'))
@@ -216,9 +217,10 @@ class TH2Painter extends THistPainter {
          for (let k = 0; k < kinds.length; ++k)
             menu.addchk(kind==kinds[k], kinds[k], kinds[k], arg => this.toggleProjection(arg));
          menu.add('endsub:');
-
-         menu.add('Auto zoom-in', () => this.autoZoom());
       }
+
+      if (!this.isTH2Poly())
+         menu.add('Auto zoom-in', () => this.autoZoom());
 
       let opts = this.getSupportedDrawOptions();
 
@@ -2504,8 +2506,9 @@ class TH2Painter extends THistPainter {
 
             if (ttrect.empty())
                ttrect = this.draw_g.append('svg:path')
-                            .attr('class', 'tooltip_bin h1bin')
-                            .style('pointer-events', 'none');
+                            .attr('class', 'tooltip_bin')
+                            .style('pointer-events', 'none')
+                            .call(addHighlightStyle);
 
             res.changed = ttrect.property('current_bin') !== foundindx;
 
@@ -2553,8 +2556,9 @@ class TH2Painter extends THistPainter {
 
             if (ttrect.empty())
                ttrect = this.draw_g.append('svg:path')
-                                   .attr('class', 'tooltip_bin h1bin')
+                                   .attr('class', 'tooltip_bin')
                                    .style('pointer-events', 'none')
+                                   .call(addHighlightStyle)
                                    .style('opacity', '0.7');
 
             res.changed = ttrect.property('current_bin') !== i;
@@ -2652,8 +2656,9 @@ class TH2Painter extends THistPainter {
       } else {
          if (ttrect.empty())
             ttrect = this.draw_g.append('svg:path')
-                                .attr('class', 'tooltip_bin h1bin')
-                                .style('pointer-events', 'none');
+                                .attr('class', 'tooltip_bin')
+                                .style('pointer-events', 'none')
+                                .call(addHighlightStyle);
 
          let binid = i*10000 + j, path;
 

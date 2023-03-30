@@ -113,9 +113,13 @@ async function drawList(dom, lst, opt) {
   * @private */
 function folderHierarchy(item, obj) {
 
-   if (!obj?.fFolders) return false;
+   if (!obj?.fFolders)
+      return false;
 
-   if (obj.fFolders.arr.length === 0) { item._more = false; return true; }
+   if (obj.fFolders.arr.length === 0) {
+      item._more = false;
+      return true;
+   }
 
    item._childs = [];
 
@@ -329,7 +333,7 @@ function objectHierarchy(top, obj, args = undefined) {
          let val = obj.getUint8(k).toString(16);
          while (val.length < 2) val = '0'+val;
          if (item._value)
-            item._value += (k%4 === 0) ? ' | ' : ' ';
+            item._value += (k % 4 === 0) ? ' | ' : ' ';
 
          item._value += val;
       }
@@ -353,7 +357,7 @@ function objectHierarchy(top, obj, args = undefined) {
       arrcompress = true;
       for (let k = 0; k < obj.length; ++k) {
          let typ = typeof obj[k];
-         if ((typ === 'number') || (typ === 'boolean') || (typ == 'string' && (obj[k].length < 16))) continue;
+         if ((typ === 'number') || (typ === 'boolean') || ((typ == 'string') && (obj[k].length < 16))) continue;
          arrcompress = false; break;
       }
    }
