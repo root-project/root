@@ -4,8 +4,8 @@
 
 #include <RooFitHS3/RooJSONFactoryWSTool.h>
 #include <RooFitHS3/HistFactoryJSONTool.h>
+#include <RooFit/ModelConfig.h>
 
-#include <RooStats/ModelConfig.h>
 #include <RooStats/HistFactory/Measurement.h>
 #include <RooStats/HistFactory/MakeModelAndMeasurementsFast.h>
 

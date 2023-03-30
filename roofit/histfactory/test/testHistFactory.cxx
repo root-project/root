@@ -4,7 +4,7 @@
 #include "RooStats/HistFactory/Measurement.h"
 #include "RooStats/HistFactory/MakeModelAndMeasurementsFast.h"
 #include "RooStats/HistFactory/Sample.h"
-#include "RooStats/ModelConfig.h"
+#include "RooFit/ModelConfig.h"
 
 #include "RooFit/Common.h"
 #include "RooWorkspace.h"

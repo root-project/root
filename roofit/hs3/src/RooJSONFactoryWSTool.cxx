@@ -23,7 +23,7 @@
 #include <RooDataSet.h>
 #include <RooDataHist.h>
 #include <RooSimultaneous.h>
-#include <RooStats/ModelConfig.h>
+#include <RooFit/ModelConfig.h>
 
 #include "Domains.h"
 

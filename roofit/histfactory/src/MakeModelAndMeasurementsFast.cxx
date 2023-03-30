@@ -27,7 +27,7 @@
 
 
 // from roofit
-#include "RooStats/ModelConfig.h"
+#include "RooFit/ModelConfig.h"
 
 // from this package
 #include "RooStats/HistFactory/Measurement.h"
