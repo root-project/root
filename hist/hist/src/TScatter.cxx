@@ -250,21 +250,3 @@ void TScatter::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 
    out << "   scat->Draw(" << quote << option << quote << ");" << std::endl;
 }
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Stream an object of class TScatter.
-
-void TScatter::Streamer(TBuffer &b)
-{
-   if (b.IsReading()) {
-      UInt_t R__s, R__c;
-      Version_t R__v = b.ReadVersion(&R__s, &R__c);
-      if (R__v > 2) {
-         b.ReadClassBuffer(TScatter::Class(), this, R__v, R__s, R__c);
-         return;
-      }
-   } else {
-      b.WriteClassBuffer(TScatter::Class(), this);
-   }
-}
