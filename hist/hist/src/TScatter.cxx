@@ -133,24 +133,23 @@ Bool_t TScatter::CtorAllocate()
 TH1F *TScatter::GetHistogram() const
 {
    if (!fHistogram) {
-      double rwxmin, rwymin, rwxmax, rwymax;
-      int npt = 100;
-      ComputeRange(rwxmin, rwymin, rwxmax, rwymax);
-      double dx = (rwxmax-rwxmin)*fMargin;
-      double dy = (rwymax-rwymin)*fMargin;
-      auto h = new TH1F(TString::Format("%s_h",GetName()),GetTitle(),npt,rwxmin,rwxmax);
-      h->SetMinimum(rwymin-dy);
-      h->SetMaximum(rwymax+dy);
-      h->GetXaxis()->SetLimits(rwxmin-dx,rwxmax+dx);
-      h->SetBit(TH1::kNoStats);
-      h->SetDirectory(0);
-      h->Sumw2(kFALSE);
-
       // do not add the histogram to gDirectory
       // use local TDirectory::TContect that will set temporarly gDirectory to a nullptr and
       // will avoid that histogram is added in the global directory
       {
          TDirectory::TContext ctx(nullptr);
+         double rwxmin, rwymin, rwxmax, rwymax;
+         int npt = 100;
+         ComputeRange(rwxmin, rwymin, rwxmax, rwymax);
+         double dx = (rwxmax-rwxmin)*fMargin;
+         double dy = (rwymax-rwymin)*fMargin;
+         auto h = new TH1F(TString::Format("%s_h",GetName()),GetTitle(),npt,rwxmin,rwxmax);
+         h->SetMinimum(rwymin-dy);
+         h->SetMaximum(rwymax+dy);
+         h->GetXaxis()->SetLimits(rwxmin-dx,rwxmax+dx);
+         h->SetBit(TH1::kNoStats);
+         h->SetDirectory(0);
+         h->Sumw2(kFALSE);
          ((TScatter*)this)->fHistogram = h;//new TH1F(gname, GetTitle(), npt, rwxmin, rwxmax);
       }
    }
