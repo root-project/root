@@ -512,7 +512,7 @@ void TPaletteAxis::Paint(Option_t *)
       w2 = wlmax;
       if (i < ndivz - 1) {
          if (fH) zc = fH->GetContourLevel(i + 1);
-         else    zc = zc = wlmin + (i+1)*dw;
+         else    zc = wlmin + (i+1)*dw;
          if (fH && fH->TestBit(TH1::kUserContour) && gPad->GetLogz())
             zc = TMath::Log10(zc);
          w2 = zc;
