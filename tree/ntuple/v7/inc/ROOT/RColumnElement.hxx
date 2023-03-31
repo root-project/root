@@ -187,7 +187,7 @@ static void CastDeltaSplitUnpack(void *destination, const void *source, std::siz
    auto splitArray = reinterpret_cast<const char *>(source);
    auto dst = reinterpret_cast<DestT *>(destination);
    for (std::size_t i = 0; i < count; ++i) {
-      SourceT val;
+      SourceT val = 0;
       for (std::size_t b = 0; b < N; ++b) {
          reinterpret_cast<char *>(&val)[b] = splitArray[b * count + i];
       }
