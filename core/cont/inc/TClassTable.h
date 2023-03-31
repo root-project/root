@@ -42,17 +42,16 @@ friend  class TROOT;
 
 private:
    typedef ROOT::TMapTypeToClassRec IdMap_t;
-   using atomic_uint = std::atomic<UInt_t>;
    class NormalizeThenLock;
 
-   static ROOT::TClassAlt **fgAlternate;
-   static ROOT::TClassRec **fgTable;
-   static ROOT::TClassRec **fgSortedTable;
-   static IdMap_t     *fgIdMap;
-   static UInt_t       fgSize;
-   static atomic_uint  fgTally;
-   static Bool_t       fgSorted;
-   static UInt_t       fgCursor;
+   static ROOT::TClassAlt   **fgAlternate;
+   static ROOT::TClassRec   **fgTable;
+   static ROOT::TClassRec   **fgSortedTable;
+   static IdMap_t            *fgIdMap;
+   static UInt_t              fgSize;
+   static std::atomic<UInt_t> fgTally;
+   static Bool_t              fgSorted;
+   static UInt_t              fgCursor;
 
    TClassTable();
 
