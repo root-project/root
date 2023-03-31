@@ -299,6 +299,8 @@ TClassTable::~TClassTable()
 
 inline Bool_t TClassTable::CheckClassTableInit()
 {
+   // This will be set at the lastest during TROOT construction, so before
+   // any threading could happen.
    if (!gClassTable || !fgTable) {
       if (GetDelayedAddClass().size()) {
          new TClassTable;
@@ -389,10 +391,12 @@ void TClassTable::Add(const char *cname, Version_t id,  const std::type_info &in
    if (!cname || *cname == 0)
       ::Fatal("TClassTable::Add()", "Failed to deduce type for '%s'", info.name());
 
-   std::lock_guard<std::mutex> lock(GetClassTableMutex());
-
+   // This will be set at the lastest during TROOT construction, so before
+   // any threading could happen.
    if (!gClassTable)
       new TClassTable;
+
+   std::lock_guard<std::mutex> lock(GetClassTableMutex());
 
    // check if already in table, if so return
    TClassRec *r = FindElement(cname, kTRUE);
@@ -442,10 +446,12 @@ void TClassTable::Add(const char *cname, Version_t id,  const std::type_info &in
 
 void TClassTable::Add(TProtoClass *proto)
 {
-   std::lock_guard<std::mutex> lock(GetClassTableMutex());
-
+   // This will be set at the lastest during TROOT construction, so before
+   // any threading could happen.
    if (!gClassTable)
       new TClassTable;
+
+   std::lock_guard<std::mutex> lock(GetClassTableMutex());
 
    // By definition the name in the TProtoClass is (must be) the normalized
    // name, so there is no need to tweak it.
@@ -486,10 +492,12 @@ void TClassTable::Add(TProtoClass *proto)
 
 void TClassTable::AddAlternate(const char *normName, const char *alternate)
 {
-   std::lock_guard<std::mutex> lock(GetClassTableMutex());
-
+   // This will be set at the lastest during TROOT construction, so before
+   // any threading could happen.
    if (!gClassTable)
       new TClassTable;
+
+   std::lock_guard<std::mutex> lock(GetClassTableMutex());
 
    UInt_t slot = ROOT::ClassTableHash(alternate, fgSize);
 
