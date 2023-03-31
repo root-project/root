@@ -43,13 +43,13 @@ using namespace ROOT;
 
 TClassTable *gClassTable;
 
-TClassAlt  **TClassTable::fgAlternate;
-TClassRec  **TClassTable::fgTable;
-TClassRec  **TClassTable::fgSortedTable;
-UInt_t       TClassTable::fgSize;
-std::atomic<UInt_t>  TClassTable::fgTally;
-Bool_t       TClassTable::fgSorted;
-UInt_t       TClassTable::fgCursor;
+TClassAlt           **TClassTable::fgAlternate;
+TClassRec           **TClassTable::fgTable;
+TClassRec           **TClassTable::fgSortedTable;
+UInt_t                TClassTable::fgSize;
+std::atomic<UInt_t>   TClassTable::fgTally;
+Bool_t                TClassTable::fgSorted;
+UInt_t                TClassTable::fgCursor;
 TClassTable::IdMap_t *TClassTable::fgIdMap;
 
 ClassImp(TClassTable);
@@ -885,10 +885,8 @@ void ROOT::AddClassAlternate(const char *normName, const char *alternate)
 ///  - The Class Version 0 request the whole object to be transient
 ///  - The Class Version 1, unless specify via ClassDef indicates that the
 ///    I/O should use the TClass checksum to distinguish the layout of the class
-
 void ROOT::ResetClassVersion(TClass *cl, const char *cname, Short_t newid)
 {
-
    if (cname && cname != (void*)-1 && TClassTable::CheckClassTableInit()) {
       TClassTable::NormalizeThenLock guard(cname);
       TClassRec *r = TClassTable::FindElement(guard.GetNormalizedName().c_str(), kFALSE);
