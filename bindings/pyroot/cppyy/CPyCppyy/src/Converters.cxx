@@ -221,6 +221,7 @@ static inline CPyCppyy::CPPInstance* GetCppInstance(PyObject* pyobject)
     if (CPPExcInstance_Check(pyobject))
         return (CPPInstance*)((CPPExcInstance*)pyobject)->fCppInstance;
 
+#if PY_VERSION_HEX < 0x03090000
 // this is not a C++ proxy; allow custom cast to C++
     PyObject* castobj = PyObject_CallMethodNoArgs(pyobject, PyStrings::gCastCpp);
     if (castobj) {
@@ -231,6 +232,8 @@ static inline CPyCppyy::CPPInstance* GetCppInstance(PyObject* pyobject)
     }
 
     PyErr_Clear();
+#endif
+
     return nullptr;
 }
 
