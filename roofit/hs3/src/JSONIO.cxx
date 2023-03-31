@@ -13,7 +13,6 @@
 #include <RooFitHS3/JSONIO.h>
 
 #include <RooFit/Detail/JSONInterface.h>
-#include <RooFitHS3/RooJSONFactoryWSTool.h>
 
 #include <RooAbsPdf.h>
 
@@ -137,7 +136,7 @@ void loadFactoryExpressions(const std::string &fname)
    std::unique_ptr<RooFit::Detail::JSONTree> tree = RooFit::Detail::JSONTree::create(infile);
    const RooFit::Detail::JSONNode &n = tree->rootnode();
    for (const auto &cl : n.children()) {
-      std::string key(RooJSONFactoryWSTool::name(cl));
+      std::string key = cl.key();
       if (!cl.has_child("class")) {
          std::cerr << "error in file '" << fname << "' for entry '" << key << "': 'class' key is required!"
                    << std::endl;
@@ -215,7 +214,7 @@ void loadExportKeys(const std::string &fname)
    std::unique_ptr<RooFit::Detail::JSONTree> tree = RooFit::Detail::JSONTree::create(infile);
    const RooFit::Detail::JSONNode &n = tree->rootnode();
    for (const auto &cl : n.children()) {
-      std::string classname(RooJSONFactoryWSTool::name(cl));
+      std::string classname = cl.key();
       TClass *c = TClass::GetClass(classname.c_str());
       if (!c) {
          std::cerr << "unable to find class " << classname << ", skipping." << std::endl;
@@ -231,9 +230,7 @@ void loadExportKeys(const std::string &fname)
          }
          ex.type = cl["type"].val();
          for (const auto &k : cl["proxies"].children()) {
-            std::string key(RooJSONFactoryWSTool::name(k));
-            std::string val(k.val());
-            ex.proxies[key] = val;
+            ex.proxies[k.key()] = k.val();
          }
          exportKeys[c] = ex;
       }

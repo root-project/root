@@ -216,7 +216,7 @@ void importAttributes(RooAbsArg *arg, JSONNode const &node)
 {
    if (auto seq = node.find("dict")) {
       for (const auto &attr : seq->children()) {
-         arg->setStringAttribute(RooJSONFactoryWSTool::name(attr).c_str(), attr.val().c_str());
+         arg->setStringAttribute(attr.key().c_str(), attr.val().c_str());
       }
    }
    if (auto seq = node.find("tags")) {
@@ -1192,7 +1192,7 @@ void RooJSONFactoryWSTool::importDependants(const JSONNode &n)
 
 std::string RooJSONFactoryWSTool::name(const JSONNode &n)
 {
-   return n.is_container() && n.has_child("name") ? n["name"].val() : (n.has_key() ? n.key() : n.val());
+   return n["name"].val();
 }
 
 void RooJSONFactoryWSTool::writeCombinedDataName(JSONNode &rootnode, std::string const &pdfName,
@@ -1426,7 +1426,7 @@ void RooJSONFactoryWSTool::importAllNodes(const RooFit::Detail::JSONNode &n)
             continue;
          RooArgSet vars;
          for (const auto &var : snsh.children()) {
-            if (RooRealVar *rrv = _workspace.var(RooJSONFactoryWSTool::name(var))) {
+            if (RooRealVar *rrv = _workspace.var(var.key())) {
                configureVariable(*_domains, var, *rrv);
                vars.add(*rrv);
             }
