@@ -505,6 +505,17 @@ void ROOT::Experimental::Detail::RFieldBase::ConnectPageSink(RPageSink &pageSink
       }
       SetColumnRepresentative(rep);
    }
+   if (pageSink.GetWriteOptions().GetHasSmallClusters()) {
+      ColumnRepresentation_t rep = GetColumnRepresentative();
+      for (auto &colType : rep) {
+         switch (colType) {
+         case EColumnType::kSplitIndex64: colType = EColumnType::kSplitIndex32; break;
+         case EColumnType::kIndex64: colType = EColumnType::kIndex32; break;
+         default: break;
+         }
+      }
+      SetColumnRepresentative(rep);
+   }
 
    GenerateColumnsImpl();
    if (!fColumns.empty())
