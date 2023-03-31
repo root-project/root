@@ -170,10 +170,6 @@ public:
    static void exportCategory(RooAbsCategory const &cat, RooFit::Detail::JSONNode &node);
 
 private:
-   struct Config {
-      static bool stripObservables;
-   };
-
    template <class T>
    T *requestImpl(const std::string &objname);
 
