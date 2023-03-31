@@ -61,6 +61,9 @@ protected:
    /// fApproxUnzippedPageSize/2 and fApproxUnzippedPageSize * 1.5 in size.
    std::size_t fApproxUnzippedPageSize = 64 * 1024;
    bool fUseBufferedWrite = true;
+   /// If set, 64bit index columns are replaced by 32bit index columns. This limits the cluster size to 512MB
+   /// but it can result in smaller file sizes for data sets with many collections and lz4 or no compression.
+   bool fHasSmallClusters = false;
 
 public:
    virtual ~RNTupleWriteOptions() = default;
@@ -86,6 +89,9 @@ public:
 
    bool GetUseBufferedWrite() const { return fUseBufferedWrite; }
    void SetUseBufferedWrite(bool val) { fUseBufferedWrite = val; }
+
+   bool GetHasSmallClusters() const { return fHasSmallClusters; }
+   void SetHasSmallClusters(bool val) { fHasSmallClusters = val; }
 };
 
 // clang-format off
