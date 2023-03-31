@@ -150,7 +150,7 @@ TH1F *TScatter::GetHistogram() const
          h->SetBit(TH1::kNoStats);
          h->SetDirectory(0);
          h->Sumw2(kFALSE);
-         ((TScatter*)this)->fHistogram = h;//new TH1F(gname, GetTitle(), npt, rwxmin, rwxmax);
+         ((TScatter*)this)->fHistogram = h;
       }
    }
    return fHistogram;

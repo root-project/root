@@ -4412,13 +4412,26 @@ void TGraphPainter::PaintScatter(TScatter *theScatter, Option_t* chopt)
 
    // Draw markers
    auto nbcol = gStyle->GetNumberOfColors();
-   Int_t logx = gPad->GetLogx();
+   int logx = gPad->GetLogx();
    int logy = gPad->GetLogy();
+   int logz = gPad->GetLogz();
+   if (theColor && logz) {
+      if (minc>0) minc = log10(minc);
+      if (maxc>0) maxc = log10(maxc);
+   }
    theScatter->SetMarkerColor(theScatter->GetMarkerColor());
    theScatter->TAttMarker::Modify();
-   double x,y;
+   double x,y,c;
    for (int i=0; i<n; i++) {
-      if (theColor) theScatter->SetMarkerColor(gStyle->GetColorPalette(((theColor[i]-minc)/(maxc-minc))*nbcol));
+      if (theColor) {
+         if (logz) {
+            if (theColor[i]>0) c = log10(theColor[i]);
+            else continue;
+         } else {
+            c = theColor[i];
+         }
+         theScatter->SetMarkerColor(gStyle->GetColorPalette(((c-minc)/(maxc-minc))*nbcol));
+      }
       if (theSize)  theScatter->SetMarkerSize(scale*((theSize[i]-mins)/(maxs-mins)));
       if (theColor || theSize) theScatter->TAttMarker::Modify();
       if (logx) {
