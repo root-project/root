@@ -4372,8 +4372,9 @@ void TGraphPainter::PaintScatter(TScatter *theScatter, Option_t* chopt)
 
    // Define palette
    if (theColor) {
+      TPaletteAxis *palette;
       TList *functions = theScatter->GetListOfFunctions();
-      TPaletteAxis *palette = (TPaletteAxis*)functions->FindObject("palette");
+      palette = (TPaletteAxis*)functions->FindObject("palette");
       TView *view = gPad->GetView();
       if (palette) {
          if (view) {
@@ -4397,7 +4398,7 @@ void TGraphPainter::PaintScatter(TScatter *theScatter, Option_t* chopt)
          Double_t xmin = gPad->PadtoX(xup +0.1*xr);
          Double_t xmax = gPad->PadtoX(xup + xr);
          if (xmax > x2) xmax = gPad->PadtoX(gPad->GetX2()-0.01*xr);
-         auto palette = new TPaletteAxis(xmin,ymin,xmax,ymax,minc,maxc);
+         palette = new TPaletteAxis(xmin,ymin,xmax,ymax,minc,maxc);
          palette->SetLabelColor(h->GetLabelColor());
          palette->SetLabelFont(h->GetLabelFont());
          palette->SetLabelOffset(h->GetLabelOffset());
