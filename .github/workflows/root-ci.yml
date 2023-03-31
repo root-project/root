@@ -202,7 +202,7 @@ jobs:
                     --architecture ${{ matrix.target_arch }}  "
 
       - name: Update artifacts after push to release branch
-        if:   github.event_name == 'push'
+        if:   github.event_name == 'push' && matrix.config == 'Release'
         shell: cmd
         run: "C:\\setenv.bat ${{ matrix.target_arch }} &&
               python .github/workflows/root-ci-config/build_root.py
