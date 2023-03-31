@@ -452,7 +452,7 @@ TEST(RClusterDescriptor, GetBytesOnStorage)
 
    auto clusterID = desc->FindClusterId(0, 0);
    ASSERT_NE(ROOT::Experimental::kInvalidDescriptorId, clusterID);
-   EXPECT_EQ(4 + 8 + 4 + 3, desc->GetClusterDescriptor(clusterID).GetBytesOnStorage());
+   EXPECT_EQ(8 + 8 + 8 + 3, desc->GetClusterDescriptor(clusterID).GetBytesOnStorage());
 }
 
 TEST(RNTupleDescriptor, Clone)

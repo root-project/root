@@ -625,7 +625,7 @@ const ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations &
 ROOT::Experimental::RField<ROOT::Experimental::ClusterSize_t>::GetColumnRepresentations() const
 {
    static RColumnRepresentations representations(
-      {{EColumnType::kSplitIndex32}, {EColumnType::kIndex32}, {EColumnType::kSplitIndex64}, {EColumnType::kIndex64}},
+      {{EColumnType::kSplitIndex64}, {EColumnType::kIndex64}, {EColumnType::kSplitIndex32}, {EColumnType::kIndex32}},
       {});
    return representations;
 }
@@ -977,10 +977,10 @@ void ROOT::Experimental::RField<std::int64_t>::AcceptVisitor(Detail::RFieldVisit
 const ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations &
 ROOT::Experimental::RField<std::string>::GetColumnRepresentations() const
 {
-   static RColumnRepresentations representations({{EColumnType::kSplitIndex32, EColumnType::kChar},
-                                                  {EColumnType::kIndex32, EColumnType::kChar},
-                                                  {EColumnType::kSplitIndex64, EColumnType::kChar},
-                                                  {EColumnType::kIndex64, EColumnType::kChar}},
+   static RColumnRepresentations representations({{EColumnType::kSplitIndex64, EColumnType::kChar},
+                                                  {EColumnType::kIndex64, EColumnType::kChar},
+                                                  {EColumnType::kSplitIndex32, EColumnType::kChar},
+                                                  {EColumnType::kIndex32, EColumnType::kChar}},
                                                  {});
    return representations;
 }
@@ -1346,7 +1346,7 @@ const ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations &
 ROOT::Experimental::RCollectionClassField::GetColumnRepresentations() const
 {
    static RColumnRepresentations representations(
-      {{EColumnType::kSplitIndex32}, {EColumnType::kIndex32}, {EColumnType::kSplitIndex64}, {EColumnType::kIndex64}},
+      {{EColumnType::kSplitIndex64}, {EColumnType::kIndex64}, {EColumnType::kSplitIndex32}, {EColumnType::kIndex32}},
       {});
    return representations;
 }
@@ -1607,7 +1607,7 @@ const ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations &
 ROOT::Experimental::RVectorField::GetColumnRepresentations() const
 {
    static RColumnRepresentations representations(
-      {{EColumnType::kSplitIndex32}, {EColumnType::kIndex32}, {EColumnType::kSplitIndex64}, {EColumnType::kIndex64}},
+      {{EColumnType::kSplitIndex64}, {EColumnType::kIndex64}, {EColumnType::kSplitIndex32}, {EColumnType::kIndex32}},
       {});
    return representations;
 }
@@ -1780,7 +1780,7 @@ const ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations &
 ROOT::Experimental::RRVecField::GetColumnRepresentations() const
 {
    static RColumnRepresentations representations(
-      {{EColumnType::kSplitIndex32}, {EColumnType::kIndex32}, {EColumnType::kSplitIndex64}, {EColumnType::kIndex64}},
+      {{EColumnType::kSplitIndex64}, {EColumnType::kIndex64}, {EColumnType::kSplitIndex32}, {EColumnType::kIndex32}},
       {});
    return representations;
 }
@@ -1969,7 +1969,7 @@ const ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations &
 ROOT::Experimental::RField<std::vector<bool>>::GetColumnRepresentations() const
 {
    static RColumnRepresentations representations(
-      {{EColumnType::kSplitIndex32}, {EColumnType::kIndex32}, {EColumnType::kSplitIndex64}, {EColumnType::kIndex64}},
+      {{EColumnType::kSplitIndex64}, {EColumnType::kIndex64}, {EColumnType::kSplitIndex32}, {EColumnType::kIndex32}},
       {});
    return representations;
 }
@@ -2458,7 +2458,7 @@ const ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations &
 ROOT::Experimental::RCollectionField::GetColumnRepresentations() const
 {
    static RColumnRepresentations representations(
-      {{EColumnType::kSplitIndex32}, {EColumnType::kIndex32}, {EColumnType::kSplitIndex64}, {EColumnType::kIndex64}},
+      {{EColumnType::kSplitIndex64}, {EColumnType::kIndex64}, {EColumnType::kSplitIndex32}, {EColumnType::kIndex32}},
       {});
    return representations;
 }
