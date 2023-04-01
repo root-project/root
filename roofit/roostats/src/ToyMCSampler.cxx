@@ -252,8 +252,15 @@ RooArgList* ToyMCSampler::EvaluateAllTestStatistics(RooAbsData& data, const RooA
 ////////////////////////////////////////////////////////////////////////////////
 
 const RooArgList* ToyMCSampler::EvaluateAllTestStatistics(RooAbsData& data, const RooArgSet& poi, DetailedOutputAggregator& detOutAgg) {
-   RooArgSet *allVars = fPdf ? fPdf->getVariables() : nullptr;
-   RooArgSet *saveAll = allVars ? allVars->snapshot() : nullptr;
+   std::unique_ptr<RooArgSet> allVars;
+   std::unique_ptr<RooArgSet> saveAll;
+   if(fPdf) {
+      allVars = std::unique_ptr<RooArgSet>{fPdf->getVariables()};
+   }
+   if(allVars) {
+      saveAll = std::make_unique<RooArgSet>();
+      allVars->snapshot(*saveAll);
+   }
    for( unsigned int i = 0; i < fTestStatistics.size(); i++ ) {
       if( fTestStatistics[i] == nullptr ) continue;
       TString name( TString::Format("%s_TS%u", fSamplingDistName.c_str(), i) );
@@ -270,8 +277,6 @@ const RooArgList* ToyMCSampler::EvaluateAllTestStatistics(RooAbsData& data, cons
         allVars->assign(*saveAll);
       }
    }
-   delete saveAll;
-   delete allVars;
    return detOutAgg.GetAsArgList();
 }
 
@@ -372,7 +377,7 @@ RooDataSet* ToyMCSampler::GetSamplingDistributionsSingleWorker(RooArgSet& paramP
    // important to cache the paramPoint b/c test statistic might
    // modify it from event to event
    RooArgSet *paramPoint = (RooArgSet*) paramPointIn.snapshot();
-   RooArgSet *allVars = fPdf->getVariables();
+   std::unique_ptr<RooArgSet> allVars{fPdf->getVariables()};
    RooArgSet *saveAll = (RooArgSet*) allVars->snapshot();
 
 
@@ -440,7 +445,6 @@ RooDataSet* ToyMCSampler::GetSamplingDistributionsSingleWorker(RooArgSet& paramP
    // clean up
    allVars->assign(*saveAll);
    delete saveAll;
-   delete allVars;
    delete paramPoint;
 
    return detOutAgg.GetAsDataSet(fSamplingDistName, fSamplingDistName);
@@ -463,14 +467,13 @@ void ToyMCSampler::GenerateGlobalObservables(RooAbsPdf& pdf) const {
       // has problem for sim pdfs
       RooSimultaneous* simPdf = dynamic_cast<RooSimultaneous*>( &pdf );
       if (!simPdf) {
-         RooDataSet *one = pdf.generate(*fGlobalObservables, 1);
+         std::unique_ptr<RooDataSet> one{pdf.generate(*fGlobalObservables, 1)};
 
          const RooArgSet *values = one->get(0);
          if (!_allVars) {
-            _allVars.reset(pdf.getVariables());
+            _allVars = std::unique_ptr<RooArgSet>{pdf.getVariables()};
          }
          _allVars->assign(*values);
-         delete one;
 
       } else {
 
@@ -500,12 +503,10 @@ void ToyMCSampler::GenerateGlobalObservables(RooAbsPdf& pdf) const {
    } else {
 
       // not using multigen for global observables
-      RooDataSet* one = pdf.generateSimGlobal( *fGlobalObservables, 1 );
+      std::unique_ptr<RooDataSet> one{pdf.generateSimGlobal( *fGlobalObservables, 1 )};
       const RooArgSet *values = one->get(0);
-      RooArgSet* allVars = pdf.getVariables();
+      std::unique_ptr<RooArgSet> allVars{pdf.getVariables()};
       allVars->assign(*values);
-      delete allVars;
-      delete one;
 
    }
 }
@@ -525,7 +526,7 @@ RooAbsData* ToyMCSampler::GenerateToyData(RooArgSet& paramPoint, double& weight,
    }
 
    // assign input paramPoint
-   RooArgSet* allVars = fPdf->getVariables();
+   std::unique_ptr<RooArgSet> allVars{fPdf->getVariables()};
    allVars->assign(paramPoint);
 
 
@@ -572,7 +573,6 @@ RooAbsData* ToyMCSampler::GenerateToyData(RooArgSet& paramPoint, double& weight,
    // We generated the data with the randomized nuisance parameter (if hybrid)
    // but now we are setting the nuisance parameters back to where they were.
    allVars->assign(*saveVars);
-   delete allVars;
    delete saveVars;
 
    return data;

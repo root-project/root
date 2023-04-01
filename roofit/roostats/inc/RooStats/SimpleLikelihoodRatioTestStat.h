@@ -48,13 +48,11 @@ namespace RooStats {
          fNullPdf = &nullPdf;
          fAltPdf = &altPdf;
 
-         RooArgSet * allNullVars = fNullPdf->getVariables();
+         std::unique_ptr<RooArgSet> allNullVars{fNullPdf->getVariables()};
          fNullParameters = (RooArgSet*) allNullVars->snapshot();
-         delete allNullVars;
 
-         RooArgSet * allAltVars = fAltPdf->getVariables();
+         std::unique_ptr<RooArgSet> allAltVars{fAltPdf->getVariables()};
          fAltParameters = (RooArgSet*) allAltVars->snapshot();
-         delete allAltVars;
 
          fDetailedOutputEnabled = false;
          fDetailedOutput = nullptr;

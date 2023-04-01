@@ -828,14 +828,15 @@ void RooVectorDataStore::cacheArgs(const RooAbsArg* owner, RooArgSet& newVarSet,
   RooAbsArg::setDirtyInhibit(true) ;
 
   std::vector<RooArgSet*> nsetList ;
-  std::vector<RooArgSet*> argObsList ;
+  std::vector<std::unique_ptr<RooArgSet>> argObsList ;
 
   // Now need to attach branch buffers of clones
   for (const auto arg : cloneSet) {
     arg->attachToVStore(*newCache) ;
 
-    RooArgSet* argObs = nset ? arg->getObservables(*nset) : arg->getVariables() ;
-    argObsList.push_back(argObs) ;
+    if(nset) argObsList.emplace_back(arg->getObservables(*nset));
+    else argObsList.emplace_back(arg->getVariables());
+    RooArgSet* argObs = argObsList.back().get();
 
     RooArgSet* normSet(0) ;
     const char* catNset = arg->getStringAttribute("CATNormSet") ;
@@ -903,11 +904,7 @@ void RooVectorDataStore::cacheArgs(const RooAbsArg* owner, RooArgSet& newVarSet,
 
   }
 
-
   for (auto set : vlist) {
-    delete set;
-  }
-  for (auto set : argObsList) {
     delete set;
   }
 

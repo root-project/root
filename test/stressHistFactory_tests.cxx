@@ -383,8 +383,8 @@ private:
     const Int_t iSamplingPoints = 100;
 
     // get variables
-    RooArgSet* pVars1 = rPDF1.getVariables();
-    RooArgSet* pVars2 = rPDF2.getVariables();
+    std::unique_ptr<RooArgSet> pVars1{rPDF1.getVariables()};
+    std::unique_ptr<RooArgSet> pVars2{rPDF2.getVariables()};
 
     if(!CompareParameters(*pVars1,*pVars2))
     {

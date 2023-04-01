@@ -170,7 +170,7 @@ void RooRealMPFE::initVars()
   _saveVars.removeAll() ;
 
   // Retrieve non-constant parameters
-  RooArgSet* vars = _arg.arg().getParameters(RooArgSet()) ;
+  auto vars = _arg->getParameters(RooArgSet());
   //RooArgSet* ncVars = (RooArgSet*) vars->selectByAttrib("Constant",false) ;
   RooArgList varList(*vars) ;
 
@@ -182,9 +182,6 @@ void RooRealMPFE::initVars()
 
   // Force next calculation
   _forceCalc = true ;
-
-  delete vars ;
-  //delete ncVars ;
 }
 
 double RooRealMPFE::getCarry() const
