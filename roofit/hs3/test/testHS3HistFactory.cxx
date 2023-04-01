@@ -189,10 +189,14 @@ TEST(TestHS3HistFactoryJSON, ClosureLoop)
    RooJSONFactoryWSTool newtool{newws};
    newtool.importJSONfromString(js);
 
-   // To check that JSON > WS > JSON doesn't change the JSON
+   std::string const &js3 = RooJSONFactoryWSTool{newws}.exportJSONtoString();
+
    if (writeJsonFiles) {
       RooJSONFactoryWSTool{newws}.exportJSON("hf3.json");
    }
+
+   // Chack that JSON > WS > JSON doesn't change the JSON
+   EXPECT_EQ(js, js3) << "The JSON -> WS -> JSON roundtrip did not result in the original JSON!";
 
    auto *newmc = dynamic_cast<RooStats::ModelConfig *>(newws.obj("ModelConfig"));
    EXPECT_TRUE(newmc != nullptr);

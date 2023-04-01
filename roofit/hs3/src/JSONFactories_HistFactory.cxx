@@ -197,10 +197,8 @@ Arg_t &getOrCreate(RooWorkspace &ws, std::string const &name, Params_t &&...para
 RooRealVar &getNP(RooWorkspace &ws, std::string const &parname)
 {
    RooRealVar &par = getOrCreate<RooRealVar>(ws, parname, 0., -5, 5);
-   par.setAttribute("np");
    std::string globname = "nom_" + parname;
    RooRealVar &nom = getOrCreate<RooRealVar>(ws, globname, 0.);
-   nom.setAttribute("glob");
    nom.setRange(-10, 10);
    nom.setConstant(true);
    return par;
@@ -219,9 +217,6 @@ ParamHistFunc &createPHF(const std::string &sysname, const std::string &phfname,
    std::string funcParams = "gamma_" + sysname;
    gammas.add(ParamHistFunc::createParamSet(ws, funcParams.c_str(), observables, gamma_min, gamma_max));
    auto &phf = tool.wsEmplace<ParamHistFunc>(phfname, observables, gammas);
-   for (auto &g : gammas) {
-      g->setAttribute("np");
-   }
    for (size_t i = 0; i < gammas.size(); ++i) {
       RooRealVar *v = dynamic_cast<RooRealVar *>(&gammas[i]);
       if (!v)
@@ -232,7 +227,6 @@ ParamHistFunc &createPHF(const std::string &sysname, const std::string &phfname,
          v->setConstant(true);
       } else if (constraintType == "Gauss") {
          auto &nom = tool.wsEmplace<RooRealVar>("nom_" + basename, 1, 0, std::max(10., gamma_max));
-         nom.setAttribute("glob");
          nom.setConstant(true);
          auto &sigma = tool.wsEmplace<RooConstVar>(basename + "_sigma", vals[i]);
          constraints.add(tool.wsEmplace<RooGaussian>(basename + "_constraint", nom, *v, sigma), true);
@@ -240,7 +234,6 @@ ParamHistFunc &createPHF(const std::string &sysname, const std::string &phfname,
          double tau_float = vals[i];
          auto &tau = tool.wsEmplace<RooConstVar>(basename + "_tau", tau_float);
          auto &nom = tool.wsEmplace<RooRealVar>("nom_" + basename, tau_float);
-         nom.setAttribute("glob");
          nom.setConstant(true);
          nom.setMin(0);
          auto &prod = tool.wsEmplace<RooProduct>(basename + "_poisMean", *v, tau);
@@ -497,7 +490,11 @@ public:
          auto &sum = tool->wsEmplace<RooRealSumPdf>(name, funcs, coefs, true);
          sum.setAttribute("BinnedLikelihood");
       } else {
-         auto &sum = tool->wsEmplace<RooRealSumPdf>(name + "_model", funcs, coefs, true);
+         std::string sumName = name + "_model";
+         if (startsWith(sumName, "model_")) {
+            sumName.erase(0, 6);
+         }
+         auto &sum = tool->wsEmplace<RooRealSumPdf>(sumName, funcs, coefs, true);
          sum.SetTitle(name.c_str());
          sum.setAttribute("BinnedLikelihood");
          tool->wsEmplace<RooProdPdf>(name, constraints, RooFit::Conditional(sum, observables));
@@ -626,11 +623,18 @@ void collectElements(RooArgSet &elems, RooAbsArg *arg)
    }
 }
 
-bool tryExportHistFactory(RooWorkspace *ws, const std::string &pdfname, const std::string chname,
-                          const RooRealSumPdf *sumpdf, JSONNode &elem)
+bool tryExportHistFactory(RooWorkspace *ws, const std::string &pdfname, const RooRealSumPdf *sumpdf, JSONNode &elem)
 {
    if (!sumpdf)
       return false;
+
+   std::string chname = pdfname;
+   if (startsWith(chname, "model_")) {
+      chname = chname.substr(6);
+   }
+   if (endsWith(chname, "_model")) {
+      chname = chname.substr(0, chname.size() - 6);
+   }
 
    for (RooAbsArg *sample : sumpdf->funcList()) {
       if (!dynamic_cast<RooProduct *>(sample) && !dynamic_cast<RooRealSumPdf *>(sample)) {
@@ -654,11 +658,11 @@ bool tryExportHistFactory(RooWorkspace *ws, const std::string &pdfname, const st
    };
    struct HistoSys {
       std::string name;
-      std::unique_ptr<TH1> high;
       std::unique_ptr<TH1> low;
+      std::unique_ptr<TH1> high;
       TClass *constraint = RooGaussian::Class();
-      HistoSys(const std::string &n, RooHistFunc *h, RooHistFunc *l, TClass *c)
-         : name(n), high(histFunc2TH1(h)), low(histFunc2TH1(l)), constraint(c){};
+      HistoSys(const std::string &n, RooHistFunc *l, RooHistFunc *h, TClass *c)
+         : name(n), low(histFunc2TH1(l)), high(histFunc2TH1(h)), constraint(c){};
    };
    struct ShapeSys {
       std::string name;
@@ -947,17 +951,7 @@ public:
       for (RooAbsArg *v : prodpdf->pdfList()) {
          sumpdf = dynamic_cast<RooRealSumPdf *>(v);
       }
-      if (!sumpdf)
-         return false;
-      std::string chname(prodpdf->GetName());
-      if (startsWith(chname, "model_")) {
-         chname = chname.substr(6);
-      }
-      if (endsWith(chname, "_model")) {
-         chname = chname.substr(0, chname.size() - 6);
-      }
-
-      return tryExportHistFactory(tool->workspace(), prodpdf->GetName(), chname, sumpdf, elem);
+      return tryExportHistFactory(tool->workspace(), prodpdf->GetName(), sumpdf, elem);
    }
    std::string const &key() const override
    {
@@ -975,16 +969,7 @@ public:
    bool autoExportDependants() const override { return false; }
    bool tryExport(RooJSONFactoryWSTool *tool, const RooRealSumPdf *sumpdf, JSONNode &elem) const
    {
-      if (!sumpdf)
-         return false;
-      std::string chname(sumpdf->GetName());
-      if (startsWith(chname, "model_")) {
-         chname = chname.substr(6);
-      }
-      if (endsWith(chname, "_model")) {
-         chname = chname.substr(0, chname.size() - 6);
-      }
-      return tryExportHistFactory(tool->workspace(), sumpdf->GetName(), chname, sumpdf, elem);
+      return tryExportHistFactory(tool->workspace(), sumpdf->GetName(), sumpdf, elem);
    }
    std::string const &key() const override
    {
