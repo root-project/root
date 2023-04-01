@@ -1039,15 +1039,26 @@ void RooJSONFactoryWSTool::exportData(RooAbsData const &data)
 
    // this is a regular unbinned dataset
 
+   // This works around a problem in RooStats/HistFactory that was only fixed
+   // in ROOT 6.30: until then, the weight variable of the observerd dataset,
+   // called "weightVar", was added to the observables. Therefore, it also got
+   // added to the Asimov dataset. But the Asimov has its own weight variable,
+   // called "binWeightAsimov", making "weightVar" an actual observable in the
+   // Asimov data. But this is only by accident and should be removed.
+   RooArgSet variables = *data.get();
+   if(auto weightVar = variables.find("weightVar")) {
+      variables.remove(*weightVar);
+   }
+
    // Check if this actually represents a binned dataset, and then import it
    // like a RooDataHist. This happens frequently when people create combined
    // RooDataSets from binned data to fit HistFactory models. In this case, it
    // doesn't make sense to export them like an unbinned dataset, because the
    // coordinates are redundant information with the binning. We only do this
    // for 1D data for now.
-   if (data.isWeighted() && data.get()->size() == 1) {
+   if (data.isWeighted() && variables.size() == 1) {
       bool isBinnedData = false;
-      auto &x = static_cast<RooRealVar const &>(*(*data.get())[0]);
+      auto &x = static_cast<RooRealVar const &>(*variables[0]);
       std::vector<double> contents;
       int i = 0;
       for (; i < data.numEntries(); ++i) {
@@ -1059,18 +1070,19 @@ void RooJSONFactoryWSTool::exportData(RooAbsData const &data)
       if (i == x.numBins())
          isBinnedData = true;
       if (isBinnedData) {
-         return exportHisto(*data.get(), data.numEntries(), contents.data(), output);
+         return exportHisto(variables, data.numEntries(), contents.data(), output);
       }
    }
 
-   exportVariables(*data.get(), output["axes"]);
+   exportVariables(variables, output["axes"]);
    auto &coords = output["entries"];
    coords.set_seq();
    auto *weights = data.isWeighted() ? &output["weights"] : nullptr;
    if (weights)
       weights->set_seq();
    for (int i = 0; i < data.numEntries(); ++i) {
-      coords.append_child().fill_seq(*data.get(i), [](auto x) { return static_cast<RooRealVar *>(x)->getVal(); });
+      data.get(i);
+      coords.append_child().fill_seq(variables, [](auto x) { return static_cast<RooRealVar *>(x)->getVal(); });
       if (weights)
          weights->append_child() << data.weight();
    }
