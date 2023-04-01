@@ -489,7 +489,7 @@ public:
 
       ooccoutI(nullptr,InputArguments) << "PosteriorFunctionFromToyMC::Pdf used for randomizing the nuisance is " << fPdf->GetName() << std::endl;
       // check that pdf contains  the nuisance
-      RooArgSet * vars = fPdf->getVariables();
+      std::unique_ptr<RooArgSet> vars{fPdf->getVariables()};
       for (int i = 0; i < fNuisParams.getSize(); ++i) {
          if (!vars->find( fNuisParams[i].GetName() ) ) {
             ooccoutW(nullptr,InputArguments) << "Nuisance parameter " << fNuisParams[i].GetName()
@@ -497,7 +497,6 @@ public:
                                                  << "they will be treated as constant " << std::endl;
          }
       }
-      delete vars;
 
       if (!fRedoToys) {
          ooccoutI(nullptr,InputArguments) << "PosteriorFunctionFromToyMC::Generate nuisance toys only one time (for all POI points)" << std::endl;
@@ -799,9 +798,9 @@ RooAbsReal* BayesianCalculator::GetPosteriorFunction() const
    }
 
 
-   RooArgSet* constrainedParams = fPdf->getParameters(*fData);
+   std::unique_ptr<RooArgSet> constrainedParams{fPdf->getParameters(*fData)};
    // remove the constant parameters
-   RemoveConstantParameters(constrainedParams);
+   RemoveConstantParameters(&*constrainedParams);
 
    //constrainedParams->Print("V");
 
@@ -866,8 +865,6 @@ RooAbsReal* BayesianCalculator::GetPosteriorFunction() const
 
    delete nllFunc;
 
-   delete constrainedParams;
-
 
    if ( fNuisanceParameters.empty() ||  fIntegrationType.Contains("ROOFIT") ) {
 
@@ -898,11 +895,10 @@ RooAbsReal* BayesianCalculator::GetPosteriorFunction() const
          pdfAndPrior = fProductPdf;
       }
 
-      RooArgSet* constrParams = fPdf->getParameters(*fData);
+      std::unique_ptr<RooArgSet> constrParams{fPdf->getParameters(*fData)};
       // remove the constant parameters
-      RemoveConstantParameters(constrParams);
+      RemoveConstantParameters(&*constrParams);
       fLogLike = pdfAndPrior->createNLL(*fData, RooFit::Constrain(*constrParams),RooFit::ConditionalObservables(fConditionalObs),RooFit::GlobalObservables(fGlobalObs) );
-      delete constrParams;
 
       TString likeName = TString("likelihood_times_prior_") + TString(pdfAndPrior->GetName());
       TString formula;

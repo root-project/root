@@ -63,7 +63,7 @@ public:
   bool forceAnalyticalInt(const RooAbsArg& dep) const override ;
 
   virtual double coefficient(Int_t basisIndex) const = 0 ;
-  virtual RooArgSet* coefVars(Int_t coefIdx) const ;
+  virtual RooFit::OwningPtr<RooArgSet> coefVars(Int_t coefIdx) const ;
 
   bool isDirectGenSafe(const RooAbsArg& arg) const override ;
 

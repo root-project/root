@@ -270,11 +270,11 @@ RooArgSet* RooNumRunningInt::actualObservables(const RooArgSet& /*nset*/) const
 /// These are always the input functions parameter, but never the
 /// integrated variable x.
 
-RooArgSet* RooNumRunningInt::actualParameters(const RooArgSet& /*nset*/) const
+RooFit::OwningPtr<RooArgSet> RooNumRunningInt::actualParameters(const RooArgSet& /*nset*/) const
 {
-  RooArgSet* ret = func.arg().getParameters(RooArgSet()) ;
+  auto ret = func.arg().getParameters(RooArgSet()) ;
   ret->remove(x.arg(),true,true) ;
-  return ret ;
+  return ret;
 }
 
 

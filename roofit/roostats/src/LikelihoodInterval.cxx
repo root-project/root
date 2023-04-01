@@ -129,7 +129,7 @@ bool LikelihoodInterval::IsInInterval(const RooArgSet &parameterPoint) const
 
 
   // set parameters
-  SetParameters(&parameterPoint, fLikelihoodRatio->getVariables() );
+  SetParameters(&parameterPoint, std::unique_ptr<RooArgSet>{fLikelihoodRatio->getVariables()}.get());
 
 
   // evaluate likelihood ratio, see if it's bigger than threshold
@@ -227,12 +227,11 @@ bool LikelihoodInterval::CreateMinimizer() {
    // bind the nll function in the right interface for the Minimizer class
    // as a function of only the parameters (poi + nuisance parameters)
 
-   RooArgSet * partmp = profilell->getVariables();
+   std::unique_ptr<RooArgSet> partmp{profilell->getVariables()};
    // need to remove constant parameters
-   RemoveConstantParameters(partmp);
+   RemoveConstantParameters(&*partmp);
 
    RooArgList params(*partmp);
-   delete partmp;
 
    // need to restore values and errors for POI
    if (fBestFitParams) {
@@ -311,10 +310,9 @@ bool LikelihoodInterval::FindLimits(const RooRealVar & param, double &lower, dou
    }
 
 
-   RooArgSet * partmp = fLikelihoodRatio->getVariables();
-   RemoveConstantParameters(partmp);
+   std::unique_ptr<RooArgSet> partmp{fLikelihoodRatio->getVariables()};
+   RemoveConstantParameters(&*partmp);
    RooArgList params(*partmp);
-   delete partmp;
    int ix = params.index(&param);
    if (ix < 0 ) {
       ccoutE(InputArguments) << "Error - invalid parameter " << param.GetName() << " specified for finding the interval limits " << std::endl;
@@ -375,10 +373,9 @@ Int_t LikelihoodInterval::GetContourPoints(const RooRealVar & paramX, const RooR
    // check the parameters
    // variable index in minimizer
    // is index in the RooArgList obtained from the profileLL variables
-   RooArgSet * partmp = fLikelihoodRatio->getVariables();
-   RemoveConstantParameters(partmp);
+   std::unique_ptr<RooArgSet> partmp{fLikelihoodRatio->getVariables()};
+   RemoveConstantParameters(&*partmp);
    RooArgList params(*partmp);
-   delete partmp;
    int ix = params.index(&paramX);
    int iy = params.index(&paramY);
    if (ix < 0 || iy < 0) {
