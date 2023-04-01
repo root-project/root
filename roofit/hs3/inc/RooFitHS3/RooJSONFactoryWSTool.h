@@ -165,7 +165,8 @@ public:
    static void
    writeCombinedDataName(RooFit::Detail::JSONNode &rootnode, std::string const &pdfName, std::string const &dataName);
 
-   static void exportDataHist(RooDataHist const &dataHist, RooFit::Detail::JSONNode &node);
+   static void
+   exportHisto(RooArgSet const &vars, std::size_t n, double const *contents, RooFit::Detail::JSONNode &output);
 
    static void exportCategory(RooAbsCategory const &cat, RooFit::Detail::JSONNode &node);
 
