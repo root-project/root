@@ -281,7 +281,7 @@ RooAbsData* ToyMCImportanceSampler::GenerateToyData(
 
 
    // assign input paramPoint
-   RooArgSet* allVars = fPdf->getVariables();
+   std::unique_ptr<RooArgSet> allVars{fPdf->getVariables()};
    allVars->assign(paramPoint);
 
 
@@ -300,9 +300,8 @@ RooAbsData* ToyMCImportanceSampler::GenerateToyData(
    // save values to restore later.
    // but this must remain after(!) generating global observables
    if( !fGenerateFromNull ) {
-      RooArgSet* allVarsImpDens = fImportanceDensities[fIndexGenDensity]->getVariables();
+      std::unique_ptr<RooArgSet> allVarsImpDens{fImportanceDensities[fIndexGenDensity]->getVariables()};
       allVars->add(*allVarsImpDens);
-      delete allVarsImpDens;
    }
    const RooArgSet* saveVars = (const RooArgSet*)allVars->snapshot();
 
@@ -358,10 +357,9 @@ RooAbsData* ToyMCImportanceSampler::GenerateToyData(
 
       allVars->assign(*fNullSnapshots[i]);
       if( !fNullNLLs[i] ) {
-         RooArgSet* allParams = fNullDensities[i]->getParameters(*data);
+         std::unique_ptr<RooArgSet> allParams{fNullDensities[i]->getParameters(*data)};
          fNullNLLs[i] = fNullDensities[i]->createNLL(*data, RooFit::CloneData(false), RooFit::Constrain(*allParams),
                                                      RooFit::ConditionalObservables(fConditionalObs));
-         delete allParams;
       }else{
          fNullNLLs[i]->setData( *data, false );
       }
@@ -384,10 +382,9 @@ RooAbsData* ToyMCImportanceSampler::GenerateToyData(
         allVars->assign(*fImportanceSnapshots[i]);
       }
       if( !fImpNLLs[i] ) {
-         RooArgSet* allParams = fImportanceDensities[i]->getParameters(*data);
+         std::unique_ptr<RooArgSet> allParams{fImportanceDensities[i]->getParameters(*data)};
          fImpNLLs[i] = fImportanceDensities[i]->createNLL(*data, RooFit::CloneData(false), RooFit::Constrain(*allParams),
                                                           RooFit::ConditionalObservables(fConditionalObs));
-         delete allParams;
       }else{
          fImpNLLs[i]->setData( *data, false );
       }
@@ -420,7 +417,6 @@ RooAbsData* ToyMCImportanceSampler::GenerateToyData(
 
 
    allVars->assign(*saveVars);
-   delete allVars;
    delete saveVars;
 
    return data;

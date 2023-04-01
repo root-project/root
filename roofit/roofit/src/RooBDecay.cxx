@@ -132,7 +132,7 @@ double RooBDecay::coefficient(Int_t basisIndex) const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooArgSet* RooBDecay::coefVars(Int_t basisIndex) const
+RooFit::OwningPtr<RooArgSet> RooBDecay::coefVars(Int_t basisIndex) const
 {
   if(basisIndex == _basisCosh)
     {
@@ -151,7 +151,7 @@ RooArgSet* RooBDecay::coefVars(Int_t basisIndex) const
       return _f3.arg().getVariables();
     }
 
-  return 0 ;
+  return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

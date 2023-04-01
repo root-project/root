@@ -119,7 +119,7 @@ RooArgSet* RooAbsSelfCachedReal::actualObservables(const RooArgSet& nset) const
 /// subset of variables of self that is not contained in the
 /// supplied nset
 
-RooArgSet* RooAbsSelfCachedReal::actualParameters(const RooArgSet& nset) const
+RooFit::OwningPtr<RooArgSet> RooAbsSelfCachedReal::actualParameters(const RooArgSet& nset) const
 {
   // Make list of servers
   RooArgSet *serverSet = new RooArgSet;
@@ -131,12 +131,5 @@ RooArgSet* RooAbsSelfCachedReal::actualParameters(const RooArgSet& nset) const
   // Remove all given observables from server list
   serverSet->remove(nset,true,true);
 
-  return serverSet;
+  return RooFit::OwningPtr<RooArgSet>{serverSet};
 }
-
-
-
-
-
-
-

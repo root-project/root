@@ -423,10 +423,10 @@ void SPlot::AddSWeight( RooAbsPdf* pdf, const RooArgList &yieldsTmp,
 
   // Find Parameters in the PDF to be considered fixed when calculating the SWeights
   // and be sure to NOT include the yields in that list
-  RooArgList* constParameters = (RooArgList*)pdf->getParameters(fSData) ;
+  std::unique_ptr<RooArgSet> constParameters{pdf->getParameters(fSData)};
   for (unsigned int i=0; i < constParameters->size(); ++i) {
     // Need a counting loop since collection is being modified
-    auto& par = (*constParameters)[i];
+    auto& par = *(*constParameters)[i];
     if (std::any_of(yieldsTmp.begin(), yieldsTmp.end(), [&](const RooAbsArg* yield){ return yield->dependsOn(par); })) {
       constParameters->remove(par, true, true);
       --i;
@@ -440,7 +440,7 @@ void SPlot::AddSWeight( RooAbsPdf* pdf, const RooArgList &yieldsTmp,
 
   for(Int_t i = 0; i < constParameters->getSize(); i++)
   {
-    RooAbsRealLValue* varTemp = static_cast<RooAbsRealLValue*>( constParameters->at(i) );
+    RooAbsRealLValue* varTemp = static_cast<RooAbsRealLValue*>( (*constParameters)[i] );
     if(varTemp &&  varTemp->isConstant() == 0 )
     {
       varTemp->setConstant();
@@ -531,7 +531,7 @@ void SPlot::AddSWeight( RooAbsPdf* pdf, const RooArgList &yieldsTmp,
   // and all others to 0.  Evaluate the pdf for each event
   // and store the values.
 
-  RooArgSet * pdfvars = pdf->getVariables();
+  std::unique_ptr<RooArgSet> pdfvars{pdf->getVariables()};
   std::vector<std::vector<double> > pdfvalues(numevents,std::vector<double>(nspec,0)) ;
 
   for (Int_t ievt = 0; ievt <numevents; ievt++)
@@ -553,7 +553,6 @@ void SPlot::AddSWeight( RooAbsPdf* pdf, const RooArgList &yieldsTmp,
       theVar->setVal( 0 ) ;
     }
   }
-  delete pdfvars;
 
   // check that the likelihood normalization is fine
   std::vector<double> norm(nspec,0) ;
