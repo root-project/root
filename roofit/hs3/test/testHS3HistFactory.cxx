@@ -106,12 +106,7 @@ measurement(const char *inputFileName = "test_hs3_histfactory_json_input.root")
 
 } // namespace
 
-TEST(TestHS3HistFactoryJSON, Create)
-{
-   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
-}
-
-TEST(TestHS3HistFactoryJSON, Closure)
+TEST(TestHS3HistFactoryJSON, HistFactoryJSONTool)
 {
    RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
 
@@ -144,27 +139,27 @@ TEST(TestHS3HistFactoryJSON, Closure)
    RooAbsData *dataFromJson = wsFromJson.data("obsData");
    EXPECT_TRUE(dataFromJson != nullptr);
 
+   // TODO: At this point, the global observables are not written into the JSON
+   // by the HistFactoryJSONTool. This should be fixed. For now, we mirror the
+   // global observables from the reference workspace.
+   RooArgSet const &globs = *mc->GetGlobalObservables();
+   RooArgSet globsInJson;
+   for (RooAbsArg const *arg : globs) {
+      globsInJson.add(*wsFromJson.var(arg->GetName()));
+   };
+
    using namespace RooFit;
 
    std::unique_ptr<RooFitResult> result{pdf->fitTo(*data, Strategy(1), Minos(*mc->GetParametersOfInterest()),
-                                                   GlobalObservables(*mc->GetGlobalObservables()), PrintLevel(-1),
-                                                   Save())};
+                                                   GlobalObservables(globs), PrintLevel(-1), Save())};
 
    std::unique_ptr<RooFitResult> resultFromJson{
       pdfFromJson->fitTo(*dataFromJson, Strategy(1), Minos(*mcFromJson->GetParametersOfInterest()),
-                         GlobalObservables(*mcFromJson->GetGlobalObservables()), PrintLevel(-1), Save())};
+                         GlobalObservables(globsInJson), PrintLevel(-1), Save())};
 
-   // TODO:
-   //   * fix issues that prevent us from increasing precision
-   //   * do also the reverse comparison to check that the set of constant parameters matches
-   // EXPECT_TRUE(result->isIdenticalNoCov(*resultFromJSON, 10.0, 0.01));
-   EXPECT_TRUE(resultFromJson->isIdenticalNoCov(*result, 10.0, 0.01));
-
-   const double muVal = ws->var("mu")->getVal();
-   const double muJsonVal = wsFromJson.var("mu")->getVal();
-
-   EXPECT_NEAR(muJsonVal, muVal, 1e-4);         // absolute tolerance
-   EXPECT_NEAR(muJsonVal, muVal, 1e-4 * muVal); // relative tolerance
+   // TODO: do also the reverse comparison to check that the set of constant parameters matches
+   // EXPECT_TRUE(result->isIdentical(*resultFromJSON));
+   EXPECT_TRUE(resultFromJson->isIdentical(*result));
 }
 
 TEST(TestHS3HistFactoryJSON, ClosureLoop)
@@ -210,25 +205,25 @@ TEST(TestHS3HistFactoryJSON, ClosureLoop)
    RooAbsData *newdata = newws.data("obsData");
    EXPECT_TRUE(newdata != nullptr);
 
+   // TODO: At this point, the global observables are not written into the JSON
+   // by the HistFactoryJSONTool. This should be fixed. For now, we mirror the
+   // global observables from the reference workspace.
+   RooArgSet const &globs = *mc->GetGlobalObservables();
+   RooArgSet globsInJson;
+   for (RooAbsArg const *arg : globs) {
+      globsInJson.add(*newws.var(arg->GetName()));
+   };
+
    using namespace RooFit;
 
    std::unique_ptr<RooFitResult> result{pdf->fitTo(*data, Strategy(1), Minos(*mc->GetParametersOfInterest()),
-                                                   GlobalObservables(*mc->GetGlobalObservables()), PrintLevel(-1),
-                                                   Save())};
+                                                   GlobalObservables(globs), PrintLevel(-1), Save())};
 
-   std::unique_ptr<RooFitResult> newresult{
-      newpdf->fitTo(*newdata, Strategy(1), Minos(*newmc->GetParametersOfInterest()),
-                    GlobalObservables(*newmc->GetGlobalObservables()), PrintLevel(-1), Save())};
+   std::unique_ptr<RooFitResult> newresult{newpdf->fitTo(*newdata, Strategy(1),
+                                                         Minos(*newmc->GetParametersOfInterest()),
+                                                         GlobalObservables(globsInJson), PrintLevel(-1), Save())};
 
-   // TODO:
-   //   * fix issues that prevent us from increasing precision
-   //   * do also the reverse comparison to check that the set of constant parameters matches
-   // EXPECT_TRUE(result->isIdenticalNoCov(*newresult, 10.0, 0.01));
-   EXPECT_TRUE(newresult->isIdenticalNoCov(*result, 10.0, 0.01));
-
-   const double muVal = ws->var("mu")->getVal();
-   const double muNewVal = newws.var("mu")->getVal();
-
-   EXPECT_NEAR(muNewVal, muVal, 1e-4);         // absolute tolerance
-   EXPECT_NEAR(muNewVal, muVal, 1e-4 * muVal); // relative tolerance
+   // TODO: do also the reverse comparison to check that the set of constant parameters matches
+   // EXPECT_TRUE(result->isIdentical(*resultFromJSON));
+   EXPECT_TRUE(newresult->isIdentical(*result));
 }
