@@ -68,10 +68,10 @@ public:
   RooAbsPdf::GenSpec* _genSpec ; ///<!
   RooRealVar* _nllVar ; ///<!
   RooRealVar* _ngenVar ; ///<!
-  RooArgSet* _params ; ///<!
+  std::unique_ptr<RooArgSet> _params; ///<!
   RooArgSet* _initParams; ///<!
 
-  ClassDefOverride(RooGenFitStudy,1) // Generate-and-Fit study module
+  ClassDefOverride(RooGenFitStudy,2) // Generate-and-Fit study module
 } ;
 
 

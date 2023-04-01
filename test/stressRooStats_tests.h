@@ -354,9 +354,8 @@ public:
       w->var("y")->setVal(fObsValueY);
       w->data("data")->add(*model->GetObservables());
 
-      const RooArgSet * initialVariables = model->GetPdf()->getVariables();
+      std::unique_ptr<RooArgSet> initialVariables{model->GetPdf()->getVariables()};
       w->saveSnapshot("initialVariables",*initialVariables);
-      delete initialVariables;
 
       // build likelihood interval with ProfileLikelihoodCalculator
       ProfileLikelihoodCalculator *plc = new ProfileLikelihoodCalculator(*w->data("data"), *model);
@@ -876,9 +875,8 @@ public:
       w->var("y")->setVal(fObsValueY);
       w->data("data")->add(*model->GetObservables());
 
-      const RooArgSet * initialVariables = model->GetPdf()->getVariables();
+      std::unique_ptr<RooArgSet> initialVariables{model->GetPdf()->getVariables()};
       w->saveSnapshot("initialVariables",*initialVariables);
-      delete initialVariables;
 
       // NOTE: Roo1DIntegrator is too slow and gives poor results
 #ifdef R__HAS_MATHMORE
@@ -1004,9 +1002,8 @@ public:
       w->var("y")->setVal(fObsValueY);
       w->data("data")->add(*model->GetObservables());
 
-      const RooArgSet * initialVariables = model->GetPdf()->getVariables();
+      std::unique_ptr<RooArgSet> initialVariables{model->GetPdf()->getVariables()};
       w->saveSnapshot("initialVariables",*initialVariables);
-      delete initialVariables;
 
       // NOTE: Roo1DIntegrator is too slow and gives poor results
 #ifdef R__HAS_MATHMORE
@@ -1487,9 +1484,8 @@ public:
       w->var("y")->setVal(fObsValueY);
       w->data("data")->add(*sbModel->GetObservables());
 
-      const RooArgSet * initialVariables = sbModel->GetPdf()->getVariables();
+      std::unique_ptr<RooArgSet> initialVariables{sbModel->GetPdf()->getVariables()};
       w->saveSnapshot("initialVariables",*initialVariables);
-      delete initialVariables;
 
       // set snapshots
       w->var("sig")->setVal(fObsValueX - w->var("bkg1")->getValV());
@@ -1657,9 +1653,8 @@ public:
       w->var("x")->setVal(fObsValueX);
       w->data("data")->add(*sbModel->GetObservables());
 
-      const RooArgSet * initialVariables = sbModel->GetPdf()->getVariables();
+      std::unique_ptr<RooArgSet> initialVariables{sbModel->GetPdf()->getVariables()};
       w->saveSnapshot("initialVariables",*initialVariables);
-      delete initialVariables;
 
       // set snapshots
       sbModel->SetSnapshot(*sbModel->GetParametersOfInterest());

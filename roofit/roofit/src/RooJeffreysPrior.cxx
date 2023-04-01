@@ -107,7 +107,7 @@ double RooJeffreysPrior::evaluate() const
     //and we start to clone again.
     auto& pdf = _nominal.arg();
     RooAbsPdf* clonePdf = static_cast<RooAbsPdf*>(pdf.cloneTree());
-    auto vars = clonePdf->getParameters(_obsSet);
+    std::unique_ptr<RooArgSet> vars{clonePdf->getParameters(_obsSet)};
     for (auto varTmp : *vars) {
       auto& var = static_cast<RooRealVar&>(*varTmp);
       auto range = var.getRange();
@@ -117,7 +117,7 @@ double RooJeffreysPrior::evaluate() const
 
     cacheElm = new CacheElem;
     cacheElm->_pdf.reset(clonePdf);
-    cacheElm->_pdfVariables.reset(vars);
+    cacheElm->_pdfVariables = std::move(vars);
 
     _cacheMgr.setObj(nullptr, cacheElm);
   }

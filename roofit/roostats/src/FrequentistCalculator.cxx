@@ -56,8 +56,8 @@ int FrequentistCalculator::PreNullHook(RooArgSet *parameterPoint, double obsTest
    // ****** any TestStatSampler ********
 
    // create profile keeping everything but nuisance parameters fixed
-   RooArgSet * allParams = fNullModel->GetPdf()->getParameters(*fData);
-   RemoveConstantParameters(allParams);
+   std::unique_ptr<RooArgSet> allParams{fNullModel->GetPdf()->getParameters(*fData)};
+   RemoveConstantParameters(&*allParams);
 
    // note: making nll or profile class variables can only be done in the constructor
    // as all other hooks are const (which has to be because GetHypoTest is const). However,
@@ -132,8 +132,6 @@ int FrequentistCalculator::PreNullHook(RooArgSet *parameterPoint, double obsTest
    if(fNullModel->GetNuisanceParameters())
       parameterPoint->add(*fNullModel->GetNuisanceParameters());
 
-   delete allParams;
-
 
    // ***** ToyMCSampler specific *******
 
@@ -173,8 +171,8 @@ int FrequentistCalculator::PreAltHook(RooArgSet *parameterPoint, double obsTestS
    // ****** any TestStatSampler ********
 
    // create profile keeping everything but nuisance parameters fixed
-   RooArgSet * allParams = fAltModel->GetPdf()->getParameters(*fData);
-   RemoveConstantParameters(allParams);
+   std::unique_ptr<RooArgSet> allParams{fAltModel->GetPdf()->getParameters(*fData)};
+   RemoveConstantParameters(&*allParams);
 
    bool doProfile = true;
    RooArgSet allButNuisance(*allParams);
@@ -243,8 +241,6 @@ int FrequentistCalculator::PreAltHook(RooArgSet *parameterPoint, double obsTestS
    // add nuisance parameters to parameter point
    if(fAltModel->GetNuisanceParameters())
       parameterPoint->add(*fAltModel->GetNuisanceParameters());
-
-   delete allParams;
 
    // ***** ToyMCSampler specific *******
 

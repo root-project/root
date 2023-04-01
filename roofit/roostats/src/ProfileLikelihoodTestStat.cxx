@@ -84,8 +84,8 @@ double RooStats::ProfileLikelihoodTestStat::EvaluateProfileLikelihood(int type, 
 
        bool created(false) ;
        if (!reuse || fNll==0) {
-          RooArgSet* allParams = fPdf->getParameters(data);
-          RooStats::RemoveConstantParameters(allParams);
+          std::unique_ptr<RooArgSet> allParams{fPdf->getParameters(data)};
+          RooStats::RemoveConstantParameters(&*allParams);
 
           // need to call constrain for RooSimultaneous until stripDisconnected problem fixed
           fNll = fPdf->createNLL(data, RooFit::CloneData(false),RooFit::Constrain(*allParams),
@@ -94,7 +94,6 @@ double RooStats::ProfileLikelihoodTestStat::EvaluateProfileLikelihood(int type, 
           if (fPrintLevel > 0 && fLOffset) cout << "ProfileLikelihoodTestStat::Evaluate - Use Offset in creating NLL " << endl ;
 
           created = true ;
-          delete allParams;
           if (fPrintLevel > 1) cout << "creating NLL " << fNll << " with data = " << &data << endl ;
        }
        if (reuse && !created) {
@@ -109,7 +108,7 @@ double RooStats::ProfileLikelihoodTestStat::EvaluateProfileLikelihood(int type, 
 
 
        // make sure we set the variables attached to this nll
-       RooArgSet* attachedSet = fNll->getVariables();
+       std::unique_ptr<RooArgSet> attachedSet{fNll->getVariables()};
 
        attachedSet->assign(paramsOfInterest);
        RooArgSet* origAttachedSet = (RooArgSet*) attachedSet->snapshot();
@@ -272,7 +271,6 @@ double RooStats::ProfileLikelihoodTestStat::EvaluateProfileLikelihood(int type, 
        // need to restore the values ?
        attachedSet->assign(*origAttachedSet);
 
-       delete attachedSet;
        delete origAttachedSet;
        delete snap;
 

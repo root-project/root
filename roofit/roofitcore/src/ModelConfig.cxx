@@ -113,13 +113,13 @@ void ModelConfig::GuessObsAndNuisance(const RooAbsData &data, bool printModelCon
    //      SetParametersOfInterest(RooArgSet());
    //   }
    if (!GetNuisanceParameters()) {
-      const RooArgSet *params = GetPdf()->getParameters(data);
-      RooArgSet p(*params);
+      RooArgSet params;
+      GetPdf()->getParameters(data.get(), params);
+      RooArgSet p(params);
       p.remove(*GetParametersOfInterest());
       removeConstantParameters(p);
       if (p.getSize() > 0)
          SetNuisanceParameters(p);
-      delete params;
    }
 
    // print Modelconfig as an info message

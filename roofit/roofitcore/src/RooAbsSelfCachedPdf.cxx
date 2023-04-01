@@ -120,7 +120,7 @@ RooArgSet* RooAbsSelfCachedPdf::actualObservables(const RooArgSet& /*nset*/) con
 /// subset of variables of self that is not contained in the
 /// supplied nset
 
-RooArgSet* RooAbsSelfCachedPdf::actualParameters(const RooArgSet& nset) const
+RooFit::OwningPtr<RooArgSet> RooAbsSelfCachedPdf::actualParameters(const RooArgSet& nset) const
 {
   RooArgSet *serverSet = new RooArgSet;
 
@@ -131,7 +131,7 @@ RooArgSet* RooAbsSelfCachedPdf::actualParameters(const RooArgSet& nset) const
   // Remove all given observables from server list
   serverSet->remove(nset,true,true);
 
-  return serverSet;
+  return RooFit::OwningPtr<RooArgSet>{serverSet};
 }
 
 

@@ -170,18 +170,17 @@ MCMCInterval* MCMCCalculator::GetInterval() const
       prodPdf = new RooProdPdf(prodName,prodName,RooArgList(*fPdf,*fPriorPdf) );
    }
 
-   RooArgSet* constrainedParams = prodPdf->getParameters(*fData);
+   std::unique_ptr<RooArgSet> constrainedParams{prodPdf->getParameters(*fData)};
    RooAbsReal* nll = prodPdf->createNLL(*fData, Constrain(*constrainedParams),ConditionalObservables(fConditionalObs),GlobalObservables(fGlobalObs));
-   delete constrainedParams;
 
-   RooArgSet* params = nll->getParameters(*fData);
-   RemoveConstantParameters(params);
+   std::unique_ptr<RooArgSet> params{nll->getParameters(*fData)};
+   RemoveConstantParameters(&*params);
    if (fNumBins > 0) {
       SetBins(*params, fNumBins);
       SetBins(fPOI, fNumBins);
       if (dynamic_cast<PdfProposal*>(fPropFunc)) {
-         RooArgSet* proposalVars = ((PdfProposal*)fPropFunc)->GetPdf()->
-                                               getParameters((RooAbsData*)nullptr);
+         std::unique_ptr<RooArgSet> proposalVars{((PdfProposal*)fPropFunc)->GetPdf()->
+                                               getParameters((RooAbsData*)nullptr)};
          SetBins(*proposalVars, fNumBins);
       }
    }
@@ -217,7 +216,6 @@ MCMCInterval* MCMCCalculator::GetInterval() const
    if (useDefaultPropFunc) delete fPropFunc;
    if (usePriorPdf) delete prodPdf;
    delete nll;
-   delete params;
 
    return interval;
 }

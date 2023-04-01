@@ -51,7 +51,6 @@ RooGenFitStudy::RooGenFitStudy(const char* name, const char* title) :
   _genSpec(0),
   _nllVar(0),
   _ngenVar(0),
-  _params(0),
   _initParams(0)
 {
 }
@@ -72,7 +71,6 @@ RooGenFitStudy::RooGenFitStudy(const RooGenFitStudy& other) :
   _genSpec(0),
   _nllVar(0),
   _ngenVar(0),
-  _params(0),
   _initParams(0)
 {
   for(TObject * o : other._genOpts) _genOpts.Add(o->Clone());
@@ -85,7 +83,6 @@ RooGenFitStudy::RooGenFitStudy(const RooGenFitStudy& other) :
 
 RooGenFitStudy::~RooGenFitStudy()
 {
-  if (_params) delete _params ;
 }
 
 
@@ -164,7 +161,7 @@ bool RooGenFitStudy::initialize()
   _nllVar = new RooRealVar("NLL","-log(Likelihood)",0) ;
   _ngenVar = new RooRealVar("ngen","number of generated events",0) ;
 
-  _params = _fitPdf->getParameters(_genObs) ;
+  _params = std::unique_ptr<RooArgSet>{_fitPdf->getParameters(_genObs)};
   RooArgSet modelParams(*_params) ;
   _initParams = new RooArgSet;
   _params->snapshot(*_initParams);
@@ -206,12 +203,11 @@ bool RooGenFitStudy::execute()
 
 bool RooGenFitStudy::finalize()
 {
-  delete _params ;
   delete _nllVar ;
   delete _ngenVar ;
   delete _initParams ;
   delete _genSpec ;
-  _params = 0 ;
+  _params.reset();
   _nllVar = 0 ;
   _ngenVar = 0 ;
   _initParams = 0 ;

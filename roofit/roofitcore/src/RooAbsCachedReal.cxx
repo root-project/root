@@ -207,7 +207,7 @@ RooAbsCachedReal::FuncCacheElem::FuncCacheElem(const RooAbsCachedReal& self, con
   _func->setValueDirty() ;
 
   // Create pseudo-object that tracks changes in parameter values
-  RooArgSet* params = self.actualParameters(orderedObs) ;
+  std::unique_ptr<RooArgSet> params{self.actualParameters(orderedObs)};
   string name= Form("%s_CACHEPARAMS",_func->GetName()) ;
   _paramTracker = new RooChangeTracker(name.c_str(),name.c_str(),*params,true) ;
   _paramTracker->hasChanged(true) ; // clear dirty flag as cache is up-to-date upon creation
@@ -216,11 +216,8 @@ RooAbsCachedReal::FuncCacheElem::FuncCacheElem(const RooAbsCachedReal& self, con
   // makes the correct decisions
   _func->addServerList(*params) ;
 
-
   delete observables ;
-  delete params ;
   delete nset2 ;
-
 }
 
 

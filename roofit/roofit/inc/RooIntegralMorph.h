@@ -95,7 +95,7 @@ protected:
   PdfCacheElem* createCache(const RooArgSet* nset) const override ;
   const char* inputBaseName() const override ;
   RooArgSet* actualObservables(const RooArgSet& nset) const override ;
-  RooArgSet* actualParameters(const RooArgSet& nset) const override ;
+  RooFit::OwningPtr<RooArgSet> actualParameters(const RooArgSet& nset) const override ;
   void fillCacheObject(PdfCacheElem& cache) const override ;
 
   RooRealProxy pdf1 ; // First input shape

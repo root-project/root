@@ -344,7 +344,7 @@ void xRooNLLVar::reinitialize()
       }
    }
 
-   fFuncVars.reset(std::shared_ptr<RooAbsReal>::get()->getVariables());
+   fFuncVars = std::unique_ptr<RooArgSet>{std::shared_ptr<RooAbsReal>::get()->getVariables()};
    if (fGlobs) {
       fFuncGlobs.reset(fFuncVars->selectCommon(*fGlobs));
       fFuncGlobs->setAttribAll("Constant", true);

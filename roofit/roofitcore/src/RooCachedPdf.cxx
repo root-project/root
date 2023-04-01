@@ -156,12 +156,9 @@ RooArgSet* RooCachedPdf::actualObservables(const RooArgSet& nset) const
 /// the cache observables. If this p.d.f is operated in automatic mode,
 /// return the parameters of the external input p.d.f
 
-RooArgSet* RooCachedPdf::actualParameters(const RooArgSet& nset) const
+RooFit::OwningPtr<RooArgSet> RooCachedPdf::actualParameters(const RooArgSet& nset) const
 {
-  if (_cacheObs.getSize()>0) {
-    return pdf.arg().getParameters(_cacheObs) ;
-  }
-  return pdf.arg().getParameters(nset) ;
+   return pdf.arg().getParameters(_cacheObs.empty() ? nset : _cacheObs) ;
 }
 
 

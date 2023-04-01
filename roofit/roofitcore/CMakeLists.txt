@@ -20,6 +20,7 @@ endif()
 
 ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
   HEADERS
+    RooFit/Config.h
     RooFit/Detail/AnalyticalIntegrals.h
     RooFit/Detail/EvaluateFuncs.h
     RooFit/Detail/CodeSquashContext.h

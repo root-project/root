@@ -238,9 +238,8 @@ int  FitUsingRooFit(TTree & tree, RooAbsPdf & pdf, RooArgSet & xvars) {
    w.Stop();
 
    std::cout << "RooFit result " << std::endl;
-   RooArgSet * params = pdf.getParameters(xvars);
+   std::unique_ptr<RooArgSet> params{pdf.getParameters(xvars)};
    params->Print("v");
-   delete params;
 
 
    std::cout << "\nTime: \t" << w.RealTime() << " , " << w.CpuTime() << std::endl;

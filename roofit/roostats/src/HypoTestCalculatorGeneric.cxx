@@ -128,10 +128,9 @@ HypoTestResult* HypoTestCalculatorGeneric::GetHypoTest() const {
    }
 
    // get a big list of all variables for convenient switching
-   RooArgSet *nullParams = fNullModel->GetPdf()->getParameters(*fData);
-   RooArgSet *altParams = fAltModel->GetPdf()->getParameters(*fData);
+   std::unique_ptr<RooArgSet> altParams{fAltModel->GetPdf()->getParameters(*fData)};
    // save all parameters so we can set them back to what they were
-   RooArgSet *bothParams = fNullModel->GetPdf()->getParameters(*fData);
+   std::unique_ptr<RooArgSet> bothParams{fNullModel->GetPdf()->getParameters(*fData)};
    bothParams->add(*altParams,false);
    RooArgSet *saveAll = (RooArgSet*) bothParams->snapshot();
 
@@ -244,10 +243,7 @@ HypoTestResult* HypoTestCalculatorGeneric::GetHypoTest() const {
 
    bothParams->assign(*saveAll);
    delete allTS;
-   delete bothParams;
    delete saveAll;
-   delete altParams;
-   delete nullParams;
    delete nullSnapshot;
    PostHook();
    return res;

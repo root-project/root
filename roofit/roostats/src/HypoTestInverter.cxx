@@ -144,7 +144,7 @@ void HypoTestInverter::CheckInputModels(const HypoTestCalculatorGeneric &hc,cons
       oocoutE(nullptr,InputArguments) << "HypoTestInverter - B model has no pdf or observables defined" <<  std::endl;
       return;
    }
-   RooArgSet * bParams = bPdf->getParameters(*bObs);
+   std::unique_ptr<RooArgSet> bParams{bPdf->getParameters(*bObs)};
    if (!bParams) {
       oocoutE(nullptr,InputArguments) << "HypoTestInverter - pdf of B model has no parameters" << std::endl;
       return;
@@ -158,7 +158,6 @@ void HypoTestInverter::CheckInputModels(const HypoTestCalculatorGeneric &hc,cons
                                              << " user must check input model configurations " << endl;
       if (poiB) delete poiB;
    }
-   delete bParams;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1167,7 +1166,7 @@ SamplingDistribution * HypoTestInverter::RebuildDistributions(bool isUpper, int 
    // save all parameters to restore them later
    assert(bModel->GetPdf() );
    assert(bModel->GetObservables() );
-   RooArgSet * allParams = bModel->GetPdf()->getParameters( *bModel->GetObservables() );
+   std::unique_ptr<RooArgSet> allParams{bModel->GetPdf()->getParameters( *bModel->GetObservables() )};
    RooArgSet saveParams;
    allParams->snapshot(saveParams);
 

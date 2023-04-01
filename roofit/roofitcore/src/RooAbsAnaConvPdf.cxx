@@ -614,10 +614,8 @@ void RooAbsAnaConvPdf::makeCoefVarList(RooArgList& varList) const
 {
   // Instantate a coefficient variables
   for (Int_t i=0 ; i<_convSet.getSize() ; i++) {
-    RooArgSet* cvars = coefVars(i) ;
-    RooAbsReal* coefVar = new RooConvCoefVar(Form("%s_coefVar_%d",GetName(),i),"coefVar",*this,i,cvars) ;
-    varList.addOwned(*coefVar) ;
-    delete cvars ;
+    auto cvars = coefVars(i);
+    varList.addOwned(std::make_unique<RooConvCoefVar>(Form("%s_coefVar_%d",GetName(),i),"coefVar",*this,i,&*cvars));
   }
 
 }
@@ -626,9 +624,9 @@ void RooAbsAnaConvPdf::makeCoefVarList(RooArgList& varList) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Return set of parameters with are used exclusively by the coefficient functions
 
-RooArgSet* RooAbsAnaConvPdf::coefVars(Int_t /*coefIdx*/) const
+RooFit::OwningPtr<RooArgSet> RooAbsAnaConvPdf::coefVars(Int_t /*coefIdx*/) const
 {
-  RooArgSet* cVars = getParameters((RooArgSet*)0) ;
+  auto cVars = getParameters(static_cast<RooArgSet*>(nullptr));
   std::vector<RooAbsArg*> tmp;
   for (auto arg : *cVars) {
     for (auto convSetArg : _convSet) {
@@ -640,7 +638,7 @@ RooArgSet* RooAbsAnaConvPdf::coefVars(Int_t /*coefIdx*/) const
 
   cVars->remove(tmp.begin(), tmp.end(), true, true);
 
-  return cVars ;
+  return RooFit::OwningPtr<RooArgSet>{std::move(cVars)};
 }
 
 
