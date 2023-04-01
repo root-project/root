@@ -310,6 +310,12 @@ JSONNode &getRooFitInternal(JSONNode &node, Keys_t const &...keys)
 
 void exportAttributes(const RooAbsArg *arg, JSONNode &rootnode)
 {
+   bool isRooConstVar = dynamic_cast<RooConstVar const *>(arg);
+   // If this RooConst is a literal number, we don't need to export the attributes.
+   if (isRooConstVar && isNumber(arg->GetName())) {
+      return;
+   }
+
    JSONNode *node = nullptr;
 
    auto initializeNode = [&]() {
@@ -322,7 +328,7 @@ void exportAttributes(const RooAbsArg *arg, JSONNode &rootnode)
    // We have to remember if the variable was a constant RooRealVar or a
    // RooConstVar in RooFit to reconstruct the workspace correctly. The HS3
    // standard does not make this distinction.
-   if (dynamic_cast<RooConstVar const *>(arg)) {
+   if (isRooConstVar) {
       initializeNode();
       (*node)["is_const_var"] << 1;
    }
@@ -330,6 +336,9 @@ void exportAttributes(const RooAbsArg *arg, JSONNode &rootnode)
    // export all string attributes of an object
    if (!arg->stringAttributes().empty()) {
       for (const auto &it : arg->stringAttributes()) {
+         // Skip some RooFit internals
+         if (it.first == "factory_tag" || it.first == "PROD_TERM_TYPE")
+            continue;
          initializeNode();
          auto &dict = (*node)["dict"];
          dict.set_map();
@@ -337,29 +346,27 @@ void exportAttributes(const RooAbsArg *arg, JSONNode &rootnode)
       }
    }
    if (!arg->attributes().empty()) {
-      initializeNode();
-      (*node)["tags"].fill_seq(arg->attributes());
+      for (auto const &attr : arg->attributes()) {
+         // Skip some RooFit internals
+         if (attr == "SnapShot_ExtRefClone" || attr == "RooRealConstant_Factory_Object")
+            continue;
+         initializeNode();
+         auto &tags = (*node)["tags"];
+         tags.set_seq();
+         tags.append_child() << attr;
+      }
    }
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////
-// read observables
-std::map<std::string, Var> readObservables(const JSONNode &node)
-{
-   std::map<std::string, Var> vars;
-
-   for (const auto &p : node["axes"].children()) {
-      vars.emplace(RooJSONFactoryWSTool::name(p), Var(p));
-   }
-
-   return vars;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 // create several observables
 void getObservables(RooWorkspace const &ws, const JSONNode &node, RooArgSet &out)
 {
-   auto vars = readObservables(node);
+   std::map<std::string, Var> vars;
+   for (const auto &p : node["axes"].children()) {
+      vars.emplace(RooJSONFactoryWSTool::name(p), Var(p));
+   }
+
    for (auto v : vars) {
       std::string name(v.first);
       if (ws.var(name)) {
@@ -452,35 +459,19 @@ void importAnalysis(const RooFit::Detail::JSONNode &rootnode, const RooFit::Deta
    auto &mc = *static_cast<RooStats::ModelConfig *>(workspace.obj(mcname));
    mc.SetWS(workspace);
    mc.SetPdf(*pdf);
-   RooArgSet observables;
-   for (auto const &child : analysisNode["variables"].children()) {
-      if (auto var = workspace.var(child.val())) {
-         observables.add(*var);
+
+   auto readArgSet = [&](std::string const &name) {
+      RooArgSet out;
+      for (auto const &child : analysisNode[name].children()) {
+         out.add(*workspace.arg(child.val()));
       }
-   }
-   RooArgSet nps;
-   RooArgSet pois;
-   for (auto const &child : analysisNode["pois"].children()) {
-      if (auto var = workspace.var(child.val())) {
-         pois.add(*var);
-      }
-   }
-   RooArgSet globs;
-   std::unique_ptr<RooArgSet> pdfVars{pdf->getVariables()};
-   for (auto &var : workspace.allVars()) {
-      if (!pdfVars->find(*var))
-         continue;
-      if (var->getAttribute("np")) {
-         nps.add(*var, true);
-      }
-      if (var->getAttribute("glob")) {
-         globs.add(*var, true);
-      }
-   }
-   mc.SetObservables(observables);
-   mc.SetParametersOfInterest(pois);
-   mc.SetNuisanceParameters(nps);
-   mc.SetGlobalObservables(globs);
+      return out;
+   };
+
+   mc.SetObservables(readArgSet("variables"));
+   mc.SetParametersOfInterest(readArgSet("pois"));
+   mc.SetNuisanceParameters(readArgSet("nps"));
+   mc.SetGlobalObservables(readArgSet("globs"));
 
    if (auto *mcAuxNode = findRooFitInternal(rootnode, "ModelConfigs", analysisNode["name"].val())) {
       if (auto found = mcAuxNode->find("combined_data_name")) {
@@ -1047,7 +1038,7 @@ void RooJSONFactoryWSTool::exportData(RooAbsData const &data)
    // called "binWeightAsimov", making "weightVar" an actual observable in the
    // Asimov data. But this is only by accident and should be removed.
    RooArgSet variables = *data.get();
-   if(auto weightVar = variables.find("weightVar")) {
+   if (auto weightVar = variables.find("weightVar")) {
       variables.remove(*weightVar);
    }
 
@@ -1280,8 +1271,15 @@ void RooJSONFactoryWSTool::exportModelConfig(JSONNode &rootnode, RooStats::Model
    }
 
    auto writeList = [&](const char *name, RooArgSet const *args) {
-      if (args)
-         analysisNode[name].fill_seq(*args, [](auto const &arg) { return arg->GetName(); });
+      if (!args)
+         return;
+
+      std::vector<std::string> names;
+      names.reserve(args->size());
+      for (RooAbsArg const *arg : *args)
+         names.push_back(arg->GetName());
+      std::sort(names.begin(), names.end());
+      analysisNode[name].fill_seq(names);
    };
 
    writeList("variables", mc.GetObservables());
@@ -1395,14 +1393,14 @@ std::unique_ptr<JSONTree> RooJSONFactoryWSTool::createNewJSONTree()
    std::unique_ptr<JSONTree> tree = JSONTree::create();
    JSONNode &n = tree->rootnode();
    n.set_map();
-   auto& metadata = n["metadata"];
+   auto &metadata = n["metadata"];
    metadata.set_map();
 
    // Bump to 0.2.0 once the HS3 v2 standard is final
    metadata["hs3_version"] << "0.1.90";
 
    // Add information about the ROOT version that was used to generate this file
-   auto& rootInfo = appendNamedChild(metadata["packages"], "ROOT");
+   auto &rootInfo = appendNamedChild(metadata["packages"], "ROOT");
    std::string versionName = gROOT->GetVersion();
    // We want to consistently use dots such that the version name can be easily
    // digested automatically.
@@ -1471,15 +1469,12 @@ void RooJSONFactoryWSTool::importAllNodes(const RooFit::Detail::JSONNode &n)
 
    this->importDependants(n);
 
-   _workspace.saveSnapshot("fromJSON", _workspace.allVars());
    if (n.has_child("parameter_points")) {
       for (const auto &snsh : n["parameter_points"].children()) {
          std::string name = RooJSONFactoryWSTool::name(snsh);
-         if (name == "fromJSON")
-            continue;
          RooArgSet vars;
-         for (const auto &var : snsh.children()) {
-            if (RooRealVar *rrv = _workspace.var(var.key())) {
+         for (const auto &var : snsh["parameters"].children()) {
+            if (RooRealVar *rrv = _workspace.var(var["name"].val())) {
                configureVariable(*_domains, var, *rrv);
                vars.add(*rrv);
             }
@@ -1487,7 +1482,8 @@ void RooJSONFactoryWSTool::importAllNodes(const RooFit::Detail::JSONNode &n)
          _workspace.saveSnapshot(name, vars);
       }
    }
-   _workspace.loadSnapshot("fromJSON");
+
+   combinePdfs(*_rootnodeInput, _workspace);
 
    // Import attributes
    if (_attributesNode) {
@@ -1498,8 +1494,6 @@ void RooJSONFactoryWSTool::importAllNodes(const RooFit::Detail::JSONNode &n)
    }
 
    _attributesNode = nullptr;
-
-   combinePdfs(*_rootnodeInput, _workspace);
 
    // We delay the import of the data to after combineDatasets(), because it
    // might be that some datasets are merged to combined datasets there. In
