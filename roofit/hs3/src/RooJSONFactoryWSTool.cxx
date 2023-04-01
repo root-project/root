@@ -944,10 +944,11 @@ void RooJSONFactoryWSTool::importFunction(const JSONNode &p, bool isPdf)
    }
 }
 
-void RooJSONFactoryWSTool::exportDataHist(RooDataHist const &dataHist, RooFit::Detail::JSONNode &output)
+void RooJSONFactoryWSTool::exportHisto(RooArgSet const &vars, std::size_t n, double const *contents,
+                                       RooFit::Detail::JSONNode &output)
 {
    auto &observablesNode = output["axes"];
-   for (RooRealVar *var : static_range_cast<RooRealVar *>(*dataHist.get())) {
+   for (RooRealVar *var : static_range_cast<RooRealVar *>(vars)) {
       auto &observableNode = appendNamedChild(observablesNode, var->GetName());
       observableNode["min"] << var->getMin();
       observableNode["max"] << var->getMax();
@@ -956,8 +957,8 @@ void RooJSONFactoryWSTool::exportDataHist(RooDataHist const &dataHist, RooFit::D
 
    auto &weights = output["contents"];
    weights.set_seq();
-   for (int i = 0; i < dataHist.numEntries(); ++i) {
-      double w = dataHist.weight(i);
+   for (std::size_t i = 0; i < n; ++i) {
+      double w = contents[i];
       // To make sure there are no unnecessary floating points in the JSON
       if (int(w) == w) {
          weights.append_child() << int(w);
@@ -1033,10 +1034,35 @@ void RooJSONFactoryWSTool::exportData(RooAbsData const &data)
 
    // this is a binned dataset
    if (auto dh = dynamic_cast<RooDataHist const *>(&data)) {
-      return exportDataHist(*dh, output);
+      return exportHisto(*dh->get(), dh->numEntries(), dh->weightArray(), output);
    }
 
    // this is a regular unbinned dataset
+
+   // Check if this actually represents a binned dataset, and then import it
+   // like a RooDataHist. This happens frequently when people create combined
+   // RooDataSets from binned data to fit HistFactory models. In this case, it
+   // doesn't make sense to export them like an unbinned dataset, because the
+   // coordinates are redundant information with the binning. We only do this
+   // for 1D data for now.
+   if (data.isWeighted() && data.get()->size() == 1) {
+      bool isBinnedData = false;
+      auto &x = static_cast<RooRealVar const &>(*(*data.get())[0]);
+      std::vector<double> contents;
+      int i = 0;
+      for (; i < data.numEntries(); ++i) {
+         data.get(i);
+         if (x.getBin() != i)
+            break;
+         contents.push_back(data.weight());
+      }
+      if (i == x.numBins())
+         isBinnedData = true;
+      if (isBinnedData) {
+         return exportHisto(*data.get(), data.numEntries(), contents.data(), output);
+      }
+   }
+
    exportVariables(*data.get(), output["axes"]);
    auto &coords = output["entries"];
    coords.set_seq();
@@ -1208,7 +1234,9 @@ void RooJSONFactoryWSTool::exportModelConfig(JSONNode &rootnode, RooStats::Model
 {
    auto pdf = dynamic_cast<RooSimultaneous const *>(mc.GetPdf());
    if (pdf == nullptr) {
-      throw std::runtime_error("RooFitHS3 only supports ModelConfigs with RooSimultaneous!");
+      RooMsgService::instance().log(nullptr, RooFit::MsgLevel::WARNING, RooFit::IO)
+         << "RooFitHS3 only supports ModelConfigs with RooSimultaneous! Skipping ModelConfig.\n";
+      return;
    }
 
    JSONNode &analysisNode = appendNamedChild(rootnode["analyses"], pdf->GetName());
@@ -1310,7 +1338,8 @@ void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
       }
    }
    for (const auto &mc : mcs) {
-      RooJSONFactoryWSTool::exportObject(mc->GetPdf());
+      if (auto *pdf = mc->GetPdf())
+         RooJSONFactoryWSTool::exportObject(pdf);
    }
    _domains->writeJSON(n["domains"]);
    _domains.reset();
