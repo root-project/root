@@ -297,7 +297,8 @@ public:
    {
       const RooHistFunc *hf = static_cast<const RooHistFunc *>(func);
       elem["type"] << key();
-      tool->exportDataHist(hf->dataHist(), elem["data"]);
+      RooDataHist const &dh = hf->dataHist();
+      tool->exportHisto(*dh.get(), dh.numEntries(), dh.weightArray(), elem["data"]);
       return true;
    }
 };
@@ -323,7 +324,8 @@ public:
    {
       const RooHistPdf *hf = static_cast<const RooHistPdf *>(func);
       elem["type"] << key();
-      tool->exportDataHist(hf->dataHist(), elem["data"]);
+      RooDataHist const &dh = hf->dataHist();
+      tool->exportHisto(*dh.get(), dh.numEntries(), dh.weightArray(), elem["data"]);
       return true;
    }
 };
