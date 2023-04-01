@@ -23,7 +23,6 @@ const bool writeJsonFiles = false;
 
 void createInputFile(std::string const &inputFileName)
 {
-
    TH1F data("data", "data", 2, 1.0, 2.0);
 
    TH1F signal("signal", "signal histogram (pb)", 2, 1.0, 2.0);
