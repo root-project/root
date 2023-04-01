@@ -28,6 +28,7 @@
 #include "Domains.h"
 
 #include "TH1.h"
+#include "TROOT.h"
 
 #include <algorithm>
 #include <fstream>
@@ -1394,9 +1395,20 @@ std::unique_ptr<JSONTree> RooJSONFactoryWSTool::createNewJSONTree()
    std::unique_ptr<JSONTree> tree = JSONTree::create();
    JSONNode &n = tree->rootnode();
    n.set_map();
-   n["metadata"].set_map();
-   // The currently implemented HS3 standard is version 0.1
-   n["metadata"]["version"] << "0.1.90";
+   auto& metadata = n["metadata"];
+   metadata.set_map();
+
+   // Bump to 0.2.0 once the HS3 v2 standard is final
+   metadata["hs3_version"] << "0.1.90";
+
+   // Add information about the ROOT version that was used to generate this file
+   auto& rootInfo = appendNamedChild(metadata["packages"], "ROOT");
+   std::string versionName = gROOT->GetVersion();
+   // We want to consistently use dots such that the version name can be easily
+   // digested automatically.
+   std::replace(versionName.begin(), versionName.end(), '/', '.');
+   rootInfo["version"] << versionName;
+
    return tree;
 }
 
