@@ -280,9 +280,11 @@ ParamHistFunc &createPHFMCStat(std::string name, const std::vector<double> &sumW
 
    ParamHistFunc &phf = createPHF(sysname, phfname, vals, tool, constraints, observables, statErrType, gammas, 0, 10);
 
-   // set constant NPs which are below the MC stat threshold, and remove them from the np list
+   // Set a reasonable range for gamma and set constant NPs which are below the
+   // MC stat threshold, and remove them from the np list.
    for (size_t i = 0; i < sumW.size(); ++i) {
       auto g = static_cast<RooRealVar *>(gammas.at(i));
+      g->setMax(1 + 5 * errs[i]);
       g->setError(errs[i]);
       if (errs[i] < statErrThresh) {
          g->setConstant(true); // all negative errs are set constant
