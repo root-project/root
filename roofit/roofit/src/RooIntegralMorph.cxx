@@ -147,9 +147,9 @@ RooArgSet* RooIntegralMorph::actualObservables(const RooArgSet& /*nset*/) const
 /// Parameters of the cache. Returns parameters of both pdf1 and pdf2
 /// and parameter cache, in case doCacheAlpha is not set.
 
-RooArgSet* RooIntegralMorph::actualParameters(const RooArgSet& /*nset*/) const
+RooFit::OwningPtr<RooArgSet> RooIntegralMorph::actualParameters(const RooArgSet& /*nset*/) const
 {
-  RooArgSet* par1 = pdf1.arg().getParameters(static_cast<RooArgSet*>(nullptr));
+  auto par1 = pdf1.arg().getParameters(static_cast<RooArgSet*>(nullptr));
   RooArgSet par2;
   pdf2.arg().getParameters(nullptr, par2);
   par1->add(par2,true) ;
@@ -157,7 +157,7 @@ RooArgSet* RooIntegralMorph::actualParameters(const RooArgSet& /*nset*/) const
   if (!_cacheAlpha) {
     par1->add(alpha.arg()) ;
   }
-  return par1 ;
+  return RooFit::OwningPtr<RooArgSet>{std::move(par1)};
 }
 
 ////////////////////////////////////////////////////////////////////////////////

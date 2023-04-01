@@ -559,9 +559,38 @@ void RooAbsArg::treeNodeServerList(RooAbsCollection* list, const RooAbsArg* arg,
 /// function is responsible for deleting the returned argset.
 /// The complement of this function is getObservables()
 
-RooArgSet* RooAbsArg::getParameters(const RooAbsData* set, bool stripDisconnected) const
+RooFit::OwningPtr<RooArgSet> RooAbsArg::getParameters(const RooAbsData* set, bool stripDisconnected) const
 {
   return getParameters(set?set->get():0,stripDisconnected) ;
+}
+
+
+/// Return the parameters of this p.d.f when used in conjuction with dataset 'data'.
+RooFit::OwningPtr<RooArgSet> RooAbsArg::getParameters(const RooAbsData& data, bool stripDisconnected) const
+{
+  return getParameters(&data,stripDisconnected) ;
+}
+
+
+/// Return the parameters of the p.d.f given the provided set of observables.
+RooFit::OwningPtr<RooArgSet> RooAbsArg::getParameters(const RooArgSet& observables, bool stripDisconnected) const
+{
+  return getParameters(&observables,stripDisconnected);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Create a list of leaf nodes in the arg tree starting with
+/// ourself as top node that don't match any of the names the args in the
+/// supplied argset. The caller of this function is responsible
+/// for deleting the returned argset. The complement of this function
+/// is getObservables().
+
+RooFit::OwningPtr<RooArgSet> RooAbsArg::getParameters(const RooArgSet* observables, bool stripDisconnected) const
+{
+  auto * outputSet = new RooArgSet;
+  getParameters(observables, *outputSet, stripDisconnected);
+  return RooFit::OwningPtr<RooArgSet>{outputSet};
 }
 
 
@@ -635,19 +664,6 @@ std::size_t RooAbsArg::getParametersSizeEstimate(const RooArgSet* nset) const
   }
 
   return res;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Create a list of leaf nodes in the arg tree starting with
-/// ourself as top node that don't match any of the names the args in the
-/// supplied argset. The caller of this function is responsible
-/// for deleting the returned argset. The complement of this function
-/// is getObservables().
-
-RooArgSet* RooAbsArg::getParameters(const RooArgSet* observables, bool stripDisconnected) const {
-  auto * outputSet = new RooArgSet;
-  getParameters(observables, *outputSet, stripDisconnected);
-  return outputSet;
 }
 
 
@@ -1815,14 +1831,14 @@ bool RooAbsArg::findConstantNodes(const RooArgSet& observables, RooArgSet& cache
 
   // Check if node depends on any non-constant parameter
   bool canOpt(true) ;
-  RooArgSet* paramSet = getParameters(observables) ;
-  for(RooAbsArg * param : *paramSet) {
+  RooArgSet paramSet;
+  getParameters(&observables, paramSet);
+  for(RooAbsArg * param : paramSet) {
     if (!param->isConstant()) {
       canOpt=false ;
       break ;
     }
   }
-  delete paramSet ;
 
 
   if (getAttribute("NeverConstant")) {
@@ -2076,7 +2092,7 @@ RooAbsCache* RooAbsArg::getCache(Int_t index) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Return RooArgSet with all variables (tree leaf nodes of expresssion tree)
 
-RooArgSet* RooAbsArg::getVariables(bool stripDisconnected) const
+RooFit::OwningPtr<RooArgSet> RooAbsArg::getVariables(bool stripDisconnected) const
 {
   return getParameters(RooArgSet(),stripDisconnected) ;
 }

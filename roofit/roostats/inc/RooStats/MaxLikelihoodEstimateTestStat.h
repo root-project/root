@@ -78,8 +78,8 @@ class MaxLikelihoodEstimateTestStat: public TestStatistic {
     return ret;
     */
 
-    RooArgSet* allParams = fPdf->getParameters(data);
-    RooStats::RemoveConstantParameters(allParams);
+    std::unique_ptr<RooArgSet> allParams{fPdf->getParameters(data)};
+    RooStats::RemoveConstantParameters(&*allParams);
 
     // need to call constrain for RooSimultaneous until stripDisconnected problem fixed
     RooAbsReal* nll = fPdf->createNLL(data, RooFit::CloneData(false),RooFit::Constrain(*allParams),RooFit::ConditionalObservables(fConditionalObs));
