@@ -350,6 +350,9 @@ bool importHistSample(RooJSONFactoryWSTool &tool, RooDataHist &dh, Scope &scope,
          std::string modtype = mod["type"].val();
          if (modtype == "normfactor") {
             normElems.add(getOrCreate<RooRealVar>(ws, mod["name"].val(), 1., -3, 5));
+            if (auto constrInfo = mod.find("constraint_name")) {
+               constraints.add(*tool.request<RooAbsReal>(constrInfo->val(), name));
+            }
          } else if (modtype == "normsys") {
             std::string sysname(mod["name"].val());
             std::string parname(mod.has_child("parameter") ? RooJSONFactoryWSTool::name(mod["parameter"])
@@ -625,8 +628,70 @@ void collectElements(RooArgSet &elems, RooAbsArg *arg)
    }
 }
 
-bool tryExportHistFactory(RooWorkspace *ws, const std::string &pdfname, const RooRealSumPdf *sumpdf, JSONNode &elem)
+struct NormFactor {
+   std::string name;
+   RooAbsArg const *param;
+   RooAbsPdf const *constraint = nullptr;
+   NormFactor(RooAbsArg const &par, RooAbsPdf const *constr = nullptr)
+      : name{par.GetName()}, param{&par}, constraint{constr}
+   {
+   }
+};
+
+struct NormSys {
+   std::string name;
+   double low;
+   double high;
+   TClass *constraint = RooGaussian::Class();
+   NormSys(const std::string &n, double h, double l, TClass *c) : name(n), low(l), high(h), constraint(c) {}
+};
+struct HistoSys {
+   std::string name;
+   std::unique_ptr<TH1> low;
+   std::unique_ptr<TH1> high;
+   TClass *constraint = RooGaussian::Class();
+   HistoSys(const std::string &n, RooHistFunc *l, RooHistFunc *h, TClass *c)
+      : name(n), low(histFunc2TH1(l)), high(histFunc2TH1(h)), constraint(c){};
+};
+struct ShapeSys {
+   std::string name;
+   std::vector<double> constraints;
+   TClass *constraint = nullptr;
+   ShapeSys(const std::string &n) : name(n){};
+};
+struct Sample {
+   std::string name;
+   std::unique_ptr<TH1> hist = nullptr;
+   std::vector<NormFactor> normfactors;
+   std::vector<NormSys> normsys;
+   std::vector<HistoSys> histosys;
+   std::vector<ShapeSys> shapesys;
+   bool use_barlow_beeston_light = false;
+   TClass *barlow_beeston_light_constraint = RooPoisson::Class();
+   Sample(const std::string &n) : name(n){};
+};
+
+void addNormFactor(RooRealVar const *par, Sample &sample, RooWorkspace *ws)
 {
+   std::string parname = par->GetName();
+   bool isConstrained = false;
+   for (RooAbsArg const *pdf : ws->allPdfs()) {
+      if (auto gauss = dynamic_cast<RooGaussian const *>(pdf)) {
+         if (parname == gauss->getX().GetName()) {
+            sample.normfactors.emplace_back(*par, gauss);
+            isConstrained = true;
+         }
+      }
+   }
+   if (!isConstrained)
+      sample.normfactors.emplace_back(*par);
+}
+
+bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname, const RooRealSumPdf *sumpdf,
+                          JSONNode &elem)
+{
+   RooWorkspace *ws = tool->workspace();
+
    if (!sumpdf)
       return false;
 
@@ -651,38 +716,6 @@ bool tryExportHistFactory(RooWorkspace *ws, const std::string &pdfname, const Ro
    std::map<std::string, std::unique_ptr<TH1>> nonbb_histograms;
    std::vector<std::string> varnames;
 
-   struct NormSys {
-      std::string name;
-      double low;
-      double high;
-      TClass *constraint = RooGaussian::Class();
-      NormSys(const std::string &n, double h, double l, TClass *c) : name(n), low(l), high(h), constraint(c) {}
-   };
-   struct HistoSys {
-      std::string name;
-      std::unique_ptr<TH1> low;
-      std::unique_ptr<TH1> high;
-      TClass *constraint = RooGaussian::Class();
-      HistoSys(const std::string &n, RooHistFunc *l, RooHistFunc *h, TClass *c)
-         : name(n), low(histFunc2TH1(l)), high(histFunc2TH1(h)), constraint(c){};
-   };
-   struct ShapeSys {
-      std::string name;
-      std::vector<double> constraints;
-      TClass *constraint = nullptr;
-      ShapeSys(const std::string &n) : name(n){};
-   };
-   struct Sample {
-      std::string name;
-      std::unique_ptr<TH1> hist = nullptr;
-      std::vector<const RooAbsArg *> norms;
-      std::vector<NormSys> normsys;
-      std::vector<HistoSys> histosys;
-      std::vector<ShapeSys> shapesys;
-      bool use_barlow_beeston_light = false;
-      TClass *barlow_beeston_light_constraint = RooPoisson::Class();
-      Sample(const std::string &n) : name(n){};
-   };
    std::vector<Sample> samples;
 
    for (size_t sampleidx = 0; sampleidx < sumpdf->funcList().size(); ++sampleidx) {
@@ -709,9 +742,9 @@ bool tryExportHistFactory(RooWorkspace *ws, const std::string &pdfname, const Ro
          if (auto constVar = dynamic_cast<RooConstVar *>(e)) {
             if (constVar->getVal() == 1.)
                continue;
-            sample.norms.push_back(e);
-         } else if (dynamic_cast<RooRealVar *>(e)) {
-            sample.norms.push_back(e);
+            sample.normfactors.emplace_back(*e);
+         } else if (auto par = dynamic_cast<RooRealVar *>(e)) {
+            addNormFactor(par, sample, ws);
          } else if (auto hf = dynamic_cast<const RooHistFunc *>(e)) {
             if (varnames.empty()) {
                varnames = names(*hf->dataHist().get());
@@ -742,8 +775,7 @@ bool tryExportHistFactory(RooWorkspace *ws, const std::string &pdfname, const Ro
       }
 
       // sort and configure norms
-      std::sort(sample.norms.begin(), sample.norms.end(),
-                [](auto &l, auto &r) { return strcmp(l->GetName(), r->GetName()) < 0; });
+      std::sort(sample.normfactors.begin(), sample.normfactors.end(), [](auto &l, auto &r) { return l.name < r.name; });
 
       // sort and configure the normsys
       if (fip) {
@@ -892,8 +924,14 @@ bool tryExportHistFactory(RooWorkspace *ws, const std::string &pdfname, const Ro
       auto &modifiers = s["modifiers"];
       modifiers.set_seq();
 
-      for (const auto &nf : sample.norms) {
-         RooJSONFactoryWSTool::appendNamedChild(modifiers, nf->GetName())["type"] << "normfactor";
+      for (const auto &nf : sample.normfactors) {
+         auto &mod = RooJSONFactoryWSTool::appendNamedChild(modifiers, nf.name);
+         mod["type"] << "normfactor";
+         if (nf.constraint) {
+            mod["constraint_name"] << nf.constraint->GetName();
+            // tool->exportObject(nf.constraint);
+            tool->queueExport(*nf.constraint);
+         }
       }
 
       for (const auto &sys : sample.normsys) {
@@ -953,7 +991,7 @@ public:
       for (RooAbsArg *v : prodpdf->pdfList()) {
          sumpdf = dynamic_cast<RooRealSumPdf *>(v);
       }
-      return tryExportHistFactory(tool->workspace(), prodpdf->GetName(), sumpdf, elem);
+      return tryExportHistFactory(tool, prodpdf->GetName(), sumpdf, elem);
    }
    std::string const &key() const override
    {
@@ -971,7 +1009,7 @@ public:
    bool autoExportDependants() const override { return false; }
    bool tryExport(RooJSONFactoryWSTool *tool, const RooRealSumPdf *sumpdf, JSONNode &elem) const
    {
-      return tryExportHistFactory(tool->workspace(), sumpdf->GetName(), sumpdf, elem);
+      return tryExportHistFactory(tool, sumpdf->GetName(), sumpdf, elem);
    }
    std::string const &key() const override
    {
