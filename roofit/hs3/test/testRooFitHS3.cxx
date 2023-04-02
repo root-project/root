@@ -27,9 +27,15 @@ namespace {
 
 void setupKeys()
 {
+   static bool isAlreadySetup = false;
+   if (isAlreadySetup)
+      return;
+
    auto etcDir = std::string(TROOT::GetEtcDir());
    RooFit::JSONIO::loadExportKeys(etcDir + "/RooFitHS3_wsexportkeys.json");
    RooFit::JSONIO::loadFactoryExpressions(etcDir + "/RooFitHS3_wsfactoryexpressions.json");
+
+   isAlreadySetup = true;
 }
 
 // Validate the JSON IO for a given RooAbsReal in a RooWorkspace. The workspace
