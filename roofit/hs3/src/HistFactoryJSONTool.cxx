@@ -54,6 +54,9 @@ void exportSample(const RooStats::HistFactory::Sample &sample, JSONNode &channel
       for (const auto &nf : sample.GetNormFactorList()) {
          RooJSONFactoryWSTool::appendNamedChild(modifiers, nf.GetName())["type"] << "normfactor";
       }
+      auto &mod = RooJSONFactoryWSTool::appendNamedChild(modifiers, "Lumi");
+      mod["type"] << "normfactor";
+      mod["constraint_name"] << "lumiConstraint";
    }
 
    if (!sample.GetHistoSysList().empty()) {
@@ -208,6 +211,24 @@ void exportMeasurement(RooStats::HistFactory::Measurement &measurement, JSONNode
       variables[std::string("alpha_") + sys].isConstant = true;
    }
 
+   // the lumi variables
+   {
+      double nominal = measurement.GetLumi();
+      double error = measurement.GetLumi() * measurement.GetLumiRelErr();
+
+      auto &info1 = variables["Lumi"];
+      info1.val = nominal;
+      info1.minVal = 0;
+      info1.maxVal = 10 * nominal;
+      info1.isConstant = true;
+
+      auto &info2 = variables["nominalLumi"];
+      info2.val = nominal;
+      info2.minVal = 0;
+      info2.maxVal = nominal + 10 * error;
+      info2.isConstant = true;
+   }
+
    JSONNode &varlist = RooJSONFactoryWSTool::makeVariablesNode(n);
    for (auto const &item : variables) {
       std::string const &parname = item.first;
@@ -260,6 +281,14 @@ void exportMeasurement(RooStats::HistFactory::Measurement &measurement, JSONNode
    }
 
    RooJSONFactoryWSTool::writeCombinedDataName(n, "simPdf", "obsData");
+
+   // Finally write lumi constraint
+   auto &lumiConstraint = RooJSONFactoryWSTool::appendNamedChild(pdflist, "lumiConstraint");
+   lumiConstraint["mean"] << "nominalLumi";
+   lumiConstraint["name"] << "lumiConstraint";
+   lumiConstraint["sigma"] << std::to_string(measurement.GetLumi() * measurement.GetLumiRelErr());
+   lumiConstraint["type"] << "gaussian_dist";
+   lumiConstraint["x"] << "Lumi";
 }
 
 } // namespace
