@@ -2,6 +2,7 @@
 // Authors: Carsten D. Burgard, DESY/ATLAS, 12/2021
 //          Jonas Rembser, CERN 12/2022
 
+#include <RooFitHS3/JSONIO.h>
 #include <RooFitHS3/RooJSONFactoryWSTool.h>
 #include <RooFitHS3/HistFactoryJSONTool.h>
 #include <RooFit/ModelConfig.h>
@@ -20,6 +21,19 @@ namespace {
 
 // If the JSON files should be written out for debugging purpose.
 const bool writeJsonFiles = false;
+
+void setupKeys()
+{
+   static bool isAlreadySetup = false;
+   if (isAlreadySetup)
+      return;
+
+   auto etcDir = std::string(TROOT::GetEtcDir());
+   RooFit::JSONIO::loadExportKeys(etcDir + "/RooFitHS3_wsexportkeys.json");
+   RooFit::JSONIO::loadFactoryExpressions(etcDir + "/RooFitHS3_wsfactoryexpressions.json");
+
+   isAlreadySetup = true;
+}
 
 void createInputFile(std::string const &inputFileName)
 {
@@ -110,6 +124,8 @@ TEST(TestHS3HistFactoryJSON, HistFactoryJSONTool)
 {
    RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
 
+   setupKeys();
+
    std::unique_ptr<RooStats::HistFactory::Measurement> meas = measurement();
    if (writeJsonFiles) {
       RooStats::HistFactory::JSONTool{*meas}.PrintJSON("hf.json");
@@ -149,22 +165,24 @@ TEST(TestHS3HistFactoryJSON, HistFactoryJSONTool)
    };
 
    using namespace RooFit;
+   using Res = std::unique_ptr<RooFitResult>;
 
-   std::unique_ptr<RooFitResult> result{pdf->fitTo(*data, Strategy(1), Minos(*mc->GetParametersOfInterest()),
-                                                   GlobalObservables(globs), PrintLevel(-1), Save())};
+   Res result{pdf->fitTo(*data, Strategy(1), Minos(*mc->GetParametersOfInterest()), GlobalObservables(globs),
+                         PrintLevel(-1), Save())};
 
-   std::unique_ptr<RooFitResult> resultFromJson{
-      pdfFromJson->fitTo(*dataFromJson, Strategy(1), Minos(*mcFromJson->GetParametersOfInterest()),
-                         GlobalObservables(globsInJson), PrintLevel(-1), Save())};
+   Res resultFromJson{pdfFromJson->fitTo(*dataFromJson, Strategy(1), Minos(*mcFromJson->GetParametersOfInterest()),
+                                         GlobalObservables(globsInJson), PrintLevel(-1), Save())};
 
-   // TODO: do also the reverse comparison to check that the set of constant parameters matches
-   // EXPECT_TRUE(result->isIdentical(*resultFromJSON));
+   // Do also the reverse comparison to check that the set of constant parameters matches
+   EXPECT_TRUE(result->isIdentical(*resultFromJson));
    EXPECT_TRUE(resultFromJson->isIdentical(*result));
 }
 
 TEST(TestHS3HistFactoryJSON, ClosureLoop)
 {
    RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   setupKeys();
 
    std::unique_ptr<RooStats::HistFactory::Measurement> meas = measurement();
    std::unique_ptr<RooWorkspace> ws{RooStats::HistFactory::MakeModelAndMeasurementFast(*meas)};
@@ -215,15 +233,15 @@ TEST(TestHS3HistFactoryJSON, ClosureLoop)
    };
 
    using namespace RooFit;
+   using Res = std::unique_ptr<RooFitResult>;
 
-   std::unique_ptr<RooFitResult> result{pdf->fitTo(*data, Strategy(1), Minos(*mc->GetParametersOfInterest()),
-                                                   GlobalObservables(globs), PrintLevel(-1), Save())};
+   Res result{pdf->fitTo(*data, Strategy(1), Minos(*mc->GetParametersOfInterest()), GlobalObservables(globs),
+                         PrintLevel(-1), Save())};
 
-   std::unique_ptr<RooFitResult> newresult{newpdf->fitTo(*newdata, Strategy(1),
-                                                         Minos(*newmc->GetParametersOfInterest()),
-                                                         GlobalObservables(globsInJson), PrintLevel(-1), Save())};
+   Res resultFromJson{newpdf->fitTo(*newdata, Strategy(1), Minos(*newmc->GetParametersOfInterest()),
+                                    GlobalObservables(globsInJson), PrintLevel(-1), Save())};
 
-   // TODO: do also the reverse comparison to check that the set of constant parameters matches
-   // EXPECT_TRUE(result->isIdentical(*resultFromJSON));
-   EXPECT_TRUE(newresult->isIdentical(*result));
+   // Do also the reverse comparison to check that the set of constant parameters matches
+   EXPECT_TRUE(result->isIdentical(*resultFromJson));
+   EXPECT_TRUE(resultFromJson->isIdentical(*result));
 }

@@ -170,6 +170,8 @@ public:
 
    static void exportCategory(RooAbsCategory const &cat, RooFit::Detail::JSONNode &node);
 
+   void queueExport(RooAbsArg const &arg) { _serversToExport.push_back(&arg); }
+
 private:
    template <class T>
    T *requestImpl(const std::string &objname);
@@ -198,5 +200,6 @@ private:
 
    // objects to represent intermediate information
    std::unique_ptr<RooFit::JSONIO::Detail::Domains> _domains;
+   std::vector<RooAbsArg const *> _serversToExport;
 };
 #endif
