@@ -142,21 +142,21 @@ public:
    static std::unique_ptr<RNTupleInspector> Create(std::string_view ntupleName, std::string_view storage);
 
    /// Get the descriptor for the RNTuple being inspected.
-   RNTupleDescriptor *GetDescriptor();
+   RNTupleDescriptor *GetDescriptor() { return fDescriptor.get(); }
 
    /// Get the compression settings of the RNTuple being inspected.
-   int GetCompressionSettings();
+   int GetCompressionSettings() { return fCompressionSettings; }
 
    /// Get the on-disk, compressed size of the RNTuple being inspected, in bytes.
    /// Does **not** include the size of the header and footer.
-   std::uint64_t GetOnDiskSize();
+   std::uint64_t GetOnDiskSize() { return fOnDiskSize; }
 
    /// Get the total, in-memory size of the RNTuple being inspected, in bytes.
    /// Does **not** include the size of the header and footer.
-   std::uint64_t GetInMemorySize();
+   std::uint64_t GetInMemorySize() { return fInMemorySize; }
 
    /// Get the compression factor of the RNTuple being inspected.
-   float GetCompressionFactor();
+   float GetCompressionFactor() { return (float)fInMemorySize / (float)fOnDiskSize; }
 
    const RColumnInfo &GetColumnInfo(DescriptorId_t physicalColumnId);
 
