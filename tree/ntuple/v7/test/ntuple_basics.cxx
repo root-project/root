@@ -317,12 +317,6 @@ TEST(RNTupleModel, EnforceValidFieldNames)
    } catch (const RException& err) {
       EXPECT_THAT(err.what(), testing::HasSubstr("name cannot be empty string"));
    }
-   try {
-      auto field3 = model->MakeField<float>("pt.pt", 42.0);
-      FAIL() << "field name with periods should throw";
-   } catch (const RException& err) {
-      EXPECT_THAT(err.what(), testing::HasSubstr("name 'pt.pt' cannot contain dot characters '.'"));
-   }
 
    // AddField
    try {

@@ -344,8 +344,6 @@ ROOT::Experimental::Detail::RFieldBase::EnsureValidFieldName(std::string_view fi
 {
    if (fieldName == "") {
       return R__FAIL("name cannot be empty string \"\"");
-   } else if (fieldName.find(".") != std::string::npos) {
-      return R__FAIL("name '" + std::string(fieldName) + "' cannot contain dot characters '.'");
    }
    return RResult<void>::Success();
 }
