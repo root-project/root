@@ -141,7 +141,7 @@ std::unique_ptr<ROOT::Experimental::RNTupleInspector>
 ROOT::Experimental::RNTupleInspector::Create(ROOT::Experimental::RNTuple *sourceNTuple)
 {
    if (!sourceNTuple) {
-      return R__FAIL("provided RNTuple is null");
+      throw RException(R__FAIL("provided RNTuple is null"));
    }
 
    std::unique_ptr<ROOT::Experimental::Detail::RPageSource> pageSource = sourceNTuple->MakePageSource();
@@ -149,17 +149,17 @@ ROOT::Experimental::RNTupleInspector::Create(ROOT::Experimental::RNTuple *source
    return ROOT::Experimental::RNTupleInspector::Create(std::move(pageSource));
 }
 
-ROOT::Experimental::RResult<std::unique_ptr<ROOT::Experimental::RNTupleInspector>>
+std::unique_ptr<ROOT::Experimental::RNTupleInspector>
 ROOT::Experimental::RNTupleInspector::Create(std::string_view ntupleName, std::string_view sourceFileName)
 {
    auto sourceFile = std::unique_ptr<TFile>(TFile::Open(std::string(sourceFileName).c_str()));
    if (!sourceFile || sourceFile->IsZombie()) {
-      return R__FAIL("cannot open source file " + std::string(sourceFileName));
+      throw RException(R__FAIL("cannot open source file " + std::string(sourceFileName)));
    }
    auto ntuple = std::unique_ptr<ROOT::Experimental::RNTuple>(
       sourceFile->Get<ROOT::Experimental::RNTuple>(std::string(ntupleName).c_str()));
    if (!ntuple) {
-      return R__FAIL("cannot read RNTuple " + std::string(ntupleName) + " from " + std::string(sourceFileName));
+      throw RException(R__FAIL("cannot read RNTuple " + std::string(ntupleName) + " from " + std::string(sourceFileName)));
    }
 
    auto inspector = std::unique_ptr<RNTupleInspector>(new RNTupleInspector(ntuple->MakePageSource()));
