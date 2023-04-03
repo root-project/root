@@ -165,9 +165,11 @@ private:
    /// string representation of the array of chars.
    bool AddInterpreterString(std::stringstream &, ROOT::RVec<bool> &boolArr, const int &index)
    {
-      fCollectionsRepresentations[index].reserve(boolArr.size());
+      auto &collRepr = fCollectionsRepresentations[index];
+      collRepr.clear();
+      collRepr.reserve(boolArr.size());
       for (bool b : boolArr)
-         fCollectionsRepresentations[index].push_back(b ? "true" : "false");
+         collRepr.push_back(b ? "true" : "false");
 
       return true; // treat this as a collection
    }
