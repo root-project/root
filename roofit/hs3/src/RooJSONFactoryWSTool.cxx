@@ -340,9 +340,7 @@ void exportAttributes(const RooAbsArg *arg, JSONNode &rootnode)
          if (it.first == "factory_tag" || it.first == "PROD_TERM_TYPE")
             continue;
          initializeNode();
-         auto &dict = (*node)["dict"];
-         dict.set_map();
-         dict[it.first] << it.second;
+         (*node)["dict"].set_map()[it.first] << it.second;
       }
    }
    if (!arg->attributes().empty()) {
@@ -351,9 +349,7 @@ void exportAttributes(const RooAbsArg *arg, JSONNode &rootnode)
          if (attr == "SnapShot_ExtRefClone" || attr == "RooRealConstant_Factory_Object")
             continue;
          initializeNode();
-         auto &tags = (*node)["tags"];
-         tags.set_seq();
-         tags.append_child() << attr;
+         (*node)["tags"].set_seq().append_child() << attr;
       }
    }
 }
@@ -572,9 +568,7 @@ RooJSONFactoryWSTool::~RooJSONFactoryWSTool() {}
 
 JSONNode &RooJSONFactoryWSTool::appendNamedChild(JSONNode &node, std::string const &name)
 {
-   node.set_seq();
-   JSONNode &child = node.append_child();
-   child.set_map();
+   JSONNode &child = node.set_seq().append_child().set_map();
    child["name"] << name;
    return child;
 }
@@ -591,9 +585,7 @@ JSONNode const *RooJSONFactoryWSTool::findNamedChild(JSONNode const &node, std::
 JSONNode &RooJSONFactoryWSTool::makeVariablesNode(JSONNode &rootNode)
 {
    JSONNode &container = appendNamedChild(rootNode["parameter_points"], "default_values");
-   JSONNode &list = container["parameters"];
-   list.set_seq();
-   return list;
+   return container["parameters"].set_seq();
 }
 
 template <>
@@ -666,12 +658,10 @@ void RooJSONFactoryWSTool::exportHistogram(const TH1 &histo, JSONNode &node, con
                                            const TH1 *errH, bool writeObservables, bool writeErrors)
 {
    node.set_map();
-   auto &weights = node["contents"];
-   weights.set_seq();
+   auto &weights = node["contents"].set_seq();
    JSONNode *errors = nullptr;
    if (writeErrors) {
-      errors = &node["errors"];
-      errors->set_seq();
+      errors = &node["errors"].set_seq();
    }
    if (writeObservables) {
       RooJSONFactoryWSTool::writeObservables(histo, node, varnames);
@@ -954,8 +944,7 @@ void RooJSONFactoryWSTool::exportHisto(RooArgSet const &vars, std::size_t n, dou
       observableNode["nbins"] << var->numBins();
    }
 
-   auto &weights = output["contents"];
-   weights.set_seq();
+   auto &weights = output["contents"].set_seq();
    for (std::size_t i = 0; i < n; ++i) {
       double w = contents[i];
       // To make sure there are no unnecessary floating points in the JSON
@@ -969,10 +958,8 @@ void RooJSONFactoryWSTool::exportHisto(RooArgSet const &vars, std::size_t n, dou
 
 void RooJSONFactoryWSTool::exportCategory(RooAbsCategory const &cat, RooFit::Detail::JSONNode &node)
 {
-   auto &labels = node["labels"];
-   labels.set_seq();
-   auto &indices = node["indices"];
-   indices.set_seq();
+   auto &labels = node["labels"].set_seq();
+   auto &indices = node["indices"].set_seq();
 
    for (auto const &item : cat) {
       labels.append_child() << item.first;
@@ -1074,11 +1061,8 @@ void RooJSONFactoryWSTool::exportData(RooAbsData const &data)
    }
 
    exportVariables(variables, output["axes"]);
-   auto &coords = output["entries"];
-   coords.set_seq();
-   auto *weights = data.isWeighted() ? &output["weights"] : nullptr;
-   if (weights)
-      weights->set_seq();
+   auto &coords = output["entries"].set_seq();
+   auto *weights = data.isWeighted() ? &output["weights"].set_seq() : nullptr;
    for (int i = 0; i < data.numEntries(); ++i) {
       data.get(i);
       coords.append_child().fill_seq(variables, [](auto x) { return static_cast<RooRealVar *>(x)->getVal(); });
@@ -1243,9 +1227,7 @@ void RooJSONFactoryWSTool::exportModelConfig(JSONNode &rootnode, RooStats::Model
 
    JSONNode &analysisNode = appendNamedChild(rootnode["analyses"], pdf->GetName());
 
-   auto &analysisDomains = analysisNode["domains"];
-   analysisDomains.set_seq();
-   analysisDomains.append_child() << "default_domain";
+   analysisNode["domains"].set_seq().append_child() << "default_domain";
 
    analysisNode["likelihood"] << pdf->GetName();
 
