@@ -3077,8 +3077,6 @@ RooPlot* RooAbsPdf::plotOn(RooPlot *frame, PlotOpt o) const
 /// <tr><th> Type of CmdArg                     <th> Effect on parameter box
 /// <tr><td> `Parameters(const RooArgSet& param)` <td>  Only the specified subset of parameters will be shown. By default all non-constant parameters are shown.
 /// <tr><td> `ShowConstants(bool flag)`         <td>  Also display constant parameters
-/// <tr><td> `Format(const char* optStr)`         <td>  \deprecated Classing parameter formatting options, provided for backward compatibility
-///
 /// <tr><td> `Format(const char* what,...)`       <td>  Parameter formatting options.
 ///   | Parameter              | Format
 ///   | ---------------------- | --------------------------
@@ -3117,10 +3115,7 @@ RooPlot* RooAbsPdf::paramOn(RooPlot* frame, const RooCmdArg& arg1, const RooCmdA
   pc.defineInt("ymaxi","Layout",0,Int_t(0.9*10000)) ;
   pc.defineInt("showc","ShowConstants",0,0) ;
   pc.defineSet("params","Parameters",0,0) ;
-  pc.defineString("formatStr","Format",0,"NELU") ;
-  pc.defineInt("sigDigit","Format",0,2) ;
   pc.defineInt("dummy","FormatArgs",0,0) ;
-  pc.defineMutex("Format","FormatArgs") ;
 
   // Process and check varargs
   pc.process(cmdList) ;
@@ -3128,56 +3123,23 @@ RooPlot* RooAbsPdf::paramOn(RooPlot* frame, const RooCmdArg& arg1, const RooCmdA
     return frame ;
   }
 
+  auto formatCmd = static_cast<RooCmdArg const*>(cmdList.FindObject("FormatArgs")) ;
+
   const char* label = pc.getString("label") ;
   double xmin = pc.getDouble("xmin") ;
   double xmax = pc.getDouble("xmax") ;
   double ymax = pc.getInt("ymaxi") / 10000. ;
-  Int_t showc = pc.getInt("showc") ;
-
-
-  const char* formatStr = pc.getString("formatStr") ;
-  Int_t sigDigit = pc.getInt("sigDigit") ;
+  int showc = pc.getInt("showc") ;
 
   // Decode command line arguments
-  RooArgSet* params = pc.getSet("params");
-  if (!params) {
-    std::unique_ptr<RooArgSet> paramsPtr{getParameters(frame->getNormVars())} ;
-    if (pc.hasProcessed("FormatArgs")) {
-      const RooCmdArg* formatCmd = static_cast<RooCmdArg*>(cmdList.FindObject("FormatArgs")) ;
-      paramOn(frame,*paramsPtr,showc,label,0,0,xmin,xmax,ymax,formatCmd) ;
-    } else {
-      paramOn(frame,*paramsPtr,showc,label,sigDigit,formatStr,xmin,xmax,ymax) ;
-    }
-  } else {
-    std::unique_ptr<RooArgSet> pdfParams{getParameters(frame->getNormVars())} ;
-    std::unique_ptr<RooArgSet> selParams{static_cast<RooArgSet*>(pdfParams->selectCommon(*params))} ;
-    if (pc.hasProcessed("FormatArgs")) {
-      const RooCmdArg* formatCmd = static_cast<RooCmdArg*>(cmdList.FindObject("FormatArgs")) ;
-      paramOn(frame,*selParams,showc,label,0,0,xmin,xmax,ymax,formatCmd) ;
-    } else {
-      paramOn(frame,*selParams,showc,label,sigDigit,formatStr,xmin,xmax,ymax) ;
-    }
+  std::unique_ptr<RooArgSet> params{getParameters(frame->getNormVars())} ;
+  if(RooArgSet* requestedParams = pc.getSet("params")) {
+    params = std::unique_ptr<RooArgSet>{static_cast<RooArgSet*>(params->selectCommon(*requestedParams))};
   }
+  paramOn(frame,*params,showc,label,xmin,xmax,ymax,formatCmd);
 
   return frame ;
 }
-
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// \deprecated Obsolete, provided for backward compatibility. Don't use.
-
-RooPlot* RooAbsPdf::paramOn(RooPlot* frame, const RooAbsData* data, const char *label,
-             Int_t sigDigits, Option_t *options, double xmin,
-             double xmax ,double ymax)
-{
-  std::unique_ptr<RooArgSet> params{getParameters(data)} ;
-  TString opts(options) ;
-  paramOn(frame,*params,opts.Contains("c"),label,sigDigits,options,xmin,xmax,ymax) ;
-  return frame ;
-}
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3190,13 +3152,10 @@ RooPlot* RooAbsPdf::paramOn(RooPlot* frame, const RooAbsData* data, const char *
 /// values specify the initial relative position of the text box in the plot frame.
 
 RooPlot* RooAbsPdf::paramOn(RooPlot* frame, const RooArgSet& params, bool showConstants, const char *label,
-             Int_t sigDigits, Option_t *options, double xmin,
-             double xmax ,double ymax, const RooCmdArg* formatCmd)
+             double xmin, double xmax ,double ymax, const RooCmdArg* formatCmd)
 {
 
   // parse the options
-  TString opts = options;
-  opts.ToLower();
   bool showLabel= (label != 0 && strlen(label) > 0);
 
   // calculate the box's size, adjusting for constant parameters
@@ -3225,7 +3184,7 @@ RooPlot* RooAbsPdf::paramOn(RooPlot* frame, const RooArgSet& params, bool showCo
     auto var = static_cast<const RooRealVar*>(param);
     if(var->isConstant() && !showConstants) continue;
 
-    std::unique_ptr<TString> formatted{options ? var->format(sigDigits, options) : var->format(*formatCmd)};
+    std::unique_ptr<TString> formatted{formatCmd ? var->format(*formatCmd) : var->format(2, "NELU")};
     box->AddText(formatted->Data());
   }
 
