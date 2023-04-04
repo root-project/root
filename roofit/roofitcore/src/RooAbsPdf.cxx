@@ -3082,7 +3082,7 @@ RooPlot* RooAbsPdf::plotOn(RooPlot *frame, PlotOpt o) const
 /// <tr><td> `Format(const char* what,...)`       <td>  Parameter formatting options.
 ///   | Parameter              | Format
 ///   | ---------------------- | --------------------------
-///   | `const char* what`     |  Controls what is shown. "N" adds name, "E" adds error, "A" shows asymmetric error, "U" shows unit, "H" hides the value
+///   | `const char* what`     |  Controls what is shown. "N" adds name (alternatively, "T" adds the title), "E" adds error, "A" shows asymmetric error, "U" shows unit, "H" hides the value
 ///   | `FixedPrecision(int n)`|  Controls precision, set fixed number of digits
 ///   | `AutoPrecision(int n)` |  Controls precision. Number of shown digits is calculated from error + n specified additional digits (1 is sensible default)
 /// <tr><td> `Label(const chat* label)`           <td>  Add label to parameter box. Use `\n` for multi-line labels.
