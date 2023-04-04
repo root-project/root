@@ -41,6 +41,8 @@ public:
 
    void gradient(const double *x, double *g) const;
 
+   std::size_t getNumParams() const { return _params.size(); }
+
 protected:
    double evaluate() const override;
 
