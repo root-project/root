@@ -921,8 +921,7 @@ bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname
 
       auto &s = RooJSONFactoryWSTool::appendNamedChild(elem["samples"], sample.name);
 
-      auto &modifiers = s["modifiers"];
-      modifiers.set_seq();
+      auto &modifiers = s["modifiers"].set_seq();
 
       for (const auto &nf : sample.normfactors) {
          auto &mod = RooJSONFactoryWSTool::appendNamedChild(modifiers, nf.name);
@@ -938,8 +937,7 @@ bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname
          auto &mod = RooJSONFactoryWSTool::appendNamedChild(modifiers, sys.name);
          mod["type"] << "normsys";
          mod["constraint"] << toString(sys.constraint);
-         auto &data = mod["data"];
-         data.set_map();
+         auto &data = mod["data"].set_map();
          data["lo"] << sys.low;
          data["hi"] << sys.high;
       }
@@ -948,8 +946,7 @@ bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname
          auto &mod = RooJSONFactoryWSTool::appendNamedChild(modifiers, sys.name);
          mod["type"] << "histosys";
          mod["constraint"] << toString(sys.constraint);
-         auto &data = mod["data"];
-         data.set_map();
+         auto &data = mod["data"].set_map();
          RooJSONFactoryWSTool::exportHistogram(*sys.low, data["lo"], varnames, nullptr, false, false);
          RooJSONFactoryWSTool::exportHistogram(*sys.high, data["hi"], varnames, nullptr, false, false);
       }
@@ -959,8 +956,7 @@ bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname
          mod["type"] << "shapesys";
          mod["constraint"] << toString(sys.constraint);
          if (sys.constraint) {
-            auto &data = mod["data"];
-            data.set_map();
+            auto &data = mod["data"].set_map();
             auto &vals = data["vals"];
             vals.fill_seq(sys.constraints);
          }
