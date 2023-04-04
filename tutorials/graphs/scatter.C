@@ -30,7 +30,6 @@ void scatter()
    }
 
    auto scat = new TScatter(n, x, y,c,s);
-   TH1F *h = scat->GetHistogram();
    scat->SetMarkerStyle(20);
    scat->SetMarkerColor(kRed);
    scat->SetTitle("Scatter plot;X;Y");
