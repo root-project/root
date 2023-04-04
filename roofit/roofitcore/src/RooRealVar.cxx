@@ -913,6 +913,7 @@ TString* RooRealVar::format(const RooCmdArg& formatArg) const
 ///
 /// To control what is shown use the following options
 /// N = show name
+/// T = show title (takes precedent over `N`, falls back to `N` if title is empty)
 /// H = hide value
 /// E = show error
 /// A = show asymmetric error instead of parabolic error (if available)
@@ -929,12 +930,12 @@ TString* RooRealVar::format(const RooCmdArg& formatArg) const
 
 TString *RooRealVar::format(Int_t sigDigits, const char *options) const
 {
-  //cout << "format = " << options << endl ;
-
   // parse the options string
   TString opts(options);
   opts.ToLower();
+
   bool showName= opts.Contains("n");
+  bool showTitle = opts.Contains("t");
   bool hideValue= opts.Contains("h");
   bool showError= opts.Contains("e");
   bool showUnit= opts.Contains("u");
@@ -942,6 +943,12 @@ TString *RooRealVar::format(Int_t sigDigits, const char *options) const
   bool latexMode= opts.Contains("x");
   bool latexTableMode = opts.Contains("y") ;
   bool latexVerbatimName = opts.Contains("v") ;
+
+  std::string label = showName ? getPlotLabel() : "";
+  if(showTitle) {
+     label = GetTitle();
+     if(label.empty()) label = getPlotLabel();
+  }
 
   if (latexTableMode) latexMode = true ;
   bool asymError= opts.Contains("a") ;
@@ -967,11 +974,11 @@ TString *RooRealVar::format(Int_t sigDigits, const char *options) const
   TString *text= new TString();
   if(latexMode) text->Append("$");
   // begin the string with "<name> = " if requested
-  if(showName) {
+  if(showName || showTitle) {
     if (latexTableMode && latexVerbatimName) {
       text->Append("\\verb+") ;
     }
-    text->Append(getPlotLabel());
+    text->Append(label);
     if (latexVerbatimName) text->Append("+") ;
 
     if (!latexTableMode) {
