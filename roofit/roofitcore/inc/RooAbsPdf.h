@@ -141,10 +141,6 @@ public:
                            const RooCmdArg& arg5=RooCmdArg::none(), const RooCmdArg& arg6=RooCmdArg::none(),
                            const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none()) ;
 
-  virtual RooPlot* paramOn(RooPlot* frame, const RooAbsData* data, const char *label= "", Int_t sigDigits = 2,
-            Option_t *options = "NELU", double xmin=0.65,
-            double xmax = 0.9, double ymax = 0.9) ;
-
   // Built-in generator support
   virtual Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, bool staticInitOK=true) const;
   virtual void initGenerator(Int_t code) ;
@@ -332,8 +328,8 @@ private:
 
   // Implementation version
   virtual RooPlot* paramOn(RooPlot* frame, const RooArgSet& params, bool showConstants=false,
-                           const char *label= "", Int_t sigDigits = 2, Option_t *options = "NELU", double xmin=0.65,
-            double xmax= 0.99,double ymax=0.95, const RooCmdArg* formatCmd=nullptr) ;
+                           const char *label= "", double xmin=0.65,
+                           double xmax= 0.99,double ymax=0.95, const RooCmdArg* formatCmd=nullptr) ;
 
   void logBatchComputationErrors(RooSpan<const double>& outputs, std::size_t begin) const;
   bool traceEvalPdf(double value) const;
