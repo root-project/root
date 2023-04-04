@@ -31,7 +31,8 @@ The following people have contributed to this new version:
  Silia Taider, CERN/EP-SFT,\
  Florian Uhlig, GSI,\
  Devajith Valaparambil Sreeramaswamy, CERN/EP-SFT,\
- Vassil Vassilev, Princeton
+ Vassil Vassilev, Princeton,\
+ Sandro Wenzel, CERN/ALICE
 
 ## Deprecation and Removal
 
@@ -49,6 +50,13 @@ The following people have contributed to this new version:
 
 ## Core Libraries
 * Behavior change: when selecting a template instantiation for a dictionary, all the template arguments have to be fully defined - the forward declarations are not enough any more. The error prompted by the dictionary generator will be `Warning: Unused class rule: MyTemplate<MyFwdDeclaredClass>`.
+* New expert option to reduce static startup cost of ROOT by setting environment variables
+```bash
+export ROOT_LDSYSPATH=$(LD_DEBUG=libs LD_PRELOAD=DOESNOTEXIST ls /tmp/DOESNOTEXIST 2>&1 | grep -m 1 "system search path" | sed 's/.*=//g' | awk '//{print $1}')
+export CLING_LDSYSPATH=ROOT_LDSYSPATH
+export CLING_CPPSYSINCL=$(LC_ALL=C c++ -xc++ -E -v /dev/null 2>&1 | sed -n '/^.include/,${/^ \/.*++/{p}}' | tr '\n' ':' | tr ' ' ':')
+```
+This caching reduces sub-process creation during initialization and can be useful when multiple ROOT instances or binaries linked to ROOT are executed (less system-calls, cleaner debugging).
 
 ## I/O
 
