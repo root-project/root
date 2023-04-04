@@ -89,8 +89,9 @@ TEST(RooFuncWrapper, GaussianNormalizedHardcoded)
    EXPECT_EQ(paramsMyGauss.size(), paramsGauss.size());
 
    // Get AD based derivative
-   double dMyGauss[3] = {};
-   gaussFunc.getGradient(dMyGauss);
+   // Get number of actual parameters directly from the wrapper as not always will they be the same as paramsMyGauss.
+   std::vector<double> dMyGauss(gaussFunc.getNumParams(), 0);
+   gaussFunc.getGradient(dMyGauss.data());
 
    // Check if derivatives are equal
    EXPECT_NEAR(getNumDerivative(gauss, x, normSet), dMyGauss[0], 1e-8);
@@ -148,8 +149,8 @@ TEST(RooFuncWrapper, NllWithObservables)
    EXPECT_EQ(paramsMyNLL.size(), parameters.size());
 
    // Get AD based derivative
-   double dMyNLL[2] = {};
-   nllFunc.getGradient(dMyNLL);
+   std::vector<double> dMyNLL(nllFunc.getNumParams(), 0);
+   nllFunc.getGradient(dMyNLL.data());
 
    // Check if derivatives are equal
    EXPECT_NEAR(getNumDerivative(*nllRef, mu, normSet), dMyNLL[0], 1e-6);
@@ -222,8 +223,8 @@ TEST(RooFuncWrapper, GaussianNormalized)
    EXPECT_NEAR(gauss.getVal(normSet), gaussFunc.getVal(), 1e-8);
 
    // Get AD based derivative
-   double dMyGauss[3] = {};
-   gaussFunc.getGradient(dMyGauss);
+   std::vector<double> dMyGauss(gaussFunc.getNumParams(), 0);
+   gaussFunc.getGradient(dMyGauss.data());
 
    // Check if derivatives are equal
    for (std::size_t i = 0; i < paramsGauss.size(); ++i) {
@@ -248,8 +249,8 @@ TEST(RooFuncWrapper, Exponential)
    EXPECT_NEAR(expo.getVal(normSet), expoFunc.getVal(), 1e-8);
 
    // Get AD based derivative
-   double dExpo[2] = {};
-   expoFunc.getGradient(dExpo);
+   std::vector<double> dExpo(expoFunc.getNumParams(), 0);
+   expoFunc.getGradient(dExpo.data());
 
    // Check if derivatives are equal
    for (std::size_t i = 0; i < params.size(); ++i) {
@@ -298,8 +299,8 @@ TEST(RooFuncWrapper, Nll)
    EXPECT_EQ(paramsMyNLL.size(), paramsRefNll.size());
 
    // Get AD based derivative
-   double dMyNLL[2] = {};
-   nllFunc.getGradient(dMyNLL);
+   std::vector<double> dMyNLL(nllFunc.getNumParams(), 0);
+   nllFunc.getGradient(dMyNLL.data());
 
    // Check if derivatives are equal
    for (std::size_t i = 0; i < paramsMyNLL.size(); ++i) {
