@@ -30,8 +30,8 @@ public:
       friend TJSONTree;
       std::unique_ptr<Impl> node;
 
-      const TJSONTree *get_tree() const;
-      TJSONTree *get_tree();
+      const TJSONTree *get_tree() const { return tree; }
+      TJSONTree *get_tree() { return tree; }
       const Impl &get_node() const;
       Impl &get_node();
 
@@ -54,8 +54,8 @@ public:
       bool is_container() const override;
       bool is_map() const override;
       bool is_seq() const override;
-      void set_map() override;
-      void set_seq() override;
+      Node &set_map() override;
+      Node &set_seq() override;
       void clear() override;
       std::string key() const override;
       std::string val() const override;
@@ -85,6 +85,6 @@ public:
    TJSONTree(std::istream &is);
    TJSONTree::Node &incache(const TJSONTree::Node &n);
 
-   Node &rootnode() override;
+   Node &rootnode() override { return root; }
 };
 #endif

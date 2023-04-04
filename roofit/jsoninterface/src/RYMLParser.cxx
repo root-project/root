@@ -109,16 +109,18 @@ void TRYMLTree::Node::writeYML(std::ostream &os) const
    os << node->get();
 }
 
-void TRYMLTree::Node::set_map()
+TRYMLTree::Node &TRYMLTree::Node::set_map()
 {
    // assign this node to be a map (JSON object)
    node->get() |= c4::yml::MAP;
+   return *this;
 }
 
-void TRYMLTree::Node::set_seq()
+TRYMLTree::Node &TRYMLTree::Node::set_seq()
 {
    // assign this node to be a sequence (JSON array)
    node->get() |= c4::yml::SEQ;
+   return *this;
 }
 
 void TRYMLTree::Node::clear()

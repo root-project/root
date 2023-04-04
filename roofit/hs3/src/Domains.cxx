@@ -97,8 +97,7 @@ void Domains::ProductDomain::writeJSON(RooFit::Detail::JSONNode &node) const
 
    for (auto const &item : _map) {
       auto const &elem = item.second;
-      RooFit::Detail::JSONNode &varnode = variablesNode.append_child();
-      varnode.set_map();
+      RooFit::Detail::JSONNode &varnode = variablesNode.append_child().set_map();
       varnode["name"] << item.first;
       if (elem.hasMin)
          varnode["min"] << elem.min;
