@@ -156,15 +156,11 @@ void exportMeasurement(RooStats::HistFactory::Measurement &measurement, JSONNode
    auto &analysisNode = RooJSONFactoryWSTool::appendNamedChild(n["analyses"], "simPdf");
    analysisNode.set_map();
    analysisNode["InterpolationScheme"] << measurement.GetInterpolationScheme();
-   auto &analysisDomains = analysisNode["domains"];
-   analysisDomains.set_seq();
-   analysisDomains.append_child() << "default_domain";
+   analysisNode["domains"].set_seq().append_child() << "default_domain";
 
-   auto &analysisPois = analysisNode["pois"];
-   analysisPois.set_seq();
+   auto &analysisPois = analysisNode["pois"].set_seq();
 
-   auto &analysisObservables = analysisNode["observables"];
-   analysisObservables.set_seq();
+   auto &analysisObservables = analysisNode["observables"].set_seq();
 
    for (const auto &poi : measurement.GetPOIList()) {
       analysisPois.append_child() << poi;
@@ -247,18 +243,13 @@ void exportMeasurement(RooStats::HistFactory::Measurement &measurement, JSONNode
       RooJSONFactoryWSTool::appendNamedChild(n.get("misc", "ROOT_internal", "combined_distributions"), "simPdf");
 
    child1["index_cat"] << "channelCat";
-   auto &labels1 = child1["labels"];
-   labels1.set_seq();
-   auto &indices1 = child1["indices"];
-   indices1.set_seq();
+   auto &labels1 = child1["labels"].set_seq();
+   auto &indices1 = child1["indices"].set_seq();
 
    child2["index_cat"] << "channelCat";
-   auto &labels2 = child2["labels"];
-   labels2.set_seq();
-   auto &indices2 = child2["indices"];
-   indices2.set_seq();
-   auto &pdfs2 = child2["distributions"];
-   pdfs2.set_seq();
+   auto &labels2 = child2["labels"].set_seq();
+   auto &indices2 = child2["indices"].set_seq();
+   auto &pdfs2 = child2["distributions"].set_seq();
 
    std::vector<std::string> channelNames;
    for (const auto &c : measurement.GetChannels()) {
@@ -334,10 +325,7 @@ void RooStats::HistFactory::JSONTool::PrintYAML(std::string const &filename)
 
 void RooStats::HistFactory::JSONTool::activateStatError(JSONNode &sampleNode)
 {
-   auto &modifiers = sampleNode["modifiers"];
-   modifiers.set_seq();
-   auto &node = modifiers.append_child();
-   node.set_map();
+   auto &node = sampleNode["modifiers"].set_seq().append_child().set_map();
    node["type"] << "staterror";
    node["name"] << "mcstat";
 }
