@@ -197,7 +197,7 @@ jobs:
                     --buildtype    ${{ matrix.config }}
                     --platform     windows10
                     --incremental  false
-                    --base_ref     ${{ github.base_ref }}
+                    --base_ref     ${{ github.ref_name }}
                     --repository   ${{ github.server_url }}/${{ github.repository }}
                     --architecture ${{ matrix.target_arch }}  "
 
