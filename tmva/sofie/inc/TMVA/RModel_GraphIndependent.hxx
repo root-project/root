@@ -86,7 +86,6 @@ public:
 
    RModel_GraphIndependent(GraphIndependent_Init& graph_input_struct);
    RModel_GraphIndependent(){}
-   RModel_GraphIndependent(std::string name, std::string parsedtime);
    
    void Generate();
 

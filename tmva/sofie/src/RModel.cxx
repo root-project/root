@@ -162,6 +162,7 @@ namespace SOFIE{
    }
 
    void RModel::AddOutputTensorNameList(std::vector<std::string> outputtensornames){
+      fOutputTensorNames.clear();
       for(auto& it : outputtensornames){
          fOutputTensorNames.push_back(UTILITY::Clean_name(it));
       }
@@ -224,7 +225,6 @@ namespace SOFIE{
          }
          if (!modelHasWeights) fUseWeightFile = false;
       }
-
 
       for (auto& i : fOperators){
          i->Initialize(*this);

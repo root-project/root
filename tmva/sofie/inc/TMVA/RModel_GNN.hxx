@@ -127,7 +127,6 @@ public:
 
    RModel_GNN(GNN_Init& graph_input_struct);
    RModel_GNN(){}
-   RModel_GNN(std::string name, std::string parsedtime);
    
    void Generate();
 
