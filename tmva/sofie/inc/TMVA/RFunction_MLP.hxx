@@ -5,17 +5,21 @@
 #include "TMVA/SOFIE_common.hxx"
 #include "TMVA/ROperator_Concat.hxx"
 #include "TMVA/ROperator_Gemm.hxx"
+#include "TMVA/ROperator_LayerNormalization.hxx"
 #include "TMVA/ROperator_Relu.hxx"
 #include "TMVA/RFunction.hxx"
 #include "TMVA/RModel_GNN.hxx"
 
-#include <any>
 #include <sstream>
 #include <algorithm>
 #include <iterator>
 #include <iomanip>
 #include <limits>
 #include <cassert>
+#include <memory>
+#include <vector>
+
+#include <iostream>
 
 namespace TMVA{
 namespace Experimental{
@@ -35,13 +39,21 @@ class RFunction_MLP: public RFunction_Update{
         std::vector<std::string> fBiasTensors;
 
     public:
+        virtual ~RFunction_MLP(){}
         RFunction_MLP(FunctionTarget target, Int_t numLayers, Activation activation_function=Activation::RELU, bool activate_final=false, GraphType gType=GraphType::GNN):
         RFunction_Update(target, gType), fNumLayers(numLayers), fActivationFunction(activation_function), fActivateFinal(activate_final){
             if(fActivationFunction == Activation::Invalid){
                 throw std::runtime_error("TMVA SOFIE GNN doesn't currently supports the provided activation function for " + fFuncName + " update.");
             }
+
+            // assuming all the linear layers has a kernel and a bias initialized tensors
+            if(fActivateFinal){
+                function_block->AddOutputTensorNameList({fFuncName+"Relu"+std::to_string(fNumLayers)});
+            } else{
+                function_block->AddOutputTensorNameList({fFuncName+"Gemm"+std::to_string(fNumLayers)});
+            }
         }
-        
+
         void Initialize(){
             
             std::string fGemmInput;
@@ -79,17 +91,24 @@ class RFunction_MLP: public RFunction_Update{
                 } 
             }
 
-            function_block->AddBlasRoutines({"Gemm", "Gemv"});  // for Gemm operation
 
-            // assuming all the linear layers has a kernel and a bias initialized tensors
-            if(fActivateFinal){
-                function_block->AddOutputTensorNameList({fFuncName+"Relu"+std::to_string(fNumLayers)});
-            } else{
-                function_block->AddOutputTensorNameList({fFuncName+"Gemm"+std::to_string(fNumLayers)});
+            if(fAddlOp.size()){
+                for(auto &i:fAddlOp){
+                    std::unique_ptr<ROperator> tmp(i);
+                    function_block->AddOperator(std::move(tmp));                
+                }
             }
         }
 
-        void AddInitializedTensors(std::vector<std::vector<std::string>> initialized_tensors){
+        void AddLayerNormalization(int axis, float epsilon, size_t stashType, const std::string &nameX,
+                                    const std::string &nameScale, const std::string &nameB, const std::string &nameY){
+            auto op_layerNorm = new ROperator_LayerNormalization<float>(axis, epsilon, stashType, nameX,
+                                                                        nameScale, nameB, nameY, "", "");
+            fAddlOp.push_back((op_layerNorm));
+        }
+        
+
+        void AddInitializedTensors(const std::vector<std::vector<std::string>>& initialized_tensors){
                 fKernelTensors = initialized_tensors[0];
                 fBiasTensors   = initialized_tensors[1];
         }
