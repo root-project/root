@@ -126,7 +126,8 @@
                     "max": 2
                 }
             ],
-            "contents": [122, 112]
+            "contents": [122, 112],
+            "type": "binned"
         }
     ]
 }
