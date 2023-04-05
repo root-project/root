@@ -718,7 +718,7 @@ bool RooWorkspace::import(const RooAbsArg& inArg,
 /// <tr><td> `RenameVariable(const char* inputName, const char* outputName)` <td> Change names of observables in dataset upon insertion
 /// <tr><td> `Silence` <td> Be quiet, except in case of errors
 /// \note From python, use `Import()`, since `import` is a reserved keyword.
-bool RooWorkspace::import(RooAbsData& inData,
+bool RooWorkspace::import(RooAbsData const& inData,
              const RooCmdArg& arg1, const RooCmdArg& arg2, const RooCmdArg& arg3,
              const RooCmdArg& arg4, const RooCmdArg& arg5, const RooCmdArg& arg6,
              const RooCmdArg& arg7, const RooCmdArg& arg8, const RooCmdArg& arg9)
@@ -1899,7 +1899,7 @@ bool RooWorkspace::makeDir()
 ///
 /// Returns true if an error has occurred.
 
-bool RooWorkspace::import(TObject& object, bool replaceExisting)
+bool RooWorkspace::import(TObject const& object, bool replaceExisting)
 {
   // First check if object with given name already exists
   std::unique_ptr<TObject> oldObj{_genObjects.FindObject(object.GetName())};
@@ -1939,7 +1939,7 @@ bool RooWorkspace::import(TObject& object, bool replaceExisting)
 ///
 /// Returns true if an error has occurred.
 
-bool RooWorkspace::import(TObject& object, const char* aliasName, bool replaceExisting)
+bool RooWorkspace::import(TObject const& object, const char* aliasName, bool replaceExisting)
 {
   // First check if object with given name already exists
   std::unique_ptr<TObject> oldObj{_genObjects.FindObject(object.GetName())};
