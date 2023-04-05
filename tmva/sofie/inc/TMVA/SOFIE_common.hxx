@@ -458,8 +458,8 @@ TMVA::Experimental::RTensor<T> Concatenate( TMVA::Experimental::RTensor<T> & t1,
    size_t sout = (axis > 0) ? outStride[axis-1] : tout.GetSize();
    size_t nb = t1.GetSize()/s1;
    for (size_t i = 0; i < nb; i++) {
-      std::copy(t1.begin() + i*s1, t1.begin() + (i+1)*s1, tout.begin() + i * sout );
-      std::copy(t2.begin() + i*s2, t2.begin() + (i+1)*s2, tout.begin() + i * sout + s1 );
+      std::copy(t1.GetData() + i*s1, t1.GetData() + (i+1)*s1, tout.GetData() + i * sout );
+      std::copy(t2.GetData() + i*s2, t2.GetData() + (i+1)*s2, tout.GetData() + i * sout + s1 );
    }
 
    return tout;
@@ -476,9 +476,12 @@ inline GNN_Data Concatenate(GNN_Data & data1, GNN_Data & data2, int axis = 0) {
 
 inline GNN_Data Copy(const GNN_Data & data) {
    GNN_Data out;
-   out.node_data = data.node_data.Copy();
-   out.edge_data = data.edge_data.Copy();
-   out.global_data = data.global_data.Copy();
+   out.node_data = RTensor<float>(data.node_data.GetShape());
+   out.edge_data = RTensor<float>(data.edge_data.GetShape());
+   out.global_data = RTensor<float>(data.global_data.GetShape());
+   std::copy(data.node_data.GetData(), data.node_data.GetData()+ data.node_data.GetSize(), out.node_data.GetData());
+   std::copy(data.edge_data.GetData(), data.edge_data.GetData()+ data.edge_data.GetSize(), out.edge_data.GetData());
+   std::copy(data.global_data.GetData(), data.global_data.GetData()+ data.global_data.GetSize(), out.global_data.GetData());
    return out;
 }
 

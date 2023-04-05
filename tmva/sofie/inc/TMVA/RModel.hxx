@@ -66,6 +66,10 @@ public:
    void AddInputTensorInfo(std::string input_name, ETensorType type, std::vector<Dim> shape);
    void AddInputTensorInfo(std::string input_name, ETensorType type, std::vector<size_t> shape);
    void AddOperator(std::unique_ptr<ROperator> op, int order_execution = -1);
+   void AddOperatorReference(ROperator* op, int order_execution = -1){
+      std::unique_ptr<ROperator> tmp(op);
+      AddOperator(std::move(tmp), order_execution);
+   }
    void AddInitializedTensor(std::string tensor_name, ETensorType type, std::vector<std::size_t> shape, std::shared_ptr<void> data);
    
    template <typename T>
