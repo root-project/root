@@ -74,8 +74,8 @@ public:
          }
       }
 
-      bool operator==(const Section& rhs) {
-         return begin_fraction == rhs.begin_fraction && end_fraction == rhs.end_fraction;
+      friend bool operator==(const Section& lhs, const Section& rhs) {
+         return lhs.begin_fraction == rhs.begin_fraction && lhs.end_fraction == rhs.end_fraction;
       }
 
       double begin_fraction;
