@@ -382,6 +382,6 @@ namespace Internal {
    };
 } // Internal
 } // ROOT
-#define gDirectory (ROOT::Internal::TDirectoryAtomicAdapter{})
+#define gDirectory (::ROOT::Internal::TDirectoryAtomicAdapter{})
 
 #endif
