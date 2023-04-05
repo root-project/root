@@ -177,7 +177,6 @@ private:
 
    void importAllNodes(const RooFit::Detail::JSONNode &n);
 
-   void importVariables(const RooFit::Detail::JSONNode &n);
    void importVariable(const RooFit::Detail::JSONNode &n);
    void importDependants(const RooFit::Detail::JSONNode &n);
 

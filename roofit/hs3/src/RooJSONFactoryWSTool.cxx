@@ -27,7 +27,7 @@
 
 #include "Domains.h"
 
-#include "TROOT.h"
+#include <TROOT.h>
 
 #include <algorithm>
 #include <fstream>
@@ -352,12 +352,11 @@ void getObservables(RooWorkspace const &ws, const JSONNode &node, RooArgSet &out
 std::unique_ptr<RooAbsData> loadData(const JSONNode &p, RooWorkspace &workspace)
 {
    std::string name(RooJSONFactoryWSTool::name(p));
-   if (name.empty() || !p.is_map())
-      return nullptr;
-   if (p.has_child("contents")) {
+   std::string const &type = p["type"].val();
+   if (type == "binned") {
       // binned
       return RooJSONFactoryWSTool::readBinnedData(p, name);
-   } else if (p.has_child("entries")) {
+   } else if (type == "unbinned") {
       // unbinned
       RooArgSet vars;
       getObservables(workspace, p, vars);
@@ -401,10 +400,7 @@ void importAnalysis(const RooFit::Detail::JSONNode &rootnode, const RooFit::Deta
 {
    // if this is a toplevel pdf, also create a modelConfig for it
    std::string mcname = "ModelConfig";
-   {
-      RooStats::ModelConfig mc{mcname.c_str(), analysisNode["name"].val().c_str()};
-      workspace.import(mc);
-   }
+   workspace.import(RooStats::ModelConfig{mcname.c_str(), analysisNode["name"].val().c_str()});
 
    std::vector<std::string> nllDistNames;
    std::vector<std::string> nllDataNames;
@@ -811,59 +807,55 @@ void RooJSONFactoryWSTool::importFunction(const JSONNode &p, bool isPdf)
    std::string functype(p["type"].val());
    this->importDependants(p);
 
-   try {
-      // check for specific implementations
-      auto it = importers.find(functype);
-      bool ok = false;
-      if (it != importers.end()) {
-         for (auto &imp : it->second) {
-            ok = isPdf ? imp->importPdf(this, p) : imp->importFunction(this, p);
-            if (ok)
-               break;
-         }
+   // check for specific implementations
+   auto it = importers.find(functype);
+   bool ok = false;
+   if (it != importers.end()) {
+      for (auto &imp : it->second) {
+         ok = isPdf ? imp->importPdf(this, p) : imp->importFunction(this, p);
+         if (ok)
+            break;
       }
-      if (!ok) { // generic import using the factory expressions
-         auto expr = isPdf ? pdfFactoryExpressions.find(functype) : funcFactoryExpressions.find(functype);
-         if (expr != (isPdf ? pdfFactoryExpressions.end() : funcFactoryExpressions.end())) {
-            std::string expression = ::generate(expr->second, p, this);
-            if (!_workspace.factory(expression)) {
-               std::stringstream ss;
-               ss << "RooJSONFactoryWSTool() failed to create " << expr->second.tclass->GetName() << " '" << name
-                  << "', skipping. expression was\n"
-                  << expression << std::endl;
-               logInputArgumentsError(std::move(ss));
-            }
-         } else {
+   }
+   if (!ok) { // generic import using the factory expressions
+      auto expr = isPdf ? pdfFactoryExpressions.find(functype) : funcFactoryExpressions.find(functype);
+      if (expr != (isPdf ? pdfFactoryExpressions.end() : funcFactoryExpressions.end())) {
+         std::string expression = ::generate(expr->second, p, this);
+         if (!_workspace.factory(expression)) {
             std::stringstream ss;
-            ss << "RooJSONFactoryWSTool() no handling for type '" << functype << "' implemented, skipping."
-               << "\n"
-               << "there are several possible reasons for this:\n"
-               << " 1. " << functype << " is a custom type that is not available in RooFit.\n"
-               << " 2. " << functype
-               << " is a ROOT class that nobody ever bothered to write a deserialization definition for.\n"
-               << " 3. something is wrong with your setup, e.g. you might have called "
-                  "RooFit::JSONIO::clearFactoryExpressions() and/or never successfully read a file defining "
-                  "these expressions with RooFit::JSONIO::loadFactoryExpressions(filename)\n"
-               << "either way, please make sure that:\n"
-               << " 3: you are reading a file with factory expressions - call "
-                  "RooFit::JSONIO::printFactoryExpressions() "
-                  "to see what is available\n"
-               << " 2 & 1: you might need to write a deserialization definition yourself. check "
-                  "https://github.com/root-project/root/blob/master/roofit/hs3/README.md to see "
-                  "how to do this!"
-               << std::endl;
+            ss << "RooJSONFactoryWSTool() failed to create " << expr->second.tclass->GetName() << " '" << name
+               << "', skipping. expression was\n"
+               << expression << std::endl;
             logInputArgumentsError(std::move(ss));
-            return;
          }
+      } else {
+         std::stringstream ss;
+         ss << "RooJSONFactoryWSTool() no handling for type '" << functype << "' implemented, skipping."
+            << "\n"
+            << "there are several possible reasons for this:\n"
+            << " 1. " << functype << " is a custom type that is not available in RooFit.\n"
+            << " 2. " << functype
+            << " is a ROOT class that nobody ever bothered to write a deserialization definition for.\n"
+            << " 3. something is wrong with your setup, e.g. you might have called "
+               "RooFit::JSONIO::clearFactoryExpressions() and/or never successfully read a file defining "
+               "these expressions with RooFit::JSONIO::loadFactoryExpressions(filename)\n"
+            << "either way, please make sure that:\n"
+            << " 3: you are reading a file with factory expressions - call "
+               "RooFit::JSONIO::printFactoryExpressions() "
+               "to see what is available\n"
+            << " 2 & 1: you might need to write a deserialization definition yourself. check "
+               "https://github.com/root-project/root/blob/master/roofit/hs3/README.md to see "
+               "how to do this!"
+            << std::endl;
+         logInputArgumentsError(std::move(ss));
+         return;
       }
-      RooAbsReal *func = _workspace.function(name);
-      if (!func) {
-         std::stringstream err;
-         err << "something went wrong importing function '" << name << "'.";
-         RooJSONFactoryWSTool::error(err.str());
-      }
-   } catch (const RooJSONFactoryWSTool::DependencyMissingError &ex) {
-      throw ex;
+   }
+   RooAbsReal *func = _workspace.function(name);
+   if (!func) {
+      std::stringstream err;
+      err << "something went wrong importing function '" << name << "'.";
+      RooJSONFactoryWSTool::error(err.str());
    }
 }
 
@@ -959,6 +951,7 @@ void RooJSONFactoryWSTool::exportData(RooAbsData const &data)
 
    // this is a binned dataset
    if (auto dh = dynamic_cast<RooDataHist const *>(&data)) {
+      output["type"] << "binned";
       return exportHisto(*dh->get(), dh->numEntries(), dh->weightArray(), output);
    }
 
@@ -995,9 +988,12 @@ void RooJSONFactoryWSTool::exportData(RooAbsData const &data)
       if (i == x.numBins())
          isBinnedData = true;
       if (isBinnedData) {
+         output["type"] << "binned";
          return exportHisto(variables, data.numEntries(), contents.data(), output);
       }
    }
+
+   output["type"] << "unbinned";
 
    exportVariables(variables, output["axes"]);
    auto &coords = output["entries"].set_seq();
@@ -1074,15 +1070,6 @@ RooJSONFactoryWSTool::readBinnedData(const JSONNode &n, const std::string &name,
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
-// importing variables
-void RooJSONFactoryWSTool::importVariables(const JSONNode &n)
-{
-   for (const auto &p : n.children()) {
-      importVariable(p);
-   }
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////
 // importing variable
 void RooJSONFactoryWSTool::importVariable(const JSONNode &p)
 {
@@ -1100,15 +1087,12 @@ void RooJSONFactoryWSTool::importVariable(const JSONNode &p)
       if (auto *attrNode = findNamedChild(*_attributesNode, name)) {
          // We should not create RooRealVar objects for RooConstVars!
          if (attrNode->has_child("is_const_var") && (*attrNode)["is_const_var"].val_int() == 1) {
-            RooConstVar v(name.c_str(), name.c_str(), p["value"].val_double());
-            wsImport(v);
+            wsEmplace<RooConstVar>(name, p["value"].val_double());
             return;
          }
       }
    }
-   RooRealVar v(name.c_str(), name.c_str(), 1.);
-   configureVariable(*_domains, p, v);
-   wsImport(v);
+   configureVariable(*_domains, p, wsEmplace<RooRealVar>(name, 1.));
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1127,7 +1111,9 @@ void RooJSONFactoryWSTool::importDependants(const JSONNode &n)
 {
    // import all the dependants of an object
    if (JSONNode const *varsNode = getVariablesNode(n)) {
-      this->importVariables(*varsNode);
+      for (const auto &p : varsNode->children()) {
+         importVariable(p);
+      }
    }
    if (auto seq = n.find("functions")) {
       for (const auto &p : seq->children()) {
@@ -1376,8 +1362,8 @@ bool RooJSONFactoryWSTool::exportYML(std::string const &filename)
 void RooJSONFactoryWSTool::importAllNodes(const RooFit::Detail::JSONNode &n)
 {
    _domains = std::make_unique<Domains>();
-   if (n.has_child("domains"))
-      _domains->readJSON(n["domains"]);
+   if (auto domains = n.find("domains"))
+      _domains->readJSON(*domains);
 
    _rootnodeInput = &n;
 
@@ -1388,8 +1374,8 @@ void RooJSONFactoryWSTool::importAllNodes(const RooFit::Detail::JSONNode &n)
 
    this->importDependants(n);
 
-   if (n.has_child("parameter_points")) {
-      for (const auto &snsh : n["parameter_points"].children()) {
+   if (auto paramPointsNode = n.find("parameter_points")) {
+      for (const auto &snsh : paramPointsNode->children()) {
          std::string name = RooJSONFactoryWSTool::name(snsh);
          RooArgSet vars;
          for (const auto &var : snsh["parameters"].children()) {
