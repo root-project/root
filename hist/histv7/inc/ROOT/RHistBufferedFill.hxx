@@ -19,6 +19,9 @@
 #include "ROOT/RSpan.hxx"
 #include <array>
 
+#include <cstddef>
+#include <array>
+
 namespace ROOT {
 namespace Experimental {
 
