@@ -27,7 +27,6 @@
 
 #include "Domains.h"
 
-#include "TH1.h"
 #include "TROOT.h"
 
 #include <algorithm>
@@ -223,33 +222,6 @@ void importAttributes(RooAbsArg *arg, JSONNode const &node)
    if (auto seq = node.find("tags")) {
       for (const auto &attr : seq->children()) {
          arg->setAttribute(attr.val().c_str());
-      }
-   }
-}
-
-bool checkRegularBins(const TAxis &ax)
-{
-   double w = ax.GetXmax() - ax.GetXmin();
-   double bw = w / ax.GetNbins();
-   for (int i = 0; i <= ax.GetNbins(); ++i) {
-      if (std::abs(ax.GetBinUpEdge(i) - (ax.GetXmin() + (bw * i))) > w * 1e-6)
-         return false;
-   }
-   return true;
-}
-
-inline void writeAxis(JSONNode &bounds, const TAxis &ax)
-{
-   bool regular = (!ax.IsVariableBinSize()) || checkRegularBins(ax);
-   if (regular) {
-      bounds.set_map();
-      bounds["nbins"] << ax.GetNbins();
-      bounds["min"] << ax.GetXmin();
-      bounds["max"] << ax.GetXmax();
-   } else {
-      bounds.set_seq();
-      for (int i = 0; i <= ax.GetNbins(); ++i) {
-         bounds.append_child() << ax.GetBinUpEdge(i);
       }
    }
 }
@@ -639,44 +611,6 @@ RooAbsReal *RooJSONFactoryWSTool::requestImpl<RooAbsReal>(const std::string &obj
    return nullptr;
 }
 
-void RooJSONFactoryWSTool::writeObservables(const TH1 &h, JSONNode &n, const std::vector<std::string> &varnames)
-{
-   auto &observables = n["axes"];
-   auto &x = appendNamedChild(observables, varnames[0]);
-   writeAxis(x, *h.GetXaxis());
-   if (h.GetDimension() > 1) {
-      auto &y = appendNamedChild(observables, varnames[1]);
-      writeAxis(y, *(h.GetYaxis()));
-      if (h.GetDimension() > 2) {
-         auto &z = appendNamedChild(observables, varnames[2]);
-         writeAxis(z, *(h.GetZaxis()));
-      }
-   }
-}
-
-void RooJSONFactoryWSTool::exportHistogram(const TH1 &histo, JSONNode &node, const std::vector<std::string> &varnames,
-                                           const TH1 *errH, bool writeObservables, bool writeErrors)
-{
-   node.set_map();
-   auto &weights = node["contents"].set_seq();
-   JSONNode *errors = nullptr;
-   if (writeErrors) {
-      errors = &node["errors"].set_seq();
-   }
-   if (writeObservables) {
-      RooJSONFactoryWSTool::writeObservables(histo, node, varnames);
-   }
-   const int nBins = histo.GetNbinsX() * histo.GetNbinsY() * histo.GetNbinsZ();
-   for (int i = 1; i <= nBins; ++i) {
-      const double val = histo.GetBinContent(i);
-      weights.append_child() << val;
-      if (writeErrors) {
-         const double err = errH ? val * errH->GetBinContent(i) : histo.GetBinError(i);
-         errors->append_child() << err;
-      }
-   }
-}
-
 void RooJSONFactoryWSTool::exportVariable(const RooAbsArg *v, JSONNode &n)
 {
    auto *cv = dynamic_cast<const RooConstVar *>(v);
@@ -944,14 +878,19 @@ void RooJSONFactoryWSTool::exportHisto(RooArgSet const &vars, std::size_t n, dou
       observableNode["nbins"] << var->numBins();
    }
 
-   auto &weights = output["contents"].set_seq();
+   return exportArray(n, contents, output["contents"]);
+}
+
+void RooJSONFactoryWSTool::exportArray(std::size_t n, double const *contents, RooFit::Detail::JSONNode &output)
+{
+   output.set_seq();
    for (std::size_t i = 0; i < n; ++i) {
       double w = contents[i];
       // To make sure there are no unnecessary floating points in the JSON
       if (int(w) == w) {
-         weights.append_child() << int(w);
+         output.append_child() << int(w);
       } else {
-         weights.append_child() << w;
+         output.append_child() << w;
       }
    }
 }
