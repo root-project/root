@@ -327,6 +327,7 @@ void exportMeasurement(RooStats::HistFactory::Measurement &measurement, JSONNode
       pdfs2.append_child() << (std::string("model_") + c.GetName());
 
       JSONNode &dataOutput = RooJSONFactoryWSTool::appendNamedChild(n["data"], std::string("obsData_") + c.GetName());
+      dataOutput["type"] << "binned";
 
       const std::vector<std::string> obsnames = getObsnames(c);
 
