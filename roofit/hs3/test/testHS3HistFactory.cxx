@@ -35,48 +35,40 @@ void setupKeys()
    isAlreadySetup = true;
 }
 
+class HistoWriter {
+public:
+   HistoWriter(int nbinsx, double xlow, double xup) : _nbinsx{nbinsx}, _xlow{xlow}, _xup{xup} {}
+   void operator()(std::string const &name, std::vector<float> const &arr)
+   {
+      // to test code paths where name and title is treated differently
+      std::string title = name + "_title";
+      auto histo = std::make_unique<TH1F>(name.c_str(), title.c_str(), _nbinsx, _xlow, _xup);
+      for (int i = 0; i < _nbinsx; ++i) {
+         histo->SetBinContent(i + 1, arr[i]);
+      }
+      histo->Write();
+   }
+
+private:
+   int _nbinsx = 0;
+   double _xlow = 0.0;
+   double _xup = 0.0;
+};
+
 void createInputFile(std::string const &inputFileName)
 {
-   TH1F data("data", "data", 2, 1.0, 2.0);
-
-   TH1F signal("signal", "signal histogram (pb)", 2, 1.0, 2.0);
-   TH1F systUncDo("shapeUnc_sigDo", "signal shape uncert.", 2, 1.0, 2.0);
-   TH1F systUncUp("shapeUnc_sigUp", "signal shape uncert.", 2, 1.0, 2.0);
-
-   TH1F background1("background1", "background 1 histogram (pb)", 2, 1.0, 2.0);
-   TH1F background2("background2", "background 2 histogram (pb)", 2, 1.0, 2.0);
-   TH1F background1_statUncert("background1_statUncert", "statUncert", 2, 1.0, 2.0);
-
-   data.SetBinContent(1, 122.);
-   data.SetBinContent(2, 112.);
-
-   signal.SetBinContent(1, 20.);
-   signal.SetBinContent(2, 10.);
-
-   systUncDo.SetBinContent(1, 15.);
-   systUncDo.SetBinContent(2, 8.);
-
-   systUncUp.SetBinContent(1, 29.);
-   systUncUp.SetBinContent(2, 13.);
-
-   background1.SetBinContent(1, 100.);
-   background1.SetBinContent(2, 0.);
-
-   background2.SetBinContent(1, 0.);
-   background2.SetBinContent(2, 100.);
-
-   background1_statUncert.SetBinContent(1, 0.05);
-   background1_statUncert.SetBinContent(2, 0.05);
-
    TFile file{inputFileName.c_str(), "RECREATE"};
 
-   data.Write();
-   signal.Write();
-   systUncDo.Write();
-   systUncUp.Write();
-   background1.Write();
-   background2.Write();
-   background1_statUncert.Write();
+   HistoWriter hw{2, 1.0, 2.0};
+
+   hw("data", {122., 112.});
+   hw("signal", {20., 10.});
+   hw("shapeUnc_sigDo", {15., 8.});
+   hw("shapeUnc_sigUp", {29., 13.});
+
+   hw("background1", {100., 0.});
+   hw("background2", {0., 100.});
+   hw("background1_statUncert", {0.05, 0.05});
 }
 
 std::unique_ptr<RooStats::HistFactory::Measurement>
