@@ -19,7 +19,6 @@
 #include <RooStats/HistFactory/PiecewiseInterpolation.h>
 #include <RooStats/HistFactory/FlexibleInterpVar.h>
 #include <RooConstVar.h>
-#include <RooCategory.h>
 #include <RooRealVar.h>
 #include <RooDataHist.h>
 #include <RooHistFunc.h>
@@ -32,61 +31,37 @@
 #include <RooProduct.h>
 #include <RooWorkspace.h>
 
-#include <TH1.h>
-
-#include <stack>
-
 #include "static_execute.h"
 
 using RooFit::Detail::JSONNode;
 
 namespace {
 
-template <class T>
-std::string concat(const T *items, const std::string &sep = ",")
+inline void writeAxis(JSONNode &bounds, RooRealVar const &obs)
 {
-   // Returns a string being the concatenation of strings in input list <items>
-   // (names of objects obtained using GetName()) separated by string <sep>.
-   bool first = true;
-   std::string text;
-
-   // iterate over strings in list
-   for (auto it : *items) {
-      if (!first) {
-         // insert separator string
-         text += sep;
-      } else {
-         first = false;
+   auto &binning = obs.getBinning();
+   if (binning.isUniform()) {
+      bounds["nbins"] << obs.numBins();
+      bounds["min"] << obs.getMin();
+      bounds["max"] << obs.getMax();
+   } else {
+      bounds.set_seq();
+      bounds.append_child() << binning.binLow(0);
+      for (int i = 0; i <= binning.numBins(); ++i) {
+         bounds.append_child() << binning.binHigh(i);
       }
-      if (!it)
-         text += "nullptr";
-      else
-         text += it->GetName();
    }
-   return text;
-}
-template <class T>
-std::vector<std::string> names(T const &items)
-{
-   // Returns a string being the concatenation of strings in input list <items>
-   // (names of objects obtained using GetName()) separated by string <sep>.
-   std::vector<std::string> names;
-   // iterate over strings in list
-   for (auto it : items) {
-      names.push_back(it ? it->GetName() : "nullptr");
-   }
-   return names;
 }
 
 double round_prec(double d, int nSig)
 {
    if (d == 0.0)
       return 0.0;
-   int ndigits = floor(log10(std::abs(d))) + 1 - nSig;
-   double sf = pow(10, ndigits);
+   int ndigits = std::floor(std::log10(std::abs(d))) + 1 - nSig;
+   double sf = std::pow(10, ndigits);
    if (std::abs(d / sf) < 2)
       ndigits--;
-   return sf * round(d / sf);
+   return sf * std::round(d / sf);
 }
 
 // To avoid repeating the same string literals that can potentially get out of
@@ -120,22 +95,6 @@ private:
    RooArgList _observables;
    std::map<std::string, RooAbsArg *> _objects;
 };
-
-std::unique_ptr<TH1> histFunc2TH1(const RooHistFunc *hf)
-{
-   if (!hf)
-      RooJSONFactoryWSTool::error("null pointer passed to histFunc2TH1");
-   const RooDataHist &dh = hf->dataHist();
-   std::unique_ptr<RooArgSet> vars{hf->getVariables()};
-   std::unique_ptr<TH1> hist{hf->createHistogram(concat(vars.get()))};
-   hist->SetDirectory(nullptr);
-   auto volumes = dh.binVolumes(0, dh.numEntries());
-   for (size_t i = 0; i < volumes.size(); ++i) {
-      hist->SetBinContent(i + 1, hist->GetBinContent(i + 1) / volumes[i]);
-      hist->SetBinError(i + 1, std::sqrt(hist->GetBinContent(i + 1)));
-   }
-   return hist;
-}
 
 template <class T>
 T *findClient(RooAbsArg *gamma)
@@ -481,14 +440,11 @@ public:
 
       int idx = 0;
       for (const auto &comp : p["samples"].children()) {
-         std::string fname(fprefix + "_" + comp["name"].val() + "_shapes");
-         std::string coefname(fprefix + "_" + comp["name"].val() + "_scaleFactors");
-
          importHistSample(*tool, *data[idx], scope, fprefix, comp, constraints);
          ++idx;
 
-         funcs.add(*tool->request<RooAbsReal>(fname, name));
-         coefs.add(*tool->request<RooAbsReal>(coefname, name));
+         funcs.add(*tool->request<RooAbsReal>(fprefix + "_" + comp["name"].val() + "_shapes", name));
+         coefs.add(*tool->request<RooAbsReal>(fprefix + "_" + comp["name"].val() + "_scaleFactors", name));
       }
 
       if (constraints.empty()) {
@@ -542,9 +498,7 @@ public:
       elem["interpolationCodes"].fill_seq(pip->interpolationCodes());
       elem["positiveDefinite"] << pip->positiveDefinite();
       elem["vars"].fill_seq(pip->paramList(), [](auto const &item) { return item->GetName(); });
-      auto &nom = elem["nom"];
-      nom << pip->nominalHist()->GetName();
-
+      elem["nom"] << pip->nominalHist()->GetName();
       elem["high"].fill_seq(pip->highList(), [](auto const &item) { return item->GetName(); });
       elem["low"].fill_seq(pip->lowList(), [](auto const &item) { return item->GetName(); });
       return true;
@@ -647,11 +601,14 @@ struct NormSys {
 };
 struct HistoSys {
    std::string name;
-   std::unique_ptr<TH1> low;
-   std::unique_ptr<TH1> high;
+   std::vector<double> low;
+   std::vector<double> high;
    TClass *constraint = RooGaussian::Class();
-   HistoSys(const std::string &n, RooHistFunc *l, RooHistFunc *h, TClass *c)
-      : name(n), low(histFunc2TH1(l)), high(histFunc2TH1(h)), constraint(c){};
+   HistoSys(const std::string &n, RooHistFunc *l, RooHistFunc *h, TClass *c) : name(n), constraint(c)
+   {
+      low.assign(l->dataHist().weightArray(), l->dataHist().weightArray() + l->dataHist().numEntries());
+      high.assign(h->dataHist().weightArray(), h->dataHist().weightArray() + h->dataHist().numEntries());
+   }
 };
 struct ShapeSys {
    std::string name;
@@ -661,7 +618,8 @@ struct ShapeSys {
 };
 struct Sample {
    std::string name;
-   std::unique_ptr<TH1> hist = nullptr;
+   std::vector<double> hist;
+   std::vector<double> histError;
    std::vector<NormFactor> normfactors;
    std::vector<NormSys> normsys;
    std::vector<HistoSys> histosys;
@@ -712,9 +670,8 @@ bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname
    std::map<int, double> tot_yield;
    std::map<int, double> tot_yield2;
    std::map<int, double> rel_errors;
-   std::map<std::string, std::unique_ptr<TH1>> bb_histograms;
-   std::map<std::string, std::unique_ptr<TH1>> nonbb_histograms;
-   std::vector<std::string> varnames;
+   RooArgSet const *varSet = nullptr;
+   int nBins = 0;
 
    std::vector<Sample> samples;
 
@@ -746,11 +703,13 @@ bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname
          } else if (auto par = dynamic_cast<RooRealVar *>(e)) {
             addNormFactor(par, sample, ws);
          } else if (auto hf = dynamic_cast<const RooHistFunc *>(e)) {
-            if (varnames.empty()) {
-               varnames = names(*hf->dataHist().get());
+            if (varSet == nullptr) {
+               varSet = hf->dataHist().get();
+               nBins = hf->dataHist().numEntries();
             }
-            if (!sample.hist) {
-               sample.hist = histFunc2TH1(hf);
+            if (sample.hist.empty()) {
+               auto *w = hf->dataHist().weightArray();
+               sample.hist.assign(w, w + hf->dataHist().numEntries());
             }
          } else if (auto phf = dynamic_cast<ParamHistFunc *>(e)) {
             phfs.push_back(phf);
@@ -764,13 +723,17 @@ bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname
          }
       }
 
-      // see if we can get the varnames
+      // see if we can get the observables
       if (pip) {
          if (auto nh = dynamic_cast<RooHistFunc const *>(pip->nominalHist())) {
-            if (!sample.hist)
-               sample.hist = histFunc2TH1(nh);
-            if (varnames.empty())
-               varnames = names(*nh->dataHist().get());
+            if (sample.hist.empty()) {
+               auto *w = nh->dataHist().weightArray();
+               sample.hist.assign(w, w + nh->dataHist().numEntries());
+            }
+            if (varSet == nullptr) {
+               varSet = nh->dataHist().get();
+               nBins = nh->dataHist().numEntries();
+            }
          }
       }
 
@@ -808,12 +771,6 @@ bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname
                    [](auto const &l, auto const &r) { return l.name < r.name; });
       }
 
-      // check if we have everything
-      if (!sample.hist) {
-         std::cout << "unable to find hist" << std::endl;
-         return false;
-      }
-
       for (ParamHistFunc *phf : phfs) {
          if (startsWith(std::string(phf->GetName()), "mc_stat_")) { // MC stat uncertainty
             int idx = 0;
@@ -824,8 +781,8 @@ bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname
                   tot_yield[idx] = 0;
                   tot_yield2[idx] = 0;
                }
-               tot_yield[idx] += sample.hist->GetBinContent(idx);
-               tot_yield2[idx] += (sample.hist->GetBinContent(idx) * sample.hist->GetBinContent(idx));
+               tot_yield[idx] += sample.hist[idx - 1];
+               tot_yield2[idx] += (sample.hist[idx - 1] * sample.hist[idx - 1]);
                sample.barlow_beeston_light_constraint = constraint->IsA();
                if (RooPoisson *constraint_p = dynamic_cast<RooPoisson *>(constraint)) {
                   double erel = 1. / std::sqrt(constraint_p->getX().getVal());
@@ -899,17 +856,18 @@ bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname
 
    std::sort(samples.begin(), samples.end(), [](auto const &l, auto const &r) { return l.name < r.name; });
 
-   for (const auto &sample : samples) {
+   for (auto &sample : samples) {
       if (sample.use_barlow_beeston_light) {
+         sample.histError.resize(sample.hist.size());
          for (auto bin : rel_errors) {
             // reverse engineering the correct partial error
             // the (arbitrary) convention used here is that all samples should have the same relative error
             const int i = bin.first;
             const double relerr_tot = bin.second;
-            const double count = sample.hist->GetBinContent(i);
+            const double count = sample.hist[i - 1];
             // this reconstruction is inherently unprecise, so we truncate it at some decimal places to make sure that
             // we don't carry around too many useless digits
-            sample.hist->SetBinError(i, round_prec(relerr_tot * tot_yield[i] / std::sqrt(tot_yield2[i]) * count, 7));
+            sample.histError[i - 1] = round_prec(relerr_tot * tot_yield[i] / std::sqrt(tot_yield2[i]) * count, 7);
          }
       }
    }
@@ -928,7 +886,6 @@ bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname
          mod["type"] << "normfactor";
          if (nf.constraint) {
             mod["constraint_name"] << nf.constraint->GetName();
-            // tool->exportObject(nf.constraint);
             tool->queueExport(*nf.constraint);
          }
       }
@@ -947,8 +904,8 @@ bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname
          mod["type"] << "histosys";
          mod["constraint"] << toString(sys.constraint);
          auto &data = mod["data"].set_map();
-         RooJSONFactoryWSTool::exportHistogram(*sys.low, data["lo"], varnames, nullptr, false, false);
-         RooJSONFactoryWSTool::exportHistogram(*sys.high, data["hi"], varnames, nullptr, false, false);
+         RooJSONFactoryWSTool::exportArray(nBins, sys.low.data(), data["lo"]["contents"]);
+         RooJSONFactoryWSTool::exportArray(nBins, sys.high.data(), data["hi"]["contents"]);
       }
 
       for (const auto &sys : sample.shapesys) {
@@ -968,12 +925,16 @@ bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname
       }
 
       if (!observablesWritten) {
-         RooJSONFactoryWSTool::writeObservables(*sample.hist, elem, varnames);
+         auto &output = elem["axes"];
+         for (auto *obs : static_range_cast<RooRealVar *>(*varSet)) {
+            writeAxis(RooJSONFactoryWSTool::appendNamedChild(output, obs->GetName()).set_map(), *obs);
+         }
          observablesWritten = true;
       }
-      auto &data = s["data"];
-      RooJSONFactoryWSTool::exportHistogram(*sample.hist, data, varnames, nullptr, false,
-                                            sample.use_barlow_beeston_light);
+      RooJSONFactoryWSTool::exportArray(nBins, sample.hist.data(), s["data"]["contents"]);
+      if (!sample.histError.empty()) {
+         RooJSONFactoryWSTool::exportArray(nBins, sample.histError.data(), s["data"]["errors"]);
+      }
    }
    return true;
 }

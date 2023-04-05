@@ -20,16 +20,83 @@
 
 #include "Domains.h"
 
+#include "TH1.h"
+
 using RooFit::Detail::JSONNode;
 using RooFit::Detail::JSONTree;
 
 namespace {
+
+bool checkRegularBins(const TAxis &ax)
+{
+   double w = ax.GetXmax() - ax.GetXmin();
+   double bw = w / ax.GetNbins();
+   for (int i = 0; i <= ax.GetNbins(); ++i) {
+      if (std::abs(ax.GetBinUpEdge(i) - (ax.GetXmin() + (bw * i))) > w * 1e-6)
+         return false;
+   }
+   return true;
+}
+
+inline void writeAxis(JSONNode &bounds, const TAxis &ax)
+{
+   bool regular = (!ax.IsVariableBinSize()) || checkRegularBins(ax);
+   if (regular) {
+      bounds.set_map();
+      bounds["nbins"] << ax.GetNbins();
+      bounds["min"] << ax.GetXmin();
+      bounds["max"] << ax.GetXmax();
+   } else {
+      bounds.set_seq();
+      for (int i = 0; i <= ax.GetNbins(); ++i) {
+         bounds.append_child() << ax.GetBinUpEdge(i);
+      }
+   }
+}
 
 std::vector<std::string> getObsnames(RooStats::HistFactory::Channel const &c)
 {
    std::vector<std::string> obsnames{"obs_x_" + c.GetName(), "obs_y_" + c.GetName(), "obs_z_" + c.GetName()};
    obsnames.resize(c.GetData().GetHisto()->GetDimension());
    return obsnames;
+}
+
+void writeObservables(const TH1 &h, JSONNode &n, const std::vector<std::string> &varnames)
+{
+   auto &observables = n["axes"];
+   auto &x = RooJSONFactoryWSTool::appendNamedChild(observables, varnames[0]);
+   writeAxis(x, *h.GetXaxis());
+   if (h.GetDimension() > 1) {
+      auto &y = RooJSONFactoryWSTool::appendNamedChild(observables, varnames[1]);
+      writeAxis(y, *(h.GetYaxis()));
+      if (h.GetDimension() > 2) {
+         auto &z = RooJSONFactoryWSTool::appendNamedChild(observables, varnames[2]);
+         writeAxis(z, *(h.GetZaxis()));
+      }
+   }
+}
+
+void exportHistogram(const TH1 &histo, JSONNode &node, const std::vector<std::string> &varnames,
+                     const TH1 *errH = nullptr, bool doWriteObservables = true, bool writeErrors = true)
+{
+   node.set_map();
+   auto &weights = node["contents"].set_seq();
+   JSONNode *errors = nullptr;
+   if (writeErrors) {
+      errors = &node["errors"].set_seq();
+   }
+   if (doWriteObservables) {
+      writeObservables(histo, node, varnames);
+   }
+   const int nBins = histo.GetNbinsX() * histo.GetNbinsY() * histo.GetNbinsZ();
+   for (int i = 1; i <= nBins; ++i) {
+      const double val = histo.GetBinContent(i);
+      weights.append_child() << val;
+      if (writeErrors) {
+         const double err = errH ? val * errH->GetBinContent(i) : histo.GetBinError(i);
+         errors->append_child() << err;
+      }
+   }
 }
 
 void exportSample(const RooStats::HistFactory::Sample &sample, JSONNode &channelNode,
@@ -67,8 +134,8 @@ void exportSample(const RooStats::HistFactory::Sample &sample, JSONNode &channel
          node["type"] << "histosys";
          auto &data = node["data"];
          data.set_map();
-         RooJSONFactoryWSTool::exportHistogram(*(sys.GetHistoLow()), data["lo"], obsnames, nullptr, false);
-         RooJSONFactoryWSTool::exportHistogram(*(sys.GetHistoHigh()), data["hi"], obsnames, nullptr, false);
+         exportHistogram(*(sys.GetHistoLow()), data["lo"], obsnames, nullptr, false);
+         exportHistogram(*(sys.GetHistoHigh()), data["hi"], obsnames, nullptr, false);
       }
    }
 
@@ -86,9 +153,9 @@ void exportSample(const RooStats::HistFactory::Sample &sample, JSONNode &channel
                         : nullptr;
 
    if (!channelNode.has_child("axes")) {
-      RooJSONFactoryWSTool::writeObservables(*sample.GetHisto(), channelNode, obsnames);
+      writeObservables(*sample.GetHisto(), channelNode, obsnames);
    }
-   RooJSONFactoryWSTool::exportHistogram(*sample.GetHisto(), data, obsnames, errH, false);
+   exportHistogram(*sample.GetHisto(), data, obsnames, errH, false);
 }
 
 void exportChannel(const RooStats::HistFactory::Channel &c, JSONNode &ch)
@@ -267,7 +334,7 @@ void exportMeasurement(RooStats::HistFactory::Measurement &measurement, JSONNode
          analysisObservables.append_child() << obsname;
       }
 
-      RooJSONFactoryWSTool::exportHistogram(*c.GetData().GetHisto(), dataOutput, obsnames);
+      exportHistogram(*c.GetData().GetHisto(), dataOutput, obsnames);
       channelNames.push_back(c.GetName());
    }
 

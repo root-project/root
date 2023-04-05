@@ -34,7 +34,6 @@ namespace RooStats {
 class ModelConfig;
 }
 
-class TH1;
 class TClass;
 
 class RooJSONFactoryWSTool {
@@ -117,10 +116,6 @@ public:
    static void error(const char *s);
    inline static void error(const std::string &s) { error(s.c_str()); }
 
-   static void exportHistogram(const TH1 &h, RooFit::Detail::JSONNode &n, const std::vector<std::string> &obsnames,
-                               const TH1 *errH = nullptr, bool writeObservables = true, bool writeErrors = true);
-   static void writeObservables(const TH1 &h, RooFit::Detail::JSONNode &n, const std::vector<std::string> &varnames);
-
    static std::unique_ptr<RooDataHist> readBinnedData(const RooFit::Detail::JSONNode &n, const std::string &namecomp);
    static std::unique_ptr<RooDataHist>
    readBinnedData(const RooFit::Detail::JSONNode &n, const std::string &namecomp, RooArgList const &varlist);
@@ -167,6 +162,8 @@ public:
 
    static void
    exportHisto(RooArgSet const &vars, std::size_t n, double const *contents, RooFit::Detail::JSONNode &output);
+
+   static void exportArray(std::size_t n, double const *contents, RooFit::Detail::JSONNode &output);
 
    static void exportCategory(RooAbsCategory const &cat, RooFit::Detail::JSONNode &node);
 
