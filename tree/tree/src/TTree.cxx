@@ -2674,6 +2674,29 @@ TStreamerInfo* TTree::BuildStreamerInfo(TClass* cl, void* pointer /* = 0 */, Boo
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Enable the TTreeCache unless explicitly disabled for this TTree by
+/// a prior call to `SetCacheSize(0)`.
+/// If the environment variable `ROOT_TTREECACHE_SIZE` or the rootrc config
+/// `TTreeCache.Size` has been set to zero, this call will over-ride them with
+/// a value of 1.0 (i.e. use a cache size to hold 1 cluster)
+///
+/// Return true if there is a cache attached to the `TTree` (either pre-exisiting
+/// or created as part of this call)
+Bool_t TTree::EnableCache()
+{
+   TFile* file = GetCurrentFile();
+   if (!file)
+      return kFALSE;
+   // Check for an existing cache
+   TTreeCache* pf = GetReadCache(file);
+   if (pf)
+      return kTRUE;
+   if (fCacheUserSet && fCacheSize == 0)
+      return kFALSE;
+   return (0 == SetCacheSizeAux(kTRUE, -1));
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Called by TTree::Fill() when file has reached its maximum fgMaxTreeSize.
 /// Create a new file. If the original file is named "myfile.root",
 /// subsequent files are named "myfile_1.root", "myfile_2.root", etc.
