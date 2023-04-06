@@ -4,10 +4,6 @@
 #ifndef ROOT_XProofProtocol
 #define ROOT_XProofProtocol
 
-#ifdef __CINT__
-#define __attribute__(x)
-#endif
-
 #include "XProtocol/XProtocol.hh"
 
 #define XPD_DEF_PORT 1093
