@@ -9516,34 +9516,13 @@ void TTree::Streamer(TBuffer& b)
             // current set of ranges.
             fMaxClusterRange = fNClusterRange;
          }
-         if (GetCacheAutoSize() != 0) {
-            // a cache will be automatically created.
-            // No need for TTreePlayer::Process to enable the cache
-            fCacheSize = 0;
-         } else if (fAutoFlush < 0) {
-            // If there is no autoflush set, let's keep the cache completely
-            // disable by default for now.
-            fCacheSize = fAutoFlush;
-         } else if (fAutoFlush != 0) {
-            // Estimate the cluster size.
-            // This will allow TTree::Process to enable the cache.
-            Long64_t zipBytes = GetZipBytes();
-            Long64_t totBytes = GetTotBytes();
-            if (zipBytes != 0) {
-               fCacheSize =  fAutoFlush*(zipBytes/fEntries);
-            } else if (totBytes != 0) {
-               fCacheSize =  fAutoFlush*(totBytes/fEntries);
-            } else {
-               fCacheSize = 30000000;
-            }
-            if (fCacheSize >= (INT_MAX / 4)) {
-               fCacheSize = INT_MAX / 4;
-            } else if (fCacheSize == 0) {
-               fCacheSize = 30000000;
-            }
-         } else {
-            fCacheSize = 0;
-         }
+
+         // Throughs calls to `GetCacheAutoSize` or `EnableCache` (for example
+         // by TTreePlayer::Process, the cache size will be automatically
+         // determined unless the user explicitly call `SetCacheSize`
+         fCacheSize = 0;
+         fCacheUserSet = kFALSE;
+
          ResetBit(kMustCleanup);
          return;
       }
