@@ -430,6 +430,7 @@ public:
    virtual Long64_t        Draw(const char* varexp, const char* selection, Option_t* option = "", Long64_t nentries = kMaxEntries, Long64_t firstentry = 0); // *MENU*
    virtual void            DropBaskets();
    virtual void            DropBuffers(Int_t nbytes);
+           Bool_t          EnableCache();
    virtual Int_t           Fill();
    virtual TBranch        *FindBranch(const char* name);
    virtual TLeaf          *FindLeaf(const char* name);
