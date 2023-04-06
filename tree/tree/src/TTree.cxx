@@ -5377,6 +5377,26 @@ Int_t TTree::GetBranchStyle()
 
 Long64_t TTree::GetCacheAutoSize(Bool_t withDefault /* = kFALSE */ )
 {
+   auto calculateCacheSize = [=](Double_t cacheFactor)
+   {
+      Long64_t cacheSize = 0;
+      if (fAutoFlush < 0) {
+         cacheSize = Long64_t(-cacheFactor * fAutoFlush);
+      } else if (fAutoFlush == 0) {
+         const auto medianClusterSize = GetMedianClusterSize();
+         if (medianClusterSize > 0)
+            cacheSize = Long64_t(cacheFactor * 1.5 * medianClusterSize * GetZipBytes() / (fEntries + 1));
+         else
+            cacheSize = Long64_t(cacheFactor * 1.5 * 30000000); // use the default value of fAutoFlush
+      } else {
+         cacheSize = Long64_t(cacheFactor * 1.5 * fAutoFlush * GetZipBytes() / (fEntries + 1));
+      }
+      if (cacheSize >= (INT_MAX / 4)) {
+         cacheSize = INT_MAX / 4;
+      }
+      return cacheSize;
+   };
+
    const char *stcs;
    Double_t cacheFactor = 0.0;
    if (!(stcs = gSystem->Getenv("ROOT_TTREECACHE_SIZE")) || !*stcs) {
@@ -5390,40 +5410,14 @@ Long64_t TTree::GetCacheAutoSize(Bool_t withDefault /* = kFALSE */ )
      cacheFactor = 0.0;
    }
 
-   Long64_t cacheSize = 0;
-
-   if (fAutoFlush < 0) {
-      cacheSize = Long64_t(-cacheFactor * fAutoFlush);
-   } else if (fAutoFlush == 0) {
-      const auto medianClusterSize = GetMedianClusterSize();
-      if (medianClusterSize > 0)
-         cacheSize = Long64_t(cacheFactor * 1.5 * medianClusterSize * GetZipBytes() / (fEntries + 1));
-      else
-         cacheSize = Long64_t(cacheFactor * 1.5 * 30000000); // use the default value of fAutoFlush
-   } else {
-      cacheSize = Long64_t(cacheFactor * 1.5 * fAutoFlush * GetZipBytes() / (fEntries + 1));
-   }
-
-   if (cacheSize >= (INT_MAX / 4)) {
-      cacheSize = INT_MAX / 4;
-   }
+   Long64_t cacheSize = calculateCacheSize(cacheFactor);
 
    if (cacheSize < 0) {
       cacheSize = 0;
    }
 
    if (cacheSize == 0 && withDefault) {
-      if (fAutoFlush < 0) {
-         cacheSize = -fAutoFlush;
-      } else if (fAutoFlush == 0) {
-         const auto medianClusterSize = GetMedianClusterSize();
-         if (medianClusterSize > 0)
-            cacheSize = Long64_t(1.5 * medianClusterSize * GetZipBytes() / (fEntries + 1));
-         else
-            cacheSize = Long64_t(1.5 * 30000000); // use the default value of fAutoFlush
-      } else {
-         cacheSize = Long64_t(1.5 * fAutoFlush * GetZipBytes() / (fEntries + 1));
-      }
+      cacheSize = calculateCacheSize(1.0);
    }
 
    return cacheSize;
