@@ -2253,12 +2253,14 @@ Long64_t TTreePlayer::Process(TSelector *selector,Option_t *option, Long64_t nen
       //set the file cache
       TTreeCache *tpf = 0;
       TFile *curfile = fTree->GetCurrentFile();
-      if (curfile && fTree->GetCacheSize() > 0) {
+      if (curfile) {
          tpf = (TTreeCache*)curfile->GetCacheRead(fTree);
          if (tpf)
             tpf->SetEntryRange(firstentry,firstentry+nentries);
          else {
-            fTree->SetCacheSize(fTree->GetCacheSize());
+            // Create the TTreeCache with the default size unless the
+            // user explicitly disabled it.
+            fTree->EnableCache();
             tpf = (TTreeCache*)curfile->GetCacheRead(fTree);
             if (tpf) tpf->SetEntryRange(firstentry,firstentry+nentries);
          }
