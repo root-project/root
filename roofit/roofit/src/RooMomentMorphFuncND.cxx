@@ -8,6 +8,7 @@
 
 #include "RooMomentMorphFuncND.h"
 #include "RooAbsCategory.h"
+#include "RooAddPdf.h"
 #include "RooRealIntegral.h"
 #include "RooRealConstant.h"
 #include "RooRealVar.h"
@@ -37,19 +38,22 @@ ClassImp(RooMomentMorphFuncND);
 ClassImp(RooMomentMorphFuncND::Grid2);
 
 //_____________________________________________________________________________
-RooMomentMorphFuncND::RooMomentMorphFuncND()
-   : _cacheMgr(this, 10, true, true), _setting(RooMomentMorphFuncND::Linear), _useHorizMorph(true)
+RooMomentMorphFuncND::RooMomentMorphFuncND() : _cacheMgr(this, 10, true, true), _setting(RooMomentMorphFuncND::Linear), _useHorizMorph(true)
 {
    TRACE_CREATE;
 }
 
 //_____________________________________________________________________________
-RooMomentMorphFuncND::RooMomentMorphFuncND(const char *name, const char *title, const RooArgList &parList,
-                                           const RooArgList &obsList, const Grid2 &referenceGrid,
-                                           const Setting &setting)
-   : RooMomentMorphFuncND::Base_t(name, title), _cacheMgr(this, 10, true, true),
-     _parList("parList", "List of morph parameters", this), _obsList("obsList", "List of observables", this),
-     _referenceGrid(referenceGrid), _pdfList("pdfList", "List of pdfs", this), _setting(setting), _useHorizMorph(true)
+RooMomentMorphFuncND::RooMomentMorphFuncND(const char *name, const char *title, const RooArgList &parList, const RooArgList &obsList,
+                       const Grid2 &referenceGrid, const Setting &setting)
+   : RooMomentMorphFuncND::Base_t(name, title),
+     _cacheMgr(this, 10, true, true),
+     _parList("parList", "List of morph parameters", this),
+     _obsList("obsList", "List of observables", this),
+     _referenceGrid(referenceGrid),
+     _pdfList("pdfList", "List of pdfs", this),
+     _setting(setting),
+     _useHorizMorph(true)
 {
    // morph parameters
    initializeParameters(parList);
@@ -66,12 +70,15 @@ RooMomentMorphFuncND::RooMomentMorphFuncND(const char *name, const char *title, 
 }
 
 //_____________________________________________________________________________
-RooMomentMorphFuncND::RooMomentMorphFuncND(const char *name, const char *title, RooAbsReal &_m,
-                                           const RooArgList &varList, const RooArgList &pdfList,
-                                           const TVectorD &mrefpoints, Setting setting)
-   : RooMomentMorphFuncND::Base_t(name, title), _cacheMgr(this, 10, true, true),
-     _parList("parList", "List of morph parameters", this), _obsList("obsList", "List of observables", this),
-     _pdfList("pdfList", "List of pdfs", this), _setting(setting), _useHorizMorph(true)
+RooMomentMorphFuncND::RooMomentMorphFuncND(const char *name, const char *title, RooAbsReal &_m, const RooArgList &varList,
+                       const RooArgList &pdfList, const TVectorD &mrefpoints, Setting setting)
+   : RooMomentMorphFuncND::Base_t(name, title),
+     _cacheMgr(this, 10, true, true),
+     _parList("parList", "List of morph parameters", this),
+     _obsList("obsList", "List of observables", this),
+     _pdfList("pdfList", "List of pdfs", this),
+     _setting(setting),
+     _useHorizMorph(true)
 {
    // make reference grid
    RooBinning grid(mrefpoints.GetNrows() - 1, mrefpoints.GetMatrixArray());
@@ -103,12 +110,15 @@ RooMomentMorphFuncND::RooMomentMorphFuncND(const char *name, const char *title, 
 }
 
 //_____________________________________________________________________________
-RooMomentMorphFuncND::RooMomentMorphFuncND(const char *name, const char *title, RooAbsReal &_m,
-                                           const RooArgList &varList, const RooArgList &pdfList,
-                                           const RooArgList &mrefList, Setting setting)
-   : RooMomentMorphFuncND::Base_t(name, title), _cacheMgr(this, 10, true, true),
-     _parList("parList", "List of morph parameters", this), _obsList("obsList", "List of observables", this),
-     _pdfList("pdfList", "List of pdfs", this), _setting(setting), _useHorizMorph(true)
+RooMomentMorphFuncND::RooMomentMorphFuncND(const char *name, const char *title, RooAbsReal &_m, const RooArgList &varList,
+                       const RooArgList &pdfList, const RooArgList &mrefList, Setting setting)
+   : RooMomentMorphFuncND::Base_t(name, title),
+     _cacheMgr(this, 10, true, true),
+     _parList("parList", "List of morph parameters", this),
+     _obsList("obsList", "List of observables", this),
+     _pdfList("pdfList", "List of pdfs", this),
+     _setting(setting),
+     _useHorizMorph(true)
 {
    // make reference grid
    TVectorD mrefpoints(mrefList.getSize());
@@ -156,9 +166,13 @@ RooMomentMorphFuncND::RooMomentMorphFuncND(const char *name, const char *title, 
 
 //_____________________________________________________________________________
 RooMomentMorphFuncND::RooMomentMorphFuncND(const RooMomentMorphFuncND &other, const char *name)
-   : RooMomentMorphFuncND::Base_t(other, name), _cacheMgr(other._cacheMgr, this),
-     _parList("parList", this, other._parList), _obsList("obsList", this, other._obsList),
-     _referenceGrid(other._referenceGrid), _pdfList("pdfList", this, other._pdfList), _setting(other._setting),
+   : RooMomentMorphFuncND::Base_t(other, name),
+     _cacheMgr(other._cacheMgr, this),
+     _parList("parList", this, other._parList),
+     _obsList("obsList", this, other._obsList),
+     _referenceGrid(other._referenceGrid),
+     _pdfList("pdfList", this, other._pdfList),
+     _setting(other._setting),
      _useHorizMorph(other._useHorizMorph)
 {
    // general initialization
@@ -379,7 +393,7 @@ RooMomentMorphFuncND::CacheElem *RooMomentMorphFuncND::getCache(const RooArgSet 
 
    for (int i = 0; i < 3 * nPdf; ++i) {
       string fracName = Form("frac_%d", i);
-      double initval = 0.0;
+      double initval = _isPdfMode ? 1.0 : 0.0;
       RooRealVar *frac = new RooRealVar(fracName.c_str(), fracName.c_str(), initval); // to be set later
 
       fracl.add(*frac);
@@ -392,9 +406,10 @@ RooMomentMorphFuncND::CacheElem *RooMomentMorphFuncND::getCache(const RooArgSet 
       ownedComps.add(*(RooRealVar *)(fracl.at(i)));
    }
 
-   Sum_t *theSum = nullptr;
+   RooAbsReal *theSum = nullptr;
    string sumName = Form("%s_sum", GetName());
 
+   RooArgList transPdfList;
    if (_useHorizMorph) {
       // mean and sigma
       RooArgList obsList(_obsList);
@@ -429,7 +444,6 @@ RooMomentMorphFuncND::CacheElem *RooMomentMorphFuncND::getCache(const RooArgSet 
       }
 
       // construction of unit pdfs
-      RooArgList transPdfList;
 
       Int_t i = 0;
       for (auto const *pdf : static_range_cast<Base_t *>(_pdfList)) {
@@ -467,11 +481,14 @@ RooMomentMorphFuncND::CacheElem *RooMomentMorphFuncND::getCache(const RooArgSet 
          ownedComps.add(*transPdf[i]);
          ++i;
       }
+   }
 
-      // sum pdf
-      theSum = new Sum_t(sumName.c_str(), sumName.c_str(), transPdfList, coefList);
+   // sum pdf
+   RooArgList const &pdfList = _useHorizMorph ? transPdfList : static_cast<RooArgList const &>(_pdfList);
+   if (_isPdfMode) {
+      theSum = new RooAddPdf(sumName.c_str(), sumName.c_str(), pdfList, coefList);
    } else {
-      theSum = new Sum_t(sumName.c_str(), sumName.c_str(), _pdfList, coefList);
+      theSum = new RooRealSumFunc(sumName.c_str(), sumName.c_str(), pdfList, coefList);
    }
 
    // *** WVE this is important *** this declares that frac effectively depends on the morphing parameters
@@ -504,11 +521,11 @@ RooMomentMorphFuncND::CacheElem::~CacheElem()
 }
 
 //_____________________________________________________________________________
-double RooMomentMorphFuncND::getVal(const RooArgSet *set) const
+double RooMomentMorphFuncND::getValV(const RooArgSet *set) const
 {
-   // Special version of getVal() overrides Base_t::getVal() to save value of current normalization set
+   // Special version of getValV() overrides Base_t::getValV() to save value of current normalization set
    _curNormSet = set ? (RooArgSet *)set : (RooArgSet *)&_obsList;
-   return Base_t::getVal(set);
+   return Base_t::getValV(set);
 }
 
 //_____________________________________________________________________________

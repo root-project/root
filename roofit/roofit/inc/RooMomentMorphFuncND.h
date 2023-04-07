@@ -30,7 +30,6 @@ class RooMomentMorphFuncND : public RooAbsReal {
 
 public:
    using Base_t = RooAbsReal;
-   using Sum_t = RooRealSumFunc;
 
    class Grid2 {
    public:
@@ -109,12 +108,26 @@ public:
    TObject *clone(const char *newname) const override { return new RooMomentMorphFuncND(*this, newname); }
 
    void setMode(const Setting &setting) { _setting = setting; }
-   virtual bool selfNormalized() const { return true; }
+   /// Setting flag makes this RooMomentMorphFuncND instance behave like the
+   /// former RooMomentMorphND class, with the the only difference being the
+   /// base class. If you want to create a pdf object that behaves exactly like
+   /// the old RooMomentMorphND, you can do it as follows:
+   ///
+   /// ```C++
+   /// RooMomentMorphFuncND func{<c'tor args you previously passed to RooMomentMorphFunc>};
+   ///
+   /// func.setPdfMode(); // change behavior to be exactly like the former RooMomentMorphND
+   ///
+   /// // Pass the selfNormalized=true` flag to the wrapper because the
+   /// RooMomentMorphFuncND already normalizes itself in pdf mode.
+   /// RooWrapperPdf pdf{"pdf_name", "pdf_name", func, /*selfNormalized=*/true};
+   /// ```
+   void setPdfMode(bool flag=true) { _isPdfMode = flag; }
    bool setBinIntegrator(RooArgSet &allVars);
    void useHorizontalMorphing(bool val) { _useHorizMorph = val; }
 
    double evaluate() const override;
-   virtual double getVal(const RooArgSet *set = nullptr) const;
+   double getValV(const RooArgSet *set = nullptr) const override;
 
 protected:
    void initialize();
@@ -144,10 +157,11 @@ protected:
 
    Setting _setting;
    bool _useHorizMorph;
+   bool _isPdfMode = false;
 
    inline int sij(const int &i, const int &j) const { return (i * _obsList.getSize() + j); }
 
-   ClassDefOverride(RooMomentMorphFuncND, 3);
+   ClassDefOverride(RooMomentMorphFuncND, 4);
 };
 
 #endif
