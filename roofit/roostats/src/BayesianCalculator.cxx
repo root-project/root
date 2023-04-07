@@ -644,7 +644,7 @@ BayesianCalculator::BayesianCalculator() :
    fPdf(0),
    fPriorPdf(0),
    fNuisancePdf(0),
-   fProductPdf (0), fLogLike(0), fLikelihood (0), fIntegratedLikelihood (0), fPosteriorPdf(0),
+   fProductPdf (0), fLikelihood (0), fIntegratedLikelihood (0), fPosteriorPdf(0),
    fPosteriorFunction(0), fApproxPosterior(0),
    fLower(0), fUpper(0),
    fNLLMin(0),
@@ -672,7 +672,7 @@ BayesianCalculator::BayesianCalculator( /* const char* name,  const char* title,
    fPOI(POI),
    fPriorPdf(&priorPdf),
    fNuisancePdf(0),
-   fProductPdf (0), fLogLike(0), fLikelihood (0), fIntegratedLikelihood (0), fPosteriorPdf(0),
+   fProductPdf (0), fLikelihood (0), fIntegratedLikelihood (0), fPosteriorPdf(0),
    fPosteriorFunction(0), fApproxPosterior(0),
    fLower(0), fUpper(0),
    fNLLMin(0),
@@ -698,7 +698,7 @@ BayesianCalculator::BayesianCalculator( RooAbsData& data,
    fPdf(model.GetPdf()),
    fPriorPdf( model.GetPriorPdf()),
    fNuisancePdf(0),
-   fProductPdf (0), fLogLike(0), fLikelihood (0), fIntegratedLikelihood (0), fPosteriorPdf(0),
+   fProductPdf (0), fLikelihood (0), fIntegratedLikelihood (0), fPosteriorPdf(0),
    fPosteriorFunction(0), fApproxPosterior(0),
    fLower(0), fUpper(0),
    fNLLMin(0),
@@ -723,7 +723,7 @@ BayesianCalculator::~BayesianCalculator()
 
 void BayesianCalculator::ClearAll() const {
    if (fProductPdf) delete fProductPdf;
-   if (fLogLike) delete fLogLike;
+   fLogLike.reset();
    if (fLikelihood) delete fLikelihood;
    if (fIntegratedLikelihood) delete fIntegratedLikelihood;
    if (fPosteriorPdf) delete fPosteriorPdf;
@@ -732,7 +732,6 @@ void BayesianCalculator::ClearAll() const {
    fPosteriorPdf = 0;
    fPosteriorFunction = 0;
    fProductPdf = 0;
-   fLogLike = 0;
    fLikelihood = 0;
    fIntegratedLikelihood = 0;
    fLower = 0;
@@ -805,7 +804,7 @@ RooAbsReal* BayesianCalculator::GetPosteriorFunction() const
    //constrainedParams->Print("V");
 
    // use RooFit::Constrain() to be sure constraints terms are taken into account
-   fLogLike = fPdf->createNLL(*fData, RooFit::Constrain(*constrainedParams), RooFit::ConditionalObservables(fConditionalObs), RooFit::GlobalObservables(fGlobalObs) );
+   fLogLike = std::unique_ptr<RooAbsReal>{fPdf->createNLL(*fData, RooFit::Constrain(*constrainedParams), RooFit::ConditionalObservables(fConditionalObs), RooFit::GlobalObservables(fGlobalObs) )};
 
 
 
@@ -880,7 +879,7 @@ RooAbsReal* BayesianCalculator::GetPosteriorFunction() const
 #else
       // here use RooProdPdf (not very nice) but working
 
-      if (fLogLike) delete fLogLike;
+      if (fLogLike) fLogLike.reset();
       if (fProductPdf) {
          delete fProductPdf;
          fProductPdf = 0;
@@ -898,7 +897,7 @@ RooAbsReal* BayesianCalculator::GetPosteriorFunction() const
       std::unique_ptr<RooArgSet> constrParams{fPdf->getParameters(*fData)};
       // remove the constant parameters
       RemoveConstantParameters(&*constrParams);
-      fLogLike = pdfAndPrior->createNLL(*fData, RooFit::Constrain(*constrParams),RooFit::ConditionalObservables(fConditionalObs),RooFit::GlobalObservables(fGlobalObs) );
+      fLogLike = std::unique_ptr<RooAbsReal>{pdfAndPrior->createNLL(*fData, RooFit::Constrain(*constrParams),RooFit::ConditionalObservables(fConditionalObs),RooFit::GlobalObservables(fGlobalObs) )};
 
       TString likeName = TString("likelihood_times_prior_") + TString(pdfAndPrior->GetName());
       TString formula;

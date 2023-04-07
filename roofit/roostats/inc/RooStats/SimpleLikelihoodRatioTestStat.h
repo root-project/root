@@ -34,8 +34,6 @@ namespace RooStats {
          fNullParameters = nullptr;
          fAltParameters = nullptr;
          fReuseNll=false ;
-         fNllNull=nullptr ;
-         fNllAlt=nullptr ;
       }
 
       /// Takes null and alternate parameters from PDF. Can be overridden.
@@ -58,8 +56,6 @@ namespace RooStats {
          fDetailedOutput = nullptr;
 
          fReuseNll=false ;
-         fNllNull=nullptr ;
-         fNllAlt=nullptr ;
       }
 
       /// Takes null and alternate parameters from values in nullParameters
@@ -82,15 +78,11 @@ namespace RooStats {
          fDetailedOutput = nullptr;
 
          fReuseNll=false ;
-         fNllNull=nullptr ;
-         fNllAlt=nullptr ;
       }
 
       ~SimpleLikelihoodRatioTestStat() override {
          if (fNullParameters) delete fNullParameters;
          if (fAltParameters) delete fAltParameters;
-         if (fNllNull) delete fNllNull ;
-         if (fNllAlt) delete fNllAlt ;
          if (fDetailedOutput) delete fDetailedOutput;
       }
 
@@ -158,8 +150,8 @@ namespace RooStats {
       bool fDetailedOutputEnabled;
       RooArgSet* fDetailedOutput; ///<!
 
-      RooAbsReal* fNllNull ;  ///<! transient copy of the null NLL
-      RooAbsReal* fNllAlt ;   ///<!  transient copy of the alt NLL
+      std::unique_ptr<RooAbsReal> fNllNull; ///<! transient copy of the null NLL
+      std::unique_ptr<RooAbsReal> fNllAlt;  ///<!  transient copy of the alt NLL
       static bool fgAlwaysReuseNll ;
       bool fReuseNll ;
 

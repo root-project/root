@@ -93,8 +93,8 @@ TList* ProfileInspector::GetListOfProfilePlots( RooAbsData& data, RooStats::Mode
     return 0;
   }
 
-  RooAbsReal* nll = pdf->createNLL(data);
-  RooAbsReal* profile = nll->createProfile(*poi);
+  std::unique_ptr<RooAbsReal> nll{pdf->createNLL(data)};
+  std::unique_ptr<RooAbsReal> profile{nll->createProfile(*poi)};
 
   TList * list = new TList;
   Int_t curve_N=100;
@@ -140,8 +140,5 @@ TList* ProfileInspector::GetListOfProfilePlots( RooAbsData& data, RooStats::Mode
 
   delete [] curve_x;
 
-
-  delete nll;
-  delete profile;
   return list;
 }

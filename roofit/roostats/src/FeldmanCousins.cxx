@@ -171,8 +171,8 @@ void FeldmanCousins::CreateParameterPoints() const{
     // make profile construction
     RooFit::MsgLevel previous  = RooMsgService::instance().globalKillBelow();
     RooMsgService::instance().setGlobalKillBelow(RooFit::FATAL) ;
-    RooAbsReal* nll = pdf->createNLL(fData,RooFit::CloneData(false));
-    RooAbsReal* profile = nll->createProfile(*fModel.GetParametersOfInterest());
+    std::unique_ptr<RooAbsReal> nll{pdf->createNLL(fData,RooFit::CloneData(false))};
+    std::unique_ptr<RooAbsReal> profile{nll->createProfile(*fModel.GetParametersOfInterest())};
 
     RooDataSet* profileConstructionPoints = new RooDataSet("profileConstruction",
                         "profileConstruction",
@@ -186,8 +186,6 @@ void FeldmanCousins::CreateParameterPoints() const{
       profileConstructionPoints->add(*parameters);
     }
     RooMsgService::instance().setGlobalKillBelow(previous) ;
-    delete profile;
-    delete nll;
     if(!fPOIToTest) delete parameterScan;
 
     // done

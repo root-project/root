@@ -325,12 +325,11 @@ TEST(RooNLLVar, CopyRangedNLL)
 
    // This bug is related to the implementation details of the old test statistics, so BatchMode is forced to be off
    using namespace RooFit;
-   std::unique_ptr<RooNLLVar> nll{static_cast<RooNLLVar *>(model.createNLL(*ds, BatchMode("off")))};
-   std::unique_ptr<RooNLLVar> nllrange{
-      static_cast<RooNLLVar *>(model.createNLL(*ds, Range("fitrange"), BatchMode("off")))};
+   std::unique_ptr<RooAbsReal> nll{model.createNLL(*ds, BatchMode("off"))};
+   std::unique_ptr<RooAbsReal> nllrange{model.createNLL(*ds, Range("fitrange"), BatchMode("off"))};
 
-   auto nllClone = std::make_unique<RooNLLVar>(*nll);
-   auto nllrangeClone = std::make_unique<RooNLLVar>(*nllrange);
+   auto nllClone = std::make_unique<RooNLLVar>(static_cast<RooNLLVar &>(*nll));
+   auto nllrangeClone = std::make_unique<RooNLLVar>(static_cast<RooNLLVar &>(*nllrange));
 
    EXPECT_FLOAT_EQ(nll->getVal(), nllClone->getVal());
    EXPECT_FLOAT_EQ(nll->getVal(), nllrange->getVal());

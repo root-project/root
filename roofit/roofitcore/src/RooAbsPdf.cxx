@@ -964,7 +964,7 @@ double RooAbsPdf::extendedTerm(RooAbsData const& data, bool weightSquared, bool 
 ///
 ///
 
-RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
+RooFit::OwningPtr<RooAbsReal> RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
 {
   auto baseName = std::string("nll_") + GetName() + "_" + data.GetName();
 
@@ -1034,8 +1034,8 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
       RooFit::TestStatistics::ExternalConstraints extCons(extConsSet);
       RooFit::TestStatistics::GlobalObservables glObs(glObsSet);
 
-      return new RooFit::TestStatistics::RooRealL("likelihood", "",
-          RooFit::TestStatistics::buildLikelihood(this, &data, ext, cPars, extCons, glObs, rangeName));
+      return RooFit::OwningPtr<RooAbsReal>{new RooFit::TestStatistics::RooRealL("likelihood", "",
+          RooFit::TestStatistics::buildLikelihood(this, &data, ext, cPars, extCons, glObs, rangeName))};
   }
 
   // Decode command line arguments
@@ -1158,16 +1158,17 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
        compiledConstr->addOwnedComponents(std::move(constr));
     }
 
-    return RooFit::BatchModeHelpers::createNLL(std::move(pdfClone),
-                                               data,
-                                               std::move(compiledConstr),
-                                               rangeName ? rangeName : "",
-                                               projDeps,
-                                               ext,
-                                               pc.getDouble("IntegrateBins"),
-                                               batchMode,
-                                               offset,
-                                               takeGlobalObservablesFromData).release();
+    return RooFit::OwningPtr<RooAbsReal>{RooFit::BatchModeHelpers::createNLL(
+            std::move(pdfClone),
+            data,
+            std::move(compiledConstr),
+            rangeName ? rangeName : "",
+            projDeps,
+            ext,
+            pc.getDouble("IntegrateBins"),
+            batchMode,
+            offset,
+            takeGlobalObservablesFromData).release()};
   }
 
   // Construct NLL
@@ -1222,7 +1223,7 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
     nll->enableOffsetting(true) ;
   }
 
-  return nll.release() ;
+  return RooFit::OwningPtr<RooAbsReal>{nll.release()};
 }
 
 
