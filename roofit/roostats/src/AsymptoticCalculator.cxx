@@ -305,8 +305,8 @@ double AsymptoticCalculator::EvaluateNLL(RooAbsPdf & pdf, RooAbsData& data,   co
 
     // need to call constrain for RooSimultaneous until stripDisconnected problem fixed
     auto& config = GetGlobalRooStatsConfig();
-    RooAbsReal* nll = pdf.createNLL(data, RooFit::CloneData(false),RooFit::Constrain(*allParams),RooFit::ConditionalObservables(conditionalObs), RooFit::GlobalObservables(globalObs),
-        RooFit::Offset(config.useLikelihoodOffset));
+    std::unique_ptr<RooAbsReal> nll{pdf.createNLL(data, RooFit::CloneData(false),RooFit::Constrain(*allParams),RooFit::ConditionalObservables(conditionalObs), RooFit::GlobalObservables(globalObs),
+        RooFit::Offset(config.useLikelihoodOffset))};
 
     std::unique_ptr<RooArgSet> attachedSet{nll->getVariables()};
 
@@ -454,8 +454,6 @@ double AsymptoticCalculator::EvaluateNLL(RooAbsPdf & pdf, RooAbsData& data,   co
 
 
     if (verbose < 2) RooMsgService::instance().setGlobalKillBelow(msglevel);
-
-    delete nll;
 
     return val;
 }
