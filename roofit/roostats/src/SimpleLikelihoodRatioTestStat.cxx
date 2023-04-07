@@ -51,7 +51,8 @@ double RooStats::SimpleLikelihoodRatioTestStat::Evaluate(RooAbsData& data, RooAr
    bool created = false ;
    if (!fNllNull) {
       std::unique_ptr<RooArgSet> allParams{fNullPdf->getParameters(data)};
-      fNllNull = fNullPdf->createNLL(data, RooFit::CloneData(false),RooFit::Constrain(*allParams),RooFit::GlobalObservables(fGlobalObs),RooFit::ConditionalObservables(fConditionalObs));
+      using namespace RooFit;
+      fNllNull = std::unique_ptr<RooAbsReal>{fNullPdf->createNLL(data, CloneData(false), Constrain(*allParams), GlobalObservables(fGlobalObs), ConditionalObservables(fConditionalObs))};
       created = true ;
    }
    if (reuse && !created) {
@@ -69,13 +70,14 @@ double RooStats::SimpleLikelihoodRatioTestStat::Evaluate(RooAbsData& data, RooAr
 
 
    if (!reuse) {
-      delete fNllNull ; fNllNull = nullptr ;
+      fNllNull.reset();
    }
 
    created = false ;
    if (!fNllAlt) {
       std::unique_ptr<RooArgSet> allParams{fAltPdf->getParameters(data)};
-      fNllAlt = fAltPdf->createNLL(data, RooFit::CloneData(false),RooFit::Constrain(*allParams),RooFit::GlobalObservables(fGlobalObs),RooFit::ConditionalObservables(fConditionalObs));
+      using namespace RooFit;
+      fNllAlt = std::unique_ptr<RooAbsReal>{fAltPdf->createNLL(data, CloneData(false), Constrain(*allParams), GlobalObservables(fGlobalObs), ConditionalObservables(fConditionalObs))};
       created = true ;
    }
    if (reuse && !created) {
@@ -94,7 +96,7 @@ double RooStats::SimpleLikelihoodRatioTestStat::Evaluate(RooAbsData& data, RooAr
 
 
    if (!reuse) {
-      delete fNllAlt ; fNllAlt = nullptr ;
+      fNllAlt.reset();
    }
 
 

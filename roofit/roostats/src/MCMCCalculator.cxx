@@ -171,7 +171,7 @@ MCMCInterval* MCMCCalculator::GetInterval() const
    }
 
    std::unique_ptr<RooArgSet> constrainedParams{prodPdf->getParameters(*fData)};
-   RooAbsReal* nll = prodPdf->createNLL(*fData, Constrain(*constrainedParams),ConditionalObservables(fConditionalObs),GlobalObservables(fGlobalObs));
+   std::unique_ptr<RooAbsReal> nll{prodPdf->createNLL(*fData, Constrain(*constrainedParams),ConditionalObservables(fConditionalObs),GlobalObservables(fGlobalObs))};
 
    std::unique_ptr<RooArgSet> params{nll->getParameters(*fData)};
    RemoveConstantParameters(&*params);
@@ -215,7 +215,6 @@ MCMCInterval* MCMCCalculator::GetInterval() const
 
    if (useDefaultPropFunc) delete fPropFunc;
    if (usePriorPdf) delete prodPdf;
-   delete nll;
 
    return interval;
 }

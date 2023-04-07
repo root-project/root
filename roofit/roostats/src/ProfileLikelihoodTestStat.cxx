@@ -83,21 +83,21 @@ double RooStats::ProfileLikelihoodTestStat::EvaluateProfileLikelihood(int type, 
        bool reuse=(fReuseNll || fgAlwaysReuseNll) ;
 
        bool created(false) ;
-       if (!reuse || fNll==0) {
+       if (!reuse || fNll==nullptr) {
           std::unique_ptr<RooArgSet> allParams{fPdf->getParameters(data)};
           RooStats::RemoveConstantParameters(&*allParams);
 
           // need to call constrain for RooSimultaneous until stripDisconnected problem fixed
-          fNll = fPdf->createNLL(data, RooFit::CloneData(false),RooFit::Constrain(*allParams),
-                                 RooFit::GlobalObservables(fGlobalObs), RooFit::ConditionalObservables(fConditionalObs), RooFit::Offset(fLOffset));
+          fNll = std::unique_ptr<RooAbsReal>{fPdf->createNLL(data, RooFit::CloneData(false),RooFit::Constrain(*allParams),
+                                 RooFit::GlobalObservables(fGlobalObs), RooFit::ConditionalObservables(fConditionalObs), RooFit::Offset(fLOffset))};
 
           if (fPrintLevel > 0 && fLOffset) cout << "ProfileLikelihoodTestStat::Evaluate - Use Offset in creating NLL " << endl ;
 
           created = true ;
-          if (fPrintLevel > 1) cout << "creating NLL " << fNll << " with data = " << &data << endl ;
+          if (fPrintLevel > 1) cout << "creating NLL " << &*fNll << " with data = " << &data << endl ;
        }
        if (reuse && !created) {
-         if (fPrintLevel > 1) cout << "reusing NLL " << fNll << " new data = " << &data << endl ;
+         if (fPrintLevel > 1) cout << "reusing NLL " << &*fNll << " new data = " << &data << endl ;
          fNll->setData(data,false) ;
        }
        // print data in case of number counting (simple data sets)
@@ -275,8 +275,7 @@ double RooStats::ProfileLikelihoodTestStat::EvaluateProfileLikelihood(int type, 
        delete snap;
 
        if (!reuse) {
-    delete fNll;
-    fNll = 0;
+          fNll.reset();
        }
 
        RooMsgService::instance().setGlobalKillBelow(msglevel);

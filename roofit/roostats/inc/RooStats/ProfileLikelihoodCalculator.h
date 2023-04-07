@@ -61,7 +61,7 @@ namespace RooStats {
     void DoReset() const;
 
     /// perform a global fit
-    RooAbsReal * DoGlobalFit() const;
+    RooFit::OwningPtr<RooAbsReal> DoGlobalFit() const;
 
     /// minimize likelihood
     static RooFitResult * DoMinimizeNLL(RooAbsReal * nll);

@@ -120,7 +120,7 @@ void ProfileLikelihoodCalculator::DoReset() const {
    fFitResult = 0;
 }
 
-RooAbsReal *  ProfileLikelihoodCalculator::DoGlobalFit() const {
+RooFit::OwningPtr<RooAbsReal>  ProfileLikelihoodCalculator::DoGlobalFit() const {
    // perform a global fit of the likelihood letting with all parameter of interest and
    // nuisance parameters
    // keep the list of fitted parameters
@@ -136,19 +136,19 @@ RooAbsReal *  ProfileLikelihoodCalculator::DoGlobalFit() const {
    RemoveConstantParameters(&*constrainedParams);
 
    const auto& config = GetGlobalRooStatsConfig();
-   RooAbsReal * nll = pdf->createNLL(*data, CloneData(true), Constrain(*constrainedParams),ConditionalObservables(fConditionalObs), GlobalObservables(fGlobalObs),
+   auto nll = pdf->createNLL(*data, CloneData(true), Constrain(*constrainedParams),ConditionalObservables(fConditionalObs), GlobalObservables(fGlobalObs),
        RooFit::Offset(config.useLikelihoodOffset) );
 
    // check if global fit has been already done
    if (fFitResult && fGlobalFitDone) {
-      return nll;
+      return RooFit::OwningPtr<RooAbsReal>{std::move(nll)};
    }
 
       // calculate MLE
    oocoutP(nullptr,Minimization) << "ProfileLikelihoodCalcultor::DoGLobalFit - find MLE " << std::endl;
 
    if (fFitResult) delete fFitResult;
-   fFitResult = DoMinimizeNLL(nll);
+   fFitResult = DoMinimizeNLL(&*nll);
 
    // print fit result
    if (fFitResult) {
@@ -160,7 +160,7 @@ RooAbsReal *  ProfileLikelihoodCalculator::DoGlobalFit() const {
          fGlobalFitDone = true;
    }
 
-   return nll;
+   return RooFit::OwningPtr<RooAbsReal>{std::move(nll)};
 }
 
 RooFitResult * ProfileLikelihoodCalculator::DoMinimizeNLL(RooAbsReal * nll)  {
@@ -237,16 +237,15 @@ LikelihoodInterval* ProfileLikelihoodCalculator::GetInterval() const {
    */
 
    // do a global fit cloning the data
-   RooAbsReal * nll = DoGlobalFit();
-   if (!nll) return 0;
+   std::unique_ptr<RooAbsReal> nll{DoGlobalFit()};
+   if (!nll) return nullptr;
 
    if (!fFitResult)   {
-      delete nll;
-      return 0;
+      return nullptr;
    }
 
    RooAbsReal* profile = nll->createProfile(fPOI);
-   profile->addOwnedComponents(*nll) ;  // to avoid memory leak
+   profile->addOwnedComponents(std::move(nll)) ;  // to avoid memory leak
 
    // t.b.f. " RooProfileLL should keep and provide possibility to query on global minimum
    // set POI to fit value (this will speed up profileLL calculation of global minimum)
@@ -313,12 +312,11 @@ HypoTestResult* ProfileLikelihoodCalculator::GetHypoTest() const {
 
 
    // do a global fit
-   RooAbsReal * nll = DoGlobalFit();
-   if (!nll) return 0;
+   std::unique_ptr<RooAbsReal> nll{DoGlobalFit()};
+   if (!nll) return nullptr;
 
    if (!fFitResult) {
-      delete nll;
-      return 0;
+      return nullptr;
    }
 
    std::unique_ptr<RooArgSet> constrainedParams{pdf->getParameters(*data)};
@@ -362,7 +360,7 @@ HypoTestResult* ProfileLikelihoodCalculator::GetHypoTest() const {
    if (existVarParams) {
       oocoutP(nullptr,Minimization) << "ProfileLikelihoodCalcultor::GetHypoTest - do conditional fit " << std::endl;
 
-      RooFitResult * fit2 = DoMinimizeNLL(nll);
+      RooFitResult * fit2 = DoMinimizeNLL(&*nll);
 
       // print fit result
       if (fit2) {
@@ -405,7 +403,6 @@ HypoTestResult* ProfileLikelihoodCalculator::GetHypoTest() const {
       }
    }
 
-   delete nll;
    return htr;
 
 }

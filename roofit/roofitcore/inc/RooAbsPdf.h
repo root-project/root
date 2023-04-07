@@ -196,11 +196,11 @@ public:
   };
   std::unique_ptr<RooFitResult> minimizeNLL(RooAbsReal & nll, RooAbsData const& data, MinimizerConfig const& cfg);
 
-  virtual RooAbsReal* createNLL(RooAbsData& data, const RooLinkedList& cmdList={}) ;
+  virtual RooFit::OwningPtr<RooAbsReal> createNLL(RooAbsData& data, const RooLinkedList& cmdList={}) ;
   /// Takes an arbitrary number of RooCmdArg command options and calls
   /// RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList).
   template <typename... Args>
-  RooAbsReal* createNLL(RooAbsData& data, RooCmdArg const& arg1, Args const&... args)
+  RooFit::OwningPtr<RooAbsReal> createNLL(RooAbsData& data, RooCmdArg const& arg1, Args const&... args)
   {
     return createNLL(data, *RooFit::Detail::createCmdList(&arg1, &args...));
   }
