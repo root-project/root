@@ -71,7 +71,7 @@ public:
       // --------------------------------------------------------------------------------
 
       // Creating a RooAbsL likelihood
-      RooAbsReal *likelihood = w.pdf("model")->createNLL(d, ModularL(true));
+      std::unique_ptr<RooAbsReal> likelihood{w.pdf("model")->createNLL(d, ModularL(true))};
 
       // Creating a minimizer and explicitly setting type of parallelization
       std::size_t nWorkers = 1;

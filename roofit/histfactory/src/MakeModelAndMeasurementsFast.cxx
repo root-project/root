@@ -379,8 +379,8 @@ void RooStats::HistFactory::FitModelAndPlot(const std::string& MeasurementName,
   fprintf(tableFile, " %.4f / %.4f  ", poi->getErrorLo(), poi->getErrorHi());
 
   // Make the Profile Likelihood Plot
-  RooAbsReal* nll = model->createNLL(*simData);
-  RooAbsReal* profile = nll->createProfile(*poi);
+  std::unique_ptr<RooAbsReal> nll{model->createNLL(*simData)};
+  std::unique_ptr<RooAbsReal> profile{nll->createProfile(*poi)};
   if( profile==nullptr ) {
     cxcoutEHF << "Error: Failed to make ProfileLikelihood for: " << poi->GetName()
          << " using model: " << model->GetName()
