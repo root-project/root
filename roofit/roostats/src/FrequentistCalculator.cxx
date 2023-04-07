@@ -94,11 +94,11 @@ int FrequentistCalculator::PreNullHook(RooArgSet *parameterPoint, double obsTest
       if (fNullModel->GetGlobalObservables()) globalObs.add(*fNullModel->GetGlobalObservables());
 
       auto& config = GetGlobalRooStatsConfig();
-      RooAbsReal* nll = fNullModel->GetPdf()->createNLL(*const_cast<RooAbsData*>(fData), RooFit::CloneData(false), RooFit::Constrain(*allParams),
+      std::unique_ptr<RooAbsReal> nll{fNullModel->GetPdf()->createNLL(*const_cast<RooAbsData*>(fData), RooFit::CloneData(false), RooFit::Constrain(*allParams),
                                                         RooFit::GlobalObservables(globalObs),
                                                         RooFit::ConditionalObservables(conditionalObs),
-                                                        RooFit::Offset(config.useLikelihoodOffset));
-      RooProfileLL* profile = dynamic_cast<RooProfileLL*>(nll->createProfile(allButNuisance));
+                                                        RooFit::Offset(config.useLikelihoodOffset))};
+      std::unique_ptr<RooProfileLL> profile{dynamic_cast<RooProfileLL*>(nll->createProfile(allButNuisance))};
       // set minimier options
       profile->minimizer()->setPrintLevel(ROOT::Math::MinimizerOptions::DefaultPrintLevel()-1);
       profile->getVal(); // this will do fit and set nuisance parameters to profiled values
@@ -112,8 +112,6 @@ int FrequentistCalculator::PreNullHook(RooArgSet *parameterPoint, double obsTest
          delete result;
       }
 
-      delete profile;
-      delete nll;
       RooMsgService::instance().setGlobalKillBelow(msglevel);
 
       // set in test statistics conditional and global observables
@@ -203,12 +201,12 @@ int FrequentistCalculator::PreAltHook(RooArgSet *parameterPoint, double obsTestS
       if (fAltModel->GetGlobalObservables()) globalObs.add(*fAltModel->GetGlobalObservables());
 
       const auto& config = GetGlobalRooStatsConfig();
-      RooAbsReal* nll = fAltModel->GetPdf()->createNLL(*const_cast<RooAbsData*>(fData), RooFit::CloneData(false), RooFit::Constrain(*allParams),
+      std::unique_ptr<RooAbsReal> nll{fAltModel->GetPdf()->createNLL(*const_cast<RooAbsData*>(fData), RooFit::CloneData(false), RooFit::Constrain(*allParams),
                                                        RooFit::GlobalObservables(globalObs),
                                                        RooFit::ConditionalObservables(conditionalObs),
-                                                       RooFit::Offset(config.useLikelihoodOffset));
+                                                       RooFit::Offset(config.useLikelihoodOffset))};
 
-      RooProfileLL* profile = dynamic_cast<RooProfileLL*>(nll->createProfile(allButNuisance));
+      std::unique_ptr<RooProfileLL> profile{dynamic_cast<RooProfileLL*>(nll->createProfile(allButNuisance))};
       // set minimizer options
       profile->minimizer()->setPrintLevel(ROOT::Math::MinimizerOptions::DefaultPrintLevel()-1); // use -1 to make more silent
       profile->getVal(); // this will do fit and set nuisance parameters to profiled values
@@ -222,8 +220,6 @@ int FrequentistCalculator::PreAltHook(RooArgSet *parameterPoint, double obsTestS
          delete result;
       }
 
-      delete profile;
-      delete nll;
       RooMsgService::instance().setGlobalKillBelow(msglevel);
 
       // set in test statistics conditional and global observables

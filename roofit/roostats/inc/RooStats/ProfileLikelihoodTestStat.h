@@ -35,7 +35,6 @@ namespace RooStats {
      ProfileLikelihoodTestStat() {
         // Proof constructor. Do not use.
         fPdf = nullptr;
-        fNll = nullptr;
         fCachedBestFitParams = nullptr;
         fLastData = nullptr;
         fLimitType = twoSided;
@@ -54,7 +53,6 @@ namespace RooStats {
 
      ProfileLikelihoodTestStat(RooAbsPdf& pdf) {
        fPdf = &pdf;
-       fNll = nullptr;
        fCachedBestFitParams = nullptr;
        fLastData = nullptr;
        fLimitType = twoSided;
@@ -73,7 +71,6 @@ namespace RooStats {
      }
 
      ~ProfileLikelihoodTestStat() override {
-       if(fNll) delete fNll;
        if(fCachedBestFitParams) delete fCachedBestFitParams;
        if(fDetailedOutput) delete fDetailedOutput;
      }
@@ -139,7 +136,7 @@ namespace RooStats {
    private:
 
       RooAbsPdf* fPdf;
-      RooAbsReal* fNll; //!
+      std::unique_ptr<RooAbsReal> fNll; //!
       const RooArgSet* fCachedBestFitParams;
       RooAbsData* fLastData;
       //      double fLastMLE;

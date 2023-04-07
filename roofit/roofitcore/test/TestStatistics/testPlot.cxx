@@ -71,7 +71,7 @@ public:
       // --------------------------------------------------------------------------------
 
       // Creating a RooAbsL likelihood
-      RooAbsReal *likelihood = w.pdf("model")->createNLL(d, ModularL(true));
+      std::unique_ptr<RooAbsReal> likelihood{w.pdf("model")->createNLL(d, ModularL(true))};
 
       // Creating a minimizer and explicitly setting type of parallelization
       std::size_t nWorkers = 1;
@@ -84,6 +84,10 @@ public:
 
       // Minimize
       m.migrad();
+
+      // To reset the fitter. Otherwise, the fitter will point to a functor
+      // that points to the likelihood that will be deleted before.
+      m.cleanup();
 
       // C o n v e r t  t o  R o o R e a l L  a n d  p l o t
       // ---------------------------------------------------

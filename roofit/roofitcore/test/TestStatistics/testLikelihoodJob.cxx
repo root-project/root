@@ -163,7 +163,7 @@ TEST_F(LikelihoodJobBinnedDatasetTest, UnbinnedPdf)
 {
    data = pdf->generateBinned(*w.var("x"));
 
-   nll.reset(pdf->createNLL(*data));
+   nll = std::unique_ptr<RooAbsReal>{pdf->createNLL(*data)};
 
    likelihood = RooFit::TestStatistics::buildLikelihood(pdf, data);
    auto nll_ts =
@@ -211,9 +211,9 @@ TEST_F(LikelihoodJobTest, SimBinned)
    w.factory("Uniform::u(x)");
 
    // Generate template histograms
-   RooDataHist *h_sigA = w.pdf("gA")->generateBinned(*w.var("x"), 1000);
-   RooDataHist *h_sigB = w.pdf("gB")->generateBinned(*w.var("x"), 1000);
-   RooDataHist *h_bkg = w.pdf("u")->generateBinned(*w.var("x"), 1000);
+   std::unique_ptr<RooDataHist> h_sigA{w.pdf("gA")->generateBinned(*w.var("x"), 1000)};
+   std::unique_ptr<RooDataHist> h_sigB{w.pdf("gB")->generateBinned(*w.var("x"), 1000)};
+   std::unique_ptr<RooDataHist> h_bkg{w.pdf("u")->generateBinned(*w.var("x"), 1000)};
 
    w.import(*h_sigA, RooFit::Rename("h_sigA"));
    w.import(*h_sigB, RooFit::Rename("h_sigB"));
@@ -237,7 +237,7 @@ TEST_F(LikelihoodJobTest, SimBinned)
    pdf = w.pdf("model");
    data = pdf->generate(RooArgSet(*w.var("x"), *w.cat("index")), RooFit::AllBinned());
 
-   nll.reset(pdf->createNLL(*data));
+   nll = std::unique_ptr<RooAbsReal>{pdf->createNLL(*data)};
 
    likelihood = RooFit::TestStatistics::buildLikelihood(pdf, data);
    auto nll_ts =
@@ -260,8 +260,8 @@ TEST_F(LikelihoodJobTest, BinnedConstrained)
 
    // Generate template histograms
 
-   RooDataHist *h_sig = w.pdf("g")->generateBinned(*w.var("x"), 1000);
-   RooDataHist *h_bkg = w.pdf("u")->generateBinned(*w.var("x"), 1000);
+   std::unique_ptr<RooDataHist> h_sig{w.pdf("g")->generateBinned(*w.var("x"), 1000)};
+   std::unique_ptr<RooDataHist> h_bkg{w.pdf("u")->generateBinned(*w.var("x"), 1000)};
 
    w.import(*h_sig, RooFit::Rename("h_sig"));
    w.import(*h_bkg, RooFit::Rename("h_bkg"));
@@ -281,7 +281,7 @@ TEST_F(LikelihoodJobTest, BinnedConstrained)
    // Construct dataset from physics pdf
    data = w.pdf("model_phys")->generateBinned(*w.var("x"));
 
-   nll.reset(pdf->createNLL(*data, RooFit::GlobalObservables(*w.var("alpha_bkg_obs"))));
+   nll = std::unique_ptr<RooAbsReal>{pdf->createNLL(*data, RooFit::GlobalObservables(*w.var("alpha_bkg_obs")))};
 
    // --------
 
@@ -346,7 +346,7 @@ TEST_F(LikelihoodJobTest, SimUnbinnedNonExtended)
 
    pdf = w.pdf("model");
 
-   nll.reset(pdf->createNLL(*data));
+   nll = std::unique_ptr<RooAbsReal>{pdf->createNLL(*data)};
 
    likelihood = RooFit::TestStatistics::buildLikelihood(pdf, data);
    auto nll_ts =
@@ -410,8 +410,8 @@ protected:
 TEST_F(LikelihoodJobSimBinnedConstrainedTest, BasicParameters)
 {
    // original test:
-   nll.reset(pdf->createNLL(
-      *data, RooFit::GlobalObservables(RooArgSet(*w.var("alpha_bkg_obs_A"), *w.var("alpha_bkg_obs_B")))));
+   nll = std::unique_ptr<RooAbsReal>{
+      pdf->createNLL(*data, RooFit::GlobalObservables(*w.var("alpha_bkg_obs_A"), *w.var("alpha_bkg_obs_B")))};
 
    // --------
 
@@ -431,8 +431,9 @@ TEST_F(LikelihoodJobSimBinnedConstrainedTest, BasicParameters)
 TEST_F(LikelihoodJobSimBinnedConstrainedTest, ConstrainedAndOffset)
 {
    // a variation to test some additional parameters (ConstrainedParameters and offsetting)
-   nll.reset(pdf->createNLL(*data, RooFit::Constrain(RooArgSet(*w.var("alpha_bkg_obs_A"))),
-                            RooFit::GlobalObservables(RooArgSet(*w.var("alpha_bkg_obs_B"))), RooFit::Offset(true)));
+   nll = std::unique_ptr<RooAbsReal>{pdf->createNLL(*data, RooFit::Constrain(*w.var("alpha_bkg_obs_A")),
+                                                    RooFit::GlobalObservables(*w.var("alpha_bkg_obs_B")),
+                                                    RooFit::Offset(true))};
 
    // --------
 
@@ -498,8 +499,9 @@ class LikelihoodJobSplitStrategies : public LikelihoodJobSimBinnedConstrainedTes
 TEST_P(LikelihoodJobSplitStrategies, SimBinnedConstrainedAndOffset)
 {
    // based on ConstrainedAndOffset, this test tests different parallelization strategies
-   nll.reset(pdf->createNLL(*data, RooFit::Constrain(RooArgSet(*w.var("alpha_bkg_obs_A"))),
-                            RooFit::GlobalObservables(RooArgSet(*w.var("alpha_bkg_obs_B"))), RooFit::Offset(true)));
+   nll = std::unique_ptr<RooAbsReal>{pdf->createNLL(*data, RooFit::Constrain(*w.var("alpha_bkg_obs_A")),
+                                                    RooFit::GlobalObservables(*w.var("alpha_bkg_obs_B")),
+                                                    RooFit::Offset(true))};
 
    // --------
 
