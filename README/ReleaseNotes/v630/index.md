@@ -118,6 +118,25 @@ is equivalent to the squared weight error.
 
 Therefore, the virtual `RooAbsData::add(row, weight, weightError)` function was removed.
 
+### Removal of `RooMomentMorphND` class
+
+The `RooMomentMorphND` and `RooMomentMorphFuncND` were almost exactly the same,
+only that one inherited from `RooAbsPdf` and the other from `RooAbsReal`.
+
+Thanks to the `RooWrapperPdf`, this code duplication in the RooFit implementation can now be avoided.
+Instead of using the removed `RooMomentMorphND` (which is the pdf), you now need to use the `RooMomentMorphFuncND`,
+change its behavior to exactly match the formter `RooMomentMorphND`, and then wrap it into a pdf object:
+
+```C++
+RooMomentMorphFuncND func{<c'tor args you previously passed to RooMomentMorphFunc>};
+
+func.setPdfMode(); // change behavior to be exactly like the former RooMomentMorphND
+
+// Pass the selfNormalized=true` flag to the wrapper because the
+RooMomentMorphFuncND already normalizes itself in pdf mode.
+RooWrapperPdf pdf{"pdf_name", "pdf_name", func, /*selfNormalized=*/true};
+```
+
 ## 2D Graphics Libraries
 
 
