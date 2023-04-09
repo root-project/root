@@ -218,6 +218,7 @@ Bool_t TRefArray::GetObjectUID(Int_t &uid, TObject *obj, const char *methodname)
       } else {
          if (GetAbsLast() < 0) {
             // The container is empty, we can switch the ProcessID.
+            uid = obj->GetUniqueID();
             fPID = TProcessID::GetProcessWithUID(obj);
             valid = kTRUE;
             if (gDebug > 3)
