@@ -234,16 +234,21 @@ std::string generate(const RooFit::JSONIO::ImportExpression &ex, const JSONNode 
    size_t colon = classname.find_last_of(":");
    expression << (colon < classname.size() ? classname.substr(colon + 1) : classname);
    bool first = true;
+   const auto &name = RooJSONFactoryWSTool::name(p);
    for (auto k : ex.arguments) {
-      expression << (first ? "::" + RooJSONFactoryWSTool::name(p) + "(" : ",");
+      expression << (first ? "::" + name + "(" : ",");
       first = false;
       if (k == "true" || k == "false") {
          expression << (k == "true" ? "1" : "0");
+      } else if (!p.has_child(k)) {
+         std::stringstream errMsg;
+         errMsg << "node '" << name << "' is missing key '" << k << "'";
+         RooJSONFactoryWSTool::error(errMsg.str());
       } else if (p[k].is_seq()) {
-         bool f = true;
-         for (RooAbsArg *arg : tool->requestArgList<RooAbsReal>(p, p[k].key())) {
-            expression << (f ? "{" : ",") << arg->GetName();
-            f = false;
+         bool firstInner = true;
+         for (RooAbsArg *arg : tool->requestArgList<RooAbsReal>(p, k)) {
+            expression << (firstInner ? "{" : ",") << arg->GetName();
+            firstInner = false;
          }
          expression << "}";
       } else {
@@ -742,9 +747,11 @@ JSONNode *RooJSONFactoryWSTool::exportObject(const RooAbsArg *func)
    elem["type"] << dict->second.type;
 
    size_t nprox = func->numProxies();
+
    for (size_t i = 0; i < nprox; ++i) {
       RooAbsProxy *p = func->getProxy(i);
 
+      // some proxies start with a "!". This is a magic symbol that we don't want to stream
       std::string pname(p->name());
       if (pname[0] == '!')
          pname.erase(0, 1);
@@ -752,9 +759,13 @@ JSONNode *RooJSONFactoryWSTool::exportObject(const RooAbsArg *func)
       auto k = dict->second.proxies.find(pname);
       if (k == dict->second.proxies.end()) {
          std::cerr << "failed to find key matching proxy '" << pname << "' for type '" << dict->second.type
-                   << "', skipping" << std::endl;
+                   << "', encountered in '" << func->GetName() << "', skipping" << std::endl;
          return nullptr;
       }
+
+      // empty string is interpreted as an instruction to ignore this value
+      if (k->second.size() == 0)
+         continue;
 
       if (auto l = dynamic_cast<RooListProxy *>(p)) {
          elem[k->second].fill_seq(*l, [](auto const &e) { return e->GetName(); });
