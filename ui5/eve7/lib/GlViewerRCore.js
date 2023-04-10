@@ -478,10 +478,29 @@ sap.ui.define([
 
       makeAxis() {
          function formatFloat(val) {
-            if (Math.abs(val) > 10)
-               return (val).toFixed(0);
-            else
-               return val.toFixed(2);
+            let lg = Math.log10(Math.abs(val));
+            let fs = "undef";
+
+            if (lg < 0) {
+                if (lg > -1) {
+                    fs = val.toFixed(2);
+                }
+                else if (lg > -2) {
+                    fs = val.toFixed(3);
+                }
+                else {
+                    fs = val.toExponential(2);
+                }
+            }
+            else {
+                if (lg < 2)
+                    fs = val.toFixed(1);
+                else if (lg < 4)
+                    fs = Math.round(val);
+                else
+                    fs = val.toExponential(2);
+            }
+            return fs;
          }
 
          let bb = new RC.Box3();
