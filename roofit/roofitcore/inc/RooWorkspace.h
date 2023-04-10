@@ -51,6 +51,8 @@ public:
   RooWorkspace(const RooWorkspace& other) ;
   ~RooWorkspace() override ;
 
+  TObject *Clone(const char *newname="") const override;
+
   bool importClassCode(const char* pat="*", bool doReplace=false) ;
   bool importClassCode(TClass* theClass, bool doReplace=false) ;
 

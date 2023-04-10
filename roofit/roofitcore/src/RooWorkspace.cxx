@@ -224,6 +224,16 @@ RooWorkspace::RooWorkspace(const RooWorkspace& other) :
 }
 
 
+/// TObject::Clone() needs to be overridden.
+TObject *RooWorkspace::Clone(const char *newname) const
+{
+   auto out = new RooWorkspace{*this};
+   if(newname && std::string(newname) != GetName()) {
+      out->SetName(newname);
+   }
+   return out;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Workspace destructor
