@@ -489,18 +489,19 @@ sap.ui.define([
 
          let lines = [];
          let test = ~bb.min.x;
-         lines.push({ "p": new RC.Vector3(bb.min.x, 0, 0), "c": 0xff0000, "text": "X " + formatFloat(bb.min.x) });
-         lines.push({ "p": new RC.Vector3(bb.max.x, 0, 0), "c": 0xff0000, "text": "X " + formatFloat(bb.max.x) });
-         lines.push({ "p": new RC.Vector3(0, bb.min.y, 0), "c": 0x00ff00, "text": "Y " + formatFloat(bb.min.y) });
-         lines.push({ "p": new RC.Vector3(0, bb.max.y, 0), "c": 0x00ff00, "text": "Y " + formatFloat(bb.max.y) });
-         lines.push({ "p": new RC.Vector3(0, 0, bb.min.z), "c": 0x0000ff, "text": "Z " + formatFloat(bb.min.z) });
-         lines.push({ "p": new RC.Vector3(0, 0, bb.max.z), "c": 0x0000ff, "text": "Z " + formatFloat(bb.max.z) });
+         lines.push({ "p": new RC.Vector3(bb.min.x, 0, 0), "c": new RC.Color(1, 0, 0), "text": "X " + formatFloat(bb.min.x) });
+         lines.push({ "p": new RC.Vector3(bb.max.x, 0, 0), "c": new RC.Color(1, 0, 0), "text": "X " + formatFloat(bb.max.x) });
+         lines.push({ "p": new RC.Vector3(0, bb.min.y, 0), "c":new RC.Color(0, 1, 0), "text": "Y " + formatFloat(bb.min.y) });
+         lines.push({ "p": new RC.Vector3(0, bb.max.y, 0), "c":new RC.Color(0, 1, 0), "text": "Y " + formatFloat(bb.max.y) });
+         lines.push({ "p": new RC.Vector3(0, 0, bb.min.z), "c": new RC.Color(0, 0, 1), "text": "Z " + formatFloat(bb.min.z) });
+         lines.push({ "p": new RC.Vector3(0, 0, bb.max.z), "c": new RC.Color(0, 0, 1), "text": "Z " + formatFloat(bb.max.z) });
 
 
          for (const ax of lines) {
-            let ss = new RC.Stripe([0, 0, 0, ax.p.x, ax.p.y, ax.p.z]);
-            ss.material.lineWidth = 2;
-            ss.material.color = new RC.Color(ax.c);
+            let geom = new RC.Geometry();
+            let buf = new Float32Array([0, 0, 0, ax.p.x, ax.p.y, ax.p.z]);
+            geom.vertices = new RC.Float32Attribute(buf, 3);
+            let ss = this.creator.RcMakeStripes(geom, 2, ax.c);
             this.axis.add(ss);
          }
 
