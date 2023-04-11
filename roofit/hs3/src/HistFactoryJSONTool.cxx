@@ -222,12 +222,9 @@ void exportMeasurement(RooStats::HistFactory::Measurement &measurement, JSONNode
 
    auto &analysisNode = RooJSONFactoryWSTool::appendNamedChild(n["analyses"], "simPdf");
    analysisNode.set_map();
-   analysisNode["InterpolationScheme"] << measurement.GetInterpolationScheme();
    analysisNode["domains"].set_seq().append_child() << "default_domain";
 
-   auto &analysisPois = analysisNode["pois"].set_seq();
-
-   auto &analysisObservables = analysisNode["observables"].set_seq();
+   auto &analysisPois = analysisNode["parameters_of_interest"].set_seq();
 
    for (const auto &poi : measurement.GetPOIList()) {
       analysisPois.append_child() << poi;
@@ -329,13 +326,7 @@ void exportMeasurement(RooStats::HistFactory::Measurement &measurement, JSONNode
       JSONNode &dataOutput = RooJSONFactoryWSTool::appendNamedChild(n["data"], std::string("obsData_") + c.GetName());
       dataOutput["type"] << "binned";
 
-      const std::vector<std::string> obsnames = getObsnames(c);
-
-      for (auto const &obsname : obsnames) {
-         analysisObservables.append_child() << obsname;
-      }
-
-      exportHistogram(*c.GetData().GetHisto(), dataOutput, obsnames);
+      exportHistogram(*c.GetData().GetHisto(), dataOutput, getObsnames(c));
       channelNames.push_back(c.GetName());
    }
 
@@ -345,7 +336,7 @@ void exportMeasurement(RooStats::HistFactory::Measurement &measurement, JSONNode
    auto &lumiConstraint = RooJSONFactoryWSTool::appendNamedChild(pdflist, "lumiConstraint");
    lumiConstraint["mean"] << "nominalLumi";
    lumiConstraint["name"] << "lumiConstraint";
-   lumiConstraint["sigma"] << std::to_string(measurement.GetLumi() * measurement.GetLumiRelErr());
+   lumiConstraint["sigma"] << (measurement.GetLumi() * measurement.GetLumiRelErr());
    lumiConstraint["type"] << "gaussian_dist";
    lumiConstraint["x"] << "Lumi";
 }
