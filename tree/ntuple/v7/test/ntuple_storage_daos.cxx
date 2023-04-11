@@ -208,6 +208,9 @@ TEST_F(RPageStorageDaos, MultipleNTuplesPerContainer)
    EXPECT_THROW(RNTupleReader::Open("ntuple3", daosUri), ROOT::Experimental::RException);
 }
 
+#ifdef R__USE_IMT
+// This feature depends on RPageSinkBuf and the ability to issue a single `CommitSealedPageV()` call; thus, disable if
+// ROOT was built with `-Dimt=OFF`
 TEST_F(RPageStorageDaos, CagedPages)
 {
    std::string daosUri = RegisterLabel("ntuple-test-caged");
@@ -262,3 +265,4 @@ TEST_F(RPageStorageDaos, CagedPages)
       EXPECT_THROW(ntuple->LoadEntry(1), ROOT::Experimental::RException);
    }
 }
+#endif
