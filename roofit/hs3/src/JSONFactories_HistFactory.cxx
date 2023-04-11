@@ -15,6 +15,7 @@
 #include <RooFitHS3/JSONIO.h>
 #include <RooFit/Detail/JSONInterface.h>
 
+#include <RooStats/HistFactory/Detail/HistFactoryImpl.h>
 #include <RooStats/HistFactory/ParamHistFunc.h>
 #include <RooStats/HistFactory/PiecewiseInterpolation.h>
 #include <RooStats/HistFactory/FlexibleInterpVar.h>
@@ -74,27 +75,11 @@ bool startsWith(std::string_view str, std::string_view prefix)
 {
    return str.size() >= prefix.size() && 0 == str.compare(0, prefix.size(), prefix);
 }
+
 bool endsWith(std::string_view str, std::string_view suffix)
 {
    return str.size() >= suffix.size() && 0 == str.compare(str.size() - suffix.size(), suffix.size(), suffix);
 }
-
-class Scope {
-public:
-   void setObservables(const RooArgList &args) { _observables.add(args); }
-   void setObject(const std::string &name, RooAbsArg *obj) { _objects[name] = obj; }
-   RooAbsArg *getObject(const std::string &name) const
-   {
-      auto f = _objects.find(name);
-      return f == _objects.end() ? nullptr : f->second;
-   }
-
-   void getObservables(RooArgSet &out) const { out.add(_observables); }
-
-private:
-   RooArgList _observables;
-   std::map<std::string, RooAbsArg *> _objects;
-};
 
 template <class T>
 T *findClient(RooAbsArg *gamma)
@@ -142,16 +127,7 @@ std::string toString(TClass *c)
    return "unknown";
 }
 
-template <class Arg_t, class... Params_t>
-Arg_t &getOrCreate(RooWorkspace &ws, std::string const &name, Params_t &&...params)
-{
-   Arg_t *arg = static_cast<Arg_t *>(ws.obj(name));
-   if (arg)
-      return *arg;
-   Arg_t newArg(name.c_str(), name.c_str(), std::forward<Params_t>(params)...);
-   ws.import(newArg, RooFit::RecycleConflictNodes(true), RooFit::Silence(true));
-   return *static_cast<Arg_t *>(ws.obj(name));
-}
+using namespace RooStats::HistFactory::Detail;
 
 RooRealVar &getNP(RooWorkspace &ws, std::string const &parname)
 {
@@ -162,9 +138,18 @@ RooRealVar &getNP(RooWorkspace &ws, std::string const &parname)
    nom.setConstant(true);
    return par;
 }
+
+/// Get the conventional name of the constraint pdf for a constrained
+/// parameter.
+std::string constraintName(std::string const &sysname)
+{
+   return sysname + "_constraint";
+}
+
 RooAbsPdf &getConstraint(RooWorkspace &ws, const std::string &sysname, const std::string &pname)
 {
-   return getOrCreate<RooGaussian>(ws, sysname + "_constraint", *ws.var(pname), *ws.var("nom_" + pname), RooFit::RooConst(1.));
+   return getOrCreate<RooGaussian>(ws, constraintName(sysname), *ws.var(pname), *ws.var("nom_" + pname),
+                                   RooFit::RooConst(1.));
 }
 
 ParamHistFunc &createPHF(const std::string &sysname, const std::string &phfname, const std::vector<double> &vals,
@@ -188,7 +173,7 @@ ParamHistFunc &createPHF(const std::string &sysname, const std::string &phfname,
          auto &nom = tool.wsEmplace<RooRealVar>("nom_" + basename, 1, 0, std::max(10., gamma_max));
          nom.setConstant(true);
          auto &sigma = tool.wsEmplace<RooConstVar>(basename + "_sigma", vals[i]);
-         constraints.add(tool.wsEmplace<RooGaussian>(basename + "_constraint", nom, *v, sigma), true);
+         constraints.add(tool.wsEmplace<RooGaussian>(constraintName(basename), nom, *v, sigma), true);
       } else if (constraintType == "Poisson") {
          double tau_float = vals[i];
          auto &tau = tool.wsEmplace<RooConstVar>(basename + "_tau", tau_float);
@@ -196,7 +181,7 @@ ParamHistFunc &createPHF(const std::string &sysname, const std::string &phfname,
          nom.setConstant(true);
          nom.setMin(0);
          auto &prod = tool.wsEmplace<RooProduct>(basename + "_poisMean", *v, tau);
-         auto &pois = tool.wsEmplace<RooPoisson>(basename + "_constraint", nom, prod);
+         auto &pois = tool.wsEmplace<RooPoisson>(constraintName(basename), nom, prod);
          pois.setNoRounding(true);
          constraints.add(pois, true);
       } else {
@@ -264,8 +249,9 @@ bool hasStaterror(const JSONNode &comp)
    return false;
 }
 
-bool importHistSample(RooJSONFactoryWSTool &tool, RooDataHist &dh, Scope &scope, const std::string &fprefix,
-                      const JSONNode &p, RooArgList &constraints)
+bool importHistSample(RooJSONFactoryWSTool &tool, RooDataHist &dh, RooArgSet const &varlist,
+                      RooAbsArg const *mcStatObject, const std::string &fprefix, const JSONNode &p,
+                      RooArgList &constraints)
 {
    RooWorkspace &ws = *tool.workspace();
 
@@ -276,9 +262,6 @@ bool importHistSample(RooJSONFactoryWSTool &tool, RooDataHist &dh, Scope &scope,
       RooJSONFactoryWSTool::error("sample '" + name + "' does not define a 'data' key");
    }
 
-   RooArgSet varlist;
-   scope.getObservables(varlist);
-
    auto &hf = tool.wsEmplace<RooHistFunc>("hist_" + prefixedName, varlist, dh);
    hf.SetTitle(RooJSONFactoryWSTool::name(p).c_str());
 
@@ -288,12 +271,7 @@ bool importHistSample(RooJSONFactoryWSTool &tool, RooDataHist &dh, Scope &scope,
    shapeElems.add(tool.wsEmplace<RooBinWidthFunction>(prefixedName + "_binWidth", hf, true));
 
    if (hasStaterror(p)) {
-      if (RooAbsArg *phf = scope.getObject("mcstat")) {
-         shapeElems.add(*phf);
-      } else {
-         RooJSONFactoryWSTool::error("sample '" + name +
-                                     "' has 'staterror' active, but no element called 'mcstat' in scope!");
-      }
+      shapeElems.add(*mcStatObject);
    }
 
    if (p.has_child("modifiers")) {
@@ -378,7 +356,6 @@ public:
    bool importPdf(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
    {
       RooWorkspace &ws = *tool->workspace();
-      Scope scope;
 
       std::string name = p["name"].val();
       RooArgList funcs;
@@ -408,16 +385,13 @@ public:
          obs.setBins(obsNode["nbins"].val_int());
          observables.add(obs);
       }
-      scope.setObservables(observables);
 
       std::string fprefix = name;
 
       std::vector<std::unique_ptr<RooDataHist>> data;
       for (const auto &comp : p["samples"].children()) {
-         RooArgSet varlist;
-         scope.getObservables(varlist);
          std::unique_ptr<RooDataHist> dh = RooJSONFactoryWSTool::readBinnedData(
-            comp["data"], fprefix + "_" + comp["name"].val() + "_dataHist", varlist);
+            comp["data"], fprefix + "_" + comp["name"].val() + "_dataHist", observables);
          size_t nbins = dh->numEntries();
 
          if (hasStaterror(comp)) {
@@ -433,14 +407,15 @@ public:
          data.emplace_back(std::move(dh));
       }
 
+      RooAbsArg *mcStatObject = nullptr;
       if (!sumW.empty()) {
-         scope.setObject(
-            "mcstat", &createPHFMCStat(name, sumW, sumW2, *tool, constraints, observables, statErrThresh, statErrType));
+         mcStatObject =
+            &createPHFMCStat(name, sumW, sumW2, *tool, constraints, observables, statErrThresh, statErrType);
       }
 
       int idx = 0;
       for (const auto &comp : p["samples"].children()) {
-         importHistSample(*tool, *data[idx], scope, fprefix, comp, constraints);
+         importHistSample(*tool, *data[idx], observables, mcStatObject, fprefix, comp, constraints);
          ++idx;
 
          funcs.add(*tool->request<RooAbsReal>(fprefix + "_" + comp["name"].val() + "_shapes", name));
@@ -630,8 +605,8 @@ struct Sample {
    std::vector<NormSys> normsys;
    std::vector<HistoSys> histosys;
    std::vector<ShapeSys> shapesys;
-   bool use_barlow_beeston_light = false;
-   TClass *barlow_beeston_light_constraint = RooPoisson::Class();
+   bool use_barlowBeestonLight = false;
+   TClass *barlowBeestonLightConstraint = RooPoisson::Class();
    Sample(const std::string &n) : name(n){};
 };
 
@@ -790,7 +765,7 @@ bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname
                }
                tot_yield[idx] += sample.hist[idx - 1];
                tot_yield2[idx] += (sample.hist[idx - 1] * sample.hist[idx - 1]);
-               sample.barlow_beeston_light_constraint = constraint->IsA();
+               sample.barlowBeestonLightConstraint = constraint->IsA();
                if (RooPoisson *constraint_p = dynamic_cast<RooPoisson *>(constraint)) {
                   double erel = 1. / std::sqrt(constraint_p->getX().getVal());
                   rel_errors[idx] = erel;
@@ -802,7 +777,7 @@ bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname
                      "currently, only RooPoisson and RooGaussian are supported as constraint types");
                }
             }
-            sample.use_barlow_beeston_light = true;
+            sample.use_barlowBeestonLight = true;
          } else { // other ShapeSys
             ShapeSys sys(phf->GetName());
             if (startsWith(sys.name, "model_" + chname + "_")) {
@@ -833,9 +808,7 @@ bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname
             for (const auto &g : phf->paramList()) {
                RooAbsPdf *constraint = findConstraint(g);
                if (!constraint)
-                  constraint = ws->pdf(std::string(g->GetName()) + "_constraint");
-               if (!constraint)
-                  constraint = ws->pdf(std::string(g->GetName()) + "_Constraint");
+                  constraint = ws->pdf(constraintName(g->GetName()));
                if (!constraint && !g->isConstant())
                   RooJSONFactoryWSTool::error("cannot find constraint for " + std::string(g->GetName()));
                else if (!constraint) {
@@ -864,7 +837,7 @@ bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname
    std::sort(samples.begin(), samples.end(), [](auto const &l, auto const &r) { return l.name < r.name; });
 
    for (auto &sample : samples) {
-      if (sample.use_barlow_beeston_light) {
+      if (sample.use_barlowBeestonLight) {
          sample.histError.resize(sample.hist.size());
          for (auto bin : rel_errors) {
             // reverse engineering the correct partial error
@@ -928,10 +901,10 @@ bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname
             vals.fill_seq(sys.constraints);
          }
       }
-      if (sample.use_barlow_beeston_light) {
+      if (sample.use_barlowBeestonLight) {
          auto &mod = RooJSONFactoryWSTool::appendNamedChild(modifiers, ::Literals::staterror);
          mod["type"] << ::Literals::staterror;
-         mod["constraint"] << toString(sample.barlow_beeston_light_constraint);
+         mod["constraint"] << toString(sample.barlowBeestonLightConstraint);
       }
 
       if (!observablesWritten) {
