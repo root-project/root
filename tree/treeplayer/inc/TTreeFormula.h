@@ -92,9 +92,11 @@ protected:
    // Helper struct to hold a cache
    // that can accelerate calculation of the RealIndex.
    struct RealInstanceCache {
-      Int_t fInstanceCache = 0;
-      Int_t fLocalIndexCache = 0;
-      Int_t fVirtAccumCache = 0;
+      RealInstanceCache() : fInstanceCache(0), fLocalIndexCache(0), fVirtAccumCache(0) {}
+
+      Int_t fInstanceCache;
+      Int_t fLocalIndexCache;
+      Int_t fVirtAccumCache;
    };
 
    TTree       *fTree;            //! pointer to Tree
