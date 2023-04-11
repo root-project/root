@@ -192,6 +192,7 @@ private:
    const RooFit::Detail::JSONNode *_rootnodeInput = nullptr;
    const RooFit::Detail::JSONNode *_attributesNode = nullptr;
    RooFit::Detail::JSONNode *_rootnodeOutput = nullptr;
+   RooFit::Detail::JSONNode *_varsNode = nullptr;
    RooWorkspace &_workspace;
 
    // objects to represent intermediate information

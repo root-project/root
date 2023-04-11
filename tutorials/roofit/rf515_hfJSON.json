@@ -26,8 +26,7 @@
         {
             "name": "main",
             "likelihood": "main_likelihood",
-            "pois": ["mu"],
-            "observables": ["obs_x_channel1"]
+            "parameters_of_interest": ["mu"]
         }
     ],
     "likelihoods": [
