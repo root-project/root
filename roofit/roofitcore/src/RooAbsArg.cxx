@@ -2457,7 +2457,7 @@ void RooRefArray::Streamer(TBuffer &R__b)
      R__c = R__b.WriteVersion(RooRefArray::IsA(), true);
 
      // Make a temporary refArray and write that to the streamer
-     TRefArray refArray(GetEntriesFast());
+     TRefArray refArray;
      for(TObject * tmpObj : *this) {
        refArray.Add(tmpObj) ;
      }
