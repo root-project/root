@@ -863,7 +863,8 @@ bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname
 
       for (const auto &nf : sample.normfactors) {
          auto &mod = RooJSONFactoryWSTool::appendNamedChild(modifiers, nf.name);
-         mod["parameter"] << nf.name;
+         mod["parameter"] << nf.param->GetName();
+         tool->queueExport(*nf.param);
          mod["type"] << "normfactor";
          if (nf.constraint) {
             mod["constraint_name"] << nf.constraint->GetName();
@@ -875,6 +876,7 @@ bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname
          auto &mod = RooJSONFactoryWSTool::appendNamedChild(modifiers, sys.name);
          mod["type"] << "normsys";
          mod["parameter"] << sys.param->GetName();
+         tool->queueExport(*sys.param);
          mod["constraint"] << toString(sys.constraint);
          auto &data = mod["data"].set_map();
          data["lo"] << sys.low;
@@ -885,6 +887,7 @@ bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname
          auto &mod = RooJSONFactoryWSTool::appendNamedChild(modifiers, sys.name);
          mod["type"] << "histosys";
          mod["parameter"] << sys.param->GetName();
+         tool->queueExport(*sys.param);
          mod["constraint"] << toString(sys.constraint);
          auto &data = mod["data"].set_map();
          RooJSONFactoryWSTool::exportArray(nBins, sys.low.data(), data["lo"]["contents"]);
