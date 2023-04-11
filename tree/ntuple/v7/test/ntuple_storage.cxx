@@ -397,7 +397,11 @@ TEST(RPageSinkBuf, ParallelZip) {
             auto *parallel_zip = ntuple->GetMetrics().GetCounter(
                "RNTupleWriter.RPageSinkBuf.ParallelZip");
             ASSERT_FALSE(parallel_zip == nullptr);
+#ifdef R__USE_IMT
             EXPECT_EQ(1, parallel_zip->GetValueAsInt());
+#else
+            EXPECT_EQ(0, parallel_zip->GetValueAsInt());
+#endif
          }
       }
    }
@@ -455,10 +459,15 @@ TEST(RPageSinkBuf, CommitSealedPageV)
       ntuple->Fill();
       ntuple->Fill();
       ntuple->CommitCluster();
+#ifdef R__USE_IMT
       // All pages in all columns committed via a single call to `CommitSealedPageV()`
       EXPECT_EQ(0, counters.fNCommitPage);
-      EXPECT_EQ(0, counters.fNCommitSealedPage);
       EXPECT_EQ(1, counters.fNCommitSealedPageV);
+#else
+      EXPECT_EQ(2, counters.fNCommitPage);
+      EXPECT_EQ(0, counters.fNCommitSealedPageV);
+#endif
+      EXPECT_EQ(0, counters.fNCommitSealedPage);
    }
 }
 
