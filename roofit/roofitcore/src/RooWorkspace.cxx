@@ -1944,10 +1944,10 @@ bool RooWorkspace::import(TObject const& object, bool replaceExisting)
 bool RooWorkspace::import(TObject const& object, const char* aliasName, bool replaceExisting)
 {
   // First check if object with given name already exists
-  std::unique_ptr<TObject> oldObj{_genObjects.FindObject(object.GetName())};
+  std::unique_ptr<TObject> oldObj{_genObjects.FindObject(aliasName)};
   if (oldObj && !replaceExisting) {
     coutE(InputArguments) << "RooWorkspace::import(" << GetName() << ") generic object with name "
-           << object.GetName() << " is already in workspace and replaceExisting flag is set to false" << endl ;
+           << aliasName << " is already in workspace and replaceExisting flag is set to false" << endl ;
     return true ;
   }
 
