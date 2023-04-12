@@ -14,6 +14,7 @@
 #define RooFit_Detail_NormalizationHelpers_h
 
 #include <memory>
+#include <string>
 #include <unordered_map>
 
 class RooAbsArg;
@@ -38,6 +39,7 @@ public:
    }
 
    void compileServers(RooAbsArg &arg, RooArgSet const &normSet);
+   void compileServer(RooAbsArg &server, RooAbsArg &arg, RooArgSet const &normSet);
 
    void markAsCompiled(RooAbsArg &arg) const;
 
@@ -49,6 +51,7 @@ private:
 
    RooArgSet const &_topLevelNormSet;
    std::unordered_map<TNamed const *, RooAbsArg *> _clonedArgsSet;
+   std::unordered_map<RooAbsArg *, RooAbsArg *> _replacements;
 };
 
 template <class T>
