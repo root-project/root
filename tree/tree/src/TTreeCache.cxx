@@ -1335,7 +1335,7 @@ Bool_t TTreeCache::FillBuffer()
 
    struct collectionInfo {
       Int_t fClusterStart{-1}; // First basket belonging to the current cluster
-      Int_t fCurrent{0};       // Currently visited basket
+      Int_t fCurrent{-1};       // Currently visited basket
       Bool_t fLoadedOnce{kFALSE};
 
       void Rewind() { fCurrent = (fClusterStart >= 0) ? fClusterStart : 0; }
@@ -1416,6 +1416,9 @@ Bool_t TTreeCache::FillBuffer()
 
             if (pass == kRewind)
                cursor[i].Rewind();
+            else if (cursor[i].fCurrent == -1) {
+               cursor[i].fCurrent = TMath::BinarySearch(b->GetWriteBasket() + 1, entries, minEntry);
+            }
             for (auto &j = cursor[i].fCurrent; j < nb; j++) {
                // This basket has already been read, skip it
 
