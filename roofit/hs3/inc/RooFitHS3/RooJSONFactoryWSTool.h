@@ -22,6 +22,7 @@
 
 #include <map>
 #include <stdexcept>
+#include <set>
 
 namespace RooFit {
 namespace JSONIO {
@@ -135,7 +136,6 @@ public:
    bool importYMLfromString(const std::string &s);
 
    void importFunction(const RooFit::Detail::JSONNode &n, bool isPdf);
-   RooFit::Detail::JSONNode *exportObject(const RooAbsArg *func);
 
    static std::unique_ptr<RooFit::Detail::JSONTree> createNewJSONTree();
 
@@ -173,6 +173,8 @@ private:
    template <class T>
    T *requestImpl(const std::string &objname);
 
+   void exportObject(RooAbsArg const &func, std::set<std::string> &exportedObjectNames);
+
    void exportData(RooAbsData const &data);
 
    void importAllNodes(const RooFit::Detail::JSONNode &n);
@@ -184,7 +186,6 @@ private:
    void exportVariables(const RooArgSet &allElems, RooFit::Detail::JSONNode &n);
 
    void exportAllObjects(RooFit::Detail::JSONNode &n);
-   void exportDependants(const RooAbsArg *source);
 
    void exportModelConfig(RooFit::Detail::JSONNode &n, RooStats::ModelConfig const &mc);
 

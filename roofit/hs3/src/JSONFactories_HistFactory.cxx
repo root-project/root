@@ -129,14 +129,13 @@ std::string toString(TClass *c)
 
 using namespace RooStats::HistFactory::Detail;
 
-RooRealVar &getNP(RooWorkspace &ws, std::string const &parname)
+RooRealVar &createNominal(RooWorkspace &ws, std::string const &parname, double val, double min, double max)
 {
-   RooRealVar &par = getOrCreate<RooRealVar>(ws, parname, 0., -5, 5);
    std::string globname = "nom_" + parname;
-   RooRealVar &nom = getOrCreate<RooRealVar>(ws, globname, 0.);
-   nom.setRange(-10, 10);
+   RooRealVar &nom = getOrCreate<RooRealVar>(ws, globname, val, min, max);
    nom.setConstant(true);
-   return par;
+   nom.setAttribute("globs");
+   return nom;
 }
 
 /// Get the conventional name of the constraint pdf for a constrained
@@ -169,16 +168,13 @@ ParamHistFunc &createPHF(const std::string &sysname, const std::string &phfname,
       if (constraintType == "Const" || vals[i] == 0.) {
          v->setConstant(true);
       } else if (constraintType == "Gauss") {
-         auto &nom = tool.wsEmplace<RooRealVar>("nom_" + basename, 1, 0, std::max(10., gamma_max));
-         nom.setConstant(true);
+         auto &nom = createNominal(ws, basename, 1.0, 0, std::max(10., gamma_max));
          auto &sigma = tool.wsEmplace<RooConstVar>(basename + "_sigma", vals[i]);
          constraints.add(tool.wsEmplace<RooGaussian>(constraintName(basename), nom, *v, sigma), true);
       } else if (constraintType == "Poisson") {
          double tau_float = vals[i];
          auto &tau = tool.wsEmplace<RooConstVar>(basename + "_tau", tau_float);
-         auto &nom = tool.wsEmplace<RooRealVar>("nom_" + basename, tau_float);
-         nom.setConstant(true);
-         nom.setMin(0);
+         auto &nom = createNominal(ws, basename, tau_float, 0, RooNumber::infinity());
          auto &prod = tool.wsEmplace<RooProduct>(basename + "_poisMean", *v, tau);
          auto &pois = tool.wsEmplace<RooPoisson>(constraintName(basename), nom, prod);
          pois.setNoRounding(true);
@@ -291,18 +287,20 @@ bool importHistSample(RooJSONFactoryWSTool &tool, RooDataHist &dh, RooArgSet con
             }
          } else if (modtype == "normsys") {
             std::string sysname(mod["name"].val());
-            auto* parameter = mod.find("parameter");
+            auto *parameter = mod.find("parameter");
             std::string parname(parameter ? parameter->val() : "alpha_" + sysname);
-            overall_nps.add(::getNP(ws, parname));
+            createNominal(ws, parname, 0.0, -10, 10);
+            overall_nps.add(getOrCreate<RooRealVar>(ws, parname, 0., -5, 5));
             auto &data = mod["data"];
             overall_low.push_back(data["lo"].val_double());
             overall_high.push_back(data["hi"].val_double());
             constraints.add(getConstraint(ws, sysname, parname));
          } else if (modtype == "histosys") {
             std::string sysname(mod["name"].val());
-            auto* parameter = mod.find("parameter");
+            auto *parameter = mod.find("parameter");
             std::string parname(parameter ? parameter->val() : "alpha_" + sysname);
-            histNps.add(::getNP(ws, parname));
+            createNominal(ws, parname, 0.0, -10, 10);
+            histNps.add(getOrCreate<RooRealVar>(ws, parname, 0., -5, 5));
             auto &data = mod["data"];
             histoLo.add(tool.wsEmplace<RooHistFunc>(
                sysname + "Low_" + prefixedName, varlist,
@@ -728,8 +726,7 @@ bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname
             if (sysname.find("alpha_") == 0) {
                sysname = sysname.substr(6);
             }
-            sample.normsys.emplace_back(
-               sysname, var, fip->high()[i], fip->low()[i], findConstraint(var)->IsA());
+            sample.normsys.emplace_back(sysname, var, fip->high()[i], fip->low()[i], findConstraint(var)->IsA());
          }
          std::sort(sample.normsys.begin(), sample.normsys.end(), [](auto &l, auto &r) { return l.name < r.name; });
       }

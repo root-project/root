@@ -34,7 +34,6 @@
 #include <iostream>
 #include <stack>
 #include <stdexcept>
-#include <unordered_set>
 
 /** \class RooJSONFactoryWSTool
 \ingroup roofit
@@ -445,8 +444,6 @@ void importAnalysis(const RooFit::Detail::JSONNode &rootnode, const RooFit::Deta
    };
 
    mc.SetParametersOfInterest(readArgSet("parameters_of_interest"));
-   mc.SetNuisanceParameters(readArgSet("nps"));
-   mc.SetGlobalObservables(readArgSet("globs"));
 
    if (auto *mcAuxNode = findRooFitInternal(rootnode, "ModelConfigs", analysisNode["name"].val())) {
       if (auto found = mcAuxNode->find("combined_data_name")) {
@@ -666,12 +663,22 @@ void RooJSONFactoryWSTool::exportVariables(const RooArgSet &allElems, JSONNode &
    }
 }
 
-JSONNode *RooJSONFactoryWSTool::exportObject(const RooAbsArg *func)
+void RooJSONFactoryWSTool::exportObject(RooAbsArg const &func, std::set<std::string> &exportedObjectNames)
 {
-   if (auto simPdf = dynamic_cast<RooSimultaneous const *>(func)) {
+   const std::string name = func.GetName();
+
+   // if this element was already exported, skip
+   if (exportedObjectNames.find(name) != exportedObjectNames.end())
+      return;
+
+   exportedObjectNames.insert(name);
+
+   if (auto simPdf = dynamic_cast<RooSimultaneous const *>(&func)) {
       // RooSimultaneous is not used in the HS3 standard, we only export the
       // dependents and some ROOT internal information.
-      RooJSONFactoryWSTool::exportDependants(func);
+      for (RooAbsArg *s : func.servers()) {
+         this->exportObject(*s, exportedObjectNames);
+      }
 
       std::vector<std::string> channelNames;
       for (auto const &item : simPdf->indexCat()) {
@@ -679,37 +686,29 @@ JSONNode *RooJSONFactoryWSTool::exportObject(const RooAbsArg *func)
       }
 
       auto &infoNode = getRooFitInternal(*_rootnodeOutput, "combined_distributions");
-      if (!findNamedChild(infoNode, simPdf->GetName())) {
-         auto &child = appendNamedChild(infoNode, simPdf->GetName());
-         child["index_cat"] << simPdf->indexCat().GetName();
-         exportCategory(simPdf->indexCat(), child);
-         child["distributions"].set_seq();
-         for (auto const &item : simPdf->indexCat()) {
-            child["distributions"].append_child() << simPdf->getPdf(item.first.c_str())->GetName();
-         }
+      auto &child = appendNamedChild(infoNode, simPdf->GetName());
+      child["index_cat"] << simPdf->indexCat().GetName();
+      exportCategory(simPdf->indexCat(), child);
+      child["distributions"].set_seq();
+      for (auto const &item : simPdf->indexCat()) {
+         child["distributions"].append_child() << simPdf->getPdf(item.first.c_str())->GetName();
       }
 
-      return nullptr;
-   } else if (dynamic_cast<RooAbsCategory const *>(func)) {
+      return;
+   } else if (dynamic_cast<RooAbsCategory const *>(&func)) {
       // categories are created by the respective RooSimultaneous, so we're skipping the export here
-      return nullptr;
-   } else if (dynamic_cast<RooRealVar const *>(func) || dynamic_cast<RooConstVar const *>(func)) {
-      exportVariable(func, *_varsNode);
-      return nullptr;
+      return;
+   } else if (dynamic_cast<RooRealVar const *>(&func) || dynamic_cast<RooConstVar const *>(&func)) {
+      exportVariable(&func, *_varsNode);
+      return;
    }
 
-   auto &collectionNode = (*_rootnodeOutput)[dynamic_cast<RooAbsPdf const *>(func) ? "distributions" : "functions"];
-
-   const std::string name = func->GetName();
-
-   // if this element already exists, skip
-   if (auto child = findNamedChild(collectionNode, name))
-      return const_cast<JSONNode *>(child);
+   auto &collectionNode = (*_rootnodeOutput)[dynamic_cast<RooAbsPdf const *>(&func) ? "distributions" : "functions"];
 
    auto const &exporters = RooFit::JSONIO::exporters();
    auto const &exportKeys = RooFit::JSONIO::exportKeys();
 
-   TClass *cl = func->IsA();
+   TClass *cl = func.IsA();
 
    auto &elem = appendNamedChild(collectionNode, name);
 
@@ -717,7 +716,7 @@ JSONNode *RooJSONFactoryWSTool::exportObject(const RooAbsArg *func)
    if (it != exporters.end()) { // check if we have a specific exporter available
       for (auto &exp : it->second) {
          _serversToExport.clear();
-         if (!exp->exportObject(this, func, elem)) {
+         if (!exp->exportObject(this, &func, elem)) {
             // The exporter might have messed with the content of the node
             // before failing. That's why we clear it and only reset the name.
             elem.clear();
@@ -726,18 +725,15 @@ JSONNode *RooJSONFactoryWSTool::exportObject(const RooAbsArg *func)
             continue;
          }
          if (exp->autoExportDependants()) {
-            for (auto &s : func->servers()) {
-               this->exportObject(s);
+            for (RooAbsArg *s : func.servers()) {
+               this->exportObject(*s, exportedObjectNames);
             }
          } else {
             for (RooAbsArg const *s : _serversToExport) {
-               this->exportObject(s);
+               this->exportObject(*s, exportedObjectNames);
             }
          }
-         // Exporting the dependants will invalidate the iterator in "elem". So
-         // instead of returning elem, we have to find again the element with
-         // the right name.
-         return const_cast<JSONNode *>(findNamedChild(collectionNode, name));
+         return;
       }
    }
 
@@ -758,15 +754,15 @@ JSONNode *RooJSONFactoryWSTool::exportObject(const RooAbsArg *func)
                 << " 2 & 1: you might need to write a serialization definition yourself. check "
                    "https://github.com/root-project/root/blob/master/roofit/hs3/README.md to "
                    "see how to do this!\n";
-      return nullptr;
+      return;
    }
 
    elem["type"] << dict->second.type;
 
-   size_t nprox = func->numProxies();
+   size_t nprox = func.numProxies();
 
    for (size_t i = 0; i < nprox; ++i) {
-      RooAbsProxy *p = func->getProxy(i);
+      RooAbsProxy *p = func.getProxy(i);
 
       // some proxies start with a "!". This is a magic symbol that we don't want to stream
       std::string pname(p->name());
@@ -776,12 +772,12 @@ JSONNode *RooJSONFactoryWSTool::exportObject(const RooAbsArg *func)
       auto k = dict->second.proxies.find(pname);
       if (k == dict->second.proxies.end()) {
          std::cerr << "failed to find key matching proxy '" << pname << "' for type '" << dict->second.type
-                   << "', encountered in '" << func->GetName() << "', skipping" << std::endl;
-         return nullptr;
+                   << "', encountered in '" << func.GetName() << "', skipping" << std::endl;
+         return;
       }
 
       // empty string is interpreted as an instruction to ignore this value
-      if (k->second.size() == 0)
+      if (k->second.empty())
          continue;
 
       if (auto l = dynamic_cast<RooListProxy *>(p)) {
@@ -795,12 +791,10 @@ JSONNode *RooJSONFactoryWSTool::exportObject(const RooAbsArg *func)
       }
    }
 
-   RooJSONFactoryWSTool::exportDependants(func);
-
-   // Exporting the dependants will invalidate the iterator in "elem". So
-   // instead of returning elem, we have to find again the element with the
-   // right name.
-   return const_cast<JSONNode *>(findNamedChild(collectionNode, name));
+   // export all the servers of a given RooAbsArg
+   for (RooAbsArg *s : func.servers()) {
+      this->exportObject(*s, exportedObjectNames);
+   }
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1129,16 +1123,6 @@ void RooJSONFactoryWSTool::importVariable(const JSONNode &p)
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
-// export all dependants (servers) of a RooAbsArg
-void RooJSONFactoryWSTool::exportDependants(const RooAbsArg *source)
-{
-   // export all the servers of a given RooAbsArg
-   for (auto &s : source->servers()) {
-      this->exportObject(s);
-   }
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////
 // import all dependants (servers) of a node
 void RooJSONFactoryWSTool::importDependants(const JSONNode &n)
 {
@@ -1221,22 +1205,12 @@ void RooJSONFactoryWSTool::exportModelConfig(JSONNode &rootnode, RooStats::Model
    };
 
    writeList("parameters_of_interest", mc.GetParametersOfInterest());
-   writeList("nps", mc.GetNuisanceParameters());
-   writeList("globs", mc.GetGlobalObservables());
 }
 
 void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
 {
    _domains = std::make_unique<Domains>();
    _varsNode = &makeVariablesNode(n);
-
-   // export all attributes
-   RooArgSet sortedComponents{_workspace.components()};
-   sortedComponents.sort();
-   for (RooAbsArg const *arg : sortedComponents) {
-      exportAttributes(arg, n);
-   }
-
    _rootnodeOutput = &n;
 
    // export all toplevel pdfs
@@ -1249,8 +1223,14 @@ void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
       }
    }
    sortByName(allpdfs);
-   for (auto &p : allpdfs) {
-      this->exportObject(p);
+   std::set<std::string> exportedObjectNames;
+   for (RooAbsPdf *p : allpdfs) {
+      this->exportObject(*p, exportedObjectNames);
+   }
+
+   // export attributes of exported objects
+   for (std::string const &name : exportedObjectNames) {
+      exportAttributes(_workspace.arg(name), n);
    }
 
    // export all datasets
@@ -1272,19 +1252,13 @@ void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
       }
    }
 
-   // Figure out which variables actually got exported
-   std::unordered_set<std::string> varNames;
-   for (auto const &child : _varsNode->children()) {
-      varNames.insert(child["name"].val());
-   }
-
    for (auto *snsh : static_range_cast<RooArgSet const *>(_workspace.getSnapshots())) {
       RooArgSet snapshotSorted;
       // We only want to add the variables that actually got exported and skip
       // the ones that the pdfs encoded implicitly (like in the case of
       // HistFactory).
       for (RooAbsArg *arg : *snsh) {
-         if (varNames.find(arg->GetName()) != varNames.end())
+         if (exportedObjectNames.find(arg->GetName()) != exportedObjectNames.end())
             snapshotSorted.add(*arg);
       }
       snapshotSorted.sort();
@@ -1292,10 +1266,6 @@ void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
       if (name != "default_values") {
          this->exportVariables(snapshotSorted, appendNamedChild(n["parameter_points"], name)["parameters"]);
       }
-   }
-   for (const auto &mc : mcs) {
-      if (auto *pdf = mc->GetPdf())
-         RooJSONFactoryWSTool::exportObject(pdf);
    }
    _varsNode = nullptr;
    _domains->writeJSON(n["domains"]);
