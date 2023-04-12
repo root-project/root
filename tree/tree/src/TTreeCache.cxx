@@ -1326,18 +1326,20 @@ Bool_t TTreeCache::FillBuffer()
    Long64_t maxReadEntry = minEntry; // If we are stopped before the end of the 2nd pass, this marker will where we need to start next time.
    Int_t nReadPrefRequest = 0;
    auto perfStats = GetTree()->GetPerfStats();
+
+   struct collectionInfo {
+      Int_t fClusterStart{-1}; // First basket belonging to the current cluster
+      Int_t fCurrent{0};       // Currently visited basket
+      Bool_t fLoadedOnce{kFALSE};
+
+      void Rewind() { fCurrent = (fClusterStart >= 0) ? fClusterStart : 0; }
+   };
+   std::vector<collectionInfo> cursor(fNbranches);
+
    do {
       prevNtot = ntotCurrentBuf;
       Long64_t lowestMaxEntry = fEntryMax; // The lowest maximum entry in the TTreeCache for each branch for each pass.
 
-      struct collectionInfo {
-         Int_t fClusterStart{-1}; // First basket belonging to the current cluster
-         Int_t fCurrent{0};       // Currently visited basket
-         Bool_t fLoadedOnce{kFALSE};
-
-         void Rewind() { fCurrent = (fClusterStart >= 0) ? fClusterStart : 0; }
-      };
-      std::vector<collectionInfo> cursor(fNbranches);
       Bool_t reachedEnd = kFALSE;
       Bool_t skippedFirst = kFALSE;
       Bool_t oncePerBranch = kFALSE;
