@@ -38,6 +38,9 @@ ROOT::Experimental::RNTupleInspector::RNTupleInspector(
 
 void ROOT::Experimental::RNTupleInspector::CollectColumnInfo()
 {
+   fOnDiskSize = 0;
+   fInMemorySize = 0;
+
    for (DescriptorId_t colId = 0; colId < fDescriptor->GetNPhysicalColumns(); ++colId) {
       const RColumnDescriptor &colDesc = fDescriptor->GetColumnDescriptor(colId);
 
@@ -68,8 +71,8 @@ void ROOT::Experimental::RNTupleInspector::CollectColumnInfo()
          for (const auto &page : pageRange.fPageInfos) {
             onDiskSize += page.fLocator.fBytesOnStorage;
             inMemSize += page.fNElements * elemSize;
-            fOnDiskSize += onDiskSize;
-            fInMemorySize += inMemSize;
+            fOnDiskSize += page.fLocator.fBytesOnStorage;
+            fInMemorySize += page.fNElements * elemSize;
          }
       }
 
