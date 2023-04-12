@@ -46,6 +46,7 @@ public:
       Node &operator<<(std::string const &s) override;
       Node &operator<<(int i) override;
       Node &operator<<(double d) override;
+      Node &operator<<(bool b) override;
       const Node &operator>>(std::string &v) const override;
       Node &operator[](std::string const &k) override;
       Node &operator[](size_t pos) override;

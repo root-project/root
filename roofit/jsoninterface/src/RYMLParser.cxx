@@ -183,6 +183,13 @@ TRYMLTree::Node &TRYMLTree::Node::operator<<(double d)
    return *this;
 }
 
+TRYMLTree::Node &TRYMLTree::Node::operator<<(bool b)
+{
+   // write a bool to this node
+   node->get() << b;
+   return *this;
+}
+
 const TRYMLTree::Node &TRYMLTree::Node::operator>>(std::string &v) const
 {
    // read a string from this node
