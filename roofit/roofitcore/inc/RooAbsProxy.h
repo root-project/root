@@ -27,6 +27,10 @@
 
 #include <TClass.h>
 
+#include <string>
+#include <unordered_map>
+
+class RooAbsArg;
 class RooAbsCollection;
 class RooArgSet;
 
@@ -57,6 +61,7 @@ protected:
 
   friend class RooAbsArg ;
   virtual bool changePointer(const RooAbsCollection& newServerSet, bool nameChange=false, bool factoryInitMode=false) = 0 ;
+  virtual bool changePointer(std::unordered_map<RooAbsArg*, RooAbsArg*> const& replacements) = 0 ;
 
   friend class RooAbsPdf ;
   virtual void changeNormSet(const RooArgSet* newNormSet) ;

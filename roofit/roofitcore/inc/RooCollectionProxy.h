@@ -55,10 +55,12 @@ public:
    /// Copy constructor.
    template <class Other_t>
    RooCollectionProxy(const char *inName, RooAbsArg *owner, const Other_t &other)
-      : RooCollection_t(other, inName), _owner(owner), _defValueServer(other.defValueServer()),
+      : RooCollection_t(other, inName),
+        _owner(owner),
+        _defValueServer(other.defValueServer()),
         _defShapeServer(other.defShapeServer())
    {
-     _owner->registerProxy(*this);
+      _owner->registerProxy(*this);
    }
 
    /// Initializes this RooCollection proxy from another proxy. Should not be
@@ -89,8 +91,8 @@ public:
    // but value syncronization! Should it be re-implemented to be actual
    // assignment? That would be inconsistent with the base class! So it's
    // better to not support it at all.
-   RooCollectionProxy& operator=(RooCollectionProxy const& other) = delete;
-   RooCollectionProxy& operator=(RooCollectionProxy && other) = delete;
+   RooCollectionProxy &operator=(RooCollectionProxy const &other) = delete;
+   RooCollectionProxy &operator=(RooCollectionProxy &&other) = delete;
 
    ~RooCollectionProxy() override
    {
@@ -163,6 +165,8 @@ private:
 
    bool
    changePointer(const RooAbsCollection &newServerSet, bool nameChange = false, bool factoryInitMode = false) override;
+
+   bool changePointer(std::unordered_map<RooAbsArg *, RooAbsArg *> const &replacements) override;
 
    void checkValid() const
    {
@@ -297,6 +301,20 @@ bool RooCollectionProxy<RooCollection_t>::changePointer(const RooAbsCollection &
       RooAbsArg *newArg = arg->findNewServer(newServerList, nameChange);
       if (newArg && newArg != _owner)
          error |= !RooCollection_t::replace(*arg, *newArg);
+   }
+   return !error;
+}
+
+template <class RooCollection_t>
+bool RooCollectionProxy<RooCollection_t>::changePointer(
+   std::unordered_map<RooAbsArg *, RooAbsArg *> const &replacements)
+{
+   bool error(false);
+   for (auto const &arg : *this) {
+      auto newArgFound = replacements.find(arg);
+      if (newArgFound != replacements.end()) {
+         error |= !RooCollection_t::replace(*arg, *newArgFound->second);
+      }
    }
    return !error;
 }
