@@ -10,6 +10,7 @@
 #include <RooStats/HistFactory/ParamHistFunc.h>
 
 #include <gtest/gtest.h>
+#include <array>
 
 /// Validate the ParamHistFunc in the n-dimensional case, comparing both the
 /// BatchMode and the old implementation results to a manually-compute
