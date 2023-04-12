@@ -35,6 +35,7 @@
 #include <set>
 #include <stack>
 #include <string>
+#include <unordered_map>
 
 
 class TTree ;
@@ -262,6 +263,7 @@ public:
 
   // Server redirection interface
   bool redirectServers(const RooAbsCollection& newServerList, bool mustReplaceAll=false, bool nameChange=false, bool isRecursionStep=false) ;
+  bool redirectServers(std::unordered_map<RooAbsArg*, RooAbsArg*> const& replacements);
   bool recursiveRedirectServers(const RooAbsCollection& newServerList, bool mustReplaceAll=false, bool nameChange=false, bool recurseInNewSet=true) ;
 
   virtual bool redirectServersHook(const RooAbsCollection & newServerList, bool mustReplaceAll,
@@ -737,6 +739,10 @@ private:
  protected:
   static std::stack<RooAbsArg*> _ioReadStack ; // reading stack
   /// \endcond
+
+ private:
+  void substituteServer(RooAbsArg *oldServer, RooAbsArg *newServer);
+  bool callRedirectServersHook(RooAbsCollection const& newSet, bool mustReplaceAll, bool nameChange, bool isRecursionStep);
 
   ClassDefOverride(RooAbsArg,9) // Abstract variable
 };
