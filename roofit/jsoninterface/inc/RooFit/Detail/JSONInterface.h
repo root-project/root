@@ -57,8 +57,14 @@ public:
       Nd &operator*() const { return it->current(); }
       Nd &operator->() const { return it->current(); }
 
-      friend bool operator!=(child_iterator_t const &lhs, child_iterator_t const &rhs) { return !lhs.it->equal(*rhs.it); }
-      friend bool operator==(child_iterator_t const &lhs, child_iterator_t const &rhs) { return lhs.it->equal(*rhs.it); }
+      friend bool operator!=(child_iterator_t const &lhs, child_iterator_t const &rhs)
+      {
+         return !lhs.it->equal(*rhs.it);
+      }
+      friend bool operator==(child_iterator_t const &lhs, child_iterator_t const &rhs)
+      {
+         return lhs.it->equal(*rhs.it);
+      }
    };
 
    using child_iterator = child_iterator_t<JSONNode>;
@@ -81,8 +87,10 @@ public:
 
 public:
    virtual JSONNode &operator<<(std::string const &s) = 0;
+   inline JSONNode &operator<<(const char *s) { return *this << std::string(s); }
    virtual JSONNode &operator<<(int i) = 0;
    virtual JSONNode &operator<<(double d) = 0;
+   virtual JSONNode &operator<<(bool b) = 0;
    virtual const JSONNode &operator>>(std::string &v) const = 0;
    virtual JSONNode &operator[](std::string const &k) = 0;
    virtual JSONNode &operator[](size_t pos) = 0;

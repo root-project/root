@@ -135,6 +135,12 @@ TJSONTree::Node &TJSONTree::Node::operator<<(double d)
    return *this;
 }
 
+TJSONTree::Node &TJSONTree::Node::operator<<(bool b)
+{
+   node->get() = b;
+   return *this;
+}
+
 const TJSONTree::Node &TJSONTree::Node::operator>>(std::string &v) const
 {
    v = node->get().get<std::string>();
