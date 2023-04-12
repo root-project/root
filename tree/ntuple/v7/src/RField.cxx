@@ -2507,6 +2507,18 @@ ROOT::Experimental::Detail::RFieldValue ROOT::Experimental::RUniquePtrField::Cap
    return Detail::RFieldValue(true /* captureFlag */, this, where);
 }
 
+std::vector<ROOT::Experimental::Detail::RFieldValue>
+ROOT::Experimental::RUniquePtrField::SplitValue(const Detail::RFieldValue &value) const
+{
+   std::vector<Detail::RFieldValue> result;
+   auto ptr = value.Get<std::unique_ptr<char>>();
+   if (*ptr) {
+      auto itemValue = fSubFields[0]->CaptureValue(ptr->get());
+      result.emplace_back(itemValue);
+   }
+   return result;
+}
+
 //------------------------------------------------------------------------------
 
 std::string ROOT::Experimental::RPairField::RPairField::GetTypeList(

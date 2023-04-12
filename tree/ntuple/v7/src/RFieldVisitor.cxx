@@ -345,6 +345,22 @@ void ROOT::Experimental::RPrintValueVisitor::VisitRecordField(const RRecordField
    fOutput << "}";
 }
 
+void ROOT::Experimental::RPrintValueVisitor::VisitNullableField(const RNullableField &field)
+{
+   PrintIndent();
+   PrintName(field);
+   auto elems = field.SplitValue(fValue);
+   if (elems.empty()) {
+      fOutput << "null";
+   } else {
+      RPrintOptions options;
+      options.fPrintSingleLine = true;
+      options.fPrintName = false;
+      RPrintValueVisitor visitor(elems[0], fOutput, fLevel, options);
+      elems[0].GetField()->AcceptVisitor(visitor);
+   }
+}
+
 void ROOT::Experimental::RPrintValueVisitor::VisitCollectionClassField(const RCollectionClassField &field)
 {
    PrintCollection(field);
