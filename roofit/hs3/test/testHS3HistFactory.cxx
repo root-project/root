@@ -147,14 +147,7 @@ TEST(TestHS3HistFactoryJSON, HistFactoryJSONTool)
    RooAbsData *dataFromJson = wsFromJson.data("obsData");
    EXPECT_TRUE(dataFromJson != nullptr);
 
-   // TODO: At this point, the global observables are not written into the JSON
-   // by the HistFactoryJSONTool. This should be fixed. For now, we mirror the
-   // global observables from the reference workspace.
    RooArgSet const &globs = *mc->GetGlobalObservables();
-   RooArgSet globsInJson;
-   for (RooAbsArg const *arg : globs) {
-      globsInJson.add(*wsFromJson.var(arg->GetName()));
-   };
 
    using namespace RooFit;
    using Res = std::unique_ptr<RooFitResult>;
@@ -163,7 +156,7 @@ TEST(TestHS3HistFactoryJSON, HistFactoryJSONTool)
                          PrintLevel(-1), Save())};
 
    Res resultFromJson{pdfFromJson->fitTo(*dataFromJson, Strategy(1), Minos(*mcFromJson->GetParametersOfInterest()),
-                                         GlobalObservables(globsInJson), PrintLevel(-1), Save())};
+                                         GlobalObservablesTag("globs"), PrintLevel(-1), Save())};
 
    // Do also the reverse comparison to check that the set of constant parameters matches
    EXPECT_TRUE(result->isIdentical(*resultFromJson));
@@ -215,14 +208,7 @@ TEST(TestHS3HistFactoryJSON, ClosureLoop)
    RooAbsData *newdata = newws.data("obsData");
    EXPECT_TRUE(newdata != nullptr);
 
-   // TODO: At this point, the global observables are not written into the JSON
-   // by the HistFactoryJSONTool. This should be fixed. For now, we mirror the
-   // global observables from the reference workspace.
    RooArgSet const &globs = *mc->GetGlobalObservables();
-   RooArgSet globsInJson;
-   for (RooAbsArg const *arg : globs) {
-      globsInJson.add(*newws.var(arg->GetName()));
-   };
 
    using namespace RooFit;
    using Res = std::unique_ptr<RooFitResult>;
@@ -231,7 +217,7 @@ TEST(TestHS3HistFactoryJSON, ClosureLoop)
                          PrintLevel(-1), Save())};
 
    Res resultFromJson{newpdf->fitTo(*newdata, Strategy(1), Minos(*newmc->GetParametersOfInterest()),
-                                    GlobalObservables(globsInJson), PrintLevel(-1), Save())};
+                                    GlobalObservablesTag("globs"), PrintLevel(-1), Save())};
 
    // Do also the reverse comparison to check that the set of constant parameters matches
    EXPECT_TRUE(result->isIdentical(*resultFromJson));
