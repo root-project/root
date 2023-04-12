@@ -42,6 +42,7 @@ TEST(RNTupleShow, BasicTypes)
       auto fieldbool = model->MakeField<bool>("boolean");
       auto fieldchar = model->MakeField<uint8_t>("uint8");
       auto fieldbitset = model->MakeField<std::bitset<65>>("bitset");
+      auto fielduniqueptr = model->MakeField<std::unique_ptr<std::string>>("pstring");
       auto ntuple = RNTupleWriter::Recreate(std::move(model), ntupleName, rootFileName);
 
       *fieldPt = 5.0f;
@@ -53,6 +54,7 @@ TEST(RNTupleShow, BasicTypes)
       *fieldbool = true;
       *fieldchar = 97;
       *fieldbitset = std::bitset<65>("10000000000000000000000000000010000000000000000000000000000010010");
+      *fielduniqueptr = std::make_unique<std::string>("abc");
       ntuple->Fill();
 
       *fieldPt = 8.5f;
@@ -64,6 +66,7 @@ TEST(RNTupleShow, BasicTypes)
       *fieldbool = false;
       *fieldchar = 98;
       fieldbitset->flip();
+      fielduniqueptr->reset();
       ntuple->Fill();
    }
 
@@ -82,7 +85,8 @@ TEST(RNTupleShow, BasicTypes)
       + "  \"string\": \"TestString\",\n"
       + "  \"boolean\": true,\n"
       + "  \"uint8\": 97,\n"
-      + "  \"bitset\": \"10000000000000000000000000000010000000000000000000000000000010010\"\n"
+      + "  \"bitset\": \"10000000000000000000000000000010000000000000000000000000000010010\",\n"
+      + "  \"pstring\": \"abc\"\n"
       + "}\n" };
    // clang-format on
    EXPECT_EQ(fString, os.str());
@@ -100,7 +104,8 @@ TEST(RNTupleShow, BasicTypes)
       + "  \"string\": \"TestString2\",\n"
       + "  \"boolean\": false,\n"
       + "  \"uint8\": 98,\n"
-      + "  \"bitset\": \"01111111111111111111111111111101111111111111111111111111111101101\"\n"
+      + "  \"bitset\": \"01111111111111111111111111111101111111111111111111111111111101101\",\n"
+      + "  \"pstring\": null\n"
       + "}\n" };
    // clang-format on
    EXPECT_EQ(fString1, os1.str());

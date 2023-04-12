@@ -219,6 +219,7 @@ public:
    void VisitVectorBoolField(const RField<std::vector<bool>> &field) final;
    void VisitRVecField(const RRVecField &field) final;
    void VisitBitsetField(const RBitsetField &field) final;
+   void VisitNullableField(const RNullableField &field) final;
 };
 
 
