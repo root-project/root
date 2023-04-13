@@ -139,18 +139,15 @@ RooArgSet selectFromArgSet(RooArgSet const&, std::string const& names);
 
 namespace Detail {
 
-bool snapshotImpl(RooAbsCollection const& input, RooAbsCollection& output, bool deepCopy);
+bool snapshotImpl(RooAbsCollection const& input, RooAbsCollection& output, bool deepCopy, RooArgSet const *observables);
+RooAbsArg *cloneTreeWithSameParametersImpl(RooAbsArg const &arg, RooArgSet const *observables);
 
 } // namespace Detail
 
 /// Clone RooAbsArg object and reattach to original parameters.
 template<class T>
 std::unique_ptr<T> cloneTreeWithSameParameters(T const& arg, RooArgSet const* observables=nullptr) {
-  std::unique_ptr<T> clone{static_cast<T *>(arg.cloneTree())};
-  RooArgSet origParams;
-  arg.getParameters(observables, origParams);
-  clone->recursiveRedirectServers(origParams);
-  return clone;
+  return std::unique_ptr<T>{static_cast<T *>(Detail::cloneTreeWithSameParametersImpl(arg, observables))};
 }
 
 std::string getRangeNameForSimComponent(std::string const& rangeName, bool splitRange, std::string const& catName);
