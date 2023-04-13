@@ -2330,7 +2330,7 @@ void ROOT::Experimental::RVariantField::CommitCluster()
 
 ROOT::Experimental::RNullableField::RNullableField(std::string_view fieldName, std::string_view typeName,
                                                    std::unique_ptr<Detail::RFieldBase> &&itemField)
-   : ROOT::Experimental::Detail::RFieldBase(fieldName, typeName, ENTupleStructure::kVariant, false /* isSimple */)
+   : ROOT::Experimental::Detail::RFieldBase(fieldName, typeName, ENTupleStructure::kCollection, false /* isSimple */)
 {
    Attach(std::move(itemField));
 }
@@ -2345,15 +2345,16 @@ ROOT::Experimental::RNullableField::~RNullableField()
 const ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations &
 ROOT::Experimental::RNullableField::GetColumnRepresentations() const
 {
-   static RColumnRepresentations representations({{EColumnType::kBit}, {EColumnType::kSwitch}}, {});
+   static RColumnRepresentations representations(
+      {{EColumnType::kSplitIndex32}, {EColumnType::kIndex32}, {EColumnType::kBit}}, {});
    return representations;
 }
 
 void ROOT::Experimental::RNullableField::GenerateColumnsImpl()
 {
    if (HasDefaultColumnRepresentative()) {
-      if (fSubFields[0]->GetValueSize() > sizeof(RColumnSwitch)) {
-         SetColumnRepresentative({EColumnType::kSwitch});
+      if (fSubFields[0]->GetValueSize() < 4) {
+         SetColumnRepresentative({EColumnType::kBit});
       }
    }
    switch (GetColumnRepresentative()[0]) {
@@ -2361,10 +2362,9 @@ void ROOT::Experimental::RNullableField::GenerateColumnsImpl()
       fDefaultItemValue = fSubFields[0]->GenerateValue();
       fColumns.emplace_back(Detail::RColumn::Create<bool>(RColumnModel(EColumnType::kBit), 0));
       break;
-   case EColumnType::kSwitch:
-      fColumns.emplace_back(Detail::RColumn::Create<RColumnSwitch>(RColumnModel(EColumnType::kSwitch), 0));
+   default:
+      fColumns.emplace_back(Detail::RColumn::Create<ClusterSize_t>(RColumnModel(GetColumnRepresentative()[0]), 0));
       break;
-   default: throw RException(R__FAIL("internal error: invalid column type for nullable field"));
    }
 }
 
@@ -2375,10 +2375,7 @@ void ROOT::Experimental::RNullableField::GenerateColumnsImpl(const RNTupleDescri
    case EColumnType::kBit:
       fColumns.emplace_back(Detail::RColumn::Create<bool>(RColumnModel(EColumnType::kBit), 0));
       break;
-   case EColumnType::kSwitch:
-      fColumns.emplace_back(Detail::RColumn::Create<RColumnSwitch>(RColumnModel(EColumnType::kSwitch), 0));
-      break;
-   default: throw RException(R__FAIL("internal error: invalid column type for nullable field"));
+   default: fColumns.emplace_back(Detail::RColumn::Create<ClusterSize_t>(RColumnModel(onDiskTypes[0]), 0)); break;
    }
 }
 
@@ -2390,10 +2387,9 @@ std::size_t ROOT::Experimental::RNullableField::AppendNull()
       fPrincipalColumn->Append(maskElement);
       return 1 + fSubFields[0]->Append(fDefaultItemValue);
    } else {
-      RColumnSwitch switchValue(ClusterSize_t(0), 0);
-      Detail::RColumnElement<RColumnSwitch> switchElement(&switchValue);
-      fPrincipalColumn->Append(switchElement);
-      return sizeof(RColumnSwitch);
+      Detail::RColumnElement<ClusterSize_t> offsetElement(&fNWritten);
+      fPrincipalColumn->Append(offsetElement);
+      return sizeof(ClusterSize_t);
    }
 }
 
@@ -2406,10 +2402,10 @@ std::size_t ROOT::Experimental::RNullableField::AppendValue(const Detail::RField
       fPrincipalColumn->Append(maskElement);
       return 1 + nbytesItem;
    } else {
-      RColumnSwitch switchValue(ClusterSize_t(fNWritten++), 1);
-      Detail::RColumnElement<RColumnSwitch> switchElement(&switchValue);
-      fPrincipalColumn->Append(switchElement);
-      return sizeof(RColumnSwitch) + nbytesItem;
+      fNWritten++;
+      Detail::RColumnElement<ClusterSize_t> offsetElement(&fNWritten);
+      fPrincipalColumn->Append(offsetElement);
+      return sizeof(ClusterSize_t) + nbytesItem;
    }
 }
 
@@ -2420,10 +2416,10 @@ ROOT::Experimental::RClusterIndex ROOT::Experimental::RNullableField::GetItemInd
       const bool isValidItem = *fPrincipalColumn->Map<bool>(globalIndex);
       return isValidItem ? fPrincipalColumn->GetClusterIndex(globalIndex) : nullIndex;
    } else {
-      RClusterIndex variantIndex;
-      std::uint32_t tag;
-      fPrincipalColumn->GetSwitchInfo(globalIndex, &variantIndex, &tag);
-      return (tag == 0) ? nullIndex : variantIndex;
+      RClusterIndex collectionStart;
+      ClusterSize_t collectionSize;
+      fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, &collectionSize);
+      return (collectionSize == 0) ? nullIndex : collectionStart;
    }
 }
 
