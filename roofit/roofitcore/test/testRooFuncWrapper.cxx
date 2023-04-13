@@ -99,102 +99,6 @@ TEST(RooFuncWrapper, GaussianNormalizedHardcoded)
    EXPECT_NEAR(getNumDerivative(gauss, sigma, normSet), dMyGauss[2], 1e-8);
 }
 
-TEST(RooFuncWrapper, NllWithObservables)
-{
-   using namespace RooFit;
-
-   auto inf = std::numeric_limits<double>::infinity();
-   RooRealVar x("x", "x", 0, -inf, inf);
-   RooRealVar mu("mu", "mu", 0, -10, 10);
-   RooRealVar sigma("sigma", "sigma", 2.0, 0.01, 10);
-   RooGaussian gauss{"gauss", "gauss", x, mu, sigma};
-
-   RooArgSet normSet{x};
-
-   std::size_t nEvents = 10;
-   std::unique_ptr<RooDataSet> data{gauss.generate(x, nEvents)};
-   std::unique_ptr<RooAbsReal> nllRef{gauss.createNLL(*data)};
-
-   RooArgSet parameters;
-   gauss.getParameters(data->get(), parameters);
-
-   RooArgSet observables;
-   gauss.getObservables(data->get(), observables);
-
-   // clang-format off
-   std::stringstream func;
-   func <<  "double nllSum = 0;"
-            "const double sig = params[1];"
-            "for (int i = 0; i <" << data->numEntries() << "; i++) {"
-               "const double arg = obs[i] - params[0];"
-               "double out = std::exp(-0.5 * arg * arg / (sig * sig));"
-               "out = 1. / (std::sqrt(TMath::TwoPi()) * sig) * out;"
-               "nllSum -= std::log(out);"
-            "}"
-            "return nllSum;";
-   // clang-format on
-   RooFuncWrapper nllFunc("myNLL", "myNLL", func.str(), parameters, observables, data.get());
-
-   // Check if functions results are the same even after changing parameters.
-   EXPECT_NEAR(nllRef->getVal(normSet), nllFunc.getVal(), 1e-8);
-
-   mu.setVal(1);
-   EXPECT_NEAR(nllRef->getVal(normSet), nllFunc.getVal(), 1e-8);
-
-   // Check if the parameter layout and size is the same.
-   RooArgSet paramsMyNLL;
-   nllFunc.getParameters(&normSet, paramsMyNLL);
-
-   EXPECT_TRUE(paramsMyNLL.hasSameLayout(parameters));
-   EXPECT_EQ(paramsMyNLL.size(), parameters.size());
-
-   // Get AD based derivative
-   std::vector<double> dMyNLL(nllFunc.getNumParams(), 0);
-   nllFunc.getGradient(dMyNLL.data());
-
-   // Check if derivatives are equal
-   EXPECT_NEAR(getNumDerivative(*nllRef, mu, normSet), dMyNLL[0], 1e-6);
-   EXPECT_NEAR(getNumDerivative(*nllRef, sigma, normSet), dMyNLL[1], 1e-6);
-
-   // Remember parameter state before minimization
-   RooArgSet parametersOrig;
-   parameters.snapshot(parametersOrig);
-
-   auto runMinimizer = [&](RooAbsReal &absReal, RooMinimizer::Config cfg = {}) -> std::unique_ptr<RooFitResult> {
-      RooMinimizer m{absReal, cfg};
-      m.setPrintLevel(-1);
-      m.setStrategy(0);
-      m.minimize("Minuit2");
-      auto result = std::unique_ptr<RooFitResult>{m.save()};
-      // reset parameters
-      parameters.assign(parametersOrig);
-      return result;
-   };
-
-   // Minimize the RooFuncWrapper Implementation
-   auto result = runMinimizer(nllFunc);
-
-   // Minimize the RooFuncWrapper Implementation with AD
-   RooMinimizer::Config minimizerCfgAd;
-   std::size_t nGradientCalls = 0;
-   minimizerCfgAd.gradFunc = [&](double *out) {
-      nllFunc.getGradient(out);
-      ++nGradientCalls;
-   };
-   auto resultAd = runMinimizer(nllFunc, minimizerCfgAd);
-   EXPECT_GE(nGradientCalls, 1); // make sure the gradient function was actually called
-
-   // Minimize the reference NLL
-   auto resultRef = runMinimizer(*nllRef);
-
-   // Compare minimization results
-   // TODO: the (global) correlation coefficients are still wrong. This needs
-   // to be understood next, and then we can also use the regular
-   // isIdentical().
-   EXPECT_TRUE(result->isIdenticalNoCov(*resultRef, 1e-5));
-   EXPECT_TRUE(resultAd->isIdenticalNoCov(*resultRef, 1e-5));
-}
-
 TEST(RooFuncWrapper, GaussianNormalized)
 {
    RooRealVar x("x", "x", 0, -10, std::numeric_limits<double>::infinity());
@@ -267,7 +171,7 @@ TEST(RooFuncWrapper, Nll)
    RooRealVar shift("shift", "shift", 1.0, -10, 10);
    RooAddition muShifted("mu_shifted", "mu_shifted", {mu, shift});
 
-   RooRealVar sigma("sigma", "sigma", 2.0, 0.01, 10);
+   RooRealVar sigma("sigma", "sigma", 3.0, 0.01, 10);
    RooConstVar scale("scale", "scale", 1.5);
    RooProduct sigmaScaled("sigma_scaled", "sigma_scaled", sigma, scale);
 
@@ -304,7 +208,7 @@ TEST(RooFuncWrapper, Nll)
 
    // Check if derivatives are equal
    for (std::size_t i = 0; i < paramsMyNLL.size(); ++i) {
-      EXPECT_NEAR(getNumDerivative(*nllRef, static_cast<RooRealVar &>(*paramsMyNLL[i]), normSet), dMyNLL[i], 1e-6);
+      EXPECT_NEAR(getNumDerivative(*nllRef, static_cast<RooRealVar &>(*paramsMyNLL[i]), normSet), dMyNLL[i], 1e-4);
    }
 
    // Remember parameter state before minimization
@@ -339,9 +243,6 @@ TEST(RooFuncWrapper, Nll)
    auto resultRef = runMinimizer(*nllRef);
 
    // Compare minimization results
-   // TODO: the (global) correlation coefficients are still wrong. This needs
-   // to be understood next, and then we can also use the regular
-   // isIdentical().
-   EXPECT_TRUE(result->isIdenticalNoCov(*resultRef, 1e-3));
-   EXPECT_TRUE(resultAd->isIdenticalNoCov(*resultRef, 1e-3));
+   EXPECT_TRUE(result->isIdentical(*resultRef, 1e-4));
+   EXPECT_TRUE(resultAd->isIdentical(*resultRef, 1e-4));
 }

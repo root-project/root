@@ -98,10 +98,8 @@ public:
    /// @brief Since the squashed code represents all observables as a single flattened array, it is important
    /// to keep track of the start index for a vector valued observable which can later be expanded to access the correct
    /// element. For example, a vector valued variable x with 10 entries will be squashed to obs[start_idx + i].
-   /// @param key The node representing the vector valued observable.
+   /// @param key The name of the node representing the vector valued observable.
    /// @param idx The start index (or relative position of the observable in the set of all observables).
-   inline void addVecObs(RooAbsArg const *key, int idx) { _vecObsIndices[key->namePtr()] = idx; }
-
    inline void addVecObs(const char *key, int idx)
    {
       const TNamed *namePtr = RooNameReg::known(key);
