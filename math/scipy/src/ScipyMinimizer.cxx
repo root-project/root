@@ -1,14 +1,16 @@
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include <Python.h> // Needs to be included first to avoid redefinition of _POSIX_C_SOURCE
 #include <Math/ScipyMinimizer.h>
 #include <Fit/ParameterSettings.h>
 #include <Math/IFunction.h>
 #include <Math/FitMethodFunction.h>
-#include "Math/GenAlgoOptions.h"
+#include <Math/GenAlgoOptions.h>
 #include <TString.h>
 #include <iostream>
 
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include <numpy/arrayobject.h>
+#include <numpy/npy_math.h>
 
 using namespace ROOT;
 using namespace ROOT::Math;
@@ -148,8 +150,10 @@ void ScipyMinimizer::PyInitialize()
       _import_array(); // Numpy initialization
    }
    // Scipy initialization
-   PyRunString("from scipy.optimize import minimize");
+
+   PyRunString("from scipy.optimize import minimize, Bounds");
    fMinimize = PyDict_GetItemString(fLocalNS, "minimize");
+   fBoundsMod = PyDict_GetItemString(fLocalNS, "Bounds");
    PyRunString("from params import target_function, jac_function, hessian_function");
    fTarget = PyDict_GetItemString(fLocalNS, "target_function");
    fJacobian = PyDict_GetItemString(fLocalNS, "jac_function");
@@ -162,6 +166,8 @@ void ScipyMinimizer::PyFinalize()
 {
    if (fMinimize)
       Py_DECREF(fMinimize);
+   if (fBoundsMod)
+      Py_DECREF(fBoundsMod);
    Py_Finalize();
 }
 
@@ -212,19 +218,47 @@ bool ScipyMinimizer::Minimize()
    npy_intp dims[1] = {NDim()};
    PyObject *x0 = PyArray_SimpleNewFromData(1, dims, NPY_DOUBLE, values);
 
+   PyObject *pybounds_args = PyTuple_New(2);
+   PyObject *pylimits_lower = PyList_New(NDim());
+   PyObject *pylimits_upper = PyList_New(NDim());
+   for (unsigned int i = 0; i < NDim(); i++) {
+      ParameterSettings varsettings;
+
+      if (GetVariableSettings(i, varsettings)) {
+         if (varsettings.HasLowerLimit()) {
+            PyList_SetItem(pylimits_lower, i, PyFloat_FromDouble(varsettings.LowerLimit()));
+         } else {
+            PyList_SetItem(pylimits_lower, i, PyFloat_FromDouble(-NPY_INFINITY));
+         }
+         if (varsettings.HasUpperLimit()) {
+            PyList_SetItem(pylimits_upper, i, PyFloat_FromDouble(varsettings.UpperLimit()));
+         } else {
+            PyList_SetItem(pylimits_upper, i, PyFloat_FromDouble(NPY_INFINITY));
+         }
+      } else {
+         MATH_ERROR_MSG("ScipyMinimizer::Minimize", Form("Variable index = %d not found", i));
+      }
+   }
+   PyTuple_SetItem(pybounds_args, 0, pylimits_lower);
+   PyTuple_SetItem(pybounds_args, 1, pylimits_upper);
+
+   PyObject *pybounds = PyObject_CallObject(fBoundsMod, pybounds_args);
+
    // minimize(fun, x0, args=(), method=None, jac=None, hess=None, hessp=None, bounds=None, constraints=(), tol=None,
    // callback=None, options=None)
-   auto args = Py_BuildValue("(OO)", fTarget, x0);
-   auto kw = Py_BuildValue("{s:s,s:O,,s:O,s:d,s:O}", "method", method.c_str(), "jac", fJacobian, "hess", fHessian,
-                           "tol", Tolerance(), "options", pyoptions);
+   PyObject *args = Py_BuildValue("(OO)", fTarget, x0);
+   PyObject *kw = Py_BuildValue("{s:s,s:O,,s:O,s:O,s:d,s:O}", "method", method.c_str(), "jac", fJacobian, "hess",
+                                fHessian, "bounds", pybounds, "tol", Tolerance(), "options", pyoptions);
 
-   // PyPrint(kw);
    PyObject *result = PyObject_Call(fMinimize, args, kw);
    if (result == NULL) {
       PyErr_Print();
       return false;
    }
    // PyPrint(result);
+   Py_DECREF(pylimits_lower);
+   Py_DECREF(pylimits_upper);
+   Py_DECREF(pybounds);
    Py_DECREF(args);
    Py_DECREF(kw);
    Py_DECREF(x0);
