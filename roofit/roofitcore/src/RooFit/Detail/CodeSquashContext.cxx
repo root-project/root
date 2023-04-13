@@ -13,6 +13,8 @@
 
 #include <RooFit/Detail/CodeSquashContext.h>
 
+#include <RooArgSet.h>
+
 namespace RooFit {
 
 namespace Detail {
@@ -91,9 +93,14 @@ void CodeSquashContext::addVecObs(const char *key, int idx)
 /// loopVars is not a vector observable, it is ignored, i.e., it can be used just like outside the loop scope.
 std::unique_ptr<CodeSquashContext::LoopScope> CodeSquashContext::beginLoop(RooArgSet const &loopVars)
 {
+   // TODO: we are using the size of the first loop variable to the the number
+   // of iterations, but it should be made sure that all loop vars are either
+   // scalar or have the same size.
+   std::size_t numEntries = outputSize(*loopVars[0]);
+
    // Make sure that the name of this variable doesn't clash with other stuff
    std::string idx = "loopIdx" + std::to_string(_loopLevel);
-   addToCodeBody("for(int " + idx + " = 0; " + idx + " < " + std::to_string(_numEntries) + "; " + idx + "++) {\n");
+   addToCodeBody("for(int " + idx + " = 0; " + idx + " < " + std::to_string(numEntries) + "; " + idx + "++) {\n");
 
    std::vector<TNamed const *> vars;
    for (RooAbsArg const *var : loopVars) {

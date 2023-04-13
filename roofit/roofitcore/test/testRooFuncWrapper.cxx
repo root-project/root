@@ -20,6 +20,7 @@
 #include <RooExponential.h>
 #include <RooFuncWrapper.h>
 #include <RooGaussian.h>
+#include <RooHelpers.h>
 #include <RooMinimizer.h>
 #include <RooProduct.h>
 #include <RooRealVar.h>
@@ -165,6 +166,8 @@ TEST(RooFuncWrapper, Exponential)
 
 TEST(RooFuncWrapper, Nll)
 {
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
    RooRealVar x("x", "x", 0, -10, 10);
 
    RooRealVar mu("mu", "mu", 0, -10, 10);

@@ -48,11 +48,12 @@ protected:
    double evaluate() const override;
 
 private:
-   std::string buildCode(RooAbsReal const &head, const RooAbsData *data);
+   std::string buildCode(RooAbsReal const &head);
 
    void updateGradientVarBuffer() const;
 
-   void loadParamsAndData(std::string funcName, RooArgSet const &paramSet, const RooAbsData *data);
+   void
+   loadParamsAndData(std::string funcName, RooAbsArg const *head, RooArgSet const &paramSet, const RooAbsData *data);
 
    void declareAndDiffFunction(std::string funcName, std::string const &funcBody);
 
@@ -73,6 +74,7 @@ private:
    mutable std::vector<double> _gradientVarBuffer;
    std::vector<double> _observables;
    std::map<RooFit::Detail::DataKey, ObsInfo> _obsInfos;
+   std::map<RooFit::Detail::DataKey, std::size_t> _nodeOutputSizes;
 };
 
 #endif

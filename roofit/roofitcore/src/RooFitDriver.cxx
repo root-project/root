@@ -50,14 +50,15 @@ RooAbsPdf::fitTo() is called and gets destroyed when the fitting ends.
 
 #define COUT_DEBUG ooccoutD(nullptr, FastEvaluations)
 
+namespace ROOT {
+namespace Experimental {
+
 namespace {
 
 enum HeterogeneosIterations { CPUOnly = 2, GPUOnly = 1, Both = 3 };
 
-}
+} // namespace
 
-namespace ROOT {
-namespace Experimental {
 
 /// A struct used by the RooFitDriver to store information on the RooAbsArgs in
 /// the computation graph.
@@ -237,6 +238,8 @@ void RooFitDriver::setData(RooAbsData const &data, std::string const &rangeName,
 
 void RooFitDriver::setData(DataSpansMap const &dataSpans)
 {
+   auto outputSizeMap = RooFit::BatchModeDataHelpers::determineOutputSizes(topNode(), dataSpans);
+
    // Iterate over the given data spans and add them to the data map. Check if
    // they are used in the computation graph. If yes, add the span to the data
    // map and set the node info accordingly.
@@ -249,20 +252,17 @@ void RooFitDriver::setData(DataSpansMap const &dataSpans)
       auto found = dataSpans.find(info.absArg->namePtr());
       if (found != dataSpans.end()) {
          _dataMapCPU.at(info.absArg) = found->second;
-         info.outputSize = found->second.size();
          info.fromDataset = true;
          info.isDirty = false;
-         totalSize += info.outputSize;
+         totalSize += found->second.size();
       } else {
-         info.outputSize = 1;
          info.fromDataset = false;
          info.isDirty = true;
       }
    }
 
-   determineOutputSizes();
-
    for (auto &info : _nodes) {
+      info.outputSize = outputSizeMap.at(info.absArg);
       // If the node has an output of size 1
       info.isScalar = info.outputSize == 1;
 
@@ -764,17 +764,6 @@ void RooFitDriver::markGPUNodes()
          COUT_DEBUG << std::setw(20) << info.absArg->GetName() << "\t" << info.absArg << "\t"
                     << (info.computeInGPU ? "CUDA" : "CPU") << "\t" << info.cpuTime.count() << "us\t"
                     << info.cudaTime.count() << "us\n";
-      }
-   }
-}
-
-void RooFitDriver::determineOutputSizes()
-{
-   for (auto &argInfo : _nodes) {
-      for (auto *serverInfo : argInfo.serverInfos) {
-         if (!argInfo.absArg->isReducerNode()) {
-            argInfo.outputSize = std::max(serverInfo->outputSize, argInfo.outputSize);
-         }
       }
    }
 }

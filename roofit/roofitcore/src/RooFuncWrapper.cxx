@@ -31,7 +31,7 @@ RooFuncWrapper::RooFuncWrapper(const char *name, const char *title, std::string 
    declareAndDiffFunction(name, funcBody);
 
    // Load the parameters and observables.
-   loadParamsAndData(name, paramSet, data);
+   loadParamsAndData(name, nullptr, paramSet, data);
 }
 
 RooFuncWrapper::RooFuncWrapper(const char *name, const char *title, RooAbsReal const &obj, RooArgSet const &normSet,
@@ -48,9 +48,9 @@ RooFuncWrapper::RooFuncWrapper(const char *name, const char *title, RooAbsReal c
    obj.getParameters(data ? data->get() : nullptr, paramSet);
 
    // Load the parameters and observables.
-   loadParamsAndData(name, paramSet, data);
+   loadParamsAndData(name, pdf.get(), paramSet, data);
 
-   func = buildCode(*pdf, data);
+   func = buildCode(*pdf);
 
    // Declare the function and create its derivative.
    declareAndDiffFunction(name, func);
@@ -66,7 +66,8 @@ RooFuncWrapper::RooFuncWrapper(const RooFuncWrapper &other, const char *name)
 {
 }
 
-void RooFuncWrapper::loadParamsAndData(std::string funcName, RooArgSet const &paramSet, const RooAbsData *data)
+void RooFuncWrapper::loadParamsAndData(std::string funcName, RooAbsArg const *head, RooArgSet const &paramSet,
+                                       const RooAbsData *data)
 {
    // Extract parameters
    for (auto *param : paramSet) {
@@ -95,6 +96,10 @@ void RooFuncWrapper::loadParamsAndData(std::string funcName, RooArgSet const &pa
       for (std::size_t i = 0; i < n; ++i) {
          _observables.push_back(item.second[i]);
       }
+   }
+
+   if (head) {
+      _nodeOutputSizes = RooFit::BatchModeDataHelpers::determineOutputSizes(*head, spans);
    }
 }
 
@@ -178,9 +183,9 @@ void RooFuncWrapper::gradient(const double *x, double *g) const
    _grad(const_cast<double *>(x), _observables.data(), g);
 }
 
-std::string RooFuncWrapper::buildCode(RooAbsReal const &head, const RooAbsData *data)
+std::string RooFuncWrapper::buildCode(RooAbsReal const &head)
 {
-   RooFit::Detail::CodeSquashContext ctx(data);
+   RooFit::Detail::CodeSquashContext ctx(_nodeOutputSizes);
 
    // First update the result variable of params in the compute graph to in[<position>].
    int idx = 0;

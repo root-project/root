@@ -13,6 +13,7 @@
 #include "RooFit/BatchModeDataHelpers.h"
 #include <RooAbsData.h>
 #include <RooDataHist.h>
+#include <RooHelpers.h>
 #include "RooNLLVarNew.h"
 
 #include <ROOT/StringUtils.hxx>
@@ -206,4 +207,46 @@ RooFit::BatchModeDataHelpers::getDataSpans(RooAbsData const &data, std::string_v
    }
 
    return dataSpans;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Figure out the output size for each node in the computation graph that
+/// leads up to the top node, given some vector data as an input. The input
+/// data spans are in general not of the same size, for example in the case of
+/// a simultaneous fit.
+///
+/// \return A `std::map` with output sizes for each node in the computation graph.
+/// \param[in] topNode The top node of the computation graph.
+/// \param[in] dataSpans The input data spans.
+std::map<RooFit::Detail::DataKey, std::size_t> RooFit::BatchModeDataHelpers::determineOutputSizes(
+   RooAbsArg const &topNode, std::map<RooFit::Detail::DataKey, RooSpan<const double>> const &dataSpans)
+{
+   std::map<RooFit::Detail::DataKey, std::size_t> output;
+
+   RooArgSet serverSet;
+   RooHelpers::getSortedComputationGraph(topNode, serverSet);
+
+   for (RooAbsArg *arg : serverSet) {
+      auto found = dataSpans.find(arg->namePtr());
+      if (found != dataSpans.end()) {
+         output[arg] = found->second.size();
+      }
+   }
+
+   for (RooAbsArg *arg : serverSet) {
+      std::size_t size = 1;
+      if (output.find(arg) != output.end()) {
+         continue;
+      }
+      if (!arg->isReducerNode()) {
+         for (RooAbsArg *server : arg->servers()) {
+            if (server->isValueServer(*arg)) {
+               size = std::max(output.at(server), size);
+            }
+         }
+      }
+      output[arg] = size;
+   }
+
+   return output;
 }
