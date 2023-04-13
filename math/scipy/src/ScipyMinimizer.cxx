@@ -114,7 +114,12 @@ void ScipyMinimizer::PyInitialize()
                                              "ROOT Scipy parameters",         /* module documentation, may be NULL */
                                              -1, /* size of per-interpreter state of the module,
                                        or -1 if the module keeps state in global variables. */
-                                             ParamsMethods};
+                                             ParamsMethods,
+                                             NULL,  /* m_slots */
+                                             NULL,  /* m_traverse */
+                                             0,     /* m_clear */
+                                             NULL   /* m_free */
+                                             };
 
    auto PyInit_params = [](void) -> PyObject * {
       PyObject *m;
