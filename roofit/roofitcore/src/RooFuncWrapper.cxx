@@ -10,27 +10,28 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)
  */
 
-#include "RooFuncWrapper.h"
+#include <RooFuncWrapper.h>
 
-#include "TROOT.h"
-#include "TSystem.h"
-#include "RooAbsData.h"
-#include "RooGlobalFunc.h"
-#include "RooMsgService.h"
-#include "RooNLLVarNew.h"
-#include "RooRealVar.h"
-#include "RooHelpers.h"
-#include "RooFit/Detail/CodeSquashContext.h"
+#include <RooAbsData.h>
+#include <RooGlobalFunc.h>
+#include <RooMsgService.h>
+#include <RooRealVar.h>
+#include <RooHelpers.h>
+#include <RooFit/Detail/CodeSquashContext.h>
+#include "RooFit/BatchModeDataHelpers.h"
+
+#include <TROOT.h>
+#include <TSystem.h>
 
 RooFuncWrapper::RooFuncWrapper(const char *name, const char *title, std::string const &funcBody,
-                               RooArgSet const &paramSet, RooArgSet const &obsSet, const RooAbsData *data /*=nullptr*/)
+                               RooArgSet const &paramSet, const RooAbsData *data /*=nullptr*/)
    : RooAbsReal{name, title}, _params{"!params", "List of parameters", this}
 {
    // Declare the function and create its derivative.
    declareAndDiffFunction(name, funcBody);
 
    // Load the parameters and observables.
-   loadParamsAndObs(name, paramSet, obsSet, data);
+   loadParamsAndData(name, paramSet, data);
 }
 
 RooFuncWrapper::RooFuncWrapper(const char *name, const char *title, RooAbsReal const &obj, RooArgSet const &normSet,
@@ -45,15 +46,11 @@ RooFuncWrapper::RooFuncWrapper(const char *name, const char *title, RooAbsReal c
    // Get the parameters.
    RooArgSet paramSet;
    obj.getParameters(data ? data->get() : nullptr, paramSet);
-   // Get the observable if we have a valid dataset.
-   RooArgSet obsSet;
-   if (data)
-      obj.getObservables(data->get(), obsSet);
 
    // Load the parameters and observables.
-   loadParamsAndObs(name, paramSet, obsSet, data);
+   loadParamsAndData(name, paramSet, data);
 
-   func = buildCode(*pdf, paramSet, obsSet, data);
+   func = buildCode(*pdf, data);
 
    // Declare the function and create its derivative.
    declareAndDiffFunction(name, func);
@@ -69,8 +66,7 @@ RooFuncWrapper::RooFuncWrapper(const RooFuncWrapper &other, const char *name)
 {
 }
 
-void RooFuncWrapper::loadParamsAndObs(std::string funcName, RooArgSet const &paramSet, RooArgSet const &obsSet,
-                                      const RooAbsData *data)
+void RooFuncWrapper::loadParamsAndData(std::string funcName, RooArgSet const &paramSet, const RooAbsData *data)
 {
    // Extract parameters
    for (auto *param : paramSet) {
@@ -85,25 +81,19 @@ void RooFuncWrapper::loadParamsAndObs(std::string funcName, RooArgSet const &par
    }
    _gradientVarBuffer.reserve(_params.size());
 
-   // Extract observables
-   if (!obsSet.empty()) {
-      auto dataSpans = data->getBatches(0, data->numEntries());
-      _observables.reserve(_observables.size() * data->numEntries());
-      for (auto *obs : static_range_cast<RooRealVar *>(obsSet)) {
-         RooSpan<const double> span{dataSpans.at(obs)};
-         for (int i = 0; i < data->numEntries(); ++i) {
-            _observables.push_back(span[i]);
-         }
-      }
-   }
+   if (data == nullptr)
+      return;
 
-   // Get weights
-   if (data) {
-      auto weight = data->getWeightBatch(0, data->numEntries(), /*sumW2=*/false);
-      if (!weight.empty()) {
-         for (int i = 0; i < data->numEntries(); ++i) {
-            _observables.push_back(weight[i]);
-         }
+   // Extract observables
+   std::stack<std::vector<double>> vectorBuffers; // for data loading
+   auto spans = RooFit::BatchModeDataHelpers::getDataSpans(*data, "", "", vectorBuffers, true);
+
+   for (auto const &item : spans) {
+      std::size_t n = item.second.size();
+      _obsInfos.emplace(item.first, ObsInfo{_observables.size(), n});
+      _observables.reserve(_observables.size() + n);
+      for (std::size_t i = 0; i < n; ++i) {
+         _observables.push_back(item.second[i]);
       }
    }
 }
@@ -118,7 +108,7 @@ void RooFuncWrapper::declareAndDiffFunction(std::string funcName, std::string co
 
    // Declare the function
    std::stringstream bodyWithSigStrm;
-   bodyWithSigStrm << "double " << funcName << "(double* params, double* obs) {\n" << funcBody << "\n}";
+   bodyWithSigStrm << "double " << funcName << "(double* params, double const* obs) {\n" << funcBody << "\n}";
    bool comp = gInterpreter->Declare(bodyWithSigStrm.str().c_str());
    if (!comp) {
       std::stringstream errorMsg;
@@ -151,7 +141,7 @@ void RooFuncWrapper::declareAndDiffFunction(std::string funcName, std::string co
    // disable clang-format for making the following code unreadable.
    // clang-format off
    std::stringstream dWrapperStrm;
-   dWrapperStrm << "void " << wrapperName << "(double* params, double* obs, double* out) {\n"
+   dWrapperStrm << "void " << wrapperName << "(double* params, double const* obs, double* out) {\n"
                    "  clad::array_ref<double> cladOut(out, " << _params.size() << ");\n"
                    "  " << gradName << "(params, obs, cladOut);\n"
                    "}";
@@ -188,8 +178,7 @@ void RooFuncWrapper::gradient(const double *x, double *g) const
    _grad(const_cast<double *>(x), _observables.data(), g);
 }
 
-std::string RooFuncWrapper::buildCode(RooAbsReal const &head, RooArgSet const & /* paramSet */, RooArgSet const &obsSet,
-                                      const RooAbsData *data)
+std::string RooFuncWrapper::buildCode(RooAbsReal const &head, const RooAbsData *data)
 {
    RooFit::Detail::CodeSquashContext ctx(data);
 
@@ -200,36 +189,17 @@ std::string RooFuncWrapper::buildCode(RooAbsReal const &head, RooArgSet const & 
       idx++;
    }
 
-   // Also update observables...
-   idx = 0;
-   if (!obsSet.empty()) {
-      auto dataSpans = data->getBatches(0, data->numEntries());
-      _observables.reserve(_observables.size() * data->numEntries());
-      for (auto *obs : static_range_cast<RooRealVar *>(obsSet)) {
-         RooSpan<const double> span{dataSpans.at(obs)};
-         // If the observable is a scalar, set its name to the start index.
-         // else, store the start index and later set the the name to obs[start_idx + curr_idx], here curr_idx is
-         // defined by a loop producing parent node.
-         if (data->numEntries() == 1)
-            ctx.addResult(obs, "obs[" + std::to_string(idx) + "]");
-         else {
-            ctx.addResult(obs, "obs");
-            ctx.addVecObs(obs, idx);
-         }
-         idx += data->numEntries();
+   for (auto const &item : _obsInfos) {
+      const char *name = item.first->GetName();
+      // If the observable is scalar, set name to the start idx. else, store
+      // the start idx and later set the the name to obs[start_idx + curr_idx],
+      // here curr_idx is defined by a loop producing parent node.
+      if (item.second.size == 1) {
+         ctx.addResult(name, "obs[" + std::to_string(item.second.idx) + "]");
+      } else {
+         ctx.addResult(name, "obs");
+         ctx.addVecObs(name, item.second.idx);
       }
-   }
-
-   // Update weight vars...
-   if (data) {
-      auto weight = data->getWeightBatch(0, data->numEntries(), /*sumW2=*/false);
-      auto weightName = ROOT::Experimental::RooNLLVarNew::weightVarName;
-      if (!weight.empty()) {
-         ctx.addResult(weightName, "obs");
-         ctx.addVecObs(weightName, idx);
-         idx += data->numEntries();
-      } else
-         ctx.addResult(weightName, "1");
    }
 
    return ctx.assembleCode(ctx.getResult(head));

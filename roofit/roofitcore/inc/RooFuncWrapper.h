@@ -16,6 +16,7 @@
 #include <RooAbsReal.h>
 #include <RooListProxy.h>
 
+#include <map>
 #include <memory>
 #include <string>
 
@@ -26,7 +27,7 @@
 class RooFuncWrapper final : public RooAbsReal {
 public:
    RooFuncWrapper(const char *name, const char *title, std::string const &funcBody, RooArgSet const &paramSet,
-                  RooArgSet const &obsSet, const RooAbsData *data = nullptr);
+                  const RooAbsData *data = nullptr);
 
    RooFuncWrapper(const char *name, const char *title, RooAbsReal const &obj, RooArgSet const &normSet,
                   const RooAbsData *data = nullptr);
@@ -47,26 +48,31 @@ protected:
    double evaluate() const override;
 
 private:
-   std::string
-   buildCode(RooAbsReal const &head, RooArgSet const & /* paramSet */, RooArgSet const &obsSet, const RooAbsData *data);
+   std::string buildCode(RooAbsReal const &head, const RooAbsData *data);
 
    void updateGradientVarBuffer() const;
 
-   void
-   loadParamsAndObs(std::string funcName, RooArgSet const &paramSet, RooArgSet const &obsSet, const RooAbsData *data);
+   void loadParamsAndData(std::string funcName, RooArgSet const &paramSet, const RooAbsData *data);
 
    void declareAndDiffFunction(std::string funcName, std::string const &funcBody);
 
    void buildFuncAndGradFunctors();
 
-   using Func = double (*)(double *, double *);
-   using Grad = void (*)(double *, double *, double *);
+   using Func = double (*)(double *, double const *);
+   using Grad = void (*)(double *, double const *, double *);
+
+   struct ObsInfo {
+      ObsInfo(std::size_t i, std::size_t n) : idx{i}, size{n} {}
+      std::size_t idx = 0;
+      std::size_t size = 0;
+   };
 
    RooListProxy _params;
    Func _func;
    Grad _grad;
    mutable std::vector<double> _gradientVarBuffer;
-   mutable std::vector<double> _observables;
+   std::vector<double> _observables;
+   std::map<RooFit::Detail::DataKey, ObsInfo> _obsInfos;
 };
 
 #endif
