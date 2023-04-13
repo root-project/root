@@ -1190,9 +1190,6 @@ void prefixArgs(RooAbsArg *arg, std::string const &prefix, RooArgSet const &norm
 std::unique_ptr<RooAbsArg>
 RooSimultaneous::compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileContext &ctx) const
 {
-   RooArgSet params;
-   this->getParameters(&normSet, params);
-
    std::unique_ptr<RooSimultaneous> newSimPdf{static_cast<RooSimultaneous *>(this->Clone())};
 
    const char *rangeName = this->getStringAttribute("RangeName");
@@ -1208,7 +1205,7 @@ RooSimultaneous::compileForNormSet(RooArgSet const &normSet, RooFit::Detail::Com
 
       const std::string origname = proxy->arg().GetName();
 
-      std::unique_ptr<RooAbsPdf> pdfClone{static_cast<RooAbsPdf *>(proxy->arg().cloneTree())};
+      auto pdfClone = RooHelpers::cloneTreeWithSameParameters(static_cast<RooAbsPdf const &>(proxy->arg()), &normSet);
 
       prefixArgs(pdfClone.get(), prefix, normSet);
 
@@ -1238,7 +1235,7 @@ RooSimultaneous::compileForNormSet(RooArgSet const &normSet, RooFit::Detail::Com
 
       // We will remove the old pdf server because we will fill the new ones by
       // hand via the creation of new proxies.
-      newSimPdf->removeServer(const_cast<RooAbsReal&>(proxy->arg()), true);
+      newSimPdf->removeServer(const_cast<RooAbsReal &>(proxy->arg()), true);
    }
 
    // Replace pdfs with compiled pdfs. Don't use RooAbsArg::redirectServers()
@@ -1255,9 +1252,7 @@ RooSimultaneous::compileForNormSet(RooArgSet const &normSet, RooFit::Detail::Com
          new RooRealProxy(label, label, newSimPdf.get(), *static_cast<RooAbsReal *>(newPdfs[i])));
    }
 
-   ctx.compileServers(*newSimPdf, normSet); // to trigger compling also the index category
-
-   newSimPdf->recursiveRedirectServers(params);
+   ctx.compileServers(*newSimPdf, normSet); // to trigger compiling also the index category
 
    return newSimPdf;
 }

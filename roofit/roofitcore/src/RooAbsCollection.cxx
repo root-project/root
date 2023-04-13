@@ -254,7 +254,7 @@ RooAbsCollection* RooAbsCollection::snapshot(bool deepCopy) const
 
 bool RooAbsCollection::snapshot(RooAbsCollection& output, bool deepCopy) const
 {
-  return RooHelpers::Detail::snapshotImpl(*this, output, deepCopy);
+  return RooHelpers::Detail::snapshotImpl(*this, output, deepCopy, nullptr);
 }
 
 
