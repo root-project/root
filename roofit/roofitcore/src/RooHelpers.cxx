@@ -30,6 +30,8 @@
 #include <ROOT/StringUtils.hxx>
 #include <TClass.h>
 
+#include <unordered_map>
+
 namespace RooHelpers {
 
 LocalChangeMsgLevel::LocalChangeMsgLevel(RooFit::MsgLevel lvl,
@@ -314,29 +316,29 @@ namespace Detail {
 
 namespace {
 
+using ToCloneList = std::vector<RooAbsArg const *>;
+using ToCloneMap = std::unordered_map<TNamed const *, RooAbsArg const *>;
+
 // Add clones of servers of given argument to end of list
-bool addServerClonesToList(const RooAbsArg &var, RooAbsCollection &output, RooArgSet const *observables)
+void addServerClonesToList(const RooAbsArg &var, ToCloneList &outlist, ToCloneMap &outmap, bool deepCopy,
+                           RooArgSet const *observables)
 {
-   bool ret(false);
-
-   // This can be a very heavy operation if existing elements depend on many others,
-   // so make sure that we have the hash map available for faster finding.
-   if (var.servers().size() > 20 || output.size() > 30)
-      output.useHashMapForFind(true);
-
-   for (const auto server : var.servers()) {
-      if (output.find(*server) == nullptr) {
-         if (observables && server->isFundamental() && !observables->find(*server)) {
-            continue;
-         }
-         auto *serverClone = static_cast<RooAbsArg *>(server->Clone());
-         serverClone->setAttribute("SnapShot_ExtRefClone");
-         output.add(*serverClone);
-         ret |= addServerClonesToList(*server, output, observables);
-      }
+   if (outmap.find(var.namePtr()) != outmap.end()) {
+      return;
    }
 
-   return ret;
+   if (observables && var.isFundamental() && !observables->find(var)) {
+      return;
+   }
+
+   outmap[var.namePtr()] = &var;
+   outlist.push_back(&var);
+
+   if (deepCopy) {
+      for (const auto server : var.servers()) {
+         addServerClonesToList(*server, outlist, outmap, deepCopy, observables);
+      }
+   }
 }
 
 } // namespace
@@ -350,38 +352,26 @@ bool addServerClonesToList(const RooAbsArg &var, RooAbsCollection &output, RooAr
 ///                       variables that are in observables are deep cloned.
 bool snapshotImpl(RooAbsCollection const &input, RooAbsCollection &output, bool deepCopy, RooArgSet const *observables)
 {
-   // Copy contents
-   output.reserve(input.size());
-   for (auto orig : input) {
-      output.add(*static_cast<RooAbsArg *>(orig->Clone()));
+   // Figure out what needs to be cloned
+   ToCloneList toCloneList;
+   ToCloneMap toCloneMap;
+   for (RooAbsArg *orig : input) {
+      addServerClonesToList(*orig, toCloneList, toCloneMap, deepCopy, observables);
    }
 
-   // Add external dependents
-   bool error(false);
-   if (deepCopy) {
-      // Recursively add clones of all servers
-      // Can only do index access because collection might reallocate when growing
-      for (std::size_t i = 0; i < output.size(); ++i) {
-         RooAbsArg *var = output[i];
-         error |= addServerClonesToList(*var, output, observables);
-      }
-   }
-
-   // Handle eventual error conditions
-   if (error) {
-      oocoutE(nullptr, ObjectHandling)
-         << "RooAbsCollection::snapshot(): Errors occurred in deep clone process, snapshot not created" << std::endl;
-      output.takeOwnership();
-      return true;
+   // Actually do the cloning
+   output.reserve(toCloneList.size());
+   for (RooAbsArg const *arg : toCloneList) {
+      std::unique_ptr<RooAbsArg> serverClone{static_cast<RooAbsArg *>(arg->Clone())};
+      serverClone->setAttribute("SnapShot_ExtRefClone");
+      output.addOwned(std::move(serverClone));
    }
 
    // Redirect all server connections to internal list members
-   for (auto var : output) {
+   for (RooAbsArg *var : output) {
       var->redirectServers(output, deepCopy && !observables);
    }
 
-   // Transfer ownership of contents to list
-   output.takeOwnership();
    return false;
 }
 
