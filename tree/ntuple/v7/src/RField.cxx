@@ -130,7 +130,7 @@ std::tuple<std::string, std::vector<size_t>> ParseArrayType(std::string_view typ
 {
    std::vector<size_t> sizeVec;
 
-   /// Only parse outer array definition, i.e. the right `]` should be at the end of the type name
+   // Only parse outer array definition, i.e. the right `]` should be at the end of the type name
    while (typeName.back() == ']') {
       auto posRBrace = typeName.size() - 1;
       auto posLBrace = typeName.find_last_of("[", posRBrace);
@@ -147,10 +147,12 @@ std::tuple<std::string, std::vector<size_t>> ParseArrayType(std::string_view typ
 }
 
 std::string GetNormalizedType(const std::string &typeName) {
-   std::string normalizedType(
-      TClassEdit::ResolveTypedef(TClassEdit::CleanType(typeName.c_str(),
-                                                       /*mode=*/2).c_str()));
+   std::string normalizedType(TClassEdit::CleanType(typeName.c_str(), /*mode=*/2));
+   // The following types are asummed to be canonical names; thus, do not perform `typedef` resolution on those
+   if (normalizedType == "ROOT::Experimental::ClusterSize_t")
+      return normalizedType;
 
+   normalizedType = TClassEdit::ResolveTypedef(normalizedType.c_str());
    auto translatedType = typeTranslationMap.find(normalizedType);
    if (translatedType != typeTranslationMap.end())
       normalizedType = translatedType->second;
