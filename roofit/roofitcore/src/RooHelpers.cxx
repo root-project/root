@@ -310,4 +310,73 @@ void getSortedComputationGraph(RooAbsReal const &func, RooArgSet &out)
    out.sortTopologically();
 }
 
+namespace Detail {
+
+namespace {
+
+// Add clones of servers of given argument to end of list
+bool addServerClonesToList(const RooAbsArg &var, RooAbsCollection &output)
+{
+   bool ret(false);
+
+   // This can be a very heavy operation if existing elements depend on many others,
+   // so make sure that we have the hash map available for faster finding.
+   if (var.servers().size() > 20 || output.size() > 30)
+      output.useHashMapForFind(true);
+
+   for (const auto server : var.servers()) {
+      RooAbsArg *tmp = output.find(*server);
+
+      if (!tmp) {
+         auto *serverClone = static_cast<RooAbsArg *>(server->Clone());
+         serverClone->setAttribute("SnapShot_ExtRefClone");
+         output.add(*serverClone);
+         ret |= addServerClonesToList(*server, output);
+      }
+   }
+
+   return ret;
+}
+
+} // namespace
+
+bool snapshotImpl(RooAbsCollection const &input, RooAbsCollection &output, bool deepCopy)
+{
+   // Copy contents
+   output.reserve(input.size());
+   for (auto orig : input) {
+      output.add(*static_cast<RooAbsArg *>(orig->Clone()));
+   }
+
+   // Add external dependents
+   bool error(false);
+   if (deepCopy) {
+      // Recursively add clones of all servers
+      // Can only do index access because collection might reallocate when growing
+      for (std::size_t i = 0; i < output.size(); ++i) {
+         RooAbsArg *var = output[i];
+         error |= addServerClonesToList(*var, output);
+      }
+   }
+
+   // Handle eventual error conditions
+   if (error) {
+      oocoutE(nullptr, ObjectHandling)
+         << "RooAbsCollection::snapshot(): Errors occurred in deep clone process, snapshot not created" << std::endl;
+      output.takeOwnership();
+      return true;
+   }
+
+   // Redirect all server connections to internal list members
+   for (auto var : output) {
+      var->redirectServers(output, deepCopy);
+   }
+
+   // Transfer ownership of contents to list
+   output.takeOwnership();
+   return false;
+}
+
+} // namespace Detail
+
 }

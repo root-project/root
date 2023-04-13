@@ -363,9 +363,6 @@ protected:
 
   void deleteList() ;
 
-  // Support for snapshot method
-  bool addServerClonesToList(const RooAbsArg& var) ;
-
   inline TNamed* structureTag() { if (_structureTag==nullptr) makeStructureTag() ; return _structureTag ; }
   inline TNamed* typedStructureTag() { if (_typedStructureTag==nullptr) makeTypedStructureTag() ; return _typedStructureTag ; }
 
