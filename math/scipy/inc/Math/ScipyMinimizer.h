@@ -1,5 +1,5 @@
 // @(#)root/math/scipy:$Id$
-// Author: Omar.Zapata@cern.ch 2022
+// Author: Omar.Zapata@cern.ch 2023
 
 /*************************************************************************
  * Copyright (C) 1995-2022, Rene Brun and Fons Rademakers.               *
@@ -66,7 +66,7 @@ private:
    PyObject *fTarget;
    PyObject *fJacobian;
    PyObject *fHessian;
-
+   PyObject *fBoundsMod;
    GenAlgoOptions fExtraOpts;
    std::function<bool(const std::vector<double> &, double *)> fHessianFunc;
 
