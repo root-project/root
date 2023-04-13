@@ -462,6 +462,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooBinWidthFunction.cxx
     src/RooFitLegacy/RooCatTypeLegacy.cxx
     src/RunContext.cxx
+    src/RooFit/Detail/CodeSquashContext.cxx
     src/TestStatistics/ConstantTermsOptimizer.cxx
     src/TestStatistics/LikelihoodGradientWrapper.cxx
     src/TestStatistics/LikelihoodWrapper.cxx
