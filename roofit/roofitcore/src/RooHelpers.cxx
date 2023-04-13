@@ -298,7 +298,7 @@ BinnedLOutput getBinnedL(RooAbsPdf &pdf)
 }
 
 /// Get the topologically-sorted list of all nodes in the computation graph.
-void getSortedComputationGraph(RooAbsReal const &func, RooArgSet &out)
+void getSortedComputationGraph(RooAbsArg const &func, RooArgSet &out)
 {
    // Get the set of nodes in the computation graph. Do the detour via
    // RooArgList to avoid deduplication done after adding each element.
