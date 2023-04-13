@@ -157,7 +157,7 @@ struct BinnedLOutput {
 
 BinnedLOutput getBinnedL(RooAbsPdf &pdf);
 
-void getSortedComputationGraph(RooAbsReal const &func, RooArgSet &out);
+void getSortedComputationGraph(RooAbsArg const &func, RooArgSet &out);
 
 }
 

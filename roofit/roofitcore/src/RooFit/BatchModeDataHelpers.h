@@ -34,6 +34,10 @@ std::map<RooFit::Detail::DataKey, RooSpan<const double>>
 getDataSpans(RooAbsData const &data, std::string_view rangeName, std::string const &prefix,
              std::stack<std::vector<double>> &buffers, bool skipZeroWeights);
 
+std::map<RooFit::Detail::DataKey, std::size_t>
+determineOutputSizes(RooAbsArg const &topNode,
+                     std::map<RooFit::Detail::DataKey, RooSpan<const double>> const &dataSpans);
+
 } // namespace BatchModeDataHelpers
 } // namespace RooFit
 

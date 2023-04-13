@@ -14,12 +14,12 @@
 #ifndef RooFit_Detail_CodeSquashContext_h
 #define RooFit_Detail_CodeSquashContext_h
 
-#include <RooAbsArg.h>
+#include <RooFit/Detail/DataMap.h>
 #include <RooNumber.h>
-#include <RooAbsData.h>
 
 #include <sstream>
 #include <string>
+#include <map>
 #include <unordered_map>
 
 template <class T>
@@ -32,7 +32,9 @@ namespace Detail {
 /// @brief A class to maintain the context for squashing of RooFit models into code.
 class CodeSquashContext {
 public:
-   CodeSquashContext(const RooAbsData *data = nullptr) : _numEntries(data ? data->numEntries() : 0) {}
+   CodeSquashContext(std::map<RooFit::Detail::DataKey, std::size_t> const &outputSizes) : _nodeOutputSizes(outputSizes)
+   {
+   }
 
    inline void addResult(RooAbsArg const *key, std::string const &value) { addResult(key->namePtr(), value); }
 
@@ -44,6 +46,18 @@ public:
    std::string const &getResult(RooTemplateProxy<T> const &key)
    {
       return getResult(key.arg());
+   }
+
+   /// @brief Figure out the output size of a node. It is the size of the
+   /// vector observable that it depends on, or 1 if it doesn't depend on any
+   /// or is a reducer node.
+   /// @param key The node to look up the size for.
+   std::size_t outputSize(RooAbsArg const &arg) const
+   {
+      auto found = _nodeOutputSizes.find(&arg);
+      if (found != _nodeOutputSizes.end())
+         return found->second;
+      return 1;
    }
 
    void addToGlobalScope(std::string const &str);
@@ -113,14 +127,14 @@ private:
       return buildArg(arg) + ", " + buildArgs(args...);
    }
 
-   /// @brief A crude way of keeping track of loop ranges for nodes like NLLs.
-   const std::size_t _numEntries = 0;
    /// @brief Map of node names to their result strings.
    std::unordered_map<const TNamed *, std::string> _nodeNames;
    /// @brief Block of code that is placed before the rest of the function body.
    std::string _globalScope;
    /// @brief A map to keep track of the observable indices if they are non scalar.
    std::unordered_map<const TNamed *, int> _vecObsIndices;
+   /// @brief Map of node output sizes.
+   std::map<RooFit::Detail::DataKey, std::size_t> _nodeOutputSizes;
    /// @brief Stores the squashed code body.
    std::string _code;
    /// @brief The current number of for loops the started.
