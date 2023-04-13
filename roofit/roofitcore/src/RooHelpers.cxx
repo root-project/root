@@ -387,12 +387,26 @@ bool snapshotImpl(RooAbsCollection const &input, RooAbsCollection &output, bool 
 
 RooAbsArg *cloneTreeWithSameParametersImpl(RooAbsArg const &arg, RooArgSet const *observables)
 {
+   // Clone tree using snapshot
    RooArgSet clonedNodes;
-   snapshotImpl(RooArgSet{arg}, clonedNodes, true, observables);
+   snapshotImpl(RooArgSet(arg), clonedNodes, true, observables);
 
+   // Find the head node in the cloneSet
    RooAbsArg *head = clonedNodes.find(arg);
+   assert(head);
+
+   // We better to release the ownership before removing the "head". Otherwise,
+   // "head" might also be deleted as the clonedNodes collection owns it.
+   // (Actually this does not happen because even an owning collection doesn't
+   // delete the element when removed by pointer lookup, but it's better not to
+   // rely on this unexpected fact).
    clonedNodes.releaseOwnership();
+
+   // Remove the head node from the cloneSet
+   // To release it from the set ownership
    clonedNodes.remove(*head);
+
+   // Add the set as owned component of the head
    head->addOwnedComponents(std::move(clonedNodes));
 
    return head;
