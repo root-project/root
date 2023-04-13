@@ -815,7 +815,7 @@ class RNullableField : public Detail::RFieldBase {
    /// For a dense nullable field, used to write a default-constructed item for missing ones.
    Detail::RFieldValue fDefaultItemValue;
    /// For a sparse nullable field, the number of written non-null items in this cluster
-   ClusterSize_t::ValueType fNWritten{0};
+   ClusterSize_t fNWritten{0};
 
 protected:
    const Detail::RFieldBase::RColumnRepresentations &GetColumnRepresentations() const final;
@@ -839,7 +839,7 @@ public:
    bool IsDense() const { return GetColumnRepresentative() == ColumnRepresentation_t({EColumnType::kBit}); }
    bool IsSparse() const { return !IsDense(); }
    void SetDense() { SetColumnRepresentative({EColumnType::kBit}); }
-   void SetSparse() { SetColumnRepresentative({EColumnType::kSwitch}); }
+   void SetSparse() { SetColumnRepresentative({EColumnType::kSplitIndex32}); }
 
    void CommitCluster() final { fNWritten = 0; }
 
