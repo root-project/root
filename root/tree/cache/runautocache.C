@@ -381,6 +381,10 @@ int runautocache() {
    gSystem->Unsetenv("ROOT_TTREECACHE_SIZE");
    if (runthree()) return 1;
 
+   printf("* Resource variable TTreeCache.Size=1.5 ROOT_TTREECACHE_SIZE not set\n");
+   gEnv->SetValue("TTreeCache.Size", 1.0);
+   if (runthree()) return 1;
+
    printf("* env variable ROOT_TTREECACHE_SIZE=1.1\n");
    gSystem->Setenv("ROOT_TTREECACHE_SIZE","1.1");
    if (runthree()) return 1;
