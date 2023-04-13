@@ -315,7 +315,7 @@ namespace Detail {
 namespace {
 
 // Add clones of servers of given argument to end of list
-bool addServerClonesToList(const RooAbsArg &var, RooAbsCollection &output)
+bool addServerClonesToList(const RooAbsArg &var, RooAbsCollection &output, RooArgSet const *observables)
 {
    bool ret(false);
 
@@ -325,13 +325,14 @@ bool addServerClonesToList(const RooAbsArg &var, RooAbsCollection &output)
       output.useHashMapForFind(true);
 
    for (const auto server : var.servers()) {
-      RooAbsArg *tmp = output.find(*server);
-
-      if (!tmp) {
+      if (output.find(*server) == nullptr) {
+         if (observables && server->isFundamental() && !observables->find(*server)) {
+            continue;
+         }
          auto *serverClone = static_cast<RooAbsArg *>(server->Clone());
          serverClone->setAttribute("SnapShot_ExtRefClone");
          output.add(*serverClone);
-         ret |= addServerClonesToList(*server, output);
+         ret |= addServerClonesToList(*server, output, observables);
       }
    }
 
@@ -340,7 +341,14 @@ bool addServerClonesToList(const RooAbsArg &var, RooAbsCollection &output)
 
 } // namespace
 
-bool snapshotImpl(RooAbsCollection const &input, RooAbsCollection &output, bool deepCopy)
+/// Implementation of RooAbsCollection::snapshot() with some extra parameters.
+/// to be used in other RooHelpers functions.
+/// param[in] input The input collection.
+/// param[in] output The output collection.
+/// param[in] deepCopy If the whole computation graph should be cloned recursivly.
+/// param[in] observables If this is not a nullptr, only the fundamental
+///                       variables that are in observables are deep cloned.
+bool snapshotImpl(RooAbsCollection const &input, RooAbsCollection &output, bool deepCopy, RooArgSet const *observables)
 {
    // Copy contents
    output.reserve(input.size());
@@ -355,7 +363,7 @@ bool snapshotImpl(RooAbsCollection const &input, RooAbsCollection &output, bool 
       // Can only do index access because collection might reallocate when growing
       for (std::size_t i = 0; i < output.size(); ++i) {
          RooAbsArg *var = output[i];
-         error |= addServerClonesToList(*var, output);
+         error |= addServerClonesToList(*var, output, observables);
       }
    }
 
@@ -369,12 +377,25 @@ bool snapshotImpl(RooAbsCollection const &input, RooAbsCollection &output, bool 
 
    // Redirect all server connections to internal list members
    for (auto var : output) {
-      var->redirectServers(output, deepCopy);
+      var->redirectServers(output, deepCopy && !observables);
    }
 
    // Transfer ownership of contents to list
    output.takeOwnership();
    return false;
+}
+
+RooAbsArg *cloneTreeWithSameParametersImpl(RooAbsArg const &arg, RooArgSet const *observables)
+{
+   RooArgSet clonedNodes;
+   snapshotImpl(RooArgSet{arg}, clonedNodes, true, observables);
+
+   RooAbsArg *head = clonedNodes.find(arg);
+   clonedNodes.releaseOwnership();
+   clonedNodes.remove(*head);
+   head->addOwnedComponents(std::move(clonedNodes));
+
+   return head;
 }
 
 } // namespace Detail
