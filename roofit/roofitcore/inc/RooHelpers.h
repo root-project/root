@@ -137,6 +137,11 @@ bool checkIfRangesOverlap(RooArgSet const& observables, std::vector<std::string>
 std::string getColonSeparatedNameString(RooArgSet const& argSet);
 RooArgSet selectFromArgSet(RooArgSet const&, std::string const& names);
 
+namespace Detail {
+
+bool snapshotImpl(RooAbsCollection const& input, RooAbsCollection& output, bool deepCopy);
+
+} // namespace Detail
 
 /// Clone RooAbsArg object and reattach to original parameters.
 template<class T>
