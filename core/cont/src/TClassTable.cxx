@@ -396,7 +396,7 @@ void TClassTable::Add(const char *cname, Version_t id,  const std::type_info &in
    if (!gClassTable)
       new TClassTable;
 
-   std::lock_guard<std::mutex> lock(GetClassTableMutex());
+   std::unique_lock<std::mutex> lock(GetClassTableMutex());
 
    // check if already in table, if so return
    TClassRec *r = FindElement(cname, kTRUE);
@@ -408,6 +408,7 @@ void TClassTable::Add(const char *cname, Version_t id,  const std::type_info &in
          return;
       }
       if (!TClassEdit::IsStdClass(cname)) {
+         lock.unlock(); // Warning migth recursively call TClassTable during gROOT init
          // Warn only for class that are not STD classes
          ::Warning("TClassTable::Add", "class %s already in TClassTable", cname);
       }
@@ -451,7 +452,7 @@ void TClassTable::Add(TProtoClass *proto)
    if (!gClassTable)
       new TClassTable;
 
-   std::lock_guard<std::mutex> lock(GetClassTableMutex());
+   std::unique_lock<std::mutex> lock(GetClassTableMutex());
 
    // By definition the name in the TProtoClass is (must be) the normalized
    // name, so there is no need to tweak it.
@@ -474,6 +475,7 @@ void TClassTable::Add(TProtoClass *proto)
                    // files loaded by the current dictionary wil also de-activate the update
                    // class info mechanism!
 
+         lock.unlock(); // Warning migth recursively call TClassTable during gROOT init
          ::Warning("TClassTable::Add(TProtoClass*)","Called for existing class without a prior call add the dictionary function.");
       }
    }
@@ -650,6 +652,9 @@ DictFuncPtr_t TClassTable::GetDict(const std::type_info& info)
    if (!CheckClassTableInit())
       return nullptr;
 
+   if (gDebug > 9)
+      gROOT; // Info migth recursively call TClassTable during the gROOT init
+
    std::lock_guard<std::mutex> lock(GetClassTableMutex());
 
    if (gDebug > 9) {
@@ -671,6 +676,9 @@ DictFuncPtr_t TClassTable::GetDictNorm(const char *cname)
 {
    if (!CheckClassTableInit())
       return nullptr;
+
+   if (gDebug > 9)
+      gROOT; // Info migth recursively call TClassTable during the gROOT init
 
    std::lock_guard<std::mutex> lock(GetClassTableMutex());
 
