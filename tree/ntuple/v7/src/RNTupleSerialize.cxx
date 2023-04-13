@@ -1021,7 +1021,6 @@ std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeSchemaDe
    void** where = (buffer == nullptr) ? &buffer : reinterpret_cast<void**>(&pos);
 
    std::size_t nFields = 0, nColumns = 0, nAliasColumns = 0, fieldListOffset = 0;
-   std::vector<DescriptorId_t> subtrees;
    if (forHeaderExtension) {
       if (auto xHeader = desc.GetHeaderExtension()) {
          nFields = xHeader->GetNFields();
