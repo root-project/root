@@ -306,6 +306,22 @@ TTreeCache object pointer stayed the same
 New TChain with two files, different cluster size, use a selector
 No call to chain.SetCacheSize()
 MySelector::Process called, entry=99
+Reported cache size from fChain: 0
+Reported AutoFlush value for the TTree 50
+Reported cache size from TTree: 0
+Buffer size of TTreeCache: 0
+MySelector::Process called, entry=0
+Reported cache size from fChain: 0
+Reported AutoFlush value for the TTree 65
+Reported cache size from TTree: 0
+Buffer size of TTreeCache: 0
+TTreeCache object pointer stayed the same
+
+* Resource variable TTreeCache.Size=1.5 ROOT_TTREECACHE_SIZE not set
+--- Start of subtest 19
+New TChain with two files, different cluster size, use a selector
+No call to chain.SetCacheSize()
+MySelector::Process called, entry=99
 Reported cache size from fChain: 1027520
 Reported AutoFlush value for the TTree 50
 Reported cache size from TTree: 1027520
@@ -318,7 +334,7 @@ Buffer size of TTreeCache: 1027520
 TTreeCache object pointer stayed the same
 
 * env variable ROOT_TTREECACHE_SIZE=1.1
---- Start of subtest 19
+--- Start of subtest 20
 New TChain with two files, different cluster size, use a selector
 No call to chain.SetCacheSize()
 MySelector::Process called, entry=99
@@ -333,7 +349,7 @@ Reported cache size from TTree: 1678621
 Buffer size of TTreeCache: 1678621
 TTreeCache buffer size changed, object location not checked
 
---- Start of subtest 20
+--- Start of subtest 21
 New TChain with two files, different cluster size, use a selector
 -> Calling chain.SetCacheSize(-1) <-
 MySelector::Process called, entry=99
@@ -348,7 +364,7 @@ Reported cache size from TTree: 1291247
 Buffer size of TTreeCache: 1291247
 TTreeCache object pointer stayed the same
 
---- Start of subtest 21
+--- Start of subtest 22
 New TChain with two files, different cluster size, use a selector
 -> Calling chain.SetCacheSize(0) <-
 MySelector::Process called, entry=99
@@ -363,7 +379,7 @@ Reported cache size from TTree: 0
 No TTreeCache after Process()
 TTreeCache object pointer stayed the same
 
---- Start of subtest 22
+--- Start of subtest 23
 New TChain with two files, different cluster size, use a selector
 -> Calling chain.SetCacheSize(1500000) <-
 MySelector::Process called, entry=99
@@ -378,7 +394,7 @@ Reported cache size from TTree: 1500000
 Buffer size of TTreeCache: 1500000
 TTreeCache object pointer stayed the same
 
---- Start of subtest 23
+--- Start of subtest 24
 Created a new TTree with default constructor
 -> Calling SetCacheSize(1000000) <-
 cache does not exist
