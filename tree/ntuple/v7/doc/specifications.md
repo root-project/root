@@ -652,13 +652,23 @@ The child fileds are named `_0` and `_1`.
 #### std::tuple<T1, T2, ..., Tn>
 
 A tuple is stored using an empty mother field with $n$ subfields of type `T1`, `T2`, ..., `Tn`. All types must have RNTuple I/O support.
-The child fileds are named `_0`, `_1`, ...
+The child fields are named `_0`, `_1`, ...
 
 #### std::bitset<N>
 
 A bitset is stored as a repetitive leaf field with an attached `Bit` column.
 The bitset size `N` is stored as repetition parameter in the field meta-data.
 Within the repetition blocks, bits are stored in little-endian order, i.e. the least significant bits come first.
+
+#### std::unique_ptr<T>, std::optional<T>
+
+A unique pointer and an optional type have the same on disk representation.
+They are represented as a collection of `T`s of zero or one elements.
+A collection mother field has a single subfield named `_0` for `T`, where `T` must have RNTuple I/O support.
+By default, the mother field has a principal column of type `(Split)Index[64|32]`.
+This is called sparse representation.
+The alternative, dense representation uses a `Bit` column to mask non-existing instances of the subfield.
+In this second case, a default-constructed `T` is stored on disk for the non-existing instances.
 
 ### User-defined classes
 
