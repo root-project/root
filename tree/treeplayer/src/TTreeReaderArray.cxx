@@ -18,6 +18,7 @@
 #include "TBranchObject.h"
 #include "TBranchProxyDirector.h"
 #include "TClassEdit.h"
+#include "TEnum.h"
 #include "TFriendElement.h"
 #include "TFriendProxy.h"
 #include "TLeaf.h"
@@ -539,6 +540,12 @@ void ROOT::Internal::TTreeReaderArrayBase::CreateProxy()
             return false;
          auto left_datatype = dynamic_cast<TDataType *>(left);
          auto right_datatype = dynamic_cast<TDataType *>(right);
+         auto left_enum = dynamic_cast<TEnum*>(left);
+         auto right_enum = dynamic_cast<TEnum*>(right);
+
+         if ((left_datatype && left_datatype->GetType() == kInt_t && right_enum)
+            || (right_datatype && right_datatype->GetType() == kInt_t && left_enum))
+            return true;
          if (!left_datatype || !right_datatype)
             return false;
          auto l = left_datatype->GetType();
@@ -713,7 +720,10 @@ void ROOT::Internal::TTreeReaderArrayBase::SetImpl(TBranch* branch, TLeaf* myLea
             else if (branchElement->GetType() == TBranchElement::kClonesMemberNode){
                fImpl = std::make_unique<TBasicTypeClonesReader>(element->GetOffset());
             }
-            else {
+            else if (fDict->IsA() == TEnum::Class()) {
+               fImpl = std::make_unique<TArrayFixedSizeReader>(element->GetArrayLength());
+               ((TObjectArrayReader*)fImpl.get())->SetBasicTypeSize(sizeof(Int_t));
+            } else {
                fImpl = std::make_unique<TArrayFixedSizeReader>(element->GetArrayLength());
                ((TObjectArrayReader*)fImpl.get())->SetBasicTypeSize(((TDataType*)fDict)->Size());
             }
