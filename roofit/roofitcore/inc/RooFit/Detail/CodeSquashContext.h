@@ -36,7 +36,10 @@ public:
    {
    }
 
-   inline void addResult(RooAbsArg const *key, std::string const &value) { addResult(key->namePtr(), value); }
+   inline void addResult(RooAbsArg const *key, std::string const &value)
+   {
+      addResult(key->namePtr(), value, key->isReducerNode());
+   }
 
    void addResult(const char *key, std::string const &value);
 
@@ -52,9 +55,9 @@ public:
    /// vector observable that it depends on, or 1 if it doesn't depend on any
    /// or is a reducer node.
    /// @param key The node to look up the size for.
-   std::size_t outputSize(RooAbsArg const &arg) const
+   std::size_t outputSize(RooFit::Detail::DataKey key) const
    {
-      auto found = _nodeOutputSizes.find(&arg);
+      auto found = _nodeOutputSizes.find(key);
       if (found != _nodeOutputSizes.end())
          return found->second;
       return 1;
@@ -100,10 +103,12 @@ public:
 
    std::unique_ptr<LoopScope> beginLoop(RooArgSet const &loopVars);
 
+   std::string getTmpVarName();
+
 private:
    void endLoop(LoopScope const &scope);
 
-   inline void addResult(TNamed const *key, std::string const &value) { _nodeNames[key] = value; }
+   void addResult(TNamed const *key, std::string const &value, bool isReducerNode);
 
    std::string buildArg(double x) { return RooNumber::toString(x); }
 
@@ -139,6 +144,8 @@ private:
    std::string _code;
    /// @brief The current number of for loops the started.
    int _loopLevel = 0;
+   /// @brief Index to get unique names for temporary variables.
+   int _tmpVarIdx = 0;
 };
 
 } // namespace Detail

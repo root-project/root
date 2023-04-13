@@ -26,7 +26,20 @@ void CodeSquashContext::addResult(const char *key, std::string const &value)
 {
    const TNamed *namePtr = RooNameReg::known(key);
    if (namePtr)
-      addResult(namePtr, value);
+      addResult(namePtr, value, false);
+}
+
+void CodeSquashContext::addResult(TNamed const *key, std::string const &value, bool isReducerNode)
+{
+   if (!isReducerNode && outputSize(key) == 1) {
+      // If this is a scalar result, it will go into the global scope because
+      // it doesn't need to be recomputed inside loops.
+      std::string outputVarName = getTmpVarName();
+      addToGlobalScope("double " + outputVarName + " = " + value + ";\n");
+      _nodeNames[key] = outputVarName;
+   } else {
+      _nodeNames[key] = value;
+   }
 }
 
 /// @brief Gets the result for the given node using the node name. This node also performs the necessary
@@ -96,7 +109,14 @@ std::unique_ptr<CodeSquashContext::LoopScope> CodeSquashContext::beginLoop(RooAr
    // TODO: we are using the size of the first loop variable to the the number
    // of iterations, but it should be made sure that all loop vars are either
    // scalar or have the same size.
-   std::size_t numEntries = outputSize(*loopVars[0]);
+   std::size_t numEntries = 1;
+   for (RooAbsArg *arg : loopVars) {
+      std::size_t n = outputSize(arg);
+      if (n > 1 && numEntries > 1 && n != numEntries) {
+         throw std::runtime_error("Trying to loop over variables with different sizes!");
+      }
+      numEntries = std::max(n, numEntries);
+   }
 
    // Make sure that the name of this variable doesn't clash with other stuff
    std::string idx = "loopIdx" + std::to_string(_loopLevel);
@@ -122,12 +142,22 @@ void CodeSquashContext::endLoop(LoopScope const &scope)
 {
    _code += "}\n";
 
+   // The current code body will be written to the global scope and cleared
+   _globalScope += _code;
+   _code.clear();
+
    // clear the results of the loop variables if they were vector observables
    for (auto const &ptr : scope.vars()) {
       if (_vecObsIndices.find(ptr) != _vecObsIndices.end())
          _nodeNames.erase(ptr);
    }
    --_loopLevel;
+}
+
+/// @brief Get a unique variable name to be used in the generated code.
+std::string CodeSquashContext::getTmpVarName()
+{
+   return "tmpVar" + std::to_string(_tmpVarIdx++);
 }
 
 } // namespace Detail
