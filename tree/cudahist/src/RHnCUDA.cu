@@ -1,12 +1,32 @@
-#include <vector>
-#include <stdio.h>
-#include <thrust/functional.h>
-
 #include "RHnCUDA.h"
+
 #include "CUDAHelpers.cuh"
+#include "RtypesCore.h"
+#include "TError.h"
 #include "TMath.h"
 
-using namespace std;
+#include <thrust/functional.h>
+#include <array>
+#include <vector>
+#include <utility>
+#include <iostream>
+
+namespace CUDAhist {
+// // Forward declarations.
+// __device__ inline int FindFixBin(double x, const double *binEdges, int nBins, double xMin, double xMax);
+// template <unsigned int Dim>
+// __device__ inline int GetBin(int i, CUDAhist::RAxis (&axes)[Dim], double *coords, double *bins);
+// template <typename T, unsigned int Dim>
+// __global__ void HistoKernel(T *histogram, CUDAhist::RAxis (&axes)[Dim], int nBins, double *coords, double *bins,
+//                             double *weights, unsigned int bufferSize);
+// template <typename T, unsigned int Dim>
+// __global__ void HistoKernelGlobal(T *histogram, CUDAhist::RAxis (&axes)[Dim], int nBins, double *coords, double
+// *bins,
+//                                   double *weights, unsigned int bufferSize);
+// template <typename T, unsigned int Dim, unsigned int BlockSize>
+// __global__ void
+// GetStatsKernel(T *coords, double *bins, double *weights, unsigned int n, double *fDIntermediateStats, const int
+// nStats);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// CUDA Histogram Kernels
@@ -31,301 +51,297 @@ __device__ inline int FindFixBin(double x, const double *binEdges, int nBins, do
    return bin;
 }
 
-// Use Horner's method to calculate the bin in an n-dimensional array.
-__device__ inline int GetBin(int i, int dim, RHnCUDA::RAxis *axes, double *cells)
+// Use Horner's method to calculate the bin in an n-Dimensional array.
+template <unsigned int Dim>
+__device__ inline int GetBin(int i, CUDAhist::RAxis *axes, double *coords, double *bins)
 {
-   auto *x = &cells[i * dim];
+   auto *x = &coords[i * Dim];
 
-   auto d = dim-1;
-   auto bin = FindFixBin(x[d], axes[d].kBinEdges, axes[d].fNcells - 2, axes[d].fMin, axes[d].fMax);
-   // printf("dim:%d  bin:%d x:%f ncells:%d min:%f max:%f\n", d, bin, x[d], axes[d].fNcells, axes[d].fMin, axes[d].fMax);
+   auto bin = 0;
+   for (int d = Dim - 1; d >= 0; d--) {
+      auto binD = FindFixBin(x[d], axes[d].kBinEdges, axes[d].fNcoords - 2, axes[d].fMin, axes[d].fMax);
+      bins[i * Dim + d] = binD;
 
-   for (d--; d >= 0; d--) {
-      auto binD = FindFixBin(x[d], axes[d].kBinEdges, axes[d].fNcells - 2, axes[d].fMin, axes[d].fMax);
-      if (binD < 0) return -1;
-      // printf("dim:%d  bin:%d x:%f ncells:%d min:%f max:%f\n", d, bin, x[d], axes[d].fNcells, axes[d].fMin, axes[d].fMax);
-      bin = bin * axes[d].fNcells + binD;
+      if (binD < 0) {
+         // printf("skip %f\n", x[d]);
+         return -1;
+      }
+
+      // printf("Dim:%d  bin:%d x:%f ncells:%d min:%f max:%f\n", d, bin, x[d], axes[d].fNcoords, axes[d].fMin,
+      // axes[d].fMax);
+      bin = bin * axes[d].fNcoords + binD;
    }
 
    return bin;
 }
 
-__global__ void HistoKernel(double *histogram, int dim, RHnCUDA::RAxis *axes, int nBins, double *cells,
-                            double *w, unsigned int bufferSize, RHnCUDA::Stats *stats)
+template <typename T, unsigned int Dim>
+__global__ void HistoKernel(T *histogram, CUDAhist::RAxis *axes, int nBins, double *coords, double *bins,
+                            double *weights, unsigned int bufferSize)
 {
-   extern __shared__ double smem[];
-   int tid = threadIdx.x + blockDim.x * blockIdx.x;
-   int local_tid = threadIdx.x;
-   int stride = blockDim.x * gridDim.x;
+   auto smem = CUDAHelpers::shared_memory_proxy<T>();
+   unsigned int tid = threadIdx.x + blockDim.x * blockIdx.x;
+   unsigned int local_tid = threadIdx.x;
+   unsigned int stride = blockDim.x * gridDim.x;
 
    // Initialize a local per-block histogram
-   if (local_tid < nBins)
+   for (auto i = local_tid; i < nBins; i += blockDim.x) {
       smem[local_tid] = 0;
+   }
    __syncthreads();
 
    // Fill local histogram
-   for (int i = tid; i < bufferSize; i += stride) {
-      auto bin = GetBin(i, dim, axes, cells);
-      // printf("%d: add %f to bin %d\n", tid, w[i], bin);
-      if (bin < 0) continue;
-      atomicAdd(&smem[bin], w[i]);
+   for (auto i = tid; i < bufferSize; i += stride) {
+      auto bin = GetBin<Dim>(i, axes, coords, bins);
+      // printf("%d: add %f to bin %d\n", tid, weights[i], bin);
+      if (bin >= 0)
+         atomicAdd(&smem[bin], weights[i]);
 
       // Don't include u/overflow bins in stats.
-      // TODO: maybe not very clean to be modifying the input weights array.
-      if (bin == 0 || bin > nBins)
-         w[i] = 0;
    }
    __syncthreads();
 
    // Merge results in global histogram
-   if (local_tid < nBins) {
-      atomicAdd(&histogram[local_tid], smem[local_tid]);
+   for (auto i = local_tid; i < nBins; i += blockDim.x) {
+      // printf("%d: merge %f into bin %d\n", tid, smem[i], i);
+      atomicAdd(&histogram[i], smem[i]);
    }
 }
 
-// TODO: worked for 1 dimension, need to adapt to n-dimensional case.
-// template <unsigned int BlockSize, typename ValType>
-// __global__ void GetStatsKernel(ValType *cells, double *weights, double *oSumw, double *oSumw2, double
-// *oSumwx,
-//                                double *oSumwx2, unsigned int n)
-// {
-//    extern __shared__ double sdata[];
-
-//    unsigned int tid = threadIdx.x;
-//    unsigned int i = blockIdx.x * (BlockSize * 2) + tid;
-//    unsigned int gridSize = (BlockSize * 2) * gridDim.x;
-
-//    // Only one shared memory buffer can be declared so we index with an offset to differentiate multiple arrays.
-//    double *sdataSumw = &sdata[0];
-//    double *sdataSumw2 = &sdata[blockDim.x];
-//    double *sdataSumwx = &sdata[2 * blockDim.x];
-//    double *sdataSumwx2 = &sdata[3 * blockDim.x];
-
-//    // if (i == 0) {
-//    //    printf("blockdim:%d griddim:%d gridsize:%d\n", blockDim.x, gridDim.x, gridSize);
-//    // }
-
-//    // Operate on local var instead of sdata to avoid illegal memory accesses?
-//    double rsumw = 0, rsumw2 = 0, rsumwx = 0, rsumwx2 = 0.;
-
-//    while (i < n) {
-//       rsumw += weights[i];
-//       rsumw2 = weights[i] * weights[i];
-//       rsumwx = weights[i] * cells[i];
-//       rsumwx2 = weights[i] * cells[i] * cells[i];
-
-//       if (i + BlockSize < n) {
-//          rsumw += weights[i + BlockSize];
-//          rsumw2 += weights[i + BlockSize] * weights[i + BlockSize];
-//          rsumwx += weights[i + BlockSize] * cells[i + BlockSize];
-//          rsumwx2 += weights[i + BlockSize] * cells[i + BlockSize] * cells[i + BlockSize];
-//       }
-
-//       i += gridSize;
-//    }
-//    sdataSumw[tid] = rsumw;
-//    sdataSumw2[tid] = rsumw2;
-//    sdataSumwx[tid] = rsumwx;
-//    sdataSumwx2[tid] = rsumwx2;
-//    __syncthreads();
-
-//    CUDAHelpers::UnrolledReduce<BlockSize, CUDAHelpers::plus<double>, double>(sdataSumw, tid);
-//    CUDAHelpers::UnrolledReduce<BlockSize, CUDAHelpers::plus<double>, double>(sdataSumw2, tid);
-//    CUDAHelpers::UnrolledReduce<BlockSize, CUDAHelpers::plus<double>, double>(sdataSumwx, tid);
-//    CUDAHelpers::UnrolledReduce<BlockSize, CUDAHelpers::plus<double>, double>(sdataSumwx2, tid);
-
-//    // The first thread of each block writes the sum of the block into the global device array.
-//    if (tid == 0) {
-//       oSumw[blockIdx.x] = sdataSumw[0];
-//       oSumw2[blockIdx.x] = sdataSumw2[0];
-//       oSumwx[blockIdx.x] = sdataSumwx[0];
-//       oSumwx2[blockIdx.x] = sdataSumwx2[0];
-//    }
-// }
-
-// template __global__ void GetStatsKernel<512, double>(double *cells, double *weights, double *oSumw,
-//                                                        double *oSumw2, double *oSumwx, double *oSumwx2, unsigned int
-//                                                        n);
-
-// __global__ void H1DKernelGlobal(double *histogram, double *binEdges, double xMin, double xMax, int nCells,
-//                                 double *cells, double *w, unsigned int bufferSize)
-// {
-//    int tid = threadIdx.x + blockDim.x * blockIdx.x;
-//    int stride = blockDim.x * gridDim.x;
-
-//    // Fill histogram
-//    for (int i = tid; i < bufferSize; i += stride) {
-//       auto bin = FindFixBin(cells[i], binEdges, nCells, xMin, xMax);
-//       // printf("%d: add %f to bin %d\n", tid, w[i], bin);
-//       atomicAdd(&histogram[bin], w[i]);
-//    }
-// }
-
-////////////////////////////////////////////////////////////////////////////////
-/// RHnCUDA constructor
-
-RHnCUDA::RHnCUDA(int dim, int *ncells, double *xlow, double *xhigh, const double **binEdges) : kDim(dim)
+// Slower histogramming, but requires less memory.
+// OPTIMIZATION: consider sorting the coords array.
+template <typename T, unsigned int Dim>
+__global__ void HistoKernelGlobal(T *histogram, CUDAhist::RAxis *axes, int nBins, double *coords, double *bins,
+                                  double *weights, unsigned int bufferSize)
 {
-   fThreadBlockSize = 512;
+   unsigned int tid = threadIdx.x + blockDim.x * blockIdx.x;
+   unsigned int stride = blockDim.x * gridDim.x;
+
+   // Fill histogram
+   for (auto i = tid; i < bufferSize; i += stride) {
+      auto bin = GetBin<Dim>(i, axes, coords, bins);
+      if (bin >= 0)
+         atomicAdd(&histogram[bin], weights[i]);
+   }
+}
+
+// TODO: worked for 1 Dimension, need to adapt to n-Dimensional case.
+// OPTIMIZATION: interleave computation of stats for different axes to improve caching?
+template <typename T, unsigned int Dim, unsigned int BlockSize>
+__global__ void GetStatsKernel(double *coords, double *bins, double *weights, unsigned int n,
+                               double *fDIntermediateStats, const int nStats)
+{
+   auto sdata = CUDAHelpers::shared_memory_proxy<T>();
+
+   // // Tsumw
+   // CUDAHelpers::ReduceBase<BlockSize>(
+   //    sdata, weights, fDIntermediateStats, n, [](unsigned int i, T r, T w) { return r + w; },
+   //    CUDAHelpers::Plus<T>());
+
+   // // Tsumw2
+   // unsigned int sdata_offset = blockDim.x;
+   // unsigned int is_offset = gridDim.x;
+   // CUDAHelpers::ReduceBase<BlockSize>(
+   //    &sdata[sdata_offset], weights, &fDIntermediateStats[is_offset], n,
+   //    [](unsigned int i, T r, T w) { return r + w * w; }, CUDAHelpers::Plus<T>());
+
+   // for (auto d = 0; d < Dim; d++) {
+   //    // E.g., for d = 1 this computes Tsumwy
+   //    sdata_offset += blockDim.x;
+   //    is_offset += gridDim.x;
+   //    CUDAHelpers::ReduceBase<BlockSize>(
+   //       &sdata[sdata_offset], weights, &fDIntermediateStats[is_offset], n,
+   //       [&coords, &d](unsigned int i, T r, T w) { return r + w * coords[i * Dim + d]; }, CUDAHelpers::Plus<T>());
+
+   //    // E.g., for d = 1 this computes Tsumwy2
+   //    sdata_offset += blockDim.x;
+   //    is_offset += gridDim.x;
+   //    CUDAHelpers::ReduceBase<BlockSize>(
+   //       &sdata[sdata_offset], weights, &fDIntermediateStats[is_offset], n,
+   //       [&coords, &d](unsigned int i, T r, T w) { return r + w * coords[i * Dim + d] * coords[i * Dim + d]; },
+   //       CUDAHelpers::Plus<T>());
+
+   //    for (auto prev_d = d - 1; prev_d >= 0; prev_d--) {
+   //       // E.g., for d = 1 this computes Tsumwxy
+   //       sdata_offset += blockDim.x;
+   //       is_offset += gridDim.x;
+   //       CUDAHelpers::ReduceBase<BlockSize>(
+   //          &sdata[sdata_offset], weights, &fDIntermediateStats[is_offset], n,
+   //          [&coords, &prev_d, &d](unsigned int i, T r, T w) {
+   //             return r + w * coords[i * Dim + prev_d] * coords[i * Dim + d];
+   //          },
+   //          CUDAHelpers::Plus<T>());
+   //    }
+   // }
+}
+
+template <typename T, unsigned int Dim, unsigned int BlockSize>
+RHnCUDA<T, Dim, BlockSize>::RHnCUDA(int *ncells, double *xlow, double *xhigh, const double **binEdges)
+   : kNStats([]() {
+        // Sum of weights (squared) + sum of weight * bin (squared) per axis + sum of weight * binAx1 * binAx2 for
+        // all axis combinations
+        return Dim > 1 ? 2 + 2 * Dim + TMath::Binomial(Dim, 2) : 2 + 2 * Dim;
+     }()),
+     kStatsSmemSize((BlockSize <= 32) ? 2 * BlockSize * kNStats * sizeof(double) : BlockSize * kNStats * sizeof(double))
+// template <typename T, unsigned int Dim, unsigned int BlockSize>
+// RHnCUDA<T, Dim, BlockSize>::Initialize(int *ncells, double *xlow, double *xhigh, const double **binEdges)
+// RHnCUDA::Initialize(int *ncells, double *xlow, double *xhigh, const double **binEdges)
+{
    fBufferSize = 10000;
 
    fNbins = 1;
    fEntries = 0;
-   fDeviceStats = NULL;
-   fDeviceAxes = NULL;
-   fCells.reserve(dim * fBufferSize);
-   fWeights.reserve(fBufferSize);
+   fDIntermediateStats = NULL;
+   fDStats = NULL;
+   fDAxes = NULL;
+   fHCoords.reserve(Dim * fBufferSize);
+   fHWeights.reserve(fBufferSize);
 
    // Initialize axis descriptors.
-   for (int i = 0; i < dim; i++) {
+   for (int i = 0; i < Dim; i++) {
       RAxis axis;
-      axis.fNcells = ncells[i];
+      axis.fNcoords = ncells[i];
       axis.fMin = xlow[i];
       axis.fMax = xhigh[i];
       axis.kBinEdges = binEdges[i];
-      fAxes.push_back(axis);
+      fHAxes[i] = axis;
 
       fNbins *= ncells[i];
-      if (getenv("DBG")) printf("ncells:%d min:%f max:%f ", axis.fNcells, axis.fMin, axis.fMax);
+      if (getenv("DBG"))
+         printf("\t axis %d -- ncells:%d min:%f max:%f\n", i, axis.fNcoords, axis.fMin, axis.fMax);
    }
-   if (getenv("DBG")) printf("nbins:%d dim:%d\n", fNbins, kDim);
+
+   cudaDeviceProp prop;
+   ERRCHECK(cudaGetDeviceProperties(&prop, 0));
+   fMaxSmemSize = prop.sharedMemPerBlock;
+   fHistoSmemSize = fNbins * sizeof(T);
+
+   if (getenv("DBG"))
+      printf("nbins:%d Dim:%d nstats:%d maxsmem:%d\n", fNbins, Dim, kNStats, fMaxSmemSize);
 }
 
-// Allocate buffers for histogram on GPU
-void RHnCUDA::AllocateH1D()
+template <typename T, unsigned int Dim, unsigned int BlockSize>
+void RHnCUDA<T, Dim, BlockSize>::AllocateH1D()
 {
    // Allocate histogram on GPU
    ERRCHECK(cudaMalloc((void **)&fDeviceHisto, fNbins * sizeof(double)));
    ERRCHECK(cudaMemset(fDeviceHisto, 0, fNbins * sizeof(double)));
 
    // Allocate weights array on GPU
-   ERRCHECK(cudaMalloc((void **)&fDeviceWeights, fBufferSize * sizeof(double)));
+   ERRCHECK(cudaMalloc((void **)&fDWeights, fBufferSize * sizeof(double)));
 
-   // Allocate array of cells to fill on GPU
-   ERRCHECK(cudaMalloc((void **)&fDeviceCells, kDim * fBufferSize * sizeof(double)));
+   // Allocate array of coords to fill on GPU
+   ERRCHECK(cudaMalloc((void **)&fDCoords, Dim * fBufferSize * sizeof(double)));
+
+   // Allocate array of bins corresponding to the coords.
+   ERRCHECK(cudaMalloc((void **)&fDBins, Dim * fBufferSize * sizeof(double)));
 
    // Allocate axes on the GPU
-   ERRCHECK(cudaMalloc((void **)&fDeviceAxes, fBufferSize * sizeof(RAxis)));
-   ERRCHECK(cudaMemcpy(fDeviceAxes, fAxes.data(), kDim * sizeof(RAxis), cudaMemcpyHostToDevice));
-   for (int i = 0; i < kDim; i++) {
+   ERRCHECK(cudaMalloc((void **)&fDAxes, fBufferSize * sizeof(RAxis)));
+   ERRCHECK(cudaMemcpy(fDAxes, fHAxes.data(), Dim * sizeof(RAxis), cudaMemcpyHostToDevice));
+   for (auto i = 0; i < Dim; i++) {
       // Allocate memory for BinEdges array.
-      if (fAxes[i].kBinEdges != NULL) {
-         // ERRCHECK(cudaMalloc((void **)fDeviceAxes[i].fBinEdges, fAxes[i].fNcells * sizeof(double)));
-         // ERRCHECK(cudaMemcpy(&fDeviceAxes[i].fBinEdges, fAxes[i].fBinEdges, fAxes[i].fNcells * sizeof(double),
-         //                     cudaMemcpyHostToDevice));
-
+      if (fHAxes[i].kBinEdges != NULL) {
          double *deviceBinEdges;
-         ERRCHECK(cudaMalloc((void **)&deviceBinEdges, fAxes[i].fNcells * sizeof(double)));
-         ERRCHECK(cudaMemcpy(deviceBinEdges, fAxes[i].kBinEdges, fAxes[i].fNcells * sizeof(double),
+         ERRCHECK(cudaMalloc((void **)&deviceBinEdges, fHAxes[i].fNcoords * sizeof(double)));
+         ERRCHECK(cudaMemcpy(deviceBinEdges, fHAxes[i].kBinEdges, fHAxes[i].fNcoords * sizeof(double),
                              cudaMemcpyHostToDevice));
-         ERRCHECK(cudaMemcpy(&fDeviceAxes[i].kBinEdges, &deviceBinEdges, sizeof(double *), cudaMemcpyHostToDevice));
+         ERRCHECK(cudaMemcpy(&fDAxes[i].kBinEdges, &deviceBinEdges, sizeof(double *), cudaMemcpyHostToDevice));
       }
    }
 
-   ERRCHECK(cudaMalloc((void **)&fDeviceStats, sizeof(RHnCUDA::Stats)));
-   ERRCHECK(cudaMemset(fDeviceStats, 0, 5 * sizeof(double))); // set the first 5 variables in the struct to 0.
+   // Allocate array with (intermediate) results of the stats for each block.
+   ERRCHECK(cudaMalloc((void **)&fDStats, kNStats * sizeof(double)));
+   // ERRCHECK(cudaMemset(fDStats, 0, kNStats * sizeof(double)));
 }
 
-// TODO: worked for 1 dimension, need to adapt to n-dimensional case.
-void RHnCUDA::GetStats(unsigned int size)
+// TODO: ref to array
+template <typename T, unsigned int Dim, unsigned int BlockSize>
+void RHnCUDA<T, Dim, BlockSize>::Fill(const std::array<T, Dim> &coords, double w)
 {
-   // const unsigned int blockSize = 512;
-
-   // int smemSize = (blockSize <= 32) ? 2 * blockSize : blockSize;
-   // unsigned int numBlocks = fmax(1, ceil(size / blockSize / 2.)); // Number of blocks in grid is halved!
-
-   // double *intermediate_sumw = NULL;
-   // double *intermediate_sumw2 = NULL;
-   // double *intermediate_sumwx = NULL;
-   // double *intermediate_sumwx2 = NULL;
-   // ERRCHECK(cudaMalloc((void **)&intermediate_sumw, numBlocks * sizeof(double)));
-   // ERRCHECK(cudaMalloc((void **)&intermediate_sumw2, numBlocks * sizeof(double)));
-   // ERRCHECK(cudaMalloc((void **)&intermediate_sumwx, numBlocks * sizeof(double)));
-   // ERRCHECK(cudaMalloc((void **)&intermediate_sumwx2, numBlocks * sizeof(double)));
-
-   // GetStatsKernel<blockSize, double><<<numBlocks, blockSize, 4 * smemSize * sizeof(double)>>>(
-   //    fDeviceCells, fDeviceWeights, intermediate_sumw, intermediate_sumw2, intermediate_sumwx, intermediate_sumwx2,
-   //    size);
-   // ERRCHECK(cudaGetLastError());
-   // // OPTIMIZATION: final reduction in a single kernel?
-   // CUDAHelpers::ReductionKernel<blockSize, CUDAHelpers::plus<double>, double, false>
-   //    <<<1, blockSize, smemSize * sizeof(double)>>>(intermediate_sumw, &(fDeviceStats->fTsumw), numBlocks, 0.);
-   // ERRCHECK(cudaGetLastError());
-   // CUDAHelpers::ReductionKernel<blockSize, CUDAHelpers::plus<double>, double, false>
-   //    <<<1, blockSize, smemSize * sizeof(double)>>>(intermediate_sumw2, &(fDeviceStats->fTsumw2), numBlocks, 0.);
-   // ERRCHECK(cudaGetLastError());
-   // CUDAHelpers::ReductionKernel<blockSize, CUDAHelpers::plus<double>, double, false>
-   //    <<<1, blockSize, smemSize * sizeof(double)>>>(intermediate_sumwx, &(fDeviceStats->fTsumwx), numBlocks, 0.);
-   // ERRCHECK(cudaGetLastError());
-   // CUDAHelpers::ReductionKernel<blockSize, CUDAHelpers::plus<double>, double, false>
-   //    <<<1, blockSize, smemSize * sizeof(double)>>>(intermediate_sumwx2, &(fDeviceStats->fTsumwx2), numBlocks, 0.);
-   // ERRCHECK(cudaGetLastError());
-
-   // ERRCHECK(cudaFree(intermediate_sumw));
-   // ERRCHECK(cudaFree(intermediate_sumw2));
-   // ERRCHECK(cudaFree(intermediate_sumwx));
-   // ERRCHECK(cudaFree(intermediate_sumwx2));
-}
-
-void RHnCUDA::ExecuteCUDAH1D()
-{
-   unsigned int size = fmin(fBufferSize, fWeights.size());
-   // printf("cellsize:%lu buffersize:%f Size:%f nCells:%d\n", fCells.size(), fBufferSize, size, fNcells);
-
-   fEntries += size;
-
-   ERRCHECK(cudaMemcpy(fDeviceCells, fCells.data(), kDim * size * sizeof(double), cudaMemcpyHostToDevice));
-   ERRCHECK(cudaMemcpy(fDeviceWeights, fWeights.data(), size * sizeof(double), cudaMemcpyHostToDevice));
-
-   // TODO: this kernel fails with invalid argument when  fNbins * sizeof(double) exceeds max shared mem size.
-   HistoKernel<<<size / fThreadBlockSize + 1, fThreadBlockSize, fNbins * sizeof(double)>>>(
-      fDeviceHisto, kDim, fDeviceAxes, fNbins, fDeviceCells, fDeviceWeights, size, fDeviceStats);
-   ERRCHECK(cudaGetLastError());
-   GetStats(size);
-
-   fCells.clear();
-   fWeights.clear();
-}
-
-void RHnCUDA::Fill(std::vector<double> coords, double w)
-{
-   // Fill expects kDim number of coordinates.
-   if (coords.size() != kDim)
-      return;
-
-   fCells.insert(fCells.end(), coords.begin(), coords.end());
-   fWeights.push_back(w);
+   fHCoords.insert(fHCoords.end(), coords.begin(), coords.end());
+   fHWeights.push_back(w);
 
    // Only execute when a certain number of values are buffered to increase the GPU workload and decrease the
    // frequency of kernel launches.
-   if (fWeights.size() == fBufferSize) {
+   if (fHWeights.size() == fBufferSize) {
       ExecuteCUDAH1D();
    }
 }
 
-void RHnCUDA::Fill(std::vector<double> coords)
+template <typename T, unsigned int Dim, unsigned int BlockSize>
+void RHnCUDA<T, Dim, BlockSize>::GetStats(unsigned int size)
 {
-   Fill(coords, 1.0);
+   // TODO: move this to the constructor
+   int numBlocks = fmax(1, ceil(size / BlockSize / 2.)); // Number of blocks in grid is halved!
+   if (getenv("DBG") && atoi(getenv("DBG")) > 0)
+      printf("STATS -- size:%d smemsize: %d numblocks: %d\n", size, kStatsSmemSize, numBlocks);
+
+   if (fDIntermediateStats == NULL)
+      ERRCHECK(cudaMalloc((void **)&fDIntermediateStats, numBlocks * kNStats * sizeof(double *)));
+
+   // GetStatsKernel<T, Dim, BlockSize>
+   //    <<<numBlocks, BlockSize, kStatsSmemSize>>>(fDCoords, fDBins, fDWeights, size, fDIntermediateStats, kNStats);
+   // ERRCHECK(cudaPeekAtLastError());
+   // printf("?????????????????\n");
+
+   // OPTIMIZATION: final reduction in a single kernel?
+   // for (auto i = 0; i < kNStats; i++) {
+   //    CUDAHelpers::ReductionKernel<BlockSize, double, false><<<1, BlockSize, kStatsSmemSize>>>(
+   //       &fDIntermediateStats[i * numBlocks], &fDStats[i], numBlocks, CUDAHelpers::Plus<double>(), 0.);
+   //    ERRCHECK(cudaPeekAtLastError());
+   // }
 }
 
-// Copy back results on GPU to CPU.
-int RHnCUDA::RetrieveResults(double *histResult, double *statsResult)
+template <typename T, unsigned int Dim, unsigned int BlockSize>
+void RHnCUDA<T, Dim, BlockSize>::ExecuteCUDAH1D()
+{
+   unsigned int size = fmin(fBufferSize, fHWeights.size());
+   int numBlocks =
+      size % BlockSize == 0 ? size / BlockSize : size / BlockSize + 1; // Number of blocks in grid is halved!
+
+   if (getenv("DBG") && atoi(getenv("DBG")) > 2) {
+      printf("HISTO -- cellsize:%lu buffersize:%d Size:%d nCells:%d nBlocks:%d smemsize:%lu\n", fHCoords.size(),
+             fBufferSize, size, fNbins, numBlocks, fNbins * sizeof(double));
+   }
+
+   fEntries += size;
+
+   ERRCHECK(cudaMemcpy(fDCoords, fHCoords.data(), Dim * size * sizeof(double), cudaMemcpyHostToDevice));
+   ERRCHECK(cudaMemcpy(fDWeights, fHWeights.data(), size * sizeof(double), cudaMemcpyHostToDevice));
+
+   if (fHistoSmemSize > fMaxSmemSize) {
+      HistoKernelGlobal<T, Dim>
+         <<<numBlocks, BlockSize>>>(fDeviceHisto, fDAxes, fNbins, fDCoords, fDBins, fDWeights, size);
+   } else {
+      HistoKernel<T, Dim>
+         <<<numBlocks, BlockSize, fHistoSmemSize>>>(fDeviceHisto, fDAxes, fNbins, fDCoords, fDBins, fDWeights, size);
+   }
+   ERRCHECK(cudaPeekAtLastError());
+
+   GetStats(size);
+
+   fHCoords.clear();
+   fHWeights.clear();
+}
+
+template <typename T, unsigned int Dim, unsigned int BlockSize>
+int RHnCUDA<T, Dim, BlockSize>::RetrieveResults(double *histResult, double *statsResult)
 {
    // Fill the histogram with remaining values in the buffer.
-   if (fCells.size() > 0) {
+   if (fHWeights.size() > 0) {
       ExecuteCUDAH1D();
    }
 
    // Copy back results from GPU to CPU.
-   Stats stats;
    ERRCHECK(cudaMemcpy(histResult, fDeviceHisto, fNbins * sizeof(double), cudaMemcpyDeviceToHost));
-   ERRCHECK(cudaMemcpy(&stats, fDeviceStats, sizeof(Stats), cudaMemcpyDeviceToHost));
-   statsResult[0] = stats.fTsumw;
-   statsResult[1] = stats.fTsumw2;
-   statsResult[2] = stats.fTsumwx;
-   statsResult[3] = stats.fTsumwx2;
+   ERRCHECK(cudaMemcpy(statsResult, fDStats, kNStats * sizeof(double), cudaMemcpyDeviceToHost));
 
-   // // TODO: Free device pointers?
+   // TODO: Free device pointers?
 
    return fEntries;
 }
+
+#include "RHnCUDA-impl.cu"
+
+} // namespace CUDAhist

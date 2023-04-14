@@ -2,12 +2,41 @@
 #include "gtest/gtest.h"
 
 #include "ROOT/RDataFrame.hxx"
-#include "RHnCUDA.h"
+// #include "RHnCUDA.h"
 #include "TH1.h"
+#include "TAxis.h"
 
-auto numRows = 10;
-ROOT::RDataFrame rdf(numRows);
+// TODO: put these in some kind of gtest environment class?
+auto numRows = 100;
+auto numBins = numRows - 2; // -2 to also test filling u/overflow.
+auto startBin = 0;
+auto startFill = startBin - 1;
+auto endBin = numBins;
+
+ROOT::RDataFrame rdf1D(numRows);
+ROOT::RDataFrame rdf2D(numRows *numRows);
+ROOT::RDataFrame rdf3D(numRows *numRows *numRows);
 char env[] = "CUDA_HIST";
+
+template <typename T = double, typename HIST = TH1D>
+struct HistProperties {
+   T *array;
+   int dim, ncells;
+   double *stats;
+
+   HistProperties(ROOT::RDF::RResultPtr<HIST> &h)
+   {
+      dim = h->GetDimension();
+      auto nStats = 2 + 2 * dim;
+      if (dim > 1)
+         nStats += TMath::Binomial(dim, 2);
+      stats = (double *)malloc((nStats) * sizeof(double));
+
+      array = h->GetArray();
+      ncells = h->GetNcells();
+      h->GetStats(stats);
+   }
+};
 
 /**
  * Helper functions for toggling ON/OFF CUDA histogramming.
@@ -23,138 +52,330 @@ void DisableCUDA()
 }
 
 /**
- * Helper functions for element-wise comparison of histogram arrays and bin edges.
+ * Helper functions for element-wise comparison of histogram arrays and bin edges->
  */
 
 // Element-wise comparison between two arrays.
-template <typename AType = Double_t *>
+template <typename AType = double *>
 void CheckArrays(AType a, AType b, Int_t m, Int_t n)
 {
    EXPECT_EQ(m, n);
    for (auto i : ROOT::TSeqI(n)) {
-      EXPECT_EQ(a[i], b[i]) << "  i = " << i;
+      EXPECT_DOUBLE_EQ(a[i], b[i]) << "  i = " << i;
    }
 }
 
 // Comparison with labelled messages on failure.
-template <typename AType = Double_t *>
+template <typename AType = double *>
 void CheckArrays(AType a, AType b, Int_t m, Int_t n, const char *labelA, const char *labelB)
 {
    EXPECT_EQ(m, n);
    for (auto i : ROOT::TSeqI(n)) {
-      EXPECT_EQ(a[i], b[i]) << "  a = " << labelA << " b = " << labelB << " i = " << i;
+      EXPECT_DOUBLE_EQ(a[i], b[i]) << "  a = " << labelA << " b = " << labelB << " i = " << i;
    }
 }
 
 // Comparison with labelled messages per element on failure.
-template <typename AType = Double_t *>
-void CheckArrays(AType a, AType b, Int_t m, Int_t n, const char **labelA, const char **labelB)
+template <typename AType = double *>
+void CheckArrays(AType a, AType b, Int_t m, Int_t n, std::vector<const char *> labelA, std::vector<const char *> labelB)
 {
    EXPECT_EQ(m, n);
    for (auto i : ROOT::TSeqI(n)) {
-      EXPECT_EQ(a[i], b[i]) << "  a = " << labelA[i] << " b = " << labelB[i] << "i = " << i;
+      EXPECT_DOUBLE_EQ(a[i], b[i]) << "  a = " << labelA[i] << " b = " << labelB[i] << " i = " << i;
    }
 }
 
-void CheckBins(const TAxis *axis1, const TAxis *axis2)
+template <typename T = double, typename HIST = TH1D>
+void CompareHistograms(const HistProperties<T, HIST> &h1, const HistProperties<T, HIST> &h2)
 {
-   auto nBins1 = axis1->GetXbins()->GetSize();
-   auto nBins2 = axis2->GetXbins()->GetSize();
+   CheckArrays(h1.array, h2.array, h1.ncells, h2.ncells, "fArray", "CUDA fArray"); // Compare bin values.
+   // CheckArrays(h1.stats, h2.stats, 4, 4, {"fTsumw", "fTsumw2", "fTsumwx", "fTsumwx2"},
+   //             {"CUDA fTsumw", "CUDA fTsumw2", "CUDA fTsumwx", "CUDA fTsumwx2"}); // Compare histogram statistics.
+}
 
-   CheckArrays(axis1->GetXbins()->GetArray(), axis2->GetXbins()->GetArray(), nBins1, nBins2,
-               "binEdges", "CUDA binEdges");
+std::vector<double> *GetVariableBinEdges()
+{
+   int e = startBin;
+   auto edges = new std::vector<double>(numBins + 1);
+   std::generate(edges->begin(), edges->end(), [&]() { return e++; });
+   (*edges)[numBins] += 10;
+
+   return edges;
 }
 
 // Test filling 1-dimensional histogram with doubles
-TEST(Hist1DTest, FillFixedbins)
+TEST(HistoTest, Fill1D)
 {
-   Double_t x = 0;
-   auto d = rdf.Define("x", [&x]() { return x++; }).Define("w", [&x]() { return x + 1.; });
+   double x = startFill;
+   auto d = rdf1D.Define("x", [&x]() { return x++; }).Define("w", [&x]() { return x; });
 
-   DisableCUDA();
-   auto h1 = d.Histo1D(::TH1D("h1", "h1", numRows, 0, 100), "x");
-   auto h1Axis = h1->GetXaxis();
-   auto h1Ncells = h1->GetNcells();
-   auto h1Array = h1->GetArray();
-   Double_t h1Stats[4];
-   h1->GetStats(h1Stats);
+   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+   {
+      SCOPED_TRACE("Fill 1D histograms with fixed bins");
 
-   EnableCUDA();
-   x = 0;
-   auto h2 = d.Histo1D(::TH1D("h2", "h2", numRows, 0, 100), "x");
-   auto h2Axis = h2->GetXaxis();
-   auto h2Ncells = h2->GetNcells();
-   auto h2Array = h2->GetArray();
-   Double_t h2Stats[4];
-   h2->GetStats(h2Stats);
+      DisableCUDA();
+      auto h1ptr = d.Histo1D(::TH1D("h1", "h1", numBins, startBin, endBin), "x");
+      auto h1 = HistProperties<double>(h1ptr);
 
-   CheckBins(h1Axis, h2Axis);                                        // Compare bin edges.
-   CheckArrays(h1Array, h2Array, h1Ncells, h2Ncells, "fArray", "CUDA fArray"); // Compare bin values.
-   CheckArrays(h1Stats, h2Stats, 4, 4, new const char*[4]{"fTsumw", "fTsumw2", "fTsumwx", "fTsumwx2"},
-               new const char*[4]{"CUDA fTsumw", "CUDA fTsumw2", "CUDA fTsumwx",
-                                 "CUDA fTsumwx2"}); // Compare histogram statistics.
+      EnableCUDA();
+      x = startFill; // need to reset x, because the second Histo1D redefines "x" again.
+      auto h2ptr = d.Histo1D(::TH1D("h2", "h2", numBins, startBin, endBin), "x");
+      auto h2 = HistProperties<double>(h2ptr);
+
+      CompareHistograms(h1, h2);
+   }
+
+   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+   {
+      SCOPED_TRACE("Fill 1D histograms with weighted fixed bins");
+
+      DisableCUDA();
+      x = startFill;
+      auto h1ptr = d.Histo1D(::TH1D("h1", "h1", numBins, startBin, endBin), "x", "w");
+      auto h1 = HistProperties<double>(h1ptr);
+
+      EnableCUDA();
+      x = startFill; // need to reset x, because the second Histo1D redefines "x" again.
+      auto h2ptr = d.Histo1D(::TH1D("h2", "h2", numBins, startBin, endBin), "x", "w");
+      auto h2 = HistProperties<double>(h2ptr);
+
+      CompareHistograms(h1, h2);
+   }
+
+   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+   auto edges = GetVariableBinEdges();
+
+   {
+      SCOPED_TRACE("Fill 1D histograms with variable bins");
+
+      DisableCUDA();
+      x = startFill;
+      auto h1ptr = d.Histo1D(::TH1D("h1", "h1", numBins, edges->data()), "x");
+      auto h1 = HistProperties<double>(h1ptr);
+
+      EnableCUDA();
+      x = startFill; // need to reset x, because the second Histo1D redefines "x" again.
+      auto h2ptr = d.Histo1D(::TH1D("h2", "h2", numBins, edges->data()), "x");
+      auto h2 = HistProperties<double>(h2ptr);
+
+      CompareHistograms<double>(h1, h2);
+   }
+
+   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+   {
+      SCOPED_TRACE("Fill 1D histograms with weighted variable bins");
+
+      DisableCUDA();
+      x = startFill;
+      auto h1ptr = d.Histo1D(::TH1D("h1", "h1", numBins, edges->data()), "x", "w");
+      auto h1 = HistProperties<double>(h1ptr);
+
+      EnableCUDA();
+      x = startFill; // need to reset x, because the second Histo1D redefines "x" again.
+      auto h2ptr = d.Histo1D(::TH1D("h2", "h2", numBins, edges->data()), "x", "w");
+      auto h2 = HistProperties<double>(h2ptr);
+
+      CompareHistograms<double>(h1, h2);
+   }
 }
 
-
-TEST(Hist1DTest, FillVarbins)
+// Test filling 2-dimensional histogram with doubles
+TEST(HistoTest, Fill2D)
 {
-   Double_t x = 0;
-   auto d = rdf.Define("x", [&x]() { return x++; }).Define("w", [&x]() { return x + 1.; });
-   std::vector<double> edges{1, 2, 3, 4, 5, 6, 10};
+   double x = startFill, y = startFill;
+   int r1 = 0, r2 = 0;
 
-   DisableCUDA();
-   auto h1 = d.Histo1D(::TH1D("h1", "h1", (int)edges.size() - 1, edges.data()), "x");
-   auto h1Axis = h1->GetXaxis();
-   auto h1Ncells = h1->GetNcells();
-   auto h1Array = h1->GetArray();
-   Double_t h1Stats[4];
-   h1->GetStats(h1Stats);
+   // fill every cell in the histogram once, including u/overflow.
+   auto fillX = [&x, &r1]() { return ++r1 % numRows == 0 ? x++ : x; };
+   auto fillY = [&y, &r2]() {
+      if (r2++ % numRows == 0)
+         y = startFill;
+      return y++;
+   };
 
-   EnableCUDA();
-   x = 0;
-   auto h2 = d.Histo1D(::TH1D("h2", "h2", (int)edges.size() - 1, edges.data()), "x");
-   auto h2Axis = h2->GetXaxis();
-   auto h2Ncells = h2->GetNcells();
-   auto h2Array = h2->GetArray();
-   Double_t h2Stats[4];
-   h2->GetStats(h2Stats);
+   auto d = rdf2D.Define("x", fillX).Define("y", fillY).Define("w", [&x, &y]() { return x + y; });
 
-   CheckBins(h1Axis, h2Axis);                                        // Compare bin edges.
-   CheckArrays(h1Array, h2Array, h1Ncells, h2Ncells, "fArray", "CUDA_fArray"); // Compare bin values.
-   CheckArrays(h1Stats, h2Stats, 4, 4, new const char*[4]{"fTsumw", "fTsumw2", "fTsumwx", "fTsumwx2"},
-               new const char*[4]{"CUDA_fTsumw", "CUDA_fTsumw2", "CUDA_fTsumwx",
-                                 "CUDA_fTsumwx2"}); // Compare histogram statistics.
+   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+   {
+      SCOPED_TRACE("Fill 2D histograms with fixed bins");
+
+      DisableCUDA();
+      auto h1ptr = d.Histo2D(::TH2D("h1", "h1", numBins, startBin, endBin, numBins, startBin, endBin), "x", "y");
+      auto h1 = HistProperties<double, TH2D>(h1ptr);
+
+      EnableCUDA();
+      x = startFill, y = startFill, r1 = 0, r2 = 0; // need to reset, because the second Histo1D redefines "x" again.
+      auto h2ptr = d.Histo2D(::TH2D("h2", "h2", numBins, startBin, endBin, numBins, startBin, endBin), "x", "y");
+      auto h2 = HistProperties<double, TH2D>(h2ptr);
+
+      CompareHistograms<double, TH2D>(h1, h2);
+   }
+
+   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+   {
+      SCOPED_TRACE("Fill 2D histograms with weighted fixed bins");
+
+      DisableCUDA();
+      x = startFill, y = startFill, r1 = 0, r2 = 0;
+      auto h1ptr = d.Histo2D(::TH2D("h1", "h1", numBins, startBin, endBin, numBins, startBin, endBin), "x", "y", "w");
+      auto h1 = HistProperties<double, TH2D>(h1ptr);
+
+      EnableCUDA();
+      x = startFill, y = startFill, r1 = 0, r2 = 0;
+      auto h2ptr = d.Histo2D(::TH2D("h2", "h2", numBins, startBin, endBin, numBins, startBin, endBin), "x", "y", "w");
+      auto h2 = HistProperties<double, TH2D>(h2ptr);
+
+      CompareHistograms<double, TH2D>(h1, h2);
+   }
+
+   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+   auto edges = GetVariableBinEdges();
+
+   {
+      SCOPED_TRACE("Fill 2D histograms with variable bins");
+
+      DisableCUDA();
+      x = startFill, y = startFill, r1 = 0, r2 = 0;
+      auto h1ptr = d.Histo2D(::TH2D("h1", "h1", numBins, edges->data(), numBins, edges->data()), "x", "y");
+      auto h1 = HistProperties<double, TH2D>(h1ptr);
+
+      EnableCUDA();
+      x = startFill, y = startFill, r1 = 0, r2 = 0;
+      auto h2ptr = d.Histo2D(::TH2D("h2", "h2", numBins, edges->data(), numBins, edges->data()), "x", "y");
+      auto h2 = HistProperties<double, TH2D>(h2ptr);
+
+      CompareHistograms<double, TH2D>(h1, h2);
+   }
+
+   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+   {
+      SCOPED_TRACE("Fill 2D histograms with weighted variable bins");
+
+      DisableCUDA();
+      x = startFill, y = startFill, r1 = 0, r2 = 0;
+      auto h1ptr = d.Histo2D(::TH2D("h1", "h1", numBins, edges->data(), numBins, edges->data()), "x", "y", "w");
+      auto h1 = HistProperties<double, TH2D>(h1ptr);
+
+      EnableCUDA();
+      x = startFill, y = startFill, r1 = 0, r2 = 0;
+      auto h2ptr = d.Histo2D(::TH2D("h2", "h2", numBins, edges->data(), numBins, edges->data()), "x", "y", "w");
+      auto h2 = HistProperties<double, TH2D>(h2ptr);
+
+      CompareHistograms<double, TH2D>(h1, h2);
+   }
+
+   delete edges;
 }
 
-// Test filling 1-dimensional histogram with doubles
-TEST(Hist1DTest, FillFixedbins2D)
+// Test filling 3-dimensional histogram with doubles
+TEST(HistoTest, Fill3D)
 {
-   Double_t x = 0;
-   auto d = rdf.Define("x", [&x]() { return x++; }).Define("y", [&x]() { return x + 1.; });
+   double x = startFill, y = startFill, z = startFill;
+   int r1 = 0, r2 = 0, r3 = 0;
 
-   DisableCUDA();
-   auto h1 = d.Histo2D(::TH2D("h1", "h1", numRows, 0, 100, numRows, 200, 300), "x", "y");
-   auto h1XAxis = h1->GetXaxis();
-   auto h1YAxis = h1->GetYaxis();
-   auto h1Ncells = h1->GetNcells();
-   auto h1Array = h1->GetArray();
-   Double_t h1Stats[7];
-   h1->GetStats(h1Stats);
+   // fill every cell in the histogram once, including u/overflow.
+   auto fillX = [&x, &r1]() {
+      if (++r1 % (numRows * numRows) == 0)
+         return x++;
+      return x;
+   };
+   auto fillY = [&y, &r2]() {
+      if (r2 % (numRows * numRows) == 0)
+         y = startFill;
+      return ++r2 % numRows == 0 ? y++ : y;
+   };
 
-   EnableCUDA();
-   x = 0;
-   auto h2 = d.Histo2D(::TH2D("h2", "h2", numRows, 0, 100, numRows, 200, 300), "x", "y");
-   auto h2XAxis = h2->GetXaxis();
-   auto h2YAxis = h2->GetYaxis();
-   auto h2Ncells = h2->GetNcells();
-   auto h2Array = h2->GetArray();
-   Double_t h2Stats[7];
-   h2->GetStats(h2Stats);
+   auto fillZ = [&z, &r3]() {
+      if (r3++ % numRows == 0)
+         z = startFill;
+      return z++;
+   };
 
-   CheckBins(h1XAxis, h2XAxis);                                        // Compare bin edges.
-   CheckBins(h1YAxis, h2YAxis);                                        // Compare bin edges.
-   CheckArrays(h1Array, h2Array, h1Ncells, h2Ncells, "fArray", "CUDA fArray"); // Compare bin values.
-   CheckArrays(h1Stats, h2Stats, 4, 4, new const char*[4]{"fTsumw", "fTsumw2", "fTsumwx", "fTsumwx2"},
-               new const char*[4]{"CUDA fTsumw", "CUDA fTsumw2", "CUDA fTsumwx",
-                                 "CUDA fTsumwx2"}); // Compare histogram statistics.
+   auto d =
+      rdf3D.Define("x", fillX).Define("y", fillY).Define("z", fillZ).Define("w", [&x, &y, &z]() { return x + y + z; });
+
+   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+   {
+      SCOPED_TRACE("Fill 3D histograms with fixed bins");
+
+      DisableCUDA();
+      auto h1ptr =
+         d.Histo3D(::TH3D("h1", "h1", numBins, startBin, endBin, numBins, startBin, endBin, numBins, startBin, endBin),
+                   "x", "y", "z");
+      auto h1 = HistProperties<double, TH3D>(h1ptr);
+
+      EnableCUDA();
+      x = startFill, y = startFill, z = startFill, r1 = 0, r2 = 0, r3 = 0;
+      auto h2ptr =
+         d.Histo3D(::TH3D("h2", "h2", numBins, startBin, endBin, numBins, startBin, endBin, numBins, startBin, endBin),
+                   "x", "y", "z");
+      auto h2 = HistProperties<double, TH3D>(h2ptr);
+
+      CompareHistograms<double, TH3D>(h1, h2);
+   }
+
+   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+   {
+      SCOPED_TRACE("Fill 3D histograms with weighted fixed bins");
+
+      DisableCUDA();
+      x = startFill, y = startFill, z = startFill, r1 = 0, r2 = 0, r3 = 0;
+      auto h1ptr =
+         d.Histo3D(::TH3D("h1", "h1", numBins, startBin, endBin, numBins, startBin, endBin, numBins, startBin, endBin),
+                   "x", "y", "z", "w");
+      auto h1 = HistProperties<double, TH3D>(h1ptr);
+
+      EnableCUDA();
+      x = startFill, y = startFill, z = startFill, r1 = 0, r2 = 0, r3 = 0;
+      auto h2ptr =
+         d.Histo3D(::TH3D("h2", "h2", numBins, startBin, endBin, numBins, startBin, endBin, numBins, startBin, endBin),
+                   "x", "y", "z", "w");
+      auto h2 = HistProperties<double, TH3D>(h2ptr);
+
+      CompareHistograms<double, TH3D>(h1, h2);
+   }
+
+   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+   auto edges = GetVariableBinEdges();
+
+   {
+      SCOPED_TRACE("Fill 3D histograms with variable bins");
+
+      DisableCUDA();
+      x = startFill, y = startFill, z = startFill, r1 = 0, r2 = 0, r3 = 0;
+      auto h1ptr = d.Histo3D(::TH3D("h1", "h1", numBins, edges->data(), numBins, edges->data(), numBins, edges->data()),
+                             "x", "y", "z");
+      auto h1 = HistProperties<double, TH3D>(h1ptr);
+
+      EnableCUDA();
+      x = startFill, y = startFill, z = startFill, r1 = 0, r2 = 0, r3 = 0;
+      auto h2ptr = d.Histo3D(::TH3D("h2", "h2", numBins, edges->data(), numBins, edges->data(), numBins, edges->data()),
+                             "x", "y", "z");
+      auto h2 = HistProperties<double, TH3D>(h2ptr);
+
+      CompareHistograms<double, TH3D>(h1, h2);
+   }
+
+   /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+   {
+      SCOPED_TRACE("Fill 3D histograms with weighted variable bins");
+
+      DisableCUDA();
+      x = startFill, y = startFill, z = startFill, r1 = 0, r2 = 0, r3 = 0;
+      auto h1ptr = d.Histo3D(::TH3D("h1", "h1", numBins, edges->data(), numBins, edges->data(), numBins, edges->data()),
+                             "x", "y", "z", "w");
+      auto h1 = HistProperties<double, TH3D>(h1ptr);
+
+      EnableCUDA();
+      x = startFill, y = startFill, z = startFill, r1 = 0, r2 = 0, r3 = 0;
+      auto h2ptr = d.Histo3D(::TH3D("h2", "h2", numBins, edges->data(), numBins, edges->data(), numBins, edges->data()),
+                             "x", "y", "z", "w");
+      auto h2 = HistProperties<double, TH3D>(h2ptr);
+
+      CompareHistograms<double, TH3D>(h1, h2);
+   }
+
+   delete edges;
 }

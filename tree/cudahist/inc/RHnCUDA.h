@@ -2,72 +2,67 @@
 #define RHnCUDA_H
 
 #include "RtypesCore.h"
-#include "TError.h"
+#include "TMath.h"
 
 #include <vector>
+#include <array>
 #include <utility>
-#include <iostream>
 
+namespace CUDAhist {
 
-class RHnCUDA  {
-public:
-   struct Stats {
-      double      fTsumw;           ///<  Total Sum of weights
-      double      fTsumw2;          ///<  Total Sum of squares of weights
-      double      fTsumwx;          ///<  Total Sum of weight*X
-      double      fTsumwx2;         ///<  Total Sum of weight*X*X
-      double     *fSumw2;           ///<  Array of sum of squares of weights
-   };
+struct RAxis {
+   int fNcoords; ///< Number of bins(1D) WITH u/overflow
+   double fMin;  ///< Low edge of first bin
+   double fMax;  ///< Upper edge of last bin
 
-   struct RAxis {
-      int                  fNcells;       ///< Number of bins(1D) WITH u/overflow
-      double               fMin;          ///< Low edge of first bin
-      double               fMax;          ///< Upper edge of last bin
+   const double *kBinEdges; ///< Bin edges array, can be NULL
+};
 
-      const double        *kBinEdges;     ///< Bin edges array, can be NULL
-   };
-
+template <typename T, unsigned int Dim, unsigned int BlockSize = 512>
+class RHnCUDA {
+   // clang-format off
 private:
-   double              *fDeviceHisto;     ///< Pointer to histogram buffer on the GPU.
-   int                  fNbins;           ///< Total number of bins in the histogram WITH u/overflow
+   T                       *fDeviceHisto;        ///< Pointer to histogram buffer on the GPU.
+   int                      fNbins;              ///< Total number of bins in the histogram WITH u/overflow
 
-   int                  fThreadBlockSize; ///< Block size used in CUDA kernels
-   const int            kDim;             ///< Dimension of the histogram
-   std::vector<RAxis>   fAxes;            ///< Vector of kDim axis descriptors
-   RAxis               *fDeviceAxes;      ///< Pointer to axis descriptors on the GPU.
+   const int                kNStats;             ///< Number of statistics.
+   std::array<RAxis, Dim>   fHAxes;              ///< Vector of Dim axis descriptors
+   RAxis                   *fDAxes;              ///< Pointer to axis descriptors on the GPU.
 
-   std::vector<double>  fCells;           ///< 1D buffer with bufferSize number of kDim-dimensional coordinates to fill.
-   std::vector<double>  fWeights;         ///< Buffer of weigths for each bin.
-   double              *fDeviceCells;     ///< Pointer to array of bins to fill on the GPU.
-   double              *fDeviceWeights;   ///< Pointer to array of weights on the GPU.
+   std::vector<double>      fHCoords;            ///< 1D buffer with bufferSize #Dim-dimensional coordinates to fill.
+   std::vector<double>      fHWeights;           ///< Buffer of weigths for each bin on the Host.
+   double                  *fDCoords;            ///< Pointer to array of coordinates to fill on the GPU.
+   double                  *fDBins;              ///< Pointer to array of bins (corresponding to the coordinates) to fill on the GPU.
+   double                  *fDWeights;           ///< Pointer to array of weights on the GPU.
 
-   double               fEntries;         ///< Number of entries that have been filled.
-   Stats               *fDeviceStats;     ///< Pointer to statistics on the GPU.
-   unsigned int         fBufferSize;      ///< Number of bins to buffer.
+   double                   fEntries;            ///< Number of entries that have been filled.
+   double                  *fDIntermediateStats; ///< Pointer to statistics buffer on GPU.
+   double                  *fDStats;             ///< Pointer to statistics buffer on GPU.
 
+   // Kernel size parameters
+   unsigned int             fNumBlocks;          ///< Number of blocks used in CUDA kernels
+   unsigned int             fBufferSize;         ///< Number of coordinates to buffer.
+   unsigned int             fMaxSmemSize;        ///< Maximum shared memory size per block on device 0.
+   unsigned int             kStatsSmemSize;      ///< Size of shared memory per block in GetStatsKernel
+   unsigned int             fHistoSmemSize;      ///< Size of shared memory per block in HistoKernel
+   // clang-format on
 
 public:
    RHnCUDA() = delete;
 
-   RHnCUDA(int dim, int *ncells, double *xlow, double *xhigh, const double **binEdges);
+   RHnCUDA(int *ncells, double *xlow, double *xhigh, const double **binEdges);
 
    void AllocateH1D();
-   int RetrieveResults(double *histResult, double *stats);
 
-   void Fill(const std::vector<double> x);
-   void Fill(const std::vector<double> x, double w);
+   int RetrieveResults(double *histResult, double *statsResult);
 
-   // Temporary catch-all
-   // template <typename... ValTypes>
-   // void Fill(const ValTypes &...x)
-   // {
-   //    Fatal("Fill", "Cuda version not implemented yet");
-   // }
+   void Fill(const std::array<T, Dim> &coords, double w = 1.);
 
 protected:
    void GetStats(unsigned int size);
-   void ExecuteCUDAH1D();
+
+   void ExecuteCUDAHisto();
 };
 
-
+} // namespace CUDAhist
 #endif
