@@ -309,8 +309,8 @@ void RooProdPdf::initializeFromCmdArgList(const RooArgSet& fullPdfSet, const Roo
     if (0 == strcmp(carg->GetName(), "Conditional")) {
 
       Int_t argType = carg->getInt(0) ;
-      RooArgSet* pdfSet = (RooArgSet*) carg->getSet(0) ;
-      RooArgSet* normSet = (RooArgSet*) carg->getSet(1) ;
+      auto pdfSet = static_cast<RooArgSet const*>(carg->getSet(0));
+      auto normSet = static_cast<RooArgSet const*>(carg->getSet(1));
 
       for(auto * thePdf : static_range_cast<RooAbsPdf*>(*pdfSet)) {
         _pdfList.add(*thePdf) ;
@@ -601,7 +601,6 @@ void RooProdPdf::factorizeProduct(const RooArgSet& normSet, const RooArgSet& int
     if (!done) {
       if (!(pdfNormDeps.empty() && pdfAllDeps.empty() &&
        pdfIntSet.empty()) || normSet.empty()) {
-//    cout << GetName() << ": creating new term" << endl;
    term = new RooArgSet("term");
    termNormDeps = new RooArgSet("termNormDeps");
    depAllList.emplace_back(pdfAllDeps.begin(), pdfAllDeps.end(), "termAllDeps");
@@ -756,7 +755,6 @@ std::unique_ptr<RooProdPdf::CacheElem> RooProdPdf::createCacheElem(const RooArgS
     } else {
 //       cout<<"FK: Starting Composite Term"<<endl;
 
-      RooArgSet compTermSet, compTermNorm;
       for (auto const& term : group) {
 
    Int_t termIdx = terms.IndexOf(term);
@@ -796,23 +794,6 @@ std::unique_ptr<RooProdPdf::CacheElem> RooProdPdf::createCacheElem(const RooArgS
   // Find groups with y as termNSet
   // Replace G(y) with (G(y),ratio)
   for (auto const& group : groupedList) {
-    if (1 == group.size()) {
-      RooArgSet* term = group[0];
-
-      Int_t termIdx = terms.IndexOf(term);
-      norm = (RooArgSet*) norms.At(termIdx);
-      imps = (RooArgSet*) imp.At(termIdx);
-      RooArgSet termNSet(*norm), termImpSet(*imps);
-
-      // If termNset matches index of ratioTerms, insert ratio here
-      std::ostringstream str; termNSet.printValue(str);
-      if (!ratioTerms[str.str()].empty()) {
-//    cout << "MUST INSERT RATIO OBJECT IN TERM (SINGLE) " << *term << endl;
-      term->add(ratioTerms[str.str()]);
-      cache->_ownedList.addOwned(std::move(ratioTerms[str.str()]));
-      }
-    } else {
-      RooArgSet compTermSet, compTermNorm;
       for (auto const& term : group) {
    Int_t termIdx = terms.IndexOf(term);
    norm = (RooArgSet*) norms.At(termIdx);
@@ -827,7 +808,6 @@ std::unique_ptr<RooProdPdf::CacheElem> RooProdPdf::createCacheElem(const RooArgS
      cache->_ownedList.addOwned(std::move(ratioTerms[str.str()]));
    }
       }
-    }
   }
 
   for (auto const& group : groupedList) {
@@ -853,11 +833,6 @@ std::unique_ptr<RooProdPdf::CacheElem> RooProdPdf::createCacheElem(const RooArgS
         // Cross-imported integrated dependents
         termXSet.add(*xdeps);
         termImpSet.add(*imps);
-
-//       cout << GetName() << ": termISet = " << termISet << endl;
-//       cout << GetName() << ": termNSet = " << termNSet << endl;
-//       cout << GetName() << ": termXSet = " << termXSet << endl;
-//       cout << GetName() << ": termImpSet = " << termImpSet << endl;
 
         // Add prefab term to partIntList.
         bool isOwned(false);
@@ -894,12 +869,6 @@ std::unique_ptr<RooProdPdf::CacheElem> RooProdPdf::createCacheElem(const RooArgS
 
    // Remove outer integration dependents from termISet
    termISet.remove(outerIntDeps, true, true);
-//       cout << "termISet = "; termISet.Print("1");
-
-//    cout << GetName() << ": termISet = " << termISet << endl;
-//    cout << GetName() << ": termNSet = " << termNSet << endl;
-//    cout << GetName() << ": termXSet = " << termXSet << endl;
-//    cout << GetName() << ": termImpSet = " << termImpSet << endl;
 
    bool isOwned = false;
    vector<RooAbsReal*> func = processProductTerm(nset, iset, isetRangeName, term, termNSet, termISet, isOwned, true);
@@ -914,9 +883,6 @@ std::unique_ptr<RooProdPdf::CacheElem> RooProdPdf::createCacheElem(const RooArgS
      //cache->_numList.add(*func[1]);
      //cache->_denList.add(*func[2]);
 
-//      cout << "func[0]=" << func[0]->ClassName() << "::" << func[0]->GetName() << endl;
-//      cout << "func[1]=" << func[1]->ClassName() << "::" << func[1]->GetName() << endl;
-//      cout << "func[2]=" << func[2]->ClassName() << "::" << func[2]->GetName() << endl;
    }
       }
 
@@ -966,26 +932,6 @@ std::unique_ptr<RooProdPdf::CacheElem> RooProdPdf::createCacheElem(const RooArgS
       compTermNorm.snapshot(*cache->_normList.back(), false);
     }
   }
-
-  // WVE DEBUG PRINTING
-//   cout << "RooProdPdf::getPartIntList(" << GetName() << ") made cache " << cache << " with the following nset pointers ";
-//   TIterator* nliter = nsetList->MakeIterator();
-//   RooArgSet* ns;
-//   while((ns=(RooArgSet*)nliter->Next())) {
-//     cout << ns << " ";
-//   }
-//   cout << endl;
-//   delete nliter;
-
-//   cout << "   FOLKERT::RooProdPdf::getPartIntList END(" << GetName() <<")  nset = " << (nset?*nset:RooArgSet()) << endl
-//        << "   _normRange = " << _normRange << endl
-//        << "   iset = " << (iset?*iset:RooArgSet()) << endl
-//        << "   partList = ";
-//   if(partListPointer) partListPointer->Print();
-//   cout << "   nsetList = ";
-//   if(nsetListPointer) nsetListPointer->Print("");
-//   cout << "   code = " << returnCode << endl
-//        << "   isetRangeName = " << (isetRangeName?isetRangeName:"<null>") << endl;
 
   // Need to rearrange product in case of multiple ranges
   if (_normRange.Contains(",")) {
@@ -1394,7 +1340,7 @@ void RooProdPdf::groupProductTerms(std::list<std::vector<RooArgSet*>>& groupedTe
      newGroup->emplace_back(term2) ;
    }
 
-   // Remove this group from list and delete it (but not its contents)
+   // Remove this non-owning group from list
    group = groupedTerms.erase(group);
       } else {
         ++group;
@@ -1414,16 +1360,6 @@ std::vector<RooAbsReal*> RooProdPdf::processProductTerm(const RooArgSet* nset, c
                      const RooArgSet* term,const RooArgSet& termNSet, const RooArgSet& termISet,
                      bool& isOwned, bool forceWrap) const
 {
-//    cout << "   FOLKERT::RooProdPdf(" << GetName() <<") processProductTerm nset = " << (nset?*nset:RooArgSet()) << endl
-//          << "   _normRange = " << _normRange << endl
-//          << "   iset = " << (iset?*iset:RooArgSet()) << endl
-//          << "   isetRangeName = " << (isetRangeName?isetRangeName:"<null>") << endl
-//          << "   term = " << (term?*term:RooArgSet()) << endl
-//          << "   termNSet = " << termNSet << endl
-//          << "   termISet = " << termISet << endl
-//          << "   isOwned = " << isOwned << endl
-//          << "   forceWrap = " << forceWrap << endl ;
-
   vector<RooAbsReal*> ret(3) ; ret[0] = 0 ; ret[1] = 0 ; ret[2] = 0 ;
 
   // CASE I: factorizing term: term is integrated over all normalizing observables
@@ -2286,9 +2222,8 @@ bool RooProdPdf::redirectServersHook(const RooAbsCollection& newServerList, bool
         // Need to do some tricks here because it's not possible to replace in
         // an owning RooAbsCollection.
         normSet->releaseOwnership();
-        normSet->replace(*arg, *newArg->cloneTree());
+        normSet->replace(*std::unique_ptr<RooAbsArg>{arg}, *newArg->cloneTree());
         normSet->takeOwnership();
-        delete arg;
       }
     }
   }
