@@ -21,11 +21,14 @@ using namespace ROOT::Fit;
 const ROOT::Math::IMultiGenFunction *gFunction = nullptr;
 /// function wrapper for the gradient of the function to be minimized
 const ROOT::Math::IMultiGradFunction *gGradFunction = nullptr;
-
+/// function wrapper for the hessian of the function to be minimized
 std::function<bool(const std::vector<double> &, double *)> gfHessianFunction;
 
+/// simple function for debugging
 #define PyPrint(pyo) PyObject_Print(pyo, stdout, Py_PRINT_RAW)
 
+
+/// function to wrap into Python the C/C++ target function to be minimized
 PyObject *target_function(PyObject * /*self*/, PyObject *args)
 {
    PyArrayObject *arr = (PyArrayObject *)PyTuple_GetItem(args, 0);
@@ -36,6 +39,7 @@ PyObject *target_function(PyObject * /*self*/, PyObject *args)
    return PyFloat_FromDouble(r);
 };
 
+/// function to wrap into Python the C/C++ jacobian function
 PyObject *jac_function(PyObject * /*self*/, PyObject *args)
 {
    PyArrayObject *arr = (PyArrayObject *)PyTuple_GetItem(args, 0);
@@ -49,6 +53,7 @@ PyObject *jac_function(PyObject * /*self*/, PyObject *args)
    return py_array;
 };
 
+/// function to wrap into Python the C/C++ hessian function
 PyObject *hessian_function(PyObject * /*self*/, PyObject *args)
 {
    PyArrayObject *arr = (PyArrayObject *)PyTuple_GetItem(args, 0);
@@ -60,9 +65,6 @@ PyObject *hessian_function(PyObject * /*self*/, PyObject *args)
    gfHessianFunction(x, values);
    npy_intp dims[2] = {size, size};
    PyObject *py_array = PyArray_SimpleNewFromData(2, dims, NPY_DOUBLE, values);
-   //    std::cout<<"---------------"<<std::endl;
-   //    PyPrint(py_array);
-   //    std::cout<<"---------------"<<std::endl;
    return py_array;
 };
 
@@ -71,9 +73,7 @@ ScipyMinimizer::ScipyMinimizer() : BasicMinimizer()
 {
    fOptions.SetMinimizerType("Scipy");
    fOptions.SetMinimizerAlgorithm("L-BFGS-B");
-   if (!PyIsInitialized()) {
-      PyInitialize();
-   }
+   PyInitialize();
    fHessianFunc = [](const std::vector<double> &, double *) -> bool { return false; };
    // set extra options
    SetAlgoExtraOptions();
@@ -84,9 +84,7 @@ ScipyMinimizer::ScipyMinimizer(const char *type)
 {
    fOptions.SetMinimizerType("Scipy");
    fOptions.SetMinimizerAlgorithm(type);
-   if (!PyIsInitialized()) {
-      PyInitialize();
-   }
+   PyInitialize();
    fHessianFunc = [](const std::vector<double> &, double *) -> bool { return false; };
    // set extra options
    SetAlgoExtraOptions();
@@ -169,23 +167,23 @@ void ScipyMinimizer::PyInitialize()
 // Finalize Python interpreter
 void ScipyMinimizer::PyFinalize()
 {
-   if (fMinimize)
-      Py_DECREF(fMinimize);
-   if (fBoundsMod)
-      Py_DECREF(fBoundsMod);
    Py_Finalize();
 }
 
 //_______________________________________________________________________
 int ScipyMinimizer::PyIsInitialized()
 {
-   if (!Py_IsInitialized())
-      return kFALSE;
-   return kTRUE;
+   return Py_IsInitialized();
 }
 
 //_______________________________________________________________________
-ScipyMinimizer::~ScipyMinimizer() {}
+ScipyMinimizer::~ScipyMinimizer()
+{
+   if (fMinimize)
+      Py_DECREF(fMinimize);
+   if (fBoundsMod)
+      Py_DECREF(fBoundsMod);
+}
 
 //_______________________________________________________________________
 bool ScipyMinimizer::Minimize()

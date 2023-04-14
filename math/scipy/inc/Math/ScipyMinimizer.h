@@ -50,12 +50,19 @@ namespace Experimental {
 
 //_____________________________________________________________________________________
 /**
- * \class ScipyMinimizer
- * ScipyMinimizer class.
- * Implementation for Scipy ... TODO
+  \class ScipyMinimizer
+  ScipyMinimizer class.
+  Scipy minimizer implementation using Python C API that supports several methods such as
+  Nelder-Mead, L-BFGS-B, Powell, CG, BFGS, TNC, COBYLA, SLSQP, trust-constr,
+  Newton-CG, dogleg, trust-ncg, trust-exact and trust-krylov.
 
-   See <A HREF="https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html">Scipy doc</A>
-   from more info on the Scipy minimization algorithms.
+  It supports the Jacobian (Gradients), Hessian and bounds for the variables.
+
+  Support for constraint functions will be implemented in the next releases.
+  You can find a macro example in the folder $ROOTSYS/tutorial/fit/scipy.C
+
+  See <A HREF="https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html">Scipy doc</A>
+  from more info on the Scipy minimization algorithms.
 
    @ingroup MultiMin
 */
