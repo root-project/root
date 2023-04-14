@@ -804,7 +804,8 @@ std::unique_ptr<RooProdPdf::CacheElem> RooProdPdf::createCacheElem(const RooArgS
       std::ostringstream str; termNSet.printValue(str);
       if (!ratioTerms[str.str()].empty()) {
 //    cout << "MUST INSERT RATIO OBJECT IN TERM (SINGLE) " << *term << endl;
-   term->addOwned(std::move(ratioTerms[str.str()]));
+      term->add(ratioTerms[str.str()]);
+      cache->_ownedList.addOwned(std::move(ratioTerms[str.str()]));
       }
     } else {
       RooArgSet compTermSet, compTermNorm;
@@ -818,7 +819,8 @@ std::unique_ptr<RooProdPdf::CacheElem> RooProdPdf::createCacheElem(const RooArgS
    ostringstream str; termNSet.printValue(str);
    if (!ratioTerms[str.str()].empty()) {
 //      cout << "MUST INSERT RATIO OBJECT IN TERM (COMPOSITE)" << *term << endl;
-     term->addOwned(std::move(ratioTerms[str.str()]));
+     term->add(ratioTerms[str.str()]);
+     cache->_ownedList.addOwned(std::move(ratioTerms[str.str()]));
    }
       }
     }
