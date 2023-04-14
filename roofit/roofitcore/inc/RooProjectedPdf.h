@@ -43,6 +43,11 @@ public:
 
   std::unique_ptr<RooAbsArg> compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileContext & ctx) const override;
 
+  // Handle case of projecting an Extended pdf
+  double expectedEvents(const RooArgSet* nset) const override { return static_cast<RooAbsPdf*>(intpdf.absArg())->expectedEvents(nset); }
+  ExtendMode extendMode() const override { return static_cast<RooAbsPdf*>(intpdf.absArg())->extendMode(); }
+  
+
 protected:
 
   RooRealProxy intpdf ; ///< p.d.f that is integrated
