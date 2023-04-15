@@ -76,7 +76,7 @@ private:
    PyObject *fBoundsMod;
    GenAlgoOptions fExtraOpts;
    std::function<bool(const std::vector<double> &, double *)> fHessianFunc;
-
+   unsigned int fCalls;
 protected:
    PyObject *fGlobalNS;
    PyObject *fLocalNS;
@@ -115,6 +115,10 @@ public:
     */
    void PyRunString(TString code, TString errorMessage = "Failed to run python code", int start = Py_single_input);
 
+   /*
+      Number of function calls
+    */
+   virtual unsigned int NCalls() const  override;
 private:
    // usually copying is non trivial, so we make this unaccessible
 
