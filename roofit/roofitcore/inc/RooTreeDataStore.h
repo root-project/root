@@ -17,7 +17,6 @@
 #define ROO_TREE_DATA_STORE
 
 #include "RooAbsDataStore.h"
-#include "RunContext.h"
 
 #include "ROOT/RStringView.hxx"
 

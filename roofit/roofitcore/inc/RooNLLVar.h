@@ -57,20 +57,12 @@ public:
 
   double defaultErrorLevel() const override { return 0.5 ; }
 
-  void batchMode(bool on = true) {
-    _batchEvaluations = on;
-  }
-
   void enableBinOffsetting(bool on = true) {
     _doBinOffset = on;
   }
 
   using ComputeResult = std::pair<ROOT::Math::KahanSum<double>, double>;
 
-  static RooNLLVar::ComputeResult computeBatchedFunc(const RooAbsPdf *pdfClone, RooAbsData *dataClone,
-                                                     std::unique_ptr<RooBatchCompute::RunContext> &evalData,
-                                                 RooArgSet *normSet, bool weightSq, std::size_t stepSize,
-                                                 std::size_t firstEvent, std::size_t lastEvent);
   static RooNLLVar::ComputeResult computeScalarFunc(const RooAbsPdf *pdfClone, RooAbsData *dataClone, RooArgSet *normSet,
                                                 bool weightSq, std::size_t stepSize, std::size_t firstEvent,
                                                 std::size_t lastEvent, bool doBinOffset=false);
@@ -83,11 +75,9 @@ protected:
   static RooArgSet _emptySet ; // Supports named argument constructor
 
 private:
-  ComputeResult computeBatched(std::size_t stepSize, std::size_t firstEvent, std::size_t lastEvent) const;
   ComputeResult computeScalar(std::size_t stepSize, std::size_t firstEvent, std::size_t lastEvent) const;
 
   bool _extended{false};
-  bool _batchEvaluations{false};
   bool _doBinOffset{false};
   bool _weightSq{false}; ///< Apply weights squared?
   mutable bool _first{true}; ///<!
