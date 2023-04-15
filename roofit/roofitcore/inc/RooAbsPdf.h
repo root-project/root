@@ -242,9 +242,6 @@ public:
   double getValV(const RooArgSet* set=nullptr) const override ;
   virtual double getLogVal(const RooArgSet* set=nullptr) const ;
 
-  RooSpan<const double> getLogValBatch(std::size_t begin, std::size_t batchSize,
-      const RooArgSet* normSet = nullptr) const;
-  RooSpan<const double> getLogProbabilities(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet = nullptr) const;
   void getLogProbabilities(RooSpan<const double> pdfValues, double * output) const;
 
   /// \copydoc getNorm(const RooArgSet*) const
