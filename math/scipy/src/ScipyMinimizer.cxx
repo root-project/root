@@ -71,6 +71,7 @@ PyObject *hessian_function(PyObject * /*self*/, PyObject *args)
 //_______________________________________________________________________
 ScipyMinimizer::ScipyMinimizer() : BasicMinimizer()
 {
+   fCalls = 0;
    fOptions.SetMinimizerType("Scipy");
    fOptions.SetMinimizerAlgorithm("L-BFGS-B");
    PyInitialize();
@@ -82,6 +83,7 @@ ScipyMinimizer::ScipyMinimizer() : BasicMinimizer()
 //_______________________________________________________________________
 ScipyMinimizer::ScipyMinimizer(const char *type)
 {
+   fCalls = 0;
    fOptions.SetMinimizerType("Scipy");
    fOptions.SetMinimizerAlgorithm(type);
    PyInitialize();
@@ -288,6 +290,7 @@ bool ScipyMinimizer::Minimize()
    SetFinalValues(x);
    auto obj_value = (*gFunction)(x);
    SetMinValue(obj_value);
+   fCalls = nfev; //number of function evaluations
 
    std::cout << "=== Status: " << status << std::endl;
    std::cout << "=== Message: " << message << std::endl;
@@ -311,4 +314,10 @@ void ScipyMinimizer::PyRunString(TString code, TString errorMessage, int start)
 void ScipyMinimizer::SetHessianFunction(std::function<bool(const std::vector<double> &, double *)> func)
 {
    fHessianFunc = func;
+}
+
+//_______________________________________________________________________
+unsigned int ScipyMinimizer::NCalls() const
+{
+   return fCalls;
 }
