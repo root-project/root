@@ -3106,8 +3106,8 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent, size_t hi
          // information might be pertinent to the normalization of the name.
          // For example it might contain or be a typedef for which we don't
          // have a forward declaration (eg. typedef to instance of class
-         // template with default paramters).  So let's redo the normalization
-         // as the new information (eg typedef in TROOT::GetListOfTypes) might
+         // template with default parameters).  So let's redo the normalization
+         // as the new information (eg. typedef in TROOT::GetListOfTypes) might
          // lead to a different value.
          {
             TInterpreter::SuspendAutoLoadingRAII autoloadOff(gInterpreter);
