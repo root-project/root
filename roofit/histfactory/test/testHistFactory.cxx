@@ -16,7 +16,6 @@
 #include "RooHelpers.h"
 #include "RooFitResult.h"
 #include "RooPlot.h"
-#include "RunContext.h"
 
 #include "TROOT.h"
 #include "TFile.h"

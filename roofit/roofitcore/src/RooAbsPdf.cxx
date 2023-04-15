@@ -730,22 +730,6 @@ void RooAbsPdf::logBatchComputationErrors(RooSpan<const double>& outputs, std::s
 }
 
 
-////////////////////////////////////////////////////////////////////////////////
-/// Compute the log-likelihoods for all events in the requested batch.
-/// The arguments are passed over to getValues().
-/// \param[in] evalData Struct with data that should be used for evaluation.
-/// \param[in] normSet Optional normalisation set to be used during computations.
-/// \return    Returns a batch of doubles that contains the log probabilities.
-RooSpan<const double> RooAbsPdf::getLogProbabilities(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const {
-  auto pdfValues = getValues(evalData, normSet);
-
-  evalData.logProbabilities.resize(pdfValues.size());
-  RooSpan<double> results( evalData.logProbabilities );
-  getLogProbabilities(getValues(evalData, normSet), results.data());
-  return results;
-}
-
-
 void RooAbsPdf::getLogProbabilities(RooSpan<const double> pdfValues, double * output) const {
   for (std::size_t i = 0; i < pdfValues.size(); ++i) {
      output[i] = getLog(pdfValues[i], this);
@@ -1122,7 +1106,7 @@ RooFit::OwningPtr<RooAbsReal> RooAbsPdf::createNLL(RooAbsData& data, const RooLi
   auto batchMode = static_cast<RooFit::BatchModeOption>(pc.getInt("BatchMode"));
 
   // Construct BatchModeNLL if requested
-  if (batchMode != RooFit::BatchModeOption::Off && batchMode != RooFit::BatchModeOption::Old) {
+  if (batchMode != RooFit::BatchModeOption::Off) {
 
     // Set the normalization range. We need to do it now, because it will be
     // considered in `compileForNormSet`.
@@ -1186,7 +1170,6 @@ RooFit::OwningPtr<RooAbsReal> RooAbsPdf::createNLL(RooAbsData& data, const RooLi
   cfg.takeGlobalObservablesFromData = takeGlobalObservablesFromData;
   cfg.rangeName = rangeName ? rangeName : "";
   auto nllVar = std::make_unique<RooNLLVar>(baseName.c_str(),"-log(likelihood)",*this,data,projDeps, ext, cfg);
-  nllVar->batchMode(batchMode == RooFit::BatchModeOption::Old);
   nllVar->enableBinOffsetting(offset == RooFit::OffsetMode::Bin);
   nll = std::move(nllVar);
   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors) ;

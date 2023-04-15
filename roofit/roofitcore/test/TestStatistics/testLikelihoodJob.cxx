@@ -467,7 +467,8 @@ TEST_F(LikelihoodJobSimBinnedConstrainedTest, ConstrainedAndOffset)
    EXPECT_DOUBLE_EQ(nll1.Sum(), nll2);
 }
 
-TEST_F(LikelihoodJobTest, BatchedUnbinnedGaussianND)
+// Disabled until the new BatchMode backed by the RooFitDriver is supported.
+TEST_F(LikelihoodJobTest, DISABLED_BatchedUnbinnedGaussianND)
 {
    unsigned int N = 4;
 
