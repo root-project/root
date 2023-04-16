@@ -7657,7 +7657,7 @@ void TMinuit::mnstat(Double_t &fmin, Double_t &fedm, Double_t &errdef, Int_t &np
 /// the value .TRUE. if they are equal.  To find EPSMAC
 /// safely by foiling the Fortran optimiser
 
-void TMinuit::mntiny(volatile Double_t epsp1, Double_t &epsbak)
+void TMinuit::mntiny(Double_t epsp1, Double_t &epsbak)
 {
    epsbak = epsp1 - 1;
 }

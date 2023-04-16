@@ -252,7 +252,7 @@ public:
    virtual void   mnset();
    virtual void   mnsimp();
    virtual void   mnstat(Double_t &fmin, Double_t &fedm, Double_t &errdef, Int_t &npari, Int_t &nparx, Int_t &istat);
-   virtual void   mntiny(volatile Double_t epsp1, Double_t &epsbak);
+   virtual void   mntiny(Double_t epsp1, Double_t &epsbak);
    Bool_t         mnunpt(TString &cfname);
    virtual void   mnvert(Double_t *a, Int_t l, Int_t m, Int_t n, Int_t &ifail);
    virtual void   mnwarn(const char *copt, const char *corg, const char *cmes);
