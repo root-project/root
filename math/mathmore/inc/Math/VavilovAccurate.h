@@ -329,14 +329,14 @@ public:
 
 
 private:
-   enum{MAXTERMS=500};
+   constexpr static int MAXTERMS{500};
    double fH[8], fT0, fT1, fT, fOmega, fA_pdf[MAXTERMS+1], fB_pdf[MAXTERMS+1], fA_cdf[MAXTERMS+1], fB_cdf[MAXTERMS+1], fX0;
    double fKappa, fBeta2;
    double fEpsilonPM, fEpsilon;
 
    mutable bool fQuantileInit;
    mutable int fNQuant;
-   enum{kNquantMax=32};
+   constexpr static int kNquantMax{32};
    mutable double fQuant[kNquantMax];
    mutable double fLambda[kNquantMax];
 
