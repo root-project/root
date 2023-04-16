@@ -63,7 +63,7 @@ private:
   double *_weights;  //[_nEvents]
   double _sumWgt ;
 
-  enum { _nPoints = 1000 };
+  constexpr static int _nPoints{1000};
   double _lookupTable[_nPoints+1];
 
   double g(double x,double sigma) const;
