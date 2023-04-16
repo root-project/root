@@ -291,8 +291,12 @@ ROOT::Experimental::RNTupleWriter::RNTupleWriter(std::unique_ptr<ROOT::Experimen
 
 ROOT::Experimental::RNTupleWriter::~RNTupleWriter()
 {
-   CommitCluster(true /* commitClusterGroup */);
-   fSink->CommitDataset();
+   try {
+      CommitCluster(true /* commitClusterGroup */);
+      fSink->CommitDataset();
+   } catch (const RException &err) {
+      R__LOG_ERROR(NTupleLog()) << "failure committing ntuple: " << err.GetError().GetReport();
+   }
 }
 
 std::unique_ptr<ROOT::Experimental::RNTupleWriter>
@@ -328,6 +332,9 @@ void ROOT::Experimental::RNTupleWriter::CommitCluster(bool commitClusterGroup)
       if (commitClusterGroup)
          CommitClusterGroup();
       return;
+   }
+   if (fSink->GetWriteOptions().GetHasSmallClusters() && (fUnzippedClusterSize > 512 * 1024 * 1024)) {
+      throw RException(R__FAIL("invalid attempt to write a cluster > 512MiB with 'small clusters' option enabled"));
    }
    for (auto &field : *fModel->GetFieldZero()) {
       field.Flush();

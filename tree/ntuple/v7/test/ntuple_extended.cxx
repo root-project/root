@@ -259,3 +259,84 @@ TEST(RNTuple, LargeFile2)
    }
 }
 #endif
+
+namespace {
+
+int gTestLastLevel = -1;
+bool gTestLastAbort = false;
+std::string gTestLastLocation;
+std::string gTestLastMsg;
+
+static void TestErrorHandler(int level, Bool_t abort, const char *location, const char *msg)
+{
+   gTestLastLevel = level;
+   gTestLastAbort = abort;
+   gTestLastLocation = location;
+   gTestLastMsg = msg;
+}
+
+} // namespace
+
+TEST(RNTuple, SmallClusters)
+{
+   FileRaii fileGuard("test_ntuple_small_clusters.root");
+
+   {
+      auto model = RNTupleModel::Create();
+      auto fldVec = model->MakeField<std::vector<float>>("vec");
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      fldVec->push_back(1.0);
+      writer->Fill();
+   }
+   {
+      auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+      auto desc = reader->GetDescriptor();
+      auto colId = desc->FindLogicalColumnId(desc->FindFieldId("vec"), 0);
+      EXPECT_EQ(EColumnType::kSplitIndex64, desc->GetColumnDescriptor(colId).GetModel().GetType());
+      reader->LoadEntry(0);
+      auto entry = reader->GetModel()->GetDefaultEntry();
+      EXPECT_FLOAT_EQ(1u, entry->Get<std::vector<float>>("vec")->size());
+      EXPECT_FLOAT_EQ(1.0, entry->Get<std::vector<float>>("vec")->at(0));
+   }
+
+   {
+      auto model = RNTupleModel::Create();
+      auto fldVec = model->MakeField<std::vector<float>>("vec");
+      RNTupleWriteOptions options;
+      options.SetHasSmallClusters(true);
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath(), options);
+      fldVec->push_back(1.0);
+      writer->Fill();
+   }
+   {
+      auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+      auto desc = reader->GetDescriptor();
+      auto colId = desc->FindLogicalColumnId(desc->FindFieldId("vec"), 0);
+      EXPECT_EQ(EColumnType::kSplitIndex32, desc->GetColumnDescriptor(colId).GetModel().GetType());
+      reader->LoadEntry(0);
+      auto entry = reader->GetModel()->GetDefaultEntry();
+      EXPECT_FLOAT_EQ(1u, entry->Get<std::vector<float>>("vec")->size());
+      EXPECT_FLOAT_EQ(1.0, entry->Get<std::vector<float>>("vec")->at(0));
+   }
+
+   // Throw on attempt to commit cluster > 512MB
+   {
+      auto model = RNTupleModel::Create();
+      auto fldVec = model->MakeField<std::vector<float>>("vec");
+      RNTupleWriteOptions options;
+      options.SetHasSmallClusters(true);
+      options.SetMaxUnzippedClusterSize(1000 * 1000 * 1000); // 1GB
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath(), options);
+      fldVec->push_back(1.0);
+      // One float and one 32bit integer per entry
+      for (unsigned int i = 0; i < (300 * 1000 * 1000) / 8; ++i) {
+         writer->Fill();
+      }
+      writer->Fill();
+      EXPECT_THROW(writer->CommitCluster(), ROOT::Experimental::RException);
+      SetErrorHandler(TestErrorHandler);
+   }
+   // On destruction of the writer, the exception in CommitCluster() produced an error log
+   EXPECT_EQ(kError, gTestLastLevel);
+   EXPECT_THAT(gTestLastMsg, testing::HasSubstr("invalid attempt to write a cluster > 512MiB"));
+}
