@@ -40,7 +40,7 @@ namespace ROOT {
 namespace Experimental {
 namespace Detail {
 
-std::string inline GetDaosError(int err)
+std::string_view inline GetDaosError(int err)
 {
    return d_errstr(err);
 }
