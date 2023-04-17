@@ -36,8 +36,11 @@ public:
   Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=nullptr) const override ;
   double analyticalIntegral(Int_t code, const char* rangeName=nullptr) const override ;
 
-protected:
+  void translate(RooFit::Detail::CodeSquashContext &ctx) const override;
+  std::string
+  buildCallToAnalyticIntegral(Int_t code, const char *rangeName, RooFit::Detail::CodeSquashContext &ctx) const override;
 
+  protected:
   RooRealProxy _x;
   RooListProxy _coefList ;
   Int_t _lowestOrder  = 0;
@@ -57,8 +60,9 @@ private:
   static void computeBatchImpl(cudaStream_t *, double *output, size_t nEvents, RooFit::Detail::DataMap const &,
                                RooAbsReal const &x, RooArgList const &coefs, int lowestOrder);
 
+  static void fillCoeffValues(std::vector<double> &wksp, RooListProxy const &coefList);
 
-  ClassDefOverride(RooPolyVar,1); // Polynomial function
+  ClassDefOverride(RooPolyVar,1) // Polynomial function
 };
 
 #endif

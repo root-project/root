@@ -80,7 +80,7 @@ void RooFuncWrapper::loadParamsAndData(std::string funcName, RooAbsArg const *he
       }
       _params.add(*param);
    }
-   _gradientVarBuffer.reserve(_params.size());
+   _gradientVarBuffer.resize(_params.size());
 
    if (data == nullptr)
       return;
@@ -208,4 +208,16 @@ std::string RooFuncWrapper::buildCode(RooAbsReal const &head)
    }
 
    return ctx.assembleCode(ctx.getResult(head));
+}
+
+/// @brief Prints the squashed code body to console.
+void RooFuncWrapper::dumpCode()
+{
+   gInterpreter->ProcessLine(fName);
+}
+
+/// @brief Prints the derivative code body to console.
+void RooFuncWrapper::dumpGradient()
+{
+   gInterpreter->ProcessLine(fName + "_grad_0");
 }

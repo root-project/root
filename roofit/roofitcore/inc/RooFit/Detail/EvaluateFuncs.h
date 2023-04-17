@@ -30,6 +30,17 @@ inline double gaussianEvaluate(double x, double mean, double sigma)
    return std::exp(-0.5 * arg * arg / (sig * sig));
 }
 
+/// In pdfMode, a coefficient for the constant term of 1.0 is implied if lowestOrder > 0.
+template <bool pdfMode = false>
+inline double polynomialEvaluate(double const *coeffs, int size, int lowestOrder, double x)
+{
+   double retVal = coeffs[size - 1];
+   for (int i = size - 2; i >= 0; i--)
+      retVal = coeffs[i] + x * retVal;
+   retVal = retVal * std::pow(x, lowestOrder);
+   return retVal + (pdfMode && lowestOrder > 0 ? 1.0 : 0.0);
+}
+
 } // namespace EvaluateFuncs
 
 } // namespace Detail
