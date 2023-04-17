@@ -205,7 +205,7 @@ std::string ROOT::Experimental::Detail::RDaosContainer::GetContainerUuid()
    return std::string(id);
 }
 
-int ROOT::Experimental::Detail::RDaosContainer::ReadSingleAkey(void *buffer, std::size_t length, RDaosKey key,
+int ROOT::Experimental::Detail::RDaosContainer::ReadSingleAkey(void *buffer, std::size_t length, RDaosBlobLocator key,
                                                                ObjClassId_t cid)
 {
    std::vector<d_iov_t> iovs(1);
@@ -215,8 +215,8 @@ int ROOT::Experimental::Detail::RDaosContainer::ReadSingleAkey(void *buffer, std
    return RDaosObject(*this, key.fOid.Get(), cid.fCid).Fetch(args);
 }
 
-int ROOT::Experimental::Detail::RDaosContainer::WriteSingleAkey(const void *buffer, std::size_t length, RDaosKey key,
-                                                                ObjClassId_t cid)
+int ROOT::Experimental::Detail::RDaosContainer::WriteSingleAkey(const void *buffer, std::size_t length,
+                                                                RDaosBlobLocator key, ObjClassId_t cid)
 {
    std::vector<d_iov_t> iovs(1);
    d_iov_set(&iovs[0], const_cast<void *>(buffer), length);

@@ -43,7 +43,7 @@ namespace {
 using AttributeKey_t = ROOT::Experimental::Detail::RDaosContainer::AttributeKey_t;
 using DistributionKey_t = ROOT::Experimental::Detail::RDaosContainer::DistributionKey_t;
 using RDaosObjectId = ROOT::Experimental::Detail::RDaosObjectId;
-using RDaosKey = ROOT::Experimental::Detail::RDaosKey;
+using RDaosBlobLocator = ROOT::Experimental::Detail::RDaosBlobLocator;
 
 /// \brief RNTuple page-DAOS mappings
 enum EDaosMapping { kOidPerCluster, kOidPerPage };
@@ -68,14 +68,14 @@ const ROOT::Experimental::Detail::RDaosObject::ObjClassId kCidMetadata("SX");
 static constexpr EDaosMapping kDefaultDaosMapping = kOidPerCluster;
 
 template <EDaosMapping mapping>
-RDaosKey GetPageDaosKey(ROOT::Experimental::Detail::ntuple_index_t ntplId, long unsigned clusterId,
-                        long unsigned columnId, long unsigned pageCount)
+RDaosBlobLocator GetPageDaosKey(ROOT::Experimental::Detail::ntuple_index_t ntplId, long unsigned clusterId,
+                                long unsigned columnId, long unsigned pageCount)
 {
    if constexpr (mapping == kOidPerCluster) {
-      return RDaosKey{RDaosObjectId(ntplId, clusterId), static_cast<DistributionKey_t>(columnId),
-                      static_cast<AttributeKey_t>(pageCount)};
+      return RDaosBlobLocator{RDaosObjectId(ntplId, clusterId), static_cast<DistributionKey_t>(columnId),
+                              static_cast<AttributeKey_t>(pageCount)};
    } else if constexpr (mapping == kOidPerPage) {
-      return RDaosKey{RDaosObjectId(ntplId, pageCount), kDistributionKeyDefault, kAttributeKeyDefault};
+      return RDaosBlobLocator{RDaosObjectId(ntplId, pageCount), kDistributionKeyDefault, kAttributeKeyDefault};
    }
 }
 
@@ -283,7 +283,8 @@ ROOT::Experimental::Detail::RPageSinkDaos::CommitSealedPageImpl(DescriptorId_t p
 
    {
       RNTupleAtomicTimer timer(fCounters->fTimeWallWrite, fCounters->fTimeCpuWrite);
-      RDaosKey daosKey = GetPageDaosKey<kDefaultDaosMapping>(fNTupleIndex, clusterId, physicalColumnId, offsetData);
+      RDaosBlobLocator daosKey =
+         GetPageDaosKey<kDefaultDaosMapping>(fNTupleIndex, clusterId, physicalColumnId, offsetData);
       fDaosContainer->WriteSingleAkey(sealedPage.fBuffer, sealedPage.fSize, daosKey);
    }
 
@@ -335,7 +336,7 @@ ROOT::Experimental::Detail::RPageSinkDaos::CommitSealedPageVImpl(std::span<RPage
          }
 
          RDaosIov pageIov(const_cast<void *>(s.fBuffer), s.fSize);
-         RDaosKey daosKey =
+         RDaosBlobLocator daosKey =
             GetPageDaosKey<kDefaultDaosMapping>(fNTupleIndex, clusterId, range.fPhysicalColumnId, positionIndex);
          writeRequests.Insert(daosKey, pageIov);
 
@@ -545,7 +546,7 @@ void ROOT::Experimental::Detail::RPageSourceDaos::LoadSealedPage(DescriptorId_t 
    sealedPage.fSize = bytesOnStorage;
    sealedPage.fNElements = pageInfo.fNElements;
    if (sealedPage.fBuffer) {
-      RDaosKey daosKey = GetPageDaosKey<kDefaultDaosMapping>(
+      RDaosBlobLocator daosKey = GetPageDaosKey<kDefaultDaosMapping>(
          fNTupleIndex, clusterId, physicalColumnId, pageInfo.fLocator.GetPosition<RNTupleLocatorObject64>().fLocation);
       fDaosContainer->ReadSingleAkey(const_cast<void *>(sealedPage.fBuffer), bytesOnStorage, daosKey);
    }
@@ -574,7 +575,7 @@ ROOT::Experimental::Detail::RPageSourceDaos::PopulatePageFromCluster(ColumnHandl
       }
 
       directReadBuffer = std::make_unique<unsigned char[]>(bytesOnStorage);
-      RDaosKey daosKey = GetPageDaosKey<kDefaultDaosMapping>(
+      RDaosBlobLocator daosKey = GetPageDaosKey<kDefaultDaosMapping>(
          fNTupleIndex, clusterId, columnId, pageInfo.fLocator.GetPosition<RNTupleLocatorObject64>().fLocation);
       fDaosContainer->ReadSingleAkey(directReadBuffer.get(), bytesOnStorage, daosKey);
       fCounters->fNPageLoaded.Inc();
@@ -755,7 +756,7 @@ ROOT::Experimental::Detail::RPageSourceDaos::LoadClusters(std::span<RCluster::RK
 
          // Prepare new read request batched up by object ID and distribution key
          RDaosIov iov(cageBuffer, cageSz);
-         RDaosKey daosKey = GetPageDaosKey<kDefaultDaosMapping>(fNTupleIndex, clusterId, columnId, cageIndex);
+         RDaosBlobLocator daosKey = GetPageDaosKey<kDefaultDaosMapping>(fNTupleIndex, clusterId, columnId, cageIndex);
          readRequests.Insert(daosKey, iov);
 
          cageBuffer += cageSz;

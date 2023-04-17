@@ -56,7 +56,7 @@ struct RDaosObjectId {
    [[nodiscard]] daos_obj_id_t Get() const { return fData; }
 };
 
-struct RDaosKey {
+struct RDaosBlobLocator {
    using DistributionKey_t = std::uint64_t;
    using AttributeKey_t = std::uint64_t;
    RDaosObjectId fOid;
@@ -122,8 +122,8 @@ class RDaosObject {
 private:
    daos_handle_t fObjectHandle;
 public:
-   using DistributionKey_t = RDaosKey::DistributionKey_t;
-   using AttributeKey_t = RDaosKey::AttributeKey_t;
+   using DistributionKey_t = RDaosBlobLocator::DistributionKey_t;
+   using AttributeKey_t = RDaosBlobLocator::AttributeKey_t;
    /// \brief Wrap around a `daos_oclass_id_t`. An object class describes the schema of data distribution
    /// and protection.
    struct ObjClassId {
@@ -191,8 +191,8 @@ public:
 class RDaosContainer {
    friend class RDaosObject;
 public:
-   using DistributionKey_t = RDaosKey::DistributionKey_t;
-   using AttributeKey_t = RDaosKey::AttributeKey_t;
+   using DistributionKey_t = RDaosBlobLocator::DistributionKey_t;
+   using AttributeKey_t = RDaosBlobLocator::AttributeKey_t;
    using ObjClassId_t = RDaosObject::ObjClassId;
 
    /// \brief A pair of <object ID, distribution key> that can be used to issue a fetch/update request for multiple
@@ -260,7 +260,7 @@ public:
 
       MultiObjectRWOperation() { fRequestDict = std::make_unique<RequestDict_t>(); }
 
-      void Insert(RDaosKey &key, const RDaosIov &pageIov) const
+      void Insert(RDaosBlobLocator &key, const RDaosIov &pageIov) const
       {
          auto odPair = RDaosContainer::ROidDkeyPair{key.fOid.Get(), key.fDkey};
          auto [it, ret] = fRequestDict->emplace(odPair, RWOperation(odPair));
@@ -307,8 +307,8 @@ public:
      \param cid An object class ID.
      \return 0 if the operation succeeded; a negative DAOS error number otherwise.
      */
-   int ReadSingleAkey(void *buffer, std::size_t length, RDaosKey key, ObjClassId_t cid);
-   int ReadSingleAkey(void *buffer, std::size_t length, RDaosKey key)
+   int ReadSingleAkey(void *buffer, std::size_t length, RDaosBlobLocator key, ObjClassId_t cid);
+   int ReadSingleAkey(void *buffer, std::size_t length, RDaosBlobLocator key)
    {
       return ReadSingleAkey(buffer, length, key, fDefaultObjectClass);
    }
@@ -323,8 +323,8 @@ public:
      \param cid An object class ID.
      \return 0 if the operation succeeded; a negative DAOS error number otherwise.
      */
-   int WriteSingleAkey(const void *buffer, std::size_t length, RDaosKey key, ObjClassId_t cid);
-   int WriteSingleAkey(const void *buffer, std::size_t length, RDaosKey key)
+   int WriteSingleAkey(const void *buffer, std::size_t length, RDaosBlobLocator key, ObjClassId_t cid);
+   int WriteSingleAkey(const void *buffer, std::size_t length, RDaosBlobLocator key)
    {
       return WriteSingleAkey(buffer, length, key, fDefaultObjectClass);
    }
