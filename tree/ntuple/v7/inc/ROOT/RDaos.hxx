@@ -40,6 +40,9 @@ namespace ROOT {
 namespace Experimental {
 namespace Detail {
 
+class RDaosObject;
+
+
 std::string_view inline GetDaosError(int err)
 {
    return d_errstr(err);
@@ -54,14 +57,6 @@ struct RDaosObjectId {
    {
    }
    [[nodiscard]] daos_obj_id_t Get() const { return fData; }
-};
-
-struct RDaosBlobLocator {
-   using DistributionKey_t = std::uint64_t;
-   using AttributeKey_t = std::uint64_t;
-   RDaosObjectId fOid;
-   DistributionKey_t fDkey;
-   AttributeKey_t fAkey;
 };
 
 struct RDaosIov {
@@ -122,8 +117,8 @@ class RDaosObject {
 private:
    daos_handle_t fObjectHandle;
 public:
-   using DistributionKey_t = RDaosBlobLocator::DistributionKey_t;
-   using AttributeKey_t = RDaosBlobLocator::AttributeKey_t;
+   using DistributionKey_t = std::uint64_t;
+   using AttributeKey_t = std::uint64_t;
    /// \brief Wrap around a `daos_oclass_id_t`. An object class describes the schema of data distribution
    /// and protection.
    struct ObjClassId {
@@ -184,6 +179,14 @@ public:
    int Update(FetchUpdateArgs &args);
 };
 
+struct RDaosBlobLocator {
+   using DistributionKey_t = RDaosObject::DistributionKey_t;
+   using AttributeKey_t = RDaosObject::AttributeKey_t;
+   RDaosObjectId fOid;
+   DistributionKey_t fDkey;
+   AttributeKey_t fAkey;
+};
+
 /**
   \class RDaosContainer
   \brief A RDaosContainer provides read/write access to objects in a given container.
@@ -191,8 +194,8 @@ public:
 class RDaosContainer {
    friend class RDaosObject;
 public:
-   using DistributionKey_t = RDaosBlobLocator::DistributionKey_t;
-   using AttributeKey_t = RDaosBlobLocator::AttributeKey_t;
+   using DistributionKey_t = RDaosObject::DistributionKey_t;
+   using AttributeKey_t = RDaosObject::AttributeKey_t;
    using ObjClassId_t = RDaosObject::ObjClassId;
 
    /// \brief A pair of <object ID, distribution key> that can be used to issue a fetch/update request for multiple
