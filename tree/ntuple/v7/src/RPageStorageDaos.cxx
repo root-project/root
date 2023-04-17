@@ -356,7 +356,7 @@ ROOT::Experimental::Detail::RPageSinkDaos::CommitSealedPageVImpl(std::span<RPage
    {
       RNTupleAtomicTimer timer(fCounters->fTimeWallWrite, fCounters->fTimeCpuWrite);
       if (int err = fDaosContainer->WriteV(writeRequests))
-         throw ROOT::Experimental::RException(R__FAIL("WriteV: error" + GetDaosError(err)));
+         throw ROOT::Experimental::RException(R__FAIL("WriteV: error" + std::string(GetDaosError(err))));
    }
 
    fCounters->fNPageCommitted.Add(nPages);
@@ -768,7 +768,7 @@ ROOT::Experimental::Detail::RPageSourceDaos::LoadClusters(std::span<RCluster::RK
    {
       RNTupleAtomicTimer timer(fCounters->fTimeWallRead, fCounters->fTimeCpuRead);
       if (int err = fDaosContainer->ReadV(readRequests))
-         throw ROOT::Experimental::RException(R__FAIL("ReadV: error" + GetDaosError(err)));
+         throw ROOT::Experimental::RException(R__FAIL("ReadV: error" + std::string(GetDaosError(err))));
    }
    fCounters->fNReadV.Inc();
    fCounters->fNRead.Add(nPages);
