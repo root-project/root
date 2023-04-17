@@ -9,7 +9,7 @@ TEST(RNTuple, SchemaExtensionSimple)
       auto fieldPt = model->MakeField<float>("pt", 42.0);
 
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "myNTuple", fileGuard.GetPath());
-      auto modelUpdater = ntuple->GetModelUpdater();
+      auto modelUpdater = ntuple->CreateModelUpdater();
       modelUpdater->BeginUpdate();
       std::array<double, 2> fieldArray = refArray;
       modelUpdater->AddField<std::array<double, 2>>("array", &fieldArray);
@@ -43,7 +43,7 @@ TEST(RNTuple, SchemaExtensionInvalidUse)
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "myNTuple", fileGuard.GetPath());
       auto entry = ntuple->GetModel()->CreateEntry();
 
-      auto modelUpdater = ntuple->GetModelUpdater();
+      auto modelUpdater = ntuple->CreateModelUpdater();
       modelUpdater->BeginUpdate();
       double d;
       modelUpdater->AddField<double>("d", &d);
@@ -80,7 +80,7 @@ TEST(RNTuple, SchemaExtensionMultiple)
       auto fieldPt = model->MakeField<float>("pt", 42.0);
 
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "myNTuple", fileGuard.GetPath());
-      auto modelUpdater = ntuple->GetModelUpdater();
+      auto modelUpdater = ntuple->CreateModelUpdater();
       modelUpdater->BeginUpdate();
       std::vector<std::uint32_t> fieldVec;
       modelUpdater->AddField<std::vector<std::uint32_t>>("vec", &fieldVec);
@@ -131,7 +131,7 @@ TEST(RNTuple, SchemaExtensionProject)
       auto fieldPt = model->MakeField<float>("pt", 42.0);
 
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "myNTuple", fileGuard.GetPath());
-      auto modelUpdater = ntuple->GetModelUpdater();
+      auto modelUpdater = ntuple->CreateModelUpdater();
       modelUpdater->BeginUpdate();
       std::vector<std::uint32_t> fieldVec;
       modelUpdater->AddField<std::vector<std::uint32_t>>("vec", &fieldVec);
@@ -182,7 +182,7 @@ TEST(RNTuple, SchemaExtensionRealWorld1)
    {
       auto ntuple = RNTupleWriter::Recreate(std::move(modelWrite), "myNTuple", fileGuard.GetPath());
 
-      auto modelUpdater = ntuple->GetModelUpdater();
+      auto modelUpdater = ntuple->CreateModelUpdater();
       modelUpdater->BeginUpdate();
       std::vector<std::uint32_t> fieldVec;
       double wrEnergy;
