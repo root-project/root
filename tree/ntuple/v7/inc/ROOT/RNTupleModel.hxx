@@ -136,7 +136,7 @@ public:
    /// cases that require changing the model after the fact, `RUpdater` provides limited support for
    /// incremental updates, e.g. addition of new fields.
    ///
-   /// See `RNTupleWriter::GetModelUpdater()` for an example.
+   /// See `RNTupleWriter::CreateModelUpdater()` for an example.
    class RUpdater {
    private:
       RNTupleWriter &fWriter;
