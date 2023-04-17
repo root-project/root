@@ -74,6 +74,26 @@ inline double exponentialIntegral(double xMin, double xMax, double constant)
    return (std::exp(constant * xMax) - std::exp(constant * xMin)) / constant;
 }
 
+/// In pdfMode, a coefficient for the constant term of 1.0 is implied if lowestOrder > 0.
+template <bool pdfMode = false>
+inline double polynomialIntegral(double const *coeffs, int size, int lowestOrder, double xMin, double xMax)
+{
+   int denom = lowestOrder + size;
+   double min = coeffs[size - 1] / double(denom);
+   double max = coeffs[size - 1] / double(denom);
+
+   for (int i = size - 2; i >= 0; i--) {
+      denom--;
+      min = (coeffs[i] / double(denom)) + xMin * min;
+      max = (coeffs[i] / double(denom)) + xMax * max;
+   }
+
+   max = max * std::pow(xMax, 1 + lowestOrder);
+   min = min * std::pow(xMin, 1 + lowestOrder);
+
+   return max - min + (pdfMode && lowestOrder > 0.0 ? xMax - xMin : 0.0);
+}
+
 } // namespace AnalyticalIntegrals
 
 } // namespace Detail

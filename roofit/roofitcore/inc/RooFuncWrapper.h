@@ -44,6 +44,10 @@ public:
 
    std::size_t getNumParams() const { return _params.size(); }
 
+   void dumpCode();
+
+   void dumpGradient();
+
 protected:
    double evaluate() const override;
 

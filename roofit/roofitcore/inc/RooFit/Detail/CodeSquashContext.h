@@ -16,6 +16,8 @@
 
 #include <RooFit/Detail/DataMap.h>
 #include <RooNumber.h>
+#include <RooCollectionProxy.h>
+#include <RooArgList.h>
 
 #include <sstream>
 #include <string>
@@ -38,7 +40,7 @@ public:
 
    inline void addResult(RooAbsArg const *key, std::string const &value)
    {
-      addResult(key->namePtr(), value, key->isReducerNode());
+      addResult(key->namePtr(), saveAsTemp(key, value));
    }
 
    void addResult(const char *key, std::string const &value);
@@ -79,7 +81,7 @@ public:
    std::string buildCall(std::string const &funcname, Args_t const &...args)
    {
       std::stringstream ss;
-      ss << funcname << "(" << buildArgs(args...) << ")" << std::endl;
+      ss << funcname << "(" << buildArgs(args...) << ")";
       return ss.str();
    }
 
@@ -101,19 +103,33 @@ public:
       const std::vector<TNamed const *> _vars;
    };
 
-   std::unique_ptr<LoopScope> beginLoop(RooArgSet const &loopVars);
+   std::unique_ptr<LoopScope> beginLoop(RooAbsArg const *in);
 
    std::string getTmpVarName();
+
+   std::string saveAsTemp(RooAbsArg const *in, std::string const &valueToSave, std::string name = "");
+
+   std::string saveListAsArray(RooListProxy const &in, std::string name = "");
 
 private:
    void endLoop(LoopScope const &scope);
 
-   void addResult(TNamed const *key, std::string const &value, bool isReducerNode);
+   void addResult(TNamed const *key, std::string const &value);
 
    std::string buildArg(double x) { return RooNumber::toString(x); }
 
+   std::string buildArg(int x) { return std::to_string(x); }
+
+   std::string buildArg(unsigned int x) { return std::to_string(x); }
+
+   std::string buildArg(std::string const &x) { return x; }
+
+   std::string buildArg(RooAbsCollection const &x) { return saveListAsArray(static_cast<RooListProxy const &>(x)); }
+
+   std::string buildArg(RooAbsArg const &arg) { return getResult(arg); }
+
    template <class T>
-   std::string buildArg(T const &arg)
+   std::string buildArg(RooTemplateProxy<T> const &arg)
    {
       return getResult(arg);
    }
@@ -146,6 +162,13 @@ private:
    int _loopLevel = 0;
    /// @brief Index to get unique names for temporary variables.
    int _tmpVarIdx = 0;
+   /// @brief Keeps track of the position to go back and insert code to.
+   int _scopePtr = -1;
+   /// @brief Stores code that eventually gets injected into main code body.
+   /// Mainly used for placing decls outside of loops.
+   std::string _tempScope;
+   /// @brief A map to keep track of list names as assigned by saveAsTemp.
+   std::unordered_map<RooFit::UniqueId<RooAbsCollection>::Value_t, std::string> listNames;
 };
 
 } // namespace Detail
