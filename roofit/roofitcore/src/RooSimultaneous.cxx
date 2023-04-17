@@ -696,7 +696,7 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
     // Determine if any servers of the index category are in the projectedVars
     RooArgSet projIdxServers ;
     bool anyServers(false) ;
-    for (const auto server : _indexCat->servers()) {
+    for (const auto server : flattenedCatList()) {
       if (projectedVars.find(server->GetName())) {
         anyServers=true ;
         projIdxServers.add(*server) ;
