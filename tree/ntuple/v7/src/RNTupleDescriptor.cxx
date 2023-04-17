@@ -591,7 +591,7 @@ ROOT::Experimental::RFieldDescriptorBuilder::MakeDescriptor() const {
 void ROOT::Experimental::RNTupleDescriptorBuilder::AddField(const RFieldDescriptor& fieldDesc) {
    fDescriptor.fFieldDescriptors.emplace(fieldDesc.GetId(), fieldDesc.Clone());
    if (fDescriptor.fHeaderExtension)
-      fDescriptor.fHeaderExtension->AddField(fieldDesc);
+      fDescriptor.fHeaderExtension->AddFieldId(fieldDesc.GetId());
 }
 
 ROOT::Experimental::RResult<void>
@@ -633,7 +633,7 @@ void ROOT::Experimental::RNTupleDescriptorBuilder::AddColumn(DescriptorId_t logi
    if (!c.IsAliasColumn())
       fDescriptor.fNPhysicalColumns++;
    if (fDescriptor.fHeaderExtension)
-      fDescriptor.fHeaderExtension->AddColumn(c);
+      fDescriptor.fHeaderExtension->AddColumn(/*isAliasColumn=*/c.IsAliasColumn());
    fDescriptor.fColumnDescriptors.emplace(logicalId, std::move(c));
 }
 
@@ -664,7 +664,7 @@ ROOT::Experimental::RNTupleDescriptorBuilder::AddColumn(RColumnDescriptor &&colu
       fDescriptor.fNPhysicalColumns++;
    fDescriptor.fColumnDescriptors.emplace(logicalId, std::move(columnDesc));
    if (fDescriptor.fHeaderExtension)
-      fDescriptor.fHeaderExtension->AddColumn(columnDesc);
+      fDescriptor.fHeaderExtension->AddColumn(/*isAliasColumn=*/columnDesc.IsAliasColumn());
 
    return RResult<void>::Success();
 }
