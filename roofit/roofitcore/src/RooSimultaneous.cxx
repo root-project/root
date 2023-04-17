@@ -49,7 +49,6 @@ in each category.
 #include "RooSimultaneous.h"
 #include "RooAbsCategoryLValue.h"
 #include "RooPlot.h"
-#include "RooCurve.h"
 #include "RooRealVar.h"
 #include "RooAddPdf.h"
 #include "RooAbsData.h"
@@ -916,32 +915,6 @@ RooPlot* RooSimultaneous::plotOn(RooPlot *frame, RooLinkedList& cmdList) const
 
   return frame2 ;
 }
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// OBSOLETE -- Retained for backward compatibility
-
-RooPlot* RooSimultaneous::plotOn(RooPlot *frame, Option_t* drawOptions, double scaleFactor,
-             ScaleType stype, const RooAbsData* projData, const RooArgSet* projSet,
-             double /*precision*/, bool /*shiftToZero*/, const RooArgSet* /*projDataSet*/,
-             double /*rangeLo*/, double /*rangeHi*/, RooCurve::WingMode /*wmode*/) const
-{
-  // Make command list
-  RooLinkedList cmdList ;
-  cmdList.Add(new RooCmdArg(RooFit::DrawOption(drawOptions))) ;
-  cmdList.Add(new RooCmdArg(RooFit::Normalization(scaleFactor,stype))) ;
-  if (projData) cmdList.Add(new RooCmdArg(RooFit::ProjWData(*projData))) ;
-  if (projSet) cmdList.Add(new RooCmdArg(RooFit::Project(*projSet))) ;
-
-  // Call new method
-  RooPlot* ret = plotOn(frame,cmdList) ;
-
-  // Cleanup
-  cmdList.Delete() ;
-  return ret ;
-}
-
 
 
 ////////////////////////////////////////////////////////////////////////////////

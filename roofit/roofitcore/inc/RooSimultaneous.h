@@ -84,12 +84,6 @@ public:
   }
   RooPlot* plotOn(RooPlot* frame, RooLinkedList& cmdList) const override ;
 
-  // Backward compatibility function
-  virtual RooPlot *plotOn(RooPlot *frame, Option_t* drawOptions, double scaleFactor=1.0,
-           ScaleType stype=Relative, const RooAbsData* projData=nullptr, const RooArgSet* projSet=nullptr,
-           double precision=1e-3, bool shiftToZero=false, const RooArgSet* projDataSet=nullptr,
-           double rangeLo=0.0, double rangeHi=0.0, RooCurve::WingMode wmode=RooCurve::Extended) const;
-
   RooAbsPdf* getPdf(RooStringView catName) const ;
   const RooAbsCategoryLValue& indexCat() const { return (RooAbsCategoryLValue&) _indexCat.arg() ; }
 
