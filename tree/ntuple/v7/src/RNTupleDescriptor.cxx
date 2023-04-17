@@ -324,14 +324,13 @@ ROOT::Experimental::RNTupleDescriptor::FindPrevClusterId(DescriptorId_t clusterI
 std::vector<ROOT::Experimental::DescriptorId_t>
 ROOT::Experimental::RNTupleDescriptor::RHeaderExtension::GetTopLevelFields(const RNTupleDescriptor &desc) const
 {
-   std::vector<DescriptorId_t> fields{fFields.begin(), fFields.end()};
-   // leave top-level fields only
    auto fieldZeroId = desc.GetFieldZeroId();
-   fields.erase(std::remove_if(fields.begin(), fields.end(),
-                               [&](DescriptorId_t fieldId) {
-                                  return desc.GetFieldDescriptor(fieldId).GetParentId() != fieldZeroId;
-                               }),
-                fields.end());
+
+   std::vector<DescriptorId_t> fields;
+   for (const DescriptorId_t fieldId : fFields) {
+      if (desc.GetFieldDescriptor(fieldId).GetParentId() == fieldZeroId)
+         fields.emplace_back(fieldId);
+   }
    return fields;
 }
 
