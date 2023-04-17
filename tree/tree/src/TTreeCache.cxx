@@ -1336,6 +1336,11 @@ Bool_t TTreeCache::FillBuffer()
    };
    std::vector<collectionInfo> cursor(fNbranches);
 
+   // Main loop to fill the cache, inside each loop we will loop over
+   // all the cached branch and collect the baskets within the 'current'
+   // range/cluster.  If there is still space in the cache after that, we
+   // will do another iteration to add one more cluster to the cache.
+   // i.e. essentially loop over the clusters.
    do {
       prevNtot = ntotCurrentBuf;
       Long64_t lowestMaxEntry = fEntryMax; // The lowest maximum entry in the TTreeCache for each branch for each pass.
