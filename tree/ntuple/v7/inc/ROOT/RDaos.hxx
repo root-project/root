@@ -74,12 +74,6 @@ struct RDaosIov {
    [[nodiscard]] size_t GetBufferSize() const { return fIov.iov_buf_len; }
 };
 
-struct RDaosIovV {
-   std::vector<d_iov_t> fIovs;
-   explicit RDaosIovV(unsigned size) { fIovs.reserve(size); }
-   [[nodiscard]] std::vector<d_iov_t> Get() const { return fIovs; }
-};
-
 struct RDaosEventQueue {
    daos_handle_t fQueue;
    RDaosEventQueue();
@@ -250,21 +244,6 @@ public:
             fDataRequests.emplace_back(attr, std::initializer_list<d_iov_t>{iov.Get()});
          } else {
             fDataRequests[attrIndex].fIovs.emplace_back(iov.Get());
-         }
-      }
-
-      void Insert(AttributeKey_t attr, RDaosIovV &iovs)
-      {
-         auto [it, ret] = fIndices.emplace(attr, fDataRequests.size());
-         unsigned attrIndex = it->second;
-         auto iovSeq = iovs.Get();
-
-         if (attrIndex == fDataRequests.size()) {
-            fDataRequests.emplace_back(attr, iovSeq);
-         } else {
-            fDataRequests[attrIndex].fIovs.insert(std::end(fDataRequests[attrIndex].fIovs),
-                                                  std::make_move_iterator(std::begin(iovSeq)),
-                                                  std::make_move_iterator(std::end(iovSeq)));
          }
       }
    };
