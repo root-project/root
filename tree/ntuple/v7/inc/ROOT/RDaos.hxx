@@ -210,7 +210,7 @@ public:
       }
 
       struct Hash {
-         auto operator()(const ROidDkeyPair &x) const
+         size_t operator()(const ROidDkeyPair &x) const
          {
             /// Implementation borrowed from `boost::hash_combine`. Comparable to initial seeding with `oid.hi` followed
             /// by two subsequent hash calls for `oid.lo` and `dkey`.
@@ -257,21 +257,21 @@ public:
    public:
       using RequestDict_t =
          std::unordered_map<RDaosContainer::ROidDkeyPair, RWOperation, RDaosContainer::ROidDkeyPair::Hash>;
-      [[nodiscard]] auto begin() const { return fRequestDict->begin(); }
-      [[nodiscard]] auto end() const { return fRequestDict->end(); }
-      [[nodiscard]] size_t GetSize() const { return fRequestDict->size(); }
+      [[nodiscard]] auto begin() { return fRequestDict.begin(); }
+      [[nodiscard]] auto end() { return fRequestDict.end(); }
+      [[nodiscard]] size_t GetSize() const { return fRequestDict.size(); }
 
-      MultiObjectRWOperation() { fRequestDict = std::make_unique<RequestDict_t>(); }
+      MultiObjectRWOperation() = default;
 
-      void Insert(RDaosBlobLocator &key, const RDaosIov &pageIov) const
+      void Insert(RDaosBlobLocator &key, const RDaosIov &pageIov)
       {
          auto odPair = RDaosContainer::ROidDkeyPair{key.fOid.Get(), key.fDkey};
-         auto [it, ret] = fRequestDict->emplace(odPair, RWOperation(odPair));
+         auto [it, ret] = fRequestDict.emplace(odPair, RWOperation(odPair));
          it->second.Insert(key.fAkey, pageIov);
       }
 
    private:
-      std::unique_ptr<RequestDict_t> fRequestDict;
+      RequestDict_t fRequestDict;
    };
 
    std::string GetContainerUuid();
