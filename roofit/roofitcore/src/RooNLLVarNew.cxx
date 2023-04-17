@@ -304,13 +304,11 @@ void RooNLLVarNew::translate(RooFit::Detail::CodeSquashContext &ctx) const
    ctx.addResult(this, resName);
    ctx.addToGlobalScope("double " + resName + " = 0;\n");
 
-   RooArgSet loopVars{_observables, *_weightVar};
-
    // Begin loop scope for the observables and weight variable. If the weight
    // is a scalar, the context will ignore it for the loop scope. The closing
    // brackets of the loop is written at the end of the scopes lifetime.
    {
-      auto scope = ctx.beginLoop(loopVars);
+      auto scope = ctx.beginLoop(this);
 
       std::string tmpName = className + "Temp";
       std::string code = "double " + tmpName + ";\n";

@@ -23,6 +23,7 @@
 #include <RooHelpers.h>
 #include <RooMinimizer.h>
 #include <RooProduct.h>
+#include <RooPolyVar.h>
 #include <RooRealVar.h>
 
 #include <TROOT.h>
@@ -194,6 +195,93 @@ TEST(RooFuncWrapper, Nll)
    EXPECT_NEAR(nllRef->getVal(normSet), nllFunc.getVal(), 1e-8);
 
    mu.setVal(1);
+   EXPECT_NEAR(nllRef->getVal(normSet), nllFunc.getVal(), 1e-8);
+
+   // Check if the parameter layout and size is the same.
+   RooArgSet paramsRefNll;
+   nllRef->getParameters(nullptr, paramsRefNll);
+   RooArgSet paramsMyNLL;
+   nllFunc.getParameters(&normSet, paramsMyNLL);
+
+   EXPECT_TRUE(paramsMyNLL.hasSameLayout(paramsRefNll));
+   EXPECT_EQ(paramsMyNLL.size(), paramsRefNll.size());
+
+   // Get AD based derivative
+   std::vector<double> dMyNLL(nllFunc.getNumParams(), 0);
+   nllFunc.getGradient(dMyNLL.data());
+
+   // Check if derivatives are equal
+   for (std::size_t i = 0; i < paramsMyNLL.size(); ++i) {
+      EXPECT_NEAR(getNumDerivative(*nllRef, static_cast<RooRealVar &>(*paramsMyNLL[i]), normSet), dMyNLL[i], 1e-4);
+   }
+
+   // Remember parameter state before minimization
+   RooArgSet parametersOrig;
+   paramsRefNll.snapshot(parametersOrig);
+
+   auto runMinimizer = [&](RooAbsReal &absReal, RooMinimizer::Config cfg = {}) -> std::unique_ptr<RooFitResult> {
+      RooMinimizer m{absReal, cfg};
+      m.setPrintLevel(-1);
+      m.setStrategy(0);
+      m.minimize("Minuit2");
+      auto result = std::unique_ptr<RooFitResult>{m.save()};
+      // reset parameters
+      paramsRefNll.assign(parametersOrig);
+      return result;
+   };
+
+   // Minimize the RooFuncWrapper Implementation
+   auto result = runMinimizer(nllFunc);
+
+   // Minimize the RooFuncWrapper Implementation with AD
+   RooMinimizer::Config minimizerCfgAd;
+   std::size_t nGradientCalls = 0;
+   minimizerCfgAd.gradFunc = [&](double *out) {
+      nllFunc.getGradient(out);
+      ++nGradientCalls;
+   };
+   auto resultAd = runMinimizer(nllFunc, minimizerCfgAd);
+   EXPECT_GE(nGradientCalls, 1); // make sure the gradient function was actually called
+
+   // Minimize the reference NLL
+   auto resultRef = runMinimizer(*nllRef);
+
+   // Compare minimization results
+   EXPECT_TRUE(result->isIdentical(*resultRef, 1e-4));
+   EXPECT_TRUE(resultAd->isIdentical(*resultRef, 1e-4));
+}
+
+TEST(RooFuncWrapper, NllPolyVar)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   RooRealVar x("x", "x", -5, 5);
+   RooRealVar y("y", "y", -5, 5);
+
+   // Create function f(y) = a0 + a1*y
+   RooRealVar a0("a0", "a0", -0.5, -5, 5);
+   RooRealVar a1("a1", "a1", -0.5, -1, 1);
+   RooPolyVar fy("fy", "fy", y, RooArgSet(a0, a1, y));
+
+   // Create gauss(x,f(y),s)
+   RooRealVar sigma("sigma", "width of gaussian", 0.5, 0.01, 10);
+   RooGaussian gauss("gauss", "Gaussian with shifting mean", x, fy, sigma);
+
+   RooArgSet normSet{x};
+
+   std::size_t nEvents = 10;
+   std::unique_ptr<RooDataSet> data0{gauss.generate({x, y}, nEvents)};
+   std::unique_ptr<RooAbsData> data{data0->binnedClone()};
+   std::unique_ptr<RooAbsReal> nllRef{
+      gauss.createNLL(*data, RooFit::ConditionalObservables(y), RooFit::BatchMode("cpu"))};
+   auto nllRefResolved = static_cast<RooAbsReal *>(nllRef->servers()[0]);
+
+   RooFuncWrapper nllFunc("myNllPolyVar", "myNllPolyVar", *nllRefResolved, normSet, data.get());
+
+   // Check if functions results are the same even after changing parameters.
+   EXPECT_NEAR(nllRef->getVal(normSet), nllFunc.getVal(), 1e-8);
+
+   y.setVal(1);
    EXPECT_NEAR(nllRef->getVal(normSet), nllFunc.getVal(), 1e-8);
 
    // Check if the parameter layout and size is the same.
