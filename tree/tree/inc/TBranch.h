@@ -70,9 +70,13 @@ class TBulkBranchRead {
    friend class ::TBranch;
 
 public:
+   /// See TBranch::GetBulkEntries(Long64_t evt, TBuffer &user_buf);
    Int_t GetBulkEntries(Long64_t evt, TBuffer &user_buf);
+   /// See TBranch::GetEntriesSerialized(Long64_t evt, TBuffer &user_buf);
    Int_t GetEntriesSerialized(Long64_t evt, TBuffer &user_buf);
+   /// See TBranch::GetEntriesSerialized(Long64_t evt, TBuffer &user_buf, TBuffer *count_buf);
    Int_t GetEntriesSerialized(Long64_t evt, TBuffer &user_buf, TBuffer *count_buf);
+   /// Return true if the branch can be read through the bulk interfaces.
    Bool_t SupportsBulkRead() const;
 
 private:
