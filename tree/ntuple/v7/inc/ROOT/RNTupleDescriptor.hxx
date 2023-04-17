@@ -443,11 +443,11 @@ public:
       std::uint64_t fNLogicalColumns = 0;
       std::uint64_t fNPhysicalColumns = 0;
 
-      void AddField(const RFieldDescriptor &fieldDesc) { fFields.push_back(fieldDesc.GetId()); }
-      void AddColumn(const RColumnDescriptor &columnDesc)
+      void AddFieldId(DescriptorId_t id) { fFields.push_back(id); }
+      void AddColumn(bool isAliasColumn)
       {
          fNLogicalColumns++;
-         if (!columnDesc.IsAliasColumn())
+         if (!isAliasColumn)
             fNPhysicalColumns++;
       }
 
