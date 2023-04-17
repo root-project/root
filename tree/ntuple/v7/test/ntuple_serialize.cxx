@@ -675,6 +675,17 @@ TEST(RNTuple, SerializeFooterXHeader)
    builder.AddFieldLink(0, 45);
    builder.AddColumn(18, 18, 44, RColumnModel(EColumnType::kReal32, true), 0);
    builder.AddColumn(19, 19, 45, RColumnModel(EColumnType::kInt64, true), 0);
+
+   builder.AddField(RFieldDescriptorBuilder()
+                       .FieldId(46)
+                       .FieldName("projected")
+                       .TypeName("float")
+                       .Structure(ENTupleStructure::kLeaf)
+                       .MakeDescriptor()
+                       .Unwrap());
+   builder.AddFieldLink(0, 46);
+   builder.AddColumn(20, 18, 46, RColumnModel(EColumnType::kReal32, true), 0);
+
    // Make sure late-added fields and the corresponding columns get an on-disk ID
    context.MapSchema(builder.GetDescriptor(), /*forHeaderExtension=*/true);
 
@@ -689,16 +700,17 @@ TEST(RNTuple, SerializeFooterXHeader)
 
    desc = builder.MoveDescriptor();
 
-   EXPECT_EQ(5u, desc.GetNFields());
-   EXPECT_EQ(3u, desc.GetNLogicalColumns());
+   EXPECT_EQ(6u, desc.GetNFields());
+   EXPECT_EQ(4u, desc.GetNLogicalColumns());
    EXPECT_EQ(3u, desc.GetNPhysicalColumns());
    auto xHeader = desc.GetHeaderExtension();
    EXPECT_TRUE(xHeader != nullptr);
-   EXPECT_EQ(3u, xHeader->GetNFields());
-   EXPECT_EQ(2u, xHeader->GetNLogicalColumns());
+   EXPECT_EQ(4u, xHeader->GetNFields());
+   EXPECT_EQ(3u, xHeader->GetNLogicalColumns());
    EXPECT_EQ(2u, xHeader->GetNPhysicalColumns());
    auto fldIdStruct = desc.FindFieldId("struct");
    EXPECT_EQ(1, fldIdStruct);
    EXPECT_EQ(2, desc.FindFieldId("f", fldIdStruct));
    EXPECT_EQ(3, desc.FindFieldId("i64"));
+   EXPECT_EQ(4, desc.FindFieldId("projected"));
 }

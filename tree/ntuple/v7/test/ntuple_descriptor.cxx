@@ -211,23 +211,39 @@ TEST(RFieldDescriptorBuilder, HeaderExtension)
                             .MakeDescriptor()
                             .Unwrap());
    descBuilder.AddFieldLink(0, 4);
+   descBuilder.AddField(RFieldDescriptorBuilder()
+                           .FieldId(5)
+                           .FieldName("projected")
+                           .TypeName("int64_t")
+                           .Structure(ENTupleStructure::kLeaf)
+                           .MakeDescriptor()
+                           .Unwrap());
+   descBuilder.AddColumn(RColumnDescriptorBuilder()
+                            .LogicalColumnId(3)
+                            .PhysicalColumnId(1)
+                            .Model(RColumnModel{EColumnType::kInt64, false})
+                            .FieldId(5)
+                            .Index(0)
+                            .MakeDescriptor()
+                            .Unwrap());
+   descBuilder.AddFieldLink(0, 5);
 
    auto desc = descBuilder.MoveDescriptor();
-   ASSERT_EQ(desc.GetNFields(), 5);
-   ASSERT_EQ(desc.GetNLogicalColumns(), 3);
+   ASSERT_EQ(desc.GetNFields(), 6);
+   ASSERT_EQ(desc.GetNLogicalColumns(), 4);
    ASSERT_EQ(desc.GetNPhysicalColumns(), 3);
    {
-      std::string_view child_names[] = {"i32", "topLevel1", "topLevel2"};
+      std::string_view child_names[] = {"i32", "topLevel1", "topLevel2", "projected"};
       unsigned i = 0;
       for (auto &child_field : desc.GetTopLevelFields())
          EXPECT_EQ(child_field.GetFieldName(), child_names[i++]);
    }
    auto xHeader = desc.GetHeaderExtension();
-   EXPECT_EQ(xHeader->GetNFields(), 3);
-   EXPECT_EQ(xHeader->GetNLogicalColumns(), 2);
+   EXPECT_EQ(xHeader->GetNFields(), 4);
+   EXPECT_EQ(xHeader->GetNLogicalColumns(), 3);
    EXPECT_EQ(xHeader->GetNPhysicalColumns(), 2);
    {
-      std::string_view child_names[] = {"topLevel1", "topLevel2"};
+      std::string_view child_names[] = {"topLevel1", "topLevel2", "projected"};
       unsigned i = 0;
       for (auto child_field : xHeader->GetTopLevelFields(desc))
          EXPECT_EQ(desc.GetFieldDescriptor(child_field).GetFieldName(), child_names[i++]);
