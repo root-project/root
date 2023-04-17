@@ -65,6 +65,13 @@ std::uint32_t SerializeFieldV1(const ROOT::Experimental::RFieldDescriptor &field
    return size;
 }
 
+// clang-format off
+/// Serialize, in order, fields enumerated in `fieldList` to `buffer`.  `firstOnDiskId` specifies the on-disk ID for the
+/// first element in the `fieldList` sequence. Before calling this function `RContext::MapSchema()` should have been
+/// called on `context` in order to map in-memory field IDs to their on-disk counterpart.
+/// \return The number of bytes written to the output buffer; if `buffer` is `nullptr` no data is serialized and the
+/// required buffer size is returned
+// clang-format on
 std::uint32_t SerializeFieldList(const ROOT::Experimental::RNTupleDescriptor &desc,
                                  std::span<const ROOT::Experimental::DescriptorId_t> fieldList,
                                  std::size_t firstOnDiskId,
@@ -976,6 +983,7 @@ void ROOT::Experimental::Internal::RNTupleSerializer::RContext::MapSchema(const 
       while (!idQueue.empty()) {
          auto fieldId = idQueue.front();
          idQueue.pop_front();
+         // Field zero has no physical representation nor columns of its own; recurse over its subfields only
          if (fieldId != fieldZeroId)
             doForEachField(fieldId);
          unsigned i = 0;
@@ -1022,6 +1030,8 @@ std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeSchemaDe
 
    std::size_t nFields = 0, nColumns = 0, nAliasColumns = 0, fieldListOffset = 0;
    if (forHeaderExtension) {
+      // A call to `RNTupleDescriptorBuilder::BeginHeaderExtension()` is not strictly required after serializing the
+      // header, which may happen, e.g., in unit tests.  Ensure an empty schema extension is serialized in this case
       if (auto xHeader = desc.GetHeaderExtension()) {
          nFields = xHeader->GetNFields();
          nColumns = xHeader->GetNPhysicalColumns();
@@ -1076,6 +1086,7 @@ ROOT::Experimental::Internal::RNTupleSerializer::DeserializeSchemaDescription(co
    if (!result)
       return R__FORWARD_ERROR(result);
    bytes += result.Unwrap();
+   // The zero field is always added before `DeserializeSchemaDescription()` is called
    const std::uint32_t fieldIdRangeBegin = descBuilder.GetDescriptor().GetNFields() - 1;
    for (unsigned i = 0; i < nFields; ++i) {
       std::uint32_t fieldId = fieldIdRangeBegin + i;
