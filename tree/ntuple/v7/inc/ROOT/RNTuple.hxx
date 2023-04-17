@@ -452,8 +452,8 @@ public:
    ///
    /// auto model = RNTupleModel::Create();
    /// auto fldFloat = model->MakeField<float>("fldFloat");
-   /// auto ntuple = RNTupleWriter::Recreate(std::move(model), "myNTuple", "some/file.root");
-   /// auto updater = ntuple->CreateModelUpdater();
+   /// auto writer = RNTupleWriter::Recreate(std::move(model), "myNTuple", "some/file.root");
+   /// auto updater = writer->CreateModelUpdater();
    /// updater->BeginUpdate();
    /// updater->AddField(std::make_unique<RField<float>>("pt"));
    /// updater->CommitUpdate();
