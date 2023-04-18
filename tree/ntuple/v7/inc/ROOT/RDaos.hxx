@@ -78,21 +78,26 @@ struct RDaosIov {
    [[nodiscard]] size_t GetBufferSize() const { return fIov.iov_buf_len; }
 };
 
-struct RDaosEventQueue {
+/**
+  \class RDaosOperationQueue
+  \brief Operation queue manager for DAOS events, used to launch fetch and update requests to the object store.
+  Supports blocking calls on parent operations. Note that instantiating DAOS queues incurs significant overhead.
+  */
+struct RDaosOperationQueue {
    daos_handle_t fQueue;
-   RDaosEventQueue();
-   ~RDaosEventQueue();
+   RDaosOperationQueue();
+   ~RDaosOperationQueue();
 
-   /// \brief Sets event barrier for a given parent event and waits for the completion of all children launched before
-   /// the barrier (must have at least one child).
+   /// \brief Sets operation barrier for a given parent operation and waits for the completion of all children launched
+   /// before the barrier (must have at least one child).
    /// \return 0 on success; a DAOS error code otherwise (< 0).
    static int WaitOnParentBarrier(daos_event_t *ev_ptr);
-   /// \brief Reserve event in queue, optionally tied to a parent event.
+   /// \brief Reserve operation in queue, optionally tied to a parent operation.
    /// \return 0 on success; a DAOS error code otherwise (< 0).
-   int InitializeEvent(daos_event_t *ev_ptr, daos_event_t *parent_ptr = nullptr) const;
-   /// \brief Release event data from queue.
+   int InitializeOperation(daos_event_t *ev_ptr, daos_event_t *parent_ptr = nullptr) const;
+   /// \brief Release operation data from queue.
    /// \return 0 on success; a DAOS error code otherwise (< 0).
-   static int FinalizeEvent(daos_event_t *ev_ptr);
+   static int FinalizeOperation(daos_event_t *ev_ptr);
 };
 
 class RDaosContainer;
@@ -107,7 +112,7 @@ private:
    daos_handle_t fPoolHandle{};
    uuid_t fPoolUuid{};
    std::string fPoolLabel{};
-   std::unique_ptr<RDaosEventQueue> fEventQueue;
+   std::unique_ptr<RDaosOperationQueue> fOperationQueue;
 
 public:
    RDaosPool(const RDaosPool&) = delete;
@@ -162,7 +167,7 @@ public:
       FetchUpdateArgs(FetchUpdateArgs &&fua) noexcept;
       FetchUpdateArgs(DistributionKey_t d, std::span<RAkeyRequest> rs, bool is_async = false);
       FetchUpdateArgs &operator=(const FetchUpdateArgs &) = delete;
-      daos_event_t *GetEventPointer();
+      daos_event_t *GetDaosOpPointer();
 
       /// \brief A `daos_key_t` is a type alias of `d_iov_t`. This type stores a pointer and a length.
       /// In order for `fDistributionKey` to point to memory that we own, `fDkey` holds the distribution key.
@@ -176,7 +181,7 @@ public:
       daos_key_t fDistributionKey{};
       std::vector<daos_iod_t> fIods{};
       std::vector<d_sg_list_t> fSgls{};
-      std::optional<daos_event_t> fEvent{};
+      std::optional<daos_event_t> fDaosOp{};
    };
 
    RDaosObject() = delete;

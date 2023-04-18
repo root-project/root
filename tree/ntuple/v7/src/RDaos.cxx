@@ -38,7 +38,7 @@ ROOT::Experimental::Detail::RDaosPool::RDaosPool(std::string_view poolId)
    }
    uuid_copy(fPoolUuid, poolInfo.pi_uuid);
 
-   fEventQueue = std::make_unique<RDaosEventQueue>();
+   fOperationQueue = std::make_unique<RDaosOperationQueue>();
 }
 
 ROOT::Experimental::Detail::RDaosPool::~RDaosPool()
@@ -64,7 +64,7 @@ std::string ROOT::Experimental::Detail::RDaosObject::ObjClassId::ToString() cons
 
 ROOT::Experimental::Detail::RDaosObject::FetchUpdateArgs::FetchUpdateArgs(FetchUpdateArgs &&fua) noexcept
    : fDkey(fua.fDkey), fRequests(fua.fRequests), fIods(std::move(fua.fIods)), fSgls(std::move(fua.fSgls)),
-     fEvent(fua.fEvent)
+     fDaosOp(fua.fDaosOp)
 {
    d_iov_set(&fDistributionKey, &fDkey, sizeof(fDkey));
 }
@@ -74,7 +74,7 @@ ROOT::Experimental::Detail::RDaosObject::FetchUpdateArgs::FetchUpdateArgs(Distri
    : fDkey(d), fRequests(rs)
 {
    if (is_async)
-      fEvent.emplace();
+      fDaosOp.emplace();
 
    fSgls.reserve(fRequests.size());
    fIods.reserve(fRequests.size());
@@ -98,9 +98,9 @@ ROOT::Experimental::Detail::RDaosObject::FetchUpdateArgs::FetchUpdateArgs(Distri
    }
 }
 
-daos_event_t *ROOT::Experimental::Detail::RDaosObject::FetchUpdateArgs::GetEventPointer()
+daos_event_t *ROOT::Experimental::Detail::RDaosObject::FetchUpdateArgs::GetDaosOpPointer()
 {
-   return fEvent ? &(fEvent.value()) : nullptr;
+   return fDaosOp ? &(fDaosOp.value()) : nullptr;
 }
 
 ROOT::Experimental::Detail::RDaosObject::RDaosObject(RDaosContainer &container, daos_obj_id_t oid, ObjClassId cid)
@@ -122,39 +122,39 @@ int ROOT::Experimental::Detail::RDaosObject::Fetch(FetchUpdateArgs &args)
 {
    return daos_obj_fetch(fObjectHandle, DAOS_TX_NONE, DAOS_COND_DKEY_FETCH | DAOS_COND_AKEY_FETCH,
                          &args.fDistributionKey, args.fIods.size(), args.fIods.data(), args.fSgls.data(), nullptr,
-                         args.GetEventPointer());
+                         args.GetDaosOpPointer());
 }
 
 int ROOT::Experimental::Detail::RDaosObject::Update(FetchUpdateArgs &args)
 {
    return daos_obj_update(fObjectHandle, DAOS_TX_NONE, 0, &args.fDistributionKey, args.fIods.size(), args.fIods.data(),
-                          args.fSgls.data(), args.GetEventPointer());
+                          args.fSgls.data(), args.GetDaosOpPointer());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-ROOT::Experimental::Detail::RDaosEventQueue::RDaosEventQueue()
+ROOT::Experimental::Detail::RDaosOperationQueue::RDaosOperationQueue()
 {
    if (int ret = daos_eq_create(&fQueue))
       throw RException(R__FAIL("daos_eq_create: error: " + std::string(d_errstr(ret))));
 }
 
-ROOT::Experimental::Detail::RDaosEventQueue::~RDaosEventQueue()
+ROOT::Experimental::Detail::RDaosOperationQueue::~RDaosOperationQueue()
 {
    daos_eq_destroy(fQueue, 0);
 }
 
-int ROOT::Experimental::Detail::RDaosEventQueue::InitializeEvent(daos_event_t *ev_ptr, daos_event_t *parent_ptr) const
+int ROOT::Experimental::Detail::RDaosOperationQueue::InitializeOperation(daos_event_t *ev_ptr, daos_event_t *parent_ptr) const
 {
    return daos_event_init(ev_ptr, fQueue, parent_ptr);
 }
 
-int ROOT::Experimental::Detail::RDaosEventQueue::FinalizeEvent(daos_event_t *ev_ptr)
+int ROOT::Experimental::Detail::RDaosOperationQueue::FinalizeOperation(daos_event_t *ev_ptr)
 {
    return daos_event_fini(ev_ptr);
 }
 
-int ROOT::Experimental::Detail::RDaosEventQueue::WaitOnParentBarrier(daos_event_t *ev_ptr)
+int ROOT::Experimental::Detail::RDaosOperationQueue::WaitOnParentBarrier(daos_event_t *ev_ptr)
 {
    int err;
    bool flag;
@@ -234,9 +234,9 @@ int ROOT::Experimental::Detail::RDaosContainer::VectorReadWrite(MultiObjectRWOpe
    std::vector<request_t> requests{};
    requests.reserve(ops.GetSize());
 
-   // Initialize parent event used for grouping and waiting for completion of all requests
-   daos_event_t parent_event{};
-   if ((ret = fPool->fEventQueue->InitializeEvent(&parent_event)) < 0)
+   // Initialize parent operation used for grouping and waiting for completion of all requests
+   daos_event_t parent_op{};
+   if ((ret = fPool->fOperationQueue->InitializeOperation(&parent_op)) < 0)
       return ret;
 
    for (auto &[key, batch] : ops) {
@@ -244,8 +244,8 @@ int ROOT::Experimental::Detail::RDaosContainer::VectorReadWrite(MultiObjectRWOpe
          std::make_unique<RDaosObject>(*this, batch.fOid, cid.fCid),
          RDaosObject::FetchUpdateArgs{batch.fDistributionKey, batch.fDataRequests, /*is_async=*/true});
 
-      if ((ret = fPool->fEventQueue->InitializeEvent(std::get<1>(requests.back()).GetEventPointer(), &parent_event)) <
-          0)
+      if ((ret = fPool->fOperationQueue->InitializeOperation(std::get<1>(requests.back()).GetDaosOpPointer(),
+                                                             &parent_op)) < 0)
          return ret;
 
       // Launch operation
@@ -254,8 +254,8 @@ int ROOT::Experimental::Detail::RDaosContainer::VectorReadWrite(MultiObjectRWOpe
    }
 
    // Sets parent barrier and waits for all children launched before it.
-   if ((ret = fPool->fEventQueue->WaitOnParentBarrier(&parent_event)) < 0)
+   if ((ret = fPool->fOperationQueue->WaitOnParentBarrier(&parent_op)) < 0)
       return ret;
 
-   return fPool->fEventQueue->FinalizeEvent(&parent_event);
+   return fPool->fOperationQueue->FinalizeOperation(&parent_op);
 }
