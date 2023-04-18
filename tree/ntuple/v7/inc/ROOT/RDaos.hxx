@@ -42,12 +42,16 @@ namespace Detail {
 
 class RDaosObject;
 
-
 std::string_view inline GetDaosError(int err)
 {
    return d_errstr(err);
 }
 
+/**
+  \class RDaosObjectId
+  \brief Wrapper structure for a DAOS object identifier. Its constructor takes the ntuple's index in order to encode it
+  into the MSb half of the identifier and keep a consistent address sub-space among objects of the same dataset.
+  */
 struct RDaosObjectId {
    using ObjectIndex_t = std::uint64_t;
    daos_obj_id_t fData;
@@ -59,6 +63,11 @@ struct RDaosObjectId {
    [[nodiscard]] daos_obj_id_t Get() const { return fData; }
 };
 
+/**
+  \class RDaosIov
+  \brief Wrapper structure for a DAOS I/O operation vector (IOV). Its purpose it to provide uniform getter/setter
+  functionality exploitable by generic storage layers for different backends.
+  */
 struct RDaosIov {
    d_iov_t fIov{};
 
