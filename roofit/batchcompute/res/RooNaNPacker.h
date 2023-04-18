@@ -10,9 +10,10 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)
  */
 
-
 #ifndef ROOFIT_BATCHCOMPUTE_ROONANPACKER_H
 #define ROOFIT_BATCHCOMPUTE_ROONANPACKER_H
+
+#include <RooBatchComputeTypes.h>
 
 #include <TError.h>
 
@@ -105,7 +106,7 @@ struct RooNaNPacker {
    /// Pack float into mantissa of a NaN. Adds a tag to the
    /// upper bits of the mantissa, so a "normal" NaN can be
    /// differentiated from a NaN with a payload.
-   static double packFloatIntoNaN(float payload)
+   __roodevice__ __roohost__ static double packFloatIntoNaN(float payload)
    {
       double result = std::numeric_limits<double>::quiet_NaN();
       uint64_t tmp;

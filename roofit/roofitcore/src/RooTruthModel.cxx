@@ -249,38 +249,39 @@ void RooTruthModel::computeBatch(cudaStream_t *stream, double *output, size_t nE
    auto param2Vals = param2 ? dataMap.at(param2) : RooSpan<const double>{};
 
    // Return desired basis function
+   RooBatchCompute::ArgVector extraArgs{basisSign};
    switch (basisType) {
    case expBasis: {
-      dispatch->compute(stream, RooBatchCompute::TruthModelExpBasis, output, nEvents, {xVals, param1Vals}, {basisSign});
+      dispatch->compute(stream, RooBatchCompute::TruthModelExpBasis, output, nEvents, {xVals, param1Vals}, extraArgs);
       break;
    }
    case sinBasis: {
       dispatch->compute(stream, RooBatchCompute::TruthModelSinBasis, output, nEvents, {xVals, param1Vals, param2Vals},
-                        {basisSign});
+                        extraArgs);
       break;
    }
    case cosBasis: {
       dispatch->compute(stream, RooBatchCompute::TruthModelCosBasis, output, nEvents, {xVals, param1Vals, param2Vals},
-                        {basisSign});
+                        extraArgs);
       break;
    }
    case linBasis: {
-      dispatch->compute(stream, RooBatchCompute::TruthModelLinBasis, output, nEvents, {xVals, param1Vals}, {basisSign});
+      dispatch->compute(stream, RooBatchCompute::TruthModelLinBasis, output, nEvents, {xVals, param1Vals}, extraArgs);
       break;
    }
    case quadBasis: {
       dispatch->compute(stream, RooBatchCompute::TruthModelQuadBasis, output, nEvents, {xVals, param1Vals},
-                        {basisSign});
+                        extraArgs);
       break;
    }
    case sinhBasis: {
       dispatch->compute(stream, RooBatchCompute::TruthModelSinhBasis, output, nEvents, {xVals, param1Vals, param2Vals},
-                        {basisSign});
+                        extraArgs);
       break;
    }
    case coshBasis: {
       dispatch->compute(stream, RooBatchCompute::TruthModelCoshBasis, output, nEvents, {xVals, param1Vals, param2Vals},
-                        {basisSign});
+                        extraArgs);
       break;
    }
    default: R__ASSERT(0);

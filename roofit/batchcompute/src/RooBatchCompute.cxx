@@ -76,7 +76,7 @@ public:
    \param vars A std::vector containing pointers to the variables involved in the computation.
    \param extraArgs An optional std::vector containing extra double values that may participate in the computation. **/
    void compute(cudaStream_t *, Computer computer, RestrictArr output, size_t nEvents, const VarVector &vars,
-                const ArgVector &extraArgs) override
+                ArgVector &extraArgs) override
    {
       static std::vector<double> buffer;
       buffer.resize(vars.size() * bufferSize);
@@ -91,7 +91,6 @@ public:
          nThreads = nEvents / nEventsPerThread + (nEvents % nEventsPerThread > 0);
 
          auto task = [&](std::size_t idx) -> int {
-
             // Fill a std::vector<Batches> with the same object and with ~nEvents/nThreads
             // Then advance every object but the first to split the work between threads
             Batches batches(output, nEventsPerThread, vars, extraArgs, buffer.data());
@@ -157,8 +156,12 @@ static RooBatchComputeClass computeObj;
 For every scalar parameter a buffer (one row of the buffer) is filled with copies of the scalar
 value, so that it behaves as a batch and facilitates auto-vectorization. The Batches object can be
 passed by value to a compute function to perform efficient computations. **/
-Batches::Batches(RestrictArr output, size_t nEvents, const VarVector &vars, const ArgVector &extraArgs, double *buffer)
-   : _nEvents(nEvents), _nBatches(vars.size()), _nExtraArgs(extraArgs.size()), _output(output)
+Batches::Batches(RestrictArr output, size_t nEvents, const VarVector &vars, ArgVector &extraArgs, double *buffer)
+   : _extraArgs{extraArgs.data()},
+     _nEvents(nEvents),
+     _nBatches(vars.size()),
+     _nExtraArgs(extraArgs.size()),
+     _output(output)
 {
    _arrays.resize(vars.size());
    for (size_t i = 0; i < vars.size(); i++) {
@@ -174,7 +177,6 @@ Batches::Batches(RestrictArr output, size_t nEvents, const VarVector &vars, cons
          _arrays[i].set(span.data()[0], &buffer[i * bufferSize], false);
       }
    }
-   _extraArgs = extraArgs;
 }
 
 } // End namespace RF_ARCH

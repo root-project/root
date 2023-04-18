@@ -74,7 +74,7 @@ private:
    double _extraArgs[maxExtraArgs];
 #else
    std::vector<Batch> _arrays;
-   std::vector<double> _extraArgs;
+   double *const _extraArgs = nullptr;
 #endif // #ifdef __CUDACC__
    std::size_t _nEvents = 0;
    std::size_t _nBatches = 0;
@@ -83,13 +83,13 @@ private:
 public:
    RestrictArr _output = nullptr;
 
-   Batches(RestrictArr output, std::size_t nEvents, const VarVector &vars, const ArgVector &extraArgs = {},
+   Batches(RestrictArr output, std::size_t nEvents, const VarVector &vars, ArgVector &extraArgs,
            double *buffer = nullptr);
 
 #ifdef __CUDACC__
 #else
    // As we don't pass around Batches by value in the CPU case, delete copying
-   // and moving to it's not done accidentally.
+   // and moving so it's not done accidentally.
    Batches(const Batches &) = delete;
    Batches &operator=(const Batches &) = delete;
    Batches(Batches &&) = delete;

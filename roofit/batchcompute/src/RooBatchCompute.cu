@@ -78,7 +78,7 @@ public:
    \param vars A std::vector containing pointers to the variables involved in the computation.
    \param extraArgs An optional std::vector containing extra double values that may participate in the computation. **/
    void compute(cudaStream_t *stream, Computer computer, RestrictArr output, size_t nEvents, const VarVector &vars,
-                const ArgVector &extraArgs) override
+                ArgVector &extraArgs) override
    {
       Batches batches(output, nEvents, vars, extraArgs);
       _computeFunctions[computer]<<<128, 512, 0, *stream>>>(batches);
@@ -177,7 +177,7 @@ static RooBatchComputeClass computeObj;
 For every scalar parameter a `Batch` object inside the `Batches` object is set accordingly;
 a data member of type double gets assigned the scalar value. This way, when the cuda kernel
 is launched this scalar value gets copied automatically and thus no call to cudaMemcpy is needed **/
-Batches::Batches(RestrictArr output, size_t nEvents, const VarVector &vars, const ArgVector &extraArgs, double *)
+Batches::Batches(RestrictArr output, size_t nEvents, const VarVector &vars, ArgVector &extraArgs, double *)
    : _nEvents(nEvents), _nBatches(vars.size()), _nExtraArgs(extraArgs.size()), _output(output)
 {
    if (vars.size() > maxParams) {
