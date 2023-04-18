@@ -230,7 +230,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooXYChi2Var.h
     RooHelpers.h
     RooWrapperPdf.h
-    RooNaNPacker.h
     RooBinSamplingPdf.h
     RooBinWidthFunction.h
     RooFitLegacy/RooCatTypeLegacy.h
