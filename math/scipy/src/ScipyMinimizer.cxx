@@ -208,7 +208,11 @@ bool ScipyMinimizer::Minimize()
          PyDict_SetItemString(pyoptions, key.c_str(), PyFloat_FromDouble(value));
       }
    }
-
+   PyDict_SetItemString(pyoptions, "maxiter", PyLong_FromLong(MaxIterations()));
+   if(PrintLevel()>0)
+   {
+      PyDict_SetItemString(pyoptions, "disp", Py_True);
+   }
    std::cout << "=== Scipy Minimization" << std::endl;
    std::cout << "=== Method: " << method << std::endl;
    std::cout << "=== Initial value: (";
@@ -270,8 +274,13 @@ bool ScipyMinimizer::Minimize()
 
    // if the minimization works
    PyObject *pstatus = PyObject_GetAttrString(result, "status");
-   bool status = PyBool_Check(pstatus);
+   int status = PyLong_AsLong(pstatus);
    Py_DECREF(pstatus);
+
+   PyObject *psuccess = PyObject_GetAttrString(result, "success");
+   bool success = PyLong_AsLong(psuccess);
+   Py_DECREF(psuccess);
+
 
    // the x values for the minimum
    PyArrayObject *pyx = (PyArrayObject *)PyObject_GetAttrString(result, "x");
@@ -292,10 +301,11 @@ bool ScipyMinimizer::Minimize()
    SetMinValue(obj_value);
    fCalls = nfev; //number of function evaluations
 
+   std::cout << "=== Success: " << success << std::endl;
    std::cout << "=== Status: " << status << std::endl;
    std::cout << "=== Message: " << message << std::endl;
    std::cout << "=== Function calls: " << nfev << std::endl;
-   return status;
+   return success;
 }
 
 //_______________________________________________________________________
