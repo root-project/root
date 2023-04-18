@@ -62,7 +62,7 @@
 #include <iomanip>
 #include <numeric> // std::accumulate in MeanHelper
 
-#ifdef RH_CUDA
+#ifdef ROOT_RDF_CUDA
 #include "RHnCUDA.h"
 #endif
 
@@ -393,7 +393,7 @@ static constexpr size_t getHistDim(TH1 *) { return 1; }
 template <typename HIST = Hist_t>
 class R__CLING_PTRCHECK(off) FillHelper : public RActionImpl<FillHelper<HIST>> {
    std::vector<HIST *> fObjects;
-#ifdef RH_CUDA
+#ifdef ROOT_RDF_CUDA
    std::vector<CUDAhist::RHnCUDA<double, getHistDim((HIST *)nullptr)> *> fCudaHist; // TODO: where to store this?
 #endif
 
@@ -514,7 +514,7 @@ public:
    FillHelper(FillHelper &&) = default;
    FillHelper(const FillHelper &) = delete;
 
-#ifdef RH_CUDA
+#ifdef ROOT_RDF_CUDA
    // Initialize fCudaHist
    inline void init_cuda(HIST *obj, int i)
    {
@@ -660,7 +660,7 @@ public:
 
    void Finalize()
    {
-#ifdef RH_CUDA
+#ifdef ROOT_RDF_CUDA
       if (getenv("CUDA_HIST")) {
          if constexpr (has_getxaxis_v<HIST>) { // fix to avoid compilation errors for CustomFiller
             Double_t stats[13];

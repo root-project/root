@@ -11,19 +11,19 @@
 namespace CUDAhist {
 
 struct RAxis {
-   int fNcoords; ///< Number of bins(1D) WITH u/overflow
+   int fNbins; ///< Number of bins(1D) WITH u/overflow
    double fMin;  ///< Low edge of first bin
    double fMax;  ///< Upper edge of last bin
 
    const double *kBinEdges; ///< Bin edges array, can be NULL
 };
 
-template <typename T, unsigned int Dim, unsigned int BlockSize = 512>
+template <typename T, unsigned int Dim, unsigned int BlockSize = 32>
 class RHnCUDA {
    // clang-format off
 private:
    T                       *fDeviceHisto;        ///< Pointer to histogram buffer on the GPU.
-   int                      fNbins;              ///< Total number of bins in the histogram WITH u/overflow
+   int                      fNbins;              ///< Total number of bins in the histogram WITH under/overflow
 
    const int                kNStats;             ///< Number of statistics.
    std::array<RAxis, Dim>   fHAxes;              ///< Vector of Dim axis descriptors
@@ -32,7 +32,7 @@ private:
    std::vector<double>      fHCoords;            ///< 1D buffer with bufferSize #Dim-dimensional coordinates to fill.
    std::vector<double>      fHWeights;           ///< Buffer of weigths for each bin on the Host.
    double                  *fDCoords;            ///< Pointer to array of coordinates to fill on the GPU.
-   double                  *fDBins;              ///< Pointer to array of bins (corresponding to the coordinates) to fill on the GPU.
+   int                     *fDBins;              ///< Pointer to array of bins (corresponding to the coordinates) to fill on the GPU.
    double                  *fDWeights;           ///< Pointer to array of weights on the GPU.
 
    double                   fEntries;            ///< Number of entries that have been filled.
