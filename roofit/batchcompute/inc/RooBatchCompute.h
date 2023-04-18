@@ -58,6 +58,7 @@ enum Computer {
    Landau,
    Lognormal,
    NegativeLogarithms,
+   NormalizedPdf,
    Novosibirsk,
    Poisson,
    Polynomial,
@@ -96,7 +97,12 @@ enum Computer {
 class RooBatchComputeInterface {
 public:
    virtual ~RooBatchComputeInterface() = default;
-   virtual void compute(cudaStream_t *, Computer, RestrictArr, size_t, const VarVector &, const ArgVector & = {}) = 0;
+   virtual void compute(cudaStream_t *, Computer, RestrictArr, size_t, const VarVector &, ArgVector &) = 0;
+   inline void compute(cudaStream_t *stream, Computer comp, RestrictArr output, size_t size, const VarVector &vars)
+   {
+      ArgVector extraArgs{};
+      compute(stream, comp, output, size, vars, extraArgs);
+   }
    virtual double sumReduce(cudaStream_t *, InputArr input, size_t n) = 0;
    virtual Architecture architecture() const = 0;
    virtual std::string architectureName() const = 0;
