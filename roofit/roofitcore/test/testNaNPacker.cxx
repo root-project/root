@@ -14,6 +14,11 @@
 
 #include <gtest/gtest.h>
 
+// Backward compatibility for gtest version < 1.10.0
+#ifndef INSTANTIATE_TEST_SUITE_P
+#define INSTANTIATE_TEST_SUITE_P INSTANTIATE_TEST_CASE_P
+#endif
+
 #include <cmath>
 #include <cstdint>
 #include <bitset>
@@ -104,9 +109,11 @@ TEST(RooNaNPacker, CanPackStuffIntoNaNs)
 /// Fit a simple linear function, that starts in the negative.
 TEST(RooNaNPacker, FitSimpleLinear)
 {
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
    RooRealVar x("x", "x", -10, 10);
    RooRealVar a1("a1", "a1", 12., -5., 15.);
-   RooGenericPdf pdf("pdf", "a1 + x", RooArgSet(x, a1));
+   RooGenericPdf pdf("pdf", "a1 + x", {x, a1});
    std::unique_ptr<RooDataSet> data(pdf.generate(x, 1000));
    std::unique_ptr<RooAbsReal> nll(pdf.createNLL(*data));
 
@@ -120,23 +127,38 @@ TEST(RooNaNPacker, FitSimpleLinear)
    minim.setPrintEvalErrors(-1);
    minim.migrad();
    minim.hesse();
-   auto fitResult = minim.save();
+   std::unique_ptr<RooFitResult> fitResult{minim.save()};
 
    EXPECT_EQ(fitResult->status(), 0);
    EXPECT_NEAR(a1.getVal(), 12., a1.getError());
 }
 
+class TestForDifferentBackends : public testing::TestWithParam<std::tuple<std::string>> {
+   void SetUp() override
+   {
+      RooRandom::randomGenerator()->SetSeed(1337ul);
+      _batchMode = std::get<0>(GetParam());
+      _changeMsgLvl = std::make_unique<RooHelpers::LocalChangeMsgLevel>(RooFit::WARNING);
+   }
+
+   void TearDown() override { _changeMsgLvl.reset(); }
+
+protected:
+   std::string _batchMode;
+
+private:
+   std::unique_ptr<RooHelpers::LocalChangeMsgLevel> _changeMsgLvl;
+};
+
 /// Fit a parabola, where parameters are set up such that negative function values are obtained.
 /// The minimiser needs to recover from that.
 /// Test also that when recovery with NaN packing is switched off, the minimiser fails to recover.
-TEST(RooNaNPacker, FitParabola)
+TEST_P(TestForDifferentBackends, FitParabola)
 {
-   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING); // We don't need integration messages
-
    RooRealVar x("x", "x", -10, 10);
    RooRealVar a1("a1", "a1", 12., -10., 20.);
    RooRealVar a2("a2", "a2", 1.1, -10., 20.);
-   RooGenericPdf pdf("pdf", "a1 + x + a2 *x*x", RooArgSet(x, a1, a2));
+   RooGenericPdf pdf("pdf", "a1 + x + a2 *x*x", {x, a1, a2});
    std::unique_ptr<RooDataSet> data(pdf.generate(x, 10000));
 
    RooArgSet params(a1, a2);
@@ -147,54 +169,67 @@ TEST(RooNaNPacker, FitParabola)
    a2.setVal(-1.);
    params.snapshot(evilValues);
 
-   for (bool batchMode : std::initializer_list<bool>{true, false}) {
-      SCOPED_TRACE(batchMode ? "in batch mode" : "in single-value mode");
+   using namespace RooFit;
+   params.assign(evilValues);
+   std::unique_ptr<RooFitResult> fitResultOld(
+      pdf.fitTo(*data, RecoverFromUndefinedRegions(0.), Save(),
+                PrintLevel(-1),      // Don't need fit status printed
+                PrintEvalErrors(-1), // We provoke a lot of evaluation errors in this test. Don't print those.
+                BatchMode(_batchMode), Minos()));
 
-      params.assign(evilValues);
-      std::unique_ptr<RooFitResult> fitResultOld(pdf.fitTo(
-         *data, RooFit::RecoverFromUndefinedRegions(0.), RooFit::Save(),
-         RooFit::PrintLevel(-1),      // Don't need fit status printed
-         RooFit::PrintEvalErrors(-1), // We provoke a lot of evaluation errors in this test. Don't print those.
-         RooFit::BatchMode(batchMode), RooFit::Minos()));
+   params.assign(evilValues);
+   std::unique_ptr<RooFitResult> fitResultNew(
+      pdf.fitTo(*data, Save(), PrintLevel(-1), PrintEvalErrors(-1), BatchMode(_batchMode), Minos()));
 
-      params.assign(evilValues);
-      std::unique_ptr<RooFitResult> fitResultNew(pdf.fitTo(*data, RooFit::Save(), RooFit::PrintLevel(-1),
-                                                           RooFit::PrintEvalErrors(-1), RooFit::BatchMode(batchMode),
-                                                           RooFit::Minos()));
+   ASSERT_NE(fitResultOld, nullptr);
+   ASSERT_NE(fitResultNew, nullptr);
 
-      ASSERT_NE(fitResultOld, nullptr);
-      ASSERT_NE(fitResultNew, nullptr);
+   const auto &a1Old = static_cast<RooRealVar &>(fitResultOld->floatParsFinal()[0]);
+   const auto &a2Old = static_cast<RooRealVar &>(fitResultOld->floatParsFinal()[1]);
 
-      const auto &a1Old = static_cast<RooRealVar &>(fitResultOld->floatParsFinal()[0]);
-      const auto &a2Old = static_cast<RooRealVar &>(fitResultOld->floatParsFinal()[1]);
+   const auto &a1Recover = static_cast<RooRealVar &>(fitResultNew->floatParsFinal()[0]);
+   const auto &a2Recover = static_cast<RooRealVar &>(fitResultNew->floatParsFinal()[1]);
 
-      const auto &a1Recover = static_cast<RooRealVar &>(fitResultNew->floatParsFinal()[0]);
-      const auto &a2Recover = static_cast<RooRealVar &>(fitResultNew->floatParsFinal()[1]);
+   EXPECT_EQ(fitResultNew->status(), 0);
+   EXPECT_NEAR(a1Recover.getVal(), static_cast<RooAbsReal &>(paramsInit["a1"]).getVal(), a1Recover.getError());
+   EXPECT_NEAR(a2Recover.getVal(), static_cast<RooAbsReal &>(paramsInit["a2"]).getVal(), a2Recover.getError());
 
-      EXPECT_EQ(fitResultNew->status(), 0);
-      EXPECT_NEAR(a1Recover.getVal(), static_cast<RooAbsReal &>(paramsInit["a1"]).getVal(), a1Recover.getError());
-      EXPECT_NEAR(a2Recover.getVal(), static_cast<RooAbsReal &>(paramsInit["a2"]).getVal(), a2Recover.getError());
+   EXPECT_LT(a1Old.getVal(), 0.);
+   EXPECT_LT(a2Old.getVal(), 0.);
 
-      EXPECT_LT(a1Old.getVal(), 0.);
-      EXPECT_LT(a2Old.getVal(), 0.);
-
-      EXPECT_LT(fitResultNew->numInvalidNLL(), fitResultOld->numInvalidNLL());
-   }
+   EXPECT_LT(fitResultNew->numInvalidNLL(), fitResultOld->numInvalidNLL());
 }
+
+#ifdef R__HAS_CUDA
+#define BATCH_MODE_VALS "Off", "Cpu", "Cuda"
+#else
+#define BATCH_MODE_VALS "Off", "Cpu"
+#endif
+
+INSTANTIATE_TEST_SUITE_P(RooNaNPacker, TestForDifferentBackends, testing::Values(BATCH_MODE_VALS),
+                         [](testing::TestParamInfo<TestForDifferentBackends::ParamType> const &paramInfo) {
+                            std::stringstream ss;
+                            ss << "BatchMode" << std::get<0>(paramInfo.param);
+                            return ss.str();
+                         });
+
+#undef BATCH_MODE_VALS
 
 /// Make coefficients of RooAddPdf sum to more than 1. Fitter should recover from this.
 TEST(RooNaNPacker, FitAddPdf_DegenerateCoeff)
 {
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
    constexpr bool verbose = false;
    RooRandom::randomGenerator()->SetSeed(100);
 
    RooRealVar x("x", "x", 0., 10);
    RooRealVar a1("a1", "a1", 0.4, -10., 10.);
    RooRealVar a2("a2", "a2", 0.4, -10., 10.);
-   RooGenericPdf pdf1("gen1", "exp(-2.*x)", RooArgSet(x));
-   RooGenericPdf pdf2("gen2", "TMath::Gaus(x, 3, 2)", RooArgSet(x));
-   RooGenericPdf pdf3("gen3", "x*x*x+1", RooArgSet(x));
-   RooAddPdf pdf("sum", "a1*gen1 + a2*gen2 + (1-a1-a2)*gen3", RooArgList(pdf1, pdf2, pdf3), RooArgList(a1, a2));
+   RooGenericPdf pdf1("gen1", "exp(-2.*x)", {x});
+   RooGenericPdf pdf2("gen2", "TMath::Gaus(x, 3, 2)", {x});
+   RooGenericPdf pdf3("gen3", "x*x*x+1", {x});
+   RooAddPdf pdf("sum", "a1*gen1 + a2*gen2 + (1-a1-a2)*gen3", {pdf1, pdf2, pdf3}, {a1, a2});
    std::unique_ptr<RooDataSet> data(pdf.generate(x, 2000));
    std::unique_ptr<RooAbsReal> nll{pdf.createNLL(*data)};
 
@@ -209,7 +244,8 @@ TEST(RooNaNPacker, FitAddPdf_DegenerateCoeff)
 
    params.assign(evilValues);
 
-   RooFitResult *fitResult1 = nullptr, *fitResult2 = nullptr;
+   std::unique_ptr<RooFitResult> fitResult1;
+   std::unique_ptr<RooFitResult> fitResult2;
    for (auto tryRecover : std::initializer_list<double>{0., 10.}) {
       params.assign(evilValues);
 
@@ -220,8 +256,7 @@ TEST(RooNaNPacker, FitAddPdf_DegenerateCoeff)
       minim.setPrintEvalErrors(-1);
       minim.migrad();
       minim.hesse();
-      auto fitResult = minim.save();
-      (tryRecover != 0. ? fitResult1 : fitResult2) = fitResult;
+      std::unique_ptr<RooFitResult> fitResult{minim.save()};
 
       const auto &a1Final = static_cast<RooRealVar &>(fitResult->floatParsFinal()[0]);
       const auto &a2Final = static_cast<RooRealVar &>(fitResult->floatParsFinal()[1]);
@@ -243,6 +278,8 @@ TEST(RooNaNPacker, FitAddPdf_DegenerateCoeff)
          std::cout << "Recovery strength:" << tryRecover << "\n";
          fitResult->Print();
       }
+
+      (tryRecover != 0. ? fitResult1 : fitResult2) = std::move(fitResult);
    }
 
    // This makes clang-tidy happy:
@@ -256,16 +293,18 @@ TEST(RooNaNPacker, FitAddPdf_DegenerateCoeff)
 /// Make coefficients of RooRealSumPdf sum to more than 1. Fitter should recover from this.
 TEST(RooNaNPacker, Interface_RooAbsPdf_fitTo_RooRealSumPdf_DegenerateCoeff)
 {
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
    constexpr bool verbose = false;
    RooRandom::randomGenerator()->SetSeed(100);
 
    RooRealVar x("x", "x", 0., 10);
    RooRealVar a1("a1", "a1", 0.3, -10., 10.);
    RooRealVar a2("a2", "a2", 0.4, -10., 10.);
-   RooGenericPdf pdf1("gen1", "exp(-0.5*x)", RooArgSet(x));
-   RooGenericPdf pdf2("gen2", "TMath::Gaus(x, 5, 0.7)", RooArgSet(x));
-   RooGenericPdf pdf3("gen3", "TMath::Gaus(x, 8, 0.8)", RooArgSet(x));
-   RooRealSumPdf pdf("sum", "a1*gen1 + a2*gen2 + (1-a1-a2)*gen3", RooArgList(pdf1, pdf2, pdf3), RooArgList(a1, a2));
+   RooGenericPdf pdf1("gen1", "exp(-0.5*x)", {x});
+   RooGenericPdf pdf2("gen2", "TMath::Gaus(x, 5, 0.7)", {x});
+   RooGenericPdf pdf3("gen3", "TMath::Gaus(x, 8, 0.8)", {x});
+   RooRealSumPdf pdf("sum", "a1*gen1 + a2*gen2 + (1-a1-a2)*gen3", {pdf1, pdf2, pdf3}, {a1, a2});
    std::unique_ptr<RooDataSet> data(pdf.generate(x, 5000));
 
    RooArgSet params(a1, a2);
@@ -279,13 +318,14 @@ TEST(RooNaNPacker, Interface_RooAbsPdf_fitTo_RooRealSumPdf_DegenerateCoeff)
 
    params.assign(evilValues);
 
-   RooFitResult *fitResult1 = nullptr, *fitResult2 = nullptr;
+   std::unique_ptr<RooFitResult> fitResult1;
+   std::unique_ptr<RooFitResult> fitResult2;
    for (auto tryRecover : std::initializer_list<double>{0., 10.}) {
       params.assign(evilValues);
 
-      auto fitResult = pdf.fitTo(*data, RooFit::PrintLevel(-1), RooFit::PrintEvalErrors(-1), RooFit::Save(),
-                                 RooFit::RecoverFromUndefinedRegions(tryRecover));
-      (tryRecover != 0. ? fitResult1 : fitResult2) = fitResult;
+      using namespace RooFit;
+      std::unique_ptr<RooFitResult> fitResult{
+         pdf.fitTo(*data, PrintLevel(-1), PrintEvalErrors(-1), Save(), RecoverFromUndefinedRegions(tryRecover))};
 
       const auto &a1Final = static_cast<RooRealVar &>(fitResult->floatParsFinal()[0]);
       const auto &a2Final = static_cast<RooRealVar &>(fitResult->floatParsFinal()[1]);
@@ -309,6 +349,8 @@ TEST(RooNaNPacker, Interface_RooAbsPdf_fitTo_RooRealSumPdf_DegenerateCoeff)
          std::cout << "Recovery strength:" << tryRecover << "\n";
          fitResult->Print();
       }
+
+      (tryRecover != 0. ? fitResult1 : fitResult2) = std::move(fitResult);
    }
 
    // This makes clang-tidy happy:
