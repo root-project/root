@@ -35,7 +35,7 @@ ROOT_ADD_GTEST(ntuple_pages ntuple_pages.cxx LIBRARIES ROOTDataFrame ROOTNTuple 
 ROOT_ADD_GTEST(ntuple_print ntuple_print.cxx LIBRARIES ROOTDataFrame ROOTNTuple MathCore CustomStruct)
 ROOT_ADD_GTEST(ntuple_project ntuple_project.cxx LIBRARIES ROOTDataFrame ROOTNTuple)
 ROOT_ADD_GTEST(ntuple_rdf ntuple_rdf.cxx LIBRARIES ROOTDataFrame ROOTNTuple MathCore CustomStruct)
-ROOT_ADD_GTEST(ntuple_schemaext ntuple_schemaext.cxx LIBRARIES ROOTDataFrame ROOTNTuple CustomStruct)
+ROOT_ADD_GTEST(ntuple_modelext ntuple_modelext.cxx LIBRARIES ROOTDataFrame ROOTNTuple CustomStruct)
 ROOT_ADD_GTEST(ntuple_serialize ntuple_serialize.cxx LIBRARIES ROOTDataFrame ROOTNTuple MathCore CustomStruct)
 if(NOT MSVC OR ${LLVM_VERSION} VERSION_LESS 13.0.0 OR llvm13_broken_tests)
   ROOT_ADD_GTEST(ntuple_types ntuple_types.cxx LIBRARIES ROOTDataFrame ROOTNTuple MathCore CustomStruct)

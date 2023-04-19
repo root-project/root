@@ -1,8 +1,8 @@
 #include "ntuple_test.hxx"
 
-TEST(RNTuple, SchemaExtensionSimple)
+TEST(RNTuple, ModelExtensionSimple)
 {
-   FileRaii fileGuard("test_ntuple_schemaext_simple.root");
+   FileRaii fileGuard("test_ntuple_modelext_simple.root");
    std::array<double, 2> refArray{1.0, 24.0};
    {
       auto model = RNTupleModel::Create();
@@ -45,9 +45,9 @@ TEST(RNTuple, SchemaExtensionSimple)
    EXPECT_EQ(1337.0, array(3)[1]);
 }
 
-TEST(RNTuple, SchemaExtensionInvalidUse)
+TEST(RNTuple, ModelExtensionInvalidUse)
 {
-   FileRaii fileGuard("test_ntuple_schemaext_invalid.root");
+   FileRaii fileGuard("test_ntuple_modelext_invalid.root");
    {
       auto model = RNTupleModel::Create();
       auto fieldPt = model->MakeField<float>("pt", 42.0);
@@ -80,9 +80,9 @@ TEST(RNTuple, SchemaExtensionInvalidUse)
    EXPECT_EQ(3U, ntuple->GetDescriptor()->GetNFields());
 }
 
-TEST(RNTuple, SchemaExtensionMultiple)
+TEST(RNTuple, ModelExtensionMultiple)
 {
-   FileRaii fileGuard("test_ntuple_schemaext_multiple.root");
+   FileRaii fileGuard("test_ntuple_modelext_multiple.root");
    std::vector<std::uint32_t> refVec{0x00, 0xff, 0x55, 0xaa};
    {
       auto model = RNTupleModel::Create();
@@ -167,9 +167,9 @@ TEST(RNTuple, SchemaExtensionMultiple)
    EXPECT_EQ("abcdefABCDEF1234567890!@#$%^&*()", str(4));
 }
 
-TEST(RNTuple, SchemaExtensionProject)
+TEST(RNTuple, ModelExtensionProject)
 {
-   FileRaii fileGuard("test_ntuple_schemaext_project.root");
+   FileRaii fileGuard("test_ntuple_modelext_project.root");
    std::vector<std::uint32_t> refVec{0x00, 0xff, 0x55, 0xaa};
    {
       auto model = RNTupleModel::Create();
@@ -211,12 +211,12 @@ TEST(RNTuple, SchemaExtensionProject)
 }
 
 // Based on the RealWorld1 test in `ntuple_extended.cxx`, but here some fields are added after the fact
-TEST(RNTuple, SchemaExtensionRealWorld1)
+TEST(RNTuple, ModelExtensionRealWorld1)
 {
 #ifdef R__USE_IMT
    ROOT::EnableImplicitMT();
 #endif
-   FileRaii fileGuard("test_ntuple_schemaext_realworld1.root");
+   FileRaii fileGuard("test_ntuple_modelext_realworld1.root");
 
    // See https://github.com/olifre/root-io-bench/blob/master/benchmark.cpp
    auto modelWrite = RNTupleModel::Create();
@@ -289,11 +289,11 @@ TEST(RNTuple, SchemaExtensionRealWorld1)
    EXPECT_EQ(chksumRead, chksumWrite);
 }
 
-TEST(RNTuple, SchemaExtensionComplex)
+TEST(RNTuple, ModelExtensionComplex)
 {
    using doubleAoA_t = std::array<std::array<double, 2>, 2>;
    ROOT::EnableImplicitMT();
-   FileRaii fileGuard("test_ntuple_schemaext_complex.root");
+   FileRaii fileGuard("test_ntuple_modelext_complex.root");
 
    TRandom3 rnd(42);
    double chksumWrite = 0.0;
