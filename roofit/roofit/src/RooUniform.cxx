@@ -23,7 +23,6 @@ Flat p.d.f. in N dimensions
 #include "RooArgSet.h"
 #include "RooRealVar.h"
 #include "RooUniform.h"
-#include "RunContext.h"
 
 
 ClassImp(RooUniform);

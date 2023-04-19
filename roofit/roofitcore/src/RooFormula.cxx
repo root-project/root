@@ -59,7 +59,6 @@ Check the tutorial rf506_msgservice.C for details.
 #include "RooAbsCategory.h"
 #include "RooArgList.h"
 #include "RooMsgService.h"
-#include "RunContext.h"
 #include "RooBatchCompute.h"
 
 #include "TObjString.h"
