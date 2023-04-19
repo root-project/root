@@ -11,6 +11,4 @@ void test_ROOT9975()
    const std::vector<std::string> expected_types = {"A", "Int_t", "B", "A", "Int_t", "Int_t", "Int_t", "Int_t"};
 
    R__ASSERT(types == expected_types);
-
-   return 0;
 }
