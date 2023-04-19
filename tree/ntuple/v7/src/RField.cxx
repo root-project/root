@@ -1919,8 +1919,9 @@ void ROOT::Experimental::RRVecField::ReadGlobalImpl(NTupleSize_t globalIndex, vo
 
    // See "semantics of reading non-trivial objects" in RNTuple's architecture.md for details
    // on the element construction/destrution.
+   const bool owns = (*capacityPtr != -1);
    const bool needsConstruct = !(fSubFields[0]->GetTraits() & kTraitTriviallyConstructible);
-   const bool needsDestruct = !(fSubFields[0]->GetTraits() & kTraitTriviallyDestructible);
+   const bool needsDestruct = owns && !(fSubFields[0]->GetTraits() & kTraitTriviallyDestructible);
 
    // Destroy excess elements, if any
    if (needsDestruct) {
@@ -1940,7 +1941,8 @@ void ROOT::Experimental::RRVecField::ReadGlobalImpl(NTupleSize_t globalIndex, vo
       }
 
       // TODO Increment capacity by a factor rather than just enough to fit the elements.
-      free(*beginPtr);
+      if (owns)
+         free(*beginPtr);
       // We trust that malloc returns a buffer with large enough alignment.
       // This might not be the case if T in RVec<T> is over-aligned.
       *beginPtr = malloc(nItems * fItemSize);
