@@ -46,7 +46,6 @@
 #include "RooRealVar.h"
 #include "RooArgList.h"
 #include "RooWorkspace.h"
-#include "RunContext.h"
 
 #include "TH1.h"
 
