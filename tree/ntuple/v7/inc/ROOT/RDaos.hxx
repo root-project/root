@@ -159,7 +159,8 @@ public:
       /// In order for `fDistributionKey` to point to memory that we own, `fDkey` holds the distribution key.
       DistributionKey_t fDkey{};
       /// \brief `fRequests` is a sequential container assumed to remain valid throughout the fetch/update operation,
-      /// holding a list of `RAkeyRequest`-typed elements.
+      /// holding a list of `RAkeyRequest`-typed elements. Note that the internal structure cannot be const, as DAOS may
+      // modify contents of the scatter-gather lists with the number of bytes effectively handled.
       std::span<RAkeyRequest> fRequests{};
 
       /// \brief The distribution key, as used by the `daos_obj_{fetch,update}` functions.
