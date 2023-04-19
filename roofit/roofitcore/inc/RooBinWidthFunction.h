@@ -22,8 +22,6 @@
 #include "RooTemplateProxy.h"
 #include "RooHistFunc.h"
 
-namespace BatchHelpers { struct RunContext; }
-
 class RooBinWidthFunction : public RooAbsReal {
   static bool _enabled;
   

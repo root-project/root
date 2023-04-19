@@ -31,7 +31,6 @@
 #include "RooMsgService.h"
 #include "RooNumIntConfig.h"
 #include "RooTrace.h"
-#include "RunContext.h"
 
 #include <exception>
 #include <math.h>

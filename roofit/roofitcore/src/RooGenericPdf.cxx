@@ -47,7 +47,6 @@ the names of the arguments are not hard coded.
 #include "RooStreamParser.h"
 #include "RooMsgService.h"
 #include "RooArgList.h"
-#include "RunContext.h"
 
 using namespace std;
 

@@ -27,7 +27,6 @@
 #include "RooBinWidthFunction.h"
 
 #include "RooDataHist.h"
-#include "RunContext.h"
 
 bool RooBinWidthFunction::_enabled = true;
 

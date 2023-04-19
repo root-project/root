@@ -93,7 +93,6 @@
 #include "BracketAdapters.h"
 #include "RooAbsReal.h"
 #include "RooHelpers.h"
-#include "RunContext.h"
 
 #include "TMath.h"
 #include "Math/SpecFunc.h"

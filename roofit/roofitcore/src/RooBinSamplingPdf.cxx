@@ -93,7 +93,6 @@
 
 #include "RooHelpers.h"
 #include "RooRealBinding.h"
-#include "RunContext.h"
 #include "RooRealVar.h"
 #include "RooGlobalFunc.h"
 #include "RooDataHist.h"

@@ -29,9 +29,6 @@
 class RooAbsArg ;
 class RooArgList ;
 class TTree ;
-namespace RooBatchCompute {
-struct RunContext;
-}
 
 
 class RooAbsDataStore : public TNamed, public RooPrintable {

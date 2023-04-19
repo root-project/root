@@ -21,9 +21,6 @@
 class RooAbsPdf;
 class RooAbsData;
 class RooArgSet;
-namespace RooBatchCompute {
-struct RunContext;
-}
 class RooChangeTracker;
 
 namespace RooFit {
