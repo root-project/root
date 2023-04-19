@@ -52,7 +52,6 @@ to the fractions of the various functions. **This requires setting the last argu
 #include "RooRealVar.h"
 #include "RooMsgService.h"
 #include "RooNaNPacker.h"
-#include "RunContext.h"
 
 #include <TError.h>
 

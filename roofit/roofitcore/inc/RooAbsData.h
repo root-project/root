@@ -48,9 +48,6 @@ class RooAbsDataStore ;
 template<typename T> class TMatrixTSym;
 using TMatrixDSym = TMatrixTSym<double>;
 class RooFormulaVar;
-namespace RooBatchCompute{
-struct RunContext;
-}
 namespace RooFit {
 namespace TestStatistics {
 class RooAbsL;
