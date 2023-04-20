@@ -44,8 +44,8 @@ sap.ui.define([
          // console.log('COMPONENT DATA', Component.getOwnerComponentFor(this.getView()).getComponentData());
 
          this.setupManagerAndViewType(Component.getOwnerComponentFor(this.getView()).getComponentData(),
-                                      args.viewName, EVE.$eve7tmp);
-
+            args.viewName, EVE.$eve7tmp);
+         this.mgr.controllers[0].setToolbarExpandedAction(this);
          delete EVE.$eve7tmp;
 
          this.checkViewReady();
