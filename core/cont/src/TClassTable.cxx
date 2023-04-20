@@ -327,10 +327,12 @@ inline Bool_t TClassTable::CheckClassTableInit()
 
 void TClassTable::Print(Option_t *option) const
 {
+   std::lock_guard<std::mutex> lock(GetClassTableMutex());
+
+   // This is the very rare case (i.e. called before any dictionary load)
+   // so we don't need to execute this outside of the critical section.
    if (fgTally == 0 || !fgTable)
       return;
-
-   std::lock_guard<std::mutex> lock(GetClassTableMutex());
 
    SortTable();
 
@@ -472,6 +474,8 @@ void TClassTable::Add(TProtoClass *proto)
       if (r->fProto) delete r->fProto;
       r->fProto = proto;
       TClass *oldcl = (TClass*)gROOT->GetListOfClasses()->FindObject(cname);
+
+      lock.unlock(); // FillTClass might recursively call TClassTable during gROOT init
       if (oldcl && oldcl->GetState() == TClass::kHasTClassInit)
          proto->FillTClass(oldcl);
       return;
@@ -715,12 +719,14 @@ TProtoClass *TClassTable::GetProto(const char *cname)
    if (!CheckClassTableInit())
       return nullptr;
 
+   NormalizeThenLock guard(cname);
+
    if (gDebug > 9) {
+      // Because of the early call to Info, gROOT is already initialized
+      // and thus this will not cause a recursive call to TClassTable.
       ::Info("GetDict", "searches for %s", cname);
       fgIdMap->Print();
    }
-
-   NormalizeThenLock guard(cname);
 
    TClassRec *r = FindElement(guard.GetNormalizedName().c_str(), kFALSE);
    if (r)
