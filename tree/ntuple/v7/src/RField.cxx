@@ -1994,7 +1994,7 @@ void ROOT::Experimental::RRVecField::GenerateValue(void *where) const
    // currently the inline buffer is left uninitialized
    void **beginPtr = new (where)(void *)(nullptr);
    std::int32_t *sizePtr = new (reinterpret_cast<void *>(beginPtr + 1)) std::int32_t(0);
-   new (sizePtr + 1) std::int32_t(0);
+   new (sizePtr + 1) std::int32_t(-1);
 }
 
 void ROOT::Experimental::RRVecField::DestroyValue(void *objPtr, bool dtorOnly) const
