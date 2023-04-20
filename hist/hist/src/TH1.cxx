@@ -6654,7 +6654,7 @@ UInt_t TH1::SetCanExtend(UInt_t extendBitMask)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-/// Internal function used in TH1::Fill to see which axis is full alphanumeric
+/// Internal function used in TH1::Fill to see which axis is full alphanumeric,
 /// i.e. can be extended and is alphanumeric
 UInt_t TH1::GetAxisLabelStatus() const
 {
@@ -6690,9 +6690,9 @@ void TH1::SetDefaultSumw2(Bool_t sumw2)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Change (i.e. set) the title
+/// Change/set the title.
 ///
-/// if title is in the form `stringt;stringx;stringy;stringz`
+/// If title is in the form `stringt;stringx;stringy;stringz`
 /// the histogram title is set to `stringt`, the x axis title to `stringx`,
 /// the y axis title to `stringy`, and the z axis title to `stringz`.
 ///
@@ -6744,8 +6744,8 @@ void TH1::SetTitle(const char *title)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Smooth array xx, translation of Hbook routine hsmoof.F
-/// based on algorithm 353QH twice presented by J. Friedman
+/// Smooth array xx, translation of Hbook routine `hsmoof.F`.
+/// Based on algorithm 353QH twice presented by J. Friedman
 /// in Proc.of the 1974 CERN School of Computing, Norway, 11-24 August, 1974.
 
 void  TH1::SmoothArray(Int_t nn, Double_t *xx, Int_t ntimes)
