@@ -47,7 +47,7 @@ class RColumn;
 class RColumnElementBase;
 class RNTupleCompressor;
 class RNTupleDecompressor;
-class RNTupleModelChangeset;
+struct RNTupleModelChangeset;
 class RPagePool;
 class RFieldBase;
 
