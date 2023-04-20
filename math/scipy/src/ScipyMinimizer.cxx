@@ -260,8 +260,9 @@ bool ScipyMinimizer::Minimize()
    // minimize(fun, x0, args=(), method=None, jac=None, hess=None, hessp=None, bounds=None, constraints=(), tol=None,
    // callback=None, options=None)
    PyObject *args = Py_BuildValue("(OO)", fTarget, x0);
-   PyObject *kw = Py_BuildValue("{s:s,s:O,,s:O,s:O,s:d,s:O}", "method", method.c_str(), "jac", fJacobian, "hess",
-                                fHessian, "bounds", pybounds, "tol", Tolerance(), "options", pyoptions);
+   PyObject *kw = Py_BuildValue("{s:s,s:O,,s:O,s:O,s:O,s:d,s:O}", "method", method.c_str(), "jac", fJacobian, "hess",
+                                fHessian, "bounds", pybounds,"constraints",fConstraintsList, "tol", Tolerance(),
+                                "options", pyoptions);
 
    PyObject *result = PyObject_Call(fMinimize, args, kw);
    if (result == NULL) {
@@ -275,6 +276,8 @@ bool ScipyMinimizer::Minimize()
    Py_DECREF(args);
    Py_DECREF(kw);
    Py_DECREF(x0);
+   Py_DECREF(fConstraintsList);
+   fConstraintsList = PyList_New(0);
 
    // if the minimization works
    PyObject *pstatus = PyObject_GetAttrString(result, "status");
@@ -401,5 +404,8 @@ void ScipyMinimizer::AddConstraintFunction(std::function<double(const std::vecto
    PyDict_SetItemString(pyconst, "type", PyUnicode_FromString(type.c_str()));
    PyDict_SetItemString(pyconst, "fun", pyconstfun);
    PyList_Append(fConstraintsList, pyconst);
+
+   Py_DECREF(ConstError);
+   Py_DECREF(module);
    PyPrint(fConstraintsList);
 }
