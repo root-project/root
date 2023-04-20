@@ -158,6 +158,12 @@ sap.ui.define(['sap/ui/core/Component',
             eveView.$view_created = true;
             if(eveView.subscribed) this.makeEveViewController(eveView);
          }
+
+         if (staged.length === 1) {
+            let eveView = staged[0];
+            let t = eveView.ca.byId("tbar");
+            t.getContent()[2].setEnabled(false);
+         }
       },
 
       makeEveViewController: function(elem)
@@ -316,6 +322,23 @@ sap.ui.define(['sap/ui/core/Component',
          let t = va.byId("tbar");
          let sBtn = t.getContent()[2];
          sBtn.setIcon("sap-icon://" + iName);
+      },
+
+      setToolbarExpandedAction(va) {
+         let bar = va.byId("tbar");
+         let ca = bar.getContent();
+         while (bar.getContent().length > 1)
+            bar.removeContent(bar.getContent().length - 1);
+
+         var bb = new sap.m.Button({
+            type: sap.m.ButtonType.Default,
+            text: "Back",
+            enabled: true,
+            press: function () {
+               window.history.go(-1)
+            }
+         });
+         bar.addContent(bb);
       },
 
       onEveManagerInit: function() {
