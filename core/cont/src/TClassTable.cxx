@@ -15,6 +15,8 @@ This class registers for all classes their name, id and dictionary
 function in a hash table. Classes are automatically added by the
 ctor of a special init class when a global of this init class is
 initialized when the program starts (see the ClassImp macro).
+
+All functions in TClassTable are thread-safe.
 */
 
 #include "TClassTable.h"
@@ -38,6 +40,7 @@ initialized when the program starts (see the ClassImp macro).
 #include <typeinfo>
 #include <cstdlib>
 #include <string>
+#include <mutex>
 
 using namespace ROOT;
 
@@ -68,6 +71,11 @@ class TClassTable::NormalizeThenLock {
    std::string fNormalizedName;
 
 public:
+   NormalizeThenLock() = delete;
+   NormalizeThenLock(const NormalizeThenLock&) = delete;
+   NormalizeThenLock(NormalizeThenLock&&) = delete;
+   NormalizeThenLock& operator=(const NormalizeThenLock&) = delete;
+   NormalizeThenLock& operator=(NormalizeThenLock&&) = delete;
 
    NormalizeThenLock(const char *cname)
    {
@@ -408,7 +416,7 @@ void TClassTable::Add(const char *cname, Version_t id,  const std::type_info &in
          return;
       }
       if (!TClassEdit::IsStdClass(cname)) {
-         lock.unlock(); // Warning migth recursively call TClassTable during gROOT init
+         lock.unlock(); // Warning might recursively call TClassTable during gROOT init
          // Warn only for class that are not STD classes
          ::Warning("TClassTable::Add", "class %s already in TClassTable", cname);
       }
@@ -475,7 +483,7 @@ void TClassTable::Add(TProtoClass *proto)
                    // files loaded by the current dictionary wil also de-activate the update
                    // class info mechanism!
 
-         lock.unlock(); // Warning migth recursively call TClassTable during gROOT init
+         lock.unlock(); // Warning might recursively call TClassTable during gROOT init
          ::Warning("TClassTable::Add(TProtoClass*)","Called for existing class without a prior call add the dictionary function.");
       }
    }
@@ -579,6 +587,7 @@ void TClassTable::Remove(const char *cname)
 /// Find a class by name in the class table (using hash of name). Returns
 /// 0 if the class is not in the table. Unless arguments insert is true in
 /// which case a new entry is created and returned.
+/// `cname` must be the normalized name of the class.
 
 TClassRec *TClassTable::FindElement(const char *cname, Bool_t insert)
 {
@@ -653,7 +662,7 @@ DictFuncPtr_t TClassTable::GetDict(const std::type_info& info)
       return nullptr;
 
    if (gDebug > 9)
-      gROOT; // Info migth recursively call TClassTable during the gROOT init
+      ROOT::GetROOT(); // Info might recursively call TClassTable during the gROOT init
 
    std::lock_guard<std::mutex> lock(GetClassTableMutex());
 
@@ -678,7 +687,7 @@ DictFuncPtr_t TClassTable::GetDictNorm(const char *cname)
       return nullptr;
 
    if (gDebug > 9)
-      gROOT; // Info migth recursively call TClassTable during the gROOT init
+      ROOT::GetROOT(); // Info might recursively call TClassTable during the gROOT init
 
    std::lock_guard<std::mutex> lock(GetClassTableMutex());
 

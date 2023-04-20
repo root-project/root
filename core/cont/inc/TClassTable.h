@@ -25,7 +25,6 @@
 #include "TObject.h"
 #include <string>
 #include <atomic>
-#include <mutex>
 
 class TProtoClass;
 
