@@ -6692,7 +6692,7 @@ void TH1::SetDefaultSumw2(Bool_t sumw2)
 ////////////////////////////////////////////////////////////////////////////////
 /// Change/set the title.
 ///
-/// if title is in the form `stringt;stringx;stringy;stringz`
+/// If title is in the form `stringt;stringx;stringy;stringz`
 /// the histogram title is set to `stringt`, the x axis title to `stringx`,
 /// the y axis title to `stringy`, and the z axis title to `stringz`.
 ///
