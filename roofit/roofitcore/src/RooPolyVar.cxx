@@ -140,7 +140,8 @@ void RooPolyVar::computeBatchImpl(cudaStream_t *stream, double *output, size_t n
    }
    vars.push_back(dataMap.at(&x));
    auto dispatch = stream ? RooBatchCompute::dispatchCUDA : RooBatchCompute::dispatchCPU;
-   dispatch->compute(stream, RooBatchCompute::Polynomial, output, nEvents, vars, {double(vars.size() - 1)});
+   RooBatchCompute::ArgVector extraArgs{double(vars.size() - 1)};
+   dispatch->compute(stream, RooBatchCompute::Polynomial, output, nEvents, vars, extraArgs);
 }
 
 /// Compute multiple values of Polynomial.
