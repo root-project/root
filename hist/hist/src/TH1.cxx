@@ -6654,7 +6654,7 @@ UInt_t TH1::SetCanExtend(UInt_t extendBitMask)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-/// Internal function used in TH1::Fill to see which axis is full alphanumeric.
+/// Internal function used in TH1::Fill to see which axis is full alphanumeric,
 /// i.e. can be extended and is alphanumeric
 UInt_t TH1::GetAxisLabelStatus() const
 {
