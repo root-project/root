@@ -67,9 +67,12 @@ struct Plus {
 template <unsigned int BlockSize, typename T, typename Op>
 __device__ inline void UnrolledReduce(T *sdata, unsigned int tid, Op operation)
 {
-   if (BlockSize >= 512 && tid < 256) { sdata[tid] = operation(sdata[tid], sdata[tid + 256]); } __syncthreads();
-   if (BlockSize >= 256 && tid < 128) { sdata[tid] = operation(sdata[tid], sdata[tid + 128]); } __syncthreads();
-   if (BlockSize >= 128 && tid < 64)  { sdata[tid] = operation(sdata[tid], sdata[tid + 64]);  } __syncthreads();
+   // 1024 is the maximum number of threads per block in an NVIDIA GPU:
+   // https://docs.nvidia.com/cuda/cuda-c-programming-guide/index.html#features-and-technical-specifications
+   if (BlockSize >= 1024 && tid < 512) { sdata[tid] = operation(sdata[tid], sdata[tid + 512]); } __syncthreads();
+   if (BlockSize >= 512  && tid < 256) { sdata[tid] = operation(sdata[tid], sdata[tid + 256]); } __syncthreads();
+   if (BlockSize >= 256  && tid < 128) { sdata[tid] = operation(sdata[tid], sdata[tid + 128]); } __syncthreads();
+   if (BlockSize >= 128  && tid < 64)  { sdata[tid] = operation(sdata[tid], sdata[tid + 64]);  } __syncthreads();
 
    // Reduction within a warp
    if (BlockSize >= 64 && tid < 32)  { sdata[tid] = operation(sdata[tid], sdata[tid + 32]); } __syncthreads();
@@ -81,14 +84,18 @@ __device__ inline void UnrolledReduce(T *sdata, unsigned int tid, Op operation)
 }
 // clang-format on
 
-template <unsigned int BlockSize = 512, typename T = double, typename InitOp, typename MainOp>
-inline __device__ void ReduceBase(T *sdata, T *in, T *out, unsigned int n, InitOp initOp, MainOp mainOp, T init = 0.)
+// See https://developer.download.nvidia.com/assets/cuda/files/reduction.pdf
+//     https://github.com/zchee/cuda-sample/blob/master/6_Advanced/reduction/reduction_kernel.cu
+template <unsigned int BlockSize, typename T, typename InitOp, typename MainOp>
+inline __device__ void ReduceBase(T *in, T *out, unsigned int n, InitOp initOp, MainOp mainOp, T init)
 {
-   unsigned int tid = threadIdx.x;
-   unsigned int i = blockIdx.x * (BlockSize * 2) + tid;
+   auto sdata = CUDAHelpers::shared_memory_proxy<T>();
+
+   unsigned int local_tid = threadIdx.x;
+   unsigned int i = blockIdx.x * (BlockSize * 2) + local_tid;
    unsigned int gridSize = (BlockSize * 2) * gridDim.x;
 
-   T r = 0;
+   T r = init;
 
    while (i < n) {
       r = initOp(i, r, in[i]);
@@ -97,25 +104,52 @@ inline __device__ void ReduceBase(T *sdata, T *in, T *out, unsigned int n, InitO
       }
       i += gridSize;
    }
-   sdata[tid] = r;
+   sdata[local_tid] = r;
    __syncthreads();
 
-   CUDAHelpers::UnrolledReduce<BlockSize, T>(sdata, tid, mainOp);
+   CUDAHelpers::UnrolledReduce<BlockSize, T>(sdata, local_tid, mainOp);
 
    // The first thread of each block writes the sum of the block into the global device array.
-   if (tid == 0) {
+   if (local_tid == 0) {
       out[blockIdx.x] = mainOp(out[blockIdx.x], sdata[0]);
    }
 }
 
-// See https://developer.download.nvidia.com/assets/cuda/files/reduction.pdf
-//     https://github.com/zchee/cuda-sample/blob/master/6_Advanced/reduction/reduction_kernel.cu
-template <unsigned int BlockSize = 512, typename T = double, Bool_t Overwrite = false, typename Op = Plus<double>()>
-__global__ void ReductionKernel(T *in, T *out, unsigned int n, Op operation, T init)
+template <unsigned int BlockSize, typename T>
+__global__ void ReduceSumKernel(T *in, T *out, unsigned int n, T init)
 {
-   auto sdata = CUDAHelpers::shared_memory_proxy<T>();
-   ReduceBase(
-      sdata, in, out, n, [](unsigned int i, T r, T in) { return r + in; }, operation, init);
+   auto initOp = [](unsigned int i, T r, T in) { return r + in; };
+   ReduceBase<BlockSize>(in, out, n, initOp, CUDAHelpers::Plus<T>(), init);
+}
+
+template <typename T = double>
+void ReduceSum(int numBlocks, int blockSize, T *in, T *out, unsigned int n, T init = 0.)
+{
+   auto initOp = [](unsigned int i, T r, T in) { return r + in; };
+   auto smemSize = (blockSize <= 32) ? 2 * blockSize : blockSize;
+
+   if (blockSize == 2)
+      ReduceSumKernel<2, T><<<numBlocks, 2, smemSize>>>(in, out, n, init);
+   else if (blockSize == 4)
+      ReduceSumKernel<4, T><<<numBlocks, 4, smemSize>>>(in, out, n, init);
+   else if (blockSize == 8)
+      ReduceSumKernel<8, T><<<numBlocks, 8, smemSize>>>(in, out, n, init);
+   else if (blockSize == 16)
+      ReduceSumKernel<16, T><<<numBlocks, 16, smemSize>>>(in, out, n, init);
+   else if (blockSize == 32)
+      ReduceSumKernel<32, T><<<numBlocks, 32, smemSize>>>(in, out, n, init);
+   else if (blockSize == 64)
+      ReduceSumKernel<64, T><<<numBlocks, 64, smemSize>>>(in, out, n, init);
+   else if (blockSize == 128)
+      ReduceSumKernel<128, T><<<numBlocks, 128, smemSize>>>(in, out, n, init);
+   else if (blockSize == 256)
+      ReduceSumKernel<256, T><<<numBlocks, 256, smemSize>>>(in, out, n, init);
+   else if (blockSize == 512)
+      ReduceSumKernel<512, T><<<numBlocks, 512, smemSize>>>(in, out, n, init);
+   else if (blockSize == 1024)
+      ReduceSumKernel<1024, T><<<numBlocks, 1024, smemSize>>>(in, out, n, init);
+   else
+      Error("ReduceSum", "Unsupported block size: %d", blockSize);
 }
 
 // CUDA version of TMath::BinarySearchCUDA

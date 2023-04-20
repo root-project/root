@@ -51,8 +51,6 @@ __device__ inline int GetBin(int i, CUDAhist::RAxis *axes, double *coords, int *
          return -1;
       }
 
-      // printf("Dim:%d  bin:%d x:%f ncells:%d min:%f max:%f\n", d, bin, x[d], axes[d].fNbins, axes[d].fMin,
-      // axes[d].fMax);
       bin = bin * axes[d].fNbins + binD;
    }
 
@@ -77,7 +75,6 @@ __global__ void HistoKernel(T *histogram, CUDAhist::RAxis *axes, int nBins, doub
    // Fill local histogram
    for (auto i = tid; i < bufferSize; i += stride) {
       auto bin = GetBin<Dim>(i, axes, coords, bins);
-      // printf("%d: add %f to bin %d\n", tid, weights[i], bin);
 
       // TODO: check for datatype under/overflow
       if (bin >= 0)
@@ -87,7 +84,6 @@ __global__ void HistoKernel(T *histogram, CUDAhist::RAxis *axes, int nBins, doub
 
    // Merge results in global histogram
    for (auto i = local_tid; i < nBins; i += blockDim.x) {
-      // printf("%d: merge %f into bin %d\n", tid, smem[i], i);
       atomicAdd(&histogram[i], smem[i]);
    }
 }
@@ -117,76 +113,55 @@ __global__ void GetStatsKernel(double *coords, int *bins, double *weights, unsig
 {
    unsigned int tid = threadIdx.x + blockDim.x * blockIdx.x;
    unsigned int stride = blockDim.x * gridDim.x;
-   auto sdata = CUDAHelpers::shared_memory_proxy<double>();
 
-   // if (tid == 0 && Dim == 2)
-   //    printf("ncoords:%i nbinsX:%i nbinsY:%d\n", nCoords, axes[0].fNbins, axes[1].fNbins);
+   const int is_stride = gridDim.x;
 
    // Exclude under/overflow bins from stats
    for (auto i = tid; i < nCoords; i += stride) {
       for (auto d = 0; d < Dim; d++) {
          if (bins[i * Dim + d] <= 0 || bins[i * Dim + d] >= axes[d].fNbins - 1) {
-            // if (Dim == 2)
-            // printf("cuda SKIP? bin:%d val:%f i:%d\n", bins[i * Dim + d], coords[i * Dim + d], i * Dim + d);
-
             weights[i] = 0.;
-            // continue;
          }
       }
-      // printf("%d\n", i);
    }
 
    // Tsumw
    CUDAHelpers::ReduceBase<BlockSize>(
-      sdata, weights, fDIntermediateStats, nCoords, [](unsigned int i, double r, double w) { return r + w; },
-      CUDAHelpers::Plus<double>());
-
-   if (tid == 0) {
-      printf("sdara1:\n");
-      for (int i = 0; i <  BlockSize * nStats / 2; i++) {
-         if (i % ((BlockSize <= 32) ? 2 * BlockSize * nStats : BlockSize * nStats)  == 0)
-            printf("\n\n");
-         printf("%i%f \n", sdata[i]);
-      }
-      printf("\n\n");
-   }
+      weights, fDIntermediateStats, nCoords, [](unsigned int i, double r, double w) { return r + w; },
+      CUDAHelpers::Plus<double>(), 0.);
 
    // Tsumw2
-   unsigned int sdata_offset = blockDim.x;
-   unsigned int is_offset = gridDim.x;
+   unsigned int is_offset = is_stride;
    CUDAHelpers::ReduceBase<BlockSize>(
-      &sdata[sdata_offset], weights, &fDIntermediateStats[is_offset], nCoords,
-      [](unsigned int i, double r, double w) { return r + w * w; }, CUDAHelpers::Plus<double>());
+      weights, &fDIntermediateStats[is_offset], nCoords,
+      [](unsigned int i, double r, double w) { return r + w * w; }, CUDAHelpers::Plus<double>(), 0.);
 
    for (auto d = 0; d < Dim; d++) {
       // Multiply weight with coordinate of current axis. E.g., for Dim = 2 this computes Tsumwx and Tsumwy
-      sdata_offset += blockDim.x;
-      is_offset += gridDim.x;
+      is_offset += is_stride;
       CUDAHelpers::ReduceBase<BlockSize>(
-         &sdata[sdata_offset], weights, &fDIntermediateStats[is_offset], nCoords,
+         weights, &fDIntermediateStats[is_offset], nCoords,
          [&coords, &d](unsigned int i, double r, double w) { return r + w * coords[i * Dim + d]; },
-         CUDAHelpers::Plus<double>());
+         CUDAHelpers::Plus<double>(), 0.);
 
       // Squares coodinate per axis. E.g., for Dim = 2 this computes Tsumw2 and Tsumwy2
-      sdata_offset += blockDim.x;
-      is_offset += gridDim.x;
+      is_offset += is_stride;
       CUDAHelpers::ReduceBase<BlockSize>(
-         &sdata[sdata_offset], weights, &fDIntermediateStats[is_offset], nCoords,
+         weights, &fDIntermediateStats[is_offset], nCoords,
          [&coords, &d](unsigned int i, double r, double w) {
             return r + w * coords[i * Dim + d] * coords[i * Dim + d];
          },
-         CUDAHelpers::Plus<double>());
+         CUDAHelpers::Plus<double>(), 0.);
 
       for (auto prev_d = d - 1; prev_d >= 0; prev_d--) {
          // Multiplies coordinate of current axis with the "previous" axis. E.g., for Dim = 2 this computes Tsumwxy
-         sdata_offset += blockDim.x;
-         is_offset += gridDim.x;
+         is_offset += is_stride;
          CUDAHelpers::ReduceBase<BlockSize>(
-            &sdata[sdata_offset], weights, &fDIntermediateStats[is_offset], nCoords,
+            weights, &fDIntermediateStats[is_offset], nCoords,
             [&coords, &prev_d, &d](unsigned int i, double r, double w) {
                return r + w * coords[i * Dim + prev_d] * coords[i * Dim + d];
             },
-            CUDAHelpers::Plus<double>());
+            CUDAHelpers::Plus<double>(), 0.);
       }
    }
 }
@@ -198,10 +173,7 @@ RHnCUDA<T, Dim, BlockSize>::RHnCUDA(int *ncells, double *xlow, double *xhigh, co
         // all axis combinations
         return Dim > 1 ? 2 + 2 * Dim + TMath::Binomial(Dim, 2) : 2 + 2 * Dim;
      }()),
-     kStatsSmemSize((BlockSize <= 32) ? 2 * BlockSize * kNStats * sizeof(double) : BlockSize * kNStats * sizeof(double))
-// template <typename T, unsigned int Dim, unsigned int BlockSize>
-// RHnCUDA<T, Dim, BlockSize>::Initialize(int *ncells, double *xlow, double *xhigh, const double **binEdges)
-// RHnCUDA::Initialize(int *ncells, double *xlow, double *xhigh, const double **binEdges)
+     kStatsSmemSize((BlockSize <= 32) ? 2 * BlockSize * sizeof(double) : BlockSize * sizeof(double))
 {
    fBufferSize = 10000;
 
@@ -223,17 +195,12 @@ RHnCUDA<T, Dim, BlockSize>::RHnCUDA(int *ncells, double *xlow, double *xhigh, co
       fHAxes[i] = axis;
 
       fNbins *= ncells[i];
-      if (getenv("DBG"))
-         printf("\t axis %d -- ncells:%d min:%f max:%f\n", i, axis.fNbins, axis.fMin, axis.fMax);
    }
 
    cudaDeviceProp prop;
    ERRCHECK(cudaGetDeviceProperties(&prop, 0));
    fMaxSmemSize = prop.sharedMemPerBlock;
    fHistoSmemSize = fNbins * sizeof(T);
-
-   if (getenv("DBG"))
-      printf("nbins:%d Dim:%d nstats:%d maxsmem:%d\n", fNbins, Dim, kNStats, fMaxSmemSize);
 }
 
 template <typename T, unsigned int Dim, unsigned int BlockSize>
@@ -284,6 +251,16 @@ void RHnCUDA<T, Dim, BlockSize>::Fill(const std::array<T, Dim> &coords, double w
    }
 }
 
+unsigned int nextPow2(unsigned int x) {
+  --x;
+  x |= x >> 1;
+  x |= x >> 2;
+  x |= x >> 4;
+  x |= x >> 8;
+  x |= x >> 16;
+  return ++x;
+}
+
 template <typename T, unsigned int Dim, unsigned int BlockSize>
 void RHnCUDA<T, Dim, BlockSize>::GetStats(unsigned int size)
 {
@@ -291,24 +268,24 @@ void RHnCUDA<T, Dim, BlockSize>::GetStats(unsigned int size)
    // Number of blocks in grid is halved, because each thread loads two elements from global memory.
    int numBlocks = fmax(1, ceil(size / BlockSize / 2.));
 
-   if (getenv("DBG") && atoi(getenv("DBG")) > 0)
-      printf("STATS -- size:%d smemsize: %lu numblocks: %d blocksize %d\n", size, kStatsSmemSize / sizeof(double),
-             numBlocks, BlockSize);
-
-   if (fDIntermediateStats == NULL)
-      ERRCHECK(cudaMalloc((void **)&fDIntermediateStats, numBlocks * kNStats * sizeof(double)));
-   else
-      ERRCHECK(cudaMemset(fDIntermediateStats, 0, numBlocks * kNStats * sizeof(double)));
-
-   GetStatsKernel<Dim, BlockSize><<<numBlocks, BlockSize, kStatsSmemSize>>>(fDCoords, fDBins, fDWeights, size, fDAxes,
-                                                                            fDIntermediateStats, kNStats);
-   ERRCHECK(cudaPeekAtLastError());
-
    // OPTIMIZATION: final reduction in a single kernel?
-   for (auto i = 0; i < kNStats; i++) {
-      CUDAHelpers::ReductionKernel<BlockSize, double, false><<<1, BlockSize, kStatsSmemSize>>>(
-         &fDIntermediateStats[i * numBlocks], &fDStats[i], numBlocks, CUDAHelpers::Plus<double>(), 0.);
+   if (numBlocks > 1) {
+      if (fDIntermediateStats == NULL)
+         ERRCHECK(cudaMalloc((void **)&fDIntermediateStats, numBlocks * kNStats * sizeof(double)));
+      else
+         ERRCHECK(cudaMemset(fDIntermediateStats, 0, numBlocks * kNStats * sizeof(double)));
+
+      GetStatsKernel<Dim, BlockSize><<<numBlocks, BlockSize, kStatsSmemSize>>>(fDCoords, fDBins, fDWeights, size,
+                                                                               fDAxes, fDIntermediateStats, kNStats);
       ERRCHECK(cudaPeekAtLastError());
+
+      for (auto i = 0; i < kNStats; i++) {
+         CUDAHelpers::ReduceSum<double>(1, nextPow2(numBlocks), &fDIntermediateStats[i * numBlocks], &fDStats[i], numBlocks, 0.);
+         ERRCHECK(cudaPeekAtLastError());
+      }
+   } else {
+      GetStatsKernel<Dim, BlockSize>
+         <<<numBlocks, BlockSize, kStatsSmemSize>>>(fDCoords, fDBins, fDWeights, size, fDAxes, fDStats, kNStats);
    }
 }
 
@@ -317,11 +294,6 @@ void RHnCUDA<T, Dim, BlockSize>::ExecuteCUDAHisto()
 {
    unsigned int size = fmin(fBufferSize, fHWeights.size());
    int numBlocks = size % BlockSize == 0 ? size / BlockSize : size / BlockSize + 1;
-
-   if (getenv("DBG") && atoi(getenv("DBG")) > 2) {
-      printf("HISTO -- cellsize:%lu buffersize:%d Size:%d nCells:%d nBlocks:%d smemsize:%u\n", fHCoords.size(),
-             fBufferSize, size, fNbins, numBlocks, fHistoSmemSize);
-   }
 
    fEntries += size;
 

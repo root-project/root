@@ -152,11 +152,7 @@ endif()
 
 if (cuda)
   target_compile_definitions(ROOTDataFrame PRIVATE ROOT_RDF_CUDA)
-  # target_include_directories(ROOTDataFrame PRIVATE ${CUDA_TOOLKIT_ROOT_DIR})
-  # target_include_directories(ROOTDataFrame PRIVATE ${CUDA_INCLUDE_DIRS})
-  # target_link_libraries(ROOTDataFrame PRIVATE ${CUDA_INCLUDE_DIRS})
-  # target_link_libraries(ROOTDataFrame PRIVATE CUDAHist)
-  endif()
+endif()
 
 if(sqlite)
   target_sources(ROOTDataFrame PRIVATE src/RSqliteDS.cxx)

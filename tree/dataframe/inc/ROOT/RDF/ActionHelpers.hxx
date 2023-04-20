@@ -668,7 +668,7 @@ public:
             for (unsigned int i = 0; i < fObjects.size(); ++i) {
                HIST *h = fObjects[i];
                Int_t entries = fCudaHist[i]->RetrieveResults(h->GetArray(), stats);
-               h->SetStatsData(stats[0], stats[1], stats[2], stats[3]);
+               h->SetStatsData(stats);
                h->SetEntries(entries);
                // printf("%d %d??\n", fObjects[i]->GetArray()->size(), fObjects[i]->GetXaxis()->GetNbins());
                if (getenv("DBG")) {

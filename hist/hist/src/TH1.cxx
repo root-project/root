@@ -8874,15 +8874,17 @@ void TH1::SetStats(Bool_t stats)
 ////////////////////////////////////////////////////////////////////////////////
 ///
 
-void TH1::SetStatsData(Double_t _fTsumw, Double_t _fTsumw2, Double_t _fTsumwx, Double_t _fTsumwx2)
+#ifdef ROOT_RDF_CUDA
+void TH1::SetStatsData(Double_t *stats)
 {
    if (getenv("CUDA_HIST")) {
-      fTsumw = _fTsumw;
-      fTsumw2 = _fTsumw2;
-      fTsumwx = _fTsumwx;
-      fTsumwx2 = _fTsumwx2;
+      fTsumw = stats[0];
+      fTsumw2 = stats[1];
+      fTsumwx = stats[2];
+      fTsumwx2 = stats[3];
    }
 }
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create structure to store sum of squares of weights.
