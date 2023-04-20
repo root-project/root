@@ -27,7 +27,6 @@ std::function<bool(const std::vector<double> &, double *)> gfHessianFunction;
 /// simple function for debugging
 #define PyPrint(pyo) PyObject_Print(pyo, stdout, Py_PRINT_RAW)
 
-
 /// function to wrap into Python the C/C++ target function to be minimized
 PyObject *target_function(PyObject * /*self*/, PyObject *args)
 {
@@ -78,6 +77,8 @@ ScipyMinimizer::ScipyMinimizer() : BasicMinimizer()
    fHessianFunc = [](const std::vector<double> &, double *) -> bool { return false; };
    // set extra options
    SetAlgoExtraOptions();
+   fConstraintsList = PyList_New(0);
+   fConstN = 0;
 }
 
 //_______________________________________________________________________
@@ -90,6 +91,8 @@ ScipyMinimizer::ScipyMinimizer(const char *type)
    fHessianFunc = [](const std::vector<double> &, double *) -> bool { return false; };
    // set extra options
    SetAlgoExtraOptions();
+   fConstraintsList = PyList_New(0);
+   fConstN = 0;
 }
 
 //_______________________________________________________________________
@@ -110,16 +113,18 @@ void ScipyMinimizer::PyInitialize()
       {NULL, NULL, 0, NULL} /* Sentinel */
    };
 
-   static struct PyModuleDef paramsmodule = {PyModuleDef_HEAD_INIT, "params", /* name of module */
-                                             "ROOT Scipy parameters",         /* module documentation, may be NULL */
-                                             -1, /* size of per-interpreter state of the module,
-                                       or -1 if the module keeps state in global variables. */
-                                             ParamsMethods,
-                                             NULL,  /* m_slots */
-                                             NULL,  /* m_traverse */
-                                             0,     /* m_clear */
-                                             NULL   /* m_free */
-                                             };
+   static struct PyModuleDef paramsmodule = {
+      PyModuleDef_HEAD_INIT,
+      "params",                /* name of module */
+      "ROOT Scipy parameters", /* module documentation, may be NULL */
+      -1,                      /* size of per-interpreter state of the module,
+                     or -1 if the module keeps state in global variables. */
+      ParamsMethods,
+      NULL, /* m_slots */
+      NULL, /* m_traverse */
+      0,    /* m_clear */
+      NULL  /* m_free */
+   };
 
    auto PyInit_params = [](void) -> PyObject * {
       PyObject *m;
@@ -209,8 +214,7 @@ bool ScipyMinimizer::Minimize()
       }
    }
    PyDict_SetItemString(pyoptions, "maxiter", PyLong_FromLong(MaxIterations()));
-   if(PrintLevel()>0)
-   {
+   if (PrintLevel() > 0) {
       PyDict_SetItemString(pyoptions, "disp", Py_True);
    }
    std::cout << "=== Scipy Minimization" << std::endl;
@@ -281,7 +285,6 @@ bool ScipyMinimizer::Minimize()
    bool success = PyLong_AsLong(psuccess);
    Py_DECREF(psuccess);
 
-
    // the x values for the minimum
    PyArrayObject *pyx = (PyArrayObject *)PyObject_GetAttrString(result, "x");
    const double *x = (const double *)PyArray_DATA(pyx);
@@ -299,7 +302,7 @@ bool ScipyMinimizer::Minimize()
    SetFinalValues(x);
    auto obj_value = (*gFunction)(x);
    SetMinValue(obj_value);
-   fCalls = nfev; //number of function evaluations
+   fCalls = nfev; // number of function evaluations
 
    std::cout << "=== Success: " << success << std::endl;
    std::cout << "=== Status: " << status << std::endl;
@@ -330,4 +333,73 @@ void ScipyMinimizer::SetHessianFunction(std::function<bool(const std::vector<dou
 unsigned int ScipyMinimizer::NCalls() const
 {
    return fCalls;
+}
+
+//_______________________________________________________________________
+void ScipyMinimizer::AddConstraintFunction(std::function<double(const std::vector<double> &)> func, std::string type)
+{
+   if (type != "eq" && type != "ineq") {
+      MATH_ERROR_MSG("ScipyMinimizer::AddConstraintFunction",
+                     Form("Error in constraint type %s, it have to be \"eq\" or \"ineq\"", type.c_str()));
+      exit(1);
+   }
+   static std::function<double(const std::vector<double> &)> cfunt = func;
+   auto const_function = [](PyObject * /*self*/, PyObject *args) -> PyObject * {
+      PyArrayObject *arr = (PyArrayObject *)PyTuple_GetItem(args, 0);
+
+      uint size = PyArray_SIZE(arr);
+      auto params = (double *)PyArray_DATA(arr);
+      std::vector<double> x(params, params + size);
+      auto r = cfunt(x);
+      return PyFloat_FromDouble(r);
+   };
+
+   static const char *name = Form("const_function%d", fConstN);
+   static const char *name_error = Form("const_function%d.error", fConstN);
+   static PyObject *ConstError;
+   static PyMethodDef ConstMethods[] = {
+      {name, const_function, METH_VARARGS, "Constraint function to minimize."}, {NULL, NULL, 0, NULL} /* Sentinel */
+   };
+   static struct PyModuleDef constmodule = {
+      PyModuleDef_HEAD_INIT,
+      name,                    /* name of module */
+      "ROOT Scipy parameters", /* module documentation, may be NULL */
+      -1,                      /* size of per-interpreter state of the module,
+                     or -1 if the module keeps state in global variables. */
+      ConstMethods,
+      NULL, /* m_slots */
+      NULL, /* m_traverse */
+      0,    /* m_clear */
+      NULL  /* m_free */
+   };
+
+   auto PyInit_const = [](void) -> PyObject * {
+      PyObject *m;
+
+      m = PyModule_Create(&constmodule);
+      if (m == NULL)
+         return NULL;
+      ConstError = PyErr_NewException(name_error, NULL, NULL);
+      Py_XINCREF(ConstError);
+      if (PyModule_AddObject(m, "error", ConstError) < 0) {
+         Py_XDECREF(ConstError);
+         Py_CLEAR(ConstError);
+         Py_DECREF(m);
+         return NULL;
+      }
+      return m;
+   };
+   PyImport_AddModule(name);
+   PyObject *module = PyInit_const();
+   PyObject *sys_modules = PyImport_GetModuleDict();
+   PyDict_SetItemString(sys_modules, name, module);
+
+   PyRunString(Form("from %s import %s", name, name));
+   PyObject *pyconstfun = PyDict_GetItemString(fLocalNS, name);
+
+   PyObject *pyconst = PyDict_New();
+   PyDict_SetItemString(pyconst, "type", PyUnicode_FromString(type.c_str()));
+   PyDict_SetItemString(pyconst, "fun", pyconstfun);
+   PyList_Append(fConstraintsList, pyconst);
+   PyPrint(fConstraintsList);
 }

@@ -74,9 +74,12 @@ private:
    PyObject *fJacobian;
    PyObject *fHessian;
    PyObject *fBoundsMod;
+   PyObject *fConstraintsList; /// contraints functions
    GenAlgoOptions fExtraOpts;
    std::function<bool(const std::vector<double> &, double *)> fHessianFunc;
+   unsigned int fConstN;
    unsigned int fCalls;
+
 protected:
    PyObject *fGlobalNS;
    PyObject *fLocalNS;
@@ -118,7 +121,18 @@ public:
    /*
       Number of function calls
     */
-   virtual unsigned int NCalls() const  override;
+   virtual unsigned int NCalls() const override;
+
+   /*
+      Method to add Constraint function,
+      multiples constraints functions can be added.
+      type have to be a string "eq" or "ineq" where
+      eq (means Equal, then fun() = 0)
+      ineq (means that, it is to be non-negative. fun() >=0)
+      https://kitchingroup.cheme.cmu.edu/f19-06623/13-constrained-optimization.html
+   */
+   virtual void AddConstraintFunction(std::function<double(const std::vector<double> &)>, std::string type);
+
 private:
    // usually copying is non trivial, so we make this unaccessible
 
