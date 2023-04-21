@@ -1422,7 +1422,8 @@ Bool_t TTreeCache::FillBuffer()
             if (pass == kRewind)
                cursor[i].Rewind();
             else if (cursor[i].fCurrent == -1) {
-               cursor[i].fCurrent = TMath::BinarySearch(b->GetWriteBasket() + 1, entries, minEntry);
+               auto start = TMath::BinarySearch(b->GetWriteBasket() + 1, entries, minEntry);
+               cursor[i].fCurrent = (start < 0) ? 0 : start;
             }
             for (auto &j = cursor[i].fCurrent; j < nb; j++) {
                // This basket has already been read, skip it
