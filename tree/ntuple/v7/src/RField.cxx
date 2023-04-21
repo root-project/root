@@ -2329,7 +2329,7 @@ void ROOT::Experimental::RVariantField::CommitCluster()
 //------------------------------------------------------------------------------
 
 ROOT::Experimental::RNullableField::RNullableField(std::string_view fieldName, std::string_view typeName,
-                                                   std::unique_ptr<Detail::RFieldBase> &&itemField)
+                                                   std::unique_ptr<Detail::RFieldBase> itemField)
    : ROOT::Experimental::Detail::RFieldBase(fieldName, typeName, ENTupleStructure::kCollection, false /* isSimple */)
 {
    Attach(std::move(itemField));
