@@ -126,9 +126,11 @@ template <typename T = double>
 void ReduceSum(int numBlocks, int blockSize, T *in, T *out, unsigned int n, T init = 0.)
 {
    auto initOp = [](unsigned int i, T r, T in) { return r + in; };
-   auto smemSize = (blockSize <= 32) ? 2 * blockSize : blockSize;
+   auto smemSize = (blockSize <= 32) ? 2 * blockSize * sizeof(double) : blockSize * sizeof(double);
 
-   if (blockSize == 2)
+   if (blockSize == 1)
+      ReduceSumKernel<1, T><<<numBlocks, 1, smemSize>>>(in, out, n, init);
+   else if (blockSize == 2)
       ReduceSumKernel<2, T><<<numBlocks, 2, smemSize>>>(in, out, n, init);
    else if (blockSize == 4)
       ReduceSumKernel<4, T><<<numBlocks, 4, smemSize>>>(in, out, n, init);
