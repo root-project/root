@@ -84,12 +84,16 @@ MinimumError FumiliErrorUpdator::Update(const MinimumState &s0, const MinimumPar
       }
    }
 
-   const MnAlgebraicSymMatrix &v0 = s0.Error().InvHessian();
+   double dcov = -1;
+   if (s0.IsValid()) {
+
+      const MnAlgebraicSymMatrix &v0 = s0.Error().InvHessian();
 
    // calculate by how much did the covariance matrix changed
    // (if it changed a lot since the last step, probably we
    // are not yet near the Minimum)
-   double dcov = 0.5 * (s0.Error().Dcovar() + sum_of_elements(h - v0) / sum_of_elements(h));
+      dcov = 0.5 * (s0.Error().Dcovar() + sum_of_elements(h - v0) / sum_of_elements(h));
+   }
 
    return MinimumError(h, dcov);
 }
