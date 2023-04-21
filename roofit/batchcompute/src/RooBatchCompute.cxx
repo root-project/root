@@ -19,11 +19,14 @@ This file contains the code for cpu computations using the RooBatchCompute libra
 **/
 
 #include "RooBatchCompute.h"
+#include "RooNaNPacker.h"
 #include "RooVDTHeaders.h"
 #include "Batches.h"
 
-#include "ROOT/RConfig.hxx"
-#include "ROOT/TExecutor.hxx"
+#include <ROOT/RConfig.hxx>
+#include <ROOT/TExecutor.hxx>
+
+#include <Math/Util.h>
 
 #include <algorithm>
 #include <sstream>
@@ -135,14 +138,75 @@ public:
       }
    }
    /// Return the sum of an input array
-   double sumReduce(cudaStream_t *, InputArr input, size_t n) override
-   {
-      long double sum = 0.0;
-      for (size_t i = 0; i < n; i++)
-         sum += input[i];
-      return sum;
-   }
+   double reduceSum(cudaStream_t *, InputArr input, size_t n) override;
+   ReduceNLLOutput reduceNLL(cudaStream_t *, RooSpan<const double> probas, RooSpan<const double> weightSpan,
+                             RooSpan<const double> weights, double weightSum,
+                             RooSpan<const double> binVolumes) override;
 }; // End class RooBatchComputeClass
+
+namespace {
+
+inline std::pair<double, double> getLog(double prob, ReduceNLLOutput &out)
+{
+   if (std::abs(prob) > 1e6) {
+      out.nLargeValues++;
+   }
+
+   if (prob <= 0.0) {
+      out.nNonPositiveValues++;
+      return {std::log(prob), -prob};
+   }
+
+   if (std::isnan(prob)) {
+      out.nNaNValues++;
+      return {prob, RooNaNPacker::unpackNaN(prob)};
+   }
+
+   return {std::log(prob), 0.0};
+}
+
+} // namespace
+
+double RooBatchComputeClass::reduceSum(cudaStream_t *, InputArr input, size_t n)
+{
+   return ROOT::Math::KahanSum<double, 4u>::Accumulate(input, input + n).Sum();
+}
+
+ReduceNLLOutput RooBatchComputeClass::reduceNLL(cudaStream_t *, RooSpan<const double> probas,
+                                                RooSpan<const double> weightSpan, RooSpan<const double> weights,
+                                                double weightSum, RooSpan<const double> binVolumes)
+{
+   ReduceNLLOutput out;
+
+   double badness = 0.0;
+
+   for (std::size_t i = 0; i < probas.size(); ++i) {
+
+      const double eventWeight = weightSpan.size() > 1 ? weightSpan[i] : weightSpan[0];
+
+      if (0. == eventWeight)
+         continue;
+
+      std::pair<double, double> logOut = getLog(probas[i], out);
+      double term = logOut.first;
+      badness += logOut.second;
+
+      if (!binVolumes.empty()) {
+         term -= std::log(weights[i]) - std::log(binVolumes[i]) - std::log(weightSum);
+      }
+
+      term *= -eventWeight;
+
+      out.nllSum.Add(term);
+   }
+
+   if (badness != 0.) {
+      // Some events with evaluation errors. Return "badness" of errors.
+      out.nllSum = ROOT::Math::KahanSum<double>(RooNaNPacker::packFloatIntoNaN(badness));
+   }
+
+   return out;
+}
 
 /// Static object to trigger the constructor which overwrites the dispatch pointer.
 static RooBatchComputeClass computeObj;
