@@ -2357,14 +2357,11 @@ void ROOT::Experimental::RNullableField::GenerateColumnsImpl()
          SetColumnRepresentative({EColumnType::kBit});
       }
    }
-   switch (GetColumnRepresentative()[0]) {
-   case EColumnType::kBit:
+   if (IsDense()) {
       fDefaultItemValue = fSubFields[0]->GenerateValue();
       fColumns.emplace_back(Detail::RColumn::Create<bool>(RColumnModel(EColumnType::kBit), 0));
-      break;
-   default:
+   } else {
       fColumns.emplace_back(Detail::RColumn::Create<ClusterSize_t>(RColumnModel(GetColumnRepresentative()[0]), 0));
-      break;
    }
 }
 
