@@ -33,7 +33,7 @@ public:
    static constexpr const char *weightVarName = "_weight";
    static constexpr const char *weightVarNameSumW2 = "_weight_sumW2";
 
-   RooNLLVarNew(){};
+   RooNLLVarNew() {}
    RooNLLVarNew(const char *name, const char *title, RooAbsPdf &pdf, RooArgSet const &observables, bool isExtended,
                 RooFit::OffsetMode offsetMode);
    RooNLLVarNew(const RooNLLVarNew &other, const char *name = nullptr);
@@ -44,9 +44,9 @@ public:
    /// Return default level for MINUIT error analysis.
    double defaultErrorLevel() const override { return 0.5; }
 
-   inline RooAbsPdf *getPdf() const { return &*_pdf; }
    void computeBatch(cudaStream_t *, double *output, size_t nOut, RooFit::Detail::DataMap const &) const override;
-   inline bool isReducerNode() const override { return true; }
+   bool canComputeBatchWithCuda() const override { return !_binnedL; }
+   bool isReducerNode() const override { return true; }
 
    void setPrefix(std::string const &prefix);
 
@@ -61,8 +61,9 @@ public:
 private:
    double evaluate() const override { return _value; }
    void resetWeightVarNames();
-   double finalizeResult(ROOT::Math::KahanSum<double> &&result, double weightSum) const;
+   double finalizeResult(ROOT::Math::KahanSum<double> result, double weightSum) const;
    void fillBinWidthsFromPdfBoundaries(RooAbsReal const &pdf);
+   double computeBatchBinnedL(RooSpan<const double> preds, RooSpan<const double> weights) const;
 
    RooTemplateProxy<RooAbsPdf> _pdf;
    RooArgSet _observables;
@@ -79,7 +80,6 @@ private:
    RooTemplateProxy<RooAbsReal> _weightSquaredVar;
    RooTemplateProxy<RooAbsReal> _binVolumeVar;
    std::vector<double> _binw;
-   mutable std::vector<double> _logProbasBuffer;     ///<!
    mutable ROOT::Math::KahanSum<double> _offset{0.}; ///<! Offset as KahanSum to avoid loss of precision
 
 }; // end class RooNLLVar
