@@ -32,7 +32,6 @@ RooAbsPdf::fitTo() is called and gets destroyed when the fitting ends.
 #include <RooAbsData.h>
 #include <RooAbsReal.h>
 #include <RooRealVar.h>
-#include <RooArgList.h>
 #include <RooBatchCompute.h>
 #include <RooHelpers.h>
 #include <RooMsgService.h>
@@ -64,6 +63,10 @@ struct NodeInfo {
       }
    }
 
+   bool isScalar() const { return outputSize == 1; }
+
+   bool computeInGPU() const { return !isScalar() && absArg->canComputeBatchWithCuda(); }
+
    RooAbsArg *absArg = nullptr;
 
    Detail::AbsBuffer *buffer = nullptr;
@@ -72,8 +75,6 @@ struct NodeInfo {
    cudaStream_t *stream = nullptr;
    int remClients = 0;
    int remServers = 0;
-   bool isScalar = false;
-   bool computeInGPU = false;
    bool copyAfterEvaluation = false;
    bool fromDataset = false;
    bool isVariable = false;
@@ -106,7 +107,6 @@ struct NodeInfo {
 RooFitDriver::RooFitDriver(const RooAbsReal &absReal, RooFit::BatchModeOption batchMode)
    : _topNode{const_cast<RooAbsReal &>(absReal)}, _batchMode{batchMode}
 {
-
    // Initialize RooBatchCompute
    RooBatchCompute::init();
 
@@ -203,15 +203,13 @@ void RooFitDriver::setData(DataSpansMap const &dataSpans)
 
    for (auto &info : _nodes) {
       info.outputSize = outputSizeMap.at(info.absArg);
-      // If the node has an output of size 1
-      info.isScalar = info.outputSize == 1;
 
       // In principle we don't need dirty flag propagation because the driver
       // takes care of deciding which node needs to be re-evaluated. However,
       // disabling it also for scalar mode results in very long fitting times
       // for specific models (test 14 in stressRooFit), which still needs to be
       // understood. TODO.
-      if (!info.isScalar) {
+      if (!info.isScalar()) {
          setOperMode(info.absArg, RooAbsArg::ADirty);
       }
    }
@@ -252,7 +250,7 @@ std::vector<double> RooFitDriver::getValues()
 {
    getVal();
    NodeInfo const &nodeInfo = _nodes.back();
-   if (nodeInfo.computeInGPU) {
+   if (nodeInfo.computeInGPU()) {
       std::size_t nOut = nodeInfo.outputSize;
       std::vector<double> out(nOut);
       RooBatchCompute::dispatchCUDA->memcpyToCPU(out.data(), _dataMapCPU.at(&topNode()).data(), nOut * sizeof(double));
@@ -277,26 +275,25 @@ void RooFitDriver::computeCPUNode(const RooAbsArg *node, NodeInfo &info)
 
    const std::size_t nOut = info.outputSize;
 
+   double *buffer = nullptr;
    if (nOut == 1) {
-      _dataMapCPU.at(node) = RooSpan<const double>(&info.scalarBuffer, nOut);
       if (_batchMode == RooFit::BatchModeOption::Cuda) {
          _dataMapCUDA.at(node) = RooSpan<const double>(&info.scalarBuffer, nOut);
       }
-      nodeAbsReal->computeBatch(nullptr, &info.scalarBuffer, nOut, _dataMapCPU);
+      buffer = &info.scalarBuffer;
    } else {
       if (!info.buffer) {
          info.buffer = info.copyAfterEvaluation ? _bufferManager.makePinnedBuffer(nOut, info.stream)
                                                 : _bufferManager.makeCpuBuffer(nOut);
       }
-      double *buffer = info.buffer->cpuWritePtr();
-      _dataMapCPU.at(node) = RooSpan<const double>(buffer, nOut);
-      // compute node and measure the time the first time
-      nodeAbsReal->computeBatch(nullptr, buffer, nOut, _dataMapCPU);
-      if (info.copyAfterEvaluation) {
-         _dataMapCUDA.at(node) = RooSpan<const double>(info.buffer->gpuReadPtr(), nOut);
-         if (info.event) {
-            RooBatchCompute::dispatchCUDA->cudaEventRecord(info.event, info.stream);
-         }
+      buffer = info.buffer->cpuWritePtr();
+   }
+   _dataMapCPU.at(node) = RooSpan<const double>(buffer, nOut);
+   nodeAbsReal->computeBatch(nullptr, buffer, nOut, _dataMapCPU);
+   if (info.copyAfterEvaluation) {
+      _dataMapCUDA.at(node) = RooSpan<const double>(info.buffer->gpuReadPtr(), nOut);
+      if (info.event) {
+         RooBatchCompute::dispatchCUDA->cudaEventRecord(info.event, info.stream);
       }
    }
 }
@@ -352,7 +349,7 @@ double RooFitDriver::getValHeterogeneous()
 
    // find initial GPU nodes and assign them to GPU
    for (auto &info : _nodes) {
-      if (info.remServers == 0 && info.computeInGPU) {
+      if (info.remServers == 0 && info.computeInGPU()) {
          assignToGPU(info);
       }
    }
@@ -366,7 +363,7 @@ double RooFitDriver::getValHeterogeneous()
             // Decrement number of remaining servers for clients and start GPU computations
             for (auto *infoClient : info.clientInfos) {
                --infoClient->remServers;
-               if (infoClient->computeInGPU && infoClient->remServers == 0) {
+               if (infoClient->computeInGPU() && infoClient->remServers == 0) {
                   assignToGPU(*infoClient);
                }
             }
@@ -379,7 +376,7 @@ double RooFitDriver::getValHeterogeneous()
       // find next CPU node
       auto it = _nodes.begin();
       for (; it != _nodes.end(); it++) {
-         if (it->remServers == 0 && !it->computeInGPU)
+         if (it->remServers == 0 && !it->computeInGPU())
             break;
       }
 
@@ -400,7 +397,7 @@ double RooFitDriver::getValHeterogeneous()
 
       // Assign the clients that are computed on the GPU
       for (auto *infoClient : info.clientInfos) {
-         if (--infoClient->remServers == 0 && infoClient->computeInGPU) {
+         if (--infoClient->remServers == 0 && infoClient->computeInGPU()) {
             assignToGPU(*infoClient);
          }
       }
@@ -446,14 +443,10 @@ void RooFitDriver::markGPUNodes()
 {
    for (auto &info : _nodes) {
       info.copyAfterEvaluation = false;
-      info.computeInGPU = !info.isScalar && info.absArg->canComputeBatchWithCuda();
-   }
-
-   for (auto &info : _nodes) {
       // scalar nodes don't need copying
-      if (!info.isScalar) {
+      if (!info.isScalar()) {
          for (auto *clientInfo : info.clientInfos) {
-            if (info.computeInGPU != clientInfo->computeInGPU) {
+            if (info.computeInGPU() != clientInfo->computeInGPU()) {
                info.copyAfterEvaluation = true;
                break;
             }
