@@ -152,11 +152,14 @@ class RooSTLRefCountList {
 
 
     ///Find an item by comparing RooAbsArg::namePtr() adresses.
-    T* findByNamePointer(const T * item) const {
+    inline T* findByNamePointer(const T * item) const {
+      return findByNamePointer(item->namePtr());
+    }
+
+    T* findByNamePointer(TNamed const* namePtr) const {
       if(size() < minSizeForNamePointerOrdering) {
-        auto nptr = item->namePtr();
-        auto byNamePointer = [nptr](const T * element) {
-          return element->namePtr() == nptr;
+        auto byNamePointer = [namePtr](const T * element) {
+          return element->namePtr() == namePtr;
         };
 
         auto found = std::find_if(_storage.begin(), _storage.end(), byNamePointer);
@@ -164,9 +167,9 @@ class RooSTLRefCountList {
       } else {
         //As the collection is guaranteed to be sorted by namePtr() adress, we
         //can use a binary search to look for `item` in this collection.
-        auto first = lowerBoundByNamePointer(item);
+        auto first = lowerBoundByNamePointer(namePtr);
         if(first == _orderedStorage.end()) return nullptr;
-        if(item->namePtr() != (*first)->namePtr()) return nullptr;
+        if(namePtr != (*first)->namePtr()) return nullptr;
         return *first;
       }
     }
@@ -257,13 +260,17 @@ class RooSTLRefCountList {
   private:
     //Return an iterator to the last element in this sorted collection with a
     //RooAbsArg::namePtr() adress smaller than for `item`.
-    typename std::vector<T*>::const_iterator lowerBoundByNamePointer(const T * item) const {
+    inline typename std::vector<T*>::const_iterator lowerBoundByNamePointer(const T * item) const {
+      return lowerBoundByNamePointer(item->namePtr());
+    }
+
+    typename std::vector<T*>::const_iterator lowerBoundByNamePointer(TNamed const* namePtr) const {
 
       //If the _orderedStorage has not been initialized yet or needs resorting
       //for other reasons, (re-)initialize it now.
       if(orderedStorageNeedsSorting() || _orderedStorage.size() != _storage.size()) initializeOrderedStorage();
 
-      return std::lower_bound(_orderedStorage.begin(), _orderedStorage.end(), item->namePtr(),
+      return std::lower_bound(_orderedStorage.begin(), _orderedStorage.end(), namePtr,
              [](const auto& x, TNamed const* npt) -> bool {
                 return x->namePtr() < npt;
               });
