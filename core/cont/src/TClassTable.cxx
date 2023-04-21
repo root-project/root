@@ -64,7 +64,7 @@ static std::mutex &GetClassTableMutex()
 }
 
 // RAII to first normalize the input classname (operation that
-// both requires the ROOT global lock and might call `TClassTable
+// both requires the ROOT global lock and might call `TClassTable`
 // resursively) and then acquire a lock on `TClassTable` local
 // mutex.
 class TClassTable::NormalizeThenLock {
