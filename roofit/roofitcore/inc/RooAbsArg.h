@@ -112,7 +112,13 @@ public:
     return dependsOn(server,ignoreArg,true) ;
   }
   bool dependsOn(const RooAbsCollection& serverList, const RooAbsArg* ignoreArg=nullptr, bool valueOnly=false) const ;
-  bool dependsOn(const RooAbsArg& server, const RooAbsArg* ignoreArg=nullptr, bool valueOnly=false) const ;
+  /// Test whether we depend on (ie, are served by) the specified object.
+  /// Note that RooAbsArg objects are considered equivalent if they have
+  /// the same name.
+  inline bool dependsOn(const RooAbsArg& server, const RooAbsArg* ignoreArg=nullptr, bool valueOnly=false) const {
+    return dependsOn(server.namePtr(), ignoreArg, valueOnly);
+  }
+  bool dependsOn(TNamed const* namePtr, const RooAbsArg* ignoreArg=nullptr, bool valueOnly=false) const ;
   bool overlaps(const RooAbsArg& testArg, bool valueOnly=false) const ;
   bool hasClients() const { return !_clientList.empty(); }
 
