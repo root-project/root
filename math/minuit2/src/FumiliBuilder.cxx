@@ -215,6 +215,7 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn &fcn, const GradientCalculato
 
    bool doLineSearch = false;
    bool doTrustRegion = true;
+   bool scaleTR = false;
    // trust region parameter
    // use as initial value 0.3 * || x0 ||
    auto & x0 = initialState.Vec();
@@ -277,15 +278,38 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn &fcn, const GradientCalculato
          p = MinimumParameters(s0.Vec() + pp.X() * step, pp.Y());
          print.Debug("New point after Line Search :", "\n  FVAL     ", p.Fval(), "\n  Parameter", p.Vec());
       }
+      // use as scaling matrix diagonal of Hessian
+      auto & H = s0.Error().Hessian();
+      unsigned int n = (scaleTR) ?   H.Nrow() : 0;
+
+      MnAlgebraicSymMatrix D(n);
+      MnAlgebraicSymMatrix Dinv(n);
+      MnAlgebraicSymMatrix Dinv2(n);
+      MnAlgebraicVector stepScaled(n);
+      // set the scaling matrix to the sqrt(diagoinal hessian)
+      for (unsigned int i = 0; i < n; i++){
+         double d  = std::sqrt(H(i,i));
+         D(i,i) = d;
+         Dinv(i,i) = 1./d;
+         Dinv2(i,i) = 1./(d*d);
+      }
 
       if (doTrustRegion) {
          // do simple trust region using some control delta and eta
          // compute norm of Newton step
-         double norm = sqrt(inner_product(step,step));
+         double norm = 0;
+         if (scaleTR) {
+            print.Debug("scaling Trust region with diagonal matrix D ",D);
+            stepScaled = D * step;
+            norm = sqrt(inner_product(stepScaled, stepScaled) );
+         }
+         else
+            norm = sqrt(inner_product(step,step));
          // some conditions
-         double tr_radius = norm;
-         if (norm < 0.1 * delta) tr_radius = 0.1*delta;
-         else if (norm > delta) tr_radius = delta;
+
+         // double tr_radius = norm;
+         // if (norm < 0.1 * delta) tr_radius = 0.1*delta;
+         // else if (norm > delta) tr_radius = delta;
 
          // update new point using reduced step
          //step = (tr_radius/norm) * step;
@@ -298,15 +322,32 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn &fcn, const GradientCalculato
             //step = - (delta/norm) * step;
 
             // if Newton step  is outside try to use the Cauchy point ?
-            double normGrad2 = inner_product(s0.Gradient().Grad(),s0.Gradient().Grad());
+            double normGrad2 = 0;
+            double gHg = 0;
+            if (scaleTR) {
+               auto gScaled = Dinv * s0.Gradient().Grad();
+               normGrad2 = inner_product(gScaled, gScaled);
+               // compute D-1 H D-1 = H(i,j) * D(i,i) * D(j,j)
+               MnAlgebraicSymMatrix Hscaled(n);
+               for (unsigned int i = 0; i < n; i++) {
+                  for (unsigned int j = 0; j <=i; j++) {
+                     Hscaled(i,j) = H(i,j) * Dinv(i,i) * Dinv(j,j);
+                  }
+               }
+               gHg = similarity(gScaled, Hscaled);
+            } else {
+               normGrad2 = inner_product(s0.Gradient().Grad(),s0.Gradient().Grad());
+               gHg = similarity(s0.Gradient().Grad(), s0.Error().Hessian());
+            }
             double normGrad = sqrt(normGrad2);
             // need to compute gTHg :
-            double gHg = similarity(s0.Gradient().Grad(), s0.Error().Hessian());
+
 
             print.Debug("computed gdel gHg and normGN",gdel,gHg,norm*norm, normGrad2);
             if (gHg <= 0.) {
                // Cauchy point is at the trust region boundary)
                step = - (delta/ normGrad) * s0.Gradient().Grad();
+               if (scaleTR) step = Dinv2 * step;
                print.Debug("Use as new point the Cauchy  point - along gradient with norm=delta ", delta);
             } else {
                // Cauchy point can be inside the trust region
@@ -314,10 +355,17 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn &fcn, const GradientCalculato
                if (tau == 1.0) {
                   // Cauchy is at the boundary
                   step = - (delta/ normGrad) * s0.Gradient().Grad();
+                  if (scaleTR)
+                    step = Dinv2 * step;
+
+
                   print.Debug("tau=1. - Use as new point the Cauchy  point - along gradient with norm=delta ", delta);
                } else {
                   MnAlgebraicVector stepC(step.size());
                   stepC = - tau * (delta/ normGrad) * s0.Gradient().Grad();
+                  if (scaleTR)
+                    stepC = Dinv2 * stepC;
+
                   print.Debug("Use as new point the Cauchy  point - along gradient with tau ", tau, "delta = ", delta);
 
                   // compute dog -leg step solving quadratic equation a * t^2 + b * t + c = 0
@@ -328,7 +376,8 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn &fcn, const GradientCalculato
                   double a = inner_product(diffP, diffP);
                   double b = 2. * inner_product(stepC, diffP);
                   // norm cauchy point is tau*delta
-                  double c = delta*delta * (tau * tau  - 1.);
+                  double c =  (scaleTR) ? inner_product(stepC,stepC) - delta*delta : delta*delta * (tau*tau - 1.);
+
                   print.Debug(" dogleg equation", a, b, c);
                   // solution is
                   double t = 0;
@@ -343,6 +392,7 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn &fcn, const GradientCalculato
                   else
                      t = t2;
                   step = stepC + t * diffP;
+                  // need to rescale point per D^-1 >
                   print.Debug("New dogleg point is t = ", t);
                }
             }
@@ -367,7 +417,7 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn &fcn, const GradientCalculato
                 delta = std::min(tr_factor_up * delta, 100.*norm);  // 1000. is the delta max
             }
          }
-         print.Debug("New point after Trust region :", "norm tr ",tr_radius/norm," rho ", rho," delta ", delta,
+         print.Debug("New point after Trust region :", "norm tr ",norm," rho ", rho," delta ", delta,
            "  FVAL    ", p.Fval(), "\n  Parameter", p.Vec());
 
       // check if we need to accept the point ?

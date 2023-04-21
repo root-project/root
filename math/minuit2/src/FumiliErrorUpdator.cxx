@@ -75,12 +75,13 @@ MinimumError FumiliErrorUpdator::Update(const MinimumState &s0, const MinimumPar
       }
    }
 
-   int ifail = Invert(h);
+   MnAlgebraicSymMatrix cov(h);
+   int ifail = Invert(cov);
    if (ifail != 0) {
       print.Warn("inversion fails; return diagonal matrix");
 
-      for (unsigned int i = 0; i < h.Nrow(); i++) {
-         h(i, i) = 1. / h(i, i);
+      for (unsigned int i = 0; i < cov.Nrow(); i++) {
+         cov(i, i) = 1. / cov(i, i);
       }
    }
 
@@ -92,10 +93,10 @@ MinimumError FumiliErrorUpdator::Update(const MinimumState &s0, const MinimumPar
    // calculate by how much did the covariance matrix changed
    // (if it changed a lot since the last step, probably we
    // are not yet near the Minimum)
-      dcov = 0.5 * (s0.Error().Dcovar() + sum_of_elements(h - v0) / sum_of_elements(h));
+      dcov = 0.5 * (s0.Error().Dcovar() + sum_of_elements(cov - v0) / sum_of_elements(cov));
    }
 
-   return MinimumError(h, dcov);
+   return MinimumError(cov, h, dcov);
 }
 
 } // namespace Minuit2
