@@ -806,7 +806,7 @@ public:
 
 /// The field for values that may or may not be present in an entry. Parent class for unique pointer field and
 /// optional field. A nullable field cannot be instantiated itself but only its descendants.
-/// The RNullableField takes care of the on-disk representation. Child classes are charged with the in-memory
+/// The RNullableField takes care of the on-disk representation. Child classes are responsible for the in-memory
 /// representation.  The on-disk representation can be "dense" or "sparse". Dense nullable fields have a bitmask
 /// (true: item available, false: item missing) and serialize a default-constructed item for missing items.
 /// Sparse nullable fields use a switch column to point to the available items.
