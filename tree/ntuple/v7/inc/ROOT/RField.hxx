@@ -853,10 +853,11 @@ protected:
    void ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue *value) final;
 
 public:
-   RUniquePtrField(std::string_view fieldName, std::unique_ptr<Detail::RFieldBase> &&itemField);
+   RUniquePtrField(std::string_view fieldName, std::string_view typeName,
+                   std::unique_ptr<Detail::RFieldBase> itemField);
    RUniquePtrField(RUniquePtrField &&other) = default;
    RUniquePtrField &operator=(RUniquePtrField &&other) = default;
-   ~RUniquePtrField() = default;
+   ~RUniquePtrField() override = default;
 
    using Detail::RFieldBase::GenerateValue;
    Detail::RFieldValue GenerateValue(void *where) override;
@@ -2252,7 +2253,7 @@ template <typename ItemT>
 class RField<std::unique_ptr<ItemT>> : public RUniquePtrField {
 public:
    static std::string TypeName() { return "std::unique_ptr<" + RField<ItemT>::TypeName() + ">"; }
-   explicit RField(std::string_view name) : RUniquePtrField(name, std::make_unique<RField<ItemT>>("_0")) {}
+   explicit RField(std::string_view name) : RUniquePtrField(name, TypeName(), std::make_unique<RField<ItemT>>("_0")) {}
    RField(RField &&other) = default;
    RField &operator=(RField &&other) = default;
    ~RField() override = default;

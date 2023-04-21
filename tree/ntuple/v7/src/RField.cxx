@@ -326,8 +326,10 @@ ROOT::Experimental::Detail::RFieldBase::Create(const std::string &fieldName, con
    }
    if (normalizedType.substr(0, 16) == "std::unique_ptr<") {
       std::string itemTypeName = normalizedType.substr(16, normalizedType.length() - 17);
-      auto itemField = Create("_0", itemTypeName);
-      result = std::make_unique<RUniquePtrField>(fieldName, itemField.Unwrap());
+      auto itemField = Create("_0", itemTypeName).Unwrap();
+      auto normalizedInnerTypeName = itemField->GetType();
+      result = std::make_unique<RUniquePtrField>(fieldName, "std::unique_ptr<" + normalizedInnerTypeName + ">",
+                                                 std::move(itemField));
    }
    // TODO: create an RCollectionField?
    if (normalizedType == ":Collection:")
@@ -2428,8 +2430,9 @@ void ROOT::Experimental::RNullableField::AcceptVisitor(Detail::RFieldVisitor &vi
 //------------------------------------------------------------------------------
 
 ROOT::Experimental::RUniquePtrField::RUniquePtrField(std::string_view fieldName,
-                                                     std::unique_ptr<Detail::RFieldBase> &&itemField)
-   : RNullableField(fieldName, "std::unique_ptr<" + itemField->GetType() + ">", std::move(itemField))
+                                                     std::string_view typeName,
+                                                     std::unique_ptr<Detail::RFieldBase> itemField)
+   : RNullableField(fieldName, typeName, std::move(itemField))
 {
 }
 
@@ -2437,7 +2440,7 @@ std::unique_ptr<ROOT::Experimental::Detail::RFieldBase>
 ROOT::Experimental::RUniquePtrField::CloneImpl(std::string_view newName) const
 {
    auto newItemField = fSubFields[0]->Clone(fSubFields[0]->GetName());
-   return std::make_unique<RUniquePtrField>(newName, std::move(newItemField));
+   return std::make_unique<RUniquePtrField>(newName, GetType(), std::move(newItemField));
 }
 
 std::size_t ROOT::Experimental::RUniquePtrField::AppendImpl(const Detail::RFieldValue &value)
