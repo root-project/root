@@ -2454,7 +2454,7 @@ std::size_t ROOT::Experimental::RUniquePtrField::AppendImpl(const Detail::RField
 void ROOT::Experimental::RUniquePtrField::ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue *value)
 {
    auto ptr = value->Get<std::unique_ptr<char>>();
-   bool isValidValue = !!(*ptr);
+   bool isValidValue = static_cast<bool>(*ptr);
 
    auto itemIndex = GetItemIndex(globalIndex);
    bool isValidItem = itemIndex.GetIndex() != kInvalidClusterIndex;
