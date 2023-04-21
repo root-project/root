@@ -1447,6 +1447,19 @@ Bool_t TBranch::SupportsBulkRead() const {
 ///
 /// where T is the type stored on this branch.
 ///
+/// When `count_buf` points to a valid TBuffer and the branch has a branch count,
+/// `count_buf` will be filled (via a call to GetEntriesSerialized) with the data
+/// from the branchCount.  After deserialization those value can be used to calculate
+/// the number of elements corresponding to each entries.
+///
+/// For each entry the number of elements is the multiplication of
+///    TLeaf *leaf = dynamic_cast<TLeaf*>(branch->GetListOfLeaves()->At(0))
+///    auto len = leaf->GetLen();
+/// and the value in the BranchCount corresponding to that entry (can be obtained
+/// from branch->GetBranchCount())
+///
+///
+///
 /// NOTES:
 /// - This interface is meant to be used by higher-level, type-safe wrappers, not
 ///   by end-users.
