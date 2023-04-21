@@ -854,21 +854,16 @@ bool RooAbsArg::dependsOn(const RooAbsCollection& serverList, const RooAbsArg* i
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Test whether we depend on (ie, are served by) the specified object.
-/// Note that RooAbsArg objects are considered equivalent if they have
-/// the same name.
-
-bool RooAbsArg::dependsOn(const RooAbsArg& testArg, const RooAbsArg* ignoreArg, bool valueOnly) const
+/// Test whether we depend on (ie, are served by) an object with a specific name.
+bool RooAbsArg::dependsOn(TNamed const* testArgNamePtr, const RooAbsArg* ignoreArg, bool valueOnly) const
 {
   if (this==ignoreArg) return false ;
 
   // First check if testArg is self
-  //if (!TString(testArg.GetName()).CompareTo(GetName())) return true ;
-  if (testArg.namePtr()==namePtr()) return true ;
-
+  if (testArgNamePtr == namePtr()) return true ;
 
   // Next test direct dependence
-  RooAbsArg* foundServer = findServer(testArg) ;
+  RooAbsArg *foundServer = _serverList.findByNamePointer(testArgNamePtr);
   if (foundServer) {
 
     // Return true if valueOnly is FALSE or if server is value server, otherwise keep looking
@@ -880,7 +875,7 @@ bool RooAbsArg::dependsOn(const RooAbsArg& testArg, const RooAbsArg* ignoreArg, 
   // If not, recurse
   for (const auto server : _serverList) {
     if ( !valueOnly || server->isValueServer(*this)) {
-      if (server->dependsOn(testArg,ignoreArg,valueOnly)) {
+      if (server->dependsOn(testArgNamePtr,ignoreArg,valueOnly)) {
         return true ;
       }
     }
