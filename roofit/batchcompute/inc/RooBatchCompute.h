@@ -13,10 +13,12 @@
 #ifndef ROOFIT_BATCHCOMPUTE_ROOBATCHCOMPUTE_H
 #define ROOFIT_BATCHCOMPUTE_ROOBATCHCOMPUTE_H
 
-#include "RooBatchComputeTypes.h"
+#include <RooBatchComputeTypes.h>
 
-#include "DllImport.h" //for R__EXTERN, needed for windows
-#include "TError.h"
+#include <DllImport.h> //for R__EXTERN, needed for windows
+#include <TError.h>
+
+#include <Math/Util.h>
 
 #include <functional>
 #include <string>
@@ -74,6 +76,13 @@ enum Computer {
    Voigtian
 };
 
+struct ReduceNLLOutput {
+   ROOT::Math::KahanSum<double> nllSum;
+   std::size_t nLargeValues = 0;
+   std::size_t nNonPositiveValues = 0;
+   std::size_t nNaNValues = 0;
+};
+
 /**
  * \class RooBatchComputeInterface
  * \ingroup Roobatchcompute
@@ -103,7 +112,12 @@ public:
       ArgVector extraArgs{};
       compute(stream, comp, output, size, vars, extraArgs);
    }
-   virtual double sumReduce(cudaStream_t *, InputArr input, size_t n) = 0;
+
+   virtual double reduceSum(cudaStream_t *, InputArr input, size_t n) = 0;
+   virtual ReduceNLLOutput reduceNLL(cudaStream_t *, RooSpan<const double> probas, RooSpan<const double> weightSpan,
+                                     RooSpan<const double> weights, double weightSum,
+                                     RooSpan<const double> binVolumes) = 0;
+
    virtual Architecture architecture() const = 0;
    virtual std::string architectureName() const = 0;
 
