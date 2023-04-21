@@ -829,7 +829,7 @@ protected:
    RClusterIndex GetItemIndex(NTupleSize_t globalIndex);
 
    RNullableField(std::string_view fieldName, std::string_view typeName,
-                  std::unique_ptr<Detail::RFieldBase> &&itemField);
+                  std::unique_ptr<Detail::RFieldBase> itemField);
 
 public:
    RNullableField(RNullableField &&other) = default;
