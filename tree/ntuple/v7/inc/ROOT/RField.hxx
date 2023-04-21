@@ -809,8 +809,8 @@ public:
 /// The RNullableField takes care of the on-disk representation. Child classes are responsible for the in-memory
 /// representation.  The on-disk representation can be "dense" or "sparse". Dense nullable fields have a bitmask
 /// (true: item available, false: item missing) and serialize a default-constructed item for missing items.
-/// Sparse nullable fields use a switch column to point to the available items.
-/// By default, items whose size is smaller or equal to 8 bytes (size of switch column element) are stored densely.
+/// Sparse nullable fields use a (Split)Index[64|32] column to point to the available items.
+/// By default, items whose size is smaller or equal to 4 bytes (size of (Split)Index32 column element) are stored densely.
 class RNullableField : public Detail::RFieldBase {
    /// For a dense nullable field, used to write a default-constructed item for missing ones.
    Detail::RFieldValue fDefaultItemValue;
