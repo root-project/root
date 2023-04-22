@@ -249,14 +249,6 @@ RooFitDriver::~RooFitDriver()
 std::vector<double> RooFitDriver::getValues()
 {
    getVal();
-   NodeInfo const &nodeInfo = _nodes.back();
-   if (nodeInfo.computeInGPU()) {
-      std::size_t nOut = nodeInfo.outputSize;
-      std::vector<double> out(nOut);
-      RooBatchCompute::dispatchCUDA->memcpyToCPU(out.data(), _dataMapCPU.at(&topNode()).data(), nOut * sizeof(double));
-      _dataMapCPU.at(&topNode()) = RooSpan<const double>(out.data(), nOut);
-      return out;
-   }
    // We copy the data to the output vector
    auto dataSpan = _dataMapCPU.at(&topNode());
    std::vector<double> out;
