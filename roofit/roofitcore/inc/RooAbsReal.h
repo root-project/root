@@ -135,7 +135,7 @@ public:
 #endif
   /// \copydoc getValBatch(std::size_t, std::size_t, const RooArgSet*)
   virtual RooSpan<const double> getValues(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet = nullptr) const;
-  std::vector<double> getValues(RooAbsData const& data, RooFit::BatchModeOption batchMode=RooFit::BatchModeOption::Cpu) const;
+  std::vector<double> getValues(RooAbsData const& data) const;
 
   double getPropagatedError(const RooFitResult &fr, const RooArgSet &nset = RooArgSet()) const;
 
