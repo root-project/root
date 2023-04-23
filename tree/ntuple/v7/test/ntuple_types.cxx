@@ -837,6 +837,24 @@ TEST(RNTuple, TClassEBO)
    }
 }
 
+TEST(RNTuple, IOConstructor)
+{
+   FileRaii fileGuard("test_ntuple_ioconstructor.ntuple");
+
+   auto model = RNTupleModel::Create();
+   auto fldObj = RFieldBase::Create("obj", "IOConstructor").Unwrap();
+   model->AddField(std::move(fldObj));
+   {
+      auto writer = RNTupleWriter::Recreate(std::move(model), "f", fileGuard.GetPath());
+      writer->Fill();
+   }
+
+   auto ntuple = RNTupleReader::Open("f", fileGuard.GetPath());
+   EXPECT_EQ(1U, ntuple->GetNEntries());
+   auto obj = ntuple->GetModel()->GetDefaultEntry()->Get<IOConstructor>("obj");
+   EXPECT_EQ(7, obj->a);
+}
+
 TEST(RNTuple, TClassTemplateBased)
 {
    FileRaii fileGuard("test_ntuple_tclass_templatebased.ntuple");
