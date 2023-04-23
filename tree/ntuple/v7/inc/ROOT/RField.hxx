@@ -810,7 +810,8 @@ public:
 /// representation.  The on-disk representation can be "dense" or "sparse". Dense nullable fields have a bitmask
 /// (true: item available, false: item missing) and serialize a default-constructed item for missing items.
 /// Sparse nullable fields use a (Split)Index[64|32] column to point to the available items.
-/// By default, items whose size is smaller or equal to 4 bytes (size of (Split)Index32 column element) are stored densely.
+/// By default, items whose size is smaller or equal to 4 bytes (size of (Split)Index32 column element) are stored
+/// densely.
 class RNullableField : public Detail::RFieldBase {
    /// For a dense nullable field, used to write a default-constructed item for missing ones.
    Detail::RFieldValue fDefaultItemValue;
@@ -828,8 +829,7 @@ protected:
    /// if it is null, returns kInvalidClusterIndex
    RClusterIndex GetItemIndex(NTupleSize_t globalIndex);
 
-   RNullableField(std::string_view fieldName, std::string_view typeName,
-                  std::unique_ptr<Detail::RFieldBase> itemField);
+   RNullableField(std::string_view fieldName, std::string_view typeName, std::unique_ptr<Detail::RFieldBase> itemField);
 
 public:
    RNullableField(RNullableField &&other) = default;
