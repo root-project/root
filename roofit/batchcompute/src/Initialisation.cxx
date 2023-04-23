@@ -31,11 +31,9 @@ namespace {
 void loadWithErrorChecking(const std::string &libName)
 {
    const auto returnValue = gSystem->Load(libName.c_str());
-   if (returnValue == -1 || returnValue == -2)
+   if (returnValue == -1 || returnValue == -2) {
       throw std::runtime_error("RooFit was unable to load its computation library " + libName);
-   else if (returnValue == 1) // Library should not have been loaded before we tried to do it.
-      throw std::logic_error("RooFit computation library " + libName +
-                             " was loaded before RooFit initialisation began.");
+   }
 }
 
 } // end anonymous namespace
