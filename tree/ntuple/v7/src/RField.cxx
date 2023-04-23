@@ -2429,8 +2429,7 @@ void ROOT::Experimental::RNullableField::AcceptVisitor(Detail::RFieldVisitor &vi
 
 //------------------------------------------------------------------------------
 
-ROOT::Experimental::RUniquePtrField::RUniquePtrField(std::string_view fieldName,
-                                                     std::string_view typeName,
+ROOT::Experimental::RUniquePtrField::RUniquePtrField(std::string_view fieldName, std::string_view typeName,
                                                      std::unique_ptr<Detail::RFieldBase> itemField)
    : RNullableField(fieldName, typeName, std::move(itemField))
 {
