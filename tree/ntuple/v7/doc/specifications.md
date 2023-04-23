@@ -665,6 +665,8 @@ Within the repetition blocks, bits are stored in little-endian order, i.e. the l
 A unique pointer and an optional type have the same on disk representation.
 They are represented as a collection of `T`s of zero or one elements.
 A collection mother field has a single subfield named `_0` for `T`, where `T` must have RNTuple I/O support.
+Note that RNTuple does not support polymorphism, so the type `T` is expected to be `T` and not a child class of `T`.
+
 By default, the mother field has a principal column of type `(Split)Index[64|32]`.
 This is called sparse representation.
 The alternative, dense representation uses a `Bit` column to mask non-existing instances of the subfield.
