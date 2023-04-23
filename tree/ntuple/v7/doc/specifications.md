@@ -670,7 +670,7 @@ Note that RNTuple does not support polymorphism, so the type `T` is expected to 
 By default, the mother field has a principal column of type `(Split)Index[64|32]`.
 This is called sparse representation.
 The alternative, dense representation uses a `Bit` column to mask non-existing instances of the subfield.
-In this second case, a default-constructed `T` is stored on disk for the non-existing instances.
+In this second case, a default-constructed `T` (or, if applicable, a `T` constructed by the ROOT I/O constructor) is stored on disk for the non-existing instances.
 
 ### User-defined classes
 
