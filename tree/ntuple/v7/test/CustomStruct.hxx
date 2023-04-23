@@ -1,6 +1,8 @@
 #ifndef ROOT7_RNTuple_Test_CustomStruct
 #define ROOT7_RNTuple_Test_CustomStruct
 
+#include <TRootIOCtor.h>
+
 #include <cstdint>
 #include <string>
 #include <variant>
@@ -52,6 +54,14 @@ class EdmWrapper {
 public:
    bool fIsPresent = true;
    T fMember;
+};
+
+class IOConstructor {
+private:
+   IOConstructor();
+public:
+   int a = 7;
+   IOConstructor(TRootIOCtor *) {};
 };
 
 /// The classes below are based on an excerpt provided by Marcin Nowak (EP-UAT)
