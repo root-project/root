@@ -899,7 +899,7 @@ function(ROOT_LINKER_LIBRARY library)
     set(library ${library}_new)
   endif()
   if(WIN32 AND ARG_TYPE STREQUAL SHARED AND NOT ARG_DLLEXPORT)
-    if(CMAKE_GENERATOR MATCHES "Visual Studio")
+    if(MSVC)
       set(library_name ${libprefix}${library})
     endif()
     #---create a shared library with the .def file------------------------
