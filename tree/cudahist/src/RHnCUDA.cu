@@ -75,8 +75,6 @@ __global__ void HistoKernel(T *histogram, CUDAhist::RAxis *axes, int nBins, doub
    // Fill local histogram
    for (auto i = tid; i < bufferSize; i += stride) {
       auto bin = GetBin<Dim>(i, axes, coords, bins);
-
-      // TODO: check for datatype under/overflow
       if (bin >= 0)
          atomicAdd(&smem[bin], (T)weights[i]);
    }
@@ -105,63 +103,73 @@ __global__ void HistoKernelGlobal(T *histogram, CUDAhist::RAxis *axes, int nBins
    }
 }
 
-// TODO: worked for 1 Dimension, need to adapt to n-Dimensional case.
-// OPTIMIZATION: interleave/change order of computation of different stats to improve coalescing?
+template <unsigned int BlockSize>
+__global__ void GetSumW(double *weights, unsigned int nCoords, double *fDIntermediateStats)
+{
+   // Tsumw
+   CUDAHelpers::ReduceBase<BlockSize>(
+      weights, fDIntermediateStats, nCoords, [](unsigned int i, double r, double w) { return r + w; },
+      CUDAHelpers::Plus<double>(), 0.);
+}
+
+// Calculates Tsumw2
+template <unsigned int BlockSize>
+__global__ void GetSumW2(double *weights, unsigned int nCoords, double *fDIntermediateStats)
+{
+   CUDAHelpers::ReduceBase<BlockSize>(
+      weights, &fDIntermediateStats[gridDim.x], nCoords, [](unsigned int i, double r, double w) { return r + w * w; },
+      CUDAHelpers::Plus<double>(), 0.);
+}
+
+// Multiplies weight with coordinate of current axis. E.g., for Dim = 2 this computes Tsumwx and Tsumwy
 template <unsigned int Dim, unsigned int BlockSize>
-__global__ void GetStatsKernel(double *coords, int *bins, double *weights, unsigned int nCoords, CUDAhist::RAxis *axes,
-                               double *fDIntermediateStats, const int nStats)
+__global__ void
+GetSumWAxis(int axis, int is_offset, double *coords, double *weights, unsigned int nCoords, double *fDIntermediateStats)
+{
+   CUDAHelpers::ReduceBase<BlockSize>(
+      weights, &fDIntermediateStats[is_offset], nCoords,
+      [&coords, &axis](unsigned int i, double r, double w) { return r + w * coords[i * Dim + axis]; },
+      CUDAHelpers::Plus<double>(), 0.);
+}
+
+// Multiplies weight with coordinate of current axis. E.g., for Dim = 2 this computes Tsumwx and Tsumwy
+template <unsigned int Dim, unsigned int BlockSize>
+__global__ void GetSumWAxis2(int axis, int is_offset, double *coords, double *weights, unsigned int nCoords,
+                             double *fDIntermediateStats)
+{
+   CUDAHelpers::ReduceBase<BlockSize>(
+      weights, &fDIntermediateStats[is_offset], nCoords,
+      [&coords, &axis](unsigned int i, double r, double w) {
+         return r + w * coords[i * Dim + axis] * coords[i * Dim + axis];
+      },
+      CUDAHelpers::Plus<double>(), 0.);
+}
+
+// Multiplies coordinate of current axis with the "previous" axis. E.g., for Dim = 2 this computes Tsumwxy
+template <unsigned int Dim, unsigned int BlockSize>
+__global__ void GetSumWAxisAxis(int axis1, int axis2, int is_offset, double *coords, double *weights,
+                                unsigned int nCoords, double *fDIntermediateStats)
+{
+   CUDAHelpers::ReduceBase<BlockSize>(
+      weights, &fDIntermediateStats[is_offset], nCoords,
+      [&coords, &axis1, &axis2](unsigned int i, double r, double w) {
+         return r + w * coords[i * Dim + axis1] * coords[i * Dim + axis2];
+      },
+      CUDAHelpers::Plus<double>(), 0.);
+}
+
+// Nullify weights of under/overflow bins to exclude them from stats
+template <unsigned int Dim, unsigned int BlockSize>
+__global__ void ExcludeUOverflowKernel(int *bins, double *weights, unsigned int nCoords, CUDAhist::RAxis *axes)
 {
    unsigned int tid = threadIdx.x + blockDim.x * blockIdx.x;
    unsigned int stride = blockDim.x * gridDim.x;
 
-   const int is_stride = gridDim.x;
-
-   // Exclude under/overflow bins from stats
    for (auto i = tid; i < nCoords; i += stride) {
       for (auto d = 0; d < Dim; d++) {
          if (bins[i * Dim + d] <= 0 || bins[i * Dim + d] >= axes[d].fNbins - 1) {
             weights[i] = 0.;
          }
-      }
-   }
-
-   // Tsumw
-   CUDAHelpers::ReduceBase<BlockSize>(
-      weights, fDIntermediateStats, nCoords, [](unsigned int i, double r, double w) { return r + w; },
-      CUDAHelpers::Plus<double>(), 0.);
-
-   // Tsumw2
-   unsigned int is_offset = is_stride;
-   CUDAHelpers::ReduceBase<BlockSize>(
-      weights, &fDIntermediateStats[is_offset], nCoords,
-      [](unsigned int i, double r, double w) { return r + w * w; }, CUDAHelpers::Plus<double>(), 0.);
-
-   for (auto d = 0; d < Dim; d++) {
-      // Multiply weight with coordinate of current axis. E.g., for Dim = 2 this computes Tsumwx and Tsumwy
-      is_offset += is_stride;
-      CUDAHelpers::ReduceBase<BlockSize>(
-         weights, &fDIntermediateStats[is_offset], nCoords,
-         [&coords, &d](unsigned int i, double r, double w) { return r + w * coords[i * Dim + d]; },
-         CUDAHelpers::Plus<double>(), 0.);
-
-      // Squares coodinate per axis. E.g., for Dim = 2 this computes Tsumw2 and Tsumwy2
-      is_offset += is_stride;
-      CUDAHelpers::ReduceBase<BlockSize>(
-         weights, &fDIntermediateStats[is_offset], nCoords,
-         [&coords, &d](unsigned int i, double r, double w) {
-            return r + w * coords[i * Dim + d] * coords[i * Dim + d];
-         },
-         CUDAHelpers::Plus<double>(), 0.);
-
-      for (auto prev_d = d - 1; prev_d >= 0; prev_d--) {
-         // Multiplies coordinate of current axis with the "previous" axis. E.g., for Dim = 2 this computes Tsumwxy
-         is_offset += is_stride;
-         CUDAHelpers::ReduceBase<BlockSize>(
-            weights, &fDIntermediateStats[is_offset], nCoords,
-            [&coords, &prev_d, &d](unsigned int i, double r, double w) {
-               return r + w * coords[i * Dim + prev_d] * coords[i * Dim + d];
-            },
-            CUDAHelpers::Plus<double>(), 0.);
       }
    }
 }
@@ -186,7 +194,7 @@ RHnCUDA<T, Dim, BlockSize>::RHnCUDA(int *ncells, double *xlow, double *xhigh, co
    fHWeights.reserve(fBufferSize);
 
    // Initialize axis descriptors.
-   for (int i = 0; i < Dim; i++) {
+   for (auto i = 0; i < Dim; i++) {
       RAxis axis;
       axis.fNbins = ncells[i];
       axis.fMin = xlow[i];
@@ -237,7 +245,6 @@ void RHnCUDA<T, Dim, BlockSize>::AllocateH1D()
    ERRCHECK(cudaMalloc((void **)&fDStats, kNStats * sizeof(double)));
 }
 
-// TODO: ref to array
 template <typename T, unsigned int Dim, unsigned int BlockSize>
 void RHnCUDA<T, Dim, BlockSize>::Fill(const std::array<T, Dim> &coords, double w)
 {
@@ -251,41 +258,75 @@ void RHnCUDA<T, Dim, BlockSize>::Fill(const std::array<T, Dim> &coords, double w
    }
 }
 
-unsigned int nextPow2(unsigned int x) {
-  --x;
-  x |= x >> 1;
-  x |= x >> 2;
-  x |= x >> 4;
-  x |= x >> 8;
-  x |= x >> 16;
-  return ++x;
+unsigned int nextPow2(unsigned int x)
+{
+   --x;
+   x |= x >> 1;
+   x |= x >> 2;
+   x |= x >> 4;
+   x |= x >> 8;
+   x |= x >> 16;
+   return ++x;
 }
 
 template <typename T, unsigned int Dim, unsigned int BlockSize>
 void RHnCUDA<T, Dim, BlockSize>::GetStats(unsigned int size)
 {
-   // TODO: move this to the constructor
    // Number of blocks in grid is halved, because each thread loads two elements from global memory.
    int numBlocks = fmax(1, ceil(size / BlockSize / 2.));
 
-   // OPTIMIZATION: final reduction in a single kernel?
+   ExcludeUOverflowKernel<Dim, BlockSize><<<fmax(1, size / BlockSize), BlockSize>>>(fDBins, fDWeights, size, fDAxes);
+   ERRCHECK(cudaPeekAtLastError());
+
+   double *resultArray;
    if (numBlocks > 1) {
       if (fDIntermediateStats == NULL)
          ERRCHECK(cudaMalloc((void **)&fDIntermediateStats, numBlocks * kNStats * sizeof(double)));
       else
          ERRCHECK(cudaMemset(fDIntermediateStats, 0, numBlocks * kNStats * sizeof(double)));
 
-      GetStatsKernel<Dim, BlockSize><<<numBlocks, BlockSize, kStatsSmemSize>>>(fDCoords, fDBins, fDWeights, size,
-                                                                               fDAxes, fDIntermediateStats, kNStats);
-      ERRCHECK(cudaPeekAtLastError());
+      resultArray = fDIntermediateStats;
 
+   } else {
+      resultArray = fDStats;
+   }
+
+   // OPTIMIZATION: interleave/change order of computation of different stats to improve coalescing? or parallelize via
+   // streams
+   GetSumW<BlockSize><<<numBlocks, BlockSize, kStatsSmemSize>>>(fDWeights, size, resultArray);
+   ERRCHECK(cudaPeekAtLastError());
+   GetSumW2<BlockSize><<<numBlocks, BlockSize, kStatsSmemSize>>>(fDWeights, size, resultArray);
+   ERRCHECK(cudaPeekAtLastError());
+
+   auto is_offset = 2 * numBlocks;
+   for (auto d = 0; d < Dim; d++) {
+      // Multiply weight with coordinate of current axis. E.g., for Dim = 2 this computes Tsumwx and Tsumwy
+      GetSumWAxis<Dim, BlockSize>
+         <<<numBlocks, BlockSize, kStatsSmemSize>>>(d, is_offset, fDCoords, fDWeights, size, resultArray);
+      ERRCHECK(cudaPeekAtLastError());
+      is_offset += numBlocks;
+
+      // Squares coodinate per axis. E.g., for Dim = 2 this computes Tsumwx2 and Tsumwy2
+      GetSumWAxis2<Dim, BlockSize>
+         <<<numBlocks, BlockSize, kStatsSmemSize>>>(d, is_offset, fDCoords, fDWeights, size, resultArray);
+      ERRCHECK(cudaPeekAtLastError());
+      is_offset += numBlocks;
+
+      for (auto prev_d = 0; prev_d < d; prev_d++) {
+         // Multiplies coordinate of current axis with the "previous" axis. E.g., for Dim = 2 this computes Tsumwxy
+         GetSumWAxisAxis<Dim, BlockSize>
+            <<<numBlocks, BlockSize, kStatsSmemSize>>>(d, prev_d, is_offset, fDCoords, fDWeights, size, resultArray);
+         ERRCHECK(cudaPeekAtLastError());
+         is_offset += numBlocks;
+      }
+   }
+
+   if (numBlocks > 1) {
       for (auto i = 0; i < kNStats; i++) {
-         CUDAHelpers::ReduceSum<double>(1, nextPow2(numBlocks), &fDIntermediateStats[i * numBlocks], &fDStats[i], numBlocks, 0.);
+         CUDAHelpers::ReduceSum<double>(1, nextPow2(numBlocks) / 2, &fDIntermediateStats[i * numBlocks], &fDStats[i],
+                                        numBlocks, 0.);
          ERRCHECK(cudaPeekAtLastError());
       }
-   } else {
-      GetStatsKernel<Dim, BlockSize>
-         <<<numBlocks, BlockSize, kStatsSmemSize>>>(fDCoords, fDBins, fDWeights, size, fDAxes, fDStats, kNStats);
    }
 }
 

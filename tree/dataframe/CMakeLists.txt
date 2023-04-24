@@ -19,7 +19,6 @@ if(arrow)
 endif()
 
 if (cuda)
-  # list(APPEND RDATAFRAME_EXTRA_HEADERS ROOT/RSqliteDS.hxx)
   list(APPEND RDATAFRAME_EXTRA_DEPS CUDAHist)
 endif()
 

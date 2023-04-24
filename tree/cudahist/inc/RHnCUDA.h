@@ -18,7 +18,7 @@ struct RAxis {
    const double *kBinEdges; ///< Bin edges array, can be NULL
 };
 
-template <typename T, unsigned int Dim, unsigned int BlockSize = 64>
+template <typename T, unsigned int Dim, unsigned int BlockSize = 256>
 class RHnCUDA {
    // clang-format off
 private:

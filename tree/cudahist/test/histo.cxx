@@ -7,7 +7,7 @@
 #include "TAxis.h"
 
 // TODO: put these in some kind of gtest environment class?
-auto numRows = 100;
+auto numRows = 42;
 auto numBins = numRows - 2; // -2 to also test filling u/overflow.
 auto startBin = 0;
 auto startFill = startBin - 1;
@@ -21,19 +21,20 @@ char env[] = "CUDA_HIST";
 template <typename T = double, typename HIST = TH1D>
 struct HistProperties {
    T *array;
-   int dim, ncells;
+   int dim, nCells;
    double *stats;
+   int nStats;
 
    HistProperties(ROOT::RDF::RResultPtr<HIST> &h)
    {
       dim = h->GetDimension();
-      auto nStats = 2 + 2 * dim;
+      nStats = 2 + 2 * dim;
       if (dim > 1)
          nStats += TMath::Binomial(dim, 2);
       stats = (double *)malloc((nStats) * sizeof(double));
 
       array = h->GetArray();
-      ncells = h->GetNcells();
+      nCells = h->GetNcells();
       h->GetStats(stats);
    }
 };
@@ -88,9 +89,8 @@ void CheckArrays(AType a, AType b, Int_t m, Int_t n, std::vector<const char *> l
 template <typename T = double, typename HIST = TH1D>
 void CompareHistograms(const HistProperties<T, HIST> &h1, const HistProperties<T, HIST> &h2)
 {
-   CheckArrays(h1.array, h2.array, h1.ncells, h2.ncells, "fArray", "CUDA fArray"); // Compare bin values.
-   // CheckArrays(h1.stats, h2.stats, 4, 4, {"fTsumw", "fTsumw2", "fTsumwx", "fTsumwx2"},
-   //             {"CUDA fTsumw", "CUDA fTsumw2", "CUDA fTsumwx", "CUDA fTsumwx2"}); // Compare histogram statistics.
+   CheckArrays(h1.array, h2.array, h1.nCells, h2.nCells, "fArray", "CUDA fArray"); // Compare bin values.
+   CheckArrays(h1.stats, h2.stats, h1.nStats, h2.nStats); // Compare histogram statistics
 }
 
 std::vector<double> *GetVariableBinEdges()
