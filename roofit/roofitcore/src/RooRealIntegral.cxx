@@ -227,7 +227,7 @@ Int_t RooRealIntegral::_cacheAllNDim(2) ;
 
 RooRealIntegral::RooRealIntegral()
 {
-  TRACE_CREATE
+  TRACE_CREATE;
 }
 
 
@@ -357,9 +357,10 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
   }
   exclLVBranches.remove(depList,true,true) ;
 
-  // Initial fill of list of LValue leaf servers (put in intDepList)
+  // Initial fill of list of LValue leaf servers (put in intDepList, but the
+  // instances that are in the actual computation graph of the function)
   RooArgSet exclLVServers("exclLVServers") ;
-  exclLVServers.add(intDepList) ;
+  function.getObservables(&intDepList, exclLVServers);
 
   // Obtain mutual exclusive dependence by iterative reduction
   bool converged(false) ;
@@ -447,14 +448,9 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
   // * E) interact with function to make list of objects actually integrated analytically  *
   // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 
-  RooArgSet anIntDepList ;
+  _mode = function.getAnalyticalIntegralWN(anIntOKDepList,_anaList,_funcNormSet.get(),RooNameReg::str(_rangeName)) ;
 
-  RooArgSet anaSet{ _anaList, Form("UniqueCloneOf_%s",_anaList.GetName())};
-  _mode = function.getAnalyticalIntegralWN(anIntOKDepList,anaSet,_funcNormSet.get(),RooNameReg::str(_rangeName)) ;
-  _anaList.removeAll() ;
-  _anaList.add(anaSet);
-
-  // Avoid confusion -- if mode is zero no analytical integral is defined regardless of contents of _anaListx
+  // Avoid confusion -- if mode is zero no analytical integral is defined regardless of contents of _anaList
   if (_mode==0) {
     _anaList.removeAll() ;
   }
@@ -600,7 +596,7 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
     }
   }
 
-  TRACE_CREATE
+  TRACE_CREATE;
 }
 
 
@@ -758,7 +754,7 @@ RooRealIntegral::RooRealIntegral(const RooRealIntegral& other, const char* name)
  other._intList.snapshot(_saveInt) ;
  other._sumList.snapshot(_saveSum) ;
 
-  TRACE_CREATE
+  TRACE_CREATE;
 }
 
 
@@ -766,7 +762,7 @@ RooRealIntegral::RooRealIntegral(const RooRealIntegral& other, const char* name)
 
 RooRealIntegral::~RooRealIntegral()
 {
-  TRACE_DESTROY
+  TRACE_DESTROY;
 }
 
 
