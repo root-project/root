@@ -361,3 +361,32 @@ INSTANTIATE_TEST_SUITE_P(RooRealIntegral, LevelTest, testing::Values(1, 2, 3),
                             ss << "Level" << paramInfo.param;
                             return ss.str();
                          });
+
+// If we integrate a model that uses RooLinearVar and should be able to get
+// integrated analytically, this should also work if we integrate over variable
+// clones because RooFit considers them identical. Covers GitHub issue #12646.
+TEST(RooRealIntegral, RooLinearVarModelIntegratedOverVariableClones)
+{
+   RooWorkspace ws;
+   ws.factory("LinearVar::x2(x[0, 1], 1, 0)");
+   ws.factory("LinearVar::y2(y[0, 1], 1, 0)");
+
+   // RooGaussian can integrate over x or mu, but not both still, the issue is
+   // visible regardless
+   ws.factory("Gaussian::gauss(x2, y2, 0.2)");
+
+   RooRealVar &x = *ws.var("x");
+   RooRealVar &y = *ws.var("y");
+   RooAbsPdf &gauss = *ws.pdf("gauss");
+
+   // There should be no numeric integration happening
+   std::unique_ptr<RooAbsReal> integral{gauss.createIntegral({y}, {x, y})};
+   EXPECT_TRUE(static_cast<RooRealIntegral &>(*integral).numIntRealVars().empty());
+
+   RooRealVar xCopy{x};
+   RooRealVar yCopy{y};
+
+   // Also if we use clones of the observables, it should not make a difference
+   std::unique_ptr<RooAbsReal> integral2{gauss.createIntegral({yCopy}, {xCopy, yCopy})};
+   EXPECT_TRUE(static_cast<RooRealIntegral &>(*integral2).numIntRealVars().empty());
+}
