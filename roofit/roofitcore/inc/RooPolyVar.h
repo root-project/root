@@ -24,45 +24,42 @@
 
 class RooPolyVar : public RooAbsReal {
 public:
+   RooPolyVar() {}
+   RooPolyVar(const char *name, const char *title, RooAbsReal &x);
+   RooPolyVar(const char *name, const char *title, RooAbsReal &_x, const RooArgList &_coefList, Int_t lowestOrder = 0);
 
-  RooPolyVar() {}
-  RooPolyVar(const char* name, const char* title, RooAbsReal& x) ;
-  RooPolyVar(const char *name, const char *title,
-      RooAbsReal& _x, const RooArgList& _coefList, Int_t lowestOrder=0) ;
+   RooPolyVar(const RooPolyVar &other, const char *name = nullptr);
+   TObject *clone(const char *newname) const override { return new RooPolyVar(*this, newname); }
 
-  RooPolyVar(const RooPolyVar& other, const char *name = nullptr);
-  TObject* clone(const char* newname) const override { return new RooPolyVar(*this, newname); }
+   Int_t getAnalyticalIntegral(RooArgSet &allVars, RooArgSet &analVars, const char *rangeName = nullptr) const override;
+   double analyticalIntegral(Int_t code, const char *rangeName = nullptr) const override;
 
-  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=nullptr) const override ;
-  double analyticalIntegral(Int_t code, const char* rangeName=nullptr) const override ;
+   void translate(RooFit::Detail::CodeSquashContext &ctx) const override;
+   std::string buildCallToAnalyticIntegral(Int_t code, const char *rangeName,
+                                           RooFit::Detail::CodeSquashContext &ctx) const override;
 
-  void translate(RooFit::Detail::CodeSquashContext &ctx) const override;
-  std::string
-  buildCallToAnalyticIntegral(Int_t code, const char *rangeName, RooFit::Detail::CodeSquashContext &ctx) const override;
+protected:
+   RooRealProxy _x;
+   RooListProxy _coefList;
+   Int_t _lowestOrder = 0;
 
-  protected:
-  RooRealProxy _x;
-  RooListProxy _coefList ;
-  Int_t _lowestOrder  = 0;
+   mutable std::vector<double> _wksp; ///<! do not persist
 
-  mutable std::vector<double> _wksp; ///<! do not persist
+   double evaluate() const override;
+   void computeBatch(cudaStream_t *, double *output, size_t nEvents, RooFit::Detail::DataMap const &) const override;
 
-  double evaluate() const override;
-  void computeBatch(cudaStream_t*, double* output, size_t nEvents, RooFit::Detail::DataMap const&) const override;
-
-  // It doesn't make sense to use the GPU if the polynomial has no terms.
-  inline bool canComputeBatchWithCuda() const override { return !_coefList.empty(); }
+   // It doesn't make sense to use the GPU if the polynomial has no terms.
+   inline bool canComputeBatchWithCuda() const override { return !_coefList.empty(); }
 
 private:
+   friend class RooPolynomial;
 
-  friend class RooPolynomial;
+   static void computeBatchImpl(cudaStream_t *, double *output, size_t nEvents, RooFit::Detail::DataMap const &,
+                                RooAbsReal const &x, RooArgList const &coefs, int lowestOrder);
 
-  static void computeBatchImpl(cudaStream_t *, double *output, size_t nEvents, RooFit::Detail::DataMap const &,
-                               RooAbsReal const &x, RooArgList const &coefs, int lowestOrder);
+   static void fillCoeffValues(std::vector<double> &wksp, RooListProxy const &coefList);
 
-  static void fillCoeffValues(std::vector<double> &wksp, RooListProxy const &coefList);
-
-  ClassDefOverride(RooPolyVar,1) // Polynomial function
+   ClassDefOverride(RooPolyVar, 1) // Polynomial function
 };
 
 #endif
