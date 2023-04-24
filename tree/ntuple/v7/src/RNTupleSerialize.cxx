@@ -1044,7 +1044,7 @@ std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeSchemaDe
       nAliasColumns = desc.GetNLogicalColumns() - desc.GetNPhysicalColumns();
    }
    const auto &onDiskFields = context.GetOnDiskFieldList();
-   std::span<const DescriptorId_t> fieldList{onDiskFields.begin() + fieldListOffset, onDiskFields.end()};
+   std::span<const DescriptorId_t> fieldList{&(*(onDiskFields.cbegin() + fieldListOffset)), &(*onDiskFields.cend())};
 
    auto frame = pos;
    pos += SerializeListFramePreamble(nFields, *where);
