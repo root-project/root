@@ -22,6 +22,7 @@
 #include "RooPrintable.h"
 #include "RooCmdArg.h"
 #include "RooLinkedListIter.h"
+#include "RooFit/UniqueId.h"
 
 // The range casts are not used in this file, but if you want to work with
 // RooFit collections you also want to have static_range_cast and
@@ -52,8 +53,6 @@ ROOT::RRangeCast<T, true, Range_t> dynamic_range_cast(Range_t &&coll)
    return ROOT::RangeDynCast<T>(std::forward<Range_t>(coll));
 }
 
-
-class RooCmdArg;
 
 namespace RooFit {
 namespace Detail {
@@ -89,6 +88,12 @@ public:
 
   // Move constructor
   RooAbsCollection(RooAbsCollection && other);
+
+  /// Returns a unique ID that is different for every instantiated
+  /// RooAbsCollection. This ID can be used to check whether two collections
+  /// are the same object, which is safer than memory address comparisons that
+  /// might result in false positives when memory is recycled.
+  RooFit::UniqueId<RooAbsCollection> const& uniqueId() const { return _uniqueId; }
 
   // Copy list and contents (and optionally 'deep' servers)
   RooAbsCollection *snapshot(bool deepCopy=true) const ;
@@ -397,6 +402,8 @@ private:
   std::size_t _sizeThresholdForMapSearch = 100; ///<!
 
   void insert(RooAbsArg*);
+
+  const RooFit::UniqueId<RooAbsCollection> _uniqueId; //!
 
   ClassDefOverride(RooAbsCollection,3) // Collection of RooAbsArg objects
 };
