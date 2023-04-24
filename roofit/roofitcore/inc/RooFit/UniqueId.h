@@ -62,7 +62,8 @@ public:
    bool operator<(UniqueId const &other) const { return _val < other._val; }
 
    /// Get an ID that is less than the ID of any object (similar to nullptr).
-   static UniqueId const& nullid() {
+   static UniqueId const &nullid()
+   {
       static const UniqueId nid{nullval};
       return nid;
    }
@@ -83,10 +84,11 @@ std::atomic<typename UniqueId<Class>::Value_t> UniqueId<Class>::counter{UniqueId
 /// A helper function to replace pointer comparisons with UniqueId comparisons.
 /// With pointer comparisons, we can also have `nullptr`. In the UniqueId case,
 /// this translates to the `nullid`.
-template <class Class>
-UniqueId<Class> const& getUniqueId(Class const *ptr)
+template <class Class,
+          class UniqueId_t = std::remove_reference_t<decltype(std::declval<std::remove_pointer_t<Class>>().uniqueId())>>
+UniqueId_t const &getUniqueId(Class const *ptr)
 {
-   return ptr ? ptr->uniqueId() : UniqueId<Class>::nullid();
+   return ptr ? ptr->uniqueId() : UniqueId_t::nullid();
 }
 
 } // namespace RooFit
