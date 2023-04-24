@@ -55,27 +55,25 @@ End_Macro
 The hyperbolic surface equation is taken in the form:
 
 ~~~{.cpp}
-r2 - z2tan2() = r2min
+r^2 - z^2 * tan(st)^2 = rmin^2
 ~~~
 
 -   `r,z:` cylindrical coordinates for a point on the surface
--   `:` stereo angle between the hyperbola asymptotic lines and Z axis
--   `r2min:` minimum distance between hyperbola and Z axis (at `z=0`)
+-   `st:` stereo angle between the hyperbola asymptotic lines and Z axis
+-   `rmin:` minimum distance between hyperbola and Z axis (at `z=0`)
 
-The input parameters represent:
+The input parameters for a hyperboloid represent:
 
--   `rin, stin:` minimum radius and tangent of stereo angle for inner
-    surface
--   `rout, stout:` minimum radius and tangent of stereo angle for outer
-    surface
+-   `rin, stin:` minimum radius and stereo angle in degrees for the inner surface
+-   `rout, stout:` minimum radius and stereo angle in degrees for the outer surface
 -   `dz:` half length in Z (bounding planes positions at `+/-dz`)
 
 The following conditions are mandatory in order to avoid intersections
 between the inner and outer hyperbolic surfaces in the range `+/-dz`:
 
--   `rin<rout`
--   `rout>0`
--   `rin2 + dz2*stin2 > rout2 + dz2*stout2`
+-   `rin < rout`
+-   `rout > 0`
+-   `rin^2 + dz^2 * tan(stin)^2 > rout^2 + dz^2 * tan(stout)^2`
 
 Particular cases:
 
