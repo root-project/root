@@ -5,8 +5,8 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
 ############################################################################
-# CMakeLists.txt file for building ROOT tree/tree package
-# @author Pere Mato, CERN
+# CMakeLists.txt file for building ROOT tree/cudahist package
+# @author Jolly Chen, CERN
 ############################################################################
 
 if (NOT cuda)

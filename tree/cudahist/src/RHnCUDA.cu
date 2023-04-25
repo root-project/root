@@ -291,8 +291,8 @@ void RHnCUDA<T, Dim, BlockSize>::GetStats(unsigned int size)
       resultArray = fDStats;
    }
 
-   // OPTIMIZATION: interleave/change order of computation of different stats to improve coalescing? or parallelize via
-   // streams
+   // OPTIMIZATION: interleave/change order of computation of different stats? or parallelize via
+   // streams. Need to profile first.
    GetSumW<BlockSize><<<numBlocks, BlockSize, kStatsSmemSize>>>(fDWeights, size, resultArray);
    ERRCHECK(cudaPeekAtLastError());
    GetSumW2<BlockSize><<<numBlocks, BlockSize, kStatsSmemSize>>>(fDWeights, size, resultArray);
@@ -321,7 +321,14 @@ void RHnCUDA<T, Dim, BlockSize>::GetStats(unsigned int size)
       }
    }
 
+
+
    if (numBlocks > 1) {
+      // fDintermediateStats stores the result of the sum for each block, per statistic. We need to perform another
+      // reduction to merge the per-block sums to get the total sum for each statistic.
+      // OPTIMIZATION: perform final reductions for a small number of blocks on CPU?
+      // TODO: the max blocksize is 1024, so for numBlocks > 1024 the final reduction has to be performed in multiple
+      // stages?
       for (auto i = 0; i < kNStats; i++) {
          CUDAHelpers::ReduceSum<double>(1, nextPow2(numBlocks) / 2, &fDIntermediateStats[i * numBlocks], &fDStats[i],
                                         numBlocks, 0.);

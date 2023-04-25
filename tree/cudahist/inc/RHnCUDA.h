@@ -11,7 +11,7 @@
 namespace CUDAhist {
 
 struct RAxis {
-   int fNbins; ///< Number of bins(1D) WITH u/overflow
+   int fNbins;   ///< Number of bins(1D) WITH u/overflow
    double fMin;  ///< Low edge of first bin
    double fMax;  ///< Upper edge of last bin
 

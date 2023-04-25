@@ -86,6 +86,20 @@ __device__ inline void UnrolledReduce(T *sdata, unsigned int tid, Op operation)
 
 // See https://developer.download.nvidia.com/assets/cuda/files/reduction.pdf
 //     https://github.com/zchee/cuda-sample/blob/master/6_Advanced/reduction/reduction_kernel.cu
+// The type of reduction in this kernel can be customized by passing different lambda operations
+// as initOp and mainOp.
+// The initOp lambda function should take as input (unsigned int i, T r, T val):
+//    - val: element loaded from the global input array
+//    - i: the index of the loaded element
+//    - r: variable that stores the current result of the reduction. The return value of
+//         initOp is written to this variable.
+// The mainOp lambda function should take as input (T lhs, T rhs) and its the return value will be
+// written to lhs.
+// Both the initOp and mainOp functions should perform a reduction operation (e.g., sum, min, max), but
+// initOp is intended as an operation that can also do some preprocessing before the reduction, such as
+// squaring the elements or mulitplying them by another value captured by the lambda function.
+// It should be noted that the lambda functions are only recognized if they are defined in a CUDA kernel/on the
+// GP, and not on the CPU, so this kernel should be called via another (__global__) CUDA kernel.
 template <unsigned int BlockSize, typename T, typename InitOp, typename MainOp>
 inline __device__ void ReduceBase(T *in, T *out, unsigned int n, InitOp initOp, MainOp mainOp, T init)
 {
@@ -115,6 +129,8 @@ inline __device__ void ReduceBase(T *in, T *out, unsigned int n, InitOp initOp, 
    }
 }
 
+// Kernel that performs a sum reduction on n elements in the input array and writes the result (per-block) to the
+// given output array. This kernel can be called on the CPU.
 template <unsigned int BlockSize, typename T>
 __global__ void ReduceSumKernel(T *in, T *out, unsigned int n, T init)
 {

@@ -4,6 +4,7 @@
 /// header is included in cpp files to access the CUDA histogramming class. The cpp files are compiled
 /// with a cpp compiler which will not be recognize any CUDA calls, so any calls to the CUDA API needs
 /// to be separated and only compiled by the nvcc compiler.
+/// TODO: support for char and short histograms.
 
 // template class RHnCUDA<char,   1, 64>;
 // template class RHnCUDA<char,   2, 64>;
