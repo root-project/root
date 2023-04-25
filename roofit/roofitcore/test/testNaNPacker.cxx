@@ -128,18 +128,22 @@ TEST(RooNaNPacker, FitSimpleLinear)
    EXPECT_NEAR(a1.getVal(), 12., a1.getError());
 }
 
-class TestForDifferentBackends : public testing::TestWithParam<std::tuple<std::string>> {
+class TestForDifferentBackends : public testing::TestWithParam<std::tuple<RooFit::EvalBackend>> {
+public:
+   TestForDifferentBackends() : _evalBackend{RooFit::EvalBackend::Legacy()} {}
+
+private:
    void SetUp() override
    {
       RooRandom::randomGenerator()->SetSeed(1337ul);
-      _batchMode = std::get<0>(GetParam());
+      _evalBackend = std::get<0>(GetParam());
       _changeMsgLvl = std::make_unique<RooHelpers::LocalChangeMsgLevel>(RooFit::WARNING);
    }
 
    void TearDown() override { _changeMsgLvl.reset(); }
 
 protected:
-   std::string _batchMode;
+   RooFit::EvalBackend _evalBackend;
 
 private:
    std::unique_ptr<RooHelpers::LocalChangeMsgLevel> _changeMsgLvl;
@@ -172,11 +176,11 @@ TEST_P(TestForDifferentBackends, FitParabola)
       pdf.fitTo(*data, RecoverFromUndefinedRegions(0.), Save(),
                 PrintLevel(-1),      // Don't need fit status printed
                 PrintEvalErrors(-1), // We provoke a lot of evaluation errors in this test. Don't print those.
-                BatchMode(_batchMode), Hesse(false), Minos(false)));
+                _evalBackend, Hesse(false), Minos(false)));
 
    params.assign(evilValues);
    std::unique_ptr<RooFitResult> fitResultNew(
-      pdf.fitTo(*data, Save(), PrintLevel(-1), PrintEvalErrors(-1), BatchMode(_batchMode)));
+      pdf.fitTo(*data, Save(), PrintLevel(-1), PrintEvalErrors(-1), _evalBackend));
 
    ASSERT_NE(fitResultOld, nullptr);
    ASSERT_NE(fitResultNew, nullptr);
@@ -208,15 +212,15 @@ TEST_P(TestForDifferentBackends, FitParabola)
 }
 
 #ifdef R__HAS_CUDA
-#define BATCH_MODE_VALS "Off", "Cpu", "Cuda"
+#define EVAL_BACKENDS RooFit::EvalBackend::Legacy(), RooFit::EvalBackend::Cpu(), RooFit::EvalBackend::Cuda()
 #else
-#define BATCH_MODE_VALS "Off", "Cpu"
+#define EVAL_BACKENDS RooFit::EvalBackend::Legacy(), RooFit::EvalBackend::Cpu()
 #endif
 
-INSTANTIATE_TEST_SUITE_P(RooNaNPacker, TestForDifferentBackends, testing::Values(BATCH_MODE_VALS),
+INSTANTIATE_TEST_SUITE_P(RooNaNPacker, TestForDifferentBackends, testing::Values(EVAL_BACKENDS),
                          [](testing::TestParamInfo<TestForDifferentBackends::ParamType> const &paramInfo) {
                             std::stringstream ss;
-                            ss << "BatchMode" << std::get<0>(paramInfo.param);
+                            ss << "EvalBackend" << std::get<0>(paramInfo.param).name();
                             return ss.str();
                          });
 

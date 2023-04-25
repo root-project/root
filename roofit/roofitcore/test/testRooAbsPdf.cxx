@@ -26,18 +26,22 @@
 
 #include <memory>
 
-class FitTest : public testing::TestWithParam<std::tuple<std::string>> {
+class FitTest : public testing::TestWithParam<std::tuple<RooFit::EvalBackend>> {
+public:
+   FitTest() : _evalBackend{RooFit::EvalBackend::Legacy()} {}
+
+private:
    void SetUp() override
    {
       RooRandom::randomGenerator()->SetSeed(1337ul);
-      _batchMode = std::get<0>(GetParam());
+      _evalBackend = std::get<0>(GetParam());
       _changeMsgLvl = std::make_unique<RooHelpers::LocalChangeMsgLevel>(RooFit::WARNING);
    }
 
    void TearDown() override { _changeMsgLvl.reset(); }
 
 protected:
-   std::string _batchMode;
+   RooFit::EvalBackend _evalBackend;
 
 private:
    std::unique_ptr<RooHelpers::LocalChangeMsgLevel> _changeMsgLvl;
@@ -64,9 +68,9 @@ TEST_P(FitTest, AsymptoticallyCorrectErrors)
    ASSERT_NE(weightedData.weight(), 1);
 
    a = 1.2;
-   auto result = pdf.fitTo(weightedData, Save(), AsymptoticError(true), PrintLevel(-1), BatchMode(_batchMode));
+   auto result = pdf.fitTo(weightedData, Save(), AsymptoticError(true), PrintLevel(-1), _evalBackend);
    a = 1.2;
-   auto result2 = pdf.fitTo(weightedData, Save(), SumW2Error(false), PrintLevel(-1), BatchMode(_batchMode));
+   auto result2 = pdf.fitTo(weightedData, Save(), SumW2Error(false), PrintLevel(-1), _evalBackend);
 
    // Set relative tolerance for errors to large value to only check for values
    EXPECT_TRUE(result->isIdenticalNoCov(*result2, 1e-6, 10.0)) << "Fit results should be very similar.";
@@ -139,11 +143,10 @@ TEST(RooAbsPdf, ConditionalFitBatchMode)
 
       RooHelpers::HijackMessageStream hijack(RooFit::INFO, RooFit::FastEvaluations);
 
-      for (bool batchMode : {false, true}) {
+      for (auto evalBackend : {EvalBackend::Legacy(), EvalBackend::Cpu()}) {
          factor.setVal(1.0);
          factor.setError(0.0);
-         fitResults.emplace_back(
-            model->fitTo(*data, ConditionalObservables(y), Save(), PrintLevel(-1), BatchMode(batchMode)));
+         fitResults.emplace_back(model->fitTo(*data, ConditionalObservables(y), Save(), PrintLevel(-1), evalBackend));
          if (verbose) {
             fitResults.back()->Print();
          }
@@ -203,12 +206,12 @@ TEST_P(FitTest, MultiRangeFit)
          // full range
          resetValues();
          std::unique_ptr<RooFitResult> fitResultFull{
-            model->fitTo(*data, Range("full"), Save(), PrintLevel(-1), BatchMode(_batchMode))};
+            model->fitTo(*data, Range("full"), Save(), PrintLevel(-1), _evalBackend)};
 
          // part (side band fit, but the union of the side bands is the full range)
          resetValues();
          std::unique_ptr<RooFitResult> fitResultPart{
-            model->fitTo(*data, Range("low,high"), Save(), PrintLevel(-1), BatchMode(_batchMode))};
+            model->fitTo(*data, Range("low,high"), Save(), PrintLevel(-1), _evalBackend)};
 
          EXPECT_TRUE(fitResultPart->isIdentical(*fitResultFull))
             << "Results of fitting " << model->GetName() << " to a " << data->ClassName() << " should be very similar.";
@@ -217,7 +220,7 @@ TEST_P(FitTest, MultiRangeFit)
 
    // If the BatchMode is off, we are doing the same cross-check also with the
    // chi-square fit on the RooDataHist.
-   if (_batchMode == "off") {
+   if (_evalBackend == EvalBackend::Legacy()) {
 
       auto &dh = static_cast<RooDataHist &>(*dataHist);
 
@@ -300,12 +303,12 @@ TEST_P(FitTest, MultiRangeFit2D)
       // full range
       resetValues();
       std::unique_ptr<RooFitResult> fitResultFull{
-         model.fitTo(*data, Range("FULL"), Save(), PrintLevel(-1), BatchMode(_batchMode))};
+         model.fitTo(*data, Range("FULL"), Save(), PrintLevel(-1), _evalBackend)};
 
       // part (side band fit, but the union of the side bands is the full range)
       resetValues();
       std::unique_ptr<RooFitResult> fitResultPart{
-         model.fitTo(*data, Range("SB1,SB2,SIG"), Save(), PrintLevel(-1), BatchMode(_batchMode))};
+         model.fitTo(*data, Range("SB1,SB2,SIG"), Save(), PrintLevel(-1), _evalBackend)};
 
       EXPECT_TRUE(fitResultPart->isIdentical(*fitResultFull))
          << "Results of fitting " << model.GetName() << " to a " << data->ClassName() << " should be very similar.";
@@ -313,17 +316,17 @@ TEST_P(FitTest, MultiRangeFit2D)
 
    // If the BatchMode is off, we are doing the same cross-check also with the
    // chi-square fit on the RooDataHist.
-   if (_batchMode == "off") {
+   if (_evalBackend.name() == EvalBackend::Legacy().name()) {
 
       // full range
       resetValues();
       std::unique_ptr<RooFitResult> fitResultFull{
-         model.fitTo(*dataHist, Range("FULL"), Save(), PrintLevel(-1), BatchMode(_batchMode))};
+         model.fitTo(*dataHist, Range("FULL"), Save(), PrintLevel(-1), _evalBackend)};
 
       // part (side band fit, but the union of the side bands is the full range)
       resetValues();
       std::unique_ptr<RooFitResult> fitResultPart{
-         model.fitTo(*dataHist, Range("SB1,SB2,SIG"), Save(), PrintLevel(-1), BatchMode(_batchMode))};
+         model.fitTo(*dataHist, Range("SB1,SB2,SIG"), Save(), PrintLevel(-1), _evalBackend)};
 
       EXPECT_TRUE(fitResultPart->isIdentical(*fitResultFull))
          << "Results of fitting " << model.GetName()
@@ -364,7 +367,7 @@ TEST_P(FitTest, ProblemsWith2DSimultaneousFit)
    // Construct a dummy dataset
    std::unique_ptr<RooDataSet> data{simPdf.generate({sample, *ws.var("x"), *ws.var("y")})};
 
-   simPdf.fitTo(*data, PrintLevel(-1), BatchMode(_batchMode));
+   simPdf.fitTo(*data, PrintLevel(-1), _evalBackend);
 }
 
 // Verifies that a server pdf gets correctly reevaluated when the normalization
@@ -389,9 +392,9 @@ TEST(RooAbsPdf, NormSetChange)
    EXPECT_NE(v1, v2);
 }
 
-INSTANTIATE_TEST_SUITE_P(RooAbsPdf, FitTest, testing::Values("off", "cpu"),
+INSTANTIATE_TEST_SUITE_P(RooAbsPdf, FitTest, testing::Values(RooFit::EvalBackend::Legacy(), RooFit::EvalBackend::Cpu()),
                          [](testing::TestParamInfo<FitTest::ParamType> const &paramInfo) {
                             std::stringstream ss;
-                            ss << "BatchMode" << std::get<0>(paramInfo.param);
+                            ss << "EvalBackend" << std::get<0>(paramInfo.param).name();
                             return ss.str();
                          });

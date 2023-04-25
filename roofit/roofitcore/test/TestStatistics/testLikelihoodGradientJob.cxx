@@ -208,7 +208,7 @@ TEST_P(LikelihoodGradientJobTest, GaussianND)
    std::unique_ptr<RooArgSet> values;
    RooAbsPdf *pdf;
    std::unique_ptr<RooDataSet> data;
-   std::tie(nll, pdf, data, values) = generate_ND_gaussian_pdf_nll(w, N, 1000);
+   std::tie(nll, pdf, data, values) = generate_ND_gaussian_pdf_nll(w, N, 1000, RooFit::EvalBackend::Legacy());
 
    RooArgSet savedValues;
    values->snapshot(savedValues);

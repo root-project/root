@@ -23,7 +23,7 @@
 
 class RooArgSet ;
 
-class RooCmdArg final : public TNamed {
+class RooCmdArg : public TNamed {
 public:
 
   RooCmdArg();
