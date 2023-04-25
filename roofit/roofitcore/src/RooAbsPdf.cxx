@@ -177,6 +177,8 @@ called for each data event.
 #include "RooFit/TestStatistics/RooRealL.h"
 #include "RunContext.h"
 #include "ConstraintHelpers.h"
+#include "RooFitDriver.h"
+#include "RooSimultaneous.h"
 
 #include "ROOT/StringUtils.hxx"
 #include "TMath.h"
@@ -1143,17 +1145,25 @@ RooFit::OwningPtr<RooAbsReal> RooAbsPdf::createNLL(RooAbsData& data, const RooLi
        compiledConstr->addOwnedComponents(std::move(constr));
     }
 
-    return RooFit::Detail::owningPtr(RooFit::BatchModeHelpers::createNLL(
-            std::move(pdfClone),
+    auto nll = RooFit::BatchModeHelpers::createNLL(
+            *pdfClone,
             data,
             std::move(compiledConstr),
             rangeName ? rangeName : "",
             projDeps,
             ext,
             pc.getDouble("IntegrateBins"),
-            batchMode,
-            offset,
-            takeGlobalObservablesFromData));
+            offset);
+
+    auto driver = std::make_unique<ROOT::Experimental::RooFitDriver>(*nll, batchMode);
+
+    auto driverWrapper = std::make_unique<ROOT::Experimental::RooAbsRealWrapper>(
+       std::move(driver), rangeName ? rangeName : "", dynamic_cast<RooSimultaneous *>(pdfClone.get()), takeGlobalObservablesFromData);
+    driverWrapper->setData(data, false);
+    driverWrapper->addOwnedComponents(std::move(nll));
+    driverWrapper->addOwnedComponents(std::move(pdfClone));
+
+    return RooFit::Detail::owningPtr<RooAbsReal>(std::move(driverWrapper));
   }
 
   // Construct NLL
