@@ -50,6 +50,47 @@ RooAbsPdf::fitTo() is called and gets destroyed when the fitting ends.
 namespace ROOT {
 namespace Experimental {
 
+namespace {
+
+void logArchitectureInfo(RooFit::BatchModeOption batchMode)
+{
+   // We have to exit early if the message stream is not active. Otherwise it's
+   // possible that this function skips logging because it thinks it has
+   // already logged, but actually it didn't.
+   if (!RooMsgService::instance().isActive(static_cast<RooAbsArg *>(nullptr), RooFit::Fitting, RooFit::INFO)) {
+      return;
+   }
+
+   // Don't repeat logging architecture info if the batchMode option didn't change
+   {
+      // Second element of pair tracks whether this function has already been called
+      static std::pair<RooFit::BatchModeOption, bool> lastBatchMode;
+      if (lastBatchMode.second && lastBatchMode.first == batchMode)
+         return;
+      lastBatchMode = {batchMode, true};
+   }
+
+   auto log = [](std::string_view message) {
+      oocxcoutI(static_cast<RooAbsArg *>(nullptr), Fitting) << message << std::endl;
+   };
+
+   if (batchMode == RooFit::BatchModeOption::Cuda && !RooBatchCompute::dispatchCUDA) {
+      throw std::runtime_error(std::string("In: ") + __func__ + "(), " + __FILE__ + ":" + __LINE__ +
+                               ": Cuda implementation of the computing library is not available\n");
+   }
+   if (RooBatchCompute::dispatchCPU->architecture() == RooBatchCompute::Architecture::GENERIC) {
+      log("using generic CPU library compiled with no vectorizations");
+   } else {
+      log(std::string("using CPU computation library compiled with -m") +
+          RooBatchCompute::dispatchCPU->architectureName());
+   }
+   if (batchMode == RooFit::BatchModeOption::Cuda) {
+      log("using CUDA computation library");
+   }
+}
+
+} // namespace
+
 /// A struct used by the RooFitDriver to store information on the RooAbsArgs in
 /// the computation graph.
 struct NodeInfo {
@@ -112,7 +153,7 @@ RooFitDriver::RooFitDriver(const RooAbsReal &absReal, RooFit::BatchModeOption ba
    RooBatchCompute::init();
 
    // Some checks and logging of used architectures
-   RooFit::BatchModeHelpers::logArchitectureInfo(_batchMode);
+   logArchitectureInfo(_batchMode);
 
    RooArgSet serverSet;
    RooHelpers::getSortedComputationGraph(topNode(), serverSet);
@@ -546,6 +587,63 @@ void RooFitDriver::print(std::ostream &os) const
    }
 
    printHorizontalRow();
+}
+
+RooAbsRealWrapper::RooAbsRealWrapper(std::unique_ptr<RooFitDriver> driver, std::string const &rangeName, RooSimultaneous const *simPdf,
+                  bool takeGlobalObservablesFromData)
+   : RooAbsReal{"RooFitDriverWrapper", "RooFitDriverWrapper"},
+     _driver{std::move(driver)},
+     _topNode("topNode", "top node", this, _driver->topNode()),
+     _rangeName{rangeName},
+     _simPdf{simPdf},
+     _takeGlobalObservablesFromData{takeGlobalObservablesFromData}
+{
+}
+
+RooAbsRealWrapper::RooAbsRealWrapper(const RooAbsRealWrapper &other, const char *name)
+   : RooAbsReal{other, name},
+     _driver{other._driver},
+     _topNode("topNode", this, other._topNode),
+     _data{other._data},
+     _parameters{other._parameters},
+     _rangeName{other._rangeName},
+     _simPdf{other._simPdf},
+     _takeGlobalObservablesFromData{other._takeGlobalObservablesFromData}
+{
+}
+
+bool RooAbsRealWrapper::getParameters(const RooArgSet *observables, RooArgSet &outputSet, bool /*stripDisconnected*/) const
+{
+   outputSet.add(_parameters);
+   if (observables) {
+      outputSet.remove(*observables);
+   }
+   // If we take the global observables as data, we have to return these as
+   // parameters instead of the parameters in the model. Otherwise, the
+   // constant parameters in the fit result that are global observables will
+   // not have the right values.
+   if (_takeGlobalObservablesFromData && _data->getGlobalObservables()) {
+      outputSet.replace(*_data->getGlobalObservables());
+   }
+   return false;
+}
+
+bool RooAbsRealWrapper::setData(RooAbsData &data, bool /*cloneData*/)
+{
+   _data = &data;
+
+   // Figure out what are the parameters for the current dataset
+   _parameters.clear();
+   RooArgSet params;
+   _driver->topNode().getParameters(_data->get(), params, true);
+   for (RooAbsArg *param : params) {
+      if (!param->getAttribute("__obs__")) {
+         _parameters.add(*param);
+      }
+   }
+
+   _driver->setData(*_data, _rangeName, _simPdf, /*skipZeroWeights=*/true, _takeGlobalObservablesFromData);
+   return true;
 }
 
 } // namespace Experimental
