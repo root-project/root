@@ -596,7 +596,7 @@ void RooMCStudy::resetFitParams()
 ////////////////////////////////////////////////////////////////////////////////
 /// Internal function. Performs actual fit according to specifications
 
-RooFitResult* RooMCStudy::doFit(RooAbsData* genSample)
+RooFit::OwningPtr<RooFitResult> RooMCStudy::doFit(RooAbsData* genSample)
 {
   // Optionally bin dataset before fitting
   std::unique_ptr<RooDataHist> ownedDataHist;
@@ -620,9 +620,7 @@ RooFitResult* RooMCStudy::doFit(RooAbsData* genSample)
     fitOptList.Add(&condo) ;
   }
   fitOptList.Add(&plevel) ;
-  RooFitResult* fr = _fitModel->fitTo(*data,fitOptList) ;
-
-  return fr ;
+  return _fitModel->fitTo(*data,fitOptList);
 }
 
 
@@ -631,18 +629,18 @@ RooFitResult* RooMCStudy::doFit(RooAbsData* genSample)
 /// Redo fit on 'current' toy sample, or if genSample is not nullptr
 /// do fit on given sample instead
 
-RooFitResult* RooMCStudy::refit(RooAbsData* genSample)
+RooFit::OwningPtr<RooFitResult> RooMCStudy::refit(RooAbsData* genSample)
 {
   if (!genSample) {
     genSample = _genSample ;
   }
 
-  RooFitResult* fr(0) ;
+  std::unique_ptr<RooFitResult> fr;
   if (genSample->sumEntries()>0) {
-    fr = doFit(genSample) ;
+    fr = std::unique_ptr<RooFitResult>{doFit(genSample)};
   }
 
-  return fr ;
+  return RooFit::OwningPtr<RooFitResult>(fr.release());
 }
 
 
@@ -667,7 +665,7 @@ bool RooMCStudy::fitSample(RooAbsData* genSample)
   bool ok ;
   std::unique_ptr<RooFitResult> fr;
   if (genSample->sumEntries()>0) {
-    fr.reset(doFit(genSample));
+    fr = std::unique_ptr<RooFitResult>{doFit(genSample)};
     ok = (fr->status()==0) ;
   } else {
     ok = false ;

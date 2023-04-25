@@ -160,11 +160,11 @@ public:
   void setGeneratorConfig(const RooNumGenConfig& config) ;
 
   // -log(L) fits to binned and unbinned data
-  virtual RooFitResult* fitTo(RooAbsData& data, const RooLinkedList& cmdList={}) ;
+  virtual RooFit::OwningPtr<RooFitResult> fitTo(RooAbsData& data, const RooLinkedList& cmdList={}) ;
   /// Takes an arbitrary number of RooCmdArg command options and calls
   /// RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList).
   template <typename... Args>
-  RooFitResult* fitTo(RooAbsData& data, RooCmdArg const& arg1, Args const&... args)
+  RooFit::OwningPtr<RooFitResult> fitTo(RooAbsData& data, RooCmdArg const& arg1, Args const&... args)
   {
     return fitTo(data, *RooFit::Detail::createCmdList(&arg1, &args...));
   }
@@ -235,12 +235,12 @@ public:
   virtual RooAbsPdf* createProjection(const RooArgSet& iset) ;
 
   // Create cumulative density function from p.d.f
-  RooAbsReal* createCdf(const RooArgSet& iset, const RooArgSet& nset=RooArgSet()) ;
-  RooAbsReal* createCdf(const RooArgSet& iset, const RooCmdArg& arg1, const RooCmdArg& arg2=RooCmdArg::none(),
+  RooFit::OwningPtr<RooAbsReal> createCdf(const RooArgSet& iset, const RooArgSet& nset=RooArgSet()) ;
+  RooFit::OwningPtr<RooAbsReal> createCdf(const RooArgSet& iset, const RooCmdArg& arg1, const RooCmdArg& arg2=RooCmdArg::none(),
          const RooCmdArg& arg3=RooCmdArg::none(), const RooCmdArg& arg4=RooCmdArg::none(),
          const RooCmdArg& arg5=RooCmdArg::none(), const RooCmdArg& arg6=RooCmdArg::none(),
          const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none()) ;
-  RooAbsReal* createScanCdf(const RooArgSet& iset, const RooArgSet& nset, Int_t numScanBins, Int_t intOrder) ;
+  RooFit::OwningPtr<RooAbsReal> createScanCdf(const RooArgSet& iset, const RooArgSet& nset, Int_t numScanBins, Int_t intOrder) ;
 
   // Function evaluation support
   double getValV(const RooArgSet* set=nullptr) const override ;
