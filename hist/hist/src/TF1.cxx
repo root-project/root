@@ -2971,10 +2971,9 @@ void TF1::Paint(Option_t *choptin)
       pmax = gPad->PadtoX(gPad->GetUxmax());
    }
    if (optSAME) {
-      if (xmax < pmin) return;  // Completely outside.
+      // Completely outside
+      if (xmax < pmin) return;
       if (xmin > pmax) return;
-      if (xmin < pmin) xmin = pmin;
-      if (xmax > pmax) xmax = pmax;
    }
 
    // create an histogram using the function content (re-use it if already existing)
