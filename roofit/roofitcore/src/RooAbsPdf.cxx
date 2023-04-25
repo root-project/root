@@ -179,6 +179,7 @@ called for each data event.
 #include "ConstraintHelpers.h"
 #include "RooFitDriver.h"
 #include "RooSimultaneous.h"
+#include "RooFuncWrapper.h"
 
 #include "ROOT/StringUtils.hxx"
 #include "TMath.h"
@@ -1158,15 +1159,23 @@ RooFit::OwningPtr<RooAbsReal> RooAbsPdf::createNLL(RooAbsData& data, const RooLi
             pc.getDouble("IntegrateBins"),
             offset);
 
-    auto driver = std::make_unique<ROOT::Experimental::RooFitDriver>(*nll, batchMode);
+    std::unique_ptr<RooAbsReal> nllWrapper;
 
-    auto driverWrapper = std::make_unique<ROOT::Experimental::RooAbsRealWrapper>(
-       std::move(driver), rangeName ? rangeName : "", dynamic_cast<RooSimultaneous *>(pdfClone.get()), takeGlobalObservablesFromData);
-    driverWrapper->setData(data, false);
-    driverWrapper->addOwnedComponents(std::move(nll));
-    driverWrapper->addOwnedComponents(std::move(pdfClone));
+    if(batchMode == RooFit::BatchModeOption::CodeGen) {
+       static int iFuncWrapper = 0;
+       std::string wrapperName = "nll_func_wrapper_" + std::to_string(iFuncWrapper++);
+       nllWrapper = std::make_unique<RooFuncWrapper>(wrapperName.c_str(), wrapperName.c_str(), *nll, normSet, &data,
+                                                     dynamic_cast<RooSimultaneous const *>(pdfClone.get()));
+    } else {
+      auto driver = std::make_unique<ROOT::Experimental::RooFitDriver>(*nll, batchMode);
+      nllWrapper = std::make_unique<ROOT::Experimental::RooAbsRealWrapper>(
+         std::move(driver), rangeName ? rangeName : "", dynamic_cast<RooSimultaneous *>(pdfClone.get()), takeGlobalObservablesFromData);
+      nllWrapper->setData(data, false);
+    }
 
-    return RooFit::Detail::owningPtr<RooAbsReal>(std::move(driverWrapper));
+    nllWrapper->addOwnedComponents(std::move(nll));
+    nllWrapper->addOwnedComponents(std::move(pdfClone));
+    return RooFit::Detail::owningPtr(std::move(nllWrapper));
   }
 
   // Construct NLL
