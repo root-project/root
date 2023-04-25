@@ -981,9 +981,6 @@ RooFit::OwningPtr<RooAbsReal> RooAbsPdf::createNLL(RooAbsData& data, const RooLi
 {
   auto baseName = std::string("nll_") + GetName() + "_" + data.GetName();
 
-  // Figure out the integer that corresponds to the default BatchMode option.
-  const int defaultBatchModeInt = RooFit::BatchMode(RooFit::Experimental::defaultBatchMode()).getInt(0);
-
   // Select the pdf-specific commands
   RooCmdConfig pc("RooAbsPdf::createNLL(" + std::string(GetName()) + ")");
 
@@ -1005,7 +1002,7 @@ RooFit::OwningPtr<RooAbsReal> RooAbsPdf::createNLL(RooAbsData& data, const RooLi
   pc.defineSet("glObs","GlobalObservables",0,0) ;
   pc.defineInt("doOffset","OffsetLikelihood",0,0) ;
   pc.defineSet("extCons","ExternalConstraints",0,0) ;
-  pc.defineInt("BatchMode", "BatchMode", 0, defaultBatchModeInt);
+  pc.defineInt("EvalBackend", "EvalBackend", 0, static_cast<int>(RooFit::EvalBackend::defaultValue()));
   pc.defineDouble("IntegrateBins", "IntegrateBins", 0, -1.);
   pc.defineMutex("Range","RangeWithName") ;
   pc.defineMutex("GlobalObservables","GlobalObservablesTag") ;
@@ -1128,10 +1125,10 @@ RooFit::OwningPtr<RooAbsReal> RooAbsPdf::createNLL(RooAbsData& data, const RooLi
     );
   };
 
-  auto batchMode = static_cast<RooFit::BatchModeOption>(pc.getInt("BatchMode"));
+  auto evalBackend = static_cast<RooFit::EvalBackend::Value>(pc.getInt("EvalBackend"));
 
   // Construct BatchModeNLL if requested
-  if (batchMode != RooFit::BatchModeOption::Off) {
+  if (evalBackend != RooFit::EvalBackend::Value::Legacy) {
 
     // Set the normalization range. We need to do it now, because it will be
     // considered in `compileForNormSet`.
@@ -1182,13 +1179,13 @@ RooFit::OwningPtr<RooAbsReal> RooAbsPdf::createNLL(RooAbsData& data, const RooLi
 
     std::unique_ptr<RooAbsReal> nllWrapper;
 
-    if(batchMode == RooFit::BatchModeOption::CodeGen) {
+    if(evalBackend == RooFit::EvalBackend::Value::Codegen) {
        static int iFuncWrapper = 0;
        std::string wrapperName = "nll_func_wrapper_" + std::to_string(iFuncWrapper++);
        nllWrapper = std::make_unique<RooFuncWrapper>(wrapperName.c_str(), wrapperName.c_str(), *nll, normSet, &data,
                                                      dynamic_cast<RooSimultaneous const *>(pdfClone.get()));
     } else {
-      auto evaluator = std::make_unique<RooFit::Evaluator>(*nll, batchMode == RooFit::BatchModeOption::Cuda);
+      auto evaluator = std::make_unique<RooFit::Evaluator>(*nll, evalBackend == RooFit::EvalBackend::Value::Cuda);
       nllWrapper = std::make_unique<RooEvaluatorWrapper>(*nll,
          std::move(evaluator), rangeName ? rangeName : "", dynamic_cast<RooSimultaneous *>(pdfClone.get()), takeGlobalObservablesFromData);
       nllWrapper->setData(data, false);
@@ -1424,7 +1421,7 @@ RooFit::OwningPtr<RooFitResult> RooAbsPdf::fitTo(RooAbsData& data, const RooLink
   std::string nllCmdListString = "ProjectedObservables,Extended,Range,"
       "RangeWithName,SumCoefRange,NumCPU,SplitRange,Constrained,Constrain,ExternalConstraints,"
       "CloneData,GlobalObservables,GlobalObservablesSource,GlobalObservablesTag,"
-      "BatchMode,IntegrateBins,ModularL";
+      "EvalBackend,IntegrateBins,ModularL";
 
   if (!cmdList.FindObject("ModularL") || static_cast<RooCmdArg*>(cmdList.FindObject("ModularL"))->getInt(0) == 0)
     nllCmdListString += ",OffsetLikelihood";
