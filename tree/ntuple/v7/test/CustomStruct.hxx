@@ -57,11 +57,11 @@ public:
 };
 
 class IOConstructor {
-private:
-   IOConstructor();
 public:
-   int a = 7;
+   IOConstructor() = delete;
    IOConstructor(TRootIOCtor *) {};
+
+   int a = 7;
 };
 
 /// The classes below are based on an excerpt provided by Marcin Nowak (EP-UAT)
