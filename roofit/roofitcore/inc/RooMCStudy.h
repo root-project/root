@@ -100,7 +100,7 @@ protected:
 
   bool run(bool generate, bool fit, Int_t nSamples, Int_t nEvtPerSample, bool keepGenData, const char* asciiFilePat) ;
   bool fitSample(RooAbsData* genSample) ;
-  RooFitResult* doFit(RooAbsData* genSample) ;
+  RooFit::OwningPtr<RooFitResult> doFit(RooAbsData* genSample) ;
 
   void calcPulls() ;
 
@@ -141,7 +141,7 @@ protected:
   std::list<RooAbsMCStudyModule*> _modList ; ///< List of additional study modules ;
 
   // Utilities for modules ;
-  RooFitResult* refit(RooAbsData* genSample=nullptr) ;
+  RooFit::OwningPtr<RooFitResult> refit(RooAbsData* genSample=nullptr) ;
   void resetFitParams() ;
   void RecursiveRemove(TObject *obj) override;
 

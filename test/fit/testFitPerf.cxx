@@ -574,11 +574,7 @@ int  FitUsingRooFit(TTree * tree, TF1 * func) {
       bool save = false;
 #endif
 
-//#ifndef _WIN32 // until a bug 30762 is fixed
-      RooFitResult * result = pdf.fitTo(data, RooFit::Minos(0), RooFit::Hesse(1) , RooFit::PrintLevel(level), RooFit::Save(save) );
-// #else
-//       RooFitResult * result = pdf.fitTo(data );
-// #endif
+      std::unique_ptr<RooFitResult> result{pdf.fitTo(data, RooFit::Minos(0), RooFit::Hesse(1) , RooFit::PrintLevel(level), RooFit::Save(save) )};
 
 #ifdef DEBUG
       mean.Print();
@@ -671,11 +667,7 @@ int  FitUsingRooFit2(TTree * tree) {
 #endif
 
 
-#ifndef _WIN32 // until a bug 30762 is fixed
-      RooFitResult * result = pdf[N-1]->fitTo(data, RooFit::Minos(0), RooFit::Hesse(1) , RooFit::PrintLevel(level), RooFit::Save(save) );
-#else
-      RooFitResult * result = pdf[N-1]->fitTo(data);
-#endif
+      std::unique_ptr<RooFitResult> result{pdf[N-1]->fitTo(data, RooFit::Minos(0), RooFit::Hesse(1) , RooFit::PrintLevel(level), RooFit::Save(save) )};
 
 #ifdef DEBUG
       assert(result != 0);

@@ -79,8 +79,7 @@ bool ToyMCStudy::execute(void) {
 
    coutP(Generation) << "ToyMCStudy::execute - run with seed " <<   RooRandom::randomGenerator()->Integer(TMath::Limits<unsigned int>::Max() ) << std::endl;
    RooDataSet* sd = fToyMCSampler->GetSamplingDistributionsSingleWorker(fParamPoint);
-   ToyMCPayload *sdw = new ToyMCPayload(sd);
-   storeDetailedOutput(*sdw);
+   storeDetailedOutput(std::make_unique<ToyMCPayload>(sd));
 
    return false;
 }

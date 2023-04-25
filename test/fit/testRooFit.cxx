@@ -213,18 +213,14 @@ int  FitUsingRooFit(TTree & tree, RooAbsPdf & pdf, RooArgSet & xvars) {
       int level = 2;
       std::cout << "num entries = " << data.numEntries() << std::endl;
       bool save = true;
-      pdf.getVariables()->Print("v"); // print the parameters
+      std::unique_ptr<RooArgSet>{pdf.getVariables()}->Print("v"); // print the parameters
       std::cout << "\n\nDo the fit now \n\n";
 #else
       int level = -1;
       bool save = false;
 #endif
 
-#ifndef _WIN32 // until a bug 30762 is fixed
-      RooFitResult * result = pdf.fitTo(data, RooFit::Minos(0), RooFit::Hesse(0) , RooFit::PrintLevel(level), RooFit::Save(save) );
-#else
-      RooFitResult * result = pdf.fitTo(data );
-#endif
+      std::unique_ptr<RooFitResult> result{pdf.fitTo(data, RooFit::Minos(0), RooFit::Hesse(0) , RooFit::PrintLevel(level), RooFit::Save(save) )};
 
 #ifdef DEBUG
       assert(result != nullptr);

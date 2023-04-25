@@ -182,17 +182,16 @@ bool RooGenFitStudy::initialize()
 bool RooGenFitStudy::execute()
 {
   _params->assign(*_initParams) ;
-  RooDataSet* data = _genPdf->generate(*_genSpec) ;
-  RooFitResult* fr  = _fitPdf->fitTo(*data,RooFit::Save(true),(RooCmdArg&)*_fitOpts.At(0),(RooCmdArg&)*_fitOpts.At(1),(RooCmdArg&)*_fitOpts.At(2)) ;
+  std::unique_ptr<RooDataSet> data{_genPdf->generate(*_genSpec)};
+  std::unique_ptr<RooFitResult> fr{_fitPdf->fitTo(*data,RooFit::Save(true),(RooCmdArg&)*_fitOpts.At(0),(RooCmdArg&)*_fitOpts.At(1),(RooCmdArg&)*_fitOpts.At(2))};
 
   if (fr->status()==0) {
     _ngenVar->setVal(data->sumEntries()) ;
     _nllVar->setVal(fr->minNll()) ;
     storeSummaryOutput(*_params) ;
-    storeDetailedOutput(*fr) ;
+    storeDetailedOutput(std::move(fr)) ;
   }
 
-  delete data ;
   return false ;
 }
 
