@@ -512,19 +512,19 @@ TEST_P(HFFixture, Fit) {
         poi->setConstant();
       }
 
-      auto fitResult = simPdf->fitTo(*data,
+      std::unique_ptr<RooFitResult> fitResult{simPdf->fitTo(*data,
           RooFit::BatchMode(batchFit),
           RooFit::Optimize(constTermOptimisation),
           RooFit::GlobalObservables(*mc->GetGlobalObservables()),
           RooFit::Save(),
-          RooFit::PrintLevel(verbose ? 1 : -1));
+          RooFit::PrintLevel(verbose ? 1 : -1))};
       ASSERT_NE(fitResult, nullptr);
       if (verbose)
         fitResult->Print();
       EXPECT_EQ(fitResult->status(), 0);
 
 
-      auto checkParam = [fitResult](const std::string& param, double target, double absPrecision) {
+      auto checkParam = [&fitResult](const std::string& param, double target, double absPrecision) {
         auto par = dynamic_cast<RooRealVar*>(fitResult->floatParsFinal().find(param.c_str()));
         if (!par) {
           // Parameter was constant in this fit

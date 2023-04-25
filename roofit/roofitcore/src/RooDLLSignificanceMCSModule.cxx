@@ -174,7 +174,7 @@ bool RooDLLSignificanceMCSModule::processAfterFit(Int_t /*sampleNum*/)
   RooRealVar* par = static_cast<RooRealVar*>(fitParams()->find(_parName.c_str())) ;
   par->setVal(_nullValue) ;
   par->setConstant(true) ;
-  RooFitResult* frnull = refit() ;
+  std::unique_ptr<RooFitResult> frnull{refit()};
   par->setConstant(false) ;
 
   _nll0h->setVal(frnull->minNll()) ;
@@ -186,8 +186,6 @@ bool RooDLLSignificanceMCSModule::processAfterFit(Int_t /*sampleNum*/)
 
 
   _data->add(RooArgSet(*_nll0h,*_dll0h,*_sig0h)) ;
-
-  delete frnull ;
 
   return true ;
 }

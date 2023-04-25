@@ -3838,7 +3838,7 @@ void RooAbsReal::preferredObservableScanOrder(const RooArgSet& obs, RooArgSet& o
 ////////////////////////////////////////////////////////////////////////////////
 /// Calls createRunningIntegral(const RooArgSet&, const RooCmdArg&, const RooCmdArg&, const RooCmdArg&, const RooCmdArg&, const RooCmdArg&, const RooCmdArg&, const RooCmdArg&, const RooCmdArg&)
 
-RooAbsReal* RooAbsReal::createRunningIntegral(const RooArgSet& iset, const RooArgSet& nset)
+RooFit::OwningPtr<RooAbsReal> RooAbsReal::createRunningIntegral(const RooArgSet& iset, const RooArgSet& nset)
 {
   return createRunningIntegral(iset,RooFit::SupNormSet(nset)) ;
 }
@@ -3882,7 +3882,7 @@ RooAbsReal* RooAbsReal::createRunningIntegral(const RooArgSet& iset, const RooAr
 /// | `ScanAll()`                            | Always apply scanning technique
 /// | `ScanNone()`                           | Never apply scanning technique
 
-RooAbsReal* RooAbsReal::createRunningIntegral(const RooArgSet& iset, const RooCmdArg& arg1, const RooCmdArg& arg2,
+RooFit::OwningPtr<RooAbsReal> RooAbsReal::createRunningIntegral(const RooArgSet& iset, const RooCmdArg& arg1, const RooCmdArg& arg2,
              const RooCmdArg& arg3, const RooCmdArg& arg4, const RooCmdArg& arg5,
              const RooCmdArg& arg6, const RooCmdArg& arg7, const RooCmdArg& arg8)
 {
@@ -3942,14 +3942,14 @@ RooAbsReal* RooAbsReal::createRunningIntegral(const RooArgSet& iset, const RooCm
 /// Utility function for createRunningIntegral that construct an object
 /// implementing the numeric scanning technique for calculating the running integral
 
-RooAbsReal* RooAbsReal::createScanRI(const RooArgSet& iset, const RooArgSet& nset, Int_t numScanBins, Int_t intOrder)
+RooFit::OwningPtr<RooAbsReal> RooAbsReal::createScanRI(const RooArgSet& iset, const RooArgSet& nset, Int_t numScanBins, Int_t intOrder)
 {
   std::string name = std::string(GetName()) + "_NUMRUNINT_" + integralNameSuffix(iset,&nset).Data() ;
   RooRealVar* ivar = (RooRealVar*) iset.first() ;
   ivar->setBins(numScanBins,"numcdf") ;
-  RooNumRunningInt* ret = new RooNumRunningInt(name.c_str(),name.c_str(),*this,*ivar,"numrunint") ;
+  auto ret = std::make_unique<RooNumRunningInt>(name.c_str(),name.c_str(),*this,*ivar,"numrunint") ;
   ret->setInterpolationOrder(intOrder) ;
-  return ret ;
+  return RooFit::OwningPtr<RooAbsReal>{ret.release()};
 }
 
 
@@ -3959,7 +3959,7 @@ RooAbsReal* RooAbsReal::createScanRI(const RooArgSet& iset, const RooArgSet& nse
 /// object implementing the standard (analytical) integration
 /// technique for calculating the running integral.
 
-RooAbsReal* RooAbsReal::createIntRI(const RooArgSet& iset, const RooArgSet& nset)
+RooFit::OwningPtr<RooAbsReal> RooAbsReal::createIntRI(const RooArgSet& iset, const RooArgSet& nset)
 {
   // Make std::list of input arguments keeping only RooRealVars
   RooArgList ilist ;
@@ -4004,14 +4004,14 @@ RooAbsReal* RooAbsReal::createIntRI(const RooArgSet& iset, const RooArgSet& nset
   // Construct final normalization set for c.d.f = integrated observables + any extra specified by user
   RooArgSet finalNset(nset) ;
   finalNset.add(cloneList,true) ;
-  RooAbsReal* cdf = tmp->createIntegral(cloneList,finalNset,"CDF") ;
+  std::unique_ptr<RooAbsReal> cdf{tmp->createIntegral(cloneList,finalNset,"CDF")};
 
   // Transfer ownership of cloned items to top-level c.d.f object
   cdf->addOwnedComponents(*tmp) ;
   cdf->addOwnedComponents(cloneList) ;
   cdf->addOwnedComponents(loList) ;
 
-  return cdf ;
+  return RooFit::OwningPtr<RooAbsReal>{cdf.release()};
 }
 
 
