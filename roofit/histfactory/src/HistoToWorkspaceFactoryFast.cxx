@@ -1155,7 +1155,7 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
       fObsNameVec.push_back( fObsName );
     }
 
-    if (fObsNameVec.size() == 0 || fObsNameVec.size() >= 3) {
+    if (fObsNameVec.empty() || fObsNameVec.size() > 3) {
       throw hf_exc("HistFactory is limited to 1- to 3-dimensional histograms.");
     }
 
