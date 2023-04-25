@@ -95,7 +95,7 @@ double RooProjectedPdf::evaluate() const
 {
   // Calculate current unnormalized value of object
   int code ;
-  return getProjection(&intobs, _normSet, (_normRangeOverride.Length()>0 ? _normRangeOverride.Data() : (_normRange.Length()>0 ? _normRange.Data() : 0)), code)->getVal() ;
+  return getProjection(&intobs, _normSet, normRange(), code)->getVal() ;
 }
 
 
