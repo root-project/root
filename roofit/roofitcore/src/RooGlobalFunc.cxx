@@ -203,6 +203,7 @@ namespace RooFit {
       if(lower == "off") mode = BatchModeOption::Off;
       else if(lower == "cpu") mode = BatchModeOption::Cpu;
       else if(lower == "cuda") mode = BatchModeOption::Cuda;
+      else if(lower == "codegen") mode = BatchModeOption::CodeGen;
       // Note that the "old" argument is undocumented, because accessing the
       // old batch mode is an advanced developer feature.
       else throw std::runtime_error("Only supported string values for BatchMode() are \"off\", \"cpu\", or \"cuda\".");

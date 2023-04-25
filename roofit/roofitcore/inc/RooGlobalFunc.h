@@ -66,7 +66,7 @@ enum MPSplit { BulkPartition=0, Interleave=1, SimComponents=2, Hybrid=3 } ;
 
 /// For setting the batch mode flag with the BatchMode() command argument to
 /// RooAbsPdf::fitTo()
-enum class BatchModeOption { Off, Cpu, Cuda };
+enum class BatchModeOption { Off, Cpu, Cuda, CodeGen };
 
 /// For setting the offset mode with the Offset() command argument to
 /// RooAbsPdf::fitTo()
