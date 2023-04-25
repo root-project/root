@@ -116,7 +116,7 @@ TEST_F(LikelihoodSerialTest, UnbinnedGaussianND)
 {
    unsigned int N = 4;
 
-   std::tie(nll, pdf, data, values) = generate_ND_gaussian_pdf_nll(w, N, 1000);
+   std::tie(nll, pdf, data, values) = generate_ND_gaussian_pdf_nll(w, N, 1000, RooFit::EvalBackend::Legacy());
    likelihood = RooFit::TestStatistics::buildLikelihood(pdf, data.get());
    auto nll_ts = LikelihoodWrapper::create(RooFit::TestStatistics::LikelihoodMode::serial, likelihood, clean_flags);
 
@@ -432,12 +432,12 @@ TEST_F(LikelihoodSerialTest, BatchedUnbinnedGaussianND)
 {
    unsigned int N = 4;
 
-   bool batch_mode = true;
+   auto backend = RooFit::EvalBackend::Cpu();
 
-   std::tie(nll, pdf, data, values) = generate_ND_gaussian_pdf_nll(w, N, 1000, batch_mode);
+   std::tie(nll, pdf, data, values) = generate_ND_gaussian_pdf_nll(w, N, 1000, backend);
    auto nll0 = nll->getVal();
 
-   likelihood = RooFit::TestStatistics::NLLFactory{*pdf, *data}.BatchMode(RooFit::BatchModeOption::Cpu).build();
+   likelihood = RooFit::TestStatistics::NLLFactory{*pdf, *data}.EvalBackend(backend).build();
    auto nll_ts = LikelihoodWrapper::create(RooFit::TestStatistics::LikelihoodMode::serial, likelihood, clean_flags);
 
    nll_ts->evaluate();

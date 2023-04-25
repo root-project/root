@@ -35,7 +35,7 @@ public:
    NLLFactory &ExternalConstraints(const RooArgSet &externalconstraints);
    NLLFactory &GlobalObservables(const RooArgSet &globalObservables);
    NLLFactory &GlobalObservablesTag(const char *globalObservablesTag);
-   NLLFactory &BatchMode(RooFit::BatchModeOption batchMode);
+   NLLFactory &EvalBackend(RooFit::EvalBackend evalBackend);
 
 private:
    std::vector<std::unique_ptr<RooAbsL>> getSimultaneousComponents();
@@ -48,7 +48,7 @@ private:
    RooArgSet _externalConstraints;
    RooArgSet _globalObservables;
    std::string _globalObservablesTag;
-   RooFit::BatchModeOption _batchMode = RooFit::BatchModeOption::Off;
+   RooFit::EvalBackend _evalBackend = RooFit::EvalBackend::Legacy();
 };
 
 /// Delegating function to build a likelihood without additional arguments.

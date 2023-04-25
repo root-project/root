@@ -64,19 +64,11 @@ enum MsgTopic { Generation=1, Minimization=2, Plotting=4, Fitting=8, Integration
     Contents=4096, DataHandling=8192, NumIntegration=16384, FastEvaluations=1<<15, HistFactory=1<<16, IO=1<<17 };
 enum MPSplit { BulkPartition=0, Interleave=1, SimComponents=2, Hybrid=3 } ;
 
-/// For setting the batch mode flag with the BatchMode() command argument to
-/// RooAbsPdf::fitTo()
-enum class BatchModeOption { Off, Cpu, Cuda, CodeGen };
-
 /// For setting the offset mode with the Offset() command argument to
 /// RooAbsPdf::fitTo()
 enum class OffsetMode { None, Initial, Bin };
 
 namespace Experimental {
-
-/// Get a handle on the default BatchMode option that is used when creating
-/// likelihoods. \note Experimental, the interface might change in the future.
-std::string& defaultBatchMode();
 
 /// Configuration options for parallel minimization with multiprocessing library
 RooCmdArg ParallelGradientOptions(bool enable=true, int orderStrategy=0, int chainFactor=1) ;
@@ -243,6 +235,34 @@ RooCmdArg IntegrateBins(double precision);
 // RooAbsPdf::fitTo arguments
 RooCmdArg PrefitDataFraction(double data_ratio = 0.0) ;
 RooCmdArg Optimize(Int_t flag=2) ;
+
+class EvalBackend : public RooCmdArg {
+public:
+   enum class Value { Legacy, Cpu, Cuda, Codegen, CodegenNoGrad };
+
+   EvalBackend(Value value);
+
+   EvalBackend(std::string const &name);
+
+   static EvalBackend Legacy();
+   static EvalBackend Cpu();
+   static EvalBackend Cuda();
+   static EvalBackend Codegen();
+   static EvalBackend CodegenNoGrad();
+
+   Value value() const { return static_cast<Value>(getInt(0)); }
+
+   bool operator==(EvalBackend const &other) const { return value() == other.value(); }
+
+   bool operator!=(EvalBackend const &other) const { return value() != other.value(); }
+
+   std::string name() const;
+
+   static Value &defaultValue();
+private:
+   static Value toValue(std::string const& name);
+   static std::string toName(Value value);
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a RooCmdArg to declare conditional observables.
@@ -425,14 +445,13 @@ namespace Detail {
 
 // Function to pack an arbitrary number of RooCmdArgs into a RooLinkedList. Implementation detail of many high-level RooFit functions.
 template <typename... Args>
-inline std::unique_ptr<RooLinkedList> createCmdList(Args &&... args)
+inline std::unique_ptr<RooLinkedList> createCmdList(Args &&...args)
 {
-  auto cmdList = std::make_unique<RooLinkedList>();
-  for (auto * arg : {args...}) {
-    cmdList->Add(const_cast<RooCmdArg*>(arg));
-    //cmdList->Add(new RooCmdArg{arg});
-  }
-  return cmdList;
+   auto cmdList = std::make_unique<RooLinkedList>();
+   for (auto *arg : {static_cast<RooCmdArg const *>(args)...}) {
+      cmdList->Add(const_cast<RooCmdArg *>(arg));
+   }
+   return cmdList;
 }
 
 } // namespace Detail

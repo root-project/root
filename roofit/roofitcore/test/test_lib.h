@@ -57,7 +57,7 @@ generate_1D_gaussian_pdf_nll(RooWorkspace &ws, unsigned long nEvents)
 // return two unique_ptrs, the first because nll is a pointer,
 // the second because RooArgSet doesn't have a move ctor
 std::tuple<std::unique_ptr<RooAbsReal>, RooAbsPdf *, std::unique_ptr<RooDataSet>, std::unique_ptr<RooArgSet>>
-generate_ND_gaussian_pdf_nll(RooWorkspace &ws, unsigned int n, unsigned long nEvents, bool batch_mode = false)
+generate_ND_gaussian_pdf_nll(RooWorkspace &ws, unsigned int n, unsigned long nEvents, RooFit::EvalBackend evalBackend)
 {
    RooArgSet obs_set;
 
@@ -110,7 +110,7 @@ generate_ND_gaussian_pdf_nll(RooWorkspace &ws, unsigned int n, unsigned long nEv
    // --- Generate a toyMC sample from composite PDF ---
    std::unique_ptr<RooDataSet> data{sum->generate(obs_set)};
 
-   std::unique_ptr<RooAbsReal> nll{sum->createNLL(*data, RooFit::BatchMode(batch_mode))};
+   std::unique_ptr<RooAbsReal> nll{sum->createNLL(*data, evalBackend)};
 
    // set values randomly so that they actually need to do some fitting
    for (unsigned ix = 0; ix < n; ++ix) {

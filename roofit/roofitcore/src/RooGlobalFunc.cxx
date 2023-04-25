@@ -72,12 +72,6 @@ RooCmdArg processMap(const char *name, Func_t func, Map_t const &map)
 
 namespace Experimental {
 
-std::string &defaultBatchMode()
-{
-   static std::string batchMode = "off";
-   return batchMode;
-}
-
 RooCmdArg ParallelGradientOptions(bool enable, int orderStrategy, int chainFactor)
 {
    return RooCmdArg("ParallelGradientOptions", enable, chainFactor, orderStrategy, 0, nullptr, nullptr, nullptr,
@@ -412,22 +406,16 @@ RooCmdArg TimingAnalysis(bool flag)
 }
 RooCmdArg BatchMode(std::string const &batchMode)
 {
+   oocoutW(nullptr, InputArguments) << "The BatchMode() command argument is deprecated. Please use EvalBackend() instead." << std::endl;
    std::string lower = batchMode;
    std::transform(lower.begin(), lower.end(), lower.begin(), [](unsigned char c) { return std::tolower(c); });
-   BatchModeOption mode;
    if (lower == "off")
-      mode = BatchModeOption::Off;
+      return EvalBackend::Legacy();
    else if (lower == "cpu")
-      mode = BatchModeOption::Cpu;
+      return EvalBackend::Cpu();
    else if (lower == "cuda")
-      mode = BatchModeOption::Cuda;
-   else if (lower == "codegen")
-      mode = BatchModeOption::CodeGen;
-   // Note that the "old" argument is undocumented, because accessing the
-   // old batch mode is an advanced developer feature.
-   else
-      throw std::runtime_error("Only supported string values for BatchMode() are \"off\", \"cpu\", or \"cuda\".");
-   return RooCmdArg("BatchMode", static_cast<int>(mode));
+      return EvalBackend::Cuda();
+   throw std::runtime_error("Only supported string values for BatchMode() are \"off\", \"cpu\", or \"cuda\".");
 }
 /// Integrate the PDF over bins. Improves accuracy for binned fits. Switch off using `0.` as argument. \see
 /// RooAbsPdf::fitTo().
@@ -497,6 +485,70 @@ RooCmdArg EventRange(Int_t nStart, Int_t nStop)
 }
 
 // RooAbsPdf::fitTo arguments
+
+EvalBackend::EvalBackend(EvalBackend::Value value) : RooCmdArg{"EvalBackend", static_cast<int>(value)} {}
+EvalBackend::EvalBackend(std::string const &name) : EvalBackend{toValue(name)} {}
+EvalBackend::Value EvalBackend::toValue(std::string const &name)
+{
+   std::string lower = name;
+   std::transform(lower.begin(), lower.end(), lower.begin(), [](unsigned char c) { return std::tolower(c); });
+   if (lower == toName(Value::Legacy))
+      return Value::Legacy;
+   if (lower == toName(Value::Cpu))
+      return Value::Cpu;
+   if (lower == toName(Value::Cuda))
+      return Value::Cuda;
+   if (lower == toName(Value::Codegen))
+      return Value::Codegen;
+   if (lower == toName(Value::CodegenNoGrad))
+      return Value::CodegenNoGrad;
+   throw std::runtime_error("Only supported string values for EvalBackend() are \"legacy\", \"cpu\", \"cuda\", "
+                            "\"codegen\", or \"codegen_no_grad\".");
+}
+EvalBackend EvalBackend::Legacy()
+{
+   return EvalBackend(Value::Legacy);
+}
+EvalBackend EvalBackend::Cpu()
+{
+   return EvalBackend(Value::Cpu);
+}
+EvalBackend EvalBackend::Cuda()
+{
+   return EvalBackend(Value::Cpu);
+}
+EvalBackend EvalBackend::Codegen()
+{
+   return EvalBackend(Value::Codegen);
+}
+EvalBackend EvalBackend::CodegenNoGrad()
+{
+   return EvalBackend(Value::CodegenNoGrad);
+}
+std::string EvalBackend::name() const
+{
+   return toName(value());
+}
+std::string EvalBackend::toName(EvalBackend::Value value)
+{
+   if (value == Value::Legacy)
+      return "legacy";
+   if (value == Value::Cpu)
+      return "cpu";
+   if (value == Value::Cuda)
+      return "cuda";
+   if (value == Value::Codegen)
+      return "codegen";
+   if (value == Value::CodegenNoGrad)
+      return "codegen_no_grad";
+   return "";
+}
+EvalBackend::Value &EvalBackend::defaultValue()
+{
+   static Value value = Value::Legacy;
+   return value;
+}
+
 RooCmdArg PrefitDataFraction(double data_ratio)
 {
    return RooCmdArg("Prefit", 0, 0, data_ratio, 0, nullptr, nullptr, nullptr, nullptr);

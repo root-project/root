@@ -148,13 +148,13 @@ TEST(HistFactory, Read_ROOT6_16_Combined_Model)
 /// a test suite.
 enum class MakeModelMode { OverallSyst, HistoSyst, StatSyst, ShapeSyst };
 
-using HFTestParam = std::tuple<MakeModelMode, bool, std::string>;
+using HFTestParam = std::tuple<MakeModelMode, bool, RooFit::EvalBackend>;
 
 std::string getName(HFTestParam const &param)
 {
    const MakeModelMode mode = std::get<0>(param);
    const bool customBins = std::get<1>(param);
-   const std::string batchMode = std::get<2>(param);
+   auto const& evalBackend = std::get<2>(param);
 
    std::stringstream ss;
 
@@ -169,9 +169,7 @@ std::string getName(HFTestParam const &param)
    if (mode == MakeModelMode::ShapeSyst)
       ss << "_ShapeSyst";
 
-   if (!batchMode.empty()) {
-      ss << "_BatchMode_" << batchMode;
-   }
+   ss << "_Backend_" << evalBackend.name();
 
    return ss.str();
 }
@@ -447,9 +445,7 @@ TEST_P(HFFixtureEval, Evaluation)
    const double systEps = 1e-6;
 
    const MakeModelMode makeModelMode = std::get<0>(GetParam());
-   // Note: the hardcoded string needs to be adjusted when the batch mode
-   // options will be renamed.
-   const bool useBatchMode = std::get<2>(GetParam()) != "off";
+   const bool useBatchMode = std::get<2>(GetParam()) != RooFit::EvalBackend::Legacy();
 
    RooHelpers::HijackMessageStream evalMessages(RooFit::INFO, RooFit::FastEvaluations);
 
@@ -636,7 +632,7 @@ TEST_P(HFFixture, HS3ClosureLoop)
 TEST_P(HFFixtureFit, Fit)
 {
    const MakeModelMode makeModelMode = std::get<0>(GetParam());
-   const std::string batchMode = std::get<2>(GetParam());
+   RooFit::EvalBackend evalBackend = std::get<2>(GetParam());
 
    constexpr bool verbose = false;
 
@@ -657,7 +653,7 @@ TEST_P(HFFixtureFit, Fit)
    for (bool constTermOptimization : {true, false}) {
 
       // constTermOptimization makes only sense in the legacy backend
-      if (constTermOptimization && batchMode != "off") {
+      if (constTermOptimization && evalBackend != RooFit::EvalBackend::Legacy()) {
          continue;
       }
       SCOPED_TRACE(constTermOptimization ? "const term optimisation" : "No const term optimisation");
@@ -682,7 +678,7 @@ TEST_P(HFFixtureFit, Fit)
 
       using namespace RooFit;
       std::unique_ptr<RooFitResult> fitResult{
-         simPdf->fitTo(*data, BatchMode(batchMode), Optimize(constTermOptimization),
+         simPdf->fitTo(*data, evalBackend, Optimize(constTermOptimization),
                        GlobalObservables(*mc->GetGlobalObservables()), Save(), PrintLevel(verbose ? 1 : -1))};
       ASSERT_NE(fitResult, nullptr);
       if (verbose)
@@ -694,7 +690,7 @@ TEST_P(HFFixtureFit, Fit)
          if (!par) {
             // Parameter was constant in this fit
             par = dynamic_cast<RooRealVar *>(fitResult->constPars().find(param.c_str()));
-            if (batchMode != "codegen") {
+            if (evalBackend != RooFit::EvalBackend::Codegen()) {
                ASSERT_NE(par, nullptr) << param;
                EXPECT_DOUBLE_EQ(par->getVal(), target) << "Constant parameter " << param << " is off target.";
             } else {
@@ -760,21 +756,21 @@ INSTANTIATE_TEST_SUITE_P(HistFactory, HFFixture,
                          testing::Combine(testing::Values(MakeModelMode::OverallSyst, MakeModelMode::HistoSyst,
                                                           MakeModelMode::StatSyst, MakeModelMode::ShapeSyst),
                                           testing::Values(false, true), // non-uniform bins or not
-                                          testing::Values("")),
+                                          testing::Values(RooFit::EvalBackend::Legacy())),
                          getNameFromInfo);
 
 INSTANTIATE_TEST_SUITE_P(HistFactory, HFFixtureEval,
                          testing::Combine(testing::Values(MakeModelMode::OverallSyst, MakeModelMode::HistoSyst,
                                                           MakeModelMode::StatSyst, MakeModelMode::ShapeSyst),
                                           testing::Values(false, true), // non-uniform bins or not
-                                          testing::Values("off", "cpu")),
+                                          testing::Values(RooFit::EvalBackend::Legacy(), RooFit::EvalBackend::Cpu())),
                          getNameFromInfo);
 
 INSTANTIATE_TEST_SUITE_P(HistFactory, HFFixtureFit,
                          testing::Combine(testing::Values(MakeModelMode::OverallSyst, MakeModelMode::HistoSyst,
                                                           MakeModelMode::StatSyst, MakeModelMode::ShapeSyst),
                                           testing::Values(false, true), // non-uniform bins or not
-                                          testing::Values("off", "cpu")),
+                                          testing::Values(RooFit::EvalBackend::Legacy(), RooFit::EvalBackend::Cpu())),
                          getNameFromInfo);
 
 #ifdef TEST_CODEGEN_AD
@@ -784,6 +780,6 @@ INSTANTIATE_TEST_SUITE_P(HistFactoryCodeGen, HFFixtureFit,
                          testing::Combine(testing::Values(MakeModelMode::OverallSyst, MakeModelMode::HistoSyst,
                                                           MakeModelMode::StatSyst, MakeModelMode::ShapeSyst),
                                           testing::Values(false), // no non-uniform bins
-                                          testing::Values("codegen")),
+                                          testing::Values(RooFit::EvalBackend::Codegen())),
                          getNameFromInfo);
 #endif

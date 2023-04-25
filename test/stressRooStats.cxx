@@ -298,7 +298,7 @@ int main(int argc, const char *argv[])
    bool dryRun      = false;
    bool doDump      = false;
    bool doTreeStore = false;
-   std::string batchMode = "off";
+   auto backend = RooFit::EvalBackend::Legacy();
 
    //string refFileName = "http://root.cern.ch/files/stressRooStats_v534_ref.root" ;
    string refFileName = "stressRooStats_ref.root" ;
@@ -310,8 +310,8 @@ int main(int argc, const char *argv[])
 
       if (arg=="-b") {
          std::string mode = argv[++i];
-         batchMode = mode;
-         std::cout << "stressRooStats: BatchMode set to " << mode << std::endl;
+         backend = RooFit::EvalBackend(mode);
+         std::cout << "stressRooStats: NLL evaluation backend set to " << mode << std::endl;
       } else if (arg == "-f") {
          cout << "stressRooStats: using reference file " << argv[i + 1] << endl ;
          refFileName = argv[++i] ;
@@ -352,6 +352,7 @@ int main(int argc, const char *argv[])
       } else if (arg == "-h" || arg == "--help") {
          cout << R"(usage: stressRooStats [ options ]
 
+       -b <mode>   : Perform every fit in the tests with the EvalBackend(<mode>) command argument, where <mode> is a string
        -f <file>   : use given reference file instead of default ("stressRooStats_ref.root")
        -w          : write reference file, instead of reading file and running comparison tests
        -n N        : only run test with sequential number N
@@ -385,8 +386,8 @@ int main(int argc, const char *argv[])
    // set minimizer
    ROOT::Math::MinimizerOptions::SetDefaultMinimizer(minimizerName.c_str());
 
-   // set default BatchMode backend
-   RooFit::Experimental::defaultBatchMode() = batchMode;
+   // set default NLL backend
+   RooFit::EvalBackend::defaultValue() = backend.value();
 
    gBenchmark = new TBenchmark();
    return stressRooStats(refFileName.c_str(), doWrite, verbose, allTests, oneTest, testNumber, dryRun, doDump, doTreeStore);

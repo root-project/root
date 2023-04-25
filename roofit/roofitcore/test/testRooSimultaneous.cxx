@@ -48,10 +48,10 @@ TEST(RooSimultaneous, SingleChannelCrossCheck)
 
    using AbsRealPtr = std::unique_ptr<RooAbsReal>;
 
-   AbsRealPtr nllDirect{modelConstrained.createNLL(combData, BatchMode("off"))};
-   AbsRealPtr nllSimWrapped{modelSim.createNLL(combData, BatchMode("off"))};
-   AbsRealPtr nllDirectBatch{modelConstrained.createNLL(combData, BatchMode("cpu"))};
-   AbsRealPtr nllSimWrappedBatch{modelSim.createNLL(combData, BatchMode("cpu"))};
+   AbsRealPtr nllDirect{modelConstrained.createNLL(combData, EvalBackend::Legacy())};
+   AbsRealPtr nllSimWrapped{modelSim.createNLL(combData, EvalBackend::Legacy())};
+   AbsRealPtr nllDirectBatch{modelConstrained.createNLL(combData, EvalBackend::Cpu())};
+   AbsRealPtr nllSimWrappedBatch{modelSim.createNLL(combData, EvalBackend::Cpu())};
 
    EXPECT_FLOAT_EQ(nllDirect->getVal(), nllSimWrapped->getVal()) << "Inconsistency in old RooFit";
    EXPECT_FLOAT_EQ(nllDirect->getVal(), nllDirectBatch->getVal()) << "Old RooFit and BatchMode don't agree";
@@ -125,12 +125,12 @@ TEST(RooSimultaneous, CategoriesWithNoPdf)
 
    // We don't care about the fit result, just that it doesn't crash.
    using namespace RooFit;
-   sim.fitTo(*ds, BatchMode(false), PrintLevel(-1));
+   sim.fitTo(*ds, EvalBackend::Legacy(), PrintLevel(-1));
    m0.setVal(0.5);
    m0.setError(0.0);
    m1.setVal(0.5);
    m1.setError(0.0);
-   sim.fitTo(*ds, BatchMode(true), PrintLevel(-1));
+   sim.fitTo(*ds, EvalBackend::Cpu(), PrintLevel(-1));
 }
 
 /// GitHub issue #11396.
@@ -175,8 +175,8 @@ TEST(RooSimultaneous, MultiRangeFitWithSplitRange)
    const char *cutRange1 = "SideBandLo_cat1,SideBandHi_cat1";
    const char *cutRange2 = "SideBandLo_cat2,SideBandHi_cat2";
    using RealPtr = std::unique_ptr<RooAbsReal>;
-   RealPtr nllSim{simPdf.createNLL(combData, Range("SideBandLo,SideBandHi"), SplitRange(), BatchMode("off"))};
-   RealPtr nllSimBatch{simPdf.createNLL(combData, Range("SideBandLo,SideBandHi"), SplitRange(), BatchMode("cpu"))};
+   RealPtr nllSim{simPdf.createNLL(combData, Range("SideBandLo,SideBandHi"), SplitRange(), EvalBackend::Legacy())};
+   RealPtr nllSimBatch{simPdf.createNLL(combData, Range("SideBandLo,SideBandHi"), SplitRange(), EvalBackend::Cpu())};
 
    // In simultaneous PDFs, the probability is normalized over the categories,
    // so we have to do that as well when computing the reference value. Since
@@ -249,12 +249,11 @@ TEST(RooSimultaneous, RangedCategory)
       sigma.setError(0.0);
    };
 
-   constexpr auto batchMode = "off";
-
    // Function to do the fit
    auto doFit = [&](RooAbsPdf &pdf, RooAbsData &dataset, const char *range = nullptr) {
       resetParameters();
-      std::unique_ptr<RooFitResult> res{pdf.fitTo(dataset, Range(range), Save(), PrintLevel(-1), BatchMode(batchMode))};
+      std::unique_ptr<RooFitResult> res{
+         pdf.fitTo(dataset, Range(range), Save(), PrintLevel(-1), EvalBackend::Legacy())};
       resetParameters();
       return res;
    };

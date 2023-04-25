@@ -41,9 +41,9 @@ namespace TestStatistics {
 
 namespace {
 
-RooAbsL::ClonePdfData clonePdfData(RooAbsPdf &pdf, RooAbsData &data, RooFit::BatchModeOption batchMode)
+RooAbsL::ClonePdfData clonePdfData(RooAbsPdf &pdf, RooAbsData &data, RooFit::EvalBackend evalBackend)
 {
-   if (batchMode == RooFit::BatchModeOption::Off) {
+   if (evalBackend.value() == RooFit::EvalBackend::Value::Legacy) {
       return {&pdf, &data};
    }
    // For the evaluation with the BatchMode, the pdf needs to be "compiled" for
@@ -54,14 +54,14 @@ RooAbsL::ClonePdfData clonePdfData(RooAbsPdf &pdf, RooAbsData &data, RooFit::Bat
 } // namespace
 
 RooUnbinnedL::RooUnbinnedL(RooAbsPdf *pdf, RooAbsData *data, RooAbsL::Extended extended,
-                           RooFit::BatchModeOption batchMode)
-   : RooAbsL(clonePdfData(*pdf, *data, batchMode), data->numEntries(), 1, extended)
+                           RooFit::EvalBackend evalBackend)
+   : RooAbsL(clonePdfData(*pdf, *data, evalBackend), data->numEntries(), 1, extended)
 {
    std::unique_ptr<RooArgSet> params(pdf->getParameters(data));
    paramTracker_ = std::make_unique<RooChangeTracker>("chtracker", "change tracker", *params, true);
 
-   if (batchMode != RooFit::BatchModeOption::Off) {
-      evaluator_ = std::make_unique<RooFit::Evaluator>(*pdf_, batchMode == RooFit::BatchModeOption::Cuda);
+   if (evalBackend.value() != RooFit::EvalBackend::Value::Legacy) {
+      evaluator_ = std::make_unique<RooFit::Evaluator>(*pdf_, evalBackend.value() == RooFit::EvalBackend::Value::Cuda);
       std::stack<std::vector<double>>{}.swap(_vectorBuffers);
       auto dataSpans =
          RooFit::BatchModeDataHelpers::getDataSpans(*data, "", nullptr, /*skipZeroWeights=*/true,
