@@ -204,7 +204,8 @@ TEST(RooFuncWrapper, Exponential)
    }
 }
 
-using CreateNLLFunc = std::function<std::unique_ptr<RooAbsReal>(RooAbsPdf &, RooAbsData &, RooWorkspace &)>;
+using CreateNLLFunc =
+   std::function<std::unique_ptr<RooAbsReal>(RooAbsPdf &, RooAbsData &, RooWorkspace &, std::string const &)>;
 using WorkspaceSetupFunc = std::function<void(RooWorkspace &)>;
 
 class FactoryTestParams {
@@ -243,6 +244,17 @@ private:
    std::unique_ptr<RooHelpers::LocalChangeMsgLevel> _changeMsgLvl;
 };
 
+std::unique_ptr<RooFitResult> runMinimizer(RooAbsReal &absReal, bool useGradient = true)
+{
+   RooMinimizer::Config cfg;
+   cfg.useGradient = useGradient;
+   RooMinimizer m{absReal, cfg};
+   m.setPrintLevel(-1);
+   m.setStrategy(0);
+   m.minimize("Minuit2");
+   return std::unique_ptr<RooFitResult>{m.save()};
+}
+
 TEST_P(FactoryTest, NLLFit)
 {
 
@@ -252,13 +264,7 @@ TEST_P(FactoryTest, NLLFit)
    _params._setupWorkspace(ws);
    RooArgSet const &observables = *ws.set("observables");
    RooAbsData *data = ws.data("data");
-
    RooAbsPdf &model = *ws.pdf("model");
-
-   // Figure out if this is a simultaneous fit. The RooFuncWrapper needs to
-   // know about this to figure out how to split the dataset and fill the
-   // observables.
-   auto simPdf = dynamic_cast<RooSimultaneous *>(&model);
 
    std::size_t nEvents = 100;
    if (!data) {
@@ -266,32 +272,30 @@ TEST_P(FactoryTest, NLLFit)
       ownedData = std::unique_ptr<RooAbsData>{data0->binnedClone()};
       data = ownedData.get();
    }
-   std::unique_ptr<RooAbsReal> nllRef = _params._createNLL(model, *data, ws);
-   auto nllRefResolved = static_cast<RooAbsReal *>(nllRef->servers()[0]);
 
-   static int funcWrapperCounter = 0;
-   std::string wrapperName = "func_wrapper_" + std::to_string(funcWrapperCounter++);
-   RooFuncWrapper nllFunc(wrapperName.c_str(), wrapperName.c_str(), *nllRefResolved, observables, data, simPdf);
+   std::unique_ptr<RooAbsReal> nllRef = _params._createNLL(model, *data, ws, "cpu");
+   std::unique_ptr<RooAbsReal> nllFunc = _params._createNLL(model, *data, ws, "codegen");
 
-   // Check if functions results are the same even after changing parameters.
-   EXPECT_NEAR(nllRef->getVal(observables), nllFunc.getVal(), 1e-8);
+   EXPECT_NEAR(nllRef->getVal(observables), nllFunc->getVal(), 1e-8);
 
    // Check if the parameter layout and size is the same.
    RooArgSet paramsRefNll;
    nllRef->getParameters(nullptr, paramsRefNll);
    RooArgSet paramsMyNLL;
-   nllFunc.getParameters(&observables, paramsMyNLL);
+   nllFunc->getParameters(&observables, paramsMyNLL);
 
    if (_params._randomizeParameters) {
       randomizeParameters(paramsMyNLL);
+      // Check if functions results are the same even after changing parameters.
+      EXPECT_NEAR(nllRef->getVal(observables), nllFunc->getVal(), 1e-8);
    }
 
    EXPECT_TRUE(paramsMyNLL.hasSameLayout(paramsRefNll));
    EXPECT_EQ(paramsMyNLL.size(), paramsRefNll.size());
 
    // Get AD based derivative
-   std::vector<double> dMyNLL(nllFunc.getNumParams(), 0);
-   nllFunc.gradient(dMyNLL.data());
+   std::vector<double> dMyNLL(paramsMyNLL.size(), 0);
+   nllFunc->gradient(dMyNLL.data());
 
    // Check if derivatives are equal
    for (std::size_t i = 0; i < paramsMyNLL.size(); ++i) {
@@ -302,27 +306,17 @@ TEST_P(FactoryTest, NLLFit)
    RooArgSet parametersOrig;
    paramsRefNll.snapshot(parametersOrig);
 
-   auto runMinimizer = [&](RooAbsReal &absReal, RooMinimizer::Config cfg = {}) -> std::unique_ptr<RooFitResult> {
-      RooMinimizer m{absReal, cfg};
-      m.setPrintLevel(-1);
-      m.setStrategy(0);
-      m.minimize("Minuit2");
-      auto result = std::unique_ptr<RooFitResult>{m.save()};
-      // reset parameters
-      paramsRefNll.assign(parametersOrig);
-      return result;
-   };
-
-   // Minimize the RooFuncWrapper Implementation without AD
-   RooMinimizer::Config minimizerCfgNoAd;
-   minimizerCfgNoAd.useGradient = false;
-   auto result = runMinimizer(nllFunc, minimizerCfgNoAd);
+   // Minimize the RooFuncWrapper Implementation
+   auto result = runMinimizer(*nllFunc, false);
+   paramsRefNll.assign(parametersOrig);
 
    // Minimize the RooFuncWrapper Implementation with AD
-   auto resultAd = runMinimizer(nllFunc);
+   auto resultAd = runMinimizer(*nllFunc);
+   paramsRefNll.assign(parametersOrig);
 
    // Minimize the reference NLL
    auto resultRef = runMinimizer(*nllRef);
+   paramsRefNll.assign(parametersOrig);
 
    // Compare minimization results
    double tol = _params._fitResultTolerance;
@@ -343,8 +337,9 @@ FactoryTestParams param1{"Gaussian",
 
                             ws.defineSet("observables", "x");
                          },
-                         [](RooAbsPdf &pdf, RooAbsData &data, RooWorkspace &) {
-                            return std::unique_ptr<RooAbsReal>{pdf.createNLL(data, RooFit::BatchMode("cpu"))};
+                         [](RooAbsPdf &pdf, RooAbsData &data, RooWorkspace &, std::string const &backend) {
+                            using namespace RooFit;
+                            return std::unique_ptr<RooAbsReal>{pdf.createNLL(data, BatchMode(backend))};
                          },
                          1e-4,
                          /*randomizeParameters=*/false};
@@ -357,11 +352,11 @@ FactoryTestParams param2{"PolyVar",
 
                             ws.defineSet("observables", "x,y");
                          },
-                         [](RooAbsPdf &pdf, RooAbsData &data, RooWorkspace &ws) {
+                         [](RooAbsPdf &pdf, RooAbsData &data, RooWorkspace &ws, std::string const &backend) {
                             using namespace RooFit;
                             RooRealVar &y = *ws.var("y");
                             return std::unique_ptr<RooAbsReal>{
-                               pdf.createNLL(data, ConditionalObservables(y), BatchMode("cpu"))};
+                               pdf.createNLL(data, ConditionalObservables(y), BatchMode(backend))};
                          },
                          1e-4,
                          /*randomizeParameters=*/false};
@@ -377,8 +372,9 @@ FactoryTestParams param3{"AddPdf",
 
                             ws.defineSet("observables", "x");
                          },
-                         [](RooAbsPdf &pdf, RooAbsData &data, RooWorkspace &) {
-                            return std::unique_ptr<RooAbsReal>{pdf.createNLL(data, RooFit::BatchMode("cpu"))};
+                         [](RooAbsPdf &pdf, RooAbsData &data, RooWorkspace &, std::string const &backend) {
+                            using namespace RooFit;
+                            return std::unique_ptr<RooAbsReal>{pdf.createNLL(data, BatchMode(backend))};
                          },
                          5e-3,
                          /*randomizeParameters=*/true};
@@ -394,10 +390,10 @@ FactoryTestParams param4{"ConstraintSum",
 
                             ws.defineSet("observables", "x");
                          },
-                         [](RooAbsPdf &pdf, RooAbsData &data, RooWorkspace &ws) {
+                         [](RooAbsPdf &pdf, RooAbsData &data, RooWorkspace &ws, std::string const &backend) {
                             using namespace RooFit;
-                            return std::unique_ptr<RooAbsReal>{
-                               pdf.createNLL(data, ExternalConstraints(*ws.pdf("fconstext")), BatchMode("cpu"))};
+                            return std::unique_ptr<RooAbsReal>{pdf.createNLL(
+                               data, ExternalConstraints(*ws.pdf("fconstext")), BatchMode(backend))};
                          },
                          1e-4,
                          /*randomizeParameters=*/true};
@@ -473,8 +469,9 @@ void getSimPdfModel(RooWorkspace &ws)
 
 /// Test based on the simultaneous fit shown in CHEP'23 results
 FactoryTestParams param5{"SimPdf", getSimPdfModel,
-                         [](RooAbsPdf &pdf, RooAbsData &data, RooWorkspace &) {
-                            return std::unique_ptr<RooAbsReal>{pdf.createNLL(data, RooFit::BatchMode("cpu"))};
+                         [](RooAbsPdf &pdf, RooAbsData &data, RooWorkspace &, std::string const &backend) {
+                            return std::unique_ptr<RooAbsReal>{
+                               pdf.createNLL(data, RooFit::BatchMode(backend))};
                          },
                          5e-3,
                          /*randomizeParameters=*/true};
@@ -485,9 +482,9 @@ FactoryTestParams param6{"GaussianExtended",
                             ws.factory("ExtendPdf::model(gauss, n[100, 0, 10000])");
                             ws.defineSet("observables", "x");
                          },
-                         [](RooAbsPdf &pdf, RooAbsData &data, RooWorkspace &) {
+                         [](RooAbsPdf &pdf, RooAbsData &data, RooWorkspace &, std::string const &backend) {
                             return std::unique_ptr<RooAbsReal>{
-                               pdf.createNLL(data, RooFit::BatchMode("cpu"), RooFit::Extended(true))};
+                               pdf.createNLL(data, RooFit::BatchMode(backend))};
                          },
                          1e-4,
                          /*randomizeParameters=*/false};
@@ -521,8 +518,8 @@ void getDataHistModel(RooWorkspace &ws)
 
 /// Test based on rf706 tutorial
 FactoryTestParams param7{"HistPdf", getDataHistModel,
-                         [](RooAbsPdf &pdf, RooAbsData &data, RooWorkspace &) {
-                            return std::unique_ptr<RooAbsReal>{pdf.createNLL(data, RooFit::BatchMode("cpu"))};
+                         [](RooAbsPdf &pdf, RooAbsData &data, RooWorkspace &, std::string const &backend) {
+                            return std::unique_ptr<RooAbsReal>{pdf.createNLL(data, RooFit::BatchMode(backend))};
                          },
                          1e-4,
                          /*randomizeParameters=*/true};
@@ -575,8 +572,8 @@ void getDataHistFuncModel(RooWorkspace &ws)
 } // namespace
 
 FactoryTestParams param8{"HistFuncPdf", getDataHistFuncModel,
-                         [](RooAbsPdf &pdf, RooAbsData &data, RooWorkspace &) {
-                            return std::unique_ptr<RooAbsReal>{pdf.createNLL(data, RooFit::BatchMode("cpu"))};
+                         [](RooAbsPdf &pdf, RooAbsData &data, RooWorkspace &, std::string const& backend) {
+                            return std::unique_ptr<RooAbsReal>{pdf.createNLL(data, RooFit::BatchMode(backend))};
                          },
                          1e-4,
                          /*randomizeParameters=*/true};
@@ -587,8 +584,8 @@ FactoryTestParams param9{"Poisson",
                             ws.factory("Poisson::model(x[5, -10, 10], mu_shifted)");
                             ws.defineSet("observables", "x");
                          },
-                         [](RooAbsPdf &pdf, RooAbsData &data, RooWorkspace &) {
-                            return std::unique_ptr<RooAbsReal>{pdf.createNLL(data, RooFit::BatchMode("cpu"))};
+                         [](RooAbsPdf &pdf, RooAbsData &data, RooWorkspace &, std::string const& backend) {
+                            return std::unique_ptr<RooAbsReal>{pdf.createNLL(data, RooFit::BatchMode(backend))};
                          },
                          1e-4,
                          /*randomizeParameters=*/false};
@@ -602,8 +599,8 @@ FactoryTestParams param10{"PoissonNoRounding",
                              poisson->setNoRounding(true);
                              ws.defineSet("observables", "x");
                           },
-                          [](RooAbsPdf &pdf, RooAbsData &data, RooWorkspace &) {
-                             return std::unique_ptr<RooAbsReal>{pdf.createNLL(data, RooFit::BatchMode("cpu"))};
+                          [](RooAbsPdf &pdf, RooAbsData &data, RooWorkspace &, std::string const& backend) {
+                             return std::unique_ptr<RooAbsReal>{pdf.createNLL(data, RooFit::BatchMode(backend))};
                           },
                           1e-4,
                           /*randomizeParameters=*/false};
