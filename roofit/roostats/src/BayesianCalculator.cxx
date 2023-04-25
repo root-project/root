@@ -1211,10 +1211,10 @@ void BayesianCalculator::ComputeIntervalUsingRooFit(double lowerCutOff, double u
    if (!fPosteriorPdf) fPosteriorPdf = (RooAbsPdf*) GetPosteriorPdf();
    if (!fPosteriorPdf) return;
 
-   RooAbsReal* cdf = fPosteriorPdf->createCdf(fPOI,RooFit::ScanNoCdf());
+   std::unique_ptr<RooAbsReal> cdf{fPosteriorPdf->createCdf(fPOI,RooFit::ScanNoCdf())};
    if (!cdf) return;
 
-   RooAbsFunc* cdf_bind = cdf->bindVars(fPOI,&fPOI);
+   std::unique_ptr<RooAbsFunc> cdf_bind{cdf->bindVars(fPOI,&fPOI)};
    if (!cdf_bind) return;
 
    RooBrentRootFinder brf(*cdf_bind);
@@ -1244,9 +1244,6 @@ void BayesianCalculator::ComputeIntervalUsingRooFit(double lowerCutOff, double u
 
 
    poi->setVal(tmpVal); // patch: restore the original value of poi
-
-   delete cdf_bind;
-   delete cdf;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

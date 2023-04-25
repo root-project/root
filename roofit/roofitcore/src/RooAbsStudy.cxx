@@ -100,9 +100,9 @@ void RooAbsStudy::storeSummaryOutput(const RooArgSet& vars)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void RooAbsStudy::storeDetailedOutput(TNamed& object)
+void RooAbsStudy::storeDetailedOutput(std::unique_ptr<TNamed> object)
 {
-  if (_storeDetails) {
+  if (!_storeDetails) return;
 
     if (!_detailData) {
       _detailData = new RooLinkedList ;
@@ -110,12 +110,9 @@ void RooAbsStudy::storeDetailedOutput(TNamed& object)
       //cout << "RooAbsStudy::ctor() detailData name = " << _detailData->GetName() << endl ;
     }
 
-    object.SetName(TString::Format("%s_detailed_data_%d",GetName(),_detailData->GetSize())) ;
+    object->SetName(TString::Format("%s_detailed_data_%d",GetName(),_detailData->GetSize())) ;
     //cout << "storing detailed data with name " << object.GetName() << endl ;
-    _detailData->Add(&object) ;
-  } else {
-    delete &object ;
-  }
+    _detailData->Add(object.release());
 }
 
 
@@ -144,7 +141,7 @@ void RooAbsStudy::aggregateSummaryOutput(TList* chunkList)
 
     if (auto dlist = dynamic_cast<RooLinkedList*>(obj)) {
       if (TString(dlist->GetName()).BeginsWith(Form("%s_detailed_data",GetName()))) {
-        for(auto * dobj : static_range_cast<TNamed*>(*dlist)) storeDetailedOutput(*dobj) ;
+        for(auto * dobj : static_range_cast<TNamed*>(*dlist)) storeDetailedOutput(std::unique_ptr<TNamed>{dobj}) ;
       }
     }
   }

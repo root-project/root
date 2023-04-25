@@ -398,7 +398,7 @@ public:
     // -------------------------------------------------------------------
 
     // Fit g2 to data from g1
-    RooFitResult* r = g2.fitTo(*data2,Save(),BatchMode(_batchMode)) ;
+    std::unique_ptr<RooFitResult> r{g2.fitTo(*data2,Save(),BatchMode(_batchMode))};
 
     // Plot data on frame and overlay projection of g2
     RooPlot* xframe2 = x.frame(Title("Tailored Gaussian pdf")) ;
@@ -407,7 +407,7 @@ public:
 
     regPlot(xframe,"rf103_plot1") ;
     regPlot(xframe2,"rf103_plot2") ;
-    regResult(r,"rf103_fit1") ;
+    regResult(std::move(r),"rf103_fit1") ;
 
     return true ;
   }
@@ -1115,7 +1115,7 @@ public:
     // ---------------------------
 
     // Fit p.d.f to all data
-    RooFitResult* r_full = model.fitTo(*modelData,Save(true),BatchMode(_batchMode)) ;
+    std::unique_ptr<RooFitResult> r_full{model.fitTo(*modelData,Save(true),BatchMode(_batchMode))};
 
 
     // F i t   p a r t i a l   r a n g e
@@ -1125,7 +1125,7 @@ public:
     x.setRange("signal",-3,3) ;
 
     // Fit p.d.f only to data in "signal" range
-    RooFitResult* r_sig = model.fitTo(*modelData,Save(true),Range("signal"),BatchMode(_batchMode)) ;
+    std::unique_ptr<RooFitResult> r_sig{model.fitTo(*modelData,Save(true),Range("signal"),BatchMode(_batchMode))};
 
 
     // P l o t   /   p r i n t   r e s u l t s
@@ -1138,8 +1138,8 @@ public:
     model.plotOn(frame) ; // By default only fitted range is shown
 
     regPlot(frame,"rf203_plot") ;
-    regResult(r_full,"rf203_r_full") ;
-    regResult(r_sig,"rf203_r_sig") ;
+    regResult(std::move(r_full),"rf203_r_full") ;
+    regResult(std::move(r_sig),"rf203_r_sig") ;
 
     return true;
   }
@@ -1216,10 +1216,10 @@ public:
 
 
     // Perform unbinned extended ML fit to data
-    RooFitResult* r = model.fitTo(*data,Extended(true),Save(),BatchMode(_batchMode)) ;
+    std::unique_ptr<RooFitResult> r{model.fitTo(*data,Extended(true),Save(),BatchMode(_batchMode))};
 
 
-    regResult(r,"rf204_result") ;
+    regResult(std::move(r),"rf204_result") ;
 
     return true ;
   }
@@ -2485,10 +2485,10 @@ public:
   // -------------------------------------------------------------------------------------
 
   // Perform fit in SideBand1 region (RooAddPdf coefficients will be interpreted in full range)
-  RooFitResult* r_sb1 = model.fitTo(*modelData,Range("SB1"),Save(),BatchMode(_batchMode)) ;
+  std::unique_ptr<RooFitResult> r_sb1{model.fitTo(*modelData,Range("SB1"),Save(),BatchMode(_batchMode))};
 
   // Perform fit in SideBand2 region (RooAddPdf coefficients will be interpreted in full range)
-  RooFitResult* r_sb2 = model.fitTo(*modelData,Range("SB2"),Save(),BatchMode(_batchMode)) ;
+  std::unique_ptr<RooFitResult> r_sb2{model.fitTo(*modelData,Range("SB2"),Save(),BatchMode(_batchMode))};
 
 
 
@@ -2497,12 +2497,12 @@ public:
 
   // Now perform fit to joint 'L-shaped' sideband region 'SB1|SB2'
   // (RooAddPdf coefficients will be interpreted in full range)
-  RooFitResult* r_sb12 = model.fitTo(*modelData,Range("SB1,SB2"),Save(),BatchMode(_batchMode)) ;
+  std::unique_ptr<RooFitResult> r_sb12{model.fitTo(*modelData,Range("SB1,SB2"),Save(),BatchMode(_batchMode))};
 
 
-  regResult(r_sb1,"rf312_fit_sb1") ;
-  regResult(r_sb2,"rf312_fit_sb2") ;
-  regResult(r_sb12,"rf312_fit_sb12") ;
+  regResult(std::move(r_sb1),"rf312_fit_sb1") ;
+  regResult(std::move(r_sb2),"rf312_fit_sb2") ;
+  regResult(std::move(r_sb12),"rf312_fit_sb12") ;
 
   return true ;
 
@@ -2641,7 +2641,7 @@ public:
   // F i t   p d f   t o   d a t a   i n   a c c e p t a n c e   r e g i o n
   // -----------------------------------------------------------------------
 
-  RooFitResult* r = model.fitTo(*dacc,Save(),BatchMode(_batchMode)) ;
+  std::unique_ptr<RooFitResult> r{model.fitTo(*dacc,Save(),BatchMode(_batchMode))};
 
 
 
@@ -2655,7 +2655,7 @@ public:
   dacc->plotOn(frame,Name("dacc")) ;
 
   // Print fit results to demonstrate absence of bias
-  regResult(r,"rf314_fit") ;
+  regResult(std::move(r),"rf314_fit") ;
   regPlot(frame,"rf314_plot1") ;
 
   return true;
@@ -3025,7 +3025,7 @@ public:
   //       event weights represent Poisson statistics themselves.
   //       In general, parameter error reflect precision of SumOfWeights
   //       events rather than NumEvents events. See comparisons below
-  RooFitResult* r_ml_wgt = p2.fitTo(dataw,Save(),BatchMode(_batchMode)) ;
+  std::unique_ptr<RooFitResult> r_ml_wgt{p2.fitTo(dataw,Save(),BatchMode(_batchMode))};
 
 
 
@@ -3056,8 +3056,8 @@ public:
   std::unique_ptr<RooDataSet> data3{genPdf.generate(x,43000)};
 
   // Fit the 2nd order polynomial to both unweighted datasets and save the results for comparison
-  RooFitResult* r_ml_unw10 = p2.fitTo(*data2,Save(),BatchMode(_batchMode)) ;
-  RooFitResult* r_ml_unw43 = p2.fitTo(*data3,Save(),BatchMode(_batchMode)) ;
+  std::unique_ptr<RooFitResult> r_ml_unw10{p2.fitTo(*data2,Save(),BatchMode(_batchMode))};
+  std::unique_ptr<RooFitResult> r_ml_unw43{p2.fitTo(*data3,Save(),BatchMode(_batchMode))};
 
 
   // C h i 2   f i t   o f   p d f   t o   b i n n e d   w e i g h t e d   d a t a s e t
@@ -3077,7 +3077,7 @@ public:
   m.hesse() ;
 
   // Plot chi^2 fit result on frame as well
-  RooFitResult* r_chi2_wgt = m.save() ;
+  std::unique_ptr<RooFitResult> r_chi2_wgt{m.save()};
   p2.plotOn(frame,LineStyle(kDashed),LineColor(kRed),Name("p2_alt")) ;
 
 
@@ -3089,10 +3089,10 @@ public:
   // than to 1Kevt of unweighted data, whereas the reference chi^2 fit with SumW2 error gives a result closer to
   // that of an unbinned ML fit to 1Kevt of unweighted data.
 
-  regResult(r_ml_unw10,"rf403_ml_unw10") ;
-  regResult(r_ml_unw43,"rf403_ml_unw43") ;
-  regResult(r_ml_wgt  ,"rf403_ml_wgt") ;
-  regResult(r_chi2_wgt ,"rf403_ml_chi2") ;
+  regResult(std::move(r_ml_unw10),"rf403_ml_unw10") ;
+  regResult(std::move(r_ml_unw43),"rf403_ml_unw43") ;
+  regResult(std::move(r_ml_wgt)  ,"rf403_ml_wgt") ;
+  regResult(std::move(r_chi2_wgt) ,"rf403_ml_chi2") ;
   regPlot(frame,"rf403_plot1") ;
 
   return true ;
@@ -3813,7 +3813,7 @@ public:
   // matrix, the EDM, the minimized FCN , the last MINUIT status code and
   // the number of times the RooFit function object has indicated evaluation
   // problems (e.g. zero probabilities during likelihood evaluation)
-  RooFitResult* r = m.save() ;
+  std::unique_ptr<RooFitResult> r{m.save()};
 
 
   // C h a n g e   p a r a m e t e r   v a l u e s ,   f l o a t i n g
@@ -3834,10 +3834,10 @@ public:
   m.migrad() ;
   m.hesse() ;
 
-  RooFitResult* r2 = m.save() ;
+  std::unique_ptr<RooFitResult> r2{m.save()};
 
-  regResult(r,"rf601_r") ;
-  regResult(r2,"rf601_r2") ;
+  regResult(std::move(r),"rf601_r") ;
+  regResult(std::move(r2),"rf601_r2") ;
 
   return true ;
   }
@@ -3906,9 +3906,9 @@ public:
   m.migrad() ;
   m.hesse() ;
 
-  RooFitResult* r = m.save() ;
+  std::unique_ptr<RooFitResult> r{ m.save()};
 
-  regResult(r,"rf602_r") ;
+  regResult(std::move(r),"rf602_r");
 
   return true ;
   }
@@ -3971,10 +3971,10 @@ public:
   RooProdPdf modelc("modelc","model with constraint",RooArgSet(model,fconstraint)) ;
 
   // Fit modelc without use of constraint term
-  RooFitResult* r1 = modelc.fitTo(*d,Save(),BatchMode(_batchMode)) ;
+  std::unique_ptr<RooFitResult> r1{modelc.fitTo(*d,Save(),BatchMode(_batchMode))};
 
   // Fit modelc with constraint term on parameter f
-  RooFitResult* r2 = modelc.fitTo(*d,Constrain(f),Save(),BatchMode(_batchMode)) ;
+  std::unique_ptr<RooFitResult> r2{modelc.fitTo(*d,Constrain(f),Save(),BatchMode(_batchMode))};
 
 
 
@@ -3985,12 +3985,12 @@ public:
   RooGaussian fconstext("fconstext","fconstext",f,0.2,0.1) ;
 
   // Fit with external constraint
-  RooFitResult* r3 = model.fitTo(*d,ExternalConstraints(fconstext),Save(),BatchMode(_batchMode)) ;
+  std::unique_ptr<RooFitResult> r3{model.fitTo(*d,ExternalConstraints(fconstext),Save(),BatchMode(_batchMode))};
 
 
-  regResult(r1,"rf604_r1") ;
-  regResult(r2,"rf604_r2") ;
-  regResult(r3,"rf604_r3") ;
+  regResult(std::move(r1),"rf604_r1") ;
+  regResult(std::move(r2),"rf604_r2") ;
+  regResult(std::move(r3),"rf604_r3") ;
 
   return true ;
   }

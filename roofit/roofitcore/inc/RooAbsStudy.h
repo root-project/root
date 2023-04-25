@@ -59,7 +59,7 @@ public:
   friend class RooStudyPackage ;
   void registerSummaryOutput(const RooArgSet& allVars, const RooArgSet& varsWithError=RooArgSet(), const RooArgSet& varsWithAsymError=RooArgSet()) ;
   void storeSummaryOutput(const RooArgSet& vars) ;
-  void storeDetailedOutput(TNamed& object) ;
+  void storeDetailedOutput(std::unique_ptr<TNamed> object) ;
   void aggregateSummaryOutput(TList* chunkList) ;
 
  private:

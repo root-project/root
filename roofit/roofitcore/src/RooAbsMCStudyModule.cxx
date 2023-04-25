@@ -31,12 +31,13 @@ summaryData() is merged with the 'master' summary dataset in RooMCStudy.
 Look at RooDLLSignificanceMCSModule for an example of an implementation.
 **/
 
-#include "RooAbsMCStudyModule.h"
+#include <RooAbsMCStudyModule.h>
+
+#include <RooFitResult.h>
 
 using namespace std;
 
 ClassImp(RooAbsMCStudyModule);
-  ;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -65,3 +66,6 @@ bool RooAbsMCStudyModule::doInitializeInstance(RooMCStudy& study)
   return initializeInstance() ;
 }
 
+RooFit::OwningPtr<RooFitResult> RooAbsMCStudyModule::refit(RooAbsData* inGenSample) {
+  if (_mcs) return _mcs->refit(inGenSample) ; else return nullptr ;
+}

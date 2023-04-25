@@ -2168,9 +2168,9 @@ std::string RooFactoryWSTool::SpecialsIFace::create(RooFactoryWSTool& ft, const 
 
     std::unique_ptr<RooAbsReal> cdf;
     if (pargv.size()==2) {
-      cdf.reset(pdf.createCdf(ft.asSET(pargv[1].c_str())));
+      cdf = std::unique_ptr<RooAbsReal>{pdf.createCdf(ft.asSET(pargv[1].c_str()))};
     } else {
-      cdf.reset(pdf.createCdf(ft.asSET(pargv[1].c_str()),ft.asSET(pargv[2].c_str())));
+      cdf = std::unique_ptr<RooAbsReal>{pdf.createCdf(ft.asSET(pargv[1].c_str()),ft.asSET(pargv[2].c_str()))};
     }
 
     cdf->SetName(instName) ;

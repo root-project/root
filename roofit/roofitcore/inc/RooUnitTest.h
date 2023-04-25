@@ -44,7 +44,7 @@ public:
   void setSilentMode() ;
   void clearSilentMode() ;
   void regPlot(RooPlot* frame, const char* refName) ;
-  void regResult(RooFitResult* r, const char* refName) ;
+  void regResult(std::unique_ptr<RooFitResult> r, const char* refName) ;
   void regValue(double value, const char* refName) ;
   void regTable(RooTable* t, const char* refName) ;
   void regWS(RooWorkspace* ws, const char* refName) ;
