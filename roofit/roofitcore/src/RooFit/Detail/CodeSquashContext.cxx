@@ -207,10 +207,8 @@ std::string CodeSquashContext::saveListAsArray(RooListProxy const &in, std::stri
 
    std::stringstream declStrm;
    declStrm << "double " << savedName << "[" << in.size() << "] = {";
-   int idx = 0;
    for (const auto arg : in) {
       declStrm << getResult(*arg) << ",";
-      idx++;
       canSaveOutside = canSaveOutside && !arg->isReducerNode() && outputSize(arg->namePtr()) == 1;
    }
    declStrm.seekp(-1, declStrm.cur);
