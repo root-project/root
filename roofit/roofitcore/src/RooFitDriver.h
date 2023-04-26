@@ -89,8 +89,6 @@ private:
 
    // RAII structures to reset state of computation graph after driver destruction
    std::stack<RooHelpers::ChangeOperModeRAII> _changeOperModeRAIIs;
-
-   std::vector<std::unique_ptr<RooAbsData>> _splittedDataSets;
 };
 
 } // end namespace Experimental
