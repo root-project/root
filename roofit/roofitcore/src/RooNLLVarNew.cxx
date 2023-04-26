@@ -309,11 +309,7 @@ void RooNLLVarNew::translate(RooFit::Detail::CodeSquashContext &ctx) const
    // brackets of the loop is written at the end of the scopes lifetime.
    {
       auto scope = ctx.beginLoop(this);
-
-      std::string tmpName = className + "Temp";
-      std::string code = "double " + tmpName + ";\n";
-      code += tmpName + " = std::log(" + ctx.getResult(_pdf.arg()) + ");\n";
-      code += resName + " -= " + ctx.getResult(_weightVar.arg()) + " * " + tmpName + ";\n";
-      ctx.addToCodeBody(code);
+      ctx.addToCodeBody(resName + " -= " + ctx.getResult(_weightVar.arg()) + " * std::log(" +
+                        ctx.getResult(_pdf.arg()) + ");\n");
    }
 }
