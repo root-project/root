@@ -54,6 +54,7 @@ enum Computer {
    DstD0BG,
    Exponential,
    Gamma,
+   GaussModelExpBasis,
    Gaussian,
    Identity,
    Johnson,
