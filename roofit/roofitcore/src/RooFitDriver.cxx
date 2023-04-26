@@ -186,54 +186,9 @@ RooFitDriver::RooFitDriver(const RooAbsReal &absReal, RooFit::BatchModeOption ba
 void RooFitDriver::setData(RooAbsData const &data, std::string const &rangeName, RooSimultaneous const *simPdf,
                            bool skipZeroWeights, bool takeGlobalObservablesFromData)
 {
-   std::vector<std::pair<std::string, RooAbsData const *>> datas;
-   std::vector<bool> isBinnedL;
-   bool splitRange = false;
-
-   if (simPdf) {
-      _splittedDataSets.clear();
-      std::unique_ptr<TList> splits{data.split(*simPdf, true)};
-      for (auto *d : static_range_cast<RooAbsData *>(*splits)) {
-         RooAbsPdf *simComponent = simPdf->getPdf(d->GetName());
-         // If there is no PDF for that component, we also don't need to fill the data
-         if (!simComponent) {
-            continue;
-         }
-         datas.emplace_back(std::string("_") + d->GetName() + "_", d);
-         isBinnedL.emplace_back(simComponent->getAttribute("BinnedLikelihoodActive"));
-         // The dataset need to be kept alive because the datamap points to their content
-         _splittedDataSets.emplace_back(d);
-      }
-      splitRange = simPdf->getAttribute("SplitRange");
-   } else {
-      datas.emplace_back("", &data);
-      isBinnedL.emplace_back(false);
-   }
-
-   DataSpansMap dataSpans;
-
    std::stack<std::vector<double>>{}.swap(_vectorBuffers);
-
-   for (std::size_t iData = 0; iData < datas.size(); ++iData) {
-      auto const &toAdd = datas[iData];
-      DataSpansMap spans = RooFit::BatchModeDataHelpers::getDataSpans(
-         *toAdd.second, RooHelpers::getRangeNameForSimComponent(rangeName, splitRange, toAdd.second->GetName()),
-         toAdd.first, _vectorBuffers, skipZeroWeights && !isBinnedL[iData]);
-      for (auto const &item : spans) {
-         dataSpans.insert(item);
-      }
-   }
-
-   if (takeGlobalObservablesFromData && data.getGlobalObservables()) {
-      _vectorBuffers.emplace();
-      auto &buffer = _vectorBuffers.top();
-      buffer.reserve(data.getGlobalObservables()->size());
-      for (auto *arg : static_range_cast<RooRealVar const *>(*data.getGlobalObservables())) {
-         buffer.push_back(arg->getVal());
-         dataSpans[arg] = RooSpan<const double>{&buffer.back(), 1};
-      }
-   }
-   setData(dataSpans);
+   setData(RooFit::BatchModeDataHelpers::getDataSpans(data, rangeName, simPdf, skipZeroWeights,
+                                                      takeGlobalObservablesFromData, _vectorBuffers));
 }
 
 void RooFitDriver::setData(DataSpansMap const &dataSpans)
