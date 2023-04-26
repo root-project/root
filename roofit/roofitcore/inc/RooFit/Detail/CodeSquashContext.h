@@ -14,10 +14,9 @@
 #ifndef RooFit_Detail_CodeSquashContext_h
 #define RooFit_Detail_CodeSquashContext_h
 
+#include <RooAbsCollection.h>
 #include <RooFit/Detail/DataMap.h>
 #include <RooNumber.h>
-#include <RooCollectionProxy.h>
-#include <RooArgList.h>
 
 #include <sstream>
 #include <string>
@@ -38,11 +37,7 @@ public:
    {
    }
 
-   inline void addResult(RooAbsArg const *key, std::string const &value)
-   {
-      addResult(key->namePtr(), saveAsTemp(key, value));
-   }
-
+   void addResult(RooAbsArg const *key, std::string const &value);
    void addResult(const char *key, std::string const &value);
 
    std::string const &getResult(RooAbsArg const &arg);
@@ -107,10 +102,6 @@ public:
 
    std::string getTmpVarName();
 
-   std::string saveAsTemp(RooAbsArg const *in, std::string const &valueToSave, std::string name = "");
-
-   std::string saveListAsArray(RooListProxy const &in, std::string name = "");
-
 private:
    void endLoop(LoopScope const &scope);
 
@@ -126,7 +117,7 @@ private:
 
    std::string buildArg(std::string const &x) { return x; }
 
-   std::string buildArg(RooAbsCollection const &x) { return saveListAsArray(static_cast<RooListProxy const &>(x)); }
+   std::string buildArg(RooAbsCollection const &x);
 
    std::string buildArg(RooAbsArg const &arg) { return getResult(arg); }
 
@@ -169,7 +160,7 @@ private:
    /// @brief Stores code that eventually gets injected into main code body.
    /// Mainly used for placing decls outside of loops.
    std::string _tempScope;
-   /// @brief A map to keep track of list names as assigned by saveAsTemp.
+   /// @brief A map to keep track of list names as assigned by addResult.
    std::unordered_map<RooFit::UniqueId<RooAbsCollection>::Value_t, std::string> listNames;
 };
 
