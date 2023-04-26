@@ -61,6 +61,8 @@ public:
 
   void computeBatch(cudaStream_t*, double* output, size_t size, RooFit::Detail::DataMap const&) const override;
 
+  bool canComputeBatchWithCuda() const override { return getBasisType(_basisCode) == expBasis; }
+
 protected:
 
   double evaluate() const override ;
@@ -68,6 +70,13 @@ protected:
 
   // Calculate common normalization factors
   std::complex<double> evalCerfInt(double sign, double wt, double tau, double umin, double umax, double c) const;
+
+private:
+
+  static BasisType getBasisType(int basisCode)
+  {
+    return static_cast<BasisType>(basisCode == 0 ? 0 : (basisCode / 10) + 1);
+  }
 
   bool _flatSFInt ;
 
