@@ -12,22 +12,15 @@
  */
 
 #include <RooAbsPdf.h>
-#include <RooAddition.h>
-#include <RooAddPdf.h>
-#include <RooChebychev.h>
-#include <RooConstVar.h>
 #include <RooDataSet.h>
 #include <RooDataHist.h>
 #include <RooFitResult.h>
-#include <RooExponential.h>
 #include <RooFuncWrapper.h>
-#include <RooGaussian.h>
 #include <RooHelpers.h>
 #include <RooMinimizer.h>
-#include <RooProduct.h>
-#include <RooPolyVar.h>
 #include <RooRealVar.h>
 #include <RooRandom.h>
+#include <RooWorkspace.h>
 
 #include <TROOT.h>
 #include <TSystem.h>
@@ -35,7 +28,7 @@
 #include <Math/Factory.h>
 #include <Math/Minimizer.h>
 
-#include "gtest/gtest.h"
+#include <gtest/gtest.h>
 
 namespace {
 
@@ -78,12 +71,16 @@ void randomizeParameters(const RooArgSet &parameters, ULong_t seed = 0)
 TEST(RooFuncWrapper, GaussianNormalizedHardcoded)
 {
    using namespace RooFit;
-
    auto inf = std::numeric_limits<double>::infinity();
-   RooRealVar x("x", "x", 0, -inf, inf);
-   RooRealVar mu("mu", "mu", 0, -10, 10);
-   RooRealVar sigma("sigma", "sigma", 2.0, 0.01, 10);
-   RooGaussian gauss{"gauss", "gauss", x, mu, sigma};
+
+   RooWorkspace ws;
+   ws.import(RooRealVar{"x", "x", 0, -inf, inf});
+   ws.factory("Gaussian::gauss(x, mu[0, -10, 10], sigma[2.0, 0.01, 10])");
+
+   RooAbsPdf &gauss = *ws.pdf("gauss");
+   RooRealVar &x = *ws.var("x");
+   RooRealVar &mu = *ws.var("mu");
+   RooRealVar &sigma = *ws.var("sigma");
 
    RooArgSet normSet{x};
    RooArgSet paramsGauss;
@@ -121,17 +118,15 @@ TEST(RooFuncWrapper, GaussianNormalizedHardcoded)
 
 TEST(RooFuncWrapper, GaussianNormalized)
 {
-   RooRealVar x("x", "x", 0, -10, std::numeric_limits<double>::infinity());
+   RooWorkspace ws;
+   ws.import(RooRealVar{"x", "x", 0, -10, std::numeric_limits<double>::infinity()});
+   ws.factory("sum::mu_shifted(mu[0, -10, 10], shift[1.0, -10, 10])");
+   ws.factory("prod::sigma_scaled(sigma[2.0, 0.01, 10], 1.5)");
+   ws.factory("Gaussian::gauss(x, mu_shifted, sigma_scaled)");
 
-   RooRealVar mu("mu", "mu", 0, -10, 10);
-   RooRealVar shift("shift", "shift", 1.0, -10, 10);
-   RooAddition muShifted("mu_shifted", "mu_shifted", {mu, shift});
-
-   RooRealVar sigma("sigma", "sigma", 2.0, 0.01, 10);
-   RooConstVar scale("scale", "scale", 1.5);
-   RooProduct sigmaScaled("sigma_scaled", "sigma_scaled", sigma, scale);
-
-   RooGaussian gauss{"gauss", "gauss", x, muShifted, sigmaScaled};
+   RooAbsPdf &gauss = *ws.pdf("gauss");
+   RooRealVar &x = *ws.var("x");
+   RooRealVar &mu = *ws.var("mu");
 
    RooArgSet normSet{x};
 
@@ -158,10 +153,11 @@ TEST(RooFuncWrapper, GaussianNormalized)
 
 TEST(RooFuncWrapper, Exponential)
 {
-   RooRealVar x("x", "x", 1.0, 0, 10);
-   RooRealVar c("c", "c", 0.1, 0, 10);
+   RooWorkspace ws;
+   ws.factory("Exponential::expo(x[1.0, 0, 10], c[0.1, 0, 10])");
 
-   RooExponential expo("expo", "expo", x, c);
+   RooAbsPdf &expo = *ws.pdf("expo");
+   RooRealVar &x = *ws.var("x");
 
    RooArgSet normSet{x};
 
@@ -183,28 +179,26 @@ TEST(RooFuncWrapper, Exponential)
    }
 }
 
+/// Initial test for NLL minimization that was not based on any other tutorial/test.
 TEST(RooFuncWrapper, Nll)
 {
    RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
 
-   RooRealVar x("x", "x", 0, -10, 10);
+   RooWorkspace ws;
+   ws.factory("sum::mu_shifted(mu[0, -10, 10], shift[1.0, -10, 10])");
+   ws.factory("prod::sigma_scaled(sigma[3.0, 0.01, 10], 1.5)");
+   ws.factory("Gaussian::gauss(x[0, -10, 10], mu_shifted, sigma_scaled)");
 
-   RooRealVar mu("mu", "mu", 0, -10, 10);
-   RooRealVar shift("shift", "shift", 1.0, -10, 10);
-   RooAddition muShifted("mu_shifted", "mu_shifted", {mu, shift});
-
-   RooRealVar sigma("sigma", "sigma", 3.0, 0.01, 10);
-   RooConstVar scale("scale", "scale", 1.5);
-   RooProduct sigmaScaled("sigma_scaled", "sigma_scaled", sigma, scale);
-
-   RooGaussian gauss{"gauss", "gauss", x, muShifted, sigmaScaled};
+   RooAbsPdf &pdf = *ws.pdf("gauss");
+   RooRealVar &x = *ws.var("x");
+   RooRealVar &mu = *ws.var("mu");
 
    RooArgSet normSet{x};
 
    std::size_t nEvents = 10;
-   std::unique_ptr<RooDataSet> data0{gauss.generate(x, nEvents)};
+   std::unique_ptr<RooDataSet> data0{pdf.generate(x, nEvents)};
    std::unique_ptr<RooAbsData> data{data0->binnedClone()};
-   std::unique_ptr<RooAbsReal> nllRef{gauss.createNLL(*data, RooFit::BatchMode("cpu"))};
+   std::unique_ptr<RooAbsReal> nllRef{pdf.createNLL(*data, RooFit::BatchMode("cpu"))};
    auto nllRefResolved = static_cast<RooAbsReal *>(nllRef->servers()[0]);
 
    RooFuncWrapper nllFunc("myNll", "myNll", *nllRefResolved, normSet, data.get());
@@ -269,29 +263,29 @@ TEST(RooFuncWrapper, Nll)
    EXPECT_TRUE(resultAd->isIdentical(*resultRef, 1e-4));
 }
 
+/// Test based on the rf301 tutorial.
 TEST(RooFuncWrapper, NllPolyVar)
 {
+   using namespace RooFit;
+
    RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
 
-   RooRealVar x("x", "x", -5, 5);
-   RooRealVar y("y", "y", -5, 5);
-
-   // Create function f(y) = a0 + a1*y
-   RooRealVar a0("a0", "a0", -0.5, -5, 5);
-   RooRealVar a1("a1", "a1", -0.5, -1, 1);
-   RooPolyVar fy("fy", "fy", y, RooArgSet(a0, a1, y));
-
+   RooWorkspace ws;
+   // Create function f(y) = a0 + a1*y + y*y*y
+   ws.factory("PolyVar::fy(y[-5, 5], {a0[-0.5, -5, 5], a1[-0.5, -1, 1], y})");
    // Create gauss(x,f(y),s)
-   RooRealVar sigma("sigma", "width of gaussian", 0.5, 0.01, 10);
-   RooGaussian gauss("gauss", "Gaussian with shifting mean", x, fy, sigma);
+   ws.factory("Gaussian::gauss(x[-5, 5], fy, sigma[0.5, 0.01, 10])");
+
+   RooRealVar &x = *ws.var("x");
+   RooRealVar &y = *ws.var("y");
+   RooAbsPdf &pdf = *ws.pdf("gauss");
 
    RooArgSet normSet{x};
 
    std::size_t nEvents = 10;
-   std::unique_ptr<RooDataSet> data0{gauss.generate({x, y}, nEvents)};
+   std::unique_ptr<RooDataSet> data0{pdf.generate({x, y}, nEvents)};
    std::unique_ptr<RooAbsData> data{data0->binnedClone()};
-   std::unique_ptr<RooAbsReal> nllRef{
-      gauss.createNLL(*data, RooFit::ConditionalObservables(y), RooFit::BatchMode("cpu"))};
+   std::unique_ptr<RooAbsReal> nllRef{pdf.createNLL(*data, ConditionalObservables(y), BatchMode("cpu"))};
    auto nllRefResolved = static_cast<RooAbsReal *>(nllRef->servers()[0]);
 
    RooFuncWrapper nllFunc("myNllPolyVar", "myNllPolyVar", *nllRefResolved, normSet, data.get());
@@ -356,31 +350,20 @@ TEST(RooFuncWrapper, NllPolyVar)
    EXPECT_TRUE(resultAd->isIdentical(*resultRef, 1e-4));
 }
 
+/// Test based on the rf201 tutorial.
 TEST(RooFuncWrapper, NllAddPdf)
 {
    RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
-   RooRealVar x("x", "x", 0, 10);
 
-   // Create two Gaussian PDFs g1(x,mean1,sigma) anf g2(x,mean2,sigma) and their parameters
-   RooRealVar mean("mean", "mean of gaussians", 5, -10, 10);
-   RooRealVar sigma1("sigma1", "width of gaussians", 0.50, .01, 10);
-   RooRealVar sigma2("sigma2", "width of gaussians", 5, .01, 10);
+   RooWorkspace ws;
+   ws.factory("Gaussian::sig1(x[0, 10], mean[5, -10, 10], sigma1[0.50, .01, 10])");
+   ws.factory("Gaussian::sig2(x, mean, sigma2[5, .01, 10])");
+   ws.factory("Chebychev::bkg(x, {a0[0.3, 0., 0.5], a1[0.2, 0., 0.5]})");
+   ws.factory("SUM::sig(sig1frac[0.8, 0.0, 1.0] * sig1, sig2)");
+   ws.factory("SUM::model(bkgfrac[0.5, 0.0, 1.0] * bkg, sig)");
 
-   RooGaussian sig1("sig1", "Signal component 1", x, mean, sigma1);
-   RooGaussian sig2("sig2", "Signal component 2", x, mean, sigma2);
-
-   // Build Chebychev polynomial pdf
-   RooRealVar a0("a0", "a0", 0.3, 0., 0.5);
-   RooRealVar a1("a1", "a1", 0.2, 0., 0.5);
-   RooChebychev bkg("bkg", "Background", x, RooArgSet(a0, a1));
-
-   // Sum the signal components into a composite signal pdf
-   RooRealVar sig1frac("sig1frac", "fraction of component 1 in signal", 0.8, 0., 1.);
-   RooAddPdf sig("sig", "Signal", RooArgList(sig1, sig2), sig1frac);
-
-   // Sum the composite signal and background
-   RooRealVar bkgfrac("bkgfrac", "fraction of background", 0.5, 0., 1.);
-   RooAddPdf model("model", "g1+g2+a", RooArgList(bkg, sig), bkgfrac);
+   RooRealVar &x = *ws.var("x");
+   RooAbsPdf &model = *ws.pdf("model");
 
    RooArgSet normSet{x};
 
