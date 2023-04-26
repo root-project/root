@@ -1,15 +1,15 @@
 /*
  * Project: RooFit
  *
- * Copyright (c) 2022, CERN
+ * Copyright (c) 2023, CERN
  *
  * Redistribution and use in source and binary forms,
  * with or without modification, are permitted according to the terms
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)
  */
 
-#ifndef roofit_batchcompute_faddeeva_impl_h 
-#define roofit_batchcompute_faddeeva_impl_h 
+#ifndef ROOFIT_BATCHCOMPUTE_ROOHETEROGENEOUSMATH_H
+#define ROOFIT_BATCHCOMPUTE_ROOHETEROGENEOUSMATH_H
 
 #include <RooBatchComputeTypes.h>
 #include <RooBatchCompute.h>
@@ -19,7 +19,23 @@
 #include <complex>
 #include <iostream>
 
-namespace faddeeva_impl {
+#if defined(__CUDACC__)
+#include <cuda/std/complex>
+#else
+#include <complex>
+#endif
+
+namespace RooHeterogeneousMath {
+
+// The C++ std::complex type operators don't work on the GPU (silently gives
+// wrong results). But if we use the cuda::std:: namespace, all the math
+// operations work again.
+#if defined(__CUDACC__)
+namespace STD = cuda::std;
+#else
+namespace STD = std;
+#endif
+
 __roodevice__ __roohost__ static inline void cexp(double& re, double& im)
     {
    // with gcc on unix machines and on x86_64, we can gain by hand-coding
@@ -103,7 +119,7 @@ __roodevice__ __roohost__ static inline void cexp(double& re, double& im)
     }
 
     template <class T, unsigned N, unsigned NTAYLOR, unsigned NCF>
-__roodevice__ __roohost__ static inline std::complex<T> faddeeva_smabmq_impl(
+__roodevice__ __roohost__ static inline STD::complex<T> faddeeva_smabmq_impl(
        T zre, T zim, const T tm,
        const T (&a)[N], const T (&npi)[N],
        const T (&taylorarr)[N * NTAYLOR * 2])
@@ -144,8 +160,8 @@ __roodevice__ __roohost__ static inline std::complex<T> faddeeva_smabmq_impl(
          sumim = im + coeffs[2 * i + 1];
           }
           // undo the flip in real part of z if needed
-          if (negrez) return std::complex<T>(sumre, -sumim);
-          else return std::complex<T>(sumre, sumim);
+          if (negrez) return STD::complex<T>(sumre, -sumim);
+          else return STD::complex<T>(sumre, sumim);
       }
        }
    }
@@ -176,18 +192,18 @@ __roodevice__ __roohost__ static inline std::complex<T> faddeeva_smabmq_impl(
       // use erfc(-z) = 2 - erfc(z) to get good accuracy for
       // Im(z) < 0: 2 / exp(z^2) - w(z)
       T ez2re = -z2re, ez2im = -z2im;
-      faddeeva_impl::cexp(ez2re, ez2im);
-      return std::complex<T>(T(2) * ez2re - sumre,
+      RooHeterogeneousMath::cexp(ez2re, ez2im);
+      return STD::complex<T>(T(2) * ez2re - sumre,
          T(2) * ez2im - sumim);
        } else {
-      return std::complex<T>(sumre, sumim);
+      return STD::complex<T>(sumre, sumim);
        }
    }
    const T twosqrtpi = 3.54490770181103205e+00;
    const T tmzre = tm * zre, tmzim = tm * zim;
    // calculate exp(i tm z)
    T eitmzre = -tmzim, eitmzim = tmzre;
-   faddeeva_impl::cexp(eitmzre, eitmzim);
+   RooHeterogeneousMath::cexp(eitmzre, eitmzim);
    // form 1 +/- exp (i tm z)
    const T numerarr[4] = {
        T(1) - eitmzre, -eitmzim, T(1) + eitmzre, +eitmzim
@@ -265,11 +281,11 @@ __roodevice__ __roohost__ static inline std::complex<T> faddeeva_smabmq_impl(
        const T z2im = -T(2) * zre * zim;
        const T z2re = -(zre + zim) * (zre - zim);
        T ez2re = z2re, ez2im = z2im;
-       faddeeva_impl::cexp(ez2re, ez2im);
-       return std::complex<T>(T(2) * ez2re + sumim / twosqrtpi,
+       RooHeterogeneousMath::cexp(ez2re, ez2im);
+       return STD::complex<T>(T(2) * ez2re + sumim / twosqrtpi,
           T(2) * ez2im - sumre / twosqrtpi);
    } else {
-       return std::complex<T>(-sumim / twosqrtpi, sumre / twosqrtpi);
+       return STD::complex<T>(-sumim / twosqrtpi, sumre / twosqrtpi);
    }
     }
 
@@ -525,19 +541,55 @@ __roodevice__ static const double taylorarr24[24 * 12] = {
     2.00739683204152177e-07,  1.48879348585662670e-01
     };
 
-    __roodevice__ __roohost__ inline std::complex<double> faddeeva(std::complex<double> z)
+    __roodevice__ __roohost__ inline STD::complex<double> faddeeva(STD::complex<double> z)
     {
-        return faddeeva_impl::faddeeva_smabmq_impl<double, 24, 6, 9>(
-           z.real(), z.imag(), 12., faddeeva_impl::a24,
-           faddeeva_impl::npi24, faddeeva_impl::taylorarr24);
+        return RooHeterogeneousMath::faddeeva_smabmq_impl<double, 24, 6, 9>(
+           z.real(), z.imag(), 12., RooHeterogeneousMath::a24,
+           RooHeterogeneousMath::npi24, RooHeterogeneousMath::taylorarr24);
     }
 
-    __roodevice__ __roohost__ inline std::complex<double> faddeeva_fast(std::complex<double> z)
+    __roodevice__ __roohost__ inline STD::complex<double> faddeeva_fast(STD::complex<double> z)
     {
-        return faddeeva_impl::faddeeva_smabmq_impl<double, 11, 3, 3>(
-           z.real(), z.imag(), 8., faddeeva_impl::a11,
-           faddeeva_impl::npi11, faddeeva_impl::taylorarr11);
+        return RooHeterogeneousMath::faddeeva_smabmq_impl<double, 11, 3, 3>(
+           z.real(), z.imag(), 8., RooHeterogeneousMath::a11,
+           RooHeterogeneousMath::npi11, RooHeterogeneousMath::taylorarr11);
     }
+
+////////////////////////////////////////////////////////////////////////////////
+/// use the approximation: erf(z) = exp(-z*z)/(STD::sqrt(pi)*z)
+/// to explicitly cancel the divergent exp(y*y) behaviour of
+/// CWERF for z = x + i y with large negative y
+
+__roohost__ __roodevice__ STD::complex<double> evalCerfApprox(double _x, double u, double c)
+{
+   const double rootpi = STD::sqrt(STD::atan2(0., -1.));
+   const STD::complex<double> z(_x * c, u + c);
+   const STD::complex<double> zc(u + c, -_x * c);
+   const STD::complex<double> zsq((z.real() + z.imag()) * (z.real() - z.imag()), 2. * z.real() * z.imag());
+   const STD::complex<double> v(-zsq.real() - u * u, -zsq.imag());
+   const STD::complex<double> ev = STD::exp(v);
+   const STD::complex<double> mez2zcrootpi = -STD::exp(zsq) / (zc * rootpi);
+
+   return 2. * (ev * (mez2zcrootpi + 1.));
+}
+
+// Calculate exp(-u^2) cwerf(swt*c + i(u+c)), taking care of numerical instabilities
+__roohost__ __roodevice__ inline STD::complex<double> evalCerf(double swt, double u, double c)
+{
+   if (swt == 0.0) {
+      // For a purely complex argument z, the faddeeva function equals to
+      // exp(z*z) * erfc(z). Together with coefficient exp(-u*u), this means the
+      // function can be simplified to:
+      const double z = u + c;
+      return z > -4.0 ? (STD::exp(c * (c + 2. * u)) * STD::erfc(z)) : evalCerfApprox(0., u, c);
+      // This version with STD::erfc is about twice as fast as the faddeeva_fast
+      // code path, speeding up in particular the analytical convolution of an
+      // exponential decay with a Gaussian (like in RooDecay).
+   }
+   STD::complex<double> z(swt*c,u+c);
+   return (z.imag()>-4.0) ? (STD::exp(-u*u)*faddeeva_fast(z)) : evalCerfApprox(swt,u,c);
+}
+
 }
 
 #endif

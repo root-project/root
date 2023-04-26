@@ -28,52 +28,16 @@ for analytical convolutions with classes inheriting from RooAbsAnaConvPdf
 #include "RooMath.h"
 #include "RooRealConstant.h"
 #include "RooRandom.h"
+#include "RooBatchCompute.h"
 
 #include "TError.h"
 
-
-namespace {
-
-////////////////////////////////////////////////////////////////////////////////
-/// use the approximation: erf(z) = exp(-z*z)/(std::sqrt(pi)*z)
-/// to explicitly cancel the divergent exp(y*y) behaviour of
-/// CWERF for z = x + i y with large negative y
-
-std::complex<double> evalCerfApprox(double _x, double u, double c)
-{
-  static const double rootpi= std::sqrt(std::atan2(0.,-1.));
-  const std::complex<double> z(_x * c, u + c);
-  const std::complex<double> zc(u + c, - _x * c);
-  const std::complex<double> zsq((z.real() + z.imag()) * (z.real() - z.imag()),
-     2. * z.real() * z.imag());
-  const std::complex<double> v(-zsq.real() - u*u, -zsq.imag());
-  const std::complex<double> ev = std::exp(v);
-  const std::complex<double> mez2zcrootpi = -std::exp(zsq)/(zc*rootpi);
-
-  return 2. * (ev * (mez2zcrootpi + 1.));
-}
-
-// Calculate exp(-u^2) cwerf(swt*c + i(u+c)), taking care of numerical instabilities
-inline std::complex<double> evalCerf(double swt, double u, double c)
-{
-  if(swt == 0.0) {
-    // For a purely complex argument z, the faddeeva function equals to
-    // exp(z*z) * erfc(z). Together with coefficient exp(-u*u), this means the
-    // function can be simplified to:
-    const double z = u + c;
-    return z > -4.0 ? (std::exp(c * (c + 2.*u)) * std::erfc(z)) : evalCerfApprox(0.,u,c);
-    // This version with std::erfc is about twice as fast as the faddeeva_fast
-    // code path, speeding up in particular the analytical convolution of an
-    // exponential decay with a Gaussian (like in RooDecay).
-  }
-  std::complex<double> z(swt*c,u+c);
-  return (z.imag()>-4.0) ? (std::exp(-u*u)*RooMath::faddeeva_fast(z)) : evalCerfApprox(swt,u,c);
-}
-
-} // namespace
-
+#include <RooHeterogeneousMath.h>
 
 using namespace std;
+
+using RooHeterogeneousMath::evalCerf;
+using RooHeterogeneousMath::evalCerfApprox;
 
 ClassImp(RooGaussModel);
 
@@ -191,6 +155,22 @@ void RooGaussModel::computeBatch(cudaStream_t *stream, double *output, size_t si
    auto param1Vals = param1 ? dataMap.at(param1) : RooSpan<const double>{&zeroVal, 1};
    auto param2Vals = param2 ? dataMap.at(param2) : RooSpan<const double>{&zeroVal, 1};
 
+   BasisType basisType = getBasisType(_basisCode);
+   double basisSign = _basisCode - 10 * (basisType - 1) - 2;
+
+   auto dispatch = stream ? RooBatchCompute::dispatchCUDA : RooBatchCompute::dispatchCPU;
+
+   // We have an implementation also for CUDA right now only for the most used
+   // basis type, which is expBasis. If the need to support other basis types
+   // arises, they can be implemented following this example. Remember to also
+   // adapt RooGaussModel::canComputeBatchWithCuda().
+   if (basisType == expBasis) {
+      RooBatchCompute::ArgVector extraArgs{basisSign};
+      dispatch->compute(stream, RooBatchCompute::GaussModelExpBasis, output, size,
+                        {xVals, meanVals, meanSfVals, sigmaVals, sigmaSfVals, param1Vals}, extraArgs);
+      return;
+   }
+
    // For now, if the arrays don't have the expected input shape, fall back to the scalar mode
    if (xVals.size() != size || meanVals.size() != 1 || meanSfVals.size() != 1 || sigmaVals.size() != 1 ||
        sigmaSfVals.size() != 1 || param1Vals.size() != 1 || param2Vals.size() != 1) {
@@ -210,7 +190,7 @@ double RooGaussModel::evaluate(double x, double mean, double sigma, double param
   static double root2pi(std::sqrt(2.*std::atan2(0.,-1.))) ;
   static double rootpi(std::sqrt(std::atan2(0.,-1.))) ;
 
-  BasisType basisType = (BasisType)( (basisCode == 0) ? 0 : (basisCode/10) + 1 );
+  BasisType basisType = getBasisType(basisCode);
   BasisSign basisSign = (BasisSign)( basisCode - 10*(basisType-1) - 2 ) ;
 
   double tau = (basisCode!=noBasis) ? param1 : 0.0;

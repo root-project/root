@@ -30,9 +30,7 @@ https://developer.nvidia.com/blog/cuda-pro-tip-write-flexible-kernels-grid-strid
 
 #include <TMath.h>
 
-#include <complex>
-
-#include "faddeeva_impl.h"
+#include <RooHeterogeneousMath.h>
 
 #ifdef __CUDACC__
 #define BEGIN blockDim.x *blockIdx.x + threadIdx.x
@@ -342,9 +340,49 @@ __rooglobal__ void computeGamma(BatchesHandle batches)
       }
 }
 
+__rooglobal__ void computeGaussModelExpBasis(BatchesHandle batches)
+{
+   const double root2 = std::sqrt(2.);
+   const double root2pi = std::sqrt(2. * std::atan2(0., -1.));
+
+   const bool isMinus = batches.extraArg(0) < 0.0;
+   const bool isPlus = batches.extraArg(0) > 0.0;
+
+   for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
+
+      const double x = batches[0][i];
+      const double mean = batches[1][i] * batches[2][i];
+      const double sigma = batches[3][i] * batches[4][i];
+      const double tau = batches[5][i];
+
+      if (tau == 0.0) {
+         // Straight Gaussian, used for unconvoluted PDF or expBasis with 0 lifetime
+         double xprime = (x - mean) / sigma;
+         double result = std::exp(-0.5 * xprime * xprime) / (sigma * root2pi);
+         if (!isMinus && !isPlus)
+            result *= 2;
+         batches._output[i] = result;
+      } else {
+         // Convolution with exp(-t/tau)
+         const double xprime = (x - mean) / tau;
+         const double c = sigma / (root2 * tau);
+         const double u = xprime / (2 * c);
+
+         double result = 0.0;
+         if (!isMinus)
+            result += RooHeterogeneousMath::evalCerf(0, -u, c).real();
+         if (!isPlus)
+            result += RooHeterogeneousMath::evalCerf(0, u, c).real();
+         batches._output[i] = result;
+      }
+   }
+}
+
 __rooglobal__ void computeGaussian(BatchesHandle batches)
 {
-   auto x = batches[0], mean = batches[1], sigma = batches[2];
+   auto x = batches[0];
+   auto mean = batches[1];
+   auto sigma = batches[2];
    for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
       const double arg = x[i] - mean[i];
       const double halfBySigmaSq = -0.5 / (sigma[i] * sigma[i]);
@@ -738,8 +776,9 @@ __rooglobal__ void computeVoigtian(BatchesHandle batches)
          if (batches._output[i] < 0)
             batches._output[i] = -batches._output[i];
          const double factor = W[i] > 0.0 ? 0.5 : -0.5;
-         std::complex<double> z(batches._output[i] * (X[i] - M[i]), factor * batches._output[i] * W[i]);
-         batches._output[i] *= faddeeva_impl::faddeeva(z).real();
+         RooHeterogeneousMath::STD::complex<double> z(batches._output[i] * (X[i] - M[i]),
+                                                      factor * batches._output[i] * W[i]);
+         batches._output[i] *= RooHeterogeneousMath::faddeeva(z).real();
       }
    }
 }
@@ -761,6 +800,7 @@ std::vector<void (*)(BatchesHandle)> getFunctions()
            computeDstD0BG,
            computeExponential,
            computeGamma,
+           computeGaussModelExpBasis,
            computeGaussian,
            computeIdentity,
            computeJohnson,
