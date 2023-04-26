@@ -13,6 +13,8 @@
 
 #include <RooAbsPdf.h>
 #include <RooAddition.h>
+#include <RooAddPdf.h>
+#include <RooChebychev.h>
 #include <RooConstVar.h>
 #include <RooDataSet.h>
 #include <RooDataHist.h>
@@ -25,6 +27,7 @@
 #include <RooProduct.h>
 #include <RooPolyVar.h>
 #include <RooRealVar.h>
+#include <RooRandom.h>
 
 #include <TROOT.h>
 #include <TSystem.h>
@@ -53,6 +56,21 @@ double getNumDerivative(const RooAbsReal &pdf, RooRealVar &var, const RooArgSet 
    var.setVal(orig);
 
    return (plus - minus) / (2 * eps);
+}
+
+void randomizeParameters(const RooArgSet &parameters, ULong_t seed = 0)
+{
+   auto random = RooRandom::randomGenerator();
+   if (seed != 0)
+      random->SetSeed(seed);
+
+   for (auto param : parameters) {
+      auto par = static_cast<RooAbsRealLValue *>(param);
+      const double uni = random->Uniform();
+      const double min = par->getMin();
+      const double max = par->getMax();
+      par->setVal(min + uni * (max - min));
+   }
 }
 
 } // namespace
@@ -336,4 +354,99 @@ TEST(RooFuncWrapper, NllPolyVar)
    // Compare minimization results
    EXPECT_TRUE(result->isIdentical(*resultRef, 1e-4));
    EXPECT_TRUE(resultAd->isIdentical(*resultRef, 1e-4));
+}
+
+TEST(RooFuncWrapper, NllAddPdf)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+   RooRealVar x("x", "x", 0, 10);
+
+   // Create two Gaussian PDFs g1(x,mean1,sigma) anf g2(x,mean2,sigma) and their parameters
+   RooRealVar mean("mean", "mean of gaussians", 5, -10, 10);
+   RooRealVar sigma1("sigma1", "width of gaussians", 0.50, .01, 10);
+   RooRealVar sigma2("sigma2", "width of gaussians", 5, .01, 10);
+
+   RooGaussian sig1("sig1", "Signal component 1", x, mean, sigma1);
+   RooGaussian sig2("sig2", "Signal component 2", x, mean, sigma2);
+
+   // Build Chebychev polynomial pdf
+   RooRealVar a0("a0", "a0", 0.3, 0., 0.5);
+   RooRealVar a1("a1", "a1", 0.2, 0., 0.5);
+   RooChebychev bkg("bkg", "Background", x, RooArgSet(a0, a1));
+
+   // Sum the signal components into a composite signal pdf
+   RooRealVar sig1frac("sig1frac", "fraction of component 1 in signal", 0.8, 0., 1.);
+   RooAddPdf sig("sig", "Signal", RooArgList(sig1, sig2), sig1frac);
+
+   // Sum the composite signal and background
+   RooRealVar bkgfrac("bkgfrac", "fraction of background", 0.5, 0., 1.);
+   RooAddPdf model("model", "g1+g2+a", RooArgList(bkg, sig), bkgfrac);
+
+   RooArgSet normSet{x};
+
+   std::size_t nEvents = 10;
+   std::unique_ptr<RooDataSet> data0{model.generate({x}, nEvents)};
+   std::unique_ptr<RooAbsData> data{data0->binnedClone()};
+   std::unique_ptr<RooAbsReal> nllRef{model.createNLL(*data, RooFit::BatchMode("cpu"))};
+   auto nllRefResolved = static_cast<RooAbsReal *>(nllRef->servers()[0]);
+
+   RooFuncWrapper nllFunc("myNllAddPdf", "myNllAddPdf", *nllRefResolved, normSet, data.get());
+
+   // Check if functions results are the same even after changing parameters.
+   EXPECT_NEAR(nllRef->getVal(normSet), nllFunc.getVal(), 1e-8);
+
+   // Check if the parameter layout and size is the same.
+   RooArgSet paramsRefNll;
+   nllRef->getParameters(nullptr, paramsRefNll);
+   RooArgSet paramsMyNLL;
+   nllFunc.getParameters(&normSet, paramsMyNLL);
+
+   randomizeParameters(paramsMyNLL, 1337);
+
+   EXPECT_TRUE(paramsMyNLL.hasSameLayout(paramsRefNll));
+   EXPECT_EQ(paramsMyNLL.size(), paramsRefNll.size());
+
+   // Get AD based derivative
+   std::vector<double> dMyNLL(nllFunc.getNumParams(), 0);
+   nllFunc.getGradient(dMyNLL.data());
+
+   // Check if derivatives are equal
+   for (std::size_t i = 0; i < paramsMyNLL.size(); ++i) {
+      EXPECT_NEAR(getNumDerivative(*nllRef, static_cast<RooRealVar &>(*paramsMyNLL[i]), normSet), dMyNLL[i], 1e-4);
+   }
+
+   // Remember parameter state before minimization
+   RooArgSet parametersOrig;
+   paramsRefNll.snapshot(parametersOrig);
+
+   auto runMinimizer = [&](RooAbsReal &absReal, RooMinimizer::Config cfg = {}) -> std::unique_ptr<RooFitResult> {
+      RooMinimizer m{absReal, cfg};
+      m.setPrintLevel(-1);
+      m.setStrategy(0);
+      m.minimize("Minuit2");
+      auto result = std::unique_ptr<RooFitResult>{m.save()};
+      // reset parameters
+      paramsRefNll.assign(parametersOrig);
+      return result;
+   };
+
+   // Minimize the RooFuncWrapper Implementation
+   auto result = runMinimizer(nllFunc);
+
+   // Minimize the RooFuncWrapper Implementation with AD
+   RooMinimizer::Config minimizerCfgAd;
+   std::size_t nGradientCalls = 0;
+   minimizerCfgAd.gradFunc = [&](double *out) {
+      nllFunc.getGradient(out);
+      ++nGradientCalls;
+   };
+   auto resultAd = runMinimizer(nllFunc, minimizerCfgAd);
+   EXPECT_GE(nGradientCalls, 1); // make sure the gradient function was actually called
+
+   // Minimize the reference NLL
+   auto resultRef = runMinimizer(*nllRef);
+
+   // Compare minimization results
+   EXPECT_TRUE(result->isIdentical(*resultRef, 1e-3));
+   EXPECT_TRUE(resultAd->isIdentical(*resultRef, 1e-3));
 }

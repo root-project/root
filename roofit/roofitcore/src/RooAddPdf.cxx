@@ -491,6 +491,36 @@ double RooAddPdf::getValV(const RooArgSet* normSet) const
   return _value;
 }
 
+void RooAddPdf::translate(RooFit::Detail::CodeSquashContext &ctx) const
+{
+   if (_pdfList.size() < 3) {
+      bool noLastCoeff = _pdfList.size() != _coefList.size();
+
+      std::string sum;
+      std::string lastCoeff = "(1";
+
+      std::size_t i;
+      for (i = 0; i < _coefList.size(); ++i) {
+         auto coeff = ctx.getResult(_coefList[i]);
+         sum += "(" + ctx.getResult(_pdfList[i]) + " * " + coeff + ") +";
+         if (noLastCoeff)
+            lastCoeff += " - " + coeff;
+      }
+      lastCoeff += ")";
+
+      if (noLastCoeff) {
+         sum += "(" + ctx.getResult(_pdfList[i]) + " * " + lastCoeff + ")";
+      } else {
+         sum.pop_back();
+      }
+
+      ctx.addResult(this, sum);
+   } else {
+      std::string const &addRes = ctx.buildCall("RooFit::Detail::EvaluateFuncs::addPdfEvaluate", _coefList,
+                                                _coefList.size(), _pdfList, _pdfList.size());
+      ctx.addResult(this, addRes);
+   }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute addition of PDFs in batches.

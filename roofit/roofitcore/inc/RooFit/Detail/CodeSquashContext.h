@@ -122,6 +122,8 @@ private:
 
    std::string buildArg(unsigned int x) { return std::to_string(x); }
 
+   std::string buildArg(long unsigned int x) { return std::to_string(x); }
+
    std::string buildArg(std::string const &x) { return x; }
 
    std::string buildArg(RooAbsCollection const &x) { return saveListAsArray(static_cast<RooListProxy const &>(x)); }
