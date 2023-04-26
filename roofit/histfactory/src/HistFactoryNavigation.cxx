@@ -16,8 +16,8 @@
 #include "RooCategory.h"
 #include "RooSimultaneous.h"
 #include "RooWorkspace.h"
+#include "RooFit/ModelConfig.h"
 
-#include "RooStats/ModelConfig.h"
 #include "RooStats/HistFactory/HistFactoryNavigation.h"
 #include "RooStats/HistFactory/HistFactoryException.h"
 
@@ -354,7 +354,8 @@ namespace RooStats {
     void HistFactoryNavigation::PrintParameters(bool IncludeConstantParams) {
 
       // Get the list of parameters
-      RooArgSet* params = fModel->getParameters(*fObservables);
+      RooArgSet params;
+      fModel->getParameters(fObservables, params);
 
       std::cout << std::endl;
 
@@ -366,7 +367,7 @@ namespace RooStats {
       << std::endl;
 
       // Loop over the parameters and print their values, etc
-      for (auto const *param : static_range_cast<RooRealVar *>(*params)) {
+      for (auto const *param : static_range_cast<RooRealVar *>(params)) {
         if( !IncludeConstantParams && param->isConstant() ) continue;
 
         std::cout << std::setw(30) << param->GetName();
@@ -383,7 +384,8 @@ namespace RooStats {
                          bool IncludeConstantParams) {
 
       // Get the list of parameters
-      RooArgSet* params = fModel->getParameters(*fObservables);
+      RooArgSet params;
+      fModel->getParameters(fObservables, params);
 
       // Get the pdf for this channel
       RooAbsPdf* channel_pdf = GetChannelPdf(channel);
@@ -398,7 +400,7 @@ namespace RooStats {
       << std::endl;
 
       // Loop over the parameters and print their values, etc
-      for (auto const *param : static_range_cast<RooRealVar *>(*params)) {
+      for (auto const *param : static_range_cast<RooRealVar *>(params)) {
         if( !IncludeConstantParams && param->isConstant() ) continue;
         if( findChild(param->GetName(), channel_pdf)==nullptr ) continue;
         std::cout << std::setw(30) << param->GetName();
@@ -417,7 +419,8 @@ namespace RooStats {
                         bool IncludeConstantParams) {
 
       // Get the list of parameters
-      RooArgSet* params = fModel->getParameters(*fObservables);
+      RooArgSet params;
+      fModel->getParameters(fObservables, params);
 
       // Get the pdf for this channel
       RooAbsReal* sample_func = SampleFunction(channel, sample);
@@ -432,7 +435,7 @@ namespace RooStats {
       << std::endl;
 
       // Loop over the parameters and print their values, etc
-      for (auto const *param : static_range_cast<RooRealVar *>(*params)) {
+      for (auto const *param : static_range_cast<RooRealVar *>(params)) {
         if( !IncludeConstantParams && param->isConstant() ) continue;
         if( findChild(param->GetName(), sample_func)==nullptr ) continue;
         std::cout << std::setw(30) << param->GetName();
@@ -1198,7 +1201,8 @@ namespace RooStats {
       // set the constant as
 
       // Get the list of parameters
-      RooArgSet* params = fModel->getParameters(*fObservables);
+      RooArgSet params;
+      fModel->getParameters(fObservables, params);
 
       std::cout << std::endl;
 
@@ -1210,7 +1214,7 @@ namespace RooStats {
       << std::endl;
 
       // Loop over the parameters and print their values, etc
-      for (auto *param : static_range_cast<RooRealVar *>(*params)) {
+      for (auto *param : static_range_cast<RooRealVar *>(params)) {
 
           std::string ParamName = param->GetName();
           TString ParamNameTString(ParamName);

@@ -176,8 +176,8 @@ bool AsymptoticCalculator::Initialize() const {
 
    // keep snapshot for the initial parameter values (need for nominal Asimov)
    RooArgSet nominalParams;
-   RooArgSet * allParams = nullPdf->getParameters(data);
-   RemoveConstantParameters(allParams);
+   std::unique_ptr<RooArgSet> allParams{nullPdf->getParameters(data)};
+   RemoveConstantParameters(&*allParams);
    if (fNominalAsimov) {
       allParams->snapshot(nominalParams);
    }
@@ -197,7 +197,6 @@ bool AsymptoticCalculator::Initialize() const {
       oocoutP(nullptr,Eval) << "Best fitted POI value = " << muBest->getVal() << " +/- " << muBest->getError() << std::endl;
    // keep snapshot of all best fit parameters
    allParams->snapshot(fBestFitParams);
-   delete allParams;
 
    // compute Asimov data set for the background (alt poi ) value
    const RooArgSet * altSnapshot = GetAlternateModel()->GetSnapshot();
@@ -295,8 +294,8 @@ double AsymptoticCalculator::EvaluateNLL(RooAbsPdf & pdf, RooAbsData& data,   co
     if (verbose < 2) RooMsgService::instance().setGlobalKillBelow(RooFit::FATAL);
 
 
-    RooArgSet* allParams = pdf.getParameters(data);
-    RooStats::RemoveConstantParameters(allParams);
+    std::unique_ptr<RooArgSet> allParams{pdf.getParameters(data)};
+    RooStats::RemoveConstantParameters(&*allParams);
     // add constraint terms for all non-constant parameters
 
     RooArgSet conditionalObs;
@@ -306,10 +305,10 @@ double AsymptoticCalculator::EvaluateNLL(RooAbsPdf & pdf, RooAbsData& data,   co
 
     // need to call constrain for RooSimultaneous until stripDisconnected problem fixed
     auto& config = GetGlobalRooStatsConfig();
-    RooAbsReal* nll = pdf.createNLL(data, RooFit::CloneData(false),RooFit::Constrain(*allParams),RooFit::ConditionalObservables(conditionalObs), RooFit::GlobalObservables(globalObs),
-        RooFit::Offset(config.useLikelihoodOffset));
+    std::unique_ptr<RooAbsReal> nll{pdf.createNLL(data, RooFit::CloneData(false),RooFit::Constrain(*allParams),RooFit::ConditionalObservables(conditionalObs), RooFit::GlobalObservables(globalObs),
+        RooFit::Offset(config.useLikelihoodOffset))};
 
-    RooArgSet* attachedSet = nll->getVariables();
+    std::unique_ptr<RooArgSet> attachedSet{nll->getVariables()};
 
     // if poi are specified - do a conditional fit
     RooArgSet paramsSetConstant;
@@ -351,7 +350,6 @@ double AsymptoticCalculator::EvaluateNLL(RooAbsPdf & pdf, RooAbsData& data,   co
     //check if needed to skip the fit
     RooArgSet nllParams(*attachedSet);
     RooStats::RemoveConstantParameters(&nllParams);
-    delete attachedSet;
     bool skipFit = (nllParams.empty());
 
     if (skipFit)
@@ -457,9 +455,6 @@ double AsymptoticCalculator::EvaluateNLL(RooAbsPdf & pdf, RooAbsData& data,   co
 
     if (verbose < 2) RooMsgService::instance().setGlobalKillBelow(msglevel);
 
-    delete allParams;
-    delete nll;
-
     return val;
 }
 
@@ -507,9 +502,8 @@ HypoTestResult* AsymptoticCalculator::GetHypoTest() const {
       oocoutW(nullptr,InputArguments) << "AsymptoticCalculator::GetHypoTest: snapshot has more than one POI - assume as POI first parameter " << std::endl;
    }
 
-   RooArgSet * allParams = nullPdf->getParameters(*GetData() );
+   std::unique_ptr<RooArgSet> allParams{nullPdf->getParameters(*GetData() )};
    allParams->assign(fBestFitParams);
-   delete allParams;
 
    // set the one-side condition
    // (this works when we have only one params of interest
@@ -1311,8 +1305,8 @@ RooAbsData * AsymptoticCalculator::MakeAsimovData(RooAbsData & realData, const M
    SetAllConstant(paramsSetConstant, false);
 
 
-   RooArgSet *  allParams = model.GetPdf()->getParameters(realData);
-   RooStats::RemoveConstantParameters( allParams );
+   std::unique_ptr<RooArgSet> allParams{model.GetPdf()->getParameters(realData)};
+   RooStats::RemoveConstantParameters( &*allParams );
 
    // if a RooArgSet of poi is passed , different poi will be used for generating the Asimov data set
    if (genPoiValues) {
@@ -1321,12 +1315,7 @@ RooAbsData * AsymptoticCalculator::MakeAsimovData(RooAbsData & realData, const M
 
    // now do the actual generation of the AsimovData Set
    // no need to pass parameters values since we have set them before
-   RooAbsData * asimovData =  MakeAsimovData(model, *allParams, asimovGlobObs);
-
-   delete allParams;
-
-   return asimovData;
-
+   return MakeAsimovData(model, *allParams, asimovGlobObs);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1348,9 +1337,8 @@ RooAbsData * AsymptoticCalculator::MakeAsimovData(const ModelConfig & model, con
    // set the parameter values (do I need the poi to be constant ? )
    // the nuisance parameter values could be set at their fitted value (the MLE)
    if (!allParamValues.empty()) {
-      RooArgSet *  allVars = model.GetPdf()->getVariables();
+      std::unique_ptr<RooArgSet> allVars{model.GetPdf()->getVariables()};
       allVars->assign(allParamValues);
-      delete allVars;
    }
 
 

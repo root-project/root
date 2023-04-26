@@ -141,10 +141,6 @@ public:
                            const RooCmdArg& arg5=RooCmdArg::none(), const RooCmdArg& arg6=RooCmdArg::none(),
                            const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none()) ;
 
-  virtual RooPlot* paramOn(RooPlot* frame, const RooAbsData* data, const char *label= "", Int_t sigDigits = 2,
-            Option_t *options = "NELU", double xmin=0.65,
-            double xmax = 0.9, double ymax = 0.9) ;
-
   // Built-in generator support
   virtual Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, bool staticInitOK=true) const;
   virtual void initGenerator(Int_t code) ;
@@ -160,11 +156,11 @@ public:
   void setGeneratorConfig(const RooNumGenConfig& config) ;
 
   // -log(L) fits to binned and unbinned data
-  virtual RooFitResult* fitTo(RooAbsData& data, const RooLinkedList& cmdList={}) ;
+  virtual RooFit::OwningPtr<RooFitResult> fitTo(RooAbsData& data, const RooLinkedList& cmdList={}) ;
   /// Takes an arbitrary number of RooCmdArg command options and calls
   /// RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList).
   template <typename... Args>
-  RooFitResult* fitTo(RooAbsData& data, RooCmdArg const& arg1, Args const&... args)
+  RooFit::OwningPtr<RooFitResult> fitTo(RooAbsData& data, RooCmdArg const& arg1, Args const&... args)
   {
     return fitTo(data, *RooFit::Detail::createCmdList(&arg1, &args...));
   }
@@ -200,11 +196,11 @@ public:
   };
   std::unique_ptr<RooFitResult> minimizeNLL(RooAbsReal & nll, RooAbsData const& data, MinimizerConfig const& cfg);
 
-  virtual RooAbsReal* createNLL(RooAbsData& data, const RooLinkedList& cmdList={}) ;
+  virtual RooFit::OwningPtr<RooAbsReal> createNLL(RooAbsData& data, const RooLinkedList& cmdList={}) ;
   /// Takes an arbitrary number of RooCmdArg command options and calls
   /// RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList).
   template <typename... Args>
-  RooAbsReal* createNLL(RooAbsData& data, RooCmdArg const& arg1, Args const&... args)
+  RooFit::OwningPtr<RooAbsReal> createNLL(RooAbsData& data, RooCmdArg const& arg1, Args const&... args)
   {
     return createNLL(data, *RooFit::Detail::createCmdList(&arg1, &args...));
   }
@@ -235,12 +231,12 @@ public:
   virtual RooAbsPdf* createProjection(const RooArgSet& iset) ;
 
   // Create cumulative density function from p.d.f
-  RooAbsReal* createCdf(const RooArgSet& iset, const RooArgSet& nset=RooArgSet()) ;
-  RooAbsReal* createCdf(const RooArgSet& iset, const RooCmdArg& arg1, const RooCmdArg& arg2=RooCmdArg::none(),
+  RooFit::OwningPtr<RooAbsReal> createCdf(const RooArgSet& iset, const RooArgSet& nset=RooArgSet()) ;
+  RooFit::OwningPtr<RooAbsReal> createCdf(const RooArgSet& iset, const RooCmdArg& arg1, const RooCmdArg& arg2=RooCmdArg::none(),
          const RooCmdArg& arg3=RooCmdArg::none(), const RooCmdArg& arg4=RooCmdArg::none(),
          const RooCmdArg& arg5=RooCmdArg::none(), const RooCmdArg& arg6=RooCmdArg::none(),
          const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none()) ;
-  RooAbsReal* createScanCdf(const RooArgSet& iset, const RooArgSet& nset, Int_t numScanBins, Int_t intOrder) ;
+  RooFit::OwningPtr<RooAbsReal> createScanCdf(const RooArgSet& iset, const RooArgSet& nset, Int_t numScanBins, Int_t intOrder) ;
 
   // Function evaluation support
   double getValV(const RooArgSet* set=nullptr) const override ;
@@ -332,8 +328,8 @@ private:
 
   // Implementation version
   virtual RooPlot* paramOn(RooPlot* frame, const RooArgSet& params, bool showConstants=false,
-                           const char *label= "", Int_t sigDigits = 2, Option_t *options = "NELU", double xmin=0.65,
-            double xmax= 0.99,double ymax=0.95, const RooCmdArg* formatCmd=nullptr) ;
+                           const char *label= "", double xmin=0.65,
+                           double xmax= 0.99,double ymax=0.95, const RooCmdArg* formatCmd=nullptr) ;
 
   void logBatchComputationErrors(RooSpan<const double>& outputs, std::size_t begin) const;
   bool traceEvalPdf(double value) const;

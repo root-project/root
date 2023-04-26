@@ -3,6 +3,7 @@
 #include "ROOT/TestSupport.hxx"
 #include "TInterpreter.h"
 
+#include <bitset>
 #include <cstring>
 #include <limits>
 
@@ -458,6 +459,40 @@ TEST(RNTuple, Float)
    EXPECT_FLOAT_EQ(2.0, *reader->GetModel()->GetDefaultEntry()->Get<float>("f2"));
 }
 
+TEST(RNTuple, Bitset)
+{
+   FileRaii fileGuard("test_ntuple_bitset.root");
+
+   auto model = RNTupleModel::Create();
+
+   auto f1 = model->MakeField<std::bitset<66>>("f1");
+   EXPECT_EQ(std::string("std::bitset<66>"), model->GetField("f1")->GetType());
+   EXPECT_EQ(sizeof(std::bitset<66>), model->GetField("f1")->GetValueSize());
+   auto f2 = model->MakeField<std::bitset<8>>("f2", "10101010");
+
+   {
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
+      writer->Fill();
+      f1->set(0);
+      f1->set(3);
+      f1->set(33);
+      f1->set(65);
+      f2->flip();
+      writer->Fill();
+   }
+
+   auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
+   EXPECT_EQ(std::string("std::bitset<66>"), reader->GetModel()->GetField("f1")->GetType());
+   auto bs1 = reader->GetModel()->GetDefaultEntry()->Get<std::bitset<66>>("f1");
+   auto bs2 = reader->GetModel()->GetDefaultEntry()->Get<std::bitset<8>>("f2");
+   reader->LoadEntry(0);
+   EXPECT_EQ("000000000000000000000000000000000000000000000000000000000000000000", bs1->to_string());
+   EXPECT_EQ("10101010", bs2->to_string());
+   reader->LoadEntry(1);
+   EXPECT_EQ("100000000000000000000000000000001000000000000000000000000000001001", bs1->to_string());
+   EXPECT_EQ("01010101", bs2->to_string());
+}
+
 TEST(RNTuple, UnsupportedStdTypes)
 {
    try {
@@ -659,12 +694,45 @@ TEST(RNTuple, TClassEBO)
    }
 }
 
-TEST(RNTuple, TClassTemplatedBase)
+TEST(RNTuple, TClassTemplateBased)
+{
+   FileRaii fileGuard("test_ntuple_tclass_templatebased.ntuple");
+   {
+      auto model = RNTupleModel::Create();
+      auto fieldObject = model->MakeField<EdmWrapper<CustomStruct>>("klass");
+      auto writer = RNTupleWriter::Recreate(std::move(model), "f", fileGuard.GetPath());
+      writer->Fill();
+      fieldObject->fMember.a = 42.0;
+      fieldObject->fMember.v1.push_back(1.0);
+      fieldObject->fMember.s = "x";
+      writer->Fill();
+      fieldObject->fIsPresent = false;
+      writer->Fill();
+   }
+
+   auto reader = RNTupleReader::Open("f", fileGuard.GetPath());
+
+   auto fieldObject = reader->GetModel()->GetField("klass");
+   EXPECT_EQ("EdmWrapper<CustomStruct>", fieldObject->GetType());
+   auto object = reader->GetModel()->GetDefaultEntry()->Get<EdmWrapper<CustomStruct>>("klass");
+   reader->LoadEntry(0);
+   EXPECT_TRUE(object->fIsPresent);
+   reader->LoadEntry(1);
+   EXPECT_TRUE(object->fIsPresent);
+   EXPECT_FLOAT_EQ(42.0, object->fMember.a);
+   EXPECT_EQ(1u, object->fMember.v1.size());
+   EXPECT_FLOAT_EQ(1.0, object->fMember.v1[0]);
+   EXPECT_EQ("x", object->fMember.s);
+   reader->LoadEntry(2);
+   EXPECT_FALSE(object->fIsPresent);
+}
+
+TEST(RNTuple, TClassStlDerived)
 {
    // For non-cxxmodules builds, cling needs to parse the header for the `SG::sgkey_t` type to be known
    gInterpreter->ProcessLine("#include \"CustomStruct.hxx\"");
 
-   FileRaii fileGuard("test_ntuple_tclass_templatebase.ntuple");
+   FileRaii fileGuard("test_ntuple_tclass_stlderived.ntuple");
    {
       auto model = RNTupleModel::Create();
       auto fieldKlass = model->MakeField<PackedContainer<int>>("klass");

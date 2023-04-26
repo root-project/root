@@ -2,6 +2,7 @@
 
 #include <TFile.h>
 #include <TTree.h>
+#include <TChain.h>
 
 #include <cstdio>
 #include <string>
@@ -31,6 +32,72 @@ TEST(RNTupleImporter, Empty)
    importer->Import();
    auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
    EXPECT_EQ(0U, reader->GetNEntries());
+   EXPECT_THROW(importer->Import(), ROOT::Experimental::RException);
+}
+
+TEST(RNTupleImporter, CreateFromTree)
+{
+   FileRaii fileGuard("test_ntuple_importer_empty.root");
+   {
+      std::unique_ptr<TFile> file(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
+      auto tree = std::make_unique<TTree>("tree", "");
+      tree->Write();
+   }
+
+   std::unique_ptr<TFile> file(TFile::Open(fileGuard.GetPath().c_str()));
+   auto tree = file->Get<TTree>("tree");
+
+   auto importer = RNTupleImporter::Create(tree, fileGuard.GetPath()).Unwrap();
+   importer->SetIsQuiet(true);
+   EXPECT_THROW(importer->Import(), ROOT::Experimental::RException);
+   importer->SetNTupleName("ntuple");
+   importer->Import();
+   auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
+   EXPECT_EQ(0U, reader->GetNEntries());
+   EXPECT_THROW(importer->Import(), ROOT::Experimental::RException);
+}
+
+TEST(RNTupleImporter, CreateFromChain)
+{
+   FileRaii fileGuard1("test_ntuple_create_from_chain_1.root");
+   {
+      std::unique_ptr<TFile> file(TFile::Open(fileGuard1.GetPath().c_str(), "RECREATE"));
+      auto tree = std::make_unique<TTree>("tree", "");
+      Int_t a = 42;
+      // For single-leaf branches, use branch name, not leaf name
+      tree->Branch("a", &a);
+      tree->Fill();
+      tree->Write();
+   }
+
+   FileRaii fileGuard2("test_ntuple_create_from_chain_2.root");
+   {
+      std::unique_ptr<TFile> file(TFile::Open(fileGuard2.GetPath().c_str(), "RECREATE"));
+      auto tree = std::make_unique<TTree>("tree", "");
+      Int_t a = 43;
+      // For single-leaf branches, use branch name, not leaf name
+      tree->Branch("a", &a);
+      tree->Fill();
+      tree->Write();
+   }
+
+   TChain *chain = new TChain("tree");
+   chain->Add(fileGuard1.GetPath().c_str());
+   chain->Add(fileGuard2.GetPath().c_str());
+
+   auto importer = RNTupleImporter::Create(chain, fileGuard1.GetPath()).Unwrap();
+   importer->SetIsQuiet(true);
+   EXPECT_THROW(importer->Import(), ROOT::Experimental::RException);
+   importer->SetNTupleName("ntuple");
+   importer->Import();
+
+   auto reader = RNTupleReader::Open("ntuple", fileGuard1.GetPath());
+   auto viewA = reader->GetView<std::int32_t>("a");
+
+   EXPECT_EQ(2U, reader->GetNEntries());
+   EXPECT_EQ(42, viewA(0));
+   EXPECT_EQ(43, viewA(1));
+
    EXPECT_THROW(importer->Import(), ROOT::Experimental::RException);
 }
 

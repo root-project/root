@@ -323,7 +323,7 @@ void xRooNLLVar::reinitialize()
       std::set<std::string> attribs;
       if (std::shared_ptr<RooAbsReal>::get())
          attribs = std::shared_ptr<RooAbsReal>::get()->attributes();
-      this->reset(fPdf->createNLL(*fData, *fOpts));
+      this->reset(std::unique_ptr<RooAbsReal>{fPdf->createNLL(*fData, *fOpts)}.release());
       // RooFit only swaps in what it calls parameters, this misses out the RooConstVars which we treat as pars as well
       // so swap those in ... question: is recursiveRedirectServers usage in RooAbsOptTestStatic (and here) a memory
       // leak?? where do the replaced servers get deleted??
@@ -344,7 +344,7 @@ void xRooNLLVar::reinitialize()
       }
    }
 
-   fFuncVars.reset(std::shared_ptr<RooAbsReal>::get()->getVariables());
+   fFuncVars = std::unique_ptr<RooArgSet>{std::shared_ptr<RooAbsReal>::get()->getVariables()};
    if (fGlobs) {
       fFuncGlobs.reset(fFuncVars->selectCommon(*fGlobs));
       fFuncGlobs->setAttribAll("Constant", true);

@@ -146,6 +146,110 @@ TEST(RNTupleDescriptorBuilder, CatchInvalidDescriptors)
    descBuilder.EnsureValidDescriptor();
 }
 
+TEST(RFieldDescriptorBuilder, HeaderExtension)
+{
+   RNTupleDescriptorBuilder descBuilder;
+   descBuilder.AddField(
+      RFieldDescriptorBuilder().FieldId(0).Structure(ENTupleStructure::kRecord).MakeDescriptor().Unwrap());
+   descBuilder.AddField(RFieldDescriptorBuilder()
+                           .FieldId(1)
+                           .FieldName("i32")
+                           .TypeName("int32_t")
+                           .Structure(ENTupleStructure::kLeaf)
+                           .MakeDescriptor()
+                           .Unwrap());
+   descBuilder.AddColumn(RColumnDescriptorBuilder()
+                            .LogicalColumnId(0)
+                            .PhysicalColumnId(0)
+                            .Model(RColumnModel{EColumnType::kInt32, false})
+                            .FieldId(1)
+                            .Index(0)
+                            .MakeDescriptor()
+                            .Unwrap());
+   descBuilder.AddFieldLink(0, 1);
+
+   EXPECT_TRUE(descBuilder.GetDescriptor().GetHeaderExtension() == nullptr);
+   descBuilder.BeginHeaderExtension();
+   EXPECT_TRUE(descBuilder.GetDescriptor().GetHeaderExtension() != nullptr);
+
+   descBuilder.AddField(RFieldDescriptorBuilder()
+                           .FieldId(2)
+                           .FieldName("topLevel1")
+                           .Structure(ENTupleStructure::kRecord)
+                           .MakeDescriptor()
+                           .Unwrap());
+   descBuilder.AddField(RFieldDescriptorBuilder()
+                           .FieldId(3)
+                           .FieldName("i64")
+                           .TypeName("int64_t")
+                           .Structure(ENTupleStructure::kLeaf)
+                           .MakeDescriptor()
+                           .Unwrap());
+   descBuilder.AddColumn(RColumnDescriptorBuilder()
+                            .LogicalColumnId(1)
+                            .PhysicalColumnId(1)
+                            .Model(RColumnModel{EColumnType::kInt64, false})
+                            .FieldId(3)
+                            .Index(0)
+                            .MakeDescriptor()
+                            .Unwrap());
+   descBuilder.AddFieldLink(2, 3);
+   descBuilder.AddFieldLink(0, 2);
+   descBuilder.AddField(RFieldDescriptorBuilder()
+                           .FieldId(4)
+                           .FieldName("topLevel2")
+                           .TypeName("bool")
+                           .Structure(ENTupleStructure::kLeaf)
+                           .MakeDescriptor()
+                           .Unwrap());
+   descBuilder.AddColumn(RColumnDescriptorBuilder()
+                            .LogicalColumnId(2)
+                            .PhysicalColumnId(2)
+                            .Model(RColumnModel{EColumnType::kBit, false})
+                            .FieldId(4)
+                            .Index(0)
+                            .MakeDescriptor()
+                            .Unwrap());
+   descBuilder.AddFieldLink(0, 4);
+   descBuilder.AddField(RFieldDescriptorBuilder()
+                           .FieldId(5)
+                           .FieldName("projected")
+                           .TypeName("int64_t")
+                           .Structure(ENTupleStructure::kLeaf)
+                           .MakeDescriptor()
+                           .Unwrap());
+   descBuilder.AddColumn(RColumnDescriptorBuilder()
+                            .LogicalColumnId(3)
+                            .PhysicalColumnId(1)
+                            .Model(RColumnModel{EColumnType::kInt64, false})
+                            .FieldId(5)
+                            .Index(0)
+                            .MakeDescriptor()
+                            .Unwrap());
+   descBuilder.AddFieldLink(0, 5);
+
+   auto desc = descBuilder.MoveDescriptor();
+   ASSERT_EQ(desc.GetNFields(), 6);
+   ASSERT_EQ(desc.GetNLogicalColumns(), 4);
+   ASSERT_EQ(desc.GetNPhysicalColumns(), 3);
+   {
+      std::string_view child_names[] = {"i32", "topLevel1", "topLevel2", "projected"};
+      unsigned i = 0;
+      for (auto &child_field : desc.GetTopLevelFields())
+         EXPECT_EQ(child_field.GetFieldName(), child_names[i++]);
+   }
+   auto xHeader = desc.GetHeaderExtension();
+   EXPECT_EQ(xHeader->GetNFields(), 4);
+   EXPECT_EQ(xHeader->GetNLogicalColumns(), 3);
+   EXPECT_EQ(xHeader->GetNPhysicalColumns(), 2);
+   {
+      std::string_view child_names[] = {"topLevel1", "topLevel2", "projected"};
+      unsigned i = 0;
+      for (auto child_field : xHeader->GetTopLevelFields(desc))
+         EXPECT_EQ(desc.GetFieldDescriptor(child_field).GetFieldName(), child_names[i++]);
+   }
+}
+
 TEST(RNTupleDescriptor, QualifiedFieldName)
 {
    auto model = RNTupleModel::Create();

@@ -73,8 +73,8 @@ public:
     RooAbsPdf* _pdf2 ; // PDF2
     RooRealVar* _x   ; // X
     RooAbsReal* _alpha ; // ALPHA
-    RooAbsReal* _c1 ; // CDF of PDF 1
-    RooAbsReal* _c2 ; // CDF of PDF 2
+    std::unique_ptr<RooAbsReal> _c1 ; // CDF of PDF 1
+    std::unique_ptr<RooAbsReal> _c2 ; // CDF of PDF 2
     RooAbsFunc* _cb1 ; // Binding of CDF1
     RooAbsFunc* _cb2 ; // Binding of CDF2
     std::unique_ptr<RooBrentRootFinder> _rf1; // ROOT finder on CDF1
@@ -95,7 +95,7 @@ protected:
   PdfCacheElem* createCache(const RooArgSet* nset) const override ;
   const char* inputBaseName() const override ;
   RooArgSet* actualObservables(const RooArgSet& nset) const override ;
-  RooArgSet* actualParameters(const RooArgSet& nset) const override ;
+  RooFit::OwningPtr<RooArgSet> actualParameters(const RooArgSet& nset) const override ;
   void fillCacheObject(PdfCacheElem& cache) const override ;
 
   RooRealProxy pdf1 ; // First input shape

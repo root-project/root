@@ -17,7 +17,6 @@ endif()
 ROOT_STANDARD_LIBRARY_PACKAGE(RooFit
   HEADERS
     Roo2DKeysPdf.h
-    RooAbsCollection.h
     RooArgusBG.h
     RooBCPEffDecay.h
     RooBCPGenDecay.h
@@ -41,7 +40,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFit
     RooDstD0BG.h
     RooExponential.h
     RooExpPoly.h
-    RooPower.h    
+    RooPower.h
     RooFunctor1DBinding.h
     RooFunctorBinding.h
     RooGamma.h
@@ -59,7 +58,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFit
     RooMomentMorphFunc.h
     RooMomentMorphFuncND.h
     RooMomentMorph.h
-    RooMomentMorphND.h
     RooMultiBinomial.h
     RooNDKeysPdf.h
     RooNonCPEigenDecay.h
@@ -122,7 +120,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFit
     src/RooMomentMorph.cxx
     src/RooMomentMorphFunc.cxx
     src/RooMomentMorphFuncND.cxx
-    src/RooMomentMorphND.cxx
     src/RooMultiBinomial.cxx
     src/RooNDKeysPdf.cxx
     src/RooNonCPEigenDecay.cxx

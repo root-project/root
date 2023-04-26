@@ -51,6 +51,8 @@ public:
   RooWorkspace(const RooWorkspace& other) ;
   ~RooWorkspace() override ;
 
+  TObject *Clone(const char *newname="") const override;
+
   bool importClassCode(const char* pat="*", bool doReplace=false) ;
   bool importClassCode(TClass* theClass, bool doReplace=false) ;
 
@@ -63,7 +65,7 @@ public:
       const RooCmdArg& arg1=RooCmdArg(),const RooCmdArg& arg2=RooCmdArg(),const RooCmdArg& arg3=RooCmdArg(),
       const RooCmdArg& arg4=RooCmdArg(),const RooCmdArg& arg5=RooCmdArg(),const RooCmdArg& arg6=RooCmdArg(),
       const RooCmdArg& arg7=RooCmdArg(),const RooCmdArg& arg8=RooCmdArg(),const RooCmdArg& arg9=RooCmdArg()) ;
-  bool import(RooAbsData& data,
+  bool import(RooAbsData const& data,
       const RooCmdArg& arg1=RooCmdArg(),const RooCmdArg& arg2=RooCmdArg(),const RooCmdArg& arg3=RooCmdArg(),
       const RooCmdArg& arg4=RooCmdArg(),const RooCmdArg& arg5=RooCmdArg(),const RooCmdArg& arg6=RooCmdArg(),
       const RooCmdArg& arg7=RooCmdArg(),const RooCmdArg& arg8=RooCmdArg(),const RooCmdArg& arg9=RooCmdArg()) ;
@@ -71,8 +73,8 @@ public:
       const RooCmdArg& arg1=RooCmdArg(),const RooCmdArg& arg2=RooCmdArg(),const RooCmdArg& arg3=RooCmdArg(),
       const RooCmdArg& arg4=RooCmdArg(),const RooCmdArg& arg5=RooCmdArg(),const RooCmdArg& arg6=RooCmdArg(),
       const RooCmdArg& arg7=RooCmdArg(),const RooCmdArg& arg8=RooCmdArg(),const RooCmdArg& arg9=RooCmdArg()) ;
-  bool import(TObject& object, bool replaceExisting=false) ;
-  bool import(TObject& object, const char* aliasName, bool replaceExisting=false) ;
+  bool import(TObject const& object, bool replaceExisting=false) ;
+  bool import(TObject const& object, const char* aliasName, bool replaceExisting=false) ;
 
   // Transaction management interface for multi-step import operations
   bool startTransaction() ;

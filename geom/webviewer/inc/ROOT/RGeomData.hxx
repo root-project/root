@@ -87,27 +87,27 @@ class RGeoItem : public Browsable::RItem {
 
 protected:
    // this is part for browser, visible for I/O
+   int id{0};              ///< node id
    std::string color;      ///< color
    std::string material;   ///< material
+   int vis{0};             ///< visibility of logical node
+   int pvis{0};            ///< visibility of physical node
+   bool top{false};        ///< indicates if node selected as top
 
 public:
 
    /** Default constructor */
    RGeoItem() = default;
 
-   RGeoItem(const std::string &_name, int _nchilds, const std::string &_color,
-         const std::string &_material = "") :
-         Browsable::RItem(_name, _nchilds), color(_color), material(_material) {
+   RGeoItem(const std::string &_name, int _nchilds, int _nodeid, const std::string &_color,
+         const std::string &_material = "", int _vis = 0, int _pvis = 0) :
+         Browsable::RItem(_name, _nchilds), id(_nodeid), color(_color), material(_material), vis(_vis), pvis(_pvis) {
    }
 
    // should be here, one needs virtual table for correct streaming of RRootBrowserReply
    virtual ~RGeoItem() = default;
 
-   void SetColor(const std::string &_color) { color  = _color; }
-   void SetMaterial(const std::string &_material) { material  = _material; }
-
-   const std::string &GetColor() const { return color; }
-   const std::string &GetMaterial() const { return material; }
+   void SetTop(bool on = true) { top = on; }
 };
 
 
@@ -190,7 +190,7 @@ public:
    RGeomRenderInfo *ri{nullptr};  ///< rendering information (if applicable)
 };
 
-/** Node information including rendering data */
+/** Custom settings for physical Node visibility */
 class RGeomNodeVisibility {
 public:
    std::vector<int> stack;        ///< path to the node
@@ -254,6 +254,7 @@ class RGeomDescription {
    int fActualLevel{0};             ///<! level can be reduced when selecting nodes
    bool fPreferredOffline{false};   ///<! indicates that full description should be provided to client
    int fJsonComp{0};                ///<! default JSON compression
+   std::string fActiveItemName;     ///<! name of item which should be activated in hierarchy
 
    RGeomConfig fCfg;                ///<! configuration parameter editable from GUI
 
@@ -290,6 +291,8 @@ class RGeomDescription {
    void BuildDescription(TGeoNode *topnode, TGeoVolume *topvolume);
 
    TGeoVolume *GetVolume(int nodeid);
+
+   int IsPhysNodeVisible(const std::vector<int> &stack);
 
 public:
    RGeomDescription() = default;
@@ -422,19 +425,35 @@ public:
       return fClickedStack;
    }
 
+   bool SetActiveItem(const std::string &itemname)
+   {
+      TLockGuard lock(fMutex);
+      bool changed = (fActiveItemName != itemname);
+      fActiveItemName = itemname;
+      return changed;
+   }
+
+   std::string GetActiveItem() const
+   {
+      TLockGuard lock(fMutex);
+      return fActiveItemName;
+   }
+
    bool ChangeConfiguration(const std::string &json);
 
    std::unique_ptr<RGeomNodeInfo> MakeNodeInfo(const std::vector<int> &stack);
 
-   bool ChangeNodeVisibility(int nodeid, bool selected);
+   bool ChangeNodeVisibility(const std::vector<std::string> &path, bool on);
 
    bool SelectTop(const std::vector<std::string> &path);
 
-   bool SetNodeVisibility(const std::vector<std::string> &path, bool on = true);
+   bool SetPhysNodeVisibility(const std::vector<std::string> &path, bool on = true);
 
-   bool ClearNodeVisibility(const std::vector<std::string> &path);
+   bool SetPhysNodeVisibility(const std::string &path, bool on = true);
 
-   bool ClearAllVisibility();
+   bool ClearPhysNodeVisibility(const std::vector<std::string> &path);
+
+   bool ClearAllPhysVisibility();
 
    bool SetSearch(const std::string &query, const std::string &json);
 

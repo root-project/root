@@ -21,10 +21,7 @@
 #include <RooWorkspace.h>
 
 #include <map>
-#include <memory>
 #include <stdexcept>
-#include <string>
-#include <vector>
 
 namespace RooFit {
 namespace JSONIO {
@@ -37,7 +34,6 @@ namespace RooStats {
 class ModelConfig;
 }
 
-class TH1;
 class TClass;
 
 class RooJSONFactoryWSTool {
@@ -60,6 +56,16 @@ public:
          return out;
       }
       throw DependencyMissingError(requestAuthor, objname, T::Class()->GetName());
+   }
+
+   template <class T>
+   T *requestArg(const RooFit::Detail::JSONNode &node, const std::string &key)
+   {
+      std::string requestAuthor(RooJSONFactoryWSTool::name(node));
+      if (!node.has_child(key)) {
+         RooJSONFactoryWSTool::error("no \"" + key + "\" given in \"" + requestAuthor + "\"");
+      }
+      return request<T>(node[key].val(), requestAuthor);
    }
 
    template <class T, class Coll_t>
@@ -95,70 +101,24 @@ public:
    RooWorkspace *workspace() { return &_workspace; }
 
    template <class Obj_t>
-   void wsImport(Obj_t const &arg)
+   Obj_t &wsImport(Obj_t const &obj)
    {
-      _workspace.import(arg, RooFit::RecycleConflictNodes(true), RooFit::Silence(true));
+      _workspace.import(obj, RooFit::RecycleConflictNodes(true), RooFit::Silence(true));
+      return *static_cast<Obj_t *>(_workspace.obj(obj.GetName()));
    }
 
    template <class Obj_t, typename... Args_t>
-   void wsEmplace(RooStringView name, RooStringView title, Args_t &&...args)
+   Obj_t &wsEmplace(RooStringView name, Args_t &&...args)
    {
-      Obj_t arg{name, title, std::forward<Args_t>(args)...};
-      return wsImport(arg);
+      return wsImport(Obj_t(name, name, std::forward<Args_t>(args)...));
    }
 
-   static void error(const char *s) { throw std::runtime_error(s); }
+   static void error(const char *s);
    inline static void error(const std::string &s) { error(s.c_str()); }
-   template <class T>
-   static std::string concat(const T *items, const std::string &sep = ",")
-   {
-      // Returns a string being the concatenation of strings in input list <items>
-      // (names of objects obtained using GetName()) separated by string <sep>.
-      bool first = true;
-      std::string text;
-
-      // iterate over strings in list
-      for (auto it : *items) {
-         if (!first) {
-            // insert separator string
-            text += sep;
-         } else {
-            first = false;
-         }
-         if (!it)
-            text += "nullptr";
-         else
-            text += it->GetName();
-      }
-      return text;
-   }
-   template <class T>
-   static std::vector<std::string> names(const T *items)
-   {
-      // Returns a string being the concatenation of strings in input list <items>
-      // (names of objects obtained using GetName()) separated by string <sep>.
-      std::vector<std::string> names;
-      // iterate over strings in list
-      for (auto it : *items) {
-         if (!it)
-            names.push_back("nullptr");
-         else
-            names.push_back(it->GetName());
-      }
-      return names;
-   }
-
-   static std::string genPrefix(const RooFit::Detail::JSONNode &p, bool trailing_underscore);
-   static void exportHistogram(const TH1 &h, RooFit::Detail::JSONNode &n, const std::vector<std::string> &obsnames,
-                               const TH1 *errH = nullptr, bool writeObservables = true, bool writeErrors = true);
-   static void writeObservables(const TH1 &h, RooFit::Detail::JSONNode &n, const std::vector<std::string> &varnames);
 
    static std::unique_ptr<RooDataHist> readBinnedData(const RooFit::Detail::JSONNode &n, const std::string &namecomp);
    static std::unique_ptr<RooDataHist>
-   readBinnedData(const RooFit::Detail::JSONNode &n, const std::string &namecomp, RooArgList varlist);
-
-   static void
-   getObservables(RooWorkspace &ws, const RooFit::Detail::JSONNode &n, const std::string &obsnamecomp, RooArgSet &out);
+   readBinnedData(const RooFit::Detail::JSONNode &n, const std::string &namecomp, RooArgList const &varlist);
 
    bool importJSON(std::string const &filename);
    bool importYML(std::string const &filename);
@@ -174,14 +134,12 @@ public:
    bool importJSONfromString(const std::string &s);
    bool importYMLfromString(const std::string &s);
 
-   void importFunctions(const RooFit::Detail::JSONNode &n);
    void importFunction(const RooFit::Detail::JSONNode &n, bool isPdf);
    RooFit::Detail::JSONNode *exportObject(const RooAbsArg *func);
 
    static std::unique_ptr<RooFit::Detail::JSONTree> createNewJSONTree();
 
    static RooFit::Detail::JSONNode &makeVariablesNode(RooFit::Detail::JSONNode &rootNode);
-   static RooFit::Detail::JSONNode const *getVariablesNode(RooFit::Detail::JSONNode const &rootNode);
 
    // error handling helpers
    class DependencyMissingError : public std::exception {
@@ -202,45 +160,26 @@ public:
    static void
    writeCombinedDataName(RooFit::Detail::JSONNode &rootnode, std::string const &pdfName, std::string const &dataName);
 
+   static void
+   exportHisto(RooArgSet const &vars, std::size_t n, double const *contents, RooFit::Detail::JSONNode &output);
+
+   static void exportArray(std::size_t n, double const *contents, RooFit::Detail::JSONNode &output);
+
+   static void exportCategory(RooAbsCategory const &cat, RooFit::Detail::JSONNode &node);
+
+   void queueExport(RooAbsArg const &arg) { _serversToExport.push_back(&arg); }
+
 private:
-   struct Config {
-      static bool stripObservables;
-   };
-
-   struct Var {
-      int nbins;
-      double min;
-      double max;
-      std::vector<double> bounds;
-
-      Var(int n) : nbins(n), min(0), max(n) {}
-      Var(const RooFit::Detail::JSONNode &val);
-   };
-
-   std::map<std::string, std::unique_ptr<RooAbsData>> loadData(const RooFit::Detail::JSONNode &rootnode);
-   std::unique_ptr<RooDataSet> unbinned(RooDataHist const &hist);
-   static RooRealVar *createObservable(RooWorkspace &ws, const std::string &name, const RooJSONFactoryWSTool::Var &var);
-
    template <class T>
    T *requestImpl(const std::string &objname);
 
-   void exportData(RooAbsData &data);
-   static std::vector<std::vector<int>> generateBinIndices(const RooArgList &vars);
-   static std::map<std::string, RooJSONFactoryWSTool::Var>
-   readObservables(const RooFit::Detail::JSONNode &n, const std::string &obsnamecomp);
+   void exportData(RooAbsData const &data);
 
    void importAllNodes(const RooFit::Detail::JSONNode &n);
 
-   void importVariables(const RooFit::Detail::JSONNode &n);
    void importVariable(const RooFit::Detail::JSONNode &n);
    void importDependants(const RooFit::Detail::JSONNode &n);
-   void importAnalysis(const RooFit::Detail::JSONNode &analysisNode, const RooFit::Detail::JSONNode &likelihoodsNode,
-                       const RooFit::Detail::JSONNode &mcAux);
 
-   bool find(const RooFit::Detail::JSONNode &n, const std::string &elem);
-   void append(RooFit::Detail::JSONNode &n, const std::string &elem);
-
-   void exportAttributes(const RooAbsArg *arg, RooFit::Detail::JSONNode &n);
    void exportVariable(const RooAbsArg *v, RooFit::Detail::JSONNode &n);
    void exportVariables(const RooArgSet &allElems, RooFit::Detail::JSONNode &n);
 
@@ -251,10 +190,12 @@ private:
 
    // member variables
    const RooFit::Detail::JSONNode *_rootnodeInput = nullptr;
+   const RooFit::Detail::JSONNode *_attributesNode = nullptr;
    RooFit::Detail::JSONNode *_rootnodeOutput = nullptr;
    RooWorkspace &_workspace;
 
    // objects to represent intermediate information
    std::unique_ptr<RooFit::JSONIO::Detail::Domains> _domains;
+   std::vector<RooAbsArg const *> _serversToExport;
 };
 #endif

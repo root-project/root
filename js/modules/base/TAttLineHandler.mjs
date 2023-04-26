@@ -33,14 +33,14 @@ class TAttLineHandler {
    setArgs(args) {
       if (args.attr) {
          this.color_index = args.attr.fLineColor;
-         args.color = args.color0 || (args.painter ? args.painter.getColor(this.color_index) : getColor(this.color_index));
+         args.color = args.color0 || (args.painter?.getColor(this.color_index) ?? getColor(this.color_index));
          if (args.width === undefined) args.width = args.attr.fLineWidth;
          if (args.style === undefined) args.style = args.attr.fLineStyle;
       } else if (isStr(args.color)) {
          if ((args.color !== 'none') && !args.width) args.width = 1;
       } else if (typeof args.color == 'number') {
          this.color_index = args.color;
-         args.color = args.painter ? args.painter.getColor(args.color) : getColor(args.color);
+         args.color = args.painter?.getColor(args.color) ?? getColor(args.color);
       }
 
       if (args.width === undefined)
@@ -169,6 +169,4 @@ function getSvgLineStyle(indx) {
    return root_line_styles[indx];
 }
 
-
 export { TAttLineHandler, getSvgLineStyle, root_line_styles };
-

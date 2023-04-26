@@ -322,9 +322,9 @@ TEST(RCsvDS, ProgressiveReadingRDFMT)
 
 TEST(RCsvDS, SpecifyColumnTypes)
 {
-   RCsvDS tds0(fileName0, true, ',', -1LL, {{"Age", 'D'}, {"Height", 'T'}}); // with headers
+   RCsvDS tds0(fileName0, true, ',', -1LL, {{"Age", 'D'}, {"Name", 'T'}}); // with headers
    EXPECT_STREQ("double", tds0.GetTypeName("Age").c_str());
-   EXPECT_STREQ("std::string", tds0.GetTypeName("Height").c_str());
+   EXPECT_STREQ("std::string", tds0.GetTypeName("Name").c_str());
 
    RCsvDS tds1(fileName1, false, ',', -1LL, {{"Col1", 'T'}}); // without headers (Col0, ...)
    EXPECT_STREQ("std::string", tds1.GetTypeName("Col1").c_str());
@@ -350,6 +350,12 @@ TEST(RCsvDS, SpecifyColumnTypes)
          throw;
       },
       std::runtime_error);
+
+   auto df = ROOT::RDF::FromCSV(fileName0, true, ',', -1LL, {{"Age", 'L'}, {"Height", 'D'}});
+   auto maxHeight = df.Max<double>("Height");
+   auto maxAge = df.Max<Long64_t>("Age");
+   EXPECT_DOUBLE_EQ(maxHeight.GetValue(), 200.5);
+   EXPECT_EQ(maxAge.GetValue(), 60);
 }
 
 TEST(RCsvDS, NaNTypeIndentification)

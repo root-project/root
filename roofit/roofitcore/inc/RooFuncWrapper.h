@@ -13,22 +13,24 @@
 #ifndef RooFit_RooFuncWrapper_h
 #define RooFit_RooFuncWrapper_h
 
-#include "RooAbsReal.h"
-#include "RooListProxy.h"
+#include <RooAbsReal.h>
+#include <RooListProxy.h>
 
-#include "Math/Functor.h"
-
+#include <map>
 #include <memory>
 #include <string>
 
 /// @brief  A wrapper class to store a C++ function of type 'double (*)(double*, double*)'.
 /// The parameters can be accessed as params[<relative position of param in paramSet>] in the function body.
-/// The observables can be accessed as obs[i * num_entries + j], where i represents the observable position and j
+/// The observables can be accessed as obs[i + j], where i represents the observable position and j
 /// represents the data entry.
 class RooFuncWrapper final : public RooAbsReal {
 public:
    RooFuncWrapper(const char *name, const char *title, std::string const &funcBody, RooArgSet const &paramSet,
-                  RooArgSet const &ObsSet, const RooAbsData *data = nullptr);
+                  const RooAbsData *data = nullptr);
+
+   RooFuncWrapper(const char *name, const char *title, RooAbsReal const &obj, RooArgSet const &normSet,
+                  const RooAbsData *data = nullptr);
 
    RooFuncWrapper(const RooFuncWrapper &other, const char *name = nullptr);
 
@@ -40,28 +42,43 @@ public:
 
    void gradient(const double *x, double *g) const;
 
-   const ROOT::Math::GradFunctor &getGradFunctor() const { return _gradFunctor; }
+   std::size_t getNumParams() const { return _params.size(); }
 
-   const ROOT::Math::Functor &getFunctor() const { return _funcFunctor; }
+   void dumpCode();
+
+   void dumpGradient();
 
 protected:
-   void updateGradientVarBuffer() const;
-
    double evaluate() const override;
 
 private:
-   using Func = double (*)(double *, double *);
-   using Grad = void (*)(double *, double *, double *);
+   std::string buildCode(RooAbsReal const &head);
 
-   double doEval(const double *x) const;
+   void updateGradientVarBuffer() const;
+
+   void
+   loadParamsAndData(std::string funcName, RooAbsArg const *head, RooArgSet const &paramSet, const RooAbsData *data);
+
+   void declareAndDiffFunction(std::string funcName, std::string const &funcBody);
+
+   void buildFuncAndGradFunctors();
+
+   using Func = double (*)(double *, double const *);
+   using Grad = void (*)(double *, double const *, double *);
+
+   struct ObsInfo {
+      ObsInfo(std::size_t i, std::size_t n) : idx{i}, size{n} {}
+      std::size_t idx = 0;
+      std::size_t size = 0;
+   };
 
    RooListProxy _params;
    Func _func;
-   ROOT::Math::Functor _funcFunctor;
    Grad _grad;
-   ROOT::Math::GradFunctor _gradFunctor;
    mutable std::vector<double> _gradientVarBuffer;
-   mutable std::vector<double> _observables;
+   std::vector<double> _observables;
+   std::map<RooFit::Detail::DataKey, ObsInfo> _obsInfos;
+   std::map<RooFit::Detail::DataKey, std::size_t> _nodeOutputSizes;
 };
 
 #endif

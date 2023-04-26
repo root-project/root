@@ -23,22 +23,20 @@ public:
    WrapperRooPdf(RooAbsPdf * pdf, const std::string xvar = "x", bool norm = true) :
       fNorm(norm),
       fPdf(pdf),
-      fX(0),
-      fParams(nullptr)
+      fX(0)
    {
       assert(fPdf != nullptr);
 
-      RooArgSet *vars = fPdf->getVariables();
+      std::unique_ptr<RooArgSet> vars{fPdf->getVariables()};
       RooAbsArg * arg = vars->find(xvar.c_str());  // code should abort if not found
       if (!arg) std::cout <<"Error - observable " << xvar << "is not in the list of pdf variables" << std::endl;
       assert(arg != nullptr);
       RooArgSet obsList(*arg);
       //arg.setDirtyInhibit(true); // do have faster setter of values
       fX = fPdf->getObservables(obsList);
-      fParams = fPdf->getParameters(obsList);
+      fParams = std::unique_ptr<RooArgSet>{fPdf->getParameters(obsList)};
       assert(fX != nullptr);
       assert(fParams != nullptr);
-      delete vars;
 #ifdef DEBUG
       fX->Print("v");
       fParams->Print("v");
@@ -54,13 +52,12 @@ public:
    WrapperRooPdf(RooAbsPdf * pdf, const RooArgSet & obsList, bool norm = true ) :
       fNorm(norm),
       fPdf(pdf),
-      fX(nullptr),
-      fParams(nullptr)
+      fX(nullptr)
    {
       assert(fPdf != nullptr);
 
       fX = fPdf->getObservables(obsList);
-      fParams = fPdf->getParameters(obsList);
+      fParams = std::unique_ptr<RooArgSet>{fPdf->getParameters(obsList)};
       assert(fX != nullptr);
       assert(fParams != nullptr);
 #ifdef DEBUG
@@ -81,7 +78,6 @@ public:
    ~WrapperRooPdf() override {
       // need to delete observables and parameter list
       if (fX) delete fX;
-      if (fParams) delete fParams;
    }
 
    /**
@@ -204,7 +200,7 @@ private:
    bool fNorm;
    mutable RooAbsPdf * fPdf;
    mutable RooArgSet * fX;
-   mutable RooArgSet * fParams;
+   mutable std::unique_ptr<RooArgSet> fParams;
    mutable std::vector<double> fParamValues;
 
 

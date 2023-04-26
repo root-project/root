@@ -31,7 +31,6 @@
 #include "RooMsgService.h"
 #include "RooNumIntConfig.h"
 #include "RooTrace.h"
-#include "RunContext.h"
 
 #include <exception>
 #include <math.h>
@@ -423,9 +422,9 @@ void PiecewiseInterpolation::computeBatch(cudaStream_t*, double* sum, size_t /*s
       }
       break;
     default:
-      coutE(InputArguments) << "PiecewiseInterpolation::evaluateSpan(): " << _paramSet[i].GetName()
+      coutE(InputArguments) << "PiecewiseInterpolation::computeBatch(): " << _paramSet[i].GetName()
                        << " with unknown interpolation code" << icode << std::endl;
-      throw std::invalid_argument("PiecewiseInterpolation::evaluateSpan() got invalid interpolation code " + std::to_string(icode));
+      throw std::invalid_argument("PiecewiseInterpolation::computeBatch() got invalid interpolation code " + std::to_string(icode));
       break;
     }
   }

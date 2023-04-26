@@ -137,6 +137,8 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
          this.geo_painter.activateInBrowser = this.activateInTreeTable.bind(this);
 
+         this.geo_painter.hidePhysicalNode = this.hidePhysicalNode.bind(this);
+
          this.geo_painter.assignClones(this.geo_clones);
       },
 
@@ -272,7 +274,6 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       onWebsocketClosed() {
          // when connection closed, close panel as well
          if (window && !this._embeded) window.close();
-
          this.isConnected = false;
       },
 
@@ -421,7 +422,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          if (visibles?.length) {
             let dflt = Math.max(this.geo_painter.ctrl.transparency, 0.98), indx = 0;
             this.geo_painter.changedGlobalTransparency(node => {
-               if (node.stack && (indx < visibles.length) &&  this.geo.isSameStack(node.stack, visibles[indx].stack)) {
+               if (node.stack && (indx < visibles.length) && this.geo.isSameStack(node.stack, visibles[indx].stack)) {
                   indx++;
                   return 0;
                }
@@ -433,6 +434,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          }
       },
 
+      /** @summary Append more nodes to the geo painter */
       appendNodes(nodes) {
          this.geo_painter?.prepareObjectDraw(nodes, "__geom_viewer_append__");
       },
@@ -459,9 +461,8 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
       checkSendRequest(force) {
          if (this.isConnected && !this.nobrowser && !this.send_channel) {
-            let h = this.byId('geomHierarchyPanel');
-
-            let websocket = this.websocket.createChannel();
+            let h = this.byId('geomHierarchyPanel'),
+                websocket = this.websocket.createChannel();
 
             h.getController().configure({
                websocket,
@@ -481,11 +482,23 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          }
       },
 
-      /** @summary method called from geom painter when specific node need to be activated in the browser
-        * @desc Due to complex indexing in TreeTable it is not trivial to select special node */
+      /** @summary method called from geom painter when specific node need to be activated in the browser */
       activateInTreeTable(itemnames, force) {
          if ((itemnames?.length > 0) && force)
-            this.websocket.send('ACTIVATE:' + itemnames[0]);
+            if (this.standalone)
+               this.byId('geomHierarchyPanel')?.getController().activateInTreeTable(itemnames[0]);
+            else
+               this.websocket.send('ACTIVATE:' + itemnames[0]);
+      },
+
+      /** @summary Hide physical (seen in graphics) node */
+      hidePhysicalNode(itemnames) {
+         if (itemnames?.length > 0)
+            if (!this.standalone)
+               this.websocket.send('HIDE_ITEMS:' + JSON.stringify(itemnames));
+            else
+               for (let i = 0; i < itemnames.length; ++i)
+                  this.changeNodeVisibilityOffline(itemnames[i], true, false);
       },
 
       /** @summary when new draw options send from server */
@@ -495,7 +508,33 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          this.geo_painter?.setAutoRotate(opt.indexOf("rotate") >= 0);
       },
 
-      /** Try to provide as much info as possible offline */
+      /** @summary Try to change node visibility offline */
+     changeNodeVisibilityOffline(itemname, physical, flag) {
+        if (!this.geo_clones || !this.geo_painter)
+           return;
+
+        let stack = this.geo_clones.findStackByName(itemname),
+            nodeid = this.geo_clones.getNodeIdByStack(stack);
+        if (!stack || (nodeid < 0)) return;
+
+        let match_func = physical
+                           ? node => this.geo.isSameStack(node.stack, stack)
+                           : node => { return this.geo_clones.getNodeIdByStack(node.stack) == nodeid; };
+
+        let changed = false;
+
+        this.geo_painter._toplevel?.traverse(node => {
+           if (node.stack && match_func(node)) {
+               changed = changed || (node.visible != flag)
+               node.visible = flag;
+            }
+        });
+
+        if (changed)
+           this.geo_painter.render3D();
+      },
+
+      /** @summary Try to provide as much info as possible offline */
       processInfoOffline(path, id) {
          if (!this.isInfoPageActive() || !path)
             return;

@@ -2674,6 +2674,29 @@ TStreamerInfo* TTree::BuildStreamerInfo(TClass* cl, void* pointer /* = 0 */, Boo
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Enable the TTreeCache unless explicitly disabled for this TTree by
+/// a prior call to `SetCacheSize(0)`.
+/// If the environment variable `ROOT_TTREECACHE_SIZE` or the rootrc config
+/// `TTreeCache.Size` has been set to zero, this call will over-ride them with
+/// a value of 1.0 (i.e. use a cache size to hold 1 cluster)
+///
+/// Return true if there is a cache attached to the `TTree` (either pre-exisiting
+/// or created as part of this call)
+Bool_t TTree::EnableCache()
+{
+   TFile* file = GetCurrentFile();
+   if (!file)
+      return kFALSE;
+   // Check for an existing cache
+   TTreeCache* pf = GetReadCache(file);
+   if (pf)
+      return kTRUE;
+   if (fCacheUserSet && fCacheSize == 0)
+      return kFALSE;
+   return (0 == SetCacheSizeAux(kTRUE, -1));
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Called by TTree::Fill() when file has reached its maximum fgMaxTreeSize.
 /// Create a new file. If the original file is named "myfile.root",
 /// subsequent files are named "myfile_1.root", "myfile_2.root", etc.
@@ -5377,6 +5400,26 @@ Int_t TTree::GetBranchStyle()
 
 Long64_t TTree::GetCacheAutoSize(Bool_t withDefault /* = kFALSE */ )
 {
+   auto calculateCacheSize = [=](Double_t cacheFactor)
+   {
+      Long64_t cacheSize = 0;
+      if (fAutoFlush < 0) {
+         cacheSize = Long64_t(-cacheFactor * fAutoFlush);
+      } else if (fAutoFlush == 0) {
+         const auto medianClusterSize = GetMedianClusterSize();
+         if (medianClusterSize > 0)
+            cacheSize = Long64_t(cacheFactor * 1.5 * medianClusterSize * GetZipBytes() / (fEntries + 1));
+         else
+            cacheSize = Long64_t(cacheFactor * 1.5 * 30000000); // use the default value of fAutoFlush
+      } else {
+         cacheSize = Long64_t(cacheFactor * 1.5 * fAutoFlush * GetZipBytes() / (fEntries + 1));
+      }
+      if (cacheSize >= (INT_MAX / 4)) {
+         cacheSize = INT_MAX / 4;
+      }
+      return cacheSize;
+   };
+
    const char *stcs;
    Double_t cacheFactor = 0.0;
    if (!(stcs = gSystem->Getenv("ROOT_TTREECACHE_SIZE")) || !*stcs) {
@@ -5390,40 +5433,14 @@ Long64_t TTree::GetCacheAutoSize(Bool_t withDefault /* = kFALSE */ )
      cacheFactor = 0.0;
    }
 
-   Long64_t cacheSize = 0;
-
-   if (fAutoFlush < 0) {
-      cacheSize = Long64_t(-cacheFactor * fAutoFlush);
-   } else if (fAutoFlush == 0) {
-      const auto medianClusterSize = GetMedianClusterSize();
-      if (medianClusterSize > 0)
-         cacheSize = Long64_t(cacheFactor * 1.5 * medianClusterSize * GetZipBytes() / (fEntries + 1));
-      else
-         cacheSize = Long64_t(cacheFactor * 1.5 * 30000000); // use the default value of fAutoFlush
-   } else {
-      cacheSize = Long64_t(cacheFactor * 1.5 * fAutoFlush * GetZipBytes() / (fEntries + 1));
-   }
-
-   if (cacheSize >= (INT_MAX / 4)) {
-      cacheSize = INT_MAX / 4;
-   }
+   Long64_t cacheSize = calculateCacheSize(cacheFactor);
 
    if (cacheSize < 0) {
       cacheSize = 0;
    }
 
    if (cacheSize == 0 && withDefault) {
-      if (fAutoFlush < 0) {
-         cacheSize = -fAutoFlush;
-      } else if (fAutoFlush == 0) {
-         const auto medianClusterSize = GetMedianClusterSize();
-         if (medianClusterSize > 0)
-            cacheSize = Long64_t(1.5 * medianClusterSize * GetZipBytes() / (fEntries + 1));
-         else
-            cacheSize = Long64_t(cacheFactor * 1.5 * 30000000); // use the default value of fAutoFlush
-      } else {
-         cacheSize = Long64_t(1.5 * fAutoFlush * GetZipBytes() / (fEntries + 1));
-      }
+      cacheSize = calculateCacheSize(1.0);
    }
 
    return cacheSize;
@@ -9523,34 +9540,13 @@ void TTree::Streamer(TBuffer& b)
             // current set of ranges.
             fMaxClusterRange = fNClusterRange;
          }
-         if (GetCacheAutoSize() != 0) {
-            // a cache will be automatically created.
-            // No need for TTreePlayer::Process to enable the cache
-            fCacheSize = 0;
-         } else if (fAutoFlush < 0) {
-            // If there is no autoflush set, let's keep the cache completely
-            // disable by default for now.
-            fCacheSize = fAutoFlush;
-         } else if (fAutoFlush != 0) {
-            // Estimate the cluster size.
-            // This will allow TTree::Process to enable the cache.
-            Long64_t zipBytes = GetZipBytes();
-            Long64_t totBytes = GetTotBytes();
-            if (zipBytes != 0) {
-               fCacheSize =  fAutoFlush*(zipBytes/fEntries);
-            } else if (totBytes != 0) {
-               fCacheSize =  fAutoFlush*(totBytes/fEntries);
-            } else {
-               fCacheSize = 30000000;
-            }
-            if (fCacheSize >= (INT_MAX / 4)) {
-               fCacheSize = INT_MAX / 4;
-            } else if (fCacheSize == 0) {
-               fCacheSize = 30000000;
-            }
-         } else {
-            fCacheSize = 0;
-         }
+
+         // Throughs calls to `GetCacheAutoSize` or `EnableCache` (for example
+         // by TTreePlayer::Process, the cache size will be automatically
+         // determined unless the user explicitly call `SetCacheSize`
+         fCacheSize = 0;
+         fCacheUserSet = kFALSE;
+
          ResetBit(kMustCleanup);
          return;
       }

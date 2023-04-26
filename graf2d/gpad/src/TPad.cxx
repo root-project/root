@@ -5691,22 +5691,31 @@ void TPad::SaveAs(const char *filename, Option_t * /*option*/) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Save primitives in this pad on the C++ source file out.
 
-void TPad::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
+void TPad::SavePrimitive(std::ostream &out, Option_t * option /*= ""*/)
 {
    TContext ctxt(this, kFALSE); // not interactive
 
    char quote = '"';
-   char lcname[100];
-   const char *cname = GetName();
-   size_t nch = strlen(cname);
-   if (nch < sizeof(lcname)) {
-      strlcpy(lcname, cname, sizeof(lcname));
-      for(size_t k = 0; k < nch; k++)
-         if (lcname[k] == ' ')
-            lcname[k] = 0;
-      if (lcname[0] != 0)
-         cname = lcname;
-      else if (this == gPad->GetCanvas())
+
+   TString padName = GetName();
+
+   // check for space in the pad name
+   auto p = padName.Index(" ");
+   if (p != kNPOS) padName.Resize(p);
+
+   TString opt = option;
+   if (!opt.Contains("toplevel")) {
+      static Int_t pcounter = 0;
+      padName += TString::Format("__%d", pcounter++);
+      padName = gInterpreter->MapCppName(padName);
+   }
+
+   const char *pname = padName.Data();
+   const char *cname = padName.Data();
+
+   if (padName.Length() == 0) {
+      pname = "unnamed";
+      if (this == gPad->GetCanvas())
          cname = "c1";
       else
          cname = "pad";
@@ -5717,8 +5726,7 @@ void TPad::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
       out <<"  "<<std::endl;
       out <<"// ------------>Primitives in pad: "<<GetName()<<std::endl;
 
-      out<<"   TPad *"<<cname<<" = new TPad("<<quote<<GetName()<<quote<<", "<<quote<<GetTitle()
-      <<quote
+      out<<"   TPad *"<<cname<<" = new TPad("<<quote<<GetName()<<quote<<", "<<quote<<GetTitle()<<quote
       <<","<<fXlowNDC
       <<","<<fYlowNDC
       <<","<<fXlowNDC+fWNDC
@@ -5854,9 +5862,14 @@ void TPad::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
          if (!strcmp(obj->GetName(),"Graph"))
             ((TGraph*)obj)->SetName(TString::Format("Graph%d",grnum++).Data());
       obj->SavePrimitive(out, (Option_t *)next.GetOption());
+      if (obj->InheritsFrom(TPad::Class())) {
+         if (opt.Contains("toplevel"))
+            out<<"   "<<pname<<"->cd();"<<std::endl;
+         else
+            out<<"   "<<cname<<"->cd();"<<std::endl;
+      }
    }
    out<<"   "<<cname<<"->Modified();"<<std::endl;
-   out<<"   "<<GetMother()->GetName()<<"->cd();"<<std::endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

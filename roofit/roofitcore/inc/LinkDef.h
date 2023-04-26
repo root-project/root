@@ -124,7 +124,6 @@
 #pragma link C++ class RooGenContext+ ;
 #pragma link C++ class RooGenericPdf+ ;
 #pragma link C++ class RooGenProdProj+ ;
-#pragma link C++ class RooHistError+ ;
 #pragma link C++ class RooHist+ ;
 #pragma link C++ class RooImproperIntegrator1D+ ;
 #pragma link C++ class RooIntegrator1D+ ;
@@ -326,7 +325,12 @@
 #pragma link C++ class RooRangeBoolean+ ;
 #pragma link C++ class RooVectorDataStore- ;
 #pragma link C++ class RooVectorDataStore::RealVector+;
-#pragma link C++ class RooVectorDataStore::RealFullVector- ;
+#pragma link C++ class RooVectorDataStore::RealFullVector+ ;
+#pragma read sourceClass="RooVectorDataStore::RealFullVector" targetClass="RooVectorDataStore::RealFullVector" version="[1]" \
+  source="std::vector<double>* _vecE; std::vector<double>* _vecEL; std::vector<double>* _vecEH" target="_vecE, _vecEL, _vecEH" \
+  code="{ if(onfile._vecE) { _vecE = *onfile._vecE; }     \
+          if(onfile._vecEL) { _vecEL = *onfile._vecEL; }  \
+          if(onfile._vecEH) { _vecEH = *onfile._vecEH; }  }";
 #pragma link C++ class RooVectorDataStore::CatVector+;
 #pragma read sourceClass="RooVectorDataStore::CatVector" targetClass="RooVectorDataStore::CatVector" version="[1]" \
   source="std::vector<RooCatType> _vec;" target="_vec" \
@@ -341,6 +345,7 @@
 #pragma link C++ class RooMoment+ ;
 #pragma link C++ class RooFirstMoment+ ;
 #pragma link C++ class RooSecondMoment+ ;
+#pragma link C++ class RooStats::ModelConfig+;
 #pragma link C++ class RooStudyManager+ ;
 #pragma link C++ class RooStudyPackage+ ;
 #pragma link C++ class RooAbsStudy+ ;

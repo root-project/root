@@ -13,7 +13,6 @@
 #include <RooFitHS3/JSONIO.h>
 
 #include <RooFit/Detail/JSONInterface.h>
-#include <RooFitHS3/RooJSONFactoryWSTool.h>
 
 #include <RooAbsPdf.h>
 
@@ -137,7 +136,7 @@ void loadFactoryExpressions(const std::string &fname)
    std::unique_ptr<RooFit::Detail::JSONTree> tree = RooFit::Detail::JSONTree::create(infile);
    const RooFit::Detail::JSONNode &n = tree->rootnode();
    for (const auto &cl : n.children()) {
-      std::string key(RooJSONFactoryWSTool::name(cl));
+      std::string key = cl.key();
       if (!cl.has_child("class")) {
          std::cerr << "error in file '" << fname << "' for entry '" << key << "': 'class' key is required!"
                    << std::endl;
@@ -147,24 +146,23 @@ void loadFactoryExpressions(const std::string &fname)
       TClass *c = TClass::GetClass(classname.c_str());
       if (!c) {
          std::cerr << "unable to find class " << classname << ", skipping." << std::endl;
+         continue;
+      }
+      RooFit::JSONIO::ImportExpression ex;
+      ex.tclass = c;
+      if (!cl.has_child("arguments")) {
+         std::cerr << "class " << classname << " seems to have no arguments attached, skipping" << std::endl;
+         continue;
+      }
+      for (const auto &arg : cl["arguments"].children()) {
+         ex.arguments.push_back(arg.val());
+      }
+      if (c->InheritsFrom(RooAbsPdf::Class())) {
+         pdfFactoryExpressions[key] = ex;
+      } else if (c->InheritsFrom(RooAbsReal::Class())) {
+         funcFactoryExpressions[key] = ex;
       } else {
-         RooFit::JSONIO::ImportExpression ex;
-         ex.tclass = c;
-         if (!cl.has_child("arguments")) {
-            std::cerr << "class " << classname << " seems to have no arguments attached, skipping" << std::endl;
-            continue;
-         }
-         for (const auto &arg : cl["arguments"].children()) {
-            ex.arguments.push_back(arg.val());
-         }
-         if (c->InheritsFrom(RooAbsPdf::Class())) {
-            pdfFactoryExpressions[key] = ex;
-         } else if (c->InheritsFrom(RooAbsReal::Class())) {
-            funcFactoryExpressions[key] = ex;
-         } else {
-            std::cerr << "class " << classname << " seems to not inherit from any suitable class, skipping"
-                      << std::endl;
-         }
+         std::cerr << "class " << classname << " seems to not inherit from any suitable class, skipping" << std::endl;
       }
    }
 }
@@ -215,28 +213,28 @@ void loadExportKeys(const std::string &fname)
    std::unique_ptr<RooFit::Detail::JSONTree> tree = RooFit::Detail::JSONTree::create(infile);
    const RooFit::Detail::JSONNode &n = tree->rootnode();
    for (const auto &cl : n.children()) {
-      std::string classname(RooJSONFactoryWSTool::name(cl));
+      std::string classname = cl.key();
       TClass *c = TClass::GetClass(classname.c_str());
       if (!c) {
          std::cerr << "unable to find class " << classname << ", skipping." << std::endl;
-      } else {
-         RooFit::JSONIO::ExportKeys ex;
-         if (!cl.has_child("type")) {
-            std::cerr << "class " << classname << "has not type key set, skipping" << std::endl;
-            continue;
-         }
-         if (!cl.has_child("proxies")) {
-            std::cerr << "class " << classname << "has no proxies identified, skipping" << std::endl;
-            continue;
-         }
-         ex.type = cl["type"].val();
-         for (const auto &k : cl["proxies"].children()) {
-            std::string key(RooJSONFactoryWSTool::name(k));
-            std::string val(k.val());
-            ex.proxies[key] = val;
-         }
-         exportKeys[c] = ex;
+         continue;
       }
+      RooFit::JSONIO::ExportKeys ex;
+      auto *type = cl.find("type");
+      auto *proxies = cl.find("proxies");
+      if (!type) {
+         std::cerr << "class " << classname << "has not type key set, skipping" << std::endl;
+         continue;
+      }
+      if (!proxies) {
+         std::cerr << "class " << classname << "has no proxies identified, skipping" << std::endl;
+         continue;
+      }
+      ex.type = type->val();
+      for (const auto &k : proxies->children()) {
+         ex.proxies[k.key()] = k.val();
+      }
+      exportKeys[c] = ex;
    }
 }
 

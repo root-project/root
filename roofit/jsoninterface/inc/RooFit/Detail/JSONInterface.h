@@ -57,8 +57,8 @@ public:
       Nd &operator*() const { return it->current(); }
       Nd &operator->() const { return it->current(); }
 
-      bool operator!=(const child_iterator_t &that) const { return !this->it->equal(*that.it); }
-      bool operator==(const child_iterator_t &that) const { return this->it->equal(*that.it); }
+      friend bool operator!=(child_iterator_t const &lhs, child_iterator_t const &rhs) { return !lhs.it->equal(*rhs.it); }
+      friend bool operator==(child_iterator_t const &lhs, child_iterator_t const &rhs) { return lhs.it->equal(*rhs.it); }
    };
 
    using child_iterator = child_iterator_t<JSONNode>;
@@ -91,8 +91,8 @@ public:
    virtual bool is_container() const = 0;
    virtual bool is_map() const = 0;
    virtual bool is_seq() const = 0;
-   virtual void set_map() = 0;
-   virtual void set_seq() = 0;
+   virtual JSONNode &set_map() = 0;
+   virtual JSONNode &set_seq() = 0;
    virtual void clear() = 0;
 
    virtual std::string key() const = 0;
@@ -145,6 +145,33 @@ public:
             row.append_child() << mat(i, j);
          }
       }
+   }
+
+   JSONNode const *find(std::string const &key) const
+   {
+      auto &n = *this;
+      return n.has_child(key) ? &n[key] : nullptr;
+   }
+
+   template <typename... Keys_t>
+   JSONNode const *find(std::string const &key, Keys_t const &...keys) const
+   {
+      auto &n = *this;
+      return n.has_child(key) ? n[key].find(keys...) : nullptr;
+   }
+
+   JSONNode &get(std::string const &key)
+   {
+      auto &n = *this;
+      return n[key];
+   }
+
+   template <typename... Keys_t>
+   JSONNode &get(std::string const &key, Keys_t const &...keys)
+   {
+      auto &next = get(key);
+      next.set_map();
+      return next.get(keys...);
    }
 };
 

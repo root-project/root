@@ -7,7 +7,10 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                'sap/ui/unified/Menu',
                'sap/ui/unified/MenuItem',
                'sap/ui/core/Popup',
-               'sap/m/MessageToast'
+               'sap/ui/core/Icon',
+               'sap/m/MessageToast',
+               'sap/ui/layout/HorizontalLayout',
+               'sap/m/CheckBox'
 ], function(Controller,
             mText,
             tableColumn,
@@ -17,7 +20,10 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             Menu,
             MenuItem,
             Popup,
-            MessageToast) {
+            Icon,
+            MessageToast,
+            HorizontalLayout,
+            mCheckBox) {
 
    "use strict";
 
@@ -32,17 +38,37 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
    return Controller.extend('rootui5.geom.controller.GeomHierarchy', {
 
       onInit() {
+         let viewData = this.getView().getViewData();
+
+         if (!viewData?.conn_handle?.getUserArgs('only_hierarchy')) return;
+
+         // standalone running hierarchy only
+
+         this.websocket = viewData.conn_handle;
+         this.jsroot = viewData.jsroot;
+
+         this.standalone = (this.websocket.kind == 'file');
+
+         this.websocket.setReceiver(this);
+         this.websocket.connect(viewData.conn_href);
+
+         this._embeded = false;
+
+         this.configureTable(true);
       },
 
       configure(args) {
-
          this.jsroot = args.jsroot;
-
          this.websocket = args.websocket; // special channel created from main conection
-
          this.viewer = args.viewer;
-
+         this.standalone = args.standalone;
          this.websocket.setReceiver(this);
+         this._embeded = true;
+
+         this.configureTable(args.show_columns);
+      },
+
+      configureTable(show_columns) {
 
          // create model only for browser - no need for anybody else
          this.model = new GeomBrowserModel();
@@ -55,30 +81,56 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
          t.setRowHeight(20);
 
-         // let vis_selected_handler = this.visibilitySelected.bind(this);
-
          this.model.assignTreeTable(t);
 
          t.addColumn(new tableColumn('columnName', {
             label: 'Description',
             tooltip: 'Name of geometry nodes',
-            template: new mText({text: "{name}", wrapping: false})
+            autoResizable: true,
+            width: '15rem',
+            visible: true,
+            tooltip: "{name}",
+            template: new HorizontalLayout({
+                  content: [
+                     new Icon({ visible: '{top}', src: 'sap-icon://badge', tooltip: '{name} selected as top node' }).addStyleClass('sapUiTinyMarginEnd'),
+                     new mText({ text: '{name}', tooltip: '{name}', wrapping: false })
+                  ]
+            })
          }));
 
-         if (args.show_columns) {
+         if (show_columns) {
             //new mCheckBox({ enabled: true, visible: true, selected: "{node_visible}", select: vis_selected_handler }),
             t.setColumnHeaderVisible(true);
+
+            t.addColumn(new tableColumn('columnVis', {
+               label: 'Visibility',
+               tooltip: 'Visibility flags',
+               autoResizable: true,
+               visible: true,
+               width: '5rem',
+               template: new HorizontalLayout({
+                  content: [
+                     new mCheckBox({ enabled: true, visible: true, selected: "{_node/visible}", select: evnt => this.changeVisibility(evnt), tooltip: '{name} logical node visibility' }),
+                     new mCheckBox({ enabled: true, visible: true, selected: "{pvisible}", select: evnt => this.changeVisibility(evnt, true), tooltip: '{name} physical node visibility' })
+                  ]
+               })
+            }));
+
             t.addColumn(new tableColumn('columnColor', {
                label: 'Color',
                tooltip: 'Color of geometry volumes',
                width: '2rem',
-               template: new GeomColorBox({color: "{_elem/color}", visible: "{= !!${_elem/color}}"})
+               autoResizable: true,
+               visible: true,
+               template: new GeomColorBox({color: "{_node/color}", visible: "{= !!${_node/color}}"})
             }));
             t.addColumn(new tableColumn('columnMaterial', {
                label: 'Material',
                tooltip: 'Material of the volumes',
                width: '6rem',
-               template: new mText({text: "{_elem/material}", wrapping: false})
+               autoResizable: true,
+               visible: true,
+               template: new mText({text: "{_node/material}", wrapping: false})
             }));
          }
 
@@ -89,17 +141,39 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       },
 
       /** @summary invoked when visibility checkbox clicked */
-      visibilitySelected(oEvent) {
-         let nodeid = this.getRowNodeId(oEvent.getSource());
-         if (nodeid < 0) {
-            console.error('Fail to identify nodeid');
-            return;
+      changeVisibility(oEvent, physical) {
+         let row = oEvent.getSource(),
+             flag = oEvent.getParameter('selected'),
+             ctxt = row?.getBindingContext(),
+             ttt = ctxt?.getProperty(ctxt?.getPath());
+
+         if (!ttt?.path)
+            return console.error('Fail to get path');
+
+         if (this.standalone) {
+            this.viewer?.changeNodeVisibilityOffline(ttt.path.join('/'), physical, flag);
+         } else {
+            let msg = '';
+
+            if (physical) {
+               msg = flag ? 'SHOW' : 'HIDE';
+            } else {
+               ttt.pvisible = flag;
+               msg = "SETVI" + (flag ? '1' : '0');
+
+               // all other rows referencing same node reset pvisible flag
+               this.byId("treeTable").getRows().forEach(r => {
+                  let r_ctxt = r.getBindingContext(),
+                      r_ttt = r_ctxt?.getProperty(r_ctxt?.getPath());
+                  if ((r_ttt?._node === ttt._node) && (r !== row))
+                     r_ttt.pvisible = flag;
+               });
+            }
+
+            msg += ':' + JSON.stringify(ttt.path);
+
+            this.websocket.send(msg);
          }
-
-         let msg = "SETVI" + (oEvent.getParameter('selected') ? '1:' : '0:') + JSON.stringify(nodeid);
-
-         // send info message to client to change visibility
-         this.websocket.send(msg);
       },
 
       assignRowHandlers() {
@@ -126,8 +200,9 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       /** @summary Return nodeid for the row */
       getRowNodeId(row) {
          let ctxt = row.getBindingContext(),
-             ttt = ctxt ? ctxt.getProperty(ctxt.getPath()) : null;
-         return ttt && (ttt.id !== undefined) ? ttt.id : -1;
+             ttt = ctxt?.getProperty(ctxt?.getPath());
+
+         return ttt?.id ?? -1;
       },
 
       /** @summary Return arrys of ids for this row  */
@@ -137,7 +212,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
          let path = ctxt.getPath(), lastpos = 0, ids = [];
 
-         while (lastpos>=0) {
+         while (lastpos >= 0) {
             lastpos = path.indexOf("/childs", lastpos+1);
 
             let ttt = ctxt.getProperty(path.substr(0,lastpos));
@@ -190,6 +265,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
       onWebsocketClosed() {
          // when connection closed, close panel as well
+         if (window && !this._embeded) window.close();
          this.isConnected = false;
       },
 
@@ -214,14 +290,20 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             this.parseDescription(msg, false);
             break;
          case "BREPL:":   // browser reply
+            let bresp = JSON.parse(msg);
             if (this.model)
-               this.model.processResponse(JSON.parse(msg));
+               this.model.processResponse(bresp);
+            if (bresp?.path?.length == 0)
+               this.byId("treeTable").autoResizeColumn(0);
             break;
          case "FOUND:":  // text message for found query
             this.showTextInBrowser(msg);
             break;
          case "RELOAD":
             this.doReload(true);
+            break;
+         case "UPDATE":
+            this.doReload(false);
             break;
          case "ACTIV:":
             this.activateInTreeTable(msg);
@@ -241,16 +323,118 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
          if (!this.model) return;
 
+         if (is_original) {
+            let suffix = ':__SELECTED_STACK__:', p = msg.indexOf(suffix);
+            if (p > 0) {
+               this.selectedStack = JSON.parse(msg.slice(p+suffix.length));
+               msg = msg.slice(0, p);
+            } else {
+               delete this.selectedStack;
+            }
+
+            suffix = ':__PHYSICAL_VISIBILITY__:';
+            p = msg.indexOf(suffix);
+            if (p > 0) {
+               this.physVisibility = JSON.parse(msg.slice(p+suffix.length));
+               msg = msg.slice(0, p);
+            } else {
+               delete this.physVisibility;
+            }
+         }
+
          let descr = JSON.parse(msg), br = this.byId("treeTable");
 
          br.setNoData("");
          br.setShowNoData(false);
 
          let topnode = this.model.buildTree(descr, is_original ? 1 : 999);
-         if (this.standalone)
-            this.fullModel = topnode;
-
+         this.model.hController = this;
          this.model.setFullModel(topnode);
+
+         if (is_original) {
+            this.fullModel = topnode;
+            this.fullModelNodes = this.model.logicalNodes;
+         }
+
+      },
+
+      /** @summary Returns stack by node path */
+      getStackByPath(node, path) {
+         if (!node || !path || path.length < 1 || (path[0] != node.name)) return null;
+         let i = 1, stack = [];
+         while (i < path.length) {
+            let len = node.childs?.length ?? 0, found = false;
+            for (let k = 0; k < len; ++k)
+               if (node.childs[k].name == path[i]) {
+                  stack.push(k);
+                  node = node.childs[k];
+                  i++;
+                  found = true;
+                  break;
+               }
+            if (!found) return null;
+         }
+
+         return stack;
+      },
+
+      /** @summary Get entry with physical node visibility */
+      getPhysVisibilityEntry(path, force) {
+         if ((!this.physVisibility && !force) || !this.fullModel)
+            return;
+
+         let stack = this.getStackByPath(this.fullModel, path);
+         if (stack === null)
+            return;
+
+         let len = stack.length;
+
+         for (let i = 0; i < this.physVisibility?.length; ++i) {
+            let item = this.physVisibility[i], match = true;
+            if (len != item.stack?.length) continue;
+            for (let k = 0; match && (k < len); ++k)
+               if (stack[k] != item.stack[k])
+                  match = false;
+            if (match)
+               return item;
+         }
+
+         if (force) {
+            if (!this.physVisibility)
+               this.physVisibility = [];
+            let item = { stack, visible: true };
+            // TODO: one may add items in sort order to make it same as on server side
+            this.physVisibility.push(item);
+            return item;
+         }
+      },
+
+      /** @summary Returns true if node identified by path is selected */
+      getPhysTopNode(path) {
+         if (!this.fullModel)
+            return false;
+
+         let stack = this.getStackByPath(this.fullModel, path);
+         if (!stack)
+            return !this.selectedStack;
+
+         if (!this.selectedStack) return false;
+
+         let len = this.selectedStack.length;
+         if (len != stack.length)
+            return false;
+
+         for (let k = 0; k < len; ++k)
+            if (stack[k] != this.selectedStack[k])
+               return false;
+
+         return true;
+      },
+
+      /** @summary Set top node by path */
+      setPhysTopNode(path) {
+         if (this.fullModel)
+            this.selectedStack = this.getStackByPath(this.fullModel, path);
       },
 
       /** @summary Show special message insted of nodes hierarchy */
@@ -326,21 +510,23 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       /** @summary when new query entered in the seach field */
       onSearch(oEvt, direct) {
          let query = (typeof oEvt == 'string' && direct) ? oEvt : oEvt.getSource().getValue();
+
          if (!this.standalone) {
             this.submitSearchQuery(query);
          } else if (this.viewer) {
             let lst = this.viewer.findMatchesFromDraw(node => { return node.name.indexOf(query) == 0; });
 
-            if (lst?.length) {
+            if (lst) {
                this.showFoundNodes(lst);
-               this.viewer?.paintFoundNodes(lst);
+               this.viewer.paintFoundNodes(lst);
             } else {
                this.showTextInBrowser("No found nodes");
-               this.viewer?.paintFoundNodes(null);
+               this.viewer.paintFoundNodes(null);
             }
          }
       },
 
+      /** @summary when click cell on tree table */
       onCellClick(oEvent) {
 
          let tt = this.byId("treeTable"),
@@ -367,24 +553,25 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
          oEvent.preventDefault();
 
-         // var oRowContext = oEvent.getParameter("rowBindingContext");
-
          if (!this._oIdContextMenu) {
             this._oIdContextMenu = new Menu();
             this.getView().addDependent(this._oIdContextMenu);
          }
 
          this._oIdContextMenu.destroyItems();
-         this._oIdContextMenu.addItem(new MenuItem({
-            text: 'Set as top',
-            select: () => {
-               if (this.standalone) {
-                  MessageToast.show('Set as top not yet supported in standalone mode');
-               } else {
+         if (!this.standalone)
+            this._oIdContextMenu.addItem(new MenuItem({
+               text: 'Set as top',
+               select: () => {
+                  this.setPhysTopNode(prop.path);
                   this.websocket.send('SETTOP:' + JSON.stringify(prop.path));
+
+                  let len = this.model?.getLength() ?? 0;
+                  for (let n = 0; n < len; ++n)
+                     this.model?.setProperty(`/nodes/${n}/top`, false);
+                  this.model?.setProperty(ctxt.getPath() + '/top', true);
                }
-            }
-         }));
+            }));
 
          let text = 'Search for ', value;
          if ((colid == 'columnMaterial') && prop._elem.material) {
@@ -451,21 +638,25 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
       },
 
       doReload(force) {
+         // reassign logical nodes, used together with full model
+         if (this.fullModelNodes && this.model)
+            this.model.logicalNodes = this.fullModelNodes;
+
          if (this.standalone) {
             this.showTextInBrowser();
             this.model?.setFullModel(this.fullModel);
             this.viewer?.paintFoundNodes(null);
          } else {
             this.model?.clearFullModel();
-            this.model?.reloadMainModel(force);
+            this.model?.reloadMainModel(force, true);
 
             let srch = this.byId('searchNode');
             if (srch.getValue()) {
                srch.setValue('');
-               submitSearchQuery('', true, true);
+               this.submitSearchQuery('', true, true);
             }
          }
-      },
+      }
 
    });
 

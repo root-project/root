@@ -55,6 +55,7 @@ TPieSlice::TPieSlice(const char *name, const char *title,
 Int_t TPieSlice::DistancetoPrimitive(Int_t /*px*/, Int_t /*py*/)
 {
    Int_t dist = 9999;
+   if (!gPad) return dist;
 
    if (fIsActive) {
       dist = 0;

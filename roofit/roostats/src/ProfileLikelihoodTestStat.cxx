@@ -83,22 +83,21 @@ double RooStats::ProfileLikelihoodTestStat::EvaluateProfileLikelihood(int type, 
        bool reuse=(fReuseNll || fgAlwaysReuseNll) ;
 
        bool created(false) ;
-       if (!reuse || fNll==0) {
-          RooArgSet* allParams = fPdf->getParameters(data);
-          RooStats::RemoveConstantParameters(allParams);
+       if (!reuse || fNll==nullptr) {
+          std::unique_ptr<RooArgSet> allParams{fPdf->getParameters(data)};
+          RooStats::RemoveConstantParameters(&*allParams);
 
           // need to call constrain for RooSimultaneous until stripDisconnected problem fixed
-          fNll = fPdf->createNLL(data, RooFit::CloneData(false),RooFit::Constrain(*allParams),
-                                 RooFit::GlobalObservables(fGlobalObs), RooFit::ConditionalObservables(fConditionalObs), RooFit::Offset(fLOffset));
+          fNll = std::unique_ptr<RooAbsReal>{fPdf->createNLL(data, RooFit::CloneData(false),RooFit::Constrain(*allParams),
+                                 RooFit::GlobalObservables(fGlobalObs), RooFit::ConditionalObservables(fConditionalObs), RooFit::Offset(fLOffset))};
 
           if (fPrintLevel > 0 && fLOffset) cout << "ProfileLikelihoodTestStat::Evaluate - Use Offset in creating NLL " << endl ;
 
           created = true ;
-          delete allParams;
-          if (fPrintLevel > 1) cout << "creating NLL " << fNll << " with data = " << &data << endl ;
+          if (fPrintLevel > 1) cout << "creating NLL " << &*fNll << " with data = " << &data << endl ;
        }
        if (reuse && !created) {
-         if (fPrintLevel > 1) cout << "reusing NLL " << fNll << " new data = " << &data << endl ;
+         if (fPrintLevel > 1) cout << "reusing NLL " << &*fNll << " new data = " << &data << endl ;
          fNll->setData(data,false) ;
        }
        // print data in case of number counting (simple data sets)
@@ -109,7 +108,7 @@ double RooStats::ProfileLikelihoodTestStat::EvaluateProfileLikelihood(int type, 
 
 
        // make sure we set the variables attached to this nll
-       RooArgSet* attachedSet = fNll->getVariables();
+       std::unique_ptr<RooArgSet> attachedSet{fNll->getVariables()};
 
        attachedSet->assign(paramsOfInterest);
        RooArgSet* origAttachedSet = (RooArgSet*) attachedSet->snapshot();
@@ -272,13 +271,11 @@ double RooStats::ProfileLikelihoodTestStat::EvaluateProfileLikelihood(int type, 
        // need to restore the values ?
        attachedSet->assign(*origAttachedSet);
 
-       delete attachedSet;
        delete origAttachedSet;
        delete snap;
 
        if (!reuse) {
-    delete fNll;
-    fNll = 0;
+          fNll.reset();
        }
 
        RooMsgService::instance().setGlobalKillBelow(msglevel);

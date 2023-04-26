@@ -50,12 +50,12 @@ private:
    const Long64_t fLinesChunkSize;
    ULong64_t fEntryRangesRequested = 0ULL;
    ULong64_t fProcessedLines = 0ULL; // marks the progress of the consumption of the csv lines
-   std::vector<std::string> fHeaders;
+   std::vector<std::string> fHeaders; // the column names
    std::unordered_map<std::string, ColType_t> fColTypes;
    std::set<std::string> fColContainingEmpty; // store columns which had empty entry
-   std::list<ColType_t> fColTypesList;
-   std::vector<std::vector<void *>> fColAddresses;         // fColAddresses[column][slot]
-   std::vector<Record_t> fRecords;                         // fRecords[entry][column]
+   std::list<ColType_t> fColTypesList; // column types, order is the same as fHeaders, values the same as fColTypes
+   std::vector<std::vector<void *>> fColAddresses;         // fColAddresses[column][slot] (same ordering as fHeaders)
+   std::vector<Record_t> fRecords;                         // fRecords[entry][column] (same ordering as fHeaders)
    std::vector<std::vector<double>> fDoubleEvtValues;      // one per column per slot
    std::vector<std::vector<Long64_t>> fLong64EvtValues;    // one per column per slot
    std::vector<std::vector<std::string>> fStringEvtValues; // one per column per slot

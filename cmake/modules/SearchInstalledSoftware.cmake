@@ -147,10 +147,11 @@ if(builtin_freetype)
   message(STATUS "Building freetype version ${freetype_version} included in ROOT itself")
   set(FREETYPE_LIBRARY ${CMAKE_BINARY_DIR}/FREETYPE-prefix/src/FREETYPE/objs/.libs/${CMAKE_STATIC_LIBRARY_PREFIX}freetype${CMAKE_STATIC_LIBRARY_SUFFIX})
   if(WIN32)
+    set(freetypebuild "Release")
+    set(freetypelib freetype.lib)
     if(winrtdebug)
       set(freetypebuild "Debug")
-    else()
-      set(freetypebuild "Release")
+      set(freetypelib freetyped.lib)
     endif()
     ExternalProject_Add(
       FREETYPE
@@ -159,7 +160,7 @@ if(builtin_freetype)
       INSTALL_DIR ${CMAKE_BINARY_DIR}
       CMAKE_ARGS -G ${CMAKE_GENERATOR} -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX} -DFT_DISABLE_BZIP2=TRUE
       BUILD_COMMAND ${CMAKE_COMMAND} --build . --config ${freetypebuild}
-      INSTALL_COMMAND ${CMAKE_COMMAND} -E copy_if_different ${freetypebuild}/freetype.lib ${FREETYPE_LIBRARY}
+      INSTALL_COMMAND ${CMAKE_COMMAND} -E copy_if_different ${freetypebuild}/${freetypelib} ${FREETYPE_LIBRARY}
       LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 0
       BUILD_BYPRODUCTS ${FREETYPE_LIBRARY}
       TIMEOUT 600
@@ -1357,23 +1358,28 @@ if(builtin_tbb)
     else()
       set(tbb_arch Win32)
     endif()
-    set(TBB_LIBRARIES ${CMAKE_BINARY_DIR}/lib/tbb.lib)
+    set(tbbbuild "Release")
+    if(winrtdebug)
+      set(tbbbuild "Debug")
+      set(tbbsuffix "_debug")
+    endif()
+    set(TBB_LIBRARIES ${CMAKE_BINARY_DIR}/lib/tbb${tbbsuffix}.lib)
     ExternalProject_Add(
       TBB
       URL ${lcgpackages}/tbb-${tbb_builtin_version}.tar.gz
       URL_HASH SHA256=${tbb_sha256}
       INSTALL_DIR ${CMAKE_BINARY_DIR}
       CONFIGURE_COMMAND devenv.exe /useenv /upgrade build/${vsdir}/makefile.sln
-      BUILD_COMMAND MSBuild.exe build/${vsdir}/makefile.sln /p:Configuration=Release /p:Platform=${tbb_arch}
-      INSTALL_COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/${tbb_arch}/Release/tbb.dll ${CMAKE_BINARY_DIR}/bin/
-              COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/${tbb_arch}/Release/tbbmalloc.dll ${CMAKE_BINARY_DIR}/bin/
-              COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/${tbb_arch}/Release/tbbmalloc_proxy.dll ${CMAKE_BINARY_DIR}/bin/
-              COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/${tbb_arch}/Release/tbb.lib ${CMAKE_BINARY_DIR}/lib/
-              COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/${tbb_arch}/Release/tbbmalloc.lib ${CMAKE_BINARY_DIR}/lib/
-              COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/${tbb_arch}/Release/tbbmalloc_proxy.lib ${CMAKE_BINARY_DIR}/lib/
-              COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/${tbb_arch}/Release/tbb.pdb ${CMAKE_BINARY_DIR}/bin/
-              COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/${tbb_arch}/Release/tbbmalloc.pdb ${CMAKE_BINARY_DIR}/bin/
-              COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/${tbb_arch}/Release/tbbmalloc_proxy.pdb ${CMAKE_BINARY_DIR}/bin/
+      BUILD_COMMAND MSBuild.exe build/${vsdir}/makefile.sln /p:Configuration=${tbbbuild} /p:Platform=${tbb_arch}
+      INSTALL_COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/${tbb_arch}/${tbbbuild}/tbb${tbbsuffix}.dll ${CMAKE_BINARY_DIR}/bin/
+              COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/${tbb_arch}/${tbbbuild}/tbbmalloc${tbbsuffix}.dll ${CMAKE_BINARY_DIR}/bin/
+              COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/${tbb_arch}/${tbbbuild}/tbbmalloc_proxy${tbbsuffix}.dll ${CMAKE_BINARY_DIR}/bin/
+              COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/${tbb_arch}/${tbbbuild}/tbb${tbbsuffix}.lib ${CMAKE_BINARY_DIR}/lib/
+              COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/${tbb_arch}/${tbbbuild}/tbbmalloc${tbbsuffix}.lib ${CMAKE_BINARY_DIR}/lib/
+              COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/${tbb_arch}/${tbbbuild}/tbbmalloc_proxy${tbbsuffix}.lib ${CMAKE_BINARY_DIR}/lib/
+              COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/${tbb_arch}/${tbbbuild}/tbb${tbbsuffix}.pdb ${CMAKE_BINARY_DIR}/bin/
+              COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/${tbb_arch}/${tbbbuild}/tbbmalloc${tbbsuffix}.pdb ${CMAKE_BINARY_DIR}/bin/
+              COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/${tbb_arch}/${tbbbuild}/tbbmalloc_proxy${tbbsuffix}.pdb ${CMAKE_BINARY_DIR}/bin/
               COMMAND ${CMAKE_COMMAND} -Dinstall_dir=<INSTALL_DIR> -Dsource_dir=<SOURCE_DIR>
                                        -P ${CMAKE_SOURCE_DIR}/cmake/scripts/InstallTBB.cmake
       BUILD_IN_SOURCE 1
@@ -1748,7 +1754,7 @@ if(cuda OR tmva-gpu)
       find_program(CUDA_NVCC_EXECUTABLE
         NAMES nvcc nvcc.exe
         PATHS "${CUDA_TOOLKIT_ROOT_DIR}"
-          ENV CUDA_TOOKIT_ROOT
+          ENV CUDA_TOOLKIT_ROOT
           ENV CUDA_PATH
           ENV CUDA_BIN_PATH
         PATH_SUFFIXES bin bin64
@@ -2025,13 +2031,17 @@ if (builtin_gtest)
     )
 
   if(MSVC)
+    set(gtestbuild "Release")
+    if(winrtdebug)
+      set(gtestbuild "Debug")
+    endif()
     set(EXTRA_GTEST_OPTS
       -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG:PATH=${_gtest_byproduct_binary_dir}/lib/
       -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_MINSIZEREL:PATH=${_gtest_byproduct_binary_dir}/lib/
       -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE:PATH=${_gtest_byproduct_binary_dir}/lib/
       -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELWITHDEBINFO:PATH=${_gtest_byproduct_binary_dir}/lib/
       -Dgtest_force_shared_crt=ON
-      BUILD_COMMAND ${CMAKE_COMMAND} --build <BINARY_DIR> --config Release)
+      BUILD_COMMAND ${CMAKE_COMMAND} --build <BINARY_DIR> --config ${gtestbuild})
   endif()
   if(APPLE)
     set(EXTRA_GTEST_OPTS
@@ -2150,8 +2160,8 @@ if(webgui)
   endif()
   ExternalProject_Add(
     RENDERCORE
-    URL ${CMAKE_SOURCE_DIR}/builtins/rendercore/RenderCore.tar.gz
-    URL_HASH SHA256=a0b1cc0d4e8d739b113ace87e33de77572cf019772899549cb082088943513e1
+    URL ${CMAKE_SOURCE_DIR}/builtins/rendercore/RenderCore-1.1.tar.gz
+    URL_HASH SHA256=2cb8c722193ae0ddffde3b1c4b24fc877c9bb2c9ebacdaa6f3860b81991e8737
     CONFIGURE_COMMAND ""
     BUILD_COMMAND ""
     INSTALL_COMMAND ""

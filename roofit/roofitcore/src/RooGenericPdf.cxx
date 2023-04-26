@@ -47,7 +47,6 @@ the names of the arguments are not hard coded.
 #include "RooStreamParser.h"
 #include "RooMsgService.h"
 #include "RooArgList.h"
-#include "RunContext.h"
 
 using namespace std;
 
@@ -122,18 +121,6 @@ double RooGenericPdf::evaluate() const
   return formula().eval(_actualVars.nset()) ;
 }
 
-
-////////////////////////////////////////////////////////////////////////////////
-/// Evaluate this formula for values found in inputData.
-RooSpan<double> RooGenericPdf::evaluateSpan(RooBatchCompute::RunContext& inputData, const RooArgSet* normSet) const {
-  if (normSet != nullptr && normSet != _normSet)
-    throw std::logic_error("Got conflicting normSets");
-
-  auto results = formula().evaluateSpan(this, inputData, _normSet);
-  inputData.spans[this] = results;
-
-  return results;
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 void RooGenericPdf::computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const

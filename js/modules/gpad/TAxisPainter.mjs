@@ -1,8 +1,8 @@
-import { gStyle, settings, constants, isBatchMode, clTGaxis, clTAxis } from '../core.mjs';
+import { gStyle, settings, constants, isBatchMode, clTAxis, clTGaxis } from '../core.mjs';
 import { select as d3_select, drag as d3_drag, timeFormat as d3_timeFormat,
          scaleTime as d3_scaleTime, scaleSymlog as d3_scaleSymlog,
          scaleLog as d3_scaleLog, scaleLinear as d3_scaleLinear } from '../d3.mjs';
-import { floatToString, makeTranslate } from '../base/BasePainter.mjs';
+import { floatToString, makeTranslate, addHighlightStyle } from '../base/BasePainter.mjs';
 import { ObjectPainter, EAxisBits } from '../base/ObjectPainter.mjs';
 import { FontHandler } from '../base/FontHandler.mjs';
 
@@ -145,12 +145,14 @@ const AxisPainterMethods = {
    /** @summary Provide label for normal axis */
    formatNormal(d, asticks, fmt) {
       let val = parseFloat(d);
-      if (asticks && this.order) val = val / Math.pow(10, this.order);
+      if (asticks && this.order)
+         val = val / Math.pow(10, this.order);
 
-      if (val === Math.round(val))
+      if (gStyle.fStripDecimals && (val === Math.round(val)))
          return Math.abs(val) < 1e9 ? val.toFixed(0) : val.toExponential(4);
 
-      if (asticks) return (this.ndig>10) ? val.toExponential(this.ndig-11) : val.toFixed(this.ndig);
+      if (asticks)
+         return this.ndig > 10 ? val.toExponential(this.ndig-11) : val.toFixed(this.ndig);
 
       return floatToString(val, fmt || gStyle.fStatFormat);
    },
@@ -345,7 +347,7 @@ const AxisPainterMethods = {
 
 
 /**
- * @summary Painter for TAxis/TGaxis objects
+ * @summary Painter for TAxis object
  *
  * @private
  */
@@ -358,6 +360,8 @@ class TAxisPainter extends ObjectPainter {
      * @param {boolean} embedded - if true, painter used in other objects painters */
    constructor(dom, axis, embedded) {
       super(dom, axis);
+
+      this.is_gaxis = axis?._typename === clTGaxis;
 
       Object.assign(this, AxisPainterMethods);
       this.initAxisPainter();
@@ -399,6 +403,8 @@ class TAxisPainter extends ObjectPainter {
       if (opts.time_scale || axis.fTimeDisplay) {
          this.kind = 'time';
          this.timeoffset = getTimeOffset(axis);
+      } else if (opts.axis_func) {
+         this.kind = 'func';
       } else {
          this.kind = !axis.fLabels ? 'normal' : 'labels';
       }
@@ -407,7 +413,7 @@ class TAxisPainter extends ObjectPainter {
          this.func = d3_scaleTime().domain([this.convertDate(smin), this.convertDate(smax)]);
       } else if (this.log) {
          if ((this.log === 1) || (this.log === 10))
-            this.logbase =  10;
+            this.logbase = 10;
          else if (this.log === 3)
             this.logbase = Math.E;
          else
@@ -427,7 +433,10 @@ class TAxisPainter extends ObjectPainter {
          if ((smin <= 0) || (smin >= smax))
             smin = smax * (opts.logminfactor || 1e-4);
 
-         this.func = d3_scaleLog().base(this.logbase).domain([smin, smax]);
+         if (this.kind == 'func')
+            this.func = this.createFuncHandle(opts.axis_func, this.logbase, smin, smax);
+         else
+            this.func = d3_scaleLog().base(this.logbase).domain([smin, smax]);
       } else if (this.symlog) {
          let v = Math.max(Math.abs(smin), Math.abs(smax));
          if (Number.isInteger(this.symlog) && (this.symlog > 0))
@@ -435,6 +444,8 @@ class TAxisPainter extends ObjectPainter {
          else
             v *= 0.01;
          this.func = d3_scaleSymlog().constant(v).domain([smin, smax]);
+      } else if (this.kind == 'func') {
+         this.func = this.createFuncHandle(opts.axis_func, 0, smin, smax);
       } else {
          this.func = d3_scaleLinear().domain([smin,smax]);
       }
@@ -455,12 +466,10 @@ class TAxisPainter extends ObjectPainter {
       else
          this.gr = this.func;
 
-      let is_gaxis = (axis?._typename === clTGaxis);
-
       delete this.format;// remove formatting func
 
       let ndiv = 508;
-      if (is_gaxis)
+      if (this.is_gaxis)
          ndiv = axis.fNdiv;
        else if (axis)
           ndiv = Math.max(axis.fNdivisions, 4);
@@ -469,7 +478,7 @@ class TAxisPainter extends ObjectPainter {
       this.nticks2 = (ndiv % 10000 - this.nticks) / 100;
       this.nticks3 = Math.floor(ndiv/10000);
 
-      if (axis && !is_gaxis && (this.nticks > 20)) this.nticks = 20;
+      if (axis && !this.is_gaxis && (this.nticks > 20)) this.nticks = 20;
 
       let gr_range = Math.abs(this.func.range()[1] - this.func.range()[0]);
       if (gr_range <= 0) gr_range = 100;
@@ -524,6 +533,7 @@ class TAxisPainter extends ObjectPainter {
          this.ndig = 0;
          this.format = this.formatNormal;
       }
+
    }
 
    /** @summary Return scale min */
@@ -641,21 +651,21 @@ class TAxisPainter extends ObjectPainter {
 
       // at the moment when drawing labels, we can try to find most optimal text representation for them
 
-      if ((this.kind == 'normal') && !this.log && (handle.major.length > 0)) {
+      if (((this.kind == 'normal') || (this.kind == 'func')) && !this.log && (handle.major.length > 0)) {
 
          let maxorder = 0, minorder = 0, exclorder3 = false;
 
          if (!optionNoexp) {
-            let maxtick = Math.max(Math.abs(handle.major[0]),Math.abs(handle.major[handle.major.length-1])),
-                mintick = Math.min(Math.abs(handle.major[0]),Math.abs(handle.major[handle.major.length-1])),
+            let maxtick = Math.max(Math.abs(handle.major[0]), Math.abs(handle.major[handle.major.length-1])),
+                mintick = Math.min(Math.abs(handle.major[0]), Math.abs(handle.major[handle.major.length-1])),
                 ord1 = (maxtick > 0) ? Math.round(Math.log10(maxtick)/3)*3 : 0,
                 ord2 = (mintick > 0) ? Math.round(Math.log10(mintick)/3)*3 : 0;
 
              exclorder3 = (maxtick < 2e4); // do not show 10^3 for values below 20000
 
              if (maxtick || mintick) {
-                maxorder = Math.max(ord1,ord2) + 3;
-                minorder = Math.min(ord1,ord2) - 3;
+                maxorder = Math.max(ord1, ord2) + 3;
+                minorder = Math.min(ord1, ord2) - 3;
              }
          }
 
@@ -664,7 +674,7 @@ class TAxisPainter extends ObjectPainter {
          let bestorder = 0, bestndig = this.ndig, bestlen = 1e10;
 
          for (let order = minorder; order <= maxorder; order+=3) {
-            if (exclorder3 && (order===3)) continue;
+            if (exclorder3 && (order === 3)) continue;
             this.order = order;
             this.ndig = 0;
             let lbls = [], indx = 0, totallen = 0;
@@ -672,6 +682,11 @@ class TAxisPainter extends ObjectPainter {
                let lbl = this.format(handle.major[indx], true);
                if (lbls.indexOf(lbl) < 0) {
                   lbls.push(lbl);
+                  let p = lbl.indexOf('.');
+                  if (!order  && !optionNoexp && ((p > gStyle.fAxisMaxDigits) || ((p < 0) && (lbl.length > gStyle.fAxisMaxDigits)))) {
+                     totallen += 1e10; // do not use order = 0 when too many digits are there
+                     exclorder3 = false;
+                  }
                   totallen += lbl.length;
                   indx++;
                   continue;
@@ -757,13 +772,13 @@ class TAxisPainter extends ObjectPainter {
          alt_pos[curr_indx] = vertical ? acc_y : acc_x;
 
          drag_rect = title_g.append('rect')
-              .classed('zoom', true)
               .attr('x', box.x)
               .attr('y', box.y)
               .attr('width', box.width)
               .attr('height', box.height)
-              .style('cursor', 'move');
-//                 .style('pointer-events','none'); // let forward double click to underlying elements
+              .style('cursor', 'move')
+              .call(addHighlightStyle, true);
+         //   .style('pointer-events','none'); // let forward double click to underlying elements
       }).on('drag', evnt => {
          if (!drag_rect) return;
 
@@ -837,9 +852,13 @@ class TAxisPainter extends ObjectPainter {
    /** @summary Submit exec for the axis - if possible
      * @private */
    submitAxisExec(exec) {
-      let snapid = this.hist_painter?.snapid;
-      if (snapid && this.hist_axis)
-         this.submitCanvExec(exec, snapid + '#' + this.hist_axis);
+      if (this.is_gaxis) {
+         this.submitCanvExec(exec);
+      } else {
+         let snapid = this.hist_painter?.snapid;
+         if (snapid && this.hist_axis)
+            this.submitCanvExec(exec, `${snapid}#${this.hist_axis}`);
+      }
    }
 
    /** @summary Produce svg path for axis ticks */
@@ -857,7 +876,7 @@ class TAxisPainter extends ObjectPainter {
          if (handle.kind == 1) {
             // if not showing labels, not show large tick
             // FIXME: for labels last tick is smaller,
-            if (/*(this.kind == 'labels') || */ (this.format(handle.tick,true) !== null)) h1 = tickSize;
+            if (/*(this.kind == 'labels') || */ (this.format(handle.tick, true) !== null)) h1 = tickSize;
             this.ticks.push(handle.grpos); // keep graphical positions of major ticks
          }
 
@@ -991,15 +1010,28 @@ class TAxisPainter extends ObjectPainter {
             lastpos = pos;
          }
 
-         if (this.order)
+         if (this.order) {
+            let xoff = 0, yoff = 0;
+            if (this.name == 'xaxis') {
+               xoff = gStyle.fXAxisExpXOffset || 0;
+               yoff = gStyle.fXAxisExpYOffset || 0;
+            } else if (this.name == 'yaxis') {
+               xoff = gStyle.fYAxisExpXOffset || 0;
+               yoff = gStyle.fYAxisExpYOffset || 0;
+            }
+
+            if (xoff) xoff = Math.round(xoff * (this.getPadPainter()?.getPadWidth() ?? 0));
+            if (yoff) yoff = Math.round(yoff * (this.getPadPainter()?.getPadHeight() ?? 0));
+
             this.drawText({ color: labelsFont.color,
-                            x: this.vertical ? side*5 : w+5,
-                            y: this.has_obstacle ? fix_coord : (this.vertical ? -3 : -3*side),
+                            x: xoff + (this.vertical ? side*5 : w+5),
+                            y: yoff + (this.has_obstacle ? fix_coord : (this.vertical ? -3 : -3*side)),
                             align: this.vertical ? ((side < 0) ? 30 : 10) : ( (this.has_obstacle ^ (side < 0)) ? 13 : 10 ),
                             latex: 1,
                             text: '#times' + this.formatExp(10, this.order),
                             draw_g: label_g[lcnt]
             });
+         }
       }
 
       // first complete major labels drawing
@@ -1025,7 +1057,6 @@ class TAxisPainter extends ObjectPainter {
      * @private  */
    extractDrawAttributes(scalingSize, w, h) {
       let axis = this.getObject(),
-          is_gaxis = axis?._typename === clTGaxis,
           pp = this.getPadPainter(),
           pad_w = pp?.getPadWidth() || scalingSize || w/0.8, // use factor 0.8 as ratio between frame and pad size
           pad_h = pp?.getPadHeight() || scalingSize || h/0.8,
@@ -1033,14 +1064,13 @@ class TAxisPainter extends ObjectPainter {
 
       this.scalingSize = scalingSize || Math.max(Math.min(pad_w, pad_h), 10);
 
-      if (is_gaxis) {
+      if (this.is_gaxis) {
          let optionSize = axis.fChopt.indexOf('S') >= 0;
          this.optionUnlab = axis.fChopt.indexOf('U') >= 0;
          this.optionMinus = (axis.fChopt.indexOf('-') >= 0) || axis.TestBit(EAxisBits.kTickMinus);
          this.optionPlus = (axis.fChopt.indexOf('+') >= 0) || axis.TestBit(EAxisBits.kTickPlus);
          this.optionNoopt = (axis.fChopt.indexOf('N') >= 0);  // no ticks position optimization
          this.optionInt = (axis.fChopt.indexOf('I') >= 0);  // integer labels
-
          this.createAttLine({ attr: axis });
          tickScalingSize = scalingSize || (this.vertical ? 1.7*h : 0.6*w);
          tickSize = optionSize ? axis.fTickSize : 0.03;
@@ -1082,7 +1112,8 @@ class TAxisPainter extends ObjectPainter {
          this.titleFont.setColor(titleColor);
          this.offsetScaling = (axis.fTitleSize >= 1) ? 1 : (this.vertical ? pad_w : pad_h) / this.scalingSize;
          this.titleOffset = axis.fTitleOffset;
-         if (!this.titleOffset && this.name[0] == 'x') this.titleOffset = gStyle.fXaxis.fTitleOffset;
+         if (!this.titleOffset && this.name[0] == 'x')
+            this.titleOffset = gStyle.fXaxis.fTitleOffset;
          this.titleOffset *= this.titleSize * this.offsetScaling;
          this.titleCenter = axis.TestBit(EAxisBits.kCenterTitle);
          this.titleOpposite = axis.TestBit(EAxisBits.kOppositeTitle);
@@ -1102,12 +1133,8 @@ class TAxisPainter extends ObjectPainter {
    async drawAxis(layer, w, h, transform, secondShift, disable_axis_drawing, max_text_width, calculate_position) {
 
       let axis = this.getObject(),
-          is_gaxis = axis?._typename === clTGaxis,
           axis_g = layer,
           draw_lines = true,
-          pp = this.getPadPainter(),
-          pad_w = pp?.getPadWidth() || 10,
-          pad_h = pp?.getPadHeight() || 10,
           swap_side = this.swap_side || false;
 
       // shift for second ticks set (if any)
@@ -1118,17 +1145,16 @@ class TAxisPainter extends ObjectPainter {
 
       this.extractDrawAttributes(undefined, w, h);
 
-      if (is_gaxis) {
+      if (this.is_gaxis)
          draw_lines = axis.fLineColor != 0;
-      }
 
       // indicate that attributes created not for TAttLine, therefore cannot be updated as TAttLine in GED
       this.lineatt.not_standard = true;
 
-      if (!is_gaxis || (this.name === 'zaxis')) {
-         axis_g = layer.select('.' + this.name + '_container');
+      if (!this.is_gaxis || (this.name === 'zaxis')) {
+         axis_g = layer.select(`.${this.name}_container`);
          if (axis_g.empty())
-            axis_g = layer.append('svg:g').attr('class',this.name + '_container');
+            axis_g = layer.append('svg:g').attr('class', `${this.name}_container`);
          else
             axis_g.selectAll('*').remove();
       }
@@ -1221,10 +1247,10 @@ class TAxisPainter extends ObjectPainter {
 
             title_shift_x = Math.round(title_offest_k * this.titleOffset);
 
-            if ((this.name == 'zaxis') && is_gaxis && ('getBoundingClientRect' in axis_g.node())) {
+            if ((this.name == 'zaxis') && this.is_gaxis && ('getBoundingClientRect' in axis_g.node())) {
                // special handling for color palette labels - draw them always on right side
                let rect = axis_g.node().getBoundingClientRect();
-               if (title_shift_x < rect.width - this.ticksSize)
+               if (title_shift_x < rect.waddMoveHandleridth - this.ticksSize)
                   title_shift_x = Math.round(rect.width - this.ticksSize);
             }
 
@@ -1259,74 +1285,6 @@ class TAxisPainter extends ObjectPainter {
 
          return this;
       });
-   }
-
-   /** @summary Convert TGaxis position into NDC to fix it when frame zoomed */
-   convertTo(opt) {
-      let gaxis = this.getObject(),
-          x1 = this.axisToSvg('x', gaxis.fX1),
-          y1 = this.axisToSvg('y', gaxis.fY1),
-          x2 = this.axisToSvg('x', gaxis.fX2),
-          y2 = this.axisToSvg('y', gaxis.fY2);
-
-      if (opt == 'ndc') {
-          let pw = this.getPadPainter().getPadWidth(),
-              ph = this.getPadPainter().getPadHeight();
-
-          gaxis.fX1 = x1 / pw;
-          gaxis.fX2 = x2 / pw;
-          gaxis.fY1 = (ph - y1) / ph;
-          gaxis.fY2 = (ph - y2)/ ph;
-          this.use_ndc = true;
-      } else if (opt == 'frame') {
-         let rect = this.getFramePainter().getFrameRect();
-         gaxis.fX1 = (x1 - rect.x) / rect.width;
-         gaxis.fX2 = (x2 - rect.x) / rect.width;
-         gaxis.fY1 = (y1 - rect.y) / rect.height;
-         gaxis.fY2 = (y2 - rect.y) / rect.height;
-         this.bind_frame = true;
-      }
-   }
-
-   /** @summary Redraw axis, used in standalone mode for TGaxis */
-   redraw() {
-
-      let gaxis = this.getObject(), x1, y1, x2, y2;
-
-      if (this.bind_frame) {
-         let rect = this.getFramePainter().getFrameRect();
-         x1 = Math.round(rect.x + gaxis.fX1 * rect.width);
-         x2 = Math.round(rect.x + gaxis.fX2 * rect.width);
-         y1 = Math.round(rect.y + gaxis.fY1 * rect.height);
-         y2 = Math.round(rect.y + gaxis.fY2 * rect.height);
-      } else {
-          x1 = this.axisToSvg('x', gaxis.fX1, this.use_ndc);
-          y1 = this.axisToSvg('y', gaxis.fY1, this.use_ndc);
-          x2 = this.axisToSvg('x', gaxis.fX2, this.use_ndc);
-          y2 = this.axisToSvg('y', gaxis.fY2, this.use_ndc);
-      }
-      let w = x2 - x1, h = y1 - y2,
-          vertical = Math.abs(w) < Math.abs(h),
-          sz = vertical ? h : w,
-          reverse = false,
-          min = gaxis.fWmin, max = gaxis.fWmax;
-
-      if (sz < 0) {
-         reverse = true;
-         sz = -sz;
-         if (vertical) y2 = y1; else x1 = x2;
-      }
-
-      this.configureAxis(vertical ? 'yaxis' : 'xaxis', min, max, min, max, vertical, [0, sz], {
-         time_scale: gaxis.fChopt.indexOf('t') >= 0,
-         log: (gaxis.fChopt.indexOf('G') >= 0) ? 1 : 0,
-         reverse,
-         swap_side: reverse
-      });
-
-      this.createG();
-
-      return this.drawAxis(this.getG(), Math.abs(w), Math.abs(h), makeTranslate(x1, y2) || '');
    }
 
 } // class TAxisPainter

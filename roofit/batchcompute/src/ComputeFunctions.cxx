@@ -24,6 +24,7 @@ https://developer.nvidia.com/blog/cuda-pro-tip-write-flexible-kernels-grid-strid
 **/
 
 #include "RooBatchCompute.h"
+#include "RooNaNPacker.h"
 #include "RooVDTHeaders.h"
 #include "Batches.h"
 
@@ -488,6 +489,44 @@ __rooglobal__ void computeLognormal(BatchesHandle batches)
    }
 }
 
+__rooglobal__ void computeNormalizedPdf(BatchesHandle batches)
+{
+   auto rawVal = batches[0];
+   auto normVal = batches[1];
+
+   int nEvalErrorsType0 = 0;
+   int nEvalErrorsType1 = 0;
+   int nEvalErrorsType2 = 0;
+
+   for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
+      double out = 0.0;
+      // batches._output[i] = rawVal[i] / normVar[i];
+      if (normVal[i] < 0. || (normVal[i] == 0. && rawVal[i] != 0)) {
+         // Unreasonable normalisations. A zero integral can be tolerated if the function vanishes, though.
+         out = RooNaNPacker::packFloatIntoNaN(-normVal[i] + (rawVal[i] < 0. ? -rawVal[i] : 0.));
+         nEvalErrorsType0++;
+      } else if (rawVal[i] < 0.) {
+         // The pdf value is less than zero.
+         out = RooNaNPacker::packFloatIntoNaN(-rawVal[i]);
+         nEvalErrorsType1++;
+      } else if (std::isnan(rawVal[i])) {
+         // The pdf value is Not-a-Number.
+         out = rawVal[i];
+         nEvalErrorsType2++;
+      } else {
+         out = (rawVal[i] == 0. && normVal[i] == 0.) ? 0. : rawVal[i] / normVal[i];
+      }
+      batches._output[i] = out;
+   }
+
+   if (nEvalErrorsType0 > 0)
+      batches.setExtraArg(0, batches.extraArg(0) + nEvalErrorsType0);
+   if (nEvalErrorsType1 > 1)
+      batches.setExtraArg(1, batches.extraArg(1) + nEvalErrorsType1);
+   if (nEvalErrorsType2 > 2)
+      batches.setExtraArg(2, batches.extraArg(2) + nEvalErrorsType2);
+}
+
 /* TMath::ASinH(x) needs to be replaced with ln( x + sqrt(x^2+1))
  * argasinh -> the argument of TMath::ASinH()
  * argln -> the argument of the logarithm that replaces AsinH
@@ -546,41 +585,19 @@ __rooglobal__ void computePoisson(BatchesHandle batches)
 
 __rooglobal__ void computePolynomial(BatchesHandle batches)
 {
-   Batch X = batches[0];
-   const int nCoef = batches.getNExtraArgs() - 1;
-   const int lowestOrder = batches.extraArg(nCoef);
-   if (nCoef == 0) {
-      for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP)
-         batches._output[i] = (lowestOrder > 0.0);
-      return;
-   } else
-      for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP)
-         batches._output[i] = batches.extraArg(nCoef - 1);
+   const int nCoef = batches.extraArg(0);
+   const std::size_t nEvents = batches.getNEvents();
+   Batch x = batches[nCoef];
 
-   /* Indexes are in range 0..nCoef-1 but coefList[nCoef-1]
-    * has already been processed. In order to traverse the list,
-    * with step of 2 we have to start at index nCoef-3 and use
-    * coefList[k+1] and coefList[k]
-    */
-   for (int k = nCoef - 3; k >= 0; k -= 2)
-      for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP)
-         batches._output[i] = X[i] * (batches._output[i] * X[i] + batches.extraArg(k + 1)) + batches.extraArg(k);
+   for (size_t i = BEGIN; i < nEvents; i += STEP) {
+      batches._output[i] = batches[nCoef - 1][i];
+   }
 
-   // If nCoef is even, then the coefList[0] didn't get processed
-   if (nCoef % 2 == 0)
-      for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP)
-         batches._output[i] = batches._output[i] * X[i] + batches.extraArg(0);
-
-   // Increase the order of the polynomial, first by myltiplying with X[i]^2
-   if (lowestOrder != 0) {
-      for (int k = 2; k <= lowestOrder; k += 2)
-         for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP)
-            batches._output[i] *= X[i] * X[i];
-
-      for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
-         if (lowestOrder % 2 == 1)
-            batches._output[i] *= X[i];
-         batches._output[i] += 1.0;
+   // Indexes are in range 0..nCoef-1 but coefList[nCoef-1] has already been
+   // processed.
+   for (int k = nCoef - 2; k >= 0; k--) {
+      for (size_t i = BEGIN; i < nEvents; i += STEP) {
+         batches._output[i] = batches[k][i] + x[i] * batches._output[i];
       }
    }
 }
@@ -750,6 +767,7 @@ std::vector<void (*)(BatchesHandle)> getFunctions()
            computeLandau,
            computeLognormal,
            computeNegativeLogarithms,
+           computeNormalizedPdf,
            computeNovosibirsk,
            computePoisson,
            computePolynomial,

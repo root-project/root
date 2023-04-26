@@ -34,10 +34,6 @@ a specified area of a Poisson or Binomail error distribution.
 
 using namespace std;
 
-ClassImp(RooHistError);
-  ;
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return a reference to a singleton object that is created the

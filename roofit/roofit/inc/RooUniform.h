@@ -40,7 +40,6 @@ protected:
   RooListProxy x ;
 
   double evaluate() const override ;
-  RooSpan<double> evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* /*normSet*/ = nullptr) const override;
 
 
 private:

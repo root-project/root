@@ -126,11 +126,11 @@ the proxy holds a function, and will trigger an assert.
 ### Batched function evaluations (Advanced usage)
 
 To speed up computations with large numbers of data events in unbinned fits,
-it is beneficial to override `evaluateSpan()`. Like this, large spans of
+it is beneficial to override `computeBatch()`. Like this, large spans of
 computations can be done, without having to call `evaluate()` for each single data event.
-`evaluateSpan()` should execute the same computation as `evaluate()`, but it
+`computeBatch()` should execute the same computation as `evaluate()`, but it
 may choose an implementation that is capable of SIMD computations.
-If evaluateSpan is not implemented, the classic and slower `evaluate()` will be
+If computeBatch is not implemented, the classic and slower `evaluate()` will be
 called for each data event.
 */
 
@@ -964,7 +964,7 @@ double RooAbsPdf::extendedTerm(RooAbsData const& data, bool weightSquared, bool 
 ///
 ///
 
-RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
+RooFit::OwningPtr<RooAbsReal> RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
 {
   auto baseName = std::string("nll_") + GetName() + "_" + data.GetName();
 
@@ -1034,8 +1034,8 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
       RooFit::TestStatistics::ExternalConstraints extCons(extConsSet);
       RooFit::TestStatistics::GlobalObservables glObs(glObsSet);
 
-      return new RooFit::TestStatistics::RooRealL("likelihood", "",
-          RooFit::TestStatistics::buildLikelihood(this, &data, ext, cPars, extCons, glObs, rangeName));
+      return RooFit::OwningPtr<RooAbsReal>{new RooFit::TestStatistics::RooRealL("likelihood", "",
+          RooFit::TestStatistics::buildLikelihood(this, &data, ext, cPars, extCons, glObs, rangeName))};
   }
 
   // Decode command line arguments
@@ -1158,16 +1158,17 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
        compiledConstr->addOwnedComponents(std::move(constr));
     }
 
-    return RooFit::BatchModeHelpers::createNLL(std::move(pdfClone),
-                                               data,
-                                               std::move(compiledConstr),
-                                               rangeName ? rangeName : "",
-                                               projDeps,
-                                               ext,
-                                               pc.getDouble("IntegrateBins"),
-                                               batchMode,
-                                               offset,
-                                               takeGlobalObservablesFromData).release();
+    return RooFit::OwningPtr<RooAbsReal>{RooFit::BatchModeHelpers::createNLL(
+            std::move(pdfClone),
+            data,
+            std::move(compiledConstr),
+            rangeName ? rangeName : "",
+            projDeps,
+            ext,
+            pc.getDouble("IntegrateBins"),
+            batchMode,
+            offset,
+            takeGlobalObservablesFromData).release()};
   }
 
   // Construct NLL
@@ -1222,7 +1223,7 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
     nll->enableOffsetting(true) ;
   }
 
-  return nll.release() ;
+  return RooFit::OwningPtr<RooAbsReal>{nll.release()};
 }
 
 
@@ -1609,7 +1610,7 @@ std::unique_ptr<RooFitResult> RooAbsPdf::minimizeNLL(RooAbsReal & nll,
 /// </table>
 ///
 
-RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
+RooFit::OwningPtr<RooFitResult> RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
 {
   // Select the pdf-specific commands
   RooCmdConfig pc(Form("RooAbsPdf::fitTo(%s)",GetName())) ;
@@ -1751,7 +1752,7 @@ RooFitResult* RooAbsPdf::fitTo(RooAbsData& data, const RooLinkedList& cmdList)
   cfg.enableParallelGradient = pc.getInt("enableParallelGradient");
   cfg.enableParallelDescent = pc.getInt("enableParallelDescent");
   cfg.timingAnalysis = pc.getInt("timingAnalysis");
-  return minimizeNLL(*nll, data, cfg).release();
+  return RooFit::OwningPtr<RooFitResult>{minimizeNLL(*nll, data, cfg).release()};
 }
 
 
@@ -3077,12 +3078,10 @@ RooPlot* RooAbsPdf::plotOn(RooPlot *frame, PlotOpt o) const
 /// <tr><th> Type of CmdArg                     <th> Effect on parameter box
 /// <tr><td> `Parameters(const RooArgSet& param)` <td>  Only the specified subset of parameters will be shown. By default all non-constant parameters are shown.
 /// <tr><td> `ShowConstants(bool flag)`         <td>  Also display constant parameters
-/// <tr><td> `Format(const char* optStr)`         <td>  \deprecated Classing parameter formatting options, provided for backward compatibility
-///
 /// <tr><td> `Format(const char* what,...)`       <td>  Parameter formatting options.
 ///   | Parameter              | Format
 ///   | ---------------------- | --------------------------
-///   | `const char* what`     |  Controls what is shown. "N" adds name, "E" adds error, "A" shows asymmetric error, "U" shows unit, "H" hides the value
+///   | `const char* what`     |  Controls what is shown. "N" adds name (alternatively, "T" adds the title), "E" adds error, "A" shows asymmetric error, "U" shows unit, "H" hides the value
 ///   | `FixedPrecision(int n)`|  Controls precision, set fixed number of digits
 ///   | `AutoPrecision(int n)` |  Controls precision. Number of shown digits is calculated from error + n specified additional digits (1 is sensible default)
 /// <tr><td> `Label(const chat* label)`           <td>  Add label to parameter box. Use `\n` for multi-line labels.
@@ -3117,10 +3116,7 @@ RooPlot* RooAbsPdf::paramOn(RooPlot* frame, const RooCmdArg& arg1, const RooCmdA
   pc.defineInt("ymaxi","Layout",0,Int_t(0.9*10000)) ;
   pc.defineInt("showc","ShowConstants",0,0) ;
   pc.defineSet("params","Parameters",0,0) ;
-  pc.defineString("formatStr","Format",0,"NELU") ;
-  pc.defineInt("sigDigit","Format",0,2) ;
   pc.defineInt("dummy","FormatArgs",0,0) ;
-  pc.defineMutex("Format","FormatArgs") ;
 
   // Process and check varargs
   pc.process(cmdList) ;
@@ -3128,56 +3124,23 @@ RooPlot* RooAbsPdf::paramOn(RooPlot* frame, const RooCmdArg& arg1, const RooCmdA
     return frame ;
   }
 
+  auto formatCmd = static_cast<RooCmdArg const*>(cmdList.FindObject("FormatArgs")) ;
+
   const char* label = pc.getString("label") ;
   double xmin = pc.getDouble("xmin") ;
   double xmax = pc.getDouble("xmax") ;
   double ymax = pc.getInt("ymaxi") / 10000. ;
-  Int_t showc = pc.getInt("showc") ;
-
-
-  const char* formatStr = pc.getString("formatStr") ;
-  Int_t sigDigit = pc.getInt("sigDigit") ;
+  int showc = pc.getInt("showc") ;
 
   // Decode command line arguments
-  RooArgSet* params = pc.getSet("params");
-  if (!params) {
-    std::unique_ptr<RooArgSet> paramsPtr{getParameters(frame->getNormVars())} ;
-    if (pc.hasProcessed("FormatArgs")) {
-      const RooCmdArg* formatCmd = static_cast<RooCmdArg*>(cmdList.FindObject("FormatArgs")) ;
-      paramOn(frame,*paramsPtr,showc,label,0,0,xmin,xmax,ymax,formatCmd) ;
-    } else {
-      paramOn(frame,*paramsPtr,showc,label,sigDigit,formatStr,xmin,xmax,ymax) ;
-    }
-  } else {
-    std::unique_ptr<RooArgSet> pdfParams{getParameters(frame->getNormVars())} ;
-    std::unique_ptr<RooArgSet> selParams{static_cast<RooArgSet*>(pdfParams->selectCommon(*params))} ;
-    if (pc.hasProcessed("FormatArgs")) {
-      const RooCmdArg* formatCmd = static_cast<RooCmdArg*>(cmdList.FindObject("FormatArgs")) ;
-      paramOn(frame,*selParams,showc,label,0,0,xmin,xmax,ymax,formatCmd) ;
-    } else {
-      paramOn(frame,*selParams,showc,label,sigDigit,formatStr,xmin,xmax,ymax) ;
-    }
+  std::unique_ptr<RooArgSet> params{getParameters(frame->getNormVars())} ;
+  if(RooArgSet* requestedParams = pc.getSet("params")) {
+    params = std::unique_ptr<RooArgSet>{static_cast<RooArgSet*>(params->selectCommon(*requestedParams))};
   }
+  paramOn(frame,*params,showc,label,xmin,xmax,ymax,formatCmd);
 
   return frame ;
 }
-
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// \deprecated Obsolete, provided for backward compatibility. Don't use.
-
-RooPlot* RooAbsPdf::paramOn(RooPlot* frame, const RooAbsData* data, const char *label,
-             Int_t sigDigits, Option_t *options, double xmin,
-             double xmax ,double ymax)
-{
-  std::unique_ptr<RooArgSet> params{getParameters(data)} ;
-  TString opts(options) ;
-  paramOn(frame,*params,opts.Contains("c"),label,sigDigits,options,xmin,xmax,ymax) ;
-  return frame ;
-}
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3190,13 +3153,10 @@ RooPlot* RooAbsPdf::paramOn(RooPlot* frame, const RooAbsData* data, const char *
 /// values specify the initial relative position of the text box in the plot frame.
 
 RooPlot* RooAbsPdf::paramOn(RooPlot* frame, const RooArgSet& params, bool showConstants, const char *label,
-             Int_t sigDigits, Option_t *options, double xmin,
-             double xmax ,double ymax, const RooCmdArg* formatCmd)
+             double xmin, double xmax ,double ymax, const RooCmdArg* formatCmd)
 {
 
   // parse the options
-  TString opts = options;
-  opts.ToLower();
   bool showLabel= (label != 0 && strlen(label) > 0);
 
   // calculate the box's size, adjusting for constant parameters
@@ -3225,7 +3185,7 @@ RooPlot* RooAbsPdf::paramOn(RooPlot* frame, const RooArgSet& params, bool showCo
     auto var = static_cast<const RooRealVar*>(param);
     if(var->isConstant() && !showConstants) continue;
 
-    std::unique_ptr<TString> formatted{options ? var->format(sigDigits, options) : var->format(*formatCmd)};
+    std::unique_ptr<TString> formatted{formatCmd ? var->format(*formatCmd) : var->format(2, "NELU")};
     box->AddText(formatted->Data());
   }
 
@@ -3334,7 +3294,7 @@ RooAbsPdf* RooAbsPdf::createProjection(const RooArgSet& iset)
 /// over z results in a maximum value of 1. To construct such a cdf pass
 /// z as argument to the optional nset argument
 
-RooAbsReal* RooAbsPdf::createCdf(const RooArgSet& iset, const RooArgSet& nset)
+RooFit::OwningPtr<RooAbsReal> RooAbsPdf::createCdf(const RooArgSet& iset, const RooArgSet& nset)
 {
   return createCdf(iset,RooFit::SupNormSet(nset)) ;
 }
@@ -3356,7 +3316,7 @@ RooAbsReal* RooAbsPdf::createCdf(const RooArgSet& iset, const RooArgSet& nset)
 /// | ScanNoCdf()                          | Never apply scanning technique
 /// | ScanParameters(Int_t nbins, Int_t intOrder) | Parameters for scanning technique of making CDF: number of sampled bins and order of interpolation applied on numeric cdf
 
-RooAbsReal* RooAbsPdf::createCdf(const RooArgSet& iset, const RooCmdArg& arg1, const RooCmdArg& arg2,
+RooFit::OwningPtr<RooAbsReal> RooAbsPdf::createCdf(const RooArgSet& iset, const RooCmdArg& arg1, const RooCmdArg& arg2,
              const RooCmdArg& arg3, const RooCmdArg& arg4, const RooCmdArg& arg5,
              const RooCmdArg& arg6, const RooCmdArg& arg7, const RooCmdArg& arg8)
 {
@@ -3411,14 +3371,14 @@ RooAbsReal* RooAbsPdf::createCdf(const RooArgSet& iset, const RooCmdArg& arg1, c
   return 0 ;
 }
 
-RooAbsReal* RooAbsPdf::createScanCdf(const RooArgSet& iset, const RooArgSet& nset, Int_t numScanBins, Int_t intOrder)
+RooFit::OwningPtr<RooAbsReal> RooAbsPdf::createScanCdf(const RooArgSet& iset, const RooArgSet& nset, Int_t numScanBins, Int_t intOrder)
 {
   string name = string(GetName()) + "_NUMCDF_" + integralNameSuffix(iset,&nset).Data() ;
   RooRealVar* ivar = (RooRealVar*) iset.first() ;
   ivar->setBins(numScanBins,"numcdf") ;
-  RooNumCdf* ret = new RooNumCdf(name.c_str(),name.c_str(),*this,*ivar,"numcdf") ;
+  auto ret = std::make_unique<RooNumCdf>(name.c_str(),name.c_str(),*this,*ivar,"numcdf");
   ret->setInterpolationOrder(intOrder) ;
-  return ret ;
+  return RooFit::OwningPtr<RooAbsReal>{ret.release()};
 }
 
 

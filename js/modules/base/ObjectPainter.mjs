@@ -5,6 +5,7 @@ import { getElementRect, BasePainter, makeTranslate } from './BasePainter.mjs';
 import { TAttMarkerHandler } from './TAttMarkerHandler.mjs';
 import { TAttFillHandler } from './TAttFillHandler.mjs';
 import { TAttLineHandler } from './TAttLineHandler.mjs';
+import { TAttTextHandler } from './TAttTextHandler.mjs';
 import { FontHandler } from './FontHandler.mjs';
 import { getRootColors } from './colors.mjs';
 
@@ -628,6 +629,29 @@ class ObjectPainter extends BasePainter {
          handler.setArgs(args);
 
       if (args.std) this.lineatt = handler;
+      return handler;
+   }
+
+   /** @summary Creates text attributes object.
+     * @param {object} args - either TAttText or see constructor arguments of {@link TAttTextHandler}
+     * @protected */
+   createAttText(args) {
+      if (!isObject(args))
+         args = { std: true };
+      else if (args.fTextFont !== undefined && args.fTextSize !== undefined && args.fTextSize !== undefined)
+         args = { attr: args, std: false };
+
+      if (args.std === undefined) args.std = true;
+      if (args.painter === undefined) args.painter = this;
+
+      let handler = args.std ? this.textatt : null;
+
+      if (!handler)
+         handler = new TAttTextHandler(args);
+      else if (!handler.changed || args.force)
+         handler.setArgs(args);
+
+      if (args.std) this.textatt = handler;
       return handler;
    }
 
@@ -1407,7 +1431,7 @@ class ObjectPainter extends BasePainter {
    }
 
    /** @summary Provide projection areas
-     * @param kind - 'X', 'Y' or ''
+     * @param kind - 'X', 'Y', 'XY' or ''
      * @private */
    async provideSpecialDrawArea(kind) {
       if (kind == this._special_draw_area)
@@ -1419,13 +1443,15 @@ class ObjectPainter extends BasePainter {
       });
    }
 
-   /** @summary Provide projection areas
-     * @param kind - 'X', 'Y' or ''
+   /** @summary Draw in special projection areas
+     * @param obj - object to draw
+     * @param opt - draw option
+     * @param kind - '', 'X', 'Y'
      * @private */
-   async drawInSpecialArea(obj, opt) {
+   async drawInSpecialArea(obj, opt, kind) {
       let canp = this.getCanvPainter();
       if (this._special_draw_area && isFunc(canp?.drawProjection))
-         return canp.drawProjection(this._special_draw_area, obj, opt);
+         return canp.drawProjection(kind || this._special_draw_area, obj, opt);
 
       return false;
    }

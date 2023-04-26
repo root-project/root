@@ -15,14 +15,26 @@
 #include <RooProdPdf.h>
 #include <RooRealVar.h>
 #include <RooWorkspace.h>
-
-#include <RooStats/ModelConfig.h>
+#include <RooFit/ModelConfig.h>
 
 #include <TROOT.h>
 
 #include <gtest/gtest.h>
 
 namespace {
+
+void setupKeys()
+{
+   static bool isAlreadySetup = false;
+   if (isAlreadySetup)
+      return;
+
+   auto etcDir = std::string(TROOT::GetEtcDir());
+   RooFit::JSONIO::loadExportKeys(etcDir + "/RooFitHS3_wsexportkeys.json");
+   RooFit::JSONIO::loadFactoryExpressions(etcDir + "/RooFitHS3_wsfactoryexpressions.json");
+
+   isAlreadySetup = true;
+}
 
 std::unique_ptr<RooFitResult> writeJSONAndFitModel(std::string &jsonStr)
 {
@@ -61,12 +73,9 @@ std::unique_ptr<RooFitResult> writeJSONAndFitModel(std::string &jsonStr)
    x1.setBins(20);
    x2.setBins(20);
 
-   RooAbsPdf &model_1 = *ws.pdf("model_1");
-   RooAbsPdf &model_2 = *ws.pdf("model_2");
-
    std::map<std::string, std::unique_ptr<RooAbsData>> datas;
-   datas["channel_1"] = std::unique_ptr<RooDataHist>{model_1.generateBinned(x1)};
-   datas["channel_2"] = std::unique_ptr<RooDataHist>{model_2.generateBinned(x2)};
+   datas["channel_1"] = std::unique_ptr<RooDataHist>{ws.pdf("model_1")->generateBinned(x1)};
+   datas["channel_2"] = std::unique_ptr<RooDataHist>{ws.pdf("model_2")->generateBinned(x2)};
 
    datas["channel_1"]->SetName("obsData_channel_1");
    datas["channel_2"]->SetName("obsData_channel_2");
@@ -76,9 +85,6 @@ std::unique_ptr<RooFitResult> writeJSONAndFitModel(std::string &jsonStr)
 
    auto &pdf = *ws.pdf("simPdf");
    auto &data = *ws.data("obsData");
-
-   // For now, this is the way to tell the JSONIO what the combined datasets are
-   pdf.setStringAttribute("combined_data_name", data.GetName());
 
    // Export before fitting to keep the prefit values
    jsonStr = RooJSONFactoryWSTool{ws}.exportJSONtoString();
@@ -95,6 +101,11 @@ std::unique_ptr<RooFitResult> readJSONAndFitModel(std::string const &jsonStr)
 
    tool.importJSONfromString(jsonStr);
 
+   // Make sure that there is exactly one dataset in the new workspace, and
+   // that there are no spurious datasets left over from first importing the
+   // channel datasets that later get merged to the combined dataset
+   EXPECT_EQ(ws.allData().size(), 1) << "Unexpected number of datasets in the new workspace";
+
    auto &pdf = *ws.pdf("simPdf");
    auto &data = *ws.data("obsData");
 
@@ -107,11 +118,9 @@ TEST(RooFitHS3, SimultaneousFit)
 {
    RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
 
-   using namespace RooFit;
+   setupKeys();
 
-   auto etcDir = std::string(TROOT::GetEtcDir());
-   RooFit::JSONIO::loadExportKeys(etcDir + "/RooFitHS3_wsexportkeys.json");
-   RooFit::JSONIO::loadFactoryExpressions(etcDir + "/RooFitHS3_wsfactoryexpressions.json");
+   using namespace RooFit;
 
    std::string jsonStr;
 

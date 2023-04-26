@@ -383,8 +383,8 @@ private:
     const Int_t iSamplingPoints = 100;
 
     // get variables
-    RooArgSet* pVars1 = rPDF1.getVariables();
-    RooArgSet* pVars2 = rPDF2.getVariables();
+    std::unique_ptr<RooArgSet> pVars1{rPDF1.getVariables()};
+    std::unique_ptr<RooArgSet> pVars2{rPDF2.getVariables()};
 
     if(!CompareParameters(*pVars1,*pVars2))
     {
@@ -442,12 +442,12 @@ private:
     if (gSystem->Load("libMinuit2") < 0) minimizerType = "Minuit";
     gErrorIgnoreLevel=prec;
 
-    RooFitResult* r1 = rPDF1.fitTo(rTestData,Save(), RooFit::Minimizer(minimizerType.c_str()));
+    std::unique_ptr<RooFitResult> r1{rPDF1.fitTo(rTestData,Save(), RooFit::Minimizer(minimizerType.c_str()))};
     //L.M:  for minuit we need ot rest otherwise fit could fail
     if (minimizerType == "Minuit") {
        if (gMinuit) { delete gMinuit; gMinuit=0; }
     }
-    RooFitResult* r2 = rPDF2.fitTo(rTestData,Save(), RooFit::Minimizer(minimizerType.c_str()));
+    std::unique_ptr<RooFitResult> r2{rPDF2.fitTo(rTestData,Save(), RooFit::Minimizer(minimizerType.c_str()))};
 
     if(_verb > 0)
     {

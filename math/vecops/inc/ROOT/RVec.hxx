@@ -167,7 +167,7 @@ protected:
    /// std::length_error or calls report_fatal_error.
    static void report_at_maximum_capacity();
 
-   /// If true, the RVec is in "memory adoption" mode, i.e. it is acting as a view on a memory buffer it does not own.
+   /// If false, the RVec is in "memory adoption" mode, i.e. it is acting as a view on a memory buffer it does not own.
    bool Owns() const { return fCapacity != -1; }
 
 public:
@@ -535,6 +535,18 @@ void UninitializedValueConstruct(ForwardIt first, ForwardIt last)
 #else
    std::uninitialized_value_construct(first, last);
 #endif
+}
+
+/// An unsafe function to reset the buffer for which this RVec is acting as a view.
+///
+/// \note This is a low-level method that _must_ be called on RVecs that are already non-owning:
+/// - it does not put the RVec in "non-owning mode" (fCapacity == -1)
+/// - it does not free any owned buffer
+template <typename T>
+void ResetView(RVec<T> &v, T* addr, std::size_t sz)
+{
+   v.fBeginX = addr;
+   v.fSize = sz;
 }
 
 } // namespace VecOps
@@ -1479,6 +1491,9 @@ hpt->Draw();
 template <typename T>
 class R__CLING_PTRCHECK(off) RVec : public RVecN<T, Internal::VecOps::RVecInlineStorageSize<T>::value> {
    using SuperClass = RVecN<T, Internal::VecOps::RVecInlineStorageSize<T>::value>;
+
+   friend void Internal::VecOps::ResetView<>(RVec<T> &v, T *addr, std::size_t sz);
+
 public:
    using reference = typename SuperClass::reference;
    using const_reference = typename SuperClass::const_reference;

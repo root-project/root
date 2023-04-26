@@ -209,7 +209,7 @@ private:
    RNTupleImporter() = default;
 
    std::unique_ptr<TFile> fSourceFile;
-   std::unique_ptr<TTree> fSourceTree;
+   TTree *fSourceTree;
 
    std::string fDestFileName;
    std::string fNTupleName;
@@ -232,6 +232,8 @@ private:
    std::unique_ptr<RNTupleModel> fModel;
    std::unique_ptr<REntry> fEntry;
 
+   ROOT::Experimental::RResult<void> InitDestination(std::string_view destFileName);
+
    void ResetSchema();
    /// Sets up the connection from TTree branches to RNTuple fields, including initialization of the memory
    /// buffers used for reading and writing.
@@ -247,7 +249,10 @@ public:
 
    /// Opens the input file for reading and the output file for writing (update).
    static RResult<std::unique_ptr<RNTupleImporter>>
-   Create(std::string_view sourceFile, std::string_view treeName, std::string_view destFile);
+   Create(std::string_view sourceFileName, std::string_view treeName, std::string_view destFileName);
+
+   /// Directly uses the provided tree and opens the output file for writing (update).
+   static RResult<std::unique_ptr<RNTupleImporter>> Create(TTree *sourceTree, std::string_view destFileName);
 
    RNTupleWriteOptions GetWriteOptions() const { return fWriteOptions; }
    void SetWriteOptions(RNTupleWriteOptions options) { fWriteOptions = options; }

@@ -147,8 +147,23 @@ public:
       fImpl->FillN(xN, weightN);
    }
 
+   /// For each coordinate in `xN`, add `weightN[i]` to the bin at coordinate
+   /// `xN[i]`. The sizes of `xN` and `weightN` must be the same. This is more
+   /// efficient than many separate calls to `Fill()`.
+   /// Overload for passing initializer lists.
+   void FillN(std::initializer_list<const CoordArray_t> xN, std::initializer_list<const Weight_t> weightN) noexcept
+   {
+      fImpl->FillN(std::span<const CoordArray_t>(xN.begin(), xN.end()), std::span<const Weight_t>(weightN.begin(), weightN.end()));
+   }
+
    /// Convenience overload: `FillN()` with weight 1.
    void FillN(const std::span<const CoordArray_t> xN) noexcept { fImpl->FillN(xN); }
+
+   /// Convenience overload: `FillN()` with weight 1.
+   /// Overload for passing initializer lists.
+   void FillN(std::initializer_list<const CoordArray_t> xN) noexcept {
+      fImpl->FillN(std::span<const CoordArray_t>(xN.begin(), xN.end()));
+   }
 
    /// Get the number of entries this histogram was filled with.
    int64_t GetEntries() const noexcept { return fImpl->GetStat().GetEntries(); }

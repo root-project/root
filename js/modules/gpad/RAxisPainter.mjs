@@ -3,7 +3,7 @@ import { select as d3_select, pointer as d3_pointer,
          drag as d3_drag, timeFormat as d3_timeFormat,
          scaleTime as d3_scaleTime, scaleSymlog as d3_scaleSymlog,
          scaleLog as d3_scaleLog, scaleLinear as d3_scaleLinear } from '../d3.mjs';
-import { makeTranslate } from '../base/BasePainter.mjs';
+import { makeTranslate, addHighlightStyle } from '../base/BasePainter.mjs';
 import { AxisPainterMethods, chooseTimeFormat } from './TAxisPainter.mjs';
 import { createMenu } from '../gui/menu.mjs';
 import { addDragHandler } from './TFramePainter.mjs';
@@ -371,12 +371,13 @@ class RAxisPainter extends RObjectPainter {
          let box = label_g.node().getBBox();
 
          label_g.append('rect')
-                 .classed('zoom', true)
+                 .classed('drag',true)
                  .attr('x', box.x)
                  .attr('y', box.y)
                  .attr('width', box.width)
                  .attr('height', box.height)
-                 .style('cursor', 'move');
+                 .style('cursor', 'move')
+                 .call(addHighlightStyle, true);
          if (this.vertical) {
             this.drag_pos0 = pos[0];
          } else {
@@ -398,7 +399,7 @@ class RAxisPainter extends RObjectPainter {
       if (!offset) label_g.attr('transform', null);
 
       if (arg == 'stop') {
-         label_g.select('rect.zoom').remove();
+         label_g.select('rect.drag').remove();
          delete this.drag_pos0;
          if (offset != label_g.property('fix_offset')) {
             label_g.property('fix_offset', offset);
@@ -454,13 +455,13 @@ class RAxisPainter extends RObjectPainter {
             alt_pos[curr_indx] = this.vertical ? acc_y : acc_x;
 
             drag_rect = title_g.append('rect')
-                 .classed('zoom', true)
                  .attr('x', box.x)
                  .attr('y', box.y)
                  .attr('width', box.width)
                  .attr('height', box.height)
-                 .style('cursor', 'move');
-//                 .style('pointer-events','none'); // let forward double click to underlying elements
+                 .style('cursor', 'move')
+                 .call(addHighlightStyle, true);
+              // .style('pointer-events','none'); // let forward double click to underlying elements
           }).on('drag', evnt => {
                if (!drag_rect) return;
 

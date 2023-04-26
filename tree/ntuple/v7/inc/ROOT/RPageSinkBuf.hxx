@@ -142,6 +142,7 @@ public:
    RPageSinkBuf& operator=(RPageSinkBuf&&) = default;
    ~RPageSinkBuf() override = default;
 
+   void UpdateSchema(const RNTupleModelChangeset &changeset) final;
    RPage ReservePage(ColumnHandle_t columnHandle, std::size_t nElements) final;
    void ReleasePage(RPage &page) final;
 

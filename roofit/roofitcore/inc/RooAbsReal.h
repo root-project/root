@@ -25,6 +25,7 @@
 #include "RooSpan.h"
 #include "RooBatchComputeTypes.h"
 #include "RooFit/Detail/DataMap.h"
+#include "RooFit/Detail/CodeSquashContext.h"
 
 class RooDataSet ;
 class RooPlot;
@@ -244,13 +245,13 @@ public:
   void setParameterizeIntegral(const RooArgSet& paramVars) ;
 
   // Create running integrals
-  RooAbsReal* createRunningIntegral(const RooArgSet& iset, const RooArgSet& nset=RooArgSet()) ;
-  RooAbsReal* createRunningIntegral(const RooArgSet& iset, const RooCmdArg& arg1, const RooCmdArg& arg2=RooCmdArg::none(),
+  RooFit::OwningPtr<RooAbsReal> createRunningIntegral(const RooArgSet& iset, const RooArgSet& nset=RooArgSet()) ;
+  RooFit::OwningPtr<RooAbsReal> createRunningIntegral(const RooArgSet& iset, const RooCmdArg& arg1, const RooCmdArg& arg2=RooCmdArg::none(),
          const RooCmdArg& arg3=RooCmdArg::none(), const RooCmdArg& arg4=RooCmdArg::none(),
          const RooCmdArg& arg5=RooCmdArg::none(), const RooCmdArg& arg6=RooCmdArg::none(),
          const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none()) ;
-  RooAbsReal* createIntRI(const RooArgSet& iset, const RooArgSet& nset=RooArgSet()) ;
-  RooAbsReal* createScanRI(const RooArgSet& iset, const RooArgSet& nset, Int_t numScanBins, Int_t intOrder) ;
+  RooFit::OwningPtr<RooAbsReal> createIntRI(const RooArgSet& iset, const RooArgSet& nset=RooArgSet()) ;
+  RooFit::OwningPtr<RooAbsReal> createScanRI(const RooArgSet& iset, const RooArgSet& nset, Int_t numScanBins, Int_t intOrder) ;
 
 
   // Optimized accept/reject generator support
@@ -426,6 +427,9 @@ protected:
                      RooArgSet *&cloneSet, const char* rangeName=nullptr, const RooArgSet* condObs=nullptr) const;
   virtual void computeBatch(cudaStream_t*, double* output, size_t size, RooFit::Detail::DataMap const&) const;
 
+  virtual std::string
+  buildCallToAnalyticIntegral(Int_t code, const char *rangeName, RooFit::Detail::CodeSquashContext &ctx) const;
+
  protected:
 
   RooFitResult* chi2FitDriver(RooAbsReal& fcn, RooLinkedList& cmdList) ;
@@ -466,22 +470,6 @@ protected:
 
   /// Evaluate this PDF / function / constant. Needs to be overridden by all derived classes.
   virtual double evaluate() const = 0;
-
-  /// \deprecated evaluateBatch() has been removed in favour of the faster evaluateSpan(). If your code is affected
-  /// by this change, please consult the release notes for ROOT 6.24 for guidance on how to make this transition.
-  /// https://root.cern/doc/v624/release-notes.html
-#ifndef R__MACOSX
-  virtual RooSpan<double> evaluateBatch(std::size_t /*begin*/, std::size_t /*maxSize*/) = delete;
-#else
-  //AppleClang in MacOS10.14 has a linker bug and fails to link programs that create objects of classes containing virtual deleted methods.
-  //This can be safely deleted when MacOS10.14 is no longer supported by ROOT. See https://reviews.llvm.org/D37830
-  virtual RooSpan<double> evaluateBatch(std::size_t /*begin*/, std::size_t /*maxSize*/) final {
-    throw std::logic_error("Deprecated evaluatedBatch() has been removed in favour of the faster evaluateSpan(). If your code is affected by this change, please consult the release notes for ROOT 6.24 for guidance on how to make this transition. https://root.cern/doc/v624/release-notes.html");
-  }
-#endif
-
-  virtual RooSpan<double> evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const;
-
 
   //---------- Interface to access batch data ---------------------------
   //
@@ -604,7 +592,7 @@ protected:
   };
 
 
-  mutable RooArgSet* _lastNSet = nullptr; ///<!
+  mutable RooFit::UniqueId<RooArgSet>::Value_t _lastNormSetId = RooFit::UniqueId<RooArgSet>::nullval; ///<!
   static bool _hideOffset ;    ///< Offset hiding flag
 
   ClassDefOverride(RooAbsReal,3) // Abstract real-valued variable

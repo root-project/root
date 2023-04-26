@@ -78,11 +78,11 @@ class MaxLikelihoodEstimateTestStat: public TestStatistic {
     return ret;
     */
 
-    RooArgSet* allParams = fPdf->getParameters(data);
-    RooStats::RemoveConstantParameters(allParams);
+    std::unique_ptr<RooArgSet> allParams{fPdf->getParameters(data)};
+    RooStats::RemoveConstantParameters(&*allParams);
 
     // need to call constrain for RooSimultaneous until stripDisconnected problem fixed
-    RooAbsReal* nll = fPdf->createNLL(data, RooFit::CloneData(false),RooFit::Constrain(*allParams),RooFit::ConditionalObservables(fConditionalObs));
+    std::unique_ptr<RooAbsReal> nll{fPdf->createNLL(data, RooFit::CloneData(false),RooFit::Constrain(*allParams),RooFit::ConditionalObservables(fConditionalObs))};
 
     //RooAbsReal* nll = fPdf->createNLL(data, RooFit::CloneData(false));
 
@@ -91,9 +91,6 @@ class MaxLikelihoodEstimateTestStat: public TestStatistic {
     // RooArgSet* vars = profile->getVariables();
     // RooMsgService::instance().setGlobalKillBelow(msglevel);
     // double ret = vars->getRealValue(fParameter->GetName());
-    // delete vars;
-    // delete nll;
-    // delete profile;
     // return ret;
 
 
@@ -123,7 +120,6 @@ class MaxLikelihoodEstimateTestStat: public TestStatistic {
      //allParams->Print("V");
 
      RooMsgService::instance().setGlobalKillBelow(msglevel);
-     delete nll;
 
      if (status != 0) return -1;
      return fParameter->getVal();

@@ -413,10 +413,9 @@ std::unique_ptr<RHolder> TObjectElement::GetObject()
 
 bool TObjectElement::IsObject(void *obj)
 {
-   if (CheckObject() == obj)
-      return true;
+   return (fObj && (fObj == obj));
 
-   return fObject && (fObject->get_object<TObject>() == obj);
+   // return fObject && (fObject->get_object<TObject>() == obj);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -461,7 +460,7 @@ std::unique_ptr<RItem> TObjectElement::CreateItem() const
    if (!obj)
       return RElement::CreateItem();
 
-   auto isfolder = !IsHideChilds() && obj->IsFolder();
+   auto isfolder = !IsHideChilds() && IsFolder();
 
    auto item = std::make_unique<TObjectItem>(obj->GetName(), isfolder ? -1 : 0);
 
@@ -589,9 +588,10 @@ public:
       RegisterTObject("TMultiGraph", "sap-icon://multiple-line-chart");
 
       RegisterTObject("TCollection", "sap-icon://list", true, 0);
-      RegisterTObject("TGeoManager", "sap-icon://overview-chart", true, 0);
-      RegisterTObject("TGeoVolume", "sap-icon://product", true, 0);
-      RegisterTObject("TGeoNode", "sap-icon://product", true, 0);
+
+      RegisterClass("TGeoManager", "sap-icon://overview-chart", "libROOTGeoBrowseProvider");
+      RegisterClass("TGeoVolume", "sap-icon://product", "libROOTGeoBrowseProvider");
+      RegisterClass("TGeoNode", "sap-icon://product", "libROOTGeoBrowseProvider");
 
       RegisterBrowse(TFolder::Class(), [](std::unique_ptr<RHolder> &object) -> std::shared_ptr<RElement> {
          return std::make_shared<TFolderElement>(object);

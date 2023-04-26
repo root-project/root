@@ -44,6 +44,7 @@
 #include "TRegexp.h"
 
 #include <algorithm>
+#include <array>
 
 namespace ROOT {
 namespace Experimental {
@@ -77,6 +78,8 @@ public:
    const std::string &GetColor() const { return fDesc.fDesc[fNodeId].color; }
 
    const std::string &GetMaterial() const { return fDesc.fDesc[fNodeId].material; }
+
+   int GetVisible() const { return fDesc.fDesc[fNodeId].vis; }
 
    bool IsValid() const { return fNodeId >= 0; }
 
@@ -224,7 +227,7 @@ public:
       return true;
    }
 
-   /** Navigate to specified volume - find first occurence */
+   /** Navigate to specified volume - find first occurrence */
    bool Navigate(TGeoVolume *vol)
    {
       Reset();
@@ -252,6 +255,7 @@ public:
    }
 
 };
+
 } // namespace Experimental
 } // namespace ROOT
 
@@ -260,6 +264,28 @@ using namespace ROOT::Experimental;
 
 using namespace std::string_literals;
 
+
+namespace {
+
+   int compare_stacks(const std::vector<int> &stack1, const std::vector<int> &stack2)
+   {
+      unsigned len1 = stack1.size(), len2 = stack2.size(), len = (len1 < len2) ? len1 : len2, indx = 0;
+      while (indx < len) {
+         if (stack1[indx] < stack2[indx])
+            return -1;
+         if (stack1[indx] > stack2[indx])
+            return 1;
+         ++indx;
+      }
+
+      if (len1 < len2)
+         return -1;
+      if (len1 > len2)
+         return 1;
+
+      return 0;
+   }
+}
 
 /////////////////////////////////////////////////////////////////////
 /// Issue signal, which distributed on all handlers - excluding source handler
@@ -625,19 +651,21 @@ int RGeomDescription::ScanNodes(bool only_visible, int maxlvl, RGeomScanFunc_t f
          is_inside = true;
 
       auto &desc = fDesc[nodeid];
+      auto desc_vis = desc.vis;
       int res = 0;
 
       if (desc.nochlds && (lvl > 0)) lvl = 0;
 
       bool can_display = desc.CanDisplay(), scan_childs = true;
 
-      if ((viter != fVisibility.end()) && (viter->stack == stack)) {
+      if ((viter != fVisibility.end()) && (compare_stacks(viter->stack, stack) == 0)) {
          can_display = scan_childs = viter->visible;
+         desc_vis = !viter->visible ? 0 : (desc.chlds.size() > 0 ? 1 : 99);
          viter++;
       }
 
       // same logic as in JSROOT ClonedNodes.scanVisible
-      bool is_visible = (lvl >= 0) && (desc.vis > lvl) && can_display && is_inside;
+      bool is_visible = (lvl >= 0) && (desc_vis > lvl) && can_display && is_inside;
 
       if (is_visible || !only_visible)
          if (func(desc, stack, is_visible, counter))
@@ -741,7 +769,16 @@ std::string RGeomDescription::ProcessBrowserRequest(const std::string &msg)
       for (auto &item : fDesc)
          vect[cnt++]= &item;
 
-      res = "DESCR:"s + TBufferJSON::ToJSON(&vect,GetJsonComp()).Data();
+      res = "DESCR:"s + TBufferJSON::ToJSON(&vect, GetJsonComp()).Data();
+
+      if (fVisibility.size() > 0) {
+         res += ":__PHYSICAL_VISIBILITY__:";
+         res += TBufferJSON::ToJSON(&fVisibility, GetJsonComp()).Data();
+      }
+
+      res += ":__SELECTED_STACK__:";
+      res += TBufferJSON::ToJSON(&fSelectedStack, GetJsonComp()).Data();
+
    } else {
       std::vector<RGeoItem> temp_nodes;
       bool toplevel = request->path.empty();
@@ -762,10 +799,22 @@ std::string RGeomDescription::ProcessBrowserRequest(const std::string &msg)
                request->first--;
             }
 
+            // first element
+            auto stack = MakeStackByIds(iter.CurrentIds());
+
             while (iter.IsValid() && (request->number > 0)) {
-               temp_nodes.emplace_back(iter.GetName(), iter.NumChilds(), iter.GetColor(), iter.GetMaterial());
-               if (toplevel) temp_nodes.back().SetExpanded(true);
+               int pvis = IsPhysNodeVisible(stack);
+               temp_nodes.emplace_back(iter.GetName(), iter.NumChilds(),
+                                       iter.GetNodeId(), iter.GetColor(), iter.GetMaterial(), iter.GetVisible(), pvis < 0 ? iter.GetVisible() : pvis);
+               if (toplevel)
+                  temp_nodes.back().SetExpanded(true);
+               if (stack == fSelectedStack)
+                  temp_nodes.back().SetTop(true);
                request->number--;
+
+               if (stack.size() > 0)
+                  stack[stack.size()-1]++;
+
                if (!iter.Next()) break;
             }
          }
@@ -1019,13 +1068,8 @@ RGeomDescription::ShapeDescr &RGeomDescription::MakeShapeDescr(TGeoShape *shape)
 
             auto size_of_polygon = mesh->SizeOfPoly(polyIndex);
 
-            if (size_of_polygon == 3) {
-               num_polynoms += 1;
-            } else if (size_of_polygon == 4) {
-               num_polynoms += 2;
-            } else {
-               R__LOG_ERROR(RGeomLog()) << "CSG polygon has unsupported number of vertices " << size_of_polygon;
-            }
+            if (size_of_polygon >= 3)
+               num_polynoms += (size_of_polygon - 2);
          }
 
          Int_t index_buffer_size = num_polynoms * 3,  // triangle indexes
@@ -1054,18 +1098,18 @@ RGeomDescription::ShapeDescr &RGeomDescription::MakeShapeDescr(TGeoShape *shape)
          for (unsigned polyIndex = 0; polyIndex < mesh->NumberOfPolys(); ++polyIndex) {
             auto size_of_polygon = mesh->SizeOfPoly(polyIndex);
 
-            if ((size_of_polygon == 3) || (size_of_polygon == 4))  {
-               // add first triangle
+            // add first triangle
+            if (size_of_polygon >= 3)
                for (int i = 0; i < 3; ++i)
                   indexes[pos++] = mesh->GetVertexIndex(polyIndex, i);
-            }
 
-            if (size_of_polygon == 4) {
-               // add second triangle
-               indexes[pos++] = mesh->GetVertexIndex(polyIndex, 0);
-               indexes[pos++] = mesh->GetVertexIndex(polyIndex, 2);
-               indexes[pos++] = mesh->GetVertexIndex(polyIndex, 3);
-            }
+            // add following triangles
+            if (size_of_polygon > 3)
+               for (unsigned vertex = 3; vertex < size_of_polygon; vertex++) {
+                  indexes[pos++] = mesh->GetVertexIndex(polyIndex, 0);
+                  indexes[pos++] = mesh->GetVertexIndex(polyIndex, vertex-1);
+                  indexes[pos++] = mesh->GetVertexIndex(polyIndex, vertex);
+               }
          }
 
       }
@@ -1216,7 +1260,6 @@ std::string RGeomDescription::ProduceJson(bool all_nodes)
 
    ScanNodes(true, level, [&, this](RGeomNode &node, std::vector<int> &stack, bool, int seqid) {
       if ((node.sortid < fDrawIdCut) && (viscnt[node.id] > 0)) {
-
          drawing.visibles.emplace_back(node.id, seqid, stack);
 
          auto &item = drawing.visibles.back();
@@ -1743,8 +1786,16 @@ std::string RGeomDescription::MakeDrawingJson(RGeomDrawing &drawing, bool has_sh
 /// Change visibility for specified element
 /// Returns true if changes was performed
 
-bool RGeomDescription::ChangeNodeVisibility(int nodeid, bool selected)
+bool RGeomDescription::ChangeNodeVisibility(const std::vector<std::string> &path, bool selected)
 {
+   TLockGuard lock(fMutex);
+
+   RGeomBrowserIter giter(*this);
+   if (!giter.Navigate(path))
+      return false;
+
+   auto nodeid = giter.GetNodeId();
+
    auto &dnode = fDesc[nodeid];
 
    auto vol = GetVolume(nodeid);
@@ -1764,6 +1815,15 @@ bool RGeomDescription::ChangeNodeVisibility(int nodeid, bool selected)
    for (auto &desc: fDesc)
       if (GetVolume(id++) == vol)
          desc.vis = dnode.vis;
+
+   auto stack = MakeStackByIds(giter.CurrentIds());
+
+   // any change in logical node visibility erase individual physical node settings
+   for (auto iter = fVisibility.begin(); iter != fVisibility.end(); iter ++)
+      if (compare_stacks(iter->stack, stack) == 0) {
+         fVisibility.erase(iter);
+         break;
+      }
 
    ClearDrawData(); // after change raw data is no longer valid
 
@@ -1841,31 +1901,11 @@ bool RGeomDescription::SelectTop(const std::vector<std::string> &path)
    return true;
 }
 
-
-int compare_stacks(const std::vector<int> &stack1, const std::vector<int> &stack2)
-{
-   unsigned len1 = stack1.size(),
-            len2 = stack2.size(),
-            len = (len1 < len2) ? len1 : len2,
-            indx = 0;
-   while (indx < len) {
-      if (stack1[indx] < stack2[indx]) return -1;
-      if (stack1[indx] > stack2[indx]) return 1;
-      ++indx;
-   }
-
-   if (len1 < len2) return -1;
-   if (len1 > len2) return 1;
-
-   return 0;
-}
-
-
 /////////////////////////////////////////////////////////////////////////////////
 /// Set visibility of physical node by path
 /// It overrules TGeo visibility flags - but only for specific physical node
 
-bool RGeomDescription::SetNodeVisibility(const std::vector<std::string> &path, bool on)
+bool RGeomDescription::SetPhysNodeVisibility(const std::vector<std::string> &path, bool on)
 {
    TLockGuard lock(fMutex);
 
@@ -1876,6 +1916,8 @@ bool RGeomDescription::SetNodeVisibility(const std::vector<std::string> &path, b
 
    auto stack = MakeStackByIds(giter.CurrentIds());
 
+   auto nodeid = giter.GetNodeId();
+
    for (auto iter = fVisibility.begin(); iter != fVisibility.end(); iter ++) {
       auto res = compare_stacks(iter->stack, stack);
 
@@ -1884,7 +1926,12 @@ bool RGeomDescription::SetNodeVisibility(const std::vector<std::string> &path, b
          if (changed) {
             iter->visible = on;
             ClearDrawData();
+
+            // no need for custom settings if match with description
+            if ((fDesc[nodeid].vis > 0) == on)
+               fVisibility.erase(iter);
          }
+
          return changed;
       }
 
@@ -1901,9 +1948,59 @@ bool RGeomDescription::SetNodeVisibility(const std::vector<std::string> &path, b
 }
 
 /////////////////////////////////////////////////////////////////////////////////
+/// Set visibility of physical node by itemname
+/// itemname in string with path like "/TOP_1/SUB_2/NODE_3"
+
+bool RGeomDescription::SetPhysNodeVisibility(const std::string &itemname, bool on)
+{
+   std::vector<std::string> path;
+   std::string::size_type p1 = 0;
+
+   while (p1 < itemname.length()) {
+      if (itemname[p1] == '/') {
+         p1++; continue;
+      }
+      auto p = itemname.find("/", p1);
+      if (p == std::string::npos) {
+         path.emplace_back(itemname.substr(p1));
+         p1 = itemname.length();
+      } else {
+         path.emplace_back(itemname.substr(p1, p-p1));
+         p1 = p + 1;
+      }
+   }
+
+   return SetPhysNodeVisibility(path, on);
+}
+
+
+/////////////////////////////////////////////////////////////////////////////////
+/// Check if there special settings for specified physical node
+/// returns -1 if nothing is found
+
+int RGeomDescription::IsPhysNodeVisible(const std::vector<int> &stack)
+{
+   for (auto &item : fVisibility) {
+      unsigned sz = item.stack.size();
+      if (stack.size() < sz)
+         continue;
+      bool match = true;
+      for (unsigned n = 0 ;n < sz; ++n)
+         if (stack[n] != item.stack[n]) {
+            match = false;
+            break;
+         }
+
+      if (match)
+         return item.visible ? 1 : 0;
+   }
+   return -1;
+}
+
+/////////////////////////////////////////////////////////////////////////////////
 /// Reset custom visibility of physical node by path
 
-bool RGeomDescription::ClearNodeVisibility(const std::vector<std::string> &path)
+bool RGeomDescription::ClearPhysNodeVisibility(const std::vector<std::string> &path)
 {
    TLockGuard lock(fMutex);
 
@@ -1927,7 +2024,7 @@ bool RGeomDescription::ClearNodeVisibility(const std::vector<std::string> &path)
 /////////////////////////////////////////////////////////////////////////////////
 /// Reset all custom visibility settings
 
-bool RGeomDescription::ClearAllVisibility()
+bool RGeomDescription::ClearAllPhysVisibility()
 {
    TLockGuard lock(fMutex);
 
@@ -2004,7 +2101,7 @@ void RGeomDescription::SavePrimitive(std::ostream &fs, const std::string &name)
    // store custom visibility flags
    for (auto &item : fVisibility) {
       auto path = MakePathByStack(item.stack);
-      fs << prefix << name << "SetNodeVisibility(";
+      fs << prefix << name << "SetPhysNodeVisibility(";
       for (int i = 0; i < (int) path.size(); ++i)
          fs << (i == 0 ? "{\"" : ", \"") << path[i] << "\"";
       fs << "}, " << (item.visible ? "true" : "false") << ");" << std::endl;

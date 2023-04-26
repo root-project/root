@@ -74,8 +74,8 @@ public:
          }
       }
 
-      bool operator==(const Section& rhs) {
-         return begin_fraction == rhs.begin_fraction && end_fraction == rhs.end_fraction;
+      friend bool operator==(const Section& lhs, const Section& rhs) {
+         return lhs.begin_fraction == rhs.begin_fraction && lhs.end_fraction == rhs.end_fraction;
       }
 
       double begin_fraction;
@@ -99,7 +99,7 @@ public:
    evaluatePartition(Section events, std::size_t components_begin, std::size_t components_end) = 0;
 
    // necessary from MinuitFcnGrad to reach likelihood properties:
-   virtual RooArgSet *getParameters();
+   virtual std::unique_ptr<RooArgSet> getParameters();
 
    /// \brief Interface function signaling a request to perform constant term optimization.
    ///

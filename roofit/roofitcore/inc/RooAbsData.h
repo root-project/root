@@ -47,9 +47,6 @@ class RooAbsDataStore ;
 template<typename T> class TMatrixTSym;
 using TMatrixDSym = TMatrixTSym<double>;
 class RooFormulaVar;
-namespace RooBatchCompute{
-struct RunContext;
-}
 namespace RooFit {
 namespace TestStatistics {
 class RooAbsL;
@@ -98,7 +95,7 @@ public:
   virtual bool changeObservableName(const char* from, const char* to) ;
 
   // Add one ore more rows of data
-  virtual void add(const RooArgSet& row, double weight=1, double weightError=0.0) = 0 ; // DERIVED
+  virtual void add(const RooArgSet& row, double weight=1) = 0 ; // DERIVED
   virtual void fill() ;
 
   // Load a given row of data

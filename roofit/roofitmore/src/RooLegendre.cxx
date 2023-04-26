@@ -22,7 +22,6 @@
 **/
 
 #include "RooLegendre.h"
-#include "RunContext.h"
 #include "RooAbsReal.h"
 
 #include "Math/SpecFunc.h"
@@ -168,12 +167,9 @@ void compute(  size_t batchSize, const int l1, const int m1, const int l2, const
 }
 };
 
-RooSpan<double> RooLegendre::evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const {
-  RooSpan<const double> cthetaData = _ctheta->getValues(evalData, normSet);
-  size_t batchSize = cthetaData.size();
-  auto output = evalData.makeBatch(this, batchSize);
-  compute(batchSize, _l1, _m1, _l2, _m2, output.data(), cthetaData.data());
-  return output;
+void RooLegendre::computeBatch(cudaStream_t*, double* output, size_t size, RooFit::Detail::DataMap const& dataMap) const
+{
+  compute(size, _l1, _m1, _l2, _m2, output, dataMap.at(_ctheta).data());
 }
 
 

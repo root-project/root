@@ -128,6 +128,47 @@ ROOT::Experimental::RNTupleModel::RProjectedFields::Clone(const RNTupleModel *ne
    return clone;
 }
 
+ROOT::Experimental::RNTupleModel::RUpdater::RUpdater(RNTupleWriter &writer)
+   : fWriter(writer), fOpenChangeset(*fWriter.fModel)
+{
+}
+
+void ROOT::Experimental::RNTupleModel::RUpdater::BeginUpdate()
+{
+   if (fWriter.fNEntries > 0)
+      throw RException(R__FAIL("invalid attempt to alter model (fWriter.fNEntries > 0)"));
+   fOpenChangeset.fModel.Unfreeze();
+}
+
+void ROOT::Experimental::RNTupleModel::RUpdater::CommitUpdate()
+{
+   fOpenChangeset.fModel.Freeze();
+   if (fOpenChangeset.IsEmpty())
+      return;
+   Detail::RNTupleModelChangeset toCommit{fOpenChangeset.fModel};
+   std::swap(fOpenChangeset.fAddedFields, toCommit.fAddedFields);
+   std::swap(fOpenChangeset.fAddedProjectedFields, toCommit.fAddedProjectedFields);
+   fWriter.fSink->UpdateSchema(toCommit);
+}
+
+void ROOT::Experimental::RNTupleModel::RUpdater::AddField(std::unique_ptr<Detail::RFieldBase> field)
+{
+   auto fieldp = field.get();
+   fOpenChangeset.fModel.AddField(std::move(field));
+   fOpenChangeset.fAddedFields.emplace_back(fieldp);
+}
+
+ROOT::Experimental::RResult<void>
+ROOT::Experimental::RNTupleModel::RUpdater::AddProjectedField(std::unique_ptr<Detail::RFieldBase> field,
+                                                              std::function<std::string(const std::string &)> mapping)
+{
+   auto fieldp = field.get();
+   auto result = fOpenChangeset.fModel.AddProjectedField(std::move(field), mapping);
+   if (result)
+      fOpenChangeset.fAddedProjectedFields.emplace_back(fieldp);
+   return R__FORWARD_RESULT(result);
+}
+
 void ROOT::Experimental::RNTupleModel::EnsureValidFieldName(std::string_view fieldName)
 {
    RResult<void> nameValid = Detail::RFieldBase::EnsureValidFieldName(fieldName);
@@ -299,6 +340,13 @@ std::unique_ptr<ROOT::Experimental::REntry> ROOT::Experimental::RNTupleModel::Cr
       entry->CaptureValue(f->CaptureValue(nullptr));
    }
    return entry;
+}
+
+void ROOT::Experimental::RNTupleModel::Unfreeze()
+{
+   if (!IsFrozen())
+      throw RException(R__FAIL("invalid attempt to unfreeze an unfrozen model"));
+   fModelId = 0;
 }
 
 void ROOT::Experimental::RNTupleModel::Freeze()

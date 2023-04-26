@@ -16,12 +16,12 @@ TEST(RNTupleShow, Empty)
    auto ntuple2 = RNTupleReader::Open(std::move(model2), ntupleName, rootFileName);
 
    std::ostringstream os;
-   ntuple2->Show(0, ROOT::Experimental::ENTupleShowFormat::kCurrentModelJSON, os);
+   ntuple2->Show(0, os);
    std::string fString{"{}\n"};
    EXPECT_EQ(fString, os.str());
 
    std::ostringstream os1;
-   ntuple2->Show(1, ROOT::Experimental::ENTupleShowFormat::kCurrentModelJSON, os1);
+   ntuple2->Show(1, os1);
    std::string fString1{"{}\n"};
    EXPECT_EQ(fString1, os1.str());
 }
@@ -41,6 +41,7 @@ TEST(RNTupleShow, BasicTypes)
       auto fieldstring = model->MakeField<std::string>("string");
       auto fieldbool = model->MakeField<bool>("boolean");
       auto fieldchar = model->MakeField<uint8_t>("uint8");
+      auto fieldbitset = model->MakeField<std::bitset<65>>("bitset");
       auto ntuple = RNTupleWriter::Recreate(std::move(model), ntupleName, rootFileName);
 
       *fieldPt = 5.0f;
@@ -51,6 +52,7 @@ TEST(RNTupleShow, BasicTypes)
       *fieldstring = "TestString";
       *fieldbool = true;
       *fieldchar = 97;
+      *fieldbitset = std::bitset<65>("10000000000000000000000000000010000000000000000000000000000010010");
       ntuple->Fill();
 
       *fieldPt = 8.5f;
@@ -61,13 +63,14 @@ TEST(RNTupleShow, BasicTypes)
       *fieldstring = "TestString2";
       *fieldbool = false;
       *fieldchar = 98;
+      fieldbitset->flip();
       ntuple->Fill();
    }
 
    auto ntuple2 = RNTupleReader::Open(ntupleName, rootFileName);
 
    std::ostringstream os;
-   ntuple2->Show(0, ROOT::Experimental::ENTupleShowFormat::kCompleteJSON, os);
+   ntuple2->Show(0, os);
    // clang-format off
    std::string fString{ std::string("")
       + "{\n"
@@ -78,13 +81,14 @@ TEST(RNTupleShow, BasicTypes)
       + "  \"uint64\": 44444444444,\n"
       + "  \"string\": \"TestString\",\n"
       + "  \"boolean\": true,\n"
-      + "  \"uint8\": 97\n"
+      + "  \"uint8\": 97,\n"
+      + "  \"bitset\": \"10000000000000000000000000000010000000000000000000000000000010010\"\n"
       + "}\n" };
    // clang-format on
    EXPECT_EQ(fString, os.str());
 
    std::ostringstream os1;
-   ntuple2->Show(1, ROOT::Experimental::ENTupleShowFormat::kCompleteJSON, os1);
+   ntuple2->Show(1, os1);
    // clang-format off
    std::string fString1{ std::string("")
       + "{\n"
@@ -95,13 +99,14 @@ TEST(RNTupleShow, BasicTypes)
       + "  \"uint64\": 2299994967294,\n"
       + "  \"string\": \"TestString2\",\n"
       + "  \"boolean\": false,\n"
-      + "  \"uint8\": 98\n"
+      + "  \"uint8\": 98,\n"
+      + "  \"bitset\": \"01111111111111111111111111111101111111111111111111111111111101101\"\n"
       + "}\n" };
    // clang-format on
    EXPECT_EQ(fString1, os1.str());
 
    // TODO(jblomer): this should fail to an exception instead
-   EXPECT_DEATH(ntuple2->Show(2, ROOT::Experimental::ENTupleShowFormat::kCompleteJSON), ".*");
+   EXPECT_DEATH(ntuple2->Show(2), ".*");
 }
 
 TEST(RNTupleShow, Vectors)
@@ -134,7 +139,7 @@ TEST(RNTupleShow, Vectors)
    auto ntuple2 = RNTupleReader::Open(std::move(model2), ntupleName, rootFileName);
 
    std::ostringstream os;
-   ntuple2->Show(0, ROOT::Experimental::ENTupleShowFormat::kCurrentModelJSON, os);
+   ntuple2->Show(0, os);
    // clang-format off
    std::string fString{ std::string("")
       + "{\n"
@@ -146,7 +151,7 @@ TEST(RNTupleShow, Vectors)
    EXPECT_EQ(fString, os.str());
 
    std::ostringstream os1;
-   ntuple2->Show(1, ROOT::Experimental::ENTupleShowFormat::kCurrentModelJSON, os1);
+   ntuple2->Show(1, os1);
    // clang-format off
    std::string fString1{ std::string("")
       + "{\n"
@@ -203,7 +208,7 @@ TEST(RNTupleShow, Arrays)
    auto ntuple2 = RNTupleReader::Open(std::move(model2), ntupleName, rootFileName);
 
    std::ostringstream os;
-   ntuple2->Show(0, ROOT::Experimental::ENTupleShowFormat::kCurrentModelJSON, os);
+   ntuple2->Show(0, os);
    // clang-format off
    std::string fString{ std::string("")
       + "{\n"
@@ -218,7 +223,7 @@ TEST(RNTupleShow, Arrays)
    EXPECT_EQ(fString, os.str());
 
    std::ostringstream os1;
-   ntuple2->Show(1, ROOT::Experimental::ENTupleShowFormat::kCurrentModelJSON, os1);
+   ntuple2->Show(1, os1);
    // clang-format off
    std::string fString1{ std::string("")
       + "{\n"
@@ -272,7 +277,7 @@ TEST(RNTupleShow, Objects)
    auto ntuple2 = RNTupleReader::Open(std::move(model2), ntupleName, rootFileName);
 
    std::ostringstream os;
-   ntuple2->Show(0, ROOT::Experimental::ENTupleShowFormat::kCurrentModelJSON, os);
+   ntuple2->Show(0, os);
    // clang-format off
    std::string fString{ std::string("")
       + "{\n"
@@ -328,7 +333,7 @@ TEST(RNTupleShow, Collections)
 
    auto ntuple = RNTupleReader::Open(ntupleName, rootFileName);
    std::ostringstream osData;
-   ntuple->Show(0, ROOT::Experimental::ENTupleShowFormat::kCompleteJSON, osData);
+   ntuple->Show(0, osData);
    // clang-format off
    std::string outputData{ std::string("")
       + "{\n"
@@ -383,7 +388,7 @@ TEST(RNTupleShow, RVec)
    auto r = RNTupleReader::Open(std::move(modelRead), ntupleName, rootFileName);
 
    std::ostringstream os;
-   r->Show(0, ROOT::Experimental::ENTupleShowFormat::kCurrentModelJSON, os);
+   r->Show(0, os);
    // clang-format off
    std::string expected1{std::string("")
       + "{\n"
@@ -396,7 +401,7 @@ TEST(RNTupleShow, RVec)
    EXPECT_EQ(os.str(), expected1);
 
    std::ostringstream os2;
-   r->Show(1, ROOT::Experimental::ENTupleShowFormat::kCurrentModelJSON, os2);
+   r->Show(1, os2);
    // clang-format off
    std::string expected2{std::string("")
       + "{\n"
@@ -450,7 +455,7 @@ TEST(RNTupleShow, RVecTypeErased)
    auto ntuple = RNTupleReader::Open(ntupleName, rootFileName);
 
    std::ostringstream os;
-   ntuple->Show(0, ROOT::Experimental::ENTupleShowFormat::kCompleteJSON, os);
+   ntuple->Show(0, os);
    // clang-format off
    std::string fString{std::string("")
       + "{\n"
@@ -463,7 +468,7 @@ TEST(RNTupleShow, RVecTypeErased)
    EXPECT_EQ(fString, os.str());
 
    std::ostringstream os1;
-   ntuple->Show(1, ROOT::Experimental::ENTupleShowFormat::kCompleteJSON, os1);
+   ntuple->Show(1, os1);
    // clang-format off
    std::string fString1{std::string("")
       + "{\n"
@@ -504,7 +509,7 @@ TEST(RNTupleShow, CollectionProxy)
       EXPECT_EQ(1U, ntuple->GetNEntries());
 
       std::ostringstream os;
-      ntuple->Show(0, ROOT::Experimental::ENTupleShowFormat::kCompleteJSON, os);
+      ntuple->Show(0, os);
       // clang-format off
       std::string expected{std::string("")
          + "{\n"
@@ -514,57 +519,4 @@ TEST(RNTupleShow, CollectionProxy)
       // clang-format on
       EXPECT_EQ(os.str(), expected);
    }
-}
-
-TEST(RNTupleShow, CompleteOrCurrentModel)
-{
-   FileRaii fileGuard("test_ntuple_show_completeorcurrentmodel.root");
-   {
-      auto model = RNTupleModel::Create();
-      auto fldInt = model->MakeField<int>("int");
-      auto fldFloat = model->MakeField<float>("float");
-      auto ntuple = RNTupleWriter::Recreate(std::move(model), "f", fileGuard.GetPath());
-
-      *fldInt = 42;
-      *fldFloat = 3.14;
-      *fldFloat = ntuple->Fill();
-   }
-
-   auto ntuple1 = RNTupleReader::Open("f", fileGuard.GetPath());
-
-   auto model = RNTupleModel::Create();
-   auto fldInt = model->MakeField<int>("int");
-   auto ntuple2 = RNTupleReader::Open(std::move(model), "f", fileGuard.GetPath());
-
-   std::ostringstream os1;
-   ntuple1->Show(0, ROOT::Experimental::ENTupleShowFormat::kCurrentModelJSON, os1);
-   // clang-format off
-   std::string expected1{std::string("")
-      + "{\n"
-      + "  \"int\": 42,\n"
-      + "  \"float\": 3.14\n"
-      + "}\n"};
-   // clang-format on
-   EXPECT_EQ(expected1, os1.str());
-
-   std::ostringstream os2;
-   ntuple2->Show(0, ROOT::Experimental::ENTupleShowFormat::kCurrentModelJSON, os2);
-   // clang-format off
-   std::string expected2{std::string("")
-      + "{\n"
-      + "  \"int\": 42\n"
-      + "}\n"};
-   // clang-format on
-   EXPECT_EQ(expected2, os2.str());
-
-   std::ostringstream os3;
-   ntuple2->Show(0, ROOT::Experimental::ENTupleShowFormat::kCompleteJSON, os3);
-   // clang-format off
-   std::string expected3{std::string("")
-      + "{\n"
-      + "  \"int\": 42,\n"
-      + "  \"float\": 3.14\n"
-      + "}\n"};
-   // clang-format on
-   EXPECT_EQ(expected3, os3.str());
 }

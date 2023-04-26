@@ -211,8 +211,8 @@ class THistDrawOptions {
       Object.assign(this,
             { Axis: 0, RevX: false, RevY: false, SymlogX: 0, SymlogY: 0,
               Bar: false, BarStyle: 0, Curve: false,
-              Hist: true, Line: false, Fill: false,
-              Error: false, ErrorKind: -1, errorX: gStyle.fErrorX,
+              Hist: 1, Line: false, Fill: false,
+              Error: 0, ErrorKind: -1, errorX: gStyle.fErrorX,
               Mark: false, Same: false, Scat: false, ScatCoef: 1., Func: true,
               Arrow: false, Box: false, BoxStyle: 0,
               Text: false, TextAngle: 0, TextKind: '', Char: 0, Color: false, Contour: 0, Cjust: false,
@@ -222,13 +222,29 @@ class THistDrawOptions {
               GLBox: 0, GLColor: false, Project: '',
               System: CoordSystem.kCARTESIAN,
               AutoColor: false, NoStat: false, ForceStat: false, PadStats: false, PadTitle: false, AutoZoom: false,
-              HighRes: 0, Zero: true, Palette: 0, BaseLine: false,
+              HighRes: 0, Zero: 1, Palette: 0, BaseLine: false,
               Optimize: settings.OptimizeDraw, adjustFrame: false,
               Mode3D: false, x3dscale: 1, y3dscale: 1,
               Render3D: constants.Render3D.Default,
               FrontBox: true, BackBox: true,
               _pmc: false, _plc: false, _pfc: false, need_fillcol: false,
               minimum: kNoZoom, maximum: kNoZoom, ymin: 0, ymax: 0, cutg: null, IgnoreMainScale: false });
+   }
+
+   /** @summary Base on sumw2 values (re)set some bacis draw options, only for 1dim hist */
+   decodeSumw2(histo, force) {
+      let len = histo.fSumw2?.length ?? 0, isany = false;
+      for (let n = 0; n < len; ++n)
+         if (histo.fSumw2[n] > 0) { isany = true; break; }
+
+      if (Number.isInteger(this.Error) || force)
+         this.Error = isany ? 1 : 0;
+
+      if (Number.isInteger(this.Hist) || force)
+         this.Hist = isany ? 0 : 1;
+
+      if (Number.isInteger(this.Zero) || force)
+         this.Zero = isany ? 0 : 1;
    }
 
    /** @summary Decode histogram draw options */
@@ -248,9 +264,7 @@ class THistDrawOptions {
 
       const d = new DrawOptions(opt);
 
-      if ((hdim === 1) && (histo.fSumw2.length > 0))
-         for (let n = 0; n < histo.fSumw2.length; ++n)
-            if (histo.fSumw2[n] > 0) { this.Error = true; this.Hist = false; this.Zero = false; break; }
+      if (hdim === 1) this.decodeSumw2(histo, true);
 
       this.ndim = hdim || 1; // keep dimensions, used for now in GED
 
@@ -470,8 +484,9 @@ class THistDrawOptions {
       if (d.check('PARABOLIC')) this.Proj = 4;
       if (this.Proj > 0) this.Contour = 14;
 
-      if (d.check('PROJX',true)) this.Project = 'X' + d.partAsInt(0,1);
-      if (d.check('PROJY',true)) this.Project = 'Y' + d.partAsInt(0,1);
+      if (d.check('PROJXY', true)) this.Project = 'XY' + d.partAsInt(0,1);
+      if (d.check('PROJX', true)) this.Project = 'X' + d.part;
+      if (d.check('PROJY', true)) this.Project = 'Y' + d.part;
       if (d.check('PROJ')) this.Project = 'Y1';
 
       if (check3dbox) {
@@ -1041,6 +1056,9 @@ class THistPainter extends ObjectPainter {
          histo.fMinimum = obj.fMinimum;
          histo.fMaximum = obj.fMaximum;
          histo.fSumw2 = obj.fSumw2;
+
+         if (this.getDimension() == 1)
+            this.options.decodeSumw2(histo);
 
          if (this.isTProfile()) {
             histo.fBinEntries = obj.fBinEntries;
@@ -1782,28 +1800,26 @@ class THistPainter extends ObjectPainter {
 
          let main = this.getMainPainter() || this;
 
-         menu.addchk(main.isTooltipAllowed(), 'Show tooltips', function() {
-            main.setTooltipAllowed('toggle');
-         });
+         menu.addchk(main.isTooltipAllowed(), 'Show tooltips', () => main.setTooltipAllowed('toggle'));
 
-         menu.addchk(fp.enable_highlight, 'Highlight bins', function() {
+         menu.addchk(fp.enable_highlight, 'Highlight bins', () => {
             fp.enable_highlight = !fp.enable_highlight;
             if (!fp.enable_highlight && fp.highlightBin3D && fp.mode3d) fp.highlightBin3D(null);
          });
 
          if (isFunc(fp?.render3D)) {
-            menu.addchk(main.options.FrontBox, 'Front box', function() {
+            menu.addchk(main.options.FrontBox, 'Front box', () => {
                main.options.FrontBox = !main.options.FrontBox;
                fp.render3D();
             });
-            menu.addchk(main.options.BackBox, 'Back box', function() {
+            menu.addchk(main.options.BackBox, 'Back box', () => {
                main.options.BackBox = !main.options.BackBox;
                fp.render3D();
             });
          }
 
          if (this.draw_content) {
-            menu.addchk(!this.options.Zero, 'Suppress zeros', function() {
+            menu.addchk(!this.options.Zero, 'Suppress zeros', () => {
                this.options.Zero = !this.options.Zero;
                this.interactiveRedraw('pad');
             });
@@ -1815,17 +1831,13 @@ class THistPainter extends ObjectPainter {
          }
 
          if (isFunc(main.control?.reset))
-            menu.add('Reset camera', function() {
-               main.control.reset();
-            });
+            menu.add('Reset camera', () => main.control.reset());
       }
 
       menu.addAttributesMenu(this);
 
       if (this.histogram_updated && fp.zoomChangedInteractive())
-         menu.add('Let update zoom', function() {
-            fp.zoomChangedInteractive('reset');
-         });
+         menu.add('Let update zoom', () => fp.zoomChangedInteractive('reset'));
 
       return true;
    }

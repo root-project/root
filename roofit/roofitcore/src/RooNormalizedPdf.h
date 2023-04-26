@@ -30,8 +30,10 @@ public:
    }
 
    RooNormalizedPdf(const RooNormalizedPdf &other, const char *name)
-      : RooAbsPdf(other, name), _pdf("numerator", this, other._pdf),
-        _normIntegral("denominator", this, other._normIntegral), _normSet{other._normSet}
+      : RooAbsPdf(other, name),
+        _pdf("numerator", this, other._pdf),
+        _normIntegral("denominator", this, other._normIntegral),
+        _normSet{other._normSet}
    {
    }
 
@@ -57,6 +59,10 @@ public:
    {
       return static_cast<RooAbsPdf &>(*_pdf).expectedEvents(&_normSet);
    }
+
+   void translate(RooFit::Detail::CodeSquashContext &ctx) const override;
+
+   bool canComputeBatchWithCuda() const override { return true; }
 
 protected:
    void computeBatch(cudaStream_t *, double *output, size_t size, RooFit::Detail::DataMap const &) const override;

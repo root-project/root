@@ -48,6 +48,7 @@ public:
    ROOT::Math::IMultiGenFunction *getMultiGenFcn() override { return _multiGenFcn.get(); }
 
    double operator()(const double *x) const;
+   void evaluateGradient(const double *x, double *out) const;
 
 private:
    RooAbsReal *_funct;

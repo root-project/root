@@ -54,6 +54,8 @@ public:
     _value = value;
   }
 
+  void translate(RooFit::Detail::CodeSquashContext &ctx) const override;
+
 protected:
 
   double evaluate() const override {
