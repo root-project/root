@@ -65,7 +65,7 @@ struct NodeInfo {
 
    bool isScalar() const { return outputSize == 1; }
 
-   bool computeInGPU() const { return !isScalar() && absArg->canComputeBatchWithCuda(); }
+   bool computeInGPU() const { return (absArg->isReducerNode() || !isScalar()) && absArg->canComputeBatchWithCuda(); }
 
    RooAbsArg *absArg = nullptr;
 
@@ -80,6 +80,7 @@ struct NodeInfo {
    bool isVariable = false;
    bool isDirty = true;
    bool isCategory = false;
+   bool hasLogged = false;
    std::size_t outputSize = 1;
    std::size_t lastSetValCount = std::numeric_limits<std::size_t>::max();
    std::size_t originalDataToken = 0;
@@ -271,10 +272,15 @@ void RooFitDriver::setData(DataSpansMap const &dataSpans)
       if (!info.fromDataset)
          continue;
       std::size_t size = info.outputSize;
-      _dataMapCUDA.at(info.absArg) = RooSpan<double>(_cudaMemDataset + idx, size);
-      RooBatchCompute::dispatchCUDA->memcpyToCUDA(_cudaMemDataset + idx, _dataMapCPU.at(info.absArg).data(),
-                                                  size * sizeof(double));
-      idx += size;
+      if (size == 1) {
+         // Scalar observables from the data don't need to be copied to the GPU
+         _dataMapCUDA.at(info.absArg) = _dataMapCPU.at(info.absArg);
+      } else {
+         _dataMapCUDA.at(info.absArg) = RooSpan<double>(_cudaMemDataset + idx, size);
+         RooBatchCompute::dispatchCUDA->memcpyToCUDA(_cudaMemDataset + idx, _dataMapCPU.at(info.absArg).data(),
+                                                     size * sizeof(double));
+         idx += size;
+      }
    }
 
    markGPUNodes();
@@ -314,11 +320,19 @@ void RooFitDriver::computeCPUNode(const RooAbsArg *node, NodeInfo &info)
 
    double *buffer = nullptr;
    if (nOut == 1) {
-      if (_batchMode == RooFit::BatchModeOption::Cuda) {
-         _dataMapCUDA.at(node) = RooSpan<const double>(&info.scalarBuffer, nOut);
-      }
       buffer = &info.scalarBuffer;
+      if (_batchMode == RooFit::BatchModeOption::Cuda) {
+         _dataMapCUDA.at(node) = RooSpan<const double>(buffer, nOut);
+      }
    } else {
+      if (!info.hasLogged && _batchMode == RooFit::BatchModeOption::Cuda) {
+         RooAbsArg const &arg = *info.absArg;
+         oocoutI(&arg, FastEvaluations) << "The argument " << arg.ClassName() << "::" << arg.GetName()
+                                        << " could not be evaluated on the GPU because the class doesn't support it. "
+                                           "Consider requesting or implementing it to benefit from a speed up."
+                                        << std::endl;
+         info.hasLogged = true;
+      }
       if (!info.buffer) {
          info.buffer = info.copyAfterEvaluation ? _bufferManager.makePinnedBuffer(nOut, info.stream)
                                                 : _bufferManager.makeCpuBuffer(nOut);
@@ -455,8 +469,6 @@ void RooFitDriver::assignToGPU(NodeInfo &info)
 
    auto node = static_cast<RooAbsReal const *>(info.absArg);
 
-   const std::size_t nOut = info.outputSize;
-
    info.remServers = -1;
    // wait for every server to finish
    for (auto *infoServer : info.serverInfos) {
@@ -464,9 +476,17 @@ void RooFitDriver::assignToGPU(NodeInfo &info)
          RooBatchCompute::dispatchCUDA->cudaStreamWaitEvent(info.stream, infoServer->event);
    }
 
-   info.buffer = info.copyAfterEvaluation ? _bufferManager.makePinnedBuffer(nOut, info.stream)
-                                          : _bufferManager.makeGpuBuffer(nOut);
-   double *buffer = info.buffer->gpuWritePtr();
+   const std::size_t nOut = info.outputSize;
+
+   double *buffer = nullptr;
+   if (nOut == 1) {
+      buffer = &info.scalarBuffer;
+      _dataMapCPU.at(node) = RooSpan<const double>(buffer, nOut);
+   } else {
+      info.buffer = info.copyAfterEvaluation ? _bufferManager.makePinnedBuffer(nOut, info.stream)
+                                             : _bufferManager.makeGpuBuffer(nOut);
+      buffer = info.buffer->gpuWritePtr();
+   }
    _dataMapCUDA.at(node) = RooSpan<const double>(buffer, nOut);
    node->computeBatch(info.stream, buffer, nOut, _dataMapCUDA);
    RooBatchCompute::dispatchCUDA->cudaEventRecord(info.event, info.stream);
