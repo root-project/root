@@ -62,10 +62,6 @@
 #include <iomanip>
 #include <numeric> // std::accumulate in MeanHelper
 
-#ifdef ROOT_RDF_CUDA
-#include "RHnCUDA.h"
-#endif
-
 #include <typeinfo>
 #include <type_traits>
 
@@ -368,34 +364,11 @@ extern template void BufferedFillHelper::Exec(unsigned int, const std::vector<in
 extern template void
 BufferedFillHelper::Exec(unsigned int, const std::vector<unsigned int> &, const std::vector<unsigned int> &);
 
-// From here ...
-template <class T>
-struct has_getxaxis {
-   static std::false_type test(...);
-
-   template <class U>
-   static auto test(U) -> decltype(std::declval<U>().GetXaxis(), std::true_type{});
-
-   static constexpr bool value = decltype(test(std::declval<T>()))::value;
-};
-
-template <class T>
-constexpr bool has_getxaxis_v = has_getxaxis<T>::value;
-
-static constexpr size_t getHistDim(TH3 *) { return 3; }
-static constexpr size_t getHistDim(TH2 *) { return 2; }
-static constexpr size_t getHistDim(TH1 *) { return 1; }
-
-// to here is temporary stuff to avoid compilation errors with CustomFiller
-
 /// The generic Fill helper: it calls Fill on per-thread objects and then Merge to produce a final result.
 /// For one-dimensional histograms, if no axes are specified, RDataFrame uses BufferedFillHelper instead.
 template <typename HIST = Hist_t>
 class R__CLING_PTRCHECK(off) FillHelper : public RActionImpl<FillHelper<HIST>> {
    std::vector<HIST *> fObjects;
-#ifdef ROOT_RDF_CUDA
-   std::vector<CUDAhist::RHnCUDA<double, getHistDim((HIST *)nullptr)> *> fCudaHist; // TODO: where to store this?
-#endif
 
    template <typename H = HIST, typename = decltype(std::declval<H>().Reset())>
    void ResetIfPossible(H *h)
@@ -514,91 +487,6 @@ public:
    FillHelper(FillHelper &&) = default;
    FillHelper(const FillHelper &) = delete;
 
-#ifdef ROOT_RDF_CUDA
-   // Initialize fCudaHist
-   inline void init_cuda(HIST *obj, int i)
-   {
-      if (getenv("CUDA_HIST")) {
-         if constexpr (has_getxaxis_v<HIST>) { // Avoid compilation errors for fObjects without GetXaxis()
-            if (getenv("DBG"))
-               printf("Init cuda hist %d\n", i);
-            auto dims = obj->GetDimension();
-            std::vector<Int_t> ncells;
-            std::vector<Double_t> xlow;
-            std::vector<Double_t> xhigh;
-            std::vector<const Double_t *> binEdges;
-            TAxis *ax;
-
-            for (auto d = 0; d < dims; d++) {
-               if (d == 0) {
-                  ax = obj->GetXaxis();
-               } else if (d == 1) {
-                  ax = obj->GetYaxis();
-               } else {
-                  ax = obj->GetZaxis();
-               }
-
-               ncells.push_back(ax->GetNbins() + 2);
-               xlow.push_back(ax->GetXmin());
-               xhigh.push_back(ax->GetXmax());
-               binEdges.push_back(ax->GetXbins()->GetArray());
-               if (getenv("DBG"))
-                  printf("\tdim %d --- nbins: %d xlow: %f xhigh: %f\n", d, ncells[d], xlow[d], xhigh[d]);
-            }
-
-            fCudaHist[i] = new CUDAhist::RHnCUDA<double, getHistDim((HIST *)nullptr)>(ncells.data(), xlow.data(), xhigh.data(), binEdges.data());
-            fCudaHist[i]->AllocateH1D();
-         }
-      }
-   }
-
-   FillHelper(const std::shared_ptr<HIST> &h, const unsigned int nSlots)
-      : fObjects(nSlots, nullptr), fCudaHist(nSlots, nullptr)
-   {
-      fObjects[0] = h.get();
-      init_cuda(fObjects[0], 0);
-
-      // Initialize all other slots
-      for (unsigned int i = 1; i < nSlots; ++i) {
-         fObjects[i] = new HIST(*fObjects[0]);
-         UnsetDirectoryIfPossible(fObjects[i]);
-         init_cuda(fObjects[i], i);
-      }
-   }
-
-   void InitTask(TTreeReader *, unsigned int) {}
-
-   template <size_t DIMW>
-   void FillWithWeight(unsigned int slot, const std::array<double, DIMW> &v)
-   {
-      double w = v.back();
-      std::array<double, DIMW - 1> coords;
-      std::copy(v.begin(), v.end() - 1, coords.begin());
-      fCudaHist[slot]->Fill(coords, w);
-   }
-
-   template <typename... Coords>
-   void FillWithoutWeight(unsigned int slot, const Coords &...x)
-   {
-      fCudaHist[slot]->Fill({x...});
-   }
-
-   template <typename... ValTypes, std::enable_if_t<!Disjunction<IsDataContainer<ValTypes>...>::value, int> = 0>
-   auto Exec(unsigned int slot, const ValTypes &...x) -> decltype(fObjects[slot]->Fill(x...), void())
-   {
-      if constexpr (has_getxaxis_v<HIST>) {
-         if (getenv("CUDA_HIST")) {
-            if constexpr (sizeof...(ValTypes) > getHistDim((HIST *)nullptr))
-               FillWithWeight<getHistDim((HIST *)nullptr) + 1>(slot, {((Double_t)x)...});
-            else
-               FillWithoutWeight(slot, x...);
-            return;
-         }
-      }
-
-      fObjects[slot]->Fill(x...);
-   }
-#else
    FillHelper(const std::shared_ptr<HIST> &h, const unsigned int nSlots) : fObjects(nSlots, nullptr)
    {
       fObjects[0] = h.get();
@@ -617,7 +505,6 @@ public:
    {
       fObjects[slot]->Fill(x...);
    }
-#endif
 
    // at least one container argument
    template <typename... Xs, std::enable_if_t<Disjunction<IsDataContainer<Xs>...>::value, int> = 0>
@@ -660,48 +547,6 @@ public:
 
    void Finalize()
    {
-#ifdef ROOT_RDF_CUDA
-      if (getenv("CUDA_HIST")) {
-         if constexpr (has_getxaxis_v<HIST>) { // fix to avoid compilation errors for CustomFiller
-            Double_t stats[13];
-
-            for (unsigned int i = 0; i < fObjects.size(); ++i) {
-               HIST *h = fObjects[i];
-               Int_t entries = fCudaHist[i]->RetrieveResults(h->GetArray(), stats);
-               h->SetStatsData(stats);
-               h->SetEntries(entries);
-               // printf("%d %d??\n", fObjects[i]->GetArray()->size(), fObjects[i]->GetXaxis()->GetNbins());
-               if (getenv("DBG")) {
-                  printf("cuda stats:");
-                  for (int j = 0; j < 13; j++) {
-                     printf("%f ", stats[j]);
-                  }
-                  printf(" %f\n", fObjects[0]->GetEntries());
-               }
-            }
-         }
-      }
-
-      if constexpr (has_getxaxis_v<HIST>) {
-         if (getenv("DBG")) {
-            Double_t stats[13];
-            fObjects[0]->GetStats(stats);
-            printf("stats:");
-            for (int j = 0; j < 13; j++) {
-               printf("%f ", stats[j]);
-            }
-            printf(" %f\n", fObjects[0]->GetEntries());
-            if (getenv("DBG") && atoi(getenv("DBG")) > 1) {
-
-               printf("histogram:");
-               for (int j = 0; j < fObjects[0]->GetNcells(); ++j) {
-                  printf("%f ", fObjects[0]->GetArray()[j]);
-               }
-               printf("\n");
-            }
-         }
-      }
-#endif
       if (fObjects.size() == 1)
          return;
 

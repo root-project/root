@@ -20,6 +20,7 @@ endif()
 
 if (cuda)
   list(APPEND RDATAFRAME_EXTRA_DEPS CUDAHist)
+  list(APPEND RDATAFRAME_EXTRA_HEADERS ROOT/RDF/CUDAFillHelper.hxx)
 endif()
 
 if(sqlite)

@@ -364,7 +364,7 @@ void RHnCUDA<T, Dim, BlockSize>::ExecuteCUDAHisto()
 }
 
 template <typename T, unsigned int Dim, unsigned int BlockSize>
-int RHnCUDA<T, Dim, BlockSize>::RetrieveResults(double *histResult, double *statsResult)
+void RHnCUDA<T, Dim, BlockSize>::RetrieveResults(double *histResult, double *statsResult)
 {
    // Fill the histogram with remaining values in the buffer.
    if (fHWeights.size() > 0) {
@@ -376,8 +376,6 @@ int RHnCUDA<T, Dim, BlockSize>::RetrieveResults(double *histResult, double *stat
    ERRCHECK(cudaMemcpy(statsResult, fDStats, kNStats * sizeof(double), cudaMemcpyDeviceToHost));
 
    // TODO: Free device pointers?
-
-   return fEntries;
 }
 
 #include "RHnCUDA-impl.cu"

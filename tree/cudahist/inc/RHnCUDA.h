@@ -35,9 +35,9 @@ private:
    int                     *fDBins;              ///< Pointer to array of bins (corresponding to the coordinates) to fill on the GPU.
    double                  *fDWeights;           ///< Pointer to array of weights on the GPU.
 
-   double                   fEntries;            ///< Number of entries that have been filled.
-   double                  *fDIntermediateStats; ///< Pointer to statistics buffer on GPU.
-   double                  *fDStats;             ///< Pointer to statistics buffer on GPU.
+   int                      fEntries;            ///< Number of entries that have been filled.
+   double                  *fDIntermediateStats; ///< Buffer for storing intermediate results of stat reduction on GPU.
+   double                  *fDStats;             ///< Pointer to statistics array on GPU.
 
    // Kernel size parameters
    unsigned int             fNumBlocks;          ///< Number of blocks used in CUDA kernels
@@ -52,9 +52,11 @@ public:
 
    RHnCUDA(int *ncells, double *xlow, double *xhigh, const double **binEdges);
 
+   int GetEntries() { return fEntries; }
+
    void AllocateH1D();
 
-   int RetrieveResults(double *histResult, double *statsResult);
+   void RetrieveResults(double *histResult, double *statsResult);
 
    void Fill(const std::array<T, Dim> &coords, double w = 1.);
 
