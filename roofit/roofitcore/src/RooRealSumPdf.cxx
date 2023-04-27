@@ -262,7 +262,6 @@ double RooRealSumPdf::evaluate(RooAbsReal const& caller,
   return value < 0 && doFloor ? 0.0 : value;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate the current value
 
@@ -320,6 +319,42 @@ void RooRealSumPdf::computeBatch(cudaStream_t* /*stream*/, double* output, size_
   }
 }
 
+void RooRealSumPdf::translateImpl(RooFit::Detail::CodeSquashContext &ctx, RooAbsArg const *klass,
+                                  RooArgList const &funcList, RooArgList const &coefList)
+{
+   if (funcList.size() < 3) {
+      bool noLastCoeff = funcList.size() != coefList.size();
+
+      std::string sum;
+      std::string lastCoeff = "(1";
+
+      std::size_t i;
+      for (i = 0; i < coefList.size(); ++i) {
+         auto coeff = ctx.getResult(coefList[i]);
+         sum += "(" + ctx.getResult(funcList[i]) + " * " + coeff + ") +";
+         if (noLastCoeff)
+            lastCoeff += " - " + coeff;
+      }
+      lastCoeff += ")";
+
+      if (noLastCoeff) {
+         sum += "(" + ctx.getResult(funcList[i]) + " * " + lastCoeff + ")";
+      } else {
+         sum.pop_back();
+      }
+
+      ctx.addResult(klass, sum);
+   } else {
+      std::string const &addRes = ctx.buildCall("RooFit::Detail::EvaluateFuncs::addPdfEvaluate", funcList,
+                                                funcList.size(), coefList, coefList.size());
+      ctx.addResult(klass, addRes);
+   }
+}
+
+void RooRealSumPdf::translate(RooFit::Detail::CodeSquashContext &ctx) const
+{
+   translateImpl(ctx, this, _funcList, _coefList);
+}
 
 bool RooRealSumPdf::checkObservables(RooAbsReal const& caller, RooArgSet const* nset,
                                      RooArgList const& funcList, RooArgList const& coefList)
