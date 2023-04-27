@@ -51,6 +51,7 @@
 #include "RooRealVar.h"
 #include "RooAddGenContext.h"
 #include "RooNameReg.h"
+#include "RooBatchCompute.h"
 
 using namespace std;
 
@@ -376,6 +377,46 @@ double RooAddModel::evaluate() const
   return value ;
 }
 
+void RooAddModel::computeBatch(cudaStream_t *stream, double *output, size_t nEvents,
+                               RooFit::Detail::DataMap const &dataMap) const
+{
+   // Like many other functions in this class, the implementation was copy-pasted from the RooAddPdf
+
+   _coefCache.resize(_pdfList.size());
+   for (std::size_t i = 0; i < _coefList.size(); ++i) {
+      auto coefVals = dataMap.at(&_coefList[i]);
+      // We don't support per-event coefficients in this function. If the CPU
+      // mode is used, we can just fall back to the RooAbsReal implementation.
+      // With CUDA, we can't do that because the inputs might be on the device.
+      // That's why we throw an exception then.
+      if (coefVals.size() > 1) {
+         if (stream) {
+            throw std::runtime_error("The RooAddPdf doesn't support per-event coefficients in CUDA mode yet!");
+         }
+         RooAbsReal::computeBatch(stream, output, nEvents, dataMap);
+         return;
+      }
+      _coefCache[i] = coefVals[0];
+   }
+
+   RooBatchCompute::VarVector pdfs;
+   RooBatchCompute::ArgVector coefs;
+   const RooArgSet *nset = nullptr;
+   AddCacheElem *cache = getProjCache(nullptr);
+   // We don't sync the coefficient values from the _coefList to the _coefCache
+   // because we have already done it using the dataMap.
+   updateCoefficients(*cache, nset);
+
+   for (unsigned int pdfNo = 0; pdfNo < _pdfList.size(); ++pdfNo) {
+      auto pdf = static_cast<RooAbsPdf *>(&_pdfList[pdfNo]);
+      if (pdf->isSelectedComp()) {
+         pdfs.push_back(dataMap.at(pdf));
+         coefs.push_back(_coefCache[pdfNo] / cache->suppNormVal(pdfNo));
+      }
+   }
+   auto dispatch = stream ? RooBatchCompute::dispatchCUDA : RooBatchCompute::dispatchCPU;
+   dispatch->compute(stream, RooBatchCompute::AddPdf, output, nEvents, pdfs, coefs);
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////
