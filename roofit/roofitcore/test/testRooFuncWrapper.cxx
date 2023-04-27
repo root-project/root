@@ -22,13 +22,19 @@
 #include <RooRandom.h>
 #include <RooWorkspace.h>
 
+#include <ROOT/StringUtils.hxx>
 #include <TROOT.h>
 #include <TSystem.h>
 #include <TMath.h>
-#include <Math/Factory.h>
-#include <Math/Minimizer.h>
+
+#include <functional>
 
 #include <gtest/gtest.h>
+
+// Backward compatibility for gtest version < 1.10.0
+#ifndef INSTANTIATE_TEST_SUITE_P
+#define INSTANTIATE_TEST_SUITE_P INSTANTIATE_TEST_CASE_P
+#endif
 
 namespace {
 
@@ -179,41 +185,84 @@ TEST(RooFuncWrapper, Exponential)
    }
 }
 
-/// Initial test for NLL minimization that was not based on any other tutorial/test.
-TEST(RooFuncWrapper, Nll)
+using CreateNLLFunction = std::function<std::unique_ptr<RooAbsReal>(RooAbsPdf &, RooAbsData &, RooWorkspace &)>;
+
+class FactoryTestParams {
+public:
+   FactoryTestParams() = default;
+   FactoryTestParams(std::string const &name, std::string const &exprs, std::string const &observableNames,
+                     CreateNLLFunction createNLL, double fitResultTolerance, bool randomizeParameters)
+      : _name{name},
+        _factoryExpressions{exprs},
+        _observableNames{observableNames},
+        _createNLL{createNLL},
+        _fitResultTolerance{fitResultTolerance},
+        _randomizeParameters{randomizeParameters}
+   {
+   }
+
+   std::string _name;
+   std::string _factoryExpressions;
+   std::string _observableNames;
+   CreateNLLFunction _createNLL;
+   double _fitResultTolerance = 1e-4;
+   bool _randomizeParameters = true;
+};
+
+class FactoryTest : public testing::TestWithParam<FactoryTestParams> {
+   void SetUp() override
+   {
+      _changeMsgLvl = std::make_unique<RooHelpers::LocalChangeMsgLevel>(RooFit::WARNING);
+      _params = GetParam();
+   }
+
+   void TearDown() override { _changeMsgLvl.reset(); }
+
+protected:
+   FactoryTestParams _params;
+
+private:
+   std::unique_ptr<RooHelpers::LocalChangeMsgLevel> _changeMsgLvl;
+};
+
+TEST_P(FactoryTest, NLLFit)
 {
-   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
-
    RooWorkspace ws;
-   ws.factory("sum::mu_shifted(mu[0, -10, 10], shift[1.0, -10, 10])");
-   ws.factory("prod::sigma_scaled(sigma[3.0, 0.01, 10], 1.5)");
-   ws.factory("Gaussian::gauss(x[0, -10, 10], mu_shifted, sigma_scaled)");
+   for (std::string const &expr : ROOT::Split(_params._factoryExpressions, ";")) {
+      if (!expr.empty())
+         ws.factory(expr.c_str());
+   }
 
-   RooAbsPdf &pdf = *ws.pdf("gauss");
-   RooRealVar &x = *ws.var("x");
-   RooRealVar &mu = *ws.var("mu");
+   RooArgSet observables;
+   for (std::string const &obsName : ROOT::Split(_params._observableNames, ",")) {
+      if (!obsName.empty())
+         observables.add(*ws.var(obsName));
+   }
 
-   RooArgSet normSet{x};
+   RooAbsPdf &model = *ws.pdf("model");
 
    std::size_t nEvents = 10;
-   std::unique_ptr<RooDataSet> data0{pdf.generate(x, nEvents)};
+   std::unique_ptr<RooDataSet> data0{model.generate(observables, nEvents)};
    std::unique_ptr<RooAbsData> data{data0->binnedClone()};
-   std::unique_ptr<RooAbsReal> nllRef{pdf.createNLL(*data, RooFit::BatchMode("cpu"))};
+   std::unique_ptr<RooAbsReal> nllRef = _params._createNLL(model, *data, ws);
    auto nllRefResolved = static_cast<RooAbsReal *>(nllRef->servers()[0]);
 
-   RooFuncWrapper nllFunc("myNll", "myNll", *nllRefResolved, normSet, data.get());
+   static int funcWrapperCounter = 0;
+   std::string wrapperName = "func_wrapper_" + std::to_string(funcWrapperCounter++);
+   RooFuncWrapper nllFunc(wrapperName.c_str(), wrapperName.c_str(), *nllRefResolved, observables, data.get());
 
    // Check if functions results are the same even after changing parameters.
-   EXPECT_NEAR(nllRef->getVal(normSet), nllFunc.getVal(), 1e-8);
-
-   mu.setVal(1);
-   EXPECT_NEAR(nllRef->getVal(normSet), nllFunc.getVal(), 1e-8);
+   EXPECT_NEAR(nllRef->getVal(observables), nllFunc.getVal(), 1e-8);
 
    // Check if the parameter layout and size is the same.
    RooArgSet paramsRefNll;
    nllRef->getParameters(nullptr, paramsRefNll);
    RooArgSet paramsMyNLL;
-   nllFunc.getParameters(&normSet, paramsMyNLL);
+   nllFunc.getParameters(&observables, paramsMyNLL);
+
+   if (_params._randomizeParameters) {
+      randomizeParameters(paramsMyNLL, 1337);
+   }
 
    EXPECT_TRUE(paramsMyNLL.hasSameLayout(paramsRefNll));
    EXPECT_EQ(paramsMyNLL.size(), paramsRefNll.size());
@@ -224,7 +273,7 @@ TEST(RooFuncWrapper, Nll)
 
    // Check if derivatives are equal
    for (std::size_t i = 0; i < paramsMyNLL.size(); ++i) {
-      EXPECT_NEAR(getNumDerivative(*nllRef, static_cast<RooRealVar &>(*paramsMyNLL[i]), normSet), dMyNLL[i], 1e-4);
+      EXPECT_NEAR(getNumDerivative(*nllRef, static_cast<RooRealVar &>(*paramsMyNLL[i]), observables), dMyNLL[i], 1e-4);
    }
 
    // Remember parameter state before minimization
@@ -259,262 +308,71 @@ TEST(RooFuncWrapper, Nll)
    auto resultRef = runMinimizer(*nllRef);
 
    // Compare minimization results
-   EXPECT_TRUE(result->isIdentical(*resultRef, 1e-4));
-   EXPECT_TRUE(resultAd->isIdentical(*resultRef, 1e-4));
+   double tol = _params._fitResultTolerance;
+   EXPECT_TRUE(result->isIdentical(*resultRef, tol));
+   EXPECT_TRUE(resultAd->isIdentical(*resultRef, tol));
 }
+
+/// Initial minimization that was not based on any other tutorial/test.
+FactoryTestParams param1{"Gaussian",
+                         "sum::mu_shifted(mu[0, -10, 10], shift[1.0, -10, 10]);"
+                         "prod::sigma_scaled(sigma[3.0, 0.01, 10], 1.5);"
+                         "Gaussian::model(x[0, -10, 10], mu_shifted, sigma_scaled);",
+                         "x",
+                         [](RooAbsPdf &pdf, RooAbsData &data, RooWorkspace &) {
+                            return std::unique_ptr<RooAbsReal>{
+                               pdf.createNLL(data, RooFit::BatchMode("cpu"))};
+                         },
+                         1e-4,
+                         /*randomizeParameters=*/false};
 
 /// Test based on the rf301 tutorial.
-TEST(RooFuncWrapper, NllPolyVar)
-{
-   using namespace RooFit;
-
-   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
-
-   RooWorkspace ws;
-   // Create function f(y) = a0 + a1*y + y*y*y
-   ws.factory("PolyVar::fy(y[-5, 5], {a0[-0.5, -5, 5], a1[-0.5, -1, 1], y})");
-   // Create gauss(x,f(y),s)
-   ws.factory("Gaussian::gauss(x[-5, 5], fy, sigma[0.5, 0.01, 10])");
-
-   RooRealVar &x = *ws.var("x");
-   RooRealVar &y = *ws.var("y");
-   RooAbsPdf &pdf = *ws.pdf("gauss");
-
-   RooArgSet normSet{x};
-
-   std::size_t nEvents = 10;
-   std::unique_ptr<RooDataSet> data0{pdf.generate({x, y}, nEvents)};
-   std::unique_ptr<RooAbsData> data{data0->binnedClone()};
-   std::unique_ptr<RooAbsReal> nllRef{pdf.createNLL(*data, ConditionalObservables(y), BatchMode("cpu"))};
-   auto nllRefResolved = static_cast<RooAbsReal *>(nllRef->servers()[0]);
-
-   RooFuncWrapper nllFunc("myNllPolyVar", "myNllPolyVar", *nllRefResolved, normSet, data.get());
-
-   // Check if functions results are the same even after changing parameters.
-   EXPECT_NEAR(nllRef->getVal(normSet), nllFunc.getVal(), 1e-8);
-
-   y.setVal(1);
-   EXPECT_NEAR(nllRef->getVal(normSet), nllFunc.getVal(), 1e-8);
-
-   // Check if the parameter layout and size is the same.
-   RooArgSet paramsRefNll;
-   nllRef->getParameters(nullptr, paramsRefNll);
-   RooArgSet paramsMyNLL;
-   nllFunc.getParameters(&normSet, paramsMyNLL);
-
-   EXPECT_TRUE(paramsMyNLL.hasSameLayout(paramsRefNll));
-   EXPECT_EQ(paramsMyNLL.size(), paramsRefNll.size());
-
-   // Get AD based derivative
-   std::vector<double> dMyNLL(nllFunc.getNumParams(), 0);
-   nllFunc.getGradient(dMyNLL.data());
-
-   // Check if derivatives are equal
-   for (std::size_t i = 0; i < paramsMyNLL.size(); ++i) {
-      EXPECT_NEAR(getNumDerivative(*nllRef, static_cast<RooRealVar &>(*paramsMyNLL[i]), normSet), dMyNLL[i], 1e-4);
-   }
-
-   // Remember parameter state before minimization
-   RooArgSet parametersOrig;
-   paramsRefNll.snapshot(parametersOrig);
-
-   auto runMinimizer = [&](RooAbsReal &absReal, RooMinimizer::Config cfg = {}) -> std::unique_ptr<RooFitResult> {
-      RooMinimizer m{absReal, cfg};
-      m.setPrintLevel(-1);
-      m.setStrategy(0);
-      m.minimize("Minuit2");
-      auto result = std::unique_ptr<RooFitResult>{m.save()};
-      // reset parameters
-      paramsRefNll.assign(parametersOrig);
-      return result;
-   };
-
-   // Minimize the RooFuncWrapper Implementation
-   auto result = runMinimizer(nllFunc);
-
-   // Minimize the RooFuncWrapper Implementation with AD
-   RooMinimizer::Config minimizerCfgAd;
-   std::size_t nGradientCalls = 0;
-   minimizerCfgAd.gradFunc = [&](double *out) {
-      nllFunc.getGradient(out);
-      ++nGradientCalls;
-   };
-   auto resultAd = runMinimizer(nllFunc, minimizerCfgAd);
-   EXPECT_GE(nGradientCalls, 1); // make sure the gradient function was actually called
-
-   // Minimize the reference NLL
-   auto resultRef = runMinimizer(*nllRef);
-
-   // Compare minimization results
-   EXPECT_TRUE(result->isIdentical(*resultRef, 1e-4));
-   EXPECT_TRUE(resultAd->isIdentical(*resultRef, 1e-4));
-}
+FactoryTestParams param2{"PolyVar",
+                         // Create function f(y) = a0 + a1*y + y*y*y
+                         "PolyVar::fy(y[-5, 5], {a0[-0.5, -5, 5], a1[-0.5, -1, 1], y});"
+                         // Create gauss(x,f(y),s)
+                         "Gaussian::model(x[-5, 5], fy, sigma[0.5, 0.01, 10]);",
+                         "x,y",
+                         [](RooAbsPdf &pdf, RooAbsData &data, RooWorkspace &ws) {
+                            using namespace RooFit;
+                            RooRealVar &y = *ws.var("y");
+                            return std::unique_ptr<RooAbsReal>{
+                               pdf.createNLL(data, ConditionalObservables(y), BatchMode("cpu"))};
+                         },
+                         1e-4,
+                         /*randomizeParameters=*/false};
 
 /// Test based on the rf201 tutorial.
-TEST(RooFuncWrapper, NllAddPdf)
-{
-   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
-
-   RooWorkspace ws;
-   ws.factory("Gaussian::sig1(x[0, 10], mean[5, -10, 10], sigma1[0.50, .01, 10])");
-   ws.factory("Gaussian::sig2(x, mean, sigma2[5, .01, 10])");
-   ws.factory("Chebychev::bkg(x, {a0[0.3, 0., 0.5], a1[0.2, 0., 0.5]})");
-   ws.factory("SUM::sig(sig1frac[0.8, 0.0, 1.0] * sig1, sig2)");
-   ws.factory("SUM::model(bkgfrac[0.5, 0.0, 1.0] * bkg, sig)");
-
-   RooRealVar &x = *ws.var("x");
-   RooAbsPdf &model = *ws.pdf("model");
-
-   RooArgSet normSet{x};
-
-   std::size_t nEvents = 10;
-   std::unique_ptr<RooDataSet> data0{model.generate({x}, nEvents)};
-   std::unique_ptr<RooAbsData> data{data0->binnedClone()};
-   std::unique_ptr<RooAbsReal> nllRef{model.createNLL(*data, RooFit::BatchMode("cpu"))};
-   auto nllRefResolved = static_cast<RooAbsReal *>(nllRef->servers()[0]);
-
-   RooFuncWrapper nllFunc("myNllAddPdf", "myNllAddPdf", *nllRefResolved, normSet, data.get());
-
-   // Check if functions results are the same even after changing parameters.
-   EXPECT_NEAR(nllRef->getVal(normSet), nllFunc.getVal(), 1e-8);
-
-   // Check if the parameter layout and size is the same.
-   RooArgSet paramsRefNll;
-   nllRef->getParameters(nullptr, paramsRefNll);
-   RooArgSet paramsMyNLL;
-   nllFunc.getParameters(&normSet, paramsMyNLL);
-
-   randomizeParameters(paramsMyNLL, 1337);
-
-   EXPECT_TRUE(paramsMyNLL.hasSameLayout(paramsRefNll));
-   EXPECT_EQ(paramsMyNLL.size(), paramsRefNll.size());
-
-   // Get AD based derivative
-   std::vector<double> dMyNLL(nllFunc.getNumParams(), 0);
-   nllFunc.getGradient(dMyNLL.data());
-
-   // Check if derivatives are equal
-   for (std::size_t i = 0; i < paramsMyNLL.size(); ++i) {
-      EXPECT_NEAR(getNumDerivative(*nllRef, static_cast<RooRealVar &>(*paramsMyNLL[i]), normSet), dMyNLL[i], 1e-4);
-   }
-
-   // Remember parameter state before minimization
-   RooArgSet parametersOrig;
-   paramsRefNll.snapshot(parametersOrig);
-
-   auto runMinimizer = [&](RooAbsReal &absReal, RooMinimizer::Config cfg = {}) -> std::unique_ptr<RooFitResult> {
-      RooMinimizer m{absReal, cfg};
-      m.setPrintLevel(-1);
-      m.setStrategy(0);
-      m.minimize("Minuit2");
-      auto result = std::unique_ptr<RooFitResult>{m.save()};
-      // reset parameters
-      paramsRefNll.assign(parametersOrig);
-      return result;
-   };
-
-   // Minimize the RooFuncWrapper Implementation
-   auto result = runMinimizer(nllFunc);
-
-   // Minimize the RooFuncWrapper Implementation with AD
-   RooMinimizer::Config minimizerCfgAd;
-   std::size_t nGradientCalls = 0;
-   minimizerCfgAd.gradFunc = [&](double *out) {
-      nllFunc.getGradient(out);
-      ++nGradientCalls;
-   };
-   auto resultAd = runMinimizer(nllFunc, minimizerCfgAd);
-   EXPECT_GE(nGradientCalls, 1); // make sure the gradient function was actually called
-
-   // Minimize the reference NLL
-   auto resultRef = runMinimizer(*nllRef);
-
-   // Compare minimization results
-   EXPECT_TRUE(result->isIdentical(*resultRef, 1e-3));
-   EXPECT_TRUE(resultAd->isIdentical(*resultRef, 1e-3));
-}
+FactoryTestParams param3{"AddPdf",
+                         "Gaussian::sig1(x[0, 10], mean[5, -10, 10], sigma1[0.50, .01, 10]);"
+                         "Gaussian::sig2(x, mean, sigma2[5, .01, 10]);"
+                         "Chebychev::bkg(x, {a0[0.3, 0., 0.5], a1[0.2, 0., 0.5]});"
+                         "SUM::sig(sig1frac[0.8, 0.0, 1.0] * sig1, sig2);"
+                         "SUM::model(bkgfrac[0.5, 0.0, 1.0] * bkg, sig);",
+                         "x",
+                         [](RooAbsPdf &pdf, RooAbsData &data, RooWorkspace &) {
+                            return std::unique_ptr<RooAbsReal>{pdf.createNLL(data, RooFit::BatchMode("cpu"))};
+                         },
+                         1e-3,
+                         /*randomizeParameters=*/true};
 
 /// Test based on the rf604 tutorial.
-TEST(RooFuncWrapper, NllConstraintSum)
-{
-   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+FactoryTestParams param4{"ConstraintSum",
+                         "RealSumFunc::mu_func({mu[-1, -10, 10], 4.0}, {1.1, 0.3});"
+                         "Gaussian::gauss(x[-10, 10], mu_func, sigma[2, 0.1, 10]);"
+                         "Polynomial::poly(x);"
+                         "SUM::model(f[0.5, 0.0, 1.0] * gauss, poly);"
+                         "Gaussian::fconstext(f, 0.2, 0.1);",
+                         "x",
+                         [](RooAbsPdf &pdf, RooAbsData &data, RooWorkspace &ws) {
+                            using namespace RooFit;
+                            return std::unique_ptr<RooAbsReal>{
+                               pdf.createNLL(data, ExternalConstraints(*ws.pdf("fconstext")), BatchMode("cpu"))};
+                         },
+                         1e-4,
+                         /*randomizeParameters=*/true};
 
-   RooWorkspace ws;
-   ws.factory("RealSumFunc::mu_func({mu[-1, -10, 10], 4.0}, {1.1, 0.3})");
-   ws.factory("Gaussian::gauss(x[-10, 10], mu_func, sigma[2, 0.1, 10])");
-   ws.factory("Polynomial::poly(x)");
-   ws.factory("SUM::model(f[0.5, 0.0, 1.0] * gauss, poly)");
-   ws.factory("Gaussian::fconstext(f, 0.2, 0.1)");
-
-   RooRealVar &x = *ws.var("x");
-   RooAbsPdf &model = *ws.pdf("model");
-
-   RooArgSet normSet{x};
-
-   std::size_t nEvents = 10;
-   std::unique_ptr<RooDataSet> data0{model.generate({x}, nEvents)};
-   std::unique_ptr<RooAbsData> data{data0->binnedClone()};
-   std::unique_ptr<RooAbsReal> nllRef{
-      model.createNLL(*data, RooFit::ExternalConstraints(*ws.pdf("fconstext")), RooFit::BatchMode("cpu"))};
-   auto nllRefResolved = static_cast<RooAbsReal *>(nllRef->servers()[0]);
-
-   RooFuncWrapper nllFunc("myNllConstraintSum", "myNllConstraintSum", *nllRefResolved, normSet, data.get());
-
-   // Check if functions results are the same even after changing parameters.
-   EXPECT_NEAR(nllRef->getVal(normSet), nllFunc.getVal(), 1e-8);
-
-   // Check if the parameter layout and size is the same.
-   RooArgSet paramsRefNll;
-   nllRef->getParameters(nullptr, paramsRefNll);
-   RooArgSet paramsMyNLL;
-   nllFunc.getParameters(&normSet, paramsMyNLL);
-
-   randomizeParameters(paramsMyNLL, 1337);
-
-   EXPECT_TRUE(paramsMyNLL.hasSameLayout(paramsRefNll));
-   EXPECT_EQ(paramsMyNLL.size(), paramsRefNll.size());
-
-   // Get AD based derivative
-   std::vector<double> dMyNLL(nllFunc.getNumParams(), 0);
-   nllFunc.getGradient(dMyNLL.data());
-
-   // Check if derivatives are equal
-   for (std::size_t i = 0; i < paramsMyNLL.size(); ++i) {
-      EXPECT_NEAR(getNumDerivative(*nllRef, static_cast<RooRealVar &>(*paramsMyNLL[i]), normSet), dMyNLL[i], 1e-4);
-   }
-
-   // Remember parameter state before minimization
-   RooArgSet parametersOrig;
-   paramsRefNll.snapshot(parametersOrig);
-
-   auto runMinimizer = [&](RooAbsReal &absReal, RooMinimizer::Config cfg = {}) -> std::unique_ptr<RooFitResult> {
-      RooMinimizer m{absReal, cfg};
-      m.setPrintLevel(-1);
-      m.setStrategy(0);
-      m.minimize("Minuit2");
-      auto result = std::unique_ptr<RooFitResult>{m.save()};
-      // reset parameters
-      paramsRefNll.assign(parametersOrig);
-      return result;
-   };
-
-   // Minimize the RooFuncWrapper Implementation
-   auto result = runMinimizer(nllFunc);
-
-   // Minimize the RooFuncWrapper Implementation with AD
-   RooMinimizer::Config minimizerCfgAd;
-   std::size_t nGradientCalls = 0;
-   minimizerCfgAd.gradFunc = [&](double *out) {
-      nllFunc.getGradient(out);
-      ++nGradientCalls;
-   };
-   auto resultAd = runMinimizer(nllFunc, minimizerCfgAd);
-   EXPECT_GE(nGradientCalls, 1); // make sure the gradient function was actually called
-
-   // Minimize the reference NLL
-   auto resultRef = runMinimizer(*nllRef);
-
-   // Compare minimization results
-   EXPECT_TRUE(result->isIdentical(*resultRef, 1e-4));
-   EXPECT_TRUE(resultAd->isIdentical(*resultRef, 1e-4));
-}
+INSTANTIATE_TEST_SUITE_P(RooFuncWrapper, FactoryTest, testing::Values(param1, param2, param3, param4),
+                         [](testing::TestParamInfo<FactoryTest::ParamType> const &paramInfo) {
+                            return paramInfo.param._name;
+                         });
