@@ -13,7 +13,7 @@ if (NOT cuda)
   return()
 endif()
 
-ROOT_LINKER_LIBRARY(CUDAHist src/RHnCUDA.cu inc/CUDAHelpers.cuh TYPE SHARED DEPENDENCIES MathCore)
+ROOT_LINKER_LIBRARY(CUDAHist src/RHnCUDA.cu TYPE SHARED DEPENDENCIES MathCore)
 target_compile_options(CUDAHist PRIVATE -rdc=true -lineinfo --expt-relaxed-constexpr)
 set_target_properties(CUDAHist PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
 

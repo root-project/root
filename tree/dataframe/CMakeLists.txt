@@ -18,11 +18,6 @@ if(arrow)
   list(APPEND RDATAFRAME_EXTRA_INCLUDES -I${ARROW_INCLUDE_DIR})
 endif()
 
-if (cuda)
-  list(APPEND RDATAFRAME_EXTRA_DEPS CUDAHist)
-  list(APPEND RDATAFRAME_EXTRA_HEADERS ROOT/RDF/CUDAFillHelper.hxx)
-endif()
-
 if(sqlite)
   list(APPEND RDATAFRAME_EXTRA_HEADERS ROOT/RSqliteDS.hxx)
 endif()
@@ -152,6 +147,7 @@ endif()
 
 if (cuda)
   target_compile_definitions(ROOTDataFrame PRIVATE ROOT_RDF_CUDA)
+  target_link_libraries(ROOTDataFrame PRIVATE CUDAHist)
 endif()
 
 if(sqlite)
