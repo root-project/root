@@ -18,9 +18,10 @@
 #include <RooFit/Detail/DataMap.h>
 #include <RooNumber.h>
 
+#include <map>
 #include <sstream>
 #include <string>
-#include <map>
+#include <type_traits>
 #include <unordered_map>
 
 template <class T>
@@ -107,13 +108,11 @@ private:
 
    void addResult(TNamed const *key, std::string const &value);
 
-   std::string buildArg(double x) { return RooNumber::toString(x); }
-
-   std::string buildArg(int x) { return std::to_string(x); }
-
-   std::string buildArg(unsigned int x) { return std::to_string(x); }
-
-   std::string buildArg(long unsigned int x) { return std::to_string(x); }
+   template <class T, typename std::enable_if<std::is_arithmetic<T>{}, bool>::type = true>
+   std::string buildArg(T x)
+   {
+      return RooNumber::toString(x);
+   }
 
    std::string buildArg(std::string const &x) { return x; }
 
