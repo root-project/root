@@ -85,6 +85,15 @@ inline double addPdfEvaluate(double const *coeffs, unsigned int nCoeffs, double 
    return sum;
 }
 
+inline double constraintSumEvaluate(double const *comp, unsigned int compSize)
+{
+   double sum = 0;
+   for (unsigned int i = 0; i < compSize; i++) {
+      sum -= std::log(comp[i]);
+   }
+   return sum;
+}
+
 } // namespace EvaluateFuncs
 
 } // namespace Detail
