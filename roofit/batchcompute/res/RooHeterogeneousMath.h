@@ -36,8 +36,8 @@ namespace STD = cuda::std;
 namespace STD = std;
 #endif
 
-__roodevice__ __roohost__ static inline void cexp(double& re, double& im)
-    {
+__roodevice__ __roohost__ static inline void cexp(double &re, double &im)
+{
    // with gcc on unix machines and on x86_64, we can gain by hand-coding
    // exp(z) for the x87 coprocessor; other platforms have the default
    // routines as fallback implementation, and compilers other than gcc on
@@ -46,15 +46,14 @@ __roodevice__ __roohost__ static inline void cexp(double& re, double& im)
    // is optimising for code size
    // (we insist on __unix__ here, since the assemblers on other OSs
    // typically do not speak AT&T syntax as gas does...)
-#if defined(__CUDACC__) || !(defined(__GNUC__) || defined(__clang__)) || \
-   !defined(__unix__) || !defined(__x86_64__) || \
-   !defined(__OPTIMIZE__) || defined(__OPTIMIZE_SIZE__) || \
-   defined(__INTEL_COMPILER) || \
-   defined(__OPEN64__) || defined(__PATHSCALE__)
+#if defined(__CUDACC__) || !(defined(__GNUC__) || defined(__clang__)) || !defined(__unix__) || !defined(__x86_64__) || \
+   !defined(__OPTIMIZE__) || defined(__OPTIMIZE_SIZE__) || defined(__INTEL_COMPILER) || defined(__OPEN64__) ||         \
+   defined(__PATHSCALE__)
    const double e = std::exp(re);
    re = e * std::cos(im);
    im = e * std::sin(im);
 #else
+   // clang-format off
    __asm__ (
       "fxam\n\t"      // examine st(0): NaN? Inf?
       "fstsw %%ax\n\t"
@@ -115,15 +114,15 @@ __roodevice__ __roohost__ static inline void cexp(double& re, double& im)
           // http://lists.cs.uiuc.edu/pipermail/cfe-dev/2012-May/021715.html
 #endif // __clang__
           );
+   // clang-format on
 #endif
-    }
+}
 
-    template <class T, unsigned N, unsigned NTAYLOR, unsigned NCF>
-__roodevice__ __roohost__ static inline STD::complex<T> faddeeva_smabmq_impl(
-       T zre, T zim, const T tm,
-       const T (&a)[N], const T (&npi)[N],
-       const T (&taylorarr)[N * NTAYLOR * 2])
-    {
+template <class T, unsigned N, unsigned NTAYLOR, unsigned NCF>
+__roodevice__ __roohost__ static inline STD::complex<T>
+faddeeva_smabmq_impl(T zre, T zim, const T tm, const T (&a)[N], const T (&npi)[N],
+                     const T (&taylorarr)[N * NTAYLOR * 2])
+{
    // catch singularities in the Fourier representation At
    // z = n pi / tm, and provide a Taylor series expansion in those
    // points, and only use it when we're close enough to the real axis
@@ -131,73 +130,76 @@ __roodevice__ __roohost__ static inline STD::complex<T> faddeeva_smabmq_impl(
    const T zim2 = zim * zim;
    const T maxnorm = T(9) / T(1000000);
    if (zim2 < maxnorm) {
-       // we're close enough to the real axis that we need to worry about
-       // singularities
-       const T dnsing = tm * zre / npi[1];
-       const T dnsingmax2 = (T(N) - T(1) / T(2)) * (T(N) - T(1) / T(2));
-       if (dnsing * dnsing < dnsingmax2) {
-      // we're in the interesting range of the real axis as well...
-      // deal with Re(z) < 0 so we only need N different Taylor
-      // expansions; use w(-x+iy) = conj(w(x+iy))
-      const bool negrez = zre < T(0);
-      // figure out closest singularity
-      const int nsing = int(std::abs(dnsing) + T(1) / T(2));
-      // and calculate just how far we are from it
-      const T zmnpire = std::abs(zre) - npi[nsing];
-      const T zmnpinorm = zmnpire * zmnpire + zim2;
-      // close enough to one of the singularities?
-      if (zmnpinorm < maxnorm) {
-          const T* coeffs = &taylorarr[nsing * NTAYLOR * 2];
-          // calculate value of taylor expansion...
-          // (note: there's no chance to vectorize this one, since
-          // the value of the next iteration depend on the ones from
-          // the previous iteration)
-          T sumre = coeffs[0], sumim = coeffs[1];
-          for (unsigned i = 1; i < NTAYLOR; ++i) {
-         const T re = sumre * zmnpire - sumim * zim;
-         const T im = sumim * zmnpire + sumre * zim;
-         sumre = re + coeffs[2 * i + 0];
-         sumim = im + coeffs[2 * i + 1];
-          }
-          // undo the flip in real part of z if needed
-          if (negrez) return STD::complex<T>(sumre, -sumim);
-          else return STD::complex<T>(sumre, sumim);
+      // we're close enough to the real axis that we need to worry about
+      // singularities
+      const T dnsing = tm * zre / npi[1];
+      const T dnsingmax2 = (T(N) - T(1) / T(2)) * (T(N) - T(1) / T(2));
+      if (dnsing * dnsing < dnsingmax2) {
+         // we're in the interesting range of the real axis as well...
+         // deal with Re(z) < 0 so we only need N different Taylor
+         // expansions; use w(-x+iy) = conj(w(x+iy))
+         const bool negrez = zre < T(0);
+         // figure out closest singularity
+         const int nsing = int(std::abs(dnsing) + T(1) / T(2));
+         // and calculate just how far we are from it
+         const T zmnpire = std::abs(zre) - npi[nsing];
+         const T zmnpinorm = zmnpire * zmnpire + zim2;
+         // close enough to one of the singularities?
+         if (zmnpinorm < maxnorm) {
+            const T *coeffs = &taylorarr[nsing * NTAYLOR * 2];
+            // calculate value of taylor expansion...
+            // (note: there's no chance to vectorize this one, since
+            // the value of the next iteration depend on the ones from
+            // the previous iteration)
+            T sumre = coeffs[0], sumim = coeffs[1];
+            for (unsigned i = 1; i < NTAYLOR; ++i) {
+               const T re = sumre * zmnpire - sumim * zim;
+               const T im = sumim * zmnpire + sumre * zim;
+               sumre = re + coeffs[2 * i + 0];
+               sumim = im + coeffs[2 * i + 1];
+            }
+            // undo the flip in real part of z if needed
+            if (negrez)
+               return STD::complex<T>(sumre, -sumim);
+            else
+               return STD::complex<T>(sumre, sumim);
+         }
       }
-       }
    }
    // negative Im(z) is treated by calculating for -z, and using the
    // symmetry properties of erfc(z)
    const bool negimz = zim < T(0);
    if (negimz) {
-       zre = -zre;
-       zim = -zim;
+      zre = -zre;
+      zim = -zim;
    }
-        const T znorm = zre * zre + zim2;
+   const T znorm = zre * zre + zim2;
    if (znorm > tm * tm) {
-       // use continued fraction approximation for |z| large
-       const T isqrtpi = 5.64189583547756287e-01;
-       const T z2re = (zre + zim) * (zre - zim);
-       const T z2im = T(2) * zre * zim;
-       T cfre = T(1), cfim = T(0), cfnorm = T(1);
-       for (unsigned k = NCF; k; --k) {
-      cfre = +(T(k) / T(2)) * cfre / cfnorm;
-      cfim = -(T(k) / T(2)) * cfim / cfnorm;
-      if (k & 1) cfre -= z2re, cfim -= z2im;
-      else cfre += T(1);
-      cfnorm = cfre * cfre + cfim * cfim;
-       }
-       T sumre =  (zim * cfre - zre * cfim) * isqrtpi / cfnorm;
-       T sumim = -(zre * cfre + zim * cfim) * isqrtpi / cfnorm;
-       if (negimz) {
-      // use erfc(-z) = 2 - erfc(z) to get good accuracy for
-      // Im(z) < 0: 2 / exp(z^2) - w(z)
-      T ez2re = -z2re, ez2im = -z2im;
-      RooHeterogeneousMath::cexp(ez2re, ez2im);
-      return STD::complex<T>(T(2) * ez2re - sumre,
-         T(2) * ez2im - sumim);
-       } else {
-      return STD::complex<T>(sumre, sumim);
-       }
+      // use continued fraction approximation for |z| large
+      const T isqrtpi = 5.64189583547756287e-01;
+      const T z2re = (zre + zim) * (zre - zim);
+      const T z2im = T(2) * zre * zim;
+      T cfre = T(1), cfim = T(0), cfnorm = T(1);
+      for (unsigned k = NCF; k; --k) {
+         cfre = +(T(k) / T(2)) * cfre / cfnorm;
+         cfim = -(T(k) / T(2)) * cfim / cfnorm;
+         if (k & 1)
+            cfre -= z2re, cfim -= z2im;
+         else
+            cfre += T(1);
+         cfnorm = cfre * cfre + cfim * cfim;
+      }
+      T sumre = (zim * cfre - zre * cfim) * isqrtpi / cfnorm;
+      T sumim = -(zre * cfre + zim * cfim) * isqrtpi / cfnorm;
+      if (negimz) {
+         // use erfc(-z) = 2 - erfc(z) to get good accuracy for
+         // Im(z) < 0: 2 / exp(z^2) - w(z)
+         T ez2re = -z2re, ez2im = -z2im;
+         RooHeterogeneousMath::cexp(ez2re, ez2im);
+         return STD::complex<T>(T(2) * ez2re - sumre, T(2) * ez2im - sumim);
+      } else {
+         return STD::complex<T>(sumre, sumim);
+      }
    }
    const T twosqrtpi = 3.54490770181103205e+00;
    const T tmzre = tm * zre, tmzim = tm * zim;
@@ -205,16 +207,10 @@ __roodevice__ __roohost__ static inline STD::complex<T> faddeeva_smabmq_impl(
    T eitmzre = -tmzim, eitmzim = tmzre;
    RooHeterogeneousMath::cexp(eitmzre, eitmzim);
    // form 1 +/- exp (i tm z)
-   const T numerarr[4] = {
-       T(1) - eitmzre, -eitmzim, T(1) + eitmzre, +eitmzim
-   };
+   const T numerarr[4] = {T(1) - eitmzre, -eitmzim, T(1) + eitmzre, +eitmzim};
    // form tm z * (1 +/- exp(i tm z))
-   const T numertmz[4] = {
-       tmzre * numerarr[0] - tmzim * numerarr[1],
-       tmzre * numerarr[1] + tmzim * numerarr[0],
-       tmzre * numerarr[2] - tmzim * numerarr[3],
-       tmzre * numerarr[3] + tmzim * numerarr[2]
-   };
+   const T numertmz[4] = {tmzre * numerarr[0] - tmzim * numerarr[1], tmzre * numerarr[1] + tmzim * numerarr[0],
+                          tmzre * numerarr[2] - tmzim * numerarr[3], tmzre * numerarr[3] + tmzim * numerarr[2]};
    // common subexpressions for use inside the loop
    const T reimtmzm2 = T(-2) * tmzre * tmzim;
    const T imtmz2 = tmzim * tmzim;
@@ -226,69 +222,68 @@ __roodevice__ __roohost__ static inline STD::complex<T> faddeeva_smabmq_impl(
    // clock cycles; non-gcc compilers also get the normal code, since they
    // usually do a better job with the default code (and yes, it's a pain
    // that they're all pretending to be gcc)
-#if (defined(__CUDACC__) || !defined(__x86_64__)) || !defined(__OPTIMIZE__) || \
-   defined(__OPTIMIZE_SIZE__) || defined(__INTEL_COMPILER) || \
-   defined(__clang__) || defined(__OPEN64__) || \
-   defined(__PATHSCALE__) || !defined(__GNUC__)
-        T sumre = (-a[0] / znorm) * (numerarr[0] * zre + numerarr[1] * zim);
-        T sumim = (-a[0] / znorm) * (numerarr[1] * zre - numerarr[0] * zim);
-        for (unsigned i = 0; i < N; ++i) {
-            const unsigned j = (i << 1) & 2;
-            // denominator
-            const T wk = imtmz2 + (npi[i] + tmzre) * (npi[i] - tmzre);
-            // norm of denominator
-            const T norm = wk * wk + reimtmzm22;
-            const T f = T(2) * tm * a[i] / norm;
-            // sum += a[i] * numer / wk
-            sumre -= f * (numertmz[j] * wk + numertmz[j + 1] * reimtmzm2);
-            sumim -= f * (numertmz[j + 1] * wk - numertmz[j] * reimtmzm2);
-        }
+#if (defined(__CUDACC__) || !defined(__x86_64__)) || !defined(__OPTIMIZE__) || defined(__OPTIMIZE_SIZE__) || \
+   defined(__INTEL_COMPILER) || defined(__clang__) || defined(__OPEN64__) || defined(__PATHSCALE__) ||       \
+   !defined(__GNUC__)
+   T sumre = (-a[0] / znorm) * (numerarr[0] * zre + numerarr[1] * zim);
+   T sumim = (-a[0] / znorm) * (numerarr[1] * zre - numerarr[0] * zim);
+   for (unsigned i = 0; i < N; ++i) {
+      const unsigned j = (i << 1) & 2;
+      // denominator
+      const T wk = imtmz2 + (npi[i] + tmzre) * (npi[i] - tmzre);
+      // norm of denominator
+      const T norm = wk * wk + reimtmzm22;
+      const T f = T(2) * tm * a[i] / norm;
+      // sum += a[i] * numer / wk
+      sumre -= f * (numertmz[j] * wk + numertmz[j + 1] * reimtmzm2);
+      sumim -= f * (numertmz[j + 1] * wk - numertmz[j] * reimtmzm2);
+   }
 #else
    // BEGIN fully vectorisable code - enjoy reading... ;)
    T tmp[2 * N];
    for (unsigned i = 0; i < N; ++i) {
-       const T wk = imtmz2 + (npi[i] + tmzre) * (npi[i] - tmzre);
-       tmp[2 * i + 0] = wk;
-       tmp[2 * i + 1] = T(2) * tm * a[i] / (wk * wk + reimtmzm22);
+      const T wk = imtmz2 + (npi[i] + tmzre) * (npi[i] - tmzre);
+      tmp[2 * i + 0] = wk;
+      tmp[2 * i + 1] = T(2) * tm * a[i] / (wk * wk + reimtmzm22);
    }
    for (unsigned i = 0; i < N / 2; ++i) {
-       T wk = tmp[4 * i + 0], f = tmp[4 * i + 1];
-       tmp[4 * i + 0] = -f * (numertmz[0] * wk + numertmz[1] * reimtmzm2);
-       tmp[4 * i + 1] = -f * (numertmz[1] * wk - numertmz[0] * reimtmzm2);
-       wk = tmp[4 * i + 2], f = tmp[4 * i + 3];
-       tmp[4 * i + 2] = -f * (numertmz[2] * wk + numertmz[3] * reimtmzm2);
-       tmp[4 * i + 3] = -f * (numertmz[3] * wk - numertmz[2] * reimtmzm2);
+      T wk = tmp[4 * i + 0], f = tmp[4 * i + 1];
+      tmp[4 * i + 0] = -f * (numertmz[0] * wk + numertmz[1] * reimtmzm2);
+      tmp[4 * i + 1] = -f * (numertmz[1] * wk - numertmz[0] * reimtmzm2);
+      wk = tmp[4 * i + 2], f = tmp[4 * i + 3];
+      tmp[4 * i + 2] = -f * (numertmz[2] * wk + numertmz[3] * reimtmzm2);
+      tmp[4 * i + 3] = -f * (numertmz[3] * wk - numertmz[2] * reimtmzm2);
    }
    if (N & 1) {
-       // we may have missed one element in the last loop; if so, process
-       // it now...
-       const T wk = tmp[2 * N - 2], f = tmp[2 * N - 1];
-       tmp[2 * (N - 1) + 0] = -f * (numertmz[0] * wk + numertmz[1] * reimtmzm2);
-       tmp[2 * (N - 1) + 1] = -f * (numertmz[1] * wk - numertmz[0] * reimtmzm2);
+      // we may have missed one element in the last loop; if so, process
+      // it now...
+      const T wk = tmp[2 * N - 2], f = tmp[2 * N - 1];
+      tmp[2 * (N - 1) + 0] = -f * (numertmz[0] * wk + numertmz[1] * reimtmzm2);
+      tmp[2 * (N - 1) + 1] = -f * (numertmz[1] * wk - numertmz[0] * reimtmzm2);
    }
    T sumre = (-a[0] / znorm) * (numerarr[0] * zre + numerarr[1] * zim);
    T sumim = (-a[0] / znorm) * (numerarr[1] * zre - numerarr[0] * zim);
    for (unsigned i = 0; i < N; ++i) {
-       sumre += tmp[2 * i + 0];
-       sumim += tmp[2 * i + 1];
+      sumre += tmp[2 * i + 0];
+      sumim += tmp[2 * i + 1];
    }
    // END fully vectorisable code
 #endif
    // prepare the result
    if (negimz) {
-       // use erfc(-z) = 2 - erfc(z) to get good accuracy for
-       // Im(z) < 0: 2 / exp(z^2) - w(z)
-       const T z2im = -T(2) * zre * zim;
-       const T z2re = -(zre + zim) * (zre - zim);
-       T ez2re = z2re, ez2im = z2im;
-       RooHeterogeneousMath::cexp(ez2re, ez2im);
-       return STD::complex<T>(T(2) * ez2re + sumim / twosqrtpi,
-          T(2) * ez2im - sumre / twosqrtpi);
+      // use erfc(-z) = 2 - erfc(z) to get good accuracy for
+      // Im(z) < 0: 2 / exp(z^2) - w(z)
+      const T z2im = -T(2) * zre * zim;
+      const T z2re = -(zre + zim) * (zre - zim);
+      T ez2re = z2re, ez2im = z2im;
+      RooHeterogeneousMath::cexp(ez2re, ez2im);
+      return STD::complex<T>(T(2) * ez2re + sumim / twosqrtpi, T(2) * ez2im - sumre / twosqrtpi);
    } else {
-       return STD::complex<T>(-sumim / twosqrtpi, sumre / twosqrtpi);
+      return STD::complex<T>(-sumim / twosqrtpi, sumre / twosqrtpi);
    }
-    }
+}
 
+// clang-format off
 __roodevice__ static const double npi24[24] = { // precomputed values n * pi
    0.00000000000000000e+00, 3.14159265358979324e+00, 6.28318530717958648e+00,
    9.42477796076937972e+00, 1.25663706143591730e+01, 1.57079632679489662e+01,
@@ -481,19 +476,19 @@ __roodevice__ static const double taylorarr24[24 * 12] = {
     1.79368667683853708e-16,  9.50473084594884184e-02
     };
 
-    __roodevice__ const double npi11[11] = { // precomputed values n * pi
+__roodevice__ const double npi11[11] = { // precomputed values n * pi
    0.00000000000000000e+00, 3.14159265358979324e+00, 6.28318530717958648e+00,
    9.42477796076937972e+00, 1.25663706143591730e+01, 1.57079632679489662e+01,
    1.88495559215387594e+01, 2.19911485751285527e+01, 2.51327412287183459e+01,
    2.82743338823081391e+01, 3.14159265358979324e+01
     };
-   __roodevice__  const double a11[11] = { // precomputed Fourier coefficient prefactors
+__roodevice__  const double a11[11] = { // precomputed Fourier coefficient prefactors
    4.43113462726379007e-01, 3.79788034073635143e-01, 2.39122407410867584e-01,
    1.10599187402169792e-01, 3.75782250080904725e-02, 9.37936104296856288e-03,
    1.71974046186334976e-03, 2.31635559000523461e-04, 2.29192401420125452e-05,
    1.66589592139340077e-06, 8.89504561311882155e-08
     };
-    __roodevice__ const double taylorarr11[11 * 6] = {
+__roodevice__ const double taylorarr11[11 * 6] = {
    // real part imaginary part, low order coefficients last
    // nsing = 0
    -1.00000000000000000e+00,  0.00000000000000000e+00,
@@ -540,20 +535,21 @@ __roodevice__ static const double taylorarr24[24 * 12] = {
    -1.57660578509526722e-06, -4.09165023743669707e-02,
     2.00739683204152177e-07,  1.48879348585662670e-01
     };
+// clang-format on
 
-    __roodevice__ __roohost__ inline STD::complex<double> faddeeva(STD::complex<double> z)
-    {
-        return RooHeterogeneousMath::faddeeva_smabmq_impl<double, 24, 6, 9>(
-           z.real(), z.imag(), 12., RooHeterogeneousMath::a24,
-           RooHeterogeneousMath::npi24, RooHeterogeneousMath::taylorarr24);
-    }
+__roodevice__ __roohost__ inline STD::complex<double> faddeeva(STD::complex<double> z)
+{
+   return RooHeterogeneousMath::faddeeva_smabmq_impl<double, 24, 6, 9>(
+      z.real(), z.imag(), 12., RooHeterogeneousMath::a24, RooHeterogeneousMath::npi24,
+      RooHeterogeneousMath::taylorarr24);
+}
 
-    __roodevice__ __roohost__ inline STD::complex<double> faddeeva_fast(STD::complex<double> z)
-    {
-        return RooHeterogeneousMath::faddeeva_smabmq_impl<double, 11, 3, 3>(
-           z.real(), z.imag(), 8., RooHeterogeneousMath::a11,
-           RooHeterogeneousMath::npi11, RooHeterogeneousMath::taylorarr11);
-    }
+__roodevice__ __roohost__ inline STD::complex<double> faddeeva_fast(STD::complex<double> z)
+{
+   return RooHeterogeneousMath::faddeeva_smabmq_impl<double, 11, 3, 3>(
+      z.real(), z.imag(), 8., RooHeterogeneousMath::a11, RooHeterogeneousMath::npi11,
+      RooHeterogeneousMath::taylorarr11);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// use the approximation: erf(z) = exp(-z*z)/(STD::sqrt(pi)*z)
@@ -586,10 +582,10 @@ __roohost__ __roodevice__ inline STD::complex<double> evalCerf(double swt, doubl
       // code path, speeding up in particular the analytical convolution of an
       // exponential decay with a Gaussian (like in RooDecay).
    }
-   STD::complex<double> z(swt*c,u+c);
-   return (z.imag()>-4.0) ? (STD::exp(-u*u)*faddeeva_fast(z)) : evalCerfApprox(swt,u,c);
+   STD::complex<double> z(swt * c, u + c);
+   return (z.imag() > -4.0) ? (STD::exp(-u * u) * faddeeva_fast(z)) : evalCerfApprox(swt, u, c);
 }
 
-}
+} // namespace RooHeterogeneousMath
 
 #endif
