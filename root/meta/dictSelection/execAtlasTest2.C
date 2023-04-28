@@ -23,6 +23,13 @@ void printMembers( TClass* cl ) {
 
    std::cout << "Members of class " << cl->GetName() << std::endl;
 
+   if (cl->GetCollectionProxy())
+      // Members does not matter (and some implementation have them in the base
+      // and some newer implementation have the data member in the class itself.
+      // Either way, they are internal (since we use the collection proxy) and
+      // do no matter.
+      return;
+
    TList* members = cl->GetListOfDataMembers();
    for( Int_t i = 0; i < members->GetSize(); ++i ) {
       TDataMember* member = dynamic_cast< TDataMember* >( members->At( i ) );
