@@ -173,6 +173,8 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::PrepareSc
          return R__FAIL("unsupported: count leaf arrays in leaf list, branch " + std::string(b->GetName()));
 
       // Only plain leafs with type identifies 'C' are C strings. Otherwise, they are char arrays.
+      // We use GetLeafCounter instead of GetLeafCount and GetLenStatic because the latter don't distinguish between
+      // char arrays and C strings.
       Int_t firstLeafCountval;
       const bool isCString = !isLeafList && (firstLeaf->IsA() == TLeafC::Class()) &&
                              (!firstLeaf->GetLeafCounter(firstLeafCountval)) && (firstLeafCountval == 1);
@@ -200,13 +202,12 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::PrepareSc
             return R__FAIL("unsupported: TObject branches, branch: " + std::string(b->GetName()));
          }
 
-         Int_t countval = 0;
-         // We don't use GetLeafCounter() to retrieve the leaf count because it relies on the correct format of
-         // the leaf title. There are files in the public where the title is broken (empty).
-         l->GetLeafCounter(countval);
+         // We don't use GetLeafCounter() because it relies on the correct format of the leaf title.
+         // There are files in the public where the title is broken (empty).
+         Int_t countval = l->GetLenStatic();
          auto *countleaf = l->GetLeafCount();
          const bool isLeafCountArray = (countleaf != nullptr);
-         const bool isFixedSizeArray = (countleaf == nullptr) && (countval > 1);
+         const bool isFixedSizeArray = !isCString && (countleaf == nullptr) && (countval > 1);
 
          // The base case for branches with fundamental, single numerical types.
          // For other types of branches, different field names or types are necessary,
