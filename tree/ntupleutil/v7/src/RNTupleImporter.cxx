@@ -201,7 +201,10 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::PrepareSc
          }
 
          Int_t countval = 0;
-         auto *countleaf = l->GetLeafCounter(countval);
+         // We don't use GetLeafCounter() to retrieve the leaf count because it relies on the correct format of
+         // the leaf title. There are files in the public where the title is broken (empty).
+         l->GetLeafCounter(countval);
+         auto *countleaf = l->GetLeafCount();
          const bool isLeafCountArray = (countleaf != nullptr);
          const bool isFixedSizeArray = (countleaf == nullptr) && (countval > 1);
 
