@@ -241,7 +241,6 @@ Char_t
 vector<double,allocator<double> >::size_type
 ROOT::Math::KDTree<ROOT::Math::TDataPoint<1,double> >::Bin
 string::size_type
-mbstate_t
 basic_streambuf<char,char_traits<char> >::traits_type
 basic_ostringstream<char,char_traits<char>,allocator<char> >::char_type
 long long
