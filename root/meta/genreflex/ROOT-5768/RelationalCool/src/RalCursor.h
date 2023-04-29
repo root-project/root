@@ -25,7 +25,7 @@ namespace cool
   public:
 
     /// Destructor
-    virtual ~RalCursor() {}
+    ~RalCursor() override {}
 
     /// Constructor from a CORAL query.
     /// The constructor takes ownership of the query and executes it.
@@ -36,20 +36,20 @@ namespace cool
 
     /// Positions the cursor to the next available row in the result set.
     /// If there are no more rows in the result set false is returned.
-    bool next()
+    bool next() override
     {
       return m_cursor.next();
       //return RalQueryMgr::cursorNext( m_cursor ); // with TimingReport
     }
 
     /// Returns a reference to the output buffer holding the last row fetched.
-    const coral::AttributeList& currentRow() const
+    const coral::AttributeList& currentRow() const override
     {
       return m_cursor.currentRow();
     }
 
     /// Explicitly closes the cursor, releasing the resources on the server.
-    void close()
+    void close() override
     {
       return m_cursor.close();
     }

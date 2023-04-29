@@ -203,15 +203,15 @@ namespace coral
     /// Default constructor
     MsgReporter();
     /// Destructor
-    virtual ~MsgReporter() {}
+    ~MsgReporter() override {}
     /// Release reference to reporter
-    virtual void release() { delete this; }
+    void release() override { delete this; }
     /// Access output level
-    virtual coral::MsgLevel outputLevel() const;
+    coral::MsgLevel outputLevel() const override;
     /// Modify output level
-    virtual void setOutputLevel(coral::MsgLevel lvl);
+    void setOutputLevel(coral::MsgLevel lvl) override;
     /// Report a message
-    virtual void report(int lvl, const std::string& src, const std::string& msg);
+    void report(int lvl, const std::string& src, const std::string& msg) override;
 
   private:
     /// The current message level threshold

@@ -24,7 +24,7 @@ namespace coral {
     WebCacheControlException() {}
 
     /// Destructor
-    virtual ~WebCacheControlException() throw() {}
+    ~WebCacheControlException() throw() override {}
 
   };
 

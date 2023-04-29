@@ -41,7 +41,7 @@ class TH2Analyzer : public TObject {
     Eval(rebin, binxmin, binxmax, cst_binning);
   } 
 
-  ~TH2Analyzer() {Reset(); }
+  ~TH2Analyzer() override {Reset(); }
 
   void Reset() {}
 
@@ -75,7 +75,7 @@ class TH2Analyzer : public TObject {
   TH1D*      meanXslice_;
 
   //std::vector< TH1D* > parameters_; // if we are not fitting with a gauss function
-  ClassDef(TH2Analyzer, 1);
+  ClassDefOverride(TH2Analyzer, 1);
 
 };
 

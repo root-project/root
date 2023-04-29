@@ -16,7 +16,7 @@ namespace coral {
                  "CoralBase" )
     {}
 
-    virtual ~AttributeListException() throw() {}
+    ~AttributeListException() throw() override {}
   };
 
 }

@@ -13,7 +13,7 @@ public:
       // fArray.push_back(123);
       // fArray.push_back(456);
    }
-   void Print(Option_t * /*option*/ ="") const {
+   void Print(Option_t * /*option*/ ="") const override {
       std::cout << "MyClass::Print ver: " << ver << "\n";
    }
 
@@ -23,5 +23,5 @@ private:
    int ver;
    std::vector<int> fArray;
 
-   ClassDef(MyClass, 1)
+   ClassDefOverride(MyClass, 1)
 };

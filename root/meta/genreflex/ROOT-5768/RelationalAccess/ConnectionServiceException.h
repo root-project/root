@@ -24,7 +24,7 @@ namespace coral {
     {}
 
     /// Destructor
-    virtual ~ConnectionServiceException() throw() {}
+    ~ConnectionServiceException() throw() override {}
   };
 
 
@@ -41,7 +41,7 @@ namespace coral {
                                   methodName, moduleName ){}
 
     /// Destructor
-    virtual ~ConnectionNotAvailableException() throw() {}
+    ~ConnectionNotAvailableException() throw() override {}
   };
 
 
@@ -59,7 +59,7 @@ namespace coral {
                                   methodName, moduleName ){}
 
     /// Destructor
-    virtual ~ReplicaNotAvailableException() throw() {}
+    ~ReplicaNotAvailableException() throw() override {}
   };
 
 }

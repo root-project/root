@@ -23,14 +23,14 @@ namespace coral
     ConnectionService();
 
     /// Destructor
-    virtual ~ConnectionService();
+    ~ConnectionService() override;
 
     /**
      * Returns a session proxy object for the specified connection string
      * and access mode.
      */
     ISessionProxy* connect( const std::string& connectionName,
-                            AccessMode accessMode = Update );
+                            AccessMode accessMode = Update ) override;
 
     /**
      * Returns a session proxy object for the specified connection string, role
@@ -38,27 +38,27 @@ namespace coral
      */
     ISessionProxy* connect( const std::string& connectionName,
                             const std::string& asRole,
-                            AccessMode accessMode = Update );
+                            AccessMode accessMode = Update ) override;
     /**
      * Returns the configuration object for the service.
      */
-    IConnectionServiceConfiguration& configuration();
+    IConnectionServiceConfiguration& configuration() override;
 
     /**
      * Cleans up the connection pool from the unused connection, according to
      * the policy defined in the configuration.
      */
-    void purgeConnectionPool();
+    void purgeConnectionPool() override;
 
     /**
      * Returns the monitoring reporter
      */
-    const IMonitoringReporter& monitoringReporter() const;
+    const IMonitoringReporter& monitoringReporter() const override;
 
     /**
      * Returns the object which controls the web cache
      */
-    IWebCacheControl& webCacheControl();
+    IWebCacheControl& webCacheControl() override;
 
     // Set the user defined verbosity level
     void setMessageVerbosityLevel( coral::MsgLevel level );

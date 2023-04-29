@@ -27,7 +27,7 @@ namespace cool {
   public:
 
     /// Destructor
-    virtual ~RalTransactionMgr();
+    ~RalTransactionMgr() override;
 
     /// Constructor from a RalSessionMgr
     RalTransactionMgr( const boost::shared_ptr<ISessionMgr>& sessionMgr,
@@ -47,25 +47,25 @@ namespace cool {
   protected:
 
     /// Start a transaction
-    void start( bool readOnly );
+    void start( bool readOnly ) override;
 
     /// Commit a transaction
-    void commit();
+    void commit() override;
 
     /// Rollback a transaction
-    void rollback();
+    void rollback() override;
 
     /// Is the transaction active?
-    bool isActive();
+    bool isActive() override;
 
     /// Is the transaction read-only?
     bool isReadOnly();
 
     /// Enable auto-transactions
-    void setAutoTransactions( bool flag ) { m_autoTransactions = flag; }
+    void setAutoTransactions( bool flag ) override { m_autoTransactions = flag; }
 
     /// Are auto-transactions enabled?
-    bool autoTransactions() const { return m_autoTransactions; }
+    bool autoTransactions() const override { return m_autoTransactions; }
 
     /// Get the CORAL transaction
     coral::ITransaction& coralTransaction( const std::string& source ) const;

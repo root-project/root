@@ -23,7 +23,7 @@ namespace coral {
     RelationalServiceException() {}
 
     /// Destructor
-    virtual ~RelationalServiceException() throw() {}
+    ~RelationalServiceException() throw() override {}
   };
 
   /// Exception thrown when an invalid replica identifier is specified
@@ -40,7 +40,7 @@ namespace coral {
 
     NonExistingDomainException() {}
     /// Destructor
-    virtual ~NonExistingDomainException() throw() {}
+    ~NonExistingDomainException() throw() override {}
   };
 
   /// Exception thrown when an invalid operation is requested by the CORAL client
@@ -55,7 +55,7 @@ namespace coral {
     InvalidOperationException() {}
 
     /// Destructor
-    virtual ~InvalidOperationException() throw() {}
+    ~InvalidOperationException() throw() override {}
   };
 
 }

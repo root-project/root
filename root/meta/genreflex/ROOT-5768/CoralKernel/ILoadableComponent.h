@@ -18,7 +18,7 @@ namespace coral {
     explicit ILoadableComponent( const std::string& name ) : RefCounted(), m_name( name ) {}
 
     /// Destructor
-    virtual ~ILoadableComponent() {}
+    ~ILoadableComponent() override {}
 
   private:
     /// No copy constructor

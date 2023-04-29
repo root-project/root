@@ -1,5 +1,5 @@
 #include "TObject.h"
 class DummyVIClass: public virtual TObject {
-ClassDef(DummyVIClass,0)
+ClassDefOverride(DummyVIClass,0)
 };
 

@@ -15,7 +15,7 @@ namespace coral {
   class IBulkOperationWithQuery : virtual public IBulkOperation {
   public:
     /// Destructor
-    virtual ~IBulkOperationWithQuery() {}
+    ~IBulkOperationWithQuery() override {}
 
     /**
      * Returns a reference to the underlying query definition,

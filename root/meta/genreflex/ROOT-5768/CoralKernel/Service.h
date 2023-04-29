@@ -23,7 +23,7 @@ namespace coral
     explicit Service( const std::string& name );
 
     /// Destructor
-    virtual ~Service();
+    ~Service() override;
 
     /// Returns the underlying message stream object
     MessageStream& log()

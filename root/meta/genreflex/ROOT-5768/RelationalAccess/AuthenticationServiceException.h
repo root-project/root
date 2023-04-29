@@ -23,7 +23,7 @@ namespace coral {
     {}
 
     /// Destructor
-    virtual ~AuthenticationServiceException() throw() {}
+    ~AuthenticationServiceException() throw() override {}
   };
 
 
@@ -41,7 +41,7 @@ namespace coral {
     {}
 
     /// Destructor
-    virtual ~UnknownConnectionException() throw() {}
+    ~UnknownConnectionException() throw() override {}
   };
 
 
@@ -60,7 +60,7 @@ namespace coral {
     {}
 
     /// Destructor
-    virtual ~UnknownRoleException() throw() {}
+    ~UnknownRoleException() throw() override {}
   };
 
 
@@ -78,7 +78,7 @@ namespace coral {
     {}
 
     /// Destructor
-    virtual ~InvalidCredentialItemException() throw() {}
+    ~InvalidCredentialItemException() throw() override {}
   };
 
 
@@ -95,7 +95,7 @@ namespace coral {
     {}
 
     /// Destructor
-    virtual ~CredentialItemIndexOutOfRangeException() throw() {}
+    ~CredentialItemIndexOutOfRangeException() throw() override {}
   };
 
 }

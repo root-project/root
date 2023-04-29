@@ -17,7 +17,7 @@ namespace coral
     {
     }
 
-    virtual ~AttributeException() throw()
+    ~AttributeException() throw() override
     {
     }
   };

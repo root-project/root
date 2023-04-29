@@ -30,7 +30,7 @@ namespace cool
   public:
 
     /// Destructor.
-    virtual ~RelationalTableRow();
+    ~RelationalTableRow() override;
 
     /// Standard constructor.
     /// Creates a table row with empty AttributeList data.

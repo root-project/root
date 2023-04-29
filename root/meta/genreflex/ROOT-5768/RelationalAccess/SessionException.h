@@ -21,7 +21,7 @@ namespace coral
     /// Default constructor
     SessionException() {}
     /// Destructor
-    virtual ~SessionException() throw() {}
+    ~SessionException() throw() override {}
   };
 
 
@@ -38,7 +38,7 @@ namespace coral
     /// Default constructor
     MaximumNumberOfSessionsException() {}
     /// Destructor
-    virtual ~MaximumNumberOfSessionsException() throw() {}
+    ~MaximumNumberOfSessionsException() throw() override {}
   };
 
 
@@ -55,7 +55,7 @@ namespace coral
     /// Default constructor
     StartSessionException() {}
     /// Destructor
-    virtual ~StartSessionException() throw() {}
+    ~StartSessionException() throw() override {}
   };
 
 
@@ -78,7 +78,7 @@ namespace coral
     /// Default constructor
     InvalidOperationInReadOnlyModeException() {}
     /// Destructor
-    virtual ~InvalidOperationInReadOnlyModeException() throw() {}
+    ~InvalidOperationInReadOnlyModeException() throw() override {}
   };
 
 
@@ -94,7 +94,7 @@ namespace coral
     /// Default constructor
     InvalidSchemaNameException() {}
     /// Destructor
-    virtual ~InvalidSchemaNameException() throw() {}
+    ~InvalidSchemaNameException() throw() override {}
   };
 
 
@@ -111,7 +111,7 @@ namespace coral
     /// Default constructor
     NoAuthenticationServiceException() {}
     /// Destructor
-    virtual ~NoAuthenticationServiceException() throw() {}
+    ~NoAuthenticationServiceException() throw() override {}
   };
 
 
@@ -127,7 +127,7 @@ namespace coral
     /// Default constructor
     AuthenticationFailureException() {}
     /// Destructor
-    virtual ~AuthenticationFailureException() throw() {}
+    ~AuthenticationFailureException() throw() override {}
   };
 
 
@@ -144,7 +144,7 @@ namespace coral
     /// Default constructor
     MonitoringServiceNotFoundException() {}
     /// Destructor
-    virtual ~MonitoringServiceNotFoundException() throw() {}
+    ~MonitoringServiceNotFoundException() throw() override {}
   };
 
 
@@ -178,7 +178,7 @@ namespace coral
     /// Default constructor
     ServerException() {}
     /// Destructor
-    virtual ~ServerException() throw() {}
+    ~ServerException() throw() override {}
   };
 
 
@@ -195,7 +195,7 @@ namespace coral
     /// Default constructor
     DatabaseNotAccessibleException() {}
     /// Destructor
-    virtual ~DatabaseNotAccessibleException() throw() {}
+    ~DatabaseNotAccessibleException() throw() override {}
   };
 
 
@@ -211,7 +211,7 @@ namespace coral
     /// Default constructor
     ConnectionException() {}
     /// Destructor
-    virtual ~ConnectionException() throw() {}
+    ~ConnectionException() throw() override {}
   };
 
 
@@ -227,7 +227,7 @@ namespace coral
     /// Default constructor
     ConnectionNotActiveException() {}
     /// Destructor
-    virtual ~ConnectionNotActiveException() throw() {}
+    ~ConnectionNotActiveException() throw() override {}
   };
 
 
@@ -244,7 +244,7 @@ namespace coral
     /// Default constructor
     ConnectionLostException() {}
     /// Destructor
-    virtual ~ConnectionLostException() throw() {}
+    ~ConnectionLostException() throw() override {}
   };
 
 
@@ -260,7 +260,7 @@ namespace coral
     /// Default constructor
     TransactionException() {}
     /// Destructor
-    virtual ~TransactionException() throw() {}
+    ~TransactionException() throw() override {}
   };
 
 
@@ -275,7 +275,7 @@ namespace coral
     /// Default constructor
     TransactionNotStartedException() {}
     /// Destructor
-    virtual ~TransactionNotStartedException() throw() {}
+    ~TransactionNotStartedException() throw() override {}
   };
 
 
@@ -290,7 +290,7 @@ namespace coral
     /// Default constructor
     TransactionNotCommittedException() {}
     /// Destructor
-    virtual ~TransactionNotCommittedException() throw() {}
+    ~TransactionNotCommittedException() throw() override {}
   };
 
 
@@ -306,7 +306,7 @@ namespace coral
     /// Default constructor
     TransactionNotActiveException() {}
     /// Destructor
-    virtual ~TransactionNotActiveException() throw() {}
+    ~TransactionNotActiveException() throw() override {}
   };
 
 
@@ -323,7 +323,7 @@ namespace coral
     /// Default constructor
     InvalidOperationInReadOnlyTransactionException() {}
     /// Destructor
-    virtual ~InvalidOperationInReadOnlyTransactionException() throw() {}
+    ~InvalidOperationInReadOnlyTransactionException() throw() override {}
   };
 
 
@@ -341,7 +341,7 @@ namespace coral
     /// Default constructor
     TypeConverterException() {}
     /// Destructor
-    virtual ~TypeConverterException() throw() {}
+    ~TypeConverterException() throw() override {}
   };
 
 
@@ -359,7 +359,7 @@ namespace coral
     /// Default constructor
     UnSupportedSqlTypeException() {}
     /// Destructor
-    virtual ~UnSupportedSqlTypeException() throw() {}
+    ~UnSupportedSqlTypeException() throw() override {}
   };
 
 
@@ -377,7 +377,7 @@ namespace coral
     /// Default constructor
     UnSupportedCppTypeException() {}
     /// Destructor
-    virtual ~UnSupportedCppTypeException() throw() {}
+    ~UnSupportedCppTypeException() throw() override {}
   };
 
 

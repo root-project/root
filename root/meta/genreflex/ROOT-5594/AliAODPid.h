@@ -18,7 +18,7 @@ class AliAODPid : public TObject {
 
  public:
   AliAODPid();
-  virtual ~AliAODPid();
+  ~AliAODPid() override;
   AliAODPid(const AliAODPid& pid); 
   AliAODPid& operator=(const AliAODPid& pid);
   
@@ -90,7 +90,7 @@ class AliAODPid : public TObject {
  
   AliTPCdEdxInfo * fTPCdEdxInfo; // object containing dE/dx information for different pad regions
 
-  ClassDef(AliAODPid, 15);
+  ClassDefOverride(AliAODPid, 15);
 };
 
 //_____________________________________________________________

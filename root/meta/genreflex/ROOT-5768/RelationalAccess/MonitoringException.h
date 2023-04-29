@@ -25,7 +25,7 @@ namespace coral {
     MonitoringException() {}
 
     /// Destructor
-    virtual ~MonitoringException() throw() {}
+    ~MonitoringException() throw() override {}
   };
 
 }
