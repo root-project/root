@@ -36,9 +36,15 @@ class ModelConfig;
 }
 
 class TClass;
+class RooSimultaneous;
 
 class RooJSONFactoryWSTool {
 public:
+   struct CombinedData {
+      std::string name;
+      std::map<std::string, std::string> components;
+   };
+
    RooJSONFactoryWSTool(RooWorkspace &ws);
 
    ~RooJSONFactoryWSTool();
@@ -176,6 +182,7 @@ private:
    void exportObject(RooAbsArg const &func, std::set<std::string> &exportedObjectNames);
 
    void exportData(RooAbsData const &data);
+   RooJSONFactoryWSTool::CombinedData exportCombinedData(RooAbsData const &data);
 
    void importAllNodes(const RooFit::Detail::JSONNode &n);
 
@@ -187,7 +194,12 @@ private:
 
    void exportAllObjects(RooFit::Detail::JSONNode &n);
 
-   void exportModelConfig(RooFit::Detail::JSONNode &n, RooStats::ModelConfig const &mc);
+   void exportModelConfig(RooFit::Detail::JSONNode &rootnode, RooStats::ModelConfig const &mc,
+                          const std::vector<RooJSONFactoryWSTool::CombinedData> &d);
+
+   void exportSingleModelConfig(RooFit::Detail::JSONNode &rootnode, RooStats::ModelConfig const &mc,
+                                std::string const &analysisName,
+                                std::map<std::string, std::string> const *dataComponents);
 
    // member variables
    const RooFit::Detail::JSONNode *_rootnodeInput = nullptr;
