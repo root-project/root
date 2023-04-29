@@ -22,7 +22,7 @@ namespace cool {
   public:
 
     /// Destructor
-    virtual ~RalBulkOperation() {}
+    ~RalBulkOperation() override {}
 
     /// Constructor
     RalBulkOperation( const boost::shared_ptr<coral::IBulkOperation> bulkOp,
@@ -30,20 +30,20 @@ namespace cool {
       : m_bulkOperation( bulkOp ), m_rowCacheSize( rowCacheSize ) {}
 
     /// Processes the next iteration
-    void processNextIteration()
+    void processNextIteration() override
     {
       m_bulkOperation->processNextIteration();
     }
 
     /// Flushes the data on the client side to the server.
-    void flush()
+    void flush() override
     {
       m_bulkOperation->flush();
     }
 
     /// Get the row cache size associated to this bulk operation
     /// (the bulk operation is auto-flushed if this is exceeded)
-    int rowCacheSize() const
+    int rowCacheSize() const override
     {
       return m_rowCacheSize;
     }

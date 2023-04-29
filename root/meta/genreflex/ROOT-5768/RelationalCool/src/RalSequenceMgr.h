@@ -39,24 +39,24 @@ namespace cool
     }
 
     /// Destructor
-    virtual ~RalSequenceMgr();
+    ~RalSequenceMgr() override;
 
     /// Create a new sequence (ownership of the C++ instance is shared).
     boost::shared_ptr<RelationalSequence>
-    createSequence( const std::string& name );
+    createSequence( const std::string& name ) override;
 
     /// Does this sequence exist?
-    bool existsSequence( const std::string& name );
+    bool existsSequence( const std::string& name ) override;
 
     /// Get an existing sequence (ownership of the C++ instance is shared).
     boost::shared_ptr<RelationalSequence>
-    getSequence( const std::string& name );
+    getSequence( const std::string& name ) override;
 
     /// Drop an existing sequence
-    void dropSequence( const std::string& name );
+    void dropSequence( const std::string& name ) override;
 
     /// Init the sequence (fill with initial values)
-    void initSequence( const std::string& name );
+    void initSequence( const std::string& name ) override;
 
   private:
 

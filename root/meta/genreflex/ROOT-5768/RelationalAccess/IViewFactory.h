@@ -16,7 +16,7 @@ namespace coral {
   class IViewFactory : virtual public IQueryDefinition {
   public:
     /// Destructor
-    virtual ~IViewFactory() {}
+    ~IViewFactory() override {}
 
     /**
      * Creates a new view with the specified

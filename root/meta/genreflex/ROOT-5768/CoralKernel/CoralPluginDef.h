@@ -13,10 +13,10 @@ namespace coral {
   {
   public:
     CoralPluginFactory( const std::string& name ) : m_name( name ) {}
-    virtual ~CoralPluginFactory() {}
-    coral::ILoadableComponent* component() const
+    ~CoralPluginFactory() override {}
+    coral::ILoadableComponent* component() const override
     { return static_cast< coral::ILoadableComponent* >( new T( m_name ) ); }
-    std::string name() const { return m_name; }
+    std::string name() const override { return m_name; }
   private:
     std::string m_name;
   };

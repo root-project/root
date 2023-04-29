@@ -21,13 +21,13 @@ namespace coral
     Exception() {};
 
     /// Destructor
-    virtual ~Exception() throw() {}
+    ~Exception() throw() override {}
 
     /// Set (or reset) the execption message
     void setMessage(const std::string& message);
 
     /// The error reporting method
-    virtual const char* what() const throw() { return m_message.c_str(); }
+    const char* what() const throw() override { return m_message.c_str(); }
 
   private:
 

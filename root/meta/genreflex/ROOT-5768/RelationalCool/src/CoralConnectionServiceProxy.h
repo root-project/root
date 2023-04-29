@@ -28,7 +28,7 @@ namespace cool
     CoralConnectionServiceProxy( coral::IConnectionService* pConnSvc = 0 );
 
     /// Destructor
-    virtual ~CoralConnectionServiceProxy();
+    ~CoralConnectionServiceProxy() override;
 
     /// Get the pointer - throws if the pointer is 0.
     const coral::IConnectionService* getICS() const;
@@ -49,7 +49,7 @@ namespace cool
      * and access mode.
      */
     coral::ISessionProxy* connect( const std::string& connectionName,
-                                   coral::AccessMode accessMode = coral::Update )
+                                   coral::AccessMode accessMode = coral::Update ) override
     {
       boost::mutex::scoped_lock lock( m_mutex );
       return getICS()->connect( connectionName, accessMode );;
@@ -61,7 +61,7 @@ namespace cool
      */
     coral::ISessionProxy* connect( const std::string& connectionName,
                                    const std::string& asRole,
-                                   coral::AccessMode accessMode = coral::Update )
+                                   coral::AccessMode accessMode = coral::Update ) override
     {
       boost::mutex::scoped_lock lock( m_mutex );
       return getICS()->connect( connectionName, asRole, accessMode );
@@ -70,7 +70,7 @@ namespace cool
     /**
      * Returns the configuration object for the service.
      */
-    coral::IConnectionServiceConfiguration& configuration()
+    coral::IConnectionServiceConfiguration& configuration() override
     {
       boost::mutex::scoped_lock lock( m_mutex );
       return getICS()->configuration();
@@ -80,7 +80,7 @@ namespace cool
      * Cleans up the connection pool from the unused connection, according to
      * the policy defined in the configuration.
      */
-    void purgeConnectionPool()
+    void purgeConnectionPool() override
     {
       //std::cout << "CoralConnectionServiceProxy::purgeConnectionPool" << std::endl;
       boost::mutex::scoped_lock lock( m_mutex );
@@ -90,7 +90,7 @@ namespace cool
     /**
      * Returns the monitoring reporter
      */
-    const coral::IMonitoringReporter& monitoringReporter() const
+    const coral::IMonitoringReporter& monitoringReporter() const override
     {
       boost::mutex::scoped_lock lock( m_mutex );
       return getICS()->monitoringReporter();
@@ -99,7 +99,7 @@ namespace cool
     /**
      * Returns the object which controls the web cache
      */
-    coral::IWebCacheControl& webCacheControl()
+    coral::IWebCacheControl& webCacheControl() override
     {
       boost::mutex::scoped_lock lock( m_mutex );
       return getICS()->webCacheControl();

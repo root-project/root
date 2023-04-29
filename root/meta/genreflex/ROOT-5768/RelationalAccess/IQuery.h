@@ -20,7 +20,7 @@ namespace coral {
   class IQuery : virtual public IQueryDefinition {
   public:
     /// Destructor
-    virtual ~IQuery() {}
+    ~IQuery() override {}
 
     /**
      * Instructs the server to lock the rows involved in the result set.

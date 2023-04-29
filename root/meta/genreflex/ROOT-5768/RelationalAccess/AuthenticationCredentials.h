@@ -18,7 +18,7 @@ namespace coral {
     explicit AuthenticationCredentials( const std::string& implementationName );
 
     /// Destructor
-    virtual ~AuthenticationCredentials();
+    ~AuthenticationCredentials() override;
 
     /// Registers a new item name-value pair. Returns false if an item with the same name already exists.
     bool registerItem( const std::string& name,
@@ -27,17 +27,17 @@ namespace coral {
     /**
      * Returns the value for a given credential item. If the item name is not valid an InvalidCredentialItemException is thrown.
      */
-    std::string valueForItem( const std::string& itemName ) const;
+    std::string valueForItem( const std::string& itemName ) const override;
 
     /**
      * Returns the number of credential items
      */
-    int numberOfItems() const;
+    int numberOfItems() const override;
 
     /**
      * Returns the name of a crential item for a given index. If the index is out of range a CredentialItemIndexOutOfRangeException is thrown.
      */
-    std::string itemName( int itemIndex ) const;
+    std::string itemName( int itemIndex ) const override;
 
   private:
     /// The authentication service implementation name

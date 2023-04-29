@@ -46,9 +46,9 @@ namespace coral
   public:
 
     Property();
-    virtual ~Property();
-    virtual bool set(const std::string&);
-    virtual const std::string& get() const;
+    ~Property() override;
+    bool set(const std::string&) override;
+    const std::string& get() const override;
 
     /**
      * Callback functor type.

@@ -114,7 +114,7 @@ namespace coral
     class iterator : public iterator_base
     {
     public:
-      ~iterator() {};
+      ~iterator() override {};
       iterator( const iterator_base& rhs ) : iterator_base( rhs ) {}
       iterator& operator=( const iterator_base& rhs ) { iterator_base::operator=( rhs ); return *this; }
     private:
@@ -134,7 +134,7 @@ namespace coral
     class const_iterator : public iterator_base
     {
     public:
-      ~const_iterator() {};
+      ~const_iterator() override {};
       const_iterator( const iterator_base& rhs ) : iterator_base( rhs ) {}
       const_iterator& operator=( const iterator_base& rhs ) { iterator_base::operator=( rhs ); return *this; }
     private:

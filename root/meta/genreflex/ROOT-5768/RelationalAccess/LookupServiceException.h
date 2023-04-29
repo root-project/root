@@ -19,7 +19,7 @@ namespace coral {
     LookupServiceException() : Exception() {}
 
     /// Destructor
-    virtual ~LookupServiceException() throw() {}
+    ~LookupServiceException() throw() override {}
   };
 
 
@@ -38,7 +38,7 @@ namespace coral {
     InvalidReplicaIdentifierException() : LookupServiceException() {}
 
     /// Destructor
-    virtual ~InvalidReplicaIdentifierException() throw() {}
+    ~InvalidReplicaIdentifierException() throw() override {}
   };
 
 }

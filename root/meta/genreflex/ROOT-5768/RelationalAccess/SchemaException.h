@@ -19,7 +19,7 @@ namespace coral {
     SchemaException() {}
 
     /// Destructor
-    virtual ~SchemaException() throw() {}
+    ~SchemaException() throw() override {}
   };
 
 
@@ -38,7 +38,7 @@ namespace coral {
     TableAlreadyExistingException() {}
 
     /// Destructor
-    virtual ~TableAlreadyExistingException() throw() {}
+    ~TableAlreadyExistingException() throw() override {}
   };
 
 
@@ -58,7 +58,7 @@ namespace coral {
     TableNotExistingException() {}
 
     /// Destructor
-    virtual ~TableNotExistingException() throw() {}
+    ~TableNotExistingException() throw() override {}
   };
 
 
@@ -77,7 +77,7 @@ namespace coral {
     ViewAlreadyExistingException() {}
 
     /// Destructor
-    virtual ~ViewAlreadyExistingException() throw() {}
+    ~ViewAlreadyExistingException() throw() override {}
   };
 
 
@@ -97,7 +97,7 @@ namespace coral {
     ViewNotExistingException() {}
 
     /// Destructor
-    virtual ~ViewNotExistingException() throw() {}
+    ~ViewNotExistingException() throw() override {}
   };
 
 
@@ -117,7 +117,7 @@ namespace coral {
     QueryException() {}
 
     /// Destructor
-    virtual ~QueryException() throw() {}
+    ~QueryException() throw() override {}
   };
 
 
@@ -136,7 +136,7 @@ namespace coral {
     QueryExecutedException() {}
 
     /// Destructor
-    virtual ~QueryExecutedException() throw() {}
+    ~QueryExecutedException() throw() override {}
   };
 
 
@@ -155,7 +155,7 @@ namespace coral {
     InvalidUniqueConstraintIdentifierException() {}
 
     /// Destructor
-    virtual ~InvalidUniqueConstraintIdentifierException() throw() {}
+    ~InvalidUniqueConstraintIdentifierException() throw() override {}
   };
 
 
@@ -174,7 +174,7 @@ namespace coral {
     InvalidForeignKeyIdentifierException() {}
 
     /// Destructor
-    virtual ~InvalidForeignKeyIdentifierException() throw() {}
+    ~InvalidForeignKeyIdentifierException() throw() override {}
   };
 
 
@@ -193,7 +193,7 @@ namespace coral {
     InvalidIndexIdentifierException() {}
 
     /// Destructor
-    virtual ~InvalidIndexIdentifierException() throw() {}
+    ~InvalidIndexIdentifierException() throw() override {}
   };
 
 
@@ -212,7 +212,7 @@ namespace coral {
     InvalidColumnIndexException() {}
 
     /// Destructor
-    virtual ~InvalidColumnIndexException() throw() {}
+    ~InvalidColumnIndexException() throw() override {}
   };
 
 
@@ -231,7 +231,7 @@ namespace coral {
     InvalidColumnNameException() {}
 
     /// Destructor
-    virtual ~InvalidColumnNameException() throw() {}
+    ~InvalidColumnNameException() throw() override {}
   };
 
 
@@ -250,7 +250,7 @@ namespace coral {
     NoPrimaryKeyException() {}
 
     /// Destructor
-    virtual ~NoPrimaryKeyException() throw() {}
+    ~NoPrimaryKeyException() throw() override {}
   };
 
 
@@ -268,7 +268,7 @@ namespace coral {
     ExistingPrimaryKeyException() {}
 
     /// Destructor
-    virtual ~ExistingPrimaryKeyException() throw() {}
+    ~ExistingPrimaryKeyException() throw() override {}
   };
 
 
@@ -286,7 +286,7 @@ namespace coral {
     UniqueConstraintAlreadyExistingException() {}
 
     /// Destructor
-    virtual ~UniqueConstraintAlreadyExistingException() throw() {}
+    ~UniqueConstraintAlreadyExistingException() throw() override {}
   };
 
 
@@ -306,7 +306,7 @@ namespace coral {
     DataEditorException() {}
 
     /// Destructor
-    virtual ~DataEditorException() throw() {}
+    ~DataEditorException() throw() override {}
   };
 
 
@@ -325,7 +325,7 @@ namespace coral {
     DuplicateEntryInUniqueKeyException() {}
 
     /// Destructor
-    virtual ~DuplicateEntryInUniqueKeyException() throw() {}
+    ~DuplicateEntryInUniqueKeyException() throw() override {}
   };
 
 }
