@@ -1,3 +1,4 @@
 tmva-pymva=Off
 test_distrdf_pyspark=OFF
+pythia8=Off
 CMAKE_CXX_STANDARD=20
