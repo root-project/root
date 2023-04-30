@@ -19,14 +19,12 @@ namespace RooFit {
 
 namespace Detail {
 
-namespace {
-
 /// Transform a string into a valid C++ variable name by replacing forbidden.
 /// \note The implementation was copy-pasted from `TSystem.cxx`.
 /// characters with underscores.
 /// @param in The input string.
 /// @return A new string vaild variable name.
-std::string makeValidVarName(TString in)
+std::string CodeSquashContext::makeValidVarName(TString in) const
 {
 
    static const int nForbidden = 27;
@@ -39,8 +37,6 @@ std::string makeValidVarName(TString in)
 
    return in.Data();
 }
-
-} // namespace
 
 /// @brief Adds (or overwrites) the string representing the result of a node.
 /// @param key The name of the node to add the result for.

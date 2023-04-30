@@ -27,6 +27,8 @@
 template <class T>
 class RooTemplateProxy;
 
+class TString;
+
 namespace RooFit {
 
 namespace Detail {
@@ -102,6 +104,8 @@ public:
    std::unique_ptr<LoopScope> beginLoop(RooAbsArg const *in);
 
    std::string getTmpVarName();
+
+   std::string makeValidVarName(TString in) const;
 
 private:
    void endLoop(LoopScope const &scope);
