@@ -270,8 +270,6 @@ bool ScipyMinimizer::Minimize()
       return false;
    }
    // PyPrint(result);
-   Py_DECREF(pylimits_lower);
-   Py_DECREF(pylimits_upper);
    Py_DECREF(pybounds);
    Py_DECREF(args);
    Py_DECREF(kw);
