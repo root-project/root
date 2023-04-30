@@ -1347,22 +1347,23 @@ if(builtin_tbb)
     set(TBB_LIBRARIES ${CMAKE_BINARY_DIR}/lib/tbb12${tbbsuffix}.lib)
   else()
     set(TBB_LIBRARIES ${CMAKE_BINARY_DIR}/lib/libtbb${CMAKE_SHARED_LIBRARY_SUFFIX})
-  endif()
-
-  ExternalProject_Add(
-    TBB
-    URL ${tbb_url}
-    URL_HASH SHA256=${tbb_sha256}
-    INSTALL_DIR ${CMAKE_BINARY_DIR}
-    CMAKE_ARGS -DCMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD} -DTBB_ENABLE_IPO=OFF -DTBB_TEST=Off -DTBB_STRICT=Off -DTBBMALLOC_BUILD=Off -DTBBMALLOC_PROXY_BUILD=Off "-DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}" "-DCMAKE_INSTALL_LIBDIR=${CMAKE_BINARY_DIR}/lib" "-DCMAKE_INSTALL_INCLUDEDIR=${CMAKE_BINARY_DIR}/include"
-    LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 LOG_OUTPUT_ON_FAILURE 1
-    BUILD_BYPRODUCTS ${TBB_LIBRARIES}
-    TIMEOUT 600
-  )
-  if(MSVC)
-    install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin/ DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT libraries FILES_MATCHING PATTERN "tbb*.dll")
-    install(DIRECTORY ${CMAKE_BINARY_DIR}/lib/ DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries FILES_MATCHING PATTERN "tbb*.lib")
-  else()
+    ExternalProject_Add(
+      TBB
+      URL ${lcgpackages}/tbb-${tbb_builtin_version}.tar.gz
+      URL_HASH SHA256=${tbb_sha256}
+      INSTALL_DIR ${CMAKE_BINARY_DIR}
+      PATCH_COMMAND sed -i -e "/clang -v/s@-v@--version@" build/macos.inc
+      COMMAND ${tbb_command}
+      CONFIGURE_COMMAND ""
+      BUILD_COMMAND make ${_tbb_compiler} cpp0x=1 "CXXFLAGS=${_tbb_cxxflags}" CPLUS=${CMAKE_CXX_COMPILER} CONLY=${CMAKE_C_COMPILER} "LDFLAGS=${_tbb_ldflags}"
+      INSTALL_COMMAND ${CMAKE_COMMAND} -Dinstall_dir=<INSTALL_DIR> -Dsource_dir=<SOURCE_DIR>
+                                       -P ${CMAKE_SOURCE_DIR}/cmake/scripts/InstallTBB.cmake
+      INSTALL_COMMAND ""
+      BUILD_IN_SOURCE 1
+      LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
+      BUILD_BYPRODUCTS ${TBB_LIBRARIES}
+      TIMEOUT 600
+    )
     install(DIRECTORY ${CMAKE_BINARY_DIR}/lib/ DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries FILES_MATCHING PATTERN "libtbb*")
   endif()
 
