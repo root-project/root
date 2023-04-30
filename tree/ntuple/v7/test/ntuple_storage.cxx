@@ -235,18 +235,21 @@ TEST(RNTuple, PageFillingString) {
       *fldX = "";
       ntuple->Fill();
       ntuple->CommitCluster();
-      // 2 pages: 16 and 8 characters
-      *fldX = "012345678901234567890123";
+      // 2 pages: 16 and 10 characters
+      *fldX = "01234567890123456789012";
       ntuple->Fill();
+      *fldX = "012";
+      ntuple->Fill(); // main write page is half full here; RColumn::AppendV should flush the shadow page
    }
 
    auto ntuple = RNTupleReader::Open("ntpl", fileGuard.GetPath());
    auto viewX = ntuple->GetView<std::string>("x");
-   ASSERT_EQ(4u, ntuple->GetNEntries());
-   EXPECT_EQ("01234567890123456",        viewX(0));
-   EXPECT_EQ("0123456789012345",         viewX(1));
-   EXPECT_EQ("",                         viewX(2));
-   EXPECT_EQ("012345678901234567890123", viewX(3));
+   ASSERT_EQ(5u, ntuple->GetNEntries());
+   EXPECT_EQ("01234567890123456",       viewX(0));
+   EXPECT_EQ("0123456789012345",        viewX(1));
+   EXPECT_EQ("",                        viewX(2));
+   EXPECT_EQ("01234567890123456789012", viewX(3));
+   EXPECT_EQ("012",                     viewX(4));
 
    const auto desc = ntuple->GetDescriptor();
    EXPECT_EQ(4u, desc->GetNClusters());
@@ -265,7 +268,7 @@ TEST(RNTuple, PageFillingString) {
    const auto &pr4 = cd4.GetPageRange(1);
    ASSERT_EQ(2u, pr4.fPageInfos.size());
    EXPECT_EQ(16u, pr4.fPageInfos[0].fNElements);
-   EXPECT_EQ(8u, pr4.fPageInfos[1].fNElements);
+   EXPECT_EQ(10u, pr4.fPageInfos[1].fNElements);
 }
 
 TEST(RPageSinkBuf, Basics)
