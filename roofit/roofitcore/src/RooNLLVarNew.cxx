@@ -276,10 +276,18 @@ double RooNLLVarNew::finalizeResult(ROOT::Math::KahanSum<double> result, double 
 
 void RooNLLVarNew::translate(RooFit::Detail::CodeSquashContext &ctx) const
 {
-   std::string className = GetName();
-   std::string resName = className + "Result";
+   std::string resName = ctx.makeValidVarName(GetName()) + "Result";
    ctx.addResult(this, resName);
    ctx.addToGlobalScope("double " + resName + " = 0;\n");
+
+   if (_simCount > 1) {
+
+      {
+         auto scope = ctx.beginLoop(this);
+         ctx.addToCodeBody(resName + " += " + ctx.getResult(_weightVar.arg()) + ";\n");
+      }
+      ctx.addToCodeBody(resName + " *= std::log(" + std::to_string(static_cast<double>(_simCount)) + ");\n");
+   }
 
    // Begin loop scope for the observables and weight variable. If the weight
    // is a scalar, the context will ignore it for the loop scope. The closing

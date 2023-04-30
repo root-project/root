@@ -20,6 +20,8 @@
 #include <memory>
 #include <string>
 
+class RooSimultaneous;
+
 /// @brief  A wrapper class to store a C++ function of type 'double (*)(double*, double*)'.
 /// The parameters can be accessed as params[<relative position of param in paramSet>] in the function body.
 /// The observables can be accessed as obs[i + j], where i represents the observable position and j
@@ -27,10 +29,10 @@
 class RooFuncWrapper final : public RooAbsReal {
 public:
    RooFuncWrapper(const char *name, const char *title, std::string const &funcBody, RooArgSet const &paramSet,
-                  const RooAbsData *data = nullptr);
+                  const RooAbsData *data = nullptr, RooSimultaneous const *simPdf = nullptr);
 
    RooFuncWrapper(const char *name, const char *title, RooAbsReal const &obj, RooArgSet const &normSet,
-                  const RooAbsData *data = nullptr);
+                  const RooAbsData *data = nullptr, RooSimultaneous const *simPdf = nullptr);
 
    RooFuncWrapper(const RooFuncWrapper &other, const char *name = nullptr);
 
@@ -56,8 +58,8 @@ private:
 
    void updateGradientVarBuffer() const;
 
-   void
-   loadParamsAndData(std::string funcName, RooAbsArg const *head, RooArgSet const &paramSet, const RooAbsData *data);
+   void loadParamsAndData(std::string funcName, RooAbsArg const *head, RooArgSet const &paramSet,
+                          const RooAbsData *data, RooSimultaneous const *simPdf);
 
    void declareAndDiffFunction(std::string funcName, std::string const &funcBody);
 
