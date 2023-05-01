@@ -89,8 +89,9 @@ namespace SOFIE{
 
         // Generating Infer function definition for Edge Update function
         long next_pos;
+        const size_t block_size = num_edges;
         fGC+="\n\nnamespace Edge_Update{\nstruct Session {\n";
-        std::vector<std::vector<std::size_t>> Update_Input_edges = {{1, num_edge_features},{1, num_node_features},{1, num_node_features},{1, num_global_features}};
+        std::vector<std::vector<std::size_t>> Update_Input_edges = {{block_size, num_edge_features},{block_size, num_node_features},{block_size, num_node_features},{block_size, num_global_features}};
         edges_update_block->Initialize();
         edges_update_block->AddInputTensors(Update_Input_edges);
         fGC+=edges_update_block->GenerateModel(fName);
@@ -128,6 +129,12 @@ namespace SOFIE{
         next_pos = globals_update_block->GetFunctionBlock()->WriteInitializedTensorsToFile(fName+".dat");
         fGC+="};\n}\n";
 
+        // correct for difference in global size
+        auto num_global_features_input = num_global_features;
+        if(globals_update_block->GetFunctionBlock()->GetTensorShape(globals_update_block->GetFunctionBlock()->GetOutputTensorNames()[0])[0] != num_global_features){
+            num_global_features = globals_update_block->GetFunctionBlock()->GetTensorShape(globals_update_block->GetFunctionBlock()->GetOutputTensorNames()[0])[0];
+        }
+
         fGC+=edge_node_agg_block->GenerateModel();
 
         if(edge_node_agg_block->GetFunctionType() != edge_global_agg_block->GetFunctionType()){
@@ -138,6 +145,7 @@ namespace SOFIE{
         }
         fGC+="\n\n";
 
+
         // computing inplace on input graph
         fGC += "struct Session {\n";
         fGC += "\n// Instantiating session objects for graph components\n";
@@ -145,25 +153,66 @@ namespace SOFIE{
         fGC += "Node_Update::Session node_update;\n";
         fGC += "Global_Update::Session global_update;\n\n";
 
+        fGC += "std::vector<int> fSenders = { ";
+        for(int k=0; k<num_edges; ++k) {
+            fGC += std::to_string(senders[k]);
+            if (k < num_edges-1) fGC += ", ";
+            if (k > 0 && k%32 == 0) fGC += "\n";
+        }
+        fGC += "};\n";
+        fGC += "std::vector<int> fReceivers = { ";
+        for(int k=0; k<num_edges; ++k) {
+            fGC += std::to_string(receivers[k]);
+            if (k < num_edges-1) fGC += ", ";
+            if (k > 0 && k%32 == 0) fGC += "\n";
+        }
+        fGC += "};\n";
+
+        // create temp vector for edge updates
+        fGC += "std::vector<float> fEdgeUpdates = std::vector<float>(" + std::to_string(num_edges) + "*" + std::to_string(num_edge_features) + ");\n";
+        // input vectors for edge update
+        fGC += "std::vector<float> fEdgeInputs = std::vector<float>(" + std::to_string(num_edges) + "*" + std::to_string(num_edge_features_input) + ");\n";
+        fGC += "std::vector<float> fRecNodeInputs = std::vector<float>(" + std::to_string(num_edges) + "*" + std::to_string(num_node_features_input) + ");\n";
+        fGC += "std::vector<float> fSndNodeInputs = std::vector<float>(" + std::to_string(num_edges) + "*" + std::to_string(num_node_features_input) + ");\n";
+        fGC += "std::vector<float> fGlobInputs = std::vector<float>(" + std::to_string(num_edges) + "*" + std::to_string(num_global_features_input) + ");\n";
+
+
         fGC += "void infer(TMVA::Experimental::SOFIE::GNN_Data& input_graph){\n";
 
 
         // computing updated edge attributes
         fGC += "\n// --- Edge Update ---\n";
-        for(int k=0; k<num_edges; ++k){
-            fGC+="std::vector<float> Edge_"+std::to_string(k)+"_Update = ";
-            fGC+=edges_update_block->Generate({"input_graph.edge_data.GetData()+"+std::to_string(k*num_edge_features_input),
-                                            "input_graph.node_data.GetData()+"+std::to_string(receivers[k] * num_node_features_input),
-                                            "input_graph.node_data.GetData()+"+std::to_string(senders[k] * num_node_features_input),
-                                            "input_graph.global_data.GetData()"});
-        }
+        std::string e_size_input =  std::to_string(num_edge_features_input);
+        std::string n_size_input =  std::to_string(num_node_features_input);
+        std::string g_size_input =  std::to_string(num_global_features_input);
+        fGC += "for (int k = 0; k < " + std::to_string(num_edges) + "; k++) { \n";
+        fGC += "   std::copy(input_graph.edge_data.GetData() + k * " + e_size_input +
+                         ", input_graph.edge_data.GetData() + (k + 1) * " + e_size_input +
+                         ", fEdgeInputs.begin() + k * " + e_size_input + ");\n";
+        fGC += "   std::copy(input_graph.node_data.GetData() + fReceivers[k] * " + n_size_input +
+                         ", input_graph.node_data.GetData() + (fReceivers[k] + 1) * " + n_size_input +
+                         ", fRecNodeInputs.begin() + k * " + n_size_input + ");\n";
+        fGC += "   std::copy(input_graph.node_data.GetData() + fSenders[k] * " + n_size_input +
+                         ", input_graph.node_data.GetData() + (fSenders[k] + 1) * " + n_size_input +
+                         ", fSndNodeInputs.begin() + k * " + n_size_input + ");\n";
+        fGC += "   std::copy(input_graph.global_data.GetData()";
+        fGC += ", input_graph.global_data.GetData() + " + g_size_input +
+                         ", fGlobInputs.begin() + k * " + g_size_input + ");\n";
+        fGC += "}\n";
+
+        fGC += "fEdgeUpdates = " + edges_update_block->Generate({"fEdgeInputs.data(), fRecNodeInputs.data(), fSndNodeInputs.data(), fGlobInputs.data()"}) + "\n";
+
+        fGC += "//  resize edge graph data since output feature size is not equal to input size\n";
         if(num_edge_features != num_edge_features_input) {
-            fGC+="\ninput_graph.edge_data = input_graph.edge_data.Resize({"+std::to_string(num_edges)+", "+std::to_string(num_edge_features)+"});\n";
+            fGC+="input_graph.edge_data = input_graph.edge_data.Resize({"+std::to_string(num_edges)+", "+std::to_string(num_edge_features)+"});\n";
         }
-        for(int k=0; k<num_edges; ++k){
-            fGC+="\nstd::copy(Edge_"+std::to_string(k)+"_Update.begin(),Edge_"+std::to_string(k)+"_Update.end(),input_graph.edge_data.GetData()+"+std::to_string(k*num_edge_features)+");\n";
-        }
+        // copy output
+        fGC += "for (int k = 0; k < " + std::to_string(num_edges) + "; k++) { \n";
+        fGC += "   std::copy(fEdgeUpdates.begin()+ k * " + std::to_string(num_edge_features) + ", fEdgeUpdates.begin()+ (k+1) * " + std::to_string(num_edge_features) +
+                    ",input_graph.edge_data.GetData() + k * " + std::to_string(num_edge_features)+ ");\n";
+        fGC += "}\n";
         fGC+="\n";
+
 
         // aggregating edge if it's a receiver node and then updating corresponding node
         fGC += "\n// --- Node Update ---\n";

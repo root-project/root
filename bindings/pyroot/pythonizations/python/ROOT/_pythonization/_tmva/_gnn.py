@@ -11,7 +11,11 @@
 ################################################################################
 
 from .. import pythonization
+import sys
 from cppyy import gbl as gbl_namespace
+
+if sys.version_info < (3, 7):
+    raise RuntimeError("GNN Pythonizations are only supported in Python3")
 
 def getActivationFunction(model):
     function = model._activation.__name__
@@ -36,7 +40,13 @@ def make_mlp_model(gin, model, target, type):
     upd.AddInitializedTensors(val)
     gin.createUpdateFunction(upd)
 
-def add_layer_norm(module_layer, model_block):
+def add_layer_norm(gin, module_layer, function_target):
+    if function_target == gbl_namespace.TMVA.Experimental.SOFIE.FunctionTarget.NODES:
+        model_block = gin.nodes_update_block
+    elif function_target == gbl_namespace.TMVA.Experimental.SOFIE.FunctionTarget.EDGES:
+        model_block = gin.edges_update_block
+    else:
+        model_block = gin.globals_update_block
     axis = module_layer._axis
     eps  = module_layer._eps 
     stash_type = 1
@@ -50,7 +60,14 @@ def add_layer_norm(module_layer, model_block):
     new_output_tensors.push_back(name_Y)
     model_block.GetFunctionBlock().AddOutputTensorNameList(new_output_tensors)    
 
-def add_weights(weights, model_block):
+def add_weights(gin, weights, function_target):
+    if function_target == gbl_namespace.TMVA.Experimental.SOFIE.FunctionTarget.NODES:
+        model_block = gin.nodes_update_block
+    elif function_target == gbl_namespace.TMVA.Experimental.SOFIE.FunctionTarget.EDGES:
+        model_block = gin.edges_update_block
+    else:
+        model_block = gin.globals_update_block
+
     for i in weights:
         shape = gbl_namespace.std.vector['std::size_t']()
         shape_as_list = i.shape.as_list()
@@ -69,92 +86,63 @@ def add_aggregate_function(gin, reducer, relation):
         raise RuntimeError("Invalid aggregate function for reduction")    
 
 
+def add_update_function(gin, component_model, graph_type, function_target):
+    if (component_model.name == 'mlp'):
+        make_mlp_model(gin, component_model, function_target, graph_type)
+    elif (component_model.name == 'sequential'):
+        for i in component_model._layers:
+            if(i.name == 'mlp'):
+                make_mlp_model(gin, i, function_target, graph_type)
+            elif(i.name == 'layer_norm'):
+                add_layer_norm(gin, i, function_target)
+            else:
+                raise RuntimeError("Invalid Model for node update")
+    else:
+        raise RuntimeError("Invalid Model for update function")
+    add_weights(gin, component_model.variables, function_target)
+
+
 
 class RModel_GNN: 
-    def ParseFromMemory(GraphModule, GraphData, filename = "gnn_network"):
+
+    def ParseFromMemory(graph_module, graph_data, filename = "gnn_network"):
         gin = gbl_namespace.TMVA.Experimental.SOFIE.GNN_Init()
-        gin.num_nodes = len(GraphData['nodes'])
+        gin.num_nodes = len(graph_data['nodes'])
 
         # extracting the edges
         edges = []
-        for i in range(len(GraphData['senders'])):
-            val =  gbl_namespace.std.make_pair['int,int'](int(GraphData['receivers'][i]), int(GraphData['senders'][i]))
-            gin.edges.push_back(val)
+        for sender, receiver in zip(graph_data['senders'], graph_data['receivers']):
+            gin.edges.push_back(gbl_namespace.std.make_pair['int,int'](int(receiver), int(sender)))
 
-        gin.num_node_features = len(GraphData['nodes'][0])
-        gin.num_edge_features = len(GraphData['edges'][0])
-        gin.num_global_features = len(GraphData['globals'])
+        gin.num_node_features = len(graph_data['nodes'][0])
+        gin.num_edge_features = len(graph_data['edges'][0])
+        gin.num_global_features = len(graph_data['globals'])
 
         gin.filename = filename
         
         # adding the node update function
-        node_model = GraphModule._node_block._node_model
-        if (node_model.name == 'mlp'):
-            make_mlp_model(gin, node_model, gbl_namespace.TMVA.Experimental.SOFIE.FunctionTarget.NODES, gbl_namespace.TMVA.Experimental.SOFIE.GraphType.GNN)
-        elif (node_model.name == 'sequential'):
-            for i in node_model._layers:
-                if(i.name == 'mlp'):
-                    make_mlp_model(gin, node_model._layers[0], gbl_namespace.TMVA.Experimental.SOFIE.FunctionTarget.NODES, gbl_namespace.TMVA.Experimental.SOFIE.GraphType.GNN)
-                elif(i.name == 'layer_norm'):
-                    add_layer_norm(i, gin.nodes_update_block)
-                else:
-                    print("Invalid Model for node update.")
-                    return
-        
-        else:
-            print("Invalid Model for node update.")
-            return
-        
-        add_weights(node_model.variables, gin.nodes_update_block)
+        node_model = graph_module._node_block._node_model
+        add_update_function(gin, node_model, gbl_namespace.TMVA.Experimental.SOFIE.GraphType.GNN, 
+                                         gbl_namespace.TMVA.Experimental.SOFIE.FunctionTarget.NODES)
 
         # adding the edge update function
-        edge_model = GraphModule._edge_block._edge_model
-        if (edge_model.name == 'mlp'):
-            make_mlp_model(gin, edge_model, gbl_namespace.TMVA.Experimental.SOFIE.FunctionTarget.EDGES, gbl_namespace.TMVA.Experimental.SOFIE.GraphType.GNN)
-        elif (edge_model.name == 'sequential'):
-            for i in edge_model._layers:
-                if(i.name == 'mlp'):
-                    make_mlp_model(gin, edge_model._layers[0], gbl_namespace.TMVA.Experimental.SOFIE.FunctionTarget.EDGES, gbl_namespace.TMVA.Experimental.SOFIE.GraphType.GNN)
-                elif(i.name == 'layer_norm'):
-                    add_layer_norm(i, gin.edges_update_block)
-                else:
-                    print("Invalid Model for edge update.")
-                    return
-        
-        else:
-            print("Invalid Model for edge update.")
-            return
-
-        add_weights(edge_model.variables, gin.edges_update_block)
+        edge_model = graph_module._edge_block._edge_model
+        add_update_function(gin, edge_model, gbl_namespace.TMVA.Experimental.SOFIE.GraphType.GNN, 
+                                             gbl_namespace.TMVA.Experimental.SOFIE.FunctionTarget.EDGES)
 
         # adding the global update function
-        global_model = GraphModule._global_block._global_model
-        if (global_model.name == 'mlp'):
-            make_mlp_model(gin, global_model, gbl_namespace.TMVA.Experimental.SOFIE.FunctionTarget.GLOBALS, gbl_namespace.TMVA.Experimental.SOFIE.GraphType.GNN)
-        elif (global_model.name == 'sequential'):
-            for i in global_model._layers:
-                if(i.name == 'mlp'):
-                    make_mlp_model(gin, global_model._layers[0], gbl_namespace.TMVA.Experimental.SOFIE.FunctionTarget.GLOBALS, gbl_namespace.TMVA.Experimental.SOFIE.GraphType.GNN)
-                elif(i.name == 'layer_norm'):
-                    add_layer_norm(i, gin.globals_update_block)
-                else:
-                    print("Invalid Model for global update.")
-                    return
-        
-        else:
-            print("Invalid Model for global update.")
-            return
-
-        add_weights(global_model.variables, gin.globals_update_block)
+        global_model = graph_module._global_block._global_model
+        add_update_function(gin, global_model, gbl_namespace.TMVA.Experimental.SOFIE.GraphType.GNN, 
+                                             gbl_namespace.TMVA.Experimental.SOFIE.FunctionTarget.GLOBALS) 
 
         # adding edge-node aggregate function
-        add_aggregate_function(gin, GraphModule._node_block._received_edges_aggregator._reducer.__qualname__, gbl_namespace.TMVA.Experimental.SOFIE.FunctionRelation.NODES_EDGES)
+        add_aggregate_function(gin, graph_module._node_block._received_edges_aggregator._reducer.__qualname__, gbl_namespace.TMVA.Experimental.SOFIE.FunctionRelation.NODES_EDGES)
 
         # adding node-global aggregate function
-        add_aggregate_function(gin, GraphModule._global_block._nodes_aggregator._reducer.__qualname__, gbl_namespace.TMVA.Experimental.SOFIE.FunctionRelation.NODES_GLOBALS)
+        add_aggregate_function(gin, graph_module._global_block._nodes_aggregator._reducer.__qualname__, gbl_namespace.TMVA.Experimental.SOFIE.FunctionRelation.NODES_GLOBALS)
 
         # adding edge-global aggregate function
-        add_aggregate_function(gin, GraphModule._global_block._edges_aggregator._reducer.__qualname__, gbl_namespace.TMVA.Experimental.SOFIE.FunctionRelation.EDGES_GLOBALS)
+        add_aggregate_function(gin, graph_module._global_block._edges_aggregator._reducer.__qualname__, gbl_namespace.TMVA.Experimental.SOFIE.FunctionRelation.EDGES_GLOBALS)
 
         gnn_model = gbl_namespace.TMVA.Experimental.SOFIE.RModel_GNN(gin)
         blas_routines = gbl_namespace.std.vector['std::string']()
@@ -165,89 +153,43 @@ class RModel_GNN:
         return gnn_model
 
 class RModel_GraphIndependent:
-    def ParseFromMemory(GraphModule, GraphData, filename = "graph_independent_network"):
+    def ParseFromMemory(graph_module, graph_data, filename = "graph_independent_network"):
         gin = gbl_namespace.TMVA.Experimental.SOFIE.GraphIndependent_Init()
-        gin.num_nodes = len(GraphData['nodes'])
+        gin.num_nodes = len(graph_data['nodes'])
 
         # extracting the edges
         edges = []
-        for i in range(len(GraphData['senders'])):
-            val =  gbl_namespace.std.make_pair['int,int'](int(GraphData['receivers'][i]), int(GraphData['senders'][i]))
-            gin.edges.push_back(val)
+        for sender, receiver in zip(graph_data['senders'], graph_data['receivers']):
+            gin.edges.push_back(gbl_namespace.std.make_pair['int,int'](int(receiver), int(sender)))
 
-        gin.num_node_features = len(GraphData['nodes'][0])
-        gin.num_edge_features = len(GraphData['edges'][0])
-        gin.num_global_features = len(GraphData['globals'])
+        gin.num_node_features = len(graph_data['nodes'][0])
+        gin.num_edge_features = len(graph_data['edges'][0])
+        gin.num_global_features = len(graph_data['globals'])
 
         gin.filename = filename
 
-        # adding the node update function
-        node_model = GraphModule._node_model._model
-        if (node_model.name == 'mlp'):
-            make_mlp_model(gin, node_model, gbl_namespace.TMVA.Experimental.SOFIE.FunctionTarget.NODES, gbl_namespace.TMVA.Experimental.SOFIE.GraphType.GraphIndependent)
-        elif (node_model.name == 'sequential'):
-            for i in node_model._layers:
-                if(i.name == 'mlp'):
-                    make_mlp_model(gin, node_model._layers[0], gbl_namespace.TMVA.Experimental.SOFIE.FunctionTarget.NODES, gbl_namespace.TMVA.Experimental.SOFIE.GraphType.GraphIndependent)
-                elif(i.name == 'layer_norm'):
-                    add_layer_norm(i, gin.nodes_update_block)
-                else:
-                    print("Invalid Model for node update.")
-                    return
-        
-        else:
-            print("Invalid Model for node update.")
-            return
-        
-        add_weights(node_model.variables, gin.nodes_update_block)
 
+        # adding the node update function
+        node_model = graph_module._node_model._model
+        add_update_function(gin, node_model, gbl_namespace.TMVA.Experimental.SOFIE.GraphType.GraphIndependent, 
+                                         gbl_namespace.TMVA.Experimental.SOFIE.FunctionTarget.NODES)
 
         # adding the edge update function
-        edge_model = GraphModule._edge_model._model
-        if (edge_model.name == 'mlp'):
-            make_mlp_model(gin, edge_model, gbl_namespace.TMVA.Experimental.SOFIE.FunctionTarget.EDGES, gbl_namespace.TMVA.Experimental.SOFIE.GraphType.GraphIndependent)
-        elif (edge_model.name == 'sequential'):
-            for i in edge_model._layers:
-                if(i.name == 'mlp'):
-                    make_mlp_model(gin, edge_model._layers[0], gbl_namespace.TMVA.Experimental.SOFIE.FunctionTarget.EDGES, gbl_namespace.TMVA.Experimental.SOFIE.GraphType.GraphIndependent)
-                elif(i.name == 'layer_norm'):
-                    add_layer_norm(i, gin.edges_update_block)
-                else:
-                    print("Invalid Model for edge update.")
-                    return
-        
-        else:
-            print("Invalid Model for edge update.")
-            return
-        
-        add_weights(edge_model.variables, gin.edges_update_block)
-
+        edge_model = graph_module._edge_model._model
+        add_update_function(gin, edge_model, gbl_namespace.TMVA.Experimental.SOFIE.GraphType.GraphIndependent, 
+                                             gbl_namespace.TMVA.Experimental.SOFIE.FunctionTarget.EDGES)
 
         # adding the global update function
-        global_model = GraphModule._global_model._model
-        if (global_model.name == 'mlp'):
-            make_mlp_model(gin, global_model, gbl_namespace.TMVA.Experimental.SOFIE.FunctionTarget.GLOBALS, gbl_namespace.TMVA.Experimental.SOFIE.GraphType.GraphIndependent)
-        elif (global_model.name == 'sequential'):
-            for i in global_model._layers:
-                if(i.name == 'mlp'):
-                    make_mlp_model(gin, global_model._layers[0], gbl_namespace.TMVA.Experimental.SOFIE.FunctionTarget.GLOBALS, gbl_namespace.TMVA.Experimental.SOFIE.GraphType.GraphIndependent)
-                elif(i.name == 'layer_norm'):
-                    add_layer_norm(i, gin.globals_update_block)
-                else:
-                    print("Invalid Model for global update.")
-                    return
-        
-        else:
-            print("Invalid Model for global update.")
-            return
-
-        add_weights(global_model.variables, gin.globals_update_block)
+        global_model = graph_module._global_model._model
+        add_update_function(gin, global_model, gbl_namespace.TMVA.Experimental.SOFIE.GraphType.GraphIndependent, 
+                                             gbl_namespace.TMVA.Experimental.SOFIE.FunctionTarget.GLOBALS) 
 
         graph_independent_model = gbl_namespace.TMVA.Experimental.SOFIE.RModel_GraphIndependent(gin)
         blas_routines = gbl_namespace.std.vector['std::string']()
         blas_routines.push_back("Gemm")
         graph_independent_model.AddBlasRoutines(blas_routines)
         return graph_independent_model
+
 
 @pythonization("RModel_GNN", ns="TMVA::Experimental::SOFIE")
 def pythonize_gnn_parse(klass):
