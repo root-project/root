@@ -67,8 +67,9 @@ namespace SOFIE{
 
         //Generating Infer function definition for Edge update function
         long next_pos;
+        const size_t block_size = num_edges;
         fGC+="\n\nnamespace Edge_Update{\nstruct Session {\n";
-        std::vector<std::vector<std::size_t>> Update_Input = {{1, num_edge_features}};
+        std::vector<std::vector<std::size_t>> Update_Input = {{block_size, num_edge_features}};
         edges_update_block->Initialize();
         edges_update_block->AddInputTensors(Update_Input);
         fGC+=edges_update_block->GenerateModel(fName);
@@ -116,16 +117,20 @@ namespace SOFIE{
 
         // computing updated edge attributes
         fGC += "\n// --- Edge Update ---\n";
-        for(int k=0; k<num_edges; ++k){
-            fGC+="std::vector<float> Edge_"+std::to_string(k)+"_Update = ";
-            fGC+=edges_update_block->Generate({"input_graph.edge_data.GetData()+"+std::to_string(k*num_edge_features)});
-        }
+
+        fGC+="std::vector<float> Edge_Update = ";
+        fGC+=edges_update_block->Generate({"input_graph.edge_data.GetData()"});
+        
         if(num_edge_features != num_edge_features_input) {
             fGC+="\ninput_graph.edge_data = input_graph.edge_data.Resize({"+std::to_string(num_edges)+", "+std::to_string(num_edge_features)+"});\n";
         }
-        for(int k=0; k<num_edges; ++k){
-            fGC+="\nstd::copy(Edge_"+std::to_string(k)+"_Update.begin(),Edge_"+std::to_string(k)+"_Update.end(),input_graph.edge_data.GetData()+"+std::to_string(k*num_edge_features)+");\n";
-        }
+
+        // copy output
+        fGC += "for (int k = 0; k < " + std::to_string(num_edges) + "; k++) { \n";
+        fGC += "   std::copy(Edge_Update.begin()+ k * " + std::to_string(num_edge_features) + ", Edge_Update.begin()+ (k+1) * " + std::to_string(num_edge_features) +
+                    ",input_graph.edge_data.GetData() + k * " + std::to_string(num_edge_features)+ ");\n";
+        fGC += "}\n";
+        fGC+="\n";
 
         // computing updated node attributes
         fGC += "\n// --- Node Update ---\n";

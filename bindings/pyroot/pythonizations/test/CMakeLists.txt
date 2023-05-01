@@ -125,14 +125,14 @@ if (dataframe)
     ROOT_ADD_PYUNITTEST(pyroot_rdfdescription rdfdescription.py)
 endif()
 
-# RTensor pythonizations
+# SOFIE-GNN pythonizations
 if (dataframe AND tmva)
-    if(NOT MSVC OR CMAKE_SIZEOF_VOID_P EQUAL 4 OR win_broken_tests)
-        ROOT_ADD_PYUNITTEST(pyroot_pyz_sofie_gnn sofie_gnn.py PYTHON_DEPS numpy)
+    if(NOT MSVC OR CMAKE_SIZEOF_VOID_P EQUAL 4 OR win_broken_tests AND PYTHON_VERSION_MAJOR_Development_Main EQUAL 3 )
+        ROOT_ADD_PYUNITTEST(pyroot_pyz_sofie_gnn sofie_gnn.py PYTHON_DEPS numpy sonnet graph_nets)
     endif()
 endif()
 
-# SOFIE-GNN pythonizations
+# RTensor pythonizations
 if (tmva AND sofie)
     if(NOT MSVC OR CMAKE_SIZEOF_VOID_P EQUAL 4 OR win_broken_tests)
         ROOT_ADD_PYUNITTEST(pyroot_pyz_rtensor rtensor.py PYTHON_DEPS numpy)

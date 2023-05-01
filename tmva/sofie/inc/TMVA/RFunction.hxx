@@ -35,7 +35,7 @@ class RFunction_Update: public RFunction{
                 GraphType fGraphType;
                 std::vector<std::string> fInputTensors;
                 std::vector<ROperator*> fAddlOp;  // temporary vector to store pointer that will be moved in a unique_ptr
-                
+
         public:
         virtual ~RFunction_Update(){}
         RFunction_Update(){}
@@ -44,7 +44,7 @@ class RFunction_Update: public RFunction{
                                 case FunctionTarget::EDGES:{
                                         fFuncName = "edge_update";
                                         break;
-                                } 
+                                }
                                 case FunctionTarget::NODES: {
                                         fFuncName = "node_update";
                                         break;
@@ -59,18 +59,18 @@ class RFunction_Update: public RFunction{
                         fType = FunctionType::UPDATE;
                         function_block = std::make_unique<RModel>(fFuncName);
 
-                        if(fGraphType == GraphType::GNN){            
+                        if(fGraphType == GraphType::GNN){
                                 if(fTarget == FunctionTarget::EDGES){
                                         fInputTensors = {"edge","receiver","sender","global"};
                                 } else if(fTarget == FunctionTarget::NODES || fTarget == FunctionTarget::GLOBALS){
-                                        fInputTensors = {"edge","node","global"}; 
+                                        fInputTensors = {"edge","node","global"};
                                 }
 
                         } else if(fGraphType == GraphType::GraphIndependent){
                                 if(fTarget == FunctionTarget::EDGES){
                                         fInputTensors = {"edge"};
                                 } else if(fTarget == FunctionTarget::NODES){
-                                        fInputTensors = {"node"}; 
+                                        fInputTensors = {"node"};
                                 } else {
                                         fInputTensors = {"global"};
                                 }
@@ -91,9 +91,10 @@ class RFunction_Update: public RFunction{
                         return function_block;
                 }
 
-                std::string GenerateModel(const std::string& filename, long read_pos=0){
+                std::string GenerateModel(const std::string& filename, long read_pos=0, long block_size=1){
                         function_block->SetFilename(filename);
-                        function_block->Generate(Options::kGNNComponent,1,read_pos);
+                        // use batch size as b;lock size in RModel::generate
+                        function_block->Generate(Options::kGNNComponent,block_size,read_pos);
                         std::string modelGenerationString;
                         modelGenerationString = "\n//--------- GNN_Update_Function---"+fFuncName+"\n"+function_block->ReturnGenerated();
                         return modelGenerationString;
