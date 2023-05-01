@@ -15,7 +15,7 @@ public:
 
    void verify();
 
-   ClassDef(myclass,1);
+   ClassDefOverride(myclass,1);
 };
 
 class wrapper {
@@ -26,7 +26,7 @@ public:
    wrapper(myclass *p = 0) : fParent(p),fIndex(0) {}
    virtual ~wrapper() {}
 
-   ClassDef(wrapper,1);
+   ClassDefOverride(wrapper,1);
 };
 
 inline void myclass::set() {

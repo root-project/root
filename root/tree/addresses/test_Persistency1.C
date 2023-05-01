@@ -14,8 +14,8 @@ struct ITime  {
 struct TimePoint : public ITime  {
   Long64_t m_time;
   TimePoint() : m_time(0) {}
-  virtual ~TimePoint() {}
-  virtual Long64_t getData() { return m_time; }
+  ~TimePoint() override {}
+  Long64_t getData() override { return m_time; }
 };
 struct SmartRefBase  {
   int m_linkID,m_hintID;
@@ -72,7 +72,7 @@ struct Event : public DataObject  {
   TimePoint m_time;
   SmartRefVector<Obj> m_collisions;
   Event() : m_evt(0) , m_run(0) {}
-  virtual ~Event() { m_collisions.clear(); }
+  ~Event() override { m_collisions.clear(); }
 };
 
 void writeTree()  {

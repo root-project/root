@@ -41,7 +41,7 @@ public:
   TMyPar();
   virtual ~TMyPar();
 
-  ClassDef(TMyPar,2)
+  ClassDefOverride(TMyPar,2)
 };
 
 ClassImp(TMyPar)
@@ -106,7 +106,7 @@ public:
   TMyData();
   virtual ~TMyData();
 
-  ClassDef(TMyData,2)
+  ClassDefOverride(TMyData,2)
 };
 
 ClassImp(TMyData)

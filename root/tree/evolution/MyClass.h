@@ -17,7 +17,7 @@ class Track : public TObject {
 public:
    Track(double energy=-99.99) : fEnergy(energy) {}
    double GetEnergy() { return fEnergy; }
-   ClassDef(Track,1);
+   ClassDefOverride(Track,1);
 };
 #endif
 

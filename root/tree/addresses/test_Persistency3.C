@@ -39,7 +39,7 @@ class DerivedClass : public TestClass  {
  public:
   DerivedClass(int i) : TestClass(i) {}
   DerivedClass() :TestClass() { }
-  virtual ~DerivedClass() {}
+  ~DerivedClass() override {}
 };
 
 void writeTree(bool withdot)  {

@@ -78,7 +78,7 @@ struct B_GammaParameters : public CandidateParameters, public TObject
     float bestEtaMass;
     // the closest we can get to a pi0 with a combination of any other photon
     float bestPi0Mass;
-    ClassDef(B_GammaParameters, 1);
+    ClassDefOverride(B_GammaParameters, 1);
 };
 
 
@@ -89,7 +89,7 @@ struct B_ProtonParameters : public CandidateParameters, public TObject
     char charge; //!
 //    unsigned char isPID;
     int pidMask;
-    ClassDef(B_ProtonParameters, 1);
+    ClassDefOverride(B_ProtonParameters, 1);
 };
 
 
@@ -98,7 +98,7 @@ struct LambdaPionParameters : public CandidateParameters, public TObject
     LambdaPionParameters();
     void reset();
     char charge; //!
-    ClassDef(LambdaPionParameters, 1);
+    ClassDefOverride(LambdaPionParameters, 1);
 };
 
 
@@ -109,7 +109,7 @@ struct LambdaProtonParameters : public CandidateParameters, public TObject
     char charge; //!
 //    unsigned char isPID;
     int pidMask;
-    ClassDef(LambdaProtonParameters, 1);
+    ClassDefOverride(LambdaProtonParameters, 1);
 };
 
 
@@ -129,7 +129,7 @@ struct LambdaParameters : public CandidateParameters, public TObject
     float decayLength;
     float decayLengthError; // significance of the length
     TVector3 decayVector;
-    ClassDef(LambdaParameters, 1);
+    ClassDefOverride(LambdaParameters, 1);
 };
 
 
@@ -161,7 +161,7 @@ struct B_Parameters : public CandidateParameters, public TObject
     float cosAngleB2Rest;
     float bThrustMag;
     float restOfEventThrustMag;
-    ClassDef(B_Parameters, 2);
+    ClassDefOverride(B_Parameters, 2);
 };
 
 
@@ -194,7 +194,7 @@ struct JansEventHeader : public TObject
     unsigned char hasLambdaVeryVeryLooseTag;
     float r2;
     TLorentzVector eventCMS;
-    ClassDef(JansEventHeader, 1);
+    ClassDefOverride(JansEventHeader, 1);
 };
 
 
@@ -215,7 +215,7 @@ struct JansEvent : public TObject
     // Composite objects
     B_List bList;
 
-    ClassDef(JansEvent, 1);
+    ClassDefOverride(JansEvent, 1);
 };
 
 

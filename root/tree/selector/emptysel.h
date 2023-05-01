@@ -31,22 +31,22 @@ public :
 	       << std::endl << std::endl;
    };
 
-   virtual ~emptysel() { }
-   virtual Int_t   Version() const { return 2; }
-   virtual void    Begin(TTree *tree);
-   virtual void    SlaveBegin(TTree *tree);
-   virtual void    Init(TTree *tree);
-   virtual Bool_t  Notify();
-   virtual Bool_t  Process(Long64_t entry);
-   virtual Int_t   GetEntry(Long64_t entry, Int_t getall = 0) { return fChain ? fChain->GetTree()->GetEntry(entry, getall) : 0; }
-   virtual void    SetOption(const char *option) { fOption = option; }
-   virtual void    SetObject(TObject *obj) { fObject = obj; }
-   virtual void    SetInputList(TList *input) { fInput = input; }
-   virtual TList  *GetOutputList() const { return fOutput; }
-   virtual void    SlaveTerminate();
-   virtual void    Terminate();
+   ~emptysel() override { }
+   Int_t   Version() const override { return 2; }
+   void    Begin(TTree *tree) override;
+   void    SlaveBegin(TTree *tree) override;
+   void    Init(TTree *tree) override;
+   Bool_t  Notify() override;
+   Bool_t  Process(Long64_t entry) override;
+   Int_t   GetEntry(Long64_t entry, Int_t getall = 0) override { return fChain ? fChain->GetTree()->GetEntry(entry, getall) : 0; }
+   void    SetOption(const char *option) override { fOption = option; }
+   void    SetObject(TObject *obj) override { fObject = obj; }
+   void    SetInputList(TList *input) override { fInput = input; }
+   TList  *GetOutputList() const override { return fOutput; }
+   void    SlaveTerminate() override;
+   void    Terminate() override;
 
-   ClassDef(emptysel,0);
+   ClassDefOverride(emptysel,0);
 };
 
 #endif

@@ -6,7 +6,7 @@ class Notified : public TObject {
 
 public:
   Notified(unsigned int value) : fValue (value) {}
-  Bool_t Notify() { printf("Notifying #%d\n", fValue); return true; }
+  Bool_t Notify() override { printf("Notifying #%d\n", fValue); return true; }
 };
 
 #include "TList.h"

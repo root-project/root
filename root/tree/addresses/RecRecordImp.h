@@ -10,16 +10,16 @@ class RecRecordImp : public TObject {
 
    RecRecordImp() {} 
    RecRecordImp(const T& header): fHeader(header) {}
-   virtual ~RecRecordImp() {}
+   ~RecRecordImp() override {}
 
    // State testing methods
    virtual const T& GetHeader() const { return fHeader; }
-   virtual void Print(Option_t* option = "") const;
+   void Print(Option_t* option = "") const override;
 
  private:
    T                  fHeader;       // header base class
 
-   ClassDef(RecRecordImp<T>,1)
+   ClassDefOverride(RecRecordImp<T>,1)
 };
 
 #endif  

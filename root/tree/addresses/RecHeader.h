@@ -9,15 +9,15 @@ class RecHeader : public TObject {
 
    RecHeader() {}                 // necessary for streamer io
    RecHeader(const Context& vld) : fContext(vld) {}
-   virtual ~RecHeader() {}
+   ~RecHeader() override {}
 
-   virtual void Print(Option_t* option = "") const;
+   void Print(Option_t* option = "") const override;
      
  private:
    
    Context  fContext;  // Detector_t, SimFlag_t, VldTimeStamp
 
-ClassDef(RecHeader,1)
+ClassDefOverride(RecHeader,1)
 };
 
 #endif

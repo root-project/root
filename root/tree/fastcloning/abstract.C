@@ -13,7 +13,7 @@ public:
 class Bottom : public AbstractMiddle {
 public:
    int j;
-   int get() { return j; }
+   int get() override { return j; }
 };
 
 class Holder {

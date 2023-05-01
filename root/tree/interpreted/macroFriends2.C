@@ -38,7 +38,7 @@ class MyClass: public TNamed {
       void GetTreeZ();
 
 #if !defined (__CINT__) || defined (__MAKECINT__)
-      ClassDef(MyClass,1) //MyClass
+      ClassDefOverride(MyClass,1) //MyClass
 #endif
 };
 
@@ -60,7 +60,7 @@ class MyData {
       Double_t GetX()  const {return fX;}
 
 #if !defined (__CINT__) || defined (__MAKECINT__)
-      ClassDef(MyData,1) //MyData
+      ClassDefOverride(MyData,1) //MyData
 #endif
 };
 

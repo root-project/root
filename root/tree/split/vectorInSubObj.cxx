@@ -5,14 +5,14 @@ class MyHit : public TObject {
 private:
   /* only basic types */
    float fdata;
-   ClassDef(MyHit,1);
+   ClassDefOverride(MyHit,1);
 };
 
 class MySubEvent : public TObject {
 public:
 private:
    std::vector<MyHit> hits;
-   ClassDef(MySubEvent,1);
+   ClassDefOverride(MySubEvent,1);
 };
 
 class MyEvent : public TObject {
@@ -22,7 +22,7 @@ public:
 private:
    std::vector<MyHit> hitsintop;
    MySubEvent se;
-   ClassDef(MyEvent,1);
+   ClassDefOverride(MyEvent,1);
 };
 
 

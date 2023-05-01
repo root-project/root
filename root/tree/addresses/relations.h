@@ -16,9 +16,9 @@ public:
   int m;    //!
   DataTObject() {}
   DataTObject(int ii,float ij) : i(ii),j(ij) {}
-  virtual ~DataTObject() {}
+  ~DataTObject() override {}
   virtual void release() {}
-  ClassDef(DataTObject,1);
+  ClassDefOverride(DataTObject,1);
 };
 
 struct DataObject  {
@@ -41,7 +41,7 @@ public:
 
 template<class FROM, class TO> struct IRelation : public IInterface  {
 public:
-  virtual ~IRelation() {}
+  ~IRelation() override {}
 };
 
 template<class FROM,class TO> struct RelationBase  {  
@@ -67,6 +67,6 @@ template<class FROM,class TO> struct Relation1D :
 {
 public:
   Relation1D ()   {  };
-  virtual ~Relation1D()  {  }
+  ~Relation1D() override  {  }
 };
 #endif

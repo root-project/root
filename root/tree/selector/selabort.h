@@ -54,21 +54,21 @@ class selabort : public TSelector {
    TString MyNameIs;
    
    selabort(TTree * /* tree */=0) { }
-   ~selabort() { }
-   Int_t   Version() const { return 2; }
-   void    Begin(TTree *tree);
-   void    Init(TTree *tree);
-   Bool_t  Notify();
-   Bool_t  Process(Long64_t entry);
-   Bool_t  ProcessCut(Long64_t entry);
-   void    ProcessFill(Long64_t entry);
-   void    SetOption(const char *option) { fOption = option; }
-   void    SetObject(TObject *obj) { fObject = obj; }
-   void    SetInputList(TList *input) {fInput = input;}
-   TList  *GetOutputList() const { return fOutput; }
-   void    Terminate();
+   ~selabort() override { }
+   Int_t   Version() const override { return 2; }
+   void    Begin(TTree *tree) override;
+   void    Init(TTree *tree) override;
+   Bool_t  Notify() override;
+   Bool_t  Process(Long64_t entry) override;
+   Bool_t  ProcessCut(Long64_t entry) override;
+   void    ProcessFill(Long64_t entry) override;
+   void    SetOption(const char *option) override { fOption = option; }
+   void    SetObject(TObject *obj) override { fObject = obj; }
+   void    SetInputList(TList *input) override {fInput = input;}
+   TList  *GetOutputList() const override { return fOutput; }
+   void    Terminate() override;
    
-   //ClassDef(selabort,3);
+   //ClassDefOverride(selabort,3);
 };
 
 #endif
