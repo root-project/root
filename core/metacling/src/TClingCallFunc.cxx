@@ -79,8 +79,6 @@ using namespace std;
 static unsigned long long gWrapperSerial = 0LL;
 static const string kIndentString("   ");
 
-static map<const Decl *, void *> gWrapperStore;
-
 static
 inline
 void
@@ -991,9 +989,16 @@ void TClingCallFunc::make_narg_call_with_return(const unsigned N, const string &
 
 tcling_callfunc_Wrapper_t TClingCallFunc::make_wrapper()
 {
+   static map<const Decl *, void *> gWrapperStore;
+
    R__LOCKGUARD_CLING(gInterpreterMutex);
 
    const Decl *D = GetFunctionOrShadowDecl();
+
+   auto I = gWrapperStore.find(D);
+   if (I != gWrapperStore.end())
+      return (tcling_callfunc_Wrapper_t)I->second;
+
    string wrapper_name;
    string wrapper;
 
@@ -1651,20 +1656,10 @@ void *TClingCallFunc::InterfaceMethod()
    if (!IsValid()) {
       return nullptr;
    }
-   if (!fWrapper) {
-      const Decl *decl = GetFunctionOrShadowDecl();
 
-      R__LOCKGUARD_CLING(gInterpreterMutex);
-      // check if another thread already did it
-      if (!fWrapper) {
-         map<const Decl *, void *>::iterator I = gWrapperStore.find(decl);
-         if (I != gWrapperStore.end()) {
-            fWrapper = (tcling_callfunc_Wrapper_t)I->second;
-         } else {
-            fWrapper = make_wrapper();
-         }
-      }
-   }
+   if (!fWrapper)
+      fWrapper = make_wrapper();
+
    return (void *)fWrapper.load();
 }
 
@@ -1683,20 +1678,10 @@ TInterpreter::CallFuncIFacePtr_t TClingCallFunc::IFacePtr()
             "Attempt to get interface while invalid.");
       return TInterpreter::CallFuncIFacePtr_t();
    }
-   if (!fWrapper) {
-      const Decl *decl = GetFunctionOrShadowDecl();
 
-      R__LOCKGUARD_CLING(gInterpreterMutex);
-      // check if another thread already did it
-      if (!fWrapper) {
-         map<const Decl *, void *>::iterator I = gWrapperStore.find(decl);
-         if (I != gWrapperStore.end()) {
-            fWrapper = (tcling_callfunc_Wrapper_t)I->second;
-         } else {
-            fWrapper = make_wrapper();
-         }
-      }
-   }
+   if (!fWrapper)
+      fWrapper = make_wrapper();
+
    return TInterpreter::CallFuncIFacePtr_t(fWrapper);
 }
 
