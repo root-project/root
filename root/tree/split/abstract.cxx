@@ -18,9 +18,9 @@ public:
    
    absBot() : absTop(-1) {}
    absBot(int v) : absTop(v) {};
-   ~absBot() {};
+   ~absBot() override {};
 
-   int getVal() { return val; }
+   int getVal() override { return val; }
 };
 
 class Contained {

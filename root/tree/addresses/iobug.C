@@ -112,7 +112,7 @@ public:
    {
       FillZero(0, n);
    }
-   ~Graph() {
+   ~Graph() override {
       delete [] fX;
       delete [] fY;
    }
@@ -141,7 +141,7 @@ public:
       fY[i] = y;
    }
 
-   ClassDef(Graph,4)  //Graph graphics class
+   ClassDefOverride(Graph,4)  //Graph graphics class
 };
 
 class GraphErrors : public Graph {
@@ -156,7 +156,7 @@ public:
    {
       FillZero(0, n);
    }
-   ~GraphErrors() {
+   ~GraphErrors() override {
       delete [] fEX;
       delete [] fEY;
    }

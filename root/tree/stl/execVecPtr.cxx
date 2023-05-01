@@ -16,11 +16,11 @@ public:
    One() : fOneValue(-1) {}
    One(int seed) : Top(seed), fOneValue(seed) {}
    int fOneValue;
-   virtual void Print() {
+   void Print() override {
      Top::Print();
      std::cout << " One::fOneValue= " << fOneValue;
    }
-   virtual ~One() {}
+   ~One() override {}
 };
 
 class Two : public Top {
@@ -28,11 +28,11 @@ public:
    Two() : fTwoValue(-1) {}
    Two(int seed) : Top(seed),fTwoValue(seed) {}
    int fTwoValue;
-   virtual void Print() {
+   void Print() override {
      Top::Print();
      std::cout << " Two::fTwoValue= " << fTwoValue;
    }
-   virtual ~Two() {}
+   ~Two() override {}
 };
 
 #include <vector>

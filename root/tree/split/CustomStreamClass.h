@@ -10,12 +10,12 @@ class MyClass : public TObject
    
    public:
    MyClass(){};
-   virtual ~MyClass(){};
+   ~MyClass() override{};
    
    void PrintX() { std::cout << "x=" << x << std::endl; }
    void SetX(Int_t i){x=i;}
    
-   ClassDef(MyClass,1)//MyClass      
+   ClassDefOverride(MyClass,1)//MyClass      
 };
 
 #endif

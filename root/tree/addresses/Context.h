@@ -10,8 +10,8 @@ class Context : public TObject {
    Context():fDetector(-1),fSimFlag(-1),fTimeStamp(-1) {}
    Context(Int_t detector,Int_t mcflag,Int_t time) : fDetector(detector),
      fSimFlag(mcflag),fTimeStamp(time) {}
-   virtual ~Context() {}
-   void                     Print(Option_t *option = "") const;
+   ~Context() override {}
+   void                     Print(Option_t *option = "") const override;
 
  private:
 
@@ -20,7 +20,7 @@ class Context : public TObject {
    Int_t       fTimeStamp;
 
 
-   ClassDef(Context,1)  
+   ClassDefOverride(Context,1)  
 
 };
 

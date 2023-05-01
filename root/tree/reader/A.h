@@ -17,7 +17,7 @@ public:
 
     Int_t GetDummy() const { return dummy; }
 
-    ClassDef(B, 1);
+    ClassDefOverride(B, 1);
 };
 
 class A {

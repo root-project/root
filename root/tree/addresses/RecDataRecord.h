@@ -15,7 +15,7 @@ class RecDataRecord : public RecRecordImp<T> {
  private:
   // data members
 
-  ClassDef(RecDataRecord,1)
+  ClassDefOverride(RecDataRecord,1)
 
 };
 

@@ -5,14 +5,14 @@ class TopTrack : public TObject {
 public:
    int topval;
    TopTrack(int val = -1) : topval(val) {}
-   ClassDef(TopTrack,1);
+   ClassDefOverride(TopTrack,1);
 };
 
 class BottomTrack : public TopTrack {
 public:
    int bottomval;
    BottomTrack(int val=-2) : TopTrack(-val),bottomval(val) {}
-   ClassDef(BottomTrack,1);
+   ClassDefOverride(BottomTrack,1);
 };
 
 
@@ -22,7 +22,7 @@ public:
    TClonesArray* pPhotons; //photons data
    
    PhotonsList() : val(-1), pPhotons(0) { }
-   ~PhotonsList() {
+   ~PhotonsList() override {
       if (!pPhotons) return;
       pPhotons->Delete();
       delete pPhotons;
@@ -30,7 +30,7 @@ public:
 
    void Init() { pPhotons = new TClonesArray(BottomTrack::Class(), 8); }
    
-   ClassDef(PhotonsList,1); //list of photons for an event
+   ClassDefOverride(PhotonsList,1); //list of photons for an event
 }; // PhotonsList
 
 
@@ -38,7 +38,7 @@ class FittedList: public PhotonsList {
 public:
    FittedList(): PhotonsList() {}
    
-   ClassDef(FittedList,1); //fitted event
+   ClassDefOverride(FittedList,1); //fitted event
 }; // FittedList
 
 
@@ -48,7 +48,7 @@ public:
    
    void Init() { Fit.Init(); }
    
-   ClassDef(STreeEvent,1); //event encapsulated in a tree
+   ClassDefOverride(STreeEvent,1); //event encapsulated in a tree
 }; // STreeEvent
 
 // end of code - STreeEvent.h

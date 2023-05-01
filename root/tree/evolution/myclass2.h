@@ -37,7 +37,7 @@ public:
    void     SetfAt(Int_t i, Double_t val) { f[i] = val; }
    Double_t GetfAt(Int_t i) { return f[i]; }
 
-   virtual ~myclass() {delete [] e; delete [] f;}
+   ~myclass() override {delete [] e; delete [] f;}
 
    void SeteSize(Int_t number) {
       if (number < 0) return;
@@ -69,7 +69,7 @@ public:
       fSize = number;
    }
 
-   ClassDef(myclass,2)
+   ClassDefOverride(myclass,2)
 }; 
 
 #ifdef __MAKECINT__ 

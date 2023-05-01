@@ -12,11 +12,11 @@ public:
    Jet(Double_t x = 0.0, Double_t y = 0.0,
        Double_t z = 0.0, Double_t t = 0.0,
        Double_t val = 0.0) : TLorentzVector(x,y,z,t),jetVal(val)  {};
-   ~Jet() {};
+   ~Jet() override {};
    
    Double_t jetVal;
 
-   ClassDef(Jet,1);
+   ClassDefOverride(Jet,1);
 };
 
 void writeJet() {

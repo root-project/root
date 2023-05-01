@@ -9,8 +9,8 @@ class ConfigRecord : public RecDataRecord<RecHeader>
 public:
   ConfigRecord() {}
   ConfigRecord(const RecHeader& header) : RecDataRecord<RecHeader>(header){} 
-  virtual ~ConfigRecord() {}
+  ~ConfigRecord() override {}
 
 
-ClassDef(ConfigRecord,1)                                 // ConfigRecord
+ClassDefOverride(ConfigRecord,1)                                 // ConfigRecord
 };

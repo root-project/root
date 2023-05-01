@@ -11,13 +11,13 @@ public :
    TTree          *fChain;   //!pointer to the analyzed TTree or TChain
 
    MySelector(TTree * /*tree*/ =0) : fChain(0), pfs1(0), pf1(0), first(kTRUE) { }
-   virtual ~MySelector() { }
-   virtual Int_t   Version() const { return 2; }
-   virtual void    Begin(TTree *tree) { }
-   virtual void    SlaveBegin(TTree *tree) { }
-   virtual void    Init(TTree *tree) { fChain = tree; }
-   virtual Bool_t  Notify() { return kTRUE; }
-   virtual Bool_t  Process(Long64_t entry) {
+   ~MySelector() override { }
+   Int_t   Version() const override { return 2; }
+   void    Begin(TTree *tree) override { }
+   void    SlaveBegin(TTree *tree) override { }
+   void    Init(TTree *tree) override { fChain = tree; }
+   Bool_t  Notify() override { return kTRUE; }
+   Bool_t  Process(Long64_t entry) override {
       GetEntry(entry);
       printf("MySelector::Process called, entry=%lld\n", entry);
       printf("Reported cache size from fChain: %lld\n", fChain->GetCacheSize());
@@ -49,19 +49,19 @@ public :
       first = kFALSE;
       return kTRUE;
    }
-   virtual Int_t   GetEntry(Long64_t entry, Int_t getall = 0) { return fChain ? fChain->GetTree()->GetEntry(entry, getall) : 0; }
-   virtual void    SetOption(const char *option) {  }
-   virtual void    SetObject(TObject *obj) { }
-   virtual void    SetInputList(TList *input) { }
-   virtual TList  *GetOutputList() const { return 0; }
-   virtual void    SlaveTerminate() { }
-   virtual void    Terminate() { }
+   Int_t   GetEntry(Long64_t entry, Int_t getall = 0) override { return fChain ? fChain->GetTree()->GetEntry(entry, getall) : 0; }
+   void    SetOption(const char *option) override {  }
+   void    SetObject(TObject *obj) override { }
+   void    SetInputList(TList *input) override { }
+   TList  *GetOutputList() const override { return 0; }
+   void    SlaveTerminate() override { }
+   void    Terminate() override { }
 
    Long64_t pfs1;
    TTreeCache *pf1;
    Bool_t first;
 
-   ClassDef(MySelector,0);
+   ClassDefOverride(MySelector,0);
 };
 
 int gNum=0;

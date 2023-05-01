@@ -8,10 +8,10 @@ public:
 
 class Derived: public ABC {
 public:
-   virtual ~Derived() {}
+   ~Derived() override {}
    Derived(int i = -2): ABC(i+1), derived(i) {}
 
-   int pv() { return abc + derived; }
+   int pv() override { return abc + derived; }
    int derived;
 };
 

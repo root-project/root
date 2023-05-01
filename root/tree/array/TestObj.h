@@ -39,7 +39,7 @@ class Reconstruction: public TObject {
 
         void Init(int v) { np = 2+v; for (int i = 0; i < 2; ++i) p[i].Init(v); }
 
-        virtual void Clear(const Option_t* opt = "") {
+        void Clear(const Option_t* opt = "") override {
            Init(0);
            TObject::Clear(opt);
         }
@@ -55,7 +55,7 @@ class Reconstruction: public TObject {
 //      static const bool gInitted;
 //      static bool StaticInit() { Class()->IgnoreTObjectStreamer(); }
 
-        ClassDef(Reconstruction,1);
+        ClassDefOverride(Reconstruction,1);
 }; // Reconstruction
 
 

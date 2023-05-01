@@ -5,7 +5,7 @@ class Track : public TObject {
   Track() : a(0) {};
   explicit Track(int val) : a(val) {};
   int a;
-  ClassDef(Track,1);
+  ClassDefOverride(Track,1);
 };
 class Header {
   public:
@@ -18,7 +18,7 @@ class PhotonsList: public TObject {
   TClonesArray* pPhotons; //photons data
 
   PhotonsList() { pPhotons = NULL; }
-  ~PhotonsList() {
+  ~PhotonsList() override {
     if (!pPhotons) return;
     pPhotons->Delete();
     delete pPhotons;
@@ -26,12 +26,12 @@ class PhotonsList: public TObject {
 
   void Init() { pPhotons = new TClonesArray(Track::Class(), 8); }
 
-  ClassDef(PhotonsList,1) //list of photons for an event
+  ClassDefOverride(PhotonsList,1) //list of photons for an event
 }; // PhotonsList
 
 class SubPhotonsList : public PhotonsList {
 
-  ClassDef(SubPhotonsList,1);
+  ClassDefOverride(SubPhotonsList,1);
 };
 
 class STreeEvent: public TObject {
@@ -41,12 +41,12 @@ class STreeEvent: public TObject {
 
   void Init() { Clusters.Init(); }
 
-  ClassDef(STreeEvent,1) //event encapsulated in a tree
+  ClassDefOverride(STreeEvent,1) //event encapsulated in a tree
 }; // STreeEvent
 
 class SubSTreeEvent: public STreeEvent {
 
-  ClassDef(SubSTreeEvent,1) //event encapsulated in a tree
+  ClassDefOverride(SubSTreeEvent,1) //event encapsulated in a tree
 }; // STreeEvent
 
 #ifdef __CINT__
