@@ -309,6 +309,7 @@ bool ScipyMinimizer::Minimize()
    std::cout << "=== Status: " << status << std::endl;
    std::cout << "=== Message: " << message << std::endl;
    std::cout << "=== Function calls: " << nfev << std::endl;
+   if(success) fStatus=0;
    return success;
 }
 
