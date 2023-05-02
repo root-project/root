@@ -1,250 +1,108 @@
-allocator<const double*>::const_pointer
-allocator<const double*>::const_reference
 allocator<const double*>::difference_type
-allocator<const double*>::pointer
-allocator<const double*>::reference
 allocator<const double*>::size_type
 allocator<const double*>::value_type
-allocator<TBranchSTL::ElementBranchHelper_t>::const_pointer
-allocator<TBranchSTL::ElementBranchHelper_t>::const_reference
 allocator<TBranchSTL::ElementBranchHelper_t>::difference_type
-allocator<TBranchSTL::ElementBranchHelper_t>::pointer
-allocator<TBranchSTL::ElementBranchHelper_t>::reference
 allocator<TBranchSTL::ElementBranchHelper_t>::size_type
 allocator<TBranchSTL::ElementBranchHelper_t>::value_type
-allocator<ROOT::TCollectionProxyInfo::EnvironBase*>::const_pointer
-allocator<ROOT::TCollectionProxyInfo::EnvironBase*>::const_reference
 allocator<ROOT::TCollectionProxyInfo::EnvironBase*>::difference_type
-allocator<ROOT::TCollectionProxyInfo::EnvironBase*>::pointer
-allocator<ROOT::TCollectionProxyInfo::EnvironBase*>::reference
 allocator<ROOT::TCollectionProxyInfo::EnvironBase*>::size_type
 allocator<ROOT::TCollectionProxyInfo::EnvironBase*>::value_type
-allocator<float>::const_pointer
-allocator<float>::const_reference
 allocator<float>::difference_type
-allocator<float>::pointer
-allocator<float>::reference
 allocator<float>::size_type
 allocator<float>::value_type
-allocator<TFitEditor::FuncParamData_t>::const_pointer
-allocator<TFitEditor::FuncParamData_t>::const_reference
 allocator<TFitEditor::FuncParamData_t>::difference_type
-allocator<TFitEditor::FuncParamData_t>::pointer
-allocator<TFitEditor::FuncParamData_t>::reference
 allocator<TFitEditor::FuncParamData_t>::size_type
 allocator<TFitEditor::FuncParamData_t>::value_type
-allocator<int>::const_pointer
-allocator<int>::const_reference
 allocator<int>::difference_type
-allocator<int>::pointer
-allocator<int>::reference
 allocator<int>::size_type
 allocator<int>::value_type
-allocator<Long64_t>::const_pointer
-allocator<Long64_t>::const_reference
 allocator<Long64_t>::difference_type
-allocator<Long64_t>::pointer
-allocator<Long64_t>::reference
 allocator<Long64_t>::size_type
 allocator<Long64_t>::value_type
-allocator<long>::const_pointer
-allocator<long>::const_reference
 allocator<long>::difference_type
-allocator<long>::pointer
-allocator<long>::reference
 allocator<long>::size_type
 allocator<long>::value_type
-allocator<map<double,vector<unsigned int> > >::const_pointer
-allocator<map<double,vector<unsigned int> > >::const_reference
 allocator<map<double,vector<unsigned int> > >::difference_type
-allocator<map<double,vector<unsigned int> > >::pointer
-allocator<map<double,vector<unsigned int> > >::reference
 allocator<map<double,vector<unsigned int> > >::size_type
 allocator<map<double,vector<unsigned int> > >::value_type
-allocator<pair<int,int> >::const_pointer
-allocator<pair<int,int> >::const_reference
 allocator<pair<int,int> >::difference_type
-allocator<pair<int,int> >::pointer
-allocator<pair<int,int> >::reference
 allocator<pair<int,int> >::size_type
 allocator<pair<int,int> >::value_type
-allocator<pair<TDSetElement*,TString> >::const_pointer
-allocator<pair<TDSetElement*,TString> >::const_reference
 allocator<pair<TDSetElement*,TString> >::difference_type
-allocator<pair<TDSetElement*,TString> >::pointer
-allocator<pair<TDSetElement*,TString> >::reference
 allocator<pair<TDSetElement*,TString> >::size_type
 allocator<pair<TDSetElement*,TString> >::value_type
-allocator<pair<TObject*const,TF1*> >::const_pointer
-allocator<pair<TObject*const,TF1*> >::const_reference
 allocator<pair<TObject*const,TF1*> >::difference_type
-allocator<pair<TObject*const,TF1*> >::pointer
-allocator<pair<TObject*const,TF1*> >::reference
 allocator<pair<TObject*const,TF1*> >::size_type
 allocator<pair<TObject*const,TF1*> >::value_type
-allocator<ROOT::Fit::ParameterSettings>::const_pointer
-allocator<ROOT::Fit::ParameterSettings>::const_reference
 allocator<ROOT::Fit::ParameterSettings>::difference_type
-allocator<ROOT::Fit::ParameterSettings>::pointer
-allocator<ROOT::Fit::ParameterSettings>::reference
 allocator<ROOT::Fit::ParameterSettings>::size_type
 allocator<ROOT::Fit::ParameterSettings>::value_type
-allocator<TProofDrawListOfGraphs::Point3D_t>::const_pointer
-allocator<TProofDrawListOfGraphs::Point3D_t>::const_reference
 allocator<TProofDrawListOfGraphs::Point3D_t>::difference_type
-allocator<TProofDrawListOfGraphs::Point3D_t>::pointer
-allocator<TProofDrawListOfGraphs::Point3D_t>::reference
 allocator<TProofDrawListOfGraphs::Point3D_t>::size_type
 allocator<TProofDrawListOfGraphs::Point3D_t>::value_type
-allocator<TProofDrawListOfPolyMarkers3D::Point4D_t>::const_pointer
-allocator<TProofDrawListOfPolyMarkers3D::Point4D_t>::const_reference
 allocator<TProofDrawListOfPolyMarkers3D::Point4D_t>::difference_type
-allocator<TProofDrawListOfPolyMarkers3D::Point4D_t>::pointer
-allocator<TProofDrawListOfPolyMarkers3D::Point4D_t>::reference
 allocator<TProofDrawListOfPolyMarkers3D::Point4D_t>::size_type
 allocator<TProofDrawListOfPolyMarkers3D::Point4D_t>::value_type
-allocator<short>::const_pointer
-allocator<short>::const_reference
 allocator<short>::difference_type
-allocator<short>::pointer
-allocator<short>::reference
 allocator<short>::size_type
 allocator<short>::value_type
-allocator<ROOT::Detail::TBranchProxy*>::const_pointer
-allocator<ROOT::Detail::TBranchProxy*>::const_reference
 allocator<ROOT::Detail::TBranchProxy*>::difference_type
-allocator<ROOT::Detail::TBranchProxy*>::pointer
-allocator<ROOT::Detail::TBranchProxy*>::reference
 allocator<ROOT::Detail::TBranchProxy*>::size_type
 allocator<ROOT::Detail::TBranchProxy*>::value_type
-allocator<TChainIndex::TChainIndexEntry>::const_pointer
-allocator<TChainIndex::TChainIndexEntry>::const_reference
 allocator<TChainIndex::TChainIndexEntry>::difference_type
-allocator<TChainIndex::TChainIndexEntry>::pointer
-allocator<TChainIndex::TChainIndexEntry>::reference
 allocator<TChainIndex::TChainIndexEntry>::size_type
 allocator<TChainIndex::TChainIndexEntry>::value_type
-allocator<TStreamerInfoActions::TConfiguredAction>::const_pointer
-allocator<TStreamerInfoActions::TConfiguredAction>::const_reference
 allocator<TStreamerInfoActions::TConfiguredAction>::difference_type
-allocator<TStreamerInfoActions::TConfiguredAction>::pointer
-allocator<TStreamerInfoActions::TConfiguredAction>::reference
 allocator<TStreamerInfoActions::TConfiguredAction>::size_type
 allocator<TStreamerInfoActions::TConfiguredAction>::value_type
-allocator<TF1*>::const_pointer
-allocator<TF1*>::const_reference
 allocator<TF1*>::difference_type
-allocator<TF1*>::pointer
-allocator<TF1*>::reference
 allocator<TF1*>::size_type
 allocator<TF1*>::value_type
-allocator<ROOT::Internal::TFriendProxy*>::const_pointer
-allocator<ROOT::Internal::TFriendProxy*>::const_reference
 allocator<ROOT::Internal::TFriendProxy*>::difference_type
-allocator<ROOT::Internal::TFriendProxy*>::pointer
-allocator<ROOT::Internal::TFriendProxy*>::reference
 allocator<ROOT::Internal::TFriendProxy*>::size_type
 allocator<ROOT::Internal::TFriendProxy*>::value_type
-allocator<TGListTreeItem*>::const_pointer
-allocator<TGListTreeItem*>::const_reference
 allocator<TGListTreeItem*>::difference_type
-allocator<TGListTreeItem*>::pointer
-allocator<TGListTreeItem*>::reference
 allocator<TGListTreeItem*>::size_type
 allocator<TGListTreeItem*>::value_type
-allocator<TGeoBoolNode::ThreadData_t*>::const_pointer
-allocator<TGeoBoolNode::ThreadData_t*>::const_reference
 allocator<TGeoBoolNode::ThreadData_t*>::difference_type
-allocator<TGeoBoolNode::ThreadData_t*>::pointer
-allocator<TGeoBoolNode::ThreadData_t*>::reference
 allocator<TGeoBoolNode::ThreadData_t*>::size_type
 allocator<TGeoBoolNode::ThreadData_t*>::value_type
-allocator<ROOT::Internal::TSchemaHelper>::const_pointer
-allocator<ROOT::Internal::TSchemaHelper>::const_reference
 allocator<ROOT::Internal::TSchemaHelper>::difference_type
-allocator<ROOT::Internal::TSchemaHelper>::pointer
-allocator<ROOT::Internal::TSchemaHelper>::reference
 allocator<ROOT::Internal::TSchemaHelper>::size_type
 allocator<ROOT::Internal::TSchemaHelper>::value_type
-allocator<TGenCollectionProxy::TStaging*>::const_pointer
-allocator<TGenCollectionProxy::TStaging*>::const_reference
 allocator<TGenCollectionProxy::TStaging*>::difference_type
-allocator<TGenCollectionProxy::TStaging*>::pointer
-allocator<TGenCollectionProxy::TStaging*>::reference
 allocator<TGenCollectionProxy::TStaging*>::size_type
 allocator<TGenCollectionProxy::TStaging*>::value_type
-allocator<TStreamerInfo*>::const_pointer
-allocator<TStreamerInfo*>::const_reference
 allocator<TStreamerInfo*>::difference_type
-allocator<TStreamerInfo*>::pointer
-allocator<TStreamerInfo*>::reference
 allocator<TStreamerInfo*>::size_type
 allocator<TStreamerInfo*>::value_type
-allocator<TString>::const_pointer
-allocator<TString>::const_reference
 allocator<TString>::difference_type
-allocator<TString>::pointer
-allocator<TString>::reference
 allocator<TString>::size_type
 allocator<TString>::value_type
-allocator<TThread*>::const_pointer
-allocator<TThread*>::const_reference
 allocator<TThread*>::difference_type
-allocator<TThread*>::pointer
-allocator<TThread*>::reference
 allocator<TThread*>::size_type
 allocator<TThread*>::value_type
-allocator<ROOT::Internal::TTreeReaderValueBase*>::const_pointer
-allocator<ROOT::Internal::TTreeReaderValueBase**>::const_pointer
-allocator<ROOT::Internal::TTreeReaderValueBase*>::const_reference
-allocator<ROOT::Internal::TTreeReaderValueBase**>::const_reference
 allocator<ROOT::Internal::TTreeReaderValueBase*>::difference_type
 allocator<ROOT::Internal::TTreeReaderValueBase**>::difference_type
-allocator<ROOT::Internal::TTreeReaderValueBase*>::pointer
-allocator<ROOT::Internal::TTreeReaderValueBase**>::pointer
-allocator<ROOT::Internal::TTreeReaderValueBase*>::reference
-allocator<ROOT::Internal::TTreeReaderValueBase**>::reference
 allocator<ROOT::Internal::TTreeReaderValueBase*>::size_type
 allocator<ROOT::Internal::TTreeReaderValueBase**>::size_type
 allocator<ROOT::Internal::TTreeReaderValueBase*>::value_type
 allocator<ROOT::Internal::TTreeReaderValueBase**>::value_type
-allocator<ULong64_t>::const_pointer
-allocator<ULong64_t>::const_reference
 allocator<ULong64_t>::difference_type
-allocator<ULong64_t>::pointer
-allocator<ULong64_t>::reference
 allocator<ULong64_t>::size_type
 allocator<ULong64_t>::value_type
-allocator<unsigned char>::const_pointer
-allocator<unsigned char>::const_reference
 allocator<unsigned char>::difference_type
-allocator<unsigned char>::pointer
-allocator<unsigned char>::reference
 allocator<unsigned char>::size_type
 allocator<unsigned char>::value_type
-allocator<unsigned long>::const_pointer
-allocator<unsigned long>::const_reference
 allocator<unsigned long>::difference_type
-allocator<unsigned long>::pointer
-allocator<unsigned long>::reference
 allocator<unsigned long>::size_type
 allocator<unsigned long>::value_type
-allocator<vector<double> >::const_pointer
-allocator<vector<double> >::const_reference
 allocator<vector<double> >::difference_type
-allocator<vector<double> >::pointer
-allocator<vector<double> >::reference
 allocator<vector<double> >::size_type
 allocator<vector<double> >::value_type
-allocator<vector<pair<bool,bool> > >::const_pointer
-allocator<vector<pair<bool,bool> > >::const_reference
 allocator<vector<pair<bool,bool> > >::difference_type
-allocator<vector<pair<bool,bool> > >::pointer
-allocator<vector<pair<bool,bool> > >::reference
 allocator<vector<pair<bool,bool> > >::size_type
 allocator<vector<pair<bool,bool> > >::value_type
-allocator<void>::const_pointer
-allocator<void>::pointer
 allocator<void>::value_type
 Angle_t
 Atom_t

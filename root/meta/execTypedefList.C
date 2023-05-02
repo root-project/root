@@ -146,7 +146,7 @@ int execTypedefList() {
    #endif
 #else
    res = check_file("typelist.v5.txt",340); if (res) return res;
-   res = check_file("typelist.v6.txt",1465); if (res) return res;
+   res = check_file("typelist.v6.txt",1323); if (res) return res;
 #endif
 
    return 0;
