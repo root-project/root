@@ -50,6 +50,13 @@ namespace std{
 template <class T>
 class myAlloc : public std::allocator<T> {
 public:
+   myAlloc() = default;
+
+   template <class U>
+   myAlloc(const allocator<U> &other) noexcept
+   {
+   }
+
    template <typename U>
    struct rebind {
       using other = myAlloc<U>;
