@@ -95,25 +95,25 @@ public:
 
    virtual void          AddPoint(Double_t x, Double_t y) { SetPoint(fNpoints, x, y); } ///< Append a new point to the graph.
    virtual void          Apply(TF1 *f);
-   void          Browse(TBrowser *b) override;
+   void                  Browse(TBrowser *b) override;
    virtual Double_t      Chisquare(TF1 *f1, Option_t *option="") const;
    static Bool_t         CompareArg(const TGraph* gr, Int_t left, Int_t right);
    static Bool_t         CompareX(const TGraph* gr, Int_t left, Int_t right);
    static Bool_t         CompareY(const TGraph* gr, Int_t left, Int_t right);
    static Bool_t         CompareRadius(const TGraph* gr, Int_t left, Int_t right);
    virtual void          ComputeRange(Double_t &xmin, Double_t &ymin, Double_t &xmax, Double_t &ymax) const;
-   Int_t         DistancetoPrimitive(Int_t px, Int_t py) override;
-   void          Draw(Option_t *chopt="") override;
+   Int_t                 DistancetoPrimitive(Int_t px, Int_t py) override;
+   void                  Draw(Option_t *chopt="") override;
    virtual void          DrawGraph(Int_t n, const Int_t *x, const Int_t *y, Option_t *option="");
    virtual void          DrawGraph(Int_t n, const Float_t *x, const Float_t *y, Option_t *option="");
    virtual void          DrawGraph(Int_t n, const Double_t *x=nullptr, const Double_t *y=nullptr, Option_t *option="");
    virtual void          DrawPanel(); // *MENU*
    virtual Double_t      Eval(Double_t x, TSpline *spline=nullptr, Option_t *option="") const;
-   void          ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
+   void                  ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
    virtual void          Expand(Int_t newsize);
    virtual void          Expand(Int_t newsize, Int_t step);
-   TObject      *FindObject(const char *name) const override;
-   TObject      *FindObject(const TObject *obj) const override;
+   TObject              *FindObject(const char *name) const override;
+   TObject              *FindObject(const TObject *obj) const override;
    virtual TFitResultPtr Fit(const char *formula ,Option_t *option="" ,Option_t *goption="", Axis_t xmin=0, Axis_t xmax=0); // *MENU*
    virtual TFitResultPtr Fit(TF1 *f1 ,Option_t *option="" ,Option_t *goption="", Axis_t xmin=0, Axis_t xmax=0);
    virtual void          FitPanel(); // *MENU*
@@ -149,7 +149,7 @@ public:
    Double_t              GetMinimum()  const {return fMinimum;}
    TAxis                *GetXaxis() const ;
    TAxis                *GetYaxis() const ;
-   char         *GetObjectInfo(Int_t px, Int_t py) const override;
+   char                 *GetObjectInfo(Int_t px, Int_t py) const override;
    virtual Int_t         GetPoint(Int_t i, Double_t &x, Double_t &y) const;
    virtual Double_t      GetPointX(Int_t i) const;
    virtual Double_t      GetPointY(Int_t i) const;
@@ -167,16 +167,16 @@ public:
    virtual void          LeastSquareLinearFit(Int_t n, Double_t &a0, Double_t &a1, Int_t &ifail, Double_t xmin=0, Double_t xmax=0);
    virtual Int_t         Merge(TCollection* list);
    virtual void          MovePoints(Double_t dx, Double_t dy, Bool_t logx = kFALSE, Bool_t logy = kFALSE);
-   void          Paint(Option_t *chopt="") override;
+   void                  Paint(Option_t *chopt="") override;
    void                  PaintGraph(Int_t npoints, const Double_t *x, const Double_t *y, Option_t *chopt);
    void                  PaintGrapHist(Int_t npoints, const Double_t *x, const Double_t *y, Option_t *chopt);
    virtual void          PaintStats(TF1 *fit);
-   void          Print(Option_t *chopt="") const override;
-   void          RecursiveRemove(TObject *obj) override;
+   void                  Print(Option_t *chopt="") const override;
+   void                  RecursiveRemove(TObject *obj) override;
    virtual Int_t         RemovePoint(); // *MENU*
    virtual Int_t         RemovePoint(Int_t ipoint);
-   void          SavePrimitive(std::ostream &out, Option_t *option = "") override;
-   void          SaveAs(const char *filename, Option_t *option = "") const override; // *MENU*
+   void                  SavePrimitive(std::ostream &out, Option_t *option = "") override;
+   void                  SaveAs(const char *filename, Option_t *option = "") const override; // *MENU*
    virtual void          Scale(Double_t c1=1., Option_t *option="y"); // *MENU*
    virtual void          SetEditable(Bool_t editable=kTRUE); // *TOGGLE* *GETTER=GetEditable
    virtual void          SetHighlight(Bool_t set = kTRUE); // *TOGGLE* *GETTER=IsHighlight
@@ -187,13 +187,13 @@ public:
    virtual void          SetPoint(Int_t i, Double_t x, Double_t y);
    virtual void          SetPointX(Int_t i, Double_t x);
    virtual void          SetPointY(Int_t i, Double_t y);
-   void          SetName(const char *name="") override; // *MENU*
-   void          SetNameTitle(const char *name="", const char *title="") override;
+   void                  SetName(const char *name="") override; // *MENU*
+   void                  SetNameTitle(const char *name="", const char *title="") override;
    virtual void          SetStats(Bool_t stats=kTRUE); // *MENU*
-   void          SetTitle(const char *title="") override;    // *MENU*
+   void                  SetTitle(const char *title="") override;    // *MENU*
    virtual void          Sort(Bool_t (*greater)(const TGraph*, Int_t, Int_t)=&TGraph::CompareX,
                               Bool_t ascending=kTRUE, Int_t low=0, Int_t high=-1111);
-   void          UseCurrentStyle() override;
+   void                  UseCurrentStyle() override;
    void                  Zero(Int_t &k,Double_t AZ,Double_t BZ,Double_t E2,Double_t &X,Double_t &Y,Int_t maxiterations);
 
    ClassDefOverride(TGraph,4)  //Graph graphics class

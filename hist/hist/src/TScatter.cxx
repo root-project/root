@@ -16,10 +16,8 @@
 #include "TStyle.h"
 #include "TMath.h"
 #include "TVirtualPad.h"
-#include "TH1.h"
-#include "TF1.h"
-#include "TVectorD.h"
-#include "TSystem.h"
+#include "TH2.h"
+#include "TVirtualGraphPainter.h"
 #include "strtok.h"
 
 #include <iostream>
@@ -34,9 +32,9 @@ ClassImp(TScatter);
 
 /** \class TScatter
     \ingroup Graphs
-A TScatter is a TGraph able to draw four variables on a single plot. The two first
-variables are the x and y position of the markers and the 3rd is mapped on the current
-color map and the 4th on the marker size.
+A TScatter is able to draw four variables scatter plot on a single plot. The two first
+variables are the x and y position of the markers and the third is mapped on the current
+color map and the fourth on the marker size.
 
 The following example demonstrates how it works:
 
@@ -50,13 +48,17 @@ End_Macro
 ////////////////////////////////////////////////////////////////////////////////
 /// TScatter default constructor.
 
-TScatter::TScatter(): TGraph()
+TScatter::TScatter()
 {
-   if (!CtorAllocate()) return;
-   fScale  = 5.;
-   fMargin = 0.1;
-   fSize   = nullptr;
-   fColor  = nullptr;
+   fNpoints   = -1;
+   fMaxSize   = -1;
+
+   fGraph     = nullptr;
+   fHistogram = nullptr;
+   fScale     = 5.;
+   fMargin    = 0.1;
+   fSize      = nullptr;
+   fColor     = nullptr;
 }
 
 
@@ -66,14 +68,19 @@ TScatter::TScatter(): TGraph()
 ///  the arrays are preset to zero
 
 TScatter::TScatter(Int_t n)
-   : TGraph(n)
 {
-   if (!CtorAllocate()) return;
-   FillZero(0, fNpoints);
+   fGraph     = new TGraph(n);
+   fNpoints   = fGraph->GetN();
+   fMaxSize   = fGraph->GetMaxSize();
+   fHistogram = nullptr;
+
+   fColor = new Double_t[fMaxSize];
+   fSize  = new Double_t[fMaxSize];
+
+   memset(fColor, 0, fNpoints * sizeof(Double_t));
+   memset(fSize, 0, fNpoints * sizeof(Double_t));
    fScale  = 5.;
    fMargin = 0.1;
-   fSize   = nullptr;
-   fColor  = nullptr;
 }
 
 
@@ -83,15 +90,21 @@ TScatter::TScatter(Int_t n)
 ///  if ex or ey are null, the corresponding arrays are preset to zero
 
 TScatter::TScatter(Int_t n, const Double_t *x, const Double_t *y, const Double_t *col, const Double_t *size)
-   : TGraph(n, x, y)
 {
-   if (!CtorAllocate()) return;
+   fGraph     = new TGraph(n, x, y);
+   fNpoints   = fGraph->GetN();
+   fMaxSize   = fGraph->GetMaxSize();
+   fHistogram = nullptr;
+
+   fColor = new Double_t[fMaxSize];
+   fSize  = new Double_t[fMaxSize];
 
    n = sizeof(Double_t) * fNpoints;
    if (col) memcpy(fColor, col, n);
    else     fColor = nullptr;
    if (size) memcpy(fSize, size, n);
    else      fSize = nullptr;
+
    fScale  = 5.;
    fMargin = 0.1;
 }
@@ -102,35 +115,49 @@ TScatter::TScatter(Int_t n, const Double_t *x, const Double_t *y, const Double_t
 
 TScatter::~TScatter()
 {
+   delete fGraph;
+   delete fHistogram;
    delete [] fColor;
    delete [] fSize;
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor allocate.
+/// Compute distance from point px,py to a scatter plot.
 ///
-/// Note: This function should be called only from the constructor
-/// since it does not delete previously existing arrays.
+///  Compute the closest distance of approach from point px,py to this scatter plot.
+///  The distance is computed in pixels units.
 
-Bool_t TScatter::CtorAllocate()
+Int_t TScatter::DistancetoPrimitive(Int_t px, Int_t py)
 {
+   TVirtualGraphPainter *painter = TVirtualGraphPainter::GetPainter();
+   if (painter) return painter->DistancetoPrimitiveHelper(this->GetGraph(), px, py);
+   else return 0;
+}
 
-   if (!fNpoints) {
-      fColor = fSize = nullptr;
-      return kFALSE;
-   } else {
-      fColor = new Double_t[fMaxSize];
-      fSize = new Double_t[fMaxSize];
-   }
-   return kTRUE;
+
+////////////////////////////////////////////////////////////////////////////////
+/// Execute action corresponding to one event.
+///
+///  This member function is called when a graph is clicked with the locator
+///
+///  If Left button clicked on one of the line end points, this point
+///     follows the cursor until button is released.
+///
+///  if Middle button clicked, the line is moved parallel to itself
+///     until the button is released.
+
+void TScatter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
+{
+   TVirtualGraphPainter *painter = TVirtualGraphPainter::GetPainter();
+   if (painter) painter->ExecuteEventHelper(this->GetGraph(), event, px, py);
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns a pointer to the histogram used to draw the axis
 
-TH1F *TScatter::GetHistogram() const
+TH2F *TScatter::GetHistogram() const
 {
    if (!fHistogram) {
       // do not add the histogram to gDirectory
@@ -139,14 +166,15 @@ TH1F *TScatter::GetHistogram() const
       {
          TDirectory::TContext ctx(nullptr);
          double rwxmin, rwymin, rwxmax, rwymax;
-         int npt = 100;
-         ComputeRange(rwxmin, rwymin, rwxmax, rwymax);
+         int npt = 50;
+         fGraph->ComputeRange(rwxmin, rwymin, rwxmax, rwymax);
          double dx = (rwxmax-rwxmin)*fMargin;
          double dy = (rwymax-rwymin)*fMargin;
-         auto h = new TH1F(TString::Format("%s_h",GetName()),GetTitle(),npt,rwxmin,rwxmax);
-         h->SetMinimum(rwymin-dy);
-         h->SetMaximum(rwymax+dy);
+         auto h = new TH2F(TString::Format("%s_h",GetName()),GetTitle(),npt,rwxmin,rwxmax,npt,rwymin,rwymax);
+//          h->SetMinimum(rwymin-dy);
+//          h->SetMaximum(rwymax+dy);
          h->GetXaxis()->SetLimits(rwxmin-dx,rwxmax+dx);
+         h->GetYaxis()->SetLimits(rwymin-dy,rwymax+dy);
          h->SetBit(TH1::kNoStats);
          h->SetDirectory(0);
          h->Sumw2(kFALSE);
@@ -158,16 +186,12 @@ TH1F *TScatter::GetHistogram() const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set zero values for point arrays in the range `[begin, end]`.
+/// Paint this scatter plot with its current attributes.
 
-void TScatter::FillZero(Int_t begin, Int_t end, Bool_t from_ctor)
+void TScatter::Paint(Option_t *option)
 {
-   if (!from_ctor) {
-      TGraph::FillZero(begin, end, from_ctor);
-   }
-   Int_t n = (end - begin) * sizeof(Double_t);
-   memset(fColor + begin, 0, n);
-   memset(fSize + begin, 0, n);
+   TVirtualGraphPainter *painter = TVirtualGraphPainter::GetPainter();
+   if (painter) painter->PaintScatter(this, option);
 }
 
 
@@ -176,8 +200,10 @@ void TScatter::FillZero(Int_t begin, Int_t end, Bool_t from_ctor)
 
 void TScatter::Print(Option_t *) const
 {
+   Double_t *X = fGraph->GetX();
+   Double_t *Y = fGraph->GetY();
    for (Int_t i = 0; i < fNpoints; i++) {
-      printf("x[%d]=%g, y[%d]=%g, color[%d]=%g, size[%d]=%g\n", i, fX[i], i, fY[i], i, fColor[i], i, fSize[i]);
+      printf("x[%d]=%g, y[%d]=%g, color[%d]=%g, size[%d]=%g\n", i, X[i], i, Y[i], i, fColor[i], i, fSize[i]);
    }
 }
 
@@ -206,16 +232,18 @@ void TScatter::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    frameNumber++;
 
    Int_t i;
+   Double_t *X        = fGraph->GetX();
+   Double_t *Y        = fGraph->GetY();
    TString fXName     = TString::Format("%s_fx%d",GetName(),frameNumber);
    TString fYName     = TString::Format("%s_fy%d", GetName(),frameNumber);
    TString fColorName = TString::Format("%s_fcolor%d",GetName(),frameNumber);
    TString fSizeName  = TString::Format("%s_fsize%d",GetName(),frameNumber);
    out << "   Double_t " << fXName << "[" << fNpoints << "] = {" << std::endl;
-   for (i = 0; i < fNpoints-1; i++) out << "   " << fX[i] << "," << std::endl;
-   out << "   " << fX[fNpoints-1] << "};" << std::endl;
+   for (i = 0; i < fNpoints-1; i++) out << "   " << X[i] << "," << std::endl;
+   out << "   " << X[fNpoints-1] << "};" << std::endl;
    out << "   Double_t " << fYName << "[" << fNpoints << "] = {" << std::endl;
-   for (i = 0; i < fNpoints-1; i++) out << "   " << fY[i] << "," << std::endl;
-   out << "   " << fY[fNpoints-1] << "};" << std::endl;
+   for (i = 0; i < fNpoints-1; i++) out << "   " << Y[i] << "," << std::endl;
+   out << "   " << Y[fNpoints-1] << "};" << std::endl;
    out << "   Double_t " << fColorName << "[" << fNpoints << "] = {" << std::endl;
    for (i = 0; i < fNpoints-1; i++) out << "   " << fColor[i] << "," << std::endl;
    out << "   " << fColor[fNpoints-1] << "};" << std::endl;

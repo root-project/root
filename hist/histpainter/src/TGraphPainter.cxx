@@ -1249,8 +1249,6 @@ void TGraphPainter::PaintHelper(TGraph *theGraph, Option_t *option)
          } else {
             PaintGraphErrors(theGraph,chopt);
          }
-      } else if (theGraph->InheritsFrom(TScatter::Class())) {
-         PaintScatter((TScatter*)theGraph,chopt);
       } else {
          PaintGraphSimple(theGraph,chopt);
       }
@@ -4337,11 +4335,11 @@ void TGraphPainter::PaintScatter(TScatter *theScatter, Option_t* chopt)
 
    if (opt.Contains("A")) optionAxis  = 1;  else optionAxis  = 0;
 
-   double *theX     = theScatter->GetX();
-   double *theY     = theScatter->GetY();
+   double *theX     = theScatter->GetGraph()->GetX();
+   double *theY     = theScatter->GetGraph()->GetY();
+   int n            = theScatter->GetGraph()->GetN();
    double *theColor = theScatter->GetColor();
    double *theSize  = theScatter->GetSize();
-   int n            = theScatter->GetN();
    double scale     = theScatter->GetScale();
 
    double minx =  DBL_MAX;
@@ -4367,13 +4365,13 @@ void TGraphPainter::PaintScatter(TScatter *theScatter, Option_t* chopt)
       }
    }
 
-   TH1F *h = theScatter->GetHistogram();
+   TH2F *h = theScatter->GetHistogram();
    if (optionAxis) h->Paint(" ");
 
-   // Define palette
+   // Define and paint palette
    if (theColor) {
       TPaletteAxis *palette;
-      TList *functions = theScatter->GetListOfFunctions();
+      TList *functions = theScatter->GetGraph()->GetListOfFunctions();
       palette = (TPaletteAxis*)functions->FindObject("palette");
       TView *view = gPad->GetView();
       if (palette) {
@@ -4408,6 +4406,7 @@ void TGraphPainter::PaintScatter(TScatter *theScatter, Option_t* chopt)
          palette->SetNdivisions(h->GetNdivisions());
          functions->AddFirst(palette);
       }
+      if (palette) palette->Paint();
    }
 
    // Draw markers

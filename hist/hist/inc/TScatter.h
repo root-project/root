@@ -21,17 +21,25 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#include "TNamed.h"
+#include "TAttLine.h"
+#include "TAttFill.h"
+#include "TAttMarker.h"
 #include "TGraph.h"
-class TH1F;
-class TScatter : public TGraph {
+
+class TH2F;
+
+class TScatter : public TNamed, public TAttLine, public TAttFill, public TAttMarker {
 
 protected:
-   Double_t  *fColor{nullptr};   ///< [fNpoints] array of colors
-   Double_t  *fSize{nullptr};    ///< [fNpoints] array of marker sizes
-   Double_t   fScale;            ///< Largest marker size used to paint the markers
-   Double_t   fMargin;           ///< Margin around the plot in %
-   Bool_t     CtorAllocate();
-   void       FillZero(Int_t begin, Int_t end, Bool_t from_ctor = kTRUE) override;
+   Int_t      fMaxSize;            ///<!Current dimension of arrays fX and fY
+   Int_t      fNpoints;            ///< Number of points <= fMaxSize
+   TH2F      *fHistogram{nullptr}; ///< Pointer to histogram used for drawing axis
+   TGraph    *fGraph{nullptr};     ///< Pointer to graph holding X and Y positions
+   Double_t  *fColor{nullptr};     ///< [fNpoints] array of colors
+   Double_t  *fSize{nullptr};      ///< [fNpoints] array of marker sizes
+   Double_t   fScale;              ///< Largest marker size used to paint the markers
+   Double_t   fMargin;             ///< Margin around the plot in %
 
 public:
    TScatter();
@@ -39,16 +47,21 @@ public:
    TScatter(Int_t n, const Double_t *x, const Double_t *y, const Double_t *col = nullptr, const Double_t *size = nullptr);
    ~TScatter() override;
 
+   Int_t     DistancetoPrimitive(Int_t px, Int_t py) override;
+   void      ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
    Double_t *GetColor() const {return fColor;}   ///< Get the array of colors
    Double_t *GetSize()  const {return fSize;}    ///< Get the array of marker sizes
    Double_t  GetMargin() const {return fMargin;} ///< Set the margin around the plot in %
    Double_t  GetScale() const {return fScale;}   ///< Get the largest marker size used to paint the markers
-   TH1F     *GetHistogram() const override;
+   TGraph   *GetGraph() const {return fGraph;}   ///< Get the graph holding X and Y positions
+   TH2F     *GetHistogram() const;               ///< Get the graph histogram used for drawing axis
 
    void      SetScale(Double_t scale) {fScale = scale;}     ///< Set the largest marker size used to paint the markers
    void      SetMargin(Double_t);
+   void      SetHistogram(TH2F *h) {fHistogram = h;}
    void      Print(Option_t *chopt="") const override;
    void      SavePrimitive(std::ostream &out, Option_t *option = "") override;
+   void      Paint(Option_t *chopt="") override;
 
 
    ClassDefOverride(TScatter,1)  //A scatter plot
