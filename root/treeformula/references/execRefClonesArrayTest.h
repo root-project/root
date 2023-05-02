@@ -12,7 +12,7 @@ class ObjA: public TObject
     UInt_t    fObjAVal;
     TRef      fObjB;
 
-  ClassDef(ObjA, 1);
+  ClassDefOverride(ObjA, 1);
 };
 
 class ObjB: public TObject
@@ -21,7 +21,7 @@ class ObjB: public TObject
 
     UInt_t fObjBVal;
 
-  ClassDef(ObjB, 1);
+  ClassDefOverride(ObjB, 1);
 };
 
 
@@ -30,12 +30,12 @@ class Top: public TObject
   public:
     Top() { fObjAArray = new TClonesArray(ObjA::Class(), 10); 
             fObjBArray = new TClonesArray(ObjB::Class(), 10); } 
-    ~Top() { delete fObjAArray; delete fObjBArray; } 
+    ~Top() override { delete fObjAArray; delete fObjBArray; } 
 
     TClonesArray*    fObjAArray; //->
     TClonesArray*    fObjBArray; //->
     TRef             fLastB;
 
-  ClassDef(Top, 1);
+  ClassDefOverride(Top, 1);
 };
 #endif /* execRefClonesArrayTest_h */

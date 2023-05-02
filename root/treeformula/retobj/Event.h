@@ -55,8 +55,8 @@ public:
      fNsp = 0;
    }
    Track(Float_t random);
-   virtual ~Track() {Clear();}
-   void          Clear(Option_t *option="") { delete [] fPointValue; fPointValue=0; }
+   ~Track() override {Clear();}
+   void          Clear(Option_t *option="") override { delete [] fPointValue; fPointValue=0; }
    Float_t       GetPx() const { return fPx; }
    Float_t       GetPy() const { return fPy; }
    Float_t       GetPz() const { return fPz; }
@@ -80,7 +80,7 @@ public:
    Int_t         GetN() const { return fNsp; }
    Float_t       GetPointValue(Int_t i=0) const { return (i<fNsp)?fPointValue[i]:0; }
 
-   ClassDef(Track,2)  //A track segment
+   ClassDefOverride(Track,2)  //A track segment
 };
 
 class EventHeader {
@@ -129,9 +129,9 @@ private:
 
 public:
    Event();
-   virtual ~Event();
+   ~Event() override;
    void          Build(Int_t ev, Int_t arg5=600, Float_t ptmin=1);
-   void          Clear(Option_t *option ="");
+   void          Clear(Option_t *option ="") override;
    static void   Reset(Option_t *option ="");
    void          ResetHistogramPointer() {fH=0;}
    void          SetNseg(Int_t n) { fNseg = n; }
@@ -176,7 +176,7 @@ public:
 #else
    Track         GetTrackCopy(int i = 0) const { return *(Track*)fTracks->At(i); }
 #endif
-   ClassDef(Event,1)  //Event structure
+   ClassDefOverride(Event,1)  //Event structure
 };
 
 #ifdef ClingWorkAroundCallfuncAndInline

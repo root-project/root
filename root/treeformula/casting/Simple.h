@@ -16,10 +16,10 @@ public:
 
    Simple() : fID(0), fShape(0) { }
    Simple(Int_t id, TShape* shape): fID(id), fShape(shape) { }
-   virtual ~Simple();
-   virtual void Print(Option_t *option = "") const;
+   ~Simple() override;
+   void Print(Option_t *option = "") const override;
 
-   ClassDef(Simple,1)  //Simple class
+   ClassDefOverride(Simple,1)  //Simple class
 };
 
 #endif                         // SIMPLE_H

@@ -10,7 +10,7 @@ class A : public TObject
 {
 public:
   A();
-  ~A();
+  ~A() override;
   void Fill(int n);
   void Dump2() const;
   
@@ -19,7 +19,7 @@ public:
   int    *aa[3];  //[n]
   int    (*aaa)[3];  //![n]
 
-  ClassDef(A,1)
+  ClassDefOverride(A,1)
 };
 
 #endif

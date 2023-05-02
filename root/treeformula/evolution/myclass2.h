@@ -9,7 +9,7 @@ class myclass: public TNamed
   Double_t GetA() { return a; }
   myclass(); 
   myclass(const char* name); 
-  ClassDef(myclass,2); 
+  ClassDefOverride(myclass,2); 
 }; 
 
 #ifdef __MAKECINT__ 

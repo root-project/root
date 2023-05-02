@@ -44,7 +44,7 @@ public:
       nmu   = 0;
       nbest = -1;
    }
-   ClassDef(Jet,1)
+   ClassDefOverride(Jet,1)
 };
 
 class Event: public TObject {
@@ -58,7 +58,7 @@ public:
       jet = new TClonesArray("Jet");
       clear();
    }
-  ~Event() {
+  ~Event() override {
       delete jet;    jet = 0;
    }
    void clear() {
@@ -72,7 +72,7 @@ public:
       new ((*jet)[njet]) Jet(*jet_);
       njet = jet->GetLast()+1;                    // update nmu
    }
-   ClassDef(Event,1)
+   ClassDefOverride(Event,1)
 };
 
 //------------------------ jetclass.C ----------------------------

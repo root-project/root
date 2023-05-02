@@ -38,7 +38,7 @@ public:
    TVectorD  fX;
    TVectorD  fY;
    
-   ClassDef(MyClass, 1)
+   ClassDefOverride(MyClass, 1)
 };
 
 ClassImp(MyClass)

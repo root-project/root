@@ -11,8 +11,8 @@ public:
    Double_t p;
 
    Track(Double_t _p = 0.) : p(_p) {}
-   virtual ~Track(void) {}
-   ClassDef(Track, 1)
+   ~Track(void) override {}
+   ClassDefOverride(Track, 1)
 };
 
 class EventTcaMember : public TObject
@@ -21,8 +21,8 @@ public:
    TClonesArray tca;
    EventTcaMember() : tca() {}
    EventTcaMember(Int_t n) : tca("Track", n) {}
-   virtual ~EventTcaMember (void) {}
-   ClassDef(EventTcaMember, 1)
+   ~EventTcaMember (void) override {}
+   ClassDefOverride(EventTcaMember, 1)
 };
 
 #ifdef __MAKECINT__

@@ -10,7 +10,7 @@
 class SubChild : public TObject {
 public:
    Float_t efg[5];
-   ClassDef(SubChild,1);
+   ClassDefOverride(SubChild,1);
 };
 
 class NSChild : public TObject {
