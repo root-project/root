@@ -10,7 +10,7 @@ class MyClass : public TObject {
  public:
   MyClass();
 
-  virtual ~MyClass() {
+  ~MyClass() override {
     delete fgWSb;
   }
 
@@ -24,7 +24,7 @@ class MyClass : public TObject {
 
   static TF1*    fgWSb;            // Wood-Saxon Function (b)
     
-  ClassDef(MyClass,1)  // Test
+  ClassDefOverride(MyClass,1)  // Test
 };
 
 #endif

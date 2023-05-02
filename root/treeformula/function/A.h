@@ -8,13 +8,13 @@ class A : public TObject
 {
 public:
   A();
-  ~A();
+  ~A() override;
 
   TVector3  GetV() const { return tv; }
   TVector3  tv;
   int       val;
 
-  ClassDef(A,1)
+  ClassDefOverride(A,1)
 };
 
 #endif

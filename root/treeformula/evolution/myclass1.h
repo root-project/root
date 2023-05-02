@@ -8,7 +8,7 @@ class myclass: public TNamed
   Double32_t a; 
   myclass(); 
   myclass(const char* name); 
-  ClassDef(myclass,1); 
+  ClassDefOverride(myclass,1); 
 }; 
 
 #ifdef __MAKECINT__ 

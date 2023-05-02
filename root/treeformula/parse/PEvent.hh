@@ -27,7 +27,7 @@ class QRawPulse : public TObject {
         Int_t fNsamples;           // number of ADC samples 
         UInt_t* fSample;           //[fNsamples]
 
-        ClassDef(QRawPulse,1);
+        ClassDefOverride(QRawPulse,1);
 };
 
 class QRawTriggerPulse : public QRawPulse {
@@ -40,7 +40,7 @@ class QRawTriggerPulse : public QRawPulse {
     protected:
         Int_t fChannel;
 
-        ClassDef(QRawTriggerPulse,1);
+        ClassDefOverride(QRawTriggerPulse,1);
 };
 
  

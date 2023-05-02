@@ -16,7 +16,7 @@ public:
   A GetACopy() const { return *(A*)fA->At(0); };
   std::vector<A> GetVecACopy() const { return fVecA; }
 
-  ClassDef(B,1)
+  ClassDefOverride(B,1)
 };
 
 #endif

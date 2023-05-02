@@ -11,25 +11,25 @@ class TStrip: public TObject {
   
 public:
   TStrip(const char * /* name */ =0){}; 
-  ~TStrip() { // delete all hists here - well, not in your example case where you have 5 global ones 
+  ~TStrip() override { // delete all hists here - well, not in your example case where you have 5 global ones 
   }
   void pushback(TH1F *histog){fHists.push_back(histog);};
 private:
   std::list<TH1F*> fHists;
-  ClassDef(TStrip,1); // a strip
+  ClassDefOverride(TStrip,1); // a strip
 };
 
 class TPlate: public TObject {
   
 public:
   TPlate(const char * /* name */ =0){};
-  ~TPlate() { // delete all entries in fStrips here 
+  ~TPlate() override { // delete all entries in fStrips here 
   }
   void pushback(TStrip *strip){fStrips.push_back(strip);};
   
 private:
   std::list<TStrip*> fStrips;
-  ClassDef(TPlate,1); // a plate
+  ClassDefOverride(TPlate,1); // a plate
 };
 
 #ifdef __MAKECINT__

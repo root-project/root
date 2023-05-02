@@ -20,13 +20,13 @@ typedef std::vector<collection> third;
 struct One : public TObject {
    One() : fN(0),fVecPtr(new subCollection) {}
    One(const One &rhs) : TObject(),fN(rhs.fN),fVecPtr(new subCollection(*rhs.fVecPtr)) {}
-   ~One() { delete fVecPtr; }
+   ~One() override { delete fVecPtr; }
    int GetN1() { return fN+1; }
    int fN;
    subCollection *fVecPtr; //->
    subUCollection fUVec;
    collection fVec1;
-   ClassDef(One,1);
+   ClassDefOverride(One,1);
 };
 
 struct Two {

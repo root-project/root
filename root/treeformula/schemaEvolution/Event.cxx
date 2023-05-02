@@ -82,10 +82,10 @@
 #include "Event.h"
 #endif
 
-ClassImp(EventHeader)
-ClassImp(Event)
-ClassImp(Track)
-ClassImp(HistogramManager)
+ClassImp(EventHeader);
+ClassImp(Event);
+ClassImp(Track);
+ClassImp(HistogramManager);
 
 TClonesArray *Event::fgTracks = 0;
 TH1F *Event::fgHist = 0;

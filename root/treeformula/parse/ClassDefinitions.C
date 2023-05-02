@@ -8,7 +8,7 @@ class QRawPulseR : public TObject
 {
 	public:
 		QRawPulseR();
-		virtual ~QRawPulseR();
+		~QRawPulseR() override;
 		const QRawPulseR& operator=(const QRawPulseR& P);
 		void SetDataHist(const int, double*);
 		void SetChannel(const Int_t chan) {fChannel = chan;}
@@ -18,7 +18,7 @@ class QRawPulseR : public TObject
 		Int_t fChannel;
 
 	friend class QRawTriggerPulseR;
-	ClassDef(QRawPulseR, 1)
+	ClassDefOverride(QRawPulseR, 1)
 };
 
 ClassImp(QRawPulseR);
@@ -58,14 +58,14 @@ class QRawTriggerPulseR : public QRawPulseR
 {
 	public:
 		QRawTriggerPulseR();
-		virtual ~QRawTriggerPulseR();
+		~QRawTriggerPulseR() override;
 		const QRawTriggerPulseR& operator=(const QRawTriggerPulseR& P);
 		Int_t GetTriggerPosition() const { return ftrigger_position; }
 
 	private:
 		Int_t ftrigger_position; 
 
-	ClassDef(QRawTriggerPulseR, 1);
+	ClassDefOverride(QRawTriggerPulseR, 1);
 };
 
 ClassImp(QRawTriggerPulseR);
@@ -96,7 +96,7 @@ class QRawEventR : public TObject
 { 
 	public:
 		QRawEventR();	
-		virtual ~QRawEventR();
+		~QRawEventR() override;
 		void SetRawPulse(const QRawTriggerPulseR);
 
 	private:
