@@ -485,6 +485,12 @@ sap.ui.define([
          }
       },
 
+      buildREveBoxSetSetter : function(el)
+      {
+         this.makeBoolSetter(el.coneCap, "DrawConeCap");
+         this.buildREveElementSetter(el);
+      },
+
       makeBoolSetter : function(val, labelName, funcName, gedFrame)
       {
          if (!gedFrame)

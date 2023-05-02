@@ -601,6 +601,15 @@ TGeoManager *REveManager::GetDefaultGeometry()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Get the default viewer.
+///
+
+REveViewer *REveManager::GetDefaultViewer() const
+{
+   return dynamic_cast<REveViewer*>(fViewers->FirstChild());
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Register 'name' as an alias for geometry file 'filename'.
 /// The old aliases are silently overwritten.
 /// After that the geometry can be retrieved also by calling:
