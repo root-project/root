@@ -4,6 +4,11 @@
 template <typename T>
 class CustomAlloc : public std::allocator<T>
 {
+public:
+   template <typename U>
+   struct rebind {
+      using other = CustomAlloc<U>;
+   };
 };
 
 class Track {

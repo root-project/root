@@ -48,7 +48,13 @@ namespace std{
 //------------------------------------------------------------------------------
 
 template <class T>
-class myAlloc : public std::allocator<T> {};
+class myAlloc : public std::allocator<T> {
+public:
+   template <typename U>
+   struct rebind {
+      using other = myAlloc<U>;
+   };
+};
 
 //------------------------------------------------------------------------------
 
