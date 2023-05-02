@@ -16,7 +16,7 @@ if(WIN32)
   cmake_policy(SET CMP0091 OLD)
 endif()
 
-if(CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR)
+if(CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR AND NOT ALLOW_IN_SOURCE)
   message(FATAL_ERROR
     " ROOT must be built out-of-source.\n"
     " Please see README/INSTALL for more information.")
