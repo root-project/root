@@ -531,15 +531,15 @@ int assertTooSmall()
 
    int result = 0;
 
-   result += regular(true, true, true);
-   result += regular(true, true, false);
-   result += regular(true, false, true);
-   result += regular(true, false, false);
+   result += ::regular(true, true, true);
+   result += ::regular(true, true, false);
+   result += ::regular(true, false, true);
+   result += ::regular(true, false, false);
 
-   result += regular(false, true, true);
-   result += regular(false, true, false);
-   result += regular(false, false, true);
-   result += regular(false, false, false);
+   result += ::regular(false, true, true);
+   result += ::regular(false, true, false);
+   result += ::regular(false, false, true);
+   result += ::regular(false, false, false);
 
    result += largeStandaloneBasket();
 
