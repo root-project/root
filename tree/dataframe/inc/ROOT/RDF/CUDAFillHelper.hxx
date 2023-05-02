@@ -39,8 +39,6 @@ using Hist_t = ::TH1D;
 static constexpr size_t getHistDim(TH3 *) { return 3; }
 static constexpr size_t getHistDim(TH2 *) { return 2; }
 static constexpr size_t getHistDim(TH1 *) { return 1; }
-// template <typename T>
-// static constexpr size_t getHistDim(T *) { return 0; } // Default case
 
 static constexpr char getHistType(TH1C *) { return (char) 0; }
 static constexpr char getHistType(TH2C *) { return (char) 0; }
@@ -57,35 +55,35 @@ static constexpr float getHistType(TH3F *) { return (float) 0; }
 static constexpr double getHistType(TH1D *) { return (double) 0; }
 static constexpr double getHistType(TH2D *) { return (double) 0; }
 static constexpr double getHistType(TH3D *) { return (double) 0; }
-// template <typename T>
-// static constexpr T getHistType(T *) { return nullptr; } // Default case
 
 // clang-format on
 
 template <typename HIST = Hist_t>
 class R__CLING_PTRCHECK(off) CUDAFillHelper : public RActionImpl<CUDAFillHelper<HIST>> {
+   static constexpr size_t dim = getHistDim((HIST *)nullptr);
+
    std::vector<HIST *> fObjects;
    std::vector<CUDAhist::RHnCUDA<decltype(getHistType((HIST *)nullptr)), getHistDim((HIST *)nullptr)> *> fCudaHist;
 
-   // template <typename H = HIST, typename = decltype(std::declval<H>().Reset())>
-   // void ResetIfPossible(H *h)
-   // {
-   //    h->Reset();
-   // }
+   template <typename H = HIST, typename = decltype(std::declval<H>().Reset())>
+   void ResetIfPossible(H *h)
+   {
+      h->Reset();
+   }
 
-   // void ResetIfPossible(TStatistic *h) { *h = TStatistic(); }
+   void ResetIfPossible(TStatistic *h) { *h = TStatistic(); }
 
-   // // cannot safely re-initialize variations of the result, hence error out
-   // void ResetIfPossible(...)
-   // {
-   //    throw std::runtime_error(
-   //       "A systematic variation was requested for a custom Fill action, but the type of the object to be filled does
-   //       " "not implement a Reset method, so we cannot safely re-initialize variations of the result. Aborting.");
-   // }
+   // cannot safely re-initialize variations of the result, hence error out
+   void ResetIfPossible(...)
+   {
+      throw std::runtime_error(
+         "A systematic variation was requested for a custom Fill action, but the type of the object to be filled does"
+         "not implement a Reset method, so we cannot safely re-initialize variations of the result. Aborting.");
+   }
 
-   // void UnsetDirectoryIfPossible(TH1 *h) { h->SetDirectory(nullptr); }
+   void UnsetDirectoryIfPossible(TH1 *h) { h->SetDirectory(nullptr); }
 
-   // void UnsetDirectoryIfPossible(...) {}
+   void UnsetDirectoryIfPossible(...) {}
 
    template <size_t DIMW>
    void FillWithWeight(unsigned int slot, const std::array<double, DIMW> &v)
@@ -131,51 +129,51 @@ class R__CLING_PTRCHECK(off) CUDAFillHelper : public RActionImpl<CUDAFillHelper<
    }
 
    // class which wraps a pointer and implements a no-op increment operator
-   // template <typename T>
-   // class ScalarConstIterator {
-   //    const T *obj_;
+   template <typename T>
+   class ScalarConstIterator {
+      const T *obj_;
 
-   // public:
-   //    ScalarConstIterator(const T *obj) : obj_(obj) {}
-   //    const T &operator*() const { return *obj_; }
-   //    ScalarConstIterator<T> &operator++() { return *this; }
-   // };
+   public:
+      ScalarConstIterator(const T *obj) : obj_(obj) {}
+      const T &operator*() const { return *obj_; }
+      ScalarConstIterator<T> &operator++() { return *this; }
+   };
 
    // helper functions which provide one implementation for scalar types and another for containers
    // TODO these could probably all be replaced by inlined lambdas and/or constexpr if statements
    // in c++17 or later
 
    // return unchanged value for scalar
-   //    template <typename T, std::enable_if_t<!IsDataContainer<T>::value, int> = 0>
-   //    ScalarConstIterator<T> MakeBegin(const T &val)
-   //    {
-   //       return ScalarConstIterator<T>(&val);
-   //    }
+   template <typename T, std::enable_if_t<!IsDataContainer<T>::value, int> = 0>
+   ScalarConstIterator<T> MakeBegin(const T &val)
+   {
+      return ScalarConstIterator<T>(&val);
+   }
 
-   //    // return iterator to beginning of container
-   //    template <typename T, std::enable_if_t<IsDataContainer<T>::value, int> = 0>
-   //    auto MakeBegin(const T &val)
-   //    {
-   //       return std::begin(val);
-   //    }
+   // return iterator to beginning of container
+   template <typename T, std::enable_if_t<IsDataContainer<T>::value, int> = 0>
+   auto MakeBegin(const T &val)
+   {
+      return std::begin(val);
+   }
 
-   //    // return 1 for scalars
-   //    template <typename T, std::enable_if_t<!IsDataContainer<T>::value, int> = 0>
-   //    std::size_t GetSize(const T &)
-   //    {
-   //       return 1;
-   //    }
+   // return 1 for scalars
+   template <typename T, std::enable_if_t<!IsDataContainer<T>::value, int> = 0>
+   std::size_t GetSize(const T &)
+   {
+      return 1;
+   }
 
-   //    // return container size
-   //    template <typename T, std::enable_if_t<IsDataContainer<T>::value, int> = 0>
-   //    std::size_t GetSize(const T &val)
-   //    {
-   // #if __cplusplus >= 201703L
-   //       return std::size(val);
-   // #else
-   //       return val.size();
-   // #endif
-   //    }
+   // return container size
+   template <typename T, std::enable_if_t<IsDataContainer<T>::value, int> = 0>
+   std::size_t GetSize(const T &val)
+   {
+#if __cplusplus >= 201703L
+      return std::size(val);
+#else
+      return val.size();
+#endif
+   }
 
    template <std::size_t ColIdx, typename End_t, typename... Its>
    void ExecLoop(unsigned int slot, End_t end, Its... its)
@@ -196,14 +194,13 @@ public:
    // Initialize fCudaHist
    inline void init_cuda(HIST *obj, int i)
    {
-      // if constexpr (has_getxaxis_v<HIST>) { // Avoid compilation errors for fObjects without GetXaxis()
       if (getenv("DBG"))
          printf("Init cuda hist %d\n", i);
       auto dims = obj->GetDimension();
-      std::vector<Int_t> ncells;
-      std::vector<Double_t> xlow;
-      std::vector<Double_t> xhigh;
-      std::vector<const Double_t *> binEdges;
+      std::array<Int_t, dim> ncells;
+      std::array<Double_t, dim> xlow;
+      std::array<Double_t, dim> xhigh;
+      std::array<const Double_t *, dim> binEdges;
       TAxis *ax;
 
       for (auto d = 0; d < dims; d++) {
@@ -215,18 +212,17 @@ public:
             ax = obj->GetZaxis();
          }
 
-         ncells.push_back(ax->GetNbins() + 2);
-         xlow.push_back(ax->GetXmin());
-         xhigh.push_back(ax->GetXmax());
-         binEdges.push_back(ax->GetXbins()->GetArray());
+         ncells[d] = ax->GetNbins() + 2;
+         binEdges[d] = ax->GetXbins()->GetArray();
+         xlow[d] = ax->GetXmin();
+         xhigh[d] = ax->GetXmax();
+
          if (getenv("DBG"))
             printf("\tdim %d --- nbins: %d xlow: %f xhigh: %f\n", d, ncells[d], xlow[d], xhigh[d]);
       }
 
-      fCudaHist[i] = new CUDAhist::RHnCUDA<decltype(getHistType((HIST *)nullptr)), getHistDim((HIST *)nullptr)>(
-         ncells.data(), xlow.data(), xhigh.data(), binEdges.data());
-      fCudaHist[i]->AllocateH1D();
-      // }
+      fCudaHist[i] =
+         new CUDAhist::RHnCUDA<decltype(getHistType((HIST *)nullptr)), dim>(ncells, xlow, xhigh, binEdges.data());
    }
 
    CUDAFillHelper(const std::shared_ptr<HIST> &h, const unsigned int nSlots)
@@ -238,7 +234,7 @@ public:
       // Initialize all other slots
       for (unsigned int i = 1; i < nSlots; ++i) {
          fObjects[i] = new HIST(*fObjects[0]);
-         // UnsetDirectoryIfPossible(fObjects[i]);
+         UnsetDirectoryIfPossible(fObjects[i]);
          init_cuda(fObjects[i], i);
       }
    }
@@ -248,13 +244,11 @@ public:
    template <typename... ValTypes, std::enable_if_t<!Disjunction<IsDataContainer<ValTypes>...>::value, int> = 0>
    auto Exec(unsigned int slot, const ValTypes &...x) -> decltype(fObjects[slot]->Fill(x...), void())
    {
-      // if constexpr (has_getxaxis_v<HIST>) {
-      if constexpr (sizeof...(ValTypes) > getHistDim((HIST *)nullptr))
-         FillWithWeight<getHistDim((HIST *)nullptr) + 1>(slot, {((Double_t)x)...});
+      if constexpr (sizeof...(ValTypes) > dim)
+         FillWithWeight<dim + 1>(slot, {((Double_t)x)...});
       else
          FillWithoutWeight(slot, x...);
       return;
-      // }
 
       fObjects[slot]->Fill(x...);
    }
@@ -300,7 +294,6 @@ public:
 
    void Finalize()
    {
-      // if constexpr (has_getxaxis_v<HIST>) { // fix to avoid compilation errors for CustomFiller
       Double_t stats[13];
 
       for (unsigned int i = 0; i < fObjects.size(); ++i) {
@@ -334,7 +327,6 @@ public:
             printf("\n");
          }
       }
-      // }
 
       if (fObjects.size() == 1)
          return;
@@ -346,10 +338,10 @@ public:
          delete *it;
    }
 
-   // HIST &PartialUpdate(unsigned int slot)
-   // {
-   //    return *fObjects[slot];
-   // }
+   HIST &PartialUpdate(unsigned int slot)
+   {
+      return *fObjects[slot];
+   }
 
    // Helper functions for RMergeableValue
    std::unique_ptr<RMergeableValueBase> GetMergeableValue() const final
@@ -375,8 +367,8 @@ public:
    CUDAFillHelper MakeNew(void *newResult)
    {
       auto &result = *static_cast<std::shared_ptr<H> *>(newResult);
-      // ResetIfPossible(result.get());
-      // UnsetDirectoryIfPossible(result.get());
+      ResetIfPossible(result.get());
+      UnsetDirectoryIfPossible(result.get());
       return CUDAFillHelper(result, fObjects.size());
    }
 };

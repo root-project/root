@@ -22,6 +22,10 @@ if(sqlite)
   list(APPEND RDATAFRAME_EXTRA_HEADERS ROOT/RSqliteDS.hxx)
 endif()
 
+if(cuda)
+  list(APPEND RDATAFRAME_EXTRA_HEADERS ROOT/RDF/CUDAFillHelper.hxx)
+endif()
+
 if(root7)
   list(APPEND RDATAFRAME_EXTRA_HEADERS ROOT/RNTupleDS.hxx)
   list(APPEND RDATAFRAME_EXTRA_DEPS ROOTNTuple)

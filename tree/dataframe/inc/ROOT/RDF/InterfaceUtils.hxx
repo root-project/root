@@ -32,7 +32,7 @@
 #include <TROOT.h> // IsImplicitMTEnabled
 
 #ifdef ROOT_RDF_CUDA
-#include <ROOT/RDF/CUDAFillHelper.hxx> // for
+#include <ROOT/RDF/CUDAFillHelper.hxx>
 #endif
 
 #include <deque>

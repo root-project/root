@@ -57,6 +57,63 @@ __device__ inline int GetBin(int i, CUDAhist::RAxis *axes, double *coords, int *
    return bin;
 }
 
+
+///////////////////////////////////////////
+/// Device kernels for incrementing a bin.
+
+template <typename T>
+__device__ inline void AddBinContent(T *histogram, int bin, T weight)
+{
+   atomicAdd(&histogram[bin], weight);
+}
+
+// TODO:
+// template <>
+// __device__ inline void AddBinContent(char *histogram, int bin, char weight)
+// {
+//    int newval = histogram[bin] + int(weight);
+//    if (newval > -128 && newval < 128) {
+//       atomicExch(&histogram[bin], (char) newval);
+//       return;
+//    }
+//    if (newval < -127)
+//       atomicExch(&histogram[bin], (char) -127);
+//    if (newval > 127)
+//       atomicExch(&histogram[bin], (char) 127);
+// }
+
+// TODO:
+// template <>
+// __device__ inline void AddBinContent(short *histogram, int bin, short weight)
+// {
+//    int newval = histogram[bin] + int(weight);
+//    if (newval > -32768 && newval < 32768) {
+//       atomicExch(&histogram[bin], (short) newval);
+//       return;
+//    }
+//    if (newval < -32767)
+//       atomicExch(&histogram[bin], (short) -32767);
+//    if (newval > 32767)
+//       atomicExch(&histogram[bin], (short) -32767);
+// }
+
+template <>
+__device__ inline void AddBinContent(int *histogram, int bin, int weight)
+{
+   long long newval = histogram[bin] + (long long)weight;
+   if (newval > -INT_MAX && newval < INT_MAX) {
+      atomicExch(&histogram[bin], (int)newval);
+      return;
+   }
+   if (newval < -INT_MAX)
+      atomicExch(&histogram[bin], -INT_MAX);
+   if (newval > INT_MAX)
+      atomicExch(&histogram[bin], -INT_MAX);
+}
+
+///////////////////////////////////////////
+/// Histogram filling kernels
+
 template <typename T, unsigned int Dim>
 __global__ void HistoKernel(T *histogram, CUDAhist::RAxis *axes, int nBins, double *coords, int *bins, double *weights,
                             unsigned int bufferSize)
@@ -76,7 +133,7 @@ __global__ void HistoKernel(T *histogram, CUDAhist::RAxis *axes, int nBins, doub
    for (auto i = tid; i < bufferSize; i += stride) {
       auto bin = GetBin<Dim>(i, axes, coords, bins);
       if (bin >= 0)
-         atomicAdd(&smem[bin], (T)weights[i]);
+         AddBinContent<T>(smem, bin, (T)weights[i]);
    }
    __syncthreads();
 
@@ -99,7 +156,7 @@ __global__ void HistoKernelGlobal(T *histogram, CUDAhist::RAxis *axes, int nBins
    for (auto i = tid; i < bufferSize; i += stride) {
       auto bin = GetBin<Dim>(i, axes, coords, bins);
       if (bin >= 0)
-         atomicAdd(&histogram[bin], (T)weights[i]);
+         AddBinContent<T>(histogram, bin, (T)weights[i]);
    }
 }
 
@@ -175,7 +232,8 @@ __global__ void ExcludeUOverflowKernel(int *bins, double *weights, unsigned int 
 }
 
 template <typename T, unsigned int Dim, unsigned int BlockSize>
-RHnCUDA<T, Dim, BlockSize>::RHnCUDA(int *ncells, double *xlow, double *xhigh, const double **binEdges)
+   RHnCUDA<T, Dim, BlockSize>::RHnCUDA(std::array<int, Dim> ncells, std::array<double, Dim> xlow,
+                                       std::array<double, Dim> xhigh, const double **binEdges)
    : kNStats([]() {
         // Sum of weights (squared) + sum of weight * bin (squared) per axis + sum of weight * binAx1 * binAx2 for
         // all axis combinations
@@ -209,10 +267,12 @@ RHnCUDA<T, Dim, BlockSize>::RHnCUDA(int *ncells, double *xlow, double *xhigh, co
    ERRCHECK(cudaGetDeviceProperties(&prop, 0));
    fMaxSmemSize = prop.sharedMemPerBlock;
    fHistoSmemSize = fNbins * sizeof(T);
+
+   AllocateBuffers();
 }
 
 template <typename T, unsigned int Dim, unsigned int BlockSize>
-void RHnCUDA<T, Dim, BlockSize>::AllocateH1D()
+void RHnCUDA<T, Dim, BlockSize>::AllocateBuffers()
 {
    // Allocate histogram on GPU
    ERRCHECK(cudaMalloc((void **)&fDeviceHisto, fNbins * sizeof(double)));

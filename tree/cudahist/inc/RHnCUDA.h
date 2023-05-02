@@ -1,9 +1,6 @@
 #ifndef RHnCUDA_H
 #define RHnCUDA_H
 
-#include "RtypesCore.h"
-#include "TMath.h"
-
 #include <vector>
 #include <array>
 #include <utility>
@@ -11,9 +8,9 @@
 namespace CUDAhist {
 
 struct RAxis {
-   int fNbins;   ///< Number of bins(1D) WITH u/overflow
-   double fMin;  ///< Low edge of first bin
-   double fMax;  ///< Upper edge of last bin
+   int fNbins;  ///< Number of bins(1D) WITH u/overflow
+   double fMin; ///< Low edge of first bin
+   double fMax; ///< Upper edge of last bin
 
    const double *kBinEdges; ///< Bin edges array, can be NULL
 };
@@ -50,11 +47,12 @@ private:
 public:
    RHnCUDA() = delete;
 
-   RHnCUDA(int *ncells, double *xlow, double *xhigh, const double **binEdges);
+   RHnCUDA(std::array<int, Dim> ncells, std::array<double, Dim> xlow, std::array<double, Dim> xhigh,
+           const double **binEdges = NULL);
 
    int GetEntries() { return fEntries; }
 
-   void AllocateH1D();
+   void AllocateBuffers();
 
    void RetrieveResults(double *histResult, double *statsResult);
 
