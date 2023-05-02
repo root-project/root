@@ -34,7 +34,7 @@ template<class Class, typename Type, Type (Class::*PtrToMemberFunction)()const> 
 
 /// Base class for our complex class
 typedef multi_index_container< ComplexElement*,
-                               indexed_by< ordered_unique< identity< ComplexElement > >,
+                               indexed_by< ordered_unique< ::identity< ComplexElement > >,
                                            ordered_unique< tag< DummyCounter >,
                                                            composite_key< ComplexElement*,
                                                                           const_mem_fun< ComplexElement,
