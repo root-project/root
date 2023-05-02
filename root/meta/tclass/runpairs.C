@@ -69,7 +69,7 @@ public:
 
 void write2file(const char*filename="pairs.root",int debug =0) {
    TFile *f = new TFile(filename,"RECREATE");
-   regular r;
+   ::regular r;
    f->WriteObject(&r,"myr");
    f->Write();
    if (debug) cout << "wrote " << filename << endl;
@@ -85,7 +85,7 @@ void readfile(const char*filename="pairs.root",int debug = 0) {
    checkRegular(TClass::GetClass("tp<Int_t>"),"tp<int>");
    check(TClass::GetClass("vector<Int_t>"));
    check(TClass::GetClass("vector<std::pair<Char_t, UChar_t> >"));
-   regular *r;
+   ::regular *r;
    f->GetObject("myr",r);
 }
  
