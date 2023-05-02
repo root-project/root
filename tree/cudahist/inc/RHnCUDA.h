@@ -19,7 +19,7 @@ template <typename T, unsigned int Dim, unsigned int BlockSize = 256>
 class RHnCUDA {
    // clang-format off
 private:
-   T                       *fDeviceHisto;        ///< Pointer to histogram buffer on the GPU.
+   T                       *fDHistogram;        ///< Pointer to histogram buffer on the GPU.
    int                      fNbins;              ///< Total number of bins in the histogram WITH under/overflow
 
    const int                kNStats;             ///< Number of statistics.
@@ -54,9 +54,9 @@ public:
 
    void AllocateBuffers();
 
-   void RetrieveResults(double *histResult, double *statsResult);
+   void RetrieveResults(T *histResult, double *statsResult);
 
-   void Fill(const std::array<T, Dim> &coords, double w = 1.);
+   void Fill(const std::array<double, Dim> &coords, double w = 1.);
 
 protected:
    void GetStats(unsigned int size);

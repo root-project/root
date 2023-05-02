@@ -14,7 +14,7 @@
 namespace CUDAhist {
 
 ////////////////////////////////////////////////////////////////////////////////
-/// CUDA Histogram Kernels
+/// CUDA kernels
 
 __device__ inline int FindFixBin(double x, const double *binEdges, int nBins, double xMin, double xMax)
 {
@@ -56,7 +56,6 @@ __device__ inline int GetBin(int i, CUDAhist::RAxis *axes, double *coords, int *
 
    return bin;
 }
-
 
 ///////////////////////////////////////////
 /// Device kernels for incrementing a bin.
@@ -231,9 +230,12 @@ __global__ void ExcludeUOverflowKernel(int *bins, double *weights, unsigned int 
    }
 }
 
+///////////////////////////////////////////
+/// RHnCUDA
+
 template <typename T, unsigned int Dim, unsigned int BlockSize>
-   RHnCUDA<T, Dim, BlockSize>::RHnCUDA(std::array<int, Dim> ncells, std::array<double, Dim> xlow,
-                                       std::array<double, Dim> xhigh, const double **binEdges)
+RHnCUDA<T, Dim, BlockSize>::RHnCUDA(std::array<int, Dim> ncells, std::array<double, Dim> xlow,
+                                    std::array<double, Dim> xhigh, const double **binEdges)
    : kNStats([]() {
         // Sum of weights (squared) + sum of weight * bin (squared) per axis + sum of weight * binAx1 * binAx2 for
         // all axis combinations
@@ -257,9 +259,12 @@ template <typename T, unsigned int Dim, unsigned int BlockSize>
       axis.fNbins = ncells[i];
       axis.fMin = xlow[i];
       axis.fMax = xhigh[i];
-      axis.kBinEdges = binEdges[i];
-      fHAxes[i] = axis;
+      if (binEdges != NULL)
+         axis.kBinEdges = binEdges[i];
+      else
+         axis.kBinEdges = NULL;
 
+      fHAxes[i] = axis;
       fNbins *= ncells[i];
    }
 
@@ -275,8 +280,8 @@ template <typename T, unsigned int Dim, unsigned int BlockSize>
 void RHnCUDA<T, Dim, BlockSize>::AllocateBuffers()
 {
    // Allocate histogram on GPU
-   ERRCHECK(cudaMalloc((void **)&fDeviceHisto, fNbins * sizeof(double)));
-   ERRCHECK(cudaMemset(fDeviceHisto, 0, fNbins * sizeof(double)));
+   ERRCHECK(cudaMalloc((void **)&fDHistogram, fNbins * sizeof(T)));
+   ERRCHECK(cudaMemset(fDHistogram, 0, fNbins * sizeof(T)));
 
    // Allocate weights array on GPU
    ERRCHECK(cudaMalloc((void **)&fDWeights, fBufferSize * sizeof(double)));
@@ -306,7 +311,7 @@ void RHnCUDA<T, Dim, BlockSize>::AllocateBuffers()
 }
 
 template <typename T, unsigned int Dim, unsigned int BlockSize>
-void RHnCUDA<T, Dim, BlockSize>::Fill(const std::array<T, Dim> &coords, double w)
+void RHnCUDA<T, Dim, BlockSize>::Fill(const std::array<double, Dim> &coords, double w)
 {
    fHCoords.insert(fHCoords.end(), coords.begin(), coords.end());
    fHWeights.push_back(w);
@@ -381,8 +386,6 @@ void RHnCUDA<T, Dim, BlockSize>::GetStats(unsigned int size)
       }
    }
 
-
-
    if (numBlocks > 1) {
       // fDintermediateStats stores the result of the sum for each block, per statistic. We need to perform another
       // reduction to merge the per-block sums to get the total sum for each statistic.
@@ -410,10 +413,10 @@ void RHnCUDA<T, Dim, BlockSize>::ExecuteCUDAHisto()
 
    if (fHistoSmemSize > fMaxSmemSize) {
       HistoKernelGlobal<T, Dim>
-         <<<numBlocks, BlockSize>>>(fDeviceHisto, fDAxes, fNbins, fDCoords, fDBins, fDWeights, size);
+         <<<numBlocks, BlockSize>>>(fDHistogram, fDAxes, fNbins, fDCoords, fDBins, fDWeights, size);
    } else {
       HistoKernel<T, Dim>
-         <<<numBlocks, BlockSize, fHistoSmemSize>>>(fDeviceHisto, fDAxes, fNbins, fDCoords, fDBins, fDWeights, size);
+         <<<numBlocks, BlockSize, fHistoSmemSize>>>(fDHistogram, fDAxes, fNbins, fDCoords, fDBins, fDWeights, size);
    }
    ERRCHECK(cudaPeekAtLastError());
 
@@ -424,7 +427,7 @@ void RHnCUDA<T, Dim, BlockSize>::ExecuteCUDAHisto()
 }
 
 template <typename T, unsigned int Dim, unsigned int BlockSize>
-void RHnCUDA<T, Dim, BlockSize>::RetrieveResults(double *histResult, double *statsResult)
+void RHnCUDA<T, Dim, BlockSize>::RetrieveResults(T *histResult, double *statsResult)
 {
    // Fill the histogram with remaining values in the buffer.
    if (fHWeights.size() > 0) {
@@ -432,7 +435,7 @@ void RHnCUDA<T, Dim, BlockSize>::RetrieveResults(double *histResult, double *sta
    }
 
    // Copy back results from GPU to CPU.
-   ERRCHECK(cudaMemcpy(histResult, fDeviceHisto, fNbins * sizeof(double), cudaMemcpyDeviceToHost));
+   ERRCHECK(cudaMemcpy(histResult, fDHistogram, fNbins * sizeof(T), cudaMemcpyDeviceToHost));
    ERRCHECK(cudaMemcpy(statsResult, fDStats, kNStats * sizeof(double), cudaMemcpyDeviceToHost));
 
    // TODO: Free device pointers?

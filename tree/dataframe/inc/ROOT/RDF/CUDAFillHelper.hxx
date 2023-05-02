@@ -63,7 +63,7 @@ class R__CLING_PTRCHECK(off) CUDAFillHelper : public RActionImpl<CUDAFillHelper<
    static constexpr size_t dim = getHistDim((HIST *)nullptr);
 
    std::vector<HIST *> fObjects;
-   std::vector<CUDAhist::RHnCUDA<decltype(getHistType((HIST *)nullptr)), getHistDim((HIST *)nullptr)> *> fCudaHist;
+   std::vector<CUDAhist::RHnCUDA<decltype(getHistType((HIST *)nullptr)), dim> *> fCudaHist;
 
    template <typename H = HIST, typename = decltype(std::declval<H>().Reset())>
    void ResetIfPossible(H *h)
