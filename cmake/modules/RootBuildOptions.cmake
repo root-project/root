@@ -120,7 +120,7 @@ ROOT_BUILD_OPTION(cocoa OFF "Use native Cocoa/Quartz graphics backend (MacOS X o
 ROOT_BUILD_OPTION(coverage OFF "Enable compile flags for coverage testing")
 ROOT_BUILD_OPTION(cuda OFF "Enable support for CUDA (requires CUDA toolkit >= 7.5)")
 ROOT_BUILD_OPTION(cudnn ON "Enable support for cuDNN (default when Cuda is enabled)")
-ROOT_BUILD_OPTION(cxxmodules OFF "Enable support for C++ modules")
+ROOT_BUILD_OPTION(cxxmodules OFF "Enable support for C++ modules (deprecated)")
 ROOT_BUILD_OPTION(daos OFF "Enable RNTuple support for Intel DAOS")
 ROOT_BUILD_OPTION(dataframe ON "Enable ROOT RDataFrame")
 ROOT_BUILD_OPTION(test_distrdf_pyspark OFF "Enable distributed RDataFrame tests that use pyspark")
@@ -423,7 +423,7 @@ foreach(opt afdsmgrd afs bonjour castor chirp geocad glite globus hdfs ios
 endforeach()
 
 #---Deprecated options------------------------------------------------------------------------
-foreach(opt alien)
+foreach(opt alien cxxmodules)
   if(${opt})
     message(DEPRECATION ">>> Option '${opt}' is deprecated and will be removed in the next release of ROOT. Please contact root-dev@cern.ch should you still need it.")
   endif()
