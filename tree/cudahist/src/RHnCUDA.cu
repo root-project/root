@@ -21,14 +21,14 @@ __device__ inline int FindFixBin(double x, const double *binEdges, int nBins, do
    int bin;
 
    // OPTIMIZATION: can this be done with less branching?
-   if (x < xMin) { //*-* underflow
+   if (x < xMin) {           //*-* underflow
       bin = 0;
    } else if (!(x < xMax)) { //*-* overflow  (note the way to catch NaN)
       bin = nBins + 1;
    } else {
       if (binEdges == NULL) { //*-* fix bins
          bin = 1 + int(nBins * (x - xMin) / (xMax - xMin));
-      } else { //*-* variable bin sizes
+      } else {                //*-* variable bin sizes
          bin = 1 + CUDAHelpers::BinarySearchCUDA(nBins + 1, binEdges, x);
       }
    }
@@ -345,10 +345,11 @@ void RHnCUDA<T, Dim, BlockSize>::GetStats(unsigned int size)
 
    double *resultArray;
    if (numBlocks > 1) {
-      if (fDIntermediateStats == NULL)
+      if (fDIntermediateStats == NULL) {
          ERRCHECK(cudaMalloc((void **)&fDIntermediateStats, numBlocks * kNStats * sizeof(double)));
-      else
+      } else {
          ERRCHECK(cudaMemset(fDIntermediateStats, 0, numBlocks * kNStats * sizeof(double)));
+      }
 
       resultArray = fDIntermediateStats;
 

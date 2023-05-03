@@ -15,6 +15,14 @@ void EnableCUDA()
    setenv(env, "1", 1);
 }
 
+template <typename T, int n>
+std::array<T, n> Repeat(T val)
+{
+   std::array<T, n> result;
+   result.fill(val);
+   return result;
+}
+
 /**
  * Helper functions for element-wise comparison of histogram arrays
  */
@@ -39,6 +47,25 @@ void EnableCUDA()
          EXPECT_DOUBLE_EQ(a[i], b[i]) << "  at index i = " << i; \
       }                                                          \
    }
+
+template <typename T>
+void CompareArrays(T *result, T* expected, int n)
+{
+   CHECK_ARRAY(result, expected, n)
+}
+
+template<>
+void CompareArrays(float *result, float* expected, int n)
+{
+   CHECK_ARRAY_FLOAT(result, expected, n)
+}
+
+template<>
+void CompareArrays(double *result, double* expected, int n)
+{
+   CHECK_ARRAY_DOUBLE(result, expected, n)
+}
+
 
 // std::vector<double> *GetVariableBinEdges(int startBin, int numBins)
 // {
@@ -103,9 +130,10 @@ protected:
    // 1, 2, or 3
    static constexpr int dim = T::GetDim();
 
+   const static int nCells = pow(numBins, dim);
    int nStats;
 
-   histType result[numBins], expected[numBins];
+   histType result[nCells], expected[nCells];
    double *stats;
 
    void SetUp() override
@@ -136,56 +164,48 @@ TYPED_TEST(HistoTestFixture, FillFixedBins)
 {
    // int, double, or float
    using t = typename TypeParam::type;
-   auto h = CUDAhist::RHnCUDA<t, this->dim>({this->numBins}, {this->startBin}, {this->endBin});
+   auto h =
+      CUDAhist::RHnCUDA<t, this->dim>(Repeat<int, this->dim>(this->numBins), Repeat<double, this->dim>(this->startBin),
+                                      Repeat<double, this->dim>(this->endBin));
 
    // Underflow
-   std::array<double, this->dim> uCoords;
-   uCoords.fill(this->startBin - 1);
-   h.Fill(uCoords);
+   h.Fill(Repeat<double, this->dim>(this->startBin - 1));
    this->expected[0] = (t)1;
 
    // Center
-   std::array<double, this->dim> cCoords;
-   uCoords.fill((this->startBin + this->endBin) / 2);
-   h.Fill(cCoords);
-   this->expected[(int)pow(this->numBins, this->dim) / this->dim] = (t)1;
+   h.Fill(Repeat<double, this->dim>((this->startBin + this->endBin) / 2.));
+   this->expected[(int)round(this->nCells / 2)] = (t)1;
 
-   // Overflow
-   std::array<double, this->dim> oCoords;
-   uCoords.fill(this->endBin + 1);
-   h.Fill(oCoords);
-   this->expected[this->numBins - 1] = (t)1;
+   // // Overflow
+   h.Fill(Repeat<double, this->dim>(this->endBin + 1));
+   this->expected[this->nCells - 1] = (t)1;
 
    h.RetrieveResults(this->result, this->stats);
-   CHECK_ARRAY(this->result, this->expected, this->numBins);
+   CompareArrays(this->result, this->expected, this->nCells);
 }
 
 TYPED_TEST(HistoTestFixture, FillFixedBinsWeighted)
 {
    // int, double, or float
    using t = typename TypeParam::type;
-   auto h = CUDAhist::RHnCUDA<t, this->dim>({this->numBins}, {this->startBin}, {this->endBin});
+   auto h =
+      CUDAhist::RHnCUDA<t, this->dim>(Repeat<int, this->dim>(this->numBins), Repeat<double, this->dim>(this->startBin),
+                                      Repeat<double, this->dim>(this->endBin));
 
    // Underflow
-   std::array<double, this->dim> uCoords;
-   uCoords.fill(this->startBin - 1);
-   h.Fill(uCoords, (t)7);
+   h.Fill(Repeat<double, this->dim>(this->startBin - 1), (t)7);
    this->expected[0] = (t)7;
 
    // Center
-   std::array<double, this->dim> cCoords;
-   uCoords.fill((this->startBin + this->endBin) / 2);
-   h.Fill(cCoords, (t)7);
-   this->expected[(int)pow(this->numBins, this->dim) / 2] = (t)7;
+   h.Fill(Repeat<double, this->dim>((this->startBin + this->endBin) / 2.), (t)7);
+   this->expected[(int)round(this->nCells / 2)] = (t)7;
 
    // Overflow
-   std::array<double, this->dim> oCoords;
-   uCoords.fill(this->endBin + 1);
-   h.Fill(oCoords, (t)7);
-   this->expected[this->numBins - 1] = (t)7;
+   h.Fill(Repeat<double, this->dim>(this->endBin + 1), (t)7);
+   this->expected[this->nCells - 1] = (t)7;
 
    h.RetrieveResults(this->result, this->stats);
-   CHECK_ARRAY(this->result, this->expected, this->numBins);
+   CompareArrays(this->result, this->expected, this->nCells);
 }
 
 // TYPED_TEST(HistoTestFixture, FillVariableBins)
