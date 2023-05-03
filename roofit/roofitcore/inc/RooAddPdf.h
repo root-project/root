@@ -20,7 +20,6 @@
 #include "RooListProxy.h"
 #include "RooSetProxy.h"
 #include "RooAICRegistry.h"
-#include "RooNormSetCache.h"
 #include "RooObjCacheManager.h"
 #include "RooNameReg.h"
 #include "RooTrace.h"

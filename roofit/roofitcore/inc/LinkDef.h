@@ -311,7 +311,6 @@
 #pragma link C++ class RooBinningCategory+ ;
 #pragma link C++ class RooDerivative+ ;
 #pragma link C++ class RooFunctor+ ;
-#pragma link C++ class RooTFoamBinding+ ;
 #pragma link C++ class RooAdaptiveIntegratorND+ ;
 #pragma link C++ class RooNumGenConfig+ ;
 #pragma link C++ class RooMultiVarGaussian+ ;
