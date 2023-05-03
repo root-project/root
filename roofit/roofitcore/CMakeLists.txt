@@ -89,7 +89,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooConstVar.h
     RooConvCoefVar.h
     RooConvGenContext.h
-    RooConvIntegrandBinding.h
     RooCurve.h
     RooCustomizer.h
     RooDataHist.h
@@ -135,7 +134,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooIntegrator1D.h
     RooIntegrator2D.h
     RooIntegratorBinding.h
-    RooInt.h
     RooInvTransform.h
     RooLinearCombination.h
     RooLinearVar.h
@@ -216,7 +214,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooStudyPackage.h
     RooSuperCategory.h
     RooTable.h
-    RooTFoamBinding.h
     RooThresholdCategory.h
     RooTObjWrap.h
     RooTrace.h
@@ -359,7 +356,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooHistFunc.cxx
     src/RooHistPdf.cxx
     src/RooImproperIntegrator1D.cxx
-    src/RooInt.cxx
     src/RooIntegrator1D.cxx
     src/RooIntegrator2D.cxx
     src/RooIntegratorBinding.cxx
