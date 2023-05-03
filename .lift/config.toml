@@ -1,2 +1,2 @@
 setup = ".lift/setup.sh"
-build = "Compilation database"
+build = "compdb"
