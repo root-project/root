@@ -65,26 +65,6 @@ inline double chebychevEvaluate(double *coeffs, unsigned int nCoeffs, double x_i
    return sum;
 }
 
-inline double addPdfEvaluate(double const *coeffs, unsigned int nCoeffs, double const *pdfs, unsigned int pdfSize)
-{
-   bool noLastCoeff = pdfSize != nCoeffs;
-   double extraCoeff = 1;
-   double sum = 0;
-
-   unsigned int i;
-   for (i = 0; i < nCoeffs; i++) {
-      sum += pdfs[i] * coeffs[i];
-      if (noLastCoeff)
-         extraCoeff -= coeffs[i];
-   }
-
-   if (noLastCoeff) {
-      sum += pdfs[i] * extraCoeff;
-   }
-
-   return sum;
-}
-
 inline double constraintSumEvaluate(double const *comp, unsigned int compSize)
 {
    double sum = 0;

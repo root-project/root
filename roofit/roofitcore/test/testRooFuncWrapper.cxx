@@ -358,7 +358,7 @@ FactoryTestParams param3{"AddPdf",
 
 /// Test based on the rf604 tutorial.
 FactoryTestParams param4{"ConstraintSum",
-                         "RealSumFunc::mu_func({mu[-1, -10, 10], 4.0}, {1.1, 0.3});"
+                         "RealSumFunc::mu_func({mu[-1, -10, 10], 4.0, 5.0}, {1.1, 0.3, 0.2});"
                          "Gaussian::gauss(x[-10, 10], mu_func, sigma[2, 0.1, 10]);"
                          "Polynomial::poly(x);"
                          "SUM::model(f[0.5, 0.0, 1.0] * gauss, poly);"
