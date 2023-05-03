@@ -42,6 +42,13 @@ Begin_Macro(source)
 ../../../tutorials/graphs/scatter.C
 End_Macro
 
+### TScatter's plotting options
+TScatter can be drawn with the following options:
+
+| Option   | Description                                                       |
+|----------|-------------------------------------------------------------------|
+| "A"      | Produce a new plot with Axis around the graph |
+
 */
 
 

@@ -49,11 +49,11 @@ public:
 
    Int_t     DistancetoPrimitive(Int_t px, Int_t py) override;
    void      ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
-   Double_t *GetColor() const {return fColor;}   ///< Get the array of colors
-   Double_t *GetSize()  const {return fSize;}    ///< Get the array of marker sizes
+   Double_t *GetColor()  const {return fColor;}  ///< Get the array of colors
+   Double_t *GetSize()   const {return fSize;}   ///< Get the array of marker sizes
    Double_t  GetMargin() const {return fMargin;} ///< Set the margin around the plot in %
-   Double_t  GetScale() const {return fScale;}   ///< Get the largest marker size used to paint the markers
-   TGraph   *GetGraph() const {return fGraph;}   ///< Get the graph holding X and Y positions
+   Double_t  GetScale()  const {return fScale;}  ///< Get the largest marker size used to paint the markers
+   TGraph   *GetGraph()  const {return fGraph;}  ///< Get the graph holding X and Y positions
    TH2F     *GetHistogram() const;               ///< Get the graph histogram used for drawing axis
 
    void      SetScale(Double_t scale) {fScale = scale;}     ///< Set the largest marker size used to paint the markers
