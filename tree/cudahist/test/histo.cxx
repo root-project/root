@@ -1,3 +1,8 @@
+////////////////////////////////////////////////////////////////////////////////////
+/// Compares results of RHnCUDA and TH* with Histo*D
+/// Note that these histograms are only of type double
+///
+
 #include <stdlib.h>
 #include "gtest/gtest.h"
 
@@ -57,40 +62,19 @@ void DisableCUDA()
  */
 
 // Element-wise comparison between two arrays.
-template <typename AType = double *>
-void CheckArrays(AType a, AType b, Int_t m, Int_t n)
-{
-   EXPECT_EQ(m, n);
-   for (auto i : ROOT::TSeqI(n)) {
-      EXPECT_DOUBLE_EQ(a[i], b[i]) << "  i = " << i;
+#define CHECK_ARRAY(a, b, n, m)                                  \
+   {                                                             \
+      EXPECT_EQ(n, n);                                           \
+      for (auto i : ROOT::TSeqI(n)) {                            \
+         EXPECT_DOUBLE_EQ(a[i], b[i]) << "  at index i = " << i; \
+      }                                                          \
    }
-}
-
-// Comparison with labelled messages on failure.
-template <typename AType = double *>
-void CheckArrays(AType a, AType b, Int_t m, Int_t n, const char *labelA, const char *labelB)
-{
-   EXPECT_EQ(m, n);
-   for (auto i : ROOT::TSeqI(n)) {
-      EXPECT_DOUBLE_EQ(a[i], b[i]) << "  a = " << labelA << " b = " << labelB << " i = " << i;
-   }
-}
-
-// Comparison with labelled messages per element on failure.
-template <typename AType = double *>
-void CheckArrays(AType a, AType b, Int_t m, Int_t n, std::vector<const char *> labelA, std::vector<const char *> labelB)
-{
-   EXPECT_EQ(m, n);
-   for (auto i : ROOT::TSeqI(n)) {
-      EXPECT_DOUBLE_EQ(a[i], b[i]) << "  a = " << labelA[i] << " b = " << labelB[i] << " i = " << i;
-   }
-}
 
 template <typename T = double, typename HIST = TH1D>
-void CompareHistograms(const HistProperties<T, HIST> &h1, const HistProperties<T, HIST> &h2)
+void CompareHistograms(const HistProperties<T, HIST> &TH, const HistProperties<T, HIST> &CUDA)
 {
-   CheckArrays(h1.array, h2.array, h1.nCells, h2.nCells, "fArray", "CUDA fArray"); // Compare bin values.
-   CheckArrays(h1.stats, h2.stats, h1.nStats, h2.nStats); // Compare histogram statistics
+   CHECK_ARRAY(TH.array, CUDA.array, TH.nCells, CUDA.nCells); // Compare bin values.
+   CHECK_ARRAY(TH.stats, CUDA.stats, TH.nStats, CUDA.nStats); // Compare histogram statistics
 }
 
 std::vector<double> *GetVariableBinEdges()

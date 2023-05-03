@@ -1,3 +1,7 @@
+////////////////////////////////////////////////////////////////////////////////////
+/// Tests for filling RHnCUDA histograms with different data types and dimensions.
+///
+
 #include <stdlib.h>
 #include "gtest/gtest.h"
 
@@ -6,15 +10,14 @@
 #include "TH1.h"
 #include "TAxis.h"
 
-/**
- * Helper function for toggling ON CUDA histogramming.
- */
+// Helper function for toggling ON CUDA histogramming.
 char env[] = "CUDA_HIST";
 void EnableCUDA()
 {
    setenv(env, "1", 1);
 }
 
+// Returns an array with the given value repeated n times.
 template <typename T, int n>
 std::array<T, n> Repeat(T val)
 {
@@ -23,10 +26,17 @@ std::array<T, n> Repeat(T val)
    return result;
 }
 
-/**
- * Helper functions for element-wise comparison of histogram arrays
- */
+// std::vector<double> *GetVariableBinEdges(int startBin, int numBins)
+// {
+//    int e = startBin;
+//    auto edges = new std::vector<double>(numBins + 1);
+//    std::generate(edges->begin(), edges->end(), [&]() { return e++; });
+//    (*edges)[numBins] += 10;
 
+//    return edges;
+// }
+
+// Helper functions for element-wise comparison of histogram arrays.
 #define CHECK_ARRAY(a, b, n)                              \
    {                                                      \
       for (auto i : ROOT::TSeqI(n)) {                     \
@@ -49,38 +59,27 @@ std::array<T, n> Repeat(T val)
    }
 
 template <typename T>
-void CompareArrays(T *result, T* expected, int n)
+void CompareArrays(T *result, T *expected, int n)
 {
    CHECK_ARRAY(result, expected, n)
 }
 
-template<>
-void CompareArrays(float *result, float* expected, int n)
+template <>
+void CompareArrays(float *result, float *expected, int n)
 {
    CHECK_ARRAY_FLOAT(result, expected, n)
 }
 
-template<>
-void CompareArrays(double *result, double* expected, int n)
+template <>
+void CompareArrays(double *result, double *expected, int n)
 {
    CHECK_ARRAY_DOUBLE(result, expected, n)
 }
 
-
-// std::vector<double> *GetVariableBinEdges(int startBin, int numBins)
-// {
-//    int e = startBin;
-//    auto edges = new std::vector<double>(numBins + 1);
-//    std::generate(edges->begin(), edges->end(), [&]() { return e++; });
-//    (*edges)[numBins] += 10;
-
-//    return edges;
-// }
-
 // Create all combinations of datatype and dimension
 // Partially taken from https://stackoverflow.com/questions/56115790/gtest-parametrized-tests-for-different-types
 
-// "parameters"
+// Test "parameters"
 struct OneDim {
    static constexpr int dim = 1;
 };
@@ -101,7 +100,7 @@ template <class TupleType, class TupleParam, std::size_t I>
 struct make_case {
    static constexpr std::size_t N = std::tuple_size<TupleParam>::value;
    using type =
-      Case<typename std::tuple_element<I / N, TupleType>::type, typename std::tuple_element<I % N, TupleParam>::type>;
+      Case<typename std::tuple_element<I / N, TupleType>::type, typename std::tuple_element<I %N, TupleParam>::type>;
 };
 
 template <class T1, class T2, class Is>
@@ -115,14 +114,16 @@ struct make_combinations<TupleType, TupleParam, std::index_sequence<Is...>> {
 template <class TupleTypes, class... Params>
 using Combinations_t = typename make_combinations<
    TupleTypes, std::tuple<Params...>,
-   std::make_index_sequence<(std::tuple_size<TupleTypes>::value) * (sizeof...(Params))>>::tuples;
+   std::make_index_sequence<(std::tuple_size<TupleTypes>::value) *(sizeof...(Params))>>::tuples;
 
 template <typename T>
 class HistoTestFixture : public ::testing::Test {
 protected:
-   const static int numBins = 40;
-   const double startBin = 0;
-   const double endBin = 38;
+   // includes u/overflow bins. Uneven number chosen to have a center bin.
+   const static int numBins = 5;
+
+   const double startBin = 1;
+   const double endBin = 4;
 
    // int, double, float
    using histType = typename T::type;
@@ -144,6 +145,9 @@ protected:
          nStats += TMath::Binomial(dim, 2);
 
       stats = new double[nStats];
+
+      memset(stats, 0, nStats * sizeof(double));
+      memset(expected, 0, nCells * sizeof(histType));
    }
 
    void TearDown() override { delete[] stats; }
@@ -160,6 +164,9 @@ struct Test<std::tuple<T...>> {
 using TestTypes = Test<Combinations_t<std::tuple<double, float, int>, OneDim, TwoDim, ThreeDim>>::Types;
 TYPED_TEST_SUITE(HistoTestFixture, TestTypes);
 
+/////////////////////////////////////
+/// Test Cases
+
 TYPED_TEST(HistoTestFixture, FillFixedBins)
 {
    // int, double, or float
@@ -174,9 +181,9 @@ TYPED_TEST(HistoTestFixture, FillFixedBins)
 
    // Center
    h.Fill(Repeat<double, this->dim>((this->startBin + this->endBin) / 2.));
-   this->expected[(int)round(this->nCells / 2)] = (t)1;
+   this->expected[this->nCells / 2] = (t)1;
 
-   // // Overflow
+   // Overflow
    h.Fill(Repeat<double, this->dim>(this->endBin + 1));
    this->expected[this->nCells - 1] = (t)1;
 
@@ -198,7 +205,7 @@ TYPED_TEST(HistoTestFixture, FillFixedBinsWeighted)
 
    // Center
    h.Fill(Repeat<double, this->dim>((this->startBin + this->endBin) / 2.), (t)7);
-   this->expected[(int)round(this->nCells / 2)] = (t)7;
+   this->expected[this->nCells / 2] = (t)7;
 
    // Overflow
    h.Fill(Repeat<double, this->dim>(this->endBin + 1), (t)7);
