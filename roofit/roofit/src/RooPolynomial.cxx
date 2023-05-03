@@ -172,12 +172,6 @@ std::string RooPolynomial::buildCallToAnalyticIntegral(Int_t /* code */, const c
    if (!sz)
       return std::to_string(_lowestOrder ? xmax - xmin : 0.0);
 
-   std::string integralName = ctx.getTmpVarName();
-   std::string integralDecl = "double " + integralName + " = ";
-   integralDecl += ctx.buildCall("RooFit::Detail::AnalyticalIntegrals::polynomialIntegral<true>", _coefList, sz,
-                                 _lowestOrder, xmin, xmax);
-   integralDecl += ";\n";
-   ctx.addToCodeBody(integralDecl);
-
-   return integralName;
+   return ctx.buildCall("RooFit::Detail::AnalyticalIntegrals::polynomialIntegral<true>", _coefList, sz, _lowestOrder,
+                        xmin, xmax);
 }

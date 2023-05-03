@@ -199,11 +199,11 @@ void RooAddition::translate(RooFit::Detail::CodeSquashContext &ctx) const
       ctx.addToGlobalScope("double " + sumName + " = 0;\n");
       std::string iterator = "i_" + className;
       code += "for(int " + iterator + " = 0; " + iterator + " < " + std::to_string(eleSize) + "; " + iterator +
-              "++) {\n" + sumName + " += " + varName + "[i];\n}\n";
+              "++) {\n" + sumName + " += " + varName + "[" + iterator + "];\n}\n";
       result = sumName;
       ctx.addResult(this, result);
 
-      ctx.addToCodeBody(code);
+      ctx.addToCodeBody(this, code);
    }
 
    result = "(";

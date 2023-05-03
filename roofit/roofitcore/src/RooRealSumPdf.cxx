@@ -322,11 +322,12 @@ void RooRealSumPdf::computeBatch(cudaStream_t* /*stream*/, double* output, size_
 void RooRealSumPdf::translateImpl(RooFit::Detail::CodeSquashContext &ctx, RooAbsArg const *klass,
                                   RooArgList const &funcList, RooArgList const &coefList)
 {
-   if (funcList.size() < 3) {
-      bool noLastCoeff = funcList.size() != coefList.size();
+   bool noLastCoeff = funcList.size() != coefList.size();
+   std::string sum;
+   std::string lastCoeff;
 
-      std::string sum;
-      std::string lastCoeff = "(1";
+   if (funcList.size() < 3) {
+      lastCoeff = "(1";
 
       std::size_t i;
       for (i = 0; i < coefList.size(); ++i) {
@@ -343,12 +344,31 @@ void RooRealSumPdf::translateImpl(RooFit::Detail::CodeSquashContext &ctx, RooAbs
          sum.pop_back();
       }
 
-      ctx.addResult(klass, sum);
    } else {
-      std::string const &addRes = ctx.buildCall("RooFit::Detail::EvaluateFuncs::addPdfEvaluate", funcList,
-                                                funcList.size(), coefList, coefList.size());
-      ctx.addResult(klass, addRes);
+      std::string const &funcName = ctx.buildArg(funcList);
+      std::string const &coeffName = ctx.buildArg(coefList);
+      std::string const &coeffSize = std::to_string(coefList.size());
+      std::string const &className = klass->GetName();
+
+      sum = ctx.getTmpVarName();
+      lastCoeff = ctx.getTmpVarName();
+      ctx.addToCodeBody(klass, "double " + sum + " = 0, " + lastCoeff + "= 0;\n");
+
+      std::string iterator = "i_" + className;
+      std::string subscriptExpr = "[" + iterator + "]";
+
+      std::string code = "for(int " + iterator + " = 0; " + iterator + " < " + coeffSize + "; " + iterator + "++) {\n" +
+                         sum + " += " + funcName + subscriptExpr + " * " + coeffName + subscriptExpr + ";\n";
+      if (noLastCoeff)
+         code += lastCoeff + " += " + coeffName + subscriptExpr + ";\n";
+      code += "}\n";
+
+      if (noLastCoeff)
+         code += sum + " += " + funcName + "[" + coeffSize + "]" + " * (1 - " + lastCoeff + ");\n";
+      ctx.addToCodeBody(klass, code);
    }
+
+   ctx.addResult(klass, sum);
 }
 
 void RooRealSumPdf::translate(RooFit::Detail::CodeSquashContext &ctx) const
