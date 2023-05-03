@@ -22,6 +22,7 @@
 #include "TObject.h"
 
 class TGraph;
+class TScatter;
 class TF1;
 
 class TVirtualGraphPainter : public TObject {
@@ -40,6 +41,7 @@ public:
    virtual void  PaintHelper(TGraph *theGraph, Option_t *option) = 0;
    virtual void  PaintGraph(TGraph *theGraph, Int_t npoints, const Double_t *x, const Double_t *y, Option_t *chopt) = 0;
    virtual void  PaintGrapHist(TGraph *theGraph, Int_t npoints, const Double_t *x, const Double_t *y, Option_t *chopt) = 0;
+   virtual void  PaintScatter(TScatter *theScatter, Option_t *option) = 0;
    virtual void  PaintStats(TGraph *theGraph, TF1 *fit) = 0;
    virtual void  SetHighlight(TGraph *theGraph) = 0;
 
