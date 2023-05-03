@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- * @(#)root/roofitcore:$Id$
+ *    File: $Id$
  * Authors:                                                                  *
  *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
  *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
@@ -13,34 +13,27 @@
  * with or without modification, are permitted according to the terms        *
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
+#ifndef ROO_TFOAM_BINDING
+#define ROO_TFOAM_BINDING
 
-/**
-\file RooInt.cxx
-\class RooInt
-\ingroup Roofitcore
+#include "TFoamIntegrand.h"
+#include "RooArgSet.h"
+#include "RooRealBinding.h"
+class RooAbsPdf;
 
-RooInt is a minimal implementation of a TObject holding a Int_t
-value.
-**/
+// Function binding to RooAbsReal object
+class RooTFoamBinding : public TFoamIntegrand {
+public:
+   RooTFoamBinding(const RooAbsReal &pdf, const RooArgSet &observables);
+   ~RooTFoamBinding() override;
 
-#include "RooInt.h"
+   double Density(Int_t ndim, double *) override;
 
-using namespace std;
+   RooRealBinding &binding() { return *_binding; }
 
-ClassImp(RooInt);
-;
+protected:
+   RooArgSet _nset;
+   RooRealBinding *_binding;
+};
 
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Facilitate sorting of RooInts in ROOT container classes
-/// Return -1 or +1 if 'other' is a RooInt with value
-/// greater or lesser than self. Return zero if other
-/// object is not a RooInt
-
-Int_t RooInt::Compare(const TObject* other) const
-{
-  const RooInt* otherD = dynamic_cast<const RooInt*>(other) ;
-  if (!otherD) return 0 ;
-  return (_value>otherD->_value) ? 1 : -1 ;
-}
+#endif
