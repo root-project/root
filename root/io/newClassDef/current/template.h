@@ -28,8 +28,8 @@ class MyTemplate <const double*> : public TObject {
   std::vector<int> vars;
 #endif
   
-  MyTemplate<const double*>(const double* a) { variable = *a; };
-  MyTemplate<const double*>() {};
+  MyTemplate(const double* a) { variable = *a; };
+  MyTemplate() {};
   
 #ifdef R__WIN32
   typedef MyTemplate<const double*> type;

@@ -27,8 +27,8 @@ class MyTemplate <const double*> : public TObject {
   std::vector<int> vars;
 #endif
   
-  MyTemplate<const double*>(const double* a) { variable = *a; };
-  MyTemplate<const double*>() {};
+  MyTemplate(const double* a) { variable = *a; };
+  MyTemplate() {};
   
   ClassDefT(MyTemplate<const double*>,2)
 };
@@ -51,8 +51,8 @@ class MyPairTemplate<int, double> : public TObject {
   float var1;
   float var2;
   
-  MyPairTemplate<int,double>(int a, double b) : var1(a), var2(b) {};
-  MyPairTemplate<int,double>() {};
+  MyPairTemplate(int a, double b) : var1(a), var2(b) {};
+  MyPairTemplate() {};
 #if (__GNUC__>=3 || __GNUC_MINOR__>=95)
   ~MyPairTemplate() {};
 #endif
