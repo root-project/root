@@ -93,7 +93,7 @@ ROOT::Internal::TTreeReaderValueBase::operator=(const TTreeReaderValueBase& rhs)
       fHaveLeaf = rhs.fHaveLeaf;
       fHaveStaticClassOffsets = rhs.fHaveStaticClassOffsets;
       fBranchName = rhs.fBranchName;
-      fLeafName = rhs.fLeafName;
+      fBranchName = rhs.fLeafName;
       if (fTreeReader != rhs.fTreeReader) {
          if (fTreeReader)
             fTreeReader->DeregisterValueReader(this);
