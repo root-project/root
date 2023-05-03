@@ -30,9 +30,9 @@ namespace MySpace {
     std::vector<int> vars;
 #endif
   
-    MyTemplate<const double*>(const double* a) { 
+    MyTemplate(const double* a) { 
       variable = *a; variable2 = 2* *a; };
-    MyTemplate<const double*>() {};
+    MyTemplate() {};
   
     ClassDef(MyTemplate<const double*>,1)
   };
