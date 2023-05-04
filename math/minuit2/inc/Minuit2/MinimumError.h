@@ -90,7 +90,7 @@ public:
    bool HasReachedCallLimit() const { return GetStatus() == MnReachedCallLimit; }
    bool IsAvailable() const { return GetStatus() != MnUnset; }
 
-private:
+public:
    struct Data {
       MnAlgebraicSymMatrix fMatrix;
       MnAlgebraicSymMatrix fHessian;  // optional stored also Hessian (used in Fumili)
