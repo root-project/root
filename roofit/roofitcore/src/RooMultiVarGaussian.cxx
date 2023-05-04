@@ -654,16 +654,15 @@ bool RooMultiVarGaussian::BitBlock::getBit(Int_t ibit)
   return false ;
 }
 
-bool RooMultiVarGaussian::BitBlock::operator==(const BitBlock& other)
+bool operator==(RooMultiVarGaussian::BitBlock const &lhs, RooMultiVarGaussian::BitBlock const &rhs)
 {
-  if (b0 != other.b0) return false ;
-  if (b1 != other.b1) return false ;
-  if (b2 != other.b2) return false ;
-  if (b3 != other.b3) return false ;
-  return true ;
+   if (lhs.b0 != rhs.b0)
+      return false;
+   if (lhs.b1 != rhs.b1)
+      return false;
+   if (lhs.b2 != rhs.b2)
+      return false;
+   if (lhs.b3 != rhs.b3)
+      return false;
+   return true;
 }
-
-
-
-
-
