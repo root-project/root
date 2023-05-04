@@ -79,9 +79,6 @@ public:
 
    NormalizeThenLock(const char *cname)
    {
-      if (!TClassTable::CheckClassTableInit())
-         return;
-
       // The recorded name is normalized, let's make sure we convert the
       // input accordingly.  This operation will take the ROOT global lock
       // and might call recursively `TClassTable`, so this must be done
@@ -617,6 +614,9 @@ TClassRec *TClassTable::FindElement(const char *cname, Bool_t insert)
 
 Version_t TClassTable::GetID(const char *cname)
 {
+   if (!TClassTable::CheckClassTableInit())
+      return -1;
+
    NormalizeThenLock guard(cname);
 
    TClassRec *r = FindElement(guard.GetNormalizedName().c_str(), kFALSE);
@@ -630,6 +630,9 @@ Version_t TClassTable::GetID(const char *cname)
 
 Int_t TClassTable::GetPragmaBits(const char *cname)
 {
+   if (!TClassTable::CheckClassTableInit())
+      return 0;
+
    NormalizeThenLock guard(cname);
 
    TClassRec *r = FindElement(guard.GetNormalizedName().c_str(), kFALSE);
@@ -648,6 +651,10 @@ DictFuncPtr_t TClassTable::GetDict(const char *cname)
       ::Info("GetDict", "searches for %s", cname);
       fgIdMap->Print();
    }
+
+   if (!TClassTable::CheckClassTableInit())
+      return nullptr;
+
    NormalizeThenLock guard(cname);
 
    TClassRec *r = FindElement(guard.GetNormalizedName().c_str(), kFALSE);
