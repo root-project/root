@@ -1269,12 +1269,10 @@ void TGraphPainter::PaintHelper(TGraph *theGraph, Option_t *option)
                break;
             }
          }
-      }
-      if (fit && !theGraph->TestBit(TGraph::kNoStats)) PaintStats(theGraph, fit);
-      if (functions) {
          TPaletteAxis *palette = (TPaletteAxis*)functions->FindObject("palette");
          if (palette) palette->Paint();
       }
+      if (fit && !theGraph->TestBit(TGraph::kNoStats)) PaintStats(theGraph, fit);
    }
 }
 
