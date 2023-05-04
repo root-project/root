@@ -116,7 +116,7 @@ class TAttMarkerHandler {
 
    /** @summary Prepare object to create marker
      * @private */
-    _configure() {
+   _configure() {
 
       this.x0 = this.y0 = 0;
 

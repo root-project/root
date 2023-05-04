@@ -108,7 +108,7 @@ function create3DScene(render3d, x3dscale, y3dscale) {
 
       if (!this.mode3d) return;
 
-      if (!this.clear3dCanvas) {
+      if (!isFunc(this.clear3dCanvas)) {
          console.error(`Strange, why mode3d=${this.mode3d} is configured!!!!`);
          return;
       }
@@ -118,7 +118,7 @@ function create3DScene(render3d, x3dscale, y3dscale) {
       this.clear3dCanvas();
 
       disposeThreejsObject(this.scene);
-      if (this.control) this.control.cleanup();
+      this.control?.cleanup();
 
       cleanupRender3D(this.renderer);
 

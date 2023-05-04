@@ -1,4 +1,4 @@
-import { settings, create, gStyle, isStr, clTF2 } from '../core.mjs';
+import { settings, create, gStyle, isStr, clTH1I, clTF2 } from '../core.mjs';
 import { DrawOptions, buildSvgCurve } from '../base/BasePainter.mjs';
 import { ObjectPainter } from '../base/ObjectPainter.mjs';
 import { TH1Painter } from '../hist2d/TH1Painter.mjs';
@@ -185,7 +185,7 @@ class TF1Painter extends ObjectPainter {
          if (ymin < 0.0) ymin *= (1 + gStyle.fHistTopMargin);
       }
 
-      let histo = create('TH1I'),
+      let histo = create(clTH1I),
           tf1 = this.getObject();
 
       histo.fName = tf1.fName + '_hist';

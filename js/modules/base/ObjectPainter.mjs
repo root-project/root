@@ -1,5 +1,6 @@
 import { select as d3_select, pointer as d3_pointer } from '../d3.mjs';
-import { settings, constants, internals, isNodeJs, getPromise, BIT, clTObjString, clTAxis, isObject, isFunc, isStr } from '../core.mjs';
+import { settings, constants, internals, isNodeJs, getPromise, BIT,
+         prROOT, clTObjString, clTAxis, isObject, isFunc, isStr } from '../core.mjs';
 import { isPlainText, producePlainText, produceLatex, produceMathjax, typesetMathjax } from './latex.mjs';
 import { getElementRect, BasePainter, makeTranslate } from './BasePainter.mjs';
 import { TAttMarkerHandler } from './TAttMarkerHandler.mjs';
@@ -167,7 +168,7 @@ class ObjectPainter extends BasePainter {
       if (!obj?._typename || !isFunc(pp?.getObjectDrawSettings))
          return [];
 
-      return pp.getObjectDrawSettings(`ROOT.${obj._typename}`, 'nosame')?.opts;
+      return pp.getObjectDrawSettings(prROOT + obj._typename, 'nosame')?.opts;
    }
 
    /** @summary Central place to update objects drawing

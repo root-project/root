@@ -153,6 +153,14 @@ class RPadPainter extends RObjectPainter {
          }
    }
 
+   /** @summary try to find object by name in list of pad primitives
+     * @desc used to find title drawing
+     * @private */
+   findInPrimitives(objname, objtype) {
+      console.error('findInPrimitives not implemented for RPad');
+      return null;
+   }
+
    /** @summary Try to find painter for specified object
      * @desc can be used to find painter for some special objects, registered as
      * histogram functions

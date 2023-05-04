@@ -1,4 +1,4 @@
-import { createHistogram, kNoStats, settings } from '../core.mjs';
+import { createHistogram, kNoStats, settings, clTH2F } from '../core.mjs';
 import { TH2Painter } from '../hist/TH2Painter.mjs';
 import { proivdeEvalPar } from '../hist/TF1Painter.mjs';
 import { getElementMainPainter } from '../base/ObjectPainter.mjs';
@@ -40,9 +40,9 @@ function createTF2Histogram(func, hist = undefined) {
             }
 
             if (!iserr && Number.isFinite(z)) {
-               if (!hist) hist = createHistogram('TH2F', npx, npy);
+               if (!hist) hist = createHistogram(clTH2F, npx, npy);
                isany = true;
-               hist.setBinContent(hist.getBin(i+1,j+1), z);
+               hist.setBinContent(hist.getBin(i + 1, j + 1), z);
             }
          }
 
@@ -51,7 +51,7 @@ function createTF2Histogram(func, hist = undefined) {
    }
 
    if (!use_saved_points && !hist)
-      hist = createHistogram('TH2F', npx, npy);
+      hist = createHistogram(clTH2F, npx, npy);
 
    if (!iserr && isany) {
       hist.fXaxis.fXmin = func.fXmin - (use_middle ? 0 : dx/2);
@@ -67,7 +67,7 @@ function createTF2Histogram(func, hist = undefined) {
       dx = (func.fSave[nsave-5] - func.fSave[nsave-6]) / npx;
       dy = (func.fSave[nsave-3] - func.fSave[nsave-4]) / npy;
 
-      if (!hist) hist = createHistogram('TH2F', npx+1, npy+1);
+      if (!hist) hist = createHistogram(clTH2F, npx+1, npy+1);
 
       hist.fXaxis.fXmin = func.fSave[nsave-6] - dx/2;
       hist.fXaxis.fXmax = func.fSave[nsave-5] + dx/2;

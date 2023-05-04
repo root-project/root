@@ -6,6 +6,7 @@ import { TAttMarkerHandler } from '../base/TAttMarkerHandler.mjs';
 import { getSvgLineStyle } from '../base/TAttLineHandler.mjs';
 import { FontHandler } from '../base/FontHandler.mjs';
 
+
 /**
  * @summary Abstract class for creating context menu
  *
@@ -657,6 +658,7 @@ class JSRootMenu {
       this.addSizeMenu('Max ranges', 1, 1000, [1, 10, 20, 50, 200, 1000], settings.MaxRanges, value => { settings.MaxRanges = value; }, 'Maximal number of ranges in single http request');
 
       this.addchk(settings.HandleWrongHttpResponse, 'Handle wrong http response', flag => { settings.HandleWrongHttpResponse = flag; });
+      this.addchk(settings.WithCredentials, 'With credentials', flag => { settings.WithCredentials = flag; }, 'Submit http request with user credentials');
 
       this.add('endsub:');
 
@@ -1056,18 +1058,18 @@ class StandaloneMenu extends JSRootMenu {
          outer.style.top = top + 'px';
 
          injectStyle(
-            `.jsroot_ctxt_container {
-                position: absolute; top: 0; user-select: none; z-index: 100000; background-color: rgb(250, 250, 250); margin: 0; padding: 0px; width: auto;
-                min-width: 100px; box-shadow: 0px 0px 10px rgb(0, 0, 0, 0.2); border: 3px solid rgb(215, 215, 215); font-family: Arial, helvetica, sans-serif, serif;
-                font-size: 13px; color: rgb(0, 0, 0, 0.8);
-             }
-             .jsroot_ctxt_column { float: left; }
-             .jsroot_ctxt_divider { width: 85%; margin: 3px auto; border: 1px solid rgb(0, 0, 0, 0.15); }
-             .jsroot_ctxt_header { background-color: lightblue; padding: 3px 7px; font-weight: bold; border-bottom: 1px; }
-             .jsroot_ctxt_text { margin: 0; padding: 3px 7px; pointer-events: none; white-space: nowrap; }
-             .jsroot_ctxt_extraText { margin: 0; padding: 3px 7px; color: rgb(0, 0, 0, 0.6); }
-             .jsroot_ctxt_focus { background-color: rgb(220, 220, 220); }
-             .jsroot_ctxt_item:hover { background-color: rgb(235, 235, 235); }`, this.element);
+            `.jsroot_ctxt_container {`+
+            `   position: absolute; top: 0; user-select: none; z-index: 100000; background-color: rgb(250, 250, 250); margin: 0; padding: 0px; width: auto;`+
+            `   min-width: 100px; box-shadow: 0px 0px 10px rgb(0, 0, 0, 0.2); border: 3px solid rgb(215, 215, 215); font-family: Arial, helvetica, sans-serif, serif;`+
+            `   font-size: 13px; color: rgb(0, 0, 0, 0.8);`+
+            `}`+
+            `.jsroot_ctxt_column { float: left; }`+
+            `.jsroot_ctxt_divider { width: 85%; margin: 3px auto; border: 1px solid rgb(0, 0, 0, 0.15); }`+
+            `.jsroot_ctxt_header { background-color: lightblue; padding: 3px 7px; font-weight: bold; border-bottom: 1px; }`+
+            `.jsroot_ctxt_text { margin: 0; padding: 3px 7px; pointer-events: none; white-space: nowrap; }`+
+            `.jsroot_ctxt_extraText { margin: 0; padding: 3px 7px; color: rgb(0, 0, 0, 0.6); }`+
+            `.jsroot_ctxt_focus { background-color: rgb(220, 220, 220); }`+
+            `.jsroot_ctxt_item:hover { background-color: rgb(235, 235, 235); }`, this.element);
       } else if ((left < 0) && (top == left)) {
          // column
          outer.className = 'jsroot_ctxt_column';
@@ -1286,13 +1288,13 @@ class StandaloneMenu extends JSRootMenu {
           </div>`);
 
       injectStyle(
-         `.jsroot_dialog_block { z-index: 100000; position: absolute; top: 0; left: 0; right: 0; bottom: 0; opacity: 0.2; background-color: white; }
-          .jsroot_dialog { z-index: 100001; position: absolute; left: 50%; top: 50%; }
-          .jsroot_dialog_body { position: relative; left: -50%; top: -50%; border: solid green 3px; padding: 5px; display: flex; flex-flow: column; background-color: white; }
-          .jsroot_dialog_header { flex: 0 1 auto; padding: 5px; }
-          .jsroot_dialog_content { flex: 1 1 auto; padding: 5px; }
-          .jsroot_dialog_footer { flex: 0 1 auto; padding: 5px; }
-          .jsroot_dialog_button { float: right; margin-right: 1em; }`, element.node());
+         `.jsroot_dialog_block { z-index: 100000; position: absolute; top: 0; left: 0; right: 0; bottom: 0; opacity: 0.2; background-color: white; }`+
+         `.jsroot_dialog { z-index: 100001; position: absolute; left: 50%; top: 50%; }`+
+         `.jsroot_dialog_body { position: relative; left: -50%; top: -50%; border: solid green 3px; padding: 5px; display: flex; flex-flow: column; background-color: white; }`+
+         `.jsroot_dialog_header { flex: 0 1 auto; padding: 5px; }`+
+         `.jsroot_dialog_content { flex: 1 1 auto; padding: 5px; }`+
+         `.jsroot_dialog_footer { flex: 0 1 auto; padding: 5px; }`+
+         `.jsroot_dialog_button { float: right; margin-right: 1em; }`, element.node());
 
       return new Promise(resolveFunc => {
          element.on('keyup', evnt => {

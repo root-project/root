@@ -1,10 +1,11 @@
-import { settings, createHistogram, kNoZoom, clTGraph2DErrors, clTGraph2DAsymmErrors, kNoStats } from '../core.mjs';
+import { settings, createHistogram, kNoZoom, clTH2I, clTGraph2DErrors, clTGraph2DAsymmErrors, kNoStats } from '../core.mjs';
 import { REVISION, Color, LineBasicMaterial } from '../three.mjs';
 import { DrawOptions } from '../base/BasePainter.mjs';
 import { ObjectPainter } from '../base/ObjectPainter.mjs';
 import { TAttMarkerHandler } from '../base/TAttMarkerHandler.mjs';
 import { TH2Painter } from './TH2Painter.mjs';
 import { createLineSegments, PointsCreator } from '../base/base3d.mjs';
+
 
 /**
  * @summary Painter for TGraph2D classes
@@ -90,7 +91,7 @@ class TGraph2DPainter extends ObjectPainter {
       if (graph.fMinimum != kNoZoom) uzmin = graph.fMinimum;
       if (graph.fMaximum != kNoZoom) uzmax = graph.fMaximum;
 
-      let histo = createHistogram('TH2I', 10, 10);
+      let histo = createHistogram(clTH2I, 10, 10);
       histo.fName = graph.fName + '_h';
       histo.fTitle = graph.fTitle;
       histo.fXaxis.fXmin = uxmin;
