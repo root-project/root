@@ -33,6 +33,8 @@ public:
 
    virtual bool Hessian(const MinimumParameters &, MnAlgebraicSymMatrix &) const { return false;}
 
+   virtual bool G2(const MinimumParameters &, MnAlgebraicVector &) const { return false;}
+
 };
 
 } // namespace Minuit2

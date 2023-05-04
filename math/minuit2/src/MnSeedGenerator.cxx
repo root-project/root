@@ -116,11 +116,19 @@ MinimumSeed MnSeedGenerator::operator()(const MnFcn &fcn, const AnalyticalGradie
    //}
 
    if (!gc.CanComputeG2()) {
+      print.Info("Using analytical (external) gradient calculator but cannot compute G2 - use then numerical gradient for G2");
       Numerical2PGradientCalculator ngc(fcn, st.Trafo(), stra);
       return this->operator()(fcn, ngc, st, stra);
    }
 
-   print.Info("Computing seed using analytical (external) gradients");
+
+
+   if (gc.CanComputeHessian())
+      print.Info("Computing seed using analytical (external) gradients and Hessian calculator");
+   else
+      print.Info("Computing seed using analytical (external) gradients and G2 calculator");
+
+
 
    // find seed (initial point for minimization) using analytical gradient
    unsigned int n = st.VariableParameters();
@@ -206,7 +214,7 @@ MinimumSeed MnSeedGenerator::operator()(const MnFcn &fcn, const AnalyticalGradie
    if (stra.Strategy() == 2 && !st.HasCovariance() && !computedHessian) {
       // can calculate full 2nd derivative
       MinimumState tmpState = MnHesse(stra)(fcn, state, st.Trafo());
-      print.Info("Initial seeding state ",tmpState);
+      print.Info("Compute full Hessian: Initial seeding state is ",tmpState);
       return MinimumSeed(tmpState, st.Trafo());
    }
 
