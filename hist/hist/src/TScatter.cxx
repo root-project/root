@@ -57,17 +57,7 @@ TScatter can be drawn with the following options:
 
 TScatter::TScatter()
 {
-   fNpoints   = -1;
-   fMaxSize   = -1;
-
-   fGraph     = nullptr;
-   fHistogram = nullptr;
-   fScale     = 5.;
-   fMargin    = 0.1;
-   fSize      = nullptr;
-   fColor     = nullptr;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TScatter normal constructor.
@@ -79,7 +69,6 @@ TScatter::TScatter(Int_t n)
    fGraph     = new TGraph(n);
    fNpoints   = fGraph->GetN();
    fMaxSize   = fGraph->GetMaxSize();
-   fHistogram = nullptr;
 
    fColor = new Double_t[fMaxSize];
    fSize  = new Double_t[fMaxSize];
@@ -101,16 +90,16 @@ TScatter::TScatter(Int_t n, const Double_t *x, const Double_t *y, const Double_t
    fGraph     = new TGraph(n, x, y);
    fNpoints   = fGraph->GetN();
    fMaxSize   = fGraph->GetMaxSize();
-   fHistogram = nullptr;
 
-   fColor = new Double_t[fMaxSize];
-   fSize  = new Double_t[fMaxSize];
-
-   n = sizeof(Double_t) * fNpoints;
-   if (col) memcpy(fColor, col, n);
-   else     fColor = nullptr;
-   if (size) memcpy(fSize, size, n);
-   else      fSize = nullptr;
+   Int_t bufsize = sizeof(Double_t) * fNpoints;
+   if (col) {
+      fColor = new Double_t[fMaxSize];
+      memcpy(fColor, col, bufsize);
+   }
+   if (size) {
+      fSize  = new Double_t[fMaxSize];
+      memcpy(fSize, size, bufsize);
+   }
 
    fScale  = 5.;
    fMargin = 0.1;
@@ -138,8 +127,9 @@ TScatter::~TScatter()
 Int_t TScatter::DistancetoPrimitive(Int_t px, Int_t py)
 {
    TVirtualGraphPainter *painter = TVirtualGraphPainter::GetPainter();
-   if (painter) return painter->DistancetoPrimitiveHelper(this->GetGraph(), px, py);
-   else return 0;
+   if (painter)
+      return painter->DistancetoPrimitiveHelper(this->GetGraph(), px, py);
+   return 0;
 }
 
 
@@ -170,23 +160,19 @@ TH2F *TScatter::GetHistogram() const
       // do not add the histogram to gDirectory
       // use local TDirectory::TContect that will set temporarly gDirectory to a nullptr and
       // will avoid that histogram is added in the global directory
-      {
-         TDirectory::TContext ctx(nullptr);
-         double rwxmin, rwymin, rwxmax, rwymax;
-         int npt = 50;
-         fGraph->ComputeRange(rwxmin, rwymin, rwxmax, rwymax);
-         double dx = (rwxmax-rwxmin)*fMargin;
-         double dy = (rwymax-rwymin)*fMargin;
-         auto h = new TH2F(TString::Format("%s_h",GetName()),GetTitle(),npt,rwxmin,rwxmax,npt,rwymin,rwymax);
+      TDirectory::TContext ctx(nullptr);
+      double rwxmin, rwymin, rwxmax, rwymax;
+      int npt = 50;
+      fGraph->ComputeRange(rwxmin, rwymin, rwxmax, rwymax);
+      double dx = (rwxmax-rwxmin)*fMargin;
+      double dy = (rwymax-rwymin)*fMargin;
+      auto h = new TH2F(TString::Format("%s_h",GetName()),GetTitle(),npt,rwxmin-dx,rwxmax+dx,npt,rwymin-dy,rwymax+dy);
 //          h->SetMinimum(rwymin-dy);
 //          h->SetMaximum(rwymax+dy);
-         h->GetXaxis()->SetLimits(rwxmin-dx,rwxmax+dx);
-         h->GetYaxis()->SetLimits(rwymin-dy,rwymax+dy);
-         h->SetBit(TH1::kNoStats);
-         h->SetDirectory(0);
-         h->Sumw2(kFALSE);
-         ((TScatter*)this)->fHistogram = h;
-      }
+      h->SetBit(TH1::kNoStats);
+      h->SetDirectory(nullptr);
+      h->Sumw2(kFALSE);
+      const_cast<TScatter *>(this)->fHistogram = h;
    }
    return fHistogram;
 }
@@ -258,15 +244,17 @@ void TScatter::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    for (i = 0; i < fNpoints-1; i++) out << "   " << fSize[i] << "," << std::endl;
    out << "   " << fSize[fNpoints-1] << "};" << std::endl;
 
-   if (gROOT->ClassSaved(TScatter::Class())) out << "   ";
-   else out << "   TScatter *";
-   out << "scat = new TScatter(" << fNpoints << ","
-                                    << fXName   << ","  << fYName  << ","
-                                    << fColorName  << ","  << fSizeName << ");"
-                                    << std::endl;
+   if (gROOT->ClassSaved(TScatter::Class()))
+      out << "   ";
+   else
+      out << "   TScatter *";
+   out << "scat = new TScatter(" << fNpoints << "," << fXName   << ","  << fYName  << ","
+                                 << fColorName  << ","  << fSizeName << ");" << std::endl;
 
    out << "   scat->SetName(" << quote << GetName() << quote << ");" << std::endl;
    out << "   scat->SetTitle(" << quote << GetTitle() << quote << ");" << std::endl;
+   out << "   scat->SetMargin(" << GetMargin() << ");" << std::endl;
+   out << "   scat->SetScale(" << GetScale() << ");" << std::endl;
 
    SaveFillAttributes(out, "scat", 0, 1001);
    SaveLineAttributes(out, "scat", 1, 1, 1);
@@ -274,11 +262,11 @@ void TScatter::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 
    if (fHistogram) {
       TString hname = fHistogram->GetName();
-      hname += frameNumber;
-      fHistogram->SetName(TString::Format("Graph_%s", hname.Data()));
+      fHistogram->SetName(TString::Format("Graph_%s%d", hname.Data(), frameNumber));
       fHistogram->SavePrimitive(out, "nodraw");
       out << "   scat->SetHistogram(" << fHistogram->GetName() << ");" << std::endl;
       out << "   " << std::endl;
+      fHistogram->SetName(hname);
    }
 
    out << "   scat->Draw(" << quote << option << quote << ");" << std::endl;
