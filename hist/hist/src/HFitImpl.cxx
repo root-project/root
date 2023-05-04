@@ -310,7 +310,7 @@ TFitResultPtr HFit::Fit(FitObject * h1, TF1 *f1 , Foption_t & fitOption , const 
    fitConfig.SetMinimizerOptions(minOption);
 
    // specific  print level options
-   if (fitOption.Verbose) fitConfig.MinimizerOptions().SetPrintLevel(3);
+   if (fitOption.Verbose)  fitConfig.MinimizerOptions().SetPrintLevel(fitOption.Verbose + 1);
    if (fitOption.Quiet)    fitConfig.MinimizerOptions().SetPrintLevel(0);
 
    // specific minimizer options depending on minimizer
@@ -789,6 +789,8 @@ void ROOT::Fit::FitOptionsMake(EFitObjectType type, const char *option, Foption_
    }
    if (opt.Contains("Q")) fitOption.Quiet   = 1;
    if (opt.Contains("V")) {fitOption.Verbose = 1; fitOption.Quiet   = 0;}
+   if (opt.Contains("VV")) {fitOption.Verbose = 2; }
+    if (opt.Contains("VVV") || opt.Contains("DEBUG")) {fitOption.Verbose = 3; }
 
 
    if (opt.Contains("E")) fitOption.Errors  = 1;
@@ -895,7 +897,7 @@ TFitResultPtr ROOT::Fit::UnBinFit(ROOT::Fit::UnBinData * data, TF1 * fitfunc, Fo
 
    fitConfig.SetMinimizerOptions(minOption);
 
-   if (fitOption.Verbose)   fitConfig.MinimizerOptions().SetPrintLevel(3);
+   if (fitOption.Verbose)   fitConfig.MinimizerOptions().SetPrintLevel(fitOption.Verbose+1);
    if (fitOption.Quiet)     fitConfig.MinimizerOptions().SetPrintLevel(0);
 
    // more
