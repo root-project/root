@@ -213,9 +213,9 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn &fcn, const GradientCalculato
    // initial lambda Value
 
 
-   bool doLineSearch = false;
-   bool doTrustRegion = true;
-   bool scaleTR = false;
+   bool doLineSearch = (fMethodType == kLineSearch);
+   bool doTrustRegion = (fMethodType == kTrustRegion || fMethodType == kTrustRegionScaled);
+   bool scaleTR = (fMethodType == kTrustRegionScaled);
    // trust region parameter
    // use as initial value 0.3 * || x0 ||
    auto & x0 = initialState.Vec();
@@ -226,6 +226,14 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn &fcn, const GradientCalculato
    double tr_factor_up = 3;
    double tr_factor_down = 0.5;
    bool acceptNewPoint = true;
+
+   if (doLineSearch)
+      print.Info("Using Fumili with a line search algorithm");
+   else if (doTrustRegion && scaleTR)
+      print.Info("Using Fumili with a scaled trust region algorithm with factors up/down",tr_factor_up,tr_factor_down);
+   else
+      print.Info("Using Fumili with a trust region algorithm with factors up/down",tr_factor_up,tr_factor_down);
+
 
    double lambda = (doLineSearch) ? 0.001 : 0;
 
