@@ -249,6 +249,7 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn &fcn, const GradientC
          break;
       }
 
+      // gdel = s^T * g = -g^T H g (since s = - Hg)  so it must be negative
       double gdel = inner_product(step, s0.Gradient().Grad());
 
       if (gdel > 0.) {

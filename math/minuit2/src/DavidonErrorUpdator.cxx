@@ -85,11 +85,16 @@ DavidonErrorUpdator::Update(const MinimumState &s0, const MinimumParameters &p1,
 
    MnAlgebraicVector vg = v0 * dg;
 
+   // use rank 2 formula (Davidon)
    MnAlgebraicSymMatrix vUpd = Outer_product(dx) / delgam - Outer_product(vg) / gvg;
 
    if (delgam > gvg) {
-      // use rank 1 formula
+      // use dual formula formula (BFGS)
       vUpd += gvg * Outer_product(MnAlgebraicVector(dx / delgam - vg / gvg));
+      print.Debug("delgam<gvg : use dual (BFGS)  formula");
+   }
+   else {
+    print.Debug("delgam<gvg : use rank 2 Davidon formula");
    }
 
    double sum_upd = sum_of_elements(vUpd);
