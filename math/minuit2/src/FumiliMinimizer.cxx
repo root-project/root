@@ -83,6 +83,16 @@ FunctionMinimum FumiliMinimizer::Minimize(const FCNBase &fcn, const MnUserParame
 }
 
 
+void FumiliMinimizer::SetMethod(const std::string & method) {
+   if (method == "tr")
+      fMinBuilder.SetMethod(FumiliBuilder::kTrustRegion);
+   else if (method == "ls")
+      fMinBuilder.SetMethod(FumiliBuilder::kLineSearch);
+   else if (method == "trs")
+      fMinBuilder.SetMethod(FumiliBuilder::kTrustRegionScaled);
+}
+
+
 } // namespace Minuit2
 
 } // namespace ROOT

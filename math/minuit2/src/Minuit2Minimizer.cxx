@@ -520,6 +520,17 @@ bool Minuit2Minimizer::Minimize()
       if (ret)
          SetStorageLevel(storageLevel);
 
+      // fumili options
+      if (fUseFumili) {
+         std::string fumiliMethod;
+         ret = minuit2Opt->GetValue("FumiliMethod", fumiliMethod);
+         if (ret) {
+            auto fumiliMinimizer = dynamic_cast<ROOT::Minuit2::FumiliMinimizer*>(fMinimizer);
+            if (fumiliMinimizer)
+               fumiliMinimizer->SetMethod(fumiliMethod);
+         }
+      }
+
       if (printLevel > 0) {
          std::cout << "Minuit2Minimizer::Minuit  - Changing default options" << std::endl;
          minuit2Opt->Print();
