@@ -80,6 +80,7 @@ public:
          if (fData)
           StackAllocatorHolder::Get().Deallocate(fData);
          fSize = v.size();
+         fNRow = v.Nrow();
          fData = (double *)StackAllocatorHolder::Get().Allocate(sizeof(double) * fSize);
       }
       std::memcpy(fData, v.Data(), fSize * sizeof(double));
