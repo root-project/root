@@ -26,16 +26,6 @@ std::array<T, n> Repeat(T val)
    return result;
 }
 
-// std::vector<double> *GetVariableBinEdges(int startBin, int numBins)
-// {
-//    int e = startBin;
-//    auto edges = new std::vector<double>(numBins + 1);
-//    std::generate(edges->begin(), edges->end(), [&]() { return e++; });
-//    (*edges)[numBins] += 10;
-
-//    return edges;
-// }
-
 // Helper functions for element-wise comparison of histogram arrays.
 #define CHECK_ARRAY(a, b, n)                              \
    {                                                      \
@@ -122,6 +112,7 @@ protected:
    // includes u/overflow bins. Uneven number chosen to have a center bin.
    const static int numBins = 5;
 
+   // Variables for defining fixed bins.
    const double startBin = 1;
    const double endBin = 4;
 
@@ -131,11 +122,18 @@ protected:
    // 1, 2, or 3
    static constexpr int dim = T::GetDim();
 
+   // Total number of cells
    const static int nCells = pow(numBins, dim);
+   histType result[nCells], expectedHist[nCells];
+
+   double *stats, *expectedStats;
    int nStats;
 
-   histType result[nCells], expected[nCells];
-   double *stats;
+   CUDAhist::RHnCUDA<histType, dim> histogram;
+
+   HistoTestFixture() : histogram(Repeat<int, dim>(numBins), Repeat<double, dim>(startBin), Repeat<double, dim>(endBin))
+   {
+   }
 
    void SetUp() override
    {
@@ -145,12 +143,49 @@ protected:
          nStats += TMath::Binomial(dim, 2);
 
       stats = new double[nStats];
+      expectedStats = new double[nStats];
 
       memset(stats, 0, nStats * sizeof(double));
-      memset(expected, 0, nCells * sizeof(histType));
+      memset(expectedStats, 0, nStats * sizeof(double));
+      memset(expectedHist, 0, nCells * sizeof(histType));
    }
 
    void TearDown() override { delete[] stats; }
+
+   bool UOverflow(std::array<double, dim> coord)
+   {
+      for (auto d = 0; d < dim; d++) {
+         if (coord[d] < startBin || coord[d] > endBin)
+            return true;
+      }
+      return false;
+   }
+
+   void GetExpectedStats(std::vector<std::array<double, dim>> coords, histType weight)
+   {
+      for (auto i = 0; i < (int)coords.size(); i++) {
+         if (UOverflow(coords[i]))
+            continue;
+
+         // Tsumw
+         expectedStats[0] += weight;
+         // Tsumw2
+         expectedStats[1] += weight * weight;
+
+         auto offset = 2;
+         for (auto d = 0; d < dim; d++) {
+            // e.g. Tsumwx
+            expectedStats[offset++] += weight * coords[i][d];
+            // e.g. Tsumwx2
+            expectedStats[offset++] += weight * pow(coords[i][d], 2);
+
+            for (auto prev_d = 0; prev_d < d; prev_d++) {
+               // e.g. Tsumwxy
+               this->expectedStats[offset++] += weight * coords[i][d] * coords[i][prev_d];
+            }
+         }
+      }
+   }
 };
 
 template <typename T>
@@ -171,77 +206,67 @@ TYPED_TEST(HistoTestFixture, FillFixedBins)
 {
    // int, double, or float
    using t = typename TypeParam::type;
-   auto h =
-      CUDAhist::RHnCUDA<t, this->dim>(Repeat<int, this->dim>(this->numBins), Repeat<double, this->dim>(this->startBin),
-                                      Repeat<double, this->dim>(this->endBin));
+   auto h = this->histogram;
 
-   // Underflow
-   h.Fill(Repeat<double, this->dim>(this->startBin - 1));
-   this->expected[0] = (t)1;
+   std::vector<std::array<double, this->dim>> coords = {
+      Repeat<double, this->dim>(this->startBin - 1),                   // Underflow
+      Repeat<double, this->dim>((this->startBin + this->endBin) / 2.), // Center
+      Repeat<double, this->dim>(this->endBin + 1)                      // OVerflow
+   };
+   auto weight = (t)1;
 
-   // Center
-   h.Fill(Repeat<double, this->dim>((this->startBin + this->endBin) / 2.));
-   this->expected[this->nCells / 2] = (t)1;
+   std::vector<int> expectedHistBins = { 0, this->nCells / 2, this->nCells - 1 };
 
-   // Overflow
-   h.Fill(Repeat<double, this->dim>(this->endBin + 1));
-   this->expected[this->nCells - 1] = (t)1;
+   for (auto i = 0; i < (int)coords.size(); i++) {
+      h.Fill(coords[i]);
+      this->expectedHist[expectedHistBins[i]] = weight;
+   }
 
    h.RetrieveResults(this->result, this->stats);
-   CompareArrays(this->result, this->expected, this->nCells);
+
+   {
+      SCOPED_TRACE("Check fill result");
+      CompareArrays(this->result, this->expectedHist, this->nCells);
+   }
+
+   {
+      SCOPED_TRACE("Check statistics");
+      this->GetExpectedStats(coords, weight);
+      CompareArrays(this->stats, this->expectedStats, this->nStats);
+   }
 }
+
 
 TYPED_TEST(HistoTestFixture, FillFixedBinsWeighted)
 {
    // int, double, or float
    using t = typename TypeParam::type;
-   auto h =
-      CUDAhist::RHnCUDA<t, this->dim>(Repeat<int, this->dim>(this->numBins), Repeat<double, this->dim>(this->startBin),
-                                      Repeat<double, this->dim>(this->endBin));
+   auto h = this->histogram;
 
-   // Underflow
-   h.Fill(Repeat<double, this->dim>(this->startBin - 1), (t)7);
-   this->expected[0] = (t)7;
+   std::vector<std::array<double, this->dim>> coords = {
+      Repeat<double, this->dim>(this->startBin - 1),                   // Underflow
+      Repeat<double, this->dim>((this->startBin + this->endBin) / 2.), // Center
+      Repeat<double, this->dim>(this->endBin + 1)                      // OVerflow
+   };
+   auto weight = (t)7;
 
-   // Center
-   h.Fill(Repeat<double, this->dim>((this->startBin + this->endBin) / 2.), (t)7);
-   this->expected[this->nCells / 2] = (t)7;
+   std::vector<int> expectedHistBins = { 0, this->nCells / 2, this->nCells - 1 };
 
-   // Overflow
-   h.Fill(Repeat<double, this->dim>(this->endBin + 1), (t)7);
-   this->expected[this->nCells - 1] = (t)7;
+   for (auto i = 0; i < (int)coords.size(); i++) {
+      h.Fill(coords[i], weight);
+      this->expectedHist[expectedHistBins[i]] = weight;
+   }
 
    h.RetrieveResults(this->result, this->stats);
-   CompareArrays(this->result, this->expected, this->nCells);
+
+   {
+      SCOPED_TRACE("Check fill result");
+      CompareArrays(this->result, this->expectedHist, this->nCells);
+   }
+
+   {
+      SCOPED_TRACE("Check statistics");
+      this->GetExpectedStats(coords, weight);
+      CompareArrays(this->stats, this->expectedStats, this->nStats);
+   }
 }
-
-// TYPED_TEST(HistoTestFixture, FillVariableBins)
-// {
-//    // int, double, or float
-//    using t = typename TypeParam::type;
-//    std::vector<const double *> binEdges;
-//    for (auto i = 0; i < this->dim; i++)
-//       binEdges.push_back(GetVariableBinEdges(this->startBin, this->numBins));
-//    auto h = CUDAhist::RHnCUDA<t, this->dim>({this->numBins}, {this->startBin}, {this->endBin}, binEdges.data());
-
-//    // Underflow
-//    std::array<double, this->dim> uCoords;
-//    uCoords.fill(this->startBin - 1);
-//    h.Fill(uCoords);
-//    this->expected[0] = (t)1;
-
-//    // Center
-//    std::array<double, this->dim> cCoords;
-//    uCoords.fill((this->startBin + this->endBin) / 2);
-//    h.Fill(cCoords);
-//    this->expected[(int)pow(this->numBins, this->dim) / this->dim] = (t)1;
-
-//    // Overflow
-//    std::array<double, this->dim> oCoords;
-//    uCoords.fill(this->endBin + 1);
-//    h.Fill(oCoords);
-//    this->expected[this->numBins - 1] = (t)1;
-
-//    h.RetrieveResults(this->result, this->stats);
-//    CHECK_ARRAY(this->result, this->expected, this->numBins);
-// }
