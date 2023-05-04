@@ -2102,7 +2102,7 @@ function createServerGeometry(rd, nsegm) {
 
    }
 
-   // shape handle is similar to created in JSROOT.GeoPainter
+   // shape handle is similar to created in TGeoPainter
    return {
       _typename: '$$Shape$$', // indicate that shape can be used as is
       ready: true,

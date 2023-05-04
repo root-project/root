@@ -2123,31 +2123,40 @@ class TPadPainter extends ObjectPainter {
       if (d.check('NOZOOMX')) this.options.NoZoomX = true;
       if (d.check('NOZOOMY')) this.options.NoZoomY = true;
 
-      if (d.check('NOMARGINS')) pad.fLeftMargin = pad.fRightMargin = pad.fBottomMargin = pad.fTopMargin = 0;
-      if (d.check('WHITE')) pad.fFillColor = 0;
-      if (d.check('LOG2X')) { pad.fLogx = 2; pad.fUxmin = 0; pad.fUxmax = 1; pad.fX1 = 0; pad.fX2 = 1; }
-      if (d.check('LOGX')) { pad.fLogx = 1; pad.fUxmin = 0; pad.fUxmax = 1; pad.fX1 = 0; pad.fX2 = 1; }
-      if (d.check('LOG2Y')) { pad.fLogy = 2; pad.fUymin = 0; pad.fUymax = 1; pad.fY1 = 0; pad.fY2 = 1; }
-      if (d.check('LOGY')) { pad.fLogy = 1; pad.fUymin = 0; pad.fUymax = 1; pad.fY1 = 0; pad.fY2 = 1; }
-      if (d.check('LOG2Z')) pad.fLogz = 2;
-      if (d.check('LOGZ')) pad.fLogz = 1;
-      if (d.check('LOG2')) pad.fLogx = pad.fLogy = pad.fLogz = 2;
-      if (d.check('LOG')) pad.fLogx = pad.fLogy = pad.fLogz = 1;
-      if (d.check('LNX')) { pad.fLogx = 3; pad.fUxmin = 0; pad.fUxmax = 1; pad.fX1 = 0; pad.fX2 = 1; }
-      if (d.check('LNY')) { pad.fLogy = 3; pad.fUymin = 0; pad.fUymax = 1; pad.fY1 = 0; pad.fY2 = 1; }
-      if (d.check('LN')) pad.fLogx = pad.fLogy = pad.fLogz = 3;
-      if (d.check('GRIDX')) pad.fGridx = 1;
-      if (d.check('GRIDY')) pad.fGridy = 1;
-      if (d.check('GRID')) pad.fGridx = pad.fGridy = 1;
-      if (d.check('TICKX')) pad.fTickx = 1;
-      if (d.check('TICKY')) pad.fTicky = 1;
-      if (d.check('TICK')) pad.fTickx = pad.fTicky = 1;
-      if (d.check('OTX')) pad.$OTX = true;
-      if (d.check('OTY')) pad.$OTY = true;
-      if (d.check('CTX')) pad.$CTX = true;
-      if (d.check('CTY')) pad.$CTY = true;
-      if (d.check('RX')) pad.$RX = true;
-      if (d.check('RY')) pad.$RY = true;
+      function forEach(func, p) {
+         if (!p) p = pad;
+         func(p);
+         let arr = p.fPrimitives?.arr || [];
+         for (let i = 0; i < arr.length; ++i)
+            if (arr[i]._typename == clTPad)
+               forEach(func, arr[i]);
+      }
+
+      if (d.check('NOMARGINS')) forEach(p => { p.fLeftMargin = p.fRightMargin = p.fBottomMargin = p.fTopMargin = 0; });
+      if (d.check('WHITE')) forEach(p => { p.fFillColor = 0; });
+      if (d.check('LOG2X')) forEach(p => { p.fLogx = 2; p.fUxmin = 0; p.fUxmax = 1; p.fX1 = 0; p.fX2 = 1; });
+      if (d.check('LOGX')) forEach(p => { p.fLogx = 1; p.fUxmin = 0; p.fUxmax = 1; p.fX1 = 0; p.fX2 = 1; });
+      if (d.check('LOG2Y')) forEach(p => { p.fLogy = 2; p.fUymin = 0; p.fUymax = 1; p.fY1 = 0; p.fY2 = 1; });
+      if (d.check('LOGY')) forEach(p => { p.fLogy = 1; p.fUymin = 0; p.fUymax = 1; p.fY1 = 0; p.fY2 = 1; });
+      if (d.check('LOG2Z')) forEach(p => { p.fLogz = 2; });
+      if (d.check('LOGZ')) forEach(p => { p.fLogz = 1; });
+      if (d.check('LOG2')) forEach(p => { p.fLogx = p.fLogy = p.fLogz = 2; });
+      if (d.check('LOG')) forEach(p => { p.fLogx = p.fLogy = p.fLogz = 1; });
+      if (d.check('LNX')) forEach(p => { p.fLogx = 3; p.fUxmin = 0; p.fUxmax = 1; p.fX1 = 0; p.fX2 = 1; });
+      if (d.check('LNY')) forEach(p => { p.fLogy = 3; p.fUymin = 0; p.fUymax = 1; p.fY1 = 0; p.fY2 = 1; });
+      if (d.check('LN')) forEach(p => { p.fLogx = p.fLogy = p.fLogz = 3; });
+      if (d.check('GRIDX')) forEach(p => { p.fGridx = 1; });
+      if (d.check('GRIDY')) forEach(p => { p.fGridy = 1; });
+      if (d.check('GRID')) forEach(p => { p.fGridx = p.fGridy = 1; });
+      if (d.check('TICKX')) forEach(p => { p.fTickx = 1; });
+      if (d.check('TICKY')) forEach(p => { p.fTicky = 1; });
+      if (d.check('TICK')) forEach(p => { p.fTickx = p.fTicky = 1; });
+      if (d.check('OTX')) forEach(p => { p.$OTX = true; });
+      if (d.check('OTY')) forEach(p => { p.$OTY = true; });
+      if (d.check('CTX')) forEach(p => { p.$CTX = true; });
+      if (d.check('CTY')) forEach(p => { p.$CTY = true; });
+      if (d.check('RX')) forEach(p => { p.$RX = true; });
+      if (d.check('RY')) forEach(p => { p.$RY = true; });
 
       this.storeDrawOpt(opt);
    }
