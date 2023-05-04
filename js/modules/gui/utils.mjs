@@ -57,7 +57,8 @@ function closeCurrentWindow() {
    window.open('', '_self').close();
 }
 
-
+/** @summary Tries to open ui5
+  * @private */
 function tryOpenOpenUI(sources, args) {
    if (!sources || (sources.length == 0)) {
       if (args.rejectFunc) {
@@ -107,8 +108,9 @@ function tryOpenOpenUI(sources, args) {
 }
 
 
-// return Promise let loader wait before dependent source will be invoked
-
+/** @summary load openui5
+  * @return {Promise} for loading ready
+  * @private */
 async function loadOpenui5(args) {
    // very simple - openui5 was loaded before and will be used as is
    if (typeof sap == 'object')
@@ -168,7 +170,6 @@ async function loadOpenui5(args) {
 
       tryOpenOpenUI(openui5_sources, args);
    });
-
 }
 
 // some icons taken from http://uxrepo.com/
@@ -278,6 +279,8 @@ function registerForResize(handle, delay) {
    });
 }
 
+/** @summary Detect mouse right button
+  * @private */
 function detectRightButton(event) {
    if ('buttons' in event) return event.buttons === 2;
    if ('which' in event) return event.which === 3;
@@ -395,6 +398,8 @@ function selectgStyle(name) {
    }
 }
 
+/** @summary Save object as a cookie
+  * @private */
 function saveCookie(obj, expires, name) {
    let arg = (expires <= 0) ? '' : btoa_func(JSON.stringify(obj)),
        d = new Date();
@@ -402,6 +407,8 @@ function saveCookie(obj, expires, name) {
    document.cookie = `${name}=${arg}; expires=${d.toUTCString()}; SameSite=None; Secure; path=/;`;
 }
 
+/** @summary Read cookie with specified name
+  * @private */
 function readCookie(name) {
    if (typeof document == 'undefined') return null;
    let decodedCookie = decodeURIComponent(document.cookie),
@@ -461,7 +468,6 @@ function readStyle(only_check = false, name = 'jsroot_style') {
 }
 
 let _saveFileFunc = null;
-
 
 /** @summary Returns image file content as it should be stored on the disc
   * @desc Replaces all kind of base64 coding
