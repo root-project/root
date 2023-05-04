@@ -32,14 +32,14 @@ class TH2F;
 class TScatter : public TNamed, public TAttLine, public TAttFill, public TAttMarker {
 
 protected:
-   Int_t      fMaxSize;            ///<!Current dimension of arrays fX and fY
-   Int_t      fNpoints;            ///< Number of points <= fMaxSize
+   Int_t      fMaxSize{-1};        ///<!Current dimension of arrays fX and fY
+   Int_t      fNpoints{-1};        ///< Number of points <= fMaxSize
    TH2F      *fHistogram{nullptr}; ///< Pointer to histogram used for drawing axis
    TGraph    *fGraph{nullptr};     ///< Pointer to graph holding X and Y positions
    Double_t  *fColor{nullptr};     ///< [fNpoints] array of colors
    Double_t  *fSize{nullptr};      ///< [fNpoints] array of marker sizes
-   Double_t   fScale;              ///< Largest marker size used to paint the markers
-   Double_t   fMargin;             ///< Margin around the plot in %
+   Double_t   fScale{5.};          ///< Largest marker size used to paint the markers
+   Double_t   fMargin{.1};         ///< Margin around the plot in %
 
 public:
    TScatter();
