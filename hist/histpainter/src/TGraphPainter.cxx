@@ -110,7 +110,7 @@ Graphs can be drawn with the following options:
 
 | Option   | Description                                                       |
 |----------|-------------------------------------------------------------------|
-| "A"      | Axis are drawn around the graph |
+| "A"      | Produce a new plot with Axis around the graph |
 | "I"      | Combine with option 'A' it draws invisible axis |
 | "L"      | A simple polyline is drawn |
 | "F"      | A fill area is drawn ('CF' draw a smoothed fill area) |
@@ -1269,10 +1269,10 @@ void TGraphPainter::PaintHelper(TGraph *theGraph, Option_t *option)
                break;
             }
          }
+         TPaletteAxis *palette = (TPaletteAxis*)functions->FindObject("palette");
+         if (palette) palette->Paint();
       }
       if (fit && !theGraph->TestBit(TGraph::kNoStats)) PaintStats(theGraph, fit);
-      TPaletteAxis *palette = (TPaletteAxis*)functions->FindObject("palette");
-      if (palette) palette->Paint();
    }
 }
 
