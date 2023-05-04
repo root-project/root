@@ -24,7 +24,7 @@
 
 
 // setting USE_FUMILI_FUNCTION will use the Derivatives provided by Fumili
-// instead of what proided in FitUtil::EvalChi2Residual
+// instead of what provided in FitUtil::EvalChi2Residual
 // t.d.: use still standard Chi2 but replace model function
 // with a gradient function where gradient is computed by TFumili
 // since TFumili knows the step size can calculate it better
@@ -307,7 +307,7 @@ double TFumiliMinimizer::EvaluateFCN(const double * x, double * grad) {
          }
 
          // t.b.d should protect for bad  values of fval
-         sum += 0.5 * fval * fval; // neeedd to divide chi2 by 2
+         sum += 0.5 * fval * fval; // need to divide chi2 by 2
 
          for (unsigned int j = 0; j < npar; ++j) {
             grad[j] +=  fval * gf[j];
@@ -343,7 +343,7 @@ double TFumiliMinimizer::EvaluateFCN(const double * x, double * grad) {
          sum += fval;
 
          for (unsigned int j = 0; j < npar; ++j) {
-            grad[j] += gf[j];
+            grad[j] += gf[j];  // maybe a factor of 2 here???
             for (unsigned int k = j; k < npar; ++ k) {
                int idx =  j + k*(k+1)/2;
                hess[idx] += h[idx];
@@ -405,7 +405,9 @@ double TFumiliMinimizer::EvaluateFCN(const double * x, double * grad) {
    std::cout << std::endl << std::endl;
 #endif
 
-
+   // evaluate directly function value in case of Poisson likelihoods
+   if (fgFunc && fgFunc->Type() == ROOT::Math::FitMethodFunction::kPoissonLikelihood) return  0.5 * (*fgFunc)(x);
+   if (fgGradFunc && fgGradFunc->Type() == ROOT::Math::FitMethodGradFunction::kPoissonLikelihood)  return 0.5 * (*fgGradFunc)(x);
    return sum;
 
 }
@@ -527,14 +529,20 @@ bool TFumiliMinimizer::Minimize() {
 //    fFumili->ExecuteCommand("SET Err",arglist,1);
 
    int printlevel = PrintLevel();
-   // not implemented in TFumili yet
+
    //arglist[0] = printlevel - 1;
    //fFumili->ExecuteCommand("SET PRINT",arglist,1,ierr);
 
    // suppress warning in case Printlevel() == 0
-   if (printlevel == 0)    fFumili->ExecuteCommand("SET NOW",arglist,0);
-   else fFumili->ExecuteCommand("SET WAR",arglist,0);
+   if (printlevel <= 0)
+      fFumili->ExecuteCommand("SET NOW",arglist,0);
+   else
+      fFumili->ExecuteCommand("SET WAR",arglist,0);
 
+   if (printlevel < 3)
+      fFumili->ExecuteCommand("SET NOD",arglist,0);
+   else
+      fFumili->ExecuteCommand("SET DEB",arglist,0);
 
    // minimize: use ExecuteCommand instead of Minimize to set tolerance and maxiter
 
@@ -564,6 +572,9 @@ bool TFumiliMinimizer::Minimize() {
    int nfree;
    double errdef = 0; // err def is not used by Fumili
    fFumili->GetStats(fMinVal,fEdm,errdef,nfree,ntot);
+
+   // recompute function value (because in case of likelihood is not correct)
+
 
    if (printlevel > 0)
       fFumili->PrintResults(printlevel,fMinVal);
