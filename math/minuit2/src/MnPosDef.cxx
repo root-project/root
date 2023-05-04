@@ -13,6 +13,7 @@
 #include "Minuit2/MnPrint.h"
 
 #include <algorithm>
+#include <iostream>
 
 namespace ROOT {
 
@@ -98,7 +99,9 @@ MinimumError MnPosDef::operator()(const MinimumError &e, const MnMachinePrecisio
 
    print.Warn("Matrix forced pos-def by adding to diagonal", pAdd);
 
-   return MinimumError(err, MinimumError::MnMadePosDef);
+   MinimumError epdf(err, MinimumError::MnMadePosDef);
+   std::cout << epdf.Hessian().size() << "  " << epdf.Hessian().Nrow() << std::endl;
+   return epdf;
 }
 
 } // namespace Minuit2

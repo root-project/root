@@ -40,9 +40,15 @@ section 5
 class FumiliBuilder : public MinimumBuilder {
 
 public:
+
+   enum FumiliMethodType { kLineSearch = 0, kTrustRegion = 1, kTrustRegionScaled = 2};
+
+
    FumiliBuilder() : fEstimator(VariableMetricEDMEstimator()), fErrorUpdator(FumiliErrorUpdator()) {}
 
    ~FumiliBuilder() override {}
+
+   void SetMethod(FumiliMethodType type) { fMethodType = type;}
 
    /**
 
@@ -131,6 +137,7 @@ public:
 private:
    VariableMetricEDMEstimator fEstimator;
    FumiliErrorUpdator fErrorUpdator;
+   FumiliMethodType fMethodType;
 };
 
 } // namespace Minuit2
