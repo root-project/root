@@ -169,10 +169,14 @@ int unuranDistr() {
 
 
    TF1 * f = new TF1("n",norm,-10,10,1);
-   f->SetParameters(par);
+   // Using `f->SetParameters(par)` gives a compiler warning, becaues
+   // internally, this does `std::copy(par, par + npars, ...)`.
+   // The `par + npars` gives an out-of-bounds warning, because par is a
+   // C-style array with compile-time size.
+   f->SetParameter(0, par[0]);
 
    TF1 * fc = new TF1("c",cdf,0,1,1);
-   fc->SetParameters(par);
+   fc->SetParameter(0, par[0]);
 
 
    // tester class
