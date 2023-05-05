@@ -6240,15 +6240,16 @@ void TPad::ShowGuidelines(TObject *object, const Int_t event, const char mode, c
    if (mode != 'i') resize = true;
 
    TPad *is_pad = dynamic_cast<TPad *>( object );
-   TVirtualPad *padSave = 0;
-   padSave = gPad;
+   TVirtualPad *padSave = gPad;
    if (is_pad)
      if (is_pad->GetMother()) is_pad->GetMother()->cd();
 
-   static TPad * tmpGuideLinePad;
+   static TPad *tmpGuideLinePad = 0;
 
    //delete all existing Guidelines and create new invisible pad
    if (tmpGuideLinePad) {
+      if (padSave == tmpGuideLinePad)
+         padSave = 0;
       if (object == tmpGuideLinePad) { // in case of funny button click combination.
          tmpGuideLinePad->Delete();
          tmpGuideLinePad = 0;
@@ -6502,7 +6503,7 @@ void TPad::ShowGuidelines(TObject *object, const Int_t event, const char mode, c
    }
 
    gPad->Modified(kTRUE);
-   padSave->cd();
+   if (padSave) padSave->cd();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
