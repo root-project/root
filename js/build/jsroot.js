@@ -11,7 +11,7 @@ let version_id = 'dev';
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-let version_date = '4/05/2023';
+let version_date = '5/05/2023';
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -9157,11 +9157,7 @@ function parseLatex(node, arg, label, curr) {
             if (curr.x) elem.attr('x', curr.x);
             if (curr.y) elem.attr('y', curr.y);
 
-            // values used for superscript
-            curr.last_y1 = curr.y - rect.height*0.8;
-            curr.last_y2 = curr.y + rect.height*0.2;
-
-            extendPosition(curr.x, curr.last_y1, curr.x + rect.width, curr.last_y2);
+            extendPosition(curr.x, curr.y - rect.height*0.8, curr.x + rect.width, curr.y + rect.height*0.2);
 
             if (!alone) {
                shiftX(rect.width);
@@ -9301,10 +9297,6 @@ function parseLatex(node, arg, label, curr) {
             parseLatex(currG(), arg, subs.low, pos_low);
          }
 
-         if ((curr.last_y1 !== undefined) && (curr.last_y2 !== undefined)) {
-            y1 = curr.last_y1; y2 = curr.last_y2;
-         }
-
          if (pos_up) {
             positionGNode(pos_up, x, y1 - pos_up.rect.y1 - curr.fsize*0.1);
             w1 = pos_up.rect.width;
@@ -9392,10 +9384,6 @@ function parseLatex(node, arg, label, curr) {
          extendPosition(curr.x, curr.y + r.y1, curr.x + 4*w + r.width, curr.y + r.y2);
 
          shiftX(4*w + r.width);
-
-         // values used for superscript
-         curr.last_y1 = r.y1;
-         curr.last_y2 = r.y2;
 
          continue;
       }
@@ -66327,7 +66315,7 @@ class TFramePainter extends ObjectPainter {
          }
       }
 
-      if ((opts.zoom_ymin != opts.zoom_ymax) && (this.zoom_ymin == this.zoom_ymax) && !this.zoomChangedInteractive('y')) {
+      if ((opts.zoom_ymin != opts.zoom_ymax) && ((this.zoom_ymin == this.zoom_ymax) || !this.zoomChangedInteractive('y'))) {
          this.zoom_ymin = opts.zoom_ymin;
          this.zoom_ymax = opts.zoom_ymax;
       }
@@ -99934,8 +99922,12 @@ class HierarchyPainter extends BasePainter {
                   filepath += `&item=${name}`;
                }
 
+               let arg0 = 'nobrowser';
+               if (settings.WithCredentials)
+                  arg0 += '&with_credentials';
+
                menu.addDrawMenu('Draw in new tab', sett.opts,
-                                arg => window.open(`${exports.source_dir}index.htm?nobrowser&${filepath}&opt=${arg}`));
+                                arg => window.open(`${exports.source_dir}?${arg0}&${filepath}&opt=${arg}`));
             }
 
             if ((sett.expand || sett.get_expand) && !('_childs' in hitem) && (hitem._more || !('_more' in hitem)))
@@ -101014,9 +101006,9 @@ class HierarchyPainter extends BasePainter {
 
       if (sett.opts && (node._can_draw !== false))
          menu.addDrawMenu('Draw in new window', sett.opts,
-                           arg => window.open(onlineprop.server + '?nobrowser&item=' + onlineprop.itemname +
-                                              (this.isMonitoring() ? '&monitoring=' + this.getMonitoringInterval() : '') +
-                                              (arg ? '&opt=' + arg : '')));
+                           arg => window.open(onlineprop.server + `?nobrowser&item=${onlineprop.itemname}` +
+                                              (this.isMonitoring() ? `&monitoring=${this.getMonitoringInterval()}` : '') +
+                                              (arg ? `&opt=${arg}` : '')));
 
       if (sett.opts && (sett.opts.length > 0) && root_type && (node._can_draw !== false))
          menu.addDrawMenu('Draw as png', sett.opts,
@@ -108158,10 +108150,8 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
 
       // if our own histogram was used as axis drawing, we need update histogram as well
       if (this.axes_draw) {
-         let histo = this.createHistogram();
-         histo.fTitle = graph.fTitle; // copy title
-
-         let hist_painter = this.getMainPainter();
+         let histo = this.createHistogram(),
+             hist_painter = this.getMainPainter();
          if (hist_painter?.$secondary) {
             hist_painter.updateObject(histo, this.options.Axis);
             this.$redraw_hist = true;

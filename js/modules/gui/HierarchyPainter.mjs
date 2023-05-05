@@ -1797,8 +1797,12 @@ class HierarchyPainter extends BasePainter {
                   filepath += `&item=${name}`;
                }
 
+               let arg0 = 'nobrowser';
+               if (settings.WithCredentials)
+                  arg0 += '&with_credentials';
+
                menu.addDrawMenu('Draw in new tab', sett.opts,
-                                arg => window.open(`${source_dir}index.htm?nobrowser&${filepath}&opt=${arg}`));
+                                arg => window.open(`${source_dir}?${arg0}&${filepath}&opt=${arg}`));
             }
 
             if ((sett.expand || sett.get_expand) && !('_childs' in hitem) && (hitem._more || !('_more' in hitem)))
@@ -2878,9 +2882,9 @@ class HierarchyPainter extends BasePainter {
 
       if (sett.opts && (node._can_draw !== false))
          menu.addDrawMenu('Draw in new window', sett.opts,
-                           arg => window.open(onlineprop.server + '?nobrowser&item=' + onlineprop.itemname +
-                                              (this.isMonitoring() ? '&monitoring=' + this.getMonitoringInterval() : '') +
-                                              (arg ? '&opt=' + arg : '')));
+                           arg => window.open(onlineprop.server + `?nobrowser&item=${onlineprop.itemname}` +
+                                              (this.isMonitoring() ? `&monitoring=${this.getMonitoringInterval()}` : '') +
+                                              (arg ? `&opt=${arg}` : '')));
 
       if (sett.opts && (sett.opts.length > 0) && root_type && (node._can_draw !== false))
          menu.addDrawMenu('Draw as png', sett.opts,

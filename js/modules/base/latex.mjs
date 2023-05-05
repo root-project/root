@@ -462,11 +462,7 @@ function parseLatex(node, arg, label, curr) {
             if (curr.x) elem.attr('x', curr.x);
             if (curr.y) elem.attr('y', curr.y);
 
-            // values used for superscript
-            curr.last_y1 = curr.y - rect.height*0.8;
-            curr.last_y2 = curr.y + rect.height*0.2;
-
-            extendPosition(curr.x, curr.last_y1, curr.x + rect.width, curr.last_y2);
+            extendPosition(curr.x, curr.y - rect.height*0.8, curr.x + rect.width, curr.y + rect.height*0.2);
 
             if (!alone) {
                shiftX(rect.width);
@@ -606,10 +602,6 @@ function parseLatex(node, arg, label, curr) {
             parseLatex(currG(), arg, subs.low, pos_low);
          }
 
-         if ((curr.last_y1 !== undefined) && (curr.last_y2 !== undefined)) {
-            y1 = curr.last_y1; y2 = curr.last_y2;
-         }
-
          if (pos_up) {
             positionGNode(pos_up, x, y1 - pos_up.rect.y1 - curr.fsize*0.1);
             w1 = pos_up.rect.width;
@@ -697,10 +689,6 @@ function parseLatex(node, arg, label, curr) {
          extendPosition(curr.x, curr.y + r.y1, curr.x + 4*w + r.width, curr.y + r.y2);
 
          shiftX(4*w + r.width);
-
-         // values used for superscript
-         curr.last_y1 = r.y1;
-         curr.last_y2 = r.y2;
 
          continue;
       }
