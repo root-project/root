@@ -8,11 +8,11 @@
 /// \macro_image
 /// \macro_code
 ///
-/// \author Luca Lista
+/// \author Luca Lista, Olivier Couet
 
 void annotation3d()
 {
-   TCanvas *c = new TCanvas("c", "c", 600, 600);
+   auto c = new TCanvas("c", "c", 600, 600);
    c->SetTheta(30);
    c->SetPhi(50);
    gStyle->SetOptStat(0);
@@ -20,7 +20,7 @@ void annotation3d()
    gStyle->SetOptTitle(kFALSE);
 
    // Define and draw a surface
-   TF2 *f = new TF2("f", "[0]*cos(x)*cos(y)", -1, 1, -1, 1);
+   auto f = new TF2("f", "[0]*cos(x)*cos(y)", -1, 1, -1, 1);
    f->SetParameter(0, 1);
    double s = 1./f->Integral(-1, 1, -1, 1);
    f->SetParameter(0, s);
@@ -61,12 +61,12 @@ void annotation3d()
    double y[11] = {-0.985, -0.8, -0.6, -0.4, -0.2,  0.0,  0.2,  0.4,  0.6,  0.8,  0.985};
    double z[11];
    for (int i = 0; i < 11; ++i) z[i] = s*cos(x[i])*cos(y[i]);
-   TPolyLine3D *g2 = new TPolyLine3D(11, x, y, z);
+   auto g2 = new TPolyLine3D(11, x, y, z);
 
    double xx[2] = {-0.5, -0.5};
    double yy[2] = {-0.985, -0.985};
    double zz[2] = {0.11, s*cos(-0.5)*cos(-0.985)};
-   TPolyLine3D *l2 = new TPolyLine3D(2, xx, yy, zz);
+   auto l2 = new TPolyLine3D(2, xx, yy, zz);
 
    g2->SetLineColor(kRed);
    g2->SetLineWidth(3);
@@ -78,12 +78,12 @@ void annotation3d()
    l2->Draw();
 
    // Draw text Annotations
-   TLatex *txt = new TLatex(0.05, 0, "f(y,x_{0})");
+   TLatex3D *txt = new TLatex3D(-0.45, -0.2, 0.3, "f(y,x_{0})");
    txt->SetTextFont(42);
    txt->SetTextColor(kRed);
    txt->Draw();
 
-   TLatex *txt1 = new TLatex(0.12, 0.52, "f(x,y)");
+   TLatex3D *txt1 = new TLatex3D(0.5, 0.5, 0.3, "f(x,y)");
    txt1->SetTextColor(kBlue);
    txt1->SetTextFont(42);
    txt1->Draw();

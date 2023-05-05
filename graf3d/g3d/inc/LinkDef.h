@@ -36,6 +36,8 @@
 #pragma link C++ class TPCON-;
 #pragma link C++ class TPGON+;
 #pragma link C++ class TPolyLine3D-;
+#pragma link C++ class TText3D+;
+#pragma link C++ class TLatex3D+;
 #pragma link C++ class TPolyMarker3D-;
 #pragma link C++ class TPointSet3D-;
 #pragma link C++ class TRotMatrix-;

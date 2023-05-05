@@ -67,7 +67,7 @@ public:
    virtual void     PaintText(Double_t x, Double_t y, const wchar_t *text);
    virtual void     PaintTextNDC(Double_t u, Double_t v, const char *text);
    virtual void     PaintTextNDC(Double_t u, Double_t v, const wchar_t *text);
-   void             Print(Option_t *option="") const override;
+   virtual void     Print(Option_t *option="") const override;
    void             SavePrimitive(std::ostream &out, Option_t *option = "") override;
    virtual void     SetMbTitle(const wchar_t *title=L"");
    virtual void     SetNDC(Bool_t isNDC=kTRUE);
