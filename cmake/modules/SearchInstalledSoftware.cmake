@@ -1374,6 +1374,7 @@ if(builtin_tbb)
   )
   set(TBB_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/ginclude)
   set(TBB_CXXFLAGS "-DTBB_SUPPRESS_DEPRECATED_MESSAGES=1")
+  set(TBB_TARGET TBB)
 endif()
 
 #---Check for Vc---------------------------------------------------------------------
