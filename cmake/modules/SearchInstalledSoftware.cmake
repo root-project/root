@@ -1374,6 +1374,8 @@ if(builtin_tbb)
   )
   set(TBB_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/ginclude)
   set(TBB_CXXFLAGS "-DTBB_SUPPRESS_DEPRECATED_MESSAGES=1")
+  # The following line is needed to generate the proper dependency with: BUILTINS TBB (in Imt)
+  # and generated with this syntax: add_dependencies(${library} ${${arg1}_TARGET})
   set(TBB_TARGET TBB)
 endif()
 
