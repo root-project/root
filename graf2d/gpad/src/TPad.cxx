@@ -6230,13 +6230,11 @@ void TPad::ShowGuidelines(TObject *object, const Int_t event, const char mode, c
 
    //delete all existing Guidelines and create new invisible pad
    if (tmpGuideLinePad) {
-      if (object == tmpGuideLinePad) { // in case of funny button click combination.
-         tmpGuideLinePad->Delete();
-         tmpGuideLinePad = nullptr;
-         return;
-      }
+      ctxt.PadDeleted(tmpGuideLinePad);
+      auto guidePadClicked = (object == tmpGuideLinePad); // in case of funny button click combination.
       tmpGuideLinePad->Delete();
       tmpGuideLinePad = nullptr;
+      if (guidePadClicked) return;
    }
 
    // Get Primitives

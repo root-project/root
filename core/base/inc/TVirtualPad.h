@@ -67,6 +67,7 @@ public:
        ~TContext();
        auto IsInteractive() const { return fInteractive; }
        auto GetSaved() const { return fSaved; }
+       void PadDeleted(TVirtualPad *pad);
    };
 
 

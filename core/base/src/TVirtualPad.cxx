@@ -66,6 +66,15 @@ TVirtualPad::TContext::~TContext()
       fSaved->cd();
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Inform context that pad deleted or will be deleted soon
+/// Reference on that pad should be cleared
+
+void TVirtualPad::TContext::PadDeleted(TVirtualPad *pad)
+{
+   if (pad == fSaved)
+      fSaved = nullptr;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the current pad for the current thread.
