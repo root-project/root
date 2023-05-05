@@ -18,9 +18,7 @@
 class TText3D : public TText {
 
 protected:
-   double fX3D{0}; ///< X position of text
-   double fY3D{0}; ///< Y position of text
-   double fZ3D{0}; ///< Z position of text
+   double fZ{0}; ///< Z position of text
 
 public:
 

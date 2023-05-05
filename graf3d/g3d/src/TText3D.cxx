@@ -54,9 +54,9 @@ End_Macro
 
 TText3D::TText3D(Double_t x, Double_t y, Double_t z, const char *text)
 {
-   fX3D = x;
-   fY3D = y;
-   fZ3D = z;
+   fX = x;
+   fY = y;
+   fZ = z;
    fTitle = text;
 }
 
@@ -75,7 +75,7 @@ TText3D::~TText3D()
 void TText3D::ls(Option_t *) const
 {
    TROOT::IndentLevel();
-   printf("OBJ: %s\t%s  \tX= %f Y=%f Z=%f \n",IsA()->GetName(),GetTitle(),fX3D,fY3D,fZ3D);
+   printf("OBJ: %s\t%s  \tX= %f Y=%f Z=%f \n",IsA()->GetName(),GetTitle(),fX,fY,fZ);
 }
 
 
@@ -100,12 +100,12 @@ void TText3D::Paint(Option_t * /* option */ )
 {
    TView *view = gPad->GetView();
    if (!view) {
-      PaintText(fX3D,fY3D,GetTitle());
+      PaintText(fX,fY,GetTitle());
    } else {
       double xyz[3];
-      xyz[0] = fX3D;
-      xyz[1] = fY3D;
-      xyz[2] = fZ3D;
+      xyz[0] = fX;
+      xyz[1] = fY;
+      xyz[2] = fZ;
       Double_t xpad[3];
       view->WCtoNDC(xyz, &xpad[0]);
       PaintText(xpad[0],xpad[1],GetTitle());
@@ -117,7 +117,7 @@ void TText3D::Paint(Option_t * /* option */ )
 
 void TText3D::Print(Option_t *) const
 {
-   printf("Text  X=%f Y=%f Z = %f Text=%s Font=%d Size=%f",fX3D,fY3D,fZ3D,GetTitle(),GetTextFont(),GetTextSize());
+   printf("Text  X=%f Y=%f Z = %f Text=%s Font=%d Size=%f",fX,fY,fZ,GetTitle(),GetTextFont(),GetTextSize());
    if (GetTextColor() != 1 ) printf(" Color=%d",GetTextColor());
    if (GetTextAlign() != 10) printf(" Align=%d",GetTextAlign());
    if (GetTextAngle() != 0 ) printf(" Angle=%f",GetTextAngle());
