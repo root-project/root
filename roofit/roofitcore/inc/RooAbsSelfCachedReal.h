@@ -109,7 +109,7 @@ RooArgSet *RooAbsSelfCached<Base_t>::actualObservables(const RooArgSet &nset) co
 }
 
 template <>
-RooArgSet *RooAbsSelfCached<RooAbsCachedPdf>::actualObservables(const RooArgSet & /*nset*/) const
+inline RooArgSet *RooAbsSelfCached<RooAbsCachedPdf>::actualObservables(const RooArgSet & /*nset*/) const
 {
    // Make list of servers
    auto serverSet = new RooArgSet;
