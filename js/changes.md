@@ -23,6 +23,7 @@
 20. Support new TScatter class
 21. Fix - rescan sumw2 when update TH1
 22. Fix - correct placing for TLegend header
+23. Fix - correctly align sub/super scripts in complex TLatex
 
 
 ## Changes in 7.3.1

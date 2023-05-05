@@ -1381,10 +1381,8 @@ class TGraphPainter extends ObjectPainter {
 
       // if our own histogram was used as axis drawing, we need update histogram as well
       if (this.axes_draw) {
-         let histo = this.createHistogram();
-         histo.fTitle = graph.fTitle; // copy title
-
-         let hist_painter = this.getMainPainter();
+         let histo = this.createHistogram(),
+             hist_painter = this.getMainPainter();
          if (hist_painter?.$secondary) {
             hist_painter.updateObject(histo, this.options.Axis);
             this.$redraw_hist = true;
