@@ -72,9 +72,8 @@ FitResult::FitResult(const FitConfig & fconfig) :
    // set minimizer type and algorithm
    fMinimType = fconfig.MinimizerType();
    // append algorithm name for minimizer that support it
-   if ( (fMinimType.find("Fumili") == std::string::npos) &&
-        (fMinimType.find("GSLMultiFit") == std::string::npos)
-      ) {
+   if ( (fMinimType.find("Fumili") == std::string::npos) )
+   {
       if (!fconfig.MinimizerAlgoType().empty()) fMinimType += " / " + fconfig.MinimizerAlgoType();
    }
 

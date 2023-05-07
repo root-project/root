@@ -41,19 +41,15 @@ FunctionMinimum FumiliMinimizer::Minimize(const FCNBase &fcn, const MnUserParame
    // The FCNBase passed must be a FumiliFCNBase type otherwise method will fail !
 
    MnUserFcn mfcn(fcn, st.Trafo());
-   //  Numerical2PGradientCalculator gc(mfcn, st.Trafo(), strategy);
+
 
    unsigned int npar = st.VariableParameters();
    if (maxfcn == 0)
       maxfcn = 200 + 100 * npar + 5 * npar * npar;
    // FUMILI needs much less function calls
-   maxfcn = int(0.1 * maxfcn);
+   //maxfcn = int(0.1 * maxfcn);
 
-   // MinimumSeed mnseeds = SeedGenerator()(mfcn, gc, st, strategy);
-
-   // std::cout << "FCN type " << typeid(&fcn).Name() << std::endl;
-
-   // Minimize using Fumili. Case of interface is a function with gradient.
+   // Minimize using Fumili - function interface must be a FumiliFCNBase type
    FumiliFCNBase *fumiliFcn = dynamic_cast<FumiliFCNBase *>(const_cast<FCNBase *>(&fcn));
    if (!fumiliFcn) {
       print.Error("Wrong FCN type; try to use default minimizer");
@@ -77,7 +73,8 @@ FunctionMinimum FumiliMinimizer::Minimize(const FCNBase &fcn, const MnUserParame
    FunctionGradient grad = fgc(pa);
    FumiliErrorUpdator errUpdator;
    MinimumError err = errUpdator.Update(MinimumState(0), pa, fgc, 0.);
-   MinimumSeed mnseeds(MinimumState(pa, err, grad, -1., 1), st.Trafo());
+   // set an arbitrary large initial edm (1.E10)
+   MinimumSeed mnseeds(MinimumState(pa, err, grad, 1.E10, 1), st.Trafo());
 
    return ModularFunctionMinimizer::Minimize(mfcn, fgc, mnseeds, strategy, maxfcn, toler);
 }

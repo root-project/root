@@ -54,13 +54,9 @@ public:
 
    void SetErrorDef(double up) override { fUp = up; }
 
-   // virtual std::vector<double> Gradient(std::vector<double> const &) const;
-
-   // forward interface
-   // virtual double operator()(int npar, double* params,int iflag = 4) const;
 
    /**
-       evaluate gradient hessian and function value needed by fumili
+       evaluate gradient hessian and function value needed by Fumili
      */
    void EvaluateAll(std::vector<double> const &v) override;
 
@@ -130,7 +126,7 @@ void FumiliFCNAdapter<Function>::EvaluateAll(std::vector<double> const &v)
    } else if (fFunc.Type() == Function::kPoissonLikelihood) {
       print.Debug("Poisson Likelihood FCN: Evaluate gradient and Hessian");
       // for Poisson need Hessian computed in DataElement since one needs the bin expected value ad bin observed value
-     for (unsigned int i = 0; i < ndata; ++i) {
+      for (unsigned int i = 0; i < ndata; ++i) {
          // calculate data element and gradient
          fFunc.DataElement(&v.front(), i, gf.data(), h.data());
          for (size_t j = 0; j < npar; ++j) {
@@ -140,7 +136,7 @@ void FumiliFCNAdapter<Function>::EvaluateAll(std::vector<double> const &v)
                hess[idx] += h[idx];
             }
          }
-     }
+      }
    } else {
       print.Error("Type of fit method is not supported, it must be chi2 or log-likelihood or Poisson Likelihood");
    }
