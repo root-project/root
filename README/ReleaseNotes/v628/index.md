@@ -892,8 +892,31 @@ Published on March 21, 2023
 * [[#12409](https://github.com/root-project/root/issues/12409)] - ROOT does not work when launched from non-accessible folder
 * [[#12498](https://github.com/root-project/root/issues/12498)] - `TTime` class is not splitable
 
+
+## Release 6.28/04
+
+Published on May 7, 2023
+
+### Bugs and Issues fixed in this release
+
+* [[#12493](https://github.com/root-project/root/issues/12493)] - "TEXT90 COLZ" does not work
+* [[#12520](https://github.com/root-project/root/issues/12520)] - `RDF::FromCSV` gives wrong output with colTypes specified
+* [[#12597](https://github.com/root-project/root/issues/12597)] - [DF] Display of `RVec<bool>` shows wrong values
+* [[#12358](https://github.com/root-project/root/issues/12358)] - Self-reference through a map of tuples breaks the interpreter (2023.02.20.)
+* [[#12623](https://github.com/root-project/root/issues/12623)] - `gDirectory` macro should include global-namespace qualification
+* [[#12378](https://github.com/root-project/root/issues/12378)] - `GetClass(<typedef>)` works only at the second try
+* [[#12552](https://github.com/root-project/root/issues/12552)] - Race condition when loading dictionary shared libraries
+* [[#12704](https://github.com/root-project/root/issues/12704)] - [RF] Off-by-one error in Roofit/Histfactory/HistoToWorkspaceFactoryFast
+* [[#8984](https://github.com/root-project/root/issues/8984)] - [RF] Problem of memory leak (?) with RooDataSet
+* [[#12659](https://github.com/root-project/root/issues/12659)] - compiling v6.28.02 fails under opensuse TW with gcc-13
+* [[#12646](https://github.com/root-project/root/issues/12646)] - [RF] `RooLinearVar` not used in plot projection integrals
+* [[#10895](https://github.com/root-project/root/issues/10895)] - [cling] void macro should not return value
+* [[#12750](https://github.com/root-project/root/issues/12750)] - cocoa GUI crashes on macOS
+* [[#12240](https://github.com/root-project/root/issues/12240)] - [ROOT 6.29] module 'std.bits/uses_allocator_args.h' requires feature 'cplusplus20'
+* [[#12779](https://github.com/root-project/root/issues/12779)] - [cling][c++20] Interpreter crash on concept definition
+
 ## HEAD of the v6-28-00-patches branch
 
-These changes will be part of a future 6.28/04.
+These changes will be part of a future 6.28/06.
 
 - None so far.
