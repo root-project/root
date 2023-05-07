@@ -201,6 +201,7 @@ public:
 
    /// return extra options (NULL pointer if they are not present)
    const IOptions * ExtraOptions() const { return fExtraOptions; }
+   IOptions * ExtraOptions() { return fExtraOptions; }
 
    /// type of minimizer
    const std::string & MinimizerType() const { return fMinimType; }
