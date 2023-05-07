@@ -74,7 +74,7 @@ ScipyMinimizer::ScipyMinimizer() : BasicMinimizer()
    fOptions.SetMinimizerType("Scipy");
    fOptions.SetMinimizerAlgorithm("L-BFGS-B");
    PyInitialize();
-   fHessianFunc = [](const std::vector<double> &, double *) -> bool { return false; };
+   fHessianFunc = nullptr; 
    // set extra options
    SetAlgoExtraOptions();
    fConstraintsList = PyList_New(0);
@@ -88,7 +88,7 @@ ScipyMinimizer::ScipyMinimizer(const char *type)
    fOptions.SetMinimizerType("Scipy");
    fOptions.SetMinimizerAlgorithm(type);
    PyInitialize();
-   fHessianFunc = [](const std::vector<double> &, double *) -> bool { return false; };
+   fHessianFunc = nullptr;
    // set extra options
    SetAlgoExtraOptions();
    fConstraintsList = PyList_New(0);
@@ -98,7 +98,6 @@ ScipyMinimizer::ScipyMinimizer(const char *type)
 //_______________________________________________________________________
 void ScipyMinimizer::SetAlgoExtraOptions()
 {
-   std::string type = fOptions.MinimizerAlgorithm();
    SetExtraOptions(fExtraOpts);
 }
 
@@ -201,7 +200,7 @@ bool ScipyMinimizer::Minimize()
    if (gGradFunction == nullptr) {
       fJacobian = Py_None;
    }
-   if (!gfHessianFunction) {
+   if (gfHessianFunction == nullptr) {
       fHessian = Py_None;
    }
    auto method = fOptions.MinimizerAlgorithm();
@@ -234,16 +233,19 @@ bool ScipyMinimizer::Minimize()
    PyObject *pybounds_args = PyTuple_New(2);
    PyObject *pylimits_lower = PyList_New(NDim());
    PyObject *pylimits_upper = PyList_New(NDim());
+   bool foundBounds = false;
    for (unsigned int i = 0; i < NDim(); i++) {
       ParameterSettings varsettings;
 
       if (GetVariableSettings(i, varsettings)) {
          if (varsettings.HasLowerLimit()) {
+            foundBounds=true;
             PyList_SetItem(pylimits_lower, i, PyFloat_FromDouble(varsettings.LowerLimit()));
          } else {
             PyList_SetItem(pylimits_lower, i, PyFloat_FromDouble(-NPY_INFINITY));
          }
          if (varsettings.HasUpperLimit()) {
+            foundBounds=true;
             PyList_SetItem(pylimits_upper, i, PyFloat_FromDouble(varsettings.UpperLimit()));
          } else {
             PyList_SetItem(pylimits_upper, i, PyFloat_FromDouble(NPY_INFINITY));
@@ -252,24 +254,37 @@ bool ScipyMinimizer::Minimize()
          MATH_ERROR_MSG("ScipyMinimizer::Minimize", Form("Variable index = %d not found", i));
       }
    }
-   PyTuple_SetItem(pybounds_args, 0, pylimits_lower);
-   PyTuple_SetItem(pybounds_args, 1, pylimits_upper);
-
-   PyObject *pybounds = PyObject_CallObject(fBoundsMod, pybounds_args);
-
+   PyObject *pybounds = Py_None;
+   if(foundBounds)
+   {
+      PyTuple_SetItem(pybounds_args, 0, pylimits_lower);
+      PyTuple_SetItem(pybounds_args, 1, pylimits_upper);
+      pybounds = PyObject_CallObject(fBoundsMod, pybounds_args);
+   }
+ 
    // minimize(fun, x0, args=(), method=None, jac=None, hess=None, hessp=None, bounds=None, constraints=(), tol=None,
    // callback=None, options=None)
    PyObject *args = Py_BuildValue("(OO)", fTarget, x0);
    PyObject *kw = Py_BuildValue("{s:s,s:O,,s:O,s:O,s:O,s:d,s:O}", "method", method.c_str(), "jac", fJacobian, "hess",
                                 fHessian, "bounds", pybounds,"constraints",fConstraintsList, "tol", Tolerance(),
                                 "options", pyoptions);
-
+   if(PrintLevel()>0)
+   {
+      std::cout<<"========Minimizer Parameters========\n";
+      PyPrint(kw);
+      std::cout<<"====================================\n";
+   }
    PyObject *result = PyObject_Call(fMinimize, args, kw);
    if (result == NULL) {
       PyErr_Print();
       return false;
    }
-   // PyPrint(result);
+   if(PrintLevel()>0)
+   {
+      std::cout<<"========Minimizer Results========\n";
+      PyPrint(result);
+      std::cout<<"=================================\n";
+   }
    Py_DECREF(pybounds);
    Py_DECREF(args);
    Py_DECREF(kw);
@@ -304,12 +319,14 @@ bool ScipyMinimizer::Minimize()
    auto obj_value = (*gFunction)(x);
    SetMinValue(obj_value);
    fCalls = nfev; // number of function evaluations
-
    std::cout << "=== Success: " << success << std::endl;
    std::cout << "=== Status: " << status << std::endl;
    std::cout << "=== Message: " << message << std::endl;
    std::cout << "=== Function calls: " << nfev << std::endl;
    if(success) fStatus=0;
+   else fStatus = status; //suggested by Lorenzo.
+
+   Py_DECREF(result);
    return success;
 }
 
