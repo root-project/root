@@ -14,9 +14,11 @@
 
 #include "Math/MinimTransformFunction.h"
 #include "Math/MultiNumGradFunction.h"
+#include "Math/GenAlgoOptions.h"
 
 #include "Math/Error.h"
 #include "GSLMultiFit.h"
+#include "GSLMultiFit2.h"
 #include "gsl/gsl_errno.h"
 
 
@@ -81,6 +83,8 @@ public:
       return fTransform->NTot();
    }
 
+   virtual  typename FMFunc::Type_t Type() const { return fFunc.Type(); }
+
    // forward of transformation functions
    const double * Transformation( const double * x) const { return fTransform->Transformation(x); }
 
@@ -135,6 +139,7 @@ template<class Func>
 class LSResidualFunc : public IMultiGradFunction {
 public:
 
+
    //default ctor (required by CINT)
    LSResidualFunc() : fIndex(0), fChi2(0)
    {}
@@ -173,14 +178,25 @@ public:
       FdF(x,f0,g);
    }
 
+   bool IsLSType() const {
+      //std::cout << "getting type of fit method function " << typeid(*fChi2).name() << " " << fChi2->Type() << std::endl;
+      return fChi2->Type() == fChi2->kLeastSquare;
+   }
+
    void FdF (const double * x, double & f, double * g) const override {
-      f = fChi2->DataElement(x,fIndex,g);
-      // for likelihood fits need to rescale g ??
-      // if (fChi2->Type() == Func::kPoissonLikelihood) {
-      //    f *= -1;
-      //    for (unsigned int i = 0; i < NDim(); i++)
-      //       g[i] *= -1.; // /= f;
-      // }
+      if (IsLSType()) {
+         f = fChi2->DataElement(x,fIndex,g);
+      } else  {
+         // data element is computed
+         if (fH.empty() || fH.size() != NDim()*NDim()) {
+            fH = std::vector<double>(NDim()*NDim());
+         }
+         f = fChi2->DataElement(x,fIndex,g,fH.data());
+      }
+   }
+
+   void GetHessian(double *h){
+      std::copy(fH.begin(), fH.end(),h);
    }
 
 
@@ -198,21 +214,45 @@ private:
 
    unsigned int fIndex;
    const Func * fChi2;
+   mutable std::vector<double> fH;
 };
 
+int GetTypeFromName(const char * name) {
+   std::string tName(name);
+   if (tName.empty()) return 0;
+   if (tName == "lms_old") return 1;
+   if (tName == "lm_old") return 2;
+   if (tName == "trust") return 3;
+   if (tName == "trust_lm") return 4;
+   if (tName == "trust_lmaccel") return 5;
+   if (tName == "trust_dogleg") return 6;
+   if (tName == "trust_ddogleg") return 7;
+   if (tName == "trust_subspace2D" || tName == "trust_2D") return 8;
+   return 0;
+}
 
 // GSLNLSMinimizer implementation
+GSLNLSMinimizer::GSLNLSMinimizer( const char *  name ) :
+   GSLNLSMinimizer(GetTypeFromName(name))
+   {}
 
 GSLNLSMinimizer::GSLNLSMinimizer( int type )
 {
    // Constructor implementation : create GSLMultiFit wrapper object
-   const gsl_multifit_fdfsolver_type * gsl_type = nullptr; // use default type defined in GSLMultiFit
-   if (type == 1) gsl_type =   gsl_multifit_fdfsolver_lmsder; // scaled lmder version
-   if (type == 2) gsl_type =   gsl_multifit_fdfsolver_lmder; // unscaled version
+   const gsl_multifit_fdfsolver_type * gsl_old_type = nullptr; // use default type defined in GSLMultiFit
+   if (type == 1) gsl_old_type =   gsl_multifit_fdfsolver_lmsder; // scaled lmder version
+   if (type == 2) gsl_old_type =   gsl_multifit_fdfsolver_lmder; // unscaled version
 
-   fGSLMultiFit = new GSLMultiFit( gsl_type );
+   // const gsl_multifit_nlinear_type * gsl_new_type = nullptr; //
+   //if (type == 3) gsl_new_type =   gsl_multifit_nlinear_trust; // trust region default
+
+   if (gsl_old_type)
+      fGSLMultiFit = new GSLMultiFit( gsl_old_type );
+   else
+      fGSLMultiFit2 = new GSLMultiFit2( type -3);
 
    fEdm = -1;
+
 
    // default tolerance and max iterations
    int niter = ROOT::Math::MinimizerOptions::DefaultMaxIterations();
@@ -223,11 +263,25 @@ GSLNLSMinimizer::GSLNLSMinimizer( int type )
    if (fLSTolerance <=0) fLSTolerance = 0.0001; // default internal value
 
    SetPrintLevel(ROOT::Math::MinimizerOptions::DefaultPrintLevel());
+
+   // set the default options
+   if (fGSLMultiFit2) {
+      fOptions.SetExtraOptions(fGSLMultiFit2->GetDefaultOptions());
+      if (type == 0 || type == 3)
+         fOptions.SetMinimizerAlgorithm("trust_lm");
+
+      fOptions.ExtraOptions()->SetValue("scale","marquardt");
+   }
 }
 
 GSLNLSMinimizer::~GSLNLSMinimizer () {
+<<<<<<< HEAD
    assert(fGSLMultiFit != nullptr);
    delete fGSLMultiFit;
+=======
+   if (fGSLMultiFit) delete fGSLMultiFit;
+   if (fGSLMultiFit2) delete fGSLMultiFit2;
+>>>>>>> c1c95febd88 ([math][mathmore] Add new fitter algorithm from GSL under GSLMultiFit)
 }
 
 
@@ -235,7 +289,6 @@ GSLNLSMinimizer::~GSLNLSMinimizer () {
 void GSLNLSMinimizer::SetFunction(const ROOT::Math::IMultiGenFunction & func) {
    // set the function to minimizer
    // need to create vector of functions to be passed to GSL multifit
-   // support now only CHi2 implementation
 
    // call base class method. It will clone the function and set number of dimensions
    BasicMinimizer::SetFunction(func);
@@ -258,14 +311,34 @@ bool GSLNLSMinimizer::Minimize() {
       return false;
    }
 
-   if (fitGradFunc)
-      return DoMinimize<ROOT::Math::FitMethodGradFunction>(*fitGradFunc);
-   else
-      return DoMinimize<ROOT::Math::FitMethodFunction>(*fitFunc);
+   if (fGSLMultiFit) {
+
+      std::cout << "GLSNLSMinimizer::Minimize - Using old GSLMultiFit with method " <<
+      fOptions.MinimizerAlgorithm() << std::endl;
+
+      if (fitGradFunc)
+         return DoMinimize<ROOT::Math::FitMethodGradFunction, GSLMultiFit>(*fitGradFunc, fGSLMultiFit);
+      else
+         return DoMinimize<ROOT::Math::FitMethodFunction, GSLMultiFit>(*fitFunc, fGSLMultiFit);
+   }
+   if (fGSLMultiFit2) {
+
+      // set specific minimizer parameters
+      fGSLMultiFit2->SetParameters(fOptions);
+
+      std::cout << "GLSNLSMinimizer::Minimize - Using new GSLMultiFit with trs method " <<
+      fOptions.MinimizerAlgorithm() << std::endl;
+
+      if (fitGradFunc)
+         return DoMinimize<ROOT::Math::FitMethodGradFunction, GSLMultiFit2>(*fitGradFunc, fGSLMultiFit2);
+      else
+         return DoMinimize<ROOT::Math::FitMethodFunction, GSLMultiFit2>(*fitFunc, fGSLMultiFit2);
+   }
+
 }
 
-template<class Func>
-bool GSLNLSMinimizer::DoMinimize(const Func & fitFunc) {
+template<class Func, class FitterType>
+bool GSLNLSMinimizer::DoMinimize(const Func & fitFunc, FitterType * fitter) {
 
    unsigned int size = fitFunc.NPoints();
    fNCalls = 0;  // reset number of function calls
@@ -276,7 +349,6 @@ bool GSLNLSMinimizer::DoMinimize(const Func & fitFunc) {
    // set initial parameters of the minimizer
    int debugLevel = PrintLevel();
 
-   assert (fGSLMultiFit != nullptr);
 
    unsigned int npar = NPar();
    unsigned int ndim = NDim();
@@ -317,48 +389,52 @@ bool GSLNLSMinimizer::DoMinimize(const Func & fitFunc) {
    if (debugLevel >=1 ) std::cout <<"Minimize using GSLNLSMinimizer "  << std::endl;
 
 
-   int iret = fGSLMultiFit->Set( residualFuncs, &startValues.front() );
+   int iret = fitter->Set( residualFuncs, &startValues.front() );
 
    if (iret) {
       MATH_ERROR_MSGVAL("GSLNLSMinimizer::Minimize","Error setting the residual functions ",iret);
       return false;
    }
 
+   int status = 0;
+   bool minFound = false;
+   unsigned  int iter = 0;
+   if (fGSLMultiFit) {
+      // case of using old solver
+
    if (debugLevel >=1 ) std::cout <<"GSLNLSMinimizer: " << fGSLMultiFit->Name() << " - start iterating......... "  << std::endl;
 
    // start iteration
    unsigned  int iter = 0;
-   int status;
-   bool minFound = false;
    do {
-      status = fGSLMultiFit->Iterate();
+      status = fitter->Iterate();
 
       if (debugLevel >=1) {
          std::cout << "----------> Iteration " << iter << " / " << MaxIterations() << " status " << gsl_strerror(status)  << std::endl;
-         const double * x = fGSLMultiFit->X();
+         const double * x = fitter->X();
          if (trFunc) x = trFunc->Transformation(x);
          int pr = std::cout.precision(18);
          std::cout << "            FVAL = " << (fitFunc)(x) << std::endl;
          std::cout.precision(pr);
          std::cout << "            X Values : ";
          for (unsigned int i = 0; i < NDim(); ++i)
-            std::cout << " " << VariableName(i) << " = " << X()[i];
+            std::cout << " " << VariableName(i) << " = " << x[i];
          std::cout << std::endl;
       }
 
       if (status) break;
 
       // check also the delta in X()
-      status = fGSLMultiFit->TestDelta( Tolerance(), Tolerance() );
+      status = fitter->TestDelta( Tolerance(), Tolerance() );
       if (status == GSL_SUCCESS) {
          minFound = true;
       }
 
       // double-check with the gradient
-      int status2 = fGSLMultiFit->TestGradient( Tolerance() );
+      int status2 = fitter->TestGradient( Tolerance() );
       if ( minFound && status2 != GSL_SUCCESS) {
          // check now edm
-         fEdm = fGSLMultiFit->Edm();
+         fEdm = fitter->Edm();
          if (fEdm > Tolerance() ) {
             // continue the iteration
             status = status2;
@@ -378,14 +454,25 @@ bool GSLNLSMinimizer::DoMinimize(const Func & fitFunc) {
    while (status == GSL_CONTINUE && iter < MaxIterations() );
 
    // check edm
-   fEdm = fGSLMultiFit->Edm();
+   fEdm = fitter->Edm();
    if ( fEdm < Tolerance() ) {
       minFound = true;
    }
 
+   } else if (fGSLMultiFit2) {
+      //case using new solver
+      status = fGSLMultiFit2->Solve();
+      if (status == GSL_SUCCESS) minFound = true;
+   }
+
    // save state with values and function value
+<<<<<<< HEAD
    const double * x = fGSLMultiFit->X();
    if (x == nullptr) return false;
+=======
+   const double * x = fitter->X();
+   if (x == 0) return false;
+>>>>>>> c1c95febd88 ([math][mathmore] Add new fitter algorithm from GSL under GSLMultiFit)
    // apply transformation outside SetFinalValues(..)
    // because trFunc is not a MinimTransformFunction but a FitTransFormFunction
    if (trFunc)  x = trFunc->Transformation(x);
@@ -397,13 +484,13 @@ bool GSLNLSMinimizer::DoMinimize(const Func & fitFunc) {
    fErrors.resize(NDim());
 
    // get errors from cov matrix
-   const double * cov =  fGSLMultiFit->CovarMatrix();
+   const double * cov =  fitter->CovarMatrix();
    if (cov) {
 
       fCovMatrix.resize(ndim*ndim);
 
       if (trFunc) {
-         trFunc->MatrixTransformation(x, fGSLMultiFit->CovarMatrix(), fCovMatrix.data() );
+         trFunc->MatrixTransformation(x, fitter->CovarMatrix(), fCovMatrix.data() );
       }
       else {
          std::copy(cov, cov + fCovMatrix.size(), fCovMatrix.begin() );
@@ -439,7 +526,7 @@ bool GSLNLSMinimizer::DoMinimize(const Func & fitFunc) {
       }
       if (debugLevel >=1 ) {
          std::cout << "FVAL         = " << MinValue() << std::endl;
-         std::cout << "Edm   = " << fGSLMultiFit->Edm() << std::endl;
+         std::cout << "Edm   = " << fitter->Edm() << std::endl;
          std::cout << "Niterations  = " << iter << std::endl;
       }
       return false;

@@ -36,6 +36,8 @@
 
 #include "gsl/gsl_vector.h"
 #include "gsl/gsl_matrix.h"
+#include "gsl/gsl_matrix.h"
+#include "gsl/gsl_linalg.h"
 
 #include <cassert>
 
@@ -91,10 +93,47 @@ public:
       if (n == 0) return -1;
       if (npar == 0) return -2;
       FuncVector  & funcVec = *( reinterpret_cast< FuncVector *> (p) );
-      for (unsigned int i = 0; i < n ; ++i) {
-         double * g = (h->data)+i*npar;   //pointer to start  of i-th row
-         assert ( npar == (funcVec[i]).NDim() );
-         (funcVec[i]).Gradient(x->data, g);
+      bool isLSType = (funcVec[0]).IsLSType();
+      if (isLSType) {
+         for (unsigned int i = 0; i < n ; ++i) {
+            double * g = (h->data)+i*npar;   //pointer to start  of i-th row
+            assert ( npar == (funcVec[i]).NDim() );
+            (funcVec[i]).Gradient(x->data, g);
+         }
+      } else {
+         // general case: need to compute Jacobian by factorizing the Hessian
+         // which is returned by FdF. and we conpute the residual f by solving for
+         // J * f = g  where J is such H = J^t J
+         gsl_matrix * hessian = gsl_matrix_alloc( npar, npar );
+         gsl_vector * gradient = gsl_vector_alloc( npar );
+         gsl_vector * gtmp = gsl_vector_alloc( npar );
+         gsl_matrix * htmp = gsl_matrix_alloc( npar,npar );
+         // get hessian and gradient from data element
+         n = funcVec.size();
+         for (unsigned int i = 0; i < n; ++i) {
+            double fval = 0;
+            (funcVec[i]).FdF(x->data, fval, gtmp->data);
+            gsl_vector_add(gradient,gtmp);
+            (funcVec[i]).GetHessian(htmp->data);
+            gsl_matrix_add(hessian,htmp);
+         }
+         // perform Cholesky factorization
+         gsl_linalg_cholesky_decomp1(hessian);
+         // copy computed hessian to htmp for inverting
+         gsl_matrix_memcpy(htmp, hessian);
+         gsl_matrix_memcpy(h, htmp);
+         /*
+         gsl_linalg_tri_invert(CblasLower, CblasNonUnit, htmp);
+         // multiply inverse by g to compute f
+         gsl_vector * ftmp = gsl_vector_alloc( npar );
+         gsl_blas_dgemv(CblasNoTrans, 1., htmp, gradient, 0., ftmp);
+         gsl_vector_memcpy(f, ftmp);
+         gsl_vector_free(ftmp);
+         */
+         gsl_matrix_free(htmp);
+         gsl_vector_free(gtmp);
+         gsl_vector_free(gradient);
+         gsl_matrix_free(hessian);
       }
       return 0;
    }
@@ -109,12 +148,47 @@ public:
       if (npar == 0) return -2;
       FuncVector  & funcVec = *( reinterpret_cast< FuncVector *> (p) );
       assert ( f->size == n);
-      for (unsigned int i = 0; i < n ; ++i) {
-         assert ( npar == (funcVec[i]).NDim() );
-         double fval = 0;
-         double * g = (h->data)+i*npar;   //pointer to start  of i-th row
-         (funcVec[i]).FdF(x->data, fval, g);
-         gsl_vector_set(f, i, fval  );
+      bool isLSType = (funcVec[0]).IsLSType();
+      if (isLSType) {
+         for (unsigned int i = 0; i < n; ++i) {
+            assert(npar == (funcVec[i]).NDim());
+            double fval = 0;
+            double *g = (h->data) + i * npar; // pointer to start  of i-th row
+            (funcVec[i]).FdF(x->data, fval, g);
+            gsl_vector_set(f, i, fval);
+         }
+      } else {
+         // general case: need to compute Jacobian by factorizing the Hessian
+         // which is returned by FdF. and we conpute the residual f by solving for
+         // J * f = g  where J is such H = J^t J
+         gsl_matrix * hessian = gsl_matrix_alloc( npar, npar );
+         gsl_vector * gradient = gsl_vector_alloc( npar );
+         gsl_vector * gtmp = gsl_vector_alloc( npar );
+         gsl_matrix * htmp = gsl_matrix_alloc( npar,npar );
+         // get hessian and gradient from data element
+         n = funcVec.size();
+         for (unsigned int i = 0; i < n; ++i) {
+            double fval = 0;
+            (funcVec[i]).FdF(x->data, fval, gtmp->data);
+            gsl_vector_add(gradient,gtmp);
+            (funcVec[i]).GetHessian(htmp->data);
+            gsl_matrix_add(hessian,htmp);
+         }
+         // perform Cholesky factorization
+         gsl_linalg_cholesky_decomp1(hessian);
+         // copy computed hessian to htmp for inverting
+         gsl_matrix_memcpy(htmp, hessian);
+         gsl_matrix_memcpy(h, htmp);
+         gsl_linalg_tri_invert(CblasLower, CblasNonUnit, htmp);
+         // multiply inverse by g to compute f
+         gsl_vector * ftmp = gsl_vector_alloc( npar );
+         gsl_blas_dgemv(CblasNoTrans, 1., htmp, gradient, 0., ftmp);
+         gsl_vector_memcpy(f, ftmp);
+         gsl_matrix_free(htmp);
+         gsl_vector_free(ftmp);
+         gsl_vector_free(gtmp);
+         gsl_vector_free(gradient);
+         gsl_matrix_free(hessian);
       }
       return 0;
    }
