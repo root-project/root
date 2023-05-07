@@ -46,11 +46,13 @@ MinimumError FumiliErrorUpdator::Update(const MinimumState &s0, const MinimumPar
    // we apply also the Marquard lambda factor to increase weight of diagonal term
    // as suggester in Numerical Receipt for Marquard method
 
+   MnPrint print("FumiliErrorUpdator");
+   print.Debug("Compute covariance matrix using Fumili method");
+
    // need to downcast to FumiliGradientCalculator
    FumiliGradientCalculator *fgc = dynamic_cast<FumiliGradientCalculator *>(const_cast<GradientCalculator *>(&gc));
    assert(fgc != nullptr);
 
-   MnPrint print("FumiliErrorUpdator");
 
    // get Hessian from Gradient calculator
 
@@ -80,6 +82,9 @@ MinimumError FumiliErrorUpdator::Update(const MinimumState &s0, const MinimumPar
       for (unsigned int i = 0; i < cov.Nrow(); i++) {
          cov(i, i) = 1. / cov(i, i);
       }
+
+      // shiould we return the Hessian in addition to cov in this case?
+      return MinimumError(cov, MinimumError::MnInvertFailed);
    }
 
    double dcov = -1;

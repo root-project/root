@@ -115,6 +115,7 @@ public:
       if (npts == 0) return -1;
 
       unsigned int npar = funcVec[0].NDim();
+
       // Remove unused typedef to remove warning in GCC48
       // http://gcc.gnu.org/gcc-4.8/porting_to.html
       // typedef typename std::vector<Func>  FuncVec;
@@ -150,8 +151,7 @@ public:
    /// parameter values at the minimum
    const double * X() const {
       if (fSolver == nullptr) return nullptr;
-      gsl_vector * x =  gsl_multifit_fdfsolver_position(fSolver);
-      return x->data;
+      return fSolver->x->data;
    }
 
    /// gradient value at the minimum
