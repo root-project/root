@@ -787,10 +787,12 @@ void ROOT::Fit::FitOptionsMake(EFitObjectType type, const char *option, Foption_
          fitOption.User = 0;
       }
    }
-   if (opt.Contains("Q")) fitOption.Quiet   = 1;
-   if (opt.Contains("V")) {fitOption.Verbose = 1; fitOption.Quiet   = 0;}
-   if (opt.Contains("VV")) {fitOption.Verbose = 2; }
-    if (opt.Contains("VVV") || opt.Contains("DEBUG")) {fitOption.Verbose = 3; }
+
+   // in case of Q and V options V has precedence
+   if (opt.Contains("VVV") || opt.Contains("DEBUG")) { fitOption.Verbose = 3; }
+   else if (opt.Contains("VV")) {fitOption.Verbose = 2; }
+   else if (opt.Contains("V")) {fitOption.Verbose = 1; }
+   else if (opt.Contains("Q")) {fitOption.Quiet   = 1; }
 
 
    if (opt.Contains("E")) fitOption.Errors  = 1;

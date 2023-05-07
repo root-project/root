@@ -486,6 +486,7 @@ bool Minuit2Minimizer::Minimize()
    fMinuitFCN->SetErrorDef(ErrorDef());
 
    const int printLevel = PrintLevel();
+   print.Debug("Minuit print level is", printLevel);
    if (PrintLevel() >= 1) {
       // print the real number of maxfcn used (defined in ModularFunctionMinimizer)
       int maxfcn_used = maxfcn;

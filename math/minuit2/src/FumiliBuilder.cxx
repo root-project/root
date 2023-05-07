@@ -43,16 +43,19 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn &fcn, const GradientCalculato
    print.Debug("Convergence when edm <", edmval);
 
    if (seed.Parameters().Vec().size() == 0) {
+      print.Warn("No variable parameters are defined! - Return current function value ");
       return FunctionMinimum(seed, fcn.Up());
    }
 
-   //   double edm = Estimator().Estimate(seed.Gradient(), seed.Error());
-   double edm = seed.State().Edm();
+   // estimate initial edm value
+   double edm = Estimator().Estimate(seed.Gradient(), seed.Error());
+   print.Debug("initial edm is ", edm);
+   //double edm = seed.State().Edm();
 
    FunctionMinimum min(seed, fcn.Up());
 
    if (edm < 0.) {
-      print.Warn("Initial matrix not pos.def.");
+      print.Error("Initial matrix not positive defined, edm = ",edm,"\nExit minimization ");
       return min;
    }
 
@@ -196,6 +199,8 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn &fcn, const GradientCalculato
    double edm = initialState.Edm();
 
    MnPrint print("FumiliBuilder");
+
+   print.Info("Iterating FumiliBuilder", maxfcn, edmval);
 
    print.Debug("Initial State:", "\n  Parameter", initialState.Vec(), "\n  Gradient", initialState.Gradient().Vec(),
                "\n  Inv Hessian", initialState.Error().InvHessian(), "\n  edm", initialState.Edm(), "\n  maxfcn",
@@ -361,7 +366,6 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn &fcn, const GradientCalculato
                   if (scaleTR)
                     step = Dinv2 * step;
 
-
                   print.Debug("tau=1. - Use as new point the Cauchy  point - along gradient with norm=delta ", delta);
                } else {
                   MnAlgebraicVector stepC(step.size());
@@ -385,15 +389,21 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn &fcn, const GradientCalculato
                   // solution is
                   double t = 0;
                   // a cannot be negative or zero, otherwise point was accepted
-                  assert( a> 0);
-                  double t1 = (-b + sqrt(b * b - 4. * a * c)) / (2.0 * a);
-                  double t2 = (-b - sqrt(b * b - 4. * a * c)) / (2.0 * a);
-                  // if b is positive solution is
-                  print.Debug(" solution dogleg equation", t1, t2);
-                  if (t1 >= 0 && t1 <= 1.)
-                     t = t1;
-                  else
-                     t = t2;
+                  if (a <= 0) {
+                     // case a is zero
+                     print.Warn("a is equal to zero!  a = ",a);
+                     print.Info(" delta ",delta," tau ",tau," gHg ",gHg," normgrad2 ",normGrad2);
+                     t = -b/c;
+                  } else {
+                     double t1 = (-b + sqrt(b * b - 4. * a * c)) / (2.0 * a);
+                     double t2 = (-b - sqrt(b * b - 4. * a * c)) / (2.0 * a);
+                     // if b is positive solution is
+                     print.Debug(" solution dogleg equation", t1, t2);
+                     if (t1 >= 0 && t1 <= 1.)
+                        t = t1;
+                     else
+                        t = t2;
+                  }
                   step = stepC + t * diffP;
                   // need to rescale point per D^-1 >
                   print.Debug("New dogleg point is t = ", t);
@@ -476,15 +486,15 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn &fcn, const GradientCalculato
 
       // check lambda according to step
       if (doLineSearch) {
-      if (p.Fval() < s0.Fval())
-         // fcn is decreasing along the step
-         lambda *= 0.1;
-      else {
-         lambda *= 10;
-         // if close to minimum stop to avoid oscillations around minimum value
-         if (edm < 0.1)
-            break;
-      }
+         if (p.Fval() < s0.Fval())
+            // fcn is decreasing along the step
+            lambda *= 0.1;
+         else {
+            lambda *= 10;
+            // if close to minimum stop to avoid oscillations around minimum value
+            if (edm < 0.1)
+               break;
+         }
       }
 
       print.Debug("finish iteration -", result.size(), "lambda =", lambda, "f1 =", p.Fval(), "f0 =", s0.Fval(),
@@ -504,7 +514,7 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn &fcn, const GradientCalculato
    } while (edm > edmval && fcn.NumOfCalls() < maxfcn);
 
    if (fcn.NumOfCalls() >= maxfcn) {
-      print.Warn("Call limit exceeded");
+      print.Warn("Call limit exceeded",fcn.NumOfCalls(), maxfcn);
 
       return FunctionMinimum(seed, result, fcn.Up(), FunctionMinimum::MnReachedCallLimit);
    }
@@ -523,7 +533,6 @@ FunctionMinimum FumiliBuilder::Minimum(const MnFcn &fcn, const GradientCalculato
          return FunctionMinimum(seed, result, fcn.Up(), FunctionMinimum::MnAboveMaxEdm);
       }
    }
-   //   std::cout<<"result.back().Error().Dcovar()= "<<result.back().Error().Dcovar()<<std::endl;
 
    print.Debug("Exiting successfully", "Ncalls", fcn.NumOfCalls(), "FCN", result.back().Fval(), "Edm", edm, "Requested",
                edmval);

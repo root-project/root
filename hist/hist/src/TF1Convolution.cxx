@@ -329,7 +329,9 @@ void TF1Convolution::MakeFFTConv()
 
 Double_t TF1Convolution::EvalFFTConv(Double_t t)
 {
-   if (!fFlagGraph)  MakeFFTConv();
+   if (!fFlagGraph) {
+      MakeFFTConv();
+   }
    // if cannot make FFT use numconv
    if (fGraphConv)
       return  fGraphConv -> Eval(t);
@@ -430,10 +432,10 @@ void TF1Convolution::SetParameters(Double_t p0, Double_t p1, Double_t p2, Double
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set the fraction of extra range used when doing an FFT convolution.
+/// Set the fraction of extra range used when doing an convolution.
 /// The extra range is often needed to avoid mirroring effect of the resulting convolution
 /// function at the borders.
-/// By default an extra range of 0.1 is used.
+/// By default an extra range of 0.1 is used when doing FFT and it is not use for numerical convolution
 
 void TF1Convolution::SetExtraRange(Double_t percentage)
 {

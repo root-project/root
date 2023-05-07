@@ -137,7 +137,7 @@ public:
 private:
    VariableMetricEDMEstimator fEstimator;
    FumiliErrorUpdator fErrorUpdator;
-   FumiliMethodType fMethodType;
+   FumiliMethodType fMethodType = kTrustRegion;   // use Trust region as default method
 };
 
 } // namespace Minuit2
