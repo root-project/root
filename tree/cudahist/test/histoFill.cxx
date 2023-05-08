@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////
 /// Tests for filling RHnCUDA histograms with different data types and dimensions.
 ///
-
+#include <climits>
 #include <stdlib.h>
 #include "gtest/gtest.h"
 
@@ -90,7 +90,7 @@ template <class TupleType, class TupleParam, std::size_t I>
 struct make_case {
    static constexpr std::size_t N = std::tuple_size<TupleParam>::value;
    using type =
-      Case<typename std::tuple_element<I / N, TupleType>::type, typename std::tuple_element<I %N, TupleParam>::type>;
+      Case<typename std::tuple_element<I / N, TupleType>::type, typename std::tuple_element<I % N, TupleParam>::type>;
 };
 
 template <class T1, class T2, class Is>
@@ -104,12 +104,12 @@ struct make_combinations<TupleType, TupleParam, std::index_sequence<Is...>> {
 template <class TupleTypes, class... Params>
 using Combinations_t = typename make_combinations<
    TupleTypes, std::tuple<Params...>,
-   std::make_index_sequence<(std::tuple_size<TupleTypes>::value) *(sizeof...(Params))>>::tuples;
+   std::make_index_sequence<(std::tuple_size<TupleTypes>::value) * (sizeof...(Params))>>::tuples;
 
 template <typename T>
 class HistoTestFixture : public ::testing::Test {
 protected:
-   // includes u/overflow bins. Uneven number chosen to have a center bin.
+   // Includes u/overflow bins. Uneven number chosen to have a center bin.
    const static int numBins = 5;
 
    // Variables for defining fixed bins.
@@ -196,7 +196,7 @@ struct Test<std::tuple<T...>> {
    using Types = ::testing::Types<T...>;
 };
 
-using TestTypes = Test<Combinations_t<std::tuple<double, float, int>, OneDim, TwoDim, ThreeDim>>::Types;
+using TestTypes = Test<Combinations_t<std::tuple<double, float, int, short>, OneDim, TwoDim, ThreeDim>>::Types;
 TYPED_TEST_SUITE(HistoTestFixture, TestTypes);
 
 /////////////////////////////////////
@@ -215,7 +215,7 @@ TYPED_TEST(HistoTestFixture, FillFixedBins)
    };
    auto weight = (t)1;
 
-   std::vector<int> expectedHistBins = { 0, this->nCells / 2, this->nCells - 1 };
+   std::vector<int> expectedHistBins = {0, this->nCells / 2, this->nCells - 1};
 
    for (auto i = 0; i < (int)coords.size(); i++) {
       h.Fill(coords[i]);
@@ -236,7 +236,6 @@ TYPED_TEST(HistoTestFixture, FillFixedBins)
    }
 }
 
-
 TYPED_TEST(HistoTestFixture, FillFixedBinsWeighted)
 {
    // int, double, or float
@@ -250,7 +249,7 @@ TYPED_TEST(HistoTestFixture, FillFixedBinsWeighted)
    };
    auto weight = (t)7;
 
-   std::vector<int> expectedHistBins = { 0, this->nCells / 2, this->nCells - 1 };
+   std::vector<int> expectedHistBins = {0, this->nCells / 2, this->nCells - 1};
 
    for (auto i = 0; i < (int)coords.size(); i++) {
       h.Fill(coords[i], weight);
@@ -269,4 +268,55 @@ TYPED_TEST(HistoTestFixture, FillFixedBinsWeighted)
       this->GetExpectedStats(coords, weight);
       CompareArrays(this->stats, this->expectedStats, this->nStats);
    }
+}
+
+TEST(HistoTestFixture, FillIntClamp)
+{
+   auto h = CUDAhist::RHnCUDA<int, 1>({6}, {0}, {4});
+   h.Fill({0}, INT_MAX);
+   h.Fill({3}, -INT_MAX);
+
+   for (int i = 0; i < 100; i++) {     // Repeat to test for race conditions
+      h.Fill({0});                     // Should keep max value
+      h.Fill({1}, long(INT_MAX) + 1);  // Clamp positive overflow
+      h.Fill({2}, -long(INT_MAX) - 1); // Clamp negative overflow
+      h.Fill({3}, -1);                 // Should keep min value
+   }
+
+   int r[6];
+   double s[4];
+   h.RetrieveResults(r, s);
+
+   EXPECT_EQ(r[0], 0);
+   EXPECT_EQ(r[1], INT_MAX);
+   EXPECT_EQ(r[2], INT_MAX);
+   EXPECT_EQ(r[3], -INT_MAX);
+   EXPECT_EQ(r[4], -INT_MAX);
+   EXPECT_EQ(r[5], 0);
+}
+
+TEST(HistoTestFixture, FillShortClamp)
+{
+   auto h = CUDAhist::RHnCUDA<short, 1>({10}, {0}, {8});
+
+   // Filling short histograms is implemented using atomic operations on integers so we test each case
+   // twice to test the for correct filling of the lower and upper bits.
+   for (int offset = 0; offset < 2; offset++) {
+      h.Fill({0. + offset}, 32767);
+      h.Fill({2. + offset}, -32767);
+
+      for (int i = 0; i < 100; i++) {   // Repeat to test for race conditions
+         h.Fill({0. + offset});         // Keep max value
+         h.Fill({2. + offset}, -1);     // Keep min value
+         h.Fill({4. + offset}, 32769);  // Clamp positive overflow
+         h.Fill({6. + offset}, -32769); // Clamp negative overflow
+      }
+   }
+
+   short r[10];
+   double s[4];
+   h.RetrieveResults(r, s);
+
+   int expected[10] = {0, 32767, 32767, -32767, -32767, 32767, 32767, -32767, -32767, 0};
+   CHECK_ARRAY(r, expected, 10);
 }

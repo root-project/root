@@ -21,16 +21,15 @@ __device__ inline int FindFixBin(double x, const double *binEdges, int nBins, do
    int bin;
 
    // OPTIMIZATION: can this be done with less branching?
-   if (x < xMin) {           //*-* underflow
+   if (x < xMin) { // underflow
       bin = 0;
-   } else if (!(x < xMax)) { //*-* overflow  (note the way to catch NaN)
+   } else if (!(x < xMax)) { // overflow  (note the way to catch NaN)
       bin = nBins + 1;
    } else {
-      if (binEdges == NULL) { //*-* fix bins
+      if (binEdges == NULL) // fix bins
          bin = 1 + int(nBins * (x - xMin) / (xMax - xMin));
-      } else {                //*-* variable bin sizes
+      else // variable bin sizes
          bin = 1 + CUDAHelpers::BinarySearchCUDA(nBins + 1, binEdges, x);
-      }
    }
 
    return bin;
@@ -61,53 +60,78 @@ __device__ inline int GetBin(int i, CUDAhist::RAxis *axes, double *coords, int *
 /// Device kernels for incrementing a bin.
 
 template <typename T>
-__device__ inline void AddBinContent(T *histogram, int bin, T weight)
+__device__ inline void AddBinContent(T *histogram, int bin, double weight)
 {
-   atomicAdd(&histogram[bin], weight);
+   atomicAdd(&histogram[bin], (T)weight);
 }
 
 // TODO:
 // template <>
 // __device__ inline void AddBinContent(char *histogram, int bin, char weight)
 // {
-//    int newval = histogram[bin] + int(weight);
-//    if (newval > -128 && newval < 128) {
-//       atomicExch(&histogram[bin], (char) newval);
+//    int newVal = histogram[bin] + int(weight);
+//    if (newVal > -128 && newVal < 128) {
+//       atomicExch(&histogram[bin], (char) newVal);
 //       return;
 //    }
-//    if (newval < -127)
+//    if (newVal < -127)
 //       atomicExch(&histogram[bin], (char) -127);
-//    if (newval > 127)
+//    if (newVal > 127)
 //       atomicExch(&histogram[bin], (char) 127);
 // }
 
-// TODO:
-// template <>
-// __device__ inline void AddBinContent(short *histogram, int bin, short weight)
-// {
-//    int newval = histogram[bin] + int(weight);
-//    if (newval > -32768 && newval < 32768) {
-//       atomicExch(&histogram[bin], (short) newval);
-//       return;
-//    }
-//    if (newval < -32767)
-//       atomicExch(&histogram[bin], (short) -32767);
-//    if (newval > 32767)
-//       atomicExch(&histogram[bin], (short) -32767);
-// }
+template <>
+__device__ inline void AddBinContent(short *histogram, int bin, double weight)
+{
+   // There is no CUDA atomicCAS for short so we need to operate on integers... (Assumes little endian)
+   short *addr = &histogram[bin];
+   int *addrInt = (int *)((char *)addr - ((size_t)addr & 2));
+   int old = *addrInt, assumed, newVal, overwrite;
+
+   do {
+      assumed = old;
+
+      if ((size_t)addr & 2) {
+         newVal = (assumed >> 16) + (int)weight; // extract short from upper 16 bits
+         overwrite = assumed & 0x0000ffff;       // clear upper 16 bits
+         if (newVal > -32768 && newVal < 32768)
+            overwrite |= (newVal << 16); // Set upper 16 bits to newVal
+         else if (newVal < -32767)
+            overwrite |= 0x80010000; // Set upper 16 bits to min short (-32767)
+         else
+            overwrite |= 0x7fff0000; // Set upper 16 bits to max short (32767)
+      } else {
+         newVal = (((assumed & 0xffff) << 16) >> 16) + (int)weight; // extract short from lower 16 bits + sign extend
+         overwrite = assumed & 0xffff0000;                          // clear lower 16 bits
+         if (newVal > -32768 && newVal < 32768)
+            overwrite |= (newVal & 0xffff); // Set lower 16 bits to newVal
+         else if (newVal < -32767)
+            overwrite |= 0x00008001; // Set lower 16 bits to min short (-32767)
+         else
+            overwrite |= 0x00007fff; // Set lower 16 bits to max short (32767)
+      }
+
+      old = atomicCAS(addrInt, assumed, overwrite);
+   } while (assumed != old);
+}
 
 template <>
-__device__ inline void AddBinContent(int *histogram, int bin, int weight)
+__device__ inline void AddBinContent(int *histogram, int bin, double weight)
 {
-   long long newval = histogram[bin] + (long long)weight;
-   if (newval > -INT_MAX && newval < INT_MAX) {
-      atomicExch(&histogram[bin], (int)newval);
-      return;
-   }
-   if (newval < -INT_MAX)
-      atomicExch(&histogram[bin], -INT_MAX);
-   if (newval > INT_MAX)
-      atomicExch(&histogram[bin], -INT_MAX);
+   int old = histogram[bin], assumed;
+   long newVal;
+
+   do {
+      assumed = old;
+      newVal = assumed + long(weight);
+
+      if (newVal > -INT_MAX && newVal < INT_MAX)
+         old = atomicCAS(&histogram[bin], assumed, (int)newVal);
+      else if (newVal <= -INT_MAX)
+         old = atomicCAS(&histogram[bin], assumed, -INT_MAX);
+      else // newVal >= INT_MAX
+         old = atomicCAS(&histogram[bin], assumed, INT_MAX);
+   } while (assumed != old); // Repeat on failure/when the bin was already updated by another thread
 }
 
 ///////////////////////////////////////////
@@ -117,14 +141,14 @@ template <typename T, unsigned int Dim>
 __global__ void HistoKernel(T *histogram, CUDAhist::RAxis *axes, int nBins, double *coords, int *bins, double *weights,
                             unsigned int bufferSize)
 {
-   auto smem = CUDAHelpers::shared_memory_proxy<T>();
+   auto sMem = CUDAHelpers::shared_memory_proxy<T>();
    unsigned int tid = threadIdx.x + blockDim.x * blockIdx.x;
-   unsigned int local_tid = threadIdx.x;
+   unsigned int localTid = threadIdx.x;
    unsigned int stride = blockDim.x * gridDim.x;
 
    // Initialize a local per-block histogram
-   for (auto i = local_tid; i < nBins; i += blockDim.x) {
-      smem[local_tid] = 0;
+   for (auto i = localTid; i < nBins; i += blockDim.x) {
+      sMem[localTid] = 0;
    }
    __syncthreads();
 
@@ -132,13 +156,13 @@ __global__ void HistoKernel(T *histogram, CUDAhist::RAxis *axes, int nBins, doub
    for (auto i = tid; i < bufferSize; i += stride) {
       auto bin = GetBin<Dim>(i, axes, coords, bins);
       if (bin >= 0)
-         AddBinContent<T>(smem, bin, (T)weights[i]);
+         AddBinContent<T>(sMem, bin, weights[i]);
    }
    __syncthreads();
 
    // Merge results in global histogram
-   for (auto i = local_tid; i < nBins; i += blockDim.x) {
-      atomicAdd(&histogram[i], smem[i]);
+   for (auto i = localTid; i < nBins; i += blockDim.x) {
+      AddBinContent<T>(histogram, i, sMem[i]);
    }
 }
 
@@ -155,7 +179,7 @@ __global__ void HistoKernelGlobal(T *histogram, CUDAhist::RAxis *axes, int nBins
    for (auto i = tid; i < bufferSize; i += stride) {
       auto bin = GetBin<Dim>(i, axes, coords, bins);
       if (bin >= 0)
-         AddBinContent<T>(histogram, bin, (T)weights[i]);
+         AddBinContent<T>(histogram, bin, weights[i]);
    }
 }
 

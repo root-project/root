@@ -376,10 +376,7 @@ class R__CLING_PTRCHECK(off) FillHelper : public RActionImpl<FillHelper<HIST>> {
       h->Reset();
    }
 
-   void ResetIfPossible(TStatistic *h)
-   {
-      *h = TStatistic();
-   }
+   void ResetIfPossible(TStatistic *h) { *h = TStatistic(); }
 
    // cannot safely re-initialize variations of the result, hence error out
    void ResetIfPossible(...)
@@ -389,10 +386,7 @@ class R__CLING_PTRCHECK(off) FillHelper : public RActionImpl<FillHelper<HIST>> {
          "not implement a Reset method, so we cannot safely re-initialize variations of the result. Aborting.");
    }
 
-   void UnsetDirectoryIfPossible(TH1 *h)
-   {
-      h->SetDirectory(nullptr);
-   }
+   void UnsetDirectoryIfPossible(TH1 *h) { h->SetDirectory(nullptr); }
 
    void UnsetDirectoryIfPossible(...) {}
 

@@ -391,7 +391,7 @@ public:
    virtual void     SetLabelOffset(Float_t offset=0.005, Option_t *axis="X");
    virtual void     SetLabelSize(Float_t size=0.02, Option_t *axis="X");
 #ifdef ROOT_RDF_CUDA
-   void             SetStatsData(Double_t *stats); // TODO: for retrieving stats computed on gpu
+   void SetStatsData(Double_t *stats); // TODO: for retrieving stats computed on gpu
 #endif
 
    /*

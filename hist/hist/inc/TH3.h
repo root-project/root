@@ -105,7 +105,7 @@ public:
    virtual void     GetRandom3(Double_t &x, Double_t &y, Double_t &, TRandom * rng = nullptr);
            void     GetStats(Double_t *stats) const override;
 #ifdef ROOT_RDF_CUDA
-           void     SetStatsData(Double_t *stats);
+           void SetStatsData(Double_t *stats);
 #endif
            Double_t Integral(Option_t *option="") const override;
    virtual Double_t Integral(Int_t binx1, Int_t binx2, Int_t biny1, Int_t biny2, Int_t binz1, Int_t binz2, Option_t *option="") const;

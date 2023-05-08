@@ -5,10 +5,8 @@
 #include <thrust/binary_search.h>
 #include <thrust/functional.h>
 
-#include "RtypesCore.h"
 #include "TError.h"
 
-// TODO: reused from RooBatchComputeTypes.h.
 #define ERRCHECK(err) __checkCudaErrors((err), __func__, __FILE__, __LINE__)
 inline static void __checkCudaErrors(cudaError_t error, std::string func, std::string file, int line)
 {
@@ -30,6 +28,13 @@ __device__ T *shared_memory_proxy()
    Fatal("template <typename T> __device__ T *shared_memory_proxy()", "Unsupported shared memory type");
    return (T *)0;
 };
+
+template <>
+__device__ short *shared_memory_proxy<short>()
+{
+   extern __shared__ short s_short[];
+   return s_short;
+}
 
 template <>
 __device__ int *shared_memory_proxy<int>()
@@ -72,15 +77,15 @@ __device__ inline void UnrolledReduce(T *sdata, unsigned int tid, Op operation)
    if (BlockSize >= 1024 && tid < 512) { sdata[tid] = operation(sdata[tid], sdata[tid + 512]); } __syncthreads();
    if (BlockSize >= 512  && tid < 256) { sdata[tid] = operation(sdata[tid], sdata[tid + 256]); } __syncthreads();
    if (BlockSize >= 256  && tid < 128) { sdata[tid] = operation(sdata[tid], sdata[tid + 128]); } __syncthreads();
-   if (BlockSize >= 128  && tid < 64)  { sdata[tid] = operation(sdata[tid], sdata[tid + 64]);  } __syncthreads();
+   if (BlockSize >= 128  && tid < 64) { sdata[tid] = operation(sdata[tid], sdata[tid + 64]); } __syncthreads();
 
    // Reduction within a warp
-   if (BlockSize >= 64 && tid < 32)  { sdata[tid] = operation(sdata[tid], sdata[tid + 32]); } __syncthreads();
-   if (BlockSize >= 32 && tid < 16)  { sdata[tid] = operation(sdata[tid], sdata[tid + 16]); } __syncthreads();
-   if (BlockSize >= 16 && tid < 8)   { sdata[tid] = operation(sdata[tid], sdata[tid + 8]);  } __syncthreads();
-   if (BlockSize >= 8  && tid < 4)   { sdata[tid] = operation(sdata[tid], sdata[tid + 4]);  } __syncthreads();
-   if (BlockSize >= 4  && tid < 2)   { sdata[tid] = operation(sdata[tid], sdata[tid + 2]);  } __syncthreads();
-   if (BlockSize >= 2  && tid < 1)   { sdata[tid] = operation(sdata[tid], sdata[tid + 1]);  } __syncthreads();
+   if (BlockSize >= 64 && tid < 32) { sdata[tid] = operation(sdata[tid], sdata[tid + 32]); } __syncthreads();
+   if (BlockSize >= 32 && tid < 16) { sdata[tid] = operation(sdata[tid], sdata[tid + 16]); } __syncthreads();
+   if (BlockSize >= 16 && tid < 8) { sdata[tid] = operation(sdata[tid], sdata[tid + 8]); } __syncthreads();
+   if (BlockSize >= 8  && tid < 4) { sdata[tid] = operation(sdata[tid], sdata[tid + 4]); } __syncthreads();
+   if (BlockSize >= 4  && tid < 2) { sdata[tid] = operation(sdata[tid], sdata[tid + 2]); } __syncthreads();
+   if (BlockSize >= 2  && tid < 1) { sdata[tid] = operation(sdata[tid], sdata[tid + 1]); } __syncthreads();
 }
 // clang-format on
 

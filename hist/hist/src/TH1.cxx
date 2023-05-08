@@ -10096,7 +10096,6 @@ TH1D::TH1D(): TH1(), TArrayD()
 /// Create a 1-Dim histogram with fix bins of type double
 /// (see TH1::TH1 for explanation of parameters)
 
-//TODO:
 TH1D::TH1D(const char *name,const char *title,Int_t nbins,Double_t xlow,Double_t xup)
 : TH1(name,title,nbins,xlow,xup)
 {
