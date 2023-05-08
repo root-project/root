@@ -105,7 +105,7 @@ endif()
       )
    else()
       add_custom_command(TARGET SofieCompileModels_PyTorch POST_BUILD
-         COMMAND ${CMAKE_COMMAND} -E env "LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/lib:$ENV{LD_LIBRARY_PATH}" ./emitFromPyTorch.exe
+         COMMAND ${CMAKE_COMMAND} -E env "LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/lib:$ENV{LD_LIBRARY_PATH}" ./emitFromPyTorch
          USES_TERMINAL
       )
       ROOT_ADD_GTEST(TestRModelParserPyTorch TestRModelParserPyTorch.C
