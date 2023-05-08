@@ -137,16 +137,18 @@ public:
          return;
       }
 
-      void *dst = fWritePage[fWritePageIdx].GrowUnchecked(count);
-
       // The check for flushing the shadow page is more complicated than for the Append() case
       // because we don't necessarily fill up to exactly fApproxNElementsPerPage / 2 elements;
-      // we might instead jump over the 50% fill level
+      // we might instead jump over the 50% fill level.
+      // This check should be done before calling `RPage::GrowUnchecked()` as the latter affects the return value of
+      // `RPage::GetNElements()`.
       if ((fWritePage[fWritePageIdx].GetNElements() < fApproxNElementsPerPage / 2) &&
           (fWritePage[fWritePageIdx].GetNElements() + count >= fApproxNElementsPerPage / 2))
       {
          FlushShadowWritePage();
       }
+
+      void *dst = fWritePage[fWritePageIdx].GrowUnchecked(count);
 
       elemArray.WriteTo(dst, count);
       fNElements += count;

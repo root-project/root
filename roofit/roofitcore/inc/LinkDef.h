@@ -91,7 +91,6 @@
              }"
 #pragma link C++ class RooConvCoefVar+ ;
 #pragma link C++ class RooConvGenContext+ ;
-#pragma link C++ class RooConvIntegrandBinding+ ;
 #pragma link C++ class RooCurve+ ;
 #pragma link C++ class RooDataHist- ;
 #pragma link C++ class RooDataProjBinding+ ;
@@ -130,7 +129,6 @@
 #pragma link C++ class RooBinIntegrator+ ;
 #pragma link C++ class RooIntegrator2D+ ;
 #pragma link C++ class RooIntegratorBinding+ ;
-#pragma link C++ class RooInt+ ;
 #pragma link C++ class RooInvTransform+ ;
 #pragma link C++ class RooLinearVar+ ;
 #pragma link C++ class RooLinearCombination+ ;
@@ -311,7 +309,6 @@
 #pragma link C++ class RooBinningCategory+ ;
 #pragma link C++ class RooDerivative+ ;
 #pragma link C++ class RooFunctor+ ;
-#pragma link C++ class RooTFoamBinding+ ;
 #pragma link C++ class RooAdaptiveIntegratorND+ ;
 #pragma link C++ class RooNumGenConfig+ ;
 #pragma link C++ class RooMultiVarGaussian+ ;

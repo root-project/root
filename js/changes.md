@@ -17,8 +17,13 @@
 14. Use TGaxis attributes from gStyle - fAxisMaxDigits, fStripDecimals and exponent offset
 15. Implement "projxy" draw option for TH2 - like projxy3 or projx1_y5
 16. Support custom function in TGaxis - when drawn in TWebCanvas
-17. Fix - rescan sumw2 when update TH1
-18. Fix - correct placing for TLegend header
+17. Introduce settings.WithCredentials, set xhr.withCredentials = true when submitting HTTP requests
+18. Let superimpose TH3 and geo drawings
+19. Apply pad draw options like 'gridx' or 'logy' to all subpads
+20. Support new TScatter class
+21. Fix - rescan sumw2 when update TH1
+22. Fix - correct placing for TLegend header
+23. Fix - correctly align sub/super scripts in complex TLatex
 
 
 ## Changes in 7.3.1

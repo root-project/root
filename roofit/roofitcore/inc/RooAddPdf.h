@@ -20,7 +20,6 @@
 #include "RooListProxy.h"
 #include "RooSetProxy.h"
 #include "RooAICRegistry.h"
-#include "RooNormSetCache.h"
 #include "RooObjCacheManager.h"
 #include "RooNameReg.h"
 #include "RooTrace.h"
@@ -92,8 +91,9 @@ public:
   CacheMode canNodeBeCached() const override { return RooAbsArg::NotAdvised ; };
   void setCacheAndTrackHints(RooArgSet&) override;
 
-protected:
+  void translate(RooFit::Detail::CodeSquashContext &ctx) const override;
 
+  protected:
   void selectNormalization(const RooArgSet* depSet=nullptr, bool force=false) override;
   void selectNormalizationRange(const char* rangeName=nullptr, bool force=false) override;
 

@@ -25,14 +25,16 @@
 
 class RooAbsCategory;
 class RooAbsData;
+class RooSimultaneous;
+
 class TNamed;
 
 namespace RooFit {
 namespace BatchModeDataHelpers {
 
 std::map<RooFit::Detail::DataKey, RooSpan<const double>>
-getDataSpans(RooAbsData const &data, std::string_view rangeName, std::string const &prefix,
-             std::stack<std::vector<double>> &buffers, bool skipZeroWeights);
+getDataSpans(RooAbsData const &data, std::string const &rangeName, RooSimultaneous const *simPdf, bool skipZeroWeights,
+             bool takeGlobalObservablesFromData, std::stack<std::vector<double>> &buffers);
 
 std::map<RooFit::Detail::DataKey, std::size_t>
 determineOutputSizes(RooAbsArg const &topNode,

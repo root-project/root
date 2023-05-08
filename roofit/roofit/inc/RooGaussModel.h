@@ -59,12 +59,24 @@ public:
 
   void advertiseAymptoticIntegral(bool flag) { _asympInt = flag ; }  // added FMV,07/24/03
 
+  void computeBatch(cudaStream_t*, double* output, size_t size, RooFit::Detail::DataMap const&) const override;
+
+  bool canComputeBatchWithCuda() const override { return getBasisType(_basisCode) == expBasis; }
+
 protected:
 
   double evaluate() const override ;
+  static double evaluate(double x, double mean, double sigma, double param1, double param2, int basisCode);
 
   // Calculate common normalization factors
   std::complex<double> evalCerfInt(double sign, double wt, double tau, double umin, double umax, double c) const;
+
+private:
+
+  static BasisType getBasisType(int basisCode)
+  {
+    return static_cast<BasisType>(basisCode == 0 ? 0 : (basisCode / 10) + 1);
+  }
 
   bool _flatSFInt ;
 

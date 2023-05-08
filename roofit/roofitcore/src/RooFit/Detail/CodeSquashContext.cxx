@@ -13,12 +13,34 @@
 
 #include <RooFit/Detail/CodeSquashContext.h>
 
-#include <RooArgSet.h>
-#include <RooListProxy.h>
+#include <TString.h>
 
 namespace RooFit {
 
 namespace Detail {
+
+namespace {
+
+/// Transform a string into a valid C++ variable name by replacing forbidden.
+/// \note The implementation was copy-pasted from `TSystem.cxx`.
+/// characters with underscores.
+/// @param in The input string.
+/// @return A new string vaild variable name.
+std::string makeValidVarName(TString in)
+{
+
+   static const int nForbidden = 27;
+   static const char *forbiddenChars[nForbidden] = {"+", "-", "*", "/", "&", "%", "|", "^",  ">",
+                                                    "<", "=", "~", ".", "(", ")", "[", "]",  "!",
+                                                    ",", "$", " ", ":", "'", "#", "@", "\\", "\""};
+   for (int ic = 0; ic < nForbidden; ic++) {
+      in.ReplaceAll(forbiddenChars[ic], "_");
+   }
+
+   return in.Data();
+}
+
+} // namespace
 
 /// @brief Adds (or overwrites) the string representing the result of a node.
 /// @param key The name of the node to add the result for.
@@ -158,12 +180,9 @@ std::string CodeSquashContext::getTmpVarName()
 /// @brief A function to save an expression that includes/depends on the result of the input node.
 /// @param in The node on which the valueToSave depends on/belongs to.
 /// @param valueToSave The actual string value to save as a temporary.
-/// @param name Prefix of the name of the temporary being saved. A non-empty name forces the creation of a temp value.
-/// @return The name of the temporary saved.
-std::string
-CodeSquashContext::saveAsTemp(RooAbsArg const *in, std::string const &valueToSave, std::string name /* = "" */)
+void CodeSquashContext::addResult(RooAbsArg const *in, std::string const &valueToSave)
 {
-   std::string savedName = name + getTmpVarName();
+   std::string savedName = makeValidVarName(in->GetName());
 
    // Check if this result can be placed anywhere (i.e. scope independent)
    bool canSaveValOutside = !in->isReducerNode() && outputSize(in->namePtr()) == 1;
@@ -172,11 +191,11 @@ CodeSquashContext::saveAsTemp(RooAbsArg const *in, std::string const &valueToSav
 
    // If the name is not empty and this value is worth saving, save it to the correct scope.
    // otherwise, just return the actual value itself
-   if (hasOperations || name != "") {
+   if (hasOperations) {
 
       // If this is a scalar result, it will go just outside the loop because
       // it doesn't need to be recomputed inside loops.
-      std::string outVarDecl = "double " + savedName + " = " + valueToSave + ";\n";
+      std::string outVarDecl = "const double " + savedName + " = " + valueToSave + ";\n";
 
       // If we are in a loop and the value is scope independent, save it at the top of the loop.
       // else, just save it in the current scope.
@@ -189,28 +208,25 @@ CodeSquashContext::saveAsTemp(RooAbsArg const *in, std::string const &valueToSav
       savedName = valueToSave;
    }
 
-   return savedName;
+   addResult(in->namePtr(), savedName);
 }
 
 /// @brief Function to save a RooListProxy as an array in the squashed code.
 /// @param in The list to convert to array.
-/// @param name Prefix of the array name.
 /// @return Name of the array that stores the input list in the squashed code.
-std::string CodeSquashContext::saveListAsArray(RooListProxy const &in, std::string name /*  = "" */)
+std::string CodeSquashContext::buildArg(RooAbsCollection const &in)
 {
    auto it = listNames.find(in.uniqueId().value());
    if (it != listNames.end())
       return it->second;
 
-   std::string savedName = name + getTmpVarName();
+   std::string savedName = getTmpVarName();
    bool canSaveOutside = true;
 
    std::stringstream declStrm;
-   declStrm << "double " << savedName << "[" << in.size() << "] = {";
-   int idx = 0;
+   declStrm << "double " << savedName << "[] = {";
    for (const auto arg : in) {
       declStrm << getResult(*arg) << ",";
-      idx++;
       canSaveOutside = canSaveOutside && !arg->isReducerNode() && outputSize(arg->namePtr()) == 1;
    }
    declStrm.seekp(-1, declStrm.cur);

@@ -1,4 +1,4 @@
-import { gStyle, create } from '../core.mjs';
+import { gStyle, create, clTH1I } from '../core.mjs';
 import { DrawOptions, floatToString, buildSvgCurve } from '../base/BasePainter.mjs';
 import { ObjectPainter } from '../base/ObjectPainter.mjs';
 import { TH1Painter } from '../hist/TH1Painter.mjs';
@@ -92,7 +92,7 @@ class TSplinePainter extends ObjectPainter {
          if (ymin < 0.0) ymin *= (1 + gStyle.fHistTopMargin);
       }
 
-      let histo = create('TH1I');
+      let histo = create(clTH1I);
 
       histo.fName = spline.fName + '_hist';
       histo.fTitle = spline.fTitle;

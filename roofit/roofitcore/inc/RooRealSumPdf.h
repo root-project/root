@@ -70,6 +70,8 @@ public:
 
   std::unique_ptr<RooAbsArg> compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileContext & ctx) const override;
 
+  void translate(RooFit::Detail::CodeSquashContext &ctx) const override;
+
 protected:
 
   class CacheElem : public RooAbsCacheElement {
@@ -107,8 +109,11 @@ private:
                          bool doFloor,
                          bool & hasWarnedBefore);
 
-  static bool checkObservables(RooAbsReal const& caller, RooArgSet const* nset,
-                               RooArgList const& funcList, RooArgList const& coefList);
+  static void translateImpl(RooFit::Detail::CodeSquashContext &ctx, RooAbsArg const *klass, RooArgList const &funcList,
+                            RooArgList const &coefList);
+
+  static bool checkObservables(RooAbsReal const &caller, RooArgSet const *nset, RooArgList const &funcList,
+                               RooArgList const &coefList);
 
   static Int_t getAnalyticalIntegralWN(RooAbsReal const& caller, RooObjCacheManager & normIntMgr,
                                        RooArgList const& funcList, RooArgList const& coefList,

@@ -6,7 +6,7 @@ import { getSvgLineStyle } from '../base/TAttLineHandler.mjs';
 import { TAxisPainter } from './TAxisPainter.mjs';
 import { FontHandler } from '../base/FontHandler.mjs';
 import { createMenu, closeMenu } from '../gui/menu.mjs';
-import { detectRightButton, injectStyle } from '../gui/utils.mjs';
+import { detectRightButton } from '../gui/utils.mjs';
 
 
 const logminfactorX = 0.0001, logminfactorY = 3e-4;
@@ -911,8 +911,8 @@ const FrameInteractive = {
 
          this.zoom_rect = this.getFrameSvg()
                               .append('rect')
-                              .attr('class', 'zoom')
-                              .style('pointer-events','none');
+                              .style('pointer-events','none')
+                              .call(addHighlightStyle, true);
       }
 
       this.zoom_rect.attr('x', x).attr('y', y).attr('width', w).attr('height', h);
@@ -1104,12 +1104,12 @@ const FrameInteractive = {
       setPainterTooltipEnabled(this, false);
 
       this.zoom_rect = this.getFrameSvg().append('rect')
-            .attr('class', 'zoom')
             .attr('id', 'zoomRect')
             .attr('x', this.zoom_curr[0])
             .attr('y', this.zoom_curr[1])
             .attr('width', this.zoom_origin[0] - this.zoom_curr[0])
-            .attr('height', this.zoom_origin[1] - this.zoom_curr[1]);
+            .attr('height', this.zoom_origin[1] - this.zoom_curr[1])
+            .call(addHighlightStyle, true);
 
       d3_select(window).on('touchmove.zoomRect', evnt => this.moveTouchZoom(evnt))
                        .on('touchcancel.zoomRect', evnt => this.endTouchZoom(evnt))
@@ -1738,7 +1738,7 @@ class TFramePainter extends ObjectPainter {
          }
       }
 
-      if ((opts.zoom_ymin != opts.zoom_ymax) && (this.zoom_ymin == this.zoom_ymax) && !this.zoomChangedInteractive('y')) {
+      if ((opts.zoom_ymin != opts.zoom_ymax) && ((this.zoom_ymin == this.zoom_ymax) || !this.zoomChangedInteractive('y'))) {
          this.zoom_ymin = opts.zoom_ymin;
          this.zoom_ymax = opts.zoom_ymax;
       }

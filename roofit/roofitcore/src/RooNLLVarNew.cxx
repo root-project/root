@@ -24,8 +24,7 @@ functions from `RooBatchCompute` library to provide faster computation times.
 
 #include "RooNLLVarNew.h"
 
-#include <RooAddition.h>
-#include <RooFormulaVar.h>
+#include <RooBatchCompute.h>
 #include <RooNaNPacker.h>
 #include <RooRealVar.h>
 #include "RooFit/Detail/Buffers.h"
@@ -35,7 +34,6 @@ functions from `RooBatchCompute` library to provide faster computation times.
 #include <TClass.h>
 #include <TMath.h>
 #include <Math/Util.h>
-#include <TMath.h>
 
 #include <numeric>
 #include <stdexcept>
@@ -48,12 +46,6 @@ constexpr const char *RooNLLVarNew::weightVarName;
 constexpr const char *RooNLLVarNew::weightVarNameSumW2;
 
 namespace {
-
-template <class Input>
-double kahanSum(Input const &input)
-{
-   return ROOT::Math::KahanSum<double, 4u>::Accumulate(input.begin(), input.end()).Sum();
-}
 
 RooArgSet getObs(RooAbsArg const &arg, RooArgSet const &observables)
 {
@@ -137,6 +129,39 @@ void RooNLLVarNew::fillBinWidthsFromPdfBoundaries(RooAbsReal const &pdf)
    }
 }
 
+double RooNLLVarNew::computeBatchBinnedL(RooSpan<const double> preds, RooSpan<const double> weights) const
+{
+   ROOT::Math::KahanSum<double> result{0.0};
+   ROOT::Math::KahanSum<double> sumWeightKahanSum{0.0};
+
+   for (std::size_t i = 0; i < preds.size(); ++i) {
+
+      double eventWeight = weights[i];
+
+      // Calculate log(Poisson(N|mu) for this bin
+      double N = eventWeight;
+      double mu = preds[i] * _binw[i];
+
+      if (mu <= 0 && N > 0) {
+
+         // Catch error condition: data present where zero events are predicted
+         logEvalError(Form("Observed %f events in bin %lu with zero event yield", N, (unsigned long)i));
+
+      } else if (std::abs(mu) < 1e-10 && std::abs(N) < 1e-10) {
+
+         // Special handling of this case since log(Poisson(0,0)=0 but can't be calculated with usual log-formula
+         // since log(mu)=0. No update of result is required since term=0.
+
+      } else {
+
+         result += -1 * (-mu + N * log(mu) - TMath::LnGamma(N + 1));
+         sumWeightKahanSum += eventWeight;
+      }
+   }
+
+   return finalizeResult(result, sumWeightKahanSum.Sum());
+}
+
 /** Compute multiple negative logs of propabilities
 
 \param output An array of doubles where the computation results will be stored
@@ -144,96 +169,48 @@ void RooNLLVarNew::fillBinWidthsFromPdfBoundaries(RooAbsReal const &pdf)
 \note nEvents is the number of events to be processed (the dataMap size)
 \param dataMap A map containing spans with the input data for the computation
 **/
-void RooNLLVarNew::computeBatch(cudaStream_t * /*stream*/, double *output, size_t /*nOut*/,
+void RooNLLVarNew::computeBatch(cudaStream_t *stream, double *output, size_t /*nOut*/,
                                 RooFit::Detail::DataMap const &dataMap) const
 {
-   std::size_t nEvents = dataMap.at(_pdf).size();
-
    RooSpan<const double> weights = dataMap.at(_weightVar);
    RooSpan<const double> weightsSumW2 = dataMap.at(_weightSquaredVar);
-   RooSpan<const double> weightSpan = _weightSquared ? weightsSumW2 : weights;
-   RooSpan<const double> binVolumes = _doBinOffset ? dataMap.at(_binVolumeVar) : RooSpan<const double>{};
 
    if (_binnedL) {
-      ROOT::Math::KahanSum<double> result{0.0};
-      ROOT::Math::KahanSum<double> sumWeightKahanSum{0.0};
-      auto preds = dataMap.at(&*_pdf);
-
-      for (std::size_t i = 0; i < nEvents; ++i) {
-
-         double eventWeight = weightSpan[i];
-
-         // Calculate log(Poisson(N|mu) for this bin
-         double N = eventWeight;
-         double mu = preds[i] * _binw[i];
-
-         if (mu <= 0 && N > 0) {
-
-            // Catch error condition: data present where zero events are predicted
-            logEvalError(Form("Observed %f events in bin %lu with zero event yield", N, (unsigned long)i));
-
-         } else if (std::abs(mu) < 1e-10 && std::abs(N) < 1e-10) {
-
-            // Special handling of this case since log(Poisson(0,0)=0 but can't be calculated with usual log-formula
-            // since log(mu)=0. No update of result is required since term=0.
-
-         } else {
-
-            result += -1 * (-mu + N * log(mu) - TMath::LnGamma(N + 1));
-            sumWeightKahanSum += eventWeight;
-         }
-      }
-
-      output[0] = finalizeResult(std::move(result), sumWeightKahanSum.Sum());
-
+      output[0] = computeBatchBinnedL(dataMap.at(&*_pdf), _weightSquared ? weightsSumW2 : weights);
       return;
    }
 
+   auto dispatch = stream ? RooBatchCompute::dispatchCUDA : RooBatchCompute::dispatchCPU;
+
    auto probas = dataMap.at(_pdf);
 
-   _logProbasBuffer.resize(nEvents);
-   (*_pdf).getLogProbabilities(probas, _logProbasBuffer.data());
-
-   _sumWeight = weights.size() == 1 ? weights[0] * nEvents : kahanSum(weights);
-   const double logSumW = std::log(_sumWeight);
-
+   _sumWeight =
+      weights.size() == 1 ? weights[0] * probas.size() : dispatch->reduceSum(stream, weights.data(), weights.size());
    if (_isExtended && _weightSquared && _sumWeight2 == 0.0) {
-      _sumWeight2 = weights.size() == 1 ? weightsSumW2[0] * nEvents : kahanSum(weightsSumW2);
+      _sumWeight2 = weights.size() == 1 ? weightsSumW2[0] * probas.size()
+                                        : dispatch->reduceSum(stream, weightsSumW2.data(), weightsSumW2.size());
    }
 
-   ROOT::Math::KahanSum<double> kahanProb;
-   RooNaNPacker packedNaN(0.f);
+   auto nllOut = dispatch->reduceNLL(stream, probas, _weightSquared ? weightsSumW2 : weights, weights, _sumWeight,
+                                     _doBinOffset ? dataMap.at(_binVolumeVar) : RooSpan<const double>{});
 
-   for (std::size_t i = 0; i < nEvents; ++i) {
-
-      double eventWeight = weightSpan.size() > 1 ? weightSpan[i] : weightSpan[0];
-
-      if (0. == eventWeight * eventWeight)
-         continue;
-
-      double term = _logProbasBuffer[i];
-
-      if (_doBinOffset) {
-         term -= std::log(weights[i]) - std::log(binVolumes[i]) - logSumW;
-      }
-
-      term *= -eventWeight;
-
-      kahanProb.Add(term);
-      packedNaN.accumulate(term);
+   if (nllOut.nLargeValues > 0) {
+      oocoutW(&*_pdf, Eval) << "RooAbsPdf::getLogVal(" << _pdf->GetName()
+                            << ") WARNING: top-level pdf has unexpectedly large values" << std::endl;
    }
-
-   if (packedNaN.getPayload() != 0.) {
-      // Some events with evaluation errors. Return "badness" of errors.
-      kahanProb = Math::KahanSum<double>(packedNaN.getNaNWithPayload());
+   for (std::size_t i = 0; i < nllOut.nNonPositiveValues; ++i) {
+      _pdf->logEvalError("getLogVal() top-level p.d.f not greater than zero");
+   }
+   for (std::size_t i = 0; i < nllOut.nNaNValues; ++i) {
+      _pdf->logEvalError("getLogVal() top-level p.d.f evaluates to NaN");
    }
 
    if (_isExtended) {
       double expected = _pdf->expectedEvents(&_observables);
-      kahanProb += _pdf->extendedTerm(_sumWeight, expected, _weightSquared ? _sumWeight2 : 0.0, _doBinOffset);
+      nllOut.nllSum += _pdf->extendedTerm(_sumWeight, expected, _weightSquared ? _sumWeight2 : 0.0, _doBinOffset);
    }
 
-   output[0] = finalizeResult(std::move(kahanProb), _sumWeight);
+   output[0] = finalizeResult(nllOut.nllSum, _sumWeight);
 }
 
 void RooNLLVarNew::getParametersHook(const RooArgSet * /*nset*/, RooArgSet *params, bool /*stripDisconnected*/) const
@@ -273,7 +250,7 @@ void RooNLLVarNew::enableOffsetting(bool flag)
    _offset = ROOT::Math::KahanSum<double>{};
 }
 
-double RooNLLVarNew::finalizeResult(ROOT::Math::KahanSum<double> &&result, double weightSum) const
+double RooNLLVarNew::finalizeResult(ROOT::Math::KahanSum<double> result, double weightSum) const
 {
    // If part of simultaneous PDF normalize probability over
    // number of simultaneous PDFs: -sum(log(p/n)) = -sum(log(p)) + N*log(n)
@@ -309,11 +286,7 @@ void RooNLLVarNew::translate(RooFit::Detail::CodeSquashContext &ctx) const
    // brackets of the loop is written at the end of the scopes lifetime.
    {
       auto scope = ctx.beginLoop(this);
-
-      std::string tmpName = className + "Temp";
-      std::string code = "double " + tmpName + ";\n";
-      code += tmpName + " = std::log(" + ctx.getResult(_pdf.arg()) + ");\n";
-      code += resName + " -= " + ctx.getResult(_weightVar.arg()) + " * " + tmpName + ";\n";
-      ctx.addToCodeBody(code);
+      ctx.addToCodeBody(resName + " -= " + ctx.getResult(_weightVar.arg()) + " * std::log(" +
+                        ctx.getResult(_pdf.arg()) + ");\n");
    }
 }
