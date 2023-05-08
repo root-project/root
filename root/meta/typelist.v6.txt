@@ -471,7 +471,6 @@ long long
 Long_t
 Marker_t
 Mask_t
-mbstate_t
 MemberStreamerFunc_t
 mode_t
 multimap<TObject*,TF1*>::allocator_type
