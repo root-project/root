@@ -20,7 +20,7 @@
 #include "RooNumIntConfig.h"
 #include "TString.h"
 
-namespace ROOT { namespace Math { class AdaptiveIntegratorMultiDim ; } } 
+namespace ROOT { namespace Math { class AdaptiveIntegratorMultiDim ; } }
 class RooMultiGenFunction ;
 
 class RooAdaptiveIntegratorND : public RooAbsIntegrator {
@@ -30,43 +30,43 @@ public:
   RooAdaptiveIntegratorND() ;
   RooAdaptiveIntegratorND(const RooAbsFunc& function, const RooNumIntConfig& config) ;
 
-  virtual RooAbsIntegrator* clone(const RooAbsFunc& function, const RooNumIntConfig& config) const ;
-  virtual ~RooAdaptiveIntegratorND();
+  RooAbsIntegrator* clone(const RooAbsFunc& function, const RooNumIntConfig& config) const override ;
+  ~RooAdaptiveIntegratorND() override;
 
-  virtual Bool_t checkLimits() const;
-  virtual Double_t integral(const Double_t *yvec=0) ;
+  bool checkLimits() const override;
+  double integral(const double *yvec=nullptr) override ;
 
   using RooAbsIntegrator::setLimits ;
-  Bool_t setLimits(Double_t* xmin, Double_t* xmax);
+  bool setLimits(double* xmin, double* xmax) override;
 
-  virtual Bool_t canIntegrate1D() const { return kFALSE ; }
-  virtual Bool_t canIntegrate2D() const { return kTRUE ; }
-  virtual Bool_t canIntegrateND() const { return kTRUE ; }
-  virtual Bool_t canIntegrateOpenEnded() const { return kFALSE ; }
+  bool canIntegrate1D() const override { return false ; }
+  bool canIntegrate2D() const override { return true ; }
+  bool canIntegrateND() const override { return true ; }
+  bool canIntegrateOpenEnded() const override { return false ; }
 
-  virtual Bool_t setUseIntegrandLimits(Bool_t flag) {_useIntegrandLimits = flag ; return kTRUE ; }
+  bool setUseIntegrandLimits(bool flag) override {_useIntegrandLimits = flag ; return true ; }
 
 protected:
-  
+
   RooAdaptiveIntegratorND(const RooAdaptiveIntegratorND&) ;
 
-  Bool_t _useIntegrandLimits;  // If true limits of function binding are ued
+  bool _useIntegrandLimits;  ///< If true limits of function binding are used
 
-  mutable Double_t* _xmin ;  // Lower bound in each dimension
-  mutable Double_t* _xmax ;  // Upper bound in each dimension
-  Double_t _epsRel ; // Relative precision
-  Double_t _epsAbs ; // Absolute precision
-  Int_t    _nmax ;   // Max number of divisions
-  Int_t    _nError ; // Number of error occurrences
-  Int_t    _nWarn ; // Max number of warnings to be issued ;
-  RooMultiGenFunction* _func ; //! ROOT::Math multi-parameter function binding 
+  mutable std::vector<double> _xmin;    ///< Lower bound in each dimension
+  mutable std::vector<double> _xmax;    ///< Upper bound in each dimension
+  double _epsRel ;           ///< Relative precision
+  double _epsAbs ;           ///< Absolute precision
+  Int_t    _nmax ;             ///< Max number of divisions
+  Int_t    _nError ;           ///< Number of error occurrences
+  Int_t    _nWarn ;            ///< Max number of warnings to be issued ;
+  RooMultiGenFunction* _func ; ///<! ROOT::Math multi-parameter function binding
   ROOT::Math::AdaptiveIntegratorMultiDim* _integrator ;
-  TString _intName ; // Integrand name
+  TString _intName ;           ///< Integrand name
 
   friend class RooNumIntFactory ;
-  static void registerIntegrator(RooNumIntFactory& fact) ;	
+  static void registerIntegrator(RooNumIntFactory& fact) ;
 
-  ClassDef(RooAdaptiveIntegratorND,0) // N-dimensional adaptive integration (interface to MathCore integrator)
+  ClassDefOverride(RooAdaptiveIntegratorND,0) // N-dimensional adaptive integration (interface to MathCore integrator)
 };
 
 #endif

@@ -19,6 +19,7 @@ echo "        ../../core/metacling/            \\" >> Doxyfile_INPUT
 echo "        ../../core/clingutils/           \\" >> Doxyfile_INPUT
 echo "        ../../core/multiproc/            \\" >> Doxyfile_INPUT
 echo "        ../../core/rint/                 \\" >> Doxyfile_INPUT
+echo "        ../../core/testsupport/          \\" >> Doxyfile_INPUT
 echo "        ../../core/thread/               \\" >> Doxyfile_INPUT
 echo "        ../../core/unix/                 \\" >> Doxyfile_INPUT
 echo "        ../../core/winnt/                \\" >> Doxyfile_INPUT
@@ -55,6 +56,7 @@ echo "        ../../io/xmlparser/              \\" >> Doxyfile_INPUT
 echo "        ../../main/src/hadd.cxx          \\" >> Doxyfile_INPUT
 echo "        ../../math/                      \\" >> Doxyfile_INPUT
 echo "        ../../montecarlo/                \\" >> Doxyfile_INPUT
+echo "        ../../net/doc/                   \\" >> Doxyfile_INPUT
 echo "        ../../net/alien/                 \\" >> Doxyfile_INPUT
 echo "        ../../net/auth/                  \\" >> Doxyfile_INPUT
 echo "        ../../net/davix/                 \\" >> Doxyfile_INPUT
@@ -63,6 +65,7 @@ echo "        ../../net/monalisa/              \\" >> Doxyfile_INPUT
 echo "        ../../net/net/                   \\" >> Doxyfile_INPUT
 echo "        ../../net/netx/                  \\" >> Doxyfile_INPUT
 echo "        ../../net/netxng/                \\" >> Doxyfile_INPUT
+echo "        ../../net/httpsniff/             \\" >> Doxyfile_INPUT
 echo "        ../../proof/                     \\" >> Doxyfile_INPUT
 echo "        ../../tmva/                      \\" >> Doxyfile_INPUT
 echo "        ../../roofit/                    \\" >> Doxyfile_INPUT

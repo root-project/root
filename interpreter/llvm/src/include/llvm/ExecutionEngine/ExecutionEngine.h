@@ -142,11 +142,6 @@ protected:
       std::shared_ptr<LegacyJITSymbolResolver> SR,
       std::unique_ptr<TargetMachine> TM);
 
-  static ExecutionEngine *(*OrcMCJITReplacementCtor)(
-      std::string *ErrorStr, std::shared_ptr<MCJITMemoryManager> MM,
-      std::shared_ptr<LegacyJITSymbolResolver> SR,
-      std::unique_ptr<TargetMachine> TM);
-
   static ExecutionEngine *(*InterpCtor)(std::unique_ptr<Module> M,
                                         std::string *ErrorStr);
 
@@ -157,6 +152,8 @@ protected:
 
   /// getMangledName - Get mangled name.
   std::string getMangledName(const GlobalValue *GV);
+
+  std::string ErrMsg;
 
 public:
   /// lock - This lock protects the ExecutionEngine and MCJIT classes. It must
@@ -275,7 +272,19 @@ public:
   /// object have been relocated using mapSectionAddress.  When this method is
   /// called the MCJIT execution engine will reapply relocations for a loaded
   /// object.  This method has no effect for the interpeter.
+  ///
+  /// Returns true on success, false on failure. Error messages can be retrieved
+  /// by calling getError();
   virtual void finalizeObject() {}
+
+  /// Returns true if an error has been recorded.
+  bool hasError() const { return !ErrMsg.empty(); }
+
+  /// Clear the error message.
+  void clearErrorMessage() { ErrMsg.clear(); }
+
+  /// Returns the most recent error message.
+  const std::string &getErrorMessage() const { return ErrMsg; }
 
   /// runStaticConstructorsDestructors - This method is used to execute all of
   /// the static constructors or destructors for a program.
@@ -499,7 +508,7 @@ protected:
 
   void emitGlobals();
 
-  void EmitGlobalVariable(const GlobalVariable *GV);
+  void emitGlobalVariable(const GlobalVariable *GV);
 
   GenericValue getConstantValue(const Constant *C);
   void LoadValueFromMemory(GenericValue &Result, GenericValue *Ptr,
@@ -538,7 +547,6 @@ private:
   std::string MCPU;
   SmallVector<std::string, 4> MAttrs;
   bool VerifyModules;
-  bool UseOrcMCJITReplacement;
   bool EmulatedTLS = true;
 
 public:
@@ -634,17 +642,6 @@ public:
     return *this;
   }
 
-  // Use OrcMCJITReplacement instead of MCJIT. Off by default.
-  LLVM_ATTRIBUTE_DEPRECATED(
-      inline void setUseOrcMCJITReplacement(bool UseOrcMCJITReplacement),
-      "ORCv1 utilities (including OrcMCJITReplacement) are deprecated. Please "
-      "use ORCv2/LLJIT instead (see docs/ORCv2.rst)");
-
-  void setUseOrcMCJITReplacement(ORCv1DeprecationAcknowledgement,
-                                 bool UseOrcMCJITReplacement) {
-    this->UseOrcMCJITReplacement = UseOrcMCJITReplacement;
-  }
-
   void setEmulatedTLS(bool EmulatedTLS) {
     this->EmulatedTLS = EmulatedTLS;
   }
@@ -664,10 +661,6 @@ public:
 
   ExecutionEngine *create(TargetMachine *TM);
 };
-
-void EngineBuilder::setUseOrcMCJITReplacement(bool UseOrcMCJITReplacement) {
-  this->UseOrcMCJITReplacement = UseOrcMCJITReplacement;
-}
 
 // Create wrappers for C Binding types (see CBindingWrapping.h).
 DEFINE_SIMPLE_CONVERSION_FUNCTIONS(ExecutionEngine, LLVMExecutionEngineRef)

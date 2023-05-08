@@ -49,11 +49,11 @@ public:
    char     *GetBuffer() const;
    char     *GetPtrToPiece(Int_t index) const;
 
-   void SetBuffer(char*);
-   void SetPos(Int_t, Long64_t);
-   void ReallocBlock(Long64_t*, Int_t*, Int_t);
+   void      SetBuffer(char*);
+   void      SetPos(Int_t, Long64_t);
+   void      ReallocBlock(Long64_t*, Int_t*, Int_t);
 
-   ClassDef(TFPBlock, 0);  // File prefetch block
+   ClassDefOverride(TFPBlock, 0);  // File prefetch block
 };
 
 /// Get pointer to the array of postions.
@@ -65,7 +65,6 @@ inline Long64_t* TFPBlock::GetPos() const
 /// Get pointer to the array of lengths.
 inline Int_t* TFPBlock::GetLen() const
 {
-
    return fLen;
 }
 

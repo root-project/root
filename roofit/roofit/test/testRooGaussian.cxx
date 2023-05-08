@@ -8,7 +8,7 @@
 
 
 TEST(RooGaussian, AnalyticalIntegral)
-{ 
+{
   //The last working implementation was accurate up to ~ 1.E-9
   constexpr double prec = 1.E-8;
   constexpr double oneSig = 0.682689492137;

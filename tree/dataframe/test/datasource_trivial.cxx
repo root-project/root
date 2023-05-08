@@ -28,7 +28,7 @@ TEST(RTrivialDS, EntryRanges)
    RTrivialDS tds(32);
    const auto nSlots = 4U;
    tds.SetNSlots(nSlots);
-   tds.Initialise();
+   tds.Initialize();
    auto ranges = tds.GetEntryRanges();
 
    EXPECT_EQ(4U, ranges.size());
@@ -48,7 +48,7 @@ TEST(RTrivialDS, ColumnReaders)
    const auto nSlots = 4U;
    tds.SetNSlots(nSlots);
    auto vals = tds.GetColumnReaders<ULong64_t>("col0");
-   tds.Initialise();
+   tds.Initialize();
    auto ranges = tds.GetEntryRanges();
    auto slot = 0U;
    for (auto &&range : ranges) {
@@ -140,8 +140,6 @@ TEST(RTrivialDS, EarlyQuitWithRange)
    // here we check that the event loop early-quits when the Range is exhausted
    EXPECT_EQ(df.Range(10).Count().GetValue(), 10);
 }
-
-#ifdef R__B64
 
 TEST(RTrivialDS, FromARDFWithJitting)
 {
@@ -245,5 +243,3 @@ TEST(RTrivialDS, SkipEntriesMT)
 }
 
 #endif // R__USE_IMT
-
-#endif // R__B64

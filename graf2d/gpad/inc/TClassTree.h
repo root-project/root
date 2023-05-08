@@ -22,27 +22,27 @@ class TObjString;
 class TClassTree : public TNamed {
 
 protected:
-   TString   fClasses;    ///<List of classes to be drawn
-   Float_t   fYoffset;    ///<offset at top of picture in per cent of pad
-   Float_t   fLabelDx;    ///<width along x of TPaveLabels in per cent of pad
-   Int_t     fNclasses;   ///<current number of classes
-   Int_t     fShowCod;    ///<if 1 show classes referenced by implementation
-   Int_t     fShowMul;    ///<if 1 show multiple inheritance
-   Int_t     fShowHas;    ///<if 1 show "has a" relationship
-   Int_t     fShowRef;    ///<if 1 show classes relationship other than inheritance
-   Int_t    *fCstatus;    ///<[fNclasses] classes status
-   Int_t    *fNdata;      ///<[fNclasses] Number of data members per class
-   Int_t    *fParents;    ///<[fNclasses] parent number of classes (permanent)
-   Int_t    *fCparent;    ///<!parent number of classes (temporary)
-   char    **fDerived;    ///<![fNclasses] table to indicate if i derives from j
-   TClass  **fCpointer;   ///<![fNclasses] pointers to the TClass objects
-   TString **fCnames;     ///<![fNclasses] class names
-   TString **fCtitles;    ///<![fNclasses] class titles
-   TString **fOptions;    ///<![fNclasses] List of options per class
-   TString   fSourceDir;  ///<Concatenated source directories
-   TList   **fLinks;      ///<![fNclasses] for each class, the list of referenced(ing) classes
-   std::vector<Int_t> fNsons;  ///<! internal variable, used during painting
-   std::vector<Int_t> fNtsons;  ///<! internal variable, used during painting
+   TString   fClasses;             ///<List of classes to be drawn
+   Float_t   fYoffset{0};          ///<offset at top of picture in per cent of pad
+   Float_t   fLabelDx{0};          ///<width along x of TPaveLabels in per cent of pad
+   Int_t     fNclasses{0};         ///<current number of classes
+   Int_t     fShowCod{0};          ///<if 1 show classes referenced by implementation
+   Int_t     fShowMul{0};          ///<if 1 show multiple inheritance
+   Int_t     fShowHas{0};          ///<if 1 show "has a" relationship
+   Int_t     fShowRef{0};          ///<if 1 show classes relationship other than inheritance
+   Int_t    *fCstatus{nullptr};    ///<[fNclasses] classes status
+   Int_t    *fNdata{nullptr};      ///<[fNclasses] Number of data members per class
+   Int_t    *fParents{nullptr};    ///<[fNclasses] parent number of classes (permanent)
+   Int_t    *fCparent{nullptr};    ///<!parent number of classes (temporary)
+   char    **fDerived{nullptr};    ///<![fNclasses] table to indicate if i derives from j
+   TClass  **fCpointer{nullptr};   ///<![fNclasses] pointers to the TClass objects
+   TString **fCnames{nullptr};     ///<![fNclasses] class names
+   TString **fCtitles{nullptr};    ///<![fNclasses] class titles
+   TString **fOptions{nullptr};    ///<![fNclasses] List of options per class
+   TString   fSourceDir;           ///<Concatenated source directories
+   TList   **fLinks{nullptr};      ///<![fNclasses] for each class, the list of referenced(ing) classes
+   std::vector<Int_t> fNsons;      ///<! internal variable, used during painting
+   std::vector<Int_t> fNtsons;     ///<! internal variable, used during painting
 
    virtual  void FindClassPosition(const char *classname, Float_t &x, Float_t &y);
    virtual  void FindClassesUsedBy(Int_t iclass);
@@ -60,13 +60,13 @@ public:
    TClassTree();
    TClassTree(const char *name, const char *classes="");
    virtual      ~TClassTree();
-   virtual  void Draw(const char *classes ="");
+            void Draw(const char *classes ="") override;
    virtual Int_t FindClass(const char *classname);
    const char   *GetClasses() const {return fClasses.Data();}
    virtual const char  *GetSourceDir() const {return fSourceDir.Data();}
-   virtual  void ls(Option_t *option="") const;
-   virtual  void Paint(Option_t *option="");
-   virtual  void SaveAs(const char *filename="",Option_t *option="") const;
+            void ls(Option_t *option="") const override;
+            void Paint(Option_t *option="") override;
+            void SaveAs(const char *filename="",Option_t *option="") const override;
    virtual  void SetClasses(const char *classes, Option_t *option="ID");
    virtual  void SetSourceDir(const char *dir="src") {fSourceDir = dir;}
    virtual  void SetYoffset(Float_t offset=0);
@@ -75,7 +75,7 @@ public:
    virtual  void ShowClassesUsing(const char *classes);
    virtual  void ShowLinks(Option_t *option="HMR");
 
-   ClassDef(TClassTree,1)  //Manager class to draw classes inheritance tree and relations
+   ClassDefOverride(TClassTree,1)  //Manager class to draw classes inheritance tree and relations
 };
 
 #endif

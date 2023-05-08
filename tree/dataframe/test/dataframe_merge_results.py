@@ -1,4 +1,6 @@
+import pickle
 import unittest
+
 import ROOT
 
 GetMergeableValue = ROOT.ROOT.Detail.RDF.GetMergeableValue
@@ -22,7 +24,6 @@ class RDataFrameMergeResults(unittest.TestCase):
 
     def test_pickle_mean(self):
         """Merge two averages, pickle and merge again."""
-        import pickle
 
         df1 = ROOT.RDataFrame(10)
         df2 = ROOT.RDataFrame(20)
@@ -55,7 +56,6 @@ class RDataFrameMergeResults(unittest.TestCase):
 
     def test_pickle_histo1d(self):
         """Merge two histograms, pickle and merge again."""
-        import pickle
 
         df = ROOT.RDataFrame(100)
 
@@ -83,6 +83,34 @@ class RDataFrameMergeResults(unittest.TestCase):
 
         self.assertEqual(mergedh.GetEntries(), 300)
         self.assertAlmostEqual(mergedh.GetMean(), 49.5)
+
+    def test_pickle_variedhisto(self):
+        """Merge 3 varied histograms, pickle and evaluate values."""
+
+        df = ROOT.RDataFrame(10)
+        df1 = df.Define("x", "1").Vary("x", "ROOT::RVecI{-1, 2}", ["down", "up"])
+        h = df1.Histo1D("x")
+        hx = ROOT.RDF.Experimental.VariationsFor(h)
+
+        mh1 = GetMergeableValue(hx)
+        mh2 = GetMergeableValue(hx)
+
+        deser1 = pickle.loads(pickle.dumps(mh1))
+        deser2 = pickle.loads(pickle.dumps(mh2))
+
+        MergeValues(deser1, deser2)
+
+        keys = deser1.GetKeys()
+
+        expectedmeans = [1, -1, 2]
+
+        expectedkeys = ["nominal", "x:down", "x:up"]
+        self.assertListEqual([str(key) for key in keys], expectedkeys)
+
+        for key, mean in zip(expectedkeys, expectedmeans):
+            histo = deser1.GetVariation(key)
+            self.assertEqual(histo.GetEntries(), 20)
+            self.assertAlmostEqual(histo.GetMean(), mean)
 
 
 if __name__ == "__main__":

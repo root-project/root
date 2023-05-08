@@ -89,21 +89,17 @@ static TReAllocInit gReallocInit;
 
 #ifdef MEM_DEBUG
 #   define MEM_MAGIC ((unsigned char)0xAB)
+#   define RealStart(p) ((char*)(p) - sizeof(std::max_align_t))
 #ifdef R__B64
-#   define storage_size(p) ((size_t)(((size_t*)p)[-1]))
-#   define RealStart(p) ((char*)(p) - sizeof(size_t))
+#   define storage_size(p) (*(size_t*)RealStart(p))
 #   define StoreSize(p, sz) (*((size_t*)(p)) = (sz))
-#   define ExtStart(p) ((char*)(p) + sizeof(size_t))
-#   define RealSize(sz) ((sz) + sizeof(size_t) + sizeof(char))
-#   define StoreMagic(p, sz) *((unsigned char*)(p)+sz+sizeof(size_t)) = MEM_MAGIC
 #else
-#   define storage_size(p) ((size_t)(((int*)p)[-2]))
-#   define RealStart(p) ((char*)(p) - 2*sizeof(int))
 #   define StoreSize(p, sz) (*((int*)(p)) = (sz))
-#   define ExtStart(p) ((char*)(p) + 2*sizeof(int))
-#   define RealSize(sz) ((sz) + 2*sizeof(int) + sizeof(char))
-#   define StoreMagic(p, sz) *((unsigned char*)(p)+sz+2*sizeof(int)) = MEM_MAGIC
+#   define storage_size(p) ((size_t)*(int*)RealStart(p))
 #endif
+#   define ExtStart(p) ((char*)(p) + sizeof(std::max_align_t))
+#   define RealSize(sz) ((sz) + sizeof(std::max_align_t) + sizeof(char))
+#   define StoreMagic(p, sz) *((unsigned char*)(p)+sz+sizeof(std::max_align_t)) = MEM_MAGIC
 #   define MemClear(p, start, len) \
       if ((len) > 0) memset(&((char*)(p))[(start)], 0, (len))
 #   define TestMagic(p, sz) (*((unsigned char*)(p)+sz) != MEM_MAGIC)

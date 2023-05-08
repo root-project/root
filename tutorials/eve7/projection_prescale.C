@@ -84,7 +84,7 @@ TGeoNode* getNodeFromPath( TGeoNode* top, std::string path)
 }
 
 
-void projection_prescale(std::string type = "RhPhi")
+void projection_prescale(std::string type = "RPhi")
 {
    eveMng = REX::REveManager::Create();
 

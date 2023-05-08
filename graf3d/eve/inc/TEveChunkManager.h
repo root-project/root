@@ -78,11 +78,11 @@ public:
       std::set<Int_t>::const_iterator  fSelectionIterator;
 
       iterator(TEveChunkManager* p) :
-         fPlex(p), fCurrent(0), fAtomIndex(-1),
-         fNextChunk(0), fAtomsToGo(0), fSelection(0), fSelectionIterator() {}
+         fPlex(p), fCurrent(nullptr), fAtomIndex(-1),
+         fNextChunk(0), fAtomsToGo(0), fSelection(nullptr), fSelectionIterator() {}
       iterator(TEveChunkManager& p) :
-         fPlex(&p), fCurrent(0), fAtomIndex(-1),
-         fNextChunk(0), fAtomsToGo(0), fSelection(0), fSelectionIterator() {}
+         fPlex(&p), fCurrent(nullptr), fAtomIndex(-1),
+         fNextChunk(0), fAtomsToGo(0), fSelection(nullptr), fSelectionIterator() {}
       iterator(const iterator& i) :
          fPlex(i.fPlex), fCurrent(i.fCurrent), fAtomIndex(i.fAtomIndex),
          fNextChunk(i.fNextChunk), fAtomsToGo(i.fAtomsToGo),
@@ -96,7 +96,7 @@ public:
       }
 
       Bool_t  next();
-      void    reset() { fCurrent = 0; fAtomIndex = -1; fNextChunk = fAtomsToGo = 0; }
+      void    reset() { fCurrent = nullptr; fAtomIndex = -1; fNextChunk = fAtomsToGo = 0; }
 
       Char_t* operator()() { return fCurrent; }
       Char_t* operator*()  { return fCurrent; }

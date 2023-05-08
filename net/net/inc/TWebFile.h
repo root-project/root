@@ -36,7 +36,7 @@ friend class TWebSocket;
 friend class TWebSystem;
 
 private:
-   TWebFile() : fSocket(0) { }
+   TWebFile() : fSocket(nullptr) {}
 
 protected:
    mutable Long64_t  fSize;             // file size
@@ -57,7 +57,7 @@ protected:
    static TUrl       fgProxy;           // globally set proxy URL
    static Long64_t   fgMaxFullCacheSize; // maximal size of full-cached content, 500 MB by default
 
-   virtual void        Init(Bool_t readHeadOnly);
+           void        Init(Bool_t readHeadOnly) override;
    virtual void        CheckProxy();
    virtual TString     BasicAuthentication();
    virtual Int_t       GetHead();
@@ -65,11 +65,11 @@ protected:
    virtual Int_t       GetHunk(TSocket *s, char *hunk, Int_t maxsize);
    virtual const char *HttpTerminator(const char *start, const char *peeked, Int_t peeklen);
    virtual Int_t       GetFromWeb(char *buf, Int_t len, const TString &msg);
-   virtual Int_t       GetFromWeb10(char *buf, Int_t len, const TString &msg, Int_t nseg = 0, Long64_t *seg_pos = 0, Int_t *seg_len = 0);
+   virtual Int_t       GetFromWeb10(char *buf, Int_t len, const TString &msg, Int_t nseg = 0, Long64_t *seg_pos = nullptr, Int_t *seg_len = nullptr);
    virtual Int_t       GetFromCache(char *buf, Int_t len, Int_t nseg, Long64_t *seg_pos, Int_t *seg_len);
    virtual Bool_t      ReadBuffer10(char *buf, Int_t len);
    virtual Bool_t      ReadBuffers10(char *buf, Long64_t *pos, Int_t *len, Int_t nbuf);
-   virtual void        SetMsgReadBuffer10(const char *redirectLocation = 0, Bool_t tempRedirect = kFALSE);
+   virtual void        SetMsgReadBuffer10(const char *redirectLocation = nullptr, Bool_t tempRedirect = kFALSE);
    virtual void        ProcessHttpHeader(const TString& headerLine);
 
 public:
@@ -77,13 +77,13 @@ public:
    TWebFile(TUrl url, Option_t *opt="");
    virtual ~TWebFile();
 
-   virtual Long64_t    GetSize() const;
-   virtual Bool_t      IsOpen() const;
-   virtual Int_t       ReOpen(Option_t *mode);
-   virtual Bool_t      ReadBuffer(char *buf, Int_t len);
-   virtual Bool_t      ReadBuffer(char *buf, Long64_t pos, Int_t len);
-   virtual Bool_t      ReadBuffers(char *buf, Long64_t *pos, Int_t *len, Int_t nbuf);
-   virtual void        Seek(Long64_t offset, ERelativeTo pos = kBeg);
+   Long64_t    GetSize() const override;
+   Bool_t      IsOpen() const override;
+   Int_t       ReOpen(Option_t *mode) override;
+   Bool_t      ReadBuffer(char *buf, Int_t len) override;
+   Bool_t      ReadBuffer(char *buf, Long64_t pos, Int_t len) override;
+   Bool_t      ReadBuffers(char *buf, Long64_t *pos, Int_t *len, Int_t nbuf) override;
+   void        Seek(Long64_t offset, ERelativeTo pos = kBeg) override;
 
    static void        SetProxy(const char *url);
    static const char *GetProxy();
@@ -91,7 +91,7 @@ public:
    static Long64_t    GetMaxFullCacheSize();
    static void        SetMaxFullCacheSize(Long64_t sz);
 
-   ClassDef(TWebFile,2)  //A ROOT file that reads via a http server
+   ClassDefOverride(TWebFile,2)  //A ROOT file that reads via a http server
 };
 
 
@@ -100,21 +100,21 @@ class TWebSystem : public TSystem {
 private:
    void *fDirp;    // directory handler
 
-   void *GetDirPtr() const { return fDirp; }
+   void *GetDirPtr() const override { return fDirp; }
 
 public:
    TWebSystem();
-   virtual ~TWebSystem() { }
+   virtual ~TWebSystem() {}
 
-   Int_t       MakeDirectory(const char *name);
-   void       *OpenDirectory(const char *name);
-   void        FreeDirectory(void *dirp);
-   const char *GetDirEntry(void *dirp);
-   Int_t       GetPathInfo(const char *path, FileStat_t &buf);
-   Bool_t      AccessPathName(const char *path, EAccessMode mode);
-   Int_t       Unlink(const char *path);
+   Int_t       MakeDirectory(const char *name) override;
+   void       *OpenDirectory(const char *name) override;
+   void        FreeDirectory(void *dirp) override;
+   const char *GetDirEntry(void *dirp) override;
+   Int_t       GetPathInfo(const char *path, FileStat_t &buf) override;
+   Bool_t      AccessPathName(const char *path, EAccessMode mode) override;
+   Int_t       Unlink(const char *path) override;
 
-   ClassDef(TWebSystem,0)  // Directory handler for HTTP (TWebFiles)
+   ClassDefOverride(TWebSystem,0)  // Directory handler for HTTP (TWebFiles)
 };
 
 #endif

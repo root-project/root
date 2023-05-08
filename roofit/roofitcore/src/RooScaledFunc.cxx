@@ -19,12 +19,10 @@
 \class RooScaledFunc
 \ingroup Roofitcore
 
-Lightweight RooAbsFunction implementation that applies a constant scale 
+Lightweight RooAbsFunction implementation that applies a constant scale
 factor to another RooAbsFunc.
 **/
 
-
-#include "RooFit.h"
 
 #include "RooScaledFunc.h"
 

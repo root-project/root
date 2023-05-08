@@ -1,26 +1,43 @@
-add_llvm_library(LLVMGlobalISel
-        CSEInfo.cpp
-        CSEMIRBuilder.cpp
-        CallLowering.cpp
-        GlobalISel.cpp
-        Combiner.cpp
-        CombinerHelper.cpp
-        GISelChangeObserver.cpp
-        IRTranslator.cpp
-        InstructionSelect.cpp
-        InstructionSelector.cpp
-        LegalityPredicates.cpp
-        LegalizeMutations.cpp
-        Legalizer.cpp
-        LegalizerHelper.cpp
-        LegalizerInfo.cpp
-        Localizer.cpp
-        MachineIRBuilder.cpp
-        RegBankSelect.cpp
-        RegisterBank.cpp
-        RegisterBankInfo.cpp
-        Utils.cpp
+add_llvm_component_library(LLVMGlobalISel
+  CSEInfo.cpp
+  GISelKnownBits.cpp
+  CSEMIRBuilder.cpp
+  CallLowering.cpp
+  GlobalISel.cpp
+  Combiner.cpp
+  CombinerHelper.cpp
+  GISelChangeObserver.cpp
+  IRTranslator.cpp
+  InlineAsmLowering.cpp
+  InstructionSelect.cpp
+  InstructionSelector.cpp
+  LegalityPredicates.cpp
+  LegalizeMutations.cpp
+  Legalizer.cpp
+  LegalizerHelper.cpp
+  LegalizerInfo.cpp
+  LegacyLegalizerInfo.cpp
+  Localizer.cpp
+  LostDebugLocObserver.cpp
+  MachineIRBuilder.cpp
+  RegBankSelect.cpp
+  RegisterBank.cpp
+  RegisterBankInfo.cpp
+  Utils.cpp
 
-        DEPENDS
-        intrinsics_gen
+  ADDITIONAL_HEADER_DIRS
+  ${LLVM_MAIN_INCLUDE_DIR}/llvm/CodeGen/GlobalISel
+
+  DEPENDS
+  intrinsics_gen
+
+  LINK_COMPONENTS
+  Analysis
+  CodeGen
+  Core
+  MC
+  SelectionDAG
+  Support
+  Target
+  TransformUtils
   )

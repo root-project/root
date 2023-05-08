@@ -31,15 +31,18 @@ namespace TestStatistics {
 class RooBinnedL : public RooAbsL {
 public:
    RooBinnedL(RooAbsPdf *pdf, RooAbsData *data);
-   ~RooBinnedL();
+   ~RooBinnedL() override;
    ROOT::Math::KahanSum<double>
    evaluatePartition(Section bins, std::size_t components_begin, std::size_t components_end) override;
+
+   std::string GetClassName() const override { return "RooBinnedL"; }
 
 private:
    mutable bool _first = true;        ///<!
    mutable std::vector<double> _binw; ///<!
    std::unique_ptr<RooChangeTracker> paramTracker_;
-   mutable ROOT::Math::KahanSum<double> cachedResult_ = 0;
+   Section lastSection_ = {0, 0}; // used for cache together with the parameter tracker
+   mutable ROOT::Math::KahanSum<double> cachedResult_{0.};
 };
 
 } // namespace TestStatistics

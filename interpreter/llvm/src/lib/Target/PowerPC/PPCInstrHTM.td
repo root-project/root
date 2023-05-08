@@ -13,7 +13,7 @@
 
 
 
-def HasHTM : Predicate<"PPCSubTarget->hasHTM()">;
+def HasHTM : Predicate<"Subtarget->hasHTM()">;
 
 def HTM_get_imm : SDNodeXForm<imm, [{
   return getI32Imm (N->getZExtValue(), SDLoc(N));
@@ -36,7 +36,7 @@ def TEND : XForm_htm1 <31, 686,
 
 def TABORT : XForm_base_r3xo <31, 910,
                               (outs), (ins gprc:$A), "tabort. $A", IIC_SprMTSPR,
-                              []>, isDOT {
+                              []>, isRecordForm {
   let RST = 0;
   let B = 0;
 }
@@ -44,38 +44,38 @@ def TABORT : XForm_base_r3xo <31, 910,
 def TABORTWC : XForm_base_r3xo <31, 782,
                                 (outs), (ins u5imm:$RTS, gprc:$A, gprc:$B),
                                 "tabortwc. $RTS, $A, $B", IIC_SprMTSPR, []>,
-                                isDOT;
+                                isRecordForm;
 
 def TABORTWCI : XForm_base_r3xo <31, 846,
                                  (outs), (ins u5imm:$RTS, gprc:$A, u5imm:$B),
                                  "tabortwci. $RTS, $A, $B", IIC_SprMTSPR, []>,
-                                 isDOT;
+                                 isRecordForm;
 
 def TABORTDC : XForm_base_r3xo <31, 814,
                                 (outs), (ins u5imm:$RTS, gprc:$A, gprc:$B),
                                 "tabortdc. $RTS, $A, $B", IIC_SprMTSPR, []>,
-                                isDOT;
+                                isRecordForm;
 
 def TABORTDCI : XForm_base_r3xo <31, 878,
                                  (outs), (ins u5imm:$RTS, gprc:$A, u5imm:$B),
                                  "tabortdci. $RTS, $A, $B", IIC_SprMTSPR, []>,
-                                 isDOT;
+                                 isRecordForm;
 
 def TSR : XForm_htm2 <31, 750,
                       (outs), (ins u1imm:$L), "tsr. $L", IIC_SprMTSPR, []>,
-                      isDOT;
+                      isRecordForm;
 
 def TRECLAIM : XForm_base_r3xo <31, 942,
                                 (outs), (ins gprc:$A), "treclaim. $A",
                                 IIC_SprMTSPR, []>,
-                                isDOT {
+                                isRecordForm {
   let RST = 0;
   let B = 0;
 }
 
 def TRECHKPT : XForm_base_r3xo <31, 1006,
                                 (outs), (ins), "trechkpt.", IIC_SprMTSPR, []>,
-                                isDOT {
+                                isRecordForm {
   let RST = 0;
   let A = 0;
   let B = 0;
@@ -164,8 +164,12 @@ def : Pat<(int_ppc_tsuspend),
           (TSR 0)>;
 
 def : Pat<(i64 (int_ppc_ttest)),
-          (RLDICL (i64 (INSERT_SUBREG (i64 (IMPLICIT_DEF)),
-                                      (TABORTWCI 0, (LI 0), 0), sub_32)),
-                   36, 28)>;
+          (i64 (INSERT_SUBREG
+                (i64 (IMPLICIT_DEF)), (TABORTWCI 0, (LI 0), 0), sub_32))>;
 
 } // [HasHTM]
+
+def : InstAlias<"tend.", (TEND 0)>, Requires<[HasHTM]>;
+def : InstAlias<"tendall.", (TEND 1)>, Requires<[HasHTM]>;
+def : InstAlias<"tsuspend.", (TSR 0)>, Requires<[HasHTM]>;
+def : InstAlias<"tresume.", (TSR 1)>, Requires<[HasHTM]>;

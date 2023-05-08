@@ -35,16 +35,6 @@ namespace ROOT {
 
    namespace Fit {
 
-      //class used for making shared_ptr of data classes managed by the user (i.e. when we don;t want to delete the contained object)
-      template <class T>
-      struct DummyDeleter {
-         // a deleter not deleting the contained object
-         // used to avoid shared_ptr deleting the contained objects if managed externally
-         void operator()(T * /* p */)
-         {
-            //printf("ROOT::Fit::DummyDeleter called - do not delete object %x \n", p);
-         }
-      };
 
       /**
        * Base class for all the fit data types:
@@ -57,7 +47,7 @@ namespace ROOT {
       /**
          class holding the fit data points. It is template on the type of point,
          which can be for example a binned or unbinned point.
-         It is basicaly a wrapper on an std::vector
+         It is basically a wrapper on an std::vector
 
          @ingroup FitData
 
@@ -117,7 +107,7 @@ namespace ROOT {
            Uses as argument an iterator of a list (or vector) containing the const double * of the data
            An example could be the std::vector<const double *>::begin
            In case of weighted data, the external data must have a dim+1 lists of data
-           The apssed dim refers just to the coordinate size
+           The passed dim refers just to the coordinate size
          */
          template<class Iterator>
          FitData(unsigned int n, unsigned int dim, Iterator dataItr) :

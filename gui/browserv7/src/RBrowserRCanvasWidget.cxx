@@ -56,7 +56,7 @@ public:
       return fCanvas->GetTitle();
    }
 
-   bool DrawElement(std::shared_ptr<Browsable::RElement> &elem, const std::string &opt) override
+   bool DrawElement(std::shared_ptr<Browsable::RElement> &elem, const std::string &opt = "") override
    {
       if (!elem->IsCapable(Browsable::RElement::kActDraw7))
          return false;
@@ -67,7 +67,20 @@ public:
 
       std::shared_ptr<RPadBase> subpad = fCanvas;
 
-      if (obj && Browsable::RProvider::Draw7(subpad, obj, opt)) {
+      std::string drawopt = opt;
+
+      if (drawopt.compare(0,8,"<append>") == 0) {
+         drawopt.erase(0,8);
+      } else if (subpad->NumPrimitives() > 0) {
+         subpad->Wipe();
+         fCanvas->Modified();
+         fCanvas->Update(true);
+      }
+
+      if (drawopt == "<dflt>")
+         drawopt = Browsable::RProvider::GetClassDrawOption(obj->GetClass());
+
+      if (Browsable::RProvider::Draw7(subpad, obj, drawopt)) {
          fCanvas->Modified();
          fCanvas->Update(true);
          return true;

@@ -39,16 +39,16 @@ LLVM code fundamentals. In this article, we assume the reader is familiar with
 `Single Static Assignment
 <http://en.wikipedia.org/wiki/Static_single_assignment_form>`_
 concept and has an understanding of
-`IR structure <http://llvm.org/docs/LangRef.html#high-level-structure>`_.
+`IR structure <https://llvm.org/docs/LangRef.html#high-level-structure>`_.
 
 We will use terms such as
-"`module <http://llvm.org/docs/LangRef.html#high-level-structure>`_",
-"`function <http://llvm.org/docs/ProgrammersManual.html#the-function-class>`_",
+"`module <https://llvm.org/docs/LangRef.html#high-level-structure>`_",
+"`function <https://llvm.org/docs/ProgrammersManual.html#the-function-class>`_",
 "`basic block <http://en.wikipedia.org/wiki/Basic_block>`_",
-"`user <http://llvm.org/docs/ProgrammersManual.html#the-user-class>`_",
-"`value <http://llvm.org/docs/ProgrammersManual.html#the-value-class>`_",
+"`user <https://llvm.org/docs/ProgrammersManual.html#the-user-class>`_",
+"`value <https://llvm.org/docs/ProgrammersManual.html#the-value-class>`_",
 "`instruction
-<http://llvm.org/docs/ProgrammersManual.html#the-instruction-class>`_".
+<https://llvm.org/docs/ProgrammersManual.html#the-instruction-class>`_".
 
 As a good starting point, the Kaleidoscope tutorial can be used:
 
@@ -99,8 +99,8 @@ and a ``void*`` as equal.
 This is just an example; more possible details are described a bit below.
 
 As another example, the reader may imagine two more functions. The first
-function performs a multiplication on 2, while the second one performs an
-arithmetic right shift on 1.
+function performs a multiplication by 2, while the second one performs an
+logical left shift by 1.
 
 Possible solutions
 ^^^^^^^^^^^^^^^^^^
@@ -134,7 +134,7 @@ How it could this be done? Just convert each function to a number, and gather
 all of them in a special hash-table. Functions with equal hashes are equal.
 Good hashing means, that every function part must be taken into account. That
 means we have to convert every function part into some number, and then add it
-into the hash. The lookup-up time would be small, but such a approach adds some
+into the hash. The lookup-up time would be small, but such an approach adds some
 delay due to the hashing routine.
 
 Logarithmical search

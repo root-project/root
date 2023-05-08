@@ -31,7 +31,7 @@ gauss = ROOT.RooGaussian("gauss", "gaussian PDF", x, mean, sigma)
 
 # Create study manager for binned likelihood fits of a Gaussian pdf in 10
 # bins
-mcs = ROOT.RooMCStudy(gauss, {x}, ROOT.RooFit.Silence(), ROOT.RooFit.Binned())
+mcs = ROOT.RooMCStudy(gauss, {x}, Silence=True, Binned=True)
 
 # Add chi^2 calculator module to mcs
 chi2mod = ROOT.RooChi2MCSModule()
@@ -40,10 +40,13 @@ mcs.addModule(chi2mod)
 # Generate 1000 samples of 1000 events
 mcs.generateAndFit(2000, 1000)
 
+# Number of bins for chi2 plots
+nBins = 100
+
 # Fill histograms with distributions chi2 and prob(chi2,ndf) that
 # are calculated by ROOT.RooChiMCSModule
-hist_chi2 = ROOT.RooAbsData.createHistogram(mcs.fitParDataSet(), "chi2")
-hist_prob = ROOT.RooAbsData.createHistogram(mcs.fitParDataSet(), "prob")
+hist_chi2 = mcs.fitParDataSet().createHistogram("chi2", AutoBinning=nBins)
+hist_prob = mcs.fitParDataSet().createHistogram("prob", AutoBinning=nBins)
 
 # Create manager with separate fit model
 # ----------------------------------------------------------------------------
@@ -55,7 +58,7 @@ gauss2 = ROOT.RooGaussian("gauss2", "gaussian PDF2", x, mean2, sigma)
 # Create study manager with separate generation and fit model. ROOT.This configuration
 # is set up to generate bad fits as the fit and generator model have different means
 # and the mean parameter is not floating in the fit
-mcs2 = ROOT.RooMCStudy(gauss2, {x}, ROOT.RooFit.FitModel(gauss), ROOT.RooFit.Silence(), ROOT.RooFit.Binned())
+mcs2 = ROOT.RooMCStudy(gauss2, {x}, FitModel=gauss, Silence=True, Binned=True)
 
 # Add chi^2 calculator module to mcs
 chi2mod2 = ROOT.RooChi2MCSModule()
@@ -74,8 +77,8 @@ pullMeanFrame = mcs2.plotPull(mean)
 
 # Fill histograms with distributions chi2 and prob(chi2,ndf) that
 # are calculated by ROOT.RooChiMCSModule
-hist2_chi2 = ROOT.RooAbsData.createHistogram(mcs2.fitParDataSet(), "chi2")
-hist2_prob = ROOT.RooAbsData.createHistogram(mcs2.fitParDataSet(), "prob")
+hist2_chi2 = mcs2.fitParDataSet().createHistogram("chi2", AutoBinning=nBins)
+hist2_prob = mcs2.fitParDataSet().createHistogram("prob", AutoBinning=nBins)
 hist2_chi2.SetLineColor(ROOT.kRed)
 hist2_prob.SetLineColor(ROOT.kRed)
 

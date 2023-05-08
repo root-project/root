@@ -306,7 +306,7 @@ public:
    void Browse(TBrowser *);
 
    // Starts recording of events to the given file
-   void Start(const char *filename, Option_t *option = "RECREATE", Window_t *w = 0, Int_t winCount = 0);
+   void Start(const char *filename, Option_t *option = "RECREATE", Window_t *w = nullptr, Int_t winCount = 0);
 
    // Stops recording of events
    void Stop(Bool_t guiCommand = kFALSE);
@@ -568,12 +568,12 @@ private:
 
 public:
    virtual        ~TRecorderInactive() {}
-   TRecorderInactive() : fCollect(0) {}
+   TRecorderInactive() : fCollect(nullptr) {}
 
    virtual void   ListCmd(const char *filename);
    virtual void   ListGui(const char *filename);
 
-   virtual void   Start(TRecorder *r, const char *filename, Option_t *option, Window_t *w = 0, Int_t winCount = 0);
+   virtual void   Start(TRecorder *r, const char *filename, Option_t *option, Window_t *w = nullptr, Int_t winCount = 0);
    virtual Bool_t Replay(TRecorder *r, const char *filename, Bool_t showMouseCursor, TRecorder::EReplayModes mode);
 
    virtual TRecorder::ERecorderState GetState() const { return TRecorder::kInactive; }
@@ -648,7 +648,7 @@ private:
    void                SetDefault();
 
 public:
-   TGRecorder(const TGWindow *p = 0, UInt_t w = 230, UInt_t h = 150);
+   TGRecorder(const TGWindow *p = nullptr, UInt_t w = 230, UInt_t h = 150);
    virtual ~TGRecorder();
 
    void StartStop();

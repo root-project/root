@@ -32,6 +32,9 @@ private:
 public:
   X86LegalizerInfo(const X86Subtarget &STI, const X86TargetMachine &TM);
 
+  bool legalizeIntrinsic(LegalizerHelper &Helper,
+                         MachineInstr &MI) const override;
+
 private:
   void setLegalizerInfo32bit();
   void setLegalizerInfo64bit();

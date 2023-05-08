@@ -79,20 +79,20 @@ namespace TMVA {
       // ---
       VariableInfo&     AddVariable( const TString& expression, const TString& title = "", const TString& unit = "",
                                      Double_t min = 0, Double_t max = 0, char varType='F',
-                                     Bool_t normalized = kTRUE, void* external = 0 );
+                                     Bool_t normalized = kTRUE, void* external = nullptr );
       VariableInfo&     AddVariable( const VariableInfo& varInfo );
 
       // NEW: add an array of variables (e.g. for image data)
       void AddVariablesArray(const TString &expression, Int_t size, const TString &title = "", const TString &unit = "",
                              Double_t min = 0, Double_t max = 0, char type = 'F', Bool_t normalized = kTRUE,
-                             void *external = 0 );
+                             void *external = nullptr );
 
       VariableInfo&     AddTarget  ( const TString& expression, const TString& title, const TString& unit,
-                                     Double_t min, Double_t max, Bool_t normalized = kTRUE, void* external = 0 );
+                                     Double_t min, Double_t max, Bool_t normalized = kTRUE, void* external = nullptr );
       VariableInfo&     AddTarget  ( const VariableInfo& varInfo );
 
       VariableInfo&     AddSpectator ( const TString& expression, const TString& title, const TString& unit,
-                                       Double_t min, Double_t max, char type = 'F', Bool_t normalized = kTRUE, void* external = 0 );
+                                       Double_t min, Double_t max, char type = 'F', Bool_t normalized = kTRUE, void* external = nullptr );
       VariableInfo&     AddSpectator ( const VariableInfo& varInfo );
 
       ClassInfo*        AddClass   ( const TString& className );
@@ -203,24 +203,24 @@ namespace TMVA {
 
       void PrintCorrelationMatrix( TTree* theTree );
 
-      TString                    fName;              // name of the dataset info object
+      TString                    fName;              ///< name of the dataset info object
 
-      mutable DataSet*           fDataSet;           // dataset, owned by this datasetinfo object
-      mutable Bool_t             fNeedsRebuilding;   // flag if rebuilding of dataset is needed (after change of cuts, vars, etc.)
+      mutable DataSet*           fDataSet;           ///< dataset, owned by this datasetinfo object
+      mutable Bool_t             fNeedsRebuilding;   ///< flag if rebuilding of dataset is needed (after change of cuts, vars, etc.)
 
       // expressions/formulas
-      std::vector<VariableInfo>  fVariables;         // list of variable expressions/internal names
-      std::vector<VariableInfo>  fTargets;           // list of targets expressions/internal names
-      std::vector<VariableInfo>  fSpectators;        // list of spectators expressions/internal names
+      std::vector<VariableInfo>  fVariables;         ///< list of variable expressions/internal names
+      std::vector<VariableInfo>  fTargets;           ///< list of targets expressions/internal names
+      std::vector<VariableInfo>  fSpectators;        ///< list of spectators expressions/internal names
 
       // variable arrays
       std::map<TString, int> fVarArrays;
 
       // the classes
-      mutable std::vector<ClassInfo*> fClasses;      // name and other infos of the classes
+      mutable std::vector<ClassInfo*> fClasses;      ///< name and other infos of the classes
 
-      TString                    fNormalization;     //
-      TString                    fSplitOptions;      //
+      TString                    fNormalization;
+      TString                    fSplitOptions;
 
       Double_t                   fTrainingSumSignalWeights;
       Double_t                   fTrainingSumBackgrWeights;
@@ -229,14 +229,14 @@ namespace TMVA {
 
 
 
-      TDirectory*                fOwnRootDir;        // ROOT output dir
-      Bool_t                     fVerbose;           // Verbosity
+      TDirectory*                fOwnRootDir;        ///< ROOT output dir
+      Bool_t                     fVerbose;           ///< Verbosity
 
-      UInt_t                     fSignalClass;       // index of the class with the name signal
+      UInt_t                     fSignalClass;       ///< index of the class with the name signal
 
-      std::vector<Float_t>*      fTargetsForMulticlass;//-> all targets 0 except the one with index==classNumber
+      std::vector<Float_t>*      fTargetsForMulticlass;///<-> all targets 0 except the one with index==classNumber
 
-      mutable MsgLogger*         fLogger;            //! message logger
+      mutable MsgLogger*         fLogger;            ///<! message logger
       MsgLogger& Log() const { return *fLogger; }
 
    public:

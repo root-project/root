@@ -6,8 +6,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef LLVM_DEBUGINFO_DWARFATTRIBUTE_H
-#define LLVM_DEBUGINFO_DWARFATTRIBUTE_H
+#ifndef LLVM_DEBUGINFO_DWARF_DWARFATTRIBUTE_H
+#define LLVM_DEBUGINFO_DWARF_DWARFATTRIBUTE_H
 
 #include "llvm/BinaryFormat/Dwarf.h"
 #include "llvm/DebugInfo/DWARF/DWARFFormValue.h"
@@ -23,7 +23,7 @@ namespace llvm {
 /// attributes in a DWARFDie.
 struct DWARFAttribute {
   /// The debug info/types offset for this attribute.
-  uint32_t Offset = 0;
+  uint64_t Offset = 0;
   /// The debug info/types section byte size of the data for this attribute.
   uint32_t ByteSize = 0;
   /// The attribute enumeration of this attribute.
@@ -39,11 +39,14 @@ struct DWARFAttribute {
     return isValid();
   }
 
+  /// Identify DWARF attributes that may contain a pointer to a location list.
+  static bool mayHaveLocationList(dwarf::Attribute Attr);
+
   /// Identifies DWARF attributes that may contain a reference to a
   /// DWARF expression.
-  static bool mayHaveLocationDescription(dwarf::Attribute Attr);
+  static bool mayHaveLocationExpr(dwarf::Attribute Attr);
 };
 
 } // end namespace llvm
 
-#endif // LLVM_DEBUGINFO_DWARFATTRIBUTE_H
+#endif // LLVM_DEBUGINFO_DWARF_DWARFATTRIBUTE_H

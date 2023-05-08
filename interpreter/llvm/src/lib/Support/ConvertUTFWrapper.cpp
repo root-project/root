@@ -97,12 +97,14 @@ bool convertUTF16ToUTF8String(ArrayRef<char> SrcBytes, std::string &Out) {
   const UTF16 *Src = reinterpret_cast<const UTF16 *>(SrcBytes.begin());
   const UTF16 *SrcEnd = reinterpret_cast<const UTF16 *>(SrcBytes.end());
 
+  assert((uintptr_t)Src % sizeof(UTF16) == 0);
+
   // Byteswap if necessary.
   std::vector<UTF16> ByteSwapped;
   if (Src[0] == UNI_UTF16_BYTE_ORDER_MARK_SWAPPED) {
     ByteSwapped.insert(ByteSwapped.end(), Src, SrcEnd);
     for (unsigned I = 0, E = ByteSwapped.size(); I != E; ++I)
-      ByteSwapped[I] = llvm::sys::SwapByteOrder_16(ByteSwapped[I]);
+      ByteSwapped[I] = llvm::ByteSwap_16(ByteSwapped[I]);
     Src = &ByteSwapped[0];
     SrcEnd = &ByteSwapped[ByteSwapped.size() - 1] + 1;
   }

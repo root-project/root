@@ -87,6 +87,7 @@ add_cling_library(clingInterpreter OBJECT
   InvocationOptions.cpp
   LookupHelper.cpp
   NullDerefProtectionTransformer.cpp
+  PerfJITEventListener.cpp
   RequiredSymbols.cpp
   Transaction.cpp
   TransactionUnloader.cpp
@@ -234,6 +235,8 @@ if (UNIX)
           set(CLING_CXX_RLTV "${CLING_CXX_RLTV} --gcc-toolchain=${gcctoolchain}")
         endif()
       endif()
+    elseif (APPLE)
+      set(CLING_CXX_PATH_ARGS "-isysroot;${CMAKE_OSX_SYSROOT}")
     endif()
   endif()
 

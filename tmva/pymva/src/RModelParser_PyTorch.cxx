@@ -414,6 +414,7 @@ RModel Parse(std::string filename, std::vector<std::vector<size_t>> inputShapes,
         PyRunString("dummyInputs.append(torch.rand(*inputShape))",fGlobalNS,fLocalNS);
     }
 
+
     //Getting the ONNX graph from model using the dummy inputs and example outputs
     PyRunString("_set_onnx_shape_inference(True)",fGlobalNS,fLocalNS);
     PyRunString("graph=_model_to_graph(model,dummyInputs)",fGlobalNS,fLocalNS);
@@ -514,6 +515,7 @@ RModel Parse(std::string filename, std::vector<std::vector<size_t>> inputShapes,
         switch(fInputDType){
             case(ETensorType::FLOAT): {
                 rmodel.AddInputTensorInfo(fInputName, ETensorType::FLOAT, fInputShape);
+                rmodel.AddInputTensorName(fInputName);
                 break;
             }
             default:
@@ -536,7 +538,7 @@ RModel Parse(std::string filename, std::vector<std::vector<size_t>> inputShapes,
 }
 
 //////////////////////////////////////////////////////////////////////////////////
-/// \param[in] filename file location of PyTorch .pt model
+/// \param[in] filepath file location of PyTorch .pt model
 /// \param[in] inputShapes vector of input shape vectors
 /// \return    Parsed RModel object
 ///

@@ -23,8 +23,6 @@
 Lightweight interface adaptor that exports a RooAbsReal as a ROOT::Math::IMultiGenFunction
 **/
 
-
-#include "RooFit.h"
 #include "Riostream.h"
 
 #include "RooMultiGenFunction.h"
@@ -46,7 +44,7 @@ ClassImp(RooMultiGenFunction);
 ////////////////////////////////////////////////////////////////////////////////
 
 RooMultiGenFunction::RooMultiGenFunction(const RooAbsFunc& func) :
-  _ftor(func) 
+  _ftor(func)
 {
 }
 
@@ -78,14 +76,14 @@ RooMultiGenFunction::RooMultiGenFunction(const RooMultiGenFunction& other) :
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooMultiGenFunction::~RooMultiGenFunction() 
+RooMultiGenFunction::~RooMultiGenFunction()
 {
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
 
-double RooMultiGenFunction::DoEval(const double* x) const 
+double RooMultiGenFunction::DoEval(const double* x) const
 {
   return _ftor(x) ;
 }

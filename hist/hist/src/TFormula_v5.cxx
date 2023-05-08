@@ -191,7 +191,7 @@ TFormula::TFormula(const char *name,const char *expression) :
 
    //eliminate blanks in expression
    Int_t i,j,nch;
-   nch = strlen(expression);
+   nch = expression ? strlen(expression) : 0;
    char *expr = new char[nch+1];
    j = 0;
    for (i=0;i<nch;i++) {
@@ -294,7 +294,7 @@ TFormula::TFormula(const TFormula &formula) : TNamed()
    fOperOptimized  = 0;
    fOptimal = (ROOT::v5::TFormulaPrimitive::TFuncG)&TFormula::EvalParOld;
 
-   ((TFormula&)formula).TFormula::Copy(*this);
+   formula.TFormula::Copy(*this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -302,9 +302,8 @@ TFormula::TFormula(const TFormula &formula) : TNamed()
 
 TFormula& TFormula::operator=(const TFormula &rhs)
 {
-   if (this != &rhs) {
-      rhs.Copy(*this);
-   }
+   if (this != &rhs)
+      rhs.TFormula::Copy(*this);
    return *this;
 }
 
@@ -3811,9 +3810,9 @@ void  TFormula::MakePrimitive(const char *expr, Int_t pos)
 ///             }
 /// ~~~
 ///     2. ex.
-///           -  fOptimal = ::EvalPrimitive0 - if it return only variable, constant or parameter
-///           -           = ::EvalParameter1 - if only one unary operation
-///           -           = ::EvalPrimitive2 - if only one binary operation
+///           -  fOptimal = TFormula::EvalPrimitive0 - if it return only variable, constant or parameter
+///           -           = TFormula::EvalPrimitive1 - if only one unary operation
+///           -           = TFormula::EvalPrimitive2 - if only one binary operation
 
 void TFormula::Optimize()
 {

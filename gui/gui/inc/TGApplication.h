@@ -25,8 +25,8 @@ private:
    TGClient      *fClient{nullptr};   ///< pointer to the client environment
 
 protected:
-   TGApplication() : TApplication() { }
-   virtual void LoadGraphicsLibs();
+   TGApplication() : TApplication() {}
+   void LoadGraphicsLibs() override;
 
 public:
    TGApplication(const char *appClassName,
@@ -34,9 +34,9 @@ public:
                  void *options = nullptr, Int_t numOptions = 0);
    virtual ~TGApplication();
 
-   virtual void GetOptions(Int_t *argc, char **argv);
+   void GetOptions(Int_t *argc, char **argv) override;
 
-   ClassDef(TGApplication,0)  //GUI application singleton
+   ClassDefOverride(TGApplication,0)  //GUI application singleton
 };
 
 #endif

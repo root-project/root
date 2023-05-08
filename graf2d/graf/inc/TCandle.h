@@ -52,7 +52,7 @@ protected:
 
    bool fIsRaw;                           ///< 0: for TH1 projection, 1: using raw data
    bool fIsCalculated;
-   TH1D * fProj;
+   TH1D *fProj{nullptr};
    bool fDismiss;                         ///< True if the candle cannot be painted
 
    Double_t fPosCandleAxis;               ///< x-pos for a vertical candle
@@ -67,7 +67,7 @@ protected:
    Double_t fWhiskerUp;                   ///< Position of the upper whisker end
    Double_t fWhiskerDown;                 ///< Position of the lower whisker end
 
-   Double_t * fDatapoints;                ///< position of all Datapoints within this candle
+   Double_t *fDatapoints{nullptr};        ///< position of all Datapoints within this candle
    Long64_t fNDatapoints;                 ///< Number of Datapoints within this candle
 
    Double_t fDrawPointsX[kNMAXPOINTS];    ///< x-coord for every outlier, ..
@@ -137,7 +137,7 @@ public:
    virtual void   SetQ3(Double_t q3) { fBoxDown = q3; }
 
    int            ParseOption(char *optin);
-   const char *   GetDrawOption() { return fOptionStr; }
+   const char    *GetDrawOption() { return fOptionStr; }
    long           GetOption() { return fOption; }
    bool           IsOption(CandleOption opt);
    static void    SetWhiskerRange(const Double_t wRange);
@@ -145,6 +145,6 @@ public:
    static void    SetScaledCandle(const Bool_t cScale = true);
    static void    SetScaledViolin(const Bool_t vScale = true);
 
-   ClassDef(TCandle,2)  //A Candle
+   ClassDefOverride(TCandle,2)  //A Candle
 };
 #endif

@@ -294,44 +294,58 @@ Sema::DiagnoseUnexpandedParameterPacks(SourceLocation Loc,
     return false;
 
   // If we are within a lambda expression and referencing a pack that is not
-  // a parameter of the lambda itself, that lambda contains an unexpanded
+  // declared within the lambda itself, that lambda contains an unexpanded
   // parameter pack, and we are done.
   // FIXME: Store 'Unexpanded' on the lambda so we don't need to recompute it
   // later.
   SmallVector<UnexpandedParameterPack, 4> LambdaParamPackReferences;
-  for (unsigned N = FunctionScopes.size(); N; --N) {
-    sema::FunctionScopeInfo *Func = FunctionScopes[N-1];
-    // We do not permit pack expansion that would duplicate a statement
-    // expression, not even within a lambda.
-    // FIXME: We could probably support this for statement expressions that do
-    // not contain labels, and for pack expansions that expand both the stmt
-    // expr and the enclosing lambda.
-    if (std::any_of(
-            Func->CompoundScopes.begin(), Func->CompoundScopes.end(),
-            [](sema::CompoundScopeInfo &CSI) { return CSI.IsStmtExpr; }))
-      break;
-
-    if (auto *LSI = dyn_cast<sema::LambdaScopeInfo>(Func)) {
-      if (N == FunctionScopes.size()) {
-        for (auto &Pack : Unexpanded) {
-          auto *VD = dyn_cast_or_null<VarDecl>(
-              Pack.first.dyn_cast<NamedDecl *>());
-          if (VD && VD->getDeclContext() == LSI->CallOperator)
-            LambdaParamPackReferences.push_back(Pack);
+  if (auto *LSI = getEnclosingLambda()) {
+    for (auto &Pack : Unexpanded) {
+      auto DeclaresThisPack = [&](NamedDecl *LocalPack) {
+        if (auto *TTPT = Pack.first.dyn_cast<const TemplateTypeParmType *>()) {
+          auto *TTPD = dyn_cast<TemplateTypeParmDecl>(LocalPack);
+          return TTPD && TTPD->getTypeForDecl() == TTPT;
         }
+        return declaresSameEntity(Pack.first.get<NamedDecl *>(), LocalPack);
+      };
+      if (std::find_if(LSI->LocalPacks.begin(), LSI->LocalPacks.end(),
+                       DeclaresThisPack) != LSI->LocalPacks.end())
+        LambdaParamPackReferences.push_back(Pack);
+    }
+
+    if (LambdaParamPackReferences.empty()) {
+      // Construct in lambda only references packs declared outside the lambda.
+      // That's OK for now, but the lambda itself is considered to contain an
+      // unexpanded pack in this case, which will require expansion outside the
+      // lambda.
+
+      // We do not permit pack expansion that would duplicate a statement
+      // expression, not even within a lambda.
+      // FIXME: We could probably support this for statement expressions that
+      // do not contain labels.
+      // FIXME: This is insufficient to detect this problem; consider
+      //   f( ({ bad: 0; }) + pack ... );
+      bool EnclosingStmtExpr = false;
+      for (unsigned N = FunctionScopes.size(); N; --N) {
+        sema::FunctionScopeInfo *Func = FunctionScopes[N-1];
+        if (std::any_of(
+                Func->CompoundScopes.begin(), Func->CompoundScopes.end(),
+                [](sema::CompoundScopeInfo &CSI) { return CSI.IsStmtExpr; })) {
+          EnclosingStmtExpr = true;
+          break;
+        }
+        // Coumpound-statements outside the lambda are OK for now; we'll check
+        // for those when we finish handling the lambda.
+        if (Func == LSI)
+          break;
       }
 
-      // If we have references to a parameter pack of the innermost enclosing
-      // lambda, only diagnose those ones. We don't know whether any other
-      // unexpanded parameters referenced herein are actually unexpanded;
-      // they might be expanded at an outer level.
-      if (!LambdaParamPackReferences.empty()) {
-        Unexpanded = LambdaParamPackReferences;
-        break;
+      if (!EnclosingStmtExpr) {
+        LSI->ContainsUnexpandedParameterPack = true;
+        return false;
       }
-
-      LSI->ContainsUnexpandedParameterPack = true;
-      return false;
+    } else {
+      Unexpanded = LambdaParamPackReferences;
     }
   }
 
@@ -354,8 +368,8 @@ Sema::DiagnoseUnexpandedParameterPacks(SourceLocation Loc,
       Locations.push_back(Unexpanded[I].second);
   }
 
-  DiagnosticBuilder DB = Diag(Loc, diag::err_unexpanded_parameter_pack)
-                         << (int)UPPC << (int)Names.size();
+  auto DB = Diag(Loc, diag::err_unexpanded_parameter_pack)
+            << (int)UPPC << (int)Names.size();
   for (size_t I = 0, E = std::min(Names.size(), (size_t)2); I != E; ++I)
     DB << Names[I];
 
@@ -392,6 +406,29 @@ bool Sema::DiagnoseUnexpandedParameterPack(Expr *E,
   CollectUnexpandedParameterPacksVisitor(Unexpanded).TraverseStmt(E);
   assert(!Unexpanded.empty() && "Unable to find unexpanded parameter packs");
   return DiagnoseUnexpandedParameterPacks(E->getBeginLoc(), UPPC, Unexpanded);
+}
+
+bool Sema::DiagnoseUnexpandedParameterPackInRequiresExpr(RequiresExpr *RE) {
+  if (!RE->containsUnexpandedParameterPack())
+    return false;
+
+  SmallVector<UnexpandedParameterPack, 2> Unexpanded;
+  CollectUnexpandedParameterPacksVisitor(Unexpanded).TraverseStmt(RE);
+  assert(!Unexpanded.empty() && "Unable to find unexpanded parameter packs");
+
+  // We only care about unexpanded references to the RequiresExpr's own
+  // parameter packs.
+  auto Parms = RE->getLocalParameters();
+  llvm::SmallPtrSet<NamedDecl*, 8> ParmSet(Parms.begin(), Parms.end());
+  SmallVector<UnexpandedParameterPack, 2> UnexpandedParms;
+  for (auto Parm : Unexpanded)
+    if (ParmSet.contains(Parm.first.dyn_cast<NamedDecl*>()))
+      UnexpandedParms.push_back(Parm);
+  if (UnexpandedParms.empty())
+    return false;
+
+  return DiagnoseUnexpandedParameterPacks(RE->getBeginLoc(), UPPC_Requirement,
+                                          UnexpandedParms);
 }
 
 bool Sema::DiagnoseUnexpandedParameterPack(const CXXScopeSpec &SS,
@@ -600,7 +637,8 @@ QualType Sema::CheckPackExpansion(QualType Pattern, SourceRange PatternRange,
     return QualType();
   }
 
-  return Context.getPackExpansionType(Pattern, NumExpansions);
+  return Context.getPackExpansionType(Pattern, NumExpansions,
+                                      /*ExpectPackInType=*/false);
 }
 
 ExprResult Sema::ActOnPackExpansion(Expr *Pattern, SourceLocation EllipsisLoc) {
@@ -833,6 +871,7 @@ bool Sema::containsUnexpandedParameterPacks(Declarator &D) {
 
   case TST_typeofExpr:
   case TST_decltype:
+  case TST_extint:
     if (DS.getRepAsExpr() &&
         DS.getRepAsExpr()->containsUnexpandedParameterPack())
       return true;
@@ -866,6 +905,7 @@ bool Sema::containsUnexpandedParameterPacks(Declarator &D) {
   case TST_auto:
   case TST_auto_type:
   case TST_decltype_auto:
+  case TST_BFloat16:
 #define GENERIC_IMAGE_TYPE(ImgType, Id) case TST_##ImgType##_t:
 #include "clang/Basic/OpenCLImageTypes.def"
   case TST_unknown_anytype:
@@ -923,6 +963,10 @@ bool Sema::containsUnexpandedParameterPacks(Declarator &D) {
     }
   }
 
+  if (Expr *TRC = D.getTrailingRequiresClause())
+    if (TRC->containsUnexpandedParameterPack())
+      return true;
+
   return false;
 }
 
@@ -937,7 +981,7 @@ class ParameterPackValidatorCCC final : public CorrectionCandidateCallback {
   }
 
   std::unique_ptr<CorrectionCandidateCallback> clone() override {
-    return llvm::make_unique<ParameterPackValidatorCCC>(*this);
+    return std::make_unique<ParameterPackValidatorCCC>(*this);
   }
 };
 
@@ -1051,7 +1095,7 @@ Sema::getTemplateArgumentPackExpansionPattern(
   case TemplateArgument::TemplateExpansion:
     Ellipsis = OrigLoc.getTemplateEllipsisLoc();
     NumExpansions = Argument.getNumTemplateExpansions();
-    return TemplateArgumentLoc(Argument.getPackExpansionPattern(),
+    return TemplateArgumentLoc(Context, Argument.getPackExpansionPattern(),
                                OrigLoc.getTemplateQualifierLoc(),
                                OrigLoc.getTemplateNameLoc());
 
@@ -1139,7 +1183,7 @@ static void CheckFoldOperand(Sema &S, Expr *E) {
   }
 }
 
-ExprResult Sema::ActOnCXXFoldExpr(SourceLocation LParenLoc, Expr *LHS,
+ExprResult Sema::ActOnCXXFoldExpr(Scope *S, SourceLocation LParenLoc, Expr *LHS,
                                   tok::TokenKind Operator,
                                   SourceLocation EllipsisLoc, Expr *RHS,
                                   SourceLocation RParenLoc) {
@@ -1181,18 +1225,37 @@ ExprResult Sema::ActOnCXXFoldExpr(SourceLocation LParenLoc, Expr *LHS,
   }
 
   BinaryOperatorKind Opc = ConvertTokenKindToBinaryOpcode(Operator);
-  return BuildCXXFoldExpr(LParenLoc, LHS, Opc, EllipsisLoc, RHS, RParenLoc,
+
+  // Perform first-phase name lookup now.
+  UnresolvedLookupExpr *ULE = nullptr;
+  {
+    UnresolvedSet<16> Functions;
+    LookupBinOp(S, EllipsisLoc, Opc, Functions);
+    if (!Functions.empty()) {
+      DeclarationName OpName = Context.DeclarationNames.getCXXOperatorName(
+          BinaryOperator::getOverloadedOperator(Opc));
+      ExprResult Callee = CreateUnresolvedLookupExpr(
+          /*NamingClass*/ nullptr, NestedNameSpecifierLoc(),
+          DeclarationNameInfo(OpName, EllipsisLoc), Functions);
+      if (Callee.isInvalid())
+        return ExprError();
+      ULE = cast<UnresolvedLookupExpr>(Callee.get());
+    }
+  }
+
+  return BuildCXXFoldExpr(ULE, LParenLoc, LHS, Opc, EllipsisLoc, RHS, RParenLoc,
                           None);
 }
 
-ExprResult Sema::BuildCXXFoldExpr(SourceLocation LParenLoc, Expr *LHS,
+ExprResult Sema::BuildCXXFoldExpr(UnresolvedLookupExpr *Callee,
+                                  SourceLocation LParenLoc, Expr *LHS,
                                   BinaryOperatorKind Operator,
                                   SourceLocation EllipsisLoc, Expr *RHS,
                                   SourceLocation RParenLoc,
                                   Optional<unsigned> NumExpansions) {
-  return new (Context) CXXFoldExpr(Context.DependentTy, LParenLoc, LHS,
-                                   Operator, EllipsisLoc, RHS, RParenLoc,
-                                   NumExpansions);
+  return new (Context)
+      CXXFoldExpr(Context.DependentTy, Callee, LParenLoc, LHS, Operator,
+                  EllipsisLoc, RHS, RParenLoc, NumExpansions);
 }
 
 ExprResult Sema::BuildEmptyCXXFoldExpr(SourceLocation EllipsisLoc,

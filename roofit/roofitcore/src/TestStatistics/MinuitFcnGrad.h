@@ -18,10 +18,9 @@
 #include <RooFit/TestStatistics/RooAbsL.h>
 #include <RooFit/TestStatistics/LikelihoodWrapper.h>
 #include <RooFit/TestStatistics/LikelihoodGradientWrapper.h>
-#include "RooAbsMinimizerFcn.h"
+#include "../RooAbsMinimizerFcn.h"
 
 #include <Fit/ParameterSettings.h>
-#include <Fit/Fitter.h>
 #include "Math/IFunction.h" // ROOT::Math::IMultiGradFunction
 
 // forward declaration
@@ -35,21 +34,26 @@ class MinuitFcnGrad : public ROOT::Math::IMultiGradFunction, public RooAbsMinimi
 public:
    MinuitFcnGrad(const std::shared_ptr<RooFit::TestStatistics::RooAbsL> &_likelihood, RooMinimizer *context,
                  std::vector<ROOT::Fit::ParameterSettings> &parameters, LikelihoodMode likelihoodMode,
-                 LikelihoodGradientMode likelihoodGradientMode, bool verbose = false);
+                 LikelihoodGradientMode likelihoodGradientMode);
 
    inline ROOT::Math::IMultiGradFunction *Clone() const override { return new MinuitFcnGrad(*this); }
 
    /// Overridden from RooAbsMinimizerFcn to include gradient strategy synchronization.
-   Bool_t Synchronize(std::vector<ROOT::Fit::ParameterSettings> &parameter_settings, Bool_t optConst,
-                      Bool_t verbose = kFALSE) override;
+   bool Synchronize(std::vector<ROOT::Fit::ParameterSettings> &parameter_settings) override;
 
    // used inside Minuit:
    inline bool returnsInMinuit2ParameterSpace() const override { return gradient->usesMinuitInternalValues(); }
 
-   inline void setOptimizeConstOnFunction(RooAbsArg::ConstOpCode opcode, Bool_t doAlsoTrackingOpt) override
+   inline void setOptimizeConstOnFunction(RooAbsArg::ConstOpCode opcode, bool doAlsoTrackingOpt) override
    {
       likelihood->constOptimizeTestStatistic(opcode, doAlsoTrackingOpt);
+      if (likelihood != likelihood_in_gradient) {
+         likelihood_in_gradient->constOptimizeTestStatistic(opcode, doAlsoTrackingOpt);
+      }
    }
+
+   bool fit(ROOT::Fit::Fitter &fitter) const override { return fitter.FitFCN(*this); };
+   ROOT::Math::IMultiGenFunction *getMultiGenFcn() override { return this; };
 
 private:
    /// IMultiGradFunction override necessary for Minuit
@@ -68,7 +72,13 @@ public:
 
    inline std::string getFunctionTitle() const override { return likelihood->GetTitle(); }
 
-   inline void setOffsetting(Bool_t flag) override { likelihood->enableOffsetting(flag); }
+   inline void setOffsetting(bool flag) override
+   {
+      likelihood->enableOffsetting(flag);
+      if (likelihood != likelihood_in_gradient) {
+         likelihood_in_gradient->enableOffsetting(flag);
+      }
+   }
 
 private:
    /// This override should not be used in this class, so it throws.
@@ -78,7 +88,9 @@ private:
 
    // members
    std::shared_ptr<LikelihoodWrapper> likelihood;
+   std::shared_ptr<LikelihoodWrapper> likelihood_in_gradient;
    std::shared_ptr<LikelihoodGradientWrapper> gradient;
+   mutable bool calculating_gradient_ = false;
 
 public:
    mutable std::shared_ptr<WrapperCalculationCleanFlags> calculation_is_clean;

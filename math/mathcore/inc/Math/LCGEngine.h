@@ -41,11 +41,11 @@ namespace ROOT {
 
          LCGEngine() : fSeed(65539) { }
 
-         virtual ~LCGEngine() {}
+         ~LCGEngine() override {}
 
          void SetSeed(uint32_t seed) { fSeed = seed; }
 
-         virtual double Rndm() {
+         double Rndm() override {
             //double Rndm() {
             return Rndm_impl();
          }

@@ -28,13 +28,17 @@ public:
 
    ROOT::Math::KahanSum<double>
    evaluatePartition(Section events, std::size_t components_begin, std::size_t components_end) override;
-   inline RooArgSet *getParameters() override { return &parameter_set_; }
+   inline std::unique_ptr<RooArgSet> getParameters() override { return std::make_unique<RooArgSet>(parameter_set_); }
    inline std::string GetName() const override { return std::string("subsidiary_pdf_of_") + parent_pdf_name_; }
 
    inline std::string GetTitle() const override
    {
       return std::string("Subsidiary PDF set of simultaneous PDF ") + parent_pdf_name_;
    }
+
+   std::string GetInfo() const override { return GetClassName() + "::" + parent_pdf_name_; }
+
+   std::string GetClassName() const override { return "RooSubsidiaryL"; }
 
    inline std::size_t numDataEntries() const override
    {
@@ -47,8 +51,8 @@ public:
 
 private:
    std::string parent_pdf_name_;
-   RooArgList subsidiary_pdfs_{"subsidiary_pdfs"}; // Set of subsidiary PDF or "constraint" terms
-   RooArgSet parameter_set_{"parameter_set"};      // Set of parameters to which constraints apply
+   RooArgList subsidiary_pdfs_{"subsidiary_pdfs"}; ///< Set of subsidiary PDF or "constraint" terms
+   RooArgSet parameter_set_{"parameter_set"};      ///< Set of parameters to which constraints apply
 };
 
 } // namespace TestStatistics

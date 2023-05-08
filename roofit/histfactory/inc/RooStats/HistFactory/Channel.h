@@ -57,7 +57,7 @@ public:
   void SetData( TH1* hData );
   /// get data object
   RooStats::HistFactory::Data& GetData() { return fData; }
-  const RooStats::HistFactory::Data& GetData() const { return fData; }  
+  const RooStats::HistFactory::Data& GetData() const { return fData; }
 
   /// add additional data object
   void AddAdditionalData( const RooStats::HistFactory::Data& data ) { fAdditionalData.push_back(data); }
@@ -70,7 +70,7 @@ public:
   void SetStatErrorConfig( RooStats::HistFactory::StatErrorConfig Config ) { fStatErrorConfig = Config; }
   /// get information about threshold for statistical uncertainties and constraint term
   HistFactory::StatErrorConfig& GetStatErrorConfig() { return fStatErrorConfig; }
-  const HistFactory::StatErrorConfig& GetStatErrorConfig() const { return fStatErrorConfig; }  
+  const HistFactory::StatErrorConfig& GetStatErrorConfig() const { return fStatErrorConfig; }
 
   void AddSample( RooStats::HistFactory::Sample sample );
   /// get vector of samples for this channel
@@ -84,7 +84,7 @@ public:
   bool CheckHistograms() const;
 
 protected:
-  
+
   std::string fName;
   std::string fInputFile;
   std::string fHistoPath;
@@ -103,7 +103,7 @@ protected:
 };
 
   extern Channel BadChannel;
- 
+
 } // namespace HistFactory
 } // namespace RooStats
 

@@ -36,26 +36,26 @@ private:
 
    std::vector<std::pair<size_t, size_t>> fGetterIndex; // (columnId, visitorId)
    std::vector<std::unique_ptr<ROOT::Internal::RDF::TValueGetter>> fValueGetters; // Visitors to be used to track and get entries. One per column.
-   std::vector<void *> GetColumnReadersImpl(std::string_view name, const std::type_info &type) override;
+   std::vector<void *> GetColumnReadersImpl(std::string_view name, const std::type_info &type) final;
 
 public:
    RArrowDS(std::shared_ptr<arrow::Table> table, std::vector<std::string> const &columns);
    ~RArrowDS();
-   const std::vector<std::string> &GetColumnNames() const override;
-   std::vector<std::pair<ULong64_t, ULong64_t>> GetEntryRanges() override;
-   std::string GetTypeName(std::string_view colName) const override;
-   bool HasColumn(std::string_view colName) const override;
-   bool SetEntry(unsigned int slot, ULong64_t entry) override;
-   void InitSlot(unsigned int slot, ULong64_t firstEntry) override;
-   void SetNSlots(unsigned int nSlots) override;
-   void Initialise() override;
-   std::string GetLabel() override;
+   const std::vector<std::string> &GetColumnNames() const final;
+   std::vector<std::pair<ULong64_t, ULong64_t>> GetEntryRanges() final;
+   std::string GetTypeName(std::string_view colName) const final;
+   bool HasColumn(std::string_view colName) const final;
+   bool SetEntry(unsigned int slot, ULong64_t entry) final;
+   void InitSlot(unsigned int slot, ULong64_t firstEntry) final;
+   void SetNSlots(unsigned int nSlots) final;
+   void Initialize() final;
+   std::string GetLabel() final;
 };
 
-////////////////////////////////////////////////////////////////////////////////////////////////
-/// \brief Factory method to create a Apache Arrow RDataFrame.
-/// \param[in] table an apache::arrow table to use as a source.
-RDataFrame MakeArrowDataFrame(std::shared_ptr<arrow::Table> table, std::vector<std::string> const &columns);
+RDataFrame FromArrow(std::shared_ptr<arrow::Table> table, std::vector<std::string> const &columnNames);
+
+R__DEPRECATED(6, 30, "Use FromArrow instead.")
+RDataFrame MakeArrowDataFrame(std::shared_ptr<arrow::Table> table, std::vector<std::string> const &columnNames);
 
 } // namespace RDF
 

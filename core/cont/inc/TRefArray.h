@@ -50,52 +50,52 @@ protected:
 public:
    typedef TRefArrayIter Iterator_t;
 
-   TRefArray(TProcessID *pid = 0);
+   TRefArray(TProcessID *pid = nullptr);
    TRefArray(Int_t s, TProcessID *pid);
-   TRefArray(Int_t s, Int_t lowerBound = 0, TProcessID *pid = 0);
+   TRefArray(Int_t s, Int_t lowerBound = 0, TProcessID *pid = nullptr);
    TRefArray(const TRefArray &a);
    TRefArray& operator=(const TRefArray &a);
    virtual          ~TRefArray();
-   virtual void     Clear(Option_t *option="");
+   void             Clear(Option_t *option="") override;
    virtual void     Compress();
-   virtual void     Delete(Option_t *option="");
+   void             Delete(Option_t *option="") override;
    virtual void     Expand(Int_t newSize);   // expand or shrink an array
-   Int_t            GetEntries() const;
+   Int_t            GetEntries() const override;
    Int_t            GetEntriesFast() const {
       return GetAbsLast() + 1;   //only OK when no gaps
    }
-   Int_t            GetLast() const;
-   TObject        **GetObjectRef(const TObject *obj) const;
+   Int_t            GetLast() const override;
+   TObject        **GetObjectRef(const TObject *obj) const override;
    TProcessID      *GetPID() const {return fPID;}
    UInt_t           GetUID(Int_t at) const;
-   Bool_t           IsEmpty() const { return GetAbsLast() == -1; }
-   TIterator       *MakeIterator(Bool_t dir = kIterForward) const;
+   Bool_t           IsEmpty() const  override { return GetAbsLast() == -1; }
+   TIterator       *MakeIterator(Bool_t dir = kIterForward) const override;
 
-   void             Add(TObject *obj) { AddLast(obj); }
-   virtual void     AddFirst(TObject *obj);
-   virtual void     AddLast(TObject *obj);
-   virtual void     AddAt(TObject *obj, Int_t idx);
+   void             Add(TObject *obj) override { AddLast(obj); }
+   void             AddFirst(TObject *obj) override;
+   void             AddLast(TObject *obj) override;
+   void             AddAt(TObject *obj, Int_t idx) override;
    virtual void     AddAtAndExpand(TObject *obj, Int_t idx);
    virtual Int_t    AddAtFree(TObject *obj);
-   virtual void     AddAfter(const TObject *after, TObject *obj);
-   virtual void     AddBefore(const TObject *before, TObject *obj);
-   virtual TObject *RemoveAt(Int_t idx);
-   virtual TObject *Remove(TObject *obj);
+   void             AddAfter(const TObject *after, TObject *obj) override;
+   void             AddBefore(const TObject *before, TObject *obj) override;
+   TObject         *RemoveAt(Int_t idx) override;
+   TObject         *Remove(TObject *obj) override;
 
-   TObject         *At(Int_t idx) const;
-   TObject         *Before(const TObject *obj) const;
-   TObject         *After(const TObject *obj) const;
-   TObject         *First() const;
-   TObject         *Last() const;
+   TObject         *At(Int_t idx) const override;
+   TObject         *Before(const TObject *obj) const override;
+   TObject         *After(const TObject *obj) const override;
+   TObject         *First() const override;
+   TObject         *Last() const override;
    virtual TObject *operator[](Int_t i) const;
    Int_t            LowerBound() const { return fLowerBound; }
-   Int_t            IndexOf(const TObject *obj) const;
+   Int_t            IndexOf(const TObject *obj) const override;
    void             SetLast(Int_t last);
 
    virtual void     Sort(Int_t upto = kMaxInt);
    virtual Int_t    BinarySearch(TObject *obj, Int_t upto = kMaxInt); // the TRefArray has to be sorted, -1 == not found !!
 
-   ClassDef(TRefArray,1)  //An array of references to TObjects
+   ClassDefOverride(TRefArray,1)  //An array of references to TObjects
 };
 
 
@@ -121,7 +121,7 @@ private:
    Int_t             fCursor;     //next position in array
    Bool_t            fDirection;  //iteration direction
 
-   TRefArrayIter() : fArray(0), fCurCursor(0), fCursor(0), fDirection(kIterForward) { }
+   TRefArrayIter() : fArray(nullptr), fCurCursor(0), fCursor(0), fDirection(kIterForward) {}
 
 public:
    using iterator_category = std::bidirectional_iterator_tag; // TODO: ideally it should be a randomaccess_iterator_tag
@@ -134,17 +134,17 @@ public:
    TRefArrayIter(const TRefArray *arr, Bool_t dir = kIterForward);
    TRefArrayIter(const TRefArrayIter &iter);
    ~TRefArrayIter() { }
-   TIterator         &operator=(const TIterator &rhs);
+   TIterator         &operator=(const TIterator &rhs) override;
    TRefArrayIter     &operator=(const TRefArrayIter &rhs);
 
-   const TCollection *GetCollection() const { return fArray; }
-   TObject           *Next();
-   void               Reset();
-   Bool_t             operator!=(const TIterator &aIter) const;
+   const TCollection *GetCollection() const override { return fArray; }
+   TObject           *Next() override;
+   void               Reset() override;
+   Bool_t             operator!=(const TIterator &aIter) const override;
    Bool_t             operator!=(const TRefArrayIter &aIter) const;
-   TObject           *operator*() const;
+   TObject           *operator*() const override;
 
-   ClassDef(TRefArrayIter,0)  //Object array iterator
+   ClassDefOverride(TRefArrayIter,0)  //Object array iterator
 };
 
 #if (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__) >= 40600
@@ -165,14 +165,14 @@ inline TObject *TRefArray::operator[](Int_t at) const
 {
    int j = at-fLowerBound;
    if (j >= 0 && j < fSize) {
-      if (!fPID) return 0;
-      if (!TProcessID::IsValid(fPID)) return 0;
+      if (!fPID) return nullptr;
+      if (!TProcessID::IsValid(fPID)) return nullptr;
       TObject *obj = fPID->GetObjectWithID(fUIDs[j]);
-      if (obj==0) obj = GetFromTable(j);
+      if (!obj) obj = GetFromTable(j);
       return obj;
    }
    BoundsOk("At", at);
-   return 0;
+   return nullptr;
 }
 
 inline TObject *TRefArray::At(Int_t at) const
@@ -180,14 +180,14 @@ inline TObject *TRefArray::At(Int_t at) const
    // Return the object at position i. Returns 0 if i is out of bounds.
    int j = at-fLowerBound;
    if (j >= 0 && j < fSize) {
-      if (!fPID) return 0;
-      if (!TProcessID::IsValid(fPID)) return 0;
+      if (!fPID) return nullptr;
+      if (!TProcessID::IsValid(fPID)) return nullptr;
       TObject *obj = fPID->GetObjectWithID(fUIDs[j]);
-      if (obj==0) obj = GetFromTable(j);
+      if (!obj) obj = GetFromTable(j);
       return obj;
    }
    BoundsOk("At", at);
-   return 0;
+   return nullptr;
 }
 
 #endif

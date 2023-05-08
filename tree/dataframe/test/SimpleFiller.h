@@ -2,6 +2,7 @@
 #define RDF_TEST_SIMPLEFILLER
 
 #include <TH1D.h>
+#include <TList.h>
 
 class SimpleFiller {
    TH1D fHisto;
@@ -19,6 +20,9 @@ public:
          l.Add(&o->GetHisto());
       fHisto.Merge(&l);
    }
+
+   // needed for VariationsFor
+   void Reset() { fHisto.Reset(); }
 
    TH1D &GetHisto() { return fHisto; }
 };

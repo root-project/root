@@ -51,7 +51,7 @@ public:
    virtual TGButton *AddButton(const TGWindow *w, TGPictureButton *button, Int_t spacing = 0);
 
    virtual void ChangeIcon(ToolBarData_t *button, const char *new_icon);
-   virtual void Cleanup();
+   void Cleanup() override;
    virtual TGButton *GetButton(Int_t id) const;
    virtual Longptr_t GetId(TGButton *button) const;
    virtual void      SetId(TGButton *button, Longptr_t id);
@@ -64,9 +64,9 @@ public:
    virtual void Released(Int_t id) { Emit("Released(Int_t)",id);}   //*SIGNAL*
    virtual void Clicked(Int_t id)  { Emit("Clicked(Int_t)",id); }   //*SIGNAL*
 
-   virtual void   SavePrimitive(std::ostream &out, Option_t *option = "");
+   void SavePrimitive(std::ostream &out, Option_t *option = "") override;
 
-   ClassDef(TGToolBar,0)  //A bar containing picture buttons
+   ClassDefOverride(TGToolBar,0)  //A bar containing picture buttons
 };
 
 #endif

@@ -22,8 +22,6 @@
 Multivariate Gaussian p.d.f. with correlations
 **/
 
-#include "RooFit.h"
-
 #include "Riostream.h"
 #include <math.h>
 
@@ -45,10 +43,10 @@ ClassImp(RooMultiVarGaussian);
 ////////////////////////////////////////////////////////////////////////////////
 
 RooMultiVarGaussian::RooMultiVarGaussian(const char *name, const char *title,
-					 const RooArgList& xvec, const RooArgList& mu, const TMatrixDSym& cov) :
+                const RooArgList& xvec, const RooArgList& mu, const TMatrixDSym& cov) :
   RooAbsPdf(name,title),
-  _x("x","Observables",this,kTRUE,kFALSE),
-  _mu("mu","Offset vector",this,kTRUE,kFALSE),
+  _x("x","Observables",this,true,false),
+  _mu("mu","Offset vector",this,true,false),
   _cov(cov),
   _covI(cov),
   _z(4)
@@ -67,10 +65,10 @@ RooMultiVarGaussian::RooMultiVarGaussian(const char *name, const char *title,
 ////////////////////////////////////////////////////////////////////////////////
 
 RooMultiVarGaussian::RooMultiVarGaussian(const char *name, const char *title,
-					 const RooArgList& xvec, const RooFitResult& fr, Bool_t reduceToConditional) :
+                const RooArgList& xvec, const RooFitResult& fr, bool reduceToConditional) :
   RooAbsPdf(name,title),
-  _x("x","Observables",this,kTRUE,kFALSE),
-  _mu("mu","Offset vector",this,kTRUE,kFALSE),
+  _x("x","Observables",this,true,false),
+  _mu("mu","Offset vector",this,true,false),
   _cov(reduceToConditional ? fr.conditionalCovarianceMatrix(xvec) : fr.reducedCovarianceMatrix(xvec)),
   _covI(_cov),
   _z(4)
@@ -83,16 +81,16 @@ RooMultiVarGaussian::RooMultiVarGaussian(const char *name, const char *title,
   for (Int_t i=0 ; i<fpf.getSize() ; i++) {
     if (xvec.find(fpf.at(i)->GetName())) {
       RooRealVar* parclone = (RooRealVar*) fpf.at(i)->Clone(Form("%s_centralvalue",fpf.at(i)->GetName())) ;
-      parclone->setConstant(kTRUE) ;
-      _mu.addOwned(*parclone) ;              
+      parclone->setConstant(true) ;
+      _mu.addOwned(*parclone) ;
       munames.push_back(fpf.at(i)->GetName()) ;
     }
   }
-  
+
   // Fill X vector in same order as mu vector
   for (list<string>::iterator iter=munames.begin() ; iter!=munames.end() ; ++iter) {
     RooRealVar* xvar = (RooRealVar*) xvec.find(iter->c_str()) ;
-    _x.add(*xvar) ;      
+    _x.add(*xvar) ;
   }
 
   // Invert covariance matrix
@@ -104,10 +102,10 @@ RooMultiVarGaussian::RooMultiVarGaussian(const char *name, const char *title,
 ////////////////////////////////////////////////////////////////////////////////
 
 RooMultiVarGaussian::RooMultiVarGaussian(const char *name, const char *title,
-					 const RooArgList& xvec, const TVectorD& mu, const TMatrixDSym& cov) :
+                const RooArgList& xvec, const TVectorD& mu, const TMatrixDSym& cov) :
   RooAbsPdf(name,title),
-  _x("x","Observables",this,kTRUE,kFALSE),
-  _mu("mu","Offset vector",this,kTRUE,kFALSE),
+  _x("x","Observables",this,true,false),
+  _mu("mu","Offset vector",this,true,false),
   _cov(cov),
   _covI(cov),
   _z(4)
@@ -117,7 +115,7 @@ RooMultiVarGaussian::RooMultiVarGaussian(const char *name, const char *title,
  for (Int_t i=0 ; i<mu.GetNrows() ; i++) {
    _mu.add(RooFit::RooConst(mu(i))) ;
  }
-   
+
  _det = _cov.Determinant() ;
 
  // Invert covariance matrix
@@ -127,10 +125,10 @@ RooMultiVarGaussian::RooMultiVarGaussian(const char *name, const char *title,
 ////////////////////////////////////////////////////////////////////////////////
 
 RooMultiVarGaussian::RooMultiVarGaussian(const char *name, const char *title,
-					 const RooArgList& xvec, const TMatrixDSym& cov) :
+                const RooArgList& xvec, const TMatrixDSym& cov) :
   RooAbsPdf(name,title),
-  _x("x","Observables",this,kTRUE,kFALSE),
-  _mu("mu","Offset vector",this,kTRUE,kFALSE),
+  _x("x","Observables",this,true,false),
+  _mu("mu","Offset vector",this,true,false),
   _cov(cov),
   _covI(cov),
   _z(4)
@@ -140,7 +138,7 @@ RooMultiVarGaussian::RooMultiVarGaussian(const char *name, const char *title,
   for (Int_t i=0 ; i<xvec.getSize() ; i++) {
     _mu.add(RooFit::RooConst(0)) ;
   }
-  
+
  _det = _cov.Determinant() ;
 
  // Invert covariance matrix
@@ -151,8 +149,8 @@ RooMultiVarGaussian::RooMultiVarGaussian(const char *name, const char *title,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooMultiVarGaussian::RooMultiVarGaussian(const RooMultiVarGaussian& other, const char* name) : 
-  RooAbsPdf(other,name), _aicMap(other._aicMap), _x("x",this,other._x), _mu("mu",this,other._mu), 
+RooMultiVarGaussian::RooMultiVarGaussian(const RooMultiVarGaussian& other, const char* name) :
+  RooAbsPdf(other,name), _aicMap(other._aicMap), _x("x",this,other._x), _mu("mu",this,other._mu),
   _cov(other._cov), _covI(other._covI), _det(other._det), _z(other._z)
 {
 }
@@ -161,7 +159,7 @@ RooMultiVarGaussian::RooMultiVarGaussian(const RooMultiVarGaussian& other, const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void RooMultiVarGaussian::syncMuVec() const 
+void RooMultiVarGaussian::syncMuVec() const
 {
   _muVec.ResizeTo(_mu.getSize()) ;
   for (Int_t i=0 ; i<_mu.getSize() ; i++) {
@@ -173,18 +171,18 @@ void RooMultiVarGaussian::syncMuVec() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Represent observables as vector
 
-Double_t RooMultiVarGaussian::evaluate() const
+double RooMultiVarGaussian::evaluate() const
 {
   TVectorD x(_x.getSize()) ;
   for (int i=0 ; i<_x.getSize() ; i++) {
     x[i] = ((RooAbsReal*)_x.at(i))->getVal() ;
   }
 
-  // Calculate return value 
+  // Calculate return value
   syncMuVec() ;
-  TVectorD x_min_mu = x - _muVec ;  
+  TVectorD x_min_mu = x - _muVec ;
 
-  Double_t alpha =  x_min_mu * (_covI * x_min_mu) ;
+  double alpha =  x_min_mu * (_covI * x_min_mu) ;
   return exp(-0.5*alpha) ;
 }
 
@@ -192,18 +190,18 @@ Double_t RooMultiVarGaussian::evaluate() const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Int_t RooMultiVarGaussian::getAnalyticalIntegral(RooArgSet& allVarsIn, RooArgSet& analVars, const char* rangeName) const 
+Int_t RooMultiVarGaussian::getAnalyticalIntegral(RooArgSet& allVarsIn, RooArgSet& analVars, const char* rangeName) const
 {
   RooArgSet allVars(allVarsIn) ;
-  
+
   // If allVars contains x_i it cannot contain mu_i
   for (Int_t i=0 ; i<_x.getSize() ; i++) {
     if (allVars.contains(*_x.at(i))) {
-      allVars.remove(*_mu.at(i),kTRUE,kTRUE) ;
+      allVars.remove(*_mu.at(i),true,true) ;
     }
   }
-  
-  
+
+
   // Analytical integral known over all observables
   if (allVars.getSize()==_x.getSize() && !rangeName) {
     analVars.add(allVars) ;
@@ -215,47 +213,47 @@ Int_t RooMultiVarGaussian::getAnalyticalIntegral(RooArgSet& allVarsIn, RooArgSet
   Int_t nx = _x.getSize() ;
   if (nx>127) {
     // Warn that analytical integration is only provided for the first 127 observables
-    coutW(Integration) << "RooMultiVarGaussian::getAnalyticalIntegral(" << GetName() << ") WARNING: p.d.f. has " << _x.getSize() 
-		       << " observables, analytical integration is only implemented for the first 127 observables" << endl ;
+    coutW(Integration) << "RooMultiVarGaussian::getAnalyticalIntegral(" << GetName() << ") WARNING: p.d.f. has " << _x.getSize()
+             << " observables, analytical integration is only implemented for the first 127 observables" << endl ;
     nx=127 ;
   }
 
   // Advertise partial analytical integral over all observables for which is wide enough to
   // use asymptotic integral calculation
   BitBlock bits ;
-  Bool_t anyBits(kFALSE) ;
+  bool anyBits(false) ;
   syncMuVec() ;
   for (int i=0 ; i<_x.getSize() ; i++) {
 
     // Check if integration over observable #i is requested
     if (allVars.find(_x.at(i)->GetName())) {
-      // Check if range is wider than Z sigma 
+      // Check if range is wider than Z sigma
       RooRealVar* xi = (RooRealVar*)_x.at(i) ;
       if (xi->getMin(rangeName)<_muVec(i)-_z*sqrt(_cov(i,i)) && xi->getMax(rangeName) > _muVec(i)+_z*sqrt(_cov(i,i))) {
-	cxcoutD(Integration) << "RooMultiVarGaussian::getAnalyticalIntegral(" << GetName() 
-			     << ") Advertising analytical integral over " << xi->GetName() << " as range is >" << _z << " sigma" << endl ;
-	bits.setBit(i) ;
-	anyBits = kTRUE ;
-	analVars.add(*allVars.find(_x.at(i)->GetName())) ;
+   cxcoutD(Integration) << "RooMultiVarGaussian::getAnalyticalIntegral(" << GetName()
+              << ") Advertising analytical integral over " << xi->GetName() << " as range is >" << _z << " sigma" << endl ;
+   bits.setBit(i) ;
+   anyBits = true ;
+   analVars.add(*allVars.find(_x.at(i)->GetName())) ;
       } else {
-	cxcoutD(Integration) << "RooMultiVarGaussian::getAnalyticalIntegral(" << GetName() << ") Range of " << xi->GetName() << " is <" 
-			     << _z << " sigma, relying on numeric integral" << endl ;	
+   cxcoutD(Integration) << "RooMultiVarGaussian::getAnalyticalIntegral(" << GetName() << ") Range of " << xi->GetName() << " is <"
+              << _z << " sigma, relying on numeric integral" << endl ;
       }
     }
 
     // Check if integration over parameter #i is requested
     if (allVars.find(_mu.at(i)->GetName())) {
-      // Check if range is wider than Z sigma 
+      // Check if range is wider than Z sigma
       RooRealVar* pi = (RooRealVar*)_mu.at(i) ;
       if (pi->getMin(rangeName)<_muVec(i)-_z*sqrt(_cov(i,i)) && pi->getMax(rangeName) > _muVec(i)+_z*sqrt(_cov(i,i))) {
-	cxcoutD(Integration) << "RooMultiVarGaussian::getAnalyticalIntegral(" << GetName() 
-			     << ") Advertising analytical integral over " << pi->GetName() << " as range is >" << _z << " sigma" << endl ;
-	bits.setBit(i) ;
-	anyBits = kTRUE ;
-	analVars.add(*allVars.find(_mu.at(i)->GetName())) ;
+   cxcoutD(Integration) << "RooMultiVarGaussian::getAnalyticalIntegral(" << GetName()
+              << ") Advertising analytical integral over " << pi->GetName() << " as range is >" << _z << " sigma" << endl ;
+   bits.setBit(i) ;
+   anyBits = true ;
+   analVars.add(*allVars.find(_mu.at(i)->GetName())) ;
       } else {
-	cxcoutD(Integration) << "RooMultiVarGaussian::getAnalyticalIntegral(" << GetName() << ") Range of " << pi->GetName() << " is <" 
-			     << _z << " sigma, relying on numeric integral" << endl ;	
+   cxcoutD(Integration) << "RooMultiVarGaussian::getAnalyticalIntegral(" << GetName() << ") Range of " << pi->GetName() << " is <"
+              << _z << " sigma, relying on numeric integral" << endl ;
       }
     }
 
@@ -266,7 +264,7 @@ Int_t RooMultiVarGaussian::getAnalyticalIntegral(RooArgSet& allVarsIn, RooArgSet
   if (!anyBits) {
     return 0 ;
   }
-  
+
   // Map BitBlock into return code
   for (UInt_t i=0 ; i<_aicMap.size() ; i++) {
     if (_aicMap[i]==bits) {
@@ -286,17 +284,17 @@ Int_t RooMultiVarGaussian::getAnalyticalIntegral(RooArgSet& allVarsIn, RooArgSet
 ////////////////////////////////////////////////////////////////////////////////
 /// Handle full integral here
 
-Double_t RooMultiVarGaussian::analyticalIntegral(Int_t code, const char* /*rangeName*/) const 
+double RooMultiVarGaussian::analyticalIntegral(Int_t code, const char* /*rangeName*/) const
 {
   if (code==-1) {
-    return pow(2*3.14159268,_x.getSize()/2.)*sqrt(fabs(_det)) ;
+    return pow(2*3.14159268,_x.getSize()/2.)*sqrt(std::abs(_det)) ;
   }
 
   // Handle partial integrals here
 
   // Retrieve |S22|, S22bar from cache
   AnaIntData& aid = anaIntData(code) ;
- 
+
   // Fill position vector for non-integrated observables
   syncMuVec() ;
   TVectorD u(aid.pmap.size()) ;
@@ -305,7 +303,7 @@ Double_t RooMultiVarGaussian::analyticalIntegral(Int_t code, const char* /*range
   }
 
   // Calculate partial integral
-  Double_t ret = pow(2*3.14159268,aid.nint/2.)/sqrt(fabs(aid.S22det))*exp(-0.5*u*(aid.S22bar*u)) ;
+  double ret = pow(2*3.14159268,aid.nint/2.)/sqrt(std::abs(aid.S22det))*exp(-0.5*u*(aid.S22bar*u)) ;
 
   return ret ;
 }
@@ -315,19 +313,19 @@ Double_t RooMultiVarGaussian::analyticalIntegral(Int_t code, const char* /*range
 ////////////////////////////////////////////////////////////////////////////////
 /// Check if cache entry was previously created
 
-RooMultiVarGaussian::AnaIntData& RooMultiVarGaussian::anaIntData(Int_t code) const 
+RooMultiVarGaussian::AnaIntData& RooMultiVarGaussian::anaIntData(Int_t code) const
 {
   map<int,AnaIntData>::iterator iter =  _anaIntCache.find(code) ;
   if (iter != _anaIntCache.end()) {
     return iter->second ;
   }
 
-  // Calculate cache contents  
+  // Calculate cache contents
 
   // Decode integration code
   vector<int> map1,map2 ;
   decodeCode(code,map1,map2) ;
-  
+
   // Rearrage observables so that all non-integrated observables
   // go first (preserving relative order) and all integrated observables
   // go last (preserving relative order)
@@ -350,8 +348,8 @@ RooMultiVarGaussian::AnaIntData& RooMultiVarGaussian::anaIntData(Int_t code) con
 
   // Calculate Schur complement S22bar
   TMatrixD S22inv(S22) ;
-  S22inv.Invert() ;  
-  TMatrixD S22bar = S11 - S12*S22inv*S21 ;  
+  S22inv.Invert() ;
+  TMatrixD S22bar = S11 - S12*S22inv*S21 ;
 
   // Create new cache entry
   AnaIntData& cacheData = _anaIntCache[code] ;
@@ -369,7 +367,7 @@ RooMultiVarGaussian::AnaIntData& RooMultiVarGaussian::anaIntData(Int_t code) con
 ////////////////////////////////////////////////////////////////////////////////
 /// Special case: generate all observables
 
-Int_t RooMultiVarGaussian::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t /*staticInitOK*/) const
+Int_t RooMultiVarGaussian::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, bool /*staticInitOK*/) const
 {
   if (directVars.getSize()==_x.getSize()) {
     generateVars.add(directVars) ;
@@ -379,15 +377,15 @@ Int_t RooMultiVarGaussian::getGenerator(const RooArgSet& directVars, RooArgSet &
   Int_t nx = _x.getSize() ;
   if (nx>127) {
     // Warn that analytical integration is only provided for the first 127 observables
-    coutW(Integration) << "RooMultiVarGaussian::getGenerator(" << GetName() << ") WARNING: p.d.f. has " << _x.getSize() 
-		       << " observables, partial internal generation is only implemented for the first 127 observables" << endl ;
+    coutW(Integration) << "RooMultiVarGaussian::getGenerator(" << GetName() << ") WARNING: p.d.f. has " << _x.getSize()
+             << " observables, partial internal generation is only implemented for the first 127 observables" << endl ;
     nx=127 ;
   }
 
   // Advertise partial generation over all permutations of observables
   Int_t code(0) ;
   BitBlock bits ;
-  for (int i=0 ; i<_x.getSize() ; i++) {    
+  for (int i=0 ; i<_x.getSize() ; i++) {
     RooAbsArg* arg = directVars.find(_x.at(i)->GetName()) ;
     if (arg) {
       bits.setBit(i) ;
@@ -407,7 +405,7 @@ Int_t RooMultiVarGaussian::getGenerator(const RooArgSet& directVars, RooArgSet &
     code = _aicMap.size() ;
   }
 
-  
+
   return code ;
 }
 
@@ -415,12 +413,12 @@ Int_t RooMultiVarGaussian::getGenerator(const RooArgSet& directVars, RooArgSet &
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Clear the GenData cache as its content is not invariant under changes in
-/// the mu vector. 
+/// the mu vector.
 
 void RooMultiVarGaussian::initGenerator(Int_t /*code*/)
 {
   _genCache.clear() ;
-  
+
 }
 
 
@@ -434,16 +432,16 @@ void RooMultiVarGaussian::generateEvent(Int_t code)
   GenData& gd = genData(code) ;
   TMatrixD& TU = gd.UT ;
   Int_t nobs = TU.GetNcols() ;
-  vector<int>& omap = gd.omap ; 
+  vector<int>& omap = gd.omap ;
 
   while(1) {
 
-    // Create unit Gaussian vector 
+    // Create unit Gaussian vector
     TVectorD xgen(nobs);
     for(Int_t k= 0; k <nobs; k++) {
       xgen(k)= RooRandom::gaussian();
     }
-    
+
     // Apply transformation matrix
     xgen *= TU ;
 
@@ -461,23 +459,23 @@ void RooMultiVarGaussian::generateEvent(Int_t code)
       TVectorD mubar(gd.mu1) ;
       TVectorD x2(gd.pmap.size()) ;
       for (UInt_t i=0 ; i<gd.pmap.size() ; i++) {
-	x2(i) = ((RooAbsReal*)_x.at(gd.pmap[i]))->getVal() ;
+   x2(i) = ((RooAbsReal*)_x.at(gd.pmap[i]))->getVal() ;
       }
-      mubar += gd.S12S22I * (x2 - gd.mu2) ;      
+      mubar += gd.S12S22I * (x2 - gd.mu2) ;
 
-      xgen += mubar ;    
+      xgen += mubar ;
 
     }
 
     // Transfer values and check if values are in range
-    Bool_t ok(kTRUE) ;
+    bool ok(true) ;
     for (int i=0 ; i<nobs ; i++) {
-      RooRealVar* xi = (RooRealVar*)_x.at(omap[i]) ;      
+      RooRealVar* xi = (RooRealVar*)_x.at(omap[i]) ;
       if (xgen(i)<xi->getMin() || xgen(i)>xi->getMax()) {
-	ok = kFALSE ;
-	break ;
+   ok = false ;
+   break ;
       } else {
-	xi->setVal(xgen(i)) ;
+   xi->setVal(xgen(i)) ;
       }
     }
 
@@ -496,7 +494,7 @@ void RooMultiVarGaussian::generateEvent(Int_t code)
 ////////////////////////////////////////////////////////////////////////////////
 /// WVE -- CHECK THAT GENDATA IS VALID GIVEN CURRENT VALUES OF _MU
 
-RooMultiVarGaussian::GenData& RooMultiVarGaussian::genData(Int_t code) const 
+RooMultiVarGaussian::GenData& RooMultiVarGaussian::genData(Int_t code) const
 {
   // Check if cache entry was previously created
   map<int,GenData>::iterator iter =  _genCache.find(code) ;
@@ -513,15 +511,15 @@ RooMultiVarGaussian::GenData& RooMultiVarGaussian::genData(Int_t code) const
     TDecompChol tdc(_cov) ;
     tdc.Decompose() ;
     TMatrixD U = tdc.GetU() ;
-    TMatrixD TU(TMatrixD::kTransposed,U) ;    
+    TMatrixD TU(TMatrixD::kTransposed,U) ;
 
     // Fill cache data
     cacheData.UT.ResizeTo(TU) ;
-    cacheData.UT = TU ;    
+    cacheData.UT = TU ;
     cacheData.omap.resize(_x.getSize()) ;
     for (int i=0 ; i<_x.getSize() ; i++) {
       cacheData.omap[i] = i ;
-    }    
+    }
     syncMuVec() ;
     cacheData.mu1.ResizeTo(_muVec) ;
     cacheData.mu1 = _muVec ;
@@ -535,8 +533,8 @@ RooMultiVarGaussian::GenData& RooMultiVarGaussian::genData(Int_t code) const
     // Do block decomposition of covariance matrix
     TMatrixDSym S11, S22 ;
     TMatrixD S12, S21 ;
-    blockDecompose(_cov,map1,map2,S11,S12,S21,S22) ;        
-    
+    blockDecompose(_cov,map1,map2,S11,S12,S21,S22) ;
+
     // Constructed conditional matrix form
     //                                             -1
     // F(X1|X2) --> CovI --> S22bar = S11 - S12 S22  S21
@@ -551,7 +549,7 @@ RooMultiVarGaussian::GenData& RooMultiVarGaussian::genData(Int_t code) const
     TDecompChol tdc(S22bar) ;
     tdc.Decompose() ;
     TMatrixD U = tdc.GetU() ;
-    TMatrixD TU(TMatrixD::kTransposed,U) ;    
+    TMatrixD TU(TMatrixD::kTransposed,U) ;
 
     // Split mu vector into mu1 and mu2
     TVectorD mu1(map1.size()),mu2(map2.size()) ;
@@ -568,16 +566,16 @@ RooMultiVarGaussian::GenData& RooMultiVarGaussian::genData(Int_t code) const
 
     // Fill cache data
     cacheData.UT.ResizeTo(TU) ;
-    cacheData.UT = TU ;    
+    cacheData.UT = TU ;
     cacheData.omap = map1 ;
     cacheData.pmap = map2 ;
     cacheData.mu1.ResizeTo(mu1) ;
     cacheData.mu2.ResizeTo(mu2) ;
     cacheData.mu1 = mu1 ;
-    cacheData.mu2 = mu2 ;    
+    cacheData.mu2 = mu2 ;
     cacheData.S12S22I.ResizeTo(S12S22Inv) ;
     cacheData.S12S22I = S12S22Inv ;
-    
+
   }
 
 
@@ -598,7 +596,7 @@ void RooMultiVarGaussian::decodeCode(Int_t code, vector<int>& map1, vector<int>&
     throw string("RooMultiVarGaussian::decodeCode() ERROR don't have bit pattern for code") ;
   }
 
-  BitBlock b = _aicMap[code-1] ;  
+  BitBlock b = _aicMap[code-1] ;
   map1.clear() ;
   map2.clear() ;
   for (int i=0 ; i<_x.getSize() ; i++) {
@@ -618,28 +616,28 @@ void RooMultiVarGaussian::blockDecompose(const TMatrixD& input, const vector<int
 {
   // Allocate and fill reordered covI matrix in 2x2 block structure
 
-  S11.ResizeTo(map1.size(),map1.size()) ; 
+  S11.ResizeTo(map1.size(),map1.size()) ;
   S12.ResizeTo(map1.size(),map2.size()) ;
   S21.ResizeTo(map2.size(),map1.size()) ;
   S22.ResizeTo(map2.size(),map2.size()) ;
 
   for (UInt_t i=0 ; i<map1.size() ; i++) {
-    for (UInt_t j=0 ; j<map1.size() ; j++) 
+    for (UInt_t j=0 ; j<map1.size() ; j++)
       S11(i,j) = input(map1[i],map1[j]) ;
-    for (UInt_t j=0 ; j<map2.size() ; j++) 
+    for (UInt_t j=0 ; j<map2.size() ; j++)
       S12(i,j) = input(map1[i],map2[j]) ;
   }
   for (UInt_t i=0 ; i<map2.size() ; i++) {
-    for (UInt_t j=0 ; j<map1.size() ; j++) 
+    for (UInt_t j=0 ; j<map1.size() ; j++)
       S21(i,j) = input(map2[i],map1[j]) ;
-    for (UInt_t j=0 ; j<map2.size() ; j++) 
+    for (UInt_t j=0 ; j<map2.size() ; j++)
       S22(i,j) = input(map2[i],map2[j]) ;
   }
-  
+
 }
 
 
-void RooMultiVarGaussian::BitBlock::setBit(Int_t ibit) 
+void RooMultiVarGaussian::BitBlock::setBit(Int_t ibit)
 {
   if (ibit<32) { b0 |= (1<<ibit) ; return ; }
   if (ibit<64) { b1 |= (1<<(ibit-32)) ; return ; }
@@ -647,22 +645,22 @@ void RooMultiVarGaussian::BitBlock::setBit(Int_t ibit)
   if (ibit<128) { b3 |= (1<<(ibit-96)) ; return ; }
 }
 
-Bool_t RooMultiVarGaussian::BitBlock::getBit(Int_t ibit) 
+bool RooMultiVarGaussian::BitBlock::getBit(Int_t ibit)
 {
-  if (ibit<32) return (b0 & (1<<ibit)) ; 
-  if (ibit<64) return (b1 & (1<<(ibit-32))) ; 
-  if (ibit<96) return (b2 & (1<<(ibit-64))) ; 
-  if (ibit<128) return (b3 & (1<<(ibit-96))) ; 
-  return kFALSE ;
+  if (ibit<32) return (b0 & (1<<ibit)) ;
+  if (ibit<64) return (b1 & (1<<(ibit-32))) ;
+  if (ibit<96) return (b2 & (1<<(ibit-64))) ;
+  if (ibit<128) return (b3 & (1<<(ibit-96))) ;
+  return false ;
 }
 
-Bool_t RooMultiVarGaussian::BitBlock::operator==(const BitBlock& other) 
+bool RooMultiVarGaussian::BitBlock::operator==(const BitBlock& other)
 {
-  if (b0 != other.b0) return kFALSE ;
-  if (b1 != other.b1) return kFALSE ;
-  if (b2 != other.b2) return kFALSE ;
-  if (b3 != other.b3) return kFALSE ;
-  return kTRUE ;
+  if (b0 != other.b0) return false ;
+  if (b1 != other.b1) return false ;
+  if (b2 != other.b2) return false ;
+  if (b3 != other.b3) return false ;
+  return true ;
 }
 
 

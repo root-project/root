@@ -24,6 +24,7 @@
 
 #include "TObject.h"
 #include <string>
+#include <atomic>
 
 class TProtoClass;
 
@@ -40,20 +41,20 @@ friend  class TROOT;
 
 private:
    typedef ROOT::TMapTypeToClassRec IdMap_t;
+   class NormalizeThenLock;
 
-   static ROOT::TClassAlt **fgAlternate;
-   static ROOT::TClassRec **fgTable;
-   static ROOT::TClassRec **fgSortedTable;
-   static IdMap_t     *fgIdMap;
-   static UInt_t       fgSize;
-   static UInt_t       fgTally;
-   static Bool_t       fgSorted;
-   static UInt_t       fgCursor;
+   static ROOT::TClassAlt   **fgAlternate;
+   static ROOT::TClassRec   **fgTable;
+   static ROOT::TClassRec   **fgSortedTable;
+   static IdMap_t            *fgIdMap;
+   static UInt_t              fgSize;
+   static std::atomic<UInt_t> fgTally;
+   static Bool_t              fgSorted;
+   static UInt_t              fgCursor;
 
    TClassTable();
 
-   static ROOT::TClassRec   *FindElementImpl(const char *cname, Bool_t insert);
-   static ROOT::TClassRec   *FindElement(const char *cname, Bool_t insert=kFALSE);
+   static ROOT::TClassRec   *FindElement(const char *cname, Bool_t insert);
    static void         SortTable();
 
    static Bool_t CheckClassTableInit();
@@ -84,12 +85,12 @@ public:
    static TProtoClass  *GetProtoNorm(const char *cname);
    static void          Init();
    static char         *Next();
-   void                 Print(Option_t *option="") const;
+   void                 Print(Option_t *option="") const override;
    static void          PrintTable();
    static void          Remove(const char *cname);
    static void          Terminate();
 
-   ClassDef(TClassTable,0)  //Table of known classes
+   ClassDefOverride(TClassTable,0)  //Table of known classes
 };
 
 R__EXTERN TClassTable *gClassTable;

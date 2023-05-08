@@ -1,6 +1,12 @@
 /****** Run RDataFrame tests both with and without IMT enabled *******/
 #include <gtest/gtest.h>
-#include <ROOTUnitTestSupport.h>
+
+// Backward compatibility for gtest version < 1.10.0
+#ifndef INSTANTIATE_TEST_SUITE_P
+#define INSTANTIATE_TEST_SUITE_P INSTANTIATE_TEST_CASE_P
+#endif
+
+#include <ROOT/TestSupport.hxx>
 #include <ROOT/RDataFrame.hxx>
 #include <ROOT/TSeq.hxx>
 #include <TChain.h>
@@ -98,7 +104,7 @@ TEST_P(RDFSimpleTests, CreateZeroEntriesWithBranches)
    auto c = tdf.Count();
    auto m = tdf.Mean("b1");
    EXPECT_EQ(0U, *c);
-   EXPECT_EQ(0., *m);
+   EXPECT_DOUBLE_EQ(0., *m);
 }
 
 TEST_P(RDFSimpleTests, BuildWithTDirectory)
@@ -207,7 +213,7 @@ TEST_P(RDFSimpleTests, Define_jitted_complex)
    RDataFrame tdf(50);
    auto d = tdf.Define("i", "r.Uniform(0.,8.)");
    auto m = d.Max("i");
-   EXPECT_EQ(7.867497533559811628, *m);
+   EXPECT_DOUBLE_EQ(7.867497533559811628, *m);
 }
 
 TEST_P(RDFSimpleTests, Define_jitted_complex_array_sum)
@@ -251,7 +257,7 @@ TEST_P(RDFSimpleTests, Define_Filter_jitted)
    auto d = tdf.Define("r", [&r]() { return r.Uniform(0., 8.); });
    auto df = d.Filter("r>5");
    auto m = df.Max("r");
-   EXPECT_EQ(7.867497533559811628, *m);
+   EXPECT_DOUBLE_EQ(7.867497533559811628, *m);
 }
 
 TEST_P(RDFSimpleTests, Define_Filter_named)
@@ -261,7 +267,7 @@ TEST_P(RDFSimpleTests, Define_Filter_named)
    auto d = tdf.Define("r", [&r]() { return r.Uniform(0., 8.); });
    auto df = d.Filter([](double x) { return x > 5; }, {"r"}, "myFilter");
    auto m = df.Max("r");
-   EXPECT_EQ(7.867497533559811628, *m);
+   EXPECT_DOUBLE_EQ(7.867497533559811628, *m);
 }
 
 TEST_P(RDFSimpleTests, Define_Filter_named_jitted)
@@ -271,7 +277,7 @@ TEST_P(RDFSimpleTests, Define_Filter_named_jitted)
    auto d = tdf.Define("r", [&r]() { return r.Uniform(0., 8.); });
    auto df = d.Filter("r>5", "myFilter");
    auto m = df.Max("r");
-   EXPECT_EQ(7.867497533559811628, *m);
+   EXPECT_DOUBLE_EQ(7.867497533559811628, *m);
 }
 
 // jitted Define + Filters
@@ -282,7 +288,7 @@ TEST_P(RDFSimpleTests, Define_jitted_Filter)
    auto d = tdf.Define("r", "r.Uniform(0.,8.)");
    auto df = d.Filter([](double x) { return x > 5; }, {"r"});
    auto m = df.Max("r");
-   EXPECT_EQ(7.867497533559811628, *m);
+   EXPECT_DOUBLE_EQ(7.867497533559811628, *m);
 }
 
 TEST_P(RDFSimpleTests, Define_jitted_Filter_jitted)
@@ -292,7 +298,7 @@ TEST_P(RDFSimpleTests, Define_jitted_Filter_jitted)
    auto d = tdf.Define("r", "r.Uniform(0.,8.)");
    auto df = d.Filter("r>5");
    auto m = df.Max("r");
-   EXPECT_EQ(7.867497533559811628, *m);
+   EXPECT_DOUBLE_EQ(7.867497533559811628, *m);
 }
 
 TEST_P(RDFSimpleTests, Define_jitted_Filter_named)
@@ -302,7 +308,7 @@ TEST_P(RDFSimpleTests, Define_jitted_Filter_named)
    auto d = tdf.Define("r", "r.Uniform(0.,8.)");
    auto df = d.Filter([](double x) { return x > 5; }, {"r"}, "myFilter");
    auto m = df.Max("r");
-   EXPECT_EQ(7.867497533559811628, *m);
+   EXPECT_DOUBLE_EQ(7.867497533559811628, *m);
 }
 
 TEST_P(RDFSimpleTests, Define_jitted_Filter_named_jitted)
@@ -312,7 +318,7 @@ TEST_P(RDFSimpleTests, Define_jitted_Filter_named_jitted)
    auto d = tdf.Define("r", "r.Uniform(0.,8.)");
    auto df = d.Filter("r>5", "myFilter");
    auto m = df.Max("r");
-   EXPECT_EQ(7.867497533559811628, *m);
+   EXPECT_DOUBLE_EQ(7.867497533559811628, *m);
 }
 
 TEST_P(RDFSimpleTests, Define_jitted_Filter_complex_array)
@@ -338,7 +344,7 @@ TEST_P(RDFSimpleTests, DefineSlotConsistency)
 {
    RDataFrame df(8);
    auto m = df.DefineSlot("x", [](unsigned int) { return 1.; }).Max("x");
-   EXPECT_EQ(1., *m);
+   EXPECT_DOUBLE_EQ(1., *m);
 }
 
 TEST_P(RDFSimpleTests, DefineSlot)
@@ -576,15 +582,9 @@ TEST_P(RDFSimpleTests, Graph)
 
    // Create the graph from the Dataframe
    ROOT::RDataFrame d(NR_ELEMENTS);
-   auto dd = d.DefineSlotEntry("x1",
-                               [&source](unsigned int slot, ULong64_t entry) {
-                                  (void)slot;
-                                  return source[entry];
-                               })
-                .DefineSlotEntry("x2", [&source](unsigned int slot, ULong64_t entry) {
-                   (void)slot;
-                   return source[entry];
-                });
+   auto dd = d.DefineSlotEntry("x1", [&source](unsigned int /*slot*/, ULong64_t entry) {
+                 return source[entry];
+              }).DefineSlotEntry("x2", [&source](unsigned int /*slot*/, ULong64_t entry) { return source[entry]; });
 
    auto dfGraph = dd.Graph("x1", "x2");
    EXPECT_EQ(dfGraph->GetN(), NR_ELEMENTS);
@@ -663,12 +663,9 @@ public:
    double stdDevFromWelford()
    {
       ROOT::RDataFrame d(samples.size());
-      return *d.DefineSlotEntry("x",
-                                [this](unsigned int slot, ULong64_t entry) {
-                                   (void)slot;
-                                   return samples[entry];
-                                })
-                 .StdDev("x");
+      return *d.DefineSlotEntry("x", [this](unsigned int /*slot*/, ULong64_t entry) {
+                  return samples[entry];
+               }).StdDev("x");
    }
 };
 
@@ -736,12 +733,51 @@ TEST_P(RDFSimpleTests, StandardDeviationEmpty)
    EXPECT_DOUBLE_EQ(*stdDev, 0);
 }
 
+/*
+/// This test was deactivated because it is not possible to Sum Strings using a Kahan Sum.
+/// The reason is that there is no minus operator for that case. 
 TEST(RDFSimpleTests, SumOfStrings)
 {
    auto df = RDataFrame(2).Define("str", []() -> std::string { return "bla"; });
    EXPECT_EQ(*df.Sum<std::string>("str"), "blabla");
 }
+*/
 
+TEST_P(RDFSimpleTests, KahanSum_Double)
+{
+   constexpr std::uint64_t N = 1e7;
+   ROOT::RDataFrame d(N);
+   auto df = d.Define("x", "double(rdfentry_ +1)");
+   double true_sum = (N + 1.0) / 2.0;
+   EXPECT_DOUBLE_EQ(*df.Sum<double>({"x"}) / N, true_sum);
+}
+
+TEST_P(RDFSimpleTests, KahanSum_Float)
+{
+   constexpr std::uint64_t N = 1e7;
+   ROOT::RDataFrame d(N);
+   auto df = d.Define("x", "float(rdfentry_ +1)");
+   float true_sum = (N + 1.0) / 2.0;
+   EXPECT_FLOAT_EQ(*df.Sum<float>({"x"}) / N, true_sum);
+}
+
+TEST_P(RDFSimpleTests, KahanMean_Double)
+{
+   constexpr std::uint64_t N = 1e7;
+   ROOT::RDataFrame d(N);
+   auto df = d.Define("x", "double(rdfentry_ +1)");
+   double true_sum = (N + 1.0) / 2.0;
+   EXPECT_DOUBLE_EQ(*df.Mean<double>({"x"}), true_sum);
+}
+
+TEST_P(RDFSimpleTests, KahanMean_Float)
+{
+   constexpr std::uint64_t N = 1e7;
+   ROOT::RDataFrame d(N);
+   auto df = d.Define("x", "float(rdfentry_ +1)");
+   float true_sum = (N + 1.0) / 2.0;
+   EXPECT_FLOAT_EQ(*df.Mean<float>({"x"}), true_sum);
+}
 
 TEST(RDFSimpleTests, GenVector)
 {
@@ -847,7 +883,7 @@ TEST_P(RDFSimpleTests, NonExistingFileInChain)
    const auto errmsg = "file %s/doesnotexist.root does not exist";
    TString expecteddiag;
    expecteddiag.Form(errmsg, gSystem->pwd());
-   ROOTUnitTestSupport::CheckDiagsRAII diagRAII{kError, "TFile::TFile", expecteddiag.Data()};
+   ROOT::TestSupport::CheckDiagsRAII diagRAII{kError, "TFile::TFile", expecteddiag.Data()};
    // in the single-thread case the error happens when TTreeReader is calling LoadTree the first time
    // otherwise we notice the file does not exist beforehand, e.g. in TTreeProcessorMT
    if (!ROOT::IsImplicitMTEnabled())

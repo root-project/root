@@ -40,22 +40,22 @@ class FumiliFCNBase;
 class ModularFunctionMinimizer : public FunctionMinimizer {
 
 public:
-   virtual ~ModularFunctionMinimizer() {}
+   ~ModularFunctionMinimizer() override {}
 
    // inherited interface
-   virtual FunctionMinimum Minimize(const FCNBase &, const std::vector<double> &, const std::vector<double> &,
-                                    unsigned int stra = 1, unsigned int maxfcn = 0, double toler = 0.1) const;
+   FunctionMinimum Minimize(const FCNBase &, const std::vector<double> &, const std::vector<double> &,
+                                    unsigned int stra = 1, unsigned int maxfcn = 0, double toler = 0.1) const override;
 
-   virtual FunctionMinimum Minimize(const FCNGradientBase &, const std::vector<double> &, const std::vector<double> &,
-                                    unsigned int stra = 1, unsigned int maxfcn = 0, double toler = 0.1) const;
+   FunctionMinimum Minimize(const FCNGradientBase &, const std::vector<double> &, const std::vector<double> &,
+                                    unsigned int stra = 1, unsigned int maxfcn = 0, double toler = 0.1) const override;
 
-   virtual FunctionMinimum Minimize(const FCNBase &, const std::vector<double> &, unsigned int,
+   FunctionMinimum Minimize(const FCNBase &, const std::vector<double> &, unsigned int,
                                     const std::vector<double> &, unsigned int stra = 1, unsigned int maxfcn = 0,
-                                    double toler = 0.1) const;
+                                    double toler = 0.1) const override;
 
-   virtual FunctionMinimum Minimize(const FCNGradientBase &, const std::vector<double> &, unsigned int,
+   FunctionMinimum Minimize(const FCNGradientBase &, const std::vector<double> &, unsigned int,
                                     const std::vector<double> &, unsigned int stra = 1, unsigned int maxfcn = 0,
-                                    double toler = 0.1) const;
+                                    double toler = 0.1) const override;
 
    // extension
    virtual FunctionMinimum Minimize(const FCNBase &, const MnUserParameters &, const MnStrategy &,

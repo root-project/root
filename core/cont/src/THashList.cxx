@@ -247,9 +247,9 @@ void THashList::Delete(Option_t *option)
       // not, they are supposed to be deleted, so we can as well unregister
       // them from their directory, even if they are stack-based:
       TIter iRemDir(&removeDirectory);
-      TObject* dirRem = 0;
+      TObject* dirRem = nullptr;
       while ((dirRem = iRemDir())) {
-            (*dirRem->IsA()->GetDirectoryAutoAdd())(dirRem, 0);
+            (*dirRem->IsA()->GetDirectoryAutoAdd())(dirRem, nullptr);
       }
       Changed();
    }
@@ -378,7 +378,7 @@ void THashList::Rehash(Int_t newCapacity)
 TObject *THashList::Remove(TObject *obj)
 {
    R__COLLECTION_READ_LOCKGUARD(ROOT::gCoreMutex);
-   if (!obj || !fTable->FindObject(obj)) return 0;
+   if (!obj || !fTable->FindObject(obj)) return nullptr;
 
    R__COLLECTION_WRITE_LOCKGUARD(ROOT::gCoreMutex);
    TList::Remove(obj);
@@ -390,7 +390,7 @@ TObject *THashList::Remove(TObject *obj)
 
 TObject *THashList::Remove(TObjLink *lnk)
 {
-   if (!lnk) return 0;
+   if (!lnk) return nullptr;
 
    R__COLLECTION_WRITE_LOCKGUARD(ROOT::gCoreMutex);
    TObject *obj = lnk->GetObject();

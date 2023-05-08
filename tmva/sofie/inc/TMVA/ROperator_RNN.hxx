@@ -124,6 +124,9 @@ template <typename T> class ROperator_RNN final : public ROperator {
    // generate code for Session data members (e.g. internal vectors)
    std::string GenerateSessionMembersCode(std::string opName);
 
+   /*! \brief Returns the blas routines needed to compile the generated code
+    */
+   std::vector<std::string> GetBlasRoutines() { return { std::string("Gemm"), std::string("Axpy") }; }
 };
 
 } // namespace SOFIE

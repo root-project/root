@@ -33,21 +33,18 @@ namespace RooStats {
          const ModelConfig &nullModel,
          bool nominalAsimov = false
          );
-      //    HypoTestCalculatorGeneric(data, altModel, nullModel, 0)
-      // {
-      // }
 
-      ~AsymptoticCalculator() {
+      ~AsymptoticCalculator() override {
       }
 
       /// initialize the calculator by performing a global fit and make the Asimov data set
       bool Initialize() const;
 
       /// re-implement HypoTest computation using the asymptotic
-      virtual HypoTestResult *GetHypoTest() const;
+      HypoTestResult *GetHypoTest() const override;
 
       /// Make Asimov data.
-      static RooAbsData * MakeAsimovData( RooAbsData & data, const ModelConfig & model,  const RooArgSet & poiValues, RooArgSet & globObs, const RooArgSet * genPoiValues = 0);
+      static RooAbsData * MakeAsimovData( RooAbsData & data, const ModelConfig & model,  const RooArgSet & poiValues, RooArgSet & globObs, const RooArgSet * genPoiValues = nullptr);
 
 
       /// Make a nominal Asimov data set from a model.
@@ -71,15 +68,15 @@ namespace RooStats {
       void SetOneSidedDiscovery(bool on) { fOneSidedDiscovery = on; }
 
       /// re-implementation of  setters since they are needed to re-initialize the calculator
-      virtual void SetNullModel(const ModelConfig &nullModel) {
+      void SetNullModel(const ModelConfig &nullModel) override {
          HypoTestCalculatorGeneric::SetNullModel(nullModel);
          fIsInitialized = false;
       }
-      virtual void SetAlternateModel(const ModelConfig &altModel) {
+      void SetAlternateModel(const ModelConfig &altModel) override {
          HypoTestCalculatorGeneric::SetAlternateModel(altModel);
          fIsInitialized = false;
       }
-      virtual void SetData(RooAbsData &data) {
+      void SetData(RooAbsData &data) override {
          HypoTestCalculatorGeneric::SetData(data);
          fIsInitialized = false;
       }
@@ -110,38 +107,38 @@ namespace RooStats {
 
 
       static RooAbsData * GenerateAsimovDataSinglePdf(const RooAbsPdf & pdf, const RooArgSet & obs,  const RooRealVar & weightVar,
-                                                      RooCategory * channelCat = 0);
+                                                      RooCategory * channelCat = nullptr);
 
       static RooAbsData * GenerateCountingAsimovData(RooAbsPdf & pdf, const RooArgSet & obs,  const RooRealVar & weightVar,
-                                                      RooCategory * channelCat = 0);
+                                                      RooCategory * channelCat = nullptr);
 
 
       static void FillBins(const RooAbsPdf & pdf, const RooArgList &obs, RooAbsData & data, int &index,  double
                            &binVolume, int &ibin);
 
-      static double EvaluateNLL(RooAbsPdf & pdf, RooAbsData& data, const RooArgSet * condObs, const RooArgSet * globObs, const RooArgSet *poiSet = 0 );
+      static double EvaluateNLL(RooAbsPdf & pdf, RooAbsData& data, const RooArgSet * condObs, const RooArgSet * globObs, const RooArgSet *poiSet = nullptr );
 
       static bool SetObsToExpected(RooAbsPdf &pdf, const RooArgSet &obs);
       static bool SetObsToExpected(RooProdPdf &prod, const RooArgSet &obs);
 
    protected:
-      ClassDef(AsymptoticCalculator,2)
+      ClassDefOverride(AsymptoticCalculator,2)
 
    private:
 
-      bool fOneSided;                     // for one sided PL test statistic (upper limits)
-      mutable bool fOneSidedDiscovery;    // for one sided PL test statistic (for discovery)
-      bool fNominalAsimov;                // make Asimov at nominal parameter values
-      mutable bool fIsInitialized;        //! flag to check if calculator is initialized
-      mutable int fUseQTilde;             // flag to indicate if using qtilde or not (-1 (default based on RooRealVar)), 0 false, 1 (true)
-      static int fgPrintLevel;            // control print level  (0 minimal, 1 normal, 2 debug)
+      bool fOneSided;                     ///< for one sided PL test statistic (upper limits)
+      mutable bool fOneSidedDiscovery;    ///< for one sided PL test statistic (for discovery)
+      bool fNominalAsimov;                ///< make Asimov at nominal parameter values
+      mutable bool fIsInitialized;        ///<! flag to check if calculator is initialized
+      mutable int fUseQTilde;             ///< flag to indicate if using qtilde or not (-1 (default based on RooRealVar)), 0 false, 1 (true)
+      static int fgPrintLevel;            ///< control print level  (0 minimal, 1 normal, 2 debug)
       mutable double fNLLObs;
       mutable double fNLLAsimov;
 
-      mutable RooAbsData * fAsimovData;   // asimov data set
-      mutable RooArgSet  fAsimovGlobObs;  // snapshot of Asimov global observables
-      mutable RooArgSet  fBestFitPoi;     // snapshot of best fitted POI values
-      mutable RooArgSet  fBestFitParams;  // snapshot of all best fitted Parameter values
+      mutable RooAbsData * fAsimovData;   ///< asimov data set
+      mutable RooArgSet  fAsimovGlobObs;  ///< snapshot of Asimov global observables
+      mutable RooArgSet  fBestFitPoi;     ///< snapshot of best fitted POI values
+      mutable RooArgSet  fBestFitParams;  ///< snapshot of all best fitted Parameter values
 
 
    };

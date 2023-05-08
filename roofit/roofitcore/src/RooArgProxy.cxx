@@ -14,8 +14,6 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-#include "RooFit.h"
-
 #include "RooArgProxy.h"
 #include "RooArgSet.h"
 #include "RooAbsArg.h"
@@ -44,10 +42,10 @@ ClassImp(RooArgProxy);
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor with owner and proxied variable. 
+/// Constructor with owner and proxied variable.
 
 RooArgProxy::RooArgProxy(const char* inName, const char* desc, RooAbsArg* owner,
-			 Bool_t valueServer, Bool_t shapeServer, Bool_t proxyOwnsArg) : 
+          bool valueServer, bool shapeServer, bool proxyOwnsArg) :
   TNamed(inName,desc), _owner(owner), _arg(0),
   _valueServer(valueServer), _shapeServer(shapeServer), _ownArg(proxyOwnsArg)
 {
@@ -58,11 +56,11 @@ RooArgProxy::RooArgProxy(const char* inName, const char* desc, RooAbsArg* owner,
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor with owner and proxied variable. The valueServer and shapeServer booleans
-/// control if the inserted client-server link in the owner propagates value and/or 
+/// control if the inserted client-server link in the owner propagates value and/or
 /// shape dirty flags. If proxyOwnsArg is true, the proxy takes ownership of its component
 
 RooArgProxy::RooArgProxy(const char* inName, const char* desc, RooAbsArg* owner, RooAbsArg& arg,
-			 Bool_t valueServer, Bool_t shapeServer, Bool_t proxyOwnsArg) : 
+          bool valueServer, bool shapeServer, bool proxyOwnsArg) :
   TNamed(inName,desc), _owner(owner), _arg(&arg),
   _valueServer(valueServer), _shapeServer(shapeServer), _ownArg(proxyOwnsArg)
 {
@@ -75,10 +73,10 @@ RooArgProxy::RooArgProxy(const char* inName, const char* desc, RooAbsArg* owner,
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
 
-RooArgProxy::RooArgProxy(const char* inName, RooAbsArg* owner, const RooArgProxy& other) : 
-  TNamed(inName,inName), RooAbsProxy(other), _owner(owner), _arg(other._arg), 
+RooArgProxy::RooArgProxy(const char* inName, RooAbsArg* owner, const RooArgProxy& other) :
+  TNamed(inName,inName), RooAbsProxy(other), _owner(owner), _arg(other._arg),
   _valueServer(other._valueServer), _shapeServer(other._shapeServer),
-  _isFund(other._isFund), _ownArg(other._ownArg) 
+  _isFund(other._isFund), _ownArg(other._ownArg)
 {
   if (_ownArg) {
     _arg = _arg ? (RooAbsArg*) _arg->Clone() : 0 ;
@@ -105,7 +103,7 @@ RooArgProxy::~RooArgProxy()
 /// the replacement object can have a different name and is identified as the replacement object by
 /// the existence of a boolean attribute "origName:MyName" where MyName is the name of this instance
 
-Bool_t RooArgProxy::changePointer(const RooAbsCollection& newServerList, Bool_t nameChange, Bool_t factoryInitMode) 
+bool RooArgProxy::changePointer(const RooAbsCollection& newServerList, bool nameChange, bool factoryInitMode)
 {
   RooAbsArg* newArg = nullptr;
   const bool initEmpty = _arg == nullptr;
@@ -139,7 +137,7 @@ Bool_t RooArgProxy::changePointer(const RooAbsCollection& newServerList, Bool_t 
 /// Change the normalization set that should be offered to the
 /// content objects getVal() when evaluated.
 
-void RooArgProxy::changeDataSet(const RooArgSet* newNormSet) 
+void RooArgProxy::changeDataSet(const RooArgSet* newNormSet)
 {
   RooAbsProxy::changeNormSet(newNormSet) ;
   _arg->setProxyNormSet(newNormSet) ;
@@ -151,9 +149,9 @@ void RooArgProxy::changeDataSet(const RooArgSet* newNormSet)
 /// Print the name of the proxy on ostream. If addContents is
 /// true also the value of the contained RooAbsArg is also printed
 
-void RooArgProxy::print(ostream& os, Bool_t addContents) const 
-{ 
-  os << name() << "=" << (_arg?_arg->GetName():"NULL")  ;
+void RooArgProxy::print(ostream& os, bool addContents) const
+{
+  os << name() << "=" << (_arg?_arg->GetName():"nullptr")  ;
   if (_arg && addContents) {
     os << "=" ;
     _arg->printStream(os,RooPrintable::kValue,RooPrintable::kInline) ;

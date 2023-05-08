@@ -57,7 +57,7 @@ namespace {
                          const char *ExtraCode, raw_ostream &O) override;
     bool PrintAsmMemoryOperand(const MachineInstr *MI, unsigned OpNo,
                                const char *ExtraCode, raw_ostream &O) override;
-    void EmitInstruction(const MachineInstr *MI) override;
+    void emitInstruction(const MachineInstr *MI) override;
 
     void EmitInterruptVectorSection(MachineFunction &ISR);
   };
@@ -148,7 +148,7 @@ bool MSP430AsmPrinter::PrintAsmMemoryOperand(const MachineInstr *MI,
 }
 
 //===----------------------------------------------------------------------===//
-void MSP430AsmPrinter::EmitInstruction(const MachineInstr *MI) {
+void MSP430AsmPrinter::emitInstruction(const MachineInstr *MI) {
   MSP430MCInstLower MCInstLowering(OutContext, *this);
 
   MCInst TmpInst;
@@ -159,8 +159,9 @@ void MSP430AsmPrinter::EmitInstruction(const MachineInstr *MI) {
 void MSP430AsmPrinter::EmitInterruptVectorSection(MachineFunction &ISR) {
   MCSection *Cur = OutStreamer->getCurrentSectionOnly();
   const auto *F = &ISR.getFunction();
-  assert(F->hasFnAttribute("interrupt") &&
-         "Functions with MSP430_INTR CC should have 'interrupt' attribute");
+  if (F->getCallingConv() != CallingConv::MSP430_INTR) {
+    report_fatal_error("Functions with 'interrupt' attribute must have msp430_intrcc CC");
+  }
   StringRef IVIdx = F->getFnAttribute("interrupt").getValueAsString();
   MCSection *IV = OutStreamer->getContext().getELFSection(
     "__interrupt_vector_" + IVIdx,
@@ -168,21 +169,22 @@ void MSP430AsmPrinter::EmitInterruptVectorSection(MachineFunction &ISR) {
   OutStreamer->SwitchSection(IV);
 
   const MCSymbol *FunctionSymbol = getSymbol(F);
-  OutStreamer->EmitSymbolValue(FunctionSymbol, TM.getProgramPointerSize());
+  OutStreamer->emitSymbolValue(FunctionSymbol, TM.getProgramPointerSize());
   OutStreamer->SwitchSection(Cur);
 }
 
 bool MSP430AsmPrinter::runOnMachineFunction(MachineFunction &MF) {
   // Emit separate section for an interrupt vector if ISR
-  if (MF.getFunction().getCallingConv() == CallingConv::MSP430_INTR)
+  if (MF.getFunction().hasFnAttribute("interrupt")) {
     EmitInterruptVectorSection(MF);
+  }
 
   SetupMachineFunction(MF);
-  EmitFunctionBody();
+  emitFunctionBody();
   return false;
 }
 
 // Force static initialization.
-extern "C" void LLVMInitializeMSP430AsmPrinter() {
+extern "C" LLVM_EXTERNAL_VISIBILITY void LLVMInitializeMSP430AsmPrinter() {
   RegisterAsmPrinter<MSP430AsmPrinter> X(getTheMSP430Target());
 }

@@ -11,6 +11,7 @@
 
 #include "clang/Driver/ToolChain.h"
 #include "clang/Driver/Tool.h"
+#include "AMDGPU.h"
 
 namespace clang {
 namespace driver {
@@ -37,33 +38,17 @@ public:
                     const char *LinkingOutput) const override;
 
 private:
-  /// \return llvm-link output file name.
-  const char *constructLLVMLinkCommand(Compilation &C, const JobAction &JA,
-                                       const InputInfoList &Inputs,
-                                       const llvm::opt::ArgList &Args,
-                                       llvm::StringRef SubArchName,
-                                       llvm::StringRef OutputFilePrefix) const;
-
-  /// \return opt output file name.
-  const char *constructOptCommand(Compilation &C, const JobAction &JA,
-                                  const InputInfoList &Inputs,
-                                  const llvm::opt::ArgList &Args,
-                                  llvm::StringRef SubArchName,
-                                  llvm::StringRef OutputFilePrefix,
-                                  const char *InputFileName) const;
-
-  /// \return llc output file name.
-  const char *constructLlcCommand(Compilation &C, const JobAction &JA,
-                                  const InputInfoList &Inputs,
-                                  const llvm::opt::ArgList &Args,
-                                  llvm::StringRef SubArchName,
-                                  llvm::StringRef OutputFilePrefix,
-                                  const char *InputFileName) const;
 
   void constructLldCommand(Compilation &C, const JobAction &JA,
                            const InputInfoList &Inputs, const InputInfo &Output,
-                           const llvm::opt::ArgList &Args,
-                           const char *InputFileName) const;
+                           const llvm::opt::ArgList &Args) const;
+
+  // Construct command for creating Object from HIP fatbin.
+  void constructGenerateObjFileFromHIPFatBinary(Compilation &C,
+                                                const InputInfo &Output,
+                                                const InputInfoList &Inputs,
+                                                const llvm::opt::ArgList &Args,
+                                                const JobAction &JA) const;
 };
 
 } // end namespace AMDGCN
@@ -71,7 +56,7 @@ private:
 
 namespace toolchains {
 
-class LLVM_LIBRARY_VISIBILITY HIPToolChain : public ToolChain {
+class LLVM_LIBRARY_VISIBILITY HIPToolChain final : public ROCMToolChain {
 public:
   HIPToolChain(const Driver &D, const llvm::Triple &Triple,
                 const ToolChain &HostTC, const llvm::opt::ArgList &Args);
@@ -86,15 +71,6 @@ public:
   void addClangTargetOptions(const llvm::opt::ArgList &DriverArgs,
                              llvm::opt::ArgStringList &CC1Args,
                              Action::OffloadKind DeviceOffloadKind) const override;
-
-  bool useIntegratedAs() const override { return true; }
-  bool isCrossCompiling() const override { return true; }
-  bool isPICDefault() const override { return false; }
-  bool isPIEDefault() const override { return false; }
-  bool isPICDefaultForced() const override { return false; }
-  bool SupportsProfiling() const override { return false; }
-  bool IsMathErrnoDefault() const override { return false; }
-
   void addClangWarningOptions(llvm::opt::ArgStringList &CC1Args) const override;
   CXXStdlibType GetCXXStdlibType(const llvm::opt::ArgList &Args) const override;
   void
@@ -105,6 +81,10 @@ public:
       llvm::opt::ArgStringList &CC1Args) const override;
   void AddIAMCUIncludeArgs(const llvm::opt::ArgList &DriverArgs,
                            llvm::opt::ArgStringList &CC1Args) const override;
+  void AddHIPIncludeArgs(const llvm::opt::ArgList &DriverArgs,
+                         llvm::opt::ArgStringList &CC1Args) const override;
+  llvm::SmallVector<std::string, 12>
+  getHIPDeviceLibs(const llvm::opt::ArgList &Args) const override;
 
   SanitizerMask getSupportedSanitizers() const override;
 
@@ -112,9 +92,10 @@ public:
   computeMSVCVersion(const Driver *D,
                      const llvm::opt::ArgList &Args) const override;
 
-  unsigned GetDefaultDwarfVersion() const override { return 2; }
+  unsigned GetDefaultDwarfVersion() const override { return 4; }
 
   const ToolChain &HostTC;
+  void checkTargetID(const llvm::opt::ArgList &DriverArgs) const override;
 
 protected:
   Tool *buildLinker() const override;

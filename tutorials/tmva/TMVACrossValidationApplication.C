@@ -81,7 +81,7 @@ int TMVACrossValidationApplication()
    TString jobname("TMVACrossValidation");
    {
       TString methodName = "BDTG";
-      TString weightfile = TString("dataset/weights/") + jobname + "_" + methodName + TString(".weights.xml");
+      TString weightfile = TString("datasetcv/weights/") + jobname + "_" + methodName + TString(".weights.xml");
 
       Bool_t weightfileExists = (gSystem->AccessPathName(weightfile) == kFALSE);
       if (weightfileExists) {
@@ -96,7 +96,7 @@ int TMVACrossValidationApplication()
    }
    {
       TString methodName = "Fisher";
-      TString weightfile = TString("dataset/weights/") + jobname + "_" + methodName + TString(".weights.xml");
+      TString weightfile = TString("datasetcv/weights/") + jobname + "_" + methodName + TString(".weights.xml");
 
       Bool_t weightfileExists = (gSystem->AccessPathName(weightfile) == kFALSE);
       if (weightfileExists) {

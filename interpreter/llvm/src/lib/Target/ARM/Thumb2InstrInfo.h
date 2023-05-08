@@ -26,7 +26,7 @@ public:
   explicit Thumb2InstrInfo(const ARMSubtarget &STI);
 
   /// Return the noop instruction to use for a noop.
-  void getNoop(MCInst &NopInst) const override;
+  MCInst getNop() const override;
 
   // Return the non-pre/post incrementing version of 'Opc'. Return 0
   // if there is not such an opcode.
@@ -39,18 +39,18 @@ public:
                            MachineBasicBlock::iterator MBBI) const override;
 
   void copyPhysReg(MachineBasicBlock &MBB, MachineBasicBlock::iterator I,
-                   const DebugLoc &DL, unsigned DestReg, unsigned SrcReg,
+                   const DebugLoc &DL, MCRegister DestReg, MCRegister SrcReg,
                    bool KillSrc) const override;
 
   void storeRegToStackSlot(MachineBasicBlock &MBB,
                            MachineBasicBlock::iterator MBBI,
-                           unsigned SrcReg, bool isKill, int FrameIndex,
+                           Register SrcReg, bool isKill, int FrameIndex,
                            const TargetRegisterClass *RC,
                            const TargetRegisterInfo *TRI) const override;
 
   void loadRegFromStackSlot(MachineBasicBlock &MBB,
                             MachineBasicBlock::iterator MBBI,
-                            unsigned DestReg, int FrameIndex,
+                            Register DestReg, int FrameIndex,
                             const TargetRegisterClass *RC,
                             const TargetRegisterInfo *TRI) const override;
 
@@ -60,6 +60,14 @@ public:
   ///
   const ThumbRegisterInfo &getRegisterInfo() const override { return RI; }
 
+  MachineInstr *optimizeSelect(MachineInstr &MI,
+                               SmallPtrSetImpl<MachineInstr *> &SeenMIs,
+                               bool) const override;
+
+  MachineInstr *commuteInstructionImpl(MachineInstr &MI, bool NewMI,
+                                       unsigned OpIdx1,
+                                       unsigned OpIdx2) const override;
+
 private:
   void expandLoadStackGuard(MachineBasicBlock::iterator MI) const override;
 };
@@ -67,13 +75,24 @@ private:
 /// getITInstrPredicate - Valid only in Thumb2 mode. This function is identical
 /// to llvm::getInstrPredicate except it returns AL for conditional branch
 /// instructions which are "predicated", but are not in IT blocks.
-ARMCC::CondCodes getITInstrPredicate(const MachineInstr &MI, unsigned &PredReg);
+ARMCC::CondCodes getITInstrPredicate(const MachineInstr &MI, Register &PredReg);
 
 // getVPTInstrPredicate: VPT analogue of that, plus a helper function
 // corresponding to MachineInstr::findFirstPredOperandIdx.
 int findFirstVPTPredOperandIdx(const MachineInstr &MI);
 ARMVCC::VPTCodes getVPTInstrPredicate(const MachineInstr &MI,
-                                      unsigned &PredReg);
+                                      Register &PredReg);
+inline ARMVCC::VPTCodes getVPTInstrPredicate(const MachineInstr &MI) {
+  Register PredReg;
+  return getVPTInstrPredicate(MI, PredReg);
 }
+
+// Recomputes the Block Mask of Instr, a VPT or VPST instruction.
+// This rebuilds the block mask of the instruction depending on the predicates
+// of the instructions following it. This should only be used after the
+// MVEVPTBlockInsertion pass has run, and should be used whenever a predicated
+// instruction is added to/removed from the block.
+void recomputeVPTBlockMask(MachineInstr &Instr);
+} // namespace llvm
 
 #endif

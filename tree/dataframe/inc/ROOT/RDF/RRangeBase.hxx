@@ -17,13 +17,13 @@
 #include <unordered_map>
 
 namespace ROOT {
-
-// fwd decl
 namespace Internal {
 namespace RDF {
+namespace GraphDrawing {
 class GraphNode;
-} // ns RDF
-} // ns Internal
+}
+} // namespace RDF
+} // namespace Internal
 
 namespace Detail {
 namespace RDF {
@@ -50,14 +50,13 @@ public:
               const unsigned int nSlots, const std::vector<std::string> &prevVariations);
 
    RRangeBase &operator=(const RRangeBase &) = delete;
-   virtual ~RRangeBase();
+   ~RRangeBase() override;
 
    void InitNode() { ResetCounters(); }
-   virtual std::shared_ptr<RDFGraphDrawing::GraphNode> GetGraph() = 0;
 };
 
 } // ns RDF
 } // ns Detail
-} // ns ROOT
+} // namespace ROOT
 
 #endif // ROOT_RRANGEBASE

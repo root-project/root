@@ -278,7 +278,7 @@ Int_t TZIPFile::ReadZip64EndRecord(Long64_t pos)
 Int_t TZIPFile::ReadDirectory()
 {
    char   buf[kDIR_HEADER_SIZE];
-   UInt_t n, i;
+   UInt_t n;
 
    // read and validate first the header magic
    fFile->Seek(fDirPos);
@@ -290,7 +290,7 @@ Int_t TZIPFile::ReadDirectory()
    }
 
    // now read the full directory
-   for (i = 0; n == kDIR_HEADER_MAGIC; i++) {
+   while (n == kDIR_HEADER_MAGIC) {
       // read the rest of the header
       if (fFile->ReadBuffer(buf + kZIP_MAGIC_LEN, kDIR_HEADER_SIZE - kZIP_MAGIC_LEN)) {
          Error("ReadDirectory", "error reading %d directory bytes from %s",

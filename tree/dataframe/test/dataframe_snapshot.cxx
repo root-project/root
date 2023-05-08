@@ -1,4 +1,4 @@
-#include "ROOTUnitTestSupport.h"
+#include "ROOT/TestSupport.hxx"
 #include "ROOT/RDataFrame.hxx"
 #include "ROOT/RTrivialDS.hxx"
 #include "ROOT/TSeq.hxx"
@@ -7,9 +7,7 @@
 #include "TSystem.h"
 #include <TInterpreter.h>
 #include "TTree.h"
-#include "TChain.h"
 #include "gtest/gtest.h"
-#include <limits>
 #include <memory>
 #include <thread>
 using namespace ROOT;         // RDataFrame
@@ -293,10 +291,18 @@ void checkSnapshotArrayFile(RResultPtr<RInterface<RLoopManager>> &df, unsigned i
       const auto &bv = varSizeBoolArr->at(i);
       EXPECT_EQ(thisSize, dv.size());
       EXPECT_EQ(thisSize, bv.size());
+      std::cout << "bv: ";
+      for (auto j = 0u; j < thisSize; ++j)
+         std::cout << bv[j] << ' ';
+      std::cout << "\nexpected: ";
       for (auto j = 0u; j < thisSize; ++j) {
          EXPECT_DOUBLE_EQ(dv[j], i * j);
-         EXPECT_EQ(bv[j], j % 2 == 0);
+         const bool value = bv[j];
+         const bool expected = j % 2 == 0;
+         std::cout << expected << ' ';
+         EXPECT_EQ(value, expected);
       }
+      std::cout << '\n';
    }
 }
 
@@ -495,11 +501,14 @@ void ReadWriteCarray(const char *outFileNameBase)
    t.Branch("vb", vb, "vb[size]/O");
    t.Branch("vl", vl, "vl[size]/G");
 
+   // use 2**33 as a larger-than-int value on 64 bits, otherwise just something larger than short (2**30)
+   static constexpr long int longintTestValue = sizeof(long int) == 8 ? 8589934592 : 1073741824;
+
    // Size 1
    size = 1;
    v[0] = 12;
    vb[0] = true;
-   vl[0] = 8589934592; // 2**33
+   vl[0] = longintTestValue;
    t.Fill();
 
    // Size 0 (see ROOT-9860)
@@ -546,7 +555,7 @@ void ReadWriteCarray(const char *outFileNameBase)
       EXPECT_EQ(rvb.GetSize(), 1u);
       EXPECT_TRUE(rvb[0]);
       EXPECT_EQ(rvl.GetSize(), 1u);
-      EXPECT_EQ(rvl[0], 8589934592);
+      EXPECT_EQ(rvl[0], longintTestValue);
 
       // Size 0
       EXPECT_TRUE(r.Next());
@@ -631,7 +640,7 @@ TEST(RDFSnapshotMore, ReadWriteNestedLeaves)
    const auto outfname = "out_readwritenestedleaves.root";
    ROOT::RDF::RNode d2(d);
    {
-      ROOTUnitTestSupport::CheckDiagsRAII diagRAII;
+      ROOT::TestSupport::CheckDiagsRAII diagRAII;
       diagRAII.requiredDiag(kInfo, "Snapshot", "Column v.a will be saved as v_a");
       diagRAII.requiredDiag(kInfo, "Snapshot", "Column v.b will be saved as v_b");
       d2 = *d.Snapshot<int, int>(treename, outfname, {"v.a", "v.b"});
@@ -834,7 +843,7 @@ TEST(RDFSnapshotMore, ForbiddenOutputFilename)
    // If some other test case called EnableThreadSafety, the error printed here is of the form
    // "SysError in <TFile::TFile>: file /definitely/not/a/valid/path/f.root can not be opened No such file or directory\nError in <TReentrantRWLock::WriteUnLock>: Write lock already released for 0x55f179989378\n"
    // but the address printed changes every time
-   ROOTUnitTestSupport::CheckDiagsRAII diagRAII{kSysError, "TFile::TFile", "file /definitely/not/a/valid/path/f.root can not be opened No such file or directory"};
+   ROOT::TestSupport::CheckDiagsRAII diagRAII{kSysError, "TFile::TFile", "file /definitely/not/a/valid/path/f.root can not be opened No such file or directory"};
    EXPECT_THROW(df.Snapshot("t", out_fname, {"rdfslot_"}), std::runtime_error);
 }
 
@@ -886,7 +895,7 @@ TEST(RDFSnapshotMore, MissingSizeBranch)
    ROOT::RDataFrame df("t", inFile);
 
    // fully typed Snapshot call throws
-   EXPECT_THROW(df.Snapshot<ROOT::RVecF>("t", "NeverWrittenOut.root", {"vec"}), std::runtime_error);
+   EXPECT_THROW(df.Snapshot<ROOT::RVecF>("t", outFile, {"vec"}), std::runtime_error);
 
    // jitted Snapshot works anyway
    auto out = df.Snapshot("t", outFile, {"vec"});
@@ -902,6 +911,7 @@ TEST(RDFSnapshotMore, MissingSizeBranch)
    EXPECT_TRUE(All(vecs->at(2) == ROOT::RVecF{1, 2, 3}));
 
    gSystem->Unlink(inFile);
+   gSystem->Unlink(outFile);
 }
 
 TEST(RDFSnapshotMore, OutOfOrderSizeBranch)
@@ -1173,14 +1183,14 @@ TEST(RDFSnapshotMore, TreeWithFriendsMT)
 TEST(RDFSnapshotMore, JittedSnapshotAndAliasedColumns)
 {
    ROOT::RDataFrame df(1);
-   const auto fname = "out_aliasedcustomcolumn.root";
+   const auto fname = "out_aliaseddefine.root";
    // aliasing a custom column
    auto df2 = df.Define("x", [] { return 42; }).Alias("y", "x").Snapshot("t", fname, "y"); // must be jitted!
    EXPECT_EQ(df2->GetColumnNames(), std::vector<std::string>({"y"}));
    EXPECT_EQ(df2->Take<int>("y")->at(0), 42);
 
    // aliasing a column from a file
-   const auto fname2 = "out_aliasedcustomcolumn2.root";
+   const auto fname2 = "out_aliaseddefine2.root";
    auto df3 = df2->Alias("z", "y").Snapshot("t", fname2, "z");
    EXPECT_EQ(df3->GetColumnNames(), std::vector<std::string>({"z"}));
    EXPECT_EQ(df3->Max<int>("z").GetValue(), 42);
@@ -1255,7 +1265,7 @@ TEST(RDFSnapshotMore, ForbiddenOutputFilenameMT)
    // the error printed here is
    // "SysError in <TFile::TFile>: file /definitely/not/a/valid/path/f.root can not be opened No such file or directory\nError in <TReentrantRWLock::WriteUnLock>: Write lock already released for 0x55f179989378\n"
    // but the address printed changes every time
-   ROOTUnitTestSupport::CheckDiagsRAII diagRAII;
+   ROOT::TestSupport::CheckDiagsRAII diagRAII;
    diagRAII.requiredDiag(kSysError, "TFile::TFile", "file /definitely/not/a/valid/path/f.root can not be opened No such file or directory");
    diagRAII.optionalDiag(kSysError, "TReentrantRWLock::WriteUnLock", "Write lock already released for", /*wholeStringNeedsToMatch=*/false);
    EXPECT_THROW(df.Snapshot("t", out_fname, {"rdfslot_"}), std::runtime_error);

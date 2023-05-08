@@ -38,6 +38,8 @@ class RRawFile;
 }
 
 namespace Experimental {
+class RNTuple; // for making RPageSourceFile a friend of RNTuple
+
 namespace Detail {
 
 class RClusterPool;
@@ -59,25 +61,20 @@ private:
    std::unique_ptr<RPageAllocatorHeap> fPageAllocator;
 
    std::unique_ptr<Internal::RNTupleFileWriter> fWriter;
-   /// Byte offset of the first page of the current cluster
-   std::uint64_t fClusterMinOffset = std::uint64_t(-1);
-   /// Byte offset of the end of the last page of the current cluster
-   std::uint64_t fClusterMaxOffset = 0;
    /// Number of bytes committed to storage in the current cluster
    std::uint64_t fNBytesCurrentCluster = 0;
-   /// Used to keep the column and field IDs issued during header serialization for the footer serialization
-   Internal::RNTupleSerializer::RContext fSerializationContext;
    RPageSinkFile(std::string_view ntupleName, const RNTupleWriteOptions &options);
 
    RNTupleLocator WriteSealedPage(const RPageStorage::RSealedPage &sealedPage,
                                                 std::size_t bytesPacked);
 
 protected:
-   void CreateImpl(const RNTupleModel &model) final;
+   void CreateImpl(const RNTupleModel &model, unsigned char *serializedHeader, std::uint32_t length) final;
    RNTupleLocator CommitPageImpl(ColumnHandle_t columnHandle, const RPage &page) final;
    RNTupleLocator CommitSealedPageImpl(DescriptorId_t columnId, const RPageStorage::RSealedPage &sealedPage) final;
    std::uint64_t CommitClusterImpl(NTupleSize_t nEntries) final;
-   void CommitDatasetImpl() final;
+   RNTupleLocator CommitClusterGroupImpl(unsigned char *serializedPageList, std::uint32_t length) final;
+   void CommitDatasetImpl(unsigned char *serializedFooter, std::uint32_t length) final;
 
 public:
    RPageSinkFile(std::string_view ntupleName, std::string_view path, const RNTupleWriteOptions &options);
@@ -88,7 +85,7 @@ public:
    RPageSinkFile& operator=(const RPageSinkFile&) = delete;
    RPageSinkFile(RPageSinkFile&&) = default;
    RPageSinkFile& operator=(RPageSinkFile&&) = default;
-   virtual ~RPageSinkFile();
+   ~RPageSinkFile() override;
 
    RPage ReservePage(ColumnHandle_t columnHandle, std::size_t nElements) final;
    void ReleasePage(RPage &page) final;
@@ -117,11 +114,19 @@ public:
 */
 // clang-format on
 class RPageSourceFile : public RPageSource {
-public:
-   /// Cannot process pages larger than 1MB
-   static constexpr std::size_t kMaxPageSize = 1024 * 1024;
+   friend class ROOT::Experimental::RNTuple;
 
 private:
+   /// Summarizes cluster-level information that are necessary to populate a certain page.
+   /// Used by PopulatePageFromCluster().
+   struct RClusterInfo {
+      DescriptorId_t fClusterId = 0;
+      /// Location of the page on disk
+      RClusterDescriptor::RPageRange::RPageInfoExtended fPageInfo;
+      /// The first element number of the page's column in the given cluster
+      std::uint64_t fColumnOffset = 0;
+   };
+
    /// Populated pages might be shared; there memory buffer is managed by the RPageAllocatorFile
    std::unique_ptr<RPageAllocatorFile> fPageAllocator;
    /// The page pool might, at some point, be used by multiple page sources
@@ -132,11 +137,19 @@ private:
    std::unique_ptr<ROOT::Internal::RRawFile> fFile;
    /// Takes the fFile to read ntuple blobs from it
    Internal::RMiniFileReader fReader;
+   /// The descriptor is created from the header and footer either in AttachImpl or in CreateFromAnchor
+   RNTupleDescriptorBuilder fDescriptorBuilder;
    /// The cluster pool asynchronously preloads the next few clusters
    std::unique_ptr<RClusterPool> fClusterPool;
 
+   /// Deserialized header and footer into a minimal descriptor held by fDescriptorBuilder
+   void InitDescriptor(const Internal::RFileNTupleAnchor &anchor);
+
    RPageSourceFile(std::string_view ntupleName, const RNTupleReadOptions &options);
-   RPage PopulatePageFromCluster(ColumnHandle_t columnHandle, const RClusterDescriptor &clusterDescriptor,
+   /// Used from the RNTuple class to build a datasource if the anchor is already available
+   static std::unique_ptr<RPageSourceFile> CreateFromAnchor(const Internal::RFileNTupleAnchor &anchor,
+                                                            std::string_view path, const RNTupleReadOptions &options);
+   RPage PopulatePageFromCluster(ColumnHandle_t columnHandle, const RClusterInfo &clusterInfo,
                                  ClusterSize_t::ValueType idxInCluster);
 
    /// Helper function for LoadClusters: it prepares the memory buffer (page map) and the
@@ -159,9 +172,9 @@ public:
 
    RPageSourceFile(const RPageSourceFile&) = delete;
    RPageSourceFile& operator=(const RPageSourceFile&) = delete;
-   RPageSourceFile(RPageSourceFile&&) = default;
-   RPageSourceFile& operator=(RPageSourceFile&&) = default;
-   virtual ~RPageSourceFile();
+   RPageSourceFile(RPageSourceFile &&) = delete;
+   RPageSourceFile &operator=(RPageSourceFile &&) = delete;
+   ~RPageSourceFile() override;
 
    RPage PopulatePage(ColumnHandle_t columnHandle, NTupleSize_t globalIndex) final;
    RPage PopulatePage(ColumnHandle_t columnHandle, const RClusterIndex &clusterIndex) final;

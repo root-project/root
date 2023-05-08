@@ -34,8 +34,8 @@ protected:
    Bool_t             fIsOwner;        //true if folder own its contained objects
 
 private:
-   TFolder(const TFolder &folder);  //folders cannot be copied
-   void operator=(const TFolder &);
+   TFolder(const TFolder &folder) = delete;  //folders cannot be copied
+   void operator=(const TFolder &)= delete;
 
 public:
 
@@ -43,26 +43,26 @@ public:
    TFolder(const char *name, const char *title);
    virtual ~TFolder();
    virtual void        Add(TObject *obj);
-   TFolder            *AddFolder(const char *name, const char *title, TCollection *collection=0);
-   virtual void        Browse(TBrowser *b);
-   virtual void        Clear(Option_t *option="");
-   virtual void        Copy(TObject &) const { MayNotUse("Copy(TObject &)"); }
+   TFolder            *AddFolder(const char *name, const char *title, TCollection *collection=nullptr);
+   void                Browse(TBrowser *b) override;
+   void                Clear(Option_t *option="") override;
+   void                Copy(TObject &) const override { MayNotUse("Copy(TObject &)"); }
    virtual const char *FindFullPathName(const char *name) const;
    virtual const char *FindFullPathName(const TObject *obj) const;
-   virtual TObject    *FindObject(const char *name) const;
-   virtual TObject    *FindObject(const TObject *obj) const;
+   TObject            *FindObject(const char *name) const override;
+   TObject            *FindObject(const TObject *obj) const override;
    virtual TObject    *FindObjectAny(const char *name) const;
    TCollection        *GetListOfFolders() const { return fFolders; }
-   Bool_t              IsFolder() const { return kTRUE; }
+   Bool_t              IsFolder() const override { return kTRUE; }
    Bool_t              IsOwner()  const;
-   virtual void        ls(Option_t *option="") const;  // *MENU*
+   void                ls(Option_t *option="") const override;  // *MENU*
    virtual Int_t       Occurence(const TObject *obj) const;
-   virtual void        RecursiveRemove(TObject *obj);
+   void                RecursiveRemove(TObject *obj) override;
    virtual void        Remove(TObject *obj);
-   virtual void        SaveAs(const char *filename="",Option_t *option="") const; // *MENU*
+   void                SaveAs(const char *filename="",Option_t *option="") const override; // *MENU*
    virtual void        SetOwner(Bool_t owner=kTRUE);
 
-   ClassDef(TFolder,1)  //Describe a folder: a list of objects and folders
+   ClassDefOverride(TFolder,1)  //Describe a folder: a list of objects and folders
 };
 
 #endif

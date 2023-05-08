@@ -221,7 +221,7 @@ protected:
 
    Bool_t HelixIntersectPlane(const REveVectorD &p, const REveVectorD &point, const REveVectorD &normal, REveVectorD &itsect);
    Bool_t LineIntersectPlane(const REveVectorD &p, const REveVectorD &point, const REveVectorD &normal, REveVectorD &itsect);
-   Bool_t PointOverVertex(const REveVector4D &v0, const REveVector4D &v, Double_t *p = 0);
+   Bool_t PointOverVertex(const REveVector4D &v0, const REveVector4D &v, Double_t *p = nullptr);
 
    void   ClosestPointFromVertexToLineSegment(const REveVectorD &v, const REveVectorD &s, const REveVectorD &r,
                                               Double_t rMagInv, REveVectorD &c);

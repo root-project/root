@@ -13,17 +13,14 @@
 #ifndef ROOT_RDF_HELPERS
 #define ROOT_RDF_HELPERS
 
-#include <ROOT/RDataFrame.hxx>
 #include <ROOT/RDF/GraphUtils.hxx>
 #include <ROOT/RDF/RActionBase.hxx>
 #include <ROOT/RDF/RResultMap.hxx>
-#include <ROOT/RResultHandle.hxx>
+#include <ROOT/RResultHandle.hxx> // users of RunGraphs might rely on this transitive include
 #include <ROOT/TypeTraits.hxx>
 
-#include <algorithm> // std::transform
 #include <fstream>
 #include <functional>
-#include <iostream>
 #include <memory>
 #include <type_traits>
 #include <utility> // std::index_sequence
@@ -69,7 +66,6 @@ auto PassAsVec(F &&f) -> PassAsVecHelper<std::make_index_sequence<N>, T, F>
 
 namespace RDF {
 namespace RDFInternal = ROOT::Internal::RDF;
-
 
 // clag-format off
 /// Given a callable with signature bool(T1, T2, ...) return a callable with same signature that returns the negated result
@@ -120,7 +116,7 @@ template <typename NodeType>
 std::string SaveGraph(NodeType node)
 {
    ROOT::Internal::RDF::GraphDrawing::GraphCreatorHelper helper;
-   return helper(node);
+   return helper.RepresentGraph(node);
 }
 
 // clang-format off
@@ -139,7 +135,7 @@ template <typename NodeType>
 void SaveGraph(NodeType node, const std::string &outputFile)
 {
    ROOT::Internal::RDF::GraphDrawing::GraphCreatorHelper helper;
-   std::string dotGraph = helper(node);
+   std::string dotGraph = helper.RepresentGraph(node);
 
    std::ofstream out(outputFile);
    if (!out.is_open()) {

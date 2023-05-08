@@ -1,4 +1,4 @@
-#include "ROOTUnitTestSupport.h"
+#include "ROOT/TestSupport.hxx"
 #include "ROOT/RDataFrame.hxx"
 #include "ROOT/RResultHandle.hxx"
 #include "TH1D.h" // for NullResultPtr test case

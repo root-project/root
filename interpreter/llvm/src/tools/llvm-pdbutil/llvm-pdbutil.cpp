@@ -466,6 +466,10 @@ cl::opt<bool> DumpTypeStats(
     "type-stats",
     cl::desc("Dump a detailed breakdown of type usage/size"),
     cl::cat(MsfOptions), cl::sub(DumpSubcommand));
+cl::opt<bool> DumpIDStats(
+    "id-stats",
+    cl::desc("Dump a detailed breakdown of IPI types usage/size"),
+    cl::cat(MsfOptions), cl::sub(DumpSubcommand));
 cl::opt<bool> DumpUdtStats(
     "udt-stats",
     cl::desc("Dump a detailed breakdown of S_UDT record usage / stats"),
@@ -744,7 +748,7 @@ static ExitOnError ExitOnErr;
 static void yamlToPdb(StringRef Path) {
   BumpPtrAllocator Allocator;
   ErrorOr<std::unique_ptr<MemoryBuffer>> ErrorOrBuffer =
-      MemoryBuffer::getFileOrSTDIN(Path, /*FileSize=*/-1,
+      MemoryBuffer::getFileOrSTDIN(Path, /*IsText=*/false,
                                    /*RequiresNullTerminator=*/false);
 
   if (ErrorOrBuffer.getError()) {
@@ -863,8 +867,7 @@ static void pdb2Yaml(StringRef Path) {
   std::unique_ptr<IPDBSession> Session;
   auto &File = loadPDB(Path, Session);
 
-  auto O = llvm::make_unique<YAMLOutputStyle>(File);
-  O = llvm::make_unique<YAMLOutputStyle>(File);
+  auto O = std::make_unique<YAMLOutputStyle>(File);
 
   ExitOnErr(O->dump());
 }
@@ -872,7 +875,7 @@ static void pdb2Yaml(StringRef Path) {
 static void dumpRaw(StringRef Path) {
   InputFile IF = ExitOnErr(InputFile::open(Path));
 
-  auto O = llvm::make_unique<DumpOutputStyle>(IF);
+  auto O = std::make_unique<DumpOutputStyle>(IF);
   ExitOnErr(O->dump());
 }
 
@@ -880,7 +883,7 @@ static void dumpBytes(StringRef Path) {
   std::unique_ptr<IPDBSession> Session;
   auto &File = loadPDB(Path, Session);
 
-  auto O = llvm::make_unique<BytesOutputStyle>(File);
+  auto O = std::make_unique<BytesOutputStyle>(File);
 
   ExitOnErr(O->dump());
 }
@@ -888,9 +891,9 @@ static void dumpBytes(StringRef Path) {
 bool opts::pretty::shouldDumpSymLevel(SymLevel Search) {
   if (SymTypes.empty())
     return true;
-  if (llvm::find(SymTypes, Search) != SymTypes.end())
+  if (llvm::is_contained(SymTypes, Search))
     return true;
-  if (llvm::find(SymTypes, SymLevel::All) != SymTypes.end())
+  if (llvm::is_contained(SymTypes, SymLevel::All))
     return true;
   return false;
 }
@@ -1347,7 +1350,7 @@ static void explain() {
       ExitOnErr(InputFile::open(opts::explain::InputFilename.front(), true));
 
   for (uint64_t Off : opts::explain::Offsets) {
-    auto O = llvm::make_unique<ExplainOutputStyle>(IF, Off);
+    auto O = std::make_unique<ExplainOutputStyle>(IF, Off);
 
     ExitOnErr(O->dump());
   }
@@ -1427,6 +1430,8 @@ int main(int Argc, const char **Argv) {
   InitLLVM X(Argc, Argv);
   ExitOnErr.setBanner("llvm-pdbutil: ");
 
+  cl::HideUnrelatedOptions(
+      {&opts::TypeCategory, &opts::FilterCategory, &opts::OtherOptions});
   cl::ParseCommandLineOptions(Argc, Argv, "LLVM PDB Dumper\n");
 
   if (opts::BytesSubcommand) {
@@ -1507,7 +1512,7 @@ int main(int Argc, const char **Argv) {
     if (opts::yaml2pdb::YamlPdbOutputFile.empty()) {
       SmallString<16> OutputFilename(opts::yaml2pdb::InputFilename.getValue());
       sys::path::replace_extension(OutputFilename, ".pdb");
-      opts::yaml2pdb::YamlPdbOutputFile = OutputFilename.str();
+      opts::yaml2pdb::YamlPdbOutputFile = std::string(OutputFilename.str());
     }
     yamlToPdb(opts::yaml2pdb::InputFilename);
   } else if (opts::DiaDumpSubcommand) {

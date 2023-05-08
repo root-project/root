@@ -129,8 +129,8 @@ public:
    TTreeCache();
    TTreeCache(TTree *tree, Int_t buffersize=0);
    virtual ~TTreeCache();
-   virtual Int_t        AddBranch(TBranch *b, Bool_t subgbranches = kFALSE);
-   virtual Int_t        AddBranch(const char *branch, Bool_t subbranches = kFALSE);
+   Int_t                AddBranch(TBranch *b, Bool_t subgbranches = kFALSE) override;
+   Int_t                AddBranch(const char *branch, Bool_t subbranches = kFALSE) override;
    virtual Int_t        DropBranch(TBranch *b, Bool_t subbranches = kFALSE);
    virtual Int_t        DropBranch(const char *branch, Bool_t subbranches = kFALSE);
    virtual void         Disable() {fEnabled = kFALSE;}
@@ -149,22 +149,22 @@ public:
    TTree               *GetTree() const {return fTree;}
    Bool_t               IsAutoCreated() const {return fAutoCreated;}
    virtual Bool_t       IsEnabled() const {return fEnabled;}
-   virtual Bool_t       IsLearning() const {return fIsLearning;}
+   Bool_t               IsLearning() const override {return fIsLearning;}
 
    virtual Bool_t       FillBuffer();
-   virtual Int_t        LearnBranch(TBranch *b, Bool_t subgbranches = kFALSE);
+   Int_t                LearnBranch(TBranch *b, Bool_t subgbranches = kFALSE) override;
    virtual void         LearnPrefill();
 
-   virtual void         Print(Option_t *option="") const;
-   virtual Int_t        ReadBuffer(char *buf, Long64_t pos, Int_t len);
+   void                 Print(Option_t *option="") const override;
+   Int_t                ReadBuffer(char *buf, Long64_t pos, Int_t len) override;
    virtual Int_t        ReadBufferNormal(char *buf, Long64_t pos, Int_t len);
    virtual Int_t        ReadBufferPrefetch(char *buf, Long64_t pos, Int_t len);
    virtual void         ResetCache();
    void                 ResetMissCache(); // Reset the miss cache.
    void                 SetAutoCreated(Bool_t val) {fAutoCreated = val;}
-   virtual Int_t        SetBufferSize(Int_t buffersize);
+   Int_t                SetBufferSize(Int_t buffersize) override;
    virtual void         SetEntryRange(Long64_t emin,   Long64_t emax);
-   virtual void         SetFile(TFile *file, TFile::ECacheAction action=TFile::kDisconnect);
+   void                 SetFile(TFile *file, TFile::ECacheAction action=TFile::kDisconnect) override;
    virtual void         SetLearnPrefill(EPrefillType type = kNoPrefill);
    static void          SetLearnEntries(Int_t n = 10);
    void                 SetOptimizeMisses(Bool_t opt);
@@ -172,7 +172,7 @@ public:
    virtual void         StopLearningPhase();
    virtual void         UpdateBranches(TTree *tree);
 
-   ClassDef(TTreeCache,3)  //Specialization of TFileCacheRead for a TTree
+   ClassDefOverride(TTreeCache,3)  //Specialization of TFileCacheRead for a TTree
 };
 
 #endif

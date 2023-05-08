@@ -15,6 +15,7 @@
 #include "llvm/DebugInfo/CodeView/TypeIndex.h"
 #include "llvm/DebugInfo/CodeView/TypeIndexDiscovery.h"
 #include "llvm/DebugInfo/CodeView/TypeRecord.h"
+#include "llvm/DebugInfo/CodeView/TypeRecordHelpers.h"
 #include "llvm/Support/Error.h"
 
 using namespace llvm;
@@ -37,7 +38,7 @@ namespace {
 /// 0x1000.
 ///
 /// Type records are only allowed to use type indices smaller than their own, so
-/// a type stream is effectively a topologically sorted DAG. Cycles occuring in
+/// a type stream is effectively a topologically sorted DAG. Cycles occurring in
 /// the type graph of the source program are resolved with forward declarations
 /// of composite types. This class implements the following type stream merging
 /// algorithm, which relies on this DAG structure:
@@ -202,21 +203,6 @@ private:
 
 const TypeIndex TypeStreamMerger::Untranslated(SimpleTypeKind::NotTranslated);
 
-static bool isIdRecord(TypeLeafKind K) {
-  switch (K) {
-  case TypeLeafKind::LF_FUNC_ID:
-  case TypeLeafKind::LF_MFUNC_ID:
-  case TypeLeafKind::LF_STRING_ID:
-  case TypeLeafKind::LF_SUBSTR_LIST:
-  case TypeLeafKind::LF_BUILDINFO:
-  case TypeLeafKind::LF_UDT_SRC_LINE:
-  case TypeLeafKind::LF_UDT_MOD_SRC_LINE:
-    return true;
-  default:
-    return false;
-  }
-}
-
 void TypeStreamMerger::addMapping(TypeIndex Idx) {
   if (!IsSecondPass) {
     assert(IndexMap.size() == slotForIndex(CurIndex) &&
@@ -374,16 +360,18 @@ Error TypeStreamMerger::remapType(const CVType &Type) {
         [this, Type](MutableArrayRef<uint8_t> Storage) -> ArrayRef<uint8_t> {
       return remapIndices(Type, Storage);
     };
+    unsigned AlignedSize = alignTo(Type.RecordData.size(), 4);
+
     if (LLVM_LIKELY(UseGlobalHashes)) {
       GlobalTypeTableBuilder &Dest =
           isIdRecord(Type.kind()) ? *DestGlobalIdStream : *DestGlobalTypeStream;
       GloballyHashedType H = GlobalHashes[CurIndex.toArrayIndex()];
-      DestIdx = Dest.insertRecordAs(H, Type.RecordData.size(), DoSerialize);
+      DestIdx = Dest.insertRecordAs(H, AlignedSize, DoSerialize);
     } else {
       MergingTypeTableBuilder &Dest =
           isIdRecord(Type.kind()) ? *DestIdStream : *DestTypeStream;
 
-      RemapStorage.resize(Type.RecordData.size());
+      RemapStorage.resize(AlignedSize);
       ArrayRef<uint8_t> Result = DoSerialize(RemapStorage);
       if (!Result.empty())
         DestIdx = Dest.insertRecordBytes(Result);
@@ -400,9 +388,14 @@ Error TypeStreamMerger::remapType(const CVType &Type) {
 ArrayRef<uint8_t>
 TypeStreamMerger::remapIndices(const CVType &OriginalType,
                                MutableArrayRef<uint8_t> Storage) {
+  unsigned Align = OriginalType.RecordData.size() & 3;
+  assert(Storage.size() == alignTo(OriginalType.RecordData.size(), 4) &&
+         "The storage buffer size is not a multiple of 4 bytes which will "
+         "cause misalignment in the output TPI stream!");
+
   SmallVector<TiReference, 4> Refs;
   discoverTypeIndices(OriginalType.RecordData, Refs);
-  if (Refs.empty())
+  if (Refs.empty() && Align == 0)
     return OriginalType.RecordData;
 
   ::memcpy(Storage.data(), OriginalType.RecordData.data(),
@@ -421,6 +414,16 @@ TypeStreamMerger::remapIndices(const CVType &OriginalType,
       if (LLVM_UNLIKELY(!Success))
         return {};
     }
+  }
+
+  if (Align > 0) {
+    RecordPrefix *StorageHeader =
+        reinterpret_cast<RecordPrefix *>(Storage.data());
+    StorageHeader->RecordLen += 4 - Align;
+
+    DestContent = Storage.data() + OriginalType.RecordData.size();
+    for (; Align < 4; ++Align)
+      *DestContent++ = LF_PAD4 - Align;
   }
   return Storage;
 }

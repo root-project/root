@@ -31,12 +31,12 @@ protected:
 public:
 
    enum {
-     kNone = 0,        // dummy
-     kObject = 1,      // object itself
-     kSVG = 2,         // list of SVG primitives
-     kSubPad = 3,      // subpad
-     kColors = 4,      // list of ROOT colors + palette
-     kStyle = 5        // gStyle object
+     kNone = 0,        ///< dummy
+     kObject = 1,      ///< object itself
+     kSVG = 2,         ///< list of SVG primitives
+     kSubPad = 3,      ///< subpad
+     kColors = 4,      ///< list of ROOT colors + palette
+     kStyle = 5        ///< gStyle object
    };
 
    virtual ~TWebSnapshot();
@@ -51,7 +51,7 @@ public:
    Int_t GetKind() const { return fKind; }
    TObject *GetSnapshot() const { return fSnapshot; }
 
-   ClassDef(TWebSnapshot,1)  // Object painting snapshot, used for JSROOT
+   ClassDefOverride(TWebSnapshot,1)  // Object painting snapshot, used for JSROOT
 };
 
 // =================================================================================
@@ -60,18 +60,25 @@ class TPadWebSnapshot : public TWebSnapshot {
 protected:
    bool fActive{false};                                    ///< true when pad is active
    bool fReadOnly{true};                                   ///< when canvas or pad are in readonly mode
+   bool fSetObjectIds{true};                               ///<! set objects ids
+   bool fWithoutPrimitives{false};                         ///< true when primitives not send while there are no modifications
    std::vector<std::unique_ptr<TWebSnapshot>> fPrimitives; ///< list of all primitives, drawn in the pad
 
 public:
-   TPadWebSnapshot(bool readonly = true)
+   TPadWebSnapshot(bool readonly = true, bool setids = true)
    {
       SetKind(kSubPad);
       fReadOnly = readonly;
+      fSetObjectIds = setids;
    }
 
    void SetActive(bool on = true) { fActive = on; }
 
+   void SetWithoutPrimitives(bool on = true) { fWithoutPrimitives = on; }
+
    bool IsReadOnly() const { return fReadOnly; }
+
+   bool IsSetObjectIds() const { return fSetObjectIds; }
 
    TWebSnapshot &NewPrimitive(TObject *obj = nullptr, const std::string &opt = "");
 
@@ -79,24 +86,25 @@ public:
 
    TWebSnapshot &NewSpecials();
 
-   ClassDef(TPadWebSnapshot, 1) // Pad painting snapshot, used for JSROOT
+   ClassDefOverride(TPadWebSnapshot, 2) // Pad painting snapshot, used for JSROOT
 };
 
 // =================================================================================
 
 class TCanvasWebSnapshot : public TPadWebSnapshot {
 protected:
-   Long64_t fVersion{0};           ///< actual canvas version
    std::string fScripts;           ///< custom scripts to load
+   bool fHighlightConnect{false};  ///< does HighlightConnect has connection
 public:
-   TCanvasWebSnapshot() {} // NOLINT: not allowed to use = default because of TObject::kIsOnHeap detection, see ROOT-10300
-   TCanvasWebSnapshot(bool readonly, Long64_t v) : TPadWebSnapshot(readonly), fVersion(v) {}
-
-   Long64_t GetVersion() const { return fVersion; }
+   TCanvasWebSnapshot(bool readonly = true, bool setids = true) : TPadWebSnapshot(readonly, setids) {}
 
    void SetScripts(const std::string &src) { fScripts = src; }
+   const std::string &GetScripts() const { return fScripts; }
 
-   ClassDef(TCanvasWebSnapshot, 1) // Canvas painting snapshot, used for JSROOT
+   void SetHighlightConnect(bool on = true) { fHighlightConnect = on; }
+   bool GetHighlightConnect() const { return fHighlightConnect; }
+
+   ClassDefOverride(TCanvasWebSnapshot, 3) // Canvas painting snapshot, used for JSROOT
 };
 
 

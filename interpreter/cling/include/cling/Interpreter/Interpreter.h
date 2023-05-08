@@ -29,6 +29,9 @@ namespace llvm {
   class StringRef;
   class Type;
   template <typename T> class SmallVectorImpl;
+  namespace orc {
+    class DefinitionGenerator;
+  }
 }
 
 namespace clang {
@@ -141,6 +144,26 @@ namespace cling {
       kNumExeResults
     };
 
+    ///\brief Flags that provide additional information about the context in
+    /// which parsing occurs. These flags can be bitwise-OR'ed together.
+    enum InputFlags {
+      ///\brief Input comes from an external file
+      kInputFromFile = 0x01,
+      ///\brief If `kInputFromFile == 1`, whether `Interpreter::process()` is
+      /// called once per line
+      kIFFLineByLine = 0x02
+    };
+
+    ///\brief A RAII object that temporarily sets `Interpreter::m_InputFlags`
+    /// and restores it on destruction.
+    struct InputFlagsRAII {
+      Interpreter &m_Interp;
+      unsigned m_OldFlags;
+      InputFlagsRAII(Interpreter &I, unsigned F)
+        : m_Interp(I), m_OldFlags(I.m_InputFlags) { I.m_InputFlags = F; }
+      ~InputFlagsRAII() { m_Interp.m_InputFlags = m_OldFlags; }
+    };
+
   public:
     using ModuleFileExtensions =
         std::vector<std::shared_ptr<clang::ModuleFileExtension>>;
@@ -189,6 +212,10 @@ namespace cling {
     ///\brief Flag toggling the raw input on or off.
     ///
     bool m_RawInputEnabled;
+
+    ///\brief Flags that provide additional information about the context in
+    /// which parsing occurs (see `InputFlags`).
+    unsigned m_InputFlags{};
 
     ///\brief Configuration bits that can be changed at runtime. This allows the
     /// user to enable/disable specific interpreter extensions.
@@ -287,10 +314,6 @@ namespace cling {
     ExecutionResult RunFunction(const clang::FunctionDecl* FD,
                                 Value* res = 0);
 
-    ///\brief Forwards to cling::IncrementalExecutor::addSymbol.
-    ///
-    bool addSymbol(const char* symbolName,  void* symbolAddress);
-
     ///\brief Compile the function definition and return its Decl.
     ///
     ///\param[in] name - name of the function, used to find its Decl.
@@ -321,7 +344,8 @@ namespace cling {
     /// constructors. parentInterp might be nullptr.
     ///
     Interpreter(int argc, const char* const* argv, const char* llvmdir,
-                const ModuleFileExtensions& moduleExtensions, bool noRuntime,
+                const ModuleFileExtensions& moduleExtensions,
+                void *extraLibHandle, bool noRuntime,
                 const Interpreter* parentInterp);
 
   public:
@@ -330,13 +354,14 @@ namespace cling {
     ///\param[in] argc - no. of args.
     ///\param[in] argv - arguments passed when driver is invoked.
     ///\param[in] llvmdir - ???
+    ///\param[in] extraLibHandle - resolve symbols also from this dylib
     ///\param[in] noRuntime - flag to control the presence of runtime universe
     ///
     Interpreter(int argc, const char* const* argv, const char* llvmdir = 0,
                 const ModuleFileExtensions& moduleExtensions = {},
-                bool noRuntime = false)
-        : Interpreter(argc, argv, llvmdir, moduleExtensions, noRuntime,
-                      nullptr) {}
+                void *extraLibHandle = nullptr, bool noRuntime = false)
+        : Interpreter(argc, argv, llvmdir, moduleExtensions, extraLibHandle,
+                      noRuntime, nullptr) {}
 
     ///\brief Constructor for child Interpreter.
     /// If the parent Interpreter has a replacement DiagnosticConsumer, it is
@@ -345,12 +370,13 @@ namespace cling {
     ///\param[in] argc - no. of args.
     ///\param[in] argv - arguments passed when driver is invoked.
     ///\param[in] llvmdir - ???
+    ///\param[in] extraLibHandle - resolve symbols also from this dylib
     ///\param[in] noRuntime - flag to control the presence of runtime universe
     ///
     Interpreter(const Interpreter& parentInterpreter, int argc,
                 const char* const* argv, const char* llvmdir = 0,
                 const ModuleFileExtensions& moduleExtensions = {},
-                bool noRuntime = true);
+                void *extraLibHandle = nullptr, bool noRuntime = true);
 
     virtual ~Interpreter();
 
@@ -690,6 +716,9 @@ namespace cling {
     bool isRawInputEnabled() const { return m_RawInputEnabled; }
     void enableRawInput(bool raw = true) { m_RawInputEnabled = raw; }
 
+    unsigned getInputFlags() const { return m_InputFlags; }
+    void setInputFlags(unsigned value) { m_InputFlags = value; }
+
     int getDefaultOptLevel() const { return m_OptLevel; }
     void setDefaultOptLevel(int optLevel) { m_OptLevel = optLevel; }
 
@@ -712,8 +741,9 @@ namespace cling {
     ///\brief Create suitable default compilation options.
     CompilationOptions makeDefaultCompilationOpts() const;
 
-    //FIXME: This must be in InterpreterCallbacks.
-    void installLazyFunctionCreator(void* (*fp)(const std::string&));
+    /// Register a DefinitionGenerator to dynamically provide symbols for
+    /// generated code that are not already available within the process.
+    void addGenerator(std::unique_ptr<llvm::orc::DefinitionGenerator> G);
 
     //FIXME: Lets the IncrementalParser run static inits on transaction
     // completed. Find a better way.

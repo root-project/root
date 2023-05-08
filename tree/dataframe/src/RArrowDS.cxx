@@ -51,7 +51,7 @@ namespace ROOT {
 namespace Internal {
 namespace RDF {
 
-// This is needed by Arrow 0.12.0 which dropped 
+// This is needed by Arrow 0.12.0 which dropped
 //
 //      using ArrowType = ArrowType_;
 //
@@ -586,7 +586,7 @@ std::vector<void *> RArrowDS::GetColumnReadersImpl(std::string_view colName, con
    return fValueGetters[getterIdx]->SlotPtrs();
 }
 
-void RArrowDS::Initialise()
+void RArrowDS::Initialize()
 {
    auto nRecords = getNRecords(fTable, fColumnNames);
    splitInEqualRanges(fEntryRanges, nRecords, fNSlots);
@@ -597,14 +597,24 @@ std::string RArrowDS::GetLabel()
    return "ArrowDS";
 }
 
+/// \brief Factory method to create a Apache Arrow RDataFrame.
+///
 /// Creates a RDataFrame using an arrow::Table as input.
-/// \param[in] table the arrow Table to observe.
+/// \param[in] table an apache::arrow table to use as a source / to observe.
 /// \param[in] columnNames the name of the columns to use
 /// In case columnNames is empty, we use all the columns found in the table
-RDataFrame MakeArrowDataFrame(std::shared_ptr<arrow::Table> table, std::vector<std::string> const &columnNames)
+RDataFrame FromArrow(std::shared_ptr<arrow::Table> table, std::vector<std::string> const &columnNames)
 {
    ROOT::RDataFrame tdf(std::make_unique<RArrowDS>(table, columnNames));
    return tdf;
+}
+
+/// \brief Factory method to create a Apache Arrow RDataFrame.
+///
+/// Deprecated in favor of FromArrow().
+RDataFrame MakeArrowDataFrame(std::shared_ptr<arrow::Table> table, std::vector<std::string> const &columnNames)
+{
+   return FromArrow(table, columnNames);
 }
 
 } // namespace RDF

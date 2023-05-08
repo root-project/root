@@ -1506,8 +1506,8 @@ MnGlobalCorrelationCoeff data member.
 ### MnUserParameterState::isValid() and\
 MnUserParameterState::hasCovariance() ###
 
-isValid() returns true if the the state is valid, false if not.
-hasCovariance returns true if the the state has a valid covariance,
+isValid() returns `true` if the state is valid, false if not.
+hasCovariance returns `true` if the state has a valid covariance,
 false otherwise.
 
 ### MnUserParameterState::fval(), MnUserParameterState::edm(),\
@@ -1528,7 +1528,7 @@ defined in the file MnPrint.h.
 
 ### operator$<<$(std::ostream&, const FunctionMinimum&) ###
 
-Prints out the the values of the FunctionMinimum, internal parameters
+Prints out the values of the FunctionMinimum, internal parameters
 and external parameters (MnUserParameterState), the function value, the
 expected distance to the minimum and the number of function calls.
 

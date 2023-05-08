@@ -7,36 +7,34 @@
 #ifndef ROOHISTCONSTRAINT
 #define ROOHISTCONSTRAINT
 
-#include "RooAbsPdf.h"
-#include "RooRealProxy.h"
-#include "RooCategoryProxy.h"
-#include "RooAbsReal.h"
-#include "RooAbsCategory.h"
-#include "RooListProxy.h"
-
-class RooParamHistFunc ;
+#include <RooAbsPdf.h>
+#include <RooListProxy.h>
 
 class RooHistConstraint : public RooAbsPdf {
 public:
   RooHistConstraint() {} ;
-  RooHistConstraint(const char *name, const char *title, const RooArgSet& phfSet, Int_t threshold=1000000);
-  RooHistConstraint(const RooHistConstraint& other, const char* name=0) ;
-  virtual TObject* clone(const char* newname) const { return new RooHistConstraint(*this,newname); }
-  inline virtual ~RooHistConstraint() { }
+  RooHistConstraint(const char *name, const char *title, const RooArgSet& phfSet, int threshold=1000000);
+  RooHistConstraint(const RooHistConstraint& other, const char* name=nullptr) ;
+  TObject* clone(const char* newname) const override { return new RooHistConstraint(*this,newname); }
 
-  Double_t getLogVal(const RooArgSet* set=0) const ;
+  double getLogVal(const RooArgSet* set=nullptr) const override ;
+
+  /// It makes only sense to use the RooHistConstraint when normalized over the
+  /// set of all gammas, in which case it is self-normalized because the used
+  /// TMath::Poisson function is normalized.
+  bool selfNormalized() const override { return true; }
 
 protected:
 
   RooListProxy _gamma ;
   RooListProxy _nominal ;
-  Bool_t _relParam ;
+  bool _relParam ;
 
-  Double_t evaluate() const ;
+  double evaluate() const override ;
 
 private:
 
-  ClassDef(RooHistConstraint, 2)
+  ClassDefOverride(RooHistConstraint, 2)
 };
 
 #endif

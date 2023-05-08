@@ -11,8 +11,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef LLVM_EXECUTIONENGINE_OBJECTMEMORYBUFFER_H
-#define LLVM_EXECUTIONENGINE_OBJECTMEMORYBUFFER_H
+#ifndef LLVM_SUPPORT_SMALLVECTORMEMORYBUFFER_H
+#define LLVM_SUPPORT_SMALLVECTORMEMORYBUFFER_H
 
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/Support/MemoryBuffer.h"
@@ -44,7 +44,7 @@ public:
   /// Construct a named SmallVectorMemoryBuffer from the given
   /// SmallVector r-value and StringRef.
   SmallVectorMemoryBuffer(SmallVectorImpl<char> &&SV, StringRef Name)
-      : SV(std::move(SV)), BufferName(Name) {
+      : SV(std::move(SV)), BufferName(std::string(Name)) {
     init(this->SV.begin(), this->SV.end(), false);
   }
 

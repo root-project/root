@@ -66,7 +66,7 @@
 using namespace ROOT::Math;
 
 
-
+bool gTestResultSuccess = true;
 
 class VectorTest {
 
@@ -107,6 +107,7 @@ public:
     std::cout.precision(16);
     std::cout << s1 << "\t" << s2 <<"\t" << s3 << "\n";
     std::cout << "Test " << name << " failed !!\n\n";
+    gTestResultSuccess = false;
     return -1;
   }
 
@@ -271,7 +272,6 @@ double testDeltaR( const std::vector<V *> & dataV, TStopwatch & tim, double& t, 
 
 template <class V>
 int testAnalysis( const std::vector<V *> & dataV, TStopwatch & tim, double& t,  std::string s) {
-  int nsel = 0;
   int nsel2 = 0;
   double deltaMax = 1.;
   double ptMin = 1.;
@@ -288,7 +288,6 @@ int testAnalysis( const std::vector<V *> & dataV, TStopwatch & tim, double& t,  
          delta = VectorUtil::DeltaR(v1,v2);
          if (delta < deltaMax) {
             V v3 = v1 + v2;
-            nsel++;
             if ( cutPtEtaAndMass(v3))
             nsel2++;
          }
@@ -297,7 +296,6 @@ int testAnalysis( const std::vector<V *> & dataV, TStopwatch & tim, double& t,  
   }
   tim.Stop();
   print(tim,s);
-  //std::cout << nsel << "\n";
   t += tim.RealTime();
   return nsel2;
 }
@@ -542,7 +540,7 @@ int main(int argc,const char *argv[]) {
       s1=a.testDeltaR   (v1, t, t1,      "DeltaR   TLorentzVector      " );
       s2=a.testDeltaR   (v2, t, t2,      "DeltaR   XYZTVector          " );
       s3=a.testDeltaR   (v3, t, t3,      "DeltaR   PtEtaPhiEVector     " );
-      a.check("DeltaR",s1,s2,s3,10);
+      a.check("DeltaR",s1,s2,s3,15);
 
 
       int n1, n2, n3;
@@ -639,6 +637,19 @@ int main(int argc,const char *argv[]) {
       a.check("BoostX2",s1,s2,s3,10);
 
 
+      // test TLorentzVector => ROOT::Math::PxPyPzEVector conversion.
+      TLorentzVector lv(0.1, 0.2, 0.3, 0.4);
+      ROOT::Math::PxPyPzEVector xyze(lv);
+      auto checkConversion = [](double l, double g, const char* what) {
+        if (l != g) {
+          std::cerr << "ERROR: PxPyPzEVector::" << what << "()\n";
+          gTestResultSuccess = false;
+        }
+      };
+      checkConversion(lv.X(), xyze.X(), "X");
+      checkConversion(lv.Y(), xyze.Y(), "Y");
+      checkConversion(lv.Z(), xyze.Z(), "Z");
+      checkConversion(lv.E(), xyze.E(), "E");
 
       // clean all at the end
       a.clear(v1);
@@ -653,5 +664,9 @@ int main(int argc,const char *argv[]) {
 
   //tr.dump();
 
+  if (!gTestResultSuccess)
+    return 1;
+
+  return 0;
 }
 

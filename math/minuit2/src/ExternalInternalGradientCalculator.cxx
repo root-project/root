@@ -26,7 +26,7 @@ FunctionGradient ExternalInternalGradientCalculator::operator()(const MinimumPar
       par_vec[ix] = par.Vec()(ix);
    }
 
-   std::vector<double> grad = fGradCalc.Gradient(par_vec);
+   std::vector<double> grad = fGradFunc.Gradient(par_vec);
    assert(grad.size() == fTransformation.Parameters().size());
 
    MnAlgebraicVector v(par.Vec().size());
@@ -54,7 +54,7 @@ ExternalInternalGradientCalculator::operator()(const MinimumParameters &par, con
    std::vector<double> previous_g2(functionGradient.G2().Data(), functionGradient.G2().Data() + functionGradient.G2().size());
    std::vector<double> previous_gstep(functionGradient.Gstep().Data(), functionGradient.Gstep().Data() + functionGradient.Gstep().size());
 
-   std::vector<double> grad = fGradCalc.GradientWithPrevResult(par_vec, previous_grad.data(), previous_g2.data(), previous_gstep.data());
+   std::vector<double> grad = fGradFunc.GradientWithPrevResult(par_vec, previous_grad.data(), previous_g2.data(), previous_gstep.data());
    assert(grad.size() == fTransformation.Parameters().size());
 
    MnAlgebraicVector v(par.Vec().size());

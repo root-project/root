@@ -30,7 +30,7 @@
 #include <TVirtualPad.h>
 #include <TCanvas.h>
 
-TH2F *last_histo=NULL;
+TH2F *last_histo = nullptr;
 
 void mygenerate(double factor, double cen_x, double cen_y)
 {
@@ -52,9 +52,9 @@ void mygenerate(double factor, double cen_x, double cen_y)
     }
   else
     {
-      if(last_histo!=NULL) delete last_histo;
+      if(last_histo) delete last_histo;
       // allocate first view...
-      last_histo= new TH2F("h2",
+      last_histo = new TH2F("h2",
          "Mandelbrot [move mouse and  press z to zoom, u to unzoom, r to reset]",
                            200,-2,2,200,-2,2);
       last_histo->SetStats(0);

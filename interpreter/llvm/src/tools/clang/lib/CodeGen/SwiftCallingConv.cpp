@@ -93,11 +93,24 @@ void SwiftAggLowering::addTypedData(QualType type, CharUnits begin) {
     // Just add it all as opaque.
     addOpaqueData(begin, begin + CGM.getContext().getTypeSizeInChars(type));
 
-  // Everything else is scalar and should not convert as an LLVM aggregate.
+    // Atomic types.
+  } else if (const auto *atomicType = type->getAs<AtomicType>()) {
+    auto valueType = atomicType->getValueType();
+    auto atomicSize = CGM.getContext().getTypeSizeInChars(atomicType);
+    auto valueSize = CGM.getContext().getTypeSizeInChars(valueType);
+
+    addTypedData(atomicType->getValueType(), begin);
+
+    // Add atomic padding.
+    auto atomicPadding = atomicSize - valueSize;
+    if (atomicPadding > CharUnits::Zero())
+      addOpaqueData(begin + valueSize, begin + atomicSize);
+
+    // Everything else is scalar and should not convert as an LLVM aggregate.
   } else {
     // We intentionally convert as !ForMem because we want to preserve
     // that a type was an i1.
-    auto llvmType = CGM.getTypes().ConvertType(type);
+    auto *llvmType = CGM.getTypes().ConvertType(type);
     addTypedData(llvmType, begin);
   }
 }
@@ -320,9 +333,12 @@ restartAfterSplit:
   // If we have a vector type, split it.
   if (auto vecTy = dyn_cast_or_null<llvm::VectorType>(type)) {
     auto eltTy = vecTy->getElementType();
-    CharUnits eltSize = (end - begin) / vecTy->getNumElements();
+    CharUnits eltSize =
+        (end - begin) / cast<llvm::FixedVectorType>(vecTy)->getNumElements();
     assert(eltSize == getTypeStoreSize(CGM, eltTy));
-    for (unsigned i = 0, e = vecTy->getNumElements(); i != e; ++i) {
+    for (unsigned i = 0,
+                  e = cast<llvm::FixedVectorType>(vecTy)->getNumElements();
+         i != e; ++i) {
       addEntry(eltTy, begin, begin + eltSize);
       begin += eltSize;
     }
@@ -674,8 +690,9 @@ bool swiftcall::isLegalIntegerType(CodeGenModule &CGM,
 
 bool swiftcall::isLegalVectorType(CodeGenModule &CGM, CharUnits vectorSize,
                                   llvm::VectorType *vectorTy) {
-  return isLegalVectorType(CGM, vectorSize, vectorTy->getElementType(),
-                           vectorTy->getNumElements());
+  return isLegalVectorType(
+      CGM, vectorSize, vectorTy->getElementType(),
+      cast<llvm::FixedVectorType>(vectorTy)->getNumElements());
 }
 
 bool swiftcall::isLegalVectorType(CodeGenModule &CGM, CharUnits vectorSize,
@@ -688,13 +705,13 @@ bool swiftcall::isLegalVectorType(CodeGenModule &CGM, CharUnits vectorSize,
 std::pair<llvm::Type*, unsigned>
 swiftcall::splitLegalVectorType(CodeGenModule &CGM, CharUnits vectorSize,
                                 llvm::VectorType *vectorTy) {
-  auto numElts = vectorTy->getNumElements();
+  auto numElts = cast<llvm::FixedVectorType>(vectorTy)->getNumElements();
   auto eltTy = vectorTy->getElementType();
 
   // Try to split the vector type in half.
   if (numElts >= 4 && isPowerOf2(numElts)) {
     if (isLegalVectorType(CGM, vectorSize / 2, eltTy, numElts / 2))
-      return {llvm::VectorType::get(eltTy, numElts / 2), 2};
+      return {llvm::FixedVectorType::get(eltTy, numElts / 2), 2};
   }
 
   return {eltTy, numElts};
@@ -710,7 +727,7 @@ void swiftcall::legalizeVectorType(CodeGenModule &CGM, CharUnits origVectorSize,
   }
 
   // Try to split the vector into legal subvectors.
-  auto numElts = origVectorTy->getNumElements();
+  auto numElts = cast<llvm::FixedVectorType>(origVectorTy)->getNumElements();
   auto eltTy = origVectorTy->getElementType();
   assert(numElts != 1);
 
@@ -747,7 +764,8 @@ void swiftcall::legalizeVectorType(CodeGenModule &CGM, CharUnits origVectorSize,
 
     // Add the right number of vectors of this size.
     auto numVecs = numElts >> logCandidateNumElts;
-    components.append(numVecs, llvm::VectorType::get(eltTy, candidateNumElts));
+    components.append(numVecs,
+                      llvm::FixedVectorType::get(eltTy, candidateNumElts));
     numElts -= (numVecs << logCandidateNumElts);
 
     if (numElts == 0) return;
@@ -757,7 +775,7 @@ void swiftcall::legalizeVectorType(CodeGenModule &CGM, CharUnits origVectorSize,
     // This only needs to be separately checked if it's not a power of 2.
     if (numElts > 2 && !isPowerOf2(numElts) &&
         isLegalVectorType(CGM, eltSize * numElts, eltTy, numElts)) {
-      components.push_back(llvm::VectorType::get(eltTy, numElts));
+      components.push_back(llvm::FixedVectorType::get(eltTy, numElts));
       return;
     }
 

@@ -193,16 +193,16 @@ private:
    const char   *Ey();
    const char   *Ez();
    const char   *En(Int_t n);
-   void          MapBranch(TBranch *branch, const char *prefix="", TGListTreeItem *parent = 0, Bool_t listIt = kTRUE);
+   void          MapBranch(TBranch *branch, const char *prefix="", TGListTreeItem *parent = nullptr, Bool_t listIt = kTRUE);
    void          MapOptions(Long_t parm1);
-   void          MapTree(TTree *tree, TGListTreeItem *parent = 0, Bool_t listIt = kTRUE);
+   void          MapTree(TTree *tree, TGListTreeItem *parent = nullptr, Bool_t listIt = kTRUE);
    void          SetFile();
    const char   *ScanList();
    void          SetParentTree(TGListTreeItem *item);
    void          DoError(int level, const char *location, const char *fmt, va_list va) const;
 
 public:
-   TTreeViewer(const char* treeName = 0);
+   TTreeViewer(const char* treeName = nullptr);
    TTreeViewer(const TTree *tree);
    virtual       ~TTreeViewer();
 
@@ -225,7 +225,7 @@ public:
    Bool_t        HandleTimer(TTimer *timer);
    Bool_t        IsCutEnabled() {return fEnableCut;}
    Bool_t        IsScanRedirected();
-   Int_t         MakeSelector(const char* selector = 0);         // *MENU*
+   Int_t         MakeSelector(const char* selector = nullptr);         // *MENU*
    void          Message(const char* msg);
    void          NewExpression();                                // *MENU*
    void          PrintEntries();

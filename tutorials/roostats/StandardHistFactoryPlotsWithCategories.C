@@ -153,21 +153,19 @@ void StandardHistFactoryPlotsWithCategories(const char *infile = "", const char 
 
    if (doFit) {
       RooCategory *channelCat = (RooCategory *)(&simPdf->indexCat());
-      TIterator *iter = channelCat->typeIterator();
-      RooCatType *tt = NULL;
-      tt = (RooCatType *)iter->Next();
-      RooAbsPdf *pdftmp = ((RooSimultaneous *)mc->GetPdf())->getPdf(tt->GetName());
+      auto const& catName = channelCat->begin()->first;
+      RooAbsPdf *pdftmp = ((RooSimultaneous *)mc->GetPdf())->getPdf(catName.c_str());
       RooArgSet *obstmp = pdftmp->getObservables(*mc->GetObservables());
       obs = ((RooRealVar *)obstmp->first());
       RooPlot *frame = obs->frame();
-      cout << Form("%s==%s::%s", channelCat->GetName(), channelCat->GetName(), tt->GetName()) << endl;
-      cout << tt->GetName() << " " << channelCat->getLabel() << endl;
+      cout << Form("%s==%s::%s", channelCat->GetName(), channelCat->GetName(), catName.c_str()) << endl;
+      cout << catName << " " << channelCat->getLabel() << endl;
       data->plotOn(frame, MarkerSize(1),
-                   Cut(Form("%s==%s::%s", channelCat->GetName(), channelCat->GetName(), tt->GetName())),
+                   Cut(Form("%s==%s::%s", channelCat->GetName(), channelCat->GetName(), catName.c_str())),
                    DataError(RooAbsData::None));
 
       Double_t normCount =
-         data->sumEntries(Form("%s==%s::%s", channelCat->GetName(), channelCat->GetName(), tt->GetName()));
+         data->sumEntries(Form("%s==%s::%s", channelCat->GetName(), channelCat->GetName(), catName.c_str()));
 
       pdftmp->plotOn(frame, LineWidth(2.), Normalization(normCount, RooAbsReal::NumEvent));
       frame->Draw();
@@ -196,14 +194,17 @@ void StandardHistFactoryPlotsWithCategories(const char *infile = "", const char 
 
    } else {
       RooCategory *channelCat = (RooCategory *)(&simPdf->indexCat());
-      //    TIterator* iter = simPdf->indexCat().typeIterator() ;
-      TIterator *iter = channelCat->typeIterator();
-      RooCatType *tt = NULL;
-      while (nPlots < nPlotsMax && (tt = (RooCatType *)iter->Next())) {
+      for (auto const& tt : *channelCat) {
 
-         cout << "on type " << tt->GetName() << " " << endl;
+         if (nPlots == nPlotsMax) {
+            break;
+         }
+
+         auto const& catName = tt.first;
+
+         cout << "on type " << catName << " " << endl;
          // Get pdf associated with state from simpdf
-         RooAbsPdf *pdftmp = simPdf->getPdf(tt->GetName());
+         RooAbsPdf *pdftmp = simPdf->getPdf(catName.c_str());
 
          // Generate observables defined by the pdf associated with this state
          RooArgSet *obstmp = pdftmp->getObservables(*mc->GetObservables());
@@ -219,14 +220,14 @@ void StandardHistFactoryPlotsWithCategories(const char *infile = "", const char 
             frame->SetName(Form("frame%d", nPlots));
             frame->SetYTitle(var->GetName());
 
-            cout << Form("%s==%s::%s", channelCat->GetName(), channelCat->GetName(), tt->GetName()) << endl;
-            cout << tt->GetName() << " " << channelCat->getLabel() << endl;
+            cout << Form("%s==%s::%s", channelCat->GetName(), channelCat->GetName(), catName.c_str()) << endl;
+            cout << catName << " " << channelCat->getLabel() << endl;
             data->plotOn(frame, MarkerSize(1),
-                         Cut(Form("%s==%s::%s", channelCat->GetName(), channelCat->GetName(), tt->GetName())),
+                         Cut(Form("%s==%s::%s", channelCat->GetName(), channelCat->GetName(), catName.c_str())),
                          DataError(RooAbsData::None));
 
             Double_t normCount =
-               data->sumEntries(Form("%s==%s::%s", channelCat->GetName(), channelCat->GetName(), tt->GetName()));
+               data->sumEntries(Form("%s==%s::%s", channelCat->GetName(), channelCat->GetName(), catName.c_str()));
 
             if (strcmp(var->GetName(), "Lumi") == 0) {
                cout << "working on lumi" << endl;
@@ -238,8 +239,8 @@ void StandardHistFactoryPlotsWithCategories(const char *infile = "", const char 
             // w->allVars().Print("v");
             // mc->GetNuisanceParameters()->Print("v");
             // pdftmp->plotOn(frame,LineWidth(2.));
-            // mc->GetPdf()->plotOn(frame,LineWidth(2.),Slice(*channelCat,tt->GetName()),ProjWData(*data));
-            // pdftmp->plotOn(frame,LineWidth(2.),Slice(*channelCat,tt->GetName()),ProjWData(*data));
+            // mc->GetPdf()->plotOn(frame,LineWidth(2.),Slice(*channelCat,catName.c_str()),ProjWData(*data));
+            // pdftmp->plotOn(frame,LineWidth(2.),Slice(*channelCat,catName.c_str()),ProjWData(*data));
             normCount = pdftmp->expectedEvents(*obs);
             pdftmp->plotOn(frame, LineWidth(2.), Normalization(normCount, RooAbsReal::NumEvent));
 
@@ -251,8 +252,8 @@ void StandardHistFactoryPlotsWithCategories(const char *infile = "", const char 
                var->setVal(nSigmaToVary);
             }
             // pdftmp->plotOn(frame,LineColor(kRed),LineStyle(kDashed),LineWidth(2));
-            // mc->GetPdf()->plotOn(frame,LineColor(kRed),LineStyle(kDashed),LineWidth(2.),Slice(*channelCat,tt->GetName()),ProjWData(*data));
-            // pdftmp->plotOn(frame,LineColor(kRed),LineStyle(kDashed),LineWidth(2.),Slice(*channelCat,tt->GetName()),ProjWData(*data));
+            // mc->GetPdf()->plotOn(frame,LineColor(kRed),LineStyle(kDashed),LineWidth(2.),Slice(*channelCat,catName.c_str()),ProjWData(*data));
+            // pdftmp->plotOn(frame,LineColor(kRed),LineStyle(kDashed),LineWidth(2.),Slice(*channelCat,catName.c_str()),ProjWData(*data));
             normCount = pdftmp->expectedEvents(*obs);
             pdftmp->plotOn(frame, LineWidth(2.), LineColor(kRed), LineStyle(kDashed),
                            Normalization(normCount, RooAbsReal::NumEvent));
@@ -265,8 +266,8 @@ void StandardHistFactoryPlotsWithCategories(const char *infile = "", const char 
                var->setVal(-nSigmaToVary);
             }
             // pdftmp->plotOn(frame,LineColor(kGreen),LineStyle(kDashed),LineWidth(2));
-            // mc->GetPdf()->plotOn(frame,LineColor(kGreen),LineStyle(kDashed),LineWidth(2),Slice(*channelCat,tt->GetName()),ProjWData(*data));
-            // pdftmp->plotOn(frame,LineColor(kGreen),LineStyle(kDashed),LineWidth(2),Slice(*channelCat,tt->GetName()),ProjWData(*data));
+            // mc->GetPdf()->plotOn(frame,LineColor(kGreen),LineStyle(kDashed),LineWidth(2),Slice(*channelCat,catName.c_str()),ProjWData(*data));
+            // pdftmp->plotOn(frame,LineColor(kGreen),LineStyle(kDashed),LineWidth(2),Slice(*channelCat,catName.c_str()),ProjWData(*data));
             normCount = pdftmp->expectedEvents(*obs);
             pdftmp->plotOn(frame, LineWidth(2.), LineColor(kGreen), LineStyle(kDashed),
                            Normalization(normCount, RooAbsReal::NumEvent));
@@ -286,7 +287,7 @@ void StandardHistFactoryPlotsWithCategories(const char *infile = "", const char 
             ++nPlots;
 
             frame->Draw();
-            c2->SaveAs(Form("%s_%s_%s.pdf", tt->GetName(), obs->GetName(), var->GetName()));
+            c2->SaveAs(Form("%s_%s_%s.pdf", catName.c_str(), obs->GetName(), var->GetName()));
             delete c2;
          }
       }

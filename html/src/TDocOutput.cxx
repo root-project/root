@@ -1442,7 +1442,7 @@ void TDocOutput::DecorateEntityEnd(TString& str, Ssiz_t& pos, TDocParser::EParse
 /// (i) "FirstName LastName " or
 /// (ii) "FirstName LastName <link> more stuff"
 /// The first one generates an XWho link (CERN compatible),
-/// the second a http link (WORLD compatible), <link> being e.g.
+/// the second a http link (WORLD compatible), `<link>` being e.g.
 /// <mailto:user@host.bla> or <http://www.host.bla/page>.
 
 void TDocOutput::FixupAuthorSourceInfo(TString& authors)

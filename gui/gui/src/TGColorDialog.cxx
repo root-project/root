@@ -1060,7 +1060,7 @@ void TGColorPick::DrawLcursor(Int_t onoff)
 /// It uses 2 TGColorPalette's and the TGColorPick widgets.
 
 TGColorDialog::TGColorDialog(const TGWindow *p, const TGWindow *m,
-                             Int_t *retc, ULong_t *color, Bool_t wait) :
+                             Int_t *retc, Pixel_t *color, Bool_t wait) :
    TGTransientFrame(p, m, 200, 150)
 {
    const Int_t kC_X = 175;  // Win95: 177

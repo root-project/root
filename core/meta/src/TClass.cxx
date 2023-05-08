@@ -190,13 +190,13 @@ TClass::TDeclNameRegistry::TDeclNameRegistry(Int_t verbLevel): fVerbLevel(verbLe
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Extract this part of the name
-/// 1. Templates ns::ns2::,,,::THISPART<...
-/// 2. Namespaces,classes ns::ns2::,,,::THISPART
+/// 1. Templates `ns::%ns2::,,,::%THISPART<...`
+/// 2. Namespaces,classes `ns::%ns2::,,,::%THISPART`
 
 void TClass::TDeclNameRegistry::AddQualifiedName(const char *name)
 {
    // Sanity check
-   auto strLen = strlen(name);
+   auto strLen = name ? strlen(name) : 0;
    if (strLen == 0) return;
    // find <. If none, put end of string
    const char* endCharPtr = strchr(name, '<');
@@ -557,7 +557,7 @@ public:
    TDumpMembers(bool noAddr): fNoAddr(noAddr) { }
 
    using TMemberInspector::Inspect;
-   void Inspect(TClass *cl, const char *parent, const char *name, const void *addr, Bool_t isTransient);
+   void Inspect(TClass *cl, const char *parent, const char *name, const void *addr, Bool_t isTransient) override;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -761,7 +761,7 @@ public:
       fRealDataClass = cl;
    }
    using TMemberInspector::Inspect;
-   void Inspect(TClass *cl, const char *parent, const char *name, const void *addr, Bool_t isTransient);
+   void Inspect(TClass *cl, const char *parent, const char *name, const void *addr, Bool_t isTransient) override;
 
 };
 
@@ -903,13 +903,15 @@ public:
    Int_t     fCount;
    TBrowser *fBrowser;
 
-   TAutoInspector(TBrowser *b) {
+   TAutoInspector(TBrowser *b)
+   {
       // main constructor.
-      fBrowser = b; fCount = 0; }
-   virtual ~TAutoInspector() { }
+      fBrowser = b; fCount = 0;
+   }
+   virtual ~TAutoInspector() {}
    using TMemberInspector::Inspect;
-   virtual void Inspect(TClass *cl, const char *parent, const char *name, const void *addr, Bool_t isTransient);
-   virtual Bool_t IsTreatingNonAccessibleTypes() {return kFALSE;}
+   void Inspect(TClass *cl, const char *parent, const char *name, const void *addr, Bool_t isTransient) override;
+   Bool_t IsTreatingNonAccessibleTypes() override { return kFALSE; }
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2295,9 +2297,8 @@ Bool_t TClass::CanSplitBaseAllow()
 
    // Look at inheritance tree
    while (lnk) {
-      TClass     *c;
       TBaseClass *base = (TBaseClass*) lnk->GetObject();
-      c = base->GetClassPointer();
+      TClass *c = base->GetClassPointer();
       if(!c) {
          // If there is a missing base class, we can't split the immediate
          // derived class.
@@ -2463,7 +2464,8 @@ TObject *TClass::Clone(const char *new_name) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Copy the argument.
+/// Replaces the collection proxy for this class. The provided object is cloned
+/// and the copy is then owned by `TClass`.
 
 void TClass::CopyCollectionProxy(const TVirtualCollectionProxy &orig)
 {
@@ -2486,11 +2488,11 @@ void TClass::Draw(Option_t *option)
 {
    if (!HasInterpreterInfo()) return;
 
-   TVirtualPad *padsav = gPad;
+   TVirtualPad::TContext ctxt(kTRUE);
 
    // Should we create a new canvas?
-   TString opt=option;
-   if (!padsav || !opt.Contains("same")) {
+   TString opt = option;
+   if (!ctxt.GetSaved() || !opt.Contains("same")) {
       TVirtualPad *padclass = (TVirtualPad*)(gROOT->GetListOfCanvases())->FindObject("R__class");
       if (!padclass) {
          gROOT->ProcessLine("new TCanvas(\"R__class\",\"class\",20,20,1000,750);");
@@ -2499,9 +2501,8 @@ void TClass::Draw(Option_t *option)
       }
    }
 
-   if (gPad) gPad->DrawClassObject(this,option);
-
-   if (padsav) padsav->cd();
+   if (gPad)
+      gPad->DrawClassObject(this,option);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2569,7 +2570,7 @@ char *TClass::EscapeChars(const char *text) const
    static const UInt_t maxsize = 255;
    static char name[maxsize+2]; //One extra if last char needs to be escaped
 
-   UInt_t nch = strlen(text);
+   UInt_t nch = text ? strlen(text) : 0;
    UInt_t icur = 0;
    for (UInt_t i = 0; i < nch && icur < maxsize; ++i, ++icur) {
       if (text[i] == '\"' || text[i] == '[' || text[i] == '~' ||
@@ -2586,7 +2587,7 @@ char *TClass::EscapeChars(const char *text) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return a pointer the the real class of the object.
+/// Return a pointer to the real class of the object.
 /// This is equivalent to object->IsA() when the class has a ClassDef.
 /// It is REQUIRED that object is coming from a proper pointer to the
 /// class represented by 'this'.
@@ -2605,7 +2606,8 @@ char *TClass::EscapeChars(const char *text) const
 
 TClass *TClass::GetActualClass(const void *object) const
 {
-   if (object==nullptr) return (TClass*)this;
+   if (!object)
+      return (TClass*)this;
    if (fIsA) {
       return (*fIsA)(object); // ROOT::IsA((ThisClass*)object);
    } else if (fGlobalIsA) {
@@ -2973,6 +2975,7 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent, size_t hi
    if (!name || !name[0]) return nullptr;
 
    if (strstr(name, "(anonymous)")) return nullptr;
+   if (strstr(name, "(unnamed)")) return nullptr;
    if (strncmp(name,"class ",6)==0) name += 6;
    if (strncmp(name,"struct ",7)==0) name += 7;
 
@@ -3099,6 +3102,17 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent, size_t hi
       loadedcl = LoadClassDefault(normalizedName.c_str(),silent);
    } else {
       if (gInterpreter->AutoLoad(normalizedName.c_str(),kTRUE)) {
+         // At this point more information has been loaded.  This
+         // information might be pertinent to the normalization of the name.
+         // For example it might contain or be a typedef for which we don't
+         // have a forward declaration (eg. typedef to instance of class
+         // template with default parameters).  So let's redo the normalization
+         // as the new information (eg. typedef in TROOT::GetListOfTypes) might
+         // lead to a different value.
+         {
+            TInterpreter::SuspendAutoLoadingRAII autoloadOff(gInterpreter);
+            TClassEdit::GetNormalizedName(normalizedName, name);
+         }
          loadedcl = LoadClassDefault(normalizedName.c_str(),silent);
       }
       auto e = TEnum::GetEnum(normalizedName.c_str(), TEnum::kNone);
@@ -6363,7 +6377,7 @@ TVirtualStreamerInfo *TClass::SetStreamerInfo(Int_t /*version*/, const char * /*
 
 /*
    TDataMember *dm;
-   Int_t nch = strlen(info);
+   Int_t nch = info ? strlen(info) : 0;
    Bool_t update = kTRUE;
    if (nch != 0) {
       //decode strings like "TObject;TAttLine;fA;fB;Int_t i,j,k;"

@@ -11,12 +11,15 @@
 #ifndef ROOT_RDF_RSAMPLEINFO
 #define ROOT_RDF_RSAMPLEINFO
 
+#include <ROOT/RDF/RSample.hxx>
 #include <ROOT/RStringView.hxx>
 #include <Rtypes.h>
 
 #include <functional>
 #include <stdexcept>
 #include <string>
+
+#include <tuple>
 
 namespace ROOT {
 namespace RDF {
@@ -33,9 +36,20 @@ class RSampleInfo {
    std::string fID;
    std::pair<ULong64_t, ULong64_t> fEntryRange;
 
+   const ROOT::RDF::Experimental::RSample *fSample = nullptr; // non-owning
+
+   void ThrowIfNoSample() const
+   {
+      if (fSample == nullptr) {
+         const auto msg = "RSampleInfo: sample data was requested but no samples are available.";
+         throw std::logic_error(msg);
+      }
+   }
+
 public:
-   explicit RSampleInfo(std::string_view id, std::pair<ULong64_t, ULong64_t> entryRange)
-      : fID(id), fEntryRange(entryRange)
+   RSampleInfo(std::string_view id, std::pair<ULong64_t, ULong64_t> entryRange,
+               const ROOT::RDF::Experimental::RSample *sample = nullptr)
+      : fID(id), fEntryRange(entryRange), fSample(sample)
    {
    }
    RSampleInfo() = default;
@@ -44,6 +58,36 @@ public:
    RSampleInfo(RSampleInfo &&) = default;
    RSampleInfo &operator=(RSampleInfo &&) = default;
    ~RSampleInfo() = default;
+
+   const std::string &GetSampleName() const
+   {
+      ThrowIfNoSample();
+      return fSample->GetSampleName();
+   }
+
+   unsigned int GetSampleId() const
+   {
+      ThrowIfNoSample();
+      return fSample->GetSampleId();
+   }
+
+   int GetI(const std::string &key) const
+   {
+      ThrowIfNoSample();
+      return fSample->GetMetaData().GetI(key);
+   }
+
+   double GetD(const std::string &key) const
+   {
+      ThrowIfNoSample();
+      return fSample->GetMetaData().GetD(key);
+   }
+
+   std::string GetS(const std::string &key) const
+   {
+      ThrowIfNoSample();
+      return fSample->GetMetaData().GetS(key);
+   }
 
    /// Check whether the sample name contains the given substring.
    bool Contains(std::string_view substr) const

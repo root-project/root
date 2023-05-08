@@ -8,8 +8,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_RCUSTOMCOLUMNBASE
-#define ROOT_RCUSTOMCOLUMNBASE
+#ifndef ROOT_RDEFINEBASE
+#define ROOT_RDEFINEBASE
 
 #include "ROOT/RDF/GraphNode.hxx"
 #include "ROOT/RDF/RColumnRegister.hxx"
@@ -67,7 +67,7 @@ public:
    /// Update function to be called once per sample, used if the derived type is a RDefinePerSample
    virtual void Update(unsigned int /*slot*/, const ROOT::RDF::RSampleInfo &/*id*/) {}
    /// Clean-up operations to be performed at the end of a task.
-   virtual void FinaliseSlot(unsigned int slot) = 0;
+   virtual void FinalizeSlot(unsigned int slot) = 0;
 
    const std::vector<std::string> &GetVariations() const { return fVariationDeps; }
 
@@ -82,4 +82,4 @@ public:
 } // ns Detail
 } // ns ROOT
 
-#endif // ROOT_RCUSTOMCOLUMNBASE
+#endif // ROOT_RDEFINEBASE

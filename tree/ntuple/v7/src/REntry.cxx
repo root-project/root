@@ -14,7 +14,10 @@
  *************************************************************************/
 
 #include <ROOT/REntry.hxx>
+#include <ROOT/RError.hxx>
 #include <ROOT/RFieldValue.hxx>
+
+#include <algorithm>
 
 ROOT::Experimental::REntry::~REntry()
 {
@@ -32,4 +35,20 @@ void ROOT::Experimental::REntry::AddValue(const Detail::RFieldValue& value)
 void ROOT::Experimental::REntry::CaptureValue(const Detail::RFieldValue& value)
 {
    fValues.push_back(value);
+}
+
+void ROOT::Experimental::REntry::CaptureValueUnsafe(std::string_view fieldName, void *where)
+{
+   for (std::size_t i = 0; i < fValues.size(); ++i) {
+      if (fValues[i].GetField()->GetName() != fieldName)
+         continue;
+      auto itr = std::find(fManagedValues.begin(), fManagedValues.end(), i);
+      if (itr != fManagedValues.end()) {
+         fValues[i].GetField()->DestroyValue(fValues[i]);
+         fManagedValues.erase(itr);
+      }
+      fValues[i] = fValues[i].GetField()->CaptureValue(where);
+      return;
+   }
+   throw RException(R__FAIL("invalid field name: " + std::string(fieldName)));
 }

@@ -87,6 +87,40 @@ generates a ``distribution`` target which builds all the components specified in
 the list. This is a convenience build target to allow building just the
 distributed pieces without needing to build all configured targets.
 
+.. _Multi-distribution configurations:
+
+Multi-distribution configurations
+---------------------------------
+
+The ``install-distribution`` target described above is for building a single
+distribution. LLVM's build system also supports building multiple distributions,
+which can be used to e.g. have one distribution containing just tools and
+another for libraries (to enable development). These are configured by setting
+the *LLVM_DISTRIBUTIONS* variable to hold a list of all distribution names
+(which conventionally start with an uppercase letter, e.g. "Development"), and
+then setting the *LLVM_<distribution>_DISTRIBUTION_COMPONENTS* variable to the
+list of targets for that distribution. For each distribution, the build system
+generates an ``install-${distribution}-distribution`` target, where
+``${distribution}`` is the name of the distribution in lowercase, to install
+that distribution. Each target can only be in one distribution.
+
+Each distribution creates its own set of CMake exports, and the target to
+install the CMake exports for a particular distribution for a project is named
+``${project}-${distribution}-cmake-exports``, where ``${project}`` is the name
+of the project in lowercase and ``${distribution}`` is the name of the
+distribution in lowercase, unless the project is LLVM, in which case the target
+is just named ``${distribution}-cmake-exports``. These targets need to be
+explicitly included in the *LLVM_<distribution>_DISTRIBUTION_COMPONENTS*
+variable in order to be included as part of the distribution.
+
+Unlike with the single distribution setup, when building multiple distributions,
+any components specified in *LLVM_RUNTIME_DISTRIBUTION_COMPONENTS* are not
+automatically added to any distribution. Instead, you must include the targets
+explicitly in some *LLVM_<distribution>_DISTRIBUTION_COMPONENTS* list.
+
+We strongly encourage looking at ``clang/cmake/caches/MultiDistributionExample.cmake``
+as an example of configuring multiple distributions.
+
 Special Notes for Library-only Distributions
 --------------------------------------------
 
@@ -96,6 +130,7 @@ LLVM. Even in this situation using *BUILD_SHARED_LIBS* is not supported. If you
 want to distribute LLVM as a shared library for use in a tool, the recommended
 method is using *LLVM_BUILD_LLVM_DYLIB*, and you can use *LLVM_DYLIB_COMPONENTS*
 to configure which LLVM components are part of libLLVM.
+Note: *LLVM_BUILD_LLVM_DYLIB* is not available on Windows.
 
 Options for Optimizing LLVM
 ===========================
@@ -132,10 +167,10 @@ the performance of the generated binaries.
 In addition to PGO profiling we also have limited support in-tree for generating
 linker order files. These files provide the linker with a suggested ordering for
 functions in the final binary layout. This can measurably speed up clang by
-physically grouping functions that are called temporally close to eachother. The
-current tooling is only available on Darwin systems with ``dtrace(1)``. It is
-worth noting that dtrace is non-deterministic, and so the order file generation
-using dtrace is also non-deterministic.
+physically grouping functions that are called temporally close to each other.
+The current tooling is only available on Darwin systems with ``dtrace(1)``. It
+is worth noting that dtrace is non-deterministic, and so the order file
+generation using dtrace is also non-deterministic.
 
 Options for Reducing Size
 =========================
@@ -178,6 +213,11 @@ that are already documented include: *LLVM_TARGETS_TO_BUILD*,
   of the libraries and runtimes. Component names match the names of the build
   system targets.
 
+**LLVM_DISTRIBUTIONS**:STRING
+  This variable can be set to a semi-colon separated list of distributions. See
+  the :ref:`Multi-distribution configurations` section above for details on this
+  and other CMake variables to configure multiple distributions.
+
 **LLVM_RUNTIME_DISTRIBUTION_COMPONENTS**:STRING
   This variable can be set to a semi-colon separated list of runtime library
   components. This is used in conjunction with *LLVM_ENABLE_RUNTIMES* to specify
@@ -193,7 +233,6 @@ that are already documented include: *LLVM_TARGETS_TO_BUILD*,
   
   #. ``all`` - All LLVM available component libraries
   #. ``Native`` - The LLVM target for the Native system
-  #. ``AllTargetsAsmPrinters`` - All the included target ASM printers libraries
   #. ``AllTargetsAsmParsers`` - All the included target ASM parsers libraries
   #. ``AllTargetsDescs`` - All the included target descriptions libraries
   #. ``AllTargetsDisassemblers`` - All the included target dissassemblers libraries

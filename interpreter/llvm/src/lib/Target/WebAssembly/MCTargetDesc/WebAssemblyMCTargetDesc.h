@@ -24,21 +24,17 @@ namespace llvm {
 
 class MCAsmBackend;
 class MCCodeEmitter;
-class MCContext;
 class MCInstrInfo;
 class MCObjectTargetWriter;
-class MCSubtargetInfo;
 class MVT;
-class Target;
 class Triple;
-class raw_pwrite_stream;
 
 MCCodeEmitter *createWebAssemblyMCCodeEmitter(const MCInstrInfo &MCII);
 
 MCAsmBackend *createWebAssemblyAsmBackend(const Triple &TT);
 
 std::unique_ptr<MCObjectTargetWriter>
-createWebAssemblyWasmObjectWriter(bool Is64Bit);
+createWebAssemblyWasmObjectWriter(bool Is64Bit, bool IsEmscripten);
 
 namespace WebAssembly {
 enum OperandType {
@@ -68,16 +64,22 @@ enum OperandType {
   OPERAND_FUNCTION32,
   /// 32-bit unsigned memory offsets.
   OPERAND_OFFSET32,
+  /// 64-bit unsigned memory offsets.
+  OPERAND_OFFSET64,
   /// p2align immediate for load and store address alignment.
   OPERAND_P2ALIGN,
   /// signature immediate for block/loop.
   OPERAND_SIGNATURE,
   /// type signature immediate for call_indirect.
   OPERAND_TYPEINDEX,
-  /// Event index.
-  OPERAND_EVENT,
+  /// Tag index.
+  OPERAND_TAG,
   /// A list of branch targets for br_list.
   OPERAND_BRLIST,
+  /// 32-bit unsigned table number.
+  OPERAND_TABLE,
+  /// heap type immediate for ref.null.
+  OPERAND_HEAPTYPE,
 };
 } // end namespace WebAssembly
 
@@ -97,6 +99,11 @@ enum TOF {
   // address relative the __memory_base wasm global.
   // Only applicable to data symbols.
   MO_MEMORY_BASE_REL,
+
+  // On a symbol operand this indicates that the immediate is the symbol
+  // address relative the __tls_base wasm global.
+  // Only applicable to data symbols.
+  MO_TLS_BASE_REL,
 
   // On a symbol operand this indicates that the immediate is the symbol
   // address relative the __table_base wasm global.
@@ -122,237 +129,138 @@ enum TOF {
 namespace llvm {
 namespace WebAssembly {
 
-/// This is used to indicate block signatures.
-enum class ExprType : unsigned {
-  Void = 0x40,
-  I32 = 0x7F,
-  I64 = 0x7E,
-  F32 = 0x7D,
-  F64 = 0x7C,
-  V128 = 0x7B,
-  Exnref = 0x68,
-  Invalid = 0x00
-};
-
 /// Instruction opcodes emitted via means other than CodeGen.
 static const unsigned Nop = 0x01;
 static const unsigned End = 0x0b;
 
-wasm::ValType toValType(const MVT &Ty);
-
 /// Return the default p2align value for a load or store with the given opcode.
 inline unsigned GetDefaultP2AlignAny(unsigned Opc) {
   switch (Opc) {
-  case WebAssembly::LOAD8_S_I32:
-  case WebAssembly::LOAD8_S_I32_S:
-  case WebAssembly::LOAD8_U_I32:
-  case WebAssembly::LOAD8_U_I32_S:
-  case WebAssembly::LOAD8_S_I64:
-  case WebAssembly::LOAD8_S_I64_S:
-  case WebAssembly::LOAD8_U_I64:
-  case WebAssembly::LOAD8_U_I64_S:
-  case WebAssembly::ATOMIC_LOAD8_U_I32:
-  case WebAssembly::ATOMIC_LOAD8_U_I32_S:
-  case WebAssembly::ATOMIC_LOAD8_U_I64:
-  case WebAssembly::ATOMIC_LOAD8_U_I64_S:
-  case WebAssembly::STORE8_I32:
-  case WebAssembly::STORE8_I32_S:
-  case WebAssembly::STORE8_I64:
-  case WebAssembly::STORE8_I64_S:
-  case WebAssembly::ATOMIC_STORE8_I32:
-  case WebAssembly::ATOMIC_STORE8_I32_S:
-  case WebAssembly::ATOMIC_STORE8_I64:
-  case WebAssembly::ATOMIC_STORE8_I64_S:
-  case WebAssembly::ATOMIC_RMW8_U_ADD_I32:
-  case WebAssembly::ATOMIC_RMW8_U_ADD_I32_S:
-  case WebAssembly::ATOMIC_RMW8_U_ADD_I64:
-  case WebAssembly::ATOMIC_RMW8_U_ADD_I64_S:
-  case WebAssembly::ATOMIC_RMW8_U_SUB_I32:
-  case WebAssembly::ATOMIC_RMW8_U_SUB_I32_S:
-  case WebAssembly::ATOMIC_RMW8_U_SUB_I64:
-  case WebAssembly::ATOMIC_RMW8_U_SUB_I64_S:
-  case WebAssembly::ATOMIC_RMW8_U_AND_I32:
-  case WebAssembly::ATOMIC_RMW8_U_AND_I32_S:
-  case WebAssembly::ATOMIC_RMW8_U_AND_I64:
-  case WebAssembly::ATOMIC_RMW8_U_AND_I64_S:
-  case WebAssembly::ATOMIC_RMW8_U_OR_I32:
-  case WebAssembly::ATOMIC_RMW8_U_OR_I32_S:
-  case WebAssembly::ATOMIC_RMW8_U_OR_I64:
-  case WebAssembly::ATOMIC_RMW8_U_OR_I64_S:
-  case WebAssembly::ATOMIC_RMW8_U_XOR_I32:
-  case WebAssembly::ATOMIC_RMW8_U_XOR_I32_S:
-  case WebAssembly::ATOMIC_RMW8_U_XOR_I64:
-  case WebAssembly::ATOMIC_RMW8_U_XOR_I64_S:
-  case WebAssembly::ATOMIC_RMW8_U_XCHG_I32:
-  case WebAssembly::ATOMIC_RMW8_U_XCHG_I32_S:
-  case WebAssembly::ATOMIC_RMW8_U_XCHG_I64:
-  case WebAssembly::ATOMIC_RMW8_U_XCHG_I64_S:
-  case WebAssembly::ATOMIC_RMW8_U_CMPXCHG_I32:
-  case WebAssembly::ATOMIC_RMW8_U_CMPXCHG_I32_S:
-  case WebAssembly::ATOMIC_RMW8_U_CMPXCHG_I64:
-  case WebAssembly::ATOMIC_RMW8_U_CMPXCHG_I64_S:
-    return 0;
-  case WebAssembly::LOAD16_S_I32:
-  case WebAssembly::LOAD16_S_I32_S:
-  case WebAssembly::LOAD16_U_I32:
-  case WebAssembly::LOAD16_U_I32_S:
-  case WebAssembly::LOAD16_S_I64:
-  case WebAssembly::LOAD16_S_I64_S:
-  case WebAssembly::LOAD16_U_I64:
-  case WebAssembly::LOAD16_U_I64_S:
-  case WebAssembly::ATOMIC_LOAD16_U_I32:
-  case WebAssembly::ATOMIC_LOAD16_U_I32_S:
-  case WebAssembly::ATOMIC_LOAD16_U_I64:
-  case WebAssembly::ATOMIC_LOAD16_U_I64_S:
-  case WebAssembly::STORE16_I32:
-  case WebAssembly::STORE16_I32_S:
-  case WebAssembly::STORE16_I64:
-  case WebAssembly::STORE16_I64_S:
-  case WebAssembly::ATOMIC_STORE16_I32:
-  case WebAssembly::ATOMIC_STORE16_I32_S:
-  case WebAssembly::ATOMIC_STORE16_I64:
-  case WebAssembly::ATOMIC_STORE16_I64_S:
-  case WebAssembly::ATOMIC_RMW16_U_ADD_I32:
-  case WebAssembly::ATOMIC_RMW16_U_ADD_I32_S:
-  case WebAssembly::ATOMIC_RMW16_U_ADD_I64:
-  case WebAssembly::ATOMIC_RMW16_U_ADD_I64_S:
-  case WebAssembly::ATOMIC_RMW16_U_SUB_I32:
-  case WebAssembly::ATOMIC_RMW16_U_SUB_I32_S:
-  case WebAssembly::ATOMIC_RMW16_U_SUB_I64:
-  case WebAssembly::ATOMIC_RMW16_U_SUB_I64_S:
-  case WebAssembly::ATOMIC_RMW16_U_AND_I32:
-  case WebAssembly::ATOMIC_RMW16_U_AND_I32_S:
-  case WebAssembly::ATOMIC_RMW16_U_AND_I64:
-  case WebAssembly::ATOMIC_RMW16_U_AND_I64_S:
-  case WebAssembly::ATOMIC_RMW16_U_OR_I32:
-  case WebAssembly::ATOMIC_RMW16_U_OR_I32_S:
-  case WebAssembly::ATOMIC_RMW16_U_OR_I64:
-  case WebAssembly::ATOMIC_RMW16_U_OR_I64_S:
-  case WebAssembly::ATOMIC_RMW16_U_XOR_I32:
-  case WebAssembly::ATOMIC_RMW16_U_XOR_I32_S:
-  case WebAssembly::ATOMIC_RMW16_U_XOR_I64:
-  case WebAssembly::ATOMIC_RMW16_U_XOR_I64_S:
-  case WebAssembly::ATOMIC_RMW16_U_XCHG_I32:
-  case WebAssembly::ATOMIC_RMW16_U_XCHG_I32_S:
-  case WebAssembly::ATOMIC_RMW16_U_XCHG_I64:
-  case WebAssembly::ATOMIC_RMW16_U_XCHG_I64_S:
-  case WebAssembly::ATOMIC_RMW16_U_CMPXCHG_I32:
-  case WebAssembly::ATOMIC_RMW16_U_CMPXCHG_I32_S:
-  case WebAssembly::ATOMIC_RMW16_U_CMPXCHG_I64:
-  case WebAssembly::ATOMIC_RMW16_U_CMPXCHG_I64_S:
-    return 1;
-  case WebAssembly::LOAD_I32:
-  case WebAssembly::LOAD_I32_S:
-  case WebAssembly::LOAD_F32:
-  case WebAssembly::LOAD_F32_S:
-  case WebAssembly::STORE_I32:
-  case WebAssembly::STORE_I32_S:
-  case WebAssembly::STORE_F32:
-  case WebAssembly::STORE_F32_S:
-  case WebAssembly::LOAD32_S_I64:
-  case WebAssembly::LOAD32_S_I64_S:
-  case WebAssembly::LOAD32_U_I64:
-  case WebAssembly::LOAD32_U_I64_S:
-  case WebAssembly::STORE32_I64:
-  case WebAssembly::STORE32_I64_S:
-  case WebAssembly::ATOMIC_LOAD_I32:
-  case WebAssembly::ATOMIC_LOAD_I32_S:
-  case WebAssembly::ATOMIC_LOAD32_U_I64:
-  case WebAssembly::ATOMIC_LOAD32_U_I64_S:
-  case WebAssembly::ATOMIC_STORE_I32:
-  case WebAssembly::ATOMIC_STORE_I32_S:
-  case WebAssembly::ATOMIC_STORE32_I64:
-  case WebAssembly::ATOMIC_STORE32_I64_S:
-  case WebAssembly::ATOMIC_RMW_ADD_I32:
-  case WebAssembly::ATOMIC_RMW_ADD_I32_S:
-  case WebAssembly::ATOMIC_RMW32_U_ADD_I64:
-  case WebAssembly::ATOMIC_RMW32_U_ADD_I64_S:
-  case WebAssembly::ATOMIC_RMW_SUB_I32:
-  case WebAssembly::ATOMIC_RMW_SUB_I32_S:
-  case WebAssembly::ATOMIC_RMW32_U_SUB_I64:
-  case WebAssembly::ATOMIC_RMW32_U_SUB_I64_S:
-  case WebAssembly::ATOMIC_RMW_AND_I32:
-  case WebAssembly::ATOMIC_RMW_AND_I32_S:
-  case WebAssembly::ATOMIC_RMW32_U_AND_I64:
-  case WebAssembly::ATOMIC_RMW32_U_AND_I64_S:
-  case WebAssembly::ATOMIC_RMW_OR_I32:
-  case WebAssembly::ATOMIC_RMW_OR_I32_S:
-  case WebAssembly::ATOMIC_RMW32_U_OR_I64:
-  case WebAssembly::ATOMIC_RMW32_U_OR_I64_S:
-  case WebAssembly::ATOMIC_RMW_XOR_I32:
-  case WebAssembly::ATOMIC_RMW_XOR_I32_S:
-  case WebAssembly::ATOMIC_RMW32_U_XOR_I64:
-  case WebAssembly::ATOMIC_RMW32_U_XOR_I64_S:
-  case WebAssembly::ATOMIC_RMW_XCHG_I32:
-  case WebAssembly::ATOMIC_RMW_XCHG_I32_S:
-  case WebAssembly::ATOMIC_RMW32_U_XCHG_I64:
-  case WebAssembly::ATOMIC_RMW32_U_XCHG_I64_S:
-  case WebAssembly::ATOMIC_RMW_CMPXCHG_I32:
-  case WebAssembly::ATOMIC_RMW_CMPXCHG_I32_S:
-  case WebAssembly::ATOMIC_RMW32_U_CMPXCHG_I64:
-  case WebAssembly::ATOMIC_RMW32_U_CMPXCHG_I64_S:
-  case WebAssembly::ATOMIC_NOTIFY:
-  case WebAssembly::ATOMIC_NOTIFY_S:
-  case WebAssembly::ATOMIC_WAIT_I32:
-  case WebAssembly::ATOMIC_WAIT_I32_S:
-    return 2;
-  case WebAssembly::LOAD_I64:
-  case WebAssembly::LOAD_I64_S:
-  case WebAssembly::LOAD_F64:
-  case WebAssembly::LOAD_F64_S:
-  case WebAssembly::STORE_I64:
-  case WebAssembly::STORE_I64_S:
-  case WebAssembly::STORE_F64:
-  case WebAssembly::STORE_F64_S:
-  case WebAssembly::ATOMIC_LOAD_I64:
-  case WebAssembly::ATOMIC_LOAD_I64_S:
-  case WebAssembly::ATOMIC_STORE_I64:
-  case WebAssembly::ATOMIC_STORE_I64_S:
-  case WebAssembly::ATOMIC_RMW_ADD_I64:
-  case WebAssembly::ATOMIC_RMW_ADD_I64_S:
-  case WebAssembly::ATOMIC_RMW_SUB_I64:
-  case WebAssembly::ATOMIC_RMW_SUB_I64_S:
-  case WebAssembly::ATOMIC_RMW_AND_I64:
-  case WebAssembly::ATOMIC_RMW_AND_I64_S:
-  case WebAssembly::ATOMIC_RMW_OR_I64:
-  case WebAssembly::ATOMIC_RMW_OR_I64_S:
-  case WebAssembly::ATOMIC_RMW_XOR_I64:
-  case WebAssembly::ATOMIC_RMW_XOR_I64_S:
-  case WebAssembly::ATOMIC_RMW_XCHG_I64:
-  case WebAssembly::ATOMIC_RMW_XCHG_I64_S:
-  case WebAssembly::ATOMIC_RMW_CMPXCHG_I64:
-  case WebAssembly::ATOMIC_RMW_CMPXCHG_I64_S:
-  case WebAssembly::ATOMIC_WAIT_I64:
-  case WebAssembly::ATOMIC_WAIT_I64_S:
-    return 3;
-  case WebAssembly::LOAD_v16i8:
-  case WebAssembly::LOAD_v16i8_S:
-  case WebAssembly::LOAD_v8i16:
-  case WebAssembly::LOAD_v8i16_S:
-  case WebAssembly::LOAD_v4i32:
-  case WebAssembly::LOAD_v4i32_S:
-  case WebAssembly::LOAD_v2i64:
-  case WebAssembly::LOAD_v2i64_S:
-  case WebAssembly::LOAD_v4f32:
-  case WebAssembly::LOAD_v4f32_S:
-  case WebAssembly::LOAD_v2f64:
-  case WebAssembly::LOAD_v2f64_S:
-  case WebAssembly::STORE_v16i8:
-  case WebAssembly::STORE_v16i8_S:
-  case WebAssembly::STORE_v8i16:
-  case WebAssembly::STORE_v8i16_S:
-  case WebAssembly::STORE_v4i32:
-  case WebAssembly::STORE_v4i32_S:
-  case WebAssembly::STORE_v2i64:
-  case WebAssembly::STORE_v2i64_S:
-  case WebAssembly::STORE_v4f32:
-  case WebAssembly::STORE_v4f32_S:
-  case WebAssembly::STORE_v2f64:
-  case WebAssembly::STORE_v2f64_S:
+#define WASM_LOAD_STORE(NAME) \
+  case WebAssembly::NAME##_A32: \
+  case WebAssembly::NAME##_A64: \
+  case WebAssembly::NAME##_A32_S: \
+  case WebAssembly::NAME##_A64_S:
+  WASM_LOAD_STORE(LOAD8_S_I32)
+  WASM_LOAD_STORE(LOAD8_U_I32)
+  WASM_LOAD_STORE(LOAD8_S_I64)
+  WASM_LOAD_STORE(LOAD8_U_I64)
+  WASM_LOAD_STORE(ATOMIC_LOAD8_U_I32)
+  WASM_LOAD_STORE(ATOMIC_LOAD8_U_I64)
+  WASM_LOAD_STORE(STORE8_I32)
+  WASM_LOAD_STORE(STORE8_I64)
+  WASM_LOAD_STORE(ATOMIC_STORE8_I32)
+  WASM_LOAD_STORE(ATOMIC_STORE8_I64)
+  WASM_LOAD_STORE(ATOMIC_RMW8_U_ADD_I32)
+  WASM_LOAD_STORE(ATOMIC_RMW8_U_ADD_I64)
+  WASM_LOAD_STORE(ATOMIC_RMW8_U_SUB_I32)
+  WASM_LOAD_STORE(ATOMIC_RMW8_U_SUB_I64)
+  WASM_LOAD_STORE(ATOMIC_RMW8_U_AND_I32)
+  WASM_LOAD_STORE(ATOMIC_RMW8_U_AND_I64)
+  WASM_LOAD_STORE(ATOMIC_RMW8_U_OR_I32)
+  WASM_LOAD_STORE(ATOMIC_RMW8_U_OR_I64)
+  WASM_LOAD_STORE(ATOMIC_RMW8_U_XOR_I32)
+  WASM_LOAD_STORE(ATOMIC_RMW8_U_XOR_I64)
+  WASM_LOAD_STORE(ATOMIC_RMW8_U_XCHG_I32)
+  WASM_LOAD_STORE(ATOMIC_RMW8_U_XCHG_I64)
+  WASM_LOAD_STORE(ATOMIC_RMW8_U_CMPXCHG_I32)
+  WASM_LOAD_STORE(ATOMIC_RMW8_U_CMPXCHG_I64)
+  WASM_LOAD_STORE(LOAD8_SPLAT)
+  WASM_LOAD_STORE(LOAD_LANE_I8x16)
+  WASM_LOAD_STORE(STORE_LANE_I8x16)
+  return 0;
+  WASM_LOAD_STORE(LOAD16_S_I32)
+  WASM_LOAD_STORE(LOAD16_U_I32)
+  WASM_LOAD_STORE(LOAD16_S_I64)
+  WASM_LOAD_STORE(LOAD16_U_I64)
+  WASM_LOAD_STORE(ATOMIC_LOAD16_U_I32)
+  WASM_LOAD_STORE(ATOMIC_LOAD16_U_I64)
+  WASM_LOAD_STORE(STORE16_I32)
+  WASM_LOAD_STORE(STORE16_I64)
+  WASM_LOAD_STORE(ATOMIC_STORE16_I32)
+  WASM_LOAD_STORE(ATOMIC_STORE16_I64)
+  WASM_LOAD_STORE(ATOMIC_RMW16_U_ADD_I32)
+  WASM_LOAD_STORE(ATOMIC_RMW16_U_ADD_I64)
+  WASM_LOAD_STORE(ATOMIC_RMW16_U_SUB_I32)
+  WASM_LOAD_STORE(ATOMIC_RMW16_U_SUB_I64)
+  WASM_LOAD_STORE(ATOMIC_RMW16_U_AND_I32)
+  WASM_LOAD_STORE(ATOMIC_RMW16_U_AND_I64)
+  WASM_LOAD_STORE(ATOMIC_RMW16_U_OR_I32)
+  WASM_LOAD_STORE(ATOMIC_RMW16_U_OR_I64)
+  WASM_LOAD_STORE(ATOMIC_RMW16_U_XOR_I32)
+  WASM_LOAD_STORE(ATOMIC_RMW16_U_XOR_I64)
+  WASM_LOAD_STORE(ATOMIC_RMW16_U_XCHG_I32)
+  WASM_LOAD_STORE(ATOMIC_RMW16_U_XCHG_I64)
+  WASM_LOAD_STORE(ATOMIC_RMW16_U_CMPXCHG_I32)
+  WASM_LOAD_STORE(ATOMIC_RMW16_U_CMPXCHG_I64)
+  WASM_LOAD_STORE(LOAD16_SPLAT)
+  WASM_LOAD_STORE(LOAD_LANE_I16x8)
+  WASM_LOAD_STORE(STORE_LANE_I16x8)
+  return 1;
+  WASM_LOAD_STORE(LOAD_I32)
+  WASM_LOAD_STORE(LOAD_F32)
+  WASM_LOAD_STORE(STORE_I32)
+  WASM_LOAD_STORE(STORE_F32)
+  WASM_LOAD_STORE(LOAD32_S_I64)
+  WASM_LOAD_STORE(LOAD32_U_I64)
+  WASM_LOAD_STORE(STORE32_I64)
+  WASM_LOAD_STORE(ATOMIC_LOAD_I32)
+  WASM_LOAD_STORE(ATOMIC_LOAD32_U_I64)
+  WASM_LOAD_STORE(ATOMIC_STORE_I32)
+  WASM_LOAD_STORE(ATOMIC_STORE32_I64)
+  WASM_LOAD_STORE(ATOMIC_RMW_ADD_I32)
+  WASM_LOAD_STORE(ATOMIC_RMW32_U_ADD_I64)
+  WASM_LOAD_STORE(ATOMIC_RMW_SUB_I32)
+  WASM_LOAD_STORE(ATOMIC_RMW32_U_SUB_I64)
+  WASM_LOAD_STORE(ATOMIC_RMW_AND_I32)
+  WASM_LOAD_STORE(ATOMIC_RMW32_U_AND_I64)
+  WASM_LOAD_STORE(ATOMIC_RMW_OR_I32)
+  WASM_LOAD_STORE(ATOMIC_RMW32_U_OR_I64)
+  WASM_LOAD_STORE(ATOMIC_RMW_XOR_I32)
+  WASM_LOAD_STORE(ATOMIC_RMW32_U_XOR_I64)
+  WASM_LOAD_STORE(ATOMIC_RMW_XCHG_I32)
+  WASM_LOAD_STORE(ATOMIC_RMW32_U_XCHG_I64)
+  WASM_LOAD_STORE(ATOMIC_RMW_CMPXCHG_I32)
+  WASM_LOAD_STORE(ATOMIC_RMW32_U_CMPXCHG_I64)
+  WASM_LOAD_STORE(MEMORY_ATOMIC_NOTIFY)
+  WASM_LOAD_STORE(MEMORY_ATOMIC_WAIT32)
+  WASM_LOAD_STORE(LOAD32_SPLAT)
+  WASM_LOAD_STORE(LOAD_ZERO_I32x4)
+  WASM_LOAD_STORE(LOAD_LANE_I32x4)
+  WASM_LOAD_STORE(STORE_LANE_I32x4)
+  return 2;
+  WASM_LOAD_STORE(LOAD_I64)
+  WASM_LOAD_STORE(LOAD_F64)
+  WASM_LOAD_STORE(STORE_I64)
+  WASM_LOAD_STORE(STORE_F64)
+  WASM_LOAD_STORE(ATOMIC_LOAD_I64)
+  WASM_LOAD_STORE(ATOMIC_STORE_I64)
+  WASM_LOAD_STORE(ATOMIC_RMW_ADD_I64)
+  WASM_LOAD_STORE(ATOMIC_RMW_SUB_I64)
+  WASM_LOAD_STORE(ATOMIC_RMW_AND_I64)
+  WASM_LOAD_STORE(ATOMIC_RMW_OR_I64)
+  WASM_LOAD_STORE(ATOMIC_RMW_XOR_I64)
+  WASM_LOAD_STORE(ATOMIC_RMW_XCHG_I64)
+  WASM_LOAD_STORE(ATOMIC_RMW_CMPXCHG_I64)
+  WASM_LOAD_STORE(MEMORY_ATOMIC_WAIT64)
+  WASM_LOAD_STORE(LOAD64_SPLAT)
+  WASM_LOAD_STORE(LOAD_EXTEND_S_I16x8)
+  WASM_LOAD_STORE(LOAD_EXTEND_U_I16x8)
+  WASM_LOAD_STORE(LOAD_EXTEND_S_I32x4)
+  WASM_LOAD_STORE(LOAD_EXTEND_U_I32x4)
+  WASM_LOAD_STORE(LOAD_EXTEND_S_I64x2)
+  WASM_LOAD_STORE(LOAD_EXTEND_U_I64x2)
+  WASM_LOAD_STORE(LOAD_ZERO_I64x2)
+  WASM_LOAD_STORE(LOAD_LANE_I64x2)
+  WASM_LOAD_STORE(STORE_LANE_I64x2)
+  return 3;
+  WASM_LOAD_STORE(LOAD_V128)
+  WASM_LOAD_STORE(STORE_V128)
     return 4;
   default:
     return -1;
   }
+#undef WASM_LOAD_STORE
 }
 
 inline unsigned GetDefaultP2Align(unsigned Opc) {
@@ -385,8 +293,10 @@ inline bool isArgument(unsigned Opc) {
   case WebAssembly::ARGUMENT_v4f32_S:
   case WebAssembly::ARGUMENT_v2f64:
   case WebAssembly::ARGUMENT_v2f64_S:
-  case WebAssembly::ARGUMENT_exnref:
-  case WebAssembly::ARGUMENT_exnref_S:
+  case WebAssembly::ARGUMENT_funcref:
+  case WebAssembly::ARGUMENT_funcref_S:
+  case WebAssembly::ARGUMENT_externref:
+  case WebAssembly::ARGUMENT_externref_S:
     return true;
   default:
     return false;
@@ -405,8 +315,10 @@ inline bool isCopy(unsigned Opc) {
   case WebAssembly::COPY_F64_S:
   case WebAssembly::COPY_V128:
   case WebAssembly::COPY_V128_S:
-  case WebAssembly::COPY_EXNREF:
-  case WebAssembly::COPY_EXNREF_S:
+  case WebAssembly::COPY_FUNCREF:
+  case WebAssembly::COPY_FUNCREF_S:
+  case WebAssembly::COPY_EXTERNREF:
+  case WebAssembly::COPY_EXTERNREF_S:
     return true;
   default:
     return false;
@@ -425,8 +337,10 @@ inline bool isTee(unsigned Opc) {
   case WebAssembly::TEE_F64_S:
   case WebAssembly::TEE_V128:
   case WebAssembly::TEE_V128_S:
-  case WebAssembly::TEE_EXNREF:
-  case WebAssembly::TEE_EXNREF_S:
+  case WebAssembly::TEE_FUNCREF:
+  case WebAssembly::TEE_FUNCREF_S:
+  case WebAssembly::TEE_EXTERNREF:
+  case WebAssembly::TEE_EXTERNREF_S:
     return true;
   default:
     return false;
@@ -435,30 +349,8 @@ inline bool isTee(unsigned Opc) {
 
 inline bool isCallDirect(unsigned Opc) {
   switch (Opc) {
-  case WebAssembly::CALL_VOID:
-  case WebAssembly::CALL_VOID_S:
-  case WebAssembly::CALL_i32:
-  case WebAssembly::CALL_i32_S:
-  case WebAssembly::CALL_i64:
-  case WebAssembly::CALL_i64_S:
-  case WebAssembly::CALL_f32:
-  case WebAssembly::CALL_f32_S:
-  case WebAssembly::CALL_f64:
-  case WebAssembly::CALL_f64_S:
-  case WebAssembly::CALL_v16i8:
-  case WebAssembly::CALL_v16i8_S:
-  case WebAssembly::CALL_v8i16:
-  case WebAssembly::CALL_v8i16_S:
-  case WebAssembly::CALL_v4i32:
-  case WebAssembly::CALL_v4i32_S:
-  case WebAssembly::CALL_v2i64:
-  case WebAssembly::CALL_v2i64_S:
-  case WebAssembly::CALL_v4f32:
-  case WebAssembly::CALL_v4f32_S:
-  case WebAssembly::CALL_v2f64:
-  case WebAssembly::CALL_v2f64_S:
-  case WebAssembly::CALL_exnref:
-  case WebAssembly::CALL_exnref_S:
+  case WebAssembly::CALL:
+  case WebAssembly::CALL_S:
   case WebAssembly::RET_CALL:
   case WebAssembly::RET_CALL_S:
     return true;
@@ -469,30 +361,8 @@ inline bool isCallDirect(unsigned Opc) {
 
 inline bool isCallIndirect(unsigned Opc) {
   switch (Opc) {
-  case WebAssembly::CALL_INDIRECT_VOID:
-  case WebAssembly::CALL_INDIRECT_VOID_S:
-  case WebAssembly::CALL_INDIRECT_i32:
-  case WebAssembly::CALL_INDIRECT_i32_S:
-  case WebAssembly::CALL_INDIRECT_i64:
-  case WebAssembly::CALL_INDIRECT_i64_S:
-  case WebAssembly::CALL_INDIRECT_f32:
-  case WebAssembly::CALL_INDIRECT_f32_S:
-  case WebAssembly::CALL_INDIRECT_f64:
-  case WebAssembly::CALL_INDIRECT_f64_S:
-  case WebAssembly::CALL_INDIRECT_v16i8:
-  case WebAssembly::CALL_INDIRECT_v16i8_S:
-  case WebAssembly::CALL_INDIRECT_v8i16:
-  case WebAssembly::CALL_INDIRECT_v8i16_S:
-  case WebAssembly::CALL_INDIRECT_v4i32:
-  case WebAssembly::CALL_INDIRECT_v4i32_S:
-  case WebAssembly::CALL_INDIRECT_v2i64:
-  case WebAssembly::CALL_INDIRECT_v2i64_S:
-  case WebAssembly::CALL_INDIRECT_v4f32:
-  case WebAssembly::CALL_INDIRECT_v4f32_S:
-  case WebAssembly::CALL_INDIRECT_v2f64:
-  case WebAssembly::CALL_INDIRECT_v2f64_S:
-  case WebAssembly::CALL_INDIRECT_exnref:
-  case WebAssembly::CALL_INDIRECT_exnref_S:
+  case WebAssembly::CALL_INDIRECT:
+  case WebAssembly::CALL_INDIRECT_S:
   case WebAssembly::RET_CALL_INDIRECT:
   case WebAssembly::RET_CALL_INDIRECT_S:
     return true;
@@ -501,66 +371,15 @@ inline bool isCallIndirect(unsigned Opc) {
   }
 }
 
-/// Returns the operand number of a callee, assuming the argument is a call
-/// instruction.
-inline unsigned getCalleeOpNo(unsigned Opc) {
-  switch (Opc) {
-  case WebAssembly::CALL_VOID:
-  case WebAssembly::CALL_VOID_S:
-  case WebAssembly::CALL_INDIRECT_VOID:
-  case WebAssembly::CALL_INDIRECT_VOID_S:
-  case WebAssembly::RET_CALL:
-  case WebAssembly::RET_CALL_S:
-  case WebAssembly::RET_CALL_INDIRECT:
-  case WebAssembly::RET_CALL_INDIRECT_S:
-    return 0;
-  case WebAssembly::CALL_i32:
-  case WebAssembly::CALL_i32_S:
-  case WebAssembly::CALL_i64:
-  case WebAssembly::CALL_i64_S:
-  case WebAssembly::CALL_f32:
-  case WebAssembly::CALL_f32_S:
-  case WebAssembly::CALL_f64:
-  case WebAssembly::CALL_f64_S:
-  case WebAssembly::CALL_v16i8:
-  case WebAssembly::CALL_v16i8_S:
-  case WebAssembly::CALL_v8i16:
-  case WebAssembly::CALL_v8i16_S:
-  case WebAssembly::CALL_v4i32:
-  case WebAssembly::CALL_v4i32_S:
-  case WebAssembly::CALL_v2i64:
-  case WebAssembly::CALL_v2i64_S:
-  case WebAssembly::CALL_v4f32:
-  case WebAssembly::CALL_v4f32_S:
-  case WebAssembly::CALL_v2f64:
-  case WebAssembly::CALL_v2f64_S:
-  case WebAssembly::CALL_exnref:
-  case WebAssembly::CALL_exnref_S:
-  case WebAssembly::CALL_INDIRECT_i32:
-  case WebAssembly::CALL_INDIRECT_i32_S:
-  case WebAssembly::CALL_INDIRECT_i64:
-  case WebAssembly::CALL_INDIRECT_i64_S:
-  case WebAssembly::CALL_INDIRECT_f32:
-  case WebAssembly::CALL_INDIRECT_f32_S:
-  case WebAssembly::CALL_INDIRECT_f64:
-  case WebAssembly::CALL_INDIRECT_f64_S:
-  case WebAssembly::CALL_INDIRECT_v16i8:
-  case WebAssembly::CALL_INDIRECT_v16i8_S:
-  case WebAssembly::CALL_INDIRECT_v8i16:
-  case WebAssembly::CALL_INDIRECT_v8i16_S:
-  case WebAssembly::CALL_INDIRECT_v4i32:
-  case WebAssembly::CALL_INDIRECT_v4i32_S:
-  case WebAssembly::CALL_INDIRECT_v2i64:
-  case WebAssembly::CALL_INDIRECT_v2i64_S:
-  case WebAssembly::CALL_INDIRECT_v4f32:
-  case WebAssembly::CALL_INDIRECT_v4f32_S:
-  case WebAssembly::CALL_INDIRECT_v2f64:
-  case WebAssembly::CALL_INDIRECT_v2f64_S:
-  case WebAssembly::CALL_INDIRECT_exnref:
-  case WebAssembly::CALL_INDIRECT_exnref_S:
-    return 1;
+inline bool isBrTable(const MachineInstr &MI) {
+  switch (MI.getOpcode()) {
+  case WebAssembly::BR_TABLE_I32:
+  case WebAssembly::BR_TABLE_I32_S:
+  case WebAssembly::BR_TABLE_I64:
+  case WebAssembly::BR_TABLE_I64_S:
+    return true;
   default:
-    llvm_unreachable("Not a call instruction");
+    return false;
   }
 }
 
@@ -578,6 +397,18 @@ inline bool isMarker(unsigned Opc) {
   case WebAssembly::TRY_S:
   case WebAssembly::END_TRY:
   case WebAssembly::END_TRY_S:
+    return true;
+  default:
+    return false;
+  }
+}
+
+inline bool isCatch(unsigned Opc) {
+  switch (Opc) {
+  case WebAssembly::CATCH:
+  case WebAssembly::CATCH_S:
+  case WebAssembly::CATCH_ALL:
+  case WebAssembly::CATCH_ALL_S:
     return true;
   default:
     return false;

@@ -12,6 +12,7 @@
 #include "clang/Driver/Types.h"
 #include "llvm/Option/Arg.h"
 #include "llvm/Option/ArgList.h"
+#include "llvm/Transforms/Instrumentation/AddressSanitizerOptions.h"
 #include <string>
 #include <vector>
 
@@ -25,13 +26,16 @@ class SanitizerArgs {
   SanitizerSet RecoverableSanitizers;
   SanitizerSet TrapSanitizers;
 
-  std::vector<std::string> BlacklistFiles;
-  std::vector<std::string> ExtraDeps;
+  std::vector<std::string> UserIgnorelistFiles;
+  std::vector<std::string> SystemIgnorelistFiles;
+  std::vector<std::string> CoverageAllowlistFiles;
+  std::vector<std::string> CoverageIgnorelistFiles;
   int CoverageFeatures = 0;
   int MsanTrackOrigins = 0;
   bool MsanUseAfterDtor = true;
   bool CfiCrossDso = false;
   bool CfiICallGeneralizePointers = false;
+  bool CfiCanonicalJumpTables = false;
   int AsanFieldPadding = 0;
   bool SharedRuntime = false;
   bool AsanUseAfterScope = true;
@@ -40,7 +44,10 @@ class SanitizerArgs {
   bool AsanUseOdrIndicator = false;
   bool AsanInvalidPointerCmp = false;
   bool AsanInvalidPointerSub = false;
+  bool AsanOutlineInstrumentation = false;
+  llvm::AsanDtorKind AsanDtorKind = llvm::AsanDtorKind::Invalid;
   std::string HwasanAbi;
+  bool LinkRuntimes = true;
   bool LinkCXXRuntimes = false;
   bool NeedPIE = false;
   bool SafeStackRuntime = false;
@@ -51,15 +58,25 @@ class SanitizerArgs {
   bool MinimalRuntime = false;
   // True if cross-dso CFI support if provided by the system (i.e. Android).
   bool ImplicitCfiRuntime = false;
+  bool NeedsMemProfRt = false;
+  bool HwasanUseAliases = false;
+  llvm::AsanDetectStackUseAfterReturnMode AsanUseAfterReturn =
+      llvm::AsanDetectStackUseAfterReturnMode::Invalid;
 
- public:
+public:
   /// Parses the sanitizer arguments from an argument list.
   SanitizerArgs(const ToolChain &TC, const llvm::opt::ArgList &Args);
 
   bool needsSharedRt() const { return SharedRuntime; }
 
+  bool needsMemProfRt() const { return NeedsMemProfRt; }
   bool needsAsanRt() const { return Sanitizers.has(SanitizerKind::Address); }
-  bool needsHwasanRt() const { return Sanitizers.has(SanitizerKind::HWAddress); }
+  bool needsHwasanRt() const {
+    return Sanitizers.has(SanitizerKind::HWAddress);
+  }
+  bool needsHwasanAliasesRt() const {
+    return needsHwasanRt() && HwasanUseAliases;
+  }
   bool needsTsanRt() const { return Sanitizers.has(SanitizerKind::Thread); }
   bool needsMsanRt() const { return Sanitizers.has(SanitizerKind::Memory); }
   bool needsFuzzer() const { return Sanitizers.has(SanitizerKind::Fuzzer); }
@@ -68,6 +85,7 @@ class SanitizerArgs {
            !Sanitizers.has(SanitizerKind::Address) &&
            !Sanitizers.has(SanitizerKind::HWAddress);
   }
+  bool needsFuzzerInterceptors() const;
   bool needsUbsanRt() const;
   bool requiresMinimalRuntime() const { return MinimalRuntime; }
   bool needsDfsanRt() const { return Sanitizers.has(SanitizerKind::DataFlow); }
@@ -80,6 +98,7 @@ class SanitizerArgs {
   bool requiresPIE() const;
   bool needsUnwindTables() const;
   bool needsLTO() const;
+  bool linkRuntimes() const { return LinkRuntimes; }
   bool linkCXXRuntimes() const { return LinkCXXRuntimes; }
   bool hasCrossDsoCfi() const { return CfiCrossDso; }
   bool hasAnySanitizer() const { return !Sanitizers.empty(); }

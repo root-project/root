@@ -8,6 +8,7 @@ import libcppyy as cppyy_backend
 from cppyy import gbl as gbl_namespace
 from cppyy import cppdef, include
 from libROOTPythonizations import gROOT, CreateBufferFromAddress
+from cppyy.gbl import gSystem
 
 from ._application import PyROOTApplication
 _numba_pyversion = (2, 7, 5)
@@ -229,25 +230,32 @@ class ROOTFacade(types.ModuleType):
 
         return setattr(self, name, val)
 
+    def _execute_rootlogon_module(self, file_path):
+        """Execute the 'rootlogon.py' module found at the given 'file_path'"""
+        # Could also have used execfile, but import is likely to give fewer surprises
+        module_name = 'rootlogon'
+        if sys.version_info >= (3, 5):
+            import importlib.util
+            spec = importlib.util.spec_from_file_location(module_name, file_path)
+            module = importlib.util.module_from_spec(spec)
+            sys.modules[module_name] = module
+            spec.loader.exec_module(module)
+        else:
+            import imp
+            imp.load_module(module_name, open(file_path, 'r'), file_path, ('.py', 'r', 1))
+            del imp
+
     def _run_rootlogon(self):
         # Run custom logon file (must be after creation of ROOT globals)
         hasargv = hasattr(sys, 'argv')
         # -n disables the reading of the logon file, just like with root
         if hasargv and not '-n' in sys.argv and not self.PyConfig.DisableRootLogon:
-            file_path = os.path.expanduser('~/.rootlogon.py')
-            if os.path.exists(file_path):
-                # Could also have used execfile, but import is likely to give fewer surprises
-                module_name = 'rootlogon'
-                if sys.version_info >= (3,5):
-                    import importlib.util
-                    spec = importlib.util.spec_from_file_location(module_name, file_path)
-                    module = importlib.util.module_from_spec(spec)
-                    sys.modules[module_name] = module
-                    spec.loader.exec_module(module)
-                else:
-                    import imp
-                    imp.load_module(module_name, open(file_path, 'r'), file_path, ('.py','r',1))
-                    del imp
+            file_path_home = os.path.expanduser('~/.rootlogon.py')
+            file_path_local = os.path.join(os.getcwd(), '.rootlogon.py')
+            if os.path.exists(file_path_home):
+                self._execute_rootlogon_module(file_path_home)
+            elif os.path.exists(file_path_local):
+                self._execute_rootlogon_module(file_path_local)
             else:
                 # If the .py version of rootlogon exists, the .C is ignored (the user can
                 # load the .C from the .py, if so desired).
@@ -317,13 +325,22 @@ class ROOTFacade(types.ModuleType):
     def RDF(self):
         ns = self._fallback_getattr('RDF')
         try:
-            # Inject MakeNumpyDataFrame function
+            # Inject FromNumpy function
             from libROOTPythonizations import MakeNumpyDataFrame
-            ns.MakeNumpyDataFrame = MakeNumpyDataFrame
+            def DeprecatedMakeNumpy(*args, **kwargs):
+                import warnings
+                warnings.warn("MakeNumpyDataFrame is deprecated since v6.28 and will be removed in v6.30."\
+                              "Please use FromNumpy instead.", FutureWarning)
+                MakeNumpyDataFrame(*args, **kwargs)
+            ns.MakeNumpyDataFrame = DeprecatedMakeNumpy
+            ns.FromNumpy = MakeNumpyDataFrame
 
-            if sys.version_info >= (3, 7):
-                # Inject Experimental.Distributed package into namespace RDF
-                ns.Experimental.Distributed = _create_rdf_experimental_distributed_module(ns.Experimental)
+            if sys.version_info >= (3, 8):
+                try:
+                    # Inject Experimental.Distributed package into namespace RDF if available
+                    ns.Experimental.Distributed = _create_rdf_experimental_distributed_module(ns.Experimental)
+                except ImportError:
+                    pass
         except:
             raise Exception('Failed to pythonize the namespace RDF')
         del type(self).RDF
@@ -344,12 +361,16 @@ class ROOTFacade(types.ModuleType):
     # Overload TMVA namespace
     @property
     def TMVA(self):
+        #this line is needed to import the pythonizations in _tmva directory
+        from ._pythonization import _tmva
         ns = self._fallback_getattr('TMVA')
-        try:
-            from libROOTPythonizations import AsRTensor
-            ns.Experimental.AsRTensor = AsRTensor
-        except:
-            raise Exception('Failed to pythonize the namespace TMVA')
+        hasRDF = gSystem.GetFromPipe("root-config --has-dataframe") == "yes"
+        if hasRDF:
+            try:
+                from libROOTPythonizations import AsRTensor
+                ns.Experimental.AsRTensor = AsRTensor
+            except:
+                raise Exception('Failed to pythonize the namespace TMVA')
         del type(self).TMVA
         return ns
 

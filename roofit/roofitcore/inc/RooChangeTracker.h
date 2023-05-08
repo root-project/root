@@ -27,30 +27,30 @@ class RooChangeTracker : public RooAbsReal {
 public:
 
   RooChangeTracker() ;
-  RooChangeTracker(const char *name, const char *title, const RooArgSet& trackSet, Bool_t checkValues=kFALSE) ;
-  virtual ~RooChangeTracker() ;
+  RooChangeTracker(const char *name, const char *title, const RooArgSet& trackSet, bool checkValues=false) ;
+  ~RooChangeTracker() override ;
 
-  RooChangeTracker(const RooChangeTracker& other, const char* name = 0);
-  virtual TObject* clone(const char* newname) const { return new RooChangeTracker(*this, newname); }
+  RooChangeTracker(const RooChangeTracker& other, const char* name = nullptr);
+  TObject* clone(const char* newname) const override { return new RooChangeTracker(*this, newname); }
 
-  Bool_t hasChanged(Bool_t clearState) ;
+  bool hasChanged(bool clearState) ;
 
   RooArgSet parameters() const ;
 
 
 protected:
 
-  RooListProxy     _realSet ;        // List of reals to track 
-  RooListProxy     _catSet ;         // List of categories to check
-  std::vector<Double_t> _realRef ;   // Reference values for reals
-  std::vector<Int_t>    _catRef ;    // Reference valyes for categories
-  Bool_t       _checkVal ;           // Check contents as well if true
+  RooListProxy     _realSet ;        ///< List of reals to track
+  RooListProxy     _catSet ;         ///< List of categories to check
+  std::vector<double> _realRef ;   ///< Reference values for reals
+  std::vector<Int_t>    _catRef ;    ///< Reference values for categories
+  bool       _checkVal ;           ///< Check contents as well if true
 
-  Bool_t        _init ; //!
+  bool        _init ; //!
 
-  Double_t evaluate() const { return 1 ; }
+  double evaluate() const override { return 1 ; }
 
-  ClassDef(RooChangeTracker,1) // Meta object that tracks changes in set of other arguments
+  ClassDefOverride(RooChangeTracker,1) // Meta object that tracks changes in set of other arguments
 };
 
 #endif

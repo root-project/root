@@ -1,20 +1,14 @@
 // Tests for global observables
 // Authors: Jonas Rembser, CERN  08/2021
 
-#include "RooRealVar.h"
-#include "RooMsgService.h"
-#include "RooGaussian.h"
-#include "RooPolynomial.h"
-#include "RooAddPdf.h"
-#include "RooDataSet.h"
-#include "RooProdPdf.h"
-#include "RooFitResult.h"
-#include "RooConstVar.h"
-#include "RooPoisson.h"
-#include "RooProduct.h"
-#include "RooWorkspace.h"
+#include <RooAbsPdf.h>
+#include <RooDataSet.h>
+#include <RooFitResult.h>
+#include <RooHelpers.h>
+#include <RooRealVar.h>
+#include <RooWorkspace.h>
 
-#include "gtest/gtest.h"
+#include <gtest/gtest.h>
 
 #include <memory>
 #include <functional>
@@ -27,8 +21,9 @@ namespace {
 bool isNotIdentical(RooFitResult const &res1, RooFitResult const &res2)
 {
    std::size_t n = res1.floatParsFinal().size();
-   if (n != res2.floatParsFinal().size())
+   if (n != res2.floatParsFinal().size()) {
       return true;
+   }
    for (std::size_t i = 0; i < n; ++i) {
       if (static_cast<RooAbsRealLValue &>(res1.floatParsFinal()[i]).getVal() !=
           static_cast<RooAbsRealLValue &>(res2.floatParsFinal()[i]).getVal())
@@ -47,54 +42,40 @@ public:
    void SetUp() override
    {
       // silence log output
-      RooMsgService::instance().setGlobalKillBelow(RooFit::WARNING);
-
-      // observables
-      RooRealVar x("x", "x", 0.0, 0.0, 20.0);
-
-      // global observables, always constant in fits
-      RooRealVar gm("gm", "gm", 11.0, 0.0, 20.0);
-      RooRealVar gs("gs", "gs", 1.0, 0.1, 10.0);
-      gm.setConstant(true);
-      gs.setConstant(true);
-
-      // constrained parameters
-      RooRealVar f("f", "f", 0.5, 0.0, 1.0);
-
-      // other parameters
-      RooRealVar m("m", "m", 10.0, 0.0, 20.0);
-      RooRealVar s("s", "s", 2.0, 0.1, 10.0);
+      _changeMsgLvl = std::make_unique<RooHelpers::LocalChangeMsgLevel>(RooFit::WARNING);
 
       // We use the global observable also in the model for the event
       // observables. It's unusual, but let's better do this to also cover the
       // corner case where the global observable is not only part of the
       // constraint term.
-      RooProduct sigma{"sigma", "sigma", {s, gs}};
+      _ws.factory("Product::sigma({s[2.0, 0.1, 10.0], gs[1.0, 0.1, 10.0]})");
 
-      // build the unconstrained model
-      RooGaussian model("model", "model", x, m, sigma);
+      _ws.factory("Gaussian::model(x[0.0, 0.0, 20.0], m[10.0, 0.0, 20.0], sigma)");
 
       // the constraint pdfs, they are RooPoisson so we can't have tests that accidentally
       // pass because of the symmetry of normalizing over x or mu
-      RooPoisson mconstraint("mconstraint", "mconstraint", gm, m);
-      RooPoisson sconstraint("sconstraint", "sconstraint", gs, s);
+      _ws.factory("Poisson::mconstraint(gm[11.0, 0.0, 20.0], m)");
+      _ws.factory("Poisson::sconstraint(gs, s)");
+
+      // global observables, always constant in fits
+      RooRealVar &gm = *_ws.var("gm");
+      RooRealVar &gs = *_ws.var("gs");
+      gm.setConstant(true);
+      gs.setConstant(true);
 
       // the model multiplied with the constraint term
-      RooProdPdf modelc("modelc", "modelc", RooArgSet(model, mconstraint, sconstraint));
+      _ws.factory("ProdPdf::modelc(model, mconstraint, sconstraint)");
 
       // generate small dataset for use in fitting below, also cloned versions
       // with one or two global observables attached
-      _data.reset(model.generate(x, 50));
+      _data.reset(_ws.pdf("model")->generate(*_ws.var("x"), 50));
 
-      _dataWithMeanSigmaGlobs.reset(
-         static_cast<RooDataSet *>(_data->Clone((std::string(_data->GetName()) + "_gm_gs").c_str())));
+      _dataWithMeanSigmaGlobs.reset(static_cast<RooDataSet *>(_data->Clone()));
+      _dataWithMeanSigmaGlobs->SetName((std::string(_data->GetName()) + "_gm_gs").c_str());
       _dataWithMeanSigmaGlobs->setGlobalObservables({gm, gs});
 
       _dataWithMeanGlob.reset(static_cast<RooDataSet *>(_data->Clone((std::string(_data->GetName()) + "_gm").c_str())));
       _dataWithMeanGlob->setGlobalObservables(gm);
-
-      _workspace = std::make_unique<RooWorkspace>("workspace", "workspace");
-      _workspace->import(modelc);
    }
 
    // reset the parameter values to initial values before fits
@@ -103,13 +84,13 @@ public:
       std::vector<std::string> names{"x", "m", "s", "gm", "gs"};
       std::vector<double> values{0.0, 10.0, 2.0, 11.0, 1.0};
       for (std::size_t i = 0; i < names.size(); ++i) {
-         auto *var = _workspace->var(names[i].c_str());
+         auto *var = _ws.var(names[i]);
          var->setVal(values[i]);
          var->setError(0.0);
       }
    }
 
-   RooWorkspace &ws() { return *_workspace; }
+   RooWorkspace &ws() { return _ws; }
    RooDataSet &data() { return *_data; }
    RooDataSet &dataWithMeanSigmaGlobs() { return *_dataWithMeanSigmaGlobs; }
    RooDataSet &dataWithMeanGlob() { return *_dataWithMeanGlob; }
@@ -128,17 +109,18 @@ public:
 
    void TearDown() override
    {
-      _workspace.reset();
       _data.reset();
       _dataWithMeanSigmaGlobs.reset();
       _data.reset();
+      _changeMsgLvl.reset();
    }
 
 private:
-   std::unique_ptr<RooWorkspace> _workspace;
+   RooWorkspace _ws;
    std::unique_ptr<RooDataSet> _data;
    std::unique_ptr<RooDataSet> _dataWithMeanSigmaGlobs;
    std::unique_ptr<RooDataSet> _dataWithMeanGlob;
+   std::unique_ptr<RooHelpers::LocalChangeMsgLevel> _changeMsgLvl;
 };
 
 TEST_F(TestGlobalObservables, NoConstraints)

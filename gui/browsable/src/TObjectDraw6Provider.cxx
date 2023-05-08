@@ -32,8 +32,6 @@ public:
             tobj->SetBit(TObject::kMustCleanup); // TCanvas should care about cleanup
          }
 
-         pad->GetListOfPrimitives()->Clear();
-
          pad->GetListOfPrimitives()->Add(tobj, opt.c_str());
 
          return true;

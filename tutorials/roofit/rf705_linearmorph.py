@@ -9,8 +9,7 @@
 ## \macro_code
 ##
 ## \date February 2018
-## \author Clemens Lange
-## \author Wouter Verkerke (C version)
+## \authors Clemens Lange, Wouter Verkerke (C version)
 
 
 import ROOT
@@ -99,7 +98,7 @@ lmorph.plotOn(frame2)
 frame3 = alpha.frame(Bins=100, Range=(0.1, 0.9))
 
 # Make 2D pdf of histogram
-nll = ROOT.RooNLLVar("nll", "nll", lmorph, data)
+nll = lmorph.createNLL(data)
 nll.plotOn(frame3, ShiftToZero=True)
 
 lmorph.setCacheAlpha(False)

@@ -46,9 +46,7 @@
 #include <string>
 #include <thread>
 #include <utility>
-#if __cplusplus >= 201703L
 #include <variant>
-#endif
 #include <vector>
 
 using ClusterSize_t = ROOT::Experimental::ClusterSize_t;
@@ -60,6 +58,7 @@ using NTupleSize_t = ROOT::Experimental::NTupleSize_t;
 using RColumnModel = ROOT::Experimental::RColumnModel;
 using RClusterIndex = ROOT::Experimental::RClusterIndex;
 using RClusterDescriptorBuilder = ROOT::Experimental::RClusterDescriptorBuilder;
+using RClusterGroupDescriptorBuilder = ROOT::Experimental::RClusterGroupDescriptorBuilder;
 using RFieldDescriptorBuilder = ROOT::Experimental::RFieldDescriptorBuilder;
 using RException = ROOT::Experimental::RException;
 template <class T>
@@ -69,6 +68,7 @@ using RFieldDescriptor = ROOT::Experimental::RFieldDescriptor;
 using RFieldMerger = ROOT::Experimental::RFieldMerger;
 using RFieldValue = ROOT::Experimental::Detail::RFieldValue;
 using RNTupleLocator = ROOT::Experimental::RNTupleLocator;
+using RNTupleLocatorObject64 = ROOT::Experimental::RNTupleLocatorObject64;
 using RMiniFileReader = ROOT::Experimental::Internal::RMiniFileReader;
 using RNTuple = ROOT::Experimental::RNTuple;
 using RNTupleAtomicCounter = ROOT::Experimental::Detail::RNTupleAtomicCounter;
@@ -89,7 +89,6 @@ using RNTupleModel = ROOT::Experimental::RNTupleModel;
 using RNTuplePlainCounter = ROOT::Experimental::Detail::RNTuplePlainCounter;
 using RNTuplePlainTimer = ROOT::Experimental::Detail::RNTuplePlainTimer;
 using RNTupleSerializer = ROOT::Experimental::Internal::RNTupleSerializer;
-using RNTupleVersion = ROOT::Experimental::RNTupleVersion;
 using RPage = ROOT::Experimental::Detail::RPage;
 using RPageAllocatorHeap = ROOT::Experimental::Detail::RPageAllocatorHeap;
 using RPageDeleter = ROOT::Experimental::Detail::RPageDeleter;

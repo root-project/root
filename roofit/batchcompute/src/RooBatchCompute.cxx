@@ -19,11 +19,14 @@ This file contains the code for cpu computations using the RooBatchCompute libra
 **/
 
 #include "RooBatchCompute.h"
+#include "RooNaNPacker.h"
 #include "RooVDTHeaders.h"
 #include "Batches.h"
 
-#include "ROOT/RConfig.h"
-#include "ROOT/TExecutor.hxx"
+#include <ROOT/RConfig.hxx>
+#include <ROOT/TExecutor.hxx>
+
+#include <Math/Util.h>
 
 #include <algorithm>
 #include <sstream>
@@ -76,7 +79,7 @@ public:
    \param vars A std::vector containing pointers to the variables involved in the computation.
    \param extraArgs An optional std::vector containing extra double values that may participate in the computation. **/
    void compute(cudaStream_t *, Computer computer, RestrictArr output, size_t nEvents, const VarVector &vars,
-                const ArgVector &extraArgs) override
+                ArgVector &extraArgs) override
    {
       static std::vector<double> buffer;
       buffer.resize(vars.size() * bufferSize);
@@ -91,7 +94,6 @@ public:
          nThreads = nEvents / nEventsPerThread + (nEvents % nEventsPerThread > 0);
 
          auto task = [&](std::size_t idx) -> int {
-
             // Fill a std::vector<Batches> with the same object and with ~nEvents/nThreads
             // Then advance every object but the first to split the work between threads
             Batches batches(output, nEventsPerThread, vars, extraArgs, buffer.data());
@@ -102,7 +104,7 @@ public:
                batches.setNEvents(nEvents - idx * batches.getNEvents());
             }
 
-            int events = batches.getNEvents();
+            std::size_t events = batches.getNEvents();
             batches.setNEvents(bufferSize);
             while (events > bufferSize) {
                _computeFunctions[computer](batches);
@@ -124,7 +126,7 @@ public:
          // Then advance every object but the first to split the work between threads
          Batches batches(output, nEvents, vars, extraArgs, buffer.data());
 
-         int events = batches.getNEvents();
+         std::size_t events = batches.getNEvents();
          batches.setNEvents(bufferSize);
          while (events > bufferSize) {
             _computeFunctions[computer](batches);
@@ -136,14 +138,75 @@ public:
       }
    }
    /// Return the sum of an input array
-   double sumReduce(cudaStream_t *, InputArr input, size_t n) override
-   {
-      long double sum = 0.0;
-      for (size_t i = 0; i < n; i++)
-         sum += input[i];
-      return sum;
-   }
+   double reduceSum(cudaStream_t *, InputArr input, size_t n) override;
+   ReduceNLLOutput reduceNLL(cudaStream_t *, RooSpan<const double> probas, RooSpan<const double> weightSpan,
+                             RooSpan<const double> weights, double weightSum,
+                             RooSpan<const double> binVolumes) override;
 }; // End class RooBatchComputeClass
+
+namespace {
+
+inline std::pair<double, double> getLog(double prob, ReduceNLLOutput &out)
+{
+   if (std::abs(prob) > 1e6) {
+      out.nLargeValues++;
+   }
+
+   if (prob <= 0.0) {
+      out.nNonPositiveValues++;
+      return {std::log(prob), -prob};
+   }
+
+   if (std::isnan(prob)) {
+      out.nNaNValues++;
+      return {prob, RooNaNPacker::unpackNaN(prob)};
+   }
+
+   return {std::log(prob), 0.0};
+}
+
+} // namespace
+
+double RooBatchComputeClass::reduceSum(cudaStream_t *, InputArr input, size_t n)
+{
+   return ROOT::Math::KahanSum<double, 4u>::Accumulate(input, input + n).Sum();
+}
+
+ReduceNLLOutput RooBatchComputeClass::reduceNLL(cudaStream_t *, RooSpan<const double> probas,
+                                                RooSpan<const double> weightSpan, RooSpan<const double> weights,
+                                                double weightSum, RooSpan<const double> binVolumes)
+{
+   ReduceNLLOutput out;
+
+   double badness = 0.0;
+
+   for (std::size_t i = 0; i < probas.size(); ++i) {
+
+      const double eventWeight = weightSpan.size() > 1 ? weightSpan[i] : weightSpan[0];
+
+      if (0. == eventWeight)
+         continue;
+
+      std::pair<double, double> logOut = getLog(probas[i], out);
+      double term = logOut.first;
+      badness += logOut.second;
+
+      if (!binVolumes.empty()) {
+         term -= std::log(weights[i]) - std::log(binVolumes[i]) - std::log(weightSum);
+      }
+
+      term *= -eventWeight;
+
+      out.nllSum.Add(term);
+   }
+
+   if (badness != 0.) {
+      // Some events with evaluation errors. Return "badness" of errors.
+      out.nllSum = ROOT::Math::KahanSum<double>(RooNaNPacker::packFloatIntoNaN(badness));
+   }
+
+   return out;
+}
 
 /// Static object to trigger the constructor which overwrites the dispatch pointer.
 static RooBatchComputeClass computeObj;
@@ -157,8 +220,12 @@ static RooBatchComputeClass computeObj;
 For every scalar parameter a buffer (one row of the buffer) is filled with copies of the scalar
 value, so that it behaves as a batch and facilitates auto-vectorization. The Batches object can be
 passed by value to a compute function to perform efficient computations. **/
-Batches::Batches(RestrictArr output, size_t nEvents, const VarVector &vars, const ArgVector &extraArgs, double *buffer)
-   : _nEvents(nEvents), _nBatches(vars.size()), _nExtraArgs(extraArgs.size()), _output(output)
+Batches::Batches(RestrictArr output, size_t nEvents, const VarVector &vars, ArgVector &extraArgs, double *buffer)
+   : _extraArgs{extraArgs.data()},
+     _nEvents(nEvents),
+     _nBatches(vars.size()),
+     _nExtraArgs(extraArgs.size()),
+     _output(output)
 {
    _arrays.resize(vars.size());
    for (size_t i = 0; i < vars.size(); i++) {
@@ -174,7 +241,6 @@ Batches::Batches(RestrictArr output, size_t nEvents, const VarVector &vars, cons
          _arrays[i].set(span.data()[0], &buffer[i * bufferSize], false);
       }
    }
-   _extraArgs = extraArgs;
 }
 
 } // End namespace RF_ARCH

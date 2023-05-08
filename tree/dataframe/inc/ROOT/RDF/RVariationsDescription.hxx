@@ -11,11 +11,15 @@
 #ifndef ROOT_RDF_RVARIATIONSDESCRIPTION
 #define ROOT_RDF_RVARIATIONSDESCRIPTION
 
-#include <ROOT/RDF/RVariationBase.hxx>
-
-#include <memory>
 #include <string>
-#include <unordered_map>
+#include <vector>
+namespace ROOT {
+namespace Internal {
+namespace RDF {
+class RVariationBase;
+}
+} // namespace Internal
+} // namespace ROOT
 
 namespace ROOT {
 namespace RDF {
@@ -23,7 +27,7 @@ namespace RDF {
 /// A descriptor for the systematic variations known to a given RDataFrame node.
 class RVariationsDescription {
    std::string fStringRepr;
-   using Variations_t = std::unordered_multimap<std::string, std::shared_ptr<ROOT::Internal::RDF::RVariationBase>>;
+   using Variations_t = std::vector<const ROOT::Internal::RDF::RVariationBase *>;
 
 public:
    RVariationsDescription(const Variations_t &variations);

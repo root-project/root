@@ -18,13 +18,14 @@
 #define ROOT_Math_Random
 
 /**
-@defgroup Random Interface class for Random number generation
+@defgroup Random Interface classes for Random number generation
 */
 
 #include "Math/RandomFunctions.h"
 
 #include <string>
 #include <vector>
+#include <cstdint>
 
 
 namespace ROOT {
@@ -165,12 +166,12 @@ namespace Math {
          return fFunctions.BreitWigner(mean,gamma);
       }
 
-     ///  generate random numbers in a 2D circle of radious 1
+     ///  generate random numbers in a 2D circle of radius 1
       void Circle(double &x, double &y, double r = 1) {
          fFunctions.Circle(x,y,r);
       }
 
-      ///  generate random numbers in a 3D sphere of radious 1
+      ///  generate random numbers in a 3D sphere of radius 1
       void Sphere(double &x, double &y, double &z,double r = 1) {
          fFunctions.Sphere(x,y,z,r);
       }
@@ -222,8 +223,8 @@ namespace Math {
 
    private:
 
-      Engine fEngine;             //  random generator engine
-      RndmFunctions fFunctions;   //! random functions object
+      Engine fEngine;             ///<  random generator engine
+      RndmFunctions fFunctions;   ///<! random functions object
 
 
   };

@@ -157,7 +157,7 @@ if(builtin_freetype)
       URL ${CMAKE_SOURCE_DIR}/graf2d/freetype/src/freetype-${freetype_version}.tar.gz
       URL_HASH SHA256=efe71fd4b8246f1b0b1b9bfca13cfff1c9ad85930340c27df469733bbb620938
       INSTALL_DIR ${CMAKE_BINARY_DIR}
-      CMAKE_ARGS -G ${CMAKE_GENERATOR} -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
+      CMAKE_ARGS -G ${CMAKE_GENERATOR} -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX} -DFT_DISABLE_BZIP2=TRUE
       BUILD_COMMAND ${CMAKE_COMMAND} --build . --config ${freetypebuild}
       INSTALL_COMMAND ${CMAKE_COMMAND} -E copy_if_different ${freetypebuild}/freetype.lib ${FREETYPE_LIBRARY}
       LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 0
@@ -239,7 +239,7 @@ if(builtin_lzma)
   message(STATUS "Building LZMA version ${lzma_version} included in ROOT itself")
   if(WIN32)
     set(LIBLZMA_LIBRARIES ${CMAKE_BINARY_DIR}/LZMA/src/LZMA/lib/liblzma.lib)
-    if("${CMAKE_GENERATOR_PLATFORM}" MATCHES "x64")
+    if(CMAKE_SIZEOF_VOID_P EQUAL 8)
       set(LZMA_URL ${CMAKE_SOURCE_DIR}/core/lzma/src/xz-${lzma_version}-win64.tar.gz)
       set(LZMA_URL_HASH SHA256=76ba7cdff547141f6d6810c8600a9d782feca343debde378fc8f6a307cbfd1d2)
     else()
@@ -1039,6 +1039,16 @@ else()
   set(netx OFF)
 endif()
 
+#---make sure non-builtin xrootd is not using builtin_openssl-----------
+if(xrootd AND NOT builtin_xrootd AND builtin_openssl)
+  if(fail-on-missing)
+    message(FATAL_ERROR "Non-builtin XROOTD must not be used with builtin OpenSSL. If you want to use non-builtin XROOTD, please use the system OpenSSL")
+  else()
+    message(STATUS "Non-builtin XROOTD must not be used with builtin OpenSSL. Disabling the 'xrootd' option.")
+    set(xrootd OFF CACHE BOOL "Disabled because non-builtin xrootd cannot be used with builtin OpenSSL" FORCE)
+  endif()
+endif()
+
 #---Alien support----------------------------------------------------------------
 if(alien)
   find_package(Alien)
@@ -1201,6 +1211,7 @@ if(builtin_davix)
   else()
     list(APPEND ROOT_BUILTINS Davix)
     add_subdirectory(builtins/davix)
+    set(davix ON CACHE BOOL "Enabled because builtin_davix is enabled)" FORCE)
   endif()
 endif()
 
@@ -1341,7 +1352,7 @@ if(builtin_tbb)
   endif()
   if(MSVC)
     set(vsdir "vs2013")
-    if("${CMAKE_GENERATOR_PLATFORM}" MATCHES "x64")
+    if(CMAKE_SIZEOF_VOID_P EQUAL 8)
       set(tbb_arch x64)
     else()
       set(tbb_arch Win32)
@@ -1387,6 +1398,7 @@ if(builtin_tbb)
       URL_HASH SHA256=${tbb_sha256}
       INSTALL_DIR ${CMAKE_BINARY_DIR}
       PATCH_COMMAND sed -i -e "/clang -v/s@-v@--version@" build/macos.inc
+      COMMAND patch -p0 -i ${CMAKE_SOURCE_DIR}/builtins/tbb/patches/gcc13.patch
       COMMAND ${tbb_command}
       CONFIGURE_COMMAND ""
       BUILD_COMMAND make ${_tbb_compiler} cpp0x=1 "CXXFLAGS=${_tbb_cxxflags}" CPLUS=${CMAKE_CXX_COMPILER} CONLY=${CMAKE_C_COMPILER} "LDFLAGS=${_tbb_ldflags}"
@@ -1673,7 +1685,7 @@ endif()
 #---Check for VecGeom--------------------------------------------------------------------
 if (vecgeom)
   message(STATUS "Looking for VecGeom")
-  find_package(VecGeom ${VecGeom_FIND_VERSION} CONFIG QUIET)
+  find_package(VecGeom 1.2 CONFIG)
   if(builtin_veccore)
     message(WARNING "ROOT must be built against the VecCore installation that was used to build VecGeom; builtin_veccore cannot be used. Option VecGeom will be disabled.")
     set(vecgeom OFF CACHE BOOL "Disabled because non-builtin VecGeom specified but its VecCore cannot be found" FORCE)
@@ -1689,6 +1701,8 @@ if (vecgeom)
       message(STATUS "              For the time being switching OFF 'vecgeom' option")
       set(vecgeom OFF CACHE BOOL "Disabled because VecGeom not found (${vecgeom_description})" FORCE)
     endif()
+  else()
+    message(STATUS "   Found VecGeom " ${VecGeom_VERSION})
   endif()
 endif()
 
@@ -1890,15 +1904,6 @@ if (mpi)
   endif()
 endif()
 
-if(testing AND NO_CONNECTION)
-  if(fail-on-missing)
-    message(FATAL_ERROR "No internet connection. Please check your connection, or either disable the 'testing' option or the 'fail-on-missing' to automatically disable options requiring internet access")
-  else()
-    message(STATUS "No internet connection, disabling 'testing' option")
-    set(testing OFF CACHE BOOL "Disabled because there is no internet connection" FORCE)
-  endif()
-endif()
-
 #---Check for ZeroMQ when building RooFit::MultiProcess--------------------------------------------
 
 if (roofit_multiprocess)
@@ -1972,8 +1977,41 @@ if (roofit_multiprocess)
   target_compile_definitions(cppzmq INTERFACE ZMQ_NO_EXPORT)
 endif (roofit_multiprocess)
 
-#---Download googletest--------------------------------------------------------------
+#---Check for googletest---------------------------------------------------------------
 if (testing)
+  if (NOT builtin_gtest)
+    if(fail-on-missing)
+      find_package(GTest REQUIRED)
+    else()
+      find_package(GTest)
+      if(NOT GTEST_FOUND)
+        if(NO_CONNECTION)
+          if(fail-on-missing)
+            message(FATAL_ERROR "No internet connection and GTest was not found. Please check your connection, or either disable the 'testing' option or the 'fail-on-missing' to automatically disable options requiring internet access")
+          else()
+            message(STATUS "GTest not found, and no internet connection. Disabing the 'testing' option.")
+            set(testing OFF CACHE BOOL "Disabled because testing requested and GTest not found (${builtin_gtest_description}) and there is no internet connection" FORCE)
+          endif()
+        else()
+          message(STATUS "GTest not found, switching ON 'builtin_gtest' option.")
+          set(builtin_gtest ON CACHE BOOL "Enabled because testing requested and GTest not found (${builtin_gtest_description})" FORCE)
+        endif()
+      endif()
+    endif()
+  else()
+    if(NO_CONNECTION)
+      if(fail-on-missing)
+        message(FATAL_ERROR "No internet connection. Please check your connection, or either disable the 'testing' option or the 'builtin_gtest' option or the 'fail-on-missing' option to automatically disable options requiring internet access")
+      else()
+        message(STATUS "No internet connection, disabling the 'testing' and 'builtin_gtest' options")
+        set(testing OFF CACHE BOOL "Disabled because there is no internet connection" FORCE)
+        set(builtin_gtest OFF CACHE BOOL "Disabled because there is no internet connection" FORCE)
+      endif()
+    endif()
+  endif()
+endif()
+
+if (builtin_gtest)
   # FIXME: Remove our version of gtest in roottest. We can reuse this one.
   # Add googletest
   # http://stackoverflow.com/questions/9689183/cmake-googletest
@@ -2005,7 +2043,7 @@ if (testing)
     googletest
     GIT_REPOSITORY https://github.com/google/googletest.git
     GIT_SHALLOW 1
-    GIT_TAG release-1.11.0
+    GIT_TAG release-1.12.1
     UPDATE_COMMAND ""
     # TIMEOUT 10
     # # Force separate output paths for debug and release builds to allow easy
@@ -2085,7 +2123,7 @@ endif()
 
 #------------------------------------------------------------------------------------
 if(webgui)
-  if(NOT "$ENV{OPENUI5DIR}" STREQUAL "" AND EXISTS "$ENV{OPENUI5DIR}/resources/sap-ui-core-nojQuery.js")
+  if(NOT "$ENV{OPENUI5DIR}" STREQUAL "" AND EXISTS "$ENV{OPENUI5DIR}/resources/sap-ui-core.js")
      # create symbolic link on existing openui5 installation
      # should be used only for debug purposes to be able try different openui5 version
      # cannot be used for installation purposes
@@ -2098,7 +2136,7 @@ if(webgui)
       ExternalProject_Add(
         OPENUI5
         URL ${CMAKE_SOURCE_DIR}/builtins/openui5/openui5.tar.gz
-        URL_HASH SHA256=f40910aae22afb80f0d1a0ff07577ff8073896dd4415e4c64a125b7c29b89b0e
+        URL_HASH SHA256=cc6791ac9c064c3e3f8281870063c549fa5e3f1252095ccc5d542c33db9cf8b2
         CONFIGURE_COMMAND ""
         BUILD_COMMAND ""
         INSTALL_COMMAND ""
@@ -2108,8 +2146,8 @@ if(webgui)
     else()
       ExternalProject_Add(
         OPENUI5
-        URL https://github.com/SAP/openui5/releases/download/1.82.2/openui5-runtime-1.82.2.zip
-        URL_HASH SHA256=b405fa6a3a3621879e8efe80eb193c1071f2bdf37a8ecc8c057194a09635eaff
+        URL https://github.com/SAP/openui5/releases/download/1.98.0/openui5-runtime-1.98.0.zip
+        URL_HASH SHA256=3d3db9ba001141019aae2cdf6eb6d34d655a3652308e03a335794f1231d21d2f
         CONFIGURE_COMMAND ""
         BUILD_COMMAND ""
         INSTALL_COMMAND ""
@@ -2119,6 +2157,17 @@ if(webgui)
     endif()
     install(DIRECTORY ${CMAKE_BINARY_DIR}/ui5/distribution/ DESTINATION ${CMAKE_INSTALL_OPENUI5DIR}/distribution/ COMPONENT libraries FILES_MATCHING PATTERN "*")
   endif()
+  ExternalProject_Add(
+    RENDERCORE
+    URL ${CMAKE_SOURCE_DIR}/builtins/rendercore/RenderCore.tar.gz
+    URL_HASH SHA256=a0b1cc0d4e8d739b113ace87e33de77572cf019772899549cb082088943513e1
+    CONFIGURE_COMMAND ""
+    BUILD_COMMAND ""
+    INSTALL_COMMAND ""
+    SOURCE_DIR ${CMAKE_BINARY_DIR}/ui5/eve7/rcore
+    TIMEOUT 600
+  )
+  install(DIRECTORY ${CMAKE_BINARY_DIR}/ui5/eve7/rcore/ DESTINATION ${CMAKE_INSTALL_OPENUI5DIR}/eve7/rcore/ COMPONENT libraries FILES_MATCHING PATTERN "*")
 endif()
 
 #------------------------------------------------------------------------------------
@@ -2179,10 +2228,10 @@ if(test_distrdf_dask)
   message(STATUS "Looking for Dask")
 
   if(fail-on-missing)
-    find_package(Dask 2022.02 REQUIRED)
+    find_package(Dask 2022.08.1 REQUIRED)
   else()
 
-    find_package(Dask 2022.02)
+    find_package(Dask 2022.08.1)
     if(NOT Dask_FOUND)
       message(STATUS "Switching OFF 'test_distrdf_dask' option")
       set(test_distrdf_dask OFF CACHE BOOL "Disabled because Dask not found" FORCE)

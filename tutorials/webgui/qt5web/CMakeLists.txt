@@ -24,5 +24,5 @@ add_executable(qt5web
 
 target_link_libraries(qt5web
    Qt5::Core Qt5::Widgets Qt5::WebEngine Qt5::WebEngineWidgets
-   ${ROOT_LIBRARIES} ROOT::ROOTWebDisplay ROOT::ROOTQt5WebDisplay ROOT::Gpad ROOT::WebGui6 ROOT::ROOTGpadv7 ROOT::ROOTCanvasPainter ROOT::Geom ROOT::ROOTBrowserv7 ROOT::ROOTEve
+   ${ROOT_LIBRARIES} ROOT::ROOTWebDisplay ROOT::ROOTQt5WebDisplay ROOT::Gpad ROOT::WebGui6 ROOT::ROOTGpadv7 ROOT::ROOTCanvasPainter ROOT::Geom ROOT::ROOTBrowserv7 ROOT::ROOTGeomViewer
 )

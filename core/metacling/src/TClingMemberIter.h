@@ -30,7 +30,7 @@
 
 namespace clang {
 class Sema;
-class RedeclarableDemplateDecl;
+class RedeclarableTemplateDecl;
 } // namespace clang
 
 namespace cling {

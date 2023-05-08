@@ -57,10 +57,9 @@ public:
   /// \param FilenameTok The file name token in \#include "FileName" directive
   /// or macro expanded file name token from \#include MACRO(PARAMS) directive.
   /// Note that FilenameTok contains corresponding quotes/angles symbols.
-  virtual void FileSkipped(const FileEntry &SkippedFile,
+  virtual void FileSkipped(const FileEntryRef &SkippedFile,
                            const Token &FilenameTok,
-                           SrcMgr::CharacteristicKind FileType) {
-  }
+                           SrcMgr::CharacteristicKind FileType) {}
 
   /// Callback invoked whenever an inclusion directive results in a
   /// file-not-found error.
@@ -192,6 +191,10 @@ public:
                              StringRef Str) {
   }
 
+  /// Callback invoked when a \#pragma mark comment is read.
+  virtual void PragmaMark(SourceLocation Loc, StringRef Trivia) {
+  }
+
   /// Callback invoked when a \#pragma detect_mismatch directive is
   /// read.
   virtual void PragmaDetectMismatch(SourceLocation Loc, StringRef Name,
@@ -308,8 +311,8 @@ public:
   /// Hook called when a '__has_include' or '__has_include_next' directive is
   /// read.
   virtual void HasInclude(SourceLocation Loc, StringRef FileName, bool IsAngled,
-                          const FileEntry *File,
-                          SrcMgr::CharacteristicKind FileType) {}
+                          Optional<FileEntryRef> File,
+                          SrcMgr::CharacteristicKind FileType);
 
   /// Hook called when a source range is skipped.
   /// \param Range The SourceRange that was skipped. The range begins at the
@@ -352,12 +355,44 @@ public:
                      const MacroDefinition &MD) {
   }
 
+  /// Hook called whenever an \#elifdef branch is taken.
+  /// \param Loc the source location of the directive.
+  /// \param MacroNameTok Information on the token being tested.
+  /// \param MD The MacroDefinition if the name was a macro, null otherwise.
+  virtual void Elifdef(SourceLocation Loc, const Token &MacroNameTok,
+                       const MacroDefinition &MD) {
+  }
+  /// Hook called whenever an \#elifdef is skipped.
+  /// \param Loc the source location of the directive.
+  /// \param ConditionRange The SourceRange of the expression being tested.
+  /// \param IfLoc the source location of the \#if/\#ifdef/\#ifndef directive.
+  // FIXME: better to pass in a list (or tree!) of Tokens.
+  virtual void Elifdef(SourceLocation Loc, SourceRange ConditionRange,
+                       SourceLocation IfLoc) {
+  }
+
   /// Hook called whenever an \#ifndef is seen.
   /// \param Loc the source location of the directive.
   /// \param MacroNameTok Information on the token being tested.
   /// \param MD The MacroDefiniton if the name was a macro, null otherwise.
   virtual void Ifndef(SourceLocation Loc, const Token &MacroNameTok,
                       const MacroDefinition &MD) {
+  }
+
+  /// Hook called whenever an \#elifndef branch is taken.
+  /// \param Loc the source location of the directive.
+  /// \param MacroNameTok Information on the token being tested.
+  /// \param MD The MacroDefinition if the name was a macro, null otherwise.
+  virtual void Elifndef(SourceLocation Loc, const Token &MacroNameTok,
+                        const MacroDefinition &MD) {
+  }
+  /// Hook called whenever an \#elifndef is skipped.
+  /// \param Loc the source location of the directive.
+  /// \param ConditionRange The SourceRange of the expression being tested.
+  /// \param IfLoc the source location of the \#if/\#ifdef/\#ifndef directive.
+  // FIXME: better to pass in a list (or tree!) of Tokens.
+  virtual void Elifndef(SourceLocation Loc, SourceRange ConditionRange,
+                        SourceLocation IfLoc) {
   }
 
   /// Hook called whenever an \#else is seen.
@@ -375,13 +410,14 @@ public:
 
 /// Simple wrapper class for chaining callbacks.
 class PPChainedCallbacks : public PPCallbacks {
-  virtual void anchor();
   std::unique_ptr<PPCallbacks> First, Second;
 
 public:
   PPChainedCallbacks(std::unique_ptr<PPCallbacks> _First,
                      std::unique_ptr<PPCallbacks> _Second)
     : First(std::move(_First)), Second(std::move(_Second)) {}
+
+  ~PPChainedCallbacks() override;
 
   void FileChanged(SourceLocation Loc, FileChangeReason Reason,
                    SrcMgr::CharacteristicKind FileType,
@@ -390,8 +426,7 @@ public:
     Second->FileChanged(Loc, Reason, FileType, PrevFID);
   }
 
-  void FileSkipped(const FileEntry &SkippedFile,
-                   const Token &FilenameTok,
+  void FileSkipped(const FileEntryRef &SkippedFile, const Token &FilenameTok,
                    SrcMgr::CharacteristicKind FileType) override {
     First->FileSkipped(SkippedFile, FilenameTok, FileType);
     Second->FileSkipped(SkippedFile, FilenameTok, FileType);
@@ -491,11 +526,8 @@ public:
   }
 
   void HasInclude(SourceLocation Loc, StringRef FileName, bool IsAngled,
-                  const FileEntry *File,
-                  SrcMgr::CharacteristicKind FileType) override {
-    First->HasInclude(Loc, FileName, IsAngled, File, FileType);
-    Second->HasInclude(Loc, FileName, IsAngled, File, FileType);
-  }
+                  Optional<FileEntryRef> File,
+                  SrcMgr::CharacteristicKind FileType) override;
 
   void PragmaOpenCLExtension(SourceLocation NameLoc, const IdentifierInfo *Name,
                              SourceLocation StateLoc, unsigned State) override {
@@ -590,11 +622,37 @@ public:
     Second->Ifdef(Loc, MacroNameTok, MD);
   }
 
+  /// Hook called whenever an \#elifdef is taken.
+  void Elifdef(SourceLocation Loc, const Token &MacroNameTok,
+               const MacroDefinition &MD) override {
+    First->Elifdef(Loc, MacroNameTok, MD);
+    Second->Elifdef(Loc, MacroNameTok, MD);
+  }
+  /// Hook called whenever an \#elifdef is skipped.
+  void Elifdef(SourceLocation Loc, SourceRange ConditionRange,
+               SourceLocation IfLoc) override {
+    First->Elifdef(Loc, ConditionRange, IfLoc);
+    Second->Elifdef(Loc, ConditionRange, IfLoc);
+  }
+
   /// Hook called whenever an \#ifndef is seen.
   void Ifndef(SourceLocation Loc, const Token &MacroNameTok,
               const MacroDefinition &MD) override {
     First->Ifndef(Loc, MacroNameTok, MD);
     Second->Ifndef(Loc, MacroNameTok, MD);
+  }
+
+  /// Hook called whenever an \#elifndef is taken.
+  void Elifndef(SourceLocation Loc, const Token &MacroNameTok,
+                const MacroDefinition &MD) override {
+    First->Elifndef(Loc, MacroNameTok, MD);
+    Second->Elifndef(Loc, MacroNameTok, MD);
+  }
+  /// Hook called whenever an \#elifndef is skipped.
+  void Elifndef(SourceLocation Loc, SourceRange ConditionRange,
+               SourceLocation IfLoc) override {
+    First->Elifndef(Loc, ConditionRange, IfLoc);
+    Second->Elifndef(Loc, ConditionRange, IfLoc);
   }
 
   /// Hook called whenever an \#else is seen.

@@ -61,7 +61,7 @@ protected:
    TDataType& operator=(const TDataType&);
 
 public:
-   TDataType(TypedefInfo_t *info = 0);
+   TDataType(TypedefInfo_t *info = nullptr);
    TDataType(const char *typenam);
    virtual       ~TDataType();
    Int_t          Size() const;
@@ -69,14 +69,14 @@ public:
    TString        GetTypeName();
    const char    *GetFullTypeName() const;
    const char    *AsString(void *buf) const;
-   Long_t         Property() const;
+   Long_t         Property() const override;
 
    static const char *GetTypeName(EDataType type);
    static TDataType  *GetDataType(EDataType type);
    static EDataType GetType(const std::type_info &typeinfo);
    static void AddBuiltins(TCollection* types);
 
-   ClassDef(TDataType,2)  //Basic data type descriptor
+   ClassDefOverride(TDataType,2)  //Basic data type descriptor
 };
 
 #endif

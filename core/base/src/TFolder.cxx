@@ -13,6 +13,8 @@
 /** \class TFolder
 \ingroup Base
 
+\legacy{TFolder}
+
 A TFolder object is a collection of objects and folders.
 Folders have a name and a title and are identified in the folder hierarchy
 by a "Unix-like" naming mechanism. The root of all folders is //root.
@@ -122,14 +124,6 @@ TFolder::TFolder(const char *name, const char *title) : TNamed(name,title)
    fFolders = new TList();
    SetBit(kOwnFolderList);
    fIsOwner = kFALSE;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Copy constructor.
-
-TFolder::TFolder(const TFolder &folder) : TNamed(folder),fFolders(nullptr),fIsOwner(kFALSE)
-{
-   ((TFolder&)folder).Copy(*this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

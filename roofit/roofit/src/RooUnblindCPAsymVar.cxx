@@ -29,8 +29,6 @@ the error on the blind parameters is identical to that
 of the unblind parameter
 **/
 
-#include "RooFit.h"
-
 #include "RooArgSet.h"
 #include "RooUnblindCPAsymVar.h"
 
@@ -87,7 +85,7 @@ RooUnblindCPAsymVar::~RooUnblindCPAsymVar()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooUnblindCPAsymVar::evaluate() const
+double RooUnblindCPAsymVar::evaluate() const
 {
   if (isHidden()) {
     // Blinding active for this event

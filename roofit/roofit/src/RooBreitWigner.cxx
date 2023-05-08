@@ -22,13 +22,10 @@ Class RooBreitWigner is a RooAbsPdf implementation
 that models a non-relativistic Breit-Wigner shape
 **/
 
-#include "RooFit.h"
-
 #include "Riostream.h"
 #include <math.h>
 
 #include "RooBreitWigner.h"
-#include "RooAbsReal.h"
 #include "RooRealVar.h"
 #include "RooBatchCompute.h"
 
@@ -58,9 +55,9 @@ RooBreitWigner::RooBreitWigner(const RooBreitWigner& other, const char* name) :
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooBreitWigner::evaluate() const
+double RooBreitWigner::evaluate() const
 {
-  Double_t arg= x - mean;
+  double arg= x - mean;
   return 1. / (arg*arg + 0.25*width*width);
 }
 
@@ -82,12 +79,12 @@ Int_t RooBreitWigner::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analV
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooBreitWigner::analyticalIntegral(Int_t code, const char* rangeName) const
+double RooBreitWigner::analyticalIntegral(Int_t code, const char* rangeName) const
 {
   switch(code) {
   case 1:
     {
-      Double_t c = 2./width;
+      double c = 2./width;
       return c*(atan(c*(x.max(rangeName)-mean)) - atan(c*(x.min(rangeName)-mean)));
     }
   }

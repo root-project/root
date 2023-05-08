@@ -13,8 +13,7 @@
 
 #include "Rtypes.h"
 
-#include "RooNLLVar.h"
-
+#include "RooAbsPdf.h"
 #include "RooRealVar.h"
 
 #include "RooStats/TestStatistic.h"
@@ -25,49 +24,42 @@ namespace RooStats {
 
    public:
 
-      //__________________________________
+      /// Constructor for proof. Do not use.
       SimpleLikelihoodRatioTestStat() :
-         fNullPdf(NULL), fAltPdf(NULL)
+         fNullPdf(nullptr), fAltPdf(nullptr)
       {
-         // Constructor for proof. Do not use.
          fFirstEval = true;
-        fDetailedOutputEnabled = false;
-        fDetailedOutput = NULL;
-         fNullParameters = NULL;
-         fAltParameters = NULL;
-    fReuseNll=kFALSE ;
-    fNllNull=NULL ;
-    fNllAlt=NULL ;
+         fDetailedOutputEnabled = false;
+         fDetailedOutput = nullptr;
+         fNullParameters = nullptr;
+         fAltParameters = nullptr;
+         fReuseNll=false ;
       }
 
-      //__________________________________
+      /// Takes null and alternate parameters from PDF. Can be overridden.
       SimpleLikelihoodRatioTestStat(
          RooAbsPdf& nullPdf,
          RooAbsPdf& altPdf
       ) :
          fFirstEval(true)
       {
-         // Takes null and alternate parameters from PDF. Can be overridden.
-
          fNullPdf = &nullPdf;
          fAltPdf = &altPdf;
 
-         RooArgSet * allNullVars = fNullPdf->getVariables();
+         std::unique_ptr<RooArgSet> allNullVars{fNullPdf->getVariables()};
          fNullParameters = (RooArgSet*) allNullVars->snapshot();
-         delete allNullVars;
 
-         RooArgSet * allAltVars = fAltPdf->getVariables();
+         std::unique_ptr<RooArgSet> allAltVars{fAltPdf->getVariables()};
          fAltParameters = (RooArgSet*) allAltVars->snapshot();
-         delete allAltVars;
 
          fDetailedOutputEnabled = false;
-         fDetailedOutput = NULL;
+         fDetailedOutput = nullptr;
 
-    fReuseNll=kFALSE ;
-    fNllNull=NULL ;
-    fNllAlt=NULL ;
+         fReuseNll=false ;
       }
-      //__________________________________
+
+      /// Takes null and alternate parameters from values in nullParameters
+      /// and altParameters. Can be overridden.
       SimpleLikelihoodRatioTestStat(
          RooAbsPdf& nullPdf,
          RooAbsPdf& altPdf,
@@ -76,8 +68,6 @@ namespace RooStats {
       ) :
          fFirstEval(true)
       {
-         // Takes null and alternate parameters from values in nullParameters
-         // and altParameters. Can be overridden.
          fNullPdf = &nullPdf;
          fAltPdf = &altPdf;
 
@@ -85,77 +75,65 @@ namespace RooStats {
          fAltParameters = (RooArgSet*) altParameters.snapshot();
 
          fDetailedOutputEnabled = false;
-         fDetailedOutput = NULL;
+         fDetailedOutput = nullptr;
 
-    fReuseNll=kFALSE ;
-    fNllNull=NULL ;
-    fNllAlt=NULL ;
+         fReuseNll=false ;
       }
 
-      //______________________________
-      virtual ~SimpleLikelihoodRatioTestStat() {
+      ~SimpleLikelihoodRatioTestStat() override {
          if (fNullParameters) delete fNullParameters;
          if (fAltParameters) delete fAltParameters;
-    if (fNllNull) delete fNllNull ;
-    if (fNllAlt) delete fNllAlt ;
-    if (fDetailedOutput) delete fDetailedOutput;
+         if (fDetailedOutput) delete fDetailedOutput;
       }
 
-      static void SetAlwaysReuseNLL(Bool_t flag);
+      static void SetAlwaysReuseNLL(bool flag);
 
-      void SetReuseNLL(Bool_t flag) { fReuseNll = flag ; }
+      void SetReuseNLL(bool flag) { fReuseNll = flag ; }
 
-      //_________________________________________
       void SetNullParameters(const RooArgSet& nullParameters) {
          if (fNullParameters) delete fNullParameters;
          fFirstEval = true;
-         //      if(fNullParameters) delete fNullParameters;
          fNullParameters = (RooArgSet*) nullParameters.snapshot();
       }
 
-      //_________________________________________
       void SetAltParameters(const RooArgSet& altParameters) {
          if (fAltParameters) delete fAltParameters;
          fFirstEval = true;
-         //      if(fAltParameters) delete fAltParameters;
          fAltParameters = (RooArgSet*) altParameters.snapshot();
       }
 
-      //______________________________
+      /// this should be possible with RooAbsCollection
       bool ParamsAreEqual() {
-         // this should be possible with RooAbsCollection
          if (!fNullParameters->equals(*fAltParameters)) return false;
 
-         RooAbsReal* null;
-         RooAbsReal* alt;
-
-         TIterator* nullIt = fNullParameters->createIterator();
-         TIterator* altIt = fAltParameters->createIterator();
          bool ret = true;
-         while ((null = (RooAbsReal*) nullIt->Next()) && (alt = (RooAbsReal*) altIt->Next())) {
-            if (null->getVal() != alt->getVal()) ret = false;
+
+         for (auto nullIt = fNullParameters->begin(), altIt = fAltParameters->begin();
+              nullIt != fNullParameters->end() && altIt != fAltParameters->end(); ++nullIt, ++altIt) {
+            RooAbsReal *null = static_cast<RooAbsReal *>(*nullIt);
+            RooAbsReal *alt = static_cast<RooAbsReal *>(*altIt);
+            if (null->getVal() != alt->getVal())
+               ret = false;
          }
-         delete nullIt;
-         delete altIt;
+
          return ret;
       }
 
 
-      // set the conditional observables which will be used when creating the NLL
-      // so the pdf's will not be normalized on the conditional observables when computing the NLL
-      virtual void SetConditionalObservables(const RooArgSet& set) {fConditionalObs.removeAll(); fConditionalObs.add(set);}
+      /// set the conditional observables which will be used when creating the NLL
+      /// so the pdf's will not be normalized on the conditional observables when computing the NLL
+      void SetConditionalObservables(const RooArgSet& set) override {fConditionalObs.removeAll(); fConditionalObs.add(set);}
 
-      // set the global observables which will be used when creating the NLL
-      // so the constraint pdf's will be normalized correctly on the global observables when computing the NLL
-      virtual void SetGlobalObservables(const RooArgSet& set) {fGlobalObs.removeAll(); fGlobalObs.add(set);}
+      /// set the global observables which will be used when creating the NLL
+      /// so the constraint pdf's will be normalized correctly on the global observables when computing the NLL
+      void SetGlobalObservables(const RooArgSet& set) override {fGlobalObs.removeAll(); fGlobalObs.add(set);}
 
-      //______________________________
-      virtual Double_t Evaluate(RooAbsData& data, RooArgSet& nullPOI);
+      double Evaluate(RooAbsData& data, RooArgSet& nullPOI) override;
 
-      virtual void EnableDetailedOutput( bool e=true ) { fDetailedOutputEnabled = e; fDetailedOutput = NULL; }
-      virtual const RooArgSet* GetDetailedOutput(void) const { return fDetailedOutput; }
+      virtual void EnableDetailedOutput( bool e=true ) { fDetailedOutputEnabled = e; fDetailedOutput = nullptr; }
+      const RooArgSet* GetDetailedOutput(void) const override { return fDetailedOutput; }
 
-      virtual const TString GetVarName() const {
+      const TString GetVarName() const override {
          return "log(L(#mu_{1}) / L(#mu_{0}))";
       }
 
@@ -170,16 +148,16 @@ namespace RooStats {
       bool fFirstEval;
 
       bool fDetailedOutputEnabled;
-      RooArgSet* fDetailedOutput; //!
+      RooArgSet* fDetailedOutput; ///<!
 
-      RooAbsReal* fNllNull ;  //! transient copy of the null NLL
-      RooAbsReal* fNllAlt ; //!  transient copy of the alt NLL
-      static Bool_t fgAlwaysReuseNll ;
-      Bool_t fReuseNll ;
+      std::unique_ptr<RooAbsReal> fNllNull; ///<! transient copy of the null NLL
+      std::unique_ptr<RooAbsReal> fNllAlt;  ///<!  transient copy of the alt NLL
+      static bool fgAlwaysReuseNll ;
+      bool fReuseNll ;
 
 
    protected:
-   ClassDef(SimpleLikelihoodRatioTestStat,4)
+   ClassDefOverride(SimpleLikelihoodRatioTestStat,4)
 };
 
 }

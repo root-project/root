@@ -158,8 +158,8 @@ TBranch::TBranch()
 ///        - `d` : a 24 bit truncated floating point (`Double32_t`)
 ///        - `L` : a 64 bit signed integer (`Long64_t`)
 ///        - `l` : a 64 bit unsigned integer (`ULong64_t`)
-///        - `G` : a long signed integer, stored as 64 bit (`Long_t`)
-///        - `g` : a long unsigned integer, stored as 64 bit (`ULong_t`)
+///        - `G` : a long signed integer (`Long_t`, which `sizeof` is platform dependent), stored as a 64 bit integer but usually held in memory as a 64 bit integer on 64 bit machines and 32 bit on 32 bit machines. Due to this difference, this data type is **not cross-platform**.
+///        - `g` : a long unsigned integer (`ULong_t`, which `sizeof` is platform dependent), stored as a 64 bit unsigned integer but held in memory usually as a 64 bit integer on 64 bit machines and 32 bit on 32 bit machines. Due to this difference, this data type is **not cross-platform**.
 ///        - `O` : [the letter `o`, not a zero] a boolean (`Bool_t`)
 ///
 ///     Arrays of values are supported with the following syntax:
@@ -464,6 +464,8 @@ TBranch::~TBranch()
    delete [] fBasketBytes;
    fBasketBytes = 0;
 
+   if (fExtraBasket && !fBaskets.Remove(fExtraBasket))
+      delete fExtraBasket;
    fBaskets.Delete();
    fNBaskets = 0;
    fCurrentBasket = 0;
@@ -1619,6 +1621,12 @@ Int_t TBranch::GetEntriesSerialized(Long64_t entry, TBuffer &user_buf, TBuffer *
       }
    }
 
+   if (fCurrentBasket == nullptr) {
+      R__ASSERT(fExtraBasket == nullptr && "fExtraBasket should have been set to nullptr by GetFreshBasket");
+      fExtraBasket = basket;
+      basket->DisownBuffer();
+   }
+
    return N;
 }
 
@@ -1897,7 +1905,7 @@ TBasket *TBranch::GetFreshCluster(TBuffer* user_buffer)
       if (fExtraBasket) {
          newbasket = fExtraBasket;
          fExtraBasket = nullptr;
-      } else { 
+      } else {
          newbasket = fTree->CreateBasket(this);
       }
       if (user_buffer)
@@ -1972,11 +1980,19 @@ TString TBranch::GetFullName() const
    if (!mother || mother==this) {
       return fName;
    }
-   TString motherName(mother->GetName());
-   if (motherName.Length() && (motherName[motherName.Length()-1] == '.')) {
+
+   const auto motherName = mother->GetName();
+   const auto len = strlen(motherName);
+   if (len > 0 && (motherName[len-1] == '.')) {
       return fName;
    }
-   return motherName + "." + fName;
+
+   // Reserve the final size to avoid allocations
+   TString result{static_cast<Ssiz_t>(len + 1 + fName.Length())};
+   result  = motherName;
+   result += ".";
+   result += fName;
+   return result;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

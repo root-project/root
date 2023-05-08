@@ -32,8 +32,8 @@ class TObjString;
 class TProcessUUID : public TProcessID {
 
 private:
-   TProcessUUID(const TProcessID&);              // TProcessUUID are not copiable.
-   TProcessUUID &operator=(const TProcessUUID&); // TProcessUUID are not copiable.
+   TProcessUUID(const TProcessID&) = delete;
+   TProcessUUID &operator=(const TProcessUUID&) = delete;
 
 protected:
    TList       *fUUIDs;        //Global list of TUUIDs
@@ -50,7 +50,7 @@ public:
    TList             *GetUUIDs()  const {return fUUIDs;}
    void               RemoveUUID(UInt_t number);
 
-   ClassDef(TProcessUUID,1)  //TProcessID managing UUIDs
+   ClassDefOverride(TProcessUUID,1)  //TProcessID managing UUIDs
 };
 
 #endif

@@ -53,17 +53,16 @@
 #include "llvm/IR/InstrTypes.h"
 #include "llvm/IR/Instruction.h"
 #include "llvm/IR/Instructions.h"
+#include "llvm/IR/IntrinsicInst.h"
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/Metadata.h"
 #include "llvm/IR/Module.h"
 #include "llvm/IR/ModuleSlotTracker.h"
 #include "llvm/IR/ModuleSummaryIndex.h"
 #include "llvm/IR/Operator.h"
-#include "llvm/IR/Statepoint.h"
 #include "llvm/IR/Type.h"
 #include "llvm/IR/TypeFinder.h"
 #include "llvm/IR/Use.h"
-#include "llvm/IR/UseListOrder.h"
 #include "llvm/IR/User.h"
 #include "llvm/IR/Value.h"
 #include "llvm/Support/AtomicOrdering.h"
@@ -95,29 +94,22 @@ AssemblyAnnotationWriter::~AssemblyAnnotationWriter() = default;
 // Helper Functions
 //===----------------------------------------------------------------------===//
 
-namespace {
+using OrderMap = MapVector<const Value *, unsigned>;
 
-struct OrderMap {
-  DenseMap<const Value *, std::pair<unsigned, bool>> IDs;
+using UseListOrderMap =
+    DenseMap<const Function *, MapVector<const Value *, std::vector<unsigned>>>;
 
-  unsigned size() const { return IDs.size(); }
-  std::pair<unsigned, bool> &operator[](const Value *V) { return IDs[V]; }
-
-  std::pair<unsigned, bool> lookup(const Value *V) const {
-    return IDs.lookup(V);
-  }
-
-  void index(const Value *V) {
-    // Explicitly sequence get-size and insert-value operations to avoid UB.
-    unsigned ID = IDs.size() + 1;
-    IDs[V].first = ID;
-  }
-};
-
-} // end anonymous namespace
+/// Look for a value that might be wrapped as metadata, e.g. a value in a
+/// metadata operand. Returns the input value as-is if it is not wrapped.
+static const Value *skipMetadataWrapper(const Value *V) {
+  if (const auto *MAV = dyn_cast<MetadataAsValue>(V))
+    if (const auto *VAM = dyn_cast<ValueAsMetadata>(MAV->getMetadata()))
+      return VAM->getValue();
+  return V;
+}
 
 static void orderValue(const Value *V, OrderMap &OM) {
-  if (OM.lookup(V).first)
+  if (OM.lookup(V))
     return;
 
   if (const Constant *C = dyn_cast<Constant>(V))
@@ -128,12 +120,11 @@ static void orderValue(const Value *V, OrderMap &OM) {
 
   // Note: we cannot cache this lookup above, since inserting into the map
   // changes the map's size, and thus affects the other IDs.
-  OM.index(V);
+  unsigned ID = OM.size() + 1;
+  OM[V] = ID;
 }
 
 static OrderMap orderModule(const Module *M) {
-  // This needs to match the order used by ValueEnumerator::ValueEnumerator()
-  // and ValueEnumerator::incorporateFunction().
   OrderMap OM;
 
   for (const GlobalVariable &G : M->globals()) {
@@ -167,10 +158,12 @@ static OrderMap orderModule(const Module *M) {
     for (const BasicBlock &BB : F) {
       orderValue(&BB, OM);
       for (const Instruction &I : BB) {
-        for (const Value *Op : I.operands())
+        for (const Value *Op : I.operands()) {
+          Op = skipMetadataWrapper(Op);
           if ((isa<Constant>(*Op) && !isa<GlobalValue>(*Op)) ||
               isa<InlineAsm>(*Op))
             orderValue(Op, OM);
+        }
         orderValue(&I, OM);
       }
     }
@@ -178,33 +171,34 @@ static OrderMap orderModule(const Module *M) {
   return OM;
 }
 
-static void predictValueUseListOrderImpl(const Value *V, const Function *F,
-                                         unsigned ID, const OrderMap &OM,
-                                         UseListOrderStack &Stack) {
+static std::vector<unsigned>
+predictValueUseListOrder(const Value *V, unsigned ID, const OrderMap &OM) {
   // Predict use-list order for this one.
   using Entry = std::pair<const Use *, unsigned>;
   SmallVector<Entry, 64> List;
   for (const Use &U : V->uses())
     // Check if this user will be serialized.
-    if (OM.lookup(U.getUser()).first)
+    if (OM.lookup(U.getUser()))
       List.push_back(std::make_pair(&U, List.size()));
 
   if (List.size() < 2)
     // We may have lost some users.
-    return;
+    return {};
 
-  bool GetsReversed =
-      !isa<GlobalVariable>(V) && !isa<Function>(V) && !isa<BasicBlock>(V);
+  // When referencing a value before its declaration, a temporary value is
+  // created, which will later be RAUWed with the actual value. This reverses
+  // the use list. This happens for all values apart from basic blocks.
+  bool GetsReversed = !isa<BasicBlock>(V);
   if (auto *BA = dyn_cast<BlockAddress>(V))
-    ID = OM.lookup(BA->getBasicBlock()).first;
+    ID = OM.lookup(BA->getBasicBlock());
   llvm::sort(List, [&](const Entry &L, const Entry &R) {
     const Use *LU = L.first;
     const Use *RU = R.first;
     if (LU == RU)
       return false;
 
-    auto LID = OM.lookup(LU->getUser()).first;
-    auto RID = OM.lookup(RU->getUser()).first;
+    auto LID = OM.lookup(LU->getUser());
+    auto RID = OM.lookup(RU->getUser());
 
     // If ID is 4, then expect: 7 6 5 1 2 3.
     if (LID < RID) {
@@ -228,91 +222,42 @@ static void predictValueUseListOrderImpl(const Value *V, const Function *F,
     return LU->getOperandNo() > RU->getOperandNo();
   });
 
-  if (std::is_sorted(
-          List.begin(), List.end(),
-          [](const Entry &L, const Entry &R) { return L.second < R.second; }))
+  if (llvm::is_sorted(List, [](const Entry &L, const Entry &R) {
+        return L.second < R.second;
+      }))
     // Order is already correct.
-    return;
+    return {};
 
   // Store the shuffle.
-  Stack.emplace_back(V, F, List.size());
-  assert(List.size() == Stack.back().Shuffle.size() && "Wrong size");
+  std::vector<unsigned> Shuffle(List.size());
   for (size_t I = 0, E = List.size(); I != E; ++I)
-    Stack.back().Shuffle[I] = List[I].second;
+    Shuffle[I] = List[I].second;
+  return Shuffle;
 }
 
-static void predictValueUseListOrder(const Value *V, const Function *F,
-                                     OrderMap &OM, UseListOrderStack &Stack) {
-  auto &IDPair = OM[V];
-  assert(IDPair.first && "Unmapped value");
-  if (IDPair.second)
-    // Already predicted.
-    return;
-
-  // Do the actual prediction.
-  IDPair.second = true;
-  if (!V->use_empty() && std::next(V->use_begin()) != V->use_end())
-    predictValueUseListOrderImpl(V, F, IDPair.first, OM, Stack);
-
-  // Recursive descent into constants.
-  if (const Constant *C = dyn_cast<Constant>(V))
-    if (C->getNumOperands()) // Visit GlobalValues.
-      for (const Value *Op : C->operands())
-        if (isa<Constant>(Op)) // Visit GlobalValues.
-          predictValueUseListOrder(Op, F, OM, Stack);
-}
-
-static UseListOrderStack predictUseListOrder(const Module *M) {
+static UseListOrderMap predictUseListOrder(const Module *M) {
   OrderMap OM = orderModule(M);
-
-  // Use-list orders need to be serialized after all the users have been added
-  // to a value, or else the shuffles will be incomplete.  Store them per
-  // function in a stack.
-  //
-  // Aside from function order, the order of values doesn't matter much here.
-  UseListOrderStack Stack;
-
-  // We want to visit the functions backward now so we can list function-local
-  // constants in the last Function they're used in.  Module-level constants
-  // have already been visited above.
-  for (const Function &F : make_range(M->rbegin(), M->rend())) {
-    if (F.isDeclaration())
+  UseListOrderMap ULOM;
+  for (const auto &Pair : OM) {
+    const Value *V = Pair.first;
+    if (V->use_empty() || std::next(V->use_begin()) == V->use_end())
       continue;
-    for (const BasicBlock &BB : F)
-      predictValueUseListOrder(&BB, &F, OM, Stack);
-    for (const Argument &A : F.args())
-      predictValueUseListOrder(&A, &F, OM, Stack);
-    for (const BasicBlock &BB : F)
-      for (const Instruction &I : BB)
-        for (const Value *Op : I.operands())
-          if (isa<Constant>(*Op) || isa<InlineAsm>(*Op)) // Visit GlobalValues.
-            predictValueUseListOrder(Op, &F, OM, Stack);
-    for (const BasicBlock &BB : F)
-      for (const Instruction &I : BB)
-        predictValueUseListOrder(&I, &F, OM, Stack);
+
+    std::vector<unsigned> Shuffle =
+        predictValueUseListOrder(V, Pair.second, OM);
+    if (Shuffle.empty())
+      continue;
+
+    const Function *F = nullptr;
+    if (auto *I = dyn_cast<Instruction>(V))
+      F = I->getFunction();
+    if (auto *A = dyn_cast<Argument>(V))
+      F = A->getParent();
+    if (auto *BB = dyn_cast<BasicBlock>(V))
+      F = BB->getParent();
+    ULOM[F][V] = std::move(Shuffle);
   }
-
-  // Visit globals last.
-  for (const GlobalVariable &G : M->globals())
-    predictValueUseListOrder(&G, nullptr, OM, Stack);
-  for (const Function &F : *M)
-    predictValueUseListOrder(&F, nullptr, OM, Stack);
-  for (const GlobalAlias &A : M->aliases())
-    predictValueUseListOrder(&A, nullptr, OM, Stack);
-  for (const GlobalIFunc &I : M->ifuncs())
-    predictValueUseListOrder(&I, nullptr, OM, Stack);
-  for (const GlobalVariable &G : M->globals())
-    if (G.hasInitializer())
-      predictValueUseListOrder(G.getInitializer(), nullptr, OM, Stack);
-  for (const GlobalAlias &A : M->aliases())
-    predictValueUseListOrder(A.getAliasee(), nullptr, OM, Stack);
-  for (const GlobalIFunc &I : M->ifuncs())
-    predictValueUseListOrder(I.getResolver(), nullptr, OM, Stack);
-  for (const Function &F : *M)
-    for (const Use &U : F.operands())
-      predictValueUseListOrder(U.get(), nullptr, OM, Stack);
-
-  return Stack;
+  return ULOM;
 }
 
 static const Module *getModuleFromVal(const Value *V) {
@@ -352,6 +297,8 @@ static void PrintCallingConv(unsigned cc, raw_ostream &Out) {
   case CallingConv::PreserveAll:   Out << "preserve_allcc"; break;
   case CallingConv::CXX_FAST_TLS:  Out << "cxx_fast_tlscc"; break;
   case CallingConv::GHC:           Out << "ghccc"; break;
+  case CallingConv::Tail:          Out << "tailcc"; break;
+  case CallingConv::CFGuard_Check: Out << "cfguard_checkcc"; break;
   case CallingConv::X86_StdCall:   Out << "x86_stdcallcc"; break;
   case CallingConv::X86_FastCall:  Out << "x86_fastcallcc"; break;
   case CallingConv::X86_ThisCall:  Out << "x86_thiscallcc"; break;
@@ -362,6 +309,9 @@ static void PrintCallingConv(unsigned cc, raw_ostream &Out) {
   case CallingConv::ARM_AAPCS:     Out << "arm_aapcscc"; break;
   case CallingConv::ARM_AAPCS_VFP: Out << "arm_aapcs_vfpcc"; break;
   case CallingConv::AArch64_VectorCall: Out << "aarch64_vector_pcs"; break;
+  case CallingConv::AArch64_SVE_VectorCall:
+    Out << "aarch64_sve_vector_pcs";
+    break;
   case CallingConv::MSP430_INTR:   Out << "msp430_intrcc"; break;
   case CallingConv::AVR_INTR:      Out << "avr_intrcc "; break;
   case CallingConv::AVR_SIGNAL:    Out << "avr_signalcc "; break;
@@ -372,6 +322,7 @@ static void PrintCallingConv(unsigned cc, raw_ostream &Out) {
   case CallingConv::SPIR_FUNC:     Out << "spir_func"; break;
   case CallingConv::SPIR_KERNEL:   Out << "spir_kernel"; break;
   case CallingConv::Swift:         Out << "swiftcc"; break;
+  case CallingConv::SwiftTail:     Out << "swifttailcc"; break;
   case CallingConv::X86_INTR:      Out << "x86_intrcc"; break;
   case CallingConv::HHVM:          Out << "hhvmcc"; break;
   case CallingConv::HHVM_C:        Out << "hhvm_ccc"; break;
@@ -383,6 +334,7 @@ static void PrintCallingConv(unsigned cc, raw_ostream &Out) {
   case CallingConv::AMDGPU_PS:     Out << "amdgpu_ps"; break;
   case CallingConv::AMDGPU_CS:     Out << "amdgpu_cs"; break;
   case CallingConv::AMDGPU_KERNEL: Out << "amdgpu_kernel"; break;
+  case CallingConv::AMDGPU_Gfx:    Out << "amdgpu_gfx"; break;
   }
 }
 
@@ -455,6 +407,33 @@ static void PrintLLVMName(raw_ostream &OS, StringRef Name, PrefixType Prefix) {
 static void PrintLLVMName(raw_ostream &OS, const Value *V) {
   PrintLLVMName(OS, V->getName(),
                 isa<GlobalValue>(V) ? GlobalPrefix : LocalPrefix);
+}
+
+static void PrintShuffleMask(raw_ostream &Out, Type *Ty, ArrayRef<int> Mask) {
+  Out << ", <";
+  if (isa<ScalableVectorType>(Ty))
+    Out << "vscale x ";
+  Out << Mask.size() << " x i32> ";
+  bool FirstElt = true;
+  if (all_of(Mask, [](int Elt) { return Elt == 0; })) {
+    Out << "zeroinitializer";
+  } else if (all_of(Mask, [](int Elt) { return Elt == UndefMaskElem; })) {
+    Out << "undef";
+  } else {
+    Out << "<";
+    for (int Elt : Mask) {
+      if (FirstElt)
+        FirstElt = false;
+      else
+        Out << ", ";
+      Out << "i32 ";
+      if (Elt == UndefMaskElem)
+        Out << "undef";
+      else
+        Out << Elt;
+    }
+    Out << ">";
+  }
 }
 
 namespace {
@@ -556,6 +535,7 @@ void TypePrinting::print(Type *Ty, raw_ostream &OS) {
   switch (Ty->getTypeID()) {
   case Type::VoidTyID:      OS << "void"; return;
   case Type::HalfTyID:      OS << "half"; return;
+  case Type::BFloatTyID:    OS << "bfloat"; return;
   case Type::FloatTyID:     OS << "float"; return;
   case Type::DoubleTyID:    OS << "double"; return;
   case Type::X86_FP80TyID:  OS << "x86_fp80"; return;
@@ -564,6 +544,7 @@ void TypePrinting::print(Type *Ty, raw_ostream &OS) {
   case Type::LabelTyID:     OS << "label"; return;
   case Type::MetadataTyID:  OS << "metadata"; return;
   case Type::X86_MMXTyID:   OS << "x86_mmx"; return;
+  case Type::X86_AMXTyID:   OS << "x86_amx"; return;
   case Type::TokenTyID:     OS << "token"; return;
   case Type::IntegerTyID:
     OS << 'i' << cast<IntegerType>(Ty)->getBitWidth();
@@ -605,6 +586,12 @@ void TypePrinting::print(Type *Ty, raw_ostream &OS) {
   }
   case Type::PointerTyID: {
     PointerType *PTy = cast<PointerType>(Ty);
+    if (PTy->isOpaque()) {
+      OS << "ptr";
+      if (unsigned AddressSpace = PTy->getAddressSpace())
+        OS << " addrspace(" << AddressSpace << ')';
+      return;
+    }
     print(PTy->getElementType(), OS);
     if (unsigned AddressSpace = PTy->getAddressSpace())
       OS << " addrspace(" << AddressSpace << ')';
@@ -618,12 +605,14 @@ void TypePrinting::print(Type *Ty, raw_ostream &OS) {
     OS << ']';
     return;
   }
-  case Type::VectorTyID: {
+  case Type::FixedVectorTyID:
+  case Type::ScalableVectorTyID: {
     VectorType *PTy = cast<VectorType>(Ty);
+    ElementCount EC = PTy->getElementCount();
     OS << "<";
-    if (PTy->isScalable())
+    if (EC.isScalable())
       OS << "vscale x ";
-    OS << PTy->getNumElements() << " x ";
+    OS << EC.getKnownMinValue() << " x ";
     print(PTy->getElementType(), OS);
     OS << '>';
     return;
@@ -658,6 +647,8 @@ void TypePrinting::printStructBody(StructType *STy, raw_ostream &OS) {
     OS << '>';
 }
 
+AbstractSlotTrackerStorage::~AbstractSlotTrackerStorage() {}
+
 namespace llvm {
 
 //===----------------------------------------------------------------------===//
@@ -665,7 +656,7 @@ namespace llvm {
 //===----------------------------------------------------------------------===//
 /// This class provides computation of slot numbers for LLVM Assembly writing.
 ///
-class SlotTracker {
+class SlotTracker : public AbstractSlotTrackerStorage {
 public:
   /// ValueMap - A mapping of Values to slot numbers.
   using ValueMap = DenseMap<const Value *, unsigned>;
@@ -678,6 +669,11 @@ private:
   const Function* TheFunction = nullptr;
   bool FunctionProcessed = false;
   bool ShouldInitializeAllMetadata;
+
+  std::function<void(AbstractSlotTrackerStorage *, const Module *, bool)>
+      ProcessModuleHookFn;
+  std::function<void(AbstractSlotTrackerStorage *, const Function *, bool)>
+      ProcessFunctionHookFn;
 
   /// The summary index for which we are holding slot numbers.
   const ModuleSummaryIndex *TheIndex = nullptr;
@@ -733,11 +729,22 @@ public:
   SlotTracker(const SlotTracker &) = delete;
   SlotTracker &operator=(const SlotTracker &) = delete;
 
+  ~SlotTracker() = default;
+
+  void setProcessHook(
+      std::function<void(AbstractSlotTrackerStorage *, const Module *, bool)>);
+  void setProcessHook(std::function<void(AbstractSlotTrackerStorage *,
+                                         const Function *, bool)>);
+
+  unsigned getNextMetadataSlot() override { return mdnNext; }
+
+  void createMetadataSlot(const MDNode *N) override;
+
   /// Return the slot number of the specified value in it's type
   /// plane.  If something is not in the SlotTracker, return -1.
   int getLocalSlot(const Value *V);
   int getGlobalSlot(const GlobalValue *V);
-  int getMetadataSlot(const MDNode *N);
+  int getMetadataSlot(const MDNode *N) override;
   int getAttributeGroupSlot(AttributeSet AS);
   int getModulePathSlot(StringRef Path);
   int getGUIDSlot(GlobalValue::GUID GUID);
@@ -778,7 +785,7 @@ public:
 
   /// These functions do the actual initialization.
   inline void initializeIfNeeded();
-  void initializeIndexIfNeeded();
+  int initializeIndexIfNeeded();
 
   // Implementation Details
 private:
@@ -801,7 +808,8 @@ private:
   /// Add all of the module level global variables (and their initializers)
   /// and function declarations, but not the contents of those functions.
   void processModule();
-  void processIndex();
+  // Returns number of allocated slots
+  int processIndex();
 
   /// Add all of the functions arguments, basic blocks, and instructions.
   void processFunction();
@@ -835,8 +843,12 @@ SlotTracker *ModuleSlotTracker::getMachine() {
 
   ShouldCreateStorage = false;
   MachineStorage =
-      llvm::make_unique<SlotTracker>(M, ShouldInitializeAllMetadata);
+      std::make_unique<SlotTracker>(M, ShouldInitializeAllMetadata);
   Machine = MachineStorage.get();
+  if (ProcessModuleHookFn)
+    Machine->setProcessHook(ProcessModuleHookFn);
+  if (ProcessFunctionHookFn)
+    Machine->setProcessHook(ProcessFunctionHookFn);
   return Machine;
 }
 
@@ -857,6 +869,18 @@ void ModuleSlotTracker::incorporateFunction(const Function &F) {
 int ModuleSlotTracker::getLocalSlot(const Value *V) {
   assert(F && "No function incorporated");
   return Machine->getLocalSlot(V);
+}
+
+void ModuleSlotTracker::setProcessHook(
+    std::function<void(AbstractSlotTrackerStorage *, const Module *, bool)>
+        Fn) {
+  ProcessModuleHookFn = Fn;
+}
+
+void ModuleSlotTracker::setProcessHook(
+    std::function<void(AbstractSlotTrackerStorage *, const Function *, bool)>
+        Fn) {
+  ProcessFunctionHookFn = Fn;
 }
 
 static SlotTracker *createSlotTracker(const Value *V) {
@@ -915,11 +939,12 @@ inline void SlotTracker::initializeIfNeeded() {
     processFunction();
 }
 
-void SlotTracker::initializeIndexIfNeeded() {
+int SlotTracker::initializeIndexIfNeeded() {
   if (!TheIndex)
-    return;
-  processIndex();
+    return 0;
+  int NumSlots = processIndex();
   TheIndex = nullptr; ///< Prevent re-processing next time we're called.
+  return NumSlots;
 }
 
 // Iterate through all the global variables, functions, and global
@@ -968,6 +993,9 @@ void SlotTracker::processModule() {
       CreateAttributeSetSlot(FnAttrs);
   }
 
+  if (ProcessModuleHookFn)
+    ProcessModuleHookFn(this, TheModule, ShouldInitializeAllMetadata);
+
   ST_DEBUG("end processModule!\n");
 }
 
@@ -1008,13 +1036,16 @@ void SlotTracker::processFunction() {
     }
   }
 
+  if (ProcessFunctionHookFn)
+    ProcessFunctionHookFn(this, TheFunction, ShouldInitializeAllMetadata);
+
   FunctionProcessed = true;
 
   ST_DEBUG("end processFunction!\n");
 }
 
 // Iterate through all the GUID in the index and create slots for them.
-void SlotTracker::processIndex() {
+int SlotTracker::processIndex() {
   ST_DEBUG("begin processIndex!\n");
   assert(TheIndex);
 
@@ -1033,17 +1064,16 @@ void SlotTracker::processIndex() {
   for (auto &GlobalList : *TheIndex)
     CreateGUIDSlot(GlobalList.first);
 
-  // Start numbering the TypeIds after the GUIDs.
-  TypeIdNext = GUIDNext;
-
-  for (auto TidIter = TheIndex->typeIds().begin();
-       TidIter != TheIndex->typeIds().end(); TidIter++)
-    CreateTypeIdSlot(TidIter->second.first);
-
   for (auto &TId : TheIndex->typeIdCompatibleVtableMap())
     CreateGUIDSlot(GlobalValue::getGUID(TId.first));
 
+  // Start numbering the TypeIds after the GUIDs.
+  TypeIdNext = GUIDNext;
+  for (const auto &TID : TheIndex->typeIds())
+    CreateTypeIdSlot(TID.second.first);
+
   ST_DEBUG("end processIndex!\n");
+  return TypeIdNext;
 }
 
 void SlotTracker::processGlobalObjectMetadata(const GlobalObject &GO) {
@@ -1098,6 +1128,21 @@ int SlotTracker::getGlobalSlot(const GlobalValue *V) {
   ValueMap::iterator MI = mMap.find(V);
   return MI == mMap.end() ? -1 : (int)MI->second;
 }
+
+void SlotTracker::setProcessHook(
+    std::function<void(AbstractSlotTrackerStorage *, const Module *, bool)>
+        Fn) {
+  ProcessModuleHookFn = Fn;
+}
+
+void SlotTracker::setProcessHook(
+    std::function<void(AbstractSlotTrackerStorage *, const Function *, bool)>
+        Fn) {
+  ProcessFunctionHookFn = Fn;
+}
+
+/// getMetadataSlot - Get the slot number of a MDNode.
+void SlotTracker::createMetadataSlot(const MDNode *N) { CreateMetadataSlot(N); }
 
 /// getMetadataSlot - Get the slot number of a MDNode.
 int SlotTracker::getMetadataSlot(const MDNode *N) {
@@ -1190,8 +1235,9 @@ void SlotTracker::CreateFunctionSlot(const Value *V) {
 void SlotTracker::CreateMetadataSlot(const MDNode *N) {
   assert(N && "Can't insert a null Value into SlotTracker!");
 
-  // Don't make slots for DIExpressions. We just print them inline everywhere.
-  if (isa<DIExpression>(N))
+  // Don't make slots for DIExpressions or DIArgLists. We just print them inline
+  // everywhere.
+  if (isa<DIExpression>(N) || isa<DIArgList>(N))
     return;
 
   unsigned DestSlot = mdnNext;
@@ -1311,16 +1357,15 @@ static void WriteConstantInternal(raw_ostream &Out, const Constant *CV,
       bool isInf = APF.isInfinity();
       bool isNaN = APF.isNaN();
       if (!isInf && !isNaN) {
-        double Val = isDouble ? APF.convertToDouble() : APF.convertToFloat();
+        double Val = APF.convertToDouble();
         SmallString<128> StrVal;
         APF.toString(StrVal, 6, 0, false);
         // Check to make sure that the stringized number is not some string like
         // "Inf" or NaN, that atof will accept, but the lexer will not.  Check
         // that the string matches the "[-+]?[0-9]" regex.
         //
-        assert(((StrVal[0] >= '0' && StrVal[0] <= '9') ||
-                ((StrVal[0] == '-' || StrVal[0] == '+') &&
-                 (StrVal[1] >= '0' && StrVal[1] <= '9'))) &&
+        assert((isDigit(StrVal[0]) || ((StrVal[0] == '-' || StrVal[0] == '+') &&
+                                       isDigit(StrVal[1]))) &&
                "[-+]?[0-9] regex does not match!");
         // Reparse stringized version!
         if (APFloat(APFloat::IEEEdouble(), StrVal).convertToDouble() == Val) {
@@ -1336,14 +1381,24 @@ static void WriteConstantInternal(raw_ostream &Out, const Constant *CV,
                     "assuming that double is 64 bits!");
       APFloat apf = APF;
       // Floats are represented in ASCII IR as double, convert.
-      if (!isDouble)
+      // FIXME: We should allow 32-bit hex float and remove this.
+      if (!isDouble) {
+        // A signaling NaN is quieted on conversion, so we need to recreate the
+        // expected value after convert (quiet bit of the payload is clear).
+        bool IsSNAN = apf.isSignaling();
         apf.convert(APFloat::IEEEdouble(), APFloat::rmNearestTiesToEven,
-                          &ignored);
+                    &ignored);
+        if (IsSNAN) {
+          APInt Payload = apf.bitcastToAPInt();
+          apf = APFloat::getSNaN(APFloat::IEEEdouble(), apf.isNegative(),
+                                 &Payload);
+        }
+      }
       Out << format_hex(apf.bitcastToAPInt().getZExtValue(), 0, /*Upper=*/true);
       return;
     }
 
-    // Either half, or some form of long double.
+    // Either half, bfloat or some form of long double.
     // These appear as a magic letter identifying the type, then a
     // fixed number of hex digits.
     Out << "0x";
@@ -1371,6 +1426,10 @@ static void WriteConstantInternal(raw_ostream &Out, const Constant *CV,
       Out << 'H';
       Out << format_hex_no_prefix(API.getZExtValue(), 4,
                                   /*Upper=*/true);
+    } else if (&APF.getSemantics() == &APFloat::BFloat()) {
+      Out << 'R';
+      Out << format_hex_no_prefix(API.getZExtValue(), 4,
+                                  /*Upper=*/true);
     } else
       llvm_unreachable("Unsupported floating point type");
     return;
@@ -1389,6 +1448,13 @@ static void WriteConstantInternal(raw_ostream &Out, const Constant *CV,
     WriteAsOperandInternal(Out, BA->getBasicBlock(), &TypePrinter, Machine,
                            Context);
     Out << ")";
+    return;
+  }
+
+  if (const auto *Equiv = dyn_cast<DSOLocalEquivalent>(CV)) {
+    Out << "dso_local_equivalent ";
+    WriteAsOperandInternal(Out, Equiv->getGlobalValue(), &TypePrinter, Machine,
+                           Context);
     return;
   }
 
@@ -1470,13 +1536,14 @@ static void WriteConstantInternal(raw_ostream &Out, const Constant *CV,
   }
 
   if (isa<ConstantVector>(CV) || isa<ConstantDataVector>(CV)) {
-    Type *ETy = CV->getType()->getVectorElementType();
+    auto *CVVTy = cast<FixedVectorType>(CV->getType());
+    Type *ETy = CVVTy->getElementType();
     Out << '<';
     TypePrinter.print(ETy, Out);
     Out << ' ';
     WriteAsOperandInternal(Out, CV->getAggregateElement(0U), &TypePrinter,
                            Machine, Context);
-    for (unsigned i = 1, e = CV->getType()->getVectorNumElements(); i != e;++i){
+    for (unsigned i = 1, e = CVVTy->getNumElements(); i != e; ++i) {
       Out << ", ";
       TypePrinter.print(ETy, Out);
       Out << ' ';
@@ -1494,6 +1561,11 @@ static void WriteConstantInternal(raw_ostream &Out, const Constant *CV,
 
   if (isa<ConstantTokenNone>(CV)) {
     Out << "none";
+    return;
+  }
+
+  if (isa<PoisonValue>(CV)) {
+    Out << "poison";
     return;
   }
 
@@ -1539,6 +1611,9 @@ static void WriteConstantInternal(raw_ostream &Out, const Constant *CV,
       Out << " to ";
       TypePrinter.print(CE->getType(), Out);
     }
+
+    if (CE->getOpcode() == Instruction::ShuffleVector)
+      PrintShuffleMask(Out, CE->getType(), CE->getShuffleMask());
 
     Out << ')';
     return;
@@ -1609,6 +1684,8 @@ struct MDFieldPrinter {
                      bool ShouldSkipNull = true);
   template <class IntTy>
   void printInt(StringRef Name, IntTy Int, bool ShouldSkipZero = true);
+  void printAPInt(StringRef Name, const APInt &Int, bool IsUnsigned,
+                  bool ShouldSkipZero);
   void printBool(StringRef Name, bool Value, Optional<bool> Default = None);
   void printDIFlags(StringRef Name, DINode::DIFlags Flags);
   void printDISPFlags(StringRef Name, DISubprogram::DISPFlags Flags);
@@ -1682,6 +1759,15 @@ void MDFieldPrinter::printInt(StringRef Name, IntTy Int, bool ShouldSkipZero) {
     return;
 
   Out << FS << Name << ": " << Int;
+}
+
+void MDFieldPrinter::printAPInt(StringRef Name, const APInt &Int,
+                                bool IsUnsigned, bool ShouldSkipZero) {
+  if (ShouldSkipZero && Int.isNullValue())
+    return;
+
+  Out << FS << Name << ": ";
+  Int.print(Out, !IsUnsigned);
 }
 
 void MDFieldPrinter::printBool(StringRef Name, bool Value,
@@ -1799,12 +1885,94 @@ static void writeDISubrange(raw_ostream &Out, const DISubrange *N,
                             const Module *Context) {
   Out << "!DISubrange(";
   MDFieldPrinter Printer(Out, TypePrinter, Machine, Context);
-  if (auto *CE = N->getCount().dyn_cast<ConstantInt*>())
-    Printer.printInt("count", CE->getSExtValue(), /* ShouldSkipZero */ false);
+
+  auto *Count = N->getRawCountNode();
+  if (auto *CE = dyn_cast_or_null<ConstantAsMetadata>(Count)) {
+    auto *CV = cast<ConstantInt>(CE->getValue());
+    Printer.printInt("count", CV->getSExtValue(),
+                     /* ShouldSkipZero */ false);
+  } else
+    Printer.printMetadata("count", Count, /*ShouldSkipNull */ true);
+
+  // A lowerBound of constant 0 should not be skipped, since it is different
+  // from an unspecified lower bound (= nullptr).
+  auto *LBound = N->getRawLowerBound();
+  if (auto *LE = dyn_cast_or_null<ConstantAsMetadata>(LBound)) {
+    auto *LV = cast<ConstantInt>(LE->getValue());
+    Printer.printInt("lowerBound", LV->getSExtValue(),
+                     /* ShouldSkipZero */ false);
+  } else
+    Printer.printMetadata("lowerBound", LBound, /*ShouldSkipNull */ true);
+
+  auto *UBound = N->getRawUpperBound();
+  if (auto *UE = dyn_cast_or_null<ConstantAsMetadata>(UBound)) {
+    auto *UV = cast<ConstantInt>(UE->getValue());
+    Printer.printInt("upperBound", UV->getSExtValue(),
+                     /* ShouldSkipZero */ false);
+  } else
+    Printer.printMetadata("upperBound", UBound, /*ShouldSkipNull */ true);
+
+  auto *Stride = N->getRawStride();
+  if (auto *SE = dyn_cast_or_null<ConstantAsMetadata>(Stride)) {
+    auto *SV = cast<ConstantInt>(SE->getValue());
+    Printer.printInt("stride", SV->getSExtValue(), /* ShouldSkipZero */ false);
+  } else
+    Printer.printMetadata("stride", Stride, /*ShouldSkipNull */ true);
+
+  Out << ")";
+}
+
+static void writeDIGenericSubrange(raw_ostream &Out, const DIGenericSubrange *N,
+                                   TypePrinting *TypePrinter,
+                                   SlotTracker *Machine,
+                                   const Module *Context) {
+  Out << "!DIGenericSubrange(";
+  MDFieldPrinter Printer(Out, TypePrinter, Machine, Context);
+
+  auto IsConstant = [&](Metadata *Bound) -> bool {
+    if (auto *BE = dyn_cast_or_null<DIExpression>(Bound)) {
+      return BE->isConstant()
+                 ? DIExpression::SignedOrUnsignedConstant::SignedConstant ==
+                       *BE->isConstant()
+                 : false;
+    }
+    return false;
+  };
+
+  auto GetConstant = [&](Metadata *Bound) -> int64_t {
+    assert(IsConstant(Bound) && "Expected constant");
+    auto *BE = dyn_cast_or_null<DIExpression>(Bound);
+    return static_cast<int64_t>(BE->getElement(1));
+  };
+
+  auto *Count = N->getRawCountNode();
+  if (IsConstant(Count))
+    Printer.printInt("count", GetConstant(Count),
+                     /* ShouldSkipZero */ false);
   else
-    Printer.printMetadata("count", N->getCount().dyn_cast<DIVariable*>(),
-                          /*ShouldSkipNull */ false);
-  Printer.printInt("lowerBound", N->getLowerBound());
+    Printer.printMetadata("count", Count, /*ShouldSkipNull */ true);
+
+  auto *LBound = N->getRawLowerBound();
+  if (IsConstant(LBound))
+    Printer.printInt("lowerBound", GetConstant(LBound),
+                     /* ShouldSkipZero */ false);
+  else
+    Printer.printMetadata("lowerBound", LBound, /*ShouldSkipNull */ true);
+
+  auto *UBound = N->getRawUpperBound();
+  if (IsConstant(UBound))
+    Printer.printInt("upperBound", GetConstant(UBound),
+                     /* ShouldSkipZero */ false);
+  else
+    Printer.printMetadata("upperBound", UBound, /*ShouldSkipNull */ true);
+
+  auto *Stride = N->getRawStride();
+  if (IsConstant(Stride))
+    Printer.printInt("stride", GetConstant(Stride),
+                     /* ShouldSkipZero */ false);
+  else
+    Printer.printMetadata("stride", Stride, /*ShouldSkipNull */ true);
+
   Out << ")";
 }
 
@@ -1813,13 +1981,10 @@ static void writeDIEnumerator(raw_ostream &Out, const DIEnumerator *N,
   Out << "!DIEnumerator(";
   MDFieldPrinter Printer(Out);
   Printer.printString("name", N->getName(), /* ShouldSkipEmpty */ false);
-  if (N->isUnsigned()) {
-    auto Value = static_cast<uint64_t>(N->getValue());
-    Printer.printInt("value", Value, /* ShouldSkipZero */ false);
+  Printer.printAPInt("value", N->getValue(), N->isUnsigned(),
+                     /*ShouldSkipZero=*/false);
+  if (N->isUnsigned())
     Printer.printBool("isUnsigned", true);
-  } else {
-    Printer.printInt("value", N->getValue(), /* ShouldSkipZero */ false);
-  }
   Out << ")";
 }
 
@@ -1835,6 +2000,23 @@ static void writeDIBasicType(raw_ostream &Out, const DIBasicType *N,
   Printer.printDwarfEnum("encoding", N->getEncoding(),
                          dwarf::AttributeEncodingString);
   Printer.printDIFlags("flags", N->getFlags());
+  Out << ")";
+}
+
+static void writeDIStringType(raw_ostream &Out, const DIStringType *N,
+                              TypePrinting *TypePrinter, SlotTracker *Machine,
+                              const Module *Context) {
+  Out << "!DIStringType(";
+  MDFieldPrinter Printer(Out, TypePrinter, Machine, Context);
+  if (N->getTag() != dwarf::DW_TAG_string_type)
+    Printer.printTag(N);
+  Printer.printString("name", N->getName());
+  Printer.printMetadata("stringLength", N->getRawStringLength());
+  Printer.printMetadata("stringLengthExpression", N->getRawStringLengthExp());
+  Printer.printInt("size", N->getSizeInBits());
+  Printer.printInt("align", N->getAlignInBits());
+  Printer.printDwarfEnum("encoding", N->getEncoding(),
+                         dwarf::AttributeEncodingString);
   Out << ")";
 }
 
@@ -1883,6 +2065,14 @@ static void writeDICompositeType(raw_ostream &Out, const DICompositeType *N,
   Printer.printMetadata("templateParams", N->getRawTemplateParams());
   Printer.printString("identifier", N->getIdentifier());
   Printer.printMetadata("discriminator", N->getRawDiscriminator());
+  Printer.printMetadata("dataLocation", N->getRawDataLocation());
+  Printer.printMetadata("associated", N->getRawAssociated());
+  Printer.printMetadata("allocated", N->getRawAllocated());
+  if (auto *RankConst = N->getRankConst())
+    Printer.printInt("rank", RankConst->getSExtValue(),
+                     /* ShouldSkipZero */ false);
+  else
+    Printer.printMetadata("rank", N->getRawRank(), /*ShouldSkipNull */ true);
   Out << ")";
 }
 
@@ -1940,6 +2130,8 @@ static void writeDICompileUnit(raw_ostream &Out, const DICompileUnit *N,
                     false);
   Printer.printNameTableKind("nameTableKind", N->getNameTableKind());
   Printer.printBool("rangesBaseAddress", N->getRangesBaseAddress(), false);
+  Printer.printString("sysroot", N->getSysRoot());
+  Printer.printString("sdk", N->getSDK());
   Out << ")";
 }
 
@@ -2052,7 +2244,10 @@ static void writeDIModule(raw_ostream &Out, const DIModule *N,
   Printer.printString("name", N->getName());
   Printer.printString("configMacros", N->getConfigurationMacros());
   Printer.printString("includePath", N->getIncludePath());
-  Printer.printString("isysroot", N->getISysRoot());
+  Printer.printString("apinotes", N->getAPINotesFile());
+  Printer.printMetadata("file", N->getRawFile());
+  Printer.printInt("line", N->getLineNo());
+  Printer.printBool("isDecl", N->getIsDecl(), /* Default */ false);
   Out << ")";
 }
 
@@ -2066,6 +2261,7 @@ static void writeDITemplateTypeParameter(raw_ostream &Out,
   MDFieldPrinter Printer(Out, TypePrinter, Machine, Context);
   Printer.printString("name", N->getName());
   Printer.printMetadata("type", N->getRawType(), /* ShouldSkipNull */ false);
+  Printer.printBool("defaulted", N->isDefault(), /* Default= */ false);
   Out << ")";
 }
 
@@ -2080,6 +2276,7 @@ static void writeDITemplateValueParameter(raw_ostream &Out,
     Printer.printTag(N);
   Printer.printString("name", N->getName());
   Printer.printMetadata("type", N->getRawType());
+  Printer.printBool("defaulted", N->isDefault(), /* Default= */ false);
   Printer.printMetadata("value", N->getValue(), /* ShouldSkipNull */ false);
   Out << ")";
 }
@@ -2137,22 +2334,37 @@ static void writeDIExpression(raw_ostream &Out, const DIExpression *N,
   Out << "!DIExpression(";
   FieldSeparator FS;
   if (N->isValid()) {
-    for (auto I = N->expr_op_begin(), E = N->expr_op_end(); I != E; ++I) {
-      auto OpStr = dwarf::OperationEncodingString(I->getOp());
+    for (const DIExpression::ExprOperand &Op : N->expr_ops()) {
+      auto OpStr = dwarf::OperationEncodingString(Op.getOp());
       assert(!OpStr.empty() && "Expected valid opcode");
 
       Out << FS << OpStr;
-      if (I->getOp() == dwarf::DW_OP_LLVM_convert) {
-        Out << FS << I->getArg(0);
-        Out << FS << dwarf::AttributeEncodingString(I->getArg(1));
+      if (Op.getOp() == dwarf::DW_OP_LLVM_convert) {
+        Out << FS << Op.getArg(0);
+        Out << FS << dwarf::AttributeEncodingString(Op.getArg(1));
       } else {
-        for (unsigned A = 0, AE = I->getNumArgs(); A != AE; ++A)
-          Out << FS << I->getArg(A);
+        for (unsigned A = 0, AE = Op.getNumArgs(); A != AE; ++A)
+          Out << FS << Op.getArg(A);
       }
     }
   } else {
     for (const auto &I : N->getElements())
       Out << FS << I;
+  }
+  Out << ")";
+}
+
+static void writeDIArgList(raw_ostream &Out, const DIArgList *N,
+                           TypePrinting *TypePrinter, SlotTracker *Machine,
+                           const Module *Context, bool FromValue = false) {
+  assert(FromValue &&
+         "Unexpected DIArgList metadata outside of value argument");
+  Out << "!DIArgList(";
+  FieldSeparator FS;
+  MDFieldPrinter Printer(Out, TypePrinter, Machine, Context);
+  for (Metadata *Arg : N->getArgs()) {
+    Out << FS;
+    WriteAsOperandInternal(Out, Arg, TypePrinter, Machine, Context, true);
   }
   Out << ")";
 }
@@ -2245,6 +2457,8 @@ static void WriteAsOperandInternal(raw_ostream &Out, const Value *V,
     // We don't emit the AD_ATT dialect as it's the assumed default.
     if (IA->getDialect() == InlineAsm::AD_Intel)
       Out << "inteldialect ";
+    if (IA->canThrow())
+      Out << "unwind ";
     Out << '"';
     printEscapedString(IA->getAsmString(), Out);
     Out << "\", \"";
@@ -2302,17 +2516,21 @@ static void WriteAsOperandInternal(raw_ostream &Out, const Metadata *MD,
                                    TypePrinting *TypePrinter,
                                    SlotTracker *Machine, const Module *Context,
                                    bool FromValue) {
-  // Write DIExpressions inline when used as a value. Improves readability of
-  // debug info intrinsics.
+  // Write DIExpressions and DIArgLists inline when used as a value. Improves
+  // readability of debug info intrinsics.
   if (const DIExpression *Expr = dyn_cast<DIExpression>(MD)) {
     writeDIExpression(Out, Expr, TypePrinter, Machine, Context);
+    return;
+  }
+  if (const DIArgList *ArgList = dyn_cast<DIArgList>(MD)) {
+    writeDIArgList(Out, ArgList, TypePrinter, Machine, Context, FromValue);
     return;
   }
 
   if (const MDNode *N = dyn_cast<MDNode>(MD)) {
     std::unique_ptr<SlotTracker> MachineStorage;
     if (!Machine) {
-      MachineStorage = make_unique<SlotTracker>(Context);
+      MachineStorage = std::make_unique<SlotTracker>(Context);
       Machine = MachineStorage.get();
     }
     int Slot = Machine->getMetadataSlot(N);
@@ -2359,7 +2577,7 @@ class AssemblyWriter {
   SetVector<const Comdat *> Comdats;
   bool IsForDebug;
   bool ShouldPreserveUseListOrder;
-  UseListOrderStack UseListOrders;
+  UseListOrderMap UseListOrders;
   SmallVector<StringRef, 8> MDNames;
   /// Synchronization scope names registered with LLVMContext.
   SmallVector<StringRef, 8> SSNs;
@@ -2394,6 +2612,8 @@ public:
 
   void writeAllMDNodes();
   void writeMDNode(unsigned Slot, const MDNode *Node);
+  void writeAttribute(const Attribute &Attr, bool InAttrGroup = false);
+  void writeAttributeSet(const AttributeSet &AttrSet, bool InAttrGroup = false);
   void writeAllAttributeGroups();
 
   void printTypeIdentities();
@@ -2406,7 +2626,7 @@ public:
   void printInstructionLine(const Instruction &I);
   void printInstruction(const Instruction &I);
 
-  void printUseListOrder(const UseListOrder &Order);
+  void printUseListOrder(const Value *V, const std::vector<unsigned> &Shuffle);
   void printUseLists(const Function *F);
 
   void printModuleSummaryIndex();
@@ -2423,10 +2643,10 @@ public:
   void printTypeIdInfo(const FunctionSummary::TypeIdInfo &TIDInfo);
   void printVFuncId(const FunctionSummary::VFuncId VFId);
   void
-  printNonConstVCalls(const std::vector<FunctionSummary::VFuncId> VCallList,
+  printNonConstVCalls(const std::vector<FunctionSummary::VFuncId> &VCallList,
                       const char *Tag);
   void
-  printConstVCalls(const std::vector<FunctionSummary::ConstVCall> VCallList,
+  printConstVCalls(const std::vector<FunctionSummary::ConstVCall> &VCallList,
                    const char *Tag);
 
 private:
@@ -2526,8 +2746,10 @@ void AssemblyWriter::writeParamOperand(const Value *Operand,
   // Print the type
   TypePrinter.print(Operand->getType(), Out);
   // Print parameter attributes list
-  if (Attrs.hasAttributes())
-    Out << ' ' << Attrs.getAsString();
+  if (Attrs.hasAttributes()) {
+    Out << ' ';
+    writeAttributeSet(Attrs);
+  }
   Out << ' ';
   // Print the operand
   WriteAsOperandInternal(Out, Operand, &TypePrinter, &Machine, TheModule);
@@ -2638,13 +2860,14 @@ void AssemblyWriter::printModule(const Module *M) {
   for (const GlobalIFunc &GI : M->ifuncs())
     printIndirectSymbol(&GI);
 
+  // Output all of the functions.
+  for (const Function &F : *M) {
+    Out << '\n';
+    printFunction(&F);
+  }
+
   // Output global use-lists.
   printUseLists(nullptr);
-
-  // Output all of the functions.
-  for (const Function &F : *M)
-    printFunction(&F);
-  assert(UseListOrders.empty() && "All use-lists should have been consumed");
 
   // Output all attribute groups.
   if (!Machine.as_empty()) {
@@ -2667,21 +2890,22 @@ void AssemblyWriter::printModule(const Module *M) {
 
 void AssemblyWriter::printModuleSummaryIndex() {
   assert(TheIndex);
-  Machine.initializeIndexIfNeeded();
+  int NumSlots = Machine.initializeIndexIfNeeded();
 
   Out << "\n";
 
   // Print module path entries. To print in order, add paths to a vector
   // indexed by module slot.
   std::vector<std::pair<std::string, ModuleHash>> moduleVec;
-  std::string RegularLTOModuleName = "[Regular LTO]";
+  std::string RegularLTOModuleName =
+      ModuleSummaryIndex::getRegularLTOModuleName();
   moduleVec.resize(TheIndex->modulePaths().size());
   for (auto &ModPath : TheIndex->modulePaths())
     moduleVec[Machine.getModulePathSlot(ModPath.first())] = std::make_pair(
         // A module id of -1 is a special entry for a regular LTO module created
         // during the thin link.
         ModPath.second.first == -1u ? RegularLTOModuleName
-                                    : (std::string)ModPath.first(),
+                                    : (std::string)std::string(ModPath.first()),
         ModPath.second.second);
 
   unsigned i = 0;
@@ -2712,12 +2936,11 @@ void AssemblyWriter::printModuleSummaryIndex() {
   }
 
   // Print the TypeIdMap entries.
-  for (auto TidIter = TheIndex->typeIds().begin();
-       TidIter != TheIndex->typeIds().end(); TidIter++) {
-    Out << "^" << Machine.getTypeIdSlot(TidIter->second.first)
-        << " = typeid: (name: \"" << TidIter->second.first << "\"";
-    printTypeIdSummary(TidIter->second.second);
-    Out << ") ; guid = " << TidIter->first << "\n";
+  for (const auto &TID : TheIndex->typeIds()) {
+    Out << "^" << Machine.getTypeIdSlot(TID.second.first)
+        << " = typeid: (name: \"" << TID.second.first << "\"";
+    printTypeIdSummary(TID.second.second);
+    Out << ") ; guid = " << TID.first << "\n";
   }
 
   // Print the TypeIdCompatibleVtableMap entries.
@@ -2728,6 +2951,15 @@ void AssemblyWriter::printModuleSummaryIndex() {
     printTypeIdCompatibleVtableSummary(TId.second);
     Out << ") ; guid = " << GUID << "\n";
   }
+
+  // Don't emit flags when it's not really needed (value is zero by default).
+  if (TheIndex->getFlags()) {
+    Out << "^" << NumSlots << " = flags: " << TheIndex->getFlags() << "\n";
+    ++NumSlots;
+  }
+
+  Out << "^" << NumSlots << " = blockcount: " << TheIndex->getBlockCount()
+      << "\n";
 }
 
 static const char *
@@ -2760,6 +2992,8 @@ static const char *getWholeProgDevirtResByArgKindName(
 
 static const char *getTTResKindName(TypeTestResolution::Kind K) {
   switch (K) {
+  case TypeTestResolution::Unknown:
+    return "unknown";
   case TypeTestResolution::Unsat:
     return "unsat";
   case TypeTestResolution::ByteArray:
@@ -2891,10 +3125,15 @@ void AssemblyWriter::printAliasSummary(const AliasSummary *AS) {
 }
 
 void AssemblyWriter::printGlobalVarSummary(const GlobalVarSummary *GS) {
-  Out << ", varFlags: (readonly: " << GS->VarFlags.MaybeReadOnly << ", "
-      << "writeonly: " << GS->VarFlags.MaybeWriteOnly << ")";
-
   auto VTableFuncs = GS->vTableFuncs();
+  Out << ", varFlags: (readonly: " << GS->VarFlags.MaybeReadOnly << ", "
+      << "writeonly: " << GS->VarFlags.MaybeWriteOnly << ", "
+      << "constant: " << GS->VarFlags.Constant;
+  if (!VTableFuncs.empty())
+    Out << ", "
+        << "vcall_visibility: " << GS->VarFlags.VCallVisibility;
+  Out << ")";
+
   if (!VTableFuncs.empty()) {
     Out << ", vTableFuncs: (";
     FieldSeparator FS;
@@ -2945,18 +3184,31 @@ static std::string getLinkageNameWithSpace(GlobalValue::LinkageTypes LT) {
   return getLinkageName(LT) + " ";
 }
 
+static const char *getVisibilityName(GlobalValue::VisibilityTypes Vis) {
+  switch (Vis) {
+  case GlobalValue::DefaultVisibility:
+    return "default";
+  case GlobalValue::HiddenVisibility:
+    return "hidden";
+  case GlobalValue::ProtectedVisibility:
+    return "protected";
+  }
+  llvm_unreachable("invalid visibility");
+}
+
 void AssemblyWriter::printFunctionSummary(const FunctionSummary *FS) {
   Out << ", insts: " << FS->instCount();
 
   FunctionSummary::FFlags FFlags = FS->fflags();
   if (FFlags.ReadNone | FFlags.ReadOnly | FFlags.NoRecurse |
-      FFlags.ReturnDoesNotAlias) {
+      FFlags.ReturnDoesNotAlias | FFlags.NoInline | FFlags.AlwaysInline) {
     Out << ", funcFlags: (";
     Out << "readNone: " << FFlags.ReadNone;
     Out << ", readOnly: " << FFlags.ReadOnly;
     Out << ", noRecurse: " << FFlags.NoRecurse;
     Out << ", returnDoesNotAlias: " << FFlags.ReturnDoesNotAlias;
     Out << ", noInline: " << FFlags.NoInline;
+    Out << ", alwaysInline: " << FFlags.AlwaysInline;
     Out << ")";
   }
   if (!FS->calls().empty()) {
@@ -2976,6 +3228,36 @@ void AssemblyWriter::printFunctionSummary(const FunctionSummary *FS) {
 
   if (const auto *TIdInfo = FS->getTypeIdInfo())
     printTypeIdInfo(*TIdInfo);
+
+  auto PrintRange = [&](const ConstantRange &Range) {
+    Out << "[" << Range.getSignedMin() << ", " << Range.getSignedMax() << "]";
+  };
+
+  if (!FS->paramAccesses().empty()) {
+    Out << ", params: (";
+    FieldSeparator IFS;
+    for (auto &PS : FS->paramAccesses()) {
+      Out << IFS;
+      Out << "(param: " << PS.ParamNo;
+      Out << ", offset: ";
+      PrintRange(PS.Use);
+      if (!PS.Calls.empty()) {
+        Out << ", calls: (";
+        FieldSeparator IFS;
+        for (auto &Call : PS.Calls) {
+          Out << IFS;
+          Out << "(callee: ^" << Machine.getGUIDSlot(Call.Callee.getGUID());
+          Out << ", param: " << Call.ParamNo;
+          Out << ", offset: ";
+          PrintRange(Call.Offsets);
+          Out << ")";
+        }
+        Out << ")";
+      }
+      Out << ")";
+    }
+    Out << ")";
+  }
 }
 
 void AssemblyWriter::printTypeIdInfo(
@@ -3047,7 +3329,7 @@ void AssemblyWriter::printVFuncId(const FunctionSummary::VFuncId VFId) {
 }
 
 void AssemblyWriter::printNonConstVCalls(
-    const std::vector<FunctionSummary::VFuncId> VCallList, const char *Tag) {
+    const std::vector<FunctionSummary::VFuncId> &VCallList, const char *Tag) {
   Out << Tag << ": (";
   FieldSeparator FS;
   for (auto &VFuncId : VCallList) {
@@ -3058,7 +3340,8 @@ void AssemblyWriter::printNonConstVCalls(
 }
 
 void AssemblyWriter::printConstVCalls(
-    const std::vector<FunctionSummary::ConstVCall> VCallList, const char *Tag) {
+    const std::vector<FunctionSummary::ConstVCall> &VCallList,
+    const char *Tag) {
   Out << Tag << ": (";
   FieldSeparator FS;
   for (auto &ConstVCall : VCallList) {
@@ -3081,6 +3364,8 @@ void AssemblyWriter::printSummary(const GlobalValueSummary &Summary) {
   Out << "(module: ^" << Machine.getModulePathSlot(Summary.modulePath())
       << ", flags: (";
   Out << "linkage: " << getLinkageName(LT);
+  Out << ", visibility: "
+      << getVisibilityName((GlobalValue::VisibilityTypes)GVFlags.Visibility);
   Out << ", notEligibleToImport: " << GVFlags.NotEligibleToImport;
   Out << ", live: " << GVFlags.Live;
   Out << ", dsoLocal: " << GVFlags.DSOLocal;
@@ -3165,6 +3450,8 @@ void AssemblyWriter::printNamedMDNode(const NamedMDNode *NMD) {
     // Write DIExpressions inline.
     // FIXME: Ban DIExpressions in NamedMDNodes, they will serve no purpose.
     MDNode *Op = NMD->getOperand(i);
+    assert(!isa<DIArgList>(Op) &&
+           "DIArgLists should not appear in NamedMDNodes");
     if (auto *Expr = dyn_cast<DIExpression>(Op)) {
       writeDIExpression(Out, Expr, nullptr, nullptr, nullptr);
       continue;
@@ -3190,11 +3477,7 @@ static void PrintVisibility(GlobalValue::VisibilityTypes Vis,
 
 static void PrintDSOLocation(const GlobalValue &GV,
                              formatted_raw_ostream &Out) {
-  // GVs with local linkage or non default visibility are implicitly dso_local,
-  // so we don't print it.
-  bool Implicit = GV.hasLocalLinkage() ||
-                  (!GV.hasExternalWeakLinkage() && !GV.hasDefaultVisibility());
-  if (GV.isDSOLocal() && !Implicit)
+  if (GV.isDSOLocal() && !GV.isImplicitDSOLocal())
     Out << "dso_local ";
 }
 
@@ -3394,9 +3677,6 @@ void AssemblyWriter::printTypeIdentities() {
 
 /// printFunction - Print all aspects of a function.
 void AssemblyWriter::printFunction(const Function *F) {
-  // Print out the return type and name.
-  Out << '\n';
-
   if (AnnotationWriter) AnnotationWriter->emitFunctionAnnot(F, Out);
 
   if (F->isMaterializable())
@@ -3459,8 +3739,10 @@ void AssemblyWriter::printFunction(const Function *F) {
       TypePrinter.print(FT->getParamType(I), Out);
 
       AttributeSet ArgAttrs = Attrs.getParamAttributes(I);
-      if (ArgAttrs.hasAttributes())
-        Out << ' ' << ArgAttrs.getAsString();
+      if (ArgAttrs.hasAttributes()) {
+        Out << ' ';
+        writeAttributeSet(ArgAttrs);
+      }
     }
   } else {
     // The arguments are meaningful here, print them in detail.
@@ -3546,19 +3828,25 @@ void AssemblyWriter::printArgument(const Argument *Arg, AttributeSet Attrs) {
   TypePrinter.print(Arg->getType(), Out);
 
   // Output parameter attributes list
-  if (Attrs.hasAttributes())
-    Out << ' ' << Attrs.getAsString();
+  if (Attrs.hasAttributes()) {
+    Out << ' ';
+    writeAttributeSet(Attrs);
+  }
 
   // Output name, if available...
   if (Arg->hasName()) {
     Out << ' ';
     PrintLLVMName(Out, Arg);
+  } else {
+    int Slot = Machine.getLocalSlot(Arg);
+    assert(Slot != -1 && "expect argument in function here");
+    Out << " %" << Slot;
   }
 }
 
 /// printBasicBlock - This member is called for each basic block in a method.
 void AssemblyWriter::printBasicBlock(const BasicBlock *BB) {
-  bool IsEntryBlock = BB == &BB->getParent()->getEntryBlock();
+  bool IsEntryBlock = BB->getParent() && BB->isEntryBlock();
   if (BB->hasName()) {              // Print out the label if it exists...
     Out << "\n";
     PrintLLVMName(Out, BB->getName(), LabelPrefix);
@@ -3572,10 +3860,7 @@ void AssemblyWriter::printBasicBlock(const BasicBlock *BB) {
       Out << "<badref>:";
   }
 
-  if (!BB->getParent()) {
-    Out.PadToColumn(50);
-    Out << "; Error: Block without parent!";
-  } else if (!IsEntryBlock) {
+  if (!IsEntryBlock) {
     // Output predecessors for the block.
     Out.PadToColumn(50);
     Out << ";";
@@ -3760,14 +4045,14 @@ void AssemblyWriter::printInstruction(const Instruction &I) {
   } else if (const ExtractValueInst *EVI = dyn_cast<ExtractValueInst>(&I)) {
     Out << ' ';
     writeOperand(I.getOperand(0), true);
-    for (const unsigned *i = EVI->idx_begin(), *e = EVI->idx_end(); i != e; ++i)
-      Out << ", " << *i;
+    for (unsigned i : EVI->indices())
+      Out << ", " << i;
   } else if (const InsertValueInst *IVI = dyn_cast<InsertValueInst>(&I)) {
     Out << ' ';
     writeOperand(I.getOperand(0), true); Out << ", ";
     writeOperand(I.getOperand(1), true);
-    for (const unsigned *i = IVI->idx_begin(), *e = IVI->idx_end(); i != e; ++i)
-      Out << ", " << *i;
+    for (unsigned i : IVI->indices())
+      Out << ", " << i;
   } else if (const LandingPadInst *LPI = dyn_cast<LandingPadInst>(&I)) {
     Out << ' ';
     TypePrinter.print(I.getType(), Out);
@@ -3837,7 +4122,7 @@ void AssemblyWriter::printInstruction(const Instruction &I) {
       PrintCallingConv(CI->getCallingConv(), Out);
     }
 
-    Operand = CI->getCalledValue();
+    Operand = CI->getCalledOperand();
     FunctionType *FTy = CI->getFunctionType();
     Type *RetTy = FTy->getReturnType();
     const AttributeList &PAL = CI->getAttributes();
@@ -3876,7 +4161,7 @@ void AssemblyWriter::printInstruction(const Instruction &I) {
 
     writeOperandBundles(CI);
   } else if (const InvokeInst *II = dyn_cast<InvokeInst>(&I)) {
-    Operand = II->getCalledValue();
+    Operand = II->getCalledOperand();
     FunctionType *FTy = II->getFunctionType();
     Type *RetTy = FTy->getReturnType();
     const AttributeList &PAL = II->getAttributes();
@@ -3919,7 +4204,7 @@ void AssemblyWriter::printInstruction(const Instruction &I) {
     Out << " unwind ";
     writeOperand(II->getUnwindDest(), true);
   } else if (const CallBrInst *CBI = dyn_cast<CallBrInst>(&I)) {
-    Operand = CBI->getCalledValue();
+    Operand = CBI->getCalledOperand();
     FunctionType *FTy = CBI->getFunctionType();
     Type *RetTy = FTy->getReturnType();
     const AttributeList &PAL = CBI->getAttributes();
@@ -4061,11 +4346,15 @@ void AssemblyWriter::printInstruction(const Instruction &I) {
   } else if (const AtomicCmpXchgInst *CXI = dyn_cast<AtomicCmpXchgInst>(&I)) {
     writeAtomicCmpXchg(CXI->getContext(), CXI->getSuccessOrdering(),
                        CXI->getFailureOrdering(), CXI->getSyncScopeID());
+    Out << ", align " << CXI->getAlign().value();
   } else if (const AtomicRMWInst *RMWI = dyn_cast<AtomicRMWInst>(&I)) {
     writeAtomic(RMWI->getContext(), RMWI->getOrdering(),
                 RMWI->getSyncScopeID());
+    Out << ", align " << RMWI->getAlign().value();
   } else if (const FenceInst *FI = dyn_cast<FenceInst>(&I)) {
     writeAtomic(FI->getContext(), FI->getOrdering(), FI->getSyncScopeID());
+  } else if (const ShuffleVectorInst *SVI = dyn_cast<ShuffleVectorInst>(&I)) {
+    PrintShuffleMask(Out, SVI->getType(), SVI->getShuffleMask());
   }
 
   // Print Metadata info.
@@ -4108,9 +4397,8 @@ void AssemblyWriter::writeMDNode(unsigned Slot, const MDNode *Node) {
 void AssemblyWriter::writeAllMDNodes() {
   SmallVector<const MDNode *, 16> Nodes;
   Nodes.resize(Machine.mdn_size());
-  for (SlotTracker::mdn_iterator I = Machine.mdn_begin(), E = Machine.mdn_end();
-       I != E; ++I)
-    Nodes[I->second] = cast<MDNode>(I->first);
+  for (auto &I : llvm::make_range(Machine.mdn_begin(), Machine.mdn_end()))
+    Nodes[I.second] = cast<MDNode>(I.first);
 
   for (unsigned i = 0, e = Nodes.size(); i != e; ++i) {
     writeMDNode(i, Nodes[i]);
@@ -4121,56 +4409,76 @@ void AssemblyWriter::printMDNodeBody(const MDNode *Node) {
   WriteMDNodeBodyInternal(Out, Node, &TypePrinter, &Machine, TheModule);
 }
 
+void AssemblyWriter::writeAttribute(const Attribute &Attr, bool InAttrGroup) {
+  if (!Attr.isTypeAttribute()) {
+    Out << Attr.getAsString(InAttrGroup);
+    return;
+  }
+
+  Out << Attribute::getNameFromAttrKind(Attr.getKindAsEnum());
+  if (Type *Ty = Attr.getValueAsType()) {
+    Out << '(';
+    TypePrinter.print(Ty, Out);
+    Out << ')';
+  }
+}
+
+void AssemblyWriter::writeAttributeSet(const AttributeSet &AttrSet,
+                                       bool InAttrGroup) {
+  bool FirstAttr = true;
+  for (const auto &Attr : AttrSet) {
+    if (!FirstAttr)
+      Out << ' ';
+    writeAttribute(Attr, InAttrGroup);
+    FirstAttr = false;
+  }
+}
+
 void AssemblyWriter::writeAllAttributeGroups() {
   std::vector<std::pair<AttributeSet, unsigned>> asVec;
   asVec.resize(Machine.as_size());
 
-  for (SlotTracker::as_iterator I = Machine.as_begin(), E = Machine.as_end();
-       I != E; ++I)
-    asVec[I->second] = *I;
+  for (auto &I : llvm::make_range(Machine.as_begin(), Machine.as_end()))
+    asVec[I.second] = I;
 
   for (const auto &I : asVec)
     Out << "attributes #" << I.second << " = { "
         << I.first.getAsString(true) << " }\n";
 }
 
-void AssemblyWriter::printUseListOrder(const UseListOrder &Order) {
+void AssemblyWriter::printUseListOrder(const Value *V,
+                                       const std::vector<unsigned> &Shuffle) {
   bool IsInFunction = Machine.getFunction();
   if (IsInFunction)
     Out << "  ";
 
   Out << "uselistorder";
-  if (const BasicBlock *BB =
-          IsInFunction ? nullptr : dyn_cast<BasicBlock>(Order.V)) {
+  if (const BasicBlock *BB = IsInFunction ? nullptr : dyn_cast<BasicBlock>(V)) {
     Out << "_bb ";
     writeOperand(BB->getParent(), false);
     Out << ", ";
     writeOperand(BB, false);
   } else {
     Out << " ";
-    writeOperand(Order.V, true);
+    writeOperand(V, true);
   }
   Out << ", { ";
 
-  assert(Order.Shuffle.size() >= 2 && "Shuffle too small");
-  Out << Order.Shuffle[0];
-  for (unsigned I = 1, E = Order.Shuffle.size(); I != E; ++I)
-    Out << ", " << Order.Shuffle[I];
+  assert(Shuffle.size() >= 2 && "Shuffle too small");
+  Out << Shuffle[0];
+  for (unsigned I = 1, E = Shuffle.size(); I != E; ++I)
+    Out << ", " << Shuffle[I];
   Out << " }\n";
 }
 
 void AssemblyWriter::printUseLists(const Function *F) {
-  auto hasMore =
-      [&]() { return !UseListOrders.empty() && UseListOrders.back().F == F; };
-  if (!hasMore())
-    // Nothing to do.
+  auto It = UseListOrders.find(F);
+  if (It == UseListOrders.end())
     return;
 
   Out << "\n; uselistorder directives\n";
-  while (hasMore()) {
-    printUseListOrder(UseListOrders.back());
-    UseListOrders.pop_back();
-  }
+  for (const auto &Pair : It->second)
+    printUseListOrder(Pair.first, Pair.second);
 }
 
 //===----------------------------------------------------------------------===//
@@ -4186,6 +4494,17 @@ void Function::print(raw_ostream &ROS, AssemblyAnnotationWriter *AAW,
                    IsForDebug,
                    ShouldPreserveUseListOrder);
   W.printFunction(this);
+}
+
+void BasicBlock::print(raw_ostream &ROS, AssemblyAnnotationWriter *AAW,
+                     bool ShouldPreserveUseListOrder,
+                     bool IsForDebug) const {
+  SlotTracker SlotTable(this->getParent());
+  formatted_raw_ostream OS(ROS);
+  AssemblyWriter W(OS, SlotTable, this->getModule(), AAW,
+                   IsForDebug,
+                   ShouldPreserveUseListOrder);
+  W.printBasicBlock(this);
 }
 
 void Module::print(raw_ostream &ROS, AssemblyAnnotationWriter *AAW,
@@ -4234,8 +4553,8 @@ void Comdat::print(raw_ostream &ROS, bool /*IsForDebug*/) const {
   case Comdat::Largest:
     ROS << "largest";
     break;
-  case Comdat::NoDuplicates:
-    ROS << "noduplicates";
+  case Comdat::NoDeduplicate:
+    ROS << "nodeduplicate";
     break;
   case Comdat::SameSize:
     ROS << "samesize";
@@ -4383,7 +4702,7 @@ static void printMetadataImpl(raw_ostream &ROS, const Metadata &MD,
                          /* FromValue */ true);
 
   auto *N = dyn_cast<MDNode>(&MD);
-  if (OnlyAsOperand || !N || isa<DIExpression>(MD))
+  if (OnlyAsOperand || !N || isa<DIExpression>(MD) || isa<DIArgList>(MD))
     return;
 
   OS << " = ";
@@ -4416,6 +4735,17 @@ void ModuleSummaryIndex::print(raw_ostream &ROS, bool IsForDebug) const {
   formatted_raw_ostream OS(ROS);
   AssemblyWriter W(OS, SlotTable, this, IsForDebug);
   W.printModuleSummaryIndex();
+}
+
+void ModuleSlotTracker::collectMDNodes(MachineMDNodeListType &L, unsigned LB,
+                                       unsigned UB) const {
+  SlotTracker *ST = MachineStorage.get();
+  if (!ST)
+    return;
+
+  for (auto &I : llvm::make_range(ST->mdn_begin(), ST->mdn_end()))
+    if (I.second >= LB && I.second < UB)
+      L.push_back(std::make_pair(I.second, I.first));
 }
 
 #if !defined(NDEBUG) || defined(LLVM_ENABLE_DUMP)

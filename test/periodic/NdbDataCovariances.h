@@ -13,9 +13,9 @@ public:
       : NdbMF(30, "Data covariances obtained from parameter "
          "covariances and sensitivities") {}
 
-   ~NdbDataCovariances() {}
+   ~NdbDataCovariances() override {}
 
-   ClassDef(NdbDataCovariances,1)
+   ClassDefOverride(NdbDataCovariances,1)
 
 }; // NdbDataCovariances
 

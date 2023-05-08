@@ -623,7 +623,7 @@ public:
    TGLMatrix & operator*=(const TGLMatrix & rhs) { MultRight(rhs); return *this; }
 
    // Manipulators
-   void Set(const TGLVertex3 & origin, const TGLVector3 & zAxis, const TGLVector3 & xAxis = 0);
+   void Set(const TGLVertex3 & origin, const TGLVector3 & zAxis, const TGLVector3 & xAxis = nullptr);
    void Set(const Double_t vals[16]);
    void SetIdentity();
 
@@ -928,6 +928,9 @@ private:
    static Float_t fgPointLineScalingFactor;
    static Int_t   fgPickingRadius;
 
+   static Float_t fgSimpleAxisWidthScale;
+   static Float_t fgSimpleAxisBBoxScale;
+
    TGLUtil(const TGLUtil&);            // Not implemented.
    TGLUtil& operator=(const TGLUtil&); // Not implemented.
 
@@ -1037,13 +1040,17 @@ public:
    static void DrawReferenceMarker(const TGLCamera  & camera,
                                    const TGLVertex3 & pos,
                                          Float_t      radius = 3,
-                                   const UChar_t    * rgba   = 0);
+                                   const UChar_t    * rgba   = nullptr);
    static void DrawSimpleAxes(const TGLCamera      & camera,
                               const TGLBoundingBox & bbox,
-                                    Int_t            axesType);
+                                    Int_t            axesType,
+                                    Float_t          labelScale = 1);
    static void DrawNumber(const TString    & num,
                           const TGLVertex3 & pos,
                                 Bool_t       center = kFALSE);
+
+   static void SetSimpleAxisWidthScale(Float_t s);
+   static void SetSimpleAxisBBoxScale(Float_t s);
 
    // Frequently used colors.
    static const UChar_t fgRed[4];

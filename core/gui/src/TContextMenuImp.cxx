@@ -18,4 +18,3 @@ This class provides an interface to GUI independent context sensitive popup menu
 #include "TContextMenuImp.h"
 
 ClassImp(TContextMenuImp);
-TContextMenuImp::~TContextMenuImp() {}

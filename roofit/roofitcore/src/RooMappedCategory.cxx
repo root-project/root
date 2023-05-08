@@ -24,7 +24,6 @@
 
 #include "RooMappedCategory.h"
 
-#include "RooFit.h"
 #include "RooStreamParser.h"
 #include "RooMsgService.h"
 #include "Riostream.h"
@@ -47,11 +46,11 @@ class RooMappedCategoryCache : public RooAbsCache {
     RooAbsCategory::value_type lookup(Int_t idx) const
     { return _map[idx]; }
 
-    virtual void wireCache()
+    void wireCache() override
     { _map.clear(); initialise(); }
 
-    virtual Bool_t redirectServersHook(const RooAbsCollection& /*newServerList*/, Bool_t /*mustReplaceAll*/, Bool_t /*nameChange*/, Bool_t /*isRecursive*/)
-    { _map.clear(); initialise(); return kFALSE; }
+    bool redirectServersHook(const RooAbsCollection& /*newServerList*/, bool /*mustReplaceAll*/, bool /*nameChange*/, bool /*isRecursive*/) override
+    { _map.clear(); initialise(); return false; }
 
   private:
     mutable std::map<Int_t, RooAbsCategory::value_type> _map;
@@ -111,7 +110,7 @@ RooMappedCategory::~RooMappedCategory()
 
 
 
-Bool_t RooMappedCategory::map(const char* inKeyRegExp, const char* outKey, Int_t outIdx)
+bool RooMappedCategory::map(const char* inKeyRegExp, const char* outKey, Int_t outIdx)
 {
   // Add mapping rule: any input category state label matching the 'inKeyRegExp'
   // wildcard expression will be mapped to an output state with name 'outKey'
@@ -119,13 +118,13 @@ Bool_t RooMappedCategory::map(const char* inKeyRegExp, const char* outKey, Int_t
   // Rules are evaluated in the order they were added. In case an input state
   // matches more than one rule, the first rules output state will be assigned
 
-  if (!inKeyRegExp || !outKey) return kTRUE ;
+  if (!inKeyRegExp || !outKey) return true ;
 
   // Check if pattern is already registered
   if (_mapArray.find(inKeyRegExp)!=_mapArray.end()) {
     coutE(InputArguments) << "RooMappedCategory::map(" << GetName() << "): ERROR expression "
                           << inKeyRegExp << " already mapped" << std::endl ;
-    return kTRUE ;
+    return true ;
   }
 
   // Check if output type exists, if not register
@@ -149,11 +148,11 @@ Bool_t RooMappedCategory::map(const char* inKeyRegExp, const char* outKey, Int_t
   if (!e.ok()) {
     coutE(InputArguments) << "RooMappedCategory::map(" << GetName()
                           << "): ERROR, expression " << inKeyRegExp << " didn't compile" << std::endl ;
-    return kTRUE ;
+    return true ;
   }
 
   _mapArray[inKeyRegExp] = e ;
-  return kFALSE ;
+  return false ;
 }
 
 
@@ -171,7 +170,7 @@ const RooMappedCategoryCache* RooMappedCategory::getOrCreateCache() const
     return _mapcache;
 }
 
-void RooMappedCategory::printMultiline(std::ostream& os, Int_t content, Bool_t verbose, TString indent) const
+void RooMappedCategory::printMultiline(std::ostream& os, Int_t content, bool verbose, TString indent) const
 {
   // Print info about this mapped category to the specified stream. In addition to the info
   // from RooAbsCategory::printStream() we add:
@@ -197,12 +196,12 @@ void RooMappedCategory::printMultiline(std::ostream& os, Int_t content, Bool_t v
 }
 
 
-Bool_t RooMappedCategory::readFromStream(std::istream& is, Bool_t compact, Bool_t /*verbose*/)
+bool RooMappedCategory::readFromStream(std::istream& is, bool compact, bool /*verbose*/)
 {
   // Read object contents from given stream
    if (compact) {
      coutE(InputArguments) << "RooMappedCategory::readFromSteam(" << GetName() << "): can't read in compact mode" << std::endl ;
-     return kTRUE ;
+     return true ;
    } else {
 
      //Clear existing definitions, but preserve default output
@@ -220,16 +219,16 @@ Bool_t RooMappedCategory::readFromStream(std::istream& is, Bool_t compact, Bool_
      parser.setPunctuation(":,") ;
 
      TString destKey,srcKey ;
-     Bool_t readToken(kTRUE) ;
+     bool readToken(true) ;
 
     // Loop over definition sequences
      while(1) {
        if (readToken) token=parser.readToken() ;
        if (token.IsNull()) break ;
-       readToken=kTRUE ;
+       readToken=true ;
 
        destKey = token ;
-       if (parser.expectToken(":",kTRUE)) return kTRUE ;
+       if (parser.expectToken(":",true)) return true ;
 
        // Loop over list of sources for this destination
        while(1) {
@@ -237,19 +236,19 @@ Bool_t RooMappedCategory::readFromStream(std::istream& is, Bool_t compact, Bool_
          token = parser.readToken() ;
 
          // Map a value
-         if (map(srcKey,destKey)) return kTRUE ;
+         if (map(srcKey,destKey)) return true ;
 
          // Unless next token is ',' current token
          // is destination part of next sequence
          if (token.CompareTo(",")) {
-           readToken = kFALSE ;
+           readToken = false ;
            break ;
          }
        }
      }
-     return kFALSE ;
+     return false ;
    }
-   //return kFALSE ; // statement unreachable (OSF)
+   //return false ; // statement unreachable (OSF)
 }
 
 
@@ -261,12 +260,12 @@ void RooMappedCategory::printMetaArgs(std::ostream& os) const
 {
   // Scan array of regexps
   RooAbsCategory::value_type prevOutCat = invalidCategory().second;
-  Bool_t first(kTRUE) ;
+  bool first(true) ;
   os << "map=(" ;
   for (const auto& iter : _mapArray) {
     if (iter.second.outCat() != prevOutCat) {
       if (!first) { os << " " ; }
-      first=kFALSE ;
+      first=false ;
 
       os << iter.second.outCat() << ":" << iter.first ;
       prevOutCat = iter.second.outCat();
@@ -284,7 +283,7 @@ void RooMappedCategory::printMetaArgs(std::ostream& os) const
 
 
 
-void RooMappedCategory::writeToStream(std::ostream& os, Bool_t compact) const
+void RooMappedCategory::writeToStream(std::ostream& os, bool compact) const
 {
   // Write object contents to given stream
   if (compact) {
@@ -295,11 +294,11 @@ void RooMappedCategory::writeToStream(std::ostream& os, Bool_t compact) const
 
     // Scan array of regexps
     RooAbsCategory::value_type prevOutCat = invalidCategory().second;
-    Bool_t first(kTRUE) ;
+    bool first(true) ;
     for (const auto& iter : _mapArray) {
       if (iter.second.outCat() != prevOutCat) {
         if (!first) { os << " " ; }
-        first=kFALSE ;
+        first=false ;
 
         os << iter.second.outCat() << "<-" << iter.first ;
         prevOutCat = iter.second.outCat();

@@ -51,7 +51,7 @@ static MCOperand GetSymbolRef(const MachineOperand &MO, const MCSymbol *Symbol,
     RelocationType = MCSymbolRefExpr::VK_None;
     break;
   case HexagonII::MO_PCREL:
-    RelocationType = MCSymbolRefExpr::VK_Hexagon_PCREL;
+    RelocationType = MCSymbolRefExpr::VK_PCREL;
     break;
   case HexagonII::MO_GOT:
     RelocationType = MCSymbolRefExpr::VK_GOT;
@@ -104,7 +104,7 @@ void llvm::HexagonLowerToMC(const MCInstrInfo &MCII, const MachineInstr *MI,
     HexagonMCInstrInfo::setOuterLoop(MCB);
     return;
   }
-  MCInst *MCI = new (AP.OutContext) MCInst;
+  MCInst *MCI = AP.OutContext.createMCInst();
   MCI->setOpcode(MI->getOpcode());
   assert(MCI->getOpcode() == static_cast<unsigned>(MI->getOpcode()) &&
          "MCI opcode should have been set on construction");

@@ -31,8 +31,6 @@ analytically. Remaining non-factorising observables are integrated numerically.
 **/
 
 
-#include "RooFit.h"
-
 #include "Riostream.h"
 #include <math.h>
 
@@ -52,9 +50,9 @@ ClassImp(RooGenProdProj);
 /// Default constructor
 
 RooGenProdProj::RooGenProdProj() :
-  _compSetOwnedN(0), 
+  _compSetOwnedN(0),
   _compSetOwnedD(0),
-  _haveD(kFALSE)
+  _haveD(false)
 {
 }
 
@@ -63,15 +61,15 @@ RooGenProdProj::RooGenProdProj() :
 /// Constructor for a normalization projection of the product of p.d.f.s _prodSet
 /// integrated over _intSet in range isetRangeName while normalized over _normSet
 
-RooGenProdProj::RooGenProdProj(const char *name, const char *title, const RooArgSet& _prodSet, const RooArgSet& _intSet, 
-			       const RooArgSet& _normSet, const char* isetRangeName, const char* normRangeName, Bool_t doFactorize) :
+RooGenProdProj::RooGenProdProj(const char *name, const char *title, const RooArgSet& _prodSet, const RooArgSet& _intSet,
+                const RooArgSet& _normSet, const char* isetRangeName, const char* normRangeName, bool doFactorize) :
   RooAbsReal(name, title),
-  _compSetOwnedN(0), 
+  _compSetOwnedN(0),
   _compSetOwnedD(0),
-  _compSetN("compSetN","Set of integral components owned by numerator",this,kFALSE),
-  _compSetD("compSetD","Set of integral components owned by denominator",this,kFALSE),
-  _intList("intList","List of integrals",this,kTRUE),
-  _haveD(kFALSE)
+  _compSetN("compSetN","Set of integral components owned by numerator",this,false),
+  _compSetD("compSetD","Set of integral components owned by denominator",this,false),
+  _intList("intList","List of integrals",this,true),
+  _haveD(false)
 {
   // Set expensive object cache to that of first item in prodSet
   setExpensiveObjectCache(_prodSet.first()->expensiveObjectCache()) ;
@@ -91,11 +89,11 @@ RooGenProdProj::RooGenProdProj(const char *name, const char *title, const RooArg
   // Copy all components in (non-owning) set proxy
   _compSetN.add(*_compSetOwnedN) ;
   _compSetD.add(*_compSetOwnedD) ;
-  
+
   _intList.add(*numerator) ;
   if (denominator) {
     _intList.add(*denominator) ;
-    _haveD = kTRUE ;
+    _haveD = true ;
   }
 }
 
@@ -105,21 +103,13 @@ RooGenProdProj::RooGenProdProj(const char *name, const char *title, const RooArg
 /// Copy constructor
 
 RooGenProdProj::RooGenProdProj(const RooGenProdProj& other, const char* name) :
-  RooAbsReal(other, name), 
-  _compSetOwnedN(0), 
+  RooAbsReal(other, name),
+  _compSetOwnedN(0),
   _compSetOwnedD(0),
   _compSetN("compSetN","Set of integral components owned by numerator",this),
   _compSetD("compSetD","Set of integral components owned by denominator",this),
   _intList("intList","List of integrals",this)
 {
-  // Explicitly remove all server links at this point
-  TIterator* iter = serverIterator() ;
-  RooAbsArg* server ;
-  while((server=(RooAbsArg*)iter->Next())) {
-    removeServer(*server,kTRUE) ;
-  }
-  delete iter ;
-
   // Copy constructor
   _compSetOwnedN = (RooArgSet*) other._compSetN.snapshot() ;
   _compSetN.add(*_compSetOwnedN) ;
@@ -127,19 +117,12 @@ RooGenProdProj::RooGenProdProj(const RooGenProdProj& other, const char* name) :
   _compSetOwnedD = (RooArgSet*) other._compSetD.snapshot() ;
   _compSetD.add(*_compSetOwnedD) ;
 
-  RooAbsArg* arg ;
-  TIterator* nIter = _compSetOwnedN->createIterator() ;  
-  while((arg=(RooAbsArg*)nIter->Next())) {
-//     cout << "ownedN elem " << arg->GetName() << "(" << arg << ")" << endl ;
+  for (RooAbsArg * arg : *_compSetOwnedN) {
     arg->setOperMode(_operMode) ;
   }
-  delete nIter ;
-  TIterator* dIter = _compSetOwnedD->createIterator() ;
-  while((arg=(RooAbsArg*)dIter->Next())) {
-//     cout << "ownedD elem " << arg->GetName() << "(" << arg << ")" << endl ;
+  for (RooAbsArg * arg : *_compSetOwnedD) {
     arg->setOperMode(_operMode) ;
   }
-  delete dIter ;
 
   // Fill _intList
   _haveD = other._haveD ;
@@ -175,8 +158,8 @@ RooGenProdProj::~RooGenProdProj()
 /// \return A RooAbsReal object representing the requested integral. The object is owned by `saveSet`.
 ///
 /// The integration is factorized into components as much as possible and done analytically as far as possible.
-RooAbsReal* RooGenProdProj::makeIntegral(const char* name, const RooArgSet& compSet, const RooArgSet& intSet, 
-					 RooArgSet& saveSet, const char* isetRangeName, Bool_t doFactorize) 
+RooAbsReal* RooGenProdProj::makeIntegral(const char* name, const RooArgSet& compSet, const RooArgSet& intSet,
+                RooArgSet& saveSet, const char* isetRangeName, bool doFactorize)
 {
   RooArgSet anaIntSet, numIntSet ;
 
@@ -189,13 +172,29 @@ RooAbsReal* RooGenProdProj::makeIntegral(const char* name, const RooArgSet& comp
 
     if (count==1) {
       anaIntSet.add(*arg) ;
-    }    
+    }
   }
 
   // Determine which of the factorizable integrals can be done analytically
   RooArgSet prodSet ;
   numIntSet.add(intSet) ;
-  
+
+  // The idea of the RooGenProdProj is that we divide two integral objects each
+  // created with this makeIntgral() function to get the normalized integral of
+  // a product. Therefore, we don't need to normalize the numerater and
+  // denominator integrals themselves. Doing the normalization would be
+  // expensive and it would cancel out anyway. However, if we don't specify an
+  // explicit normalization integral in createIntegral(), the last-used
+  // normalization set might be used to normalize the pdf, resulting in
+  // redundant computations.
+  //
+  // For this reason, the normalization set of the integrated pdfs is fixed to
+  // an empty set in this case. Note that in RooFit, a nullptr normalization
+  // set and an empty normalization set is not equivalent. The former implies
+  // taking the last-used normalization set, and the latter means explicitly no
+  // normalization.
+  RooArgSet emptyNormSet{};
+
   for (const auto pdfAsArg : compSet) {
     auto pdf = static_cast<const RooAbsPdf*>(pdfAsArg);
 
@@ -204,7 +203,7 @@ RooAbsReal* RooGenProdProj::makeIntegral(const char* name, const RooArgSet& comp
       Int_t code = pdf->getAnalyticalIntegralWN(anaIntSet,anaSet,0,isetRangeName) ;
       if (code!=0) {
         // Analytical integral, create integral object
-        RooAbsReal* pai = pdf->createIntegral(anaSet,isetRangeName) ;
+        RooAbsReal* pai = pdf->createIntegral(anaSet,emptyNormSet,isetRangeName) ;
         pai->setOperMode(_operMode) ;
 
         // Add to integral to product
@@ -218,7 +217,7 @@ RooAbsReal* RooGenProdProj::makeIntegral(const char* name, const RooArgSet& comp
       } else {
         // Analytic integration of factorizable observable not possible, add straight pdf to product
         prodSet.add(*pdf) ;
-      }      
+      }
     } else {
       // Non-factorizable observables, add straight pdf to product
       prodSet.add(*pdf) ;
@@ -247,7 +246,7 @@ RooAbsReal* RooGenProdProj::makeIntegral(const char* name, const RooArgSet& comp
   prod->setOperMode(_operMode) ;
 
   // Create integral performing remaining numeric integration over (partial) analytic product
-  std::unique_ptr<RooAbsReal> integral{prod->createIntegral(numIntSet,isetRangeName)};
+  std::unique_ptr<RooAbsReal> integral{prod->createIntegral(numIntSet,emptyNormSet,isetRangeName)};
   integral->setOperMode(_operMode) ;
   auto ret = integral.get();
 
@@ -266,13 +265,15 @@ RooAbsReal* RooGenProdProj::makeIntegral(const char* name, const RooArgSet& comp
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate and return value of normalization projection
 
-Double_t RooGenProdProj::evaluate() const 
-{  
-  Double_t nom = ((RooAbsReal*)_intList.at(0))->getVal() ;
+double RooGenProdProj::evaluate() const
+{
+  RooArgSet const* nset = _intList.nset();
+
+  double nom = static_cast<RooAbsReal*>(_intList.at(0))->getVal(nset);
 
   if (!_haveD) return nom ;
 
-  Double_t den = ((RooAbsReal*)_intList.at(1))->getVal() ;
+  double den = static_cast<RooAbsReal*>(_intList.at(1))->getVal(nset);
 
   //cout << "RooGenProdProj::eval(" << GetName() << ") nom = " << nom << " den = " << den << endl ;
 
@@ -284,22 +285,17 @@ Double_t RooGenProdProj::evaluate() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Intercept cache mode operation changes and propagate them to the components
 
-void RooGenProdProj::operModeHook() 
+void RooGenProdProj::operModeHook()
 {
   // WVE use cache manager here!
 
-  RooAbsArg* arg ;
-  TIterator* nIter = _compSetOwnedN->createIterator() ;  
-  while((arg=(RooAbsArg*)nIter->Next())) {
+  for(RooAbsArg * arg : *_compSetOwnedN) {
     arg->setOperMode(_operMode) ;
   }
-  delete nIter ;
 
-  TIterator* dIter = _compSetOwnedD->createIterator() ;
-  while((arg=(RooAbsArg*)dIter->Next())) {
+  for(RooAbsArg * arg : *_compSetOwnedD) {
     arg->setOperMode(_operMode) ;
   }
-  delete dIter ;
 
   _intList.at(0)->setOperMode(_operMode) ;
   if (_haveD) _intList.at(1)->setOperMode(Auto) ; // Denominator always stays in Auto mode (normalization integral)

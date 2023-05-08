@@ -250,15 +250,22 @@ REveDataSimpleProxyBuilder::VisibilityModelChanges(int idx, REveElement* iCompou
 
 //______________________________________________________________________________
 
-void REveDataSimpleProxyBuilder::FillImpliedSelected(REveElement::Set_t &impSet, Product* p)
+void REveDataSimpleProxyBuilder::FillImpliedSelected(REveElement::Set_t &impSet, const std::set<int>& sec_idcs, Product* p)
 {
-   for (auto &s : Collection()->GetItemList()->RefSelectedSet()) {
-      // printf("Fill implied selected %d \n", s);
+   for (auto &s : sec_idcs) {
       auto spb = fProductMap[p->m_elements];
       auto it = spb->map.find(s);
       if (it != spb->map.end()) {
-         // printf("Fill implied selected %s \n", it->second->GetCName());
-         it->second->FillImpliedSelectedSet(impSet);
+         it->second->FillImpliedSelectedSet(impSet, sec_idcs);
+      }
+   }
+
+   // remove elements that are not added in any scene
+   for (auto it = impSet.begin(); it != impSet.end();) {
+      if ((*it)->GetElementId()) {
+         ++it;
+      } else {
+         it = impSet.erase(it);
       }
    }
 }

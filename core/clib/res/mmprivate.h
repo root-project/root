@@ -59,6 +59,8 @@
 #   include <stdlib.h>
 #endif
 
+#include <stdint.h>
+
 #ifndef MIN
 #  define MIN(A, B) ((A) < (B) ? (A) : (B))
 #endif
@@ -79,14 +81,7 @@
 #define BLOCKSIZE ((unsigned int) 1 << BLOCKLOG)
 #define BLOCKIFY(SIZE) (((SIZE) + BLOCKSIZE - 1) / BLOCKSIZE)
 
-/* The difference between two pointers is a signed int.  On machines where
- the data addresses have the high bit set, we need to ensure that the
- difference becomes an unsigned int when we are using the address as an
- integral value.  In addition, when using with the '%' operator, the
- sign of the result is machine dependent for negative values, so force
- it to be treated as an unsigned int. */
-
-#define ADDR2UINT(addr) ((unsigned int) ((char *) (addr) - (char *) NULL))
+#define ADDR2UINT(addr) ((uintptr_t)(addr))
 #define RESIDUAL(addr,bsize) ((unsigned int) (ADDR2UINT (addr) % (bsize)))
 
 /* Determine the amount of memory spanned by the initial heap table

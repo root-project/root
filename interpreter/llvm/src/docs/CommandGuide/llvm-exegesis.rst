@@ -73,14 +73,7 @@ To measure the latency of all instructions for the host architecture, run:
 
 .. code-block:: bash
 
-  #!/bin/bash
-  readonly INSTRUCTIONS=$(($(grep INSTRUCTION_LIST_END build/lib/Target/X86/X86GenInstrInfo.inc | cut -f2 -d=) - 1))
-  for INSTRUCTION in $(seq 1 ${INSTRUCTIONS});
-  do
-    ./build/bin/llvm-exegesis -mode=latency -opcode-index=${INSTRUCTION} | sed -n '/---/,$p'
-  done
-
-FIXME: Provide an :program:`llvm-exegesis` option to test all instructions.
+    $ llvm-exegesis -mode=latency -opcode-index=-1
 
 
 EXAMPLE 2: benchmarking a custom code snippet
@@ -175,7 +168,8 @@ OPTIONS
 
 .. option:: -opcode-index=<LLVM opcode index>
 
- Specify the opcode to measure, by index. See example 1 for details.
+ Specify the opcode to measure, by index. Specifying `-1` will result
+ in measuring every existing opcode. See example 1 for details.
  Either `opcode-index`, `opcode-name` or `snippets-file` must be set.
 
 .. option:: -opcode-name=<opcode name 1>,<opcode name 2>,...
@@ -184,21 +178,72 @@ OPTIONS
  a comma-separated list. See example 1 for details.
  Either `opcode-index`, `opcode-name` or `snippets-file` must be set.
 
- .. option:: -snippets-file=<filename>
+.. option:: -snippets-file=<filename>
 
-  Specify the custom code snippet to measure. See example 2 for details.
-  Either `opcode-index`, `opcode-name` or `snippets-file` must be set.
+ Specify the custom code snippet to measure. See example 2 for details.
+ Either `opcode-index`, `opcode-name` or `snippets-file` must be set.
 
 .. option:: -mode=[latency|uops|inverse_throughput|analysis]
 
- Specify the run mode. Note that if you pick `analysis` mode, you also need
- to specify at least one of the `-analysis-clusters-output-file=` and
- `-analysis-inconsistencies-output-file=`.
+ Specify the run mode. Note that some modes have additional requirements and options.
 
-.. option:: -num-repetitions=<Number of repetition>
+ `latency` mode can be  make use of either RDTSC or LBR.
+ `latency[LBR]` is only available on X86 (at least `Skylake`).
+ To run in `latency` mode, a positive value must be specified
+ for `x86-lbr-sample-period` and `--repetition-mode=loop`.
 
- Specify the number of repetitions of the asm snippet.
+ In `analysis` mode, you also need to specify at least one of the
+ `-analysis-clusters-output-file=` and `-analysis-inconsistencies-output-file=`.
+
+.. option:: -x86-lbr-sample-period=<nBranches/sample>
+
+  Specify the LBR sampling period - how many branches before we take a sample.
+  When a positive value is specified for this option and when the mode is `latency`,
+  we will use LBRs for measuring.
+  On choosing the "right" sampling period, a small value is preferred, but throttling
+  could occur if the sampling is too frequent. A prime number should be used to
+  avoid consistently skipping certain blocks.
+
+.. option:: -repetition-mode=[duplicate|loop|min]
+
+ Specify the repetition mode. `duplicate` will create a large, straight line
+ basic block with `num-repetitions` instructions (repeating the snippet
+ `num-repetitions`/`snippet size` times). `loop` will, optionally, duplicate the
+ snippet until the loop body contains at least `loop-body-size` instructions,
+ and then wrap the result in a loop which will execute `num-repetitions`
+ instructions (thus, again, repeating the snippet
+ `num-repetitions`/`snippet size` times). The `loop` mode, especially with loop
+ unrolling tends to better hide the effects of the CPU frontend on architectures
+ that cache decoded instructions, but consumes a register for counting
+ iterations. If performing an analysis over many opcodes, it may be best to
+ instead use the `min` mode, which will run each other mode,
+ and produce the minimal measured result.
+
+.. option:: -num-repetitions=<Number of repetitions>
+
+ Specify the target number of executed instructions. Note that the actual
+ repetition count of the snippet will be `num-repetitions`/`snippet size`.
  Higher values lead to more accurate measurements but lengthen the benchmark.
+
+.. option:: -loop-body-size=<Preferred loop body size>
+
+ Only effective for `-repetition-mode=[loop|min]`.
+ Instead of looping over the snippet directly, first duplicate it so that the
+ loop body contains at least this many instructions. This potentially results
+ in loop body being cached in the CPU Op Cache / Loop Cache, which allows to
+ which may have higher throughput than the CPU decoders.
+
+.. option:: -max-configs-per-opcode=<value>
+
+ Specify the maximum configurations that can be generated for each opcode.
+ By default this is `1`, meaning that we assume that a single measurement is
+ enough to characterize an opcode. This might not be true of all instructions:
+ for example, the performance characteristics of the LEA instruction on X86
+ depends on the value of assigned registers and immediates. Setting a value of
+ `-max-configs-per-opcode` larger than `1` allows `llvm-exegesis` to explore
+ more configurations to discover if some register or immediate assignments
+ lead to different performance characteristics.
+
 
 .. option:: -benchmarks-file=</path/to/file>
 

@@ -59,8 +59,10 @@ protected:
    };
 
    class ChromeCreator : public BrowserCreator {
+      bool fEdge{false};
+      std::string fEnvPrefix; // rc parameters prefix
    public:
-      ChromeCreator();
+      ChromeCreator(bool is_edge = false);
       virtual ~ChromeCreator() = default;
       bool IsActive() const override { return !fProg.empty(); }
       void ProcessGeometry(std::string &, const RWebDisplayArgs &args) override;
@@ -99,7 +101,7 @@ public:
 
    static bool DisplayUrl(const std::string &url);
 
-   static bool ProduceImage(const std::string &fname, const std::string &json, int width = 800, int height = 600);
+   static bool ProduceImage(const std::string &fname, const std::string &json, int width = 800, int height = 600, const char *batch_file = nullptr);
 };
 
 }

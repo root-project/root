@@ -23,6 +23,7 @@ class TControlBar;
 class TCanvas : public TPad {
 
 friend class TCanvasImp;
+friend class TWebCanvas;
 friend class TThread;
 friend class TInterpreter;
 

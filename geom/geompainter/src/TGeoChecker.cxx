@@ -74,6 +74,7 @@ volume by material sampling. Accepts as input the desired precision.
 #include "TGeoVoxelFinder.h"
 #include "TGeoBBox.h"
 #include "TGeoPcon.h"
+#include "TGeoTessellated.h"
 #include "TGeoManager.h"
 #include "TGeoOverlap.h"
 #include "TGeoPainter.h"
@@ -968,7 +969,11 @@ void TGeoChecker::CleanPoints(Double_t *points, Int_t &numPoints) const
 
 TGeoOverlap *TGeoChecker::MakeCheckOverlap(const char *name, TGeoVolume *vol1, TGeoVolume *vol2, TGeoMatrix *mat1, TGeoMatrix *mat2, Bool_t isovlp, Double_t ovlp)
 {
-   TGeoOverlap *nodeovlp = 0;
+   TGeoOverlap *nodeovlp = nullptr;
+   if (vol1->IsAssembly() || vol2->IsAssembly())
+      return nullptr;
+   if (dynamic_cast<TGeoTessellated *>(vol1->GetShape()) || dynamic_cast<TGeoTessellated *>(vol2->GetShape()))
+      return nullptr;
    Int_t numPoints1 = fBuff1->NbPnts();
    Int_t numSegs1   = fBuff1->NbSegs();
    Int_t numPols1   = fBuff1->NbPols();
@@ -983,7 +988,6 @@ TGeoOverlap *TGeoChecker::MakeCheckOverlap(const char *name, TGeoVolume *vol1, T
    Double_t point[3];
    Double_t safety = TGeoShape::Big();
    Double_t tolerance = TGeoShape::Tolerance();
-   if (vol1->IsAssembly() || vol2->IsAssembly()) return nodeovlp;
    TGeoShape *shape1 = vol1->GetShape();
    TGeoShape *shape2 = vol2->GetShape();
    OpProgress("refresh", 0,0,NULL,kFALSE,kTRUE);

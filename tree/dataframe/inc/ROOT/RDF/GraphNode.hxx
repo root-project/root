@@ -14,7 +14,7 @@
 #include <string>
 #include <memory>
 #include <vector>
-#include "TString.h"
+#include "ROOT/RStringView.hxx"
 
 #include <iostream>
 
@@ -23,11 +23,20 @@ namespace Internal {
 namespace RDF {
 namespace GraphDrawing {
 
+enum class ENodeType {
+   kAction,
+   kDefine,
+   kFilter,
+   kRange,
+   kRoot,
+   kUsedAction,
+};
+
 class GraphCreatorHelper;
 
 // clang-format off
 /**
-\class ROOT::Internal::RDF::GraphNode
+\class ROOT::Internal::RDF::GraphDrawing::GraphNode
 \ingroup dataframe
 \brief Class used to create the operation graph to be printed in the dot representation
 
@@ -36,39 +45,85 @@ class GraphCreatorHelper;
 */
 // clang-format on
 class GraphNode {
-   friend class GraphCreatorHelper;
+   /// Nodes may share the same name (e.g. Filter). To manage this situation in dot, each node
+   /// is represented by an unique id.
+   unsigned int fID;
 
-private:
-   unsigned int fCounter; ///< Nodes may share the same name (e.g. Filter). To manage this situation in dot, each node
-   ///< is represented by an unique id.
    std::string fName, fColor, fShape;
-   std::vector<std::string>
-      fDefinedColumns; ///< Columns defined up to this node. By checking the defined columns between two consecutive
-                       ///< nodes, it is possible to know if there was some Define in between.
+
+   /// Columns defined up to this node. By checking the defined columns between two consecutive
+   /// nodes, it is possible to know if there was some Define in between.
+   std::vector<std::string> fDefinedColumns;
+
    std::shared_ptr<GraphNode> fPrevNode;
 
-   bool fIsExplored = false; ///< When the graph is reconstructed, the first time this node has been explored this flag
-   ///< is set and it won't be explored anymore
-   bool fIsNew = true; ///< A just created node. This means that in no other exploration the node was already created
-   ///< (this is needed because branches may share some common node).
+   /// When the graph is reconstructed, the first time this node has been explored this flag
+   /// is set and it won't be explored anymore.
+   bool fIsExplored = false;
+
+   /// A just created node. This means that in no other exploration the node was already created
+   /// (this is needed because branches may share some common node).
+   bool fIsNew = true;
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Returns a static variable to allow each node to retrieve its counter
-   static unsigned int &GetStaticGlobalCounter()
+   /// \brief Gives a different shape based on the node type
+   void SetRoot()
    {
-      static unsigned int sGlobalCounter = 1;
-      return sGlobalCounter;
+      fColor = "#f4b400";
+      fShape = "ellipse";
+   }
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Gives a different shape based on the node type
+   void SetFilter()
+   {
+      fColor = "#0f9d58";
+      fShape = "hexagon";
+   }
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Gives a different shape based on the node type
+   void SetDefine()
+   {
+      fColor = "#4285f4";
+      fShape = "ellipse";
+   }
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Gives a different shape based on the node type
+   void SetRange()
+   {
+      fColor = "#9574b4";
+      fShape = "diamond";
+   }
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Gives a different shape based on the node type
+   void SetAction(bool hasRun)
+   {
+      if (hasRun) {
+         fName += "\\n(already run)";
+         fColor = "#e6e5e6";
+      } else {
+         fColor = "#e47c7e";
+      }
+      fShape = "box";
    }
 
 public:
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Creates a node with a name and a counter
-   GraphNode(const std::string_view &name) : fName(name) { fCounter = GetStaticGlobalCounter()++; }
-
-   ////////////////////////////////////////////////////////////////////////////
-   /// \brief Resets the counter.
-   /// This is not strictly needed but guarantees that two consecutive request to the graph return the same result.
-   static void ClearCounter() { GraphNode::GetStaticGlobalCounter() = 1; }
+   /// \brief Creates a node with a name
+   GraphNode(std::string_view name, unsigned int id, ENodeType t) : fID(id), fName(name)
+   {
+      switch (t) {
+      case ENodeType::kAction: SetAction(/*hasRun=*/false); break;
+      case ENodeType::kDefine: SetDefine(); break;
+      case ENodeType::kFilter: SetFilter(); break;
+      case ENodeType::kRange: SetRange(); break;
+      case ENodeType::kRoot: SetRoot(); break;
+      case ENodeType::kUsedAction: SetAction(/*hasRun=*/true); break;
+      };
+   }
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Appends a node on the head of the current node
@@ -78,68 +133,26 @@ public:
    /// \brief Adds the column defined up to the node
    void AddDefinedColumns(const std::vector<std::string> &columns) { fDefinedColumns = columns; }
 
-   ////////////////////////////////////////////////////////////////////////////
-   /// \brief Gets the column defined up to the node
-   std::vector<std::string> GetDefinedColumns() { return fDefinedColumns; }
+   std::string GetColor() const { return fColor; }
+   unsigned int GetID() const { return fID; }
+   std::string GetName() const { return fName; }
+   std::string GetShape() const { return fShape; }
+   GraphNode *GetPrevNode() const { return fPrevNode.get(); }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Manually sets the counter to a node.
-   /// It is used by the root node to set its counter to zero.
-   void SetCounter(unsigned int counter) { fCounter = counter; }
+   /// \brief Gets the column defined up to the node
+   const std::vector<std::string> &GetDefinedColumns() const { return fDefinedColumns; }
+
+   bool IsExplored() const { return fIsExplored; }
+   bool IsNew() const { return fIsNew; }
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Allows to stop the graph traversal when an explored node is encountered
-   void SetIsExplored(bool isExplored) { fIsExplored = isExplored; }
+   void SetExplored() { fIsExplored = true; }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief The node is considered just created
-   void SetIsNew(bool isNew) { fIsNew = isNew; }
-
-   bool GetIsNew() { return fIsNew; }
-
-   ////////////////////////////////////////////////////////////////////////////
-   /// \brief Gives a different shape based on the node type
-   void SetRoot()
-   {
-      fColor = "#e8f8fc";
-      fShape = "oval";
-   }
-
-   ////////////////////////////////////////////////////////////////////////////
-   /// \brief Gives a different shape based on the node type
-   void SetFilter()
-   {
-      fColor = "#c4cfd4";
-      fShape = "diamond";
-   }
-
-   ////////////////////////////////////////////////////////////////////////////
-   /// \brief Gives a different shape based on the node type
-   void SetDefine()
-   {
-      fColor = "#60aef3";
-      fShape = "oval";
-   }
-
-   ////////////////////////////////////////////////////////////////////////////
-   /// \brief Gives a different shape based on the node type
-   void SetRange()
-   {
-      fColor = "#6F4D8F";
-      fShape = "diamond";
-   }
-
-   ////////////////////////////////////////////////////////////////////////////
-   /// \brief Gives a different shape based on the node type
-   void SetAction(bool hasRun)
-   {
-      if (hasRun) {
-         fColor = "#baf1e5";
-      } else {
-         fColor = "#9cbbe5";
-      }
-      fShape = "box";
-   }
+   /// \brief Mark this node as "not newly created"
+   void SetNotNew() { fIsNew = false; }
 };
 
 } // namespace GraphDrawing

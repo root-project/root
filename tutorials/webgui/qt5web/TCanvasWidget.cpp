@@ -42,7 +42,7 @@ TCanvasWidget::TCanvasWidget(QWidget *parent) : QWidget(parent)
 
    gPad = fCanvas;
 
-   bool read_only = (gEnv->GetValue("WebGui.FullCanvas", (Int_t) 0) == 0);
+   bool read_only = gEnv->GetValue("WebGui.FullCanvas", (Int_t) 1) == 0;
 
    TWebCanvas *web = new TWebCanvas(fCanvas, "title", 0, 0, 800, 600, read_only);
 

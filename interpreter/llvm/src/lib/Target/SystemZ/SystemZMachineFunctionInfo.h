@@ -13,12 +13,24 @@
 
 namespace llvm {
 
+namespace SystemZ {
+// A struct to hold the low and high GPR registers to be saved/restored as
+// well as the offset into the register save area of the low register.
+struct GPRRegs {
+  unsigned LowGPR;
+  unsigned HighGPR;
+  unsigned GPROffset;
+  GPRRegs() : LowGPR(0), HighGPR(0), GPROffset(0) {}
+  };
+}
+
 class SystemZMachineFunctionInfo : public MachineFunctionInfo {
   virtual void anchor();
-  unsigned LowSavedGPR;
-  unsigned HighSavedGPR;
-  unsigned VarArgsFirstGPR;
-  unsigned VarArgsFirstFPR;
+
+  SystemZ::GPRRegs SpillGPRRegs;
+  SystemZ::GPRRegs RestoreGPRRegs;
+  Register VarArgsFirstGPR;
+  Register VarArgsFirstFPR;
   unsigned VarArgsFrameIndex;
   unsigned RegSaveFrameIndex;
   int FramePointerSaveIndex;
@@ -27,28 +39,38 @@ class SystemZMachineFunctionInfo : public MachineFunctionInfo {
 
 public:
   explicit SystemZMachineFunctionInfo(MachineFunction &MF)
-    : LowSavedGPR(0), HighSavedGPR(0), VarArgsFirstGPR(0), VarArgsFirstFPR(0),
-      VarArgsFrameIndex(0), RegSaveFrameIndex(0), FramePointerSaveIndex(0),
-      ManipulatesSP(false), NumLocalDynamics(0) {}
+    : VarArgsFirstGPR(0), VarArgsFirstFPR(0), VarArgsFrameIndex(0),
+      RegSaveFrameIndex(0), FramePointerSaveIndex(0), ManipulatesSP(false),
+      NumLocalDynamics(0) {}
 
-  // Get and set the first call-saved GPR that should be saved and restored
-  // by this function.  This is 0 if no GPRs need to be saved or restored.
-  unsigned getLowSavedGPR() const { return LowSavedGPR; }
-  void setLowSavedGPR(unsigned Reg) { LowSavedGPR = Reg; }
+  // Get and set the first and last call-saved GPR that should be saved by
+  // this function and the SP offset for the STMG.  These are 0 if no GPRs
+  // need to be saved or restored.
+  SystemZ::GPRRegs getSpillGPRRegs() const { return SpillGPRRegs; }
+  void setSpillGPRRegs(Register Low, Register High, unsigned Offs) {
+    SpillGPRRegs.LowGPR = Low;
+    SpillGPRRegs.HighGPR = High;
+    SpillGPRRegs.GPROffset = Offs;
+  }
 
-  // Get and set the last call-saved GPR that should be saved and restored
-  // by this function.
-  unsigned getHighSavedGPR() const { return HighSavedGPR; }
-  void setHighSavedGPR(unsigned Reg) { HighSavedGPR = Reg; }
+  // Get and set the first and last call-saved GPR that should be restored by
+  // this function and the SP offset for the LMG.  These are 0 if no GPRs
+  // need to be saved or restored.
+  SystemZ::GPRRegs getRestoreGPRRegs() const { return RestoreGPRRegs; }
+  void setRestoreGPRRegs(Register Low, Register High, unsigned Offs) {
+    RestoreGPRRegs.LowGPR = Low;
+    RestoreGPRRegs.HighGPR = High;
+    RestoreGPRRegs.GPROffset = Offs;
+  }
 
   // Get and set the number of fixed (as opposed to variable) arguments
   // that are passed in GPRs to this function.
-  unsigned getVarArgsFirstGPR() const { return VarArgsFirstGPR; }
-  void setVarArgsFirstGPR(unsigned GPR) { VarArgsFirstGPR = GPR; }
+  Register getVarArgsFirstGPR() const { return VarArgsFirstGPR; }
+  void setVarArgsFirstGPR(Register GPR) { VarArgsFirstGPR = GPR; }
 
   // Likewise FPRs.
-  unsigned getVarArgsFirstFPR() const { return VarArgsFirstFPR; }
-  void setVarArgsFirstFPR(unsigned FPR) { VarArgsFirstFPR = FPR; }
+  Register getVarArgsFirstFPR() const { return VarArgsFirstFPR; }
+  void setVarArgsFirstFPR(Register FPR) { VarArgsFirstFPR = FPR; }
 
   // Get and set the frame index of the first stack vararg.
   unsigned getVarArgsFrameIndex() const { return VarArgsFrameIndex; }

@@ -14,6 +14,7 @@
 #include "AVRISelLowering.h"
 
 #include "llvm/ADT/StringSwitch.h"
+#include "llvm/ADT/STLExtras.h"
 #include "llvm/CodeGen/CallingConvLower.h"
 #include "llvm/CodeGen/MachineFrameInfo.h"
 #include "llvm/CodeGen/MachineInstrBuilder.h"
@@ -151,10 +152,12 @@ AVRTargetLowering::AVRTargetLowering(const AVRTargetMachine &TM,
   setOperationAction(ISD::SREM, MVT::i16, Expand);
 
   // Make division and modulus custom
-  for (MVT VT : MVT::integer_valuetypes()) {
-    setOperationAction(ISD::UDIVREM, VT, Custom);
-    setOperationAction(ISD::SDIVREM, VT, Custom);
-  }
+  setOperationAction(ISD::UDIVREM, MVT::i8, Custom);
+  setOperationAction(ISD::UDIVREM, MVT::i16, Custom);
+  setOperationAction(ISD::UDIVREM, MVT::i32, Custom);
+  setOperationAction(ISD::SDIVREM, MVT::i8, Custom);
+  setOperationAction(ISD::SDIVREM, MVT::i16, Custom);
+  setOperationAction(ISD::SDIVREM, MVT::i32, Custom);
 
   // Do not use MUL. The AVR instructions are closer to SMUL_LOHI &co.
   setOperationAction(ISD::MUL, MVT::i8, Expand);
@@ -190,41 +193,29 @@ AVRTargetLowering::AVRTargetLowering(const AVRTargetMachine &TM,
     // improvements in how we treat 16-bit "registers" to be feasible.
   }
 
-  // Division rtlib functions (not supported)
+  // Division rtlib functions (not supported), use divmod functions instead
   setLibcallName(RTLIB::SDIV_I8, nullptr);
   setLibcallName(RTLIB::SDIV_I16, nullptr);
   setLibcallName(RTLIB::SDIV_I32, nullptr);
-  setLibcallName(RTLIB::SDIV_I64, nullptr);
-  setLibcallName(RTLIB::SDIV_I128, nullptr);
   setLibcallName(RTLIB::UDIV_I8, nullptr);
   setLibcallName(RTLIB::UDIV_I16, nullptr);
   setLibcallName(RTLIB::UDIV_I32, nullptr);
-  setLibcallName(RTLIB::UDIV_I64, nullptr);
-  setLibcallName(RTLIB::UDIV_I128, nullptr);
 
-  // Modulus rtlib functions (not supported)
+  // Modulus rtlib functions (not supported), use divmod functions instead
   setLibcallName(RTLIB::SREM_I8, nullptr);
   setLibcallName(RTLIB::SREM_I16, nullptr);
   setLibcallName(RTLIB::SREM_I32, nullptr);
-  setLibcallName(RTLIB::SREM_I64, nullptr);
-  setLibcallName(RTLIB::SREM_I128, nullptr);
   setLibcallName(RTLIB::UREM_I8, nullptr);
   setLibcallName(RTLIB::UREM_I16, nullptr);
   setLibcallName(RTLIB::UREM_I32, nullptr);
-  setLibcallName(RTLIB::UREM_I64, nullptr);
-  setLibcallName(RTLIB::UREM_I128, nullptr);
 
   // Division and modulus rtlib functions
   setLibcallName(RTLIB::SDIVREM_I8, "__divmodqi4");
   setLibcallName(RTLIB::SDIVREM_I16, "__divmodhi4");
   setLibcallName(RTLIB::SDIVREM_I32, "__divmodsi4");
-  setLibcallName(RTLIB::SDIVREM_I64, "__divmoddi4");
-  setLibcallName(RTLIB::SDIVREM_I128, "__divmodti4");
   setLibcallName(RTLIB::UDIVREM_I8, "__udivmodqi4");
   setLibcallName(RTLIB::UDIVREM_I16, "__udivmodhi4");
   setLibcallName(RTLIB::UDIVREM_I32, "__udivmodsi4");
-  setLibcallName(RTLIB::UDIVREM_I64, "__udivmoddi4");
-  setLibcallName(RTLIB::UDIVREM_I128, "__udivmodti4");
 
   // Several of the runtime library functions use a special calling conv
   setLibcallCallingConv(RTLIB::SDIVREM_I8, CallingConv::AVR_BUILTIN);
@@ -236,7 +227,7 @@ AVRTargetLowering::AVRTargetLowering(const AVRTargetMachine &TM,
   setLibcallName(RTLIB::SIN_F32, "sin");
   setLibcallName(RTLIB::COS_F32, "cos");
 
-  setMinFunctionAlignment(1);
+  setMinFunctionAlignment(Align(2));
   setMinimumJumpTableEntries(UINT_MAX);
 }
 
@@ -259,6 +250,8 @@ const char *AVRTargetLowering::getTargetNodeName(unsigned Opcode) const {
     NODE(ASR);
     NODE(LSLLOOP);
     NODE(LSRLOOP);
+    NODE(ROLLOOP);
+    NODE(RORLOOP);
     NODE(ASRLOOP);
     NODE(BRCOND);
     NODE(CMP);
@@ -282,6 +275,8 @@ SDValue AVRTargetLowering::LowerShifts(SDValue Op, SelectionDAG &DAG) const {
   const SDNode *N = Op.getNode();
   EVT VT = Op.getValueType();
   SDLoc dl(N);
+  assert(isPowerOf2_32(VT.getSizeInBits()) &&
+         "Expected power-of-2 shift amount");
 
   // Expand non-constant shifts to loops.
   if (!isa<ConstantSDNode>(N->getOperand(1))) {
@@ -294,12 +289,20 @@ SDValue AVRTargetLowering::LowerShifts(SDValue Op, SelectionDAG &DAG) const {
     case ISD::SRL:
       return DAG.getNode(AVRISD::LSRLOOP, dl, VT, N->getOperand(0),
                          N->getOperand(1));
-    case ISD::ROTL:
-      return DAG.getNode(AVRISD::ROLLOOP, dl, VT, N->getOperand(0),
-                         N->getOperand(1));
-    case ISD::ROTR:
-      return DAG.getNode(AVRISD::RORLOOP, dl, VT, N->getOperand(0),
-                         N->getOperand(1));
+    case ISD::ROTL: {
+      SDValue Amt = N->getOperand(1);
+      EVT AmtVT = Amt.getValueType();
+      Amt = DAG.getNode(ISD::AND, dl, AmtVT, Amt,
+                        DAG.getConstant(VT.getSizeInBits() - 1, dl, AmtVT));
+      return DAG.getNode(AVRISD::ROLLOOP, dl, VT, N->getOperand(0), Amt);
+    }
+    case ISD::ROTR: {
+      SDValue Amt = N->getOperand(1);
+      EVT AmtVT = Amt.getValueType();
+      Amt = DAG.getNode(ISD::AND, dl, AmtVT, Amt,
+                        DAG.getConstant(VT.getSizeInBits() - 1, dl, AmtVT));
+      return DAG.getNode(AVRISD::RORLOOP, dl, VT, N->getOperand(0), Amt);
+    }
     case ISD::SRA:
       return DAG.getNode(AVRISD::ASRLOOP, dl, VT, N->getOperand(0),
                          N->getOperand(1));
@@ -315,9 +318,11 @@ SDValue AVRTargetLowering::LowerShifts(SDValue Op, SelectionDAG &DAG) const {
     break;
   case ISD::ROTL:
     Opc8 = AVRISD::ROL;
+    ShiftAmount = ShiftAmount % VT.getSizeInBits();
     break;
   case ISD::ROTR:
     Opc8 = AVRISD::ROR;
+    ShiftAmount = ShiftAmount % VT.getSizeInBits();
     break;
   case ISD::SRL:
     Opc8 = AVRISD::LSR;
@@ -327,6 +332,90 @@ SDValue AVRTargetLowering::LowerShifts(SDValue Op, SelectionDAG &DAG) const {
     break;
   default:
     llvm_unreachable("Invalid shift opcode");
+  }
+
+  // Optimize int8/int16 shifts.
+  if (VT.getSizeInBits() == 8) {
+    if (Op.getOpcode() == ISD::SHL && 4 <= ShiftAmount && ShiftAmount < 7) {
+      // Optimize LSL when 4 <= ShiftAmount <= 6.
+      Victim = DAG.getNode(AVRISD::SWAP, dl, VT, Victim);
+      Victim =
+          DAG.getNode(ISD::AND, dl, VT, Victim, DAG.getConstant(0xf0, dl, VT));
+      ShiftAmount -= 4;
+    } else if (Op.getOpcode() == ISD::SRL && 4 <= ShiftAmount &&
+               ShiftAmount < 7) {
+      // Optimize LSR when 4 <= ShiftAmount <= 6.
+      Victim = DAG.getNode(AVRISD::SWAP, dl, VT, Victim);
+      Victim =
+          DAG.getNode(ISD::AND, dl, VT, Victim, DAG.getConstant(0x0f, dl, VT));
+      ShiftAmount -= 4;
+    } else if (Op.getOpcode() == ISD::SHL && ShiftAmount == 7) {
+      // Optimize LSL when ShiftAmount == 7.
+      Victim = DAG.getNode(AVRISD::LSLBN, dl, VT, Victim,
+                           DAG.getConstant(7, dl, VT));
+      ShiftAmount = 0;
+    } else if (Op.getOpcode() == ISD::SRL && ShiftAmount == 7) {
+      // Optimize LSR when ShiftAmount == 7.
+      Victim = DAG.getNode(AVRISD::LSRBN, dl, VT, Victim,
+                           DAG.getConstant(7, dl, VT));
+      ShiftAmount = 0;
+    } else if (Op.getOpcode() == ISD::SRA && ShiftAmount == 7) {
+      // Optimize ASR when ShiftAmount == 7.
+      Victim = DAG.getNode(AVRISD::ASRBN, dl, VT, Victim,
+                           DAG.getConstant(7, dl, VT));
+      ShiftAmount = 0;
+    }
+  } else if (VT.getSizeInBits() == 16) {
+    if (4 <= ShiftAmount && ShiftAmount < 8)
+      switch (Op.getOpcode()) {
+      case ISD::SHL:
+        Victim = DAG.getNode(AVRISD::LSLWN, dl, VT, Victim,
+                             DAG.getConstant(4, dl, VT));
+        ShiftAmount -= 4;
+        break;
+      case ISD::SRL:
+        Victim = DAG.getNode(AVRISD::LSRWN, dl, VT, Victim,
+                             DAG.getConstant(4, dl, VT));
+        ShiftAmount -= 4;
+        break;
+      default:
+        break;
+      }
+    else if (8 <= ShiftAmount && ShiftAmount < 12)
+      switch (Op.getOpcode()) {
+      case ISD::SHL:
+        Victim = DAG.getNode(AVRISD::LSLWN, dl, VT, Victim,
+                             DAG.getConstant(8, dl, VT));
+        ShiftAmount -= 8;
+        break;
+      case ISD::SRL:
+        Victim = DAG.getNode(AVRISD::LSRWN, dl, VT, Victim,
+                             DAG.getConstant(8, dl, VT));
+        ShiftAmount -= 8;
+        break;
+      case ISD::SRA:
+        Victim = DAG.getNode(AVRISD::ASRWN, dl, VT, Victim,
+                             DAG.getConstant(8, dl, VT));
+        ShiftAmount -= 8;
+        break;
+      default:
+        break;
+      }
+    else if (12 <= ShiftAmount)
+      switch (Op.getOpcode()) {
+      case ISD::SHL:
+        Victim = DAG.getNode(AVRISD::LSLWN, dl, VT, Victim,
+                             DAG.getConstant(12, dl, VT));
+        ShiftAmount -= 12;
+        break;
+      case ISD::SRL:
+        Victim = DAG.getNode(AVRISD::LSRWN, dl, VT, Victim,
+                             DAG.getConstant(12, dl, VT));
+        ShiftAmount -= 12;
+        break;
+      default:
+        break;
+      }
   }
 
   while (ShiftAmount--) {
@@ -356,12 +445,6 @@ SDValue AVRTargetLowering::LowerDivRem(SDValue Op, SelectionDAG &DAG) const {
     break;
   case MVT::i32:
     LC = IsSigned ? RTLIB::SDIVREM_I32 : RTLIB::UDIVREM_I32;
-    break;
-  case MVT::i64:
-    LC = IsSigned ? RTLIB::SDIVREM_I64 : RTLIB::UDIVREM_I64;
-    break;
-  case MVT::i128:
-    LC = IsSigned ? RTLIB::SDIVREM_I128 : RTLIB::UDIVREM_I128;
     break;
   }
 
@@ -436,6 +519,36 @@ static AVRCC::CondCodes intCCToAVRCC(ISD::CondCode CC) {
   case ISD::SETULT:
     return AVRCC::COND_LO;
   }
+}
+
+/// Returns appropriate CP/CPI/CPC nodes code for the given 8/16-bit operands.
+SDValue AVRTargetLowering::getAVRCmp(SDValue LHS, SDValue RHS,
+                                     SelectionDAG &DAG, SDLoc DL) const {
+  assert((LHS.getSimpleValueType() == RHS.getSimpleValueType()) &&
+         "LHS and RHS have different types");
+  assert(((LHS.getSimpleValueType() == MVT::i16) ||
+          (LHS.getSimpleValueType() == MVT::i8)) && "invalid comparison type");
+
+  SDValue Cmp;
+
+  if (LHS.getSimpleValueType() == MVT::i16 && isa<ConstantSDNode>(RHS)) {
+    // Generate a CPI/CPC pair if RHS is a 16-bit constant.
+    SDValue LHSlo = DAG.getNode(ISD::EXTRACT_ELEMENT, DL, MVT::i8, LHS,
+                                DAG.getIntPtrConstant(0, DL));
+    SDValue LHShi = DAG.getNode(ISD::EXTRACT_ELEMENT, DL, MVT::i8, LHS,
+                                DAG.getIntPtrConstant(1, DL));
+    SDValue RHSlo = DAG.getNode(ISD::EXTRACT_ELEMENT, DL, MVT::i8, RHS,
+                                DAG.getIntPtrConstant(0, DL));
+    SDValue RHShi = DAG.getNode(ISD::EXTRACT_ELEMENT, DL, MVT::i8, RHS,
+                                DAG.getIntPtrConstant(1, DL));
+    Cmp = DAG.getNode(AVRISD::CMP, DL, MVT::Glue, LHSlo, RHSlo);
+    Cmp = DAG.getNode(AVRISD::CMPC, DL, MVT::Glue, LHShi, RHShi, Cmp);
+  } else {
+    // Generate ordinary 16-bit comparison.
+    Cmp = DAG.getNode(AVRISD::CMP, DL, MVT::Glue, LHS, RHS);
+  }
+
+  return Cmp;
 }
 
 /// Returns appropriate AVR CMP/CMPC nodes and corresponding condition code for
@@ -550,7 +663,7 @@ SDValue AVRTargetLowering::getAVRCmp(SDValue LHS, SDValue RHS, ISD::CondCode CC,
                                 DAG.getIntPtrConstant(1, DL));
       Cmp = DAG.getNode(AVRISD::TST, DL, MVT::Glue, Top);
     } else {
-      Cmp = DAG.getNode(AVRISD::CMP, DL, MVT::Glue, LHSlo, RHSlo);
+      Cmp = getAVRCmp(LHSlo, RHSlo, DAG, DL);
       Cmp = DAG.getNode(AVRISD::CMPC, DL, MVT::Glue, LHShi, RHShi, Cmp);
     }
   } else if (VT == MVT::i64) {
@@ -588,7 +701,7 @@ SDValue AVRTargetLowering::getAVRCmp(SDValue LHS, SDValue RHS, ISD::CondCode CC,
                                 DAG.getIntPtrConstant(1, DL));
       Cmp = DAG.getNode(AVRISD::TST, DL, MVT::Glue, Top);
     } else {
-      Cmp = DAG.getNode(AVRISD::CMP, DL, MVT::Glue, LHS0, RHS0);
+      Cmp = getAVRCmp(LHS0, RHS0, DAG, DL);
       Cmp = DAG.getNode(AVRISD::CMPC, DL, MVT::Glue, LHS1, RHS1, Cmp);
       Cmp = DAG.getNode(AVRISD::CMPC, DL, MVT::Glue, LHS2, RHS2, Cmp);
       Cmp = DAG.getNode(AVRISD::CMPC, DL, MVT::Glue, LHS3, RHS3, Cmp);
@@ -602,7 +715,7 @@ SDValue AVRTargetLowering::getAVRCmp(SDValue LHS, SDValue RHS, ISD::CondCode CC,
                             : DAG.getNode(ISD::EXTRACT_ELEMENT, DL, MVT::i8,
                                           LHS, DAG.getIntPtrConstant(1, DL)));
     } else {
-      Cmp = DAG.getNode(AVRISD::CMP, DL, MVT::Glue, LHS, RHS);
+      Cmp = getAVRCmp(LHS, RHS, DAG, DL);
     }
   } else {
     llvm_unreachable("Invalid comparison size");
@@ -677,7 +790,7 @@ SDValue AVRTargetLowering::LowerVASTART(SDValue Op, SelectionDAG &DAG) const {
   SDValue FI = DAG.getFrameIndex(AFI->getVarArgsFrameIndex(), getPointerTy(DL));
 
   return DAG.getStore(Op.getOperand(0), dl, FI, Op.getOperand(1),
-                      MachinePointerInfo(SV), 0);
+                      MachinePointerInfo(SV));
 }
 
 SDValue AVRTargetLowering::LowerOperation(SDValue Op, SelectionDAG &DAG) const {
@@ -883,173 +996,145 @@ bool AVRTargetLowering::isOffsetFoldingLegal(
 
 #include "AVRGenCallingConv.inc"
 
-/// For each argument in a function store the number of pieces it is composed
-/// of.
-static void parseFunctionArgs(const SmallVectorImpl<ISD::InputArg> &Ins,
-                              SmallVectorImpl<unsigned> &Out) {
-  for (const ISD::InputArg &Arg : Ins) {
-    if(Arg.PartOffset > 0) continue;
-    unsigned Bytes = ((Arg.ArgVT.getSizeInBits()) + 7) / 8;
+/// Registers for calling conventions, ordered in reverse as required by ABI.
+/// Both arrays must be of the same length.
+static const MCPhysReg RegList8[] = {
+    AVR::R25, AVR::R24, AVR::R23, AVR::R22, AVR::R21, AVR::R20,
+    AVR::R19, AVR::R18, AVR::R17, AVR::R16, AVR::R15, AVR::R14,
+    AVR::R13, AVR::R12, AVR::R11, AVR::R10, AVR::R9,  AVR::R8};
+static const MCPhysReg RegList16[] = {
+    AVR::R26R25, AVR::R25R24, AVR::R24R23, AVR::R23R22,
+    AVR::R22R21, AVR::R21R20, AVR::R20R19, AVR::R19R18,
+    AVR::R18R17, AVR::R17R16, AVR::R16R15, AVR::R15R14,
+    AVR::R14R13, AVR::R13R12, AVR::R12R11, AVR::R11R10,
+    AVR::R10R9,  AVR::R9R8};
 
-    Out.push_back((Bytes + 1) / 2);
-  }
-}
-
-/// For external symbols there is no function prototype information so we
-/// have to rely directly on argument sizes.
-static void parseExternFuncCallArgs(const SmallVectorImpl<ISD::OutputArg> &In,
-                                    SmallVectorImpl<unsigned> &Out) {
-  for (unsigned i = 0, e = In.size(); i != e;) {
-    unsigned Size = 0;
-    unsigned Offset = 0;
-    while ((i != e) && (In[i].PartOffset == Offset)) {
-      Offset += In[i].VT.getStoreSize();
-      ++i;
-      ++Size;
-    }
-    Out.push_back(Size);
-  }
-}
-
-static StringRef getFunctionName(TargetLowering::CallLoweringInfo &CLI) {
-  SDValue Callee = CLI.Callee;
-
-  if (const ExternalSymbolSDNode *G = dyn_cast<ExternalSymbolSDNode>(Callee)) {
-    return G->getSymbol();
-  }
-
-  if (const GlobalAddressSDNode *G = dyn_cast<GlobalAddressSDNode>(Callee)) {
-    return G->getGlobal()->getName();
-  }
-
-  llvm_unreachable("don't know how to get the name for this callee");
-}
+static_assert(array_lengthof(RegList8) == array_lengthof(RegList16),
+        "8-bit and 16-bit register arrays must be of equal length");
 
 /// Analyze incoming and outgoing function arguments. We need custom C++ code
-/// to handle special constraints in the ABI like reversing the order of the
-/// pieces of splitted arguments. In addition, all pieces of a certain argument
-/// have to be passed either using registers or the stack but never mixing both.
-static void analyzeStandardArguments(TargetLowering::CallLoweringInfo *CLI,
-                                     const Function *F, const DataLayout *TD,
-                                     const SmallVectorImpl<ISD::OutputArg> *Outs,
-                                     const SmallVectorImpl<ISD::InputArg> *Ins,
-                                     CallingConv::ID CallConv,
-                                     SmallVectorImpl<CCValAssign> &ArgLocs,
-                                     CCState &CCInfo, bool IsCall, bool IsVarArg) {
-  static const MCPhysReg RegList8[] = {AVR::R24, AVR::R22, AVR::R20,
-                                       AVR::R18, AVR::R16, AVR::R14,
-                                       AVR::R12, AVR::R10, AVR::R8};
-  static const MCPhysReg RegList16[] = {AVR::R25R24, AVR::R23R22, AVR::R21R20,
-                                        AVR::R19R18, AVR::R17R16, AVR::R15R14,
-                                        AVR::R13R12, AVR::R11R10, AVR::R9R8};
-  if (IsVarArg) {
-    // Variadic functions do not need all the analysis below.
-    if (IsCall) {
-      CCInfo.AnalyzeCallOperands(*Outs, ArgCC_AVR_Vararg);
-    } else {
-      CCInfo.AnalyzeFormalArguments(*Ins, ArgCC_AVR_Vararg);
+/// to handle special constraints in the ABI.
+/// In addition, all pieces of a certain argument have to be passed either
+/// using registers or the stack but never mixing both.
+template <typename ArgT>
+static void
+analyzeArguments(TargetLowering::CallLoweringInfo *CLI, const Function *F,
+                 const DataLayout *TD, const SmallVectorImpl<ArgT> &Args,
+                 SmallVectorImpl<CCValAssign> &ArgLocs, CCState &CCInfo) {
+  unsigned NumArgs = Args.size();
+  // This is the index of the last used register, in RegList*.
+  // -1 means R26 (R26 is never actually used in CC).
+  int RegLastIdx = -1;
+  // Once a value is passed to the stack it will always be used
+  bool UseStack = false;
+  for (unsigned i = 0; i != NumArgs;) {
+    MVT VT = Args[i].VT;
+    // We have to count the number of bytes for each function argument, that is
+    // those Args with the same OrigArgIndex. This is important in case the
+    // function takes an aggregate type.
+    // Current argument will be between [i..j).
+    unsigned ArgIndex = Args[i].OrigArgIndex;
+    unsigned TotalBytes = VT.getStoreSize();
+    unsigned j = i + 1;
+    for (; j != NumArgs; ++j) {
+      if (Args[j].OrigArgIndex != ArgIndex)
+        break;
+      TotalBytes += Args[j].VT.getStoreSize();
     }
-    return;
-  }
+    // Round up to even number of bytes.
+    TotalBytes = alignTo(TotalBytes, 2);
+    // Skip zero sized arguments
+    if (TotalBytes == 0)
+      continue;
+    // The index of the first register to be used
+    unsigned RegIdx = RegLastIdx + TotalBytes;
+    RegLastIdx = RegIdx;
+    // If there are not enough registers, use the stack
+    if (RegIdx >= array_lengthof(RegList8)) {
+      UseStack = true;
+    }
+    for (; i != j; ++i) {
+      MVT VT = Args[i].VT;
 
-  // Fill in the Args array which will contain original argument sizes.
-  SmallVector<unsigned, 8> Args;
-  if (IsCall) {
-    parseExternFuncCallArgs(*Outs, Args);
-  } else {
-    assert(F != nullptr && "function should not be null");
-    parseFunctionArgs(*Ins, Args);
-  }
-
-  unsigned RegsLeft = array_lengthof(RegList8), ValNo = 0;
-  // Variadic functions always use the stack.
-  bool UsesStack = false;
-  for (unsigned i = 0, pos = 0, e = Args.size(); i != e; ++i) {
-    unsigned Size = Args[i];
-
-    // If we have a zero-sized argument, don't attempt to lower it.
-    // AVR-GCC does not support zero-sized arguments and so we need not
-    // worry about ABI compatibility.
-    if (Size == 0) continue;
-
-    MVT LocVT = (IsCall) ? (*Outs)[pos].VT : (*Ins)[pos].VT;
-
-    // If we have plenty of regs to pass the whole argument do it.
-    if (!UsesStack && (Size <= RegsLeft)) {
-      const MCPhysReg *RegList = (LocVT == MVT::i16) ? RegList16 : RegList8;
-
-      for (unsigned j = 0; j != Size; ++j) {
-        unsigned Reg = CCInfo.AllocateReg(
-            ArrayRef<MCPhysReg>(RegList, array_lengthof(RegList8)));
+      if (UseStack) {
+        auto evt = EVT(VT).getTypeForEVT(CCInfo.getContext());
+        unsigned Offset = CCInfo.AllocateStack(TD->getTypeAllocSize(evt),
+                                               TD->getABITypeAlign(evt));
         CCInfo.addLoc(
-            CCValAssign::getReg(ValNo++, LocVT, Reg, LocVT, CCValAssign::Full));
-        --RegsLeft;
-      }
-
-      // Reverse the order of the pieces to agree with the "big endian" format
-      // required in the calling convention ABI.
-      std::reverse(ArgLocs.begin() + pos, ArgLocs.begin() + pos + Size);
-    } else {
-      // Pass the rest of arguments using the stack.
-      UsesStack = true;
-      for (unsigned j = 0; j != Size; ++j) {
-        unsigned Offset = CCInfo.AllocateStack(
-            TD->getTypeAllocSize(EVT(LocVT).getTypeForEVT(CCInfo.getContext())),
-            TD->getABITypeAlignment(
-                EVT(LocVT).getTypeForEVT(CCInfo.getContext())));
-        CCInfo.addLoc(CCValAssign::getMem(ValNo++, LocVT, Offset, LocVT,
-                                          CCValAssign::Full));
+            CCValAssign::getMem(i, VT, Offset, VT, CCValAssign::Full));
+      } else {
+        unsigned Reg;
+        if (VT == MVT::i8) {
+          Reg = CCInfo.AllocateReg(RegList8[RegIdx]);
+        } else if (VT == MVT::i16) {
+          Reg = CCInfo.AllocateReg(RegList16[RegIdx]);
+        } else {
+          llvm_unreachable(
+              "calling convention can only manage i8 and i16 types");
+        }
+        assert(Reg && "register not available in calling convention");
+        CCInfo.addLoc(CCValAssign::getReg(i, VT, Reg, VT, CCValAssign::Full));
+        // Registers inside a particular argument are sorted in increasing order
+        // (remember the array is reversed).
+        RegIdx -= VT.getStoreSize();
       }
     }
-    pos += Size;
   }
 }
 
-static void analyzeBuiltinArguments(TargetLowering::CallLoweringInfo &CLI,
-                                    const Function *F, const DataLayout *TD,
-                                    const SmallVectorImpl<ISD::OutputArg> *Outs,
-                                    const SmallVectorImpl<ISD::InputArg> *Ins,
-                                    CallingConv::ID CallConv,
-                                    SmallVectorImpl<CCValAssign> &ArgLocs,
-                                    CCState &CCInfo, bool IsCall, bool IsVarArg) {
-  StringRef FuncName = getFunctionName(CLI);
+/// Count the total number of bytes needed to pass or return these arguments.
+template <typename ArgT>
+static unsigned getTotalArgumentsSizeInBytes(const SmallVectorImpl<ArgT> &Args) {
+  unsigned TotalBytes = 0;
 
-  if (FuncName.startswith("__udivmod") || FuncName.startswith("__divmod")) {
-    CCInfo.AnalyzeCallOperands(*Outs, ArgCC_AVR_BUILTIN_DIV);
+  for (const ArgT& Arg : Args) {
+    TotalBytes += Arg.VT.getStoreSize();
+  }
+  return TotalBytes;
+}
+
+/// Analyze incoming and outgoing value of returning from a function.
+/// The algorithm is similar to analyzeArguments, but there can only be
+/// one value, possibly an aggregate, and it is limited to 8 bytes.
+template <typename ArgT>
+static void analyzeReturnValues(const SmallVectorImpl<ArgT> &Args,
+                                CCState &CCInfo) {
+  unsigned NumArgs = Args.size();
+  unsigned TotalBytes = getTotalArgumentsSizeInBytes(Args);
+  // CanLowerReturn() guarantees this assertion.
+  assert(TotalBytes <= 8 && "return values greater than 8 bytes cannot be lowered");
+
+  // GCC-ABI says that the size is rounded up to the next even number,
+  // but actually once it is more than 4 it will always round up to 8.
+  if (TotalBytes > 4) {
+    TotalBytes = 8;
   } else {
-    analyzeStandardArguments(&CLI, F, TD, Outs, Ins,
-                             CallConv, ArgLocs, CCInfo,
-                             IsCall, IsVarArg);
+    TotalBytes = alignTo(TotalBytes, 2);
   }
-}
 
-static void analyzeArguments(TargetLowering::CallLoweringInfo *CLI,
-                             const Function *F, const DataLayout *TD,
-                             const SmallVectorImpl<ISD::OutputArg> *Outs,
-                             const SmallVectorImpl<ISD::InputArg> *Ins,
-                             CallingConv::ID CallConv,
-                             SmallVectorImpl<CCValAssign> &ArgLocs,
-                             CCState &CCInfo, bool IsCall, bool IsVarArg) {
-  switch (CallConv) {
-    case CallingConv::AVR_BUILTIN: {
-      analyzeBuiltinArguments(*CLI, F, TD, Outs, Ins,
-                              CallConv, ArgLocs, CCInfo,
-                              IsCall, IsVarArg);
-      return;
+  // The index of the first register to use.
+  int RegIdx = TotalBytes - 1;
+  for (unsigned i = 0; i != NumArgs; ++i) {
+    MVT VT = Args[i].VT;
+    unsigned Reg;
+    if (VT == MVT::i8) {
+      Reg = CCInfo.AllocateReg(RegList8[RegIdx]);
+    } else if (VT == MVT::i16) {
+      Reg = CCInfo.AllocateReg(RegList16[RegIdx]);
+    } else {
+      llvm_unreachable("calling convention can only manage i8 and i16 types");
     }
-    default: {
-      analyzeStandardArguments(CLI, F, TD, Outs, Ins,
-                               CallConv, ArgLocs, CCInfo,
-                               IsCall, IsVarArg);
-      return;
-    }
+    assert(Reg && "register not available in calling convention");
+    CCInfo.addLoc(CCValAssign::getReg(i, VT, Reg, VT, CCValAssign::Full));
+    // Registers sort in increasing order
+    RegIdx -= VT.getStoreSize();
   }
 }
 
 SDValue AVRTargetLowering::LowerFormalArguments(
     SDValue Chain, CallingConv::ID CallConv, bool isVarArg,
-    const SmallVectorImpl<ISD::InputArg> &Ins, const SDLoc &dl, SelectionDAG &DAG,
-    SmallVectorImpl<SDValue> &InVals) const {
+    const SmallVectorImpl<ISD::InputArg> &Ins, const SDLoc &dl,
+    SelectionDAG &DAG, SmallVectorImpl<SDValue> &InVals) const {
   MachineFunction &MF = DAG.getMachineFunction();
   MachineFrameInfo &MFI = MF.getFrameInfo();
   auto DL = DAG.getDataLayout();
@@ -1059,8 +1144,12 @@ SDValue AVRTargetLowering::LowerFormalArguments(
   CCState CCInfo(CallConv, isVarArg, DAG.getMachineFunction(), ArgLocs,
                  *DAG.getContext());
 
-  analyzeArguments(nullptr, &MF.getFunction(), &DL, 0, &Ins, CallConv, ArgLocs, CCInfo,
-                   false, isVarArg);
+  // Variadic functions do not need all the analysis below.
+  if (isVarArg) {
+    CCInfo.AnalyzeFormalArguments(Ins, ArgCC_AVR_Vararg);
+  } else {
+    analyzeArguments(nullptr, &MF.getFunction(), &DL, Ins, ArgLocs, CCInfo);
+  }
 
   SDValue ArgValue;
   for (CCValAssign &VA : ArgLocs) {
@@ -1121,8 +1210,7 @@ SDValue AVRTargetLowering::LowerFormalArguments(
       // from this parameter.
       SDValue FIN = DAG.getFrameIndex(FI, getPointerTy(DL));
       InVals.push_back(DAG.getLoad(LocVT, dl, Chain, FIN,
-                                   MachinePointerInfo::getFixedStack(MF, FI),
-                                   0));
+                                   MachinePointerInfo::getFixedStack(MF, FI)));
     }
   }
 
@@ -1181,8 +1269,12 @@ SDValue AVRTargetLowering::LowerCall(TargetLowering::CallLoweringInfo &CLI,
                                          getPointerTy(DAG.getDataLayout()));
   }
 
-  analyzeArguments(&CLI, F, &DAG.getDataLayout(), &Outs, 0, CallConv, ArgLocs, CCInfo,
-                   true, isVarArg);
+  // Variadic functions do not need all the analysis below.
+  if (isVarArg) {
+    CCInfo.AnalyzeCallOperands(Outs, ArgCC_AVR_Vararg);
+  } else {
+    analyzeArguments(&CLI, F, &DAG.getDataLayout(), Outs, ArgLocs, CCInfo);
+  }
 
   // Get a count of how many bytes are to be pushed on the stack.
   unsigned NumBytes = CCInfo.getNextStackOffset();
@@ -1231,15 +1323,17 @@ SDValue AVRTargetLowering::LowerCall(TargetLowering::CallLoweringInfo &CLI,
     RegsToPass.push_back(std::make_pair(VA.getLocReg(), Arg));
   }
 
-  // Second, stack arguments have to walked in reverse order by inserting
-  // chained stores, this ensures their order is not changed by the scheduler
-  // and that the push instruction sequence generated is correct, otherwise they
-  // can be freely intermixed.
+  // Second, stack arguments have to walked.
+  // Previously this code created chained stores but those chained stores appear
+  // to be unchained in the legalization phase. Therefore, do not attempt to
+  // chain them here. In fact, chaining them here somehow causes the first and
+  // second store to be reversed which is the exact opposite of the intended
+  // effect.
   if (HasStackArgs) {
-    for (AE = AI, AI = ArgLocs.size(); AI != AE; --AI) {
-      unsigned Loc = AI - 1;
-      CCValAssign &VA = ArgLocs[Loc];
-      SDValue Arg = OutVals[Loc];
+    SmallVector<SDValue, 8> MemOpChains;
+    for (; AI != AE; AI++) {
+      CCValAssign &VA = ArgLocs[AI];
+      SDValue Arg = OutVals[AI];
 
       assert(VA.isMemLoc());
 
@@ -1249,11 +1343,13 @@ SDValue AVRTargetLowering::LowerCall(TargetLowering::CallLoweringInfo &CLI,
           DAG.getRegister(AVR::SP, getPointerTy(DAG.getDataLayout())),
           DAG.getIntPtrConstant(VA.getLocMemOffset() + 1, DL));
 
-      Chain =
+      MemOpChains.push_back(
           DAG.getStore(Chain, DL, Arg, PtrOff,
-                       MachinePointerInfo::getStack(MF, VA.getLocMemOffset()),
-                       0);
+                       MachinePointerInfo::getStack(MF, VA.getLocMemOffset())));
     }
+
+    if (!MemOpChains.empty())
+      Chain = DAG.getNode(ISD::TokenFactor, DL, MVT::Other, MemOpChains);
   }
 
   // Build a sequence of copy-to-reg nodes chained together with token chain and
@@ -1319,13 +1415,10 @@ SDValue AVRTargetLowering::LowerCallResult(
                  *DAG.getContext());
 
   // Handle runtime calling convs.
-  auto CCFunction = CCAssignFnForReturn(CallConv);
-  CCInfo.AnalyzeCallResult(Ins, CCFunction);
-
-  if (CallConv != CallingConv::AVR_BUILTIN && RVLocs.size() > 1) {
-    // Reverse splitted return values to get the "big endian" format required
-    // to agree with the calling convention ABI.
-    std::reverse(RVLocs.begin(), RVLocs.end());
+  if (CallConv == CallingConv::AVR_BUILTIN) {
+    CCInfo.AnalyzeCallResult(Ins, RetCC_AVR_BUILTIN);
+  } else {
+    analyzeReturnValues(Ins, CCInfo);
   }
 
   // Copy all of the result registers out of their specified physreg.
@@ -1344,26 +1437,17 @@ SDValue AVRTargetLowering::LowerCallResult(
 //               Return Value Calling Convention Implementation
 //===----------------------------------------------------------------------===//
 
-CCAssignFn *AVRTargetLowering::CCAssignFnForReturn(CallingConv::ID CC) const {
-  switch (CC) {
-  case CallingConv::AVR_BUILTIN:
-    return RetCC_AVR_BUILTIN;
-  default:
-    return RetCC_AVR;
+bool AVRTargetLowering::CanLowerReturn(
+    CallingConv::ID CallConv, MachineFunction &MF, bool isVarArg,
+    const SmallVectorImpl<ISD::OutputArg> &Outs, LLVMContext &Context) const {
+  if (CallConv == CallingConv::AVR_BUILTIN) {
+    SmallVector<CCValAssign, 16> RVLocs;
+    CCState CCInfo(CallConv, isVarArg, MF, RVLocs, Context);
+    return CCInfo.CheckReturn(Outs, RetCC_AVR_BUILTIN);
   }
-}
 
-bool
-AVRTargetLowering::CanLowerReturn(CallingConv::ID CallConv,
-                                  MachineFunction &MF, bool isVarArg,
-                                  const SmallVectorImpl<ISD::OutputArg> &Outs,
-                                  LLVMContext &Context) const
-{
-  SmallVector<CCValAssign, 16> RVLocs;
-  CCState CCInfo(CallConv, isVarArg, MF, RVLocs, Context);
-
-  auto CCFunction = CCAssignFnForReturn(CallConv);
-  return CCInfo.CheckReturn(Outs, CCFunction);
+  unsigned TotalBytes = getTotalArgumentsSizeInBytes(Outs);
+  return TotalBytes <= 8;
 }
 
 SDValue
@@ -1379,25 +1463,19 @@ AVRTargetLowering::LowerReturn(SDValue Chain, CallingConv::ID CallConv,
   CCState CCInfo(CallConv, isVarArg, DAG.getMachineFunction(), RVLocs,
                  *DAG.getContext());
 
-  // Analyze return values.
-  auto CCFunction = CCAssignFnForReturn(CallConv);
-  CCInfo.AnalyzeReturn(Outs, CCFunction);
-
-  // If this is the first return lowered for this function, add the regs to
-  // the liveout set for the function.
   MachineFunction &MF = DAG.getMachineFunction();
-  unsigned e = RVLocs.size();
 
-  // Reverse splitted return values to get the "big endian" format required
-  // to agree with the calling convention ABI.
-  if (e > 1) {
-    std::reverse(RVLocs.begin(), RVLocs.end());
+  // Analyze return values.
+  if (CallConv == CallingConv::AVR_BUILTIN) {
+    CCInfo.AnalyzeReturn(Outs, RetCC_AVR_BUILTIN);
+  } else {
+    analyzeReturnValues(Outs, CCInfo);
   }
 
   SDValue Flag;
   SmallVector<SDValue, 4> RetOps(1, Chain);
   // Copy the result values into the output registers.
-  for (unsigned i = 0; i != e; ++i) {
+  for (unsigned i = 0, e = RVLocs.size(); i != e; ++i) {
     CCValAssign &VA = RVLocs[i];
     assert(VA.isRegLoc() && "Can only return in registers!");
 
@@ -1415,10 +1493,12 @@ AVRTargetLowering::LowerReturn(SDValue Chain, CallingConv::ID CallConv,
     return Chain;
   }
 
+  const AVRMachineFunctionInfo *AFI = MF.getInfo<AVRMachineFunctionInfo>();
+
   unsigned RetOpc =
-      (CallConv == CallingConv::AVR_INTR || CallConv == CallingConv::AVR_SIGNAL)
-          ? AVRISD::RETI_FLAG
-          : AVRISD::RET_FLAG;
+    AFI->isInterruptOrSignalHandler()
+        ? AVRISD::RETI_FLAG
+        : AVRISD::RET_FLAG;
 
   RetOps[0] = Chain; // Update chain.
 
@@ -1472,16 +1552,15 @@ MachineBasicBlock *AVRTargetLowering::insertShift(MachineInstr &MI,
     RC = &AVR::DREGSRegClass;
     break;
   case AVR::Rol8:
-    Opc = AVR::ADCRdRr; // ROL is an alias of ADC Rd, Rd
+    Opc = AVR::ROLBRd;
     RC = &AVR::GPR8RegClass;
-    HasRepeatedOperand = true;
     break;
   case AVR::Rol16:
     Opc = AVR::ROLWRd;
     RC = &AVR::DREGSRegClass;
     break;
   case AVR::Ror8:
-    Opc = AVR::RORRd;
+    Opc = AVR::RORBRd;
     RC = &AVR::GPR8RegClass;
     break;
   case AVR::Ror16:
@@ -1498,9 +1577,11 @@ MachineBasicBlock *AVRTargetLowering::insertShift(MachineInstr &MI,
 
   // Create loop block.
   MachineBasicBlock *LoopBB = F->CreateMachineBasicBlock(LLVM_BB);
+  MachineBasicBlock *CheckBB = F->CreateMachineBasicBlock(LLVM_BB);
   MachineBasicBlock *RemBB = F->CreateMachineBasicBlock(LLVM_BB);
 
   F->insert(I, LoopBB);
+  F->insert(I, CheckBB);
   F->insert(I, RemBB);
 
   // Update machine-CFG edges by transferring all successors of the current
@@ -1509,58 +1590,55 @@ MachineBasicBlock *AVRTargetLowering::insertShift(MachineInstr &MI,
                 BB->end());
   RemBB->transferSuccessorsAndUpdatePHIs(BB);
 
-  // Add adges BB => LoopBB => RemBB, BB => RemBB, LoopBB => LoopBB.
-  BB->addSuccessor(LoopBB);
-  BB->addSuccessor(RemBB);
-  LoopBB->addSuccessor(RemBB);
-  LoopBB->addSuccessor(LoopBB);
+  // Add edges BB => LoopBB => CheckBB => RemBB, CheckBB => LoopBB.
+  BB->addSuccessor(CheckBB);
+  LoopBB->addSuccessor(CheckBB);
+  CheckBB->addSuccessor(LoopBB);
+  CheckBB->addSuccessor(RemBB);
 
-  unsigned ShiftAmtReg = RI.createVirtualRegister(&AVR::LD8RegClass);
-  unsigned ShiftAmtReg2 = RI.createVirtualRegister(&AVR::LD8RegClass);
-  unsigned ShiftReg = RI.createVirtualRegister(RC);
-  unsigned ShiftReg2 = RI.createVirtualRegister(RC);
-  unsigned ShiftAmtSrcReg = MI.getOperand(2).getReg();
-  unsigned SrcReg = MI.getOperand(1).getReg();
-  unsigned DstReg = MI.getOperand(0).getReg();
+  Register ShiftAmtReg = RI.createVirtualRegister(&AVR::GPR8RegClass);
+  Register ShiftAmtReg2 = RI.createVirtualRegister(&AVR::GPR8RegClass);
+  Register ShiftReg = RI.createVirtualRegister(RC);
+  Register ShiftReg2 = RI.createVirtualRegister(RC);
+  Register ShiftAmtSrcReg = MI.getOperand(2).getReg();
+  Register SrcReg = MI.getOperand(1).getReg();
+  Register DstReg = MI.getOperand(0).getReg();
 
   // BB:
-  // cpi N, 0
-  // breq RemBB
-  BuildMI(BB, dl, TII.get(AVR::CPIRdK)).addReg(ShiftAmtSrcReg).addImm(0);
-  BuildMI(BB, dl, TII.get(AVR::BREQk)).addMBB(RemBB);
+  // rjmp CheckBB
+  BuildMI(BB, dl, TII.get(AVR::RJMPk)).addMBB(CheckBB);
 
   // LoopBB:
-  // ShiftReg = phi [%SrcReg, BB], [%ShiftReg2, LoopBB]
-  // ShiftAmt = phi [%N, BB],      [%ShiftAmt2, LoopBB]
   // ShiftReg2 = shift ShiftReg
-  // ShiftAmt2 = ShiftAmt - 1;
-  BuildMI(LoopBB, dl, TII.get(AVR::PHI), ShiftReg)
-      .addReg(SrcReg)
-      .addMBB(BB)
-      .addReg(ShiftReg2)
-      .addMBB(LoopBB);
-  BuildMI(LoopBB, dl, TII.get(AVR::PHI), ShiftAmtReg)
-      .addReg(ShiftAmtSrcReg)
-      .addMBB(BB)
-      .addReg(ShiftAmtReg2)
-      .addMBB(LoopBB);
-
   auto ShiftMI = BuildMI(LoopBB, dl, TII.get(Opc), ShiftReg2).addReg(ShiftReg);
   if (HasRepeatedOperand)
     ShiftMI.addReg(ShiftReg);
 
-  BuildMI(LoopBB, dl, TII.get(AVR::SUBIRdK), ShiftAmtReg2)
-      .addReg(ShiftAmtReg)
-      .addImm(1);
-  BuildMI(LoopBB, dl, TII.get(AVR::BRNEk)).addMBB(LoopBB);
-
-  // RemBB:
-  // DestReg = phi [%SrcReg, BB], [%ShiftReg, LoopBB]
-  BuildMI(*RemBB, RemBB->begin(), dl, TII.get(AVR::PHI), DstReg)
+  // CheckBB:
+  // ShiftReg = phi [%SrcReg, BB], [%ShiftReg2, LoopBB]
+  // ShiftAmt = phi [%N,      BB], [%ShiftAmt2, LoopBB]
+  // DestReg  = phi [%SrcReg, BB], [%ShiftReg,  LoopBB]
+  // ShiftAmt2 = ShiftAmt - 1;
+  // if (ShiftAmt2 >= 0) goto LoopBB;
+  BuildMI(CheckBB, dl, TII.get(AVR::PHI), ShiftReg)
       .addReg(SrcReg)
       .addMBB(BB)
       .addReg(ShiftReg2)
       .addMBB(LoopBB);
+  BuildMI(CheckBB, dl, TII.get(AVR::PHI), ShiftAmtReg)
+      .addReg(ShiftAmtSrcReg)
+      .addMBB(BB)
+      .addReg(ShiftAmtReg2)
+      .addMBB(LoopBB);
+  BuildMI(CheckBB, dl, TII.get(AVR::PHI), DstReg)
+      .addReg(SrcReg)
+      .addMBB(BB)
+      .addReg(ShiftReg2)
+      .addMBB(LoopBB);
+
+  BuildMI(CheckBB, dl, TII.get(AVR::DECRd), ShiftAmtReg2)
+      .addReg(ShiftAmtReg);
+  BuildMI(CheckBB, dl, TII.get(AVR::BRPLk)).addMBB(LoopBB);
 
   MI.eraseFromParent(); // The pseudo instruction is gone now.
   return RemBB;
@@ -1568,7 +1646,7 @@ MachineBasicBlock *AVRTargetLowering::insertShift(MachineInstr &MI,
 
 static bool isCopyMulResult(MachineBasicBlock::iterator const &I) {
   if (I->getOpcode() == AVR::COPY) {
-    unsigned SrcReg = I->getOperand(1).getReg();
+    Register SrcReg = I->getOperand(1).getReg();
     return (SrcReg == AVR::R0 || SrcReg == AVR::R1);
   }
 
@@ -1852,44 +1930,65 @@ std::pair<unsigned, const TargetRegisterClass *>
 AVRTargetLowering::getRegForInlineAsmConstraint(const TargetRegisterInfo *TRI,
                                                 StringRef Constraint,
                                                 MVT VT) const {
-  // We only support i8 and i16.
-  //
-  //:FIXME: remove this assert for now since it gets sometimes executed
-  // assert((VT == MVT::i16 || VT == MVT::i8) && "Wrong operand type.");
-
   if (Constraint.size() == 1) {
     switch (Constraint[0]) {
     case 'a': // Simple upper registers r16..r23.
-      return std::make_pair(0U, &AVR::LD8loRegClass);
+      if (VT == MVT::i8)
+        return std::make_pair(0U, &AVR::LD8loRegClass);
+      else if (VT == MVT::i16)
+        return std::make_pair(0U, &AVR::DREGSLD8loRegClass);
+      break;
     case 'b': // Base pointer registers: y, z.
-      return std::make_pair(0U, &AVR::PTRDISPREGSRegClass);
+      if (VT == MVT::i8 || VT == MVT::i16)
+        return std::make_pair(0U, &AVR::PTRDISPREGSRegClass);
+      break;
     case 'd': // Upper registers r16..r31.
-      return std::make_pair(0U, &AVR::LD8RegClass);
+      if (VT == MVT::i8)
+        return std::make_pair(0U, &AVR::LD8RegClass);
+      else if (VT == MVT::i16)
+        return std::make_pair(0U, &AVR::DLDREGSRegClass);
+      break;
     case 'l': // Lower registers r0..r15.
-      return std::make_pair(0U, &AVR::GPR8loRegClass);
+      if (VT == MVT::i8)
+        return std::make_pair(0U, &AVR::GPR8loRegClass);
+      else if (VT == MVT::i16)
+        return std::make_pair(0U, &AVR::DREGSloRegClass);
+      break;
     case 'e': // Pointer register pairs: x, y, z.
-      return std::make_pair(0U, &AVR::PTRREGSRegClass);
+      if (VT == MVT::i8 || VT == MVT::i16)
+        return std::make_pair(0U, &AVR::PTRREGSRegClass);
+      break;
     case 'q': // Stack pointer register: SPH:SPL.
       return std::make_pair(0U, &AVR::GPRSPRegClass);
     case 'r': // Any register: r0..r31.
       if (VT == MVT::i8)
         return std::make_pair(0U, &AVR::GPR8RegClass);
-
-      assert(VT == MVT::i16 && "inline asm constraint too large");
-      return std::make_pair(0U, &AVR::DREGSRegClass);
+      else if (VT == MVT::i16)
+        return std::make_pair(0U, &AVR::DREGSRegClass);
+      break;
     case 't': // Temporary register: r0.
-      return std::make_pair(unsigned(AVR::R0), &AVR::GPR8RegClass);
+      if (VT == MVT::i8)
+        return std::make_pair(unsigned(AVR::R0), &AVR::GPR8RegClass);
+      break;
     case 'w': // Special upper register pairs: r24, r26, r28, r30.
-      return std::make_pair(0U, &AVR::IWREGSRegClass);
+      if (VT == MVT::i8 || VT == MVT::i16)
+        return std::make_pair(0U, &AVR::IWREGSRegClass);
+      break;
     case 'x': // Pointer register pair X: r27:r26.
     case 'X':
-      return std::make_pair(unsigned(AVR::R27R26), &AVR::PTRREGSRegClass);
+      if (VT == MVT::i8 || VT == MVT::i16)
+        return std::make_pair(unsigned(AVR::R27R26), &AVR::PTRREGSRegClass);
+      break;
     case 'y': // Pointer register pair Y: r29:r28.
     case 'Y':
-      return std::make_pair(unsigned(AVR::R29R28), &AVR::PTRREGSRegClass);
+      if (VT == MVT::i8 || VT == MVT::i16)
+        return std::make_pair(unsigned(AVR::R29R28), &AVR::PTRREGSRegClass);
+      break;
     case 'z': // Pointer register pair Z: r31:r30.
     case 'Z':
-      return std::make_pair(unsigned(AVR::R31R30), &AVR::PTRREGSRegClass);
+      if (VT == MVT::i8 || VT == MVT::i16)
+        return std::make_pair(unsigned(AVR::R31R30), &AVR::PTRREGSRegClass);
+      break;
     default:
       break;
     }
@@ -2006,44 +2105,27 @@ void AVRTargetLowering::LowerAsmOperandForConstraint(SDValue Op,
   return TargetLowering::LowerAsmOperandForConstraint(Op, Constraint, Ops, DAG);
 }
 
-unsigned AVRTargetLowering::getRegisterByName(const char *RegName,
-                                              EVT VT,
-                                              SelectionDAG &DAG) const {
-  unsigned Reg;
+Register AVRTargetLowering::getRegisterByName(const char *RegName, LLT VT,
+                                              const MachineFunction &MF) const {
+  Register Reg;
 
-  if (VT == MVT::i8) {
+  if (VT == LLT::scalar(8)) {
     Reg = StringSwitch<unsigned>(RegName)
-      .Case("r0", AVR::R0).Case("r1", AVR::R1).Case("r2", AVR::R2)
-      .Case("r3", AVR::R3).Case("r4", AVR::R4).Case("r5", AVR::R5)
-      .Case("r6", AVR::R6).Case("r7", AVR::R7).Case("r8", AVR::R8)
-      .Case("r9", AVR::R9).Case("r10", AVR::R10).Case("r11", AVR::R11)
-      .Case("r12", AVR::R12).Case("r13", AVR::R13).Case("r14", AVR::R14)
-      .Case("r15", AVR::R15).Case("r16", AVR::R16).Case("r17", AVR::R17)
-      .Case("r18", AVR::R18).Case("r19", AVR::R19).Case("r20", AVR::R20)
-      .Case("r21", AVR::R21).Case("r22", AVR::R22).Case("r23", AVR::R23)
-      .Case("r24", AVR::R24).Case("r25", AVR::R25).Case("r26", AVR::R26)
-      .Case("r27", AVR::R27).Case("r28", AVR::R28).Case("r29", AVR::R29)
-      .Case("r30", AVR::R30).Case("r31", AVR::R31)
-      .Case("X", AVR::R27R26).Case("Y", AVR::R29R28).Case("Z", AVR::R31R30)
-      .Default(0);
+              .Case("r0", AVR::R0)
+              .Case("r1", AVR::R1)
+              .Default(0);
   } else {
     Reg = StringSwitch<unsigned>(RegName)
-      .Case("r0", AVR::R1R0).Case("r2", AVR::R3R2)
-      .Case("r4", AVR::R5R4).Case("r6", AVR::R7R6)
-      .Case("r8", AVR::R9R8).Case("r10", AVR::R11R10)
-      .Case("r12", AVR::R13R12).Case("r14", AVR::R15R14)
-      .Case("r16", AVR::R17R16).Case("r18", AVR::R19R18)
-      .Case("r20", AVR::R21R20).Case("r22", AVR::R23R22)
-      .Case("r24", AVR::R25R24).Case("r26", AVR::R27R26)
-      .Case("r28", AVR::R29R28).Case("r30", AVR::R31R30)
-      .Case("X", AVR::R27R26).Case("Y", AVR::R29R28).Case("Z", AVR::R31R30)
-      .Default(0);
+              .Case("r0", AVR::R1R0)
+              .Case("sp", AVR::SP)
+              .Default(0);
   }
 
   if (Reg)
     return Reg;
 
-  report_fatal_error("Invalid register name global variable");
+  report_fatal_error(
+      Twine("Invalid register name \"" + StringRef(RegName) + "\"."));
 }
 
 } // end of namespace llvm

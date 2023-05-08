@@ -25,44 +25,72 @@
 #include "RConfigure.h"
 
 #if defined(R__HAS_VDT) && !defined(__CUDACC__)
-#include "vdt/exp.h"
-#include "vdt/log.h"
-#include "vdt/sqrt.h"
+#include <vdt/cos.h>
+#include <vdt/exp.h>
+#include <vdt/log.h>
+#include <vdt/sin.h>
+#include <vdt/sqrt.h>
 
-namespace RooBatchCompute{
+namespace RooBatchCompute {
 
-inline double fast_exp(double x) {
-  return vdt::fast_exp(x);
+inline double fast_exp(double x)
+{
+   return vdt::fast_exp(x);
 }
 
-inline double fast_log(double x) {
-  return vdt::fast_log(x);
+inline double fast_sin(double x)
+{
+   return vdt::fast_sin(x);
 }
 
-inline double fast_isqrt(double x) {
-  return vdt::fast_isqrt(x);
+inline double fast_cos(double x)
+{
+   return vdt::fast_cos(x);
 }
 
+inline double fast_log(double x)
+{
+   return vdt::fast_log(x);
 }
+
+inline double fast_isqrt(double x)
+{
+   return vdt::fast_isqrt(x);
+}
+
+} // namespace RooBatchCompute
 
 #else
 #include <cmath>
 
-namespace RooBatchCompute{
+namespace RooBatchCompute {
 
-__roodevice__ inline double fast_exp(double x) {
-  return std::exp(x);
+__roodevice__ inline double fast_exp(double x)
+{
+   return std::exp(x);
 }
 
-__roodevice__ inline double fast_log(double x) {
-  return std::log(x);
+__roodevice__ inline double fast_sin(double x)
+{
+   return std::sin(x);
 }
 
-__roodevice__ inline double fast_isqrt(double x) {
-  return 1/std::sqrt(x);
+__roodevice__ inline double fast_cos(double x)
+{
+   return std::cos(x);
 }
 
+__roodevice__ inline double fast_log(double x)
+{
+   return std::log(x);
 }
+
+__roodevice__ inline double fast_isqrt(double x)
+{
+   return 1. / std::sqrt(x);
+}
+
+} // namespace RooBatchCompute
 
 #endif // defined(R__HAS_VDT) && !defined(__CUDACC__)
 

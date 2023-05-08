@@ -13,8 +13,9 @@
         <Image height="35px" src="rootui5sys/browser/logo.png"/>
         <Text text="ROOT 7" wrapping="false" />
         <ToolbarSpacer/>
-        <Button icon="sap-icon://settings" type="Transparent" tooltip="Settings" press="onSettingPress"/>
-        <Button icon="sap-icon://log" type="Transparent" tooltip="Logoff" press="onQuitRootPress"/>
+        <Button icon="sap-icon://settings" type="Transparent" tooltip="Settings" press="onSettingsPress"/>
+        <Button icon="sap-icon://refresh" type="Transparent" tooltip="Reload RBrowser" press="onReloadPress"/>
+        <Button icon="sap-icon://log" type="Transparent" tooltip="Quit ROOT session" press="onQuitRootPress"/>
       </tnt:ToolHeader>
 
       <ScrollContainer height="calc(100% - 40px)">

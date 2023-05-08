@@ -10,10 +10,11 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)
  */
 
-#include <RooFit/Detail/Buffers.h>
+#include "RooFit/Detail/Buffers.h"
 
 #include <RooBatchCompute.h>
 
+#include <stdexcept>
 #include <functional>
 #include <queue>
 #include <map>

@@ -50,53 +50,53 @@ public:
    TObjArray(const TObjArray &a);
    virtual          ~TObjArray();
    TObjArray& operator=(const TObjArray&);
-   virtual void     Clear(Option_t *option="");
+   void             Clear(Option_t *option="") override;
    virtual void     Compress();
-   virtual void     Delete(Option_t *option="");
+   void             Delete(Option_t *option="") override;
    virtual void     Expand(Int_t newSize);   // expand or shrink an array
-   Int_t            GetEntries() const;
+   Int_t            GetEntries() const override;
    Int_t            GetEntriesFast() const {
       return GetAbsLast() + 1;   //only OK when no gaps
    }
    Int_t            GetEntriesUnsafe() const;
-   Int_t            GetLast() const;
+   Int_t            GetLast() const override;
    TObject        **GetObjectRef() const { return fCont; };
-   TObject        **GetObjectRef(const TObject *obj) const;
-   Bool_t           IsEmpty() const { return GetAbsLast() == -1; }
-   TIterator       *MakeIterator(Bool_t dir = kIterForward) const;
+   TObject        **GetObjectRef(const TObject *obj) const override;
+   Bool_t           IsEmpty() const override { return GetAbsLast() == -1; }
+   TIterator       *MakeIterator(Bool_t dir = kIterForward) const override;
 
-   void             Add(TObject *obj) { AddLast(obj); }
-   virtual void     AddFirst(TObject *obj);
-   virtual void     AddLast(TObject *obj);
-   virtual void     AddAt(TObject *obj, Int_t idx);
+   void             Add(TObject *obj) override { AddLast(obj); }
+   void             AddFirst(TObject *obj) override;
+   void             AddLast(TObject *obj) override;
+   void             AddAt(TObject *obj, Int_t idx) override;
    virtual void     AddAtAndExpand(TObject *obj, Int_t idx);
    virtual Int_t    AddAtFree(TObject *obj);
-   virtual void     AddAfter(const TObject *after, TObject *obj);
-   virtual void     AddBefore(const TObject *before, TObject *obj);
-   virtual TObject *FindObject(const char *name) const;
-   virtual TObject *FindObject(const TObject *obj) const;
-   virtual TObject *RemoveAt(Int_t idx);
-   virtual TObject *Remove(TObject *obj);
+   void             AddAfter(const TObject *after, TObject *obj) override;
+   void             AddBefore(const TObject *before, TObject *obj) override;
+   TObject         *FindObject(const char *name) const override;
+   TObject         *FindObject(const TObject *obj) const override;
+   TObject         *RemoveAt(Int_t idx) override;
+   TObject         *Remove(TObject *obj) override;
    virtual void     RemoveRange(Int_t idx1, Int_t idx2);
-   virtual void     RecursiveRemove(TObject *obj);
+   void             RecursiveRemove(TObject *obj) override;
 
-   TObject         *At(Int_t idx) const;
+   TObject         *At(Int_t idx) const override;
    TObject         *UncheckedAt(Int_t i) const { return fCont[i-fLowerBound]; }
-   TObject         *Before(const TObject *obj) const;
-   TObject         *After(const TObject *obj) const;
-   TObject         *First() const;
-   TObject         *Last() const;
+   TObject         *Before(const TObject *obj) const override;
+   TObject         *After(const TObject *obj) const override;
+   TObject         *First() const override;
+   TObject         *Last() const override;
    virtual TObject *&operator[](Int_t i);
    virtual TObject *operator[](Int_t i) const;
    Int_t            LowerBound() const { return fLowerBound; }
-   Int_t            IndexOf(const TObject *obj) const;
+   Int_t            IndexOf(const TObject *obj) const override;
    void             SetLast(Int_t last);
 
    virtual void     Randomize(Int_t ntimes=1);
    virtual void     Sort(Int_t upto = kMaxInt);
    virtual Int_t    BinarySearch(TObject *obj, Int_t upto = kMaxInt); // the TObjArray has to be sorted, -1 == not found !!
 
-   ClassDef(TObjArray,3)  //An array of objects
+   ClassDefOverride(TObjArray,3)  //An array of objects
 };
 
 
@@ -122,7 +122,7 @@ private:
    Int_t             fCursor;    //next position in array
    Bool_t            fDirection; //iteration direction
 
-   TObjArrayIter() : fArray(0), fCurCursor(0), fCursor(0), fDirection(kIterForward) { }
+   TObjArrayIter() : fArray(nullptr), fCurCursor(0), fCursor(0), fDirection(kIterForward) { }
 
 public:
    using iterator_category = std::bidirectional_iterator_tag; // TODO: ideally it should be a randomaccess_iterator_tag
@@ -135,17 +135,17 @@ public:
    TObjArrayIter(const TObjArray *arr, Bool_t dir = kIterForward);
    TObjArrayIter(const TObjArrayIter &iter);
    ~TObjArrayIter() { }
-   TIterator     &operator=(const TIterator &rhs);
+   TIterator     &operator=(const TIterator &rhs) override;
    TObjArrayIter &operator=(const TObjArrayIter &rhs);
 
-   const TCollection *GetCollection() const { return fArray; }
-   TObject           *Next();
-   void               Reset();
-   Bool_t             operator!=(const TIterator &aIter) const;
+   const TCollection *GetCollection() const override { return fArray; }
+   TObject           *Next() override;
+   void               Reset() override;
+   Bool_t             operator!=(const TIterator &aIter) const override;
    Bool_t             operator!=(const TObjArrayIter &aIter) const;
-   TObject           *operator*() const;
+   TObject           *operator*() const override;
 
-   ClassDef(TObjArrayIter,0)  //Object array iterator
+   ClassDefOverride(TObjArrayIter,0)  //Object array iterator
 };
 
 #if (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__) >= 40600
@@ -167,7 +167,7 @@ inline TObject *TObjArray::At(Int_t i) const
    int j = i-fLowerBound;
    if (j >= 0 && j < fSize) return fCont[j];
    BoundsOk("At", i);
-   return 0;
+   return nullptr;
 }
 
 #endif

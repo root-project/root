@@ -36,7 +36,7 @@
 #pragma link C++ class ROOT::RDF::TProfile1DModel-;
 #pragma link C++ class ROOT::RDF::TProfile2DModel-;
 #pragma link C++ class ROOT::Internal::RDF::RIgnoreErrorLevelRAII-;
-#pragma link C++ class ROOT::Internal::RDF::FillHelper-;
+#pragma link C++ class ROOT::Internal::RDF::BufferedFillHelper-;
 #pragma link C++ class ROOT::RDF::RTrivialDS-;
 #pragma link C++ class ROOT::Internal::RDF::RRootDS-;
 #pragma link C++ class ROOT::RDF::RCsvDS-;
@@ -58,6 +58,7 @@
 #pragma link C++ class ROOT::Detail::RDF::RMergeableValue<TStatistic>+;
 #pragma link C++ class ROOT::Detail::RDF::RMergeableValue<TProfile>+;
 #pragma link C++ class ROOT::Detail::RDF::RMergeableValue<TProfile2D>+;
+#pragma link C++ class ROOT::Detail::RDF::RMergeableVariationsBase+;
 #pragma link C++ class TNotifyLink<ROOT::Internal::RDF::RNewSampleFlag>;
 #pragma link C++ class ROOT::RDF::RCutFlowReport;
 

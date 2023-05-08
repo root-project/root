@@ -43,8 +43,8 @@ bool threshListSorter(const std::pair<double,RooAbsCategory::value_type>& lhs, c
 /// Constructor with input function to be mapped and name and index of default
 /// output state of unmapped values
 
-RooThresholdCategory::RooThresholdCategory(const char *name, const char *title, RooAbsReal& inputVar, 
-					   const char* defOut, Int_t defIdx) :
+RooThresholdCategory::RooThresholdCategory(const char *name, const char *title, RooAbsReal& inputVar,
+                  const char* defOut, Int_t defIdx) :
   RooAbsCategory(name, title),
   _inputVar("inputVar","Input category",this,inputVar),
   _defIndex(defIdx)
@@ -73,15 +73,15 @@ RooThresholdCategory::RooThresholdCategory(const RooThresholdCategory& other, co
 /// Insert threshold at value upperLimit. All values below upper limit (and above any lower
 /// thresholds, if any) will be mapped to a state name 'catName' with index 'catIdx'
 
-Bool_t RooThresholdCategory::addThreshold(Double_t upperLimit, const char* catName, Int_t catIdx) 
-{  
+bool RooThresholdCategory::addThreshold(double upperLimit, const char* catName, Int_t catIdx)
+{
   // Check if identical threshold values is not defined yet
   for (const auto& thresh : _threshList) {
     if (thresh.first == upperLimit) {
-      coutW(InputArguments) << "RooThresholdCategory::addThreshold(" << GetName() 
-			    << ") threshold at " << upperLimit << " already defined" << endl ;
+      coutW(InputArguments) << "RooThresholdCategory::addThreshold(" << GetName()
+             << ") threshold at " << upperLimit << " already defined" << endl ;
       return true;
-    }    
+    }
   }
 
   // Add a threshold entry
@@ -96,7 +96,7 @@ Bool_t RooThresholdCategory::addThreshold(Double_t upperLimit, const char* catNa
 
   _threshList.emplace_back(upperLimit, newIdx);
   std::sort(_threshList.begin(), _threshList.end(), threshListSorter);
-     
+
   return false;
 }
 
@@ -122,7 +122,7 @@ RooAbsCategory::value_type RooThresholdCategory::evaluate() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Write object contents to given stream
 
-void RooThresholdCategory::writeToStream(ostream& os, Bool_t compact) const
+void RooThresholdCategory::writeToStream(ostream& os, bool compact) const
 {
   if (compact) {
     // Write value only
@@ -148,15 +148,15 @@ void RooThresholdCategory::writeToStream(ostream& os, Bool_t compact) const
 ///     Shape : default value
 ///   Verbose : list of thresholds
 
-void RooThresholdCategory::printMultiline(ostream& os, Int_t content, Bool_t verbose, TString indent) const
+void RooThresholdCategory::printMultiline(ostream& os, Int_t content, bool verbose, TString indent) const
 {
    RooAbsCategory::printMultiline(os,content,verbose,indent);
 
    if (verbose) {
      os << indent << "--- RooThresholdCategory ---" << endl
-	<< indent << "  Maps from " ;
+   << indent << "  Maps from " ;
      _inputVar.arg().printStream(os,0,kStandard);
-     
+
      os << indent << "  Threshold list" << endl ;
      for (const auto& thresh : _threshList) {
        os << indent << "    input < " << thresh.first << " --> " ;

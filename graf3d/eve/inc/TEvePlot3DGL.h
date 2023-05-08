@@ -36,7 +36,7 @@ public:
 
    virtual Bool_t KeepDuringSmartRefresh() const { return kFALSE; }
 
-   virtual Bool_t SetModel(TObject* obj, const Option_t* opt=0);
+   virtual Bool_t SetModel(TObject* obj, const Option_t *opt = nullptr);
    virtual void   SetBBox();
 
    virtual void DirectDraw(TGLRnrCtx & rnrCtx) const;

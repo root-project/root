@@ -33,7 +33,7 @@ public:
       if (fDestroyed) *fDestroyed = kTRUE;
    }
 
-   TIterator &operator=(const TIterator &rhs)
+   TIterator &operator=(const TIterator &rhs) override
    {
       if (this != &rhs)
          TListIter::operator=(rhs);

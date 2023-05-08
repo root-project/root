@@ -21,9 +21,7 @@
 #include "llvm/ADT/BitVector.h"
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/GraphTraits.h"
-#include "llvm/ADT/Optional.h"
 #include "llvm/ADT/SmallVector.h"
-#include "llvm/ADT/StringRef.h"
 #include "llvm/ADT/ilist.h"
 #include "llvm/ADT/iterator.h"
 #include "llvm/Analysis/EHPersonalities.h"
@@ -34,8 +32,8 @@
 #include "llvm/Support/ArrayRecycler.h"
 #include "llvm/Support/AtomicOrdering.h"
 #include "llvm/Support/Compiler.h"
-#include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/Recycler.h"
+#include "llvm/Target/TargetOptions.h"
 #include <cassert>
 #include <cstdint>
 #include <memory>
@@ -48,10 +46,12 @@ class BasicBlock;
 class BlockAddress;
 class DataLayout;
 class DebugLoc;
+struct DenormalMode;
 class DIExpression;
 class DILocalVariable;
 class DILocation;
 class Function;
+class GISelChangeObserver;
 class GlobalValue;
 class LLVMTargetMachine;
 class MachineConstantPool;
@@ -63,10 +63,12 @@ class MachineRegisterInfo;
 class MCContext;
 class MCInstrDesc;
 class MCSymbol;
+class MCSection;
 class Pass;
 class PseudoSourceValueManager;
 class raw_ostream;
 class SlotIndexes;
+class StringRef;
 class TargetRegisterClass;
 class TargetSubtargetInfo;
 struct WasmEHFuncInfo;
@@ -122,11 +124,14 @@ public:
   // NoPHIs: The machine function does not contain any PHI instruction.
   // TracksLiveness: True when tracking register liveness accurately.
   //  While this property is set, register liveness information in basic block
-  //  live-in lists and machine instruction operands (e.g. kill flags, implicit
-  //  defs) is accurate. This means it can be used to change the code in ways
-  //  that affect the values in registers, for example by the register
-  //  scavenger.
-  //  When this property is clear, liveness is no longer reliable.
+  //  live-in lists and machine instruction operands (e.g. implicit defs) is
+  //  accurate, kill flags are conservatively accurate (kill flag correctly
+  //  indicates the last use of a register, an operand without kill flag may or
+  //  may not be the last use of a register). This means it can be used to
+  //  change the code in ways that affect the values in registers, for example
+  //  by the register scavenger.
+  //  When this property is cleared at a very late time, liveness is no longer
+  //  reliable.
   // NoVRegs: The machine function does not use any virtual registers.
   // Legalized: In GlobalISel: the MachineLegalizer ran and all pre-isel generic
   //  instructions have been legalized; i.e., all instructions are now one of:
@@ -142,6 +147,8 @@ public:
   //  operands, this also means that all generic virtual registers have been
   //  constrained to virtual registers (assigned to register classes) and that
   //  all sizes attached to them have been eliminated.
+  // TiedOpsRewritten: The twoaddressinstruction pass will set this flag, it
+  //  means that tied-def have been rewritten to meet the RegConstraint.
   enum class Property : unsigned {
     IsSSA,
     NoPHIs,
@@ -151,7 +158,8 @@ public:
     Legalized,
     RegBankSelected,
     Selected,
-    LastProperty = Selected,
+    TiedOpsRewritten,
+    LastProperty = TiedOpsRewritten,
   };
 
   bool hasProperty(Property P) const {
@@ -219,8 +227,8 @@ struct LandingPadInfo {
       : LandingPadBlock(MBB) {}
 };
 
-class MachineFunction {
-  const Function &F;
+class LLVM_EXTERNAL_VISIBILITY MachineFunction {
+  Function &F;
   const LLVMTargetMachine &Target;
   const TargetSubtargetInfo *STI;
   MCContext &Ctx;
@@ -242,6 +250,9 @@ class MachineFunction {
   // Keep track of jump tables for switch instructions
   MachineJumpTableInfo *JumpTableInfo;
 
+  // Keep track of the function section.
+  MCSection *Section = nullptr;
+
   // Keeps track of Wasm exception handling related data. This will be null for
   // functions that aren't using a wasm EH personality.
   WasmEHFuncInfo *WasmEHInfo = nullptr;
@@ -254,6 +265,12 @@ class MachineFunction {
   // MachineBasicBlock is inserted into a MachineFunction is it automatically
   // numbered and this vector keeps track of the mapping from ID's to MBB's.
   std::vector<MachineBasicBlock*> MBBNumbering;
+
+  // Unary encoding of basic block symbols is used to reduce size of ".strtab".
+  // Basic block number 'i' gets a prefix of length 'i'.  The ith character also
+  // denotes the type of basic block number 'i'.  Return blocks are marked with
+  // 'r', landing pads with 'l' and regular blocks with 'a'.
+  std::vector<char> BBSectionsSymbolPrefix;
 
   // Pool-allocate MachineFunction-lifetime and IR objects.
   BumpPtrAllocator Allocator;
@@ -277,7 +294,7 @@ class MachineFunction {
   unsigned FunctionNumber;
 
   /// Alignment - The alignment of the function.
-  unsigned Alignment;
+  Align Alignment;
 
   /// ExposesReturnsTwice - True if the function calls setjmp or related
   /// functions with attribute "returns twice", but doesn't have
@@ -303,6 +320,14 @@ class MachineFunction {
   /// by debug and exception handling consumers.
   std::vector<MCCFIInstruction> FrameInstructions;
 
+  /// List of basic blocks immediately following calls to _setjmp. Used to
+  /// construct a table of valid longjmp targets for Windows Control Flow Guard.
+  std::vector<MCSymbol *> LongjmpTargets;
+
+  /// List of basic blocks that are the target of catchrets. Used to construct
+  /// a table of valid targets for Windows EHCont Guard.
+  std::vector<MCSymbol *> CatchretTargets;
+
   /// \name Exception Handling
   /// \{
 
@@ -321,14 +346,14 @@ class MachineFunction {
   /// CodeView label annotations.
   std::vector<std::pair<MCSymbol *, MDNode *>> CodeViewAnnotations;
 
-  /// CodeView heapallocsites.
-  std::vector<std::tuple<MCSymbol*, MCSymbol*, DIType*>>
-      CodeViewHeapAllocSites;
-
   bool CallsEHReturn = false;
   bool CallsUnwindInit = false;
+  bool HasEHCatchret = false;
   bool HasEHScopes = false;
   bool HasEHFunclets = false;
+
+  /// Section Type for basic blocks, only relevant with basic block sections.
+  BasicBlockSection BBSectionsType = BasicBlockSection::None;
 
   /// List of C++ TypeInfo used.
   std::vector<const GlobalValue *> TypeInfos;
@@ -383,9 +408,9 @@ public:
   /// For now we support only cases when argument is transferred through one
   /// register.
   struct ArgRegPair {
-    unsigned Reg;
+    Register Reg;
     uint16_t ArgNo;
-    ArgRegPair(unsigned R, unsigned Arg) : Reg(R), ArgNo(Arg) {
+    ArgRegPair(Register R, unsigned Arg) : Reg(R), ArgNo(Arg) {
       assert(Arg < (1 << 16) && "Arg out of range");
     }
   };
@@ -395,10 +420,15 @@ public:
 
 private:
   Delegate *TheDelegate = nullptr;
+  GISelChangeObserver *Observer = nullptr;
 
   using CallSiteInfoMap = DenseMap<const MachineInstr *, CallSiteInfo>;
   /// Map a call instruction to call site arguments forwarding info.
   CallSiteInfoMap CallSitesInfo;
+
+  /// A helper function that returns call site info for a give call
+  /// instruction if debug entry value support is enabled.
+  CallSiteInfoMap::iterator getCallSiteInfo(const MachineInstr *MI);
 
   // Callbacks for insertion and removal.
   void handleInsertion(MachineInstr &MI);
@@ -409,7 +439,104 @@ public:
   using VariableDbgInfoMapTy = SmallVector<VariableDbgInfo, 4>;
   VariableDbgInfoMapTy VariableDbgInfos;
 
-  MachineFunction(const Function &F, const LLVMTargetMachine &Target,
+  /// A count of how many instructions in the function have had numbers
+  /// assigned to them. Used for debug value tracking, to determine the
+  /// next instruction number.
+  unsigned DebugInstrNumberingCount = 0;
+
+  /// Set value of DebugInstrNumberingCount field. Avoid using this unless
+  /// you're deserializing this data.
+  void setDebugInstrNumberingCount(unsigned Num);
+
+  /// Pair of instruction number and operand number.
+  using DebugInstrOperandPair = std::pair<unsigned, unsigned>;
+
+  /// Replacement definition for a debug instruction reference. Made up of a
+  /// source instruction / operand pair, destination pair, and a qualifying
+  /// subregister indicating what bits in the operand make up the substitution.
+  // For example, a debug user
+  /// of %1:
+  ///    %0:gr32 = someinst, debug-instr-number 1
+  ///    %1:gr16 = %0.some_16_bit_subreg, debug-instr-number 2
+  /// Would receive the substitution {{2, 0}, {1, 0}, $subreg}, where $subreg is
+  /// the subregister number for some_16_bit_subreg.
+  class DebugSubstitution {
+  public:
+    DebugInstrOperandPair Src;  ///< Source instruction / operand pair.
+    DebugInstrOperandPair Dest; ///< Replacement instruction / operand pair.
+    unsigned Subreg;            ///< Qualifier for which part of Dest is read.
+
+    DebugSubstitution(const DebugInstrOperandPair &Src,
+                      const DebugInstrOperandPair &Dest, unsigned Subreg)
+        : Src(Src), Dest(Dest), Subreg(Subreg) {}
+
+    /// Order only by source instruction / operand pair: there should never
+    /// be duplicate entries for the same source in any collection.
+    bool operator<(const DebugSubstitution &Other) const {
+      return Src < Other.Src;
+    }
+  };
+
+  /// Debug value substitutions: a collection of DebugSubstitution objects,
+  /// recording changes in where a value is defined. For example, when one
+  /// instruction is substituted for another. Keeping a record allows recovery
+  /// of variable locations after compilation finishes.
+  SmallVector<DebugSubstitution, 8> DebugValueSubstitutions;
+
+  /// Location of a PHI instruction that is also a debug-info variable value,
+  /// for the duration of register allocation. Loaded by the PHI-elimination
+  /// pass, and emitted as DBG_PHI instructions during VirtRegRewriter, with
+  /// maintenance applied by intermediate passes that edit registers (such as
+  /// coalescing and the allocator passes).
+  class DebugPHIRegallocPos {
+  public:
+    MachineBasicBlock *MBB; ///< Block where this PHI was originally located.
+    Register Reg;           ///< VReg where the control-flow-merge happens.
+    unsigned SubReg;        ///< Optional subreg qualifier within Reg.
+    DebugPHIRegallocPos(MachineBasicBlock *MBB, Register Reg, unsigned SubReg)
+        : MBB(MBB), Reg(Reg), SubReg(SubReg) {}
+  };
+
+  /// Map of debug instruction numbers to the position of their PHI instructions
+  /// during register allocation. See DebugPHIRegallocPos.
+  DenseMap<unsigned, DebugPHIRegallocPos> DebugPHIPositions;
+
+  /// Create a substitution between one <instr,operand> value to a different,
+  /// new value.
+  void makeDebugValueSubstitution(DebugInstrOperandPair, DebugInstrOperandPair,
+                                  unsigned SubReg = 0);
+
+  /// Create substitutions for any tracked values in \p Old, to point at
+  /// \p New. Needed when we re-create an instruction during optimization,
+  /// which has the same signature (i.e., def operands in the same place) but
+  /// a modified instruction type, flags, or otherwise. An example: X86 moves
+  /// are sometimes transformed into equivalent LEAs.
+  /// If the two instructions are not the same opcode, limit which operands to
+  /// examine for substitutions to the first N operands by setting
+  /// \p MaxOperand.
+  void substituteDebugValuesForInst(const MachineInstr &Old, MachineInstr &New,
+                                    unsigned MaxOperand = UINT_MAX);
+
+  /// Find the underlying  defining instruction / operand for a COPY instruction
+  /// while in SSA form. Copies do not actually define values -- they move them
+  /// between registers. Labelling a COPY-like instruction with an instruction
+  /// number is to be avoided as it makes value numbers non-unique later in
+  /// compilation. This method follows the definition chain for any sequence of
+  /// COPY-like instructions to find whatever non-COPY-like instruction defines
+  /// the copied value; or for parameters, creates a DBG_PHI on entry.
+  /// May insert instructions into the entry block!
+  /// \p MI The copy-like instruction to salvage.
+  /// \returns An instruction/operand pair identifying the defining value.
+  DebugInstrOperandPair salvageCopySSA(MachineInstr &MI);
+
+  /// Finalise any partially emitted debug instructions. These are DBG_INSTR_REF
+  /// instructions where we only knew the vreg of the value they use, not the
+  /// instruction that defines that vreg. Once isel finishes, we should have
+  /// enough information for every DBG_INSTR_REF to point at an instruction
+  /// (or DBG_PHI).
+  void finalizeDebugInstrRefs();
+
+  MachineFunction(Function &F, const LLVMTargetMachine &Target,
                   const TargetSubtargetInfo &STI, unsigned FunctionNum,
                   MachineModuleInfo &MMI);
   MachineFunction(const MachineFunction &) = delete;
@@ -439,13 +566,26 @@ public:
     TheDelegate = delegate;
   }
 
+  void setObserver(GISelChangeObserver *O) { Observer = O; }
+
+  GISelChangeObserver *getObserver() const { return Observer; }
+
   MachineModuleInfo &getMMI() const { return MMI; }
   MCContext &getContext() const { return Ctx; }
+
+  /// Returns the Section this function belongs to.
+  MCSection *getSection() const { return Section; }
+
+  /// Indicates the Section this function belongs to.
+  void setSection(MCSection *S) { Section = S; }
 
   PseudoSourceValueManager &getPSVManager() const { return *PSVManager; }
 
   /// Return the DataLayout attached to the Module associated to this MF.
   const DataLayout &getDataLayout() const;
+
+  /// Return the LLVM function that this machine code represents
+  Function &getFunction() { return F; }
 
   /// Return the LLVM function that this machine code represents
   const Function &getFunction() const { return F; }
@@ -455,6 +595,24 @@ public:
 
   /// getFunctionNumber - Return a unique ID for the current function.
   unsigned getFunctionNumber() const { return FunctionNumber; }
+
+  /// Returns true if this function has basic block sections enabled.
+  bool hasBBSections() const {
+    return (BBSectionsType == BasicBlockSection::All ||
+            BBSectionsType == BasicBlockSection::List ||
+            BBSectionsType == BasicBlockSection::Preset);
+  }
+
+  /// Returns true if basic block labels are to be generated for this function.
+  bool hasBBLabels() const {
+    return BBSectionsType == BasicBlockSection::Labels;
+  }
+
+  void setBBSectionsType(BasicBlockSection V) { BBSectionsType = V; }
+
+  /// Assign IsBeginSection IsEndSection fields for basic blocks in this
+  /// function.
+  void assignBeginEndSections();
 
   /// getTarget - Return the target machine this machine code is compiled with
   const LLVMTargetMachine &getTarget() const { return Target; }
@@ -508,15 +666,16 @@ public:
   const WinEHFuncInfo *getWinEHFuncInfo() const { return WinEHInfo; }
   WinEHFuncInfo *getWinEHFuncInfo() { return WinEHInfo; }
 
-  /// getAlignment - Return the alignment (log2, not bytes) of the function.
-  unsigned getAlignment() const { return Alignment; }
+  /// getAlignment - Return the alignment of the function.
+  Align getAlignment() const { return Alignment; }
 
-  /// setAlignment - Set the alignment (log2, not bytes) of the function.
-  void setAlignment(unsigned A) { Alignment = A; }
+  /// setAlignment - Set the alignment of the function.
+  void setAlignment(Align A) { Alignment = A; }
 
-  /// ensureAlignment - Make sure the function is at least 1 << A bytes aligned.
-  void ensureAlignment(unsigned A) {
-    if (Alignment < A) Alignment = A;
+  /// ensureAlignment - Make sure the function is at least A bytes aligned.
+  void ensureAlignment(Align A) {
+    if (Alignment < A)
+      Alignment = A;
   }
 
   /// exposesReturnsTwice - Returns true if the function calls setjmp or
@@ -547,6 +706,9 @@ public:
   }
   void setHasWinCFI(bool v) { HasWinCFI = v; }
 
+  /// True if this function needs frame moves for debug or exceptions.
+  bool needsFrameMoves() const;
+
   /// Get the function properties
   const MachineFunctionProperties &getProperties() const { return Properties; }
   MachineFunctionProperties &getProperties() { return Properties; }
@@ -565,6 +727,10 @@ public:
   const Ty *getInfo() const {
      return const_cast<MachineFunction*>(this)->getInfo<Ty>();
   }
+
+  /// Returns the denormal handling type for the default rounding mode of the
+  /// function.
+  DenormalMode getDenormalMode(const fltSemantics &FPType) const;
 
   /// getBlockNumbered - MachineBasicBlocks are automatically numbered when they
   /// are inserted into the machine function.  The block number for a machine
@@ -630,7 +796,7 @@ public:
 
   /// addLiveIn - Add the specified physical register as a live-in value and
   /// create a corresponding virtual register for it.
-  unsigned addLiveIn(unsigned PReg, const TargetRegisterClass *RC);
+  Register addLiveIn(MCRegister PReg, const TargetRegisterClass *RC);
 
   //===--------------------------------------------------------------------===//
   // BasicBlock accessor functions.
@@ -706,7 +872,7 @@ public:
   /// CreateMachineInstr - Allocate a new MachineInstr. Use this instead
   /// of `new MachineInstr'.
   MachineInstr *CreateMachineInstr(const MCInstrDesc &MCID, const DebugLoc &DL,
-                                   bool NoImp = false);
+                                   bool NoImplicit = false);
 
   /// Create a new MachineInstr which is a copy of \p Orig, identical in all
   /// ways except the instruction has no parent, prev, or next. Bundling flags
@@ -740,9 +906,15 @@ public:
   /// explicitly deallocated.
   MachineMemOperand *getMachineMemOperand(
       MachinePointerInfo PtrInfo, MachineMemOperand::Flags f, uint64_t s,
-      unsigned base_alignment, const AAMDNodes &AAInfo = AAMDNodes(),
-      const MDNode *Ranges = nullptr,
-      SyncScope::ID SSID = SyncScope::System,
+      Align base_alignment, const AAMDNodes &AAInfo = AAMDNodes(),
+      const MDNode *Ranges = nullptr, SyncScope::ID SSID = SyncScope::System,
+      AtomicOrdering Ordering = AtomicOrdering::NotAtomic,
+      AtomicOrdering FailureOrdering = AtomicOrdering::NotAtomic);
+
+  MachineMemOperand *getMachineMemOperand(
+      MachinePointerInfo PtrInfo, MachineMemOperand::Flags f, LLT MemTy,
+      Align base_alignment, const AAMDNodes &AAInfo = AAMDNodes(),
+      const MDNode *Ranges = nullptr, SyncScope::ID SSID = SyncScope::System,
       AtomicOrdering Ordering = AtomicOrdering::NotAtomic,
       AtomicOrdering FailureOrdering = AtomicOrdering::NotAtomic);
 
@@ -751,7 +923,22 @@ public:
   /// MachineMemOperands are owned by the MachineFunction and need not be
   /// explicitly deallocated.
   MachineMemOperand *getMachineMemOperand(const MachineMemOperand *MMO,
-                                          int64_t Offset, uint64_t Size);
+                                          int64_t Offset, LLT Ty);
+  MachineMemOperand *getMachineMemOperand(const MachineMemOperand *MMO,
+                                          int64_t Offset, uint64_t Size) {
+    return getMachineMemOperand(MMO, Offset, LLT::scalar(8 * Size));
+  }
+
+  /// getMachineMemOperand - Allocate a new MachineMemOperand by copying
+  /// an existing one, replacing only the MachinePointerInfo and size.
+  /// MachineMemOperands are owned by the MachineFunction and need not be
+  /// explicitly deallocated.
+  MachineMemOperand *getMachineMemOperand(const MachineMemOperand *MMO,
+                                          const MachinePointerInfo &PtrInfo,
+                                          uint64_t Size);
+  MachineMemOperand *getMachineMemOperand(const MachineMemOperand *MMO,
+                                          const MachinePointerInfo &PtrInfo,
+                                          LLT Ty);
 
   /// Allocate a new MachineMemOperand by copying an existing one,
   /// replacing only AliasAnalysis information. MachineMemOperands are owned
@@ -783,14 +970,15 @@ public:
   /// Allocate and initialize a register mask with @p NumRegister bits.
   uint32_t *allocateRegMask();
 
+  ArrayRef<int> allocateShuffleMask(ArrayRef<int> Mask);
+
   /// Allocate and construct an extra info structure for a `MachineInstr`.
   ///
   /// This is allocated on the function's allocator and so lives the life of
   /// the function.
-  MachineInstr::ExtraInfo *
-  createMIExtraInfo(ArrayRef<MachineMemOperand *> MMOs,
-                    MCSymbol *PreInstrSymbol = nullptr,
-                    MCSymbol *PostInstrSymbol = nullptr);
+  MachineInstr::ExtraInfo *createMIExtraInfo(
+      ArrayRef<MachineMemOperand *> MMOs, MCSymbol *PreInstrSymbol = nullptr,
+      MCSymbol *PostInstrSymbol = nullptr, MDNode *HeapAllocMarker = nullptr);
 
   /// Allocate a string and populate it with the given external symbol name.
   const char *createExternalSymbolName(StringRef Name);
@@ -817,6 +1005,29 @@ public:
 
   LLVM_NODISCARD unsigned addFrameInst(const MCCFIInstruction &Inst);
 
+  /// Returns a reference to a list of symbols immediately following calls to
+  /// _setjmp in the function. Used to construct the longjmp target table used
+  /// by Windows Control Flow Guard.
+  const std::vector<MCSymbol *> &getLongjmpTargets() const {
+    return LongjmpTargets;
+  }
+
+  /// Add the specified symbol to the list of valid longjmp targets for Windows
+  /// Control Flow Guard.
+  void addLongjmpTarget(MCSymbol *Target) { LongjmpTargets.push_back(Target); }
+
+  /// Returns a reference to a list of symbols that we have catchrets.
+  /// Used to construct the catchret target table used by Windows EHCont Guard.
+  const std::vector<MCSymbol *> &getCatchretTargets() const {
+    return CatchretTargets;
+  }
+
+  /// Add the specified symbol to the list of valid catchret targets for Windows
+  /// EHCont Guard.
+  void addCatchretTarget(MCSymbol *Target) {
+    CatchretTargets.push_back(Target);
+  }
+
   /// \name Exception Handling
   /// \{
 
@@ -825,6 +1036,9 @@ public:
 
   bool callsUnwindInit() const { return CallsUnwindInit; }
   void setCallsUnwindInit(bool b) { CallsUnwindInit = b; }
+
+  bool hasEHCatchret() const { return HasEHCatchret; }
+  void setHasEHCatchret(bool V) { HasEHCatchret = V; }
 
   bool hasEHScopes() const { return HasEHScopes; }
   void setHasEHScopes(bool V) { HasEHScopes = V; }
@@ -934,14 +1148,6 @@ public:
     return CodeViewAnnotations;
   }
 
-  /// Record heapallocsites
-  void addCodeViewHeapAllocSite(MachineInstr *I, MDNode *MD);
-
-  ArrayRef<std::tuple<MCSymbol*, MCSymbol*, DIType*>>
-      getCodeViewHeapAllocSites() const {
-    return CodeViewHeapAllocSites;
-  }
-
   /// Return a reference to the C++ typeinfo for the current function.
   const std::vector<const GlobalValue *> &getTypeInfos() const {
     return TypeInfos;
@@ -966,22 +1172,45 @@ public:
     return VariableDbgInfos;
   }
 
+  /// Start tracking the arguments passed to the call \p CallI.
   void addCallArgsForwardingRegs(const MachineInstr *CallI,
                                  CallSiteInfoImpl &&CallInfo) {
-    assert(CallI->isCall());
-    CallSitesInfo[CallI] = std::move(CallInfo);
+    assert(CallI->isCandidateForCallSiteEntry());
+    bool Inserted =
+        CallSitesInfo.try_emplace(CallI, std::move(CallInfo)).second;
+    (void)Inserted;
+    assert(Inserted && "Call site info not unique");
   }
 
   const CallSiteInfoMap &getCallSitesInfo() const {
     return CallSitesInfo;
   }
 
-  /// Update call sites info by deleting entry for \p Old call instruction.
-  /// If \p New is present then transfer \p Old call info to it. This function
-  /// should be called before removing call instruction or before replacing
-  /// call instruction with new one.
-  void updateCallSiteInfo(const MachineInstr *Old,
-                          const MachineInstr *New = nullptr);
+  /// Following functions update call site info. They should be called before
+  /// removing, replacing or copying call instruction.
+
+  /// Erase the call site info for \p MI. It is used to remove a call
+  /// instruction from the instruction stream.
+  void eraseCallSiteInfo(const MachineInstr *MI);
+  /// Copy the call site info from \p Old to \ New. Its usage is when we are
+  /// making a copy of the instruction that will be inserted at different point
+  /// of the instruction stream.
+  void copyCallSiteInfo(const MachineInstr *Old,
+                        const MachineInstr *New);
+
+  const std::vector<char> &getBBSectionsSymbolPrefix() const {
+    return BBSectionsSymbolPrefix;
+  }
+
+  /// Move the call site info from \p Old to \New call site info. This function
+  /// is used when we are replacing one call instruction with another one to
+  /// the same callee.
+  void moveCallSiteInfo(const MachineInstr *Old,
+                        const MachineInstr *New);
+
+  unsigned getNewDebugInstrNum() {
+    return ++DebugInstrNumberingCount;
+  }
 };
 
 //===--------------------------------------------------------------------===//
@@ -1047,6 +1276,11 @@ template <> struct GraphTraits<Inverse<const MachineFunction*>> :
     return &G.Graph->front();
   }
 };
+
+class MachineFunctionAnalysisManager;
+void verifyMachineFunction(MachineFunctionAnalysisManager *,
+                           const std::string &Banner,
+                           const MachineFunction &MF);
 
 } // end namespace llvm
 

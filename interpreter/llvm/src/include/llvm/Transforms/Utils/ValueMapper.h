@@ -22,7 +22,7 @@ namespace llvm {
 
 class Constant;
 class Function;
-class GlobalAlias;
+class GlobalIndirectSymbol;
 class GlobalVariable;
 class Instruction;
 class MDNode;
@@ -89,9 +89,11 @@ enum RemapFlags {
   /// \a MapMetadata() always ignores this flag.
   RF_IgnoreMissingLocals = 2,
 
-  /// Instruct the remapper to move distinct metadata instead of duplicating it
-  /// when there are module-level changes.
-  RF_MoveDistinctMDs = 4,
+  /// Instruct the remapper to reuse and mutate distinct metadata (remapping
+  /// them in place) instead of cloning remapped copies. This flag has no
+  /// effect when when RF_NoModuleLevelChanges, since that implies an identity
+  /// mapping.
+  RF_ReuseAndMutateDistinctMDs = 4,
 
   /// Any global values not in value map are mapped to null instead of mapping
   /// to self.  Illegal if RF_IgnoreMissingLocals is also set.
@@ -120,7 +122,7 @@ inline RemapFlags operator|(RemapFlags LHS, RemapFlags RHS) {
 /// instance:
 /// - \a scheduleMapGlobalInitializer()
 /// - \a scheduleMapAppendingVariable()
-/// - \a scheduleMapGlobalAliasee()
+/// - \a scheduleMapGlobalIndirectSymbol()
 /// - \a scheduleRemapFunction()
 ///
 /// Sometimes a callback needs a different mapping context.  Such a context can
@@ -180,8 +182,9 @@ public:
                                     bool IsOldCtorDtor,
                                     ArrayRef<Constant *> NewMembers,
                                     unsigned MappingContextID = 0);
-  void scheduleMapGlobalAliasee(GlobalAlias &GA, Constant &Aliasee,
-                                unsigned MappingContextID = 0);
+  void scheduleMapGlobalIndirectSymbol(GlobalIndirectSymbol &GIS,
+                                       Constant &Target,
+                                       unsigned MappingContextID = 0);
   void scheduleRemapFunction(Function &F, unsigned MappingContextID = 0);
 };
 

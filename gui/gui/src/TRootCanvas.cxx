@@ -232,22 +232,22 @@ private:
 public:
    TRootContainer(TRootCanvas *c, Window_t id, const TGWindow *parent);
 
-   Bool_t  HandleButton(Event_t *ev);
-   Bool_t  HandleDoubleClick(Event_t *ev)
+   Bool_t  HandleButton(Event_t *ev) override;
+   Bool_t  HandleDoubleClick(Event_t *ev) override
                { return fCanvas->HandleContainerDoubleClick(ev); }
-   Bool_t  HandleConfigureNotify(Event_t *ev)
+   Bool_t  HandleConfigureNotify(Event_t *ev) override
                { TGFrame::HandleConfigureNotify(ev);
                   return fCanvas->HandleContainerConfigure(ev); }
-   Bool_t  HandleKey(Event_t *ev)
+   Bool_t  HandleKey(Event_t *ev) override
                { return fCanvas->HandleContainerKey(ev); }
-   Bool_t  HandleMotion(Event_t *ev)
+   Bool_t  HandleMotion(Event_t *ev) override
                { return fCanvas->HandleContainerMotion(ev); }
-   Bool_t  HandleExpose(Event_t *ev)
+   Bool_t  HandleExpose(Event_t *ev) override
                { return fCanvas->HandleContainerExpose(ev); }
-   Bool_t  HandleCrossing(Event_t *ev)
+   Bool_t  HandleCrossing(Event_t *ev) override
                { return fCanvas->HandleContainerCrossing(ev); }
-   void    SavePrimitive(std::ostream &out, Option_t * = "");
-   void    SetEditable(Bool_t) { }
+   void    SavePrimitive(std::ostream &out, Option_t * = "") override;
+   void    SetEditable(Bool_t) override { }
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -704,7 +704,7 @@ void TRootCanvas::ReallyDelete()
    fCanvas->Clear();
    fCanvas->SetName("");
    if (gPad && gPad->GetCanvas() == fCanvas)
-      gPad = 0;
+      gPad = nullptr;
    delete this;
 }
 
@@ -1023,7 +1023,7 @@ again:
                      break;
                   case kViewMarkers:
                      {
-                        TVirtualPad *padsav = gPad->GetCanvas();
+                        TVirtualPad *padsav = gPad ? gPad->GetCanvas() : nullptr;
                         TCanvas *m = new TCanvas("markers","Marker Types",600,200);
                         TMarker::DisplayMarkerTypes();
                         m->Update();
@@ -1466,14 +1466,41 @@ void TRootCanvas::ShowStatusBar(Bool_t show)
 
 void TRootCanvas::ShowEditor(Bool_t show)
 {
-   TVirtualPad *savedPad = 0;
-   savedPad = (TVirtualPad *) gPad;
-   gPad = Canvas();
+   TVirtualPad::TContext ctxt(Canvas(), kFALSE);
 
    UInt_t w = GetWidth();
    UInt_t e = fEditorFrame->GetWidth();
    UInt_t h = GetHeight();
    UInt_t s = fHorizontal1->GetHeight();
+
+   auto lambda_show = [&, this]() {
+      if (show) {
+         if (!fEditor)
+            CreateEditor();
+         TVirtualPadEditor *gged = TVirtualPadEditor::GetPadEditor(kFALSE);
+         if (gged && gged->GetCanvas() == fCanvas) {
+            gged->Hide();
+         }
+         if (!fViewMenu->IsEntryChecked(kViewToolbar) || fToolDock->IsUndocked()) {
+            ShowFrame(fHorizontal1);
+            h += s;
+         }
+         fMainFrame->ShowFrame(fEditorFrame);
+         fEditor->Show();
+         fViewMenu->CheckEntry(kViewEditor);
+         w += e;
+      } else {
+         if (!fViewMenu->IsEntryChecked(kViewToolbar) || fToolDock->IsUndocked()) {
+            HideFrame(fHorizontal1);
+            h -= s;
+         }
+         if (fEditor)
+            fEditor->Hide();
+         fMainFrame->HideFrame(fEditorFrame);
+         fViewMenu->UnCheckEntry(kViewEditor);
+         w -= e;
+      }
+   };
 
    if (fParent && fParent != fClient->GetDefaultRoot()) {
       TGMainFrame *main = (TGMainFrame *)fParent->GetMainFrame();
@@ -1509,36 +1536,14 @@ void TRootCanvas::ShowEditor(Bool_t show)
                fEditor = TVirtualPadEditor::GetPadEditor(kFALSE);
          }
          if (show) browser->GetTabLeft()->SetTab("Pad Editor");
+      } else {
+         lambda_show();
+         main->Layout();
       }
    }
    else {
-      if (show) {
-         if (!fEditor) CreateEditor();
-         TVirtualPadEditor* gged = TVirtualPadEditor::GetPadEditor(kFALSE);
-         if(gged && gged->GetCanvas() == fCanvas){
-            gged->Hide();
-         }
-         if (!fViewMenu->IsEntryChecked(kViewToolbar) || fToolDock->IsUndocked()) {
-            ShowFrame(fHorizontal1);
-            h = h + s;
-         }
-         fMainFrame->ShowFrame(fEditorFrame);
-         fEditor->Show();
-         fViewMenu->CheckEntry(kViewEditor);
-         w = w + e;
-      } else {
-         if (!fViewMenu->IsEntryChecked(kViewToolbar) || fToolDock->IsUndocked()) {
-            HideFrame(fHorizontal1);
-            h = h - s;
-         }
-         if (fEditor) fEditor->Hide();
-         fMainFrame->HideFrame(fEditorFrame);
-         fViewMenu->UnCheckEntry(kViewEditor);
-         w = w - e;
-      }
-      Resize(w, h);
+      lambda_show();
    }
-   if (savedPad) gPad = savedPad;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

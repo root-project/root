@@ -8,9 +8,17 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+#include <ROOT/RDF/RColumnRegister.hxx>
 #include <ROOT/RDF/RLoopManager.hxx>
 #include <ROOT/RDF/RVariationBase.hxx>
 #include <ROOT/RDF/Utils.hxx> // CacheLineStep
+#include <ROOT/RStringView.hxx>
+#include <ROOT/RVec.hxx>
+#include <RtypesCore.h>
+
+#include <memory>
+#include <string>
+#include <vector>
 
 namespace ROOT {
 namespace Internal {
@@ -29,7 +37,7 @@ RVariationBase::RVariationBase(const std::vector<std::string> &colNames, std::st
 
    const auto nColumns = fInputColumns.size();
    for (auto i = 0u; i < nColumns; ++i)
-      fIsDefine[i] = fColumnRegister.HasName(fInputColumns[i]);
+      fIsDefine[i] = fColumnRegister.IsDefineOrAlias(fInputColumns[i]);
 }
 
 RVariationBase::~RVariationBase() = default;

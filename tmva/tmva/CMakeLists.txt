@@ -37,6 +37,7 @@ if(dataframe)
         TMVA/RReader.hxx
         TMVA/RInferenceUtils.hxx
         TMVA/RBDT.hxx
+        TMVA/RSofieReader.hxx
     )
     set(TMVA_EXTRA_SOURCES
         RBDT.cxx

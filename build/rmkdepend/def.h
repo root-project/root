@@ -32,6 +32,9 @@ in this Software without prior written authorization from the X Consortium.
 #define _POSIX_SOURCE
 #endif
 #endif
+#if defined(__APPLE__) && !defined(_DARWIN_C_SOURCE)
+#define _DARWIN_C_SOURCE
+#endif
 #include <stdio.h>
 #ifndef X_NOT_STDC_ENV
 #include <string.h>
@@ -137,7 +140,7 @@ char   *base_name(char*);
 char   *rgetline(struct filepointer*);
 struct symtab  **slookup(char*, struct inclist*);
 struct symtab  **isdefined(char*,struct inclist*, struct inclist**);
-struct symtab  **fdefined();
+struct symtab **fdefined(char *, struct inclist *, struct inclist **);
 struct filepointer *getfile(char*);
 struct inclist  *newinclude(char*,char*);
 struct inclist  *inc_path(char*, char*, boolean);

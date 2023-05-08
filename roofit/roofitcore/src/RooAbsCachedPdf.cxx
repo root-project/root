@@ -33,6 +33,7 @@ for changes to trigger a refilling of the cache histogram.
 #include "RooDataHist.h"
 #include "RooHistPdf.h"
 #include "RooExpensiveObjectCache.h"
+#include "RooNormalizedPdf.h"
 
 ClassImp(RooAbsCachedPdf);
 
@@ -104,16 +105,6 @@ RooDataHist* RooAbsCachedPdf::getCacheHist(const RooArgSet* nset) const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Mark all bins of given cache as unitialized (value -1)
-
-void RooAbsCachedPdf::clearCacheObject(PdfCacheElem& cache) const
-{
-  cache.hist()->setAllWeights(-1) ;
-}
-
-
-
-////////////////////////////////////////////////////////////////////////////////
 /// Retrieve cache object associated with given choice of observables. If cache object
 /// does not exist, create and fill and register it on the fly. If recalculate=false
 /// recalculation of cache contents of existing caches that are marked dirty due to
@@ -129,7 +120,7 @@ RooAbsCachedPdf::PdfCacheElem* RooAbsCachedPdf::getCache(const RooArgSet* nset, 
   if (cache) {
     if (cache->paramTracker()->hasChanged(true) && (recalculate || !cache->pdf()->haveUnitNorm()) ) {
       cxcoutD(Eval) << "RooAbsCachedPdf::getCache(" << GetName() << ") cache " << cache << " pdf "
-		    << cache->pdf()->GetName() << " requires recalculation as parameters changed" << std::endl ;
+          << cache->pdf()->GetName() << " requires recalculation as parameters changed" << std::endl ;
       fillCacheObject(*cache) ;
       cache->pdf()->setValueDirty() ;
     }
@@ -162,7 +153,7 @@ RooAbsCachedPdf::PdfCacheElem* RooAbsCachedPdf::getCache(const RooArgSet* nset, 
   int code = _cacheMgr.setObj(nset,0,(static_cast<RooAbsCacheElement*>(cache)),0) ;
 
   coutI(Caching) << "RooAbsCachedPdf::getCache(" << GetName() << ") creating new cache " << cache << " with pdf "
-		 << cache->pdf()->GetName() << " for nset " << (nset?*nset:RooArgSet()) << " with code " << code ;
+       << cache->pdf()->GetName() << " for nset " << (nset?*nset:RooArgSet()) << " with code " << code ;
   if (htmp) {
     ccoutI(Caching) << " from preexisting content." ;
   }
@@ -410,4 +401,26 @@ void RooAbsCachedPdf::computeBatch(cudaStream_t* stream, double* output, size_t 
 {
   auto * cachePdf = getCachePdf(_normSet);
   cachePdf->computeBatch(stream, output, nEvents, dataMap);
+}
+
+
+std::unique_ptr<RooAbsArg>
+RooAbsCachedPdf::compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileContext &ctx) const
+{
+   if (normSet.empty()) {
+      return RooAbsPdf::compileForNormSet(normSet, ctx);
+   }
+   std::unique_ptr<RooAbsPdf> pdfClone(static_cast<RooAbsPdf *>(this->Clone()));
+   ctx.compileServers(*pdfClone, {});
+
+   auto newArg = std::make_unique<RooNormalizedPdf>(*pdfClone, normSet);
+
+   // The direct servers are this pdf and the normalization integral, which
+   // don't need to be compiled further.
+   for (RooAbsArg *server : newArg->servers()) {
+      server->setAttribute("_COMPILED");
+   }
+   newArg->setAttribute("_COMPILED");
+   newArg->addOwnedComponents(std::move(pdfClone));
+   return newArg;
 }

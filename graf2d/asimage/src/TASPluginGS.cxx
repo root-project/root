@@ -65,7 +65,7 @@ TASPluginGS::TASPluginGS(const char *ext) : TASImagePlugin(ext)
 TASPluginGS::~TASPluginGS()
 {
    delete [] fInterpreter;
-   fInterpreter = 0;
+   fInterpreter = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -75,12 +75,12 @@ ASImage *TASPluginGS::File2ASImage(const char *filename)
 {
    if (!fInterpreter) {
       Warning("File2ASImage", "GhostScript is not available");
-      return 0;
+      return nullptr;
    }
 
    if (gSystem->AccessPathName(filename)) {
       Warning("File2ASImage", "input file %s is not accessible", filename);
-      return 0;
+      return nullptr;
    }
 
    TString ext = (strrchr(filename, '.') + 1);
@@ -96,7 +96,7 @@ ASImage *TASPluginGS::File2ASImage(const char *filename)
       FILE *fd = fopen(filename, "r");
       if (!fd) {
          Warning("File2ASImage", "input file %s is not readable", filename);
-         return 0;
+         return nullptr;
       }
 
       do {
@@ -127,7 +127,7 @@ ASImage *TASPluginGS::File2ASImage(const char *filename)
    FILE *in = gSystem->OpenPipe(cmd.Data(), popen_flags);
 
    if (!in) {
-      return 0;
+      return nullptr;
    }
 
    const UInt_t kBuffLength = 32768;
@@ -147,10 +147,10 @@ ASImage *TASPluginGS::File2ASImage(const char *filename)
    params.height = height;
    params.filter = SCL_DO_ALL;
    params.gamma = 0;
-   params.gamma_table = 0;
+   params.gamma_table = nullptr;
    params.compression = 0;
    params.format = ASA_ASImage;
-   params.search_path = 0;
+   params.search_path = nullptr;
    params.subimage = 0;
 
    ASImage *ret = PNGBuff2ASimage((CARD8 *)raw.Data(), &params);

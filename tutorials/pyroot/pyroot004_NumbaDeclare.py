@@ -36,12 +36,12 @@ print('pypow({}, 3) = {}'.format(data['x'], data['x_pow3']))
 # We support as input and return types of the callable fundamental types and
 # ROOT::RVec thereof. See the following callable computing the power of the
 # elements in an array.
-@ROOT.Numba.Declare(['RVec<float>', 'int'], 'RVec<float>')
+@ROOT.Numba.Declare(['RVecF', 'int'], 'RVecF')
 def pypowarray(x, y):
     return x**y
 
 ROOT.gInterpreter.ProcessLine('''
-ROOT::RVec<float> x = {0, 1, 2, 3};
+ROOT::RVecF x = {0, 1, 2, 3};
 cout << "pypowarray(" << x << ", 3) =  " << Numba::pypowarray(x, 3) << endl;
 ''')
 

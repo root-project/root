@@ -33,32 +33,36 @@ public:
   // Constructors, assignment etc
   RooNLLVar();
   RooNLLVar(const char *name, const char* title, RooAbsPdf& pdf, RooAbsData& data,
-	    const RooCmdArg& arg1=RooCmdArg::none(), const RooCmdArg& arg2=RooCmdArg::none(),const RooCmdArg& arg3=RooCmdArg::none(),
-	    const RooCmdArg& arg4=RooCmdArg::none(), const RooCmdArg& arg5=RooCmdArg::none(),const RooCmdArg& arg6=RooCmdArg::none(),
-	    const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none(),const RooCmdArg& arg9=RooCmdArg::none()) ;
+       const RooCmdArg& arg1=RooCmdArg::none(), const RooCmdArg& arg2=RooCmdArg::none(),const RooCmdArg& arg3=RooCmdArg::none(),
+       const RooCmdArg& arg4=RooCmdArg::none(), const RooCmdArg& arg5=RooCmdArg::none(),const RooCmdArg& arg6=RooCmdArg::none(),
+       const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none(),const RooCmdArg& arg9=RooCmdArg::none()) ;
 
   RooNLLVar(const char *name, const char *title, RooAbsPdf& pdf, RooAbsData& data,
             bool extended,
             RooAbsTestStatistic::Configuration const& cfg=RooAbsTestStatistic::Configuration{});
-  
+
   RooNLLVar(const char *name, const char *title, RooAbsPdf& pdf, RooAbsData& data,
             const RooArgSet& projDeps, bool extended = false,
             RooAbsTestStatistic::Configuration const& cfg=RooAbsTestStatistic::Configuration{});
 
-  RooNLLVar(const RooNLLVar& other, const char* name=0);
-  virtual TObject* clone(const char* newname) const { return new RooNLLVar(*this,newname); }
+  RooNLLVar(const RooNLLVar& other, const char* name=nullptr);
+  TObject* clone(const char* newname) const override { return new RooNLLVar(*this,newname); }
 
-  virtual RooAbsTestStatistic* create(const char *name, const char *title, RooAbsReal& pdf, RooAbsData& adata,
-                                      const RooArgSet& projDeps, RooAbsTestStatistic::Configuration const& cfg);
-  
-  virtual ~RooNLLVar();
+  RooAbsTestStatistic* create(const char *name, const char *title, RooAbsReal& pdf, RooAbsData& adata,
+                                      const RooArgSet& projDeps, RooAbsTestStatistic::Configuration const& cfg) override;
 
-  void applyWeightSquared(bool flag);
+  ~RooNLLVar() override;
 
-  Double_t defaultErrorLevel() const { return 0.5 ; }
+  void applyWeightSquared(bool flag) override;
+
+  double defaultErrorLevel() const override { return 0.5 ; }
 
   void batchMode(bool on = true) {
     _batchEvaluations = on;
+  }
+
+  void enableBinOffsetting(bool on = true) {
+    _doBinOffset = on;
   }
 
   using ComputeResult = std::pair<ROOT::Math::KahanSum<double>, double>;
@@ -69,12 +73,12 @@ public:
                                                  std::size_t firstEvent, std::size_t lastEvent);
   static RooNLLVar::ComputeResult computeScalarFunc(const RooAbsPdf *pdfClone, RooAbsData *dataClone, RooArgSet *normSet,
                                                 bool weightSq, std::size_t stepSize, std::size_t firstEvent,
-                                                std::size_t lastEvent);
+                                                std::size_t lastEvent, bool doBinOffset=false);
 
 protected:
 
-  virtual Bool_t processEmptyDataSets() const { return _extended ; }
-  virtual Double_t evaluatePartition(std::size_t firstEvent, std::size_t lastEvent, std::size_t stepSize) const;
+  bool processEmptyDataSets() const override { return _extended ; }
+  double evaluatePartition(std::size_t firstEvent, std::size_t lastEvent, std::size_t stepSize) const override;
 
   static RooArgSet _emptySet ; // Supports named argument constructor
 
@@ -82,17 +86,18 @@ private:
   ComputeResult computeBatched(std::size_t stepSize, std::size_t firstEvent, std::size_t lastEvent) const;
   ComputeResult computeScalar(std::size_t stepSize, std::size_t firstEvent, std::size_t lastEvent) const;
 
-  Bool_t _extended{false};
+  bool _extended{false};
   bool _batchEvaluations{false};
-  Bool_t _weightSq{false}; // Apply weights squared?
-  mutable Bool_t _first{true}; //!
-  ROOT::Math::KahanSum<double> _offsetSaveW2{0.0}; //!
+  bool _doBinOffset{false};
+  bool _weightSq{false}; ///< Apply weights squared?
+  mutable bool _first{true}; ///<!
+  ROOT::Math::KahanSum<double> _offsetSaveW2{0.0}; ///<!
 
-  mutable std::vector<Double_t> _binw ; //!
-  mutable RooRealSumPdf* _binnedPdf{nullptr}; //!
-  mutable std::unique_ptr<RooBatchCompute::RunContext> _evalData; //! Struct to store function evaluation workspaces.
-   
-  ClassDef(RooNLLVar,3) // Function representing (extended) -log(L) of p.d.f and dataset
+  mutable std::vector<double> _binw ; ///<!
+  mutable RooRealSumPdf* _binnedPdf{nullptr}; ///<!
+  mutable std::unique_ptr<RooBatchCompute::RunContext> _evalData; ///<! Struct to store function evaluation workspaces.
+
+  ClassDefOverride(RooNLLVar,0) // Function representing (extended) -log(L) of p.d.f and dataset
 };
 
 #endif

@@ -42,6 +42,10 @@ _String_: A string is stored as a 32bit unsigned integer indicating the length o
 followed by the characters.
 Strings are ASCII encoded; every character is a signed 8bit integer.
 
+_Compression settings_: A 32bit integer containing both a compression algorithm and the compression level.
+The compression settings are encoded according to this formula: $$ settings = algorithm * 100 + level $$
+See Compression.[h/cxx] for details and available algorithms.
+
 The meta-data envelope defines additional basic types (see below).
 
 
@@ -53,7 +57,7 @@ The most significant bit is used to indicate that there are more than 63 feature
 That means that readers need to continue reading feature flags as long as their signed integer value is negative.
 
 
-### Frames
+## Frames
 
 RNTuple envelopes can store records and lists of basic types and other records or lists by means of **frames**.
 The frame has the following format
@@ -84,18 +88,18 @@ This approach ensures that frames can be extended in future file format versions
 without breaking the deserialization of older readers.
 
 
-### Locators and Envelope Links
+## Locators and Envelope Links
 
 A locator is a generalized way to specify a certain byte range on the storage medium.
 For disk-based storage, the locator is just byte offset and byte size.
-For object stores, the locator can specify a certain object ID.
-The locator as the following format
+For other storage systems, the locator contains enough information to retrieve the referenced block, e.g. in object stores, the locator can specify a certain object ID.
+The locator has the following format
 
 ```
  0                   1                   2                   3
  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-|                             Size              |     Type    |T|
+|                             Size                            |T|
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 |                                                               |
 +                             Offset                            +
@@ -103,28 +107,68 @@ The locator as the following format
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 ```
 
-_Size_: If type is zero, the number of bytes to read, i.e. the compressed size of the referenced block.
-Otherwise the size of the locator itself.
+_Size_: If `T` is zero, the number of bytes to read, i.e. the compressed size of the referenced block.
+Otherwise the 16 least-significant bits, i.e bits 0:15, specify the size of the locator itself (see below).
 
-_T(ype)_: Zero for an on-disk or in-file locator, 1 otherwise.
+_T(ype)_: Zero for a simple on-disk or in-file locator, 1 otherwise.
 Can be interpreted as the sign bit of the size, i.e. negative sizes indicate non-disk locators.
 In this case, the locator should be interpreted like a frame, i.e. size indicates the _size of the locator itself_.
-Only for non-disk locators, the last 8 bits of the size should be interpreted as a locator type.
-To determine the locator type, the absolute value of the 8bit integer should be taken.
-The type can take one of the following values
-
-| Type | Meaning         |
-|------|-----------------|
-| 0x01 | 64bit object ID |
-| 0x02 | URI string      |
 
 _Offset_:
 For on-disk / in-file locators, the 64bit byte offset of the referenced byte range counted from the start of the file.
-For object ID locators, specifies the 64bit object ID.
+
+For non-disk locators, i.e. `T` == 1, the locator format is as follows
+
+```
+ 0                   1                   2                   3
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|              Size             |   Reserved    |     Type    |T|
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                        LOCATOR PAYLOAD                        |
+|                              ...                              |
+```
+
+In this case, the last 8 bits of the size should be interpreted as a locator type.
+To determine the locator type, the absolute value of the 8bit integer should be taken.
+The type can take one of the following values
+
+| Type | Meaning      | Payload format     |
+|------|--------------|--------------------|
+| 0x01 | URI string   | [ASCII characters] |
+| 0x02 | DAOS locator | Object64           |
+
+The range 0x03 - 0x7f is currently unused. Additional types can be registered in the future.
 For URI locators, the locator contains the ASCII characters of the URI following the size and the type.
+Each locator type follows a given format for the payload (see Section "Well-known payload formats" below).
+
+_Reserved_ is an 8bit field that can be used by the storage backend corresponding to the type in order to store additional information about the locator.
 
 An envelope link consists of a 32bit unsigned integer that specifies the uncompressed size of the envelope
 followed by a locator.
+
+### Well-known Payload Formats
+
+This section describes the well-known payload formats used in non-disk locators.
+Note that locators having a different value for _Type_ may share a given payload format (see the table above).
+
+- _Object64_: Targets object storage systems in which 64bit suffice to locate a specific object. The payload has the following format
+```
+ 0                   1                   2                   3
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                          Content size                         |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+|                                                               |
++                            Location                           +
+|                                                               |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+```
+
+_Content size_: the number of bytes to read, i.e. the compressed size of the referenced block.
+
+_Location_: 64bit object address; its specific use depends on the object store.
+In particular, it might contain a partial address that can be qualified using some other information depending on the storage backend, e.g. a URL might be generated based on this value.
 
 
 ## Envelopes
@@ -163,7 +207,7 @@ A reader must support at least this version in order to extract meaningful data 
 If the envelope version is larger than the minimum version, there might be additional data in the envelope
 that older readers can safely ignore.
 
-_CRC32_: Checksum of the envelope and the payload
+_CRC32_: Checksum of the envelope and the payload bytes together (CRC32 has the property that `crc32("123456") == crc32("456", crc32("123")`)
 
 Note that the size of envelopes is given by the RNTuple anchor (header, footer)
 or by a locator that references the envelope.
@@ -435,7 +479,7 @@ The order of items corresponds to the cluster IDs as defined by the cluster grou
 Every item of the top-most list frame consists of an outer list frame where every item corresponds to a column.
 Every item of the outer list frame is an inner list frame
 whose items correspond to the pages of the column in the cluster.
-The inner list is followed by a 64bit unsigned integer element offset and the 32bit compression settings.
+The inner list is followed by a 64bit unsigned integer element offset and the 32bit compression settings (see Section "Basic Types").
 Note that the size of the inner list frame includes the element offset and compression settings.
 The order of the outer items must match the order of the columns as specified in the cluster summary and column groups.
 For a complete cluster (covering all original columns), the order is given by the column IDs (small to large).
@@ -466,10 +510,11 @@ without inspecting the meta-data of all the previous clusters.
 
 The hierarchical structure of the frames in the page list envelope is as follows:
 
-    - Top-most cluster list frame
+    # this is `List frame of cluster group record frames` mentioned above
+    - Top-most cluster list frame (one item for each cluster in this RNTuple)
     |
-    |---- Cluster 1 column list frame (outer list frame)
-    |     |---- Column 1 page list frame (inner list frame)
+    |---- Cluster 1 column list frame (outer list frame, one item for each column in this RNTuple)
+    |     |---- Column 1 page list frame (inner list frame, one item for each page in this column)
     |     |     |---- Page 1 description (inner item)
     |     |     |---- Page 2 description (inner item)
     |     |     | ...
@@ -575,10 +620,11 @@ They are stored as two fields:
   - Child field of type `T`, which must by a type with RNTuple I/O support.
     The name of the child field is `_0`.
 
-#### std::array<T, N>
+#### std::array<T, N> and array type of the form T[N]
 
 Fixed-sized arrays are stored as single repetitive fields of type `T`.
 The array size `N` is stored in the field meta-data.
+Multi-dimensional arrays of the form `T[N][M]...` are currently not supported.
 
 #### std::variant<T1, T2, ..., Tn>
 
@@ -586,7 +632,22 @@ Variants are stored in $n+1$ fields:
   - Variant mother field of type Switch; the dispatch tag points to the principle column of the active type
   - Child fields of types `T1`, ..., `Tn`; their names are `_0`, `_1`, ...
 
+#### std::pair<T1, T2>
+
+A pair is stored using an empty mother field with two subfields, one of type `T1` and one of type `T2`. `T1` and `T2` must be types with RNTuple I/O support.
+The child fileds are named `_0` and `_1`.
+
+#### std::tuple<T1, T2, ..., Tn>
+
+A tuple is stored using an empty mother field with $n$ subfields of type `T1`, `T2`, ..., `Tn`. All types must have RNTuple I/O support.
+The child fileds are named `_0`, `_1`, ...
+
 ### User-defined classes
+
+User-defined classes might behave either as a record or as a collection of elements of a given type.
+The behavior depends on whether the class has an associated collection proxy.
+
+#### Regular class / struct
 
 User defined C++ classes are supported with the following limitations
   - The class must have a dictionary
@@ -600,6 +661,16 @@ User classes are stored as a record mother field with no attached columns.
 Direct base classes and persistent members are stored as subfields with their respective types.
 The field name of member subfields is identical to the C++ field name.
 The field name of base class subfields are numbered and preceeded by a colon (`:`), i.e. `:_0`, `:_1`, ...
+
+#### Classes with an associated collection proxy
+
+User classes that specify a collection proxy behave as collections of a given value type.
+Associative collections are not currently supported.
+
+The on-disk representation is similar to a `std::vector<T>` where `T` is the value type; specifically, it is stored as two fields:
+  - Collection mother field of type SplitIndex32 or SplitIndex64
+  - Child field of type `T`, which must by a type with RNTuple I/O support.
+    The name of the child field is `_0`.
 
 ## Limits
 

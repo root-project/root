@@ -1,6 +1,6 @@
 /// \file
 /// \ingroup tutorial_xml
-/// \notebook -nodraw
+///
 /// Example to create a new xml file with the TXMLEngine class
 ///
 /// \macro_code

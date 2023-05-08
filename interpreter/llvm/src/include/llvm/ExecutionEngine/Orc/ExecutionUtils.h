@@ -17,12 +17,13 @@
 #include "llvm/ADT/iterator_range.h"
 #include "llvm/ExecutionEngine/JITSymbol.h"
 #include "llvm/ExecutionEngine/Orc/Core.h"
-#include "llvm/ExecutionEngine/Orc/OrcError.h"
+#include "llvm/ExecutionEngine/Orc/Mangling.h"
+#include "llvm/ExecutionEngine/Orc/Shared/OrcError.h"
 #include "llvm/ExecutionEngine/RuntimeDyld.h"
+#include "llvm/Object/Archive.h"
 #include "llvm/Support/DynamicLibrary.h"
 #include <algorithm>
 #include <cstdint>
-#include <string>
 #include <utility>
 #include <vector>
 
@@ -36,6 +37,8 @@ class TargetMachine;
 class Value;
 
 namespace orc {
+
+class ObjectLayer;
 
 /// This iterator provides a convenient way to iterate over the elements
 ///        of an llvm.global_ctors/llvm.global_dtors instance.
@@ -90,55 +93,52 @@ iterator_range<CtorDtorIterator> getConstructors(const Module &M);
 ///        array.
 iterator_range<CtorDtorIterator> getDestructors(const Module &M);
 
-/// Convenience class for recording constructor/destructor names for
-///        later execution.
-template <typename JITLayerT>
-class LegacyCtorDtorRunner {
+/// This iterator provides a convenient way to iterate over GlobalValues that
+/// have initialization effects.
+class StaticInitGVIterator {
 public:
-  /// Construct a CtorDtorRunner for the given range using the given
-  ///        name mangling function.
-  LLVM_ATTRIBUTE_DEPRECATED(
-      LegacyCtorDtorRunner(std::vector<std::string> CtorDtorNames,
-                           VModuleKey K),
-      "ORCv1 utilities (utilities with the 'Legacy' prefix) are deprecated. "
-      "Please use the ORCv2 CtorDtorRunner utility instead");
+  StaticInitGVIterator() = default;
 
-  LegacyCtorDtorRunner(ORCv1DeprecationAcknowledgement,
-                       std::vector<std::string> CtorDtorNames, VModuleKey K)
-      : CtorDtorNames(std::move(CtorDtorNames)), K(K) {}
-
-  /// Run the recorded constructors/destructors through the given JIT
-  ///        layer.
-  Error runViaLayer(JITLayerT &JITLayer) const {
-    using CtorDtorTy = void (*)();
-
-    for (const auto &CtorDtorName : CtorDtorNames) {
-      if (auto CtorDtorSym = JITLayer.findSymbolIn(K, CtorDtorName, false)) {
-        if (auto AddrOrErr = CtorDtorSym.getAddress()) {
-          CtorDtorTy CtorDtor =
-            reinterpret_cast<CtorDtorTy>(static_cast<uintptr_t>(*AddrOrErr));
-          CtorDtor();
-        } else
-          return AddrOrErr.takeError();
-      } else {
-        if (auto Err = CtorDtorSym.takeError())
-          return Err;
-        else
-          return make_error<JITSymbolNotFound>(CtorDtorName);
-      }
-    }
-    return Error::success();
+  StaticInitGVIterator(Module &M)
+      : I(M.global_values().begin()), E(M.global_values().end()),
+        ObjFmt(Triple(M.getTargetTriple()).getObjectFormat()) {
+    if (I != E) {
+      if (!isStaticInitGlobal(*I))
+        moveToNextStaticInitGlobal();
+    } else
+      I = E = Module::global_value_iterator();
   }
 
+  bool operator==(const StaticInitGVIterator &O) const { return I == O.I; }
+  bool operator!=(const StaticInitGVIterator &O) const { return I != O.I; }
+
+  StaticInitGVIterator &operator++() {
+    assert(I != E && "Increment past end of range");
+    moveToNextStaticInitGlobal();
+    return *this;
+  }
+
+  GlobalValue &operator*() { return *I; }
+
 private:
-  std::vector<std::string> CtorDtorNames;
-  orc::VModuleKey K;
+  bool isStaticInitGlobal(GlobalValue &GV);
+  void moveToNextStaticInitGlobal() {
+    ++I;
+    while (I != E && !isStaticInitGlobal(*I))
+      ++I;
+    if (I == E)
+      I = E = Module::global_value_iterator();
+  }
+
+  Module::global_value_iterator I, E;
+  Triple::ObjectFormatType ObjFmt;
 };
 
-template <typename JITLayerT>
-LegacyCtorDtorRunner<JITLayerT>::LegacyCtorDtorRunner(
-    std::vector<std::string> CtorDtorNames, VModuleKey K)
-    : CtorDtorNames(std::move(CtorDtorNames)), K(K) {}
+/// Create an iterator range over the GlobalValues that contribute to static
+/// initialization.
+inline iterator_range<StaticInitGVIterator> getStaticInitGVs(Module &M) {
+  return make_range(StaticInitGVIterator(M), StaticInitGVIterator());
+}
 
 class CtorDtorRunner {
 public:
@@ -188,48 +188,25 @@ protected:
                                void *DSOHandle);
 };
 
-class LegacyLocalCXXRuntimeOverrides : public LocalCXXRuntimeOverridesBase {
-public:
-  /// Create a runtime-overrides class.
-  template <typename MangleFtorT>
-  LLVM_ATTRIBUTE_DEPRECATED(
-      LegacyLocalCXXRuntimeOverrides(const MangleFtorT &Mangle),
-      "ORCv1 utilities (utilities with the 'Legacy' prefix) are deprecated. "
-      "Please use the ORCv2 LocalCXXRuntimeOverrides utility instead");
-
-  template <typename MangleFtorT>
-  LegacyLocalCXXRuntimeOverrides(ORCv1DeprecationAcknowledgement,
-                                 const MangleFtorT &Mangle) {
-    addOverride(Mangle("__dso_handle"), toTargetAddress(&DSOHandleOverride));
-    addOverride(Mangle("__cxa_atexit"), toTargetAddress(&CXAAtExitOverride));
-  }
-
-  /// Search overrided symbols.
-  JITEvaluatedSymbol searchOverrides(const std::string &Name) {
-    auto I = CXXRuntimeOverrides.find(Name);
-    if (I != CXXRuntimeOverrides.end())
-      return JITEvaluatedSymbol(I->second, JITSymbolFlags::Exported);
-    return nullptr;
-  }
-
-private:
-  void addOverride(const std::string &Name, JITTargetAddress Addr) {
-    CXXRuntimeOverrides.insert(std::make_pair(Name, Addr));
-  }
-
-  StringMap<JITTargetAddress> CXXRuntimeOverrides;
-};
-
-template <typename MangleFtorT>
-LegacyLocalCXXRuntimeOverrides::LegacyLocalCXXRuntimeOverrides(
-    const MangleFtorT &Mangle) {
-  addOverride(Mangle("__dso_handle"), toTargetAddress(&DSOHandleOverride));
-  addOverride(Mangle("__cxa_atexit"), toTargetAddress(&CXAAtExitOverride));
-}
-
 class LocalCXXRuntimeOverrides : public LocalCXXRuntimeOverridesBase {
 public:
   Error enable(JITDylib &JD, MangleAndInterner &Mangler);
+};
+
+/// An interface for Itanium __cxa_atexit interposer implementations.
+class ItaniumCXAAtExitSupport {
+public:
+  struct AtExitRecord {
+    void (*F)(void *);
+    void *Ctx;
+  };
+
+  void registerAtExit(void (*F)(void *), void *Ctx, void *DSOHandle);
+  void runAtExits(void *DSOHandle);
+
+private:
+  std::mutex AtExitsMutex;
+  DenseMap<void *, std::vector<AtExitRecord>> AtExitRecords;
 };
 
 /// A utility class to expose symbols found via dlsym to the JIT.
@@ -237,9 +214,9 @@ public:
 /// If an instance of this class is attached to a JITDylib as a fallback
 /// definition generator, then any symbol found in the given DynamicLibrary that
 /// passes the 'Allow' predicate will be added to the JITDylib.
-class DynamicLibrarySearchGenerator {
+class DynamicLibrarySearchGenerator : public DefinitionGenerator {
 public:
-  using SymbolPredicate = std::function<bool(SymbolStringPtr)>;
+  using SymbolPredicate = std::function<bool(const SymbolStringPtr &)>;
 
   /// Create a DynamicLibrarySearchGenerator that searches for symbols in the
   /// given sys::DynamicLibrary.
@@ -253,24 +230,68 @@ public:
   /// Permanently loads the library at the given path and, on success, returns
   /// a DynamicLibrarySearchGenerator that will search it for symbol definitions
   /// in the library. On failure returns the reason the library failed to load.
-  static Expected<DynamicLibrarySearchGenerator>
+  static Expected<std::unique_ptr<DynamicLibrarySearchGenerator>>
   Load(const char *FileName, char GlobalPrefix,
        SymbolPredicate Allow = SymbolPredicate());
 
   /// Creates a DynamicLibrarySearchGenerator that searches for symbols in
   /// the current process.
-  static Expected<DynamicLibrarySearchGenerator>
+  static Expected<std::unique_ptr<DynamicLibrarySearchGenerator>>
   GetForCurrentProcess(char GlobalPrefix,
                        SymbolPredicate Allow = SymbolPredicate()) {
     return Load(nullptr, GlobalPrefix, std::move(Allow));
   }
 
-  Expected<SymbolNameSet> operator()(JITDylib &JD, const SymbolNameSet &Names);
+  Error tryToGenerate(LookupState &LS, LookupKind K, JITDylib &JD,
+                      JITDylibLookupFlags JDLookupFlags,
+                      const SymbolLookupSet &Symbols) override;
 
 private:
   sys::DynamicLibrary Dylib;
   SymbolPredicate Allow;
   char GlobalPrefix;
+};
+
+/// A utility class to expose symbols from a static library.
+///
+/// If an instance of this class is attached to a JITDylib as a fallback
+/// definition generator, then any symbol found in the archive will result in
+/// the containing object being added to the JITDylib.
+class StaticLibraryDefinitionGenerator : public DefinitionGenerator {
+public:
+  /// Try to create a StaticLibraryDefinitionGenerator from the given path.
+  ///
+  /// This call will succeed if the file at the given path is a static library
+  /// is a valid archive, otherwise it will return an error.
+  static Expected<std::unique_ptr<StaticLibraryDefinitionGenerator>>
+  Load(ObjectLayer &L, const char *FileName);
+
+  /// Try to create a StaticLibraryDefinitionGenerator from the given path.
+  ///
+  /// This call will succeed if the file at the given path is a static library
+  /// or a MachO universal binary containing a static library that is compatible
+  /// with the given triple. Otherwise it will return an error.
+  static Expected<std::unique_ptr<StaticLibraryDefinitionGenerator>>
+  Load(ObjectLayer &L, const char *FileName, const Triple &TT);
+
+  /// Try to create a StaticLibrarySearchGenerator from the given memory buffer.
+  /// This call will succeed if the buffer contains a valid archive, otherwise
+  /// it will return an error.
+  static Expected<std::unique_ptr<StaticLibraryDefinitionGenerator>>
+  Create(ObjectLayer &L, std::unique_ptr<MemoryBuffer> ArchiveBuffer);
+
+  Error tryToGenerate(LookupState &LS, LookupKind K, JITDylib &JD,
+                      JITDylibLookupFlags JDLookupFlags,
+                      const SymbolLookupSet &Symbols) override;
+
+private:
+  StaticLibraryDefinitionGenerator(ObjectLayer &L,
+                                   std::unique_ptr<MemoryBuffer> ArchiveBuffer,
+                                   Error &Err);
+
+  ObjectLayer &L;
+  std::unique_ptr<MemoryBuffer> ArchiveBuffer;
+  std::unique_ptr<object::Archive> Archive;
 };
 
 } // end namespace orc

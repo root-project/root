@@ -24,14 +24,14 @@ TODBCRow::TODBCRow(SQLHSTMT stmt, Int_t fieldcount)
    fHstmt = stmt;
    fFieldCount = fieldcount;
 
-   fBuffer = 0;
-   fLengths = 0;
+   fBuffer = nullptr;
+   fLengths = nullptr;
 
    if (fFieldCount>0) {
       fBuffer = new char*[fFieldCount];
       fLengths = new ULong_t[fFieldCount];
       for (Int_t n = 0; n < fFieldCount; n++) {
-         fBuffer[n] = 0;
+         fBuffer[n] = nullptr;
          fLengths[n] = 0;
          CopyFieldValue(n);
       }
@@ -51,16 +51,16 @@ TODBCRow::~TODBCRow()
 
 void TODBCRow::Close(Option_t *)
 {
-   if (fBuffer!=0) {
+   if (fBuffer) {
       for (Int_t n = 0; n < fFieldCount; n++)
          delete[] fBuffer[n];
       delete[] fBuffer;
-      fBuffer = 0;
+      fBuffer = nullptr;
    }
 
-   if (fLengths!=0) {
+   if (fLengths) {
       delete[] fLengths;
-      fLengths = 0;
+      fLengths = nullptr;
    }
 }
 
@@ -82,7 +82,7 @@ void TODBCRow::CopyFieldValue(Int_t field)
 
    if (ressize==SQL_NULL_DATA) {
       delete[] fBuffer[field];
-      fBuffer[field] = 0;
+      fBuffer[field] = nullptr;
       return;
    }
 
@@ -91,7 +91,7 @@ void TODBCRow::CopyFieldValue(Int_t field)
    if (retcode==SQL_SUCCESS_WITH_INFO) {
       SQLINTEGER code;
       SQLCHAR state[ 7 ];
-      SQLGetDiagRec(SQL_HANDLE_STMT, fHstmt, 1, state, &code, 0, 0, 0);
+      SQLGetDiagRec(SQL_HANDLE_STMT, fHstmt, 1, state, &code, nullptr, 0, nullptr);
 
       if (strcmp((char*)state,"01004")==0) {
 //         Info("CopyFieldValue","Before %d %s", ressize, fBuffer[field]);
@@ -113,7 +113,8 @@ void TODBCRow::CopyFieldValue(Int_t field)
 
 ULong_t TODBCRow::GetFieldLength(Int_t field)
 {
-   if ((field<0) || (field>=fFieldCount)) return 0;
+   if ((field < 0) || (field >= fFieldCount))
+      return 0;
 
    return fLengths[field];
 }
@@ -123,7 +124,8 @@ ULong_t TODBCRow::GetFieldLength(Int_t field)
 
 const char *TODBCRow::GetField(Int_t field)
 {
-   if ((field<0) || (field>=fFieldCount)) return 0;
+   if ((field < 0) || (field >= fFieldCount))
+      return nullptr;
 
    return fBuffer[field];
 }

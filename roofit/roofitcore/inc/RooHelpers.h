@@ -17,9 +17,9 @@
 #ifndef ROOFIT_ROOFITCORE_INC_ROOHELPERS_H_
 #define ROOFIT_ROOFITCORE_INC_ROOHELPERS_H_
 
-#include "RooMsgService.h"
-#include "RooAbsArg.h"
-#include "RooAbsReal.h"
+#include <RooMsgService.h>
+#include <RooAbsArg.h>
+#include <RooAbsReal.h>
 
 #include <sstream>
 #include <vector>
@@ -36,7 +36,7 @@ namespace RooHelpers {
 /// Can also temporarily activate / deactivate message topics.
 /// Use as
 /// ~~~{.cpp}
-/// RooHelpers::LocalChangeMessageLevel changeMsgLvl(RooFit::WARNING);
+/// RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
 /// [ statements that normally generate a lot of output ]
 /// ~~~
 class LocalChangeMsgLevel {
@@ -132,16 +132,33 @@ private:
 
 std::pair<double, double> getRangeOrBinningInterval(RooAbsArg const* arg, const char* rangeName);
 
-bool checkIfRangesOverlap(RooAbsPdf const& pdf,
-                          RooAbsData const& data,
-                          std::vector<std::string> const& rangeNames,
-                          bool splitRange);
+bool checkIfRangesOverlap(RooArgSet const& observables, std::vector<std::string> const& rangeNames);
 
 std::string getColonSeparatedNameString(RooArgSet const& argSet);
 RooArgSet selectFromArgSet(RooArgSet const&, std::string const& names);
 
+
+/// Clone RooAbsArg object and reattach to original parameters.
+template<class T>
+std::unique_ptr<T> cloneTreeWithSameParameters(T const& arg, RooArgSet const* observables=nullptr) {
+  std::unique_ptr<T> clone{static_cast<T *>(arg.cloneTree())};
+  RooArgSet origParams;
+  arg.getParameters(observables, origParams);
+  clone->recursiveRedirectServers(origParams);
+  return clone;
 }
 
+std::string getRangeNameForSimComponent(std::string const& rangeName, bool splitRange, std::string const& catName);
 
+struct BinnedLOutput {
+    RooAbsPdf * binnedPdf = nullptr;
+    bool isBinnedL = false;
+};
+
+BinnedLOutput getBinnedL(RooAbsPdf &pdf);
+
+void getSortedComputationGraph(RooAbsReal const &func, RooArgSet &out);
+
+}
 
 #endif /* ROOFIT_ROOFITCORE_INC_ROOHELPERS_H_ */

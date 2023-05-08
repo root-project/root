@@ -60,9 +60,9 @@ class RosenBrockFunction : public ROOT::Math::IMultiGenFunction {
 public :
 
 
-   unsigned int NDim() const { return 2; }
+   unsigned int NDim() const override { return 2; }
 
-   ROOT::Math::IMultiGenFunction * Clone() const {
+   ROOT::Math::IMultiGenFunction * Clone() const override {
       return new RosenBrockFunction();
    }
 
@@ -78,7 +78,7 @@ public :
 
    private:
 
-   inline double DoEval (const double * x) const {
+   inline double DoEval (const double * x) const override {
 #ifdef USE_FREE_FUNC
       double f = 0;
       int ierr = 0;
@@ -136,9 +136,9 @@ public :
    }
 
 
-   unsigned int NDim() const { return fDim; }
+   unsigned int NDim() const override { return fDim; }
 
-   ROOT::Math::IMultiGenFunction * Clone() const {
+   ROOT::Math::IMultiGenFunction * Clone() const override {
       TrigoFletcherFunction * f = new TrigoFletcherFunction(*this);
 //       std::cerr <<"cannot clone this function" << std::endl;
 //       assert(0);
@@ -167,7 +167,7 @@ public :
 
    double TrueMinimum() const { return 0; }
 
-   void  Gradient (const double * x, double * g) const {
+   void  Gradient (const double * x, double * g) const override {
       gNCall2++;
 
       for (unsigned int i = 0; i < fDim ; ++i) {
@@ -219,7 +219,7 @@ public :
 //    TrigoFletcherFunction(const TrigoFletcherFunction & ) {}
 //    TrigoFletcherFunction & operator=(const TrigoFletcherFunction &) { return *this; }
 
-   double DoEval (const double * x) const {
+   double DoEval (const double * x) const override {
       gNCall++;
 
 
@@ -235,7 +235,7 @@ public :
    }
 
 
-   double DoDerivative (const double * x, unsigned int i ) const {
+   double DoDerivative (const double * x, unsigned int i ) const override {
       std::vector<double> g(fDim);
       Gradient(x,&g[0]);
       return  g[i];
@@ -273,9 +273,9 @@ public :
    {
    }
 
-   unsigned int NDim() const { return fDim; }
+   unsigned int NDim() const override { return fDim; }
 
-   ROOT::Math::IMultiGenFunction * Clone() const {
+   ROOT::Math::IMultiGenFunction * Clone() const override {
       return new ChebyQuadFunction(*this);
    }
 
@@ -295,7 +295,7 @@ public :
 
    // compute gradient
 
-   void Gradient(const double * x, double * g) const {
+   void Gradient(const double * x, double * g) const override {
       gNCall2++;
       unsigned int n = fDim;
       // estimate first the fvec
@@ -325,7 +325,7 @@ public :
 
    private:
 
-   double DoEval (const double * x) const {
+   double DoEval (const double * x) const override {
 
       gNCall++;
       DoCalculatefi(x);
@@ -337,7 +337,7 @@ public :
 
    }
 
-   double DoDerivative (const double * x, unsigned int i ) const {
+   double DoDerivative (const double * x, unsigned int i ) const override {
       std::vector<double> g(fDim);
       Gradient(x,&g[0]);
       return  g[i];

@@ -105,7 +105,7 @@ private:
    TGClient  *fClient;   // connection to display server
 public:
    TGInputHandler(TGClient *c, Int_t fd) : TFileHandler(fd, 1) { fClient = c; }
-   Bool_t Notify();
+   Bool_t Notify() override;
    // Important: don't override ReadNotify()
 };
 

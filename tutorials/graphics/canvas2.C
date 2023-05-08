@@ -7,6 +7,8 @@
 /// same width and height. CanvasPartition does that properly. This
 /// example also ensure that the axis labels and titles have the same
 /// sizes and that the tick marks length is uniform.
+/// In addition, XtoPad and YtoPad allow to place graphics objects like
+/// text in the right place in each sub-pads.
 ///
 /// \macro_image
 /// \macro_code
@@ -16,13 +18,14 @@
 void CanvasPartition(TCanvas *C,const Int_t Nx = 2,const Int_t Ny = 2,
                      Float_t lMargin = 0.15, Float_t rMargin = 0.05,
                      Float_t bMargin = 0.15, Float_t tMargin = 0.05);
+double XtoPad(double x);
+double YtoPad(double x);
 
 void canvas2()
 {
-
    gStyle->SetOptStat(0);
 
-   TCanvas *C = (TCanvas*) gROOT->FindObject("C");
+   auto C = (TCanvas*) gROOT->FindObject("C");
    if (C) delete C;
    C = new TCanvas("C","canvas",1024,640);
    C->SetFillStyle(4000);
@@ -41,7 +44,7 @@ void canvas2()
    CanvasPartition(C,Nx,Ny,lMargin,rMargin,bMargin,tMargin);
 
    // Dummy histogram.
-   TH1F *h = (TH1F*) gROOT->FindObject("histo");
+   auto h = (TH1F*) gROOT->FindObject("histo");
    if (h) delete h;
    h = new TH1F("histo","",100,-5.0,5.0);
    h->FillRandom("gaus",10000);
@@ -50,14 +53,12 @@ void canvas2()
 
    TPad *pad[Nx][Ny];
 
-   for (Int_t i=0;i<Nx;i++) {
-      for (Int_t j=0;j<Ny;j++) {
+   for (Int_t i = 0; i < Nx; i++) {
+      for (Int_t j = 0; j < Ny; j++) {
          C->cd(0);
 
          // Get the pads previously created.
-         char pname[16];
-         sprintf(pname,"pad_%i_%i",i,j);
-         pad[i][j] = (TPad*) gROOT->FindObject(pname);
+         pad[i][j] = (TPad*) C->FindObject(TString::Format("pad_%d_%d",i,j).Data());
          pad[i][j]->Draw();
          pad[i][j]->SetFillStyle(4000);
          pad[i][j]->SetFrameFillStyle(4000);
@@ -67,14 +68,11 @@ void canvas2()
          Float_t xFactor = pad[0][0]->GetAbsWNDC()/pad[i][j]->GetAbsWNDC();
          Float_t yFactor = pad[0][0]->GetAbsHNDC()/pad[i][j]->GetAbsHNDC();
 
-         char hname[16];
-         sprintf(hname,"h_%i_%i",i,j);
-         TH1F *hFrame = (TH1F*) h->Clone(hname);
-         hFrame->Reset();
-         hFrame->Draw();
+         TH1F *hFrame = (TH1F*) h->Clone(TString::Format("h_%d_%d",i,j).Data());
 
          // y axis range
-         hFrame->GetYaxis()->SetRangeUser(0.0001,1.2*h->GetMaximum());
+         hFrame->SetMinimum(0.0001); // do not show 0
+         hFrame->SetMaximum(1.2*h->GetMaximum());
 
          // Format for y axis
          hFrame->GetYaxis()->SetLabelFont(43);
@@ -103,7 +101,14 @@ void canvas2()
          // TICKS X Axis
          hFrame->GetXaxis()->SetTickLength(yFactor*0.06/xFactor);
 
-         h->Draw("same");
+         // Draw cloned histogram with individual settings
+         hFrame->Draw();
+
+         TText text;
+         text.SetTextAlign(31);
+         text.SetTextFont(43);
+         text.SetTextSize(10);
+         text.DrawTextNDC(XtoPad(0.9), YtoPad(0.8), gPad->GetName());
       }
    }
    C->cd();
@@ -173,11 +178,10 @@ void CanvasPartition(TCanvas *C,const Int_t Nx,const Int_t Ny,
 
          C->cd(0);
 
-         char name[16];
-         sprintf(name,"pad_%i_%i",i,j);
-         TPad *pad = (TPad*) gROOT->FindObject(name);
+         auto name = TString::Format("pad_%d_%d",i,j);
+         auto pad = (TPad*) C->FindObject(name.Data());
          if (pad) delete pad;
-         pad = new TPad(name,"",hposl,vposd,hposr,vposu);
+         pad = new TPad(name.Data(),"",hposl,vposd,hposr,vposu);
          pad->SetLeftMargin(hmarl);
          pad->SetRightMargin(hmarr);
          pad->SetBottomMargin(vmard);
@@ -190,4 +194,26 @@ void CanvasPartition(TCanvas *C,const Int_t Nx,const Int_t Ny,
          pad->Draw();
       }
    }
+}
+
+double XtoPad(double x)
+{
+   double xl,yl,xu,yu;
+   gPad->GetPadPar(xl,yl,xu,yu);
+   double pw = xu-xl;
+   double lm = gPad->GetLeftMargin();
+   double rm = gPad->GetRightMargin();
+   double fw = pw-pw*lm-pw*rm;
+   return (x*fw+pw*lm)/pw;
+}
+
+double YtoPad(double y)
+{
+   double xl,yl,xu,yu;
+   gPad->GetPadPar(xl,yl,xu,yu);
+   double ph = yu-yl;
+   double tm = gPad->GetTopMargin();
+   double bm = gPad->GetBottomMargin();
+   double fh = ph-ph*bm-ph*tm;
+   return (y*fh+bm*ph)/ph;
 }

@@ -52,7 +52,7 @@ model.add(Dense(64, activation='tanh', input_dim=2))
 model.add(Dense(1, activation='linear'))
 
 # Set loss and optimizer
-model.compile(loss='mean_squared_error', optimizer=SGD(learning_rate=0.01))
+model.compile(loss='mean_squared_error', optimizer=SGD(learning_rate=0.01), weighted_metrics=[])
 
 # Store model to file
 model.save('modelRegression.h5')

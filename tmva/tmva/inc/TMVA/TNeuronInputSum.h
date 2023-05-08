@@ -20,7 +20,7 @@
  * modification, are permitted according to the terms listed in LICENSE           *
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
- 
+
 
 #ifndef ROOT_TMVA_TNeuronInputSum
 #define ROOT_TMVA_TNeuronInputSum
@@ -39,7 +39,7 @@
 namespace TMVA {
 
    class TNeuronInputSum : public TNeuronInput {
-    
+
    public:
 
       TNeuronInputSum() {}

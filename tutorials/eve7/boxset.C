@@ -16,6 +16,12 @@
 using namespace ROOT::Experimental;
 
 
+std::string customTooltip(const ROOT::Experimental::REveDigitSet *digitSet, int n)
+{
+   auto d = digitSet->GetDigit(n);
+   return TString::Format("Custom tooltip:\n value %d idx %d\n", d->fValue, n).Data();
+}
+
 REveBoxSet* boxset(Int_t num=100)
 {
    auto eveMng = REveManager::Create();
@@ -23,6 +29,8 @@ REveBoxSet* boxset(Int_t num=100)
    TRandom r(0);
 
    auto pal = new REveRGBAPalette(0, 130);
+   pal->SetMin(80);
+
 
    auto q = new REveBoxSet("BoxSet");
    q->SetPalette(pal);
@@ -30,14 +38,16 @@ REveBoxSet* boxset(Int_t num=100)
 
 #define RND_BOX(x) (Float_t)r.Uniform(-(x), (x))
 
-   Float_t verts[24];
-   for (Int_t i=0; i<num; ++i) {
-      Float_t x = RND_BOX(10);
-      Float_t y = RND_BOX(10);
-      Float_t z = RND_BOX(10);
-      Float_t a = r.Uniform(0.2, 0.5);
-      Float_t d = 0.05;
-      Float_t verts[24] = {
+   const float R = 500;
+   const float A = 40;
+   const float D = 1;
+   for (int i = 0; i < num; ++i) {
+      float x = RND_BOX(R);
+      float y = RND_BOX(R);
+      float z = RND_BOX(R);
+      float a = r.Uniform(0.2*A, A);
+      float d = D;
+      float verts[24] = {
                            x - a + RND_BOX(d), y - a + RND_BOX(d), z - a + RND_BOX(d),
                            x - a + RND_BOX(d), y + a + RND_BOX(d), z - a + RND_BOX(d),
                            x + a + RND_BOX(d), y + a + RND_BOX(d), z - a + RND_BOX(d),
@@ -56,6 +66,8 @@ REveBoxSet* boxset(Int_t num=100)
    // Uncomment these two lines to get internal highlight / selection.
    q->SetPickable(1);
    q->SetAlwaysSecSelect(1);
+
+   q->SetTooltipCBFoo(customTooltip);
 
    eveMng->GetEventScene()->AddElement(q);
 
@@ -165,7 +177,7 @@ REveBoxSet* boxset_single_color(Float_t x=0, Float_t y=0, Float_t z=0,
    return q;
 }
 
-/*
+
 REveBoxSet* boxset_hex(Float_t x=0, Float_t y=0, Float_t z=0,
                        Int_t num=100, Bool_t registerSet=kTRUE)
 {
@@ -198,4 +210,4 @@ REveBoxSet* boxset_hex(Float_t x=0, Float_t y=0, Float_t z=0,
 
    return q;
 }
-*/
+

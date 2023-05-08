@@ -13,15 +13,15 @@
 //===----------------------------------------------------------------------===//
 
 #include "clang/StaticAnalyzer/Checkers/BuiltinCheckerRegistration.h"
+#include "clang/Analysis/PathDiagnostic.h"
 #include "clang/AST/DeclObjC.h"
 #include "clang/AST/Expr.h"
 #include "clang/AST/ExprObjC.h"
 #include "clang/AST/RecursiveASTVisitor.h"
 #include "clang/StaticAnalyzer/Core/BugReporter/BugReporter.h"
-#include "clang/StaticAnalyzer/Core/BugReporter/PathDiagnostic.h"
 #include "clang/StaticAnalyzer/Core/Checker.h"
 #include "clang/StaticAnalyzer/Core/PathSensitive/AnalysisManager.h"
-#include "llvm/ADT/SmallSet.h"
+#include "llvm/ADT/SmallPtrSet.h"
 #include "llvm/ADT/SmallString.h"
 #include "llvm/Support/raw_ostream.h"
 
@@ -74,7 +74,7 @@ private:
   void initializeSelectors(ASTContext &Ctx) const;
   void fillSelectors(ASTContext &Ctx, ArrayRef<SelectorDescriptor> Sel,
                      StringRef ClassName) const;
-  mutable llvm::StringMap<llvm::SmallSet<Selector, 16> > SelectorsForClass;
+  mutable llvm::StringMap<llvm::SmallPtrSet<Selector, 16>> SelectorsForClass;
   mutable bool IsInitialized;
 };
 
@@ -100,7 +100,8 @@ bool ObjCSuperCallChecker::isCheckableClass(const ObjCImplementationDecl *D,
 void ObjCSuperCallChecker::fillSelectors(ASTContext &Ctx,
                                          ArrayRef<SelectorDescriptor> Sel,
                                          StringRef ClassName) const {
-  llvm::SmallSet<Selector, 16> &ClassSelectors = SelectorsForClass[ClassName];
+  llvm::SmallPtrSet<Selector, 16> &ClassSelectors =
+      SelectorsForClass[ClassName];
   // Fill the Selectors SmallSet with all selectors we want to check.
   for (ArrayRef<SelectorDescriptor>::iterator I = Sel.begin(), E = Sel.end();
        I != E; ++I) {
@@ -221,7 +222,7 @@ void ento::registerObjCSuperCallChecker(CheckerManager &Mgr) {
   Mgr.registerChecker<ObjCSuperCallChecker>();
 }
 
-bool ento::shouldRegisterObjCSuperCallChecker(const LangOptions &LO) {
+bool ento::shouldRegisterObjCSuperCallChecker(const CheckerManager &mgr) {
   return true;
 }
 

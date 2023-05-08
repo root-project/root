@@ -49,9 +49,12 @@ void multigraph()
    c1->Update();
    auto stats1 = (TPaveStats*)gr1->GetListOfFunctions()->FindObject("stats");
    auto stats2 = (TPaveStats*)gr2->GetListOfFunctions()->FindObject("stats");
-   stats1->SetTextColor(kBlue);
-   stats2->SetTextColor(kRed);
-   stats1->SetX1NDC(0.12); stats1->SetX2NDC(0.32); stats1->SetY1NDC(0.75);
-   stats2->SetX1NDC(0.72); stats2->SetX2NDC(0.92); stats2->SetY1NDC(0.78);
-   c1->Modified();
+
+   if (stats1 && stats2) {
+      stats1->SetTextColor(kBlue);
+      stats2->SetTextColor(kRed);
+      stats1->SetX1NDC(0.12); stats1->SetX2NDC(0.32); stats1->SetY1NDC(0.75);
+      stats2->SetX1NDC(0.72); stats2->SetX2NDC(0.92); stats2->SetY1NDC(0.78);
+      c1->Modified();
+   }
 }

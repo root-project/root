@@ -41,7 +41,7 @@ namespace Internal{
       std::list<Detail::TBranchProxy*> fDirected;
       std::vector<TFriendProxy*> fFriends;
 
-      TBranchProxyDirector(const TBranchProxyDirector &) : fTree(nullptr), fEntry(-1) {;}
+      TBranchProxyDirector(const TBranchProxyDirector &) : fTree(nullptr), fEntry(-1) {}
       TBranchProxyDirector& operator=(const TBranchProxyDirector&) {return *this;}
 
    public:

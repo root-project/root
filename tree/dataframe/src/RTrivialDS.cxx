@@ -9,7 +9,6 @@
 #include <ROOT/RDF/Utils.hxx>
 #include <ROOT/TSeq.hxx>
 #include <ROOT/RTrivialDS.hxx>
-#include <TError.h>
 
 #include <limits>
 #include <memory>
@@ -95,7 +94,7 @@ void RTrivialDS::SetNSlots(unsigned int nSlots)
    fCounterAddr.resize(fNSlots);
 }
 
-void RTrivialDS::Initialise()
+void RTrivialDS::Initialize()
 {
    if (fSize == std::numeric_limits<ULong64_t>::max()) {
       // infinite source, nothing to do here

@@ -24,7 +24,7 @@ const int N_PAR = 2;
 
 class StatFunction : public ROOT::Math::IParamFunction {
 private:
-   double DoEvalPar(double x, const double *) const
+   double DoEvalPar(double x, const double *) const override
    {
       // use explicitly cached param values
       return fPdf(x, fParams[0], fParams[1]);
@@ -60,11 +60,11 @@ public:
       if (fXUp < INF) fHasUpRange = true;
    }
 
-   unsigned int NPar() const { return N_PAR; }
-   const double *Parameters() const { return fParams; }
-   ROOT::Math::IGenFunction *Clone() const { return new StatFunction(fPdf, fCdf, fQuant); }
+   unsigned int NPar() const override { return N_PAR; }
+   const double *Parameters() const override { return fParams; }
+   ROOT::Math::IGenFunction *Clone() const override { return new StatFunction(fPdf, fCdf, fQuant); }
 
-   void SetParameters(const double *p) { std::copy(p, p + N_PAR, fParams); }
+   void SetParameters(const double *p) override { std::copy(p, p + N_PAR, fParams); }
 
    void SetParameters(double p0, double p1)
    {

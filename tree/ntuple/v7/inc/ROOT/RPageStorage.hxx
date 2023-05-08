@@ -28,8 +28,10 @@
 
 #include <atomic>
 #include <cstddef>
+#include <deque>
 #include <functional>
 #include <memory>
+#include <shared_mutex>
 #include <unordered_set>
 #include <vector>
 
@@ -94,6 +96,19 @@ public:
       RSealedPage& operator =(RSealedPage &&other) = default;
    };
 
+   using SealedPageSequence_t = std::deque<RSealedPage>;
+   /// A range of sealed pages referring to the same column that can be used for vector commit
+   struct RSealedPageGroup {
+      DescriptorId_t fColumnId;
+      SealedPageSequence_t::const_iterator fFirst;
+      SealedPageSequence_t::const_iterator fLast;
+
+      RSealedPageGroup(DescriptorId_t d, SealedPageSequence_t::const_iterator b, SealedPageSequence_t::const_iterator e)
+         : fColumnId(d), fFirst(b), fLast(e)
+      {
+      }
+   };
+
 protected:
    std::string fNTupleName;
    RTaskScheduler *fTaskScheduler = nullptr;
@@ -152,6 +167,10 @@ up to the given entry number are committed.
 */
 // clang-format on
 class RPageSink : public RPageStorage {
+private:
+   /// Used to map the IDs of the descriptor to the physical IDs issued during header/footer serialization
+   Internal::RNTupleSerializer::RContext fSerializationContext;
+
 protected:
    /// Default I/O performance counters that get registered in fMetrics
    struct RCounters {
@@ -173,11 +192,9 @@ protected:
    /// with the page source, we leave it up to the derived class whether or not the compressor gets constructed.
    std::unique_ptr<RNTupleCompressor> fCompressor;
 
-   /// Building the ntuple descriptor while writing is done in the same way for all the storage sink implementations.
-   /// Field, column, cluster ids and page indexes per cluster are issued sequentially starting with 0
-   DescriptorId_t fLastFieldId = 0;
-   DescriptorId_t fLastColumnId = 0;
-   DescriptorId_t fLastClusterId = 0;
+   /// Remembers the starting cluster id for the next cluster group
+   std::uint64_t fNextClusterInGroup = 0;
+   /// Used to calculate the number of entries in the current cluster
    NTupleSize_t fPrevClusterNEntries = 0;
    /// Keeps track of the number of elements in the currently open cluster. Indexed by column id.
    std::vector<RClusterDescriptor::RColumnRange> fOpenColumnRanges;
@@ -185,13 +202,23 @@ protected:
    std::vector<RClusterDescriptor::RPageRange> fOpenPageRanges;
    RNTupleDescriptorBuilder fDescriptorBuilder;
 
-   virtual void CreateImpl(const RNTupleModel &model) = 0;
+   virtual void CreateImpl(const RNTupleModel &model, unsigned char *serializedHeader, std::uint32_t length) = 0;
    virtual RNTupleLocator CommitPageImpl(ColumnHandle_t columnHandle, const RPage &page) = 0;
    virtual RNTupleLocator CommitSealedPageImpl(DescriptorId_t columnId,
                                                const RPageStorage::RSealedPage &sealedPage) = 0;
+   /// Vector commit of preprocessed pages. The `ranges` array specifies a range of sealed pages to be
+   /// committed for each column.  The returned vector contains, in order, the RNTupleLocator for each
+   /// page on each range in `ranges`, i.e. the first N entries refer to the N pages in `ranges[0]`,
+   /// followed by M entries that refer to the M pages in `ranges[1]`, etc.
+   /// The default is to call `CommitSealedPageImpl` for each page; derived classes may provide an
+   /// optimized implementation though.
+   virtual std::vector<RNTupleLocator> CommitSealedPageVImpl(std::span<RPageStorage::RSealedPageGroup> ranges);
    /// Returns the number of bytes written to storage (excluding metadata)
    virtual std::uint64_t CommitClusterImpl(NTupleSize_t nEntries) = 0;
-   virtual void CommitDatasetImpl() = 0;
+   /// Returns the locator of the page list envelope of the given buffer that contains the serialized page list.
+   /// Typically, the implementation takes care of compressing and writing the provided buffer.
+   virtual RNTupleLocator CommitClusterGroupImpl(unsigned char *serializedPageList, std::uint32_t length) = 0;
+   virtual void CommitDatasetImpl(unsigned char *serializedFooter, std::uint32_t length) = 0;
 
    /// Helper for streaming a page. This is commonly used in derived, concrete page sinks. Note that if
    /// compressionSetting is 0 (uncompressed) and the page is mappable, the returned sealed page will
@@ -222,7 +249,7 @@ public:
    RPageSink& operator=(const RPageSink&) = delete;
    RPageSink(RPageSink&&) = default;
    RPageSink& operator=(RPageSink&&) = default;
-   virtual ~RPageSink();
+   ~RPageSink() override;
 
    /// Guess the concrete derived page source from the file name (location)
    static std::unique_ptr<RPageSink> Create(std::string_view ntupleName, std::string_view location,
@@ -241,20 +268,24 @@ public:
    /// Write a page to the storage. The column must have been added before.
    void CommitPage(ColumnHandle_t columnHandle, const RPage &page);
    /// Write a preprocessed page to storage. The column must have been added before.
-   /// TODO(jblomer): allow for vector commit of sealed pages
    void CommitSealedPage(DescriptorId_t columnId, const RPageStorage::RSealedPage &sealedPage);
+   /// Write a vector of preprocessed pages to storage. The corresponding columns must have been added before.
+   void CommitSealedPageV(std::span<RPageStorage::RSealedPageGroup> ranges);
    /// Finalize the current cluster and create a new one for the following data.
    /// Returns the number of bytes written to storage (excluding meta-data).
    std::uint64_t CommitCluster(NTupleSize_t nEntries);
+   /// Write out the page locations (page list envelope) for all the committed clusters since the last call of
+   /// CommitClusterGroup (or the beginning of writing).
+   void CommitClusterGroup();
    /// Finalize the current cluster and the entrire data set.
-   void CommitDataset() { CommitDatasetImpl(); }
+   void CommitDataset();
 
    /// Get a new, empty page for the given column that can be filled with up to nElements.  If nElements is zero,
    /// the page sink picks an appropriate size.
    virtual RPage ReservePage(ColumnHandle_t columnHandle, std::size_t nElements) = 0;
 
    /// Returns the default metrics object.  Subclasses might alternatively provide their own metrics object by overriding this.
-   virtual RNTupleMetrics &GetMetrics() override { return fMetrics; };
+   RNTupleMetrics &GetMetrics() override { return fMetrics; };
 };
 
 // clang-format off
@@ -268,6 +299,53 @@ mapped into memory. The page source also gives access to the ntuple's meta-data.
 */
 // clang-format on
 class RPageSource : public RPageStorage {
+public:
+   /// An RAII wrapper used for the read-only access to RPageSource::fDescriptor. See GetExclDescriptorGuard().
+   class RSharedDescriptorGuard {
+      const RNTupleDescriptor &fDescriptor;
+      std::shared_mutex &fLock;
+
+   public:
+      RSharedDescriptorGuard(const RNTupleDescriptor &desc, std::shared_mutex &lock) : fDescriptor(desc), fLock(lock)
+      {
+         fLock.lock_shared();
+      }
+      RSharedDescriptorGuard(const RSharedDescriptorGuard &) = delete;
+      RSharedDescriptorGuard &operator=(const RSharedDescriptorGuard &) = delete;
+      RSharedDescriptorGuard(RSharedDescriptorGuard &&) = delete;
+      RSharedDescriptorGuard &operator=(RSharedDescriptorGuard &&) = delete;
+      ~RSharedDescriptorGuard() { fLock.unlock_shared(); }
+      const RNTupleDescriptor *operator->() const { return &fDescriptor; }
+      const RNTupleDescriptor &GetRef() const { return fDescriptor; }
+   };
+
+   /// An RAII wrapper used for the writable access to RPageSource::fDescriptor. See GetSharedDescriptorGuard().
+   class RExclDescriptorGuard {
+      RNTupleDescriptor &fDescriptor;
+      std::shared_mutex &fLock;
+
+   public:
+      RExclDescriptorGuard(RNTupleDescriptor &desc, std::shared_mutex &lock) : fDescriptor(desc), fLock(lock)
+      {
+         fLock.lock();
+      }
+      RExclDescriptorGuard(const RExclDescriptorGuard &) = delete;
+      RExclDescriptorGuard &operator=(const RExclDescriptorGuard &) = delete;
+      RExclDescriptorGuard(RExclDescriptorGuard &&) = delete;
+      RExclDescriptorGuard &operator=(RExclDescriptorGuard &&) = delete;
+      ~RExclDescriptorGuard()
+      {
+         fDescriptor.IncGeneration();
+         fLock.unlock();
+      }
+      RNTupleDescriptor *operator->() const { return &fDescriptor; }
+      void MoveIn(RNTupleDescriptor &&desc) { fDescriptor = std::move(desc); }
+   };
+
+private:
+   RNTupleDescriptor fDescriptor;
+   mutable std::shared_mutex fDescriptorLock;
+
 protected:
    /// Default I/O performance counters that get registered in fMetrics
    struct RCounters {
@@ -294,7 +372,6 @@ protected:
    RNTupleMetrics fMetrics;
 
    RNTupleReadOptions fOptions;
-   RNTupleDescriptor fDescriptor;
    /// The active columns are implicitly defined by the model fields or views
    RCluster::ColumnSet_t fActiveColumns;
 
@@ -322,13 +399,16 @@ protected:
    /// GetMetrics() member function.
    void EnableDefaultMetrics(const std::string &prefix);
 
+   /// Note that the underlying lock is not recursive. See GetSharedDescriptorGuard() for further information.
+   RExclDescriptorGuard GetExclDescriptorGuard() { return RExclDescriptorGuard(fDescriptor, fDescriptorLock); }
+
 public:
    RPageSource(std::string_view ntupleName, const RNTupleReadOptions &fOptions);
    RPageSource(const RPageSource&) = delete;
    RPageSource& operator=(const RPageSource&) = delete;
-   RPageSource(RPageSource&&) = default;
-   RPageSource& operator=(RPageSource&&) = default;
-   virtual ~RPageSource();
+   RPageSource(RPageSource &&) = delete;
+   RPageSource &operator=(RPageSource &&) = delete;
+   ~RPageSource() override;
    /// Guess the concrete derived page source from the file name (location)
    static std::unique_ptr<RPageSource> Create(std::string_view ntupleName, std::string_view location,
                                               const RNTupleReadOptions &options = RNTupleReadOptions());
@@ -336,13 +416,25 @@ public:
    virtual std::unique_ptr<RPageSource> Clone() const = 0;
 
    EPageStorageType GetType() final { return EPageStorageType::kSource; }
-   const RNTupleDescriptor &GetDescriptor() const { return fDescriptor; }
    const RNTupleReadOptions &GetReadOptions() const { return fOptions; }
+
+   /// Takes the read lock for the descriptor. Multiple threads can take the lock concurrently.
+   /// The underlying std::shared_mutex, however, is neither read nor write recursive:
+   /// within one thread, only one lock (shared or exclusive) must be acquired at the same time. This requires special
+   /// care in sections protected by GetSharedDescriptorGuard() and GetExclDescriptorGuard() especially to avoid that
+   /// the locks are acquired indirectly (e.g. by a call to GetNEntries()).
+   /// As a general guideline, no other method of the page source should be called (directly or indirectly) in a
+   /// guarded section.
+   const RSharedDescriptorGuard GetSharedDescriptorGuard() const
+   {
+      return RSharedDescriptorGuard(fDescriptor, fDescriptorLock);
+   }
+
    ColumnHandle_t AddColumn(DescriptorId_t fieldId, const RColumn &column) override;
    void DropColumn(ColumnHandle_t columnHandle) override;
 
    /// Open the physical storage container for the tree
-   void Attach() { fDescriptor = AttachImpl(); }
+   void Attach() { GetExclDescriptorGuard().MoveIn(AttachImpl()); }
    NTupleSize_t GetNEntries();
    NTupleSize_t GetNElements(ColumnHandle_t columnHandle);
    ColumnId_t GetColumnId(ColumnHandle_t columnHandle);
@@ -376,7 +468,7 @@ public:
    void UnzipCluster(RCluster *cluster);
 
    /// Returns the default metrics object.  Subclasses might alternatively override the method and provide their own metrics object.
-   virtual RNTupleMetrics &GetMetrics() override { return fMetrics; };
+   RNTupleMetrics &GetMetrics() override { return fMetrics; };
 };
 
 } // namespace Detail

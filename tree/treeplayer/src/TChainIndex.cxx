@@ -182,9 +182,11 @@ void TChainIndex::DeleteIndices()
 
 TChainIndex::~TChainIndex()
 {
-   DeleteIndices();
-   if (fTree && fTree->GetTreeIndex() == this)
-      fTree->SetTreeIndex(0);
+   if (fTree) {
+      DeleteIndices();
+      if (fTree->GetTreeIndex() == this)
+         fTree->SetTreeIndex(nullptr);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -399,8 +401,9 @@ void TChainIndex::UpdateFormulaLeaves(const TTree *parent)
 ////////////////////////////////////////////////////////////////////////////////
 /// See TTreeIndex::SetTree.
 
-void TChainIndex::SetTree(const TTree *T)
+void TChainIndex::SetTree(TTree *T)
 {
    R__ASSERT(fTree == 0 || fTree == T || T==0);
+   fTree = T;
 }
 

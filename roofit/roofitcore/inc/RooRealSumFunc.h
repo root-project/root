@@ -20,6 +20,7 @@
 #include "RooListProxy.h"
 #include "RooAICRegistry.h"
 #include "RooObjCacheManager.h"
+
 #include <list>
 
 class RooRealSumFunc : public RooAbsReal {
@@ -28,67 +29,51 @@ public:
    RooRealSumFunc(const char *name, const char *title);
    RooRealSumFunc(const char *name, const char *title, const RooArgList &funcList, const RooArgList &coefList);
    RooRealSumFunc(const char *name, const char *title, RooAbsReal &func1, RooAbsReal &func2, RooAbsReal &coef1);
-   RooRealSumFunc(const RooRealSumFunc &other, const char *name = 0);
-   virtual TObject *clone(const char *newname) const { return new RooRealSumFunc(*this, newname); }
-   virtual ~RooRealSumFunc();
+   RooRealSumFunc(const RooRealSumFunc &other, const char *name = nullptr);
+   TObject *clone(const char *newname) const override { return new RooRealSumFunc(*this, newname); }
+   ~RooRealSumFunc() override;
 
-   Double_t evaluate() const;
-   virtual Bool_t checkObservables(const RooArgSet *nset) const;
+   double evaluate() const override;
+   bool checkObservables(const RooArgSet *nset) const override;
 
-   virtual Bool_t forceAnalyticalInt(const RooAbsArg &arg) const { return arg.isFundamental(); }
+   bool forceAnalyticalInt(const RooAbsArg &arg) const override { return arg.isFundamental(); }
    Int_t getAnalyticalIntegralWN(RooArgSet &allVars, RooArgSet &numVars, const RooArgSet *normSet,
-                                 const char *rangeName = 0) const;
-   Double_t analyticalIntegralWN(Int_t code, const RooArgSet *normSet, const char *rangeName = 0) const;
+                                 const char *rangeName = nullptr) const override;
+   double analyticalIntegralWN(Int_t code, const RooArgSet *normSet, const char *rangeName = nullptr) const override;
 
    const RooArgList &funcList() const { return _funcList; }
    const RooArgList &coefList() const { return _coefList; }
 
-   void printMetaArgs(std::ostream &os) const;
+   void printMetaArgs(std::ostream &os) const override;
 
-   virtual std::list<Double_t> *binBoundaries(RooAbsRealLValue & /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const;
-   virtual std::list<Double_t> *plotSamplingHint(RooAbsRealLValue & /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const;
-   Bool_t isBinnedDistribution(const RooArgSet &obs) const;
+   std::list<double> *binBoundaries(RooAbsRealLValue & /*obs*/, double /*xlo*/, double /*xhi*/) const override;
+   std::list<double> *plotSamplingHint(RooAbsRealLValue & /*obs*/, double /*xlo*/, double /*xhi*/) const override;
+   bool isBinnedDistribution(const RooArgSet &obs) const override;
 
-   void setFloor(Bool_t flag) { _doFloor = flag; }
-   Bool_t getFloor() const { return _doFloor; }
-   static void setFloorGlobal(Bool_t flag) { _doFloorGlobal = flag; }
-   static Bool_t getFloorGlobal() { return _doFloorGlobal; }
+   void setFloor(bool flag) { _doFloor = flag; }
+   bool getFloor() const { return _doFloor; }
+   static void setFloorGlobal(bool flag) { _doFloorGlobal = flag; }
+   static bool getFloorGlobal() { return _doFloorGlobal; }
 
-   virtual CacheMode canNodeBeCached() const { return RooAbsArg::NotAdvised; };
-   virtual void setCacheAndTrackHints(RooArgSet &);
+   CacheMode canNodeBeCached() const override { return RooAbsArg::NotAdvised; };
+   void setCacheAndTrackHints(RooArgSet &) override;
 
-   std::unique_ptr<RooArgSet> fillNormSetForServer(RooArgSet const& /*normSet*/, RooAbsArg const& /*server*/) const {
-     return std::make_unique<RooArgSet>();
-   }
+   std::unique_ptr<RooAbsArg> compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileContext & ctx) const override;
 
 protected:
-   class CacheElem : public RooAbsCacheElement {
-   public:
-      CacheElem(){};
-      virtual ~CacheElem(){};
-      virtual RooArgList containedArgs(Action)
-      {
-         RooArgList ret(_funcIntList);
-         ret.add(_funcNormList);
-         return ret;
-      }
-      RooArgList _funcIntList;
-      RooArgList _funcNormList;
-   };
    mutable RooObjCacheManager _normIntMgr; //! The integration cache manager
 
-   Bool_t _haveLastCoef;
+   bool _haveLastCoef;
 
-   RooListProxy _funcList; //  List of component FUNCs
-   RooListProxy _coefList; //  List of coefficients
-   TIterator *_funcIter;   //! Iterator over FUNC list
-   TIterator *_coefIter;   //! Iterator over coefficient list
+   RooListProxy _funcList; ///<  List of component FUNCs
+   RooListProxy _coefList; ///<  List of coefficients
 
-   Bool_t _doFloor;              // Introduce floor at zero in pdf
-   static Bool_t _doFloorGlobal; // Global flag for introducing floor at zero in pdf
+   bool _doFloor = false;           ///< Introduce floor at zero in pdf
+   mutable bool _haveWarned{false}; ///<!
+   static bool _doFloorGlobal;      ///< Global flag for introducing floor at zero in pdf
 
 private:
-   ClassDef(RooRealSumFunc, 4) // PDF constructed from a sum of (non-pdf) functions
+   ClassDefOverride(RooRealSumFunc, 4) // PDF constructed from a sum of (non-pdf) functions
 };
 
 #endif

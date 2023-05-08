@@ -27,9 +27,9 @@
 #include <cstdio>
 #include <memory>
 #include <string>
+#include <optional>
 
 namespace ROOT {
-
 namespace Experimental {
 namespace Detail {
 
@@ -40,6 +40,7 @@ class RPagePool;
 class RDaosPool;
 class RDaosContainer;
 
+using ntuple_index_t = std::uint32_t;
 
 // clang-format off
 /**
@@ -82,11 +83,53 @@ struct RDaosNTupleAnchor {
 
 // clang-format off
 /**
+\class ROOT::Experimental::Detail::RDaosContainerNTupleLocator
+\ingroup NTuple
+\brief Helper structure concentrating the functionality required to locate an ntuple within a DAOS container.
+It includes a hashing function that converts the RNTuple's name into a 32-bit identifier; this value is used to index
+the subspace for the ntuple among all objects in the container. A zero-value hash value is reserved for storing any
+future metadata related to container-wide management; a zero-index ntuple is thus disallowed and remapped to "1".
+Once the index is computed, `InitNTupleDescriptorBuilder()` can be called to return a partially-filled builder with
+the ntuple's anchor, header and footer, lacking only pagelists. Upon that call, a copy of the anchor is stored in `fAnchor`.
+*/
+// clang-format on
+struct RDaosContainerNTupleLocator {
+   std::string fName{};
+   ntuple_index_t fIndex{};
+   std::optional<ROOT::Experimental::Detail::RDaosNTupleAnchor> fAnchor;
+   static const ntuple_index_t kReservedIndex = 0;
+
+   RDaosContainerNTupleLocator() = default;
+   explicit RDaosContainerNTupleLocator(const std::string &ntupleName) : fName(ntupleName), fIndex(Hash(ntupleName)){};
+
+   bool IsValid() { return fAnchor.has_value() && fAnchor->fNBytesHeader; }
+   [[nodiscard]] ntuple_index_t GetIndex() const { return fIndex; };
+   static ntuple_index_t Hash(const std::string &ntupleName)
+   {
+      // Convert string to numeric representation via `std::hash`.
+      std::size_t h = std::hash<std::string>{}(ntupleName);
+      // Fold `std::size_t` bits into 32-bit using `boost::hash_combine()` algorithm and magic number.
+      auto seed = static_cast<uint32_t>(h >> 32);
+      seed ^= static_cast<uint32_t>(h & 0xffffffff) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+      auto hash = static_cast<ntuple_index_t>(seed);
+      return (hash == kReservedIndex) ? kReservedIndex + 1 : hash;
+   }
+
+   int InitNTupleDescriptorBuilder(RDaosContainer &cont, RNTupleDecompressor &decompressor,
+                                   RNTupleDescriptorBuilder &builder);
+
+   static std::pair<RDaosContainerNTupleLocator, RNTupleDescriptorBuilder>
+   LocateNTuple(RDaosContainer &cont, const std::string &ntupleName, RNTupleDecompressor &decompressor);
+};
+
+// clang-format off
+/**
 \class ROOT::Experimental::Detail::RPageSinkDaos
 \ingroup NTuple
 \brief Storage provider that writes ntuple pages to into a DAOS container
 
-Currently, an object is allocated for each page + 3 additional objects (anchor/header/footer).
+Currently, an object is allocated for ntuple metadata (anchor/header/footer). 
+Objects can correspond to pages or clusters of pages depending on the RNTuple-DAOS mapping strategy.
 */
 // clang-format on
 class RPageSinkDaos : public RPageSink {
@@ -98,35 +141,37 @@ private:
    /// (which calls `daos_cont_close()`; the destructor for the `std::shared_ptr<RDaosPool>` is invoked
    /// after (which calls `daos_pool_disconect()`).
    std::unique_ptr<RDaosContainer> fDaosContainer;
-   /// OID for the next committed page; it is automatically incremented in `CommitSealedPageImpl()`
-   std::atomic<std::uint64_t> fOid{0};
-   /// \brief A URI to a DAOS pool of the form 'daos://pool-uuid:svc_replicas/container-uuid'
+   /// Page identifier for the next committed page; it is automatically incremented in `CommitSealedPageImpl()`
+   std::atomic<std::uint64_t> fPageId{0};
+   /// Cluster group counter for the next committed cluster pagelist; incremented in `CommitClusterGroupImpl()`
+   std::atomic<std::uint64_t> fClusterGroupId{0};
+   /// \brief A URI to a DAOS pool of the form 'daos://pool-label/container-label'
    std::string fURI;
    /// Tracks the number of bytes committed to the current cluster
    std::uint64_t fNBytesCurrentCluster{0};
-   /// Used to keep the column and field IDs issued during header serialization for the footer serialization
-   Internal::RNTupleSerializer::RContext fSerializationContext;
 
    RDaosNTupleAnchor fNTupleAnchor;
+   ntuple_index_t fNTupleIndex{0};
 
 protected:
-   void CreateImpl(const RNTupleModel &model) final;
+   void CreateImpl(const RNTupleModel &model, unsigned char *serializedHeader, std::uint32_t length) final;
    RNTupleLocator CommitPageImpl(ColumnHandle_t columnHandle, const RPage &page) final;
    RNTupleLocator CommitSealedPageImpl(DescriptorId_t columnId, const RPageStorage::RSealedPage &sealedPage) final;
+   std::vector<RNTupleLocator> CommitSealedPageVImpl(std::span<RPageStorage::RSealedPageGroup> ranges) final;
    std::uint64_t CommitClusterImpl(NTupleSize_t nEntries) final;
-   void CommitDatasetImpl() final;
+   RNTupleLocator CommitClusterGroupImpl(unsigned char *serializedPageList, std::uint32_t length) final;
+   void CommitDatasetImpl(unsigned char *serializedFooter, std::uint32_t length) final;
    void WriteNTupleHeader(const void *data, size_t nbytes, size_t lenHeader);
    void WriteNTupleFooter(const void *data, size_t nbytes, size_t lenFooter);
    void WriteNTupleAnchor();
 
 public:
    RPageSinkDaos(std::string_view ntupleName, std::string_view uri, const RNTupleWriteOptions &options);
-   virtual ~RPageSinkDaos();
+   ~RPageSinkDaos() override;
 
    RPage ReservePage(ColumnHandle_t columnHandle, std::size_t nElements) final;
    void ReleasePage(RPage &page) final;
 };
-
 
 // clang-format off
 /**
@@ -138,9 +183,8 @@ public:
 class RPageAllocatorDaos {
 public:
    static RPage NewPage(ColumnId_t columnId, void *mem, std::size_t elementSize, std::size_t nElements);
-   static void DeletePage(const RPage& page);
+   static void DeletePage(const RPage &page);
 };
-
 
 // clang-format off
 /**
@@ -151,6 +195,18 @@ public:
 // clang-format on
 class RPageSourceDaos : public RPageSource {
 private:
+   /// Summarizes cluster-level information that are necessary to populate a certain page.
+   /// Used by PopulatePageFromCluster().
+   struct RClusterInfo {
+      DescriptorId_t fClusterId = 0;
+      /// Location of the page on disk
+      RClusterDescriptor::RPageRange::RPageInfoExtended fPageInfo;
+      /// The first element number of the page's column in the given cluster
+      std::uint64_t fColumnOffset = 0;
+   };
+
+   ntuple_index_t fNTupleIndex{0};
+
    /// Populated pages might be shared; the memory buffer is managed by the RPageAllocatorDaos
    std::unique_ptr<RPageAllocatorDaos> fPageAllocator;
    // TODO: the page pool should probably be handled by the base class.
@@ -160,12 +216,14 @@ private:
    RCluster *fCurrentCluster = nullptr;
    /// A container that stores object data (header/footer, pages, etc.)
    std::unique_ptr<RDaosContainer> fDaosContainer;
-   /// A URI to a DAOS pool of the form 'daos://pool-uuid:svc_replicas/container-uuid'
+   /// A URI to a DAOS pool of the form 'daos://pool-label/container-label'
    std::string fURI;
    /// The cluster pool asynchronously preloads the next few clusters
    std::unique_ptr<RClusterPool> fClusterPool;
 
-   RPage PopulatePageFromCluster(ColumnHandle_t columnHandle, const RClusterDescriptor &clusterDescriptor,
+   RNTupleDescriptorBuilder fDescriptorBuilder;
+
+   RPage PopulatePageFromCluster(ColumnHandle_t columnHandle, const RClusterInfo &clusterInfo,
                                  ClusterSize_t::ValueType idxInCluster);
 
 protected:
@@ -177,21 +235,19 @@ public:
    /// The cloned page source creates a new connection to the pool/container.
    /// The meta-data (header and footer) is reread and parsed by the clone.
    std::unique_ptr<RPageSource> Clone() const final;
-   virtual ~RPageSourceDaos();
+   ~RPageSourceDaos() override;
 
    RPage PopulatePage(ColumnHandle_t columnHandle, NTupleSize_t globalIndex) final;
    RPage PopulatePage(ColumnHandle_t columnHandle, const RClusterIndex &clusterIndex) final;
    void ReleasePage(RPage &page) final;
 
-   void LoadSealedPage(DescriptorId_t columnId, const RClusterIndex &clusterIndex,
-                       RSealedPage &sealedPage) final;
+   void LoadSealedPage(DescriptorId_t columnId, const RClusterIndex &clusterIndex, RSealedPage &sealedPage) final;
 
    std::vector<std::unique_ptr<RCluster>> LoadClusters(std::span<RCluster::RKey> clusterKeys) final;
 
    /// Return the object class used for user data OIDs in this ntuple.
    std::string GetObjectClass() const;
 };
-
 
 } // namespace Detail
 

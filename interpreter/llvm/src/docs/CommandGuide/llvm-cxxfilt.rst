@@ -46,16 +46,17 @@ OPTIONS
 
 .. option:: --help, -h
 
- Print a summary of command line options.
+  Print a summary of command line options.
 
-.. option:: --help-list
+.. option:: --no-strip-underscore, -n
 
- Print an uncategorized summary of command line options.
+  Do not strip a leading underscore. This is the default for all platforms
+  except Mach-O based hosts.
 
 .. option:: --strip-underscore, -_
 
-  Discard a single leading underscore, if present, from each input name before
-  demangling.
+  Strip a single leading underscore, if present, from each input name before
+  demangling. On by default on Mach-O based platforms.
 
 .. option:: --types, -t
 
@@ -63,7 +64,7 @@ OPTIONS
 
 .. option:: --version
 
-  Display the version of this program.
+  Display the version of the :program:`llvm-cxxfilt` executable.
 
 .. option:: @<FILE>
 

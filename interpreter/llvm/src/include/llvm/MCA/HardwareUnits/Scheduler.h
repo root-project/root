@@ -11,8 +11,8 @@
 ///
 //===----------------------------------------------------------------------===//
 
-#ifndef LLVM_MCA_SCHEDULER_H
-#define LLVM_MCA_SCHEDULER_H
+#ifndef LLVM_MCA_HARDWAREUNITS_SCHEDULER_H
+#define LLVM_MCA_HARDWAREUNITS_SCHEDULER_H
 
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/MC/MCSchedule.h"
@@ -68,7 +68,7 @@ public:
 /// instructions from the dispatch stage, until the write-back stage.
 ///
 class Scheduler : public HardwareUnit {
-  LSUnit &LSU;
+  LSUnitBase &LSU;
 
   // Instruction selection strategy for this Scheduler.
   std::unique_ptr<SchedulerStrategy> Strategy;
@@ -154,15 +154,15 @@ class Scheduler : public HardwareUnit {
   bool promoteToPendingSet(SmallVectorImpl<InstRef> &Pending);
 
 public:
-  Scheduler(const MCSchedModel &Model, LSUnit &Lsu)
+  Scheduler(const MCSchedModel &Model, LSUnitBase &Lsu)
       : Scheduler(Model, Lsu, nullptr) {}
 
-  Scheduler(const MCSchedModel &Model, LSUnit &Lsu,
+  Scheduler(const MCSchedModel &Model, LSUnitBase &Lsu,
             std::unique_ptr<SchedulerStrategy> SelectStrategy)
-      : Scheduler(make_unique<ResourceManager>(Model), Lsu,
+      : Scheduler(std::make_unique<ResourceManager>(Model), Lsu,
                   std::move(SelectStrategy)) {}
 
-  Scheduler(std::unique_ptr<ResourceManager> RM, LSUnit &Lsu,
+  Scheduler(std::unique_ptr<ResourceManager> RM, LSUnitBase &Lsu,
             std::unique_ptr<SchedulerStrategy> SelectStrategy)
       : LSU(Lsu), Resources(std::move(RM)), BusyResourceUnits(0),
         NumDispatchedToThePendingSet(0), HadTokenStall(false) {
@@ -228,6 +228,9 @@ public:
                   SmallVectorImpl<InstRef> &Ready);
 
   /// Convert a resource mask into a valid llvm processor resource identifier.
+  ///
+  /// Only the most significant bit of the Mask is used by this method to
+  /// identify the processor resource.
   unsigned getResourceID(uint64_t Mask) const {
     return Resources->resolveResourceMask(Mask);
   }
@@ -264,13 +267,13 @@ public:
   // This routine performs a sanity check.  This routine should only be called
   // when we know that 'IR' is not in the scheduler's instruction queues.
   void sanityCheck(const InstRef &IR) const {
-    assert(find(WaitSet, IR) == WaitSet.end() && "Already in the wait set!");
-    assert(find(ReadySet, IR) == ReadySet.end() && "Already in the ready set!");
-    assert(find(IssuedSet, IR) == IssuedSet.end() && "Already executing!");
+    assert(!is_contained(WaitSet, IR) && "Already in the wait set!");
+    assert(!is_contained(ReadySet, IR) && "Already in the ready set!");
+    assert(!is_contained(IssuedSet, IR) && "Already executing!");
   }
 #endif // !NDEBUG
 };
 } // namespace mca
 } // namespace llvm
 
-#endif // LLVM_MCA_SCHEDULER_H
+#endif // LLVM_MCA_HARDWAREUNITS_SCHEDULER_H

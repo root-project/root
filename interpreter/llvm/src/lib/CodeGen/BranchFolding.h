@@ -13,7 +13,6 @@
 #include "llvm/ADT/SmallPtrSet.h"
 #include "llvm/CodeGen/LivePhysRegs.h"
 #include "llvm/CodeGen/MachineBasicBlock.h"
-#include "llvm/Support/BlockFrequency.h"
 #include "llvm/Support/Compiler.h"
 #include <cstdint>
 #include <vector>
@@ -21,24 +20,22 @@
 namespace llvm {
 
 class BasicBlock;
-class MachineBlockFrequencyInfo;
 class MachineBranchProbabilityInfo;
 class MachineFunction;
 class MachineLoopInfo;
 class MachineModuleInfo;
 class MachineRegisterInfo;
-class raw_ostream;
+class MBFIWrapper;
+class ProfileSummaryInfo;
 class TargetInstrInfo;
 class TargetRegisterInfo;
 
   class LLVM_LIBRARY_VISIBILITY BranchFolder {
   public:
-    class MBFIWrapper;
-
-    explicit BranchFolder(bool defaultEnableTailMerge,
-                          bool CommonHoist,
+    explicit BranchFolder(bool DefaultEnableTailMerge, bool CommonHoist,
                           MBFIWrapper &FreqInfo,
                           const MachineBranchProbabilityInfo &ProbInfo,
+                          ProfileSummaryInfo *PSI,
                           // Min tail length to merge. Defaults to commandline
                           // flag. Ignored for optsize.
                           unsigned MinTailLength = 0);
@@ -47,7 +44,7 @@ class TargetRegisterInfo;
     /// given function.  Block placement changes the layout and may create new
     /// tail merging opportunities.
     bool OptimizeFunction(MachineFunction &MF, const TargetInstrInfo *tii,
-                          const TargetRegisterInfo *tri, MachineModuleInfo *mmi,
+                          const TargetRegisterInfo *tri,
                           MachineLoopInfo *mli = nullptr,
                           bool AfterPlacement = false);
 
@@ -126,34 +123,13 @@ class TargetRegisterInfo;
     const TargetInstrInfo *TII;
     const MachineRegisterInfo *MRI;
     const TargetRegisterInfo *TRI;
-    MachineModuleInfo *MMI;
     MachineLoopInfo *MLI;
     LivePhysRegs LiveRegs;
-
-  public:
-    /// This class keeps track of branch frequencies of newly created
-    /// blocks and tail-merged blocks.
-    class MBFIWrapper {
-    public:
-      MBFIWrapper(const MachineBlockFrequencyInfo &I) : MBFI(I) {}
-
-      BlockFrequency getBlockFreq(const MachineBasicBlock *MBB) const;
-      void setBlockFreq(const MachineBasicBlock *MBB, BlockFrequency F);
-      raw_ostream &printBlockFreq(raw_ostream &OS,
-                                  const MachineBasicBlock *MBB) const;
-      raw_ostream &printBlockFreq(raw_ostream &OS,
-                                  const BlockFrequency Freq) const;
-      void view(const Twine &Name, bool isSimple = true);
-      uint64_t getEntryFreq() const;
-
-    private:
-      const MachineBlockFrequencyInfo &MBFI;
-      DenseMap<const MachineBasicBlock *, BlockFrequency> MergedBBFreq;
-    };
 
   private:
     MBFIWrapper &MBBFreqInfo;
     const MachineBranchProbabilityInfo &MBPI;
+    ProfileSummaryInfo *PSI;
 
     bool TailMergeBlocks(MachineFunction &MF);
     bool TryTailMergeBlocks(MachineBasicBlock* SuccBB,

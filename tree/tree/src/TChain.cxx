@@ -286,7 +286,7 @@ Int_t TChain::Add(TChain* chain)
 /// - Tagging the name of the tree with a slash (e.g. \p /tree_name ) is only
 ///   supported for backward compatibility; it requires the file name to contain
 ///   the string '.root' and its use is deprecated. Instead, use the form
-///   \p ?#tree_name (that is an "?" followed by an empty query), for example:
+///   \p ?#%tree_name (that is an "?" followed by an empty query), for example:
 ///   ~~~{.cpp}
 ///   TChain c;
 ///   // DO NOT DO THIS
@@ -362,7 +362,7 @@ Int_t TChain::Add(TChain* chain)
 Int_t TChain::Add(const char* name, Long64_t nentries /* = TTree::kMaxEntries */)
 {
    TString basename, treename, query, suffix;
-   ParseTreeFilename(name, basename, treename, query, suffix, kTRUE);
+   ParseTreeFilename(name, basename, treename, query, suffix);
 
    // case with one single file
    if (!basename.MaybeWildcard()) {
@@ -400,9 +400,22 @@ Int_t TChain::Add(const char* name, Long64_t nentries /* = TTree::kMaxEntries */
       l.Sort();
       TIter next(&l);
       TObjString *obj;
+      const TString hashMarkTreeName{"#" + treename};
       while ((obj = (TObjString*)next())) {
          file = obj->GetName();
-         nf += AddFile(TString::Format("%s/%s%s",directory.Data(),file,suffix.Data()),nentries);
+         if (suffix == hashMarkTreeName) {
+            // See https://github.com/root-project/root/issues/11483
+            // In case the input parameter 'name' contains both a glob and the
+            // '?#' token to identify the tree name, the call to
+            // `ParseTreeFileName` will produce a 'suffix' string of the form
+            // '#treename'. Passing this to the `AddFile` call produces a bogus
+            // file name that TChain won't be able to open afterwards. Thus,
+            // we do not pass the 'suffix' as part of the file name, instead we
+            // directly pass 'treename' to `AddFile`.
+            nf += AddFile(TString::Format("%s/%s", directory.Data(), file), nentries, treename);
+         } else {
+            nf += AddFile(TString::Format("%s/%s%s", directory.Data(), file, suffix.Data()), nentries);
+         }
       }
       l.Delete();
    }
@@ -482,7 +495,7 @@ Int_t TChain::AddFile(const char* name, Long64_t nentries /* = TTree::kMaxEntrie
    if (tname && strlen(tname) > 0) treename = tname;
 
    TString basename, tn, query, suffix;
-   ParseTreeFilename(name, basename, tn, query, suffix, kFALSE);
+   ParseTreeFilename(name, basename, tn, query, suffix);
 
    if (!tn.IsNull()) {
       treename = tn.Data();
@@ -936,7 +949,7 @@ Bool_t TChain::GetBranchStatus(const char* branchname) const
 
 TTree::TClusterIterator TChain::GetClusterIterator(Long64_t /* firstentry */)
 {
-   Fatal("GetClusterIterator","Not support for TChain object");
+   Fatal("GetClusterIterator","TChain objects are not supported");
    return TTree::GetClusterIterator(-1);
 }
 
@@ -1873,7 +1886,7 @@ void TChain::ls(Option_t* option) const
 /// ~~~ {.cpp}
 ///     TFile* file = TFile::Open("newfile.root", "RECREATE");
 ///     file->mkdir("mydir")->cd();
-///     ch.Merge(file);
+///     ch.Merge(file, 0);
 /// ~~~
 
 Long64_t TChain::Merge(const char* name, Option_t* option)
@@ -1938,7 +1951,7 @@ Long64_t TChain::Merge(TCollection* /* list */, TFileMergeInfo *)
 /// ~~~ {.cpp}
 ///     TFile* file = TFile::Open("newfile.root", "RECREATE");
 ///     file->mkdir("mydir")->cd();
-///     ch.Merge(file);
+///     ch.Merge(file, 0);
 /// ~~~
 /// If 'option' contains the word 'fast' the merge will be done without
 /// unzipping or unstreaming the baskets (i.e., a direct copy of the raw
@@ -2126,16 +2139,10 @@ Long64_t TChain::Merge(TFile* file, Int_t basketsize, Option_t* option)
 ///     [xxx://host]/a/path/file#treename
 /// ~~~
 /// i.e. anchor but no options (query), the filename will be the full path, as
-/// the anchor may be the internal file name of an archive. Use '?#treename' to
+/// the anchor may be the internal file name of an archive. Use '?#%treename' to
 /// pass the treename if the query field is empty.
 ///
 /// \param[in] name        is the original name
-/// \param[in] wildcards   indicates if the resulting filename will be treated for
-///                        wildcards. For backwards compatibility, with most protocols
-///                        this flag suppresses the search for the url fragment
-///                        identifier and limits the query identifier search to cases
-///                        where the tree name is given as a trailing slash-separated
-///                        string at the end of the file name.
 /// \param[out] filename   the url or filename to be opened or matched
 /// \param[out] treename   the treename, which may be found in a url fragment section
 ///                        as a trailing part of the name (deprecated).
@@ -2145,8 +2152,8 @@ Long64_t TChain::Merge(TFile* file, Int_t basketsize, Option_t* option)
 ///                        a fragment this will be empty.
 /// \param[out] suffix     the portion of name which was removed to from filename.
 
-void TChain::ParseTreeFilename(const char *name, TString &filename, TString &treename, TString &query, TString &suffix,
-                               Bool_t) const
+void TChain::ParseTreeFilename(const char *name, TString &filename, TString &treename, TString &query,
+                               TString &suffix) const
 {
    Ssiz_t pIdx = kNPOS;
    filename.Clear();
@@ -2398,19 +2405,7 @@ void TChain::SavePrimitive(std::ostream &out, Option_t *option)
    }
    out << std::endl;
 
-   if (GetMarkerColor() != 1) {
-      if (GetMarkerColor() > 228) {
-         TColor::SaveColor(out, GetMarkerColor());
-         out << "   " << chName.Data() << "->SetMarkerColor(ci);" << std::endl;
-      } else
-         out << "   " << chName.Data() << "->SetMarkerColor(" << GetMarkerColor() << ");" << std::endl;
-   }
-   if (GetMarkerStyle() != 1) {
-      out << "   " << chName.Data() << "->SetMarkerStyle(" << GetMarkerStyle() << ");" << std::endl;
-   }
-   if (GetMarkerSize() != 1) {
-      out << "   " << chName.Data() << "->SetMarkerSize(" << GetMarkerSize() << ");" << std::endl;
-   }
+   SaveMarkerAttributes(out, chName.Data(), 1, 1, 1);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

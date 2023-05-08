@@ -12,6 +12,7 @@
 #include "llvm/ADT/StringExtras.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/BinaryFormat/Dwarf.h"
+#include "llvm/MC/MCRegisterInfo.h"
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/Compiler.h"
 #include "llvm/Support/DataExtractor.h"
@@ -23,156 +24,788 @@
 #include <cassert>
 #include <cinttypes>
 #include <cstdint>
-#include <string>
-#include <vector>
 
 using namespace llvm;
 using namespace dwarf;
 
+static void printRegister(raw_ostream &OS, const MCRegisterInfo *MRI, bool IsEH,
+                          unsigned RegNum) {
+  if (MRI) {
+    if (Optional<unsigned> LLVMRegNum = MRI->getLLVMRegNum(RegNum, IsEH)) {
+      if (const char *RegName = MRI->getName(*LLVMRegNum)) {
+        OS << RegName;
+        return;
+      }
+    }
+  }
+  OS << "reg" << RegNum;
+}
+
+UnwindLocation UnwindLocation::createUnspecified() { return {Unspecified}; }
+
+UnwindLocation UnwindLocation::createUndefined() { return {Undefined}; }
+
+UnwindLocation UnwindLocation::createSame() { return {Same}; }
+
+UnwindLocation UnwindLocation::createIsConstant(int32_t Value) {
+  return {Constant, InvalidRegisterNumber, Value, None, false};
+}
+
+UnwindLocation UnwindLocation::createIsCFAPlusOffset(int32_t Offset) {
+  return {CFAPlusOffset, InvalidRegisterNumber, Offset, None, false};
+}
+
+UnwindLocation UnwindLocation::createAtCFAPlusOffset(int32_t Offset) {
+  return {CFAPlusOffset, InvalidRegisterNumber, Offset, None, true};
+}
+
+UnwindLocation
+UnwindLocation::createIsRegisterPlusOffset(uint32_t RegNum, int32_t Offset,
+                                           Optional<uint32_t> AddrSpace) {
+  return {RegPlusOffset, RegNum, Offset, AddrSpace, false};
+}
+
+UnwindLocation
+UnwindLocation::createAtRegisterPlusOffset(uint32_t RegNum, int32_t Offset,
+                                           Optional<uint32_t> AddrSpace) {
+  return {RegPlusOffset, RegNum, Offset, AddrSpace, true};
+}
+
+UnwindLocation UnwindLocation::createIsDWARFExpression(DWARFExpression Expr) {
+  return {Expr, false};
+}
+
+UnwindLocation UnwindLocation::createAtDWARFExpression(DWARFExpression Expr) {
+  return {Expr, true};
+}
+
+void UnwindLocation::dump(raw_ostream &OS, const MCRegisterInfo *MRI,
+                          bool IsEH) const {
+  if (Dereference)
+    OS << '[';
+  switch (Kind) {
+  case Unspecified:
+    OS << "unspecified";
+    break;
+  case Undefined:
+    OS << "undefined";
+    break;
+  case Same:
+    OS << "same";
+    break;
+  case CFAPlusOffset:
+    OS << "CFA";
+    if (Offset == 0)
+      break;
+    if (Offset > 0)
+      OS << "+";
+    OS << Offset;
+    break;
+  case RegPlusOffset:
+    printRegister(OS, MRI, IsEH, RegNum);
+    if (Offset == 0 && !AddrSpace)
+      break;
+    if (Offset >= 0)
+      OS << "+";
+    OS << Offset;
+    if (AddrSpace)
+      OS << " in addrspace" << *AddrSpace;
+    break;
+  case DWARFExpr:
+    Expr->print(OS, DIDumpOptions(), MRI, nullptr, IsEH);
+    break;
+  case Constant:
+    OS << Offset;
+    break;
+  }
+  if (Dereference)
+    OS << ']';
+}
+
+raw_ostream &llvm::dwarf::operator<<(raw_ostream &OS,
+                                     const UnwindLocation &UL) {
+  UL.dump(OS, nullptr, false);
+  return OS;
+}
+
+bool UnwindLocation::operator==(const UnwindLocation &RHS) const {
+  if (Kind != RHS.Kind)
+    return false;
+  switch (Kind) {
+  case Unspecified:
+  case Undefined:
+  case Same:
+    return true;
+  case CFAPlusOffset:
+    return Offset == RHS.Offset && Dereference == RHS.Dereference;
+  case RegPlusOffset:
+    return RegNum == RHS.RegNum && Offset == RHS.Offset &&
+           Dereference == RHS.Dereference;
+  case DWARFExpr:
+    return *Expr == *RHS.Expr && Dereference == RHS.Dereference;
+  case Constant:
+    return Offset == RHS.Offset;
+  }
+  return false;
+}
+
+void RegisterLocations::dump(raw_ostream &OS, const MCRegisterInfo *MRI,
+                             bool IsEH) const {
+  bool First = true;
+  for (const auto &RegLocPair : Locations) {
+    if (First)
+      First = false;
+    else
+      OS << ", ";
+    printRegister(OS, MRI, IsEH, RegLocPair.first);
+    OS << '=';
+    RegLocPair.second.dump(OS, MRI, IsEH);
+  }
+}
+
+raw_ostream &llvm::dwarf::operator<<(raw_ostream &OS,
+                                     const RegisterLocations &RL) {
+  RL.dump(OS, nullptr, false);
+  return OS;
+}
+
+void UnwindRow::dump(raw_ostream &OS, const MCRegisterInfo *MRI, bool IsEH,
+                     unsigned IndentLevel) const {
+  OS.indent(2 * IndentLevel);
+  if (hasAddress())
+    OS << format("0x%" PRIx64 ": ", *Address);
+  OS << "CFA=";
+  CFAValue.dump(OS, MRI, IsEH);
+  if (RegLocs.hasLocations()) {
+    OS << ": ";
+    RegLocs.dump(OS, MRI, IsEH);
+  }
+  OS << "\n";
+}
+
+raw_ostream &llvm::dwarf::operator<<(raw_ostream &OS, const UnwindRow &Row) {
+  Row.dump(OS, nullptr, false, 0);
+  return OS;
+}
+
+void UnwindTable::dump(raw_ostream &OS, const MCRegisterInfo *MRI, bool IsEH,
+                       unsigned IndentLevel) const {
+  for (const UnwindRow &Row : Rows)
+    Row.dump(OS, MRI, IsEH, IndentLevel);
+}
+
+raw_ostream &llvm::dwarf::operator<<(raw_ostream &OS, const UnwindTable &Rows) {
+  Rows.dump(OS, nullptr, false, 0);
+  return OS;
+}
+
+Expected<UnwindTable> UnwindTable::create(const FDE *Fde) {
+  const CIE *Cie = Fde->getLinkedCIE();
+  if (Cie == nullptr)
+    return createStringError(errc::invalid_argument,
+                             "unable to get CIE for FDE at offset 0x%" PRIx64,
+                             Fde->getOffset());
+
+  // Rows will be empty if there are no CFI instructions.
+  if (Cie->cfis().empty() && Fde->cfis().empty())
+    return UnwindTable();
+
+  UnwindTable UT;
+  UnwindRow Row;
+  Row.setAddress(Fde->getInitialLocation());
+  UT.EndAddress = Fde->getInitialLocation() + Fde->getAddressRange();
+  if (Error CieError = UT.parseRows(Cie->cfis(), Row, nullptr))
+    return std::move(CieError);
+  // We need to save the initial locations of registers from the CIE parsing
+  // in case we run into DW_CFA_restore or DW_CFA_restore_extended opcodes.
+  const RegisterLocations InitialLocs = Row.getRegisterLocations();
+  if (Error FdeError = UT.parseRows(Fde->cfis(), Row, &InitialLocs))
+    return std::move(FdeError);
+  // May be all the CFI instructions were DW_CFA_nop amd Row becomes empty.
+  // Do not add that to the unwind table.
+  if (Row.getRegisterLocations().hasLocations() ||
+      Row.getCFAValue().getLocation() != UnwindLocation::Unspecified)
+    UT.Rows.push_back(Row);
+  return UT;
+}
+
+Expected<UnwindTable> UnwindTable::create(const CIE *Cie) {
+  // Rows will be empty if there are no CFI instructions.
+  if (Cie->cfis().empty())
+    return UnwindTable();
+
+  UnwindTable UT;
+  UnwindRow Row;
+  if (Error CieError = UT.parseRows(Cie->cfis(), Row, nullptr))
+    return std::move(CieError);
+  // May be all the CFI instructions were DW_CFA_nop amd Row becomes empty.
+  // Do not add that to the unwind table.
+  if (Row.getRegisterLocations().hasLocations() ||
+      Row.getCFAValue().getLocation() != UnwindLocation::Unspecified)
+    UT.Rows.push_back(Row);
+  return UT;
+}
 
 // See DWARF standard v3, section 7.23
 const uint8_t DWARF_CFI_PRIMARY_OPCODE_MASK = 0xc0;
 const uint8_t DWARF_CFI_PRIMARY_OPERAND_MASK = 0x3f;
 
-Error CFIProgram::parse(DataExtractor Data, uint32_t *Offset,
-                        uint32_t EndOffset) {
-  while (*Offset < EndOffset) {
-    uint8_t Opcode = Data.getU8(Offset);
-    // Some instructions have a primary opcode encoded in the top bits.
-    uint8_t Primary = Opcode & DWARF_CFI_PRIMARY_OPCODE_MASK;
+Error CFIProgram::parse(DWARFDataExtractor Data, uint64_t *Offset,
+                        uint64_t EndOffset) {
+  DataExtractor::Cursor C(*Offset);
+  while (C && C.tell() < EndOffset) {
+    uint8_t Opcode = Data.getRelocatedValue(C, 1);
+    if (!C)
+      break;
 
-    if (Primary) {
+    // Some instructions have a primary opcode encoded in the top bits.
+    if (uint8_t Primary = Opcode & DWARF_CFI_PRIMARY_OPCODE_MASK) {
       // If it's a primary opcode, the first operand is encoded in the bottom
       // bits of the opcode itself.
       uint64_t Op1 = Opcode & DWARF_CFI_PRIMARY_OPERAND_MASK;
       switch (Primary) {
-      default:
-        return createStringError(errc::illegal_byte_sequence,
-                                 "Invalid primary CFI opcode 0x%" PRIx8,
-                                 Primary);
       case DW_CFA_advance_loc:
       case DW_CFA_restore:
         addInstruction(Primary, Op1);
         break;
       case DW_CFA_offset:
-        addInstruction(Primary, Op1, Data.getULEB128(Offset));
+        addInstruction(Primary, Op1, Data.getULEB128(C));
         break;
-      }
-    } else {
-      // Extended opcode - its value is Opcode itself.
-      switch (Opcode) {
       default:
-        return createStringError(errc::illegal_byte_sequence,
-                                 "Invalid extended CFI opcode 0x%" PRIx8,
-                                 Opcode);
-      case DW_CFA_nop:
-      case DW_CFA_remember_state:
-      case DW_CFA_restore_state:
-      case DW_CFA_GNU_window_save:
-        // No operands
-        addInstruction(Opcode);
-        break;
-      case DW_CFA_set_loc:
-        // Operands: Address
-        addInstruction(Opcode, Data.getAddress(Offset));
-        break;
-      case DW_CFA_advance_loc1:
-        // Operands: 1-byte delta
-        addInstruction(Opcode, Data.getU8(Offset));
-        break;
-      case DW_CFA_advance_loc2:
-        // Operands: 2-byte delta
-        addInstruction(Opcode, Data.getU16(Offset));
-        break;
-      case DW_CFA_advance_loc4:
-        // Operands: 4-byte delta
-        addInstruction(Opcode, Data.getU32(Offset));
-        break;
-      case DW_CFA_restore_extended:
-      case DW_CFA_undefined:
-      case DW_CFA_same_value:
-      case DW_CFA_def_cfa_register:
-      case DW_CFA_def_cfa_offset:
-      case DW_CFA_GNU_args_size:
-        // Operands: ULEB128
-        addInstruction(Opcode, Data.getULEB128(Offset));
-        break;
-      case DW_CFA_def_cfa_offset_sf:
-        // Operands: SLEB128
-        addInstruction(Opcode, Data.getSLEB128(Offset));
-        break;
-      case DW_CFA_offset_extended:
-      case DW_CFA_register:
-      case DW_CFA_def_cfa:
-      case DW_CFA_val_offset: {
-        // Operands: ULEB128, ULEB128
-        // Note: We can not embed getULEB128 directly into function
-        // argument list. getULEB128 changes Offset and order of evaluation
-        // for arguments is unspecified.
-        auto op1 = Data.getULEB128(Offset);
-        auto op2 = Data.getULEB128(Offset);
-        addInstruction(Opcode, op1, op2);
-        break;
-        }
-        case DW_CFA_offset_extended_sf:
-        case DW_CFA_def_cfa_sf:
-        case DW_CFA_val_offset_sf: {
-          // Operands: ULEB128, SLEB128
-          // Note: see comment for the previous case
-          auto op1 = Data.getULEB128(Offset);
-          auto op2 = (uint64_t)Data.getSLEB128(Offset);
-          addInstruction(Opcode, op1, op2);
-          break;
-        }
-        case DW_CFA_def_cfa_expression: {
-          uint32_t ExprLength = Data.getULEB128(Offset);
-          addInstruction(Opcode, 0);
-          DataExtractor Extractor(
-              Data.getData().slice(*Offset, *Offset + ExprLength),
-              Data.isLittleEndian(), Data.getAddressSize());
-          Instructions.back().Expression = DWARFExpression(
-              Extractor, Data.getAddressSize(), dwarf::DWARF_VERSION);
-          *Offset += ExprLength;
-          break;
-        }
-        case DW_CFA_expression:
-        case DW_CFA_val_expression: {
-          auto RegNum = Data.getULEB128(Offset);
-          auto BlockLength = Data.getULEB128(Offset);
-          addInstruction(Opcode, RegNum, 0);
-          DataExtractor Extractor(
-              Data.getData().slice(*Offset, *Offset + BlockLength),
-              Data.isLittleEndian(), Data.getAddressSize());
-          Instructions.back().Expression = DWARFExpression(
-              Extractor, Data.getAddressSize(), dwarf::DWARF_VERSION);
-          *Offset += BlockLength;
-          break;
-        }
+        llvm_unreachable("invalid primary CFI opcode");
       }
+      continue;
+    }
+
+    // Extended opcode - its value is Opcode itself.
+    switch (Opcode) {
+    default:
+      return createStringError(errc::illegal_byte_sequence,
+                               "invalid extended CFI opcode 0x%" PRIx8, Opcode);
+    case DW_CFA_nop:
+    case DW_CFA_remember_state:
+    case DW_CFA_restore_state:
+    case DW_CFA_GNU_window_save:
+      // No operands
+      addInstruction(Opcode);
+      break;
+    case DW_CFA_set_loc:
+      // Operands: Address
+      addInstruction(Opcode, Data.getRelocatedAddress(C));
+      break;
+    case DW_CFA_advance_loc1:
+      // Operands: 1-byte delta
+      addInstruction(Opcode, Data.getRelocatedValue(C, 1));
+      break;
+    case DW_CFA_advance_loc2:
+      // Operands: 2-byte delta
+      addInstruction(Opcode, Data.getRelocatedValue(C, 2));
+      break;
+    case DW_CFA_advance_loc4:
+      // Operands: 4-byte delta
+      addInstruction(Opcode, Data.getRelocatedValue(C, 4));
+      break;
+    case DW_CFA_restore_extended:
+    case DW_CFA_undefined:
+    case DW_CFA_same_value:
+    case DW_CFA_def_cfa_register:
+    case DW_CFA_def_cfa_offset:
+    case DW_CFA_GNU_args_size:
+      // Operands: ULEB128
+      addInstruction(Opcode, Data.getULEB128(C));
+      break;
+    case DW_CFA_def_cfa_offset_sf:
+      // Operands: SLEB128
+      addInstruction(Opcode, Data.getSLEB128(C));
+      break;
+    case DW_CFA_LLVM_def_aspace_cfa:
+    case DW_CFA_LLVM_def_aspace_cfa_sf: {
+      auto RegNum = Data.getULEB128(C);
+      auto CfaOffset = Opcode == DW_CFA_LLVM_def_aspace_cfa
+                           ? Data.getULEB128(C)
+                           : Data.getSLEB128(C);
+      auto AddressSpace = Data.getULEB128(C);
+      addInstruction(Opcode, RegNum, CfaOffset, AddressSpace);
+      break;
+    }
+    case DW_CFA_offset_extended:
+    case DW_CFA_register:
+    case DW_CFA_def_cfa:
+    case DW_CFA_val_offset: {
+      // Operands: ULEB128, ULEB128
+      // Note: We can not embed getULEB128 directly into function
+      // argument list. getULEB128 changes Offset and order of evaluation
+      // for arguments is unspecified.
+      uint64_t op1 = Data.getULEB128(C);
+      uint64_t op2 = Data.getULEB128(C);
+      addInstruction(Opcode, op1, op2);
+      break;
+    }
+    case DW_CFA_offset_extended_sf:
+    case DW_CFA_def_cfa_sf:
+    case DW_CFA_val_offset_sf: {
+      // Operands: ULEB128, SLEB128
+      // Note: see comment for the previous case
+      uint64_t op1 = Data.getULEB128(C);
+      uint64_t op2 = (uint64_t)Data.getSLEB128(C);
+      addInstruction(Opcode, op1, op2);
+      break;
+    }
+    case DW_CFA_def_cfa_expression: {
+      uint64_t ExprLength = Data.getULEB128(C);
+      addInstruction(Opcode, 0);
+      StringRef Expression = Data.getBytes(C, ExprLength);
+
+      DataExtractor Extractor(Expression, Data.isLittleEndian(),
+                              Data.getAddressSize());
+      // Note. We do not pass the DWARF format to DWARFExpression, because
+      // DW_OP_call_ref, the only operation which depends on the format, is
+      // prohibited in call frame instructions, see sec. 6.4.2 in DWARFv5.
+      Instructions.back().Expression =
+          DWARFExpression(Extractor, Data.getAddressSize());
+      break;
+    }
+    case DW_CFA_expression:
+    case DW_CFA_val_expression: {
+      uint64_t RegNum = Data.getULEB128(C);
+      addInstruction(Opcode, RegNum, 0);
+
+      uint64_t BlockLength = Data.getULEB128(C);
+      StringRef Expression = Data.getBytes(C, BlockLength);
+      DataExtractor Extractor(Expression, Data.isLittleEndian(),
+                              Data.getAddressSize());
+      // Note. We do not pass the DWARF format to DWARFExpression, because
+      // DW_OP_call_ref, the only operation which depends on the format, is
+      // prohibited in call frame instructions, see sec. 6.4.2 in DWARFv5.
+      Instructions.back().Expression =
+          DWARFExpression(Extractor, Data.getAddressSize());
+      break;
+    }
     }
   }
 
+  *Offset = C.tell();
+  return C.takeError();
+}
+
+StringRef CFIProgram::callFrameString(unsigned Opcode) const {
+  return dwarf::CallFrameString(Opcode, Arch);
+}
+
+const char *CFIProgram::operandTypeString(CFIProgram::OperandType OT) {
+#define ENUM_TO_CSTR(e)                                                        \
+  case e:                                                                      \
+    return #e;
+  switch (OT) {
+    ENUM_TO_CSTR(OT_Unset);
+    ENUM_TO_CSTR(OT_None);
+    ENUM_TO_CSTR(OT_Address);
+    ENUM_TO_CSTR(OT_Offset);
+    ENUM_TO_CSTR(OT_FactoredCodeOffset);
+    ENUM_TO_CSTR(OT_SignedFactDataOffset);
+    ENUM_TO_CSTR(OT_UnsignedFactDataOffset);
+    ENUM_TO_CSTR(OT_Register);
+    ENUM_TO_CSTR(OT_AddressSpace);
+    ENUM_TO_CSTR(OT_Expression);
+  }
+  return "<unknown CFIProgram::OperandType>";
+}
+
+llvm::Expected<uint64_t>
+CFIProgram::Instruction::getOperandAsUnsigned(const CFIProgram &CFIP,
+                                              uint32_t OperandIdx) const {
+  if (OperandIdx >= MaxOperands)
+    return createStringError(errc::invalid_argument,
+                             "operand index %" PRIu32 " is not valid",
+                             OperandIdx);
+  OperandType Type = CFIP.getOperandTypes()[Opcode][OperandIdx];
+  uint64_t Operand = Ops[OperandIdx];
+  switch (Type) {
+  case OT_Unset:
+  case OT_None:
+  case OT_Expression:
+    return createStringError(errc::invalid_argument,
+                             "op[%" PRIu32 "] has type %s which has no value",
+                             OperandIdx, CFIProgram::operandTypeString(Type));
+
+  case OT_Offset:
+  case OT_SignedFactDataOffset:
+  case OT_UnsignedFactDataOffset:
+    return createStringError(
+        errc::invalid_argument,
+        "op[%" PRIu32 "] has OperandType OT_Offset which produces a signed "
+        "result, call getOperandAsSigned instead",
+        OperandIdx);
+
+  case OT_Address:
+  case OT_Register:
+  case OT_AddressSpace:
+    return Operand;
+
+  case OT_FactoredCodeOffset: {
+    const uint64_t CodeAlignmentFactor = CFIP.codeAlign();
+    if (CodeAlignmentFactor == 0)
+      return createStringError(
+          errc::invalid_argument,
+          "op[%" PRIu32 "] has type OT_FactoredCodeOffset but code alignment "
+          "is zero",
+          OperandIdx);
+    return Operand * CodeAlignmentFactor;
+  }
+  }
+  llvm_unreachable("invalid operand type");
+}
+
+llvm::Expected<int64_t>
+CFIProgram::Instruction::getOperandAsSigned(const CFIProgram &CFIP,
+                                            uint32_t OperandIdx) const {
+  if (OperandIdx >= MaxOperands)
+    return createStringError(errc::invalid_argument,
+                             "operand index %" PRIu32 " is not valid",
+                             OperandIdx);
+  OperandType Type = CFIP.getOperandTypes()[Opcode][OperandIdx];
+  uint64_t Operand = Ops[OperandIdx];
+  switch (Type) {
+  case OT_Unset:
+  case OT_None:
+  case OT_Expression:
+    return createStringError(errc::invalid_argument,
+                             "op[%" PRIu32 "] has type %s which has no value",
+                             OperandIdx, CFIProgram::operandTypeString(Type));
+
+  case OT_Address:
+  case OT_Register:
+  case OT_AddressSpace:
+    return createStringError(
+        errc::invalid_argument,
+        "op[%" PRIu32 "] has OperandType %s which produces an unsigned result, "
+        "call getOperandAsUnsigned instead",
+        OperandIdx, CFIProgram::operandTypeString(Type));
+
+  case OT_Offset:
+    return (int64_t)Operand;
+
+  case OT_FactoredCodeOffset:
+  case OT_SignedFactDataOffset: {
+    const int64_t DataAlignmentFactor = CFIP.dataAlign();
+    if (DataAlignmentFactor == 0)
+      return createStringError(errc::invalid_argument,
+                               "op[%" PRIu32 "] has type %s but data "
+                               "alignment is zero",
+                               OperandIdx, CFIProgram::operandTypeString(Type));
+    return int64_t(Operand) * DataAlignmentFactor;
+  }
+
+  case OT_UnsignedFactDataOffset: {
+    const int64_t DataAlignmentFactor = CFIP.dataAlign();
+    if (DataAlignmentFactor == 0)
+      return createStringError(errc::invalid_argument,
+                               "op[%" PRIu32
+                               "] has type OT_UnsignedFactDataOffset but data "
+                               "alignment is zero",
+                               OperandIdx);
+    return Operand * DataAlignmentFactor;
+  }
+  }
+  llvm_unreachable("invalid operand type");
+}
+
+Error UnwindTable::parseRows(const CFIProgram &CFIP, UnwindRow &Row,
+                             const RegisterLocations *InitialLocs) {
+  std::vector<RegisterLocations> RegisterStates;
+  for (const CFIProgram::Instruction &Inst : CFIP) {
+    switch (Inst.Opcode) {
+    case dwarf::DW_CFA_set_loc: {
+      // The DW_CFA_set_loc instruction takes a single operand that
+      // represents a target address. The required action is to create a new
+      // table row using the specified address as the location. All other
+      // values in the new row are initially identical to the current row.
+      // The new location value is always greater than the current one. If
+      // the segment_size field of this FDE's CIE is non- zero, the initial
+      // location is preceded by a segment selector of the given length
+      llvm::Expected<uint64_t> NewAddress = Inst.getOperandAsUnsigned(CFIP, 0);
+      if (!NewAddress)
+        return NewAddress.takeError();
+      if (*NewAddress <= Row.getAddress())
+        return createStringError(
+            errc::invalid_argument,
+            "%s with adrress 0x%" PRIx64 " which must be greater than the "
+            "current row address 0x%" PRIx64,
+            CFIP.callFrameString(Inst.Opcode).str().c_str(), *NewAddress,
+            Row.getAddress());
+      Rows.push_back(Row);
+      Row.setAddress(*NewAddress);
+      break;
+    }
+
+    case dwarf::DW_CFA_advance_loc:
+    case dwarf::DW_CFA_advance_loc1:
+    case dwarf::DW_CFA_advance_loc2:
+    case dwarf::DW_CFA_advance_loc4: {
+      // The DW_CFA_advance instruction takes a single operand that
+      // represents a constant delta. The required action is to create a new
+      // table row with a location value that is computed by taking the
+      // current entry’s location value and adding the value of delta *
+      // code_alignment_factor. All other values in the new row are initially
+      // identical to the current row.
+      Rows.push_back(Row);
+      llvm::Expected<uint64_t> Offset = Inst.getOperandAsUnsigned(CFIP, 0);
+      if (!Offset)
+        return Offset.takeError();
+      Row.slideAddress(*Offset);
+      break;
+    }
+
+    case dwarf::DW_CFA_restore:
+    case dwarf::DW_CFA_restore_extended: {
+      // The DW_CFA_restore instruction takes a single operand (encoded with
+      // the opcode) that represents a register number. The required action
+      // is to change the rule for the indicated register to the rule
+      // assigned it by the initial_instructions in the CIE.
+      if (InitialLocs == nullptr)
+        return createStringError(
+            errc::invalid_argument, "%s encountered while parsing a CIE",
+            CFIP.callFrameString(Inst.Opcode).str().c_str());
+      llvm::Expected<uint64_t> RegNum = Inst.getOperandAsUnsigned(CFIP, 0);
+      if (!RegNum)
+        return RegNum.takeError();
+      if (Optional<UnwindLocation> O =
+              InitialLocs->getRegisterLocation(*RegNum))
+        Row.getRegisterLocations().setRegisterLocation(*RegNum, *O);
+      else
+        Row.getRegisterLocations().removeRegisterLocation(*RegNum);
+      break;
+    }
+
+    case dwarf::DW_CFA_offset:
+    case dwarf::DW_CFA_offset_extended:
+    case dwarf::DW_CFA_offset_extended_sf: {
+      llvm::Expected<uint64_t> RegNum = Inst.getOperandAsUnsigned(CFIP, 0);
+      if (!RegNum)
+        return RegNum.takeError();
+      llvm::Expected<int64_t> Offset = Inst.getOperandAsSigned(CFIP, 1);
+      if (!Offset)
+        return Offset.takeError();
+      Row.getRegisterLocations().setRegisterLocation(
+          *RegNum, UnwindLocation::createAtCFAPlusOffset(*Offset));
+      break;
+    }
+
+    case dwarf::DW_CFA_nop:
+      break;
+
+    case dwarf::DW_CFA_remember_state:
+      RegisterStates.push_back(Row.getRegisterLocations());
+      break;
+
+    case dwarf::DW_CFA_restore_state:
+      if (RegisterStates.empty())
+        return createStringError(errc::invalid_argument,
+                                 "DW_CFA_restore_state without a matching "
+                                 "previous DW_CFA_remember_state");
+      Row.getRegisterLocations() = RegisterStates.back();
+      RegisterStates.pop_back();
+      break;
+
+    case dwarf::DW_CFA_GNU_window_save:
+      switch (CFIP.triple()) {
+      case Triple::aarch64:
+      case Triple::aarch64_be:
+      case Triple::aarch64_32: {
+        // DW_CFA_GNU_window_save is used for different things on different
+        // architectures. For aarch64 it is known as
+        // DW_CFA_AARCH64_negate_ra_state. The action is to toggle the
+        // value of the return address state between 1 and 0. If there is
+        // no rule for the AARCH64_DWARF_PAUTH_RA_STATE register, then it
+        // should be initially set to 1.
+        constexpr uint32_t AArch64DWARFPAuthRaState = 34;
+        auto LRLoc = Row.getRegisterLocations().getRegisterLocation(
+            AArch64DWARFPAuthRaState);
+        if (LRLoc) {
+          if (LRLoc->getLocation() == UnwindLocation::Constant) {
+            // Toggle the constant value from 0 to 1 or 1 to 0.
+            LRLoc->setConstant(LRLoc->getConstant() ^ 1);
+          } else {
+            return createStringError(
+                errc::invalid_argument,
+                "%s encountered when existing rule for this register is not "
+                "a constant",
+                CFIP.callFrameString(Inst.Opcode).str().c_str());
+          }
+        } else {
+          Row.getRegisterLocations().setRegisterLocation(
+              AArch64DWARFPAuthRaState, UnwindLocation::createIsConstant(1));
+        }
+        break;
+      }
+
+      case Triple::sparc:
+      case Triple::sparcv9:
+      case Triple::sparcel:
+        for (uint32_t RegNum = 16; RegNum < 32; ++RegNum) {
+          Row.getRegisterLocations().setRegisterLocation(
+              RegNum, UnwindLocation::createAtCFAPlusOffset((RegNum - 16) * 8));
+        }
+        break;
+
+      default: {
+        return createStringError(
+            errc::not_supported,
+            "DW_CFA opcode %#x is not supported for architecture %s",
+            Inst.Opcode, Triple::getArchTypeName(CFIP.triple()).str().c_str());
+
+        break;
+      }
+      }
+      break;
+
+    case dwarf::DW_CFA_undefined: {
+      llvm::Expected<uint64_t> RegNum = Inst.getOperandAsUnsigned(CFIP, 0);
+      if (!RegNum)
+        return RegNum.takeError();
+      Row.getRegisterLocations().setRegisterLocation(
+          *RegNum, UnwindLocation::createUndefined());
+      break;
+    }
+
+    case dwarf::DW_CFA_same_value: {
+      llvm::Expected<uint64_t> RegNum = Inst.getOperandAsUnsigned(CFIP, 0);
+      if (!RegNum)
+        return RegNum.takeError();
+      Row.getRegisterLocations().setRegisterLocation(
+          *RegNum, UnwindLocation::createSame());
+      break;
+    }
+
+    case dwarf::DW_CFA_GNU_args_size:
+      break;
+
+    case dwarf::DW_CFA_register: {
+      llvm::Expected<uint64_t> RegNum = Inst.getOperandAsUnsigned(CFIP, 0);
+      if (!RegNum)
+        return RegNum.takeError();
+      llvm::Expected<uint64_t> NewRegNum = Inst.getOperandAsUnsigned(CFIP, 1);
+      if (!NewRegNum)
+        return NewRegNum.takeError();
+      Row.getRegisterLocations().setRegisterLocation(
+          *RegNum, UnwindLocation::createIsRegisterPlusOffset(*NewRegNum, 0));
+      break;
+    }
+
+    case dwarf::DW_CFA_val_offset:
+    case dwarf::DW_CFA_val_offset_sf: {
+      llvm::Expected<uint64_t> RegNum = Inst.getOperandAsUnsigned(CFIP, 0);
+      if (!RegNum)
+        return RegNum.takeError();
+      llvm::Expected<int64_t> Offset = Inst.getOperandAsSigned(CFIP, 1);
+      if (!Offset)
+        return Offset.takeError();
+      Row.getRegisterLocations().setRegisterLocation(
+          *RegNum, UnwindLocation::createIsCFAPlusOffset(*Offset));
+      break;
+    }
+
+    case dwarf::DW_CFA_expression: {
+      llvm::Expected<uint64_t> RegNum = Inst.getOperandAsUnsigned(CFIP, 0);
+      if (!RegNum)
+        return RegNum.takeError();
+      Row.getRegisterLocations().setRegisterLocation(
+          *RegNum, UnwindLocation::createAtDWARFExpression(*Inst.Expression));
+      break;
+    }
+
+    case dwarf::DW_CFA_val_expression: {
+      llvm::Expected<uint64_t> RegNum = Inst.getOperandAsUnsigned(CFIP, 0);
+      if (!RegNum)
+        return RegNum.takeError();
+      Row.getRegisterLocations().setRegisterLocation(
+          *RegNum, UnwindLocation::createIsDWARFExpression(*Inst.Expression));
+      break;
+    }
+
+    case dwarf::DW_CFA_def_cfa_register: {
+      llvm::Expected<uint64_t> RegNum = Inst.getOperandAsUnsigned(CFIP, 0);
+      if (!RegNum)
+        return RegNum.takeError();
+      if (Row.getCFAValue().getLocation() != UnwindLocation::RegPlusOffset)
+        Row.getCFAValue() =
+            UnwindLocation::createIsRegisterPlusOffset(*RegNum, 0);
+      else
+        Row.getCFAValue().setRegister(*RegNum);
+      break;
+    }
+
+    case dwarf::DW_CFA_def_cfa_offset:
+    case dwarf::DW_CFA_def_cfa_offset_sf: {
+      llvm::Expected<int64_t> Offset = Inst.getOperandAsSigned(CFIP, 0);
+      if (!Offset)
+        return Offset.takeError();
+      if (Row.getCFAValue().getLocation() != UnwindLocation::RegPlusOffset) {
+        return createStringError(
+            errc::invalid_argument,
+            "%s found when CFA rule was not RegPlusOffset",
+            CFIP.callFrameString(Inst.Opcode).str().c_str());
+      }
+      Row.getCFAValue().setOffset(*Offset);
+      break;
+    }
+
+    case dwarf::DW_CFA_def_cfa:
+    case dwarf::DW_CFA_def_cfa_sf: {
+      llvm::Expected<uint64_t> RegNum = Inst.getOperandAsUnsigned(CFIP, 0);
+      if (!RegNum)
+        return RegNum.takeError();
+      llvm::Expected<int64_t> Offset = Inst.getOperandAsSigned(CFIP, 1);
+      if (!Offset)
+        return Offset.takeError();
+      Row.getCFAValue() =
+          UnwindLocation::createIsRegisterPlusOffset(*RegNum, *Offset);
+      break;
+    }
+
+    case dwarf::DW_CFA_LLVM_def_aspace_cfa:
+    case dwarf::DW_CFA_LLVM_def_aspace_cfa_sf: {
+      llvm::Expected<uint64_t> RegNum = Inst.getOperandAsUnsigned(CFIP, 0);
+      if (!RegNum)
+        return RegNum.takeError();
+      llvm::Expected<int64_t> Offset = Inst.getOperandAsSigned(CFIP, 1);
+      if (!Offset)
+        return Offset.takeError();
+      llvm::Expected<uint32_t> CFAAddrSpace =
+          Inst.getOperandAsUnsigned(CFIP, 2);
+      if (!CFAAddrSpace)
+        return CFAAddrSpace.takeError();
+      Row.getCFAValue() = UnwindLocation::createIsRegisterPlusOffset(
+          *RegNum, *Offset, *CFAAddrSpace);
+      break;
+    }
+
+    case dwarf::DW_CFA_def_cfa_expression:
+      Row.getCFAValue() =
+          UnwindLocation::createIsDWARFExpression(*Inst.Expression);
+      break;
+    }
+  }
   return Error::success();
 }
 
-namespace {
-
-
-} // end anonymous namespace
-
-ArrayRef<CFIProgram::OperandType[2]> CFIProgram::getOperandTypes() {
-  static OperandType OpTypes[DW_CFA_restore+1][2];
+ArrayRef<CFIProgram::OperandType[CFIProgram::MaxOperands]>
+CFIProgram::getOperandTypes() {
+  static OperandType OpTypes[DW_CFA_restore + 1][MaxOperands];
   static bool Initialized = false;
   if (Initialized) {
-    return ArrayRef<OperandType[2]>(&OpTypes[0], DW_CFA_restore+1);
+    return ArrayRef<OperandType[MaxOperands]>(&OpTypes[0], DW_CFA_restore + 1);
   }
   Initialized = true;
 
-#define DECLARE_OP2(OP, OPTYPE0, OPTYPE1)       \
-  do {                                          \
-    OpTypes[OP][0] = OPTYPE0;                   \
-    OpTypes[OP][1] = OPTYPE1;                   \
+#define DECLARE_OP3(OP, OPTYPE0, OPTYPE1, OPTYPE2)                             \
+  do {                                                                         \
+    OpTypes[OP][0] = OPTYPE0;                                                  \
+    OpTypes[OP][1] = OPTYPE1;                                                  \
+    OpTypes[OP][2] = OPTYPE2;                                                  \
   } while (false)
+#define DECLARE_OP2(OP, OPTYPE0, OPTYPE1)                                      \
+  DECLARE_OP3(OP, OPTYPE0, OPTYPE1, OT_None)
 #define DECLARE_OP1(OP, OPTYPE0) DECLARE_OP2(OP, OPTYPE0, OT_None)
 #define DECLARE_OP0(OP) DECLARE_OP1(OP, OT_None)
 
@@ -185,6 +818,10 @@ ArrayRef<CFIProgram::OperandType[2]> CFIProgram::getOperandTypes() {
   DECLARE_OP2(DW_CFA_def_cfa, OT_Register, OT_Offset);
   DECLARE_OP2(DW_CFA_def_cfa_sf, OT_Register, OT_SignedFactDataOffset);
   DECLARE_OP1(DW_CFA_def_cfa_register, OT_Register);
+  DECLARE_OP3(DW_CFA_LLVM_def_aspace_cfa, OT_Register, OT_Offset,
+              OT_AddressSpace);
+  DECLARE_OP3(DW_CFA_LLVM_def_aspace_cfa_sf, OT_Register,
+              OT_SignedFactDataOffset, OT_AddressSpace);
   DECLARE_OP1(DW_CFA_def_cfa_offset, OT_Offset);
   DECLARE_OP1(DW_CFA_def_cfa_offset_sf, OT_SignedFactDataOffset);
   DECLARE_OP1(DW_CFA_def_cfa_expression, OT_Expression);
@@ -210,21 +847,22 @@ ArrayRef<CFIProgram::OperandType[2]> CFIProgram::getOperandTypes() {
 #undef DECLARE_OP1
 #undef DECLARE_OP2
 
-  return ArrayRef<OperandType[2]>(&OpTypes[0], DW_CFA_restore+1);
+  return ArrayRef<OperandType[MaxOperands]>(&OpTypes[0], DW_CFA_restore + 1);
 }
 
 /// Print \p Opcode's operand number \p OperandIdx which has value \p Operand.
-void CFIProgram::printOperand(raw_ostream &OS, const MCRegisterInfo *MRI,
-                              bool IsEH, const Instruction &Instr,
-                              unsigned OperandIdx, uint64_t Operand) const {
-  assert(OperandIdx < 2);
+void CFIProgram::printOperand(raw_ostream &OS, DIDumpOptions DumpOpts,
+                              const MCRegisterInfo *MRI, bool IsEH,
+                              const Instruction &Instr, unsigned OperandIdx,
+                              uint64_t Operand) const {
+  assert(OperandIdx < MaxOperands);
   uint8_t Opcode = Instr.Opcode;
   OperandType Type = getOperandTypes()[Opcode][OperandIdx];
 
   switch (Type) {
   case OT_Unset: {
     OS << " Unsupported " << (OperandIdx ? "second" : "first") << " operand to";
-    auto OpcodeName = CallFrameString(Opcode, Arch);
+    auto OpcodeName = callFrameString(Opcode);
     if (!OpcodeName.empty())
       OS << " " << OpcodeName;
     else
@@ -261,36 +899,63 @@ void CFIProgram::printOperand(raw_ostream &OS, const MCRegisterInfo *MRI,
       OS << format(" %" PRId64 "*data_alignment_factor" , Operand);
     break;
   case OT_Register:
-    OS << format(" reg%" PRId64, Operand);
+    OS << ' ';
+    printRegister(OS, MRI, IsEH, Operand);
+    break;
+  case OT_AddressSpace:
+    OS << format(" in addrspace%" PRId64, Operand);
     break;
   case OT_Expression:
     assert(Instr.Expression && "missing DWARFExpression object");
     OS << " ";
-    Instr.Expression->print(OS, MRI, nullptr, IsEH);
+    Instr.Expression->print(OS, DumpOpts, MRI, nullptr, IsEH);
     break;
   }
 }
 
-void CFIProgram::dump(raw_ostream &OS, const MCRegisterInfo *MRI, bool IsEH,
+void CFIProgram::dump(raw_ostream &OS, DIDumpOptions DumpOpts,
+                      const MCRegisterInfo *MRI, bool IsEH,
                       unsigned IndentLevel) const {
   for (const auto &Instr : Instructions) {
     uint8_t Opcode = Instr.Opcode;
-    if (Opcode & DWARF_CFI_PRIMARY_OPCODE_MASK)
-      Opcode &= DWARF_CFI_PRIMARY_OPCODE_MASK;
     OS.indent(2 * IndentLevel);
-    OS << CallFrameString(Opcode, Arch) << ":";
+    OS << callFrameString(Opcode) << ":";
     for (unsigned i = 0; i < Instr.Ops.size(); ++i)
-      printOperand(OS, MRI, IsEH, Instr, i, Instr.Ops[i]);
+      printOperand(OS, DumpOpts, MRI, IsEH, Instr, i, Instr.Ops[i]);
     OS << '\n';
   }
 }
 
-void CIE::dump(raw_ostream &OS, const MCRegisterInfo *MRI, bool IsEH) const {
-  OS << format("%08x %08x %08x CIE", (uint32_t)Offset, (uint32_t)Length,
-               DW_CIE_ID)
-     << "\n";
-  OS << format("  Version:               %d\n", Version);
-  OS << "  Augmentation:          \"" << Augmentation << "\"\n";
+// Returns the CIE identifier to be used by the requested format.
+// CIE ids for .debug_frame sections are defined in Section 7.24 of DWARFv5.
+// For CIE ID in .eh_frame sections see
+// https://refspecs.linuxfoundation.org/LSB_5.0.0/LSB-Core-generic/LSB-Core-generic/ehframechpt.html
+constexpr uint64_t getCIEId(bool IsDWARF64, bool IsEH) {
+  if (IsEH)
+    return 0;
+  if (IsDWARF64)
+    return DW64_CIE_ID;
+  return DW_CIE_ID;
+}
+
+void CIE::dump(raw_ostream &OS, DIDumpOptions DumpOpts,
+               const MCRegisterInfo *MRI, bool IsEH) const {
+  // A CIE with a zero length is a terminator entry in the .eh_frame section.
+  if (IsEH && Length == 0) {
+    OS << format("%08" PRIx64, Offset) << " ZERO terminator\n";
+    return;
+  }
+
+  OS << format("%08" PRIx64, Offset)
+     << format(" %0*" PRIx64, IsDWARF64 ? 16 : 8, Length)
+     << format(" %0*" PRIx64, IsDWARF64 && !IsEH ? 16 : 8,
+               getCIEId(IsDWARF64, IsEH))
+     << " CIE\n"
+     << "  Format:                " << FormatString(IsDWARF64) << "\n";
+  if (IsEH && Version != 1)
+    OS << "WARNING: unsupported CIE version\n";
+  OS << format("  Version:               %d\n", Version)
+     << "  Augmentation:          \"" << Augmentation << "\"\n";
   if (Version >= 4) {
     OS << format("  Address size:          %u\n", (uint32_t)AddressSize);
     OS << format("  Segment desc size:     %u\n",
@@ -308,19 +973,46 @@ void CIE::dump(raw_ostream &OS, const MCRegisterInfo *MRI, bool IsEH) const {
     OS << "\n";
   }
   OS << "\n";
-  CFIs.dump(OS, MRI, IsEH);
+  CFIs.dump(OS, DumpOpts, MRI, IsEH);
+  OS << "\n";
+
+  if (Expected<UnwindTable> RowsOrErr = UnwindTable::create(this))
+    RowsOrErr->dump(OS, MRI, IsEH, 1);
+  else {
+    DumpOpts.RecoverableErrorHandler(joinErrors(
+        createStringError(errc::invalid_argument,
+                          "decoding the CIE opcodes into rows failed"),
+        RowsOrErr.takeError()));
+  }
   OS << "\n";
 }
 
-void FDE::dump(raw_ostream &OS, const MCRegisterInfo *MRI, bool IsEH) const {
-  OS << format("%08x %08x %08x FDE ", (uint32_t)Offset, (uint32_t)Length,
-               (int32_t)LinkedCIEOffset);
-  OS << format("cie=%08x pc=%08x...%08x\n", (int32_t)LinkedCIEOffset,
-               (uint32_t)InitialLocation,
-               (uint32_t)InitialLocation + (uint32_t)AddressRange);
+void FDE::dump(raw_ostream &OS, DIDumpOptions DumpOpts,
+               const MCRegisterInfo *MRI, bool IsEH) const {
+  OS << format("%08" PRIx64, Offset)
+     << format(" %0*" PRIx64, IsDWARF64 ? 16 : 8, Length)
+     << format(" %0*" PRIx64, IsDWARF64 && !IsEH ? 16 : 8, CIEPointer)
+     << " FDE cie=";
+  if (LinkedCIE)
+    OS << format("%08" PRIx64, LinkedCIE->getOffset());
+  else
+    OS << "<invalid offset>";
+  OS << format(" pc=%08" PRIx64 "...%08" PRIx64 "\n", InitialLocation,
+               InitialLocation + AddressRange);
+  OS << "  Format:       " << FormatString(IsDWARF64) << "\n";
   if (LSDAAddress)
     OS << format("  LSDA Address: %016" PRIx64 "\n", *LSDAAddress);
-  CFIs.dump(OS, MRI, IsEH);
+  CFIs.dump(OS, DumpOpts, MRI, IsEH);
+  OS << "\n";
+
+  if (Expected<UnwindTable> RowsOrErr = UnwindTable::create(this))
+    RowsOrErr->dump(OS, MRI, IsEH, 1);
+  else {
+    DumpOpts.RecoverableErrorHandler(joinErrors(
+        createStringError(errc::invalid_argument,
+                          "decoding the FDE opcodes into rows failed"),
+        RowsOrErr.takeError()));
+  }
   OS << "\n";
 }
 
@@ -331,7 +1023,7 @@ DWARFDebugFrame::DWARFDebugFrame(Triple::ArchType Arch,
 DWARFDebugFrame::~DWARFDebugFrame() = default;
 
 static void LLVM_ATTRIBUTE_UNUSED dumpDataAux(DataExtractor Data,
-                                              uint32_t Offset, int Length) {
+                                              uint64_t Offset, int Length) {
   errs() << "DUMP: ";
   for (int i = 0; i < Length; ++i) {
     uint8_t c = Data.getU8(&Offset);
@@ -340,53 +1032,45 @@ static void LLVM_ATTRIBUTE_UNUSED dumpDataAux(DataExtractor Data,
   errs() << "\n";
 }
 
-// This is a workaround for old compilers which do not allow
-// noreturn attribute usage in lambdas. Once the support for those
-// compilers are phased out, we can remove this and return back to
-// a ReportError lambda: [StartOffset](const char *ErrorMsg).
-static void LLVM_ATTRIBUTE_NORETURN ReportError(uint32_t StartOffset,
-                                                const char *ErrorMsg) {
-  std::string Str;
-  raw_string_ostream OS(Str);
-  OS << format(ErrorMsg, StartOffset);
-  OS.flush();
-  report_fatal_error(Str);
-}
-
-void DWARFDebugFrame::parse(DWARFDataExtractor Data) {
-  uint32_t Offset = 0;
-  DenseMap<uint32_t, CIE *> CIEs;
+Error DWARFDebugFrame::parse(DWARFDataExtractor Data) {
+  uint64_t Offset = 0;
+  DenseMap<uint64_t, CIE *> CIEs;
 
   while (Data.isValidOffset(Offset)) {
-    uint32_t StartOffset = Offset;
+    uint64_t StartOffset = Offset;
 
-    bool IsDWARF64 = false;
-    uint64_t Length = Data.getU32(&Offset);
-    uint64_t Id;
+    uint64_t Length;
+    DwarfFormat Format;
+    std::tie(Length, Format) = Data.getInitialLength(&Offset);
+    bool IsDWARF64 = Format == DWARF64;
 
-    if (Length == UINT32_MAX) {
-      // DWARF-64 is distinguished by the first 32 bits of the initial length
-      // field being 0xffffffff. Then, the next 64 bits are the actual entry
-      // length.
-      IsDWARF64 = true;
-      Length = Data.getU64(&Offset);
+    // If the Length is 0, then this CIE is a terminator. We add it because some
+    // dumper tools might need it to print something special for such entries
+    // (e.g. llvm-objdump --dwarf=frames prints "ZERO terminator").
+    if (Length == 0) {
+      auto Cie = std::make_unique<CIE>(
+          IsDWARF64, StartOffset, 0, 0, SmallString<8>(), 0, 0, 0, 0, 0,
+          SmallString<8>(), 0, 0, None, None, Arch);
+      CIEs[StartOffset] = Cie.get();
+      Entries.push_back(std::move(Cie));
+      break;
     }
 
     // At this point, Offset points to the next field after Length.
     // Length is the structure size excluding itself. Compute an offset one
     // past the end of the structure (needed to know how many instructions to
     // read).
-    // TODO: For honest DWARF64 support, DataExtractor will have to treat
-    //       offset_ptr as uint64_t*
-    uint32_t StartStructureOffset = Offset;
-    uint32_t EndStructureOffset = Offset + static_cast<uint32_t>(Length);
+    uint64_t StartStructureOffset = Offset;
+    uint64_t EndStructureOffset = Offset + Length;
 
     // The Id field's size depends on the DWARF format
-    Id = Data.getUnsigned(&Offset, (IsDWARF64 && !IsEH) ? 8 : 4);
-    bool IsCIE =
-        ((IsDWARF64 && Id == DW64_CIE_ID) || Id == DW_CIE_ID || (IsEH && !Id));
+    Error Err = Error::success();
+    uint64_t Id = Data.getRelocatedValue((IsDWARF64 && !IsEH) ? 8 : 4, &Offset,
+                                         /*SectionIndex=*/nullptr, &Err);
+    if (Err)
+      return Err;
 
-    if (IsCIE) {
+    if (Id == getCIEId(IsDWARF64, IsEH)) {
       uint8_t Version = Data.getU8(&Offset);
       const char *Augmentation = Data.getCStr(&Offset);
       StringRef AugmentationString(Augmentation ? Augmentation : "");
@@ -407,66 +1091,72 @@ void DWARFDebugFrame::parse(DWARFDataExtractor Data) {
       Optional<uint32_t> PersonalityEncoding;
       if (IsEH) {
         Optional<uint64_t> AugmentationLength;
-        uint32_t StartAugmentationOffset;
-        uint32_t EndAugmentationOffset;
+        uint64_t StartAugmentationOffset;
+        uint64_t EndAugmentationOffset;
 
         // Walk the augmentation string to get all the augmentation data.
         for (unsigned i = 0, e = AugmentationString.size(); i != e; ++i) {
           switch (AugmentationString[i]) {
-            default:
-              ReportError(StartOffset,
-                          "Unknown augmentation character in entry at %lx");
-            case 'L':
-              LSDAPointerEncoding = Data.getU8(&Offset);
-              break;
-            case 'P': {
-              if (Personality)
-                ReportError(StartOffset,
-                            "Duplicate personality in entry at %lx");
-              PersonalityEncoding = Data.getU8(&Offset);
-              Personality = Data.getEncodedPointer(
-                  &Offset, *PersonalityEncoding,
-                  EHFrameAddress ? EHFrameAddress + Offset : 0);
-              break;
-            }
-            case 'R':
-              FDEPointerEncoding = Data.getU8(&Offset);
-              break;
-            case 'S':
-              // Current frame is a signal trampoline.
-              break;
-            case 'z':
-              if (i)
-                ReportError(StartOffset,
-                            "'z' must be the first character at %lx");
-              // Parse the augmentation length first.  We only parse it if
-              // the string contains a 'z'.
-              AugmentationLength = Data.getULEB128(&Offset);
-              StartAugmentationOffset = Offset;
-              EndAugmentationOffset = Offset +
-                static_cast<uint32_t>(*AugmentationLength);
-              break;
-            case 'B':
-              // B-Key is used for signing functions associated with this
-              // augmentation string
-              break;
+          default:
+            return createStringError(
+                errc::invalid_argument,
+                "unknown augmentation character in entry at 0x%" PRIx64,
+                StartOffset);
+          case 'L':
+            LSDAPointerEncoding = Data.getU8(&Offset);
+            break;
+          case 'P': {
+            if (Personality)
+              return createStringError(
+                  errc::invalid_argument,
+                  "duplicate personality in entry at 0x%" PRIx64, StartOffset);
+            PersonalityEncoding = Data.getU8(&Offset);
+            Personality = Data.getEncodedPointer(
+                &Offset, *PersonalityEncoding,
+                EHFrameAddress ? EHFrameAddress + Offset : 0);
+            break;
+          }
+          case 'R':
+            FDEPointerEncoding = Data.getU8(&Offset);
+            break;
+          case 'S':
+            // Current frame is a signal trampoline.
+            break;
+          case 'z':
+            if (i)
+              return createStringError(
+                  errc::invalid_argument,
+                  "'z' must be the first character at 0x%" PRIx64, StartOffset);
+            // Parse the augmentation length first.  We only parse it if
+            // the string contains a 'z'.
+            AugmentationLength = Data.getULEB128(&Offset);
+            StartAugmentationOffset = Offset;
+            EndAugmentationOffset = Offset + *AugmentationLength;
+            break;
+          case 'B':
+            // B-Key is used for signing functions associated with this
+            // augmentation string
+            break;
           }
         }
 
         if (AugmentationLength.hasValue()) {
           if (Offset != EndAugmentationOffset)
-            ReportError(StartOffset, "Parsing augmentation data at %lx failed");
-
+            return createStringError(errc::invalid_argument,
+                                     "parsing augmentation data at 0x%" PRIx64
+                                     " failed",
+                                     StartOffset);
           AugmentationData = Data.getData().slice(StartAugmentationOffset,
                                                   EndAugmentationOffset);
         }
       }
 
-      auto Cie = llvm::make_unique<CIE>(
-          StartOffset, Length, Version, AugmentationString, AddressSize,
-          SegmentDescriptorSize, CodeAlignmentFactor, DataAlignmentFactor,
-          ReturnAddressRegister, AugmentationData, FDEPointerEncoding,
-          LSDAPointerEncoding, Personality, PersonalityEncoding, Arch);
+      auto Cie = std::make_unique<CIE>(
+          IsDWARF64, StartOffset, Length, Version, AugmentationString,
+          AddressSize, SegmentDescriptorSize, CodeAlignmentFactor,
+          DataAlignmentFactor, ReturnAddressRegister, AugmentationData,
+          FDEPointerEncoding, LSDAPointerEncoding, Personality,
+          PersonalityEncoding, Arch);
       CIEs[StartOffset] = Cie.get();
       Entries.emplace_back(std::move(Cie));
     } else {
@@ -480,12 +1170,13 @@ void DWARFDebugFrame::parse(DWARFDataExtractor Data) {
       if (IsEH) {
         // The address size is encoded in the CIE we reference.
         if (!Cie)
-          ReportError(StartOffset,
-                      "Parsing FDE data at %lx failed due to missing CIE");
-
-        if (auto Val = Data.getEncodedPointer(
-                &Offset, Cie->getFDEPointerEncoding(),
-                EHFrameAddress ? EHFrameAddress + Offset : 0)) {
+          return createStringError(errc::invalid_argument,
+                                   "parsing FDE data at 0x%" PRIx64
+                                   " failed due to missing CIE",
+                                   StartOffset);
+        if (auto Val =
+                Data.getEncodedPointer(&Offset, Cie->getFDEPointerEncoding(),
+                                       EHFrameAddress + Offset)) {
           InitialLocation = *Val;
         }
         if (auto Val = Data.getEncodedPointer(
@@ -498,8 +1189,7 @@ void DWARFDebugFrame::parse(DWARFDataExtractor Data) {
           // Parse the augmentation length and data for this FDE.
           uint64_t AugmentationLength = Data.getULEB128(&Offset);
 
-          uint32_t EndAugmentationOffset =
-            Offset + static_cast<uint32_t>(AugmentationLength);
+          uint64_t EndAugmentationOffset = Offset + AugmentationLength;
 
           // Decode the LSDA if the CIE augmentation string said we should.
           if (Cie->getLSDAPointerEncoding() != DW_EH_PE_omit) {
@@ -509,26 +1199,32 @@ void DWARFDebugFrame::parse(DWARFDataExtractor Data) {
           }
 
           if (Offset != EndAugmentationOffset)
-            ReportError(StartOffset, "Parsing augmentation data at %lx failed");
+            return createStringError(errc::invalid_argument,
+                                     "parsing augmentation data at 0x%" PRIx64
+                                     " failed",
+                                     StartOffset);
         }
       } else {
-        InitialLocation = Data.getAddress(&Offset);
-        AddressRange = Data.getAddress(&Offset);
+        InitialLocation = Data.getRelocatedAddress(&Offset);
+        AddressRange = Data.getRelocatedAddress(&Offset);
       }
 
-      Entries.emplace_back(new FDE(StartOffset, Length, CIEPointer,
-                                   InitialLocation, AddressRange,
-                                   Cie, LSDAAddress, Arch));
+      Entries.emplace_back(new FDE(IsDWARF64, StartOffset, Length, CIEPointer,
+                                   InitialLocation, AddressRange, Cie,
+                                   LSDAAddress, Arch));
     }
 
     if (Error E =
-            Entries.back()->cfis().parse(Data, &Offset, EndStructureOffset)) {
-      report_fatal_error(toString(std::move(E)));
-    }
+            Entries.back()->cfis().parse(Data, &Offset, EndStructureOffset))
+      return E;
 
     if (Offset != EndStructureOffset)
-      ReportError(StartOffset, "Parsing entry instructions at %lx failed");
+      return createStringError(
+          errc::invalid_argument,
+          "parsing entry instructions at 0x%" PRIx64 " failed", StartOffset);
   }
+
+  return Error::success();
 }
 
 FrameEntry *DWARFDebugFrame::getEntryAtOffset(uint64_t Offset) const {
@@ -540,15 +1236,16 @@ FrameEntry *DWARFDebugFrame::getEntryAtOffset(uint64_t Offset) const {
   return nullptr;
 }
 
-void DWARFDebugFrame::dump(raw_ostream &OS, const MCRegisterInfo *MRI,
+void DWARFDebugFrame::dump(raw_ostream &OS, DIDumpOptions DumpOpts,
+                           const MCRegisterInfo *MRI,
                            Optional<uint64_t> Offset) const {
   if (Offset) {
     if (auto *Entry = getEntryAtOffset(*Offset))
-      Entry->dump(OS, MRI, IsEH);
+      Entry->dump(OS, DumpOpts, MRI, IsEH);
     return;
   }
 
   OS << "\n";
   for (const auto &Entry : Entries)
-    Entry->dump(OS, MRI, IsEH);
+    Entry->dump(OS, DumpOpts, MRI, IsEH);
 }

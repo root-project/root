@@ -117,13 +117,13 @@ HLFactory::HLFactory():
 /// destructor
 
 HLFactory::~HLFactory(){
-    if (fComboSigBkgPdf!=NULL)
+    if (fComboSigBkgPdf!=nullptr)
         delete fComboSigBkgPdf;
-    if (fComboBkgPdf!=NULL)
+    if (fComboBkgPdf!=nullptr)
         delete fComboBkgPdf;
-    if (fComboDataset!=NULL)
+    if (fComboDataset!=nullptr)
         delete fComboDataset;
-    if (fComboCat!=NULL)
+    if (fComboCat!=nullptr)
         delete fComboCat;
 
     if (fOwnWs)
@@ -149,7 +149,7 @@ int HLFactory::AddChannel(const char* label,
         }
 
     if (SigBkgPdfName!=0){
-        if (fWs->pdf(SigBkgPdfName)==NULL){
+        if (fWs->pdf(SigBkgPdfName)==nullptr){
             std::cerr << "Pdf " << SigBkgPdfName << " not found in workspace!\n";
             return -1;
             }
@@ -158,7 +158,7 @@ int HLFactory::AddChannel(const char* label,
         }
 
     if (BkgPdfName!=0){
-        if (fWs->pdf(BkgPdfName)==NULL){
+        if (fWs->pdf(BkgPdfName)==nullptr){
             std::cerr << "Pdf " << BkgPdfName << " not found in workspace!\n";
             return -1;
             }
@@ -167,7 +167,7 @@ int HLFactory::AddChannel(const char* label,
         }
 
     if (DatasetName!=0){
-        if (fWs->data(DatasetName)==NULL){
+        if (fWs->data(DatasetName)==nullptr){
             std::cerr << "Dataset " << DatasetName << " not found in workspace!\n";
             return -1;
             }
@@ -191,11 +191,11 @@ RooAbsPdf* HLFactory::GetTotSigBkgPdf(){
     if (fSigBkgPdfNames.GetSize()==0)
         return 0;
 
-    if (fComboSigBkgPdf!=NULL)
+    if (fComboSigBkgPdf!=nullptr)
         return fComboSigBkgPdf;
 
     if (!fNamesListsConsistent())
-        return NULL;
+        return nullptr;
 
     if (fSigBkgPdfNames.GetSize()==1){
         TString name(((TObjString*)fSigBkgPdfNames.At(0))->String());
@@ -208,14 +208,9 @@ RooAbsPdf* HLFactory::GetTotSigBkgPdf(){
 
     RooArgList pdfs("pdfs");
 
-    TIterator* it=fSigBkgPdfNames.MakeIterator();
-    TObjString* ostring;
-    TObject* obj;
-    while ((obj = it->Next())){
-        ostring=(TObjString*) obj;
+    for(auto * ostring : static_range_cast<TObjString*>(fSigBkgPdfNames)) {
         pdfs.add( *(fWs->pdf(ostring->String())) );
-        }
-    delete it;
+    }
 
     TString name(GetName());
     name+="_sigbkg";
@@ -235,18 +230,18 @@ RooAbsPdf* HLFactory::GetTotSigBkgPdf(){
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the combination of the background only channels.
-/// If no background channel is specified a NULL pointer is returned.
+/// If no background channel is specified a nullptr pointer is returned.
 /// The factory owns the object.
 
 RooAbsPdf* HLFactory::GetTotBkgPdf(){
     if (fBkgPdfNames.GetSize()==0)
         return 0;
 
-    if (fComboBkgPdf!=NULL)
+    if (fComboBkgPdf!=nullptr)
         return fComboBkgPdf;
 
     if (!fNamesListsConsistent())
-        return NULL;
+        return nullptr;
 
     if (fBkgPdfNames.GetSize()==1){
         fComboBkgPdf=fWs->pdf(((TObjString*)fBkgPdfNames.First())->String());
@@ -258,13 +253,9 @@ RooAbsPdf* HLFactory::GetTotBkgPdf(){
 
     RooArgList pdfs("pdfs");
 
-    TIter it = fBkgPdfNames.MakeIterator();
-    TObjString* ostring;
-    TObject* obj;
-    while ((obj = it.Next())){
-        ostring=(TObjString*) obj;
+    for(auto * ostring : static_range_cast<TObjString*>(fBkgPdfNames)) {
         pdfs.add( *(fWs->pdf(ostring->String())) );
-        }
+    }
 
     TString name(GetName());
     name+="_bkg";
@@ -284,18 +275,18 @@ RooAbsPdf* HLFactory::GetTotBkgPdf(){
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the combination of the datasets.
-/// If no dataset is specified a NULL pointer is returned.
+/// If no dataset is specified a nullptr pointer is returned.
 /// The factory owns the object.
 
 RooDataSet* HLFactory::GetTotDataSet(){
     if (fDatasetsNames.GetSize()==0)
         return 0;
 
-    if (fComboDataset!=NULL)
+    if (fComboDataset!=nullptr)
         return fComboDataset;
 
     if (!fNamesListsConsistent())
-        return NULL;
+        return nullptr;
 
     if (fDatasetsNames.GetSize()==1){
         fComboDataset=(RooDataSet*)fWs->data(((TObjString*)fDatasetsNames.First())->String());
@@ -306,23 +297,23 @@ RooDataSet* HLFactory::GetTotDataSet(){
         fCreateCategory();
 
 
-    TIterator* it = fDatasetsNames.MakeIterator();
+    auto it = fDatasetsNames.begin();
     TObjString* ostring;
-    TObject* obj = it->Next();
-    ostring = (TObjString*) obj;
+    ostring = static_cast<TObjString*>(*it);
+    ++it;
     fComboDataset = (RooDataSet*) fWs->data(ostring->String()) ;
-    if (!fComboDataset) return NULL;
+    if (!fComboDataset) return nullptr;
     fComboDataset->Print();
     TString dataname(GetName());
     fComboDataset = new RooDataSet(*fComboDataset,dataname+"_TotData");
     int catindex=0;
     fComboCat->setIndex(catindex);
     fComboDataset->addColumn(*fComboCat);
-    while ((obj = it->Next())){
-        ostring=(TObjString*) obj;
+    for(; it != fDatasetsNames.end() ; ++it) {
+        ostring = static_cast<TObjString*>(*it);
         catindex++;
         RooDataSet * data = (RooDataSet*)fWs->data(ostring->String());
-        if (!data) return NULL;
+        if (!data) return nullptr;
         RooDataSet* dummy = new RooDataSet(*data,"");
         fComboCat->setIndex(catindex);
         fComboCat->Print();
@@ -331,7 +322,6 @@ RooDataSet* HLFactory::GetTotDataSet(){
         delete dummy;
     }
 
-    delete it;
     return fComboDataset;
 
 }
@@ -341,11 +331,11 @@ RooDataSet* HLFactory::GetTotDataSet(){
 /// The factory owns the object.
 
 RooCategory* HLFactory::GetTotCategory(){
-    if (fComboCat!=NULL)
+    if (fComboCat!=nullptr)
         return fComboCat;
 
     if (!fNamesListsConsistent())
-        return NULL;
+        return nullptr;
 
     if (!fCombinationDone)
         fCreateCategory();
@@ -423,15 +413,13 @@ int HLFactory::fReadFile(const char*fileName, bool is_included){
     // the comments.
     TString ifileContentStripped("");
 
-    TObjArray* lines_array = ifileContent.Tokenize("\n");
-    TIterator* lineIt=lines_array->MakeIterator();
+    std::unique_ptr<TObjArray> lines_array{ifileContent.Tokenize("\n")};
 
     bool in_comment=false;
-    TString line;
-    TObject* line_o;
 
-    while((line_o=(*lineIt)())){ // Start iteration on lines array
-        line = (static_cast<TObjString*>(line_o))->GetString();
+    // Start iteration on lines array
+    for(TObject * line_o : *lines_array) {
+        TString line = (static_cast<TObjString*>(line_o))->GetString();
 
         // Are we in a multiline comment?
         if (in_comment)
@@ -460,21 +448,17 @@ int HLFactory::fReadFile(const char*fileName, bool is_included){
         ifileContentStripped+=line+"\n";
         }
 
-    delete lines_array;
-    delete lineIt;
-
     // Now proceed with the parsing of the stripped file
 
-    lines_array = ifileContentStripped.Tokenize(";");
-    lineIt=lines_array->MakeIterator();
+    lines_array.reset(ifileContentStripped.Tokenize(";"));
     in_comment=false;
 
     const int nNeutrals=2;
     TString neutrals[nNeutrals]={"\t"," "};
 
-    while((line_o=(*lineIt)())){
+    for(TObject * line_o : *lines_array) {
 
-        line = (static_cast<TObjString*>(line_o))->GetString();
+        TString line = (static_cast<TObjString*>(line_o))->GetString();
 
         // Strip spaces at the beginning and the end of the line
         line.Strip(TString::kBoth,' ');
@@ -519,9 +503,6 @@ int HLFactory::fReadFile(const char*fileName, bool is_included){
         fParseLine(line);
         }
 
-    delete lineIt;
-    delete lines_array;
-
     return 0;
 }
 
@@ -542,11 +523,7 @@ void HLFactory::fCreateCategory(){
 
     fComboCat=new RooCategory(name,title);
 
-    TIter it = fLabelsNames.MakeIterator();
-    TObjString* ostring;
-    TObject* obj;
-    while ((obj = it.Next())){
-        ostring=(TObjString*) obj;
+    for (auto * ostring : static_range_cast<TObjString*>(fLabelsNames)) {
         fComboCat->defineType(ostring->String());
         }
 
@@ -623,7 +600,7 @@ int HLFactory::fParseLine(TString& line){
         TString ws_name("");
         TString rootfile_name (static_cast<TObjString*>(descr_array->At(0))->GetString());
 
-        TFile* ifile=TFile::Open(rootfile_name);
+        std::unique_ptr<TFile> ifile{TFile::Open(rootfile_name)};
         if (ifile==0)
             return 1;
 
@@ -638,7 +615,6 @@ int HLFactory::fParseLine(TString& line){
           TObject* the_obj=ifile->Get(obj_name);
           fWs->import(*the_obj,o_name);
           }
-        delete ifile;
         return 0;
         } // end of import block
 

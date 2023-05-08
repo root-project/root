@@ -45,6 +45,9 @@ public:
   void FileChanged(SourceLocation Loc, FileChangeReason Reason,
                    SrcMgr::CharacteristicKind FileType,
                    FileID PrevFID) override;
+
+  void FileSkipped(const FileEntryRef &SkippedFile, const Token &FilenameTok,
+                   SrcMgr::CharacteristicKind FileType) override;
 };
 }
 
@@ -100,7 +103,8 @@ void clang::AttachHeaderIncludeGen(Preprocessor &PP,
   if (!OutputPath.empty()) {
     std::error_code EC;
     llvm::raw_fd_ostream *OS = new llvm::raw_fd_ostream(
-        OutputPath.str(), EC, llvm::sys::fs::F_Append | llvm::sys::fs::F_Text);
+        OutputPath.str(), EC,
+        llvm::sys::fs::OF_Append | llvm::sys::fs::OF_TextWithCRLF);
     if (EC) {
       PP.getDiagnostics().Report(clang::diag::warn_fe_cc_print_header_failure)
           << EC.message();
@@ -118,16 +122,16 @@ void clang::AttachHeaderIncludeGen(Preprocessor &PP,
   // as sanitizer blacklists. It's only important for cl.exe compatibility,
   // the GNU way to generate rules is -M / -MM / -MD / -MMD.
   for (const auto &Header : DepOpts.ExtraDeps)
-    PrintHeaderInfo(OutputFile, Header, ShowDepth, 2, MSStyle);
-  PP.addPPCallbacks(llvm::make_unique<HeaderIncludesCallback>(
+    PrintHeaderInfo(OutputFile, Header.first, ShowDepth, 2, MSStyle);
+  PP.addPPCallbacks(std::make_unique<HeaderIncludesCallback>(
       &PP, ShowAllHeaders, OutputFile, DepOpts, OwnsOutputFile, ShowDepth,
       MSStyle));
 }
 
 void HeaderIncludesCallback::FileChanged(SourceLocation Loc,
                                          FileChangeReason Reason,
-                                       SrcMgr::CharacteristicKind NewFileType,
-                                       FileID PrevFID) {
+                                         SrcMgr::CharacteristicKind NewFileType,
+                                         FileID PrevFID) {
   // Unless we are exiting a #include, make sure to skip ahead to the line the
   // #include directive was at.
   PresumedLoc UserLoc = SM.getPresumedLoc(Loc);
@@ -166,6 +170,9 @@ void HeaderIncludesCallback::FileChanged(SourceLocation Loc,
   else if (!DepOpts.ShowIncludesPretendHeader.empty())
     ++IncludeDepth; // Pretend inclusion by ShowIncludesPretendHeader.
 
+  if (!DepOpts.IncludeSystemHeaders && isSystem(NewFileType))
+    ShowHeader = false;
+
   // Dump the header include information we are past the predefines buffer or
   // are showing all headers and this isn't the magic implicit <command line>
   // header.
@@ -176,4 +183,17 @@ void HeaderIncludesCallback::FileChanged(SourceLocation Loc,
     PrintHeaderInfo(OutputFile, UserLoc.getFilename(), ShowDepth, IncludeDepth,
                     MSStyle);
   }
+}
+
+void HeaderIncludesCallback::FileSkipped(const FileEntryRef &SkippedFile, const
+                                         Token &FilenameTok,
+                                         SrcMgr::CharacteristicKind FileType) {
+  if (!DepOpts.ShowSkippedHeaderIncludes)
+    return;
+
+  if (!DepOpts.IncludeSystemHeaders && isSystem(FileType))
+    return;
+
+  PrintHeaderInfo(OutputFile, SkippedFile.getName(), ShowDepth,
+                  CurrentIncludeDepth + 1, MSStyle);
 }

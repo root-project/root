@@ -24,7 +24,7 @@
 
 #include <ROOT/RCanvas.hxx>
 #include <ROOT/TObjectDrawable.hxx>
-#include <ROOT/REveGeomViewer.hxx>
+#include <ROOT/RGeomViewer.hxx>
 
 #include <QMessageBox>
 
@@ -243,7 +243,6 @@ void ExampleWidget::DrawGeometryInCanvas()
    canv->Clear();
 
    canv->GetListOfPrimitives()->Add(geom,"");
-
 
    // create a first PolyMarker3D
    TPolyMarker3D *pm = new TPolyMarker3D(21);

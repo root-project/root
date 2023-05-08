@@ -33,6 +33,7 @@ class TTree;
 class RooVectorDataStore;
 class Roo1DTable;
 class TIterator;
+struct TreeReadBuffer; /// A space to attach TBranches
 
 class RooAbsCategory : public RooAbsArg {
 public:
@@ -40,11 +41,11 @@ public:
   using value_type = int;
 
   // Constructors, assignment etc.
-  RooAbsCategory() { };
+  RooAbsCategory();
   RooAbsCategory(const char *name, const char *title);
-  RooAbsCategory(const RooAbsCategory& other, const char* name=0) ;
-  virtual ~RooAbsCategory();
-  
+  RooAbsCategory(const RooAbsCategory& other, const char* name=nullptr) ;
+  ~RooAbsCategory() override;
+
   // Value accessors
   virtual value_type getCurrentIndex() const ;
   virtual const char* getCurrentLabel() const ;
@@ -52,14 +53,14 @@ public:
   const std::map<std::string, value_type>::value_type& getOrdinal(unsigned int n) const;
   unsigned int getCurrentOrdinalNumber() const;
 
-  Bool_t operator==(value_type index) const ;
-  Bool_t operator!=(value_type index) {  return !operator==(index);}
-  Bool_t operator==(const char* label) const ;
-  Bool_t operator!=(const char* label) { return !operator==(label);}
-  virtual Bool_t operator==(const RooAbsArg& other) const ;
-  Bool_t         operator!=(const RooAbsArg& other) { return !operator==(other);}
-  virtual Bool_t isIdentical(const RooAbsArg& other, Bool_t assumeSameType=kFALSE) const;
-  
+  bool operator==(value_type index) const ;
+  bool operator!=(value_type index) {  return !operator==(index);}
+  bool operator==(const char* label) const ;
+  bool operator!=(const char* label) { return !operator==(label);}
+  bool operator==(const RooAbsArg& other) const override ;
+  bool         operator!=(const RooAbsArg& other) { return !operator==(other);}
+  bool isIdentical(const RooAbsArg& other, bool assumeSameType=false) const override;
+
   /// Check if a state with name `label` exists.
   bool hasLabel(const std::string& label) const {
     return stateNames().find(label) != stateNames().end();
@@ -73,23 +74,23 @@ public:
   value_type lookupIndex(const std::string& stateName) const;
 
 
-  Bool_t isSignType(Bool_t mustHaveZero=kFALSE) const ;
+  bool isSignType(bool mustHaveZero=false) const ;
 
   Roo1DTable *createTable(const char *label) const ;
 
   // I/O streaming interface
-  virtual Bool_t readFromStream(std::istream& is, Bool_t compact, Bool_t verbose=kFALSE) ;
-  virtual void writeToStream(std::ostream& os, Bool_t compact) const ;
+  bool readFromStream(std::istream& is, bool compact, bool verbose=false) override ;
+  void writeToStream(std::ostream& os, bool compact) const override ;
 
-  virtual void printValue(std::ostream& os) const ;
-  virtual void printMultiline(std::ostream& os, Int_t contents, Bool_t verbose=kFALSE, TString indent="") const ;
+  void printValue(std::ostream& os) const override ;
+  void printMultiline(std::ostream& os, Int_t contents, bool verbose=false, TString indent="") const override ;
 
-  virtual Bool_t isIntegrationSafeLValue(const RooArgSet* /*set*/) const { 
+  virtual bool isIntegrationSafeLValue(const RooArgSet* /*set*/) const {
     // Is this l-value object safe for use as integration observable
-    return kTRUE ; 
+    return true ;
   }
 
-  RooAbsArg *createFundamental(const char* newname=0) const;
+  RooAbsArg *createFundamental(const char* newname=nullptr) const override;
 
   /// Iterator for category state names. Points to pairs of index and name.
   std::map<std::string, value_type>::const_iterator begin() const {
@@ -103,8 +104,12 @@ public:
   std::size_t size() const {
     return stateNames().size();
   }
+  /// If there are no states defined
+  bool empty() const {
+    return stateNames().empty();
+  }
 
-  bool isCategory() const { return true; }
+  bool isCategory() const override { return true; }
 
   /// \name Legacy interface
   /// Previous versions of RooAbsCategory were based on RooCatType, a class containing a state and a label.
@@ -115,18 +120,18 @@ public:
   /// @{
   const RooCatType*
   R__SUGGEST_ALTERNATIVE("This interface is inefficient. Use lookupName()")
-  lookupType(value_type index, Bool_t printError=kFALSE) const;
+  lookupType(value_type index, bool printError=false) const;
   const RooCatType*
   R__SUGGEST_ALTERNATIVE("This interface is inefficient. Use lookupIndex()")
-  lookupType(const char* label, Bool_t printError=kFALSE) const;
+  lookupType(const char* label, bool printError=false) const;
   const RooCatType*
   R__SUGGEST_ALTERNATIVE("This interface is inefficient. Use lookupName() / lookupIndex()")
-  lookupType(const RooCatType& type, Bool_t printError=kFALSE) const;
+  lookupType(const RooCatType& type, bool printError=false) const;
   TIterator*
   R__SUGGEST_ALTERNATIVE("This interface is inefficient. Use begin(), end() or range-based for loops.")
   typeIterator() const;
-  /// Return number of types defined (in range named rangeName if rangeName!=0)
-  Int_t numTypes(const char* /*rangeName*/=0) const {
+  /// Return number of types defined (in range named rangeName if rangeName!=nullptr)
+  Int_t numTypes(const char* /*rangeName*/=nullptr) const {
     return stateNames().size();
   }
   /// Retrieve the current index. Use getCurrentIndex() for more clarity.
@@ -134,7 +139,7 @@ public:
   /// Retrieve current label. Use getCurrentLabel() for more clarity.
   const char* getLabel() const { return getCurrentLabel(); }
 protected:
-  virtual Bool_t
+  virtual bool
   R__SUGGEST_ALTERNATIVE("This interface is inefficient. Use hasIndex() or hasLabel().")
   isValid(const RooCatType& value) const ;
   /// \deprecated Use defineState(const std::string& label)
@@ -189,7 +194,7 @@ protected:
   void defineStateUnchecked(const std::string& label, value_type index);
   void clearTypes() ;
 
-  virtual bool isValid() const {
+  bool isValid() const override {
     return hasIndex(_currentIndex);
   }
 
@@ -201,28 +206,29 @@ protected:
   virtual void recomputeShape() = 0;
 
   friend class RooVectorDataStore ;
-  virtual void syncCache(const RooArgSet* set=0) ;
-  virtual void copyCache(const RooAbsArg* source, Bool_t valueOnly=kFALSE, Bool_t setValueDirty=kTRUE) ;
+  void syncCache(const RooArgSet* set=nullptr) override ;
+  void copyCache(const RooAbsArg* source, bool valueOnly=false, bool setValueDirty=true) override ;
   void setCachedValue(double value, bool notifyClients = true) final;
-  virtual void attachToTree(TTree& t, Int_t bufSize=32000) ;
-  virtual void attachToVStore(RooVectorDataStore& vstore) ;
-  virtual void setTreeBranchStatus(TTree& t, Bool_t active) ;
-  virtual void fillTreeBranch(TTree& t) ;
+  void attachToTree(TTree& t, Int_t bufSize=32000) override ;
+  void attachToVStore(RooVectorDataStore& vstore) override ;
+  void setTreeBranchStatus(TTree& t, bool active) override ;
+  void fillTreeBranch(TTree& t) override ;
 
   RooCatType* retrieveLegacyState(value_type index) const;
   value_type nextAvailableStateIndex() const;
 
 
-  mutable value_type _currentIndex{std::numeric_limits<int>::min()}; /// Current category state
-  std::map<std::string, value_type> _stateNames; /// Map state names to index numbers. Make sure state names are updated in recomputeShape().
-  std::vector<std::string> _insertionOrder; /// Keeps track in which order state numbers have been inserted. Make sure this is updated in recomputeShape().
-  mutable UChar_t _byteValue{0}; //! Transient cache for byte values from tree branches
-  mutable std::map<value_type, std::unique_ptr<RooCatType, std::function<void(RooCatType*)>> > _legacyStates; //! Map holding pointers to RooCatType instances. Only for legacy interface. Don't use if possible.
-  bool _treeVar{false}; /// Is this category attached to a tree?
+  mutable value_type _currentIndex{std::numeric_limits<int>::min()}; ///< Current category state
+  std::map<std::string, value_type> _stateNames;                     ///< Map state names to index numbers. Make sure state names are updated in recomputeShape().
+  std::vector<std::string> _insertionOrder;                          ///< Keeps track in which order state numbers have been inserted. Make sure this is updated in recomputeShape().
+  mutable std::map<value_type, std::unique_ptr<RooCatType, std::function<void(RooCatType*)>> > _legacyStates; ///<! Map holding pointers to RooCatType instances. Only for legacy interface. Don't use if possible.
 
   static const decltype(_stateNames)::value_type& invalidCategory();
 
-  ClassDef(RooAbsCategory, 3) // Abstract discrete variable
+private:
+  std::unique_ptr<TreeReadBuffer> _treeReadBuffer; //! A buffer for reading values from trees
+
+  ClassDefOverride(RooAbsCategory, 4) // Abstract discrete variable
 };
 
 #endif

@@ -14,7 +14,6 @@
 #ifndef LLVM_UTILS_TABLEGEN_CODEGENDAGPATTERNS_H
 #define LLVM_UTILS_TABLEGEN_CODEGENDAGPATTERNS_H
 
-#include "CodeGenHwModes.h"
 #include "CodeGenIntrinsics.h"
 #include "CodeGenTarget.h"
 #include "SDNodeProperties.h"
@@ -42,7 +41,6 @@ class SDNodeInfo;
 class TreePattern;
 class TreePatternNode;
 class CodeGenDAGPatterns;
-class ComplexPattern;
 
 /// Shared pointer for TreePatternNode.
 using TreePatternNodePtr = std::shared_ptr<TreePatternNode>;
@@ -190,10 +188,11 @@ private:
 
 struct TypeSetByHwMode : public InfoByHwMode<MachineValueTypeSet> {
   using SetType = MachineValueTypeSet;
-  std::vector<unsigned> AddrSpaces;
+  SmallVector<unsigned, 16> AddrSpaces;
 
   TypeSetByHwMode() = default;
   TypeSetByHwMode(const TypeSetByHwMode &VTS) = default;
+  TypeSetByHwMode &operator=(const TypeSetByHwMode &) = default;
   TypeSetByHwMode(MVT::SimpleValueType VT)
     : TypeSetByHwMode(ValueTypeByHwMode(VT)) {}
   TypeSetByHwMode(ValueTypeByHwMode VT)
@@ -201,9 +200,7 @@ struct TypeSetByHwMode : public InfoByHwMode<MachineValueTypeSet> {
   TypeSetByHwMode(ArrayRef<ValueTypeByHwMode> VTList);
 
   SetType &getOrCreate(unsigned Mode) {
-    if (hasMode(Mode))
-      return get(Mode);
-    return Map.insert({Mode,SetType()}).first->second;
+    return Map[Mode];
   }
 
   bool isValueTypeByHwMode(bool AllowEmpty) const;
@@ -429,15 +426,13 @@ class ScopedName {
   std::string Identifier;
 public:
   ScopedName(unsigned Scope, StringRef Identifier)
-    : Scope(Scope), Identifier(Identifier) {
+      : Scope(Scope), Identifier(std::string(Identifier)) {
     assert(Scope != 0 &&
            "Scope == 0 is used to indicate predicates without arguments");
   }
 
   unsigned getScope() const { return Scope; }
   const std::string &getIdentifier() const { return Identifier; }
-
-  std::string getFullName() const;
 
   bool operator==(const ScopedName &o) const;
   bool operator!=(const ScopedName &o) const;
@@ -594,6 +589,7 @@ public:
   Record *getScalarMemoryVT() const;
 
   ListInit *getAddressSpaces() const;
+  int64_t getMinAlignment() const;
 
   // If true, indicates that GlobalISel-based C++ code was supplied.
   bool hasGISelPredicateCode() const;
@@ -1051,85 +1047,43 @@ public:
   TreePatternNodePtr getResultPattern() const { return ResultPattern; }
 };
 
-/// This class represents a condition that has to be satisfied for a pattern
-/// to be tried. It is a generalization of a class "Pattern" from Target.td:
-/// in addition to the Target.td's predicates, this class can also represent
-/// conditions associated with HW modes. Both types will eventually become
-/// strings containing C++ code to be executed, the difference is in how
-/// these strings are generated.
-class Predicate {
-public:
-  Predicate(Record *R, bool C = true) : Def(R), IfCond(C), IsHwMode(false) {
-    assert(R->isSubClassOf("Predicate") &&
-           "Predicate objects should only be created for records derived"
-           "from Predicate class");
-  }
-  Predicate(StringRef FS, bool C = true) : Def(nullptr), Features(FS.str()),
-    IfCond(C), IsHwMode(true) {}
-
-  /// Return a string which contains the C++ condition code that will serve
-  /// as a predicate during instruction selection.
-  std::string getCondString() const {
-    // The string will excute in a subclass of SelectionDAGISel.
-    // Cast to std::string explicitly to avoid ambiguity with StringRef.
-    std::string C = IsHwMode
-        ? std::string("MF->getSubtarget().checkFeatures(\"" + Features + "\")")
-        : std::string(Def->getValueAsString("CondString"));
-    return IfCond ? C : "!("+C+')';
-  }
-  bool operator==(const Predicate &P) const {
-    return IfCond == P.IfCond && IsHwMode == P.IsHwMode && Def == P.Def;
-  }
-  bool operator<(const Predicate &P) const {
-    if (IsHwMode != P.IsHwMode)
-      return IsHwMode < P.IsHwMode;
-    assert(!Def == !P.Def && "Inconsistency between Def and IsHwMode");
-    if (IfCond != P.IfCond)
-      return IfCond < P.IfCond;
-    if (Def)
-      return LessRecord()(Def, P.Def);
-    return Features < P.Features;
-  }
-  Record *Def;            ///< Predicate definition from .td file, null for
-                          ///< HW modes.
-  std::string Features;   ///< Feature string for HW mode.
-  bool IfCond;            ///< The boolean value that the condition has to
-                          ///< evaluate to for this predicate to be true.
-  bool IsHwMode;          ///< Does this predicate correspond to a HW mode?
-};
-
 /// PatternToMatch - Used by CodeGenDAGPatterns to keep tab of patterns
 /// processed to produce isel.
 class PatternToMatch {
-public:
-  PatternToMatch(Record *srcrecord, std::vector<Predicate> preds,
-                 TreePatternNodePtr src, TreePatternNodePtr dst,
-                 std::vector<Record *> dstregs, int complexity,
-                 unsigned uid, unsigned setmode = 0)
-      : SrcRecord(srcrecord), SrcPattern(src), DstPattern(dst),
-        Predicates(std::move(preds)), Dstregs(std::move(dstregs)),
-        AddedComplexity(complexity), ID(uid), ForceMode(setmode) {}
-
   Record          *SrcRecord;   // Originating Record for the pattern.
+  ListInit        *Predicates;  // Top level predicate conditions to match.
   TreePatternNodePtr SrcPattern;      // Source pattern to match.
   TreePatternNodePtr DstPattern;      // Resulting pattern.
-  std::vector<Predicate> Predicates;  // Top level predicate conditions
-                                      // to match.
   std::vector<Record*> Dstregs; // Physical register defs being matched.
+  std::string      HwModeFeatures;
   int              AddedComplexity; // Add to matching pattern complexity.
   unsigned         ID;          // Unique ID for the record.
   unsigned         ForceMode;   // Force this mode in type inference when set.
 
+public:
+  PatternToMatch(Record *srcrecord, ListInit *preds, TreePatternNodePtr src,
+                 TreePatternNodePtr dst, std::vector<Record *> dstregs,
+                 int complexity, unsigned uid, unsigned setmode = 0,
+                 const Twine &hwmodefeatures = "")
+      : SrcRecord(srcrecord), Predicates(preds), SrcPattern(src),
+        DstPattern(dst), Dstregs(std::move(dstregs)),
+        HwModeFeatures(hwmodefeatures.str()), AddedComplexity(complexity),
+        ID(uid), ForceMode(setmode) {}
+
   Record          *getSrcRecord()  const { return SrcRecord; }
+  ListInit        *getPredicates() const { return Predicates; }
   TreePatternNode *getSrcPattern() const { return SrcPattern.get(); }
   TreePatternNodePtr getSrcPatternShared() const { return SrcPattern; }
   TreePatternNode *getDstPattern() const { return DstPattern.get(); }
   TreePatternNodePtr getDstPatternShared() const { return DstPattern; }
   const std::vector<Record*> &getDstRegs() const { return Dstregs; }
+  StringRef   getHwModeFeatures() const { return HwModeFeatures; }
   int         getAddedComplexity() const { return AddedComplexity; }
-  const std::vector<Predicate> &getPredicates() const { return Predicates; }
+  unsigned getID() const { return ID; }
+  unsigned getForceMode() const { return ForceMode; }
 
   std::string getPredicateCheck() const;
+  void getPredicateRecords(SmallVectorImpl<Record *> &PredicateRecs) const;
 
   /// Compute the complexity metric for the input pattern.  This roughly
   /// corresponds to the number of nodes that are covered.
@@ -1140,7 +1094,6 @@ class CodeGenDAGPatterns {
   RecordKeeper &Records;
   CodeGenTarget Target;
   CodeGenIntrinsicTable Intrinsics;
-  CodeGenIntrinsicTable TgtIntrinsics;
 
   std::map<Record*, SDNodeInfo, LessRecordByID> SDNodes;
   std::map<Record*, std::pair<Record*, std::string>, LessRecordByID>
@@ -1175,7 +1128,7 @@ public:
   const CodeGenTarget &getTargetInfo() const { return Target; }
   const TypeSetByHwMode &getLegalTypes() const { return LegalVTS; }
 
-  Record *getSDNodeNamed(const std::string &Name) const;
+  Record *getSDNodeNamed(StringRef Name) const;
 
   const SDNodeInfo &getSDNodeInfo(Record *R) const {
     auto F = SDNodes.find(R);
@@ -1191,12 +1144,6 @@ public:
     return F->second;
   }
 
-  typedef std::map<Record*, NodeXForm, LessRecordByID>::const_iterator
-          nx_iterator;
-  nx_iterator nx_begin() const { return SDNodeXForms.begin(); }
-  nx_iterator nx_end() const { return SDNodeXForms.end(); }
-
-
   const ComplexPattern &getComplexPattern(Record *R) const {
     auto F = ComplexPatterns.find(R);
     assert(F != ComplexPatterns.end() && "Unknown addressing mode!");
@@ -1206,24 +1153,18 @@ public:
   const CodeGenIntrinsic &getIntrinsic(Record *R) const {
     for (unsigned i = 0, e = Intrinsics.size(); i != e; ++i)
       if (Intrinsics[i].TheDef == R) return Intrinsics[i];
-    for (unsigned i = 0, e = TgtIntrinsics.size(); i != e; ++i)
-      if (TgtIntrinsics[i].TheDef == R) return TgtIntrinsics[i];
     llvm_unreachable("Unknown intrinsic!");
   }
 
   const CodeGenIntrinsic &getIntrinsicInfo(unsigned IID) const {
     if (IID-1 < Intrinsics.size())
       return Intrinsics[IID-1];
-    if (IID-Intrinsics.size()-1 < TgtIntrinsics.size())
-      return TgtIntrinsics[IID-Intrinsics.size()-1];
     llvm_unreachable("Bad intrinsic ID!");
   }
 
   unsigned getIntrinsicID(Record *R) const {
     for (unsigned i = 0, e = Intrinsics.size(); i != e; ++i)
       if (Intrinsics[i].TheDef == R) return i;
-    for (unsigned i = 0, e = TgtIntrinsics.size(); i != e; ++i)
-      if (TgtIntrinsics[i].TheDef == R) return i + Intrinsics.size();
     llvm_unreachable("Unknown intrinsic!");
   }
 
@@ -1280,8 +1221,6 @@ public:
     return intrinsic_wo_chain_sdnode;
   }
 
-  bool hasTargetIntrinsics() { return !TgtIntrinsics.empty(); }
-
   unsigned allocateScope() { return ++NumScopes; }
 
   bool operandHasDefault(Record *Op) const {
@@ -1301,8 +1240,6 @@ private:
   void InferInstructionFlags();
   void GenerateVariants();
   void VerifyInstructionFlags();
-
-  std::vector<Predicate> makePredList(ListInit *L);
 
   void ParseOnePattern(Record *TheDef,
                        TreePattern &Pattern, TreePattern &Result,

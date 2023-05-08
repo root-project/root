@@ -35,13 +35,10 @@ data = model.generate({x, y}, 10000)
 # -------------------------------------------------------------
 
 # Create and fill ROOT 2D histogram (20x20 bins) with contents of dataset
-# hh_data = data.createHistogram("hh_data",x, ROOT.RooFit.Binning(20), ROOT.RooFit.YVar(y, ROOT.RooFit.Binning(20)))
-# hh_data = data.createHistogram("x,y", 20, 20) # does not work, see
-# https://root.cern.ch/phpBB3/viewtopic.php?t=16648
-hh_data = ROOT.RooAbsData.createHistogram(data, "x,y", x, Binning=20, YVar=dict(var=y, Binning=20))
+hh_data = data.createHistogram("x,y", x, Binning=20, YVar=dict(var=y, Binning=20))
 
 # Create and fill ROOT 2D histogram (50x50 bins) with sampling of pdf
-# hh_pdf = model.createHistogram("hh_model",x, ROOT.RooFit.Binning(50), ROOT.RooFit.YVar(y, ROOT.RooFit.Binning(50)))
+# hh_pdf = model.createHistogram("hh_model", x, Binning=50, YVar=dict(var=y, Binning=50))
 hh_pdf = model.createHistogram("x,y", 50, 50)
 hh_pdf.SetLineColor(ROOT.kBlue)
 
@@ -60,9 +57,8 @@ data3 = model3.generate({x, y, z}, 10000)
 # -------------------------------------------------------------
 
 # Create and fill ROOT 2D histogram (8x8x8 bins) with contents of dataset
-# hh_data3 = data3.createHistogram("hh_data3", x, ROOT.RooFit.Binning(8), ROOT.RooFit.YVar(y, ROOT.RooFit.Binning(8)), ROOT.RooFit.ZVar(z, ROOT.RooFit.Binning(8)))
-hh_data3 = ROOT.RooAbsData.createHistogram(
-    data3,
+# hh_data3 = data3.createHistogram("hh_data3", x, Binning=8, YVar=(var=y, Binning=8), ZVar=(var=z, Binning=8))
+hh_data3 = data3.createHistogram(
     "hh_data3",
     x,
     Binning=8,

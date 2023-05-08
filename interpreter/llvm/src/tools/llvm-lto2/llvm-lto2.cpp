@@ -16,18 +16,24 @@
 //===----------------------------------------------------------------------===//
 
 #include "llvm/Bitcode/BitcodeReader.h"
-#include "llvm/CodeGen/CommandFlags.inc"
+#include "llvm/CodeGen/CommandFlags.h"
+#include "llvm/Config/llvm-config.h"
 #include "llvm/IR/DiagnosticPrinter.h"
 #include "llvm/LTO/Caching.h"
 #include "llvm/LTO/LTO.h"
+#include "llvm/Passes/PassPlugin.h"
+#include "llvm/Remarks/HotnessThresholdParser.h"
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Support/FileSystem.h"
 #include "llvm/Support/InitLLVM.h"
+#include "llvm/Support/PluginLoader.h"
 #include "llvm/Support/TargetSelect.h"
 #include "llvm/Support/Threading.h"
 
 using namespace llvm;
 using namespace lto;
+
+static codegen::RegisterCodeGenFlags CGF;
 
 static cl::opt<char>
     OptLevel("O", cl::desc("Optimization level. [-O0, -O1, -O2, or -O3] "
@@ -65,8 +71,11 @@ static cl::opt<bool>
                                        "import files for the "
                                        "distributed backend case"));
 
-static cl::opt<int> Threads("thinlto-threads",
-                            cl::init(llvm::heavyweight_hardware_concurrency()));
+// Default to using all available threads in the system, but using only one
+// thread per core (no SMT).
+// Use -thinlto-threads=all to use hardware_concurrency() instead, which means
+// to use all hardware threads or cores in the system.
+static cl::opt<std::string> Threads("thinlto-threads");
 
 static cl::list<std::string> SymbolResolutions(
     "r",
@@ -95,6 +104,14 @@ static cl::opt<bool> RemarksWithHotness(
     "pass-remarks-with-hotness",
     cl::desc("With PGO, include profile count in optimization remarks"),
     cl::Hidden);
+
+cl::opt<Optional<uint64_t>, false, remarks::HotnessThresholdParser>
+    RemarksHotnessThreshold(
+        "pass-remarks-hotness-threshold",
+        cl::desc("Minimum profile count required for an "
+                 "optimization remark to be output."
+                 " Use 'auto' to apply the threshold from profile summary."),
+        cl::value_desc("uint or 'auto'"), cl::init(0), cl::Hidden);
 
 static cl::opt<std::string>
     RemarksFilename("pass-remarks-output",
@@ -128,7 +145,7 @@ static cl::opt<bool>
 static cl::opt<bool>
     UseNewPM("use-new-pm",
              cl::desc("Run LTO passes using the new pass manager"),
-             cl::init(false), cl::Hidden);
+             cl::init(LLVM_ENABLE_NEW_PASS_MANAGER), cl::Hidden);
 
 static cl::opt<bool>
     DebugPassManager("debug-pass-manager", cl::init(false), cl::Hidden,
@@ -136,6 +153,15 @@ static cl::opt<bool>
 
 static cl::opt<std::string>
     StatsFile("stats-file", cl::desc("Filename to write statistics to"));
+
+static cl::list<std::string>
+    PassPlugins("load-pass-plugin",
+                cl::desc("Load passes from plugin library"));
+
+static cl::opt<bool> EnableFreestanding(
+    "lto-freestanding",
+    cl::desc("Enable Freestanding (disable builtins / TLI) during LTO"),
+    cl::init(false), cl::Hidden);
 
 static void check(Error E, std::string Msg) {
   if (!E)
@@ -203,7 +229,8 @@ static int run(int argc, char **argv) {
         return 1;
       }
     }
-    CommandLineResolutions[{FileName, SymbolName}].push_back(Res);
+    CommandLineResolutions[{std::string(FileName), std::string(SymbolName)}]
+        .push_back(Res);
   }
 
   std::vector<std::unique_ptr<MemoryBuffer>> MBs;
@@ -217,12 +244,12 @@ static int run(int argc, char **argv) {
       exit(1);
   };
 
-  Conf.CPU = MCPU;
-  Conf.Options = InitTargetOptionsFromCodeGenFlags();
-  Conf.MAttrs = MAttrs;
-  if (auto RM = getRelocModel())
-    Conf.RelocModel = *RM;
-  Conf.CodeModel = getCodeModel();
+  Conf.CPU = codegen::getMCPU();
+  Conf.Options = codegen::InitTargetOptionsFromCodeGenFlags(Triple());
+  Conf.MAttrs = codegen::getMAttrs();
+  if (auto RM = codegen::getExplicitRelocModel())
+    Conf.RelocModel = RM.getValue();
+  Conf.CodeModel = codegen::getExplicitCodeModel();
 
   Conf.DebugPassManager = DebugPassManager;
 
@@ -234,6 +261,7 @@ static int run(int argc, char **argv) {
   Conf.RemarksFilename = RemarksFilename;
   Conf.RemarksPasses = RemarksPasses;
   Conf.RemarksWithHotness = RemarksWithHotness;
+  Conf.RemarksHotnessThreshold = RemarksHotnessThreshold;
   Conf.RemarksFormat = RemarksFormat;
 
   Conf.SampleProfile = SamplePGOFile;
@@ -246,6 +274,9 @@ static int run(int argc, char **argv) {
 
   Conf.OptLevel = OptLevel - '0';
   Conf.UseNewPM = UseNewPM;
+  Conf.Freestanding = EnableFreestanding;
+  for (auto &PluginFN : PassPlugins)
+    Conf.PassPlugins.push_back(PluginFN);
   switch (CGOptLevel) {
   case '0':
     Conf.CGOptLevel = CodeGenOpt::None;
@@ -264,12 +295,14 @@ static int run(int argc, char **argv) {
     return 1;
   }
 
-  if (FileType.getNumOccurrences())
-    Conf.CGFileType = FileType;
+  if (auto FT = codegen::getExplicitFileType())
+    Conf.CGFileType = FT.getValue();
 
   Conf.OverrideTriple = OverrideTriple;
   Conf.DefaultTriple = DefaultTriple;
   Conf.StatsFile = StatsFile;
+  Conf.PTO.LoopVectorization = Conf.OptLevel > 1;
+  Conf.PTO.SLPVectorization = Conf.OptLevel > 1;
 
   ThinBackend Backend;
   if (ThinLTODistributedIndexes)
@@ -279,7 +312,8 @@ static int run(int argc, char **argv) {
                                             /* LinkedObjectsFile */ nullptr,
                                             /* OnWrite */ {});
   else
-    Backend = createInProcessThinBackend(Threads);
+    Backend = createInProcessThinBackend(
+        llvm::heavyweight_hardware_concurrency(Threads));
   LTO Lto(std::move(Conf), std::move(Backend));
 
   bool HasErrors = false;
@@ -290,7 +324,15 @@ static int run(int argc, char **argv) {
 
     std::vector<SymbolResolution> Res;
     for (const InputFile::Symbol &Sym : Input->symbols()) {
-      auto I = CommandLineResolutions.find({F, Sym.getName()});
+      auto I = CommandLineResolutions.find({F, std::string(Sym.getName())});
+      // If it isn't found, look for ".", which would have been added
+      // (followed by a hash) when the symbol was promoted during module
+      // splitting if it was defined in one part and used in the other.
+      // Try looking up the symbol name before the suffix.
+      if (I == CommandLineResolutions.end()) {
+        auto SplitName = Sym.getName().rsplit(".");
+        I = CommandLineResolutions.find({F, std::string(SplitName.first)});
+      }
       if (I == CommandLineResolutions.end()) {
         llvm::errs() << argv[0] << ": missing symbol resolution for " << F
                      << ',' << Sym.getName() << '\n';
@@ -325,9 +367,9 @@ static int run(int argc, char **argv) {
     std::string Path = OutputFilename + "." + utostr(Task);
 
     std::error_code EC;
-    auto S = llvm::make_unique<raw_fd_ostream>(Path, EC, sys::fs::F_None);
+    auto S = std::make_unique<raw_fd_ostream>(Path, EC, sys::fs::OF_None);
     check(EC, Path);
-    return llvm::make_unique<lto::NativeObjectStream>(std::move(S));
+    return std::make_unique<lto::NativeObjectStream>(std::move(S));
   };
 
   auto AddBuffer = [&](size_t Task, std::unique_ptr<MemoryBuffer> MB) {
@@ -344,8 +386,10 @@ static int run(int argc, char **argv) {
 
 static int dumpSymtab(int argc, char **argv) {
   for (StringRef F : make_range(argv + 1, argv + argc)) {
-    std::unique_ptr<MemoryBuffer> MB = check(MemoryBuffer::getFile(F), F);
-    BitcodeFileContents BFC = check(getBitcodeFileContents(*MB), F);
+    std::unique_ptr<MemoryBuffer> MB =
+        check(MemoryBuffer::getFile(F), std::string(F));
+    BitcodeFileContents BFC =
+        check(getBitcodeFileContents(*MB), std::string(F));
 
     if (BFC.Symtab.size() >= sizeof(irsymtab::storage::Header)) {
       auto *Hdr = reinterpret_cast<const irsymtab::storage::Header *>(
@@ -357,7 +401,7 @@ static int dumpSymtab(int argc, char **argv) {
     }
 
     std::unique_ptr<InputFile> Input =
-        check(InputFile::create(MB->getMemBufferRef()), F);
+        check(InputFile::create(MB->getMemBufferRef()), std::string(F));
 
     outs() << "target triple: " << Input->getTargetTriple() << '\n';
     Triple TT(Input->getTargetTriple());
@@ -374,7 +418,8 @@ static int dumpSymtab(int argc, char **argv) {
       outs() << '\n';
     }
 
-    std::vector<StringRef> ComdatTable = Input->getComdatTable();
+    ArrayRef<std::pair<StringRef, Comdat::SelectionKind>> ComdatTable =
+        Input->getComdatTable();
     for (const InputFile::Symbol &Sym : Input->symbols()) {
       switch (Sym.getVisibility()) {
       case GlobalValue::HiddenVisibility:
@@ -403,8 +448,27 @@ static int dumpSymtab(int argc, char **argv) {
                << Sym.getCommonAlignment() << '\n';
 
       int Comdat = Sym.getComdatIndex();
-      if (Comdat != -1)
-        outs() << "         comdat " << ComdatTable[Comdat] << '\n';
+      if (Comdat != -1) {
+        outs() << "         comdat ";
+        switch (ComdatTable[Comdat].second) {
+        case Comdat::Any:
+          outs() << "any";
+          break;
+        case Comdat::ExactMatch:
+          outs() << "exactmatch";
+          break;
+        case Comdat::Largest:
+          outs() << "largest";
+          break;
+        case Comdat::NoDeduplicate:
+          outs() << "nodeduplicate";
+          break;
+        case Comdat::SameSize:
+          outs() << "samesize";
+          break;
+        }
+        outs() << ' ' << ComdatTable[Comdat].first << '\n';
+      }
 
       if (TT.isOSBinFormatCOFF() && Sym.isWeak() && Sym.isIndirect())
         outs() << "         fallback " << Sym.getCOFFWeakExternalFallback() << '\n';

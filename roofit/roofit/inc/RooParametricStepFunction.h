@@ -26,33 +26,31 @@ class RooArgList ;
 class RooParametricStepFunction : public RooAbsPdf {
 public:
 
-   RooParametricStepFunction() : _nBins(0), _coefIter(0) {}
+   RooParametricStepFunction() {}
 
   RooParametricStepFunction(const char *name, const char *title,
       RooAbsReal& x, const RooArgList& coefList, TArrayD& limits, Int_t nBins=1) ;
 
-  RooParametricStepFunction(const RooParametricStepFunction& other, const char* name = 0);
-  virtual TObject* clone(const char* newname) const { return new RooParametricStepFunction(*this, newname); }
-  virtual ~RooParametricStepFunction() ;
+  RooParametricStepFunction(const RooParametricStepFunction& other, const char* name = nullptr);
+  TObject* clone(const char* newname) const override { return new RooParametricStepFunction(*this, newname); }
 
-  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const ;
-  Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const ;
-  Int_t getnBins();
-  Double_t* getLimits();
+  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=nullptr) const override ;
+  double analyticalIntegral(Int_t code, const char* rangeName=nullptr) const override ;
+  Int_t getnBins() const { return _nBins; }
+  double* getLimits() { return _limits.GetArray(); }
 
 protected:
 
-  Double_t lastBinValue() const ;
+  double lastBinValue() const ;
 
   RooRealProxy _x;
   RooListProxy _coefList ;
   TArrayD _limits;
-  Int_t _nBins ;
-  TIterator* _coefIter ;  //! do not persist
+  Int_t _nBins = 0;
 
-  Double_t evaluate() const;
+  double evaluate() const override;
 
-  ClassDef(RooParametricStepFunction,1) // Parametric Step Function Pdf
+  ClassDefOverride(RooParametricStepFunction,1) // Parametric Step Function Pdf
 };
 
 #endif

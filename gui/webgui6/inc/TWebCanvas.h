@@ -23,11 +23,13 @@
 #include <string>
 #include <queue>
 #include <functional>
+#include <map>
 
 class TPad;
 class TPadWebSnapshot;
 class TWebPS;
 class TObjLink;
+class TExec;
 
 class TWebCanvas : public TCanvasImp {
 
@@ -51,18 +53,33 @@ protected:
 
    struct WebConn {
       unsigned fConnId{0};             ///<! connection id
+      Long64_t fCheckedVersion{0};     ///<! canvas version checked before sending
       Long64_t fSendVersion{0};        ///<! canvas version send to the client
       Long64_t fDrawVersion{0};        ///<! canvas version drawn (confirmed) by client
+      UInt_t fLastSendHash{0};         ///<! hash of last send draw message, avoid looping
       std::queue<std::string> fSend;   ///<! send queue, processed after sending draw data
       WebConn(unsigned id) : fConnId(id) {}
+      void reset()
+      {
+         fCheckedVersion = fSendVersion = fDrawVersion = 0;
+         fLastSendHash = 0;
+      }
+   };
+
+   struct PadStatus {
+      Long64_t fVersion{0};    ///<! last pad version
+      bool _detected{false};   ///<! if pad was detected during last scan
+      bool _modified{false};   ///<! if pad was modified during last scan
+      bool _has_specials{false}; ///<! are there any special objects with painting
    };
 
    std::vector<WebConn> fWebConn;  ///<! connections
 
+   std::map<TPad*, PadStatus> fPadsStatus; ///<! map of pads in canvas and their status flags
+
    std::shared_ptr<ROOT::Experimental::RWebWindow> fWindow; ///!< configured display
 
    Bool_t fReadOnly{true};         ///<! in read-only mode canvas cannot be changed from client side
-   Bool_t fHasSpecials{false};     ///<! has special objects which may require pad ranges
    Long64_t fCanvVersion{1};       ///<! actual canvas version, changed with every new Modified() call
    UInt_t fClientBits{0};          ///<! latest status bits from client like editor visible or not
    TList fPrimitivesLists;         ///<! list of lists of primitives, temporary collected during painting
@@ -76,6 +93,10 @@ protected:
    Bool_t fLongerPolling{kFALSE};  ///<! when true, make longer polling in blocking operations
    Bool_t fProcessingData{kFALSE}; ///<! flag used to prevent blocking methods when process data is invoked
    Bool_t fAsyncMode{kFALSE};      ///<! when true, methods like TCanvas::Update will never block
+   Long64_t fStyleVersion{0};      ///<! current gStyle object version, checked every time when new snapshot created
+   UInt_t fStyleHash{0};           ///<! last hash of gStyle
+   Long64_t fColorsVersion{0};     ///<! current colors/palette version, checked every time when new snapshot created
+   UInt_t fColorsHash{0};          ///<! last hash of colors/palette
 
    UpdatedSignal_t fUpdatedSignal; ///<! signal emitted when canvas updated or state is changed
    PadSignal_t fActivePadChangedSignal; ///<! signal emitted when active pad changed in the canvas
@@ -91,11 +112,15 @@ protected:
    Bool_t PerformUpdate() override;
    TVirtualPadPainter *CreatePadPainter() override;
 
+   UInt_t CalculateColorsHash();
    void AddColorsPalette(TPadWebSnapshot &master);
+
    void CreateObjectSnapshot(TPadWebSnapshot &master, TPad *pad, TObject *obj, const char *opt, TWebPS *masterps = nullptr);
    void CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t version, PadPaintingReady_t func);
 
-   Bool_t CheckPadModified(TPad *pad, Bool_t inc_version = kTRUE);
+   void CheckPadModified(TPad *pad);
+
+   void CheckCanvasModified(bool force_modified = false);
 
    Bool_t AddToSendQueue(unsigned connid, const std::string &msg);
 
@@ -103,7 +128,7 @@ protected:
 
    Bool_t WaitWhenCanvasPainted(Long64_t ver);
 
-   virtual Bool_t IsJSSupportedClass(TObject *obj);
+   virtual Bool_t IsJSSupportedClass(TObject *obj, Bool_t many_primitives = kFALSE);
 
    Bool_t IsFirstConn(unsigned connid) const { return (connid!=0) && (fWebConn.size()>0) && (fWebConn[0].fConnId == connid) ;}
 
@@ -113,13 +138,15 @@ protected:
 
    virtual Bool_t ProcessData(unsigned connid, const std::string &arg);
 
-   virtual Bool_t DecodePadOptions(const std::string &);
+   virtual Bool_t DecodePadOptions(const std::string &, bool process_execs = false);
 
    virtual Bool_t CanCreateObject(const std::string &) { return !IsReadOnly() && fCanCreateObjects; }
 
-   TPad *ProcessObjectOptions(TWebObjectOptions &item, TPad *pad);
+   TPad *ProcessObjectOptions(TWebObjectOptions &item, TPad *pad, int idcnt = 1);
 
-   TObject *FindPrimitive(const std::string &id, TPad *pad = nullptr, TObjLink **padlnk = nullptr, TPad **objpad = nullptr);
+   TObject *FindPrimitive(const std::string &id, int idcnt = 1, TPad *pad = nullptr, TObjLink **objlnk = nullptr, TPad **objpad = nullptr);
+
+   void ProcessExecs(TPad *pad, TExec *extra = nullptr);
 
 public:
    TWebCanvas(TCanvas *c, const char *name, Int_t x, Int_t y, UInt_t width, UInt_t height, Bool_t readonly = kTRUE);
@@ -142,7 +169,6 @@ public:
    void ShowEditor(Bool_t show = kTRUE) override { ShowCmd("Editor", show); }
    void ShowToolBar(Bool_t show = kTRUE) override { ShowCmd("ToolBar", show); }
    void ShowToolTips(Bool_t show = kTRUE) override { ShowCmd("ToolTips", show); }
-
 
    // web-canvas specific methods
 
@@ -197,10 +223,13 @@ public:
    void SetAsyncMode(Bool_t on = kTRUE) { fAsyncMode = on; }
    Bool_t IsAsyncMode() const { return fAsyncMode; }
 
+   static TString CreatePadJSON(TPad *pad, Int_t json_compression = 0);
    static TString CreateCanvasJSON(TCanvas *c, Int_t json_compression = 0);
    static Int_t StoreCanvasJSON(TCanvas *c, const char *filename, const char *option = "");
 
-   static bool ProduceImage(TCanvas *c, const char *filename, Int_t width = 0, Int_t height = 0);
+   static bool ProduceImage(TPad *pad, const char *filename, Int_t width = 0, Int_t height = 0);
+
+   static TCanvasImp *NewCanvas(TCanvas *c, const char *name, Int_t x, Int_t y, UInt_t width, UInt_t height);
 
    ClassDefOverride(TWebCanvas, 0) // Web-based implementation for TCanvasImp, read-only mode
 };

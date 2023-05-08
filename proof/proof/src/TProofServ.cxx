@@ -1277,7 +1277,7 @@ TDSetElement *TProofServ::GetNextPacket(Long64_t totalEntries)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get and handle command line options. Fixed format:
-/// "proofserv"|"proofslave" <confdir>
+/// "proofserv"|"proofslave" `<confdir>`
 
 void TProofServ::GetOptions(Int_t *argc, char **argv)
 {
@@ -2574,7 +2574,7 @@ void TProofServ::Reset(const char *dir)
 ////////////////////////////////////////////////////////////////////////////////
 /// Receive a file, either sent by a client or a master server.
 /// If bin is true it is a binary file, other wise it is an ASCII
-/// file and we need to check for Windows \r tokens. Returns -1 in
+/// file and we need to check for Windows \\r tokens. Returns -1 in
 /// case of error, 0 otherwise.
 
 Int_t TProofServ::ReceiveFile(const char *file, Bool_t bin, Long64_t size)
@@ -5985,7 +5985,7 @@ Int_t TProofServ::GetPriority()
 ////////////////////////////////////////////////////////////////////////////////
 /// Send an asychronous message to the master / client .
 /// Masters will forward up the message to the client.
-/// The client prints 'msg' of stderr and adds a '\n'/'\r' depending on
+/// The client prints 'msg' of stderr and adds a '\\n'/'\\r' depending on
 /// 'lf' being kTRUE (default) or kFALSE.
 /// Returns the return value from TSocket::Send(TMessage &) .
 

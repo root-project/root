@@ -18,21 +18,21 @@ public:
       fLogAmp = std::log(_amp);
    }
 
-   unsigned int NDim() const { return 1; }
+   unsigned int NDim() const override { return 1; }
 
-   unsigned int NPar() const { return kNPar; }
+   unsigned int NPar() const override { return kNPar; }
 
    inline double amp()   const { return fParams[0]; }
    inline double logamp()   const { return fLogAmp; }
    inline double mean()  const { return fParams[1]; }
    inline double sigma() const { return fParams[2]; }
 
-   const double * Parameters() const { return fParams; }
+   const double * Parameters() const override { return fParams; }
 
-   void SetParameters(const double * p) { std::copy(p,p+kNPar,fParams); /* fLogAmp = std::log( p[0] ); */ }
+   void SetParameters(const double * p) override { std::copy(p,p+kNPar,fParams); /* fLogAmp = std::log( p[0] ); */ }
 
 
-   ROOT::Math::IMultiGenFunction * Clone() const { return new GaussFunction(amp(), mean(), sigma() ); }
+   ROOT::Math::IMultiGenFunction * Clone() const override { return new GaussFunction(amp(), mean(), sigma() ); }
 
 
    // implementing this is much faster
@@ -43,7 +43,7 @@ public:
 
    using  ROOT::Math::IParamMultiGradFunction::operator();
 
-   void ParameterGradient(const double *x, const double * p, double * g) const {
+   void ParameterGradient(const double *x, const double * p, double * g) const override {
       double a = p[0];
       double m = p[1];
       double s = p[2];
@@ -57,7 +57,7 @@ public:
 private:
 
 
-   double DoEvalPar(const double * x, const double * p) const {
+   double DoEvalPar(const double * x, const double * p) const override {
       double a = p[0];
       double m = p[1];
       double s = p[2];
@@ -72,7 +72,7 @@ private:
       return dGdx;
    }
 
-   double DoParameterDerivative(const double *x, const double * p, unsigned int ipar) const {
+   double DoParameterDerivative(const double *x, const double * p, unsigned int ipar) const override {
       double grad[3];
       ParameterGradient(x, p, &grad[0] );
       return grad[ipar];

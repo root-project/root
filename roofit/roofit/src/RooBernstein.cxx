@@ -33,8 +33,6 @@ http://www.idav.ucdavis.edu/education/CAGDNotes/Bernstein-Polynomials.pdf
 **/
 
 #include "RooBernstein.h"
-#include "RooFit.h"
-#include "RooAbsReal.h"
 #include "RooRealVar.h"
 #include "RooArgList.h"
 #include "RooBatchCompute.h"
@@ -46,14 +44,8 @@ using namespace std;
 
 ClassImp(RooBernstein);
 
-////////////////////////////////////////////////////////////////////////////////
-
-RooBernstein::RooBernstein()
-{
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Constructor
+////////////////////////////////////////////////////////////////////////////////
 
 RooBernstein::RooBernstein(const char* name, const char* title,
                            RooAbsRealLValue& x, const RooArgList& coefList):
@@ -61,9 +53,7 @@ RooBernstein::RooBernstein(const char* name, const char* title,
   _x("x", "Dependent", this, x),
   _coefList("coefficients","List of coefficients",this)
 {
-  TIterator* coefIter = coefList.createIterator() ;
-  RooAbsArg* coef ;
-  while((coef = (RooAbsArg*)coefIter->Next())) {
+  for (auto *coef : coefList) {
     if (!dynamic_cast<RooAbsReal*>(coef)) {
       cout << "RooBernstein::ctor(" << GetName() << ") ERROR: coefficient " << coef->GetName()
       << " is not of type RooAbsReal" << endl ;
@@ -71,15 +61,12 @@ RooBernstein::RooBernstein(const char* name, const char* title,
     }
     _coefList.add(*coef) ;
   }
-  delete coefIter ;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooBernstein::RooBernstein(const RooBernstein& other, const char* name) :
-  RooAbsPdf(other, name),
-  _x("x", this, other._x),
-  _coefList("coefList",this,other._coefList)
+RooBernstein::RooBernstein(const RooBernstein &other, const char *name)
+   : RooAbsPdf(other, name), _x("x", this, other._x), _coefList("coefList", this, other._coefList)
 {
 }
 
@@ -87,7 +74,7 @@ RooBernstein::RooBernstein(const RooBernstein& other, const char* name) :
 
 /// Force use of a given normalisation range.
 /// Needed for functions or PDFs (e.g. RooAddPdf) whose shape depends on the choice of normalisation.
-void RooBernstein::selectNormalizationRange(const char* rangeName, Bool_t force)
+void RooBernstein::selectNormalizationRange(const char* rangeName, bool force)
 {
   if (rangeName && (force || !_refRangeName.empty())) {
      _refRangeName = rangeName;
@@ -96,42 +83,42 @@ void RooBernstein::selectNormalizationRange(const char* rangeName, Bool_t force)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooBernstein::evaluate() const
+double RooBernstein::evaluate() const
 {
   double xmax,xmin;
   std::tie(xmin, xmax) = _x->getRange(_refRangeName.empty() ? nullptr : _refRangeName.c_str());
-  Double_t x = (_x - xmin) / (xmax - xmin); // rescale to [0,1]
+  double x = (_x - xmin) / (xmax - xmin); // rescale to [0,1]
   Int_t degree = _coefList.getSize() - 1; // n+1 polys of degree n
-  RooFIter iter = _coefList.fwdIterator();
 
   if(degree == 0) {
 
-    return ((RooAbsReal *)iter.next())->getVal();
+    return static_cast<RooAbsReal &>(_coefList[0]).getVal();
 
   } else if(degree == 1) {
 
-    Double_t a0 = ((RooAbsReal *)iter.next())->getVal(); // c0
-    Double_t a1 = ((RooAbsReal *)iter.next())->getVal() - a0; // c1 - c0
+    double a0 = static_cast<RooAbsReal &>(_coefList[0]).getVal(); // c0
+    double a1 = static_cast<RooAbsReal &>(_coefList[1]).getVal() - a0; // c1 - c0
     return a1 * x + a0;
 
   } else if(degree == 2) {
 
-    Double_t a0 = ((RooAbsReal *)iter.next())->getVal(); // c0
-    Double_t a1 = 2 * (((RooAbsReal *)iter.next())->getVal() - a0); // 2 * (c1 - c0)
-    Double_t a2 = ((RooAbsReal *)iter.next())->getVal() - a1 - a0; // c0 - 2 * c1 + c2
+    double a0 = static_cast<RooAbsReal &>(_coefList[0]).getVal();  // c0
+    double a1 = 2 * (static_cast<RooAbsReal &>(_coefList[1]).getVal() - a0); // 2 * (c1 - c0)
+    double a2 = static_cast<RooAbsReal &>(_coefList[2]).getVal() - a1 - a0;  // c0 - 2 * c1 + c2
     return (a2 * x + a1) * x + a0;
 
   } else if(degree > 2) {
 
-    Double_t t = x;
-    Double_t s = 1 - x;
+    double t = x;
+    double s = 1 - x;
 
-    Double_t result = ((RooAbsReal *)iter.next())->getVal() * s;
+    double result = static_cast<RooAbsReal &>(_coefList[0]).getVal() * s;
     for(Int_t i = 1; i < degree; i++) {
-      result = (result + t * TMath::Binomial(degree, i) * ((RooAbsReal *)iter.next())->getVal()) * s;
+      result = (result + t * TMath::Binomial(degree, i) 
+                * static_cast<RooAbsReal &>(_coefList[i]).getVal()) * s;
       t *= x;
     }
-    result += t * ((RooAbsReal *)iter.next())->getVal();
+    result += t * static_cast<RooAbsReal &>(_coefList[degree]).getVal();
 
     return result;
   }
@@ -166,20 +153,19 @@ Int_t RooBernstein::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVar
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooBernstein::analyticalIntegral(Int_t code, const char* rangeName) const
+double RooBernstein::analyticalIntegral(Int_t code, const char* rangeName) const
 {
   R__ASSERT(code==1) ;
 
   double xmax,xmin;
   std::tie(xmin, xmax) = _x->getRange(_refRangeName.empty() ? nullptr : _refRangeName.c_str());
-  const Double_t xlo = (_x.min(rangeName) - xmin) / (xmax - xmin);
-  const Double_t xhi = (_x.max(rangeName) - xmin) / (xmax - xmin);
+  const double xlo = (_x.min(rangeName) - xmin) / (xmax - xmin);
+  const double xhi = (_x.max(rangeName) - xmin) / (xmax - xmin);
 
   Int_t degree= _coefList.getSize()-1; // n+1 polys of degree n
-  Double_t norm(0) ;
+  double norm(0) ;
 
-  RooFIter iter = _coefList.fwdIterator() ;
-  Double_t temp=0;
+  double temp=0;
   for (int i=0; i<=degree; ++i){
     // for each of the i Bernstein basis polynomials
     // represent it in the 'power basis' (the naive polynomial basis)
@@ -188,7 +174,7 @@ Double_t RooBernstein::analyticalIntegral(Int_t code, const char* rangeName) con
     for (int j=i; j<=degree; ++j){ // power basis≈ß
       temp += pow(-1.,j-i) * TMath::Binomial(degree, j) * TMath::Binomial(j,i) * (TMath::Power(xhi,j+1) - TMath::Power(xlo,j+1)) / (j+1);
     }
-    temp *= ((RooAbsReal*)iter.next())->getVal(); // include coeff
+    temp *= static_cast<RooAbsReal &>(_coefList[i]).getVal(); // include coeff
     norm += temp; // add this basis's contribution to total
   }
 

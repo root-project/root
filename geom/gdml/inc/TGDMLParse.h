@@ -99,6 +99,7 @@ public:
    TGeoVolume* fWorld; //top volume of geometry
    int fVolID;   //volume ID, incremented as assigned.
    int fFILENO; //Holds which level of file the parser is at
+   int fNunitless{0};           // Number of entities defined unitless
    TXMLEngine* fFileEngine[20]; //array of dom object pointers
    const char* fStartFile; //name of originating file
    const char* fCurrentFile; //current file name being parsed
@@ -175,6 +176,13 @@ private:
 
    //'setup' section
    XMLNodePointer_t  TopProcess(TXMLEngine* gdml, XMLNodePointer_t node);
+
+   // Find defined objects by name
+   TGeoTranslation  *GetPosition(const char *name);
+   TGeoRotation     *GetRotation(const char *name);
+   TGeoScale        *GetScaleObj(const char *name);
+   TGeoShape        *GetSolid(const char *name);
+   TGeoVolume       *GetVolume(const char *name);
 
    typedef TGDMMapHelper<TGeoTranslation> PosMap;
    typedef TGDMMapHelper<TGeoRotation> RotMap;

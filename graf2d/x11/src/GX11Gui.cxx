@@ -380,7 +380,7 @@ Window_t TGX11::CreateWindow(Window_t parent, Int_t x, Int_t y,
 
    if (depth == 0)
       depth = fDepth;
-   if (visual == 0)
+   if (!visual)
       visual = fVisual;
    if (fColormap && !(xmask & CWColormap)) {
       xmask |= CWColormap;
@@ -842,7 +842,7 @@ Int_t TGX11::OpenDisplay(const char *dpyName)
 void TGX11::CloseDisplay()
 {
    XCloseDisplay((Display*)fDisplay);
-   fDisplay = 0;
+   fDisplay = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -924,7 +924,7 @@ Window_t TGX11::GetParent(Window_t id) const
    if (!id) return (Window_t)0;
 
    Window  root, parent;
-   Window *children = 0;
+   Window *children = nullptr;
    UInt_t  nchildren;
 
    XQueryTree((Display*)fDisplay, (Window) id, &root, &parent, &children, &nchildren);
@@ -1128,7 +1128,7 @@ void TGX11::MapPictureAttributes(PictureAttributes_t &attr, RXpmAttributes &xpma
       }
       if ((mask & kPAReturnPixels)) {
          xmask |= XpmReturnPixels;
-         xpmattr.pixels  = 0;  // output parameters
+         xpmattr.pixels  = nullptr;  // output parameters
          xpmattr.npixels = 0;
       }
       if ((mask & kPACloseness)) {
@@ -1140,7 +1140,7 @@ void TGX11::MapPictureAttributes(PictureAttributes_t &attr, RXpmAttributes &xpma
       ULong_t xmask = xpmattr.valuemask;
       Mask_t  mask  = 0;
 
-      attr.fPixels  = 0;
+      attr.fPixels  = nullptr;
       attr.fNpixels = 0;
 
       if ((xmask & XpmColormap)) {
@@ -1809,6 +1809,9 @@ void TGX11::WMDeleteNotify(Window_t id)
 
 void TGX11::SetKeyAutoRepeat(Bool_t on)
 {
+   if (!fDisplay)
+      return;
+
    if (on)
       XAutoRepeatOn((Display*)fDisplay);
    else
@@ -2132,7 +2135,7 @@ void TGX11::FreeFontStruct(FontStruct_t fs)
    }
 
    if (xfree86_400 == 0)
-      XFreeFontInfo(0, (XFontStruct *) fs, 1);
+      XFreeFontInfo(nullptr, (XFontStruct *) fs, 1);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2284,7 +2287,7 @@ void TGX11::LookupString(Event_t *event, char *buf, Int_t buflen, UInt_t &keysym
 
    MapEvent(*event, &xev);
 
-   int n = XLookupString(&xev.xkey, buf, buflen-1, &xkeysym, 0);
+   int n = XLookupString(&xev.xkey, buf, buflen-1, &xkeysym, nullptr);
    if (n >= buflen)
       Error("LookupString", "buf too small, must be at least %d", n+1);
    else
@@ -2621,7 +2624,7 @@ Drawable_t TGX11::CreateImage(UInt_t width, UInt_t height)
       bitmap_pad = 32;
 
    XImage *xim = XCreateImage((Display*)fDisplay, fVisual, fDepth, ZPixmap,
-                              0, 0, width, height, bitmap_pad, 0);
+                              0, nullptr, width, height, bitmap_pad, 0);
 
    // use calloc since Xlib will use free() in XDestroyImage
    if (xim) xim->data = (char *) calloc(xim->bytes_per_line * xim->height, 1);
@@ -2802,9 +2805,9 @@ Window_t TGX11::FindRWindow(Window_t win, Window_t dragwin, Window_t input,
                             int x, int y, int maxd)
 {
    WindowAttributes_t wattr;
-   static Atom_t *dndTypeList = 0;
+   static Atom_t *dndTypeList = nullptr;
 
-   if (dndTypeList == 0) {
+   if (!dndTypeList) {
       dndTypeList = new Atom_t[3];
       dndTypeList[0] = InternAtom("application/root", kFALSE);
       dndTypeList[1] = InternAtom("text/uri-list", kFALSE);
@@ -2854,7 +2857,7 @@ Bool_t TGX11::IsDNDAware(Window_t win, Atom_t *typelist)
    Atom_t  actual;
    Int_t   format;
    ULong_t count, remaining;
-   unsigned char *data = 0;
+   unsigned char *data = nullptr;
    Atom_t *types, *t;
    Int_t   result = kTRUE;
    static Atom_t dndaware = kNone;

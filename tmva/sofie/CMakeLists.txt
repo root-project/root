@@ -16,18 +16,33 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTMVASofie
    TMVA/OperatorList.hxx
    TMVA/RModel.hxx
    TMVA/ROperator.hxx
-   TMVA/ROperator_Add.hxx
+   TMVA/ROperator_BasicUnary.hxx
+   TMVA/ROperator_BasicBinary.hxx
+   TMVA/ROperator_BasicNary.hxx
    TMVA/ROperator_BatchNormalization.hxx
    TMVA/ROperator_Conv.hxx
+   TMVA/ROperator_ConvTranspose.hxx
    TMVA/ROperator_Gemm.hxx
    TMVA/ROperator_Relu.hxx
+   TMVA/ROperator_Tanh.hxx
+   TMVA/ROperator_LeakyRelu.hxx
    TMVA/ROperator_Reshape.hxx
    TMVA/ROperator_Selu.hxx
    TMVA/ROperator_Sigmoid.hxx
    TMVA/ROperator_Slice.hxx
    TMVA/ROperator_Transpose.hxx
    TMVA/ROperator_Pool.hxx
+   TMVA/ROperator_Concat.hxx
+   TMVA/ROperator_Identity.hxx
+   TMVA/ROperator_Softmax.hxx
+   TMVA/ROperator_Reduce.hxx
+   TMVA/ROperator_Shape.hxx
+   TMVA/ROperator_Cast.hxx
+   TMVA/ROperator_Custom.hxx
+   TMVA/ROperator_LayerNormalization.hxx
+   TMVA/ROperator_Expand.hxx
    TMVA/SOFIE_common.hxx
+   TMVA/SOFIEHelpers.hxx
   SOURCES
     src/RModel.cxx
     src/SOFIE_common.cxx

@@ -11,6 +11,11 @@
 
 #include <gtest/gtest.h>
 
+// Backward compatibility for gtest version < 1.10.0
+#ifndef INSTANTIATE_TEST_SUITE_P
+#define INSTANTIATE_TEST_SUITE_P INSTANTIATE_TEST_CASE_P
+#endif
+
 #include <algorithm> // std::min
 #include <memory>
 #include <mutex>
@@ -27,7 +32,7 @@ struct RDFSampleCallback : ::testing::TestWithParam<bool> {
          ROOT::EnableImplicitMT();
    }
 
-   ~RDFSampleCallback()
+   ~RDFSampleCallback() override
    {
       if (GetParam())
          ROOT::DisableImplicitMT();
@@ -125,11 +130,13 @@ TEST_P(RDFSampleCallback, EmptySourceSampleID) {
       // RDF with empty sources tries to produce 2 tasks per slot when MT is enabled
       const auto expectedSize = std::min(NENTRIES, df.GetNSlots() * 2ull);
       ASSERT_EQ(result->size(), expectedSize);
+      ULong64_t entries = 0;
       for (auto &id : *result) {
          // check that all entries start with the expected string
          EXPECT_TRUE(id.AsString().rfind("Empty source, range: {", 0) == 0);
-         EXPECT_EQ(id.NEntries(), NENTRIES / expectedSize);
+         entries += id.NEntries();
       }
+      EXPECT_EQ(entries, NENTRIES);
    } else {
       ASSERT_EQ(result->size(), 1);
       const auto &id = result->at(0);

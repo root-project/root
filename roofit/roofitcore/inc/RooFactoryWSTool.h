@@ -50,19 +50,19 @@ public:
 
   // Constructors, assignment etc
   RooFactoryWSTool(RooWorkspace& ws) ;
-  virtual ~RooFactoryWSTool() ;
+  ~RooFactoryWSTool() override ;
 
   // --- low level factory interface ---
 
   // Create variables
-  RooRealVar* createVariable(const char* name, Double_t xmin, Double_t xmax) ;
-  RooCategory* createCategory(const char* name, const char* stateNameList=0) ;
+  RooRealVar* createVariable(const char* name, double xmin, double xmax) ;
+  RooCategory* createCategory(const char* name, const char* stateNameList=nullptr) ;
 
   // Create functions and p.d.f.s (any RooAbsArg)
   RooAbsArg* createArg(const char* className, const char* objName, const char* varList) ;
 
   // Create operator p.d.f.s
-  RooAddPdf* add(const char *objName, const char* specList, Bool_t recursiveCoefs=kFALSE) ;
+  RooAddPdf* add(const char *objName, const char* specList, bool recursiveCoefs=false) ;
   RooRealSumPdf* amplAdd(const char *objName, const char* specList) ;
   RooProdPdf* prod(const char *objName, const char* pdfList) ;
   RooSimultaneous* simul(const char* objName, const char* indexCat, const char* pdfMap) ;
@@ -107,9 +107,9 @@ public:
 
   static const char* as_STRING(UInt_t idx) { checkIndex(idx) ; return of()->asSTRING(of()->_args[idx].c_str()) ; }
   static Int_t as_INT(UInt_t idx) { checkIndex(idx) ; return of()->asINT(of()->_args[idx].c_str()) ; }
-  static Double_t as_DOUBLE(UInt_t idx) { checkIndex(idx) ; return of()->asDOUBLE(of()->_args[idx].c_str()) ; }
+  static double as_DOUBLE(UInt_t idx) { checkIndex(idx) ; return of()->asDOUBLE(of()->_args[idx].c_str()) ; }
   static Int_t as_INT(UInt_t idx, Int_t defVal) { checkIndex(idx) ;   if (idx>of()->_args.size()-1) return defVal ; return of()->asINT(of()->_args[idx].c_str()) ; }
-  static Double_t as_DOUBLE(UInt_t idx, Double_t defVal) { checkIndex(idx) ;   if (idx>of()->_args.size()-1) return defVal ; return of()->asDOUBLE(of()->_args[idx].c_str()) ; }
+  static double as_DOUBLE(UInt_t idx, double defVal) { checkIndex(idx) ;   if (idx>of()->_args.size()-1) return defVal ; return of()->asDOUBLE(of()->_args[idx].c_str()) ; }
 
   RooAbsArg& asARG(const char*) ;
 
@@ -123,8 +123,8 @@ public:
   RooAbsCategoryLValue& asCATLV(const char*) ;
   RooAbsCategory& asCATFUNC(const char*) ;
 
-  RooArgSet asSET(const char*) ; 
-  RooArgList asLIST(const char*) ; 
+  RooArgSet asSET(const char*) ;
+  RooArgList asLIST(const char*) ;
 
   RooAbsData& asDATA(const char*) ;
   RooDataHist& asDHIST(const char*) ;
@@ -134,8 +134,8 @@ public:
 
   const char* asSTRING(const char*) ;
   Int_t asINT(const char*) ;
-  Double_t asDOUBLE(const char*) ;
-  
+  double asDOUBLE(const char*) ;
+
   class IFace {
   public:
     virtual ~IFace() {} ;
@@ -144,8 +144,8 @@ public:
 
   class SpecialsIFace : public IFace {
   public:
-    virtual ~SpecialsIFace() {} ;
-    std::string create(RooFactoryWSTool& ft, const char* typeName, const char* instanceName, std::vector<std::string> args) ;    
+    ~SpecialsIFace() override {} ;
+    std::string create(RooFactoryWSTool& ft, const char* typeName, const char* instanceName, std::vector<std::string> args) override ;
   } ;
 
   static void registerSpecial(const char* typeName, RooFactoryWSTool::IFace* iface) ;
@@ -157,16 +157,16 @@ public:
 
 protected:
 
-  Bool_t checkSyntax(const char* arg) ;
+  bool checkSyntax(const char* arg) ;
 
   std::string varTag(std::string& func, std::vector<std::string>& args) ;
 
-  std::stack<std::string> _autoNamePrefix ; 
+  std::stack<std::string> _autoNamePrefix ;
   std::map<std::string,std::string> _typeAliases ;
 
   static void checkIndex(UInt_t index) ;
 
-  
+
   std::string processCompositeExpression(const char* arg) ;
   std::string processSingleExpression(const char* arg) ;
   std::string processListExpression(const char* arg) ;
@@ -181,7 +181,7 @@ protected:
   // CINT constructor interface back end
   static RooFactoryWSTool* of() ;
   static RooFactoryWSTool* _of ;
-  std::vector<std::string> _args ;    
+  std::vector<std::string> _args ;
 
   // Hooks for other tools
   static std::map<std::string,IFace*>& hooks() ;
@@ -198,7 +198,7 @@ protected:
 
   RooFactoryWSTool(const RooFactoryWSTool&) ;
 
-  ClassDef(RooFactoryWSTool,0) // RooFit class code and instance factory 
+  ClassDefOverride(RooFactoryWSTool,0) // RooFit class code and instance factory
 
 } ;
 

@@ -46,23 +46,6 @@ RConcurrentHashColl::HashValue RConcurrentHashColl::Hash(char *buffer, int len)
 }
 
 /// If the buffer is there, return false. Otherwise, insert the hash and return true
-bool RConcurrentHashColl::Insert(char *buffer, int len) const
-{
-   HashValue hash(buffer, len);
-
-   {
-      ROOT::TRWSpinLockReadGuard rg(*fRWLock);
-      if (fHashSet->fSet.end() != fHashSet->fSet.find(hash))
-         return false;
-   }
-   {
-      ROOT::TRWSpinLockWriteGuard wg(*fRWLock);
-      fHashSet->fSet.insert(hash);
-      return true;
-   }
-}
-
-/// If the buffer is there, return false. Otherwise, insert the hash and return true
 bool RConcurrentHashColl::Insert(const HashValue &hash) const
 {
    ROOT::TRWSpinLockWriteGuard wg(*fRWLock);

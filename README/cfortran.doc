@@ -1530,7 +1530,7 @@ Some loaders, including at least one for the CRAY, turn off the
 'automagically set aside storage' capability for Fortran common blocks,
 if any C object declares that common block.
 Therefore, C code should define, i.e. set aside storage,
-for the the common block as shown above.
+for the common block as shown above.
 
 e.g.
 C Fortran

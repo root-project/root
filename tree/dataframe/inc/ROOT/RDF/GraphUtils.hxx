@@ -12,16 +12,12 @@
 #define ROOT_GRAPHUTILS
 
 #include <string>
-#include <sstream>
 #include <vector>
-#include <map>
+#include <unordered_map>
 #include <memory>
-#include <type_traits>
 #include <ROOT/RDataFrame.hxx>
 #include <ROOT/RDF/RInterface.hxx>
 #include <ROOT/RDF/GraphNode.hxx>
-
-#include <iostream>
 
 namespace ROOT {
 namespace Detail {
@@ -35,20 +31,17 @@ class RRangeBase;
 namespace Internal {
 namespace RDF {
 class RColumnRegister;
-
 namespace GraphDrawing {
-std::shared_ptr<GraphNode>
-CreateDefineNode(const std::string &columnName, const ROOT::Detail::RDF::RDefineBase *columnPtr);
 
-std::shared_ptr<GraphNode> CreateFilterNode(const ROOT::Detail::RDF::RFilterBase *filterPtr);
+std::shared_ptr<GraphNode> CreateDefineNode(const std::string &columnName,
+                                            const ROOT::Detail::RDF::RDefineBase *columnPtr,
+                                            std::unordered_map<void *, std::shared_ptr<GraphNode>> &visitedMap);
 
-std::shared_ptr<GraphNode> CreateRangeNode(const ROOT::Detail::RDF::RRangeBase *rangePtr);
+std::shared_ptr<GraphNode> CreateFilterNode(const ROOT::Detail::RDF::RFilterBase *filterPtr,
+                                            std::unordered_map<void *, std::shared_ptr<GraphNode>> &visitedMap);
 
-
-/// Add the Defines that have been added between this node and the previous to the graph.
-/// Return the new "upmost" node, i.e. the last of the Defines added if any, otherwise the node itself
-std::shared_ptr<GraphNode> AddDefinesToGraph(std::shared_ptr<GraphNode> node, const RColumnRegister &colRegister,
-                                             const std::vector<std::string> &prevNodeDefines);
+std::shared_ptr<GraphNode> CreateRangeNode(const ROOT::Detail::RDF::RRangeBase *rangePtr,
+                                           std::unordered_map<void *, std::shared_ptr<GraphNode>> &visitedMap);
 
 // clang-format off
 /**
@@ -63,55 +56,19 @@ std::shared_ptr<GraphNode> AddDefinesToGraph(std::shared_ptr<GraphNode> node, co
 // clang-format on
 class GraphCreatorHelper {
 private:
-   using DefinesNodesMap_t = std::map<const ROOT::Detail::RDF::RDefineBase *, std::weak_ptr<GraphNode>>;
-   using FiltersNodesMap_t = std::map<const ROOT::Detail::RDF::RFilterBase *, std::weak_ptr<GraphNode>>;
-   using RangesNodesMap_t = std::map<const ROOT::Detail::RDF::RRangeBase *, std::weak_ptr<GraphNode>>;
-
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Stores the columns defined and which node in the graph defined them.
-   static DefinesNodesMap_t &GetStaticColumnsMap()
-   {
-      static DefinesNodesMap_t sMap;
-      return sMap;
-   };
-
-   ////////////////////////////////////////////////////////////////////////////
-   /// \brief Stores the filters defined and which node in the graph defined them.
-   static FiltersNodesMap_t &GetStaticFiltersMap()
-   {
-      static FiltersNodesMap_t sMap;
-      return sMap;
-   }
-
-   ////////////////////////////////////////////////////////////////////////////
-   /// \brief Stores the ranges defined and which node in the graph defined them.
-   static RangesNodesMap_t &GetStaticRangesMap()
-   {
-      static RangesNodesMap_t sMap;
-      return sMap;
-   }
-
-   ////////////////////////////////////////////////////////////////////////////
-   /// \brief Invoked by the RNodes to create a define graph node.
-   friend std::shared_ptr<GraphNode>
-   CreateDefineNode(const std::string &columnName, const ROOT::Detail::RDF::RDefineBase *columnPtr);
-
-   ////////////////////////////////////////////////////////////////////////////
-   /// \brief Invoked by the RNodes to create a Filter graph node.
-   friend std::shared_ptr<GraphNode> CreateFilterNode(const ROOT::Detail::RDF::RFilterBase *filterPtr);
-
-   ////////////////////////////////////////////////////////////////////////////
-   /// \brief Invoked by the RNodes to create a Range graph node.
-   friend std::shared_ptr<GraphNode> CreateRangeNode(const ROOT::Detail::RDF::RRangeBase *rangePtr);
+   /// \brief Map to keep track of visited nodes when constructing the computation graph (SaveGraph)
+   std::unordered_map<void *, std::shared_ptr<GraphNode>> fVisitedMap;
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Starting from any leaf (Action, Filter, Range) it draws the dot representation of the branch.
-   std::string FromGraphLeafToDot(std::shared_ptr<GraphNode> leaf);
+   std::string FromGraphLeafToDot(const GraphNode &leaf) const;
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Starting by an array of leaves, it draws the entire graph.
-   std::string FromGraphActionsToDot(std::vector<std::shared_ptr<GraphNode>> leaves);
+   std::string FromGraphActionsToDot(std::vector<std::shared_ptr<GraphNode>> leaves) const;
 
+public:
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Starting from the root node, prints the entire graph.
    std::string RepresentGraph(ROOT::RDataFrame &rDataFrame);
@@ -128,7 +85,7 @@ private:
       auto loopManager = rInterface.GetLoopManager();
       loopManager->Jit();
 
-      return FromGraphLeafToDot(rInterface.GetProxiedPtr()->GetGraph());
+      return FromGraphLeafToDot(*rInterface.GetProxiedPtr()->GetGraph(fVisitedMap));
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -141,24 +98,7 @@ private:
       loopManager->Jit();
 
       auto actionPtr = resultPtr.fActionPtr;
-      return FromGraphLeafToDot(actionPtr->GetGraph());
-   }
-
-public:
-   ////////////////////////////////////////////////////////////////////////////
-   /// \brief Functor. Initializes the static members and delegates the work to the right override.
-   /// \tparam NodeType the RNode from which the graph has to be drawn
-   template <typename NodeType>
-   std::string operator()(NodeType &node)
-   {
-      // First all static data structures are cleaned, to avoid undefined behaviours if more than one Represent is
-      // called
-      GetStaticFiltersMap() = FiltersNodesMap_t();
-      GetStaticColumnsMap() = DefinesNodesMap_t();
-      GetStaticRangesMap() = RangesNodesMap_t();
-      GraphNode::ClearCounter();
-      // The Represent can now start on a clean environment
-      return RepresentGraph(node);
+      return FromGraphLeafToDot(*actionPtr->GetGraph(fVisitedMap));
    }
 };
 

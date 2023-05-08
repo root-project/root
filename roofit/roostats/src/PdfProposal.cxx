@@ -58,7 +58,6 @@ for future versions.
 #include "RooAbsPdf.h"
 #include "RooMsgService.h"
 #include "RooRealVar.h"
-#include "TIterator.h"
 
 #include <map>
 
@@ -74,11 +73,11 @@ using namespace std;
 
 PdfProposal::PdfProposal() : ProposalFunction()
 {
-   fPdf = NULL;
-   fOwnsPdf = kFALSE;
+   fPdf = nullptr;
+   fOwnsPdf = false;
    fCacheSize = 1;
    fCachePosition = 0;
-   fCache = NULL;
+   fCache = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -88,29 +87,25 @@ PdfProposal::PdfProposal() : ProposalFunction()
 PdfProposal::PdfProposal(RooAbsPdf& pdf) : ProposalFunction()
 {
    fPdf = &pdf;
-   fOwnsPdf = kFALSE;
+   fOwnsPdf = false;
    fCacheSize = 1;
    fCachePosition = 0;
-   fCache = NULL;
+   fCache = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// determine whether these two RooArgSets represent the same point
 
-Bool_t PdfProposal::Equals(RooArgSet& x1, RooArgSet& x2)
+bool PdfProposal::Equals(RooArgSet& x1, RooArgSet& x2)
 {
    if (x1.equals(x2)) {
-      TIterator* it = x1.createIterator();
-      RooRealVar* r;
-      while ((r = (RooRealVar*)it->Next()) != NULL)
+      for (auto const *r : static_range_cast<RooRealVar*>(x1))
          if (r->getVal() != x2.getRealValue(r->GetName())) {
-            delete it;
-            return kFALSE;
+            return false;
          }
-      delete it;
-      return kTRUE;
+      return true;
    }
-   return kFALSE;
+   return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -118,7 +113,7 @@ Bool_t PdfProposal::Equals(RooArgSet& x1, RooArgSet& x2)
 
 void PdfProposal::Propose(RooArgSet& xPrime, RooArgSet& x)
 {
-   if (fLastX.getSize() == 0) {
+   if (fLastX.empty()) {
       // fLastX not yet initialized
       fLastX.addClone(x);
       // generate initial cache
@@ -130,7 +125,7 @@ void PdfProposal::Propose(RooArgSet& xPrime, RooArgSet& x)
       fCache = fPdf->generate(xPrime, fCacheSize);
    }
 
-   Bool_t moved = false;
+   bool moved = false;
    if (fMap.size() > 0) {
       moved = !Equals(fLastX, x);
 
@@ -167,7 +162,7 @@ void PdfProposal::Propose(RooArgSet& xPrime, RooArgSet& x)
 /// points x1 and x2 - that is, whether the probabilty of reaching x2
 /// from x1 is equal to the probability of reaching x1 from x2
 
-Bool_t PdfProposal::IsSymmetric(RooArgSet& /* x1 */, RooArgSet& /* x2 */)
+bool PdfProposal::IsSymmetric(RooArgSet& /* x1 */, RooArgSet& /* x2 */)
 {
    // kbelasco: is there a better way to do this?
    return false;
@@ -177,7 +172,7 @@ Bool_t PdfProposal::IsSymmetric(RooArgSet& /* x1 */, RooArgSet& /* x2 */)
 /// Return the probability of proposing the point x1 given the starting
 /// point x2
 
-Double_t PdfProposal::GetProposalDensity(RooArgSet& x1, RooArgSet& x2)
+double PdfProposal::GetProposalDensity(RooArgSet& x1, RooArgSet& x2)
 {
    RooStats::SetParameters(&x2, &fMaster);
    for (fIt = fMap.begin(); fIt != fMap.end(); fIt++)
@@ -199,8 +194,8 @@ Double_t PdfProposal::GetProposalDensity(RooArgSet& x1, RooArgSet& x2)
 
 void PdfProposal::AddMapping(RooRealVar& proposalParam, RooAbsReal& update)
 {
-   fMaster.add(*update.getParameters((RooAbsData*)NULL));
-   if (update.getParameters((RooAbsData*)NULL)->getSize() == 0)
+   fMaster.add(*update.getParameters(static_cast<RooAbsData const*>(nullptr)));
+   if (update.getParameters(static_cast<RooAbsData const*>(nullptr))->empty())
       fMaster.add(update);
    fMap.insert(pair<RooRealVar*, RooAbsReal*>(&proposalParam, &update));
 }

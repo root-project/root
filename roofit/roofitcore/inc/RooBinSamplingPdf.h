@@ -32,24 +32,24 @@ public:
   RooBinSamplingPdf(const char *name, const char *title, RooAbsRealLValue& observable, RooAbsPdf& inputPdf,
       double epsilon = 1.E-4);
 
-  RooBinSamplingPdf(const RooBinSamplingPdf& other, const char* name = 0);
+  RooBinSamplingPdf(const RooBinSamplingPdf& other, const char* name = nullptr);
 
-  virtual TObject* clone(const char* newname) const override {
+  TObject* clone(const char* newname) const override {
     return new RooBinSamplingPdf(*this, newname);
   }
 
   // Analytical Integration handling
-  Bool_t forceAnalyticalInt(const RooAbsArg& dep) const override {
+  bool forceAnalyticalInt(const RooAbsArg& dep) const override {
     return _pdf->forceAnalyticalInt(dep);
   }
   /// Forwards to the PDF's implementation.
   Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet,
-      const char* rangeName=0) const override {
+      const char* rangeName=nullptr) const override {
     return _pdf->getAnalyticalIntegralWN(allVars, analVars, normSet, rangeName);
   }
   /// Forwards to the PDF's implementation.
   Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& numVars,
-      const char* rangeName=0) const override {
+      const char* rangeName=nullptr) const override {
     return _pdf->getAnalyticalIntegral(allVars, numVars, rangeName);
   }
   /// Forwards to the PDF's implementation.
@@ -57,12 +57,12 @@ public:
     return _pdf->analyticalIntegralWN(code, normSet, rangeName);
   }
   /// Forwards to the PDF's implementation.
-  double analyticalIntegral(Int_t code, const char* rangeName=0) const override {
+  double analyticalIntegral(Int_t code, const char* rangeName=nullptr) const override {
     return _pdf->analyticalIntegral(code, rangeName);
   }
 
   /// Forwards to the PDF's implementation.
-  bool selfNormalized() const override { return _pdf->selfNormalized(); }
+  bool selfNormalized() const override { return true; }
 
   /// Forwards to the PDF's implementation.
   RooAbsReal* createIntegral(const RooArgSet& iset,
@@ -73,7 +73,7 @@ public:
   }
 
   ExtendMode extendMode() const override { return _pdf->extendMode(); }
-  virtual Double_t expectedEvents(const RooArgSet* nset) const override { return _pdf->expectedEvents(nset); }
+  double expectedEvents(const RooArgSet* nset) const override { return _pdf->expectedEvents(nset); }
 
   /// Forwards to the PDF's implementation.
   Int_t getGenerator(const RooArgSet& directVars, RooArgSet& generateVars, bool staticInitOK = true) const override {
@@ -84,18 +84,18 @@ public:
   /// Forwards to the PDF's implementation.
   void generateEvent(Int_t code) override { _pdf->generateEvent(code); }
   /// Forwards to the PDF's implementation.
-  Bool_t isDirectGenSafe(const RooAbsArg& arg) const override { return _pdf->isDirectGenSafe(arg); }
+  bool isDirectGenSafe(const RooAbsArg& arg) const override { return _pdf->isDirectGenSafe(arg); }
 
 
   // Hints for optimized brute-force sampling
   Int_t getMaxVal(const RooArgSet& vars) const override { return _pdf->getMaxVal(vars); }
-  Double_t maxVal(Int_t code) const override { return _pdf->maxVal(code); }
+  double maxVal(Int_t code) const override { return _pdf->maxVal(code); }
   Int_t minTrialSamples(const RooArgSet& arGenObs) const override { return _pdf->minTrialSamples(arGenObs); }
 
   // Plotting and binning hints
   /// Returns true, since this PDF is meant to be binned.
   bool isBinnedDistribution(const RooArgSet& /*obs*/) const override { return true; }
-  std::list<double>* binBoundaries(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const override;
+  std::list<double>* binBoundaries(RooAbsRealLValue& obs, double xlo, double xhi) const override;
   std::list<double>* plotSamplingHint(RooAbsRealLValue& obs, double xlo, double xhi) const override;
 
   std::unique_ptr<ROOT::Math::IntegratorOneDim>& integrator() const;
@@ -106,15 +106,10 @@ public:
   const RooAbsPdf& pdf() const { return _pdf.arg(); }
   const RooAbsReal& observable() const { return _observable.arg(); }
 
-  std::unique_ptr<RooArgSet> fillNormSetForServer(RooArgSet const& /*normSet*/,
-                         RooAbsArg const& /*server*/) const override {
-    // servers are evaluated unnormalized
-    return std::make_unique<RooArgSet>();
-  }
+  void computeBatch(cudaStream_t*, double* output, size_t size, RooFit::Detail::DataMap const&) const override;
 
 protected:
   double evaluate() const override;
-  RooSpan<double> evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const override;
   RooSpan<const double> binBoundaries() const;
 
 private:
@@ -127,10 +122,10 @@ private:
 
   RooTemplateProxy<RooAbsPdf> _pdf;
   RooTemplateProxy<RooAbsRealLValue> _observable;
-  double _relEpsilon{1.E-4}; /// Default integrator precision.
+  double _relEpsilon{1.E-4}; ///< Default integrator precision.
 
-  mutable std::unique_ptr<ROOT::Math::IntegratorOneDim> _integrator{nullptr}; //! Integrator used to sample bins.
-  mutable std::vector<double> _binBoundaries; //! Workspace to store data for bin sampling
+  mutable std::unique_ptr<ROOT::Math::IntegratorOneDim> _integrator{nullptr}; ///<! Integrator used to sample bins.
+  mutable std::vector<double> _binBoundaries; ///<! Workspace to store data for bin sampling
 
   ClassDefOverride(RooBinSamplingPdf,1)
 };

@@ -45,7 +45,7 @@ particle at say 8 fixed planes, the trajectory is described by an
 \f]
 in 8-dimensional pattern space.
 
-One proceeds by generating a a representative tracks sample and
+One proceeds by generating a representative tracks sample and
 building up the covariance matrix \f$\mathsf{C}\f$. Its eigenvectors and
 eigenvalues are computed by standard methods, and thus a new basis is
 obtained for the original 8-dimensional space the expansion of the
@@ -271,7 +271,7 @@ TPrincipal::TPrincipal(Int_t nVariables, Option_t *opt)
    fIsNormalised       = kFALSE;
    fNumberOfDataPoints = 0;
    fNumberOfVariables  = nVariables;
-   while (strlen(opt) > 0) {
+   while (opt && strlen(opt) > 0) {
       switch(*opt++) {
          case 'N':
          case 'n':
@@ -580,7 +580,7 @@ void TPrincipal::MakeHistograms(const char *name, Option_t *opt)
    Bool_t makeE  = kFALSE;
    Bool_t makeS  = kFALSE;
 
-   Int_t len     = strlen(opt);
+   Int_t len     = opt ? strlen(opt) : 0;
    Int_t i,j,k;
    for (i = 0; i < len; i++) {
       switch (opt[i]) {
@@ -819,7 +819,7 @@ void TPrincipal::MakeNormalised()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Generate the file <classname>PCA.cxx which contains the
+/// Generate the file `<classname>PCA.cxx` which contains the
 /// implementation of two methods:
 /// ~~~ {.cpp}
 ///    void <classname>::X2P(Double_t *x, Double *p)
@@ -837,7 +837,7 @@ void TPrincipal::MakeNormalised()
 ///    Double_t <classname>::fgSigmaValues[]
 /// ~~~
 /// are initialized, and assumed to exist. The class declaration is
-/// assumed to be in <classname>.h and assumed to be provided by the
+/// assumed to be in `<classname>.h` and assumed to be provided by the
 /// user.
 ///
 /// See TPrincipal::MakeRealCode for a list of options
@@ -856,7 +856,7 @@ void TPrincipal::MakeNormalised()
 ///     void P2X(Double_t *p, Double_t *x, Int_t nTest);
 ///   };
 /// ~~~
-/// Whether the methods <classname>::X2P and <classname>::P2X should
+/// Whether the methods `<classname>::%X2P` and `<classname>::%P2X` should
 /// be static or not, is up to the user.
 
 void TPrincipal::MakeMethods(const char *classname, Option_t *opt)
@@ -1090,7 +1090,7 @@ void TPrincipal::Print(Option_t *opt) const
    Bool_t printS = kFALSE;
    Bool_t printE = kFALSE;
 
-   Int_t len     = strlen(opt);
+   Int_t len     = opt ? strlen(opt) : 0;
    for (Int_t i = 0; i < len; i++) {
       switch (opt[i]) {
          case 'V':

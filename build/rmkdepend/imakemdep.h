@@ -679,7 +679,7 @@ char *cpp_argv[ARGUMENTS] = {
 /*
  * Step 7:  predefs
  *     If your compiler and/or preprocessor define any specific symbols, add
- *     them to the the following table.  The definition of struct symtab is
+ *     them to the following table. The definition of struct symtab is
  *     in util/makedepend/def.h.
  */
 struct symtab   predefs[] = {

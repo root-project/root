@@ -23,7 +23,6 @@ Class RooSharedProperties is the base class for shared properties
 that can be stored in RooSharedPropertiesList.
 **/
 
-#include "RooFit.h"
 #include "RooSharedProperties.h"
 #include "RooMsgService.h"
 #include "RooTrace.h"
@@ -42,36 +41,36 @@ ClassImp(RooSharedProperties);
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
 
-RooSharedProperties::RooSharedProperties() : _refCount(0), _inSharedList(kFALSE)
+RooSharedProperties::RooSharedProperties() : _refCount(0), _inSharedList(false)
 {
   RooTrace::create(this) ;
-} 
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor with unique-id string
 
-RooSharedProperties::RooSharedProperties(const char* uuidstr) : _uuid(uuidstr), _refCount(0), _inSharedList(kFALSE)
+RooSharedProperties::RooSharedProperties(const char* uuidstr) : _uuid(uuidstr), _refCount(0), _inSharedList(false)
 {
   RooTrace::create(this) ;
-} 
+}
 
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor
 
-RooSharedProperties::~RooSharedProperties() 
+RooSharedProperties::~RooSharedProperties()
 {
   RooTrace::destroy(this) ;
-} 
+}
 
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return true of unique id of this property is equal to that of other
 
-Bool_t RooSharedProperties::operator==(const RooSharedProperties& other) const
+bool RooSharedProperties::operator==(const RooSharedProperties& other) const
 {
   return (_uuid==other._uuid) ;
 }
@@ -80,7 +79,7 @@ Bool_t RooSharedProperties::operator==(const RooSharedProperties& other) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Printing interface
 
-void RooSharedProperties::Print(Option_t* /*opts*/) const 
+void RooSharedProperties::Print(Option_t* /*opts*/) const
 {
   cout << "RooSharedProperties(" << this << ") UUID = " << _uuid.AsString() << endl ;
 }

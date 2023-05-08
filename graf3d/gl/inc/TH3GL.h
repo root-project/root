@@ -37,7 +37,7 @@ public:
    TH3GL(TH3 *h, TPolyMarker3D *pm);
    virtual ~TH3GL();
 
-   virtual Bool_t SetModel(TObject* obj, const Option_t* opt=0);
+   virtual Bool_t SetModel(TObject* obj, const Option_t *opt = nullptr);
    virtual void   SetBBox();
 
    virtual void DirectDraw(TGLRnrCtx & rnrCtx) const;

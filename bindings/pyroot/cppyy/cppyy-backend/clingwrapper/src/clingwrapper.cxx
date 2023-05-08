@@ -184,7 +184,7 @@ static void inline do_trace(int sig) {
 
 class TExceptionHandlerImp : public TExceptionHandler {
 public:
-    virtual void HandleException(Int_t sig) {
+    void HandleException(Int_t sig) override {
         if (TROOT::Initialized()) {
             if (gException) {
                 gInterpreter->RewindDictionary();
@@ -271,10 +271,6 @@ public:
                "#include <vector>\n"
                "#include <utility>";
         gInterpreter->ProcessLine(code);
-
-    // make sure we run in batch mode as far as ROOT graphics is concerned
-        if (!getenv("ROOTSYS"))
-            gROOT->SetBatch(kTRUE);
 
     // create helpers for comparing thingies
         gInterpreter->Declare(
@@ -452,7 +448,7 @@ std::string Cppyy::ResolveEnum(const std::string& enum_type)
 
 // desugar the type before resolving
     std::string et_short = TClassEdit::ShortType(enum_type.c_str(), 1);
-    if (et_short.find("(anonymous") == std::string::npos) {
+    if (et_short.find("(unnamed") == std::string::npos) {
         std::ostringstream decl;
     // TODO: now presumed fixed with https://sft.its.cern.ch/jira/browse/ROOT-6988
         for (auto& itype : {"unsigned int"}) {
@@ -597,7 +593,7 @@ Cppyy::TCppType_t Cppyy::GetActualClass(TCppType_t klass, TCppObject_t obj)
     // if the raw name is the empty string (no guarantees that this is so as truly, the
     // address is corrupt, but it is common to be empty), then there is no accessible RTTI
     // and getting the unmangled name will crash ...
-        if (!raw || raw[0] == '\0')
+        if (!raw)
             return klass;
     } catch (std::bad_typeid) {
         return klass;        // can't risk passing to ROOT/meta as it may do RTTI
@@ -1276,7 +1272,7 @@ Cppyy::TCppIndex_t GetLongestInheritancePath(TClass *klass)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// \fn Cppyy::TCppIndex_t Cppyy::GetNumBasesLongest(TCppType_t klass)
+/// \fn Cppyy::TCppIndex_t Cppyy::GetNumBasesLongestBranch(TCppType_t klass)
 /// \brief Retrieve number of base classes in the longest branch of the
 ///        inheritance tree.
 /// \param[in] klass The class to start the retrieval process from.
@@ -2127,7 +2123,7 @@ bool Cppyy::IsEnumData(TCppScope_t scope, TCppIndex_t idata)
         std::string ti = m->GetTypeName();
 
     // can't check anonymous enums by type name, so just accept them as enums
-        if (ti.rfind("(anonymous)") != std::string::npos)
+        if (ti.rfind("(unnamed)") != std::string::npos)
             return m->Property() & kIsEnum;
 
     // since there seems to be no distinction between data of enum type and enum values,

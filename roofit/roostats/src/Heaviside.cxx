@@ -20,7 +20,7 @@ using namespace std;
     \ingroup Roostats
 
 Represents the Heaviside function.
-Evaluates to 1.0 when ((Double_t)x) >= ((Double_t)c), 0.0 otherwise.
+Evaluates to 1.0 when ((double)x) >= ((double)c), 0.0 otherwise.
 
 */
 
@@ -51,10 +51,10 @@ Heaviside::Heaviside(const Heaviside& other, const char* name) :
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t Heaviside::evaluate() const
+double Heaviside::evaluate() const
 {
   // ENTER EXPRESSION IN TERMS OF VARIABLE ARGUMENTS HERE
-  if (((Double_t)x) >= ((Double_t)c))
+  if (((double)x) >= ((double)c))
      return 1.0;
   else
      return 0.0;

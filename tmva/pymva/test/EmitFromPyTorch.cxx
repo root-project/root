@@ -17,9 +17,9 @@ int main(){
    Py_Initialize();
 
    // Generating PyTorch models for testing
-   FILE* fPyTorchModel;
-   fPyTorchModel = fopen("generatePyTorchModel.py", "r");
-   PyRun_SimpleFile(fPyTorchModel, "generatePyTorchModel.py");
+   FILE* fPyTorchModels;
+   fPyTorchModels = fopen("generatePyTorchModels.py", "r");
+   PyRun_SimpleFile(fPyTorchModels, "generatePyTorchModels.py");
 
    //Emitting header file for PyTorch nn.Module
    std::vector<size_t> inputTensorShapeModule{2,6};

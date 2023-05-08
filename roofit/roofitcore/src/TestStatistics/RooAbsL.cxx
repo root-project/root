@@ -12,7 +12,6 @@
 
 #include <RooFit/TestStatistics/RooAbsL.h>
 #include "ConstantTermsOptimizer.h"
-#include "RooAbsPdf.h"
 #include "RooAbsData.h"
 
 // for dynamic casts in init_clones:
@@ -58,7 +57,7 @@ RooAbsL::RooAbsL(std::shared_ptr<RooAbsPdf> pdf, std::shared_ptr<RooAbsData> dat
    extended_ = isExtendedHelper(pdf_.get(), extended);
    if (extended == Extended::Auto) {
       if (extended_) {
-         oocoutI((TObject *)nullptr, Minimization)
+         oocoutI(nullptr, Minimization)
             << "in RooAbsL ctor: p.d.f. provides expected number of events, including extended term in likelihood."
             << std::endl;
       }
@@ -125,15 +124,15 @@ void RooAbsL::initClones(RooAbsPdf &inpdf, RooAbsData &indata)
    pdf_->recursiveRedirectServers(*origParams);
 
    // Store normalization set
-   normSet_.reset((RooArgSet *)indata.get()->snapshot(kFALSE));
+   normSet_.reset((RooArgSet *)indata.get()->snapshot(false));
 
    // Expand list of observables with any observables used in parameterized ranges
    for (const auto realDep : *_funcObsSet) {
       auto realDepRLV = dynamic_cast<RooAbsRealLValue *>(realDep);
       if (realDepRLV && realDepRLV->isDerived()) {
          RooArgSet tmp2;
-         realDepRLV->leafNodeServerList(&tmp2, 0, kTRUE);
-         _funcObsSet->add(tmp2, kTRUE);
+         realDepRLV->leafNodeServerList(&tmp2, 0, true);
+         _funcObsSet->add(tmp2, true);
       }
    }
 
@@ -158,7 +157,7 @@ void RooAbsL::initClones(RooAbsPdf &inpdf, RooAbsData &indata)
       // Check that range of observables in pdf is equal or contained in range of observables in data
 
       if (!realReal->getBinning().lowBoundFunc() && realReal->getMin() < (datReal->getMin() - 1e-6)) {
-         oocoutE((TObject *)0, InputArguments) << "RooAbsL: ERROR minimum of FUNC observable " << arg->GetName() << "("
+         oocoutE(nullptr, InputArguments) << "RooAbsL: ERROR minimum of FUNC observable " << arg->GetName() << "("
                                                << realReal->getMin() << ") is smaller than that of " << arg->GetName()
                                                << " in the dataset (" << datReal->getMin() << ")" << std::endl;
          RooErrorHandler::softAbort();
@@ -166,7 +165,7 @@ void RooAbsL::initClones(RooAbsPdf &inpdf, RooAbsData &indata)
       }
 
       if (!realReal->getBinning().highBoundFunc() && realReal->getMax() > (datReal->getMax() + 1e-6)) {
-         oocoutE((TObject *)0, InputArguments)
+         oocoutE(nullptr, InputArguments)
             << "RooAbsL: ERROR maximum of FUNC observable " << arg->GetName() << " is larger than that of "
             << arg->GetName() << " in the dataset" << std::endl;
          RooErrorHandler::softAbort();
@@ -180,12 +179,18 @@ void RooAbsL::initClones(RooAbsPdf &inpdf, RooAbsData &indata)
 
    // TODO
 
-   // If dataset is binned, activate caching of bins that are invalid because they're outside the
-   // updated range definition (WVE need to add virtual interface here)
-   RooDataHist *tmph = dynamic_cast<RooDataHist *>(data_.get());
-   if (tmph) {
-      tmph->cacheValidEntries();
-   }
+   // Jonas R.: The following code is commented out, because the functionality
+   // to mask out-ot-range entries with `RooDataHist::cacheValidEntries` has
+   // been removed from the RooDataHist. If you want to implement ranged fits
+   // properly, please create a RooDataHist for the requested range with
+   // `RooDataHist::reduce`.
+
+   //// If dataset is binned, activate caching of bins that are invalid because they're outside the
+   //// updated range definition (WVE need to add virtual interface here)
+   //RooDataHist *tmph = dynamic_cast<RooDataHist *>(data_.get());
+   //if (tmph) {
+      //tmph->cacheValidEntries();
+   //}
 
    // This is deferred from part 2 - but must happen after part 3 - otherwise invalid bins cannot be properly marked in
    // cacheValidEntries
@@ -207,16 +212,15 @@ void RooAbsL::initClones(RooAbsPdf &inpdf, RooAbsData &indata)
    // Set value caching mode for all nodes that depend on any of the observables to ADirty
    pdf_->optimizeCacheMode(*_funcObsSet);
    // Disable propagation of dirty state flags for observables
-   data_->setDirtyProp(kFALSE);
+   data_->setDirtyProp(false);
 
    // Disable reading of observables that are not used
    data_->optimizeReadingWithCaching(*pdf_, RooArgSet(), RooArgSet());
 }
 
-RooArgSet *RooAbsL::getParameters()
+std::unique_ptr<RooArgSet> RooAbsL::getParameters()
 {
-   auto ding = pdf_->getParameters(*data_);
-   return ding;
+   return std::unique_ptr<RooArgSet>{pdf_->getParameters(*data_)};
 }
 
 void RooAbsL::constOptimizeTestStatistic(RooAbsArg::ConstOpCode opcode, bool doAlsoTrackingOpt)

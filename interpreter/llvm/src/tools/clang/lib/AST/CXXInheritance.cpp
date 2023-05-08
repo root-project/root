@@ -33,29 +33,6 @@
 
 using namespace clang;
 
-/// Computes the set of declarations referenced by these base
-/// paths.
-void CXXBasePaths::ComputeDeclsFound() {
-  assert(NumDeclsFound == 0 && !DeclsFound &&
-         "Already computed the set of declarations");
-
-  llvm::SmallSetVector<NamedDecl *, 8> Decls;
-  for (paths_iterator Path = begin(), PathEnd = end(); Path != PathEnd; ++Path)
-    Decls.insert(Path->Decls.front());
-
-  NumDeclsFound = Decls.size();
-  DeclsFound = llvm::make_unique<NamedDecl *[]>(NumDeclsFound);
-  std::copy(Decls.begin(), Decls.end(), DeclsFound.get());
-}
-
-CXXBasePaths::decl_range CXXBasePaths::found_decls() {
-  if (NumDeclsFound == 0)
-    ComputeDeclsFound();
-
-  return decl_range(decl_iterator(DeclsFound.get()),
-                    decl_iterator(DeclsFound.get() + NumDeclsFound));
-}
-
 /// isAmbiguous - Determines whether the set of paths provided is
 /// ambiguous, i.e., there are two or more paths that refer to
 /// different base class subobjects of the same type. BaseType must be
@@ -147,37 +124,27 @@ CXXRecordDecl::isCurrentInstantiation(const DeclContext *CurContext) const {
   return false;
 }
 
-bool CXXRecordDecl::forallBases(ForallBasesCallback BaseMatches,
-                                bool AllowShortCircuit) const {
+bool CXXRecordDecl::forallBases(ForallBasesCallback BaseMatches) const {
   SmallVector<const CXXRecordDecl*, 8> Queue;
 
   const CXXRecordDecl *Record = this;
-  bool AllMatches = true;
   while (true) {
     for (const auto &I : Record->bases()) {
       const RecordType *Ty = I.getType()->getAs<RecordType>();
-      if (!Ty) {
-        if (AllowShortCircuit) return false;
-        AllMatches = false;
-        continue;
-      }
+      if (!Ty)
+        return false;
 
       CXXRecordDecl *Base =
             cast_or_null<CXXRecordDecl>(Ty->getDecl()->getDefinition());
       if (!Base ||
           (Base->isDependentContext() &&
            !Base->isCurrentInstantiation(Record))) {
-        if (AllowShortCircuit) return false;
-        AllMatches = false;
-        continue;
+        return false;
       }
 
       Queue.push_back(Base);
-      if (!BaseMatches(Base)) {
-        if (AllowShortCircuit) return false;
-        AllMatches = false;
-        continue;
-      }
+      if (!BaseMatches(Base))
+        return false;
     }
 
     if (Queue.empty())
@@ -185,7 +152,7 @@ bool CXXRecordDecl::forallBases(ForallBasesCallback BaseMatches,
     Record = Queue.pop_back_val(); // not actually a queue.
   }
 
-  return AllMatches;
+  return true;
 }
 
 bool CXXBasePaths::lookupInBases(ASTContext &Context,
@@ -412,54 +379,45 @@ bool CXXRecordDecl::FindVirtualBaseClass(const CXXBaseSpecifier *Specifier,
             ->getCanonicalDecl() == BaseRecord;
 }
 
-bool CXXRecordDecl::FindTagMember(const CXXBaseSpecifier *Specifier,
-                                  CXXBasePath &Path,
-                                  DeclarationName Name) {
-  RecordDecl *BaseRecord =
-    Specifier->getType()->castAs<RecordType>()->getDecl();
-
-  for (Path.Decls = BaseRecord->lookup(Name);
-       !Path.Decls.empty();
-       Path.Decls = Path.Decls.slice(1)) {
-    if (Path.Decls.front()->isInIdentifierNamespace(IDNS_Tag))
-      return true;
-  }
-
-  return false;
+static bool isOrdinaryMember(const NamedDecl *ND) {
+  return ND->isInIdentifierNamespace(Decl::IDNS_Ordinary | Decl::IDNS_Tag |
+                                     Decl::IDNS_Member);
 }
 
-static bool findOrdinaryMember(RecordDecl *BaseRecord, CXXBasePath &Path,
+static bool findOrdinaryMember(const CXXRecordDecl *RD, CXXBasePath &Path,
                                DeclarationName Name) {
-  const unsigned IDNS = Decl::IDNS_Ordinary | Decl::IDNS_Tag |
-                        Decl::IDNS_Member;
-  for (Path.Decls = BaseRecord->lookup(Name);
-       !Path.Decls.empty();
-       Path.Decls = Path.Decls.slice(1)) {
-    if (Path.Decls.front()->isInIdentifierNamespace(IDNS))
+  Path.Decls = RD->lookup(Name).begin();
+  for (DeclContext::lookup_iterator I = Path.Decls, E = I.end(); I != E; ++I)
+    if (isOrdinaryMember(*I))
       return true;
-  }
 
   return false;
 }
 
-bool CXXRecordDecl::FindOrdinaryMember(const CXXBaseSpecifier *Specifier,
-                                       CXXBasePath &Path,
-                                       DeclarationName Name) {
-  RecordDecl *BaseRecord =
-      Specifier->getType()->castAs<RecordType>()->getDecl();
-  return findOrdinaryMember(BaseRecord, Path, Name);
+bool CXXRecordDecl::hasMemberName(DeclarationName Name) const {
+  CXXBasePath P;
+  if (findOrdinaryMember(this, P, Name))
+    return true;
+
+  CXXBasePaths Paths(false, false, false);
+  return lookupInBases(
+      [Name](const CXXBaseSpecifier *Specifier, CXXBasePath &Path) {
+        return findOrdinaryMember(Specifier->getType()->getAsCXXRecordDecl(),
+                                  Path, Name);
+      },
+      Paths);
 }
 
-bool CXXRecordDecl::FindOrdinaryMemberInDependentClasses(
-    const CXXBaseSpecifier *Specifier, CXXBasePath &Path,
-    DeclarationName Name) {
+static bool
+findOrdinaryMemberInDependentClasses(const CXXBaseSpecifier *Specifier,
+                                     CXXBasePath &Path, DeclarationName Name) {
   const TemplateSpecializationType *TST =
       Specifier->getType()->getAs<TemplateSpecializationType>();
   if (!TST) {
     auto *RT = Specifier->getType()->getAs<RecordType>();
     if (!RT)
       return false;
-    return findOrdinaryMember(RT->getDecl(), Path, Name);
+    return findOrdinaryMember(cast<CXXRecordDecl>(RT->getDecl()), Path, Name);
   }
   TemplateName TN = TST->getTemplateName();
   const auto *TD = dyn_cast_or_null<ClassTemplateDecl>(TN.getAsTemplateDecl());
@@ -471,81 +429,34 @@ bool CXXRecordDecl::FindOrdinaryMemberInDependentClasses(
   return findOrdinaryMember(RD, Path, Name);
 }
 
-bool CXXRecordDecl::FindOMPReductionMember(const CXXBaseSpecifier *Specifier,
-                                           CXXBasePath &Path,
-                                           DeclarationName Name) {
-  RecordDecl *BaseRecord =
-      Specifier->getType()->castAs<RecordType>()->getDecl();
-
-  for (Path.Decls = BaseRecord->lookup(Name); !Path.Decls.empty();
-       Path.Decls = Path.Decls.slice(1)) {
-    if (Path.Decls.front()->isInIdentifierNamespace(IDNS_OMPReduction))
-      return true;
-  }
-
-  return false;
-}
-
-bool CXXRecordDecl::FindOMPMapperMember(const CXXBaseSpecifier *Specifier,
-                                        CXXBasePath &Path,
-                                        DeclarationName Name) {
-  RecordDecl *BaseRecord =
-      Specifier->getType()->castAs<RecordType>()->getDecl();
-
-  for (Path.Decls = BaseRecord->lookup(Name); !Path.Decls.empty();
-       Path.Decls = Path.Decls.slice(1)) {
-    if (Path.Decls.front()->isInIdentifierNamespace(IDNS_OMPMapper))
-      return true;
-  }
-
-  return false;
-}
-
-bool CXXRecordDecl::
-FindNestedNameSpecifierMember(const CXXBaseSpecifier *Specifier,
-                              CXXBasePath &Path,
-                              DeclarationName Name) {
-  RecordDecl *BaseRecord =
-    Specifier->getType()->castAs<RecordType>()->getDecl();
-
-  for (Path.Decls = BaseRecord->lookup(Name);
-       !Path.Decls.empty();
-       Path.Decls = Path.Decls.slice(1)) {
-    // FIXME: Refactor the "is it a nested-name-specifier?" check
-    if (isa<TypedefNameDecl>(Path.Decls.front()) ||
-        Path.Decls.front()->isInIdentifierNamespace(IDNS_Tag))
-      return true;
-  }
-
-  return false;
-}
-
 std::vector<const NamedDecl *> CXXRecordDecl::lookupDependentName(
-    const DeclarationName &Name,
+    DeclarationName Name,
     llvm::function_ref<bool(const NamedDecl *ND)> Filter) {
   std::vector<const NamedDecl *> Results;
   // Lookup in the class.
-  DeclContext::lookup_result DirectResult = lookup(Name);
-  if (!DirectResult.empty()) {
-    for (const NamedDecl *ND : DirectResult) {
-      if (Filter(ND))
-        Results.push_back(ND);
-    }
-    return Results;
+  bool AnyOrdinaryMembers = false;
+  for (const NamedDecl *ND : lookup(Name)) {
+    if (isOrdinaryMember(ND))
+      AnyOrdinaryMembers = true;
+    if (Filter(ND))
+      Results.push_back(ND);
   }
+  if (AnyOrdinaryMembers)
+    return Results;
+
   // Perform lookup into our base classes.
   CXXBasePaths Paths;
   Paths.setOrigin(this);
   if (!lookupInBases(
           [&](const CXXBaseSpecifier *Specifier, CXXBasePath &Path) {
-            return CXXRecordDecl::FindOrdinaryMemberInDependentClasses(
-                Specifier, Path, Name);
+            return findOrdinaryMemberInDependentClasses(Specifier, Path, Name);
           },
           Paths, /*LookupInDependent=*/true))
     return Results;
-  for (const NamedDecl *ND : Paths.front().Decls) {
-    if (Filter(ND))
-      Results.push_back(ND);
+  for (DeclContext::lookup_iterator I = Paths.front().Decls, E = I.end();
+       I != E; ++I) {
+    if (isOrdinaryMember(*I) && Filter(*I))
+      Results.push_back(*I);
   }
   return Results;
 }
@@ -758,6 +669,8 @@ CXXRecordDecl::getFinalOverriders(CXXFinalOverriderMap &FinalOverriders) const {
         return false;
       };
 
+      // FIXME: IsHidden reads from Overriding from the middle of a remove_if
+      // over the same sequence! Is this guaranteed to work?
       Overriding.erase(
           std::remove_if(Overriding.begin(), Overriding.end(), IsHidden),
           Overriding.end());

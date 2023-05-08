@@ -8,10 +8,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-
 #include <ROOT/RSqliteDS.hxx>
-#include <ROOT/RConfig.hxx>
-#include <ROOT/RDF/Utils.hxx>
 #include <ROOT/RRawFile.hxx>
 
 #include "TError.h"
@@ -526,7 +523,7 @@ bool RSqliteDS::HasColumn(std::string_view colName) const
 
 ////////////////////////////////////////////////////////////////////////////
 /// Resets the SQlite query engine at the beginning of the event loop.
-void RSqliteDS::Initialise()
+void RSqliteDS::Initialize()
 {
    fNRow = 0;
    int retval = sqlite3_reset(fDataSet->fQuery);
@@ -543,10 +540,19 @@ std::string RSqliteDS::GetLabel()
 /// \brief Factory method to create a SQlite RDataFrame.
 /// \param[in] fileName Path of the sqlite file.
 /// \param[in] query SQL query that defines the data set.
-RDataFrame MakeSqliteDataFrame(std::string_view fileName, std::string_view query)
+RDataFrame FromSqlite(std::string_view fileName, std::string_view query)
 {
    ROOT::RDataFrame rdf(std::make_unique<RSqliteDS>(std::string(fileName), std::string(query)));
    return rdf;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////
+/// \brief Factory method to create a SQlite RDataFrame.
+///
+/// Deprecated in favor of FromSqlite().
+RDataFrame MakeSqliteDataFrame(std::string_view fileName, std::string_view query)
+{
+   return FromSqlite(fileName, query);
 }
 
 ////////////////////////////////////////////////////////////////////////////

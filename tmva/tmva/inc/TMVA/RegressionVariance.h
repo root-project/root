@@ -89,7 +89,7 @@ namespace TMVA {
 
    protected:
 
-      TString fName;  // name of the concrete Separation Index implementation
+      TString fName;  ///< name of the concrete Separation Index implementation
 
       ClassDef(RegressionVariance,0); // Interface to different separation criteria used in training algorithms
    };

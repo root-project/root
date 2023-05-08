@@ -91,6 +91,7 @@ ClassImp(TGLViewer);
 
 TGLColorSet TGLViewer::fgDefaultColorSet;
 Bool_t      TGLViewer::fgUseDefaultColorSetForNewViewers = kFALSE;
+Float_t     TGLViewer::fgAxisLabelScale = 1;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1179,7 +1180,7 @@ void TGLViewer::DrawGuides()
       glDisable(GL_DEPTH_TEST);
       disabled = kTRUE;
    }
-   TGLUtil::DrawSimpleAxes(*fCamera, fOverallBoundingBox, fAxesType);
+   TGLUtil::DrawSimpleAxes(*fCamera, fOverallBoundingBox, fAxesType, fgAxisLabelScale);
    if (disabled)
       glEnable(GL_DEPTH_TEST);
 }
@@ -1700,6 +1701,16 @@ void TGLViewer::UseDefaultColorSetForNewViewers(Bool_t x)
 Bool_t TGLViewer::IsUsingDefaultColorSetForNewViewers()
 {
    return fgUseDefaultColorSetForNewViewers;
+}
+
+ ////////////////////////////////////////////////////////////////////////////////
+/// Sets static scaling facor that allows simple guide axies to have label values
+/// scaled relative to actual scene dimensions.
+/// This is set to 1 in static initialization.
+
+void TGLViewer::SetAxisLabelScale(Float_t als)
+{
+   fgAxisLabelScale = als;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

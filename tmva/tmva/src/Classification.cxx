@@ -938,7 +938,7 @@ void TMVA::Experimental::Classification::TestMethod(Types::EMVA method, TString 
 
 //_______________________________________________________________________
 /**
- * return the the vector of TMVA::Experimental::ClassificationResult objects.
+ * Return the vector of TMVA::Experimental::ClassificationResult objects.
  * \return vector of results.
  */
 std::vector<TMVA::Experimental::ClassificationResult> &TMVA::Experimental::Classification::GetResults()

@@ -390,8 +390,8 @@ End_Macro
 ## Interface to TMathText
 
 The class `TMathText` is a TeX math formulae interpreter. It uses plain
-TeX syntax and uses "\" as control instead of "#". If a piece of text containing
-"\" is given to `TLatex` then `TMathText` is automatically invoked.
+TeX syntax and uses "\\" as control instead of "#". If a piece of text containing
+"\\" is given to `TLatex` then `TMathText` is automatically invoked.
 Therefore, as histograms' titles, axis titles, labels etc ... are drawn using
 `TLatex`, the `TMathText` syntax can be used for them also.
 */
@@ -403,12 +403,9 @@ TLatex::TLatex()
 {
    fFactorSize  = 1.5;
    fFactorPos   = 0.6;
-   fError       = 0;
+   fError       = nullptr;
    fShow        = kFALSE;
-   fPos         = 0;
-   fTabMax      = 0;
    fOriginSize  = 0.04;
-   fTabSize     = 0;
    fItalic      = kFALSE;
    fLimitFactorSize = 3;
    SetLineWidth(2);
@@ -422,12 +419,9 @@ TLatex::TLatex(Double_t x, Double_t y, const char *text)
 {
    fFactorSize  = 1.5;
    fFactorPos   = 0.6;
-   fError       = 0;
+   fError       = nullptr;
    fShow        = kFALSE;
-   fPos         = 0;
-   fTabMax      = 0;
    fOriginSize  = 0.04;
-   fTabSize     = 0;
    fItalic      = kFALSE;
    fLimitFactorSize = 3;
    SetLineWidth(2);
@@ -443,19 +437,16 @@ TLatex::~TLatex()
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor.
 
-TLatex::TLatex(const TLatex &text) : TText(text), TAttLine(text)
+TLatex::TLatex(const TLatex &latex) : TText(latex), TAttLine(latex)
 {
    fFactorSize  = 1.5;
    fFactorPos   = 0.6;
-   fError       = 0;
+   fError       = nullptr;
    fShow        = kFALSE;
-   fPos         = 0;
-   fTabMax      = 0;
    fOriginSize  = 0.04;
-   fTabSize     = 0;
    fItalic      = kFALSE;
    fLimitFactorSize = 3;
-   ((TLatex&)text).Copy(*this);
+   latex.TLatex::Copy(*this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -463,19 +454,17 @@ TLatex::TLatex(const TLatex &text) : TText(text), TAttLine(text)
 
 TLatex& TLatex::operator=(const TLatex& lt)
 {
-   if(this!=&lt) {
+   if (this != &lt) {
       TText::operator=(lt);
       TAttLine::operator=(lt);
-      fFactorSize=lt.fFactorSize;
-      fFactorPos=lt.fFactorPos;
-      fLimitFactorSize=lt.fLimitFactorSize;
-      fError=lt.fError;
-      fShow=lt.fShow;
-      fTabSize=lt.fTabSize;
-      fOriginSize=lt.fOriginSize;
-      fTabSize=lt.fTabSize;
-      fTabSize=lt.fTabSize;
-      fItalic=lt.fItalic;
+      fFactorSize = lt.fFactorSize;
+      fFactorPos = lt.fFactorPos;
+      fLimitFactorSize = lt.fLimitFactorSize;
+      fError = lt.fError;
+      fShow = lt.fShow;
+      fTabSize = lt.fTabSize;
+      fOriginSize = lt.fOriginSize;
+      fItalic = lt.fItalic;
    }
    return *this;
 }
@@ -485,18 +474,16 @@ TLatex& TLatex::operator=(const TLatex& lt)
 
 void TLatex::Copy(TObject &obj) const
 {
+   TText::Copy(obj);
+   TAttLine::Copy((TLatex &)obj);
    ((TLatex&)obj).fFactorSize  = fFactorSize;
    ((TLatex&)obj).fFactorPos   = fFactorPos;
    ((TLatex&)obj).fLimitFactorSize  = fLimitFactorSize;
    ((TLatex&)obj).fError       = fError;
    ((TLatex&)obj).fShow        = fShow;
-   ((TLatex&)obj).fTabSize     = 0;
+   ((TLatex&)obj).fTabSize     = fTabSize;
    ((TLatex&)obj).fOriginSize  = fOriginSize;
-   ((TLatex&)obj).fTabMax      = fTabMax;
-   ((TLatex&)obj).fPos         = fPos;
    ((TLatex&)obj).fItalic      = fItalic;
-   TText::Copy(obj);
-   TAttLine::Copy((TLatex&)obj);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -516,10 +503,10 @@ TLatex::TLatexFormSize TLatex::Anal1(TextSpec_t spec, const Char_t* t, Int_t len
 ///  itself recursively to analyse the arguments of the operator.
 ///  when the argument is an atom (normal text), it calculates
 ///  the size of it and return it as the result.
-///  for example : if the operator #frac{arg1}{arg2} is found :
+///  for example : if the operator #%frac{arg1}{arg2} is found :
 ///  Analyse(arg1) return the size of arg1 (width, up, down)
 ///  Analyse(arg2) return the size of arg2
-///  now, we know the size of #frac{arg1}{arg2}:
+///  now, we know the size of #%frac{arg1}{arg2}:
 ///
 /// ~~~ {.cpp}
 ///  width = max(width_arg1, width_arg2)
@@ -557,11 +544,11 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, 
 
    const char *tab3[] = { "bar","vec","dot","hat","ddot","acute","grave","check","tilde","slash"};
 
-   if (fError != 0) return TLatexFormSize(0,0,0);
+   if (fError) return TLatexFormSize(0,0,0);
 
-   Int_t nBlancDeb=0,nBlancFin=0,l_nBlancDeb=0,l_nBlancFin=0;
-   Int_t i,k;
-   Int_t min=0, max=0;
+   Int_t nBlancDeb = 0, nBlancFin = 0, l_nBlancDeb = 0, l_nBlancFin = 0;
+   Int_t i, k;
+   Int_t min = 0, max = 0;
    Bool_t cont = kTRUE;
    while(cont) {
       // count leading blanks
@@ -1455,7 +1442,7 @@ TLatex::TLatexFormSize TLatex::Analyse(Double_t x, Double_t y, TextSpec_t spec, 
                // tilde must be drawn separately on screen and on PostScript
                // because an adjustment is required along Y for PostScript.
                TVirtualPS *saveps = gVirtualPS;
-               if (gVirtualPS) gVirtualPS = 0;
+               if (gVirtualPS) gVirtualPS = nullptr;
                Double_t y22 = y2;
                if (gVirtualX->InheritsFrom("TGCocoa")) y2 -= 4.7*sub;
                Double_t sinang  = TMath::Sin(spec.fAngle/180*kPI);
@@ -2148,7 +2135,7 @@ void TLatex::PaintLatex(Double_t x, Double_t y, Double_t angle, Double_t size, c
          }
          gPad->SetBatch(saveb);
       }
-      gVirtualPS = 0;
+      gVirtualPS = nullptr;
    }
 
    if (!gPad->IsBatch()) PaintLatex1( x, y, angle, size, text1);
@@ -2164,13 +2151,13 @@ Int_t TLatex::PaintLatex1(Double_t x, Double_t y, Double_t angle, Double_t size,
    if( newText.Length() == 0) return 0;
    newText.ReplaceAll("#hbox","#mbox");
 
-   fError = 0 ;
+   fError = nullptr;
    if (CheckLatexSyntax(newText)) {
       std::cout<<"\n*ERROR<TLatex>: "<<fError<<std::endl;
       std::cout<<"==> "<<text1<<std::endl;
       return 0;
    }
-   fError = 0 ;
+   fError = nullptr;
 
    // Do not use Latex if font is low precision.
    if (fTextFont%10 < 2) {
@@ -2232,7 +2219,7 @@ Int_t TLatex::PaintLatex1(Double_t x, Double_t y, Double_t angle, Double_t size,
    Short_t halign = fTextAlign/10;
    Short_t valign = fTextAlign - 10*halign;
    TextSpec_t newSpec = spec;
-   if (fError != 0) {
+   if (fError) {
       std::cout<<"*ERROR<TLatex>: "<<fError<<std::endl;
       std::cout<<"==> "<<text<<std::endl;
    } else {
@@ -2260,8 +2247,8 @@ Int_t TLatex::PaintLatex1(Double_t x, Double_t y, Double_t angle, Double_t size,
    SetTextAlign(valign+10*halign);
    SetLineWidth(lineW);
    SetLineColor(lineC);
-   delete[] fTabSize;
-   if (fError != 0) return 0;
+   fTabSize.clear();
+   if (fError) return 0;
    return 1;
 }
 
@@ -2297,7 +2284,6 @@ Int_t TLatex::CheckLatexSyntax(TString &text)
    Int_t length = text.Length() ;
 
    Int_t nOfCurlyBracket, nOfKW1, nOfKW2, nOfKW3, nOfSquareCurly, nOfCurlyCurly ;
-   Int_t nOfExtraCurly = 0 , nOfExtraSquare = 0;
    Int_t nOfSquareBracket = 0 ;
    Int_t error = 0  ;
    Bool_t quote1 = kFALSE , quote2 = kFALSE;
@@ -2410,19 +2396,16 @@ Int_t TLatex::CheckLatexSyntax(TString &text)
                text.Insert(i,"@") ;
                length++ ;
                i+=2 ;
-               nOfExtraSquare-- ;
          }
          else if (text[i] == '[' ) {  // not belonging to a key word, add @ in front
                text.Insert(i,"@") ;
                length++ ;
                i+=2 ;
-               nOfExtraSquare++ ;
          }
          else if (text[i] == '{' ) {  // not belonging to a key word, add @ in front
                text.Insert(i,"@") ;
                length++ ;
                i+=2 ;
-               nOfExtraCurly++ ;
          }
          else if (text[i] == '}' ) {
             if ( nOfCurlyBracket) {
@@ -2432,7 +2415,6 @@ Int_t TLatex::CheckLatexSyntax(TString &text)
                text.Insert(i,"@") ;
                length++ ;
                i+=2 ;
-               nOfExtraCurly-- ;
             }
          } else {
             i++ ;
@@ -2474,12 +2456,7 @@ Int_t TLatex::CheckLatexSyntax(TString &text)
 
 TLatex::TLatexFormSize TLatex::FirstParse(Double_t angle, Double_t size, const Char_t *text)
 {
-   fError   = 0;
-   fTabMax  = 100;
-   fTabSize = new FormSize_t[fTabMax];
-   // we assume less than 100 parts in one formula
-   // we will reallocate if necessary.
-   fPos        = 0;
+   fTabSize.reserve(100); // ensure 100 entries before memory reallocation required
    fShow       = kFALSE;
    fOriginSize = size;
 
@@ -2536,19 +2513,19 @@ Double_t TLatex::GetXsize()
       return tm.GetXsize();
    }
 
-   fError = 0 ;
+   fError = nullptr;
    if (CheckLatexSyntax(newText)) {
       std::cout<<"\n*ERROR<TLatex>: "<<fError<<std::endl;
       std::cout<<"==> "<<GetTitle()<<std::endl;
       return 0;
    }
-   fError = 0 ;
+   fError = nullptr;
 
    const Char_t *text = newText.Data() ;
    Double_t angle_old = GetTextAngle();
    TLatexFormSize fs = FirstParse(0,GetTextSize(),text);
    SetTextAngle(angle_old);
-   delete[] fTabSize;
+   fTabSize.clear();
    return TMath::Abs(gPad->AbsPixeltoX(Int_t(fs.Width())) - gPad->AbsPixeltoX(0));
 }
 
@@ -2568,13 +2545,13 @@ void TLatex::GetBoundingBox(UInt_t &w, UInt_t &h, Bool_t angle)
       return;
    }
 
-   fError = 0 ;
+   fError = nullptr;
    if (CheckLatexSyntax(newText)) {
       std::cout<<"\n*ERROR<TLatex>: "<<fError<<std::endl;
       std::cout<<"==> "<<GetTitle()<<std::endl;
       return;
    }
-   fError = 0 ;
+   fError = nullptr;
 
    if (angle) {
       Int_t cBoxX[4], cBoxY[4];
@@ -2602,7 +2579,7 @@ void TLatex::GetBoundingBox(UInt_t &w, UInt_t &h, Bool_t angle)
    } else {
       const Char_t *text = newText.Data() ;
       TLatexFormSize fs = FirstParse(GetTextAngle(),GetTextSize(),text);
-      delete[] fTabSize;
+      fTabSize.clear();
       w = (UInt_t)fs.Width();
       h = (UInt_t)fs.Height();
    }
@@ -2624,19 +2601,19 @@ Double_t TLatex::GetYsize()
       return tm.GetYsize();
    }
 
-   fError = 0 ;
+   fError = nullptr;
    if (CheckLatexSyntax(newText)) {
       std::cout<<"\n*ERROR<TLatex>: "<<fError<<std::endl;
       std::cout<<"==> "<<GetTitle()<<std::endl;
       return 0;
    }
-   fError = 0 ;
+   fError = nullptr;
 
-   const Char_t *text = newText.Data() ;
+   const Char_t *text = newText.Data();
    Double_t angsav = fTextAngle;
    TLatexFormSize fs = FirstParse(0,GetTextSize(),text);
    fTextAngle = angsav;
-   delete[] fTabSize;
+   fTabSize.clear();
    return TMath::Abs(gPad->AbsPixeltoY(Int_t(fs.Height())) - gPad->AbsPixeltoY(0));
 }
 
@@ -2645,8 +2622,13 @@ Double_t TLatex::GetYsize()
 
 TLatex::TLatexFormSize TLatex::Readfs()
 {
-   fPos--;
-   TLatexFormSize result(fTabSize[fPos].fWidth,fTabSize[fPos].fOver,fTabSize[fPos].fUnder);
+   if (fTabSize.empty()) {
+      Error("Readfs", "No data in fTabSize stack");
+      return TLatexFormSize(0,0,0);
+   }
+
+   TLatexFormSize result = fTabSize.back();
+   fTabSize.pop_back();
    return result;
 }
 
@@ -2655,21 +2637,7 @@ TLatex::TLatexFormSize TLatex::Readfs()
 
 void TLatex::Savefs(TLatex::TLatexFormSize *fs)
 {
-   fTabSize[fPos].fWidth  = fs->Width();
-   fTabSize[fPos].fOver   = fs->Over();
-   fTabSize[fPos].fUnder  = fs->Under();
-   fPos++;
-   if (fPos>=fTabMax) {
-      // allocate more memory
-      FormSize_t *temp = new FormSize_t[fTabMax+100];
-      // copy array
-      memcpy(temp,fTabSize,fTabMax*sizeof(FormSize_t));
-      fTabMax += 100;
-      // free previous array
-      delete [] fTabSize;
-      // swap pointers
-      fTabSize = temp;
-   }
+   fTabSize.emplace_back(*fs);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2679,21 +2647,20 @@ void TLatex::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
    char quote = '"';
 
-   if (gROOT->ClassSaved(TLatex::Class())) {
+   if (gROOT->ClassSaved(TLatex::Class()))
       out<<"   ";
-   } else {
+   else
       out<<"   TLatex *";
-   }
 
    TString s = GetTitle();
+   s.ReplaceSpecialCppChars();
 
-   s.ReplaceAll("\\","\\\\");
-   s.ReplaceAll("\"","\\\"");
-   out<<"   tex = new TLatex("<<fX<<","<<fY<<","<<quote<<s.Data()<<quote<<");"<<std::endl;
-   if (TestBit(kTextNDC)) out<<"tex->SetNDC();"<<std::endl;
+   out<<"   tex = new TLatex("<<fX<<","<<fY<<","<<quote<<s<<quote<<");"<<std::endl;
+   if (TestBit(kTextNDC))
+      out<<"   tex->SetNDC();"<<std::endl;
 
-   SaveTextAttributes(out,"tex",11,0,1,62,0.05);
-   SaveLineAttributes(out,"tex",1,1,1);
+   SaveTextAttributes(out, "tex", 11, 0, 1, 62, 0.05);
+   SaveLineAttributes(out, "tex", 1, 1, 1);
 
    out<<"   tex->Draw();"<<std::endl;
 }

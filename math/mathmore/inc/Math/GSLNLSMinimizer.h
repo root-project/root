@@ -47,95 +47,6 @@ namespace ROOT {
 
       class GSLMultiFit;
 
-
-//________________________________________________________________________________
-/**
-    LSResidualFunc class description.
-    Internal class used for accessing the residuals of the Least Square function
-    and their derivates which are estimated numerically using GSL numerical derivation.
-    The class contains a pointer to the fit method function and an index specifying
-    the i-th residual and wraps it in a multi-dim gradient function interface
-    ROOT::Math::IGradientFunctionMultiDim.
-    The class is used by ROOT::Math::GSLNLSMinimizer (GSL non linear least square fitter)
-
-    @ingroup MultiMin
-*/
-class LSResidualFunc : public IMultiGradFunction {
-public:
-
-   //default ctor (required by CINT)
-   LSResidualFunc() : fIndex(0), fChi2(0)
-   {}
-
-
-   LSResidualFunc(const ROOT::Math::FitMethodFunction & func, unsigned int i) :
-      fIndex(i),
-      fChi2(&func),
-      fX2(std::vector<double>(func.NDim() ) )
-   {}
-
-
-   // copy ctor
-   LSResidualFunc(const LSResidualFunc & rhs) :
-      IMultiGenFunction(),
-      IMultiGradFunction()
-   {
-      operator=(rhs);
-   }
-
-   // assignment
-   LSResidualFunc & operator= (const LSResidualFunc & rhs)
-   {
-      fIndex = rhs.fIndex;
-      fChi2 = rhs.fChi2;
-      fX2 = rhs.fX2;
-      return *this;
-   }
-
-   IMultiGenFunction * Clone() const {
-      return new LSResidualFunc(*fChi2,fIndex);
-   }
-
-   unsigned int NDim() const { return fChi2->NDim(); }
-
-   void Gradient( const double * x, double * g) const {
-      double f0 = 0;
-      FdF(x,f0,g);
-   }
-
-   void FdF (const double * x, double & f, double * g) const {
-      unsigned int n = NDim();
-      std::copy(x,x+n,fX2.begin());
-      const double kEps = 1.0E-4;
-      f = DoEval(x);
-      for (unsigned int i = 0; i < n; ++i) {
-         fX2[i] += kEps;
-         g[i] =  ( DoEval(&fX2.front()) - f )/kEps;
-         fX2[i] = x[i];
-      }
-   }
-
-
-private:
-
-   double DoEval (const double * x) const {
-      return fChi2->DataElement(x, fIndex);
-   }
-
-   double DoDerivative(const double * x, unsigned int icoord) const {
-      //return  ROOT::Math::Derivator::Eval(*this, x, icoord, 1E-8);
-      std::copy(x,x+NDim(),fX2.begin());
-      const double kEps = 1.0E-4;
-      fX2[icoord] += kEps;
-      return ( DoEval(&fX2.front()) - DoEval(x) )/kEps;
-   }
-
-   unsigned int fIndex;
-   const ROOT::Math::FitMethodFunction * fChi2;
-   mutable std::vector<double> fX2;  // cached vector
-};
-
-
 //_____________________________________________________________________________________________________
 /**
    GSLNLSMinimizer class for Non Linear Least Square fitting
@@ -157,7 +68,7 @@ public:
    /**
       Destructor (no operations)
    */
-   ~GSLNLSMinimizer ();
+   ~GSLNLSMinimizer () override;
 
 private:
    // usually copying is non trivial, so we make this unaccessible
@@ -178,35 +89,35 @@ private:
 public:
 
    /// set the function to minimize
-   virtual void SetFunction(const ROOT::Math::IMultiGenFunction & func);
+   void SetFunction(const ROOT::Math::IMultiGenFunction & func) override;
 
    /// set gradient the function to minimize
-   virtual void SetFunction(const ROOT::Math::IMultiGradFunction & func);
+   void SetFunction(const ROOT::Math::IMultiGradFunction & func) override;
 
 
    /// method to perform the minimization
-   virtual  bool Minimize();
+    bool Minimize() override;
 
 
    /// return expected distance reached from the minimum
-   virtual double Edm() const { return fEdm; } // not impl. }
+   double Edm() const override { return fEdm; } // not impl. }
 
 
    /// return pointer to gradient values at the minimum
-   virtual const double *  MinGradient() const;
+   const double *  MinGradient() const override;
 
    /// number of function calls to reach the minimum
-   virtual unsigned int NCalls() const { return (fChi2Func) ? fChi2Func->NCalls() : 0; }
+   unsigned int NCalls() const override { return fNCalls; }
 
    /// number of free variables (real dimension of the problem)
    /// this is <= Function().NDim() which is the total
 //   virtual unsigned int NFree() const { return fNFree; }
 
    /// minimizer provides error and error matrix
-   virtual bool ProvidesError() const { return true; }
+   bool ProvidesError() const override { return true; }
 
    /// return errors at the minimum
-   virtual const double * Errors() const { return (fErrors.size() > 0) ? &fErrors.front() : 0; }
+   const double * Errors() const override { return (fErrors.size() > 0) ? &fErrors.front() : nullptr; }
 //  {
 //       static std::vector<double> err;
 //       err.resize(fDim);
@@ -217,27 +128,31 @@ public:
        if the variable is fixed the matrix is zero
        The ordering of the variables is the same as in errors
    */
-   virtual double CovMatrix(unsigned int , unsigned int ) const;
+   double CovMatrix(unsigned int , unsigned int ) const override;
 
    /// return covariance matrix status
-   virtual int CovMatrixStatus() const;
+   int CovMatrixStatus() const override;
 
 protected:
+
+   /// Internal method to perform minimization
+   /// template on the type of method function
+   template<class Func>
+   bool DoMinimize(const Func & f);
 
 
 private:
 
+   bool fUseGradFunction = false; // flag to indicate if using external gradients
    unsigned int fNFree;      // dimension of the internal function to be minimized
-   unsigned int fSize;        // number of fit points (residuals)
+   unsigned int fNCalls;        // number of function calls
 
    ROOT::Math::GSLMultiFit * fGSLMultiFit;        // pointer to GSL multi fit solver
-   const ROOT::Math::FitMethodFunction * fChi2Func;      // pointer to Least square function
 
    double fEdm;                                   // edm value
    double fLSTolerance;                           // Line Search Tolerance
    std::vector<double> fErrors;
    std::vector<double> fCovMatrix;              //  cov matrix (stored as cov[ i * dim + j]
-   std::vector<LSResidualFunc> fResiduals;   //! transient Vector of the residual functions
 
 
 

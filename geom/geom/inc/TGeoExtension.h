@@ -38,7 +38,7 @@ class TGeoRCExtension : public TGeoExtension
 protected:
    virtual ~TGeoRCExtension() {delete fUserObject;}
 public:
-   TGeoRCExtension() : TGeoExtension(), fRC(0), fUserObject(0) { fRC++; }
+   TGeoRCExtension() : TGeoExtension(), fRC(0), fUserObject(nullptr) { fRC++; }
    TGeoRCExtension(TObject *obj) : TGeoExtension(), fRC(0), fUserObject(obj) { fRC++; }
 
    TGeoExtension       *Grab() override             { fRC++; return this; }

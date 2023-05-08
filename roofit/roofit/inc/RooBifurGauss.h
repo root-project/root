@@ -27,12 +27,12 @@ public:
   RooBifurGauss(const char *name, const char *title, RooAbsReal& _x,
       RooAbsReal& _mean, RooAbsReal& _sigmaL, RooAbsReal& _sigmaR);
 
-  RooBifurGauss(const RooBifurGauss& other, const char* name=0) ;
-  virtual TObject* clone(const char* newname) const { return new RooBifurGauss(*this,newname); }
-  inline virtual ~RooBifurGauss() { }
+  RooBifurGauss(const RooBifurGauss& other, const char* name=nullptr) ;
+  TObject* clone(const char* newname) const override { return new RooBifurGauss(*this,newname); }
+  inline ~RooBifurGauss() override { }
 
-  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const ;
-  Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const ;
+  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=nullptr) const override ;
+  double analyticalIntegral(Int_t code, const char* rangeName=nullptr) const override ;
 
 
 protected:
@@ -42,13 +42,13 @@ protected:
   RooRealProxy sigmaL;
   RooRealProxy sigmaR;
 
-  double evaluate() const;
-  void computeBatch(cudaStream_t*, double* output, size_t nEvents, RooFit::Detail::DataMap const&) const;
-  inline bool canComputeBatchWithCuda() const { return true; }
+  double evaluate() const override;
+  void computeBatch(cudaStream_t*, double* output, size_t nEvents, RooFit::Detail::DataMap const&) const override;
+  inline bool canComputeBatchWithCuda() const override { return true; }
 
 private:
 
-  ClassDef(RooBifurGauss,1) // Bifurcated Gaussian PDF
+  ClassDefOverride(RooBifurGauss,1) // Bifurcated Gaussian PDF
 };
 
 #endif

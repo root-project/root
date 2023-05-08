@@ -23,19 +23,19 @@ class CombinedMinimumBuilder : public MinimumBuilder {
 public:
    CombinedMinimumBuilder() : fVMMinimizer(VariableMetricMinimizer()), fSimplexMinimizer(SimplexMinimizer()) {}
 
-   ~CombinedMinimumBuilder() {}
+   ~CombinedMinimumBuilder() override {}
 
-   virtual FunctionMinimum Minimum(const MnFcn &, const GradientCalculator &, const MinimumSeed &, const MnStrategy &,
-                                   unsigned int, double) const;
+   FunctionMinimum Minimum(const MnFcn &, const GradientCalculator &, const MinimumSeed &, const MnStrategy &,
+                                   unsigned int, double) const override;
 
    // re-implement setter of base class. Need also to store in the base class for consistency
-   virtual void SetPrintLevel(int level)
+   void SetPrintLevel(int level) override
    {
       MinimumBuilder::SetPrintLevel(level);
       fVMMinimizer.Builder().SetPrintLevel(level);
       fSimplexMinimizer.Builder().SetPrintLevel(level);
    }
-   virtual void SetStorageLevel(int level)
+   void SetStorageLevel(int level) override
    {
       MinimumBuilder::SetStorageLevel(level);
       fVMMinimizer.Builder().SetStorageLevel(level);
@@ -43,7 +43,7 @@ public:
    }
 
    // set trace object (user manages it)
-   virtual void SetTraceObject(MnTraceObject &obj)
+   void SetTraceObject(MnTraceObject &obj) override
    {
       MinimumBuilder::SetTraceObject(obj);
       fVMMinimizer.Builder().SetTraceObject(obj);

@@ -48,7 +48,7 @@ public:
   { }
 
 
-  /// Conversion constructor from <T> to <const T>
+  /// Conversion constructor from `RooSpan<NON_CONST_T>` to `RooSpan<T>`, where `T` is a `const` type.
   /// If the input span owns some memory, the const-version of the
   /// span will copy the shared_ptr.
   template<typename NON_CONST_T,
@@ -73,11 +73,7 @@ public:
 
 
   /// Construct from start pointer and size.
-  constexpr RooSpan(typename std::span<T>::pointer beginIn,
-      typename std::span<T>::index_type sizeIn) :
-  _span{beginIn, sizeIn}
-  { }
-
+  constexpr RooSpan(typename std::span<T>::pointer beginIn, std::size_t sizeIn) : _span{beginIn, sizeIn} {}
 
   constexpr RooSpan(const std::vector<typename std::remove_cv<T>::type>& vec) noexcept :
   _span{vec}
@@ -108,24 +104,27 @@ public:
   }
 
 #ifdef NDEBUG
-  constexpr typename std::span<T>::reference operator[](typename std::span<T>::index_type i) const noexcept {
-    return _span[i];
+  constexpr typename std::span<T>::reference operator[](std::size_t i) const noexcept
+  {
+     return _span[i];
   }
 #else
-  typename std::span<T>::reference operator[](typename std::span<T>::index_type i) const noexcept {
-    assert(i < _span.size());
-    return _span[i];
+  typename std::span<T>::reference operator[](std::size_t i) const noexcept
+  {
+     assert(i < _span.size());
+     return _span[i];
   }
 #endif
 
-  constexpr typename std::span<T>::index_type size() const noexcept {
-    return _span.size();
+  constexpr std::size_t size() const noexcept
+  {
+     return _span.size();
   }
 
   constexpr bool empty() const noexcept {
     return _span.empty();
   }
-  
+
   constexpr bool isBatch() const noexcept {
     return true;
   }

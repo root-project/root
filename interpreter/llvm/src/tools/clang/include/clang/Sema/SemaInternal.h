@@ -97,7 +97,7 @@ public:
                          bool EnteringContext)
       : Typo(TypoName.getName().getAsIdentifierInfo()), CurrentTCIndex(0),
         SavedTCIndex(0), SemaRef(SemaRef), S(S),
-        SS(SS ? llvm::make_unique<CXXScopeSpec>(*SS) : nullptr),
+        SS(SS ? std::make_unique<CXXScopeSpec>(*SS) : nullptr),
         CorrectionValidator(std::move(CCC)), MemberContext(MemberContext),
         Result(SemaRef, TypoName, LookupKind),
         Namespaces(SemaRef.Context, SemaRef.CurContext, SS),
@@ -167,6 +167,11 @@ public:
     CurrentTCIndex = Current;
     return TC;
   }
+
+  /// In the case of deeply invalid expressions, `getNextCorrection()` will
+  /// never be called since the transform never makes progress. If we don't
+  /// detect this we risk trying to correct typos forever.
+  bool hasMadeAnyCorrectionProgress() const { return CurrentTCIndex != 0; }
 
   /// Reset the consumer's position in the stream of viable corrections
   /// (i.e. getNextCorrection() will return each of the previously returned

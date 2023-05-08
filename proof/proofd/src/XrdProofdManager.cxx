@@ -1366,15 +1366,15 @@ void XrdProofdManager::RegisterDirectives()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Resolve special keywords in 's' for client 'pcl'. Recognized keywords
-///     <workdir>          root for working dirs
-///     <host>             local host name
-///     <port>             daemon port
-///     <homedir>          user home dir
-///     <user>             user name
-///     <group>            user group
-///     <uid>              user ID
-///     <gid>              user group ID
-///     <effuser>          effective user name (for multiuser or user mapping modes)
+///     `<workdir>`          root for working dirs
+///     `<host>`             local host name
+///     `<port>`             daemon port
+///     `<homedir>`          user home dir
+///     `<user>`             user name
+///     `<group>`            user group
+///     `<uid>`              user ID
+///     `<gid>`              user group ID
+///     `<effuser>`          effective user name (for multiuser or user mapping modes)
 /// Return the number of keywords resolved.
 
 int XrdProofdManager::ResolveKeywords(XrdOucString &s, XrdProofdClient *pcl)
@@ -1934,7 +1934,7 @@ int XrdProofdManager::DoDirectiveXrootd(char *val, XrdOucStream *, bool)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Process 'rootd' directive
-///  xpd.rootd deny|allow [rootsys:<tag>] [path:abs-path/] [mode:ro|rw]
+/// xpd.rootd deny|allow [rootsys:`<tag>`] [path:abs-path/] [mode:ro|rw]
 ///            [auth:none|full] [other_rootd_args]
 
 int XrdProofdManager::DoDirectiveRootd(char *, XrdOucStream *, bool)

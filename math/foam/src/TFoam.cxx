@@ -20,7 +20,7 @@ Monte Carlo event generator (integrator) FOAM.
    an arbitrary probability distribution  in n dimensions,
    for which you supply your own method. FOAM can do it for you!
    Even if your distributions has quite strong peaks and is discontinuous!
--  FOAM generates random points with weight one or with variable weight.
+ - FOAM generates random points with weight one or with variable weight.
  - FOAM is capable to integrate using efficient "adaptive" MC method.
    (The distribution does not need to be normalized to one.)
 
@@ -85,7 +85,6 @@ S. Jadach, Computer Physics Communications 152 (2003) 55.
 #include <iomanip>
 #include <fstream>
 #include "TH1.h"
-#include "TRefArray.h"
 #include "TObjArray.h"
 #include "TMethodCall.h"
 #include "TRandom.h"
@@ -126,10 +125,10 @@ public:
 
    FoamIntegrandFunction(FunctionPtr func) : fFunc(func) {}
 
-   virtual ~FoamIntegrandFunction() {}
+   ~FoamIntegrandFunction() override {}
 
    // evaluate the density using the provided function pointer
-   Double_t Density (Int_t nDim, Double_t * x) {
+   Double_t Density (Int_t nDim, Double_t * x) override {
       return fFunc(nDim,x);
    }
 
@@ -148,7 +147,7 @@ TFoam::TFoam() :
    fOptDrive(0), fChat(0), fOptRej(0),
    fNBin(0), fNSampl(0), fEvPerBin(0),
    fMaskDiv(0), fInhiDiv(0), fOptPRD(0), fXdivPRD(0),
-   fNoAct(0), fLastCe(0), fCells(0),
+   fNoAct(0), fLastCe(0),
    fMCMonit(0), fMaxWtRej(0), fPrimAcu(0),
    fHistEdg(0), fHistDbg(0), fHistWt(0),
    fMCvect(0), fMCwt(0), fRvec(0),
@@ -169,7 +168,7 @@ TFoam::TFoam(const Char_t* Name) :
    fOptDrive(0), fChat(0), fOptRej(0),
    fNBin(0), fNSampl(0), fEvPerBin(0),
    fMaskDiv(0), fInhiDiv(0), fOptPRD(0), fXdivPRD(0),
-   fNoAct(0), fLastCe(0), fCells(0),
+   fNoAct(0), fLastCe(0),
    fMCMonit(0), fMaxWtRej(0), fPrimAcu(0),
    fHistEdg(0), fHistDbg(0), fHistWt(0),
    fMCvect(0), fMCwt(0), fRvec(0),
@@ -190,7 +189,6 @@ TFoam::TFoam(const Char_t* Name) :
    fMaskDiv  = 0;             // Dynamic Mask for  cell division, h-cubic
    fInhiDiv  = 0;             // Flag allowing to inhibit cell division in certain projection/edge
    fXdivPRD  = 0;             // Lists of division values encoded in one vector per direction
-   fCells    = 0;
    fAlpha    = 0;
    fPrimAcu  = 0;
    fHistEdg  = 0;
@@ -231,7 +229,7 @@ TFoam::~TFoam()
 {
    Int_t i;
 
-   if(fCells!= 0) {
+   if(fCells!= nullptr) {
       for(i=0; i<fNCells; i++) delete fCells[i]; // TFoamCell*[]
       delete [] fCells;
    }
@@ -421,13 +419,13 @@ void TFoam::Initialize()
    fNevGen = 0.0;               // M.C. generation sum of 1d0
    fWtMax  = gVlow;               // M.C. generation maximum wt
    fWtMin  = gHigh;               // M.C. generation minimum wt
-   fMCresult=fCells[0]->GetIntg(); // M.C. Value of INTEGRAL,temporary assignment
-   fMCresult=fCells[0]->GetIntg(); // M.C. Value of INTEGRAL,temporary assignment
-   fMCerror =fCells[0]->GetIntg(); // M.C. Value of ERROR   ,temporary assignment
+   fMCresult= getCell(0)->GetIntg(); // M.C. Value of INTEGRAL,temporary assignment
+   fMCresult= getCell(0)->GetIntg(); // M.C. Value of INTEGRAL,temporary assignment
+   fMCerror = getCell(0)->GetIntg(); // M.C. Value of ERROR   ,temporary assignment
    fMCMonit = new TFoamMaxwt(5.0,1000);  // monitoring M.C. efficiency
    //
    if(fChat>0){
-      Double_t driver = fCells[0]->GetDriv();
+      Double_t driver = getCell(0)->GetDriv();
       BXOPE;
       BXTXT("***  TFoam::Initialize FINISHED!!!  ***");
       BX1I("    nCalls",fNCalls,  "Total number of function calls         ");
@@ -459,7 +457,7 @@ void TFoam::InitCells()
       fCells[i]= new TFoamCell(fDim); // Allocate BIG list of cells
       fCells[i]->SetSerial(i);
    }
-   if(fCells==0) Error("InitCells", "Cannot initialize CELLS \n"  );
+   if(fCells==nullptr) Error("InitCells", "Cannot initialize CELLS \n"  );
 
    /////////////////////////////////////////////////////////////////////////////
    //              Single Root Hypercube                                      //
@@ -468,7 +466,7 @@ void TFoam::InitCells()
 
    // Exploration of the root cell(s)
    for(Long_t iCell=0; iCell<=fLastCe; iCell++){
-      Explore( fCells[iCell] );               // Exploration of root cell(s)
+      Explore( getCell(iCell) );               // Exploration of root cell(s)
    }
 }
 
@@ -485,7 +483,7 @@ Int_t TFoam::CellFill(Int_t Status, TFoamCell *parent)
    fLastCe++;   // 0-th cell is the first
    if (Status==1) fNoAct++;
 
-   cell = fCells[fLastCe];
+   cell = getCell(fLastCe);
 
    cell->Fill(Status, parent, 0, 0);
 
@@ -751,7 +749,7 @@ void TFoam::Varedu(Double_t ceSum[5], Int_t &kBest, Double_t &xBest, Double_t &y
 void TFoam::Carver(Int_t &kBest, Double_t &xBest, Double_t &yBest)
 {
    Int_t    kProj,iBin;
-   Double_t carve,carvTot,carvMax,carvOne,binMax,binTot;
+   Double_t carve,carvTot,carvMax,carvOne,binMax;
    Int_t    jLow,jUp,iLow,iUp;
    Double_t theBin;
    // Int_t    jDivi; // TEST
@@ -780,10 +778,8 @@ void TFoam::Carver(Int_t &kBest, Double_t &xBest, Double_t &yBest)
             return;
          }
          carvTot = 0.0;
-         binTot  = 0.0;
          for(iBin=0;iBin<fNBin;iBin++){
             carvTot = carvTot + (binMax-bins[iBin]);     // Total Carve (more stable)
-            binTot  +=bins[iBin];
          }
          // primTot = binMax*fNBin;
          //std::cout <<"Carver:  CarvTot "<<CarvTot<< "    primTot "<<primTot<<std::endl;
@@ -872,7 +868,7 @@ void TFoam::Grow()
         Error("Grow", "Wrong iCell \n");
         break;
       }
-      newCell = fCells[iCell];
+      newCell = getCell(iCell);
 
       if(fLastCe !=0) {
          Int_t kEcho=10;
@@ -907,8 +903,8 @@ Long_t  TFoam::PeekMax()
 
    drivMax = gVlow;
    for(i=0; i<=fLastCe; i++) {//without root
-      if( fCells[i]->GetStat() == 1 ) {
-         driv =  TMath::Abs( fCells[i]->GetDriv());
+      if( getCell(i)->GetStat() == 1 ) {
+         driv =  TMath::Abs( getCell(i)->GetDriv());
          //std::cout<<"PeekMax: Driv = "<<driv<<std::endl;
          if(driv > drivMax) {
             drivMax = driv;
@@ -951,10 +947,10 @@ Int_t TFoam::Divide(TFoamCell *cell)
 
    Int_t d1 = CellFill(1,   cell);
    Int_t d2 = CellFill(1,   cell);
-   cell->SetDau0((fCells[d1]));
-   cell->SetDau1((fCells[d2]));
-   Explore( (fCells[d1]) );
-   Explore( (fCells[d2]) );
+   cell->SetDau0((getCell(d1)));
+   cell->SetDau1((getCell(d2)));
+   Explore( (getCell(d1)) );
+   Explore( (getCell(d2)) );
    return 1;
 } // TFoam_Divide
 
@@ -980,8 +976,8 @@ void TFoam::MakeActiveList()
 
    fPrime = 0.0;
    for(iCell=0; iCell<=fLastCe; iCell++) {
-      if (fCells[iCell]->GetStat()==1) {
-         fPrime += fCells[iCell]->GetPrim();
+      if (getCell(iCell)->GetStat()==1) {
+         fPrime += getCell(iCell)->GetPrim();
          fCellsAct.push_back(iCell);
       }
    }
@@ -994,7 +990,7 @@ void TFoam::MakeActiveList()
 
    sum =0.0;
    for(iCell=0; iCell<fNoAct; iCell++) {
-      sum = sum + ( fCells[fCellsAct[iCell]] )->GetPrim()/fPrime;
+      sum = sum + ( getCell(fCellsAct[iCell]) )->GetPrim()/fPrime;
       fPrimAcu[iCell]=sum;
    }
 
@@ -1110,9 +1106,9 @@ void TFoam::GenerCel2(TFoamCell *&pCell)
       }
    }
    if (fPrimAcu[lo]>random)
-      pCell = fCells[fCellsAct[lo]];
+      pCell = getCell(fCellsAct[lo]);
    else
-      pCell = fCells[fCellsAct[hi]];
+      pCell = getCell(fCellsAct[hi]);
 }       // TFoam::GenerCel2
 
 
@@ -1271,7 +1267,7 @@ void TFoam::Finalize(Double_t& IntNorm, Double_t& Errel)
       mCeff=0;
       if(wtMax>0.0) mCeff=aveWt/wtMax;
       mcEf2 = sigma/aveWt;
-      Double_t driver = fCells[0]->GetDriv();
+      Double_t driver = getCell(0)->GetDriv();
       //
       BXOPE;
       BXTXT("****************************************");
@@ -1388,7 +1384,7 @@ void TFoam::CheckAll(Int_t level)
    errors = 0; warnings = 0;
    if (level==1) std::cout << "///////////////////////////// FOAM_Checks /////////////////////////////////" << std::endl;
    for(iCell=1; iCell<=fLastCe; iCell++) {
-      cell = fCells[iCell];
+      cell = getCell(iCell);
       //  checking general rules
       if( ((cell->GetDau0()==0) && (cell->GetDau1()!=0) ) ||
          ((cell->GetDau1()==0) && (cell->GetDau0()!=0) ) ) {
@@ -1405,7 +1401,7 @@ void TFoam::CheckAll(Int_t level)
       }
 
       // checking parents
-      if( (cell->GetPare())!=fCells[0] ) { // not child of the root
+      if( (cell->GetPare())!=getCell(0) ) { // not child of the root
          if ( (cell != cell->GetPare()->GetDau0()) && (cell != cell->GetPare()->GetDau1()) ) {
             errors++;
             if (level==1) Error("CheckAll","ERROR: Cell's no %ld parent not pointing to this cell\n ",iCell);
@@ -1429,7 +1425,7 @@ void TFoam::CheckAll(Int_t level)
 
    // Check for empty cells
    for(iCell=0; iCell<=fLastCe; iCell++) {
-      cell = fCells[iCell];
+      cell = getCell(iCell);
       if( (cell->GetStat()==1) && (cell->GetDriv()==0) ) {
          warnings++;
          if(level==1) Warning("CheckAll", "Warning: Cell no. %ld is active but empty \n", iCell);
@@ -1453,9 +1449,9 @@ void TFoam::PrintCells(void)
 
    for(iCell=0; iCell<=fLastCe; iCell++) {
       std::cout<<"Cell["<<iCell<<"]={ ";
-      //std::cout<<"  "<< fCells[iCell]<<"  ";  // extra DEBUG
+      //std::cout<<"  "<< getCell(iCell)<<"  ";  // extra DEBUG
       std::cout<<std::endl;
-      fCells[iCell]->Print("1");
+      getCell(iCell)->Print("1");
       std::cout<<"}"<<std::endl;
    }
 }
@@ -1496,8 +1492,8 @@ void TFoam::RootPlot2dim(Char_t *filename)
       TFoamVect  cellPosi(fDim); TFoamVect  cellSize(fDim);
       outfile << "// =========== Rectangular cells  ==========="<< std::endl;
       for(iCell=1; iCell<=fLastCe; iCell++) {
-         if( fCells[iCell]->GetStat() == 1) {
-            fCells[iCell]->GetHcub(cellPosi,cellSize);
+         if( getCell(iCell)->GetStat() == 1) {
+            getCell(iCell)->GetHcub(cellPosi,cellSize);
             x1 = offs+lpag*(        cellPosi[0]); y1 = offs+lpag*(        cellPosi[1]);
             x2 = offs+lpag*(cellPosi[0]+cellSize[0]); y2 = offs+lpag*(cellPosi[1]+cellSize[1]);
             //     cell rectangle
@@ -1526,3 +1522,14 @@ void TFoam::LinkCells()
    return;
 }
 
+TFoamCell* TFoam::getCell(std::size_t i) const
+{
+  // Ensure that the fCells member of the cells is filled
+  if(fCells[i]->GetCells() == nullptr) {
+    for (Int_t j=0; j < fNCells; ++j) {
+      fCells[j]->SetCells(fCells);
+    }
+  }
+
+  return fCells[i];
+}

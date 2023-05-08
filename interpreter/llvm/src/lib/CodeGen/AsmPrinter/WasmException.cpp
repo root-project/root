@@ -18,16 +18,16 @@
 using namespace llvm;
 
 void WasmException::endModule() {
-  // This is the symbol used in 'throw' and 'br_on_exn' instruction to denote
-  // this is a C++ exception. This symbol has to be emitted somewhere once in
-  // the module.  Check if the symbol has already been created, i.e., we have at
-  // least one 'throw' or 'br_on_exn' instruction in the module, and emit the
-  // symbol only if so.
+  // This is the symbol used in 'throw' and 'catch' instruction to denote this
+  // is a C++ exception. This symbol has to be emitted somewhere once in the
+  // module.  Check if the symbol has already been created, i.e., we have at
+  // least one 'throw' or 'catch' instruction in the module, and emit the symbol
+  // only if so.
   SmallString<60> NameStr;
   Mangler::getNameWithPrefix(NameStr, "__cpp_exception", Asm->getDataLayout());
   if (Asm->OutContext.lookupSymbol(NameStr)) {
     MCSymbol *ExceptionSym = Asm->GetExternalSymbolSymbol("__cpp_exception");
-    Asm->OutStreamer->EmitLabel(ExceptionSym);
+    Asm->OutStreamer->emitLabel(ExceptionSym);
   }
 }
 
@@ -58,7 +58,7 @@ void WasmException::endFunction(const MachineFunction *MF) {
   // end marker and set the size as the difference between the start end the end
   // marker.
   MCSymbol *LSDAEndLabel = Asm->createTempSymbol("GCC_except_table_end");
-  Asm->OutStreamer->EmitLabel(LSDAEndLabel);
+  Asm->OutStreamer->emitLabel(LSDAEndLabel);
   MCContext &OutContext = Asm->OutStreamer->getContext();
   const MCExpr *SizeExp = MCBinaryExpr::createSub(
       MCSymbolRefExpr::create(LSDAEndLabel, OutContext),
@@ -76,6 +76,7 @@ void WasmException::endFunction(const MachineFunction *MF) {
 // information.
 void WasmException::computeCallSiteTable(
     SmallVectorImpl<CallSiteEntry> &CallSites,
+    SmallVectorImpl<CallSiteRange> &CallSiteRanges,
     const SmallVectorImpl<const LandingPadInfo *> &LandingPads,
     const SmallVectorImpl<unsigned> &FirstActions) {
   MachineFunction &MF = *Asm->MF;

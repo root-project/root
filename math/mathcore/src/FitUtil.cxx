@@ -223,8 +223,8 @@ namespace ROOT {
 // for chi2 functions
 //___________________________________________________________________________________________________________________________
 
-      double FitUtil::EvaluateChi2(const IModelFunction &func, const BinData &data, const double *p, unsigned int &,
-                                   ROOT::EExecutionPolicy executionPolicy, unsigned nChunks)
+      double FitUtil::EvaluateChi2(const IModelFunction &func, const BinData &data, const double *p, unsigned int &nPoints,
+                                   ::ROOT::EExecutionPolicy executionPolicy, unsigned nChunks)
       {
          // evaluate the chi2 given a  function reference  , the data and returns the value and also in nPoints
          // the actual number of used points
@@ -409,6 +409,10 @@ namespace ROOT {
     Error("FitUtil::EvaluateChi2","Execution policy unknown. Avalaible choices:\n ROOT::EExecutionPolicy::kSequential (default)\n ROOT::EExecutionPolicy::kMultiThread (requires IMT)\n");
   }
 
+  // reset the number of fitting data points
+  nPoints = n;  // no points are rejected
+  //if (nRejected != 0)  nPoints = n - nRejected;
+
    return res;
 }
 
@@ -536,7 +540,7 @@ double FitUtil::EvaluateChi2Effective(const IModelFunction & func, const BinData
 ///  integral option is also not yet implemented
 ///  one can use in that case normal chi2 method
 
-double FitUtil::EvaluateChi2Residual(const IModelFunction & func, const BinData & data, const double * p, unsigned int i, double * g) {
+double FitUtil::EvaluateChi2Residual(const IModelFunction & func, const BinData & data, const double * p, unsigned int i, double * g, double * h, bool hasGrad, bool useFullHessian) {
    if (data.GetErrorType() == BinData::kCoordError && data.Opt().fCoordErrors ) {
       MATH_ERROR_MSG("FitUtil::EvaluateChi2Residual","Error on the coordinates are not used in calculating Chi2 residual");
       return 0; // it will assert otherwise later in GetPoint
@@ -606,15 +610,25 @@ double FitUtil::EvaluateChi2Residual(const IModelFunction & func, const BinData 
    resval = CorrectValue(resval);
 
    // estimate gradient
-   if (g != 0) {
+   if (g) {
 
       unsigned int npar = func.NPar();
-      const IGradModelFunction * gfunc = dynamic_cast<const IGradModelFunction *>( &func);
 
-      if (gfunc != 0) {
+      // use gradient of model function only if FCN support gradient
+      const IGradModelFunction * gfunc = (hasGrad) ?
+         dynamic_cast<const IGradModelFunction *>( &func) : nullptr;
+
+      if (!h ) useFullHessian = false;
+      if (useFullHessian &&  (!gfunc || useBinIntegral || (gfunc && !gfunc->HasParameterHessian())))
+         return std::numeric_limits<double>::quiet_NaN();
+
+      if (gfunc) {
          //case function provides gradient
          if (!useBinIntegral ) {
-            gfunc->ParameterGradient(  x , p, g );
+            gfunc->ParameterGradient(x , p, g);
+            if (useFullHessian) {
+               gfunc->ParameterHessian(x, p, h);
+            }
          }
          else {
             // needs to calculate the integral for each partial derivative
@@ -623,17 +637,31 @@ double FitUtil::EvaluateChi2Residual(const IModelFunction & func, const BinData 
       }
       else {
          SimpleGradientCalculator  gc( npar, func);
-         if (!useBinIntegral )
+         if (!useBinIntegral ) {
             gc.ParameterGradient(x, p, fval, g);
-         else {
+         } else {
             // needs to calculate the integral for each partial derivative
             CalculateGradientIntegral( gc, x1, x2, p, g);
          }
       }
-      // mutiply by - 1 * weight
+      // multiply by - 1 * weight
       for (unsigned int k = 0; k < npar; ++k) {
          g[k] *= - invError;
          if (useBinVolume) g[k] *= binVolume;
+         if (h) {
+            for (unsigned int l = 0; l <= k; l++) {  // use lower diagonal because I modify g[k]
+               unsigned int idx = l + k * (k + 1) / 2;
+               if (useFullHessian) {
+                  h[idx] *= 2.* resval * (-invError);  // hessian of model function
+                  if (useBinVolume) h[idx] *= binVolume;
+               }
+               else {
+                  h[idx] = 0;
+               }
+               // add term depending on only gradient of model function
+               h[idx] +=  2. * g[k]*g[l];
+            }
+         }
       }
    }
 
@@ -826,7 +854,7 @@ void FitUtil::EvaluateChi2Gradient(const IModelFunction &f, const BinData &data,
    // }
    else {
       Error("FitUtil::EvaluateChi2Gradient",
-            "Execution policy unknown. Avalaible choices:\n 0: Serial (default)\n 1: MultiThread (requires IMT)\n");
+            "Execution policy unknown. Available choices:\n 0: Serial (default)\n 1: MultiThread (requires IMT)\n");
    }
 
 #ifndef R__USE_IMT
@@ -860,13 +888,12 @@ void FitUtil::EvaluateChi2Gradient(const IModelFunction &f, const BinData &data,
 
 // for LogLikelihood functions
 
-double FitUtil::EvaluatePdf(const IModelFunction & func, const UnBinData & data, const double * p, unsigned int i, double * g) {
+double FitUtil::EvaluatePdf(const IModelFunction & func, const UnBinData & data, const double * p, unsigned int i, double * g, double * /*h*/, bool hasGrad, bool) {
    // evaluate the pdf contribution to the generic logl function in case of bin data
    // return actually the log of the pdf and its derivatives
 
 
    //func.SetParameters(p);
-
 
    const double * x = data.Coords(i);
    double fval = func ( x, p );
@@ -874,15 +901,16 @@ double FitUtil::EvaluatePdf(const IModelFunction & func, const UnBinData & data,
    //return
    if (g == 0) return logPdf;
 
-   const IGradModelFunction * gfunc = dynamic_cast<const IGradModelFunction *>( &func);
+   const IGradModelFunction * gfunc = (hasGrad) ?
+      dynamic_cast<const IGradModelFunction *>( &func) : nullptr;
 
    // gradient  calculation
-   if (gfunc != 0) {
+   if (gfunc) {
       //case function provides gradient
       gfunc->ParameterGradient(  x , p, g );
    }
    else {
-      // estimate gradieant numerically with simple 2 point rule
+      // estimate gradient numerically with simple 2 point rule
       // should probably calculate gradient of log(pdf) is more stable numerically
       SimpleGradientCalculator gc(func.NPar(), func);
       gc.ParameterGradient(x, p, fval, g );
@@ -908,7 +936,7 @@ double FitUtil::EvaluatePdf(const IModelFunction & func, const UnBinData & data,
    return logPdf;
 }
 
-double FitUtil::EvaluateLogL(const IModelFunctionTempl<double> &func, const UnBinData &data, const double *p,
+double FitUtil::EvaluateLogL(const IModelFunction &func, const UnBinData &data, const double *p,
                              int iWeight, bool extended, unsigned int &nPoints,
                              ROOT::EExecutionPolicy executionPolicy, unsigned nChunks)
 {
@@ -970,7 +998,7 @@ double FitUtil::EvaluateLogL(const IModelFunctionTempl<double> &func, const UnBi
             }
          }
 
-         // needed to compue effective global weight in case of extended likelihood
+         // needed to compute effective global weight in case of extended likelihood
 
          auto mapFunction = [&](const unsigned i) {
             double W = 0;
@@ -1062,7 +1090,7 @@ double FitUtil::EvaluateLogL(const IModelFunctionTempl<double> &func, const UnBi
     sumW=resArray.weight;
     sumW2=resArray.weight2;
 #endif
-//   } else if(executionPolicy == ROOT::Fit::kMultitProcess){
+//   } else if(executionPolicy == ROOT::Fit::kMultiProcess){
     // ROOT::TProcessExecutor pool;
     // res = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, n), redFunction);
   } else{
@@ -1129,7 +1157,7 @@ double FitUtil::EvaluateLogL(const IModelFunctionTempl<double> &func, const UnBi
 }
 
 void FitUtil::EvaluateLogLGradient(const IModelFunction &f, const UnBinData &data, const double *p, double *grad,
-                                   unsigned int &, ROOT::EExecutionPolicy executionPolicy, unsigned nChunks)
+                                   unsigned int &nPoints, ROOT::EExecutionPolicy executionPolicy, unsigned nChunks)
 {
    // evaluate the gradient of the log likelihood function
 
@@ -1250,6 +1278,7 @@ void FitUtil::EvaluateLogLGradient(const IModelFunction &f, const UnBinData &dat
 
    // copy result
    std::copy(g.begin(), g.end(), grad);
+   nPoints = data.Size();  // npoints
 
 #ifdef DEBUG
    std::cout << "FitUtil.cxx : Final gradient ";
@@ -1263,9 +1292,9 @@ void FitUtil::EvaluateLogLGradient(const IModelFunction &f, const UnBinData &dat
 // for binned log likelihood functions
 ////////////////////////////////////////////////////////////////////////////////
 /// evaluate the pdf (Poisson) contribution to the logl (return actually log of pdf)
-/// and its gradient
+/// and its gradient (gradient of log(pdf))
 
-double FitUtil::EvaluatePoissonBinPdf(const IModelFunction & func, const BinData & data, const double * p, unsigned int i, double * g ) {
+double FitUtil::EvaluatePoissonBinPdf(const IModelFunction & func, const BinData & data, const double * p, unsigned int i, double * g, double * h, bool hasGrad, bool useFullHessian) {
    double y = 0;
    const double * x1 = data.GetPoint(i,y);
 
@@ -1306,26 +1335,36 @@ double FitUtil::EvaluatePoissonBinPdf(const IModelFunction & func, const BinData
 
    // logPdf for Poisson: ignore constant term depending on N
    fval = std::max(fval, 0.0);  // avoid negative or too small values
-   double logPdf =  - fval;
+   double nlogPdf =  fval;
    if (y > 0.0) {
       // include also constants due to saturate model (see Baker-Cousins paper)
-      logPdf += y * ROOT::Math::Util::EvalLog( fval / y) + y;
+      nlogPdf -= y * ROOT::Math::Util::EvalLog( fval / y) - y;
    }
-   // need to return the pdf contribution (not the log)
 
-   //double pdfval =  std::exp(logPdf);
-
-  //if (g == 0) return pdfval;
-   if (g == 0) return logPdf;
+   if (g == nullptr) return nlogPdf;
 
    unsigned int npar = func.NPar();
-   const IGradModelFunction * gfunc = dynamic_cast<const IGradModelFunction *>( &func);
+   const IGradModelFunction * gfunc = (hasGrad) ?
+      dynamic_cast<const IGradModelFunction *>( &func) : nullptr;
+
+   // for full Hessian we need a gradient function and not bin intgegral computation
+   if (useFullHessian &&  (!gfunc || useBinIntegral || (gfunc && !gfunc->HasParameterHessian())))
+      return std::numeric_limits<double>::quiet_NaN();
 
    // gradient  calculation
-   if (gfunc != 0) {
+   if (gfunc) {
       //case function provides gradient
-      if (!useBinIntegral )
+      if (!useBinIntegral ) {
          gfunc->ParameterGradient(  x , p, g );
+         if (useFullHessian && h) {
+            if (!gfunc->HasParameterHessian())
+               return std::numeric_limits<double>::quiet_NaN();
+            bool goodHessFunc = gfunc->ParameterHessian(x , p, h);
+            if (!goodHessFunc) {
+               return std::numeric_limits<double>::quiet_NaN();
+            }
+         }
+      }
       else {
          // needs to calculate the integral for each partial derivative
          CalculateGradientIntegral( *gfunc, x1, x2, p, g);
@@ -1341,32 +1380,54 @@ double FitUtil::EvaluatePoissonBinPdf(const IModelFunction & func, const BinData
          CalculateGradientIntegral( gc, x1, x2, p, g);
       }
    }
-   // correct g[] do be derivative of poisson term
+   // correct g[] do be derivative of poisson term. We compute already derivative w.r.t. LL
+   double coeffGrad = (fval > 0) ? (1. - y/fval) : ( (y > 0) ? std::sqrt( std::numeric_limits<double>::max() )  : 1. );
+   double coeffHess = (fval > 0) ?  y/(fval*fval) : ( (y > 0) ? std::sqrt( std::numeric_limits<double>::max() )  : 0. );
+   if (useBinVolume) {
+      coeffGrad *= binVolume;
+      coeffHess *= binVolume*binVolume;
+   }
    for (unsigned int k = 0; k < npar; ++k) {
-      // apply bin volume correction
-      if (useBinVolume) g[k] *= binVolume;
-
-      // correct for Poisson term
-      if ( fval > 0)
-         g[k] *= ( y/fval - 1.) ;//* pdfval;
-      else if (y > 0) {
-         const double kdmax1 = std::sqrt( std::numeric_limits<double>::max() );
-         g[k] *= kdmax1;
+      // compute also approximate Hessian (excluding term with second derivative of model function)
+      if (h) {
+         for (unsigned int l = k; l < npar; ++l) {
+            unsigned int idx = k + l * (l + 1) / 2;
+            if (useFullHessian) {
+               h[idx] *= coeffGrad;  // h contains first model function derivatives
+            }
+            else {
+               h[idx] = 0;
+            }
+            // add term deoending on only gradient of model function
+            h[idx] += coeffHess * g[k]*g[l];  // g are model function derivatives
+         }
       }
-      else   // y == 0 cannot have  negative y
-         g[k] *= -1;
+      // compute gradient of NLL element
+      // and apply bin volume correction if needed
+      g[k] *= coeffGrad;
+      if (useBinVolume)
+         g[k] *= binVolume;
    }
 
-
 #ifdef DEBUG
-   std::cout << "x = " << x[0] << " logPdf = " << logPdf << " grad";
+   std::cout << "x = " << x[0] << " y " << y << " fval " << fval << " logPdf = " << nlogPdf << " gradient : ";
    for (unsigned int ipar = 0; ipar < npar; ++ipar)
       std::cout << g[ipar] << "\t";
+   if (h) {
+      std::cout << "\thessian : ";
+      for (unsigned int ipar = 0; ipar < npar; ++ipar) {
+         std::cout << " {";
+         for (unsigned int jpar = 0; jpar <= ipar; ++jpar) {
+            std::cout << h[ipar + jpar * (jpar + 1) / 2] << "\t";
+         }
+         std::cout << "}";
+      }
+   }
    std::cout << std::endl;
 #endif
+#undef DEBUG
 
-//   return pdfval;
-   return logPdf;
+   return nlogPdf;
 }
 
 double FitUtil::EvaluatePoissonLogL(const IModelFunction &func, const BinData &data, const double *p, int iWeight,
@@ -1513,7 +1574,7 @@ double FitUtil::EvaluatePoissonLogL(const IModelFunction &func, const BinData &d
          if (y != 0) {
             double error = data.Error(i);
             weight = (error * error) / y; // this is the bin effective weight
-            nloglike += weight * y * ( ROOT::Math::Util::EvalLog(y) - ROOT::Math::Util::EvalLog(fval) );
+            nloglike -= weight * y * ( ROOT::Math::Util::EvalLog(fval/y) );
          }
          else {
             // for empty bin use the average weight  computed from the total data weight

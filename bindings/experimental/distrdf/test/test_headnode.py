@@ -11,7 +11,48 @@ def create_dummy_headnode(*args):
     """Create dummy head node instance needed in the test"""
     # Pass None as `npartitions`. The tests will modify this member
     # according to needs
-    return get_headnode(None, *args)
+    return get_headnode(None, None, *args)
+
+
+def fill_main_tree_and_indexed_friend(mainfile, auxfile):
+    idx = array("i", [0])
+    x = array("i", [0])
+    y = array("i", [0])
+
+    with ROOT.TFile(mainfile, "RECREATE") as f1:
+        main_tree = ROOT.TTree("mainTree", "mainTree")
+        main_tree.Branch("idx", idx, "idx/I")
+        main_tree.Branch("x", x, "x/I")
+
+        idx[0] = 1
+        x[0] = 1
+        main_tree.Fill()
+        idx[0] = 1
+        x[0] = 2
+        main_tree.Fill()
+        idx[0] = 1
+        x[0] = 3
+        main_tree.Fill()
+        idx[0] = 2
+        x[0] = 4
+        main_tree.Fill()
+        idx[0] = 2
+        x[0] = 5
+        main_tree.Fill()
+        f1.WriteObject(main_tree, "mainTree")
+
+    with ROOT.TFile(auxfile, "RECREATE") as f2:
+        aux_tree = ROOT.TTree("auxTree", "auxTree")
+        aux_tree.Branch("idx", idx, "idx/I")
+        aux_tree.Branch("y", y, "y/I")
+
+        idx[0] = 2
+        y[0] = 5
+        aux_tree.Fill()
+        idx[0] = 1
+        y[0] = 7
+        aux_tree.Fill()
+        f2.WriteObject(aux_tree, "auxTree")
 
 
 class DataFrameConstructorTests(unittest.TestCase):
@@ -163,6 +204,35 @@ class DataFrameConstructorTests(unittest.TestCase):
         self.assertIsInstance(hn_2.defaultbranches, type(reqd_branches_vec))
         self.assertIsInstance(hn_4.defaultbranches, type(reqd_branches_vec))
 
+    def test_tree_with_friends_and_treeindex(self):
+        """TTreeIndex is not supported in distributed mode."""
+        # See https://github.com/root-project/root/issues/7541 and
+        # https://bugs.llvm.org/show_bug.cgi?id=49692 :
+        # llvm JIT fails to catch exceptions on M1, so we disable their testing
+        if platform.processor() != "arm" or platform.mac_ver()[0] == '':
+            main_file = "distrdf_indexed_friend_main.root"
+            aux_file = "distrdf_indexed_friend_aux.root"
+            fill_main_tree_and_indexed_friend(main_file, aux_file)
+
+            main_chain = ROOT.TChain("mainTree", "mainTree")
+            main_chain.Add(main_file)
+            aux_chain = ROOT.TChain("auxTree", "auxTree")
+            aux_chain.Add(aux_file)
+
+            aux_chain.BuildIndex("idx")
+            main_chain.AddFriend(aux_chain)
+
+            with self.assertRaises(ValueError) as context:
+                create_dummy_headnode(main_chain)
+
+            self.assertEqual(str(context.exception),
+                            "Friend tree 'auxTree' has a TTreeIndex. This is not supported in distributed mode.")
+
+            # Remove unnecessary .root files
+            os.remove(main_file)
+            os.remove(aux_file)
+
+
 class NumEntriesTest(unittest.TestCase):
     """'get_num_entries' returns the number of entries in the input dataset"""
 
@@ -237,4 +307,29 @@ class NumEntriesTest(unittest.TestCase):
         self.assertEqual(hn.tree.GetEntries(), 4)
 
         f.Close()
+        os.remove(filename)
+
+
+class InternalDataFrameTests(unittest.TestCase):
+    """The HeadNode stores an internal RDataFrame for certain information"""
+
+    def test_getcolumnnames(self):
+        treename = "tree"
+        filename = "test_distrdf_getcolumnnames.root"
+        f = ROOT.TFile(filename, "recreate")
+        tree = ROOT.TTree(treename, "test")
+        x = array("i", [0])
+        tree.Branch("myColumn", x, "myColumn/I")
+
+        for i in range(3):
+            x[0] = i
+            tree.Fill()
+
+        f.Write()
+        f.Close()
+
+        hn = create_dummy_headnode(treename, filename)
+        cn_vec = hn.GetColumnNames()
+        self.assertListEqual([str(col) for col in cn_vec], ["myColumn"])
+
         os.remove(filename)

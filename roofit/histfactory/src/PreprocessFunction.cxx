@@ -1,5 +1,5 @@
 // @(#)root/roostats:$Id$
-// Author: Kyle Cranmer, George Lewis 
+// Author: Kyle Cranmer, George Lewis
 /*************************************************************************
  * Copyright (C) 1995-2008, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -9,7 +9,7 @@
  *************************************************************************/
 
 ////////////////////////////////////////////////////////////////////////////////
-/** 
+/**
  * \ingroup HistFactory
  */
 

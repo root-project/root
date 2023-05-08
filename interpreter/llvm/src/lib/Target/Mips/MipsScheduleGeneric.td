@@ -720,10 +720,15 @@ def : InstRW<[GenericWriteALU], (instrs BADDu, BBIT0, BBIT032, BBIT1, BBIT132,
                                  CINS, CINS32, CINS64_32, CINS_i32,
                                  DMFC2_OCTEON, DMTC2_OCTEON, DPOP, EXTS,
                                  EXTS32, MTM0, MTM1, MTM2, MTP0, MTP1, MTP2,
-                                 POP, SEQ, SEQi, SNE, SNEi, V3MULU, VMM0,
-                                 VMULU)>;
+                                 POP, SEQ, SEQi, SNE, SNEi,
+                                 V3MULU, VMM0, VMULU)>;
 
 def : InstRW<[GenericWriteMDUtoGPR], (instrs DMUL)>;
+
+// Cavium Networks MIPS (cnMIPSP) - Octeon+, HasCnMipsP
+// =================================================
+
+def : InstRW<[GenericWriteALU], (instrs SAA, SAAD)>;
 
 // FPU Pipelines
 // =============
@@ -817,17 +822,20 @@ def : InstRW<[GenericWriteFPUS], (instrs FABS_S, FABS_D32, FABS_D64, FADD_D32,
 // madd.d, msub.dm mul.d, mul.ps, nmadd.d, nmsub.d, ceil.[wl].[sd], cvt.d.[sw],
 // cvt.s.[dw], cvt.w.[sd], cvt.[sw].ps, round.[lw].[ds], floor.[lw].ds,
 // trunc.w.[ds], trunc.w.ps,
-def : InstRW<[GenericWriteFPUL], (instrs CEIL_L_D64, CEIL_L_S, CEIL_W_D32,
+def : InstRW<[GenericWriteFPUL], (instrs ADDR_PS64,
+                                  CEIL_L_D64, CEIL_L_S, CEIL_W_D32,
                                   CEIL_W_D64, CEIL_W_S, CVT_D32_S, CVT_D32_W,
                                   CVT_D64_L, CVT_D64_S, CVT_D64_W, CVT_L_D64,
                                   CVT_L_S, CVT_S_D32, CVT_S_D64, CVT_S_L,
                                   CVT_S_W, CVT_W_D32, CVT_W_D64, CVT_W_S,
                                   CVT_PS_S64, CVT_S_PL64, CVT_S_PU64,
+                                  CVT_PS_PW64, CVT_PW_PS64, FADD_PS64,
                                   FLOOR_L_D64, FLOOR_L_S, FLOOR_W_D32,
                                   FLOOR_W_D64, FLOOR_W_S, FMUL_D32, FMUL_D64,
-                                  MADD_D32, MADD_D64, MSUB_D32, MSUB_D64,
+                                  FMUL_PS64, FSUB_PS64, MADD_D32, MADD_D64,
+                                  MSUB_D32, MSUB_D64, MULR_PS64,
                                   NMADD_D32, NMADD_D64, NMSUB_D32, NMSUB_D64,
-                                  PLL_PS64, PLU_PS64,
+                                  PLL_PS64, PLU_PS64, PUL_PS64, PUU_PS64,
                                   ROUND_L_D64, ROUND_L_S, ROUND_W_D32,
                                   ROUND_W_D64, ROUND_W_S, TRUNC_L_D64,
                                   TRUNC_L_S, TRUNC_W_D32, TRUNC_W_D64,
@@ -1610,5 +1618,6 @@ def : InstRW<[GenericWriteAtomic],
 def : InstRW<[GenericWriteAtomic],
     (instregex "^ATOMIC_CMP_SWAP_I(8|16|32|64)_POSTRA$")>;
 def : InstRW<[GenericWriteAtomic],
-    (instregex "^ATOMIC_LOAD_(ADD|SUB|AND|OR|XOR|NAND)_I(8|16|32|64)_POSTRA$")>;
+    (instregex "^ATOMIC_LOAD_(ADD|SUB|AND|OR|XOR|NAND|MIN|MAX|UMIN|UMAX)"
+               "_I(8|16|32|64)_POSTRA$")>;
 }

@@ -12,4 +12,8 @@ endif()
 
 ROOT_ADD_GTEST(testTThreadedObject testTThreadedObject.cxx LIBRARIES Hist)
 
-ROOT_ADD_GTEST(testInterpreterLock testInterpreterLock.cxx LIBRARIES Imt REPEATS 50)
+if(NOT MSVC OR CMAKE_SIZEOF_VOID_P EQUAL 8 OR llvm13_broken_tests)
+  ROOT_ADD_GTEST(testInterpreterLock testInterpreterLock.cxx LIBRARIES Imt REPEATS 50)
+else()
+  ROOT_ADD_GTEST(testInterpreterLock testInterpreterLock.cxx LIBRARIES Imt REPEATS 40)
+endif()

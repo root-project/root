@@ -172,7 +172,7 @@ class SimpleProgressBar:
     A simple progress bar which doesn't need any terminal support.
 
     This prints out a progress bar like:
-      'Header: 0 .. 10.. 20.. ...'
+      'Header:  0.. 10.. 20.. ...'
     """
 
     def __init__(self, header):
@@ -191,7 +191,7 @@ class SimpleProgressBar:
         for i in range(self.atIndex, next):
             idx = i % 5
             if idx == 0:
-                sys.stdout.write('%-2d' % (i*2))
+                sys.stdout.write('%2d' % (i*2))
             elif idx == 1:
                 pass # Skip second char
             elif idx < 4:
@@ -201,8 +201,8 @@ class SimpleProgressBar:
         sys.stdout.flush()
         self.atIndex = next
 
-    def clear(self):
-        if self.atIndex is not None:
+    def clear(self, interrupted):
+        if self.atIndex is not None and not interrupted:
             sys.stdout.write('\n')
             sys.stdout.flush()
             self.atIndex = None
@@ -218,7 +218,7 @@ class ProgressBar:
     The progress bar is colored, if the terminal supports color
     output; and adjusts to the width of the terminal.
     """
-    BAR = '%s${GREEN}[${BOLD}%s%s${NORMAL}${GREEN}]${NORMAL}%s'
+    BAR = '%s${%s}[${BOLD}%s%s${NORMAL}${%s}]${NORMAL}%s'
     HEADER = '${BOLD}${CYAN}%s${NORMAL}\n\n'
         
     def __init__(self, term, header, useETA=True):
@@ -235,13 +235,13 @@ class ProgressBar:
                 self.XNL = "" # Cursor must be fed to the next line
         else:
             self.width = 75
-        self.bar = term.render(self.BAR)
+        self.barColor = 'GREEN'
         self.header = self.term.render(self.HEADER % header.center(self.width))
         self.cleared = 1 #: true if we haven't drawn the bar yet.
         self.useETA = useETA
         if self.useETA:
             self.startTime = time.time()
-        self.update(0, '')
+        # self.update(0, '')
 
     def update(self, percent, message):
         if self.cleared:
@@ -253,7 +253,7 @@ class ProgressBar:
             elapsed = time.time() - self.startTime
             if percent > .0001 and elapsed > 1:
                 total = elapsed / percent
-                eta = int(total - elapsed)
+                eta = total - elapsed
                 h = eta//3600.
                 m = (eta//60) % 60
                 s = eta % 60
@@ -264,19 +264,25 @@ class ProgressBar:
             message = message + ' '*(self.width - len(message))
         else:
             message = '... ' + message[-(self.width-4):]
+        bc = self.barColor
+        bar = self.BAR % (prefix, bc, '='*n, '-'*(barWidth-n), bc, suffix)
+        bar = self.term.render(bar)
         sys.stdout.write(
             self.BOL + self.term.UP + self.term.CLEAR_EOL +
-            (self.bar % (prefix, '='*n, '-'*(barWidth-n), suffix)) +
+            bar +
             self.XNL +
             self.term.CLEAR_EOL + message)
         if not self.term.XN:
             sys.stdout.flush()
 
-    def clear(self):
+    def clear(self, interrupted):
         if not self.cleared:
             sys.stdout.write(self.BOL + self.term.CLEAR_EOL +
                              self.term.UP + self.term.CLEAR_EOL +
                              self.term.UP + self.term.CLEAR_EOL)
+            if interrupted:  # ^C creates extra line. Gobble it up!
+                sys.stdout.write(self.term.UP + self.term.CLEAR_EOL)
+                sys.stdout.write('^C')
             sys.stdout.flush()
             self.cleared = 1
 

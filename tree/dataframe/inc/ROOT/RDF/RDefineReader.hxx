@@ -13,7 +13,6 @@
 
 #include "RColumnReaderBase.hxx"
 #include "RDefineBase.hxx"
-#include "Utils.hxx" // CheckReaderTypeMatches
 #include <Rtypes.h>  // Long64_t, R__CLING_PTRCHECK
 
 #include <limits>
@@ -25,13 +24,13 @@ namespace RDF {
 
 namespace RDFDetail = ROOT::Detail::RDF;
 
-/// Column reader for defined (aka custom) columns.
+/// Column reader for defined columns.
 class R__CLING_PTRCHECK(off) RDefineReader final : public ROOT::Detail::RDF::RColumnReaderBase {
-   /// Non-owning reference to the node responsible for the custom column. Needed when querying custom values.
+   /// Non-owning reference to the node responsible for the defined column.
    RDFDetail::RDefineBase &fDefine;
 
-   /// Non-owning ptr to the value of a custom column.
-   void *fCustomValuePtr = nullptr;
+   /// Non-owning ptr to the defined value.
+   void *fValuePtr = nullptr;
 
    /// The slot this value belongs to.
    unsigned int fSlot = std::numeric_limits<unsigned int>::max();
@@ -39,14 +38,13 @@ class R__CLING_PTRCHECK(off) RDefineReader final : public ROOT::Detail::RDF::RCo
    void *GetImpl(Long64_t entry) final
    {
       fDefine.Update(fSlot, entry);
-      return fCustomValuePtr;
+      return fValuePtr;
    }
 
 public:
-   RDefineReader(unsigned int slot, RDFDetail::RDefineBase &define, const std::type_info &tid)
-      : fDefine(define), fCustomValuePtr(define.GetValuePtr(slot)), fSlot(slot)
+   RDefineReader(unsigned int slot, RDFDetail::RDefineBase &define)
+      : fDefine(define), fValuePtr(define.GetValuePtr(slot)), fSlot(slot)
    {
-      CheckReaderTypeMatches(define.GetTypeId(), tid, define.GetName(), "RDefineReader");
    }
 };
 

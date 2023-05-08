@@ -12,13 +12,14 @@
 #include "TPgSQLResult.h"
 #include "TPgSQLRow.h"
 
+#include <libpq-fe.h>
 
 ClassImp(TPgSQLResult);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// PgSQL query result.
 
-TPgSQLResult::TPgSQLResult(void *result)
+TPgSQLResult::TPgSQLResult(PGresult *result)
 {
    fResult     = (PGresult *) result;
    fRowCount   = fResult ? PQntuples(fResult) : 0;
@@ -43,7 +44,7 @@ void TPgSQLResult::Close(Option_t *)
       return;
 
    PQclear(fResult);
-   fResult     = 0;
+   fResult     = nullptr;
    fRowCount   = 0;
    fCurrentRow = 0;
 }
@@ -83,7 +84,7 @@ const char *TPgSQLResult::GetFieldName(Int_t field)
 {
    if (!fResult) {
       Error("GetFieldName", "result set closed");
-      return 0;
+      return nullptr;
    }
    return PQfname(fResult, field);
 }
@@ -94,15 +95,13 @@ const char *TPgSQLResult::GetFieldName(Int_t field)
 
 TSQLRow *TPgSQLResult::Next()
 {
-   Int_t row;
-
    if (!fResult) {
       Error("Next", "result set closed");
-      return 0;
+      return nullptr;
    }
-   row = fCurrentRow++;
-   if (row >= fRowCount)
-      return 0;
-   else
-      return new TPgSQLRow((void *) fResult, (ULong_t) row);
+   ULong_t row = fCurrentRow++;
+   if ((Int_t) row >= fRowCount)
+      return nullptr;
+
+   return new TPgSQLRow(fResult, row);
 }

@@ -21,11 +21,10 @@ This file contains the code for cuda computations using the RooBatchCompute libr
 #include "RooBatchCompute.h"
 #include "Batches.h"
 
-#include "ROOT/RConfig.h"
+#include "ROOT/RConfig.hxx"
 #include "TError.h"
 
 #include <algorithm>
-#include <thrust/reduce.h>
 
 #ifdef __CUDACC__
 #define ERRCHECK(err) __checkCudaErrors((err), __func__, __FILE__, __LINE__)
@@ -44,6 +43,9 @@ inline static void __checkCudaErrors(cudaError_t error, std::string func, std::s
 
 namespace RooBatchCompute {
 namespace RF_ARCH {
+
+constexpr int gridSize = 128;
+constexpr int blockSize = 512;
 
 std::vector<void (*)(Batches)> getFunctions();
 
@@ -78,16 +80,16 @@ public:
    \param vars A std::vector containing pointers to the variables involved in the computation.
    \param extraArgs An optional std::vector containing extra double values that may participate in the computation. **/
    void compute(cudaStream_t *stream, Computer computer, RestrictArr output, size_t nEvents, const VarVector &vars,
-                const ArgVector &extraArgs) override
+                ArgVector &extraArgs) override
    {
       Batches batches(output, nEvents, vars, extraArgs);
-      _computeFunctions[computer]<<<128, 512, 0, *stream>>>(batches);
+      _computeFunctions[computer]<<<gridSize, blockSize, 0, *stream>>>(batches);
    }
    /// Return the sum of an input array
-   double sumReduce(cudaStream_t *stream, InputArr input, size_t n) override
-   {
-      return thrust::reduce(thrust::cuda::par.on(*stream), input, input + n, 0.0);
-   }
+   double reduceSum(cudaStream_t *stream, InputArr input, size_t n) override;
+   ReduceNLLOutput reduceNLL(cudaStream_t *, RooSpan<const double> probas, RooSpan<const double> weightSpan,
+                             RooSpan<const double> weights, double weightSum,
+                             RooSpan<const double> binVolumes) override;
 
    // cuda functions
    virtual void *cudaMalloc(size_t nBytes)
@@ -166,6 +168,152 @@ public:
    }
 }; // End class RooBatchComputeClass
 
+template <class T>
+class DeviceArray {
+public:
+   DeviceArray(std::size_t n) : _size{n} { cudaMalloc(reinterpret_cast<void **>(&_deviceArray), n * sizeof(T)); }
+   DeviceArray(T const *hostArray, std::size_t n) : _size{n}
+   {
+      cudaMalloc((void **)&_deviceArray, n * sizeof(T));
+      cudaMemcpy(_deviceArray, hostArray, n * sizeof(T), cudaMemcpyHostToDevice);
+   }
+   DeviceArray(DeviceArray const &other) = delete;
+   DeviceArray &operator=(DeviceArray const &other) = delete;
+   ~DeviceArray() { cudaFree(_deviceArray); }
+
+   std::size_t size() const { return _size; }
+   T *data() { return _deviceArray; }
+   T const *data() const { return _deviceArray; }
+
+   void copyBack(T *hostArray, std::size_t n)
+   {
+      cudaMemcpy(hostArray, _deviceArray, sizeof(T) * n, cudaMemcpyDeviceToHost);
+   }
+
+private:
+   T *_deviceArray = nullptr;
+   std::size_t _size = 0;
+};
+
+template <class T, class U>
+__global__ void sumMultiBlock(const T *__restrict__ gArr, int arraySize, U *__restrict__ gOut)
+{
+   int thIdx = threadIdx.x;
+   int gthIdx = thIdx + blockIdx.x * blockSize;
+   const int gridSize = blockSize * gridDim.x;
+   U sum = 0;
+   for (int i = gthIdx; i < arraySize; i += gridSize)
+      sum += gArr[i];
+   __shared__ U shArr[blockSize];
+   shArr[thIdx] = sum;
+   __syncthreads();
+   for (int size = blockSize / 2; size > 0; size /= 2) { // uniform
+      if (thIdx < size)
+         shArr[thIdx] += shArr[thIdx + size];
+      __syncthreads();
+   }
+   if (thIdx == 0)
+      gOut[blockIdx.x] = shArr[0];
+}
+
+__global__ void nllSumMultiBlock(const double *__restrict__ probas, int probasSize, double *__restrict__ out)
+{
+   int thIdx = threadIdx.x;
+   int gthIdx = thIdx + blockIdx.x * blockSize;
+   const int gridSize = blockSize * gridDim.x;
+   double sum = 0;
+   for (int i = gthIdx; i < probasSize; i += gridSize)
+      sum -= std::log(probas[i]);
+   __shared__ double shArr[blockSize];
+   shArr[thIdx] = sum;
+   __syncthreads();
+   for (int size = blockSize / 2; size > 0; size /= 2) { // uniform
+      if (thIdx < size)
+         shArr[thIdx] += shArr[thIdx + size];
+      __syncthreads();
+   }
+   if (thIdx == 0)
+      out[blockIdx.x] = shArr[0];
+}
+
+__global__ void nllSumKernel(const double *probas, double *out, int n)
+{
+   int idx = threadIdx.x;
+   double nllSum = 0;
+   for (int i = idx; i < n; i += blockSize) {
+      nllSum -= std::log(probas[i]);
+   }
+   __shared__ double r[blockSize];
+   r[idx] = nllSum;
+   __syncthreads();
+   for (int size = blockSize / 2; size > 0; size /= 2) { // uniform
+      if (idx < size) {
+         r[idx] += r[idx + size];
+      }
+      __syncthreads();
+   }
+   if (idx == 0) {
+      *out = r[0];
+   }
+}
+
+__global__ void nllSumWeightedKernel(const double *probas, const double *weightSpan, double *out, int n)
+{
+   int idx = threadIdx.x;
+   double nllSum = 0;
+   for (int i = idx; i < n; i += blockSize) {
+      if (weightSpan[i] != 0.0) {
+         nllSum -= weightSpan[i] * std::log(probas[i]);
+      }
+   }
+   __shared__ double r[blockSize];
+   r[idx] = nllSum;
+   __syncthreads();
+   for (int size = blockSize / 2; size > 0; size /= 2) { // uniform
+      if (idx < size) {
+         r[idx] += r[idx + size];
+      }
+      __syncthreads();
+   }
+   if (idx == 0) {
+      *out = r[0];
+   }
+}
+
+double RooBatchComputeClass::reduceSum(cudaStream_t *stream, InputArr input, size_t n)
+{
+   DeviceArray<double> devOut{gridSize};
+   double tmp = 0.0;
+   sumMultiBlock<<<gridSize, blockSize, 0, *stream>>>(input, n, devOut.data());
+   sumMultiBlock<<<1, blockSize, 0, *stream>>>(devOut.data(), gridSize, devOut.data());
+   devOut.copyBack(&tmp, 1);
+   return tmp;
+}
+
+ReduceNLLOutput RooBatchComputeClass::reduceNLL(cudaStream_t *stream, RooSpan<const double> probas,
+                                                RooSpan<const double> weightSpan, RooSpan<const double> weights,
+                                                double weightSum, RooSpan<const double> binVolumes)
+{
+   ReduceNLLOutput out;
+   DeviceArray<double> devOut{gridSize};
+   double tmp = 0.0;
+
+   if (weightSpan.size() == 1) {
+      nllSumMultiBlock<<<gridSize, blockSize, 0, *stream>>>(probas.data(), probas.size(), devOut.data());
+      sumMultiBlock<<<1, blockSize, 0, *stream>>>(devOut.data(), gridSize, devOut.data());
+      devOut.copyBack(&tmp, 1);
+      tmp *= weightSpan[0];
+   } else {
+      nllSumWeightedKernel<<<gridSize, blockSize, 0, *stream>>>(probas.data(), weightSpan.data(), devOut.data(),
+                                                                probas.size());
+      sumMultiBlock<<<1, blockSize, 0, *stream>>>(devOut.data(), gridSize, devOut.data());
+      devOut.copyBack(&tmp, 1);
+   }
+
+   out.nllSum.Add(tmp);
+   return out;
+}
+
 /// Static object to trigger the constructor which overwrites the dispatch pointer.
 static RooBatchComputeClass computeObj;
 
@@ -177,7 +325,7 @@ static RooBatchComputeClass computeObj;
 For every scalar parameter a `Batch` object inside the `Batches` object is set accordingly;
 a data member of type double gets assigned the scalar value. This way, when the cuda kernel
 is launched this scalar value gets copied automatically and thus no call to cudaMemcpy is needed **/
-Batches::Batches(RestrictArr output, size_t nEvents, const VarVector &vars, const ArgVector &extraArgs, double *)
+Batches::Batches(RestrictArr output, size_t nEvents, const VarVector &vars, ArgVector &extraArgs, double *)
    : _nEvents(nEvents), _nBatches(vars.size()), _nExtraArgs(extraArgs.size()), _output(output)
 {
    if (vars.size() > maxParams) {

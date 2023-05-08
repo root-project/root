@@ -10,9 +10,6 @@
 #include <ROOT/RRootDS.hxx>
 #include <ROOT/TSeq.hxx>
 #include <TClass.h>
-#include <TError.h>
-#include <TROOT.h>         // For the gROOTMutex
-#include <TVirtualMutex.h> // For the R__LOCKGUARD
 
 #include <algorithm>
 #include <vector>
@@ -98,7 +95,6 @@ void RRootDS::InitSlot(unsigned int slot, ULong64_t firstEntry)
    chain->ResetBit(kMustCleanup);
    chain->Add(fFileNameGlob.c_str());
    chain->GetEntry(firstEntry);
-   TString setBranches;
    for (auto i : ROOT::TSeqU(fListOfBranches.size())) {
       auto colName = fListOfBranches[i].c_str();
       auto &addr = fBranchAddresses[i][slot];
@@ -117,7 +113,7 @@ void RRootDS::InitSlot(unsigned int slot, ULong64_t firstEntry)
    fChains[slot].reset(chain);
 }
 
-void RRootDS::FinaliseSlot(unsigned int slot)
+void RRootDS::FinalizeSlot(unsigned int slot)
 {
    fChains[slot].reset(nullptr);
 }
@@ -141,13 +137,13 @@ void RRootDS::SetNSlots(unsigned int nSlots)
    fNSlots = nSlots;
 
    const auto nColumns = fListOfBranches.size();
-   // Initialise the entire set of addresses
+   // Initialize the entire set of addresses
    fBranchAddresses.resize(nColumns, std::vector<void *>(fNSlots, nullptr));
 
    fChains.resize(fNSlots);
 }
 
-void RRootDS::Initialise()
+void RRootDS::Initialize()
 {
    const auto nentries = fModelChain.GetEntries();
    const auto chunkSize = nentries / fNSlots;
@@ -166,11 +162,6 @@ void RRootDS::Initialise()
 std::string RRootDS::GetLabel()
 {
    return "Root";
-}
-
-RDataFrame MakeRootDataFrame(std::string_view treeName, std::string_view fileNameGlob)
-{
-   return ROOT::RDataFrame(treeName, fileNameGlob);
 }
 
 } // ns RDF

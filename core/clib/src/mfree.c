@@ -31,10 +31,7 @@ Boston, MA 02111-1307, USA.
 /* Return memory to the heap.
    Like `mfree' but don't call a mfree_hook if there is one.  */
 
-void
-__mmalloc_free (mdp, ptr)
-  struct mdesc *mdp;
-  PTR ptr;
+void __mmalloc_free(struct mdesc *mdp, PTR ptr)
 {
    int type;
    size_t block, blocks;
@@ -206,10 +203,7 @@ __mmalloc_free (mdp, ptr)
 
 /* Return memory to the heap.  */
 
-void
-mfree (md, ptr)
-  PTR md;
-  PTR ptr;
+void mfree(PTR md, PTR ptr)
 {
    struct mdesc *mdp;
    register struct alignlist *l;

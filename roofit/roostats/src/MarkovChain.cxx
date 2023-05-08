@@ -45,32 +45,29 @@ static const char* DEFAULT_TITLE = "Markov Chain";
 MarkovChain::MarkovChain() :
    TNamed(DEFAULT_NAME, DEFAULT_TITLE)
 {
-   fParameters = NULL;
-   fDataEntry = NULL;
-   fChain = NULL;
-   fNLL = NULL;
-   fWeight = NULL;
+   fParameters = nullptr;
+   fDataEntry = nullptr;
+   fChain = nullptr;
+   fNLL = nullptr;
 }
 
 MarkovChain::MarkovChain(RooArgSet& parameters) :
    TNamed(DEFAULT_NAME, DEFAULT_TITLE)
 {
-   fParameters = NULL;
-   fDataEntry = NULL;
-   fChain = NULL;
-   fNLL = NULL;
-   fWeight = NULL;
+   fParameters = nullptr;
+   fDataEntry = nullptr;
+   fChain = nullptr;
+   fNLL = nullptr;
    SetParameters(parameters);
 }
 
 MarkovChain::MarkovChain(const char* name, const char* title,
       RooArgSet& parameters) : TNamed(name, title)
 {
-   fParameters = NULL;
-   fDataEntry = NULL;
-   fChain = NULL;
-   fNLL = NULL;
-   fWeight = NULL;
+   fParameters = nullptr;
+   fDataEntry = nullptr;
+   fChain = nullptr;
+   fNLL = nullptr;
    SetParameters(parameters);
 }
 
@@ -87,26 +84,22 @@ void MarkovChain::SetParameters(RooArgSet& parameters)
    // to see if that makes it possible to get values of variables without
    // doing string comparison
    RooRealVar nll(NLL_NAME, "-log Likelihood", 0);
-   RooRealVar weight(WEIGHT_NAME, "weight", 0);
 
    fDataEntry = new RooArgSet();
    fDataEntry->addClone(parameters);
    fDataEntry->addClone(nll);
-   fDataEntry->addClone(weight);
    fNLL = (RooRealVar*)fDataEntry->find(NLL_NAME);
-   fWeight = (RooRealVar*)fDataEntry->find(WEIGHT_NAME);
 
-   fChain = new RooDataSet(DATASET_NAME, "Markov Chain", *fDataEntry,WEIGHT_NAME);
+   fChain = new RooDataSet(DATASET_NAME, "Markov Chain", *fDataEntry, RooFit::WeightVar(WEIGHT_NAME));
 }
 
-void MarkovChain::Add(RooArgSet& entry, Double_t nllValue, Double_t weight)
+void MarkovChain::Add(RooArgSet& entry, double nllValue, double weight)
 {
-   if (fParameters == NULL)
+   if (fParameters == nullptr)
       SetParameters(entry);
    RooStats::SetParameters(&entry, fDataEntry);
    fNLL->setVal(nllValue);
    //kbelasco: this is stupid, but some things might require it, so be doubly sure
-   fWeight->setVal(weight);
    fChain->add(*fDataEntry, weight);
    //fChain->add(*fDataEntry);
 }
@@ -115,7 +108,7 @@ void MarkovChain::AddWithBurnIn(MarkovChain& otherChain, Int_t burnIn)
 {
    // Discards the first n accepted points.
 
-   if(fParameters == NULL) SetParameters(*(RooArgSet*)otherChain.Get());
+   if(fParameters == nullptr) SetParameters(*(RooArgSet*)otherChain.Get());
    int counter = 0;
    for( int i=0; i < otherChain.Size(); i++ ) {
       RooArgSet* entry = (RooArgSet*)otherChain.Get(i);
@@ -125,13 +118,13 @@ void MarkovChain::AddWithBurnIn(MarkovChain& otherChain, Int_t burnIn)
       }
    }
 }
-void MarkovChain::Add(MarkovChain& otherChain, Double_t discardEntries)
+void MarkovChain::Add(MarkovChain& otherChain, double discardEntries)
 {
    // Discards the first entries. This is different to the definition of
    // burn-in used in the Bayesian calculator where the first n accepted
    // terms from the proposal function are discarded.
 
-   if(fParameters == NULL) SetParameters(*(RooArgSet*)otherChain.Get());
+   if(fParameters == nullptr) SetParameters(*(RooArgSet*)otherChain.Get());
    double counter = 0.0;
    for( int i=0; i < otherChain.Size(); i++ ) {
       RooArgSet* entry = (RooArgSet*)otherChain.Get(i);
@@ -142,12 +135,11 @@ void MarkovChain::Add(MarkovChain& otherChain, Double_t discardEntries)
    }
 }
 
-void MarkovChain::AddFast(RooArgSet& entry, Double_t nllValue, Double_t weight)
+void MarkovChain::AddFast(RooArgSet& entry, double nllValue, double weight)
 {
    RooStats::SetParameters(&entry, fDataEntry);
    fNLL->setVal(nllValue);
    //kbelasco: this is stupid, but some things might require it, so be doubly sure
-   fWeight->setVal(weight);
    fChain->addFast(*fDataEntry, weight);
    //fChain->addFast(*fDataEntry);
 }
@@ -155,7 +147,7 @@ void MarkovChain::AddFast(RooArgSet& entry, Double_t nllValue, Double_t weight)
 RooDataSet* MarkovChain::GetAsDataSet(RooArgSet* whichVars) const
 {
    RooArgSet args;
-   if (whichVars == NULL) {
+   if (whichVars == nullptr) {
       //args.add(*fParameters);
       //args.add(*fNLL);
       args.add(*fDataEntry);
@@ -182,7 +174,7 @@ RooDataSet* MarkovChain::GetAsDataSet(const RooCmdArg& arg1, const RooCmdArg& ar
 RooDataHist* MarkovChain::GetAsDataHist(RooArgSet* whichVars) const
 {
    RooArgSet args;
-   if (whichVars == NULL) {
+   if (whichVars == nullptr) {
       args.add(*fParameters);
       //args.add(*fNLL);
       //args.add(*fDataEntry);
@@ -213,24 +205,23 @@ RooDataHist* MarkovChain::GetAsDataHist(const RooCmdArg& arg1, const RooCmdArg& 
 THnSparse* MarkovChain::GetAsSparseHist(RooAbsCollection* whichVars) const
 {
    RooArgList axes;
-   if (whichVars == NULL)
+   if (whichVars == nullptr)
       axes.add(*fParameters);
    else
       axes.add(*whichVars);
 
    Int_t dim = axes.getSize();
-   std::vector<Double_t> min(dim);
-   std::vector<Double_t> max(dim);
+   std::vector<double> min(dim);
+   std::vector<double> max(dim);
    std::vector<Int_t> bins(dim);
    std::vector<const char *> names(dim);
-   TIterator* it = axes.createIterator();
-   for (Int_t i = 0; i < dim; i++) {
-      RooRealVar * var = dynamic_cast<RooRealVar*>(it->Next() );
-      assert(var != 0);
+   Int_t i = 0;
+   for (auto const *var : static_range_cast<RooRealVar *>(axes)) {
       names[i] = var->GetName();
       min[i] = var->getMin();
       max[i] = var->getMax();
       bins[i] = var->numBins();
+      ++i;
    }
 
    THnSparseF* sparseHist = new THnSparseF("posterior", "MCMC Posterior Histogram",
@@ -244,23 +235,21 @@ THnSparse* MarkovChain::GetAsSparseHist(RooAbsCollection* whichVars) const
    // Fill histogram
    Int_t size = fChain->numEntries();
    const RooArgSet* entry;
-   Double_t* x = new Double_t[dim];
-   for (Int_t i = 0; i < size; i++) {
+   std::vector<double> x(dim);
+   for ( i = 0; i < size; i++) {
       entry = fChain->get(i);
-      it->Reset();
+
       for (Int_t ii = 0; ii < dim; ii++) {
          //LM:  doing this is probably quite slow
          x[ii] = entry->getRealValue( names[ii]);
-         sparseHist->Fill(x, fChain->weight());
+         sparseHist->Fill(x.data(), fChain->weight());
       }
    }
-   delete[] x;
-   delete it;
 
    return sparseHist;
 }
 
-Double_t MarkovChain::NLL(Int_t i) const
+double MarkovChain::NLL(Int_t i) const
 {
    // kbelasco: how to do this?
    //fChain->get(i);
@@ -268,7 +257,7 @@ Double_t MarkovChain::NLL(Int_t i) const
    return fChain->get(i)->getRealValue(NLL_NAME);
 }
 
-Double_t MarkovChain::NLL() const
+double MarkovChain::NLL() const
 {
    // kbelasco: how to do this?
    //fChain->get();
@@ -276,12 +265,12 @@ Double_t MarkovChain::NLL() const
    return fChain->get()->getRealValue(NLL_NAME);
 }
 
-Double_t MarkovChain::Weight() const
+double MarkovChain::Weight() const
 {
    return fChain->weight();
 }
 
-Double_t MarkovChain::Weight(Int_t i) const
+double MarkovChain::Weight(Int_t i) const
 {
    fChain->get(i);
    return fChain->weight();

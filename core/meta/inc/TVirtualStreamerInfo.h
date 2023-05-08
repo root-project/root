@@ -134,16 +134,16 @@ public:
    TVirtualStreamerInfo(TClass * /*cl*/);
    virtual            ~TVirtualStreamerInfo();
    virtual void        Build(Bool_t isTransient = kFALSE) = 0;
-   virtual void        BuildCheck(TFile *file = 0, Bool_t load = kTRUE) = 0;
+   virtual void        BuildCheck(TFile *file = nullptr, Bool_t load = kTRUE) = 0;
    virtual void        BuildEmulated(TFile *file) = 0;
    virtual void        BuildOld() = 0;
    virtual Bool_t      BuildFor( const TClass *cl ) = 0;
    virtual void        CallShowMembers(const void* obj, TMemberInspector &insp, Bool_t isTransient) const = 0;
-   virtual void        Clear(Option_t *) = 0;
+   virtual void        Clear(Option_t * = "") override = 0;
    virtual Bool_t      CompareContent(TClass *cl,TVirtualStreamerInfo *info, Bool_t warn, Bool_t complete, TFile *file) = 0;
    virtual void        Compile() = 0;
    virtual void        ForceWriteInfo(TFile *file, Bool_t force=kFALSE) = 0;
-   virtual Int_t       GenerateHeaderFile(const char *dirname, const TList *subClasses = 0, const TList *extrainfos = 0) = 0;
+   virtual Int_t       GenerateHeaderFile(const char *dirname, const TList *subClasses = nullptr, const TList *extrainfos = nullptr) = 0;
    virtual TClass     *GetActualClass(const void *obj) const = 0;
    virtual TClass     *GetClass() const  = 0;
    virtual UInt_t      GetCheckSum() const = 0;
@@ -163,10 +163,10 @@ public:
            Bool_t      IsCompiled() const { return fIsCompiled; }
            Bool_t      IsOptimized() const { return fOptimized; }
            Int_t       IsRecovered() const { return TestBit(kRecovered); }
-   virtual void        ls(Option_t *option="") const = 0;
+   virtual void        ls(Option_t * = "") const override = 0;
    virtual TVirtualStreamerInfo *NewInfo(TClass *cl) = 0;
-   virtual void       *New(void *obj = 0) = 0;
-   virtual void       *NewArray(Long_t nElements, void* ary = 0) = 0;
+   virtual void       *New(void *obj = nullptr) = 0;
+   virtual void       *NewArray(Long_t nElements, void* ary = nullptr) = 0;
    virtual void        Destructor(void* p, Bool_t dtorOnly = kFALSE) = 0;
    virtual void        DeleteArray(void* p, Bool_t dtorOnly = kFALSE) = 0;
 
@@ -203,7 +203,7 @@ public:
    static TVirtualStreamerInfo *Factory();
 
    //WARNING this class version must be the same as TStreamerInfo
-   ClassDef(TVirtualStreamerInfo,6)  //Abstract Interface describing Streamer information for one class
+   ClassDefOverride(TVirtualStreamerInfo,6)  //Abstract Interface describing Streamer information for one class
 };
 
 #ifdef _MSC_VER

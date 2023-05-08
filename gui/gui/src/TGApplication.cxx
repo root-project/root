@@ -42,7 +42,7 @@ ClassImp(TGApplication);
 /// use either TApplication or TRint.
 
 TGApplication::TGApplication(const char *appClassName,
-                             int *argc, char **argv, void*, int)
+                             Int_t *argc, char **argv, void*, Int_t)
    : TApplication()
 {
    if (gApplication) {
@@ -108,7 +108,8 @@ TGApplication::TGApplication(const char *appClassName,
       UInt_t w, h;
       if (gVirtualX) {
          gVirtualX->GetGeometry(-1, x, y, w, h);
-         if (h > 0 && h < 1000) gStyle->SetScreenFactor(0.0011*h);
+         if (h > 0)
+            gStyle->SetScreenFactor(0.001 * h);
       }
    }
 

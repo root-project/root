@@ -31,8 +31,6 @@ D*-D0 mass difference distributions. It computes
 **/
 
 #include "RooDstD0BG.h"
-#include "RooFit.h"
-#include "RooAbsReal.h"
 #include "RooRealVar.h"
 #include "RooIntegrator1D.h"
 #include "RooAbsFunc.h"
@@ -69,12 +67,12 @@ RooDstD0BG::RooDstD0BG(const RooDstD0BG& other, const char *name) :
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooDstD0BG::evaluate() const
+double RooDstD0BG::evaluate() const
 {
-  Double_t arg= dm- dm0;
+  double arg= dm- dm0;
   if (arg <= 0 ) return 0;
-  Double_t ratio= dm/dm0;
-  Double_t val= (1- exp(-arg/C))* TMath::Power(ratio, A) + B*(ratio-1);
+  double ratio= dm/dm0;
+  double val= (1- exp(-arg/C))* TMath::Power(ratio, A) + B*(ratio-1);
 
   return (val > 0 ? val : 0) ;
 }
@@ -98,25 +96,25 @@ Int_t RooDstD0BG::getAnalyticalIntegral(RooArgSet& /*allVars*/, RooArgSet& /*ana
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooDstD0BG::analyticalIntegral(Int_t code, const char* rangeName) const
+double RooDstD0BG::analyticalIntegral(Int_t code, const char* rangeName) const
 {
   switch(code) {
   case 1:
     {
-      Double_t min= dm.min(rangeName);
-      Double_t max= dm.max(rangeName);
+      double min= dm.min(rangeName);
+      double max= dm.max(rangeName);
       if (max <= dm0 ) return 0;
       else if (min < dm0) min = dm0;
 
-      Bool_t doNumerical= kFALSE;
-      if ( A != 0 ) doNumerical= kTRUE;
+      bool doNumerical= false;
+      if ( A != 0 ) doNumerical= true;
       else if (B < 0) {
    // If b<0, pdf can be negative at large dm, the integral should
    // only up to where pdf hits zero. Better solution should be
    // solve the zero and use it as max.
    // Here we check this whether pdf(max) < 0. If true, let numerical
    // integral take care of. ( kind of ugly!)
-   if ( 1- exp(-(max-dm0)/C) + B*(max/dm0 -1) < 0) doNumerical= kTRUE;
+   if ( 1- exp(-(max-dm0)/C) + B*(max/dm0 -1) < 0) doNumerical= true;
       }
       if ( ! doNumerical ) {
    return (max-min)+ C* exp(dm0/C)* (exp(-max/C)- exp(-min/C)) +

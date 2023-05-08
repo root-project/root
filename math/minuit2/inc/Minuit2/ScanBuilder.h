@@ -29,10 +29,10 @@ class ScanBuilder : public MinimumBuilder {
 public:
    ScanBuilder() {}
 
-   ~ScanBuilder() {}
+   ~ScanBuilder() override {}
 
-   virtual FunctionMinimum Minimum(const MnFcn &, const GradientCalculator &, const MinimumSeed &, const MnStrategy &,
-                                   unsigned int, double) const;
+   FunctionMinimum Minimum(const MnFcn &, const GradientCalculator &, const MinimumSeed &, const MnStrategy &,
+                                   unsigned int, double) const override;
 
 private:
 };

@@ -80,7 +80,7 @@ void ARMTargetStreamer::emitInst(uint32_t Inst, char Suffix) {
   default:
     llvm_unreachable("Invalid Suffix");
   }
-  getStreamer().EmitBytes(StringRef(Buffer, Size));
+  getStreamer().emitBytes(StringRef(Buffer, Size));
 }
 
 // The remaining callbacks should be handled separately by each
@@ -108,7 +108,7 @@ void ARMTargetStreamer::emitIntTextAttribute(unsigned Attribute,
                                              unsigned IntValue,
                                              StringRef StringValue) {}
 void ARMTargetStreamer::emitArch(ARM::ArchKind Arch) {}
-void ARMTargetStreamer::emitArchExtension(unsigned ArchExt) {}
+void ARMTargetStreamer::emitArchExtension(uint64_t ArchExt) {}
 void ARMTargetStreamer::emitObjectArch(ARM::ArchKind Arch) {}
 void ARMTargetStreamer::emitFPU(unsigned FPU) {}
 void ARMTargetStreamer::finishAttributeSection() {}
@@ -249,12 +249,12 @@ void ARMTargetStreamer::emitTargetAttributes(const MCSubtargetInfo &STI) {
                             : ARM::FK_VFPV3_D16)
                      : (STI.hasFeature(ARM::FeatureFP16) ? ARM::FK_VFPV3XD_FP16
                                                          : ARM::FK_VFPV3XD)));
-    else if (STI.hasFeature(ARM::FeatureVFP2_D16_SP))
+    else if (STI.hasFeature(ARM::FeatureVFP2_SP))
       emitFPU(ARM::FK_VFPV2);
   }
 
   // ABI_HardFP_use attribute to indicate single precision FP.
-  if (STI.hasFeature(ARM::FeatureVFP2_D16_SP) && !STI.hasFeature(ARM::FeatureFP64))
+  if (STI.hasFeature(ARM::FeatureVFP2_SP) && !STI.hasFeature(ARM::FeatureFP64))
     emitAttribute(ARMBuildAttrs::ABI_HardFP_use,
                   ARMBuildAttrs::HardFPSinglePrecision);
 

@@ -33,6 +33,7 @@ void TWebMenuItems::PopulateObjectMenu(void *obj, TClass *cl)
    while ((m = (TMethod *)iter()) != nullptr) {
 
       Bool_t is_editor = kFALSE;
+      TNamed *tn = nullptr;
 
       if (strcmp(m->GetClass()->GetName(), "TH1") == 0) {
          if (strcmp(m->GetName(), "SetHighlight") == 0) continue;
@@ -48,6 +49,10 @@ void TWebMenuItems::PopulateObjectMenu(void *obj, TClass *cl)
          if (strcmp(m->GetName(), "SetMarkerAttributes") == 0) is_editor = kTRUE;
       } else if (strcmp(m->GetClass()->GetName(), "TAttText") == 0) {
          if (strcmp(m->GetName(), "SetTextAttributes") == 0) is_editor = kTRUE;
+      } else if (strcmp(m->GetClass()->GetName(), "TNamed") == 0) {
+         auto offset = cl->GetBaseClassOffset(TNamed::Class());
+         if (offset >= 0)
+            tn = (TNamed *) ((char *) obj + offset);
       }
 
       if (is_editor) {
@@ -85,7 +90,7 @@ void TWebMenuItems::PopulateObjectMenu(void *obj, TClass *cl)
                Longptr_t l(0);
                call->Execute(obj, l);
 
-               AddChkMenuItem(m->GetName(), m->GetTitle(), l != 0, Form("%s(%s)", m->GetName(), (l != 0) ? "0" : "1"), m->GetClass());
+               AddChkMenuItem(m->GetName(), m->GetTitle(), l != 0, TString::Format("%s(%s)", m->GetName(), (l != 0) ? "0" : "1").Data(), m->GetClass());
 
             } else {
                // Error("CheckModifiedFlag", "Cannot get toggle value with getter %s", getter.Data());
@@ -97,18 +102,25 @@ void TWebMenuItems::PopulateObjectMenu(void *obj, TClass *cl)
          TList *args = m->GetListOfMethodArgs();
 
          if (!args || (args->GetSize() == 0)) {
-            AddMenuItem(m->GetName(), m->GetTitle(), Form("%s()", m->GetName()), m->GetClass());
+            AddMenuItem(m->GetName(), m->GetTitle(), TString::Format("%s()", m->GetName()).Data(), m->GetClass());
          } else {
             TWebArgsMenuItem *item = new TWebArgsMenuItem(m->GetName(), m->GetTitle());
-            item->SetExec(Form("%s()", m->GetName()));
+            item->SetExec(TString::Format("%s()", m->GetName()).Data());
             if (m->GetClass()) item->SetClassName(m->GetClass()->GetName());
 
             TIter args_iter(args);
             TMethodArg *arg = nullptr;
 
             while ((arg = dynamic_cast<TMethodArg *>(args_iter())) != nullptr) {
-               const char *dflt = arg->GetDefault();
-               if (!dflt) dflt = "";
+               const char *dflt = "";
+               if (tn && (strcmp(m->GetName(), "SetTitle") == 0))
+                  dflt = tn->GetTitle();
+               else if (tn && (strcmp(m->GetName(), "SetName") == 0))
+                  dflt = tn->GetName();
+               else
+                  dflt = arg->GetDefault();
+               if (!dflt)
+                  dflt = "";
                item->GetArgs().emplace_back(arg->GetName(), arg->GetTitle(), arg->GetFullTypeName(), dflt);
             }
 

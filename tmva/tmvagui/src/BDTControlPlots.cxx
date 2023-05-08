@@ -46,9 +46,11 @@ void TMVA::bdtcontrolplots(TString dataset, TDirectory *bdtdir ) {
 
    Int_t width  = 900;
    Int_t height = 600;
-   char cn[100], cn2[100];
+   constexpr std::size_t bufferSize = 100;
+   char cn[bufferSize];
+   char cn2[bufferSize];
    const TString titName = bdtdir->GetName();
-   sprintf( cn, "cv_%s", titName.Data() );
+   snprintf( cn, bufferSize, "cv_%s", titName.Data() );
    TCanvas *c = new TCanvas( cn,  Form( "%s Control Plots", titName.Data() ),
                              width, height ); 
    c->Divide(3,2);
@@ -97,7 +99,7 @@ void TMVA::bdtcontrolplots(TString dataset, TDirectory *bdtdir ) {
    
    TCanvas *c2 = NULL;
    if (BoostMonitorIsDone){
-      sprintf( cn2, "cv2_%s", titName.Data() );
+      snprintf( cn2, bufferSize, "cv2_%s", titName.Data() );
       c2 = new TCanvas( cn2,  Form( "%s BoostWeights", titName.Data() ),
                         1200, 1200 ); 
       c2->Divide(5,5);
@@ -139,7 +141,7 @@ void TMVA::bdtcontrolplots(TString dataset, TDirectory *bdtdir ) {
 
    TCanvas *c3 = NULL;
    if (BoostMonitorIsDone){
-      sprintf( cn2, "cv3_%s", titName.Data() );
+      snprintf( cn2, bufferSize, "cv3_%s", titName.Data() );
       c3 = new TCanvas( cn2,  Form( "%s Variables", titName.Data() ),
                         1200, 1200 ); 
       c3->Divide(5,5);

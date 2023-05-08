@@ -45,7 +45,7 @@ class User : public Value {
   template <unsigned>
   friend struct HungoffOperandTraits;
 
-  LLVM_ATTRIBUTE_ALWAYS_INLINE inline static void *
+  LLVM_ATTRIBUTE_ALWAYS_INLINE static void *
   allocateFixedOperandUser(size_t, unsigned, unsigned);
 
 protected:
@@ -111,7 +111,7 @@ public:
 #endif
   }
   /// Placement delete - required by std, called if the ctor throws.
-  void operator delete(void *Usr, unsigned, bool) {
+  void operator delete(void *Usr, unsigned, unsigned) {
     // Note: If a subclass manipulates the information which is required to calculate the
     // Usr memory pointer, e.g. NumUserOperands, the operator delete of that subclass has
     // to restore the changed information to the original value, since the dtor of that class
@@ -217,6 +217,11 @@ public:
     assert(NumOps < (1u << NumUserOperandsBits) && "Too many operands");
     NumUserOperands = NumOps;
   }
+
+  /// A droppable user is a user for which uses can be dropped without affecting
+  /// correctness and should be dropped rather than preventing a transformation
+  /// from happening.
+  bool isDroppable() const;
 
   // ---------------------------------------------------------------------------
   // Operand Iterator interface...

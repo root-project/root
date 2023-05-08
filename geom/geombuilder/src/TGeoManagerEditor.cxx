@@ -1423,3 +1423,12 @@ void TGeoManagerEditor::ShowSelectMatrix(Bool_t show)
    if (show) cont->ShowFrame(f6);
    else      cont->HideFrame(f6);
 }
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Dummy static function, used to load plugin
+
+void TGeoManagerEditor::LoadLib()
+{
+
+}

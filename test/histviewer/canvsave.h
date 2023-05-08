@@ -29,11 +29,11 @@ private:
 public:
    CanvSave(const TGWindow *p, const TGWindow *main, UInt_t w, UInt_t h,
             UInt_t options = kMainFrame | kVerticalFrame);
-   virtual ~CanvSave();
-   virtual void CloseWindow();
-   virtual Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2);
+   ~CanvSave() override;
+   void CloseWindow() override;
+   Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2) override;
 
-   ClassDef(CanvSave,0)
+   ClassDefOverride(CanvSave,0)
 };
 
 #endif

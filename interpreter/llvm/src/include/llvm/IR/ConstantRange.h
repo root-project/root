@@ -124,6 +124,10 @@ public:
   static ConstantRange makeExactICmpRegion(CmpInst::Predicate Pred,
                                            const APInt &Other);
 
+  /// Does the predicate \p Pred hold between ranges this and \p Other?
+  /// NOTE: false does not mean that inverse predicate holds!
+  bool icmp(CmpInst::Predicate Pred, const ConstantRange &Other) const;
+
   /// Produce the largest range containing all X such that "X BinOp Y" is
   /// guaranteed not to wrap (overflow) for *all* Y in Other. However, there may
   /// be *some* Y in Other for which additional X not contained in the result
@@ -149,6 +153,14 @@ public:
   static ConstantRange makeExactNoWrapRegion(Instruction::BinaryOps BinOp,
                                              const APInt &Other,
                                              unsigned NoWrapKind);
+
+  /// Returns true if ConstantRange calculations are supported for intrinsic
+  /// with \p IntrinsicID.
+  static bool isIntrinsicSupported(Intrinsic::ID IntrinsicID);
+
+  /// Compute range of intrinsic result for the given operand ranges.
+  static ConstantRange intrinsic(Intrinsic::ID IntrinsicID,
+                                 ArrayRef<ConstantRange> Ops);
 
   /// Set up \p Pred and \p RHS such that
   /// ConstantRange::makeExactICmpRegion(Pred, RHS) == *this.  Return true if
@@ -253,6 +265,14 @@ public:
     return !operator==(CR);
   }
 
+  /// Compute the maximal number of active bits needed to represent every value
+  /// in this range.
+  unsigned getActiveBits() const;
+
+  /// Compute the maximal number of bits needed to represent every value
+  /// in this signed range.
+  unsigned getMinSignedBits() const;
+
   /// Subtract the specified constant from the endpoints of this constant range.
   ConstantRange subtract(const APInt &CI) const;
 
@@ -327,16 +347,36 @@ public:
                          const ConstantRange &Other) const;
 
   /// Return a new range representing the possible values resulting
+  /// from an application of the specified overflowing binary operator to a
+  /// left hand side of this range and a right hand side of \p Other given
+  /// the provided knowledge about lack of wrapping \p NoWrapKind.
+  ConstantRange overflowingBinaryOp(Instruction::BinaryOps BinOp,
+                                    const ConstantRange &Other,
+                                    unsigned NoWrapKind) const;
+
+  /// Return a new range representing the possible values resulting
   /// from an addition of a value in this range and a value in \p Other.
   ConstantRange add(const ConstantRange &Other) const;
 
-  /// Return a new range representing the possible values resulting from a
-  /// known NSW addition of a value in this range and \p Other constant.
-  ConstantRange addWithNoSignedWrap(const APInt &Other) const;
+  /// Return a new range representing the possible values resulting
+  /// from an addition with wrap type \p NoWrapKind of a value in this
+  /// range and a value in \p Other.
+  /// If the result range is disjoint, the preferred range is determined by the
+  /// \p PreferredRangeType.
+  ConstantRange addWithNoWrap(const ConstantRange &Other, unsigned NoWrapKind,
+                              PreferredRangeType RangeType = Smallest) const;
 
   /// Return a new range representing the possible values resulting
   /// from a subtraction of a value in this range and a value in \p Other.
   ConstantRange sub(const ConstantRange &Other) const;
+
+  /// Return a new range representing the possible values resulting
+  /// from an subtraction with wrap type \p NoWrapKind of a value in this
+  /// range and a value in \p Other.
+  /// If the result range is disjoint, the preferred range is determined by the
+  /// \p PreferredRangeType.
+  ConstantRange subWithNoWrap(const ConstantRange &Other, unsigned NoWrapKind,
+                              PreferredRangeType RangeType = Smallest) const;
 
   /// Return a new range representing the possible values resulting
   /// from a multiplication of a value in this range and a value in \p Other,
@@ -381,6 +421,11 @@ public:
   /// value in \p Other.
   ConstantRange srem(const ConstantRange &Other) const;
 
+  /// Return a new range representing the possible values resulting from
+  /// a binary-xor of a value in this range by an all-one value,
+  /// aka bitwise complement operation.
+  ConstantRange binaryNot() const;
+
   /// Return a new range representing the possible values resulting
   /// from a binary-and of a value in this range by a value in \p Other.
   ConstantRange binaryAnd(const ConstantRange &Other) const;
@@ -388,6 +433,10 @@ public:
   /// Return a new range representing the possible values resulting
   /// from a binary-or of a value in this range by a value in \p Other.
   ConstantRange binaryOr(const ConstantRange &Other) const;
+
+  /// Return a new range representing the possible values resulting
+  /// from a binary-xor of a value in this range by a value in \p Other.
+  ConstantRange binaryXor(const ConstantRange &Other) const;
 
   /// Return a new range representing the possible values resulting
   /// from a left shift of a value in this range by a value in \p Other.
@@ -414,12 +463,27 @@ public:
   /// Perform a signed saturating subtraction of two constant ranges.
   ConstantRange ssub_sat(const ConstantRange &Other) const;
 
+  /// Perform an unsigned saturating multiplication of two constant ranges.
+  ConstantRange umul_sat(const ConstantRange &Other) const;
+
+  /// Perform a signed saturating multiplication of two constant ranges.
+  ConstantRange smul_sat(const ConstantRange &Other) const;
+
+  /// Perform an unsigned saturating left shift of this constant range by a
+  /// value in \p Other.
+  ConstantRange ushl_sat(const ConstantRange &Other) const;
+
+  /// Perform a signed saturating left shift of this constant range by a
+  /// value in \p Other.
+  ConstantRange sshl_sat(const ConstantRange &Other) const;
+
   /// Return a new range that is the logical not of the current set.
   ConstantRange inverse() const;
 
   /// Calculate absolute value range. If the original range contains signed
-  /// min, then the resulting range will also contain signed min.
-  ConstantRange abs() const;
+  /// min, then the resulting range will contain signed min if and only if
+  /// \p IntMinIsPoison is false.
+  ConstantRange abs(bool IntMinIsPoison = false) const;
 
   /// Represents whether an operation on the given constant range is known to
   /// always or never overflow.

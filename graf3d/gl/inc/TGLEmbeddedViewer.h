@@ -34,7 +34,7 @@ private:
    TGLEmbeddedViewer& operator=(const TGLEmbeddedViewer&); // Not implemented
 
 public:
-   TGLEmbeddedViewer(const TGWindow *parent, TVirtualPad *pad=0, Int_t border=2);
+   TGLEmbeddedViewer(const TGWindow *parent, TVirtualPad *pad = nullptr, Int_t border=2);
    TGLEmbeddedViewer(const TGWindow *parent, TVirtualPad *pad, TGedEditor *ged, Int_t border=2);
    ~TGLEmbeddedViewer();
 

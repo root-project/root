@@ -35,19 +35,19 @@ namespace RDF {
 using namespace ROOT::TypeTraits;
 
 // clang-format off
-namespace CustomColExtraArgs {
+namespace ExtraArgsForDefine {
 struct None{};
 struct Slot{};
 struct SlotAndEntry{};
 }
 // clang-format on
 
-template <typename F, typename ExtraArgsTag = CustomColExtraArgs::None>
+template <typename F, typename ExtraArgsTag = ExtraArgsForDefine::None>
 class R__CLING_PTRCHECK(off) RDefine final : public RDefineBase {
    // shortcuts
-   using NoneTag = CustomColExtraArgs::None;
-   using SlotTag = CustomColExtraArgs::Slot;
-   using SlotAndEntryTag = CustomColExtraArgs::SlotAndEntry;
+   using NoneTag = ExtraArgsForDefine::None;
+   using SlotTag = ExtraArgsForDefine::Slot;
+   using SlotAndEntryTag = ExtraArgsForDefine::SlotAndEntry;
    // other types
    using FunParamTypes_t = typename CallableTraits<F>::arg_types;
    using ColumnTypesTmp_t =
@@ -64,7 +64,7 @@ class R__CLING_PTRCHECK(off) RDefine final : public RDefineBase {
    ValuesPerSlot_t fLastResults;
 
    /// Column readers per slot and per input column
-   std::vector<std::array<std::unique_ptr<RColumnReaderBase>, ColumnTypes_t::list_size>> fValues;
+   std::vector<std::array<RColumnReaderBase *, ColumnTypes_t::list_size>> fValues;
 
    /// Define objects corresponding to systematic variations other than nominal for this defined column.
    /// The map key is the full variation name, e.g. "pt:up".
@@ -75,9 +75,7 @@ class R__CLING_PTRCHECK(off) RDefine final : public RDefineBase {
    {
       fLastResults[slot * RDFInternal::CacheLineStep<ret_type>()] =
          fExpression(fValues[slot][S]->template Get<ColTypes>(entry)...);
-      // silence "unused parameter" warnings in gcc
-      (void)slot;
-      (void)entry;
+      (void)entry; // avoid unused parameter warning (gcc 12.1)
    }
 
    template <typename... ColTypes, std::size_t... S>
@@ -85,9 +83,7 @@ class R__CLING_PTRCHECK(off) RDefine final : public RDefineBase {
    {
       fLastResults[slot * RDFInternal::CacheLineStep<ret_type>()] =
          fExpression(slot, fValues[slot][S]->template Get<ColTypes>(entry)...);
-      // silence "unused parameter" warnings in gcc
-      (void)slot;
-      (void)entry;
+      (void)entry; // avoid unused parameter warning (gcc 12.1)
    }
 
    template <typename... ColTypes, std::size_t... S>
@@ -96,9 +92,6 @@ class R__CLING_PTRCHECK(off) RDefine final : public RDefineBase {
    {
       fLastResults[slot * RDFInternal::CacheLineStep<ret_type>()] =
          fExpression(slot, entry, fValues[slot][S]->template Get<ColTypes>(entry)...);
-      // silence "unused parameter" warnings in gcc
-      (void)slot;
-      (void)entry;
    }
 
 public:
@@ -108,7 +101,7 @@ public:
       : RDefineBase(name, type, colRegister, lm, columns, variationName), fExpression(std::move(expression)),
         fLastResults(lm.GetNSlots() * RDFInternal::CacheLineStep<ret_type>()), fValues(lm.GetNSlots())
    {
-      fLoopManager->Book(this);
+      fLoopManager->Register(this);
    }
 
    RDefine(const RDefine &) = delete;
@@ -117,13 +110,9 @@ public:
 
    void InitSlot(TTreeReader *r, unsigned int slot) final
    {
-      RDFInternal::RColumnReadersInfo info{fColumnNames, fColRegister, fIsDefine.data(), fLoopManager->GetDSValuePtrs(),
-                                           fLoopManager->GetDataSource()};
-      fValues[slot] = RDFInternal::MakeColumnReaders(slot, r, ColumnTypes_t{}, info, fVariation);
+      RDFInternal::RColumnReadersInfo info{fColumnNames, fColRegister, fIsDefine.data(), *fLoopManager};
+      fValues[slot] = RDFInternal::GetColumnReaders(slot, r, ColumnTypes_t{}, info, fVariation);
       fLastCheckedEntry[slot * RDFInternal::CacheLineStep<Long64_t>()] = -1;
-
-      for (auto &e : fVariedDefines)
-         e.second->InitSlot(r, slot);
    }
 
    /// Return the (type-erased) address of the Define'd value for the given processing slot.
@@ -144,16 +133,15 @@ public:
 
    void Update(unsigned int /*slot*/, const ROOT::RDF::RSampleInfo &/*id*/) final {}
 
-   const std::type_info &GetTypeId() const { return typeid(ret_type); }
+   const std::type_info &GetTypeId() const final { return typeid(ret_type); }
 
    /// Clean-up operations to be performed at the end of a task.
-   void FinaliseSlot(unsigned int slot) final
+   void FinalizeSlot(unsigned int slot) final
    {
-      for (auto &v : fValues[slot])
-         v.reset();
+      fValues[slot].fill(nullptr);
 
       for (auto &e : fVariedDefines)
-         e.second->FinaliseSlot(slot);
+         e.second->FinalizeSlot(slot);
    }
 
    /// Create clones of this Define that work with values in varied "universes".

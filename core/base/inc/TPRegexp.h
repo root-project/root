@@ -57,7 +57,7 @@ protected:
                         Int_t *ovec, Int_t nmatch) const;
 
    Int_t    MatchInternal(const TString& s, Int_t start,
-                          Int_t nMaxMatch, TArrayI *pos=0) const;
+                          Int_t nMaxMatch, TArrayI *pos = nullptr) const;
 
    Int_t    SubstituteInternal(TString &s, const TString &replace,
                                Int_t start, Int_t nMaxMatch0,
@@ -72,7 +72,7 @@ public:
    Bool_t     IsValid() const;
 
    Int_t      Match(const TString &s, const TString &mods="",
-                    Int_t start=0, Int_t nMaxMatch=10, TArrayI *pos=0);
+                    Int_t start=0, Int_t nMaxMatch=10, TArrayI *pos = nullptr);
    TObjArray *MatchS(const TString &s, const TString &mods="",
                      Int_t start=0, Int_t nMaxMatch=10);
    Bool_t     MatchB(const TString &s, const TString &mods="",
@@ -136,7 +136,7 @@ public:
 
    virtual void Print(Option_t* option="");
 
-   ClassDef(TPMERegexp, 0); // Wrapper for Perl-like regular expression matching.
+   ClassDefOverride(TPMERegexp, 0); // Wrapper for Perl-like regular expression matching.
 };
 
 
@@ -155,7 +155,7 @@ public:
    Bool_t NextToken();
    Bool_t AtEnd() const { return fPos >= fFullStr.Length(); }
 
-   ClassDef(TStringToken,0) // String tokenizer using PCRE for finding next tokens.
+   ClassDefOverride(TStringToken,0) // String tokenizer using PCRE for finding next tokens.
 };
 
 #endif

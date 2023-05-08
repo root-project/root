@@ -31,7 +31,7 @@ public:
    TGFrameElementPack(TGFrame *frame, TGLayoutHints* lh = nullptr, Float_t weight = 1):
       TGFrameElement(frame, lh), fWeight(weight), fSplitFE(nullptr) { }
 
-   ClassDef(TGFrameElementPack, 0); // Class used in TGPack.
+   ClassDefOverride(TGFrameElementPack, 0); // Class used in TGPack.
 };
 
 //==============================================================================
@@ -68,31 +68,30 @@ protected:
    void           AddFrameInternal(TGFrame *f, TGLayoutHints* l = nullptr, Float_t weight = 1);
    void           RemoveFrameInternal(TGFrame *f);
 
-
 public:
    TGPack(const TGWindow *p = nullptr, UInt_t w = 1, UInt_t h = 1, UInt_t options = 0,
           Pixel_t back = GetDefaultFrameBackground());
-   TGPack(TGClient *c, Window_t id, const TGWindow *parent = 0);
+   TGPack(TGClient *c, Window_t id, const TGWindow *parent = nullptr);
    virtual ~TGPack();
 
-   virtual void   AddFrameWithWeight(TGFrame *f, TGLayoutHints* l, Float_t w);
-   virtual void   AddFrame(TGFrame *f, TGLayoutHints* l=0);
+   virtual void AddFrameWithWeight(TGFrame *f, TGLayoutHints* l, Float_t w);
+   void AddFrame(TGFrame *f, TGLayoutHints* l = nullptr) override;
 
-   virtual void   DeleteFrame(TGFrame *f);
-   virtual void   RemoveFrame(TGFrame *f);
-   virtual void   ShowFrame(TGFrame *f);
-   virtual void   HideFrame(TGFrame *f);
+   virtual void DeleteFrame(TGFrame *f);
+   void RemoveFrame(TGFrame *f) override;
+   void ShowFrame(TGFrame *f) override;
+   void HideFrame(TGFrame *f) override;
 
-   using          TGCompositeFrame::Resize;
-   virtual void   Resize(UInt_t w = 0, UInt_t h = 0);
+   using TGCompositeFrame::Resize;
+   void Resize(UInt_t w = 0, UInt_t h = 0) override;
 
-   using          TGCompositeFrame::MapSubwindows;
-   virtual void   MapSubwindows();
+   using TGCompositeFrame::MapSubwindows;
+   void MapSubwindows() override;
 
-   virtual void   MoveResize(Int_t x, Int_t y, UInt_t w = 0, UInt_t h = 0);
-   virtual void   Layout();
+   void MoveResize(Int_t x, Int_t y, UInt_t w = 0, UInt_t h = 0) override;
+   void Layout() override;
 
-   virtual void Dump() const;
+   void Dump() const override;
 
    void EqualizeFrames();
    void HandleSplitterStart();
@@ -107,7 +106,7 @@ public:
    Bool_t GetUseSplitters() const { return fUseSplitters; }
    void SetUseSplitters(Bool_t x) { fUseSplitters = x; }
 
-   ClassDef(TGPack, 0); // Horizontal or vertical stack of frames.
+   ClassDefOverride(TGPack, 0); // Horizontal or vertical stack of frames.
 };
 
 #endif

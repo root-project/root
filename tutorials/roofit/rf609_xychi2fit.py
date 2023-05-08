@@ -44,21 +44,24 @@ for i in range(10):
 # Make fit function
 a = ROOT.RooRealVar("a", "a", 0.0, -10, 10)
 b = ROOT.RooRealVar("b", "b", 0.0, -100, 100)
-f = ROOT.RooPolyVar("f", "f", x, [b, a, 1.0])
+c = ROOT.RooRealVar("c", "c", 0.0, -100, 100)
+f = ROOT.RooPolyVar("f", "f", x, [b, a, c])
 
 # Plot dataset in X-Y interpretation
 frame = x.frame(Title="Chi^2 fit of function set of (X#pmdX,Y#pmdY) values")
 dxy.plotOnXY(frame, YVar=y)
 
 # Fit chi^2 using X and Y errors
-f.chi2FitTo(dxy, YVar=y)
+fit1 = f.chi2FitTo(dxy, YVar=y, Save=True, PrintLevel=-1)
+fit1.Print()
 
 # Overlay fitted function
 f.plotOn(frame)
 
 # Alternative: fit chi^2 integrating f(x) over ranges defined by X errors, rather
 # than taking point at center of bin
-f.chi2FitTo(dxy, YVar=y, Integrate=True)
+fit2 = f.chi2FitTo(dxy, YVar=y, Save=True, PrintLevel=-1, Integrate=True)
+fit2.Print()
 
 # Overlay alternate fit result
 f.plotOn(frame, LineStyle="--", LineColor="r")

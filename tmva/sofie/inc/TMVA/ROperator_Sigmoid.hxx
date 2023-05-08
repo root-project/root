@@ -47,7 +47,7 @@ public:
    std::string Generate(std::string OpName){
       OpName = "op_" + OpName;
       if (fShape.empty()){
-         throw std::runtime_error("TMVA SOFIE Transpose Sigmoid called to Generate without being initialized first");
+         throw std::runtime_error("TMVA SOFIE Operator Sigmoid called to Generate without being initialized first");
       }
       std::stringstream out;
       int length = 1;
@@ -60,6 +60,7 @@ public:
       return out.str();
    }
 
+   std::vector<std::string> GetStdLibs() { return { std::string("cmath") };}
 };
 
 }//SOFIE

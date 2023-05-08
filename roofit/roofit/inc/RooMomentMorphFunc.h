@@ -33,27 +33,27 @@ public:
                       const RooArgList &pdfList, const RooArgList &mrefList, Setting setting = NonLinearPosFractions);
    RooMomentMorphFunc(const char *name, const char *title, RooAbsReal &_m, const RooArgList &varList,
                       const RooArgList &pdfList, const TVectorD &mrefpoints, Setting setting = NonLinearPosFractions);
-   RooMomentMorphFunc(const RooMomentMorphFunc &other, const char *name = 0);
-   virtual TObject *clone(const char *newname) const { return new RooMomentMorphFunc(*this, newname); }
-   virtual ~RooMomentMorphFunc();
+   RooMomentMorphFunc(const RooMomentMorphFunc &other, const char *name = nullptr);
+   TObject *clone(const char *newname) const override { return new RooMomentMorphFunc(*this, newname); }
+   ~RooMomentMorphFunc() override;
 
    void setMode(const Setting &setting) { _setting = setting; }
 
    void useHorizontalMorphing(bool val) { _useHorizMorph = val; }
 
-   virtual Bool_t selfNormalized() const
+   virtual bool selfNormalized() const
    {
       // P.d.f is self normalized
-      return kTRUE;
+      return true;
    }
 
-   virtual Double_t getVal(const RooArgSet *set = 0) const;
+   virtual double getVal(const RooArgSet *set = nullptr) const;
    RooAbsReal *sumFunc(const RooArgSet *nset);
    const RooAbsReal *sumFunc(const RooArgSet *nset) const;
 
-   virtual std::list<Double_t> *plotSamplingHint(RooAbsRealLValue &obs, Double_t xlo, Double_t xhi) const;
-   virtual std::list<Double_t> *binBoundaries(RooAbsRealLValue & /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const;
-   Bool_t isBinnedDistribution(const RooArgSet &obs) const;
+   std::list<double> *plotSamplingHint(RooAbsRealLValue &obs, double xlo, double xhi) const override;
+   std::list<double> *binBoundaries(RooAbsRealLValue & /*obs*/, double /*xlo*/, double /*xhi*/) const override;
+   bool isBinnedDistribution(const RooArgSet &obs) const override;
 
 protected:
    class CacheElem : public RooAbsCacheElement {
@@ -63,22 +63,22 @@ protected:
       {
          _frac.add(flist);
       };
-      virtual ~CacheElem();
-      virtual RooArgList containedArgs(Action);
+      ~CacheElem() override;
+      RooArgList containedArgs(Action) override;
       RooAbsReal *_sumFunc;
       RooChangeTracker *_tracker;
       RooArgList _frac;
 
       RooRealVar *frac(Int_t i);
       const RooRealVar *frac(Int_t i) const;
-      void calculateFractions(const RooMomentMorphFunc &self, Bool_t verbose = kTRUE) const;
+      void calculateFractions(const RooMomentMorphFunc &self, bool verbose = true) const;
    };
    mutable RooObjCacheManager _cacheMgr; //! The cache manager
    mutable RooArgSet *_curNormSet;       //! Current normalization set
 
    friend class CacheElem; // Cache needs to be able to clear _norm pointer
 
-   Double_t evaluate() const;
+   double evaluate() const override;
 
    void initialize();
    CacheElem *getCache(const RooArgSet *nset) const;
@@ -92,15 +92,13 @@ protected:
    RooListProxy _pdfList;
    mutable TVectorD *_mref;
 
-   TIterator *_varItr;   //! do not persist
-   TIterator *_pdfItr;   //!
    mutable TMatrixD *_M; //
 
    Setting _setting;
 
    bool _useHorizMorph;
 
-   ClassDef(RooMomentMorphFunc, 3) // Your description goes here...
+   ClassDefOverride(RooMomentMorphFunc, 3) // Your description goes here...
 };
 
 #endif

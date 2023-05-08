@@ -20,9 +20,12 @@
 #include "clang/Lex/ModuleMap.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/DenseMap.h"
+#include "llvm/ADT/SetVector.h"
+#include "llvm/ADT/SmallSet.h"
+#include "llvm/ADT/SmallString.h"
 #include "llvm/ADT/StringMap.h"
-#include "llvm/ADT/StringSet.h"
 #include "llvm/ADT/StringRef.h"
+#include "llvm/ADT/StringSet.h"
 #include "llvm/Support/Allocator.h"
 #include <cassert>
 #include <cstddef>
@@ -110,6 +113,14 @@ struct HeaderFileInfo {
   /// of the framework.
   StringRef Framework;
 
+  /// List of aliases that this header is known as.
+  /// Most headers should only have at most one alias, but a handful
+  /// have two.
+  llvm::SetVector<llvm::SmallString<32>,
+                  llvm::SmallVector<llvm::SmallString<32>, 2>,
+                  llvm::SmallSet<llvm::SmallString<32>, 2>>
+      Aliases;
+
   HeaderFileInfo()
       : isImport(false), isPragmaOnce(false), DirInfo(SrcMgr::C_User),
         External(false), isModuleHeader(false), isCompilingModuleHeader(false),
@@ -183,6 +194,9 @@ class HeaderSearch {
   /// a system header.
   std::vector<std::pair<std::string, bool>> SystemHeaderPrefixes;
 
+  /// The hash used for module cache paths.
+  std::string ModuleHash;
+
   /// The path to the module cache.
   std::string ModuleCachePath;
 
@@ -250,12 +264,6 @@ class HeaderSearch {
   /// Entity used to look up stored header file information.
   ExternalHeaderFileInfoSource *ExternalSource = nullptr;
 
-  // Various statistics we track for performance analysis.
-  unsigned NumIncluded = 0;
-  unsigned NumMultiIncludeFileOptzn = 0;
-  unsigned NumFrameworkLookups = 0;
-  unsigned NumSubFrameworkLookups = 0;
-
 public:
   HeaderSearch(std::shared_ptr<HeaderSearchOptions> HSOpts,
                SourceManager &SourceMgr, DiagnosticsEngine &Diags,
@@ -308,7 +316,7 @@ public:
   void AddIncludeAlias(StringRef Source, StringRef Dest) {
     if (!IncludeAliases)
       IncludeAliases.reset(new IncludeAliasMap);
-    (*IncludeAliases)[Source] = Dest;
+    (*IncludeAliases)[Source] = std::string(Dest);
   }
 
   /// Maps one header file name to a different header
@@ -325,10 +333,16 @@ public:
     return {};
   }
 
+  /// Set the hash to use for module cache paths.
+  void setModuleHash(StringRef Hash) { ModuleHash = std::string(Hash); }
+
   /// Set the path to the module cache.
   void setModuleCachePath(StringRef CachePath) {
-    ModuleCachePath = CachePath;
+    ModuleCachePath = std::string(CachePath);
   }
+
+  /// Retrieve the module hash.
+  StringRef getModuleHash() const { return ModuleHash; }
 
   /// Retrieve the path to the module cache.
   StringRef getModuleCachePath() const { return ModuleCachePath; }
@@ -395,7 +409,7 @@ public:
   /// found in any of searched SearchDirs. Will be set to false if a framework
   /// is found only through header maps. Doesn't guarantee the requested file is
   /// found.
-  const FileEntry *LookupFile(
+  Optional<FileEntryRef> LookupFile(
       StringRef Filename, SourceLocation IncludeLoc, bool isAngled,
       const DirectoryLookup *FromDir, const DirectoryLookup *&CurDir,
       ArrayRef<std::pair<const FileEntry *, const DirectoryEntry *>> Includers,
@@ -411,7 +425,7 @@ public:
   /// within ".../Carbon.framework/Headers/Carbon.h", check to see if
   /// HIToolbox is a subframework within Carbon.framework.  If so, return
   /// the FileEntry for the designated file, otherwise return null.
-  const FileEntry *LookupSubframeworkHeader(
+  Optional<FileEntryRef> LookupSubframeworkHeader(
       StringRef Filename, const FileEntry *ContextFileEnt,
       SmallVectorImpl<char> *SearchPath, SmallVectorImpl<char> *RelativePath,
       Module *RequestingModule, ModuleMap::KnownHeader *SuggestedModule);
@@ -451,6 +465,10 @@ public:
     getFileInfo(File).DirInfo = SrcMgr::C_System;
   }
 
+  void AddFileAlias(const FileEntry *File, StringRef Alias) {
+    getFileInfo(File).Aliases.insert(Alias);
+  }
+
   /// Mark the specified file as part of a module.
   void MarkFileModuleHeader(const FileEntry *FE,
                             ModuleMap::ModuleHeaderRole Role,
@@ -483,6 +501,13 @@ public:
   /// This routine does not consider the effect of \#import
   bool isFileMultipleIncludeGuarded(const FileEntry *File);
 
+  /// Determine whether the given file is known to have ever been \#imported
+  /// (or if it has been \#included and we've encountered a \#pragma once).
+  bool hasFileBeenImported(const FileEntry *File) {
+    const HeaderFileInfo *FI = getExistingFileInfo(File);
+    return FI && FI->isImport;
+  }
+
   /// This method returns a HeaderMap for the specified
   /// FileEntry, uniquing them through the 'HeaderMaps' datastructure.
   const HeaderMap *CreateHeaderMap(const FileEntry *FE);
@@ -511,6 +536,15 @@ public:
   /// or an empty string if this module does not correspond to any module file.
   std::string getPrebuiltModuleFileName(StringRef ModuleName,
                                         bool FileMapOnly = false);
+
+  /// Retrieve the name of the prebuilt module file that should be used
+  /// to load the given module.
+  ///
+  /// \param Module The module whose module file name will be returned.
+  ///
+  /// \returns The name of the module file that corresponds to this module,
+  /// or an empty string if this module does not correspond to any module file.
+  std::string getPrebuiltImplicitModuleFileName(Module *Module);
 
   /// Retrieve the name of the (to-be-)cached module file that should
   /// be used to load a module with the given name.
@@ -545,8 +579,6 @@ public:
   const FileEntry *lookupModuleMapFile(const DirectoryEntry *Dir,
                                        bool IsFramework);
 
-  void IncrementFrameworkLookupCount() { ++NumFrameworkLookups; }
-
   /// Determine whether there is a module map that may map the header
   /// with the given file name to a (sub)module.
   /// Always returns false if modules are disabled.
@@ -567,6 +599,12 @@ public:
   /// \param AllowTextual Whether we want to find textual headers too.
   ModuleMap::KnownHeader findModuleForHeader(const FileEntry *File,
                                              bool AllowTextual = false) const;
+
+  /// Retrieve all the modules corresponding to the given file.
+  ///
+  /// \ref findModuleForHeader should typically be used instead of this.
+  ArrayRef<ModuleMap::KnownHeader>
+  findAllModulesForHeader(const FileEntry *File) const;
 
   /// Read the contents of the given module map file.
   ///
@@ -610,6 +648,22 @@ private:
   Module *lookupModule(StringRef ModuleName, StringRef SearchName,
                        bool AllowExtraModuleMapSearch = false);
 
+  /// Retrieve the name of the (to-be-)cached module file that should
+  /// be used to load a module with the given name.
+  ///
+  /// \param ModuleName The module whose module file name will be returned.
+  ///
+  /// \param ModuleMapPath A path that when combined with \c ModuleName
+  /// uniquely identifies this module. See Module::ModuleMap.
+  ///
+  /// \param CachePath A path to the module cache.
+  ///
+  /// \returns The name of the module file that corresponds to this module,
+  /// or an empty string if this module does not correspond to any module file.
+  std::string getCachedModuleFileNameImpl(StringRef ModuleName,
+                                          StringRef ModuleMapPath,
+                                          StringRef CachePath);
+
   /// Retrieve a module with the given name, which may be part of the
   /// given framework.
   ///
@@ -650,7 +704,7 @@ private:
 
   /// Look up the file with the specified name and determine its owning
   /// module.
-  const FileEntry *
+  Optional<FileEntryRef>
   getFileAndSuggestModule(StringRef FileName, SourceLocation IncludeLoc,
                           const DirectoryEntry *Dir, bool IsSystemHeaderDir,
                           Module *RequestingModule,

@@ -22,8 +22,6 @@
 RooInt is a minimal implementation of a TNamed holding a TObject
 **/
 
-#include "RooFit.h"
-
 #include "RooTObjWrap.h"
 
 using namespace std;

@@ -12,9 +12,9 @@ public:
    NdbRadioXS()
       : NdbMF(10, "Cross section for radioactive nuclide production") {}
 
-   ~NdbRadioXS() {}
+   ~NdbRadioXS() override {}
 
-   ClassDef(NdbRadioXS,1)
+   ClassDefOverride(NdbRadioXS,1)
 }; // NdbRadioXS
 
 #endif

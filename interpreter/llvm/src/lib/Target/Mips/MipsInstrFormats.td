@@ -97,9 +97,6 @@ class MipsInst<dag outs, dag ins, string asmstr, list<dag> pattern,
   bit isCTI            = 0; // Any form of Control Transfer Instruction.
                             // Required for MIPSR6
   bit hasForbiddenSlot = 0; // Instruction has a forbidden slot.
-  bit IsPCRelativeLoad = 0; // Load instruction with implicit source register
-                            // ($pc) and with explicit offset and destination
-                            // register
   bit hasFCCRegOperand = 0; // Instruction uses $fcc<X> register and is
                             // present in MIPS-I to MIPS-III.
 
@@ -107,8 +104,7 @@ class MipsInst<dag outs, dag ins, string asmstr, list<dag> pattern,
   let TSFlags{3-0}   = FormBits;
   let TSFlags{4}     = isCTI;
   let TSFlags{5}     = hasForbiddenSlot;
-  let TSFlags{6}     = IsPCRelativeLoad;
-  let TSFlags{7}     = hasFCCRegOperand;
+  let TSFlags{6}     = hasFCCRegOperand;
 
   let DecoderNamespace = "Mips";
 
@@ -170,39 +166,6 @@ class FR<bits<6> op, bits<6> _funct, dag outs, dag ins, string asmstr,
   let Inst{15-11} = rd;
   let Inst{10-6}  = shamt;
   let Inst{5-0}   = funct;
-}
-
-//===----------------------------------------------------------------------===//
-// Format I instruction class in Mips : <|opcode|rs|rt|immediate|>
-//===----------------------------------------------------------------------===//
-
-class FI<bits<6> op, dag outs, dag ins, string asmstr, list<dag> pattern,
-         InstrItinClass itin>: InstSE<outs, ins, asmstr, pattern, itin, FrmI>
-{
-  bits<5>  rt;
-  bits<5>  rs;
-  bits<16> imm16;
-
-  let Opcode = op;
-
-  let Inst{25-21} = rs;
-  let Inst{20-16} = rt;
-  let Inst{15-0}  = imm16;
-}
-
-class BranchBase<bits<6> op, dag outs, dag ins, string asmstr,
-                  list<dag> pattern, InstrItinClass itin>:
-  InstSE<outs, ins, asmstr, pattern, itin, FrmI>
-{
-  bits<5>  rs;
-  bits<5>  rt;
-  bits<16> imm16;
-
-  let Opcode = op;
-
-  let Inst{25-21} = rs;
-  let Inst{20-16} = rt;
-  let Inst{15-0}  = imm16;
 }
 
 //===----------------------------------------------------------------------===//
@@ -626,6 +589,19 @@ class SEQI_FM<bits<6> funct> : StdArch {
   let Inst{5-0}   = funct;
 }
 
+class SAA_FM<bits<6> funct> : StdArch {
+  bits<5> rt;
+  bits<5> rs;
+
+  bits<32> Inst;
+
+  let Inst{31-26} = 0x1c;
+  let Inst{25-21} = rs;
+  let Inst{20-16} = rt;
+  let Inst{15-6}  = 0;
+  let Inst{5-0}   = funct;
+}
+
 //===----------------------------------------------------------------------===//
 //  System calls format <op|code_|funct>
 //===----------------------------------------------------------------------===//
@@ -701,20 +677,6 @@ class EI_FM<bits<1> sc> : StdArch
 //===----------------------------------------------------------------------===//
 // Format FI instruction class in Mips : <|opcode|base|ft|immediate|>
 //===----------------------------------------------------------------------===//
-
-class FFI<bits<6> op, dag outs, dag ins, string asmstr, list<dag> pattern>:
-  InstSE<outs, ins, asmstr, pattern, NoItinerary, FrmFI>
-{
-  bits<5>  ft;
-  bits<5>  base;
-  bits<16> imm16;
-
-  let Opcode = op;
-
-  let Inst{25-21} = base;
-  let Inst{20-16} = ft;
-  let Inst{15-0}  = imm16;
-}
 
 class ADDS_FM<bits<6> funct, bits<5> fmt> : StdArch {
   bits<5> fd;

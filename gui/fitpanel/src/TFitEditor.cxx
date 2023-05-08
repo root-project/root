@@ -2803,15 +2803,19 @@ void TFitEditor::DoSliderXMoved()
 
 void TFitEditor::DrawSelection(bool restore)
 {
+#ifndef R__HAS_COCOA
    static Int_t  px1old, py1old, px2old, py2old; // to remember the square drawn.
+#endif
 
    if ( !fParentPad ) return;
 
    if (restore) {
+#ifndef R__HAS_COCOA
       px1old = fParentPad->XtoAbsPixel(fParentPad->GetUxmin());
       py1old = fParentPad->YtoAbsPixel(fParentPad->GetUymin());
       px2old = fParentPad->XtoAbsPixel(fParentPad->GetUxmax());
       py2old = fParentPad->YtoAbsPixel(fParentPad->GetUymax());
+#endif
       return;
    }
 
@@ -2852,13 +2856,13 @@ void TFitEditor::DrawSelection(bool restore)
    // done by clearing the backing store and repainting inside a special
    // window.
    gVirtualX->DrawBox(px1old, py1old, px2old, py2old, TVirtualX::kHollow);
-#endif // R__HAS_COCOA
-   gVirtualX->DrawBox(px1, py1, px2, py2, TVirtualX::kHollow);
 
    px1old = px1;
    py1old = py1;
-   px2old = px2 ;
+   px2old = px2;
    py2old = py2;
+#endif // R__HAS_COCOA
+   gVirtualX->DrawBox(px1, py1, px2, py2, TVirtualX::kHollow);
 
    if(save) gPad = save;
 }

@@ -43,7 +43,7 @@ private:
 
 public:
    TParallelCoordRange();
-   TParallelCoordRange(TParallelCoordVar *var, Double_t min=0, Double_t max=0, TParallelCoordSelect* sel=NULL);
+   TParallelCoordRange(TParallelCoordVar *var, Double_t min=0, Double_t max=0, TParallelCoordSelect* sel=nullptr);
    virtual ~TParallelCoordRange();
 
    virtual void BringOnTop() ;// *MENU*

@@ -3,7 +3,12 @@ if (NOT builtin_clang)
   message(WARNING "Due to ROOT-specific patches you need a special version of clang. You cannot use vanilla clang.")
 endif()
 
+#--Set the LLVM version required for ROOT-----------------------------------------------------------
+set(ROOT_LLVM_VERSION_REQUIRED_MAJOR 13)
+set(ROOT_LLVM_VERSION_REQUIRED_MINOR 0)
+
 #---Define the way we want to build and what of llvm/clang/cling------------------------------------
+set(LLVM_ENABLE_RTTI ON CACHE BOOL "")
 set(LLVM_APPEND_VC_REV OFF CACHE BOOL "")
 set(LLVM_ENABLE_BINDINGS OFF CACHE BOOL "")
 set(LLVM_ENABLE_FFI OFF CACHE BOOL "")
@@ -14,6 +19,7 @@ set(LLVM_INCLUDE_TESTS OFF CACHE BOOL "")
 set(LLVM_INCLUDE_BENCHMARKS OFF CACHE BOOL "")
 set(CLANG_INCLUDE_TESTS OFF CACHE BOOL "")
 set(LLVM_INCLUDE_EXAMPLES OFF CACHE BOOL "")
+set(LLVM_CXX_STD "c++${CMAKE_CXX_STANDARD}" CACHE STRING "")
 set(CLANG_BUILD_TOOLS OFF CACHE BOOL "")
 # It looks like that turning off CLANG_BUILD_TOOLS is not enough.
 set(CLANG_TOOL_ARCMT_TEST_BUILD OFF CACHE BOOL "")
@@ -36,6 +42,13 @@ set(CLANG_TOOL_CLANG_OFFLOAD_BUNDLER_BUILD OFF CACHE BOOL "")
 set(LLVM_FORCE_USE_OLD_TOOLCHAIN ON CACHE BOOL "")
 # Support gcc 4.8 and higher.
 set(LLVM_TEMPORARILY_ALLOW_OLD_TOOLCHAIN ON CACHE BOOL "")
+
+# Prevent Clang from finding CUDA just to determine the architecture for OpenMP
+# offloading, which we are not interested in. If the CUDA package was already
+# found before (because the user turned on cuda or tmva-gpu), this will not have
+# an effect, which is fine.
+# (Note that the option is very counter-intuitive: We turn *on* disabling it...)
+set(CMAKE_DISABLE_FIND_PACKAGE_CUDA ON)
 
 # will be set again in case NOT builtin_llvm
 set(LLVM_DIR "${CMAKE_BINARY_DIR}/interpreter/llvm/src")
@@ -103,8 +116,10 @@ endif()
 if(MSVC)
   # FIXME: since Visual Studio v16.4.0 the /O2 optimization flag make many (25%) of the tests failing
   # Try to re-enable /O2 after the upgrade of llvm & clang
-  string(REPLACE "-O2" "-O1 -Oi" CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
-  string(REPLACE "-O2" "-O1 -Oi" CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
+  if (MSVC_VERSION GREATER_EQUAL 1924 AND MSVC_VERSION LESS 1929)
+    string(REPLACE "-O2" "-O1 -Oi" CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE}")
+    string(REPLACE "-O2" "-O1 -Oi" CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO}")
+  endif()
   # replace dashes in the -EH* and -GR* flags with slashes (/EH* /GR*)
   string(REPLACE " -EH" " /EH" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
   string(REPLACE " -GR" " /GR" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
@@ -182,7 +197,7 @@ if(builtin_llvm)
   message(STATUS "Building LLVM in '${LLVM_BUILD_TYPE}' mode.")
 
   if(NOT DEFINED LLVM_ENABLE_ASSERTIONS)
-    if(CMAKE_BUILD_TYPE MATCHES "(Debug|RelWithDebInfo)"
+    if(CMAKE_BUILD_TYPE MATCHES "Debug"
      OR LLVM_BUILD_TYPE MATCHES "(Debug|RelWithDebInfo)")
       set(LLVM_ENABLE_ASSERTIONS TRUE)
     else()
@@ -244,7 +259,7 @@ if(builtin_llvm)
 else()
   # Rely on llvm-config.
   set(CONFIG_OUTPUT)
-  find_program(LLVM_CONFIG NAMES "llvm-config" "llvm-config-9")
+  find_program(LLVM_CONFIG NAMES "llvm-config-${ROOT_LLVM_VERSION_REQUIRED_MAJOR}" "llvm-config")
   if(LLVM_CONFIG)
     message(STATUS "Found LLVM_CONFIG as ${LLVM_CONFIG}")
     set(CONFIG_COMMAND ${LLVM_CONFIG}
@@ -347,10 +362,10 @@ else()
   include(VersionFromVCS)
 
   set(PACKAGE_VERSION "${LLVM_PACKAGE_VERSION}")
-  if (${PACKAGE_VERSION} MATCHES "9\\.0(|\\.[0-9]+)")
+  if (${PACKAGE_VERSION} MATCHES "${ROOT_LLVM_VERSION_REQUIRED_MAJOR}\\.${ROOT_LLVM_VERSION_REQUIRED_MINOR}(|\\.[0-9]+)")
     message(STATUS "Using LLVM external library - ${PACKAGE_VERSION}")
   else()
-    message(FATAL_ERROR "LLVM version different from ROOT supported, please try 9.0.x")
+    message(FATAL_ERROR "LLVM version different from ROOT supported, please try ${ROOT_LLVM_VERSION_REQUIRED_MAJOR}.${ROOT_LLVM_VERSION_REQUIRED_MINOR}.x")
   endif()
 
   if (NOT DEFINED LLVM_INCLUDE_TESTS)
@@ -528,6 +543,7 @@ if (builtin_cling)
 else()
   set(Cling_DIR ${LLVM_BINARY_DIR}/lib/cmake/cling/)
   find_package(Cling REQUIRED CONFIG PATHS ${Cling_DIR} "${Cling_DIR}/lib/cmake/cling" "${Cling_DIR}/cmake" NO_DEFAULT_PATH)
+  find_package(Clang REQUIRED CONFIG PATHS ${Cling_DIR} "${Cling_DIR}/lib/cmake/clang" "${Cling_DIR}/cmake" NO_DEFAULT_PATH)
 
   # We need to consider not just the direct link dependencies, but also the
   # transitive link dependencies. Do this by starting with the set of direct

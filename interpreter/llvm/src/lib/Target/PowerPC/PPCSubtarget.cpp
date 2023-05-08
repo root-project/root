@@ -11,9 +11,13 @@
 //===----------------------------------------------------------------------===//
 
 #include "PPCSubtarget.h"
+#include "GISel/PPCCallLowering.h"
+#include "GISel/PPCLegalizerInfo.h"
+#include "GISel/PPCRegisterBankInfo.h"
 #include "PPC.h"
 #include "PPCRegisterInfo.h"
 #include "PPCTargetMachine.h"
+#include "llvm/CodeGen/GlobalISel/InstructionSelect.h"
 #include "llvm/CodeGen/MachineFunction.h"
 #include "llvm/CodeGen/MachineScheduler.h"
 #include "llvm/IR/Attributes.h"
@@ -35,10 +39,6 @@ using namespace llvm;
 static cl::opt<bool> UseSubRegLiveness("ppc-track-subreg-liveness",
 cl::desc("Enable subregister liveness tracking for PPC"), cl::Hidden);
 
-static cl::opt<bool> QPXStackUnaligned("qpx-stack-unaligned",
-  cl::desc("Even when QPX is enabled the stack is not 32-byte aligned"),
-  cl::Hidden);
-
 static cl::opt<bool>
     EnableMachinePipeliner("ppc-enable-pipeliner",
                            cl::desc("Enable Machine Pipeliner for PPC"),
@@ -53,15 +53,23 @@ PPCSubtarget &PPCSubtarget::initializeSubtargetDependencies(StringRef CPU,
 
 PPCSubtarget::PPCSubtarget(const Triple &TT, const std::string &CPU,
                            const std::string &FS, const PPCTargetMachine &TM)
-    : PPCGenSubtargetInfo(TT, CPU, FS), TargetTriple(TT),
+    : PPCGenSubtargetInfo(TT, CPU, /*TuneCPU*/ CPU, FS), TargetTriple(TT),
       IsPPC64(TargetTriple.getArch() == Triple::ppc64 ||
               TargetTriple.getArch() == Triple::ppc64le),
       TM(TM), FrameLowering(initializeSubtargetDependencies(CPU, FS)),
-      InstrInfo(*this), TLInfo(TM, *this) {}
+      InstrInfo(*this), TLInfo(TM, *this) {
+  CallLoweringInfo.reset(new PPCCallLowering(*getTargetLowering()));
+  Legalizer.reset(new PPCLegalizerInfo(*this));
+  auto *RBI = new PPCRegisterBankInfo(*getRegisterInfo());
+  RegBankInfo.reset(RBI);
+
+  InstSelector.reset(createPPCInstructionSelector(
+      *static_cast<const PPCTargetMachine *>(&TM), *this, *RBI));
+}
 
 void PPCSubtarget::initializeEnvironment() {
-  StackAlignment = 16;
-  DarwinDirective = PPC::DIR_NONE;
+  StackAlignment = Align(16);
+  CPUDirective = PPC::DIR_NONE;
   HasMFOCRF = false;
   Has64BitSupport = false;
   Use64BitRegs = false;
@@ -69,8 +77,8 @@ void PPCSubtarget::initializeEnvironment() {
   HasHardFloat = false;
   HasAltivec = false;
   HasSPE = false;
+  HasEFPU2 = false;
   HasFPU = false;
-  HasQPX = false;
   HasVSX = false;
   NeedsTwoConstNR = false;
   HasP8Vector = false;
@@ -78,6 +86,12 @@ void PPCSubtarget::initializeEnvironment() {
   HasP8Crypto = false;
   HasP9Vector = false;
   HasP9Altivec = false;
+  HasMMA = false;
+  HasROPProtect = false;
+  HasPrivileged = false;
+  HasP10Vector = false;
+  HasPrefixInstrs = false;
+  HasPCRelativeMemops = false;
   HasFCPSGN = false;
   HasFSQRT = false;
   HasFRE = false;
@@ -100,32 +114,44 @@ void PPCSubtarget::initializeEnvironment() {
   IsPPC6xx = false;
   IsE500 = false;
   FeatureMFTB = false;
+  AllowsUnalignedFPAccess = false;
   DeprecatedDST = false;
-  HasLazyResolverStubs = false;
   HasICBT = false;
   HasInvariantFunctionDescriptors = false;
   HasPartwordAtomics = false;
+  HasQuadwordAtomics = false;
   HasDirectMove = false;
-  IsQPXStackUnaligned = false;
   HasHTM = false;
   HasFloat128 = false;
+  HasFusion = false;
+  HasStoreFusion = false;
+  HasAddiLoadFusion = false;
+  HasAddisLoadFusion = false;
+  IsISA2_07 = false;
   IsISA3_0 = false;
+  IsISA3_1 = false;
   UseLongCalls = false;
   SecurePlt = false;
   VectorsUseTwoUnits = false;
   UsePPCPreRASchedStrategy = false;
   UsePPCPostRASchedStrategy = false;
+  PairedVectorMemops = false;
+  PredictableSelectIsExpensive = false;
+  HasModernAIXAs = false;
+  IsAIX = false;
 
   HasPOPCNTD = POPCNTD_Unavailable;
 }
 
 void PPCSubtarget::initSubtargetFeatures(StringRef CPU, StringRef FS) {
   // Determine default and user specified characteristics
-  std::string CPUName = CPU;
+  std::string CPUName = std::string(CPU);
   if (CPUName.empty() || CPU == "generic") {
     // If cross-compiling with -march=ppc64le without -mcpu
     if (TargetTriple.getArch() == Triple::ppc64le)
       CPUName = "ppc64le";
+    else if (TargetTriple.getSubArch() == Triple::PPCSubArch_spe)
+      CPUName = "e500";
     else
       CPUName = "generic";
   }
@@ -134,24 +160,21 @@ void PPCSubtarget::initSubtargetFeatures(StringRef CPU, StringRef FS) {
   InstrItins = getInstrItineraryForCPU(CPUName);
 
   // Parse features string.
-  ParseSubtargetFeatures(CPUName, FS);
+  ParseSubtargetFeatures(CPUName, /*TuneCPU*/ CPUName, FS);
 
   // If the user requested use of 64-bit regs, but the cpu selected doesn't
   // support it, ignore.
   if (IsPPC64 && has64BitSupport())
     Use64BitRegs = true;
 
-  // Set up darwin-specific properties.
-  if (isDarwin())
-    HasLazyResolverStubs = true;
-
-  if (TargetTriple.isOSNetBSD() || TargetTriple.isOSOpenBSD() ||
+  if ((TargetTriple.isOSFreeBSD() && TargetTriple.getOSMajorVersion() >= 13) ||
+      TargetTriple.isOSNetBSD() || TargetTriple.isOSOpenBSD() ||
       TargetTriple.isMusl())
     SecurePlt = true;
 
   if (HasSPE && IsPPC64)
     report_fatal_error( "SPE is only supported for 32-bit targets.\n", false);
-  if (HasSPE && (HasAltivec || HasQPX || HasVSX || HasFPU))
+  if (HasSPE && (HasAltivec || HasVSX || HasFPU))
     report_fatal_error(
         "SPE and traditional floating point cannot both be enabled.\n", false);
 
@@ -159,37 +182,16 @@ void PPCSubtarget::initSubtargetFeatures(StringRef CPU, StringRef FS) {
   if (!HasSPE)
     HasFPU = true;
 
-  // QPX requires a 32-byte aligned stack. Note that we need to do this if
-  // we're compiling for a BG/Q system regardless of whether or not QPX
-  // is enabled because external functions will assume this alignment.
-  IsQPXStackUnaligned = QPXStackUnaligned;
   StackAlignment = getPlatformStackAlignment();
 
   // Determine endianness.
-  // FIXME: Part of the TargetMachine.
-  IsLittleEndian = (TargetTriple.getArch() == Triple::ppc64le);
-}
-
-/// Return true if accesses to the specified global have to go through a dyld
-/// lazy resolution stub.  This means that an extra load is required to get the
-/// address of the global.
-bool PPCSubtarget::hasLazyResolverStub(const GlobalValue *GV) const {
-  if (!HasLazyResolverStubs)
-    return false;
-  if (!TM.shouldAssumeDSOLocal(*GV->getParent(), GV))
-    return true;
-  // 32 bit macho has no relocation for a-b if a is undefined, even if b is in
-  // the section that is being relocated. This means we have to use o load even
-  // for GVs that are known to be local to the dso.
-  if (GV->isDeclarationForLinker() || GV->hasCommonLinkage())
-    return true;
-  return false;
+  IsLittleEndian = TM.isLittleEndian();
 }
 
 bool PPCSubtarget::enableMachineScheduler() const { return true; }
 
 bool PPCSubtarget::enableMachinePipeliner() const {
-  return (DarwinDirective == PPC::DIR_PWR9) && EnableMachinePipeliner;
+  return getSchedModel().hasInstrSchedModel() && EnableMachinePipeliner;
 }
 
 bool PPCSubtarget::useDFAforSMS() const { return false; }
@@ -228,19 +230,36 @@ bool PPCSubtarget::enableSubRegLiveness() const {
   return UseSubRegLiveness;
 }
 
-unsigned char
-PPCSubtarget::classifyGlobalReference(const GlobalValue *GV) const {
-  // Note that currently we don't generate non-pic references.
-  // If a caller wants that, this will have to be updated.
-
+bool PPCSubtarget::isGVIndirectSymbol(const GlobalValue *GV) const {
   // Large code model always uses the TOC even for local symbols.
   if (TM.getCodeModel() == CodeModel::Large)
-    return PPCII::MO_PIC_FLAG | PPCII::MO_NLP_FLAG;
-
+    return true;
   if (TM.shouldAssumeDSOLocal(*GV->getParent(), GV))
-    return PPCII::MO_PIC_FLAG;
-  return PPCII::MO_PIC_FLAG | PPCII::MO_NLP_FLAG;
+    return false;
+  return true;
 }
 
 bool PPCSubtarget::isELFv2ABI() const { return TM.isELFv2ABI(); }
 bool PPCSubtarget::isPPC64() const { return TM.isPPC64(); }
+
+bool PPCSubtarget::isUsingPCRelativeCalls() const {
+  return isPPC64() && hasPCRelativeMemops() && isELFv2ABI() &&
+         CodeModel::Medium == getTargetMachine().getCodeModel();
+}
+
+// GlobalISEL
+const CallLowering *PPCSubtarget::getCallLowering() const {
+  return CallLoweringInfo.get();
+}
+
+const RegisterBankInfo *PPCSubtarget::getRegBankInfo() const {
+  return RegBankInfo.get();
+}
+
+const LegalizerInfo *PPCSubtarget::getLegalizerInfo() const {
+  return Legalizer.get();
+}
+
+InstructionSelector *PPCSubtarget::getInstructionSelector() const {
+  return InstSelector.get();
+}

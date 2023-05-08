@@ -49,7 +49,7 @@ The main changes are:
 
 ## Basic concepts of MINUIT
 
-The [MINUIT](https://root.cern.ch/sites/d35c7d8c.web.cern.ch/files/minuit.pdf)
+The [MINUIT](https://root.cern.ch/download/minuit.pdf)
 package acts on a multiparameter Fortran function to which one
 must give the generic name <TT>FCN</TT>. In the ROOT implementation,
 the function <TT>FCN</TT> is defined via the MINUIT SetFCN member function
@@ -1493,7 +1493,7 @@ void TMinuit::mncont(Int_t ike1, Int_t ike2, Int_t nptu, Double_t *xptu, Double_
          fXpt[i-1] = xptu[i-2];
          fYpt[i-1] = yptu[i-2];
       }
-      sprintf(fChpt,"%s"," ABCD");
+      snprintf(fChpt, fMaxcpt+1, "%s", " ABCD");
       mnplot(fXpt, fYpt, fChpt, nall, fNpagwd, fNpagln);
    }
 
@@ -7657,7 +7657,7 @@ void TMinuit::mnstat(Double_t &fmin, Double_t &fedm, Double_t &errdef, Int_t &np
 /// the value .TRUE. if they are equal.  To find EPSMAC
 /// safely by foiling the Fortran optimiser
 
-void TMinuit::mntiny(volatile Double_t epsp1, Double_t &epsbak)
+void TMinuit::mntiny(Double_t epsp1, Double_t &epsbak)
 {
    epsbak = epsp1 - 1;
 }

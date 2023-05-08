@@ -73,7 +73,6 @@ for advanced uses of categories.
 
 #include "RooCategory.h"
 
-#include "RooFit.h"
 #include "RooArgSet.h"
 #include "RooStreamParser.h"
 #include "RooMsgService.h"
@@ -96,7 +95,7 @@ using namespace std;
 
 ClassImp(RooCategory);
 
-std::map<std::string, std::weak_ptr<RooCategory::RangeMap_t>> RooCategory::_uuidToSharedRangeIOHelper; // Helper for restoring shared properties
+std::map<RooSharedProperties::UUID, std::weak_ptr<RooCategory::RangeMap_t>> RooCategory::_uuidToSharedRangeIOHelper; // Helper for restoring shared properties
 std::map<std::string, std::weak_ptr<RooCategory::RangeMap_t>> RooCategory::_sharedRangeIOHelper;
 
 
@@ -104,20 +103,20 @@ std::map<std::string, std::weak_ptr<RooCategory::RangeMap_t>> RooCategory::_shar
 
 RooCategory::RooCategory()
 {
-  TRACE_CREATE 
+  TRACE_CREATE;
 }
 
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor. Types must be defined using defineType() before variable can be used
-RooCategory::RooCategory(const char *name, const char *title) : 
+RooCategory::RooCategory(const char *name, const char *title) :
   RooAbsCategoryLValue(name,title),
-  _ranges(new RangeMap_t())
+  _ranges{std::make_unique<RangeMap_t>()}
 {
-  setValueDirty() ;  
-  setShapeDirty() ;  
-  TRACE_CREATE 
+  setValueDirty() ;
+  setShapeDirty() ;
+  TRACE_CREATE;
 }
 
 
@@ -128,7 +127,7 @@ RooCategory::RooCategory(const char *name, const char *title) :
 /// \param[in] allowedStates Map of allowed states. Pass e.g. `{ {"0Lep", 0}, {"1Lep:, 1} }`
 RooCategory::RooCategory(const char* name, const char* title, const std::map<std::string, int>& allowedStates) :
   RooAbsCategoryLValue(name,title),
-  _ranges(new RangeMap_t())
+  _ranges{std::make_unique<RangeMap_t>()}
 {
   defineTypes(allowedStates);
 }
@@ -142,7 +141,7 @@ RooCategory::RooCategory(const RooCategory& other, const char* name) :
   RooAbsCategoryLValue(other, name),
   _ranges(other._ranges)
 {
-  TRACE_CREATE   
+  TRACE_CREATE;
 }
 
 
@@ -151,7 +150,7 @@ RooCategory::RooCategory(const RooCategory& other, const char* name) :
 
 RooCategory::~RooCategory()
 {
-  TRACE_DESTROY
+  TRACE_DESTROY;
 }
 
 
@@ -162,7 +161,7 @@ RooCategory::~RooCategory()
 /// If printError is set, a message will be printed if
 /// the specified index does not represent a valid state.
 /// \return bool signalling if an error occurred.
-Bool_t RooCategory::setIndex(Int_t index, Bool_t printError) 
+bool RooCategory::setIndex(Int_t index, bool printError)
 {
   if (!hasIndex(index)) {
     if (printError) {
@@ -184,7 +183,7 @@ Bool_t RooCategory::setIndex(Int_t index, Bool_t printError)
 /// If printError is set, a message will be printed if
 /// the specified label does not represent a valid state.
 /// \return false on success.
-Bool_t RooCategory::setLabel(const char* label, Bool_t printError) 
+bool RooCategory::setLabel(const char* label, bool printError)
 {
   const auto item = stateNames().find(label);
   if (item != stateNames().end()) {
@@ -208,7 +207,7 @@ Bool_t RooCategory::setLabel(const char* label, Bool_t printError)
 /// state labels may not contain semicolons.
 /// \return True in case of an error.
 bool RooCategory::defineType(const std::string& label)
-{ 
+{
   if (label.find(';') != std::string::npos) {
     coutE(InputArguments) << "RooCategory::defineType(" << GetName()
         << "): semicolons not allowed in label name" << endl ;
@@ -227,7 +226,7 @@ bool RooCategory::defineType(const std::string& label, Int_t index)
 {
   if (label.find(';') != std::string::npos) {
     coutE(InputArguments) << "RooCategory::defineType(" << GetName()
-			<< "): semicolons not allowed in label name" << endl ;
+         << "): semicolons not allowed in label name" << endl ;
     return true;
   }
 
@@ -286,7 +285,7 @@ std::map<std::string, RooAbsCategory::value_type>& RooCategory::states() {
 /// Read object contents from given stream. If token is a decimal digit, try to
 /// find a corresponding state for it. If that succeeds, the state denoted by this
 /// index is used. Otherwise, interpret it as a label.
-Bool_t RooCategory::readFromStream(istream& is, Bool_t /*compact*/, Bool_t verbose) 
+bool RooCategory::readFromStream(istream& is, bool /*compact*/, bool verbose)
 {
   // Read single token
   RooStreamParser parser(is) ;
@@ -304,7 +303,7 @@ Bool_t RooCategory::readFromStream(istream& is, Bool_t /*compact*/, Bool_t verbo
 ////////////////////////////////////////////////////////////////////////////////
 /// compact only at the moment
 
-void RooCategory::writeToStream(ostream& os, Bool_t compact) const
+void RooCategory::writeToStream(ostream& os, bool compact) const
 {
   if (compact) {
     os << getCurrentIndex() ;
@@ -319,7 +318,7 @@ void RooCategory::writeToStream(ostream& os, Bool_t compact) const
 /// \note This affects **all** copies of this category, because they are sharing
 /// range definitions. This ensures that categories inside a dataset and their
 /// counterparts on the outside will both see a modification of the range.
-void RooCategory::clearRange(const char* name, Bool_t silent)
+void RooCategory::clearRange(const char* name, bool silent)
 {
   std::map<std::string, std::vector<value_type>>::iterator item = _ranges->find(name);
   if (item == _ranges->end()) {
@@ -327,16 +326,16 @@ void RooCategory::clearRange(const char* name, Bool_t silent)
       coutE(InputArguments) << "RooCategory::clearRange(" << GetName() << ") ERROR: must specify valid range name" << endl ;
     return;
   }
-  
+
   _ranges->erase(item);
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void RooCategory::setRange(const char* name, const char* stateNameList) 
+void RooCategory::setRange(const char* name, const char* stateNameList)
 {
-  clearRange(name,kTRUE) ;
+  clearRange(name,true) ;
   addToRange(name,stateNameList) ;
 }
 
@@ -356,7 +355,7 @@ void RooCategory::addToRange(const char* name, RooAbsCategory::value_type stateI
     }
 
     item = _ranges->emplace(name, std::vector<value_type>()).first;
-    coutI(Contents) << "RooCategory::setRange(" << GetName() 
+    coutI(Contents) << "RooCategory::setRange(" << GetName()
         << ") new range named '" << name << "' created for state " << stateIndex << endl ;
   }
 
@@ -383,8 +382,8 @@ void RooCategory::addToRange(const char* name, const char* stateNameList)
     if (idx != invalidCategory().second) {
       addToRange(name, idx);
     } else {
-      coutW(InputArguments) << "RooCategory::setRange(" << GetName() << ") WARNING: Ignoring invalid state name '" 
-			    << token << "' in state name list" << endl ;
+      coutW(InputArguments) << "RooCategory::setRange(" << GetName() << ") WARNING: Ignoring invalid state name '"
+             << token << "' in state name list" << endl ;
     }
   }
 }
@@ -434,7 +433,7 @@ void RooCategory::Streamer(TBuffer &R__b)
 {
   UInt_t R__s, R__c;
   if (R__b.IsReading()) {
-    
+
     Version_t R__v = R__b.ReadVersion(&R__s, &R__c);
 
     if (R__v==1) {
@@ -463,7 +462,7 @@ void RooCategory::Streamer(TBuffer &R__b)
     }
 
     R__b.CheckByteCount(R__s, R__c, RooCategory::IsA());
-    
+
   } else {
     // Since we cannot write shared pointers yet, assign the shared ranges to a normal pointer,
     // write, and restore.
@@ -482,13 +481,13 @@ void RooCategory::installLegacySharedProp(const RooCategorySharedProperties* pro
   if (props == nullptr || (*props == RooCategorySharedProperties("00000000-0000-0000-0000-000000000000")))
     return;
 
-  auto& weakPtr = _uuidToSharedRangeIOHelper[props->asString().Data()];
+  auto& weakPtr = _uuidToSharedRangeIOHelper[props->uuid()];
   if (auto existingObject = weakPtr.lock()) {
     // We know this range, start sharing
     _ranges = std::move(existingObject);
   } else {
     // This range is unknown, make a new object
-    _ranges = std::make_shared<std::map<std::string, std::vector<value_type>>>();
+    _ranges = std::make_unique<std::map<std::string, std::vector<value_type>>>();
     auto& rangesMap = *_ranges;
 
     // Copy the data:
@@ -496,8 +495,7 @@ void RooCategory::installLegacySharedProp(const RooCategorySharedProperties* pro
       std::vector<value_type>& vec = rangesMap[olist->GetName()];
 
 
-      std::unique_ptr<TIterator> citer(olist->MakeIterator());
-      while (RooCatType* ctype = (RooCatType*)citer->Next()) {
+      for(auto * ctype : static_range_cast<RooCatType*>(*olist)) {
         vec.push_back(ctype->getVal());
       }
     }
@@ -523,16 +521,12 @@ void RooCategory::installSharedRange(std::unique_ptr<RangeMap_t>&& rangeMap) {
     if (a.size() != b.size())
       return false;
 
-    auto vecsEqual = [](const std::vector<RooAbsCategory::value_type>& aa, const std::vector<RooAbsCategory::value_type>& bb) {
-      return aa.size() == bb.size() && std::equal(aa.begin(), aa.end(), bb.begin());
-    };
-
     for (const auto& itemA : a) {
       const auto itemB = b.find(itemA.first);
       if (itemB == b.end())
         return false;
 
-      if (!vecsEqual(itemA.second, itemB->second))
+      if (itemA.second != itemB->second)
         return false;
     }
 

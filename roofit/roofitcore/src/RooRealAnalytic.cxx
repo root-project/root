@@ -23,11 +23,7 @@ Lightweight RooAbsFunc interface adaptor that binds an analytic integral of a
 RooAbsReal object (specified by a code) to a set of dependent variables.
 **/
 
-
-#include "RooFit.h"
-
 #include "RooRealAnalytic.h"
-#include "RooAbsReal.h"
 #include "RooAbsRealLValue.h"
 
 #include <assert.h>
@@ -41,10 +37,10 @@ ClassImp(RooRealAnalytic);
 ////////////////////////////////////////////////////////////////////////////////
 /// Evaluate our analytic integral at the specified values of the dependents.
 
-Double_t RooRealAnalytic::operator()(const Double_t xvector[]) const 
+double RooRealAnalytic::operator()(const double xvector[]) const
 {
   assert(isValid());
-  loadValues(xvector);  
+  loadValues(xvector);
   _ncall++ ;
   return _code ? _func->analyticalIntegralWN(_code,_nset,_rangeName?_rangeName->GetName():0):_func->getVal(_nset) ;
 }
@@ -57,7 +53,7 @@ RooSpan<const double> RooRealAnalytic::getValues(std::vector<RooSpan<const doubl
   _ncall += coordinates.front().size();
 
   if (!_batchBuffer)
-    _batchBuffer.reset(new std::vector<double>());
+    _batchBuffer = std::make_unique<std::vector<double>>();
   _batchBuffer->resize(coordinates.front().size());
   RooSpan<double> results(*_batchBuffer);
 

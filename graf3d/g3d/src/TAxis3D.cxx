@@ -130,7 +130,7 @@ TAxis3D::TAxis3D(Option_t *) : TNamed(TAxis3D::fgRulerName,"ruler")
 
 TAxis3D::TAxis3D(const TAxis3D &axis) : TNamed(axis)
 {
-   ((TAxis3D&)axis).Copy(*this);
+   axis.TAxis3D::Copy(*this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -139,7 +139,8 @@ TAxis3D::TAxis3D(const TAxis3D &axis) : TNamed(axis)
 void TAxis3D::Copy(TObject &obj) const
 {
    TNamed::Copy(obj);
-   for (Int_t i=0;i<2;i++) fAxis[i].Copy(((TAxis3D&)obj).fAxis[i]);
+   for (Int_t i = 0; i < 3; i++)
+      fAxis[i].Copy(((TAxis3D &)obj).fAxis[i]);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

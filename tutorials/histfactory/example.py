@@ -20,6 +20,9 @@ def main():
     """
 
     InputFile = "./data/example.root"
+    if (ROOT.gSystem.AccessPathName(InputFile)) :
+        ROOT.Info("example.py", InputFile+" does not exist")
+        exit()
 
     # Create the measurement
     meas = ROOT.RooStats.HistFactory.Measurement("meas", "meas")
@@ -68,7 +71,7 @@ def main():
     meas.AddChannel( chan )
 
     # Collect the histograms from their files,
-    # print some output, 
+    # print some output,
     meas.CollectHistograms()
     meas.PrintTree();
 

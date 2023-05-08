@@ -102,12 +102,12 @@ private:
    }
 protected:
    inline mathtext::affine_transform_t
-   transform_logical_to_pixel(void) const
+   transform_logical_to_pixel(void) const override
    {
       return mathtext::affine_transform_t::identity;
    }
    inline mathtext::affine_transform_t
-   transform_pixel_to_logical(void) const
+   transform_pixel_to_logical(void) const override
    {
       return mathtext::affine_transform_t::identity;
    }
@@ -130,28 +130,28 @@ public:
       for (i = 0; i < mathtext::math_text_renderer_t::NFAMILY; i++) _current_font_size[i] = 0;
    }
    inline float
-   font_size(const unsigned int family = FAMILY_PLAIN) const
+   font_size(const unsigned int family = FAMILY_PLAIN) const override
    {
       return _current_font_size[family];
    }
    inline void
-   point(const float /*x*/, const float /*y*/)
+   point(const float /*x*/, const float /*y*/) override
    {
    }
    inline void
-   set_font_size(const float size, const unsigned int family)
+   set_font_size(const float size, const unsigned int family) override
    {
       _current_font_size[family] = size;
    }
    inline void
-   set_font_size(const float size)
+   set_font_size(const float size) override
    {
       _font_size = size;
       std::fill(_current_font_size,
               _current_font_size + NFAMILY, size);
    }
    inline void
-   reset_font_size(const unsigned int /*family*/)
+   reset_font_size(const unsigned int /*family*/) override
    {
    }
    inline void
@@ -196,7 +196,7 @@ public:
          y * _pad_pixel_transform[4] + _pad_pixel_transform[5]));
    }
    inline void
-   filled_rectangle(const mathtext::bounding_box_t &bounding_box_0)
+   filled_rectangle(const mathtext::bounding_box_t &bounding_box_0) override
    {
       SetFillColor(_parent->fTextColor);
       SetFillStyle(1001);
@@ -220,7 +220,7 @@ public:
       gPad->PaintFillArea(4, xt, yt);
    }
    inline void
-   rectangle(const mathtext::bounding_box_t &/*bounding_box*/)
+   rectangle(const mathtext::bounding_box_t &/*bounding_box*/) override
    {
    }
    inline mathtext::bounding_box_t
@@ -269,7 +269,7 @@ public:
    }
    inline mathtext::bounding_box_t
    bounding_box(const std::wstring string,
-             const unsigned int family = FAMILY_PLAIN)
+             const unsigned int family = FAMILY_PLAIN) override
    {
       if (TTF::fgCurFontIdx<0) return mathtext::bounding_box_t(0, 0, 0, 0, 0, 0);
       if (string.empty() || TTF::fgFace[TTF::fgCurFontIdx] == NULL ||
@@ -296,7 +296,7 @@ public:
    inline void
    text_raw(const float x, const float y,
           const std::wstring string,
-          const unsigned int family = FAMILY_PLAIN)
+          const unsigned int family = FAMILY_PLAIN) override
    {
       SetTextFont((Font_t) root_face_number(family));
       SetTextSize(_current_font_size[family]);
@@ -332,7 +332,7 @@ public:
    inline void
    text_with_bounding_box(const float /*x*/, const float /*y*/,
                      const std::wstring /*string*/,
-                     const unsigned int /*family = FAMILY_PLAIN*/)
+                     const unsigned int /*family = FAMILY_PLAIN*/) override
    {
    }
    using mathtext::math_text_renderer_t::bounding_box;
@@ -343,7 +343,7 @@ ClassImp(TMathText);
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.
 
-TMathText::TMathText(void)
+TMathText::TMathText()
    : TAttFill(0, 1001)
 {
    fRenderer = new TMathTextRenderer(this);
@@ -361,8 +361,9 @@ TMathText::TMathText(Double_t x, Double_t y, const char *text)
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor.
 
-TMathText::~TMathText(void)
+TMathText::~TMathText()
 {
+   delete fRenderer;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -371,7 +372,6 @@ TMathText::~TMathText(void)
 TMathText::TMathText(const TMathText &text)
    : TText(text), TAttFill(text)
 {
-   ((TMathText &)text).Copy(*this);
    fRenderer = new TMathTextRenderer(this);
 }
 
@@ -381,8 +381,10 @@ TMathText::TMathText(const TMathText &text)
 TMathText &TMathText::operator=(const TMathText &rhs)
 {
    if (this != &rhs) {
-      TText::operator    = (rhs);
-      TAttFill::operator = (rhs);
+      TText::operator=(rhs);
+      TAttFill::operator=(rhs);
+      delete fRenderer;
+      fRenderer = new TMathTextRenderer(this);
    }
    return *this;
 }
@@ -392,51 +394,44 @@ TMathText &TMathText::operator=(const TMathText &rhs)
 
 void TMathText::Copy(TObject &obj) const
 {
-   ((TMathText &)obj).fRenderer = fRenderer;
-   TText::Copy(obj);
-   TAttFill::Copy((TAttFill &)obj);
+   TMathText &tgt = (TMathText &)obj;
+   delete tgt.fRenderer;
+   TText::Copy(tgt);
+   TAttFill::Copy(tgt);
+   tgt.fRenderer = new TMathTextRenderer(&tgt);
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Render the text.
 
-void TMathText::
-Render(const Double_t x, const Double_t y, const Double_t size,
-      const Double_t angle, const Char_t *t, const Int_t /*length*/)
+void TMathText::Render(const Double_t x, const Double_t y, const Double_t size,
+                       const Double_t angle, const Char_t *t, const Int_t /*length*/)
 {
    const mathtext::math_text_t math_text(t);
-   TMathTextRenderer *renderer = (TMathTextRenderer *)fRenderer;
 
-   renderer->set_parameter(x, y, size, angle);
-   renderer->text(0, 0, math_text);
+   fRenderer->set_parameter(x, y, size, angle);
+   fRenderer->text(0, 0, math_text);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get the text bounding box.
 
-void TMathText::
-GetSize(Double_t &x0, Double_t &y0, Double_t &x1, Double_t &y1,
-      const Double_t size, const Double_t angle, const Char_t *t,
-      const Int_t /*length*/)
+void TMathText::GetSize(Double_t &x0, Double_t &y0, Double_t &x1, Double_t &y1,
+                        const Double_t size, const Double_t angle, const Char_t *t,
+                        const Int_t /*length*/)
 {
    const mathtext::math_text_t math_text(t);
-   TMathTextRenderer *renderer = (TMathTextRenderer *)fRenderer;
 
-   renderer->set_parameter(0, 0, size, angle);
+   fRenderer->set_parameter(0, 0, size, angle);
 
-   const mathtext::bounding_box_t bounding_box =
-      renderer->bounding_box(math_text);
-   double x[4];
-   double y[4];
+   const mathtext::bounding_box_t bounding_box = fRenderer->bounding_box(math_text);
+   double x[4], y[4];
 
-   renderer->transform_pad(
-      x[0], y[0], bounding_box.left(), bounding_box.bottom());
-   renderer->transform_pad(
-      x[1], y[1], bounding_box.right(), bounding_box.bottom());
-   renderer->transform_pad(
-      x[2], y[2], bounding_box.right(), bounding_box.top());
-   renderer->transform_pad(
-      x[3], y[3], bounding_box.left(), bounding_box.top());
+   fRenderer->transform_pad(x[0], y[0], bounding_box.left(), bounding_box.bottom());
+   fRenderer->transform_pad(x[1], y[1], bounding_box.right(), bounding_box.bottom());
+   fRenderer->transform_pad(x[2], y[2], bounding_box.right(), bounding_box.top());
+   fRenderer->transform_pad(x[3], y[3], bounding_box.left(), bounding_box.top());
 
    x0 = std::min(std::min(x[0], x[1]), std::min(x[2], x[3]));
    y0 = std::min(std::min(y[0], y[1]), std::min(y[2], y[3]));
@@ -447,21 +442,17 @@ GetSize(Double_t &x0, Double_t &y0, Double_t &x1, Double_t &y1,
 ////////////////////////////////////////////////////////////////////////////////
 /// Alignment.
 
-void TMathText::
-GetAlignPoint(Double_t &x0, Double_t &y0,
-           const Double_t size, const Double_t angle,
-           const Char_t *t, const Int_t /*length*/,
-           const Short_t align)
+void TMathText::GetAlignPoint(Double_t &x0, Double_t &y0,
+                              const Double_t size, const Double_t angle,
+                              const Char_t *t, const Int_t /*length*/,
+                              const Short_t align)
 {
    const mathtext::math_text_t math_text(t);
-   TMathTextRenderer *renderer = (TMathTextRenderer *)fRenderer;
 
-   renderer->set_parameter(0, 0, size, angle);
+   fRenderer->set_parameter(0, 0, size, angle);
 
-   const mathtext::bounding_box_t bounding_box =
-      renderer->bounding_box(math_text);
-   float x = 0;
-   float y = 0;
+   const mathtext::bounding_box_t bounding_box = fRenderer->bounding_box(math_text);
+   float x = 0, y = 0;
 
    Short_t halign = align / 10;
    Short_t valign = align - 10 * halign;
@@ -478,7 +469,7 @@ GetAlignPoint(Double_t &x0, Double_t &y0,
       case 2:   y = bounding_box.vertical_center();   break;
       case 3:   y = bounding_box.top();               break;
    }
-   renderer->transform_pad(x0, y0, x, y);
+   fRenderer->transform_pad(x0, y0, x, y);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

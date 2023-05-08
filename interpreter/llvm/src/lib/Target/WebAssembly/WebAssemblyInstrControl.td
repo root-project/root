@@ -30,6 +30,8 @@ def : Pat<(brcond (i32 (setne I32:$cond, 0)), bb:$dst),
           (BR_IF bb_op:$dst, I32:$cond)>;
 def : Pat<(brcond (i32 (seteq I32:$cond, 0)), bb:$dst),
           (BR_UNLESS bb_op:$dst, I32:$cond)>;
+def : Pat<(brcond (i32 (xor bool_node:$cond, (i32 1))), bb:$dst),
+          (BR_UNLESS bb_op:$dst, I32:$cond)>;
 
 // A list of branch targets enclosed in {} and separated by comma.
 // Used by br_table only.
@@ -40,21 +42,25 @@ def brlist : Operand<i32> {
   let PrintMethod = "printBrList";
 }
 
-// TODO: SelectionDAG's lowering insists on using a pointer as the index for
-// jump tables, so in practice we don't ever use BR_TABLE_I64 in wasm32 mode
-// currently.
-let isTerminator = 1, hasCtrlDep = 1, isBarrier = 1 in {
+// Duplicating a BR_TABLE is almost never a good idea. In particular, it can
+// lead to some nasty irreducibility due to tail merging when the br_table is in
+// a loop.
+let isTerminator = 1, hasCtrlDep = 1, isBarrier = 1, isNotDuplicable = 1 in {
+
 defm BR_TABLE_I32 : I<(outs), (ins I32:$index, variable_ops),
                       (outs), (ins brlist:$brl),
                       [(WebAssemblybr_table I32:$index)],
                       "br_table \t$index", "br_table \t$brl",
                       0x0e>;
+// TODO: SelectionDAG's lowering insists on using a pointer as the index for
+// jump tables, so in practice we don't ever use BR_TABLE_I64 in wasm32 mode
+// currently.
 defm BR_TABLE_I64 : I<(outs), (ins I64:$index, variable_ops),
                       (outs), (ins brlist:$brl),
                       [(WebAssemblybr_table I64:$index)],
                       "br_table \t$index", "br_table \t$brl",
                       0x0e>;
-} // isTerminator = 1, hasCtrlDep = 1, isBarrier = 1
+} // isTerminator = 1, hasCtrlDep = 1, isBarrier = 1, isNotDuplicable = 1
 
 // This is technically a control-flow instruction, since all it affects is the
 // IP.
@@ -84,53 +90,36 @@ let isTerminator = 1, isBarrier = 1 in
 defm END_FUNCTION : NRI<(outs), (ins), [], "end_function", 0x0b>;
 } // Uses = [VALUE_STACK], Defs = [VALUE_STACK]
 
-multiclass RETURN<WebAssemblyRegClass vt> {
-  defm RETURN_#vt : I<(outs), (ins vt:$val), (outs), (ins),
-                      [(WebAssemblyreturn vt:$val)],
-                      "return  \t$val", "return", 0x0f>;
-  // Equivalent to RETURN_#vt, for use at the end of a function when wasm
-  // semantics return by falling off the end of the block.
-  let isCodeGenOnly = 1 in
-  defm FALLTHROUGH_RETURN_#vt : I<(outs), (ins vt:$val), (outs), (ins), []>;
-}
 
-multiclass SIMD_RETURN<ValueType vt> {
-  defm RETURN_#vt : I<(outs), (ins V128:$val), (outs), (ins),
-                      [(WebAssemblyreturn (vt V128:$val))],
-                      "return  \t$val", "return", 0x0f>,
-                    Requires<[HasSIMD128]>;
-  // Equivalent to RETURN_#vt, for use at the end of a function when wasm
-  // semantics return by falling off the end of the block.
-  let isCodeGenOnly = 1 in
-  defm FALLTHROUGH_RETURN_#vt : I<(outs), (ins V128:$val), (outs), (ins),
-                                  []>,
-                                  Requires<[HasSIMD128]>;
-}
-
-let isTerminator = 1, hasCtrlDep = 1, isBarrier = 1 in {
-
+let hasCtrlDep = 1, isBarrier = 1 in {
+let isTerminator = 1 in {
 let isReturn = 1 in {
-  defm "": RETURN<I32>;
-  defm "": RETURN<I64>;
-  defm "": RETURN<F32>;
-  defm "": RETURN<F64>;
-  defm "": RETURN<EXNREF>;
-  defm "": SIMD_RETURN<v16i8>;
-  defm "": SIMD_RETURN<v8i16>;
-  defm "": SIMD_RETURN<v4i32>;
-  defm "": SIMD_RETURN<v2i64>;
-  defm "": SIMD_RETURN<v4f32>;
-  defm "": SIMD_RETURN<v2f64>;
 
-  defm RETURN_VOID : NRI<(outs), (ins), [(WebAssemblyreturn)], "return", 0x0f>;
+defm RETURN : I<(outs), (ins variable_ops), (outs), (ins),
+                [(WebAssemblyreturn)],
+                "return", "return", 0x0f>;
+// Equivalent to RETURN, for use at the end of a function when wasm
+// semantics return by falling off the end of the block.
+let isCodeGenOnly = 1 in
+defm FALLTHROUGH_RETURN : I<(outs), (ins variable_ops), (outs), (ins), []>;
 
-  // This is to RETURN_VOID what FALLTHROUGH_RETURN_#vt is to RETURN_#vt.
-  let isCodeGenOnly = 1 in
-  defm FALLTHROUGH_RETURN_VOID : NRI<(outs), (ins), []>;
 } // isReturn = 1
 
+let IsCanonical = 1, isTrap = 1 in
 defm UNREACHABLE : NRI<(outs), (ins), [(trap)], "unreachable", 0x00>;
-} // isTerminator = 1, hasCtrlDep = 1, isBarrier = 1
+
+} // isTerminator = 1
+
+// debugtrap explicitly returns despite trapping because it is supposed to just
+// get the attention of the debugger. Unfortunately, because UNREACHABLE is a
+// terminator, lowering debugtrap to UNREACHABLE can create an invalid
+// MachineBasicBlock when there is additional code after it. Lower it to this
+// non-terminator version instead.
+// TODO: Actually execute the debugger statement when running on the Web
+let isTrap = 1 in
+defm DEBUG_UNREACHABLE : NRI<(outs), (ins), [(debugtrap)], "unreachable", 0x00>;
+
+} // hasCtrlDep = 1, isBarrier = 1
 
 //===----------------------------------------------------------------------===//
 // Exception handling instructions
@@ -140,18 +129,15 @@ let Predicates = [HasExceptionHandling] in {
 
 // Throwing an exception: throw / rethrow
 let isTerminator = 1, hasCtrlDep = 1, isBarrier = 1 in {
-defm THROW : I<(outs), (ins event_op:$tag, variable_ops),
-               (outs), (ins event_op:$tag),
+defm THROW : I<(outs), (ins tag_op:$tag, variable_ops),
+               (outs), (ins tag_op:$tag),
                [(WebAssemblythrow (WebAssemblywrapper texternalsym:$tag))],
                "throw   \t$tag", "throw   \t$tag", 0x08>;
-defm RETHROW : I<(outs), (ins EXNREF:$exn), (outs), (ins), [],
-                 "rethrow \t$exn", "rethrow", 0x09>;
-// Pseudo instruction to be the lowering target of int_wasm_rethrow_in_catch
-// intrinsic. Will be converted to the real rethrow instruction later.
-let isPseudo = 1 in
-defm RETHROW_IN_CATCH : NRI<(outs), (ins), [(int_wasm_rethrow_in_catch)],
-                            "rethrow_in_catch", 0>;
+defm RETHROW : NRI<(outs), (ins i32imm:$depth), [], "rethrow \t$depth", 0x09>;
 } // isTerminator = 1, hasCtrlDep = 1, isBarrier = 1
+// The depth argument will be computed in CFGStackify. We set it to 0 here for
+// now.
+def : Pat<(int_wasm_rethrow), (RETHROW 0)>;
 
 // Region within which an exception is caught: try / end_try
 let Uses = [VALUE_STACK], Defs = [VALUE_STACK] in {
@@ -159,26 +145,22 @@ defm TRY     : NRI<(outs), (ins Signature:$sig), [], "try     \t$sig", 0x06>;
 defm END_TRY : NRI<(outs), (ins), [], "end_try", 0x0b>;
 } // Uses = [VALUE_STACK], Defs = [VALUE_STACK]
 
-// Catching an exception: catch / extract_exception
-let hasCtrlDep = 1, hasSideEffects = 1 in
-defm CATCH : I<(outs EXNREF:$dst), (ins), (outs), (ins), [],
-               "catch   \t$dst", "catch", 0x07>;
+// Catching an exception: catch / catch_all
+let hasCtrlDep = 1, hasSideEffects = 1 in {
+// Currently 'catch' can only extract an i32, which is sufficient for C++
+// support, but according to the spec 'catch' can extract any number of values
+// based on the tag type.
+defm CATCH : I<(outs I32:$dst), (ins tag_op:$tag),
+               (outs), (ins tag_op:$tag),
+               [(set I32:$dst,
+                 (WebAssemblycatch (WebAssemblywrapper texternalsym:$tag)))],
+               "catch   \t$dst, $tag", "catch   \t$tag", 0x07>;
+defm CATCH_ALL : NRI<(outs), (ins), [], "catch_all", 0x19>;
+}
 
-// Querying / extracing exception: br_on_exn
-// br_on_exn queries an exnref to see if it matches the corresponding exception
-// tag index. If true it branches to the given label and pushes the
-// corresponding argument values of the exception onto the stack.
-let isBranch = 1, isTerminator = 1, hasCtrlDep = 1 in
-defm BR_ON_EXN : I<(outs), (ins bb_op:$dst, event_op:$tag, EXNREF:$exn),
-                   (outs), (ins bb_op:$dst, event_op:$tag), [],
-                   "br_on_exn \t$dst, $tag, $exn", "br_on_exn \t$dst, $tag",
-                   0x0a>;
-// This is a pseudo instruction that simulates popping a value from stack, which
-// has been pushed by br_on_exn
-let isCodeGenOnly = 1, hasSideEffects = 1 in
-defm EXTRACT_EXCEPTION_I32 : NRI<(outs I32:$dst), (ins),
-                                 [(set I32:$dst, (int_wasm_extract_exception))],
-                                 "extract_exception\t$dst">;
+// Delegating an exception: delegate
+let isTerminator = 1, hasCtrlDep = 1, hasSideEffects = 1 in
+defm DELEGATE : NRI<(outs), (ins bb_op:$dst), [], "delegate \t $dst", 0x18>;
 
 // Pseudo instructions: cleanupret / catchret
 let isTerminator = 1, hasSideEffects = 1, isBarrier = 1, hasCtrlDep = 1,

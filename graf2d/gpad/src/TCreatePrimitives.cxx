@@ -240,19 +240,19 @@ void TCreatePrimitives::Line(Int_t event, Int_t px, Int_t py, Int_t mode)
    case kButton1Up:
       if (mode == kLine) {
          gPad->GetCanvas()->Selected(gPad, fgLine, kButton1Down);
-         fgLine = 0;
+         fgLine = nullptr;
       }
       if (mode == kArrow) {
          gPad->GetCanvas()->Selected(gPad, fgArrow, kButton1Down);
-         fgArrow = 0;
+         fgArrow = nullptr;
       }
       if (mode == kCurlyLine) {
          gPad->GetCanvas()->Selected(gPad, fgCLine, kButton1Down);
-         fgCLine = 0;
+         fgCLine = nullptr;
       }
       if (mode == kCurlyArc) {
          gPad->GetCanvas()->Selected(gPad, fgCArc, kButton1Down);
-         fgCArc = 0;
+         fgCArc = nullptr;
       }
       gROOT->SetEditorMode();
       break;
@@ -271,9 +271,8 @@ void TCreatePrimitives::Pad(Int_t event, Int_t px, Int_t py, Int_t)
 {
    static Int_t px1old, py1old, px2old, py2old;
    static Int_t px1, py1, px2, py2, pxl, pyl, pxt, pyt;
-   static TPad *padsav = nullptr;
+   static TVirtualPad *padsav = nullptr;
    Double_t xlow, ylow, xup, yup;
-   TPad * newpad;
 
    Int_t  n = 0;
    TObject *obj;
@@ -288,7 +287,7 @@ void TCreatePrimitives::Pad(Int_t event, Int_t px, Int_t py, Int_t)
    switch (event) {
 
    case kButton1Down:
-      padsav = (TPad*)gPad;
+      padsav = gPad;
       gPad->cd();
       px1 = gPad->XtoAbsPixel(gPad->GetX1());
       py1 = gPad->YtoAbsPixel(gPad->GetY1());
@@ -324,7 +323,7 @@ void TCreatePrimitives::Pad(Int_t event, Int_t px, Int_t py, Int_t)
 
    case kButton1Up:
       fgPadBBox->Delete();
-      fgPadBBox = 0;
+      fgPadBBox = nullptr;
       xlow = (Double_t(pxl) - Double_t(px1))/(Double_t(px2) - Double_t(px1));
       ylow = (Double_t(py1) - Double_t(pyl))/(Double_t(py1) - Double_t(py2));
       xup  = (Double_t(pxt) - Double_t(px1))/(Double_t(px2) - Double_t(px1));
@@ -332,11 +331,11 @@ void TCreatePrimitives::Pad(Int_t event, Int_t px, Int_t py, Int_t)
 
       gROOT->SetEditorMode();
       if (xup <= xlow || yup <= ylow) return;
-      newpad = new TPad(Form("%s_%d",gPad->GetName(),n+1),"newpad",xlow, ylow, xup, yup);
+      auto newpad = new TPad(TString::Format("%s_%d",gPad->GetName(),n+1).Data(),"newpad",xlow, ylow, xup, yup);
       if (newpad->IsZombie()) break;
       newpad->SetFillColor(gStyle->GetPadColor());
       newpad->Draw();
-      TCanvas *canvas = gPad->GetCanvas();
+      auto canvas = gPad->GetCanvas();
       if (canvas) canvas->Selected((TPad*)gPad, newpad, kButton1Down);
       if (padsav) {
          padsav->cd();
@@ -373,7 +372,7 @@ void TCreatePrimitives::Pave(Int_t event, Int_t px, Int_t py, Int_t mode)
             gPad->Modified(kTRUE);
             gROOT->SetEditorMode();
             gPad->Update();
-            fgPaveLabel = 0;
+            fgPaveLabel = nullptr;
          } else if (py == kKey_Backspace) {
             TString s(fgPaveLabel->GetTitle());
             Int_t l = s.Length();
@@ -530,22 +529,22 @@ void TCreatePrimitives::Pave(Int_t event, Int_t px, Int_t py, Int_t mode)
       break;
 
    case kButton1Up:
-            gPad->GetCanvas()->Selected(gPad, fgPave, kButton1Down);
+      gPad->GetCanvas()->Selected(gPad, fgPave, kButton1Down);
       if (mode == kPave) {
          gPad->GetCanvas()->Selected(gPad, fgPave, kButton1Down);
-         fgPave = 0;
+         fgPave = nullptr;
       }
       if (mode == kPaveText ) {
          gPad->GetCanvas()->Selected(gPad, fgPaveText, kButton1Down);
-         fgPaveText = 0;
+         fgPaveText = nullptr;
       }
       if (mode == kPavesText) {
          gPad->GetCanvas()->Selected(gPad, fgPavesText, kButton1Down);
-         fgPavesText = 0;
+         fgPavesText = nullptr;
       }
       if (mode == kDiamond)   {
          gPad->GetCanvas()->Selected(gPad, fgDiamond, kButton1Down);
-         fgDiamond = 0;
+         fgDiamond = nullptr;
       }
       if (mode == kPaveLabel) {
          gPad->GetCanvas()->Selected(gPad, fgPaveLabel, kButton1Down);
@@ -600,7 +599,7 @@ void TCreatePrimitives::PolyLine(Int_t event, Int_t px, Int_t py, Int_t mode)
                   fgPolyLine->SetPoint(npoints, xnew, ynew);
                }
                gPad->GetCanvas()->Selected(gPad, fgPolyLine, kButton1Down);
-               fgPolyLine = 0;
+               fgPolyLine = nullptr;
                npoints    = 0;
                gPad->Modified();
                gPad->Update();
@@ -629,13 +628,13 @@ void TCreatePrimitives::PolyLine(Int_t event, Int_t px, Int_t py, Int_t mode)
             fgPolyLine->SetPoint(npoints, xnew, ynew);
          }
          gPad->GetCanvas()->Selected(gPad, fgPolyLine, kButton1Down);
-         fgPolyLine = 0;
+         fgPolyLine = nullptr;
          npoints = 0;
          gPad->Modified();
          gPad->Update();
          gROOT->SetEditorMode();
       }
-      fgPolyLine = 0;
+      fgPolyLine = nullptr;
       break;
 
    case kMouseMotion:
@@ -674,7 +673,7 @@ void TCreatePrimitives::Text(Int_t event, Int_t px, Int_t py, Int_t mode)
          gROOT->SetEditorMode();
          gPad->Update();
          gPad->GetCanvas()->Selected(gPad, fgText, kButton1Down);
-         fgText = 0;
+         fgText = nullptr;
       } else if (py == kKey_Backspace) {
          TString s(fgText->GetTitle());
          Int_t l = s.Length();

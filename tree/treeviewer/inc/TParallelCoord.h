@@ -57,7 +57,7 @@ private:
    TGaxis         *fCandleAxis;             ///<! An axis used when displaying a candle chart.
 
    void            Init();
-   void            PaintEntries(TParallelCoordSelect* sel=NULL);
+   void            PaintEntries(TParallelCoordSelect* sel=nullptr);
    void            SetAxesPosition();
 
 public:

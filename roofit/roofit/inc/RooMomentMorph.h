@@ -32,20 +32,20 @@ public:
           const RooArgList& pdfList, const RooArgList& mrefList, Setting setting = NonLinearPosFractions);
   RooMomentMorph(const char *name, const char *title, RooAbsReal& _m, const RooArgList& varList,
           const RooArgList& pdfList, const TVectorD& mrefpoints, Setting setting = NonLinearPosFractions );
-  RooMomentMorph(const RooMomentMorph& other, const char* name=0) ;
-  virtual TObject* clone(const char* newname) const { return new RooMomentMorph(*this,newname); }
-  virtual ~RooMomentMorph();
+  RooMomentMorph(const RooMomentMorph& other, const char* name=nullptr) ;
+  TObject* clone(const char* newname) const override { return new RooMomentMorph(*this,newname); }
+  ~RooMomentMorph() override;
 
   void     setMode(const Setting& setting) { _setting = setting; }
 
   void useHorizontalMorphing(bool val) { _useHorizMorph = val; }
 
-  virtual Bool_t selfNormalized() const {
+  bool selfNormalized() const override {
     // P.d.f is self normalized
-    return kTRUE ;
+    return true ;
   }
 
-  virtual Double_t getVal(const RooArgSet* set=0) const ;
+  virtual double getVal(const RooArgSet* set=nullptr) const ;
   RooAbsPdf* sumPdf(const RooArgSet* nset) ;
 
 
@@ -53,23 +53,25 @@ protected:
 
   class CacheElem : public RooAbsCacheElement {
   public:
-    CacheElem(RooAbsPdf& sumPdf, RooChangeTracker& tracker, const RooArgList& flist) : _sumPdf(&sumPdf), _tracker(&tracker) { _frac.add(flist) ; } ;
-    virtual ~CacheElem() ;
-    virtual RooArgList containedArgs(Action) ;
-    RooAbsPdf* _sumPdf ;
-    RooChangeTracker* _tracker ;
+    CacheElem(std::unique_ptr<RooAbsPdf> && sumPdf,
+              std::unique_ptr<RooChangeTracker> && tracker,
+              const RooArgList& flist);
+    ~CacheElem() override ;
+    RooArgList containedArgs(Action) override ;
+    std::unique_ptr<RooAbsPdf> _sumPdf ;
+    std::unique_ptr<RooChangeTracker> _tracker ;
     RooArgList _frac ;
 
     RooRealVar* frac(Int_t i ) ;
     const RooRealVar* frac(Int_t i ) const ;
-    void calculateFractions(const RooMomentMorph& self, Bool_t verbose=kTRUE) const;
+    void calculateFractions(const RooMomentMorph& self, bool verbose=true) const;
   } ;
   mutable RooObjCacheManager _cacheMgr ; //! The cache manager
   mutable RooArgSet* _curNormSet ; //! Current normalization set
 
   friend class CacheElem ; // Cache needs to be able to clear _norm pointer
 
-  Double_t evaluate() const ;
+  double evaluate() const override ;
 
   void     initialize();
   CacheElem* getCache(const RooArgSet* nset) const ;
@@ -83,15 +85,13 @@ protected:
   RooListProxy _pdfList ;
   mutable TVectorD* _mref;
 
-  TIterator* _varItr ;   //! do not persist
-  TIterator* _pdfItr ;   //!
   mutable TMatrixD* _M; //
 
   Setting _setting;
 
   bool _useHorizMorph;
 
-  ClassDef(RooMomentMorph,3) // Your description goes here...
+  ClassDefOverride(RooMomentMorph,3) // Your description goes here...
 };
 
 #endif

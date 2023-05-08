@@ -30,16 +30,16 @@ class MnUserTransformation;
 class ExternalInternalGradientCalculator : public AnalyticalGradientCalculator {
 
 public:
-   ExternalInternalGradientCalculator(const FCNGradientBase &fcn, const MnUserTransformation &state)
-      : AnalyticalGradientCalculator(fcn, state)
+   ExternalInternalGradientCalculator(const FCNGradientBase &fcn, const MnUserTransformation &trafo)
+      : AnalyticalGradientCalculator(fcn, trafo)
    {
    }
 
-   ~ExternalInternalGradientCalculator() {}
+   ~ExternalInternalGradientCalculator() override {}
 
-   virtual FunctionGradient operator()(const MinimumParameters &) const;
+   FunctionGradient operator()(const MinimumParameters &) const override;
 
-   virtual FunctionGradient operator()(const MinimumParameters &, const FunctionGradient &) const;
+   FunctionGradient operator()(const MinimumParameters &, const FunctionGradient &) const override;
 };
 
 } // namespace Minuit2

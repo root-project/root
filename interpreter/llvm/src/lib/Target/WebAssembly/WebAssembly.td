@@ -25,12 +25,6 @@ include "llvm/Target/Target.td"
 def FeatureSIMD128 : SubtargetFeature<"simd128", "SIMDLevel", "SIMD128",
                                       "Enable 128-bit SIMD">;
 
-def FeatureUnimplementedSIMD128 :
-      SubtargetFeature<"unimplemented-simd128",
-                       "SIMDLevel", "UnimplementedSIMD128",
-                       "Enable 128-bit SIMD not yet implemented in engines",
-                       [FeatureSIMD128]>;
-
 def FeatureAtomics : SubtargetFeature<"atomics", "HasAtomics", "true",
                                       "Enable Atomics">;
 
@@ -66,6 +60,10 @@ def FeatureMutableGlobals :
       SubtargetFeature<"mutable-globals", "HasMutableGlobals", "true",
                        "Enable mutable globals">;
 
+def FeatureReferenceTypes :
+      SubtargetFeature<"reference-types", "HasReferenceTypes", "true",
+                       "Enable reference types">;
+
 //===----------------------------------------------------------------------===//
 // Architectures.
 //===----------------------------------------------------------------------===//
@@ -98,7 +96,8 @@ def : ProcessorModel<"generic", NoSchedModel, []>;
 def : ProcessorModel<"bleeding-edge", NoSchedModel,
                       [FeatureSIMD128, FeatureAtomics,
                        FeatureNontrappingFPToInt, FeatureSignExt,
-                       FeatureMutableGlobals]>;
+                       FeatureMutableGlobals, FeatureBulkMemory,
+                       FeatureTailCall]>;
 
 //===----------------------------------------------------------------------===//
 // Target Declaration

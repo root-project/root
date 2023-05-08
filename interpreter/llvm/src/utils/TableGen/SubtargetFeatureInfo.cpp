@@ -7,11 +7,10 @@
 //===----------------------------------------------------------------------===//
 
 #include "SubtargetFeatureInfo.h"
-
 #include "Types.h"
 #include "llvm/Config/llvm-config.h"
+#include "llvm/TableGen/Error.h"
 #include "llvm/TableGen/Record.h"
-
 #include <map>
 
 using namespace llvm;
@@ -37,6 +36,10 @@ SubtargetFeatureInfo::getAll(const RecordKeeper &Records) {
 
     if (Pred->getName().empty())
       PrintFatalError(Pred->getLoc(), "Predicate has no name!");
+
+    // Ignore always true predicates.
+    if (Pred->getValueAsString("CondString").empty())
+      continue;
 
     SubtargetFeatures.emplace_back(
         Pred, SubtargetFeatureInfo(Pred, SubtargetFeatures.size()));
@@ -95,9 +98,11 @@ void SubtargetFeatureInfo::emitComputeAvailableFeatures(
   OS << "  PredicateBitset Features;\n";
   for (const auto &SF : SubtargetFeatures) {
     const SubtargetFeatureInfo &SFI = SF.second;
+    StringRef CondStr = SFI.TheDef->getValueAsString("CondString");
+    assert(!CondStr.empty() && "true predicate should have been filtered");
 
-    OS << "  if (" << SFI.TheDef->getValueAsString("CondString") << ")\n";
-    OS << "    Features[" << SFI.getEnumBitName() << "] = 1;\n";
+    OS << "  if (" << CondStr << ")\n";
+    OS << "    Features.set(" << SFI.getEnumBitName() << ");\n";
   }
   OS << "  return Features;\n";
   OS << "}\n\n";
@@ -107,42 +112,45 @@ void SubtargetFeatureInfo::emitComputeAssemblerAvailableFeatures(
     StringRef TargetName, StringRef ClassName, StringRef FuncName,
     SubtargetFeatureInfoMap &SubtargetFeatures, raw_ostream &OS) {
   OS << "FeatureBitset " << TargetName << ClassName << "::\n"
-     << FuncName << "(const FeatureBitset& FB) const {\n";
+     << FuncName << "(const FeatureBitset &FB) const {\n";
   OS << "  FeatureBitset Features;\n";
   for (const auto &SF : SubtargetFeatures) {
     const SubtargetFeatureInfo &SFI = SF.second;
 
     OS << "  if (";
-    std::string CondStorage =
-        SFI.TheDef->getValueAsString("AssemblerCondString");
-    StringRef Conds = CondStorage;
-    std::pair<StringRef, StringRef> Comma = Conds.split(',');
-    bool First = true;
-    do {
-      if (!First)
-        OS << " && ";
 
-      bool Neg = false;
-      StringRef Cond = Comma.first;
-      if (Cond[0] == '!') {
-        Neg = true;
-        Cond = Cond.substr(1);
-      }
+    const DagInit *D = SFI.TheDef->getValueAsDag("AssemblerCondDag");
+    std::string CombineType = D->getOperator()->getAsString();
+    if (CombineType != "any_of" && CombineType != "all_of")
+      PrintFatalError(SFI.TheDef->getLoc(), "Invalid AssemblerCondDag!");
+    if (D->getNumArgs() == 0)
+      PrintFatalError(SFI.TheDef->getLoc(), "Invalid AssemblerCondDag!");
+    bool IsOr = CombineType == "any_of";
 
+    if (IsOr)
       OS << "(";
-      if (Neg)
+
+    ListSeparator LS(IsOr ? " || " : " && ");
+    for (auto *Arg : D->getArgs()) {
+      OS << LS;
+      if (auto *NotArg = dyn_cast<DagInit>(Arg)) {
+        if (NotArg->getOperator()->getAsString() != "not" ||
+            NotArg->getNumArgs() != 1)
+          PrintFatalError(SFI.TheDef->getLoc(), "Invalid AssemblerCondDag!");
+        Arg = NotArg->getArg(0);
         OS << "!";
-      OS << "FB[" << TargetName << "::" << Cond << "])";
+      }
+      if (!isa<DefInit>(Arg) ||
+          !cast<DefInit>(Arg)->getDef()->isSubClassOf("SubtargetFeature"))
+        PrintFatalError(SFI.TheDef->getLoc(), "Invalid AssemblerCondDag!");
+      OS << "FB[" << TargetName << "::" << Arg->getAsString() << "]";
+    }
 
-      if (Comma.second.empty())
-        break;
-
-      First = false;
-      Comma = Comma.second.split(',');
-    } while (true);
+    if (IsOr)
+      OS << ")";
 
     OS << ")\n";
-    OS << "    Features[" << SFI.getEnumBitName() << "] = 1;\n";
+    OS << "    Features.set(" << SFI.getEnumBitName() << ");\n";
   }
   OS << "  return Features;\n";
   OS << "}\n\n";

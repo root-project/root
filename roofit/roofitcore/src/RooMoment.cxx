@@ -25,8 +25,6 @@ derivator class.
 **/
 
 
-#include "RooFit.h"
-
 #include "Riostream.h"
 #include <math.h>
 
@@ -54,7 +52,7 @@ ClassImp(RooMoment);
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
 
-RooMoment::RooMoment() 
+RooMoment::RooMoment()
 {
 }
 
@@ -62,14 +60,14 @@ RooMoment::RooMoment()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooMoment::RooMoment(const char* name, const char* title, RooAbsReal& func, RooRealVar& x, Int_t orderIn, Bool_t centr, Bool_t takeRoot) :
+RooMoment::RooMoment(const char* name, const char* title, RooAbsReal& func, RooRealVar& x, Int_t orderIn, bool centr, bool takeRoot) :
   RooAbsMoment(name, title,func,x,orderIn,takeRoot),
-  _xf("!xf","xf",this,kFALSE,kFALSE),
+  _xf("!xf","xf",this,false,false),
   _ixf("!ixf","ixf",this),
   _if("!if","if",this)
 {
   setExpensiveObjectCache(func.expensiveObjectCache()) ;
-  
+
   string pname=Form("%s_product",name) ;
 
   RooFormulaVar* XF ;
@@ -88,13 +86,13 @@ RooMoment::RooMoment(const char* name, const char* title, RooAbsReal& func, RooR
   }
 
   if (func.isBinnedDistribution(x)) {
-    XF->specialIntegratorConfig(kTRUE)->method1D().setLabel("RooBinIntegrator");
+    XF->specialIntegratorConfig(true)->method1D().setLabel("RooBinIntegrator");
   }
 
   RooRealIntegral* intXF = (RooRealIntegral*) XF->createIntegral(x) ;
   RooRealIntegral* intF =  (RooRealIntegral*) func.createIntegral(x) ;
-  intXF->setCacheNumeric(kTRUE) ;
-  intF->setCacheNumeric(kTRUE) ;
+  intXF->setCacheNumeric(true) ;
+  intF->setCacheNumeric(true) ;
 
   _xf.setArg(*XF) ;
   _ixf.setArg(*intXF) ;
@@ -104,10 +102,10 @@ RooMoment::RooMoment(const char* name, const char* title, RooAbsReal& func, RooR
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooMoment::RooMoment(const char* name, const char* title, RooAbsReal& func, RooRealVar& x, const RooArgSet& nset, 
-		     Int_t orderIn, Bool_t centr, Bool_t takeRoot, Bool_t intNSet) :
+RooMoment::RooMoment(const char* name, const char* title, RooAbsReal& func, RooRealVar& x, const RooArgSet& nset,
+           Int_t orderIn, bool centr, bool takeRoot, bool intNSet) :
   RooAbsMoment(name, title,func,x,orderIn,takeRoot),
-  _xf("!xf","xf",this,kFALSE,kFALSE),
+  _xf("!xf","xf",this,false,false),
   _ixf("!ixf","ixf",this),
   _if("!if","if",this)
 {
@@ -132,16 +130,16 @@ RooMoment::RooMoment(const char* name, const char* title, RooAbsReal& func, RooR
   }
 
   if (func.isBinnedDistribution(x)) {
-    XF->specialIntegratorConfig(kTRUE)->method1D().setLabel("RooBinIntegrator");
+    XF->specialIntegratorConfig(true)->method1D().setLabel("RooBinIntegrator");
   }
 
   RooArgSet intSet(x) ;
-  if (intNSet) intSet.add(_nset,kTRUE) ;
+  if (intNSet) intSet.add(_nset,true) ;
 
   RooRealIntegral* intXF = (RooRealIntegral*) XF->createIntegral(intSet,&_nset) ;
   RooRealIntegral* intF =  (RooRealIntegral*) func.createIntegral(intSet,&_nset) ;
-  intXF->setCacheNumeric(kTRUE) ;
-  intF->setCacheNumeric(kTRUE) ;
+  intXF->setCacheNumeric(true) ;
+  intF->setCacheNumeric(true) ;
 
   _xf.setArg(*XF) ;
   _ixf.setArg(*intXF) ;
@@ -154,7 +152,7 @@ RooMoment::RooMoment(const char* name, const char* title, RooAbsReal& func, RooR
 ////////////////////////////////////////////////////////////////////////////////
 
 RooMoment::RooMoment(const RooMoment& other, const char* name) :
-  RooAbsMoment(other, name), 
+  RooAbsMoment(other, name),
   _xf("xf",this,other._xf),
   _ixf("ixf",this,other._ixf),
   _if("if",this,other._if)
@@ -166,19 +164,19 @@ RooMoment::RooMoment(const RooMoment& other, const char* name) :
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor
 
-RooMoment::~RooMoment() 
+RooMoment::~RooMoment()
 {
 }
 
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Calculate value  
+/// Calculate value
 
-Double_t RooMoment::evaluate() const 
+double RooMoment::evaluate() const
 {
-  Double_t ratio = _ixf / _if ;
-  Double_t ret =  _takeRoot ? pow(ratio,1.0/_order) : ratio ;
+  double ratio = _ixf / _if ;
+  double ret =  _takeRoot ? pow(ratio,1.0/_order) : ratio ;
   return ret ;
 }
 

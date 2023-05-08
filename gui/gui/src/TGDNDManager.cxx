@@ -807,8 +807,7 @@ Bool_t TGDNDManager::HandleDNDFinished(Window_t /*target*/)
 Bool_t TGDNDManager::HandleSelectionRequest(Event_t *event)
 {
    if ((Atom_t)event->fUser[1] == fgDNDSelection) {
-      Event_t xevent;
-      TDNDData *dnddata = 0;
+      TDNDData *dnddata = nullptr;
       char *data;
       int len;
 
@@ -828,6 +827,7 @@ Bool_t TGDNDManager::HandleSelectionRequest(Event_t *event)
                                   event->fUser[2], 8,
                                   (unsigned char *) data, len);
 #ifndef R__WIN32
+      Event_t xevent;
       xevent.fType    = kSelectionNotify;
       xevent.fTime    = event->fTime;
       xevent.fUser[0] = event->fUser[0]; // requestor

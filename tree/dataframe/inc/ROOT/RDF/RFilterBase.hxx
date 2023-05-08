@@ -55,7 +55,7 @@ public:
                const std::vector<std::string> &prevVariations, const std::string &variation = "nominal");
    RFilterBase &operator=(const RFilterBase &) = delete;
 
-   virtual ~RFilterBase();
+   ~RFilterBase() override;
 
    virtual void InitSlot(TTreeReader *r, unsigned int slot) = 0;
    bool HasName() const;
@@ -70,9 +70,8 @@ public:
       std::fill(fRejected.begin(), fRejected.end(), 0);
    }
    /// Clean-up operations to be performed at the end of a task.
-   virtual void FinaliseSlot(unsigned int slot) = 0;
+   virtual void FinalizeSlot(unsigned int slot) = 0;
    virtual void InitNode();
-   virtual void AddFilterName(std::vector<std::string> &filters) = 0;
 };
 
 } // ns RDF

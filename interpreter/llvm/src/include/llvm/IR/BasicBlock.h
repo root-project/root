@@ -31,6 +31,7 @@
 
 namespace llvm {
 
+class AssemblyAnnotationWriter;
 class CallInst;
 class Function;
 class LandingPadInst;
@@ -133,6 +134,15 @@ public:
          static_cast<const BasicBlock *>(this)->getTerminatingDeoptimizeCall());
   }
 
+  /// Returns the call instruction calling \@llvm.experimental.deoptimize
+  /// that is present either in current basic block or in block that is a unique
+  /// successor to current block, if such call is present. Otherwise, returns null.
+  const CallInst *getPostdominatingDeoptimizeCall() const;
+  CallInst *getPostdominatingDeoptimizeCall() {
+    return const_cast<CallInst *>(
+         static_cast<const BasicBlock *>(this)->getPostdominatingDeoptimizeCall());
+  }
+
   /// Returns the call instruction marked 'musttail' prior to the terminating
   /// return instruction of this basic block, if such a call is present.
   /// Otherwise, returns null.
@@ -155,19 +165,24 @@ public:
   }
 
   /// Returns a pointer to the first instruction in this block that is not a
-  /// PHINode or a debug intrinsic.
-  const Instruction* getFirstNonPHIOrDbg() const;
-  Instruction* getFirstNonPHIOrDbg() {
+  /// PHINode or a debug intrinsic, or any pseudo operation if \c SkipPseudoOp
+  /// is true.
+  const Instruction *getFirstNonPHIOrDbg(bool SkipPseudoOp = false) const;
+  Instruction *getFirstNonPHIOrDbg(bool SkipPseudoOp = false) {
     return const_cast<Instruction *>(
-                  static_cast<const BasicBlock *>(this)->getFirstNonPHIOrDbg());
+        static_cast<const BasicBlock *>(this)->getFirstNonPHIOrDbg(
+            SkipPseudoOp));
   }
 
   /// Returns a pointer to the first instruction in this block that is not a
-  /// PHINode, a debug intrinsic, or a lifetime intrinsic.
-  const Instruction* getFirstNonPHIOrDbgOrLifetime() const;
-  Instruction* getFirstNonPHIOrDbgOrLifetime() {
+  /// PHINode, a debug intrinsic, or a lifetime intrinsic, or any pseudo
+  /// operation if \c SkipPseudoOp is true.
+  const Instruction *
+  getFirstNonPHIOrDbgOrLifetime(bool SkipPseudoOp = false) const;
+  Instruction *getFirstNonPHIOrDbgOrLifetime(bool SkipPseudoOp = false) {
     return const_cast<Instruction *>(
-        static_cast<const BasicBlock *>(this)->getFirstNonPHIOrDbgOrLifetime());
+        static_cast<const BasicBlock *>(this)->getFirstNonPHIOrDbgOrLifetime(
+            SkipPseudoOp));
   }
 
   /// Returns an iterator to the first instruction in this block that is
@@ -181,16 +196,23 @@ public:
   }
 
   /// Return a const iterator range over the instructions in the block, skipping
-  /// any debug instructions.
+  /// any debug instructions. Skip any pseudo operations as well if \c
+  /// SkipPseudoOp is true.
   iterator_range<filter_iterator<BasicBlock::const_iterator,
                                  std::function<bool(const Instruction &)>>>
-  instructionsWithoutDebug() const;
+  instructionsWithoutDebug(bool SkipPseudoOp = false) const;
 
   /// Return an iterator range over the instructions in the block, skipping any
-  /// debug instructions.
-  iterator_range<filter_iterator<BasicBlock::iterator,
-                                 std::function<bool(Instruction &)>>>
-  instructionsWithoutDebug();
+  /// debug instructions. Skip and any pseudo operations as well if \c
+  /// SkipPseudoOp is true.
+  iterator_range<
+      filter_iterator<BasicBlock::iterator, std::function<bool(Instruction &)>>>
+  instructionsWithoutDebug(bool SkipPseudoOp = false);
+
+  /// Return the size of the basic block ignoring debug instructions
+  filter_iterator<BasicBlock::const_iterator,
+                  std::function<bool(const Instruction &)>>::difference_type
+  sizeWithoutDebug() const;
 
   /// Unlink 'this' from the containing function, but do not delete it.
   void removeFromParent();
@@ -262,6 +284,12 @@ public:
                    static_cast<const BasicBlock *>(this)->getUniqueSuccessor());
   }
 
+  /// Print the basic block to an output stream with an optional
+  /// AssemblyAnnotationWriter.
+  void print(raw_ostream &OS, AssemblyAnnotationWriter *AAW = nullptr,
+             bool ShouldPreserveUseListOrder = false,
+             bool IsForDebug = false) const;
+
   //===--------------------------------------------------------------------===//
   /// Instruction iterator methods
   ///
@@ -300,8 +328,8 @@ public:
 
     // Allow conversion between instantiations where valid.
     template <typename PHINodeU, typename BBIteratorU,
-              typename = typename std::enable_if<
-                  std::is_convertible<PHINodeU *, PHINodeT *>::value>::type>
+              typename = std::enable_if_t<
+                  std::is_convertible<PHINodeU *, PHINodeT *>::value>>
     phi_iterator_impl(const phi_iterator_impl<PHINodeU, BBIteratorU> &Arg)
         : PN(Arg.PN) {}
 
@@ -358,39 +386,68 @@ public:
   /// except operator delete.
   void dropAllReferences();
 
-  /// Notify the BasicBlock that the predecessor \p Pred is no longer able to
-  /// reach it.
+  /// Update PHI nodes in this BasicBlock before removal of predecessor \p Pred.
+  /// Note that this function does not actually remove the predecessor.
   ///
-  /// This is actually not used to update the Predecessor list, but is actually
-  /// used to update the PHI nodes that reside in the block.  Note that this
-  /// should be called while the predecessor still refers to this block.
+  /// If \p KeepOneInputPHIs is true then don't remove PHIs that are left with
+  /// zero or one incoming values, and don't simplify PHIs with all incoming
+  /// values the same.
   void removePredecessor(BasicBlock *Pred, bool KeepOneInputPHIs = false);
 
   bool canSplitPredecessors() const;
 
   /// Split the basic block into two basic blocks at the specified instruction.
   ///
-  /// Note that all instructions BEFORE the specified iterator stay as part of
-  /// the original basic block, an unconditional branch is added to the original
-  /// BB, and the rest of the instructions in the BB are moved to the new BB,
-  /// including the old terminator.  The newly formed BasicBlock is returned.
-  /// This function invalidates the specified iterator.
+  /// If \p Before is true, splitBasicBlockBefore handles the
+  /// block splitting. Otherwise, execution proceeds as described below.
+  ///
+  /// Note that all instructions BEFORE the specified iterator
+  /// stay as part of the original basic block, an unconditional branch is added
+  /// to the original BB, and the rest of the instructions in the BB are moved
+  /// to the new BB, including the old terminator.  The newly formed basic block
+  /// is returned. This function invalidates the specified iterator.
   ///
   /// Note that this only works on well formed basic blocks (must have a
-  /// terminator), and 'I' must not be the end of instruction list (which would
-  /// cause a degenerate basic block to be formed, having a terminator inside of
-  /// the basic block).
+  /// terminator), and \p 'I' must not be the end of instruction list (which
+  /// would cause a degenerate basic block to be formed, having a terminator
+  /// inside of the basic block).
   ///
   /// Also note that this doesn't preserve any passes. To split blocks while
   /// keeping loop information consistent, use the SplitBlock utility function.
-  BasicBlock *splitBasicBlock(iterator I, const Twine &BBName = "");
-  BasicBlock *splitBasicBlock(Instruction *I, const Twine &BBName = "") {
-    return splitBasicBlock(I->getIterator(), BBName);
+  BasicBlock *splitBasicBlock(iterator I, const Twine &BBName = "",
+                              bool Before = false);
+  BasicBlock *splitBasicBlock(Instruction *I, const Twine &BBName = "",
+                              bool Before = false) {
+    return splitBasicBlock(I->getIterator(), BBName, Before);
+  }
+
+  /// Split the basic block into two basic blocks at the specified instruction
+  /// and insert the new basic blocks as the predecessor of the current block.
+  ///
+  /// This function ensures all instructions AFTER and including the specified
+  /// iterator \p I are part of the original basic block. All Instructions
+  /// BEFORE the iterator \p I are moved to the new BB and an unconditional
+  /// branch is added to the new BB. The new basic block is returned.
+  ///
+  /// Note that this only works on well formed basic blocks (must have a
+  /// terminator), and \p 'I' must not be the end of instruction list (which
+  /// would cause a degenerate basic block to be formed, having a terminator
+  /// inside of the basic block).  \p 'I' cannot be a iterator for a PHINode
+  /// with multiple incoming blocks.
+  ///
+  /// Also note that this doesn't preserve any passes. To split blocks while
+  /// keeping loop information consistent, use the SplitBlockBefore utility
+  /// function.
+  BasicBlock *splitBasicBlockBefore(iterator I, const Twine &BBName = "");
+  BasicBlock *splitBasicBlockBefore(Instruction *I, const Twine &BBName = "") {
+    return splitBasicBlockBefore(I->getIterator(), BBName);
   }
 
   /// Returns true if there are any uses of this basic block other than
   /// direct branches, switches, etc. to it.
-  bool hasAddressTaken() const { return getSubclassDataFromValue() != 0; }
+  bool hasAddressTaken() const {
+    return getBasicBlockBits().BlockAddressRefCount != 0;
+  }
 
   /// Update all phi nodes in this basic block to refer to basic block \p New
   /// instead of basic block \p Old.
@@ -423,18 +480,87 @@ public:
   /// Return true if it is legal to hoist instructions into this block.
   bool isLegalToHoistInto() const;
 
+  /// Return true if this is the entry block of the containing function.
+  /// This method can only be used on blocks that have a parent function.
+  bool isEntryBlock() const;
+
   Optional<uint64_t> getIrrLoopHeaderWeight() const;
 
+  /// Returns true if the Order field of child Instructions is valid.
+  bool isInstrOrderValid() const {
+    return getBasicBlockBits().InstrOrderValid;
+  }
+
+  /// Mark instruction ordering invalid. Done on every instruction insert.
+  void invalidateOrders() {
+    validateInstrOrdering();
+    BasicBlockBits Bits = getBasicBlockBits();
+    Bits.InstrOrderValid = false;
+    setBasicBlockBits(Bits);
+  }
+
+  /// Renumber instructions and mark the ordering as valid.
+  void renumberInstructions();
+
+  /// Asserts that instruction order numbers are marked invalid, or that they
+  /// are in ascending order. This is constant time if the ordering is invalid,
+  /// and linear in the number of instructions if the ordering is valid. Callers
+  /// should be careful not to call this in ways that make common operations
+  /// O(n^2). For example, it takes O(n) time to assign order numbers to
+  /// instructions, so the order should be validated no more than once after
+  /// each ordering to ensure that transforms have the same algorithmic
+  /// complexity when asserts are enabled as when they are disabled.
+  void validateInstrOrdering() const;
+
 private:
+#if defined(_AIX) && (!defined(__GNUC__) || defined(__clang__))
+// Except for GCC; by default, AIX compilers store bit-fields in 4-byte words
+// and give the `pack` pragma push semantics.
+#define BEGIN_TWO_BYTE_PACK() _Pragma("pack(2)")
+#define END_TWO_BYTE_PACK() _Pragma("pack(pop)")
+#else
+#define BEGIN_TWO_BYTE_PACK()
+#define END_TWO_BYTE_PACK()
+#endif
+
+  BEGIN_TWO_BYTE_PACK()
+  /// Bitfield to help interpret the bits in Value::SubclassData.
+  struct BasicBlockBits {
+    unsigned short BlockAddressRefCount : 15;
+    unsigned short InstrOrderValid : 1;
+  };
+  END_TWO_BYTE_PACK()
+
+#undef BEGIN_TWO_BYTE_PACK
+#undef END_TWO_BYTE_PACK
+
+  /// Safely reinterpret the subclass data bits to a more useful form.
+  BasicBlockBits getBasicBlockBits() const {
+    static_assert(sizeof(BasicBlockBits) == sizeof(unsigned short),
+                  "too many bits for Value::SubclassData");
+    unsigned short ValueData = getSubclassDataFromValue();
+    BasicBlockBits AsBits;
+    memcpy(&AsBits, &ValueData, sizeof(AsBits));
+    return AsBits;
+  }
+
+  /// Reinterpret our subclass bits and store them back into Value.
+  void setBasicBlockBits(BasicBlockBits AsBits) {
+    unsigned short D;
+    memcpy(&D, &AsBits, sizeof(D));
+    Value::setValueSubclassData(D);
+  }
+
   /// Increment the internal refcount of the number of BlockAddresses
   /// referencing this BasicBlock by \p Amt.
   ///
   /// This is almost always 0, sometimes one possibly, but almost never 2, and
   /// inconceivably 3 or more.
   void AdjustBlockAddressRefCount(int Amt) {
-    setValueSubclassData(getSubclassDataFromValue()+Amt);
-    assert((int)(signed char)getSubclassDataFromValue() >= 0 &&
-           "Refcount wrap-around");
+    BasicBlockBits Bits = getBasicBlockBits();
+    Bits.BlockAddressRefCount += Amt;
+    setBasicBlockBits(Bits);
+    assert(Bits.BlockAddressRefCount < 255 && "Refcount wrap-around");
   }
 
   /// Shadow Value::setValueSubclassData with a private forwarding method so
@@ -450,6 +576,12 @@ DEFINE_SIMPLE_CONVERSION_FUNCTIONS(BasicBlock, LLVMBasicBlockRef)
 /// Advance \p It while it points to a debug instruction and return the result.
 /// This assumes that \p It is not at the end of a block.
 BasicBlock::iterator skipDebugIntrinsics(BasicBlock::iterator It);
+
+#ifdef NDEBUG
+/// In release builds, this is a no-op. For !NDEBUG builds, the checks are
+/// implemented in the .cpp file to avoid circular header deps.
+inline void BasicBlock::validateInstrOrdering() const {}
+#endif
 
 } // end namespace llvm
 

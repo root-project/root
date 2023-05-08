@@ -66,7 +66,7 @@ public:
    TApplicationServer(Int_t *argc, char **argv, FILE *flog, const char *logfile);
    virtual ~TApplicationServer();
 
-   void           GetOptions(Int_t *argc, char **argv);
+   void           GetOptions(Int_t *argc, char **argv) override;
    Int_t          GetProtocol() const   { return fProtocol; }
    Int_t          GetPort() const       { return fUrl.GetPort(); }
    const char    *GetUser() const       { return fUrl.GetUser(); }
@@ -79,19 +79,19 @@ public:
    void           Interrupt() { fInterrupt = kTRUE; }
    Bool_t         IsValid() const { return fIsValid; }
 
-   Longptr_t      ProcessLine(const char *line, Bool_t = kFALSE, Int_t *err = 0);
+   Longptr_t      ProcessLine(const char *line, Bool_t = kFALSE, Int_t *err = nullptr) override;
 
    void           Reset(const char *dir);
    Int_t          ReceiveFile(const char *file, Bool_t bin, Long64_t size);
-   void           Run(Bool_t retrn = kFALSE);
+   void           Run(Bool_t retrn = kFALSE) override;
    void           SendLogFile(Int_t status = 0, Int_t start = -1, Int_t end = -1);
    Int_t          BrowseDirectory(const char *dirname);
    Int_t          BrowseFile(const char *fname);
    Int_t          BrowseKey(const char *keyname);
 
-   void           Terminate(Int_t status);
+   void           Terminate(Int_t status) override;
 
-   ClassDef(TApplicationServer,0)  //Remote Application Interface
+   ClassDefOverride(TApplicationServer,0)  //Remote Application Interface
 };
 
 
@@ -113,8 +113,8 @@ public:
 
    Bool_t IsValid() { return ((fFile && fSocket) ? kTRUE : kFALSE); }
 
-   Bool_t Notify();
-   Bool_t ReadNotify() { return Notify(); }
+   Bool_t Notify() override;
+   Bool_t ReadNotify() override { return Notify(); }
 
    static void SetDefaultPrefix(const char *pfx);
 };

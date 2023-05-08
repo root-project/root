@@ -20,7 +20,7 @@
 /// \author Rene Brun
 
 void latex4() {
-   TCanvas *c1 = new TCanvas("greek","greek",600,700);
+   auto c1 = new TCanvas("greek","greek",600,700);
 
    TLatex l;
    l.SetTextSize(0.03);
@@ -98,7 +98,7 @@ void latex4() {
 
    // Save the picture in various formats
    c1->Print("greek.ps");
-   c1->Print("greek.gif");
+   c1->Print("greek.png");
    c1->Print("greek.pdf");
    c1->Print("greek.svg");
 }

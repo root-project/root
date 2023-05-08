@@ -10,17 +10,17 @@
 // instructions on to the real streamer.
 //
 //===----------------------------------------------------------------------===//
-#define DEBUG_TYPE "avrmcelfstreamer"
-
 #include "MCTargetDesc/AVRMCELFStreamer.h"
 #include "llvm/MC/MCContext.h"
 #include "llvm/MC/MCExpr.h"
 #include "llvm/MC/MCSymbol.h"
 #include "llvm/MC/MCObjectWriter.h"
 
+#define DEBUG_TYPE "avrmcelfstreamer"
+
 using namespace llvm;
 
-void AVRMCELFStreamer::EmitValueForModiferKind(
+void AVRMCELFStreamer::emitValueForModiferKind(
     const MCSymbol *Sym, unsigned SizeInBytes, SMLoc Loc,
     AVRMCExpr::VariantKind ModifierKind) {
   MCSymbolRefExpr::VariantKind Kind = MCSymbolRefExpr::VK_AVR_NONE;
@@ -36,7 +36,7 @@ void AVRMCELFStreamer::EmitValueForModiferKind(
     Kind = MCSymbolRefExpr::VK_AVR_HI8;
   else if (ModifierKind == AVRMCExpr::VK_AVR_HH8)
     Kind = MCSymbolRefExpr::VK_AVR_HLO8;
-  MCELFStreamer::EmitValue(MCSymbolRefExpr::create(Sym, Kind, getContext()),
+  MCELFStreamer::emitValue(MCSymbolRefExpr::create(Sym, Kind, getContext()),
                            SizeInBytes, Loc);
 }
 

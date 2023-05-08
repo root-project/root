@@ -11,6 +11,8 @@
 #include "clang/AST/Expr.h"
 #include "clang/AST/ExprCXX.h"
 #include "clang/AST/Type.h"
+#include "clang/Basic/Builtins.h"
+#include "clang/Basic/TargetInfo.h"
 #include "clang/Lex/Preprocessor.h"
 #include "clang/Sema/Sema.h"
 
@@ -69,7 +71,7 @@ namespace cling {
           for (unsigned i = 0, e = MI->getNumTokens(); i != e; ++i) {
             const Token &Tok = MI->getReplacementToken(i);
             Out() << Tok.getName() << ' ';
-            macrodefs.push_back(macro.m_II->getName());
+            macrodefs.push_back(macro.m_II->getName().str());
           }
           Out() << '\n';
         }
@@ -207,21 +209,21 @@ namespace cling {
 
      auto& PP = m_PP;
      auto isDirectlyReacheable = [&PP](llvm::StringRef FileName) {
-       const FileEntry* FE = nullptr;
        SourceLocation fileNameLoc;
        bool isAngled = false;
        const DirectoryLookup* FromDir = nullptr;
        const FileEntry* FromFile = nullptr;
        const DirectoryLookup* CurDir = nullptr;
 
-       FE = PP.LookupFile(fileNameLoc, FileName, isAngled, FromDir, FromFile,
-                          CurDir, /*SearchPath*/ 0,
-                          /*RelativePath*/ 0, /*suggestedModule*/ 0,
-                          /*IsMapped*/ 0, /*IsFramework*/ nullptr,
-                          /*SkipCache*/ false,
-                          /*OpenFile*/ false, /*CacheFail*/ true);
+       auto FE = PP.LookupFile(fileNameLoc, FileName, isAngled, FromDir,
+                               FromFile,
+                               CurDir, /*SearchPath*/ 0,
+                               /*RelativePath*/ 0, /*suggestedModule*/ 0,
+                               /*IsMapped*/ 0, /*IsFramework*/ nullptr,
+                               /*SkipCache*/ false,
+                               /*OpenFile*/ false, /*CacheFail*/ true);
        // Return true if we can '#include' the given filename
-       return FE != nullptr;
+       return FE.hasValue();
      };
 
      SourceLocation spellingLoc = m_SMgr.getSpellingLoc(D->getBeginLoc());
@@ -355,13 +357,13 @@ namespace cling {
     if (!m_Policy.SuppressSpecifiers && D->isModulePrivate())
       Out() << "__module_private__ ";
     Out() << "enum ";
-    prettyPrintAttributes(D);
     if (D->isScoped()) {
       if (D->isScopedUsingClassTag())
         Out() << "class ";
       else
         Out() << "struct ";
     }
+    prettyPrintAttributes(D);
     Out() << *D;
 
 //      if (D->isFixed())
@@ -955,7 +957,7 @@ namespace cling {
 
         if (Args) {
           Stream << " = ";
-          Args->get(i).print(m_Policy, Stream);
+          Args->get(i).print(m_Policy, Stream, /*IncludeType=*/true);
         }
         else if (NTTP->hasDefaultArgument()) {
           Expr* DefArg = NTTP->getDefaultArgument()->IgnoreImpCasts();
@@ -1053,7 +1055,7 @@ namespace cling {
         skipDecl(D, "specialization failed");
         return;
       }
-      std::string output = stream.take(true);
+      std::string output = stream.take(true).str();
       Out() << output;
     }
 
@@ -1077,7 +1079,7 @@ namespace cling {
           skipDecl(D, "template instance failed");
           return;
         }
-        std::string output = stream.take(true);
+        std::string output = stream.take(true).str();
         Out() << output;
         Out() << '\n';
       }

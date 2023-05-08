@@ -16,9 +16,84 @@
 namespace ROOT {
 namespace Internal {
 namespace RDF {
+
+std::shared_ptr<GraphDrawing::GraphNode>
+GraphDrawing::CreateDefineNode(const std::string &columnName, const ROOT::Detail::RDF::RDefineBase *columnPtr,
+                               std::unordered_map<void *, std::shared_ptr<GraphNode>> &visitedMap)
+{
+   // If there is already a node for this define (recognized by the custom column it is defining) return it. If there is
+   // not, return a new one.
+   auto duplicateDefineIt = visitedMap.find((void *)columnPtr);
+   if (duplicateDefineIt != visitedMap.end())
+      return duplicateDefineIt->second;
+
+   auto node = std::make_shared<GraphNode>("Define\\n" + columnName, visitedMap.size(), ENodeType::kDefine);
+   visitedMap[(void *)columnPtr] = node;
+   return node;
+}
+
+std::shared_ptr<GraphDrawing::GraphNode>
+GraphDrawing::CreateFilterNode(const ROOT::Detail::RDF::RFilterBase *filterPtr,
+                               std::unordered_map<void *, std::shared_ptr<GraphNode>> &visitedMap)
+{
+   // If there is already a node for this filter return it. If there is not, return a new one.
+   auto duplicateFilterIt = visitedMap.find((void *)filterPtr);
+   if (duplicateFilterIt != visitedMap.end()) {
+      duplicateFilterIt->second->SetNotNew();
+      return duplicateFilterIt->second;
+   }
+
+   auto node = std::make_shared<GraphNode>((filterPtr->HasName() ? filterPtr->GetName() : "Filter"), visitedMap.size(),
+                                           ENodeType::kFilter);
+   visitedMap[(void *)filterPtr] = node;
+   return node;
+}
+
+std::shared_ptr<GraphDrawing::GraphNode>
+GraphDrawing::CreateRangeNode(const ROOT::Detail::RDF::RRangeBase *rangePtr,
+                              std::unordered_map<void *, std::shared_ptr<GraphNode>> &visitedMap)
+{
+   // If there is already a node for this range return it. If there is not, return a new one.
+   auto duplicateRangeIt = visitedMap.find((void *)rangePtr);
+   if (duplicateRangeIt != visitedMap.end()) {
+      duplicateRangeIt->second->SetNotNew();
+      return duplicateRangeIt->second;
+   }
+
+   auto node = std::make_shared<GraphNode>("Range", visitedMap.size(), ENodeType::kRange);
+   visitedMap[(void *)rangePtr] = node;
+   return node;
+}
+
+std::shared_ptr<GraphDrawing::GraphNode>
+GraphDrawing::AddDefinesToGraph(std::shared_ptr<GraphNode> node, const RColumnRegister &colRegister,
+                                const std::vector<std::string> &prevNodeDefines,
+                                std::unordered_map<void *, std::shared_ptr<GraphNode>> &visitedMap)
+{
+   auto upmostNode = node;
+   const auto &defineNames = colRegister.GetNames();
+   for (auto i = int(defineNames.size()) - 1; i >= 0; --i) { // walk backwards through the names of defined columns
+      const auto colName = defineNames[i];
+      const bool isAlias = colRegister.IsDefineOrAlias(colName) && colRegister.GetDefine(colName) == nullptr;
+      if (isAlias || IsInternalColumn(colName))
+         continue; // aliases appear in the list of defineNames but we don't support them yet
+      const bool isANewDefine =
+         std::find(prevNodeDefines.begin(), prevNodeDefines.end(), colName) == prevNodeDefines.end();
+      if (!isANewDefine)
+         break; // we walked back through all new defines, the rest is stuff that was already in the graph
+
+      // create a node for this new Define
+      auto defineNode = RDFGraphDrawing::CreateDefineNode(colName, colRegister.GetDefine(colName), visitedMap);
+      upmostNode->SetPrevNode(defineNode);
+      upmostNode = defineNode;
+   }
+
+   return upmostNode;
+}
+
 namespace GraphDrawing {
 
-std::string GraphCreatorHelper::FromGraphLeafToDot(std::shared_ptr<GraphNode> leaf)
+std::string GraphCreatorHelper::FromGraphLeafToDot(const GraphNode &start) const
 {
    // Only the mapping between node id and node label (i.e. name)
    std::stringstream dotStringLabels;
@@ -26,36 +101,39 @@ std::string GraphCreatorHelper::FromGraphLeafToDot(std::shared_ptr<GraphNode> le
    std::stringstream dotStringGraph;
 
    // Explore the graph bottom-up and store its dot representation.
+   const GraphNode *leaf = &start;
    while (leaf) {
-      dotStringLabels << "\t" << leaf->fCounter << " [label=\"" << leaf->fName << "\", style=\"filled\", fillcolor=\""
-                      << leaf->fColor << "\", shape=\"" << leaf->fShape << "\"];\n";
-      if (leaf->fPrevNode) {
-         dotStringGraph << "\t" << leaf->fPrevNode->fCounter << " -> " << leaf->fCounter << ";\n";
+      dotStringLabels << "\t" << leaf->GetID() << " [label=\"" << leaf->GetName()
+                      << "\", style=\"filled\", fillcolor=\"" << leaf->GetColor() << "\", shape=\"" << leaf->GetShape()
+                      << "\"];\n";
+      if (leaf->GetPrevNode()) {
+         dotStringGraph << "\t" << leaf->GetPrevNode()->GetID() << " -> " << leaf->GetID() << ";\n";
       }
-      leaf = leaf->fPrevNode;
+      leaf = leaf->GetPrevNode();
    }
 
    return "digraph {\n" + dotStringLabels.str() + dotStringGraph.str() + "}";
 }
 
-std::string GraphCreatorHelper::FromGraphActionsToDot(std::vector<std::shared_ptr<GraphNode>> leaves)
+std::string GraphCreatorHelper::FromGraphActionsToDot(std::vector<std::shared_ptr<GraphNode>> leaves) const
 {
    // Only the mapping between node id and node label (i.e. name)
    std::stringstream dotStringLabels;
    // Representation of the relationships between nodes
    std::stringstream dotStringGraph;
 
-   for (auto leaf : leaves) {
-      while (leaf && !leaf->fIsExplored) {
-         dotStringLabels << "\t" << leaf->fCounter << " [label=\"" << leaf->fName
-                         << "\", style=\"filled\", fillcolor=\"" << leaf->fColor << "\", shape=\"" << leaf->fShape
-                         << "\"];\n";
-         if (leaf->fPrevNode) {
-            dotStringGraph << "\t" << leaf->fPrevNode->fCounter << " -> " << leaf->fCounter << ";\n";
+   for (auto leafShPtr : leaves) {
+      GraphNode *leaf = leafShPtr.get();
+      while (leaf && !leaf->IsExplored()) {
+         dotStringLabels << "\t" << leaf->GetID() << " [label=\"" << leaf->GetName()
+                         << "\", style=\"filled\", fillcolor=\"" << leaf->GetColor() << "\", shape=\""
+                         << leaf->GetShape() << "\"];\n";
+         if (leaf->GetPrevNode()) {
+            dotStringGraph << "\t" << leaf->GetPrevNode()->GetID() << " -> " << leaf->GetID() << ";\n";
          }
          // Multiple branches may share the same nodes. It is wrong to explore them more than once.
-         leaf->fIsExplored = true;
-         leaf = leaf->fPrevNode;
+         leaf->SetExplored();
+         leaf = leaf->GetPrevNode();
       }
    }
    return "digraph {\n" + dotStringLabels.str() + dotStringGraph.str() + "}";
@@ -79,90 +157,11 @@ std::string GraphCreatorHelper::RepresentGraph(RLoopManager *loopManager)
    nodes.reserve(actions.size() + edges.size());
 
    for (auto *action : actions)
-      nodes.emplace_back(action->GetGraph());
+      nodes.emplace_back(action->GetGraph(fVisitedMap));
    for (auto *edge : edges)
-      nodes.emplace_back(edge->GetGraph());
+      nodes.emplace_back(edge->GetGraph(fVisitedMap));
 
-   return FromGraphActionsToDot(nodes);
-}
-
-std::shared_ptr<GraphNode>
-CreateDefineNode(const std::string &columnName, const ROOT::Detail::RDF::RDefineBase *columnPtr)
-{
-   // If there is already a node for this define (recognized by the custom column it is defining) return it. If there is
-   // not, return a new one.
-   auto &sColumnsMap = GraphCreatorHelper::GetStaticColumnsMap();
-   auto duplicateDefineIt = sColumnsMap.find(columnPtr);
-   if (duplicateDefineIt != sColumnsMap.end()) {
-      auto duplicateDefine = duplicateDefineIt->second.lock();
-      return duplicateDefine;
-   }
-
-   auto node = std::make_shared<GraphNode>("Define\n" + columnName);
-   node->SetDefine();
-
-   sColumnsMap[columnPtr] = node;
-   return node;
-}
-
-std::shared_ptr<GraphNode> CreateFilterNode(const ROOT::Detail::RDF::RFilterBase *filterPtr)
-{
-   // If there is already a node for this filter return it. If there is not, return a new one.
-   auto &sFiltersMap = GraphCreatorHelper::GetStaticFiltersMap();
-   auto duplicateFilterIt = sFiltersMap.find(filterPtr);
-   if (duplicateFilterIt != sFiltersMap.end()) {
-      auto duplicateFilter = duplicateFilterIt->second.lock();
-      duplicateFilter->SetIsNew(false);
-      return duplicateFilter;
-   }
-   auto filterName = (filterPtr->HasName() ? filterPtr->GetName() : "Filter");
-   auto node = std::make_shared<GraphNode>(filterName);
-
-   sFiltersMap[filterPtr] = node;
-   node->SetFilter();
-   return node;
-}
-
-std::shared_ptr<GraphNode> CreateRangeNode(const ROOT::Detail::RDF::RRangeBase *rangePtr)
-{
-   // If there is already a node for this range return it. If there is not, return a new one.
-   auto &sRangesMap = GraphCreatorHelper::GetStaticRangesMap();
-   auto duplicateRangeIt = sRangesMap.find(rangePtr);
-   if (duplicateRangeIt != sRangesMap.end()) {
-      auto duplicateRange = duplicateRangeIt->second.lock();
-      duplicateRange->SetIsNew(false);
-      return duplicateRange;
-   }
-   auto node = std::make_shared<GraphNode>("Range");
-   node->SetRange();
-
-   sRangesMap[rangePtr] = node;
-   return node;
-}
-
-std::shared_ptr<GraphNode> AddDefinesToGraph(std::shared_ptr<GraphNode> node, const RColumnRegister &colRegister,
-                                             const std::vector<std::string> &prevNodeDefines)
-{
-   auto upmostNode = node;
-   const auto &defineNames = colRegister.GetNames();
-   const auto &defineMap = colRegister.GetColumns();
-   for (auto i = int(defineNames.size()) - 1; i >= 0; --i) { // walk backwards through the names of defined columns
-      const auto colName = defineNames[i];
-      const bool isAlias = defineMap.find(colName) == defineMap.end();
-      if (isAlias || IsInternalColumn(colName))
-         continue; // aliases appear in the list of defineNames but we don't support them yet
-      const bool isANewDefine =
-         std::find(prevNodeDefines.begin(), prevNodeDefines.end(), colName) == prevNodeDefines.end();
-      if (!isANewDefine)
-         break; // we walked back through all new defines, the rest is stuff that was already in the graph
-
-      // create a node for this new Define
-      auto defineNode = RDFGraphDrawing::CreateDefineNode(colName, defineMap.at(colName).get());
-      upmostNode->SetPrevNode(defineNode);
-      upmostNode = defineNode;
-   }
-
-   return upmostNode;
+   return FromGraphActionsToDot(std::move(nodes));
 }
 
 } // namespace GraphDrawing

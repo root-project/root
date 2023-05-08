@@ -23,11 +23,13 @@ It has the same behaviour as a TF1
 
 Example of a function
 
-~~~ {.cpp}
-    TF2 *f2 = new TF2("f2","sin(x)*sin(y)/(x*y)",0,5,0,5);
-    TF12 *f12 = new TF12("f12",f2,0.1,"y");
+Begin_Macro(source)
+{
+    auto f2 = new TF2("f2","sin(x)*sin(y)/(x*y)",0,5,0,5);
+    auto f12 = new TF12("f12",f2,0.1,"y");
     f12->Draw();
-~~~
+}
+End_Macro
 
 */
 
@@ -86,7 +88,7 @@ TF12::~TF12()
 
 TF12::TF12(const TF12 &f12) : TF1(f12)
 {
-   ((TF12&)f12).Copy(*this);
+   f12.TF12::Copy(*this);
 }
 
 

@@ -139,7 +139,7 @@ void Ingest() {
 // they are actually used. This stems from motivations relating to efficiency and optimization.
 void Analyze() {
    // Create a RDataframe by wrapping around NTuple.
-   auto df = ROOT::Experimental::MakeNTupleDataFrame("GlobalTempData", kNTupleFileName);
+   auto df = ROOT::RDF::Experimental::FromRNTuple("GlobalTempData", kNTupleFileName);
    df.Display()->Print();
 
    // Declare the minimum and maximum temperature from the dataset.

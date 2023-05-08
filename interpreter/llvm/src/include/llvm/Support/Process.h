@@ -25,10 +25,11 @@
 #define LLVM_SUPPORT_PROCESS_H
 
 #include "llvm/ADT/Optional.h"
-#include "llvm/Support/Allocator.h"
+#include "llvm/Support/AllocatorBase.h"
 #include "llvm/Support/Chrono.h"
 #include "llvm/Support/DataTypes.h"
 #include "llvm/Support/Error.h"
+#include "llvm/Support/Program.h"
 #include <system_error>
 
 namespace llvm {
@@ -42,6 +43,11 @@ namespace sys {
 /// current executing process.
 class Process {
 public:
+  using Pid = int32_t;
+
+  /// Get the process's identifier.
+  static Pid getProcessId();
+
   /// Get the process's page size.
   /// This may fail if the underlying syscall returns an error. In most cases,
   /// page size information is used for optimization, and this error can be
@@ -102,10 +108,12 @@ public:
   /// considered.
   static Optional<std::string> FindInEnvPath(StringRef EnvName,
                                              StringRef FileName,
-                                             ArrayRef<std::string> IgnoreList);
+                                             ArrayRef<std::string> IgnoreList,
+                                             char Separator = EnvPathSeparator);
 
   static Optional<std::string> FindInEnvPath(StringRef EnvName,
-                                             StringRef FileName);
+                                             StringRef FileName,
+                                             char Separator = EnvPathSeparator);
 
   // This functions ensures that the standard file descriptors (input, output,
   // and error) are properly mapped to a file descriptor before we use any of
@@ -201,6 +209,17 @@ public:
   /// Get the result of a process wide random number generator. The
   /// generator will be automatically seeded in non-deterministic fashion.
   static unsigned GetRandomNumber();
+
+  /// Equivalent to ::exit(), except when running inside a CrashRecoveryContext.
+  /// In that case, the control flow will resume after RunSafely(), like for a
+  /// crash, rather than exiting the current process.
+  /// Use \arg NoCleanup for calling _exit() instead of exit().
+  LLVM_ATTRIBUTE_NORETURN
+  static void Exit(int RetCode, bool NoCleanup = false);
+
+private:
+  LLVM_ATTRIBUTE_NORETURN
+  static void ExitNoCleanup(int RetCode);
 };
 
 }

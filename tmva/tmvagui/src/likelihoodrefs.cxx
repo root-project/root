@@ -44,7 +44,7 @@ void TMVA::likelihoodrefs(TString dataset, TDirectory *lhdir ) {
 
             if (newCanvas) {
                char cn[20];
-               sprintf( cn, "cv%d_%s", ic+1, titName.Data() );
+               snprintf( cn, 20, "cv%d_%s", ic+1, titName.Data() );
                ++ic;
                TString n = hname;
                c[ic] = new TCanvas( cn, Form( "%s reference for variable: %s", 

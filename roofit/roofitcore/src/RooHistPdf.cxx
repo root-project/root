@@ -19,13 +19,12 @@
 \class RooHistPdf
 \ingroup Roofitcore
 
-RooHistPdf implements a probablity density function sampled from a 
+RooHistPdf implements a probablity density function sampled from a
 multidimensional histogram. The histogram distribution is explicitly
-normalized by RooHistPdf and can have an arbitrary number of real or 
+normalized by RooHistPdf and can have an arbitrary number of real or
 discrete dimensions.
 **/
 
-#include "RooFit.h"
 #include "Riostream.h"
 
 #include "RooHistPdf.h"
@@ -40,21 +39,8 @@ discrete dimensions.
 #include "TError.h"
 #include "TBuffer.h"
 
-using namespace std;
 
 ClassImp(RooHistPdf);
-
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Default constructor
-/// coverity[UNINIT_CTOR]
-
-RooHistPdf::RooHistPdf() : _dataHist(0), _totVolume(0), _unitNorm(kFALSE)
-{
-
-}
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -63,37 +49,35 @@ RooHistPdf::RooHistPdf() : _dataHist(0), _totVolume(0), _unitNorm(kFALSE)
 /// RooHistPdf neither owns or clone 'dhist' and the user must ensure the input histogram exists
 /// for the entire life span of this PDF.
 
-RooHistPdf::RooHistPdf(const char *name, const char *title, const RooArgSet& vars, 
-		       const RooDataHist& dhist, Int_t intOrder) :
-  RooAbsPdf(name,title), 
+RooHistPdf::RooHistPdf(const char *name, const char *title, const RooArgSet& vars,
+             const RooDataHist& dhist, Int_t intOrder) :
+  RooAbsPdf(name,title),
   _pdfObsList("pdfObs","List of p.d.f. observables",this),
-  _dataHist((RooDataHist*)&dhist), 
+  _dataHist((RooDataHist*)&dhist),
   _codeReg(10),
   _intOrder(intOrder),
-  _cdfBoundaries(kFALSE),
-  _totVolume(0),
-  _unitNorm(kFALSE)
+  _cdfBoundaries(false)
 {
   _histObsList.addClone(vars) ;
   _pdfObsList.add(vars) ;
 
   // Verify that vars and dhist.get() have identical contents
   const RooArgSet* dvars = dhist.get() ;
-  if (vars.getSize()!=dvars->getSize()) {
-    coutE(InputArguments) << "RooHistPdf::ctor(" << GetName() 
-			  << ") ERROR variable list and RooDataHist must contain the same variables." << endl ;
+  if (vars.size()!=dvars->size()) {
+    coutE(InputArguments) << "RooHistPdf::ctor(" << GetName()
+           << ") ERROR variable list and RooDataHist must contain the same variables." << std::endl ;
     assert(0) ;
   }
   for (const auto arg : vars) {
     if (!dvars->find(arg->GetName())) {
-      coutE(InputArguments) << "RooHistPdf::ctor(" << GetName() 
-			    << ") ERROR variable list and RooDataHist must contain the same variables." << endl ;
+      coutE(InputArguments) << "RooHistPdf::ctor(" << GetName()
+             << ") ERROR variable list and RooDataHist must contain the same variables." << std::endl ;
       assert(0) ;
     }
   }
 
 
-  // Adjust ranges of _histObsList to those of _dataHist 
+  // Adjust ranges of _histObsList to those of _dataHist
   for (const auto hobs : _histObsList) {
     // Guaranteed to succeed, since checked above in ctor
     RooAbsArg* dhobs = dhist.get()->find(hobs->GetName()) ;
@@ -102,7 +86,7 @@ RooHistPdf::RooHistPdf(const char *name, const char *title, const RooArgSet& var
       ((RooRealVar*)hobs)->setRange(dhreal->getMin(),dhreal->getMax()) ;
     }
   }
-  
+
 }
 
 
@@ -115,43 +99,41 @@ RooHistPdf::RooHistPdf(const char *name, const char *title, const RooArgSet& var
 /// RooRealVar or RooCategory This constructor thus allows to apply a coordinate transformation
 /// on the histogram data to be applied.
 
-RooHistPdf::RooHistPdf(const char *name, const char *title, const RooArgList& pdfObs, 
-		       const RooArgList& histObs, const RooDataHist& dhist, Int_t intOrder) :
-  RooAbsPdf(name,title), 
+RooHistPdf::RooHistPdf(const char *name, const char *title, const RooArgList& pdfObs,
+             const RooArgList& histObs, const RooDataHist& dhist, Int_t intOrder) :
+  RooAbsPdf(name,title),
   _pdfObsList("pdfObs","List of p.d.f. observables",this),
-  _dataHist((RooDataHist*)&dhist), 
+  _dataHist((RooDataHist*)&dhist),
   _codeReg(10),
   _intOrder(intOrder),
-  _cdfBoundaries(kFALSE),
-  _totVolume(0),
-  _unitNorm(kFALSE)
+  _cdfBoundaries(false)
 {
   _histObsList.addClone(histObs) ;
   _pdfObsList.add(pdfObs) ;
 
   // Verify that vars and dhist.get() have identical contents
   const RooArgSet* dvars = dhist.get() ;
-  if (histObs.getSize()!=dvars->getSize()) {
-    coutE(InputArguments) << "RooHistPdf::ctor(" << GetName() 
-			  << ") ERROR histogram variable list and RooDataHist must contain the same variables." << endl ;
-    throw(string("RooHistPdf::ctor() ERROR: histogram variable list and RooDataHist must contain the same variables")) ;
+  if (histObs.size()!=dvars->size()) {
+    coutE(InputArguments) << "RooHistPdf::ctor(" << GetName()
+           << ") ERROR histogram variable list and RooDataHist must contain the same variables." << std::endl ;
+    throw(std::string("RooHistPdf::ctor() ERROR: histogram variable list and RooDataHist must contain the same variables")) ;
   }
 
   for (const auto arg : histObs) {
     if (!dvars->find(arg->GetName())) {
-      coutE(InputArguments) << "RooHistPdf::ctor(" << GetName() 
-			    << ") ERROR variable list and RooDataHist must contain the same variables." << endl ;
-      throw(string("RooHistPdf::ctor() ERROR: histogram variable list and RooDataHist must contain the same variables")) ;
+      coutE(InputArguments) << "RooHistPdf::ctor(" << GetName()
+             << ") ERROR variable list and RooDataHist must contain the same variables." << std::endl ;
+      throw(std::string("RooHistPdf::ctor() ERROR: histogram variable list and RooDataHist must contain the same variables")) ;
     }
     if (!arg->isFundamental()) {
-      coutE(InputArguments) << "RooHistPdf::ctor(" << GetName() 
-			    << ") ERROR all elements of histogram observables set must be of type RooRealVar or RooCategory." << endl ;
-      throw(string("RooHistPdf::ctor() ERROR all elements of histogram observables set must be of type RooRealVar or RooCategory.")) ;
+      coutE(InputArguments) << "RooHistPdf::ctor(" << GetName()
+             << ") ERROR all elements of histogram observables set must be of type RooRealVar or RooCategory." << std::endl ;
+      throw(std::string("RooHistPdf::ctor() ERROR all elements of histogram observables set must be of type RooRealVar or RooCategory.")) ;
     }
   }
 
 
-  // Adjust ranges of _histObsList to those of _dataHist 
+  // Adjust ranges of _histObsList to those of _dataHist
   for (const auto hobs : _histObsList) {
     // Guaranteed to succeed, since checked above in ctor
     RooAbsArg* dhobs = dhist.get()->find(hobs->GetName()) ;
@@ -163,12 +145,25 @@ RooHistPdf::RooHistPdf(const char *name, const char *title, const RooArgList& pd
 }
 
 
+RooHistPdf::RooHistPdf(const char *name, const char *title, const RooArgSet& vars,
+           std::unique_ptr<RooDataHist> dhist, int intOrder)
+  : RooHistPdf{name, title, vars, *dhist, intOrder}
+{
+  _ownedDataHist = std::move(dhist);
+}
+RooHistPdf::RooHistPdf(const char *name, const char *title, const RooArgList& pdfObs, const RooArgList& histObs,
+           std::unique_ptr<RooDataHist> dhist, int intOrder)
+  : RooHistPdf{name, title, pdfObs, histObs, *dhist, intOrder}
+{
+  _ownedDataHist = std::move(dhist);
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
 
 RooHistPdf::RooHistPdf(const RooHistPdf& other, const char* name) :
-  RooAbsPdf(other,name), 
+  RooAbsPdf(other,name),
   _pdfObsList("pdfObs",this,other._pdfObsList),
   _dataHist(other._dataHist),
   _codeReg(other._codeReg),
@@ -192,8 +187,24 @@ RooHistPdf::~RooHistPdf()
 
 }
 
+RooDataHist* RooHistPdf::cloneAndOwnDataHist(const char* newname) {
+   if (_ownedDataHist) return _ownedDataHist.get();
+   _ownedDataHist.reset(static_cast<RooDataHist*>(_dataHist->Clone(newname)));
+   _dataHist = _ownedDataHist.get();
+   return _dataHist;
+}
 
+void RooHistPdf::computeBatch(cudaStream_t*, double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const {
 
+  // For interpolation and histograms of higher dimension, use base function
+  if(_pdfObsList.size() > 1) {
+      RooAbsReal::computeBatch(nullptr, output, nEvents, dataMap);
+      return;
+  }
+
+  auto xVals = dataMap.at(_pdfObsList[0]);
+  _dataHist->weights(output, xVals, _intOrder, true, _cdfBoundaries);
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -201,16 +212,16 @@ RooHistPdf::~RooHistPdf()
 /// of the observables, normalized by the histograms contents. Interpolation
 /// is applied if the RooHistPdf is configured to do that.
 
-Double_t RooHistPdf::evaluate() const
+double RooHistPdf::evaluate() const
 {
-  // Transfer values from   
+  // Transfer values from
   for (unsigned int i=0; i < _pdfObsList.size(); ++i) {
     RooAbsArg* harg = _histObsList[i];
     RooAbsArg* parg = _pdfObsList[i];
 
     if (harg != parg) {
       parg->syncCache() ;
-      harg->copyCache(parg,kTRUE) ;
+      harg->copyCache(parg,true) ;
       if (!harg->inRange(0)) {
         return 0 ;
       }
@@ -226,7 +237,7 @@ Double_t RooHistPdf::evaluate() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the total volume spanned by the observables of the RooHistPdf
 
-Double_t RooHistPdf::totVolume() const
+double RooHistPdf::totVolume() const
 {
   // Return previously calculated value, if any
   if (_totVolume>0) {
@@ -241,7 +252,7 @@ Double_t RooHistPdf::totVolume() const
     } else {
       RooCategory* cat = dynamic_cast<RooCategory*>(arg) ;
       if (cat) {
-	_totVolume *= cat->numTypes() ;
+   _totVolume *= cat->numTypes() ;
       }
     }
   }
@@ -309,14 +320,14 @@ Int_t RooHistPdf::getAnalyticalIntegral(RooArgSet& allVars,
 }
 
 
-Double_t RooHistPdf::analyticalIntegral(Int_t code,
+double RooHistPdf::analyticalIntegral(Int_t code,
                                         const char* rangeName,
                                         RooArgSet const& histObsList,
                                         RooSetProxy const& pdfObsList,
                                         RooDataHist& dataHist,
                                         bool histFuncMode) {
   // Simplest scenario, full-range integration over all dependents
-  if (((2 << histObsList.getSize()) - 1) == code) {
+  if (((2 << histObsList.size()) - 1) == code) {
     return dataHist.sum(histFuncMode);
   }
 
@@ -338,11 +349,11 @@ Double_t RooHistPdf::analyticalIntegral(Int_t code,
     // Transfer values from
     if (ha != pa) {
       pa->syncCache();
-      ha->copyCache(pa,kTRUE);
+      ha->copyCache(pa,true);
     }
   }
 
-  Double_t ret = (code & 1) ? dataHist.sum(intSet,histObsList,true,!histFuncMode) :
+  double ret = (code & 1) ? dataHist.sum(intSet,histObsList,true,!histFuncMode) :
                               dataHist.sum(intSet,histObsList,true,!histFuncMode, ranges);
 
   return ret ;
@@ -355,7 +366,7 @@ Double_t RooHistPdf::analyticalIntegral(Int_t code,
 /// histogram. If interpolation is used on the integral over
 /// all histogram observables is supported
 
-Int_t RooHistPdf::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName) const 
+Int_t RooHistPdf::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName) const
 {
   return getAnalyticalIntegral(allVars, analVars, rangeName, _histObsList, _pdfObsList, _intOrder);
 }
@@ -366,7 +377,7 @@ Int_t RooHistPdf::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars,
 /// is deferred to RooDataHist::sum() which implements partial
 /// or complete summation over the histograms contents.
 
-Double_t RooHistPdf::analyticalIntegral(Int_t code, const char* rangeName) const 
+double RooHistPdf::analyticalIntegral(Int_t code, const char* rangeName) const
 {
     return analyticalIntegral(code, rangeName, _histObsList, _pdfObsList, *_dataHist, false);
 }
@@ -377,51 +388,63 @@ Double_t RooHistPdf::analyticalIntegral(Int_t code, const char* rangeName) const
 /// as the recursive division strategy of RooCurve cannot deal efficiently
 /// with the vertical lines that occur in a non-interpolated histogram
 
-list<Double_t>* RooHistPdf::plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const
+std::list<double>* RooHistPdf::plotSamplingHint(RooAbsRealLValue& obs, double xlo, double xhi) const
+{
+  return plotSamplingHint(*_dataHist, _pdfObsList, _histObsList, _intOrder, obs, xlo, xhi);
+}
+
+
+std::list<double>* RooHistPdf::plotSamplingHint(RooDataHist const& dataHist,
+                                                RooArgSet const& pdfObsList,
+                                                RooArgSet const& histObsList,
+                                                int intOrder,
+                                                RooAbsRealLValue& obs,
+                                                double xlo,
+                                                double xhi)
 {
   // No hints are required when interpolation is used
-  if (_intOrder>0) {
-    return 0 ;
+  if (intOrder>0) {
+    return nullptr;
   }
 
   // Check that observable is in dataset, if not no hint is generated
   RooAbsArg* dhObs = nullptr;
-  for (unsigned int i=0; i < _pdfObsList.size(); ++i) {
-    RooAbsArg* histObs = _histObsList[i];
-    RooAbsArg* pdfObs = _pdfObsList[i];
-    if (TString(obs.GetName())==pdfObs->GetName()) {
-      dhObs = _dataHist->get()->find(histObs->GetName()) ;
+  for (unsigned int i=0; i < pdfObsList.size(); ++i) {
+    RooAbsArg* histObs = histObsList[i];
+    RooAbsArg* pdfObs = pdfObsList[i];
+    if (std::string(obs.GetName())==pdfObs->GetName()) {
+      dhObs = dataHist.get()->find(histObs->GetName()) ;
       break;
     }
   }
 
   if (!dhObs) {
-    return 0 ;
+    return nullptr;
   }
   RooAbsLValue* lval = dynamic_cast<RooAbsLValue*>(dhObs) ;
   if (!lval) {
-    return 0 ;
+    return nullptr;
   }
 
   // Retrieve position of all bin boundaries
-  
-  const RooAbsBinning* binning = lval->getBinningPtr(0) ;
-  Double_t* boundaries = binning->array() ;
 
-  list<Double_t>* hint = new list<Double_t> ;
+  const RooAbsBinning* binning = lval->getBinningPtr(nullptr);
+  std::span<double> boundaries{binning->array(), static_cast<std::size_t>(binning->numBoundaries())};
 
-  // Widen range slighty
-  xlo = xlo - 0.01*(xhi-xlo) ;
-  xhi = xhi + 0.01*(xhi-xlo) ;
+  auto hint = new std::list<double> ;
 
-  Double_t delta = (xhi-xlo)*1e-8 ;
- 
-  // Construct array with pairs of points positioned epsilon to the left and
-  // right of the bin boundaries
-  for (Int_t i=0 ; i<binning->numBoundaries() ; i++) {
-    if (boundaries[i]>=xlo && boundaries[i]<=xhi) {
-      hint->push_back(boundaries[i]-delta) ;
-      hint->push_back(boundaries[i]+delta) ;
+  const double delta = (xhi-xlo)*1e-8 ;
+
+  // Sample points right next to the plot limits
+  hint->push_back(xlo + delta);
+  hint->push_back(xhi - delta);
+
+  // Sample points very close to the left and right of the bin boundaries that
+  // are strictly in between the plot limits.
+  for (const double x : boundaries) {
+    if (x - xlo > delta && xhi - x > delta) {
+      hint->push_back(x - delta);
+      hint->push_back(x + delta);
     }
   }
 
@@ -429,17 +452,16 @@ list<Double_t>* RooHistPdf::plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo
 }
 
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Return sampling hint for making curves of (projections) of this function
 /// as the recursive division strategy of RooCurve cannot deal efficiently
 /// with the vertical lines that occur in a non-interpolated histogram
 
-std::list<Double_t>* RooHistPdf::binBoundaries(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const 
+std::list<double>* RooHistPdf::binBoundaries(RooAbsRealLValue& obs, double xlo, double xhi) const
 {
   // No hints are required when interpolation is used
   if (_intOrder>0) {
-    return 0 ;
+    return nullptr;
   }
 
   // Check that observable is in dataset, if not no hint is generated
@@ -449,10 +471,10 @@ std::list<Double_t>* RooHistPdf::binBoundaries(RooAbsRealLValue& obs, Double_t x
   }
 
   // Retrieve position of all bin boundaries
-  const RooAbsBinning* binning = lvarg->getBinningPtr(0) ;
-  Double_t* boundaries = binning->array() ;
+  const RooAbsBinning* binning = lvarg->getBinningPtr(nullptr);
+  double* boundaries = binning->array() ;
 
-  list<Double_t>* hint = new list<Double_t> ;
+  auto hint = new std::list<double> ;
 
   // Construct array with pairs of points positioned epsilon to the left and
   // right of the bin boundaries
@@ -471,28 +493,26 @@ std::list<Double_t>* RooHistPdf::binBoundaries(RooAbsRealLValue& obs, Double_t x
 ////////////////////////////////////////////////////////////////////////////////
 /// Only handle case of maximum in all variables
 
-Int_t RooHistPdf::getMaxVal(const RooArgSet& vars) const 
+Int_t RooHistPdf::getMaxVal(const RooArgSet& vars) const
 {
-  RooAbsCollection* common = _pdfObsList.selectCommon(vars) ;
-  if (common->getSize()==_pdfObsList.getSize()) {
-    delete common ;
+  std::unique_ptr<RooAbsCollection> common{_pdfObsList.selectCommon(vars)};
+  if (common->size()==_pdfObsList.size()) {
     return 1;
   }
-  delete common ;
   return 0 ;
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooHistPdf::maxVal(Int_t code) const 
+double RooHistPdf::maxVal(Int_t code) const
 {
   R__ASSERT(code==1) ;
 
-  Double_t max(-1) ;
+  double max(-1) ;
   for (Int_t i=0 ; i<_dataHist->numEntries() ; i++) {
     _dataHist->get(i) ;
-    Double_t wgt = _dataHist->weight() ;
+    double wgt = _dataHist->weight() ;
     if (wgt>max) max=wgt ;
   }
 
@@ -504,16 +524,16 @@ Double_t RooHistPdf::maxVal(Int_t code) const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Bool_t RooHistPdf::areIdentical(const RooDataHist& dh1, const RooDataHist& dh2) 
+bool RooHistPdf::areIdentical(const RooDataHist& dh1, const RooDataHist& dh2)
 {
-  if (fabs(dh1.sumEntries()-dh2.sumEntries())>1e-8) return kFALSE ;
-  if (dh1.numEntries() != dh2.numEntries()) return kFALSE ;
+  if (std::abs(dh1.sumEntries()-dh2.sumEntries())>1e-8) return false ;
+  if (dh1.numEntries() != dh2.numEntries()) return false ;
   for (int i=0 ; i < dh1.numEntries() ; i++) {
     dh1.get(i) ;
     dh2.get(i) ;
-    if (fabs(dh1.weight()-dh2.weight())>1e-8) return kFALSE ;
+    if (std::abs(dh1.weight()-dh2.weight())>1e-8) return false ;
   }
-  return kTRUE ;
+  return true ;
 }
 
 
@@ -521,63 +541,59 @@ Bool_t RooHistPdf::areIdentical(const RooDataHist& dh1, const RooDataHist& dh2)
 ////////////////////////////////////////////////////////////////////////////////
 /// Check if our datahist is already in the workspace
 
-Bool_t RooHistPdf::importWorkspaceHook(RooWorkspace& ws) 
-{  
-  std::list<RooAbsData*> allData = ws.allData() ;
-  std::list<RooAbsData*>::const_iterator iter ;
-  for (iter = allData.begin() ; iter != allData.end() ; ++iter) {
+bool RooHistPdf::importWorkspaceHook(RooWorkspace& ws)
+{
+  for(auto const& data : ws.allData()) {
     // If your dataset is already in this workspace nothing needs to be done
-    if (*iter == _dataHist) {
-      return kFALSE ;
+    if (data == _dataHist) {
+      return false ;
     }
   }
 
   // Check if dataset with given name already exists
-  RooAbsData* wsdata = ws.embeddedData(_dataHist->GetName()) ;
+  if (RooAbsData* wsdata = ws.embeddedData(_dataHist->GetName())) {
 
-  if (wsdata) {
-
-    // Yes it exists - now check if it is identical to our internal histogram 
+    // Yes it exists - now check if it is identical to our internal histogram
     if (wsdata->InheritsFrom(RooDataHist::Class())) {
 
       // Check if histograms are identical
       if (areIdentical((RooDataHist&)*wsdata,*_dataHist)) {
 
-	// Exists and is of correct type, and identical -- adjust internal pointer to WS copy
-	_dataHist = (RooDataHist*) wsdata ;
+   // Exists and is of correct type, and identical -- adjust internal pointer to WS copy
+   _dataHist = (RooDataHist*) wsdata ;
       } else {
 
-	// not identical, clone rename and import
-	TString uniqueName = Form("%s_%s",_dataHist->GetName(),GetName()) ;
-	Bool_t flag = ws.import(*_dataHist,RooFit::Rename(uniqueName.Data()),RooFit::Embedded()) ;
-	if (flag) {
-	  coutE(ObjectHandling) << " RooHistPdf::importWorkspaceHook(" << GetName() << ") unable to import clone of underlying RooDataHist with unique name " << uniqueName << ", abort" << endl ;
-	  return kTRUE ;
-	}
-	_dataHist = (RooDataHist*) ws.embeddedData(uniqueName.Data()) ;
+   // not identical, clone rename and import
+   auto uniqueName = std::string(_dataHist->GetName()) + "_" + GetName();
+   bool flag = ws.import(*_dataHist,RooFit::Rename(uniqueName.c_str()),RooFit::Embedded()) ;
+   if (flag) {
+     coutE(ObjectHandling) << " RooHistPdf::importWorkspaceHook(" << GetName() << ") unable to import clone of underlying RooDataHist with unique name " << uniqueName << ", abort" << std::endl ;
+     return true ;
+   }
+   _dataHist = (RooDataHist*) ws.embeddedData(uniqueName.c_str()) ;
       }
 
     } else {
 
       // Exists and is NOT of correct type: clone rename and import
-      TString uniqueName = Form("%s_%s",_dataHist->GetName(),GetName()) ;
-      Bool_t flag = ws.import(*_dataHist,RooFit::Rename(uniqueName.Data()),RooFit::Embedded()) ;
+      auto uniqueName = std::string(_dataHist->GetName()) + "_" + GetName();
+      bool flag = ws.import(*_dataHist,RooFit::Rename(uniqueName.c_str()),RooFit::Embedded()) ;
       if (flag) {
-	coutE(ObjectHandling) << " RooHistPdf::importWorkspaceHook(" << GetName() << ") unable to import clone of underlying RooDataHist with unique name " << uniqueName << ", abort" << endl ;
-	return kTRUE ;
+   coutE(ObjectHandling) << " RooHistPdf::importWorkspaceHook(" << GetName() << ") unable to import clone of underlying RooDataHist with unique name " << uniqueName << ", abort" << std::endl ;
+   return true ;
       }
-      _dataHist = (RooDataHist*) ws.embeddedData(uniqueName.Data()) ;
-      
+      _dataHist = static_cast<RooDataHist*>(ws.embeddedData(uniqueName.c_str()));
+
     }
-    return kFALSE ;
+    return false ;
   }
-  
+
   // We need to import our datahist into the workspace
   ws.import(*_dataHist,RooFit::Embedded()) ;
 
   // Redirect our internal pointer to the copy in the workspace
   _dataHist = (RooDataHist*) ws.embeddedData(_dataHist->GetName()) ;
-  return kFALSE ;
+  return false ;
 }
 
 

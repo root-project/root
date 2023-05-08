@@ -269,9 +269,9 @@ const char *oracle_OtherTypes[13] = {
 /// default TSQLFile constructor
 
 TSQLFile::TSQLFile()
-   : TFile(), fSQL(0), fSQLClassInfos(0), fUseSuffixes(kTRUE), fSQLIOversion(1), fArrayLimit(21),
+   : TFile(), fSQL(nullptr), fSQLClassInfos(nullptr), fUseSuffixes(kTRUE), fSQLIOversion(1), fArrayLimit(21),
      fCanChangeConfig(kFALSE), fTablesType(), fUseTransactions(0), fUseIndexes(0), fModifyCounter(0), fQuerisCounter(0),
-     fBasicTypes(0), fOtherTypes(0), fUserName(), fLogFile(0), fIdsTableExists(kFALSE), fStmtCounter(0)
+     fBasicTypes(nullptr), fOtherTypes(nullptr), fUserName(), fLogFile(nullptr), fIdsTableExists(kFALSE), fStmtCounter(0)
 {
    SetBit(kBinaryFile, kFALSE);
 }
@@ -295,21 +295,21 @@ TSQLFile::TSQLFile()
 /// For a moment TSQLFile does not support TTree objects and subdirectories.
 
 TSQLFile::TSQLFile(const char *dbname, Option_t *option, const char *user, const char *pass)
-   : TFile(), fSQL(0), fSQLClassInfos(0), fUseSuffixes(kTRUE), fSQLIOversion(1), fArrayLimit(21),
+   : TFile(), fSQL(nullptr), fSQLClassInfos(nullptr), fUseSuffixes(kTRUE), fSQLIOversion(1), fArrayLimit(21),
      fCanChangeConfig(kFALSE), fTablesType(), fUseTransactions(0), fUseIndexes(0), fModifyCounter(0), fQuerisCounter(0),
-     fBasicTypes(mysql_BasicTypes), fOtherTypes(mysql_OtherTypes), fUserName(user), fLogFile(0),
+     fBasicTypes(mysql_BasicTypes), fOtherTypes(mysql_OtherTypes), fUserName(user), fLogFile(nullptr),
      fIdsTableExists(kFALSE), fStmtCounter(0)
 {
    if (!gROOT)
       ::Fatal("TFile::TFile", "ROOT system not initialized");
 
-   gDirectory = 0;
+   gDirectory = nullptr;
    SetName(dbname);
    SetTitle("TFile interface to SQL DB");
    TDirectoryFile::Build();
    fFile = this;
 
-   if (dbname && strstr(dbname, "oracle://") != 0) {
+   if (dbname && strstr(dbname, "oracle://")) {
       fBasicTypes = oracle_BasicTypes;
       fOtherTypes = oracle_OtherTypes;
    }
@@ -321,7 +321,7 @@ TSQLFile::TSQLFile(const char *dbname, Option_t *option, const char *user, const
 
    fD = -1;
    fFile = this;
-   fFree = 0;
+   fFree = nullptr;
    fVersion = gROOT->GetVersionInt(); // ROOT version in integer format
    fUnits = 4;
    fOption = option;
@@ -331,7 +331,7 @@ TSQLFile::TSQLFile(const char *dbname, Option_t *option, const char *user, const
    fSum2Buffer = 0;
    fBytesRead = 0;
    fBytesWrite = 0;
-   fClassIndex = 0;
+   fClassIndex = nullptr;
    fSeekInfo = 0;
    fNbytesInfo = 0;
    fProcessIDs = nullptr;
@@ -371,7 +371,7 @@ TSQLFile::TSQLFile(const char *dbname, Option_t *option, const char *user, const
 
    fSQL = TSQLServer::Connect(dbname, user, pass);
 
-   if (fSQL == 0) {
+   if (!fSQL) {
       Error("TSQLFile", "Cannot connect to DB %s", dbname);
       goto zombie;
    }
@@ -436,7 +436,7 @@ TSQLFile::TSQLFile(const char *dbname, Option_t *option, const char *user, const
 zombie:
 
    delete fSQL;
-   fSQL = 0;
+   fSQL = nullptr;
    MakeZombie();
    gDirectory = gROOT;
 }
@@ -455,9 +455,9 @@ void TSQLFile::StartLogFile(const char *fname)
 
 void TSQLFile::StopLogFile()
 {
-   if (fLogFile != 0) {
+   if (fLogFile) {
       delete fLogFile;
-      fLogFile = 0;
+      fLogFile = nullptr;
    }
 }
 
@@ -466,7 +466,7 @@ void TSQLFile::StopLogFile()
 
 Bool_t TSQLFile::IsMySQL() const
 {
-   if (fSQL == 0)
+   if (!fSQL)
       return kFALSE;
    return strcmp(fSQL->ClassName(), "TMySQLServer") == 0;
 }
@@ -476,7 +476,7 @@ Bool_t TSQLFile::IsMySQL() const
 
 Bool_t TSQLFile::IsOracle() const
 {
-   if (fSQL == 0)
+   if (!fSQL)
       return kFALSE;
    return strcmp(fSQL->ClassName(), "TOracleServer") == 0;
 }
@@ -486,7 +486,7 @@ Bool_t TSQLFile::IsOracle() const
 
 Bool_t TSQLFile::IsODBC() const
 {
-   if (fSQL == 0)
+   if (!fSQL)
       return kFALSE;
    return strcmp(fSQL->ClassName(), "TODBCServer") == 0;
 }
@@ -627,10 +627,10 @@ void TSQLFile::SetUseIndexes(Int_t use_type)
 const char *TSQLFile::GetDataBaseName() const
 {
    if (IsOracle())
-      return 0;
+      return nullptr;
    const char *name = strrchr(GetName(), '/');
-   if (name == 0)
-      return 0;
+   if (!name)
+      return nullptr;
    return name + 1;
 }
 
@@ -802,9 +802,9 @@ void TSQLFile::WriteStreamerInfo()
 
    TIter iter(gROOT->GetListOfStreamerInfo());
 
-   TVirtualStreamerInfo *info = 0;
+   TVirtualStreamerInfo *info = nullptr;
 
-   while ((info = (TVirtualStreamerInfo *)iter()) != 0) {
+   while ((info = (TVirtualStreamerInfo *)iter()) != nullptr) {
       Int_t uid = info->GetNumber();
       if (fClassIndex->fArray[uid]) {
          if (gDebug > 1)
@@ -1013,7 +1013,7 @@ void TSQLFile::InitSqlDatabase(Bool_t create)
 
          ReadStreamerInfo();
 
-         ok = (ReadSpecialObject(sqlio::Ids_TSQLFile, this) != 0);
+         ok = (ReadSpecialObject(sqlio::Ids_TSQLFile, this) != nullptr);
       }
 
       // read list of keys
@@ -1024,7 +1024,7 @@ void TSQLFile::InitSqlDatabase(Bool_t create)
          Error("InitSqlDatabase", "Cannot detect proper tabled in database. Close.");
          Close();
          delete fSQL;
-         fSQL = 0;
+         fSQL = nullptr;
          MakeZombie();
          gDirectory = gROOT;
          return;
@@ -1355,8 +1355,8 @@ Int_t TSQLFile::GetLocking()
                sqlio::ConfigTable, quote, quote, sqlio::CT_Field, quote, vquote, sqlio::cfg_LockingMode, vquote);
 
    TSQLResult *res = SQLQuery(sqlcmd.Data(), 1);
-   TSQLRow *row = (res == 0) ? 0 : res->Next();
-   TString field = (row == 0) ? "" : row->GetField(0);
+   TSQLRow *row = !res ? nullptr : res->Next();
+   TString field = !row ? "" : row->GetField(0);
    delete row;
    delete res;
 
@@ -1411,7 +1411,7 @@ TSQLResult *TSQLFile::SQLQuery(const char *cmd, Int_t flag, Bool_t *ok)
 
    TSQLResult *res = fSQL->Query(cmd);
    if (ok)
-      *ok = res != 0;
+      *ok = res != nullptr;
    if (!res)
       return nullptr;
    //   if ((flag==2) && IsOracle())
@@ -1442,7 +1442,7 @@ TSQLStatement *TSQLFile::SQLStatement(const char *cmd, Int_t bufsize)
       return nullptr;
 
    if (!fSQL->HasStatement())
-      return 0;
+      return nullptr;
 
    if (gDebug > 1)
       Info("SQLStatement", "%s", cmd);
@@ -1530,8 +1530,8 @@ Long64_t TSQLFile::SQLMaximumValue(const char *tablename, const char *columnname
    TSQLRow *row = res->Next();
 
    Long64_t maxid = -1;
-   if (row != 0)
-      if (row->GetField(0) != 0)
+   if (row)
+      if (row->GetField(0))
          maxid = sqlio::atol64(row->GetField(0));
 
    delete row;
@@ -1621,10 +1621,10 @@ void TSQLFile::DeleteKeyFromDB(Long64_t keyid)
                quote, SQLObjectIdColumn(), quote, quote, sqlio::ObjectsTable, quote, quote, SQLKeyIdColumn(), quote,
                keyid);
    TSQLResult *res = SQLQuery(sqlcmd.Data(), 2);
-   TSQLRow *row = res == 0 ? 0 : res->Next();
-   Long64_t minid(1), maxid(0);
+   TSQLRow *row = !res  ? nullptr : res->Next();
+   Long64_t minid = 1, maxid = 0;
 
-   if (row && (row->GetField(0) != 0) && (row->GetField(1) != 0)) {
+   if (row && row->GetField(0) && row->GetField(1)) {
       minid = sqlio::atol64(row->GetField(0));
       maxid = sqlio::atol64(row->GetField(1));
    }
@@ -2097,7 +2097,7 @@ Bool_t TSQLFile::CreateClassTable(TSQLClassInfo *sqlinfo, TObjArray *colinfos)
          first = false;
 
       const char *colname = col->GetSQLName();
-      if ((strpbrk(colname, "[:.]<>") != 0) || forcequote) {
+      if ((strpbrk(colname, "[:.]<>") != nullptr) || forcequote) {
          sqlcmd += quote;
          sqlcmd += colname;
          sqlcmd += quote;
@@ -2419,7 +2419,7 @@ TObjArray *TSQLFile::SQLObjectsInfo(Long64_t keyid)
       Int_t version = atoi(row->GetField(2));
 
       TSQLObjectInfo *info = new TSQLObjectInfo(objid, clname, version);
-      if (arr == 0)
+      if (!arr)
          arr = new TObjArray();
       arr->Add(info);
 
@@ -2435,7 +2435,7 @@ TObjArray *TSQLFile::SQLObjectsInfo(Long64_t keyid)
 TSQLResult *TSQLFile::GetNormalClassData(Long64_t objid, TSQLClassInfo *sqlinfo)
 {
    if (!sqlinfo->IsClassTableExist())
-      return 0;
+      return nullptr;
    TString sqlcmd;
    const char *quote = SQLIdentifierQuote();
    sqlcmd.Form("SELECT * FROM %s%s%s WHERE %s%s%s=%lld", quote, sqlinfo->GetClassTableName(), quote, quote,
@@ -2565,7 +2565,7 @@ Long64_t TSQLFile::StoreObjectInTables(Long64_t keyid, const void *obj, const TC
 
 const char *TSQLFile::SQLCompatibleType(Int_t typ) const
 {
-   return (typ < 0) || (typ > 18) ? 0 : fBasicTypes[typ];
+   return (typ < 0) || (typ > 18) ? nullptr : fBasicTypes[typ];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2670,7 +2670,7 @@ void TSQLFile::Streamer(TBuffer &b)
    TString sbuf;
 
    if (b.IsReading()) {
-      Version_t R__v = b.ReadVersion(0, 0);
+      Version_t R__v = b.ReadVersion(nullptr, nullptr);
       b.ClassBegin(TSQLFile::Class(), R__v);
 
       b.ClassMember("CreateTime", "TString");

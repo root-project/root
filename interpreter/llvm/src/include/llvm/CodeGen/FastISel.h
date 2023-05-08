@@ -20,7 +20,6 @@
 #include "llvm/CodeGen/MachineBasicBlock.h"
 #include "llvm/CodeGen/TargetLowering.h"
 #include "llvm/IR/Attributes.h"
-#include "llvm/IR/CallSite.h"
 #include "llvm/IR/CallingConv.h"
 #include "llvm/IR/DebugLoc.h"
 #include "llvm/IR/DerivedTypes.h"
@@ -86,16 +85,16 @@ public:
     const Value *Callee = nullptr;
     MCSymbol *Symbol = nullptr;
     ArgListTy Args;
-    ImmutableCallSite *CS = nullptr;
+    const CallBase *CB = nullptr;
     MachineInstr *Call = nullptr;
-    unsigned ResultReg = 0;
+    Register ResultReg;
     unsigned NumResultRegs = 0;
 
     SmallVector<Value *, 16> OutVals;
     SmallVector<ISD::ArgFlagsTy, 16> OutFlags;
-    SmallVector<unsigned, 16> OutRegs;
+    SmallVector<Register, 16> OutRegs;
     SmallVector<ISD::InputArg, 4> Ins;
-    SmallVector<unsigned, 4> InRegs;
+    SmallVector<Register, 4> InRegs;
 
     CallLoweringInfo()
         : RetSExt(false), RetZExt(false), IsVarArg(false), IsInReg(false),
@@ -103,14 +102,14 @@ public:
 
     CallLoweringInfo &setCallee(Type *ResultTy, FunctionType *FuncTy,
                                 const Value *Target, ArgListTy &&ArgsList,
-                                ImmutableCallSite &Call) {
+                                const CallBase &Call) {
       RetTy = ResultTy;
       Callee = Target;
 
       IsInReg = Call.hasRetAttr(Attribute::InReg);
       DoesNotReturn = Call.doesNotReturn();
       IsVarArg = FuncTy->isVarArg();
-      IsReturnValueUsed = !Call.getInstruction()->use_empty();
+      IsReturnValueUsed = !Call.use_empty();
       RetSExt = Call.hasRetAttr(Attribute::SExt);
       RetZExt = Call.hasRetAttr(Attribute::ZExt);
 
@@ -118,23 +117,23 @@ public:
       Args = std::move(ArgsList);
       NumFixedArgs = FuncTy->getNumParams();
 
-      CS = &Call;
+      CB = &Call;
 
       return *this;
     }
 
     CallLoweringInfo &setCallee(Type *ResultTy, FunctionType *FuncTy,
                                 MCSymbol *Target, ArgListTy &&ArgsList,
-                                ImmutableCallSite &Call,
+                                const CallBase &Call,
                                 unsigned FixedArgs = ~0U) {
       RetTy = ResultTy;
-      Callee = Call.getCalledValue();
+      Callee = Call.getCalledOperand();
       Symbol = Target;
 
       IsInReg = Call.hasRetAttr(Attribute::InReg);
       DoesNotReturn = Call.doesNotReturn();
       IsVarArg = FuncTy->isVarArg();
-      IsReturnValueUsed = !Call.getInstruction()->use_empty();
+      IsReturnValueUsed = !Call.use_empty();
       RetSExt = Call.hasRetAttr(Attribute::SExt);
       RetZExt = Call.hasRetAttr(Attribute::ZExt);
 
@@ -142,7 +141,7 @@ public:
       Args = std::move(ArgsList);
       NumFixedArgs = (FixedArgs == ~0U) ? FuncTy->getNumParams() : FixedArgs;
 
-      CS = &Call;
+      CB = &Call;
 
       return *this;
     }
@@ -199,7 +198,7 @@ public:
   };
 
 protected:
-  DenseMap<const Value *, unsigned> LocalValueMap;
+  DenseMap<const Value *, Register> LocalValueMap;
   FunctionLoweringInfo &FuncInfo;
   MachineFunction *MF;
   MachineRegisterInfo &MRI;
@@ -225,10 +224,6 @@ protected:
   /// makes sense (for example, on function calls)
   MachineInstr *EmitStartPt;
 
-  /// Last local value flush point. On a subsequent flush, no local value will
-  /// sink past this point.
-  MachineBasicBlock::iterator LastFlushPoint;
-
 public:
   virtual ~FastISel();
 
@@ -247,7 +242,7 @@ public:
   /// be appended.
   void startNewBlock();
 
-  /// Flush the local value map and sink local values if possible.
+  /// Flush the local value map.
   void finishBasicBlock();
 
   /// Return current debug location information.
@@ -270,16 +265,16 @@ public:
 
   /// Create a virtual register and arrange for it to be assigned the
   /// value for the given LLVM value.
-  unsigned getRegForValue(const Value *V);
+  Register getRegForValue(const Value *V);
 
   /// Look up the value to see if its value is already cached in a
   /// register. It may be defined by instructions across blocks or defined
   /// locally.
-  unsigned lookUpRegForValue(const Value *V);
+  Register lookUpRegForValue(const Value *V);
 
   /// This is a wrapper around getRegForValue that also takes care of
   /// truncating or sign-extending the given getelementptr index value.
-  std::pair<unsigned, bool> getRegForGEPIndex(const Value *Idx);
+  Register getRegForGEPIndex(const Value *Idx);
 
   /// We're checking to see if we can fold \p LI into \p FoldInst. Note
   /// that we could have a sequence where multiple LLVM IR instructions are
@@ -314,10 +309,7 @@ public:
   void removeDeadCode(MachineBasicBlock::iterator I,
                       MachineBasicBlock::iterator E);
 
-  struct SavePoint {
-    MachineBasicBlock::iterator InsertPt;
-    DebugLoc DL;
-  };
+  using SavePoint = MachineBasicBlock::iterator;
 
   /// Prepare InsertPt to begin inserting instructions into the local
   /// value area and return the old insert position.
@@ -355,27 +347,26 @@ protected:
 
   /// This method is called by target-independent code to request that an
   /// instruction with the given type, opcode, and register operand be emitted.
-  virtual unsigned fastEmit_r(MVT VT, MVT RetVT, unsigned Opcode, unsigned Op0,
-                              bool Op0IsKill);
+  virtual unsigned fastEmit_r(MVT VT, MVT RetVT, unsigned Opcode, unsigned Op0);
 
   /// This method is called by target-independent code to request that an
   /// instruction with the given type, opcode, and register operands be emitted.
   virtual unsigned fastEmit_rr(MVT VT, MVT RetVT, unsigned Opcode, unsigned Op0,
-                               bool Op0IsKill, unsigned Op1, bool Op1IsKill);
+                               unsigned Op1);
 
   /// This method is called by target-independent code to request that an
   /// instruction with the given type, opcode, and register and immediate
   /// operands be emitted.
   virtual unsigned fastEmit_ri(MVT VT, MVT RetVT, unsigned Opcode, unsigned Op0,
-                               bool Op0IsKill, uint64_t Imm);
+                               uint64_t Imm);
 
   /// This method is a wrapper of fastEmit_ri.
   ///
   /// It first tries to emit an instruction with an immediate operand using
   /// fastEmit_ri.  If that fails, it materializes the immediate into a register
   /// and try fastEmit_rr instead.
-  unsigned fastEmit_ri_(MVT VT, unsigned Opcode, unsigned Op0, bool Op0IsKill,
-                        uint64_t Imm, MVT ImmType);
+  Register fastEmit_ri_(MVT VT, unsigned Opcode, unsigned Op0, uint64_t Imm,
+                        MVT ImmType);
 
   /// This method is called by target-independent code to request that an
   /// instruction with the given type, opcode, and immediate operand be emitted.
@@ -389,66 +380,62 @@ protected:
 
   /// Emit a MachineInstr with no operands and a result register in the
   /// given register class.
-  unsigned fastEmitInst_(unsigned MachineInstOpcode,
+  Register fastEmitInst_(unsigned MachineInstOpcode,
                          const TargetRegisterClass *RC);
 
   /// Emit a MachineInstr with one register operand and a result register
   /// in the given register class.
-  unsigned fastEmitInst_r(unsigned MachineInstOpcode,
-                          const TargetRegisterClass *RC, unsigned Op0,
-                          bool Op0IsKill);
+  Register fastEmitInst_r(unsigned MachineInstOpcode,
+                          const TargetRegisterClass *RC, unsigned Op0);
 
   /// Emit a MachineInstr with two register operands and a result
   /// register in the given register class.
-  unsigned fastEmitInst_rr(unsigned MachineInstOpcode,
+  Register fastEmitInst_rr(unsigned MachineInstOpcode,
                            const TargetRegisterClass *RC, unsigned Op0,
-                           bool Op0IsKill, unsigned Op1, bool Op1IsKill);
+                           unsigned Op1);
 
   /// Emit a MachineInstr with three register operands and a result
   /// register in the given register class.
-  unsigned fastEmitInst_rrr(unsigned MachineInstOpcode,
+  Register fastEmitInst_rrr(unsigned MachineInstOpcode,
                             const TargetRegisterClass *RC, unsigned Op0,
-                            bool Op0IsKill, unsigned Op1, bool Op1IsKill,
-                            unsigned Op2, bool Op2IsKill);
+                            unsigned Op1, unsigned Op2);
 
   /// Emit a MachineInstr with a register operand, an immediate, and a
   /// result register in the given register class.
-  unsigned fastEmitInst_ri(unsigned MachineInstOpcode,
+  Register fastEmitInst_ri(unsigned MachineInstOpcode,
                            const TargetRegisterClass *RC, unsigned Op0,
-                           bool Op0IsKill, uint64_t Imm);
+                           uint64_t Imm);
 
   /// Emit a MachineInstr with one register operand and two immediate
   /// operands.
-  unsigned fastEmitInst_rii(unsigned MachineInstOpcode,
+  Register fastEmitInst_rii(unsigned MachineInstOpcode,
                             const TargetRegisterClass *RC, unsigned Op0,
-                            bool Op0IsKill, uint64_t Imm1, uint64_t Imm2);
+                            uint64_t Imm1, uint64_t Imm2);
 
   /// Emit a MachineInstr with a floating point immediate, and a result
   /// register in the given register class.
-  unsigned fastEmitInst_f(unsigned MachineInstOpcode,
+  Register fastEmitInst_f(unsigned MachineInstOpcode,
                           const TargetRegisterClass *RC,
                           const ConstantFP *FPImm);
 
   /// Emit a MachineInstr with two register operands, an immediate, and a
   /// result register in the given register class.
-  unsigned fastEmitInst_rri(unsigned MachineInstOpcode,
+  Register fastEmitInst_rri(unsigned MachineInstOpcode,
                             const TargetRegisterClass *RC, unsigned Op0,
-                            bool Op0IsKill, unsigned Op1, bool Op1IsKill,
-                            uint64_t Imm);
+                            unsigned Op1, uint64_t Imm);
 
   /// Emit a MachineInstr with a single immediate operand, and a result
   /// register in the given register class.
-  unsigned fastEmitInst_i(unsigned MachineInstOpcode,
+  Register fastEmitInst_i(unsigned MachineInstOpcode,
                           const TargetRegisterClass *RC, uint64_t Imm);
 
   /// Emit a MachineInstr for an extract_subreg from a specified index of
   /// a superregister to a specified type.
-  unsigned fastEmitInst_extractsubreg(MVT RetVT, unsigned Op0, bool Op0IsKill,
-                                      uint32_t Idx);
+  Register fastEmitInst_extractsubreg(MVT RetVT, unsigned Op0, uint32_t Idx);
 
   /// Emit MachineInstrs to compute the value of Op with all but the
   /// least significant bit set to zero.
-  unsigned fastEmitZExtFromI1(MVT VT, unsigned Op0, bool Op0IsKill);
+  Register fastEmitZExtFromI1(MVT VT, unsigned Op0);
 
   /// Emit an unconditional branch to the given block, unless it is the
   /// immediate (fall-through) successor, and update the CFG.
@@ -466,14 +453,14 @@ protected:
   /// NOTE: This is only necessary because we might select a block that uses a
   /// value before we select the block that defines the value. It might be
   /// possible to fix this by selecting blocks in reverse postorder.
-  void updateValueMap(const Value *I, unsigned Reg, unsigned NumRegs = 1);
+  void updateValueMap(const Value *I, Register Reg, unsigned NumRegs = 1);
 
-  unsigned createResultReg(const TargetRegisterClass *RC);
+  Register createResultReg(const TargetRegisterClass *RC);
 
   /// Try to constrain Op so that it is usable by argument OpNum of the
   /// provided MCInstrDesc. If this fails, create a new virtual register in the
   /// correct class and COPY the value there.
-  unsigned constrainOperandRegClass(const MCInstrDesc &II, unsigned Op,
+  Register constrainOperandRegClass(const MCInstrDesc &II, Register Op,
                                     unsigned OpNum);
 
   /// Emit a constant in a register using target-specific logic, such as
@@ -498,9 +485,6 @@ protected:
   /// - \c Add has a constant operand.
   bool canFoldAddIntoGEP(const User *GEP, const Value *Add);
 
-  /// Test whether the given value has exactly one use.
-  bool hasTrivialKill(const Value *V);
-
   /// Create a machine mem operand from the given instruction.
   MachineMemOperand *createMachineMemOperandFor(const Instruction *I) const;
 
@@ -510,18 +494,6 @@ protected:
   bool lowerCallTo(const CallInst *CI, const char *SymName,
                    unsigned NumArgs);
   bool lowerCallTo(CallLoweringInfo &CLI);
-
-  bool isCommutativeIntrinsic(IntrinsicInst const *II) {
-    switch (II->getIntrinsicID()) {
-    case Intrinsic::sadd_with_overflow:
-    case Intrinsic::uadd_with_overflow:
-    case Intrinsic::smul_with_overflow:
-    case Intrinsic::umul_with_overflow:
-      return true;
-    default:
-      return false;
-    }
-  }
 
   bool lowerCall(const CallInst *I);
   /// Select and emit code for a binary operator instruction, which has
@@ -534,11 +506,16 @@ protected:
   bool selectCall(const User *I);
   bool selectIntrinsicCall(const IntrinsicInst *II);
   bool selectBitCast(const User *I);
+  bool selectFreeze(const User *I);
   bool selectCast(const User *I, unsigned Opcode);
   bool selectExtractValue(const User *U);
-  bool selectInsertValue(const User *I);
   bool selectXRayCustomEvent(const CallInst *II);
   bool selectXRayTypedEvent(const CallInst *II);
+
+  bool shouldOptForSize(const MachineFunction *MF) const {
+    // TODO: Implement PGSO.
+    return MF->getFunction().hasOptSize();
+  }
 
 private:
   /// Handle PHI nodes in successor blocks.
@@ -552,12 +529,12 @@ private:
 
   /// Helper for materializeRegForValue to materialize a constant in a
   /// target-independent way.
-  unsigned materializeConstant(const Value *V, MVT VT);
+  Register materializeConstant(const Value *V, MVT VT);
 
   /// Helper for getRegForVale. This function is called when the value
   /// isn't already available in a register and must be materialized with new
   /// instructions.
-  unsigned materializeRegForValue(const Value *V, MVT VT);
+  Register materializeRegForValue(const Value *V, MVT VT);
 
   /// Clears LocalValueMap and moves the area for the new local variables
   /// to the beginning of the block. It helps to avoid spilling cached variables
@@ -566,20 +543,6 @@ private:
 
   /// Removes dead local value instructions after SavedLastLocalvalue.
   void removeDeadLocalValueCode(MachineInstr *SavedLastLocalValue);
-
-  struct InstOrderMap {
-    DenseMap<MachineInstr *, unsigned> Orders;
-    MachineInstr *FirstTerminator = nullptr;
-    unsigned FirstTerminatorOrder = std::numeric_limits<unsigned>::max();
-
-    void initialize(MachineBasicBlock *MBB,
-                    MachineBasicBlock::iterator LastFlushPoint);
-  };
-
-  /// Sinks the local value materialization instruction LocalMI to its first use
-  /// in the basic block, or deletes it if it is not used.
-  void sinkLocalValueMaterialization(MachineInstr &LocalMI, unsigned DefReg,
-                                     InstOrderMap &OrderMap);
 
   /// Insertion point before trying to select the current instruction.
   MachineBasicBlock::iterator SavedInsertPt;

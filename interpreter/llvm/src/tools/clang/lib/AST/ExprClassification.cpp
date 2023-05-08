@@ -53,8 +53,12 @@ Cl Expr::ClassifyImpl(ASTContext &Ctx, SourceLocation *Loc) const {
 
   // Enable this assertion for testing.
   switch (kind) {
-  case Cl::CL_LValue: assert(getValueKind() == VK_LValue); break;
-  case Cl::CL_XValue: assert(getValueKind() == VK_XValue); break;
+  case Cl::CL_LValue:
+    assert(isLValue());
+    break;
+  case Cl::CL_XValue:
+    assert(isXValue());
+    break;
   case Cl::CL_Function:
   case Cl::CL_Void:
   case Cl::CL_AddressableVoid:
@@ -64,7 +68,9 @@ Cl Expr::ClassifyImpl(ASTContext &Ctx, SourceLocation *Loc) const {
   case Cl::CL_ClassTemporary:
   case Cl::CL_ArrayTemporary:
   case Cl::CL_ObjCMessageRValue:
-  case Cl::CL_PRValue: assert(getValueKind() == VK_RValue); break;
+  case Cl::CL_PRValue:
+    assert(isPRValue());
+    break;
   }
 
   Cl::ModifiableType modifiable = Cl::CM_Untested;
@@ -89,7 +95,7 @@ static Cl::Kinds ClassifyExprValueKind(const LangOptions &Lang,
                                        const Expr *E,
                                        ExprValueKind Kind) {
   switch (Kind) {
-  case VK_RValue:
+  case VK_PRValue:
     return Lang.CPlusPlus ? ClassifyTemporary(E->getType()) : Cl::CL_PRValue;
   case VK_LValue:
     return Cl::CL_LValue;
@@ -124,6 +130,7 @@ static Cl::Kinds ClassifyInternal(ASTContext &Ctx, const Expr *E) {
   case Expr::ObjCPropertyRefExprClass:
     // C++ [expr.typeid]p1: The result of a typeid expression is an lvalue of...
   case Expr::CXXTypeidExprClass:
+  case Expr::CXXUuidofExprClass:
     // Unresolved lookups and uncorrected typos get classified as lvalues.
     // FIXME: Is this wise? Should they get their own kind?
   case Expr::UnresolvedLookupExprClass:
@@ -139,6 +146,8 @@ static Cl::Kinds ClassifyInternal(ASTContext &Ctx, const Expr *E) {
   case Expr::MSPropertyRefExprClass:
   case Expr::MSPropertySubscriptExprClass:
   case Expr::OMPArraySectionExprClass:
+  case Expr::OMPArrayShapingExprClass:
+  case Expr::OMPIteratorExprClass:
     return Cl::CL_LValue;
 
     // C99 6.5.2.5p5 says that compound literals are lvalues.
@@ -192,6 +201,8 @@ static Cl::Kinds ClassifyInternal(ASTContext &Ctx, const Expr *E) {
   case Expr::NoInitExprClass:
   case Expr::DesignatedInitUpdateExprClass:
   case Expr::SourceLocExprClass:
+  case Expr::ConceptSpecializationExprClass:
+  case Expr::RequiresExprClass:
     return Cl::CL_PRValue;
 
   case Expr::ConstantExprClass:
@@ -217,6 +228,10 @@ static Cl::Kinds ClassifyInternal(ASTContext &Ctx, const Expr *E) {
         return ClassifyInternal(Ctx, Base);
     }
     return Cl::CL_LValue;
+
+  // Subscripting matrix types behaves like member accesses.
+  case Expr::MatrixSubscriptExprClass:
+    return ClassifyInternal(Ctx, cast<MatrixSubscriptExpr>(E)->getBase());
 
     // C++ [expr.prim.general]p3: The result is an lvalue if the entity is a
     //   function or variable and a prvalue otherwise.
@@ -266,6 +281,7 @@ static Cl::Kinds ClassifyInternal(ASTContext &Ctx, const Expr *E) {
       return Cl::CL_PRValue;
     }
 
+  case Expr::RecoveryExprClass:
   case Expr::OpaqueValueExprClass:
     return ClassifyExprValueKind(Lang, E, E->getValueKind());
 
@@ -306,6 +322,10 @@ static Cl::Kinds ClassifyInternal(ASTContext &Ctx, const Expr *E) {
   case Expr::CUDAKernelCallExprClass:
     return ClassifyUnnamed(Ctx, cast<CallExpr>(E)->getCallReturnType(Ctx));
 
+  case Expr::CXXRewrittenBinaryOperatorClass:
+    return ClassifyInternal(
+        Ctx, cast<CXXRewrittenBinaryOperator>(E)->getSemanticForm());
+
     // __builtin_choose_expr is equivalent to the chosen expression.
   case Expr::ChooseExprClass:
     return ClassifyInternal(Ctx, cast<ChooseExpr>(E)->getChosenSubExpr());
@@ -342,6 +362,7 @@ static Cl::Kinds ClassifyInternal(ASTContext &Ctx, const Expr *E) {
   case Expr::CXXDynamicCastExprClass:
   case Expr::CXXReinterpretCastExprClass:
   case Expr::CXXConstCastExprClass:
+  case Expr::CXXAddrspaceCastExprClass:
   case Expr::ObjCBridgedCastExprClass:
   case Expr::BuiltinBitCastExprClass:
     // Only in C++ can casts be interesting at all.
@@ -396,9 +417,6 @@ static Cl::Kinds ClassifyInternal(ASTContext &Ctx, const Expr *E) {
     return Cl::CL_PRValue;
   }
 
-  case Expr::CXXUuidofExprClass:
-    return Cl::CL_LValue;
-
   case Expr::PackExpansionExprClass:
     return ClassifyInternal(Ctx, cast<PackExpansionExpr>(E)->getPattern());
 
@@ -412,7 +430,7 @@ static Cl::Kinds ClassifyInternal(ASTContext &Ctx, const Expr *E) {
     // contains only one element. In that case, we look at that element
     // for an exact classification. Init list creation takes care of the
     // value kind for us, so we only need to fine-tune.
-    if (E->isRValue())
+    if (E->isPRValue())
       return ClassifyExprValueKind(Lang, E, E->getValueKind());
     assert(cast<InitListExpr>(E)->getNumInits() == 1 &&
            "Only 1-element init lists can be glvalues.");
@@ -421,6 +439,9 @@ static Cl::Kinds ClassifyInternal(ASTContext &Ctx, const Expr *E) {
   case Expr::CoawaitExprClass:
   case Expr::CoyieldExprClass:
     return ClassifyInternal(Ctx, cast<CoroutineSuspendExpr>(E)->getResumeExpr());
+  case Expr::SYCLUniqueStableNameExprClass:
+    return Cl::CL_PRValue;
+    break;
   }
 
   llvm_unreachable("unhandled expression kind in classification");
@@ -441,11 +462,14 @@ static Cl::Kinds ClassifyDecl(ASTContext &Ctx, const Decl *D) {
 
   bool islvalue;
   if (const auto *NTTParm = dyn_cast<NonTypeTemplateParmDecl>(D))
-    islvalue = NTTParm->getType()->isReferenceType();
+    islvalue = NTTParm->getType()->isReferenceType() ||
+               NTTParm->getType()->isRecordType();
   else
     islvalue = isa<VarDecl>(D) || isa<FieldDecl>(D) ||
                isa<IndirectFieldDecl>(D) ||
                isa<BindingDecl>(D) ||
+               isa<MSGuidDecl>(D) ||
+               isa<TemplateParamObjectDecl>(D) ||
                (Ctx.getLangOpts().CPlusPlus &&
                 (isa<FunctionDecl>(D) || isa<MSPropertyDecl>(D) ||
                  isa<FunctionTemplateDecl>(D)));

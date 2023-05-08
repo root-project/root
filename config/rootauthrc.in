@@ -3,7 +3,7 @@
 #
 #  NB: this file contains system defaults read only in the case the 
 #      $HOME/.rootauthrc is non-existing or non-readable. Its content 
-#      can be included in the the private $HOME/.rootauthrc using the 
+#      can be included in the private $HOME/.rootauthrc using the 
 #      include directive (see below). The location of the private file
 #      can be changed by setting the environment variable ROOTAUTHRC
 #      to the appropriate absolute file pathname.

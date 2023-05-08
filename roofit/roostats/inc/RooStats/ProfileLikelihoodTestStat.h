@@ -20,8 +20,6 @@
 
 #include "RooRealVar.h"
 
-#include "RooNLLVar.h"
-
 #include "Math/MinimizerOptions.h"
 
 #include "RooStats/RooStatsUtils.h"
@@ -36,111 +34,100 @@ namespace RooStats {
    public:
      ProfileLikelihoodTestStat() {
         // Proof constructor. Do not use.
-        fPdf = 0;
-        fNll = 0;
-        fCachedBestFitParams = 0;
-        fLastData = 0;
-   fLimitType = twoSided;
-   fSigned = false;
+        fPdf = nullptr;
+        fCachedBestFitParams = nullptr;
+        fLastData = nullptr;
+        fLimitType = twoSided;
+        fSigned = false;
         fDetailedOutputWithErrorsAndPulls = false;
         fDetailedOutputEnabled = false;
-        fDetailedOutput = NULL;
-   fLOffset = RooStats::IsNLLOffset() ;
+        fDetailedOutput = nullptr;
+        fLOffset = RooStats::IsNLLOffset() ;
 
         fVarName = "Profile Likelihood Ratio";
         fReuseNll = false;
-   fMinimizer=::ROOT::Math::MinimizerOptions::DefaultMinimizerType().c_str();
-   fStrategy=::ROOT::Math::MinimizerOptions::DefaultStrategy();
+        fStrategy=::ROOT::Math::MinimizerOptions::DefaultStrategy();
         fTolerance=TMath::Max(1.,::ROOT::Math::MinimizerOptions::DefaultTolerance());
-   fPrintLevel=::ROOT::Math::MinimizerOptions::DefaultPrintLevel();
-
+        fPrintLevel=::ROOT::Math::MinimizerOptions::DefaultPrintLevel();
      }
+
      ProfileLikelihoodTestStat(RooAbsPdf& pdf) {
        fPdf = &pdf;
-       fNll = 0;
-       fCachedBestFitParams = 0;
-       fLastData = 0;
+       fCachedBestFitParams = nullptr;
+       fLastData = nullptr;
        fLimitType = twoSided;
        fSigned = false;
        fDetailedOutputWithErrorsAndPulls = false;
        fDetailedOutputEnabled = false;
-       fDetailedOutput = NULL;
+       fDetailedOutput = nullptr;
        fLOffset = RooStats::IsNLLOffset() ;
 
        fVarName = "Profile Likelihood Ratio";
        fReuseNll = false;
-       fMinimizer=::ROOT::Math::MinimizerOptions::DefaultMinimizerType().c_str();
        fStrategy=::ROOT::Math::MinimizerOptions::DefaultStrategy();
        // avoid default tolerance to be too small (1. is default in RooMinimizer)
        fTolerance=TMath::Max(1.,::ROOT::Math::MinimizerOptions::DefaultTolerance());
        fPrintLevel=::ROOT::Math::MinimizerOptions::DefaultPrintLevel();
      }
 
-     virtual ~ProfileLikelihoodTestStat() {
-       if(fNll) delete fNll;
+     ~ProfileLikelihoodTestStat() override {
        if(fCachedBestFitParams) delete fCachedBestFitParams;
        if(fDetailedOutput) delete fDetailedOutput;
      }
 
-     //LM use default copy constructor and assignment copying the pointers. Is this what we want ?
-
-     void SetOneSided(Bool_t flag=true) {fLimitType = (flag ? oneSided : twoSided);}
-     void SetOneSidedDiscovery(Bool_t flag=true) {fLimitType = (flag ? oneSidedDiscovery : twoSided);}
-     void SetSigned(Bool_t flag=true) {fSigned = flag;}  // +/- t_mu instead of t_mu>0 with one-sided settings
-     //void SetOneSidedDiscovery(Bool_t flag=true) {fOneSidedDiscovery = flag;}
+     void SetOneSided(bool flag=true) {fLimitType = (flag ? oneSided : twoSided);}
+     void SetOneSidedDiscovery(bool flag=true) {fLimitType = (flag ? oneSidedDiscovery : twoSided);}
+     void SetSigned(bool flag=true) {fSigned = flag;}  // +/- t_mu instead of t_mu>0 with one-sided settings
 
      bool IsTwoSided() const { return fLimitType == twoSided; }
      bool IsOneSidedDiscovery() const { return fLimitType == oneSidedDiscovery; }
 
-     static void SetAlwaysReuseNLL(Bool_t flag);
+     static void SetAlwaysReuseNLL(bool flag);
 
-     void SetReuseNLL(Bool_t flag) { fReuseNll = flag ; }
-     void SetLOffset(Bool_t flag=kTRUE) { fLOffset = flag ; }
+     void SetReuseNLL(bool flag) { fReuseNll = flag ; }
+     void SetLOffset(bool flag=true) { fLOffset = flag ; }
 
      void SetMinimizer(const char* minimizer){ fMinimizer=minimizer;}
      void SetStrategy(Int_t strategy){fStrategy=strategy;}
      void SetTolerance(double tol){fTolerance=tol;}
      void SetPrintLevel(Int_t printlevel){fPrintLevel=printlevel;}
 
-     // Main interface to evaluate the test statistic on a dataset
-     virtual Double_t Evaluate(RooAbsData& data, RooArgSet& paramsOfInterest) {
+     /// Main interface to evaluate the test statistic on a dataset
+     double Evaluate(RooAbsData& data, RooArgSet& paramsOfInterest) override {
         return EvaluateProfileLikelihood(0, data, paramsOfInterest);
      }
 
-     // evaluate  the profile likelihood ratio (type = 0) or the minimum of likelihood (type=1) or the conditional LL (type = 2)
-     virtual Double_t EvaluateProfileLikelihood(int type, RooAbsData &data, RooArgSet & paramsOfInterest);
+     /// evaluate  the profile likelihood ratio (type = 0) or the minimum of likelihood (type=1) or the conditional LL (type = 2)
+     virtual double EvaluateProfileLikelihood(int type, RooAbsData &data, RooArgSet & paramsOfInterest);
 
      virtual void EnableDetailedOutput( bool e=true, bool withErrorsAndPulls=false ) {
         fDetailedOutputEnabled = e;
         fDetailedOutputWithErrorsAndPulls = withErrorsAndPulls;
         delete fDetailedOutput;
-        fDetailedOutput = NULL;
+        fDetailedOutput = nullptr;
      }
-     virtual const RooArgSet* GetDetailedOutput(void) const {
-        // Returns detailed output. The value returned by this function is updated after each call to Evaluate().
-        // The returned RooArgSet contains the following:
-        // <ul>
-        // <li> the minimum nll, fitstatus and convergence quality for each fit </li>
-        // <li> for each fit and for each non-constant parameter, the value, error and pull of the parameter are stored </li>
-        // </ul>
-        return fDetailedOutput;
+     /// Returns detailed output. The value returned by this function is updated after each call to Evaluate().
+     /// The returned RooArgSet contains the following:
+     ///
+     ///  - the minimum nll, fitstatus and convergence quality for each fit
+     ///  - for each fit and for each non-constant parameter, the value, error and pull of the parameter are stored
+     ///
+     const RooArgSet* GetDetailedOutput(void) const override {
+      return fDetailedOutput;
      }
 
-     // set the conditional observables which will be used when creating the NLL
-     // so the pdf's will not be normalized on the conditional observables when computing the NLL
-     virtual void SetConditionalObservables(const RooArgSet& set) {fConditionalObs.removeAll(); fConditionalObs.add(set);}
+     /// set the conditional observables which will be used when creating the NLL
+     /// so the pdf's will not be normalized on the conditional observables when computing the NLL
+     void SetConditionalObservables(const RooArgSet& set) override {fConditionalObs.removeAll(); fConditionalObs.add(set);}
 
-     // set the global observables which will be used when creating the NLL
-     // so the constraint pdf's will be normalized correctly on the global observables when computing the NLL
-     virtual void SetGlobalObservables(const RooArgSet& set) {fGlobalObs.removeAll(); fGlobalObs.add(set);}
+     /// set the global observables which will be used when creating the NLL
+     /// so the constraint pdf's will be normalized correctly on the global observables when computing the NLL
+     void SetGlobalObservables(const RooArgSet& set) override {fGlobalObs.removeAll(); fGlobalObs.add(set);}
 
      virtual void SetVarName(const char* name) { fVarName = name; }
-     virtual const TString GetVarName() const {return fVarName;}
+     const TString GetVarName() const override {return fVarName;}
 
      virtual RooAbsPdf * GetPdf() const { return fPdf; }
-
-
-      //      const bool PValueIsRightTail(void) { return false; } // overwrites default
 
   private:
 
@@ -149,34 +136,34 @@ namespace RooStats {
    private:
 
       RooAbsPdf* fPdf;
-      RooAbsReal* fNll; //!
+      std::unique_ptr<RooAbsReal> fNll; //!
       const RooArgSet* fCachedBestFitParams;
       RooAbsData* fLastData;
-      //      Double_t fLastMLE;
+      //      double fLastMLE;
       LimitType fLimitType;
-      Bool_t fSigned;
+      bool fSigned;
 
-      // this will store a snapshot of the unconditional nuisance
-      // parameter fit.
+      /// this will store a snapshot of the unconditional nuisance
+      /// parameter fit.
       bool fDetailedOutputEnabled;
       bool fDetailedOutputWithErrorsAndPulls;
-      RooArgSet* fDetailedOutput; //!
-      RooArgSet fConditionalObs;    // conditional observables
-      RooArgSet fGlobalObs;    // global observables
+      RooArgSet* fDetailedOutput; ///<!
+      RooArgSet fConditionalObs;  ///< conditional observables
+      RooArgSet fGlobalObs;       ///< global observables
 
       TString fVarName;
 
-      static Bool_t fgAlwaysReuseNll ;
-      Bool_t fReuseNll ;
+      static bool fgAlwaysReuseNll ;
+      bool fReuseNll ;
       TString fMinimizer;
       Int_t fStrategy;
-      Double_t fTolerance;
+      double fTolerance;
       Int_t fPrintLevel;
-      Bool_t fLOffset ;
+      bool fLOffset ;
 
    protected:
 
-      ClassDef(ProfileLikelihoodTestStat,10)   // implements the profile likelihood ratio as a test statistic to be used with several tools
+      ClassDefOverride(ProfileLikelihoodTestStat,10)   // implements the profile likelihood ratio as a test statistic to be used with several tools
    };
 }
 

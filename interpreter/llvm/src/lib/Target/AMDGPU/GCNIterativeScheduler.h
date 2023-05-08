@@ -5,18 +5,20 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
+///
+/// \file
+/// This file defines the class GCNIterativeScheduler, which uses an iterative
+/// approach to find a best schedule for GCN architecture. It basically makes
+/// use of various lightweight schedules, scores them, chooses best one based on
+/// their scores, and finally implements the chosen one.
+///
+//===----------------------------------------------------------------------===//
 
 #ifndef LLVM_LIB_TARGET_AMDGPU_GCNITERATIVESCHEDULER_H
 #define LLVM_LIB_TARGET_AMDGPU_GCNITERATIVESCHEDULER_H
 
 #include "GCNRegPressure.h"
-#include "llvm/ADT/ArrayRef.h"
-#include "llvm/CodeGen/MachineBasicBlock.h"
 #include "llvm/CodeGen/MachineScheduler.h"
-#include "llvm/Support/Allocator.h"
-#include <limits>
-#include <memory>
-#include <vector>
 
 namespace llvm {
 

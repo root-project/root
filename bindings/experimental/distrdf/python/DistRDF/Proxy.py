@@ -1,27 +1,28 @@
-## @author Vincenzo Eduardo Padulano
+#  @author Vincenzo Eduardo Padulano
 #  @author Enric Tejedor
 #  @date 2021-02
 
 ################################################################################
-# Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.                      #
+# Copyright (C) 1995-2022, Rene Brun and Fons Rademakers.                      #
 # All rights reserved.                                                         #
 #                                                                              #
 # For the licensing terms see $ROOTSYS/LICENSE.                                #
 # For the list of contributors see $ROOTSYS/README/CREDITS.                    #
 ################################################################################
-
-from __future__ import print_function
+from __future__ import annotations
 
 import logging
-from abc import ABCMeta
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 from contextlib import contextmanager
+from functools import singledispatch
+from typing import Any, List, Optional, Union
 
 import ROOT
 
-from DistRDF.ComputationGraphGenerator import ComputationGraphGenerator
+from DistRDF import Operation
 from DistRDF.Node import Node
-from DistRDF.Operation import Operation
+
+logger = logging.getLogger(__name__)
 
 
 @contextmanager
@@ -42,12 +43,33 @@ def _managed_tcontext():
         ctxt.__destruct__()
 
 
-# Abstract class declaration
-# This ensures compatibility between Python 2 and 3 versions, since in
-# Python 2 there is no ABC class
-ABC = ABCMeta('ABC', (object,), {})
+def execute_graph(node: Node) -> None:
+    """
+    Executes the distributed RDataFrame computation graph the input node
+    belongs to. If the node already has a value, this is a no-op.
+    """
+    if node.value is None:  # If event-loop not triggered
+        # Creating a ROOT.TDirectory.TContext in a context manager so that
+        # ROOT.gDirectory won't be changed by the event loop execution.
+        with _managed_tcontext():
+            # All the information needed to reconstruct the computation graph on
+            # the workers is contained in the head node
+            node.get_head().execute_graph()
 
-logger = logging.getLogger(__name__)
+
+def _create_new_node(parent: Node, operation: Operation.Operation) -> Node:
+    """Creates a new node and inserts it in the computation graph"""
+
+    headnode = parent.get_head()
+    headnode.node_counter += 1
+
+    newnode = Node(parent.get_head, headnode.node_counter, operation, parent)
+
+    parent.nchildren += 1
+
+    headnode.graph_nodes.appendleft(newnode)
+
+    return newnode
 
 
 class Proxy(ABC):
@@ -59,7 +81,7 @@ class Proxy(ABC):
     proxied node from :obj:`True` to :obj:`False`.
     """
 
-    def __init__(self, node):
+    def __init__(self, node: Node):
         """
         Creates a new `Proxy` object for a given node.
 
@@ -86,6 +108,59 @@ class Proxy(ABC):
         self.proxied_node.has_user_references = False
 
 
+class VariationsProxy(Proxy):
+    """
+    Instances of VariationsProxy act as futures of the result produced
+    by a call to DistRDF.VariationsFor. The aim is to mimic the functionality of
+    ROOT::RDF::Experimental::RResultMap.
+    """
+
+    def __init__(self, node: Node):
+        super().__init__(node)
+        self._keys: Optional[List[str]] = None
+
+    def __getattr__(self, attr):
+        """
+        The __getattr__ of the Proxy base class is an abstract method. This
+        class has no attributes to present to the user.
+        """
+        raise AttributeError(f"'VariationsProxy' object has no attribute '{attr}'")
+
+    def __getitem__(self, key: str):
+        """
+        Equivalent of 'operator[]' of the RResultMap. Triggers the computation
+        graph, then returns the varied value linked to the 'key' name.
+        """
+        execute_graph(self.proxied_node)
+        try:
+            return self.proxied_node.value.GetVariation(key)
+        except ROOT.std.runtime_error as e:
+            raise KeyError(f"'{key}' is not a valid variation name in this branch of the graph. "
+                           f"Available variations are {self.GetKeys()}") from e
+
+    def GetKeys(self) -> List[str]:
+        """
+        Equivalent of 'GetKeys' of the RResultMap. Unlike its C++ counterpart,
+        at the moment we cannot retrieve the list of variation names for a
+        certain action without triggering the distributed computation graph. For
+        this reason, the function raises an error if the keys are accessed
+        before computations have been triggered. In the future the behaviour
+        should be aligned with the C++ counterpart.
+        """
+        if self.proxied_node.value is None:
+            # TODO:
+            # The event loop has not been triggered yet. Currently we can't retrieve
+            # the list of variation names without starting the distributed computations
+            raise RuntimeError("The list of variation names cannot be (yet) retrieved without starting the "
+                               "distributed computation graph. Please try to retrieve at least one variation value, "
+                               "then the list of variation names will be available. In the future, it will be possible "
+                               "to get the names without triggering.")
+        else:
+            if self._keys is None:
+                self._keys = [str(key) for key in self.proxied_node.value.GetKeys()]
+            return self._keys
+
+
 class ActionProxy(Proxy):
     """
     Instances of ActionProxy act as futures of the result produced
@@ -106,29 +181,13 @@ class ActionProxy(Proxy):
         self._cur_attr = attr  # Stores the name of operation call
         return self._call_action_result
 
-    def execute_graph(self):
-        """
-        Executes the distributed RDataFrame computation graph this proxy
-        belongs to. If the proxied node already has a value, this is a no-op.
-        """
-
-        # Creating a ROOT.TDirectory.TContext in a context manager so that
-        # ROOT.gDirectory won't be changed by the event loop execution.
-        with _managed_tcontext():
-            if not self.proxied_node.value:  # If event-loop not triggered
-                headnode = self.proxied_node.get_head()
-                generator = ComputationGraphGenerator(headnode)
-                headnode.backend.execute(generator)
-
     def GetValue(self):
         """
         Returns the result value of the current action node if it was executed
         before, else triggers the execution of the distributed graph before
         returning the value.
         """
-
-        self.execute_graph()
-
+        execute_graph(self.proxied_node)
         return self.proxied_node.value
 
     def _call_action_result(self, *args, **kwargs):
@@ -137,6 +196,14 @@ class ActionProxy(Proxy):
         result of the current action node.
         """
         return getattr(self.GetValue(), self._cur_attr)(*args, **kwargs)
+
+    def create_variations(self) -> VariationsProxy:
+        """
+        Creates a node responsible to signal the creation of variations in the
+        distributed computation graph, returning a specialized proxy to that
+        node. This function is usually called from DistRDF.VariationsFor.
+        """
+        return VariationsProxy(_create_new_node(self.proxied_node, Operation.create_op("VariationsFor")))
 
 
 class TransformationProxy(Proxy):
@@ -158,7 +225,7 @@ class TransformationProxy(Proxy):
 
         # if attr is a supported operation, start
         # operation and node creation
-        if attr in self.proxied_node.get_head().backend.supported_operations:
+        if attr in Operation.SUPPORTED_OPERATIONS:
             self.proxied_node._new_op_name = attr  # Stores new operation name
             return self._create_new_op
         else:
@@ -181,39 +248,41 @@ class TransformationProxy(Proxy):
         Handles an operation call to the current node and returns the new node
         built using the operation call.
         """
-        # Create a new `Operation` object for the
-        # incoming operation call
-        op = Operation(self.proxied_node._new_op_name, *args, **kwargs)
+        op = Operation.create_op(self.proxied_node._new_op_name, *args, **kwargs)
+        newnode = _create_new_node(self.proxied_node, op)
+        return get_proxy_for(op, newnode)
 
-        # Create a new `Node` object to house the operation
-        newNode = Node(operation=op, get_head=self.proxied_node.get_head)
 
-        # Logger debug statements
-        logger.debug("Created new {} node".format(op.name))
+@singledispatch
+def get_proxy_for(operation: Operation.Transformation, node: Node) -> TransformationProxy:
+    """"Returns appropriate proxy for the input node"""
+    return TransformationProxy(node)
 
-        # Add the new node as a child of the current node
-        self.proxied_node.children.append(newNode)
 
-        def _execute_instant_action():
-            headnode = self.proxied_node.get_head()
-            generator = ComputationGraphGenerator(headnode)
-            headnode.backend.execute(generator)
-            return newNode.value
+@get_proxy_for.register
+def _(operation: Operation.Action, node: Node) -> ActionProxy:
+    return ActionProxy(node)
 
-        # Return the appropriate proxy object for the node
-        if op.is_action():
-            return ActionProxy(newNode)
-        elif op.name == "AsNumpy":
-            if op.kwargs.get("lazy", False):
-                return ActionProxy(newNode)
-            else:
-                return _execute_instant_action()
-        elif op.name == "Snapshot":
-            if len(op.args) == 4:
-                # An RSnapshotOptions instance was passed as fourth argument
-                if op.args[3].fLazy:
-                    return ActionProxy(newNode)
-            else:
-                return _execute_instant_action()            
-        else:
-            return TransformationProxy(newNode)
+
+@get_proxy_for.register
+def _(operation: Operation.InstantAction, node: Node) -> Any:
+    execute_graph(node)
+    return node.value
+
+
+@get_proxy_for.register
+def _(operation: Operation.Snapshot, node: Node) -> Union[ActionProxy, Any]:
+    if len(operation.args) == 4:
+        # An RSnapshotOptions instance was passed as fourth argument
+        if operation.args[3].fLazy:
+            return get_proxy_for.dispatch(Operation.Action)(operation, node)
+
+    return get_proxy_for.dispatch(Operation.InstantAction)(operation, node)
+
+
+@get_proxy_for.register
+def _(operation: Operation.AsNumpy, node: Node) -> Union[ActionProxy, Any]:
+    if operation.kwargs.get("lazy", False):
+        return get_proxy_for.dispatch(Operation.Action)(operation, node)
+
+    return get_proxy_for.dispatch(Operation.InstantAction)(operation, node)

@@ -807,7 +807,7 @@ void TVirtualX::SetLineColor(Color_t /*cindex*/)
 ///          - n >  0 use dashed lines described by dash(n)
 ///                 e.g. n = 4,dash = (6,3,1,3) gives a dashed-dotted line
 ///                 with dash length 6 and a gap of 7 between dashes
-/// \param [in] dash(n)   dash segment lengths
+/// \param [in] dash      dash segment lengths
 
 void TVirtualX::SetLineType(Int_t /*n*/, Int_t * /*dash*/)
 {

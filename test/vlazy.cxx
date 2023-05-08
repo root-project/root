@@ -20,7 +20,7 @@ class do_downsample : public TElementPosActionF {
 private:
    const TMatrix &fOrigMatrix;
    const int row_lwb, col_lwb;
-   void Operation(Real_t &element) const
+   void Operation(Real_t &element) const override
        { element = fOrigMatrix((fI-row_lwb)*2+row_lwb,(fJ-col_lwb)*2+col_lwb); }
 public:
    do_downsample(const TMatrix &orig_matrix)
@@ -33,7 +33,7 @@ public:
 class downsample_matrix : public TMatrixFLazy {
 private:
    const TMatrix &fOrigMatrix;
-   void FillIn(TMatrixF &m) const;
+   void FillIn(TMatrixF &m) const override;
 public:
   downsample_matrix(const TMatrix &orig_matrix);
 };

@@ -1125,12 +1125,13 @@ TColor::~TColor()
 
 TColor::TColor(const TColor &color) : TNamed(color)
 {
-   ((TColor&)color).Copy(*this);
+   color.TColor::Copy(*this);
 }
 
 TColor &TColor::operator=(const TColor &color)
 {
-   ((TColor &)color).Copy(*this);
+   if (this != &color)
+      color.TColor::Copy(*this);
    return *this;
 }
 
@@ -1495,7 +1496,7 @@ ULong_t TColor::GetPixel() const
    if (gVirtualX && !gROOT->IsBatch()) {
       if (gApplication) {
          TApplication::NeedGraphicsLibs();
-         gApplication->InitializeGraphics();
+         gApplication->InitializeGraphics(gROOT->IsWebDisplay());
       }
       return gVirtualX->GetPixel(fNumber);
    }
@@ -1922,7 +1923,7 @@ Int_t TColor::GetColor(Int_t r, Int_t g, Int_t b)
    TColor *color = nullptr;
 
    // Look for color by name
-   if ((color = (TColor*) colors->FindObject(Form("#%02x%02x%02x", r, g, b))))
+   if ((color = (TColor*) colors->FindObject(TString::Format("#%02x%02x%02x", r, g, b).Data())))
       // We found the color by name, so we use that right away
       return color->GetNumber();
 
@@ -1956,7 +1957,7 @@ Int_t TColor::GetColor(Int_t r, Int_t g, Int_t b)
    // add it. Note name is of the form "#rrggbb" where rr, etc. are
    // hexadecimal numbers.
    color = new TColor(colors->GetLast()+1, rr, gg, bb,
-                      Form("#%02x%02x%02x", r, g, b));
+                      TString::Format("#%02x%02x%02x", r, g, b).Data());
 
    return color->GetNumber();
 }
@@ -1978,7 +1979,7 @@ Int_t TColor::GetColorBright(Int_t n)
    if (n < ncolors) color = (TColor*)colors->At(n);
    if (!color) return -1;
 
-   //Get the rgb of the the new bright color corresponding to color n
+   //Get the rgb of the new bright color corresponding to color n
    Float_t r,g,b;
    HLStoRGB(color->GetHue(), 1.2f*color->GetLight(), color->GetSaturation(), r, g, b);
 
@@ -1988,7 +1989,7 @@ Int_t TColor::GetColorBright(Int_t n)
    if (nb < ncolors) colorb = (TColor*)colors->At(nb);
    if (colorb) return nb;
    colorb = new TColor(nb,r,g,b);
-   colorb->SetName(Form("%s_bright",color->GetName()));
+   colorb->SetName(TString::Format("%s_bright",color->GetName()).Data());
    colors->AddAtAndExpand(colorb,nb);
    return nb;
 }
@@ -2010,7 +2011,7 @@ Int_t TColor::GetColorDark(Int_t n)
    if (n < ncolors) color = (TColor*)colors->At(n);
    if (!color) return -1;
 
-   //Get the rgb of the the new dark color corresponding to color n
+   //Get the rgb of the new dark color corresponding to color n
    Float_t r,g,b;
    HLStoRGB(color->GetHue(), 0.7f*color->GetLight(), color->GetSaturation(), r, g, b);
 
@@ -2020,14 +2021,15 @@ Int_t TColor::GetColorDark(Int_t n)
    if (nd < ncolors) colord = (TColor*)colors->At(nd);
    if (colord) return nd;
    colord = new TColor(nd,r,g,b);
-   colord->SetName(Form("%s_dark",color->GetName()));
+   colord->SetName(TString::Format("%s_dark",color->GetName()).Data());
    colors->AddAtAndExpand(colord,nd);
    return nd;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Static function: Returns the transparent color number corresponding to n.
-/// The transparency level is given by the alpha value a.
+/// The transparency level is given by the alpha value a. If a color with the same
+/// RGBa values already exists it is returned.
 
 Int_t TColor::GetColorTransparent(Int_t n, Float_t a)
 {
@@ -2035,10 +2037,21 @@ Int_t TColor::GetColorTransparent(Int_t n, Float_t a)
 
    TColor *color = gROOT->GetColor(n);
    if (color) {
+      TObjArray *colors = (TObjArray *)gROOT->GetListOfColors();
+      Int_t ncolors = colors->GetSize();
+      TColor *col = nullptr;
+      for (Int_t i = 0; i < ncolors; i++) {
+         col = (TColor *)colors->At(i);
+         if (col) {
+            if (col->GetRed()   == color->GetRed() && col->GetGreen() == color->GetGreen() &&
+                col->GetBlue()  == color->GetBlue() && col->GetAlpha() == a)
+               return col->GetNumber();
+         }
+      }
       TColor *colort = new TColor(gROOT->GetListOfColors()->GetLast()+1,
                                   color->GetRed(), color->GetGreen(), color->GetBlue());
       colort->SetAlpha(a);
-      colort->SetName(Form("%s_transparent",color->GetName()));
+      colort->SetName(TString::Format("%s_transparent",color->GetName()).Data());
       return colort->GetNumber();
    } else {
       ::Error("TColor::GetColorTransparent", "color with index %d not defined", n);
@@ -2170,21 +2183,18 @@ const char *TColor::PixelAsHexString(ULong_t pixel)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Save a color with index > 228 as a C++ statement(s) on output stream out.
+/// Return kFALSE if color not saved in the output stream
 
-void TColor::SaveColor(std::ostream &out, Int_t ci)
+Bool_t TColor::SaveColor(std::ostream &out, Int_t ci)
 {
+   if (ci <= 228)
+      return kFALSE;
+
    char quote = '"';
-   Float_t r,g,b,a;
-   Int_t ri, gi, bi;
-   TString cname;
 
    TColor *c = gROOT->GetColor(ci);
-   if (c) {
-      c->GetRGB(r, g, b);
-      a = c->GetAlpha();
-   } else {
-      return;
-   }
+   if (!c)
+      return kFALSE;
 
    if (gROOT->ClassSaved(TColor::Class())) {
       out << std::endl;
@@ -2194,17 +2204,24 @@ void TColor::SaveColor(std::ostream &out, Int_t ci)
       out << "   TColor *color; // for color definition with alpha" << std::endl;
    }
 
-   if (a<1) {
+   Float_t r, g, b, a;
+
+   c->GetRGB(r, g, b);
+   a = c->GetAlpha();
+
+   if (a < 1.) {
       out<<"   ci = "<<ci<<";"<<std::endl;
       out<<"   color = new TColor(ci, "<<r<<", "<<g<<", "<<b<<", "
       <<"\" \", "<<a<<");"<<std::endl;
    } else {
-      ri = (Int_t)(255*r);
-      gi = (Int_t)(255*g);
-      bi = (Int_t)(255*b);
-      cname.Form("#%02x%02x%02x", ri, gi, bi);
+      Int_t ri = (Int_t)(255*r),
+            gi = (Int_t)(255*g),
+            bi = (Int_t)(255*b);
+      TString cname = TString::Format("#%02x%02x%02x", ri, gi, bi);
       out<<"   ci = TColor::GetColor("<<quote<<cname.Data()<<quote<<");"<<std::endl;
    }
+
+   return kTRUE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2314,8 +2331,14 @@ Int_t TColor::CreateColorTableFromFile(TString fileName, Float_t alpha)
 ///   - Red, Green, Blue: The end point color values.
 ///                       Each entry must be on [0, 1]
 ///   - NColors: Total number of colors in the table. Must be at least 1.
+///   - alpha: the opacity factor, between 0 and 1. Default is no transparency (1).
+///   - setPalette: activate the newly created palette (true by default). If false,
+///                 the caller is in charge of calling TColor::SetPalette using the
+///                 return value of the function (first palette color index) and
+///                 reconstructing the Int_t palette[NColors+1] array.
 ///
-/// Returns a positive value on success and -1 on error.
+/// Returns a positive value (the index of the first color of the palette) on
+/// success and -1 on error.
 ///
 /// The table is constructed by tracing lines between the given points in
 /// RGB space.  Each color value may have a value between 0 and 1.  The
@@ -2351,7 +2374,8 @@ Int_t TColor::CreateColorTableFromFile(TString fileName, Float_t alpha)
 
 Int_t TColor::CreateGradientColorTable(UInt_t Number, Double_t* Stops,
                               Double_t* Red, Double_t* Green,
-                              Double_t* Blue, UInt_t NColors, Float_t alpha)
+                              Double_t* Blue, UInt_t NColors, Float_t alpha,
+                                      Bool_t setPalette)
 {
    TColor::InitializeColors();
 
@@ -2399,7 +2423,8 @@ Int_t TColor::CreateGradientColorTable(UInt_t Number, Double_t* Stops,
       }
    }
 
-   TColor::SetPalette(nPalette, palette);
+   if (setPalette)
+      TColor::SetPalette(nPalette, palette);
    delete [] palette;
    return gHighestColorIndex + 1 - NColors;
 }

@@ -74,6 +74,13 @@ namespace clang {
   private:
     SmallVector<FunctionDecl *, 8> DeferredInlineMemberFuncDefs;
 
+    static llvm::StringRef ExpandModuleName(llvm::StringRef ModuleName,
+                                            const CodeGenOptions &CGO) {
+      if (ModuleName == "-" && !CGO.MainFileName.empty())
+        return CGO.MainFileName;
+      return ModuleName;
+    }
+
   public:
     CodeGeneratorImpl(DiagnosticsEngine &diags, llvm::StringRef ModuleName,
                       const HeaderSearchOptions &HSO,
@@ -82,7 +89,8 @@ namespace clang {
                       CoverageSourceInfo *CoverageInfo = nullptr)
         : Diags(diags), Ctx(nullptr), HeaderSearchOpts(HSO),
           PreprocessorOpts(PPO), CodeGenOpts(CGO), HandlingTopLevelDecls(0),
-          CoverageInfo(CoverageInfo), M(new llvm::Module(ModuleName, C)) {
+          CoverageInfo(CoverageInfo),
+          M(new llvm::Module(ExpandModuleName(ModuleName, CGO), C)) {
       C.setDiscardValueNames(CGO.DiscardValueNames);
     }
 
@@ -195,8 +203,7 @@ namespace clang {
       out << " DeferredDeclsToEmit (std::vector<DeferredGlobal>)\n";
       for(auto I = Builder->DeferredDeclsToEmit.begin(),
             E = Builder->DeferredDeclsToEmit.end(); I != E; ++I) {
-        I->GD.getDecl()->print(out);
-        I->GV->print(out);
+        I->getDecl()->print(out);
         out << "\n";
       }
 
@@ -289,7 +296,7 @@ namespace clang {
     llvm::Module *StartModule(llvm::StringRef ModuleName,
                               llvm::LLVMContext &C) {
       assert(!M && "Replacing existing Module?");
-      M.reset(new llvm::Module(ModuleName, C));
+      M.reset(new llvm::Module(ExpandModuleName(ModuleName, CodeGenOpts), C));
       Initialize(*Ctx);
       return M.get();
     }
@@ -313,7 +320,7 @@ namespace clang {
       Ctx = &Context;
 
       M->setTargetTriple(Ctx->getTargetInfo().getTriple().getTriple());
-      M->setDataLayout(Ctx->getTargetInfo().getDataLayout());
+      M->setDataLayout(Ctx->getTargetInfo().getDataLayoutString());
       const auto &SDKVersion = Ctx->getTargetInfo().getSDKVersion();
       if (!SDKVersion.empty())
         M->setSDKVersion(SDKVersion);
@@ -415,6 +422,9 @@ namespace clang {
           if (auto *DRD = dyn_cast<OMPDeclareReductionDecl>(Member)) {
             if (Ctx->DeclMustBeEmitted(DRD))
               Builder->EmitGlobal(DRD);
+          } else if (auto *DMD = dyn_cast<OMPDeclareMapperDecl>(Member)) {
+            if (Ctx->DeclMustBeEmitted(DMD))
+              Builder->EmitGlobal(DMD);
           }
         }
       }
@@ -460,6 +470,10 @@ namespace clang {
         return;
 
       Builder->EmitTentativeDefinition(D);
+    }
+
+    void CompleteExternalDeclaration(VarDecl *D) override {
+      Builder->EmitExternalDeclaration(D);
     }
 
     void HandleVTable(CXXRecordDecl *RD) override {

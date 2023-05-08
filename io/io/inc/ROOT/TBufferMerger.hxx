@@ -14,7 +14,6 @@
 
 #include "TFileMerger.h"
 #include "TMemFile.h"
-#include "RConfig.h" /// R__DEPRECATED
 
 #include <functional>
 #include <memory>
@@ -107,7 +106,7 @@ public:
       fMerger.SetNotrees(notrees);
    }
 
-   /** Returns whether the the file has been marked as not containing any TTree objects
+   /** Returns whether the file has been marked as not containing any TTree objects
     * and thus that steps that are specific to TTree can be skipped */
    Bool_t GetNotrees() const
    {
@@ -213,14 +212,6 @@ public:
 
    ClassDefOverride(TBufferMergerFile, 0);
 };
-
-namespace Experimental {
-using TBufferMerger R__DEPRECATED(
-   6, 28, "Please use ROOT::TBufferMerger instead of ROOT::Experimental::TBufferMerger.") = ::ROOT::TBufferMerger;
-using TBufferMergerFile
-   R__DEPRECATED(6, 28, "Please use ROOT::TBufferMergerFile instead of ROOT::Experimental::TBufferMergerFile.") =
-      ::ROOT::TBufferMergerFile;
-} // namespace Experimental
 
 } // namespace ROOT
 

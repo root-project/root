@@ -113,7 +113,7 @@ accessed via a global name (third column).
        36                    open square diagonal kOpenSquareDiagonal
        37                    open three triangle  kOpenThreeTriangles
        38                    octagon with cross   kOctagonCross
-       39                    full three trangles  kFullThreeTriangles
+       39                    full three triangles kFullThreeTriangles
        40                    open four triangleX  kOpenFourTrianglesX
        41                    full four triangleX  kFullFourTrianglesX
        42                    open double diamond  kOpenDoubleDiamond
@@ -305,10 +305,10 @@ Width_t TAttMarker::GetMarkerLineWidth(Style_t style)
    if (style >= 50)
       return ((style - 50) / 18) + 2;
    else if (style == 2 || style == 3 || style == 4 || style == 5
-	    || style == 24 || style == 25 || style == 26 || style == 27
-	    || style == 28 || style == 30 || style == 31 || style == 32
-	    || style == 35 || style == 36 || style == 37 || style == 38
-	    || style == 40 || style == 42 || style == 44 || style == 46)
+       || style == 24 || style == 25 || style == 26 || style == 27
+       || style == 28 || style == 30 || style == 31 || style == 32
+       || style == 35 || style == 36 || style == 37 || style == 38
+       || style == 40 || style == 42 || style == 44 || style == 46)
       return 1;
    else
       return 0;
@@ -345,10 +345,9 @@ void TAttMarker::ResetAttMarker(Option_t *)
 void TAttMarker::SaveMarkerAttributes(std::ostream &out, const char *name, Int_t coldef, Int_t stydef, Int_t sizdef)
 {
    if (fMarkerColor != coldef) {
-      if (fMarkerColor > 228) {
-         TColor::SaveColor(out, fMarkerColor);
+      if (TColor::SaveColor(out, fMarkerColor))
          out<<"   "<<name<<"->SetMarkerColor(ci);" << std::endl;
-      } else
+      else
          out<<"   "<<name<<"->SetMarkerColor("<<fMarkerColor<<");"<<std::endl;
    }
    if (fMarkerStyle != stydef) {

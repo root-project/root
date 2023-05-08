@@ -1,5 +1,5 @@
 // @(#)root/tmva $Id$
-// Author: Matt Jachowski 
+// Author: Matt Jachowski
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
@@ -19,7 +19,7 @@
  * modification, are permitted according to the terms listed in LICENSE           *
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
- 
+
 
 #ifndef ROOT_TMVA_TNeuronInput
 #define ROOT_TMVA_TNeuronInput
@@ -38,9 +38,9 @@
 namespace TMVA {
 
    class TNeuron;
-  
+
    class TNeuronInput {
-    
+
    public:
 
       TNeuronInput() {}

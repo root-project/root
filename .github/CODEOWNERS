@@ -9,7 +9,7 @@
 
 # Coarse-grained ownership
 * @Axel-Naumann
-/bindings/ @etejedor
+/bindings/ @Axel-Naumann @vepadulano
 /core/ @Axel-Naumann @pcanal
 /documentation/ @couet
 /fonts/ @bellenot
@@ -22,6 +22,7 @@
 /icons/ @bellenot
 /interpreter/ @Axel-Naumann
 /interpreter/llvm/ @vgvassilev
+interpreter/cling/tools/packaging @vgvassilev
 /io/ @pcanal
 /io/xml/ @pcanal @linev
 /main/ @pcanal
@@ -34,17 +35,18 @@
 /roofit/ @lmoneta @guitargeek @hageboeck
 /rootx/ @Axel-Naumann
 /sql/ @pcanal @linev
-/tmva/ @lmoneta @ashlaban @stwunsch @sitongan
+/tmva/ @lmoneta @sitongan
 /tree/ @pcanal
 /tutorials/ @couet
-/tree/dataframe @eguiraud
+/tree/dataframe/ @eguiraud
+/tree/readspeed/ @eguiraud
 /tree/ntuple/v7/ @jblomer
 
 # Projects that span over several code modules:
 /bindings/r/ @omazapa
 /core/imt/ @eguiraud
 /core/multiproc/ @eguiraud
-/graf2d/cocoa/ @TimurP
+/graf2d/cocoa/ @couet
 /graf3d/eve/ @osschar
 /graf3d/eve7/ @osschar @linev
 

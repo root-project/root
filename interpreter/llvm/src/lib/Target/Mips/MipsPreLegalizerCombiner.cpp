@@ -17,6 +17,7 @@
 #include "llvm/CodeGen/GlobalISel/CombinerInfo.h"
 #include "llvm/CodeGen/GlobalISel/MIPatternMatch.h"
 #include "llvm/CodeGen/TargetPassConfig.h"
+#include "llvm/InitializePasses.h"
 
 #define DEBUG_TYPE "mips-prelegalizer-combiner"
 
@@ -27,7 +28,8 @@ class MipsPreLegalizerCombinerInfo : public CombinerInfo {
 public:
   MipsPreLegalizerCombinerInfo()
       : CombinerInfo(/*AllowIllegalOps*/ true, /*ShouldLegalizeIllegal*/ false,
-                     /*LegalizerInfo*/ nullptr) {}
+                     /*LegalizerInfo*/ nullptr, /*EnableOpt*/ false,
+                     /*EnableOptSize*/ false, /*EnableMinSize*/ false) {}
   virtual bool combine(GISelChangeObserver &Observer, MachineInstr &MI,
                        MachineIRBuilder &B) const override;
 };
@@ -40,11 +42,26 @@ bool MipsPreLegalizerCombinerInfo::combine(GISelChangeObserver &Observer,
   switch (MI.getOpcode()) {
   default:
     return false;
+  case TargetOpcode::G_MEMCPY_INLINE:
+    return Helper.tryEmitMemcpyInline(MI);
   case TargetOpcode::G_LOAD:
   case TargetOpcode::G_SEXTLOAD:
-  case TargetOpcode::G_ZEXTLOAD:
+  case TargetOpcode::G_ZEXTLOAD: {
+    // Don't attempt to combine non power of 2 loads or unaligned loads when
+    // subtarget doesn't support them.
+    auto MMO = *MI.memoperands_begin();
+    const MipsSubtarget &STI =
+        static_cast<const MipsSubtarget &>(MI.getMF()->getSubtarget());
+    if (!isPowerOf2_64(MMO->getSize()))
+      return false;
+    bool isUnaligned = MMO->getAlign() < MMO->getSize();
+    if (!STI.systemSupportsUnalignedAccess() && isUnaligned)
+      return false;
+
     return Helper.tryCombineExtendingLoads(MI);
   }
+  }
+
   return false;
 }
 

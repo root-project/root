@@ -7,6 +7,7 @@
 #include <RooRandom.h>
 #include <RooDataHist.h>
 #include <RooDataSet.h>
+#include <RooHelpers.h>
 #include <RooRealVar.h>
 #include <RooWorkspace.h>
 
@@ -15,55 +16,38 @@
 // GitHub issue 9118: Problem running weighted binned fit in batch mode
 TEST(SumW2Error, BatchMode)
 {
-   auto &msg = RooMsgService::instance();
-   msg.setGlobalKillBelow(RooFit::WARNING);
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
 
    RooWorkspace ws{"workspace"};
    ws.factory("Gaussian::sig(x[0,0,10],mu[3,0,10],s[1, 0.1, 5])");
    ws.factory("Exponential::bkg(x,c1[-0.5, -3, -0.1])");
    ws.factory("SUM::model(f[0.2, 0.0, 1.0] * sig, bkg)");
 
-   auto &x = *ws.var("x");
-   auto &mu = *ws.var("mu");
-   auto &s = *ws.var("s");
-   auto &c1 = *ws.var("c1");
-   auto &f = *ws.var("f");
-
    auto &model = *ws.pdf("model");
 
-   auto resetParametersToInitialFitValues = [&]() {
-      mu.setVal(4.0);
-      mu.setError(0.0);
-      s.setVal(2.0);
-      s.setError(0.0);
-      c1.setVal(-0.4);
-      c1.setError(0.0);
-      f.setVal(0.3);
-      f.setError(0.0);
-   };
-
-   std::size_t nEvents = 1000;
-
    RooRandom::randomGenerator()->SetSeed(4357);
-   std::unique_ptr<RooAbsData> dataHist{model.generateBinned(x, nEvents)};
-   std::unique_ptr<RooAbsData> dataSet{model.generate(x, nEvents)};
+   std::unique_ptr<RooDataSet> dataSet{model.generate(*ws.var("x"), 1000)};
+
+   RooArgSet params;
+   RooArgSet initialParams;
+
+   model.getParameters(dataSet->get(), params);
+   params.snapshot(initialParams);
 
    // these datasets will be filled with a weight that is not unity
-   RooRealVar weight("weight", "weight", 0.5, 0.0, 1.0);
-   RooDataHist dataHistWeighted("dataHistWeighted", "dataHistWeighted", x);
-   RooDataSet dataSetWeighted("dataSetWeighted", "dataSetWeighted", {x, weight}, "weight");
+   RooDataSet dataSetWeighted("dataSetWeighted", "dataSetWeighted", *dataSet->get(), RooFit::WeightVar());
 
-   for (std::size_t i = 0; i < nEvents; ++i) {
-      dataHistWeighted.add(*dataSet->get(), 0.5); // filling the histogram from a dataset is easier
-      dataSetWeighted.add(*dataSet->get(), 0.5);
+   for (int i = 0; i < dataSet->numEntries(); ++i) {
+      dataSetWeighted.add(*dataSet->get(i), 0.5);
    }
 
-   auto fit = [&](RooAbsData &data, bool sumw2 = false, bool batchmode = false, std::string const &minimizer = "Minuit",
-                  int printLevel = -1) {
+   std::unique_ptr<RooDataHist> dataHist{dataSet->binnedClone()};
+   std::unique_ptr<RooDataHist> dataHistWeighted{dataSetWeighted.binnedClone()};
+
+   auto fit = [&](RooAbsData &data, bool sumw2, bool batchmode, std::string const &minimizer, int printLevel = -1) {
+      params.assign(initialParams);
+
       using namespace RooFit;
-
-      resetParametersToInitialFitValues();
-
       return std::unique_ptr<RooFitResult>{model.fitTo(data, Save(), SumW2Error(sumw2), Strategy(1),
                                                        BatchMode(batchmode), Minimizer(minimizer.c_str()),
                                                        PrintLevel(printLevel))};
@@ -97,16 +81,18 @@ TEST(SumW2Error, BatchMode)
    // Compare batch mode vs. scalar mode for SumW2 fits on WEIGHTED datasets
    EXPECT_TRUE(fit(dataSetWeighted, 1, 0, "Minuit")->isIdenticalNoCov(*fit(dataSetWeighted, 1, 1, "Minuit")))
       << " different results for Minuit fit to weighted RooDataSet with SumW2Error correction.";
-   EXPECT_TRUE(fit(dataHistWeighted, 1, 0, "Minuit")->isIdenticalNoCov(*fit(dataHistWeighted, 1, 1, "Minuit")))
+   EXPECT_TRUE(fit(*dataHistWeighted, 1, 0, "Minuit")->isIdenticalNoCov(*fit(*dataHistWeighted, 1, 1, "Minuit")))
       << " different results for Minuit fit to weighted RooDataHist with SumW2Error correction.";
    EXPECT_TRUE(fit(dataSetWeighted, 1, 0, "Minuit2")->isIdenticalNoCov(*fit(dataSetWeighted, 1, 1, "Minuit2")))
       << " different results for Minuit2 fit to weighted RooDataSet with SumW2Error correction.";
-   EXPECT_TRUE(fit(dataHistWeighted, 1, 0, "Minuit2")->isIdenticalNoCov(*fit(dataHistWeighted, 1, 1, "Minuit2")))
+   EXPECT_TRUE(fit(*dataHistWeighted, 1, 0, "Minuit2")->isIdenticalNoCov(*fit(*dataHistWeighted, 1, 1, "Minuit2")))
       << " different results for Minuit2 fit to weighted RooDataHist with SumW2Error correction.";
 }
 
 TEST(SumW2Error, ExtendedFit)
 {
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
    using namespace RooFit;
 
    RooWorkspace ws("workspace");
@@ -139,20 +125,14 @@ TEST(SumW2Error, ExtendedFit)
                    w->GetName()};
    RooDataHist datahist{"datahist", "datahist", *data.get(), data};
 
-   std::vector<std::pair<std::string, double>> inVals;
-   for (auto const *v : ws.allVars()) {
-      inVals.emplace_back(v->GetName(), static_cast<RooRealVar const *>(v)->getVal());
-   }
+   RooArgSet params;
+   RooArgSet initialParams;
 
-   auto resetVals = [&]() {
-      for (auto const &item : inVals) {
-         ws.var(item.first.c_str())->setError(0.0);
-         ws.var(item.first.c_str())->setVal(item.second);
-      }
-   };
+   shp->getParameters(dataNoWeights->get(), params);
+   params.snapshot(initialParams);
 
    auto doFit = [&](bool batchMode, bool sumW2Error, const char *range) {
-      resetVals();
+      params.assign(initialParams);
       return std::unique_ptr<RooFitResult>{shp->fitTo(datahist, Extended(), Range(range), Save(),
                                                       SumW2Error(sumW2Error), Strategy(1), PrintLevel(-1),
                                                       BatchMode(batchMode), Minimizer("Minuit2", "migrad"))};

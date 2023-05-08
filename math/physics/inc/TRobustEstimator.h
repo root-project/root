@@ -75,7 +75,7 @@ public:
 
    TRobustEstimator();
    TRobustEstimator(Int_t nvectors, Int_t nvariables, Int_t hh=0);
-   virtual ~TRobustEstimator(){;}
+   ~TRobustEstimator() override {}
 
    void    AddColumn(Double_t *col);         //adds a column to the data matrix
    void    AddRow(Double_t *row);            //adds a row to the data matrix
@@ -86,8 +86,8 @@ public:
    Int_t   GetBDPoint();                     //returns the breakdown point of the algorithm
 
    /// returns a reference to the data matrix
-   const TMatrixD & GetData() { return fData; } 
-   
+   const TMatrixD & GetData() { return fData; }
+
    void    GetCovariance(TMatrixDSym &matr); //returns robust covariance matrix estimate
    const   TMatrixDSym* GetCovariance() const{return &fCovariance;}
    void    GetCorrelation(TMatrixDSym &matr); //returns robust correlation matrix estimate
@@ -107,7 +107,7 @@ public:
                       //cutoff value, should be considered outliers!
    Double_t GetChiQuant(Int_t i) const;
 
-   ClassDef(TRobustEstimator,1)  //Minimum Covariance Determinant Estimator
+   ClassDefOverride(TRobustEstimator,1)  //Minimum Covariance Determinant Estimator
 
 };
 

@@ -112,7 +112,7 @@ TGButtonGroup::TGButtonGroup(const TGWindow *parent,
                              UInt_t options,
                              GContext_t norm,
                              FontStruct_t font,
-                             ULong_t back) :
+                             Pixel_t back) :
    TGGroupFrame(parent, new TGString(title), options, norm, font, back)
 {
    Init();
@@ -138,7 +138,7 @@ TGButtonGroup::TGButtonGroup(const TGWindow *parent,
                              const TString &title,
                              GContext_t norm ,
                              FontStruct_t font ,
-                             ULong_t back) :
+                             Pixel_t back) :
    TGGroupFrame(parent, new TGString(title), 0, norm, font, back)
 {
    Init();

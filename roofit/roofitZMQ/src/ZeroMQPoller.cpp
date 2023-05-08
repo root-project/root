@@ -82,7 +82,7 @@ std::vector<std::pair<size_t, zmq::event_flags>> ZeroMQPoller::poll(int timeo)
  * of when this is useful: http://api.zeromq.org/
  *
  * \param[in] timeo Timeout in milliseconds. 0 means return immediately. -1 means wait for an event indefinitely.
- * \param[in] sigmask A non-NULL pointer to a signal mask must be constructed and passed to 'sigmask'. See the man page
+ * \param[in] sigmask A non-nullptr pointer to a signal mask must be constructed and passed to 'sigmask'. See the man page
  * of sigprocmask(2) for more details on this. \return A vector of pairs of index and flags; index is the index of the
  * registered fd or socket and flags are 0 (no events), ZMQ_POLLIN or ZMQ_POLLOUT.
  *

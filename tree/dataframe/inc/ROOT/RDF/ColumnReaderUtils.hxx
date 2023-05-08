@@ -16,6 +16,7 @@
 #include "RDefineBase.hxx"
 #include "RDefineReader.hxx"
 #include "RDSColumnReader.hxx"
+#include "RLoopManager.hxx"
 #include "RTreeColumnReader.hxx"
 #include "RVariationBase.hxx"
 #include "RVariationReader.hxx"
@@ -40,100 +41,57 @@ using namespace ROOT::TypeTraits;
 namespace RDFDetail = ROOT::Detail::RDF;
 
 template <typename T>
-std::unique_ptr<RDFDetail::RColumnReaderBase>
-MakeColumnReader(unsigned int slot, RDefineBase *define,
-                 const std::map<std::string, std::vector<void *>> &DSValuePtrsMap, TTreeReader *r,
-                 ROOT::RDF::RDataSource *ds, const std::string &colName, RVariationBase *variation,
-                 const std::string &variationName)
+RDFDetail::RColumnReaderBase *GetColumnReader(unsigned int slot, RColumnReaderBase *defineOrVariationReader,
+                                              RLoopManager &lm, TTreeReader *r, const std::string &colName)
 {
-   using Ret_t = std::unique_ptr<RDFDetail::RColumnReaderBase>;
+   if (defineOrVariationReader != nullptr)
+      return defineOrVariationReader;
 
-   // variations have precedence over everything else: if this is not null, it means we are in the
-   // universe where this variation applies.
-   if (variation != nullptr)
-      return Ret_t{new RVariationReader(slot, colName, variationName, *variation, typeid(T))};
-
-   // defines come second, so that Redefine'd columns have precedence over dataset columns
-   if (define != nullptr) {
-      if (variationName != "nominal" && IsStrInVec(variationName, define->GetVariations()))
-         define = &define->GetVariedDefine(variationName);
-      return Ret_t{new RDefineReader(slot, *define, typeid(T))};
-   }
-
-   const auto DSValuePtrsIt = DSValuePtrsMap.find(colName);
-   if (DSValuePtrsIt != DSValuePtrsMap.end()) {
-      // reading from a RDataSource with the old column reader interface
-      const std::vector<void *> &DSValuePtrs = DSValuePtrsIt->second;
-      return Ret_t(new RDSColumnReader<T>(DSValuePtrs[slot]));
-   }
-
-   if (ds != nullptr) {
-      // reading from a RDataSource with the new column reader interface
-      return ds->GetColumnReaders(slot, colName, typeid(T));
-   }
+   // Check if we already inserted a reader for this column in the dataset column readers (RDataSource or Tree/TChain
+   // readers)
+   auto *datasetColReader = lm.GetDatasetColumnReader(slot, colName, typeid(T));
+   if (datasetColReader != nullptr)
+      return datasetColReader;
 
    assert(r != nullptr && "We could not find a reader for this column, this should never happen at this point.");
 
-   // reading from a TTree
-   return Ret_t{new RTreeColumnReader<T>(*r, colName)};
+   // Make a RTreeColumnReader for this column and insert it in RLoopManager's map
+   auto treeColReader = std::make_unique<RTreeColumnReader<T>>(*r, colName);
+   return lm.AddTreeColumnReader(slot, colName, std::move(treeColReader), typeid(T));
 }
 
-/// This type aggregates some of the arguments passed to MakeColumnReaders.
+/// This type aggregates some of the arguments passed to GetColumnReaders.
 /// We need to pass a single RColumnReadersInfo object rather than each argument separately because with too many
 /// arguments passed, gcc 7.5.0 and cling disagree on the ABI, which leads to the last function argument being read
-/// incorrectly from a compiled MakeColumnReaders symbols when invoked from a jitted symbol.
+/// incorrectly from a compiled GetColumnReaders symbols when invoked from a jitted symbol.
 struct RColumnReadersInfo {
    const std::vector<std::string> &fColNames;
-   const RColumnRegister &fCustomCols;
+   RColumnRegister &fColRegister;
    const bool *fIsDefine;
-   const std::map<std::string, std::vector<void *>> &fDSValuePtrsMap;
-   ROOT::RDF::RDataSource *fDataSource;
+   RLoopManager &fLoopManager;
 };
 
 /// Create a group of column readers, one per type in the parameter pack.
-/// colInfo.fColNames and colInfo.fIsDefine are expected to have size equal to the parameter pack, and elements ordered
-/// accordingly, i.e. fIsDefine[0] refers to fColNames[0] which is of type "ColTypes[0]".
-///
-/// Pre-condition: colInfo.isDefine must not be null.
 template <typename... ColTypes>
-std::array<std::unique_ptr<RDFDetail::RColumnReaderBase>, sizeof...(ColTypes)>
-MakeColumnReaders(unsigned int slot, TTreeReader *r, TypeList<ColTypes...>, const RColumnReadersInfo &colInfo,
-                  const std::string &variationName = "nominal")
+std::array<RDFDetail::RColumnReaderBase *, sizeof...(ColTypes)>
+GetColumnReaders(unsigned int slot, TTreeReader *r, TypeList<ColTypes...>, const RColumnReadersInfo &colInfo,
+                 const std::string &variationName = "nominal")
 {
    // see RColumnReadersInfo for why we pass these arguments like this rather than directly as function arguments
    const auto &colNames = colInfo.fColNames;
-   const auto &defines = colInfo.fCustomCols.GetColumns();
-   const bool *isDefine = colInfo.fIsDefine;
-   const auto &DSValuePtrsMap = colInfo.fDSValuePtrsMap;
-   auto *ds = colInfo.fDataSource;
-   const auto &colRegister = colInfo.fCustomCols;
-
-   // the i-th element indicates whether variation variationName provides alternative values for the i-th column
-   std::array<bool, sizeof...(ColTypes)> doesVariationApply;
-   if (variationName == "nominal")
-      doesVariationApply.fill(false);
-   else {
-      for (auto i = 0u; i < sizeof...(ColTypes); ++i)
-         doesVariationApply[i] = IsStrInVec(variationName, colRegister.GetVariationsFor(colNames[i]));
-   }
+   auto &lm = colInfo.fLoopManager;
+   auto &colRegister = colInfo.fColRegister;
 
    int i = -1;
-   std::array<std::unique_ptr<RDFDetail::RColumnReaderBase>, sizeof...(ColTypes)> ret{
-      {{(++i, MakeColumnReader<ColTypes>(
-                 slot, isDefine[i] ? defines.at(colNames[i]).get() : nullptr, DSValuePtrsMap, r, ds, colNames[i],
-                 doesVariationApply[i] ? &colRegister.FindVariation(colNames[i], variationName) : nullptr,
-                 variationName))}...}};
+   std::array<RDFDetail::RColumnReaderBase *, sizeof...(ColTypes)> ret{
+      (++i, GetColumnReader<ColTypes>(slot, colRegister.GetReader(slot, colNames[i], variationName, typeid(ColTypes)),
+                                      lm, r, colNames[i]))...};
    return ret;
-
-   // avoid bogus "unused variable" warnings
-   (void)ds;
-   (void)slot;
-   (void)r;
 }
 
-// dummy overload for for the case of no columns, to silence compiler warnings
-inline std::array<std::unique_ptr<RDFDetail::RColumnReaderBase>, 0>
-MakeColumnReaders(unsigned int, TTreeReader *, TypeList<>, const RColumnReadersInfo &, const std::string & = "nominal")
+// Shortcut overload for the case of no columns
+inline std::array<RDFDetail::RColumnReaderBase *, 0>
+GetColumnReaders(unsigned int, TTreeReader *, TypeList<>, const RColumnReadersInfo &, const std::string & = "nominal")
 {
    return {};
 }

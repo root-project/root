@@ -14,7 +14,7 @@
 ///
 ///
 /// With RooFit, you usually optimize some model parameters `p` to maximize the
-/// likelihood `L` given the per-event or per-bin ## observations `x`:
+/// likelihood `L` given the per-event or per-bin observations `x`:
 ///
 /// \f[ L( x | p ) \f]
 ///
@@ -33,18 +33,18 @@
 /// nuisance parameter that is constrained by an auxiliary measurement
 /// `lumi_obs` with uncertainty `lumi_obs_sigma`:
 ///
-/// \f[ L'(data | mu, lumi) = L(data | mu, lumi) * Gauss(lumi_obs | lumi, lumi_obs_sigma) \f]
+/// \f[ L'(data | mu, lumi) = L(data | mu, lumi) * \text{Gauss}(lumi_obs | lumi, lumi_obs_sigma) \f]
 ///
 /// As a Gaussian is symmetric under exchange of the observable and the mean
 /// parameter, you can also sometimes find this equivalent but less conventional
 /// formulation for Gaussian constraints:
 ///
-/// \f[ L'(data | mu, lumi) = L(data | mu, lumi) * Gauss(lumi | lumi_obs, lumi_obs_sigma) \f]
+/// \f[ L'(data | mu, lumi) = L(data | mu, lumi) * \text{Gauss}(lumi | lumi_obs, lumi_obs_sigma) \f]
 ///
 /// If you wanted to constrain a parameter that represents event counts, you
 /// would use a Poissonian constraint, e.g.:
 ///
-/// \f[ L'(data | mu, count) = L(data | mu, count) * Poisson(count_obs | count) \f]
+/// \f[ L'(data | mu, count) = L(data | mu, count) * \text{Poisson}(count_obs | count) \f]
 ///
 /// Unlike a Guassian, a Poissonian is not symmetric under exchange of the
 /// observable and the parameter, so here you need to be more careful to follow
@@ -52,6 +52,7 @@
 ///
 ///
 /// \macro_code
+/// \macro_output
 ///
 /// \date January 2022
 /// \author Jonas Rembser
@@ -67,6 +68,10 @@
 void rf613_global_observables()
 {
    using namespace RooFit;
+
+   // Silence info output for this tutorial
+   RooMsgService::instance().getStream(1).removeTopic(Minimization);
+   RooMsgService::instance().getStream(1).removeTopic(Fitting);
 
    // Setting up the model and creating toy dataset
    // ---------------------------------------------
@@ -89,7 +94,7 @@ void rf613_global_observables()
    // note: alternatively, one can create a constant with default limits using `RooRealVar("mu_obs", "mu_obs", 1.0)`
 
    // constraint pdf
-   RooGaussian constraint("constraint", "constraint", mu_obs, mu, RooConst(0.2));
+   RooGaussian constraint("constraint", "constraint", mu_obs, mu, RooConst(0.1));
 
    // full pdf including constraint pdf
    RooProdPdf model("model", "model", {gauss, constraint});
@@ -112,8 +117,10 @@ void rf613_global_observables()
 
    RooArgSet{mu_obs}.assign(*dataGlob->get(0));
 
-   // actually generate the toy dataset
-   std::unique_ptr<RooDataSet> data{model.generate({x}, 1000)};
+   // Actually generate the toy dataset. We don't generate too many events,
+   // otherwise, the constraint will not have much weight in the fit and the
+   // result looks like it's unaffected by it.
+   std::unique_ptr<RooDataSet> data{model.generate({x}, 50)};
 
    // When fitting the toy dataset, it is important to set the global
    // observables in the fit to the values that were used to generate the toy
@@ -144,7 +151,7 @@ void rf613_global_observables()
    // values in the model, so the following fit correctly uses the randomized
    // global observable values from the toy dataset:
    std::cout << "1. model.fitTo(*data, GlobalObservables(mu_obs))\n";
-   std::cout << "------------------------------------------------\n\n";
+   std::cout << "------------------------------------------------\n";
    FitRes res1{model.fitTo(*data, GlobalObservables(mu_obs), PrintLevel(-1), Save())};
    res1->Print();
    modelParameters.assign(origParameters);
@@ -155,7 +162,7 @@ void rf613_global_observables()
    // figured out from the data set (this fit result should be identical to the
    // previous one).
    std::cout << "2. model.fitTo(*data)\n";
-   std::cout << "---------------------\n\n";
+   std::cout << "---------------------\n";
    FitRes res2{model.fitTo(*data, PrintLevel(-1), Save())};
    res2->Print();
    modelParameters.assign(origParameters);
@@ -165,7 +172,7 @@ void rf613_global_observables()
    // mind that now it's also again your responsability to define the set of
    // global observables.
    std::cout << "3. model.fitTo(*data, GlobalObservables(mu_obs), GlobalObservablesSource(\"model\"))\n";
-   std::cout << "------------------------------------------------\n\n";
+   std::cout << "------------------------------------------------\n";
    FitRes res3{model.fitTo(*data, GlobalObservables(mu_obs), GlobalObservablesSource("model"), PrintLevel(-1), Save())};
    res3->Print();
    modelParameters.assign(origParameters);

@@ -30,6 +30,7 @@
 namespace ROOT {
 namespace Experimental {
 
+class RNTuple;
 class RNTupleDescriptor;
 
 namespace Detail {
@@ -82,8 +83,8 @@ public:
 
    bool SetEntry(unsigned int slot, ULong64_t entry) final;
 
-   void Initialise() final;
-   void Finalise() final;
+   void Initialize() final;
+   void Finalize() final;
 
    std::unique_ptr<ROOT::Detail::RDF::RColumnReaderBase>
    GetColumnReaders(unsigned int /*slot*/, std::string_view /*name*/, const std::type_info &) final;
@@ -92,9 +93,20 @@ protected:
    Record_t GetColumnReadersImpl(std::string_view name, const std::type_info &) final;
 };
 
+R__DEPRECATED(6, 30, "Use ROOT::RDF::Experimental::FromRNTuple instead.")
 RDataFrame MakeNTupleDataFrame(std::string_view ntupleName, std::string_view fileName);
+R__DEPRECATED(6, 30, "Use ROOT::RDF::Experimental::FromRNTuple instead.")
+RDataFrame MakeNTupleDataFrame(RNTuple *ntuple);
 
 } // ns Experimental
+
+namespace RDF {
+namespace Experimental {
+RDataFrame FromRNTuple(std::string_view ntupleName, std::string_view fileName);
+RDataFrame FromRNTuple(ROOT::Experimental::RNTuple *ntuple);
+} // namespace Experimental
+} // namespace RDF
+
 } // ns ROOT
 
 #endif

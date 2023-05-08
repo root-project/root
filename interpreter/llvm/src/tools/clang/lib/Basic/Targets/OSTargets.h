@@ -13,7 +13,6 @@
 #define LLVM_CLANG_LIB_BASIC_TARGETS_OSTARGETS_H
 
 #include "Targets.h"
-#include "llvm/MC/MCSectionMachO.h"
 
 namespace clang {
 namespace targets {
@@ -87,7 +86,7 @@ protected:
 public:
   DarwinTargetInfo(const llvm::Triple &Triple, const TargetOptions &Opts)
       : OSTargetInfo<Target>(Triple, Opts) {
-    // By default, no TLS, and we whitelist permitted architecture/OS
+    // By default, no TLS, and we list permitted architecture/OS
     // combinations.
     this->TLSSupported = false;
 
@@ -112,15 +111,6 @@ public:
     }
 
     this->MCountName = "\01mcount";
-  }
-
-  std::string isValidSectionSpecifier(StringRef SR) const override {
-    // Let MCSectionMachO validate this.
-    StringRef Segment, Section;
-    unsigned TAA, StubSize;
-    bool HasTAA;
-    return llvm::MCSectionMachO::ParseSectionSpecifier(SR, Segment, Section,
-                                                       TAA, HasTAA, StubSize);
   }
 
   const char *getStaticInitSectionSpecifier() const override {
@@ -154,7 +144,8 @@ public:
       MinVersion = llvm::VersionTuple(5U);
       break;
     default:
-      llvm_unreachable("Unexpected OS");
+      // Conservatively return 8 bytes if OS is unknown.
+      return 64;
     }
 
     unsigned Major, Minor, Micro;
@@ -252,12 +243,16 @@ public:
     case llvm::Triple::mips:
     case llvm::Triple::mipsel:
     case llvm::Triple::ppc:
+    case llvm::Triple::ppcle:
     case llvm::Triple::ppc64:
     case llvm::Triple::ppc64le:
       this->MCountName = "_mcount";
       break;
     case llvm::Triple::arm:
       this->MCountName = "__mcount";
+      break;
+    case llvm::Triple::riscv32:
+    case llvm::Triple::riscv64:
       break;
     }
   }
@@ -382,8 +377,12 @@ protected:
       Triple.getEnvironmentVersion(Maj, Min, Rev);
       this->PlatformName = "android";
       this->PlatformMinVersion = VersionTuple(Maj, Min, Rev);
-      if (Maj)
-        Builder.defineMacro("__ANDROID_API__", Twine(Maj));
+      if (Maj) {
+        Builder.defineMacro("__ANDROID_MIN_SDK_VERSION__", Twine(Maj));
+        // This historical but ambiguous name for the minSdkVersion macro. Keep
+        // defined for compatibility.
+        Builder.defineMacro("__ANDROID_API__", "__ANDROID_MIN_SDK_VERSION__");
+      }
     } else {
         Builder.defineMacro("__gnu_linux__");
     }
@@ -408,6 +407,7 @@ public:
     case llvm::Triple::mips64:
     case llvm::Triple::mips64el:
     case llvm::Triple::ppc:
+    case llvm::Triple::ppcle:
     case llvm::Triple::ppc64:
     case llvm::Triple::ppc64le:
       this->MCountName = "_mcount";
@@ -460,11 +460,19 @@ protected:
       Builder.defineMacro("_REENTRANT");
     if (this->HasFloat128)
       Builder.defineMacro("__FLOAT128__");
+
+    if (Opts.C11) {
+      Builder.defineMacro("__STDC_NO_ATOMICS__");
+      Builder.defineMacro("__STDC_NO_THREADS__");
+    }
   }
 
 public:
   OpenBSDTargetInfo(const llvm::Triple &Triple, const TargetOptions &Opts)
       : OSTargetInfo<Target>(Triple, Opts) {
+    this->WCharType = this->WIntType = this->SignedInt;
+    this->IntMaxType = TargetInfo::SignedLongLong;
+    this->Int64Type = TargetInfo::SignedLongLong;
     switch (Triple.getArch()) {
     case llvm::Triple::x86:
     case llvm::Triple::x86_64:
@@ -476,8 +484,13 @@ public:
     case llvm::Triple::mips64:
     case llvm::Triple::mips64el:
     case llvm::Triple::ppc:
+    case llvm::Triple::ppc64:
+    case llvm::Triple::ppc64le:
     case llvm::Triple::sparcv9:
       this->MCountName = "_mcount";
+      break;
+    case llvm::Triple::riscv32:
+    case llvm::Triple::riscv64:
       break;
     }
   }
@@ -538,6 +551,7 @@ protected:
     Builder.defineMacro("__KPRINTF_ATTRIBUTE__");
     DefineStd(Builder, "unix", Opts);
     Builder.defineMacro("__ELF__");
+    Builder.defineMacro("__SCE__");
     Builder.defineMacro("__ORBIS__");
   }
 
@@ -560,6 +574,10 @@ public:
       this->NewAlign = 256;
       break;
     }
+  }
+  TargetInfo::CallingConvCheckResult
+  checkCallingConvention(CallingConv CC) const override {
+    return (CC == CC_C) ? TargetInfo::CCCR_OK : TargetInfo::CCCR_Error;
   }
 };
 
@@ -662,6 +680,15 @@ protected:
     Builder.defineMacro("_POWER");
 
     Builder.defineMacro("_AIX");
+    Builder.defineMacro("__TOS_AIX__");
+
+    if (Opts.C11) {
+      Builder.defineMacro("__STDC_NO_ATOMICS__");
+      Builder.defineMacro("__STDC_NO_THREADS__");
+    }
+
+    if (Opts.EnableAIXExtendedAltivecABI)
+      Builder.defineMacro("__EXTABI__");
 
     unsigned Major, Minor, Micro;
     Triple.getOSVersion(Major, Minor, Micro);
@@ -679,6 +706,7 @@ protected:
     if (OsVersion >= std::make_pair(6, 1)) Builder.defineMacro("_AIX61");
     if (OsVersion >= std::make_pair(7, 1)) Builder.defineMacro("_AIX71");
     if (OsVersion >= std::make_pair(7, 2)) Builder.defineMacro("_AIX72");
+    if (OsVersion >= std::make_pair(7, 3)) Builder.defineMacro("_AIX73");
 
     // FIXME: Do not define _LONG_LONG when -fno-long-long is specified.
     Builder.defineMacro("_LONG_LONG");
@@ -701,6 +729,8 @@ protected:
 public:
   AIXTargetInfo(const llvm::Triple &Triple, const TargetOptions &Opts)
       : OSTargetInfo<Target>(Triple, Opts) {
+    this->TheCXXABI.set(TargetCXXABI::XL);
+
     if (this->PointerWidth == 64) {
       this->WCharType = this->UnsignedInt;
     } else {
@@ -712,6 +742,67 @@ public:
   // AIX sets FLT_EVAL_METHOD to be 1.
   unsigned getFloatEvalMethod() const override { return 1; }
   bool hasInt128Type() const override { return false; }
+
+  bool defaultsToAIXPowerAlignment() const override { return true; }
+};
+
+// z/OS target
+template <typename Target>
+class LLVM_LIBRARY_VISIBILITY ZOSTargetInfo : public OSTargetInfo<Target> {
+protected:
+  void getOSDefines(const LangOptions &Opts, const llvm::Triple &Triple,
+                    MacroBuilder &Builder) const override {
+    // FIXME: _LONG_LONG should not be defined under -std=c89.
+    Builder.defineMacro("_LONG_LONG");
+    Builder.defineMacro("_OPEN_DEFAULT");
+    // _UNIX03_WITHDRAWN is required to build libcxx.
+    Builder.defineMacro("_UNIX03_WITHDRAWN");
+    Builder.defineMacro("__370__");
+    Builder.defineMacro("__BFP__");
+    // FIXME: __BOOL__ should not be defined under -std=c89.
+    Builder.defineMacro("__BOOL__");
+    Builder.defineMacro("__LONGNAME__");
+    Builder.defineMacro("__MVS__");
+    Builder.defineMacro("__THW_370__");
+    Builder.defineMacro("__THW_BIG_ENDIAN__");
+    Builder.defineMacro("__TOS_390__");
+    Builder.defineMacro("__TOS_MVS__");
+    Builder.defineMacro("__XPLINK__");
+
+    if (this->PointerWidth == 64)
+      Builder.defineMacro("__64BIT__");
+
+    if (Opts.CPlusPlus) {
+      Builder.defineMacro("__DLL__");
+      // _XOPEN_SOURCE=600 is required to build libcxx.
+      Builder.defineMacro("_XOPEN_SOURCE", "600");
+    }
+
+    if (Opts.GNUMode) {
+      Builder.defineMacro("_MI_BUILTIN");
+      Builder.defineMacro("_EXT");
+    }
+
+    if (Opts.CPlusPlus && Opts.WChar) {
+      // Macro __wchar_t is defined so that the wchar_t data
+      // type is not declared as a typedef in system headers.
+      Builder.defineMacro("__wchar_t");
+    }
+
+    this->PlatformName = llvm::Triple::getOSTypeName(Triple.getOS());
+  }
+
+public:
+  ZOSTargetInfo(const llvm::Triple &Triple, const TargetOptions &Opts)
+      : OSTargetInfo<Target>(Triple, Opts) {
+    this->WCharType = TargetInfo::UnsignedInt;
+    this->MaxAlignedAttribute = 128;
+    this->UseBitFieldTypeAlignment = false;
+    this->UseZeroLengthBitfieldAlignment = true;
+    this->UseLeadingZeroLengthBitfield = false;
+    this->ZeroLengthBitfieldBoundary = 32;
+    this->DefaultAlignForAttributeAligned = 128;
+  }
 };
 
 void addWindowsDefines(const llvm::Triple &Triple, const LangOptions &Opts,
@@ -771,9 +862,11 @@ public:
     if (Triple.getArch() == llvm::Triple::arm) {
       // Handled in ARM's setABI().
     } else if (Triple.getArch() == llvm::Triple::x86) {
-      this->resetDataLayout("e-m:e-p:32:32-i64:64-n8:16:32-S128");
+      this->resetDataLayout("e-m:e-p:32:32-p270:32:32-p271:32:32-p272:64:64-"
+                            "i64:64-n8:16:32-S128");
     } else if (Triple.getArch() == llvm::Triple::x86_64) {
-      this->resetDataLayout("e-m:e-p:32:32-i64:64-n8:16:32:64-S128");
+      this->resetDataLayout("e-m:e-p:32:32-p270:32:32-p271:32:32-p272:64:64-"
+                            "i64:64-n8:16:32:64-S128");
     } else if (Triple.getArch() == llvm::Triple::mipsel) {
       // Handled on mips' setDataLayout.
     } else {
@@ -802,6 +895,7 @@ public:
   FuchsiaTargetInfo(const llvm::Triple &Triple, const TargetOptions &Opts)
       : OSTargetInfo<Target>(Triple, Opts) {
     this->MCountName = "__mcount";
+    this->TheCXXABI.set(TargetCXXABI::Fuchsia);
   }
 };
 
@@ -811,7 +905,7 @@ class LLVM_LIBRARY_VISIBILITY WebAssemblyOSTargetInfo
     : public OSTargetInfo<Target> {
 protected:
   void getOSDefines(const LangOptions &Opts, const llvm::Triple &Triple,
-                    MacroBuilder &Builder) const {
+                    MacroBuilder &Builder) const override {
     // A common platform macro.
     if (Opts.POSIXThreads)
       Builder.defineMacro("_REENTRANT");
@@ -855,11 +949,21 @@ class LLVM_LIBRARY_VISIBILITY EmscriptenTargetInfo
                     MacroBuilder &Builder) const final {
     WebAssemblyOSTargetInfo<Target>::getOSDefines(Opts, Triple, Builder);
     Builder.defineMacro("__EMSCRIPTEN__");
+    if (Opts.POSIXThreads)
+      Builder.defineMacro("__EMSCRIPTEN_PTHREADS__");
   }
 
 public:
-  explicit EmscriptenTargetInfo(const llvm::Triple &Triple, const TargetOptions &Opts)
-      : WebAssemblyOSTargetInfo<Target>(Triple, Opts) {}
+  explicit EmscriptenTargetInfo(const llvm::Triple &Triple,
+                                const TargetOptions &Opts)
+      : WebAssemblyOSTargetInfo<Target>(Triple, Opts) {
+    // Keeping the alignment of long double to 8 bytes even though its size is
+    // 16 bytes allows emscripten to have an 8-byte-aligned max_align_t which
+    // in turn gives is a 8-byte aligned malloc.
+    // Emscripten's ABI is unstable and we may change this back to 128 to match
+    // the WebAssembly default in the future.
+    this->LongDoubleAlign = 64;
+  }
 };
 
 } // namespace targets

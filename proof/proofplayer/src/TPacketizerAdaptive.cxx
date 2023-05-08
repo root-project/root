@@ -1562,7 +1562,7 @@ Int_t TPacketizerAdaptive::CalculatePacketSize(TObject *slStatPtr, Long64_t cach
 ////////////////////////////////////////////////////////////////////////////////
 /// To be used by GetNextPacket but also in reaction to kPROOF_STOPPROCESS
 /// message (when the worker was asked to stop processing during a packet).
-/// returns the #entries intended in the last packet - #processed entries
+/// returns the #%entries intended in the last packet - #%processed entries
 
 Int_t TPacketizerAdaptive::AddProcessed(TSlave *sl,
                                         TProofProgressStatus *status,

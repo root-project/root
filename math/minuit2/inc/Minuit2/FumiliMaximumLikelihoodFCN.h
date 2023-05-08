@@ -48,7 +48,7 @@ class FumiliMaximumLikelihoodFCN : public FumiliFCNBase {
 public:
    FumiliMaximumLikelihoodFCN() {}
 
-   virtual ~FumiliMaximumLikelihoodFCN() {}
+   ~FumiliMaximumLikelihoodFCN() override {}
 
    /**
 
@@ -126,7 +126,7 @@ public:
 
    */
 
-   double operator()(const std::vector<double> &par) const
+   double operator()(const std::vector<double> &par) const override
    {
 
       double sumoflogs = 0.0;
@@ -150,7 +150,7 @@ public:
 
    */
 
-   virtual double Up() const { return 0.5; }
+   double Up() const override { return 0.5; }
 
 private:
    // A pointer to the model function which describes the data

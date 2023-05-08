@@ -17,28 +17,18 @@
 #include "AMDGPUMachineFunction.h"
 #include "MCTargetDesc/AMDGPUMCTargetDesc.h"
 #include "SIInstrInfo.h"
-#include "SIRegisterInfo.h"
-#include "llvm/ADT/ArrayRef.h"
-#include "llvm/ADT/DenseMap.h"
-#include "llvm/ADT/Optional.h"
-#include "llvm/ADT/STLExtras.h"
-#include "llvm/ADT/SmallVector.h"
-#include "llvm/ADT/SparseBitVector.h"
+#include "llvm/ADT/MapVector.h"
 #include "llvm/CodeGen/MIRYamlMapping.h"
 #include "llvm/CodeGen/PseudoSourceValue.h"
-#include "llvm/CodeGen/TargetInstrInfo.h"
-#include "llvm/MC/MCRegisterInfo.h"
-#include "llvm/Support/ErrorHandling.h"
-#include <array>
-#include <cassert>
-#include <utility>
-#include <vector>
+#include "llvm/Support/raw_ostream.h"
 
 namespace llvm {
 
 class MachineFrameInfo;
 class MachineFunction;
 class TargetRegisterClass;
+class SIMachineFunctionInfo;
+class SIRegisterInfo;
 
 class AMDGPUPseudoSourceValue : public PseudoSourceValue {
 public:
@@ -76,6 +66,8 @@ public:
   static bool classof(const PseudoSourceValue *V) {
     return V->kind() == PSVBuffer;
   }
+
+  void printCustom(raw_ostream &OS) const override { OS << "BufferResource"; }
 };
 
 class AMDGPUImagePseudoSourceValue final : public AMDGPUPseudoSourceValue {
@@ -87,6 +79,8 @@ public:
   static bool classof(const PseudoSourceValue *V) {
     return V->kind() == PSVImage;
   }
+
+  void printCustom(raw_ostream &OS) const override { OS << "ImageResource"; }
 };
 
 class AMDGPUGWSResourcePseudoSourceValue final : public AMDGPUPseudoSourceValue {
@@ -236,17 +230,29 @@ template <> struct MappingTraits<SIArgumentInfo> {
 struct SIMode {
   bool IEEE = true;
   bool DX10Clamp = true;
+  bool FP32InputDenormals = true;
+  bool FP32OutputDenormals = true;
+  bool FP64FP16InputDenormals = true;
+  bool FP64FP16OutputDenormals = true;
 
   SIMode() = default;
-
 
   SIMode(const AMDGPU::SIModeRegisterDefaults &Mode) {
     IEEE = Mode.IEEE;
     DX10Clamp = Mode.DX10Clamp;
+    FP32InputDenormals = Mode.FP32InputDenormals;
+    FP32OutputDenormals = Mode.FP32OutputDenormals;
+    FP64FP16InputDenormals = Mode.FP64FP16InputDenormals;
+    FP64FP16OutputDenormals = Mode.FP64FP16OutputDenormals;
   }
 
   bool operator ==(const SIMode Other) const {
-    return IEEE == Other.IEEE && DX10Clamp == Other.DX10Clamp;
+    return IEEE == Other.IEEE &&
+           DX10Clamp == Other.DX10Clamp &&
+           FP32InputDenormals == Other.FP32InputDenormals &&
+           FP32OutputDenormals == Other.FP32OutputDenormals &&
+           FP64FP16InputDenormals == Other.FP64FP16InputDenormals &&
+           FP64FP16OutputDenormals == Other.FP64FP16OutputDenormals;
   }
 };
 
@@ -254,6 +260,10 @@ template <> struct MappingTraits<SIMode> {
   static void mapping(IO &YamlIO, SIMode &Mode) {
     YamlIO.mapOptional("ieee", Mode.IEEE, true);
     YamlIO.mapOptional("dx10-clamp", Mode.DX10Clamp, true);
+    YamlIO.mapOptional("fp32-input-denormals", Mode.FP32InputDenormals, true);
+    YamlIO.mapOptional("fp32-output-denormals", Mode.FP32OutputDenormals, true);
+    YamlIO.mapOptional("fp64-fp16-input-denormals", Mode.FP64FP16InputDenormals, true);
+    YamlIO.mapOptional("fp64-fp16-output-denormals", Mode.FP64FP16OutputDenormals, true);
   }
 };
 
@@ -261,22 +271,30 @@ struct SIMachineFunctionInfo final : public yaml::MachineFunctionInfo {
   uint64_t ExplicitKernArgSize = 0;
   unsigned MaxKernArgAlign = 0;
   unsigned LDSSize = 0;
+  Align DynLDSAlign;
   bool IsEntryFunction = false;
   bool NoSignedZerosFPMath = false;
   bool MemoryBound = false;
   bool WaveLimiter = false;
+  bool HasSpilledSGPRs = false;
+  bool HasSpilledVGPRs = false;
+  uint32_t HighBitsOf32BitAddress = 0;
+
+  // TODO: 10 may be a better default since it's the maximum.
+  unsigned Occupancy = 0;
 
   StringValue ScratchRSrcReg = "$private_rsrc_reg";
-  StringValue ScratchWaveOffsetReg = "$scratch_wave_offset_reg";
   StringValue FrameOffsetReg = "$fp_reg";
   StringValue StackPtrOffsetReg = "$sp_reg";
 
   Optional<SIArgumentInfo> ArgInfo;
   SIMode Mode;
+  Optional<FrameIndex> ScavengeFI;
 
   SIMachineFunctionInfo() = default;
   SIMachineFunctionInfo(const llvm::SIMachineFunctionInfo &,
-                        const TargetRegisterInfo &TRI);
+                        const TargetRegisterInfo &TRI,
+                        const llvm::MachineFunction &MF);
 
   void mappingImpl(yaml::IO &YamlIO) override;
   ~SIMachineFunctionInfo() = default;
@@ -288,20 +306,25 @@ template <> struct MappingTraits<SIMachineFunctionInfo> {
                        UINT64_C(0));
     YamlIO.mapOptional("maxKernArgAlign", MFI.MaxKernArgAlign, 0u);
     YamlIO.mapOptional("ldsSize", MFI.LDSSize, 0u);
+    YamlIO.mapOptional("dynLDSAlign", MFI.DynLDSAlign, Align());
     YamlIO.mapOptional("isEntryFunction", MFI.IsEntryFunction, false);
     YamlIO.mapOptional("noSignedZerosFPMath", MFI.NoSignedZerosFPMath, false);
     YamlIO.mapOptional("memoryBound", MFI.MemoryBound, false);
     YamlIO.mapOptional("waveLimiter", MFI.WaveLimiter, false);
+    YamlIO.mapOptional("hasSpilledSGPRs", MFI.HasSpilledSGPRs, false);
+    YamlIO.mapOptional("hasSpilledVGPRs", MFI.HasSpilledVGPRs, false);
     YamlIO.mapOptional("scratchRSrcReg", MFI.ScratchRSrcReg,
                        StringValue("$private_rsrc_reg"));
-    YamlIO.mapOptional("scratchWaveOffsetReg", MFI.ScratchWaveOffsetReg,
-                       StringValue("$scratch_wave_offset_reg"));
     YamlIO.mapOptional("frameOffsetReg", MFI.FrameOffsetReg,
                        StringValue("$fp_reg"));
     YamlIO.mapOptional("stackPtrOffsetReg", MFI.StackPtrOffsetReg,
                        StringValue("$sp_reg"));
     YamlIO.mapOptional("argumentInfo", MFI.ArgInfo);
     YamlIO.mapOptional("mode", MFI.Mode, SIMode());
+    YamlIO.mapOptional("highBitsOf32BitAddress",
+                       MFI.HighBitsOf32BitAddress, 0u);
+    YamlIO.mapOptional("occupancy", MFI.Occupancy, 0);
+    YamlIO.mapOptional("scavengeFI", MFI.ScavengeFI);
   }
 };
 
@@ -312,25 +335,22 @@ template <> struct MappingTraits<SIMachineFunctionInfo> {
 class SIMachineFunctionInfo final : public AMDGPUMachineFunction {
   friend class GCNTargetMachine;
 
-  unsigned TIDReg = AMDGPU::NoRegister;
+  Register TIDReg = AMDGPU::NoRegister;
 
   // Registers that may be reserved for spilling purposes. These may be the same
   // as the input registers.
-  unsigned ScratchRSrcReg = AMDGPU::PRIVATE_RSRC_REG;
-  unsigned ScratchWaveOffsetReg = AMDGPU::SCRATCH_WAVE_OFFSET_REG;
+  Register ScratchRSrcReg = AMDGPU::PRIVATE_RSRC_REG;
 
-  // This is the current function's incremented size from the kernel's scratch
-  // wave offset register. For an entry function, this is exactly the same as
-  // the ScratchWaveOffsetReg.
-  unsigned FrameOffsetReg = AMDGPU::FP_REG;
+  // This is the the unswizzled offset from the current dispatch's scratch wave
+  // base to the beginning of the current function's frame.
+  Register FrameOffsetReg = AMDGPU::FP_REG;
 
-  // Top of the stack SGPR offset derived from the ScratchWaveOffsetReg.
-  unsigned StackPtrOffsetReg = AMDGPU::SP_REG;
+  // This is an ABI register used in the non-entry calling convention to
+  // communicate the unswizzled offset from the current dispatch's scratch wave
+  // base to the beginning of the new function's frame.
+  Register StackPtrOffsetReg = AMDGPU::SP_REG;
 
   AMDGPUFunctionArgInfo ArgInfo;
-
-  // State of MODE register, assumed FP mode.
-  AMDGPU::SIModeRegisterDefaults Mode;
 
   // Graphics info.
   unsigned PSInputAddr = 0;
@@ -357,10 +377,8 @@ class SIMachineFunctionInfo final : public AMDGPUMachineFunction {
   // unit. Minimum - first, maximum - second.
   std::pair<unsigned, unsigned> WavesPerEU = {0, 0};
 
-  DenseMap<const Value *,
-           std::unique_ptr<const AMDGPUBufferPseudoSourceValue>> BufferPSVs;
-  DenseMap<const Value *,
-           std::unique_ptr<const AMDGPUImagePseudoSourceValue>> ImagePSVs;
+  std::unique_ptr<const AMDGPUBufferPseudoSourceValue> BufferPSV;
+  std::unique_ptr<const AMDGPUImagePseudoSourceValue> ImagePSV;
   std::unique_ptr<const AMDGPUGWSResourcePseudoSourceValue> GWSResourcePSV;
 
 private:
@@ -421,25 +439,25 @@ private:
 
 public:
   struct SpilledReg {
-    unsigned VGPR = 0;
+    Register VGPR;
     int Lane = -1;
 
     SpilledReg() = default;
-    SpilledReg(unsigned R, int L) : VGPR (R), Lane (L) {}
+    SpilledReg(Register R, int L) : VGPR (R), Lane (L) {}
 
     bool hasLane() { return Lane != -1;}
     bool hasReg() { return VGPR != 0;}
   };
 
-  struct SGPRSpillVGPRCSR {
+  struct SGPRSpillVGPR {
     // VGPR used for SGPR spills
-    unsigned VGPR;
+    Register VGPR;
 
-    // If the VGPR is a CSR, the stack slot used to save/restore it in the
-    // prolog/epilog.
+    // If the VGPR is is used for SGPR spills in a non-entrypoint function, the
+    // stack slot used to save/restore it in the prolog/epilog.
     Optional<int> FI;
 
-    SGPRSpillVGPRCSR(unsigned V, Optional<int> F) : VGPR(V), FI(F) {}
+    SGPRSpillVGPR(Register V, Optional<int> F) : VGPR(V), FI(F) {}
   };
 
   struct VGPRSpillToAGPR {
@@ -447,19 +465,16 @@ public:
     bool FullyAllocated = false;
   };
 
-  SparseBitVector<> WWMReservedRegs;
-
-  void ReserveWWMRegister(unsigned reg) { WWMReservedRegs.set(reg); }
+  // Map WWM VGPR to a stack slot that is used to save/restore it in the
+  // prolog/epilog.
+  MapVector<Register, Optional<int>> WWMReservedRegs;
 
 private:
-  // SGPR->VGPR spilling support.
-  using SpillRegMask = std::pair<unsigned, unsigned>;
-
   // Track VGPR + wave index for each subregister of the SGPR spilled to
   // frameindex key.
   DenseMap<int, std::vector<SpilledReg>> SGPRToVGPRSpills;
   unsigned NumVGPRSpillLanes = 0;
-  SmallVector<SGPRSpillVGPRCSR, 2> SpillVGPRs;
+  SmallVector<SGPRSpillVGPR, 2> SpillVGPRs;
 
   DenseMap<int, VGPRSpillToAGPR> VGPRToAGPRSpills;
 
@@ -469,16 +484,35 @@ private:
   // VGPRs used for AGPR spills.
   SmallVector<MCPhysReg, 32> SpillVGPR;
 
+  // Emergency stack slot. Sometimes, we create this before finalizing the stack
+  // frame, so save it here and add it to the RegScavenger later.
+  Optional<int> ScavengeFI;
+
 public: // FIXME
   /// If this is set, an SGPR used for save/restore of the register used for the
   /// frame pointer.
-  unsigned SGPRForFPSaveRestoreCopy = 0;
+  Register SGPRForFPSaveRestoreCopy;
   Optional<int> FramePointerSaveIndex;
+
+  /// If this is set, an SGPR used for save/restore of the register used for the
+  /// base pointer.
+  Register SGPRForBPSaveRestoreCopy;
+  Optional<int> BasePointerSaveIndex;
+
+  Register VGPRReservedForSGPRSpill;
+  bool isCalleeSavedReg(const MCPhysReg *CSRegs, MCPhysReg Reg);
 
 public:
   SIMachineFunctionInfo(const MachineFunction &MF);
 
-  bool initializeBaseYamlFields(const yaml::SIMachineFunctionInfo &YamlMFI);
+  bool initializeBaseYamlFields(const yaml::SIMachineFunctionInfo &YamlMFI,
+                                const MachineFunction &MF,
+                                PerFunctionMIParsingState &PFS,
+                                SMDiagnostic &Error, SMRange &SourceRange);
+
+  void reserveWWMRegister(Register Reg, Optional<int> FI) {
+    WWMReservedRegs.insert(std::make_pair(Reg, FI));
+  }
 
   ArrayRef<SpilledReg> getSGPRToVGPRSpills(int FrameIndex) const {
     auto I = SGPRToVGPRSpills.find(FrameIndex);
@@ -486,9 +520,15 @@ public:
       ArrayRef<SpilledReg>() : makeArrayRef(I->second);
   }
 
-  ArrayRef<SGPRSpillVGPRCSR> getSGPRSpillVGPRs() const {
-    return SpillVGPRs;
+  ArrayRef<SGPRSpillVGPR> getSGPRSpillVGPRs() const { return SpillVGPRs; }
+
+  void setSGPRSpillVGPRs(Register NewVGPR, Optional<int> newFI, int Index) {
+    SpillVGPRs[Index].VGPR = NewVGPR;
+    SpillVGPRs[Index].FI = newFI;
+    VGPRReservedForSGPRSpill = NewVGPR;
   }
+
+  bool removeVGPRForSGPRSpill(Register ReservedVGPR, MachineFunction &MF);
 
   ArrayRef<MCPhysReg> getAGPRSpillVGPRs() const {
     return SpillAGPR;
@@ -504,19 +544,19 @@ public:
                                          : I->second.Lanes[Lane];
   }
 
-  AMDGPU::SIModeRegisterDefaults getMode() const {
-    return Mode;
-  }
-
   bool haveFreeLanesForSGPRSpill(const MachineFunction &MF,
                                  unsigned NumLane) const;
   bool allocateSGPRSpillToVGPR(MachineFunction &MF, int FI);
+  bool reserveVGPRforSGPRSpills(MachineFunction &MF);
   bool allocateVGPRSpillToAGPR(MachineFunction &MF, int FI, bool isAGPRtoVGPR);
   void removeDeadFrameIndices(MachineFrameInfo &MFI);
 
+  int getScavengeFI(MachineFrameInfo &MFI, const SIRegisterInfo &TRI);
+  Optional<int> getOptionalScavengeFI() const { return ScavengeFI; }
+
   bool hasCalculatedTID() const { return TIDReg != 0; };
-  unsigned getTIDReg() const { return TIDReg; };
-  void setTIDReg(unsigned Reg) { TIDReg = Reg; }
+  Register getTIDReg() const { return TIDReg; };
+  void setTIDReg(Register Reg) { TIDReg = Reg; }
 
   unsigned getBytesInStackArgArea() const {
     return BytesInStackArgArea;
@@ -527,34 +567,34 @@ public:
   }
 
   // Add user SGPRs.
-  unsigned addPrivateSegmentBuffer(const SIRegisterInfo &TRI);
-  unsigned addDispatchPtr(const SIRegisterInfo &TRI);
-  unsigned addQueuePtr(const SIRegisterInfo &TRI);
-  unsigned addKernargSegmentPtr(const SIRegisterInfo &TRI);
-  unsigned addDispatchID(const SIRegisterInfo &TRI);
-  unsigned addFlatScratchInit(const SIRegisterInfo &TRI);
-  unsigned addImplicitBufferPtr(const SIRegisterInfo &TRI);
+  Register addPrivateSegmentBuffer(const SIRegisterInfo &TRI);
+  Register addDispatchPtr(const SIRegisterInfo &TRI);
+  Register addQueuePtr(const SIRegisterInfo &TRI);
+  Register addKernargSegmentPtr(const SIRegisterInfo &TRI);
+  Register addDispatchID(const SIRegisterInfo &TRI);
+  Register addFlatScratchInit(const SIRegisterInfo &TRI);
+  Register addImplicitBufferPtr(const SIRegisterInfo &TRI);
 
   // Add system SGPRs.
-  unsigned addWorkGroupIDX() {
+  Register addWorkGroupIDX() {
     ArgInfo.WorkGroupIDX = ArgDescriptor::createRegister(getNextSystemSGPR());
     NumSystemSGPRs += 1;
     return ArgInfo.WorkGroupIDX.getRegister();
   }
 
-  unsigned addWorkGroupIDY() {
+  Register addWorkGroupIDY() {
     ArgInfo.WorkGroupIDY = ArgDescriptor::createRegister(getNextSystemSGPR());
     NumSystemSGPRs += 1;
     return ArgInfo.WorkGroupIDY.getRegister();
   }
 
-  unsigned addWorkGroupIDZ() {
+  Register addWorkGroupIDZ() {
     ArgInfo.WorkGroupIDZ = ArgDescriptor::createRegister(getNextSystemSGPR());
     NumSystemSGPRs += 1;
     return ArgInfo.WorkGroupIDZ.getRegister();
   }
 
-  unsigned addWorkGroupInfo() {
+  Register addWorkGroupInfo() {
     ArgInfo.WorkGroupInfo = ArgDescriptor::createRegister(getNextSystemSGPR());
     NumSystemSGPRs += 1;
     return ArgInfo.WorkGroupInfo.getRegister();
@@ -573,14 +613,14 @@ public:
     ArgInfo.WorkItemIDZ = Arg;
   }
 
-  unsigned addPrivateSegmentWaveByteOffset() {
+  Register addPrivateSegmentWaveByteOffset() {
     ArgInfo.PrivateSegmentWaveByteOffset
       = ArgDescriptor::createRegister(getNextSystemSGPR());
     NumSystemSGPRs += 1;
     return ArgInfo.PrivateSegmentWaveByteOffset.getRegister();
   }
 
-  void setPrivateSegmentWaveByteOffset(unsigned Reg) {
+  void setPrivateSegmentWaveByteOffset(Register Reg) {
     ArgInfo.PrivateSegmentWaveByteOffset = ArgDescriptor::createRegister(Reg);
   }
 
@@ -656,21 +696,23 @@ public:
     return ArgInfo;
   }
 
-  std::pair<const ArgDescriptor *, const TargetRegisterClass *>
+  std::tuple<const ArgDescriptor *, const TargetRegisterClass *, LLT>
   getPreloadedValue(AMDGPUFunctionArgInfo::PreloadedValue Value) const {
     return ArgInfo.getPreloadedValue(Value);
   }
 
-  Register getPreloadedReg(AMDGPUFunctionArgInfo::PreloadedValue Value) const {
-    auto Arg = ArgInfo.getPreloadedValue(Value).first;
-    return Arg ? Arg->getRegister() : Register();
+  MCRegister getPreloadedReg(AMDGPUFunctionArgInfo::PreloadedValue Value) const {
+    auto Arg = std::get<0>(ArgInfo.getPreloadedValue(Value));
+    return Arg ? Arg->getRegister() : MCRegister();
   }
 
   unsigned getGITPtrHigh() const {
     return GITPtrHigh;
   }
 
-  unsigned get32BitAddressHighBits() const {
+  Register getGITPtrLoReg(const MachineFunction &MF) const;
+
+  uint32_t get32BitAddressHighBits() const {
     return HighBitsOf32BitAddress;
   }
 
@@ -686,35 +728,31 @@ public:
     return NumUserSGPRs + NumSystemSGPRs;
   }
 
-  unsigned getPrivateSegmentWaveByteOffsetSystemSGPR() const {
+  Register getPrivateSegmentWaveByteOffsetSystemSGPR() const {
     return ArgInfo.PrivateSegmentWaveByteOffset.getRegister();
   }
 
   /// Returns the physical register reserved for use as the resource
   /// descriptor for scratch accesses.
-  unsigned getScratchRSrcReg() const {
+  Register getScratchRSrcReg() const {
     return ScratchRSrcReg;
   }
 
-  void setScratchRSrcReg(unsigned Reg) {
+  void setScratchRSrcReg(Register Reg) {
     assert(Reg != 0 && "Should never be unset");
     ScratchRSrcReg = Reg;
   }
 
-  unsigned getScratchWaveOffsetReg() const {
-    return ScratchWaveOffsetReg;
-  }
-
-  unsigned getFrameOffsetReg() const {
+  Register getFrameOffsetReg() const {
     return FrameOffsetReg;
   }
 
-  void setFrameOffsetReg(unsigned Reg) {
+  void setFrameOffsetReg(Register Reg) {
     assert(Reg != 0 && "Should never be unset");
     FrameOffsetReg = Reg;
   }
 
-  void setStackPtrOffsetReg(unsigned Reg) {
+  void setStackPtrOffsetReg(Register Reg) {
     assert(Reg != 0 && "Should never be unset");
     StackPtrOffsetReg = Reg;
   }
@@ -723,20 +761,15 @@ public:
   // NoRegister. This is mostly a workaround for MIR tests where state that
   // can't be directly computed from the function is not preserved in serialized
   // MIR.
-  unsigned getStackPtrOffsetReg() const {
+  Register getStackPtrOffsetReg() const {
     return StackPtrOffsetReg;
   }
 
-  void setScratchWaveOffsetReg(unsigned Reg) {
-    assert(Reg != 0 && "Should never be unset");
-    ScratchWaveOffsetReg = Reg;
-  }
-
-  unsigned getQueuePtrUserSGPR() const {
+  Register getQueuePtrUserSGPR() const {
     return ArgInfo.QueuePtr.getRegister();
   }
 
-  unsigned getImplicitBufferPtrUserSGPR() const {
+  Register getImplicitBufferPtrUserSGPR() const {
     return ArgInfo.ImplicitBufferPtr.getRegister();
   }
 
@@ -849,7 +882,7 @@ public:
   }
 
   /// \returns SGPR used for \p Dim's work group ID.
-  unsigned getWorkGroupIDSGPR(unsigned Dim) const {
+  Register getWorkGroupIDSGPR(unsigned Dim) const {
     switch (Dim) {
     case 0:
       assert(hasWorkGroupIDX());
@@ -868,28 +901,24 @@ public:
     return LDSWaveSpillSize;
   }
 
-  const AMDGPUBufferPseudoSourceValue *getBufferPSV(const SIInstrInfo &TII,
-                                                    const Value *BufferRsrc) {
-    assert(BufferRsrc);
-    auto PSV = BufferPSVs.try_emplace(
-      BufferRsrc,
-      llvm::make_unique<AMDGPUBufferPseudoSourceValue>(TII));
-    return PSV.first->second.get();
+  const AMDGPUBufferPseudoSourceValue *getBufferPSV(const SIInstrInfo &TII) {
+    if (!BufferPSV)
+      BufferPSV = std::make_unique<AMDGPUBufferPseudoSourceValue>(TII);
+
+    return BufferPSV.get();
   }
 
-  const AMDGPUImagePseudoSourceValue *getImagePSV(const SIInstrInfo &TII,
-                                                  const Value *ImgRsrc) {
-    assert(ImgRsrc);
-    auto PSV = ImagePSVs.try_emplace(
-      ImgRsrc,
-      llvm::make_unique<AMDGPUImagePseudoSourceValue>(TII));
-    return PSV.first->second.get();
+  const AMDGPUImagePseudoSourceValue *getImagePSV(const SIInstrInfo &TII) {
+    if (!ImagePSV)
+      ImagePSV = std::make_unique<AMDGPUImagePseudoSourceValue>(TII);
+
+    return ImagePSV.get();
   }
 
   const AMDGPUGWSResourcePseudoSourceValue *getGWSPSV(const SIInstrInfo &TII) {
     if (!GWSResourcePSV) {
       GWSResourcePSV =
-          llvm::make_unique<AMDGPUGWSResourcePseudoSourceValue>(TII);
+          std::make_unique<AMDGPUGWSResourcePseudoSourceValue>(TII);
     }
 
     return GWSResourcePSV.get();

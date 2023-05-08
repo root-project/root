@@ -30,25 +30,25 @@ namespace RooStats {
 class ToyMCStudy: public RooAbsStudy {
 
    public:
-      // need to have constructor without arguments for proof
+      /// need to have constructor without arguments for proof
       ToyMCStudy(const char *name = "ToyMCStudy", const char *title = "ToyMCStudy") :
          RooAbsStudy(name, title),
          fRandomSeed(0),
-         fToyMCSampler(NULL)
+         fToyMCSampler(nullptr)
       {
          // In this case, this is the normal output. The SamplingDistribution
          // instances are stored as detailed output.
-         storeDetailedOutput(kTRUE);
+         storeDetailedOutput(true);
       }
 
-      RooAbsStudy* clone(const char* /*newname*/="") const { return new ToyMCStudy(*this) ; }
+      RooAbsStudy* clone(const char* /*newname*/="") const override { return new ToyMCStudy(*this) ; }
 
-      virtual ~ToyMCStudy() {}
+      ~ToyMCStudy() override {}
 
       // RooAbsStudy interfaces
-      virtual Bool_t initialize(void);
-      virtual Bool_t execute(void);
-      virtual Bool_t finalize(void);
+      bool initialize(void) override;
+      bool execute(void) override;
+      bool finalize(void) override;
 
       RooDataSet* merge();
 
@@ -64,7 +64,7 @@ class ToyMCStudy: public RooAbsStudy {
       RooArgSet fParamPoint;
 
    protected:
-   ClassDef(ToyMCStudy,2); // toy MC study for parallel processing
+   ClassDefOverride(ToyMCStudy,2); // toy MC study for parallel processing
 
 };
 
@@ -75,7 +75,7 @@ class ToyMCPayload : public TNamed {
 
       ToyMCPayload() {
          // proof constructor, do not use
-    fDataSet = NULL;
+    fDataSet = nullptr;
       }
 
       ToyMCPayload(RooDataSet* sd)
@@ -83,7 +83,7 @@ class ToyMCPayload : public TNamed {
          fDataSet = sd;
       }
 
-      virtual ~ToyMCPayload() {
+      ~ToyMCPayload() override {
       }
 
 
@@ -96,7 +96,7 @@ class ToyMCPayload : public TNamed {
       RooDataSet* fDataSet;
 
    protected:
-   ClassDef(ToyMCPayload,1);
+   ClassDefOverride(ToyMCPayload,1);
 };
 
 

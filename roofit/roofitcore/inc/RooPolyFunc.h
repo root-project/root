@@ -17,6 +17,7 @@
 #define RooFit_RooFit_RooPolyFunc_h
 
 #include "RooAbsReal.h"
+#include "RooRealVar.h"
 #include "RooListProxy.h"
 
 #include <vector>
@@ -30,21 +31,31 @@ public:
    RooPolyFunc(const char *name, const char *title, RooAbsReal &x, const RooAbsCollection &coefList);
    RooPolyFunc(const char *name, const char *title, RooAbsReal &x, RooAbsReal &y, const RooAbsCollection &coefList);
    RooPolyFunc(const char *name, const char *title, const RooAbsCollection &vars);
-   RooPolyFunc(const RooPolyFunc &other, const char *name = 0);
-   RooPolyFunc &operator=(const RooPolyFunc &other);
-   virtual TObject *clone(const char *newname) const { return new RooPolyFunc(*this, newname); }
+   RooPolyFunc(const RooPolyFunc &other, const char *name = nullptr);
+   RooPolyFunc &operator=(const RooPolyFunc &other) = delete;
+   RooPolyFunc &operator=(RooPolyFunc &&other) = delete;
+   TObject *clone(const char *newname) const override { return new RooPolyFunc(*this, newname); }
+
+   std::string asString() const;
+   inline const RooArgList &variables() const { return _vars; }
+   inline const std::vector<std::unique_ptr<RooListProxy>> &terms() const { return _terms; }
+   inline RooRealVar *getCoefficient(const RooArgList &term)
+   {
+      return static_cast<RooRealVar *>(term.at(term.size() - 1));
+   }
+   inline RooRealVar *getExponent(const RooArgList &term, RooRealVar *v)
+   {
+      return static_cast<RooRealVar *>(term.at(_vars.index(v)));
+   }
 
    void addTerm(double coefficient);
    void addTerm(double coefficient, const RooAbsCollection &exponents);
    void addTerm(double coefficient, const RooAbsReal &var1, int exp1);
    void addTerm(double coefficient, const RooAbsReal &var1, int exp1, const RooAbsReal &var2, int exp2);
 
-   static std::unique_ptr<RooAbsReal>
-   taylorExpand(const char *name, const char *title, RooAbsReal &func, const RooAbsCollection &observables,
-                std::vector<double> const &observableValues, int order = 1, double eps1 = 1e-6, double eps2 = 1e-3);
-   static std::unique_ptr<RooAbsReal> taylorExpand(const char *name, const char *title, RooAbsReal &func,
-                                                   const RooAbsCollection &observables, double observablesValue = 0.0,
-                                                   int order = 1, double eps = 1e-6, double eps2 = 1e-3);
+   static std::unique_ptr<RooPolyFunc>
+   taylorExpand(const char *name, const char *title, RooAbsReal &func, const RooArgList &observables, int order = 1,
+                std::vector<double> const &observableValues = {}, double eps1 = 1e-6, double eps2 = 1e-3);
 
 protected:
    void setCoordinate(const RooAbsCollection &observables, std::vector<double> const &observableValues);
@@ -52,10 +63,9 @@ protected:
    std::vector<std::unique_ptr<RooListProxy>> _terms;
 
    /// Evaluation
-   double evaluate() const;
-   // RooSpan<double> evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const;
+   double evaluate() const override;
 
-   ClassDef(RooPolyFunc, 1) // Polynomial Function
+   ClassDefOverride(RooPolyFunc, 1) // Polynomial Function
 };
 
 #endif

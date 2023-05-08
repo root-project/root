@@ -45,7 +45,7 @@ public:
   RooRealVarSharedProperties(const char* uuidstr) : RooSharedProperties(uuidstr) {}
 
   /// Destructor
-  virtual ~RooRealVarSharedProperties() {
+  ~RooRealVarSharedProperties() override {
     if (_ownBinnings) {
       for (auto& item : _altBinning) {
         delete item.second;
@@ -61,9 +61,9 @@ protected:
 
   friend class RooRealVar ;
 
-  std::unordered_map<std::string,RooAbsBinning*> _altBinning ;  // Optional alternative ranges and binnings
+  std::unordered_map<std::string,RooAbsBinning*> _altBinning ;  ///< Optional alternative ranges and binnings
   bool _ownBinnings{true}; //!
-  ClassDef(RooRealVarSharedProperties,2) // Shared properties of a RooRealVar clone set
+  ClassDefOverride(RooRealVarSharedProperties,2) // Shared properties of a RooRealVar clone set
 };
 
 

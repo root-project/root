@@ -5,6 +5,6 @@
 
 #pragma link C++ class RooStats::HistFactory::JSONTool + ;
 #pragma link C++ class RooJSONFactoryWSTool + ;
-#pragma link C++ class RooJSONFactoryWSTool::Importer + ;
-#pragma link C++ class RooJSONFactoryWSTool::Exporter + ;
+#pragma link C++ class RooFit::JSONIO::Importer + ;
+#pragma link C++ class RooFit::JSONIO::Exporter + ;
 #endif

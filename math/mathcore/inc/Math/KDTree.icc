@@ -64,7 +64,7 @@ namespace ROOT
       {
          //private standard constructor creating a not functional tree
          //
-         //only used by interanl function for creating copies of the tree
+         //only used by internal function for creating copies of the tree
       }
 
 //______________________________________________________________________________
@@ -521,7 +521,7 @@ namespace ROOT
       {
          //returns a reference to the pointer from the parent node to the current node
          //
-         //Note: - This shoud never be called for the head node (as it is the head!)
+         //Note: - This should never be called for the head node (as it is the head!)
 
          assert(!IsHeadNode());
 
@@ -778,7 +778,7 @@ namespace ROOT
       template<class _DataPoint>
       typename KDTree<_DataPoint>::BinNode* KDTree<_DataPoint>::BinNode::Clone()
       {
-         //creates indentical copy which is not part of the tree anymore
+         //creates identical copy which is not part of the tree anymore
 
          return new BinNode(*this);
       }
@@ -1026,7 +1026,7 @@ namespace ROOT
          //        boundaries:
          //        If a node is not restricted along one axis on one/both side(s) due
          //        to a split, the corresponding upper/lower boundary is set to
-         //        the minimum/maximum coordinate alogn this axis of all contained
+         //        the minimum/maximum coordinate along this axis of all contained
          //        data points.
          //        This procedure maximises the density in the bins.
 
@@ -1326,7 +1326,7 @@ namespace ROOT
          //        boundaries:
          //        If a node is not restricted along one axis on one/both side(s) due
          //        to a split, the corresponding upper/lower boundary is set to
-         //        the minimum/maximum coordinate alogn this axis of all contained
+         //        the minimum/maximum coordinate along this axis of all contained
          //        data points.
          //        This procedure maximises the density in the bins.
 

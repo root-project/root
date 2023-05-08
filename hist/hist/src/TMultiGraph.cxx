@@ -368,11 +368,6 @@ End_Macro
 
 TMultiGraph::TMultiGraph(): TNamed()
 {
-   fGraphs    = 0;
-   fFunctions = 0;
-   fHistogram = 0;
-   fMaximum   = -1111;
-   fMinimum   = -1111;
 }
 
 
@@ -382,44 +377,7 @@ TMultiGraph::TMultiGraph(): TNamed()
 TMultiGraph::TMultiGraph(const char *name, const char *title)
        : TNamed(name,title)
 {
-   fGraphs    = 0;
-   fFunctions = 0;
-   fHistogram = 0;
-   fMaximum   = -1111;
-   fMinimum   = -1111;
 }
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Copy constructor.
-
-TMultiGraph::TMultiGraph(const TMultiGraph& mg) :
-  TNamed (mg),
-  fGraphs(mg.fGraphs),
-  fFunctions(mg.fFunctions),
-  fHistogram(mg.fHistogram),
-  fMaximum(mg.fMaximum),
-  fMinimum(mg.fMinimum)
-{
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Assignment operator.
-
-TMultiGraph& TMultiGraph::operator=(const TMultiGraph& mg)
-{
-   if (this!=&mg) {
-      TNamed::operator=(mg);
-      fGraphs=mg.fGraphs;
-      fFunctions=mg.fFunctions;
-      fHistogram=mg.fHistogram;
-      fMaximum=mg.fMaximum;
-      fMinimum=mg.fMinimum;
-   }
-   return *this;
-}
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TMultiGraph destructor.
@@ -427,16 +385,16 @@ TMultiGraph& TMultiGraph::operator=(const TMultiGraph& mg)
 TMultiGraph::~TMultiGraph()
 {
    if (!fGraphs) return;
-   TGraph *g;
+   TObject *g;
    TIter   next(fGraphs);
-   while ((g = (TGraph*) next())) {
+   while ((g = next())) {
       g->ResetBit(kMustCleanup);
    }
    fGraphs->Delete();
    delete fGraphs;
-   fGraphs = 0;
+   fGraphs = nullptr;
    delete fHistogram;
-   fHistogram = 0;
+   fHistogram = nullptr;
    if (fFunctions) {
       fFunctions->SetBit(kInvalidObject);
       //special logic to support the case where the same object is
@@ -449,6 +407,7 @@ TMultiGraph::~TMultiGraph()
          delete obj;
       }
       delete fFunctions;
+      fFunctions = nullptr;
    }
 }
 
@@ -482,14 +441,13 @@ void TMultiGraph::Add(TMultiGraph *multigraph, Option_t *chopt)
 
    if (!fGraphs) fGraphs = new TList();
 
-   TObjOptLink *lnk = (TObjOptLink*)graphlist->FirstLink();
-   TObject *obj = 0;
+   auto lnk = graphlist->FirstLink();
 
    while (lnk) {
-      obj = lnk->GetObject();
+      auto obj = lnk->GetObject();
       if (!strlen(chopt)) fGraphs->Add(obj,lnk->GetOption());
       else                fGraphs->Add(obj,chopt);
-      lnk = (TObjOptLink*)lnk->Next();
+      lnk = lnk->Next();
    }
 }
 
@@ -569,8 +527,7 @@ void TMultiGraph::Draw(Option_t *option)
 
 TFitResultPtr TMultiGraph::Fit(const char *fname, Option_t *option, Option_t *, Axis_t xmin, Axis_t xmax)
 {
-   char *linear;
-   linear= (char*)strstr(fname, "++");
+   char *linear = (char*)strstr(fname, "++");
    if (linear) {
       TF1 f1(fname, fname, xmin, xmax);
       return Fit(&f1,option,"",xmin,xmax);
@@ -1105,12 +1062,12 @@ TH1F *TMultiGraph::GetHistogram()
       rwymax = rwymax + dy;
    }
    fHistogram = new TH1F(GetName(),GetTitle(),npt,rwxmin,rwxmax);
-   if (!fHistogram) return 0;
+   if (!fHistogram) return nullptr;
    fHistogram->SetMinimum(rwymin);
    fHistogram->SetBit(TH1::kNoStats);
    fHistogram->SetMaximum(rwymax);
    fHistogram->GetYaxis()->SetLimits(rwymin,rwymax);
-   fHistogram->SetDirectory(0);
+   fHistogram->SetDirectory(nullptr);
    return fHistogram;
 }
 
@@ -1123,7 +1080,7 @@ TH1F *TMultiGraph::GetHistogram()
 
 TF1 *TMultiGraph::GetFunction(const char *name) const
 {
-   if (!fFunctions) return 0;
+   if (!fFunctions) return nullptr;
    return (TF1*)fFunctions->FindObject(name);
 }
 
@@ -1145,7 +1102,7 @@ TList *TMultiGraph::GetListOfFunctions()
 TAxis *TMultiGraph::GetXaxis()
 {
    TH1 *h = GetHistogram();
-   if (!h) return 0;
+   if (!h) return nullptr;
    return h->GetXaxis();
 }
 
@@ -1157,7 +1114,7 @@ TAxis *TMultiGraph::GetXaxis()
 TAxis *TMultiGraph::GetYaxis()
 {
    TH1 *h = GetHistogram();
-   if (!h) return 0;
+   if (!h) return nullptr;
    return h->GetYaxis();
 }
 
@@ -1174,7 +1131,7 @@ void TMultiGraph::Paint(Option_t *choptin)
 
    char option[128];
    strlcpy(option,choptin,128);
-   Int_t nch = strlen(choptin);
+   Int_t nch = choptin ? strlen(choptin) : 0;
    for (Int_t i=0;i<nch;i++) option[i] = toupper(option[i]);
 
    // Automatic color
@@ -1186,33 +1143,30 @@ void TMultiGraph::Paint(Option_t *choptin)
       if (l1) memcpy(l1,"   ",3);
       if (l2) memcpy(l2,"   ",3);
       if (l3) memcpy(l3,"   ",3);
-      TObjOptLink *lnk = (TObjOptLink*)fGraphs->FirstLink();
-      TGraph* gAti;
+      auto lnk = fGraphs->FirstLink();
       Int_t ngraphs = fGraphs->GetSize();
       Int_t ic;
       gPad->IncrementPaletteColor(ngraphs, opt1);
       for (Int_t i=0;i<ngraphs;i++) {
          ic = gPad->NextPaletteColor();
-         gAti = (TGraph*)(fGraphs->At(i));
+         auto gAti = (TGraph*)(fGraphs->At(i));
          if (l1) gAti->SetFillColor(ic);
          if (l2) gAti->SetLineColor(ic);
          if (l3) gAti->SetMarkerColor(ic);
-         lnk = (TObjOptLink*)lnk->Next();
+         lnk = lnk->Next();
       }
    }
 
-   char *l;
-
    TString chopt = option;
 
-   l = (char*)strstr(chopt.Data(),"3D");
+   auto l = strstr(chopt.Data(), "3D");
    if (l) {
-      l = (char*)strstr(chopt.Data(),"L");
+      l = strstr(chopt.Data(),"L");
       if (l) PaintPolyLine3D(chopt.Data());
       return;
    }
 
-   l = (char*)strstr(chopt.Data(),"PADS");
+   l = strstr(chopt.Data(),"PADS");
    if (l) {
       chopt.ReplaceAll("PADS","");
       PaintPads(chopt.Data());
@@ -1226,11 +1180,9 @@ void TMultiGraph::Paint(Option_t *choptin)
       return;
    }
 
-   TGraph *g;
-
-   l = (char*)strstr(chopt.Data(),"A");
+   l = strstr(chopt.Data(),"A");
    if (l) {
-      *l = ' ';
+      *((char *)l) = ' ';
       TIter   next(fGraphs);
       Int_t npt = 100;
       Double_t maximum, minimum, rwxmin, rwxmax, rwymin, rwymax, uxmin, uxmax, dx, dy;
@@ -1238,45 +1190,36 @@ void TMultiGraph::Paint(Option_t *choptin)
       rwxmax    = gPad->GetUxmax();
       rwymin    = gPad->GetUymin();
       rwymax    = gPad->GetUymax();
-      char *xtitle = 0;
-      char *ytitle = 0;
+      std::string xtitle, ytitle, timeformat;
       Int_t firstx = 0;
       Int_t lastx  = 0;
       Bool_t timedisplay = kFALSE;
-      char *timeformat = 0;
 
       if (fHistogram) {
          //cleanup in case of a previous unzoom and in case one of the TGraph has changed
-         TObjOptLink *lnk = (TObjOptLink*)fGraphs->FirstLink();
-         TGraph* gAti;
+         auto lnk = fGraphs->FirstLink();
          Int_t ngraphs = fGraphs->GetSize();
          Bool_t reset_hist = kFALSE;
          for (Int_t i=0;i<ngraphs;i++) {
-            gAti = (TGraph*)(fGraphs->At(i));
-            if(gAti->TestBit(TGraph::kResetHisto)) {reset_hist = kTRUE; break;}
-            lnk = (TObjOptLink*)lnk->Next();
+            TGraph* gAti = (TGraph*)(fGraphs->At(i));
+            if(gAti->TestBit(TGraph::kResetHisto)) {
+               reset_hist = kTRUE;
+               break;
+            }
+            lnk = lnk->Next();
          }
          if (fHistogram->GetMinimum() >= fHistogram->GetMaximum() || reset_hist) {
-            nch = strlen(fHistogram->GetXaxis()->GetTitle());
             firstx = fHistogram->GetXaxis()->GetFirst();
             lastx  = fHistogram->GetXaxis()->GetLast();
             timedisplay = fHistogram->GetXaxis()->GetTimeDisplay();
-            if (nch) {
-               xtitle = new char[nch+1];
-               strlcpy(xtitle,fHistogram->GetXaxis()->GetTitle(),nch+1);
-            }
-            nch = strlen(fHistogram->GetYaxis()->GetTitle());
-            if (nch) {
-               ytitle = new char[nch+1];
-               strlcpy(ytitle,fHistogram->GetYaxis()->GetTitle(),nch+1);
-            }
-            nch = strlen(fHistogram->GetXaxis()->GetTimeFormat());
-            if (nch) {
-              timeformat = new char[nch+1];
-              strlcpy(timeformat,fHistogram->GetXaxis()->GetTimeFormat(),nch+1);
-            }
+            if (strlen(fHistogram->GetXaxis()->GetTitle()) > 0)
+               xtitle = fHistogram->GetXaxis()->GetTitle();
+            if (strlen(fHistogram->GetYaxis()->GetTitle()) > 0)
+               ytitle = fHistogram->GetYaxis()->GetTitle();
+            if (strlen(fHistogram->GetXaxis()->GetTimeFormat()) > 0)
+              timeformat = fHistogram->GetXaxis()->GetTimeFormat();
             delete fHistogram;
-            fHistogram = 0;
+            fHistogram = nullptr;
          }
       }
       if (fHistogram) {
@@ -1286,7 +1229,7 @@ void TMultiGraph::Paint(Option_t *choptin)
          uxmax   = gPad->PadtoX(rwxmax);
       } else {
          Bool_t initialrangeset = kFALSE;
-         while ((g = (TGraph*) next())) {
+         while (auto g = (TGraph*) next()) {
             if (g->GetN() <= 0) continue;
             if (initialrangeset) {
                Double_t rx1,ry1,rx2,ry2;
@@ -1361,21 +1304,26 @@ void TMultiGraph::Paint(Option_t *choptin)
          fHistogram->SetMaximum(rwymax);
          fHistogram->GetYaxis()->SetLimits(rwymin,rwymax);
          fHistogram->SetDirectory(0);
-         if (xtitle) {fHistogram->GetXaxis()->SetTitle(xtitle); delete [] xtitle;}
-         if (ytitle) {fHistogram->GetYaxis()->SetTitle(ytitle); delete [] ytitle;}
+         if (!xtitle.empty()) fHistogram->GetXaxis()->SetTitle(xtitle.c_str());
+         if (!ytitle.empty()) fHistogram->GetYaxis()->SetTitle(ytitle.c_str());
          if (firstx != lastx) fHistogram->GetXaxis()->SetRange(firstx,lastx);
          if (timedisplay) {fHistogram->GetXaxis()->SetTimeDisplay(timedisplay);}
-         if (timeformat) {fHistogram->GetXaxis()->SetTimeFormat(timeformat); delete [] timeformat;}
+         if (!timeformat.empty()) fHistogram->GetXaxis()->SetTimeFormat(timeformat.c_str());
       }
-      fHistogram->Paint("0");
+      TString chopth = "0";
+      if (strstr(chopt.Data(),"X+")) chopth.Append("X+");
+      if (strstr(chopt.Data(),"Y+")) chopth.Append("Y+");
+      if (strstr(chopt.Data(),"I"))  chopth.Append("A");
+      fHistogram->Paint(chopth.Data());
    }
 
    TGraph *gfit = nullptr;
    if (fGraphs) {
-      TObjOptLink *lnk = (TObjOptLink*)fGraphs->FirstLink();
-      TObject *obj = 0;
+      auto lnk = fGraphs->FirstLink();
 
       chopt.ReplaceAll("A","");
+
+      TObject *obj = nullptr;
 
       while (lnk) {
 
@@ -1393,19 +1341,19 @@ void TMultiGraph::Paint(Option_t *choptin)
             }
          }
 
-         lnk = (TObjOptLink*)lnk->Next();
+         lnk = lnk->Next();
       }
 
       gfit = (TGraph*)obj; // pick one TGraph in the list to paint the fit parameters.
    }
 
-   TObject *f;
    TF1 *fit = nullptr;
    if (fFunctions) {
       TIter   next(fFunctions);
-      while ((f = (TObject*) next())) {
+      while (auto f = next()) {
          if (f->InheritsFrom(TF1::Class())) {
-            if (f->TestBit(TF1::kNotDraw) == 0) f->Paint("lsame");
+            if (f->TestBit(TF1::kNotDraw) == 0)
+               f->Paint("lsame");
             fit = (TF1*)f;
          } else  {
             f->Paint();
@@ -1413,7 +1361,8 @@ void TMultiGraph::Paint(Option_t *choptin)
       }
    }
 
-   if (gfit && fit) gfit->PaintStats(fit);
+   if (gfit && fit)
+      gfit->PaintStats(fit);
 }
 
 
@@ -1422,17 +1371,17 @@ void TMultiGraph::Paint(Option_t *choptin)
 
 void TMultiGraph::PaintPads(Option_t *option)
 {
-   TIter next(fGraphs);
+   if (!gPad) return;
+
    Int_t neededPads = fGraphs->GetSize();
    Int_t existingPads = 0;
-   TString opt = (TString)option;
 
    TVirtualPad *curPad = gPad;
-   TObject *obj;
    TIter nextPad(curPad->GetListOfPrimitives());
 
-   while ((obj = nextPad())) {
-      if (obj->InheritsFrom(TVirtualPad::Class())) existingPads++;
+   while (auto obj = nextPad()) {
+      if (obj->InheritsFrom(TVirtualPad::Class()))
+         existingPads++;
    }
    if (existingPads < neededPads) {
       curPad->Clear();
@@ -1443,23 +1392,14 @@ void TMultiGraph::PaintPads(Option_t *option)
       curPad->Divide(nx,ny);
    }
    Int_t i = 0;
-   TGraph *g;
 
-   TObjOptLink *lnk = (TObjOptLink*)fGraphs->FirstLink();
-   obj = 0;
-
-   while (lnk) {
-      g = (TGraph*)lnk->GetObject();
-      i++;
-      curPad->cd(i);
-      TString apopt = lnk->GetOption();
-      if (strlen(apopt)) {
-         g->Draw((apopt.Append("A")).Data());
-      } else {
-         if (strlen(opt)) g->Draw(opt.Append("A"));
-         else             g->Draw("LA");
-      }
-      lnk = (TObjOptLink*)lnk->Next();
+   TIter nextGraph(fGraphs);
+   while (auto g = (TGraph *) nextGraph()) {
+      curPad->cd(++i);
+      TString apopt = nextGraph.GetOption();
+      if ((apopt.Length() == 0) && option) apopt = option;
+      if (apopt.Length() == 0) apopt = "L";
+      g->Draw(apopt.Append("A").Data());
    }
 
    curPad->cd();
@@ -1471,21 +1411,18 @@ void TMultiGraph::PaintPads(Option_t *option)
 
 void TMultiGraph::PaintPolyLine3D(Option_t *option)
 {
-   Int_t i, npt=0;
-   char *l;
+   Int_t i, npt = 0;
    Double_t rwxmin=0., rwxmax=0., rwymin=0., rwymax=0.;
    TIter next(fGraphs);
-   TGraph *g;
 
-   g = (TGraph*) next();
+   TGraph *g = (TGraph*) next();
    if (g) {
       g->ComputeRange(rwxmin, rwymin, rwxmax, rwymax);
       npt = g->GetN();
    }
 
-   if (!fHistogram) {
+   if (!fHistogram)
       fHistogram = new TH1F(GetName(),GetTitle(),npt,rwxmin,rwxmax);
-   }
 
    while ((g = (TGraph*) next())) {
       Double_t rx1,ry1,rx2,ry2;
@@ -1521,12 +1458,12 @@ void TMultiGraph::PaintPolyLine3D(Option_t *option)
    if (fMaximum != -1111) frame->SetMaximum(fMaximum);
    else                   frame->SetMaximum(rwymax);
 
-   l = (char*)strstr(option,"A");
-   if (l) frame->Paint("lego9,fb,bb");
-   l = (char*)strstr(option,"BB");
-   if (!l) frame->Paint("lego9,fb,a,same");
+   if (strstr(option,"A"))
+      frame->Paint("lego9,fb,bb");
 
-   Double_t *x, *y;
+   if (!strstr(option,"BB"))
+      frame->Paint("lego9,fb,a,same");
+
    Double_t xyz1[3], xyz2[3];
 
    Double_t xl = frame->GetYaxis()->GetBinLowEdge(frame->GetYaxis()->GetFirst());
@@ -1539,8 +1476,8 @@ void TMultiGraph::PaintPolyLine3D(Option_t *option)
 
    while ((g = (TGraph*) next())) {
       npt = g->GetN();
-      x   = g->GetX();
-      y   = g->GetY();
+      auto x   = g->GetX();
+      auto y   = g->GetY();
       gPad->SetLineColor(g->GetLineColor());
       gPad->SetLineWidth(g->GetLineWidth());
       gPad->SetLineStyle(g->GetLineStyle());
@@ -1563,8 +1500,8 @@ void TMultiGraph::PaintPolyLine3D(Option_t *option)
       j--;
    }
 
-   l = (char*)strstr(option,"FB");
-   if (!l) frame->Paint("lego9,bb,a,same");
+   if (!strstr(option,"FB"))
+      frame->Paint("lego9,bb,a,same");
    delete frame;
 }
 
@@ -1652,25 +1589,19 @@ void TMultiGraph::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
    char quote = '"';
    out<<"   "<<std::endl;
-   if (gROOT->ClassSaved(TMultiGraph::Class())) {
+   if (gROOT->ClassSaved(TMultiGraph::Class())) 
       out<<"   ";
-   } else {
+   else 
       out<<"   TMultiGraph *";
-   }
    out<<"multigraph = new TMultiGraph();"<<std::endl;
    out<<"   multigraph->SetName("<<quote<<GetName()<<quote<<");"<<std::endl;
    out<<"   multigraph->SetTitle("<<quote<<GetTitle()<<quote<<");"<<std::endl;
 
-   if (fGraphs) {
-      TObjOptLink *lnk = (TObjOptLink*)fGraphs->FirstLink();
-      TObject *g;
+   TIter iter(fGraphs);
 
-      while (lnk) {
-         g = lnk->GetObject();
-         g->SavePrimitive(out, Form("multigraph%s",lnk->GetOption()));
-         lnk = (TObjOptLink*)lnk->Next();
-      }
-   }
+   while (auto g = iter())
+      g->SavePrimitive(out, TString::Format("multigraph%s", iter.GetOption()).Data());
+
    const char *l = strstr(option,"th2poly");
    if (l) {
       out<<"   "<<l+7<<"->AddBin(multigraph);"<<std::endl;

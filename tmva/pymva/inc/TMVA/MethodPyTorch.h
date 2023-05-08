@@ -60,7 +60,7 @@ namespace TMVA {
       // Get class probabilities of given event
       std::vector<Float_t>& GetMulticlassValues();
 
-      const Ranking *CreateRanking() { return 0; }
+      const Ranking *CreateRanking() { return nullptr; }
       virtual void TestClassification();
       virtual void AddWeightsXMLTo(void*) const{}
       virtual void ReadWeightsFromXML(void*){}
@@ -77,11 +77,11 @@ namespace TMVA {
       UInt_t fBatchSize {0};                          // Training batch size
       UInt_t fNumEpochs {0};                          // Number of training epochs
       Int_t fNumThreads {0};                          // Number of CPU threads (if 0 uses default values)
-      
+
       Bool_t fContinueTraining;                       // Load weights from previous training
       Bool_t fSaveBestOnly;                           // Store only weights with smallest validation loss
       TString fLearningRateSchedule;                  // Set new learning rate at specific epochs
-      
+
       TString fNumValidationString;                   // option string defining the number of validation events
 
       TString fUserCodeName;                          // filename of the user script that will be executed before loading the PyTorch model

@@ -18,11 +18,12 @@
 #include <vector>
 
 #include "TNamed.h"
-#include "TFile.h"
 
 #include "PreprocessFunction.h"
 #include "RooStats/HistFactory/Channel.h"
 #include "RooStats/HistFactory/Asimov.h"
+
+class TFile;
 
 namespace RooStats{
 namespace HistFactory {
@@ -165,7 +166,7 @@ private:
 
   std::string GetDirPath( TDirectory* dir );
 
-  ClassDef(RooStats::HistFactory::Measurement, 3);
+  ClassDefOverride(RooStats::HistFactory::Measurement, 3);
 
 };
 

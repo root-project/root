@@ -84,7 +84,9 @@ public:
 
 private:
   /// Machine instruction info used throughout the class.
-  const X86InstrInfo *TII;
+  const X86InstrInfo *TII = nullptr;
+
+  const X86Subtarget *ST = nullptr;
 };
 
 } // end anonymous namespace
@@ -94,8 +96,8 @@ char EvexToVexInstPass::ID = 0;
 bool EvexToVexInstPass::runOnMachineFunction(MachineFunction &MF) {
   TII = MF.getSubtarget<X86Subtarget>().getInstrInfo();
 
-  const X86Subtarget &ST = MF.getSubtarget<X86Subtarget>();
-  if (!ST.hasAVX512())
+  ST = &MF.getSubtarget<X86Subtarget>();
+  if (!ST->hasAVX512())
     return false;
 
   bool Changed = false;
@@ -131,7 +133,7 @@ static bool usesExtendedRegister(const MachineInstr &MI) {
     if (!MO.isReg())
       continue;
 
-    unsigned Reg = MO.getReg();
+    Register Reg = MO.getReg();
 
     assert(!(Reg >= X86::ZMM0 && Reg <= X86::ZMM31) &&
            "ZMM instructions should not be in the EVEX->VEX tables");
@@ -144,7 +146,8 @@ static bool usesExtendedRegister(const MachineInstr &MI) {
 }
 
 // Do any custom cleanup needed to finalize the conversion.
-static bool performCustomAdjustments(MachineInstr &MI, unsigned NewOpc) {
+static bool performCustomAdjustments(MachineInstr &MI, unsigned NewOpc,
+                                     const X86Subtarget *ST) {
   (void)NewOpc;
   unsigned Opc = MI.getOpcode();
   switch (Opc) {
@@ -237,11 +240,9 @@ bool EvexToVexInstPass::CompressEvexToVexImpl(MachineInstr &MI) const {
   // Make sure the tables are sorted.
   static std::atomic<bool> TableChecked(false);
   if (!TableChecked.load(std::memory_order_relaxed)) {
-    assert(std::is_sorted(std::begin(X86EvexToVex128CompressTable),
-                          std::end(X86EvexToVex128CompressTable)) &&
+    assert(llvm::is_sorted(X86EvexToVex128CompressTable) &&
            "X86EvexToVex128CompressTable is not sorted!");
-    assert(std::is_sorted(std::begin(X86EvexToVex256CompressTable),
-                          std::end(X86EvexToVex256CompressTable)) &&
+    assert(llvm::is_sorted(X86EvexToVex256CompressTable) &&
            "X86EvexToVex256CompressTable is not sorted!");
     TableChecked.store(true, std::memory_order_relaxed);
   }
@@ -252,7 +253,7 @@ bool EvexToVexInstPass::CompressEvexToVexImpl(MachineInstr &MI) const {
     (Desc.TSFlags & X86II::VEX_L) ? makeArrayRef(X86EvexToVex256CompressTable)
                                   : makeArrayRef(X86EvexToVex128CompressTable);
 
-  auto I = llvm::lower_bound(Table, MI.getOpcode());
+  const auto *I = llvm::lower_bound(Table, MI.getOpcode());
   if (I == Table.end() || I->EvexOpcode != MI.getOpcode())
     return false;
 
@@ -261,7 +262,10 @@ bool EvexToVexInstPass::CompressEvexToVexImpl(MachineInstr &MI) const {
   if (usesExtendedRegister(MI))
     return false;
 
-  if (!performCustomAdjustments(MI, NewOpc))
+  if (!CheckVEXInstPredicate(MI, ST))
+    return false;
+
+  if (!performCustomAdjustments(MI, NewOpc, ST))
     return false;
 
   MI.setDesc(TII->get(NewOpc));

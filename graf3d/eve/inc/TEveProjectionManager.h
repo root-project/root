@@ -64,7 +64,7 @@ public:
    virtual TEveElement* ImportElementsRecurse(TEveElement* el,
                                               TEveElement* parent);
    virtual TEveElement* ImportElements(TEveElement* el,
-                                       TEveElement* ext_list=0);
+                                       TEveElement* ext_list = nullptr);
 
    virtual TEveElement* SubImportElements(TEveElement* el, TEveElement* proj_parent);
    virtual Int_t        SubImportChildren(TEveElement* el, TEveElement* proj_parent);

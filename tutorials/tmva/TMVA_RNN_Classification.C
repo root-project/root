@@ -136,13 +136,14 @@ void MakeTimeData(int n, int ntime, int ndim )
    }
 }
 /// macro for performing a classification using a Recurrent Neural Network
+/// @param nevts = 2000  Number of events used. (increase for better classification results)
 /// @param use_type
 ///    use_type = 0    use Simple RNN network
 ///    use_type = 1    use LSTM network
 ///    use_type = 2    use GRU
 ///    use_type = 3    build 3 different networks with RNN, LSTM and GRU
 
-void TMVA_RNN_Classification(int use_type = 1)
+void TMVA_RNN_Classification(int nevts = 2000, int use_type = 1)
 {
 
    const int ninput = 30;
@@ -150,7 +151,7 @@ void TMVA_RNN_Classification(int use_type = 1)
    const int batchSize = 100;
    const int maxepochs = 20;
 
-   int nTotEvts = 10000; // total events to be generated for signal or background
+   int nTotEvts = nevts; // total events to be generated for signal or background
 
    bool useKeras = true;
 
@@ -190,14 +191,12 @@ void TMVA_RNN_Classification(int use_type = 1)
    useKeras = false;
 #endif
 
-   int num_threads = 0;   // use by default all threads
+   int num_threads = 4;   // use by default all threads
+   gSystem->Setenv("OMP_NUM_THREADS", "1"); // switch off MT in OpenBLAS
    // do enable MT running
    if (num_threads >= 0) {
       ROOT::EnableImplicitMT(num_threads);
-      if (num_threads > 0) gSystem->Setenv("OMP_NUM_THREADS", TString::Format("%d",num_threads));
    }
-   else
-      gSystem->Setenv("OMP_NUM_THREADS", "1");
 
    TMVA::Config::Instance();
 
@@ -424,14 +423,16 @@ the option string
             m.AddLine("model.add(Dense(64, activation = 'tanh')) ");
             m.AddLine("model.add(Dense(2, activation = 'sigmoid')) ");
             m.AddLine(
-               "model.compile(loss = 'binary_crossentropy', optimizer = Adam(lr = 0.001), metrics = ['accuracy'])");
+               "model.compile(loss = 'binary_crossentropy', optimizer = Adam(learning_rate = 0.001), weighted_metrics = ['accuracy'])");
             m.AddLine(TString::Format("modelName = '%s'", modelName.Data()));
             m.AddLine("model.save(modelName)");
             m.AddLine("model.summary()");
 
             m.SaveSource("make_rnn_model.py");
-            // execute
-            gSystem->Exec(TMVA::Python_Executable() + " make_rnn_model.py");
+            // execute python script to make the model
+            auto ret = (TString *)gROOT->ProcessLine("TMVA::Python_Executable()");
+            TString python_exe = (ret) ? *(ret) : "python";
+            gSystem->Exec(python_exe + " make_rnn_model.py");
 
             if (gSystem->AccessPathName(modelName)) {
                Warning("TMVA_RNN_Classification", "Error creating Keras recurrent model file - Skip using Keras");

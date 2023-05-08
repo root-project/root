@@ -324,8 +324,27 @@ std::unique_ptr<RDisplayItem> TObjectDrawable::Display(const RDisplayContext &ct
 void TObjectDrawable::PopulateMenu(RMenuItems &items)
 {
    auto obj = Get();
-   if ((fKind == kObject) && obj)
-      items.PopulateObjectMenu((void *)obj, obj->IsA());
+
+   if ((fKind != kObject) || !obj)
+      return;
+
+   TClass *cl = obj->IsA();
+
+   if (!items.GetSpecifier().empty() && cl->InheritsFrom("TH1")) {
+      Longptr_t offset = 0;
+      if (items.GetSpecifier() == "x")
+         offset = cl->GetDataMemberOffset("fXaxis");
+      else if (items.GetSpecifier() == "y")
+         offset = cl->GetDataMemberOffset("fYaxis");
+      else if (items.GetSpecifier() == "z")
+         offset = cl->GetDataMemberOffset("fZaxis");
+      if (offset > 0) {
+         obj = (TObject *) ((char *) obj + offset);
+         cl = obj->IsA();
+      }
+   }
+
+   items.PopulateObjectMenu((void *)obj, cl);
 }
 
 ////////////////////////////////////////////////////////////////////
@@ -351,6 +370,6 @@ void TObjectDrawable::Execute(const std::string &exec)
 
    std::stringstream cmd;
    cmd << "((" << obj->ClassName() << " *) " << std::hex << std::showbase << (size_t)obj << ")->" << ex << ";";
-   std::cout << "TObjectDrawable::Execute Obj " << obj->GetName() << "Cmd " << cmd.str() << std::endl;
+   std::cout << "TObjectDrawable::Execute Obj " << obj->GetName() << " Cmd " << cmd.str() << std::endl;
    gROOT->ProcessLine(cmd.str().c_str());
 }

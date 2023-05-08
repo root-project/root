@@ -308,7 +308,7 @@ void Inverter<idim,N>::InvertBunchKaufman(MatRepSym<T,idim> & rhs, int &ifail) {
       }
    } // end of main loop over columns
 
-   if (j == nrow) // the the last pivot is 1x1
+   if (j == nrow) // the last pivot is 1x1
    {
       mjj = rhs.Array() + j*(j-1)/2 + j-1;
       if (*mjj == 0)

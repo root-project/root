@@ -15,6 +15,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "SystemZMachineScheduler.h"
+#include "llvm/CodeGen/MachineLoopInfo.h"
 
 using namespace llvm;
 
@@ -71,6 +72,7 @@ advanceTo(MachineBasicBlock::iterator NextBegin) {
 }
 
 void SystemZPostRASchedStrategy::initialize(ScheduleDAGMI *dag) {
+  Available.clear();  // -misched-cutoff.
   LLVM_DEBUG(HazardRec->dumpState(););
 }
 

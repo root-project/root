@@ -8,18 +8,55 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "ROOT/RDF/RColumnRegister.hxx"
-#include "ROOT/RDF/RLoopManager.hxx"
 #include "ROOT/RDF/RJittedAction.hxx"
 // Avoid error: invalid application of ‘sizeof’ to incomplete type in RJittedAction::GetMergeableValue
 #include "ROOT/RDF/RMergeableValue.hxx"
-#include "TError.h"
 
 #include <cassert>
 #include <memory>
 
 using ROOT::Internal::RDF::RJittedAction;
 using ROOT::Detail::RDF::RLoopManager;
+
+// fwd decls
+class TTreeReader;
+namespace ROOT {
+namespace Detail {
+namespace RDF {
+class RLoopManager;
+}
+} // namespace Detail
+} // namespace ROOT
+namespace ROOT {
+namespace Detail {
+namespace RDF {
+class RLoopManager;
+}
+} // namespace Detail
+} // namespace ROOT
+namespace ROOT {
+namespace Detail {
+namespace RDF {
+class RMergeableValueBase;
+}
+} // namespace Detail
+} // namespace ROOT
+namespace ROOT {
+namespace Internal {
+namespace RDF {
+class RColumnRegister;
+}
+} // namespace Internal
+} // namespace ROOT
+namespace ROOT {
+namespace Internal {
+namespace RDF {
+namespace GraphDrawing {
+class GraphNode;
+}
+} // namespace RDF
+} // namespace Internal
+} // namespace ROOT
 
 RJittedAction::RJittedAction(RLoopManager &lm, const ROOT::RDF::ColumnNames_t &columns,
                              const ROOT::Internal::RDF::RColumnRegister &colRegister,
@@ -28,13 +65,7 @@ RJittedAction::RJittedAction(RLoopManager &lm, const ROOT::RDF::ColumnNames_t &c
 {
 }
 
-RJittedAction::~RJittedAction()
-{
-   // must Deregister objects from the RLoopManager here, before the fConcreteAction data member is destroyed:
-   // otherwise if fConcreteAction is the RLoopManager, it will be destroyed before the calls to Deregister happen.
-   GetColRegister().Clear(); // triggers RDefine deregistration
-   fLoopManager->Deregister(this);
-}
+RJittedAction::~RJittedAction() {}
 
 void RJittedAction::Run(unsigned int slot, Long64_t entry)
 {
@@ -94,10 +125,11 @@ void RJittedAction::SetHasRun()
    return fConcreteAction->SetHasRun();
 }
 
-std::shared_ptr<ROOT::Internal::RDF::GraphDrawing::GraphNode> RJittedAction::GetGraph()
+std::shared_ptr<ROOT::Internal::RDF::GraphDrawing::GraphNode> RJittedAction::GetGraph(
+   std::unordered_map<void *, std::shared_ptr<ROOT::Internal::RDF::GraphDrawing::GraphNode>> &visitedMap)
 {
    assert(fConcreteAction != nullptr);
-   return fConcreteAction->GetGraph();
+   return fConcreteAction->GetGraph(visitedMap);
 }
 
 /**

@@ -29,13 +29,24 @@
                         </MenuItem>
                         <MenuItem text="Save as ..." icon="sap-icon://save" enabled="false"/>
                         <MenuItem text="Interrupt" startsSection="true" icon="sap-icon://stop" enabled="{/Standalone}" tooltip="Interrupts current event loop"/>
+                        <MenuItem text="Reload" icon="sap-icon://refresh" enabled="{/Standalone}" visible="{/Standalone}" tooltip="Fully reload canvas"/>
                         <MenuItem text="Quit ROOT" icon="sap-icon://log" enabled="{/Standalone}" tooltip="Quit ROOT session"/>
-
                      </items>
                   </Menu>
                </menu>
             </MenuButton>
-            <Button text="Edit" type="Transparent"></Button>
+            <MenuButton text="Edit" type="Transparent">
+               <menu>
+                  <Menu itemSelected="onEditMenuAction">
+                     <items>
+                        <MenuItem text="Style" enabled="false"/>
+                        <MenuItem text="Divide" enabled="{/isRoot6}"/>
+                        <MenuItem text="Clear pad" startsSection="true"/>
+                        <MenuItem text="Clear canvas"/>
+                     </items>
+                  </Menu>
+               </menu>
+            </MenuButton>
             <MenuButton text="View" type="Transparent">
                <menu>
                   <Menu itemSelected="onViewMenuAction">
@@ -52,7 +63,15 @@
                   </Menu>
                </menu>
             </MenuButton>
-            <Button text="Options" type="Transparent"></Button>
+            <MenuButton text="Options" type="Transparent">
+               <menu>
+                  <Menu itemSelected="onOptionsMenuAction">
+                     <items>
+                        <MenuItem text="Interrupt"/>
+                     </items>
+                  </Menu>
+               </menu>
+            </MenuButton>
             <MenuButton text="Tools" type="Transparent">
                <menu>
                   <Menu itemSelected="onToolsMenuAction">

@@ -16,15 +16,20 @@
 #define LLVM_CLANG_AST_JSONNODEDUMPER_H
 
 #include "clang/AST/ASTContext.h"
-#include "clang/AST/ASTNodeTraverser.h"
 #include "clang/AST/ASTDumperUtils.h"
+#include "clang/AST/ASTNodeTraverser.h"
 #include "clang/AST/AttrVisitor.h"
 #include "clang/AST/CommentCommandTraits.h"
 #include "clang/AST/CommentVisitor.h"
+#include "clang/AST/ExprConcepts.h"
 #include "clang/AST/ExprCXX.h"
+#include "clang/AST/Mangle.h"
+#include "clang/AST/Type.h"
 #include "llvm/Support/JSON.h"
 
 namespace clang {
+
+class APValue;
 
 class NodeStreamer {
   bool FirstChild = true;
@@ -63,7 +68,7 @@ public:
 
     // We need to capture an owning-string in the lambda because the lambda
     // is invoked in a deferred manner.
-    std::string LabelStr = !Label.empty() ? Label : "inner";
+    std::string LabelStr(!Label.empty() ? Label : "inner");
     bool WasFirstChild = FirstChild;
     auto DumpWithIndent = [=](bool IsLastChild) {
       if (WasFirstChild) {
@@ -122,9 +127,10 @@ class JSONNodeDumper
 
   const SourceManager &SM;
   ASTContext& Ctx;
+  ASTNameGenerator ASTNameGen;
   PrintingPolicy PrintPolicy;
   const comments::CommandTraits *Traits;
-  StringRef LastLocFilename;
+  StringRef LastLocFilename, LastLocPresumedFilename;
   unsigned LastLocLine, LastLocPresumedLine;
 
   using InnerAttrVisitor = ConstAttrVisitor<JSONNodeDumper>;
@@ -140,6 +146,8 @@ class JSONNodeDumper
     if (Value)
       JOS.attribute(Key, Value);
   }
+
+  void writeIncludeStack(PresumedLoc Loc, bool JustFirst = false);
 
   // Writes the attributes of a SourceLocation object without.
   void writeBareSourceLocation(SourceLocation Loc, bool IsSpelling);
@@ -180,8 +188,9 @@ public:
   JSONNodeDumper(raw_ostream &OS, const SourceManager &SrcMgr, ASTContext &Ctx,
                  const PrintingPolicy &PrintPolicy,
                  const comments::CommandTraits *Traits)
-      : NodeStreamer(OS), SM(SrcMgr), Ctx(Ctx), PrintPolicy(PrintPolicy),
-        Traits(Traits), LastLocLine(0), LastLocPresumedLine(0) {}
+      : NodeStreamer(OS), SM(SrcMgr), Ctx(Ctx), ASTNameGen(Ctx),
+        PrintPolicy(PrintPolicy), Traits(Traits), LastLocLine(0),
+        LastLocPresumedLine(0) {}
 
   void Visit(const Attr *A);
   void Visit(const Stmt *Node);
@@ -196,6 +205,8 @@ public:
   void Visit(const OMPClause *C);
   void Visit(const BlockDecl::Capture &C);
   void Visit(const GenericSelectionExpr::ConstAssociation &A);
+  void Visit(const concepts::Requirement *R);
+  void Visit(const APValue &Value, QualType Ty);
 
   void VisitTypedefType(const TypedefType *TT);
   void VisitFunctionType(const FunctionType *T);
@@ -225,6 +236,7 @@ public:
   void VisitUsingDirectiveDecl(const UsingDirectiveDecl *UDD);
   void VisitNamespaceAliasDecl(const NamespaceAliasDecl *NAD);
   void VisitUsingDecl(const UsingDecl *UD);
+  void VisitUsingEnumDecl(const UsingEnumDecl *UED);
   void VisitUsingShadowDecl(const UsingShadowDecl *USD);
   void VisitVarDecl(const VarDecl *VD);
   void VisitFieldDecl(const FieldDecl *FD);
@@ -254,6 +266,7 @@ public:
   void VisitBlockDecl(const BlockDecl *D);
 
   void VisitDeclRefExpr(const DeclRefExpr *DRE);
+  void VisitSYCLUniqueStableNameExpr(const SYCLUniqueStableNameExpr *E);
   void VisitPredefinedExpr(const PredefinedExpr *PE);
   void VisitUnaryOperator(const UnaryOperator *UO);
   void VisitBinaryOperator(const BinaryOperator *BO);
@@ -279,6 +292,7 @@ public:
   void VisitCXXBindTemporaryExpr(const CXXBindTemporaryExpr *BTE);
   void VisitMaterializeTemporaryExpr(const MaterializeTemporaryExpr *MTE);
   void VisitCXXDependentScopeMemberExpr(const CXXDependentScopeMemberExpr *ME);
+  void VisitRequiresExpr(const RequiresExpr *RE);
 
   void VisitObjCEncodeExpr(const ObjCEncodeExpr *OEE);
   void VisitObjCMessageExpr(const ObjCMessageExpr *OME);

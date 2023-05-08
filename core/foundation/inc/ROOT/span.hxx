@@ -14,6 +14,14 @@
 #ifndef ROOT_RHYSD_SPAN_H
 #define ROOT_RHYSD_SPAN_H
 
+#if __cplusplus >= 202002
+# if __has_include(<span>)
+#  include <span>
+# endif
+#endif
+
+#if !defined(__cpp_lib_span)
+
 // Necessary to compile in c++11 mode
 #if __cplusplus >= 201402L
 #define R__CONSTEXPR_IF_CXX14 constexpr
@@ -166,7 +174,7 @@ public:
   typedef element_type *        iterator;
   typedef element_type const*   const_iterator;
   typedef ptrdiff_t             difference_type;
-  typedef std::size_t           index_type;
+  typedef std::size_t           size_type;
   typedef std::reverse_iterator<iterator> reverse_iterator;
   typedef std::reverse_iterator<const_iterator> const_reverse_iterator;
 
@@ -182,14 +190,14 @@ public:
 
   // Note:
   // This constructor can't be constexpr because & operator can't be constexpr.
-  template<index_type N>
+  template<size_type N>
   /*implicit*/ span(std::array<T, N> & a) noexcept
      : length_(N), data_(N > 0 ? a.data() : nullptr)
   {}
 
   // Note:
   // This constructor can't be constexpr because & operator can't be constexpr.
-  template<index_type N>
+  template<size_type N>
   /*implicit*/ span(T(& a)[N]) noexcept
      : length_(N), data_(N > 0 ? std::addressof(a[0]) : nullptr)
   {
@@ -204,7 +212,7 @@ public:
      : length_(v.size()), data_(v.empty() ? nullptr : v.data())
   {}
 
-  /*implicit*/ constexpr span(pointer a, index_type const n) noexcept
+  /*implicit*/ constexpr span(pointer a, size_type const n) noexcept
      : length_(n), data_(a)
   {}
 
@@ -267,15 +275,15 @@ public:
   /*
    * access
    */
-  constexpr index_type size() const noexcept
+  constexpr size_type size() const noexcept
   {
     return length_;
   }
-  constexpr index_type length() const noexcept
+  constexpr size_type length() const noexcept
   {
     return size();
   }
-  constexpr index_type max_size() const noexcept
+  constexpr size_type max_size() const noexcept
   {
     return size();
   }
@@ -283,11 +291,11 @@ public:
   {
     return length_ == 0;
   }
-  constexpr reference operator[](index_type const n) const noexcept
+  constexpr reference operator[](size_type const n) const noexcept
   {
     return *(data_ + n);
   }
-  constexpr reference at(index_type const n) const
+  constexpr reference at(size_type const n) const
   {
     //Works only in C++14
     //if (n >= length_) throw std::out_of_range("span::at()");
@@ -312,7 +320,7 @@ public:
    */
   // slice with indices {{{
   // check bound {{{
-  constexpr span<T> slice(check_bound_t, index_type const pos, index_type const slicelen) const
+  constexpr span<T> slice(check_bound_t, size_type const pos, size_type const slicelen) const
   {
     //Works only in C++14
     //if (pos >= length_ || pos + slicelen >= length_) {
@@ -321,7 +329,7 @@ public:
     //return span<T>{begin() + pos, begin() + pos + slicelen};
     return pos >= length_ || pos + slicelen >= length_ ? throw std::out_of_range("span::slice()") : span<T>{begin() + pos, begin() + pos + slicelen};
   }
-  constexpr span<T> slice_before(check_bound_t, index_type const pos) const
+  constexpr span<T> slice_before(check_bound_t, size_type const pos) const
   {
     //Works only in C++14
     //if (pos >= length_) {
@@ -330,7 +338,7 @@ public:
     //return span<T>{begin(), begin() + pos};
     return pos >= length_ ? std::out_of_range("span::slice()") : span<T>{begin(), begin() + pos};
   }
-  constexpr span<T> slice_after(check_bound_t, index_type const pos) const
+  constexpr span<T> slice_after(check_bound_t, size_type const pos) const
   {
     //Works only in C++14
     //if (pos >= length_) {
@@ -341,15 +349,15 @@ public:
   }
   // }}}
   // not check bound {{{
-  constexpr span<T> slice(index_type const pos, index_type const slicelen) const
+  constexpr span<T> slice(size_type const pos, size_type const slicelen) const
   {
     return span<T>{begin() + pos, begin() + pos + slicelen};
   }
-  constexpr span<T> slice_before(index_type const pos) const
+  constexpr span<T> slice_before(size_type const pos) const
   {
     return span<T>{begin(), begin() + pos};
   }
-  constexpr span<T> slice_after(index_type const pos) const
+  constexpr span<T> slice_after(size_type const pos) const
   {
     return span<T>{begin() + pos, end()};
   }
@@ -432,7 +440,7 @@ private:
   }
 
 private:
-  index_type length_;
+  size_type length_;
   pointer data_;
 };
 // }}}
@@ -558,7 +566,7 @@ span<T> make_view(T const (&a)[N])
 
 template<class T>
 inline constexpr
-span<T> make_view(T const* p, typename span<T>::index_type const n)
+span<T> make_view(T const* p, typename span<T>::size_type const n)
 {
   return span<T>{p, n};
 }
@@ -702,7 +710,7 @@ template<typename ValueType, int Rank = 1>
 class span {
 public:
   static constexpr int rank = Rank;
-  using index_type = index<rank>;
+  using size_type = index<rank>;
   using bounds_type = bounds<rank>;
   using size_type = typename bounds_type::size_type;
   using value_type = ValueType;
@@ -729,12 +737,13 @@ public:
 
   constexpr bounds_type bounds() const noexcept;
   constexpr size_type size() const noexcept;
-  constexpr index_type stride() const noexcept;
+  constexpr size_type stride() const noexcept;
 
   constexpr pointer data() const noexcept;
-  constexpr reference operator[](const index_type& idx) const noexcept;
+  constexpr reference operator[](const size_type& idx) const noexcept;
 };
 
 }
 #endif // too complex!
+#endif // !defined(__cpp_lib_span)
 #endif

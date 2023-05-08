@@ -32,9 +32,6 @@ class MCRegisterInfo;
 class MCSubtargetInfo;
 class MCTargetOptions;
 class Target;
-class Triple;
-class StringRef;
-class raw_pwrite_stream;
 
 MCCodeEmitter *createPPCMCCodeEmitter(const MCInstrInfo &MCII,
                                       const MCRegisterInfo &MRI,
@@ -82,6 +79,30 @@ static inline bool isRunOfOnes(unsigned Val, unsigned &MB, unsigned &ME) {
   return false;
 }
 
+static inline bool isRunOfOnes64(uint64_t Val, unsigned &MB, unsigned &ME) {
+  if (!Val)
+    return false;
+
+  if (isShiftedMask_64(Val)) {
+    // look for the first non-zero bit
+    MB = countLeadingZeros(Val);
+    // look for the first zero bit after the run of ones
+    ME = countLeadingZeros((Val - 1) ^ Val);
+    return true;
+  } else {
+    Val = ~Val; // invert mask
+    if (isShiftedMask_64(Val)) {
+      // effectively look for the first zero bit
+      ME = countLeadingZeros(Val) - 1;
+      // effectively look for the first one bit after the run of zeros
+      MB = countLeadingZeros((Val - 1) ^ Val) + 1;
+      return true;
+    }
+  }
+  // no run present
+  return false;
+}
+
 } // end namespace llvm
 
 // Generated files will use "namespace PPC". To avoid symbol clash,
@@ -102,6 +123,11 @@ static inline bool isRunOfOnes(unsigned Val, unsigned &MB, unsigned &ME) {
 
 #define GET_SUBTARGETINFO_ENUM
 #include "PPCGenSubtargetInfo.inc"
+
+#define PPC_REGS0_7(X)                                                         \
+  {                                                                            \
+    X##0, X##1, X##2, X##3, X##4, X##5, X##6, X##7                             \
+  }
 
 #define PPC_REGS0_31(X)                                                        \
   {                                                                            \
@@ -135,10 +161,10 @@ using llvm::MCPhysReg;
   static const MCPhysReg RRegs[32] = PPC_REGS0_31(PPC::R); \
   static const MCPhysReg XRegs[32] = PPC_REGS0_31(PPC::X); \
   static const MCPhysReg FRegs[32] = PPC_REGS0_31(PPC::F); \
+  static const MCPhysReg VSRpRegs[32] = PPC_REGS0_31(PPC::VSRp); \
   static const MCPhysReg SPERegs[32] = PPC_REGS0_31(PPC::S); \
   static const MCPhysReg VFRegs[32] = PPC_REGS0_31(PPC::VF); \
   static const MCPhysReg VRegs[32] = PPC_REGS0_31(PPC::V); \
-  static const MCPhysReg QFRegs[32] = PPC_REGS0_31(PPC::QF); \
   static const MCPhysReg RRegsNoR0[32] = \
     PPC_REGS_NO0_31(PPC::ZERO, PPC::R); \
   static const MCPhysReg XRegsNoX0[32] = \
@@ -158,8 +184,6 @@ using llvm::MCPhysReg;
     PPC::CR5LT, PPC::CR5GT, PPC::CR5EQ, PPC::CR5UN, \
     PPC::CR6LT, PPC::CR6GT, PPC::CR6EQ, PPC::CR6UN, \
     PPC::CR7LT, PPC::CR7GT, PPC::CR7EQ, PPC::CR7UN}; \
-  static const MCPhysReg CRRegs[8] = { \
-    PPC::CR0, PPC::CR1, PPC::CR2, PPC::CR3, \
-    PPC::CR4, PPC::CR5, PPC::CR6, PPC::CR7}
-
+  static const MCPhysReg CRRegs[8] = PPC_REGS0_7(PPC::CR); \
+  static const MCPhysReg ACCRegs[8] = PPC_REGS0_7(PPC::ACC)
 #endif // LLVM_LIB_TARGET_POWERPC_MCTARGETDESC_PPCMCTARGETDESC_H

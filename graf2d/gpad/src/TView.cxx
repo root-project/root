@@ -30,7 +30,7 @@ TView *TView::CreateView(Int_t system, const Double_t *rmin, const Double_t *rma
    TPluginHandler *h;
    if ((h = gROOT->GetPluginManager()->FindHandler("TView"))) {
       if (h->LoadPlugin() == -1)
-         return 0;
+         return nullptr;
       view = (TView*)h->ExecPlugin(3,system,rmin,rmax);
    }
    return view;

@@ -31,7 +31,6 @@
 #include "RooBernstein.h"
 #include "TCanvas.h"
 #include "RooAbsPdf.h"
-#include "RooFit.h"
 #include "RooFitResult.h"
 #include "RooPlot.h"
 #include <string>
@@ -43,7 +42,6 @@
 #include "RooProdPdf.h"
 #include "RooAddPdf.h"
 #include "RooGaussian.h"
-#include "RooNLLVar.h"
 #include "RooProfileLL.h"
 #include "RooWorkspace.h"
 
@@ -101,8 +99,7 @@ void rs_bernsteinCorrection()
    RooPlot *frame = x.frame();
    data->plotOn(frame);
    // plot the best fit nominal model in blue
-   TString minimType = ROOT::Math::MinimizerOptions::DefaultMinimizerType();
-   nominal.fitTo(*data, PrintLevel(0), Minimizer(minimType));
+    nominal.fitTo(*data, PrintLevel(0));
    nominal.plotOn(frame);
 
    // plot the best fit corrected model in red
@@ -111,7 +108,7 @@ void rs_bernsteinCorrection()
       return;
 
    // fit corrected model
-   corrected->fitTo(*data, PrintLevel(0), Minimizer(minimType));
+   corrected->fitTo(*data, PrintLevel(0));
    corrected->plotOn(frame, LineColor(kRed));
 
    // plot the correction term (* norm constant) in dashed green

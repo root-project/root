@@ -1,4 +1,4 @@
-# Copyright (C) 1995-2019, Rene Brun and Fons Rademakers.
+# Copyright (C) 1995-2022, Rene Brun and Fons Rademakers.
 # All rights reserved.
 #
 # For the licensing terms see $ROOTSYS/LICENSE.
@@ -25,4 +25,7 @@ ROOT_ADD_GTEST(
   TClingMethodInfoTests.cxx
 
   LIBRARIES
-  Core)
+  Core
+)
+
+add_dependencies(TClingTest Cling RIO)

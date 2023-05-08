@@ -30,13 +30,13 @@ public:
         RooAbsReal& _dm, RooAbsReal& _dm0, RooAbsReal& _c,
         RooAbsReal& _a, RooAbsReal& _b);
 
-  RooDstD0BG(const RooDstD0BG& other, const char *name=0) ;
-  virtual TObject *clone(const char *newname) const {
+  RooDstD0BG(const RooDstD0BG& other, const char *name=nullptr) ;
+  TObject *clone(const char *newname) const override {
     return new RooDstD0BG(*this,newname); }
-  inline virtual ~RooDstD0BG() { };
+  inline ~RooDstD0BG() override { };
 
-  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const ;
-  Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const ;
+  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=nullptr) const override ;
+  double analyticalIntegral(Int_t code, const char* rangeName=nullptr) const override ;
 
 protected:
 
@@ -44,13 +44,13 @@ protected:
   RooRealProxy dm0 ;
   RooRealProxy C,A,B ;
 
-  double evaluate() const;
-  void computeBatch(cudaStream_t*, double* output, size_t nEvents, RooFit::Detail::DataMap const&) const;
-  inline bool canComputeBatchWithCuda() const { return true; }
+  double evaluate() const override;
+  void computeBatch(cudaStream_t*, double* output, size_t nEvents, RooFit::Detail::DataMap const&) const override;
+  inline bool canComputeBatchWithCuda() const override { return true; }
 
 private:
 
-  ClassDef(RooDstD0BG,1) // D*-D0 mass difference background PDF
+  ClassDefOverride(RooDstD0BG,1) // D*-D0 mass difference background PDF
 };
 
 #endif

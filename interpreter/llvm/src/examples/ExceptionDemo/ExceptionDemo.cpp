@@ -792,7 +792,7 @@ _Unwind_Reason_Code ourPersonality(int version, _Unwind_Action actions,
   }
 #endif
 
-  const uint8_t *lsda = _Unwind_GetLanguageSpecificData(context);
+  const uint8_t *lsda = (const uint8_t *)_Unwind_GetLanguageSpecificData(context);
 
 #ifdef DEBUG
   fprintf(stderr,
@@ -1904,7 +1904,7 @@ int main(int argc, char *argv[]) {
 
   // Make the module, which holds all the code.
   std::unique_ptr<llvm::Module> Owner =
-      llvm::make_unique<llvm::Module>("my cool jit", Context);
+      std::make_unique<llvm::Module>("my cool jit", Context);
   llvm::Module *module = Owner.get();
 
   std::unique_ptr<llvm::RTDyldMemoryManager> MemMgr(new llvm::SectionMemoryManager());
@@ -1959,11 +1959,13 @@ int main(int argc, char *argv[]) {
 
     executionEngine->finalizeObject();
 
+#ifndef NDEBUG
     fprintf(stderr, "\nBegin module dump:\n\n");
 
     module->dump();
 
     fprintf(stderr, "\nEnd module dump:\n");
+#endif
 
     fprintf(stderr, "\n\nBegin Test:\n");
 

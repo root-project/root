@@ -40,10 +40,10 @@ namespace RooStats {
      ///     NeymanConstruction();
      NeymanConstruction(RooAbsData& data, ModelConfig& model);
 
-     virtual ~NeymanConstruction();
+     ~NeymanConstruction() override;
 
       /// Main interface to get a ConfInterval (will be a PointSetInterval)
-     virtual PointSetInterval* GetInterval() const;
+     PointSetInterval* GetInterval() const override;
 
       /// in addition to interface we also need:
       /// Set the TestStatSampler (eg. ToyMC or FFT, includes choice of TestStatistic)
@@ -51,7 +51,7 @@ namespace RooStats {
       /// fLeftSideTailFraction*fSize defines lower edge of acceptance region.
       /// Unified limits use 0, central limits use 0.5,
       /// for upper/lower limits it is 0/1 depends on sign of test statistic w.r.t. parameter
-      void SetLeftSideTailFraction(Double_t leftSideFraction = 0.) {fLeftSideFraction = leftSideFraction;}
+      void SetLeftSideTailFraction(double leftSideFraction = 0.) {fLeftSideFraction = leftSideFraction;}
 
       /// User-defined set of points to test
       void SetParameterPointsToTest(RooAbsData& pointsToTest) {
@@ -66,18 +66,18 @@ namespace RooStats {
       ///      void SetNumSteps(std::map<RooAbsArg, Int_t>)
 
       /// Get the size of the test (eg. rate of Type I error)
-      virtual Double_t Size() const {return fSize;}
+      double Size() const override {return fSize;}
 
       /// Get the Confidence level for the test
-      virtual Double_t ConfidenceLevel()  const {return 1.-fSize;}
+      double ConfidenceLevel()  const override {return 1.-fSize;}
 
       /// Set ModelConfig
-      virtual void SetModel(const ModelConfig &model) {fModel = model;}
+      void SetModel(const ModelConfig &model) override {fModel = model;}
 
       /// Set the DataSet
-      virtual void SetData(RooAbsData& data) { fData = data; }
+      void SetData(RooAbsData& data) override { fData = data; }
 
-      /// Set the Pdf, add to the the workspace if not already there
+      /// Set the Pdf, add to the workspace if not already there
       virtual void SetPdf(RooAbsPdf& /*pdf*/) {
         std::cout << "DEPRECATED, use ModelConfig"<<std::endl;
       }
@@ -93,9 +93,9 @@ namespace RooStats {
       }
 
       /// set the size of the test (rate of Type I error) ( Eg. 0.05 for a 95% Confidence Interval)
-      virtual void SetTestSize(Double_t size) {fSize = size;}
+      void SetTestSize(double size) override {fSize = size;}
       /// set the confidence level for the interval (eg. 0.95 for a 95% Confidence Interval)
-      virtual void SetConfidenceLevel(Double_t cl) {fSize = 1.-cl;}
+      void SetConfidenceLevel(double cl) override {fSize = 1.-cl;}
 
       /// Get confidence belt. This requires that CreateConfBelt() has been called.
       ConfidenceBelt* GetConfidenceBelt() {return fCreateBelt ? fConfBelt : nullptr;}
@@ -108,39 +108,34 @@ namespace RooStats {
 
       /// save the confidence belt to a file
       void SaveBeltToFile(bool flag=true){
-   fSaveBeltToFile = flag;
-   if(flag) fCreateBelt = true;
+         fSaveBeltToFile = flag;
+         if(flag) fCreateBelt = true;
       }
       /// should create confidence belt
       void CreateConfBelt(bool flag=true){fCreateBelt = flag;}
 
       /// Returns instance of TestStatSampler. Use to change properties of
-      /// TestStatSampler, e.g. GetTestStatSampler.SetTestSize(Double_t size);
+      /// TestStatSampler, e.g. GetTestStatSampler.SetTestSize(double size);
       TestStatSampler* GetTestStatSampler(void) { return fTestStatSampler; }
 
 
    private:
 
-      Double_t fSize; /// size of the test (eg. specified rate of Type I error)
-      RooAbsData& fData; /// data set
+      double fSize;    ///< size of the test (eg. specified rate of Type I error)
+      RooAbsData& fData; ///< data set
       ModelConfig &fModel;
-      /*
-      RooAbsPdf * fPdf; // common PDF
-      mutable RooArgSet fPOI; // RooArgSet specifying  parameters of interest for interval
-      RooArgSet fNuisParams;// RooArgSet specifying  nuisance parameters for interval
-      */
 
       TestStatSampler* fTestStatSampler;
       RooAbsData* fPointsToTest;
-      Double_t fLeftSideFraction;
+      double fLeftSideFraction;
       ConfidenceBelt* fConfBelt;
-      bool fAdaptiveSampling; // controls use of adaptive sampling algorithm
-      Double_t fAdditionalNToysFactor; // give user ability to ask for more toys
-      bool fSaveBeltToFile; // controls use if ConfidenceBelt should be saved to a TFile
-      bool fCreateBelt; // controls use if ConfidenceBelt should be saved to a TFile
+      bool fAdaptiveSampling;          ///< controls use of adaptive sampling algorithm
+      double fAdditionalNToysFactor; ///< give user ability to ask for more toys
+      bool fSaveBeltToFile;            ///< controls use if ConfidenceBelt should be saved to a TFile
+      bool fCreateBelt;                ///< controls use if ConfidenceBelt should be saved to a TFile
 
    protected:
-      ClassDef(NeymanConstruction,1)   // Interface for tools setting limits (producing confidence intervals)
+      ClassDefOverride(NeymanConstruction,1)   ///< Interface for tools setting limits (producing confidence intervals)
    };
 }
 

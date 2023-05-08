@@ -28,7 +28,9 @@ namespace ROOT {
       // Slot reserved by ROOT's packages.
       kPadThreadSlot       = 20,
       kClassThreadSlot     = 21,
-      kDirectoryThreadSlot = 22,
+      /* This no longer used.
+         kDirectoryThreadSlot = 22,
+      */
       kFileThreadSlot      = 23,
       kPerfStatsThreadSlot = 24,
 

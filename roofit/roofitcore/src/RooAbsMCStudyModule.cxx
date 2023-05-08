@@ -31,21 +31,21 @@ summaryData() is merged with the 'master' summary dataset in RooMCStudy.
 Look at RooDLLSignificanceMCSModule for an example of an implementation.
 **/
 
-#include "RooFit.h"
-#include "RooAbsMCStudyModule.h"
+#include <RooAbsMCStudyModule.h>
+
+#include <RooFitResult.h>
 
 using namespace std;
 
 ClassImp(RooAbsMCStudyModule);
-  ;
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor
 
-RooAbsMCStudyModule::RooAbsMCStudyModule(const char* name, const char* title) : TNamed(name,title), _mcs(0) 
+RooAbsMCStudyModule::RooAbsMCStudyModule(const char* name, const char* title) : TNamed(name,title), _mcs(0)
 {
-} 
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -53,16 +53,19 @@ RooAbsMCStudyModule::RooAbsMCStudyModule(const char* name, const char* title) : 
 
 RooAbsMCStudyModule::RooAbsMCStudyModule(const RooAbsMCStudyModule& other) : TNamed(other), _mcs(other._mcs)
 {
-} 
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Store reference to RooMCStudy object that this module relates to and call internal module
 /// initialization function
 
-Bool_t RooAbsMCStudyModule::doInitializeInstance(RooMCStudy& study) 
-{ 
-  _mcs = &study ; 
-  return initializeInstance() ; 
-}  
+bool RooAbsMCStudyModule::doInitializeInstance(RooMCStudy& study)
+{
+  _mcs = &study ;
+  return initializeInstance() ;
+}
 
+RooFit::OwningPtr<RooFitResult> RooAbsMCStudyModule::refit(RooAbsData* inGenSample) {
+  if (_mcs) return _mcs->refit(inGenSample) ; else return nullptr ;
+}

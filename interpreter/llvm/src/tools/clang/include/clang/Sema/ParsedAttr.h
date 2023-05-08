@@ -15,14 +15,15 @@
 #define LLVM_CLANG_SEMA_ATTRIBUTELIST_H
 
 #include "clang/Basic/AttrSubjectMatchRules.h"
+#include "clang/Basic/AttributeCommonInfo.h"
 #include "clang/Basic/Diagnostic.h"
 #include "clang/Basic/SourceLocation.h"
-#include "clang/Basic/TargetInfo.h"
 #include "clang/Sema/Ownership.h"
 #include "llvm/ADT/PointerUnion.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/TinyPtrVector.h"
 #include "llvm/Support/Allocator.h"
+#include "llvm/Support/Registry.h"
 #include "llvm/Support/VersionTuple.h"
 #include <cassert>
 #include <cstddef>
@@ -36,6 +37,97 @@ class Decl;
 class Expr;
 class IdentifierInfo;
 class LangOptions;
+class ParsedAttr;
+class Sema;
+class Stmt;
+class TargetInfo;
+
+struct ParsedAttrInfo {
+  /// Corresponds to the Kind enum.
+  unsigned AttrKind : 16;
+  /// The number of required arguments of this attribute.
+  unsigned NumArgs : 4;
+  /// The number of optional arguments of this attributes.
+  unsigned OptArgs : 4;
+  /// True if the parsing does not match the semantic content.
+  unsigned HasCustomParsing : 1;
+  /// True if this attribute is only available for certain targets.
+  unsigned IsTargetSpecific : 1;
+  /// True if this attribute applies to types.
+  unsigned IsType : 1;
+  /// True if this attribute applies to statements.
+  unsigned IsStmt : 1;
+  /// True if this attribute has any spellings that are known to gcc.
+  unsigned IsKnownToGCC : 1;
+  /// True if this attribute is supported by #pragma clang attribute.
+  unsigned IsSupportedByPragmaAttribute : 1;
+  /// The syntaxes supported by this attribute and how they're spelled.
+  struct Spelling {
+    AttributeCommonInfo::Syntax Syntax;
+    const char *NormalizedFullName;
+  };
+  ArrayRef<Spelling> Spellings;
+
+  ParsedAttrInfo(AttributeCommonInfo::Kind AttrKind =
+                     AttributeCommonInfo::NoSemaHandlerAttribute)
+      : AttrKind(AttrKind), NumArgs(0), OptArgs(0), HasCustomParsing(0),
+        IsTargetSpecific(0), IsType(0), IsStmt(0), IsKnownToGCC(0),
+        IsSupportedByPragmaAttribute(0) {}
+
+  virtual ~ParsedAttrInfo() = default;
+
+  /// Check if this attribute appertains to D, and issue a diagnostic if not.
+  virtual bool diagAppertainsToDecl(Sema &S, const ParsedAttr &Attr,
+                                    const Decl *D) const {
+    return true;
+  }
+  /// Check if this attribute appertains to St, and issue a diagnostic if not.
+  virtual bool diagAppertainsToStmt(Sema &S, const ParsedAttr &Attr,
+                                    const Stmt *St) const {
+    return true;
+  }
+  /// Check if the given attribute is mutually exclusive with other attributes
+  /// already applied to the given declaration.
+  virtual bool diagMutualExclusion(Sema &S, const ParsedAttr &A,
+                                   const Decl *D) const {
+    return true;
+  }
+  /// Check if this attribute is allowed by the language we are compiling, and
+  /// issue a diagnostic if not.
+  virtual bool diagLangOpts(Sema &S, const ParsedAttr &Attr) const {
+    return true;
+  }
+  /// Check if this attribute is allowed when compiling for the given target.
+  virtual bool existsInTarget(const TargetInfo &Target) const {
+    return true;
+  }
+  /// Convert the spelling index of Attr to a semantic spelling enum value.
+  virtual unsigned
+  spellingIndexToSemanticSpelling(const ParsedAttr &Attr) const {
+    return UINT_MAX;
+  }
+  /// Populate Rules with the match rules of this attribute.
+  virtual void getPragmaAttributeMatchRules(
+      llvm::SmallVectorImpl<std::pair<attr::SubjectMatchRule, bool>> &Rules,
+      const LangOptions &LangOpts) const {
+  }
+  enum AttrHandling {
+    NotHandled,
+    AttributeApplied,
+    AttributeNotApplied
+  };
+  /// If this ParsedAttrInfo knows how to handle this ParsedAttr applied to this
+  /// Decl then do so and return either AttributeApplied if it was applied or
+  /// AttributeNotApplied if it wasn't. Otherwise return NotHandled.
+  virtual AttrHandling handleDeclAttribute(Sema &S, Decl *D,
+                                           const ParsedAttr &Attr) const {
+    return NotHandled;
+  }
+
+  static const ParsedAttrInfo &get(const AttributeCommonInfo &A);
+};
+
+typedef llvm::Registry<ParsedAttrInfo> ParsedAttrInfoRegistry;
 
 /// Represents information about a change in availability for
 /// an entity, which is part of the encoding of the 'availability'
@@ -114,7 +206,8 @@ using ArgsVector = llvm::SmallVector<ArgsUnion, 12U>;
 /// 4: __attribute__(( aligned(16) )). ParmName is unused, Args/Num used.
 ///
 class ParsedAttr final
-    : private llvm::TrailingObjects<
+    : public AttributeCommonInfo,
+      private llvm::TrailingObjects<
           ParsedAttr, ArgsUnion, detail::AvailabilityData,
           detail::TypeTagForDatatypeData, ParsedType, detail::PropertyData> {
   friend TrailingObjects;
@@ -134,53 +227,14 @@ class ParsedAttr final
     return IsProperty;
   }
 
-public:
-  /// The style used to specify an attribute.
-  enum Syntax {
-    /// __attribute__((...))
-    AS_GNU,
-
-    /// [[...]]
-    AS_CXX11,
-
-    /// [[...]]
-    AS_C2x,
-
-    /// __declspec(...)
-    AS_Declspec,
-
-    /// [uuid("...")] class Foo
-    AS_Microsoft,
-
-    /// __ptr16, alignas(...), etc.
-    AS_Keyword,
-
-    /// #pragma ...
-    AS_Pragma,
-
-    // Note TableGen depends on the order above.  Do not add or change the order
-    // without adding related code to TableGen/ClangAttrEmitter.cpp.
-    /// Context-sensitive version of a keyword attribute.
-    AS_ContextSensitiveKeyword,
-  };
-
 private:
-  IdentifierInfo *AttrName;
-  IdentifierInfo *ScopeName;
   IdentifierInfo *MacroII = nullptr;
   SourceLocation MacroExpansionLoc;
-  SourceRange AttrRange;
-  SourceLocation ScopeLoc;
   SourceLocation EllipsisLoc;
-
-  unsigned AttrKind : 16;
 
   /// The number of expression arguments this attribute has.
   /// The expressions themselves are stored after the object.
   unsigned NumArgs : 16;
-
-  /// Corresponds to the Syntax enum.
-  unsigned SyntaxUsed : 3;
 
   /// True if already diagnosed as invalid.
   mutable unsigned Invalid : 1;
@@ -218,6 +272,8 @@ private:
 
   const Expr *MessageExpr;
 
+  const ParsedAttrInfo &Info;
+
   ArgsUnion *getArgsBuffer() { return getTrailingObjects<ArgsUnion>(); }
   ArgsUnion const *getArgsBuffer() const {
     return getTrailingObjects<ArgsUnion>();
@@ -239,14 +295,15 @@ private:
              IdentifierInfo *scopeName, SourceLocation scopeLoc,
              ArgsUnion *args, unsigned numArgs, Syntax syntaxUsed,
              SourceLocation ellipsisLoc)
-      : AttrName(attrName), ScopeName(scopeName), AttrRange(attrRange),
-        ScopeLoc(scopeLoc), EllipsisLoc(ellipsisLoc), NumArgs(numArgs),
-        SyntaxUsed(syntaxUsed), Invalid(false), UsedAsTypeAttr(false),
-        IsAvailability(false), IsTypeTagForDatatype(false), IsProperty(false),
-        HasParsedType(false), HasProcessingCache(false),
-        IsPragmaClangAttribute(false) {
-    if (numArgs) memcpy(getArgsBuffer(), args, numArgs * sizeof(ArgsUnion));
-    AttrKind = getKind(getName(), getScopeName(), syntaxUsed);
+      : AttributeCommonInfo(attrName, scopeName, attrRange, scopeLoc,
+                            syntaxUsed),
+        EllipsisLoc(ellipsisLoc), NumArgs(numArgs), Invalid(false),
+        UsedAsTypeAttr(false), IsAvailability(false),
+        IsTypeTagForDatatype(false), IsProperty(false), HasParsedType(false),
+        HasProcessingCache(false), IsPragmaClangAttribute(false),
+        Info(ParsedAttrInfo::get(*this)) {
+    if (numArgs)
+      memcpy(getArgsBuffer(), args, numArgs * sizeof(ArgsUnion));
   }
 
   /// Constructor for availability attributes.
@@ -257,17 +314,17 @@ private:
              const AvailabilityChange &obsoleted, SourceLocation unavailable,
              const Expr *messageExpr, Syntax syntaxUsed, SourceLocation strict,
              const Expr *replacementExpr)
-      : AttrName(attrName), ScopeName(scopeName), AttrRange(attrRange),
-        ScopeLoc(scopeLoc), NumArgs(1), SyntaxUsed(syntaxUsed), Invalid(false),
-        UsedAsTypeAttr(false), IsAvailability(true),
+      : AttributeCommonInfo(attrName, scopeName, attrRange, scopeLoc,
+                            syntaxUsed),
+        NumArgs(1), Invalid(false), UsedAsTypeAttr(false), IsAvailability(true),
         IsTypeTagForDatatype(false), IsProperty(false), HasParsedType(false),
         HasProcessingCache(false), IsPragmaClangAttribute(false),
-        UnavailableLoc(unavailable), MessageExpr(messageExpr) {
+        UnavailableLoc(unavailable), MessageExpr(messageExpr),
+        Info(ParsedAttrInfo::get(*this)) {
     ArgsUnion PVal(Parm);
     memcpy(getArgsBuffer(), &PVal, sizeof(ArgsUnion));
     new (getAvailabilityData()) detail::AvailabilityData(
         introduced, deprecated, obsoleted, strict, replacementExpr);
-    AttrKind = getKind(getName(), getScopeName(), syntaxUsed);
   }
 
   /// Constructor for objc_bridge_related attributes.
@@ -275,16 +332,16 @@ private:
              IdentifierInfo *scopeName, SourceLocation scopeLoc,
              IdentifierLoc *Parm1, IdentifierLoc *Parm2, IdentifierLoc *Parm3,
              Syntax syntaxUsed)
-      : AttrName(attrName), ScopeName(scopeName), AttrRange(attrRange),
-        ScopeLoc(scopeLoc), NumArgs(3), SyntaxUsed(syntaxUsed), Invalid(false),
-        UsedAsTypeAttr(false), IsAvailability(false),
-        IsTypeTagForDatatype(false), IsProperty(false), HasParsedType(false),
-        HasProcessingCache(false), IsPragmaClangAttribute(false) {
+      : AttributeCommonInfo(attrName, scopeName, attrRange, scopeLoc,
+                            syntaxUsed),
+        NumArgs(3), Invalid(false), UsedAsTypeAttr(false),
+        IsAvailability(false), IsTypeTagForDatatype(false), IsProperty(false),
+        HasParsedType(false), HasProcessingCache(false),
+        IsPragmaClangAttribute(false), Info(ParsedAttrInfo::get(*this)) {
     ArgsUnion *Args = getArgsBuffer();
     Args[0] = Parm1;
     Args[1] = Parm2;
     Args[2] = Parm3;
-    AttrKind = getKind(getName(), getScopeName(), syntaxUsed);
   }
 
   /// Constructor for type_tag_for_datatype attribute.
@@ -292,31 +349,31 @@ private:
              IdentifierInfo *scopeName, SourceLocation scopeLoc,
              IdentifierLoc *ArgKind, ParsedType matchingCType,
              bool layoutCompatible, bool mustBeNull, Syntax syntaxUsed)
-      : AttrName(attrName), ScopeName(scopeName), AttrRange(attrRange),
-        ScopeLoc(scopeLoc), NumArgs(1), SyntaxUsed(syntaxUsed), Invalid(false),
-        UsedAsTypeAttr(false), IsAvailability(false),
-        IsTypeTagForDatatype(true), IsProperty(false), HasParsedType(false),
-        HasProcessingCache(false), IsPragmaClangAttribute(false) {
+      : AttributeCommonInfo(attrName, scopeName, attrRange, scopeLoc,
+                            syntaxUsed),
+        NumArgs(1), Invalid(false), UsedAsTypeAttr(false),
+        IsAvailability(false), IsTypeTagForDatatype(true), IsProperty(false),
+        HasParsedType(false), HasProcessingCache(false),
+        IsPragmaClangAttribute(false), Info(ParsedAttrInfo::get(*this)) {
     ArgsUnion PVal(ArgKind);
     memcpy(getArgsBuffer(), &PVal, sizeof(ArgsUnion));
     detail::TypeTagForDatatypeData &ExtraData = getTypeTagForDatatypeDataSlot();
     new (&ExtraData.MatchingCType) ParsedType(matchingCType);
     ExtraData.LayoutCompatible = layoutCompatible;
     ExtraData.MustBeNull = mustBeNull;
-    AttrKind = getKind(getName(), getScopeName(), syntaxUsed);
   }
 
   /// Constructor for attributes with a single type argument.
   ParsedAttr(IdentifierInfo *attrName, SourceRange attrRange,
              IdentifierInfo *scopeName, SourceLocation scopeLoc,
              ParsedType typeArg, Syntax syntaxUsed)
-      : AttrName(attrName), ScopeName(scopeName), AttrRange(attrRange),
-        ScopeLoc(scopeLoc), NumArgs(0), SyntaxUsed(syntaxUsed), Invalid(false),
-        UsedAsTypeAttr(false), IsAvailability(false),
-        IsTypeTagForDatatype(false), IsProperty(false), HasParsedType(true),
-        HasProcessingCache(false), IsPragmaClangAttribute(false) {
+      : AttributeCommonInfo(attrName, scopeName, attrRange, scopeLoc,
+                            syntaxUsed),
+        NumArgs(0), Invalid(false), UsedAsTypeAttr(false),
+        IsAvailability(false), IsTypeTagForDatatype(false), IsProperty(false),
+        HasParsedType(true), HasProcessingCache(false),
+        IsPragmaClangAttribute(false), Info(ParsedAttrInfo::get(*this)) {
     new (&getTypeBuffer()) ParsedType(typeArg);
-    AttrKind = getKind(getName(), getScopeName(), syntaxUsed);
   }
 
   /// Constructor for microsoft __declspec(property) attribute.
@@ -324,13 +381,13 @@ private:
              IdentifierInfo *scopeName, SourceLocation scopeLoc,
              IdentifierInfo *getterId, IdentifierInfo *setterId,
              Syntax syntaxUsed)
-      : AttrName(attrName), ScopeName(scopeName), AttrRange(attrRange),
-        ScopeLoc(scopeLoc), NumArgs(0), SyntaxUsed(syntaxUsed), Invalid(false),
-        UsedAsTypeAttr(false), IsAvailability(false),
-        IsTypeTagForDatatype(false), IsProperty(true), HasParsedType(false),
-        HasProcessingCache(false), IsPragmaClangAttribute(false) {
+      : AttributeCommonInfo(attrName, scopeName, attrRange, scopeLoc,
+                            syntaxUsed),
+        NumArgs(0), Invalid(false), UsedAsTypeAttr(false),
+        IsAvailability(false), IsTypeTagForDatatype(false), IsProperty(true),
+        HasParsedType(false), HasProcessingCache(false),
+        IsPragmaClangAttribute(false), Info(ParsedAttrInfo::get(*this)) {
     new (&getPropertyDataBuffer()) detail::PropertyData(getterId, setterId);
-    AttrKind = getKind(getName(), getScopeName(), syntaxUsed);
   }
 
   /// Type tag information is stored immediately following the arguments, if
@@ -372,56 +429,11 @@ public:
 
   void operator delete(void *) = delete;
 
-  enum Kind {
-    #define PARSED_ATTR(NAME) AT_##NAME,
-    #include "clang/Sema/AttrParsedAttrList.inc"
-    #undef PARSED_ATTR
-    IgnoredAttribute,
-    UnknownAttribute
-  };
-
-  IdentifierInfo *getName() const { return AttrName; }
-  SourceLocation getLoc() const { return AttrRange.getBegin(); }
-  SourceRange getRange() const { return AttrRange; }
-
-  bool hasScope() const { return ScopeName; }
-  IdentifierInfo *getScopeName() const { return ScopeName; }
-  SourceLocation getScopeLoc() const { return ScopeLoc; }
-
-  bool isGNUScope() const {
-    return ScopeName &&
-           (ScopeName->isStr("gnu") || ScopeName->isStr("__gnu__"));
-  }
-
   bool hasParsedType() const { return HasParsedType; }
 
   /// Is this the Microsoft __declspec(property) attribute?
   bool isDeclspecPropertyAttribute() const  {
     return IsProperty;
-  }
-
-  bool isAlignasAttribute() const {
-    // FIXME: Use a better mechanism to determine this.
-    return getKind() == AT_Aligned && isKeywordAttribute();
-  }
-
-  bool isDeclspecAttribute() const { return SyntaxUsed == AS_Declspec; }
-  bool isMicrosoftAttribute() const { return SyntaxUsed == AS_Microsoft; }
-
-  bool isCXX11Attribute() const {
-    return SyntaxUsed == AS_CXX11 || isAlignasAttribute();
-  }
-
-  bool isC2xAttribute() const {
-    return SyntaxUsed == AS_C2x;
-  }
-
-  bool isKeywordAttribute() const {
-    return SyntaxUsed == AS_Keyword || SyntaxUsed == AS_ContextSensitiveKeyword;
-  }
-
-  bool isContextSensitiveKeywordAttribute() const {
-    return SyntaxUsed == AS_ContextSensitiveKeyword;
   }
 
   bool isInvalid() const { return Invalid; }
@@ -450,10 +462,6 @@ public:
   bool isPackExpansion() const { return EllipsisLoc.isValid(); }
   SourceLocation getEllipsisLoc() const { return EllipsisLoc; }
 
-  Kind getKind() const { return Kind(AttrKind); }
-  static Kind getKind(const IdentifierInfo *Name, const IdentifierInfo *Scope,
-                      Syntax SyntaxUsed);
-
   /// getNumArgs - Return the number of actual arguments to this attribute.
   unsigned getNumArgs() const { return NumArgs; }
 
@@ -480,54 +488,61 @@ public:
   }
 
   const AvailabilityChange &getAvailabilityIntroduced() const {
-    assert(getKind() == AT_Availability && "Not an availability attribute");
+    assert(getParsedKind() == AT_Availability &&
+           "Not an availability attribute");
     return getAvailabilityData()->Changes[detail::IntroducedSlot];
   }
 
   const AvailabilityChange &getAvailabilityDeprecated() const {
-    assert(getKind() == AT_Availability && "Not an availability attribute");
+    assert(getParsedKind() == AT_Availability &&
+           "Not an availability attribute");
     return getAvailabilityData()->Changes[detail::DeprecatedSlot];
   }
 
   const AvailabilityChange &getAvailabilityObsoleted() const {
-    assert(getKind() == AT_Availability && "Not an availability attribute");
+    assert(getParsedKind() == AT_Availability &&
+           "Not an availability attribute");
     return getAvailabilityData()->Changes[detail::ObsoletedSlot];
   }
 
   SourceLocation getStrictLoc() const {
-    assert(getKind() == AT_Availability && "Not an availability attribute");
+    assert(getParsedKind() == AT_Availability &&
+           "Not an availability attribute");
     return getAvailabilityData()->StrictLoc;
   }
 
   SourceLocation getUnavailableLoc() const {
-    assert(getKind() == AT_Availability && "Not an availability attribute");
+    assert(getParsedKind() == AT_Availability &&
+           "Not an availability attribute");
     return UnavailableLoc;
   }
 
   const Expr * getMessageExpr() const {
-    assert(getKind() == AT_Availability && "Not an availability attribute");
+    assert(getParsedKind() == AT_Availability &&
+           "Not an availability attribute");
     return MessageExpr;
   }
 
   const Expr *getReplacementExpr() const {
-    assert(getKind() == AT_Availability && "Not an availability attribute");
+    assert(getParsedKind() == AT_Availability &&
+           "Not an availability attribute");
     return getAvailabilityData()->Replacement;
   }
 
   const ParsedType &getMatchingCType() const {
-    assert(getKind() == AT_TypeTagForDatatype &&
+    assert(getParsedKind() == AT_TypeTagForDatatype &&
            "Not a type_tag_for_datatype attribute");
     return getTypeTagForDatatypeDataSlot().MatchingCType;
   }
 
   bool getLayoutCompatible() const {
-    assert(getKind() == AT_TypeTagForDatatype &&
+    assert(getParsedKind() == AT_TypeTagForDatatype &&
            "Not a type_tag_for_datatype attribute");
     return getTypeTagForDatatypeDataSlot().LayoutCompatible;
   }
 
   bool getMustBeNull() const {
-    assert(getKind() == AT_TypeTagForDatatype &&
+    assert(getParsedKind() == AT_TypeTagForDatatype &&
            "Not a type_tag_for_datatype attribute");
     return getTypeTagForDatatypeDataSlot().MustBeNull;
   }
@@ -570,10 +585,15 @@ public:
     return MacroExpansionLoc;
   }
 
-  /// Get an index into the attribute spelling list
-  /// defined in Attr.td. This index is used by an attribute
-  /// to pretty print itself.
-  unsigned getAttributeSpellingListIndex() const;
+  /// Check if the attribute has exactly as many args as Num. May output an
+  /// error. Returns false if a diagnostic is produced.
+  bool checkExactlyNumArgs(class Sema &S, unsigned Num) const;
+  /// Check if the attribute has at least as many args as Num. May output an
+  /// error. Returns false if a diagnostic is produced.
+  bool checkAtLeastNumArgs(class Sema &S, unsigned Num) const;
+  /// Check if the attribute has at most as many args as Num. May output an
+  /// error. Returns false if a diagnostic is produced.
+  bool checkAtMostNumArgs(class Sema &S, unsigned Num) const;
 
   bool isTargetSpecificAttr() const;
   bool isTypeAttr() const;
@@ -584,6 +604,14 @@ public:
   unsigned getMaxArgs() const;
   bool hasVariadicArg() const;
   bool diagnoseAppertainsTo(class Sema &S, const Decl *D) const;
+  bool diagnoseAppertainsTo(class Sema &S, const Stmt *St) const;
+  bool diagnoseMutualExclusion(class Sema &S, const Decl *D) const;
+  // This function stub exists for parity with the declaration checking code so
+  // that checkCommonAttributeFeatures() can work generically on declarations
+  // or statements.
+  bool diagnoseMutualExclusion(class Sema &S, const Stmt *St) const {
+    return true;
+  }
   bool appliesToDecl(const Decl *D, attr::SubjectMatchRule MatchRule) const;
   void getMatchRules(const LangOptions &LangOpts,
                      SmallVectorImpl<std::pair<attr::SubjectMatchRule, bool>>
@@ -600,14 +628,18 @@ public:
   /// a Spelling enumeration, the value UINT_MAX is returned.
   unsigned getSemanticSpelling() const;
 
-  /// If this is an OpenCL addr space attribute returns its representation
-  /// in LangAS, otherwise returns default addr space.
+  /// If this is an OpenCL address space attribute returns its representation
+  /// in LangAS, otherwise returns default address space.
   LangAS asOpenCLLangAS() const {
-    switch (getKind()) {
+    switch (getParsedKind()) {
     case ParsedAttr::AT_OpenCLConstantAddressSpace:
       return LangAS::opencl_constant;
     case ParsedAttr::AT_OpenCLGlobalAddressSpace:
       return LangAS::opencl_global;
+    case ParsedAttr::AT_OpenCLGlobalDeviceAddressSpace:
+      return LangAS::opencl_global_device;
+    case ParsedAttr::AT_OpenCLGlobalHostAddressSpace:
+      return LangAS::opencl_global_host;
     case ParsedAttr::AT_OpenCLLocalAddressSpace:
       return LangAS::opencl_local;
     case ParsedAttr::AT_OpenCLPrivateAddressSpace:
@@ -618,6 +650,31 @@ public:
       return LangAS::Default;
     }
   }
+
+  /// If this is an OpenCL address space attribute returns its SYCL
+  /// representation in LangAS, otherwise returns default address space.
+  LangAS asSYCLLangAS() const {
+    switch (getKind()) {
+    case ParsedAttr::AT_OpenCLGlobalAddressSpace:
+      return LangAS::sycl_global;
+    case ParsedAttr::AT_OpenCLGlobalDeviceAddressSpace:
+      return LangAS::sycl_global_device;
+    case ParsedAttr::AT_OpenCLGlobalHostAddressSpace:
+      return LangAS::sycl_global_host;
+    case ParsedAttr::AT_OpenCLLocalAddressSpace:
+      return LangAS::sycl_local;
+    case ParsedAttr::AT_OpenCLPrivateAddressSpace:
+      return LangAS::sycl_private;
+    case ParsedAttr::AT_OpenCLGenericAddressSpace:
+    default:
+      return LangAS::Default;
+    }
+  }
+
+  AttributeCommonInfo::Kind getKind() const {
+    return AttributeCommonInfo::Kind(Info.AttrKind);
+  }
+  const ParsedAttrInfo &getInfo() const { return Info; }
 };
 
 class AttributePool;
@@ -889,8 +946,9 @@ public:
   }
 
   bool hasAttribute(ParsedAttr::Kind K) const {
-    return llvm::any_of(
-        AttrList, [K](const ParsedAttr *AL) { return AL->getKind() == K; });
+    return llvm::any_of(AttrList, [K](const ParsedAttr *AL) {
+      return AL->getParsedKind() == K;
+    });
   }
 
 private:
@@ -1009,13 +1067,35 @@ private:
   mutable AttributePool pool;
 };
 
+struct ParsedAttributesWithRange : ParsedAttributes {
+  ParsedAttributesWithRange(AttributeFactory &factory)
+      : ParsedAttributes(factory) {}
+
+  void clear() {
+    ParsedAttributes::clear();
+    Range = SourceRange();
+  }
+
+  SourceRange Range;
+};
+struct ParsedAttributesViewWithRange : ParsedAttributesView {
+  ParsedAttributesViewWithRange() : ParsedAttributesView() {}
+  void clearListOnly() {
+    ParsedAttributesView::clearListOnly();
+    Range = SourceRange();
+  }
+
+  SourceRange Range;
+};
+
 /// These constants match the enumerated choices of
 /// err_attribute_argument_n_type and err_attribute_argument_type.
 enum AttributeArgumentNType {
   AANT_ArgumentIntOrBool,
   AANT_ArgumentIntegerConstant,
   AANT_ArgumentString,
-  AANT_ArgumentIdentifier
+  AANT_ArgumentIdentifier,
+  AANT_ArgumentConstantExpr,
 };
 
 /// These constants match the enumerated choices of
@@ -1036,32 +1116,43 @@ enum AttributeDeclKind {
   ExpectedFunctionWithProtoType,
 };
 
-inline const DiagnosticBuilder &operator<<(const DiagnosticBuilder &DB,
-                                           const ParsedAttr &At) {
-  DB.AddTaggedVal(reinterpret_cast<intptr_t>(At.getName()),
+inline const StreamingDiagnostic &operator<<(const StreamingDiagnostic &DB,
+                                             const ParsedAttr &At) {
+  DB.AddTaggedVal(reinterpret_cast<intptr_t>(At.getAttrName()),
                   DiagnosticsEngine::ak_identifierinfo);
   return DB;
 }
 
-inline const PartialDiagnostic &operator<<(const PartialDiagnostic &PD,
-                                           const ParsedAttr &At) {
-  PD.AddTaggedVal(reinterpret_cast<intptr_t>(At.getName()),
-                  DiagnosticsEngine::ak_identifierinfo);
-  return PD;
-}
-
-inline const DiagnosticBuilder &operator<<(const DiagnosticBuilder &DB,
-                                           const ParsedAttr *At) {
-  DB.AddTaggedVal(reinterpret_cast<intptr_t>(At->getName()),
+inline const StreamingDiagnostic &operator<<(const StreamingDiagnostic &DB,
+                                             const ParsedAttr *At) {
+  DB.AddTaggedVal(reinterpret_cast<intptr_t>(At->getAttrName()),
                   DiagnosticsEngine::ak_identifierinfo);
   return DB;
 }
 
-inline const PartialDiagnostic &operator<<(const PartialDiagnostic &PD,
-                                           const ParsedAttr *At) {
-  PD.AddTaggedVal(reinterpret_cast<intptr_t>(At->getName()),
+/// AttributeCommonInfo has a non-explicit constructor which takes an
+/// SourceRange as its only argument, this constructor has many uses so making
+/// it explicit is hard. This constructor causes ambiguity with
+/// DiagnosticBuilder &operator<<(const DiagnosticBuilder &DB, SourceRange R).
+/// We use SFINAE to disable any conversion and remove any ambiguity.
+template <typename ACI,
+          typename std::enable_if_t<
+              std::is_same<ACI, AttributeCommonInfo>::value, int> = 0>
+inline const StreamingDiagnostic &operator<<(const StreamingDiagnostic &DB,
+                                           const ACI &CI) {
+  DB.AddTaggedVal(reinterpret_cast<intptr_t>(CI.getAttrName()),
                   DiagnosticsEngine::ak_identifierinfo);
-  return PD;
+  return DB;
+}
+
+template <typename ACI,
+          typename std::enable_if_t<
+              std::is_same<ACI, AttributeCommonInfo>::value, int> = 0>
+inline const StreamingDiagnostic &operator<<(const StreamingDiagnostic &DB,
+                                           const ACI* CI) {
+  DB.AddTaggedVal(reinterpret_cast<intptr_t>(CI->getAttrName()),
+                  DiagnosticsEngine::ak_identifierinfo);
+  return DB;
 }
 
 } // namespace clang

@@ -24,7 +24,6 @@ Lightweight interface adaptor that exports a RooAbsReal as a ROOT::Math::IGenFun
 **/
 
 
-#include "RooFit.h"
 #include "Riostream.h"
 
 #include "RooGenFunction.h"
@@ -68,14 +67,14 @@ RooGenFunction::RooGenFunction(const RooGenFunction& other) :
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooGenFunction::~RooGenFunction() 
+RooGenFunction::~RooGenFunction()
 {
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
 
-double RooGenFunction::DoEval(double x) const 
+double RooGenFunction::DoEval(double x) const
 {
   return _ftor(x) ;
 }

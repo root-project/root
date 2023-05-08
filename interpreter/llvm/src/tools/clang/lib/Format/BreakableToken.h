@@ -155,7 +155,7 @@ public:
   /// file.
   virtual Split getSplit(unsigned LineIndex, unsigned TailOffset,
                          unsigned ColumnLimit, unsigned ContentStartColumn,
-                         llvm::Regex &CommentPragmasRegex) const = 0;
+                         const llvm::Regex &CommentPragmasRegex) const = 0;
 
   /// Emits the previously retrieved \p Split via \p Whitespaces.
   virtual void insertBreak(unsigned LineIndex, unsigned TailOffset, Split Split,
@@ -190,7 +190,7 @@ public:
   /// If the split is not contained within one token, for example when reflowing
   /// line comments, returns (0, <length>).
   virtual Split getReflowSplit(unsigned LineIndex,
-                               llvm::Regex &CommentPragmasRegex) const {
+                               const llvm::Regex &CommentPragmasRegex) const {
     return Split(StringRef::npos, 0);
   }
 
@@ -255,7 +255,7 @@ public:
 
   Split getSplit(unsigned LineIndex, unsigned TailOffset, unsigned ColumnLimit,
                  unsigned ContentStartColumn,
-                 llvm::Regex &CommentPragmasRegex) const override;
+                 const llvm::Regex &CommentPragmasRegex) const override;
   void insertBreak(unsigned LineIndex, unsigned TailOffset, Split Split,
                    unsigned ContentIndent,
                    WhitespaceManager &Whitespaces) const override;
@@ -298,7 +298,7 @@ public:
   unsigned getLineCount() const override;
   Split getSplit(unsigned LineIndex, unsigned TailOffset, unsigned ColumnLimit,
                  unsigned ContentStartColumn,
-                 llvm::Regex &CommentPragmasRegex) const override;
+                 const llvm::Regex &CommentPragmasRegex) const override;
   void compressWhitespace(unsigned LineIndex, unsigned TailOffset, Split Split,
                           WhitespaceManager &Whitespaces) const override;
 
@@ -309,7 +309,7 @@ protected:
   // Checks if the content of line LineIndex may be reflown with the previous
   // line.
   virtual bool mayReflow(unsigned LineIndex,
-                         llvm::Regex &CommentPragmasRegex) const = 0;
+                         const llvm::Regex &CommentPragmasRegex) const = 0;
 
   // Contains the original text of the lines of the block comment.
   //
@@ -363,7 +363,7 @@ public:
 
   Split getSplit(unsigned LineIndex, unsigned TailOffset, unsigned ColumnLimit,
                  unsigned ContentStartColumn,
-                 llvm::Regex &CommentPragmasRegex) const override;
+                 const llvm::Regex &CommentPragmasRegex) const override;
   unsigned getRangeLength(unsigned LineIndex, unsigned Offset,
                           StringRef::size_type Length,
                           unsigned StartColumn) const override;
@@ -375,7 +375,7 @@ public:
                    unsigned ContentIndent,
                    WhitespaceManager &Whitespaces) const override;
   Split getReflowSplit(unsigned LineIndex,
-                       llvm::Regex &CommentPragmasRegex) const override;
+                       const llvm::Regex &CommentPragmasRegex) const override;
   void reflow(unsigned LineIndex,
               WhitespaceManager &Whitespaces) const override;
   bool introducesBreakBeforeToken() const override;
@@ -384,7 +384,7 @@ public:
   Split getSplitAfterLastLine(unsigned TailOffset) const override;
 
   bool mayReflow(unsigned LineIndex,
-                 llvm::Regex &CommentPragmasRegex) const override;
+                 const llvm::Regex &CommentPragmasRegex) const override;
 
   // Contains Javadoc annotations that require additional indent when continued
   // on multiple lines.
@@ -436,7 +436,6 @@ private:
 class BreakableLineCommentSection : public BreakableComment {
 public:
   BreakableLineCommentSection(const FormatToken &Token, unsigned StartColumn,
-                              unsigned OriginalStartColumn, bool FirstInLine,
                               bool InPPDirective, encoding::Encoding Encoding,
                               const FormatStyle &Style);
 
@@ -448,14 +447,14 @@ public:
                    unsigned ContentIndent,
                    WhitespaceManager &Whitespaces) const override;
   Split getReflowSplit(unsigned LineIndex,
-                       llvm::Regex &CommentPragmasRegex) const override;
+                       const llvm::Regex &CommentPragmasRegex) const override;
   void reflow(unsigned LineIndex,
               WhitespaceManager &Whitespaces) const override;
   void adaptStartOfLine(unsigned LineIndex,
                         WhitespaceManager &Whitespaces) const override;
   void updateNextToken(LineState &State) const override;
   bool mayReflow(unsigned LineIndex,
-                 llvm::Regex &CommentPragmasRegex) const override;
+                 const llvm::Regex &CommentPragmasRegex) const override;
 
 private:
   // OriginalPrefix[i] contains the original prefix of line i, including
@@ -466,15 +465,23 @@ private:
   // then the original prefix is "// ".
   SmallVector<StringRef, 16> OriginalPrefix;
 
-  // Prefix[i] contains the intended leading "//" with trailing spaces to
-  // account for the indentation of content within the comment at line i after
-  // formatting. It can be different than the original prefix when the original
-  // line starts like this:
-  // //content
-  // Then the original prefix is "//", but the prefix is "// ".
-  SmallVector<StringRef, 16> Prefix;
+  /// Prefix[i] + SpacesToAdd[i] contains the intended leading "//" with
+  /// trailing spaces to account for the indentation of content within the
+  /// comment at line i after formatting. It can be different than the original
+  /// prefix.
+  /// When the original line starts like this:
+  /// //content
+  /// Then the OriginalPrefix[i] is "//", but the Prefix[i] is "// " in the LLVM
+  /// style.
+  /// When the line starts like:
+  /// // content
+  /// And we want to remove the spaces the OriginalPrefix[i] is "// " and
+  /// Prefix[i] is "//".
+  SmallVector<std::string, 16> Prefix;
 
-  SmallVector<unsigned, 16> OriginalContentColumn;
+  /// How many spaces are added or removed from the OriginalPrefix to form
+  /// Prefix.
+  SmallVector<int, 16> PrefixSpaceChange;
 
   /// The token to which the last line of this breakable token belongs
   /// to; nullptr if that token is the initial token.

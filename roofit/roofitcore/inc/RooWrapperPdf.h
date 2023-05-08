@@ -29,37 +29,47 @@ public:
   /// \param[in] name A name to identify this object.
   /// \param[in] title Title (for e.g. plotting)
   /// \param[in] inputFunction Any RooAbsReal that should be converted into a PDF. Although it's possible
+  /// \param[in] selfNormalized The return value the RooAbsPdf::selfNormalized() function for the wrapped PDF object.
+  ///            If it is `true`, then no automatic normalization will be
+  ///            performed when evaluating the function. In this case, the
+  ///            effect RooWrapperPdf is not to change the evaluated values,
+  ///            but only to wrap the function in something that is of type
+  ///            RooAbsPdf, which can be useful if some interface reqiures it.
   /// to pass a PDF, it only makes sense for non-PDF functions.
-  RooWrapperPdf(const char *name, const char *title, RooAbsReal& inputFunction) :
+  RooWrapperPdf(const char *name, const char *title, RooAbsReal& inputFunction, bool selfNormalized=false) :
     RooAbsPdf(name, title),
-    _func("inputFunction", "Function to be converted into a PDF", this, inputFunction) { }
-  virtual ~RooWrapperPdf() {};
+    _func("inputFunction", "Function to be converted into a PDF", this, inputFunction),
+    _selfNormalized{selfNormalized} { }
+  ~RooWrapperPdf() override {};
 
-  RooWrapperPdf(const RooWrapperPdf& other, const char* name = 0) :
+  RooWrapperPdf(const RooWrapperPdf& other, const char *name = nullptr) :
     RooAbsPdf(other, name),
-    _func("inputFunction", this, other._func) { }
+    _func("inputFunction", this, other._func),
+    _selfNormalized{other._selfNormalized} { }
 
-  virtual TObject* clone(const char* newname) const override {
+  TObject* clone(const char* newname) const override {
     return new RooWrapperPdf(*this, newname);
   }
 
+  bool selfNormalized() const override { return _selfNormalized; }
+
   // Analytical Integration handling
-  Bool_t forceAnalyticalInt(const RooAbsArg& dep) const override {
-    return _func.arg().forceAnalyticalInt(dep);
+  bool forceAnalyticalInt(const RooAbsArg& dep) const override {
+    return _func->forceAnalyticalInt(dep);
   }
   Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet,
-      const char* rangeName=0) const override {
-    return _func.arg().getAnalyticalIntegralWN(allVars, analVars, normSet, rangeName);
+      const char* rangeName=nullptr) const override {
+    return _func->getAnalyticalIntegralWN(allVars, analVars, normSet, rangeName);
   }
   Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& numVars,
-      const char* rangeName=0) const override {
-    return _func.arg().getAnalyticalIntegral(allVars, numVars, rangeName);
+      const char* rangeName=nullptr) const override {
+    return _func->getAnalyticalIntegral(allVars, numVars, rangeName);
   }
   double analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName) const override {
-    return _func.arg().analyticalIntegralWN(code, normSet, rangeName);
+    return _func->analyticalIntegralWN(code, normSet, rangeName);
   }
-  double analyticalIntegral(Int_t code, const char* rangeName=0) const override {
-    return _func.arg().analyticalIntegral(code, rangeName);
+  double analyticalIntegral(Int_t code, const char* rangeName=nullptr) const override {
+    return _func->analyticalIntegral(code, rangeName);
   }
 
 
@@ -70,14 +80,14 @@ public:
 //      bool /*staticInitOK = true*/) const override { return 0; }
 //  void initGenerator(Int_t /*code*/) override { }
 //  void generateEvent(Int_t /*code*/) override { }
-//  Bool_t isDirectGenSafe(const RooAbsArg& /*arg*/) const override { return false; }
+//  bool isDirectGenSafe(const RooAbsArg& /*arg*/) const override { return false; }
 
 
   // Hints for optimized brute-force sampling
   Int_t getMaxVal(const RooArgSet& vars) const override {
     return _func.arg().getMaxVal(vars);
   }
-  Double_t maxVal(Int_t code) const override {
+  double maxVal(Int_t code) const override {
     return _func.arg().maxVal(code);
   }
   Int_t minTrialSamples(const RooArgSet& arGenObs) const override {
@@ -85,13 +95,13 @@ public:
   }
 
   // Plotting and binning hints
-  Bool_t isBinnedDistribution(const RooArgSet& obs) const override {
+  bool isBinnedDistribution(const RooArgSet& obs) const override {
     return _func.arg().isBinnedDistribution(obs);
   }
-  std::list<Double_t>* binBoundaries(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const override {
+  std::list<double>* binBoundaries(RooAbsRealLValue& obs, double xlo, double xhi) const override {
     return _func.arg().binBoundaries(obs, xlo, xhi);
   }
-  std::list<Double_t>* plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const override {
+  std::list<double>* plotSamplingHint(RooAbsRealLValue& obs, double xlo, double xhi) const override {
     return _func.arg().plotSamplingHint(obs, xlo, xhi);
   }
 
@@ -99,12 +109,13 @@ public:
 
 private:
   RooRealProxy _func;
+  bool _selfNormalized = false;
 
   double evaluate() const override {
     return _func;
   }
 
-  ClassDefOverride(RooWrapperPdf,1)
+  ClassDefOverride(RooWrapperPdf,2);
 };
 
 #endif

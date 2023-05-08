@@ -13,6 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "llvm/CodeGen/LivePhysRegs.h"
+#include "llvm/CodeGen/LiveRegUnits.h"
 #include "llvm/CodeGen/MachineFrameInfo.h"
 #include "llvm/CodeGen/MachineFunction.h"
 #include "llvm/CodeGen/MachineInstrBundle.h"
@@ -42,28 +43,23 @@ void LivePhysRegs::removeRegsInMask(const MachineOperand &MO,
 
 /// Remove defined registers and regmask kills from the set.
 void LivePhysRegs::removeDefs(const MachineInstr &MI) {
-  for (ConstMIBundleOperands O(MI); O.isValid(); ++O) {
-    if (O->isReg()) {
-      if (!O->isDef() || O->isDebug())
-        continue;
-      unsigned Reg = O->getReg();
-      if (!TargetRegisterInfo::isPhysicalRegister(Reg))
-        continue;
-      removeReg(Reg);
-    } else if (O->isRegMask())
-      removeRegsInMask(*O);
+  for (const MachineOperand &MOP : phys_regs_and_masks(MI)) {
+    if (MOP.isRegMask()) {
+      removeRegsInMask(MOP);
+      continue;
+    }
+
+    if (MOP.isDef())
+      removeReg(MOP.getReg());
   }
 }
 
 /// Add uses to the set.
 void LivePhysRegs::addUses(const MachineInstr &MI) {
-  for (ConstMIBundleOperands O(MI); O.isValid(); ++O) {
-    if (!O->isReg() || !O->readsReg() || O->isDebug())
+  for (const MachineOperand &MOP : phys_regs_and_masks(MI)) {
+    if (!MOP.isReg() || !MOP.readsReg())
       continue;
-    unsigned Reg = O->getReg();
-    if (!TargetRegisterInfo::isPhysicalRegister(Reg))
-      continue;
-    addReg(Reg);
+    addReg(MOP.getReg());
   }
 }
 
@@ -86,8 +82,8 @@ void LivePhysRegs::stepForward(const MachineInstr &MI,
   // Remove killed registers from the set.
   for (ConstMIBundleOperands O(MI); O.isValid(); ++O) {
     if (O->isReg() && !O->isDebug()) {
-      unsigned Reg = O->getReg();
-      if (!TargetRegisterInfo::isPhysicalRegister(Reg))
+      Register Reg = O->getReg();
+      if (!Register::isPhysicalRegister(Reg))
         continue;
       if (O->isDef()) {
         // Note, dead defs are still recorded.  The caller should decide how to
@@ -116,7 +112,7 @@ void LivePhysRegs::stepForward(const MachineInstr &MI,
   }
 }
 
-/// Prin the currently live registers to OS.
+/// Print the currently live registers to OS.
 void LivePhysRegs::print(raw_ostream &OS) const {
   OS << "Live Registers:";
   if (!TRI) {
@@ -129,8 +125,8 @@ void LivePhysRegs::print(raw_ostream &OS) const {
     return;
   }
 
-  for (const_iterator I = begin(), E = end(); I != E; ++I)
-    OS << " " << printReg(*I, TRI);
+  for (MCPhysReg R : *this)
+    OS << " " << printReg(R, TRI);
   OS << "\n";
 }
 
@@ -243,6 +239,10 @@ void LivePhysRegs::addLiveIns(const MachineBasicBlock &MBB) {
   addBlockLiveIns(MBB);
 }
 
+void LivePhysRegs::addLiveInsNoPristines(const MachineBasicBlock &MBB) {
+  addBlockLiveIns(MBB);
+}
+
 void llvm::computeLiveIns(LivePhysRegs &LiveRegs,
                           const MachineBasicBlock &MBB) {
   const MachineFunction &MF = *MBB.getParent();
@@ -280,6 +280,7 @@ void llvm::recomputeLivenessFlags(MachineBasicBlock &MBB) {
   const MachineFunction &MF = *MBB.getParent();
   const MachineRegisterInfo &MRI = MF.getRegInfo();
   const TargetRegisterInfo &TRI = *MRI.getTargetRegisterInfo();
+  const MachineFrameInfo &MFI = MF.getFrameInfo();
 
   // We walk through the block backwards and start with the live outs.
   LivePhysRegs LiveRegs;
@@ -292,12 +293,24 @@ void llvm::recomputeLivenessFlags(MachineBasicBlock &MBB) {
       if (!MO->isReg() || !MO->isDef() || MO->isDebug())
         continue;
 
-      unsigned Reg = MO->getReg();
+      Register Reg = MO->getReg();
       if (Reg == 0)
         continue;
-      assert(TargetRegisterInfo::isPhysicalRegister(Reg));
+      assert(Register::isPhysicalRegister(Reg));
 
       bool IsNotLive = LiveRegs.available(MRI, Reg);
+
+      // Special-case return instructions for cases when a return is not
+      // the last instruction in the block.
+      if (MI.isReturn() && MFI.isCalleeSavedInfoValid()) {
+        for (const CalleeSavedInfo &Info : MFI.getCalleeSavedInfo()) {
+          if (Info.getReg() == Reg) {
+            IsNotLive = !Info.isRestored();
+            break;
+          }
+        }
+      }
+
       MO->setIsDead(IsNotLive);
     }
 
@@ -309,10 +322,10 @@ void llvm::recomputeLivenessFlags(MachineBasicBlock &MBB) {
       if (!MO->isReg() || !MO->readsReg() || MO->isDebug())
         continue;
 
-      unsigned Reg = MO->getReg();
+      Register Reg = MO->getReg();
       if (Reg == 0)
         continue;
-      assert(TargetRegisterInfo::isPhysicalRegister(Reg));
+      assert(Register::isPhysicalRegister(Reg));
 
       bool IsNotLive = LiveRegs.available(MRI, Reg);
       MO->setIsKill(IsNotLive);

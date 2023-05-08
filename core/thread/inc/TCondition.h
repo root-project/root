@@ -53,7 +53,7 @@ public:
    Int_t   Signal() { if (fConditionImp) return fConditionImp->Signal(); return -1; }
    Int_t   Broadcast() { if (fConditionImp) return fConditionImp->Broadcast(); return -1; }
 
-   ClassDef(TCondition,0)  // Condition variable class
+   ClassDefOverride(TCondition,0)  // Condition variable class
 };
 
 #endif

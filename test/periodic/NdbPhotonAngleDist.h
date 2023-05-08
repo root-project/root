@@ -12,9 +12,9 @@ public:
    NdbPhotonAngleDist()
       : NdbMF(14, "Angular distributions for photon production") {}
 
-   ~NdbPhotonAngleDist() {}
+   ~NdbPhotonAngleDist() override {}
 
-   ClassDef(NdbPhotonAngleDist,1)
+   ClassDefOverride(NdbPhotonAngleDist,1)
 }; // NdbPhotonAngleDist
 
 #endif

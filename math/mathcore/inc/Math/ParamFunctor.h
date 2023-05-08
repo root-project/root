@@ -260,7 +260,7 @@ private :
 /**
    Param Functor class for Multidimensional functions.
    It is used to wrap in a very simple and convenient way
-   any other C++ callable object (implemention double operator( const double *, const double * ) )
+   any other C++ callable object (implementation double operator( const double *, const double * ) )
    or a member function with the correct signature,
    like Foo::EvalPar(const double *, const double *)
 
@@ -282,7 +282,7 @@ public:
    /**
       Default constructor
    */
-   ParamFunctorTempl ()  : fImpl(0) {}
+   ParamFunctorTempl ()  : fImpl(nullptr) {}
 
 
    /**
@@ -329,11 +329,11 @@ public:
       Copy constructor
    */
    ParamFunctorTempl(const ParamFunctorTempl & rhs) :
-      fImpl(0)
+      fImpl(nullptr)
    {
 //       if (rhs.fImpl.get() != 0)
 //          fImpl = std::unique_ptr<Impl>( (rhs.fImpl)->Clone() );
-      if (rhs.fImpl != 0)  fImpl = rhs.fImpl->Clone();
+      if (rhs.fImpl)  fImpl = rhs.fImpl->Clone();
    }
 
    /**
@@ -348,8 +348,8 @@ public:
 
       if(this != &rhs) {
          if (fImpl) delete fImpl;
-         fImpl = 0;
-         if (rhs.fImpl != 0)
+         fImpl = nullptr;
+         if (rhs.fImpl)
             fImpl = rhs.fImpl->Clone();
       }
       return *this;
@@ -367,7 +367,7 @@ public:
    }
 
 
-   bool Empty() const { return fImpl == 0; }
+   bool Empty() const { return !fImpl; }
 
 
    void SetFunction(Impl * f) {

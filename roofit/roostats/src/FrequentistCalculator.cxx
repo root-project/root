@@ -35,9 +35,9 @@ using namespace std;
 ////////////////////////////////////////////////////////////////////////////////
 
 void FrequentistCalculator::PreHook() const {
-   if (fFitInfo != NULL) {
+   if (fFitInfo != nullptr) {
       delete fFitInfo;
-      fFitInfo = NULL;
+      fFitInfo = nullptr;
    }
    if (fStoreFitInfo) {
       fFitInfo = new RooArgSet();
@@ -56,8 +56,8 @@ int FrequentistCalculator::PreNullHook(RooArgSet *parameterPoint, double obsTest
    // ****** any TestStatSampler ********
 
    // create profile keeping everything but nuisance parameters fixed
-   RooArgSet * allParams = fNullModel->GetPdf()->getParameters(*fData);
-   RemoveConstantParameters(allParams);
+   std::unique_ptr<RooArgSet> allParams{fNullModel->GetPdf()->getParameters(*fData)};
+   RemoveConstantParameters(&*allParams);
 
    // note: making nll or profile class variables can only be done in the constructor
    // as all other hooks are const (which has to be because GetHypoTest is const). However,
@@ -70,21 +70,21 @@ int FrequentistCalculator::PreNullHook(RooArgSet *parameterPoint, double obsTest
    if( fNullModel->GetNuisanceParameters() ) {
       allButNuisance.remove(*fNullModel->GetNuisanceParameters());
       if( fConditionalMLEsNull ) {
-         oocoutI((TObject*)0,InputArguments) << "Using given conditional MLEs for Null." << endl;
+         oocoutI(nullptr,InputArguments) << "Using given conditional MLEs for Null." << endl;
          allParams->assign(*fConditionalMLEsNull);
          // LM: fConditionalMLEsNull must be nuisance parameters otherwise an error message will be printed
          allButNuisance.add( *fConditionalMLEsNull );
          if (fNullModel->GetNuisanceParameters()) {
             RooArgSet remain(*fNullModel->GetNuisanceParameters());
             remain.remove(*fConditionalMLEsNull,true,true);
-            if( remain.getSize() == 0 ) doProfile = false;
+            if( remain.empty() ) doProfile = false;
          }
       }
    }else{
       doProfile = false;
    }
    if (doProfile) {
-      oocoutI((TObject*)0,InputArguments) << "Profiling conditional MLEs for Null." << endl;
+      oocoutI(nullptr,InputArguments) << "Profiling conditional MLEs for Null." << endl;
       RooFit::MsgLevel msglevel = RooMsgService::instance().globalKillBelow();
       RooMsgService::instance().setGlobalKillBelow(RooFit::FATAL);
 
@@ -94,14 +94,13 @@ int FrequentistCalculator::PreNullHook(RooArgSet *parameterPoint, double obsTest
       if (fNullModel->GetGlobalObservables()) globalObs.add(*fNullModel->GetGlobalObservables());
 
       auto& config = GetGlobalRooStatsConfig();
-      RooAbsReal* nll = fNullModel->GetPdf()->createNLL(*const_cast<RooAbsData*>(fData), RooFit::CloneData(kFALSE), RooFit::Constrain(*allParams),
+      std::unique_ptr<RooAbsReal> nll{fNullModel->GetPdf()->createNLL(*const_cast<RooAbsData*>(fData), RooFit::CloneData(false), RooFit::Constrain(*allParams),
                                                         RooFit::GlobalObservables(globalObs),
                                                         RooFit::ConditionalObservables(conditionalObs),
-                                                        RooFit::Offset(config.useLikelihoodOffset));
-      RooProfileLL* profile = dynamic_cast<RooProfileLL*>(nll->createProfile(allButNuisance));
+                                                        RooFit::Offset(config.useLikelihoodOffset))};
+      std::unique_ptr<RooProfileLL> profile{dynamic_cast<RooProfileLL*>(nll->createProfile(allButNuisance))};
       // set minimier options
-      profile->minimizer()->setMinimizerType(ROOT::Math::MinimizerOptions::DefaultMinimizerType().c_str());
-      profile->minimizer()->setPrintLevel(ROOT::Math::MinimizerOptions::DefaultPrintLevel()-1); 
+      profile->minimizer()->setPrintLevel(ROOT::Math::MinimizerOptions::DefaultPrintLevel()-1);
       profile->getVal(); // this will do fit and set nuisance parameters to profiled values
 
       // Hack to extract a RooFitResult
@@ -113,8 +112,6 @@ int FrequentistCalculator::PreNullHook(RooArgSet *parameterPoint, double obsTest
          delete result;
       }
 
-      delete profile;
-      delete nll;
       RooMsgService::instance().setGlobalKillBelow(msglevel);
 
       // set in test statistics conditional and global observables
@@ -133,15 +130,13 @@ int FrequentistCalculator::PreNullHook(RooArgSet *parameterPoint, double obsTest
    if(fNullModel->GetNuisanceParameters())
       parameterPoint->add(*fNullModel->GetNuisanceParameters());
 
-   delete allParams;
-
 
    // ***** ToyMCSampler specific *******
 
    // check whether TestStatSampler is a ToyMCSampler
    ToyMCSampler *toymcs = dynamic_cast<ToyMCSampler*>(GetTestStatSampler());
    if(toymcs) {
-      oocoutI((TObject*)0,InputArguments) << "Using a ToyMCSampler. Now configuring for Null." << endl;
+      oocoutI(nullptr,InputArguments) << "Using a ToyMCSampler. Now configuring for Null." << endl;
 
       // variable number of toys
       if(fNToysNull >= 0) toymcs->SetNToys(fNToysNull);
@@ -151,7 +146,7 @@ int FrequentistCalculator::PreNullHook(RooArgSet *parameterPoint, double obsTest
 
       // adaptive sampling
       if(fNToysNullTail) {
-         oocoutI((TObject*)0,InputArguments) << "Adaptive Sampling" << endl;
+         oocoutI(nullptr,InputArguments) << "Adaptive Sampling" << endl;
          if(GetTestStatSampler()->GetTestStatistic()->PValueIsRightTail()) {
             toymcs->SetToysRightTail(fNToysNullTail, obsTestStat);
          }else{
@@ -174,29 +169,29 @@ int FrequentistCalculator::PreAltHook(RooArgSet *parameterPoint, double obsTestS
    // ****** any TestStatSampler ********
 
    // create profile keeping everything but nuisance parameters fixed
-   RooArgSet * allParams = fAltModel->GetPdf()->getParameters(*fData);
-   RemoveConstantParameters(allParams);
+   std::unique_ptr<RooArgSet> allParams{fAltModel->GetPdf()->getParameters(*fData)};
+   RemoveConstantParameters(&*allParams);
 
    bool doProfile = true;
    RooArgSet allButNuisance(*allParams);
    if( fAltModel->GetNuisanceParameters() ) {
       allButNuisance.remove(*fAltModel->GetNuisanceParameters());
       if( fConditionalMLEsAlt ) {
-         oocoutI((TObject*)0,InputArguments) << "Using given conditional MLEs for Alt." << endl;
+         oocoutI(nullptr,InputArguments) << "Using given conditional MLEs for Alt." << endl;
          allParams->assign(*fConditionalMLEsAlt);
          // LM: fConditionalMLEsAlt must be nuisance parameters otherwise an error message will be printed
          allButNuisance.add( *fConditionalMLEsAlt );
          if (fAltModel->GetNuisanceParameters()) {
             RooArgSet remain(*fAltModel->GetNuisanceParameters());
             remain.remove(*fConditionalMLEsAlt,true,true);
-            if( remain.getSize() == 0 ) doProfile = false;
+            if( remain.empty() ) doProfile = false;
          }
       }
    }else{
       doProfile = false;
    }
    if (doProfile) {
-      oocoutI((TObject*)0,InputArguments) << "Profiling conditional MLEs for Alt." << endl;
+      oocoutI(nullptr,InputArguments) << "Profiling conditional MLEs for Alt." << endl;
       RooFit::MsgLevel msglevel = RooMsgService::instance().globalKillBelow();
       RooMsgService::instance().setGlobalKillBelow(RooFit::FATAL);
 
@@ -206,15 +201,14 @@ int FrequentistCalculator::PreAltHook(RooArgSet *parameterPoint, double obsTestS
       if (fAltModel->GetGlobalObservables()) globalObs.add(*fAltModel->GetGlobalObservables());
 
       const auto& config = GetGlobalRooStatsConfig();
-      RooAbsReal* nll = fAltModel->GetPdf()->createNLL(*const_cast<RooAbsData*>(fData), RooFit::CloneData(kFALSE), RooFit::Constrain(*allParams),
+      std::unique_ptr<RooAbsReal> nll{fAltModel->GetPdf()->createNLL(*const_cast<RooAbsData*>(fData), RooFit::CloneData(false), RooFit::Constrain(*allParams),
                                                        RooFit::GlobalObservables(globalObs),
                                                        RooFit::ConditionalObservables(conditionalObs),
-                                                       RooFit::Offset(config.useLikelihoodOffset));
+                                                       RooFit::Offset(config.useLikelihoodOffset))};
 
-      RooProfileLL* profile = dynamic_cast<RooProfileLL*>(nll->createProfile(allButNuisance));
+      std::unique_ptr<RooProfileLL> profile{dynamic_cast<RooProfileLL*>(nll->createProfile(allButNuisance))};
       // set minimizer options
-      profile->minimizer()->setMinimizerType(ROOT::Math::MinimizerOptions::DefaultMinimizerType().c_str());
-      profile->minimizer()->setPrintLevel(ROOT::Math::MinimizerOptions::DefaultPrintLevel()-1); // use -1 to make more silent 
+      profile->minimizer()->setPrintLevel(ROOT::Math::MinimizerOptions::DefaultPrintLevel()-1); // use -1 to make more silent
       profile->getVal(); // this will do fit and set nuisance parameters to profiled values
 
       // Hack to extract a RooFitResult
@@ -226,8 +220,6 @@ int FrequentistCalculator::PreAltHook(RooArgSet *parameterPoint, double obsTestS
          delete result;
       }
 
-      delete profile;
-      delete nll;
       RooMsgService::instance().setGlobalKillBelow(msglevel);
 
       // set in test statistics conditional and global observables
@@ -246,14 +238,12 @@ int FrequentistCalculator::PreAltHook(RooArgSet *parameterPoint, double obsTestS
    if(fAltModel->GetNuisanceParameters())
       parameterPoint->add(*fAltModel->GetNuisanceParameters());
 
-   delete allParams;
-
    // ***** ToyMCSampler specific *******
 
    // check whether TestStatSampler is a ToyMCSampler
    ToyMCSampler *toymcs = dynamic_cast<ToyMCSampler*>(GetTestStatSampler());
    if(toymcs) {
-      oocoutI((TObject*)0,InputArguments) << "Using a ToyMCSampler. Now configuring for Alt." << endl;
+      oocoutI(nullptr,InputArguments) << "Using a ToyMCSampler. Now configuring for Alt." << endl;
 
       // variable number of toys
       if(fNToysAlt >= 0) toymcs->SetNToys(fNToysAlt);
@@ -263,7 +253,7 @@ int FrequentistCalculator::PreAltHook(RooArgSet *parameterPoint, double obsTestS
 
       // adaptive sampling
       if(fNToysAltTail) {
-         oocoutI((TObject*)0,InputArguments) << "Adaptive Sampling" << endl;
+         oocoutI(nullptr,InputArguments) << "Adaptive Sampling" << endl;
          if(GetTestStatSampler()->GetTestStatistic()->PValueIsRightTail()) {
             toymcs->SetToysLeftTail(fNToysAltTail, obsTestStat);
          }else{

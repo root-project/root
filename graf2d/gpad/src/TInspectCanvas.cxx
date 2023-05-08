@@ -37,18 +37,19 @@ class TInspectorObject : public TObject
 {
 public:
 
-   TInspectorObject(void *obj, TClass *cl) : fObj(obj),fClass(cl) {};
-   ~TInspectorObject(){;}
+   TInspectorObject(void *obj, TClass *cl) : fObj(obj),fClass(cl) {}
+   ~TInspectorObject() {}
 
    void   *GetObject() const { return fObj; };
-   void    Inspect() const {
+   void    Inspect() const override
+   {
       gGuiFactory->CreateInspectorImp(this, 400, 200);
-   };
-   TClass *IsA() const { return fClass; }
+   }
+   TClass *IsA() const override { return fClass; }
 
 private:
-   void     *fObj;   //! pointer to the foreign object
-   TClass   *fClass; //! pointer to class of the foreign object
+   void     *fObj{nullptr};   //! pointer to the foreign object
+   TClass   *fClass{nullptr}; //! pointer to class of the foreign object
 
 };
 
@@ -64,12 +65,8 @@ A TInspectCanvas is a canvas specialized to inspect Root objects.
 
 TInspectCanvas::TInspectCanvas() : TCanvas()
 {
-   fBackward   = 0;
-   fForward    = 0;
-   fCurObject  = 0;
-   fObjects    = 0;
-   fLogx       = kFALSE;
-   fLogy       = kFALSE;
+   fLogx       = 0;
+   fLogy       = 0;
    SetFillColor(0);
 }
 
@@ -79,12 +76,9 @@ TInspectCanvas::TInspectCanvas() : TCanvas()
 TInspectCanvas::TInspectCanvas(UInt_t ww, UInt_t wh)
             : TCanvas("inspect","ROOT Object Inspector",ww,wh)
 {
-   fBackward   = 0;
-   fForward    = 0;
-   fCurObject  = 0;
    fObjects    = new TList;
-   fLogx       = kFALSE;
-   fLogy       = kFALSE;
+   fLogx       = 0;
+   fLogy       = 0;
    SetFillColor(0);
 }
 
@@ -111,7 +105,7 @@ void TInspectCanvas::InspectObject(TObject *obj)
 {
    Int_t cdate = 0;
    Int_t ctime = 0;
-   UInt_t *cdatime = 0;
+   UInt_t *cdatime = nullptr;
    Bool_t isdate = kFALSE;
    Bool_t isbits = kFALSE;
    const Int_t kname  = 1;
@@ -122,8 +116,8 @@ void TInspectCanvas::InspectObject(TObject *obj)
    char *pname;
 
    TClass *cl = obj->IsA();
-   if (cl == 0) return;
-   TInspectorObject *proxy=0;
+   if (!cl) return;
+   TInspectorObject *proxy = nullptr;
    if (!cl->IsTObject()) {
       // This is possible only if obj is actually a TInspectorObject
       // wrapping a non-TObject.
@@ -131,7 +125,8 @@ void TInspectCanvas::InspectObject(TObject *obj)
       obj = (TObject*)proxy->GetObject();
    }
 
-   if (!cl->GetListOfRealData()) cl->BuildRealData(obj);
+   if (!cl->GetListOfRealData())
+      cl->BuildRealData(obj);
 
    // Count number of data members in order to resize the canvas
    TRealData *rd;
@@ -216,7 +211,7 @@ void TInspectCanvas::InspectObject(TObject *obj)
    ttitle.SetTextColor(2);
    ttitle.SetTextAlign(11);
    ttitle.DrawText(x1+0.2, y3+0.1, cl->GetName());
-   if (proxy==0) {
+   if (!proxy) {
       ttitle.SetTextColor(4);
       strlcpy(line,obj->GetName(),kline);
       ttitle.DrawText(xvalue+0.2, y3+0.1, line);
@@ -265,9 +260,9 @@ void TInspectCanvas::InspectObject(TObject *obj)
          Int_t offset = rd->GetThisOffset();
          char *pointer = (char*)obj + offset;
          char **ppointer = (char**)(pointer);
-         TLink *tlink = 0;
+         TLink *tlink = nullptr;
 
-         TClass *clm=0;
+         TClass *clm = nullptr;
          if (!membertype) {
             clm = member->GetClass();
          }
@@ -375,7 +370,7 @@ void TInspectCanvas::GoForward()
 
 void TInspectCanvas::Inspector(TObject *obj)
 {
-   TVirtualPad *padsav = gPad;
+   TVirtualPad::TContext ctxt(kTRUE);
    TInspectCanvas *inspect = (TInspectCanvas*)(gROOT->GetListOfCanvases())->FindObject("inspect");
    if (!inspect) inspect = new TInspectCanvas(700,600);
    else          inspect->cd();
@@ -383,8 +378,6 @@ void TInspectCanvas::Inspector(TObject *obj)
    inspect->InspectObject(obj);
    inspect->GetObjects()->Add(obj);
    //obj->SetBit(kMustCleanup);
-
-   if (padsav) padsav->cd();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

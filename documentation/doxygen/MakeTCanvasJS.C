@@ -1,5 +1,12 @@
 /// Generates the root file output of the macro MacroName
 
+#include "TString.h"
+#include "TCanvas.h"
+#include "TSystem.h"
+#include "TROOT.h"
+#include "TBufferJSON.h"
+#include <fstream>
+
 void MakeTCanvasJS(const char *MacroName, const char *IN, const char *OutDir, bool cp, bool py)
 {
 

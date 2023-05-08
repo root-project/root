@@ -2,7 +2,7 @@
 
 #include "TClass.h"
 #include "TInterpreter.h"
-#include "ROOTUnitTestSupport.h"
+#include "ROOT/TestSupport.hxx"
 
 #include "gtest/gtest.h"
 
@@ -27,7 +27,7 @@ TEST(StatusBitsChecker,NoOverlap)
 
 TEST(StatusBitsChecker,Overlap)
 {
-   ROOTUnitTestSupport::CheckDiagsRAII diags;
+   ROOT::TestSupport::CheckDiagsRAII diags;
    diags.requiredDiag(kError, "TStatusBitsChecker", "ClassWithOverlap", /*matchFullMessage=*/false);
    diags.requiredDiag(kError, "TStatusBitsChecker", "13 used in",       /*matchFullMessage=*/false);
 

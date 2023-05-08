@@ -31,18 +31,18 @@ class PiecewiseInterpolation : public RooAbsReal {
 public:
 
   PiecewiseInterpolation() ;
-  PiecewiseInterpolation(const char *name, const char *title, const RooAbsReal& nominal, const RooArgList& lowSet, const RooArgList& highSet, const RooArgList& paramSet, Bool_t takeOwnerShip=kFALSE) ;
-  virtual ~PiecewiseInterpolation() ;
+  PiecewiseInterpolation(const char *name, const char *title, const RooAbsReal& nominal, const RooArgList& lowSet, const RooArgList& highSet, const RooArgList& paramSet, bool takeOwnerShip=false) ;
+  ~PiecewiseInterpolation() override ;
 
-  PiecewiseInterpolation(const PiecewiseInterpolation& other, const char* name = 0);
-  virtual TObject* clone(const char* newname) const { return new PiecewiseInterpolation(*this, newname); }
+  PiecewiseInterpolation(const PiecewiseInterpolation& other, const char *name = nullptr);
+  TObject* clone(const char* newname) const override { return new PiecewiseInterpolation(*this, newname); }
 
   /// Return pointer to the nominal hist function.
   const RooAbsReal* nominalHist() const {
     return &_nominal.arg();
   }
 
-  //  virtual Double_t defaultErrorLevel() const ;
+  //  virtual double defaultErrorLevel() const ;
 
   //  void printMetaArgs(std::ostream& os) const ;
 
@@ -51,29 +51,30 @@ public:
   const RooArgList& paramList() const { return _paramSet ; }
   const std::vector<int>&  interpolationCodes() const { return _interpCode; }
 
-  //virtual Bool_t forceAnalyticalInt(const RooAbsArg&) const { return kTRUE ; }
-  Bool_t setBinIntegrator(RooArgSet& allVars) ;
+  //virtual bool forceAnalyticalInt(const RooAbsArg&) const { return true ; }
+  bool setBinIntegrator(RooArgSet& allVars) ;
 
-  Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet,const char* rangeName=0) const ;
-  Double_t analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=0) const ;
+  Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet,const char* rangeName=nullptr) const override ;
+  double analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=nullptr) const override ;
 
   void setPositiveDefinite(bool flag=true){_positiveDefinite=flag;}
+  bool positiveDefinite() const {return _positiveDefinite;}
 
   void setInterpCode(RooAbsReal& param, int code, bool silent=false);
   void setAllInterpCodes(int code);
   void printAllInterpCodes();
 
-  virtual std::list<Double_t>* binBoundaries(RooAbsRealLValue& /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const ;
-  virtual std::list<Double_t>* plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const ;
-  virtual Bool_t isBinnedDistribution(const RooArgSet& obs) const ;
+  std::list<double>* binBoundaries(RooAbsRealLValue& /*obs*/, double /*xlo*/, double /*xhi*/) const override ;
+  std::list<double>* plotSamplingHint(RooAbsRealLValue& obs, double xlo, double xhi) const override ;
+  bool isBinnedDistribution(const RooArgSet& obs) const override ;
 
 protected:
 
   class CacheElem : public RooAbsCacheElement {
   public:
     CacheElem()  {} ;
-    virtual ~CacheElem() {} ;
-    virtual RooArgList containedArgs(Action) {
+    ~CacheElem() override {} ;
+    RooArgList containedArgs(Action) override {
       RooArgList ret(_funcIntList) ;
       ret.add(_lowIntList);
       ret.add(_highIntList);
@@ -92,14 +93,14 @@ protected:
   RooListProxy _highSet ;          ///< High-side variation
   RooListProxy _paramSet ;         ///< interpolation parameters
   RooListProxy _normSet ;          ///< interpolation parameters
-  Bool_t _positiveDefinite;        ///< protect against negative and 0 bins.
+  bool _positiveDefinite;        ///< protect against negative and 0 bins.
 
   std::vector<int> _interpCode;
 
-  double evaluate() const;
-  void computeBatch(cudaStream_t*, double* output, size_t size, RooFit::Detail::DataMap const&) const;
+  double evaluate() const override;
+  void computeBatch(cudaStream_t*, double* output, size_t size, RooFit::Detail::DataMap const&) const override;
 
-  ClassDef(PiecewiseInterpolation,4) // Sum of RooAbsReal objects
+  ClassDefOverride(PiecewiseInterpolation,4) // Sum of RooAbsReal objects
 };
 
 #endif

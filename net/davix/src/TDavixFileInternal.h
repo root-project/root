@@ -59,9 +59,9 @@ private:
       positionLock(),
       openLock(),
       davixContext(getDavixInstance()),
-      davixParam(NULL),
-      davixPosix(NULL),
-      davixFd(NULL),
+      davixParam(nullptr),
+      davixPosix(nullptr),
+      davixFd(nullptr),
       fUrl(mUrl),
       opt(mopt),
       oflags(0),
@@ -71,9 +71,9 @@ private:
       positionLock(),
       openLock(),
       davixContext(getDavixInstance()),
-      davixParam(NULL),
-      davixPosix(NULL),
-      davixFd(NULL),
+      davixParam(nullptr),
+      davixPosix(nullptr),
+      davixFd(nullptr),
       fUrl(url),
       opt(mopt),
       oflags(0),
@@ -84,9 +84,9 @@ private:
    Davix_fd *getDavixFileInstance()
    {
       // singleton init
-      if (davixFd == NULL) {
+      if (davixFd == nullptr) {
          TLockGuard l(&(openLock));
-         if (davixFd == NULL) {
+         if (davixFd == nullptr) {
             davixFd = this->Open();
          }
       }

@@ -159,7 +159,7 @@ void ObjCSelfInitChecker::checkForInvalidSelf(const Expr *E, CheckerContext &C,
   if (!BT)
     BT.reset(new BugType(this, "Missing \"self = [(super or self) init...]\"",
                          categories::CoreFoundationObjectiveC));
-  C.emitReport(llvm::make_unique<BugReport>(*BT, errorStr, N));
+  C.emitReport(std::make_unique<PathSensitiveBugReport>(*BT, errorStr, N));
 }
 
 void ObjCSelfInitChecker::checkPostObjCMessage(const ObjCMethodCall &Msg,
@@ -437,6 +437,6 @@ void ento::registerObjCSelfInitChecker(CheckerManager &mgr) {
   mgr.registerChecker<ObjCSelfInitChecker>();
 }
 
-bool ento::shouldRegisterObjCSelfInitChecker(const LangOptions &LO) {
+bool ento::shouldRegisterObjCSelfInitChecker(const CheckerManager &mgr) {
   return true;
 }

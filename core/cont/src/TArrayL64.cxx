@@ -71,7 +71,7 @@ TArrayL64 &TArrayL64::operator=(const TArrayL64 &rhs)
 TArrayL64::~TArrayL64()
 {
    delete [] fArray;
-   fArray = 0;
+   fArray = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

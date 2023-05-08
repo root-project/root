@@ -78,12 +78,12 @@ namespace TMVA {
       // - here it is just a dummy, as it is done in the overwritten
       // - PrepareEvaluationtree... ugly but necessary due to the structure
       //   of TMultiLayerPercepton in ROOT grr... :-(
-      Double_t GetMvaValue( Double_t* err = 0, Double_t* errUpper = 0 );
+      Double_t GetMvaValue( Double_t* err = nullptr, Double_t* errUpper = nullptr );
 
       void SetHiddenLayer(TString hiddenlayer = "" ) { fHiddenLayer=hiddenlayer; }
 
       // ranking of input variables
-      const Ranking* CreateRanking() { return 0; }
+      const Ranking* CreateRanking() { return nullptr; }
 
       // make ROOT-independent C++ class
       void MakeClass( const TString& classFileName = TString("") ) const;
@@ -105,17 +105,17 @@ namespace TMVA {
       void CreateMLPOptions( TString );
 
       // option string
-      TString fLayerSpec;          // Layer specification option
+      TString fLayerSpec;          ///< Layer specification option
 
-      TMultiLayerPerceptron* fMLP; // the TMLP
-      TTree*                 fLocalTrainingTree; // local copy of training tree
+      TMultiLayerPerceptron* fMLP; ///< the TMLP
+      TTree*                 fLocalTrainingTree; ///< local copy of training tree
 
-      TString  fHiddenLayer;        // string containing the hidden layer structure
-      Int_t    fNcycles;            // number of training cycles
-      Double_t fValidationFraction; // fraction of events in training tree used for cross validation
-      TString  fMLPBuildOptions;    // option string to build the mlp
+      TString  fHiddenLayer;        ///< string containing the hidden layer structure
+      Int_t    fNcycles;            ///< number of training cycles
+      Double_t fValidationFraction; ///< fraction of events in training tree used for cross validation
+      TString  fMLPBuildOptions;    ///< option string to build the mlp
 
-      TString  fLearningMethod;     // the learning method (given via option string)
+      TString  fLearningMethod;     ///< the learning method (given via option string)
 
       // default initialisation called by all constructors
       void Init( void );

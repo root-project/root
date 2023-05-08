@@ -8,18 +8,14 @@
 ///
 /// \author Victor Perevovchikov
 
-void padRefresh(TPad *pad,int flag=0)
+void canvasRefresh(TCanvas *c1)
 {
-   if (!pad) return;
-   pad->Modified();
-   pad->Update();
-   TList *tl = pad->GetListOfPrimitives();
-   if (!tl) return;
-   TListIter next(tl);
-   TObject *to;
-   while ((to=next())) {
-     if (to->InheritsFrom(TPad::Class())) padRefresh((TPad*)to,1);}
-   if (flag) return;
+   for (Int_t j = 0; j < 3; j++)
+      c1->GetPad(j+1)->Modified();
+
+   c1->Modified();
+   c1->Update();
+
    gSystem->ProcessEvents();
 }
 
@@ -34,9 +30,8 @@ void hksimple()
    hpx[1]    = new TH1K("hk1","Nearest Neighbour of order 3",1000,-4,4);
    hpx[2]    = new TH1K("hk2","Nearest Neighbour of order 16",1000,-4,4,16);
    c1->Divide(1,3);
-   Int_t j;
-   for (j=0;j<3;j++) {
-      c1->cd(j+1);
+   for (Int_t j = 0; j < 3; j++) {
+      c1->cd(j + 1);
       hpx[j]->SetFillColor(48);
       hpx[j]->Draw();
    }
@@ -47,12 +42,14 @@ void hksimple()
    const Int_t kUPDATE = 10;
    for (Int_t i = 0; i <= 300; i++) {
       gRandom->Rannor(px,py);
-      for (j=0;j<3;j++) {hpx[j]->Fill(px);}
-      if (i && (i%kUPDATE) == 0) {
-            padRefresh(c1);
-      }
+      for (Int_t j = 0; j < 3; j++)
+         hpx[j]->Fill(px);
+      if (i && (i % kUPDATE) == 0)
+         canvasRefresh(c1);
    }
 
-   for (j=0;j<3;j++) hpx[j]->Fit("gaus");
-   padRefresh(c1);
+   for (Int_t j = 0; j < 3; j++)
+      hpx[j]->Fit("gaus");
+
+   canvasRefresh(c1);
 }

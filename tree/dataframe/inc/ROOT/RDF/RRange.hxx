@@ -25,7 +25,8 @@ namespace ROOT {
 namespace Internal {
 namespace RDF {
 namespace GraphDrawing {
-std::shared_ptr<GraphNode> CreateRangeNode(const ROOT::Detail::RDF::RRangeBase *rangePtr);
+std::shared_ptr<GraphNode> CreateRangeNode(const ROOT::Detail::RDF::RRangeBase *rangePtr,
+                                           std::unordered_map<void *, std::shared_ptr<GraphNode>> &visitedMap);
 } // ns GraphDrawing
 } // ns RDF
 } // ns Internal
@@ -50,7 +51,7 @@ public:
                    pd->GetVariations()),
         fPrevNodePtr(std::move(pd)), fPrevNode(*fPrevNodePtr)
    {
-      fLoopManager->Book(this);
+      fLoopManager->Register(this);
    }
 
    RRange(const RRange &) = delete;
@@ -108,20 +109,21 @@ public:
    }
 
    /// This function must be defined by all nodes, but only the filters will add their name
-   void AddFilterName(std::vector<std::string> &filters) { fPrevNode.AddFilterName(filters); }
-   std::shared_ptr<RDFGraphDrawing::GraphNode> GetGraph()
+   void AddFilterName(std::vector<std::string> &filters) final { fPrevNode.AddFilterName(filters); }
+   std::shared_ptr<RDFGraphDrawing::GraphNode>
+   GetGraph(std::unordered_map<void *, std::shared_ptr<RDFGraphDrawing::GraphNode>> &visitedMap) final
    {
       // TODO: Ranges node have no information about custom columns, hence it is not possible now
       // if defines have been used before.
-      auto prevNode = fPrevNode.GetGraph();
-      auto prevColumns = prevNode->GetDefinedColumns();
+      auto prevNode = fPrevNode.GetGraph(visitedMap);
+      const auto &prevColumns = prevNode->GetDefinedColumns();
 
-      auto thisNode = RDFGraphDrawing::CreateRangeNode(this);
+      auto thisNode = RDFGraphDrawing::CreateRangeNode(this, visitedMap);
 
       /* If the returned node is not new, there is no need to perform any other operation.
        * This is a likely scenario when building the entire graph in which branches share
        * some nodes. */
-      if (!thisNode->GetIsNew()) {
+      if (!thisNode->IsNew()) {
          return thisNode;
       }
       thisNode->SetPrevNode(prevNode);

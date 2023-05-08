@@ -38,10 +38,13 @@
 #include "TFile.h" // for SnapshotHelper
 #include "TH1.h"
 #include "TGraph.h"
+#include "TGraphAsymmErrors.h"
 #include "TLeaf.h"
 #include "TObject.h"
 #include "TTree.h"
 #include "TTreeReader.h" // for SnapshotHelper
+#include "TStatistic.h"
+#include "ROOT/RDF/RActionImpl.hxx"
 #include "ROOT/RDF/RMergeableValue.hxx"
 
 #include <algorithm>
@@ -59,66 +62,6 @@
 /// \cond HIDDEN_SYMBOLS
 
 namespace ROOT {
-namespace Detail {
-namespace RDF {
-
-/// Base class for action helpers, see RInterface::Book() for more information.
-template <typename Helper>
-class R__CLING_PTRCHECK(off) RActionImpl {
-public:
-   virtual ~RActionImpl() = default;
-   // call Helper::FinalizeTask if present, do nothing otherwise
-   template <typename T = Helper>
-   auto CallFinalizeTask(unsigned int slot) -> decltype(std::declval<T>().FinalizeTask(slot))
-   {
-      static_cast<Helper *>(this)->FinalizeTask(slot);
-   }
-
-   template <typename... Args>
-   void CallFinalizeTask(unsigned int, Args...) {}
-
-   template <typename H = Helper>
-   auto CallPartialUpdate(unsigned int slot) -> decltype(std::declval<H>().PartialUpdate(slot), (void *)(nullptr))
-   {
-      return &static_cast<Helper *>(this)->PartialUpdate(slot);
-   }
-
-   template <typename... Args>
-   [[noreturn]] void *CallPartialUpdate(...)
-   {
-      throw std::logic_error("This action does not support callbacks!");
-   }
-
-   template <typename T = Helper>
-   auto CallMakeNew(void *typeErasedResSharedPtr) -> decltype(std::declval<T>().MakeNew(typeErasedResSharedPtr))
-   {
-      return static_cast<Helper *>(this)->MakeNew(typeErasedResSharedPtr);
-   }
-
-   template <typename... Args>
-   [[noreturn]] Helper CallMakeNew(void *, Args...)
-   {
-      const auto &actionName = static_cast<Helper *>(this)->GetActionName();
-      throw std::logic_error("The MakeNew method is not implemented for this action helper (" + actionName +
-                             "). Cannot Vary its result.");
-   }
-
-   // Helper functions for RMergeableValue
-   virtual std::unique_ptr<RMergeableValueBase> GetMergeableValue() const
-   {
-      throw std::logic_error("`GetMergeableValue` is not implemented for this type of action.");
-   }
-
-   virtual std::function<void(unsigned int)> GetDataBlockCallback() R__DEPRECATED(6, 28, "Use GetSampleCallback.")
-   {
-      return {};
-   }
-   virtual ROOT::RDF::SampleCallback_t GetSampleCallback() { return {}; }
-};
-
-} // namespace RDF
-} // namespace Detail
-
 namespace Internal {
 namespace RDF {
 using namespace ROOT::TypeTraits;
@@ -228,7 +171,7 @@ public:
 };
 
 class R__CLING_PTRCHECK(off) CountHelper : public RActionImpl<CountHelper> {
-   const std::shared_ptr<ULong64_t> fResultCount;
+   std::shared_ptr<ULong64_t> fResultCount;
    Results<ULong64_t> fCounts;
 
 public:
@@ -258,20 +201,18 @@ public:
    }
 };
 
-template <typename ProxiedVal_t>
-class R__CLING_PTRCHECK(off) ReportHelper : public RActionImpl<ReportHelper<ProxiedVal_t>> {
-   const std::shared_ptr<RCutFlowReport> fReport;
-   // Here we have a weak pointer since we need to keep track of the validity
-   // of the proxied node. It can happen that the user does not trigger the
-   // event loop by looking into the RResultPtr and the chain goes out of scope
-   // before the Finalize method is invoked.
-   std::weak_ptr<ProxiedVal_t> fProxiedWPtr;
+template <typename RNode_t>
+class R__CLING_PTRCHECK(off) ReportHelper : public RActionImpl<ReportHelper<RNode_t>> {
+   std::shared_ptr<RCutFlowReport> fReport;
+   /// Non-owning pointer, never null. As usual, the node is owned by its children nodes (and therefore indirectly by
+   /// the RAction corresponding to this action helper).
+   RNode_t *fNode;
    bool fReturnEmptyReport;
 
 public:
    using ColumnTypes_t = TypeList<>;
-   ReportHelper(const std::shared_ptr<RCutFlowReport> &report, const std::shared_ptr<ProxiedVal_t> &pp, bool emptyRep)
-      : fReport(report), fProxiedWPtr(pp), fReturnEmptyReport(emptyRep){};
+   ReportHelper(const std::shared_ptr<RCutFlowReport> &report, RNode_t *node, bool emptyRep)
+      : fReport(report), fNode(node), fReturnEmptyReport(emptyRep){};
    ReportHelper(ReportHelper &&) = default;
    ReportHelper(const ReportHelper &) = delete;
    void InitTask(TTreeReader *, unsigned int) {}
@@ -279,9 +220,8 @@ public:
    void Initialize() { /* noop */}
    void Finalize()
    {
-      // We need the weak_ptr in order to avoid crashes at tear down
-      if (!fReturnEmptyReport && !fProxiedWPtr.expired())
-         fProxiedWPtr.lock()->Report(*fReport);
+      if (!fReturnEmptyReport)
+         fNode->Report(*fReport);
    }
 
    std::string GetActionName() { return "Report"; }
@@ -289,7 +229,14 @@ public:
    // TODO implement MakeNew. Requires some smartness in passing the appropriate previous node.
 };
 
-class R__CLING_PTRCHECK(off) FillHelper : public RActionImpl<FillHelper> {
+/// This helper fills TH1Ds for which no axes were specified by buffering the fill values to pick good axes limits.
+///
+/// TH1Ds have an automatic mechanism to pick good limits based on the first N entries they were filled with, but
+/// that does not work in multi-thread event loops as it might yield histograms with incompatible binning in each
+/// thread, making it impossible to merge the per-thread results.
+/// Instead, this helper delays the decision on the axes limits until all threads have done processing, synchronizing
+/// the decision on the limits as part of the merge operation.
+class R__CLING_PTRCHECK(off) BufferedFillHelper : public RActionImpl<BufferedFillHelper> {
    // this sets a total initial size of 16 MB for the buffers (can increase)
    static constexpr unsigned int fgTotalBufSize = 2097152;
    using BufEl_t = double;
@@ -297,7 +244,7 @@ class R__CLING_PTRCHECK(off) FillHelper : public RActionImpl<FillHelper> {
 
    std::vector<Buf_t> fBuffers;
    std::vector<Buf_t> fWBuffers;
-   const std::shared_ptr<Hist_t> fResultHist;
+   std::shared_ptr<Hist_t> fResultHist;
    unsigned int fNSlots;
    unsigned int fBufSize;
    /// Histograms containing "snapshots" of partial results. Non-null only if a registered callback requires it.
@@ -308,9 +255,9 @@ class R__CLING_PTRCHECK(off) FillHelper : public RActionImpl<FillHelper> {
    void UpdateMinMax(unsigned int slot, double v);
 
 public:
-   FillHelper(const std::shared_ptr<Hist_t> &h, const unsigned int nSlots);
-   FillHelper(FillHelper &&) = default;
-   FillHelper(const FillHelper &) = delete;
+   BufferedFillHelper(const std::shared_ptr<Hist_t> &h, const unsigned int nSlots);
+   BufferedFillHelper(BufferedFillHelper &&) = default;
+   BufferedFillHelper(const BufferedFillHelper &) = delete;
    void InitTask(TTreeReader *, unsigned int) {}
    void Exec(unsigned int slot, double v);
    void Exec(unsigned int slot, double v, double w);
@@ -375,32 +322,53 @@ public:
       return std::make_unique<RMergeableFill<Hist_t>>(*fResultHist);
    }
 
-   std::string GetActionName() { return "FillWithUnknownAxes"; }
+   std::string GetActionName()
+   {
+      return std::string(fResultHist->IsA()->GetName()) + "\\n" + std::string(fResultHist->GetName());
+   }
 
-   FillHelper MakeNew(void *newResult)
+   BufferedFillHelper MakeNew(void *newResult)
    {
       auto &result = *static_cast<std::shared_ptr<Hist_t> *>(newResult);
       result->Reset();
       result->SetDirectory(nullptr);
-      return FillHelper(result, fNSlots);
+      return BufferedFillHelper(result, fNSlots);
    }
 };
 
-extern template void FillHelper::Exec(unsigned int, const std::vector<float> &);
-extern template void FillHelper::Exec(unsigned int, const std::vector<double> &);
-extern template void FillHelper::Exec(unsigned int, const std::vector<char> &);
-extern template void FillHelper::Exec(unsigned int, const std::vector<int> &);
-extern template void FillHelper::Exec(unsigned int, const std::vector<unsigned int> &);
-extern template void FillHelper::Exec(unsigned int, const std::vector<float> &, const std::vector<float> &);
-extern template void FillHelper::Exec(unsigned int, const std::vector<double> &, const std::vector<double> &);
-extern template void FillHelper::Exec(unsigned int, const std::vector<char> &, const std::vector<char> &);
-extern template void FillHelper::Exec(unsigned int, const std::vector<int> &, const std::vector<int> &);
+extern template void BufferedFillHelper::Exec(unsigned int, const std::vector<float> &);
+extern template void BufferedFillHelper::Exec(unsigned int, const std::vector<double> &);
+extern template void BufferedFillHelper::Exec(unsigned int, const std::vector<char> &);
+extern template void BufferedFillHelper::Exec(unsigned int, const std::vector<int> &);
+extern template void BufferedFillHelper::Exec(unsigned int, const std::vector<unsigned int> &);
+extern template void BufferedFillHelper::Exec(unsigned int, const std::vector<float> &, const std::vector<float> &);
+extern template void BufferedFillHelper::Exec(unsigned int, const std::vector<double> &, const std::vector<double> &);
+extern template void BufferedFillHelper::Exec(unsigned int, const std::vector<char> &, const std::vector<char> &);
+extern template void BufferedFillHelper::Exec(unsigned int, const std::vector<int> &, const std::vector<int> &);
 extern template void
-FillHelper::Exec(unsigned int, const std::vector<unsigned int> &, const std::vector<unsigned int> &);
+BufferedFillHelper::Exec(unsigned int, const std::vector<unsigned int> &, const std::vector<unsigned int> &);
 
+/// The generic Fill helper: it calls Fill on per-thread objects and then Merge to produce a final result.
+/// For one-dimensional histograms, if no axes are specified, RDataFrame uses BufferedFillHelper instead.
 template <typename HIST = Hist_t>
-class R__CLING_PTRCHECK(off) FillParHelper : public RActionImpl<FillParHelper<HIST>> {
+class R__CLING_PTRCHECK(off) FillHelper : public RActionImpl<FillHelper<HIST>> {
    std::vector<HIST *> fObjects;
+
+   template <typename H = HIST, typename = decltype(std::declval<H>().Reset())>
+   void ResetIfPossible(H *h)
+   {
+      h->Reset();
+   }
+
+   void ResetIfPossible(TStatistic *h) { *h = TStatistic(); }
+
+   // cannot safely re-initialize variations of the result, hence error out
+   void ResetIfPossible(...)
+   {
+      throw std::runtime_error(
+         "A systematic variation was requested for a custom Fill action, but the type of the object to be filled does "
+         "not implement a Reset method, so we cannot safely re-initialize variations of the result. Aborting.");
+   }
 
    void UnsetDirectoryIfPossible(TH1 *h) {
       h->SetDirectory(nullptr);
@@ -451,28 +419,28 @@ class R__CLING_PTRCHECK(off) FillParHelper : public RActionImpl<FillParHelper<HI
    // in c++17 or later
 
    // return unchanged value for scalar
-   template <typename T, typename std::enable_if<!IsDataContainer<T>::value, int>::type = 0>
+   template <typename T, std::enable_if_t<!IsDataContainer<T>::value, int> = 0>
    ScalarConstIterator<T> MakeBegin(const T &val)
    {
       return ScalarConstIterator<T>(&val);
    }
 
    // return iterator to beginning of container
-   template <typename T, typename std::enable_if<IsDataContainer<T>::value, int>::type = 0>
+   template <typename T, std::enable_if_t<IsDataContainer<T>::value, int> = 0>
    auto MakeBegin(const T &val)
    {
       return std::begin(val);
    }
 
    // return 1 for scalars
-   template <typename T, typename std::enable_if<!IsDataContainer<T>::value, int>::type = 0>
+   template <typename T, std::enable_if_t<!IsDataContainer<T>::value, int> = 0>
    std::size_t GetSize(const T &)
    {
       return 1;
    }
 
    // return container size
-   template <typename T, typename std::enable_if<IsDataContainer<T>::value, int>::type = 0>
+   template <typename T, std::enable_if_t<IsDataContainer<T>::value, int> = 0>
    std::size_t GetSize(const T &val)
    {
 #if __cplusplus >= 201703L
@@ -495,13 +463,13 @@ class R__CLING_PTRCHECK(off) FillParHelper : public RActionImpl<FillParHelper<HI
    }
 
 public:
-   FillParHelper(FillParHelper &&) = default;
-   FillParHelper(const FillParHelper &) = delete;
+   FillHelper(FillHelper &&) = default;
+   FillHelper(const FillHelper &) = delete;
 
-   FillParHelper(const std::shared_ptr<HIST> &h, const unsigned int nSlots) : fObjects(nSlots, nullptr)
+   FillHelper(const std::shared_ptr<HIST> &h, const unsigned int nSlots) : fObjects(nSlots, nullptr)
    {
       fObjects[0] = h.get();
-      // Initialise all other slots
+      // Initialize all other slots
       for (unsigned int i = 1; i < nSlots; ++i) {
          fObjects[i] = new HIST(*fObjects[0]);
          UnsetDirectoryIfPossible(fObjects[i]);
@@ -511,16 +479,15 @@ public:
    void InitTask(TTreeReader *, unsigned int) {}
 
    // no container arguments
-   template <typename... ValTypes,
-             typename std::enable_if<!Disjunction<IsDataContainer<ValTypes>...>::value, int>::type = 0>
-   void Exec(unsigned int slot, const ValTypes &...x)
+   template <typename... ValTypes, std::enable_if_t<!Disjunction<IsDataContainer<ValTypes>...>::value, int> = 0>
+   auto Exec(unsigned int slot, const ValTypes &...x) -> decltype(fObjects[slot]->Fill(x...), void())
    {
       fObjects[slot]->Fill(x...);
    }
 
    // at least one container argument
-   template <typename... Xs, typename std::enable_if<Disjunction<IsDataContainer<Xs>...>::value, int>::type = 0>
-   void Exec(unsigned int slot, const Xs &...xs)
+   template <typename... Xs, std::enable_if_t<Disjunction<IsDataContainer<Xs>...>::value, int> = 0>
+   auto Exec(unsigned int slot, const Xs &...xs) -> decltype(fObjects[slot]->Fill(*MakeBegin(xs)...), void())
    {
       // array of bools keeping track of which inputs are containers
       constexpr std::array<bool, sizeof...(Xs)> isContainer{IsDataContainer<Xs>::value...};
@@ -545,6 +512,14 @@ public:
       ExecLoop<colidx>(slot, xrefend, MakeBegin(xs)...);
    }
 
+   template <typename T = HIST>
+   void Exec(...)
+   {
+      static_assert(sizeof(T) < 0,
+                    "When filling an object with RDataFrame (e.g. via a Fill action) the number or types of the "
+                    "columns passed did not match the signature of the object's `Fill` method.");
+   }
+
    void Initialize() { /* noop */}
 
    void Finalize()
@@ -567,29 +542,27 @@ public:
       return std::make_unique<RMergeableFill<HIST>>(*fObjects[0]);
    }
 
-   std::string GetActionName() { return "Fill"; }
-
-   // generic objects might not have a Reset method, in which case we do the safe thing and disable MakeNew:
-   // it would be hard to guarantee that the object copied from the original action is in a clean state, it
-   // might have been copied _after_ the event loop that filled it already happened.
-   template <typename H = HIST, typename = decltype(std::declval<H>().Reset())>
-   FillParHelper MakeNew(void *newResult)
+   // if the fObjects vector type is derived from TObject, return the name of the object
+   template <typename T = HIST, std::enable_if_t<std::is_base_of<TObject, T>::value, int> = 0>
+   std::string GetActionName()
    {
-      auto &result = *static_cast<std::shared_ptr<H> *>(newResult);
-      result->Reset();
-      UnsetDirectoryIfPossible(result.get());
-      return FillParHelper(result, fObjects.size());
+      return std::string(fObjects[0]->IsA()->GetName()) + "\\n" + std::string(fObjects[0]->GetName());
    }
 
-   // This overload is selected if HIST does not have a Reset method, i.e. we cannot
-   // safely re-initialize variations of the result (see above).
-   // In this case we simply error out.
-   template <typename H = HIST, typename... ExtraArgs>
-   FillParHelper MakeNew(void *, ExtraArgs...)
+   // if fObjects is not derived from TObject, indicate it is some other object
+   template <typename T = HIST, std::enable_if_t<!std::is_base_of<TObject, T>::value, int> = 0>
+   std::string GetActionName()
    {
-      throw std::runtime_error(
-         "A systematic variation was requested for a custom Fill action, but the type of the object to be filled does "
-         "not implement a Reset method, so we cannot safely re-initialize variations of the result. Aborting.");
+      return "Fill custom object";
+   }
+
+   template <typename H = HIST>
+   FillHelper MakeNew(void *newResult)
+   {
+      auto &result = *static_cast<std::shared_ptr<H> *>(newResult);
+      ResetIfPossible(result.get());
+      UnsetDirectoryIfPossible(result.get());
+      return FillHelper(result, fObjects.size());
    }
 };
 
@@ -604,12 +577,10 @@ public:
    FillTGraphHelper(FillTGraphHelper &&) = default;
    FillTGraphHelper(const FillTGraphHelper &) = delete;
 
-   // The last parameter is always false, as at the moment there is no way to propagate the parameter from the user to
-   // this method
    FillTGraphHelper(const std::shared_ptr<::TGraph> &g, const unsigned int nSlots) : fGraphs(nSlots, nullptr)
    {
       fGraphs[0] = g.get();
-      // Initialise all other slots
+      // Initialize all other slots
       for (unsigned int i = 1; i < nSlots; ++i) {
          fGraphs[i] = new TGraph(*fGraphs[0]);
       }
@@ -618,6 +589,7 @@ public:
    void Initialize() {}
    void InitTask(TTreeReader *, unsigned int) {}
 
+   // case: both types are container types
    template <typename X0, typename X1,
              std::enable_if_t<IsDataContainer<X0>::value && IsDataContainer<X1>::value, int> = 0>
    void Exec(unsigned int slot, const X0 &x0s, const X1 &x1s)
@@ -625,7 +597,7 @@ public:
       if (x0s.size() != x1s.size()) {
          throw std::runtime_error("Cannot fill Graph with values in containers of different sizes.");
       }
-      auto thisSlotG = fGraphs[slot];
+      auto *thisSlotG = fGraphs[slot];
       auto x0sIt = std::begin(x0s);
       const auto x0sEnd = std::end(x0s);
       auto x1sIt = std::begin(x1s);
@@ -634,11 +606,21 @@ public:
       }
    }
 
-   template <typename X0, typename X1>
+   // case: both types are non-container types, e.g. scalars
+   template <typename X0, typename X1,
+             std::enable_if_t<!IsDataContainer<X0>::value && !IsDataContainer<X1>::value, int> = 0>
    void Exec(unsigned int slot, X0 x0, X1 x1)
    {
       auto thisSlotG = fGraphs[slot];
       thisSlotG->SetPoint(thisSlotG->GetN(), x0, x1);
+   }
+
+   // case: types are combination of containers and non-containers
+   // this is not supported, error out
+   template <typename X0, typename X1, typename... ExtraArgsToLowerPriority>
+   void Exec(unsigned int, X0, X1, ExtraArgsToLowerPriority...)
+   {
+      throw std::runtime_error("Graph was applied to a mix of scalar values and collections. This is not supported.");
    }
 
    void Finalize()
@@ -668,6 +650,112 @@ public:
       auto &result = *static_cast<std::shared_ptr<TGraph> *>(newResult);
       result->Set(0);
       return FillTGraphHelper(result, fGraphs.size());
+   }
+};
+
+class R__CLING_PTRCHECK(off) FillTGraphAsymmErrorsHelper
+   : public ROOT::Detail::RDF::RActionImpl<FillTGraphAsymmErrorsHelper> {
+public:
+   using Result_t = ::TGraphAsymmErrors;
+
+private:
+   std::vector<::TGraphAsymmErrors *> fGraphAsymmErrors;
+
+public:
+   FillTGraphAsymmErrorsHelper(FillTGraphAsymmErrorsHelper &&) = default;
+   FillTGraphAsymmErrorsHelper(const FillTGraphAsymmErrorsHelper &) = delete;
+
+   FillTGraphAsymmErrorsHelper(const std::shared_ptr<::TGraphAsymmErrors> &g, const unsigned int nSlots)
+      : fGraphAsymmErrors(nSlots, nullptr)
+   {
+      fGraphAsymmErrors[0] = g.get();
+      // Initialize all other slots
+      for (unsigned int i = 1; i < nSlots; ++i) {
+         fGraphAsymmErrors[i] = new TGraphAsymmErrors(*fGraphAsymmErrors[0]);
+      }
+   }
+
+   void Initialize() {}
+   void InitTask(TTreeReader *, unsigned int) {}
+
+   // case: all types are container types
+   template <
+      typename X, typename Y, typename EXL, typename EXH, typename EYL, typename EYH,
+      std::enable_if_t<IsDataContainer<X>::value && IsDataContainer<Y>::value && IsDataContainer<EXL>::value &&
+                          IsDataContainer<EXH>::value && IsDataContainer<EYL>::value && IsDataContainer<EYH>::value,
+                       int> = 0>
+   void
+   Exec(unsigned int slot, const X &xs, const Y &ys, const EXL &exls, const EXH &exhs, const EYL &eyls, const EYH &eyhs)
+   {
+      if ((xs.size() != ys.size()) || (xs.size() != exls.size()) || (xs.size() != exhs.size()) ||
+          (xs.size() != eyls.size()) || (xs.size() != eyhs.size())) {
+         throw std::runtime_error("Cannot fill GraphAsymmErrors with values in containers of different sizes.");
+      }
+      auto *thisSlotG = fGraphAsymmErrors[slot];
+      auto xsIt = std::begin(xs);
+      auto ysIt = std::begin(ys);
+      auto exlsIt = std::begin(exls);
+      auto exhsIt = std::begin(exhs);
+      auto eylsIt = std::begin(eyls);
+      auto eyhsIt = std::begin(eyhs);
+      while (xsIt != std::end(xs)) {
+         const auto n = thisSlotG->GetN(); // must use the same `n` for SetPoint and SetPointError
+         thisSlotG->SetPoint(n, *xsIt++, *ysIt++);
+         thisSlotG->SetPointError(n, *exlsIt++, *exhsIt++, *eylsIt++, *eyhsIt++);
+      }
+   }
+
+   // case: all types are non-container types, e.g. scalars
+   template <
+      typename X, typename Y, typename EXL, typename EXH, typename EYL, typename EYH,
+      std::enable_if_t<!IsDataContainer<X>::value && !IsDataContainer<Y>::value && !IsDataContainer<EXL>::value &&
+                          !IsDataContainer<EXH>::value && !IsDataContainer<EYL>::value && !IsDataContainer<EYH>::value,
+                       int> = 0>
+   void Exec(unsigned int slot, X x, Y y, EXL exl, EXH exh, EYL eyl, EYH eyh)
+   {
+      auto thisSlotG = fGraphAsymmErrors[slot];
+      const auto n = thisSlotG->GetN();
+      thisSlotG->SetPoint(n, x, y);
+      thisSlotG->SetPointError(n, exl, exh, eyl, eyh);
+   }
+
+   // case: types are combination of containers and non-containers
+   // this is not supported, error out
+   template <typename X, typename Y, typename EXL, typename EXH, typename EYL, typename EYH,
+             typename... ExtraArgsToLowerPriority>
+   void Exec(unsigned int, X, Y, EXL, EXH, EYL, EYH, ExtraArgsToLowerPriority...)
+   {
+      throw std::runtime_error(
+         "GraphAsymmErrors was applied to a mix of scalar values and collections. This is not supported.");
+   }
+
+   void Finalize()
+   {
+      const auto nSlots = fGraphAsymmErrors.size();
+      auto resGraphAsymmErrors = fGraphAsymmErrors[0];
+      TList l;
+      l.SetOwner(); // The list will free the memory associated to its elements upon destruction
+      for (unsigned int slot = 1; slot < nSlots; ++slot) {
+         l.Add(fGraphAsymmErrors[slot]);
+      }
+      resGraphAsymmErrors->Merge(&l);
+   }
+
+   // Helper functions for RMergeableValue
+   std::unique_ptr<RMergeableValueBase> GetMergeableValue() const final
+   {
+      return std::make_unique<RMergeableFill<Result_t>>(*fGraphAsymmErrors[0]);
+   }
+
+   std::string GetActionName() { return "GraphAsymmErrors"; }
+
+   Result_t &PartialUpdate(unsigned int slot) { return *fGraphAsymmErrors[slot]; }
+
+   FillTGraphAsymmErrorsHelper MakeNew(void *newResult)
+   {
+      auto &result = *static_cast<std::shared_ptr<TGraphAsymmErrors> *>(newResult);
+      result->Set(0);
+      return FillTGraphAsymmErrorsHelper(result, fGraphAsymmErrors.size());
    }
 };
 
@@ -914,7 +1002,7 @@ extern template class TakeHelper<double, double, std::vector<double>>;
 
 template <typename ResultType>
 class R__CLING_PTRCHECK(off) MinHelper : public RActionImpl<MinHelper<ResultType>> {
-   const std::shared_ptr<ResultType> fResultMin;
+   std::shared_ptr<ResultType> fResultMin;
    Results<ResultType> fMins;
 
 public:
@@ -970,7 +1058,7 @@ public:
 
 template <typename ResultType>
 class R__CLING_PTRCHECK(off) MaxHelper : public RActionImpl<MaxHelper<ResultType>> {
-   const std::shared_ptr<ResultType> fResultMax;
+   std::shared_ptr<ResultType> fResultMax;
    Results<ResultType> fMaxs;
 
 public:
@@ -1027,8 +1115,9 @@ public:
 
 template <typename ResultType>
 class R__CLING_PTRCHECK(off) SumHelper : public RActionImpl<SumHelper<ResultType>> {
-   const std::shared_ptr<ResultType> fResultSum;
+   std::shared_ptr<ResultType> fResultSum;
    Results<ResultType> fSums;
+   Results<ResultType> fCompensations;
 
    /// Evaluate neutral element for this type and the sum operation.
    /// This is assumed to be any_value - any_value if operator- is defined
@@ -1049,26 +1138,45 @@ public:
    SumHelper(SumHelper &&) = default;
    SumHelper(const SumHelper &) = delete;
    SumHelper(const std::shared_ptr<ResultType> &sumVPtr, const unsigned int nSlots)
-      : fResultSum(sumVPtr), fSums(nSlots, NeutralElement(*sumVPtr, -1))
+      : fResultSum(sumVPtr), fSums(nSlots, NeutralElement(*sumVPtr, -1)),
+        fCompensations(nSlots, NeutralElement(*sumVPtr, -1))
    {
    }
-
    void InitTask(TTreeReader *, unsigned int) {}
-   void Exec(unsigned int slot, ResultType v) { fSums[slot] += v; }
+
+   void Exec(unsigned int slot, ResultType x)
+   {
+      // Kahan Sum:
+      ResultType y = x - fCompensations[slot];
+      ResultType t = fSums[slot] + y;
+      fCompensations[slot] = (t - fSums[slot]) - y;
+      fSums[slot] = t;
+   }
 
    template <typename T, std::enable_if_t<IsDataContainer<T>::value, int> = 0>
    void Exec(unsigned int slot, const T &vs)
    {
-      for (auto &&v : vs)
-         fSums[slot] += static_cast<ResultType>(v);
+      for (auto &&v : vs) {
+         Exec(slot, v);
+      }
    }
 
    void Initialize() { /* noop */}
 
    void Finalize()
    {
-      for (auto &m : fSums)
-         *fResultSum += m;
+      ResultType sum(NeutralElement(ResultType{}, -1));
+      ResultType compensation(NeutralElement(ResultType{}, -1));
+      ResultType y(NeutralElement(ResultType{}, -1));
+      ResultType t(NeutralElement(ResultType{}, -1));
+      for (auto &m : fSums) {
+         // Kahan Sum:
+         y = m - compensation;
+         t = sum + y;
+         compensation = (t - sum) - y;
+         sum = t;
+      }
+      *fResultSum += sum;
    }
 
    // Helper functions for RMergeableValue
@@ -1090,10 +1198,11 @@ public:
 };
 
 class R__CLING_PTRCHECK(off) MeanHelper : public RActionImpl<MeanHelper> {
-   const std::shared_ptr<double> fResultMean;
+   std::shared_ptr<double> fResultMean;
    std::vector<ULong64_t> fCounts;
    std::vector<double> fSums;
    std::vector<double> fPartialMeans;
+   std::vector<double> fCompensations;
 
 public:
    MeanHelper(const std::shared_ptr<double> &meanVPtr, const unsigned int nSlots);
@@ -1106,8 +1215,13 @@ public:
    void Exec(unsigned int slot, const T &vs)
    {
       for (auto &&v : vs) {
-         fSums[slot] += v;
+
          fCounts[slot]++;
+         // Kahan Sum:
+         double y = v - fCompensations[slot];
+         double t = fSums[slot] + y;
+         fCompensations[slot] = (t - fSums[slot]) - y;
+         fSums[slot] = t;
       }
    }
 
@@ -1141,8 +1255,8 @@ extern template void MeanHelper::Exec(unsigned int, const std::vector<unsigned i
 
 class R__CLING_PTRCHECK(off) StdDevHelper : public RActionImpl<StdDevHelper> {
    // Number of subsets of data
-   const unsigned int fNSlots;
-   const std::shared_ptr<double> fResultStdDev;
+   unsigned int fNSlots;
+   std::shared_ptr<double> fResultStdDev;
    // Number of element for each slot
    std::vector<ULong64_t> fCounts;
    // Mean of each slot
@@ -1197,8 +1311,8 @@ template <typename PrevNodeType>
 class R__CLING_PTRCHECK(off) DisplayHelper : public RActionImpl<DisplayHelper<PrevNodeType>> {
 private:
    using Display_t = ROOT::RDF::RDisplay;
-   const std::shared_ptr<Display_t> fDisplayerHelper;
-   const std::shared_ptr<PrevNodeType> fPrevNode;
+   std::shared_ptr<Display_t> fDisplayerHelper;
+   std::shared_ptr<PrevNodeType> fPrevNode;
    size_t fEntriesToProcess;
 
 public:
@@ -1407,15 +1521,15 @@ void ValidateSnapshotOutput(const RSnapshotOptions &opts, const std::string &tre
 /// Helper object for a single-thread Snapshot action
 template <typename... ColTypes>
 class R__CLING_PTRCHECK(off) SnapshotHelper : public RActionImpl<SnapshotHelper<ColTypes...>> {
-   const std::string fFileName;
-   const std::string fDirName;
-   const std::string fTreeName;
-   const RSnapshotOptions fOptions;
+   std::string fFileName;
+   std::string fDirName;
+   std::string fTreeName;
+   RSnapshotOptions fOptions;
    std::unique_ptr<TFile> fOutputFile;
    std::unique_ptr<TTree> fOutputTree; // must be a ptr because TTrees are not copy/move constructible
    bool fBranchAddressesNeedReset{true};
-   const ColumnNames_t fInputBranchNames; // This contains the resolved aliases
-   const ColumnNames_t fOutputBranchNames;
+   ColumnNames_t fInputBranchNames; // This contains the resolved aliases
+   ColumnNames_t fOutputBranchNames;
    TTree *fInputTree = nullptr; // Current input tree. Set at initialization time (`InitTask`)
    // TODO we might be able to unify fBranches, fBranchAddresses and fOutputBranches
    std::vector<TBranch *> fBranches; // Addresses of branches in output, non-null only for the ones holding C arrays
@@ -1437,6 +1551,11 @@ public:
 
    SnapshotHelper(const SnapshotHelper &) = delete;
    SnapshotHelper(SnapshotHelper &&) = default;
+   ~SnapshotHelper()
+   {
+      if (!fTreeName.empty() /*not moved from*/ && !fOutputFile /* did not run */ && fOptions.fLazy)
+         Warning("Snapshot", "A lazy Snapshot action was booked but never triggered.");
+   }
 
    void InitTask(TTreeReader *r, unsigned int /* slot */)
    {
@@ -1533,17 +1652,17 @@ public:
 /// Helper object for a multi-thread Snapshot action
 template <typename... ColTypes>
 class R__CLING_PTRCHECK(off) SnapshotHelperMT : public RActionImpl<SnapshotHelperMT<ColTypes...>> {
-   const unsigned int fNSlots;
+   unsigned int fNSlots;
    std::unique_ptr<ROOT::TBufferMerger> fMerger; // must use a ptr because TBufferMerger is not movable
    std::vector<std::shared_ptr<ROOT::TBufferMergerFile>> fOutputFiles;
    std::vector<std::unique_ptr<TTree>> fOutputTrees;
    std::vector<int> fBranchAddressesNeedReset; // vector<bool> does not allow concurrent writing of different elements
-   const std::string fFileName;           // name of the output file name
-   const std::string fDirName;            // name of TFile subdirectory in which output must be written (possibly empty)
-   const std::string fTreeName;           // name of output tree
-   const RSnapshotOptions fOptions;       // struct holding options to pass down to TFile and TTree in this action
-   const ColumnNames_t fInputBranchNames; // This contains the resolved aliases
-   const ColumnNames_t fOutputBranchNames;
+   std::string fFileName;           // name of the output file name
+   std::string fDirName;            // name of TFile subdirectory in which output must be written (possibly empty)
+   std::string fTreeName;           // name of output tree
+   RSnapshotOptions fOptions;       // struct holding options to pass down to TFile and TTree in this action
+   ColumnNames_t fInputBranchNames; // This contains the resolved aliases
+   ColumnNames_t fOutputBranchNames;
    std::vector<TTree *> fInputTrees; // Current input trees. Set at initialization time (`InitTask`)
    // Addresses of branches in output per slot, non-null only for the ones holding C arrays
    std::vector<std::vector<TBranch *>> fBranches;
@@ -1568,6 +1687,12 @@ public:
    }
    SnapshotHelperMT(const SnapshotHelperMT &) = delete;
    SnapshotHelperMT(SnapshotHelperMT &&) = default;
+   ~SnapshotHelperMT()
+   {
+      if (!fTreeName.empty() /*not moved from*/ && fOptions.fLazy &&
+          std::all_of(fOutputFiles.begin(), fOutputFiles.end(), [](const auto &f) { return !f; }) /* never run */)
+         Warning("Snapshot", "A lazy Snapshot action was booked but never triggered.");
+   }
 
    void InitTask(TTreeReader *r, unsigned int slot)
    {
@@ -1631,12 +1756,11 @@ public:
       // With this code, we set the value of the pointer in the output branch anew when needed.
       // Nota bene: the extra ",0" after the invocation of SetAddress, is because that method returns void and
       // we need an int for the expander list.
-      (void)slot; // avoid bogus 'unused parameter' warning
       int expander[] = {(fBranches[slot][S] && fBranchAddresses[slot][S] != GetData(values)
                          ? fBranches[slot][S]->SetAddress(GetData(values)),
                          fBranchAddresses[slot][S] = GetData(values), 0 : 0, 0)...,
                         0};
-      (void)expander; // avoid unused variable warnings for older compilers such as gcc 4.9
+      (void)expander; // avoid unused parameter warnings (gcc 12.1)
    }
 
    template <std::size_t... S>
@@ -1650,7 +1774,6 @@ public:
                         0};
       fOutputBranches[slot].AssertNoNullBranchAddresses();
       (void)expander; // avoid unused parameter warnings (gcc 12.1)
-      (void)slot;     // avoid unused variable warnings in gcc6.2
    }
 
    void Initialize()
@@ -1699,7 +1822,7 @@ class R__CLING_PTRCHECK(off) AggregateHelper
    : public RActionImpl<AggregateHelper<Acc, Merge, R, T, U, MustCopyAssign>> {
    Acc fAggregate;
    Merge fMerge;
-   const std::shared_ptr<U> fResult;
+   std::shared_ptr<U> fResult;
    Results<U> fAggregators;
 
 public:

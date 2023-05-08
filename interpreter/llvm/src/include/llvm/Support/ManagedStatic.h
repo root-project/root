@@ -66,6 +66,7 @@ public:
 #ifdef LLVM_USE_CONSTEXPR_CTOR
   constexpr ManagedStaticBase() = default;
 #endif
+
   /// isConstructed - Return true if this object has not been created yet.
   bool isConstructed() const { return Ptr != nullptr; }
 
@@ -101,6 +102,12 @@ public:
   }
 
   const C *operator->() const { return &**this; }
+
+  // Extract the instance, leaving the ManagedStatic uninitialized. The
+  // user is then responsible for the lifetime of the returned instance.
+  C *claim() {
+    return static_cast<C *>(Ptr.exchange(nullptr));
+  }
 };
 
 /// llvm_shutdown - Deallocate and destroy all ManagedStatic variables.

@@ -401,7 +401,7 @@ void TEveGListTreeEditorFrame::ItemDblClicked(TGListTreeItem* item, Int_t btn)
 ////////////////////////////////////////////////////////////////////////////////
 /// A key has been pressed for an item.
 ///
-/// Only <Delete>, <Enter> and <Return> keys are handled here,
+/// Only `<Delete>`, `<Enter>` and `<Return>` keys are handled here,
 /// otherwise the control is passed back to TGListTree.
 
 void TEveGListTreeEditorFrame::ItemKeyPress(TGListTreeItem *entry, UInt_t keysym, UInt_t mask)

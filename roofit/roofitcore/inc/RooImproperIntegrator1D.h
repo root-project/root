@@ -28,41 +28,42 @@ public:
   RooImproperIntegrator1D() ;
   RooImproperIntegrator1D(const RooAbsFunc& function);
   RooImproperIntegrator1D(const RooAbsFunc& function, const RooNumIntConfig& config);
-  RooImproperIntegrator1D(const RooAbsFunc& function, Double_t xmin, Double_t xmax, const RooNumIntConfig& config);
-  virtual RooAbsIntegrator* clone(const RooAbsFunc& function, const RooNumIntConfig& config) const ;
-  virtual ~RooImproperIntegrator1D();
+  RooImproperIntegrator1D(const RooAbsFunc& function, double xmin, double xmax, const RooNumIntConfig& config);
+  RooAbsIntegrator* clone(const RooAbsFunc& function, const RooNumIntConfig& config) const override ;
 
-  virtual Bool_t checkLimits() const;
+  bool checkLimits() const override;
   using RooAbsIntegrator::setLimits ;
-  Bool_t setLimits(Double_t* xmin, Double_t* xmax);
-  virtual Bool_t setUseIntegrandLimits(Bool_t flag) {_useIntegrandLimits = flag ; return kTRUE ; }
-  virtual Double_t integral(const Double_t* yvec=0) ;
+  bool setLimits(double* xmin, double* xmax) override;
+  bool setUseIntegrandLimits(bool flag) override {_useIntegrandLimits = flag ; return true ; }
+  double integral(const double* yvec=nullptr) override ;
 
-  virtual Bool_t canIntegrate1D() const { return kTRUE ; }
-  virtual Bool_t canIntegrate2D() const { return kFALSE ; }
-  virtual Bool_t canIntegrateND() const { return kFALSE ; }
-  virtual Bool_t canIntegrateOpenEnded() const { return kTRUE ; }
+  bool canIntegrate1D() const override { return true ; }
+  bool canIntegrate2D() const override { return false ; }
+  bool canIntegrateND() const override { return false ; }
+  bool canIntegrateOpenEnded() const override { return true ; }
 
 protected:
 
   friend class RooNumIntFactory ;
-  static void registerIntegrator(RooNumIntFactory& fact) ;	
+  static void registerIntegrator(RooNumIntFactory& fact) ;
 
-  void initialize(const RooAbsFunc* function=0) ;
+  void initialize(const RooAbsFunc* function=nullptr) ;
 
   enum LimitsCase { Invalid, ClosedBothEnds, OpenBothEnds, OpenBelowSpansZero, OpenBelow,
-		    OpenAboveSpansZero, OpenAbove };
+          OpenAboveSpansZero, OpenAbove };
   LimitsCase limitsCase() const;
-  LimitsCase _case; // Configuration of limits
-  mutable Double_t _xmin, _xmax;  // Value of limits
-  Bool_t _useIntegrandLimits;  // Use limits in function binding?
+  LimitsCase _case; ///< Configuration of limits
+  mutable double _xmin, _xmax; ///< Value of limits
+  bool _useIntegrandLimits;    ///< Use limits in function binding?
 
-  RooAbsFunc*      _origFunc ;  // Original function binding
-  RooInvTransform *_function;   // Binding with inverse of function
-  RooNumIntConfig  _config ;  // Configuration object
-  mutable RooIntegrator1D *_integrator1,*_integrator2,*_integrator3; // Piece integrators
-  
-  ClassDef(RooImproperIntegrator1D,0) // 1-dimensional improper integration engine
+  RooAbsFunc*      _origFunc = nullptr;  ///< Original function binding
+  std::unique_ptr<RooInvTransform> _function;   ///< Binding with inverse of function
+  RooNumIntConfig  _config ;    ///< Configuration object
+  mutable std::unique_ptr<RooIntegrator1D> _integrator1; ///< Piece integrator 1
+  mutable std::unique_ptr<RooIntegrator1D> _integrator2; ///< Piece integrator 2
+  mutable std::unique_ptr<RooIntegrator1D> _integrator3; ///< Piece integrator 3
+
+  ClassDefOverride(RooImproperIntegrator1D,0) // 1-dimensional improper integration engine
 };
 
 #endif

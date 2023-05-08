@@ -50,7 +50,7 @@ void add_jet(REveElement* parent, const char* name,
    auto jet = new REveJetCone(name, name);
    jet->SetMainTransparency(60);
    jet->SetLineColor(kRed);
-   jet->SetCylinder(129 - 10, 268.36 - 10);
+   jet->SetCylinder(kR_min - 10, kZ_d - 10);
    jet->AddEllipticCone(eta, phi, deta, dphi);
    jet->SetPickable(kTRUE);
    jet->SetHighlightFrame(kFALSE);
@@ -75,11 +75,12 @@ void calorimeters()
    auto b1 = new REveGeoShape("Barrel 1");
    b1->SetShape(new TGeoTube(kR_min, kR_max, kZ_d));
    b1->SetMainColor(kCyan);
+   b1->SetNSegments(80);
    eveMng->GetGlobalScene()->AddElement(b1);
 
    auto calo3d = new REveCalo3D(data);
-   calo3d->SetBarrelRadius(kR_max);
-   calo3d->SetEndCapPos(kZ_d);
+   calo3d->SetBarrelRadius(kR_max + 1);
+   calo3d->SetEndCapPos(kZ_d + 1);
    calo3d->SetMaxTowerH(300);
    eveMng->GetEventScene()->AddElement(calo3d);
 
@@ -91,5 +92,3 @@ void calorimeters()
 
    eveMng->Show();
 }
-
-

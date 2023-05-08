@@ -31,8 +31,8 @@ protected :
 public:
    // constructors
    TGeoBBox();
-   TGeoBBox(Double_t dx, Double_t dy, Double_t dz, Double_t *origin=0);
-   TGeoBBox(const char *name, Double_t dx, Double_t dy, Double_t dz, Double_t *origin=0);
+   TGeoBBox(Double_t dx, Double_t dy, Double_t dz, Double_t *origin=nullptr);
+   TGeoBBox(const char *name, Double_t dx, Double_t dy, Double_t dz, Double_t *origin=nullptr);
    TGeoBBox(Double_t *param);
    // destructor
    virtual ~TGeoBBox();
@@ -48,12 +48,12 @@ public:
    virtual Bool_t        CouldBeCrossed(const Double_t *point, const Double_t *dir) const;
    virtual Int_t         DistancetoPrimitive(Int_t px, Int_t py);
    virtual Double_t      DistFromInside(const Double_t *point, const Double_t *dir, Int_t iact=1,
-                                   Double_t step=TGeoShape::Big(), Double_t *safe=0) const;
+                                   Double_t step=TGeoShape::Big(), Double_t *safe=nullptr) const;
    virtual void          DistFromInside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t *step) const;
    static  Double_t      DistFromInside(const Double_t *point,const Double_t *dir,
                                    Double_t dx, Double_t dy, Double_t dz, const Double_t *origin, Double_t stepmax=TGeoShape::Big());
    virtual Double_t      DistFromOutside(const Double_t *point, const Double_t *dir, Int_t iact=1,
-                                   Double_t step=TGeoShape::Big(), Double_t *safe=0) const;
+                                   Double_t step=TGeoShape::Big(), Double_t *safe=nullptr) const;
    virtual void          DistFromOutside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t *step) const;
    static  Double_t      DistFromOutside(const Double_t *point,const Double_t *dir,
                                    Double_t dx, Double_t dy, Double_t dz, const Double_t *origin, Double_t stepmax=TGeoShape::Big());
@@ -83,7 +83,7 @@ public:
    virtual Double_t      Safety(const Double_t *point, Bool_t in=kTRUE) const;
    virtual void          Safety_v(const Double_t *points, const Bool_t *inside, Double_t *safe, Int_t vecsize) const;
    virtual void          SavePrimitive(std::ostream &out, Option_t *option = "");
-   void                  SetBoxDimensions(Double_t dx, Double_t dy, Double_t dz, Double_t *origin=0);
+   void                  SetBoxDimensions(Double_t dx, Double_t dy, Double_t dz, Double_t *origin=nullptr);
    virtual void          SetDimensions(Double_t *param);
    void                  SetBoxPoints(Double_t *points) const;
    virtual void          SetPoints(Double_t *points) const;

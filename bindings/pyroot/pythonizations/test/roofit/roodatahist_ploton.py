@@ -31,7 +31,7 @@ class RooDataHistPlotOn(unittest.TestCase):
 
         dh = ROOT.RooDataHist("dh", "binned version of d", ROOT.RooArgSet(x, y), d)
 
-        yframe = ROOT.RooPlot("yplot", "Operations on binned datasets", y, 0, 40, 10)
+        yframe = y.frame(Bins=10)
 
         return dh, yframe
 

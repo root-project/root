@@ -17,8 +17,6 @@
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/UniqueVector.h"
 #include "llvm/IR/Attributes.h"
-#include "llvm/IR/Metadata.h"
-#include "llvm/IR/Type.h"
 #include "llvm/IR/UseListOrder.h"
 #include <cassert>
 #include <cstdint>
@@ -29,6 +27,7 @@ namespace llvm {
 
 class BasicBlock;
 class Comdat;
+class DIArgList;
 class Function;
 class Instruction;
 class LocalAsMetadata;
@@ -288,6 +287,9 @@ private:
   void EnumerateFunctionLocalMetadata(const Function &F,
                                       const LocalAsMetadata *Local);
   void EnumerateFunctionLocalMetadata(unsigned F, const LocalAsMetadata *Local);
+  void EnumerateFunctionLocalListMetadata(const Function &F,
+                                          const DIArgList *ArgList);
+  void EnumerateFunctionLocalListMetadata(unsigned F, const DIArgList *Arglist);
   void EnumerateNamedMDNode(const NamedMDNode *NMD);
   void EnumerateValue(const Value *V);
   void EnumerateType(Type *T);

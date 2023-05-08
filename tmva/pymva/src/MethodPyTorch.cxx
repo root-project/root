@@ -192,7 +192,7 @@ void MethodPyTorch::SetupPyTorchModel(bool loadTrainedModel) {
     * Load PyTorch model from file
     */
 
-   Log() << kINFO << " Setup PyTorch Model " << Endl;
+   Log() << kINFO << " Setup PyTorch Model for training" << Endl;
 
    if (!fUserCodeName.IsNull()) {
       Log() << kINFO << " Executing user initialization code from  " << fUserCodeName << Endl;
@@ -200,8 +200,12 @@ void MethodPyTorch::SetupPyTorchModel(bool loadTrainedModel) {
       // run some python code provided by user for method initializations
       FILE* fp;
       fp = fopen(fUserCodeName, "r");
-      PyRun_SimpleFile(fp, fUserCodeName);
-      fclose(fp);
+      if (fp) { 
+         PyRun_SimpleFile(fp, fUserCodeName);
+         fclose(fp);
+      }
+      else
+         Log() << kFATAL << "Input user code is not existing : " << fUserCodeName << Endl;
    }
 
    PyRunString("print('custom objects for loading model : ',load_model_custom_objects)");
@@ -243,7 +247,7 @@ void MethodPyTorch::SetupPyTorchModel(bool loadTrainedModel) {
    }
    PyRunString("model = torch.jit.load('"+filenameLoadModel+"')",
                "Failed to load PyTorch model from file: "+filenameLoadModel);
-   Log() << kINFO << "Load model from file: " << filenameLoadModel << Endl;
+   Log() << kINFO << "Loaded model from file: " << filenameLoadModel << Endl;
 
 
    /*

@@ -161,7 +161,7 @@ void th2polyEurope(Int_t npoints=500000)
    h2->SetMarkerStyle(20);
    h2->SetMarkerSize(0.8);
 
-   TLegend *leg = new TLegend(0.5,0.67,0.92,0.8,NULL,"NDC");
+   TLegend *leg = new TLegend(0.5,0.67,0.92,0.8,nullptr,"NDC");
    leg->SetTextFont(42);
    leg->SetTextSize(0.025);
    leg->AddEntry(h,"Real countries surfaces from Wikipedia (in km^{2})","lp");

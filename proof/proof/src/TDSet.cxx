@@ -1534,11 +1534,10 @@ void TDSet::StartViewer()
    }
    fProofChain = new TProofChain(this, kTRUE);
 
-   TPluginHandler *h;
-   if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualTreeViewer"))) {
-      if (h->LoadPlugin() == -1)
-         return;
-      h->ExecPlugin(1,fProofChain);
+   const char *hname = gEnv->GetValue("TreeViewer.Name", "TTreeViewer");
+   if (auto h = gROOT->GetPluginManager()->FindHandler("TVirtualTreeViewer", hname)) {
+      if (h->LoadPlugin() != -1)
+         h->ExecPlugin(1,fProofChain);
    }
 }
 

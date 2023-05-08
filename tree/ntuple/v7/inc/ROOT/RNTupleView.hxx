@@ -161,14 +161,17 @@ private:
    Detail::RFieldValue fValue;
 
 public:
-
-   RNTupleView(DescriptorId_t fieldId, Detail::RPageSource* pageSource)
-     : fField(pageSource->GetDescriptor().GetFieldDescriptor(fieldId).GetFieldName()), fValue(fField.GenerateValue())
+   RNTupleView(DescriptorId_t fieldId, Detail::RPageSource *pageSource)
+      : fField(pageSource->GetSharedDescriptorGuard()->GetFieldDescriptor(fieldId).GetFieldName()),
+        fValue(fField.GenerateValue())
    {
+      if ((fField.GetTraits() & Detail::RFieldBase::kTraitMappable) && fField.HasReadCallbacks())
+         throw RException(R__FAIL("view disallowed on field with mappable type and read callback"));
       fField.SetOnDiskId(fieldId);
       fField.ConnectPageSource(*pageSource);
       for (auto &f : fField) {
-         auto subFieldId = pageSource->GetDescriptor().FindFieldId(f.GetName(), f.GetParent()->GetOnDiskId());
+         auto subFieldId =
+            pageSource->GetSharedDescriptorGuard()->FindFieldId(f.GetName(), f.GetParent()->GetOnDiskId());
          f.SetOnDiskId(subFieldId);
          f.ConnectPageSource(*pageSource);
       }
@@ -263,21 +266,19 @@ public:
    /// Raises an exception if there is no field with the given name.
    template <typename T>
    RNTupleView<T> GetView(std::string_view fieldName) {
-      auto fieldId = fSource->GetDescriptor().FindFieldId(fieldName, fCollectionFieldId);
+      auto fieldId = fSource->GetSharedDescriptorGuard()->FindFieldId(fieldName, fCollectionFieldId);
       if (fieldId == kInvalidDescriptorId) {
-         throw RException(R__FAIL("no field named '" + std::string(fieldName) + "' in RNTuple '"
-            + fSource->GetDescriptor().GetName() + "'"
-         ));
+         throw RException(R__FAIL("no field named '" + std::string(fieldName) + "' in RNTuple '" +
+                                  fSource->GetSharedDescriptorGuard()->GetName() + "'"));
       }
       return RNTupleView<T>(fieldId, fSource);
    }
    /// Raises an exception if there is no field with the given name.
    RNTupleViewCollection GetViewCollection(std::string_view fieldName) {
-      auto fieldId = fSource->GetDescriptor().FindFieldId(fieldName, fCollectionFieldId);
+      auto fieldId = fSource->GetSharedDescriptorGuard()->FindFieldId(fieldName, fCollectionFieldId);
       if (fieldId == kInvalidDescriptorId) {
-         throw RException(R__FAIL("no field named '" + std::string(fieldName) + "' in RNTuple '"
-            + fSource->GetDescriptor().GetName() + "'"
-         ));
+         throw RException(R__FAIL("no field named '" + std::string(fieldName) + "' in RNTuple '" +
+                                  fSource->GetSharedDescriptorGuard()->GetName() + "'"));
       }
       return RNTupleViewCollection(fieldId, fSource);
    }

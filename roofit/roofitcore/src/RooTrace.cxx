@@ -26,8 +26,6 @@ are printed in addition at the construction and destruction of
 each object.
 **/
 
-#include "RooFit.h"
-
 #include "RooTrace.h"
 #include "RooAbsArg.h"
 #include "Riostream.h"
@@ -47,7 +45,7 @@ RooTrace* RooTrace::_instance=0 ;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooTrace& RooTrace::instance() 
+RooTrace& RooTrace::instance()
 {
   if (_instance==0) _instance = new RooTrace() ;
   return *_instance ;
@@ -56,20 +54,20 @@ RooTrace& RooTrace::instance()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooTrace::RooTrace() : _active(kFALSE), _verbose(kFALSE) 
+RooTrace::RooTrace() : _active(false), _verbose(false)
 {
 }
 
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Register creation of object 'obj' 
+/// Register creation of object 'obj'
 
-void RooTrace::create(const TObject* obj) 
-{ 
+void RooTrace::create(const TObject* obj)
+{
   RooTrace& instance = RooTrace::instance() ;
   if (instance._active) {
-    instance.create3(obj) ; 
+    instance.create3(obj) ;
   }
 
 }
@@ -78,18 +76,18 @@ void RooTrace::create(const TObject* obj)
 ////////////////////////////////////////////////////////////////////////////////
 /// Register deletion of object 'obj'
 
-void RooTrace::destroy(const TObject* obj) 
-{ 
+void RooTrace::destroy(const TObject* obj)
+{
   RooTrace& instance = RooTrace::instance() ;
   if (instance._active) {
-    instance.destroy3(obj) ; 
+    instance.destroy3(obj) ;
   }
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void RooTrace::createSpecial(const char* name, int size) 
+void RooTrace::createSpecial(const char* name, int size)
 {
   RooTrace& instance = RooTrace::instance() ;
   if (instance._active) {
@@ -100,7 +98,7 @@ void RooTrace::createSpecial(const char* name, int size)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void RooTrace::destroySpecial(const char* name) 
+void RooTrace::destroySpecial(const char* name)
 {
   RooTrace& instance = RooTrace::instance() ;
   if (instance._active) {
@@ -111,7 +109,7 @@ void RooTrace::destroySpecial(const char* name)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void RooTrace::createSpecial3(const char* name, int size) 
+void RooTrace::createSpecial3(const char* name, int size)
 {
   _specialCount[name]++ ;
   _specialSize[name] = size ;
@@ -120,7 +118,7 @@ void RooTrace::createSpecial3(const char* name, int size)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void RooTrace::destroySpecial3(const char* name) 
+void RooTrace::destroySpecial3(const char* name)
 {
   _specialCount[name]-- ;
 }
@@ -130,9 +128,9 @@ void RooTrace::destroySpecial3(const char* name)
 ////////////////////////////////////////////////////////////////////////////////
 /// If flag is true, memory tracing is activated
 
-void RooTrace::active(Bool_t flag) 
-{ 
-  RooTrace::instance()._active = flag ; 
+void RooTrace::active(bool flag)
+{
+  RooTrace::instance()._active = flag ;
 }
 
 
@@ -140,9 +138,9 @@ void RooTrace::active(Bool_t flag)
 /// If flag is true, a message will be printed at each
 /// object creation or deletion
 
-void RooTrace::verbose(Bool_t flag) 
-{ 
-  RooTrace::instance()._verbose = flag ; 
+void RooTrace::verbose(bool flag)
+{
+  RooTrace::instance()._verbose = flag ;
 }
 
 
@@ -150,29 +148,29 @@ void RooTrace::verbose(Bool_t flag)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Back end function of create(), register creation of object 'obj' 
+/// Back end function of create(), register creation of object 'obj'
 
-void RooTrace::create2(const TObject* obj) 
+void RooTrace::create2(const TObject* obj)
 {
   _list.Add((RooAbsArg*)obj) ;
   if (_verbose) {
-    cout << "RooTrace::create: object " << obj << " of type " << obj->ClassName() 
-	 << " created " << endl ;
+    cout << "RooTrace::create: object " << obj << " of type " << obj->ClassName()
+    << " created " << endl ;
   }
 }
 
 
-  
+
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Back end function of destroy(), register deletion of object 'obj' 
+/// Back end function of destroy(), register deletion of object 'obj'
 
-void RooTrace::destroy2(const TObject* obj) 
+void RooTrace::destroy2(const TObject* obj)
 {
   if (!_list.Remove((RooAbsArg*)obj)) {
   } else if (_verbose) {
-    cout << "RooTrace::destroy: object " << obj << " of type " << obj->ClassName() 
-	 << " destroyed [" << obj->GetTitle() << "]" << endl ;
+    cout << "RooTrace::destroy: object " << obj << " of type " << obj->ClassName()
+    << " destroyed [" << obj->GetTitle() << "]" << endl ;
   }
 }
 
@@ -180,19 +178,19 @@ void RooTrace::destroy2(const TObject* obj)
 
 //_____________________________________________________________________________
 
-void RooTrace::create3(const TObject* obj) 
+void RooTrace::create3(const TObject* obj)
 {
-  // Back end function of create(), register creation of object 'obj' 
+  // Back end function of create(), register creation of object 'obj'
   _objectCount[obj->IsA()]++ ;
 }
 
 
-  
+
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Back end function of destroy(), register deletion of object 'obj' 
+/// Back end function of destroy(), register deletion of object 'obj'
 
-void RooTrace::destroy3(const TObject* obj) 
+void RooTrace::destroy3(const TObject* obj)
 {
   _objectCount[obj->IsA()]-- ;
 }
@@ -224,15 +222,15 @@ void RooTrace::mark3()
 ////////////////////////////////////////////////////////////////////////////////
 /// Dump contents of object registry to stdout
 
-void RooTrace::dump() 
+void RooTrace::dump()
 {
-  RooTrace::instance().dump3(cout,kFALSE) ;
+  RooTrace::instance().dump3(cout,false) ;
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void RooTrace::dump(ostream& os, Bool_t sinceMarked) 
+void RooTrace::dump(ostream& os, bool sinceMarked)
 {
   RooTrace::instance().dump3(os,sinceMarked) ;
 }
@@ -242,7 +240,7 @@ void RooTrace::dump(ostream& os, Bool_t sinceMarked)
 /// Dump contents of object register to stream 'os'. If sinceMarked is
 /// true, only object created after the last call to mark() are shown.
 
-void RooTrace::dump3(ostream& os, Bool_t sinceMarked) 
+void RooTrace::dump3(ostream& os, bool sinceMarked)
 {
   os << "List of RooFit objects allocated while trace active:" << endl ;
 
@@ -268,18 +266,18 @@ void RooTrace::printObjectCounts()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void RooTrace::printObjectCounts3() 
+void RooTrace::printObjectCounts3()
 {
-  Double_t total(0) ;
+  double total(0) ;
   for (map<TClass*,int>::iterator iter = _objectCount.begin() ; iter != _objectCount.end() ; ++iter) {
-    Double_t tot= 1.0*(iter->first->Size()*iter->second)/(1024*1024) ;
+    double tot= 1.0*(iter->first->Size()*iter->second)/(1024*1024) ;
     cout << " class " << iter->first->GetName() << " count = " << iter->second << " sizeof = " << iter->first->Size() << " total memory = " <<  Form("%5.2f",tot) << " Mb" << endl ;
     total+=tot ;
   }
 
   for (map<string,int>::iterator iter = _specialCount.begin() ; iter != _specialCount.end() ; ++iter) {
     int size = _specialSize[iter->first] ;
-    Double_t tot=1.0*(size*iter->second)/(1024*1024) ;
+    double tot=1.0*(size*iter->second)/(1024*1024) ;
     cout << " speeial " << iter->first << " count = " << iter->second << " sizeof = " << size  << " total memory = " <<  Form("%5.2f",tot) << " Mb" << endl ;
     total+=tot ;
   }
@@ -292,10 +290,10 @@ void RooTrace::printObjectCounts3()
 /// Utility function to trigger zeroing of callgrind counters.
 ///
 /// Note that this function does _not_ do anything, other than optionally printing this message
-/// To trigger callgrind zero counter action, run callgrind with 
+/// To trigger callgrind zero counter action, run callgrind with
 /// argument '--zero-before=RooTrace::callgrind_zero()' (include single quotes in cmdline)
 
-void RooTrace::callgrind_zero() 
+void RooTrace::callgrind_zero()
 {
   ooccoutD((TObject*)0,Tracing) << "RooTrace::callgrind_zero()" << endl ;
 }
@@ -304,10 +302,10 @@ void RooTrace::callgrind_zero()
 /// Utility function to trigger dumping of callgrind counters.
 ///
 /// Note that this function does _not_ do anything, other than optionally printing this message
-/// To trigger callgrind dumping action, run callgrind with 
+/// To trigger callgrind dumping action, run callgrind with
 /// argument '--dump-before=RooTrace::callgrind_dump()' (include single quotes in cmdline)
 
-void RooTrace::callgrind_dump() 
+void RooTrace::callgrind_dump()
 {
   ooccoutD((TObject*)0,Tracing) << "RooTrace::callgrind_dump()" << endl ;
 }

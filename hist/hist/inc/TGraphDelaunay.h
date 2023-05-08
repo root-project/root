@@ -31,8 +31,8 @@ class TGraphDelaunay : public TNamed {
 
 private:
 
-   TGraphDelaunay(const TGraphDelaunay&); // Not implemented
-   TGraphDelaunay& operator=(const TGraphDelaunay&); // Not implemented
+   TGraphDelaunay(const TGraphDelaunay&) = delete;
+   TGraphDelaunay& operator=(const TGraphDelaunay&) = delete;
 
 protected:
 
@@ -77,7 +77,7 @@ public:
    TGraphDelaunay();
    TGraphDelaunay(TGraph2D *g);
 
-   virtual ~TGraphDelaunay();
+   ~TGraphDelaunay() override;
 
    Double_t  ComputeZ(Double_t x, Double_t y);
    void      FindAllTriangles();
@@ -97,7 +97,7 @@ public:
    void      SetMaxIter(Int_t n=100000);
    void      SetMarginBinsContent(Double_t z=0.);
 
-   ClassDef(TGraphDelaunay,1)  // Delaunay triangulation
+   ClassDefOverride(TGraphDelaunay,1)  // Delaunay triangulation
 };
 
 #endif

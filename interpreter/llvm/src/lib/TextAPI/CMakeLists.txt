@@ -1,14 +1,18 @@
-add_llvm_library(LLVMTextAPI
-  ELF/ELFStub.cpp
-  ELF/TBEHandler.cpp
-  MachO/Architecture.cpp
-  MachO/ArchitectureSet.cpp
-  MachO/InterfaceFile.cpp
-  MachO/PackedVersion.cpp
-  MachO/Symbol.cpp
-  MachO/TextStub.cpp
-  MachO/TextStubCommon.cpp
+add_llvm_component_library(LLVMTextAPI
+  Architecture.cpp
+  ArchitectureSet.cpp
+  InterfaceFile.cpp
+  PackedVersion.cpp
+  Platform.cpp
+  Symbol.cpp
+  Target.cpp
+  TextStub.cpp
+  TextStubCommon.cpp
 
   ADDITIONAL_HEADER_DIRS
   "${LLVM_MAIN_INCLUDE_DIR}/llvm/TextAPI"
+
+  LINK_COMPONENTS
+  Support
+  BinaryFormat
 )

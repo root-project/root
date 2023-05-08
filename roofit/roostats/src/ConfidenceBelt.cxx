@@ -36,6 +36,8 @@ store the interval.
 
 #include "RooStats/RooStatsUtils.h"
 
+#include <TMath.h>
+
 ClassImp(RooStats::ConfidenceBelt); ;
 
 using namespace RooStats;
@@ -90,7 +92,7 @@ ConfidenceBelt::~ConfidenceBelt()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t ConfidenceBelt::GetAcceptanceRegionMin(RooArgSet& parameterPoint, Double_t cl, Double_t leftside) {
+double ConfidenceBelt::GetAcceptanceRegionMin(RooArgSet& parameterPoint, double cl, double leftside) {
   if(cl>0 || leftside > 0) cout <<"using default cl, leftside for now" <<endl;
   AcceptanceRegion * region = GetAcceptanceRegion(parameterPoint, cl,leftside);
   return (region) ? region->GetLowerLimit() : TMath::QuietNaN();
@@ -98,7 +100,7 @@ Double_t ConfidenceBelt::GetAcceptanceRegionMin(RooArgSet& parameterPoint, Doubl
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t ConfidenceBelt::GetAcceptanceRegionMax(RooArgSet& parameterPoint, Double_t cl, Double_t leftside) {
+double ConfidenceBelt::GetAcceptanceRegionMax(RooArgSet& parameterPoint, double cl, double leftside) {
   if(cl>0 || leftside > 0) cout <<"using default cl, leftside for now" <<endl;
   AcceptanceRegion * region = GetAcceptanceRegion(parameterPoint, cl,leftside);
   return (region) ? region->GetUpperLimit() : TMath::QuietNaN();
@@ -106,16 +108,16 @@ Double_t ConfidenceBelt::GetAcceptanceRegionMax(RooArgSet& parameterPoint, Doubl
 
 ////////////////////////////////////////////////////////////////////////////////
 
-vector<Double_t> ConfidenceBelt::ConfidenceLevels() const {
-  vector<Double_t> levels;
+vector<double> ConfidenceBelt::ConfidenceLevels() const {
+  vector<double> levels;
   return levels;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void ConfidenceBelt::AddAcceptanceRegion(RooArgSet& parameterPoint, Int_t dsIndex,
-                Double_t lower, Double_t upper,
-                Double_t cl, Double_t leftside){
+                double lower, double upper,
+                double cl, double leftside){
   if(cl>0 || leftside > 0) cout <<"using default cl, leftside for now" <<endl;
 
   RooDataSet*  tree = dynamic_cast<RooDataSet*>(  fParameterPoints );
@@ -172,7 +174,7 @@ void ConfidenceBelt::AddAcceptanceRegion(RooArgSet& parameterPoint, Int_t dsInde
 ////////////////////////////////////////////////////////////////////////////////
 
 void ConfidenceBelt::AddAcceptanceRegion(RooArgSet& parameterPoint, AcceptanceRegion region,
-                Double_t cl, Double_t leftside){
+                double cl, double leftside){
   if(cl>0 || leftside > 0) cout <<"using default cl, leftside for now" <<endl;
 
   RooDataSet*  tree = dynamic_cast<RooDataSet*>(  fParameterPoints );
@@ -210,7 +212,7 @@ void ConfidenceBelt::AddAcceptanceRegion(RooArgSet& parameterPoint, AcceptanceRe
 ////////////////////////////////////////////////////////////////////////////////
 /// Method to determine if a parameter point is in the interval
 
-AcceptanceRegion* ConfidenceBelt::GetAcceptanceRegion(RooArgSet &parameterPoint, Double_t cl, Double_t leftside)
+AcceptanceRegion* ConfidenceBelt::GetAcceptanceRegion(RooArgSet &parameterPoint, double cl, double leftside)
 {
   if(cl>0 || leftside > 0) cout <<"using default cl, leftside for now" <<endl;
 
@@ -242,17 +244,17 @@ AcceptanceRegion* ConfidenceBelt::GetAcceptanceRegion(RooArgSet &parameterPoint,
     for(index=0; index<tree->numEntries(); ++index){
       thisPoint = tree->get(index);
       bool samePoint = true;
-      TIter it = parameterPoint.createIterator();
-      RooRealVar *myarg;
-      while ( samePoint && (myarg = (RooRealVar *)it.Next())) {
-   if(myarg->getVal() != thisPoint->getRealValue(myarg->GetName()))
-     samePoint = false;
+      for (auto const *myarg : static_range_cast<RooRealVar *>(parameterPoint)) {      
+        if (samePoint == false)
+            break;
+        if(myarg->getVal() != thisPoint->getRealValue(myarg->GetName()))
+        samePoint = false;
       }
       if(samePoint)
    break;
     }
 
-    if (index >= (int)fSamplingSummaries.size())
+    if (index >= static_cast<int>(fSamplingSummaries.size()))
       throw std::runtime_error("ConfidenceBelt::GetAcceptanceRegion: Sampling summaries are not filled yet. Switch on NeymanConstruction::CreateConfBelt() or FeldmanCousins::CreateConfBelt().");
 
     return &(fSamplingSummaries[index].GetAcceptanceRegion());
@@ -275,7 +277,7 @@ RooArgSet* ConfidenceBelt::GetParameters() const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Bool_t ConfidenceBelt::CheckParameters(RooArgSet &parameterPoint) const
+bool ConfidenceBelt::CheckParameters(RooArgSet &parameterPoint) const
 {
    if (parameterPoint.getSize() != fParameterPoints->get()->getSize() ) {
       std::cout << "size is wrong, parameters don't match" << std::endl;

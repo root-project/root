@@ -10,10 +10,9 @@
 #include "DwarfCompileUnit.h"
 #include "DwarfDebug.h"
 #include "DwarfUnit.h"
-#include "llvm/ADT/SmallVector.h"
 #include "llvm/CodeGen/AsmPrinter.h"
-#include "llvm/CodeGen/DIE.h"
 #include "llvm/IR/DebugInfoMetadata.h"
+#include "llvm/IR/Metadata.h"
 #include "llvm/MC/MCStreamer.h"
 #include <algorithm>
 #include <cstdint>
@@ -53,13 +52,13 @@ void DwarfFile::emitUnit(DwarfUnit *TheU, bool UseOffsets) {
   Asm->emitDwarfDIE(TheU->getUnitDie());
 
   if (MCSymbol *EndLabel = TheU->getEndLabel())
-    Asm->OutStreamer->EmitLabel(EndLabel);
+    Asm->OutStreamer->emitLabel(EndLabel);
 }
 
 // Compute the size and offset for each DIE.
 void DwarfFile::computeSizeAndOffsets() {
   // Offset from the first CU in the debug info section is 0 initially.
-  unsigned SecOffset = 0;
+  uint64_t SecOffset = 0;
 
   // Iterate over each compile unit and set the size and offsets for each
   // DIE within each compile unit. All offsets are CU relative.
@@ -75,12 +74,15 @@ void DwarfFile::computeSizeAndOffsets() {
     TheU->setDebugSectionOffset(SecOffset);
     SecOffset += computeSizeAndOffsetsForUnit(TheU.get());
   }
+  if (SecOffset > UINT32_MAX && !Asm->isDwarf64())
+    report_fatal_error("The generated debug information is too large "
+                       "for the 32-bit DWARF format.");
 }
 
 unsigned DwarfFile::computeSizeAndOffsetsForUnit(DwarfUnit *TheU) {
   // CU-relative offset is reset to 0 here.
-  unsigned Offset = sizeof(int32_t) +      // Length of Unit Info
-                    TheU->getHeaderSize(); // Unit-specific headers
+  unsigned Offset = Asm->getUnitLengthFieldByteSize() + // Length of Unit Info
+                    TheU->getHeaderSize();              // Unit-specific headers
 
   // The return value here is CU-relative, after laying out
   // all of the CU DIE.
@@ -126,6 +128,6 @@ void DwarfFile::addScopeLabel(LexicalScope *LS, DbgLabel *Label) {
 std::pair<uint32_t, RangeSpanList *>
 DwarfFile::addRange(const DwarfCompileUnit &CU, SmallVector<RangeSpan, 2> R) {
   CURangeLists.push_back(
-      RangeSpanList(Asm->createTempSymbol("debug_ranges"), CU, std::move(R)));
+      RangeSpanList{Asm->createTempSymbol("debug_ranges"), &CU, std::move(R)});
   return std::make_pair(CURangeLists.size() - 1, &CURangeLists.back());
 }

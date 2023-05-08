@@ -25,14 +25,14 @@ TF2 *fitFcn;
 TH2D *histo;
 
 // Quadratic background function
-Double_t gaus2D(Double_t *x, Double_t *par) {
+double gaus2D(double *x, double *par) {
    double t1 =   x[0] - par[1];
    double t2 =   x[1] - par[2];
    return par[0]* exp( - 0.5 * (  t1*t1/( par[3]*par[3]) + t2*t2  /( par[4]*par[4] )  ) ) ;
 }
 
 // Sum of background and peak function
-Double_t fitFunction(Double_t *x, Double_t *par) {
+double fitFunction(double *x, double *par) {
   return gaus2D(x,par);
 }
 
@@ -46,7 +46,7 @@ void fillHisto(int n =10000) {
   }
 }
 
-void DoFit(const char* fitter, TVirtualPad *pad, Int_t npass) {
+void DoFit(const char* fitter, TVirtualPad *pad, int npass) {
    TStopwatch timer;
    TVirtualFitter::SetDefaultFitter(fitter);
    pad->SetGrid();
@@ -58,7 +58,7 @@ void DoFit(const char* fitter, TVirtualPad *pad, Int_t npass) {
    timer.Stop();
 
    histo->Draw();
-   Double_t cputime = timer.CpuTime();
+   double cputime = timer.CpuTime();
    printf("%s, npass=%d  : RT=%7.3f s, Cpu=%7.3f s\n",fitter,npass,timer.RealTime(),cputime);
    TPaveLabel *p = new TPaveLabel(0.5,0.7,0.85,0.8,Form("%s CPU= %g s",fitter,cputime),"brNDC");
    p->Draw();
@@ -66,7 +66,7 @@ void DoFit(const char* fitter, TVirtualPad *pad, Int_t npass) {
 }
 
 void minuit2FitBench2D(int n = 100000) {
-   TH1::AddDirectory(kFALSE);
+   TH1::AddDirectory(false);
    TCanvas *c1 = new TCanvas("c1","Fitting Demo",10,10,900,900);
    c1->Divide(2,2);
    // create a TF1 with the range from 0 to 3 and 6 parameters

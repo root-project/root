@@ -138,11 +138,11 @@ void rf711_lagrangianmorph()
    leg1->SetTextSize(0.04);
    leg1->SetFillColor(kWhite);
    leg1->SetLineColor(kWhite);
-   leg1->AddEntry(frame0->findObject("SM_NPsq0"), "SM", "LP");
+   leg1->AddEntry("SM_NPsq0", "SM", "LP");
    leg1->AddEntry((TObject *)0, "", "");
-   leg1->AddEntry(frame0->findObject("cHq3_NPsq1"), "c_{Hq^(3)}=1.0 at #Lambda^{-2}", "LP");
+   leg1->AddEntry("cHq3_NPsq1", "c_{Hq^(3)}=1.0 at #Lambda^{-2}", "LP");
    leg1->AddEntry((TObject *)0, "", "");
-   leg1->AddEntry(frame0->findObject("cHq3_NPsq2"), "c_{Hq^(3)}=1.0 at #Lambda^{-4}", "LP");
+   leg1->AddEntry("cHq3_NPsq2", "c_{Hq^(3)}=1.0 at #Lambda^{-4}", "LP");
    leg1->Draw();
 
    c1->cd(2);
@@ -155,11 +155,11 @@ void rf711_lagrangianmorph()
    leg2->SetTextSize(0.04);
    leg2->SetFillColor(kWhite);
    leg2->SetLineColor(kWhite);
-   leg2->AddEntry(frame1->findObject("morph_dh_cHq3=0.01"), "c_{Hq^{(3)}}=0.01", "L");
+   leg2->AddEntry("morph_dh_cHq3=0.01", "c_{Hq^{(3)}}=0.01", "L");
    leg2->AddEntry((TObject *)0, "", "");
-   leg2->AddEntry(frame1->findObject("morph_dh_cHq3=0.25"), "c_{Hq^{(3)}}=0.25", "L");
+   leg2->AddEntry("morph_dh_cHq3=0.25", "c_{Hq^{(3)}}=0.25", "L");
    leg2->AddEntry((TObject *)0, "", "");
-   leg2->AddEntry(frame1->findObject("morph_dh_cHq3=0.5"), "c_{Hq^{(3)}}=0.5", "L");
+   leg2->AddEntry("morph_dh_cHq3=0.5", "c_{Hq^{(3)}}=0.5", "L");
    leg2->AddEntry((TObject *)0, "", "");
    leg2->Draw();
 

@@ -24,6 +24,9 @@
 #include "RooAbsCache.h"
 #include "RooNameReg.h"
 #include "RooLinkedListIter.h"
+#include <RooFit/Config.h>
+#include <RooFit/Detail/NormalizationHelpers.h>
+#include <RooStringView.h>
 
 #include <deque>
 #include <iostream>
@@ -37,14 +40,15 @@
 class TTree ;
 class RooArgSet ;
 class RooAbsCollection ;
-class RooTreeDataStore ;
 class RooVectorDataStore ;
 class RooAbsData ;
 class RooAbsDataStore ;
 class RooAbsProxy ;
 class RooArgProxy ;
-class RooSetProxy ;
-class RooListProxy ;
+template<class RooCollection_t>
+class RooCollectionProxy;
+using RooSetProxy = RooCollectionProxy<RooArgSet>;
+using RooListProxy = RooCollectionProxy<RooArgList>;
 class RooExpensiveObjectCache ;
 class RooWorkspace ;
 
@@ -55,9 +59,9 @@ class RooRefArray : public TObjArray {
   RooRefArray(const RooRefArray& other) : TObjArray(other) {
   }
   RooRefArray& operator=(const RooRefArray& other) = default;
-  virtual ~RooRefArray() {} ;
+  ~RooRefArray() override {} ;
  protected:
-  ClassDef(RooRefArray,1) // Helper class for proxy lists
+  ClassDefOverride(RooRefArray,1) // Helper class for proxy lists
 } ;
 
 class RooAbsArg;
@@ -73,44 +77,50 @@ public:
 
   // Constructors, cloning and assignment
   RooAbsArg() ;
-  virtual ~RooAbsArg();
+  ~RooAbsArg() override;
   RooAbsArg(const char *name, const char *title);
-  RooAbsArg(const RooAbsArg& other, const char* name=0) ;
-  RooAbsArg& operator=(const RooAbsArg& other);
-  virtual TObject* clone(const char* newname=0) const = 0 ;
-  virtual TObject* Clone(const char* newname = 0) const {
+  RooAbsArg(const RooAbsArg& other, const char* name=nullptr) ;
+  RooAbsArg& operator=(const RooAbsArg& other) = delete;
+  virtual TObject* clone(const char* newname=nullptr) const = 0 ;
+  TObject* Clone(const char* newname = nullptr) const override {
     return clone(newname && newname[0] != '\0' ? newname : nullptr);
   }
-  virtual RooAbsArg* cloneTree(const char* newname=0) const ;
+  virtual RooAbsArg* cloneTree(const char* newname=nullptr) const ;
 
   // Accessors to client-server relation information
 
   /// Does value or shape of this arg depend on any other arg?
-  virtual Bool_t isDerived() const {
-    return kTRUE ;
+  virtual bool isDerived() const {
+    return true ;
   }
-  Bool_t isCloneOf(const RooAbsArg& other) const ;
+  bool isCloneOf(const RooAbsArg& other) const ;
 
   /// Check whether this object depends on values from an element in the `serverList`.
   ///
   /// @param serverList Test if one of the elements in this list serves values to `this`.
   /// @param ignoreArg Ignore values served by this object.
   /// @return True if values are served.
-  Bool_t dependsOnValue(const RooAbsCollection& serverList, const RooAbsArg* ignoreArg=0) const {
-    return dependsOn(serverList,ignoreArg,kTRUE) ;
+  bool dependsOnValue(const RooAbsCollection& serverList, const RooAbsArg* ignoreArg=nullptr) const {
+    return dependsOn(serverList,ignoreArg,true) ;
   }
   /// Check whether this object depends on values served from the object passed as `server`.
   ///
   /// @param server Test if `server` serves values to `this`.
   /// @param ignoreArg Ignore values served by this object.
   /// @return True if values are served.
-  Bool_t dependsOnValue(const RooAbsArg& server, const RooAbsArg* ignoreArg=0) const {
-    return dependsOn(server,ignoreArg,kTRUE) ;
+  bool dependsOnValue(const RooAbsArg& server, const RooAbsArg* ignoreArg=nullptr) const {
+    return dependsOn(server,ignoreArg,true) ;
   }
-  Bool_t dependsOn(const RooAbsCollection& serverList, const RooAbsArg* ignoreArg=0, Bool_t valueOnly=kFALSE) const ;
-  Bool_t dependsOn(const RooAbsArg& server, const RooAbsArg* ignoreArg=0, Bool_t valueOnly=kFALSE) const ;
-  Bool_t overlaps(const RooAbsArg& testArg, Bool_t valueOnly=kFALSE) const ;
-  Bool_t hasClients() const { return !_clientList.empty(); }
+  bool dependsOn(const RooAbsCollection& serverList, const RooAbsArg* ignoreArg=nullptr, bool valueOnly=false) const ;
+  /// Test whether we depend on (ie, are served by) the specified object.
+  /// Note that RooAbsArg objects are considered equivalent if they have
+  /// the same name.
+  inline bool dependsOn(const RooAbsArg& server, const RooAbsArg* ignoreArg=nullptr, bool valueOnly=false) const {
+    return dependsOn(server.namePtr(), ignoreArg, valueOnly);
+  }
+  bool dependsOn(TNamed const* namePtr, const RooAbsArg* ignoreArg=nullptr, bool valueOnly=false) const ;
+  bool overlaps(const RooAbsArg& testArg, bool valueOnly=false) const ;
+  bool hasClients() const { return !_clientList.empty(); }
 
   ////////////////////////////////////////////////////////////////////////////
   /// \name Legacy RooFit interface.
@@ -161,13 +171,13 @@ public:
   /// \deprecated Use getObservables()
   inline RooArgSet* getDependents(const RooArgSet* depList) const { return getObservables(depList) ; }
   /// \deprecated Use observableOverlaps()
-  inline Bool_t dependentOverlaps(const RooAbsData* dset, const RooAbsArg& testArg) const { return observableOverlaps(dset,testArg) ; }
+  inline bool dependentOverlaps(const RooAbsData* dset, const RooAbsArg& testArg) const { return observableOverlaps(dset,testArg) ; }
   /// \deprecated Use observableOverlaps()
-  inline Bool_t dependentOverlaps(const RooArgSet* depList, const RooAbsArg& testArg) const { return observableOverlaps(depList, testArg) ; }
+  inline bool dependentOverlaps(const RooArgSet* depList, const RooAbsArg& testArg) const { return observableOverlaps(depList, testArg) ; }
   /// \deprecated Use checkObservables()
-  inline Bool_t checkDependents(const RooArgSet* nset) const { return checkObservables(nset) ; }
+  inline bool checkDependents(const RooArgSet* nset) const { return checkObservables(nset) ; }
   /// \deprecated Use recursiveCheckObservables()
-  inline Bool_t recursiveCheckDependents(const RooArgSet* nset) const { return recursiveCheckObservables(nset) ; }
+  inline bool recursiveCheckDependents(const RooArgSet* nset) const { return recursiveCheckObservables(nset) ; }
   // --- End obsolete functions for backward compatibility
   /// @}
   ////////////////////////////////////////////////////////////////////////////
@@ -210,79 +220,66 @@ public:
     return _serverList.containedObjects()[index];
   }
   /// Check if `this` is serving values to `arg`.
-  inline Bool_t isValueServer(const RooAbsArg& arg) const {
+  inline bool isValueServer(const RooAbsArg& arg) const {
     return _clientListValue.containsByNamePtr(&arg);
   }
   /// Check if `this` is serving values to an object with name `name`.
-  inline Bool_t isValueServer(const char* name) const {
+  inline bool isValueServer(const char* name) const {
     return _clientListValue.containsSameName(name);
   }
   /// Check if `this` is serving shape to `arg`.
-  inline Bool_t isShapeServer(const RooAbsArg& arg) const {
+  inline bool isShapeServer(const RooAbsArg& arg) const {
     return _clientListShape.containsByNamePtr(&arg);
   }
   /// Check if `this` is serving shape to an object with name `name`.
-  inline Bool_t isShapeServer(const char* name) const {
+  inline bool isShapeServer(const char* name) const {
     return _clientListShape.containsSameName(name);
   }
-  void leafNodeServerList(RooAbsCollection* list, const RooAbsArg* arg=0, Bool_t recurseNonDerived=kFALSE) const ;
-  void branchNodeServerList(RooAbsCollection* list, const RooAbsArg* arg=0, Bool_t recurseNonDerived=kFALSE) const ;
-  void treeNodeServerList(RooAbsCollection* list, const RooAbsArg* arg=0,
-			  Bool_t doBranch=kTRUE, Bool_t doLeaf=kTRUE,
-			  Bool_t valueOnly=kFALSE, Bool_t recurseNonDerived=kFALSE) const ;
+  void leafNodeServerList(RooAbsCollection* list, const RooAbsArg* arg=nullptr, bool recurseNonDerived=false) const ;
+  void branchNodeServerList(RooAbsCollection* list, const RooAbsArg* arg=nullptr, bool recurseNonDerived=false) const ;
+  void treeNodeServerList(RooAbsCollection* list, const RooAbsArg* arg=nullptr,
+           bool doBranch=true, bool doLeaf=true,
+           bool valueOnly=false, bool recurseNonDerived=false) const ;
 
 
   /// Is this object a fundamental type that can be added to a dataset?
-  /// Fundamental-type subclasses override this method to return kTRUE.
+  /// Fundamental-type subclasses override this method to return true.
   /// Note that this test is subtlely different from the dynamic isDerived()
   /// test, e.g. a constant is not derived but is also not fundamental.
-  inline virtual Bool_t isFundamental() const {
-    return kFALSE;
+  inline virtual bool isFundamental() const {
+    return false;
   }
 
   /// Create a fundamental-type object that stores our type of value. The
   /// created object will have a valid value, but not necessarily the same
   /// as our value. The caller is responsible for deleting the returned object.
-  virtual RooAbsArg *createFundamental(const char* newname=0) const = 0;
+  virtual RooAbsArg *createFundamental(const char* newname=nullptr) const = 0;
 
   /// Is this argument an l-value, i.e., can it appear on the left-hand side
   /// of an assignment expression? LValues are also special since they can
   /// potentially be analytically integrated and generated.
-  inline virtual Bool_t isLValue() const {
-    return kFALSE;
-  }
-
-
-  // Server redirection interface
-  Bool_t redirectServers(const RooAbsCollection& newServerList, Bool_t mustReplaceAll=kFALSE, Bool_t nameChange=kFALSE, Bool_t isRecursionStep=kFALSE) ;
-  Bool_t recursiveRedirectServers(const RooAbsCollection& newServerList, Bool_t mustReplaceAll=kFALSE, Bool_t nameChange=kFALSE, Bool_t recurseInNewSet=kTRUE) ;
-
-  /// Function that is called at the end of redirectServers(). Can be overloaded
-  /// to inject some class-dependent behavior after server redirection, e.g.
-  /// resetting of caches. The return value is meant to be an error flag, so in
-  /// case something goes wrong the function should return `true`.
-  ///
-  /// \see redirectServers() For a detailed explanation of the function parameters.
-  ///
-  /// \param[in] newServerList One of the original parameters passed to redirectServers().
-  /// \param[in] mustReplaceAll One of the original parameters passed to redirectServers().
-  /// \param[in] nameChange  One of the original parameters passed to redirectServers().
-  /// \param[in] isRecursiveStep  One of the original parameters passed to redirectServers().
-  virtual bool redirectServersHook(const RooAbsCollection & /*newServerList*/, bool /*mustReplaceAll*/,
-                                   bool /*nameChange*/, bool /*isRecursiveStep*/)
-  {
+  inline virtual bool isLValue() const {
     return false;
   }
 
 
+  // Server redirection interface
+  bool redirectServers(const RooAbsCollection& newServerList, bool mustReplaceAll=false, bool nameChange=false, bool isRecursionStep=false) ;
+  bool recursiveRedirectServers(const RooAbsCollection& newServerList, bool mustReplaceAll=false, bool nameChange=false, bool recurseInNewSet=true) ;
+
+  virtual bool redirectServersHook(const RooAbsCollection & newServerList, bool mustReplaceAll,
+                                   bool nameChange, bool isRecursiveStep);
+
   virtual void serverNameChangeHook(const RooAbsArg* /*oldServer*/, const RooAbsArg* /*newServer*/) { } ;
 
-  void addServer(RooAbsArg& server, Bool_t valueProp=kTRUE, Bool_t shapeProp=kFALSE, std::size_t refCount = 1);
-  void addServerList(RooAbsCollection& serverList, Bool_t valueProp=kTRUE, Bool_t shapeProp=kFALSE) ;
-  void replaceServer(RooAbsArg& oldServer, RooAbsArg& newServer, Bool_t valueProp, Bool_t shapeProp) ;
-  void changeServer(RooAbsArg& server, Bool_t valueProp, Bool_t shapeProp) ;
-  void removeServer(RooAbsArg& server, Bool_t force=kFALSE) ;
-  RooAbsArg *findNewServer(const RooAbsCollection &newSet, Bool_t nameChange) const;
+  void addServer(RooAbsArg& server, bool valueProp=true, bool shapeProp=false, std::size_t refCount = 1);
+  void addServerList(RooAbsCollection& serverList, bool valueProp=true, bool shapeProp=false) ;
+  void
+  R__SUGGEST_ALTERNATIVE("This interface is unsafe! Use RooAbsArg::redirectServers()")
+  replaceServer(RooAbsArg& oldServer, RooAbsArg& newServer, bool valueProp, bool shapeProp) ;
+  void changeServer(RooAbsArg& server, bool valueProp, bool shapeProp) ;
+  void removeServer(RooAbsArg& server, bool force=false) ;
+  RooAbsArg *findNewServer(const RooAbsCollection &newSet, bool nameChange) const;
 
 
   /// @}
@@ -290,23 +287,14 @@ public:
 
 
   // Parameter & observable interpretation of servers
-  friend class RooProdPdf ;
-  friend class RooAddPdf ;
-  friend class RooAddPdfOrig ;
-  RooArgSet* getVariables(Bool_t stripDisconnected=kTRUE) const ;
-  RooArgSet* getParameters(const RooAbsData* data, bool stripDisconnected=true) const ;
-  /// Return the parameters of this p.d.f when used in conjuction with dataset 'data'
-  RooArgSet* getParameters(const RooAbsData& data, bool stripDisconnected=true) const {
-    return getParameters(&data,stripDisconnected) ;
-  }
-  /// Return the parameters of the p.d.f given the provided set of observables
-  RooArgSet* getParameters(const RooArgSet& observables, bool stripDisconnected=true) const {
-    return getParameters(&observables,stripDisconnected);
-  }
-  RooArgSet* getParameters(const RooArgSet* observables, bool stripDisconnected=true) const;
+  RooFit::OwningPtr<RooArgSet> getVariables(bool stripDisconnected=true) const ;
+  RooFit::OwningPtr<RooArgSet> getParameters(const RooAbsData* data, bool stripDisconnected=true) const;
+  RooFit::OwningPtr<RooArgSet> getParameters(const RooAbsData& data, bool stripDisconnected=true) const;
+  RooFit::OwningPtr<RooArgSet> getParameters(const RooArgSet& observables, bool stripDisconnected=true) const;
+  RooFit::OwningPtr<RooArgSet> getParameters(const RooArgSet* observables, bool stripDisconnected=true) const;
   virtual bool getParameters(const RooArgSet* observables, RooArgSet& outputSet, bool stripDisconnected=true) const;
   /// Given a set of possible observables, return the observables that this PDF depends on.
-  RooArgSet* getObservables(const RooArgSet& set, Bool_t valueOnly=kTRUE) const {
+  RooArgSet* getObservables(const RooArgSet& set, bool valueOnly=true) const {
     return getObservables(&set,valueOnly) ;
   }
   RooArgSet* getObservables(const RooAbsData* data) const ;
@@ -316,10 +304,10 @@ public:
   }
   RooArgSet* getObservables(const RooArgSet* depList, bool valueOnly=true) const ;
   bool getObservables(const RooAbsCollection* depList, RooArgSet& outputSet, bool valueOnly=true) const;
-  Bool_t observableOverlaps(const RooAbsData* dset, const RooAbsArg& testArg) const ;
-  Bool_t observableOverlaps(const RooArgSet* depList, const RooAbsArg& testArg) const ;
-  virtual Bool_t checkObservables(const RooArgSet* nset) const ;
-  Bool_t recursiveCheckObservables(const RooArgSet* nset) const ;
+  bool observableOverlaps(const RooAbsData* dset, const RooAbsArg& testArg) const ;
+  bool observableOverlaps(const RooArgSet* depList, const RooAbsArg& testArg) const ;
+  virtual bool checkObservables(const RooArgSet* nset) const ;
+  bool recursiveCheckObservables(const RooArgSet* nset) const ;
   RooArgSet* getComponents() const ;
 
 
@@ -329,36 +317,37 @@ public:
   void attachDataStore(const RooAbsDataStore &set);
 
   // I/O streaming interface (machine readable)
-  virtual Bool_t readFromStream(std::istream& is, Bool_t compact, Bool_t verbose=kFALSE) = 0 ;
-  virtual void writeToStream(std::ostream& os, Bool_t compact) const = 0 ;
+  virtual bool readFromStream(std::istream& is, bool compact, bool verbose=false) = 0 ;
+  virtual void writeToStream(std::ostream& os, bool compact) const = 0 ;
 
   /// Print the object to the defaultPrintStream().
   /// \param[in] options **V** print verbose. **T** print a tree structure with all children.
-  virtual void Print(Option_t *options= 0) const {
+  void Print(Option_t *options= nullptr) const override {
     // Printing interface (human readable)
     printStream(defaultPrintStream(),defaultPrintContents(options),defaultPrintStyle(options));
   }
 
-  virtual void printName(std::ostream& os) const ;
-  virtual void printTitle(std::ostream& os) const ;
-  virtual void printClassName(std::ostream& os) const ;
-  virtual void printAddress(std::ostream& os) const ;
-  virtual void printArgs(std::ostream& os) const ;
+  void printName(std::ostream& os) const override ;
+  void printTitle(std::ostream& os) const override ;
+  void printClassName(std::ostream& os) const override ;
+  void printAddress(std::ostream& os) const override ;
+  void printArgs(std::ostream& os) const override ;
   virtual void printMetaArgs(std::ostream& /*os*/) const {} ;
-  virtual void printMultiline(std::ostream& os, Int_t contents, Bool_t verbose=kFALSE, TString indent="") const;
-  virtual void printTree(std::ostream& os, TString indent="") const ;
+  void printMultiline(std::ostream& os, Int_t contents, bool verbose=false, TString indent="") const override;
+  void printTree(std::ostream& os, TString indent="") const override ;
 
-  virtual Int_t defaultPrintContents(Option_t* opt) const ;
+  Int_t defaultPrintContents(Option_t* opt) const override ;
 
   // Accessors to attributes
-  void setAttribute(const Text_t* name, Bool_t value=kTRUE) ;
-  Bool_t getAttribute(const Text_t* name) const ;
+  void setAttribute(const Text_t* name, bool value=true) ;
+  bool getAttribute(const Text_t* name) const ;
   inline const std::set<std::string>& attributes() const {
     // Returns set of names of boolean attributes defined
     return _boolAttrib ;
   }
 
   void setStringAttribute(const Text_t* key, const Text_t* value) ;
+  void removeStringAttribute(const Text_t* key) ;
   const Text_t* getStringAttribute(const Text_t* key) const ;
   inline const std::map<std::string,std::string>& stringAttributes() const {
     // Returns std::map<string,string> with all string attributes defined
@@ -366,37 +355,37 @@ public:
   }
 
   // Accessors to transient attributes
-  void setTransientAttribute(const Text_t* name, Bool_t value=kTRUE) ;
-  Bool_t getTransientAttribute(const Text_t* name) const ;
+  void setTransientAttribute(const Text_t* name, bool value=true) ;
+  bool getTransientAttribute(const Text_t* name) const ;
   inline const std::set<std::string>& transientAttributes() const {
     // Return set of transient boolean attributes
     return _boolAttribTransient ;
   }
 
   /// Check if the "Constant" attribute is set.
-  inline Bool_t isConstant() const {
+  inline bool isConstant() const {
     return _isConstant ; //getAttribute("Constant") ;
   }
   RooLinkedList getCloningAncestors() const ;
 
   // Sorting
-  Int_t Compare(const TObject* other) const ;
-  virtual Bool_t IsSortable() const {
+  Int_t Compare(const TObject* other) const override ;
+  bool IsSortable() const override {
     // Object is sortable in ROOT container class
-    return kTRUE ;
+    return true ;
   }
 
   virtual bool operator==(const RooAbsArg& other) const = 0 ;
-  virtual bool isIdentical(const RooAbsArg& other, Bool_t assumeSameType=kFALSE) const = 0 ;
+  virtual bool isIdentical(const RooAbsArg& other, bool assumeSameType=false) const = 0 ;
 
   // Range management
-  virtual Bool_t inRange(const char*) const {
+  virtual bool inRange(const char*) const {
     // Is value in range (dummy interface always returns true)
-    return kTRUE ;
+    return true ;
   }
-  virtual Bool_t hasRange(const char*) const {
+  virtual bool hasRange(const char*) const {
     // Has this argument a defined range (dummy interface always returns flase)
-    return kFALSE ;
+    return false ;
   }
 
 
@@ -417,76 +406,76 @@ public:
 
 
   // Find constant terms in expression
-  Bool_t findConstantNodes(const RooArgSet& observables, RooArgSet& cacheList) ;
-  Bool_t findConstantNodes(const RooArgSet& observables, RooArgSet& cacheList, RooLinkedList& processedNodes) ;
+  bool findConstantNodes(const RooArgSet& observables, RooArgSet& cacheList) ;
+  bool findConstantNodes(const RooArgSet& observables, RooArgSet& cacheList, RooLinkedList& processedNodes) ;
 
 
   // constant term optimization
-  virtual void constOptimizeTestStatistic(ConstOpCode opcode, Bool_t doAlsoTrackingOpt=kTRUE) ;
+  virtual void constOptimizeTestStatistic(ConstOpCode opcode, bool doAlsoTrackingOpt=true) ;
 
   virtual CacheMode canNodeBeCached() const { return Always ; }
   virtual void setCacheAndTrackHints(RooArgSet& /*trackNodes*/ ) {} ;
 
   // Dirty state accessor
-  inline Bool_t isShapeDirty() const {
+  inline bool isShapeDirty() const {
     // Return true is shape has been invalidated by server value change
-    return isDerived()?_shapeDirty:kFALSE ;
+    return isDerived()?_shapeDirty:false ;
   }
 
-  inline Bool_t isValueDirty() const {
+  inline bool isValueDirty() const {
     // Returns true of value has been invalidated by server value change
-    if (inhibitDirty()) return kTRUE ;
+    if (inhibitDirty()) return true ;
     switch(_operMode) {
     case AClean:
-      return kFALSE ;
+      return false ;
     case ADirty:
-      return kTRUE ;
+      return true ;
     case Auto:
       if (_valueDirty) return isDerived() ;
-      return kFALSE ;
+      return false ;
     }
-    return kTRUE ; // we should never get here
+    return true ; // we should never get here
   }
 
-  inline Bool_t isValueDirtyAndClear() const {
+  inline bool isValueDirtyAndClear() const {
     // Returns true of value has been invalidated by server value change
-    if (inhibitDirty()) return kTRUE ;
+    if (inhibitDirty()) return true ;
     switch(_operMode) {
     case AClean:
-      return kFALSE ;
+      return false ;
     case ADirty:
-      return kTRUE ;
+      return true ;
     case Auto:
       if (_valueDirty) {
-	_valueDirty = kFALSE ;
-	return isDerived();
+   _valueDirty = false ;
+   return isDerived();
       }
-      return kFALSE ;
+      return false ;
     }
-    return kTRUE ; // But we should never get here
+    return true ; // But we should never get here
   }
 
 
-  inline Bool_t isValueOrShapeDirtyAndClear() const {
+  inline bool isValueOrShapeDirtyAndClear() const {
     // Returns true of value has been invalidated by server value change
 
-    if (inhibitDirty()) return kTRUE ;
+    if (inhibitDirty()) return true ;
     switch(_operMode) {
     case AClean:
-      return kFALSE ;
+      return false ;
     case ADirty:
-      return kTRUE ;
+      return true ;
     case Auto:
       if (_valueDirty || _shapeDirty) {
-	_shapeDirty = kFALSE ;
-	_valueDirty = kFALSE ;
-	return isDerived();
+   _shapeDirty = false ;
+   _valueDirty = false ;
+   return isDerived();
       }
-      _shapeDirty = kFALSE ;
-      _valueDirty = kFALSE ;
-      return kFALSE ;
+      _shapeDirty = false ;
+      _valueDirty = false ;
+      return false ;
     }
-    return kTRUE ; // But we should never get here
+    return true ; // But we should never get here
   }
 
   // Cache management
@@ -498,7 +487,7 @@ public:
   /// Query the operation mode of this node.
   inline OperMode operMode() const { return _operMode  ; }
   /// Set the operation mode of this node.
-  void setOperMode(OperMode mode, Bool_t recurseADirty=kTRUE) ;
+  void setOperMode(OperMode mode, bool recurseADirty=true) ;
 
   // Dirty state modifiers
   /// Mark the element dirty. This forces a re-evaluation when a value is requested.
@@ -510,7 +499,7 @@ public:
   void setShapeDirty() { setShapeDirty(nullptr); }
 
   const char* aggregateCacheUniqueSuffix() const ;
-  virtual const char* cacheUniqueSuffix() const { return 0 ; }
+  virtual const char* cacheUniqueSuffix() const { return nullptr ; }
 
   void wireAllCaches() ;
 
@@ -518,8 +507,8 @@ public:
   virtual void setExpensiveObjectCache(RooExpensiveObjectCache &cache) { _eocache = &cache; }
 
   /// Overwrite the current value stored in this object, making it look like this object computed that value.
-  /// \param[in] value Value to store.
-  /// \param[in] notifyClients Notify users of this object that they need to
+  // \param[in] value Value to store.
+  // \param[in] notifyClients Notify users of this object that they need to
   /// recompute their values.
   virtual void setCachedValue(double /*value*/, bool /*notifyClients*/ = true) {};
 
@@ -527,16 +516,16 @@ public:
   ////////////////////////////////////////////////////////////////////////////
 
   //Debug hooks
-  static void verboseDirty(Bool_t flag) ;
-  void printDirty(Bool_t depth=kTRUE) const ;
-  static void setDirtyInhibit(Bool_t flag) ;
+  static void verboseDirty(bool flag) ;
+  void printDirty(bool depth=true) const ;
+  static void setDirtyInhibit(bool flag) ;
 
   void graphVizTree(const char* fileName, const char* delimiter="\n", bool useTitle=false, bool useLatex=false) ;
   void graphVizTree(std::ostream& os, const char* delimiter="\n", bool useTitle=false, bool useLatex=false) ;
 
-  void printComponentTree(const char* indent="",const char* namePat=0, Int_t nLevel=999) ;
-  void printCompactTree(const char* indent="",const char* fileName=0, const char* namePat=0, RooAbsArg* client=0) ;
-  void printCompactTree(std::ostream& os, const char* indent="", const char* namePat=0, RooAbsArg* client=0) ;
+  void printComponentTree(const char* indent="",const char* namePat=nullptr, Int_t nLevel=999) ;
+  void printCompactTree(const char* indent="",const char* fileName=nullptr, const char* namePat=nullptr, RooAbsArg* client=nullptr) ;
+  void printCompactTree(std::ostream& os, const char* indent="", const char* namePat=nullptr, RooAbsArg* client=nullptr) ;
   virtual void printCompactTreeHook(std::ostream& os, const char *ind="") ;
 
   // We want to support three cases here:
@@ -561,9 +550,10 @@ public:
   }
   const RooArgSet* ownedComponents() const { return _ownedComponents ; }
 
-  void setProhibitServerRedirect(Bool_t flag) { _prohibitServerRedirect = flag ; }
+  void setProhibitServerRedirect(bool flag) { _prohibitServerRedirect = flag ; }
 
   void setWorkspace(RooWorkspace &ws) { _myws = &ws; }
+  inline RooWorkspace* workspace() const { return _myws; }
 
   RooAbsProxy* getProxy(Int_t index) const ;
   Int_t numProxies() const ;
@@ -578,13 +568,13 @@ public:
     return _namePtr ;
   }
 
-  void SetName(const char* name) ;
-  void SetNameTitle(const char *name, const char *title) ;
+  void SetName(const char* name) override ;
+  void SetNameTitle(const char *name, const char *title) override ;
 
-  virtual Bool_t importWorkspaceHook(RooWorkspace &ws)
+  virtual bool importWorkspaceHook(RooWorkspace &ws)
   {
      _myws = &ws;
-     return kFALSE;
+     return false;
   };
 
   virtual bool canComputeBatchWithCuda() const { return false; }
@@ -592,7 +582,7 @@ public:
 
   virtual void applyWeightSquared(bool flag);
 
-  virtual std::unique_ptr<RooArgSet> fillNormSetForServer(RooArgSet const& normSet, RooAbsArg const& server) const;
+  virtual std::unique_ptr<RooAbsArg> compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileContext & ctx) const;
 
   virtual bool isCategory() const { return false; }
 
@@ -603,21 +593,21 @@ protected:
 
    virtual void optimizeDirtyHook(const RooArgSet* /*obs*/) {} ;
 
-   virtual Bool_t isValid() const ;
+   virtual bool isValid() const ;
 
-   virtual void getParametersHook(const RooArgSet* /*nset*/, RooArgSet* /*list*/, Bool_t /*stripDisconnected*/) const {} ;
+   virtual void getParametersHook(const RooArgSet* /*nset*/, RooArgSet* /*list*/, bool /*stripDisconnected*/) const {} ;
    virtual void getObservablesHook(const RooArgSet* /*nset*/, RooArgSet* /*list*/) const {} ;
 
    void clearValueAndShapeDirty() const {
-     _valueDirty=kFALSE ;
-     _shapeDirty=kFALSE ;
+     _valueDirty=false ;
+     _shapeDirty=false ;
    }
 
    void clearValueDirty() const {
-     _valueDirty=kFALSE ;
+     _valueDirty=false ;
    }
    void clearShapeDirty() const {
-     _shapeDirty=kFALSE ;
+     _shapeDirty=false ;
    }
 
    /// Force element to re-evaluate itself when a value is requested.
@@ -637,16 +627,12 @@ private:
 
 
  protected:
+  friend class RooAbsReal;
 
   // Client-Server relation and Proxy management
-  friend class RooArgSet ;
   friend class RooAbsCollection ;
-  friend class RooCustomizer ;
   friend class RooWorkspace ;
-  friend class RooExtendPdf ;
   friend class RooRealIntegral ;
-  friend class RooAbsReal ;
-  friend class RooProjectedPdf ;
   RefCountList_t _serverList       ; // list of server objects
   RefCountList_t _clientList; // list of client objects
   RefCountList_t _clientListShape; // subset of clients that requested shape dirty flag propagation
@@ -658,11 +644,9 @@ private:
 
 
   // Proxy management
-  friend class RooAddModel ;
   friend class RooArgProxy ;
-  friend class RooSetProxy ;
-  friend class RooListProxy ;
-  friend class RooObjectFactory ;
+  template<class RooCollection_t>
+  friend class RooCollectionProxy;
   friend class RooHistPdf ;
   friend class RooHistFunc ;
   void registerProxy(RooArgProxy& proxy) ;
@@ -686,15 +670,15 @@ private:
   friend class RooVectorDataStore ;
   friend class RooDataSet ;
   friend class RooRealMPFE ;
-  virtual void syncCache(const RooArgSet* nset=0) = 0 ;
-  virtual void copyCache(const RooAbsArg* source, Bool_t valueOnly=kFALSE, Bool_t setValDirty=kTRUE) = 0 ;
+  virtual void syncCache(const RooArgSet* nset=nullptr) = 0 ;
+  virtual void copyCache(const RooAbsArg* source, bool valueOnly=false, bool setValDirty=true) = 0 ;
 
   virtual void attachToTree(TTree& t, Int_t bufSize=32000) = 0 ;
   virtual void attachToVStore(RooVectorDataStore& vstore) = 0 ;
   /// Attach this argument to the data store such that it reads data from there.
   void attachToStore(RooAbsDataStore& store) ;
 
-  virtual void setTreeBranchStatus(TTree& t, Bool_t active) = 0 ;
+  virtual void setTreeBranchStatus(TTree& t, bool active) = 0 ;
   virtual void fillTreeBranch(TTree& t) = 0 ;
   TString cleanBranchName() const ;
 
@@ -710,15 +694,15 @@ private:
   ProxyListCache _proxyListCache; //! cache of the list of proxies. Avoids type casting.
 
   // Debug stuff
-  static Bool_t _verboseDirty ; // Static flag controlling verbose messaging for dirty state changes
-  static Bool_t _inhibitDirty ; // Static flag controlling global inhibit of dirty state propagation
-  Bool_t _deleteWatch ; //! Delete watch flag
+  static bool _verboseDirty ; // Static flag controlling verbose messaging for dirty state changes
+  static bool _inhibitDirty ; // Static flag controlling global inhibit of dirty state propagation
+  bool _deleteWatch ; //! Delete watch flag
 
-  Bool_t inhibitDirty() const ;
+  bool inhibitDirty() const ;
 
  public:
-  void setLocalNoDirtyInhibit(Bool_t flag) const { _localNoInhibitDirty = flag ; }
-  Bool_t localNoDirtyInhibit() const { return _localNoInhibitDirty ; }
+  void setLocalNoDirtyInhibit(bool flag) const { _localNoInhibitDirty = flag ; }
+  bool localNoDirtyInhibit() const { return _localNoInhibitDirty ; }
 
   /// Returns the token for retrieving results in the BatchMode. For internal use only.
   std::size_t dataToken() const { return _dataToken; }
@@ -728,29 +712,29 @@ private:
  protected:
 
 
-  mutable Bool_t _valueDirty ;  // Flag set if value needs recalculating because input values modified
-  mutable Bool_t _shapeDirty ;  // Flag set if value needs recalculating because input shapes modified
+  mutable bool _valueDirty ;  // Flag set if value needs recalculating because input values modified
+  mutable bool _shapeDirty ;  // Flag set if value needs recalculating because input shapes modified
 
   mutable OperMode _operMode ; // Dirty state propagation mode
-  mutable Bool_t _fast = false; // Allow fast access mode in getVal() and proxies
+  mutable bool _fast = false; // Allow fast access mode in getVal() and proxies
 
   // Owned components
   RooArgSet* _ownedComponents ; //! Set of owned component
 
-  mutable Bool_t _prohibitServerRedirect ; //! Prohibit server redirects -- Debugging tool
+  mutable bool _prohibitServerRedirect ; //! Prohibit server redirects -- Debugging tool
 
-  mutable RooExpensiveObjectCache* _eocache{nullptr}; // Pointer to global cache manager for any expensive components created by this object
+  mutable RooExpensiveObjectCache* _eocache{nullptr}; //! Pointer to global cache manager for any expensive components created by this object
 
   mutable const TNamed * _namePtr ; //! De-duplicated name pointer. This will be equal for all objects with the same name.
-  Bool_t _isConstant ; //! Cached isConstant status
+  bool _isConstant ; //! Cached isConstant status
 
-  mutable Bool_t _localNoInhibitDirty ; //! Prevent 'AlwaysDirty' mode for this node
+  mutable bool _localNoInhibitDirty ; //! Prevent 'AlwaysDirty' mode for this node
 
 /*   RooArgSet _leafNodeCache ; //! Cached leaf nodes */
 /*   RooArgSet _branchNodeCache //! Cached branch nodes     */
 
   mutable RooWorkspace *_myws; //! In which workspace do I live, if any
-  
+
   std::size_t _dataToken = 0; //! Set by the RooFitDriver for this arg to retrieve its result in the run context
 
   /// \cond Internal
@@ -763,7 +747,7 @@ private:
   static std::stack<RooAbsArg*> _ioReadStack ; // reading stack
   /// \endcond
 
-  ClassDef(RooAbsArg,8) // Abstract variable
+  ClassDefOverride(RooAbsArg,9) // Abstract variable
 };
 
 std::ostream& operator<<(std::ostream& os, const RooAbsArg &arg);

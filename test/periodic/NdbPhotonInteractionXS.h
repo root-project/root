@@ -11,9 +11,9 @@ protected:
 public:
    NdbPhotonInteractionXS()
       : NdbMF(23, "Photo-atomic interaction cross sections") {}
-   ~NdbPhotonInteractionXS() {}
+   ~NdbPhotonInteractionXS() override {}
 
-   ClassDef(NdbPhotonInteractionXS,1)
+   ClassDefOverride(NdbPhotonInteractionXS,1)
 }; // NdbPhotonInteractionXS
 
 #endif

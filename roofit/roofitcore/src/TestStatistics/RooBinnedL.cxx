@@ -17,7 +17,7 @@
 
 Class RooBinnedL implements a -log(likelihood) calculation from a dataset
 (assumed to be binned) and a PDF. The NLL is calculated as
-\f
+\f[
  \sum_\mathrm{data} -\log( \mathrm{pdf}(x_\mathrm{data}))
 \f]
 In extended mode, a
@@ -61,10 +61,10 @@ RooBinnedL::RooBinnedL(RooAbsPdf *pdf, RooAbsData *data)
          "RooBinnedL can only be created from combination of pdf and data which has exactly one observable!");
    } else {
       RooRealVar *var = (RooRealVar *)obs->first();
-      std::list<Double_t> *boundaries = pdf->binBoundaries(*var, var->getMin(), var->getMax());
-      std::list<Double_t>::iterator biter = boundaries->begin();
+      std::list<double> *boundaries = pdf->binBoundaries(*var, var->getMin(), var->getMax());
+      std::list<double>::iterator biter = boundaries->begin();
       _binw.resize(boundaries->size() - 1);
-      Double_t lastBound = (*biter);
+      double lastBound = (*biter);
       ++biter;
       int ibin = 0;
       while (biter != boundaries->end()) {
@@ -93,12 +93,12 @@ RooBinnedL::evaluatePartition(Section bins, std::size_t /*components_begin*/, st
    // expensive than that, we tolerate the additional cost...
    ROOT::Math::KahanSum<double> result;
 
-   // Do not reevaluate likelihood if parameters have not changed
-   if (!paramTracker_->hasChanged(true) & (cachedResult_ != 0)) return cachedResult_;
+   // Do not reevaluate likelihood if parameters nor event range have changed
+   if (!paramTracker_->hasChanged(true) && bins == lastSection_ && (cachedResult_.Sum() != 0 || cachedResult_.Carry() != 0)) return cachedResult_;
 
 //   data->store()->recalculateCache(_projDeps, firstEvent, lastEvent, stepSize, (_binnedPdf?false:true));
    // TODO: check when we might need _projDeps (it seems to be mostly empty); ties in with TODO below
-   data_->store()->recalculateCache(nullptr, bins.begin(N_events_), bins.end(N_events_), 1, kFALSE);
+   data_->store()->recalculateCache(nullptr, bins.begin(N_events_), bins.end(N_events_), 1, false);
 
    ROOT::Math::KahanSum<double> sumWeight;
 
@@ -106,31 +106,28 @@ RooBinnedL::evaluatePartition(Section bins, std::size_t /*components_begin*/, st
 
       data_->get(i);
 
-      if (!data_->valid())
-         continue;
-
-      Double_t eventWeight = data_->weight();
+      double eventWeight = data_->weight();
 
       // Calculate log(Poisson(N|mu) for this bin
-      Double_t N = eventWeight;
-      Double_t mu = pdf_->getVal() * _binw[i];
+      double N = eventWeight;
+      double mu = pdf_->getVal() * _binw[i];
 
       if (mu <= 0 && N > 0) {
 
          // Catch error condition: data present where zero events are predicted
 //         logEvalError(Form("Observed %f events in bin %d with zero event yield", N, i));
          // TODO: check if using regular stream vs logEvalError error gathering is ok
-         oocoutI(static_cast<RooAbsArg *>(nullptr), Minimization)
+         oocoutI(nullptr, Minimization)
             << "Observed " << N << " events in bin " << i << " with zero event yield" << std::endl;
 
-      } else if (fabs(mu) < 1e-10 && fabs(N) < 1e-10) {
+      } else if (std::abs(mu) < 1e-10 && std::abs(N) < 1e-10) {
 
          // Special handling of this case since log(Poisson(0,0)=0 but can't be calculated with usual log-formula
          // since log(mu)=0. No update of result is required since term=0.
 
       } else {
 
-         Double_t term = -1 * (-mu + N * log(mu) - TMath::LnGamma(N + 1));
+         double term = -1 * (-mu + N * log(mu) - TMath::LnGamma(N + 1));
 
          sumWeight += eventWeight;
          result += term;
@@ -140,7 +137,7 @@ RooBinnedL::evaluatePartition(Section bins, std::size_t /*components_begin*/, st
    // If part of simultaneous PDF normalize probability over
    // number of simultaneous PDFs: -sum(log(p/n)) = -sum(log(p)) + N*log(n)
    if (sim_count_ > 1) {
-      result += sumWeight * log(1.0 * sim_count_);
+      result += sumWeight.Sum() * log(1.0 * sim_count_);
    }
 
    // At the end of the first full calculation, wire the caches
@@ -150,6 +147,7 @@ RooBinnedL::evaluatePartition(Section bins, std::size_t /*components_begin*/, st
    }
 
    cachedResult_ = result;
+   lastSection_ = bins;
    return result;
 }
 

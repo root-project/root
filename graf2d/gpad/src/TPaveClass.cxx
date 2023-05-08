@@ -61,7 +61,7 @@ TPaveClass::~TPaveClass()
 
 TPaveClass::TPaveClass(const TPaveClass &PaveClass) : TPaveLabel(PaveClass)
 {
-   ((TPaveClass&)PaveClass).Copy(*this);
+   PaveClass.TPaveClass::Copy(*this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

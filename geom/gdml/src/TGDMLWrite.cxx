@@ -169,15 +169,35 @@ ClassImp(TGDMLWrite);
 TGDMLWrite *TGDMLWrite::fgGDMLWrite = nullptr;
 
 namespace {
-  struct MaterialExtractor  {
-    std::set<TGeoMaterial*> materials;
-    void operator() (const TGeoVolume* v)   {
-      materials.insert(v->GetMaterial());
-      for(Int_t i=0; i<v->GetNdaughters(); ++i)
-        (*this)(v->GetNode(i)->GetVolume());
-    }
-  };
+
+// Helper to replace string patterns
+std::string str_replace(const std::string &str, const std::string &pattern, const std::string &replacement)
+{
+   std::string res = str;
+   for (size_t id = res.find(pattern); id != std::string::npos; id = res.find(pattern))
+      res.replace(id, pattern.length(), replacement);
+   return res;
 }
+
+// Create a NCN compliant name (no '/' and no '#')
+std::string make_NCName(const std::string &in)
+{
+   std::string res = str_replace(in, "/", "_");
+   res = str_replace(res, "#", "_");
+   return res;
+}
+
+// Materials extractor from a volume tree
+struct MaterialExtractor {
+   std::set<TGeoMaterial *> materials;
+   void operator()(const TGeoVolume *v)
+   {
+      materials.insert(v->GetMaterial());
+      for (Int_t i = 0; i < v->GetNdaughters(); ++i)
+         (*this)(v->GetNode(i)->GetVolume());
+   }
+};
+} // namespace
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.
@@ -231,6 +251,14 @@ void TGDMLWrite::SetNamingSpeed(ENamingType naming)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Ignore dummy material instance, which causes trouble reading GDML in Geant4
+
+void TGDMLWrite::SetIgnoreDummyMaterial(bool value)
+{
+   fIgnoreDummyMaterial = (value ? 1 : 0);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 //wrapper of all main methods for extraction
 void TGDMLWrite::WriteGDMLfile(TGeoManager * geomanager, const char* filename, TString option)
 {
@@ -240,7 +268,8 @@ void TGDMLWrite::WriteGDMLfile(TGeoManager * geomanager, const char* filename, T
     Info("WriteGDMLfile", "Top volume does not exist!");
     return;
   }
-  fTopVolumeName = "";
+  fTopVolume = node->GetVolume();
+  fTopVolumeName = fTopVolume->GetName();
   WriteGDMLfile(geomanager, node, materials, filename, option);
 }
 
@@ -259,6 +288,7 @@ void TGDMLWrite::WriteGDMLfile(TGeoManager * geomanager, TGeoNode* node, const c
   for(TGeoMaterial* m : extract.materials)
     materials.Add(m);
   fTopVolumeName = volume->GetName();
+  fTopVolume = volume;
   fSurfaceList.clear();
   fVolumeList.clear();
   fNodeList.clear();
@@ -297,6 +327,9 @@ void TGDMLWrite::WriteGDMLfile(TGeoManager * geomanager,
       SetNamingSpeed(kelegantButSlow);
       Info("WriteGDMLfile", "Potentially slow with incremental suffix naming convention set");
    }
+
+   SetFltPrecision(TGeoManager::GetExportPrecision());
+
    auto def_units = gGeoManager->GetDefaultUnits();
    switch (def_units) {
       case TGeoManager::kG4Units:
@@ -517,8 +550,17 @@ XMLNodePointer_t TGDMLWrite::ExtractMaterials(TList* materialsLst)
    //go through materials  - iterator and object declaration
    TIter next(materialsLst);
    TGeoMaterial *lmaterial;
+   TGeoMedium *dummy_med = TGeoVolume::DummyMedium();
+   TGeoMaterial *dummy_mat = dummy_med ? dummy_med->GetMaterial() : nullptr;
+   std::string dummy_nam = dummy_mat ? dummy_mat->GetName() : "dummy";
 
    while ((lmaterial = (TGeoMaterial *)next())) {
+      // check for dummy material: if requested, ignore it
+      std::string mname = lmaterial->GetName();
+      if (fIgnoreDummyMaterial && dummy_mat && dummy_nam == mname) {
+         Info("ExtractMaterials", "Skip dummy material: %s", dummy_nam.c_str());
+         continue;
+      }
       //generate uniq name
       TString lname = GenName(lmaterial->GetName(), TString::Format("%p", lmaterial));
 
@@ -569,7 +611,7 @@ void TGDMLWrite::ExtractVolumes(TGeoNode* node)
    fNodeList.insert(node);
    fVolumeList.insert(volume);
    //create the name for volume/assembly
-   if (volume->IsTopVolume()) {
+   if (volume == fTopVolume) {
       //not needed a special function for generating name
       volname = volume->GetName();
       fTopVolumeName = volname;
@@ -613,6 +655,7 @@ void TGDMLWrite::ExtractVolumes(TGeoNode* node)
    TObjArray *nodeLst = volume->GetNodes();
    TIter next(nodeLst);
    TGeoNode *geoNode;
+   TString physvolname;
    Int_t nCnt = 0;
    //loop through all nodes
    while ((geoNode = (TGeoNode *) next())) {
@@ -649,7 +692,7 @@ void TGDMLWrite::ExtractVolumes(TGeoNode* node)
          nodPos.x = pos[0];
          nodPos.y = pos[1];
          nodPos.z = pos[2];
-         childN = CreatePositionN(posname.Data(), nodPos);
+         childN = CreatePositionN(posname.Data(), nodPos, "position", fDefault_lunit);
          fGdmlE->AddChild(fDefineNode, childN); //adding node to <define> node
          //Deal with reflection
          XMLNodePointer_t scaleN = nullptr;
@@ -675,7 +718,7 @@ void TGDMLWrite::ExtractVolumes(TGeoNode* node)
             }
          }
 
-         //rotation
+         // rotation
          TGDMLWrite::Xyz lxyz = GetXYZangles(geoNode->GetMatrix()->GetRotationMatrix());
          lxyz.x -= xangle;
          lxyz.z -= zangle;
@@ -685,8 +728,10 @@ void TGDMLWrite::ExtractVolumes(TGeoNode* node)
             fGdmlE->AddChild(fDefineNode, childN); //adding node to <define> node
          }
 
-         //create physvol for main volume/assembly node
-         childN = CreatePhysVolN(geoNode->GetName(), geoNode->GetNumber(), nodevolname.Data(), posname.Data(), rotname.Data(), scaleN);
+         // create physvol for main volume/assembly node
+         physvolname = fNameList->fLst[TString::Format("%p", geoNode)];
+         childN = CreatePhysVolN(physvolname, geoNode->GetNumber(), nodevolname.Data(),
+                                 posname.Data(), rotname.Data(), scaleN);
          fGdmlE->AddChild(volumeN, childN);
       }
       nCnt++;
@@ -840,6 +885,8 @@ XMLNodePointer_t TGDMLWrite::CreateElementN(TGeoElement * element, XMLNodePointe
       if (valZ >= 1) {
          fGdmlE->NewAttr(mainN, nullptr, "Z", TString::Format("%i", valZ));
       }
+      Int_t valN = element->N();
+      fGdmlE->NewAttr(mainN, nullptr, "N", TString::Format("%i", valN));
       fGdmlE->AddChild(mainN, CreateAtomN(element->A()));
    }
    return mainN;
@@ -852,6 +899,24 @@ XMLNodePointer_t TGDMLWrite::CreateMixtureN(TGeoMixture * mixture, XMLNodePointe
 {
    XMLNodePointer_t mainN = fGdmlE->NewChild(nullptr, nullptr, "material", nullptr);
    fGdmlE->NewAttr(mainN, nullptr, "name", mname);
+
+   // Write properties
+   TList const &properties = mixture->GetProperties();
+   if (properties.GetSize()) {
+      TIter next(&properties);
+      TNamed *property;
+      while ((property = (TNamed*)next()))
+        fGdmlE->AddChild(mainN, CreatePropertyN(*property));
+   }
+   // Write CONST properties
+   TList const &const_properties = mixture->GetConstProperties();
+   if (const_properties.GetSize()) {
+      TIter next(&const_properties);
+      TNamed *property;
+      while ((property = (TNamed*)next()))
+        fGdmlE->AddChild(mainN, CreatePropertyN(*property));
+   }
+
    fGdmlE->AddChild(mainN, CreateDN(mixture->GetDensity()));
    //local associative arrays for saving elements and their weight
    //inside mixture
@@ -895,23 +960,6 @@ XMLNodePointer_t TGDMLWrite::CreateMixtureN(TGeoMixture * mixture, XMLNodePointe
       fGdmlE->AddChild(mainN, CreateFractionN(wPercentage[itr->first], itr->first.Data()));
    }
 
-   // Write properties
-   TList const &properties = mixture->GetProperties();
-   if (properties.GetSize()) {
-      TIter next(&properties);
-      TNamed *property;
-      while ((property = (TNamed*)next()))
-        fGdmlE->AddChild(mainN, CreatePropertyN(*property));
-   }
-   // Write CONST properties
-   TList const &const_properties = mixture->GetConstProperties();
-   if (const_properties.GetSize()) {
-      TIter next(&const_properties);
-      TNamed *property;
-      while ((property = (TNamed*)next()))
-        fGdmlE->AddChild(mainN, CreatePropertyN(*property));
-   }
-
    return mainN;
 }
 
@@ -941,24 +989,27 @@ XMLNodePointer_t TGDMLWrite::CreateMaterialN(TGeoMaterial * material, TString mn
       }
    }
    fGdmlE->NewAttr(mainN, nullptr, "Z", TString::Format(fltPrecision.Data(), valZ)); //material->GetZ()));
-   fGdmlE->AddChild(mainN, CreateDN(material->GetDensity()));
-   fGdmlE->AddChild(mainN, CreateAtomN(material->GetA()));
-   // Create properties if any
+
+   // Create properties if any: Properties according to the GDML schema MUST come first!
    TList const &properties = material->GetProperties();
    if (properties.GetSize()) {
       TIter next(&properties);
       TNamed *property;
-      while ((property = (TNamed*)next()))
-        fGdmlE->AddChild(mainN, CreatePropertyN(*property));
+      while ((property = (TNamed *)next()))
+         fGdmlE->AddChild(mainN, CreatePropertyN(*property));
    }
    // Write CONST properties
    TList const &const_properties = material->GetConstProperties();
    if (const_properties.GetSize()) {
       TIter next(&const_properties);
       TNamed *property;
-      while ((property = (TNamed*)next()))
-        fGdmlE->AddChild(mainN, CreatePropertyN(*property));
+      while ((property = (TNamed *)next()))
+         fGdmlE->AddChild(mainN, CreatePropertyN(*property));
    }
+
+   // Now add the other children
+   fGdmlE->AddChild(mainN, CreateDN(material->GetDensity()));
+   fGdmlE->AddChild(mainN, CreateAtomN(material->GetA()));
    return mainN;
 }
 
@@ -1673,7 +1724,7 @@ XMLNodePointer_t TGDMLWrite::CreateTessellatedN(TGeoTessellated * geoShape)
       nodPos.x = vertex[0];
       nodPos.y = vertex[1];
       nodPos.z = vertex[2];
-      auto childN = CreatePositionN(posName.Data(), nodPos);
+      auto childN = CreatePositionN(posName.Data(), nodPos, "position", fDefault_lunit);
       fGdmlE->AddChild(fDefineNode, childN); //adding node to <define> node
    }
    XMLNodePointer_t mainN = fGdmlE->NewChild(nullptr, nullptr, "tessellated", nullptr);
@@ -1802,7 +1853,7 @@ XMLNodePointer_t TGDMLWrite::CreateCommonBoolN(TGeoCompositeShape *geoShape)
 
    //<firstposition> (left)
    if ((translL.x != 0.0) || (translL.y != 0.0) || (translL.z != 0.0)) {
-      childN = CreatePositionN((nodeName + lname + "pos").Data(), translL, "firstposition");
+      childN = CreatePositionN((nodeName + lname + "pos").Data(), translL, "firstposition", fDefault_lunit);
       fGdmlE->AddChild(mainN, childN);
    }
    //<firstrotation> (left)
@@ -1812,7 +1863,7 @@ XMLNodePointer_t TGDMLWrite::CreateCommonBoolN(TGeoCompositeShape *geoShape)
    }
    //<position> (right)
    if ((translR.x != 0.0) || (translR.y != 0.0) || (translR.z != 0.0)) {
-      childN = CreatePositionN((nodeName + rname + "pos").Data(), translR, "position");
+      childN = CreatePositionN((nodeName + rname + "pos").Data(), translR, "position", fDefault_lunit);
       fGdmlE->AddChild(mainN, childN);
    }
    //<rotation> (right)
@@ -1831,7 +1882,8 @@ XMLNodePointer_t TGDMLWrite::CreateOpticalSurfaceN(TGeoOpticalSurface * geoSurf)
 {
    XMLNodePointer_t mainN = fGdmlE->NewChild(nullptr, nullptr, "opticalsurface", nullptr);
    const TString fltPrecision = TString::Format("%%.%dg", fFltPrecision);
-   fGdmlE->NewAttr(mainN, nullptr, "name", geoSurf->GetName());
+   std::string name = make_NCName(geoSurf->GetName());
+   fGdmlE->NewAttr(mainN, nullptr, "name", name.c_str());
    fGdmlE->NewAttr(mainN, nullptr, "model", TGeoOpticalSurface::ModelToString(geoSurf->GetModel()));
    fGdmlE->NewAttr(mainN, nullptr, "finish", TGeoOpticalSurface::FinishToString(geoSurf->GetFinish()));
    fGdmlE->NewAttr(mainN, nullptr, "type", TGeoOpticalSurface::TypeToString(geoSurf->GetType()));
@@ -1854,11 +1906,16 @@ XMLNodePointer_t TGDMLWrite::CreateOpticalSurfaceN(TGeoOpticalSurface * geoSurf)
 XMLNodePointer_t TGDMLWrite::CreateSkinSurfaceN(TGeoSkinSurface * geoSurf)
 {
    XMLNodePointer_t mainN = fGdmlE->NewChild(nullptr, nullptr, "skinsurface", nullptr);
-   fGdmlE->NewAttr(mainN, nullptr, "name", geoSurf->GetName());
-   fGdmlE->NewAttr(mainN, nullptr, "surfaceproperty", geoSurf->GetTitle());
+   std::string name = make_NCName(geoSurf->GetName());
+   std::string prop = make_NCName(geoSurf->GetTitle());
+
+   fGdmlE->NewAttr(mainN, nullptr, "name", name.c_str());
+   fGdmlE->NewAttr(mainN, nullptr, "surfaceproperty", prop.c_str());
+
    // Cretate the logical volume reference node
-   auto childN = fGdmlE->NewChild(nullptr, nullptr, "volumeref", nullptr);
-   fGdmlE->NewAttr(childN, nullptr, "ref", geoSurf->GetVolume()->GetName());
+   XMLNodePointer_t childN = fGdmlE->NewChild(nullptr, nullptr, "volumeref", nullptr);
+   const TString &volname = fNameList->fLst[TString::Format("%p", geoSurf->GetVolume())];
+   fGdmlE->NewAttr(childN, nullptr, "ref", volname.Data());
    fGdmlE->AddChild(mainN, childN);
    return mainN;
 }
@@ -1869,12 +1926,21 @@ XMLNodePointer_t TGDMLWrite::CreateSkinSurfaceN(TGeoSkinSurface * geoSurf)
 XMLNodePointer_t TGDMLWrite::CreateBorderSurfaceN(TGeoBorderSurface * geoSurf)
 {
    XMLNodePointer_t mainN = fGdmlE->NewChild(nullptr, nullptr, "bordersurface", nullptr);
-   fGdmlE->NewAttr(mainN, nullptr, "name", geoSurf->GetName());
-   fGdmlE->NewAttr(mainN, nullptr, "surfaceproperty", geoSurf->GetTitle());
-   // Cretate the logical volume reference node
-   auto childN = fGdmlE->NewChild(nullptr, nullptr, "physvolref", nullptr);
-   fGdmlE->NewAttr(childN, nullptr, "ref", geoSurf->GetNode1()->GetName());
-   fGdmlE->NewAttr(childN, nullptr, "ref", geoSurf->GetNode2()->GetName());
+   std::string name = make_NCName(geoSurf->GetName());
+   std::string prop = make_NCName(geoSurf->GetTitle());
+
+   fGdmlE->NewAttr(mainN, nullptr, "name", name.c_str());
+   fGdmlE->NewAttr(mainN, nullptr, "surfaceproperty", prop.c_str());
+
+   // Cretate the logical volume reference nodes
+   XMLNodePointer_t childN = fGdmlE->NewChild(nullptr, nullptr, "physvolref", nullptr);
+   TString physvolname = fNameList->fLst[TString::Format("%p", geoSurf->GetNode1())];
+   fGdmlE->NewAttr(childN, nullptr, "ref", physvolname);
+   fGdmlE->AddChild(mainN, childN);
+
+   childN = fGdmlE->NewChild(nullptr, nullptr, "physvolref", nullptr);
+   physvolname = fNameList->fLst[TString::Format("%p", geoSurf->GetNode2())];
+   fGdmlE->NewAttr(childN, nullptr, "ref", physvolname);
    fGdmlE->AddChild(mainN, childN);
    return mainN;
 }
@@ -1936,10 +2002,11 @@ XMLNodePointer_t TGDMLWrite::CreateMatrixN(TGDMLMatrix const *matrix)
 
 XMLNodePointer_t TGDMLWrite::CreateConstantN(const char *name, Double_t value)
 {
-   XMLNodePointer_t mainN = fGdmlE->NewChild(nullptr, nullptr, "constant", nullptr);
+   XMLNodePointer_t mainN = fGdmlE->NewChild(nullptr, nullptr, "matrix", nullptr);
    const TString fltPrecision = TString::Format("%%.%dg", fFltPrecision);
    fGdmlE->NewAttr(mainN, nullptr, "name", name);
-   fGdmlE->NewAttr(mainN, nullptr, "value", TString::Format(fltPrecision.Data(), value));
+   fGdmlE->NewAttr(mainN, nullptr, "coldim", "1");
+   fGdmlE->NewAttr(mainN, nullptr, "values", TString::Format(fltPrecision.Data(), value));
    return mainN;
 }
 
@@ -2432,6 +2499,7 @@ void TGDMLWrite::WriteGDMLfile(TGeoManager * geomanager, TGeoVolume* volume, con
   for(TGeoMaterial* m : extract.materials)
     materials.Add(m);
   fTopVolumeName = volume->GetName();
+  fTopVolume = volume;
   fSurfaceList.clear();
   fVolumeList.clear();
   fNodeList.clear();
@@ -2583,7 +2651,7 @@ void TGDMLWrite::ExtractVolumes(TGeoVolume* volume)
    const TString fltPrecision = TString::Format("%%.%dg", fFltPrecision);
 
    //create the name for volume/assembly
-   if (volume->IsTopVolume()) {
+   if (volume == fTopVolume) {
       //not needed a special function for generating name
       volname = volume->GetName();
       fTopVolumeName = volname;
@@ -2626,6 +2694,7 @@ void TGDMLWrite::ExtractVolumes(TGeoVolume* volume)
    //get all nodes in volume
    TObjArray *nodeLst = volume->GetNodes();
    TIter next(nodeLst);
+   TString physvolname;
    TGeoNode *geoNode;
    Int_t nCnt = 0;
    //loop through all nodes
@@ -2662,7 +2731,7 @@ void TGDMLWrite::ExtractVolumes(TGeoVolume* volume)
          nodPos.x = pos[0];
          nodPos.y = pos[1];
          nodPos.z = pos[2];
-         childN = CreatePositionN(posname.Data(), nodPos);
+         childN = CreatePositionN(posname.Data(), nodPos, "position", fDefault_lunit);
          fGdmlE->AddChild(fDefineNode, childN); //adding node to <define> node
          //Deal with reflection
          XMLNodePointer_t scaleN = nullptr;
@@ -2699,7 +2768,9 @@ void TGDMLWrite::ExtractVolumes(TGeoVolume* volume)
          }
 
          //create physvol for main volume/assembly node
-         childN = CreatePhysVolN(geoNode->GetName(), geoNode->GetNumber(), nodevolname.Data(), posname.Data(), rotname.Data(), scaleN);
+         physvolname = fNameList->fLst[TString::Format("%p", geoNode)];
+         childN = CreatePhysVolN(physvolname, geoNode->GetNumber(), nodevolname.Data(),
+                                 posname.Data(), rotname.Data(), scaleN);
          fGdmlE->AddChild(volumeN, childN);
       }
       nCnt++;

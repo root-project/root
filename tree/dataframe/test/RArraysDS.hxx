@@ -31,7 +31,7 @@ public:
    RArraysDSVarSizeReader(std::vector<int> &v) : fPtr(&v) {}
 };
 
-/// A RDataSource to test the #var feature
+/// A RDataSource to test the `#var` feature
 class RArraysDS : public ROOT::RDF::RDataSource {
    std::vector<int> fVar = {42};
    std::vector<std::string> fColumnNames = {"R_rdf_sizeof_var", "var"};
@@ -61,7 +61,7 @@ public:
 
    bool SetEntry(unsigned int, ULong64_t) final { return true; }
 
-   void Initialise() final { fRanges = {{0ull, 1ull}}; }
+   void Initialize() final { fRanges = {{0ull, 1ull}}; }
 
    std::string GetLabel() final { return "ArraysDS"; }
 

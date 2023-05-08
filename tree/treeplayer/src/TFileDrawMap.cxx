@@ -50,7 +50,7 @@ objects to be shown. For example, to view only the keys with
 names starting with "abc", set the argument keys to "abc*".
 The default is to view all the objects.
 The argument options can also be used (only one option currently)
-When the option "same" is given, the new picture is suprimposed.
+When the option "same" is given, the new picture is superimposed.
 The option "same" is useful, eg:
 to draw all keys with names = "abc" in a first pass
 then all keys with names = "uv*" in a second pass, etc.
@@ -284,7 +284,7 @@ void TFileDrawMap::DrawObject()
    if (padsave == gPad) {
       //must create a new canvas
       gROOT->MakeDefCanvas();
-   } else {
+   } else if (padsave) {
       padsave->cd();
    }
 
@@ -497,7 +497,7 @@ void TFileDrawMap::Paint(Option_t *)
          fFrame->SetMinimum(0);
          fFrame->GetYaxis()->SetLimits(0,fYsize+1);
       }
-      fFrame->Paint("a");
+      fFrame->Paint();
    }
 
    //draw keys
@@ -577,7 +577,10 @@ void TFileDrawMap::PaintDir(TDirectory *dir, const char *keys)
          while ((leaf = (TLeaf*)nextb())) {
             TBranch *branch = leaf->GetBranch();
             color = branch->GetFillColor();
-            if (color == 0) color = 1;
+            if (color == 0) {
+               gPad->IncrementPaletteColor(1, "pfc");
+               color = gPad->NextPaletteColor();
+            }
             box.SetFillColor(color);
             Int_t nbaskets = branch->GetMaxBaskets();
             for (Int_t i=0;i<nbaskets;i++) {

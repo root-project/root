@@ -35,7 +35,9 @@ namespace cling {
            && (SM.getFileID(SM.getIncludeLoc(FID)) == SM.getMainFileID());
   }
 
-  /// \brief Returns whether the given {Function,Tag,Var}Decl/TemplateDecl is a definition.
+  /// \brief Returns whether a declaration is a definition.  A `TemplateDecl` is
+  /// a definition if the templated decl is itself a definition; a concept is
+  /// always considered a definition.
   static bool isDefinition(const Decl *D) {
     if (auto FD = dyn_cast<FunctionDecl>(D))
       return FD->isThisDeclarationADefinition();
@@ -44,7 +46,7 @@ namespace cling {
     if (auto VD = dyn_cast<VarDecl>(D))
       return VD->isThisDeclarationADefinition();
     if (auto TD = dyn_cast<TemplateDecl>(D))
-      return isDefinition(TD->getTemplatedDecl());
+      return isa<ConceptDecl>(TD) || isDefinition(TD->getTemplatedDecl());
     return true;
   }
 
@@ -62,7 +64,11 @@ namespace cling {
 
   DefinitionShadower::DefinitionShadower(Sema& S, Interpreter& I)
           : ASTTransformer(&S), m_Context(S.getASTContext()), m_Interp(I),
-            m_TU(S.getASTContext().getTranslationUnitDecl())
+            m_TU(S.getASTContext().getTranslationUnitDecl()),
+            m_ShadowsDeclInStdDiagID(S.getDiagnostics().getCustomDiagID(
+                DiagnosticsEngine::Warning,
+                "'%0' shadows a declaration with the same name in the 'std' "
+                "namespace; use '::%0' to reference this declaration"))
   {}
 
   bool DefinitionShadower::isClingShadowNamespace(const DeclContext *DC) {
@@ -78,15 +84,14 @@ namespace cling {
       if (utils::Analyze::isOnScopeChains(D, *m_Sema))
         m_Sema->IdResolver.RemoveDecl(D);
     }
-    clang::StoredDeclsList &SDL = (*m_TU->getLookupPtr())[D->getDeclName()];
-    if (SDL.getAsDecl() == D) {
-      SDL.setOnlyValue(nullptr);
-    }
-    if (auto Vec = SDL.getAsVector()) {
-      // FIXME: investigate why StoredDeclList has duplicated entries coming from PCM.
-      Vec->erase(std::remove_if(Vec->begin(), Vec->end(),
-                                [D](Decl *Other) { return cast<Decl>(D) == Other; }),
-                 Vec->end());
+    if (StoredDeclsMap* Map = m_TU->getLookupPtr()) {
+      StoredDeclsMap::iterator Pos = Map->find(D->getDeclName());
+      if (Pos != Map->end() && !Pos->second.isNull()) {
+       StoredDeclsList &List = Pos->second;
+       List.remove(D);
+       if (List.isNull())
+         Map->erase(Pos);
+     }
     }
 
     if (InterpreterCallbacks *IC = m_Interp.getCallbacks())
@@ -94,9 +99,12 @@ namespace cling {
   }
 
   void DefinitionShadower::invalidatePreviousDefinitions(NamedDecl *D) const {
+    // NotForRedeclaration: lookup anything visible; follows using directives
     LookupResult Previous(*m_Sema, D->getDeclName(), D->getLocation(),
-                   Sema::LookupOrdinaryName, Sema::ForVisibleRedeclaration);
+                   Sema::LookupOrdinaryName, Sema::NotForRedeclaration);
+    Previous.suppressDiagnostics();
     m_Sema->LookupQualifiedName(Previous, m_TU);
+    bool shadowsDeclInStd = false;
 
     for (auto Prev : Previous) {
       if (Prev == D)
@@ -116,6 +124,7 @@ namespace cling {
                                 /*IsForUsingDecl=*/false))
         continue;
 
+      shadowsDeclInStd |= Prev->isInStdNamespace();
       hideDecl(Prev);
 
       // For unscoped enumerations, also invalidate all enumerators.
@@ -132,6 +141,18 @@ namespace cling {
     // : reference to 'xxx' is ambiguous" in `class C {}; class C; C foo;`.
     if (!Previous.empty() && !isDefinition(D))
       D->setInvalidDecl();
+
+    // Diagnose shadowing of decls in the `std` namespace (see ROOT-5971).
+    // For unnamed macros, the input is ingested in a single `Interpreter::process()`
+    // call. Do not emit the warning in that case, as all references are local
+    // to the wrapper function and this diagnostic might be misleading.
+    if (shadowsDeclInStd
+        && ((m_Interp.getInputFlags() & (Interpreter::kInputFromFile
+                                         | Interpreter::kIFFLineByLine))
+             != Interpreter::kInputFromFile)) {
+      m_Sema->Diag(D->getBeginLoc(), m_ShadowsDeclInStdDiagID)
+        << D->getQualifiedNameAsString();
+    }
   }
 
   void DefinitionShadower::invalidatePreviousDefinitions(FunctionDecl *D) const {

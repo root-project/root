@@ -27,7 +27,7 @@ public:
       comment = NULL;
    }
    NdbMTReacDesc(const char *filename);
-   ~NdbMTReacDesc();
+   ~NdbMTReacDesc() override;
 
    void   Init(const char *filename);
 
@@ -40,7 +40,7 @@ public:
    char*   GetDescription(Int_t MT);
    char*   GetComment(Int_t MT);
 
-   ClassDef(NdbMTReacDesc,1)
+   ClassDefOverride(NdbMTReacDesc,1)
 
 }; // NdbMTReacDesc
 

@@ -9,41 +9,45 @@
 Bool_t raytracing = kTRUE;
 
 #include "TGeoManager.h"
-//______________________________________________________________________________
-void csgdemo ()
-{
-   gSystem->Load("libGeom");
-   TControlBar* bar = new TControlBar("vertical", "TGeo composite shapes",20,20);
-   bar->AddButton("How to run  ","help()","Instructions ");
-   bar->AddButton("Union ", "s_union()", "A + B ");
-   bar->AddButton("Intersection ", "s_intersection()","A * B ");
-   bar->AddButton("Difference ", "s_difference()","A - B ");
-   //These two buttons are disabled cause of bugs
-   bar->AddButton("Complex composite", "complex_1()","(A * B) + (C - D)");
-   bar->Show();
 
-   gROOT->SaveContext();
+//______________________________________________________________________________
+TCanvas *create_canvas(const char *title, bool divide = true)
+{
+   auto c = (TCanvas *) gROOT->GetListOfCanvases()->FindObject("csg_canvas");
+   if (c) {
+      c->Clear();
+      c->Update();
+      c->SetTitle(title);
+   } else {
+      c = new TCanvas("csg_canvas", title, 700,1000);
+   }
+
+   if (divide) {
+      c->Divide(1,2,0,0);
+      c->cd(2);
+      gPad->SetPad(0,0,1,0.4);
+      c->cd(1);
+      gPad->SetPad(0,0.4,1,1);
+   }
+
+   return c;
 }
 
 //______________________________________________________________________________
 void MakePicture()
 {
-   gGeoManager->GetGeomPainter()->SetRaytracing(kFALSE);
-   gPad->Modified();
-   gPad->Update();
+   Bool_t is_raytracing = gGeoManager->GetTopVolume()->IsRaytracing();
+   if (is_raytracing != raytracing) {
+      gGeoManager->GetTopVolume()->SetVisRaytrace(raytracing);
+      gPad->Modified();
+      gPad->Update();
+   }
 }
 
-
+//______________________________________________________________________________
 void s_union()
 {
-   gROOT->GetListOfCanvases()->Delete();
-   TCanvas *c = new TCanvas("composite shape", "Union boolean operation", 700, 1000);
-
-   c->Divide(1,2,0,0);
-   c->cd(2);
-   gPad->SetPad(0,0,1,0.4);
-   c->cd(1);
-   gPad->SetPad(0,0.4,1,1);
+   auto c = create_canvas("Union boolean operation");
 
    if (gGeoManager) delete gGeoManager;
 
@@ -91,16 +95,10 @@ void s_union()
    c->cd(1);
 }
 
+//______________________________________________________________________________
 void s_intersection()
 {
-   gROOT->GetListOfCanvases()->Delete();
-   TCanvas *c = new TCanvas("composite shape", "Intersection boolean operation", 700, 1000);
-
-   c->Divide(1,2,0,0);
-   c->cd(2);
-   gPad->SetPad(0,0,1,0.4);
-   c->cd(1);
-   gPad->SetPad(0,0.4,1,1);
+   auto c = create_canvas("Intersection boolean operation");
 
    if (gGeoManager) delete gGeoManager;
 
@@ -149,16 +147,10 @@ void s_intersection()
    c->cd(1);
 }
 
+//______________________________________________________________________________
 void s_difference()
 {
-   gROOT->GetListOfCanvases()->Delete();
-   TCanvas *c = new TCanvas("composite shape", "Difference boolean operation", 700, 1000);
-
-   c->Divide(1,2,0,0);
-   c->cd(2);
-   gPad->SetPad(0,0,1,0.4);
-   c->cd(1);
-   gPad->SetPad(0,0.4,1,1);
+   auto c = create_canvas("Difference boolean operation");
 
    if (gGeoManager) delete gGeoManager;
 
@@ -203,16 +195,10 @@ void s_difference()
    c->cd(1);
 }
 
-void complex_1()
+//______________________________________________________________________________
+void s_complex()
 {
-   gROOT->GetListOfCanvases()->Delete();
-   TCanvas *c = new TCanvas("composite shape", "A * B - C", 700, 1000);
-
-   c->Divide(1,2,0,0);
-   c->cd(2);
-   gPad->SetPad(0,0,1,0.4);
-   c->cd(1);
-   gPad->SetPad(0,0.4,1,1);
+   auto c = create_canvas("A * B - C");
 
    if (gGeoManager) delete gGeoManager;
 
@@ -271,78 +257,23 @@ void complex_1()
 }
 
 //______________________________________________________________________________
-void AddText(TPaveText *pave, const char *datamember, Double_t value, const char *comment)
+void raytrace()
 {
-   char line[128];
-   for (Int_t i=0; i<128; i++) line[i] = ' ';
-   memcpy(&line[0], datamember, strlen(datamember));
-   line[10] = '=';
-   char number[20];
-   sprintf(number, "%5.2f", value);
-   memcpy(&line[12], number, strlen(number));
-   line[26] = '=';
-   line[27] = '>';
-   sprintf(&line[30], "%s",comment);
-   TText *text = pave->AddText(line);
-   text->SetTextAlign(12);
+   if (gGeoManager && gPad) {
+      auto top = gGeoManager->GetTopVolume();
+      bool drawn = gPad->GetListOfPrimitives()->FindObject(top);
+      if (drawn) top->SetVisRaytrace(raytracing);
+
+      printf("raytrace %d\n", raytracing);
+      gPad->Modified();
+      gPad->Update();
+   }
 }
 
 //______________________________________________________________________________
-void AddText(TPaveText *pave, const char *datamember, Int_t value, const char *comment)
+void help()
 {
-   char line[128];
-   for (Int_t i=0; i<128; i++) line[i] = ' ';
-   memcpy(&line[0], datamember, strlen(datamember));
-   line[10] = '=';
-   char number[20];
-   sprintf(number, "%5i", value);
-   memcpy(&line[12], number, strlen(number));
-   line[26] = '=';
-   line[27] = '>';
-   sprintf(&line[30], "%s",comment);
-   TText *text = pave->AddText(line);
-   text->SetTextAlign(12);
-}
-
-//______________________________________________________________________________
-void AddText(TPaveText *pave, TObject *pf, Int_t iaxis)
-{
-   char line[128];
-   TGeoPatternFinder *finder = (TGeoPatternFinder*)pf;
-   if (!pave || !pf) return;
-   for (Int_t i=0; i<128; i++) line[i] = ' ';
-   TGeoVolume *volume = finder->GetVolume();
-   TGeoShape *sh = volume->GetShape();
-   sprintf(line, "Division of %s on axis %d (%s)", volume->GetName(), iaxis,sh->GetAxisName(iaxis));
-   TText *text = pave->AddText(line);
-   text->SetTextColor(3);
-   text->SetTextAlign(12);
-   AddText(pave, "fNdiv",finder->GetNdiv(),"number of divisions");
-   AddText(pave, "fStart",finder->GetStart(),"start divisioning position");
-   AddText(pave, "fStep",finder->GetStep(),"division step");
-}
-
-//______________________________________________________________________________
-void raytrace() {
-   if (!gGeoManager) return;
-
-   TVirtualGeoPainter *painter = gGeoManager->GetGeomPainter();
-
-   if (!painter) return;
-
-   painter->SetRaytracing(raytracing);
-
-   if (!gPad) return;
-
-   gPad->Modified();
-   gPad->Update();
-}
-
-//______________________________________________________________________________
-void help() {
-   //
-
-   new TCanvas("chelp","Help to run demos",200,10,700,600);
+   auto c = create_canvas("Help to run demos", false);
 
    TPaveText* welcome = new TPaveText(.1,.8,.9,.97);
    welcome->AddText("Welcome to the new geometry package");
@@ -356,6 +287,11 @@ void help() {
    hdemo->SetTextFont(52);
    hdemo->AddText("- Demo for building TGeo composite shapes");
    hdemo->AddText(" ");
+   hdemo->AddText(" .... s_union() : Union boolean operation");
+   hdemo->AddText(" .... s_difference() : Difference boolean operation");
+   hdemo->AddText(" .... s_intersection() : Intersection boolean operation");
+   hdemo->AddText(" .... s_complex() : Combination of (A * B) + (C - D)");
+   hdemo->AddText(" ");
    hdemo->SetAllWith("....","color",2);
    hdemo->SetAllWith("....","font",72);
    hdemo->SetAllWith("....","size",0.03);
@@ -363,3 +299,16 @@ void help() {
    hdemo->Draw();
 }
 
+//______________________________________________________________________________
+void csgdemo ()
+{
+   gSystem->Load("libGeom");
+   TControlBar* bar = new TControlBar("vertical", "TGeo composite shapes",20,20);
+   bar->AddButton("How to run  ","help()","Instructions ");
+   bar->AddButton("Union ", "s_union()", "A + B ");
+   bar->AddButton("Intersection ", "s_intersection()", "A * B ");
+   bar->AddButton("Difference ", "s_difference()", "A - B ");
+   bar->AddButton("Complex composite", "s_complex()", "(A * B) + (C - D)");
+   bar->AddButton("RAY-TRACE ON/OFF","raytrace()","Toggle ray-tracing mode");
+   bar->Show();
+}

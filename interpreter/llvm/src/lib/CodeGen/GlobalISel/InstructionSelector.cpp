@@ -33,24 +33,12 @@ InstructionSelector::MatcherState::MatcherState(unsigned MaxRenderers)
 
 InstructionSelector::InstructionSelector() = default;
 
-bool InstructionSelector::constrainOperandRegToRegClass(
-    MachineInstr &I, unsigned OpIdx, const TargetRegisterClass &RC,
-    const TargetInstrInfo &TII, const TargetRegisterInfo &TRI,
-    const RegisterBankInfo &RBI) const {
-  MachineBasicBlock &MBB = *I.getParent();
-  MachineFunction &MF = *MBB.getParent();
-  MachineRegisterInfo &MRI = MF.getRegInfo();
-
-  return constrainOperandRegClass(MF, TRI, MRI, TII, RBI, I, RC,
-                                  I.getOperand(OpIdx), OpIdx);
-}
-
 bool InstructionSelector::isOperandImmEqual(
     const MachineOperand &MO, int64_t Value,
     const MachineRegisterInfo &MRI) const {
   if (MO.isReg() && MO.getReg())
     if (auto VRegVal = getConstantVRegValWithLookThrough(MO.getReg(), MRI))
-      return VRegVal->Value == Value;
+      return VRegVal->Value.getSExtValue() == Value;
   return false;
 }
 
@@ -60,7 +48,7 @@ bool InstructionSelector::isBaseWithConstantOffset(
     return false;
 
   MachineInstr *RootI = MRI.getVRegDef(Root.getReg());
-  if (RootI->getOpcode() != TargetOpcode::G_GEP)
+  if (RootI->getOpcode() != TargetOpcode::G_PTR_ADD)
     return false;
 
   MachineOperand &RHS = RootI->getOperand(2);
@@ -79,5 +67,5 @@ bool InstructionSelector::isObviouslySafeToFold(MachineInstr &MI,
     return true;
 
   return !MI.mayLoadOrStore() && !MI.mayRaiseFPException() &&
-         !MI.hasUnmodeledSideEffects() && empty(MI.implicit_operands());
+         !MI.hasUnmodeledSideEffects() && MI.implicit_operands().empty();
 }

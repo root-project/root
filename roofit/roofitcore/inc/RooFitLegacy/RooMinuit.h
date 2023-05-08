@@ -36,22 +36,22 @@ class TVirtualFitter ;
 class TH2F ;
 class RooPlot ;
 
-void RooMinuitGlue(Int_t& /*np*/, Double_t* /*gin*/,  Double_t &f, Double_t *par, Int_t /*flag*/) ;
+void RooMinuitGlue(Int_t& /*np*/, double* /*gin*/,  double &f, double *par, Int_t /*flag*/) ;
 
 class RooMinuit : public TObject {
 public:
 
   RooMinuit(RooAbsReal& function) ;
-  virtual ~RooMinuit() ;
+  ~RooMinuit() override ;
 
   enum Strategy { Speed=0, Balance=1, Robustness=2 } ;
   enum PrintLevel { None=-1, Reduced=0, Normal=1, ExtraForProblem=2, Maximum=3 } ;
   void setStrategy(Int_t strat) ;
-  void setErrorLevel(Double_t level) ;
-  void setEps(Double_t eps) ;
+  void setErrorLevel(double level) ;
+  void setEps(double eps) ;
   void optimizeConst(Int_t flag) ;
-  void setEvalErrorWall(Bool_t flag) { _doEvalErrorWall = flag ; }
-  void setOffsetting(Bool_t flag) ;
+  void setEvalErrorWall(bool flag) { _doEvalErrorWall = flag ; }
+  void setOffsetting(bool flag) ;
 
   RooFitResult* fit(const char* options) ;
 
@@ -63,22 +63,22 @@ public:
   Int_t simplex() ;
   Int_t improve() ;
 
-  RooFitResult* save(const char* name=0, const char* title=0) ;
-  RooPlot* contour(RooRealVar& var1, RooRealVar& var2, 
-		   Double_t n1=1, Double_t n2=2, Double_t n3=0,
-		   Double_t n4=0, Double_t n5=0, Double_t n6=0) ;
+  RooFitResult* save(const char* name=nullptr, const char* title=nullptr) ;
+  RooPlot* contour(RooRealVar& var1, RooRealVar& var2,
+         double n1=1, double n2=2, double n3=0.0,
+         double n4=0.0, double n5=0.0, double n6=0.0) ;
 
-  Int_t setPrintLevel(Int_t newLevel) ; 
+  Int_t setPrintLevel(Int_t newLevel) ;
   void setNoWarn() ;
   Int_t setWarnLevel(Int_t newLevel) ;
   void setPrintEvalErrors(Int_t numEvalErrors) { _printEvalErrors = numEvalErrors ; }
-  void setVerbose(Bool_t flag=kTRUE) { _verbose = flag ; }
-  void setProfile(Bool_t flag=kTRUE) { _profile = flag ; }
+  void setVerbose(bool flag=true) { _verbose = flag ; }
+  void setProfile(bool flag=true) { _profile = flag ; }
   void setMaxEvalMultiplier(Int_t n) { _maxEvalMult = n ; }
-  Bool_t setLogFile(const char* logfile=0) ;  
+  bool setLogFile(const char* logfile=nullptr) ;
 
   static void cleanup() ;
-  
+
   Int_t evalCounter() const { return _evalCounter ; }
   void zeroEvalCount() { _evalCounter = 0 ; }
 
@@ -87,23 +87,23 @@ protected:
   friend class RooAbsPdf ;
   void applyCovarianceMatrix(TMatrixDSym& V) ;
 
-  friend void RooMinuitGlue(Int_t &np, Double_t *gin, Double_t &f, Double_t *par, Int_t flag) ;
+  friend void RooMinuitGlue(Int_t &np, double *gin, double &f, double *par, Int_t flag) ;
 
   void profileStart() ;
   void profileStop() ;
 
-  Bool_t synchronize(Bool_t verbose) ;  
+  bool synchronize(bool verbose) ;
   void backProp() ;
 
   inline Int_t getNPar() const { return _nPar ; }
   inline std::ofstream* logfile() const { return _logfile ; }
-  inline Double_t& maxFCN() { return _maxFCN ; }
+  inline double& maxFCN() { return _maxFCN ; }
 
-  Double_t getPdfParamVal(Int_t index) ;
-  Double_t getPdfParamErr(Int_t index) ;	
-  virtual Bool_t setPdfParamVal(Int_t index, Double_t value, Bool_t verbose=kFALSE) ;
-  void setPdfParamErr(Int_t index, Double_t value) ;
-  void setPdfParamErr(Int_t index, Double_t loVal, Double_t hiVal) ;
+  double getPdfParamVal(Int_t index) ;
+  double getPdfParamErr(Int_t index) ;
+  virtual bool setPdfParamVal(Int_t index, double value, bool verbose=false) ;
+  void setPdfParamErr(Int_t index, double value) ;
+  void setPdfParamErr(Int_t index, double loVal, double hiVal) ;
   void clearPdfParamAsymErr(Int_t index) ;
 
   void saveStatus(const char* label, Int_t status) { _statusHistory.push_back(std::pair<std::string,int>(label,status)) ; }
@@ -117,12 +117,12 @@ private:
   Int_t       _warnLevel ;
   Int_t       _status ;
   Int_t       _optConst ;
-  Bool_t      _profile ;
-  Bool_t      _handleLocalErrors ;
+  bool      _profile ;
+  bool      _handleLocalErrors ;
   Int_t       _numBadNLL ;
   Int_t       _nPar ;
   Int_t       _printEvalErrors ;
-  Bool_t      _doEvalErrorWall ;
+  bool      _doEvalErrorWall ;
   Int_t       _maxEvalMult ;
   RooArgList* _floatParamList ;
   std::vector<RooAbsArg*> _floatParamVec ;
@@ -131,22 +131,27 @@ private:
   RooArgList* _initConstParamList ;
   RooAbsReal* _func ;
 
-  Double_t    _maxFCN ;  
+  double    _maxFCN ;
   std::ofstream*   _logfile ;
-  Bool_t      _verbose ;
+  bool      _verbose ;
   TStopwatch  _timer ;
   TStopwatch  _cumulTimer ;
 
   TMatrixDSym* _extV ;
 
-  static TVirtualFitter *_theFitter ; 
+  static TVirtualFitter *_theFitter ;
 
   std::vector<std::pair<std::string,int> > _statusHistory ;
 
   RooMinuit(const RooMinuit&) ;
-	
-  ClassDef(RooMinuit,0) // RooFit minimizer based on MINUIT
-} R__SUGGEST_ALTERNATIVE("Please use RooMinimizer instead of RooMinuit");
+
+// Undocumented preprocessor define such that the implementation in
+// RooMinuit.cxx can suppress the deprecation warning.
+#ifndef __ROOFIT_SUPPRESS_ROOMINIMIZER_DEPRECATION_WARNING
+} R__DEPRECATED(6, 30, "Please use RooMinimizer instead of RooMinuit");
+#else
+};
+#endif
 
 
 #endif

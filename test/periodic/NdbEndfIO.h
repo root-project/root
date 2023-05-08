@@ -51,7 +51,7 @@ protected:
 
 public:
    NdbEndfIO()   { f=NULL; }
-   virtual ~NdbEndfIO()
+   ~NdbEndfIO() override
       { if (f) fclose(f); }
 
    NdbEndfIO( const char *filename, Int_t mode);
@@ -132,7 +132,7 @@ protected:
    Float_t      SubReadReal(Int_t start, Int_t length);
 
 
-   ClassDef(NdbEndfIO,1)
+   ClassDefOverride(NdbEndfIO,1)
 
 }; // NdbEndfIO
 

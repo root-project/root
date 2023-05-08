@@ -1,10 +1,10 @@
 // Bindings
 #include "CPyCppyy.h"
 #include "structmember.h"    // from Python
-#if PY_VERSION_HEX >= 0x02050000
-#include "code.h"            // from Python
-#else
+#if PY_VERSION_HEX < 0x02050000
 #include "compile.h"         // from Python
+#elif PY_VERSION_HEX < 0x030b0000
+#include "code.h"            // from Python
 #endif
 #ifndef CO_NOFREE
 // python2.2 does not have CO_NOFREE defined
@@ -366,7 +366,7 @@ static PyObject* mp_func_code(CPPOverload* pymeth, void*)
     return code;
 #else
 // not important for functioning of most code, so not implemented for p3 for now (TODO)
-    pymeth = 0;
+    (void)pymeth;
     Py_RETURN_NONE;
 #endif
 }

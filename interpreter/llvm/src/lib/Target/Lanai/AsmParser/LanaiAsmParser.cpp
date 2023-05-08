@@ -47,7 +47,7 @@ struct LanaiOperand;
 
 class LanaiAsmParser : public MCTargetAsmParser {
   // Parse operands
-  std::unique_ptr<LanaiOperand> parseRegister();
+  std::unique_ptr<LanaiOperand> parseRegister(bool RestoreOnFailure = false);
 
   std::unique_ptr<LanaiOperand> parseImmediate();
 
@@ -67,6 +67,8 @@ class LanaiAsmParser : public MCTargetAsmParser {
                         SMLoc NameLoc, OperandVector &Operands) override;
 
   bool ParseRegister(unsigned &RegNum, SMLoc &StartLoc, SMLoc &EndLoc) override;
+  OperandMatchResultTy tryParseRegister(unsigned &RegNo, SMLoc &StartLoc,
+                                        SMLoc &EndLoc) override;
 
   bool MatchAndEmitInstruction(SMLoc IdLoc, unsigned &Opcode,
                                OperandVector &Operands, MCStreamer &Out,
@@ -469,13 +471,14 @@ public:
     else if (isa<LanaiMCExpr>(getImm())) {
 #ifndef NDEBUG
       const LanaiMCExpr *SymbolRefExpr = dyn_cast<LanaiMCExpr>(getImm());
-      assert(SymbolRefExpr->getKind() == LanaiMCExpr::VK_Lanai_ABS_LO);
+      assert(SymbolRefExpr &&
+             SymbolRefExpr->getKind() == LanaiMCExpr::VK_Lanai_ABS_LO);
 #endif
       Inst.addOperand(MCOperand::createExpr(getImm()));
     } else if (isa<MCBinaryExpr>(getImm())) {
 #ifndef NDEBUG
       const MCBinaryExpr *BinaryExpr = dyn_cast<MCBinaryExpr>(getImm());
-      assert(isa<LanaiMCExpr>(BinaryExpr->getLHS()) &&
+      assert(BinaryExpr && isa<LanaiMCExpr>(BinaryExpr->getLHS()) &&
              cast<LanaiMCExpr>(BinaryExpr->getLHS())->getKind() ==
                  LanaiMCExpr::VK_Lanai_ABS_LO);
 #endif
@@ -499,13 +502,14 @@ public:
     else if (isa<LanaiMCExpr>(getImm())) {
 #ifndef NDEBUG
       const LanaiMCExpr *SymbolRefExpr = dyn_cast<LanaiMCExpr>(getImm());
-      assert(SymbolRefExpr->getKind() == LanaiMCExpr::VK_Lanai_ABS_HI);
+      assert(SymbolRefExpr &&
+             SymbolRefExpr->getKind() == LanaiMCExpr::VK_Lanai_ABS_HI);
 #endif
       Inst.addOperand(MCOperand::createExpr(getImm()));
     } else if (isa<MCBinaryExpr>(getImm())) {
 #ifndef NDEBUG
       const MCBinaryExpr *BinaryExpr = dyn_cast<MCBinaryExpr>(getImm());
-      assert(isa<LanaiMCExpr>(BinaryExpr->getLHS()) &&
+      assert(BinaryExpr && isa<LanaiMCExpr>(BinaryExpr->getLHS()) &&
              cast<LanaiMCExpr>(BinaryExpr->getLHS())->getKind() ==
                  LanaiMCExpr::VK_Lanai_ABS_HI);
 #endif
@@ -544,10 +548,9 @@ public:
     } else if (isa<MCBinaryExpr>(getImm())) {
 #ifndef NDEBUG
       const MCBinaryExpr *BinaryExpr = dyn_cast<MCBinaryExpr>(getImm());
-      const LanaiMCExpr *SymbolRefExpr =
-          dyn_cast<LanaiMCExpr>(BinaryExpr->getLHS());
-      assert(SymbolRefExpr &&
-             SymbolRefExpr->getKind() == LanaiMCExpr::VK_Lanai_None);
+      assert(BinaryExpr && isa<LanaiMCExpr>(BinaryExpr->getLHS()) &&
+             cast<LanaiMCExpr>(BinaryExpr->getLHS())->getKind() ==
+                 LanaiMCExpr::VK_Lanai_None);
 #endif
       Inst.addOperand(MCOperand::createExpr(getImm()));
     } else
@@ -580,7 +583,7 @@ public:
   }
 
   static std::unique_ptr<LanaiOperand> CreateToken(StringRef Str, SMLoc Start) {
-    auto Op = make_unique<LanaiOperand>(TOKEN);
+    auto Op = std::make_unique<LanaiOperand>(TOKEN);
     Op->Tok.Data = Str.data();
     Op->Tok.Length = Str.size();
     Op->StartLoc = Start;
@@ -590,7 +593,7 @@ public:
 
   static std::unique_ptr<LanaiOperand> createReg(unsigned RegNum, SMLoc Start,
                                                  SMLoc End) {
-    auto Op = make_unique<LanaiOperand>(REGISTER);
+    auto Op = std::make_unique<LanaiOperand>(REGISTER);
     Op->Reg.RegNum = RegNum;
     Op->StartLoc = Start;
     Op->EndLoc = End;
@@ -599,7 +602,7 @@ public:
 
   static std::unique_ptr<LanaiOperand> createImm(const MCExpr *Value,
                                                  SMLoc Start, SMLoc End) {
-    auto Op = make_unique<LanaiOperand>(IMMEDIATE);
+    auto Op = std::make_unique<LanaiOperand>(IMMEDIATE);
     Op->Imm.Value = Value;
     Op->StartLoc = Start;
     Op->EndLoc = End;
@@ -656,7 +659,7 @@ bool LanaiAsmParser::MatchAndEmitInstruction(SMLoc IdLoc, unsigned &Opcode,
 
   switch (MatchInstructionImpl(Operands, Inst, ErrorInfo, MatchingInlineAsm)) {
   case Match_Success:
-    Out.EmitInstruction(Inst, SubtargetInfo);
+    Out.emitInstruction(Inst, SubtargetInfo);
     Opcode = Inst.getOpcode();
     return false;
   case Match_MissingFeature:
@@ -686,21 +689,30 @@ bool LanaiAsmParser::MatchAndEmitInstruction(SMLoc IdLoc, unsigned &Opcode,
 // backwards compatible with GCC and the different ways inline assembly is
 // handled.
 // TODO: see if there isn't a better way to do this.
-std::unique_ptr<LanaiOperand> LanaiAsmParser::parseRegister() {
+std::unique_ptr<LanaiOperand>
+LanaiAsmParser::parseRegister(bool RestoreOnFailure) {
   SMLoc Start = Parser.getTok().getLoc();
   SMLoc End = SMLoc::getFromPointer(Parser.getTok().getLoc().getPointer() - 1);
+  Optional<AsmToken> PercentTok;
 
   unsigned RegNum;
   // Eat the '%'.
-  if (Lexer.getKind() == AsmToken::Percent)
+  if (Lexer.getKind() == AsmToken::Percent) {
+    PercentTok = Parser.getTok();
     Parser.Lex();
+  }
   if (Lexer.getKind() == AsmToken::Identifier) {
     RegNum = MatchRegisterName(Lexer.getTok().getIdentifier());
-    if (RegNum == 0)
+    if (RegNum == 0) {
+      if (PercentTok.hasValue() && RestoreOnFailure)
+        Lexer.UnLex(PercentTok.getValue());
       return nullptr;
+    }
     Parser.Lex(); // Eat identifier token
     return LanaiOperand::createReg(RegNum, Start, End);
   }
+  if (PercentTok.hasValue() && RestoreOnFailure)
+    Lexer.UnLex(PercentTok.getValue());
   return nullptr;
 }
 
@@ -709,10 +721,23 @@ bool LanaiAsmParser::ParseRegister(unsigned &RegNum, SMLoc &StartLoc,
   const AsmToken &Tok = getParser().getTok();
   StartLoc = Tok.getLoc();
   EndLoc = Tok.getEndLoc();
-  std::unique_ptr<LanaiOperand> Op = parseRegister();
+  std::unique_ptr<LanaiOperand> Op = parseRegister(/*RestoreOnFailure=*/false);
   if (Op != nullptr)
     RegNum = Op->getReg();
   return (Op == nullptr);
+}
+
+OperandMatchResultTy LanaiAsmParser::tryParseRegister(unsigned &RegNum,
+                                                      SMLoc &StartLoc,
+                                                      SMLoc &EndLoc) {
+  const AsmToken &Tok = getParser().getTok();
+  StartLoc = Tok.getLoc();
+  EndLoc = Tok.getEndLoc();
+  std::unique_ptr<LanaiOperand> Op = parseRegister(/*RestoreOnFailure=*/true);
+  if (Op == nullptr)
+    return MatchOperand_NoMatch;
+  RegNum = Op->getReg();
+  return MatchOperand_Success;
 }
 
 std::unique_ptr<LanaiOperand> LanaiAsmParser::parseIdentifier() {
@@ -729,9 +754,9 @@ std::unique_ptr<LanaiOperand> LanaiAsmParser::parseIdentifier() {
     return nullptr;
 
   // Check if identifier has a modifier
-  if (Identifier.equals_lower("hi"))
+  if (Identifier.equals_insensitive("hi"))
     Kind = LanaiMCExpr::VK_Lanai_ABS_HI;
-  else if (Identifier.equals_lower("lo"))
+  else if (Identifier.equals_insensitive("lo"))
     Kind = LanaiMCExpr::VK_Lanai_ABS_LO;
 
   // If the identifier corresponds to a variant then extract the real
@@ -1223,6 +1248,6 @@ bool LanaiAsmParser::ParseInstruction(ParseInstructionInfo & /*Info*/,
 #define GET_MATCHER_IMPLEMENTATION
 #include "LanaiGenAsmMatcher.inc"
 
-extern "C" void LLVMInitializeLanaiAsmParser() {
+extern "C" LLVM_EXTERNAL_VISIBILITY void LLVMInitializeLanaiAsmParser() {
   RegisterMCAsmParser<LanaiAsmParser> x(getTheLanaiTarget());
 }

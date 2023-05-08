@@ -218,21 +218,21 @@ public:
                TFormula(const char *name,const char *formula);
                TFormula(const TFormula &formula);
    TFormula&   operator=(const TFormula &rhs);
-   virtual    ~TFormula();
+      ~TFormula() override;
 
  public:
    void                Optimize();
    virtual void        Analyze(const char *schain, Int_t &err, Int_t offset=0);
    virtual Bool_t      AnalyzeFunction(TString &chaine, Int_t &err, Int_t offset=0);
    virtual Int_t       Compile(const char *expression="");
-   virtual void        Copy(TObject &formula) const;
-   virtual void        Clear(Option_t *option="");
+   void        Copy(TObject &formula) const override;
+   void        Clear(Option_t *option="") override;
    virtual char       *DefinedString(Int_t code);
    virtual Double_t    DefinedValue(Int_t code);
    virtual Int_t       DefinedVariable(TString &variable,Int_t &action);
    virtual Double_t    Eval(Double_t x, Double_t y=0, Double_t z=0, Double_t t=0) const;
-   virtual Double_t    EvalParOld(const Double_t *x, const Double_t *params=0);
-   virtual Double_t    EvalPar(const Double_t *x, const Double_t *params=0){return ((*this).*fOptimal)(x,params);};
+   virtual Double_t    EvalParOld(const Double_t *x, const Double_t *params=nullptr);
+   virtual Double_t    EvalPar(const Double_t *x, const Double_t *params=nullptr){return ((*this).*fOptimal)(x,params);};
    virtual const TObject *GetLinearPart(Int_t i);
    virtual Int_t       GetNdim() const {return fNdim;}
    virtual Int_t       GetNpar() const {return fNpar;}
@@ -246,7 +246,7 @@ public:
    virtual Int_t       GetParNumber(const char *name) const;
    virtual Bool_t      IsLinear() const {return TestBit(kLinear);}
    virtual Bool_t      IsNormalized() const {return TestBit(kNormalized);}
-   virtual void        Print(Option_t *option="") const; // *MENU*
+   void        Print(Option_t *option="") const override; // *MENU*
    virtual void        ProcessLinear(TString &replaceformula);
    virtual void        SetNumber(Int_t number) {fNumber = number;}
    virtual void        SetParameter(const char *name, Double_t parvalue);
@@ -260,15 +260,15 @@ public:
                                    *name2="p2",const char *name3="p3",const char
                                    *name4="p4", const char *name5="p5",const char *name6="p6",const char *name7="p7",const char
                                    *name8="p8",const char *name9="p9",const char *name10="p10"); // *MENU*
-   virtual void        Update() {;}
+   virtual void        Update() {}
 
    static  void        SetMaxima(Int_t maxop=1000, Int_t maxpar=1000, Int_t maxconst=1000);
    static  void        GetMaxima(Int_t& maxop, Int_t& maxpar, Int_t& maxconst);
 
    void Streamer(TBuffer &b, const TClass *onfile_class);
-   void Streamer(TBuffer &b, Int_t version, UInt_t start, UInt_t count, const TClass *onfile_class = 0);
+   void Streamer(TBuffer &b, Int_t version, UInt_t start, UInt_t count, const TClass *onfile_class = nullptr);
 
-   ClassDef(ROOT::v5::TFormula,8)  //The formula base class  f(x,y,z,par)
+   ClassDefOverride(ROOT::v5::TFormula,8)  //The formula base class  f(x,y,z,par)
 };
 
    } // end namespace v5

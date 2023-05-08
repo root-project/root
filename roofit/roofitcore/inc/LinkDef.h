@@ -1,4 +1,4 @@
-#ifdef __CINT__ 
+#ifdef __CINT__
 
 //Old LinkDef1.h
 #pragma link off all globals;
@@ -8,7 +8,7 @@
 #pragma link C++ class stack<RooAbsArg*,deque<RooAbsArg*> > ;
 #pragma link C++ class RooRefArray- ;
 #pragma read sourceClass="RooAbsArg" targetClass="RooAbsArg" version="[1-4]" source="TList _proxyList" target="_proxyList" \
-    code="{ TIterator* iter = onfile._proxyList.MakeIterator() ; TObject* tmpObj ; while ((tmpObj = iter->Next())) { _proxyList.Add(tmpObj) ; } delete iter ; }" 
+    code="{ for (TObject * tmpObj : onfile._proxyList) { _proxyList.Add(tmpObj); } }"
 #pragma read sourceClass="RooAbsArg" targetClass="RooAbsArg" version="[5]" source="TRefArray _proxyList" target="_proxyList" \
   code="{ _proxyList.GetSize() ; if (onfile._proxyList.GetSize()>0) { RooAbsArg::_ioEvoList[newObj] = std::make_unique<TRefArray>(onfile._proxyList); } }"
 #pragma read sourceClass="RooAbsArg" targetClass="RooAbsArg" version="[1-6]"\
@@ -46,7 +46,7 @@
   source="RooCatType _value" target="_currentIndex" code="{ _currentIndex = onfile._value.getVal(); }"
 #pragma link C++ class RooAbsCategoryLValue+ ;
 #pragma link C++ class RooAbsCollection+ ;
-#pragma read sourceClass="RooAbsCollection" targetClass="RooAbsCollection" version="[1]" source="" target="_allRRV" code="{ _allRRV=kFALSE ; }"
+#pragma read sourceClass="RooAbsCollection" targetClass="RooAbsCollection" version="[1]" source="" target="_allRRV" code="{ _allRRV=false ; }"
 #pragma read sourceClass="RooAbsCollection" targetClass="RooAbsCollection" version="[2]"\
     source="RooLinkedList _list" target="_list" code="{ \
     for (RooAbsArg * theArg : static_range_cast<RooAbsArg*>(onfile._list)) {_list.push_back(theArg);} }"
@@ -65,7 +65,6 @@
 #pragma link C++ class RooAbsReal+ ;
 #pragma link C++ class RooAbsRealLValue+ ;
 #pragma link C++ class RooAbsRootFinder+ ;
-#pragma link C++ class RooAcceptReject+ ;
 #pragma link C++ class RooAddGenContext+ ;
 #pragma link C++ class RooAddition+ ;
 #pragma link C++ class RooAddModel+ ;
@@ -80,10 +79,10 @@
 #pragma link C++ class RooCategorySharedProperties+ ;
 #pragma link C++ class RooCatType+ ;
 #pragma link C++ class RooChi2Var+ ;
-#pragma link C++ class RooClassFactory+ ;
 #pragma link C++ class RooCmdArg+ ;
 #pragma link C++ class RooCmdConfig+ ;
 #pragma link C++ class RooConstVar+ ;
+#pragma read sourceClass="RooConstVar" targetClass="RooConstVar" version="[1]" source="double _value" target="" code="{ newObj->changeVal(onfile._value); }"
 #pragma read sourceClass="RooConstraintSum" targetClass="RooConstraintSum" version="[3]"   \
              source="RooSetProxy _paramSet" target="_paramSet" code="{                     \
                  for(RooAbsArg * arg : onfile._paramSet) {                                 \
@@ -94,7 +93,6 @@
 #pragma link C++ class RooConvGenContext+ ;
 #pragma link C++ class RooConvIntegrandBinding+ ;
 #pragma link C++ class RooCurve+ ;
-#pragma link C++ class RooCustomizer+ ;
 #pragma link C++ class RooDataHist- ;
 #pragma link C++ class RooDataProjBinding+ ;
 #pragma link C++ class RooDataSet- ;
@@ -102,7 +100,7 @@
 #pragma link C++ class RooDLLSignificanceMCSModule+ ;
 #pragma link C++ class RooAbsAnaConvPdf+ ;
 #pragma link C++ class RooAddPdf+ ;
-#pragma link C++ class RooEfficiency+ ; 
+#pragma link C++ class RooEfficiency+ ;
 #pragma link C++ class RooEffProd+ ;
 #pragma link C++ class RooExtendPdf+ ;
 #pragma link off class RooErrorHandler+ ;
@@ -110,7 +108,10 @@
 
 
 // Old LinkDef2.h
-#pragma link C++ namespace RooFit ;
+
+// "namespace RooFit" is in roofit/roofit/inc/Linkdef1.h
+// should not be in the dictionary for two different libraries
+// #pragma link C++ namespace RooFit ;
 #pragma link C++ namespace RooFitShortHand ;
 #pragma link C++ class RooDouble+ ;
 #pragma link C++ class RooEffGenContext+ ;
@@ -123,8 +124,6 @@
 #pragma link C++ class RooGenContext+ ;
 #pragma link C++ class RooGenericPdf+ ;
 #pragma link C++ class RooGenProdProj+ ;
-#pragma link C++ class RooGrid+ ;
-#pragma link C++ class RooHashTable+ ;
 #pragma link C++ class RooHistError+ ;
 #pragma link C++ class RooHist+ ;
 #pragma link C++ class RooImproperIntegrator1D+ ;
@@ -139,42 +138,45 @@
 #pragma link C++ class RooLinkedListElem+ ;
 #pragma link C++ class RooLinkedList- ;
 #pragma link C++ class RooLinTransBinning+ ;
-#pragma link C++ class RooList+ ;
+#pragma read sourceClass="RooList" targetClass="TList";
 #pragma link C++ class RooListProxy+ ;
-#pragma read sourceClass="RooCollectionProxy<RooArgList>" targetClass="RooListProxy" ;
+#pragma link C++ class RooCollectionProxy<RooArgList>+ ;
+#pragma read sourceClass="RooListProxy" targetClass="RooCollectionProxy<RooArgList>";
 #pragma link C++ class RooMappedCategory+ ;
 #pragma read sourceClass="RooMappedCategory" targetClass="RooMappedCategory" version="[1]" include="RooFitLegacy/RooCatTypeLegacy.h" source="RooCatType* _defCat" target="_defCat" code="{ _defCat = onfile._defCat->getVal(); }"
 #pragma link C++ class RooMappedCategory::Entry+;
 #pragma read sourceClass="RooMappedCategory::Entry" targetClass="RooMappedCategory::Entry" version="[1]" include="RooFitLegacy/RooCatTypeLegacy.h" \
     source="RooCatType _cat" target="_catIdx" code="{ _catIdx = onfile._cat.getVal(); }"
 #pragma link C++ class RooMCIntegrator+ ;
-#pragma link C++ class RooMinuit+ ;
-#pragma link C++ class RooMPSentinel+ ;
 #pragma link C++ class RooMultiCategory+ ;
 #pragma link off class RooNameReg+ ;
-#pragma link C++ class RooNameSet+ ;
 #pragma link C++ class RooNLLVar+ ;
-#pragma link C++ class RooNormSetCache+ ;
-#pragma link C++ class RooNumber+ ;
 #pragma link C++ class RooNumConvolution+ ;
 #pragma link C++ class RooNumConvPdf+ ;
 #pragma link C++ class RooNumIntConfig+ ;
 #pragma link C++ class RooNumIntFactory+ ;
 #pragma link C++ class RooPlotable+ ;
 #pragma link C++ class RooPlot- ;
+#pragma read sourceClass="RooPlot" targetClass="RooPlot" version="[2]"       \
+             source="TList _items" target="_items"                           \
+             code="{  RooPlot::fillItemsFromTList(_items, onfile._items); }"
 #pragma link C++ class RooPolyFunc+ ;
 #pragma link C++ class RooPolyVar+ ;
 #pragma link C++ class RooPrintable+ ;
 #pragma link C++ class RooProdGenContext+ ;
 #pragma link C++ class RooProduct+ ;
-#pragma read sourceClass="RooProduct" targetClass="RooProduct" version="[1]" source="RooSetProxy _compRSet" target="_compRSet" code="{ _compRSet.add(onfile._compRSet) ; }"
-#pragma read sourceClass="RooProduct" targetClass="RooProduct" version="[1]" source="RooSetProxy _compCSet" target="_compCSet" code="{ _compCSet.add(onfile._compCSet) ; }"
+#pragma read sourceClass="RooProduct" targetClass="RooProduct" version="[1]"                      \
+             source="RooSetProxy _compRSet; RooSetProxy _compCSet" target="_compRSet, _compCSet"  \
+             code="{                                                                              \
+                 _compRSet.initializeAfterIOConstructor(newObj, onfile._compRSet) ;               \
+                 _compCSet.initializeAfterIOConstructor(newObj, onfile._compCSet) ;               \
+             }"
 #pragma link C++ class RooPullVar+ ;
 #pragma link C++ class RooQuasiRandomGenerator+ ;
 #pragma link C++ class RooRatio+ ;
 #pragma link C++ class RooRandom+ ;
 #pragma link off class RooErrorHandler+ ;
- 
+
 
 // Old LinkDef3.h
 #pragma link C++ class RooCacheManager<std::vector<double> >+ ;
@@ -215,9 +217,9 @@
 #pragma link C++ class RooScaledFunc+ ;
 #pragma link C++ class RooSegmentedIntegrator1D+ ;
 #pragma link C++ class RooSegmentedIntegrator2D+ ;
-#pragma link C++ class RooSetPair+ ;
 #pragma link C++ class RooSetProxy+ ;
-#pragma read sourceClass="RooCollectionProxy<RooArgSet>" targetClass="RooSetProxy" ;
+#pragma link C++ class RooCollectionProxy<RooArgSet>+ ;
+#pragma read sourceClass="RooSetProxy" targetClass="RooCollectionProxy<RooArgSet>";
 #pragma link C++ class RooSharedProperties+ ;
 #pragma link C++ class RooSimGenContext+ ;
 #pragma link C++ class RooSimSplitGenContext+ ;
@@ -233,13 +235,10 @@
   include="TSortedList.h" \
   source="RooCatType* _defCat; TSortedList _threshList" target="_defIndex,_threshList" \
   code="{const_cast<int&>(_defIndex) = onfile._defCat->getVal(); \
-         class RooThreshEntry : public TObject { public: Double_t _thresh; RooCatType _cat;}; \
-         RooThreshEntry* te; \
-         auto iter = onfile._threshList.MakeIterator();\
-         while( (te = (RooThreshEntry*)iter->Next()) ) { \
+         class RooThreshEntry : public TObject { public: double _thresh; RooCatType _cat;}; \
+         for(auto * te : static_range_cast<RooThreshEntry*>(onfile._threshList)) { \
            _threshList.emplace_back(te->_thresh, te->_cat.getVal()); \
          }\
-         delete iter;\
          }";
 #pragma read sourceClass="RooThresholdCategory" targetClass="RooThresholdCategory" version="[2]" \
   source="RooCatType* _defCat; std::vector<std::pair<double,RooCatType>> _threshList" target="_defIndex,_threshList" \
@@ -263,7 +262,6 @@
            _pdfNSetList.emplace_back(nset);                                       \
          }                                                                        \
          }";
-#pragma link C++ class RooSimPdfBuilder+ ;
 #pragma link C++ class RooMCStudy+ ;
 #pragma link C++ class RooMsgService+ ;
 #pragma link C++ class RooMsgService::StreamConfig+ ;
@@ -286,7 +284,6 @@
 #pragma link C++ class RooAbsCache+ ;
 #pragma link C++ class RooAbsCacheElement+ ;
 #pragma link C++ class RooExtendedTerm+ ;
-#pragma link C++ class RooSentinel+ ;
 #pragma link C++ class RooParamBinning+ ;
 #pragma link off class RooErrorHandler+ ;
 
@@ -295,12 +292,6 @@
 #pragma link C++ class RooConstraintSum+ ;
 #pragma link C++ class RooRecursiveFraction+ ;
 #pragma link C++ class RooDataWeightedAverage+ ;
-#pragma link C++ class RooSimWSTool+ ;
-#pragma link C++ class RooSimWSTool::SplitRule+ ;
-#pragma link C++ class RooSimWSTool::BuildConfig+ ;
-#pragma link C++ class RooSimWSTool::MultiBuildConfig+ ;
-#pragma link C++ class RooSimWSTool::ObjSplitRule+ ;
-#pragma link C++ class RooSimWSTool::ObjBuildConfig+ ;
 #pragma link C++ class RooFracRemainder+ ;
 #pragma link C++ class RooAbsCachedReal+ ;
 #pragma link C++ class RooAbsSelfCachedReal+ ;
@@ -325,10 +316,7 @@
 #pragma link C++ class RooMultiGenFunction+ ;
 #pragma link C++ class RooTFoamBinding+ ;
 #pragma link C++ class RooAdaptiveIntegratorND+ ;
-#pragma link C++ class RooAbsNumGenerator+ ;
-#pragma link C++ class RooFoamGenerator+ ;
 #pragma link C++ class RooNumGenConfig+ ;
-#pragma link C++ class RooNumGenFactory+ ;
 #pragma link C++ class RooMultiVarGaussian+ ;
 #pragma link C++ class RooMultiVarGaussian::AnaIntData+ ;
 #pragma link C++ class RooMultiVarGaussian::GenData+ ;
@@ -340,7 +328,12 @@
 #pragma link C++ class RooRangeBoolean+ ;
 #pragma link C++ class RooVectorDataStore- ;
 #pragma link C++ class RooVectorDataStore::RealVector+;
-#pragma link C++ class RooVectorDataStore::RealFullVector- ;
+#pragma link C++ class RooVectorDataStore::RealFullVector+ ;
+#pragma read sourceClass="RooVectorDataStore::RealFullVector" targetClass="RooVectorDataStore::RealFullVector" version="[1]" \
+  source="std::vector<double>* _vecE; std::vector<double>* _vecEL; std::vector<double>* _vecEH" target="_vecE, _vecEL, _vecEH" \
+  code="{ if(onfile._vecE) { _vecE = *onfile._vecE; }     \
+          if(onfile._vecEL) { _vecEL = *onfile._vecEL; }  \
+          if(onfile._vecEH) { _vecEH = *onfile._vecEH; }  }";
 #pragma link C++ class RooVectorDataStore::CatVector+;
 #pragma read sourceClass="RooVectorDataStore::CatVector" targetClass="RooVectorDataStore::CatVector" version="[1]" \
   source="std::vector<RooCatType> _vec;" target="_vec" \
@@ -350,12 +343,12 @@
 #pragma link C++ class std::pair<int,RooLinkedListElem*>+ ;
 #pragma link C++ class RooUnitTest+ ;
 #pragma link C++ class RooMinimizer+ ;
-#pragma link C++ class RooMinimizerFcn+ ;
 #pragma link C++ class RooFit::TestStatistics::RooRealL+ ;
 #pragma link C++ class RooAbsMoment+ ;
 #pragma link C++ class RooMoment+ ;
 #pragma link C++ class RooFirstMoment+ ;
 #pragma link C++ class RooSecondMoment+ ;
+#pragma link C++ class RooStats::ModelConfig+;
 #pragma link C++ class RooStudyManager+ ;
 #pragma link C++ class RooStudyPackage+ ;
 #pragma link C++ class RooAbsStudy+ ;
@@ -368,6 +361,6 @@
 // The nomap options excludes the class from the roomap file
 #pragma link C++ options=nomap class std::map<string,TH1*>+ ;
 #pragma link off class RooErrorHandler+ ;
-#endif 
+#endif
 #pragma link C++ class RooBinSamplingPdf+;
 #pragma link C++ class RooBinWidthFunction+;

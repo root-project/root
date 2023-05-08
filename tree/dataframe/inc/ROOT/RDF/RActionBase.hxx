@@ -77,7 +77,8 @@ public:
    virtual bool HasRun() const { return fHasRun; }
    virtual void SetHasRun() { fHasRun = true; }
 
-   virtual std::shared_ptr<ROOT::Internal::RDF::GraphDrawing::GraphNode> GetGraph() = 0;
+   virtual std::shared_ptr<ROOT::Internal::RDF::GraphDrawing::GraphNode>
+   GetGraph(std::unordered_map<void *, std::shared_ptr<ROOT::Internal::RDF::GraphDrawing::GraphNode>> &visitedMap) = 0;
 
    /**
       Retrieve a wrapper to the result of the action that knows how to merge

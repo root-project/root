@@ -464,7 +464,7 @@ const TSeqCollection *TTabCom::GetListOfClasses()
       ClassInfo_t* ci = gInterpreter->ClassInfo_Factory(kFALSE /*all*/);
       while (gInterpreter->ClassInfo_Next(ci)) {
          const char* className = gInterpreter->ClassInfo_FullName(ci);
-         if (strstr(className, "(anonymous)"))
+         if (strstr(className, "(anonymous)") || strstr(className, "(unnamed)"))
             continue;
          if (!fpClasses->FindObject(className)) {
             fpClasses->Add(new TObjString(className));
@@ -919,7 +919,7 @@ Bool_t TTabCom::ExcludedByFignore(TString s)
 ///[static utility function]/////////////////////////////
 ///
 ///  returns a colon-separated string of directories
-///  that CINT will search when you call #include<...>
+///  that CINT will search when you call `#include<...>`
 ///
 ///  returns empty string on failure.
 ///

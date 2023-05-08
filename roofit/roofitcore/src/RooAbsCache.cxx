@@ -26,36 +26,34 @@ and the cache data member to communicate server redirects, operation
 mode changes and constant term optimization management calls.
 **/
 
-
-#include "RooFit.h"
 #include "RooAbsCache.h"
 #include "RooAbsArg.h"
 #include "RooArgList.h"
 
 using namespace std;
 
-ClassImp(RooAbsCache); 
+ClassImp(RooAbsCache);
    ;
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor. Takes owner as argument and register cache with owner.
 
-RooAbsCache::RooAbsCache(RooAbsArg* owner) : _owner(owner) 
-{ 
+RooAbsCache::RooAbsCache(RooAbsArg* owner) : _owner(owner)
+{
   if (_owner) {
-    _owner->registerCache(*this) ; 
+    _owner->registerCache(*this) ;
   }
-} 
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor. Takes owner as argument and registers cache with owne.
 
-RooAbsCache::RooAbsCache(const RooAbsCache&, RooAbsArg* owner ) : _owner(owner) 
-{ 
+RooAbsCache::RooAbsCache(const RooAbsCache&, RooAbsArg* owner ) : _owner(owner)
+{
   if (_owner) {
-    owner->registerCache(*this) ; 
+    owner->registerCache(*this) ;
   }
 }
 
@@ -63,10 +61,10 @@ RooAbsCache::RooAbsCache(const RooAbsCache&, RooAbsArg* owner ) : _owner(owner)
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor. Unregisters cache with owner.
 
-RooAbsCache::~RooAbsCache() 
-{ 
+RooAbsCache::~RooAbsCache()
+{
   if (_owner) {
-    _owner->unRegisterCache(*this) ; 
+    _owner->unRegisterCache(*this) ;
   }
 }
 
@@ -76,10 +74,10 @@ RooAbsCache::~RooAbsCache()
 void RooAbsCache::setOwner(RooAbsArg * owner)
 {
   if (_owner) {
-    _owner->unRegisterCache(*this) ; 
+    _owner->unRegisterCache(*this) ;
   }
   _owner = owner;
   if (_owner) {
-    owner->registerCache(*this) ; 
+    owner->registerCache(*this) ;
   }
 }

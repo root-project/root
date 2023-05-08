@@ -42,9 +42,9 @@ def : Pat<(i64 (sext i32:$val)), (SRAri $val, 0)>;
 def : Pat<(i64 (and i64:$val, 0xffffffff)), (SRLri $val, 0)>;
 def : Pat<(i64 (sext_inreg i64:$val, i32)), (SRAri $val, 0)>;
 
-defm SLLX : F3_S<"sllx", 0b100101, 1, shl, i64, I64Regs>;
-defm SRLX : F3_S<"srlx", 0b100110, 1, srl, i64, I64Regs>;
-defm SRAX : F3_S<"srax", 0b100111, 1, sra, i64, I64Regs>;
+defm SLLX : F3_S<"sllx", 0b100101, 1, shl, i64, shift_imm6, I64Regs>;
+defm SRLX : F3_S<"srlx", 0b100110, 1, srl, i64, shift_imm6, I64Regs>;
+defm SRAX : F3_S<"srax", 0b100111, 1, sra, i64, shift_imm6, I64Regs>;
 
 } // Predicates = [Is64Bit]
 
@@ -177,7 +177,7 @@ def LEAX_ADDri : F3_2<2, 0b000000,
 
 def : Pat<(SPcmpicc i64:$a, i64:$b), (CMPrr $a, $b)>;
 def : Pat<(SPcmpicc i64:$a, (i64 simm13:$b)), (CMPri $a, (as_i32imm $b))>;
-def : Pat<(ctpop i64:$src), (POPCrr $src)>;
+def : Pat<(i64 (ctpop i64:$src)), (POPCrr $src)>;
 
 } // Predicates = [Is64Bit]
 
@@ -496,8 +496,6 @@ let Predicates = [Is64Bit], Constraints = "$swap = $rd", asi = 0b10000000 in {
 } // Predicates = [Is64Bit], Constraints = ...
 
 let Predicates = [Is64Bit] in {
-
-def : Pat<(atomic_fence imm, imm), (MEMBARi 0xf)>;
 
 // atomic_load_64 addr -> load addr
 def : Pat<(i64 (atomic_load_64 ADDRrr:$src)), (LDXrr ADDRrr:$src)>;

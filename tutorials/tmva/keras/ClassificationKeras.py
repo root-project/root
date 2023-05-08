@@ -52,7 +52,7 @@ model.add(Dense(2, activation='softmax'))
 
 # Set loss and optimizer
 model.compile(loss='categorical_crossentropy',
-              optimizer=SGD(learning_rate=0.01), metrics=['accuracy', ])
+              optimizer=SGD(learning_rate=0.01), weighted_metrics=['accuracy', ])
 
 # Store model to file
 model.save('modelClassification.h5')

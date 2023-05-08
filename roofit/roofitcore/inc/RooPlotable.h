@@ -26,34 +26,34 @@ class RooArgSet;
 class RooPlotable : public RooPrintable {
 public:
   inline RooPlotable() : _ymin(0), _ymax(0), _normValue(0) { }
-  inline virtual ~RooPlotable() { }
+  inline ~RooPlotable() override { }
 
   inline const char* getYAxisLabel() const { return _yAxisLabel.Data(); }
   inline void setYAxisLabel(const char *label) { _yAxisLabel= label; }
-  inline void updateYAxisLimits(Double_t y) {
+  inline void updateYAxisLimits(double y) {
     if(y > _ymax) _ymax= y;
     if(y < _ymin) _ymin= y;
   }
-  inline void setYAxisLimits(Double_t ymin, Double_t ymax) { 
+  inline void setYAxisLimits(double ymin, double ymax) {
     _ymin = ymin ;
     _ymax = ymax ;
   }
-  inline Double_t getYAxisMin() const { return _ymin; }
-  inline Double_t getYAxisMax() const { return _ymax; }
+  inline double getYAxisMin() const { return _ymin; }
+  inline double getYAxisMax() const { return _ymax; }
 
   // the normalization value refers to the full "fit range" instead of
   // the "plot range"
-  virtual Double_t getFitRangeNEvt() const = 0;
-  virtual Double_t getFitRangeNEvt(Double_t xlo, Double_t xhi) const = 0;
-  virtual Double_t getFitRangeBinW() const = 0;
+  virtual double getFitRangeNEvt() const = 0;
+  virtual double getFitRangeNEvt(double xlo, double xhi) const = 0;
+  virtual double getFitRangeBinW() const = 0;
 
-  virtual void printMultiline(std::ostream& os, Int_t contents, Bool_t verbose=kFALSE, TString indent= "") const;
+  void printMultiline(std::ostream& os, Int_t contents, bool verbose=false, TString indent= "") const override;
 
   TObject *crossCast();
 protected:
   TString _yAxisLabel;
-  Double_t _ymin, _ymax, _normValue;
-  ClassDef(RooPlotable,1) // Abstract interface for plotable objects in a RooPlot
+  double _ymin, _ymax, _normValue;
+  ClassDefOverride(RooPlotable,1) // Abstract interface for plotable objects in a RooPlot
 };
 
 #endif

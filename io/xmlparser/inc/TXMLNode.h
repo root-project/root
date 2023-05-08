@@ -40,7 +40,7 @@ public:
       kXMLCommentNode = 8
    };
 
-   TXMLNode(_xmlNode *node, TXMLNode* parent=0, TXMLNode* previous=0);
+   TXMLNode(_xmlNode *node, TXMLNode *parent = nullptr, TXMLNode *previous = nullptr);
 
    virtual ~TXMLNode();
 
@@ -63,7 +63,7 @@ public:
    const char *GetNamespaceHref() const;
    const char *GetNamespacePrefix() const;
 
-   ClassDef(TXMLNode,0);  // XML node under DOM tree
+   ClassDefOverride(TXMLNode,0);  // XML node under DOM tree
 };
 
 #endif

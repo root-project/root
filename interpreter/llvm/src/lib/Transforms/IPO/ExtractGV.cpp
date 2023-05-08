@@ -54,6 +54,7 @@ namespace {
   class GVExtractorPass : public ModulePass {
     SetVector<GlobalValue *> Named;
     bool deleteStuff;
+    bool keepConstInit;
   public:
     static char ID; // Pass identification, replacement for typeid
 
@@ -61,8 +62,9 @@ namespace {
     /// Otherwise, it deletes as much of the module as possible, except for the
     /// global values specified.
     explicit GVExtractorPass(std::vector<GlobalValue*> &GVs,
-                             bool deleteS = true)
-      : ModulePass(ID), Named(GVs.begin(), GVs.end()), deleteStuff(deleteS) {}
+                             bool deleteS = true, bool keepConstInit = false)
+      : ModulePass(ID), Named(GVs.begin(), GVs.end()), deleteStuff(deleteS),
+        keepConstInit(keepConstInit) {}
 
     bool runOnModule(Module &M) override {
       if (skipModule(M))
@@ -80,23 +82,23 @@ namespace {
       // be conservative and simple.
 
       // Visit the GlobalVariables.
-      for (Module::global_iterator I = M.global_begin(), E = M.global_end();
-           I != E; ++I) {
-        bool Delete =
-            deleteStuff == (bool)Named.count(&*I) && !I->isDeclaration();
+      for (GlobalVariable &GV : M.globals()) {
+        bool Delete = deleteStuff == (bool)Named.count(&GV) &&
+                      !GV.isDeclaration() &&
+                      (!GV.isConstant() || !keepConstInit);
         if (!Delete) {
-          if (I->hasAvailableExternallyLinkage())
+          if (GV.hasAvailableExternallyLinkage())
             continue;
-          if (I->getName() == "llvm.global_ctors")
+          if (GV.getName() == "llvm.global_ctors")
             continue;
         }
 
-        makeVisible(*I, Delete);
+        makeVisible(GV, Delete);
 
         if (Delete) {
           // Make this a declaration and drop it's comdat.
-          I->setInitializer(nullptr);
-          I->setComdat(nullptr);
+          GV.setInitializer(nullptr);
+          GV.setComdat(nullptr);
         }
       }
 
@@ -156,6 +158,6 @@ namespace {
 }
 
 ModulePass *llvm::createGVExtractionPass(std::vector<GlobalValue *> &GVs,
-                                         bool deleteFn) {
-  return new GVExtractorPass(GVs, deleteFn);
+                                         bool deleteFn, bool keepConstInit) {
+  return new GVExtractorPass(GVs, deleteFn, keepConstInit);
 }

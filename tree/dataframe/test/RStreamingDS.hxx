@@ -31,7 +31,7 @@ public:
       return ranges;
    }
    bool SetEntry(unsigned int, ULong64_t) final { return true; }
-   void Initialise() final { fCounter = 0; }
+   void Initialize() final { fCounter = 0; }
 
    std::string GetLabel() final { return "Streaming"; }
 

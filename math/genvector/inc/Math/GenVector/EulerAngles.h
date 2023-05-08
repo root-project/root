@@ -39,6 +39,8 @@ namespace Math {
       a slightly different convention.
 
       @ingroup GenVector
+
+      @sa Overview of the @ref GenVector "physics vector library"
    */
 class EulerAngles {
 

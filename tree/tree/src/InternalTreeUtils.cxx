@@ -7,73 +7,71 @@
  *************************************************************************/
 
 #include "ROOT/InternalTreeUtils.hxx"
-#include "TTree.h"
+#include "TBranch.h" // Usage of TBranch in ClearMustCleanupBits
 #include "TChain.h"
+#include "TCollection.h" // TRangeStaticCast
 #include "TFile.h"
 #include "TFriendElement.h"
+#include "TTree.h"
+#include "TVirtualIndex.h"
 
+#include <cstdint> // std::uint64_t
+#include <limits>
 #include <utility> // std::pair
 #include <vector>
 #include <stdexcept> // std::runtime_error
 #include <string>
 
+// Recursively get the top level branches from the specified tree and all of its attached friends.
+static void GetTopLevelBranchNamesImpl(TTree &t, std::unordered_set<std::string> &bNamesReg, std::vector<std::string> &bNames,
+                                       std::unordered_set<TTree *> &analysedTrees, const std::string friendName = "")
+{
+   if (!analysedTrees.insert(&t).second) {
+      return;
+   }
+
+   auto branches = t.GetListOfBranches();
+   if (branches) {
+      for (auto branchObj : *branches) {
+         const auto name = branchObj->GetName();
+         if (bNamesReg.insert(name).second) {
+            bNames.emplace_back(name);
+         } else if (!friendName.empty()) {
+            // If this is a friend and the branch name has already been inserted, it might be because the friend
+            // has a branch with the same name as a branch in the main tree. Let's add it as <friendname>.<branchname>.
+            const auto longName = friendName + "." + name;
+            if (bNamesReg.insert(longName).second)
+               bNames.emplace_back(longName);
+         }
+      }
+   }
+
+   auto friendTrees = t.GetListOfFriends();
+
+   if (!friendTrees)
+      return;
+
+   for (auto friendTreeObj : *friendTrees) {
+      auto friendElement = static_cast<TFriendElement *>(friendTreeObj);
+      auto friendTree = friendElement->GetTree();
+      const std::string frName(friendElement->GetName()); // this gets us the TTree name or the friend alias if any
+      GetTopLevelBranchNamesImpl(*friendTree, bNamesReg, bNames, analysedTrees, frName);
+   }
+}
+
 namespace ROOT {
 namespace Internal {
 namespace TreeUtils {
 
-////////////////////////////////////////////////////////////////////////////////
-/// \brief Add information of a single friend.
-///
-/// \param[in] treeName Name of the tree.
-/// \param[in] fileNameGlob Path to the file. Refer to TChain::Add for globbing rules.
-/// \param[in] alias Alias for this friend.
-void RFriendInfo::AddFriend(const std::string &treeName, const std::string &fileNameGlob, const std::string &alias)
+///////////////////////////////////////////////////////////////////////////////
+/// Get all the top-level branches names, including the ones of the friend trees
+std::vector<std::string> GetTopLevelBranchNames(TTree &t)
 {
-   fFriendNames.emplace_back(std::make_pair(treeName, alias));
-   fFriendFileNames.emplace_back(std::vector<std::string>{fileNameGlob});
-   fFriendChainSubNames.emplace_back();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// \brief Add information of a single friend.
-///
-/// \param[in] treeName Name of the tree.
-/// \param[in] fileNameGlobs Paths to the files. Refer to TChain::Add for globbing rules.
-/// \param[in] alias Alias for this friend.
-void RFriendInfo::AddFriend(const std::string &treeName, const std::vector<std::string> &fileNameGlobs,
-                            const std::string &alias)
-{
-   fFriendNames.emplace_back(std::make_pair(treeName, alias));
-   fFriendFileNames.emplace_back(fileNameGlobs);
-   fFriendChainSubNames.emplace_back(std::vector<std::string>(fileNameGlobs.size(), treeName));
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// \brief Add information of a single friend.
-///
-/// \param[in] treeAndFileNameGlobs Pairs of (treename, filename). Refer to TChain::Add for globbing rules.
-/// \param[in] alias Alias for this friend.
-void RFriendInfo::AddFriend(const std::vector<std::pair<std::string, std::string>> &treeAndFileNameGlobs,
-                            const std::string &alias)
-{
-   fFriendNames.emplace_back(std::make_pair("", alias));
-
-   fFriendFileNames.emplace_back();
-   fFriendChainSubNames.emplace_back();
-
-   auto &theseFileNames = fFriendFileNames.back();
-   auto &theseChainSubNames = fFriendChainSubNames.back();
-   auto nPairs = treeAndFileNameGlobs.size();
-   theseFileNames.reserve(nPairs);
-   theseChainSubNames.reserve(nPairs);
-
-   auto fSubNamesIt = std::back_inserter(theseChainSubNames);
-   auto fNamesIt = std::back_inserter(theseFileNames);
-
-   for (const auto &names : treeAndFileNameGlobs) {
-      *fSubNamesIt = names.first;
-      *fNamesIt = names.second;
-   }
+   std::unordered_set<std::string> bNamesSet;
+   std::vector<std::string> bNames;
+   std::unordered_set<TTree *> analysedTrees;
+   GetTopLevelBranchNamesImpl(t, bNamesSet, bNames, analysedTrees);
+   return bNames;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -119,6 +117,10 @@ std::vector<std::string> GetFileNamesFromTree(const TTree &tree)
 /// \ingroup tree
 /// \brief Get and store the names, aliases and file names of the direct friends of the tree.
 /// \param[in] tree The tree from which friends information will be gathered.
+/// \param[in] retrieveEntries Whether to also retrieve the number of entries in
+///            each tree of each friend: one if the friend is a TTree, more if
+///            the friend is a TChain. In the latter case, this function
+///            triggers the opening of all files in the chain.
 /// \throws std::runtime_error If the input tree has a list of friends, but any
 ///         of them could not be associated with any file.
 ///
@@ -132,29 +134,29 @@ std::vector<std::string> GetFileNamesFromTree(const TTree &tree)
 ///       of the input tree.
 ///
 /// \returns An RFriendInfo struct, containing the information parsed from the
-/// list of friends. The struct will contain three vectors, which elements at
+/// list of friends. The struct will contain four vectors, which elements at
 /// position `i` represent the `i`-th friend of the input tree. If this friend
 /// is a TTree, the `i`-th element of each of the three vectors will contain
 /// respectively:
+///
 /// - A pair with the name and alias of the tree (the alias might not be
 ///   present, in which case it will be just an empty string).
 /// - A vector with a single string representing the path to current file where
 ///   the tree is stored.
 /// - An empty vector.
-/// .
+/// - A vector with a single element, the number of entries in the tree.
+///
 /// If the `i`-th friend is a TChain instead, the `i`-th element of each of the
 /// three vectors will contain respectively:
 /// - A pair with the name and alias of the chain (if present, both might be
 ///   empty strings).
 /// - A vector with all the paths to the files contained in the chain.
-/// - A vector with all the the names of the trees making up the chain,
+/// - A vector with all the names of the trees making up the chain,
 ///   associated with the file names of the previous vector.
-RFriendInfo GetFriendInfo(const TTree &tree)
+/// - A vector with the number of entries of each tree in the previous vector or
+///   an empty vector, depending on whether \p retrieveEntries is true.
+ROOT::TreeUtils::RFriendInfo GetFriendInfo(const TTree &tree, bool retrieveEntries)
 {
-   std::vector<NameAlias> friendNames;
-   std::vector<std::vector<std::string>> friendFileNames;
-   std::vector<std::vector<std::string>> friendChainSubNames;
-
    // Typically, the correct way to call GetListOfFriends would be `tree.GetTree()->GetListOfFriends()`
    // (see e.g. the discussion at https://github.com/root-project/root/issues/6741).
    // However, in this case, in case we are dealing with a TChain we really only care about the TChain's
@@ -162,8 +164,21 @@ RFriendInfo GetFriendInfo(const TTree &tree)
    // internal TTree, if any, will be automatically loaded in each task just like they would be automatically
    // loaded here if we used tree.GetTree()->GetListOfFriends().
    const auto *friends = tree.GetListOfFriends();
-   if (!friends)
-      return RFriendInfo();
+   if (!friends || friends->GetEntries() == 0)
+      return ROOT::TreeUtils::RFriendInfo();
+
+   std::vector<std::pair<std::string, std::string>> friendNames;
+   std::vector<std::vector<std::string>> friendFileNames;
+   std::vector<std::vector<std::string>> friendChainSubNames;
+   std::vector<std::vector<std::int64_t>> nEntriesPerTreePerFriend;
+   std::vector<std::unique_ptr<TVirtualIndex>> treeIndexes;
+
+   // Reserve space for all friends
+   auto nFriends = friends->GetEntries();
+   friendNames.reserve(nFriends);
+   friendFileNames.reserve(nFriends);
+   friendChainSubNames.reserve(nFriends);
+   nEntriesPerTreePerFriend.reserve(nFriends);
 
    for (auto fr : *friends) {
       // Can't pass fr as const TObject* because TFriendElement::GetTree is not const.
@@ -179,9 +194,16 @@ RFriendInfo GetFriendInfo(const TTree &tree)
       friendChainSubNames.emplace_back();
       auto &chainSubNames = friendChainSubNames.back();
 
+      // The vector of entries in each tree of the current friend.
+      nEntriesPerTreePerFriend.emplace_back();
+      auto &nEntriesInThisFriend = nEntriesPerTreePerFriend.back();
+
       // Check if friend tree/chain has an alias
       const auto *alias_c = tree.GetFriendAlias(frTree);
       const std::string alias = alias_c != nullptr ? alias_c : "";
+
+      auto *treeIndex = frTree->GetTreeIndex();
+      treeIndexes.emplace_back(static_cast<TVirtualIndex *>(treeIndex ? treeIndex->Clone() : nullptr));
 
       // If the current tree is a TChain
       if (auto frChain = dynamic_cast<const TChain *>(frTree)) {
@@ -201,14 +223,41 @@ RFriendInfo GetFriendInfo(const TTree &tree)
                                      "Friends with no associated files are not supported.");
          }
 
+         // Reserve space for this friend
+         auto nFiles = chainFiles->GetEntries();
+         fileNames.reserve(nFiles);
+         chainSubNames.reserve(nFiles);
+         nEntriesInThisFriend.reserve(nFiles);
+
          // Retrieve the name of the chain and add a (name, alias) pair
          friendNames.emplace_back(std::make_pair(frChain->GetName(), alias));
          // Each file in the chain can contain a TTree with a different name wrt
          // the main TChain. Retrieve the name of the file through `GetTitle`
          // and the name of the tree through `GetName`
          for (const auto *f : *chainFiles) {
-            chainSubNames.emplace_back(f->GetName());
-            fileNames.emplace_back(f->GetTitle());
+
+            auto thisTreeName = f->GetName();
+            auto thisFileName = f->GetTitle();
+
+            chainSubNames.emplace_back(thisTreeName);
+            fileNames.emplace_back(thisFileName);
+
+            if (retrieveEntries) {
+               std::unique_ptr<TFile> thisFile{TFile::Open(thisFileName, "READ_WITHOUT_GLOBALREGISTRATION")};
+               if (!thisFile || thisFile->IsZombie())
+                  throw std::runtime_error(std::string("GetFriendInfo: Could not open file \"") + thisFileName + "\"");
+               TTree *thisTree = thisFile->Get<TTree>(thisTreeName);
+               if (!thisTree)
+                  throw std::runtime_error(std::string("GetFriendInfo: Could not retrieve TTree \"") + thisTreeName +
+                                           "\" from file \"" + thisFileName + "\"");
+               nEntriesInThisFriend.emplace_back(thisTree->GetEntries());
+            } else {
+               // Avoid odr-using TTree::kMaxEntries which would require a
+               // definition in C++14. In C++17, all constexpr static data
+               // members are implicitly inline.
+               static constexpr auto maxEntries = TTree::kMaxEntries;
+               nEntriesInThisFriend.emplace_back(maxEntries);
+            }
          }
       } else {
          // Get name of the tree
@@ -221,10 +270,15 @@ RFriendInfo GetFriendInfo(const TTree &tree)
             throw std::runtime_error("A TTree in the list of friends is not linked to any file. "
                                      "Friends with no associated files are not supported.");
          fileNames.emplace_back(f->GetName());
+         // We already have a pointer to the file and the tree, we can get the
+         // entries without triggering a re-open
+         nEntriesInThisFriend.emplace_back(frTree->GetEntries());
       }
    }
 
-   return RFriendInfo{std::move(friendNames), std::move(friendFileNames), std::move(friendChainSubNames)};
+   return ROOT::TreeUtils::RFriendInfo(std::move(friendNames), std::move(friendFileNames),
+                                       std::move(friendChainSubNames), std::move(nEntriesPerTreePerFriend),
+                                       std::move(treeIndexes));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -265,7 +319,7 @@ std::vector<std::string> GetTreeFullPaths(const TTree &tree)
       if (dynamic_cast<const TFile *>(treeDir)) {
          return {tree.GetName()};
       }
-      std::string fullPath = treeDir->GetPath();           // e.g. "file.root:/dir"
+      std::string fullPath = treeDir->GetPath();            // e.g. "file.root:/dir"
       fullPath = fullPath.substr(fullPath.rfind(":/") + 1); // e.g. "/dir"
       fullPath += "/";
       fullPath += tree.GetName(); // e.g. "/dir/tree"
@@ -274,6 +328,79 @@ std::vector<std::string> GetTreeFullPaths(const TTree &tree)
 
    // We do our best and return the name of the tree
    return {tree.GetName()};
+}
+
+/// Reset the kMustCleanup bit of a TObjArray of TBranch objects (e.g. returned by TTree::GetListOfBranches).
+///
+/// In some rare cases, all branches in a TTree can have their kMustCleanup bit set, which causes a large amount
+/// of contention at teardown due to concurrent calls to RecursiveRemove (which needs to take the global lock).
+/// This helper function checks the first branch of the array and if it has the kMustCleanup bit set, it resets
+/// it for all branches in the array, recursively going through sub-branches and leaves.
+void ClearMustCleanupBits(TObjArray &branches)
+{
+   if (branches.GetEntries() == 0 || branches.At(0)->TestBit(kMustCleanup) == false)
+      return; // we assume either no branches have the bit set, or all do. we never encountered an hybrid case
+
+   for (auto *branch : ROOT::Detail::TRangeStaticCast<TBranch>(branches)) {
+      branch->ResetBit(kMustCleanup);
+      TObjArray *subBranches = branch->GetListOfBranches();
+      ClearMustCleanupBits(*subBranches);
+      TObjArray *leaves = branch->GetListOfLeaves();
+      if (leaves->GetEntries() > 0 && leaves->At(0)->TestBit(kMustCleanup) == true) {
+         for (TObject *leaf : *leaves)
+            leaf->ResetBit(kMustCleanup);
+      }
+   }
+}
+
+/// \brief Create a TChain object with options that avoid common causes of thread contention.
+///
+/// In particular, set its kWithoutGlobalRegistration mode and reset its kMustCleanup bit.
+std::unique_ptr<TChain> MakeChainForMT(const std::string &name, const std::string &title)
+{
+   auto c = std::make_unique<TChain>(name.c_str(), title.c_str(), TChain::kWithoutGlobalRegistration);
+   c->ResetBit(TObject::kMustCleanup);
+   return c;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// \brief Create friends from the main TTree.
+std::vector<std::unique_ptr<TChain>> MakeFriends(const ROOT::TreeUtils::RFriendInfo &finfo)
+{
+   std::vector<std::unique_ptr<TChain>> friends;
+   const auto nFriends = finfo.fFriendNames.size();
+   friends.reserve(nFriends);
+
+   for (std::size_t i = 0u; i < nFriends; ++i) {
+      const auto &thisFriendName = finfo.fFriendNames[i].first;
+      const auto &thisFriendFileNames = finfo.fFriendFileNames[i];
+      const auto &thisFriendChainSubNames = finfo.fFriendChainSubNames[i];
+      const auto &thisFriendEntries = finfo.fNEntriesPerTreePerFriend[i];
+
+      // Build a friend chain
+      auto frChain = ROOT::Internal::TreeUtils::MakeChainForMT(thisFriendName);
+      if (thisFriendChainSubNames.empty()) {
+         // The friend is a TTree. It's safe to add to the chain the filename directly.
+         frChain->Add(thisFriendFileNames[0].c_str(), thisFriendEntries[0]);
+      } else {
+         // Otherwise, the new friend chain needs to be built using the nomenclature
+         // "filename?#treename" as argument to `TChain::Add`
+         for (std::size_t j = 0u; j < thisFriendFileNames.size(); ++j) {
+            frChain->Add((thisFriendFileNames[j] + "?#" + thisFriendChainSubNames[j]).c_str(), thisFriendEntries[j]);
+         }
+      }
+
+      auto &treeIndex = finfo.fTreeIndexInfos[i];
+      if (treeIndex) {
+         auto *copyOfIndex = static_cast<TVirtualIndex *>(treeIndex->Clone());
+         copyOfIndex->SetTree(frChain.get());
+         frChain->SetTreeIndex(copyOfIndex);
+      }
+
+      friends.emplace_back(std::move(frChain));
+   }
+
+   return friends;
 }
 
 } // namespace TreeUtils

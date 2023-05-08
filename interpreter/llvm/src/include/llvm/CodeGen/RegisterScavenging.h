@@ -51,7 +51,7 @@ class RegScavenger {
 
     /// If non-zero, the specific register is currently being
     /// scavenged. That is, it is spilled to this scavenging stack slot.
-    unsigned Reg = 0;
+    Register Reg;
 
     /// The instruction that restores the scavenged register from stack.
     const MachineInstr *Restore = nullptr;
@@ -89,15 +89,6 @@ public:
     while (MBBI != I) forward();
   }
 
-  /// Invert the behavior of forward() on the current instruction (undo the
-  /// changes to the available registers made by forward()).
-  void unprocess();
-
-  /// Unprocess instructions until you reach the provided iterator.
-  void unprocess(MachineBasicBlock::iterator I) {
-    while (MBBI != I) unprocess();
-  }
-
   /// Update internal register state and move MBB iterator backwards.
   /// Contrary to unprocess() this method gives precise results even in the
   /// absence of kill flags.
@@ -119,14 +110,14 @@ public:
   MachineBasicBlock::iterator getCurrentPosition() const { return MBBI; }
 
   /// Return if a specific register is currently used.
-  bool isRegUsed(unsigned Reg, bool includeReserved = true) const;
+  bool isRegUsed(Register Reg, bool includeReserved = true) const;
 
   /// Return all available registers in the register class in Mask.
   BitVector getRegsAvailable(const TargetRegisterClass *RC);
 
   /// Find an unused register of the specified register class.
   /// Return 0 if none is found.
-  unsigned FindUnusedReg(const TargetRegisterClass *RC) const;
+  Register FindUnusedReg(const TargetRegisterClass *RC) const;
 
   /// Add a scavenging frame index.
   void addScavengingFrameIndex(int FI) {
@@ -160,10 +151,10 @@ public:
   ///
   /// If \p AllowSpill is false, fail if a spill is required to make the
   /// register available, and return NoRegister.
-  unsigned scavengeRegister(const TargetRegisterClass *RC,
+  Register scavengeRegister(const TargetRegisterClass *RC,
                             MachineBasicBlock::iterator I, int SPAdj,
                             bool AllowSpill = true);
-  unsigned scavengeRegister(const TargetRegisterClass *RegClass, int SPAdj,
+  Register scavengeRegister(const TargetRegisterClass *RegClass, int SPAdj,
                             bool AllowSpill = true) {
     return scavengeRegister(RegClass, MBBI, SPAdj, AllowSpill);
   }
@@ -177,17 +168,17 @@ public:
   ///
   /// If \p AllowSpill is false, fail if a spill is required to make the
   /// register available, and return NoRegister.
-  unsigned scavengeRegisterBackwards(const TargetRegisterClass &RC,
+  Register scavengeRegisterBackwards(const TargetRegisterClass &RC,
                                      MachineBasicBlock::iterator To,
                                      bool RestoreAfter, int SPAdj,
                                      bool AllowSpill = true);
 
   /// Tell the scavenger a register is used.
-  void setRegUsed(unsigned Reg, LaneBitmask LaneMask = LaneBitmask::getAll());
+  void setRegUsed(Register Reg, LaneBitmask LaneMask = LaneBitmask::getAll());
 
 private:
   /// Returns true if a register is reserved. It is never "unused".
-  bool isReserved(unsigned Reg) const { return MRI->isReserved(Reg); }
+  bool isReserved(Register Reg) const { return MRI->isReserved(Reg); }
 
   /// setUsed / setUnused - Mark the state of one or a number of register units.
   ///
@@ -203,16 +194,16 @@ private:
   void determineKillsAndDefs();
 
   /// Add all Reg Units that Reg contains to BV.
-  void addRegUnits(BitVector &BV, unsigned Reg);
+  void addRegUnits(BitVector &BV, MCRegister Reg);
 
   /// Remove all Reg Units that \p Reg contains from \p BV.
-  void removeRegUnits(BitVector &BV, unsigned Reg);
+  void removeRegUnits(BitVector &BV, MCRegister Reg);
 
   /// Return the candidate register that is unused for the longest after
   /// StartMI. UseMI is set to the instruction where the search stopped.
   ///
   /// No more than InstrLimit instructions are inspected.
-  unsigned findSurvivorReg(MachineBasicBlock::iterator StartMI,
+  Register findSurvivorReg(MachineBasicBlock::iterator StartMI,
                            BitVector &Candidates,
                            unsigned InstrLimit,
                            MachineBasicBlock::iterator &UseMI);
@@ -225,7 +216,7 @@ private:
 
   /// Spill a register after position \p After and reload it before position
   /// \p UseMI.
-  ScavengedInfo &spill(unsigned Reg, const TargetRegisterClass &RC, int SPAdj,
+  ScavengedInfo &spill(Register Reg, const TargetRegisterClass &RC, int SPAdj,
                        MachineBasicBlock::iterator Before,
                        MachineBasicBlock::iterator &UseMI);
 };

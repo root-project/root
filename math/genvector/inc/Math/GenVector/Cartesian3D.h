@@ -38,6 +38,8 @@ namespace Math {
       (x, y, z coordinates)
 
       @ingroup GenVector
+
+      @sa Overview of the @ref GenVector "physics vector library"
   */
 
 template <class T = double>

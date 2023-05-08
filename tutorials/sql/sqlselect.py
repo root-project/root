@@ -1,6 +1,6 @@
 ## \file
 ## \ingroup tutorial_sql
-## \notebook -nodraw
+##
 ## Query example to MySQL test database.
 ## Example of query by using the test database made in MySQL, you need the
 ## database test installed in localhost, with user nobody without password.

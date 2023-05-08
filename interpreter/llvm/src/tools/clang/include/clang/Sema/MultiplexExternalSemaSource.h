@@ -36,6 +36,8 @@ namespace clang {
 /// external AST sources that also provide information for semantic
 /// analysis.
 class MultiplexExternalSemaSource : public ExternalSemaSource {
+  /// LLVM-style RTTI.
+  static char ID;
 
 private:
   SmallVector<ExternalSemaSource *, 2> Sources; // doesn't own them.
@@ -150,8 +152,6 @@ public:
 
   /// Retrieve the module that corresponds to the given module ID.
   Module *getModule(unsigned ID) override;
-
-  bool DeclIsFromPCHWithObjectFile(const Decl *D) override;
 
   /// Perform layout on the given record.
   ///
@@ -330,6 +330,15 @@ public:
       llvm::MapVector<const FunctionDecl *, std::unique_ptr<LateParsedTemplate>>
           &LPTMap) override;
 
+  /// Read the set of decls to be checked for deferred diags.
+  ///
+  /// The external source should append its own potentially emitted function
+  /// and variable decls which may cause deferred diags. Note that this routine
+  /// may be invoked multiple times; the external source should take care not to
+  /// introduce the same declarations repeatedly.
+  void ReadDeclsToCheckForDeferredDiags(
+      llvm::SmallSetVector<Decl *, 4> &Decls) override;
+
   /// \copydoc ExternalSemaSource::CorrectTypo
   /// \note Returns the first nonempty correction.
   TypoCorrection CorrectTypo(const DeclarationNameInfo &Typo,
@@ -352,9 +361,13 @@ public:
   bool MaybeDiagnoseMissingCompleteType(SourceLocation Loc,
                                         QualType T) override;
 
-  // isa/cast/dyn_cast support
-  static bool classof(const MultiplexExternalSemaSource*) { return true; }
-  //static bool classof(const ExternalSemaSource*) { return true; }
+  /// LLVM-style RTTI.
+  /// \{
+  bool isA(const void *ClassID) const override {
+    return ClassID == &ID || ExternalSemaSource::isA(ClassID);
+  }
+  static bool classof(const ExternalASTSource *S) { return S->isA(&ID); }
+  /// \}
 };
 
 } // end namespace clang

@@ -100,10 +100,10 @@ namespace TMVA {
       Int_t            fPdfMaxSmooth;
       //      mutable Event*   fTransformedEvent;
 
-      std::vector< std::vector< TH1F* > >      fCumulativeDist;   //! The Cumulative distributions
-      //std::vector< std::vector< TGraph* > >    fCumulativeGraph;  //! The Cumulative distributions
-      //std::vector< std::vector< TSpline3* > >  fCumulativeSpline; //! The Cumulative distributions
-      std::vector< std::vector< PDF*> >         fCumulativePDF;    //  The cumulative PDF
+      std::vector< std::vector< TH1F* > >      fCumulativeDist;     ///<! The Cumulative distributions
+      //std::vector< std::vector< TGraph* > >    fCumulativeGraph;  ///<! The Cumulative distributions
+      //std::vector< std::vector< TSpline3* > >  fCumulativeSpline; ///<! The Cumulative distributions
+      std::vector< std::vector< PDF*> >         fCumulativePDF;     ///<  The cumulative PDF
 
       void GetCumulativeDist( const std::vector<Event*>& );
       void CleanUpCumulativeArrays(TString opt = "ALL");

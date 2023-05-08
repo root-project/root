@@ -9,17 +9,18 @@
 #ifndef LLVM_ANALYSIS_TARGETLIBRARYINFO_H
 #define LLVM_ANALYSIS_TARGETLIBRARYINFO_H
 
+#include "llvm/ADT/BitVector.h"
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/Optional.h"
-#include "llvm/ADT/Triple.h"
-#include "llvm/IR/CallSite.h"
 #include "llvm/IR/Function.h"
+#include "llvm/IR/InstrTypes.h"
 #include "llvm/IR/Module.h"
 #include "llvm/IR/PassManager.h"
 #include "llvm/Pass.h"
 
 namespace llvm {
 template <typename T> class ArrayRef;
+class Triple;
 
 /// Describes a possible vectorization of a function.
 /// Function 'VectorFnName' is equivalent to 'ScalarFnName' vectorized
@@ -27,14 +28,15 @@ template <typename T> class ArrayRef;
 struct VecDesc {
   StringRef ScalarFnName;
   StringRef VectorFnName;
-  unsigned VectorizationFactor;
+  ElementCount VectorizationFactor;
 };
 
-  enum LibFunc {
+  enum LibFunc : unsigned {
 #define TLI_DEFINE_ENUM
 #include "llvm/Analysis/TargetLibraryInfo.def"
 
-    NumLibFuncs
+    NumLibFuncs,
+    NotLibFunc
   };
 
 /// Implementation of the target library information.
@@ -48,8 +50,9 @@ class TargetLibraryInfoImpl {
 
   unsigned char AvailableArray[(NumLibFuncs+3)/4];
   llvm::DenseMap<unsigned, std::string> CustomNames;
-  static StringRef const StandardNames[NumLibFuncs];
+  static StringLiteral const StandardNames[NumLibFuncs];
   bool ShouldExtI32Param, ShouldExtI32Return, ShouldSignExtI32Param;
+  unsigned SizeOfInt;
 
   enum AvailabilityState {
     StandardName = 3, // (memset to all ones)
@@ -84,10 +87,12 @@ public:
   /// addVectorizableFunctionsFromVecLib for filling up the tables of
   /// vectorizable functions.
   enum VectorLibrary {
-    NoLibrary,  // Don't use any vector library.
-    Accelerate, // Use Accelerate framework.
-    MASSV,      // IBM MASS vector library.
-    SVML        // Intel short vector math library.
+    NoLibrary,        // Don't use any vector library.
+    Accelerate,       // Use Accelerate framework.
+    DarwinLibSystemM, // Use Darwin's libsystem_m.
+    LIBMVEC_X86,      // GLIBC Vector Math library.
+    MASSV,            // IBM MASS vector library.
+    SVML              // Intel short vector math library.
   };
 
   TargetLibraryInfoImpl();
@@ -127,7 +132,7 @@ public:
   void setAvailableWithName(LibFunc F, StringRef Name) {
     if (StandardNames[F] != Name) {
       setState(F, CustomName);
-      CustomNames[F] = Name;
+      CustomNames[F] = std::string(Name);
       assert(CustomNames.find(F) != CustomNames.end());
     } else {
       setState(F, StandardName);
@@ -149,7 +154,7 @@ public:
 
   /// Return true if the function F has a vector equivalent with vectorization
   /// factor VF.
-  bool isFunctionVectorizable(StringRef F, unsigned VF) const {
+  bool isFunctionVectorizable(StringRef F, const ElementCount &VF) const {
     return !getVectorizedFunction(F, VF).empty();
   }
 
@@ -159,19 +164,7 @@ public:
 
   /// Return the name of the equivalent of F, vectorized with factor VF. If no
   /// such mapping exists, return the empty string.
-  StringRef getVectorizedFunction(StringRef F, unsigned VF) const;
-
-  /// Return true if the function F has a scalar equivalent, and set VF to be
-  /// the vectorization factor.
-  bool isFunctionScalarizable(StringRef F, unsigned &VF) const {
-    return !getScalarizedFunction(F, VF).empty();
-  }
-
-  /// Return the name of the equivalent of F, scalarized. If no such mapping
-  /// exists, return the empty string.
-  ///
-  /// Set VF to the vectorization factor.
-  StringRef getScalarizedFunction(StringRef F, unsigned &VF) const;
+  StringRef getVectorizedFunction(StringRef F, const ElementCount &VF) const;
 
   /// Set to true iff i32 parameters to library functions should have signext
   /// or zeroext attributes if they correspond to C-level int or unsigned int,
@@ -196,6 +189,26 @@ public:
   /// Returns the size of the wchar_t type in bytes or 0 if the size is unknown.
   /// This queries the 'wchar_size' metadata.
   unsigned getWCharSize(const Module &M) const;
+
+  /// Get size of a C-level int or unsigned int, in bits.
+  unsigned getIntSize() const {
+    return SizeOfInt;
+  }
+
+  /// Initialize the C-level size of an integer.
+  void setIntSize(unsigned Bits) {
+    SizeOfInt = Bits;
+  }
+
+  /// Returns the largest vectorization factor used in the list of
+  /// vector functions.
+  void getWidestVF(StringRef ScalarF, ElementCount &FixedVF,
+                   ElementCount &Scalable) const;
+
+  /// Returns true if call site / callee has cdecl-compatible calling
+  /// conventions.
+  static bool isCallingConvCCompatible(CallBase *CI);
+  static bool isCallingConvCCompatible(Function *Callee);
 };
 
 /// Provides information about what library functions are available for
@@ -207,21 +220,66 @@ class TargetLibraryInfo {
   friend class TargetLibraryAnalysis;
   friend class TargetLibraryInfoWrapperPass;
 
+  /// The global (module level) TLI info.
   const TargetLibraryInfoImpl *Impl;
 
+  /// Support for -fno-builtin* options as function attributes, overrides
+  /// information in global TargetLibraryInfoImpl.
+  BitVector OverrideAsUnavailable;
+
 public:
-  explicit TargetLibraryInfo(const TargetLibraryInfoImpl &Impl) : Impl(&Impl) {}
+  explicit TargetLibraryInfo(const TargetLibraryInfoImpl &Impl,
+                             Optional<const Function *> F = None)
+      : Impl(&Impl), OverrideAsUnavailable(NumLibFuncs) {
+    if (!F)
+      return;
+    if ((*F)->hasFnAttribute("no-builtins"))
+      disableAllFunctions();
+    else {
+      // Disable individual libc/libm calls in TargetLibraryInfo.
+      LibFunc LF;
+      AttributeSet FnAttrs = (*F)->getAttributes().getFnAttributes();
+      for (const Attribute &Attr : FnAttrs) {
+        if (!Attr.isStringAttribute())
+          continue;
+        auto AttrStr = Attr.getKindAsString();
+        if (!AttrStr.consume_front("no-builtin-"))
+          continue;
+        if (getLibFunc(AttrStr, LF))
+          setUnavailable(LF);
+      }
+    }
+  }
 
   // Provide value semantics.
-  TargetLibraryInfo(const TargetLibraryInfo &TLI) : Impl(TLI.Impl) {}
-  TargetLibraryInfo(TargetLibraryInfo &&TLI) : Impl(TLI.Impl) {}
+  TargetLibraryInfo(const TargetLibraryInfo &TLI)
+      : Impl(TLI.Impl), OverrideAsUnavailable(TLI.OverrideAsUnavailable) {}
+  TargetLibraryInfo(TargetLibraryInfo &&TLI)
+      : Impl(TLI.Impl), OverrideAsUnavailable(TLI.OverrideAsUnavailable) {}
   TargetLibraryInfo &operator=(const TargetLibraryInfo &TLI) {
     Impl = TLI.Impl;
+    OverrideAsUnavailable = TLI.OverrideAsUnavailable;
     return *this;
   }
   TargetLibraryInfo &operator=(TargetLibraryInfo &&TLI) {
     Impl = TLI.Impl;
+    OverrideAsUnavailable = TLI.OverrideAsUnavailable;
     return *this;
+  }
+
+  /// Determine whether a callee with the given TLI can be inlined into
+  /// caller with this TLI, based on 'nobuiltin' attributes. When requested,
+  /// allow inlining into a caller with a superset of the callee's nobuiltin
+  /// attributes, which is conservatively correct.
+  bool areInlineCompatible(const TargetLibraryInfo &CalleeTLI,
+                           bool AllowCallerSuperset) const {
+    if (!AllowCallerSuperset)
+      return OverrideAsUnavailable == CalleeTLI.OverrideAsUnavailable;
+    BitVector B = OverrideAsUnavailable;
+    B |= CalleeTLI.OverrideAsUnavailable;
+    // We can inline if the union of the caller and callee's nobuiltin
+    // attributes is no stricter than the caller's nobuiltin attributes.
+    return B == OverrideAsUnavailable;
   }
 
   /// Searches for a particular function name.
@@ -236,31 +294,49 @@ public:
     return Impl->getLibFunc(FDecl, F);
   }
 
-  /// If a callsite does not have the 'nobuiltin' attribute, return if the
+  /// If a callbase does not have the 'nobuiltin' attribute, return if the
   /// called function is a known library function and set F to that function.
-  bool getLibFunc(ImmutableCallSite CS, LibFunc &F) const {
-    return !CS.isNoBuiltin() && CS.getCalledFunction() &&
-           getLibFunc(*(CS.getCalledFunction()), F);
+  bool getLibFunc(const CallBase &CB, LibFunc &F) const {
+    return !CB.isNoBuiltin() && CB.getCalledFunction() &&
+           getLibFunc(*(CB.getCalledFunction()), F);
+  }
+
+  /// Disables all builtins.
+  ///
+  /// This can be used for options like -fno-builtin.
+  void disableAllFunctions() LLVM_ATTRIBUTE_UNUSED {
+    OverrideAsUnavailable.set();
+  }
+
+  /// Forces a function to be marked as unavailable.
+  void setUnavailable(LibFunc F) LLVM_ATTRIBUTE_UNUSED {
+    OverrideAsUnavailable.set(F);
+  }
+
+  TargetLibraryInfoImpl::AvailabilityState getState(LibFunc F) const {
+    if (OverrideAsUnavailable[F])
+      return TargetLibraryInfoImpl::Unavailable;
+    return Impl->getState(F);
   }
 
   /// Tests whether a library function is available.
   bool has(LibFunc F) const {
-    return Impl->getState(F) != TargetLibraryInfoImpl::Unavailable;
+    return getState(F) != TargetLibraryInfoImpl::Unavailable;
   }
-  bool isFunctionVectorizable(StringRef F, unsigned VF) const {
+  bool isFunctionVectorizable(StringRef F, const ElementCount &VF) const {
     return Impl->isFunctionVectorizable(F, VF);
   }
   bool isFunctionVectorizable(StringRef F) const {
     return Impl->isFunctionVectorizable(F);
   }
-  StringRef getVectorizedFunction(StringRef F, unsigned VF) const {
+  StringRef getVectorizedFunction(StringRef F, const ElementCount &VF) const {
     return Impl->getVectorizedFunction(F, VF);
   }
 
   /// Tests if the function is both available and a candidate for optimized code
   /// generation.
   bool hasOptimizedCodeGen(LibFunc F) const {
-    if (Impl->getState(F) == TargetLibraryInfoImpl::Unavailable)
+    if (getState(F) == TargetLibraryInfoImpl::Unavailable)
       return false;
     switch (F) {
     default: break;
@@ -281,6 +357,7 @@ public:
     case LibFunc_trunc:        case LibFunc_truncf:     case LibFunc_truncl:
     case LibFunc_log2:         case LibFunc_log2f:      case LibFunc_log2l:
     case LibFunc_exp2:         case LibFunc_exp2f:      case LibFunc_exp2l:
+    case LibFunc_memcpy:       case LibFunc_memset:     case LibFunc_memmove:
     case LibFunc_memcmp:       case LibFunc_bcmp:       case LibFunc_strcmp:
     case LibFunc_strcpy:       case LibFunc_stpcpy:     case LibFunc_strlen:
     case LibFunc_strnlen:      case LibFunc_memchr:     case LibFunc_mempcpy:
@@ -290,7 +367,7 @@ public:
   }
 
   StringRef getName(LibFunc F) const {
-    auto State = Impl->getState(F);
+    auto State = getState(F);
     if (State == TargetLibraryInfoImpl::Unavailable)
       return StringRef();
     if (State == TargetLibraryInfoImpl::StandardName)
@@ -324,6 +401,11 @@ public:
     return Impl->getWCharSize(M);
   }
 
+  /// \copydoc TargetLibraryInfoImpl::getIntSize()
+  unsigned getIntSize() const {
+    return Impl->getIntSize();
+  }
+
   /// Handle invalidation from the pass manager.
   ///
   /// If we try to invalidate this info, just return false. It cannot become
@@ -335,6 +417,17 @@ public:
   bool invalidate(Function &, const PreservedAnalyses &,
                   FunctionAnalysisManager::Invalidator &) {
     return false;
+  }
+  /// Returns the largest vectorization factor used in the list of
+  /// vector functions.
+  void getWidestVF(StringRef ScalarF, ElementCount &FixedVF,
+                   ElementCount &ScalableVF) const {
+    Impl->getWidestVF(ScalarF, FixedVF, ScalableVF);
+  }
+
+  /// Check if the function "F" is listed in a library known to LLVM.
+  bool isKnownVectorFunctionInLibrary(StringRef F) const {
+    return this->isFunctionVectorizable(F);
   }
 };
 
@@ -352,30 +445,24 @@ public:
   /// module.
   TargetLibraryAnalysis() {}
 
-  /// Construct a library analysis with preset info.
+  /// Construct a library analysis with baseline Module-level info.
   ///
-  /// This will directly copy the preset info into the result without
-  /// consulting the module's triple.
-  TargetLibraryAnalysis(TargetLibraryInfoImpl PresetInfoImpl)
-      : PresetInfoImpl(std::move(PresetInfoImpl)) {}
+  /// This will be supplemented with Function-specific info in the Result.
+  TargetLibraryAnalysis(TargetLibraryInfoImpl BaselineInfoImpl)
+      : BaselineInfoImpl(std::move(BaselineInfoImpl)) {}
 
-  TargetLibraryInfo run(Module &M, ModuleAnalysisManager &);
-  TargetLibraryInfo run(Function &F, FunctionAnalysisManager &);
+  TargetLibraryInfo run(const Function &F, FunctionAnalysisManager &);
 
 private:
   friend AnalysisInfoMixin<TargetLibraryAnalysis>;
   static AnalysisKey Key;
 
-  Optional<TargetLibraryInfoImpl> PresetInfoImpl;
-
-  StringMap<std::unique_ptr<TargetLibraryInfoImpl>> Impls;
-
-  TargetLibraryInfoImpl &lookupInfoImpl(const Triple &T);
+  Optional<TargetLibraryInfoImpl> BaselineInfoImpl;
 };
 
 class TargetLibraryInfoWrapperPass : public ImmutablePass {
-  TargetLibraryInfoImpl TLIImpl;
-  TargetLibraryInfo TLI;
+  TargetLibraryAnalysis TLA;
+  Optional<TargetLibraryInfo> TLI;
 
   virtual void anchor();
 
@@ -385,8 +472,11 @@ public:
   explicit TargetLibraryInfoWrapperPass(const Triple &T);
   explicit TargetLibraryInfoWrapperPass(const TargetLibraryInfoImpl &TLI);
 
-  TargetLibraryInfo &getTLI() { return TLI; }
-  const TargetLibraryInfo &getTLI() const { return TLI; }
+  TargetLibraryInfo &getTLI(const Function &F) {
+    FunctionAnalysisManager DummyFAM;
+    TLI = TLA.run(F, DummyFAM);
+    return *TLI;
+  }
 };
 
 } // end namespace llvm

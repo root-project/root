@@ -1,17 +1,224 @@
-from itertools import zip_longest
+from __future__ import annotations
+
+from abc import ABC, abstractmethod
 import logging
-from typing import Optional
 import warnings
+
+from collections import Counter, deque
+from dataclasses import dataclass
+from functools import partial, singledispatch
+from itertools import zip_longest
+from typing import Callable, Deque, Dict, Iterable, List, Optional, TYPE_CHECKING, Union
 
 import ROOT
 
-from DistRDF import Node
-from DistRDF import Ranges
+from DistRDF import ComputationGraphGenerator, Ranges
+from DistRDF.Backends.Base import distrdf_mapper, distrdf_reducer
+from DistRDF.Node import Node
+from DistRDF.Operation import Action, InstantAction, Operation
+from DistRDF.Backends import Utils
+
+if TYPE_CHECKING:
+    from DistRDF.Backends.Base import BaseBackend, TaskResult
 
 logger = logging.getLogger(__name__)
 
 
-def get_headnode(npartitions, *args):
+@singledispatch
+def _append_node_to_actions(operation: Operation, node: Node, actions: List[Node]) -> None:
+    """
+    Appends the input node to the list of action nodes, if the operation of the
+    node is an action.
+    """
+    pass
+
+
+@_append_node_to_actions.register(Action)
+@_append_node_to_actions.register(InstantAction)
+def _(operation: Union[Action, InstantAction], node: Node, actions: List[Node]) -> None:
+    actions.append(node)
+
+
+@dataclass
+class TaskObjects:
+    """
+    Holds objects needed in a distributed task.
+    Attributes:
+        rdf: The starting node of the RDataFrame computation graph. Only in a
+            TTree-based run, if the task has nothing to process then this
+            attribute is None.
+        entries_in_trees: A struct holding the amount of processed entries in
+            the task, as well as a dictionary where each key is an identifier
+            for a tree opened in the task and the value is the number of entries
+            in that tree. This attribute is not None only in a TTree-based run.
+    """
+    rdf: Optional[ROOT.RDF.RNode]
+    entries_in_trees: Optional[Ranges.TaskTreeEntries]
+
+
+class HeadNode(Node, ABC):
+    """
+    The head node of the computation graph. Keeps record of all nodes in the
+    graph, is then able to generate a flat representation to be sent to the
+    distributed workers.
+
+    Attributes:
+        backend: A reference to the instance of distributed backend that will
+            execute this computation graph.
+
+        graph_nodes: A deque of references to the nodes belonging to this graph.
+
+        node_counter: A counter of how many nodes were created in the graph of
+            this head node, starting from zero.
+    """
+
+    def __init__(self, backend: BaseBackend, npartitions: Optional[int], localdf: ROOT.RDataFrame):
+        super().__init__(lambda: self)
+
+        self.backend = backend
+
+        self.node_counter: int = 0
+        # It is important to have a double-ended queue because we need to
+        # traverse the nodes in different ways w.r.t. their insertion order.
+        # While pruning the graph, we need to check leaf nodes before their
+        # parents, so if a child is pruned then it also decrements the counter
+        # of children of its parent. Thus, we need a bottom-up traversal.
+        # While executing the graph in a task, we need to create the RDF nodes
+        # in the order the user requested them, e.g. starting from the
+        # RDataFrame itself, then calling its direct children, their children
+        # and so on. Thus, we need a top-down traversal.
+        self.graph_nodes: Deque[Node] = deque([self])
+
+        # Internal attribute to keep track of the number of partitions. We also
+        # check whether it was specified by the user when creating the dataframe.
+        # If so, this attribute will not be updated when triggering.
+        self._npartitions = npartitions
+        self._user_specified_npartitions = True if npartitions is not None else False
+
+        # Internal RDataFrame object, useful to expose information such as
+        # column names.
+        self._localdf = localdf
+
+    @property
+    def npartitions(self) -> Optional[int]:
+        return self._npartitions
+
+    @npartitions.setter
+    def npartitions(self, value: int) -> None:
+        """
+        The number of partitions for this dataframe is updated only if the user
+        did not initially specify one when creating the dataframe.
+        """
+        if not self._user_specified_npartitions:
+            self._npartitions = value
+
+    def _prune_graph(self):
+        """
+        Prunes nodes from the graph under certain conditions. A node is pruned
+        if it has no children and the user has no references to it. The internal
+        representation of the graph is traversed in such a way so that leaf
+        nodes are checked before their parents.
+        """
+        logger.debug("Starting computational graph pruning")
+        self.graph_nodes = deque(node for node in self.graph_nodes if not node.is_prunable())
+        logger.debug("Ended computational graph pruning")
+
+    def _get_action_nodes(self) -> List[Node]:
+        """Generates a list of nodes in the graph that are actions."""
+        # This function is called after distributed execution of the graph, no
+        # need to repeat the pruning
+        action_nodes: List[Node] = []
+        for node in reversed(self.graph_nodes):
+            _append_node_to_actions(node.operation, node, action_nodes)
+        return action_nodes
+
+    def _generate_graph_dict(self) -> Dict[int, Node]:
+        """
+        Generates a dictionary holding information about all nodes in the graph.
+        It is then given to the distributed scheduler.
+        """
+        # Need to prune the graph before sending it for distributed execution
+        self._prune_graph()
+        # We need to store references of each node id separately from the node
+        # objects themselves. In a distributed task, we need to know for any
+        # node which node is its parent (in order to execute an RDF operation
+        # on the right node). We can't serialize the reference to the parent
+        # node that each node object has, since that would trigger recursive
+        # serialization of the parent(s) of parent(s) nodes.
+        return {node.node_id: node for node in reversed(self.graph_nodes)}
+
+    @abstractmethod
+    def _build_ranges(self) -> List[Ranges.DataRange]:
+        pass
+
+    @abstractmethod
+    def _generate_rdf_creator(self) -> Callable[[Ranges.DataRange], TaskObjects]:
+        pass
+
+    @abstractmethod
+    def _handle_returned_values(self, values: TaskResult) -> Iterable:
+        pass
+
+    def execute_graph(self) -> None:
+        """
+        Executes an RDataFrame computation graph on a distributed backend.
+
+        The needed ingredients are:
+
+        - A collection of logical ranges in which the dataset is split. Each
+          range is going to be assigned to a distributed task.
+        - A representation of the computation graph that the task needs to
+          execute.
+        - A way to generate an RDataFrame instance starting from the logical
+          range of the task.
+        - Optionally, some setup code to be run at the beginning of each task.
+
+        These are used as inputs to a generic mapper function. Results from the
+        various mappers are then reduced and the final results are retrieved in
+        the local session. These are properly handled to perform extra checks,
+        depending on the data source. Finally, the local user-facing nodes are
+        filled with the values that were computed distributedly so that they
+        can be accessed in the application like with local RDataFrame.
+        """
+        # Check if the workflow must be generated in optimized mode
+        optimized = ROOT.RDF.Experimental.Distributed.optimized
+
+        # Updates the number of partitions for this dataframe if the user did
+        # not specify one initially. This is done each time the computations are
+        # triggered, in case the user changed the resource configuration
+        # between runs (e.g. changing the number of available cores).
+        self.npartitions = self.backend.optimize_npartitions()
+
+        if optimized:
+            computation_graph_callable = partial(
+                ComputationGraphGenerator.run_with_cppworkflow, self._generate_graph_dict())
+        else:
+            computation_graph_callable = partial(
+                ComputationGraphGenerator.trigger_computation_graph, self._generate_graph_dict())
+
+        mapper = partial(distrdf_mapper,
+                         build_rdf_from_range=self._generate_rdf_creator(),
+                         computation_graph_callable=computation_graph_callable,
+                         initialization_fn=self.backend.initialization,
+                         optimized=optimized)
+
+        # Execute graph distributedly and return the aggregated results from all
+        # tasks
+        returned_values = self.backend.ProcessAndMerge(self._build_ranges(), mapper, distrdf_reducer)
+        # Perform any extra checks that may be needed according to the
+        # type of the head node
+        final_values = self._handle_returned_values(returned_values)
+        # List of action nodes in the same order as values
+        local_nodes = self._get_action_nodes()
+        # Set the value of every action node
+        for node, value in zip(local_nodes, final_values):
+            Utils.set_value_on_node(value, node, self.backend)
+
+    def GetColumnNames(self) -> Iterable[str]:
+        return self._localdf.GetColumnNames()
+
+
+def get_headnode(backend: BaseBackend, npartitions: int, *args) -> HeadNode:
     """
     A factory for different kinds of head nodes of the RDataFrame computation
     graph, depending on the arguments to the RDataFrame constructor. Currently
@@ -21,7 +228,7 @@ def get_headnode(npartitions, *args):
 
     # Early check that arguments are accepted by RDataFrame
     try:
-        ROOT.RDataFrame(*args)
+        localdf = ROOT.RDataFrame(*args)
     except TypeError:
         raise TypeError(("The arguments provided are not accepted by any RDataFrame constructor. "
                          "See the RDataFrame documentation for the accepted constructor argument types."))
@@ -29,13 +236,13 @@ def get_headnode(npartitions, *args):
     firstarg = args[0]
     if isinstance(firstarg, int):
         # RDataFrame(ULong64_t numEntries)
-        return EmptySourceHeadNode(npartitions, firstarg)
+        return EmptySourceHeadNode(backend, npartitions, localdf, firstarg)
     elif isinstance(firstarg, (ROOT.TTree, str)):
         # RDataFrame(std::string_view treeName, filenameglob, defaultBranches = {})
         # RDataFrame(std::string_view treename, filenames, defaultBranches = {})
         # RDataFrame(std::string_view treeName, dirPtr, defaultBranches = {})
         # RDataFrame(TTree &tree, const ColumnNames_t &defaultBranches = {})
-        return TreeHeadNode(npartitions, *args)
+        return TreeHeadNode(backend, npartitions, localdf, *args)
     else:
         raise RuntimeError(
             ("First argument {} of type {} is not recognised as a supported "
@@ -44,7 +251,7 @@ def get_headnode(npartitions, *args):
                 "can be processed distributedly.").format(firstarg, type(firstarg)))
 
 
-class EmptySourceHeadNode(Node.Node):
+class EmptySourceHeadNode(HeadNode):
     """
     The head node of a computation graph where the RDataFrame data source is
     empty and a number of sequential entries will be created at runtime. This
@@ -59,7 +266,7 @@ class EmptySourceHeadNode(Node.Node):
             for distributed execution.
     """
 
-    def __init__(self, npartitions, nentries):
+    def __init__(self, backend: BaseBackend, npartitions: Optional[int], localdf: ROOT.RDataFrame, nentries: int):
         """
         Creates a new RDataFrame instance for the given arguments.
 
@@ -69,12 +276,11 @@ class EmptySourceHeadNode(Node.Node):
             npartitions (int): The number of partitions the dataset will be
                 split in for distributed execution.
         """
-        super(EmptySourceHeadNode, self).__init__(None, None)
+        super().__init__(backend, npartitions, localdf)
 
         self.nentries = nentries
-        self.npartitions = npartitions
 
-    def build_ranges(self):
+    def _build_ranges(self) -> List[Ranges.DataRange]:
         """Build the ranges for this dataset."""
         # Empty datasets cannot be processed distributedly
         if not self.nentries:
@@ -92,7 +298,7 @@ class EmptySourceHeadNode(Node.Node):
             self.npartitions = self.nentries
         return Ranges.get_balanced_ranges(self.nentries, self.npartitions)
 
-    def generate_rdf_creator(self):
+    def _generate_rdf_creator(self) -> Callable[[Ranges.DataRange], TaskObjects]:
         """
         Generates a function that is responsible for building an instance of
         RDataFrame on a distributed mapper for a given entry range. Specific for
@@ -105,11 +311,19 @@ class EmptySourceHeadNode(Node.Node):
             """
             Builds an RDataFrame instance for a distributed mapper.
             """
-            return ROOT.RDataFrame(nentries).Range(current_range.start, current_range.end)
+            return TaskObjects(ROOT.RDataFrame(nentries).Range(current_range.start, current_range.end), None)
 
         return build_rdf_from_range
 
-class TreeHeadNode(Node.Node):
+    def _handle_returned_values(self, values: TaskResult) -> Iterable:
+        """
+        Handle values returned after distributed execution. No extra checks are
+        needed in the empty source case.
+        """
+        return values.mergeables
+
+
+class TreeHeadNode(HeadNode):
     """
     The head node of a computation graph where the RDataFrame data source is
     a TTree or a TChain. This head node is responsible for the following
@@ -143,7 +357,7 @@ class TreeHeadNode(Node.Node):
 
     """
 
-    def __init__(self, npartitions, *args):
+    def __init__(self, backend: BaseBackend, npartitions: Optional[int], localdf: ROOT.RDataFrame, *args):
         """
         Creates a new RDataFrame instance for the given arguments.
 
@@ -153,17 +367,25 @@ class TreeHeadNode(Node.Node):
             npartitions (int): The number of partitions the dataset will be
                 split in for distributed execution.
         """
-        super(TreeHeadNode, self).__init__(None, None)
-
-        self.npartitions = npartitions
+        super().__init__(backend, npartitions, localdf)
 
         self.defaultbranches = None
+        # Information about friend trees, if they are present.
         self.friendinfo: Optional[ROOT.Internal.TreeUtils.RFriendInfo] = None
 
         # Retrieve the TTree/TChain that will be processed
         if isinstance(args[0], ROOT.TTree):
             # RDataFrame(tree, defaultBranches = {})
             self.tree = args[0]
+            # TTreeIndex is not supported in distributed RDataFrame
+            list_of_friends = self.tree.GetListOfFriends()
+            if list_of_friends and list_of_friends.GetEntries() > 0:
+                for friend_element in list_of_friends:
+                    if friend_element.GetTree().GetTreeIndex():
+                        raise ValueError(
+                            f"Friend tree '{friend_element.GetName()}' has a TTreeIndex. "
+                            "This is not supported in distributed mode."
+                        )
             # Retrieve information about friend trees when user passes a TTree
             # or TChain object.
             fi = ROOT.Internal.TreeUtils.GetFriendInfo(args[0])
@@ -186,7 +408,6 @@ class TreeHeadNode(Node.Node):
                 self.tree = ROOT.TChain(args[0])
                 for filename in args[1]:
                     self.tree.Add(str(filename))
-            
             # In any of the three constructors considered in this branch, if
             # the user supplied three arguments then the third argument is a
             # list of default branches
@@ -199,52 +420,49 @@ class TreeHeadNode(Node.Node):
         self.subtreenames = [str(treename) for treename in ROOT.Internal.TreeUtils.GetTreeFullPaths(self.tree)]
         self.inputfiles = [str(filename) for filename in ROOT.Internal.TreeUtils.GetFileNamesFromTree(self.tree)]
 
-    def build_ranges(self):
+    def _build_ranges(self) -> List[Ranges.DataRange]:
         """Build the ranges for this dataset."""
-        # Empty datasets cannot be processed distributedly
-        if self.tree.GetEntries() == 0:
-            raise RuntimeError(
-                ("Cannot build a distributed RDataFrame with zero entries. "
-                 "Distributed computation will fail. "))
-
         logger.debug("Building ranges from dataset info:\n"
                      "main treename: %s\n"
                      "names of subtrees: %s\n"
                      "input files: %s\n", self.maintreename, self.subtreenames, self.inputfiles)
 
-        # Retrieve a tuple of clusters for all files of the tree
-        clustersinfiles = Ranges.get_clusters(self.subtreenames, self.inputfiles)
-        numclusters = len(clustersinfiles)
+        if logger.isEnabledFor(logging.DEBUG):
+            # Compute clusters and entries of the first tree in the dataset.
+            # This will call once TFile::Open, but we pay this cost to get an estimate
+            # on whether the number of requested partitions is reasonable.
+            # Depending on the cluster setup, this may still be quite costly, so
+            # we decide to pay the price only if the user explicitly requested
+            # warning logging.
+            clusters, entries = Ranges.get_clusters_and_entries(self.subtreenames[0], self.inputfiles[0])
+            # The file could contain an empty tree. In that case, the estimate will not be computed.
+            if entries > 0:
+                partitionsperfile = self.npartitions / len(self.inputfiles)
+                if partitionsperfile > len(clusters):
+                    logger.debug(
+                        "The number of requested partitions could be higher than the maximum amount of "
+                        "chunks the dataset can be split in. Some tasks could be doing no work. Consider "
+                        "setting the 'npartitions' parameter of the RDataFrame constructor to a lower value.")
 
-        # TODO: This shouldn't be triggered if len(clustersinfiles) == 1. The
-        # current minimum amount of partitions is 2. We need a robust reducer
-        # that smartly becomes no-op if npartitions == 1 to avoid this.
-        # Restrict `npartitions` if it's greater than clusters of the dataset
-        if self.npartitions > numclusters:
-            msg = ("Number of partitions is greater than number of clusters "
-                   "in the dataset. Using {} partition(s)".format(numclusters))
-            warnings.warn(msg, UserWarning, stacklevel=2)
-            self.npartitions = numclusters
+        return Ranges.get_percentage_ranges(self.subtreenames, self.inputfiles, self.npartitions, self.friendinfo)
 
-        logger.debug("%s clusters will be split along %s partitions.",
-                     numclusters, self.npartitions)
-
-        return Ranges.get_clustered_ranges(clustersinfiles, self.npartitions, self.friendinfo, self.subtreenames, self.inputfiles)
-
-    def generate_rdf_creator(self):
+    def _generate_rdf_creator(self) -> Callable[[Ranges.DataRange], TaskObjects]:
         """
         Generates a function that is responsible for building an instance of
         RDataFrame on a distributed mapper for a given entry range. Specific for
         the TTree data source.
         """
 
-        def attach_friend_info_if_present(current_range, ds):
+        def attach_friend_info_if_present(current_range: Ranges.TreeRange,
+                                          ds: ROOT.RDF.Experimental.RDatasetSpec) -> None:
             """
-            Adds info about friend trees to dataset specification.
+            Adds info about friend trees to the input chain. Also aligns the
+            starting and ending entry of the friend chain cache to those of the
+            main chain.
             """
+            # Gather information about friend trees. Check that we got an
+            # RFriendInfo struct and that it's not empty
             if (current_range.friendinfo is not None):
-                # Zip together the information about friend trees. Each
-                # element of the iterator represents a single friend tree.
                 # If the friend is a TChain, the zipped information looks like:
                 # (name, alias), (file1.root, file2.root, ...), (subname1, subname2, ...)
                 # If the friend is a TTree, the file list is made of
@@ -257,21 +475,65 @@ class TreeHeadNode(Node.Node):
                     current_range.friendinfo.fFriendChainSubNames
                 )
                 for (friend_name, friend_alias), friend_filenames, friend_chainsubnames in zipped_friendinfo:
-                    friends = list(zip_longest(friend_chainsubnames, friend_filenames, fillvalue=friend_name))
-                    ds.AddFriend(friends, friend_alias)
+                    friend_chainsubnames = friend_chainsubnames if len(friend_chainsubnames) > 0 else [friend_name]*len(friend_filenames)
+                    ds.WithGlobalFriends(friend_chainsubnames, friend_filenames, friend_alias)
 
-        def build_rdf_from_range(current_range):
+        def build_rdf_from_range(current_range: Ranges.TreeRangePerc) -> TaskObjects:
             """
             Builds an RDataFrame instance for a distributed mapper.
+
+            The function creates a TChain from the information contained in the
+            input range object. If the chain cannot be built, returns None.
             """
 
-            ds = ROOT.ROOT.Internal.RDF.RDatasetSpec(
-                zip(current_range.treenames, current_range.filenames),
-                (current_range.globalstart, current_range.globalend)
-            )
+            clustered_range, entries_in_trees = Ranges.get_clustered_range_from_percs(current_range)
 
-            attach_friend_info_if_present(current_range, ds)
+            if clustered_range is None:
+                return TaskObjects(None, entries_in_trees)
 
-            return ROOT.ROOT.Internal.RDF.MakeDataFrameFromSpec(ds)
+            ds = ROOT.RDF.Experimental.RDatasetSpec()
+            # add a sample with no name to represent the whole dataset
+            ds.AddSample(("", clustered_range.treenames, clustered_range.filenames))
+            ds.WithGlobalRange((clustered_range.globalstart, clustered_range.globalend))
+
+            attach_friend_info_if_present(clustered_range, ds)
+
+            return TaskObjects(ROOT.RDataFrame(ds), entries_in_trees)
 
         return build_rdf_from_range
+
+    def _handle_returned_values(self, values: TaskResult) -> Iterable:
+        """
+        Handle values returned after distributed execution. When the data source
+        is a TTree, check that exactly the input files and all the entries in
+        the dataset were processed during distributed execution.
+        """
+        if values.mergeables is None:
+            raise RuntimeError("The distributed execution returned no values. "
+                               "This can happen if all files in your dataset contain empty trees.")
+
+        # User could have requested to read the same file multiple times indeed
+        input_files_and_trees = [
+            f"{filename}/{treename}" for filename, treename in zip(self.inputfiles, self.subtreenames)
+        ]
+        files_counts = Counter(input_files_and_trees)
+
+        entries_in_trees = values.entries_in_trees
+        # Keys should be exactly the same
+        if files_counts.keys() != entries_in_trees.trees_with_entries.keys():
+            raise RuntimeError("The specified input files and the files that were "
+                                "actually processed are not the same:\n"
+                                f"Input files: {list(files_counts.keys())}\n"
+                                f"Processed files: {list(entries_in_trees.trees_with_entries.keys())}")
+
+        # Multiply the entries of each tree by the number of times it was
+        # requested by the user
+        for fullpath in files_counts:
+            entries_in_trees.trees_with_entries[fullpath] *= files_counts[fullpath]
+
+        total_dataset_entries = sum(entries_in_trees.trees_with_entries.values())
+        if entries_in_trees.processed_entries != total_dataset_entries:
+            raise RuntimeError(f"The dataset has {total_dataset_entries} entries, "
+                               f"but {entries_in_trees.processed_entries} were processed.")
+
+        return values.mergeables

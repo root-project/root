@@ -36,23 +36,18 @@ Error COFFReader::readExecutableHeaders(Object &Obj) const {
                                     DH->AddressOfNewExeHeader - sizeof(*DH));
 
   if (COFFObj.is64()) {
-    const pe32plus_header *PE32Plus = nullptr;
-    if (auto EC = COFFObj.getPE32PlusHeader(PE32Plus))
-      return errorCodeToError(EC);
-    Obj.PeHeader = *PE32Plus;
+    Obj.PeHeader = *COFFObj.getPE32PlusHeader();
   } else {
-    const pe32_header *PE32 = nullptr;
-    if (auto EC = COFFObj.getPE32Header(PE32))
-      return errorCodeToError(EC);
+    const pe32_header *PE32 = COFFObj.getPE32Header();
     copyPeHeader(Obj.PeHeader, *PE32);
     // The pe32plus_header (stored in Object) lacks the BaseOfData field.
     Obj.BaseOfData = PE32->BaseOfData;
   }
 
   for (size_t I = 0; I < Obj.PeHeader.NumberOfRvaAndSize; I++) {
-    const data_directory *Dir;
-    if (auto EC = COFFObj.getDataDirectory(I, Dir))
-      return errorCodeToError(EC);
+    const data_directory *Dir = COFFObj.getDataDirectory(I);
+    if (!Dir)
+      return errorCodeToError(object_error::parse_failed);
     Obj.DataDirectories.emplace_back(*Dir);
   }
   return Error::success();
@@ -62,12 +57,14 @@ Error COFFReader::readSections(Object &Obj) const {
   std::vector<Section> Sections;
   // Section indexing starts from 1.
   for (size_t I = 1, E = COFFObj.getNumberOfSections(); I <= E; I++) {
-    const coff_section *Sec;
-    if (auto EC = COFFObj.getSection(I, Sec))
-      return errorCodeToError(EC);
+    Expected<const coff_section *> SecOrErr = COFFObj.getSection(I);
+    if (!SecOrErr)
+      return SecOrErr.takeError();
+    const coff_section *Sec = *SecOrErr;
     Sections.push_back(Section());
     Section &S = Sections.back();
     S.Header = *Sec;
+    S.Header.Characteristics &= ~COFF::IMAGE_SCN_LNK_NRELOC_OVFL;
     ArrayRef<uint8_t> Contents;
     if (Error E = COFFObj.getSectionContents(Sec, Contents))
       return E;
@@ -79,9 +76,6 @@ Error COFFReader::readSections(Object &Obj) const {
       S.Name = *NameOrErr;
     else
       return NameOrErr.takeError();
-    if (Sec->hasExtendedRelocations())
-      return createStringError(object_error::parse_failed,
-                               "extended relocations not supported yet");
   }
   Obj.addSections(Sections);
   return Error::success();
@@ -106,8 +100,10 @@ Error COFFReader::readSymbols(Object &Obj, bool IsBigObj) const {
     else
       copySymbol(Sym.Sym,
                  *reinterpret_cast<const coff_symbol16 *>(SymRef.getRawPtr()));
-    if (auto EC = COFFObj.getSymbolName(SymRef, Sym.Name))
-      return errorCodeToError(EC);
+    auto NameOrErr = COFFObj.getSymbolName(SymRef);
+    if (!NameOrErr)
+      return NameOrErr.takeError();
+    Sym.Name = *NameOrErr;
 
     ArrayRef<uint8_t> AuxData = COFFObj.getSymbolAuxData(SymRef);
     size_t SymSize = IsBigObj ? sizeof(coff_symbol32) : sizeof(coff_symbol16);
@@ -196,16 +192,13 @@ Error COFFReader::setSymbolTargets(Object &Obj) const {
 }
 
 Expected<std::unique_ptr<Object>> COFFReader::create() const {
-  auto Obj = llvm::make_unique<Object>();
+  auto Obj = std::make_unique<Object>();
 
-  const coff_file_header *CFH = nullptr;
-  const coff_bigobj_file_header *CBFH = nullptr;
-  COFFObj.getCOFFHeader(CFH);
-  COFFObj.getCOFFBigObjHeader(CBFH);
   bool IsBigObj = false;
-  if (CFH) {
+  if (const coff_file_header *CFH = COFFObj.getCOFFHeader()) {
     Obj->CoffFileHeader = *CFH;
   } else {
+    const coff_bigobj_file_header *CBFH = COFFObj.getCOFFBigObjHeader();
     if (!CBFH)
       return createStringError(object_error::parse_failed,
                                "no COFF file header returned");

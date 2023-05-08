@@ -26,16 +26,16 @@ public:
   RooGaussian() { };
   RooGaussian(const char *name, const char *title,
          RooAbsReal& _x, RooAbsReal& _mean, RooAbsReal& _sigma);
-  RooGaussian(const RooGaussian& other, const char* name=0);
-  virtual TObject* clone(const char* newname) const override {
+  RooGaussian(const RooGaussian& other, const char* name=nullptr);
+  TObject* clone(const char* newname) const override {
     return new RooGaussian(*this,newname);
   }
-  inline virtual ~RooGaussian() { }
+  inline ~RooGaussian() override { }
 
-  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const override;
-  Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const override;
+  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=nullptr) const override;
+  double analyticalIntegral(Int_t code, const char* rangeName=nullptr) const override;
 
-  Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t staticInitOK=kTRUE) const override;
+  Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, bool staticInitOK=true) const override;
   void generateEvent(Int_t code) override;
 
   /// Get the x variable.
@@ -45,8 +45,8 @@ public:
   RooAbsReal const& getMean() const { return mean.arg(); }
 
   /// Get the sigma parameter.
-  RooAbsReal const& getSigma() const { return sigma.arg(); }  
-  
+  RooAbsReal const& getSigma() const { return sigma.arg(); }
+
 protected:
 
   RooRealProxy x ;

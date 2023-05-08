@@ -19,12 +19,11 @@
 \class RooAdaptiveIntegratorND
 \ingroup Roofitcore
 
-RooAdaptiveIntegratorND implements an adaptive one-dimensional 
+RooAdaptiveIntegratorND implements an adaptive one-dimensional
 numerical integration algorithm.
 **/
 
 
-#include "RooFit.h"
 #include "Riostream.h"
 
 #include "TClass.h"
@@ -60,7 +59,7 @@ void RooAdaptiveIntegratorND::registerIntegrator(RooNumIntFactory& fact)
 
   fact.storeProtoIntegrator(new RooAdaptiveIntegratorND(),RooArgSet(maxEval2D,maxEval3D,maxEvalND,maxWarn)) ;
 }
- 
+
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -68,8 +67,6 @@ void RooAdaptiveIntegratorND::registerIntegrator(RooNumIntFactory& fact)
 
 RooAdaptiveIntegratorND::RooAdaptiveIntegratorND()
 {
-  _xmin = 0 ;
-  _xmax = 0 ;
   _epsRel = 1e-7 ;
   _epsAbs = 1e-7 ;
   _nmax = 10000 ;
@@ -77,7 +74,7 @@ RooAdaptiveIntegratorND::RooAdaptiveIntegratorND()
   _integrator = 0 ;
   _nError = 0 ;
   _nWarn = 0 ;
-  _useIntegrandLimits = kTRUE ;
+  _useIntegrandLimits = true ;
   _intName = "(none)" ;
 }
 
@@ -92,28 +89,26 @@ RooAdaptiveIntegratorND::RooAdaptiveIntegratorND(const RooAbsFunc& function, con
   RooAbsIntegrator(function)
 {
 
-  _func = new RooMultiGenFunction(function) ;  
+  _func = new RooMultiGenFunction(function) ;
   _nWarn = static_cast<Int_t>(config.getConfigSection("RooAdaptiveIntegratorND").getRealValue("maxWarn")) ;
   switch (_func->NDim()) {
   case 1: throw string(Form("RooAdaptiveIntegratorND::ctor ERROR dimension of function must be at least 2")) ;
-  case 2: _nmax = static_cast<Int_t>(config.getConfigSection("RooAdaptiveIntegratorND").getRealValue("maxEval2D")) ; break ; 
+  case 2: _nmax = static_cast<Int_t>(config.getConfigSection("RooAdaptiveIntegratorND").getRealValue("maxEval2D")) ; break ;
   case 3: _nmax = static_cast<Int_t>(config.getConfigSection("RooAdaptiveIntegratorND").getRealValue("maxEval3D")) ; break ;
   default: _nmax = static_cast<Int_t>(config.getConfigSection("RooAdaptiveIntegratorND").getRealValue("maxEvalND")) ; break ;
   }
   // by default do not use absolute tolerance (see https://root.cern.ch/phpBB3/viewtopic.php?f=15&t=20071 )
   _epsAbs = 0.0;
-  _epsRel = config.epsRel();      
+  _epsRel = config.epsRel();
   _integrator = new ROOT::Math::AdaptiveIntegratorMultiDim(_epsAbs,_epsRel,_nmax) ;
   _integrator->SetFunction(*_func) ;
-  _useIntegrandLimits=kTRUE ;
+  _useIntegrandLimits=true ;
 
-  _xmin = 0 ;
-  _xmax = 0 ;
   _nError = 0 ;
   _nWarn = 0 ;
   checkLimits() ;
   _intName = function.getName() ;
-} 
+}
 
 
 
@@ -123,7 +118,7 @@ RooAdaptiveIntegratorND::RooAdaptiveIntegratorND(const RooAbsFunc& function, con
 RooAbsIntegrator* RooAdaptiveIntegratorND::clone(const RooAbsFunc& function, const RooNumIntConfig& config) const
 {
   RooAbsIntegrator* ret = new RooAdaptiveIntegratorND(function,config) ;
-  
+
   return ret ;
 }
 
@@ -135,13 +130,11 @@ RooAbsIntegrator* RooAdaptiveIntegratorND::clone(const RooAbsFunc& function, con
 
 RooAdaptiveIntegratorND::~RooAdaptiveIntegratorND()
 {
-  delete[] _xmin ;
-  delete[] _xmax ;
   delete _integrator ;
   delete _func ;
   if (_nError>_nWarn) {
-    coutW(NumIntegration) << "RooAdaptiveIntegratorND::dtor(" << _intName 
-			  << ") WARNING: Number of suppressed warningings about integral evaluations where target precision was not reached is " << _nError-_nWarn << endl ;
+    coutW(NumIntegration) << "RooAdaptiveIntegratorND::dtor(" << _intName
+           << ") WARNING: Number of suppressed warningings about integral evaluations where target precision was not reached is " << _nError-_nWarn << endl ;
   }
 
 }
@@ -149,16 +142,16 @@ RooAdaptiveIntegratorND::~RooAdaptiveIntegratorND()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Check that our integration range is finite and otherwise return kFALSE.
+/// Check that our integration range is finite and otherwise return false.
 /// Update the limits from the integrand if requested.
 
-Bool_t RooAdaptiveIntegratorND::checkLimits() const 
+bool RooAdaptiveIntegratorND::checkLimits() const
 {
-  if (!_xmin) {
-    _xmin = new Double_t[_func->NDim()] ;
-    _xmax = new Double_t[_func->NDim()] ;
+  if (_xmin.empty()) {
+    _xmin.resize(_func->NDim());
+    _xmax.resize(_func->NDim());
   }
-  
+
   if (_useIntegrandLimits) {
     for (UInt_t i=0 ; i<_func->NDim() ; i++) {
       _xmin[i]= integrand()->getMinLimit(i);
@@ -166,20 +159,20 @@ Bool_t RooAdaptiveIntegratorND::checkLimits() const
     }
   }
 
-  return kTRUE ;
+  return true ;
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Change our integration limits. Return kTRUE if the new limits are
-/// ok, or otherwise kFALSE. Always returns kFALSE and does nothing
+/// Change our integration limits. Return true if the new limits are
+/// ok, or otherwise false. Always returns false and does nothing
 /// if this object was constructed to always use our integrand's limits.
 
-Bool_t RooAdaptiveIntegratorND::setLimits(Double_t *xmin, Double_t *xmax) 
+bool RooAdaptiveIntegratorND::setLimits(double *xmin, double *xmax)
 {
   if(_useIntegrandLimits) {
-    oocoutE((TObject*)0,Integration) << "RooAdaptiveIntegratorND::setLimits: cannot override integrand's limits" << endl;
-    return kFALSE;
+    oocoutE(nullptr,Integration) << "RooAdaptiveIntegratorND::setLimits: cannot override integrand's limits" << endl;
+    return false;
   }
   for (UInt_t i=0 ; i<_func->NDim() ; i++) {
     _xmin[i]= xmin[i];
@@ -195,20 +188,20 @@ Bool_t RooAdaptiveIntegratorND::setLimits(Double_t *xmin, Double_t *xmax)
 ////////////////////////////////////////////////////////////////////////////////
 /// Evaluate integral at given function binding parameter values
 
-Double_t RooAdaptiveIntegratorND::integral(const Double_t* /*yvec*/) 
+double RooAdaptiveIntegratorND::integral(const double* /*yvec*/)
 {
-  Double_t ret = _integrator->Integral(_xmin,_xmax) ;  
+  double ret = _integrator->Integral(_xmin.data(),_xmax.data());
   if (_integrator->Status()==1) {
     _nError++ ;
     if (_nError<=_nWarn) {
       coutW(NumIntegration) << "RooAdaptiveIntegratorND::integral(" << integrand()->getName() << ") WARNING: target rel. precision not reached due to nEval limit of "
-			    << _nmax << ", estimated rel. precision is " << Form("%3.1e",_integrator->RelError()) << endl ;
-    } 
+             << _nmax << ", estimated rel. precision is " << Form("%3.1e",_integrator->RelError()) << endl ;
+    }
     if (_nError==_nWarn) {
-      coutW(NumIntegration) << "RooAdaptiveIntegratorND::integral(" << integrand()->getName() 
-			    << ") Further warnings on target precision are suppressed conform specification in integrator specification" << endl ;
-    }    
-  }  
+      coutW(NumIntegration) << "RooAdaptiveIntegratorND::integral(" << integrand()->getName()
+             << ") Further warnings on target precision are suppressed conform specification in integrator specification" << endl ;
+    }
+  }
   return ret ;
 }
 

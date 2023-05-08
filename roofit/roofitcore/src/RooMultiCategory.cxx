@@ -21,7 +21,7 @@
 
 RooMultiCategory connects several RooAbsCategory objects into
 a single category. The states of the multi-category consist of all the permutations
-of the input categories. 
+of the input categories.
 RooMultiCategory states are automatically defined and updated whenever an input
 category modifies its list of states.
 
@@ -34,7 +34,6 @@ setting the states.
 
 #include "RooMultiCategory.h"
 
-#include "RooFit.h"
 #include "RooStreamParser.h"
 #include "RooArgSet.h"
 #include "RooAbsCategory.h"
@@ -54,13 +53,13 @@ ClassImp(RooMultiCategory);
 /// of the input categories.
 
 RooMultiCategory::RooMultiCategory(const char *name, const char *title, const RooArgSet& inputCategories) :
-  RooAbsCategory(name, title), _catSet("input","Input category set",this,kTRUE,kTRUE)
-{  
+  RooAbsCategory(name, title), _catSet("input","Input category set",this,true,true)
+{
   // Copy category list
   for (const auto arg : inputCategories) {
     if (!dynamic_cast<RooAbsCategory*>(arg)) {
-      coutE(InputArguments) << "RooMultiCategory::RooMultiCategory(" << GetName() << "): input argument " << arg->GetName() 
-			    << " is not a RooAbsCategory" << endl ;
+      coutE(InputArguments) << "RooMultiCategory::RooMultiCategory(" << GetName() << "): input argument " << arg->GetName()
+             << " is not a RooAbsCategory" << endl ;
     }
     _catSet.add(*arg) ;
   }
@@ -83,7 +82,7 @@ RooMultiCategory::RooMultiCategory(const RooMultiCategory& other, const char *na
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor
 
-RooMultiCategory::~RooMultiCategory() 
+RooMultiCategory::~RooMultiCategory()
 {
 }
 
@@ -95,7 +94,7 @@ std::string RooMultiCategory::createLabel() const
 {
   // Construct composite label name
   std::string label;
-  Bool_t first = true;
+  bool first = true;
   for (const auto arg : _catSet) {
     auto cat = static_cast<const RooAbsCategory*>(arg);
 
@@ -109,26 +108,6 @@ std::string RooMultiCategory::createLabel() const
 }
 
 
-#ifndef NDEBUG
-
-#include "RooFitLegacy/RooMultiCatIter.h"
-namespace {
-/// Check that root-6.22 redesign of category interfaces yields same labels
-std::string computeLabelOldStyle(const RooArgSet& catSet, unsigned int index) {
-  RooMultiCatIter iter(catSet) ;
-  TObjString* obj ;
-  for (unsigned int i=0; (obj=(TObjString*)iter.Next()); ++i) {
-    if (i == index) {
-      return obj->String().Data();
-    }
-  }
-
-  return {};
-}
-}
-#endif
-
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate the current value.
 /// This enumerates the states of each serving category, and calculates a unique
@@ -140,7 +119,7 @@ RooAbsCategory::value_type RooMultiCategory::evaluate() const
   value_type multiplier = 1;
   for (const auto arg : _catSet) {
     auto cat = static_cast<const RooAbsCategory*>(arg);
-    if (cat->size() == 0) {
+    if (cat->empty()) {
       coutW(InputArguments) << __func__ << " Trying to build a multi-category state based on "
           "a category with zero states. Fix '" << cat->GetName() << "'." << std::endl;
       continue;
@@ -148,12 +127,6 @@ RooAbsCategory::value_type RooMultiCategory::evaluate() const
     computedStateIndex += cat->getCurrentOrdinalNumber() * multiplier;
     multiplier *= cat->size();
   }
-
-#ifndef NDEBUG
-  assert(hasIndex(computedStateIndex));
-  _currentIndex = computedStateIndex;
-  assert(createLabel() == computeLabelOldStyle(_catSet, computedStateIndex));
-#endif
 
   return computedStateIndex;
 }
@@ -163,11 +136,11 @@ RooAbsCategory::value_type RooMultiCategory::evaluate() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Print the state of this object to the specified output stream.
 
-void RooMultiCategory::printMultiline(ostream& os, Int_t content, Bool_t verbose, TString indent) const
+void RooMultiCategory::printMultiline(ostream& os, Int_t content, bool verbose, TString indent) const
 {
   RooAbsCategory::printMultiline(os,content,verbose,indent) ;
-  
-  if (verbose) {     
+
+  if (verbose) {
     os << indent << "--- RooMultiCategory ---" << endl;
     os << indent << "  Input category list:" << endl ;
     TString moreIndent(indent) ;
@@ -180,7 +153,7 @@ void RooMultiCategory::printMultiline(ostream& os, Int_t content, Bool_t verbose
 ////////////////////////////////////////////////////////////////////////////////
 /// Write object contents to given stream
 
-void RooMultiCategory::writeToStream(ostream& os, Bool_t compact) const
+void RooMultiCategory::writeToStream(ostream& os, bool compact) const
 {
   RooAbsCategory::writeToStream(os,compact) ;
 }

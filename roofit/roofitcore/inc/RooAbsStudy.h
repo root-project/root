@@ -33,23 +33,23 @@ class RooStudyPackage ;
 class RooAbsStudy : public TNamed {
 public:
 
-  RooAbsStudy() :  _storeDetails(kFALSE), _summaryData(0), _detailData(0), _ownDetailData(kTRUE) {} ;
+  RooAbsStudy() :  _storeDetails(false), _summaryData(nullptr), _detailData(nullptr), _ownDetailData(true) {} ;
   RooAbsStudy(const char* name, const char* title) ;
   RooAbsStudy(const RooAbsStudy& other) ;
   virtual RooAbsStudy* clone(const char* newname="") const = 0 ;
-  TObject* Clone(const char* newname="") const { return clone(newname) ; }
-  virtual ~RooAbsStudy() ;
- 
-  virtual Bool_t attach(RooWorkspace& /*w*/) { return kFALSE ; } ;
-  virtual Bool_t initialize() { return kFALSE ; } ;
-  virtual Bool_t execute() { return kFALSE ; } ;
-  virtual Bool_t finalize() { return 0 ; } ;
-  void storeDetailedOutput(Bool_t flag) { _storeDetails = flag ; }
-  
+  TObject* Clone(const char* newname="") const override { return clone(newname) ; }
+  ~RooAbsStudy() override ;
+
+  virtual bool attach(RooWorkspace& /*w*/) { return false ; } ;
+  virtual bool initialize() { return false ; } ;
+  virtual bool execute() { return false ; } ;
+  virtual bool finalize() { return false ; } ;
+  void storeDetailedOutput(bool flag) { _storeDetails = flag ; }
+
   RooDataSet* summaryData() { return _summaryData ; }
   RooLinkedList* detailedData() { return _detailData ; }
 
-  void releaseDetailData() { _ownDetailData = kFALSE ; }
+  void releaseDetailData() { _ownDetailData = false ; }
 
   virtual void dump() {} ;
 
@@ -59,17 +59,17 @@ public:
   friend class RooStudyPackage ;
   void registerSummaryOutput(const RooArgSet& allVars, const RooArgSet& varsWithError=RooArgSet(), const RooArgSet& varsWithAsymError=RooArgSet()) ;
   void storeSummaryOutput(const RooArgSet& vars) ;
-  void storeDetailedOutput(TNamed& object) ;
+  void storeDetailedOutput(std::unique_ptr<TNamed> object) ;
   void aggregateSummaryOutput(TList* chunkList) ;
-  
+
  private:
 
-  Bool_t _storeDetails ;
-  RooDataSet* _summaryData ; //!
-  RooLinkedList*  _detailData ;  //!
-  Bool_t      _ownDetailData ;
+  bool _storeDetails ;
+  RooDataSet* _summaryData ;     ///<!
+  RooLinkedList*  _detailData ;  ///<!
+  bool      _ownDetailData ;
 
-  ClassDef(RooAbsStudy,1) // Abstract base class for RooStudyManager modules
+  ClassDefOverride(RooAbsStudy,1) // Abstract base class for RooStudyManager modules
 } ;
 
 

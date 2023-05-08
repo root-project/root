@@ -20,10 +20,10 @@
 #include "llvm/ADT/Hashing.h"
 #include "llvm/ADT/None.h"
 #include "llvm/ADT/StringRef.h"
-#include "llvm/ADT/StringSet.h"
 #include "llvm/ADT/iterator.h"
 #include "llvm/ADT/iterator_range.h"
 #include "llvm/ProfileData/InstrProf.h"
+#include "llvm/Support/Alignment.h"
 #include "llvm/Support/Compiler.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/Endian.h"
@@ -54,7 +54,9 @@ enum class coveragemap_error {
   no_data_found,
   unsupported_version,
   truncated,
-  malformed
+  malformed,
+  decompression_failed,
+  invalid_or_missing_arch_specifier
 };
 
 const std::error_category &coveragemap_category();
@@ -88,6 +90,8 @@ private:
 /// A Counter is an abstract value that describes how to compute the
 /// execution count for a region of code using the collected profile count data.
 struct Counter {
+  /// The CounterExpression kind (Add or Subtract) is encoded in bit 0 next to
+  /// the CounterKind. This means CounterKind has to leave bit 0 free.
   enum CounterKind { Zero, CounterValueReference, Expression };
   static const unsigned EncodingTagBits = 2;
   static const unsigned EncodingTagMask = 0x3;
@@ -217,10 +221,20 @@ struct CounterMappingRegion {
 
     /// A GapRegion is like a CodeRegion, but its count is only set as the
     /// line execution count when its the only region in the line.
-    GapRegion
+    GapRegion,
+
+    /// A BranchRegion represents leaf-level boolean expressions and is
+    /// associated with two counters, each representing the number of times the
+    /// expression evaluates to true or false.
+    BranchRegion
   };
 
+  /// Primary Counter that is also used for Branch Regions (TrueCount).
   Counter Count;
+
+  /// Secondary Counter used for Branch Regions (FalseCount).
+  Counter FalseCount;
+
   unsigned FileID, ExpandedFileID;
   unsigned LineStart, ColumnStart, LineEnd, ColumnEnd;
   RegionKind Kind;
@@ -231,6 +245,15 @@ struct CounterMappingRegion {
       : Count(Count), FileID(FileID), ExpandedFileID(ExpandedFileID),
         LineStart(LineStart), ColumnStart(ColumnStart), LineEnd(LineEnd),
         ColumnEnd(ColumnEnd), Kind(Kind) {}
+
+  CounterMappingRegion(Counter Count, Counter FalseCount, unsigned FileID,
+                       unsigned ExpandedFileID, unsigned LineStart,
+                       unsigned ColumnStart, unsigned LineEnd,
+                       unsigned ColumnEnd, RegionKind Kind)
+      : Count(Count), FalseCount(FalseCount), FileID(FileID),
+        ExpandedFileID(ExpandedFileID), LineStart(LineStart),
+        ColumnStart(ColumnStart), LineEnd(LineEnd), ColumnEnd(ColumnEnd),
+        Kind(Kind) {}
 
   static CounterMappingRegion
   makeRegion(Counter Count, unsigned FileID, unsigned LineStart,
@@ -261,6 +284,14 @@ struct CounterMappingRegion {
                                 LineEnd, (1U << 31) | ColumnEnd, GapRegion);
   }
 
+  static CounterMappingRegion
+  makeBranchRegion(Counter Count, Counter FalseCount, unsigned FileID,
+                   unsigned LineStart, unsigned ColumnStart, unsigned LineEnd,
+                   unsigned ColumnEnd) {
+    return CounterMappingRegion(Count, FalseCount, FileID, 0, LineStart,
+                                ColumnStart, LineEnd, ColumnEnd, BranchRegion);
+  }
+
   inline LineColPair startLoc() const {
     return LineColPair(LineStart, ColumnStart);
   }
@@ -271,9 +302,17 @@ struct CounterMappingRegion {
 /// Associates a source range with an execution count.
 struct CountedRegion : public CounterMappingRegion {
   uint64_t ExecutionCount;
+  uint64_t FalseExecutionCount;
+  bool Folded;
 
   CountedRegion(const CounterMappingRegion &R, uint64_t ExecutionCount)
-      : CounterMappingRegion(R), ExecutionCount(ExecutionCount) {}
+      : CounterMappingRegion(R), ExecutionCount(ExecutionCount),
+        FalseExecutionCount(0), Folded(false) {}
+
+  CountedRegion(const CounterMappingRegion &R, uint64_t ExecutionCount,
+                uint64_t FalseExecutionCount)
+      : CounterMappingRegion(R), ExecutionCount(ExecutionCount),
+        FalseExecutionCount(FalseExecutionCount), Folded(false) {}
 };
 
 /// A Counter mapping context is used to connect the counters, expressions
@@ -295,18 +334,27 @@ public:
   /// Return the number of times that a region of code associated with this
   /// counter was executed.
   Expected<int64_t> evaluate(const Counter &C) const;
+
+  unsigned getMaxCounterID(const Counter &C) const;
 };
 
 /// Code coverage information for a single function.
 struct FunctionRecord {
   /// Raw function name.
   std::string Name;
-  /// Associated files.
+  /// Mapping from FileID (i.e. vector index) to filename. Used to support
+  /// macro expansions within a function in which the macro and function are
+  /// defined in separate files.
+  ///
+  /// TODO: Uniquing filenames across all function records may be a performance
+  /// optimization.
   std::vector<std::string> Filenames;
   /// Regions in the function along with their counts.
   std::vector<CountedRegion> CountedRegions;
+  /// Branch Regions in the function along with their counts.
+  std::vector<CountedRegion> CountedBranchRegions;
   /// The number of times this function was executed.
-  uint64_t ExecutionCount;
+  uint64_t ExecutionCount = 0;
 
   FunctionRecord(StringRef Name, ArrayRef<StringRef> Filenames)
       : Name(Name), Filenames(Filenames.begin(), Filenames.end()) {}
@@ -314,10 +362,19 @@ struct FunctionRecord {
   FunctionRecord(FunctionRecord &&FR) = default;
   FunctionRecord &operator=(FunctionRecord &&) = default;
 
-  void pushRegion(CounterMappingRegion Region, uint64_t Count) {
+  void pushRegion(CounterMappingRegion Region, uint64_t Count,
+                  uint64_t FalseCount) {
+    if (Region.Kind == CounterMappingRegion::BranchRegion) {
+      CountedBranchRegions.emplace_back(Region, Count, FalseCount);
+      // If both counters are hard-coded to zero, then this region represents a
+      // constant-folded branch.
+      if (Region.Count.isZero() && Region.FalseCount.isZero())
+        CountedBranchRegions.back().Folded = true;
+      return;
+    }
     if (CountedRegions.empty())
       ExecutionCount = Count;
-    CountedRegions.emplace_back(Region, Count);
+    CountedRegions.emplace_back(Region, Count, FalseCount);
   }
 };
 
@@ -396,7 +453,8 @@ struct CoverageSegment {
         IsRegionEntry(IsRegionEntry), IsGapRegion(false) {}
 
   CoverageSegment(unsigned Line, unsigned Col, uint64_t Count,
-                  bool IsRegionEntry, bool IsGapRegion = false)
+                  bool IsRegionEntry, bool IsGapRegion = false,
+                  bool IsBranchRegion = false)
       : Line(Line), Col(Col), Count(Count), HasCount(true),
         IsRegionEntry(IsRegionEntry), IsGapRegion(IsGapRegion) {}
 
@@ -476,6 +534,7 @@ class CoverageData {
   std::string Filename;
   std::vector<CoverageSegment> Segments;
   std::vector<ExpansionRecord> Expansions;
+  std::vector<CountedRegion> BranchRegions;
 
 public:
   CoverageData() = default;
@@ -499,6 +558,9 @@ public:
 
   /// Expansions that can be further processed.
   ArrayRef<ExpansionRecord> getExpansions() const { return Expansions; }
+
+  /// Branches that can be further processed.
+  ArrayRef<CountedRegion> getBranches() const { return BranchRegions; }
 };
 
 /// The mapping of profile information to coverage data.
@@ -508,13 +570,26 @@ public:
 class CoverageMapping {
   DenseMap<size_t, DenseSet<size_t>> RecordProvenance;
   std::vector<FunctionRecord> Functions;
+  DenseMap<size_t, SmallVector<unsigned, 0>> FilenameHash2RecordIndices;
   std::vector<std::pair<std::string, uint64_t>> FuncHashMismatches;
 
   CoverageMapping() = default;
 
+  // Load coverage records from readers.
+  static Error loadFromReaders(
+      ArrayRef<std::unique_ptr<CoverageMappingReader>> CoverageReaders,
+      IndexedInstrProfReader &ProfileReader, CoverageMapping &Coverage);
+
   /// Add a function record corresponding to \p Record.
   Error loadFunctionRecord(const CoverageMappingRecord &Record,
                            IndexedInstrProfReader &ProfileReader);
+
+  /// Look up the indices for function records which are at least partially
+  /// defined in the specified file. This is guaranteed to return a superset of
+  /// such records: extra records not in the file may be included if there is
+  /// a hash collision on the filename. Clients must be robust to collisions.
+  ArrayRef<unsigned>
+  getImpreciseRecordIndicesForFilename(StringRef Filename) const;
 
 public:
   CoverageMapping(const CoverageMapping &) = delete;
@@ -527,9 +602,10 @@ public:
 
   /// Load the coverage mapping from the given object files and profile. If
   /// \p Arches is non-empty, it must specify an architecture for each object.
+  /// Ignores non-instrumented object files unless all are not instrumented.
   static Expected<std::unique_ptr<CoverageMapping>>
   load(ArrayRef<StringRef> ObjectFilenames, StringRef ProfileFilename,
-       ArrayRef<StringRef> Arches = None);
+       ArrayRef<StringRef> Arches = None, StringRef CompilationDir = "");
 
   /// The number of functions that couldn't have their profiles mapped.
   ///
@@ -664,37 +740,107 @@ getLineCoverageStats(const coverage::CoverageData &CD) {
   return make_range(Begin, End);
 }
 
-// Profile coverage map has the following layout:
-// [CoverageMapFileHeader]
-// [ArrayStart]
-//  [CovMapFunctionRecord]
-//  [CovMapFunctionRecord]
-//  ...
-// [ArrayEnd]
-// [Encoded Region Mapping Data]
+// Coverage mappping data (V2) has the following layout:
+// IPSK_covmap:
+//   [CoverageMapFileHeader]
+//   [ArrayStart]
+//    [CovMapFunctionRecordV2]
+//    [CovMapFunctionRecordV2]
+//    ...
+//   [ArrayEnd]
+//   [Encoded Filenames and Region Mapping Data]
+//
+// Coverage mappping data (V3) has the following layout:
+// IPSK_covmap:
+//   [CoverageMapFileHeader]
+//   [Encoded Filenames]
+// IPSK_covfun:
+//   [ArrayStart]
+//     odr_name_1: [CovMapFunctionRecordV3]
+//     odr_name_2: [CovMapFunctionRecordV3]
+//     ...
+//   [ArrayEnd]
+//
+// Both versions of the coverage mapping format encode the same information,
+// but the V3 format does so more compactly by taking advantage of linkonce_odr
+// semantics (it allows exactly 1 function record per name reference).
+
+/// This namespace defines accessors shared by different versions of coverage
+/// mapping records.
+namespace accessors {
+
+/// Return the structural hash associated with the function.
+template <class FuncRecordTy, support::endianness Endian>
+uint64_t getFuncHash(const FuncRecordTy *Record) {
+  return support::endian::byte_swap<uint64_t, Endian>(Record->FuncHash);
+}
+
+/// Return the coverage map data size for the function.
+template <class FuncRecordTy, support::endianness Endian>
+uint64_t getDataSize(const FuncRecordTy *Record) {
+  return support::endian::byte_swap<uint32_t, Endian>(Record->DataSize);
+}
+
+/// Return the function lookup key. The value is considered opaque.
+template <class FuncRecordTy, support::endianness Endian>
+uint64_t getFuncNameRef(const FuncRecordTy *Record) {
+  return support::endian::byte_swap<uint64_t, Endian>(Record->NameRef);
+}
+
+/// Return the PGO name of the function. Used for formats in which the name is
+/// a hash.
+template <class FuncRecordTy, support::endianness Endian>
+Error getFuncNameViaRef(const FuncRecordTy *Record,
+                        InstrProfSymtab &ProfileNames, StringRef &FuncName) {
+  uint64_t NameRef = getFuncNameRef<FuncRecordTy, Endian>(Record);
+  FuncName = ProfileNames.getFuncName(NameRef);
+  return Error::success();
+}
+
+/// Read coverage mapping out-of-line, from \p MappingBuf. This is used when the
+/// coverage mapping is attached to the file header, instead of to the function
+/// record.
+template <class FuncRecordTy, support::endianness Endian>
+StringRef getCoverageMappingOutOfLine(const FuncRecordTy *Record,
+                                      const char *MappingBuf) {
+  return {MappingBuf, size_t(getDataSize<FuncRecordTy, Endian>(Record))};
+}
+
+/// Advance to the next out-of-line coverage mapping and its associated
+/// function record.
+template <class FuncRecordTy, support::endianness Endian>
+std::pair<const char *, const FuncRecordTy *>
+advanceByOneOutOfLine(const FuncRecordTy *Record, const char *MappingBuf) {
+  return {MappingBuf + getDataSize<FuncRecordTy, Endian>(Record), Record + 1};
+}
+
+} // end namespace accessors
+
 LLVM_PACKED_START
-template <class IntPtrT> struct CovMapFunctionRecordV1 {
+template <class IntPtrT>
+struct CovMapFunctionRecordV1 {
+  using ThisT = CovMapFunctionRecordV1<IntPtrT>;
+
 #define COVMAP_V1
 #define COVMAP_FUNC_RECORD(Type, LLVMType, Name, Init) Type Name;
 #include "llvm/ProfileData/InstrProfData.inc"
 #undef COVMAP_V1
+  CovMapFunctionRecordV1() = delete;
 
-  // Return the structural hash associated with the function.
   template <support::endianness Endian> uint64_t getFuncHash() const {
-    return support::endian::byte_swap<uint64_t, Endian>(FuncHash);
+    return accessors::getFuncHash<ThisT, Endian>(this);
   }
 
-  // Return the coverage map data size for the funciton.
-  template <support::endianness Endian> uint32_t getDataSize() const {
-    return support::endian::byte_swap<uint32_t, Endian>(DataSize);
+  template <support::endianness Endian> uint64_t getDataSize() const {
+    return accessors::getDataSize<ThisT, Endian>(this);
   }
 
-  // Return function lookup key. The value is consider opaque.
+  /// Return function lookup key. The value is consider opaque.
   template <support::endianness Endian> IntPtrT getFuncNameRef() const {
     return support::endian::byte_swap<IntPtrT, Endian>(NamePtr);
   }
 
-  // Return the PGO name of the function */
+  /// Return the PGO name of the function.
   template <support::endianness Endian>
   Error getFuncName(InstrProfSymtab &ProfileNames, StringRef &FuncName) const {
     IntPtrT NameRef = getFuncNameRef<Endian>();
@@ -704,33 +850,119 @@ template <class IntPtrT> struct CovMapFunctionRecordV1 {
       return make_error<CoverageMapError>(coveragemap_error::malformed);
     return Error::success();
   }
+
+  template <support::endianness Endian>
+  std::pair<const char *, const ThisT *>
+  advanceByOne(const char *MappingBuf) const {
+    return accessors::advanceByOneOutOfLine<ThisT, Endian>(this, MappingBuf);
+  }
+
+  template <support::endianness Endian> uint64_t getFilenamesRef() const {
+    llvm_unreachable("V1 function format does not contain a filenames ref");
+  }
+
+  template <support::endianness Endian>
+  StringRef getCoverageMapping(const char *MappingBuf) const {
+    return accessors::getCoverageMappingOutOfLine<ThisT, Endian>(this,
+                                                                 MappingBuf);
+  }
 };
 
-struct CovMapFunctionRecord {
+struct CovMapFunctionRecordV2 {
+  using ThisT = CovMapFunctionRecordV2;
+
+#define COVMAP_V2
 #define COVMAP_FUNC_RECORD(Type, LLVMType, Name, Init) Type Name;
 #include "llvm/ProfileData/InstrProfData.inc"
+#undef COVMAP_V2
+  CovMapFunctionRecordV2() = delete;
 
-  // Return the structural hash associated with the function.
   template <support::endianness Endian> uint64_t getFuncHash() const {
-    return support::endian::byte_swap<uint64_t, Endian>(FuncHash);
+    return accessors::getFuncHash<ThisT, Endian>(this);
   }
 
-  // Return the coverage map data size for the funciton.
-  template <support::endianness Endian> uint32_t getDataSize() const {
-    return support::endian::byte_swap<uint32_t, Endian>(DataSize);
+  template <support::endianness Endian> uint64_t getDataSize() const {
+    return accessors::getDataSize<ThisT, Endian>(this);
   }
 
-  // Return function lookup key. The value is consider opaque.
   template <support::endianness Endian> uint64_t getFuncNameRef() const {
-    return support::endian::byte_swap<uint64_t, Endian>(NameRef);
+    return accessors::getFuncNameRef<ThisT, Endian>(this);
   }
 
-  // Return the PGO name of the function */
   template <support::endianness Endian>
   Error getFuncName(InstrProfSymtab &ProfileNames, StringRef &FuncName) const {
-    uint64_t NameRef = getFuncNameRef<Endian>();
-    FuncName = ProfileNames.getFuncName(NameRef);
-    return Error::success();
+    return accessors::getFuncNameViaRef<ThisT, Endian>(this, ProfileNames,
+                                                       FuncName);
+  }
+
+  template <support::endianness Endian>
+  std::pair<const char *, const ThisT *>
+  advanceByOne(const char *MappingBuf) const {
+    return accessors::advanceByOneOutOfLine<ThisT, Endian>(this, MappingBuf);
+  }
+
+  template <support::endianness Endian> uint64_t getFilenamesRef() const {
+    llvm_unreachable("V2 function format does not contain a filenames ref");
+  }
+
+  template <support::endianness Endian>
+  StringRef getCoverageMapping(const char *MappingBuf) const {
+    return accessors::getCoverageMappingOutOfLine<ThisT, Endian>(this,
+                                                                 MappingBuf);
+  }
+};
+
+struct CovMapFunctionRecordV3 {
+  using ThisT = CovMapFunctionRecordV3;
+
+#define COVMAP_V3
+#define COVMAP_FUNC_RECORD(Type, LLVMType, Name, Init) Type Name;
+#include "llvm/ProfileData/InstrProfData.inc"
+#undef COVMAP_V3
+  CovMapFunctionRecordV3() = delete;
+
+  template <support::endianness Endian> uint64_t getFuncHash() const {
+    return accessors::getFuncHash<ThisT, Endian>(this);
+  }
+
+  template <support::endianness Endian> uint64_t getDataSize() const {
+    return accessors::getDataSize<ThisT, Endian>(this);
+  }
+
+  template <support::endianness Endian> uint64_t getFuncNameRef() const {
+    return accessors::getFuncNameRef<ThisT, Endian>(this);
+  }
+
+  template <support::endianness Endian>
+  Error getFuncName(InstrProfSymtab &ProfileNames, StringRef &FuncName) const {
+    return accessors::getFuncNameViaRef<ThisT, Endian>(this, ProfileNames,
+                                                       FuncName);
+  }
+
+  /// Get the filename set reference.
+  template <support::endianness Endian> uint64_t getFilenamesRef() const {
+    return support::endian::byte_swap<uint64_t, Endian>(FilenamesRef);
+  }
+
+  /// Read the inline coverage mapping. Ignore the buffer parameter, it is for
+  /// out-of-line coverage mapping data only.
+  template <support::endianness Endian>
+  StringRef getCoverageMapping(const char *) const {
+    return StringRef(&CoverageMapping, getDataSize<Endian>());
+  }
+
+  // Advance to the next inline coverage mapping and its associated function
+  // record. Ignore the out-of-line coverage mapping buffer.
+  template <support::endianness Endian>
+  std::pair<const char *, const CovMapFunctionRecordV3 *>
+  advanceByOne(const char *) const {
+    assert(isAddrAligned(Align(8), this) && "Function record not aligned");
+    const char *Next = ((const char *)this) + sizeof(CovMapFunctionRecordV3) -
+                       sizeof(char) + getDataSize<Endian>();
+    // Each function record has an alignment of 8, so we need to adjust
+    // alignment before reading the next record.
+    Next += offsetToAlignedAddr(Next, Align(8));
+    return {nullptr, reinterpret_cast<const CovMapFunctionRecordV3 *>(Next)};
   }
 };
 
@@ -767,12 +999,29 @@ enum CovMapVersion {
   // A new interpretation of the columnEnd field is added in order to mark
   // regions as gap areas.
   Version3 = 2,
-  // The current version is Version3
+  // Function records are named, uniqued, and moved to a dedicated section.
+  Version4 = 3,
+  // Branch regions referring to two counters are added
+  Version5 = 4,
+  // Compilation directory is stored separately and combined with relative
+  // filenames to produce an absolute file path.
+  Version6 = 5,
+  // The current version is Version6.
   CurrentVersion = INSTR_PROF_COVMAP_VERSION
 };
 
 template <int CovMapVersion, class IntPtrT> struct CovMapTraits {
-  using CovMapFuncRecordType = CovMapFunctionRecord;
+  using CovMapFuncRecordType = CovMapFunctionRecordV3;
+  using NameRefType = uint64_t;
+};
+
+template <class IntPtrT> struct CovMapTraits<CovMapVersion::Version3, IntPtrT> {
+  using CovMapFuncRecordType = CovMapFunctionRecordV2;
+  using NameRefType = uint64_t;
+};
+
+template <class IntPtrT> struct CovMapTraits<CovMapVersion::Version2, IntPtrT> {
+  using CovMapFuncRecordType = CovMapFunctionRecordV2;
   using NameRefType = uint64_t;
 };
 

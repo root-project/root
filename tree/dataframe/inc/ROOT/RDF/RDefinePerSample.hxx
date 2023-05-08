@@ -39,10 +39,10 @@ class R__CLING_PTRCHECK(off) RDefinePerSample final : public RDefineBase {
 
 public:
    RDefinePerSample(std::string_view name, std::string_view type, F expression, RLoopManager &lm)
-      : RDefineBase(name, type, /*colRegister*/ {nullptr}, lm, /*columnNames*/ {}), fExpression(std::move(expression)),
-        fLastResults(lm.GetNSlots() * RDFInternal::CacheLineStep<RetType_t>())
+      : RDefineBase(name, type, RDFInternal::RColumnRegister{nullptr}, lm, /*columnNames*/ {}),
+        fExpression(std::move(expression)), fLastResults(lm.GetNSlots() * RDFInternal::CacheLineStep<RetType_t>())
    {
-      fLoopManager->Book(this);
+      fLoopManager->Register(this);
       auto callUpdate = [this](unsigned int slot, const ROOT::RDF::RSampleInfo &id) { this->Update(slot, id); };
       fLoopManager->AddSampleCallback(this, std::move(callUpdate));
    }
@@ -69,11 +69,11 @@ public:
       fLastResults[slot * RDFInternal::CacheLineStep<RetType_t>()] = fExpression(slot, id);
    }
 
-   const std::type_info &GetTypeId() const { return typeid(RetType_t); }
+   const std::type_info &GetTypeId() const final { return typeid(RetType_t); }
 
    void InitSlot(TTreeReader *, unsigned int) final {}
 
-   void FinaliseSlot(unsigned int) final {}
+   void FinalizeSlot(unsigned int) final {}
 
    // No-op for RDefinePerSample: it never depends on systematic variations
    void MakeVariations(const std::vector<std::string> &) final {}

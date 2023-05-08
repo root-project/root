@@ -66,17 +66,48 @@ public:
     return nullptr;
   }
 
-  void addCalledDecl(Decl *D) {
-    if (G->includeInGraph(D)) {
+  void addCalledDecl(Decl *D, Expr *CallExpr) {
+    if (G->includeCalleeInGraph(D)) {
       CallGraphNode *CalleeNode = G->getOrInsertNode(D);
-      CallerNode->addCallee(CalleeNode);
+      CallerNode->addCallee({CalleeNode, CallExpr});
     }
   }
 
   void VisitCallExpr(CallExpr *CE) {
     if (Decl *D = getDeclFromCall(CE))
-      addCalledDecl(D);
+      addCalledDecl(D, CE);
     VisitChildren(CE);
+  }
+
+  void VisitLambdaExpr(LambdaExpr *LE) {
+    if (FunctionTemplateDecl *FTD = LE->getDependentCallOperator())
+      for (FunctionDecl *FD : FTD->specializations())
+        G->VisitFunctionDecl(FD);
+    else if (CXXMethodDecl *MD = LE->getCallOperator())
+      G->VisitFunctionDecl(MD);
+  }
+
+  void VisitCXXNewExpr(CXXNewExpr *E) {
+    if (FunctionDecl *FD = E->getOperatorNew())
+      addCalledDecl(FD, E);
+    VisitChildren(E);
+  }
+
+  void VisitCXXConstructExpr(CXXConstructExpr *E) {
+    CXXConstructorDecl *Ctor = E->getConstructor();
+    if (FunctionDecl *Def = Ctor->getDefinition())
+      addCalledDecl(Def, E);
+    VisitChildren(E);
+  }
+
+  // Include the evaluation of the default argument.
+  void VisitCXXDefaultArgExpr(CXXDefaultArgExpr *E) {
+    Visit(E->getExpr());
+  }
+
+  // Include the evaluation of the default initializers in a class.
+  void VisitCXXDefaultInitExpr(CXXDefaultInitExpr *E) {
+    Visit(E->getExpr());
   }
 
   // Adds may-call edges for the ObjC message sends.
@@ -91,7 +122,7 @@ public:
       else
         D = IDecl->lookupPrivateClassMethod(Sel);
       if (D) {
-        addCalledDecl(D);
+        addCalledDecl(D, ME);
         NumObjCCallEdges++;
       }
     }
@@ -126,6 +157,10 @@ bool CallGraph::includeInGraph(const Decl *D) {
   if (!D->hasBody())
     return false;
 
+  return includeCalleeInGraph(D);
+}
+
+bool CallGraph::includeCalleeInGraph(const Decl *D) {
   if (const FunctionDecl *FD = dyn_cast<FunctionDecl>(D)) {
     // We skip function template definitions, as their semantics is
     // only determined when they are instantiated.
@@ -143,13 +178,20 @@ bool CallGraph::includeInGraph(const Decl *D) {
 void CallGraph::addNodeForDecl(Decl* D, bool IsGlobal) {
   assert(D);
 
-  // Allocate a new node, mark it as root, and process it's calls.
+  // Allocate a new node, mark it as root, and process its calls.
   CallGraphNode *Node = getOrInsertNode(D);
 
   // Process all the calls by this function as well.
   CGBuilder builder(this, Node);
   if (Stmt *Body = D->getBody())
     builder.Visit(Body);
+
+  // Include C++ constructor member initializers.
+  if (auto constructor = dyn_cast<CXXConstructorDecl>(D)) {
+    for (CXXCtorInitializer *init : constructor->inits()) {
+      builder.Visit(init->getInit());
+    }
+  }
 }
 
 CallGraphNode *CallGraph::getNode(const Decl *F) const {
@@ -166,10 +208,10 @@ CallGraphNode *CallGraph::getOrInsertNode(Decl *F) {
   if (Node)
     return Node.get();
 
-  Node = llvm::make_unique<CallGraphNode>(F);
+  Node = std::make_unique<CallGraphNode>(F);
   // Make Root node a parent of all functions to make sure all are reachable.
   if (F)
-    Root->addCallee(Node.get());
+    Root->addCallee({Node.get(), /*Call=*/nullptr});
   return Node.get();
 }
 
@@ -192,8 +234,8 @@ void CallGraph::print(raw_ostream &OS) const {
     OS << " calls: ";
     for (CallGraphNode::const_iterator CI = N->begin(),
                                        CE = N->end(); CI != CE; ++CI) {
-      assert(*CI != Root && "No one can call the root node.");
-      (*CI)->print(OS);
+      assert(CI->Callee != Root && "No one can call the root node.");
+      CI->Callee->print(OS);
       OS << " ";
     }
     OS << '\n';

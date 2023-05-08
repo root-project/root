@@ -60,7 +60,7 @@ namespace TMVA {
       // Get class probabilities of given event
       std::vector<Float_t>& GetMulticlassValues();
 
-      const Ranking *CreateRanking() { return 0; }
+      const Ranking *CreateRanking() { return nullptr; }
       virtual void TestClassification();
       virtual void AddWeightsXMLTo(void*) const{}
       virtual void ReadWeightsFromXML(void*){}
@@ -86,7 +86,7 @@ namespace TMVA {
       UInt_t fNumEpochs {0}; // Number of training epochs
       Int_t fNumThreads {0}; // Number of CPU threads (if 0 uses default values)
       Int_t fVerbose; // Keras verbosity during training
-      Bool_t fUseTFKeras { kFALSE};   // use Keras from Tensorflow (-1, default, 0 false, 1, true)
+      Bool_t fUseTFKeras { true};   // use Keras from Tensorflow default is true
       Bool_t fContinueTraining; // Load weights from previous training
       Bool_t fSaveBestOnly; // Store only weights with smallest validation loss
       Int_t fTriesEarlyStopping; // Stop training if validation loss is not decreasing for several epochs
@@ -97,14 +97,17 @@ namespace TMVA {
       TString fUserCodeName; // filename of an optional user script that will be executed before loading the Keras model
       TString fKerasString;  // string identifying keras or tf.keras
 
-      bool fModelIsSetup = false; // flag whether model is loaded, needed for getMvaValue during evaluation
-      float* fVals = nullptr; // variables array used for GetMvaValue
+      bool fModelIsSetup = false; // flag whether current model is setup for being used
+      bool fModelIsSetupForEval = false; // flag to indicate whether model is setup for evaluation
+      std::vector<float> fVals; // variables array used for GetMvaValue
       std::vector<float> fOutput; // probability or regression output array used for GetMvaValue
       UInt_t fNVars {0}; // number of variables
       UInt_t fNOutputs {0}; // number of outputs (classes or targets)
       TString fFilenameTrainedModel; // output filename for trained model
 
+      void InitKeras();    //  initialize Keras (importing the readed modules)
       void SetupKerasModel(Bool_t loadTrainedModel); // setups the needed variables, loads the model
+      void SetupKerasModelForEval();  // optimizes model for evaluation
       UInt_t  GetNumValidationSamples();  // get number of validation events according to given option
 
       ClassDef(MethodPyKeras, 0);

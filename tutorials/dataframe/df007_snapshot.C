@@ -3,7 +3,7 @@
 /// \notebook -draw
 /// Write ROOT data with RDataFrame.
 ///
-/// This tutorial shows how to write out datasets in ROOT format using the RDataFrame
+/// This tutorial shows how to write out datasets in ROOT format using RDataFrame.
 ///
 /// \macro_image
 /// \macro_code
@@ -36,7 +36,7 @@ int df007_snapshot()
    auto treeName = "myTree";
    fill_tree(treeName, fileName);
 
-   // We read the tree from the file and create a RDataFrame.
+   // We read the tree from the file and create a RDataFrame
    ROOT::RDataFrame d(treeName, fileName);
 
    // ## Select entries
@@ -86,7 +86,7 @@ int df007_snapshot()
    f2.Close();
 
    // We can also get a fresh RDataFrame out of the snapshot and restart the
-   // analysis chain from it. The default columns are the one selected.
+   // analysis chain from it. The default columns are the ones selected.
    // Notice also how we can decide to be more explicit with the types of the
    // columns.
    auto snapshot_df = d2.Snapshot<int>(treeName, outFileName, {"b1_square"});

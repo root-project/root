@@ -31,23 +31,20 @@ public:
   RooMultiGenFunction(const RooAbsReal& func, const RooArgList& observables, const RooArgList& parameters) ;
   RooMultiGenFunction(const RooAbsReal& func, const RooArgList& observables, const RooArgList& parameters, const RooArgSet& nset) ;
   RooMultiGenFunction(const RooMultiGenFunction& other) ;
-  virtual ~RooMultiGenFunction() ;
+  ~RooMultiGenFunction() override ;
 
-  virtual ROOT::Math::IBaseFunctionMultiDim* Clone() const {
+  ROOT::Math::IBaseFunctionMultiDim* Clone() const override {
     return new RooMultiGenFunction(*this) ;
   }
 
-/*   Int_t numCall() const { return _ftor.numCall() ; } */
-/*   void resetNumCall() const { _ftor.resetNumCall() ; } */
-
-  unsigned int NDim() const { return _ftor.nObs() ; }
+  unsigned int NDim() const override { return _ftor.nObs() ; }
 
 protected:
 
-  double DoEval(const double*) const ;
+  double DoEval(const double*) const override ;
 
   RooFunctor _ftor ;
-  
+
   ClassDef(RooMultiGenFunction,0) // Export RooAbsReal as functor
 };
 

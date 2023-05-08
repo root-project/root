@@ -25,6 +25,7 @@
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/iterator_range.h"
+#include "llvm/CodeGen/Register.h"
 #include "llvm/CodeGen/SlotIndexes.h"
 #include "llvm/MC/LaneBitmask.h"
 #include "llvm/Support/Allocator.h"
@@ -189,6 +190,10 @@ namespace llvm {
         return start == Other.start && end == Other.end;
       }
 
+      bool operator!=(const Segment &Other) const {
+        return !(*this == Other);
+      }
+
       void dump() const;
     };
 
@@ -224,7 +229,7 @@ namespace llvm {
 
     /// Constructs a new LiveRange object.
     LiveRange(bool UseSegmentSet = false)
-        : segmentSet(UseSegmentSet ? llvm::make_unique<SegmentSet>()
+        : segmentSet(UseSegmentSet ? std::make_unique<SegmentSet>()
                                    : nullptr) {}
 
     /// Constructs a new LiveRange object by copying segments and valnos from
@@ -593,10 +598,9 @@ namespace llvm {
     /// @p End.
     bool isUndefIn(ArrayRef<SlotIndex> Undefs, SlotIndex Begin,
                    SlotIndex End) const {
-      return std::any_of(Undefs.begin(), Undefs.end(),
-                [Begin,End] (SlotIndex Idx) -> bool {
-                  return Begin <= Idx && Idx < End;
-                });
+      return llvm::any_of(Undefs, [Begin, End](SlotIndex Idx) -> bool {
+        return Begin <= Idx && Idx < End;
+      });
     }
 
     /// Flush segment set into the regular segment vector.
@@ -613,7 +617,7 @@ namespace llvm {
     /// subranges). Returns true if found at least one index.
     template <typename Range, typename OutputIt>
     bool findIndexesLiveAt(Range &&R, OutputIt O) const {
-      assert(std::is_sorted(R.begin(), R.end()));
+      assert(llvm::is_sorted(R));
       auto Idx = R.begin(), EndIdx = R.end();
       auto Seg = segments.begin(), EndSeg = segments.end();
       bool Found = false;
@@ -621,11 +625,12 @@ namespace llvm {
         // if the Seg is lower find first segment that is above Idx using binary
         // search
         if (Seg->end <= *Idx) {
-          Seg = std::upper_bound(++Seg, EndSeg, *Idx,
-            [=](typename std::remove_reference<decltype(*Idx)>::type V,
-                const typename std::remove_reference<decltype(*Seg)>::type &S) {
-              return V < S.end;
-            });
+          Seg = std::upper_bound(
+              ++Seg, EndSeg, *Idx,
+              [=](std::remove_reference_t<decltype(*Idx)> V,
+                  const std::remove_reference_t<decltype(*Seg)> &S) {
+                return V < S.end;
+              });
           if (Seg == EndSeg)
             break;
         }
@@ -699,12 +704,16 @@ namespace llvm {
   private:
     SubRange *SubRanges = nullptr; ///< Single linked list of subregister live
                                    /// ranges.
+    const Register Reg; // the register or stack slot of this interval.
+    float Weight = 0.0; // weight of this interval
 
   public:
-    const unsigned reg;  // the register or stack slot of this interval.
-    float weight;        // weight of this interval
+    Register reg() const { return Reg; }
+    float weight() const { return Weight; }
+    void incrementWeight(float Inc) { Weight += Inc; }
+    void setWeight(float Value) { Weight = Value; }
 
-    LiveInterval(unsigned Reg, float Weight) : reg(Reg), weight(Weight) {}
+    LiveInterval(unsigned Reg, float Weight) : Reg(Reg), Weight(Weight) {}
 
     ~LiveInterval() {
       clearSubRanges();
@@ -801,14 +810,10 @@ namespace llvm {
     unsigned getSize() const;
 
     /// isSpillable - Can this interval be spilled?
-    bool isSpillable() const {
-      return weight != huge_valf;
-    }
+    bool isSpillable() const { return Weight != huge_valf; }
 
     /// markNotSpillable - Mark interval as not spillable
-    void markNotSpillable() {
-      weight = huge_valf;
-    }
+    void markNotSpillable() { Weight = huge_valf; }
 
     /// For a given lane mask @p LaneMask, compute indexes at which the
     /// lane is marked undefined by subregister <def,read-undef> definitions.
@@ -829,18 +834,43 @@ namespace llvm {
     ///    function will be applied to the L0010 and L0008 subranges.
     ///
     /// \p Indexes and \p TRI are required to clean up the VNIs that
-    /// don't defne the related lane masks after they get shrunk. E.g.,
+    /// don't define the related lane masks after they get shrunk. E.g.,
     /// when L000F gets split into L0007 and L0008 maybe only a subset
     /// of the VNIs that defined L000F defines L0007.
+    ///
+    /// The clean up of the VNIs need to look at the actual instructions
+    /// to decide what is or is not live at a definition point. If the
+    /// update of the subranges occurs while the IR does not reflect these
+    /// changes, \p ComposeSubRegIdx can be used to specify how the
+    /// definition are going to be rewritten.
+    /// E.g., let say we want to merge:
+    ///     V1.sub1:<2 x s32> = COPY V2.sub3:<4 x s32>
+    /// We do that by choosing a class where sub1:<2 x s32> and sub3:<4 x s32>
+    /// overlap, i.e., by choosing a class where we can find "offset + 1 == 3".
+    /// Put differently we align V2's sub3 with V1's sub1:
+    /// V2: sub0 sub1 sub2 sub3
+    /// V1: <offset>  sub0 sub1
+    ///
+    /// This offset will look like a composed subregidx in the the class:
+    ///     V1.(composed sub2 with sub1):<4 x s32> = COPY V2.sub3:<4 x s32>
+    /// =>  V1.(composed sub2 with sub1):<4 x s32> = COPY V2.sub3:<4 x s32>
+    ///
+    /// Now if we didn't rewrite the uses and def of V1, all the checks for V1
+    /// need to account for this offset.
+    /// This happens during coalescing where we update the live-ranges while
+    /// still having the old IR around because updating the IR on-the-fly
+    /// would actually clobber some information on how the live-ranges that
+    /// are being updated look like.
     void refineSubRanges(BumpPtrAllocator &Allocator, LaneBitmask LaneMask,
                          std::function<void(LiveInterval::SubRange &)> Apply,
                          const SlotIndexes &Indexes,
-                         const TargetRegisterInfo &TRI);
+                         const TargetRegisterInfo &TRI,
+                         unsigned ComposeSubRegIdx = 0);
 
     bool operator<(const LiveInterval& other) const {
       const SlotIndex &thisIndex = beginIndex();
       const SlotIndex &otherIndex = other.beginIndex();
-      return std::tie(thisIndex, reg) < std::tie(otherIndex, other.reg);
+      return std::tie(thisIndex, Reg) < std::tie(otherIndex, other.Reg);
     }
 
     void print(raw_ostream &OS) const;

@@ -2,7 +2,7 @@
 // Author: Rene Brun   29/12/99
 
 /*************************************************************************
- * Copyright (C) 1995-2000, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2022, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -17,13 +17,11 @@
 //                                                                      //
 // TExec                                                                //
 //                                                                      //
-// A TExec object can execute a CINT command.                           //
+// A TExec object can execute a CLING command.                           //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-
 #include "TNamed.h"
-
 
 class TExec : public TNamed {
 
@@ -33,13 +31,12 @@ public:
    TExec(const char *name, const char *command);
    TExec(const TExec &text);
    virtual ~TExec();
-   virtual void     Exec(const char *command="");
-   virtual void     Paint(Option_t *option="");
-   virtual void     SavePrimitive(std::ostream &out, Option_t *option = "");
-   virtual void     SetAction(const char *action) {SetTitle(action);}
+   virtual void     Exec(const char *command = "");
+   void             Paint(Option_t *option="") override;
+   void             SavePrimitive(std::ostream &out, Option_t *option = "") override;
+   virtual void     SetAction(const char *action) { SetTitle(action); }
 
-   ClassDef(TExec,1);  //To execute a CINT command
+   ClassDefOverride(TExec,1);  //To execute a CLING command
 };
 
 #endif
-

@@ -20,6 +20,7 @@
 #include "llvm/ADT/Optional.h"
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/SmallString.h"
+#include "llvm/ADT/StringExtras.h"
 #include "llvm/Support/raw_ostream.h"
 
 using namespace clang;
@@ -135,7 +136,7 @@ void UnixAPIMisuseChecker::ReportOpenBug(CheckerContext &C,
 
   LazyInitialize(this, BT_open, "Improper use of 'open'");
 
-  auto Report = llvm::make_unique<BugReport>(*BT_open, Msg, N);
+  auto Report = std::make_unique<PathSensitiveBugReport>(*BT_open, Msg, N);
   Report->addRange(SR);
   C.emitReport(std::move(Report));
 }
@@ -304,7 +305,8 @@ void UnixAPIMisuseChecker::CheckPthreadOnce(CheckerContext &C,
 
   LazyInitialize(this, BT_pthreadOnce, "Improper use of 'pthread_once'");
 
-  auto report = llvm::make_unique<BugReport>(*BT_pthreadOnce, os.str(), N);
+  auto report =
+      std::make_unique<PathSensitiveBugReport>(*BT_pthreadOnce, os.str(), N);
   report->addRange(CE->getArg(0)->getSourceRange());
   C.emitReport(std::move(report));
 }
@@ -347,7 +349,8 @@ bool UnixAPIPortabilityChecker::ReportZeroByteAllocation(
   SmallString<256> S;
   llvm::raw_svector_ostream os(S);
   os << "Call to '" << fn_name << "' has an allocation size of 0 bytes";
-  auto report = llvm::make_unique<BugReport>(*BT_mallocZero, os.str(), N);
+  auto report =
+      std::make_unique<PathSensitiveBugReport>(*BT_mallocZero, os.str(), N);
 
   report->addRange(arg->getSourceRange());
   bugreporter::trackExpressionValue(N, arg, *report);
@@ -501,7 +504,7 @@ void UnixAPIPortabilityChecker::checkPreStmt(const CallExpr *CE,
     mgr.registerChecker<CHECKERNAME>();                                        \
   }                                                                            \
                                                                                \
-  bool ento::shouldRegister##CHECKERNAME(const LangOptions &LO) {              \
+  bool ento::shouldRegister##CHECKERNAME(const CheckerManager &mgr) {              \
     return true;                                                               \
   }
 

@@ -29,7 +29,7 @@ end
 
 set SOURCE (status -f)
 # normalize path
-set thisroot (dirname $SOURCE)
+set thisroot (path dirname $SOURCE)
 set -xg ROOTSYS (set oldpwd $PWD; cd $thisroot/.. > /dev/null;pwd;cd $oldpwd; set -e oldpwd)
 
 if not set -q MANPATH

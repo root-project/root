@@ -18,44 +18,43 @@
 
 #include "Rtypes.h"
 #include "RooAbsBinning.h"
-class TIterator ;
 
 class RooUniformBinning : public RooAbsBinning {
 public:
 
-  RooUniformBinning(const char* name=0) ;
-  RooUniformBinning(Double_t xlo, Double_t xhi, Int_t nBins, const char* name=0) ;
-  RooUniformBinning(const RooUniformBinning& other, const char* name=0) ;
-  RooAbsBinning* clone(const char* name=0) const { return new RooUniformBinning(*this,name?name:GetName()) ; }
-  virtual ~RooUniformBinning() ;
+  RooUniformBinning(const char* name=nullptr) ;
+  RooUniformBinning(double xlo, double xhi, Int_t nBins, const char* name=nullptr) ;
+  RooUniformBinning(const RooUniformBinning& other, const char* name=nullptr) ;
+  RooAbsBinning* clone(const char* name=nullptr) const override { return new RooUniformBinning(*this,name?name:GetName()) ; }
+  ~RooUniformBinning() override ;
 
-  virtual void setRange(Double_t xlo, Double_t xhi) ;
+  void setRange(double xlo, double xhi) override ;
 
-  virtual Int_t numBoundaries() const { return _nbins + 1 ; }
-  virtual Int_t binNumber(Double_t x) const  ;
-  virtual Bool_t isUniform() const { return kTRUE ; }
+  Int_t numBoundaries() const override { return _nbins + 1 ; }
+  void binNumbers(double const * x, int * bins, std::size_t n, int coef) const override;
+  bool isUniform() const override { return true ; }
 
-  virtual Double_t lowBound() const { return _xlo ; }
-  virtual Double_t highBound() const { return _xhi ; }
+  double lowBound() const override { return _xlo ; }
+  double highBound() const override { return _xhi ; }
 
-  virtual Double_t binCenter(Int_t bin) const ;
-  virtual Double_t binWidth(Int_t bin) const ;
-  virtual Double_t binLow(Int_t bin) const ;
-  virtual Double_t binHigh(Int_t bin) const ;
+  double binCenter(Int_t bin) const override ;
+  double binWidth(Int_t bin) const override ;
+  double binLow(Int_t bin) const override ;
+  double binHigh(Int_t bin) const override ;
 
-  virtual Double_t averageBinWidth() const { return _binw ; }
-  virtual Double_t* array() const ;
+  double averageBinWidth() const override { return _binw ; }
+  double* array() const override ;
 
 protected:
 
-  mutable Double_t* _array ; //! do not persist
-  Double_t _xlo ;
-  Double_t _xhi ;
+  mutable double* _array ; ///<! do not persist
+  double _xlo ;
+  double _xhi ;
   Int_t    _nbins ;
-  Double_t _binw ;
+  double _binw ;
 
 
-  ClassDef(RooUniformBinning,1) // Uniform binning specification
+  ClassDefOverride(RooUniformBinning,1) // Uniform binning specification
 };
 
 #endif

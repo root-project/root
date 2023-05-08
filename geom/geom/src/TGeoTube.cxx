@@ -3071,7 +3071,8 @@ void TGeoCtub::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*= ""*/)
    out << "   tx   = " << fNhigh[0] << ";" << std::endl;
    out << "   ty   = " << fNhigh[1] << ";" << std::endl;
    out << "   tz   = " << fNhigh[2] << ";" << std::endl;
-   out << "   TGeoShape *" << GetPointerName() << " = new TGeoCtub(\"" << GetName() << "\",rmin,rmax,dz,phi1,phi2,lx,ly,lz,tx,ty,tz);" << std::endl;   TObject::SetBit(TGeoShape::kGeoSavePrimitive);
+   out << "   TGeoShape *" << GetPointerName() << " = new TGeoCtub(\"" << GetName() << "\",rmin,rmax,dz,phi1,phi2,lx,ly,lz,tx,ty,tz);" << std::endl;
+   TObject::SetBit(TGeoShape::kGeoSavePrimitive);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

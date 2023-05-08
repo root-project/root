@@ -38,7 +38,7 @@ using std::strstr;
 
 namespace {
   textinput::TerminalDisplayUnix*& gTerminalDisplayUnix() {
-    static textinput::TerminalDisplayUnix* S = 0;
+    static textinput::TerminalDisplayUnix* S = nullptr;
     return S;
   }
 
@@ -161,6 +161,13 @@ namespace textinput {
       }
     }
 #endif
+  }
+
+  void
+  TerminalDisplayUnix::Clear() {
+    static const char text[] = "\033[2J\033[H";
+    if (!IsTTY()) return;
+    WriteRawString(text, sizeof(text));
   }
 
   void

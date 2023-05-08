@@ -16,7 +16,6 @@
 #include <ROOT/REveViewer.hxx>
 #include <ROOT/REveScene.hxx>
 #include <ROOT/REveClient.hxx>
-#include <ROOT/REveGeomViewer.hxx>
 #include <ROOT/RWebWindow.hxx>
 #include <ROOT/RFileDialog.hxx>
 #include <ROOT/RLogger.hxx>
@@ -107,10 +106,12 @@ REveManager::REveManager()
    fSelectionList->IncDenyDestroy();
    fWorld->AddElement(fSelectionList);
    fSelection = new REveSelection("Global Selection", "", kRed, kViolet);
+   fSelection->SetIsMaster(true);
    fSelection->IncDenyDestroy();
    fSelectionList->AddElement(fSelection);
    fHighlight = new REveSelection("Global Highlight", "", kGreen, kCyan);
-   fHighlight->SetHighlightMode();
+   fHighlight->SetIsMaster(true);
+   fHighlight->SetIsHighlight(true);
    fHighlight->IncDenyDestroy();
    fSelectionList->AddElement(fHighlight);
 
@@ -143,12 +144,15 @@ REveManager::REveManager()
    fWebWindow->UseServerThreads();
    fWebWindow->SetDefaultPage("file:rootui5sys/eve7/index.html");
 
-   const char *gl_viewer = gEnv->GetValue("WebEve.GLViewer", "Three");
+   const char *gl_viewer = gEnv->GetValue("WebEve.GLViewer", "RCore");
    const char *gl_dblclick = gEnv->GetValue("WebEve.DblClick", "Off");
    Int_t htimeout = gEnv->GetValue("WebEve.HTimeout", 250);
    Int_t table_row_height = gEnv->GetValue("WebEve.TableRowHeight", 0);
    fWebWindow->SetUserArgs(Form("{ GLViewer: \"%s\", DblClick: \"%s\", HTimeout: %d, TableRowHeight: %d }", gl_viewer,
                                 gl_dblclick, htimeout, table_row_height));
+
+   if (strcmp(gl_viewer, "RCore") == 0)
+      fIsRCore = true;
 
    // this is call-back, invoked when message received via websocket
    fWebWindow->SetCallBacks([this](unsigned connid) { WindowConnect(connid); },
@@ -159,6 +163,10 @@ REveManager::REveManager()
    fWebWindow->SetMaxQueueLength(30); // number of allowed entries in the window queue
 
    fMIRExecThread = std::thread{[this] { MIRExecThread(); }};
+
+   // activate interpreter error report
+   gInterpreter->ReportDiagnosticsToErrorHandler();
+   SetErrorHandler(ErrorHandler);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -571,7 +579,7 @@ TGeoManager *REveManager::GetGeometryByAlias(const TString &alias)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get the default geometry.
-/// It should be registered via RegisterGeometryName("Default", <URL>).
+/// It should be registered via RegisterGeometryName("Default", `<URL>`).
 
 TGeoManager *REveManager::GetDefaultGeometry()
 {
@@ -940,20 +948,25 @@ void REveManager::PublishChanges()
    jobj["content"] = "EndChanges";
 
    if (!gEveLogEntries.empty()) {
-
       constexpr static int numLevels = static_cast<int>(ELogLevel::kDebug) + 1;
       constexpr static std::array<const char *, numLevels> sTag{
-         {"{unset-error-level please report}", "FATAL", "Error", "Warning", "Info", "Debug"}};
+        {"{unset-error-level please report}", "FATAL", "Error", "Warning", "Info", "Debug"}};
 
+      jobj["log"] = nlohmann::json::array();
       std::stringstream strm;
       for (auto entry : gEveLogEntries) {
+         nlohmann::json item = {};
+         item["lvl"] = entry.fLevel; 
          int cappedLevel = std::min(static_cast<int>(entry.fLevel), numLevels - 1);
-         strm << sTag[cappedLevel];
+         strm <<  "Server " << sTag[cappedLevel] << ":";
+
          if (!entry.fLocation.fFuncName.empty())
             strm << " " << entry.fLocation.fFuncName;
-         strm << " " << entry.fMessage; 
+         strm << " " << entry.fMessage;
+         item["msg"] = strm.str();
+         jobj["log"].push_back(item);
+         strm.clear();
       }
-      jobj["log"] = strm.str();
       gEveLogEntries.clear();
    }
 
@@ -1053,22 +1066,6 @@ void REveManager::Show(const RWebDisplayArgs &args)
    }
 }
 
-//////////////////////////////////////////////////////////////////
-/// Show current geometry in web browser
-
-std::shared_ptr<REveGeomViewer> REveManager::ShowGeometry(const RWebDisplayArgs &args)
-{
-   if (!gGeoManager) {
-      Error("ShowGeometry", "No geometry is loaded");
-      return nullptr;
-   }
-
-   auto viewer = std::make_shared<REveGeomViewer>(gGeoManager);
-
-   viewer->Show(args);
-
-   return viewer;
-}
 
 //____________________________________________________________________
 void REveManager::BeginChange()
@@ -1127,6 +1124,18 @@ REveManager::ChangeGuard::ChangeGuard()
 REveManager::ChangeGuard::~ChangeGuard()
 {
    gEve->EndChange();
+}
+
+// Error handler streams error-level messages to client log
+void REveManager::ErrorHandler(Int_t level, Bool_t abort, const char * location, const char *msg)
+{
+   if (level >= kError)
+   {
+      RLogEntry entry(ELogLevel::kError, REveLog());
+      entry.fMessage = msg;
+      gEveLogEntries.emplace_back(entry);
+   }
+   ::DefaultErrorHandler(level, abort, location, msg);
 }
 
 /** \class REveManager::RExceptionHandler

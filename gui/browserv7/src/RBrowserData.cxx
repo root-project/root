@@ -24,6 +24,7 @@
 #include "TFolder.h"
 #include "TROOT.h"
 #include "TBufferJSON.h"
+#include "TEnv.h"
 
 #include <algorithm>
 #include <regex>
@@ -36,11 +37,50 @@ ROOT::Experimental::RLogChannel &ROOT::Experimental::BrowserLog() {
    return sLog;
 }
 
+namespace ROOT {
+namespace Experimental {
+
+class RBrowserDataCleanup : public TObject {
+
+   RBrowserData &fData;
+
+public:
+   RBrowserDataCleanup(RBrowserData &_data) : fData(_data) {}
+
+   void RecursiveRemove(TObject *obj) override
+   {
+      fData.RemoveFromCache(obj);
+   }
+};
+}
+}
+
 
 /** \class ROOT::Experimental::RBrowserData
 \ingroup rbrowser
 \brief Way to browse (hopefully) everything in %ROOT
 */
+
+
+/////////////////////////////////////////////////////////////////////
+/// Default constructor
+
+RBrowserData::RBrowserData()
+{
+   fCleanupHandle = std::make_unique<RBrowserDataCleanup>(*this);
+   R__LOCKGUARD(gROOTMutex);
+   gROOT->GetListOfCleanups()->Add(fCleanupHandle.get());
+}
+
+/////////////////////////////////////////////////////////////////////
+/// Destructor
+
+RBrowserData::~RBrowserData()
+{
+   // should be here because of fCleanupHandle destructor
+   R__LOCKGUARD(gROOTMutex);
+   gROOT->GetListOfCleanups()->Remove(fCleanupHandle.get());
+}
 
 /////////////////////////////////////////////////////////////////////
 /// set top element for browsing
@@ -189,7 +229,7 @@ bool RBrowserData::ProcessBrowserRequest(const RBrowserRequest &request, RBrowse
 
          if (request.sort != "unsorted")
             std::sort(fLastSortedItems.begin(), fLastSortedItems.end(),
-                      [request](const Browsable::RItem *a, const Browsable::RItem *b) { return a->Compare(b, request.sort); });
+                      [request](const Browsable::RItem *a, const Browsable::RItem *b) { return a ? a->Compare(b, request.sort) : !b; });
       }
 
       if (request.reverse)
@@ -228,6 +268,11 @@ bool RBrowserData::ProcessBrowserRequest(const RBrowserRequest &request, RBrowse
 
 std::string RBrowserData::ProcessRequest(const RBrowserRequest &request)
 {
+   if (request.lastcycle < 0)
+      gEnv->SetValue("WebGui.LastCycle", "no");
+   else if (request.lastcycle > 0)
+      gEnv->SetValue("WebGui.LastCycle", "yes");
+
    RBrowserReply reply;
 
    reply.path = request.path;
@@ -264,6 +309,9 @@ std::shared_ptr<Browsable::RElement> RBrowserData::GetSubElement(const Browsable
 {
    if (path.empty())
       return fTopElement;
+
+   // validate cache - removes no longer actual elements
+   RemoveFromCache(nullptr);
 
    // first check direct match in cache
    for (auto &entry : fCache)
@@ -322,4 +370,53 @@ std::shared_ptr<Browsable::RElement> RBrowserData::GetSubElement(const Browsable
 void RBrowserData::ClearCache()
 {
    fCache.clear();
+}
+
+/////////////////////////////////////////////////////////////////////////
+/// Remove object from cache
+/// If nullptr specified - removes no-longer-valid elements
+/// Returns true if any element was removed
+
+bool RBrowserData::RemoveFromCache(void *obj)
+{
+   unsigned pos = 0;
+
+   bool isany = false;
+
+   while (pos < fCache.size()) {
+      if (obj ? !fCache[pos].second->IsObject(obj) : fCache[pos].second->CheckValid()) {
+         pos++;
+         continue;
+      }
+
+      isany = true;
+      auto path = fCache[pos].first;
+      fCache.erase(fCache.begin() + pos);
+      if (RemoveFromCache(path))
+         pos = 0; // start scan from the beginning
+   }
+
+   return isany;
+}
+
+/////////////////////////////////////////////////////////////////////////
+/// Remove path (and all sub-paths) from cache
+/// Returns true if any element was removed
+
+bool RBrowserData::RemoveFromCache(const Browsable::RElementPath_t &path)
+{
+   if (path.size() == 0)
+      return false;
+
+   bool isany = false;
+   unsigned pos = 0;
+   while (pos < fCache.size()) {
+      if (Browsable::RElement::ComparePaths(path, fCache[pos].first) == (int) path.size()) {
+         fCache.erase(fCache.begin() + pos);
+         isany = true;
+      } else {
+         pos++;
+      }
+   }
+   return isany;
 }

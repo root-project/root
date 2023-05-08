@@ -23,7 +23,12 @@
 
 namespace llvm {
 
-class Any {
+class LLVM_EXTERNAL_VISIBILITY Any {
+
+  // The `Typeid<T>::Id` static data member below is a globally unique
+  // identifier for the type `T`. It is explicitly marked with default
+  // visibility so that when `-fvisibility=hidden` is used, the loader still
+  // merges duplicate definitions across DSO boundaries.
   template <typename T> struct TypeId { static const char Id; };
 
   struct StorageBase {
@@ -38,7 +43,7 @@ class Any {
     explicit StorageImpl(T &&Value) : Value(std::move(Value)) {}
 
     std::unique_ptr<StorageBase> clone() const override {
-      return llvm::make_unique<StorageImpl<T>>(Value);
+      return std::make_unique<StorageImpl<T>>(Value);
     }
 
     const void *id() const override { return &TypeId<T>::Id; }
@@ -59,26 +64,26 @@ public:
   // When T is Any or T is not copy-constructible we need to explicitly disable
   // the forwarding constructor so that the copy constructor gets selected
   // instead.
-  template <
-      typename T,
-      typename std::enable_if<
-          llvm::conjunction<
-              llvm::negation<std::is_same<typename std::decay<T>::type, Any>>,
-              // We also disable this overload when an `Any` object can be
-              // converted to the parameter type because in that case, this
-              // constructor may combine with that conversion during overload
-              // resolution for determining copy constructibility, and then
-              // when we try to determine copy constructibility below we may
-              // infinitely recurse. This is being evaluated by the standards
-              // committee as a potential DR in `std::any` as well, but we're
-              // going ahead and adopting it to work-around usage of `Any` with
-              // types that need to be implicitly convertible from an `Any`.
-              llvm::negation<std::is_convertible<Any, typename std::decay<T>::type>>,
-              std::is_copy_constructible<typename std::decay<T>::type>>::value,
-          int>::type = 0>
+  template <typename T,
+            std::enable_if_t<
+                llvm::conjunction<
+                    llvm::negation<std::is_same<std::decay_t<T>, Any>>,
+                    // We also disable this overload when an `Any` object can be
+                    // converted to the parameter type because in that case,
+                    // this constructor may combine with that conversion during
+                    // overload resolution for determining copy
+                    // constructibility, and then when we try to determine copy
+                    // constructibility below we may infinitely recurse. This is
+                    // being evaluated by the standards committee as a potential
+                    // DR in `std::any` as well, but we're going ahead and
+                    // adopting it to work-around usage of `Any` with types that
+                    // need to be implicitly convertible from an `Any`.
+                    llvm::negation<std::is_convertible<Any, std::decay_t<T>>>,
+                    std::is_copy_constructible<std::decay_t<T>>>::value,
+                int> = 0>
   Any(T &&Value) {
-    using U = typename std::decay<T>::type;
-    Storage = llvm::make_unique<StorageImpl<U>>(std::forward<T>(Value));
+    Storage =
+        std::make_unique<StorageImpl<std::decay_t<T>>>(std::forward<T>(Value));
   }
 
   Any(Any &&Other) : Storage(std::move(Other.Storage)) {}
@@ -114,32 +119,23 @@ template <typename T> const char Any::TypeId<T>::Id = 0;
 template <typename T> bool any_isa(const Any &Value) {
   if (!Value.Storage)
     return false;
-  using U =
-      typename std::remove_cv<typename std::remove_reference<T>::type>::type;
-  return Value.Storage->id() == &Any::TypeId<U>::Id;
+  return Value.Storage->id() == &Any::TypeId<remove_cvref_t<T>>::Id;
 }
 
 template <class T> T any_cast(const Any &Value) {
-  using U =
-      typename std::remove_cv<typename std::remove_reference<T>::type>::type;
-  return static_cast<T>(*any_cast<U>(&Value));
+  return static_cast<T>(*any_cast<remove_cvref_t<T>>(&Value));
 }
 
 template <class T> T any_cast(Any &Value) {
-  using U =
-      typename std::remove_cv<typename std::remove_reference<T>::type>::type;
-  return static_cast<T>(*any_cast<U>(&Value));
+  return static_cast<T>(*any_cast<remove_cvref_t<T>>(&Value));
 }
 
 template <class T> T any_cast(Any &&Value) {
-  using U =
-      typename std::remove_cv<typename std::remove_reference<T>::type>::type;
-  return static_cast<T>(std::move(*any_cast<U>(&Value)));
+  return static_cast<T>(std::move(*any_cast<remove_cvref_t<T>>(&Value)));
 }
 
 template <class T> const T *any_cast(const Any *Value) {
-  using U =
-      typename std::remove_cv<typename std::remove_reference<T>::type>::type;
+  using U = remove_cvref_t<T>;
   assert(Value && any_isa<T>(*Value) && "Bad any cast!");
   if (!Value || !any_isa<U>(*Value))
     return nullptr;
@@ -147,7 +143,7 @@ template <class T> const T *any_cast(const Any *Value) {
 }
 
 template <class T> T *any_cast(Any *Value) {
-  using U = typename std::decay<T>::type;
+  using U = std::decay_t<T>;
   assert(Value && any_isa<U>(*Value) && "Bad any cast!");
   if (!Value || !any_isa<U>(*Value))
     return nullptr;

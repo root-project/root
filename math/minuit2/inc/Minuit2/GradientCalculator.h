@@ -10,6 +10,8 @@
 #ifndef ROOT_Minuit2_GradientCalculator
 #define ROOT_Minuit2_GradientCalculator
 
+#include "Minuit2/MnMatrixfwd.h"
+
 namespace ROOT {
 
 namespace Minuit2 {
@@ -28,6 +30,9 @@ public:
    virtual FunctionGradient operator()(const MinimumParameters &) const = 0;
 
    virtual FunctionGradient operator()(const MinimumParameters &, const FunctionGradient &) const = 0;
+
+   virtual bool Hessian(const MinimumParameters &, MnAlgebraicSymMatrix &) const { return false;}
+
 };
 
 } // namespace Minuit2

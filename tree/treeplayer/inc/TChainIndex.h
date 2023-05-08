@@ -45,7 +45,7 @@ public:
    public:
       TChainIndexEntry() : fMinIndexValue(0), fMinIndexValMinor(0),
                            fMaxIndexValue(0), fMaxIndexValMinor(0),
-                           fTreeIndex(0) {}
+                           fTreeIndex(nullptr) {}
 
       typedef std::pair<Long64_t, Long64_t>      IndexValPair_t;
 
@@ -88,7 +88,7 @@ public:
    virtual Long64_t       GetN()            const {return fEntries.size();}
    virtual Bool_t         IsValidFor(const TTree *parent);
    virtual void           UpdateFormulaLeaves(const TTree *parent);
-   virtual void           SetTree(const TTree *T);
+   virtual void           SetTree(TTree *T);
 
    ClassDef(TChainIndex,1)  //A Tree Index with majorname and minorname.
 };

@@ -291,11 +291,11 @@ Int_t TGeoMatrix::GetByteCount() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Provide a pointer name containing uid.
 
-char *TGeoMatrix::GetPointerName() const
+const char *TGeoMatrix::GetPointerName() const
 {
    static TString name;
-   name = TString::Format("pMatrix%d", GetUniqueID());
-   return (char*)name.Data();
+   name.Form("pMatrix%d", GetUniqueID());
+   return name.Data();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -683,6 +683,7 @@ TGeoHMatrix TGeoTranslation::Inverse() const
 {
    TGeoHMatrix h;
    h = *this;
+   h.ResetBit(kGeoRegistered);
    Double_t tr[3];
    tr[0] = -fTranslation[0];
    tr[1] = -fTranslation[1];
@@ -977,6 +978,7 @@ TGeoHMatrix TGeoRotation::Inverse() const
 {
    TGeoHMatrix h;
    h = *this;
+   h.ResetBit(kGeoRegistered);
    Double_t newrot[9];
    newrot[0] = fRotationMatrix[0];
    newrot[1] = fRotationMatrix[3];
@@ -1527,6 +1529,7 @@ TGeoHMatrix TGeoScale::Inverse() const
 {
    TGeoHMatrix h;
    h = *this;
+   h.ResetBit(kGeoRegistered);
    Double_t scale[3];
    scale[0] = 1./fScale[0];
    scale[1] = 1./fScale[1];
@@ -1826,6 +1829,7 @@ TGeoHMatrix TGeoCombiTrans::Inverse() const
 {
    TGeoHMatrix h;
    h = *this;
+   h.ResetBit(kGeoRegistered);
    Bool_t is_tr = IsTranslation();
    Bool_t is_rot = IsRotation();
    Double_t tr[3];
@@ -2042,11 +2046,11 @@ void TGeoCombiTrans::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    out << "   dz = " << fTranslation[2] << ";" << std::endl;
    if (fRotation && fRotation->IsRotation()) {
       fRotation->SavePrimitive(out,option);
-      out << "   " << GetPointerName() << " = new TGeoCombiTrans(\"" << GetName() << "\", dx,dy,dz,";
-      out << fRotation->GetPointerName() << ");" << std::endl;
+      out << "   auto " << GetPointerName() << " = new TGeoCombiTrans(\"" << GetName() << "\", dx, dy, dz, "
+          << fRotation->GetPointerName() << ");" << std::endl;
    } else {
-      out << "   " << GetPointerName() << " = new TGeoCombiTrans(\"" << GetName() << "\");" << std::endl;
-      out << "   " << GetPointerName() << "->SetTranslation(dx,dy,dz);" << std::endl;
+      out << "   auto " << GetPointerName() << " = new TGeoCombiTrans(\"" << GetName() << "\");" << std::endl;
+      out << "   " << GetPointerName() << "->SetTranslation(dx, dy, dz);" << std::endl;
    }
    TObject::SetBit(kGeoSavePrimitive);
 }
@@ -2232,6 +2236,7 @@ void TGeoGenTrans::SetScale(Double_t sx, Double_t sy, Double_t sz)
 TGeoHMatrix TGeoGenTrans::Inverse() const
 {
    TGeoHMatrix h = *this;
+   h.ResetBit(kGeoRegistered);
    return h;
 }
 
@@ -2458,6 +2463,7 @@ TGeoHMatrix TGeoHMatrix::Inverse() const
 {
    TGeoHMatrix h;
    h = *this;
+   h.ResetBit(kGeoRegistered);
    if (IsTranslation()) {
       Double_t tr[3];
       tr[0] = -fTranslation[0]*fRotationMatrix[0] - fTranslation[1]*fRotationMatrix[3] - fTranslation[2]*fRotationMatrix[6];
@@ -2779,8 +2785,8 @@ void TGeoHMatrix::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*= ""*
    out << "   rot[0] =" << rot[0] << ";    " << "rot[1] = " << rot[1] << ";    " << "rot[2] = " << rot[2] << ";" << std::endl;
    out << "   rot[3] =" << rot[3] << ";    " << "rot[4] = " << rot[4] << ";    " << "rot[5] = " << rot[5] << ";" << std::endl;
    out << "   rot[6] =" << rot[6] << ";    " << "rot[7] = " << rot[7] << ";    " << "rot[8] = " << rot[8] << ";" << std::endl;
-   char *name = GetPointerName();
-   out << "   TGeoHMatrix *" << name << " = new TGeoHMatrix(\"" << GetName() << "\");" << std::endl;
+   const char *name = GetPointerName();
+   out << "   auto " << name << " = new TGeoHMatrix(\"" << GetName() << "\");" << std::endl;
    out << "   " << name << "->SetTranslation(tr);" << std::endl;
    out << "   " << name << "->SetRotation(rot);" << std::endl;
    if (IsTranslation()) out << "   " << name << "->SetBit(TGeoMatrix::kGeoTranslation);" << std::endl;

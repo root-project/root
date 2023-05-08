@@ -10,7 +10,7 @@
 ## \macro_code
 ##
 ## \date January 2022
-## \authors Rahul Balasubramanian
+## \author Rahul Balasubramanian
 
 import ROOT
 
@@ -99,7 +99,7 @@ morph_datahist_0p5.plotOn(frame1, Name="morph_dh_cHq3=0.5", LineColor="kGreen+2"
 
 model = ROOT.RooWrapperPdf("wrap_pdf", "wrap_pdf", morphfunc)
 data = model.generate({cHq3, obsvar}, 1000000)
-hh_data = ROOT.RooAbsData.createHistogram(data, "x,y", obsvar, Binning=20, YVar=dict(var=cHq3, Binning=50))
+hh_data = data.createHistogram("x,y", obsvar, Binning=20, YVar=dict(var=cHq3, Binning=50))
 hh_data.SetTitle("Morphing prediction")
 
 # Draw plots on canvas
@@ -137,7 +137,7 @@ leg2.SetLineColor(ROOT.kWhite)
 
 leg2.AddEntry("morph_dh_cHq3=0.01", "c_{Hq^{(3)}}=0.01", "L")
 leg2.AddEntry(0, "", "")
-leg2.AddEntry("morph_dh_cHq3=0.025", "c_{Hq^{(3)}}=0.025", "L")
+leg2.AddEntry("morph_dh_cHq3=0.25", "c_{Hq^{(3)}}=0.25", "L")
 leg2.AddEntry(0, "", "")
 leg2.AddEntry("morph_dh_cHq3=0.5", "c_{Hq^{(3)}}=0.5", "L")
 leg2.AddEntry(0, "", "")

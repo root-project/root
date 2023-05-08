@@ -74,7 +74,7 @@ class TASInterruptHandler : public TSignalHandler {
 public:
    TASInterruptHandler(TApplicationServer *s)
       : TSignalHandler(kSigUrgent, kFALSE) { fServ = s; }
-   Bool_t  Notify();
+   Bool_t  Notify() override;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -97,7 +97,7 @@ class TASSigPipeHandler : public TSignalHandler {
 public:
    TASSigPipeHandler(TApplicationServer *s) : TSignalHandler(kSigPipe, kFALSE)
       { fServ = s; }
-   Bool_t  Notify();
+   Bool_t Notify() override;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -117,8 +117,8 @@ class TASInputHandler : public TFileHandler {
 public:
    TASInputHandler(TApplicationServer *s, Int_t fd) : TFileHandler(fd, 1)
       { fServ = s; }
-   Bool_t Notify();
-   Bool_t ReadNotify() { return Notify(); }
+   Bool_t Notify() override;
+   Bool_t ReadNotify() override { return Notify(); }
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -723,7 +723,7 @@ void TApplicationServer::Reset(const char *dir)
 ////////////////////////////////////////////////////////////////////////////////
 /// Receive a file, either sent by a client or a master server.
 /// If bin is true it is a binary file, other wise it is an ASCII
-/// file and we need to check for Windows \r tokens. Returns -1 in
+/// file and we need to check for Windows \\r tokens. Returns -1 in
 /// case of error, 0 otherwise.
 
 Int_t TApplicationServer::ReceiveFile(const char *file, Bool_t bin, Long64_t size)

@@ -45,10 +45,13 @@ namespace RooStats{
 
     public:
 
+      struct Configuration {
+        bool binnedFitOptimization = true;
+      };
 
-      HistoToWorkspaceFactoryFast();
-      HistoToWorkspaceFactoryFast(  RooStats::HistFactory::Measurement& Meas );
-      virtual ~HistoToWorkspaceFactoryFast();
+      HistoToWorkspaceFactoryFast() {}
+      HistoToWorkspaceFactoryFast(RooStats::HistFactory::Measurement& Meas);
+      HistoToWorkspaceFactoryFast(RooStats::HistFactory::Measurement& Meas, Configuration const& cfg);
 
       static void ConfigureWorkspaceForMeasurement( const std::string& ModelName,
                       RooWorkspace* ws_single,
@@ -73,20 +76,6 @@ namespace RooStats{
       std::unique_ptr<RooProduct> CreateNormFactor(RooWorkspace* proto, std::string& channel,
             std::string& sigmaEpsilon, Sample& sample, bool doRatio);
 
-      void AddMultiVarGaussConstraint(RooWorkspace* proto, std::string prefix,
-                  int lowBin, int highBin,
-                  std::vector<std::string>& likelihoodTermNames);
-
-      void AddPoissonTerms(RooWorkspace* proto, std::string prefix, std::string obsPrefix,
-            std::string expPrefix, int lowBin, int highBin,
-            std::vector<std::string>& likelihoodTermNames);
-
-      static void EditSyst(RooWorkspace* proto, const char* pdfNameChar,
-            std::map<std::string,double> gammaSyst,
-            std::map<std::string,double> uniformSyst,
-            std::map<std::string,double> logNormSyst,
-            std::map<std::string,double> noSyst);
-
       RooWorkspace* MakeSingleChannelWorkspace(Measurement& measurement, Channel& channel);
 
       void MakeTotalExpected(RooWorkspace* proto, const std::string& totName,
@@ -97,14 +86,11 @@ namespace RooStats{
             std::vector<std::unique_ptr<RooWorkspace>>& wspace_vec,
             std::vector<std::string> const& channel_names,
             std::string const& dataSetName,
-            RooArgList obsList,
+            RooArgList const& obsList,
             RooCategory* channelCat);
 
       RooHistFunc* MakeExpectedHistFunc(const TH1* hist, RooWorkspace* proto, std::string prefix,
           const RooArgList& observables) const;
-
-      void SetObsToExpected(RooWorkspace* proto, std::string obsPrefix, std::string expPrefix,
-             int lowBin, int highBin);
 
       std::unique_ptr<TH1> MakeScaledUncertaintyHist(const std::string& Name,
                  std::vector< std::pair<const TH1*, std::unique_ptr<TH1>> > const& HistVec ) const;
@@ -114,17 +100,17 @@ namespace RooStats{
       RooArgList createStatConstraintTerms( RooWorkspace* proto,
                    std::vector<std::string>& constraintTerms,
                    ParamHistFunc& paramHist, const TH1* uncertHist,
-                   Constraint::Type type, Double_t minSigma );
+                   Constraint::Type type, double minSigma );
 
       void ConfigureHistFactoryDataset(RooDataSet& obsData, TH1 const& nominal, RooWorkspace& proto,
                    std::vector<std::string> const& obsNameVec);
 
       std::vector<std::string> fSystToFix;
       std::map<std::string, double> fParamValues;
-      double fNomLumi;
-      double fLumiError;
-      int fLowBin;
-      int fHighBin;
+      double fNomLumi = 1.0;
+      double fLumiError = 0.0;
+      int fLowBin = 0;
+      int fHighBin = 0;
 
     private:
 
@@ -133,10 +119,11 @@ namespace RooStats{
       std::vector<std::string> fObsNameVec;
       std::string fObsName;
       std::vector<std::string> fPreprocessFunctions;
+      const Configuration fCfg;
 
       RooArgList createObservables(const TH1 *hist, RooWorkspace *proto) const;
 
-      ClassDef(RooStats::HistFactory::HistoToWorkspaceFactoryFast,3)
+      ClassDefOverride(RooStats::HistFactory::HistoToWorkspaceFactoryFast,3)
     };
 
   }

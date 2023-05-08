@@ -26,8 +26,8 @@ private:
    void DrawGhost();
 
    Float_t  fSum;             ///<!Sum for the slice values
-   Float_t *fSlices;          ///<!Subdivisions of the slices
-   TLegend *fLegend;          ///<!Legend for this piechart
+   Float_t *fSlices{nullptr}; ///<!Subdivisions of the slices
+   TLegend *fLegend{nullptr}; ///<!Legend for this piechart
 
 protected:
    Double_t    fX;              ///< X coordinate of the pie centre
@@ -40,7 +40,7 @@ protected:
    TString     fFractionFormat; ///< Rform numeric format for the fraction of a slice
    TString     fPercentFormat;  ///< Pfrom numeric format for the percent of a slice
    Int_t       fNvals;          ///< Number of elements
-   TPieSlice **fPieSlices;      ///<[fNvals] Slice array of this pie-chart
+   TPieSlice **fPieSlices{nullptr}; ///<[fNvals] Slice array of this pie-chart
    Bool_t      fIs3D;           ///<! true if the pseudo-3d is enabled
    Double_t    fHeight;         ///< Height of the slice in pixel
    Float_t     fAngle3D;        ///< The angle of the pseudo-3d view
@@ -48,16 +48,16 @@ protected:
 public:
    TPie();
    TPie(const char *,const char *, Int_t);
-   TPie(const char *,const char *, Int_t, Double_t *,Int_t *cols=0, const char *lbls[]=0);
-   TPie(const char *,const char *, Int_t, Float_t *,Int_t *cols=0, const char *lbls[]=0);
+   TPie(const char *,const char *, Int_t, Double_t *, Int_t *cols = nullptr, const char *lbls[] = nullptr);
+   TPie(const char *,const char *, Int_t, Float_t *, Int_t *cols = nullptr, const char *lbls[] = nullptr);
    TPie(const TH1 *h);
    TPie(const TPie&);
    ~TPie();
 
-   virtual Int_t  DistancetoPrimitive(Int_t px, Int_t py);
+   Int_t          DistancetoPrimitive(Int_t px, Int_t py) override;
    Int_t          DistancetoSlice(Int_t,Int_t);
-   virtual void   Draw(Option_t *option="l"); // *MENU*
-   virtual void   ExecuteEvent(Int_t,Int_t,Int_t);
+   void           Draw(Option_t *option="l") override; // *MENU*
+   void           ExecuteEvent(Int_t,Int_t,Int_t) override;
    Float_t        GetAngle3D() { return fAngle3D; }
    Double_t       GetAngularOffset() { return fAngularOffset; }
    Int_t          GetEntryFillColor(Int_t);
@@ -82,8 +82,8 @@ public:
    Double_t       GetY() { return fY; }
    TLegend       *MakeLegend(Double_t x1=.65,Double_t y1=.65,Double_t x2=.95, Double_t y2=.95, const char *leg_header="");
    void           MakeSlices(Bool_t force=kFALSE);
-   virtual void   Paint(Option_t *);
-   void           SavePrimitive(std::ostream &out, Option_t *opts="");
+   void           Paint(Option_t *) override;
+   void           SavePrimitive(std::ostream &out, Option_t *opts="") override;
    void           SetAngle3D(Float_t val = 30.); // *MENU*
    void           SetAngularOffset(Double_t);
    void           SetCircle(Double_t x=.5, Double_t y=.5, Double_t rad=.4);
@@ -108,7 +108,7 @@ public:
    void           SetY(Double_t); // *MENU*
    void           SortSlices(Bool_t amode=kTRUE,Float_t merge_thresold=.0);
 
-   ClassDef(TPie,1) //Pie chart graphics class
+   ClassDefOverride(TPie,1) //Pie chart graphics class
 };
 
 #endif // ROOT_TPie

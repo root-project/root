@@ -124,12 +124,9 @@ public:
             SetBit(BIT(ibit));
 
       // copy the graph attributes
-      auto &fromLine = static_cast<TAttLine &>(from);
-      fromLine.Copy(*this);
-      auto &fromFill = static_cast<TAttFill &>(from);
-      fromFill.Copy(*this);
-      auto &fromMarker = static_cast<TAttMarker &>(from);
-      fromMarker.Copy(*this);
+      from.TAttLine::Copy(*this);
+      from.TAttFill::Copy(*this);
+      from.TAttMarker::Copy(*this);
    }
 };
 } // unnamed namespace
@@ -200,7 +197,7 @@ public:
       if (par) fFunc->SetParameters(par);
    }
 
-   ROOT::Math::IGenFunction *Clone()  const
+   ROOT::Math::IGenFunction *Clone()  const override
    {
       // use default copy constructor
       TF1_EvalWrapper *f =  new TF1_EvalWrapper(*this);
@@ -208,7 +205,7 @@ public:
       return f;
    }
    // evaluate |f(x)|
-   Double_t DoEval(Double_t x) const
+   Double_t DoEval(Double_t x) const override
    {
       // use evaluation with stored parameters (i.e. pass zero)
       fX[0] = x;
@@ -268,7 +265,7 @@ The following types of functions can be created:
 
 Begin_Macro(source)
 {
-   TF1 *fa1 = new TF1("fa1","sin(x)/x",0,10);
+   auto fa1 = new TF1("fa1","sin(x)/x",0,10);
    fa1->Draw();
 }
 End_Macro
@@ -278,7 +275,7 @@ End_Macro
 
 Begin_Macro(source)
 {
-   TF1 *fa2 = new TF1("fa2","TMath::DiLog(x)",0,10);
+   auto fa2 = new TF1("fa2","TMath::DiLog(x)",0,10);
    fa2->Draw();
 }
 End_Macro
@@ -288,7 +285,7 @@ End_Macro
 ~~~~{.cpp}
 Double_t myFunc(double x) { return x+sin(x); }
 ....
-TF1 *fa3 = new TF1("fa3","myFunc(x)",-3,5);
+auto fa3 = new TF1("fa3","myFunc(x)",-3,5);
 fa3->Draw();
 ~~~~
 
@@ -301,7 +298,7 @@ fa3->Draw();
 
 
 ~~~~{.cpp}
-TF1 *fa = new TF1("fa","[0]*x*sin([1]*x)",-3,3);
+auto fa = new TF1("fa","[0]*x*sin([1]*x)",-3,3);
 ~~~~
 
 This creates a function of variable x with 2 parameters. The parameters must be initialized via:
@@ -321,7 +318,7 @@ Parameters may be given a name:
 * Example b:
 
 ~~~~{.cpp}
-    TF1 *fb = new TF1("fb","gaus(0)*expo(3)",0,10);
+    auto fb = new TF1("fb","gaus(0)*expo(3)",0,10);
 ~~~~
 
 
@@ -329,20 +326,11 @@ Parameters may be given a name:
 
 #### Case 2: inline expression using TMath functions with parameters
 
-~~~~{.cpp}
-   TF1 *fb2 = new TF1("fa3","TMath::Landau(x,[0],[1],0)",-5,10);
-   fb2->SetParameters(0.2,1.3);
-   fb2->Draw();
-~~~~
-
-
-
-Begin_Macro
+Begin_Macro(source)
 {
-    TCanvas *c = new TCanvas("c","c",0,0,500,300);
-    TF1 *fb2 = new TF1("fa3","TMath::Landau(x,[0],[1],0)",-5,10);
-    fb2->SetParameters(0.2,1.3); fb2->Draw();
-    return c;
+    auto fb2 = new TF1("fa3","TMath::Landau(x,[0],[1],0)",-5,10);
+    fb2->SetParameters(0.2,1.3);
+    fb2->Draw();
 }
 End_Macro
 
@@ -378,14 +366,14 @@ Consider the macro myfunc.C below:
    }
    void myfunc()
    {
-      TF1 *f1 = new TF1("myfunc",myfunction,0,10,2);
+      auto f1 = new TF1("myfunc",myfunction,0,10,2);
       f1->SetParameters(2,1);
       f1->SetParNames("constant","coefficient");
       f1->Draw();
    }
    void myfit()
    {
-      TH1F *h1=new TH1F("h1","test",100,0,10);
+      auto h1 = new TH1F("h1","test",100,0,10);
       h1->FillRandom("myfunc",20000);
       TF1 *f1 = (TF1 *)gROOT->GetFunction("myfunc");
       f1->SetParameters(800,1);
@@ -411,17 +399,17 @@ Example:
 
 ~~~~{.cpp}
 {
-      TF1 *fcos = new TF1 ("fcos", "[0]*cos(x)", 0., 10.);
+      auto fcos = new TF1 ("fcos", "[0]*cos(x)", 0., 10.);
       fcos->SetParNames( "cos");
       fcos->SetParameter( 0, 1.1);
 
-      TF1 *fsin = new TF1 ("fsin", "[0]*sin(x)", 0., 10.);
+      auto fsin = new TF1 ("fsin", "[0]*sin(x)", 0., 10.);
       fsin->SetParNames( "sin");
       fsin->SetParameter( 0, 2.1);
 
-      TF1 *fsincos = new TF1 ("fsc", "fcos+fsin");
+      auto fsincos = new TF1 ("fsc", "fcos+fsin");
 
-      TF1 *fs2 = new TF1 ("fs2", "fsc+fsc");
+      auto fs2 = new TF1 ("fs2", "fsc+fsc");
 }
 ~~~~
 
@@ -446,7 +434,7 @@ class  MyFunctionObject {
 {
     ....
    MyFunctionObject fobj;
-   TF1 * f = new TF1("f",fobj,0,1,npar);    // create TF1 class.
+   auto f = new TF1("f",fobj,0,1,npar);    // create TF1 class.
    .....
 }
 ~~~~
@@ -458,8 +446,8 @@ As above the lambda must have the right signature but can capture whatever we wa
 a TF1 from the TGraph::Eval function as shown below where we use as function parameter the graph normalization.
 
 ~~~~{.cpp}
-TGraph * g = new TGraph(npointx, xvec, yvec);
-TF1 * f = new TF1("f",[&](double*x, double *p){ return p[0]*g->Eval(x[0]); }, xmin, xmax, 1);
+auto g = new TGraph(npointx, xvec, yvec);
+auto f = new TF1("f",[&](double*x, double *p){ return p[0]*g->Eval(x[0]); }, xmin, xmax, 1);
 ~~~~
 
 
@@ -480,8 +468,8 @@ class  MyFunction {
 };
 {
     ....
-   MyFunction * fptr = new MyFunction(....);  // create the user function class
-   TF1 * f = new TF1("f",fptr,&MyFunction::Evaluate,0,1,npar,"MyFunction","Evaluate");   // create TF1 class.
+   MyFunction *fptr = new MyFunction(....);  // create the user function class
+   auto f = new TF1("f",fptr,&MyFunction::Evaluate,0,1,npar,"MyFunction","Evaluate");   // create TF1 class.
 
    .....
 }
@@ -523,16 +511,16 @@ TF1::TF1(const char *name, const char *formula, Double_t xmin, Double_t xmax, EA
    TNamed(name, formula), TAttLine(), TAttFill(), TAttMarker(), fType(EFType::kFormula)
 {
    if (xmin < xmax) {
-      fXmin      = xmin;
-      fXmax      = xmax;
+      fXmin = xmin;
+      fXmax = xmax;
    } else {
-      fXmin = xmax; //when called from TF2,TF3
+      fXmin = xmax; // when called from TF2,TF3
       fXmax = xmin;
    }
    // Create rep formula (no need to add to gROOT list since we will add the TF1 object)
-   const auto formulaLength = strlen(formula);
+   const auto formulaLength = formula ? strlen(formula) : 0;
    // First check if we are making a convolution
-   if (strncmp(formula, "CONV(", 5) == 0 && formula[formulaLength - 1] == ')') {
+   if (formulaLength > 5 && strncmp(formula, "CONV(", 5) == 0 && formula[formulaLength - 1] == ')') {
       // Look for single ',' delimiter
       int delimPosition = -1;
       int parenCount = 0;
@@ -559,15 +547,15 @@ TF1::TF1(const char *name, const char *formula, Double_t xmin, Double_t xmax, EA
       formula2.ReplaceAll(' ', "");
 
       TF1 *function1 = (TF1 *)(gROOT->GetListOfFunctions()->FindObject(formula1));
-      if (function1 == nullptr)
-         function1 = new TF1((const char *)formula1, (const char *)formula1, xmin, xmax);
+      if (!function1)
+         function1 = new TF1(formula1.Data(), formula1.Data(), xmin, xmax);
       TF1 *function2 = (TF1 *)(gROOT->GetListOfFunctions()->FindObject(formula2));
-      if (function2 == nullptr)
-         function2 = new TF1((const char *)formula2, (const char *)formula2, xmin, xmax);
+      if (!function2)
+         function2 = new TF1(formula2.Data(), formula2.Data(), xmin, xmax);
 
       // std::cout << "functions have been defined" << std::endl;
 
-      TF1Convolution *conv = new TF1Convolution(function1, function2,xmin,xmax);
+      TF1Convolution *conv = new TF1Convolution(function1, function2, xmin, xmax);
 
       // (note: currently ignoring `useFFT` option)
       fNpar = conv->GetNpar();
@@ -576,7 +564,7 @@ TF1::TF1(const char *name, const char *formula, Double_t xmin, Double_t xmax, EA
       fType = EFType::kCompositionFcn;
       fComposition = std::unique_ptr<TF1AbsComposition>(conv);
 
-      fParams = std::unique_ptr<TF1Parameters>(new TF1Parameters(fNpar)); // default to zeros (TF1Convolution has no GetParameters())
+      fParams = std::make_unique<TF1Parameters>(fNpar); // default to zeros (TF1Convolution has no GetParameters())
       // set parameter names
       for (int i = 0; i < fNpar; i++)
          this->SetParName(i, conv->GetParName(i));
@@ -605,7 +593,7 @@ TF1::TF1(const char *name, const char *formula, Double_t xmin, Double_t xmax, EA
       }
 
       // Then check if we need NSUM syntax:
-   } else if (strncmp(formula, "NSUM(", 5) == 0 && formula[formulaLength - 1] == ')') {
+   } else if (formulaLength > 5 && strncmp(formula, "NSUM(", 5) == 0 && formula[formulaLength - 1] == ')') {
       // using comma as delimiter
       char delimiter = ',';
       // first, remove "NSUM(" and ")" and spaces
@@ -618,11 +606,11 @@ TF1::TF1(const char *name, const char *formula, Double_t xmin, Double_t xmax, EA
       // Go char-by-char to split terms and define the relevant functions
       int parenCount = 0;
       int termStart = 0;
-      TObjArray *newFuncs = new TObjArray();
-      newFuncs->SetOwner(kTRUE);
-      TObjArray *coeffNames = new TObjArray();
-      coeffNames->SetOwner(kTRUE);
-      TString fullFormula("");
+      TObjArray newFuncs;
+      newFuncs.SetOwner(kTRUE);
+      TObjArray coeffNames;
+      coeffNames.SetOwner(kTRUE);
+      TString fullFormula;
       for (int i = 0; i < formDense.Length(); ++i) {
          if (formDense[i] == '(')
             parenCount++;
@@ -630,11 +618,11 @@ TF1::TF1(const char *name, const char *formula, Double_t xmin, Double_t xmax, EA
             parenCount--;
          else if (formDense[i] == delimiter && parenCount == 0) {
             // term goes from termStart to i
-            DefineNSUMTerm(newFuncs, coeffNames, fullFormula, formDense, termStart, i, xmin, xmax);
+            DefineNSUMTerm(&newFuncs, &coeffNames, fullFormula, formDense, termStart, i, xmin, xmax);
             termStart = i + 1;
          }
       }
-      DefineNSUMTerm(newFuncs, coeffNames, fullFormula, formDense, termStart, formDense.Length(), xmin, xmax);
+      DefineNSUMTerm(&newFuncs, &coeffNames, fullFormula, formDense, termStart, formDense.Length(), xmin, xmax);
 
       TF1NormSum *normSum = new TF1NormSum(fullFormula, xmin, xmax);
 
@@ -646,21 +634,20 @@ TF1::TF1(const char *name, const char *formula, Double_t xmin, Double_t xmax, EA
       fType = EFType::kCompositionFcn;
       fComposition = std::unique_ptr<TF1AbsComposition>(normSum);
 
-      fParams = std::unique_ptr<TF1Parameters>(new TF1Parameters(fNpar));
+      fParams = std::make_unique<TF1Parameters>(fNpar);
       fParams->SetParameters(&(normSum->GetParameters())[0]); // inherit default parameters from normSum
 
       // Parameter names
       for (int i = 0; i < fNpar; i++) {
-         if (coeffNames->At(i) != nullptr) {
-            TString coeffName = ((TObjString *)coeffNames->At(i))->GetString();
-            this->SetParName(i, (const char *)coeffName);
+         if (coeffNames.At(i)) {
+            this->SetParName(i, coeffNames.At(i)->GetName());
          } else {
             this->SetParName(i, normSum->GetParName(i));
          }
       }
 
    } else { // regular TFormula
-      fFormula = std::unique_ptr<TFormula>(new TFormula(name, formula, false, vectorize));
+      fFormula = std::make_unique<TFormula>(name, formula, false, vectorize);
       fNpar = fFormula->GetNpar();
       // TFormula can have dimension zero, but since this is a TF1 minimal dim is 1
       fNdim = fFormula->GetNdim() == 0 ? 1 : fFormula->GetNdim();
@@ -679,7 +666,9 @@ TF1::TF1(const char *name, const char *formula, Double_t xmin, Double_t xmax, EA
 
    DoInitialize(addToGlobList);
 }
-TF1::EAddToList GetGlobalListOption(Option_t * opt)  {
+
+TF1::EAddToList GetGlobalListOption(Option_t * opt)
+{
    if (opt == nullptr) return TF1::EAddToList::kDefault;
    TString option(opt);
    option.ToUpper();
@@ -687,13 +676,16 @@ TF1::EAddToList GetGlobalListOption(Option_t * opt)  {
    if (option.Contains("GL")) return TF1::EAddToList::kAdd;
    return TF1::EAddToList::kDefault;
 }
-bool GetVectorizedOption(Option_t * opt)  {
-   if (opt == nullptr) return false;
+
+bool GetVectorizedOption(Option_t * opt)
+{
+   if (!opt) return false;
    TString option(opt);
    option.ToUpper();
    if (option.Contains("VEC")) return true;
    return false;
 }
+
 TF1::TF1(const char *name, const char *formula, Double_t xmin, Double_t xmax, Option_t * opt) :
 ////////////////////////////////////////////////////////////////////////////////
 /// Same constructor as above (for TFormula based function) but passing an option strings
@@ -705,6 +697,7 @@ TF1::TF1(const char *name, const char *formula, Double_t xmin, Double_t xmax, Op
 ///////////////////////////////////////////////////////////////////////////////////
    TF1(name, formula, xmin, xmax, GetGlobalListOption(opt), GetVectorizedOption(opt) )
 {}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// F1 constructor using name of an interpreted function.
 ///
@@ -717,7 +710,7 @@ TF1::TF1(const char *name, const char *formula, Double_t xmin, Double_t xmax, Op
 ///
 ///  This constructor is called for functions of type C by the C++ interpreter.
 ///
-/// WARNING! A function created with this constructor cannot be Cloned.
+/// \warning A function created with this constructor cannot be Cloned.
 
 TF1::TF1(const char *name, Double_t xmin, Double_t xmax, Int_t npar, Int_t ndim, EAddToList addToGlobList) :
    TF1(EFType::kInterpreted, name, xmin, xmax, npar, ndim, addToGlobList, new TF1Parameters(npar))
@@ -743,7 +736,12 @@ TF1::TF1(const char *name, Double_t xmin, Double_t xmax, Int_t npar, Int_t ndim,
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor using a pointer to a real function.
 ///
-/// \param npar is the number of free parameters used by the function
+/// \param[in] name object name
+/// \param[in] fcn pointer to function
+/// \param[in] xmin,xmax x axis limits
+/// \param[in] npar is the number of free parameters used by the function
+/// \param[in] ndim number of dimensions
+/// \param[in] addToGlobList boolean marking if it should be added to global list
 ///
 /// This constructor creates a function of type C when invoked
 /// with the normal C++ compiler.
@@ -751,16 +749,21 @@ TF1::TF1(const char *name, Double_t xmin, Double_t xmax, Int_t npar, Int_t ndim,
 /// see test program test/stress.cxx (function stress1) for an example.
 /// note the interface with an intermediate pointer.
 ///
-/// WARNING! A function created with this constructor cannot be Cloned.
+/// \warning A function created with this constructor cannot be Cloned.
 
 TF1::TF1(const char *name, Double_t (*fcn)(Double_t *, Double_t *), Double_t xmin, Double_t xmax, Int_t npar, Int_t ndim, EAddToList addToGlobList) :
    TF1(EFType::kPtrScalarFreeFcn, name, xmin, xmax, npar, ndim, addToGlobList, new TF1Parameters(npar), new TF1FunctorPointerImpl<double>(ROOT::Math::ParamFunctor(fcn)))
 {}
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor using a pointer to real function.
+/// Constructor using a pointer to (const) real function.
 ///
-/// \param npar is the number of free parameters used by the function
+/// \param[in] name object name
+/// \param[in] fcn pointer to function
+/// \param[in] xmin,xmax x axis limits
+/// \param[in] npar is the number of free parameters used by the function
+/// \param[in] ndim number of dimensions
+/// \param[in] addToGlobList boolean marking if it should be added to global list
 ///
 /// This constructor creates a function of type C when invoked
 /// with the normal C++ compiler.
@@ -768,7 +771,7 @@ TF1::TF1(const char *name, Double_t (*fcn)(Double_t *, Double_t *), Double_t xmi
 /// see test program test/stress.cxx (function stress1) for an example.
 /// note the interface with an intermediate pointer.
 ///
-/// WARNING! A function created with this constructor cannot be Cloned.
+/// \warning A function created with this constructor cannot be Cloned.
 
 TF1::TF1(const char *name, Double_t (*fcn)(const Double_t *, const Double_t *), Double_t xmin, Double_t xmax, Int_t npar, Int_t ndim, EAddToList addToGlobList) :
    TF1(EFType::kPtrScalarFreeFcn, name, xmin, xmax, npar, ndim, addToGlobList, new TF1Parameters(npar), new TF1FunctorPointerImpl<double>(ROOT::Math::ParamFunctor(fcn)))
@@ -777,9 +780,13 @@ TF1::TF1(const char *name, Double_t (*fcn)(const Double_t *, const Double_t *), 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor using the Functor class.
 ///
+/// \param[in] name object name
+/// \param f parameterized functor
 /// \param xmin and
 /// \param xmax define the plotting range of the function
-/// \param npar is the number of free parameters used by the function
+/// \param[in] npar is the number of free parameters used by the function
+/// \param[in] ndim number of dimensions
+/// \param[in] addToGlobList boolean marking if it should be added to global list
 ///
 /// This constructor can be used only in compiled code
 ///
@@ -935,9 +942,8 @@ int TF1::TermCoeffLength(TString &term) {
 
 TF1 &TF1::operator=(const TF1 &rhs)
 {
-   if (this != &rhs) {
-      rhs.Copy(*this);
-   }
+   if (this != &rhs)
+      rhs.TF1::Copy(*this);
    return *this;
 }
 
@@ -966,7 +972,7 @@ TF1::TF1(const TF1 &f1) :
    TNamed(f1), TAttLine(f1), TAttFill(f1), TAttMarker(f1),
    fXmin(0), fXmax(0), fNpar(0), fNdim(0), fType(EFType::kFormula)
 {
-   ((TF1 &)f1).Copy(*this);
+   f1.TF1::Copy(*this);
 }
 
 
@@ -1379,13 +1385,10 @@ TF1 *TF1::DrawCopy(Option_t *option) const
 
 TObject *TF1::DrawDerivative(Option_t *option)
 {
-   TVirtualPad *pad = gROOT->GetSelectedPad();
-   TVirtualPad *padsav = gPad;
-   if (pad) pad->cd();
+   TVirtualPad::TContext ctxt(gROOT->GetSelectedPad(), true, true);
 
    TGraph *gr = new TGraph(this, "d");
    gr->Draw(option);
-   if (padsav) padsav->cd();
    return gr;
 }
 
@@ -1404,13 +1407,10 @@ TObject *TF1::DrawDerivative(Option_t *option)
 
 TObject *TF1::DrawIntegral(Option_t *option)
 {
-   TVirtualPad *pad = gROOT->GetSelectedPad();
-   TVirtualPad *padsav = gPad;
-   if (pad) pad->cd();
+   TVirtualPad::TContext ctxt(gROOT->GetSelectedPad(), true, true);
 
    TGraph *gr = new TGraph(this, "i");
    gr->Draw(option);
-   if (padsav) padsav->cd();
    return gr;
 }
 
@@ -1547,8 +1547,13 @@ void TF1::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Fix the value of a parameter
-/// The specified value will be used in a fit operation
+/// Fix the value of a parameter for a fit operation
+/// The specified value will be used in the fit and
+/// the parameter will be constant (nor varying) during fitting
+/// Note that when using pre-defined functions (e.g gaus),
+/// one needs to use the fit option 'B' to have the fix of the paramter
+/// effective. See TH1::Fit(TF1*, Option_t *, Option_t *, Double_t, Double_t) for
+/// the fitting documentation and the fitting options.
 
 void TF1::FixParameter(Int_t ipar, Double_t value)
 {
@@ -2461,8 +2466,11 @@ Double_t TF1::GradientPar(Int_t ipar, const Double_t *x, Double_t eps)
 
 void TF1::GradientPar(const Double_t *x, Double_t *grad, Double_t eps)
 {
-   if (fFormula && fFormula->HasGeneratedGradient())
+   if (fFormula && fFormula->HasGeneratedGradient()) {
+      // need to zero the gradient buffer
+      std::fill(grad, grad + fNpar, 0.);
       fFormula->GradientPar(x,grad);
+   }
    else
       GradientParTempl<Double_t>(x, grad, eps);
 }
@@ -2677,7 +2685,7 @@ Double_t TF1::IntegralOneDim(Double_t a, Double_t b,  Double_t epsrel, Double_t 
 /// When the poassed pointer to the covariance matrix is null, a covariance matrix from the last fit is retrieved
 /// from a global fitter instance when it exists. Note that the global fitter instance
 /// esists only when ROOT is not running with multi-threading enabled (ROOT::IsImplicitMTEnabled() == True).
-/// When the ovariance matrix from the last fit cannot be retrieved, an error message is printed and a a zero value is
+/// When the ovariance matrix from the last fit cannot be retrieved, an error message is printed and a zero value is
 /// returned.
 ///
 ///
@@ -2727,7 +2735,7 @@ Double_t TF1::IntegralError(Double_t a, Double_t b, const Double_t *params, cons
 /// When the poassed pointer to the covariance matrix is null, a covariance matrix from the last fit is retrieved
 /// from a global fitter instance when it exists. Note that the global fitter instance
 /// esists only when ROOT is not running with multi-threading enabled (ROOT::IsImplicitMTEnabled() == True).
-/// When the ovariance matrix from the last fit cannot be retrieved, an error message is printed and a a zero value is
+/// When the ovariance matrix from the last fit cannot be retrieved, an error message is printed and a zero value is
 /// returned.
 ///
 ///
@@ -3138,8 +3146,9 @@ TH1   *TF1::DoCreateHistogram(Double_t xmin, Double_t  xmax, Bool_t recreate)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Release parameter number ipar If used in a fit, the parameter
-/// can vary freely. The parameter limits are reset to 0,0.
+/// Release parameter number ipar during a fit operation.
+/// After releasing it, the parameter
+/// can vary freely in the fit. The parameter limits are reset to 0,0.
 
 void TF1::ReleaseParameter(Int_t ipar)
 {
@@ -3297,42 +3306,11 @@ void TF1::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    if (TestBit(kNotDraw)) {
       out << "   " << f1Name.Data() << "->SetBit(TF1::kNotDraw);" << std::endl;
    }
-   if (GetFillColor() != 0) {
-      if (GetFillColor() > 228) {
-         TColor::SaveColor(out, GetFillColor());
-         out << "   " << f1Name.Data() << "->SetFillColor(ci);" << std::endl;
-      } else
-         out << "   " << f1Name.Data() << "->SetFillColor(" << GetFillColor() << ");" << std::endl;
-   }
-   if (GetFillStyle() != 1001) {
-      out << "   " << f1Name.Data() << "->SetFillStyle(" << GetFillStyle() << ");" << std::endl;
-   }
-   if (GetMarkerColor() != 1) {
-      if (GetMarkerColor() > 228) {
-         TColor::SaveColor(out, GetMarkerColor());
-         out << "   " << f1Name.Data() << "->SetMarkerColor(ci);" << std::endl;
-      } else
-         out << "   " << f1Name.Data() << "->SetMarkerColor(" << GetMarkerColor() << ");" << std::endl;
-   }
-   if (GetMarkerStyle() != 1) {
-      out << "   " << f1Name.Data() << "->SetMarkerStyle(" << GetMarkerStyle() << ");" << std::endl;
-   }
-   if (GetMarkerSize() != 1) {
-      out << "   " << f1Name.Data() << "->SetMarkerSize(" << GetMarkerSize() << ");" << std::endl;
-   }
-   if (GetLineColor() != 1) {
-      if (GetLineColor() > 228) {
-         TColor::SaveColor(out, GetLineColor());
-         out << "   " << f1Name.Data() << "->SetLineColor(ci);" << std::endl;
-      } else
-         out << "   " << f1Name.Data() << "->SetLineColor(" << GetLineColor() << ");" << std::endl;
-   }
-   if (GetLineWidth() != 4) {
-      out << "   " << f1Name.Data() << "->SetLineWidth(" << GetLineWidth() << ");" << std::endl;
-   }
-   if (GetLineStyle() != 1) {
-      out << "   " << f1Name.Data() << "->SetLineStyle(" << GetLineStyle() << ");" << std::endl;
-   }
+
+   SaveFillAttributes(out, f1Name.Data(), 0, 1001);
+   SaveMarkerAttributes(out, f1Name.Data(), 1, 1, 1);
+   SaveLineAttributes(out, f1Name.Data(), 1, 1, 4);
+
    if (GetChisquare() != 0) {
       out << "   " << f1Name.Data() << "->SetChisquare(" << GetChisquare() << ");" << std::endl;
       out << "   " << f1Name.Data() << "->SetNDF(" << GetNDF() << ");" << std::endl;
@@ -3509,10 +3487,13 @@ void TF1::SetParErrors(const Double_t *errors)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set limits for parameter ipar.
+/// Set lower and upper limits for parameter ipar.
+/// The specified limits will be used in a fit operation.
+/// Note that when this function is a pre-defined function (e.g. gaus)
+/// one needs to use the fit option "B" to have the limits used in the fit.
+/// See TH1::Fit(TF1*, Option_t *, Option_t *, Double_t, Double_t) for the fitting documentation
+/// and the [fitting options](\ref HFitOpt)
 ///
-/// The specified limits will be used in a fit operation
-/// when the option "B" is specified (Bounds).
 /// To fix a parameter, use TF1::FixParameter
 
 void TF1::SetParLimits(Int_t ipar, Double_t parmin, Double_t parmax)

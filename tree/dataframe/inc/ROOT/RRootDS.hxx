@@ -37,27 +37,25 @@ private:
    std::vector<std::vector<void *>> fBranchAddresses; // first container-> slot, second -> column;
    std::vector<std::unique_ptr<TChain>> fChains;
 
-   std::vector<void *> GetColumnReadersImpl(std::string_view, const std::type_info &);
+   std::vector<void *> GetColumnReadersImpl(std::string_view, const std::type_info &) final;
 
 protected:
-   std::string AsString() { return "ROOT data source"; };
+   std::string AsString() final { return "ROOT data source"; };
 
 public:
    RRootDS(std::string_view treeName, std::string_view fileNameGlob);
    ~RRootDS();
-   std::string GetTypeName(std::string_view colName) const;
-   const std::vector<std::string> &GetColumnNames() const;
-   bool HasColumn(std::string_view colName) const;
-   void InitSlot(unsigned int slot, ULong64_t firstEntry);
-   void FinaliseSlot(unsigned int slot);
-   std::vector<std::pair<ULong64_t, ULong64_t>> GetEntryRanges();
-   bool SetEntry(unsigned int slot, ULong64_t entry);
-   void SetNSlots(unsigned int nSlots);
-   void Initialise();
-   std::string GetLabel();
+   std::string GetTypeName(std::string_view colName) const final;
+   const std::vector<std::string> &GetColumnNames() const final;
+   bool HasColumn(std::string_view colName) const final;
+   void InitSlot(unsigned int slot, ULong64_t firstEntry) final;
+   void FinalizeSlot(unsigned int slot) final;
+   std::vector<std::pair<ULong64_t, ULong64_t>> GetEntryRanges() final;
+   bool SetEntry(unsigned int slot, ULong64_t entry) final;
+   void SetNSlots(unsigned int nSlots) final;
+   void Initialize() final;
+   std::string GetLabel() final;
 };
-
-RDataFrame MakeRootDataFrame(std::string_view treeName, std::string_view fileNameGlob);
 
 } // ns RDF
 

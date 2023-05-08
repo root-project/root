@@ -31,7 +31,8 @@ enum LineType {
   LT_ObjCProperty, // An @property line.
   LT_Other,
   LT_PreprocessorDirective,
-  LT_VirtualFunctionDecl
+  LT_VirtualFunctionDecl,
+  LT_ArrayOfStructInitializer,
 };
 
 class AnnotatedLine {
@@ -114,8 +115,7 @@ public:
 
   /// \c true if this line starts a namespace definition.
   bool startsWithNamespace() const {
-    return startsWith(tok::kw_namespace) ||
-           startsWith(TT_NamespaceMacro) ||
+    return startsWith(tok::kw_namespace) || startsWith(TT_NamespaceMacro) ||
            startsWith(tok::kw_inline, tok::kw_namespace) ||
            startsWith(tok::kw_export, tok::kw_namespace);
   }
@@ -189,6 +189,17 @@ private:
   void printDebugInfo(const AnnotatedLine &Line);
 
   void calculateUnbreakableTailLengths(AnnotatedLine &Line);
+
+  void calculateArrayInitializerColumnList(AnnotatedLine &Line);
+
+  FormatToken *calculateInitializerColumnList(AnnotatedLine &Line,
+                                              FormatToken *CurrentToken,
+                                              unsigned Depth);
+  FormatStyle::PointerAlignmentStyle
+  getTokenReferenceAlignment(const FormatToken &PointerOrReference);
+
+  FormatStyle::PointerAlignmentStyle
+  getTokenPointerOrReferenceAlignment(const FormatToken &PointerOrReference);
 
   const FormatStyle &Style;
 

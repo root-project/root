@@ -1,6 +1,7 @@
 #ifndef TMVA_SOFIE_RMODEL
 #define TMVA_SOFIE_RMODEL
 
+#include <type_traits>
 #include <unordered_set>
 #include <vector>
 #include <unordered_map>
@@ -19,15 +20,24 @@ namespace TMVA{
 namespace Experimental{
 namespace SOFIE{
 
+enum class Options {
+   kDefault = 0x0,
+   kNoSession = 0x1,
+   kNoWeightFile = 0x2,
+};
+
+std::underlying_type_t<Options> operator|(Options opA, Options opB);
+std::underlying_type_t<Options> operator|(std::underlying_type_t<Options> opA, Options opB);
+
 class RModel: public TObject{
 
 private:
-
    std::unordered_map<std::string, InputTensorInfo> fInputTensorInfos; //graph input only; not including operator input (intermediate tensors)
    std::unordered_map<std::string, TensorInfo> fReadyInputTensorInfos;
    std::unordered_map<std::string, InitializedTensor> fInitializedTensors;
    std::unordered_map<std::string, TensorInfo> fIntermediateTensorInfos;
    std::vector<std::string> fOutputTensorNames;
+   std::vector<std::string> fInputTensorNames;  //input tensor names using ONNX order
 
    std::vector<std::unique_ptr<ROperator>> fOperators;
 
@@ -41,10 +51,9 @@ private:
 
    const std::unordered_set<std::string> fAllowedStdLib = {"vector", "algorithm", "cmath"};
    std::unordered_set<std::string> fNeededStdLib = {"vector"};
-   bool fUseWeightFile = false;
-   bool fUseSession = false;
-
-
+   std::unordered_set<std::string> fCustomOpHeaders;
+   bool fUseWeightFile = true;
+   bool fUseSession = true;
 
 public:
 
@@ -68,6 +77,8 @@ public:
    void AddInputTensorInfo(std::string input_name, ETensorType type, std::vector<size_t> shape);
    void AddOperator(std::unique_ptr<ROperator> op, int order_execution = -1);
    void AddInitializedTensor(std::string tensor_name, ETensorType type, std::vector<std::size_t> shape, std::shared_ptr<void> data);
+   // Check if a tensor is initialized
+   bool IsInitializedTensor(const std::string& name) const;
    void AddIntermediateTensor(std::string tensor_name, ETensorType type, std::vector<std::size_t> shape);
    void AddBlasRoutines(std::vector<std::string> routines) {
       for (auto &routine : routines) {
@@ -79,13 +90,21 @@ public:
          fNeededStdLib.insert(libname);
       }
    }
+   void AddNeededCustomHeader(std::string filename) {
+      fCustomOpHeaders.insert(filename);
+   }
+   void AddInputTensorName(std::string name);
    void AddOutputTensorNameList(std::vector<std::string> outputtensornames);
+   void UpdateOutputTensorList(std::vector<std::string> curr_output_tensor, std::vector<std::string> modify_output_tensor);
    void UpdateInitializedTensor(std::string tensor_name, ETensorType type, std::vector<std::size_t> shape, std::shared_ptr<void> data);
    std::shared_ptr<void> GetInitializedTensorData(std::string tensor_name);
 
 
-   void Initialize();
-   void Generate(bool useSession = true, bool useWeightFile = true);
+   void Initialize(int batchSize=1);
+   void Generate(std::underlying_type_t<Options> options, int batchSize = 1);
+   void Generate(Options options = Options::kDefault, int batchSize = 1) {
+      Generate(static_cast<std::underlying_type_t<Options>>(options), batchSize);
+   }
 
    void ReadInitializedTensorsFromFile();
    void WriteInitializedTensorsToFile(std::string filename = "");
@@ -95,7 +114,9 @@ public:
    }
    void PrintIntermediateTensors();
    void OutputGenerated(std::string filename = "");
-
+   std::vector<std::string> GetOutputTensorNames(){
+      return fOutputTensorNames;
+   }
 
 /*
    template <typename T>
@@ -116,13 +137,8 @@ public:
 
    bool UseSession() const { return fUseSession;}
 
-   ~RModel(){
-      /*
-      for (auto& i: fInitializedTensors){
-         free(i.second.data);
-      }
-      */
-   }
+   ~RModel() {}
+
    ClassDef(RModel,1);
 };
 

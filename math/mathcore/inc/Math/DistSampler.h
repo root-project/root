@@ -36,7 +36,7 @@ namespace ROOT {
       class DistSamplerOptions;
 
 /**
-   @defgroup Random Random Classes
+   @defgroup Random Interface classes for Random number generation
 
    Pseudo-random numbers generator classes and for generation of random number distributions.
    These classes implement several pseudo-random number generators and method for generation of random numbers
@@ -59,7 +59,7 @@ class DistSampler {
 public:
 
    /// default constructor
-   DistSampler() : fOwnFunc(false), fRange(0), fFunc(0) {}
+   DistSampler() : fOwnFunc(false), fRange(nullptr), fFunc(nullptr) {}
 
 
    /// virtual destructor
@@ -129,7 +129,7 @@ public:
       To be implemented by the derived classes who needs it
       Returns zero by default
     */
-   virtual TRandom * GetRandom() { return 0; }
+   virtual TRandom * GetRandom() { return nullptr; }
 
    /// Set the range in a given dimension.
    void SetRange(double xmin, double xmax, int icoord = 0);
@@ -137,7 +137,7 @@ public:
    /// Set the range for all dimensions.
    void SetRange(const double * xmin, const double * xmax);
    /// Set the range for all dimensions (use std::vector)
-   void SetRange(const std::vector<double> & xmin, const std::vector<double> & xmax){ 
+   void SetRange(const std::vector<double> & xmin, const std::vector<double> & xmax){
       assert(xmin.size() >= NDim() && xmax.size() >= NDim());
       SetRange(xmin.data(),xmax.data());
    }
@@ -158,11 +158,11 @@ public:
    virtual void SetArea(double) {}
 
    /// Use the log of the provided pdf.
-   /// Implemented by the derived classes 
+   /// Implemented by the derived classes
    virtual void SetUseLogPdf(bool = true) {}
 
-   /// Set usage of Derivative of PDF. 
-   /// Can be implemented by derived class 
+   /// Set usage of Derivative of PDF.
+   /// Can be implemented by derived class
    virtual void SetDPdf(const ROOT::Math::IGenFunction & ) {}
 
    /// Set usage of Cumulative of PDF.
@@ -187,7 +187,7 @@ public:
    }
 
    /**
-      Sample one event and return an array x with 
+      Sample one event and return an array x with
       sample coordinates values.
     */
    const double *  Sample() {
@@ -198,7 +198,7 @@ public:
    /**
       Sample one event in multi-dimension by filling the given array.
       Return false if the sampling failed.
-      Abstract method to be re-implmented by the derived classes
+      Abstract method to be re-implemented by the derived classes
    */
    virtual bool Sample(double * x) = 0;
 
@@ -209,7 +209,7 @@ public:
       By default do not do random sample, just return the function values
       Typically Poisson statistics will be used
     */
-   virtual bool SampleBin(double prob, double & value, double * error = 0) {
+   virtual bool SampleBin(double prob, double & value, double * error = nullptr) {
       value = prob;
       if (error) *error = 0;
       return true;
@@ -218,9 +218,9 @@ public:
       Sample a set of bins given a vector of probabilities
       Typically multinomial statistics will be used and the sum of the probabilities
       will be equal to the total number of events to be generated
-      For sampling the bins indipendently, SampleBin should be used
+      For sampling the bins independently, SampleBin should be used
     */
-   virtual bool SampleBins(unsigned int n, const double * prob, double * values, double * errors  = 0)  {
+   virtual bool SampleBins(unsigned int n, const double * prob, double * values, double * errors  = nullptr)  {
       std::copy(prob,prob+n, values); // default impl returns prob values (Asimov data)
       if (errors) std::fill(errors,errors+n,0);
       return true;
@@ -229,23 +229,23 @@ public:
 
    /**
       Generate a un-binned data set by filling the given data set object.
-      If the data set object is not empty, the new generated data will be appended to the 
-      existing one. 
+      If the data set object is not empty, the new generated data will be appended to the
+      existing one.
    */
    virtual bool Generate(unsigned int nevt, ROOT::Fit::UnBinData & data);
    /**
-      Generate a vector of events by fillling the passed data vector.
-      The flag eventRow indicates how the events are arrenged in the multi-dim case. 
-      The can be arranged in rows or in columns.  
-      With eventRow=false events are the columns in data: {x1,x2,.....,xn},{y1,....yn} 
-      With eventRow=true  events are rows in data: {x1,y1},{x2,y2},.....{xn,yn} 
+      Generate a vector of events by filling the passed data vector.
+      The flag eventRow indicates how the events are arranged in the multi-dim case.
+      The can be arranged in rows or in columns.
+      With eventRow=false events are the columns in data: {x1,x2,.....,xn},{y1,....yn}
+      With eventRow=true  events are rows in data: {x1,y1},{x2,y2},.....{xn,yn}
    */
    virtual bool Generate(unsigned int nevt, double * data, bool eventRow = false);
 
    /**
       Generate a binned data set.
       A range must have been set before (otherwise inf is returned)
-      and the bins are equidinstant in the previously defined range
+      and the bins are equidistant in the previously defined range
       bin center values must be present in given data set
       If the sampler is implemented by a random one, the entries
       will be binned according to the Poisson distribution
@@ -282,10 +282,10 @@ private:
 
    // private methods
 
-   bool fOwnFunc;                         /// flag to indicate if the function is owned
-   mutable std::vector<double> fData;     ///! internal array used to cached the sample data
-   ROOT::Fit::DataRange    *   fRange;    /// data range
-   const ROOT::Math::IMultiGenFunction * fFunc; /// internal function (ND)
+   bool fOwnFunc;                               ///< flag to indicate if the function is owned
+   mutable std::vector<double> fData;           ///<! internal array used to cached the sample data
+   ROOT::Fit::DataRange    *   fRange;          ///< data range
+   const ROOT::Math::IMultiGenFunction * fFunc; ///< internal function (ND)
 
 
 };

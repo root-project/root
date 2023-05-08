@@ -45,31 +45,31 @@ public:
    THashList(TObject *parent, Int_t capacity=TCollection::kInitHashTableCapacity, Int_t rehash=0);
    virtual    ~THashList();
    Float_t    AverageCollisions() const;
-   void       Clear(Option_t *option="");
-   void       Delete(Option_t *option="");
+   void       Clear(Option_t *option="") override;
+   void       Delete(Option_t *option="") override;
 
-   TObject   *FindObject(const char *name) const;
-   TObject   *FindObject(const TObject *obj) const;
+   TObject   *FindObject(const char *name) const override;
+   TObject   *FindObject(const TObject *obj) const override;
 
    const TList *GetListForObject(const char *name) const;
    const TList *GetListForObject(const TObject *obj) const;
 
-   void       AddFirst(TObject *obj);
-   void       AddFirst(TObject *obj, Option_t *opt);
-   void       AddLast(TObject *obj);
-   void       AddLast(TObject *obj, Option_t *opt);
-   void       AddAt(TObject *obj, Int_t idx);
-   void       AddAfter(const TObject *after, TObject *obj);
-   void       AddAfter(TObjLink *after, TObject *obj);
-   void       AddBefore(const TObject *before, TObject *obj);
-   void       AddBefore(TObjLink *before, TObject *obj);
-   void       RecursiveRemove(TObject *obj);
+   void       AddFirst(TObject *obj) override;
+   void       AddFirst(TObject *obj, Option_t *opt) override;
+   void       AddLast(TObject *obj) override;
+   void       AddLast(TObject *obj, Option_t *opt) override;
+   void       AddAt(TObject *obj, Int_t idx) override;
+   void       AddAfter(const TObject *after, TObject *obj) override;
+   void       AddAfter(TObjLink *after, TObject *obj) override;
+   void       AddBefore(const TObject *before, TObject *obj) override;
+   void       AddBefore(TObjLink *before, TObject *obj) override;
+   void       RecursiveRemove(TObject *obj) override;
    void       Rehash(Int_t newCapacity);
-   TObject   *Remove(TObject *obj);
-   TObject   *Remove(TObjLink *lnk);
-   bool       UseRWLock(Bool_t enable = true);
+   TObject   *Remove(TObject *obj) override;
+   TObject   *Remove(TObjLink *lnk) override;
+   bool       UseRWLock(Bool_t enable = true) override;
 
-   ClassDef(THashList,0)  //Doubly linked list with hashtable for lookup
+   ClassDefOverride(THashList,0)  //Doubly linked list with hashtable for lookup
 };
 
 #endif

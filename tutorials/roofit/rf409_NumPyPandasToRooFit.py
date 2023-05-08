@@ -94,6 +94,7 @@ c.SaveAs("rf409_NumPyPandasToRooFit.png")
 # Exporting a RooDataHist to NumPy arrays for histogram counts and bin edges
 # --------------------------------------------------------------------------
 
+
 def print_histogram_output(histogram_output):
     counts, bin_edges = histogram_output
     print(np.array(counts, dtype=int))

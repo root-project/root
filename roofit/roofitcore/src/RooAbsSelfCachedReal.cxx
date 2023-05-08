@@ -1,13 +1,13 @@
- /***************************************************************************** 
-  * Project: RooFit                                                           * 
-  *                                                                           * 
-  * Copyright (c) 2000-2005, Regents of the University of California          * 
-  *                          and Stanford University. All rights reserved.    * 
-  *                                                                           * 
-  * Redistribution and use in source and binary forms,                        * 
-  * with or without modification, are permitted according to the terms        * 
-  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             * 
-  *****************************************************************************/ 
+ /*****************************************************************************
+  * Project: RooFit                                                           *
+  *                                                                           *
+  * Copyright (c) 2000-2005, Regents of the University of California          *
+  *                          and Stanford University. All rights reserved.    *
+  *                                                                           *
+  * Redistribution and use in source and binary forms,                        *
+  * with or without modification, are permitted according to the terms        *
+  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
+  *****************************************************************************/
 
 /**
 \file RooAbsSelfCachedReal.cxx
@@ -27,18 +27,17 @@ RooCachedReal wrapper function that takes any RooAbsReal object as
 input.
 **/
 
-#include "Riostream.h" 
+#include "Riostream.h"
 
-#include "RooFit.h"
-#include "RooAbsSelfCachedReal.h" 
-#include "RooAbsReal.h" 
+#include "RooAbsSelfCachedReal.h"
+#include "RooAbsReal.h"
 #include "RooMsgService.h"
 #include "RooDataHist.h"
 #include "RooHistPdf.h"
 
 using namespace std ;
 
-ClassImp(RooAbsSelfCachedReal); 
+ClassImp(RooAbsSelfCachedReal);
 
 
 
@@ -47,25 +46,25 @@ ClassImp(RooAbsSelfCachedReal);
 
 RooAbsSelfCachedReal::RooAbsSelfCachedReal(const char *name, const char *title, Int_t ipOrder) :
   RooAbsCachedReal(name,title,ipOrder)
- { 
- } 
+ {
+ }
 
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
 
-RooAbsSelfCachedReal::RooAbsSelfCachedReal(const RooAbsSelfCachedReal& other, const char* name) :  
+RooAbsSelfCachedReal::RooAbsSelfCachedReal(const RooAbsSelfCachedReal& other, const char* name) :
    RooAbsCachedReal(other,name)
- { 
- } 
+ {
+ }
 
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor
 
-RooAbsSelfCachedReal::~RooAbsSelfCachedReal() 
+RooAbsSelfCachedReal::~RooAbsSelfCachedReal()
 {
 }
 
@@ -74,20 +73,20 @@ RooAbsSelfCachedReal::~RooAbsSelfCachedReal()
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill cache with sampling of function as defined by the evaluate() implementation
 
-void RooAbsSelfCachedReal::fillCacheObject(RooAbsCachedReal::FuncCacheElem& cache) const 
+void RooAbsSelfCachedReal::fillCacheObject(RooAbsCachedReal::FuncCacheElem& cache) const
 {
   RooDataHist& cacheHist = *cache.hist() ;
 
   // Make deep clone of self in non-caching mde and attach to dataset observables
-  RooArgSet* cloneSet = (RooArgSet*) RooArgSet(*this).snapshot(kTRUE) ;
+  RooArgSet* cloneSet = (RooArgSet*) RooArgSet(*this).snapshot(true) ;
   RooAbsSelfCachedReal* clone2 = (RooAbsSelfCachedReal*) cloneSet->find(GetName()) ;
-  clone2->disableCache(kTRUE) ;
+  clone2->disableCache(true) ;
   clone2->attachDataSet(cacheHist) ;
 
   // Iterator over all bins of RooDataHist and fill weights
   for (Int_t i=0 ; i<cacheHist.numEntries() ; i++) {
     const RooArgSet* obs = cacheHist.get(i) ;
-    Double_t wgt = clone2->getVal(obs) ;
+    double wgt = clone2->getVal(obs) ;
     cacheHist.set(i, wgt, 0.);
   }
 
@@ -100,7 +99,7 @@ void RooAbsSelfCachedReal::fillCacheObject(RooAbsCachedReal::FuncCacheElem& cach
 /// Defines observables to be cached, given a set of user defined observables
 /// Returns the subset of nset that are observables this p.d.f
 
-RooArgSet* RooAbsSelfCachedReal::actualObservables(const RooArgSet& nset) const 
+RooArgSet* RooAbsSelfCachedReal::actualObservables(const RooArgSet& nset) const
 {
   // Make list of servers
   RooArgSet serverSet;
@@ -108,10 +107,10 @@ RooArgSet* RooAbsSelfCachedReal::actualObservables(const RooArgSet& nset) const
   for (auto server : _serverList) {
     serverSet.add(*server);
   }
-  
+
   // Return servers that are in common with given normalization set
   return (RooArgSet*) serverSet.selectCommon(nset);
-  
+
 }
 
 
@@ -120,24 +119,17 @@ RooArgSet* RooAbsSelfCachedReal::actualObservables(const RooArgSet& nset) const
 /// subset of variables of self that is not contained in the
 /// supplied nset
 
-RooArgSet* RooAbsSelfCachedReal::actualParameters(const RooArgSet& nset) const 
-{  
+RooFit::OwningPtr<RooArgSet> RooAbsSelfCachedReal::actualParameters(const RooArgSet& nset) const
+{
   // Make list of servers
   RooArgSet *serverSet = new RooArgSet;
-  
+
   for (auto server : _serverList) {
     serverSet->add(*server);
   }
-  
+
   // Remove all given observables from server list
-  serverSet->remove(nset,kTRUE,kTRUE);
+  serverSet->remove(nset,true,true);
 
-  return serverSet;
+  return RooFit::OwningPtr<RooArgSet>{serverSet};
 }
-
-
-
-
-
-
-

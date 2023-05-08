@@ -20,6 +20,7 @@
 
 ////////////////////////////////////////////////////////////////////////////
 /// \brief Adopt memory of a Python object with array interface using an RTensor
+/// \param[in] self Always null, since this is a module function.
 /// \param[in] obj PyObject with array interface
 ///
 /// This function returns an RTensor which adopts the memory of the given
@@ -88,7 +89,7 @@ PyObject *PyROOT::AsRTensor(PyObject * /*self*/, PyObject * obj)
    // Construct an RTensor of the correct data-type
    const std::string klassname = "TMVA::Experimental::RTensor<" + cppdtype + ",std::vector<" + cppdtype + ">>";
    std::stringstream code;
-   code << "new " << klassname << "(reinterpret_cast<" << cppdtype << "*>(" << data << "),{";
+   code << "new " << klassname << "(reinterpret_cast<" << cppdtype << "*>(" << std::hex << std::showbase << data << "),{";
    for (auto s: shape) code << s << ",";
    code << "},{";
    for (auto s: strides) code << s << ",";

@@ -24,6 +24,8 @@
 #include <RooDataHist.h>
 #include <RooDataSet.h>
 #include <RooSimultaneous.h>
+#include <RooProdPdf.h>
+#include <RooRealSumPdf.h>
 
 #include <ROOT/StringUtils.hxx>
 #include <TClass.h>
@@ -141,7 +143,7 @@ void checkRangeOfParameters(const RooAbsReal* callingClass, std::initializer_lis
         rangeMsg << "inf" << closeBr;
 
       oocoutW(callingClass, InputArguments) << "The parameter '" << par->GetName() << "' with range [" << par->getMin("") << ", "
-          << par->getMax() << "] of the " << callingClass->IsA()->GetName() << " '" << callingClass->GetName()
+          << par->getMax() << "] of the " << callingClass->ClassName() << " '" << callingClass->GetName()
           << "' exceeds the safe range of " << rangeMsg.str() << ". Advise to limit its range."
           << (!extraMessage.empty() ? "\n" : "") << extraMessage << std::endl;
     }
@@ -181,61 +183,10 @@ std::pair<double, double> getRangeOrBinningInterval(RooAbsArg const* arg, const 
 
 
 /// Check if there is any overlap when a list of ranges is applied to a set of observables.
-/// \param[in] pdf the PDF
-/// \param[in] data RooAbsCollection with the observables to check for overlap.
+/// \param[in] observables The observables to check for overlap
 /// \param[in] rangeNames The names of the ranges.
-/// \param[in] splitRange If `true`, each component of a RooSimultaneous will
-///                       be checked individually for overlaps, with the range
-///                       names in that component suffixed by `_<cat_label>`.
-///                       See the `SplitRange()` command argument of
-///                       RooAbsPdf::fitTo()` to understand where this is used.
-bool checkIfRangesOverlap(RooAbsPdf const& pdf,
-                          RooAbsData const& data,
-                          std::vector<std::string> const& rangeNames,
-                          bool splitRange)
+bool checkIfRangesOverlap(RooArgSet const& observables, std::vector<std::string> const& rangeNames)
 {
-  // If the PDF is a RooSimultaneous and the `splitRange` option is set, we
-  // have to check each component PDF with a different set of rangeNames, each
-  // suffixed by the category name.
-  if(splitRange && dynamic_cast<RooSimultaneous const*>(&pdf)) {
-    auto const& simPdf = static_cast<RooSimultaneous const&>(pdf);
-    bool hasOverlap = false;
-    std::vector<std::string> rangeNamesSplit;
-    for (const auto& catState : simPdf.indexCat()) {
-      const std::string& catName = catState.first;
-      for(std::string const& rangeName : rangeNames) {
-        rangeNamesSplit.emplace_back(rangeName + "_" + catName);
-      }
-      hasOverlap |= checkIfRangesOverlap(*simPdf.getPdf(catName.c_str()), data, rangeNamesSplit, false);
-
-      rangeNamesSplit.clear();
-    }
-
-    return hasOverlap;
-  }
-
-  auto observables = *pdf.getObservables(data);
-
-  auto getLimits = [&](RooAbsRealLValue const& rlv, const char* rangeName) {
-    
-    // RooDataHistCase
-    if(dynamic_cast<RooDataHist const*>(&data)) {
-      if (auto binning = rlv.getBinningPtr(rangeName)) {
-        return getBinningInterval(*binning);
-      } else {
-        // default binning if range is not defined
-        return getBinningInterval(*rlv.getBinningPtr(nullptr));
-      }
-    }
-
-    // RooDataSet and other cases
-    if (rlv.hasRange(rangeName)) {
-      return std::pair<double, double>{rlv.getMin(rangeName), rlv.getMax(rangeName)};
-    }
-    // default range if range with given name is not defined
-    return std::pair<double, double>{rlv.getMin(), rlv.getMax()};
-  };
-
   // cache the range limits in a flat vector
   std::vector<std::pair<double,double>> limits;
   limits.reserve(rangeNames.size() * observables.size());
@@ -245,7 +196,7 @@ bool checkIfRangesOverlap(RooAbsPdf const& pdf,
       if(dynamic_cast<RooAbsCategory const*>(obs)) {
         // Nothing to be done for category observables
       } else if(auto * rlv = dynamic_cast<RooAbsRealLValue const*>(obs)) {
-        limits.push_back(getLimits(*rlv, range.c_str()));
+        limits.emplace_back(rlv->getMin(range.c_str()), rlv->getMax(range.c_str()));
       } else {
         throw std::logic_error("Classes that represent observables are expected to inherit from RooAbsRealLValue or RooAbsCategory!");
       }
@@ -278,7 +229,7 @@ bool checkIfRangesOverlap(RooAbsPdf const& pdf,
 
 
 /// Create a string with all sorted names of RooArgSet elements separated by colons.
-/// \param[in] arg argSet The input RooArgSet.
+/// \param[in] argSet The input RooArgSet.
 std::string getColonSeparatedNameString(RooArgSet const& argSet) {
 
   RooArgList tmp(argSet);
@@ -298,8 +249,8 @@ std::string getColonSeparatedNameString(RooArgSet const& argSet) {
 
 /// Construct a RooArgSet of objects in a RooArgSet whose names match to those
 /// in the names string.
-/// \param[in] arg argSet The input RooArgSet.
-/// \param[in] arg names The names of the objects to select in a colon-separated string.
+/// \param[in] argSet The input RooArgSet.
+/// \param[in] names The names of the objects to select in a colon-separated string.
 RooArgSet selectFromArgSet(RooArgSet const& argSet, std::string const& names) {
   RooArgSet output;
   for(auto const& name : ROOT::Split(names, ":")) {
@@ -308,5 +259,55 @@ RooArgSet selectFromArgSet(RooArgSet const& argSet, std::string const& names) {
   return output;
 }
 
+
+std::string getRangeNameForSimComponent(std::string const& rangeName, bool splitRange, std::string const& catName)
+{
+   if (splitRange && !rangeName.empty()) {
+      std::string out;
+      auto tokens = ROOT::Split(rangeName, ",");
+      for(std::string const& token : tokens) {
+         out += token + "_" + catName + ",";
+      }
+      out.pop_back(); // to remove the last comma
+      return out;
+   }
+
+   return rangeName;
+}
+
+BinnedLOutput getBinnedL(RooAbsPdf &pdf)
+{
+   if (pdf.getAttribute("BinnedLikelihood") && pdf.IsA()->InheritsFrom(RooRealSumPdf::Class())) {
+      // Simplest case: top-level of component is a RooRealSumPdf
+      return {&pdf, true};
+   } else if (pdf.IsA()->InheritsFrom(RooProdPdf::Class())) {
+      // Default case: top-level pdf is a product of RooRealSumPdf and other pdfs
+      for (RooAbsArg *component : static_cast<RooProdPdf &>(pdf).pdfList()) {
+         if (component->getAttribute("BinnedLikelihood") && component->IsA()->InheritsFrom(RooRealSumPdf::Class())) {
+            return {static_cast<RooAbsPdf *>(component), true};
+         }
+         if (component->getAttribute("MAIN_MEASUREMENT")) {
+           // not really a binned pdf, but this prevents a (potentially) long list of subsidiary measurements to be passed to the slave calculator
+           return {static_cast<RooAbsPdf *>(component), false};
+         }
+      }
+   }
+   return {nullptr, false};
+}
+
+/// Get the topologically-sorted list of all nodes in the computation graph.
+void getSortedComputationGraph(RooAbsReal const &func, RooArgSet &out)
+{
+   // Get the set of nodes in the computation graph. Do the detour via
+   // RooArgList to avoid deduplication done after adding each element.
+   RooArgList serverList;
+   func.treeNodeServerList(&serverList, nullptr, true, true, false, true);
+   // If we fill the servers in reverse order, they are approximately in
+   // topological order so we save a bit of work in sortTopologically().
+   out.add(serverList.rbegin(), serverList.rend(), /*silent=*/true);
+   // Sort nodes topologically: the servers of any node will be before that
+   // node in the collection.
+   out.sortTopologically();
+}
 
 }

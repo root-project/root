@@ -13,13 +13,13 @@ sap.ui.define([
       onPanelInit : function() {
 
          // WORKAROUND, need to be FIXED IN THE FUTURE
-         if (window && window.location && window.location.hostname && window.location.hostname.indexOf("github.io")>=0)
-            JSROOT.loadScript('../rootui5/fitpanel/style/style.css');
+         if ((typeof window !== 'undefined') && window?.location?.hostname && window.location.hostname.indexOf("github.io")>=0)
+            this.jsroot.loadScript('../rootui5/fitpanel/style/style.css');
          else
-            JSROOT.loadScript('rootui5sys/fitpanel/style/style.css');
+            this.jsroot.loadScript('rootui5sys/fitpanel/style/style.css');
 
          // need dummy ranges to initialize RangeSliders,
-         var data = {
+         let data = {
                fDim: 1,
                fMinRangeX: -1,
                fMaxRangeX: 1,
@@ -63,7 +63,7 @@ sap.ui.define([
       onWebsocketMsg: function(handle, msg) {
 
          if(msg.startsWith("MODEL:")) {
-            var data = JSROOT.parse(msg.substr(6));
+            let data = this.jsroot.parse(msg.substr(6));
 
             if(data) {
                this.getView().setModel(new JSONModel(data));
@@ -74,7 +74,7 @@ sap.ui.define([
             }
          } else if (msg.startsWith("PARS:")) {
 
-            this.data().fFuncPars = JSROOT.parse(msg.substr(5));
+            this.data().fFuncPars = this.jsroot.parse(msg.substr(5));
 
             this.refresh();
          }
@@ -114,18 +114,18 @@ sap.ui.define([
 
          this.getView().byId("MethodMin").getBinding("items").filter(new Filter("lib", FilterOperator.EQ, data.fLibrary));
 
-         var best = 0, selected = null;
+         let best = 0, selected = null;
 
          // first find selected item
-         for (var k=0;k<data.fMethodMinAll.length;++k) {
+         for (let k = 0; k < data.fMethodMinAll.length; ++k) {
             if (data.fMethodMinAll[k].id == data.fSelectMethodMin) {
                selected = data.fMethodMinAll[k];
                break;
             }
          }
 
-         for (var k=0;k<data.fMethodMinAll.length;++k) {
-            var item = data.fMethodMinAll[k];
+         for (let k=0;k<data.fMethodMinAll.length;++k) {
+            let item = data.fMethodMinAll[k];
             if (item.lib != data.fLibrary) continue;
             if (item.id === data.fSelectMethodMin) return;
             if (!best) best = item.id;
@@ -145,9 +145,9 @@ sap.ui.define([
       },
 
       onContourPar1Change: function() {
-         var data = this.data();
+         let data = this.data();
          if (data.fContourPar1Id == data.fContourPar2Id) {
-            var par2 = parseInt(data.fContourPar2Id);
+            let par2 = parseInt(data.fContourPar2Id);
             if (par2 > 0) par2--; else par2 = 1;
             data.fContourPar2Id = par2.toString();
             this.refresh();
@@ -155,9 +155,9 @@ sap.ui.define([
       },
 
       onContourPar2Change: function() {
-         var data = this.data();
+         let data = this.data();
          if (data.fContourPar1Id == data.fContourPar2Id) {
-            var par1 = parseInt(data.fContourPar1Id);
+            let par1 = parseInt(data.fContourPar1Id);
             if (par1 > 0) par1--; else par1 = 1;
             data.fContourPar1Id = par1.toString();
             this.refresh();
@@ -165,7 +165,7 @@ sap.ui.define([
       },
 
       pressApplyPars: function() {
-         var json = JSROOT.toJSON(this.data().fFuncPars);
+         let json = this.jsroot.toJSON(this.data().fFuncPars);
 
          if (this.websocket)
             this.websocket.send("SETPARS:" + json);

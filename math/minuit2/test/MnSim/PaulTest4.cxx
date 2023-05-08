@@ -51,9 +51,9 @@ public:
    {
    }
 
-   ~PowerLawChi2FCN() {}
+   ~PowerLawChi2FCN() override {}
 
-   double operator()(const std::vector<double> &par) const
+   double operator()(const std::vector<double> &par) const override
    {
       assert(par.size() == 2);
       PowerLawFunc pl(par[0], par[1]);
@@ -66,7 +66,7 @@ public:
       return chi2;
    }
 
-   double Up() const { return 1.; }
+   double Up() const override { return 1.; }
 
 private:
    std::vector<double> fMeasurements;
@@ -82,9 +82,9 @@ public:
    {
    }
 
-   ~PowerLawLogLikeFCN() {}
+   ~PowerLawLogLikeFCN() override {}
 
-   double operator()(const std::vector<double> &par) const
+   double operator()(const std::vector<double> &par) const override
    {
       assert(par.size() == 2);
       PowerLawFunc pl(par[0], par[1]);
@@ -99,7 +99,7 @@ public:
       return -logsum;
    }
 
-   double Up() const { return 0.5; }
+   double Up() const override { return 0.5; }
 
 private:
    std::vector<double> fMeasurements;

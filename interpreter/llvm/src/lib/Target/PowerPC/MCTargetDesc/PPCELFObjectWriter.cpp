@@ -73,16 +73,20 @@ static MCSymbolRefExpr::VariantKind getAccessVariant(const MCValue &Target,
 unsigned PPCELFObjectWriter::getRelocType(MCContext &Ctx, const MCValue &Target,
                                           const MCFixup &Fixup,
                                           bool IsPCRel) const {
+  MCFixupKind Kind = Fixup.getKind();
+  if (Kind >= FirstLiteralRelocationKind)
+    return Kind - FirstLiteralRelocationKind;
   MCSymbolRefExpr::VariantKind Modifier = getAccessVariant(Target, Fixup);
 
   // determine the type of the relocation
   unsigned Type;
   if (IsPCRel) {
-    switch ((unsigned)Fixup.getKind()) {
+    switch (Fixup.getTargetKind()) {
     default:
       llvm_unreachable("Unimplemented");
     case PPC::fixup_ppc_br24:
     case PPC::fixup_ppc_br24abs:
+    case PPC::fixup_ppc_br24_notoc:
       switch (Modifier) {
       default: llvm_unreachable("Unsupported Modifier");
       case MCSymbolRefExpr::VK_None:
@@ -93,6 +97,9 @@ unsigned PPCELFObjectWriter::getRelocType(MCContext &Ctx, const MCValue &Target,
         break;
       case MCSymbolRefExpr::VK_PPC_LOCAL:
         Type = ELF::R_PPC_LOCAL24PC;
+        break;
+      case MCSymbolRefExpr::VK_PPC_NOTOC:
+        Type = ELF::R_PPC64_REL24_NOTOC;
         break;
       }
       break;
@@ -121,6 +128,27 @@ unsigned PPCELFObjectWriter::getRelocType(MCContext &Ctx, const MCValue &Target,
       Target.print(errs());
       errs() << '\n';
       report_fatal_error("Invalid PC-relative half16ds relocation");
+    case PPC::fixup_ppc_pcrel34:
+      switch (Modifier) {
+      default:
+        llvm_unreachable("Unsupported Modifier for fixup_ppc_pcrel34");
+      case MCSymbolRefExpr::VK_PCREL:
+        Type = ELF::R_PPC64_PCREL34;
+        break;
+      case MCSymbolRefExpr::VK_PPC_GOT_PCREL:
+        Type = ELF::R_PPC64_GOT_PCREL34;
+        break;
+      case MCSymbolRefExpr::VK_PPC_GOT_TLSGD_PCREL:
+        Type = ELF::R_PPC64_GOT_TLSGD_PCREL34;
+        break;
+      case MCSymbolRefExpr::VK_PPC_GOT_TLSLD_PCREL:
+        Type = ELF::R_PPC64_GOT_TLSLD_PCREL34;
+        break;
+      case MCSymbolRefExpr::VK_PPC_GOT_TPREL_PCREL:
+        Type = ELF::R_PPC64_GOT_TPREL_PCREL34;
+        break;
+      }
+      break;
     case FK_Data_4:
     case FK_PCRel_4:
       Type = ELF::R_PPC_REL32;
@@ -131,11 +159,8 @@ unsigned PPCELFObjectWriter::getRelocType(MCContext &Ctx, const MCValue &Target,
       break;
     }
   } else {
-    switch ((unsigned)Fixup.getKind()) {
+    switch (Fixup.getTargetKind()) {
       default: llvm_unreachable("invalid fixup kind!");
-    case FK_NONE:
-      Type = ELF::R_PPC_NONE;
-      break;
     case PPC::fixup_ppc_br24abs:
       Type = ELF::R_PPC_ADDR24;
       break;
@@ -391,6 +416,21 @@ unsigned PPCELFObjectWriter::getRelocType(MCContext &Ctx, const MCValue &Target,
         else
           Type = ELF::R_PPC_TLS;
         break;
+      case MCSymbolRefExpr::VK_PPC_TLS_PCREL:
+        Type = ELF::R_PPC64_TLS;
+        break;
+      }
+      break;
+    case PPC::fixup_ppc_imm34:
+      switch (Modifier) {
+      default:
+        report_fatal_error("Unsupported Modifier for fixup_ppc_imm34.");
+      case MCSymbolRefExpr::VK_DTPREL:
+        Type = ELF::R_PPC64_DTPREL34;
+        break;
+      case MCSymbolRefExpr::VK_TPREL:
+        Type = ELF::R_PPC64_TPREL34;
+        break;
       }
       break;
     case FK_Data_8:
@@ -431,6 +471,7 @@ bool PPCELFObjectWriter::needsRelocateWithSymbol(const MCSymbol &Sym,
       return false;
 
     case ELF::R_PPC_REL24:
+    case ELF::R_PPC64_REL24_NOTOC:
       // If the target symbol has a local entry point, we must keep the
       // target symbol to preserve that information for the linker.
       // The "other" values are stored in the last 6 bits of the second byte.
@@ -443,5 +484,5 @@ bool PPCELFObjectWriter::needsRelocateWithSymbol(const MCSymbol &Sym,
 
 std::unique_ptr<MCObjectTargetWriter>
 llvm::createPPCELFObjectWriter(bool Is64Bit, uint8_t OSABI) {
-  return llvm::make_unique<PPCELFObjectWriter>(Is64Bit, OSABI);
+  return std::make_unique<PPCELFObjectWriter>(Is64Bit, OSABI);
 }

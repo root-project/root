@@ -50,7 +50,7 @@ public:
    TAxis3D();
    TAxis3D(Option_t *option);
    TAxis3D(const TAxis3D &axis);
-   virtual ~TAxis3D(){;}
+   virtual ~TAxis3D(){}
 
    virtual void     Browse(TBrowser *b);
 
@@ -66,7 +66,7 @@ public:
    virtual Style_t  GetLabelFont(Option_t *axis="X") const;
    virtual Float_t  GetLabelOffset(Option_t *axis="X") const;
    virtual Float_t  GetLabelSize(Option_t *axis="X") const;
-   static  TAxis3D *GetPadAxis(TVirtualPad *pad=0);
+   static  TAxis3D *GetPadAxis(TVirtualPad *pad=nullptr);
    virtual Float_t  GetTitleOffset(Option_t *axis="X") const;
    virtual Float_t  GetTickLength(Option_t *axis="X") const;
 
@@ -84,7 +84,7 @@ public:
    virtual Bool_t   IsFolder() const { return kTRUE;}
    virtual void     Paint(Option_t *option="");
    void             PaintAxis(TGaxis *axis, Float_t ang);
-   static Double_t *PixeltoXYZ(Double_t px, Double_t py, Double_t *point3D, TView *view =0);
+   static Double_t *PixeltoXYZ(Double_t px, Double_t py, Double_t *point3D, TView *view = nullptr);
    virtual void     SavePrimitive(std::ostream &out, Option_t *option = "");
 
    virtual void     SetAxisColor(Color_t color=1, Option_t *axis="*"); // *MENU*
@@ -102,8 +102,8 @@ public:
    virtual void     SetXTitle(const char *title) {fAxis[0].SetTitle(title);} // *MENU*
    virtual void     SetYTitle(const char *title) {fAxis[1].SetTitle(title);} // *MENU*
    virtual void     SetZTitle(const char *title) {fAxis[2].SetTitle(title);} // *MENU*
-   static  TAxis3D *ToggleRulers(TVirtualPad *pad=0);
-   static  TAxis3D *ToggleZoom(TVirtualPad *pad=0);
+   static  TAxis3D *ToggleRulers(TVirtualPad *pad = nullptr);
+   static  TAxis3D *ToggleZoom(TVirtualPad *pad = nullptr);
    void             UseCurrentStyle();
 
    ClassDef(TAxis3D,1)  //3-D ruler painting class

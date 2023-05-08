@@ -22,23 +22,24 @@ class RooAbsReal;
 
 class RooEffGenContext : public RooAbsGenContext {
 public:
-  RooEffGenContext(const RooAbsPdf &model,
-                   const RooAbsPdf &pdf,const RooAbsReal& eff,
-                   const RooArgSet &vars, const RooDataSet *prototype= 0,
-                   const RooArgSet* auxProto=0, Bool_t verbose=kFALSE, const RooArgSet* forceDirect=0);
-  virtual ~RooEffGenContext();
+   RooEffGenContext(const RooAbsPdf &model, const RooAbsPdf &pdf, const RooAbsReal &eff, const RooArgSet &vars,
+                    const RooDataSet *prototype = nullptr, const RooArgSet *auxProto = nullptr, bool verbose = false,
+                    const RooArgSet *forceDirect = nullptr);
+   ~RooEffGenContext() override;
+
+   void printMultiline(std::ostream &os, Int_t content, bool verbose = false, TString indent = "") const override;
 
 protected:
-  void initGenerator(const RooArgSet &theEvent);
-  void generateEvent(RooArgSet &theEvent, Int_t remaining);
+   void initGenerator(const RooArgSet &theEvent) override;
+   void generateEvent(RooArgSet &theEvent, Int_t remaining) override;
 
 private:
-   RooArgSet* _cloneSet;           // Internal clone of p.d.f.
-   RooAbsReal* _eff;               // Pointer to efficiency function
-   RooAbsGenContext* _generator;   // Generator context for p.d.f
-   RooArgSet* _vars;               // Vars to generate
-   double _maxEff;                 // Maximum of efficiency in vars
+   RooArgSet *_cloneSet;         ///< Internal clone of p.d.f.
+   RooAbsReal *_eff;             ///< Pointer to efficiency function
+   RooAbsGenContext *_generator; ///< Generator context for p.d.f
+   RooArgSet *_vars;             ///< Vars to generate
+   double _maxEff;               ///< Maximum of efficiency in vars
 
-   ClassDef(RooEffGenContext, 1) // Context for generating a dataset from a PDF
+   ClassDefOverride(RooEffGenContext, 0); // Context for generating a dataset from a PDF
 };
 #endif

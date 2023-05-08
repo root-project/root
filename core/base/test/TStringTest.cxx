@@ -1,6 +1,6 @@
 #include "gtest/gtest.h"
 
-#include "ROOTUnitTestSupport.h"
+#include "ROOT/TestSupport.hxx"
 
 #include "TString.h"
 

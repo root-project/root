@@ -18,6 +18,7 @@
 #ifndef LLVM_TOOLS_LLVM_EXEGESIS_MCINSTRDESCVIEW_H
 #define LLVM_TOOLS_LLVM_EXEGESIS_MCINSTRDESCVIEW_H
 
+#include <memory>
 #include <random>
 #include <unordered_map>
 
@@ -44,11 +45,11 @@ struct Variable {
   bool hasTiedOperands() const;
 
   // The indices of the operands tied to this Variable.
-  llvm::SmallVector<unsigned, 2> TiedOperands;
+  SmallVector<unsigned, 2> TiedOperands;
 
   // The index of this Variable in Instruction.Variables and its associated
   // Value in InstructionBuilder.VariableValues.
-  int Index = -1;
+  Optional<uint8_t> Index;
 };
 
 // MCOperandInfo can only represents Explicit operands. This object gives a
@@ -78,23 +79,43 @@ struct Operand {
   unsigned getVariableIndex() const;
   unsigned getImplicitReg() const;
   const RegisterAliasingTracker &getRegisterAliasing() const;
-  const llvm::MCOperandInfo &getExplicitOperandInfo() const;
+  const MCOperandInfo &getExplicitOperandInfo() const;
 
   // Please use the accessors above and not the following fields.
-  int Index = -1;
+  Optional<uint8_t> Index;
   bool IsDef = false;
   const RegisterAliasingTracker *Tracker = nullptr; // Set for Register Op.
-  const llvm::MCOperandInfo *Info = nullptr;        // Set for Explicit Op.
-  int TiedToIndex = -1;                             // Set for Reg&Explicit Op.
-  const llvm::MCPhysReg *ImplicitReg = nullptr;     // Set for Implicit Op.
-  int VariableIndex = -1;                           // Set for Explicit Op.
+  const MCOperandInfo *Info = nullptr;              // Set for Explicit Op.
+  Optional<uint8_t> TiedToIndex;                    // Set for Reg&Explicit Op.
+  const MCPhysReg *ImplicitReg = nullptr;           // Set for Implicit Op.
+  Optional<uint8_t> VariableIndex;                  // Set for Explicit Op.
+};
+
+/// A cache of BitVector to reuse between Instructions.
+/// The cache will only be exercised during Instruction initialization.
+/// For X86, this is ~160 unique vectors for all of the ~15K Instructions.
+struct BitVectorCache {
+  // Finds or allocates the provided BitVector in the cache and retrieves it's
+  // unique instance.
+  const BitVector *getUnique(BitVector &&BV) const;
+
+private:
+  mutable std::vector<std::unique_ptr<BitVector>> Cache;
 };
 
 // A view over an MCInstrDesc offering a convenient interface to compute
 // Register aliasing.
 struct Instruction {
-  Instruction(const llvm::MCInstrInfo &InstrInfo,
-              const RegisterAliasingTrackerCache &RATC, unsigned Opcode);
+  // Create an instruction for a particular Opcode.
+  static std::unique_ptr<Instruction>
+  create(const MCInstrInfo &InstrInfo, const RegisterAliasingTrackerCache &RATC,
+         const BitVectorCache &BVC, unsigned Opcode);
+
+  // Prevent copy or move, instructions are allocated once and cached.
+  Instruction(const Instruction &) = delete;
+  Instruction(Instruction &&) = delete;
+  Instruction &operator=(const Instruction &) = delete;
+  Instruction &operator=(Instruction &&) = delete;
 
   // Returns the Operand linked to this Variable.
   // In case the Variable is tied, the primary (i.e. Def) Operand is returned.
@@ -112,14 +133,11 @@ struct Instruction {
   // Repeating this instruction may execute sequentially by picking aliasing
   // Use and Def registers. It may also execute in parallel by picking non
   // aliasing Use and Def registers.
-  bool hasAliasingRegisters() const;
-
-  // Whether this instruction's implicit registers alias with OtherInstr's
-  // implicit registers.
-  bool hasAliasingImplicitRegistersThrough(const Instruction &OtherInstr) const;
+  bool hasAliasingRegisters(const BitVector &ForbiddenRegisters) const;
 
   // Whether this instruction's registers alias with OtherInstr's registers.
-  bool hasAliasingRegistersThrough(const Instruction &OtherInstr) const;
+  bool hasAliasingRegistersThrough(const Instruction &OtherInstr,
+                                   const BitVector &ForbiddenRegisters) const;
 
   // Returns whether this instruction has Memory Operands.
   // Repeating this instruction executes sequentially with an instruction that
@@ -132,42 +150,50 @@ struct Instruction {
   bool hasOneUseOrOneDef() const;
 
   // Convenient function to help with debugging.
-  void dump(const llvm::MCRegisterInfo &RegInfo,
-            llvm::raw_ostream &Stream) const;
+  void dump(const MCRegisterInfo &RegInfo,
+            const RegisterAliasingTrackerCache &RATC,
+            raw_ostream &Stream) const;
 
-  const llvm::MCInstrDesc *Description; // Never nullptr.
-  llvm::StringRef Name;                 // The name of this instruction.
-  llvm::SmallVector<Operand, 8> Operands;
-  llvm::SmallVector<Variable, 4> Variables;
-  llvm::BitVector ImplDefRegs; // The set of aliased implicit def registers.
-  llvm::BitVector ImplUseRegs; // The set of aliased implicit use registers.
-  llvm::BitVector AllDefRegs;  // The set of all aliased def registers.
-  llvm::BitVector AllUseRegs;  // The set of all aliased use registers.
+  const MCInstrDesc &Description;
+  const StringRef Name; // The name of this instruction.
+  const SmallVector<Operand, 8> Operands;
+  const SmallVector<Variable, 4> Variables;
+  const BitVector &ImplDefRegs; // The set of aliased implicit def registers.
+  const BitVector &ImplUseRegs; // The set of aliased implicit use registers.
+  const BitVector &AllDefRegs;  // The set of all aliased def registers.
+  const BitVector &AllUseRegs;  // The set of all aliased use registers.
+private:
+  Instruction(const MCInstrDesc *Description, StringRef Name,
+              SmallVector<Operand, 8> Operands,
+              SmallVector<Variable, 4> Variables, const BitVector *ImplDefRegs,
+              const BitVector *ImplUseRegs, const BitVector *AllDefRegs,
+              const BitVector *AllUseRegs);
 };
 
 // Instructions are expensive to instantiate. This class provides a cache of
 // Instructions with lazy construction.
 struct InstructionsCache {
-  InstructionsCache(const llvm::MCInstrInfo &InstrInfo,
+  InstructionsCache(const MCInstrInfo &InstrInfo,
                     const RegisterAliasingTrackerCache &RATC);
 
   // Returns the Instruction object corresponding to this Opcode.
   const Instruction &getInstr(unsigned Opcode) const;
 
 private:
-  const llvm::MCInstrInfo &InstrInfo;
+  const MCInstrInfo &InstrInfo;
   const RegisterAliasingTrackerCache &RATC;
   mutable std::unordered_map<unsigned, std::unique_ptr<Instruction>>
       Instructions;
+  const BitVectorCache BVC;
 };
 
 // Represents the assignment of a Register to an Operand.
 struct RegisterOperandAssignment {
-  RegisterOperandAssignment(const Operand *Operand, llvm::MCPhysReg Reg)
+  RegisterOperandAssignment(const Operand *Operand, MCPhysReg Reg)
       : Op(Operand), Reg(Reg) {}
 
   const Operand *Op; // Pointer to an Explicit Register Operand.
-  llvm::MCPhysReg Reg;
+  MCPhysReg Reg;
 
   bool operator==(const RegisterOperandAssignment &other) const;
 };
@@ -179,8 +205,8 @@ struct RegisterOperandAssignment {
 //   other (e.g. AX/AL)
 // - The operands are tied.
 struct AliasingRegisterOperands {
-  llvm::SmallVector<RegisterOperandAssignment, 1> Defs; // Unlikely size() > 1.
-  llvm::SmallVector<RegisterOperandAssignment, 2> Uses;
+  SmallVector<RegisterOperandAssignment, 1> Defs; // Unlikely size() > 1.
+  SmallVector<RegisterOperandAssignment, 2> Uses;
 
   // True is Defs and Use contain an Implicit Operand.
   bool hasImplicitAliasing() const;
@@ -197,15 +223,15 @@ struct AliasingConfigurations {
   bool empty() const; // True if no aliasing configuration is found.
   bool hasImplicitAliasing() const;
 
-  llvm::SmallVector<AliasingRegisterOperands, 32> Configurations;
+  SmallVector<AliasingRegisterOperands, 32> Configurations;
 };
 
 // Writes MCInst to OS.
 // This is not assembly but the internal LLVM's name for instructions and
 // registers.
-void DumpMCInst(const llvm::MCRegisterInfo &MCRegisterInfo,
-                const llvm::MCInstrInfo &MCInstrInfo,
-                const llvm::MCInst &MCInst, llvm::raw_ostream &OS);
+void DumpMCInst(const MCRegisterInfo &MCRegisterInfo,
+                const MCInstrInfo &MCInstrInfo, const MCInst &MCInst,
+                raw_ostream &OS);
 
 } // namespace exegesis
 } // namespace llvm

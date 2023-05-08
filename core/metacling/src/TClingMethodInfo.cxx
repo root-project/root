@@ -258,9 +258,7 @@ TClingMethodInfo::TClingMethodInfo(cling::Interpreter *interp,
 
       // Assemble special functions (or FunctionTemplate-s) that are synthesized from DefinitionData but
       // won't be enumerated as part of decls_begin()/decls_end().
-      llvm::SmallVector<NamedDecl*, 16> Ctors;
-      SemaRef.LookupConstructors(CXXRD, Ctors);
-      for (clang::NamedDecl *ctor : Ctors) {
+      for (clang::NamedDecl *ctor : SemaRef.LookupConstructors(CXXRD)) {
          // Filter out constructor templates, they are not functions we can iterate over:
          if (auto *CXXCD = llvm::dyn_cast<clang::CXXConstructorDecl>(ctor))
             SpecFuncs.emplace_back(CXXCD);
@@ -353,13 +351,13 @@ void TClingMethodInfo::Init(const clang::FunctionDecl *decl)
    fDecl = decl;
 }
 
-void *TClingMethodInfo::InterfaceMethod(const ROOT::TMetaUtils::TNormalizedCtxt &normCtxt) const
+void *TClingMethodInfo::InterfaceMethod() const
 {
    if (!IsValid()) {
       return 0;
    }
    R__LOCKGUARD(gInterpreterMutex);
-   TClingCallFunc cf(fInterp,normCtxt);
+   TClingCallFunc cf(fInterp);
    cf.SetFunc(this);
    return cf.InterfaceMethod();
 }

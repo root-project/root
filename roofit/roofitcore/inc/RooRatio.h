@@ -30,32 +30,32 @@ class RooProduct;
 class RooRatio : public RooAbsReal {
 public:
   RooRatio();
-  RooRatio(const char *name, const char *title, Double_t numerator,
-           Double_t denominator);
-  RooRatio(const char *name, const char *title, Double_t numerator,
+  RooRatio(const char *name, const char *title, double numerator,
+           double denominator);
+  RooRatio(const char *name, const char *title, double numerator,
            RooAbsReal &denominator);
   RooRatio(const char *name, const char *title, RooAbsReal &numerator,
-           Double_t denominator);
+           double denominator);
   RooRatio(const char *name, const char *title, RooAbsReal &numerator,
            RooAbsReal &denominator);
-  RooRatio(const char *name, const char *title, 
+  RooRatio(const char *name, const char *title,
            const RooArgList &num, const RooArgList &denom);
 
-  RooRatio(const RooRatio &other, const char *name = 0);
-  virtual TObject *clone(const char *newname) const {
+  RooRatio(const RooRatio &other, const char *name = nullptr);
+  TObject *clone(const char *newname) const override {
     return new RooRatio(*this, newname);
   }
-  virtual ~RooRatio();
+  ~RooRatio() override;
 
 protected:
-  double evaluate() const;
-  void computeBatch(cudaStream_t*, double* output, size_t nEvents, RooFit::Detail::DataMap const&) const;
-  inline bool canComputeBatchWithCuda() const { return true; }
+  double evaluate() const override;
+  void computeBatch(cudaStream_t*, double* output, size_t nEvents, RooFit::Detail::DataMap const&) const override;
+  inline bool canComputeBatchWithCuda() const override { return true; }
 
   RooRealProxy _numerator;
   RooRealProxy _denominator;
 
-  ClassDef(RooRatio, 2) // Ratio of two RooAbsReal and/or numbers
+  ClassDefOverride(RooRatio, 2) // Ratio of two RooAbsReal and/or numbers
 };
 
 #endif

@@ -15,8 +15,6 @@
  * RooAbsReal that does piecewise-linear interpolations.
  */
 
-#include "RooFit.h"
-
 #include <iostream>
 #include <cmath>
 
@@ -39,35 +37,28 @@ using namespace HistFactory;
 
 LinInterpVar::LinInterpVar()
 {
-  _paramIter = _paramList.createIterator() ;
   _nominal = 0 ;
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
 
-LinInterpVar::LinInterpVar(const char* name, const char* title, 
-		       const RooArgList& paramList, 
-		       double nominal, vector<double> low, vector<double> high) :
+LinInterpVar::LinInterpVar(const char* name, const char* title,
+             const RooArgList& paramList,
+             double nominal, vector<double> low, vector<double> high) :
   RooAbsReal(name, title),
   _paramList("paramList","List of paramficients",this),
   _nominal(nominal), _low(low), _high(high)
 {
-  _paramIter = _paramList.createIterator() ;
 
-
-  TIterator* paramIter = paramList.createIterator() ;
-  RooAbsArg* param ;
-  while((param = (RooAbsArg*)paramIter->Next())) {
+  for (auto param : paramList) {
     if (!dynamic_cast<RooAbsReal*>(param)) {
-      coutE(InputArguments) << "LinInterpVar::ctor(" << GetName() << ") ERROR: paramficient " << param->GetName() 
-			    << " is not of type RooAbsReal" << endl ;
+      coutE(InputArguments) << "LinInterpVar::ctor(" << GetName() << ") ERROR: paramficient " << param->GetName()
+             << " is not of type RooAbsReal" << endl ;
       assert(0) ;
     }
     _paramList.add(*param) ;
   }
-  delete paramIter ;
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -75,52 +66,34 @@ LinInterpVar::LinInterpVar(const char* name, const char* title,
 
 LinInterpVar::LinInterpVar(const char* name, const char* title) :
   RooAbsReal(name, title),
-  _paramList("paramList","List of coefficients",this), 
+  _paramList("paramList","List of coefficients",this),
   _nominal(0)
 {
-  _paramIter = _paramList.createIterator() ;
+  
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 LinInterpVar::LinInterpVar(const LinInterpVar& other, const char* name) :
-  RooAbsReal(other, name), 
+  RooAbsReal(other, name),
   _paramList("paramList",this,other._paramList),
   _nominal(other._nominal), _low(other._low), _high(other._high)
-  
+
 {
   // Copy constructor
-  _paramIter = _paramList.createIterator() ;
-  
+
 }
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-LinInterpVar::~LinInterpVar() 
-{
-  delete _paramIter ;
-}
-
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate and return value of polynomial
 
-Double_t LinInterpVar::evaluate() const 
+double LinInterpVar::evaluate() const
 {
-  Double_t sum(_nominal) ;
-  _paramIter->Reset() ;
-
-  RooAbsReal* param ;
-  //const RooArgSet* nset = _paramList.nset() ;
+  double sum(_nominal) ;
+  
   int i=0;
-
-  while((param=(RooAbsReal*)_paramIter->Next())) {
-    //    param->Print("v");
-
+  for(auto const* param: static_range_cast<RooAbsReal *>(_paramList)) {
     if(param->getVal()>0)
       sum +=  param->getVal()*(_high.at(i) - _nominal );
     else
@@ -131,7 +104,7 @@ Double_t LinInterpVar::evaluate() const
 
   if(sum<=0) {
     sum=1E-9;
-  }    
+  }
 
   return sum;
 }

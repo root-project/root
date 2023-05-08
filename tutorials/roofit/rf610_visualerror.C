@@ -81,13 +81,13 @@ void rf610_visualerror()
    // is chosen to be such that at least 100 curves are expected to be outside the N% interval, and is minimally
    // 100 (e.g. Z=1->Ncurve=356, Z=2->Ncurve=2156)) Intervals from the sampling method can be asymmetric,
    // and may perform better in the presence of strong correlations, but may take (much) longer to calculate
-   model.plotOn(frame, VisualizeError(*r, 1, kFALSE), DrawOption("L"), LineWidth(2), LineColor(kRed));
+   model.plotOn(frame, VisualizeError(*r, 1, false), DrawOption("L"), LineWidth(2), LineColor(kRed));
 
    // Perform the same type of error visualization on the background component only.
    // The VisualizeError() option can generally applied to _any_ kind of plot (components, asymmetries, efficiencies
    // etc..)
    model.plotOn(frame, VisualizeError(*r, 1), FillColor(kOrange), Components("bkg"));
-   model.plotOn(frame, VisualizeError(*r, 1, kFALSE), DrawOption("L"), LineWidth(2), LineColor(kRed), Components("bkg"),
+   model.plotOn(frame, VisualizeError(*r, 1, false), DrawOption("L"), LineWidth(2), LineColor(kRed), Components("bkg"),
                 LineStyle(kDashed));
 
    // Overlay central value

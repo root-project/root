@@ -14,7 +14,8 @@
 
 #include "TSQLRow.h"
 
-#include <libpq-fe.h>
+struct pg_result;
+typedef struct pg_result PGresult;
 
 class TPgSQLRow : public TSQLRow {
 
@@ -25,7 +26,7 @@ private:
    Bool_t  IsValid(Int_t field);
 
 public:
-   TPgSQLRow(void *result, ULong_t rowHandle);
+   TPgSQLRow(PGresult *result, ULong_t rowHandle);
    ~TPgSQLRow();
 
    void        Close(Option_t *opt="") final;

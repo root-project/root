@@ -116,7 +116,7 @@ public:
      fNrows(0), fNcols(0), fRowLwb(0), fColLwb(0), fNelems(0), fNrowIndex(0),
      fTol(0), fIsOwner(kTRUE) { }
 
-   virtual ~TMatrixTBase() {}
+   ~TMatrixTBase() override {}
 
            inline       Int_t     GetRowLwb     () const { return fRowLwb; }
            inline       Int_t     GetRowUpb     () const { return fNrows+fRowLwb-1; }
@@ -139,7 +139,7 @@ public:
    virtual              TMatrixTBase<Element> &SetMatrixArray  (const Element *data,Option_t *option="");
            inline       Element                SetTol          (Element tol);
 
-   virtual void   Clear      (Option_t *option="") = 0;
+   void   Clear      (Option_t *option="") override = 0;
 
    inline  void   Invalidate ()       { SetBit(kStatus); }
    inline  void   MakeValid  ()       { ResetBit(kStatus); }
@@ -180,8 +180,8 @@ public:
    virtual Element Min        () const;
    virtual Element Max        () const;
 
-   void Draw (Option_t *option="");       // *MENU*
-   void Print(Option_t *name  ="") const; // *MENU*
+   void Draw (Option_t *option="") override;       // *MENU*
+   void Print(Option_t *name  ="") const override; // *MENU*
 
    virtual Element   operator()(Int_t rown,Int_t coln) const = 0;
    virtual Element  &operator()(Int_t rown,Int_t coln)       = 0;
@@ -201,7 +201,7 @@ public:
    // make it public since it can be called by TMatrixTRow
    static Element & NaNValue();
 
-   ClassDef(TMatrixTBase,5) // Matrix base class (template)
+   ClassDefOverride(TMatrixTBase,5) // Matrix base class (template)
 };
 
 #ifndef __CLING__

@@ -11,11 +11,17 @@
 #include "ROOT/RDFHelpers.hxx"
 #include "TROOT.h"      // IsImplicitMTEnabled
 #include "TError.h"     // Warning
+#include "TStopwatch.h"
 #include "RConfigure.h" // R__USE_IMT
+#include "ROOT/RLogger.hxx"
+#include "ROOT/RDF/RLoopManager.hxx" // for RLoopManager
+#include "ROOT/RDF/Utils.hxx"
+#include "ROOT/RResultHandle.hxx"    // for RResultHandle, RunGraphs
 #ifdef R__USE_IMT
 #include "ROOT/TThreadExecutor.hxx"
 #endif // R__USE_IMT
 
+#include <algorithm>
 #include <set>
 
 using ROOT::RDF::RResultHandle;
@@ -23,22 +29,18 @@ using ROOT::RDF::RResultHandle;
 void ROOT::RDF::RunGraphs(std::vector<RResultHandle> handles)
 {
    if (handles.empty()) {
-      Warning("RunGraphs", "Got an empty list of handles");
+      Warning("RunGraphs", "Got an empty list of handles, now quitting.");
       return;
    }
 
    // Check that there are results which have not yet been run
-   unsigned int nNotRun = 0;
-   for (const auto &h : handles) {
-      if (!h.IsReady())
-         nNotRun++;
-   }
-   if (nNotRun < handles.size()) {
+   const unsigned int nToRun =
+      std::count_if(handles.begin(), handles.end(), [](const auto &h) { return !h.IsReady(); });
+   if (nToRun < handles.size()) {
       Warning("RunGraphs", "Got %lu handles from which %lu link to results which are already ready.", handles.size(),
-              handles.size() - nNotRun);
-      return;
+              handles.size() - nToRun);
    }
-   if (nNotRun == 0)
+   if (nToRun == 0u)
       return;
 
    // Find the unique event loops
@@ -46,14 +48,47 @@ void ROOT::RDF::RunGraphs(std::vector<RResultHandle> handles)
    std::set<RResultHandle, decltype(sameGraph)> s(handles.begin(), handles.end(), sameGraph);
    std::vector<RResultHandle> uniqueLoops(s.begin(), s.end());
 
+   // Trigger jitting. One call is enough to jit the code required by all computation graphs.
+   TStopwatch sw;
+   sw.Start();
+   {
+      const auto effectiveVerbosity =
+         ROOT::Experimental::Internal::GetChannelOrManager(ROOT::Detail::RDF::RDFLogChannel())
+            .GetEffectiveVerbosity(ROOT::Experimental::RLogManager::Get());
+      if (effectiveVerbosity >= ROOT::Experimental::ELogLevel::kDebug + 10) {
+         // a very high verbosity was requested, let's not silence anything
+         uniqueLoops[0].fLoopManager->Jit();
+      } else {
+         // silence logs from RLoopManager::Jit: RunGraphs does its own logging
+         auto silenceRDFLogs = ROOT::Experimental::RLogScopedVerbosity(ROOT::Detail::RDF::RDFLogChannel(),
+                                                                       ROOT::Experimental::ELogLevel::kError);
+         uniqueLoops[0].fLoopManager->Jit();
+      }
+   }
+   sw.Stop();
+   R__LOG_INFO(ROOT::Detail::RDF::RDFLogChannel())
+      << "Just-in-time compilation phase for RunGraphs (" << uniqueLoops.size()
+      << " unique computation graphs) completed"
+      << (sw.RealTime() > 1e-3 ? " in " + std::to_string(sw.RealTime()) + " seconds." : " in less than 1ms.");
+
    // Trigger the unique event loops
-   auto run = [](RResultHandle &h) { if (h.fLoopManager) h.fLoopManager->Run(); };
+   auto run = [](RResultHandle &h) {
+      if (h.fLoopManager)
+         h.fLoopManager->Run(/*jit=*/false);
+   };
+
+   sw.Start();
 #ifdef R__USE_IMT
    if (ROOT::IsImplicitMTEnabled()) {
       ROOT::TThreadExecutor{}.Foreach(run, uniqueLoops);
-      return;
+   } else {
+#endif
+      std::for_each(uniqueLoops.begin(), uniqueLoops.end(), run);
+#ifdef R__USE_IMT
    }
-#endif // R__USE_IMT
-   for (auto &h : uniqueLoops)
-      run(h);
+#endif
+   sw.Stop();
+   R__LOG_INFO(ROOT::Detail::RDF::RDFLogChannel())
+      << "Finished RunGraphs run (" << uniqueLoops.size() << " unique computation graphs, " << sw.CpuTime() << "s CPU, "
+      << sw.RealTime() << "s elapsed).";
 }

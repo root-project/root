@@ -12,6 +12,9 @@ external add_argument_promotion
 external add_constant_merge
   : [ `Module ] Llvm.PassManager.t -> unit
   = "llvm_add_constant_merge"
+external add_merge_functions
+  : [ `Module ] Llvm.PassManager.t -> unit
+  = "llvm_add_merge_functions"
 external add_dead_arg_elimination
   : [ `Module ] Llvm.PassManager.t -> unit
   = "llvm_add_dead_arg_elimination"
@@ -30,9 +33,6 @@ external add_global_dce
 external add_global_optimizer
   : [ `Module ] Llvm.PassManager.t -> unit
   = "llvm_add_global_optimizer"
-external add_ipc_propagation
-  : [ `Module ] Llvm.PassManager.t -> unit
-  = "llvm_add_ip_constant_propagation"
 external add_prune_eh
   : [ `Module ] Llvm.PassManager.t -> unit
   = "llvm_add_prune_eh"

@@ -79,7 +79,7 @@ Any tool which implements the interface should provide two modes for tree prunin
    public:
 
       // returns the PruningInfo object for a given tree and test sample
-      virtual PruningInfo* CalculatePruningInfo( DecisionTree* dt, const EventSample* testEvents = NULL,
+      virtual PruningInfo* CalculatePruningInfo( DecisionTree* dt, const EventSample* testEvents = nullptr,
                                                  Bool_t isAutomatic = kFALSE ) = 0;
 
    public:
@@ -96,9 +96,9 @@ Any tool which implements the interface should provide two modes for tree prunin
 
    protected:
 
-      //       mutable MsgLogger* fLogger; //! output stream to save logging information
+      //       mutable MsgLogger* fLogger; ///<! output stream to save logging information
       //       MsgLogger& Log() const { return *fLogger; }
-      Double_t fPruneStrength; //! regularization parameter in pruning
+      Double_t fPruneStrength; ///<! regularization parameter in pruning
 
 
       Double_t S, B;

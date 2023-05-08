@@ -195,10 +195,10 @@ namespace TMVA {
       // classifier response:
       // some methods may return a per-event error estimate
       // error calculation is skipped if err==0
-      virtual Double_t GetMvaValue( Double_t* errLower = 0, Double_t* errUpper = 0) = 0;
+      virtual Double_t GetMvaValue( Double_t* errLower = nullptr, Double_t* errUpper = nullptr) = 0;
 
       // signal/background classification response
-      Double_t GetMvaValue( const TMVA::Event* const ev, Double_t* err = 0, Double_t* errUpper = 0 );
+      Double_t GetMvaValue( const TMVA::Event* const ev, Double_t* err = nullptr, Double_t* errUpper = nullptr );
 
    protected:
       // helper function to set errors to -1
@@ -214,7 +214,7 @@ namespace TMVA {
       const std::vector<Float_t>& GetRegressionValues(const TMVA::Event* const ev){
          fTmpEvent = ev;
          const std::vector<Float_t>* ptr = &GetRegressionValues();
-         fTmpEvent = 0;
+         fTmpEvent = nullptr;
          return (*ptr);
       }
 
@@ -317,11 +317,11 @@ namespace TMVA {
       virtual TMatrixD GetMulticlassConfusionMatrix(Double_t effB, Types::ETreeType type);
       virtual Double_t GetSignificance() const;
       virtual Double_t GetROCIntegral(TH1D *histS, TH1D *histB) const;
-      virtual Double_t GetROCIntegral(PDF *pdfS=0, PDF *pdfB=0) const;
+      virtual Double_t GetROCIntegral(PDF *pdfS=nullptr, PDF *pdfB=nullptr) const;
       virtual Double_t GetMaximumSignificance( Double_t SignalEvents, Double_t BackgroundEvents,
                                                Double_t& optimal_significance_value  ) const;
       virtual Double_t GetSeparation( TH1*, TH1* ) const;
-      virtual Double_t GetSeparation( PDF* pdfS = 0, PDF* pdfB = 0 ) const;
+      virtual Double_t GetSeparation( PDF* pdfS = nullptr, PDF* pdfB = nullptr ) const;
 
       virtual void GetRegressionDeviation(UInt_t tgtNum, Types::ETreeType type, Double_t& stddev,Double_t& stddev90Percent ) const;
       // ---------- public accessors -----------------------------------------------
@@ -632,54 +632,54 @@ namespace TMVA {
       //Model Persistence
       Bool_t fModelPersistence;
 
-      TString          fParentDir;           // method parent name, like booster name
+      TString          fParentDir;           ///< method parent name, like booster name
 
-      TString          fFileDir;             // unix sub-directory for weight files (default: DataLoader's Name + "weights")
-      TString          fWeightFile;          // weight file name
+      TString          fFileDir;             ///< unix sub-directory for weight files (default: DataLoader's Name + "weights")
+      TString          fWeightFile;          ///< weight file name
 
    private:
 
-      TH1*             fEffS;                // efficiency histogram for rootfinder
+      TH1*             fEffS;                ///< efficiency histogram for rootfinder
 
-      PDF*             fDefaultPDF;          // default PDF definitions
-      PDF*             fMVAPdfS;             // signal MVA PDF
-      PDF*             fMVAPdfB;             // background MVA PDF
+      PDF*             fDefaultPDF;          ///< default PDF definitions
+      PDF*             fMVAPdfS;             ///< signal MVA PDF
+      PDF*             fMVAPdfB;             ///< background MVA PDF
 
-      //      TH1D*            fmvaS;                // PDFs of MVA distribution (signal)
-      //      TH1D*            fmvaB;                // PDFs of MVA distribution (background)
-      PDF*             fSplS;                // PDFs of MVA distribution (signal)
-      PDF*             fSplB;                // PDFs of MVA distribution (background)
-      TSpline*         fSpleffBvsS;          // splines for signal eff. versus background eff.
+      //      TH1D*            fmvaS;        ///< PDFs of MVA distribution (signal)
+      //      TH1D*            fmvaB;        ///< PDFs of MVA distribution (background)
+      PDF*             fSplS;                ///< PDFs of MVA distribution (signal)
+      PDF*             fSplB;                ///< PDFs of MVA distribution (background)
+      TSpline*         fSpleffBvsS;          ///< splines for signal eff. versus background eff.
 
-      PDF*             fSplTrainS;           // PDFs of training MVA distribution (signal)
-      PDF*             fSplTrainB;           // PDFs of training MVA distribution (background)
-      TSpline*         fSplTrainEffBvsS;     // splines for training signal eff. versus background eff.
+      PDF*             fSplTrainS;           ///< PDFs of training MVA distribution (signal)
+      PDF*             fSplTrainB;           ///< PDFs of training MVA distribution (background)
+      TSpline*         fSplTrainEffBvsS;     ///< splines for training signal eff. versus background eff.
 
    private:
 
       // basic statistics quantities of MVA
-      Double_t         fMeanS;               // mean (signal)
-      Double_t         fMeanB;               // mean (background)
-      Double_t         fRmsS;                // RMS (signal)
-      Double_t         fRmsB;                // RMS (background)
-      Double_t         fXmin;                // minimum (signal and background)
-      Double_t         fXmax;                // maximum (signal and background)
+      Double_t         fMeanS;               ///< mean (signal)
+      Double_t         fMeanB;               ///< mean (background)
+      Double_t         fRmsS;                ///< RMS (signal)
+      Double_t         fRmsB;                ///< RMS (background)
+      Double_t         fXmin;                ///< minimum (signal and background)
+      Double_t         fXmax;                ///< maximum (signal and background)
 
       // variable preprocessing
-      TString          fVarTransformString;          // labels variable transform method
+      TString          fVarTransformString;           ///< labels variable transform method
 
-      TransformationHandler* fTransformationPointer;  // pointer to the rest of transformations
-      TransformationHandler  fTransformation;         // the list of transformations
+      TransformationHandler* fTransformationPointer;  ///< pointer to the rest of transformations
+      TransformationHandler  fTransformation;         ///< the list of transformations
 
 
       // help and verbosity
-      Bool_t           fVerbose;               // verbose flag
-      TString          fVerbosityLevelString;  // verbosity level (user input string)
-      EMsgType         fVerbosityLevel;        // verbosity level
-      Bool_t           fHelp;                  // help flag
-      Bool_t           fHasMVAPdfs;            // MVA Pdfs are created for this classifier
+      Bool_t           fVerbose;               ///< verbose flag
+      TString          fVerbosityLevelString;  ///< verbosity level (user input string)
+      EMsgType         fVerbosityLevel;        ///< verbosity level
+      Bool_t           fHelp;                  ///< help flag
+      Bool_t           fHasMVAPdfs;            ///< MVA Pdfs are created for this classifier
 
-      Bool_t           fIgnoreNegWeightsInTraining;// If true, events with negative weights are not used in training
+      Bool_t           fIgnoreNegWeightsInTraining; ///< If true, events with negative weights are not used in training
 
    protected:
 
@@ -758,25 +758,25 @@ inline const TMVA::Event* TMVA::MethodBase::GetEvent() const
 
 inline const TMVA::Event* TMVA::MethodBase::GetEvent( Long64_t ievt ) const
 {
-   assert(fTmpEvent==0);
+   assert(fTmpEvent==nullptr);
    return GetTransformationHandler().Transform(Data()->GetEvent(ievt));
 }
 
 inline const TMVA::Event* TMVA::MethodBase::GetEvent( Long64_t ievt, Types::ETreeType type ) const
 {
-   assert(fTmpEvent==0);
+   assert(fTmpEvent==nullptr);
    return GetTransformationHandler().Transform(Data()->GetEvent(ievt, type));
 }
 
 inline const TMVA::Event* TMVA::MethodBase::GetTrainingEvent( Long64_t ievt ) const
 {
-   assert(fTmpEvent==0);
+   assert(fTmpEvent==nullptr);
    return GetEvent(ievt, Types::kTraining);
 }
 
 inline const TMVA::Event* TMVA::MethodBase::GetTestingEvent( Long64_t ievt ) const
 {
-   assert(fTmpEvent==0);
+   assert(fTmpEvent==nullptr);
    return GetEvent(ievt, Types::kTesting);
 }
 

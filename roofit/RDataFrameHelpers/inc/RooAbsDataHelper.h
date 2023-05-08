@@ -151,7 +151,7 @@ public:
 
     if (_numInvalid>0) {
       const auto prefix = std::string(_dataset->ClassName()) + "Helper::Finalize(" + _dataset->GetName() + ") ";
-      oocoutW(static_cast<TObject*>(nullptr), DataHandling) << prefix << "Ignored " << _numInvalid << " out-of-range events\n";
+      oocoutW(nullptr, DataHandling) << prefix << "Ignored " << _numInvalid << " out-of-range events\n";
     }
   }
 
@@ -164,7 +164,7 @@ private:
   /// No matching by name is performed.
   /// \param eventSize Size of a single event.
   void FillDataSet(const std::vector<double>& events, unsigned int eventSize) {
-    if (events.size() == 0)
+    if (events.empty())
       return;
 
     const RooArgSet& argSet = *_dataset->get();
@@ -189,10 +189,10 @@ private:
             // Unlike in the TreeVectorStore case, we don't log the event
             // number here because we don't know it anyway, because of
             // RDataFrame slots and multithreading.
-            oocoutI(static_cast<TObject*>(nullptr), DataHandling) << prefix << "Skipping event because " << destArg->GetName()
+            oocoutI(nullptr, DataHandling) << prefix << "Skipping event because " << destArg->GetName()
                 << " cannot accommodate the value " << sourceVal << "\n";
           } else if (_numInvalid == 5) {
-            oocoutI(static_cast<TObject*>(nullptr), DataHandling) << prefix << "Skipping ...\n";
+            oocoutI(nullptr, DataHandling) << prefix << "Skipping ...\n";
           }
           break ;
         }

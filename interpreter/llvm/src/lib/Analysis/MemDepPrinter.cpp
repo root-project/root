@@ -10,12 +10,16 @@
 //===----------------------------------------------------------------------===//
 
 #include "llvm/ADT/SetVector.h"
+#include "llvm/Analysis/AliasAnalysis.h"
 #include "llvm/Analysis/MemoryDependenceAnalysis.h"
 #include "llvm/Analysis/Passes.h"
 #include "llvm/IR/InstIterator.h"
+#include "llvm/IR/Instructions.h"
 #include "llvm/IR/LLVMContext.h"
+#include "llvm/InitializePasses.h"
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/raw_ostream.h"
+
 using namespace llvm;
 
 namespace {
@@ -67,9 +71,6 @@ namespace {
         return InstTypePair(dep.getInst(), NonFuncLocal);
       assert(dep.isUnknown() && "unexpected dependence type");
       return InstTypePair(dep.getInst(), Unknown);
-    }
-    static InstTypePair getInstTypePair(const Instruction* inst, DepType type) {
-      return InstTypePair(inst, type);
     }
   };
 }

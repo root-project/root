@@ -150,19 +150,19 @@ namespace TMVA {
 
       void DeclareOptions();
 
-      Bool_t    fVerbose;            // verbosity
-      Bool_t    fSilent;             // silent mode
-      Bool_t    fColor;              // color mode
-      Bool_t    fCalculateError;     // error calculation mode
+      Bool_t    fVerbose;            ///< verbosity
+      Bool_t    fSilent;             ///< silent mode
+      Bool_t    fColor;              ///< color mode
+      Bool_t    fCalculateError;     ///< error calculation mode
 
-      Double_t  fMvaEventError;      // per-event error returned by MVA
-      Double_t  fMvaEventErrorUpper; // per-event error returned by MVA
+      Double_t  fMvaEventError;      ///< per-event error returned by MVA
+      Double_t  fMvaEventErrorUpper; ///< per-event error returned by MVA
 
-      std::map<TString, IMethod*> fMethodMap; // map of methods
+      std::map<TString, IMethod*> fMethodMap; ///< map of methods
 
-      std::vector<Float_t> fTmpEvalVec; // temporary evaluation vector (if user input is v<double>)
+      std::vector<Float_t> fTmpEvalVec; ///< temporary evaluation vector (if user input is v<double>)
 
-      mutable MsgLogger* fLogger;   // message logger
+      mutable MsgLogger* fLogger;   ///< message logger
       MsgLogger& Log() const { return *fLogger; }
 
       ClassDef(Reader,0); // Interpret the trained MVAs in an analysis context

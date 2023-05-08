@@ -95,12 +95,12 @@ Executing the macro above produces the following dialog canvas:
 
 TButton::TButton(): TPad()
 {
-   fFraming = 0;
+   fFraming = kFALSE;
    fMethod  = "";
    fLogx    = kFALSE;
    fLogy    = kFALSE;
    SetEditable(kFALSE);
-   fFocused = 0;
+   fFocused = kFALSE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -111,18 +111,18 @@ TButton::TButton(): TPad()
 TButton::TButton(const char *title, const char *method, Double_t x1, Double_t y1,Double_t x2, Double_t  y2)
            :TPad("button",title,x1,y1,x2,y2,18,2,1), TAttText(22,0,1,61,0.65)
 {
-   fFraming=0;
+   fFraming = kFALSE;
    SetBit(kCanDelete);
    fModified = kTRUE;
    fMethod = method;
-   if (strlen(title)) {
-      TLatex *text = new TLatex(0.5*(fX1+fX2),0.5*(fY1+fY2),title);
+   if (title && strlen(title)) {
+      TLatex *text = new TLatex(0.5 * (fX1 + fX2), 0.5 * (fY1 + fY2), title);
       fPrimitives->Add(text);
    }
-   fLogx    = kFALSE;
-   fLogy    = kFALSE;
+   fLogx    = 0;
+   fLogy    = 0;
    SetEditable(kFALSE);
-   fFocused = 0;
+   fFocused = kFALSE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -156,7 +156,7 @@ void TButton::ExecuteEvent(Int_t event, Int_t px, Int_t py)
       return;
    }
 
-   TPad *cdpad = (TPad*)gROOT->GetSelectedPad();
+   auto cdpad = gROOT->GetSelectedPad();
    HideToolTip(event);
 
    switch (event) {
@@ -167,7 +167,7 @@ void TButton::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
    case kButton1Down:
       SetBorderMode(-1);
-      fFocused=1;
+      fFocused = kTRUE;
       Modified();
       Update();
       break;
@@ -181,14 +181,14 @@ void TButton::ExecuteEvent(Int_t event, Int_t px, Int_t py)
           py<YtoAbsPixel(0) && py>YtoAbsPixel(1)) {
          if (!fFocused) {
             SetBorderMode(-1);
-            fFocused=1;
+            fFocused = kTRUE;
             Modified();
             GetCanvas()->Modified();
             Update();
          }
       } else if (fFocused) {
          SetBorderMode(1);
-         fFocused=0;
+         fFocused = kFALSE;
          Modified();
          GetCanvas()->Modified();
          Update();
@@ -198,7 +198,7 @@ void TButton::ExecuteEvent(Int_t event, Int_t px, Int_t py)
    case kButton1Up:
       SetCursor(kWatch);
       if (fFocused) {
-         if (cdpad) cdpad->cd();
+         TVirtualPad::TContext ctxt(cdpad, kTRUE, kTRUE);
          gROOT->ProcessLine(GetMethod());
       }
       //check case where pressing a button deletes itself
@@ -219,7 +219,7 @@ void TButton::Paint(Option_t *option)
    if (!fCanvas) return;
    if (!fPrimitives) fPrimitives = new TList();
    TObject *obj = GetListOfPrimitives()->First();
-   if (obj && obj->InheritsFrom(TText::Class())) {
+   if (obj && obj->InheritsFrom(TLatex::Class())) {
       TLatex *text = (TLatex*)obj;
       text->SetTitle(GetTitle());
       text->SetTextSize(GetTextSize());
@@ -241,7 +241,7 @@ void TButton::PaintModified()
    if (!fCanvas) return;
    if (!fPrimitives) fPrimitives = new TList();
    TObject *obj = GetListOfPrimitives()->First();
-   if (obj && obj->InheritsFrom(TText::Class())) {
+   if (obj && obj->InheritsFrom(TLatex::Class())) {
       TLatex *text = (TLatex*)obj;
       text->SetTitle(GetTitle());
       text->SetTextSize(GetTextSize());
@@ -268,46 +268,27 @@ void TButton::Range(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
 
 void TButton::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
-   TPad *padsav = (TPad*)gPad;
    char quote = '"';
-   if (gROOT->ClassSaved(TButton::Class())) {
+   if (gROOT->ClassSaved(TButton::Class()))
       out<<"   ";
-   } else {
+   else
       out<<"   TButton *";
-   }
-   char *cm = (char*)GetMethod();
-   Int_t nch = strlen(cm);
-   char *cmethod = new char[nch+10];
-   Int_t i = 0;
-   while(*cm) {
-      if (*cm == '"') {
-         cmethod[i] = '\\';
-         i++;
-      }
-      cmethod[i] = *cm;
-      i++;
-      cm++;
-   }
-   cmethod[i] = 0;
-   out<<"button = new TButton("<<quote<<GetTitle()
-      <<quote<<","<<quote<<cmethod<<quote
-      <<","<<fXlowNDC
-      <<","<<fYlowNDC
-      <<","<<fXlowNDC+fWNDC
-      <<","<<fYlowNDC+fHNDC
-      <<");"<<std::endl;
-   delete [] cmethod;
+
+   TString cmethod = GetMethod();
+
+   out << "button = new TButton(" << quote << GetTitle() << quote << ","
+         << quote << cmethod.ReplaceSpecialCppChars() << quote << "," << fXlowNDC << "," << fYlowNDC
+         << "," << fXlowNDC + fWNDC << "," << fYlowNDC + fHNDC << ");"
+         << std::endl;
 
    SaveFillAttributes(out,"button",0,1001);
    SaveLineAttributes(out,"button",1,1,1);
    SaveTextAttributes(out,"button",22,0,1,61,.65);
 
-   if (GetBorderSize() != 2) {
+   if (GetBorderSize() != 2)
       out<<"   button->SetBorderSize("<<GetBorderSize()<<");"<<std::endl;
-   }
-   if (GetBorderMode() != 1) {
+   if (GetBorderMode() != 1)
       out<<"   button->SetBorderMode("<<GetBorderMode()<<");"<<std::endl;
-   }
 
    if (GetFraming()) out<<"button->SetFraming();"<<std::endl;
    if (IsEditable()) out<<"button->SetEditable(kTRUE);"<<std::endl;
@@ -315,17 +296,17 @@ void TButton::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
    out<<"   button->Draw();"<<std::endl;
 
    TIter next(GetListOfPrimitives());
-   TObject *obj = next();  //do not save first primitive
+   next();  //do not save first primitive which should be text
 
    Int_t nprim = 0;
-   while ((obj = next())) {
-      if (!nprim) out<<"   button->cd();"<<std::endl;
-      nprim++;
-      obj->SavePrimitive(out, (Option_t *)next.GetOption());
+   while (auto obj = next()) {
+      if (nprim++ == 0)
+         out<<"   button->cd();"<<std::endl;
+      obj->SavePrimitive(out, next.GetOption());
    }
 
-   if (nprim) out<<"   "<<padsav->GetName()<<"->cd();"<<std::endl;
-   padsav->cd();
+   if ((nprim > 0) && gPad)
+      out<<"   "<<gPad->GetName()<<"->cd();"<<std::endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -333,7 +314,7 @@ void TButton::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 
 void TButton::SetFraming(Bool_t f)
 {
-   fFraming=f;
+   fFraming = f;
    if (f) SetBit(kFraming);
    else   ResetBit(kFraming);
 }

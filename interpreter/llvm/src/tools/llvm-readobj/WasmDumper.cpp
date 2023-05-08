@@ -10,7 +10,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "Error.h"
 #include "ObjDumper.h"
 #include "llvm-readobj.h"
 #include "llvm/Object/Wasm.h"
@@ -24,8 +23,8 @@ namespace {
 static const EnumEntry<unsigned> WasmSymbolTypes[] = {
 #define ENUM_ENTRY(X)                                                          \
   { #X, wasm::WASM_SYMBOL_TYPE_##X }
-    ENUM_ENTRY(FUNCTION), ENUM_ENTRY(DATA),  ENUM_ENTRY(GLOBAL),
-    ENUM_ENTRY(SECTION),  ENUM_ENTRY(EVENT),
+    ENUM_ENTRY(FUNCTION), ENUM_ENTRY(DATA), ENUM_ENTRY(GLOBAL),
+    ENUM_ENTRY(SECTION),  ENUM_ENTRY(TAG),  ENUM_ENTRY(TABLE),
 #undef ENUM_ENTRY
 };
 
@@ -34,7 +33,7 @@ static const EnumEntry<uint32_t> WasmSectionTypes[] = {
   { #X, wasm::WASM_SEC_##X }
     ENUM_ENTRY(CUSTOM),   ENUM_ENTRY(TYPE),      ENUM_ENTRY(IMPORT),
     ENUM_ENTRY(FUNCTION), ENUM_ENTRY(TABLE),     ENUM_ENTRY(MEMORY),
-    ENUM_ENTRY(GLOBAL),   ENUM_ENTRY(EVENT),     ENUM_ENTRY(EXPORT),
+    ENUM_ENTRY(GLOBAL),   ENUM_ENTRY(TAG),       ENUM_ENTRY(EXPORT),
     ENUM_ENTRY(START),    ENUM_ENTRY(ELEM),      ENUM_ENTRY(CODE),
     ENUM_ENTRY(DATA),     ENUM_ENTRY(DATACOUNT),
 #undef ENUM_ENTRY
@@ -51,13 +50,14 @@ static const EnumEntry<unsigned> WasmSymbolFlags[] = {
   ENUM_ENTRY(UNDEFINED),
   ENUM_ENTRY(EXPORTED),
   ENUM_ENTRY(EXPLICIT_NAME),
+  ENUM_ENTRY(NO_STRIP),
 #undef ENUM_ENTRY
 };
 
 class WasmDumper : public ObjDumper {
 public:
   WasmDumper(const WasmObjectFile *Obj, ScopedPrinter &Writer)
-      : ObjDumper(Writer), Obj(Obj) {}
+      : ObjDumper(Writer, Obj->getFileName()), Obj(Obj) {}
 
   void printFileHeaders() override;
   void printSectionHeaders() override;
@@ -90,20 +90,10 @@ void WasmDumper::printRelocation(const SectionRef &Section,
   StringRef SymName;
   symbol_iterator SI = Reloc.getSymbol();
   if (SI != Obj->symbol_end())
-    SymName = error(SI->getName());
+    SymName = unwrapOrError(Obj->getFileName(), SI->getName());
 
-  bool HasAddend = false;
-  switch (RelocType) {
-  case wasm::R_WASM_MEMORY_ADDR_LEB:
-  case wasm::R_WASM_MEMORY_ADDR_SLEB:
-  case wasm::R_WASM_MEMORY_ADDR_I32:
-  case wasm::R_WASM_FUNCTION_OFFSET_I32:
-  case wasm::R_WASM_SECTION_OFFSET_I32:
-    HasAddend = true;
-    break;
-  default:
-    break;
-  }
+  bool HasAddend = wasm::relocTypeHasAddend(static_cast<uint32_t>(RelocType));
+
   if (opts::ExpandRelocs) {
     DictScope Group(W, "Relocation");
     W.printNumber("Type", RelocTypeName, RelocType);
@@ -133,8 +123,8 @@ void WasmDumper::printRelocations() {
   int SectionNumber = 0;
   for (const SectionRef &Section : Obj->sections()) {
     bool PrintedGroup = false;
-    StringRef Name;
-    error(Section.getName(Name));
+    StringRef Name = unwrapOrError(Obj->getFileName(), Section.getName());
+
     ++SectionNumber;
 
     for (const RelocationRef &Reloc : Section.relocations()) {
@@ -191,6 +181,10 @@ void WasmDumper::printSectionHeaders() {
         W.printNumber("Size", static_cast<uint64_t>(Seg.Content.size()));
         if (Seg.Offset.Opcode == wasm::WASM_OPCODE_I32_CONST)
           W.printNumber("Offset", Seg.Offset.Value.Int32);
+        else if (Seg.Offset.Opcode == wasm::WASM_OPCODE_I64_CONST)
+          W.printNumber("Offset", Seg.Offset.Value.Int64);
+        else
+          llvm_unreachable("unknown init expr opcode");
       }
       break;
     }
@@ -198,7 +192,7 @@ void WasmDumper::printSectionHeaders() {
       ListScope Group(W, "Memories");
       for (const wasm::WasmLimits &Memory : Obj->memories()) {
         DictScope Group(W, "Memory");
-        W.printNumber("InitialPages", Memory.Initial);
+        W.printNumber("MinPages", Memory.Minimum);
         if (Memory.Flags & wasm::WASM_LIMITS_FLAG_HAS_MAX) {
           W.printNumber("MaxPages", WasmSec.Offset);
         }
@@ -226,8 +220,12 @@ void WasmDumper::printSymbol(const SymbolRef &Sym) {
   W.printFlags("Flags", Symbol.Info.Flags, makeArrayRef(WasmSymbolFlags));
 
   if (Symbol.Info.Flags & wasm::WASM_SYMBOL_UNDEFINED) {
-    W.printString("ImportName", Symbol.Info.ImportName);
-    W.printString("ImportModule", Symbol.Info.ImportModule);
+    if (Symbol.Info.ImportName) {
+      W.printString("ImportName", *Symbol.Info.ImportName);
+    }
+    if (Symbol.Info.ImportModule) {
+      W.printString("ImportModule", *Symbol.Info.ImportModule);
+    }
   }
   if (Symbol.Info.Kind != wasm::WASM_SYMBOL_TYPE_DATA) {
     W.printHex("ElementIndex", Symbol.Info.ElementIndex);
@@ -242,14 +240,9 @@ void WasmDumper::printSymbol(const SymbolRef &Sym) {
 
 namespace llvm {
 
-std::error_code createWasmDumper(const object::ObjectFile *Obj,
-                                 ScopedPrinter &Writer,
-                                 std::unique_ptr<ObjDumper> &Result) {
-  const auto *WasmObj = dyn_cast<WasmObjectFile>(Obj);
-  assert(WasmObj && "createWasmDumper called with non-wasm object");
-
-  Result.reset(new WasmDumper(WasmObj, Writer));
-  return readobj_error::success;
+std::unique_ptr<ObjDumper> createWasmDumper(const object::WasmObjectFile &Obj,
+                                            ScopedPrinter &Writer) {
+  return std::make_unique<WasmDumper>(&Obj, Writer);
 }
 
 } // namespace llvm

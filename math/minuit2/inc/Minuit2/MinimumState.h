@@ -39,10 +39,9 @@ public:
    {
    }
 
-   /// Constuctor with only parameter values, edm and nfcn, but without errors (covariance).
+   /// Constructor with only parameter values, edm and nfcn, but without errors (covariance).
    /// The resulting state it will be considered valid, since it contains the parameter values,
-   /// although it will has not the error matrix (MinimumError) with
-   /// HasCovariance() returning false.
+   /// although it has not the error matrix (MinimumError) and  HasCovariance() returns false.
    MinimumState(const MinimumParameters &states, double edm, int nfcn)
       : MinimumState(states, MinimumError(states.Vec().size()), FunctionGradient(states.Vec().size()), edm, nfcn)
    {

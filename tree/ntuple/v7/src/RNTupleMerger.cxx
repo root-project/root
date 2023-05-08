@@ -14,7 +14,7 @@
  *************************************************************************/
 
 #include <ROOT/RError.hxx>
-#include <ROOT/RMiniFile.hxx>
+#include <ROOT/RNTuple.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RNTupleMerger.hxx>
 #include <ROOT/RNTupleUtil.hxx>
@@ -25,7 +25,6 @@ Long64_t ROOT::Experimental::RNTuple::Merge(TCollection* inputs, TFileMergeInfo*
    }
    return -1;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 

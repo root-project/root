@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 #
 #===- clang-format-diff.py - ClangFormat Diff Reformatter ----*- python -*--===#
 #
@@ -8,17 +8,18 @@
 #
 #===------------------------------------------------------------------------===#
 
-r"""
-ClangFormat Diff Reformatter
-============================
-
+"""
 This script reads input from a unified diff and reformats all the changed
 lines. This is useful to reformat all the lines touched by a specific patch.
 Example usage for git/svn users:
 
-  git diff -U0 --no-color HEAD^ | clang-format-diff.py -p1 -i
+  git diff -U0 --no-color --relative HEAD^ | clang-format-diff.py -p1 -i
   svn diff --diff-cmd=diff -x-U0 | clang-format-diff.py -i
 
+It should be noted that the filename contained in the diff is used unmodified
+to determine the source file to update. Users calling this script directly
+should be careful to ensure that the path in the diff is correct relative to the
+current working directory.
 """
 from __future__ import absolute_import, division, print_function
 
@@ -35,10 +36,9 @@ else:
 
 
 def main():
-  parser = argparse.ArgumentParser(description=
-                                   'Reformat changed lines in diff. Without -i '
-                                   'option just output the diff that would be '
-                                   'introduced.')
+  parser = argparse.ArgumentParser(description=__doc__,
+                                   formatter_class=
+                                           argparse.RawDescriptionHelpFormatter)
   parser.add_argument('-i', action='store_true', default=False,
                       help='apply edits to files instead of displaying a diff')
   parser.add_argument('-p', metavar='NUM', default=0,
@@ -47,8 +47,8 @@ def main():
                       help='custom pattern selecting file paths to reformat '
                       '(case sensitive, overrides -iregex)')
   parser.add_argument('-iregex', metavar='PATTERN', default=
-                      r'.*\.(cpp|cc|c\+\+|cxx|c|cl|h|hpp|m|mm|inc|js|ts|proto'
-                      r'|protodevel|java)',
+                      r'.*\.(cpp|cc|c\+\+|cxx|c|cl|h|hh|hpp|hxx|m|mm|inc|js|ts'
+                      r'|proto|protodevel|java|cs|json)',
                       help='custom pattern selecting file paths to reformat '
                       '(case insensitive, overridden by -regex)')
   parser.add_argument('-sort-includes', action='store_true', default=False,
@@ -56,8 +56,8 @@ def main():
   parser.add_argument('-v', '--verbose', action='store_true',
                       help='be more verbose, ineffective without -i')
   parser.add_argument('-style',
-                      help='formatting style to apply (LLVM, Google, Chromium, '
-                      'Mozilla, WebKit)')
+                      help='formatting style to apply (LLVM, GNU, Google, Chromium, '
+                      'Microsoft, Mozilla, WebKit)')
   parser.add_argument('-binary', default='clang-format',
                       help='location of binary to use for clang-format')
   args = parser.parse_args()
@@ -69,7 +69,7 @@ def main():
     match = re.search(r'^\+\+\+\ (.*?/){%s}(\S*)' % args.p, line)
     if match:
       filename = match.group(2)
-    if filename == None:
+    if filename is None:
       continue
 
     if args.regex is not None:
@@ -103,11 +103,19 @@ def main():
     command.extend(lines)
     if args.style:
       command.extend(['-style', args.style])
-    p = subprocess.Popen(command,
-                         stdout=subprocess.PIPE,
-                         stderr=None,
-                         stdin=subprocess.PIPE,
-                         universal_newlines=True)
+
+    try:
+      p = subprocess.Popen(command,
+                           stdout=subprocess.PIPE,
+                           stderr=None,
+                           stdin=subprocess.PIPE,
+                           universal_newlines=True)
+    except OSError as e:
+      # Give the user more context when clang-format isn't
+      # found/isn't executable, etc.
+      raise RuntimeError(
+        'Failed to run "%s" - %s"' % (" ".join(command), e.strerror))
+
     stdout, stderr = p.communicate()
     if p.returncode != 0:
       sys.exit(p.returncode)

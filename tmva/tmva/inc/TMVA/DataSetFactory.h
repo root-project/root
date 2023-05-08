@@ -60,7 +60,7 @@ namespace TMVA {
    class TreeInfo;
    class MsgLogger;
 
-   // =============== maybe move these elswhere (e.g. into the tools )
+   // =============== maybe move these elsewhere (e.g. into the tools )
 
    // =============== functors =======================
 
@@ -100,7 +100,7 @@ namespace TMVA {
          // returns argF
       public:
          typedef F argument_type;
-         F operator()(const F& argF) const 
+         F operator()(const F& argF) const
          {
             return argF;
          }
@@ -145,7 +145,7 @@ namespace TMVA {
             nWeEvBeforeCut(0),
             nWeEvAfterCut(0),
             nNegWeights(0),
-            varAvLength(0)
+            varAvLength(nullptr)
                {}
          ~EventStats() { delete[] varAvLength; }
          Float_t cutScaling() const { return Float_t(nEvAfterCut)/nEvBeforeCut; }
@@ -162,7 +162,7 @@ namespace TMVA {
 
       DataSet* CreateDataSet( DataSetInfo &, DataInputHandler& );
    protected:
-     
+
 
       DataSet*  BuildInitialDataSet( DataSetInfo&, TMVA::DataInputHandler& );
       DataSet*  BuildDynamicDataSet( DataSetInfo& );
@@ -201,7 +201,7 @@ namespace TMVA {
 
       // resets branch addresses to current event
       void   ResetBranchAndEventAddresses( TTree* );
-      void   ResetCurrentTree() { fCurrentTree = 0; }
+      void   ResetCurrentTree() { fCurrentTree = nullptr; }
       void   ChangeToNewTree( TreeInfo&, const DataSetInfo & );
       Bool_t CheckTTreeFormula( TTreeFormula* ttf, const TString& expression, Bool_t& hasDollar );
 
@@ -211,28 +211,28 @@ namespace TMVA {
       // data members
 
       // verbosity
-      Bool_t                     fVerbose;           // Verbosity
-      TString                    fVerboseLevel;      // VerboseLevel
+      Bool_t                     fVerbose;            ///< Verbosity
+      TString                    fVerboseLevel;       ///< VerboseLevel
 
       // Printing
-      Bool_t fCorrelations = kFALSE;          // Whether to print correlations or not
-      Bool_t fComputeCorrelations = kFALSE;   // Whether to force computation of correlations or not
+      Bool_t fCorrelations = kFALSE;                  ///< Whether to print correlations or not
+      Bool_t fComputeCorrelations = kFALSE;           ///< Whether to force computation of correlations or not
 
-      Bool_t                     fScaleWithPreselEff; // how to deal with requested #events in connection with preselection cuts 
+      Bool_t                     fScaleWithPreselEff; ///< how to deal with requested #events in connection with preselection cuts
 
       // the event
-      TTree*                     fCurrentTree;       // the tree, events are currently read from
-      UInt_t                     fCurrentEvtIdx;     // the current event (to avoid reading of the same event)
+      TTree*                     fCurrentTree;        ///< the tree, events are currently read from
+      UInt_t                     fCurrentEvtIdx;      ///< the current event (to avoid reading of the same event)
 
       // the formulas for reading the original tree
-      std::vector<TTreeFormula*> fInputFormulas;   // input variables
-      std::vector<std::pair<TTreeFormula*, Int_t>> fInputTableFormulas;    //! input variables expression for arrays
-      std::vector<TTreeFormula *> fTargetFormulas; // targets
-      std::vector<TTreeFormula*> fCutFormulas;     // cuts
-      std::vector<TTreeFormula*> fWeightFormula;   // weights
-      std::vector<TTreeFormula*> fSpectatorFormulas; // spectators
+      std::vector<TTreeFormula*> fInputFormulas;      ///< input variables
+      std::vector<std::pair<TTreeFormula*, Int_t>> fInputTableFormulas; ///<! input variables expression for arrays
+      std::vector<TTreeFormula *> fTargetFormulas;    ///< targets
+      std::vector<TTreeFormula*> fCutFormulas;        ///< cuts
+      std::vector<TTreeFormula*> fWeightFormula;      ///< weights
+      std::vector<TTreeFormula*> fSpectatorFormulas;  ///< spectators
 
-      MsgLogger*                 fLogger;          //! message logger
+      MsgLogger*                 fLogger;            ///<! message logger
       MsgLogger& Log() const { return *fLogger; }
    public:
       ClassDef(DataSetFactory, 2);

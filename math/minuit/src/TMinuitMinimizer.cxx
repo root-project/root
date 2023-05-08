@@ -578,9 +578,16 @@ bool TMinuitMinimizer::Minimize() {
    // check if Hesse needs to be run
    // Migrad runs inside it automatically for strategy >=1. Do also
    // in case improve or other minimizers are used
+   // run Hesse also in case cov matrix has not been computed or has been made pos-def
+   // or a valid error analysis is requested (when IsValidError() == true)
    if (minErrStatus == 0  && (IsValidError() || ( strategy >=1 && CovMatrixStatus() < 3) ) ) {
       fMinuit->mnexcm("HESSE",arglist,1,ierr);
       fStatus += 100*ierr;
+      // here ierr is zero when Hesse fails CovMatrixStatus = 0 or 1 (2 is when was made posdef)
+      if (ierr == 0 && CovMatrixStatus() < 2){
+         fStatus += 100*(CovMatrixStatus()+1);
+      }
+      // should check here cov matrix status??? (if <3 flag error ?)
       if (printlevel>2) Info("TMinuitMinimizer::Minimize","Finished to run HESSE - status %d",ierr);
    }
 
@@ -824,7 +831,7 @@ bool TMinuitMinimizer::GetMinosError(unsigned int i, double & errLow, double & e
    }
 
    fStatus += 10*ierr;
-   fMinosStatus = ierr; 
+   fMinosStatus = ierr;
 
    fMinosRun = true;
 

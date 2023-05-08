@@ -11,42 +11,42 @@
 
 #include <TSpectrum2.h>
 
-void Src3() {
-   Int_t i, j, nfound;
+void Src3()
+{
    const Int_t nbinsx = 64;
    const Int_t nbinsy = 64;
-   Double_t xmin = 0;
-   Double_t xmax = (Double_t)nbinsx;
-   Double_t ymin = 0;
-   Double_t ymax = (Double_t)nbinsy;
-   Double_t** source = new Double_t*[nbinsx];
-   for (i=0;i<nbinsx;i++)
-      source[i]=new Double_t[nbinsy];
-   Double_t** dest = new Double_t*[nbinsx];
-   for (i=0;i<nbinsx;i++)
-      dest[i]=new Double_t[nbinsy];
-   TString dir  = gROOT->GetTutorialDir();
-   TString file = dir+"/spectrum/TSpectrum2.root";
-   TFile *f     = new TFile(file.Data());
+   std::vector<Double_t *> source(nbinsx), dest(nbinsx);
+   for (Int_t i = 0; i < nbinsx; i++) {
+      source[i] = new Double_t[nbinsy];
+      dest[i] = new Double_t[nbinsy];
+   }
+   TString dir = gROOT->GetTutorialDir();
+   TString file = dir + "/spectrum/TSpectrum2.root";
+   TFile *f = TFile::Open(file.Data());
    gStyle->SetOptStat(0);
-   auto search = (TH2F*) f->Get("search1");
-   auto s = new TSpectrum2();
-   for (i = 0; i < nbinsx; i++){
-      for (j = 0; j < nbinsy; j++){
-         source[i][j] = search->GetBinContent(i + 1,j + 1);
+   auto search = (TH2F *)f->Get("search1");
+   TSpectrum2 s;
+   for (Int_t i = 0; i < nbinsx; i++) {
+      for (Int_t j = 0; j < nbinsy; j++) {
+         source[i][j] = search->GetBinContent(i + 1, j + 1);
       }
    }
-   nfound = s->SearchHighRes(source, dest, nbinsx, nbinsy, 2, 2, kFALSE, 3, kFALSE, 1);//3, 10, 100
-   printf("Found %d candidate peaks\n",nfound);
-   Double_t *PositionX = s->GetPositionX();
-   Double_t *PositionY = s->GetPositionY();
+   Int_t nfound = s.SearchHighRes(source.data(), dest.data(), nbinsx, nbinsy, 2, 2, kFALSE, 3, kFALSE, 1); // 3, 10, 100
+   printf("Found %d candidate peaks\n", nfound);
+   Double_t *PositionX = s.GetPositionX();
+   Double_t *PositionY = s.GetPositionY();
    search->Draw("CONT");
-   auto m = new TMarker();
-   m->SetMarkerStyle(23);
-   m->SetMarkerColor(kRed);
-   for (i=0;i<nfound;i++) {
-      printf("posx= %d, posy= %d, value=%d\n",(Int_t)(PositionX[i]+0.5), (Int_t)(PositionY[i]+0.5),
-      (Int_t)source[(Int_t)(PositionX[i]+0.5)][(Int_t)(PositionY[i]+0.5)]);
-      m->DrawMarker(PositionX[i],PositionY[i]);
+   TMarker m;
+   m.SetMarkerStyle(23);
+   m.SetMarkerColor(kRed);
+   for (Int_t i = 0; i < nfound; i++) {
+      printf("posx= %d, posy= %d, value=%d\n", (Int_t)(PositionX[i] + 0.5), (Int_t)(PositionY[i] + 0.5),
+             (Int_t)source[(Int_t)(PositionX[i] + 0.5)][(Int_t)(PositionY[i] + 0.5)]);
+      m.DrawMarker(PositionX[i], PositionY[i]);
+   }
+
+   for (Int_t i = 0; i < nbinsx; i++) {
+      delete[] source[i];
+      delete[] dest[i];
    }
 }

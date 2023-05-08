@@ -1,5 +1,6 @@
 // Tests for the RooPoisson
 // Authors: Stephan Hageboeck, CERN  01/2019
+//          Jonas Rembser, CERN  11/2022
 
 #include "RooRealVar.h"
 #include "RooPoisson.h"
@@ -97,10 +98,10 @@ TEST(RooPoisson, AnalyticalIntegral)
 
     //And first two bins
     runTest(-1., 1., TMath::Poisson(0, lambdaVal) + TMath::Poisson(1, lambdaVal));
-    
+
     //Not defined (should yield zero)
     runTest(-1., -0.5, 0.);
-    
+
     //Some positive ranges
     runTest(0., 10., ROOT::Math::poisson_cdf(10, lambdaVal));
     runTest(0.4, 10.3, ROOT::Math::poisson_cdf(10, lambdaVal));
@@ -131,4 +132,45 @@ TEST(RooPoisson, AnalyticalIntegral)
         - ROOT::Math::poisson_cdf_c(max, lambdaVal));
     }
   }
+}
+
+namespace {
+
+double getPoissonIntegral(double a, double b, double muVal)
+{
+   using namespace RooFit;
+
+   RooRealVar x{"x", "x", a, b};
+   RooRealVar mu{"mu", "mu", muVal};
+   RooPoisson poisson{"poisson", "poisson", x, mu};
+
+   return std::unique_ptr<RooAbsReal>{poisson.createIntegral(x)}->getVal();
+}
+
+} // namespace
+
+// Covers GitHub issue #10868 about the wrong integral for RooPoisson if
+// integrated from a > 0 to infinity.
+TEST(RooPoisson, IntegralFromMinGreaterZero)
+{
+   const double mu = 100;
+   const double inf = std::numeric_limits<double>::max();
+
+   // 1. Should be 1 because the probability to have x greater than 100000 is
+   // basically zero.
+   const double intVal1 = getPoissonIntegral(0, 100000, mu);
+   EXPECT_FLOAT_EQ(intVal1, 1.0);
+
+   // 2. Should be around 0.5, as the range of x is from the mean of the
+   // Poisson to basically infinity.
+   const double intVal2 = getPoissonIntegral(100, 100000, mu);
+   EXPECT_FLOAT_EQ(intVal2, 1.0 - ROOT::Math::poisson_cdf(100 - 1, mu));
+
+   // 3. Should be the same as the first integral
+   const double intVal3 = getPoissonIntegral(0, inf, mu);
+   EXPECT_FLOAT_EQ(intVal3, intVal1);
+
+   // 4. Should be the same as the second integral but it isn't!
+   const double intVal4 = getPoissonIntegral(100, inf, mu);
+   EXPECT_FLOAT_EQ(intVal4, intVal2);
 }

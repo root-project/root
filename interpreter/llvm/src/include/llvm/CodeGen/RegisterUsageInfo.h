@@ -15,12 +15,13 @@
 ///
 //===----------------------------------------------------------------------===//
 
-#ifndef LLVM_CODEGEN_PHYSICALREGISTERUSAGEINFO_H
-#define LLVM_CODEGEN_PHYSICALREGISTERUSAGEINFO_H
+#ifndef LLVM_CODEGEN_REGISTERUSAGEINFO_H
+#define LLVM_CODEGEN_REGISTERUSAGEINFO_H
 
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/IR/Instructions.h"
+#include "llvm/InitializePasses.h"
 #include "llvm/Pass.h"
 #include <cstdint>
 #include <vector>
@@ -67,4 +68,4 @@ private:
 
 } // end namespace llvm
 
-#endif // LLVM_CODEGEN_PHYSICALREGISTERUSAGEINFO_H
+#endif // LLVM_CODEGEN_REGISTERUSAGEINFO_H

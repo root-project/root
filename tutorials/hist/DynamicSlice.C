@@ -6,16 +6,16 @@
 /// \macro_image
 /// \macro_code
 ///
-/// \author Rene Brun
+/// \authors Rene Brun, Sergey Linev
 
 
 void DynamicSlice()
 {
    // Create a new canvas.
-   TCanvas* c1 = new TCanvas("c1","Dynamic Slice Example",10,10,700,500);
+   TCanvas* c1 = new TCanvas("c1","Dynamic Slice Example", 10, 10, 700, 500);
 
    //create a 2-d histogram, fill and draw it
-   TH2F *hpxpy  = new TH2F("hpxpy","py vs px",40,-4,4,40,-4,4);
+   TH2F *hpxpy  = new TH2F("hpxpy", "py vs px", 40,-4,4, 40,-4,4);
    hpxpy->SetStats(0);
    Double_t px,py;
    for (Int_t i = 0; i < 50000; i++) {
@@ -25,7 +25,7 @@ void DynamicSlice()
    hpxpy->Draw("col");
 
    //Add a TExec object to the canvas
-   c1->AddExec("dynamic","DynamicExec()");
+   c1->AddExec("dynamic", "DynamicExec()");
 }
 
 void DynamicExec()
@@ -39,23 +39,32 @@ void DynamicExec()
    // to develop more powerful interactive applications exploiting Cling
    // as a development engine.
 
-   TObject *select = gPad->GetSelected();
-   if(!select) return;
-   if (!select->InheritsFrom(TH2::Class())) {gPad->SetUniqueID(0); return;}
-   TH2 *h = (TH2*)select;
-   gPad->GetCanvas()->FeedbackMode(kTRUE);
+   static int pyold = 0;
 
-   //erase old position and draw a line at current position
-   int pyold = gPad->GetUniqueID();
-   int px = gPad->GetEventX();
-   int py = gPad->GetEventY();
    float uxmin = gPad->GetUxmin();
    float uxmax = gPad->GetUxmax();
    int pxmin = gPad->XtoAbsPixel(uxmin);
    int pxmax = gPad->XtoAbsPixel(uxmax);
-   if(pyold) gVirtualX->DrawLine(pxmin,pyold,pxmax,pyold);
-   gVirtualX->DrawLine(pxmin,py,pxmax,py);
-   gPad->SetUniqueID(py);
+   int px = gPad->GetEventX();
+   int py = gPad->GetEventY();
+   TObject *select = gPad->GetSelected();
+
+   gPad->GetCanvas()->FeedbackMode(kTRUE);
+   if (pyold) {
+      // erase line at old position
+      gVirtualX->DrawLine(pxmin, pyold, pxmax, pyold);
+      pyold = 0;
+   }
+
+   if(!select || !select->InheritsFrom(TH2::Class()))
+      return;
+
+   TH2 *h = (TH2*)select;
+
+   // draw a line at current position
+   gVirtualX->DrawLine(pxmin, py, pxmax, py);
+   pyold = py;
+
    Float_t upy = gPad->AbsPixeltoY(py);
    Float_t y = gPad->PadtoY(upy);
 
@@ -63,7 +72,7 @@ void DynamicExec()
    TVirtualPad *padsav = gPad;
    TCanvas *c2 = (TCanvas*)gROOT->GetListOfCanvases()->FindObject("c2");
    if(c2) delete c2->GetPrimitive("Projection");
-   else   c2 = new TCanvas("c2","Projection Canvas",710,10,700,500);
+     else c2 = new TCanvas("c2","Projection Canvas",710,10,700,500);
    c2->SetGrid();
    c2->cd();
 
@@ -71,10 +80,8 @@ void DynamicExec()
    Int_t biny = h->GetYaxis()->FindBin(y);
    TH1D *hp = h->ProjectionX("",biny,biny);
    hp->SetFillColor(38);
-   char title[80];
-   sprintf(title,"Projection of biny=%d",biny);
    hp->SetName("Projection");
-   hp->SetTitle(title);
+   hp->SetTitle(TString::Format("Projection of biny=%d",biny));
    hp->Fit("gaus","ql");
    hp->GetFunction("gaus")->SetLineColor(kRed);
    hp->GetFunction("gaus")->SetLineWidth(6);

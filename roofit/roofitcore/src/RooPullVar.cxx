@@ -31,7 +31,6 @@ side of that error will be used:
 
 #include "RooPullVar.h"
 
-#include "RooFit.h"
 #include "RooAbsReal.h"
 #include "RooRealVar.h"
 
@@ -72,7 +71,7 @@ RooPullVar::RooPullVar(const char* name, const char* title, RooRealVar& meas, Ro
 /// Copy constructor
 
 RooPullVar::RooPullVar(const RooPullVar& other, const char* name) :
-  RooAbsReal(other, name), 
+  RooAbsReal(other, name),
   _meas("meas",this,other._meas),
   _true("true",this,other._true)
 {
@@ -83,7 +82,7 @@ RooPullVar::RooPullVar(const RooPullVar& other, const char* name) :
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor
 
-RooPullVar::~RooPullVar() 
+RooPullVar::~RooPullVar()
 {
 }
 
@@ -94,18 +93,18 @@ RooPullVar::~RooPullVar()
 /// otherwise use symmetric error. If measurement has no error
 /// return zero.
 
-Double_t RooPullVar::evaluate() const 
+double RooPullVar::evaluate() const
 {
   const auto& meas = _meas.arg();
   if (meas.hasAsymError()) {
-    Double_t delta = _meas-_true ;
+    double delta = _meas-_true ;
     if (delta<0) {
       return delta/meas.getAsymErrorHi() ;
     } else {
       return -delta/meas.getAsymErrorLo() ;
     }
   } else if (meas.hasError()) {
-    return (_meas-_true)/meas.getError() ;    
+    return (_meas-_true)/meas.getError() ;
   } else {
     return 0 ;
   }

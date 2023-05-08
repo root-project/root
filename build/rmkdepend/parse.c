@@ -45,12 +45,7 @@ extern void add_include(struct filepointer *filep, struct inclist *file,
                            struct inclist *file_red, char *include,
                            boolean dot, boolean failOK);
 
-
-
-int
-gobble(filep, file, file_red)
-register struct filepointer *filep;
-struct inclist  *file, *file_red;
+int gobble(register struct filepointer *filep, struct inclist *file, struct inclist *file_red)
 {
    register char *line;
    register int type;
@@ -110,11 +105,8 @@ static void inplace_strcpy(char* to, const char* from)
 /*
  * Decide what type of # directive this line is.
  */
-int deftype(line, filep, file_red, file, parse_it)
-register char *line;
-register struct filepointer *filep;
-register struct inclist *file_red, *file;
-int parse_it;
+int deftype(register char *line, register struct filepointer *filep, register struct inclist *file_red,
+            register struct inclist *file, int parse_it)
 {
    register char *p;
    char *directive, savechar;
@@ -251,15 +243,11 @@ int parse_it;
    return(ret);
 }
 
-struct symtab **fdefined(symbol, file, srcfile)
-         register char *symbol;
-struct inclist *file;
-struct inclist **srcfile;
+struct symtab **fdefined(register char *symbol, struct inclist *file, struct inclist **srcfile)
 {
    register struct inclist **ip;
    register struct symtab **val;
    register int i;
-   static int recurse_lvl = 0;
 
    if (file->i_flags & DEFCHECKED)
       return(NULL);
@@ -279,16 +267,12 @@ struct inclist **srcfile;
             if (val != NULL) break;
          }
    } else if (val != NULL && srcfile != NULL) *srcfile = file;
-   recurse_lvl--;
    file->i_flags &= ~DEFCHECKED;
 
    return(val);
 }
 
-struct symtab **isdefined(symbol, file, srcfile)
-         register char *symbol;
-struct inclist *file;
-struct inclist **srcfile;
+struct symtab **isdefined(register char *symbol, struct inclist *file, struct inclist **srcfile)
 {
    register struct symtab **val;
 
@@ -306,11 +290,7 @@ struct inclist **srcfile;
 /*
  * Return type based on if the #if expression evaluates to 0
  */
-int
-zero_value(exp, filep, file_red)
-register char *exp;
-register struct filepointer *filep;
-register struct inclist *file_red;
+int zero_value(register char *exp, register struct filepointer *filep, register struct inclist *file_red)
 {
    if (cppsetup(exp, filep, file_red))
       return(IFFALSE);
@@ -318,10 +298,7 @@ register struct inclist *file_red;
       return(IF);
 }
 
-void
-define2(name, val, file)
-char *name, *val;
-struct inclist *file;
+void define2(char *name, char *val, struct inclist *file)
 {
    int first, last, below;
    register struct symtab **sp = NULL, **dest;
@@ -394,10 +371,7 @@ struct inclist *file;
    *sp = stab;
 }
 
-void
-define(def, file)
-char *def;
-struct inclist *file;
+void define(char *def, struct inclist *file)
 {
    char *val;
 
@@ -415,9 +389,7 @@ struct inclist *file;
    define2(def, val, file);
 }
 
-struct symtab **slookup(symbol, file)
-         register char *symbol;
-register struct inclist *file;
+struct symtab **slookup(register char *symbol, register struct inclist *file)
 {
    register int first = 0;
    register int last = file->i_ndefs - 1;
@@ -451,9 +423,7 @@ register struct inclist *file;
    return(NULL);
 }
 
-int merge2defines(file1, file2)
-struct inclist *file1;
-struct inclist *file2;
+int merge2defines(struct inclist *file1, struct inclist *file2)
 {
    if ((file1 != NULL) && (file2 != NULL)) {
       int first1 = 0;
@@ -502,10 +472,7 @@ struct inclist *file2;
    return 0;
 }
 
-void
-undefine(symbol, file)
-char *symbol;
-register struct inclist *file;
+void undefine(char *symbol, register struct inclist *file)
 {
    register struct symtab **ptr;
    struct inclist *srcfile;
@@ -516,9 +483,7 @@ register struct inclist *file;
    }
 }
 
-void
-undefine_all(file)
-register struct inclist *file;
+void undefine_all(register struct inclist *file)
 {
    register struct symtab **ptr;
 
@@ -528,12 +493,8 @@ register struct inclist *file;
    file->i_ndefs = 0;
 }
 
-int
-find_includes(filep, file, file_red, recursion, failOK)
-struct filepointer *filep;
-struct inclist  *file, *file_red;
-int   recursion;
-boolean   failOK;
+int find_includes(struct filepointer *filep, struct inclist *file, struct inclist *file_red, int recursion,
+                  boolean failOK)
 {
    register char *line;
    register int type;

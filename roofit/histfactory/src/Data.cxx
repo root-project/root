@@ -1,5 +1,5 @@
 // @(#)root/roostats:$Id$
-// Author: Kyle Cranmer, George Lewis 
+// Author: Kyle Cranmer, George Lewis
 /*************************************************************************
  * Copyright (C) 1995-2008, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -10,9 +10,9 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 /** \class RooStats::HistFactory::Data
- *  \ingroup HistFactory 
+ *  \ingroup HistFactory
 */
- 
+
 
 #include "RooStats/HistFactory/Data.h"
 
@@ -34,10 +34,10 @@ void RooStats::HistFactory::Data::Print( std::ostream& stream ) {
 
 
   stream << "\t \t InputFile: " << fInputFile
-	 << "\t HistoName: " << fHistoName
-	 << "\t HistoPath: " << fHistoPath
-	 << "\t HistoAddress: " << GetHisto()
-	 << std::endl;
+    << "\t HistoName: " << fHistoName
+    << "\t HistoPath: " << fHistoPath
+    << "\t HistoAddress: " << GetHisto()
+    << std::endl;
 
 }
 
@@ -45,13 +45,13 @@ void RooStats::HistFactory::Data::writeToFile( std::string OutputFileName, std::
 
   TH1* histData = GetHisto();
 
-  if( histData != NULL) {
+  if( histData != nullptr) {
 
     histData->Write();
-  
+
     // Set the location of the data
     // in the output measurement
-  
+
     fInputFile = OutputFileName;
     fHistoName = histData->GetName();
     fHistoPath = DirName;

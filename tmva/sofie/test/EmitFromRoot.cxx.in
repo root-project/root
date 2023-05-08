@@ -1,0 +1,50 @@
+// Author: Sanjiban Sengupta, 2021
+// Description:
+//           This is to test the Serialisation of RModel class
+//           defined in SOFIE. The program is run when the
+//           target 'TestCustomModelsFromROOT' is built. The program
+//           generates the required .hxx file after reading a written
+//           ROOT file which stores the object of the RModel class.
+
+#include <iostream>
+
+#include "TMVA/RModel.hxx"
+#include "TMVA/RModelParser_ONNX.hxx"
+#include "TFile.h"
+
+using namespace TMVA::Experimental::SOFIE;
+
+int EmitModel(std::string inputfile, std::string outname){
+
+   RModelParser_ONNX parser;
+   RModel model = parser.Parse(inputfile);
+   TFile fileWrite((outname+"_FromROOT.root").c_str(),"RECREATE");
+   model.Write("model");
+   fileWrite.Close();
+   TFile fileRead((outname+"_FromROOT.root").c_str(),"READ");
+   RModel *modelPtr;
+   fileRead.GetObject("model",modelPtr);
+   fileRead.Close();
+   if (outname.find("Linear_") != std::string::npos) {
+      // use Session and weight file for linear model with large weights
+      if (outname.find("Linear_32") != std::string::npos) return 0; // skip test
+      if (outname.find("Linear_64") != std::string::npos) return 0; // skip test
+      modelPtr->Generate();
+   }
+   else if (outname.find("LinearWith") != std::string::npos){
+      // in this case we don't write session class but not weight file
+      modelPtr->Generate(Options::kNoWeightFile);
+   }
+   else {
+      // in this case we don't write session class and not weight file
+      modelPtr->Generate(Options::kNoSession | Options::kNoWeightFile);
+   }
+   modelPtr->OutputGenerated(outname+"_FromROOT.hxx");
+   return 0;
+}
+
+int main(int argc, char *argv[]){
+
+@EMIT_CAPTURES@ ;
+
+}

@@ -52,10 +52,10 @@ public:
    Track() { fPointValue = 0; }
    Track(const Track& orig);
    Track(Float_t random);
-   virtual ~Track() {Clear();}
+   ~Track() override {Clear();}
    Track &operator=(const Track &orig);
 
-   void          Clear(Option_t *option="");
+   void          Clear(Option_t *option="") override;
    Float_t       GetPx() const { return fPx; }
    Float_t       GetPy() const { return fPy; }
    Float_t       GetPz() const { return fPz; }
@@ -80,7 +80,7 @@ public:
    Int_t         GetN() const { return fNsp; }
    Double32_t    GetPointValue(Int_t i=0) const { return (i<fNsp)?fPointValue[i]:0; }
 
-   ClassDef(Track,2)  //A track segment
+   ClassDefOverride(Track,2)  //A track segment
 };
 
 class EventHeader {
@@ -98,7 +98,7 @@ public:
    Int_t  GetRun() const { return fRun; }
    Int_t  GetDate() const { return fDate; }
 
-   ClassDef(EventHeader,1)  //Event Header
+   ClassDefOverride(EventHeader,1)  //Event Header
 };
 
 
@@ -127,9 +127,9 @@ private:
 
 public:
    Event();
-   virtual ~Event();
+   ~Event() override;
    void          Build(Int_t ev, Int_t arg5=600, Float_t ptmin=1);
-   void          Clear(Option_t *option ="");
+   void          Clear(Option_t *option ="") override;
    Bool_t        IsValid() const { return fIsValid; }
    void          ResetHistogramPointer() {fH=0;}
    void          SetNseg(Int_t n) { fNseg = n; }
@@ -162,7 +162,7 @@ public:
    Double32_t    GetMatrix(UChar_t x, UChar_t y) { return (x<4&&y<4)?fMatrix[x][y]:0; }
    TBits&        GetTriggerBits() { return fTriggerBits; }
 
-   ClassDef(Event,1)  //Event structure
+   ClassDefOverride(Event,1)  //Event structure
 };
 
 
@@ -196,7 +196,7 @@ public:
 
    void Hfill(Event *event);
 
-   ClassDef(HistogramManager,1)  //Manages all histograms
+   ClassDefOverride(HistogramManager,1)  //Manages all histograms
 };
 
 #endif

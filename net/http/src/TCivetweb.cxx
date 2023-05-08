@@ -1,8 +1,7 @@
-// $Id$
 // Author: Sergey Linev   21/12/2013
 
 /*************************************************************************
- * Copyright (C) 1995-2013, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2022, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -11,10 +10,8 @@
 
 #include "TCivetweb.h"
 
-#include "../civetweb/civetweb.h"
-
-#include <stdlib.h>
-#include <string.h>
+#include <cstdlib>
+#include <cstring>
 
 #ifdef _MSC_VER
 #include <windows.h>
@@ -24,16 +21,12 @@
 #include "THttpServer.h"
 #include "THttpWSEngine.h"
 #include "TUrl.h"
-
-
+#include "TSystem.h"
 
 //////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TCivetwebWSEngine                                                    //
-//                                                                      //
-// Implementation of THttpWSEngine for Civetweb                         //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/// TCivetwebWSEngine
+///
+/// Implementation of THttpWSEngine for Civetweb
 
 class TCivetwebWSEngine : public THttpWSEngine {
 protected:
@@ -352,24 +345,29 @@ static int begin_request_handler(struct mg_connection *conn, void *)
    } else if (arg->IsFile()) {
       filename = (const char *)arg->GetContent();
 #ifdef _MSC_VER
-      // resolve Windows links which are not supported by civetweb
-      const int BUFSIZE = 2048;
-      TCHAR Path[BUFSIZE];
+      if (engine->IsWinSymLinks()) {
+         // resolve Windows links which are not supported by civetweb
+         auto hFile = CreateFile(filename.Data(),       // file to open
+                                 GENERIC_READ,          // open for reading
+                                 FILE_SHARE_READ,       // share for reading
+                                 NULL,                  // default security
+                                 OPEN_EXISTING,         // existing file only
+                                 FILE_ATTRIBUTE_NORMAL, // normal file
+                                 NULL);                 // no attr. template
 
-      auto hFile = CreateFile(filename.Data(),       // file to open
-                              GENERIC_READ,          // open for reading
-                              FILE_SHARE_READ,       // share for reading
-                              NULL,                  // default security
-                              OPEN_EXISTING,         // existing file only
-                              FILE_ATTRIBUTE_NORMAL, // normal file
-                              NULL);                 // no attr. template
-
-      if( hFile != INVALID_HANDLE_VALUE) {
-         auto dwRet = GetFinalPathNameByHandle( hFile, Path, BUFSIZE, VOLUME_NAME_DOS );
-         // produced file name may include \\? symbols, which are indicating long file name
-         if(dwRet < BUFSIZE)
-            filename = Path;
-         CloseHandle(hFile);
+         if( hFile != INVALID_HANDLE_VALUE) {
+            const int BUFSIZE = 2048;
+            TCHAR Path[BUFSIZE];
+            auto dwRet = GetFinalPathNameByHandle( hFile, Path, BUFSIZE, FILE_NAME_NORMALIZED | VOLUME_NAME_DOS );
+            // produced file name may include \\?\ symbols, which are indicating long file name
+            if(dwRet < BUFSIZE) {
+               if (dwRet > 4 && Path[0] == '\\' && Path[1] == '\\' && Path[2] == '?' && Path[3] == '\\')
+                  filename = Path + 4;
+               else
+                  filename = Path;
+            }
+            CloseHandle(hFile);
+         }
       }
 #endif
       const char *mime_type = THttpServer::GetMimeType(filename.Data());
@@ -414,43 +412,46 @@ static int begin_request_handler(struct mg_connection *conn, void *)
    return 1;
 }
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TCivetweb                                                            //
-//                                                                      //
-// http server implementation, based on civetweb embedded server        //
-// It is default kind of engine, created for THttpServer                //
-// Currently v1.8 from https://github.com/civetweb/civetweb is used     //
-//                                                                      //
-// Following additional options can be specified:                       //
-//    top=foldername - name of top folder, seen in the browser          //
-//    thrds=N - use N threads to run civetweb server (default 5)        //
-//    auth_file - global authentication file                            //
-//    auth_domain - domain name, used for authentication                //
-//                                                                      //
-// Example:                                                             //
-//    new THttpServer("http:8080?top=MyApp&thrds=3");                   //
-//                                                                      //
-// Authentication:                                                      //
-//    When auth_file and auth_domain parameters are specified, access   //
-//    to running http server will be possible only after user           //
-//    authentication, using so-call digest method. To generate          //
-//    authentication file, htdigest routine should be used:             //
-//                                                                      //
-//        [shell] htdigest -c .htdigest domain_name user                //
-//                                                                      //
-//    When creating server, parameters should be:                       //
-//                                                                      //
-//       new THttpServer("http:8080?auth_file=.htdigets&auth_domain=domain_name");  //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TCivetweb
+\ingroup http
+
+THttpEngine implementation, based on civetweb embedded server
+
+It is default kind of engine, created for THttpServer
+Currently v1.15 from https://github.com/civetweb/civetweb is used
+
+Additional options can be specified:
+
+    top=foldername - name of top folder, seen in the browser
+    thrds=N        - use N threads to run civetweb server (default 5)
+    auth_file      - global authentication file
+    auth_domain    - domain name, used for authentication
+
+Example:
+
+    new THttpServer("http:8080?top=MyApp&thrds=3");
+
+For the full list of supported options see TCivetweb::Create() documentation
+
+When `auth_file` and `auth_domain` parameters are specified, access
+to running http server will be possible only after user
+authentication, using so-call digest method. To generate
+authentication file, htdigest routine should be used:
+
+    [shell] htdigest -c .htdigest domain_name user
+
+When creating server, parameters should be:
+
+   auto serv = new THttpServer("http:8080?auth_file=.htdigets&auth_domain=domain_name");
+
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor
 
 TCivetweb::TCivetweb(Bool_t only_secured)
-   : THttpEngine("civetweb", "compact embedded http server"), fCtx(nullptr), fCallbacks(nullptr), fTopName(),
-     fDebug(kFALSE), fTerminating(kFALSE), fOnlySecured(only_secured)
+   : THttpEngine("civetweb", "compact embedded http server"),
+     fOnlySecured(only_secured)
 {
 }
 
@@ -460,9 +461,7 @@ TCivetweb::TCivetweb(Bool_t only_secured)
 TCivetweb::~TCivetweb()
 {
    if (fCtx && !fTerminating)
-      mg_stop((struct mg_context *)fCtx);
-   if (fCallbacks)
-      free(fCallbacks);
+      mg_stop(fCtx);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -478,44 +477,65 @@ Int_t TCivetweb::ProcessLog(const char *message)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Creates embedded civetweb server
+///
+/// @param args string with civetweb server configuration
+///
 /// As main argument, http port should be specified like "8090".
-/// Or one can provide combination of ipaddress and portnumber like 127.0.0.1:8090
+/// Or one can provide combination of ipaddress and portnumber like "127.0.0.1:8090"
+/// Or one can specify unix socket name like "x/tmp/root.socket"
 /// Extra parameters like in URL string could be specified after '?' mark:
-///    thrds=N   - there N is number of threads used by the civetweb (default is 10)
-///    top=name  - configure top name, visible in the web browser
-///    ssl_certificate=filename - SSL certificate, see docs/OpenSSL.md from civetweb
-///    auth_file=filename  - authentication file name, created with htdigets utility
-///    auth_domain=domain   - authentication domain
-///    websocket_timeout=tm  - set web sockets timeout in seconds (default 300)
-///    websocket_disable - disable web sockets handling (default enabled)
-///    bind - ip address to bind server socket
-///    loopback  - bind specified port to loopback 127.0.0.1 address
-///    debug   - enable debug mode, server always returns html page with request info
-///    log=filename  - configure civetweb log file
-///    max_age=value - configures "Cache-Control: max_age=value" http header for all file-related requests, default 3600
-///    nocache - try to fully disable cache control for file requests
-///  Examples:
-///     http:8080?websocket_disable
-///     http:7546?thrds=30&websocket_timeout=20
+///
+///     thrds=N               - there N is number of threads used by the civetweb (default is 10)
+///     top=name              - configure top name, visible in the web browser
+///     ssl_certificate=filename - SSL certificate, see docs/OpenSSL.md from civetweb
+///     auth_file=filename    - authentication file name, created with htdigets utility
+///     auth_domain=domain    - authentication domain
+///     websocket_timeout=tm  - set web sockets timeout in seconds (default 300)
+///     websocket_disable     - disable web sockets handling (default enabled)
+///     bind                  - ip address to bind server socket
+///     loopback              - bind specified port to loopback 127.0.0.1 address
+///     debug                 - enable debug mode, server always returns html page with request info
+///     log=filename          - configure civetweb log file
+///     max_age=value         - configures "Cache-Control: max_age=value" http header for all file-related requests, default 3600
+///     socket_mode=value     - configures unix socket mode, default is 0700
+///     nocache               - try to fully disable cache control for file requests
+///     winsymlinks=no        - do not resolve symbolic links on file system (Windows only), default true
+///     dirlisting=no         - enable/disable directory listing for browsing filesystem (default no)
+///
+/// Examples of valid args values:
+///
+///     serv->CreateEngine("http:8080?websocket_disable");
+///     serv->CreateEngine("http:7546?thrds=30&websocket_timeout=20");
 
 Bool_t TCivetweb::Create(const char *args)
 {
-   fCallbacks = malloc(sizeof(struct mg_callbacks));
-   memset(fCallbacks, 0, sizeof(struct mg_callbacks));
-   //((struct mg_callbacks *) fCallbacks)->begin_request = begin_request_handler;
-   ((struct mg_callbacks *)fCallbacks)->log_message = log_message_handler;
-   TString sport = IsSecured() ? "8480s" : "8080", num_threads = "10", websocket_timeout = "300000";
-   TString auth_file, auth_domain, log_file, ssl_cert, max_age;
-   Bool_t use_ws = kTRUE;
+   memset(&fCallbacks, 0, sizeof(struct mg_callbacks));
+   // fCallbacks.begin_request = begin_request_handler;
+   fCallbacks.log_message = log_message_handler;
+   TString sport = IsSecured() ? "8480s" : "8080",
+           num_threads = "10",
+           websocket_timeout = "300000",
+           dir_listening = "no",
+           auth_file,
+           auth_domain,
+           log_file,
+           ssl_cert,
+           max_age;
+   Int_t socket_mode = 0700;
+   bool use_ws = kTRUE, is_socket = false;
 
    // extract arguments
-   if (args && (strlen(args) > 0)) {
+   if (args && *args) {
 
       // first extract port number
       sport = "";
-      while ((*args != 0) && (*args != '?') && (*args != '/'))
+
+      is_socket = *args == 'x';
+
+      while ((*args != 0) && (*args != '?') && (is_socket || (*args != '/')))
          sport.Append(*args++);
-      if (IsSecured() && (sport.Index("s")==kNPOS)) sport.Append("s");
+      if (IsSecured() && (sport.Index("s") == kNPOS) && !is_socket)
+         sport.Append("s");
 
       // than search for extra parameters
       while ((*args != 0) && (*args != '?'))
@@ -563,6 +583,18 @@ Bool_t TCivetweb::Create(const char *args)
             if (url.HasOption("debug"))
                fDebug = kTRUE;
 
+            const char *winsymlinks = url.GetValueFromOptions("winsymlinks");
+            if (winsymlinks)
+               fWinSymLinks = strcmp(winsymlinks,"no") != 0;
+
+            const char *dls = url.GetValueFromOptions("dirlisting");
+            if (dls && (!strcmp(dls,"no") || !strcmp(dls,"yes")))
+               dir_listening = dls;
+
+            const char *smode = url.GetValueFromOptions("socket_mode");
+            if (smode)
+               socket_mode = std::stoi(smode, nullptr, *smode=='0' ? 8 : 10);
+
             if (url.HasOption("loopback") && (sport.Index(":") == kNPOS))
                sport = TString("127.0.0.1:") + sport;
 
@@ -588,8 +620,8 @@ Bool_t TCivetweb::Create(const char *args)
       }
    }
 
-   const char *options[20];
-   int op(0);
+   const char *options[25];
+   int op = 0;
 
    Info("Create", "Starting HTTP server on port %s", sport.Data());
 
@@ -630,19 +662,30 @@ Bool_t TCivetweb::Create(const char *args)
       options[op++] = max_age.Data();
    }
 
+   options[op++] = "enable_directory_listing";
+   options[op++] = dir_listening.Data();
+
    options[op++] = nullptr;
 
+   // try to remove socket file - if any
+   if (is_socket && !sport.Contains(","))
+      gSystem->Unlink(sport.Data()+1);
+
    // Start the web server.
-   fCtx = mg_start((struct mg_callbacks *)fCallbacks, this, options);
+   fCtx = mg_start(&fCallbacks, this, options);
 
    if (!fCtx)
       return kFALSE;
 
-   mg_set_request_handler((struct mg_context *)fCtx, "/", begin_request_handler, nullptr);
+   mg_set_request_handler(fCtx, "/", begin_request_handler, nullptr);
 
    if (use_ws)
-      mg_set_websocket_handler((struct mg_context *)fCtx, "**root.websocket$", websocket_connect_handler,
+      mg_set_websocket_handler(fCtx, "**root.websocket$", websocket_connect_handler,
                                websocket_ready_handler, websocket_data_handler, websocket_close_handler, nullptr);
+
+   // try to remove socket file - if any
+   if (is_socket && !sport.Contains(","))
+      gSystem->Chmod(sport.Data()+1, socket_mode);
 
    return kTRUE;
 }

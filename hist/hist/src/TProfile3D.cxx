@@ -154,14 +154,15 @@ void TProfile3D::BuildOptions(Double_t tmin, Double_t tmax, Option_t *option)
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor.
 
-TProfile3D::TProfile3D(const TProfile3D &profile) : TH3D()
+TProfile3D::TProfile3D(const TProfile3D &profile3d) : TH3D()
 {
-   ((TProfile3D&)profile).Copy(*this);
+   profile3d.TProfile3D::Copy(*this);
 }
 
-TProfile3D &TProfile3D::operator=(const TProfile3D &profile)
+TProfile3D &TProfile3D::operator=(const TProfile3D &profile3d)
 {
-   ((TProfile3D &)profile).Copy(*this);
+   if (this != &profile3d)
+      profile3d.TProfile3D::Copy(*this);
    return *this;
 }
 
@@ -349,7 +350,7 @@ Int_t TProfile3D::BufferFill(Double_t x, Double_t y, Double_t z, Double_t t, Dou
 void TProfile3D::Copy(TObject &obj) const
 {
    try {
-      TProfile3D & pobj = dynamic_cast<TProfile3D&>(obj);
+      TProfile3D &pobj = dynamic_cast<TProfile3D &>(obj);
 
       TH3D::Copy(pobj);
       fBinEntries.Copy(pobj.fBinEntries);

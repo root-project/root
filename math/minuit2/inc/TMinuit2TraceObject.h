@@ -32,13 +32,13 @@ class TMinuit2TraceObject : public ROOT::Minuit2::MnTraceObject, public TNamed {
 public:
    TMinuit2TraceObject(int parNumber = -1);
 
-   virtual ~TMinuit2TraceObject();
+   ~TMinuit2TraceObject() override;
 
-   virtual void Init(const ROOT::Minuit2::MnUserParameterState &state);
+   void Init(const ROOT::Minuit2::MnUserParameterState &state) override;
 
-   virtual void operator()(int i, const ROOT::Minuit2::MinimumState &state);
+   void operator()(int i, const ROOT::Minuit2::MinimumState &state) override;
 
-   ClassDef(TMinuit2TraceObject, 0) // Example Trace Object for Minuit2
+   ClassDefOverride(TMinuit2TraceObject, 0) // Example Trace Object for Minuit2
 
       private :
 

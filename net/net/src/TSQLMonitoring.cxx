@@ -76,11 +76,11 @@ TSQLMonitoringWriter::~TSQLMonitoringWriter()
 ///                    VARvalue1,VARvalue2,...
 ///
 /// The string 'opt' allows the following additional control:
-///      table=[<db>.]<table>  allows to insert to a different table from the
-///                            one defined at construction (change is not
-///                            persistent); if <db> is not specified, the same
-///                            db defined at cinstruction is used.
-///      bulk                  Do a bulk insert
+///      table=`[<db>.]<table>`  allows to insert to a different table from the
+///                              one defined at construction (change is not
+///                              persistent); if `<db>` is not specified, the same
+///                              db defined at cinstruction is used.
+///      bulk                    Do a bulk insert
 /// More options can be given concurrently, comma-separated .
 /// The specified table must already have been created in the DB.
 

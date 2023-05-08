@@ -33,25 +33,21 @@ protected:
 
 public:
    TApplicationImp(): fApplicationName() { }
-   TApplicationImp(const char *appClassName, int *argc, char **argv);
-   virtual ~TApplicationImp();
+   TApplicationImp(const char *appClassName, int *argc, char **argv) : fApplicationName(appClassName) { (void) argc; (void) argv; }
+   virtual ~TApplicationImp() {}
 
    virtual const char *ApplicationName() const { return fApplicationName.Data(); }
-   virtual void        Show() { }
-   virtual void        Hide() { }
-   virtual void        Iconify() { }
+   virtual void        Show() {}
+   virtual void        Hide() {}
+   virtual void        Iconify() {}
    virtual Bool_t      IsCmdThread() { return kTRUE; } // by default (for UNIX) ROOT is a single thread application
-   virtual void        Init() { }
-   virtual void        Open() { }
-   virtual void        Raise() { }
-   virtual void        Lower() { }
-   virtual Int_t       ExecCommand(TGWin32Command *code, Bool_t synch);
+   virtual void        Init() {}
+   virtual void        Open() {}
+   virtual void        Raise() {}
+   virtual void        Lower() {}
+   virtual Int_t       ExecCommand(TGWin32Command *code, Bool_t synch) { (void) code; (void) synch; return 0; }
 
    ClassDef(TApplicationImp,0)  //ABC describing application protocol
 };
-
-inline TApplicationImp::TApplicationImp(const char *appClassName, int *, char **)
-  : fApplicationName(appClassName) { }
-inline Int_t TApplicationImp::ExecCommand(TGWin32Command *, Bool_t) { return 0; }
 
 #endif

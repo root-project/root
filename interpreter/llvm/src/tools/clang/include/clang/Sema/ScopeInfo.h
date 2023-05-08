@@ -22,6 +22,7 @@
 #include "clang/Basic/PartialDiagnostic.h"
 #include "clang/Basic/SourceLocation.h"
 #include "clang/Sema/CleanupInfo.h"
+#include "clang/Sema/DeclSpec.h"
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/DenseMapInfo.h"
 #include "llvm/ADT/MapVector.h"
@@ -117,6 +118,10 @@ public:
   /// Whether this function contains any indirect gotos.
   bool HasIndirectGoto : 1;
 
+  /// Whether this function contains any statement marked with
+  /// \c [[clang::musttail]].
+  bool HasMustTail : 1;
+
   /// Whether a statement was dropped because it was invalid.
   bool HasDroppedStmt : 1;
 
@@ -125,6 +130,9 @@ public:
 
   /// Whether there is a fallthrough statement in this function.
   bool HasFallthroughStmt : 1;
+
+  /// Whether this function uses constrained floating point intrinsics
+  bool UsesFPIntrin : 1;
 
   /// Whether we make reference to a declaration that could be
   /// unavailable.
@@ -173,9 +181,11 @@ public:
   /// First SEH '__try' statement in the current function.
   SourceLocation FirstSEHTryLoc;
 
+private:
   /// Used to determine if errors occurred in this function or block.
   DiagnosticErrorTrap ErrorTrap;
 
+public:
   /// A SwitchStmt, along with a flag indicating if its list of case statements
   /// is incomplete (because we dropped an invalid one while parsing).
   using SwitchInfo = llvm::PointerIntPair<SwitchStmt*, 1, bool>;
@@ -364,15 +374,26 @@ protected:
 public:
   FunctionScopeInfo(DiagnosticsEngine &Diag)
       : Kind(SK_Function), HasBranchProtectedScope(false),
-        HasBranchIntoScope(false), HasIndirectGoto(false),
+        HasBranchIntoScope(false), HasIndirectGoto(false), HasMustTail(false),
         HasDroppedStmt(false), HasOMPDeclareReductionCombiner(false),
-        HasFallthroughStmt(false), HasPotentialAvailabilityViolations(false),
-        ObjCShouldCallSuper(false), ObjCIsDesignatedInit(false),
-        ObjCWarnForNoDesignatedInitChain(false), ObjCIsSecondaryInit(false),
-        ObjCWarnForNoInitDelegation(false), NeedsCoroutineSuspends(true),
-        ErrorTrap(Diag) {}
+        HasFallthroughStmt(false), UsesFPIntrin(false),
+        HasPotentialAvailabilityViolations(false), ObjCShouldCallSuper(false),
+        ObjCIsDesignatedInit(false), ObjCWarnForNoDesignatedInitChain(false),
+        ObjCIsSecondaryInit(false), ObjCWarnForNoInitDelegation(false),
+        NeedsCoroutineSuspends(true), ErrorTrap(Diag) {}
 
   virtual ~FunctionScopeInfo();
+
+  /// Determine whether an unrecoverable error has occurred within this
+  /// function. Note that this may return false even if the function body is
+  /// invalid, because the errors may be suppressed if they're caused by prior
+  /// invalid declarations.
+  ///
+  /// FIXME: Migrate the caller of this to use containsErrors() instead once
+  /// it's ready.
+  bool hasUnrecoverableErrorOccurred() const {
+    return ErrorTrap.hasUnrecoverableErrorOccurred();
+  }
 
   /// Record that a weak object was accessed.
   ///
@@ -405,6 +426,8 @@ public:
     HasIndirectGoto = true;
   }
 
+  void setHasMustTail() { HasMustTail = true; }
+
   void setHasDroppedStmt() {
     HasDroppedStmt = true;
   }
@@ -415,6 +438,10 @@ public:
 
   void setHasFallthroughStmt() {
     HasFallthroughStmt = true;
+  }
+
+  void setUsesFPIntrin() {
+    UsesFPIntrin = true;
   }
 
   void setHasCXXTry(SourceLocation TryLoc) {
@@ -428,9 +455,8 @@ public:
   }
 
   bool NeedsScopeChecking() const {
-    return !HasDroppedStmt &&
-        (HasIndirectGoto ||
-          (HasBranchProtectedScope && HasBranchIntoScope));
+    return !HasDroppedStmt && (HasIndirectGoto || HasMustTail ||
+                               (HasBranchProtectedScope && HasBranchIntoScope));
   }
 
   // Add a block introduced in this function.
@@ -756,13 +782,16 @@ public:
   unsigned short CapRegionKind;
 
   unsigned short OpenMPLevel;
+  unsigned short OpenMPCaptureLevel;
 
   CapturedRegionScopeInfo(DiagnosticsEngine &Diag, Scope *S, CapturedDecl *CD,
                           RecordDecl *RD, ImplicitParamDecl *Context,
-                          CapturedRegionKind K, unsigned OpenMPLevel)
+                          CapturedRegionKind K, unsigned OpenMPLevel,
+                          unsigned OpenMPCaptureLevel)
       : CapturingScopeInfo(Diag, ImpCap_CapturedRegion),
         TheCapturedDecl(CD), TheRecordDecl(RD), TheScope(S),
-        ContextParam(Context), CapRegionKind(K), OpenMPLevel(OpenMPLevel) {
+        ContextParam(Context), CapRegionKind(K), OpenMPLevel(OpenMPLevel),
+        OpenMPCaptureLevel(OpenMPCaptureLevel) {
     Kind = SK_CapturedRegion;
   }
 
@@ -786,7 +815,8 @@ public:
   }
 };
 
-class LambdaScopeInfo final : public CapturingScopeInfo {
+class LambdaScopeInfo final :
+    public CapturingScopeInfo, public InventedTemplateParameterInfo {
 public:
   /// The class that describes the lambda.
   CXXRecordDecl *Lambda = nullptr;
@@ -817,24 +847,16 @@ public:
   /// Whether the lambda contains an unexpanded parameter pack.
   bool ContainsUnexpandedParameterPack = false;
 
-  /// If this is a generic lambda, use this as the depth of
-  /// each 'auto' parameter, during initial AST construction.
-  unsigned AutoTemplateParameterDepth = 0;
-
-  /// The number of parameters in the template parameter list that were
-  /// explicitly specified by the user, as opposed to being invented by use
-  /// of an auto parameter.
-  unsigned NumExplicitTemplateParams = 0;
+  /// Packs introduced by this lambda, if any.
+  SmallVector<NamedDecl*, 4> LocalPacks;
 
   /// Source range covering the explicit template parameter list (if it exists).
   SourceRange ExplicitTemplateParamsRange;
 
-  /// Store the list of the template parameters for a generic lambda.
-  /// If this is a generic lambda, this holds the explicit template parameters
-  /// followed by the auto parameters converted into TemplateTypeParmDecls.
-  /// It can be used to construct the generic lambda's template parameter list
-  /// during initial AST construction.
-  SmallVector<NamedDecl*, 4> TemplateParams;
+  /// The requires-clause immediately following the explicit template parameter
+  /// list, if any. (Note that there may be another requires-clause included as
+  /// part of the lambda-declarator.)
+  ExprResult RequiresClause;
 
   /// If this is a generic lambda, and the template parameter
   /// list has been created (from the TemplateParams) then store

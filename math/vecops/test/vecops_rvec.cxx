@@ -13,6 +13,11 @@
 #include <sstream>
 #include <cmath>
 
+// Backward compatibility for gtest version < 1.10.0
+#ifndef INSTANTIATE_TEST_SUITE_P
+#define INSTANTIATE_TEST_SUITE_P INSTANTIATE_TEST_CASE_P
+#endif
+
 using namespace ROOT;
 using namespace ROOT::VecOps;
 using namespace ROOT::Detail::VecOps; // for `IsSmall` and `IsAdopting`
@@ -121,6 +126,21 @@ TEST(VecOps, MoveCtor)
    RVec<int> v1{1, 2, 3};
    RVec<int> v2(std::move(v1));
    EXPECT_EQ(v2.size(), 3u);
+}
+
+// regression test: this used to fail to compile
+TEST(VecOps, MoveOnlyValue)
+{
+   struct MoveOnly {
+      MoveOnly() = default;
+      MoveOnly(const MoveOnly &) = delete;
+      MoveOnly &operator=(const MoveOnly &) = delete;
+      MoveOnly(MoveOnly &&) = default;
+      MoveOnly &operator=(MoveOnly &&) = default;
+   };
+   ROOT::RVec<MoveOnly> v(10);
+   v.resize(20);
+   v[19] = MoveOnly();
 }
 
 TEST(VecOps, Conversion)
@@ -516,6 +536,7 @@ TEST(VecOps, InputOutput)
    const RVec<Short_t> sref {1, 2, 3};
    const RVec<Char_t> cref {1, 2, 3};
    const RVec<bool> bref {true, false, true};
+   const RVec<std::string> strref{"hello", "hola", "ciao"};
 
    {
       auto d = dref;
@@ -531,6 +552,7 @@ TEST(VecOps, InputOutput)
       auto s = sref;
       auto c = cref;
       auto b = bref;
+      auto str = strref;
       TFile file(filename, "RECREATE");
       TTree t(treename, treename);
       t.Branch("d", &d);
@@ -546,6 +568,7 @@ TEST(VecOps, InputOutput)
       t.Branch("s", &s);
       t.Branch("c", &c);
       t.Branch("b", &b);
+      t.Branch("str", &str);
       t.Fill();
       t.Write();
    }
@@ -563,6 +586,7 @@ TEST(VecOps, InputOutput)
    auto s = new RVec<Short_t>();
    auto c = new RVec<Char_t>();
    auto b = new RVec<bool>();
+   auto str = new RVec<std::string>();
 
    TFile file(filename);
    TTree *tp;
@@ -582,6 +606,7 @@ TEST(VecOps, InputOutput)
    t.SetBranchAddress("s", &s);
    t.SetBranchAddress("c", &c);
    t.SetBranchAddress("b", &b);
+   t.SetBranchAddress("str", &str);
 
    t.GetEntry(0);
    CheckEq(*d, dref);
@@ -595,6 +620,7 @@ TEST(VecOps, InputOutput)
    CheckEq(*d, dref);
    CheckEq(*f, fref);
    CheckEq(*b, bref);
+   CheckEq(*str, strref);
 
    gSystem->Unlink(filename);
 
@@ -610,6 +636,9 @@ TEST(VecOps, SimpleStatOps)
 
    RVec<double> v1 {42.};
    ASSERT_DOUBLE_EQ(Sum(v1), 42.);
+   ASSERT_DOUBLE_EQ(Sum(v1, 1.5), 43.5);
+   ASSERT_DOUBLE_EQ(Product(v1), 42.);
+   ASSERT_DOUBLE_EQ(Product(v1, 1.5), 63.);
    ASSERT_DOUBLE_EQ(Mean(v1), 42.);
    ASSERT_DOUBLE_EQ(Max(v1), 42.);
    ASSERT_DOUBLE_EQ(Min(v1), 42.);
@@ -620,6 +649,7 @@ TEST(VecOps, SimpleStatOps)
 
    RVec<double> v2 {1., 2., 3.};
    ASSERT_DOUBLE_EQ(Sum(v2), 6.);
+   ASSERT_DOUBLE_EQ(Product(v2), 6.);
    ASSERT_DOUBLE_EQ(Mean(v2), 2.);
    ASSERT_DOUBLE_EQ(Max(v2), 3.);
    ASSERT_DOUBLE_EQ(Min(v2), 1.);
@@ -630,6 +660,7 @@ TEST(VecOps, SimpleStatOps)
 
    RVec<double> v3 {10., 20., 32.};
    ASSERT_DOUBLE_EQ(Sum(v3), 62.);
+   ASSERT_DOUBLE_EQ(Product(v3), 6400.);
    ASSERT_DOUBLE_EQ(Mean(v3), 20.666666666666668);
    ASSERT_DOUBLE_EQ(Max(v3), 32.);
    ASSERT_DOUBLE_EQ(Min(v3), 10.);
@@ -640,6 +671,7 @@ TEST(VecOps, SimpleStatOps)
 
    RVec<int> v4 {2, 3, 1};
    ASSERT_DOUBLE_EQ(Sum(v4), 6.);
+   ASSERT_DOUBLE_EQ(Product(v4), 6.);
    ASSERT_DOUBLE_EQ(Mean(v4), 2.);
    ASSERT_DOUBLE_EQ(Max(v4), 3);
    ASSERT_DOUBLE_EQ(Min(v4), 1);
@@ -650,6 +682,7 @@ TEST(VecOps, SimpleStatOps)
 
    RVec<int> v5 {2, 3, 1, 4};
    ASSERT_DOUBLE_EQ(Sum(v5), 10);
+   ASSERT_DOUBLE_EQ(Product(v5), 24.);
    ASSERT_DOUBLE_EQ(Mean(v5), 2.5);
    ASSERT_DOUBLE_EQ(Max(v5), 4);
    ASSERT_DOUBLE_EQ(Min(v5), 1);
@@ -668,6 +701,13 @@ TEST(VecOps, SimpleStatOps)
    const ROOT::Math::PtEtaPhiMVector lv_mean = Mean(v6, ROOT::Math::PtEtaPhiMVector());
    CheckEqual(lv_sum, lv_sum_ref);
    CheckEqual(lv_mean, lv_mean_ref);
+}
+
+// #11569
+TEST(VecOps, SumOfBools)
+{
+   ROOT::RVecB v{true, true, false};
+   EXPECT_EQ(Sum(v), 2ul);
 }
 
 TEST(VecOps, Any)
@@ -776,6 +816,37 @@ TEST(VecOps, TakeLast)
    auto v2 = Take(v0, 0);
    RVec<int> none{};
    CheckEqual(v2, none);
+}
+
+TEST(VecOps, TakeWithDefault)
+{
+   RVec<int> v0{1, 2, 3};
+
+   auto v1 = Take(v0, {0, 1, 2, 3}, -999);
+   RVec<int> ref{1, 2, 3, -999};
+   CheckEqual(v1, ref);
+}
+
+TEST(VecOps, Enumerate)
+{
+   RVec<int> v0{1, 2, 3};
+   RVec<int> ref{0, 1, 2};
+   CheckEqual(Enumerate(v0), ref);
+}
+
+TEST(VecOps, Range)
+{
+   std::size_t l = 3;
+   RVec<int> ref{0, 1, 2};
+   CheckEqual(Range(l), ref);
+}
+
+TEST(VecOps, RangeBeginEnd)
+{
+   const RVecI ref{1, 2, 3};
+   CheckEqual(Range(1, 4), ref);
+
+   CheckEqual(Range(4, 1), RVecI{});
 }
 
 TEST(VecOps, Drop)
@@ -1198,6 +1269,28 @@ TEST(VecOps, Map)
    CheckEqual(res, ref);
 }
 
+TEST(VecOps, MapOnNestedVectors)
+{
+   RVec<RVecF> vecOfVecs = {{1.f, 2.f}, {3.f}, {}};
+   RVecI sizes = {2, 1, 0};
+
+   auto size_by_value = [](RVecF v) { return v.size(); };
+   auto result = Map(vecOfVecs, size_by_value);
+   CheckEqual(result, sizes);
+
+   auto size_by_cvalue = [](const RVecF v) { return v.size(); };
+   result = Map(vecOfVecs, size_by_cvalue);
+   CheckEqual(result, sizes);
+
+   auto size_by_ref = [](RVecF &v) { return v.size(); };
+   result = Map(vecOfVecs, size_by_ref);
+   CheckEqual(result, sizes);
+
+   auto size_by_cref = [](const RVecF &v) { return v.size(); };
+   result = Map(vecOfVecs, size_by_cref);
+   CheckEqual(result, sizes);
+}
+
 TEST(VecOps, Construct)
 {
    RVec<float> pts {15.5f, 34.32f, 12.95f};
@@ -1334,12 +1427,14 @@ Possible combinations of vectors to swap:
 6. regular <-> adopting (and vice versa)
 */
 
+// Ensure ROOT::VecOps::swap produces the same result as std::swap
 class VecOpsSwap : public ::testing::TestWithParam<bool> {
 protected:
-   // Ensure ROOT::VecOps::swap produces the same result as std::swap
+   bool IsVecOpsSwap = GetParam();
+
    void test_swap(RVec<int> &a, RVec<int> &b) const
    {
-      if (GetParam())
+      if (IsVecOpsSwap)
          ROOT::VecOps::swap(a, b);
       else
          std::swap(a, b);
@@ -1521,7 +1616,6 @@ TEST_P(VecOpsSwap, BothAdoptingVectors)
 // there is a difference between std::swap and ROOT::VecOps::swap here
 // they both produce the same result, but std::swap might produce 2 regular vectors
 // in cases where ROOT::VecOps::swap produces 1 regular and 1 adopting vector
-// therefore ROOT::VecOps::swap-s are mainly used "alone"
 TEST_P(VecOpsSwap, SmallRegularVectors)
 {
    RVec<int> fixed_vsmall{1, 2, 3};
@@ -1539,9 +1633,12 @@ TEST_P(VecOpsSwap, SmallRegularVectors)
    RVec<int> vsmall5{1, 2, 3};
    RVec<int> vsmall6{1, 2, 3};
    RVec<int> vsmall7{1, 2, 3};
+   RVec<int> vsmall8{1, 2, 3};
 
    RVec<int> vreg1{4, 5, 6, 4, 5, 6, 4, 5, 6, 4, 5, 6, 4, 5, 6, 4, 5, 6};
    vreg1.erase(vreg1.begin() + 3, vreg1.end()); // regular vector of size 3
+   RVec<int> vreg10{4, 5, 6, 4, 5, 6, 4, 5, 6, 4, 5, 6, 4, 5, 6, 4, 5, 6};
+   vreg10.erase(vreg10.begin() + 3, vreg10.end()); // regular vector of size 3
    RVec<int> vreg2{7, 8, 4, 5, 6, 4, 5, 6, 4, 5, 6, 4, 5, 6, 4, 5, 6, 4, 5, 6};
    vreg2.erase(vreg2.begin() + 2, vreg2.end()); // regular vector of size 2
    RVec<int> vreg20{7, 8, 4, 5, 6, 4, 5, 6, 4, 5, 6, 4, 5, 6, 4, 5, 6, 4, 5, 6};
@@ -1559,78 +1656,96 @@ TEST_P(VecOpsSwap, SmallRegularVectors)
    EXPECT_FALSE(IsSmall(vreg3));
    EXPECT_FALSE(IsSmall(vreg4));
 
-   swap(vsmall1, vreg1); // small <-> regular (same size)
+   test_swap(vsmall1, vreg1); // small <-> regular (same size)
 
    CheckEqual(vsmall1, fixed_vreg1);
    CheckEqual(vreg1, fixed_vsmall);
-   EXPECT_TRUE(IsSmall(vsmall1)); // the initially small vector remained small
-   EXPECT_FALSE(IsSmall(vreg1));  // the initially regular vector remained regular
+   if (IsVecOpsSwap)
+      EXPECT_TRUE(IsSmall(vsmall1)); // the initially small vector remained small
+   else
+      EXPECT_FALSE(IsSmall(vsmall1)); // that is not the case for std::swap
+   EXPECT_FALSE(IsSmall(vreg1));      // the initially regular vector remained regular
    EXPECT_FALSE(IsAdopting(vsmall1));
    EXPECT_FALSE(IsAdopting(vreg1));
 
-   swap(vreg1, vsmall1); // regular <-> small (same size)
+   test_swap(vreg10, vsmall2); // regular <-> small (same size)
 
-   CheckEqual(vreg1, fixed_vreg1);
-   CheckEqual(vsmall1, fixed_vsmall);
-   EXPECT_FALSE(IsSmall(vreg1));  // the initially regular vector remained regular
-   EXPECT_TRUE(IsSmall(vsmall1)); // the initially small vector remained small
-   EXPECT_FALSE(IsAdopting(vreg1));
-   EXPECT_FALSE(IsAdopting(vsmall1));
+   CheckEqual(vreg10, fixed_vsmall);
+   CheckEqual(vsmall2, fixed_vreg1);
+   EXPECT_FALSE(IsSmall(vreg10)); // the initially regular vector remained regular
+   if (IsVecOpsSwap)
+      EXPECT_TRUE(IsSmall(vsmall2)); // the initially small vector remained small
+   else
+      EXPECT_FALSE(IsSmall(vsmall2)); // that is not the case for std::swap
+   EXPECT_FALSE(IsAdopting(vreg10));
+   EXPECT_FALSE(IsAdopting(vsmall2));
 
-   swap(vsmall3, vreg2); // longer small <-> shorter regular
+   test_swap(vsmall3, vreg2); // longer small <-> shorter regular
 
    CheckEqual(vsmall3, fixed_vreg2);
    CheckEqual(vreg2, fixed_vsmall);
-   EXPECT_TRUE(IsSmall(vsmall3)); // the initially small vector remained small
-   EXPECT_FALSE(IsSmall(vreg2));  // the initially regular vector remained regular
+   if (IsVecOpsSwap)
+      EXPECT_TRUE(IsSmall(vsmall3)); // the initially small vector remained small
+   else
+      EXPECT_FALSE(IsSmall(vsmall3)); // that is not the case for std::swap
+   EXPECT_FALSE(IsSmall(vreg2));      // the initially regular vector remained regular
    EXPECT_FALSE(IsAdopting(vsmall3));
    EXPECT_FALSE(IsAdopting(vreg2));
 
-   swap(vreg20, vsmall4); // shorter regular <-> longer small
+   test_swap(vreg20, vsmall4); // shorter regular <-> longer small
 
    CheckEqual(vreg20, fixed_vsmall);
    CheckEqual(vsmall4, fixed_vreg2);
    EXPECT_FALSE(IsSmall(vreg20)); // the initially regular vector remained regular
-   EXPECT_TRUE(IsSmall(vsmall4)); // the initially small vector remained small
+   if (IsVecOpsSwap)
+      EXPECT_TRUE(IsSmall(vsmall4)); // the initially small vector remained small
+   else
+      EXPECT_FALSE(IsSmall(vsmall4)); // that is not the case for std::swap
    EXPECT_FALSE(IsAdopting(vreg20));
    EXPECT_FALSE(IsAdopting(vsmall4));
 
-   swap(vsmall5, vreg3); // shorter small <-> longer regular
+   test_swap(vsmall5, vreg3); // shorter small <-> longer regular
 
    CheckEqual(vsmall5, fixed_vreg3);
    CheckEqual(vreg3, fixed_vsmall);
-   EXPECT_TRUE(IsSmall(vsmall5)); // the initially small vector remained small
-   EXPECT_FALSE(IsSmall(vreg3));  // the initially regular vector remained regular
+   if (IsVecOpsSwap)
+      EXPECT_TRUE(IsSmall(vsmall5)); // the initially small vector remained small
+   else
+      EXPECT_FALSE(IsSmall(vsmall5)); // that is not the case for std::swap
+   EXPECT_FALSE(IsSmall(vreg3));      // the initially regular vector remained regular
    EXPECT_FALSE(IsAdopting(vsmall5));
    EXPECT_FALSE(IsAdopting(vreg3));
 
-   swap(vreg30, vsmall6); // shorter regular <-> longer small
+   test_swap(vreg30, vsmall6); // shorter regular <-> longer small
 
    CheckEqual(vreg30, fixed_vsmall);
    CheckEqual(vsmall6, fixed_vreg3);
    EXPECT_FALSE(IsSmall(vreg30)); // the initially regular vector remained regular
-   EXPECT_TRUE(IsSmall(vsmall6)); // the initially small vector remained small
+   if (IsVecOpsSwap)
+      EXPECT_TRUE(IsSmall(vsmall6)); // the initially small vector remained small
+   else
+      EXPECT_FALSE(IsSmall(vsmall6)); // that is not the case for std::swap
    EXPECT_FALSE(IsAdopting(vreg30));
    EXPECT_FALSE(IsAdopting(vsmall6));
 
-   test_swap(vsmall2, vreg4); // small <-> very long regular
+   test_swap(vsmall7, vreg4); // small <-> very long regular
 
-   CheckEqual(vsmall2, fixed_vreg4);
-   CheckEqual(vreg4, fixed_vsmall);
-   EXPECT_FALSE(IsSmall(vsmall2)); // the initially small vector is now regular
-   EXPECT_FALSE(IsSmall(vreg4));   // the initially regular vector remained regular
-   EXPECT_FALSE(IsAdopting(vsmall2));
-   EXPECT_FALSE(IsAdopting(vreg4));
-
-   test_swap(vsmall2, vsmall7); // very long regular <-> small
-   // vsmall2 is already swapped
-
-   CheckEqual(vsmall2, fixed_vsmall);
    CheckEqual(vsmall7, fixed_vreg4);
-   EXPECT_FALSE(IsSmall(vsmall2)); // the initially regular vector remained regular
-   EXPECT_FALSE(IsSmall(vreg4));   // the initially small vector is now regular
-   EXPECT_FALSE(IsAdopting(vsmall2));
+   CheckEqual(vreg4, fixed_vsmall);
+   EXPECT_FALSE(IsSmall(vsmall7)); // the initially small vector is now regular
+   EXPECT_FALSE(IsSmall(vreg4));   // the initially regular vector remained regular
+   EXPECT_FALSE(IsAdopting(vsmall7));
    EXPECT_FALSE(IsAdopting(vreg4));
+
+   test_swap(vsmall7, vsmall8); // very long regular <-> small
+   // vsmall7 is already swapped
+
+   CheckEqual(vsmall7, fixed_vsmall);
+   CheckEqual(vsmall8, fixed_vreg4);
+   EXPECT_FALSE(IsSmall(vsmall7)); // the initially regular vector remained regular
+   EXPECT_FALSE(IsSmall(vsmall8)); // the initially small vector is now regular
+   EXPECT_FALSE(IsAdopting(vsmall7));
+   EXPECT_FALSE(IsAdopting(vsmall8));
 }
 
 TEST_P(VecOpsSwap, SmallAdoptingVectors)

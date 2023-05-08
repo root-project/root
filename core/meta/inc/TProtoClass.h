@@ -86,7 +86,7 @@ private:
    TProtoClass(const TProtoClass &) = delete;
    TProtoClass &operator=(const TProtoClass &) = delete;
 
-   const char * GetClassName(Int_t index) const { return (index >= 0) ? fDepClasses[index].Data() : 0; }
+   const char * GetClassName(Int_t index) const { return (index >= 0) ? fDepClasses[index].Data() : nullptr; }
 
    // compute index of data member in the list
    static Int_t DataMemberIndex(TClass * cl, const char * name);
@@ -95,7 +95,7 @@ private:
 
 public:
    TProtoClass():
-      fBase(0), fEnums(0), fSizeof(0), fCheckSum(0), fCanSplit(0),
+      fBase(nullptr), fEnums(nullptr), fSizeof(0), fCheckSum(0), fCanSplit(0),
       fStreamerType(0), fProperty(0), fClassProperty(0),
       fOffsetStreamer(0) {
    }
@@ -105,10 +105,8 @@ public:
    virtual ~TProtoClass();
 
    Bool_t FillTClass(TClass *pcl);
-   const TList *GetListOfEnums() {
-      return fEnums;
-   };
-   void Delete(Option_t *opt = "");
+   const TList *GetListOfEnums() { return fEnums; };
+   void Delete(Option_t *opt = "") override;
 
    int GetSize() { return fSizeof; }
    TList * GetBaseList() { return fBase; }
@@ -118,8 +116,7 @@ public:
    std::vector<TDataMember *> & GetData() { return fData; }
    std::vector<TString> & GetDepClasses() { return fDepClasses; }
 
-
-   ClassDef(TProtoClass, 2); //Persistent TClass
+   ClassDefOverride(TProtoClass, 2); //Persistent TClass
 };
 
 #endif

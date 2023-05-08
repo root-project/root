@@ -65,9 +65,9 @@ ClassImp(TSQLObjectData);
 /// default constructor
 
 TSQLObjectData::TSQLObjectData()
-   : TObject(), fInfo(0), fObjId(0), fOwner(kFALSE), fClassData(0), fBlobData(0), fBlobStmt(0), fLocatedColumn(-1),
-     fClassRow(0), fBlobRow(0), fLocatedField(0), fLocatedValue(0), fCurrentBlob(kFALSE), fBlobPrefixName(0),
-     fBlobTypeName(0), fUnpack(0)
+   : TObject(), fInfo(nullptr), fObjId(0), fOwner(kFALSE), fClassData(nullptr), fBlobData(nullptr), fBlobStmt(nullptr), fLocatedColumn(-1),
+     fClassRow(nullptr), fBlobRow(nullptr), fLocatedField(nullptr), fLocatedValue(nullptr), fCurrentBlob(kFALSE), fBlobPrefixName(nullptr),
+     fBlobTypeName(nullptr), fUnpack(nullptr)
 {
 }
 
@@ -77,11 +77,11 @@ TSQLObjectData::TSQLObjectData()
 TSQLObjectData::TSQLObjectData(TSQLClassInfo *sqlinfo, Long64_t objid, TSQLResult *classdata, TSQLRow *classrow,
                                TSQLResult *blobdata, TSQLStatement *blobstmt)
    : TObject(), fInfo(sqlinfo), fObjId(objid), fOwner(kFALSE), fClassData(classdata), fBlobData(blobdata),
-     fBlobStmt(blobstmt), fLocatedColumn(-1), fClassRow(classrow), fBlobRow(0), fLocatedField(0), fLocatedValue(0),
-     fCurrentBlob(kFALSE), fBlobPrefixName(0), fBlobTypeName(0), fUnpack(0)
+     fBlobStmt(blobstmt), fLocatedColumn(-1), fClassRow(classrow), fBlobRow(nullptr), fLocatedField(nullptr), fLocatedValue(nullptr),
+     fCurrentBlob(kFALSE), fBlobPrefixName(nullptr), fBlobTypeName(nullptr), fUnpack(nullptr)
 {
    // take ownership if no special row from data pool is provided
-   if ((fClassData != 0) && (fClassRow == 0)) {
+   if (fClassData && !fClassRow) {
       fOwner = kTRUE;
       fClassRow = fClassData->Next();
    }
@@ -94,19 +94,19 @@ TSQLObjectData::TSQLObjectData(TSQLClassInfo *sqlinfo, Long64_t objid, TSQLResul
 
 TSQLObjectData::~TSQLObjectData()
 {
-   if ((fClassData != 0) && fOwner)
+   if (fClassData && fOwner)
       delete fClassData;
-   if (fClassRow != 0)
+   if (fClassRow)
       delete fClassRow;
-   if (fBlobRow != 0)
+   if (fBlobRow)
       delete fBlobRow;
-   if (fBlobData != 0)
+   if (fBlobData)
       delete fBlobData;
-   if (fUnpack != 0) {
+   if (fUnpack) {
       fUnpack->Delete();
       delete fUnpack;
    }
-   if (fBlobStmt != 0)
+   if (fBlobStmt)
       delete fBlobStmt;
 }
 
@@ -115,7 +115,7 @@ TSQLObjectData::~TSQLObjectData()
 
 Int_t TSQLObjectData::GetNumClassFields()
 {
-   if (fClassData != 0)
+   if (fClassData)
       return fClassData->GetFieldCount();
    return 0;
 }
@@ -125,9 +125,9 @@ Int_t TSQLObjectData::GetNumClassFields()
 
 const char *TSQLObjectData::GetClassFieldName(Int_t n)
 {
-   if (fClassData != 0)
+   if (fClassData)
       return fClassData->GetFieldName(n);
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -135,17 +135,17 @@ const char *TSQLObjectData::GetClassFieldName(Int_t n)
 
 Bool_t TSQLObjectData::LocateColumn(const char *colname, Bool_t isblob)
 {
-   if (fUnpack != 0) {
+   if (fUnpack) {
       fUnpack->Delete();
       delete fUnpack;
-      fUnpack = 0;
+      fUnpack = nullptr;
    }
 
-   fLocatedField = 0;
-   fLocatedValue = 0;
+   fLocatedField = nullptr;
+   fLocatedValue = nullptr;
    fCurrentBlob = kFALSE;
 
-   if ((fClassData == 0) || (fClassRow == 0))
+   if (!fClassData || !fClassRow)
       return kFALSE;
 
    //   Int_t numfields = GetNumClassFields();
@@ -168,13 +168,13 @@ Bool_t TSQLObjectData::LocateColumn(const char *colname, Bool_t isblob)
       }
    */
 
-   if (fLocatedField == 0)
+   if (!fLocatedField)
       return kFALSE;
 
    if (!isblob)
       return kTRUE;
 
-   if ((fBlobRow == 0) && (fBlobStmt == 0))
+   if (!fBlobRow && !fBlobStmt)
       return kFALSE;
 
    fCurrentBlob = kTRUE;
@@ -189,18 +189,18 @@ Bool_t TSQLObjectData::LocateColumn(const char *colname, Bool_t isblob)
 
 Bool_t TSQLObjectData::ShiftBlobRow()
 {
-   if (fBlobStmt != 0) {
+   if (fBlobStmt) {
       Bool_t res = fBlobStmt->NextResultRow();
       if (!res) {
          delete fBlobStmt;
-         fBlobStmt = 0;
+         fBlobStmt = nullptr;
       }
       return res;
    }
 
    delete fBlobRow;
-   fBlobRow = fBlobData ? fBlobData->Next() : 0;
-   return fBlobRow != 0;
+   fBlobRow = fBlobData ? fBlobData->Next() : nullptr;
+   return fBlobRow != nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -208,33 +208,33 @@ Bool_t TSQLObjectData::ShiftBlobRow()
 
 Bool_t TSQLObjectData::ExtractBlobValues()
 {
-   const char *name = 0;
+   const char *name = nullptr;
 
    Bool_t hasdata = kFALSE;
 
-   if (fBlobStmt != 0) {
+   if (fBlobStmt) {
       name = fBlobStmt->GetString(0);
       fLocatedValue = fBlobStmt->GetString(1);
       hasdata = kTRUE;
    }
 
    if (!hasdata) {
-      if (fBlobRow != 0) {
+      if (fBlobRow) {
          fLocatedValue = fBlobRow->GetField(1);
          name = fBlobRow->GetField(0);
       }
    }
 
-   if (name == 0) {
-      fBlobPrefixName = 0;
-      fBlobTypeName = 0;
+   if (!name) {
+      fBlobPrefixName = nullptr;
+      fBlobTypeName = nullptr;
       return kFALSE;
    }
 
    const char *separ = strstr(name, ":"); // SQLNameSeparator()
 
-   if (separ == 0) {
-      fBlobPrefixName = 0;
+   if (!separ) {
+      fBlobPrefixName = nullptr;
       fBlobTypeName = name;
    } else {
       fBlobPrefixName = name;
@@ -257,9 +257,9 @@ Bool_t TSQLObjectData::ExtractBlobValues()
 void TSQLObjectData::AddUnpack(const char *tname, const char *value)
 {
    TNamed *str = new TNamed(tname, value);
-   if (fUnpack == 0) {
+   if (!fUnpack) {
       fUnpack = new TObjArray();
-      fBlobPrefixName = 0;
+      fBlobPrefixName = nullptr;
       fBlobTypeName = str->GetName();
       fLocatedValue = str->GetTitle();
    }
@@ -284,20 +284,20 @@ void TSQLObjectData::ShiftToNextValue()
 {
    Bool_t doshift = kTRUE;
 
-   if (fUnpack != 0) {
+   if (fUnpack) {
       TObject *prev = fUnpack->First();
       fUnpack->Remove(prev);
       delete prev;
       fUnpack->Compress();
       if (fUnpack->GetLast() >= 0) {
          TNamed *curr = (TNamed *)fUnpack->First();
-         fBlobPrefixName = 0;
+         fBlobPrefixName = nullptr;
          fBlobTypeName = curr->GetName();
          fLocatedValue = curr->GetTitle();
          return;
       }
       delete fUnpack;
-      fUnpack = 0;
+      fUnpack = nullptr;
       doshift = kFALSE;
    }
 
@@ -305,15 +305,15 @@ void TSQLObjectData::ShiftToNextValue()
       if (doshift)
          ShiftBlobRow();
       ExtractBlobValues();
-   } else if (fClassData != 0) {
+   } else if (fClassData) {
       if (doshift)
          fLocatedColumn++;
       if (fLocatedColumn < GetNumClassFields()) {
          fLocatedField = GetClassFieldName(fLocatedColumn);
          fLocatedValue = fClassRow->GetField(fLocatedColumn);
       } else {
-         fLocatedField = 0;
-         fLocatedValue = 0;
+         fLocatedField = nullptr;
+         fLocatedValue = nullptr;
       }
    }
 }
@@ -323,7 +323,7 @@ void TSQLObjectData::ShiftToNextValue()
 
 Bool_t TSQLObjectData::VerifyDataType(const char *tname, Bool_t errormsg)
 {
-   if (tname == 0) {
+   if (!tname) {
       if (errormsg)
          Error("VerifyDataType", "Data type not specified");
       return kFALSE;
@@ -334,7 +334,7 @@ Bool_t TSQLObjectData::VerifyDataType(const char *tname, Bool_t errormsg)
       return kTRUE;
 
    if (gDebug > 4)
-      if ((fBlobTypeName == 0) && errormsg) {
+      if (!fBlobTypeName && errormsg) {
          Error("VerifyDataType", "fBlobTypeName is null");
          return kFALSE;
       }
@@ -345,7 +345,7 @@ Bool_t TSQLObjectData::VerifyDataType(const char *tname, Bool_t errormsg)
    //   if (strcmp(fBlobTypeName,tname)!=0) {
    if (v1 != v2) {
       if (errormsg)
-         Error("VerifyDataType", "Data type missmatch %s - %s", fBlobTypeName, tname);
+         Error("VerifyDataType", "Data type mismatch %s - %s", fBlobTypeName, tname);
       return kFALSE;
    }
 
@@ -381,14 +381,14 @@ ClassImp(TSQLObjectDataPool);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-TSQLObjectDataPool::TSQLObjectDataPool() : TObject(), fInfo(0), fClassData(0), fIsMoreRows(kTRUE), fRowsPool(0)
+TSQLObjectDataPool::TSQLObjectDataPool() : TObject(), fInfo(nullptr), fClassData(nullptr), fIsMoreRows(kTRUE), fRowsPool(nullptr)
 {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 TSQLObjectDataPool::TSQLObjectDataPool(TSQLClassInfo *info, TSQLResult *data)
-   : TObject(), fInfo(info), fClassData(data), fIsMoreRows(kTRUE), fRowsPool(0)
+   : TObject(), fInfo(info), fClassData(data), fIsMoreRows(kTRUE), fRowsPool(nullptr)
 {
 }
 
@@ -398,9 +398,9 @@ TSQLObjectDataPool::TSQLObjectDataPool(TSQLClassInfo *info, TSQLResult *data)
 
 TSQLObjectDataPool::~TSQLObjectDataPool()
 {
-   if (fClassData != 0)
+   if (fClassData)
       delete fClassData;
-   if (fRowsPool != 0) {
+   if (fRowsPool) {
       fRowsPool->Delete();
       delete fRowsPool;
    }
@@ -411,14 +411,14 @@ TSQLObjectDataPool::~TSQLObjectDataPool()
 
 TSQLRow *TSQLObjectDataPool::GetObjectRow(Long64_t objid)
 {
-   if (fClassData == 0)
-      return 0;
+   if (!fClassData)
+      return nullptr;
 
    Long64_t rowid;
 
-   if (fRowsPool != 0) {
+   if (fRowsPool) {
       TObjLink *link = fRowsPool->FirstLink();
-      while (link != 0) {
+      while (link) {
          TSQLRow *row = (TSQLRow *)link->GetObject();
          rowid = sqlio::atol64(row->GetField(0));
          if (rowid == objid) {
@@ -432,17 +432,17 @@ TSQLRow *TSQLObjectDataPool::GetObjectRow(Long64_t objid)
 
    while (fIsMoreRows) {
       TSQLRow *row = fClassData->Next();
-      if (row == 0)
+      if (!row)
          fIsMoreRows = kFALSE;
       else {
          rowid = sqlio::atol64(row->GetField(0));
          if (rowid == objid)
             return row;
-         if (fRowsPool == 0)
+         if (!fRowsPool)
             fRowsPool = new TList();
          fRowsPool->Add(row);
       }
    }
 
-   return 0;
+   return nullptr;
 }

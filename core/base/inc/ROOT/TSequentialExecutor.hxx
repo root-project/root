@@ -14,10 +14,10 @@
 #include "ROOT/EExecutionPolicy.hxx"
 #include "ROOT/TExecutorCRTP.hxx"
 #include "ROOT/TSeq.hxx"
+#include "ROOT/TypeTraits.hxx" // InvokeResult_t
 
 #include <initializer_list>
 #include <numeric> //std::accumulate
-#include <type_traits> //std::enable_if, std::result_of
 #include <utility> //std::move
 #include <vector>
 
@@ -25,6 +25,10 @@ namespace ROOT {
 
    class TSequentialExecutor: public TExecutorCRTP<TSequentialExecutor> {
       friend TExecutorCRTP;
+
+      template <typename F, typename... Args>
+      using InvokeResult_t = ROOT::TypeTraits::InvokeResult_t<F, Args...>;
+
    public:
 
       TSequentialExecutor() = default;
@@ -68,13 +72,13 @@ namespace ROOT {
        // Implementation of the Map functions declared in the parent class (TExecutorCRTP)
       //
       template<class F, class Cond = noReferenceCond<F>>
-      auto MapImpl(F func, unsigned nTimes) -> std::vector<typename std::result_of<F()>::type>;
+      auto MapImpl(F func, unsigned nTimes) -> std::vector<InvokeResult_t<F>>;
       template<class F, class INTEGER, class Cond = noReferenceCond<F, INTEGER>>
-      auto MapImpl(F func, ROOT::TSeq<INTEGER> args) -> std::vector<typename std::result_of<F(INTEGER)>::type>;
+      auto MapImpl(F func, ROOT::TSeq<INTEGER> args) -> std::vector<InvokeResult_t<F, INTEGER>>;
       template<class F, class T, class Cond = noReferenceCond<F, T>>
-      auto MapImpl(F func, std::vector<T> &args) -> std::vector<typename std::result_of<F(T)>::type>;
+      auto MapImpl(F func, std::vector<T> &args) -> std::vector<InvokeResult_t<F, T>>;
       template<class F, class T, class Cond = noReferenceCond<F, T>>
-      auto MapImpl(F func, const std::vector<T> &args) -> std::vector<typename std::result_of<F(T)>::type>;
+      auto MapImpl(F func, const std::vector<T> &args) -> std::vector<InvokeResult_t<F, T>>;
    };
 
    /************ TEMPLATE METHODS IMPLEMENTATION ******************/
@@ -140,7 +144,7 @@ namespace ROOT {
    ///
    /// \copydetails TExecutorCRTP::Map(F func,unsigned nTimes)
    template<class F, class Cond>
-   auto TSequentialExecutor::MapImpl(F func, unsigned nTimes) -> std::vector<typename std::result_of<F()>::type> {
+   auto TSequentialExecutor::MapImpl(F func, unsigned nTimes) -> std::vector<InvokeResult_t<F>> {
       using retType = decltype(func());
       std::vector<retType> reslist;
       reslist.reserve(nTimes);
@@ -156,7 +160,7 @@ namespace ROOT {
    ///
    /// \copydetails TExecutorCRTP::Map(F func,ROOT::TSeq<INTEGER> args)
    template<class F, class INTEGER, class Cond>
-   auto TSequentialExecutor::MapImpl(F func, ROOT::TSeq<INTEGER> args) -> std::vector<typename std::result_of<F(INTEGER)>::type> {
+   auto TSequentialExecutor::MapImpl(F func, ROOT::TSeq<INTEGER> args) -> std::vector<InvokeResult_t<F, INTEGER>> {
       using retType = decltype(func(*args.begin()));
       std::vector<retType> reslist;
       reslist.reserve(args.size());
@@ -171,7 +175,7 @@ namespace ROOT {
    ///
    /// \copydetails TExecutorCRTP::Map(F func,std::vector<T> &args)
    template<class F, class T, class Cond>
-   auto TSequentialExecutor::MapImpl(F func, std::vector<T> &args) -> std::vector<typename std::result_of<F(T)>::type> {
+   auto TSequentialExecutor::MapImpl(F func, std::vector<T> &args) -> std::vector<InvokeResult_t<F, T>> {
       // //check whether func is callable
       using retType = decltype(func(args.front()));
       std::vector<retType> reslist;
@@ -188,7 +192,7 @@ namespace ROOT {
    ///
    /// \copydetails TExecutorCRTP::Map(F func,const std::vector<T> &args)
    template<class F, class T, class Cond>
-   auto TSequentialExecutor::MapImpl(F func, const std::vector<T> &args) -> std::vector<typename std::result_of<F(T)>::type> {
+   auto TSequentialExecutor::MapImpl(F func, const std::vector<T> &args) -> std::vector<InvokeResult_t<F, T>> {
       // //check whether func is callable
       using retType = decltype(func(args.front()));
       std::vector<retType> reslist;

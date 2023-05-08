@@ -36,6 +36,8 @@ STATISTIC(NumSubstZexts, "Number of setcc + zext pairs substituted");
 namespace {
 class X86FixupSetCCPass : public MachineFunctionPass {
 public:
+  static char ID;
+
   X86FixupSetCCPass() : MachineFunctionPass(ID) {}
 
   StringRef getPassName() const override { return "X86 Fixup SetCC"; }
@@ -43,54 +45,18 @@ public:
   bool runOnMachineFunction(MachineFunction &MF) override;
 
 private:
-  // Find the preceding instruction that imp-defs eflags.
-  MachineInstr *findFlagsImpDef(MachineBasicBlock *MBB,
-                                MachineBasicBlock::reverse_iterator MI);
-
-  // Return true if MI imp-uses eflags.
-  bool impUsesFlags(MachineInstr *MI);
-
-  // Return true if this is the opcode of a SetCC instruction with a register
-  // output.
-  bool isSetCCr(unsigned Opode);
-
-  MachineRegisterInfo *MRI;
-  const X86InstrInfo *TII;
+  MachineRegisterInfo *MRI = nullptr;
+  const X86InstrInfo *TII = nullptr;
 
   enum { SearchBound = 16 };
-
-  static char ID;
 };
+} // end anonymous namespace
 
 char X86FixupSetCCPass::ID = 0;
-}
+
+INITIALIZE_PASS(X86FixupSetCCPass, DEBUG_TYPE, DEBUG_TYPE, false, false)
 
 FunctionPass *llvm::createX86FixupSetCC() { return new X86FixupSetCCPass(); }
-
-// We expect the instruction *immediately* before the setcc to imp-def
-// EFLAGS (because of scheduling glue). To make this less brittle w.r.t
-// scheduling, look backwards until we hit the beginning of the
-// basic-block, or a small bound (to avoid quadratic behavior).
-MachineInstr *
-X86FixupSetCCPass::findFlagsImpDef(MachineBasicBlock *MBB,
-                                   MachineBasicBlock::reverse_iterator MI) {
-  // FIXME: Should this be instr_rend(), and MI be reverse_instr_iterator?
-  auto MBBStart = MBB->rend();
-  for (int i = 0; (i < SearchBound) && (MI != MBBStart); ++i, ++MI)
-    for (auto &Op : MI->implicit_operands())
-      if (Op.isReg() && (Op.getReg() == X86::EFLAGS) && Op.isDef())
-        return &*MI;
-
-  return nullptr;
-}
-
-bool X86FixupSetCCPass::impUsesFlags(MachineInstr *MI) {
-  for (auto &Op : MI->implicit_operands())
-    if (Op.isReg() && (Op.getReg() == X86::EFLAGS) && Op.isUse())
-      return true;
-
-  return false;
-}
 
 bool X86FixupSetCCPass::runOnMachineFunction(MachineFunction &MF) {
   bool Changed = false;
@@ -100,7 +66,12 @@ bool X86FixupSetCCPass::runOnMachineFunction(MachineFunction &MF) {
   SmallVector<MachineInstr*, 4> ToErase;
 
   for (auto &MBB : MF) {
+    MachineInstr *FlagsDefMI = nullptr;
     for (auto &MI : MBB) {
+      // Remember the most recent preceding eflags defining instruction.
+      if (MI.definesRegister(X86::EFLAGS))
+        FlagsDefMI = &MI;
+
       // Find a setcc that is used by a zext.
       // This doesn't have to be the only use, the transformation is safe
       // regardless.
@@ -115,9 +86,6 @@ bool X86FixupSetCCPass::runOnMachineFunction(MachineFunction &MF) {
       if (!ZExt)
         continue;
 
-      // Find the preceding instruction that imp-defs eflags.
-      MachineInstr *FlagsDefMI = findFlagsImpDef(
-          MI.getParent(), MachineBasicBlock::reverse_iterator(&MI));
       if (!FlagsDefMI)
         continue;
 
@@ -126,31 +94,34 @@ bool X86FixupSetCCPass::runOnMachineFunction(MachineFunction &MF) {
       // it, itself, by definition, clobbers eflags. But it may happen that
       // FlagsDefMI also *uses* eflags, in which case the transformation is
       // invalid.
-      if (impUsesFlags(FlagsDefMI))
+      if (FlagsDefMI->readsRegister(X86::EFLAGS))
         continue;
-
-      ++NumSubstZexts;
-      Changed = true;
 
       // On 32-bit, we need to be careful to force an ABCD register.
       const TargetRegisterClass *RC = MF.getSubtarget<X86Subtarget>().is64Bit()
                                           ? &X86::GR32RegClass
                                           : &X86::GR32_ABCDRegClass;
-      unsigned ZeroReg = MRI->createVirtualRegister(RC);
-      unsigned InsertReg = MRI->createVirtualRegister(RC);
+      if (!MRI->constrainRegClass(ZExt->getOperand(0).getReg(), RC)) {
+        // If we cannot constrain the register, we would need an additional copy
+        // and are better off keeping the MOVZX32rr8 we have now.
+        continue;
+      }
+
+      ++NumSubstZexts;
+      Changed = true;
 
       // Initialize a register with 0. This must go before the eflags def
+      Register ZeroReg = MRI->createVirtualRegister(RC);
       BuildMI(MBB, FlagsDefMI, MI.getDebugLoc(), TII->get(X86::MOV32r0),
               ZeroReg);
 
       // X86 setcc only takes an output GR8, so fake a GR32 input by inserting
       // the setcc result into the low byte of the zeroed register.
       BuildMI(*ZExt->getParent(), ZExt, ZExt->getDebugLoc(),
-              TII->get(X86::INSERT_SUBREG), InsertReg)
+              TII->get(X86::INSERT_SUBREG), ZExt->getOperand(0).getReg())
           .addReg(ZeroReg)
           .addReg(MI.getOperand(0).getReg())
           .addImm(X86::sub_8bit);
-      MRI->replaceRegWith(ZExt->getOperand(0).getReg(), InsertReg);
       ToErase.push_back(ZExt);
     }
   }

@@ -79,9 +79,9 @@ namespace TMVA {
 
       TString   SecToText     ( Double_t, Bool_t ) const;
 
-      Int_t     fNcounts;               // reference number of "counts"
-      TString   fPrefix;                // prefix for outputs
-      Bool_t    fColourfulOutput;       // flag for use of colors
+      Int_t     fNcounts;               ///< reference number of "counts"
+      TString   fPrefix;                ///< prefix for outputs
+      Bool_t    fColourfulOutput;       ///< flag for use of colors
 
       // Save state of previos progress
       Int_t     fPreviousProgress;
@@ -90,10 +90,10 @@ namespace TMVA {
 
       Int_t     fProgressBarStringLength;
 
-      static const TString fgClassName; // used for output
-      static const Int_t   fgNbins;     // number of bins in progress bar
+      static const TString fgClassName; ///< used for output
+      static const Int_t   fgNbins;     ///< number of bins in progress bar
 
-      mutable MsgLogger*   fLogger;     // the output logger
+      mutable MsgLogger*   fLogger;     ///< the output logger
       MsgLogger& Log() const { return *fLogger; }
 
       ClassDef(Timer,0); // Timing information for training and evaluation of MVA methods

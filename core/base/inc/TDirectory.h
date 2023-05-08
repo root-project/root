@@ -99,11 +99,17 @@ can be replaced with the simpler and exception safe:
 
       void CdNull();
       friend class TDirectory;
+
+      void RegisterCurrentDirectory();
+
    public:
+      // Note: the directory pointed to by `previous` must not be already deleted
+      // or in the process of being deleted by another thread while this constructor runs.
       TContext(TDirectory *previous, TDirectory *newCurrent) : fDirectory(previous)
       {
-         // Store the current directory so we can restore it
-         // later and cd to the new directory.
+         // Store the value of `previous` as the directory to return to when
+         // this object is destructed.
+         // Then cd to the `newCurrent` directory.
          if (fDirectory)
             (*fDirectory).RegisterContext(this);
          if (newCurrent)
@@ -115,15 +121,13 @@ can be replaced with the simpler and exception safe:
       {
          // Store the current directory so we can restore it
          // later and cd to the new directory.
-         if (fDirectory)
-            (*fDirectory).RegisterContext(this);
+         RegisterCurrentDirectory();
       }
       TContext(TDirectory *newCurrent) : fDirectory(TDirectory::CurrentDirectory().load())
       {
          // Store the current directory so we can restore it
          // later and cd to the new directory.
-         if (fDirectory)
-            (*fDirectory).RegisterContext(this);
+         RegisterCurrentDirectory();
          if (newCurrent)
             newCurrent->cd();
          else
@@ -140,9 +144,13 @@ protected:
    mutable TString  fPathBuffer;        //! Buffer for GetPath() function
    TContext        *fContext{nullptr};  //! Pointer to a list of TContext object pointing to this TDirectory
 
-   std::vector<std::atomic<TDirectory*>*> fGDirectories; //! thread local gDirectory pointing to this object.
+   using SharedGDirectory_t = std::shared_ptr<std::atomic<TDirectory *>>;
 
-   std::atomic<size_t> fContextPeg;     //!Counter delaying the TDirectory destructor from finishing.
+   static SharedGDirectory_t &GetSharedLocalCurrentDirectory();
+
+   std::vector<SharedGDirectory_t> fGDirectories; //! thread local gDirectory pointing to this object.
+
+   std::atomic<size_t> fContextPeg{0};  //! Counter delaying the TDirectory destructor from finishing.
    mutable std::atomic_flag fSpinLock;  //! MSVC doesn't support = ATOMIC_FLAG_INIT;
 
    static Bool_t fgAddDirectory;        //!flag to add histograms, graphs,etc to the directory
@@ -153,8 +161,8 @@ protected:
            void   CleanTargets();
            void   FillFullPath(TString& buf) const;
            void   RegisterContext(TContext *ctxt);
+           void   RegisterGDirectory(SharedGDirectory_t &ptr);
            void   UnregisterContext(TContext *ctxt);
-           void   RegisterGDirectory(std::atomic<TDirectory*>*);
            void   BuildDirectory(TFile* motherFile, TDirectory* motherDir);
 
    friend class TContext;
@@ -181,7 +189,8 @@ public:
    virtual void        Close(Option_t *option="");
    static std::atomic<TDirectory*> &CurrentDirectory();  // Return the current directory for this thread.
            void        Copy(TObject &) const override { MayNotUse("Copy(TObject &)"); }
-   virtual Bool_t      cd(const char *path = nullptr);
+   virtual Bool_t      cd();
+   virtual Bool_t      cd(const char *path);
    virtual void        DeleteAll(Option_t *option="");
            void        Delete(const char *namecycle="") override;
            void        Draw(Option_t *option="") override;
@@ -208,7 +217,7 @@ public:
    virtual void       *GetObjectChecked(const char *namecycle, const TClass* cl);
    virtual void       *GetObjectUnchecked(const char *namecycle);
    virtual Int_t       GetBufferSize() const {return 0;}
-   virtual TFile      *GetFile() const { return 0; }
+   virtual TFile      *GetFile() const { return nullptr; }
    virtual TKey       *GetKey(const char * /*name */, Short_t /* cycle */=9999) const {return nullptr;}
    virtual TList      *GetList() const { return fList; }
    virtual TList      *GetListOfKeys() const { return nullptr; }
@@ -222,6 +231,7 @@ public:
    virtual const char *GetPathStatic() const;
    virtual const char *GetPath() const;
    TUUID               GetUUID() const {return fUUID;}
+           Bool_t      IsBuilt() const { return fList != nullptr; }
            Bool_t      IsFolder() const override { return kTRUE; }
    virtual Bool_t      IsModified() const { return kFALSE; }
    virtual Bool_t      IsWritable() const { return kFALSE; }
@@ -294,62 +304,85 @@ public:
 
    static Bool_t       Cd(const char *path);
    static void         DecodeNameCycle(const char *namecycle, char *name, Short_t &cycle, const size_t namesize = 0);
+   R__DEPRECATED(6,30, "Cannot be used safely, use `name + ';' + std::to_string(cycle)`")
    static void         EncodeNameCycle(char *buffer, const char *name, Short_t cycle);
 
    ClassDefOverride(TDirectory,5)  //Describe directory structure in memory
 };
 
-#ifndef __CINT__
 namespace ROOT {
 namespace Internal {
+   /// \brief Internal class used in the implementation of `gDirectory`
+   /// The objects of type `TDirectoryAtomicAdapter` should only be used inside the
+   /// thread that created them.  The intent is for those objects to be used indirectly
+   /// through the macro `gDirectory` and solely as temporary objects.
+   /// For example:
+   /// ```
+   ///   gDirectory = newvalue;
+   ///   gDirectory->ls();
+   ///   TDirectory *current = gDirectory;
+   /// ```
+   /// Note that:
+   /// ```
+   ///   auto dir = gDirectory;
+   /// ```
+   /// currently behaves "unexpectedly" as changing `dir` will also change `gDirectory`:
+   /// ```
+   ///   dir = newvalue;
+   /// ```
+   /// leads to
+   /// ```
+   ///   gDirectory == newvalue
+   /// ```
+   /// To prevent this we would need a new mechanism such that the type
+   /// used by `auto` in that case is `TDirectory*` rather than the `Internal`
+   /// type `TDirectoryAtomicAdapter`.
    struct TDirectoryAtomicAdapter {
-      std::atomic<TDirectory*> &fValue;
-      TDirectoryAtomicAdapter(std::atomic<TDirectory*> &value) : fValue(value) {}
+      // The shared pointer's lifetime is that of the thread creating this object
+      // (with the default constructor)
+      TDirectory::SharedGDirectory_t &fValue;
+
+      TDirectoryAtomicAdapter() : fValue(TDirectory::GetSharedLocalCurrentDirectory()) {}
 
       template <typename T>
       explicit operator T*() const {
-         return (T*)fValue.load();
+         return (T *)fValue->load();
       }
 
       operator TDirectory*() const {
-         return fValue.load();
+         return fValue->load();
       }
 
-      operator bool() const { return fValue.load() != nullptr; }
+      operator bool() const { return fValue->load() != nullptr; }
 
       bool operator==(const TDirectory *other) const {
-         return fValue.load() == other;
+         return fValue->load() == other;
       }
 
       bool operator!=(const TDirectory *other) const {
-         return fValue.load() != other;
+         return fValue->load() != other;
       }
 
       bool operator==(TDirectory *other) const {
-         return fValue.load() == other;
+         return fValue->load() == other;
       }
 
       bool operator!=(TDirectory *other) const {
-         return fValue.load() != other;
+         return fValue->load() != other;
       }
 
       TDirectory *operator=(TDirectory *newvalue) {
          if (newvalue) {
-            newvalue->RegisterGDirectory(&fValue);
+            newvalue->RegisterGDirectory(fValue);
          }
-         fValue = newvalue;
+         fValue->exchange(newvalue);
          return newvalue;
       }
 
-      TDirectory *operator->() const { return fValue.load(); }
+      TDirectory *operator->() const { return fValue->load(); }
    };
 } // Internal
 } // ROOT
-#define gDirectory (ROOT::Internal::TDirectoryAtomicAdapter(TDirectory::CurrentDirectory()))
-
-#elif defined(__MAKECINT__)
-// To properly handle the use of gDirectory in header files (in static declarations)
-R__EXTERN TDirectory *gDirectory;
-#endif
+#define gDirectory (::ROOT::Internal::TDirectoryAtomicAdapter{})
 
 #endif

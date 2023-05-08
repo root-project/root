@@ -56,11 +56,14 @@ void rf802_mcstudy_addons()
    // Generate 1000 samples of 1000 events
    mcs->generateAndFit(2000, 1000);
 
+   // Number of bins for chi2 plots
+   int nBins = 100;
+
    // Fill histograms with distributions chi2 and prob(chi2,ndf) that
    // are calculated by RooChiMCSModule
-   TH1 *hist_chi2 = mcs->fitParDataSet().createHistogram("chi2");
+   TH1 *hist_chi2 = mcs->fitParDataSet().createHistogram("chi2", AutoBinning(nBins));
    hist_chi2->SetTitle("#chi^{2} values of all toy runs;#chi^{2}");
-   TH1 *hist_prob = mcs->fitParDataSet().createHistogram("prob");
+   TH1 *hist_prob = mcs->fitParDataSet().createHistogram("prob", AutoBinning(nBins));
    hist_prob->SetTitle("Corresponding #chi^{2} probability;Prob(#chi^{2},ndof)");
 
 
@@ -94,8 +97,8 @@ void rf802_mcstudy_addons()
 
    // Fill histograms with distributions chi2 and prob(chi2,ndf) that
    // are calculated by RooChiMCSModule
-   TH1 *hist2_chi2 = mcs2->fitParDataSet().createHistogram("chi2");
-   TH1 *hist2_prob = mcs2->fitParDataSet().createHistogram("prob");
+   TH1 *hist2_chi2 = mcs2->fitParDataSet().createHistogram("chi2", AutoBinning(nBins));
+   TH1 *hist2_prob = mcs2->fitParDataSet().createHistogram("prob", AutoBinning(nBins));
    hist2_chi2->SetLineColor(kRed);
    hist2_prob->SetLineColor(kRed);
 

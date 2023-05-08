@@ -12,7 +12,7 @@
 
 #include "RBrowserWidget.hxx"
 
-#include <ROOT/REveGeomViewer.hxx>
+#include <ROOT/RGeomViewer.hxx>
 
 #include "TGeoManager.h"
 #include "TGeoVolume.h"
@@ -25,7 +25,7 @@ using namespace std::string_literals;
 
 
 class RBrowserGeomWidget : public RBrowserWidget {
-   REveGeomViewer fViewer;
+   RGeomViewer fViewer;
 
    std::unique_ptr<Browsable::RHolder> fObject; // geometry object
 
@@ -52,29 +52,21 @@ class RBrowserGeomWidget : public RBrowserWidget {
 
 public:
 
-   RBrowserGeomWidget(const std::string &name) : RBrowserWidget(name), fViewer()
+   RBrowserGeomWidget(const std::string &name) : RBrowserWidget(name)
    {
       fViewer.SetTitle(name);
       fViewer.SetShowHierarchy(false);
-
-      // fViewer.SetGeometry(MakeDummy());
    }
 
    virtual ~RBrowserGeomWidget() = default;
 
    std::string GetKind() const override { return "geom"s; }
 
-   void Show(const std::string &arg) override
-   {
-      fViewer.Show(arg);
-   }
+   void Show(const std::string &arg) override { fViewer.Show(arg); }
 
-   std::string GetUrl() override
-   {
-      return "../"s + fViewer.GetWindowAddr() + "/"s;
-   }
+   std::string GetUrl() override { return "../"s + fViewer.GetWindowAddr() + "/"s; }
 
-   bool DrawElement(std::shared_ptr<Browsable::RElement> &elem, const std::string &) override
+   bool DrawElement(std::shared_ptr<Browsable::RElement> &elem, const std::string & = "") override
    {
       if (!elem->IsCapable(Browsable::RElement::kActGeom))
          return false;
@@ -84,8 +76,15 @@ public:
          return false;
 
       auto vol = fObject->Get<TGeoVolume>();
+
       if (vol) {
-         fViewer.SetGeometry(vol->GetGeoManager(), vol->GetName());
+         auto mgr = vol->GetGeoManager();
+
+         if (!mgr || (mgr->GetListOfVolumes()->GetLast() < 0) || (mgr->GetVolume(vol->GetName()) != vol))
+            fViewer.SetOnlyVolume(const_cast<TGeoVolume *>(vol));
+         else
+            fViewer.SetGeometry(vol->GetGeoManager(), vol->GetName());
+
          return true;
       }
 

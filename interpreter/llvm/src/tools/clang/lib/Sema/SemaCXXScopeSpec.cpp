@@ -25,7 +25,6 @@ using namespace clang;
 
 #include "HackForDefaultTemplateArg.h"
 
-/// Find the current instantiation that associated with the given type.
 static CXXRecordDecl *getCurrentInstantiationOf(QualType T,
                                                 DeclContext *CurContext) {
   if (T.isNull())
@@ -245,12 +244,19 @@ bool Sema::RequireCompleteDeclContext(CXXScopeSpec &SS,
     return true;
   }
 
-  // Fixed enum types are complete, but they aren't valid as scopes
-  // until we see a definition, so awkwardly pull out this special
-  // case.
-  auto *EnumD = dyn_cast<EnumDecl>(tag);
-  if (!EnumD)
-    return false;
+  if (auto *EnumD = dyn_cast<EnumDecl>(tag))
+    // Fixed enum types and scoped enum instantiations are complete, but they
+    // aren't valid as scopes until we see or instantiate their definition.
+    return RequireCompleteEnumDecl(EnumD, loc, &SS);
+
+  return false;
+}
+
+/// Require that the EnumDecl is completed with its enumerators defined or
+/// instantiated. SS, if provided, is the ScopeRef parsed.
+///
+bool Sema::RequireCompleteEnumDecl(EnumDecl *EnumD, SourceLocation L,
+                                   CXXScopeSpec *SS) {
   if (EnumD->isCompleteDefinition()) {
     // If we know about the definition but it is not visible, complain.
     NamedDecl *SuggestedDef = nullptr;
@@ -259,8 +265,8 @@ bool Sema::RequireCompleteDeclContext(CXXScopeSpec &SS,
       // If the user is going to see an error here, recover by making the
       // definition visible.
       bool TreatAsComplete = !isSFINAEContext();
-      diagnoseMissingImport(loc, SuggestedDef, MissingImportKind::Definition,
-                            /*Recover*/TreatAsComplete);
+      diagnoseMissingImport(L, SuggestedDef, MissingImportKind::Definition,
+                            /*Recover*/ TreatAsComplete);
       return !TreatAsComplete;
     }
     return false;
@@ -271,19 +277,26 @@ bool Sema::RequireCompleteDeclContext(CXXScopeSpec &SS,
   if (EnumDecl *Pattern = EnumD->getInstantiatedFromMemberEnum()) {
     MemberSpecializationInfo *MSI = EnumD->getMemberSpecializationInfo();
     if (MSI->getTemplateSpecializationKind() != TSK_ExplicitSpecialization) {
-      if (InstantiateEnum(loc, EnumD, Pattern,
+      if (InstantiateEnum(L, EnumD, Pattern,
                           getTemplateInstantiationArgs(EnumD),
                           TSK_ImplicitInstantiation)) {
-        SS.SetInvalid(SS.getRange());
+        if (SS)
+          SS->SetInvalid(SS->getRange());
         return true;
       }
       return false;
     }
   }
 
-  Diag(loc, diag::err_incomplete_nested_name_spec)
-    << type << SS.getRange();
-  SS.SetInvalid(SS.getRange());
+  if (SS) {
+    Diag(L, diag::err_incomplete_nested_name_spec)
+        << QualType(EnumD->getTypeForDecl(), 0) << SS->getRange();
+    SS->SetInvalid(SS->getRange());
+  } else {
+    Diag(L, diag::err_incomplete_enum) << QualType(EnumD->getTypeForDecl(), 0);
+    Diag(EnumD->getLocation(), diag::note_declared_at);
+  }
+
   return true;
 }
 
@@ -458,7 +471,7 @@ public:
   }
 
   std::unique_ptr<CorrectionCandidateCallback> clone() override {
-    return llvm::make_unique<NestedNameSpecifierValidatorCCC>(*this);
+    return std::make_unique<NestedNameSpecifierValidatorCCC>(*this);
   }
 
  private:

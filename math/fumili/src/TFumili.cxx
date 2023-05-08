@@ -131,7 +131,6 @@ TFumili::TFumili(Int_t maxpar)
    // maxpar is the maximum number of parameters used with TFumili object
    //
    fMaxParam = TMath::Max(maxpar,25);
-   if (fMaxParam>200) fMaxParam=200;
    BuildArrays();
 
    fNumericDerivatives = true;
@@ -165,6 +164,15 @@ TFumili::TFumili(Int_t maxpar)
    gFumili = this;
    gROOT->GetListOfSpecials()->Add(gFumili);
 }
+
+void TFumili::SetParNumber(Int_t ParNum){
+   fNpar = ParNum;
+   if (fNpar > fMaxParam) {
+      DeleteArrays();
+      fMaxParam = fNpar;
+      BuildArrays();
+   }
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 ///

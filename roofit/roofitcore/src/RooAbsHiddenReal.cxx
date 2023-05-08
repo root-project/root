@@ -26,8 +26,6 @@ printing methods with versions that do not reveal the objects value
 and it has a protected version of getVal()
 **/
 
-#include "RooFit.h"
-
 #include "Riostream.h"
 
 #include "RooArgSet.h"
@@ -49,7 +47,7 @@ RooCategory* RooAbsHiddenReal::_dummyBlindState = 0;
 RooAbsHiddenReal::RooAbsHiddenReal(const char *name, const char *title, const char* unit)
   : RooAbsReal(name,title,unit),
     _state("state","Blinding state",this,dummyBlindState())
-{  
+{
 }
 
 
@@ -60,7 +58,7 @@ RooAbsHiddenReal::RooAbsHiddenReal(const char *name, const char *title, const ch
 RooAbsHiddenReal::RooAbsHiddenReal(const char *name, const char *title, RooAbsCategory& blindState, const char* unit)
   : RooAbsReal(name,title,unit),
   _state("state","Blinding state",this,blindState)
-{  
+{
 }
 
 
@@ -68,7 +66,7 @@ RooAbsHiddenReal::RooAbsHiddenReal(const char *name, const char *title, RooAbsCa
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
 
-RooAbsHiddenReal::RooAbsHiddenReal(const RooAbsHiddenReal& other, const char* name) : 
+RooAbsHiddenReal::RooAbsHiddenReal(const RooAbsHiddenReal& other, const char* name) :
   RooAbsReal(other, name),
   _state("state",this,other._state)
 {
@@ -77,9 +75,9 @@ RooAbsHiddenReal::RooAbsHiddenReal(const RooAbsHiddenReal& other, const char* na
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Destructor 
+/// Destructor
 
-RooAbsHiddenReal::~RooAbsHiddenReal() 
+RooAbsHiddenReal::~RooAbsHiddenReal()
 {
 }
 
@@ -91,19 +89,19 @@ RooAbsHiddenReal::~RooAbsHiddenReal()
 void RooAbsHiddenReal::printValue(ostream& os) const
 {
   os << "(hidden)" ;
-} 
+}
 
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Special version of readFromStream that disallows reading from stream
 
-Bool_t RooAbsHiddenReal::readFromStream(istream& is, Bool_t compact, Bool_t verbose)
+bool RooAbsHiddenReal::readFromStream(istream& is, bool compact, bool verbose)
 {
   if (isHidden()) {
-    // No-op version of readFromStream 
+    // No-op version of readFromStream
     coutE(InputArguments) << "RooAbsHiddenReal::readFromStream(" << GetName() << "): not allowed" << endl ;
-    return kTRUE ;
+    return true ;
   } else {
     return readFromStream(is,compact,verbose) ;
   }
@@ -114,10 +112,10 @@ Bool_t RooAbsHiddenReal::readFromStream(istream& is, Bool_t compact, Bool_t verb
 ////////////////////////////////////////////////////////////////////////////////
 /// Special version of writeToStream that disallows reading from stream
 
-void RooAbsHiddenReal::writeToStream(ostream& os, Bool_t compact) const
+void RooAbsHiddenReal::writeToStream(ostream& os, bool compact) const
 {
   if (isHidden()) {
-    // No-op version of writeToStream 
+    // No-op version of writeToStream
     coutE(InputArguments) << "RooAbsHiddenReal::writeToStream(" << GetName() << "): not allowed" << endl ;
   } else {
     RooAbsReal::writeToStream(os,compact) ;
@@ -130,7 +128,7 @@ void RooAbsHiddenReal::writeToStream(ostream& os, Bool_t compact) const
 /// Return reference to internal dummy RooCategory implementation
 /// blinding state switch
 
-RooAbsCategory& RooAbsHiddenReal::dummyBlindState() const 
+RooAbsCategory& RooAbsHiddenReal::dummyBlindState() const
 {
   if (!_dummyBlindState) {
     _dummyBlindState = new RooCategory("dummyBlindState","dummy blinding state") ;

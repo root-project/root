@@ -39,7 +39,7 @@ public :
    Long64_t        fSelectedRows;   ///<  Number of selected entries
    Bool_t          fSelectMultiple; ///<  True if selection has a variable index
 
-   TSelectorEntries(TTree *tree = 0, const char *selection = 0);
+   TSelectorEntries(TTree *tree = nullptr, const char *selection = nullptr);
    TSelectorEntries(const char *selection);
    virtual ~TSelectorEntries();
    virtual Int_t    Version() const { return 2; }

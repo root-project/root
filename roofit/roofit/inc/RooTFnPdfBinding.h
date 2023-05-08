@@ -15,24 +15,24 @@ class TF3 ;
 
 class RooTFnPdfBinding : public RooAbsPdf {
 public:
-  RooTFnPdfBinding() : _func(0) {} ;
+  RooTFnPdfBinding() : _func(nullptr) {}
   RooTFnPdfBinding(const char *name, const char *title, TF1* func, const RooArgList& list);
-  RooTFnPdfBinding(const RooTFnPdfBinding& other, const char* name=0) ;
-  virtual TObject* clone(const char* newname) const { return new RooTFnPdfBinding(*this,newname); }
-  inline virtual ~RooTFnPdfBinding() { }
+  RooTFnPdfBinding(const RooTFnPdfBinding& other, const char* name=nullptr) ;
+  TObject* clone(const char* newname) const override { return new RooTFnPdfBinding(*this,newname); }
+  inline ~RooTFnPdfBinding() override { }
 
-  void printArgs(std::ostream& os) const ;
+  void printArgs(std::ostream& os) const override ;
 
 protected:
 
   RooListProxy _list ;
   TF1* _func ;
 
-  Double_t evaluate() const ;
+  double evaluate() const override ;
 
 private:
 
-  ClassDef(RooTFnPdfBinding,1) // RooAbsPdf binding to ROOT TF[123] functions
+  ClassDefOverride(RooTFnPdfBinding,1) // RooAbsPdf binding to ROOT TF[123] functions
 };
 
 

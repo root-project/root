@@ -16,6 +16,7 @@
 #include "llvm/Analysis/Passes.h"
 #include "llvm/Analysis/RegionInfo.h"
 #include "llvm/Analysis/RegionIterator.h"
+#include "llvm/InitializePasses.h"
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/raw_ostream.h"
@@ -46,11 +47,11 @@ struct DOTGraphTraits<RegionNode*> : public DefaultDOTGraphTraits {
       BasicBlock *BB = Node->getNodeAs<BasicBlock>();
 
       if (isSimple())
-        return DOTGraphTraits<const Function*>
-          ::getSimpleNodeLabel(BB, BB->getParent());
+        return DOTGraphTraits<DOTFuncInfo *>
+          ::getSimpleNodeLabel(BB, nullptr);
       else
-        return DOTGraphTraits<const Function*>
-          ::getCompleteNodeLabel(BB, BB->getParent());
+        return DOTGraphTraits<DOTFuncInfo *>
+          ::getCompleteNodeLabel(BB, nullptr);
     }
 
     return "Not implemented";

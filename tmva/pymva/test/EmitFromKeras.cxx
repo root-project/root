@@ -17,20 +17,56 @@ int main(){
    Py_Initialize();
 
    //Emitting header file for Keras Sequential API Model
-   FILE* fKerasSequential;
-   fKerasSequential = fopen("generateKerasModelSequential.py", "r");
-   PyRun_SimpleFile(fKerasSequential, "generateKerasModelSequential.py");
+   FILE* fKerasModels;
+   fKerasModels = fopen("generateKerasModels.py", "r");
+   PyRun_SimpleFile(fKerasModels, "generateKerasModels.py");
+
+   //Emitting header file for Keras Sequential Model
    RModel modelSequential = TMVA::Experimental::SOFIE::PyKeras::Parse("KerasModelSequential.h5");
    modelSequential.Generate();
    modelSequential.OutputGenerated("KerasSequentialModel.hxx");
 
    //Emitting header file for Keras Functional API Model
-   FILE* fKerasFunctional;
-   fKerasFunctional = fopen("generateKerasModelFunctional.py", "r");
-   PyRun_SimpleFile(fKerasFunctional, "generateKerasModelFunctional.py");
    RModel modelFunctional = TMVA::Experimental::SOFIE::PyKeras::Parse("KerasModelFunctional.h5");
    modelFunctional.Generate();
    modelFunctional.OutputGenerated("KerasFunctionalModel.hxx");
+
+   //Emitting header file for Keras BatchNorm Model
+   RModel modelBatchNorm = TMVA::Experimental::SOFIE::PyKeras::Parse("KerasModelBatchNorm.h5");
+   modelBatchNorm.Generate();
+   modelBatchNorm.OutputGenerated("KerasBatchNormModel.hxx");
+
+#if PY_MAJOR_VERSION >= 3  // parsing of convolutional models supported only for Python3
+   // Emitting header file for Keras Conv2D Model with valid padding
+   RModel modelConv2D_Valid = TMVA::Experimental::SOFIE::PyKeras::Parse("KerasModelConv2D_Valid.h5");
+   modelConv2D_Valid.Generate();
+   modelConv2D_Valid.OutputGenerated("KerasConv2D_Valid.hxx");
+
+   // Emitting header file for Keras Conv2D Model with valid padding
+   RModel modelConv2D_Same = TMVA::Experimental::SOFIE::PyKeras::Parse("KerasModelConv2D_Same.h5");
+   modelConv2D_Same.Generate();
+   modelConv2D_Same.OutputGenerated("KerasConv2D_Same.hxx");
+#endif
+
+   //Emitting header file for Keras model with Reshape layer
+   RModel modelReshape = TMVA::Experimental::SOFIE::PyKeras::Parse("KerasModelReshape.h5");
+   modelReshape.Generate();
+   modelReshape.OutputGenerated("KerasReshapeModel.hxx");
+
+   //Emitting header file for Keras model with Concatenate layer
+   RModel modelConcatenate = TMVA::Experimental::SOFIE::PyKeras::Parse("KerasModelConcatenate.h5");
+   modelConcatenate.Generate();
+   modelConcatenate.OutputGenerated("KerasConcatenateModel.hxx");
+
+   // Emitting header file for Keras Binary Op Model
+   RModel modelBinaryOp = TMVA::Experimental::SOFIE::PyKeras::Parse("KerasModelBinaryOp.h5");
+   modelBinaryOp.Generate();
+   modelBinaryOp.OutputGenerated("KerasBinaryOpModel.hxx");
+
+   //Emitting header file for Keras activation functions model
+   RModel modelActivations = TMVA::Experimental::SOFIE::PyKeras::Parse("KerasModelActivations.h5");
+   modelActivations.Generate();
+   modelActivations.OutputGenerated("KerasActivationsModel.hxx");
 
    return 0;
 }

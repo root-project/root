@@ -1421,6 +1421,12 @@ Float_t TGLUtil::fgScreenScalingFactor     = 1.0f;
 Float_t TGLUtil::fgPointLineScalingFactor  = 1.0f;
 Int_t   TGLUtil::fgPickingRadius           = 1;
 
+Float_t TGLUtil::fgSimpleAxisWidthScale = 1.0f;
+Float_t TGLUtil::fgSimpleAxisBBoxScale  = 1.0f;
+
+void TGLUtil::SetSimpleAxisWidthScale(Float_t s) { fgSimpleAxisWidthScale = s; }
+void TGLUtil::SetSimpleAxisBBoxScale(Float_t s) { fgSimpleAxisBBoxScale = s; }
+
 const UChar_t TGLUtil::fgRed[4]    = { 230,   0,   0, 255 };
 const UChar_t TGLUtil::fgGreen[4]  = {   0, 230,   0, 255 };
 const UChar_t TGLUtil::fgBlue[4]   = {   0,   0, 230, 255 };
@@ -2487,7 +2493,8 @@ void TGLUtil::DrawReferenceMarker(const TGLCamera  & camera,
 
 void TGLUtil::DrawSimpleAxes(const TGLCamera      & camera,
                              const TGLBoundingBox & bbox,
-                                   Int_t            axesType)
+                                   Int_t            axesType,
+                                   Float_t          labelScale)
 {
    if (axesType == kAxesNone)
       return;
@@ -2512,8 +2519,10 @@ void TGLUtil::DrawSimpleAxes(const TGLCamera      & camera,
    Double_t   pixelSize   = pixelVector.Mag();
 
    // Find x/y/z min/max values
-   Double_t min[3] = { bbox.XMin(), bbox.YMin(), bbox.ZMin() };
-   Double_t max[3] = { bbox.XMax(), bbox.YMax(), bbox.ZMax() };
+   TGLBoundingBox bb(bbox);
+   bb.Scale(fgSimpleAxisBBoxScale);
+   Double_t min[3] = { bb.XMin(), bb.YMin(), bb.ZMin() };
+   Double_t max[3] = { bb.XMax(), bb.YMax(), bb.ZMax() };
 
    for (UInt_t i = 0; i < 3; i++) {
       TGLVertex3 start;
@@ -2541,7 +2550,7 @@ void TGLUtil::DrawSimpleAxes(const TGLCamera      & camera,
             start[i] = max[i];
             vector[i] = min[i] - max[i];
          }
-         DrawLine(start, vector, kLineHeadNone, pixelSize*2.5, axesColors[i*2]);
+         DrawLine(start, vector, kLineHeadNone, pixelSize*fgSimpleAxisWidthScale*2.5, axesColors[i*2]);
       }
       // +ive axis?
       if (max[i] > 0.0) {
@@ -2553,7 +2562,7 @@ void TGLUtil::DrawSimpleAxes(const TGLCamera      & camera,
             start[i] = min[i];
             vector[i] = max[i] - min[i];
          }
-         DrawLine(start, vector, kLineHeadNone, pixelSize*2.5, axesColors[i*2 + 1]);
+         DrawLine(start, vector, kLineHeadNone, pixelSize*fgSimpleAxisWidthScale*2.5, axesColors[i*2 + 1]);
       }
    }
 
@@ -2608,8 +2617,8 @@ void TGLUtil::DrawSimpleAxes(const TGLCamera      & camera,
       maxPos -= camera.ViewportDeltaToWorld(maxPos, padPixels*axisViewport.X()/axisViewport.Mag(),
                                                     padPixels*axisViewport.Y()/axisViewport.Mag());
 
-      DrawNumber(Form("%.0f", min[k]), minPos, kTRUE); // Min value
-      DrawNumber(Form("%.0f", max[k]), maxPos, kTRUE); // Max value
+      DrawNumber(Form("%.0f", labelScale * min[k]), minPos, kTRUE); // Min value
+      DrawNumber(Form("%.0f", labelScale * max[k]), maxPos, kTRUE); // Max value
 
       // Axis name beside max value
       TGLVertex3 namePos = maxPos -

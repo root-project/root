@@ -44,7 +44,7 @@ unsigned HexagonELFObjectWriter::getRelocType(MCContext &Ctx,
                                               MCFixup const &Fixup,
                                               bool IsPCRel) const {
   MCSymbolRefExpr::VariantKind Variant = Target.getAccessVariant();
-  switch ((unsigned)Fixup.getKind()) {
+  switch (Fixup.getTargetKind()) {
   default:
     report_fatal_error("Unrecognized relocation type");
     break;
@@ -64,7 +64,7 @@ unsigned HexagonELFObjectWriter::getRelocType(MCContext &Ctx,
       return ELF::R_HEX_IE_GOT_32;
     case MCSymbolRefExpr::VariantKind::VK_Hexagon_LD_GOT:
       return ELF::R_HEX_LD_GOT_32;
-    case MCSymbolRefExpr::VariantKind::VK_Hexagon_PCREL:
+    case MCSymbolRefExpr::VariantKind::VK_PCREL:
       return ELF::R_HEX_32_PCREL;
     case MCSymbolRefExpr::VariantKind::VK_TPREL:
       return ELF::R_HEX_TPREL_32;
@@ -299,5 +299,5 @@ unsigned HexagonELFObjectWriter::getRelocType(MCContext &Ctx,
 
 std::unique_ptr<MCObjectTargetWriter>
 llvm::createHexagonELFObjectWriter(uint8_t OSABI, StringRef CPU) {
-  return llvm::make_unique<HexagonELFObjectWriter>(OSABI, CPU);
+  return std::make_unique<HexagonELFObjectWriter>(OSABI, CPU);
 }

@@ -460,11 +460,11 @@ TGeoExtension *TGeoMaterial::GrabFWExtension() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Provide a pointer name containing uid.
 
-char *TGeoMaterial::GetPointerName() const
+const char *TGeoMaterial::GetPointerName() const
 {
    static TString name;
-   name = TString::Format("pMat%d", GetUniqueID());
-   return (char*)name.Data();
+   name.Form("pMat%d", GetUniqueID());
+   return name.Data();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -563,7 +563,7 @@ void TGeoMaterial::Print(const Option_t * /*option*/) const
 void TGeoMaterial::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*= ""*/)
 {
    if (TestBit(TGeoMaterial::kMatSavePrimitive)) return;
-   char *name = GetPointerName();
+   const char *name = GetPointerName();
    out << "// Material: " << GetName() << std::endl;
    out << "   a       = " << fA << ";" << std::endl;
    out << "   z       = " << fZ << ";" << std::endl;
@@ -571,7 +571,7 @@ void TGeoMaterial::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*= ""
    out << "   radl    = " << fRadLen << ";" << std::endl;
    out << "   absl    = " << fIntLen << ";" << std::endl;
 
-   out << "   " << name << " = new TGeoMaterial(\"" << GetName() << "\", a,z,density,radl,absl);" << std::endl;
+   out << "   auto " << name << " = new TGeoMaterial(\"" << GetName() << "\", a, z, density, radl, absl);" << std::endl;
    out << "   " << name << "->SetIndex(" << GetIndex() << ");" << std::endl;
    SetBit(TGeoMaterial::kMatSavePrimitive);
 }
@@ -1145,11 +1145,11 @@ void TGeoMixture::Print(const Option_t * /*option*/) const
 void TGeoMixture::SavePrimitive(std::ostream &out, Option_t * /*option*/ /*= ""*/)
 {
    if (TestBit(TGeoMaterial::kMatSavePrimitive)) return;
-   char *name = GetPointerName();
+   const char *name = GetPointerName();
    out << "// Mixture: " << GetName() << std::endl;
    out << "   nel     = " << fNelements << ";" << std::endl;
    out << "   density = " << fDensity << ";" << std::endl;
-   out << "   " << name << " = new TGeoMixture(\"" << GetName() << "\", nel,density);" << std::endl;
+   out << "   auto " << name << " = new TGeoMixture(\"" << GetName() << "\", nel, density);" << std::endl;
    for (Int_t i=0; i<fNelements; i++) {
       TGeoElement *el = GetElement(i);
       out << "      a = " << fAmixture[i] << ";   z = "<< fZmixture[i] << ";   w = " << fWeights[i] << ";  // " << el->GetName() << std::endl;

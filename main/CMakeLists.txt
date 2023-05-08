@@ -23,6 +23,8 @@ if(MSVC)
       /EXPORT:_Init_thread_footer /EXPORT:_Init_thread_header /EXPORT:_tls_index
       /STACK:4000000 setargv.obj")
   set_property(TARGET root.exe APPEND_STRING PROPERTY LINK_FLAGS ${root_exports})
+  add_custom_command(TARGET root.exe POST_BUILD
+                     COMMAND mt -manifest ${ROOT_MANIFEST} -outputresource:${CMAKE_BINARY_DIR}/bin/root.exe)
 endif()
 ROOT_EXECUTABLE(proofserv.exe pmain.cxx LIBRARIES Core MathCore)
 if(MSVC)
@@ -32,6 +34,9 @@ else()
   ROOT_EXECUTABLE(hadd hadd.cxx LIBRARIES Core RIO Net Hist Graf Graf3d Gpad Tree Matrix MathCore MultiProc)
 endif()
 ROOT_EXECUTABLE(rootnb.exe nbmain.cxx LIBRARIES Core)
+
+#---ReadSpeed-------------------------------------------------------------------------------------
+ROOT_EXECUTABLE(rootreadspeed src/readspeed.cxx LIBRARIES RIO Tree TreePlayer ReadSpeed)
 
 #---CreateHaddCommandLineOptions------------------------------------------------------------------
 generateHeader(hadd
@@ -91,6 +96,7 @@ target_include_directories(rootcling PRIVATE
         ${CMAKE_SOURCE_DIR}/core/metacling/res
         ${CMAKE_SOURCE_DIR}/core/dictgen/res
         ${CMAKE_SOURCE_DIR}/io/rootpcm/res)
+set_property(TARGET rootcling PROPERTY ENABLE_EXPORTS 1)
 if(WIN32)
   set_target_properties(rootcling PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS 1)
 endif()

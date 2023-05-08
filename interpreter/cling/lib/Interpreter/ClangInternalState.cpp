@@ -120,7 +120,7 @@ namespace cling {
     if (llvm::sys::fs::createUniqueFile(TempPath.str(), fd, TempPath)
         != std::errc::no_such_file_or_directory) {
       OS.reset(new llvm::raw_fd_ostream(fd, /*shouldClose=*/true));
-      OSFile = TempPath.str();
+      OSFile = TempPath.str().str();
     }
 
     // Make sure the out stream file gets removed if we crash.
@@ -267,7 +267,7 @@ namespace cling {
       if (!(fileName.compare(0, 5, "/usr/") == 0 &&
             fileName.find("/bits/") != std::string::npos) &&
           fileName.compare("-")) {
-        if (I->second->getRawBuffer()) {
+        if (I->second->getBufferDataIfLoaded()) {
           // There is content - a memory buffer or a file.
           // We know it's a file because we started off the FileEntry.
           if (FE->isOpen())

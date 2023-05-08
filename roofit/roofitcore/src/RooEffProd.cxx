@@ -21,16 +21,15 @@
 /// generator that is smarter than accept reject.
 ///
 
-#include "RooFit.h"
 #include "RooEffProd.h"
 #include "RooEffGenContext.h"
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor of a a production of p.d.f inPdf with efficiency
-/// function inEff.
+/// Constructs the product of the PDF `inPdf` with the efficiency function
+/// `inEff`.
 
-RooEffProd::RooEffProd(const char *name, const char *title, 
+RooEffProd::RooEffProd(const char *name, const char *title,
                              RooAbsPdf& inPdf, RooAbsReal& inEff) :
   RooAbsPdf(name,title),
   _pdf("pdf","pre-efficiency pdf", this,inPdf),
@@ -42,7 +41,7 @@ RooEffProd::RooEffProd(const char *name, const char *title,
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
 
-RooEffProd::RooEffProd(const RooEffProd& other, const char* name) : 
+RooEffProd::RooEffProd(const RooEffProd& other, const char* name) :
   RooAbsPdf(other, name),
   _pdf("pdf",this,other._pdf),
   _eff("acc",this,other._eff)
@@ -53,7 +52,7 @@ RooEffProd::RooEffProd(const RooEffProd& other, const char* name) :
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate and return 'raw' unnormalized value of p.d.f
 
-Double_t RooEffProd::evaluate() const
+double RooEffProd::evaluate() const
 {
   return _eff * _pdf;
 }
@@ -64,7 +63,7 @@ Double_t RooEffProd::evaluate() const
 /// in a more efficient way than can be done for generic correlated products
 
 RooAbsGenContext* RooEffProd::genContext(const RooArgSet &vars, const RooDataSet *prototype,
-                                            const RooArgSet* auxProto, Bool_t verbose) const
+                                            const RooArgSet* auxProto, bool verbose) const
 {
   return new RooEffGenContext(*this,
                               static_cast<RooAbsPdf const&>(_pdf.arg()),

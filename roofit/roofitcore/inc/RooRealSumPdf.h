@@ -26,80 +26,109 @@ public:
 
   RooRealSumPdf() ;
   RooRealSumPdf(const char *name, const char *title);
-  RooRealSumPdf(const char *name, const char *title, const RooArgList& funcList, const RooArgList& coefList, Bool_t extended=kFALSE) ;
+  RooRealSumPdf(const char *name, const char *title, const RooArgList& funcList, const RooArgList& coefList, bool extended=false) ;
   RooRealSumPdf(const char *name, const char *title,
-		   RooAbsReal& func1, RooAbsReal& func2, RooAbsReal& coef1) ;
-  RooRealSumPdf(const RooRealSumPdf& other, const char* name=0) ;
-  virtual TObject* clone(const char* newname) const { return new RooRealSumPdf(*this,newname) ; }
-  virtual ~RooRealSumPdf() ;
+         RooAbsReal& func1, RooAbsReal& func2, RooAbsReal& coef1) ;
+  RooRealSumPdf(const RooRealSumPdf& other, const char* name=nullptr) ;
+  TObject* clone(const char* newname) const override { return new RooRealSumPdf(*this,newname) ; }
+  ~RooRealSumPdf() override ;
 
-  Double_t evaluate() const ;
-  virtual Bool_t checkObservables(const RooArgSet* nset) const ;	
+  double evaluate() const override ;
+  bool checkObservables(const RooArgSet* nset) const override ;
 
-  void computeBatch(cudaStream_t*, double* output, size_t size, RooFit::Detail::DataMap const&) const;
+  void computeBatch(cudaStream_t*, double* output, size_t size, RooFit::Detail::DataMap const&) const override;
 
-  virtual Bool_t forceAnalyticalInt(const RooAbsArg& arg) const { return arg.isFundamental() ; }
-  Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& numVars, const RooArgSet* normSet, const char* rangeName=0) const ;
-  Double_t analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=0) const ;
+  bool forceAnalyticalInt(const RooAbsArg& arg) const override { return arg.isFundamental() ; }
+  Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& numVars, const RooArgSet* normSet, const char* rangeName=nullptr) const override ;
+  double analyticalIntegralWN(Int_t code, const RooArgSet* normSet, const char* rangeName=nullptr) const override ;
 
   const RooArgList& funcList() const { return _funcList ; }
   const RooArgList& coefList() const { return _coefList ; }
 
-  virtual ExtendMode extendMode() const ; 
+  ExtendMode extendMode() const override ;
 
   /// Return expected number of events for extended likelihood calculation, which
   /// is the sum of all coefficients.
-  virtual Double_t expectedEvents(const RooArgSet* nset) const ;
+  double expectedEvents(const RooArgSet* nset) const override ;
 
-  virtual Bool_t selfNormalized() const { return getAttribute("BinnedLikelihoodActive") ; }
+  bool selfNormalized() const override { return getAttribute("BinnedLikelihoodActive") ; }
 
-  void printMetaArgs(std::ostream& os) const ;
+  void printMetaArgs(std::ostream& os) const override ;
 
 
-  virtual std::list<Double_t>* binBoundaries(RooAbsRealLValue& /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const ;
-  virtual std::list<Double_t>* plotSamplingHint(RooAbsRealLValue& /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const ;
-  Bool_t isBinnedDistribution(const RooArgSet& obs) const  ;
+  std::list<double>* binBoundaries(RooAbsRealLValue& /*obs*/, double /*xlo*/, double /*xhi*/) const override ;
+  std::list<double>* plotSamplingHint(RooAbsRealLValue& /*obs*/, double /*xlo*/, double /*xhi*/) const override ;
+  bool isBinnedDistribution(const RooArgSet& obs) const override  ;
 
-  void setFloor(Bool_t flag) { _doFloor = flag ; }
-  Bool_t getFloor() const { return _doFloor ; }
-  static void setFloorGlobal(Bool_t flag) { _doFloorGlobal = flag ; }
-  static Bool_t getFloorGlobal() { return _doFloorGlobal ; }
+  void setFloor(bool flag) { _doFloor = flag ; }
+  bool getFloor() const { return _doFloor ; }
+  static void setFloorGlobal(bool flag) { _doFloorGlobal = flag ; }
+  static bool getFloorGlobal() { return _doFloorGlobal ; }
 
-  virtual CacheMode canNodeBeCached() const { return RooAbsArg::NotAdvised ; } ;
-  virtual void setCacheAndTrackHints(RooArgSet&) ;
+  CacheMode canNodeBeCached() const override { return RooAbsArg::NotAdvised ; } ;
+  void setCacheAndTrackHints(RooArgSet&) override ;
 
-  std::unique_ptr<RooArgSet> fillNormSetForServer(RooArgSet const& /*normSet*/, RooAbsArg const& /*server*/) const {
-     return std::make_unique<RooArgSet>();
-  }
+  std::unique_ptr<RooAbsArg> compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileContext & ctx) const override;
 
 protected:
 
   class CacheElem : public RooAbsCacheElement {
   public:
     CacheElem()  {} ;
-    virtual ~CacheElem() {} ; 
-    virtual RooArgList containedArgs(Action) { RooArgList ret(_funcIntList) ; ret.add(_funcNormList) ; return ret ; }
+    ~CacheElem() override {} ;
+    RooArgList containedArgs(Action) override { RooArgList ret(_funcIntList) ; ret.add(_funcNormList) ; return ret ; }
     RooArgList _funcIntList ;
     RooArgList _funcNormList ;
   } ;
-  mutable RooObjCacheManager _normIntMgr ; //! The integration cache manager
+  mutable RooObjCacheManager _normIntMgr ; ///<! The integration cache manager
 
 
-  RooListProxy _funcList ;  //  List of component FUNCs
-  RooListProxy _coefList ;  //  List of coefficients
-  Bool_t _extended ;        // Allow use as extended p.d.f.
+  RooListProxy _funcList ;  ///<  List of component FUNCs
+  RooListProxy _coefList ;  ///<  List of coefficients
+  bool _extended ;        ///< Allow use as extended p.d.f.
 
-  Bool_t _doFloor = false; // Introduce floor at zero in pdf
-  mutable bool _haveWarned{false}; //!
-  static Bool_t _doFloorGlobal ; // Global flag for introducing floor at zero in pdf
-  
+  bool _doFloor = false; ///< Introduce floor at zero in pdf
+  mutable bool _haveWarned{false}; ///<!
+  static bool _doFloorGlobal ; ///< Global flag for introducing floor at zero in pdf
+
 private:
 
-  bool haveLastCoef() const {
-    return _funcList.size() == _coefList.size();
-  }
+  friend class RooAddPdf;
+  friend class RooAddition;
+  friend class RooRealSumFunc;
 
-  ClassDef(RooRealSumPdf, 5) // PDF constructed from a sum of (non-pdf) functions
+  static void initializeFuncsAndCoefs(RooAbsReal const& caller,
+                                      const RooArgList& inFuncList, const RooArgList& inCoefList,
+                                      RooArgList& funcList, RooArgList& coefList);
+
+  static double evaluate(RooAbsReal const& caller,
+                         RooArgList const& funcList,
+                         RooArgList const& coefList,
+                         bool doFloor,
+                         bool & hasWarnedBefore);
+
+  static bool checkObservables(RooAbsReal const& caller, RooArgSet const* nset,
+                               RooArgList const& funcList, RooArgList const& coefList);
+
+  static Int_t getAnalyticalIntegralWN(RooAbsReal const& caller, RooObjCacheManager & normIntMgr,
+                                       RooArgList const& funcList, RooArgList const& coefList,
+                                       RooArgSet& allVars, RooArgSet& numVars, const RooArgSet* normSet, const char* rangeName);
+  static double analyticalIntegralWN(RooAbsReal const& caller, RooObjCacheManager & normIntMgr,
+                                     RooArgList const& funcList, RooArgList const& coefList,
+                                     Int_t code, const RooArgSet* normSet, const char* rangeName,
+                                     bool hasWarnedBefore);
+
+  static std::list<double>* binBoundaries(
+          RooArgList const& funcList, RooAbsRealLValue& /*obs*/, double /*xlo*/, double /*xhi*/);
+  static std::list<double>* plotSamplingHint(
+          RooArgList const& funcList, RooAbsRealLValue& /*obs*/, double /*xlo*/, double /*xhi*/);
+  static bool isBinnedDistribution(RooArgList const& funcList, const RooArgSet& obs);
+
+  static void printMetaArgs(RooArgList const& funcList, RooArgList const& coefList, std::ostream& os);
+
+  static void setCacheAndTrackHints(RooArgList const& funcList, RooArgSet& trackNodes);
+
+  ClassDefOverride(RooRealSumPdf, 5) // PDF constructed from a sum of (non-pdf) functions
 };
 
 #endif

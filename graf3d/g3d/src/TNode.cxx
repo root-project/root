@@ -87,8 +87,6 @@ TNode::TNode(const char *name, const char *title, const char *shapename, Double_
    Color_t lcolor = 16;
    SetLineColor(lcolor);
 #endif
-   static Int_t counter = 0;
-   counter++;
    fX      = x;
    fY      = y;
    fZ      = z;

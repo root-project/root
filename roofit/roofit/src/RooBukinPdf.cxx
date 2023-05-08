@@ -28,7 +28,6 @@ http://www.slac.stanford.edu/BFROOT/www/Organization/CollabMtgs/2003/detJuly2003
 **/
 
 #include "RooBukinPdf.h"
-#include "RooFit.h"
 #include "RooRealVar.h"
 #include "RooHelpers.h"
 #include "RooBatchCompute.h"
@@ -85,7 +84,7 @@ RooBukinPdf::RooBukinPdf(const RooBukinPdf& other, const char *name):
 ////////////////////////////////////////////////////////////////////////////////
 /// Implementation
 
-Double_t RooBukinPdf::evaluate() const
+double RooBukinPdf::evaluate() const
 {
   const double consts = 2*sqrt(2*log(2.0));
   double r1=0,r2=0,r3=0,r4=0,r5=0,hp=0;
@@ -97,7 +96,7 @@ Double_t RooBukinPdf::evaluate() const
   r4=sqrt(xi*xi+1);
   r1=xi/r4;
 
-  if(fabs(xi) > exp(-6.)){
+  if(std::abs(xi) > exp(-6.)){
     r5=xi/log(r4+xi);
   }
   else
@@ -114,7 +113,7 @@ Double_t RooBukinPdf::evaluate() const
 
   //--- Center
   else if(x < x2) {
-    if(fabs(xi) > exp(-6.)) {
+    if(std::abs(xi) > exp(-6.)) {
       r2=log(1 + 4 * xi * r4 * (x-Xp)/hp)/log(1+2*xi*(xi-r4));
       r2=-r3*r2*r2;
     }
@@ -129,7 +128,7 @@ Double_t RooBukinPdf::evaluate() const
     r2=rho2*(x-x2)*(x-x2)/(Xp-x2)/(Xp-x2)-r3 - 4 * r3 * (x-x2)/hp * r5 * r4/(r4+xi)/(r4+xi);
   }
 
-  if(fabs(r2) > 100){
+  if(std::abs(r2) > 100){
     fit_result = 0;
   }
   else{

@@ -72,10 +72,7 @@ public:
       *fResultSum = sum;
    }
 
-   std::string GetActionName(){
-      return "THnHelper";
-   }
-
+   std::string GetActionName() { return "KahanSum"; }
 };
 
 void df022_useKahan()

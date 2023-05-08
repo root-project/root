@@ -219,7 +219,7 @@ void TGUndockedFrame::CloseWindow()
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a dockable frame widget.
 
-TGDockableFrame::TGDockableFrame(const TGWindow *p, int id, UInt_t /*options*/)
+TGDockableFrame::TGDockableFrame(const TGWindow *p, Int_t id, UInt_t /*options*/)
    : TGCompositeFrame(p, 10, 10, kHorizontalFrame), TGWidget(id)
 {
    fMsgWindow = fParent;

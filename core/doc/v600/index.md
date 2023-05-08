@@ -46,9 +46,9 @@ In upcoming releases the classic method will slowly be deprecated in favor of th
 Cling follows the C++ standard much more strictly than CINT. In
 particular some code that used to run with CINT will either issue new
 warnings or new compilation errors. For example when CINT was parsing
-Namespace::Symbol it would not only apply the C++ search rules but also
+Namespace::%Symbol it would not only apply the C++ search rules but also
 search in the outer scopes and for this example could actually return
-::Symbol instead of (as Cling now does) issuing a compilation error.
+::%Symbol instead of (as Cling now does) issuing a compilation error.
 
 #### Template class names
 Cling no longer supports refering to a class template instantiation of a
@@ -145,7 +145,7 @@ version 5 and rootcling in version 6:
     to public. In particular this means that code compiled as part of
     the dictionary no longer has access to protected and private members
     of a class (except where allowed by the C++ standard).
-    In particular, this means that the code used for read rules (#pragma read)
+    In particular, this means that the code used for read rules (\#pragma read)
     can no longer access private member unless they have been mentioned as a
     target of the rule.
 -   rootcling no longer considers a friend declaration to be a

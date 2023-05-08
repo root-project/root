@@ -1,4 +1,4 @@
-#ifdef __CINT__ 
+#ifdef __CINT__
 #pragma link off all globals;
 #pragma link off all classes;
 #pragma link off all functions;
@@ -18,6 +18,8 @@
 #pragma link C++ class RooDecay+ ;
 #pragma link C++ class RooDstD0BG+ ;
 #pragma link C++ class RooExponential+ ;
+#pragma link C++ class RooExpPoly+ ;
+#pragma link C++ class RooPower+ ;
 #pragma link C++ class RooGaussian+ ;
 #pragma link C++ class RooLognormal+ ;
 #pragma link C++ class RooGamma+ ;
@@ -62,62 +64,70 @@
 #pragma link C++ class RooJohnson+;
 #pragma link C++ class RooLagrangianMorphFunc+;
 #pragma link C++ class RooLagrangianMorphFunc::Config+;
+#pragma read sourceClass="RooLagrangianMorphFunc" targetClass="RooLagrangianMorphFunc" version="[1]" \
+  source="std::vector<RooListProxy *> _nonInterfering;" target="_nonInterfering" \
+  code="{ for(RooListProxy const * list : onfile._nonInterfering) {  \
+             _nonInterfering.emplace_back();                         \
+             for(RooAbsArg * arg : *list) {                          \
+                _nonInterfering.back().emplace_back(arg->GetName()); \
+             }                                                       \
+          } }";
 #pragma link C++ class RooFunctorBinding+ ;
 #pragma link C++ class RooFunctor1DBinding+ ;
 #pragma link C++ class RooFunctorPdfBinding+ ;
 #pragma link C++ class RooFunctor1DPdfBinding+ ;
 //
-#pragma link C++ class RooCFunction1Ref<Double_t,Double_t>- ;
-#pragma link C++ class RooCFunction1Binding<Double_t,Double_t>+ ;
-#pragma link C++ class RooCFunction1PdfBinding<Double_t,Double_t>+ ;
-#pragma link C++ class RooCFunction1Ref<Double_t,Int_t>- ;
-#pragma link C++ class RooCFunction1Binding<Double_t,Int_t>+ ;
-#pragma link C++ class RooCFunction1PdfBinding<Double_t,Int_t>+ ;
+#pragma link C++ class RooCFunction1Ref<double,double>- ;
+#pragma link C++ class RooCFunction1Binding<double,double>+ ;
+#pragma link C++ class RooCFunction1PdfBinding<double,double>+ ;
+#pragma link C++ class RooCFunction1Ref<double,Int_t>- ;
+#pragma link C++ class RooCFunction1Binding<double,Int_t>+ ;
+#pragma link C++ class RooCFunction1PdfBinding<double,Int_t>+ ;
 //
-#pragma link C++ class RooCFunction2Ref<Double_t,Double_t,Double_t>- ;
-#pragma link C++ class RooCFunction2Binding<Double_t,Double_t,Double_t>+ ;
-#pragma link C++ class RooCFunction2PdfBinding<Double_t,Double_t,Double_t>+ ;
-#pragma link C++ class RooCFunction2Ref<Double_t,Int_t,Double_t>- ;
-#pragma link C++ class RooCFunction2Binding<Double_t,Int_t,Double_t>+ ;
-#pragma link C++ class RooCFunction2PdfBinding<Double_t,Int_t,Double_t>+ ;
-#pragma link C++ class RooCFunction2Ref<Double_t,UInt_t,Double_t>- ;
-#pragma link C++ class RooCFunction2Binding<Double_t,UInt_t,Double_t>+ ;
-#pragma link C++ class RooCFunction2PdfBinding<Double_t,UInt_t,Double_t>+ ;
-#pragma link C++ class RooCFunction2Ref<Double_t,Double_t,Int_t>- ;
-#pragma link C++ class RooCFunction2Binding<Double_t,Double_t,Int_t>+ ;
-#pragma link C++ class RooCFunction2PdfBinding<Double_t,Double_t,Int_t>+ ;
-#pragma link C++ class RooCFunction2Ref<Double_t,Int_t,Int_t>- ;
-#pragma link C++ class RooCFunction2Binding<Double_t,Int_t,Int_t>+ ;
-#pragma link C++ class RooCFunction2PdfBinding<Double_t,Int_t,Int_t>+ ;
+#pragma link C++ class RooCFunction2Ref<double,double,double>- ;
+#pragma link C++ class RooCFunction2Binding<double,double,double>+ ;
+#pragma link C++ class RooCFunction2PdfBinding<double,double,double>+ ;
+#pragma link C++ class RooCFunction2Ref<double,Int_t,double>- ;
+#pragma link C++ class RooCFunction2Binding<double,Int_t,double>+ ;
+#pragma link C++ class RooCFunction2PdfBinding<double,Int_t,double>+ ;
+#pragma link C++ class RooCFunction2Ref<double,UInt_t,double>- ;
+#pragma link C++ class RooCFunction2Binding<double,UInt_t,double>+ ;
+#pragma link C++ class RooCFunction2PdfBinding<double,UInt_t,double>+ ;
+#pragma link C++ class RooCFunction2Ref<double,double,Int_t>- ;
+#pragma link C++ class RooCFunction2Binding<double,double,Int_t>+ ;
+#pragma link C++ class RooCFunction2PdfBinding<double,double,Int_t>+ ;
+#pragma link C++ class RooCFunction2Ref<double,Int_t,Int_t>- ;
+#pragma link C++ class RooCFunction2Binding<double,Int_t,Int_t>+ ;
+#pragma link C++ class RooCFunction2PdfBinding<double,Int_t,Int_t>+ ;
 //
-#pragma link C++ class RooCFunction3Ref<Double_t,Double_t,Double_t,Double_t>- ;
-#pragma link C++ class RooCFunction3Binding<Double_t,Double_t,Double_t,Double_t>+ ;
-#pragma link C++ class RooCFunction3PdfBinding<Double_t,Double_t,Double_t,Double_t>+ ;
-#pragma link C++ class RooCFunction3Ref<Double_t,Double_t,Double_t,Bool_t>- ;
-#pragma link C++ class RooCFunction3Binding<Double_t,Double_t,Double_t,Bool_t>+ ;
-#pragma link C++ class RooCFunction3PdfBinding<Double_t,Double_t,Double_t,Bool_t>+ ;
-#pragma link C++ class RooCFunction3Ref<Double_t,Double_t,Int_t,Int_t>- ;
-#pragma link C++ class RooCFunction3Binding<Double_t,Double_t,Int_t,Int_t>+ ;
-#pragma link C++ class RooCFunction3PdfBinding<Double_t,Double_t,Int_t,Int_t>+ ;
-#pragma link C++ class RooCFunction3Ref<Double_t,UInt_t,Double_t,UInt_t>- ;
-#pragma link C++ class RooCFunction3Binding<Double_t,UInt_t,Double_t,UInt_t>+ ;
-#pragma link C++ class RooCFunction3PdfBinding<Double_t,UInt_t,Double_t,UInt_t>+ ;
-#pragma link C++ class RooCFunction3Ref<Double_t,UInt_t,Double_t,Double_t>- ;
-#pragma link C++ class RooCFunction3Binding<Double_t,UInt_t,Double_t,Double_t>+ ;
-#pragma link C++ class RooCFunction3PdfBinding<Double_t,UInt_t,Double_t,Double_t>+ ;
-#pragma link C++ class RooCFunction3Ref<Double_t,UInt_t,UInt_t,Double_t>- ;
-#pragma link C++ class RooCFunction3Binding<Double_t,UInt_t,UInt_t,Double_t>+ ;
-#pragma link C++ class RooCFunction3PdfBinding<Double_t,UInt_t,UInt_t,Double_t>+ ;
+#pragma link C++ class RooCFunction3Ref<double,double,double,double>- ;
+#pragma link C++ class RooCFunction3Binding<double,double,double,double>+ ;
+#pragma link C++ class RooCFunction3PdfBinding<double,double,double,double>+ ;
+#pragma link C++ class RooCFunction3Ref<double,double,double,bool>- ;
+#pragma link C++ class RooCFunction3Binding<double,double,double,bool>+ ;
+#pragma link C++ class RooCFunction3PdfBinding<double,double,double,bool>+ ;
+#pragma link C++ class RooCFunction3Ref<double,double,Int_t,Int_t>- ;
+#pragma link C++ class RooCFunction3Binding<double,double,Int_t,Int_t>+ ;
+#pragma link C++ class RooCFunction3PdfBinding<double,double,Int_t,Int_t>+ ;
+#pragma link C++ class RooCFunction3Ref<double,UInt_t,double,UInt_t>- ;
+#pragma link C++ class RooCFunction3Binding<double,UInt_t,double,UInt_t>+ ;
+#pragma link C++ class RooCFunction3PdfBinding<double,UInt_t,double,UInt_t>+ ;
+#pragma link C++ class RooCFunction3Ref<double,UInt_t,double,double>- ;
+#pragma link C++ class RooCFunction3Binding<double,UInt_t,double,double>+ ;
+#pragma link C++ class RooCFunction3PdfBinding<double,UInt_t,double,double>+ ;
+#pragma link C++ class RooCFunction3Ref<double,UInt_t,UInt_t,double>- ;
+#pragma link C++ class RooCFunction3Binding<double,UInt_t,UInt_t,double>+ ;
+#pragma link C++ class RooCFunction3PdfBinding<double,UInt_t,UInt_t,double>+ ;
 //
-#pragma link C++ class RooCFunction4Ref<Double_t,Double_t,Double_t,Double_t,Double_t>- ;
-#pragma link C++ class RooCFunction4Binding<Double_t,Double_t,Double_t,Double_t,Double_t>+ ;
-#pragma link C++ class RooCFunction4PdfBinding<Double_t,Double_t,Double_t,Double_t,Double_t>+ ;
-#pragma link C++ class RooCFunction4Ref<Double_t,Double_t,Double_t,Double_t,Int_t>- ;
-#pragma link C++ class RooCFunction4Binding<Double_t,Double_t,Double_t,Double_t,Int_t>+ ;
-#pragma link C++ class RooCFunction4PdfBinding<Double_t,Double_t,Double_t,Double_t,Int_t>+ ;
-#pragma link C++ class RooCFunction4Ref<Double_t,Double_t,Double_t,Double_t,Bool_t>- ;
-#pragma link C++ class RooCFunction4Binding<Double_t,Double_t,Double_t,Double_t,Bool_t>+ ;
-#pragma link C++ class RooCFunction4PdfBinding<Double_t,Double_t,Double_t,Double_t,Bool_t>+ ;
+#pragma link C++ class RooCFunction4Ref<double,double,double,double,double>- ;
+#pragma link C++ class RooCFunction4Binding<double,double,double,double,double>+ ;
+#pragma link C++ class RooCFunction4PdfBinding<double,double,double,double,double>+ ;
+#pragma link C++ class RooCFunction4Ref<double,double,double,double,Int_t>- ;
+#pragma link C++ class RooCFunction4Binding<double,double,double,double,Int_t>+ ;
+#pragma link C++ class RooCFunction4PdfBinding<double,double,double,double,Int_t>+ ;
+#pragma link C++ class RooCFunction4Ref<double,double,double,double,bool>- ;
+#pragma link C++ class RooCFunction4Binding<double,double,double,double,bool>+ ;
+#pragma link C++ class RooCFunction4PdfBinding<double,double,double,double,bool>+ ;
 
 //#ifdef USE_FOR_AUTLOADING
 //#pragma link C++ class RooFit ;
@@ -125,4 +135,4 @@
 #pragma link C++ namespace RooFit ;
 //#endif
 //
-#endif 
+#endif

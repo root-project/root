@@ -74,9 +74,6 @@ Example:
 
 TPolyMarker3D::TPolyMarker3D()
 {
-   fN = 0;
-   fP = 0;
-   fLastPoint = -1;
    fName = "TPolyMarker3D";
 }
 
@@ -89,12 +86,8 @@ TPolyMarker3D::TPolyMarker3D(Int_t n, Marker_t marker, Option_t *option)
    fOption = option;
    SetMarkerStyle(marker);
    SetBit(kCanDelete);
-   fLastPoint = -1;
-   if (n <= 0) {
-      fN = 0;
-      fP = 0;
+   if (n <= 0)
       return;
-   }
 
    fN = n;
    fP = new Float_t [kDimension*fN];
@@ -111,12 +104,8 @@ TPolyMarker3D::TPolyMarker3D(Int_t n, Float_t *p, Marker_t marker,
    SetMarkerStyle(marker);
    SetBit(kCanDelete);
    fOption = option;
-   fLastPoint = -1;
-   if (n <= 0) {
-      fN = 0;
-      fP = 0;
+   if (n <= 0)
       return;
-   }
 
    fN = n;
    fP = new Float_t [kDimension*fN];
@@ -139,12 +128,8 @@ TPolyMarker3D::TPolyMarker3D(Int_t n, Double_t *p, Marker_t marker,
    SetMarkerStyle(marker);
    SetBit(kCanDelete);
    fOption = option;
-   fLastPoint = -1;
-   if (n <= 0) {
-      fN = 0;
-      fP = 0;
+   if (n <= 0)
       return;
-   }
 
    fN = n;
    fP = new Float_t [kDimension*fN];
@@ -179,12 +164,8 @@ TPolyMarker3D::~TPolyMarker3D()
 ////////////////////////////////////////////////////////////////////////////////
 /// 3-D polymarker copy ctor.
 
-TPolyMarker3D::TPolyMarker3D(const TPolyMarker3D &p) :
-   TObject(p), TAttMarker(p), TAtt3D(p)
+TPolyMarker3D::TPolyMarker3D(const TPolyMarker3D &p) : TObject(p), TAttMarker(p), TAtt3D(p)
 {
-   fN = 0;
-   fP = 0;
-   fLastPoint = -1;
    p.TPolyMarker3D::Copy(*this);
 }
 
@@ -584,7 +565,7 @@ void TPolyMarker3D::SetPolyMarker(Int_t n, Float_t *p, Marker_t marker, Option_t
       fN = 0;
       fLastPoint = -1;
       delete [] fP;
-      fP = 0;
+      fP = nullptr;
       return;
    }
    fN = n;
@@ -614,7 +595,7 @@ void TPolyMarker3D::SetPolyMarker(Int_t n, Double_t *p, Marker_t marker, Option_
       fN = 0;
       fLastPoint = -1;
       delete [] fP;
-      fP = 0;
+      fP = nullptr;
       return;
    }
    fN = n;

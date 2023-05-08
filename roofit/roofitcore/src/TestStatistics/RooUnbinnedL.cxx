@@ -47,7 +47,8 @@ RooUnbinnedL::RooUnbinnedL(RooAbsPdf *pdf, RooAbsData *data, RooAbsL::Extended e
 
 RooUnbinnedL::RooUnbinnedL(const RooUnbinnedL &other)
    : RooAbsL(other), apply_weight_squared(other.apply_weight_squared), _first(other._first),
-     useBatchedEvaluations_(other.useBatchedEvaluations_)
+     useBatchedEvaluations_(other.useBatchedEvaluations_), lastSection_(other.lastSection_),
+     cachedResult_(other.cachedResult_)
 {
    paramTracker_ = std::make_unique<RooChangeTracker>(*other.paramTracker_);
 }
@@ -87,8 +88,8 @@ RooUnbinnedL::evaluatePartition(Section events, std::size_t /*components_begin*/
    ROOT::Math::KahanSum<double> result;
    double sumWeight;
 
-   // Do not reevaluate likelihood if parameters have not changed
-   if (!paramTracker_->hasChanged(true) & (cachedResult_ != 0)) return cachedResult_;
+   // Do not reevaluate likelihood if parameters nor event range have changed
+   if (!paramTracker_->hasChanged(true) && events == lastSection_ && (cachedResult_.Sum() != 0 || cachedResult_.Carry() != 0)) return cachedResult_;
 
    data_->store()->recalculateCache(nullptr, events.begin(N_events_), events.end(N_events_), 1, true);
 
@@ -102,58 +103,8 @@ RooUnbinnedL::evaluatePartition(Section events, std::size_t /*components_begin*/
    }
 
    // include the extended maximum likelihood term, if requested
-   if (extended_) {
-      if (apply_weight_squared) {
-
-         // TODO: the following should also be factored out into free/static functions like RooNLLVar::Compute*
-         // Calculate sum of weights-squared here for extended term
-         Double_t sumW2;
-         if (useBatchedEvaluations_) {
-            const RooSpan<const double> eventWeights = data_->getWeightBatch(0, N_events_);
-            if (eventWeights.empty()) {
-               sumW2 = (events.end(N_events_) - events.begin(N_events_)) * data_->weightSquared();
-            } else {
-               ROOT::Math::KahanSum<double, 4u> kahanWeight;
-               for (std::size_t i = 0; i < eventWeights.size(); ++i) {
-                  kahanWeight.AddIndexed(eventWeights[i] * eventWeights[i], i);
-               }
-               sumW2 = kahanWeight.Sum();
-            }
-         } else { // scalar mode
-            ROOT::Math::KahanSum<double> sumW2KahanSum;
-            for (Int_t i = 0; i < data_->numEntries(); i++) {
-               data_->get(i);
-               sumW2KahanSum += data_->weightSquared();
-            }
-            sumW2 = sumW2KahanSum.Sum();
-         }
-
-         Double_t expected = pdf_->expectedEvents(data_->get());
-
-         // Adjust calculation of extended term with W^2 weighting: adjust poisson such that
-         // estimate of Nexpected stays at the same value, but has a different variance, rescale
-         // both the observed and expected count of the Poisson with a factor sum[w] / sum[w^2] which is
-         // the effective weight of the Poisson term.
-         // i.e. change Poisson(Nobs = sum[w]| Nexp ) --> Poisson( sum[w] * sum[w] / sum[w^2] | Nexp * sum[w] /
-         // sum[w^2] ) weighted by the effective weight  sum[w^2]/ sum[w] in the likelihood. Since here we compute
-         // the likelihood with the weight square we need to multiply by the square of the effective weight expectedW
-         // = expected * sum[w] / sum[w^2]   : effective expected entries observedW =  sum[w]  * sum[w] / sum[w^2] :
-         // effective observed entries The extended term for the likelihood weighted by the square of the weight will
-         // be then:
-         //  (sum[w^2]/ sum[w] )^2 * expectedW -  (sum[w^2]/ sum[w] )^2 * observedW * log (expectedW)  and this is
-         //  using the previous expressions for expectedW and observedW
-         //  sum[w^2] / sum[w] * expected - sum[w^2] * log (expectedW)
-         //  and since the weights are constants in the likelihood we can use log(expected) instead of log(expectedW)
-
-         Double_t expectedW2 = expected * sumW2 / data_->sumEntries();
-         Double_t extra = expectedW2 - sumW2 * log(expected);
-
-         // Double_t y = pdf->extendedTerm(sumW2, data->get()) - carry;
-
-         result += extra;
-      } else {
-         result += pdf_->extendedTerm(data_->sumEntries(), data_->get());
-      }
+   if (extended_ && events.begin_fraction == 0) {
+      result += pdf_->extendedTerm(*data_, apply_weight_squared);
    }
 
    // If part of simultaneous PDF normalize probability over
@@ -169,6 +120,7 @@ RooUnbinnedL::evaluatePartition(Section events, std::size_t /*components_begin*/
    }
 
    cachedResult_ = result;
+   lastSection_ = events;
    return result;
 }
 

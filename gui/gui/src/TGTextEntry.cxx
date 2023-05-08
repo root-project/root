@@ -224,7 +224,7 @@ private:
    TGTextEntry   *fTextEntry;
 public:
    TBlinkTimer(TGTextEntry *t, Long_t ms) : TTimer(ms, kTRUE) { fTextEntry = t; }
-   Bool_t Notify();
+   Bool_t Notify() override;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -246,7 +246,7 @@ ClassImp(TGTextEntry);
 
 TGTextEntry::TGTextEntry(const TGWindow *p, TGTextBuffer *text, Int_t id,
                          GContext_t norm, FontStruct_t font, UInt_t options,
-                         ULong_t back) :
+                         Pixel_t back) :
    TGFrame(p, 1, 1, options | kOwnBackground, back)
 {
    TGGC *normgc   = fClient->GetResourcePool()->GetGCPool()->FindGC(norm);
@@ -407,7 +407,7 @@ void TGTextEntry::ShiftTabPressed()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// This signal is emitted when the <TAB> key is pressed.
+/// This signal is emitted when the `<TAB>` key is pressed.
 
 void TGTextEntry::TabPressed()
 {
@@ -1225,7 +1225,6 @@ Bool_t TGTextEntry::HandleKey(Event_t* event)
 
    gVirtualX->LookupString(event, tmp, sizeof(tmp), keysym);
    n = strlen(tmp);
-   Int_t unknown = 0;
 
    if ((EKeySym)keysym  == kKey_Enter || (EKeySym)keysym  == kKey_Return) {
 
@@ -1288,8 +1287,6 @@ Bool_t TGTextEntry::HandleKey(Event_t* event)
       case kKey_Left:
          CursorWordBackward(event->fState & kKeyShiftMask);
          break;
-      default:
-         unknown++;
       }
    } else if (n && keysym <127 && keysym >=32  &&     // printable keys
                (EKeySym)keysym  != kKey_Delete &&
@@ -1328,7 +1325,8 @@ Bool_t TGTextEntry::HandleKey(Event_t* event)
          SetInsertMode(GetInsertMode() == kInsert ? kReplace : kInsert);
          break;
       default:
-         unknown++;
+         // empty case to avoid compiler warning about unhandled enum values
+         break;
       }
    }
 

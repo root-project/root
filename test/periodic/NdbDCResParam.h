@@ -11,9 +11,9 @@ protected:
 public:
    NdbDCResParam()
       : NdbMF(32, "Data covariances for resonance parameters") {}
-   ~NdbDCResParam() {}
+   ~NdbDCResParam() override {}
 
-   ClassDef(NdbDCResParam,1)
+   ClassDefOverride(NdbDCResParam,1)
 
 }; // NdbDCResParam
 

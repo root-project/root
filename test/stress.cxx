@@ -200,10 +200,6 @@ void stress(Int_t nevent, Int_t style = 1,
       TString sp = gSystem->GetFromPipe("uname -a");
       sp.Resize(60);
       printf("*  SYS: %s\n",sp.Data());
-      if (strstr(gSystem->GetBuildNode(),"Linux")) {
-         sp = gSystem->GetFromPipe("lsb_release -d -s");
-         printf("*  SYS: %s\n",sp.Data());
-      }
       if (strstr(gSystem->GetBuildNode(),"Darwin")) {
          sp  = gSystem->GetFromPipe("sw_vers -productVersion");
          sp += " Mac OS X ";
@@ -1505,7 +1501,7 @@ void stress16()
    const float a[4]  = { 0.25, 0.04, 0.25, 0 };       // acceptance/trigger (last always 0)
 
    int   i, il, istep, itim[192], itrig[192], it, im, ipass;
-   float dead, sum[10];
+   float sum[10];
 
    // create histogram and array of profile histograms
    TCanvas *c = new TCanvas("laten","latency simulation",700,600);
@@ -1526,7 +1522,6 @@ void stress16()
       hp[i]->SetLineColor(2);
    }
 
-   dead   = 0;
    sum[0] = nbuf;
    for (i = 1; i <= nlev; i++) sum[i] = 0;
    for (i = 0; i < nbuf; i++) { itrig[i] = 0; itim[i] = 0; }
@@ -1568,9 +1563,7 @@ void stress16()
             ipass++;
          }
       }
-      if (ipass == 0) dead++;
    }
-//   Float_t deadTime = 100.*dead/nstep;
 
    // View results in the canvas and make the Postscript file
 

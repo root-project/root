@@ -19,8 +19,8 @@ class TSQLFile;
 class TKeySQL final : public TKey {
 
 private:
-   TKeySQL(const TKeySQL &) = delete;            // TKeySQL objects are not copiable.
-   TKeySQL &operator=(const TKeySQL &) = delete; // TKeySQL objects are not copiable.
+   TKeySQL(const TKeySQL &) = delete;
+   TKeySQL &operator=(const TKeySQL &) = delete;
 
 protected:
    TKeySQL() {} // NOLINT: not allowed to use = default because of TObject::kIsOnHeap detection, see ROOT-10300

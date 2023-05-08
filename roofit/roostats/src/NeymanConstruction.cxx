@@ -140,7 +140,7 @@ PointSetInterval* NeymanConstruction::GetInterval() const {
     fTestStatSampler->SetParametersForTestStat(*fPOI);
 
      // get the value of the test statistic for this data set
-    Double_t thisTestStatistic = fTestStatSampler->EvaluateTestStatistic(fData, *fPOI );
+    double thisTestStatistic = fTestStatSampler->EvaluateTestStatistic(fData, *fPOI );
     /*
     cout << "NC CHECK: " << i << endl;
     point->Print();
@@ -153,9 +153,9 @@ PointSetInterval* NeymanConstruction::GetInterval() const {
     // define the acceptance region in the data
 
     SamplingDistribution* samplingDist=0;
-    Double_t sigma;
-    Double_t upperEdgeOfAcceptance, upperEdgeMinusSigma, upperEdgePlusSigma;
-    Double_t lowerEdgeOfAcceptance, lowerEdgeMinusSigma, lowerEdgePlusSigma;
+    double sigma;
+    double upperEdgeOfAcceptance, upperEdgeMinusSigma, upperEdgePlusSigma;
+    double lowerEdgeOfAcceptance, lowerEdgeMinusSigma, lowerEdgePlusSigma;
     Int_t additionalMC=0;
 
     // the adaptive sampling algorithm wants at least one toy event to be outside
@@ -173,7 +173,7 @@ PointSetInterval* NeymanConstruction::GetInterval() const {
       totalMC = (Int_t) (2./fSize);
     }
     // use control
-    Double_t tmc = Double_t(totalMC)*fAdditionalNToysFactor;
+    double tmc = double(totalMC)*fAdditionalNToysFactor;
     totalMC = (Int_t) tmc;
 
     ToyMCSampler* toyMCSampler = dynamic_cast<ToyMCSampler*>(fTestStatSampler);
@@ -190,7 +190,7 @@ PointSetInterval* NeymanConstruction::GetInterval() const {
                      samplingDist,
                      additionalMC);
         if (!samplingDist) {
-           oocoutE((TObject*)0,Eval) << "Neyman Construction: error generating sampling distribution" << endl;
+           oocoutE(nullptr,Eval) << "Neyman Construction: error generating sampling distribution" << endl;
            return 0;
         }
    totalMC=samplingDist->GetSize();
@@ -239,7 +239,7 @@ PointSetInterval* NeymanConstruction::GetInterval() const {
       // generating the sampling dist of the test statistic.
       samplingDist = fTestStatSampler->GetSamplingDistribution(*point);
       if (!samplingDist) {
-         oocoutE((TObject*)0,Eval) << "Neyman Construction: error generating sampling distribution" << endl;
+         oocoutE(nullptr,Eval) << "Neyman Construction: error generating sampling distribution" << endl;
          return 0;
       }
 
@@ -258,13 +258,11 @@ PointSetInterval* NeymanConstruction::GetInterval() const {
     }
 
     // printout some debug info
-    TIter      itr = point->createIterator();
-    RooRealVar* myarg;
     ooccoutP(samplingDist,Eval) << "NeymanConstruction: Prog: "<< i+1<<"/"<<fPointsToTest->numEntries()
             << " total MC = " << samplingDist->GetSize()
             << " this test stat = " << thisTestStatistic << endl;
     ooccoutP(samplingDist,Eval) << " ";
-    while ((myarg = (RooRealVar *)itr.Next())) {
+    for (auto const *myarg : static_range_cast<RooRealVar *> (*point)){
       ooccoutP(samplingDist,Eval) << myarg->GetName() << "=" << myarg->getVal() << " ";
     }
     ooccoutP(samplingDist,Eval) << "[" << lowerEdgeOfAcceptance << ", "

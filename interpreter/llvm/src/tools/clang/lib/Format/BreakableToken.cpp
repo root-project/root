@@ -25,7 +25,7 @@
 namespace clang {
 namespace format {
 
-static const char *const Blanks = " \t\v\f\r";
+static constexpr StringRef Blanks = " \t\v\f\r";
 static bool IsBlank(char C) {
   switch (C) {
   case ' ':
@@ -41,25 +41,27 @@ static bool IsBlank(char C) {
 
 static StringRef getLineCommentIndentPrefix(StringRef Comment,
                                             const FormatStyle &Style) {
-  static const char *const KnownCStylePrefixes[] = {"///<", "//!<", "///", "//",
-                                                    "//!"};
-  static const char *const KnownTextProtoPrefixes[] = {"//", "#", "##", "###",
-                                                       "####"};
-  ArrayRef<const char *> KnownPrefixes(KnownCStylePrefixes);
+  static constexpr StringRef KnownCStylePrefixes[] = {"///<", "//!<", "///",
+                                                      "//!",  "//:",  "//"};
+  static constexpr StringRef KnownTextProtoPrefixes[] = {"####", "###", "##",
+                                                         "//", "#"};
+  ArrayRef<StringRef> KnownPrefixes(KnownCStylePrefixes);
   if (Style.Language == FormatStyle::LK_TextProto)
     KnownPrefixes = KnownTextProtoPrefixes;
 
-  StringRef LongestPrefix;
+  assert(std::is_sorted(KnownPrefixes.begin(), KnownPrefixes.end(),
+                        [](StringRef Lhs, StringRef Rhs) noexcept {
+                          return Lhs.size() > Rhs.size();
+                        }));
+
   for (StringRef KnownPrefix : KnownPrefixes) {
     if (Comment.startswith(KnownPrefix)) {
-      size_t PrefixLength = KnownPrefix.size();
-      while (PrefixLength < Comment.size() && Comment[PrefixLength] == ' ')
-        ++PrefixLength;
-      if (PrefixLength > LongestPrefix.size())
-        LongestPrefix = Comment.substr(0, PrefixLength);
+      const auto PrefixLength =
+          Comment.find_first_not_of(' ', KnownPrefix.size());
+      return Comment.substr(0, PrefixLength);
     }
   }
-  return LongestPrefix;
+  return {};
 }
 
 static BreakableToken::Split
@@ -86,22 +88,53 @@ getCommentSplit(StringRef Text, unsigned ContentStartColumn,
     MaxSplitBytes += BytesInChar;
   }
 
+  // In JavaScript, some @tags can be followed by {, and machinery that parses
+  // these comments will fail to understand the comment if followed by a line
+  // break. So avoid ever breaking before a {.
+  if (Style.Language == FormatStyle::LK_JavaScript) {
+    StringRef::size_type SpaceOffset =
+        Text.find_first_of(Blanks, MaxSplitBytes);
+    if (SpaceOffset != StringRef::npos && SpaceOffset + 1 < Text.size() &&
+        Text[SpaceOffset + 1] == '{') {
+      MaxSplitBytes = SpaceOffset + 1;
+    }
+  }
+
   StringRef::size_type SpaceOffset = Text.find_last_of(Blanks, MaxSplitBytes);
 
-  static auto *const kNumberedListRegexp = new llvm::Regex("^[1-9][0-9]?\\.");
+  static const auto kNumberedListRegexp = llvm::Regex("^[1-9][0-9]?\\.");
+  // Some spaces are unacceptable to break on, rewind past them.
   while (SpaceOffset != StringRef::npos) {
+    // If a line-comment ends with `\`, the next line continues the comment,
+    // whether or not it starts with `//`. This is confusing and triggers
+    // -Wcomment.
+    // Avoid introducing multiline comments by not allowing a break right
+    // after '\'.
+    if (Style.isCpp()) {
+      StringRef::size_type LastNonBlank =
+          Text.find_last_not_of(Blanks, SpaceOffset);
+      if (LastNonBlank != StringRef::npos && Text[LastNonBlank] == '\\') {
+        SpaceOffset = Text.find_last_of(Blanks, LastNonBlank);
+        continue;
+      }
+    }
+
     // Do not split before a number followed by a dot: this would be interpreted
     // as a numbered list, which would prevent re-flowing in subsequent passes.
-    if (kNumberedListRegexp->match(Text.substr(SpaceOffset).ltrim(Blanks)))
+    if (kNumberedListRegexp.match(Text.substr(SpaceOffset).ltrim(Blanks))) {
       SpaceOffset = Text.find_last_of(Blanks, SpaceOffset);
-    // In JavaScript, some @tags can be followed by {, and machinery that parses
-    // these comments will fail to understand the comment if followed by a line
-    // break. So avoid ever breaking before a {.
-    else if (Style.Language == FormatStyle::LK_JavaScript &&
-             SpaceOffset + 1 < Text.size() && Text[SpaceOffset + 1] == '{')
+      continue;
+    }
+
+    // Avoid ever breaking before a @tag or a { in JavaScript.
+    if (Style.Language == FormatStyle::LK_JavaScript &&
+        SpaceOffset + 1 < Text.size() &&
+        (Text[SpaceOffset + 1] == '{' || Text[SpaceOffset + 1] == '@')) {
       SpaceOffset = Text.find_last_of(Blanks, SpaceOffset);
-    else
-      break;
+      continue;
+    }
+
+    break;
   }
 
   if (SpaceOffset == StringRef::npos ||
@@ -245,7 +278,7 @@ BreakableStringLiteral::BreakableStringLiteral(
 
 BreakableToken::Split BreakableStringLiteral::getSplit(
     unsigned LineIndex, unsigned TailOffset, unsigned ColumnLimit,
-    unsigned ContentStartColumn, llvm::Regex &CommentPragmasRegex) const {
+    unsigned ContentStartColumn, const llvm::Regex &CommentPragmasRegex) const {
   return getStringSplit(Line.substr(TailOffset), ContentStartColumn,
                         ColumnLimit - Postfix.size(), Style.TabWidth, Encoding);
 }
@@ -271,7 +304,7 @@ unsigned BreakableComment::getLineCount() const { return Lines.size(); }
 BreakableToken::Split
 BreakableComment::getSplit(unsigned LineIndex, unsigned TailOffset,
                            unsigned ColumnLimit, unsigned ContentStartColumn,
-                           llvm::Regex &CommentPragmasRegex) const {
+                           const llvm::Regex &CommentPragmasRegex) const {
   // Don't break lines matching the comment pragmas regex.
   if (CommentPragmasRegex.match(Content[LineIndex]))
     return Split(StringRef::npos, 0);
@@ -316,9 +349,9 @@ static bool mayReflowContent(StringRef Content) {
   // Numbered lists may also start with a number followed by '.'
   // To avoid issues if a line starts with a number which is actually the end
   // of a previous line, we only consider numbers with up to 2 digits.
-  static auto *const kNumberedListRegexp = new llvm::Regex("^[1-9][0-9]?\\. ");
+  static const auto kNumberedListRegexp = llvm::Regex("^[1-9][0-9]?\\. ");
   hasSpecialMeaningPrefix =
-      hasSpecialMeaningPrefix || kNumberedListRegexp->match(Content);
+      hasSpecialMeaningPrefix || kNumberedListRegexp.match(Content);
 
   // Simple heuristic for what to reflow: content should contain at least two
   // characters and either the first or second character must be
@@ -342,8 +375,8 @@ BreakableBlockComment::BreakableBlockComment(
 
   StringRef TokenText(Tok.TokenText);
   assert(TokenText.startswith("/*") && TokenText.endswith("*/"));
-  TokenText.substr(2, TokenText.size() - 4).split(Lines,
-                                                  UseCRLF ? "\r\n" : "\n");
+  TokenText.substr(2, TokenText.size() - 4)
+      .split(Lines, UseCRLF ? "\r\n" : "\n");
 
   int IndentDelta = StartColumn - OriginalStartColumn;
   Content.resize(Lines.size());
@@ -456,10 +489,9 @@ BreakableBlockComment::BreakableBlockComment(
   });
 }
 
-BreakableToken::Split
-BreakableBlockComment::getSplit(unsigned LineIndex, unsigned TailOffset,
-                           unsigned ColumnLimit, unsigned ContentStartColumn,
-                           llvm::Regex &CommentPragmasRegex) const {
+BreakableToken::Split BreakableBlockComment::getSplit(
+    unsigned LineIndex, unsigned TailOffset, unsigned ColumnLimit,
+    unsigned ContentStartColumn, const llvm::Regex &CommentPragmasRegex) const {
   // Don't break lines matching the comment pragmas regex.
   if (CommentPragmasRegex.match(Content[LineIndex]))
     return Split(StringRef::npos, 0);
@@ -588,9 +620,8 @@ void BreakableBlockComment::insertBreak(unsigned LineIndex, unsigned TailOffset,
       Text.data() - tokenAt(LineIndex).TokenText.data() + Split.first;
   unsigned CharsToRemove = Split.second;
   assert(LocalIndentAtLineBreak >= Prefix.size());
-  std::string PrefixWithTrailingIndent = Prefix;
-  for (unsigned I = 0; I < ContentIndent; ++I)
-    PrefixWithTrailingIndent += " ";
+  std::string PrefixWithTrailingIndent = std::string(Prefix);
+  PrefixWithTrailingIndent.append(ContentIndent, ' ');
   Whitespaces.replaceWhitespaceInToken(
       tokenAt(LineIndex), BreakOffsetInToken, CharsToRemove, "",
       PrefixWithTrailingIndent, InPPDirective, /*Newlines=*/1,
@@ -598,9 +629,8 @@ void BreakableBlockComment::insertBreak(unsigned LineIndex, unsigned TailOffset,
           PrefixWithTrailingIndent.size());
 }
 
-BreakableToken::Split
-BreakableBlockComment::getReflowSplit(unsigned LineIndex,
-                                      llvm::Regex &CommentPragmasRegex) const {
+BreakableToken::Split BreakableBlockComment::getReflowSplit(
+    unsigned LineIndex, const llvm::Regex &CommentPragmasRegex) const {
   if (!mayReflow(LineIndex, CommentPragmasRegex))
     return Split(StringRef::npos, 0);
 
@@ -707,8 +737,8 @@ BreakableBlockComment::getSplitAfterLastLine(unsigned TailOffset) const {
   return Split(StringRef::npos, 0);
 }
 
-bool BreakableBlockComment::mayReflow(unsigned LineIndex,
-                                      llvm::Regex &CommentPragmasRegex) const {
+bool BreakableBlockComment::mayReflow(
+    unsigned LineIndex, const llvm::Regex &CommentPragmasRegex) const {
   // Content[LineIndex] may exclude the indent after the '*' decoration. In that
   // case, we compute the start of the comment pragma manually.
   StringRef IndentContent = Content[LineIndex];
@@ -721,13 +751,15 @@ bool BreakableBlockComment::mayReflow(unsigned LineIndex,
 }
 
 BreakableLineCommentSection::BreakableLineCommentSection(
-    const FormatToken &Token, unsigned StartColumn,
-    unsigned OriginalStartColumn, bool FirstInLine, bool InPPDirective,
+    const FormatToken &Token, unsigned StartColumn, bool InPPDirective,
     encoding::Encoding Encoding, const FormatStyle &Style)
     : BreakableComment(Token, StartColumn, InPPDirective, Encoding, Style) {
   assert(Tok.is(TT_LineComment) &&
          "line comment section must start with a line comment");
   FormatToken *LineTok = nullptr;
+  // How many spaces we changed in the first line of the section, this will be
+  // applied in all following lines
+  int FirstLineSpaceChange = 0;
   for (const FormatToken *CurrentTok = &Tok;
        CurrentTok && CurrentTok->is(TT_LineComment);
        CurrentTok = CurrentTok->Next) {
@@ -739,42 +771,72 @@ BreakableLineCommentSection::BreakableLineCommentSection(
     TokenText.split(Lines, "\n");
     Content.resize(Lines.size());
     ContentColumn.resize(Lines.size());
-    OriginalContentColumn.resize(Lines.size());
+    PrefixSpaceChange.resize(Lines.size());
     Tokens.resize(Lines.size());
     Prefix.resize(Lines.size());
     OriginalPrefix.resize(Lines.size());
     for (size_t i = FirstLineIndex, e = Lines.size(); i < e; ++i) {
       Lines[i] = Lines[i].ltrim(Blanks);
-      // We need to trim the blanks in case this is not the first line in a
-      // multiline comment. Then the indent is included in Lines[i].
-      StringRef IndentPrefix =
-          getLineCommentIndentPrefix(Lines[i].ltrim(Blanks), Style);
-      assert((TokenText.startswith("//") || TokenText.startswith("#")) &&
-             "unsupported line comment prefix, '//' and '#' are supported");
-      OriginalPrefix[i] = Prefix[i] = IndentPrefix;
-      if (Lines[i].size() > Prefix[i].size() &&
-          isAlphanumeric(Lines[i][Prefix[i].size()])) {
-        if (Prefix[i] == "//")
-          Prefix[i] = "// ";
-        else if (Prefix[i] == "///")
-          Prefix[i] = "/// ";
-        else if (Prefix[i] == "//!")
-          Prefix[i] = "//! ";
-        else if (Prefix[i] == "///<")
-          Prefix[i] = "///< ";
-        else if (Prefix[i] == "//!<")
-          Prefix[i] = "//!< ";
-        else if (Prefix[i] == "#" &&
-                 Style.Language == FormatStyle::LK_TextProto)
-          Prefix[i] = "# ";
+      StringRef IndentPrefix = getLineCommentIndentPrefix(Lines[i], Style);
+      OriginalPrefix[i] = IndentPrefix;
+      const unsigned SpacesInPrefix =
+          std::count(IndentPrefix.begin(), IndentPrefix.end(), ' ');
+
+      // On the first line of the comment section we calculate how many spaces
+      // are to be added or removed, all lines after that just get only the
+      // change and we will not look at the maximum anymore. Additionally to the
+      // actual first line, we calculate that when the non space Prefix changes,
+      // e.g. from "///" to "//".
+      if (i == 0 || OriginalPrefix[i].rtrim(Blanks) !=
+                        OriginalPrefix[i - 1].rtrim(Blanks)) {
+        if (SpacesInPrefix < Style.SpacesInLineCommentPrefix.Minimum &&
+            Lines[i].size() > IndentPrefix.size() &&
+            isAlphanumeric(Lines[i][IndentPrefix.size()])) {
+          FirstLineSpaceChange =
+              Style.SpacesInLineCommentPrefix.Minimum - SpacesInPrefix;
+        } else if (SpacesInPrefix > Style.SpacesInLineCommentPrefix.Maximum) {
+          FirstLineSpaceChange =
+              Style.SpacesInLineCommentPrefix.Maximum - SpacesInPrefix;
+        } else {
+          FirstLineSpaceChange = 0;
+        }
+      }
+
+      if (Lines[i].size() != IndentPrefix.size()) {
+        PrefixSpaceChange[i] = FirstLineSpaceChange;
+
+        if (SpacesInPrefix + PrefixSpaceChange[i] <
+            Style.SpacesInLineCommentPrefix.Minimum) {
+          PrefixSpaceChange[i] += Style.SpacesInLineCommentPrefix.Minimum -
+                                  (SpacesInPrefix + PrefixSpaceChange[i]);
+        }
+
+        assert(Lines[i].size() > IndentPrefix.size());
+        const auto FirstNonSpace = Lines[i][IndentPrefix.size()];
+        const auto AllowsSpaceChange =
+            SpacesInPrefix != 0 ||
+            (isAlphanumeric(FirstNonSpace) ||
+             (FirstNonSpace == '}' && FirstLineSpaceChange != 0));
+
+        if (PrefixSpaceChange[i] > 0 && AllowsSpaceChange) {
+          Prefix[i] = IndentPrefix.str();
+          Prefix[i].append(PrefixSpaceChange[i], ' ');
+        } else if (PrefixSpaceChange[i] < 0 && AllowsSpaceChange) {
+          Prefix[i] = IndentPrefix
+                          .drop_back(std::min<std::size_t>(
+                              -PrefixSpaceChange[i], SpacesInPrefix))
+                          .str();
+        } else {
+          Prefix[i] = IndentPrefix.str();
+        }
+      } else {
+        // If the IndentPrefix is the whole line, there is no content and we
+        // drop just all space
+        Prefix[i] = IndentPrefix.drop_back(SpacesInPrefix).str();
       }
 
       Tokens[i] = LineTok;
       Content[i] = Lines[i].substr(IndentPrefix.size());
-      OriginalContentColumn[i] =
-          StartColumn + encoding::columnWidthWithTabs(OriginalPrefix[i],
-                                                      StartColumn,
-                                                      Style.TabWidth, Encoding);
       ContentColumn[i] =
           StartColumn + encoding::columnWidthWithTabs(Prefix[i], StartColumn,
                                                       Style.TabWidth, Encoding);
@@ -817,10 +879,9 @@ BreakableLineCommentSection::getRangeLength(unsigned LineIndex, unsigned Offset,
       Encoding);
 }
 
-unsigned BreakableLineCommentSection::getContentStartColumn(unsigned LineIndex,
-                                                            bool Break) const {
-  if (Break)
-    return OriginalContentColumn[LineIndex];
+unsigned
+BreakableLineCommentSection::getContentStartColumn(unsigned LineIndex,
+                                                   bool /*Break*/) const {
   return ContentColumn[LineIndex];
 }
 
@@ -833,20 +894,14 @@ void BreakableLineCommentSection::insertBreak(
   unsigned BreakOffsetInToken =
       Text.data() - tokenAt(LineIndex).TokenText.data() + Split.first;
   unsigned CharsToRemove = Split.second;
-  // Compute the size of the new indent, including the size of the new prefix of
-  // the newly broken line.
-  unsigned IndentAtLineBreak = OriginalContentColumn[LineIndex] +
-                               Prefix[LineIndex].size() -
-                               OriginalPrefix[LineIndex].size();
-  assert(IndentAtLineBreak >= Prefix[LineIndex].size());
   Whitespaces.replaceWhitespaceInToken(
       tokenAt(LineIndex), BreakOffsetInToken, CharsToRemove, "",
       Prefix[LineIndex], InPPDirective, /*Newlines=*/1,
-      /*Spaces=*/IndentAtLineBreak - Prefix[LineIndex].size());
+      /*Spaces=*/ContentColumn[LineIndex] - Prefix[LineIndex].size());
 }
 
 BreakableComment::Split BreakableLineCommentSection::getReflowSplit(
-    unsigned LineIndex, llvm::Regex &CommentPragmasRegex) const {
+    unsigned LineIndex, const llvm::Regex &CommentPragmasRegex) const {
   if (!mayReflow(LineIndex, CommentPragmasRegex))
     return Split(StringRef::npos, 0);
 
@@ -866,7 +921,8 @@ void BreakableLineCommentSection::reflow(unsigned LineIndex,
     // tokens by the empty string.
     Whitespaces.replaceWhitespace(
         *Tokens[LineIndex], /*Newlines=*/0, /*Spaces=*/0,
-        /*StartOfTokenColumn=*/StartColumn, /*InPPDirective=*/false);
+        /*StartOfTokenColumn=*/StartColumn, /*IsAligned=*/true,
+        /*InPPDirective=*/false);
   } else if (LineIndex > 0) {
     // In case we're reflowing after the '\' in:
     //
@@ -934,18 +990,17 @@ void BreakableLineCommentSection::adaptStartOfLine(
                                   /*Newlines=*/1,
                                   /*Spaces=*/LineColumn,
                                   /*StartOfTokenColumn=*/LineColumn,
+                                  /*IsAligned=*/true,
                                   /*InPPDirective=*/false);
   }
   if (OriginalPrefix[LineIndex] != Prefix[LineIndex]) {
     // Adjust the prefix if necessary.
-
-    // Take care of the space possibly introduced after a decoration.
-    assert(Prefix[LineIndex] == (OriginalPrefix[LineIndex] + " ").str() &&
-           "Expecting a line comment prefix to differ from original by at most "
-           "a space");
+    const auto SpacesToRemove = -std::min(PrefixSpaceChange[LineIndex], 0);
+    const auto SpacesToAdd = std::max(PrefixSpaceChange[LineIndex], 0);
     Whitespaces.replaceWhitespaceInToken(
-        tokenAt(LineIndex), OriginalPrefix[LineIndex].size(), 0, "", "",
-        /*InPPDirective=*/false, /*Newlines=*/0, /*Spaces=*/1);
+        tokenAt(LineIndex), OriginalPrefix[LineIndex].size() - SpacesToRemove,
+        /*ReplaceChars=*/SpacesToRemove, "", "", /*InPPDirective=*/false,
+        /*Newlines=*/0, /*Spaces=*/SpacesToAdd);
   }
 }
 
@@ -956,7 +1011,7 @@ void BreakableLineCommentSection::updateNextToken(LineState &State) const {
 }
 
 bool BreakableLineCommentSection::mayReflow(
-    unsigned LineIndex, llvm::Regex &CommentPragmasRegex) const {
+    unsigned LineIndex, const llvm::Regex &CommentPragmasRegex) const {
   // Line comments have the indent as part of the prefix, so we need to
   // recompute the start of the line.
   StringRef IndentContent = Content[LineIndex];

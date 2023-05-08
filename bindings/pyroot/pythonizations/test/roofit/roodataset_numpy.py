@@ -49,8 +49,7 @@ class TestRooDataSetNumpy(unittest.TestCase):
         w = data.addColumn(wFunc)
         wdata = ROOT.RooDataSet(data.GetName(), data.GetTitle(), data, data.get(), "", w.GetName())
 
-        self.assertEqual(set(wdata.to_numpy().keys()), {"x", "cat"})
-        self.assertEqual(set(wdata.to_numpy(compute_derived_weight=True).keys()), {"x", "cat", "w"})
+        self.assertEqual(set(wdata.to_numpy().keys()), {"x", "cat", "w"})
 
     def _check_value_equality(self, data, np_data):
         vars_in_data = data.get()
@@ -99,7 +98,7 @@ class TestRooDataSetNumpy(unittest.TestCase):
         # Instruct dataset wdata to use w as event weight and not observable
         wdata = ROOT.RooDataSet(data.GetName(), data.GetTitle(), data, data.get(), "", w.GetName())
 
-        np_data = wdata.to_numpy(compute_derived_weight=True)
+        np_data = wdata.to_numpy()
 
         wdata_2 = ROOT.RooDataSet.from_numpy(np_data, (x, cat, wvar), name="wdata_2", title="wdata_2", weight_name="w")
 

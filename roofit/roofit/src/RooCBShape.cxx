@@ -22,7 +22,6 @@ PDF implementing the Crystal Ball line shape.
 
 #include "RooCBShape.h"
 
-#include "RooAbsReal.h"
 #include "RooRealVar.h"
 #include "RooMath.h"
 #include "RooBatchCompute.h"
@@ -37,7 +36,7 @@ ClassImp(RooCBShape);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooCBShape::ApproxErf(Double_t arg) const
+double RooCBShape::ApproxErf(double arg) const
 {
   static const double erflim = 5.0;
   if( arg > erflim )
@@ -73,18 +72,18 @@ RooCBShape::RooCBShape(const RooCBShape& other, const char* name) :
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooCBShape::evaluate() const {
-  Double_t t = (m-m0)/sigma;
+double RooCBShape::evaluate() const {
+  double t = (m-m0)/sigma;
   if (alpha < 0) t = -t;
 
-  Double_t absAlpha = fabs((Double_t)alpha);
+  double absAlpha = std::abs((double)alpha);
 
   if (t >= -absAlpha) {
     return exp(-0.5*t*t);
   }
   else {
-    Double_t a =  TMath::Power(n/absAlpha,n)*exp(-0.5*absAlpha*absAlpha);
-    Double_t b= n/absAlpha - absAlpha;
+    double a =  TMath::Power(n/absAlpha,n)*exp(-0.5*absAlpha*absAlpha);
+    double b= n/absAlpha - absAlpha;
 
     return a/TMath::Power(b - t, n);
   }
@@ -98,7 +97,7 @@ void RooCBShape::computeBatch(cudaStream_t* stream, double* output, size_t nEven
   dispatch->compute(stream, RooBatchCompute::CBShape, output, nEvents,
           {dataMap.at(m), dataMap.at(m0), dataMap.at(sigma), dataMap.at(alpha), dataMap.at(n)});
 }
-  
+
 ////////////////////////////////////////////////////////////////////////////////
 
 Int_t RooCBShape::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* /*rangeName*/) const
@@ -111,7 +110,7 @@ Int_t RooCBShape::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars,
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooCBShape::analyticalIntegral(Int_t code, const char* rangeName) const
+double RooCBShape::analyticalIntegral(Int_t code, const char* rangeName) const
 {
   static const double sqrtPiOver2 = 1.2533141373;
   static const double sqrt2 = 1.4142135624;
@@ -120,10 +119,10 @@ Double_t RooCBShape::analyticalIntegral(Int_t code, const char* rangeName) const
   double result = 0.0;
   bool useLog = false;
 
-  if( fabs(n-1.0) < 1.0e-05 )
+  if( std::abs(n-1.0) < 1.0e-05 )
     useLog = true;
 
-  double sig = fabs((Double_t)sigma);
+  double sig = std::abs((double)sigma);
 
   double tmin = (m.min(rangeName)-m0)/sig;
   double tmax = (m.max(rangeName)-m0)/sig;
@@ -134,7 +133,7 @@ Double_t RooCBShape::analyticalIntegral(Int_t code, const char* rangeName) const
     tmax = -tmp;
   }
 
-  double absAlpha = fabs((Double_t)alpha);
+  double absAlpha = std::abs((double)alpha);
 
   if( tmin >= -absAlpha ) {
     result += sig*sqrtPiOver2*(   ApproxErf(tmax/sqrt2)
@@ -190,7 +189,7 @@ Int_t RooCBShape::getMaxVal(const RooArgSet& vars) const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooCBShape::maxVal(Int_t code) const
+double RooCBShape::maxVal(Int_t code) const
 {
   R__ASSERT(code==1) ;
 

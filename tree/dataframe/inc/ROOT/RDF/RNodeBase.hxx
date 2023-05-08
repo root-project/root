@@ -17,6 +17,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <unordered_map>
 
 namespace ROOT {
 namespace RDF {
@@ -59,7 +60,8 @@ public:
    virtual void StopProcessing() = 0;
    virtual void AddFilterName(std::vector<std::string> &filters) = 0;
    // Helper function for SaveGraph
-   virtual std::shared_ptr<ROOT::Internal::RDF::GraphDrawing::GraphNode> GetGraph() = 0;
+   virtual std::shared_ptr<ROOT::Internal::RDF::GraphDrawing::GraphNode>
+   GetGraph(std::unordered_map<void *, std::shared_ptr<ROOT::Internal::RDF::GraphDrawing::GraphNode>> &visitedMap) = 0;
 
    virtual void ResetChildrenCount()
    {
@@ -72,11 +74,10 @@ public:
    const std::vector<std::string> &GetVariations() const { return fVariations; }
 
    /// Return a clone of this node that acts as a Filter working with values in the variationName "universe".
-   virtual std::shared_ptr<RNodeBase> GetVariedFilter(const std::string &variationName)
+   virtual std::shared_ptr<RNodeBase> GetVariedFilter(const std::string & /*variationName*/)
    {
       R__ASSERT(false &&
                 "GetVariedFilter was called on a node type that does not implement it. This should never happen.");
-      (void)variationName;
       return nullptr;
    }
 };

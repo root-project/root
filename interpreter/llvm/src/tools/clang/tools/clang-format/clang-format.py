@@ -2,11 +2,19 @@
 # - Change 'binary' if clang-format is not on the path (see below).
 # - Add to your .vimrc:
 #
-#   map <C-I> :pyf <path-to-this-file>/clang-format.py<cr>
-#   imap <C-I> <c-o>:pyf <path-to-this-file>/clang-format.py<cr>
+#   if has('python')
+#     map <C-I> :pyf <path-to-this-file>/clang-format.py<cr>
+#     imap <C-I> <c-o>:pyf <path-to-this-file>/clang-format.py<cr>
+#   elseif has('python3')
+#     map <C-I> :py3f <path-to-this-file>/clang-format.py<cr>
+#     imap <C-I> <c-o>:py3f <path-to-this-file>/clang-format.py<cr>
+#   endif
 #
-# The first line enables clang-format for NORMAL and VISUAL mode, the second
-# line adds support for INSERT mode. Change "C-I" to another binding if you
+# The if-elseif-endif conditional should pick either the python3 or python2 
+# integration depending on your vim setup.
+# 
+# The first mapping enables clang-format for NORMAL and VISUAL mode, the second
+# mapping adds support for INSERT mode. Change "C-I" to another binding if you
 # need clang-format on a different key (C-I stands for Ctrl+i).
 #
 # With this integration you can press the bound key and clang-format will
@@ -20,7 +28,11 @@
 # like:
 # :function FormatFile()
 # :  let l:lines="all"
-# :  pyf <path-to-this-file>/clang-format.py
+# :  if has('python')
+# :    pyf <path-to-this-file>/clang-format.py
+# :  elseif has('python3')
+# :    py3f <path-to-this-file>/clang-format.py
+# :  endif
 # :endfunction
 #
 # It operates on the current, potentially unsaved buffer and does not create
@@ -58,7 +70,8 @@ def main():
   # Get the current text.
   encoding = vim.eval("&encoding")
   buf = get_buffer(encoding)
-  text = '\n'.join(buf)
+  # Join the buffer into a single string with a terminating newline
+  text = ('\n'.join(buf) + '\n').encode(encoding)
 
   # Determine range to format.
   if vim.eval('exists("l:lines")') == '1':
@@ -77,9 +90,14 @@ def main():
     lines = ['-lines', '%s:%s' % (vim.current.range.start + 1,
                                   vim.current.range.end + 1)]
 
-  # Determine the cursor position.
-  cursor = int(vim.eval('line2byte(line("."))+col(".")')) - 2
-  if cursor < 0:
+  # Convert cursor (line, col) to bytes.
+  # Don't use line2byte: https://github.com/vim/vim/issues/5930
+  _, cursor_line, cursor_col, _ = vim.eval('getpos(".")') # 1-based
+  cursor_byte = 0
+  for line in text.split(b'\n')[:int(cursor_line) - 1]:
+    cursor_byte += len(line) + 1
+  cursor_byte += int(cursor_col) - 1
+  if cursor_byte < 0:
     print('Couldn\'t determine cursor position. Is your file empty?')
     return
 
@@ -91,7 +109,7 @@ def main():
     startupinfo.wShowWindow = subprocess.SW_HIDE
 
   # Call formatter.
-  command = [binary, '-cursor', str(cursor)]
+  command = [binary, '-cursor', str(cursor_byte)]
   if lines != ['-lines', 'all']:
     command += lines
   if style:
@@ -103,7 +121,7 @@ def main():
   p = subprocess.Popen(command,
                        stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                        stdin=subprocess.PIPE, startupinfo=startupinfo)
-  stdout, stderr = p.communicate(input=text.encode(encoding))
+  stdout, stderr = p.communicate(input=text)
 
   # If successful, replace buffer contents.
   if stderr:
@@ -115,15 +133,24 @@ def main():
         'Please report to bugs.llvm.org.'
     )
   else:
-    lines = stdout.decode(encoding).split('\n')
-    output = json.loads(lines[0])
-    lines = lines[1:]
+    header, content = stdout.split(b'\n', 1)
+    header = json.loads(header)
+    # Strip off the trailing newline (added above).
+    # This maintains trailing empty lines present in the buffer if
+    # the -lines specification requests them to remain unchanged.
+    lines = content.decode(encoding).split('\n')[:-1]
     sequence = difflib.SequenceMatcher(None, buf, lines)
     for op in reversed(sequence.get_opcodes()):
-      if op[0] is not 'equal':
+      if op[0] != 'equal':
         vim.current.buffer[op[1]:op[2]] = lines[op[3]:op[4]]
-    if output.get('IncompleteFormat'):
+    if header.get('IncompleteFormat'):
       print('clang-format: incomplete (syntax errors)')
-    vim.command('goto %d' % (output['Cursor'] + 1))
+    # Convert cursor bytes to (line, col)
+    # Don't use goto: https://github.com/vim/vim/issues/5930
+    cursor_byte = int(header['Cursor'])
+    prefix = content[0:cursor_byte]
+    cursor_line = 1 + prefix.count(b'\n')
+    cursor_column = 1 + len(prefix.rsplit(b'\n', 1)[-1])
+    vim.command('call cursor(%d, %d)' % (cursor_line, cursor_column))
 
 main()

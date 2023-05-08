@@ -261,7 +261,8 @@ TAB_SIZE               = 3
 # with the commands \{ and \} for these it is advised to use the version @{ and
 # @} or use a double escape (\\{ and \\})
 
-ALIASES                = "legacy{1}=\htmlonly<div class=\"legacybox\"><h2>Legacy Code</h2> \1 is a legacy interface: it is not recommended to use it in new code. There will be no bug fixes nor new developments.</div>\endhtmlonly"
+ALIASES += "legacy{1}=\htmlonly<div class=\"legacybox\"><h2>Legacy Code</h2> \1 is a legacy interface: there will be no bug fixes nor new developments. Therefore it is not recommended to use it in new long-term production code. But, depending on the context, using \1 might still be a valid solution.</div>\endhtmlonly"
+ALIASES += "legacy{2}=\htmlonly<div class=\"legacybox\"><h2>Legacy Code</h2> \1 is a legacy interface: there will be no bug fixes nor new developments. Therefore it is not recommended to use it in new long-term production code. But, depending on the context, using \1 might still be a valid solution. \2</div>\endhtmlonly"
 
 # Set the OPTIMIZE_OUTPUT_FOR_C tag to YES if your project consists of C sources
 # only. Doxygen will then generate output that is more tailored for C. For
@@ -985,7 +986,10 @@ EXCLUDE_PATTERNS       = */G__* \
                          LinkDef*.h \
                          launcher.py \
                          */io/io/res/* \
-                         */src/lexertk.hpp
+                         */src/lexertk.hpp \
+                         *.xml \
+                         *.dtd \
+                         */tutorials/webgui/qt5web/*
 
 # The EXCLUDE_SYMBOLS tag can be used to specify one or more symbol names
 # (namespaces, classes, functions, etc.) that should be excluded from the
@@ -1487,7 +1491,7 @@ QCH_FILE               =
 # The default value is: org.doxygen.Project.
 # This tag requires that the tag GENERATE_QHP is set to YES.
 
-QHP_NAMESPACE          = org.doxygen.Project
+QHP_NAMESPACE          = cern.ch.ROOT
 
 # The QHP_VIRTUAL_FOLDER tag specifies the namespace to use when generating Qt
 # Help Project output. For more information please see Qt Help Project / Virtual
@@ -1496,7 +1500,7 @@ QHP_NAMESPACE          = org.doxygen.Project
 # The default value is: doc.
 # This tag requires that the tag GENERATE_QHP is set to YES.
 
-QHP_VIRTUAL_FOLDER     = doc
+QHP_VIRTUAL_FOLDER     = rootdoc
 
 # If the QHP_CUST_FILTER_NAME tag is set, it specifies the name of a custom
 # filter to add. For more information please see Qt Help Project / Custom
@@ -1669,7 +1673,7 @@ USE_MATHJAX            = YES
 # The default value is: MathJax_2.
 # This tag requires that the tag USE_MATHJAX is set to YES.
 
-MATHJAX_VERSION        = MathJax_2
+MATHJAX_VERSION        = MathJax_3
 
 # When MathJax is enabled you can set the default output format to be used for
 # the MathJax output. For more details about the output format see MathJax
@@ -2222,21 +2226,26 @@ MACRO_EXPANSION        = YES
 # The default value is: NO.
 # This tag requires that the tag ENABLE_PREPROCESSING is set to YES.
 
-EXPAND_ONLY_PREDEF     = YES
+EXPAND_ONLY_PREDEF     = NO
 
 # If the SEARCH_INCLUDES tag is set to YES, the include files in the
 # INCLUDE_PATH will be searched if a #include is found.
 # The default value is: YES.
 # This tag requires that the tag ENABLE_PREPROCESSING is set to YES.
 
-SEARCH_INCLUDES        = NO
+SEARCH_INCLUDES        = YES
 
 # The INCLUDE_PATH tag can be used to specify one or more directories that
 # contain include files that are not input files but should be processed by the
 # preprocessor.
 # This tag requires that the tag SEARCH_INCLUDES is set to YES.
 
-INCLUDE_PATH           =
+INCLUDE_PATH           = ../../core/base/inc ../../core/meta/inc \
+                         ../../bindings/r/inc ../../interpreter/llvm/src/tools/clang/include \
+                         ../../graf2d/graf/inc ../../graf2d/gpadv7/inc ../../tmva/tmva/inc \
+                         ../../hist/hist/inc ../../io/io/inc \
+                         ../../tree/tree/inc ../../roofit/roostats/inc \
+                         ../../roofit/histfactory/inc ../../roofit/roofitcore/inc
 
 # You can use the INCLUDE_FILE_PATTERNS tag to specify one or more wildcard
 # patterns (like *.h and *.hpp) to filter out the header-files in the
@@ -2254,14 +2263,12 @@ INCLUDE_FILE_PATTERNS  =
 # recursively expanded use the := operator instead of the = operator.
 # This tag requires that the tag ENABLE_PREPROCESSING is set to YES.
 
-PREDEFINED             = "ClassDef(x,y)=//" \
-                         ClassImp(x)=// \
-                         ClassImpQ(x)=// \
-                         templateClassImp(x)=// \
-                         NamespaceImp(x)=// \
-                         R__CLING_PTRCHECK \
+PREDEFINED             = R__CLING_PTRCHECK \
                          R__USE_IMT \
-                         R__SUGGEST_ALTERNATIVE(x)=
+                         R__SUGGEST_ALTERNATIVE(x)= \
+                         __attribute__(x)= \
+                         __declspec(x)= \
+                         __pragma(x)=
 
 # If the MACRO_EXPANSION and EXPAND_ONLY_PREDEF tags are set to YES then this
 # tag can be used to specify a list of macro names that should be expanded. The
@@ -2280,7 +2287,7 @@ EXPAND_AS_DEFINED      =
 # The default value is: YES.
 # This tag requires that the tag ENABLE_PREPROCESSING is set to YES.
 
-SKIP_FUNCTION_MACROS   = YES
+SKIP_FUNCTION_MACROS   = NO
 
 #---------------------------------------------------------------------------
 # Configuration options related to external references
@@ -2644,7 +2651,7 @@ DOT_TRANSPARENT        = NO
 # The default value is: NO.
 # This tag requires that the tag HAVE_DOT is set to YES.
 
-DOT_MULTI_TARGETS      = NO
+DOT_MULTI_TARGETS      = YES
 
 # If the GENERATE_LEGEND tag is set to YES doxygen will generate a legend page
 # explaining the meaning of the various boxes and arrows in the dot generated

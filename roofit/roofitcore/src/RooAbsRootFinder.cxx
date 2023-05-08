@@ -23,8 +23,6 @@ RooAbsRootFinder is the abstract interface for finding roots of real-valued
 1-dimensional function that implements the RooAbsFunc interface.
 **/
 
-#include "RooFit.h"
-
 #include "RooAbsRootFinder.h"
 #include "RooAbsFunc.h"
 #include "RooMsgService.h"
@@ -43,8 +41,8 @@ RooAbsRootFinder::RooAbsRootFinder(const RooAbsFunc& function) :
   _function(&function), _valid(function.isValid())
 {
   if(_function->getDimension() != 1) {
-    oocoutE((TObject*)0,Eval) << "RooAbsRootFinder:: cannot find roots for function of dimension "
-			      << _function->getDimension() << endl;
-    _valid= kFALSE;
+    oocoutE(nullptr,Eval) << "RooAbsRootFinder:: cannot find roots for function of dimension "
+               << _function->getDimension() << endl;
+    _valid= false;
   }
 }

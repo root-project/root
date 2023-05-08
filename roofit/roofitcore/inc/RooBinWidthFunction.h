@@ -22,8 +22,6 @@
 #include "RooTemplateProxy.h"
 #include "RooHistFunc.h"
 
-namespace BatchHelpers { struct RunContext; }
-
 class RooBinWidthFunction : public RooAbsReal {
   static bool _enabled;
   
@@ -53,10 +51,10 @@ public:
     _histFunc("HistFuncForBinWidth", this, other._histFunc),
     _divideByBinWidth(other._divideByBinWidth) { }
 
-  virtual ~RooBinWidthFunction() { }
+  ~RooBinWidthFunction() override { }
 
   /// Copy the object and return as TObject*.
-  virtual TObject* clone(const char* newname = nullptr) const override {
+  TObject* clone(const char* newname = nullptr) const override {
     return new RooBinWidthFunction(*this, newname);
   }
 
@@ -66,16 +64,16 @@ public:
     return _histFunc->isBinnedDistribution(obs);
   }
   /// Return bin boundaries of internal RooHistFunc.
-  std::list<Double_t>* binBoundaries(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const override {
+  std::list<double>* binBoundaries(RooAbsRealLValue& obs, double xlo, double xhi) const override {
     return _histFunc->binBoundaries(obs, xlo, xhi);
   }
   /// Return plotSamplingHint of internal RooHistFunc.
-  std::list<Double_t>* plotSamplingHint(RooAbsRealLValue& obs, Double_t xlo, Double_t xhi) const override {
+  std::list<double>* plotSamplingHint(RooAbsRealLValue& obs, double xlo, double xhi) const override {
     return _histFunc->plotSamplingHint(obs, xlo, xhi);
   }
 
   bool divideByBinWidth() const { return _divideByBinWidth; }
-  const RooHistFunc& histFunc() const { return (*_histFunc); }  
+  const RooHistFunc& histFunc() const { return (*_histFunc); }
   double evaluate() const override;
   void computeBatch(cudaStream_t*, double* output, size_t size, RooFit::Detail::DataMap const&) const override;
 

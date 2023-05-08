@@ -71,7 +71,7 @@ class RooFIterForLinkedList final : public GenericRooFIter
   }
 
  private:
-    const RooLinkedListElem * fPtr{nullptr};  //! Next link element
+    const RooLinkedListElem * fPtr{nullptr};  ///<! Next link element
 };
 
 
@@ -88,7 +88,7 @@ class RooFIterForLinkedList final : public GenericRooFIter
 ///
 /// With an iterator that counts, only inserting before or at the iterator position will create problems.
 /// deal with reallocations while iterating. Therefore, this iterator will also check that the last element
-/// it was pointing to is the the current element when it is invoked again. This ensures that
+/// it was pointing to is the current element when it is invoked again. This ensures that
 /// inserting or removing before this iterator does not happen, which was possible with
 /// the linked list iterators of RooFit.
 /// When NDEBUG is defined, these checks will disappear.
@@ -181,9 +181,9 @@ private:
   }
 
 
-  const STLContainer & fSTLContainer; //!
-  std::size_t fIndex; //!
-  const RooAbsArg * fCurrentElem; //!
+  const STLContainer & fSTLContainer; ///<!
+  std::size_t fIndex; ///<!
+  const RooAbsArg * fCurrentElem; ///<!
 };
 
 
@@ -248,7 +248,7 @@ public:
   RooLinkedListIterImpl(const RooLinkedList* list, bool forward) :
     RooLinkedListIterImpl(list, forward ? list->_first : list->_last, forward) {}
 
-  TIterator& operator=(const TIterator& other) {
+  TIterator& operator=(const TIterator& other) override {
 
     // Iterator assignment operator
 
@@ -262,12 +262,12 @@ public:
     return *this ;
   }
 
-  virtual const TCollection *GetCollection() const {
+  const TCollection *GetCollection() const override {
     // Dummy
-    return 0 ;
+    return nullptr ;
   }
 
-  virtual TObject *Next() {
+  TObject *Next() override {
     // Return next element in collection
     return NextNV();
   }
@@ -280,12 +280,12 @@ public:
     return arg ;
   }
 
-  virtual void Reset() {
+  void Reset() override {
     // Return iterator to first element in collection
     _ptr = _forward ? _list->_first : _list->_last ;
   }
 
-  bool operator!=(const TIterator &aIter) const {
+  bool operator!=(const TIterator &aIter) const override {
     const RooLinkedListIterImpl *iter(dynamic_cast<const RooLinkedListIterImpl*>(&aIter));
     if (iter) return (_ptr != iter->_ptr);
     return false; // for base class we don't implement a comparison
@@ -295,7 +295,7 @@ public:
     return _ptr != aIter._ptr;
   }
 
-  virtual TObject *operator*() const {
+  TObject *operator*() const override {
     // Return element iterator points to
     return _ptr ? _ptr->_arg : nullptr;
   }
@@ -312,9 +312,9 @@ public:
   }
 
 protected:
-  const RooLinkedList* _list ;     //! Collection iterated over
-  const RooLinkedListElem* _ptr ;  //! Next link element
-  bool _forward ;                  //!  Iterator direction
+  const RooLinkedList* _list ;     ///<! Collection iterated over
+  const RooLinkedListElem* _ptr ;  ///<! Next link element
+  bool _forward ;                  ///<!  Iterator direction
 };
 
 

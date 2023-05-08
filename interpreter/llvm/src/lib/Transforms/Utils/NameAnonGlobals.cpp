@@ -12,9 +12,9 @@
 //===----------------------------------------------------------------------===//
 
 #include "llvm/Transforms/Utils/NameAnonGlobals.h"
-
 #include "llvm/ADT/SmallString.h"
 #include "llvm/IR/Module.h"
+#include "llvm/InitializePasses.h"
 #include "llvm/Support/MD5.h"
 #include "llvm/Transforms/Utils/ModuleUtils.h"
 
@@ -55,7 +55,7 @@ public:
     Hasher.final(Hash);
     SmallString<32> Result;
     MD5::stringifyResult(Hash, Result);
-    TheHash = Result.str();
+    TheHash = std::string(Result.str());
     return TheHash;
   }
 };

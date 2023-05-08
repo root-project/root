@@ -12,7 +12,6 @@ Check the tutorial rs302_JeffreysPriorDemo.C for a demonstration with a simple P
 
 #include "RooJeffreysPrior.h"
 
-#include "RooAbsReal.h"
 #include "RooAbsPdf.h"
 #include "RooErrorHandler.h"
 #include "RooArgSet.h"
@@ -68,7 +67,7 @@ RooJeffreysPrior::RooJeffreysPrior(const char* name, const char* title,
 
   // use a different integrator by default.
   if(paramSet.getSize()==1)
-    this->specialIntegratorConfig(kTRUE)->method1D().setLabel("RooAdaptiveGaussKronrodIntegrator1D")  ;
+    this->specialIntegratorConfig(true)->method1D().setLabel("RooAdaptiveGaussKronrodIntegrator1D")  ;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -95,7 +94,7 @@ RooJeffreysPrior::~RooJeffreysPrior()
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate and return current value of self
 
-Double_t RooJeffreysPrior::evaluate() const
+double RooJeffreysPrior::evaluate() const
 {
   RooHelpers::LocalChangeMsgLevel msgLvlRAII(RooFit::WARNING);
 
@@ -108,7 +107,7 @@ Double_t RooJeffreysPrior::evaluate() const
     //and we start to clone again.
     auto& pdf = _nominal.arg();
     RooAbsPdf* clonePdf = static_cast<RooAbsPdf*>(pdf.cloneTree());
-    auto vars = clonePdf->getParameters(_obsSet);
+    std::unique_ptr<RooArgSet> vars{clonePdf->getParameters(_obsSet)};
     for (auto varTmp : *vars) {
       auto& var = static_cast<RooRealVar&>(*varTmp);
       auto range = var.getRange();
@@ -118,7 +117,7 @@ Double_t RooJeffreysPrior::evaluate() const
 
     cacheElm = new CacheElem;
     cacheElm->_pdf.reset(clonePdf);
-    cacheElm->_pdfVariables.reset(vars);
+    cacheElm->_pdfVariables = std::move(vars);
 
     _cacheMgr.setObj(nullptr, cacheElm);
   }

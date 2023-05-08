@@ -9,6 +9,7 @@
 #include "llvm/ExecutionEngine/RuntimeDyldChecker.h"
 #include "RuntimeDyldCheckerImpl.h"
 #include "llvm/ADT/STLExtras.h"
+#include "llvm/ADT/StringExtras.h"
 #include "llvm/MC/MCContext.h"
 #include "llvm/MC/MCDisassembler/MCDisassembler.h"
 #include "llvm/MC/MCInst.h"
@@ -351,7 +352,7 @@ private:
     RemainingExpr = RemainingExpr.substr(1).ltrim();
 
     uint64_t StubAddr;
-    std::string ErrorMsg = "";
+    std::string ErrorMsg;
     std::tie(StubAddr, ErrorMsg) = Checker.getStubOrGOTAddrFor(
         StubContainerName, Symbol, PCtx.IsInsideLoad, IsStubAddr);
 
@@ -380,7 +381,9 @@ private:
     RemainingExpr = RemainingExpr.substr(1).ltrim();
 
     StringRef SectionName;
-    std::tie(SectionName, RemainingExpr) = parseSymbol(RemainingExpr);
+    size_t CloseParensIdx = RemainingExpr.find(')');
+    SectionName = RemainingExpr.substr(0, CloseParensIdx).rtrim();
+    RemainingExpr = RemainingExpr.substr(CloseParensIdx).ltrim();
 
     if (!RemainingExpr.startswith(")"))
       return std::make_pair(
@@ -388,7 +391,7 @@ private:
     RemainingExpr = RemainingExpr.substr(1).ltrim();
 
     uint64_t StubAddr;
-    std::string ErrorMsg = "";
+    std::string ErrorMsg;
     std::tie(StubAddr, ErrorMsg) = Checker.getSectionAddr(
         FileName, SectionName, PCtx.IsInsideLoad);
 
@@ -667,7 +670,7 @@ private:
     ArrayRef<uint8_t> SymbolBytes(SymbolMem.bytes_begin(), SymbolMem.size());
 
     MCDisassembler::DecodeStatus S =
-        Dis->getInstruction(Inst, Size, SymbolBytes, 0, nulls(), nulls());
+        Dis->getInstruction(Inst, Size, SymbolBytes, 0, nulls());
 
     return (S == MCDisassembler::Success);
   }
@@ -704,10 +707,11 @@ bool RuntimeDyldCheckerImpl::checkAllRulesInBuffer(StringRef RulePrefix,
   bool DidAllTestsPass = true;
   unsigned NumRules = 0;
 
+  std::string CheckExpr;
   const char *LineStart = MemBuf->getBufferStart();
 
   // Eat whitespace.
-  while (LineStart != MemBuf->getBufferEnd() && std::isspace(*LineStart))
+  while (LineStart != MemBuf->getBufferEnd() && isSpace(*LineStart))
     ++LineStart;
 
   while (LineStart != MemBuf->getBufferEnd() && *LineStart != '\0') {
@@ -717,14 +721,23 @@ bool RuntimeDyldCheckerImpl::checkAllRulesInBuffer(StringRef RulePrefix,
       ++LineEnd;
 
     StringRef Line(LineStart, LineEnd - LineStart);
-    if (Line.startswith(RulePrefix)) {
-      DidAllTestsPass &= check(Line.substr(RulePrefix.size()));
-      ++NumRules;
+    if (Line.startswith(RulePrefix))
+      CheckExpr += Line.substr(RulePrefix.size()).str();
+
+    // If there's a check expr string...
+    if (!CheckExpr.empty()) {
+      // ... and it's complete then run it, otherwise remove the trailer '\'.
+      if (CheckExpr.back() != '\\') {
+        DidAllTestsPass &= check(CheckExpr);
+        CheckExpr.clear();
+        ++NumRules;
+      } else
+        CheckExpr.pop_back();
     }
 
     // Eat whitespace.
     LineStart = LineEnd;
-    while (LineStart != MemBuf->getBufferEnd() && std::isspace(*LineStart))
+    while (LineStart != MemBuf->getBufferEnd() && isSpace(*LineStart))
       ++LineStart;
   }
   return DidAllTestsPass && (NumRules != 0);
@@ -783,7 +796,7 @@ StringRef RuntimeDyldCheckerImpl::getSymbolContent(StringRef Symbol) const {
     logAllUnhandledErrors(SymInfo.takeError(), errs(), "RTDyldChecker: ");
     return StringRef();
   }
-  return SymInfo->getContent();
+  return {SymInfo->getContent().data(), SymInfo->getContent().size()};
 }
 
 std::pair<uint64_t, std::string> RuntimeDyldCheckerImpl::getSectionAddr(
@@ -851,7 +864,7 @@ RuntimeDyldChecker::RuntimeDyldChecker(
     GetGOTInfoFunction GetGOTInfo, support::endianness Endianness,
     MCDisassembler *Disassembler, MCInstPrinter *InstPrinter,
     raw_ostream &ErrStream)
-    : Impl(::llvm::make_unique<RuntimeDyldCheckerImpl>(
+    : Impl(::std::make_unique<RuntimeDyldCheckerImpl>(
           std::move(IsSymbolValid), std::move(GetSymbolInfo),
           std::move(GetSectionInfo), std::move(GetStubInfo),
           std::move(GetGOTInfo), Endianness, Disassembler, InstPrinter,

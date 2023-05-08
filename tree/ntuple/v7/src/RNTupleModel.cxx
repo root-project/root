@@ -19,6 +19,7 @@
 #include <ROOT/RNTuple.hxx>
 #include <ROOT/StringUtils.hxx>
 
+#include <atomic>
 #include <cstdlib>
 #include <memory>
 #include <utility>
@@ -36,30 +37,56 @@ void ROOT::Experimental::RNTupleModel::EnsureValidFieldName(std::string_view fie
    }
 }
 
+void ROOT::Experimental::RNTupleModel::EnsureNotFrozen() const
+{
+   if (IsFrozen())
+      throw RException(R__FAIL("invalid attempt to modify frozen model"));
+}
+
+void ROOT::Experimental::RNTupleModel::EnsureNotBare() const
+{
+   if (!fDefaultEntry)
+      throw RException(R__FAIL("invalid attempt to use default entry of bare model"));
+}
+
 ROOT::Experimental::RNTupleModel::RNTupleModel()
   : fFieldZero(std::make_unique<RFieldZero>())
-  , fDefaultEntry(std::make_unique<REntry>())
 {}
+
+std::unique_ptr<ROOT::Experimental::RNTupleModel> ROOT::Experimental::RNTupleModel::Create()
+{
+   auto model = CreateBare();
+   model->fDefaultEntry = std::unique_ptr<REntry>(new REntry());
+   return model;
+}
 
 std::unique_ptr<ROOT::Experimental::RNTupleModel> ROOT::Experimental::RNTupleModel::Clone() const
 {
-   auto cloneModel = std::make_unique<RNTupleModel>();
+   auto cloneModel = std::unique_ptr<RNTupleModel>(new RNTupleModel());
    auto cloneFieldZero = fFieldZero->Clone("");
+   cloneModel->fModelId = fModelId;
    cloneModel->fFieldZero = std::unique_ptr<RFieldZero>(static_cast<RFieldZero *>(cloneFieldZero.release()));
-   cloneModel->fDefaultEntry = cloneModel->fFieldZero->GenerateEntry();
    cloneModel->fFieldNames = fFieldNames;
    cloneModel->fDescription = fDescription;
+   if (fDefaultEntry) {
+      cloneModel->fDefaultEntry = std::unique_ptr<REntry>(new REntry(fModelId));
+      for (const auto &f : cloneModel->fFieldZero->GetSubFields()) {
+         cloneModel->fDefaultEntry->AddValue(f->GenerateValue());
+      }
+   }
    return cloneModel;
 }
 
 
 void ROOT::Experimental::RNTupleModel::AddField(std::unique_ptr<Detail::RFieldBase> field)
 {
-   if (!field) {
+   EnsureNotFrozen();
+   if (!field)
       throw RException(R__FAIL("null field"));
-   }
    EnsureValidFieldName(field->GetName());
-   fDefaultEntry->AddValue(field->GenerateValue());
+
+   if (fDefaultEntry)
+      fDefaultEntry->AddValue(field->GenerateValue());
    fFieldZero->Attach(std::move(field));
 }
 
@@ -67,18 +94,21 @@ void ROOT::Experimental::RNTupleModel::AddField(std::unique_ptr<Detail::RFieldBa
 std::shared_ptr<ROOT::Experimental::RCollectionNTupleWriter> ROOT::Experimental::RNTupleModel::MakeCollection(
    std::string_view fieldName, std::unique_ptr<RNTupleModel> collectionModel)
 {
+   EnsureNotFrozen();
    EnsureValidFieldName(fieldName);
    if (!collectionModel) {
       throw RException(R__FAIL("null collectionModel"));
    }
    auto collectionNTuple = std::make_shared<RCollectionNTupleWriter>(std::move(collectionModel->fDefaultEntry));
    auto field = std::make_unique<RCollectionField>(fieldName, collectionNTuple, std::move(collectionModel));
-   fDefaultEntry->CaptureValue(field->CaptureValue(collectionNTuple->GetOffsetPtr()));
+   if (fDefaultEntry)
+      fDefaultEntry->CaptureValue(field->CaptureValue(collectionNTuple->GetOffsetPtr()));
    fFieldZero->Attach(std::move(field));
    return collectionNTuple;
 }
 
-ROOT::Experimental::Detail::RFieldBase *ROOT::Experimental::RNTupleModel::GetField(std::string_view fieldName)
+const ROOT::Experimental::Detail::RFieldBase *
+ROOT::Experimental::RNTupleModel::GetField(std::string_view fieldName) const
 {
    if (fieldName.empty())
       return nullptr;
@@ -99,13 +129,51 @@ ROOT::Experimental::Detail::RFieldBase *ROOT::Experimental::RNTupleModel::GetFie
    return field;
 }
 
-std::unique_ptr<ROOT::Experimental::REntry> ROOT::Experimental::RNTupleModel::CreateEntry()
+ROOT::Experimental::REntry *ROOT::Experimental::RNTupleModel::GetDefaultEntry() const
 {
-   auto entry = std::make_unique<REntry>();
-   for (auto& f : *fFieldZero) {
-      if (f.GetParent() != GetFieldZero())
-         continue;
-      entry->AddValue(f.GenerateValue());
+   if (!IsFrozen())
+      throw RException(R__FAIL("invalid attempt to get default entry of unfrozen model"));
+   EnsureNotBare();
+   return fDefaultEntry.get();
+}
+
+std::unique_ptr<ROOT::Experimental::REntry> ROOT::Experimental::RNTupleModel::CreateEntry() const
+{
+   if (!IsFrozen())
+      throw RException(R__FAIL("invalid attempt to create entry of unfrozen model"));
+
+   auto entry = std::unique_ptr<REntry>(new REntry(fModelId));
+   for (const auto &f : fFieldZero->GetSubFields()) {
+      entry->AddValue(f->GenerateValue());
    }
    return entry;
+}
+
+std::unique_ptr<ROOT::Experimental::REntry> ROOT::Experimental::RNTupleModel::CreateBareEntry() const
+{
+   if (!IsFrozen())
+      throw RException(R__FAIL("invalid attempt to create entry of unfrozen model"));
+
+   auto entry = std::unique_ptr<REntry>(new REntry(fModelId));
+   for (const auto &f : fFieldZero->GetSubFields()) {
+      entry->CaptureValue(f->CaptureValue(nullptr));
+   }
+   return entry;
+}
+
+void ROOT::Experimental::RNTupleModel::Freeze()
+{
+   if (IsFrozen())
+      return;
+
+   static std::atomic<std::uint64_t> gLastModelId = 0;
+   fModelId = ++gLastModelId;
+   if (fDefaultEntry)
+      fDefaultEntry->fModelId = fModelId;
+}
+
+void ROOT::Experimental::RNTupleModel::SetDescription(std::string_view description)
+{
+   EnsureNotFrozen();
+   fDescription = std::string(description);
 }

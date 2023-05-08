@@ -293,8 +293,8 @@ protected:
    struct TF1FunctorPointerImpl: TF1FunctorPointer {
       TF1FunctorPointerImpl(const ROOT::Math::ParamFunctorTempl<T> &func): fImpl(func) {};
       TF1FunctorPointerImpl(const std::function<T(const T *f, const Double_t *param)> &func) : fImpl(func){};
-      virtual ~TF1FunctorPointerImpl() {}
-      virtual  TF1FunctorPointer * Clone() const { return new TF1FunctorPointerImpl<T>(fImpl); }
+      ~TF1FunctorPointerImpl() override {}
+       TF1FunctorPointer * Clone() const override { return new TF1FunctorPointerImpl<T>(fImpl); }
       ROOT::Math::ParamFunctorTempl<T> fImpl;
    };
 
@@ -343,13 +343,18 @@ public:
    ////////////////////////////////////////////////////////////////////////////////
    /// Constructor using a pointer to function.
    ///
-   /// \param npar is the number of free parameters used by the function
+   /// \param[in] name object name
+   /// \param[in] fcn pointer to function
+   /// \param[in] xmin,xmax x axis limits
+   /// \param[in] npar is the number of free parameters used by the function
+   /// \param[in] ndim number of dimensions
+   /// \param[in] addToGlobList boolean marking if it should be added to global list
    ///
    /// This constructor creates a function of type C when invoked
    /// with the normal C++ compiler.
    ///
    ///
-   /// WARNING! A function created with this constructor cannot be Cloned
+   /// \warning A function created with this constructor cannot be Cloned
 
 
    template <class T>
@@ -406,7 +411,7 @@ public:
 
    TF1(const TF1 &f1);
    TF1 &operator=(const TF1 &rhs);
-   virtual   ~TF1();
+     ~TF1() override;
    virtual void     AddParameter(const TString &name, Double_t value)
    {
       if (fFormula) fFormula->AddParameter(name, value);
@@ -416,26 +421,26 @@ public:
    // virtual void     AddVariables(const TString *vars, Int_t size) { if (fFormula) fFormula->AddVariables(vars,size); }
    virtual Bool_t   AddToGlobalList(Bool_t on = kTRUE);
    static  Bool_t   DefaultAddToGlobalList(Bool_t on = kTRUE);
-   virtual void     Browse(TBrowser *b);
-   virtual void     Copy(TObject &f1) const;
-   TObject*         Clone(const char* newname=0) const;
-   virtual Double_t Derivative(Double_t x, Double_t *params = 0, Double_t epsilon = 0.001) const;
-   virtual Double_t Derivative2(Double_t x, Double_t *params = 0, Double_t epsilon = 0.001) const;
-   virtual Double_t Derivative3(Double_t x, Double_t *params = 0, Double_t epsilon = 0.001) const;
+   void     Browse(TBrowser *b) override;
+   void     Copy(TObject &f1) const override;
+   TObject         *Clone(const char *newname = nullptr) const override;
+   virtual Double_t Derivative(Double_t x, Double_t *params = nullptr, Double_t epsilon = 0.001) const;
+   virtual Double_t Derivative2(Double_t x, Double_t *params = nullptr, Double_t epsilon = 0.001) const;
+   virtual Double_t Derivative3(Double_t x, Double_t *params = nullptr, Double_t epsilon = 0.001) const;
    static  Double_t DerivativeError();
-   virtual Int_t    DistancetoPrimitive(Int_t px, Int_t py);
-   virtual void     Draw(Option_t *option = "");
+   Int_t    DistancetoPrimitive(Int_t px, Int_t py) override;
+   void     Draw(Option_t *option = "") override;
    virtual TF1     *DrawCopy(Option_t *option = "") const;
    virtual TObject *DrawDerivative(Option_t *option = "al"); // *MENU*
    virtual TObject *DrawIntegral(Option_t *option = "al"); // *MENU*
    virtual void     DrawF1(Double_t xmin, Double_t xmax, Option_t *option = "");
    virtual Double_t Eval(Double_t x, Double_t y = 0, Double_t z = 0, Double_t t = 0) const;
    //template <class T> T Eval(T x, T y = 0, T z = 0, T t = 0) const;
-   virtual Double_t EvalPar(const Double_t *x, const Double_t *params = 0);
-   template <class T> T EvalPar(const T *x, const Double_t *params = 0);
+   virtual Double_t EvalPar(const Double_t *x, const Double_t *params = nullptr);
+   template <class T> T EvalPar(const T *x, const Double_t *params = nullptr);
    virtual Double_t operator()(Double_t x, Double_t y = 0, Double_t z = 0, Double_t t = 0) const;
    template <class T> T operator()(const T *x, const Double_t *params = nullptr);
-   virtual void     ExecuteEvent(Int_t event, Int_t px, Int_t py);
+   void     ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
    virtual void     FixParameter(Int_t ipar, Double_t value);
    bool      IsVectorized()
    {
@@ -460,7 +465,7 @@ public:
    }
    virtual TString  GetExpFormula(Option_t *option = "") const
    {
-      return (fFormula) ? fFormula->GetExpFormula(option) : "";
+      return (fFormula) ? fFormula->GetExpFormula(option) : TString();
    }
    virtual const TObject *GetLinearPart(Int_t i) const
    {
@@ -504,7 +509,7 @@ public:
    {
       return fNpfits;
    }
-   virtual char    *GetObjectInfo(Int_t px, Int_t py) const;
+   char    *GetObjectInfo(Int_t px, Int_t py) const override;
    TObject    *GetParent() const
    {
       return fParent;
@@ -580,10 +585,10 @@ public:
    static  void     InitStandardFunctions();
    virtual Double_t Integral(Double_t a, Double_t b, Double_t epsrel = 1.e-12);
    virtual Double_t IntegralOneDim(Double_t a, Double_t b, Double_t epsrel, Double_t epsabs, Double_t &err);
-   virtual Double_t IntegralError(Double_t a, Double_t b, const Double_t *params = 0, const Double_t *covmat = 0, Double_t epsilon = 1.E-2);
-   virtual Double_t IntegralError(Int_t n, const Double_t *a, const Double_t *b, const Double_t *params = 0, const Double_t *covmat = 0, Double_t epsilon = 1.E-2);
-   // virtual Double_t IntegralFast(const TGraph *g, Double_t a, Double_t b, Double_t *params=0);
-   virtual Double_t IntegralFast(Int_t num, Double_t *x, Double_t *w, Double_t a, Double_t b, Double_t *params = 0, Double_t epsilon = 1e-12);
+   virtual Double_t IntegralError(Double_t a, Double_t b, const Double_t *params = nullptr, const Double_t *covmat = nullptr, Double_t epsilon = 1.E-2);
+   virtual Double_t IntegralError(Int_t n, const Double_t *a, const Double_t *b, const Double_t *params = nullptr, const Double_t *covmat = nullptr, Double_t epsilon = 1.E-2);
+   // virtual Double_t IntegralFast(const TGraph *g, Double_t a, Double_t b, Double_t *params = nullptr);
+   virtual Double_t IntegralFast(Int_t num, Double_t *x, Double_t *w, Double_t a, Double_t b, Double_t *params = nullptr, Double_t epsilon = 1e-12);
    virtual Double_t IntegralMultiple(Int_t n, const Double_t *a, const Double_t *b, Int_t maxpts, Double_t epsrel, Double_t epsabs , Double_t &relerr, Int_t &nfnevl, Int_t &ifail);
    virtual Double_t IntegralMultiple(Int_t n, const Double_t *a, const Double_t *b, Int_t /*minpts*/, Int_t maxpts, Double_t epsrel, Double_t &relerr, Int_t &nfnevl, Int_t &ifail)
    {
@@ -604,16 +609,16 @@ public:
       return (fFormula) ? fFormula->IsLinear() : false;
    }
    virtual Bool_t   IsValid() const;
-   virtual void     Print(Option_t *option = "") const;
-   virtual void     Paint(Option_t *option = "");
+   void     Print(Option_t *option = "") const override;
+   void     Paint(Option_t *option = "") override;
    virtual void     ReleaseParameter(Int_t ipar);
    virtual void     Save(Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin, Double_t zmax);
-   virtual void     SavePrimitive(std::ostream &out, Option_t *option = "");
+   void     SavePrimitive(std::ostream &out, Option_t *option = "") override;
    virtual void     SetChisquare(Double_t chi2)
    {
       fChisquare = chi2;
    }
-   virtual void     SetFitResult(const ROOT::Fit::FitResult &result, const Int_t *indpar = 0);
+   virtual void     SetFitResult(const ROOT::Fit::FitResult &result, const Int_t *indpar = nullptr);
    template <class PtrObj, typename MemFn>
    void SetFunction(PtrObj &p, MemFn memFn);
    template <typename Func>
@@ -646,9 +651,9 @@ public:
       (fFormula) ? fFormula->SetParameters(params) : fParams->SetParameters(params);
       Update();
    }
-   virtual void     SetParameters(Double_t p0, Double_t p1, Double_t p2 = 0, Double_t p3 = 0, Double_t p4 = 0,
-                                  Double_t p5 = 0, Double_t p6 = 0, Double_t p7 = 0, Double_t p8 = 0,
-                                  Double_t p9 = 0, Double_t p10 = 0)
+   virtual void     SetParameters(double p0, double p1 = 0.0, double p2 = 0.0, double p3 = 0.0, double p4 = 0.0,
+                                  double p5 = 0.0, double p6 = 0.0, double p7 = 0.0, double p8 = 0.0,
+                                  double p9 = 0.0, double p10 = 0.0)
    {
       if (fFormula) fFormula->SetParameters(p0, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10);
       else          fParams->SetParameters(p0, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10);
@@ -662,7 +667,7 @@ public:
    virtual void     SetParError(Int_t ipar, Double_t error);
    virtual void     SetParErrors(const Double_t *errors);
    virtual void     SetParLimits(Int_t ipar, Double_t parmin, Double_t parmax);
-   virtual void     SetParent(TObject *p = 0)
+   virtual void     SetParent(TObject *p = nullptr)
    {
       fParent = p;
    }
@@ -670,7 +675,7 @@ public:
    virtual void     SetRange(Double_t xmin, Double_t ymin,  Double_t xmax, Double_t ymax);
    virtual void     SetRange(Double_t xmin, Double_t ymin, Double_t zmin,  Double_t xmax, Double_t ymax, Double_t zmax);
    virtual void     SetSavedPoint(Int_t point, Double_t value);
-   virtual void     SetTitle(const char *title = ""); // *MENU*
+   void     SetTitle(const char *title = "") override; // *MENU*
    virtual void     SetVectorized(Bool_t vectorized)
    {
       if (fType == EFType::kFormula && fFormula)
@@ -687,13 +692,13 @@ public:
    static  void     SetCurrent(TF1 *f1);
 
    //Moments
-   virtual Double_t Moment(Double_t n, Double_t a, Double_t b, const Double_t *params = 0, Double_t epsilon = 0.000001);
-   virtual Double_t CentralMoment(Double_t n, Double_t a, Double_t b, const Double_t *params = 0, Double_t epsilon = 0.000001);
-   virtual Double_t Mean(Double_t a, Double_t b, const Double_t *params = 0, Double_t epsilon = 0.000001)
+   virtual Double_t Moment(Double_t n, Double_t a, Double_t b, const Double_t *params = nullptr, Double_t epsilon = 0.000001);
+   virtual Double_t CentralMoment(Double_t n, Double_t a, Double_t b, const Double_t *params = nullptr, Double_t epsilon = 0.000001);
+   virtual Double_t Mean(Double_t a, Double_t b, const Double_t *params = nullptr, Double_t epsilon = 0.000001)
    {
       return Moment(1, a, b, params, epsilon);
    }
-   virtual Double_t Variance(Double_t a, Double_t b, const Double_t *params = 0, Double_t epsilon = 0.000001)
+   virtual Double_t Variance(Double_t a, Double_t b, const Double_t *params = nullptr, Double_t epsilon = 0.000001)
    {
       return CentralMoment(2, a, b, params, epsilon);
    }
@@ -711,7 +716,7 @@ private:
    inline double EvalParVec(const Double_t *data, const Double_t *params);
 #endif
 
-   ClassDef(TF1, 12) // The Parametric 1-D function
+   ClassDefOverride(TF1, 12) // The Parametric 1-D function
 };
 
 namespace ROOT {

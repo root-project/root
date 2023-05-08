@@ -23,86 +23,61 @@ public:
   void emit(raw_ostream &OS);
 
 private:
-  void emitTargetIndependentEnums(raw_ostream &OS);
-  void emitConversionFn(raw_ostream &OS);
+  void emitTargetIndependentNames(raw_ostream &OS);
   void emitFnAttrCompatCheck(raw_ostream &OS, bool IsStringAttr);
-
-  void printEnumAttrClasses(raw_ostream &OS,
-                            const std::vector<Record *> &Records);
-  void printStrBoolAttrClasses(raw_ostream &OS,
-                               const std::vector<Record *> &Records);
+  void emitAttributeProperties(raw_ostream &OF);
 
   RecordKeeper &Records;
 };
 
 } // End anonymous namespace.
 
-void Attributes::emitTargetIndependentEnums(raw_ostream &OS) {
+void Attributes::emitTargetIndependentNames(raw_ostream &OS) {
+  OS << "#ifdef GET_ATTR_NAMES\n";
+  OS << "#undef GET_ATTR_NAMES\n";
+
+  OS << "#ifndef ATTRIBUTE_ALL\n";
+  OS << "#define ATTRIBUTE_ALL(FIRST, SECOND)\n";
+  OS << "#endif\n\n";
+
+  auto Emit = [&](ArrayRef<StringRef> KindNames, StringRef MacroName) {
+    OS << "#ifndef " << MacroName << "\n";
+    OS << "#define " << MacroName
+       << "(FIRST, SECOND) ATTRIBUTE_ALL(FIRST, SECOND)\n";
+    OS << "#endif\n\n";
+    for (StringRef KindName : KindNames) {
+      for (auto A : Records.getAllDerivedDefinitions(KindName)) {
+        OS << MacroName << "(" << A->getName() << ","
+           << A->getValueAsString("AttrString") << ")\n";
+      }
+    }
+    OS << "#undef " << MacroName << "\n\n";
+  };
+
+  // Emit attribute enums in the same order llvm::Attribute::operator< expects.
+  Emit({"EnumAttr", "TypeAttr", "IntAttr"}, "ATTRIBUTE_ENUM");
+  Emit({"StrBoolAttr"}, "ATTRIBUTE_STRBOOL");
+
+  OS << "#undef ATTRIBUTE_ALL\n";
+  OS << "#endif\n\n";
+
   OS << "#ifdef GET_ATTR_ENUM\n";
   OS << "#undef GET_ATTR_ENUM\n";
-
-  std::vector<Record*> Attrs =
-      Records.getAllDerivedDefinitions("EnumAttr");
-
-  for (auto A : Attrs)
-    OS << A->getName() << ",\n";
-
-  OS << "#endif\n";
-}
-
-void Attributes::emitConversionFn(raw_ostream &OS) {
-  OS << "#ifdef GET_ATTR_KIND_FROM_NAME\n";
-  OS << "#undef GET_ATTR_KIND_FROM_NAME\n";
-
-  std::vector<Record*> Attrs =
-      Records.getAllDerivedDefinitions("EnumAttr");
-
-  OS << "static Attribute::AttrKind getAttrKindFromName(StringRef AttrName) {\n";
-  OS << "  return StringSwitch<Attribute::AttrKind>(AttrName)\n";
-
-  for (auto A : Attrs) {
-    OS << "    .Case(\"" << A->getValueAsString("AttrString");
-    OS << "\", Attribute::" << A->getName() << ")\n";
+  unsigned Value = 1; // Leave zero for AttrKind::None.
+  for (StringRef KindName : {"EnumAttr", "TypeAttr", "IntAttr"}) {
+    OS << "First" << KindName << " = " << Value << ",\n";
+    for (auto A : Records.getAllDerivedDefinitions(KindName)) {
+      OS << A->getName() << " = " << Value << ",\n";
+      Value++;
+    }
+    OS << "Last" << KindName << " = " << (Value - 1) << ",\n";
   }
-
-  OS << "    .Default(Attribute::None);\n";
-  OS << "}\n\n";
-
-  OS << "#endif\n";
+  OS << "#endif\n\n";
 }
 
 void Attributes::emitFnAttrCompatCheck(raw_ostream &OS, bool IsStringAttr) {
   OS << "#ifdef GET_ATTR_COMPAT_FUNC\n";
   OS << "#undef GET_ATTR_COMPAT_FUNC\n";
-
-  OS << "struct EnumAttr {\n";
-  OS << "  static bool isSet(const Function &Fn,\n";
-  OS << "                    Attribute::AttrKind Kind) {\n";
-  OS << "    return Fn.hasFnAttribute(Kind);\n";
-  OS << "  }\n\n";
-  OS << "  static void set(Function &Fn,\n";
-  OS << "                  Attribute::AttrKind Kind, bool Val) {\n";
-  OS << "    if (Val)\n";
-  OS << "      Fn.addFnAttr(Kind);\n";
-  OS << "    else\n";
-  OS << "      Fn.removeFnAttr(Kind);\n";
-  OS << "  }\n";
-  OS << "};\n\n";
-
-  OS << "struct StrBoolAttr {\n";
-  OS << "  static bool isSet(const Function &Fn,\n";
-  OS << "                    StringRef Kind) {\n";
-  OS << "    auto A = Fn.getFnAttribute(Kind);\n";
-  OS << "    return A.getValueAsString().equals(\"true\");\n";
-  OS << "  }\n\n";
-  OS << "  static void set(Function &Fn,\n";
-  OS << "                  StringRef Kind, bool Val) {\n";
-  OS << "    Fn.addFnAttr(Kind, Val ? \"true\" : \"false\");\n";
-  OS << "  }\n";
-  OS << "};\n\n";
-
-  printEnumAttrClasses(OS ,Records.getAllDerivedDefinitions("EnumAttr"));
-  printStrBoolAttrClasses(OS , Records.getAllDerivedDefinitions("StrBoolAttr"));
 
   OS << "static inline bool hasCompatibleFnAttrs(const Function &Caller,\n"
      << "                                        const Function &Callee) {\n";
@@ -135,36 +110,26 @@ void Attributes::emitFnAttrCompatCheck(raw_ostream &OS, bool IsStringAttr) {
   OS << "#endif\n";
 }
 
-void Attributes::printEnumAttrClasses(raw_ostream &OS,
-                                      const std::vector<Record *> &Records) {
-  OS << "// EnumAttr classes\n";
-  for (const auto *R : Records) {
-    OS << "struct " << R->getName() << "Attr : EnumAttr {\n";
-    OS << "  static enum Attribute::AttrKind getKind() {\n";
-    OS << "    return llvm::Attribute::" << R->getName() << ";\n";
-    OS << "  }\n";
-    OS << "};\n";
+void Attributes::emitAttributeProperties(raw_ostream &OS) {
+  OS << "#ifdef GET_ATTR_PROP_TABLE\n";
+  OS << "#undef GET_ATTR_PROP_TABLE\n";
+  OS << "static const uint8_t AttrPropTable[] = {\n";
+  for (StringRef KindName : {"EnumAttr", "TypeAttr", "IntAttr"}) {
+    for (auto A : Records.getAllDerivedDefinitions(KindName)) {
+      OS << "0";
+      for (Init *P : *A->getValueAsListInit("Properties"))
+        OS << " | AttributeProperty::" << cast<DefInit>(P)->getDef()->getName();
+      OS << ",\n";
+    }
   }
-  OS << "\n";
-}
-
-void Attributes::printStrBoolAttrClasses(raw_ostream &OS,
-                                         const std::vector<Record *> &Records) {
-  OS << "// StrBoolAttr classes\n";
-  for (const auto *R : Records) {
-    OS << "struct " << R->getName() << "Attr : StrBoolAttr {\n";
-    OS << "  static StringRef getKind() {\n";
-    OS << "    return \"" << R->getValueAsString("AttrString") << "\";\n";
-    OS << "  }\n";
-    OS << "};\n";
-  }
-  OS << "\n";
+  OS << "};\n";
+  OS << "#endif\n";
 }
 
 void Attributes::emit(raw_ostream &OS) {
-  emitTargetIndependentEnums(OS);
-  emitConversionFn(OS);
+  emitTargetIndependentNames(OS);
   emitFnAttrCompatCheck(OS, false);
+  emitAttributeProperties(OS);
 }
 
 namespace llvm {

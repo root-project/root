@@ -75,16 +75,16 @@ namespace TMVA {
       // special case: signal/background
 
       // Data input related
-      void SetInputTrees( const TString& signalFileName, const TString& backgroundFileName, 
+      void SetInputTrees( const TString& signalFileName, const TString& backgroundFileName,
                           Double_t signalWeight=1.0, Double_t backgroundWeight=1.0 );
       void SetInputTrees( TTree* inputTree, const TCut& SigCut, const TCut& BgCut );
       // Set input trees  at once
-      void SetInputTrees( TTree* signal, TTree* background, 
+      void SetInputTrees( TTree* signal, TTree* background,
                           Double_t signalWeight=1.0, Double_t backgroundWeight=1.0) ;
 
       void AddSignalTree( TTree* signal,    Double_t weight=1.0, Types::ETreeType treetype = Types::kMaxTreeType );
       void AddSignalTree( TString datFileS, Double_t weight=1.0, Types::ETreeType treetype = Types::kMaxTreeType );
-      void AddSignalTree( TTree* signal, Double_t weight, const TString& treetype );      
+      void AddSignalTree( TTree* signal, Double_t weight, const TString& treetype );
 
       // ... depreciated, kept for backwards compatibility
       void SetSignalTree( TTree* signal, Double_t weight=1.0);
@@ -100,22 +100,22 @@ namespace TMVA {
       void SetBackgroundWeightExpression( const TString& variable );
 
       // special case: regression
-      void AddRegressionTree( TTree* tree, Double_t weight = 1.0,  
-                              Types::ETreeType treetype = Types::kMaxTreeType ) { 
-         AddTree( tree, "Regression", weight, "", treetype ); 
+      void AddRegressionTree( TTree* tree, Double_t weight = 1.0,
+                              Types::ETreeType treetype = Types::kMaxTreeType ) {
+         AddTree( tree, "Regression", weight, "", treetype );
       }
 
       // general
 
       // Data input related
-      void SetTree( TTree* tree, const TString& className, Double_t weight ); // depreciated
+      void SetTree( TTree* tree, const TString& className, Double_t weight ); ///< deprecated
       void AddTree( TTree* tree, const TString& className, Double_t weight=1.0,
                     const TCut& cut = "",
                     Types::ETreeType tt = Types::kMaxTreeType );
       void AddTree( TTree* tree, const TString& className, Double_t weight, const TCut& cut, const TString& treeType );
 
       // set input variable
-      void SetInputVariables  ( std::vector<TString>* theVariables ); // deprecated
+      void SetInputVariables  ( std::vector<TString>* theVariables ); ///< deprecated
 
       void AddVariable        ( const TString& expression, const TString& title, const TString& unit,
                                 char type='F', Double_t min = 0, Double_t max = 0 );
@@ -151,10 +151,10 @@ namespace TMVA {
       void PrepareTrainingAndTestTree( const TCut& cut, const TString& splitOpt );
       void PrepareTrainingAndTestTree( TCut sigcut, TCut bkgcut, const TString& splitOpt );
 
-      // ... deprecated, kept for backwards compatibility 
+      // ... deprecated, kept for backwards compatibility
       void PrepareTrainingAndTestTree( const TCut& cut, Int_t Ntrain, Int_t Ntest = -1 );
 
-      void PrepareTrainingAndTestTree( const TCut& cut, Int_t NsigTrain, Int_t NbkgTrain, Int_t NsigTest, Int_t NbkgTest, 
+      void PrepareTrainingAndTestTree( const TCut& cut, Int_t NsigTrain, Int_t NbkgTrain, Int_t NsigTest, Int_t NbkgTest,
                                        const TString& otherOpt="SplitMode=Random:!V" );
 
       // Cross validation
@@ -165,15 +165,15 @@ namespace TMVA {
       const DataSetInfo& GetDefaultDataSetInfo(){ return DefaultDataSetInfo(); }
 
       TH2* GetCorrelationMatrix(const TString& className);
- 
+
       //Copy method use in VI and CV DEPRECATED: you can just call Clone  DataLoader *dl2=(DataLoader *)dl1->Clone("dl2")
       DataLoader* MakeCopy(TString name);
-      friend void DataLoaderCopy(TMVA::DataLoader* des, TMVA::DataLoader* src);      
+      friend void DataLoaderCopy(TMVA::DataLoader* des, TMVA::DataLoader* src);
       DataInputHandler&        DataInput() { return *fDataInputHandler; }
- 
+
    private:
 
- 
+
       DataSetInfo&             DefaultDataSetInfo();
       void                     SetInputTreesFromEventAssignTrees();
 
@@ -185,29 +185,29 @@ namespace TMVA {
 
       DataSetManager* fDataSetManager; // DSMTEST
 
- 
-      DataInputHandler*                         fDataInputHandler;//->
 
-      std::vector<TMVA::VariableTransformBase*> fDefaultTrfs;     // list of transformations on default DataSet
+      DataInputHandler*                         fDataInputHandler;  ///<->
+
+      std::vector<TMVA::VariableTransformBase*> fDefaultTrfs;       ///< list of transformations on default DataSet
 
       // cd to local directory
-      TString                                   fOptions;         // option string given by construction (presently only "V")
-      TString                                   fTransformations; // List of transformations to test
-      Bool_t                                    fVerbose;         // verbose mode
+      TString                                   fOptions;           ///< option string given by construction (presently only "V")
+      TString                                   fTransformations;   ///< List of transformations to test
+      Bool_t                                    fVerbose;           ///< verbose mode
 
       // flag determining the way training and test data are assigned to DataLoader
-      enum DataAssignType { kUndefined = 0, 
+      enum DataAssignType { kUndefined = 0,
                             kAssignTrees,
                             kAssignEvents };
-      DataAssignType                            fDataAssignType;  // flags for data assigning
-      std::vector<TTree*>                       fTrainAssignTree; // for each class: tmp tree if user wants to assign the events directly
-      std::vector<TTree*>                       fTestAssignTree;  // for each class: tmp tree if user wants to assign the events directly
+      DataAssignType                            fDataAssignType;    ///< flags for data assigning
+      std::vector<TTree*>                       fTrainAssignTree;   ///<  for each class: tmp tree if user wants to assign the events directly
+      std::vector<TTree*>                       fTestAssignTree;    ///<  for each class: tmp tree if user wants to assign the events directly
 
-      Int_t                                     fATreeType = 0;          // type of event (=classIndex)
-      Float_t                                   fATreeWeight = 0.0;        // weight of the event
-      std::vector<Float_t>                      fATreeEvent;         // event variables
-      
-      Types::EAnalysisType                      fAnalysisType;    // the training type
+      Int_t                                     fATreeType = 0;     ///<  type of event (=classIndex)
+      Float_t                                   fATreeWeight = 0.0; ///<  weight of the event
+      std::vector<Float_t>                      fATreeEvent;        ///<  event variables
+
+      Types::EAnalysisType                      fAnalysisType;      ///<  the training type
 
    protected:
 

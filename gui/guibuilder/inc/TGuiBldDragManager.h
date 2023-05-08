@@ -93,7 +93,7 @@ private:
 
 
    void           Reset1();
-   void           DrawGrabRectangles(TGWindow *win = 0);
+   void           DrawGrabRectangles(TGWindow *win = nullptr);
    void           DrawGrabRect(Int_t i, Int_t x, Int_t y);
    TGCompositeFrame *FindLayoutFrame(TGFrame *f);
    Bool_t         IsPointVisible(Int_t x, Int_t y);
@@ -146,7 +146,7 @@ private:
    void           DropCanvas(TGCanvas *canvas);
    void           PutToCanvas(TGCompositeFrame *cont);
    Bool_t         Save(const char *file = "");
-   Bool_t         SaveFrame(const char *file = 0);
+   Bool_t         SaveFrame(const char *file = nullptr);
    void           HandleLayoutOrder(Bool_t forward = kTRUE);
    void           DoResize();
    void           DoMove();
@@ -172,7 +172,7 @@ private:
    void           BreakLayout();
    void           SwitchLayout();
 
-   Bool_t         RecognizeGesture(Event_t *, TGFrame *frame = 0);
+   Bool_t         RecognizeGesture(Event_t *, TGFrame *frame = nullptr);
    Bool_t         HandleButtonPress(Event_t *);
    Bool_t         HandleButtonRelease(Event_t *);
    Bool_t         HandleButton(Event_t *);
@@ -184,7 +184,7 @@ private:
    Bool_t         HandleExpose(Event_t *);
    Bool_t         HandleConfigureNotify(Event_t *);
    Bool_t         HandleSelectionRequest(Event_t *);
-   void           HandleButon3Pressed(Event_t *, TGFrame *frame = 0);
+   void           HandleButon3Pressed(Event_t *, TGFrame *frame = nullptr);
    Bool_t         HandleEvent(Event_t *);
    Bool_t         HandleTimer(TTimer *);
 

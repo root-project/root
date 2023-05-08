@@ -26,16 +26,16 @@ public:
    {
    }
 
-   ~GaussFcn() {}
+   ~GaussFcn() override {}
 
-   virtual double Up() const { return fErrorDef; }
-   virtual double operator()(const std::vector<double> &) const;
+   double Up() const override { return fErrorDef; }
+   double operator()(const std::vector<double> &) const override;
 
    std::vector<double> Measurements() const { return fMeasurements; }
    std::vector<double> Positions() const { return fPositions; }
    std::vector<double> Variances() const { return fMVariances; }
 
-   void SetErrorDef(double def) { fErrorDef = def; }
+   void SetErrorDef(double def) override { fErrorDef = def; }
 
 private:
    std::vector<double> fMeasurements;

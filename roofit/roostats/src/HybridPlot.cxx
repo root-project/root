@@ -47,10 +47,10 @@ HybridPlot::HybridPlot(const char* name,
                        int n_bins,
                        bool verbosity):
   TNamed(name,title),
-  fSb_histo(NULL),
-  fSb_histo_shaded(NULL),
-  fB_histo(NULL),
-  fB_histo_shaded(NULL),
+  fSb_histo(nullptr),
+  fSb_histo_shaded(nullptr),
+  fB_histo(nullptr),
+  fB_histo_shaded(nullptr),
   fData_testStat_line(0),
   fLegend(0),
   fPad(0),
@@ -206,7 +206,7 @@ void HybridPlot::DumpToFile (const char* RootFileName, const char* options)
    fB_histo->Write();
 
    // The shaded histos
-   if (fB_histo_shaded!=NULL && fSb_histo_shaded!=NULL){
+   if (fB_histo_shaded!=nullptr && fSb_histo_shaded!=nullptr){
       fB_histo_shaded->Write();
       fSb_histo_shaded->Write();
    }
@@ -303,7 +303,7 @@ double* HybridPlot::GetHistoPvals (TH1* histo, double percentage){
 
    if (percentage>1){
       std::cerr << "Percentage greater or equal to 1!\n";
-      return NULL;
+      return nullptr;
    }
 
    // Get the integral of the histo
@@ -331,7 +331,7 @@ double* HybridPlot::GetHistoPvals (TH1* histo, double percentage){
    for (it = extremes_map.begin();it != extremes_map.end();++it){
       a=it->first;
       b=it->second;
-      current_diff=std::fabs(histo->GetBinContent(a)-histo->GetBinContent(b));
+      current_diff=std::abs(histo->GetBinContent(a)-histo->GetBinContent(b));
       if (current_diff<diff){
          //std::cout << "a=" << a << " b=" << b << std::endl;
          diff=current_diff;
@@ -352,7 +352,7 @@ double* HybridPlot::GetHistoPvals (TH1* histo, double percentage){
 double HybridPlot::GetMedian(TH1* histo){
 
    //int xbin_median;
-   Double_t* integral = histo->GetIntegral();
+   double* integral = histo->GetIntegral();
    int median_i = 0;
    for (int j=0;j<histo->GetNbinsX(); j++)
       if (integral[j]<0.5)

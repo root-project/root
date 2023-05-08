@@ -35,17 +35,22 @@
 ///
 /// \author Rene Brun
 
-#include "TBinomialEfficiencyFitter.h"
-#include "TVirtualFitter.h"
-#include "TH1.h"
-#include "TRandom3.h"
-#include "TF1.h"
-#include "TFitResult.h"
-#include "TStyle.h"
-#include "TCanvas.h"
-#include "TLegend.h"
-#include "TPaveStats.h"
-#include "Math/IntegratorOptions.h"
+#include <TBinomialEfficiencyFitter.h>
+#include <TVirtualFitter.h>
+#include <TH1.h>
+#include <TRandom3.h>
+#include <TF1.h>
+#include <TFitResult.h>
+#include <TStyle.h>
+#include <TCanvas.h>
+#include <TLegend.h>
+#include <TPaveStats.h>
+#include <TGraphErrors.h>
+#include <TObjArray.h>
+#include <HFitInterface.h>
+#include <Fit/BinData.h>
+#include <Math/IntegratorOptions.h>
+
 #include <cassert>
 #include <iostream>
 
@@ -80,7 +85,7 @@ void TestBinomial(int nloop = 100, int nevts = 100, bool plot = false, bool debu
    // Define (arbitrarily?) a distribution of input events.
    // Here: assume a x^(-2) distribution. Boundaries: [10, 100].
 
-   Double_t xmin =10, xmax = 100;
+   double xmin =10, xmax = 100;
    TH1D* hM2D = new TH1D("hM2D", "x^(-2) denominator distribution",
       45, xmin, xmax);
    TH1D* hM2N = new TH1D("hM2N", "x^(-2) numerator distribution",
@@ -101,9 +106,9 @@ void TestBinomial(int nloop = 100, int nevts = 100, bool plot = false, bool debu
    // First try: use a single set of parameters.
    // For each try, we need to find the overall normalization
 
-   Double_t normalization = 0.80;
-   Double_t threshold = 25.0;
-   Double_t width = 5.0;
+   double normalization = 0.80;
+   double threshold = 25.0;
+   double width = 5.0;
 
    fM2D->SetParameter(0, normalization);
    fM2D->SetParameter(1, threshold);
@@ -111,11 +116,11 @@ void TestBinomial(int nloop = 100, int nevts = 100, bool plot = false, bool debu
    fM2N->SetParameter(0, normalization);
    fM2N->SetParameter(1, threshold);
    fM2N->SetParameter(2, width);
-   Double_t integralN = fM2N->Integral(xmin, xmax);
-   Double_t integralD = fM2D->Integral(xmin, xmax);
-   Double_t fracN = integralN/(integralN+integralD);
-   Int_t nevtsN = rb.Binomial(nevts, fracN);
-   Int_t nevtsD = nevts - nevtsN;
+   double integralN = fM2N->Integral(xmin, xmax);
+   double integralD = fM2D->Integral(xmin, xmax);
+   double fracN = integralN/(integralN+integralD);
+   int nevtsN = rb.Binomial(nevts, fracN);
+   int nevtsD = nevts - nevtsN;
 
    std::cout << nevtsN << "  " << nevtsD << std::endl;
 
@@ -167,7 +172,7 @@ void TestBinomial(int nloop = 100, int nevts = 100, bool plot = false, bool debu
        cEvt->cd(2);
      }
      for (int fit = 0; fit < 2; ++fit) {
-       Int_t status = 0;
+       int status = 0;
        switch (fit) {
        case 0:
        {
@@ -237,12 +242,12 @@ void TestBinomial(int nloop = 100, int nevts = 100, bool plot = false, bool debu
 
        if (status != 0) break;
 
-       Double_t fnorm = fM2Fit->GetParameter(0);
-       Double_t enorm = fM2Fit->GetParError(0);
-       Double_t fthreshold = fM2Fit->GetParameter(1);
-       Double_t ethreshold = fM2Fit->GetParError(1);
-       Double_t fwidth = fM2Fit->GetParameter(2);
-       Double_t ewidth = fM2Fit->GetParError(2);
+       double fnorm = fM2Fit->GetParameter(0);
+       double enorm = fM2Fit->GetParError(0);
+       double fthreshold = fM2Fit->GetParameter(1);
+       double ethreshold = fM2Fit->GetParError(1);
+       double fwidth = fM2Fit->GetParameter(2);
+       double ewidth = fM2Fit->GetParError(2);
        if (fit == 1) {
           fnorm = fM2Fit2->GetParameter(0);
           enorm = fM2Fit2->GetParError(0);

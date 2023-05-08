@@ -184,7 +184,7 @@ void TFFTComplex::GetPoints(Double_t *data, Bool_t fromInput) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///returns real and imaginary parts of the point #ipoint
+///returns real and imaginary parts of the point `#ipoint`
 
 void TFFTComplex::GetPointComplex(Int_t ipoint, Double_t &re, Double_t &im, Bool_t fromInput) const
 {
@@ -198,7 +198,7 @@ void TFFTComplex::GetPointComplex(Int_t ipoint, Double_t &re, Double_t &im, Bool
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///For multidimensional transforms. Returns real and imaginary parts of the point #ipoint
+///For multidimensional transforms. Returns real and imaginary parts of the point `#ipoint`
 
 void TFFTComplex::GetPointComplex(const Int_t *ipoint, Double_t &re, Double_t &im, Bool_t fromInput) const
 {

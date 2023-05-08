@@ -86,7 +86,7 @@ void LikelihoodWrapper::enableOffsetting(bool flag)
    do_offset_ = flag;
    // Clear offset if feature is disabled so that it is recalculated next time it is enabled
    if (!do_offset_) {
-      offset_ = {};
+      offset_ = ROOT::Math::KahanSum<double>();
    }
 }
 
@@ -94,10 +94,10 @@ void LikelihoodWrapper::setOffsettingMode(OffsettingMode mode)
 {
    offsetting_mode_ = mode;
    if (isOffsetting()) {
-      oocoutI(static_cast<RooAbsArg *>(nullptr), Minimization)
+      oocoutI(nullptr, Minimization)
          << "LikelihoodWrapper::setOffsettingMode(" << GetName()
          << "): changed offsetting mode while offsetting was enabled; resetting offset values" << std::endl;
-      offset_ = {};
+      offset_ = ROOT::Math::KahanSum<double>();
    }
 }
 
@@ -106,7 +106,7 @@ ROOT::Math::KahanSum<double> LikelihoodWrapper::applyOffsetting(ROOT::Math::Kaha
    if (do_offset_) {
 
       // If no offset is stored enable this feature now
-      if (offset_ == 0 && current_value != 0) {
+      if (offset_.Sum() == 0 && offset_.Carry() == 0 && (current_value.Sum() != 0 || current_value.Carry() != 0)) {
          offset_ = current_value;
          if (offsetting_mode_ == OffsettingMode::legacy) {
             auto sum_likelihood = dynamic_cast<RooSumL *>(likelihood_.get());
@@ -115,11 +115,11 @@ ROOT::Math::KahanSum<double> LikelihoodWrapper::applyOffsetting(ROOT::Math::Kaha
                // "undo" the addition of the subsidiary value to emulate legacy behavior
                offset_ -= subsidiary_value;
                // manually calculate result with zero carry, again to emulate legacy behavior
-               return {current_value.Result() - offset_.Result()};
+               return ROOT::Math::KahanSum<double>{current_value.Result() - offset_.Result()};
             }
          }
-         oocoutI(static_cast<RooAbsArg *>(nullptr), Minimization)
-            << "LikelihoodWrapper::applyOffsetting(" << GetName() << "): Likelihood offset now set to " << offset_
+         oocoutI(nullptr, Minimization)
+            << "LikelihoodWrapper::applyOffsetting(" << GetName() << "): Likelihood offset now set to " << offset_.Sum()
             << std::endl;
       }
 

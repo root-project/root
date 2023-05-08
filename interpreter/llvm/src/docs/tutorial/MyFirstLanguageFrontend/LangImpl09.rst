@@ -1,5 +1,3 @@
-:orphan:
-
 ======================================
 Kaleidoscope: Adding Debug Information
 ======================================
@@ -77,8 +75,8 @@ statement be our "main":
 
 .. code-block:: udiff
 
-  -    auto Proto = llvm::make_unique<PrototypeAST>("", std::vector<std::string>());
-  +    auto Proto = llvm::make_unique<PrototypeAST>("main", std::vector<std::string>());
+  -    auto Proto = std::make_unique<PrototypeAST>("", std::vector<std::string>());
+  +    auto Proto = std::make_unique<PrototypeAST>("main", std::vector<std::string>());
 
 just with the simple change of giving it a name.
 
@@ -167,13 +165,13 @@ DWARF Emission Setup
 ====================
 
 Similar to the ``IRBuilder`` class we have a
-`DIBuilder <http://llvm.org/doxygen/classllvm_1_1DIBuilder.html>`_ class
+`DIBuilder <https://llvm.org/doxygen/classllvm_1_1DIBuilder.html>`_ class
 that helps in constructing debug metadata for an LLVM IR file. It
 corresponds 1:1 similarly to ``IRBuilder`` and LLVM IR, but with nicer names.
 Using it does require that you be more familiar with DWARF terminology than
 you needed to be with ``IRBuilder`` and ``Instruction`` names, but if you
 read through the general documentation on the
-`Metadata Format <http://llvm.org/docs/SourceLevelDebugging.html>`_ it
+`Metadata Format <https://llvm.org/docs/SourceLevelDebugging.html>`_ it
 should be a little more clear. We'll be using this class to construct all
 of our IR level descriptions. Construction for it takes a module so we
 need to construct it shortly after we construct our module. We've left it
@@ -325,7 +323,7 @@ that we pass down through when we create a new expression:
 
 .. code-block:: c++
 
-   LHS = llvm::make_unique<BinaryExprAST>(BinLoc, BinOp, std::move(LHS),
+   LHS = std::make_unique<BinaryExprAST>(BinLoc, BinOp, std::move(LHS),
                                           std::move(RHS));
 
 giving us locations for each of our expressions and variables.
@@ -343,7 +341,7 @@ We use a small helper function for this:
     else
       Scope = LexicalBlocks.back();
     Builder.SetCurrentDebugLocation(
-        DebugLoc::get(AST->getLine(), AST->getCol(), Scope));
+        DILocation::get(Scope->getContext(), AST->getLine(), AST->getCol(), Scope));
   }
 
 This both tells the main ``IRBuilder`` where we are, but also what scope
@@ -402,7 +400,7 @@ argument allocas in ``FunctionAST::codegen``.
           true);
 
       DBuilder->insertDeclare(Alloca, D, DBuilder->createExpression(),
-                              DebugLoc::get(LineNo, 0, SP),
+                              DILocation::get(SP->getContext(), LineNo, 0, SP),
                               Builder.GetInsertBlock());
 
       // Store the initial value into the alloca.
@@ -454,7 +452,7 @@ debug information. To build this example, use:
 .. code-block:: bash
 
     # Compile
-    clang++ -g toy.cpp `llvm-config --cxxflags --ldflags --system-libs --libs core mcjit native` -O3 -o toy
+    clang++ -g toy.cpp `llvm-config --cxxflags --ldflags --system-libs --libs core orcjit native` -O3 -o toy
     # Run
     ./toy
 

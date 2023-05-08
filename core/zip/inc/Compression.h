@@ -121,7 +121,7 @@ enum ECompressionAlgorithm {
    kUndefinedCompressionAlgorithm = RCompressionSetting::EAlgorithm::kUndefined
 };
 
-int CompressionSettings(RCompressionSetting::EAlgorithm algorithm, int compressionLevel);
+int CompressionSettings(RCompressionSetting::EAlgorithm::EValues algorithm, int compressionLevel);
 /// Deprecated name, do *not* use:
 int CompressionSettings(ROOT::ECompressionAlgorithm algorithm, int compressionLevel);
 } // namespace ROOT

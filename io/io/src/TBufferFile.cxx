@@ -555,6 +555,7 @@ void TBufferFile::ReadWithNbits(Double_t *ptr, Int_t nbits)
 ///   - In case F the fNsp elements of array fPointvalue are converted to an unsigned 32 bit integer
 /// Note that the range specifier must follow the dimension specifier.
 /// Case B has more precision (9 to 10 significative digits than case A (6 to 7 digits).
+/// In Case A and E, the exponent is stored as is (8 bits), for a total of 21 bits (including 1 bit for sign)
 ///
 /// The range specifier has the general format: [xmin,xmax] or [xmin,xmax,nbits]
 ///   - [0,1];
@@ -581,9 +582,9 @@ void TBufferFile::ReadWithNbits(Double_t *ptr, Int_t nbits)
 /// It is important to understand the difference with the meaning of nbits
 ///   - in case of [-1,1,nbits], nbits is the total number of bits used to make
 /// the conversion from a float to an integer
-///   - in case of [0,0,nbits], nbits is the number of bits used for the mantissa
+///   - in case of [0,0,nbits], nbits is the number of bits used for the mantissa, to which is added 8 bits for the exponent.
 ///
-///  See example of use of the Float16_t data type in tutorial double32.C
+///  See example of use of the Float16_t data type in tutorial float16.C
 ///  \image html tbufferfile_double32.gif
 
 void TBufferFile::WriteFloat16(Float_t *f, TStreamerElement *ele)
@@ -2633,7 +2634,7 @@ TClass *TBufferFile::ReadClass(const TClass *clReq, UInt_t *objTag)
         !(clReq->GetSchemaRules() &&
           clReq->GetSchemaRules()->HasRuleWithSourceClass(cl->GetName()) )
         ) ) {
-      Error("ReadClass", "The on-file class is \"'%s\" which is not compatible with the requested class: \"%s\"",
+      Error("ReadClass", "The on-file class is \"%s\" which is not compatible with the requested class: \"%s\"",
             cl->GetName(), clReq->GetName());
       // exception
    }
@@ -3270,9 +3271,12 @@ Int_t TBufferFile::ReadClassEmulated(const TClass *cl, void *object, const TClas
 /// This function assumes that the class version and the byte count
 /// information have been read.
 ///
+/// \param[in] cl pointer to the local TClass
+/// \param[out] pointer void pointer to object
 /// \param[in] version The version number of the class
 /// \param[in] start   The starting position in the buffer b
 /// \param[in] count   The number of bytes for this object in the buffer
+/// \param[in] onFileClass pointer to TClass object on file
 ///
 
 Int_t TBufferFile::ReadClassBuffer(const TClass *cl, void *pointer, Int_t version, UInt_t start, UInt_t count, const TClass *onFileClass)

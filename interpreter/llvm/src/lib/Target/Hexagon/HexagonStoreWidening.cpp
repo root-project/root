@@ -20,8 +20,6 @@
 // per packet, it also means fewer packets, and ultimately fewer cycles.
 //===---------------------------------------------------------------------===//
 
-#define DEBUG_TYPE "hexagon-widen-stores"
-
 #include "HexagonInstrInfo.h"
 #include "HexagonRegisterInfo.h"
 #include "HexagonSubtarget.h"
@@ -37,6 +35,7 @@
 #include "llvm/CodeGen/MachineOperand.h"
 #include "llvm/CodeGen/MachineRegisterInfo.h"
 #include "llvm/IR/DebugLoc.h"
+#include "llvm/InitializePasses.h"
 #include "llvm/MC/MCInstrDesc.h"
 #include "llvm/Pass.h"
 #include "llvm/Support/Debug.h"
@@ -48,6 +47,8 @@
 #include <cstdint>
 #include <iterator>
 #include <vector>
+
+#define DEBUG_TYPE "hexagon-widen-stores"
 
 using namespace llvm;
 
@@ -179,7 +180,7 @@ bool HexagonStoreWidening::instrAliased(InstrGroup &Stores,
       return true;
 
     MemoryLocation SL(SMO.getValue(), SMO.getSize(), SMO.getAAInfo());
-    if (AA->alias(L, SL))
+    if (!AA->isNoAlias(L, SL))
       return true;
   }
 
@@ -270,7 +271,7 @@ void HexagonStoreWidening::createStoreGroup(MachineInstr *BaseStore,
     if (MI->isCall() || MI->hasUnmodeledSideEffects())
       return;
 
-    if (MI->mayLoad() || MI->mayStore()) {
+    if (MI->mayLoadOrStore()) {
       if (MI->hasOrderedMemoryRef() || instrAliased(Group, MI))
         return;
       Other.push_back(MI);
@@ -313,7 +314,7 @@ bool HexagonStoreWidening::selectStores(InstrGroup::iterator Begin,
   MachineInstr *FirstMI = *Begin;
   assert(!FirstMI->memoperands_empty() && "Expecting some memory operands");
   const MachineMemOperand &FirstMMO = getStoreTarget(FirstMI);
-  unsigned Alignment = FirstMMO.getAlignment();
+  unsigned Alignment = FirstMMO.getAlign().value();
   unsigned SizeAccum = FirstMMO.getSize();
   unsigned FirstOffset = getStoreOffset(FirstMI);
 
@@ -416,9 +417,8 @@ bool HexagonStoreWidening::createWideStores(InstrGroup &OG, InstrGroup &NG,
   DebugLoc DL = OG.back()->getDebugLoc();
   const MachineMemOperand &OldM = getStoreTarget(FirstSt);
   MachineMemOperand *NewM =
-    MF->getMachineMemOperand(OldM.getPointerInfo(), OldM.getFlags(),
-                             TotalSize, OldM.getAlignment(),
-                             OldM.getAAInfo());
+      MF->getMachineMemOperand(OldM.getPointerInfo(), OldM.getFlags(),
+                               TotalSize, OldM.getAlign(), OldM.getAAInfo());
 
   if (Acc < 0x10000) {
     // Create mem[hw] = #Acc
@@ -441,7 +441,7 @@ bool HexagonStoreWidening::createWideStores(InstrGroup &OG, InstrGroup &NG,
     // Create vreg = A2_tfrsi #Acc; mem[hw] = vreg
     const MCInstrDesc &TfrD = TII->get(Hexagon::A2_tfrsi);
     const TargetRegisterClass *RC = TII->getRegClass(TfrD, 0, TRI, *MF);
-    unsigned VReg = MF->getRegInfo().createVirtualRegister(RC);
+    Register VReg = MF->getRegInfo().createVirtualRegister(RC);
     MachineInstr *TfrI = BuildMI(*MF, DL, TfrD, VReg)
                            .addImm(int(Acc));
     NG.push_back(TfrI);

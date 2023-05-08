@@ -18,14 +18,24 @@
 #include <cstring>
 #include <limits>
 #include <string>
+#if __cplusplus > 201402L
+#include <string_view>
+#endif
 #include <type_traits>
 #include <utility>
+
+// Declare the __builtin_strlen intrinsic for MSVC so it can be used in
+// constexpr context.
+#if defined(_MSC_VER)
+extern "C" size_t __builtin_strlen(const char *);
+#endif
 
 namespace llvm {
 
   class APInt;
   class hash_code;
   template <typename T> class SmallVectorImpl;
+  template <typename T> struct DenseMapInfo;
   class StringRef;
 
   /// Helper functions for StringRef::getAsInteger.
@@ -45,9 +55,9 @@ namespace llvm {
   /// situations where the character data resides in some other buffer, whose
   /// lifetime extends past that of the StringRef. For this reason, it is not in
   /// general safe to store a StringRef.
-  class StringRef {
+  class LLVM_GSL_POINTER StringRef {
   public:
-    static const size_t npos = ~size_t(0);
+    static constexpr size_t npos = ~size_t(0);
 
     using iterator = const char *;
     using const_iterator = const char *;
@@ -67,6 +77,21 @@ namespace llvm {
       return ::memcmp(Lhs,Rhs,Length);
     }
 
+    // Constexpr version of std::strlen.
+    static constexpr size_t strLen(const char *Str) {
+#if __cplusplus > 201402L
+      return std::char_traits<char>::length(Str);
+#elif __has_builtin(__builtin_strlen) || defined(__GNUC__) || \
+    (defined(_MSC_VER) && _MSC_VER >= 1916)
+      return __builtin_strlen(Str);
+#else
+      const char *Begin = Str;
+      while (*Str != '\0')
+        ++Str;
+      return Str - Begin;
+#endif
+    }
+
   public:
     /// @name Constructors
     /// @{
@@ -79,8 +104,8 @@ namespace llvm {
     StringRef(std::nullptr_t) = delete;
 
     /// Construct a string ref from a cstring.
-    /*implicit*/ StringRef(const char *Str)
-        : Data(Str), Length(Str ? ::strlen(Str) : 0) {}
+    /*implicit*/ constexpr StringRef(const char *Str)
+        : Data(Str), Length(Str ? strLen(Str) : 0) {}
 
     /// Construct a string ref from a pointer and length.
     /*implicit*/ constexpr StringRef(const char *data, size_t length)
@@ -90,9 +115,11 @@ namespace llvm {
     /*implicit*/ StringRef(const std::string &Str)
       : Data(Str.data()), Length(Str.length()) {}
 
-    static StringRef withNullAsEmpty(const char *data) {
-      return StringRef(data ? data : "");
-    }
+#if __cplusplus > 201402L
+    /// Construct a string ref from an std::string_view.
+    /*implicit*/ constexpr StringRef(std::string_view Str)
+        : Data(Str.data()), Length(Str.size()) {}
+#endif
 
     /// @}
     /// @name Iterators
@@ -162,10 +189,10 @@ namespace llvm {
               compareMemory(Data, RHS.Data, RHS.Length) == 0);
     }
 
-    /// equals_lower - Check for string equality, ignoring case.
+    /// Check for string equality, ignoring case.
     LLVM_NODISCARD
-    bool equals_lower(StringRef RHS) const {
-      return Length == RHS.Length && compare_lower(RHS) == 0;
+    bool equals_insensitive(StringRef RHS) const {
+      return Length == RHS.Length && compare_insensitive(RHS) == 0;
     }
 
     /// compare - Compare two strings; the result is -1, 0, or 1 if this string
@@ -182,9 +209,9 @@ namespace llvm {
       return Length < RHS.Length ? -1 : 1;
     }
 
-    /// compare_lower - Compare two strings, ignoring case.
+    /// Compare two strings, ignoring case.
     LLVM_NODISCARD
-    int compare_lower(StringRef RHS) const;
+    int compare_insensitive(StringRef RHS) const;
 
     /// compare_numeric - Compare two strings, treating sequences of digits as
     /// numbers.
@@ -235,17 +262,20 @@ namespace llvm {
     /// The declaration here is extra complicated so that `stringRef = {}`
     /// and `stringRef = "abc"` continue to select the move assignment operator.
     template <typename T>
-    typename std::enable_if<std::is_same<T, std::string>::value,
-                            StringRef>::type &
+    std::enable_if_t<std::is_same<T, std::string>::value, StringRef> &
     operator=(T &&Str) = delete;
 
     /// @}
     /// @name Type Conversions
     /// @{
 
-    operator std::string() const {
-      return str();
+    explicit operator std::string() const { return str(); }
+
+#if __cplusplus > 201402L
+    operator std::string_view() const {
+      return std::string_view(data(), size());
     }
+#endif
 
     /// @}
     /// @name String Predicates
@@ -260,7 +290,7 @@ namespace llvm {
 
     /// Check if this string starts with the given \p Prefix, ignoring case.
     LLVM_NODISCARD
-    bool startswith_lower(StringRef Prefix) const;
+    bool startswith_insensitive(StringRef Prefix) const;
 
     /// Check if this string ends with the given \p Suffix.
     LLVM_NODISCARD
@@ -271,7 +301,7 @@ namespace llvm {
 
     /// Check if this string ends with the given \p Suffix, ignoring case.
     LLVM_NODISCARD
-    bool endswith_lower(StringRef Suffix) const;
+    bool endswith_insensitive(StringRef Suffix) const;
 
     /// @}
     /// @name String Searching
@@ -297,7 +327,7 @@ namespace llvm {
     /// \returns The index of the first occurrence of \p C, or npos if not
     /// found.
     LLVM_NODISCARD
-    size_t find_lower(char C, size_t From = 0) const;
+    size_t find_insensitive(char C, size_t From = 0) const;
 
     /// Search for the first character satisfying the predicate \p F
     ///
@@ -335,7 +365,7 @@ namespace llvm {
     /// \returns The index of the first occurrence of \p Str, or npos if not
     /// found.
     LLVM_NODISCARD
-    size_t find_lower(StringRef Str, size_t From = 0) const;
+    size_t find_insensitive(StringRef Str, size_t From = 0) const;
 
     /// Search for the last character \p C in the string.
     ///
@@ -358,7 +388,7 @@ namespace llvm {
     /// \returns The index of the last occurrence of \p C, or npos if not
     /// found.
     LLVM_NODISCARD
-    size_t rfind_lower(char C, size_t From = npos) const;
+    size_t rfind_insensitive(char C, size_t From = npos) const;
 
     /// Search for the last string \p Str in the string.
     ///
@@ -372,7 +402,7 @@ namespace llvm {
     /// \returns The index of the last occurrence of \p Str, or npos if not
     /// found.
     LLVM_NODISCARD
-    size_t rfind_lower(StringRef Str) const;
+    size_t rfind_insensitive(StringRef Str) const;
 
     /// Find the first character in the string that is \p C, or npos if not
     /// found. Same as find.
@@ -439,14 +469,16 @@ namespace llvm {
     /// Return true if the given string is a substring of *this, and false
     /// otherwise.
     LLVM_NODISCARD
-    bool contains_lower(StringRef Other) const {
-      return find_lower(Other) != npos;
+    bool contains_insensitive(StringRef Other) const {
+      return find_insensitive(Other) != npos;
     }
 
     /// Return true if the given character is contained in *this, and false
     /// otherwise.
     LLVM_NODISCARD
-    bool contains_lower(char C) const { return find_lower(C) != npos; }
+    bool contains_insensitive(char C) const {
+      return find_insensitive(C) != npos;
+    }
 
     /// @}
     /// @name Helpful Algorithms
@@ -474,7 +506,7 @@ namespace llvm {
     /// this returns true to signify the error.  The string is considered
     /// erroneous if empty or if it overflows T.
     template <typename T>
-    typename std::enable_if<std::numeric_limits<T>::is_signed, bool>::type
+    std::enable_if_t<std::numeric_limits<T>::is_signed, bool>
     getAsInteger(unsigned Radix, T &Result) const {
       long long LLVal;
       if (getAsSignedInteger(*this, Radix, LLVal) ||
@@ -485,7 +517,7 @@ namespace llvm {
     }
 
     template <typename T>
-    typename std::enable_if<!std::numeric_limits<T>::is_signed, bool>::type
+    std::enable_if_t<!std::numeric_limits<T>::is_signed, bool>
     getAsInteger(unsigned Radix, T &Result) const {
       unsigned long long ULLVal;
       // The additional cast to unsigned long long is required to avoid the
@@ -508,7 +540,7 @@ namespace llvm {
     /// The portion of the string representing the discovered numeric value
     /// is removed from the beginning of the string.
     template <typename T>
-    typename std::enable_if<std::numeric_limits<T>::is_signed, bool>::type
+    std::enable_if_t<std::numeric_limits<T>::is_signed, bool>
     consumeInteger(unsigned Radix, T &Result) {
       long long LLVal;
       if (consumeSignedInteger(*this, Radix, LLVal) ||
@@ -519,7 +551,7 @@ namespace llvm {
     }
 
     template <typename T>
-    typename std::enable_if<!std::numeric_limits<T>::is_signed, bool>::type
+    std::enable_if_t<!std::numeric_limits<T>::is_signed, bool>
     consumeInteger(unsigned Radix, T &Result) {
       unsigned long long ULLVal;
       if (consumeUnsignedInteger(*this, Radix, ULLVal) ||
@@ -546,7 +578,8 @@ namespace llvm {
     ///
     /// If \p AllowInexact is false, the function will fail if the string
     /// cannot be represented exactly.  Otherwise, the function only fails
-    /// in case of an overflow or underflow.
+    /// in case of an overflow or underflow, or an invalid floating point
+    /// representation.
     bool getAsDouble(double &Result, bool AllowInexact = true) const;
 
     /// @}
@@ -654,10 +687,30 @@ namespace llvm {
       return true;
     }
 
+    /// Returns true if this StringRef has the given prefix, ignoring case,
+    /// and removes that prefix.
+    bool consume_front_insensitive(StringRef Prefix) {
+      if (!startswith_insensitive(Prefix))
+        return false;
+
+      *this = drop_front(Prefix.size());
+      return true;
+    }
+
     /// Returns true if this StringRef has the given suffix and removes that
     /// suffix.
     bool consume_back(StringRef Suffix) {
       if (!endswith(Suffix))
+        return false;
+
+      *this = drop_back(Suffix.size());
+      return true;
+    }
+
+    /// Returns true if this StringRef has the given suffix, ignoring case,
+    /// and removes that suffix.
+    bool consume_back_insensitive(StringRef Suffix) {
+      if (!endswith_insensitive(Suffix))
         return false;
 
       *this = drop_back(Suffix.size());
@@ -894,6 +947,35 @@ namespace llvm {
   /// Compute a hash_code for a StringRef.
   LLVM_NODISCARD
   hash_code hash_value(StringRef S);
+
+  // Provide DenseMapInfo for StringRefs.
+  template <> struct DenseMapInfo<StringRef> {
+    static inline StringRef getEmptyKey() {
+      return StringRef(
+          reinterpret_cast<const char *>(~static_cast<uintptr_t>(0)), 0);
+    }
+
+    static inline StringRef getTombstoneKey() {
+      return StringRef(
+          reinterpret_cast<const char *>(~static_cast<uintptr_t>(1)), 0);
+    }
+
+    static unsigned getHashValue(StringRef Val) {
+      assert(Val.data() != getEmptyKey().data() &&
+             "Cannot hash the empty key!");
+      assert(Val.data() != getTombstoneKey().data() &&
+             "Cannot hash the tombstone key!");
+      return (unsigned)(hash_value(Val));
+    }
+
+    static bool isEqual(StringRef LHS, StringRef RHS) {
+      if (RHS.data() == getEmptyKey().data())
+        return LHS.data() == getEmptyKey().data();
+      if (RHS.data() == getTombstoneKey().data())
+        return LHS.data() == getTombstoneKey().data();
+      return LHS == RHS;
+    }
+  };
 
 } // end namespace llvm
 

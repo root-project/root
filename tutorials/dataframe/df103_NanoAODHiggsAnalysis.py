@@ -252,10 +252,11 @@ def plot(sig, bkg, data, x_label, filename):
     d.SaveAs(filename)
 
 
-def df103_NanoAODHiggsAnalysis(run_fast = True):
+def df103_NanoAODHiggsAnalysis():
     # In fast mode, take samples from */cms_opendata_2012_nanoaod_skimmed/*, which has
     # the preselections from the selection_* functions already applied.
     path = "root://eospublic.cern.ch//eos/root-eos/cms_opendata_2012_nanoaod/"
+    run_fast = True # Run on skimmed data, set to False to run on full dataset
     if run_fast: path = "root://eospublic.cern.ch//eos/root-eos/cms_opendata_2012_nanoaod_skimmed/"
 
     # Create dataframes for signal, background and data samples
@@ -399,5 +400,4 @@ def df103_NanoAODHiggsAnalysis(run_fast = True):
 
 
 if __name__ == "__main__":
-    run_fast = True
-    df103_NanoAODHiggsAnalysis(run_fast)
+    df103_NanoAODHiggsAnalysis()

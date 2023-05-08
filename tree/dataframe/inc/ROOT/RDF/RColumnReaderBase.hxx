@@ -29,7 +29,7 @@ class R__CLING_PTRCHECK(off) RColumnReaderBase {
 public:
    virtual ~RColumnReaderBase() = default;
 
-   /// Return the column value for the given entry. Called at most once per entry.
+   /// Return the column value for the given entry.
    /// \tparam T The column type
    /// \param entry The entry number
    template <typename T>

@@ -67,7 +67,7 @@ public:
 
    int GetCompression() const { return fCompression; }
    void SetCompression(int val) { fCompression = val; }
-   void SetCompression(RCompressionSetting::EAlgorithm algorithm, int compressionLevel) {
+   void SetCompression(RCompressionSetting::EAlgorithm::EValues algorithm, int compressionLevel) {
       fCompression = CompressionSettings(algorithm, compressionLevel);
    }
 
@@ -98,7 +98,7 @@ class RNTupleWriteOptionsDaos : public RNTupleWriteOptions {
   std::string fObjectClass{"SX"};
 
 public:
-   virtual ~RNTupleWriteOptionsDaos() = default;
+   ~RNTupleWriteOptionsDaos() override = default;
    std::unique_ptr<RNTupleWriteOptions> Clone() const override
    { return std::make_unique<RNTupleWriteOptionsDaos>(*this); }
 

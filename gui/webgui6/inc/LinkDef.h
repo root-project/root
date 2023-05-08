@@ -32,6 +32,7 @@
 #pragma link C++ class TCanvasWebSnapshot+;
 
 #pragma link C++ class TWebCanvas+;
-#pragma link C++ class TWebGuiFactory+;
+
+#pragma link C++ class TWebControlBar+;
 
 #endif

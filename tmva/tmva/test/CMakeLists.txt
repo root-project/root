@@ -27,8 +27,10 @@ if(dataframe)
     # RReader
     ROOT_ADD_GTEST(rreader rreader.cxx LIBRARIES ROOTVecOps TMVA ROOTDataFrame)
     # Tree inference system and user interface
-    ROOT_ADD_GTEST(branchlessForest branchlessForest.cxx LIBRARIES TMVA)
-    ROOT_ADD_GTEST(rbdt rbdt.cxx LIBRARIES ROOTVecOps TMVA)
+    if(NOT MSVC OR ${LLVM_VERSION} VERSION_LESS 13.0.0 OR llvm13_broken_tests)
+        ROOT_ADD_GTEST(branchlessForest branchlessForest.cxx LIBRARIES TMVA)
+        ROOT_ADD_GTEST(rbdt rbdt.cxx LIBRARIES ROOTVecOps TMVA)
+    endif()
 endif()
 
 if(dataframe AND NOT pyroot_legacy)

@@ -25,36 +25,19 @@ or Binomial statistics. A RooHist is used to represent histograms in
 a RooPlot.
 **/
 
-#include "RooFit.h"
-
 #include "RooHist.h"
+
+#include "RooAbsRealLValue.h"
 #include "RooHistError.h"
 #include "RooCurve.h"
 #include "RooScaledFunc.h"
 #include "RooMsgService.h"
 
 #include "TH1.h"
-#include "TClass.h"
 #include "Riostream.h"
 #include <iomanip>
 
-using namespace std;
-
 ClassImp(RooHist);
-  ;
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Default constructor
-
-RooHist::RooHist() :
-  _nominalBinWidth(1),
-  _nSigma(1),
-  _entries(0),
-  _rawEntries(0)
-{
-}
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -65,7 +48,7 @@ RooHist::RooHist() :
 /// default used by addBin(), and is used to set the relative
 /// normalization of bins with different widths.
 
-  RooHist::RooHist(Double_t nominalBinWidth, Double_t nSigma, Double_t /*xErrorFrac*/, Double_t /*scaleFactor*/) :
+  RooHist::RooHist(double nominalBinWidth, double nSigma, double /*xErrorFrac*/, double /*scaleFactor*/) :
     TGraphAsymmErrors(), _nominalBinWidth(nominalBinWidth), _nSigma(nSigma), _rawEntries(-1)
 {
   initialize();
@@ -83,8 +66,8 @@ RooHist::RooHist() :
 /// normalization of bins with different widths. If not set, the
 /// nominal bin width is calculated as range/nbins.
 
-RooHist::RooHist(const TH1 &data, Double_t nominalBinWidth, Double_t nSigma, RooAbsData::ErrorType etype, Double_t xErrorFrac,
-       Bool_t correctForBinWidth, Double_t scaleFactor) :
+RooHist::RooHist(const TH1 &data, double nominalBinWidth, double nSigma, RooAbsData::ErrorType etype, double xErrorFrac,
+       bool correctForBinWidth, double scaleFactor) :
   TGraphAsymmErrors(), _nominalBinWidth(nominalBinWidth), _nSigma(nSigma), _rawEntries(-1)
 {
   if(etype == RooAbsData::Poisson && correctForBinWidth == false) {
@@ -135,8 +118,8 @@ RooHist::RooHist(const TH1 &data, Double_t nominalBinWidth, Double_t nSigma, Roo
 /// normalization of bins with different widths. If not set, the
 /// nominal bin width is calculated as range/nbins.
 
-RooHist::RooHist(const TH1 &data1, const TH1 &data2, Double_t nominalBinWidth, Double_t nSigma,
-       RooAbsData::ErrorType etype, Double_t xErrorFrac, Bool_t efficiency, Double_t scaleFactor) :
+RooHist::RooHist(const TH1 &data1, const TH1 &data2, double nominalBinWidth, double nSigma,
+       RooAbsData::ErrorType etype, double xErrorFrac, bool efficiency, double scaleFactor) :
   TGraphAsymmErrors(), _nominalBinWidth(nominalBinWidth), _nSigma(nSigma), _rawEntries(-1)
 {
   initialize();
@@ -145,7 +128,7 @@ RooHist::RooHist(const TH1 &data1, const TH1 &data2, Double_t nominalBinWidth, D
   SetTitle(data1.GetTitle());
   // calculate our nominal bin width if necessary
   if(_nominalBinWidth == 0) {
-    const TAxis *axis= ((TH1&)data1).GetXaxis();
+    const TAxis *axis= data1.GetXaxis();
     if(axis->GetNbins() > 0) _nominalBinWidth= (axis->GetXmax() - axis->GetXmin())/axis->GetNbins();
   }
 
@@ -159,13 +142,13 @@ RooHist::RooHist(const TH1 &data1, const TH1 &data2, Double_t nominalBinWidth, D
   // initialize our contents from the input histogram contents
   Int_t nbin= data1.GetNbinsX();
   if(data2.GetNbinsX() != nbin) {
-    coutE(InputArguments) << "RooHist::RooHist: histograms have different number of bins" << endl;
+    coutE(InputArguments) << "RooHist::RooHist: histograms have different number of bins" << std::endl;
     return;
   }
   for(Int_t bin= 1; bin <= nbin; bin++) {
     Axis_t x= data1.GetBinCenter(bin);
-    if(fabs(data2.GetBinCenter(bin)-x)>1e-10) {
-      coutW(InputArguments) << "RooHist::RooHist: histograms have different centers for bin " << bin << endl;
+    if(std::abs(data2.GetBinCenter(bin)-x)>1e-10) {
+      coutW(InputArguments) << "RooHist::RooHist: histograms have different centers for bin " << bin << std::endl;
     }
     Stat_t y1= data1.GetBinContent(bin);
     Stat_t y2= data2.GetBinContent(bin);
@@ -208,8 +191,8 @@ RooHist::RooHist(const TH1 &data1, const TH1 &data2, Double_t nominalBinWidth, D
 /// 1 in this mode, a warning message is printed. If SumW2 errors are selected the histograms are added
 /// and the histograms errors are added in quadrature, taking the weights into account.
 
-RooHist::RooHist(const RooHist& hist1, const RooHist& hist2, Double_t wgt1, Double_t wgt2,
-       RooAbsData::ErrorType etype, Double_t xErrorFrac) : _rawEntries(-1)
+RooHist::RooHist(const RooHist& hist1, const RooHist& hist2, double wgt1, double wgt2,
+       RooAbsData::ErrorType etype, double xErrorFrac) : _rawEntries(-1)
 {
   // Initialize the histogram
   initialize() ;
@@ -222,7 +205,7 @@ RooHist::RooHist(const RooHist& hist1, const RooHist& hist2, Double_t wgt1, Doub
   setYAxisLabel(hist1.getYAxisLabel()) ;
 
   if (!hist1.hasIdenticalBinning(hist2)) {
-    coutE(InputArguments) << "RooHist::RooHist input histograms have incompatible binning, combined histogram will remain empty" << endl ;
+    coutE(InputArguments) << "RooHist::RooHist input histograms have incompatible binning, combined histogram will remain empty" << std::endl ;
     return ;
   }
 
@@ -231,14 +214,14 @@ RooHist::RooHist(const RooHist& hist1, const RooHist& hist2, Double_t wgt1, Doub
 
     // Issue warning if weights are not 1
     if (wgt1!=1.0 || wgt2 != 1.0) {
-      coutW(InputArguments) << "RooHist::RooHist: WARNING: Poisson errors of weighted sum of two histograms is not well defined! " << endl
-             << "                  Summed histogram bins will rounded to nearest integer for Poisson confidence interval calculation" << endl ;
+      coutW(InputArguments) << "RooHist::RooHist: WARNING: Poisson errors of weighted sum of two histograms is not well defined! " << std::endl
+             << "                  Summed histogram bins will rounded to nearest integer for Poisson confidence interval calculation" << std::endl ;
     }
 
     // Add histograms, calculate Poisson confidence interval on sum value
     Int_t i,n=hist1.GetN() ;
     for(i=0 ; i<n ; i++) {
-      Double_t x1,y1,x2,y2,dx1 ;
+      double x1,y1,x2,y2,dx1 ;
       hist1.GetPoint(i,x1,y1) ;
       dx1 = hist1.GetErrorX(i) ;
       hist2.GetPoint(i,x2,y2) ;
@@ -251,13 +234,13 @@ RooHist::RooHist(const RooHist& hist1, const RooHist& hist2, Double_t wgt1, Doub
     // Add histograms, calculate combined sum-of-weights error
     Int_t i,n=hist1.GetN() ;
     for(i=0 ; i<n ; i++) {
-      Double_t x1,y1,x2,y2,dx1,dy1,dy2 ;
+      double x1,y1,x2,y2,dx1,dy1,dy2 ;
       hist1.GetPoint(i,x1,y1) ;
       dx1 = hist1.GetErrorX(i) ;
       dy1 = hist1.GetErrorY(i) ;
       dy2 = hist2.GetErrorY(i) ;
       hist2.GetPoint(i,x2,y2) ;
-      Double_t dy = sqrt(wgt1*wgt1*dy1*dy1+wgt2*wgt2*dy2*dy2) ;
+      double dy = sqrt(wgt1*wgt1*dy1*dy1+wgt2*wgt2*dy2*dy2) ;
       addBinWithError(x1,wgt1*y1+wgt2*y2,dy,dy,2*dx1/xErrorFrac,xErrorFrac) ;
     }
   }
@@ -272,47 +255,46 @@ RooHist::RooHist(const RooHist& hist1, const RooHist& hist2, Double_t wgt1, Doub
 /// where a pdf is constructed as "data minus background" and is thus
 /// intended to be displayed as "data" (or at least data-like).
 /// Usage of this signature is triggered by the draw style "P" in RooAbsReal::plotOn.
-/// 
+///
 /// More details.
 /// \param[in] f The function to be plotted.
 /// \param[in] x The variable on the x-axis
 /// \param[in] xErrorFrac Size of the errror in x as a fraction of the bin width
 /// \param[in] scaleFactor arbitrary scaling of the y-values
 /// \param[in] normVars variables over which to normalize
-RooHist::RooHist(const RooAbsReal &f, RooAbsRealLValue &x, Double_t xErrorFrac, Double_t scaleFactor, const RooArgSet *normVars, const RooFitResult* fr) :
+/// \param[in] fr fit result
+RooHist::RooHist(const RooAbsReal &f, RooAbsRealLValue &x, double xErrorFrac, double scaleFactor, const RooArgSet *normVars, const RooFitResult* fr) :
   TGraphAsymmErrors(), _nSigma(1), _rawEntries(-1)
 {
   // grab the function's name and title
-  TString name(f.GetName());
-  SetName(name.Data());
-  TString title(f.GetTitle());
-  SetTitle(title.Data());
+  SetName(f.GetName());
+  std::string title{f.GetTitle()};
+  SetTitle(title.c_str());
   // append " ( [<funit> ][/ <xunit> ])" to our y-axis label if necessary
   if(0 != strlen(f.getUnit()) || 0 != strlen(x.getUnit())) {
-    title.Append(" ( ");
+    title += " ( ";
     if(0 != strlen(f.getUnit())) {
-      title.Append(f.getUnit());
-      title.Append(" ");
+      title += f.getUnit();
+      title += " ";
     }
     if(0 != strlen(x.getUnit())) {
-      title.Append("/ ");
-      title.Append(x.getUnit());
-      title.Append(" ");
+      title += "/ ";
+      title += x.getUnit();
+      title += " ";
     }
-    title.Append(")");
+    title += ")";
   }
-  setYAxisLabel(title.Data());
+  setYAxisLabel(title.c_str());
 
-  RooAbsFunc *funcPtr = nullptr;
-  RooAbsFunc *rawPtr  = nullptr;
-  funcPtr= f.bindVars(x,normVars,kTRUE);
+  std::unique_ptr<RooAbsFunc> rawPtr;
+  std::unique_ptr<RooAbsFunc> funcPtr{f.bindVars(x,normVars,true)};
 
   // apply a scale factor if necessary
   if(scaleFactor != 1) {
-    rawPtr= funcPtr;
-    funcPtr= new RooScaledFunc(*rawPtr,scaleFactor);
+    rawPtr= std::move(funcPtr);
+    funcPtr = std::make_unique<RooScaledFunc>(*rawPtr,scaleFactor);
   }
-  
+
   // apply a scale factor if necessary
   assert(funcPtr);
 
@@ -325,16 +307,12 @@ RooHist::RooHist(const RooAbsReal &f, RooAbsRealLValue &x, Double_t xErrorFrac, 
     double xwidth = x.getBinning().binWidth(i);
     Axis_t xval_ax = xval;
     double yval = (*funcPtr)(&xval);
-    double yerr = sqrt(yval);
+    double yerr = std::sqrt(yval);
     if(fr) yerr = f.getPropagatedError(*fr,nset);
     addBinWithError(xval_ax,yval,yerr,yerr,xwidth,xErrorFrac,false,scaleFactor) ;
     _entries += yval;
   }
   _nominalBinWidth = 1.;
-  
-  // cleanup
-  delete funcPtr;
-  if(rawPtr) delete rawPtr;
 }
 
 
@@ -344,7 +322,6 @@ RooHist::RooHist(const RooAbsReal &f, RooAbsRealLValue &x, Double_t xErrorFrac, 
 void RooHist::initialize()
 {
   SetMarkerStyle(8);
-  _entries= 0;
 }
 
 
@@ -353,7 +330,7 @@ void RooHist::initialize()
 /// This is the number of events in the RooHist itself, unless a different
 /// value was specified through setRawEntries()
 
-Double_t RooHist::getFitRangeNEvt() const
+double RooHist::getFitRangeNEvt() const
 {
   return (_rawEntries==-1 ? _entries : _rawEntries) ;
 }
@@ -362,16 +339,21 @@ Double_t RooHist::getFitRangeNEvt() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate integral of histogram in given range
 
-Double_t RooHist::getFitRangeNEvt(Double_t xlo, Double_t xhi) const
+double RooHist::getFitRangeNEvt(double xlo, double xhi) const
 {
-  Double_t sum(0) ;
+  double sum(0) ;
   for (int i=0 ; i<GetN() ; i++) {
-    Double_t x,y ;
+    double x,y ;
 
     GetPoint(i,x,y) ;
 
     if (x>=xlo && x<=xhi) {
-      sum += y ;
+      // We have to use the original weights of the histogram, because the
+      // scaled points have nothing to do anymore with event weights in the
+      // case of non-uniform binning. For backwards compatibility with the
+      // RooHist version 1, we first need to check if the `_originalWeights`
+      // member is filled.
+      sum += _originalWeights.empty() ? y : _originalWeights[i];
     }
   }
 
@@ -381,7 +363,7 @@ Double_t RooHist::getFitRangeNEvt(Double_t xlo, Double_t xhi) const
           << "\n\t\t that the effect of that cut is uniform across the plot, which may be an incorrect assumption. To obtain a correct normalisation, it needs to be passed explicitly:"
           << "\n\t\t\t data->plotOn(frame01,CutRange(\"SB1\"));"
           << "\n\t\t\t const double nData = data->sumEntries(\"\", \"SB1\"); //or the cut string such as sumEntries(\"x > 0.\");"
-          << "\n\t\t\t model.plotOn(frame01, RooFit::Normalization(nData, RooAbsReal::NumEvent), ProjectionRange(\"SB1\"));" << endl ;
+          << "\n\t\t\t model.plotOn(frame01, RooFit::Normalization(nData, RooAbsReal::NumEvent), ProjectionRange(\"SB1\"));" << std::endl ;
     sum *= _rawEntries / _entries ;
   }
 
@@ -389,34 +371,45 @@ Double_t RooHist::getFitRangeNEvt(Double_t xlo, Double_t xhi) const
 }
 
 
-
-////////////////////////////////////////////////////////////////////////////////
-/// Return (average) bin width of this RooHist
-
-Double_t RooHist::getFitRangeBinW() const
-{
-  return _nominalBinWidth ;
-}
-
-
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the nearest positive integer to the input value
 /// and print a warning if an adjustment is required.
 
-Int_t RooHist::roundBin(Double_t y)
+Int_t RooHist::roundBin(double y)
 {
   if(y < 0) {
-    coutW(Plotting) << fName << "::roundBin: rounding negative bin contents to zero: " << y << endl;
+    coutW(Plotting) << fName << "::roundBin: rounding negative bin contents to zero: " << y << std::endl;
     return 0;
   }
   Int_t n= (Int_t)(y+0.5);
-  if(fabs(y-n)>1e-6) {
-    coutW(Plotting) << fName << "::roundBin: rounding non-integer bin contents: " << y << endl;
+  if(std::abs(y-n)>1e-6) {
+    coutW(Plotting) << fName << "::roundBin: rounding non-integer bin contents: " << y << std::endl;
   }
   return n;
 }
 
+
+void RooHist::addPoint(Axis_t binCenter, double y, double yscale, double exlow, double exhigh, double eylow, double eyhigh)
+{
+  const int index = GetN();
+  SetPoint(index, binCenter, y*yscale);
+
+  // If the scale is negative, the low and high errors must be swapped
+  if(std::abs(yscale) < 0) {
+    std::swap(eylow, eyhigh);
+  }
+
+  SetPointError(index, exlow, exhigh, std::abs(yscale) * eylow, std::abs(yscale) * eyhigh);
+
+  updateYAxisLimits(yscale * (y - eylow));
+  updateYAxisLimits(yscale * (y + eyhigh));
+
+  // We also track the original weights of the histogram, because if we only
+  // have info on the scaled points it's not possible anymore to compute the
+  // number of events in a subrange of the RooHist.
+  _originalWeights.resize(index + 1);
+  _originalWeights[index] = y;
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -424,47 +417,43 @@ Int_t RooHist::roundBin(Double_t y)
 /// and using an error bar calculated with Poisson statistics. The bin width
 /// is used to set the relative scale of bins with different widths.
 
-void RooHist::addBin(Axis_t binCenter, Double_t n, Double_t binWidth, Double_t xErrorFrac, Double_t scaleFactor)
+void RooHist::addBin(Axis_t binCenter, double n, double binWidth, double xErrorFrac, double scaleFactor)
 {
   if (n<0) {
-    coutW(Plotting) << "RooHist::addBin(" << GetName() << ") WARNING: negative entry set to zero when Poisson error bars are requested" << endl ;
+    coutW(Plotting) << "RooHist::addBin(" << GetName() << ") WARNING: negative entry set to zero when Poisson error bars are requested" << std::endl ;
   }
 
-  Double_t scale= 1;
+  double scale= 1;
   if(binWidth > 0) {
     scale= _nominalBinWidth/binWidth;
   }
   _entries+= n;
-  Int_t index= GetN();
 
   // calculate Poisson errors for this bin
-  Double_t ym,yp,dx(0.5*binWidth);
+  double ym,yp,dx(0.5*binWidth);
 
-  if (fabs((double)((n-Int_t(n))>1e-5))) {
+  if (std::abs((double)((n-Int_t(n))>1e-5))) {
     // need interpolation
-    Double_t ym1(0),yp1(0),ym2(0),yp2(0) ;
+    double ym1(0),yp1(0),ym2(0),yp2(0) ;
     Int_t n1 = Int_t(n) ;
     Int_t n2 = n1+1 ;
     if(!RooHistError::instance().getPoissonInterval(n1,ym1,yp1,_nSigma) ||
        !RooHistError::instance().getPoissonInterval(n2,ym2,yp2,_nSigma)) {
-      coutE(Plotting) << "RooHist::addBin: unable to add bin with " << n << " events" << endl;
+      coutE(Plotting) << "RooHist::addBin: unable to add bin with " << n << " events" << std::endl;
     }
     ym = ym1 + (n-n1)*(ym2-ym1) ;
     yp = yp1 + (n-n1)*(yp2-yp1) ;
     coutW(Plotting) << "RooHist::addBin(" << GetName()
-          << ") WARNING: non-integer bin entry " << n << " with Poisson errors, interpolating between Poisson errors of adjacent integer" << endl ;
+          << ") WARNING: non-integer bin entry " << n << " with Poisson errors, interpolating between Poisson errors of adjacent integer" << std::endl ;
   } else {
   // integer case
   if(!RooHistError::instance().getPoissonInterval(Int_t(n),ym,yp,_nSigma)) {
-      coutE(Plotting) << "RooHist::addBin: unable to add bin with " << n << " events" << endl;
+      coutE(Plotting) << "RooHist::addBin: unable to add bin with " << n << " events" << std::endl;
       return;
     }
   }
 
-  SetPoint(index,binCenter,n*scale*scaleFactor);
-  SetPointError(index,dx*xErrorFrac,dx*xErrorFrac,scale*(n-ym)*scaleFactor,scale*(yp-n)*scaleFactor);
-  updateYAxisLimits(scale*yp);
-  updateYAxisLimits(scale*ym);
+  addPoint(binCenter,n, scale*scaleFactor,dx*xErrorFrac,dx*xErrorFrac, n-ym, yp-n);
 }
 
 
@@ -474,21 +463,17 @@ void RooHist::addBin(Axis_t binCenter, Double_t n, Double_t binWidth, Double_t x
 /// and error. The bin width is used to set the relative scale of
 /// bins with different widths.
 
-void RooHist::addBinWithError(Axis_t binCenter, Double_t n, Double_t elow, Double_t ehigh, Double_t binWidth,
-               Double_t xErrorFrac, Bool_t correctForBinWidth, Double_t scaleFactor)
+void RooHist::addBinWithError(Axis_t binCenter, double n, double elow, double ehigh, double binWidth,
+               double xErrorFrac, bool correctForBinWidth, double scaleFactor)
 {
-  Double_t scale= 1;
+  double scale= 1;
   if(binWidth > 0 && correctForBinWidth) {
     scale= _nominalBinWidth/binWidth;
   }
   _entries+= n;
-  Int_t index= GetN();
 
-  Double_t dx(0.5*binWidth) ;
-  SetPoint(index,binCenter,n*scale*scaleFactor);
-  SetPointError(index,dx*xErrorFrac,dx*xErrorFrac,elow*scale*scaleFactor,ehigh*scale*scaleFactor);
-  updateYAxisLimits(scale*(n-elow));
-  updateYAxisLimits(scale*(n+ehigh));
+  double dx(0.5*binWidth) ;
+  addPoint(binCenter,n, scale*scaleFactor,dx*xErrorFrac,dx*xErrorFrac, elow, ehigh);
 }
 
 
@@ -499,16 +484,12 @@ void RooHist::addBinWithError(Axis_t binCenter, Double_t n, Double_t elow, Doubl
 /// and error. The bin width is used to set the relative scale of
 /// bins with different widths.
 
-void RooHist::addBinWithXYError(Axis_t binCenter, Double_t n, Double_t exlow, Double_t exhigh, Double_t eylow, Double_t eyhigh,
-            Double_t scaleFactor)
+void RooHist::addBinWithXYError(Axis_t binCenter, double n, double exlow, double exhigh, double eylow, double eyhigh,
+            double scaleFactor)
 {
   _entries+= n;
-  Int_t index= GetN();
 
-  SetPoint(index,binCenter,n*scaleFactor);
-  SetPointError(index,exlow,exhigh,eylow*scaleFactor,eyhigh*scaleFactor);
-  updateYAxisLimits(scaleFactor*(n-eylow));
-  updateYAxisLimits(scaleFactor*(n+eyhigh));
+  addPoint(binCenter, n, scaleFactor,exlow,exhigh, eylow, eyhigh);
 }
 
 
@@ -519,24 +500,17 @@ void RooHist::addBinWithXYError(Axis_t binCenter, Double_t n, Double_t exlow, Do
 /// Add a bin to this histogram with the value (n1-n2)/(n1+n2)
 /// using an error bar calculated with Binomial statistics.
 
-void RooHist::addAsymmetryBin(Axis_t binCenter, Int_t n1, Int_t n2, Double_t binWidth, Double_t xErrorFrac, Double_t scaleFactor)
+void RooHist::addAsymmetryBin(Axis_t binCenter, Int_t n1, Int_t n2, double binWidth, double xErrorFrac, double scaleFactor)
 {
-  Double_t scale= 1;
-  if(binWidth > 0) scale= _nominalBinWidth/binWidth;
-  Int_t index= GetN();
-
   // calculate Binomial errors for this bin
-  Double_t ym,yp,dx(0.5*binWidth);
+  double ym,yp,dx(0.5*binWidth);
   if(!RooHistError::instance().getBinomialIntervalAsym(n1,n2,ym,yp,_nSigma)) {
-    coutE(Plotting) << "RooHist::addAsymmetryBin: unable to calculate binomial error for bin with " << n1 << "," << n2 << " events" << endl;
+    coutE(Plotting) << "RooHist::addAsymmetryBin: unable to calculate binomial error for bin with " << n1 << "," << n2 << " events" << std::endl;
     return;
   }
 
-  Double_t a= (Double_t)(n1-n2)/(n1+n2);
-  SetPoint(index,binCenter,a*scaleFactor);
-  SetPointError(index,dx*xErrorFrac,dx*xErrorFrac,(a-ym)*scaleFactor,(yp-a)*scaleFactor);
-  updateYAxisLimits(scale*yp);
-  updateYAxisLimits(scale*ym);
+  double a= (double)(n1-n2)/(n1+n2);
+  addPoint(binCenter, a, scaleFactor,dx*xErrorFrac,dx*xErrorFrac, a-ym, yp-a);
 }
 
 
@@ -545,24 +519,17 @@ void RooHist::addAsymmetryBin(Axis_t binCenter, Int_t n1, Int_t n2, Double_t bin
 /// Add a bin to this histogram with the value (n1-n2)/(n1+n2)
 /// using an error bar calculated with Binomial statistics.
 
-void RooHist::addAsymmetryBinWithError(Axis_t binCenter, Double_t n1, Double_t n2, Double_t en1, Double_t en2, Double_t binWidth, Double_t xErrorFrac, Double_t scaleFactor)
+void RooHist::addAsymmetryBinWithError(Axis_t binCenter, double n1, double n2, double en1, double en2, double binWidth, double xErrorFrac, double scaleFactor)
 {
-  Double_t scale= 1;
-  if(binWidth > 0) scale= _nominalBinWidth/binWidth;
-  Int_t index= GetN();
-
   // calculate Binomial errors for this bin
-  Double_t ym,yp,dx(0.5*binWidth);
-  Double_t a= (Double_t)(n1-n2)/(n1+n2);
+  double ym,yp,dx(0.5*binWidth);
+  double a= (double)(n1-n2)/(n1+n2);
 
-  Double_t error = 2*sqrt( pow(en1,2)*pow(n2,2) + pow(en2,2)*pow(n1,2) ) / pow(n1+n2,2) ;
+  double error = 2*sqrt( pow(en1,2)*pow(n2,2) + pow(en2,2)*pow(n1,2) ) / pow(n1+n2,2) ;
   ym=a-error ;
   yp=a+error ;
 
-  SetPoint(index,binCenter,a*scaleFactor);
-  SetPointError(index,dx*xErrorFrac,dx*xErrorFrac,(a-ym)*scaleFactor,(yp-a)*scaleFactor);
-  updateYAxisLimits(scale*yp);
-  updateYAxisLimits(scale*ym);
+  addPoint(binCenter,a, scaleFactor, dx*xErrorFrac,dx*xErrorFrac, a-ym, yp-a);
 }
 
 
@@ -571,25 +538,18 @@ void RooHist::addAsymmetryBinWithError(Axis_t binCenter, Double_t n1, Double_t n
 /// Add a bin to this histogram with the value n1/(n1+n2)
 /// using an error bar calculated with Binomial statistics.
 
-void RooHist::addEfficiencyBin(Axis_t binCenter, Int_t n1, Int_t n2, Double_t binWidth, Double_t xErrorFrac, Double_t scaleFactor)
+void RooHist::addEfficiencyBin(Axis_t binCenter, Int_t n1, Int_t n2, double binWidth, double xErrorFrac, double scaleFactor)
 {
-  Double_t scale= 1;
-  if(binWidth > 0) scale= _nominalBinWidth/binWidth;
-  Int_t index= GetN();
-
-  Double_t a= (Double_t)(n1)/(n1+n2);
+  double a= (double)(n1)/(n1+n2);
 
   // calculate Binomial errors for this bin
-  Double_t ym,yp,dx(0.5*binWidth);
+  double ym,yp,dx(0.5*binWidth);
   if(!RooHistError::instance().getBinomialIntervalEff(n1,n2,ym,yp,_nSigma)) {
-    coutE(Plotting) << "RooHist::addEfficiencyBin: unable to calculate binomial error for bin with " << n1 << "," << n2 << " events" << endl;
+    coutE(Plotting) << "RooHist::addEfficiencyBin: unable to calculate binomial error for bin with " << n1 << "," << n2 << " events" << std::endl;
     return;
   }
 
-  SetPoint(index,binCenter,a*scaleFactor);
-  SetPointError(index,dx*xErrorFrac,dx*xErrorFrac,(a-ym)*scaleFactor,(yp-a)*scaleFactor);
-  updateYAxisLimits(scale*yp);
-  updateYAxisLimits(scale*ym);
+  addPoint(binCenter,a, scaleFactor,dx*xErrorFrac,dx*xErrorFrac, a-ym, yp-a);
 }
 
 
@@ -598,83 +558,76 @@ void RooHist::addEfficiencyBin(Axis_t binCenter, Int_t n1, Int_t n2, Double_t bi
 /// Add a bin to this histogram with the value n1/(n1+n2)
 /// using an error bar calculated with Binomial statistics.
 
-void RooHist::addEfficiencyBinWithError(Axis_t binCenter, Double_t n1, Double_t n2, Double_t en1, Double_t en2, Double_t binWidth, Double_t xErrorFrac, Double_t scaleFactor)
+void RooHist::addEfficiencyBinWithError(Axis_t binCenter, double n1, double n2, double en1, double en2, double binWidth, double xErrorFrac, double scaleFactor)
 {
-  Double_t scale= 1;
-  if(binWidth > 0) scale= _nominalBinWidth/binWidth;
-  Int_t index= GetN();
+  double a= (double)(n1)/(n1+n2);
 
-  Double_t a= (Double_t)(n1)/(n1+n2);
-
-  Double_t error = sqrt( pow(en1,2)*pow(n2,2) + pow(en2,2)*pow(n1,2) ) / pow(n1+n2,2) ;
+  double error = sqrt( pow(en1,2)*pow(n2,2) + pow(en2,2)*pow(n1,2) ) / pow(n1+n2,2) ;
 
   // calculate Binomial errors for this bin
-  Double_t ym,yp,dx(0.5*binWidth);
+  double ym,yp,dx(0.5*binWidth);
   ym=a-error ;
   yp=a+error ;
 
 
-  SetPoint(index,binCenter,a*scaleFactor);
-  SetPointError(index,dx*xErrorFrac,dx*xErrorFrac,(a-ym)*scaleFactor,(yp-a)*scaleFactor);
-  updateYAxisLimits(scale*yp);
-  updateYAxisLimits(scale*ym);
+  addPoint(binCenter,a, scaleFactor,dx*xErrorFrac,dx*xErrorFrac, a-ym, yp-a);
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return kTRUE if binning of this RooHist is identical to that of 'other'
+/// Return true if binning of this RooHist is identical to that of 'other'
 
-Bool_t RooHist::hasIdenticalBinning(const RooHist& other) const
+bool RooHist::hasIdenticalBinning(const RooHist& other) const
 {
   // First check if number of bins is the same
   if (GetN() != other.GetN()) {
-    return kFALSE ;
+    return false ;
   }
 
   // Next require that all bin centers are the same
   Int_t i ;
   for (i=0 ; i<GetN() ; i++) {
-    Double_t x1,x2,y1,y2 ;
+    double x1,x2,y1,y2 ;
 
     GetPoint(i,x1,y1) ;
     other.GetPoint(i,x2,y2) ;
 
-    if (fabs(x1-x2)>1e-10) {
-      return kFALSE ;
+    if (std::abs(x1-x2) > 1e-10 * _nominalBinWidth) {
+      return false ;
     }
 
   }
 
-  return kTRUE ;
+  return true ;
 }
 
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return kTRUE if contents of this RooHist is identical within given
+/// Return true if contents of this RooHist is identical within given
 /// relative tolerance to that of 'other'
 
-Bool_t RooHist::isIdentical(const RooHist& other, Double_t tol, bool verbose) const
+bool RooHist::isIdentical(const RooHist& other, double tol, bool verbose) const
 {
   // Make temporary TH1s output of RooHists to perform Kolmogorov test
-  TH1::AddDirectory(kFALSE) ;
+  TH1::AddDirectory(false) ;
   TH1F h_self("h_self","h_self",GetN(),0,1) ;
   TH1F h_other("h_other","h_other",GetN(),0,1) ;
-  TH1::AddDirectory(kTRUE) ;
+  TH1::AddDirectory(true) ;
 
   for (Int_t i=0 ; i<GetN() ; i++) {
     h_self.SetBinContent(i+1,GetY()[i]) ;
     h_other.SetBinContent(i+1,other.GetY()[i]) ;
   }
 
-  Double_t M = h_self.KolmogorovTest(&h_other,"M") ;
+  double M = h_self.KolmogorovTest(&h_other,"M") ;
   if (M>tol) {
-    Double_t kprob = h_self.KolmogorovTest(&h_other) ;
-    if(verbose) cout << "RooHist::isIdentical() tolerance exceeded M=" << M << " (tol=" << tol << "), corresponding prob = " << kprob << endl ;
-    return kFALSE ;
+    double kprob = h_self.KolmogorovTest(&h_other) ;
+    if(verbose) std::cout << "RooHist::isIdentical() tolerance exceeded M=" << M << " (tol=" << tol << "), corresponding prob = " << kprob << std::endl ;
+    return false ;
   }
 
-  return kTRUE ;
+  return true ;
 }
 
 
@@ -686,21 +639,21 @@ Bool_t RooHist::isIdentical(const RooHist& other, Double_t tol, bool verbose) co
 ///      Shape: error CL and maximum value
 ///    Verbose: print our bin contents and errors
 
-void RooHist::printMultiline(ostream& os, Int_t contents, Bool_t verbose, TString indent) const
+void RooHist::printMultiline(std::ostream& os, Int_t contents, bool verbose, TString indent) const
 {
   RooPlotable::printMultiline(os,contents,verbose,indent);
-  os << indent << "--- RooHist ---" << endl;
+  os << indent << "--- RooHist ---" << std::endl;
   Int_t n= GetN();
-  os << indent << "  Contains " << n << " bins" << endl;
+  os << indent << "  Contains " << n << " bins" << std::endl;
   if(verbose) {
-    os << indent << "  Errors calculated at" << _nSigma << "-sigma CL" << endl;
-    os << indent << "  Bin Contents:" << endl;
+    os << indent << "  Errors calculated at" << _nSigma << "-sigma CL" << std::endl;
+    os << indent << "  Bin Contents:" << std::endl;
     for(Int_t i= 0; i < n; i++) {
-      os << indent << setw(3) << i << ") x= " <<  fX[i];
+      os << indent << std::setw(3) << i << ") x= " <<  fX[i];
       if(fEXhigh[i] > 0 || fEXlow[i] > 0) {
    os << " +" << fEXhigh[i] << " -" << fEXlow[i];
       }
-      os << " , y = " << fY[i] << " +" << fEYhigh[i] << " -" << fEYlow[i] << endl;
+      os << " , y = " << fY[i] << " +" << fEYhigh[i] << " -" << fEYlow[i] << std::endl;
     }
   }
 }
@@ -710,7 +663,7 @@ void RooHist::printMultiline(ostream& os, Int_t contents, Bool_t verbose, TStrin
 ////////////////////////////////////////////////////////////////////////////////
 /// Print name of RooHist
 
-void RooHist::printName(ostream& os) const
+void RooHist::printName(std::ostream& os) const
 {
   os << GetName() ;
 }
@@ -720,7 +673,7 @@ void RooHist::printName(ostream& os) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Print title of RooHist
 
-void RooHist::printTitle(ostream& os) const
+void RooHist::printTitle(std::ostream& os) const
 {
   os << GetTitle() ;
 }
@@ -730,9 +683,9 @@ void RooHist::printTitle(ostream& os) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Print class name of RooHist
 
-void RooHist::printClassName(ostream& os) const
+void RooHist::printClassName(std::ostream& os) const
 {
-  os << IsA()->GetName() ;
+  os << ClassName() ;
 }
 
 
@@ -740,13 +693,10 @@ std::unique_ptr<RooHist> RooHist::createEmptyResidHist(const RooCurve& curve, bo
 {
   // Copy all non-content properties from hist1
   auto hist = std::make_unique<RooHist>(_nominalBinWidth) ;
-  if (normalize) {
-    hist->SetName(Form("pull_%s_%s",GetName(),curve.GetName())) ;
-    hist->SetTitle(Form("Pull of %s and %s",GetTitle(),curve.GetTitle())) ;
-  } else {
-    hist->SetName(Form("resid_%s_%s",GetName(),curve.GetName())) ;
-    hist->SetTitle(Form("Residual of %s and %s",GetTitle(),curve.GetTitle())) ;
-  }
+  const std::string name = GetName() + std::string("_") + curve.GetName();
+  const std::string title = GetTitle() + std::string(" and ") + curve.GetTitle();
+  hist->SetName(((normalize ? "pull_" : "resid_") + name).c_str()) ;
+  hist->SetTitle(((normalize ? "Pull of " : "Residual of ") + title).c_str()) ;
 
   return hist;
 }
@@ -755,22 +705,22 @@ std::unique_ptr<RooHist> RooHist::createEmptyResidHist(const RooCurve& curve, bo
 void RooHist::fillResidHist(RooHist & residHist, const RooCurve& curve,bool normalize, bool useAverage) const
 {
   // Determine range of curve
-  Double_t xstart,xstop,y ;
+  double xstart,xstop,y ;
   curve.GetPoint(0,xstart,y) ;
   curve.GetPoint(curve.GetN()-1,xstop,y) ;
 
   // Add histograms, calculate Poisson confidence interval on sum value
   for(Int_t i=0 ; i<GetN() ; i++) {
-    Double_t x,point;
+    double x,point;
     GetPoint(i,x,point) ;
 
     // Only calculate pull for bins inside curve range
     if (x<xstart || x>xstop) continue ;
 
-    Double_t yy ;
+    double yy ;
     if (useAverage) {
-      Double_t exl = GetErrorXlow(i);
-      Double_t exh = GetErrorXhigh(i) ;
+      double exl = GetErrorXlow(i);
+      double exh = GetErrorXhigh(i) ;
       if (exl<=0 ) exl = GetErrorX(i);
       if (exh<=0 ) exh = GetErrorX(i);
       if (exl<=0 ) exl = 0.5*getNominalBinWidth();
@@ -780,10 +730,10 @@ void RooHist::fillResidHist(RooHist & residHist, const RooCurve& curve,bool norm
       yy = point - curve.interpolate(x) ;
     }
 
-    Double_t dyl = GetErrorYlow(i) ;
-    Double_t dyh = GetErrorYhigh(i) ;
+    double dyl = GetErrorYlow(i) ;
+    double dyh = GetErrorYhigh(i) ;
     if (normalize) {
-        Double_t norm = (yy>0?dyl:dyh);
+        double norm = (yy>0?dyl:dyh);
    if (norm==0.) {
      coutW(Plotting) << "RooHist::makeResisHist(" << GetName() << ") WARNING: point " << i << " has zero error, setting residual to zero" << std::endl;
      yy=0 ;

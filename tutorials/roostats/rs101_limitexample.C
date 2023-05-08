@@ -59,84 +59,83 @@ void rs101_limitexample()
    // --------------------------------------
    // The Model building stage
    // --------------------------------------
-   RooWorkspace *wspace = new RooWorkspace();
-   wspace->factory("Poisson::countingModel(obs[150,0,300], "
+   RooWorkspace wspace{};
+   wspace.factory("Poisson::countingModel(obs[150,0,300], "
                    "sum(s[50,0,120]*ratioSigEff[1.,0,3.],b[100]*ratioBkgEff[1.,0.,3.]))"); // counting model
-   //  wspace->factory("Gaussian::sigConstraint(ratioSigEff,1,0.05)"); // 5% signal efficiency uncertainty
-   //  wspace->factory("Gaussian::bkgConstraint(ratioBkgEff,1,0.1)"); // 10% background efficiency uncertainty
-   wspace->factory("Gaussian::sigConstraint(gSigEff[1,0,3],ratioSigEff,0.05)"); // 5% signal efficiency uncertainty
-   wspace->factory("Gaussian::bkgConstraint(gSigBkg[1,0,3],ratioBkgEff,0.2)");  // 10% background efficiency uncertainty
-   wspace->factory("PROD::modelWithConstraints(countingModel,sigConstraint,bkgConstraint)"); // product of terms
-   wspace->Print();
+   //  wspace.factory("Gaussian::sigConstraint(ratioSigEff,1,0.05)"); // 5% signal efficiency uncertainty
+   //  wspace.factory("Gaussian::bkgConstraint(ratioBkgEff,1,0.1)"); // 10% background efficiency uncertainty
+   wspace.factory("Gaussian::sigConstraint(gSigEff[1,0,3],ratioSigEff,0.05)"); // 5% signal efficiency uncertainty
+   wspace.factory("Gaussian::bkgConstraint(gSigBkg[1,0,3],ratioBkgEff,0.2)");  // 10% background efficiency uncertainty
+   wspace.factory("PROD::modelWithConstraints(countingModel,sigConstraint,bkgConstraint)"); // product of terms
+   wspace.Print();
 
-   RooAbsPdf *modelWithConstraints = wspace->pdf("modelWithConstraints"); // get the model
-   RooRealVar *obs = wspace->var("obs");                                  // get the observable
-   RooRealVar *s = wspace->var("s");                                      // get the signal we care about
+   RooAbsPdf *modelWithConstraints = wspace.pdf("modelWithConstraints"); // get the model
+   RooRealVar *obs = wspace.var("obs");                                  // get the observable
+   RooRealVar *s = wspace.var("s");                                      // get the signal we care about
    RooRealVar *b =
-      wspace->var("b"); // get the background and set it to a constant.  Uncertainty included in ratioBkgEff
+      wspace.var("b"); // get the background and set it to a constant.  Uncertainty included in ratioBkgEff
    b->setConstant();
 
-   RooRealVar *ratioSigEff = wspace->var("ratioSigEff"); // get uncertain parameter to constrain
-   RooRealVar *ratioBkgEff = wspace->var("ratioBkgEff"); // get uncertain parameter to constrain
+   RooRealVar *ratioSigEff = wspace.var("ratioSigEff"); // get uncertain parameter to constrain
+   RooRealVar *ratioBkgEff = wspace.var("ratioBkgEff"); // get uncertain parameter to constrain
    RooArgSet constrainedParams(*ratioSigEff,
                                *ratioBkgEff); // need to constrain these in the fit (should change default behavior)
 
-   RooRealVar *gSigEff = wspace->var("gSigEff"); // global observables for signal efficiency
-   RooRealVar *gSigBkg = wspace->var("gSigBkg"); // global obs for background efficiency
+   RooRealVar *gSigEff = wspace.var("gSigEff"); // global observables for signal efficiency
+   RooRealVar *gSigBkg = wspace.var("gSigBkg"); // global obs for background efficiency
    gSigEff->setConstant();
    gSigBkg->setConstant();
 
    // Create an example dataset with 160 observed events
    obs->setVal(160.);
-   RooDataSet *data = new RooDataSet("exampleData", "exampleData", RooArgSet(*obs));
-   data->add(*obs);
+   RooDataSet data{"exampleData", "exampleData", *obs};
+   data.add(*obs);
 
    RooArgSet all(*s, *ratioBkgEff, *ratioSigEff);
 
    // not necessary
-   modelWithConstraints->fitTo(*data, RooFit::Constrain(RooArgSet(*ratioSigEff, *ratioBkgEff)));
+   modelWithConstraints->fitTo(data, Constrain({*ratioSigEff, *ratioBkgEff}), PrintLevel(-1));
 
    // Now let's make some confidence intervals for s, our parameter of interest
    RooArgSet paramOfInterest(*s);
 
-   ModelConfig modelConfig(wspace);
+   ModelConfig modelConfig(&wspace);
    modelConfig.SetPdf(*modelWithConstraints);
    modelConfig.SetParametersOfInterest(paramOfInterest);
    modelConfig.SetNuisanceParameters(constrainedParams);
    modelConfig.SetObservables(*obs);
    modelConfig.SetGlobalObservables(RooArgSet(*gSigEff, *gSigBkg));
    modelConfig.SetName("ModelConfig");
-   wspace->import(modelConfig);
-   wspace->import(*data);
-   wspace->SetName("w");
-   wspace->writeToFile("rs101_ws.root");
+   wspace.import(modelConfig);
+   wspace.import(data);
+   wspace.SetName("w");
+   wspace.writeToFile("rs101_ws.root");
 
    // First, let's use a Calculator based on the Profile Likelihood Ratio
-   // ProfileLikelihoodCalculator plc(*data, *modelWithConstraints, paramOfInterest);
-   ProfileLikelihoodCalculator plc(*data, modelConfig);
+   // ProfileLikelihoodCalculator plc(data, *modelWithConstraints, paramOfInterest);
+   ProfileLikelihoodCalculator plc(data, modelConfig);
    plc.SetTestSize(.05);
-   ConfInterval *lrinterval = plc.GetInterval(); // that was easy.
+   std::unique_ptr<LikelihoodInterval> lrinterval{static_cast<LikelihoodInterval*>(plc.GetInterval())};
 
    // Let's make a plot
-   TCanvas *dataCanvas = new TCanvas("dataCanvas");
+   auto dataCanvas = new TCanvas("dataCanvas");
    dataCanvas->Divide(2, 1);
 
    dataCanvas->cd(1);
-   LikelihoodIntervalPlot plotInt((LikelihoodInterval *)lrinterval);
+   LikelihoodIntervalPlot plotInt(lrinterval.get());
    plotInt.SetTitle("Profile Likelihood Ratio and Posterior for S");
    plotInt.Draw();
 
    // Second, use a Calculator based on the Feldman Cousins technique
-   FeldmanCousins fc(*data, modelConfig);
+   FeldmanCousins fc(data, modelConfig);
    fc.UseAdaptiveSampling(true);
    fc.FluctuateNumDataEntries(false); // number counting analysis: dataset always has 1 entry with N events observed
    fc.SetNBins(100);                  // number of points to test per parameter
    fc.SetTestSize(.05);
    //  fc.SaveBeltToFile(true); // optional
-   ConfInterval *fcint = NULL;
-   fcint = fc.GetInterval(); // that was easy.
+   std::unique_ptr<PointSetInterval> fcint{static_cast<PointSetInterval*>(fc.GetInterval())};
 
-   RooFitResult *fit = modelWithConstraints->fitTo(*data, Save(true));
+   RooFitResult *fit = modelWithConstraints->fitTo(data, Save(true), PrintLevel(-1));
 
    // Third, use a Calculator based on Markov Chain monte carlo
    // Before configuring the calculator, let's make a ProposalFunction
@@ -146,28 +145,28 @@ void rs101_limitexample()
    ph.SetCovMatrix(fit->covarianceMatrix());
    ph.SetUpdateProposalParameters(true);
    ph.SetCacheSize(100);
-   ProposalFunction *pdfProp = ph.GetProposalFunction(); // that was easy
+   ProposalFunction *pdfProp = ph.GetProposalFunction();
 
-   MCMCCalculator mc(*data, modelConfig);
+   MCMCCalculator mc(data, modelConfig);
    mc.SetNumIters(20000);    // steps to propose in the chain
    mc.SetTestSize(.05);      // 95% CL
    mc.SetNumBurnInSteps(40); // ignore first N steps in chain as "burn in"
    mc.SetProposalFunction(*pdfProp);
    mc.SetLeftSideTailFraction(0.5);                        // find a "central" interval
-   MCMCInterval *mcInt = (MCMCInterval *)mc.GetInterval(); // that was easy
+   std::unique_ptr<MCMCInterval> mcInt{static_cast<MCMCInterval *>(mc.GetInterval())};
 
    // Get Lower and Upper limits from Profile Calculator
-   cout << "Profile lower limit on s = " << ((LikelihoodInterval *)lrinterval)->LowerLimit(*s) << endl;
-   cout << "Profile upper limit on s = " << ((LikelihoodInterval *)lrinterval)->UpperLimit(*s) << endl;
+   std::cout << "Profile lower limit on s = " << lrinterval->LowerLimit(*s) << std::endl;
+   std::cout << "Profile upper limit on s = " << lrinterval->UpperLimit(*s) << std::endl;
 
    // Get Lower and Upper limits from FeldmanCousins with profile construction
-   if (fcint != NULL) {
-      double fcul = ((PointSetInterval *)fcint)->UpperLimit(*s);
-      double fcll = ((PointSetInterval *)fcint)->LowerLimit(*s);
-      cout << "FC lower limit on s = " << fcll << endl;
-      cout << "FC upper limit on s = " << fcul << endl;
-      TLine *fcllLine = new TLine(fcll, 0, fcll, 1);
-      TLine *fculLine = new TLine(fcul, 0, fcul, 1);
+   if (fcint) {
+      double fcul = fcint->UpperLimit(*s);
+      double fcll = fcint->LowerLimit(*s);
+      std::cout << "FC lower limit on s = " << fcll << std::endl;
+      std::cout << "FC upper limit on s = " << fcul << std::endl;
+      auto fcllLine = new TLine(fcll, 0, fcll, 1);
+      auto fculLine = new TLine(fcul, 0, fcul, 1);
       fcllLine->SetLineColor(kRed);
       fculLine->SetLineColor(kRed);
       fcllLine->Draw("same");
@@ -183,9 +182,9 @@ void rs101_limitexample()
 
    double mcul = mcInt->UpperLimit(*s);
    double mcll = mcInt->LowerLimit(*s);
-   cout << "MCMC lower limit on s = " << mcll << endl;
-   cout << "MCMC upper limit on s = " << mcul << endl;
-   cout << "MCMC Actual confidence level: " << mcInt->GetActualConfidenceLevel() << endl;
+   std::cout << "MCMC lower limit on s = " << mcll << std::endl;
+   std::cout << "MCMC upper limit on s = " << mcul << std::endl;
+   std::cout << "MCMC Actual confidence level: " << mcInt->GetActualConfidenceLevel() << std::endl;
 
    // 3-d plot of the parameter points
    dataCanvas->cd(2);
@@ -210,7 +209,7 @@ void rs101_limitexample()
    // TTree* parameterScan =  RooStats::GetAsTTree("parScanTreeData","parScanTreeData",*parScanData);
    // assert(parameterScan);
    // parameterScan->Draw("s:ratioSigEff:ratioBkgEff","","goff");
-   TGraph2D *gr = new TGraph2D(parScanData->numEntries());
+   auto gr = new TGraph2D(parScanData->numEntries());
    for (int ievt = 0; ievt < parScanData->numEntries(); ++ievt) {
       const RooArgSet *evt = parScanData->get(ievt);
       double x = evt->getRealValue("ratioBkgEff");
@@ -221,12 +220,6 @@ void rs101_limitexample()
    }
    gr->SetMarkerStyle(24);
    gr->Draw("P SAME");
-
-   delete wspace;
-   delete lrinterval;
-   delete mcInt;
-   delete fcint;
-   delete data;
 
    // print timing info
    t.Stop();

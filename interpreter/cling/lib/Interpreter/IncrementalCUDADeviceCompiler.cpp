@@ -114,14 +114,14 @@ namespace cling {
       cppStdVersion = "-std=c++14";
     if (langOpts.CPlusPlus17)
       cppStdVersion = "-std=c++1z";
-    if (langOpts.CPlusPlus2a)
-      cppStdVersion = "-std=c++2a";
+    if (langOpts.CPlusPlus20)
+      cppStdVersion = "-std=c++20";
 
     if (cppStdVersion.empty())
       llvm::errs()
           << "IncrementalCUDADeviceCompiler: No valid c++ standard is set.\n";
 
-    uint32_t smVersion = 20;
+    uint32_t smVersion = 35;
     if (!invocationOptions.CompilerOpts.CUDAGpuArch.empty()) {
       llvm::StringRef(invocationOptions.CompilerOpts.CUDAGpuArch)
           .drop_front(3 /* sm_ */)
@@ -308,7 +308,7 @@ namespace cling {
     llvm::legacy::PassManager pass;
     // it's important to use the type assembler
     // object file is not supported and do not make sense
-    auto FileType = llvm::TargetMachine::CGFT_AssemblyFile;
+    llvm::CodeGenFileType FileType = llvm::CGFT_AssemblyFile;
 
     if (targetMachine->addPassesToEmitFile(pass, dest, /*DwoOut*/ nullptr,
                                            FileType)) {
@@ -324,7 +324,7 @@ namespace cling {
     // CodeGen can use it. This should be replaced by a in-memory solution
     // (e.g. virtual file).
     std::error_code EC;
-    llvm::raw_fd_ostream os(m_FatbinFilePath, EC, llvm::sys::fs::F_None);
+    llvm::raw_fd_ostream os(m_FatbinFilePath, EC, llvm::sys::fs::OF_None);
     if (EC) {
       llvm::errs() << "ERROR: cannot generate file " << m_FatbinFilePath
                    << "\n";

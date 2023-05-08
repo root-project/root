@@ -64,7 +64,7 @@ ClassImp(TGTab);
 
 TGTabElement::TGTabElement(const TGWindow *p, TGString *text, UInt_t w, UInt_t h,
                            GContext_t norm, FontStruct_t font,
-                           UInt_t options, ULong_t back) :
+                           UInt_t options, Pixel_t back) :
    TGFrame(p, w, h, options, back)
 {
    fClosePic     = 0;
@@ -329,7 +329,7 @@ TGDimension TGTabLayout::GetDefaultSize() const
 
 TGTab::TGTab(const TGWindow *p, UInt_t w, UInt_t h,
              GContext_t norm, FontStruct_t font,
-             UInt_t options, ULong_t back) :
+             UInt_t options, Pixel_t back) :
    TGCompositeFrame(p, w, h, options, back)
 {
    fMsgWindow  = p;

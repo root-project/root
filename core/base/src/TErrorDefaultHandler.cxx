@@ -98,6 +98,7 @@ again:
 /// if abort is set it aborts the application.  Replaces the minimal error handler
 /// of TError.h as part of the gROOT construction.  TError's minimal handler is put
 /// back in place during the gROOT destruction.
+/// @note `abort()` is only called if `abort_bool` is `true` and `level < gErrorIgnoreLevel`
 void DefaultErrorHandler(Int_t level, Bool_t abort_bool, const char *location, const char *msg)
 {
    if (gErrorIgnoreLevel == kUnset) {
@@ -134,7 +135,7 @@ void DefaultErrorHandler(Int_t level, Bool_t abort_bool, const char *location, c
    if (level < gErrorIgnoreLevel)
       return;
 
-   const char *type = nullptr;
+   const char *type = "?";
 
    if (level >= kInfo)
       type = "Info";

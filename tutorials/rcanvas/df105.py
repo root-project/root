@@ -36,7 +36,7 @@ parser.add_argument("-b", action="store_true", default=False, help="Use ROOT bat
 parser.add_argument("-t", action="store_true", default=False, help="Use implicit multi threading (for the full dataset only possible with --lumi-scale 1.0)")
 args = parser.parse_args()
 
-if args.b: ROOT.gROOT.SetWebDisplay("batch")
+if args.b: ROOT.gROOT.SetBatch(True)
 if args.t: ROOT.EnableImplicitMT()
 
 if not args.full_dataset: lumi_scale = 0.001 # The preskimmed dataset contains only 0.01 fb^-1
@@ -49,7 +49,7 @@ else: dataset_path = "root://eospublic.cern.ch//eos/root-eos/reduced_atlas_opend
 
 # Create a ROOT dataframe for each dataset
 # Note that we load the filenames from the external json file placed in the same folder than this script.
-files = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "df105.json")))
+files = json.load(open(os.path.join(ROOT.gROOT.GetTutorialsDir(), "rcanvas/df105.json")))
 processes = files.keys()
 df = {}
 xsecs = {}

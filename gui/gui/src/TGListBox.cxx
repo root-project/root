@@ -131,7 +131,7 @@ void TGLBEntry::Toggle()
 /// Create a text listbox entry. The TGString is adopted.
 
 TGTextLBEntry::TGTextLBEntry(const TGWindow *p, TGString *s, Int_t id,
-      GContext_t norm, FontStruct_t font, UInt_t options, ULong_t back) :
+      GContext_t norm, FontStruct_t font, UInt_t options, Pixel_t back) :
    TGLBEntry(p, id, options, back)
 {
    fText        = s;
@@ -234,7 +234,7 @@ const TGGC &TGTextLBEntry::GetDefaultGC()
 /// Create the line style listbox entry.
 
 TGLineLBEntry::TGLineLBEntry(const TGWindow *p, Int_t id, const char *str,
-                             UInt_t w, Style_t style, UInt_t options, ULong_t back) :
+                             UInt_t w, Style_t style, UInt_t options, Pixel_t back) :
    TGTextLBEntry(p, new TGString(str), id, GetDefaultGC()(),
                  GetDefaultFontStruct(), options, back)
 {
@@ -378,7 +378,7 @@ void TGLineLBEntry::DoRedraw()
 
 TGIconLBEntry::TGIconLBEntry(const TGWindow *p, Int_t id, const char *str,
                              const TGPicture *pic,
-                             UInt_t /*w*/, Style_t /*style*/, UInt_t options, ULong_t back) :
+                             UInt_t /*w*/, Style_t /*style*/, UInt_t options, Pixel_t back) :
    TGTextLBEntry(p, new TGString(str), id, GetDefaultGC()(),
                  GetDefaultFontStruct(), options, back)
 {
@@ -457,8 +457,9 @@ public:
    TGLBFrameElement(TGFrame *f, TGLayoutHints *l) : TGFrameElement(f, l) {}
    virtual ~TGLBFrameElement() {}
 
-   Bool_t IsSortable() const { return kTRUE; }
-   Int_t  Compare(const TObject *obj) const {
+   Bool_t IsSortable() const override { return kTRUE; }
+   Int_t  Compare(const TObject *obj) const override
+   {
       if (!fFrame->InheritsFrom(TGTextLBEntry::Class())) {
          return 0;
       }
@@ -484,7 +485,7 @@ public:
 /// Create a listbox container.
 
 TGLBContainer::TGLBContainer(const TGWindow *p, UInt_t w, UInt_t h,
-                             UInt_t options, ULong_t back) :
+                             UInt_t options, Pixel_t back) :
    TGContainer(p, w, h, options, back)
 {
    fLastActive = 0;
@@ -1113,7 +1114,7 @@ Int_t TGLBContainer::GetPos(Int_t id)
 /// Create a listbox.
 
 TGListBox::TGListBox(const TGWindow *p, Int_t id,
-                     UInt_t options, ULong_t back) :
+                     UInt_t options, Pixel_t back) :
    TGCompositeFrame(p, 10, 10, options, back)
 {
    fMsgWindow = p;
@@ -1360,7 +1361,7 @@ void TGListBox::RemoveEntries(Int_t from_ID, Int_t to_ID)
 /// Insert the specified TGLBEntry and layout hints behind afterID.
 /// The entry and layout will be adopted and later deleted by the listbox.
 
-void TGListBox::InsertEntry(TGLBEntry *lbe, TGLayoutHints *lhints, int afterID)
+void TGListBox::InsertEntry(TGLBEntry *lbe, TGLayoutHints *lhints, Int_t afterID)
 {
    fItemVsize = TMath::Max(fItemVsize, lbe->GetDefaultHeight());
    fLbc->InsertEntry(lbe, lhints, afterID);
@@ -1608,7 +1609,7 @@ Bool_t TGListBox::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t)
 
 void TGListBox::Selected(Int_t widgetId, Int_t id)
 {
-   Long_t args[2];
+   Longptr_t args[2];
 
    args[0] = widgetId;
    args[1] = id;
@@ -1621,7 +1622,7 @@ void TGListBox::Selected(Int_t widgetId, Int_t id)
 
 void TGListBox::DoubleClicked(Int_t widgetId, Int_t id)
 {
-   Long_t args[2];
+   Longptr_t args[2];
 
    args[0] = widgetId;
    args[1] = id;

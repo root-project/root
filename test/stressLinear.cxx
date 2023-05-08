@@ -296,10 +296,6 @@ void stressLinear(Int_t maxSizeReq,Int_t verbose)
      TString sp = gSystem->GetFromPipe("uname -a");
      sp.Resize(60);
      printf("*  SYS: %s\n",sp.Data());
-     if (strstr(gSystem->GetBuildNode(),"Linux")) {
-        sp = gSystem->GetFromPipe("lsb_release -d -s");
-        printf("*  SYS: %s\n",sp.Data());
-     }
      if (strstr(gSystem->GetBuildNode(),"Darwin")) {
         sp  = gSystem->GetFromPipe("sw_vers -productVersion");
         sp += " Mac OS X ";
@@ -435,7 +431,7 @@ void mstress_allocation(Int_t msize)
 
 class FillMatrix : public TElementPosActionD {
    Int_t no_elems,no_cols;
-   void Operation(Double_t &element) const
+   void Operation(Double_t &element) const override
       { element = 4*TMath::Pi()/no_elems * (fI*no_cols+fJ); }
 public:
    FillMatrix() {}
@@ -609,7 +605,7 @@ void mstress_matrix_fill(Int_t rsize,Int_t csize)
 typedef  Double_t (*dfunc)(Double_t);
 class ApplyFunction : public TElementActionD {
    dfunc fFunc;
-   void Operation(Double_t &element) const { element = fFunc(Double_t(element)); }
+   void Operation(Double_t &element) const override { element = fFunc(Double_t(element)); }
 public:
    ApplyFunction(dfunc func) : fFunc(func) { }
 };
@@ -925,7 +921,7 @@ void mstress_transposition(Int_t msize)
 //           Test special matrix creation
 //
 class MakeHilbert : public TElementPosActionD {
-  void Operation(Double_t &element) const { element = 1./(fI+fJ+1); }
+  void Operation(Double_t &element) const override { element = 1./(fI+fJ+1); }
 public:
   MakeHilbert() { }
 };
@@ -933,7 +929,7 @@ public:
 #if !defined (__CINT__) || defined (__MAKECINT__)
 class TestUnit : public TElementPosActionD {
   mutable Int_t fIsUnit;
-  void Operation(Double_t &element) const
+  void Operation(Double_t &element) const override
       { if (fIsUnit)
           fIsUnit = ((fI==fJ) ? (element == 1.0) : (element == 0)); }
 public:
@@ -1081,7 +1077,7 @@ void mstress_special_creation(Int_t dim)
 //           Test matrix promises
 //
 class hilbert_matrix_promise : public TMatrixDLazy {
-  void FillIn(TMatrixD &m) const { m = THilbertMatrixD(m.GetRowLwb(),m.GetRowUpb(),
+  void FillIn(TMatrixD &m) const override { m = THilbertMatrixD(m.GetRowLwb(),m.GetRowUpb(),
                                                    m.GetColLwb(),m.GetColUpb()); }
 
 public:
@@ -3256,14 +3252,14 @@ void vstress_allocation(Int_t msize)
 //                Test uniform element operations
 //
 class SinAction : public TElementActionD {
-  void Operation(Double_t &element) const { element = TMath::Sin(element); }
+  void Operation(Double_t &element) const override { element = TMath::Sin(element); }
   public:
     SinAction() { }
 };
 
 class CosAction : public TElementPosActionD {
   Double_t factor;
-  void Operation(Double_t &element) const { element = TMath::Cos(factor*fI); }
+  void Operation(Double_t &element) const override { element = TMath::Cos(factor*fI); }
   public:
     CosAction(Int_t no_elems): factor(2*TMath::Pi()/no_elems) { }
 };
@@ -3886,7 +3882,7 @@ Bool_t test_svd_expansion(const TMatrixD &A)
 class MakeMatrix : public TMatrixDLazy {
   const Double_t *array;
         Int_t     no_elems;
-  void FillIn(TMatrixD& m) const {
+  void FillIn(TMatrixD& m) const override {
     R__ASSERT( m.GetNrows() * m.GetNcols() == no_elems );
     const Double_t *ap = array;
           Double_t *mp = m.GetMatrixArray();

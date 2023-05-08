@@ -24,8 +24,6 @@ By default a private copy of TRandom3 is used to generate all random numbers.
 **/
 #include <cassert>
 
-#include "RooFit.h"
-
 #include "RooRandom.h"
 #include "RooQuasiRandomGenerator.h"
 
@@ -50,7 +48,7 @@ RooRandom::Guard::~Guard()
 /// Return a pointer to a singleton random-number generator
 /// implementation. Creates the object the first time it is called.
 
-TRandom *RooRandom::randomGenerator() 
+TRandom *RooRandom::randomGenerator()
 {
   if (!_theGenerator) _theGenerator= new TRandom3();
   return _theGenerator;
@@ -70,7 +68,7 @@ void RooRandom::setRandomGenerator(TRandom* gen)
 /// Return a pointer to a singleton quasi-random generator
 /// implementation. Creates the object the first time it is called.
 
-RooQuasiRandomGenerator *RooRandom::quasiGenerator() 
+RooQuasiRandomGenerator *RooRandom::quasiGenerator()
 {
   if(!_theQuasiGenerator) _theQuasiGenerator= new RooQuasiRandomGenerator();
   return _theQuasiGenerator;
@@ -80,7 +78,7 @@ RooQuasiRandomGenerator *RooRandom::quasiGenerator()
 ////////////////////////////////////////////////////////////////////////////////
 /// Return a number uniformly distributed from (0,1)
 
-Double_t RooRandom::uniform(TRandom *generator) 
+double RooRandom::uniform(TRandom *generator)
 {
   return generator->Rndm();
 }
@@ -89,7 +87,7 @@ Double_t RooRandom::uniform(TRandom *generator)
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill the vector provided with random numbers uniformly distributed from (0,1)
 
-void RooRandom::uniform(UInt_t dimension, Double_t vector[], TRandom *generator) 
+void RooRandom::uniform(UInt_t dimension, double vector[], TRandom *generator)
 {
   generator->RndmArray(dimension, vector);
 }
@@ -98,7 +96,7 @@ void RooRandom::uniform(UInt_t dimension, Double_t vector[], TRandom *generator)
 ////////////////////////////////////////////////////////////////////////////////
 /// Return an integer uniformly distributed from [0,n-1]
 
-UInt_t RooRandom::integer(UInt_t n, TRandom *generator) 
+UInt_t RooRandom::integer(UInt_t n, TRandom *generator)
 {
   return generator->Integer(n);
 }
@@ -107,7 +105,7 @@ UInt_t RooRandom::integer(UInt_t n, TRandom *generator)
 ////////////////////////////////////////////////////////////////////////////////
 /// Return a Gaussian random variable with mean 0 and variance 1.
 
-Double_t RooRandom::gaussian(TRandom *generator) 
+double RooRandom::gaussian(TRandom *generator)
 {
   return generator->Gaus();
 }
@@ -118,7 +116,7 @@ Double_t RooRandom::gaussian(TRandom *generator)
 /// Niederreiter base 2 generator described in Bratley, Fox, Niederreiter,
 /// ACM Trans. Model. Comp. Sim. 2, 195 (1992).
 
-Bool_t RooRandom::quasi(UInt_t dimension, Double_t vector[], RooQuasiRandomGenerator *generator) 
+bool RooRandom::quasi(UInt_t dimension, double vector[], RooQuasiRandomGenerator *generator)
 {
   return generator->generate(dimension,vector);
 }

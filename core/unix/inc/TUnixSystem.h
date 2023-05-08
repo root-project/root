@@ -115,10 +115,11 @@ public:
    Int_t             Exec(const char *shellcmd) override;
    FILE             *OpenPipe(const char *shellcmd, const char *mode) override;
    int               ClosePipe(FILE *pipe) override;
-   void              Exit(int code, Bool_t mode = kTRUE) override;
-   void              Abort(int code = 0) override;
    int               GetPid() override;
    void              StackTrace() override;
+
+   [[ noreturn ]] void Exit (int code, Bool_t mode = kTRUE) override;
+   [[ noreturn ]] void Abort (int code = 0) override;
 
    //---- Directories ------------------------------------------
    int               MakeDirectory(const char *name) override;

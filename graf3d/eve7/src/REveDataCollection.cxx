@@ -44,8 +44,8 @@ REveDataItemList::REveDataItemList(const std::string& n, const std::string& t):
       REveDataItemList::DummyItemsChange(collection, ids);
    });
 
-   SetFillImpliedSelectedDelegate([&](REveDataItemList *collection, REveElement::Set_t &impSelSet) {
-      REveDataItemList::DummyFillImpliedSelected(collection, impSelSet);
+   SetFillImpliedSelectedDelegate([&](REveDataItemList *collection, REveElement::Set_t &impSelSet, const std::set<int>& sec_idcs) {
+      REveDataItemList::DummyFillImpliedSelected(collection, impSelSet, sec_idcs);
    });
 
    SetupDefaultColorAndTransparency(REveDataCollection::fgDefaultColor, true, true);
@@ -96,14 +96,11 @@ void REveDataItemList::ItemChanged(Int_t idx)
 
 //______________________________________________________________________________
 
-void REveDataItemList::FillImpliedSelectedSet( Set_t& impSelSet)
+void REveDataItemList::FillImpliedSelectedSet(Set_t &impSelSet, const std::set<int> &sec_idcs)
 {
-   /*
-   printf("REveDataItemList::FillImpliedSelectedSet colecction setsize %zu\n",   RefSelectedSet().size());
-   for (auto x : RefSelectedSet())
-      printf("%d \n", x);
-   */
-   fHandlerFillImplied( this ,  impSelSet);
+   // printf("REveDataItemList::FillImpliedSelectedSet colecction setsize %zu\n", sec_idcs.size());
+   RefSelectedSet() = sec_idcs;
+   fHandlerFillImplied(this, impSelSet, sec_idcs);
 }
 
 //______________________________________________________________________________
@@ -158,7 +155,7 @@ void REveDataItemList::ProcessSelectionStr(ElementId_t id, bool multi, bool seco
    try {
       while (itr != end) sis.insert(std::stoi(*itr++));
    }
-   catch (const std::invalid_argument& ia) {
+   catch (const std::invalid_argument&) {
       throw eh + "invalid secondary index argument '" + *itr + "' - must be int.";
    }
 
@@ -247,7 +244,7 @@ void REveDataItemList::DummyItemsChange(REveDataItemList*, const std::vector<int
 
 
 //______________________________________________________________________________
-void REveDataItemList::DummyFillImpliedSelected(REveDataItemList*, REveElement::Set_t&)
+void REveDataItemList::DummyFillImpliedSelected(REveDataItemList*, REveElement::Set_t&, const std::set<int>&)
 {
    if (gDebug) {
       printf("REveDataItemList::DummyFillImpliedSelectedDelegate not implemented\n");
@@ -312,7 +309,7 @@ void REveDataCollection::SetFilterExpr(const char* filter)
          R__LOG_ERROR(REveLog()) << "EveDataCollection::SetFilterExpr" << exc.what();
       }
    }
-   else 
+   else
    {
       // Remove filter
       fFilterFoo = nullptr;
@@ -336,7 +333,7 @@ void REveDataCollection::ApplyFilter()
 {
    if (!fFilterFoo)
       return;
-   
+
    Ids_t ids;
    int idx = 0;
    for (auto &ii : fItemList->fItems)

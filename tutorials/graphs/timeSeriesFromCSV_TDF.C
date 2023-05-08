@@ -22,7 +22,7 @@ void timeSeriesFromCSV_TDF()
 
    // Read the data from the file using TDataFrame. We do not have headers and
    // we would like the delimiter to be a space
-   auto tdf = ROOT::RDF::MakeCsvDataFrame(Form("%sSWAN2017.dat", dir.Data()), false, ' ');
+   auto tdf = ROOT::RDF::FromCSV(Form("%sSWAN2017.dat", dir.Data()), false, ' ');
 
    // We now prepare the graph input
    auto d = tdf.Define("TimeStamp", "auto s = string(Col0) + ' ' +  Col1; return (float) TDatime(s.c_str()).Convert();")

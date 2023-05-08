@@ -27,9 +27,9 @@ using tools::addPathIfExists;
 /// a target-triple directory in the library and header search paths.
 /// Unfortunately, this triple does not align with the vanilla target triple,
 /// so we provide a rough mapping here.
-static std::string getMultiarchTriple(const Driver &D,
-                                      const llvm::Triple &TargetTriple,
-                                      StringRef SysRoot) {
+std::string Hurd::getMultiarchTriple(const Driver &D,
+                                     const llvm::Triple &TargetTriple,
+                                     StringRef SysRoot) const {
   if (TargetTriple.getArch() == llvm::Triple::x86) {
     // We use the existence of '/lib/<triple>' as a directory to detect some
     // common hurd triples that don't quite match the Clang triple for both
@@ -61,17 +61,35 @@ static StringRef getOSLibDir(const llvm::Triple &Triple, const ArgList &Args) {
   return Triple.isArch32Bit() ? "lib" : "lib64";
 }
 
-Hurd::Hurd(const Driver &D, const llvm::Triple &Triple,
-           const ArgList &Args)
+Hurd::Hurd(const Driver &D, const llvm::Triple &Triple, const ArgList &Args)
     : Generic_ELF(D, Triple, Args) {
+  GCCInstallation.init(Triple, Args);
+  Multilibs = GCCInstallation.getMultilibs();
+  SelectedMultilib = GCCInstallation.getMultilib();
   std::string SysRoot = computeSysRoot();
+  ToolChain::path_list &PPaths = getProgramPaths();
+
+  Generic_GCC::PushPPaths(PPaths);
+
+  // The selection of paths to try here is designed to match the patterns which
+  // the GCC driver itself uses, as this is part of the GCC-compatible driver.
+  // This was determined by running GCC in a fake filesystem, creating all
+  // possible permutations of these directories, and seeing which ones it added
+  // to the link paths.
   path_list &Paths = getFilePaths();
 
-  const std::string OSLibDir = getOSLibDir(Triple, Args);
+  const std::string OSLibDir = std::string(getOSLibDir(Triple, Args));
   const std::string MultiarchTriple = getMultiarchTriple(D, Triple, SysRoot);
 
-  // If we are currently running Clang inside of the requested system root, add
-  // its parent library paths to those searched.
+#ifdef ENABLE_LINKER_BUILD_ID
+  ExtraOpts.push_back("--build-id");
+#endif
+
+  Generic_GCC::AddMultilibPaths(D, SysRoot, OSLibDir, MultiarchTriple, Paths);
+
+  // Similar to the logic for GCC above, if we currently running Clang inside
+  // of the requested system root, add its parent library paths to
+  // those searched.
   // FIXME: It's not clear whether we should use the driver's installed
   // directory ('Dir' below) or the ResourceDir.
   if (StringRef(D.Dir).startswith(SysRoot)) {
@@ -85,8 +103,11 @@ Hurd::Hurd(const Driver &D, const llvm::Triple &Triple,
   addPathIfExists(D, SysRoot + "/usr/lib/" + MultiarchTriple, Paths);
   addPathIfExists(D, SysRoot + "/usr/lib/../" + OSLibDir, Paths);
 
-  // If we are currently running Clang inside of the requested system root, add
-  // its parent library path to those searched.
+  Generic_GCC::AddMultiarchPaths(D, SysRoot, OSLibDir, Paths);
+
+  // Similar to the logic for GCC above, if we are currently running Clang
+  // inside of the requested system root, add its parent library path to those
+  // searched.
   // FIXME: It's not clear whether we should use the driver's installed
   // directory ('Dir' below) or the ResourceDir.
   if (StringRef(D.Dir).startswith(SysRoot))
@@ -102,13 +123,6 @@ Tool *Hurd::buildLinker() const { return new tools::gnutools::Linker(*this); }
 
 Tool *Hurd::buildAssembler() const {
   return new tools::gnutools::Assembler(*this);
-}
-
-std::string Hurd::computeSysRoot() const {
-  if (!getDriver().SysRoot.empty())
-    return getDriver().SysRoot;
-
-  return std::string();
 }
 
 std::string Hurd::getDynamicLinker(const ArgList &Args) const {
@@ -145,7 +159,7 @@ void Hurd::AddClangSystemIncludeArgs(const ArgList &DriverArgs,
     CIncludeDirs.split(Dirs, ":");
     for (StringRef Dir : Dirs) {
       StringRef Prefix =
-          llvm::sys::path::is_absolute(Dir) ? StringRef(SysRoot) : "";
+          llvm::sys::path::is_absolute(Dir) ? "" : StringRef(SysRoot);
       addExternCSystemInclude(DriverArgs, CC1Args, Prefix + Dir);
     }
     return;
@@ -153,11 +167,16 @@ void Hurd::AddClangSystemIncludeArgs(const ArgList &DriverArgs,
 
   // Lacking those, try to detect the correct set of system includes for the
   // target triple.
-  if (getTriple().getArch() == llvm::Triple::x86) {
-    std::string Path = SysRoot + "/usr/include/i386-gnu";
-    if (D.getVFS().exists(Path))
-      addExternCSystemInclude(DriverArgs, CC1Args, Path);
-  }
+
+  AddMultilibIncludeArgs(DriverArgs, CC1Args);
+
+  // On systems using multiarch, add /usr/include/$triple before
+  // /usr/include.
+  std::string MultiarchIncludeDir = getMultiarchTriple(D, getTriple(), SysRoot);
+  if (!MultiarchIncludeDir.empty() &&
+      D.getVFS().exists(SysRoot + "/usr/include/" + MultiarchIncludeDir))
+    addExternCSystemInclude(DriverArgs, CC1Args,
+                            SysRoot + "/usr/include/" + MultiarchIncludeDir);
 
   // Add an include of '/include' directly. This isn't provided by default by
   // system GCCs, but is often used with cross-compiling GCCs, and harmless to
@@ -165,4 +184,24 @@ void Hurd::AddClangSystemIncludeArgs(const ArgList &DriverArgs,
   addExternCSystemInclude(DriverArgs, CC1Args, SysRoot + "/include");
 
   addExternCSystemInclude(DriverArgs, CC1Args, SysRoot + "/usr/include");
+}
+
+void Hurd::addLibStdCxxIncludePaths(const llvm::opt::ArgList &DriverArgs,
+                                    llvm::opt::ArgStringList &CC1Args) const {
+  // We need a detected GCC installation on Linux to provide libstdc++'s
+  // headers in odd Linuxish places.
+  if (!GCCInstallation.isValid())
+    return;
+
+  StringRef TripleStr = GCCInstallation.getTriple().str();
+  StringRef DebianMultiarch =
+      GCCInstallation.getTriple().getArch() == llvm::Triple::x86 ? "i386-gnu"
+                                                                 : TripleStr;
+
+  addGCCLibStdCxxIncludePaths(DriverArgs, CC1Args, DebianMultiarch);
+}
+
+void Hurd::addExtraOpts(llvm::opt::ArgStringList &CmdArgs) const {
+  for (const auto &Opt : ExtraOpts)
+    CmdArgs.push_back(Opt.c_str());
 }

@@ -745,7 +745,7 @@ TEST(RDataFrameInterface, DescribeShortFormat)
    EXPECT_EQ(df2e.Describe().AsString(/*shortFormat =*/true), ss3);
 
    // others with an actual fDataSource, like csv
-   auto df3 = ROOT::RDF::MakeCsvDataFrame("RCsvDS_test_headers.csv");
+   auto df3 = ROOT::RDF::FromCSV("RCsvDS_test_headers.csv");
    EXPECT_EQ(df3.Describe().AsString(/*shortFormat =*/true), "Dataframe from datasource RCsv");
 
    for (int i = 1; i <= 3; ++i)
@@ -813,6 +813,53 @@ TEST(RDataFrameInterface, SnapshotWithDuplicateColumns)
    EXPECT_THROW((ROOT::RDataFrame(1).Snapshot("t", "neverwritten.root", {"rdfentry_", "rdfentry_"})), std::logic_error);
 }
 
+struct Jet {
+   double a, b;
+};
+
+struct CustomFiller {
+   TH2D h{"", "", 10, 0, 10, 10, 0, 10};
+
+   void Fill(const Jet &j) { h.Fill(j.a, j.b); }
+
+   void Merge(const std::vector<CustomFiller *> &)
+   {
+      // unused, single-thread test
+   }
+
+   double GetMeanX() const { return h.GetMean(1); }
+   double GetMeanY() const { return h.GetMean(2); }
+   double GetEntries() const { return h.GetEntries(); }
+};
+
+// #9428
+TEST(RDataFrameInterface, FillCustomType)
+{
+   auto res = ROOT::RDataFrame(10).Define("Jet", [] { return Jet{1., 2.}; }).Fill<Jet>(CustomFiller{}, {"Jet"});
+   EXPECT_DOUBLE_EQ(res->GetEntries(), 10.);
+   EXPECT_DOUBLE_EQ(res->GetMeanX(), 1.);
+   EXPECT_DOUBLE_EQ(res->GetMeanY(), 2.);
+}
+
+TEST(RDataFrameInterface, RedefineFriend)
+{
+   int x = 0;
+   TTree main("main", "main");
+   main.Branch("x", &x);
+   main.Fill();
+
+   x = 42;
+   TTree fr("friend", "friend");
+   fr.Branch("x", &x);
+   fr.Fill();
+
+   main.AddFriend(&fr);
+
+   auto df = ROOT::RDataFrame(main);
+   auto sum = df.Redefine("friend.x", [](int _x) { return _x + 1; }, {"friend.x"}).Sum<int>("friend.x");
+   EXPECT_EQ(*sum, 43);
+}
+
 // #11002
 TEST(RDataFrameUtils, RegexWithFriendsInJittedFilters)
 {
@@ -821,8 +868,8 @@ TEST(RDataFrameUtils, RegexWithFriendsInJittedFilters)
    t.Branch("x", &x);
    t.Fill();
    TTree fr("fr", "fr");
-   x = -42;
-   fr.Branch("x", &x);
+   int frx = -42;
+   fr.Branch("x", &frx);
    fr.Fill();
    t.AddFriend(&fr);
    ROOT::RDataFrame df(t);

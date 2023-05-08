@@ -45,7 +45,6 @@
 #include "RooRealVar.h"
 #include "RooGaussian.h"
 #include "RooMinimizer.h"
-#include "RooChi2Var.h"
 #include "RooGlobalFunc.h"
 #include "RooFitResult.h"
 #include "RooProdPdf.h"
@@ -553,13 +552,13 @@ int  FitUsingRooFit(TTree * tree, TF1 * func) {
 
 
       RooRealVar mean("mean","Mean of Gaussian",iniPar[0], -100,100) ;
-      RooRealVar sigma("sigma","Width of Gaussian",iniPar[1], -100, 100) ;
+      RooRealVar sigma("sigma","Width of Gaussian",iniPar[1], 0.01, 100) ;
 
       RooGaussian pdfx("gaussx","gauss(x,mean,sigma)",x,mean,sigma);
 
       // for 2d data
       RooRealVar meany("meanx","Mean of Gaussian",iniPar[2], -100,100) ;
-      RooRealVar sigmay("sigmay","Width of Gaussian",iniPar[3], -100, 100) ;
+      RooRealVar sigmay("sigmay","Width of Gaussian",iniPar[3], 0.01, 100) ;
       RooGaussian pdfy("gaussy","gauss(y,meanx,sigmay)",y,meany,sigmay);
 
       RooProdPdf pdf("gausxy","gausxy",RooArgSet(pdfx,pdfy) );
@@ -575,11 +574,7 @@ int  FitUsingRooFit(TTree * tree, TF1 * func) {
       bool save = false;
 #endif
 
-//#ifndef _WIN32 // until a bug 30762 is fixed
-      RooFitResult * result = pdf.fitTo(data, RooFit::Minos(0), RooFit::Hesse(1) , RooFit::PrintLevel(level), RooFit::Save(save) );
-// #else
-//       RooFitResult * result = pdf.fitTo(data );
-// #endif
+      std::unique_ptr<RooFitResult> result{pdf.fitTo(data, RooFit::Minos(0), RooFit::Hesse(1) , RooFit::PrintLevel(level), RooFit::Save(save) )};
 
 #ifdef DEBUG
       mean.Print();
@@ -640,7 +635,7 @@ int  FitUsingRooFit2(TTree * tree) {
 
 
          m[j] = new RooRealVar(mname.c_str(),mname.c_str(),iniPar[2*j],-100,100) ;
-         s[j] = new RooRealVar(sname.c_str(),sname.c_str(),iniPar[2*j+1],-100,100) ;
+         s[j] = new RooRealVar(sname.c_str(),sname.c_str(),iniPar[2*j+1],0.01,100) ;
 
          std::string gname = "g_" + ROOT::Math::Util::ToString(j);
          g[j] = new RooGaussian(gname.c_str(),"gauss(x,mean,sigma)",*x[j],*m[j],*s[j]);
@@ -672,11 +667,7 @@ int  FitUsingRooFit2(TTree * tree) {
 #endif
 
 
-#ifndef _WIN32 // until a bug 30762 is fixed
-      RooFitResult * result = pdf[N-1]->fitTo(data, RooFit::Minos(0), RooFit::Hesse(1) , RooFit::PrintLevel(level), RooFit::Save(save) );
-#else
-      RooFitResult * result = pdf[N-1]->fitTo(data);
-#endif
+      std::unique_ptr<RooFitResult> result{pdf[N-1]->fitTo(data, RooFit::Minos(0), RooFit::Hesse(1) , RooFit::PrintLevel(level), RooFit::Save(save) )};
 
 #ifdef DEBUG
       assert(result != 0);

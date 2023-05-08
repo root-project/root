@@ -45,7 +45,7 @@ model.add(Dense(num_output_nodes, activation='softmax'))
 # NOTE: Use following settings for the different tasks
 # Any classification: 'categorical_crossentropy' is recommended loss function
 # Regression: 'mean_squared_error' is recommended loss function
-model.compile(loss='categorical_crossentropy', optimizer=SGD(learning_rate=0.01), metrics=['accuracy',])
+model.compile(loss='categorical_crossentropy', optimizer=SGD(learning_rate=0.01), weighted_metrics=['accuracy',])
 
 # Save model
 model.save('model.h5')

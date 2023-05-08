@@ -18,7 +18,10 @@
 #include "RooFit/MultiProcess/Messenger.h"
 #include "RooFit/MultiProcess/Job.h"
 #include "RooFit/MultiProcess/util.h"
+#include "RooFit/MultiProcess/ProcessTimer.h"
+#include "RooFit/MultiProcess/Config.h"
 
+#include <string>
 #include <unistd.h> // getpid, pid_t
 #include <cerrno>   // EINTR
 #include <csignal>  // sigprocmask etc
@@ -107,8 +110,9 @@ void worker_loop()
                         JobManager::instance()->messenger().receive_from_master_on_worker<std::size_t>();
                      JobManager::get_job_object(job_id_for_state)->update_state();
                   }
-
+                  if (RooFit::MultiProcess::Config::getTimingAnalysis()) ProcessTimer::start_timer("worker:eval_task:" + std::to_string(task_id));
                   JobManager::get_job_object(job_id)->evaluate_task(task_id);
+                  if (RooFit::MultiProcess::Config::getTimingAnalysis()) ProcessTimer::end_timer("worker:eval_task:" + std::to_string(task_id));
                   JobManager::get_job_object(job_id)->send_back_task_result_from_worker(task_id);
 
                   break;
@@ -140,6 +144,9 @@ void worker_loop()
          throw;
       }
    }
+
+   if (RooFit::MultiProcess::Config::getTimingAnalysis()) ProcessTimer::write_file();
+   
    // clean up signal management modifications
    sigprocmask(SIG_SETMASK, &JobManager::instance()->messenger().ppoll_sigmask, nullptr);
 

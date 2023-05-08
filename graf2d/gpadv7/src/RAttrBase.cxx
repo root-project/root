@@ -58,7 +58,7 @@ void RAttrBase::ClearValue(const std::string &name)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-/// Set <NoValue> for attribute. Ensure that value can not be configured via style - defaults will be used
+/// Set `<NoValue>` for attribute. Ensure that value can not be configured via style - defaults will be used
 /// Equivalent to css syntax { attrname:; }
 
 void RAttrBase::SetNoValue(const std::string &name)

@@ -243,12 +243,13 @@ void TProfile::BuildOptions(Double_t ymin, Double_t ymax, Option_t *option)
 
 TProfile::TProfile(const TProfile &profile) : TH1D()
 {
-   ((TProfile&)profile).Copy(*this);
+   profile.TProfile::Copy(*this);
 }
 
 TProfile &TProfile::operator=(const TProfile &profile)
 {
-   ((TProfile &)profile).Copy(*this);
+   if (this != &profile)
+      profile.TProfile::Copy(*this);
    return *this;
 }
 
@@ -419,7 +420,7 @@ Int_t TProfile::BufferFill(Double_t x, Double_t y, Double_t w)
 void TProfile::Copy(TObject &obj) const
 {
    try {
-      TProfile & pobj = dynamic_cast<TProfile&>(obj);
+      TProfile &pobj = dynamic_cast<TProfile&>(obj);
       TH1D::Copy(pobj);
       fBinEntries.Copy(pobj.fBinEntries);
       fBinSumw2.Copy(pobj.fBinSumw2);

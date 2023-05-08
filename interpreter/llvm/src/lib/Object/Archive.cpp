@@ -38,13 +38,12 @@ using namespace llvm;
 using namespace object;
 using namespace llvm::support::endian;
 
-static const char *const Magic = "!<arch>\n";
-static const char *const ThinMagic = "!<thin>\n";
+const char Magic[] = "!<arch>\n";
+const char ThinMagic[] = "!<thin>\n";
 
 void Archive::anchor() {}
 
-static Error
-malformedError(Twine Msg) {
+static Error malformedError(Twine Msg) {
   std::string StringMsg = "truncated or malformed archive (" + Msg.str() + ")";
   return make_error<GenericBinaryError>(std::move(StringMsg),
                                         object_error::parse_failed);
@@ -77,8 +76,8 @@ ArchiveMemberHeader::ArchiveMemberHeader(const Archive *Parent,
     if (Err) {
       std::string Buf;
       raw_string_ostream OS(Buf);
-      OS.write_escaped(StringRef(ArMemHdr->Terminator,
-                                 sizeof(ArMemHdr->Terminator)));
+      OS.write_escaped(
+          StringRef(ArMemHdr->Terminator, sizeof(ArMemHdr->Terminator)));
       OS.flush();
       std::string Msg("terminator characters in archive member \"" + Buf +
                       "\" not the correct \"`\\n\" values for the archive "
@@ -102,14 +101,14 @@ Expected<StringRef> ArchiveMemberHeader::getRawName() const {
   auto Kind = Parent->kind();
   if (Kind == Archive::K_BSD || Kind == Archive::K_DARWIN64) {
     if (ArMemHdr->Name[0] == ' ') {
-      uint64_t Offset = reinterpret_cast<const char *>(ArMemHdr) -
-                        Parent->getData().data();
+      uint64_t Offset =
+          reinterpret_cast<const char *>(ArMemHdr) - Parent->getData().data();
       return malformedError("name contains a leading space for archive member "
-                            "header at offset " + Twine(Offset));
+                            "header at offset " +
+                            Twine(Offset));
     }
     EndCond = ' ';
-  }
-  else if (ArMemHdr->Name[0] == '/' || ArMemHdr->Name[0] == '#')
+  } else if (ArMemHdr->Name[0] == '/' || ArMemHdr->Name[0] == '#')
     EndCond = ' ';
   else
     EndCond = '/';
@@ -131,8 +130,8 @@ Expected<StringRef> ArchiveMemberHeader::getName(uint64_t Size) const {
   // archive header is truncated to produce an error message with the name.
   // Make sure the name field is not truncated.
   if (Size < offsetof(ArMemHdrType, Name) + sizeof(ArMemHdr->Name)) {
-    uint64_t ArchiveOffset = reinterpret_cast<const char *>(ArMemHdr) -
-                      Parent->getData().data();
+    uint64_t ArchiveOffset =
+        reinterpret_cast<const char *>(ArMemHdr) - Parent->getData().data();
     return malformedError("archive header truncated before the name field "
                           "for archive member header at offset " +
                           Twine(ArchiveOffset));
@@ -158,21 +157,22 @@ Expected<StringRef> ArchiveMemberHeader::getName(uint64_t Size) const {
       raw_string_ostream OS(Buf);
       OS.write_escaped(Name.substr(1).rtrim(' '));
       OS.flush();
-      uint64_t ArchiveOffset = reinterpret_cast<const char *>(ArMemHdr) -
-                               Parent->getData().data();
+      uint64_t ArchiveOffset =
+          reinterpret_cast<const char *>(ArMemHdr) - Parent->getData().data();
       return malformedError("long name offset characters after the '/' are "
-                            "not all decimal numbers: '" + Buf + "' for "
-                            "archive member header at offset " +
+                            "not all decimal numbers: '" +
+                            Buf + "' for archive member header at offset " +
                             Twine(ArchiveOffset));
     }
 
     // Verify it.
     if (StringOffset >= Parent->getStringTable().size()) {
-      uint64_t ArchiveOffset = reinterpret_cast<const char *>(ArMemHdr) -
-                               Parent->getData().data();
-      return malformedError("long name offset " + Twine(StringOffset) + " past "
-                            "the end of the string table for archive member "
-                            "header at offset " + Twine(ArchiveOffset));
+      uint64_t ArchiveOffset =
+          reinterpret_cast<const char *>(ArMemHdr) - Parent->getData().data();
+      return malformedError("long name offset " + Twine(StringOffset) +
+                            " past the end of the string table for archive "
+                            "member header at offset " +
+                            Twine(ArchiveOffset));
     }
 
     // GNU long file names end with a "/\n".
@@ -196,23 +196,24 @@ Expected<StringRef> ArchiveMemberHeader::getName(uint64_t Size) const {
       raw_string_ostream OS(Buf);
       OS.write_escaped(Name.substr(3).rtrim(' '));
       OS.flush();
-      uint64_t ArchiveOffset = reinterpret_cast<const char *>(ArMemHdr) -
-                        Parent->getData().data();
+      uint64_t ArchiveOffset =
+          reinterpret_cast<const char *>(ArMemHdr) - Parent->getData().data();
       return malformedError("long name length characters after the #1/ are "
-                            "not all decimal numbers: '" + Buf + "' for "
-                            "archive member header at offset " +
+                            "not all decimal numbers: '" +
+                            Buf + "' for archive member header at offset " +
                             Twine(ArchiveOffset));
     }
     if (getSizeOf() + NameLength > Size) {
-      uint64_t ArchiveOffset = reinterpret_cast<const char *>(ArMemHdr) -
-                        Parent->getData().data();
+      uint64_t ArchiveOffset =
+          reinterpret_cast<const char *>(ArMemHdr) - Parent->getData().data();
       return malformedError("long name length: " + Twine(NameLength) +
                             " extends past the end of the member or archive "
                             "for archive member header at offset " +
                             Twine(ArchiveOffset));
     }
     return StringRef(reinterpret_cast<const char *>(ArMemHdr) + getSizeOf(),
-                     NameLength).rtrim('\0');
+                     NameLength)
+        .rtrim('\0');
   }
 
   // It is not a long name so trim the blanks at the end of the name.
@@ -223,38 +224,45 @@ Expected<StringRef> ArchiveMemberHeader::getName(uint64_t Size) const {
   return Name.drop_back(1);
 }
 
-Expected<uint32_t> ArchiveMemberHeader::getSize() const {
-  uint32_t Ret;
-  if (StringRef(ArMemHdr->Size,
-                sizeof(ArMemHdr->Size)).rtrim(" ").getAsInteger(10, Ret)) {
+Expected<uint64_t> ArchiveMemberHeader::getSize() const {
+  uint64_t Ret;
+  if (StringRef(ArMemHdr->Size, sizeof(ArMemHdr->Size))
+          .rtrim(" ")
+          .getAsInteger(10, Ret)) {
     std::string Buf;
     raw_string_ostream OS(Buf);
-    OS.write_escaped(StringRef(ArMemHdr->Size,
-                               sizeof(ArMemHdr->Size)).rtrim(" "));
+    OS.write_escaped(
+        StringRef(ArMemHdr->Size, sizeof(ArMemHdr->Size)).rtrim(" "));
     OS.flush();
-    uint64_t Offset = reinterpret_cast<const char *>(ArMemHdr) -
-                      Parent->getData().data();
+    uint64_t Offset =
+        reinterpret_cast<const char *>(ArMemHdr) - Parent->getData().data();
     return malformedError("characters in size field in archive header are not "
-                          "all decimal numbers: '" + Buf + "' for archive "
-                          "member header at offset " + Twine(Offset));
+                          "all decimal numbers: '" +
+                          Buf +
+                          "' for archive "
+                          "member header at offset " +
+                          Twine(Offset));
   }
   return Ret;
 }
 
 Expected<sys::fs::perms> ArchiveMemberHeader::getAccessMode() const {
   unsigned Ret;
-  if (StringRef(ArMemHdr->AccessMode,
-                sizeof(ArMemHdr->AccessMode)).rtrim(' ').getAsInteger(8, Ret)) {
+  if (StringRef(ArMemHdr->AccessMode, sizeof(ArMemHdr->AccessMode))
+          .rtrim(' ')
+          .getAsInteger(8, Ret)) {
     std::string Buf;
     raw_string_ostream OS(Buf);
-    OS.write_escaped(StringRef(ArMemHdr->AccessMode,
-                               sizeof(ArMemHdr->AccessMode)).rtrim(" "));
+    OS.write_escaped(
+        StringRef(ArMemHdr->AccessMode, sizeof(ArMemHdr->AccessMode))
+            .rtrim(" "));
     OS.flush();
-    uint64_t Offset = reinterpret_cast<const char *>(ArMemHdr) -
-                      Parent->getData().data();
+    uint64_t Offset =
+        reinterpret_cast<const char *>(ArMemHdr) - Parent->getData().data();
     return malformedError("characters in AccessMode field in archive header "
-                          "are not all decimal numbers: '" + Buf + "' for the "
-                          "archive member header at offset " + Twine(Offset));
+                          "are not all decimal numbers: '" +
+                          Buf + "' for the archive member header at offset " +
+                          Twine(Offset));
   }
   return static_cast<sys::fs::perms>(Ret);
 }
@@ -262,19 +270,21 @@ Expected<sys::fs::perms> ArchiveMemberHeader::getAccessMode() const {
 Expected<sys::TimePoint<std::chrono::seconds>>
 ArchiveMemberHeader::getLastModified() const {
   unsigned Seconds;
-  if (StringRef(ArMemHdr->LastModified,
-                sizeof(ArMemHdr->LastModified)).rtrim(' ')
+  if (StringRef(ArMemHdr->LastModified, sizeof(ArMemHdr->LastModified))
+          .rtrim(' ')
           .getAsInteger(10, Seconds)) {
     std::string Buf;
     raw_string_ostream OS(Buf);
-    OS.write_escaped(StringRef(ArMemHdr->LastModified,
-                               sizeof(ArMemHdr->LastModified)).rtrim(" "));
+    OS.write_escaped(
+        StringRef(ArMemHdr->LastModified, sizeof(ArMemHdr->LastModified))
+            .rtrim(" "));
     OS.flush();
-    uint64_t Offset = reinterpret_cast<const char *>(ArMemHdr) -
-                      Parent->getData().data();
+    uint64_t Offset =
+        reinterpret_cast<const char *>(ArMemHdr) - Parent->getData().data();
     return malformedError("characters in LastModified field in archive header "
-                          "are not all decimal numbers: '" + Buf + "' for the "
-                          "archive member header at offset " + Twine(Offset));
+                          "are not all decimal numbers: '" +
+                          Buf + "' for the archive member header at offset " +
+                          Twine(Offset));
   }
 
   return sys::toTimePoint(Seconds);
@@ -290,11 +300,12 @@ Expected<unsigned> ArchiveMemberHeader::getUID() const {
     raw_string_ostream OS(Buf);
     OS.write_escaped(User);
     OS.flush();
-    uint64_t Offset = reinterpret_cast<const char *>(ArMemHdr) -
-                      Parent->getData().data();
+    uint64_t Offset =
+        reinterpret_cast<const char *>(ArMemHdr) - Parent->getData().data();
     return malformedError("characters in UID field in archive header "
-                          "are not all decimal numbers: '" + Buf + "' for the "
-                          "archive member header at offset " + Twine(Offset));
+                          "are not all decimal numbers: '" +
+                          Buf + "' for the archive member header at offset " +
+                          Twine(Offset));
   }
   return Ret;
 }
@@ -309,11 +320,12 @@ Expected<unsigned> ArchiveMemberHeader::getGID() const {
     raw_string_ostream OS(Buf);
     OS.write_escaped(Group);
     OS.flush();
-    uint64_t Offset = reinterpret_cast<const char *>(ArMemHdr) -
-                      Parent->getData().data();
+    uint64_t Offset =
+        reinterpret_cast<const char *>(ArMemHdr) - Parent->getData().data();
     return malformedError("characters in GID field in archive header "
-                          "are not all decimal numbers: '" + Buf + "' for the "
-                          "archive member header at offset " + Twine(Offset));
+                          "are not all decimal numbers: '" +
+                          Buf + "' for the archive member header at offset " +
+                          Twine(Offset));
   }
   return Ret;
 }
@@ -321,15 +333,15 @@ Expected<unsigned> ArchiveMemberHeader::getGID() const {
 Archive::Child::Child(const Archive *Parent, StringRef Data,
                       uint16_t StartOfFile)
     : Parent(Parent), Header(Parent, Data.data(), Data.size(), nullptr),
-      Data(Data), StartOfFile(StartOfFile) {
-}
+      Data(Data), StartOfFile(StartOfFile) {}
 
 Archive::Child::Child(const Archive *Parent, const char *Start, Error *Err)
     : Parent(Parent),
       Header(Parent, Start,
              Parent
-               ? Parent->getData().size() - (Start - Parent->getData().data())
-               : 0, Err) {
+                 ? Parent->getData().size() - (Start - Parent->getData().data())
+                 : 0,
+             Err) {
   if (!Start)
     return;
 
@@ -368,7 +380,7 @@ Archive::Child::Child(const Archive *Parent, const char *Start, Error *Err)
   StartOfFile = Header.getSizeOf();
   // Don't include attached name.
   Expected<StringRef> NameOrErr = getRawName();
-  if (!NameOrErr){
+  if (!NameOrErr) {
     *Err = NameOrErr.takeError();
     return;
   }
@@ -382,8 +394,8 @@ Archive::Child::Child(const Archive *Parent, const char *Start, Error *Err)
       OS.flush();
       uint64_t Offset = Start - Parent->getData().data();
       *Err = malformedError("long name length characters after the #1/ are "
-                            "not all decimal numbers: '" + Buf + "' for "
-                            "archive member header at offset " +
+                            "not all decimal numbers: '" +
+                            Buf + "' for archive member header at offset " +
                             Twine(Offset));
       return;
     }
@@ -392,12 +404,8 @@ Archive::Child::Child(const Archive *Parent, const char *Start, Error *Err)
 }
 
 Expected<uint64_t> Archive::Child::getSize() const {
-  if (Parent->IsThin) {
-    Expected<uint32_t> Size = Header.getSize();
-    if (!Size)
-      return Size.takeError();
-    return Size.get();
-  }
+  if (Parent->IsThin)
+    return Header.getSize();
   return Data.size() - StartOfFile;
 }
 
@@ -423,12 +431,12 @@ Expected<std::string> Archive::Child::getFullName() const {
     return NameOrErr.takeError();
   StringRef Name = *NameOrErr;
   if (sys::path::is_absolute(Name))
-    return Name;
+    return std::string(Name);
 
   SmallString<128> FullName = sys::path::parent_path(
       Parent->getMemoryBufferRef().getBufferIdentifier());
   sys::path::append(FullName, Name);
-  return StringRef(FullName);
+  return std::string(FullName.str());
 }
 
 Expected<StringRef> Archive::Child::getBuffer() const {
@@ -437,7 +445,7 @@ Expected<StringRef> Archive::Child::getBuffer() const {
     return isThinOrErr.takeError();
   bool isThin = isThinOrErr.get();
   if (!isThin) {
-    Expected<uint32_t> Size = getSize();
+    Expected<uint64_t> Size = getSize();
     if (!Size)
       return Size.takeError();
     return StringRef(Data.data() + StartOfFile, Size.get());
@@ -550,7 +558,7 @@ Archive::Archive(MemoryBufferRef Source, Error &Err)
   } else if (Buffer.startswith(Magic)) {
     IsThin = false;
   } else {
-    Err = make_error<GenericBinaryError>("File too small to be an archive",
+    Err = make_error<GenericBinaryError>("file too small to be an archive",
                                          object_error::invalid_file_type);
     return;
   }
@@ -650,8 +658,7 @@ Archive::Archive(MemoryBufferRef Source, Error &Err)
       SymbolTable = BufOrErr.get();
       if (Increment())
         return;
-    }
-    else if (Name == "__.SYMDEF_64 SORTED" || Name == "__.SYMDEF_64") {
+    } else if (Name == "__.SYMDEF_64 SORTED" || Name == "__.SYMDEF_64") {
       Format = K_DARWIN64;
       // We know that the symbol table is not an external file, but we still
       // must check any Expected<> return value.

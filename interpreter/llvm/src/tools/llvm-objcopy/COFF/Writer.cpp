@@ -12,6 +12,7 @@
 #include "llvm/ADT/StringRef.h"
 #include "llvm/BinaryFormat/COFF.h"
 #include "llvm/Object/COFF.h"
+#include "llvm/Support/Errc.h"
 #include "llvm/Support/ErrorHandling.h"
 #include <cstddef>
 #include <cstdint>
@@ -97,9 +98,16 @@ void COFFWriter::layoutSections() {
       S.Header.PointerToRawData = FileSize;
     FileSize += S.Header.SizeOfRawData; // For executables, this is already
                                         // aligned to FileAlignment.
-    S.Header.NumberOfRelocations = S.Relocs.size();
-    S.Header.PointerToRelocations =
-        S.Header.NumberOfRelocations > 0 ? FileSize : 0;
+    if (S.Relocs.size() >= 0xffff) {
+      S.Header.Characteristics |= COFF::IMAGE_SCN_LNK_NRELOC_OVFL;
+      S.Header.NumberOfRelocations = 0xffff;
+      S.Header.PointerToRelocations = FileSize;
+      FileSize += sizeof(coff_relocation);
+    } else {
+      S.Header.NumberOfRelocations = S.Relocs.size();
+      S.Header.PointerToRelocations = S.Relocs.size() ? FileSize : 0;
+    }
+
     FileSize += S.Relocs.size() * sizeof(coff_relocation);
     FileSize = alignTo(FileSize, FileAlignment);
 
@@ -120,12 +128,12 @@ size_t COFFWriter::finalizeStringTable() {
   StrTabBuilder.finalize();
 
   for (auto &S : Obj.getMutableSections()) {
+    memset(S.Header.Name, 0, sizeof(S.Header.Name));
     if (S.Name.size() > COFF::NameSize) {
-      memset(S.Header.Name, 0, sizeof(S.Header.Name));
       snprintf(S.Header.Name, sizeof(S.Header.Name), "/%d",
                (int)StrTabBuilder.getOffset(S.Name));
     } else {
-      strncpy(S.Header.Name, S.Name.data(), COFF::NameSize);
+      memcpy(S.Header.Name, S.Name.data(), S.Name.size());
     }
   }
   for (auto &S : Obj.getMutableSymbols()) {
@@ -233,7 +241,7 @@ Error COFFWriter::finalize(bool IsBigObj) {
 }
 
 void COFFWriter::writeHeaders(bool IsBigObj) {
-  uint8_t *Ptr = Buf.getBufferStart();
+  uint8_t *Ptr = reinterpret_cast<uint8_t *>(Buf->getBufferStart());
   if (Obj.IsPE) {
     memcpy(Ptr, &Obj.DosHeader, sizeof(Obj.DosHeader));
     Ptr += sizeof(Obj.DosHeader);
@@ -295,7 +303,8 @@ void COFFWriter::writeHeaders(bool IsBigObj) {
 
 void COFFWriter::writeSections() {
   for (const auto &S : Obj.getSections()) {
-    uint8_t *Ptr = Buf.getBufferStart() + S.Header.PointerToRawData;
+    uint8_t *Ptr = reinterpret_cast<uint8_t *>(Buf->getBufferStart()) +
+                   S.Header.PointerToRawData;
     ArrayRef<uint8_t> Contents = S.getContents();
     std::copy(Contents.begin(), Contents.end(), Ptr);
 
@@ -307,6 +316,15 @@ void COFFWriter::writeSections() {
              S.Header.SizeOfRawData - Contents.size());
 
     Ptr += S.Header.SizeOfRawData;
+
+    if (S.Relocs.size() >= 0xffff) {
+      object::coff_relocation R;
+      R.VirtualAddress = S.Relocs.size() + 1;
+      R.SymbolTableIndex = 0;
+      R.Type = 0;
+      memcpy(Ptr, &R, sizeof(R));
+      Ptr += sizeof(R);
+    }
     for (const auto &R : S.Relocs) {
       memcpy(Ptr, &R.Reloc, sizeof(R.Reloc));
       Ptr += sizeof(R.Reloc);
@@ -315,7 +333,8 @@ void COFFWriter::writeSections() {
 }
 
 template <class SymbolTy> void COFFWriter::writeSymbolStringTables() {
-  uint8_t *Ptr = Buf.getBufferStart() + Obj.CoffFileHeader.PointerToSymbolTable;
+  uint8_t *Ptr = reinterpret_cast<uint8_t *>(Buf->getBufferStart()) +
+                 Obj.CoffFileHeader.PointerToSymbolTable;
   for (const auto &S : Obj.getSymbols()) {
     // Convert symbols back to the right size, from coff_symbol32.
     copySymbol<SymbolTy, coff_symbol32>(*reinterpret_cast<SymbolTy *>(Ptr),
@@ -350,8 +369,11 @@ Error COFFWriter::write(bool IsBigObj) {
   if (Error E = finalize(IsBigObj))
     return E;
 
-  if (Error E = Buf.allocate(FileSize))
-    return E;
+  Buf = WritableMemoryBuffer::getNewMemBuffer(FileSize);
+  if (!Buf)
+    return createStringError(llvm::errc::not_enough_memory,
+                             "failed to allocate memory buffer of " +
+                                 Twine::utohexstr(FileSize) + " bytes.");
 
   writeHeaders(IsBigObj);
   writeSections();
@@ -364,7 +386,20 @@ Error COFFWriter::write(bool IsBigObj) {
     if (Error E = patchDebugDirectory())
       return E;
 
-  return Buf.commit();
+  // TODO: Implement direct writing to the output stream (without intermediate
+  // memory buffer Buf).
+  Out.write(Buf->getBufferStart(), Buf->getBufferSize());
+  return Error::success();
+}
+
+Expected<uint32_t> COFFWriter::virtualAddressToFileAddress(uint32_t RVA) {
+  for (const auto &S : Obj.getSections()) {
+    if (RVA >= S.Header.VirtualAddress &&
+        RVA < S.Header.VirtualAddress + S.Header.SizeOfRawData)
+      return S.Header.PointerToRawData + RVA - S.Header.VirtualAddress;
+  }
+  return createStringError(object_error::parse_failed,
+                           "debug directory payload not found");
 }
 
 // Locate which sections contain the debug directories, iterate over all
@@ -386,14 +421,22 @@ Error COFFWriter::patchDebugDirectory() {
                                  "debug directory extends past end of section");
 
       size_t Offset = Dir->RelativeVirtualAddress - S.Header.VirtualAddress;
-      uint8_t *Ptr = Buf.getBufferStart() + S.Header.PointerToRawData + Offset;
+      uint8_t *Ptr = reinterpret_cast<uint8_t *>(Buf->getBufferStart()) +
+                     S.Header.PointerToRawData + Offset;
       uint8_t *End = Ptr + Dir->Size;
       while (Ptr < End) {
         debug_directory *Debug = reinterpret_cast<debug_directory *>(Ptr);
-        Debug->PointerToRawData =
-            S.Header.PointerToRawData + Offset + sizeof(debug_directory);
-        Ptr += sizeof(debug_directory) + Debug->SizeOfData;
-        Offset += sizeof(debug_directory) + Debug->SizeOfData;
+        if (!Debug->AddressOfRawData)
+          return createStringError(object_error::parse_failed,
+                                   "debug directory payload outside of "
+                                   "mapped sections not supported");
+        if (Expected<uint32_t> FilePosOrErr =
+                virtualAddressToFileAddress(Debug->AddressOfRawData))
+          Debug->PointerToRawData = *FilePosOrErr;
+        else
+          return FilePosOrErr.takeError();
+        Ptr += sizeof(debug_directory);
+        Offset += sizeof(debug_directory);
       }
       // Debug directory found and patched, all done.
       return Error::success();

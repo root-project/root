@@ -66,7 +66,7 @@ private:
 
 public:
    TProofProgressLog(TProofProgressDialog *d, Int_t w = 700, Int_t h = 600);
-   TProofProgressLog(const char *url = 0, Int_t sessionidx = 0, Int_t w = 700, Int_t h = 600);
+   TProofProgressLog(const char *url = nullptr, Int_t sessionidx = 0, Int_t w = 700, Int_t h = 600);
    virtual ~TProofProgressLog();
 
    void   BuildLogList(Bool_t create = kFALSE);
@@ -79,7 +79,7 @@ public:
 
    void   LoadFile(const char *file);
 
-   void   Clear(Option_t * = 0);
+   void   Clear(Option_t * = nullptr);
    void   Popup();
    void   SaveToFile();
    void   NoLineEntry();

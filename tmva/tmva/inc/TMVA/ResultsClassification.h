@@ -74,10 +74,10 @@ namespace TMVA {
 
    private:
 
-      std::vector< Float_t >  fMvaValues;   // mva values (Results)
-      std::vector< Bool_t>    fMvaValuesTypes;// mva values type(sig/bkg) (Results)
-      mutable std::vector< Float_t >  fRet;         // return val
-      mutable MsgLogger*      fLogger;      //! message logger
+      std::vector< Float_t >  fMvaValues;      ///< mva values (Results)
+      std::vector< Bool_t>    fMvaValuesTypes; ///< mva values type(sig/bkg) (Results)
+      mutable std::vector< Float_t >  fRet;    ///< return val
+      mutable MsgLogger*      fLogger;         ///<! message logger
       MsgLogger& Log() const { return *fLogger; }
    protected:
 

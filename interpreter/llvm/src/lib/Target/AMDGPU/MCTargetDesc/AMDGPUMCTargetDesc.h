@@ -15,8 +15,6 @@
 #ifndef LLVM_LIB_TARGET_AMDGPU_MCTARGETDESC_AMDGPUMCTARGETDESC_H
 #define LLVM_LIB_TARGET_AMDGPU_MCTARGETDESC_AMDGPUMCTARGETDESC_H
 
-#include "llvm/Support/DataTypes.h"
-
 #include <memory>
 
 namespace llvm {
@@ -32,6 +30,10 @@ class StringRef;
 class Target;
 class Triple;
 class raw_pwrite_stream;
+
+enum AMDGPUDwarfFlavour : unsigned { Wave64 = 0, Wave32 = 1 };
+
+MCRegisterInfo *createGCNMCRegisterInfo(AMDGPUDwarfFlavour DwarfFlavour);
 
 MCCodeEmitter *createR600MCCodeEmitter(const MCInstrInfo &MCII,
                                        const MCRegisterInfo &MRI,
@@ -54,34 +56,24 @@ createAMDGPUELFObjectWriter(bool Is64Bit, uint8_t OSABI,
 
 #define GET_REGINFO_ENUM
 #include "AMDGPUGenRegisterInfo.inc"
-#undef GET_REGINFO_ENUM
 
 #define GET_REGINFO_ENUM
 #include "R600GenRegisterInfo.inc"
-#undef GET_REGINFO_ENUM
 
 #define GET_INSTRINFO_ENUM
 #define GET_INSTRINFO_OPERAND_ENUM
 #define GET_INSTRINFO_SCHED_ENUM
 #include "AMDGPUGenInstrInfo.inc"
-#undef GET_INSTRINFO_SCHED_ENUM
-#undef GET_INSTRINFO_OPERAND_ENUM
-#undef GET_INSTRINFO_ENUM
 
 #define GET_INSTRINFO_ENUM
 #define GET_INSTRINFO_OPERAND_ENUM
 #define GET_INSTRINFO_SCHED_ENUM
 #include "R600GenInstrInfo.inc"
-#undef GET_INSTRINFO_SCHED_ENUM
-#undef GET_INSTRINFO_OPERAND_ENUM
-#undef GET_INSTRINFO_ENUM
 
 #define GET_SUBTARGETINFO_ENUM
 #include "AMDGPUGenSubtargetInfo.inc"
-#undef GET_SUBTARGETINFO_ENUM
 
 #define GET_SUBTARGETINFO_ENUM
 #include "R600GenSubtargetInfo.inc"
-#undef GET_SUBTARGETINFO_ENUM
 
 #endif

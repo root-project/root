@@ -24,6 +24,7 @@
 #include "llvm/CodeGen/TargetRegisterInfo.h"
 #include "llvm/CodeGen/TargetSchedule.h"
 #include "llvm/CodeGen/TargetSubtargetInfo.h"
+#include "llvm/InitializePasses.h"
 #include "llvm/MC/MCRegisterInfo.h"
 #include "llvm/Pass.h"
 #include "llvm/Support/Debug.h"
@@ -634,7 +635,7 @@ struct DataDep {
   /// Create a DataDep from an SSA form virtual register.
   DataDep(const MachineRegisterInfo *MRI, unsigned VirtReg, unsigned UseOp)
     : UseOp(UseOp) {
-    assert(TargetRegisterInfo::isVirtualRegister(VirtReg));
+    assert(Register::isVirtualRegister(VirtReg));
     MachineRegisterInfo::def_iterator DefI = MRI->def_begin(VirtReg);
     assert(!DefI.atEnd() && "Register has no defs");
     DefMI = DefI->getParent();
@@ -660,10 +661,10 @@ static bool getDataDeps(const MachineInstr &UseMI,
     const MachineOperand &MO = *I;
     if (!MO.isReg())
       continue;
-    unsigned Reg = MO.getReg();
+    Register Reg = MO.getReg();
     if (!Reg)
       continue;
-    if (TargetRegisterInfo::isPhysicalRegister(Reg)) {
+    if (Register::isPhysicalRegister(Reg)) {
       HasPhysRegs = true;
       continue;
     }
@@ -687,7 +688,7 @@ static void getPHIDeps(const MachineInstr &UseMI,
   assert(UseMI.isPHI() && UseMI.getNumOperands() % 2 && "Bad PHI");
   for (unsigned i = 1; i != UseMI.getNumOperands(); i += 2) {
     if (UseMI.getOperand(i + 1).getMBB() == Pred) {
-      unsigned Reg = UseMI.getOperand(i).getReg();
+      Register Reg = UseMI.getOperand(i).getReg();
       Deps.push_back(DataDep(MRI, Reg, i));
       return;
     }
@@ -700,17 +701,15 @@ static void updatePhysDepsDownwards(const MachineInstr *UseMI,
                                     SmallVectorImpl<DataDep> &Deps,
                                     SparseSet<LiveRegUnit> &RegUnits,
                                     const TargetRegisterInfo *TRI) {
-  SmallVector<unsigned, 8> Kills;
+  SmallVector<MCRegister, 8> Kills;
   SmallVector<unsigned, 8> LiveDefOps;
 
   for (MachineInstr::const_mop_iterator MI = UseMI->operands_begin(),
        ME = UseMI->operands_end(); MI != ME; ++MI) {
     const MachineOperand &MO = *MI;
-    if (!MO.isReg())
+    if (!MO.isReg() || !MO.getReg().isPhysical())
       continue;
-    unsigned Reg = MO.getReg();
-    if (!TargetRegisterInfo::isPhysicalRegister(Reg))
-      continue;
+    MCRegister Reg = MO.getReg().asMCReg();
     // Track live defs and kills for updating RegUnits.
     if (MO.isDef()) {
       if (MO.isDead())
@@ -733,13 +732,14 @@ static void updatePhysDepsDownwards(const MachineInstr *UseMI,
 
   // Update RegUnits to reflect live registers after UseMI.
   // First kills.
-  for (unsigned Kill : Kills)
+  for (MCRegister Kill : Kills)
     for (MCRegUnitIterator Units(Kill, TRI); Units.isValid(); ++Units)
       RegUnits.erase(*Units);
 
   // Second, live defs.
   for (unsigned DefOp : LiveDefOps) {
-    for (MCRegUnitIterator Units(UseMI->getOperand(DefOp).getReg(), TRI);
+    for (MCRegUnitIterator Units(UseMI->getOperand(DefOp).getReg().asMCReg(),
+                                 TRI);
          Units.isValid(); ++Units) {
       LiveRegUnit &LRU = RegUnits[*Units];
       LRU.MI = UseMI;
@@ -765,7 +765,7 @@ computeCrossBlockCriticalPath(const TraceBlockInfo &TBI) {
   assert(TBI.HasValidInstrHeights && "Missing height info");
   unsigned MaxLen = 0;
   for (const LiveInReg &LIR : TBI.LiveIns) {
-    if (!TargetRegisterInfo::isVirtualRegister(LIR.Reg))
+    if (!LIR.Reg.isVirtual())
       continue;
     const MachineInstr *DefMI = MTM.MRI->getVRegDef(LIR.Reg);
     // Ignore dependencies outside the current trace.
@@ -902,8 +902,8 @@ static unsigned updatePhysDepsUpwards(const MachineInstr &MI, unsigned Height,
     const MachineOperand &MO = *MOI;
     if (!MO.isReg())
       continue;
-    unsigned Reg = MO.getReg();
-    if (!TargetRegisterInfo::isPhysicalRegister(Reg))
+    Register Reg = MO.getReg();
+    if (!Register::isPhysicalRegister(Reg))
       continue;
     if (MO.readsReg())
       ReadOps.push_back(MI.getOperandNo(MOI));
@@ -911,7 +911,8 @@ static unsigned updatePhysDepsUpwards(const MachineInstr &MI, unsigned Height,
       continue;
     // This is a def of Reg. Remove corresponding entries from RegUnits, and
     // update MI Height to consider the physreg dependencies.
-    for (MCRegUnitIterator Units(Reg, TRI); Units.isValid(); ++Units) {
+    for (MCRegUnitIterator Units(Reg.asMCReg(), TRI); Units.isValid();
+         ++Units) {
       SparseSet<LiveRegUnit>::iterator I = RegUnits.find(*Units);
       if (I == RegUnits.end())
         continue;
@@ -929,15 +930,15 @@ static unsigned updatePhysDepsUpwards(const MachineInstr &MI, unsigned Height,
   }
 
   // Now we know the height of MI. Update any regunits read.
-  for (unsigned i = 0, e = ReadOps.size(); i != e; ++i) {
-    unsigned Reg = MI.getOperand(ReadOps[i]).getReg();
+  for (size_t I = 0, E = ReadOps.size(); I != E; ++I) {
+    MCRegister Reg = MI.getOperand(ReadOps[I]).getReg().asMCReg();
     for (MCRegUnitIterator Units(Reg, TRI); Units.isValid(); ++Units) {
       LiveRegUnit &LRU = RegUnits[*Units];
       // Set the height to the highest reader of the unit.
       if (LRU.Cycle <= Height && LRU.MI != &MI) {
         LRU.Cycle = Height;
         LRU.MI = &MI;
-        LRU.Op = ReadOps[i];
+        LRU.Op = ReadOps[I];
       }
     }
   }
@@ -978,8 +979,8 @@ void MachineTraceMetrics::Ensemble::
 addLiveIns(const MachineInstr *DefMI, unsigned DefOp,
            ArrayRef<const MachineBasicBlock*> Trace) {
   assert(!Trace.empty() && "Trace should contain at least one block");
-  unsigned Reg = DefMI->getOperand(DefOp).getReg();
-  assert(TargetRegisterInfo::isVirtualRegister(Reg));
+  Register Reg = DefMI->getOperand(DefOp).getReg();
+  assert(Register::isVirtualRegister(Reg));
   const MachineBasicBlock *DefMBB = DefMI->getParent();
 
   // Reg is live-in to all blocks in Trace that follow DefMBB.
@@ -1026,7 +1027,7 @@ computeInstrHeights(const MachineBasicBlock *MBB) {
   if (MBB) {
     TraceBlockInfo &TBI = BlockInfo[MBB->getNumber()];
     for (LiveInReg &LI : TBI.LiveIns) {
-      if (TargetRegisterInfo::isVirtualRegister(LI.Reg)) {
+      if (LI.Reg.isVirtual()) {
         // For virtual registers, the def latency is included.
         unsigned &Height = Heights[MTM.MRI->getVRegDef(LI.Reg)];
         if (Height < LI.Height)

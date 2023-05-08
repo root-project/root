@@ -12,7 +12,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "llvm/ADT/Twine.h"
 #include "llvm/Support/AMDGPUMetadata.h"
 #include "llvm/Support/YAMLTraits.h"
 
@@ -62,6 +61,7 @@ struct ScalarEnumerationTraits<ValueKind> {
     YIO.enumCase(EN, "HiddenGlobalOffsetZ", ValueKind::HiddenGlobalOffsetZ);
     YIO.enumCase(EN, "HiddenNone", ValueKind::HiddenNone);
     YIO.enumCase(EN, "HiddenPrintfBuffer", ValueKind::HiddenPrintfBuffer);
+    YIO.enumCase(EN, "HiddenHostcallBuffer", ValueKind::HiddenHostcallBuffer);
     YIO.enumCase(EN, "HiddenDefaultQueue", ValueKind::HiddenDefaultQueue);
     YIO.enumCase(EN, "HiddenCompletionAction",
                  ValueKind::HiddenCompletionAction);
@@ -110,7 +110,11 @@ struct MappingTraits<Kernel::Arg::Metadata> {
     YIO.mapRequired(Kernel::Arg::Key::Size, MD.mSize);
     YIO.mapRequired(Kernel::Arg::Key::Align, MD.mAlign);
     YIO.mapRequired(Kernel::Arg::Key::ValueKind, MD.mValueKind);
-    YIO.mapRequired(Kernel::Arg::Key::ValueType, MD.mValueType);
+
+    // Removed. Accepted for parsing compatibility, but not emitted.
+    Optional<ValueType> Unused;
+    YIO.mapOptional(Kernel::Arg::Key::ValueType, Unused);
+
     YIO.mapOptional(Kernel::Arg::Key::PointeeAlign, MD.mPointeeAlign,
                     uint32_t(0));
     YIO.mapOptional(Kernel::Arg::Key::AddrSpaceQual, MD.mAddrSpaceQual,
@@ -206,7 +210,7 @@ struct MappingTraits<HSAMD::Metadata> {
 namespace AMDGPU {
 namespace HSAMD {
 
-std::error_code fromString(std::string String, Metadata &HSAMetadata) {
+std::error_code fromString(StringRef String, Metadata &HSAMetadata) {
   yaml::Input YamlInput(String);
   YamlInput >> HSAMetadata;
   return YamlInput.error();

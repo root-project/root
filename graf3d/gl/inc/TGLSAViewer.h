@@ -93,9 +93,9 @@ private:
    TGLSAViewer & operator = (const TGLSAViewer &);
 
 public:
-   TGLSAViewer(TVirtualPad* pad, TGLFormat* format=0);
-   TGLSAViewer(const TGWindow* parent, TVirtualPad *pad, TGedEditor *ged=0,
-               TGLFormat* format=0);
+   TGLSAViewer(TVirtualPad* pad, TGLFormat* format=nullptr);
+   TGLSAViewer(const TGWindow* parent, TVirtualPad *pad, TGedEditor *ged=nullptr,
+               TGLFormat* format=nullptr);
    ~TGLSAViewer();
 
    virtual void CreateGLWidget();

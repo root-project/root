@@ -115,7 +115,7 @@ TEST(RooAbsDataHelper, SkipEventsOutOfRange) {
   auto dataSetRDF = rdf.Book<double>(RooDataSetHelper("dataSetRDF", "dataSetRDF", RooArgSet(x)), {"x"});
 
   // Check if in the creation of the datasets, the entries outside the
-  // variable range were sucessfully discarded.
+  // variable range were successfully discarded.
   double nPassing = *rdf.Filter("x >= -2 && x <= 2.0").Count();
 
   EXPECT_EQ(dataSetRDF->numEntries(), nPassing);

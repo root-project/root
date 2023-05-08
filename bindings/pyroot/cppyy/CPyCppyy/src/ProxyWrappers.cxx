@@ -364,9 +364,9 @@ static int BuildScopeProxyDict(Cppyy::TCppScope_t scope, PyObject* pyclass)
 
             PyErr_Clear();
 
-        // it could still be that this is an anonymous enum, which is not in the list
+        // it could still be that this is an unnamed enum, which is not in the list
         // provided by the class
-            if (strstr(Cppyy::GetDatamemberType(scope, idata).c_str(), "(anonymous)") != 0) {
+            if (strstr(Cppyy::GetDatamemberType(scope, idata).c_str(), "(unnamed)") != 0) {
                 AddPropertyToClass(pyclass, scope, idata);
                 continue;
             }

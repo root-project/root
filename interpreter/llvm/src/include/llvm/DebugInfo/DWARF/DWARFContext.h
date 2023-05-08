@@ -47,11 +47,6 @@ class MCRegisterInfo;
 class MemoryBuffer;
 class raw_ostream;
 
-/// Used as a return value for a error callback passed to DWARF context.
-/// Callback should return Halt if client application wants to stop
-/// object parsing, or should return Continue otherwise.
-enum class ErrorPolicy { Halt, Continue };
-
 /// DWARFContext
 /// This data structure is the top level entity that deals with dwarf debug
 /// information parsing. The actual data is supplied through DWARFObj.
@@ -67,6 +62,7 @@ class DWARFContext : public DIContext {
   std::unique_ptr<DWARFDebugFrame> DebugFrame;
   std::unique_ptr<DWARFDebugFrame> EHFrame;
   std::unique_ptr<DWARFDebugMacro> Macro;
+  std::unique_ptr<DWARFDebugMacro> Macinfo;
   std::unique_ptr<DWARFDebugNames> Names;
   std::unique_ptr<AppleAcceleratorTable> AppleNames;
   std::unique_ptr<AppleAcceleratorTable> AppleTypes;
@@ -75,7 +71,8 @@ class DWARFContext : public DIContext {
 
   DWARFUnitVector DWOUnits;
   std::unique_ptr<DWARFDebugAbbrev> AbbrevDWO;
-  std::unique_ptr<DWARFDebugLoclists> LocDWO;
+  std::unique_ptr<DWARFDebugMacro> MacinfoDWO;
+  std::unique_ptr<DWARFDebugMacro> MacroDWO;
 
   /// The maximum DWARF version of all units.
   unsigned MaxVersion = 0;
@@ -91,6 +88,10 @@ class DWARFContext : public DIContext {
 
   std::unique_ptr<MCRegisterInfo> RegInfo;
 
+  std::function<void(Error)> RecoverableErrorHandler =
+      WithColor::defaultErrorHandler;
+  std::function<void(Error)> WarningHandler = WithColor::defaultWarningHandler;
+
   /// Read compile units from the debug_info section (if necessary)
   /// and type units from the debug_types sections (if necessary)
   /// and store them in NormalUnits.
@@ -105,9 +106,22 @@ class DWARFContext : public DIContext {
 
   std::unique_ptr<const DWARFObject> DObj;
 
+  /// Helper enum to distinguish between macro[.dwo] and macinfo[.dwo]
+  /// section.
+  enum MacroSecType {
+    MacinfoSection,
+    MacinfoDwoSection,
+    MacroSection,
+    MacroDwoSection
+  };
+
 public:
   DWARFContext(std::unique_ptr<const DWARFObject> DObj,
-               std::string DWPName = "");
+               std::string DWPName = "",
+               std::function<void(Error)> RecoverableErrorHandler =
+                   WithColor::defaultErrorHandler,
+               std::function<void(Error)> WarningHandler =
+                   WithColor::defaultWarningHandler);
   ~DWARFContext();
 
   DWARFContext(DWARFContext &) = delete;
@@ -132,6 +146,7 @@ public:
   bool verify(raw_ostream &OS, DIDumpOptions DumpOpts = {}) override;
 
   using unit_iterator_range = DWARFUnitVector::iterator_range;
+  using compile_unit_range = DWARFUnitVector::compile_unit_range;
 
   /// Get units from .debug_info in this context.
   unit_iterator_range info_section_units() {
@@ -149,10 +164,12 @@ public:
   }
 
   /// Get compile units in this context.
-  unit_iterator_range compile_units() { return info_section_units(); }
+  compile_unit_range compile_units() {
+    return make_filter_range(info_section_units(), isCompileUnit);
+  }
 
-  /// Get type units in this context.
-  unit_iterator_range type_units() { return types_section_units(); }
+  // If you want type_units(), it'll need to be a concat iterator of a filter of
+  // TUs in info_section + all the (all type) units in types_section
 
   /// Get all normal compile/type units in this context.
   unit_iterator_range normal_units() {
@@ -175,10 +192,13 @@ public:
   }
 
   /// Get compile units in the DWO context.
-  unit_iterator_range dwo_compile_units() { return dwo_info_section_units(); }
+  compile_unit_range dwo_compile_units() {
+    return make_filter_range(dwo_info_section_units(), isCompileUnit);
+  }
 
-  /// Get type units in the DWO context.
-  unit_iterator_range dwo_type_units() { return dwo_types_section_units(); }
+  // If you want dwo_type_units(), it'll need to be a concat iterator of a
+  // filter of TUs in dwo_info_section + all the (all type) units in
+  // dwo_types_section.
 
   /// Get all units in the DWO context.
   unit_iterator_range dwo_units() {
@@ -225,10 +245,10 @@ public:
   DWARFCompileUnit *getDWOCompileUnitForHash(uint64_t Hash);
 
   /// Return the compile unit that includes an offset (relative to .debug_info).
-  DWARFCompileUnit *getCompileUnitForOffset(uint32_t Offset);
+  DWARFCompileUnit *getCompileUnitForOffset(uint64_t Offset);
 
   /// Get a DIE given an exact offset.
-  DWARFDie getDIEForOffset(uint32_t Offset);
+  DWARFDie getDIEForOffset(uint64_t Offset);
 
   unsigned getMaxVersion() {
     // Ensure info units have been parsed to discover MaxVersion
@@ -260,20 +280,26 @@ public:
   /// Get a pointer to the parsed dwo abbreviations object.
   const DWARFDebugAbbrev *getDebugAbbrevDWO();
 
-  /// Get a pointer to the parsed DebugLoc object.
-  const DWARFDebugLoclists *getDebugLocDWO();
-
   /// Get a pointer to the parsed DebugAranges object.
   const DWARFDebugAranges *getDebugAranges();
 
   /// Get a pointer to the parsed frame information object.
-  const DWARFDebugFrame *getDebugFrame();
+  Expected<const DWARFDebugFrame *> getDebugFrame();
 
   /// Get a pointer to the parsed eh frame information object.
-  const DWARFDebugFrame *getEHFrame();
+  Expected<const DWARFDebugFrame *> getEHFrame();
 
-  /// Get a pointer to the parsed DebugMacro object.
+  /// Get a pointer to the parsed DebugMacinfo information object.
+  const DWARFDebugMacro *getDebugMacinfo();
+
+  /// Get a pointer to the parsed DebugMacinfoDWO information object.
+  const DWARFDebugMacro *getDebugMacinfoDWO();
+
+  /// Get a pointer to the parsed DebugMacro information object.
   const DWARFDebugMacro *getDebugMacro();
+
+  /// Get a pointer to the parsed DebugMacroDWO information object.
+  const DWARFDebugMacro *getDebugMacroDWO();
 
   /// Get a reference to the parsed accelerator table object.
   const DWARFDebugNames &getDebugNames();
@@ -295,16 +321,19 @@ public:
   const DWARFDebugLine::LineTable *getLineTableForUnit(DWARFUnit *U);
 
   /// Get a pointer to a parsed line table corresponding to a compile unit.
-  /// Report any recoverable parsing problems using the callback.
+  /// Report any recoverable parsing problems using the handler.
   Expected<const DWARFDebugLine::LineTable *>
   getLineTableForUnit(DWARFUnit *U,
-                      std::function<void(Error)> RecoverableErrorCallback);
+                      function_ref<void(Error)> RecoverableErrorHandler);
 
   DataExtractor getStringExtractor() const {
-    return DataExtractor(DObj->getStringSection(), false, 0);
+    return DataExtractor(DObj->getStrSection(), false, 0);
+  }
+  DataExtractor getStringDWOExtractor() const {
+    return DataExtractor(DObj->getStrDWOSection(), false, 0);
   }
   DataExtractor getLineStringExtractor() const {
-    return DataExtractor(DObj->getLineStringSection(), false, 0);
+    return DataExtractor(DObj->getLineStrSection(), false, 0);
   }
 
   /// Wraps the returned DIEs for a given address.
@@ -335,25 +364,44 @@ public:
   getLocalsForAddress(object::SectionedAddress Address) override;
 
   bool isLittleEndian() const { return DObj->isLittleEndian(); }
+  static unsigned getMaxSupportedVersion() { return 5; }
   static bool isSupportedVersion(unsigned version) {
-    return version == 2 || version == 3 || version == 4 || version == 5;
+    return version >= 2 && version <= getMaxSupportedVersion();
+  }
+
+  static SmallVector<uint8_t, 3> getSupportedAddressSizes() {
+    return {2, 4, 8};
+  }
+  static bool isAddressSizeSupported(unsigned AddressSize) {
+    return llvm::any_of(getSupportedAddressSizes(),
+                        [=](auto Elem) { return Elem == AddressSize; });
   }
 
   std::shared_ptr<DWARFContext> getDWOContext(StringRef AbsolutePath);
 
   const MCRegisterInfo *getRegisterInfo() const { return RegInfo.get(); }
 
-  /// Function used to handle default error reporting policy. Prints a error
-  /// message and returns Continue, so DWARF context ignores the error.
-  static ErrorPolicy defaultErrorHandler(Error E);
+  function_ref<void(Error)> getRecoverableErrorHandler() {
+    return RecoverableErrorHandler;
+  }
+
+  function_ref<void(Error)> getWarningHandler() { return WarningHandler; }
+
   static std::unique_ptr<DWARFContext>
   create(const object::ObjectFile &Obj, const LoadedObjectInfo *L = nullptr,
-         function_ref<ErrorPolicy(Error)> HandleError = defaultErrorHandler,
-         std::string DWPName = "");
+         std::string DWPName = "",
+         std::function<void(Error)> RecoverableErrorHandler =
+             WithColor::defaultErrorHandler,
+         std::function<void(Error)> WarningHandler =
+             WithColor::defaultWarningHandler);
 
   static std::unique_ptr<DWARFContext>
   create(const StringMap<std::unique_ptr<MemoryBuffer>> &Sections,
-         uint8_t AddrSize, bool isLittleEndian = sys::IsLittleEndianHost);
+         uint8_t AddrSize, bool isLittleEndian = sys::IsLittleEndianHost,
+         std::function<void(Error)> RecoverableErrorHandler =
+             WithColor::defaultErrorHandler,
+         std::function<void(Error)> WarningHandler =
+             WithColor::defaultWarningHandler);
 
   /// Loads register info for the architecture of the provided object file.
   /// Improves readability of dumped DWARF expressions. Requires the caller to
@@ -364,19 +412,21 @@ public:
   /// TODO: refactor compile_units() to make this const.
   uint8_t getCUAddrSize();
 
-  /// Dump Error as warning message to stderr.
-  static void dumpWarning(Error Warning);
-
   Triple::ArchType getArch() const {
     return getDWARFObj().getFile()->getArch();
   }
 
-private:
   /// Return the compile unit which contains instruction with provided
   /// address.
   /// TODO: change input parameter from "uint64_t Address"
   ///       into "SectionedAddress Address"
   DWARFCompileUnit *getCompileUnitForAddress(uint64_t Address);
+
+private:
+  /// Parse a macro[.dwo] or macinfo[.dwo] section.
+  std::unique_ptr<DWARFDebugMacro>
+  parseMacroOrMacinfo(MacroSecType SectionType);
+
   void addLocalsForDie(DWARFCompileUnit *CU, DWARFDie Subprogram, DWARFDie Die,
                        std::vector<DILocal> &Result);
 };

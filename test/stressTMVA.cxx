@@ -449,7 +449,7 @@ class utDataSetInfo : public UnitTesting::UnitTest
 {
 public:
    utDataSetInfo();
-   void run();
+   void run() override;
 
 private:
    void testConstructor();
@@ -657,7 +657,7 @@ class utDataSet : public UnitTesting::UnitTest
 {
 public:
    utDataSet();
-   void run();
+   void run() override;
 
 private:
    void testMethods();
@@ -835,7 +835,7 @@ class utEvent : public UnitTesting::UnitTest
 {
 public:
    utEvent();
-   void run();
+   void run() override;
 
 private:
    // the test calls in different blocks
@@ -1208,9 +1208,9 @@ namespace UnitTesting
   {
   public:
     utReader(const char* theOption="");
-    virtual ~utReader();
+    ~utReader() override;
 
-    virtual void run();
+    void run() override;
 
   protected:
 
@@ -1322,9 +1322,9 @@ namespace UnitTesting
   {
   public:
     utReaderMT(const char* theOption="");
-    virtual ~utReaderMT();
+    ~utReaderMT() override;
 
-    virtual void run();
+    void run() override;
 
   protected:
 
@@ -1445,8 +1445,8 @@ namespace UnitTesting
    {
    public:
       utFactory(const char* theOption="");
-      virtual ~utFactory();
-      virtual void run();
+      ~utFactory() override;
+      void run() override;
 
    protected:
       virtual TTree* create_Tree(const char* opt="");
@@ -1729,7 +1729,7 @@ class utVariableInfo : public UnitTesting::UnitTest
 {
  public:
   utVariableInfo();
-  void run();
+  void run() override;
 
  private:
   // the test calls in different blocks
@@ -1929,9 +1929,9 @@ namespace UnitTesting
     MethodUnitTestWithROCLimits(const TMVA::Types::EMVA& theMethod, const TString& methodTitle, const TString& theOption,
                                 double lowLimit = 0., double upLimit = 1.,
                                 const std::string & name="", const std::string & filename="", std::ostream* osptr = &std::cout);
-    virtual ~MethodUnitTestWithROCLimits();
+    ~MethodUnitTestWithROCLimits() override;
 
-    virtual void run();
+    void run() override;
 
   protected:
     TTree*          theTree;
@@ -2194,25 +2194,25 @@ void MethodUnitTestWithROCLimits::run()
            else readerVal=reader[iTest]->EvaluateMVA( testvarDouble, readerName);
         }
         else if (iTest==3 ){
-           double dummy3 = reader2->EvaluateMVA( testvarDouble, readerName2);
+           reader2->EvaluateMVA( testvarDouble, readerName2);
            if (_methodType==Types::kCuts)
               readerVal = reader[iTest]->EvaluateMVA( testvarDouble, readerName, effS );
            else readerVal=reader[iTest]->EvaluateMVA( testvarDouble, readerName);
-           dummy3 += reader2->EvaluateMVA( testvarDouble, readerName2);
+           reader2->EvaluateMVA( testvarDouble, readerName2);
         }
         else if (iTest==4){
-           double dummy4 = reader2->EvaluateMVA( testvarDouble, readerName);
+           reader2->EvaluateMVA( testvarDouble, readerName);
            if (_methodType==Types::kCuts)
               readerVal = reader[iTest]->EvaluateMVA( testvarDouble, readerName, effS );
            else readerVal=reader[iTest]->EvaluateMVA( testvarDouble, readerName);
-           dummy4 += reader2->EvaluateMVA( testvarDouble, readerName);
+           reader2->EvaluateMVA( testvarDouble, readerName);
         }
         else if (iTest==5){
-           double dummy5 = reader2->EvaluateMVA( readerName2);
+           reader2->EvaluateMVA( readerName2);
            if (_methodType==Types::kCuts)
               readerVal = reader[iTest]->EvaluateMVA( readerName, effS );
            else readerVal=reader[iTest]->EvaluateMVA( readerName);
-           dummy5 += reader2->EvaluateMVA( readerName2);
+           reader2->EvaluateMVA( readerName2);
         }
         else {
            std::cout << "ERROR, undefined iTest value "<<iTest<<endl;
@@ -2367,9 +2367,9 @@ namespace UnitTesting
     RegressionUnitTestWithDeviation(const TMVA::Types::EMVA& theMethod, const TString& methodTitle, const TString& theOption,
                                     double lowFullLimit = 0., double upFullLimit = 10., double low90PercentLimit = 0., double up90PercentLimit = 0.,
                                     const std::string & name="", const std::string & filename="", std::ostream* osptr = &std::cout);
-    virtual ~RegressionUnitTestWithDeviation();
+    ~RegressionUnitTestWithDeviation() override;
 
-    virtual void run();
+    void run() override;
 
   protected:
     TTree*          theTree;
@@ -2618,9 +2618,9 @@ namespace UnitTesting
                                     const TMVA::Types::EMVA& theMethod, const TString& methodTitle, const TString& theOption,
                                     double lowLimit = 0., double upLimit = 1.,
                                     const std::string & name="", const std::string & filename="", std::ostream* osptr = &std::cout);
-      virtual ~MethodUnitTestWithComplexData();
+      ~MethodUnitTestWithComplexData() override;
 
-      virtual void run();
+      void run() override;
 
    protected:
       TTree*  theTree;
@@ -2859,7 +2859,7 @@ Unit test for TMVA::IPythonInteractive located in TMVA/MethodBase.h
 class utIPythonInteractive : public UnitTesting::UnitTest{
 public:
   utIPythonInteractive();
-  void run();
+  void run() override;
 private:
   void testInit();
   void testMethods();
@@ -3193,10 +3193,6 @@ int main(int argc, char **argv)
       TString sp = gSystem->GetFromPipe("uname -a");
       sp.Resize(60);
       printf("*  SYS: %s\n",sp.Data());
-      if (strstr(gSystem->GetBuildNode(),"Linux")) {
-         sp = gSystem->GetFromPipe("lsb_release -d -s");
-         printf("*  SYS: %s\n",sp.Data());
-      }
       if (strstr(gSystem->GetBuildNode(),"Darwin")) {
          sp  = gSystem->GetFromPipe("sw_vers -productVersion");
          sp += " Mac OS X ";

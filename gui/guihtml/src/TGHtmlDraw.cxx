@@ -118,13 +118,12 @@ void TGHtml::AppendBlock(TGHtmlElement *pToken, TGHtmlBlock *pBlock)
 ///
 /// Revert to decimal for indices greater than 52.
 
-static void GetLetterIndex(char *zBuf, int index, int isUpper)
+static void GetLetterIndex(char (&zBuf)[30], int index, int isUpper)
 {
    int seed;
 
    if (index < 1 || index > 52) {
-      // coverity[secure_coding]: zBuf is large enough for an integer
-      sprintf(zBuf, "%d", index);
+      snprintf(zBuf, 30, "%d", index);
       return;
    }
 
@@ -154,7 +153,7 @@ static void GetLetterIndex(char *zBuf, int index, int isUpper)
 /// numerals.  For indices greater than a few thousand, revert to
 /// decimal.
 
-static void GetRomanIndex(char *zBuf, int index, int isUpper)
+static void GetRomanIndex(char (&zBuf)[30], int index, int isUpper)
 {
    int i = 0;
    UInt_t j;
@@ -185,8 +184,7 @@ static void GetRomanIndex(char *zBuf, int index, int isUpper)
    };
 
    if (index < 1 || index >= 5000) {
-      // coverity[secure_coding]: zBuf is large enough for an integer
-      sprintf(zBuf, "%d", index);
+      snprintf(zBuf, 30, "%d", index);
       return;
    }
    for (j = 0; index > 0 && j < sizeof(values)/sizeof(values[0]); j++) {
@@ -378,7 +376,8 @@ void TGHtml::BlockDraw(TGHtmlBlock *pBlock, Drawable_t drawable,
       // We are dealing with a single TGHtmlElement which contains something
       // other than plain text.
       int cnt, w;
-      char zBuf[30];
+      constexpr std::size_t zBufSize = 30;
+      char zBuf[zBufSize];
       TGHtmlLi *li;
       TGHtmlImageMarkup *image;
       switch (src->fType) {
@@ -389,7 +388,7 @@ void TGHtml::BlockDraw(TGHtmlBlock *pBlock, Drawable_t drawable,
             switch (li->fLtype) {
                case LI_TYPE_Enum_1:
                   // coverity[secure_coding]: zBuf is large enough for an int
-                  sprintf(zBuf, "%d.", li->fCnt);
+                  snprintf(zBuf, zBufSize, "%d.", li->fCnt);
                   break;
                case LI_TYPE_Enum_A:
                   GetLetterIndex(zBuf, li->fCnt, 1);
@@ -605,11 +604,11 @@ void TGHtml::AnimateImage(TGHtmlImage * /*image*/)
 ///
 ///    n                  The number of characters of text output
 ///                       associated with this block.  If the block
-///                       renders something other than text (ex: <IMG>)
+///                       renders something other than text (ex: `<IMG>`)
 ///                       then set n to 0.
 ///
 ///    z                  Pointer to malloced memory containing the
-///                       text associated with this block.  NULL if
+///                       text associated with this block. `NULL` if
 ///                       n is 0.
 ///
 /// Return a pointer to the first TGHtmlElement not covered by the block.

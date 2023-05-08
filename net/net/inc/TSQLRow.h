@@ -30,17 +30,17 @@
 class TSQLRow : public TObject {
 
 protected:
-   TSQLRow() { }
+   TSQLRow() {}
 
 public:
-   virtual ~TSQLRow() { }
+   virtual ~TSQLRow() {}
 
    virtual void        Close(Option_t *option="") = 0;
    virtual ULong_t     GetFieldLength(Int_t field) = 0;
    virtual const char *GetField(Int_t field) = 0;
    const char         *operator[](Int_t field) { return GetField(field); }
 
-   ClassDef(TSQLRow,0)  // One row of an SQL query result
+   ClassDefOverride(TSQLRow,0)  // One row of an SQL query result
 };
 
 #endif

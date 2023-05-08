@@ -2,10 +2,7 @@
 <html lang="en">
 <head>
    <meta charset="utf-8">
-
    <title>Custom HTML page for THttpServer</title>
-
-   <script src="jsrootsys/scripts/JSRoot.core.js" type="text/javascript"></script>
 
    <style>
      table, td {
@@ -50,38 +47,36 @@
      </tbody>
   </table>
 
-  <script type='text/javascript'>
-
-      document.getElementById('btn_hpx').onclick = function() {
-         JSROOT.httpRequest("hpx/root.json", 'object')
-               .then(obj => JSROOT.redraw("draw_hpx", obj));
-      }
-
-      document.getElementById('btn_hpxpy').onclick = function() {
-         JSROOT.httpRequest("hpxpy/root.json", 'object')
-               .then(obj => JSROOT.redraw("draw_hpxpy", obj, "col"));
-      }
-
-      // here both objects requested with signle multi.json request
-      document.getElementById('btn_both').onclick = function() {
-         JSROOT.httpRequest("multi.json?number=2", "multi", "hpx/root.json\nhpxpy/root.json\n")
-               .then(arr => {
-                   JSROOT.redraw("draw_hpx", arr[0]);
-                   JSROOT.redraw("draw_hpxpy", arr[1], "col");
-                });
-      }
-
-      document.getElementById('btn_clear').onclick = function() {
-         if (JSROOT.cleanup) {
-            JSROOT.cleanup("draw_hpx");
-            JSROOT.cleanup("draw_hpxpy");
-         } else {
-            console.log('No drawing was perfromed - JSROOT.cleanup function not yet defined');
-         }
-      }
-
-  </script>
-
 </body>
+
+<script type='module'>
+
+   import { httpRequest, redraw, cleanup } from './jsrootsys/modules/main.mjs';
+
+   document.getElementById('btn_hpx').onclick = function() {
+      httpRequest("hpx/root.json", 'object')
+            .then(obj => redraw("draw_hpx", obj));
+   }
+
+   document.getElementById('btn_hpxpy').onclick = function() {
+      httpRequest("hpxpy/root.json", 'object')
+            .then(obj => redraw("draw_hpxpy", obj, "col"));
+   }
+
+   // here both objects requested with signle multi.json request
+   document.getElementById('btn_both').onclick = function() {
+      httpRequest("multi.json?number=2", "multi", "hpx/root.json\nhpxpy/root.json\n")
+            .then(arr => {
+                redraw("draw_hpx", arr[0]);
+                redraw("draw_hpxpy", arr[1], "col");
+             });
+   }
+
+   document.getElementById('btn_clear').onclick = function() {
+      cleanup("draw_hpx");
+      cleanup("draw_hpxpy");
+   }
+
+</script>
 
 </html>

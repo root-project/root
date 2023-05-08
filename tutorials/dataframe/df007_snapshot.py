@@ -3,7 +3,7 @@
 ## \notebook -draw
 ## Write ROOT data with RDataFrame.
 ##
-## This tutorial shows how to write out datasets in ROOT format using the RDataFrame
+## This tutorial shows how to write out datasets in ROOT format using RDataFrame.
 ##
 ## \macro_image
 ## \macro_code
@@ -26,7 +26,7 @@ outFileNameAllColumns = "df007_snapshot_output_allColumns_py.root"
 treeName = "myTree"
 fill_tree(treeName, fileName)
 
-# We read the tree from the file and create a RDataFrame.
+# We read the tree from the file and create a RDataFrame
 d = ROOT.RDataFrame(treeName, fileName)
 
 # ## Select entries
@@ -54,11 +54,8 @@ d2 = d_cut.Define("b1_square", "b1 * b1") \
 # The user can explicitly specify the types of the columns as template
 # arguments of the Snapshot method, otherwise they will be automatically
 # inferred.
-branchList = ROOT.vector('string')()
-for branchName in ["b1", "b1_square", "b2_vector"]:
-    branchList.push_back(branchName)
-d2.Snapshot(treeName, outFileName, branchList)
-
+d2.Snapshot(treeName, outFileName, \
+    ["b1", "b1_square", "b2_vector"])
 # Open the new file and list the columns of the tree
 f1 = ROOT.TFile(outFileName)
 t = f1.myTree
@@ -85,9 +82,7 @@ f2.Close()
 # We can also get a fresh RDataFrame out of the snapshot and restart the
 # analysis chain from it.
 
-branchList.clear()
-branchList.push_back("b1_square")
-snapshot_df = d2.Snapshot(treeName, outFileName, branchList);
+snapshot_df = d2.Snapshot(treeName, outFileName, ["b1_square"]);
 h = snapshot_df.Histo1D("b1_square")
 
 c = ROOT.TCanvas()

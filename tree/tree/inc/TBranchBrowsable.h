@@ -165,7 +165,7 @@ protected:
    TCollectionPropertyBrowsable(const char *name, const char *title,
          const char *draw, const TBranch *branch,
          const TVirtualBranchBrowsable *parent = nullptr) :
-         TVirtualBranchBrowsable(branch, 0, kFALSE, parent), fDraw(draw)
+         TVirtualBranchBrowsable(branch, nullptr, kFALSE, parent), fDraw(draw)
    {
       SetNameTitle(name, title);
    }

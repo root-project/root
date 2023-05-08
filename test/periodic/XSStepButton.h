@@ -32,18 +32,18 @@ protected:
 
 public:
    XSStepButton( const TGWindow *p, Int_t id );
-   ~XSStepButton();
+   ~XSStepButton() override;
 
    virtual void   Associate(const TGWindow *w) { fMsgWindow = w; }
 
-   virtual Bool_t   ProcessMessage(Longptr_t msg,
-            Longptr_t param1, Longptr_t param2);
+   Bool_t   ProcessMessage(Longptr_t msg,
+            Longptr_t param1, Longptr_t param2) override;
 
-   virtual TGDimension   GetDefaultSize() const
+   TGDimension   GetDefaultSize() const override
          { return TGDimension(width,height); }
 
 
-   //ClassDef(XSStepButton,1)
+   //ClassDefOverride(XSStepButton,1)
 }; // XSStepButton
 
 #endif

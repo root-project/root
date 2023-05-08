@@ -39,15 +39,15 @@ class RWebWindowsManager {
    friend class RWebWindow;
 
 private:
-   std::unique_ptr<THttpServer> fServer; ///<! central communication with the all used displays
-   std::string fAddr;                    ///<! HTTP address of the server
-   std::recursive_mutex fMutex;          ///<! main mutex, used for window creations
-   unsigned fIdCnt{0};                   ///<! counter for identifiers
-   bool fUseHttpThrd{false};             ///<! use special thread for THttpServer
-   bool fUseSenderThreads{false};        ///<! use extra threads for sending data from RWebWindow to clients
-   float fLaunchTmout{30.};              ///<! timeout in seconds to start browser process, default 30s
-   bool fExternalProcessEvents{false};   ///<! indicate that there are external process events engine
-   std::unique_ptr<TExec> fAssgnExec;    ///<! special exec to assign thread id via ProcessEvents
+   std::unique_ptr<THttpServer> fServer;  ///<! central communication with the all used displays
+   std::string fAddr;                     ///<! HTTP address of the server
+   std::recursive_mutex fMutex;           ///<! main mutex, used for window creations
+   unsigned fIdCnt{0};                    ///<! counter for identifiers
+   bool fUseHttpThrd{false};              ///<! use special thread for THttpServer
+   bool fUseSenderThreads{false};         ///<! use extra threads for sending data from RWebWindow to clients
+   float fLaunchTmout{30.};               ///<! timeout in seconds to start browser process, default 30s
+   bool fExternalProcessEvents{false};    ///<! indicate that there are external process events engine
+   std::unique_ptr<TExec> fAssgnExec;     ///<! special exec to assign thread id via ProcessEvents
    WebWindowShowCallback_t fShowCallback; ///<! function called for each RWebWindow::Show call
 
    /// Returns true if http server use special thread for requests processing (default off)
@@ -71,6 +71,8 @@ private:
    bool CreateServer(bool with_http = false);
 
    void AssignWindowThreadId(RWebWindow &win);
+
+   bool InformListener(const std::string &msg);
 
 public:
    RWebWindowsManager();

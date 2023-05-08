@@ -104,7 +104,7 @@ public:
 
     //--- file management interface
    virtual Bool_t SetCWD(const char * /*path*/) { MayNotUse("SetCWD"); return kFALSE; }
-   virtual const char *GetCWD() { MayNotUse("GetCWD"); return 0; }
+   virtual const char *GetCWD() { MayNotUse("GetCWD"); return nullptr; }
 
    //--- file merging interface
    virtual void   Reset();
@@ -122,9 +122,9 @@ public:
    virtual void   SetFastMethod(Bool_t fast=kTRUE)  {fFastMethod = fast;}
            Bool_t GetNotrees() const { return fNoTrees; }
    virtual void   SetNotrees(Bool_t notrees=kFALSE) {fNoTrees = notrees;}
-   virtual void        RecursiveRemove(TObject *obj);
+           void   RecursiveRemove(TObject *obj) override;
 
-   ClassDef(TFileMerger, 6)  // File copying and merging services
+   ClassDefOverride(TFileMerger, 6)  // File copying and merging services
 };
 
 #endif

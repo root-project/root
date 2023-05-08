@@ -86,12 +86,12 @@ const char *XrdProofdAux::ProofRequestTypes(int type)
 ////////////////////////////////////////////////////////////////////////////////
 /// Expand path 'p' relative to:
 ///     $HOME               if begins with ~/
-///     <user>'s $HOME      if begins with ~<user>/
+///     `<user>`'s $HOME    if begins with `~<user>/`
 ///     $PWD                if does not begin with '/' or '~'
-///   getenv(<ENVVAR>)      if it begins with $<ENVVAR>)
+///   getenv(`<ENVVAR>`)    if it begins with $`<ENVVAR>`)
 /// The returned array of chars is the result of reallocation
 /// of the input one.
-/// If something is inconsistent, for example <ENVVAR> does not
+/// If something is inconsistent, for example `<ENVVAR>` does not
 /// exists, the original string is untouched
 
 char *XrdProofdAux::Expand(char *p)
@@ -181,11 +181,11 @@ char *XrdProofdAux::Expand(char *p)
 ////////////////////////////////////////////////////////////////////////////////
 /// Expand path 'p' relative to:
 ///     $HOME               if begins with ~/
-///     <user>'s $HOME      if begins with ~<user>/
+///     `<user>`'s $HOME    if begins with `~<user>/`
 ///     $PWD                if does not begin with '/' or '~'
-///   getenv(<ENVVAR>)      if it begins with $<ENVVAR>)
+///   getenv(`<ENVVAR>`)    if it begins with $<ENVVAR>)
 /// The input string is updated with the result.
-/// If something is inconsistent, for example <ENVVAR> does not
+/// If something is inconsistent, for example `<ENVVAR>` does not
 /// exists, the original string is untouched
 
 void XrdProofdAux::Expand(XrdOucString &p)
@@ -1558,7 +1558,7 @@ int XrdProofdAux::ReadMsg(int fd, XrdOucString &msg)
 /// Parse a path in the form of "<before>[.<pid>][.<after>]", filling 'rest'
 /// and returning 'pid'.
 /// Return 0 if pid is not defined; 'before' is filled with the string preceding
-/// <pid>, <after> with the string following <pid>.
+/// `<pid>`, `<after>` with the string following `<pid>`.
 
 int XrdProofdAux::ParsePidPath(const char *path,
                                XrdOucString &before, XrdOucString &after)
@@ -1949,11 +1949,11 @@ int XpdMsg::Get(void **p)
 ////////////////////////////////////////////////////////////////////////////////
 /// Init the multi-string handler.
 /// Supported formats:
-///    <head>[1-4]<tail>   for  <head>1<tail>, ..., <head>4<tail> (4 items)
-///    <head>[a,b]<tail>   for  <head>a<tail>, <head>b<tail> (2 items)
-///    <head>[a,1-3]<tail> for  <head>a<tail>, <head>1<tail>, <head>2<tail>,
-///                             <head>3<tail> (4 items)
-///    <head>[01-15]<tail> for  <head>01<tail>, ..., <head>15<tail> (15 items)
+///    `<head>[1-4]<tail>`   for  `<head>1<tail>`, ..., `<head>4<tail>` (4 items)
+///    `<head>[a,b]<tail>`   for  `<head>a<tail>`, `<head>b<tail>` (2 items)
+///    `<head>[a,1-3]<tail>` for  `<head>a<tail>`, `<head>1<tail>`, `<head>2<tail>`,
+///                               `<head>3<tail>` (4 items)
+///    `<head>[01-15]<tail>` for  `<head>01<tail>`, ..., `<head>15<tail>` (15 items)
 ///
 /// A dashed is possible only between numerically treatable values, i.e.
 /// single letters ([a-Z] will take all tokens between 'a' and 'Z') or n-field

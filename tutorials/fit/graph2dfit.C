@@ -17,29 +17,29 @@
 #include <TF2.h>
 #include <TH1.h>
 
-TCanvas* graph2dfit()
+void graph2dfit()
 {
    gStyle->SetOptStat(0);
    gStyle->SetOptFit();
 
-   TCanvas *c = new TCanvas("c","Graph2D example",0,0,600,800);
+   auto c = new TCanvas("c","Graph2D example",0,0,600,800);
    c->Divide(2,3);
 
-   Double_t rnd, x, y, z;
-   Double_t e = 0.3;
-   Int_t nd = 400;
-   Int_t np = 10000;
+   double rnd, x, y, z;
+   double e = 0.3;
+   int nd = 400;
+   int np = 10000;
 
    TRandom r;
-   Double_t fl = 6;
-   TF2  *f2 = new TF2("f2","1000*(([0]*sin(x)/x)*([1]*sin(y)/y))+200",
+   double fl = 6;
+   auto f2 = new TF2("f2","1000*(([0]*sin(x)/x)*([1]*sin(y)/y))+200",
       -fl,fl,-fl,fl);
    f2->SetParameters(1,1);
-   TGraph2D *dt = new TGraph2D();
+   auto dt = new TGraph2D();
 
    // Fill the 2D graph
-   Double_t zmax = 0;
-   for (Int_t N=0; N<nd; N++) {
+   double zmax = 0;
+   for (int N=0; N<nd; N++) {
       f2->GetRandom2(x,y);
       // Generate a random number in [-e,e]
       rnd = 2*r.Rndm()*e-e;
@@ -48,24 +48,24 @@ TCanvas* graph2dfit()
       dt->SetPoint(N,x,y,z);
    }
 
-   Double_t hr = 350;
-   TH1D *h1 = new TH1D("h1",
+   double hr = 350;
+   auto h1 = new TH1D("h1",
    "#splitline{Difference between Original}{#splitline{function and Function}{with noise}}",
    100, -hr, hr);
-   TH1D *h2 = new TH1D("h2",
+   auto h2 = new TH1D("h2",
    "#splitline{Difference between Original}{#splitline{function and Delaunay triangles}{interpolation}}",
    100, -hr, hr);
-   TH1D *h3 = new TH1D("h3",
+   auto h3 = new TH1D("h3",
    "#splitline{Difference between Original}{function and Minuit fit}",
    500, -hr, hr);
 
    f2->SetParameters(0.5,1.5);
    dt->Fit(f2);
-   TF2 *fit2 = (TF2*)dt->FindObject("f2");
+   auto fit2 = (TF2*)dt->FindObject("f2");
 
    f2->SetParameters(1,1);
 
-   for (Int_t N=0; N<np; N++) {
+   for (int N=0; N<np; N++) {
       f2->GetRandom2(x,y);
       // Generate a random number in [-e,e]
       rnd = 2*r.Rndm()*e-e;
@@ -102,5 +102,4 @@ TCanvas* graph2dfit()
    c->cd(4); h2->Fit("gaus","Q") ; h2->Draw();
    c->cd(6); h3->Fit("gaus","Q") ; h3->Draw();
    c->cd();
-   return c;
 }

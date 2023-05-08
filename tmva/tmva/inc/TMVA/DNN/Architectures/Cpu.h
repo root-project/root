@@ -120,7 +120,7 @@ public:
       return Tensor_t(buffer, {t, w, b}, GetTensorLayout());
    }
    // create a weight tensor/matrix vector   from another tensor/weight  vector using the given tensor shapes
-   // this function is used by the optimizers to stgore intermidiate weights representations
+   // this function is used by the optimizers to store intermediate weights representations
    static void  CreateWeightTensors( std::vector<Matrix_t> & newWeights, const std::vector<Matrix_t> & weights) {
       if (!newWeights.empty()) newWeights.clear();
       size_t n =  weights.size();
@@ -187,7 +187,7 @@ public:
     * through the network.
     */
    ///@{
-   /** Matrix-multiply \p input with the transpose of \pweights and
+   /** Matrix-multiply \p input with the transpose of \p weights and
     *  write the results into \p output. */
    static void MultiplyTranspose(Matrix_t &output, const Matrix_t &input, const Matrix_t &weights);
 
@@ -270,7 +270,7 @@ public:
 
    /** @name Activation Functions
     * For each activation function, the low-level interface contains two routines.
-    * One that applies the acitvation function to a matrix and one that evaluate
+    * One that applies the activation function to a matrix and one that evaluate
     * the derivatives of the activation function at the elements of a given matrix
     * and writes the results into the result matrix.
     */
@@ -388,7 +388,7 @@ public:
 
    /** @name Regularization
     * For each regularization type two functions are required, one named
-    * <tt><Type>Regularization</tt> that evaluates the corresponding
+    * <tt>`<Type>`Regularization</tt> that evaluates the corresponding
     * regularization functional for a given weight matrix and the
     * <tt>Add<Type>RegularizationGradients</tt>, that adds the regularization
     * component in the gradients to the provided matrix.
@@ -429,8 +429,8 @@ public:
    // return static instance of random generator used for initialization
    // if generator does not exist it is created the first time with a random seed (e.g. seed = 0)
    static TRandom & GetRandomGenerator();
-   // set random seed for the static geenrator
-   // if the static geneerator does not exists it is created
+   // set random seed for the static generator
+   // if the static generator does not exists it is created
    static void SetRandomSeed(size_t seed);
    ///@}
 
@@ -472,8 +472,8 @@ public:
 
    /** The input from each batch are normalized during training to have zero mean and unit variance
      * and they are then scaled by two parameter, different for each input variable:
-     *  - a scale factor \gamma gamma
-     *  - an offset \beta beta */
+     *  - a scale factor `\gamma` gamma
+     *  - an offset `\beta` beta */
    static void BatchNormLayerForwardTraining(int axis, const Tensor_t &x, Tensor_t &y, Matrix_t &gamma, Matrix_t &beta,
                                              Matrix_t &mean, Matrix_t &, Matrix_t &iVariance, Matrix_t &runningMeans,
                                              Matrix_t &runningVars, Scalar_t nTrainedBatches, Scalar_t momentum,
@@ -605,7 +605,7 @@ public:
     */
    ///@{
    /** Perform the complete backward propagation step in a Pooling Layer. Based on the
-    *  winning idices stored in the index matrix, it just forwards the actiovation
+    *  winning indices stored in the index matrix, it just forwards the activation
     *  gradients to the previous layer. */
    static void MaxPoolLayerBackward(Tensor_t &activationGradientsBackward, const Tensor_t &activationGradients,
                                     const Tensor_t &indexMatrix, const Tensor_t & /*inputActivation*/,
@@ -644,8 +644,8 @@ public:
 
    /** Backward pass for LSTM Network */
    static Matrix_t & LSTMLayerBackward(TCpuMatrix<Scalar_t> & state_gradients_backward,
-			                              TCpuMatrix<Scalar_t> & cell_gradients_backward,
-			                              TCpuMatrix<Scalar_t> & input_weight_gradients,
+                                          TCpuMatrix<Scalar_t> & cell_gradients_backward,
+                                          TCpuMatrix<Scalar_t> & input_weight_gradients,
                                        TCpuMatrix<Scalar_t> & forget_weight_gradients,
                                        TCpuMatrix<Scalar_t> & candidate_weight_gradients,
                                        TCpuMatrix<Scalar_t> & output_weight_gradients,
@@ -731,7 +731,7 @@ public:
     *  tensor \p B. */
    static void Deflatten(Tensor_t &A, const Tensor_t &B); // size_t index, size_t nRows,size_t nCols);
 
-   /** Rearrage data accoring to time fill B x T x D out with T x B x D matrix in*/
+   /** Rearrage data according to time fill B x T x D out with T x B x D matrix in*/
    static void Rearrange(Tensor_t &out, const Tensor_t &in);
 
 
@@ -768,7 +768,7 @@ public:
    //    Hadamard( tA, Tensor_t(B));
    // }
 
-   /** Sum columns of (m x n) matrixx \p A and write the results into the first
+   /** Sum columns of (m x n) matrix \p A and write the results into the first
     * m elements in \p A.
     */
    static void SumColumns(Matrix_t &B, const Matrix_t &A, Scalar_t alpha = 1.0, Scalar_t beta = 0.);

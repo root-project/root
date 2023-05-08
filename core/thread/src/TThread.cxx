@@ -9,16 +9,16 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TThread                                                              //
-//                                                                      //
-// This class implements threads. A thread is an execution environment  //
-// much lighter than a process. A single process can have multiple      //
-// threads. The actual work is done via the TThreadImp class (either    //
-// TPosixThread or TWin32Thread).                                       //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TThread
+
+\legacy{TThread}
+
+This class implements threads. A thread is an execution environment
+much lighter than a process. A single process can have multiple
+threads. The actual work is done via the TThreadImp class (either
+TPosixThread or TWin32Thread).
+
+**/
 
 #include "RConfigure.h"
 
@@ -178,7 +178,7 @@ Int_t TJoinHelper::Join()
          // If we received the signal or timed out, let's check the value
          if (fJoined) break;
       } else {
-         // If any other error occured, there is no point in trying again
+         // If any other error occurred, there is no point in trying again
          break;
       }
 
@@ -562,7 +562,7 @@ Long_t TThread::SelfId()
 ////////////////////////////////////////////////////////////////////////////////
 /// Start the thread. This starts the static method TThread::Function()
 /// which calls the user function specified in the TThread ctor with
-/// the arg argument. 
+/// the arg argument.
 /// If affinity is specified (>=0), a CPU affinity will be associated
 /// with the current thread.
 /// Returns 0 on success, otherwise an error number will
@@ -912,14 +912,6 @@ void **TThread::Tsd(void *dflt, Int_t k)
 void **TThread::GetTls(Int_t k) {
    TTHREAD_TLS_ARRAY(void*, ROOT::kMaxThreadSlot, tls);
 
-   // In order for the thread 'gDirectory' value to be properly
-   // initialized we set it now (otherwise it defaults
-   // to zero which is 'unexpected')
-   // We initialize it to gROOT rather than gDirectory, since
-   // TFile are currently expected to not be shared by two threads.
-   if (k == ROOT::kDirectoryThreadSlot && tls[k] == nullptr)
-      tls[k] = gROOT;
-
    return &(tls[k]);
 }
 
@@ -983,8 +975,9 @@ again:
       goto again;
    }
    if (level >= kSysError && level < kFatal) {
-      char *buf1 = new char[buf_size + strlen(gSystem->GetError()) + 5];
-      sprintf(buf1, "%s (%s)", buf, gSystem->GetError());
+      const std::size_t bufferSize = buf_size + strlen(gSystem->GetError()) + 5;
+      char *buf1 = new char[bufferSize];
+      snprintf(buf1, bufferSize, "%s (%s)", buf, gSystem->GetError());
       bp = buf1;
       delete [] buf;
    } else
@@ -1015,11 +1008,13 @@ void TThread::DoError(int level, const char *location, const char *fmt,
    char *loc = 0;
 
    if (location) {
-      loc = new char[strlen(location) + strlen(GetName()) + 32];
-      sprintf(loc, "%s %s:0x%lx", location, GetName(), fId);
+      const std::size_t bufferSize = strlen(location) + strlen(GetName()) + 32;
+      loc = new char[bufferSize];
+      snprintf(loc, bufferSize, "%s %s:0x%lx", location, GetName(), fId);
    } else {
-      loc = new char[strlen(GetName()) + 32];
-      sprintf(loc, "%s:0x%lx", GetName(), fId);
+      const std::size_t bufferSize = strlen(GetName()) + 32;
+      loc = new char[bufferSize];
+      snprintf(loc, bufferSize, "%s:0x%lx", GetName(), fId);
    }
 
    ErrorHandler(level, loc, fmt, va);
@@ -1090,7 +1085,7 @@ void TThread::XAction()
    enum { kPRTF = 0, kCUPD = 5, kCANV = 10, kCDEL = 15,
           kPDCD = 20, kMETH = 25, kERRO = 30 };
    int iact = strstr(acts, fgXAct) - acts;
-   char *cmd = 0;
+   TString cmd;
 
    switch (iact) {
 
@@ -1128,8 +1123,8 @@ void TThread::XAction()
 
             case 2:
                //((TCanvas*)fgXArr[1])->Constructor();
-               cmd = Form("((TCanvas *)0x%zx)->Constructor();",(size_t)fgXArr[1]);
-               gROOT->ProcessLine(cmd);
+               cmd.Form("((TCanvas *)0x%zx)->Constructor();",(size_t)fgXArr[1]);
+               gROOT->ProcessLine(cmd.Data());
                break;
 
             case 5:
@@ -1137,8 +1132,8 @@ void TThread::XAction()
                //                 (char*)fgXArr[2],
                //                 (char*)fgXArr[3],
                //                *((Int_t*)(fgXArr[4])));
-               cmd = Form("((TCanvas *)0x%zx)->Constructor((char*)0x%zx,(char*)0x%zx,*((Int_t*)(0x%zx)));",(size_t)fgXArr[1],(size_t)fgXArr[2],(size_t)fgXArr[3],(size_t)fgXArr[4]);
-               gROOT->ProcessLine(cmd);
+               cmd.Form("((TCanvas *)0x%zx)->Constructor((char*)0x%zx,(char*)0x%zx,*((Int_t*)(0x%zx)));",(size_t)fgXArr[1],(size_t)fgXArr[2],(size_t)fgXArr[3],(size_t)fgXArr[4]);
+               gROOT->ProcessLine(cmd.Data());
                break;
             case 6:
                //((TCanvas*)fgXArr[1])->Constructor(
@@ -1146,8 +1141,8 @@ void TThread::XAction()
                //                 (char*)fgXArr[3],
                //                *((Int_t*)(fgXArr[4])),
                //                *((Int_t*)(fgXArr[5])));
-               cmd = Form("((TCanvas *)0x%zx)->Constructor((char*)0x%zx,(char*)0x%zx,*((Int_t*)(0x%zx)),*((Int_t*)(0x%zx)));",(size_t)fgXArr[1],(size_t)fgXArr[2],(size_t)fgXArr[3],(size_t)fgXArr[4],(size_t)fgXArr[5]);
-               gROOT->ProcessLine(cmd);
+               cmd.Form("((TCanvas *)0x%zx)->Constructor((char*)0x%zx,(char*)0x%zx,*((Int_t*)(0x%zx)),*((Int_t*)(0x%zx)));",(size_t)fgXArr[1],(size_t)fgXArr[2],(size_t)fgXArr[3],(size_t)fgXArr[4],(size_t)fgXArr[5]);
+               gROOT->ProcessLine(cmd.Data());
                break;
 
             case 8:
@@ -1158,8 +1153,8 @@ void TThread::XAction()
                //               *((Int_t*)(fgXArr[5])),
                //               *((Int_t*)(fgXArr[6])),
                //               *((Int_t*)(fgXArr[7])));
-               cmd = Form("((TCanvas *)0x%zx)->Constructor((char*)0x%zx,(char*)0x%zx,*((Int_t*)(0x%zx)),*((Int_t*)(0x%zx)),*((Int_t*)(0x%zx)),*((Int_t*)(0x%zx)));",(size_t)fgXArr[1],(size_t)fgXArr[2],(size_t)fgXArr[3],(size_t)fgXArr[4],(size_t)fgXArr[5],(size_t)fgXArr[6],(size_t)fgXArr[7]);
-               gROOT->ProcessLine(cmd);
+               cmd.Form("((TCanvas *)0x%zx)->Constructor((char*)0x%zx,(char*)0x%zx,*((Int_t*)(0x%zx)),*((Int_t*)(0x%zx)),*((Int_t*)(0x%zx)),*((Int_t*)(0x%zx)));",(size_t)fgXArr[1],(size_t)fgXArr[2],(size_t)fgXArr[3],(size_t)fgXArr[4],(size_t)fgXArr[5],(size_t)fgXArr[6],(size_t)fgXArr[7]);
+               gROOT->ProcessLine(cmd.Data());
                break;
 
          }
@@ -1167,8 +1162,8 @@ void TThread::XAction()
 
       case kCDEL:
          //((TCanvas*)fgXArr[1])->Destructor();
-         cmd = Form("((TCanvas *)0x%zx)->Destructor();",(size_t)fgXArr[1]);
-         gROOT->ProcessLine(cmd);
+         cmd.Form("((TCanvas *)0x%zx)->Destructor();",(size_t)fgXArr[1]);
+         gROOT->ProcessLine(cmd.Data());
          break;
 
       case kPDCD:

@@ -37,13 +37,13 @@ public:
    {
    }
 
-   virtual ~Numerical2PGradientCalculator() {}
+   ~Numerical2PGradientCalculator() override {}
 
-   virtual FunctionGradient operator()(const MinimumParameters &) const;
+   FunctionGradient operator()(const MinimumParameters &) const override;
 
    virtual FunctionGradient operator()(const std::vector<double> &params) const;
 
-   virtual FunctionGradient operator()(const MinimumParameters &, const FunctionGradient &) const;
+   FunctionGradient operator()(const MinimumParameters &, const FunctionGradient &) const override;
 
    const MnFcn &Fcn() const { return fFcn; }
    const MnUserTransformation &Trafo() const { return fTransformation; }

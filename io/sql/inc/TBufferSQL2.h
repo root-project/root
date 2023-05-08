@@ -46,8 +46,8 @@ protected:
    TMap *fPoolsMap;              ///<!   map of pools with data from different tables
 
    // TBufferSQL2 objects cannot be copied or assigned
-   TBufferSQL2(const TBufferSQL2 &);    // not implemented
-   void operator=(const TBufferSQL2 &); // not implemented
+   TBufferSQL2(const TBufferSQL2 &) = delete;
+   void operator=(const TBufferSQL2 &) = delete;
 
    TBufferSQL2();
 
@@ -156,7 +156,7 @@ public:
 
    void ClassBegin(const TClass *, Version_t = -1) final;
    void ClassEnd(const TClass *) final;
-   void ClassMember(const char *name, const char *typeName = 0, Int_t arrsize1 = -1, Int_t arrsize2 = -1) final;
+   void ClassMember(const char *name, const char *typeName = nullptr, Int_t arrsize1 = -1, Int_t arrsize2 = -1) final;
 
    Int_t ReadArray(Bool_t *&b) final;
    Int_t ReadArray(Char_t *&c) final;

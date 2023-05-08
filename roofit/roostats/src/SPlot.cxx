@@ -56,7 +56,7 @@
   and a list which parameters of the pdf are yields. The SPlot will calculate SWeights, and
   include these as columns in the RooDataSet. The dataset will have two additional columns
   for every yield with name "`<varname>`":
-  - `L_<varname>` is the the likelihood for each event, *i.e.*, the pdf evaluated for the given value of the variable "varname".
+  - `L_<varname>` is the likelihood for each event, *i.e.*, the pdf evaluated for the given value of the variable "varname".
   - `<varname>_sw` is the value of the sWeight for the variable "varname" for each event.
 
   In SPlot::SPlot(), one can choose whether columns should be added to an existing dataset or whether a copy of the dataset
@@ -134,7 +134,7 @@ SPlot::SPlot():
 
   fSWeightVars.assign(Args);
 
-  fSData = NULL;
+  fSData = nullptr;
 
 }
 
@@ -147,7 +147,7 @@ SPlot::SPlot(const char* name, const char* title):
 
   fSWeightVars.assign(Args);
 
-  fSData = NULL;
+  fSData = nullptr;
 
 }
 
@@ -194,7 +194,7 @@ SPlot::SPlot(const SPlot &other):
 ///\param[in] useWeights Include weights of the input data in calculation of s weights.
 ///\param[in] cloneData Make a clone of the incoming data before adding weights.
 ///\param[in] newName New name for the data.
-///\param[in] argX Additional arguments for the fitting step in AddSWeight().
+///\param[in] arg5,arg6,arg7,arg8 Additional arguments for the fitting step in AddSWeight().
 SPlot::SPlot(const char* name, const char* title, RooDataSet& data, RooAbsPdf* pdf,
         const RooArgList &yieldsList, const RooArgSet &projDeps,
         bool useWeights, bool cloneData, const char* newName,
@@ -233,7 +233,7 @@ RooDataSet* SPlot::SetSData(RooDataSet* data)
     fSData = (RooDataSet*) data;
     return fSData;
   }  else
-    return NULL;
+    return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -248,7 +248,7 @@ RooDataSet* SPlot::GetSDataSet() const
 /// Retrieve an s weight.
 /// \param[in] numEvent Event number to retrieve s weight for.
 /// \param[in] sVariable The yield parameter to retrieve the s weight for.
-Double_t SPlot::GetSWeight(Int_t numEvent, const char* sVariable) const
+double SPlot::GetSWeight(Int_t numEvent, const char* sVariable) const
 {
   if(numEvent > fSData->numEntries() )
     {
@@ -262,7 +262,7 @@ Double_t SPlot::GetSWeight(Int_t numEvent, const char* sVariable) const
       return -1;
     }
 
-  Double_t totalYield = 0;
+  double totalYield = 0;
 
   std::string varname(sVariable);
   varname += "_sw";
@@ -297,7 +297,7 @@ Double_t SPlot::GetSWeight(Int_t numEvent, const char* sVariable) const
 /// This sum should equal the total weight of that event.
 /// This method is intended to be used as a check.
 
-Double_t SPlot::GetSumOfEventSWeight(Int_t numEvent) const
+double SPlot::GetSumOfEventSWeight(Int_t numEvent) const
 {
   if(numEvent > fSData->numEntries() )
     {
@@ -313,7 +313,7 @@ Double_t SPlot::GetSumOfEventSWeight(Int_t numEvent) const
 
   Int_t numSWeightVars = this->GetNumSWeightVars();
 
-  Double_t eventSWeight = 0;
+  double eventSWeight = 0;
 
   RooArgSet Row(*fSData->get(numEvent));
 
@@ -328,10 +328,10 @@ Double_t SPlot::GetSumOfEventSWeight(Int_t numEvent) const
 /// This should equal the total (weighted) yield of that species.
 /// This method is intended as a check.
 
-Double_t SPlot::GetYieldFromSWeight(const char* sVariable) const
+double SPlot::GetYieldFromSWeight(const char* sVariable) const
 {
 
-  Double_t totalYield = 0;
+  double totalYield = 0;
 
   std::string varname(sVariable);
   varname += "_sw";
@@ -394,7 +394,7 @@ Int_t SPlot::GetNumSWeightVars() const
 /// Method which adds the sWeights to the dataset.
 ///
 /// The SPlot will contain two new variables for each yield parameter:
-/// - `L_<varname>` is the the likelihood for each event, *i.e.*, the pdf evaluated for the a given value of the variable "varname".
+/// - `L_<varname>` is the likelihood for each event, i.e., the pdf evaluated for the a given value of the variable "varname".
 /// - `<varname>_sw` is the value of the sWeight for the variable "varname" for each event.
 ///
 /// Find Parameters in the PDF to be considered fixed when calculating the SWeights
@@ -402,7 +402,7 @@ Int_t SPlot::GetNumSWeightVars() const
 ///
 /// After fixing non-yield parameters, this function will start a fit by calling
 /// ```
-/// pdf->fitTo(*fSData, RooFit::Extended(kTRUE), RooFit::SumW2Error(kTRUE), RooFit::PrintLevel(-1), RooFit::PrintEvalErrors(-1)).
+/// pdf->fitTo(*fSData, RooFit::Extended(true), RooFit::SumW2Error(true), RooFit::PrintLevel(-1), RooFit::PrintEvalErrors(-1)).
 /// ```
 /// One can pass additional arguments to `fitTo`, such as `RooFit::Range("fitrange")`, as `arg5`, `arg6`, `arg7`, `arg8`.
 ///
@@ -415,7 +415,7 @@ Int_t SPlot::GetNumSWeightVars() const
 /// \param[in] projDeps These will not be normalized over when calculating the sWeights,
 /// and will be considered parameters, not observables.
 /// \param[in] includeWeights Include weights of the input data in calculation of s weights.
-/// \param[in] argX Optional additional arguments for the fitting step.
+/// \param[in] arg5,arg6,arg7,arg8 Optional additional arguments for the fitting step.
 void SPlot::AddSWeight( RooAbsPdf* pdf, const RooArgList &yieldsTmp,
          const RooArgSet &projDeps, bool includeWeights,
          const RooCmdArg& arg5, const RooCmdArg& arg6, const RooCmdArg& arg7, const RooCmdArg& arg8)
@@ -423,12 +423,12 @@ void SPlot::AddSWeight( RooAbsPdf* pdf, const RooArgList &yieldsTmp,
 
   // Find Parameters in the PDF to be considered fixed when calculating the SWeights
   // and be sure to NOT include the yields in that list
-  RooArgList* constParameters = (RooArgList*)pdf->getParameters(fSData) ;
+  std::unique_ptr<RooArgSet> constParameters{pdf->getParameters(fSData)};
   for (unsigned int i=0; i < constParameters->size(); ++i) {
     // Need a counting loop since collection is being modified
-    auto& par = (*constParameters)[i];
+    auto& par = *(*constParameters)[i];
     if (std::any_of(yieldsTmp.begin(), yieldsTmp.end(), [&](const RooAbsArg* yield){ return yield->dependsOn(par); })) {
-      constParameters->remove(par, kTRUE, kTRUE);
+      constParameters->remove(par, true, true);
       --i;
     }
   }
@@ -440,7 +440,7 @@ void SPlot::AddSWeight( RooAbsPdf* pdf, const RooArgList &yieldsTmp,
 
   for(Int_t i = 0; i < constParameters->getSize(); i++)
   {
-    RooAbsRealLValue* varTemp = static_cast<RooAbsRealLValue*>( constParameters->at(i) );
+    RooAbsRealLValue* varTemp = static_cast<RooAbsRealLValue*>( (*constParameters)[i] );
     if(varTemp &&  varTemp->isConstant() == 0 )
     {
       varTemp->setConstant();
@@ -450,26 +450,25 @@ void SPlot::AddSWeight( RooAbsPdf* pdf, const RooArgList &yieldsTmp,
 
   // Fit yields to the data with all other variables held constant
   // This is necessary because SPlot assumes the yields minimise -Log(likelihood)
-  pdf->fitTo(*fSData, RooFit::Extended(kTRUE), RooFit::SumW2Error(kTRUE), RooFit::PrintLevel(-1), RooFit::PrintEvalErrors(-1), arg5, arg6, arg7, arg8);
+  pdf->fitTo(*fSData, RooFit::Extended(true), RooFit::SumW2Error(true), RooFit::PrintLevel(-1), RooFit::PrintEvalErrors(-1), arg5, arg6, arg7, arg8);
+
+  // The list of variables to normalize over when calculating PDF values.
+  RooArgSet vars(*fSData->get() );
+  vars.remove(projDeps, true, true);
 
   // Hold the value of the fitted yields
   std::vector<double> yieldsHolder;
 
   for(Int_t i = 0; i < yieldsTmp.getSize(); i++)
-    yieldsHolder.push_back(static_cast<RooAbsReal*>(yieldsTmp.at(i))->getVal());
+    yieldsHolder.push_back(static_cast<RooAbsReal*>(yieldsTmp.at(i))->getVal(&vars));
 
   const Int_t nspec = yieldsTmp.getSize();
-  RooArgList yields = *(RooArgList*)yieldsTmp.snapshot(kFALSE);
+  RooArgList yields = *(RooArgList*)yieldsTmp.snapshot(false);
 
   if (RooMsgService::instance().isActive(this, RooFit::InputArguments, RooFit::DEBUG)) {
     coutI(InputArguments) << "Printing Yields" << endl;
     yields.Print();
   }
-
-  // The list of variables to normalize over when calculating PDF values.
-
-  RooArgSet vars(*fSData->get() );
-  vars.remove(projDeps, kTRUE, kTRUE);
 
 
   // first calculate the pdf values for all species and all events
@@ -477,17 +476,17 @@ void SPlot::AddSWeight( RooAbsPdf* pdf, const RooArgList &yieldsTmp,
   RooArgSet pdfServers;
   pdf->treeNodeServerList(&pdfServers);
 
-  std::vector<Double_t> yieldvalues ;
+  std::vector<double> yieldvalues ;
   for (Int_t k = 0; k < nspec; ++k) {
     auto thisyield = static_cast<const RooAbsReal*>(yields.at(k)) ;
     auto yieldinpdf = static_cast<RooAbsRealLValue*>(pdfServers.find(thisyield->GetName()));
     assert(pdf->dependsOn(*yieldinpdf));
 
     if (yieldinpdf) {
-      coutI(InputArguments)<< "yield in pdf: " << yieldinpdf->GetName() << " " << thisyield->getVal() << endl;
+      coutI(InputArguments)<< "yield in pdf: " << yieldinpdf->GetName() << " " << thisyield->getVal(&vars) << endl;
 
       yieldvars.push_back(yieldinpdf) ;
-      yieldvalues.push_back(thisyield->getVal()) ;
+      yieldvalues.push_back(thisyield->getVal(&vars)) ;
     }
   }
 
@@ -532,8 +531,8 @@ void SPlot::AddSWeight( RooAbsPdf* pdf, const RooArgList &yieldsTmp,
   // and all others to 0.  Evaluate the pdf for each event
   // and store the values.
 
-  RooArgSet * pdfvars = pdf->getVariables();
-  std::vector<std::vector<Double_t> > pdfvalues(numevents,std::vector<Double_t>(nspec,0)) ;
+  std::unique_ptr<RooArgSet> pdfvars{pdf->getVariables()};
+  std::vector<std::vector<double> > pdfvalues(numevents,std::vector<double>(nspec,0)) ;
 
   for (Int_t ievt = 0; ievt <numevents; ievt++)
   {
@@ -547,20 +546,19 @@ void SPlot::AddSWeight( RooAbsPdf* pdf, const RooArgList &yieldsTmp,
       // set this yield to 1
       theVar->setVal( 1 ) ;
       // evaluate the pdf
-      Double_t f_k = pdf->getVal(&vars) ;
+      double f_k = pdf->getVal(&vars) ;
       pdfvalues[ievt][k] = f_k ;
       if( !(f_k>1 || f_k<1) )
         coutW(InputArguments) << "Strange pdf value: " << ievt << " " << k << " " << f_k << std::endl ;
       theVar->setVal( 0 ) ;
     }
   }
-  delete pdfvars;
 
   // check that the likelihood normalization is fine
-  std::vector<Double_t> norm(nspec,0) ;
+  std::vector<double> norm(nspec,0) ;
   for (Int_t ievt = 0; ievt <numevents ; ievt++)
     {
-      Double_t dnorm(0) ;
+      double dnorm(0) ;
       for(Int_t k=0; k<nspec; ++k) dnorm += yieldvalues[k] * pdfvalues[ievt][k] ;
       for(Int_t j=0; j<nspec; ++j) norm[j] += pdfvalues[ievt][j]/dnorm ;
     }
@@ -587,7 +585,7 @@ void SPlot::AddSWeight( RooAbsPdf* pdf, const RooArgList &yieldsTmp,
       // matrix. See BAD 509 V2 eqn. 15
 
       // Sum for the denominator
-      Double_t dsum(0);
+      double dsum(0);
       for(Int_t k = 0; k < nspec; ++k)
    dsum += pdfvalues[ievt][k] * yieldvalues[k] ;
 
@@ -622,9 +620,9 @@ void SPlot::AddSWeight( RooAbsPdf* pdf, const RooArgList &yieldsTmp,
     coutI(Eval) << "Yield of specie  Sum of Row in Matrix   Norm" << std::endl;
     for(Int_t k=0; k<nspec; ++k)
     {
-      Double_t covnorm(0) ;
+      double covnorm(0) ;
       for(Int_t m=0; m<nspec; ++m) covnorm += covInv[k][m]*yieldvalues[m] ;
-      Double_t sumrow(0) ;
+      double sumrow(0) ;
       for(Int_t m = 0; m < nspec; ++m) sumrow += covMatrix[k][m] ;
       coutI(Eval)  << yieldvalues[k] << " " << sumrow << " " << covnorm << endl ;
     }
@@ -666,12 +664,12 @@ void SPlot::AddSWeight( RooAbsPdf* pdf, const RooArgList &yieldsTmp,
       fSData->get(ievt) ;
 
       // sum for denominator
-      Double_t dsum(0);
+      double dsum(0);
       for(Int_t k = 0; k < nspec; ++k)   dsum +=  pdfvalues[ievt][k] * yieldvalues[k] ;
       // covariance weighted pdf for each specief
       for(Int_t n=0; n<nspec; ++n)
    {
-     Double_t nsum(0) ;
+     double nsum(0) ;
      for(Int_t j=0; j<nspec; ++j) nsum += covMatrix(n,j) * pdfvalues[ievt][j] ;
 
 
@@ -685,7 +683,7 @@ void SPlot::AddSWeight( RooAbsPdf* pdf, const RooArgList &yieldsTmp,
 
      pdfvec[n]->setVal( pdfvalues[ievt][n] ) ;
 
-     if( !(fabs(nsum/dsum)>=0 ) )
+     if( !(std::abs(nsum/dsum)>=0 ) )
        {
          coutE(Contents) << "error: " << nsum/dsum << endl ;
          return;
@@ -710,7 +708,7 @@ void SPlot::AddSWeight( RooAbsPdf* pdf, const RooArgList &yieldsTmp,
   //Make any variables that were forced to constant no longer constant
 
   for(Int_t i=0; i < (Int_t) constVarHolder.size(); i++)
-    constVarHolder.at(i)->setConstant(kFALSE);
+    constVarHolder.at(i)->setConstant(false);
 
   return;
 

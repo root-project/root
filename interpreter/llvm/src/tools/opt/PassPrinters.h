@@ -14,11 +14,8 @@
 #ifndef LLVM_TOOLS_OPT_PASSPRINTERS_H
 #define LLVM_TOOLS_OPT_PASSPRINTERS_H
 
-#include "llvm/IR/PassManager.h"
-
 namespace llvm {
 
-class BasicBlockPass;
 class CallGraphSCCPass;
 class FunctionPass;
 class ModulePass;
@@ -26,25 +23,17 @@ class LoopPass;
 class PassInfo;
 class raw_ostream;
 class RegionPass;
-class Module;
 
-FunctionPass *createFunctionPassPrinter(const PassInfo *PI, raw_ostream &out,
-                                        bool Quiet);
+FunctionPass *createFunctionPassPrinter(const PassInfo *PI, raw_ostream &out);
 
 CallGraphSCCPass *createCallGraphPassPrinter(const PassInfo *PI,
-                                             raw_ostream &out, bool Quiet);
+                                             raw_ostream &out);
 
-ModulePass *createModulePassPrinter(const PassInfo *PI, raw_ostream &out,
-                                    bool Quiet);
+ModulePass *createModulePassPrinter(const PassInfo *PI, raw_ostream &out);
 
-LoopPass *createLoopPassPrinter(const PassInfo *PI, raw_ostream &out,
-                                bool Quiet);
+LoopPass *createLoopPassPrinter(const PassInfo *PI, raw_ostream &out);
 
-RegionPass *createRegionPassPrinter(const PassInfo *PI, raw_ostream &out,
-                                    bool Quiet);
-
-BasicBlockPass *createBasicBlockPassPrinter(const PassInfo *PI,
-                                            raw_ostream &out, bool Quiet);
+RegionPass *createRegionPassPrinter(const PassInfo *PI, raw_ostream &out);
 
 } // end namespace llvm
 

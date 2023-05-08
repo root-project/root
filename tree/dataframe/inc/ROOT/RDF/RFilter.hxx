@@ -36,11 +36,13 @@ using namespace ROOT::Detail::RDF;
 
 // fwd decl for RFilter
 namespace GraphDrawing {
-std::shared_ptr<GraphNode> CreateFilterNode(const RFilterBase *filterPtr);
+std::shared_ptr<GraphNode>
+CreateFilterNode(const RFilterBase *filterPtr, std::unordered_map<void *, std::shared_ptr<GraphNode>> &visitedMap);
 
 std::shared_ptr<GraphNode> AddDefinesToGraph(std::shared_ptr<GraphNode> node,
                                              const RDFInternal::RColumnRegister &colRegister,
-                                             const std::vector<std::string> &prevNodeDefines);
+                                             const std::vector<std::string> &prevNodeDefines,
+                                             std::unordered_map<void *, std::shared_ptr<GraphNode>> &visitedMap);
 } // ns GraphDrawing
 
 } // ns RDF
@@ -63,7 +65,7 @@ class R__CLING_PTRCHECK(off) RFilter final : public RFilterBase {
 
    FilterF fFilter;
    /// Column readers per slot and per input column
-   std::vector<std::array<std::unique_ptr<RColumnReaderBase>, ColumnTypes_t::list_size>> fValues;
+   std::vector<std::array<RColumnReaderBase *, ColumnTypes_t::list_size>> fValues;
    const std::shared_ptr<PrevNode_t> fPrevNodePtr;
    PrevNode_t &fPrevNode;
 
@@ -76,7 +78,7 @@ public:
         fFilter(std::move(f)), fValues(pd->GetLoopManagerUnchecked()->GetNSlots()), fPrevNodePtr(std::move(pd)),
         fPrevNode(*fPrevNodePtr)
    {
-      fLoopManager->Book(this);
+      fLoopManager->Register(this);
    }
 
    RFilter(const RFilter &) = delete;
@@ -84,7 +86,6 @@ public:
    ~RFilter() {
       // must Deregister objects from the RLoopManager here, before the fPrevNode data member is destroyed:
       // otherwise if fPrevNode is the RLoopManager, it will be destroyed before the calls to Deregister happen.
-      fColRegister.Clear(); // triggers RDefine deregistration
       fLoopManager->Deregister(this);
    }
 
@@ -109,17 +110,16 @@ public:
    template <typename... ColTypes, std::size_t... S>
    bool CheckFilterHelper(unsigned int slot, Long64_t entry, TypeList<ColTypes...>, std::index_sequence<S...>)
    {
-      // silence "unused parameter" warnings in gcc
+      return fFilter(fValues[slot][S]->template Get<ColTypes>(entry)...);
+      // avoid unused parameter warnings (gcc 12.1)
       (void)slot;
       (void)entry;
-      return fFilter(fValues[slot][S]->template Get<ColTypes>(entry)...);
    }
 
    void InitSlot(TTreeReader *r, unsigned int slot) final
    {
-      RDFInternal::RColumnReadersInfo info{fColumnNames, fColRegister, fIsDefine.data(), fLoopManager->GetDSValuePtrs(),
-                                           fLoopManager->GetDataSource()};
-      fValues[slot] = RDFInternal::MakeColumnReaders(slot, r, ColumnTypes_t{}, info, fVariation);
+      RDFInternal::RColumnReadersInfo info{fColumnNames, fColRegister, fIsDefine.data(), *fLoopManager};
+      fValues[slot] = RDFInternal::GetColumnReaders(slot, r, ColumnTypes_t{}, info, fVariation);
       fLastCheckedEntry[slot * RDFInternal::CacheLineStep<Long64_t>()] = -1;
    }
 
@@ -153,7 +153,7 @@ public:
       fPrevNode.IncrChildrenCount();
    }
 
-   void AddFilterName(std::vector<std::string> &filters)
+   void AddFilterName(std::vector<std::string> &filters) final
    {
       fPrevNode.AddFilterName(filters);
       auto name = (HasName() ? fName : "Unnamed Filter");
@@ -161,28 +161,25 @@ public:
    }
 
    /// Clean-up operations to be performed at the end of a task.
-   virtual void FinaliseSlot(unsigned int slot) final
-   {
-      for (auto &v : fValues[slot])
-         v.reset();
-   }
+   void FinalizeSlot(unsigned int slot) final { fValues[slot].fill(nullptr); }
 
-   std::shared_ptr<RDFGraphDrawing::GraphNode> GetGraph()
+   std::shared_ptr<RDFGraphDrawing::GraphNode>
+   GetGraph(std::unordered_map<void *, std::shared_ptr<RDFGraphDrawing::GraphNode>> &visitedMap) final
    {
       // Recursively call for the previous node.
-      auto prevNode = fPrevNode.GetGraph();
-      auto prevColumns = prevNode->GetDefinedColumns();
+      auto prevNode = fPrevNode.GetGraph(visitedMap);
+      const auto &prevColumns = prevNode->GetDefinedColumns();
 
-      auto thisNode = RDFGraphDrawing::CreateFilterNode(this);
+      auto thisNode = RDFGraphDrawing::CreateFilterNode(this, visitedMap);
 
       /* If the returned node is not new, there is no need to perform any other operation.
        * This is a likely scenario when building the entire graph in which branches share
        * some nodes. */
-      if (!thisNode->GetIsNew()) {
+      if (!thisNode->IsNew()) {
          return thisNode;
       }
 
-      auto upmostNode = AddDefinesToGraph(thisNode, fColRegister, prevColumns);
+      auto upmostNode = AddDefinesToGraph(thisNode, fColRegister, prevColumns, visitedMap);
 
       // Keep track of the columns defined up to this point.
       thisNode->AddDefinedColumns(fColRegister.GetNames());

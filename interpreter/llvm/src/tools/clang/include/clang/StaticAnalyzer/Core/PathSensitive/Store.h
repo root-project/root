@@ -148,14 +148,6 @@ public:
 
   virtual SVal getLValueElement(QualType elementType, NonLoc offset, SVal Base);
 
-  // FIXME: This should soon be eliminated altogether; clients should deal with
-  // region extents directly.
-  virtual DefinedOrUnknownSVal getSizeInElements(ProgramStateRef state,
-                                                 const MemRegion *region,
-                                                 QualType EleTy) {
-    return UnknownVal();
-  }
-
   /// ArrayToPointer - Used by ExprEngine::VistCast to handle implicit
   ///  conversions between arrays and pointers.
   virtual SVal ArrayToPointer(Loc Array, QualType ElementTy) = 0;
@@ -189,7 +181,8 @@ public:
   /// castRegion - Used by ExprEngine::VisitCast to handle casts from
   ///  a MemRegion* to a specific location type.  'R' is the region being
   ///  casted and 'CastToTy' the result type of the cast.
-  const MemRegion *castRegion(const MemRegion *region, QualType CastToTy);
+  Optional<const MemRegion *> castRegion(const MemRegion *region,
+                                         QualType CastToTy);
 
   virtual StoreRef removeDeadBindings(Store store, const StackFrameContext *LCtx,
                                       SymbolReaper &SymReaper) = 0;
@@ -287,12 +280,6 @@ protected:
   const ElementRegion *MakeElementRegion(const SubRegion *baseRegion,
                                          QualType pointeeTy,
                                          uint64_t index = 0);
-
-  /// CastRetrievedVal - Used by subclasses of StoreManager to implement
-  ///  implicit casts that arise from loads from regions that are reinterpreted
-  ///  as another region.
-  SVal CastRetrievedVal(SVal val, const TypedValueRegion *region,
-                        QualType castTy);
 
 private:
   SVal getLValueFieldOrIvar(const Decl *decl, SVal base);

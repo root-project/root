@@ -21,34 +21,34 @@
 class RooRangeBinning : public RooAbsBinning {
 public:
 
-  RooRangeBinning(const char* name=0) ;
-  RooRangeBinning(Double_t xmin, Double_t xmax, const char* name=0) ;
-  RooRangeBinning(const RooRangeBinning&, const char* name=0) ;
-  virtual RooAbsBinning* clone(const char* name=0) const { return new RooRangeBinning(*this,name?name:GetName()) ; }
-  virtual ~RooRangeBinning() ;
+  RooRangeBinning(const char* name=nullptr) ;
+  RooRangeBinning(double xmin, double xmax, const char* name=nullptr) ;
+  RooRangeBinning(const RooRangeBinning&, const char* name=nullptr) ;
+  RooAbsBinning* clone(const char* name=nullptr) const override { return new RooRangeBinning(*this,name?name:GetName()) ; }
+  ~RooRangeBinning() override ;
 
-  virtual Int_t numBoundaries() const { return 2 ; }
-  virtual Int_t binNumber(Double_t) const { return 0 ; }
-  virtual Double_t binCenter(Int_t) const { return (_range[0] + _range[1]) / 2 ; }
-  virtual Double_t binWidth(Int_t) const { return (_range[1] - _range[0]) ; }
-  virtual Double_t binLow(Int_t) const { return _range[0] ; }
-  virtual Double_t binHigh(Int_t) const { return _range[1] ; }
+  Int_t numBoundaries() const override { return 2 ; }
+  void binNumbers(double const * /*x*/, int * /*bins*/, std::size_t /*n*/, int /*coef*/) const override {}
+  double binCenter(Int_t) const override { return (_range[0] + _range[1]) / 2 ; }
+  double binWidth(Int_t) const override { return (_range[1] - _range[0]) ; }
+  double binLow(Int_t) const override { return _range[0] ; }
+  double binHigh(Int_t) const override { return _range[1] ; }
 
-  virtual void setRange(Double_t xlo, Double_t xhi) ;
-  virtual void setMin(Double_t xlo) { setRange(xlo,highBound()) ; }
-  virtual void setMax(Double_t xhi) { setRange(lowBound(),xhi) ; }
+  void setRange(double xlo, double xhi) override ;
+  void setMin(double xlo) override { setRange(xlo,highBound()) ; }
+  void setMax(double xhi) override { setRange(lowBound(),xhi) ; }
 
-  virtual Double_t lowBound() const { return _range[0] ; }
-  virtual Double_t highBound() const { return _range[1] ; }
-  virtual Double_t averageBinWidth() const { return binWidth(0) ; }
+  double lowBound() const override { return _range[0] ; }
+  double highBound() const override { return _range[1] ; }
+  double averageBinWidth() const override { return binWidth(0) ; }
 
-  virtual Double_t* array() const { return const_cast<Double_t*>(_range) ; }
+  double* array() const override { return const_cast<double*>(_range) ; }
 
 protected:
 
-  Double_t _range[2] ;
-    
-  ClassDef(RooRangeBinning,1) // Binning that only defines the total range
+  double _range[2] ;
+
+  ClassDefOverride(RooRangeBinning,1) // Binning that only defines the total range
 };
 
 #endif

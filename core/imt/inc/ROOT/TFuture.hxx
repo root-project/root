@@ -15,6 +15,7 @@
 #include "RConfigure.h"
 
 #include "ROOT/TTaskGroup.hxx"
+#include "ROOT/TypeTraits.hxx"
 
 #include <type_traits>
 #include <future>
@@ -83,8 +84,8 @@ template <typename T>
 class TFuture final : public ROOT::Detail::TFutureImpl<T> {
    template <class Function, class... Args>
    friend TFuture<
-      typename std::result_of<typename std::decay<Function>::type(typename std::decay<Args>::type...)>::type>
-   Async(Function &&f, Args &&... args);
+      ROOT::TypeTraits::InvokeResult_t<typename std::decay<Function>::type, typename std::decay<Args>::type...>>
+   Async(Function &&f, Args &&...args);
 
 private:
    TFuture(std::future<T> &&fut, std::unique_ptr<TTaskGroup> &&tg)
@@ -105,8 +106,8 @@ template <>
 class TFuture<void> final : public ROOT::Detail::TFutureImpl<void> {
    template <class Function, class... Args>
    friend TFuture<
-      typename std::result_of<typename std::decay<Function>::type(typename std::decay<Args>::type...)>::type>
-   Async(Function &&f, Args &&... args);
+      ROOT::TypeTraits::InvokeResult_t<typename std::decay<Function>::type, typename std::decay<Args>::type...>>
+   Async(Function &&f, Args &&...args);
 
 private:
    TFuture(std::future<void> &&fut, std::unique_ptr<TTaskGroup> &&tg)
@@ -126,8 +127,8 @@ template <typename T>
 class TFuture<T &> final : public ROOT::Detail::TFutureImpl<T &> {
    template <class Function, class... Args>
    friend TFuture<
-      typename std::result_of<typename std::decay<Function>::type(typename std::decay<Args>::type...)>::type>
-   Async(Function &&f, Args &&... args);
+      ROOT::TypeTraits::InvokeResult_t<typename std::decay<Function>::type, typename std::decay<Args>::type...>>
+   Async(Function &&f, Args &&...args);
 
 private:
    TFuture(std::future<T &> &&fut, std::unique_ptr<TTaskGroup> &&tg)
@@ -148,14 +149,11 @@ public:
 /// Runs a function asynchronously potentially in a new thread and returns a
 /// ROOT TFuture that will hold the result.
 template <class Function, class... Args>
-TFuture<typename std::result_of<typename std::decay<Function>::type(typename std::decay<Args>::type...)>::type>
-Async(Function &&f, Args &&... args)
+TFuture<ROOT::TypeTraits::InvokeResult_t<typename std::decay<Function>::type, typename std::decay<Args>::type...>>
+Async(Function &&f, Args &&...args)
 {
    // The return type according to the standard implementation of std::future
-   // the long type is due to the fact that we want to be c++11 compatible.
-   // A more elegant version would be:
-   // std::future<std::result_of_t<std::decay_t<Function>(std::decay_t<Args>...)>>
-   using Ret_t = typename std::result_of<typename std::decay<Function>::type(typename std::decay<Args>::type...)>::type;
+   using Ret_t = ROOT::TypeTraits::InvokeResult_t<std::decay_t<Function>, std::decay_t<Args>...>;
 
    auto thisPt = std::make_shared<std::packaged_task<Ret_t()>>(std::bind(f, args...));
    std::unique_ptr<ROOT::Experimental::TTaskGroup> tg(new ROOT::Experimental::TTaskGroup());

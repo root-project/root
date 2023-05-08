@@ -11,9 +11,9 @@ protected:
 public:
    NdbDCNuBar()
       : NdbMF(31, "Data covariances for nu(bar)") {}
-   ~NdbDCNuBar() {}
+   ~NdbDCNuBar() override {}
 
-   ClassDef(NdbDCNuBar,1)
+   ClassDefOverride(NdbDCNuBar,1)
 
 }; // NdbDCNuBar
 

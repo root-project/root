@@ -518,7 +518,7 @@ namespace Math {
    public:
       typedef GSLRandomEngine BaseType; 
       GSLRngMixMax();
-      virtual ~GSLRngMixMax();  // we need a dtcor since is not a standard GSL engine
+      ~GSLRngMixMax() override;  // we need a dtcor since is not a standard GSL engine
    };
 
 } // namespace Math

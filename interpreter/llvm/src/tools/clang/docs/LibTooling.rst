@@ -34,7 +34,7 @@ looked for.  Let me give you an example:
   TEST(runToolOnCode, CanSyntaxCheckCode) {
     // runToolOnCode returns whether the action was correctly run over the
     // given code.
-    EXPECT_TRUE(runToolOnCode(new clang::SyntaxOnlyAction, "class X {};"));
+    EXPECT_TRUE(runToolOnCode(std::make_unique<clang::SyntaxOnlyAction>(), "class X {};"));
   }
 
 Writing a standalone tool
@@ -198,4 +198,4 @@ Linking
 
 For a list of libraries to link, look at one of the tools' CMake files (for
 example `clang-check/CMakeList.txt
-<https://github.com/llvm/llvm-project/blob/master/clang/tools/clang-check/CMakeLists.txt>`_).
+<https://github.com/llvm/llvm-project/blob/main/clang/tools/clang-check/CMakeLists.txt>`_).

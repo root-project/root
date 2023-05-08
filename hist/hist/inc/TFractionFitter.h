@@ -28,7 +28,7 @@ class TFractionFitter: public TObject {
 public:
    TFractionFitter();
    TFractionFitter(TH1* data, TObjArray *MCs, Option_t *option="");
-   virtual ~TFractionFitter();
+   ~TFractionFitter() override;
 
    //TVirtualFitter* GetFitter() const;
    ROOT::Fit::Fitter* GetFitter() const;
@@ -109,7 +109,7 @@ protected:
 
    Int_t     fNpar;                     ///< number of fit parameters
 
-   ClassDef(TFractionFitter, 0); // Fits MC fractions to data histogram
+   ClassDefOverride(TFractionFitter, 0); // Fits MC fractions to data histogram
 };
 
 //

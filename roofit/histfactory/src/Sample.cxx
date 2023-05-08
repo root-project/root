@@ -1,5 +1,5 @@
 // @(#)root/roostats:$Id$
-// Author: Kyle Cranmer, George Lewis 
+// Author: Kyle Cranmer, George Lewis
 /*************************************************************************
  * Copyright (C) 1995-2008, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
@@ -17,10 +17,8 @@
 #include "RooStats/HistFactory/Sample.h"
 #include "RooStats/HistFactory/HistFactoryException.h"
 
-//#include "TClass.h"
-
-RooStats::HistFactory::Sample::Sample() : 
-  fNormalizeByTheory(false), fStatErrorActivate(false), fhNominal(), fhCountingHist(0) { ; }
+RooStats::HistFactory::Sample::Sample() :
+  fNormalizeByTheory(false), fStatErrorActivate(false), fhNominal() {}
 
 // copy constructor (important for python)
 RooStats::HistFactory::Sample::Sample(const Sample& other) :
@@ -38,13 +36,12 @@ RooStats::HistFactory::Sample::Sample(const Sample& other) :
   fStatError(other.fStatError),
   fNormalizeByTheory(other.fNormalizeByTheory),
   fStatErrorActivate(other.fStatErrorActivate),
-  fhNominal(other.fhNominal),
-  fhCountingHist(0)
-  { 
+  fhNominal(other.fhNominal)
+  {
     if( other.fhCountingHist ) {
       SetValue( other.fhCountingHist->GetBinContent(1) );
     }else{
-      fhCountingHist = NULL;
+      fhCountingHist.reset();
     }
   }
 
@@ -66,35 +63,27 @@ RooStats::HistFactory::Sample& RooStats::HistFactory::Sample::operator=(const Sa
   fStatErrorActivate = other.fStatErrorActivate;
   fhNominal = other.fhNominal;
 
-  if (fhCountingHist)
-    delete fhCountingHist;
+  fhCountingHist.reset();
 
   if( other.fhCountingHist ) {
     SetValue( other.fhCountingHist->GetBinContent(1) );
   } else {
-    fhCountingHist = NULL;
+    fhCountingHist.reset();
   }
 
   return *this;
 }
 
 
-RooStats::HistFactory::Sample::Sample(std::string SampName, std::string SampHistoName, std::string SampInputFile, std::string SampHistoPath) : 
-  fName( SampName ),   fInputFile( SampInputFile), 
+RooStats::HistFactory::Sample::Sample(std::string SampName, std::string SampHistoName, std::string SampInputFile, std::string SampHistoPath) :
+  fName( SampName ),   fInputFile( SampInputFile),
   fHistoName( SampHistoName ), fHistoPath( SampHistoPath ),
-  fNormalizeByTheory(true), fStatErrorActivate(false), fhNominal(),
-  fhCountingHist(0) { ; }
+  fNormalizeByTheory(true), fStatErrorActivate(false), fhNominal() {}
 
-RooStats::HistFactory::Sample::Sample(std::string SampName) : 
-  fName( SampName ),   fInputFile( "" ), 
+RooStats::HistFactory::Sample::Sample(std::string SampName) :
+  fName( SampName ),   fInputFile( "" ),
   fHistoName( "" ), fHistoPath( "" ),
-  fNormalizeByTheory(true), fStatErrorActivate(false),fhNominal(),
-  fhCountingHist(0) { ; }
-
-RooStats::HistFactory::Sample::~Sample() {
-  if(fhCountingHist)
-    delete fhCountingHist;
-}
+  fNormalizeByTheory(true), fStatErrorActivate(false),fhNominal() {}
 
 const TH1* RooStats::HistFactory::Sample::GetHisto() const {
   TH1* histo = (TH1*) fhNominal.GetObject();
@@ -106,10 +95,10 @@ void RooStats::HistFactory::Sample::writeToFile( std::string OutputFileName, std
 
   const TH1* histNominal = GetHisto();
   histNominal->Write();
-  
+
   // Set the location of the data
   // in the output measurement
-  
+
   fInputFile = OutputFileName;
   fHistoName = histNominal->GetName();
   fHistoPath = DirName;
@@ -137,25 +126,24 @@ void RooStats::HistFactory::Sample::writeToFile( std::string OutputFileName, std
 }
 
 
-void RooStats::HistFactory::Sample::SetValue( Double_t val ) {
+void RooStats::HistFactory::Sample::SetValue( double val ) {
 
   // For use in a number counting measurement
-  // Create a 1-bin histogram, 
+  // Create a 1-bin histogram,
   // fill it with this input value,
   // and set this Sample's histogram to that hist
-  
+
   std::string SampleHistName = fName + "_hist";
-  
+
   // Histogram has 1-bin (hard-coded)
-  if(fhCountingHist)
-    delete fhCountingHist;
-  
-  fhCountingHist = new TH1F( SampleHistName.c_str(), SampleHistName.c_str(), 1, 0, 1 );
+  fhCountingHist.reset();
+
+  fhCountingHist = std::make_unique<TH1F>( SampleHistName.c_str(), SampleHistName.c_str(), 1, 0, 1 );
   fhCountingHist->SetBinContent( 1, val );
 
   // Set the histogram of the internally held data
   // node of this channel to this newly created histogram
-  SetHisto( fhCountingHist );
+  SetHisto( fhCountingHist.get() );
 
 }
 
@@ -165,26 +153,26 @@ void RooStats::HistFactory::Sample::Print( std::ostream& stream ) const {
 
 
   stream << "\t \t Name: " << fName
-	 << "\t \t Channel: " << fChannelName
-	 << "\t NormalizeByTheory: " << (fNormalizeByTheory ? "True" : "False")
-	 << "\t StatErrorActivate: " << (fStatErrorActivate ? "True" : "False")
-	 << std::endl;  
+    << "\t \t Channel: " << fChannelName
+    << "\t NormalizeByTheory: " << (fNormalizeByTheory ? "True" : "False")
+    << "\t StatErrorActivate: " << (fStatErrorActivate ? "True" : "False")
+    << std::endl;
 
-  stream << "\t \t \t \t " 
-	 << "\t InputFile: " << fInputFile
-	 << "\t HistName: " << fHistoName
-	 << "\t HistoPath: " << fHistoPath
-	 << "\t HistoAddress: " << GetHisto()
+  stream << "\t \t \t \t "
+    << "\t InputFile: " << fInputFile
+    << "\t HistName: " << fHistoName
+    << "\t HistoPath: " << fHistoPath
+    << "\t HistoAddress: " << GetHisto()
     // << "\t Type: " << GetHisto()->ClassName()
-	 << std::endl;  
+    << std::endl;
 
   if( fStatError.GetActivate() ) {
     stream << "\t \t \t StatError Activate: " << fStatError.GetActivate()
-	   << "\t InputFile: " << fInputFile
-	   << "\t HistName: " << fStatError.GetHistoName()
-	   << "\t HistoPath: " << fStatError.GetHistoPath()
-	   << "\t HistoAddress: " << fStatError.GetErrorHist()
-         << std::endl;  
+      << "\t InputFile: " << fInputFile
+      << "\t HistName: " << fStatError.GetHistoName()
+      << "\t HistoPath: " << fStatError.GetHistoPath()
+      << "\t HistoAddress: " << fStatError.GetErrorHist()
+         << std::endl;
   }
 
 
@@ -199,7 +187,7 @@ void RooStats::HistFactory::Sample::Print( std::ostream& stream ) const {
   */
 
 
-}  
+}
 
 void RooStats::HistFactory::Sample::PrintXML( std::ofstream& xml ) const {
 
@@ -218,10 +206,10 @@ void RooStats::HistFactory::Sample::PrintXML( std::ofstream& xml ) const {
   /*
   if( fStatError.GetActivate() ) {
     xml << "      <StatError Activate=\"" << (fStatError.GetActivate() ? std::string("True") : std::string("False"))  << "\" "
-	<< " InputFile=\"" << fStatError.GetInputFile() << "\" "
-	<< " HistoName=\"" << fStatError.GetHistoName() << "\" "
-	<< " HistoPath=\"" << fStatError.GetHistoPath() << "\" "
-	<< " /> " << std::endl;
+   << " InputFile=\"" << fStatError.GetInputFile() << "\" "
+   << " HistoName=\"" << fStatError.GetHistoName() << "\" "
+   << " HistoPath=\"" << fStatError.GetHistoPath() << "\" "
+   << " /> " << std::endl;
   }
   */
 
@@ -232,9 +220,9 @@ void RooStats::HistFactory::Sample::PrintXML( std::ofstream& xml ) const {
     sys.PrintXML(xml);
     /*
     xml << "      <OverallSys Name=\"" << sys.GetName() << "\" "
-	<< " High=\"" << sys.GetHigh() << "\" "
-	<< " Low=\""  << sys.GetLow()  << "\" "
-	<< "  /> " << std::endl;
+   << " High=\"" << sys.GetHigh() << "\" "
+   << " Low=\""  << sys.GetLow()  << "\" "
+   << "  /> " << std::endl;
     */
   }
   for( unsigned int i = 0; i < fNormFactorList.size(); ++i ) {
@@ -242,11 +230,10 @@ void RooStats::HistFactory::Sample::PrintXML( std::ofstream& xml ) const {
     sys.PrintXML(xml);
     /*
     xml << "      <NormFactor Name=\"" << sys.GetName() << "\" "
-	<< " Val=\""   << sys.GetVal()   << "\" "
-	<< " High=\""  << sys.GetHigh()  << "\" "
-	<< " Low=\""   << sys.GetLow()   << "\" "
-	<< " Const=\"" << (sys.GetConst() ? std::string("True") : std::string("False")) << "\" "
-	<< "  /> " << std::endl;
+   << " Val=\""   << sys.GetVal()   << "\" "
+   << " High=\""  << sys.GetHigh()  << "\" "
+   << " Low=\""   << sys.GetLow()   << "\" "
+   << "  /> " << std::endl;
     */
   }
   for( unsigned int i = 0; i < fHistoSysList.size(); ++i ) {
@@ -255,14 +242,14 @@ void RooStats::HistFactory::Sample::PrintXML( std::ofstream& xml ) const {
     /*
     xml << "      <HistoSys Name=\"" << sys.GetName() << "\" "
 
-	<< " InputFileLow=\""  << sys.GetInputFileLow()  << "\" "
-	<< " HistoNameLow=\""  << sys.GetHistoNameLow()  << "\" "
-	<< " HistoPathLow=\""  << sys.GetHistoPathLow()  << "\" "
+   << " InputFileLow=\""  << sys.GetInputFileLow()  << "\" "
+   << " HistoNameLow=\""  << sys.GetHistoNameLow()  << "\" "
+   << " HistoPathLow=\""  << sys.GetHistoPathLow()  << "\" "
 
-	<< " InputFileHigh=\""  << sys.GetInputFileHigh()  << "\" "
-	<< " HistoNameHigh=\""  << sys.GetHistoNameHigh()  << "\" "
-	<< " HistoPathHigh=\""  << sys.GetHistoPathHigh()  << "\" "
-	<< "  /> " << std::endl;
+   << " InputFileHigh=\""  << sys.GetInputFileHigh()  << "\" "
+   << " HistoNameHigh=\""  << sys.GetHistoNameHigh()  << "\" "
+   << " HistoPathHigh=\""  << sys.GetHistoPathHigh()  << "\" "
+   << "  /> " << std::endl;
     */
   }
   for( unsigned int i = 0; i < fHistoFactorList.size(); ++i ) {
@@ -271,14 +258,14 @@ void RooStats::HistFactory::Sample::PrintXML( std::ofstream& xml ) const {
     /*
     xml << "      <HistoFactor Name=\"" << sys.GetName() << "\" "
 
-	<< " InputFileLow=\""  << sys.GetInputFileLow()  << "\" "
-	<< " HistoNameLow=\""  << sys.GetHistoNameLow()  << "\" "
-	<< " HistoPathLow=\""  << sys.GetHistoPathLow()  << "\" "
+   << " InputFileLow=\""  << sys.GetInputFileLow()  << "\" "
+   << " HistoNameLow=\""  << sys.GetHistoNameLow()  << "\" "
+   << " HistoPathLow=\""  << sys.GetHistoPathLow()  << "\" "
 
-	<< " InputFileHigh=\""  << sys.GetInputFileHigh()  << "\" "
-	<< " HistoNameHigh=\""  << sys.GetHistoNameHigh()  << "\" "
-	<< " HistoPathHigh=\""  << sys.GetHistoPathHigh()  << "\" "
-	<< "  /> " << std::endl;
+   << " InputFileHigh=\""  << sys.GetInputFileHigh()  << "\" "
+   << " HistoNameHigh=\""  << sys.GetHistoNameHigh()  << "\" "
+   << " HistoPathHigh=\""  << sys.GetHistoPathHigh()  << "\" "
+   << "  /> " << std::endl;
     */
   }
   for( unsigned int i = 0; i < fShapeSysList.size(); ++i ) {
@@ -287,11 +274,11 @@ void RooStats::HistFactory::Sample::PrintXML( std::ofstream& xml ) const {
     /*
     xml << "      <ShapeSys Name=\"" << sys.GetName() << "\" "
 
-	<< " InputFile=\""  << sys.GetInputFile()  << "\" "
-	<< " HistoName=\""  << sys.GetHistoName()  << "\" "
-	<< " HistoPath=\""  << sys.GetHistoPath()  << "\" "
-	<< " ConstraintType=\"" << std::string(Constraint::Name(sys.GetConstraintType())) << "\" "
-	<< "  /> " << std::endl;
+   << " InputFile=\""  << sys.GetInputFile()  << "\" "
+   << " HistoName=\""  << sys.GetHistoName()  << "\" "
+   << " HistoPath=\""  << sys.GetHistoPath()  << "\" "
+   << " ConstraintType=\"" << std::string(Constraint::Name(sys.GetConstraintType())) << "\" "
+   << "  /> " << std::endl;
     */
   }
   for( unsigned int i = 0; i < fShapeFactorList.size(); ++i ) {
@@ -299,7 +286,7 @@ void RooStats::HistFactory::Sample::PrintXML( std::ofstream& xml ) const {
     sys.PrintXML(xml);
     /*
     xml << "      <ShapeFactor Name=\"" << sys.GetName() << "\" "
-	<< "  /> " << std::endl;
+   << "  /> " << std::endl;
     */
   }
 
@@ -315,7 +302,7 @@ void RooStats::HistFactory::Sample::PrintXML( std::ofstream& xml ) const {
 
 
 void RooStats::HistFactory::Sample::ActivateStatError() {
-  
+
   fStatError.Activate( true );
   fStatError.SetUseHisto( false );
 
@@ -335,7 +322,7 @@ void RooStats::HistFactory::Sample::ActivateStatError( std::string StatHistoName
 }
 
 
-void RooStats::HistFactory::Sample::AddOverallSys( std::string SysName, Double_t SysLow, Double_t SysHigh ) {
+void RooStats::HistFactory::Sample::AddOverallSys( std::string SysName, double SysLow, double SysHigh ) {
 
   RooStats::HistFactory::OverallSys sys;
   sys.SetName( SysName );
@@ -350,7 +337,7 @@ void RooStats::HistFactory::Sample::AddOverallSys( const OverallSys& Sys ) {
   fOverallSysList.push_back(Sys);
 }
 
-void RooStats::HistFactory::Sample::AddNormFactor( std::string SysName, Double_t SysVal, Double_t SysLow, Double_t SysHigh, bool SysConst ) {
+void RooStats::HistFactory::Sample::AddNormFactor( std::string const& SysName, double SysVal, double SysLow, double SysHigh ) {
 
   RooStats::HistFactory::NormFactor norm;
 
@@ -358,7 +345,6 @@ void RooStats::HistFactory::Sample::AddNormFactor( std::string SysName, Double_t
   norm.SetVal( SysVal );
   norm.SetLow( SysLow );
   norm.SetHigh( SysHigh );
-  norm.SetConst( SysConst );
 
   fNormFactorList.push_back( norm );
 
@@ -369,13 +355,13 @@ void RooStats::HistFactory::Sample::AddNormFactor( const NormFactor& Factor ) {
 }
 
 
-void RooStats::HistFactory::Sample::AddHistoSys( std::string SysName, 
+void RooStats::HistFactory::Sample::AddHistoSys( std::string SysName,
 std::string SysHistoNameLow,  std::string SysHistoFileLow,  std::string SysHistoPathLow,
-						 std::string SysHistoNameHigh, std::string SysHistoFileHigh, std::string SysHistoPathHigh ) {
+                   std::string SysHistoNameHigh, std::string SysHistoFileHigh, std::string SysHistoPathHigh ) {
 
   RooStats::HistFactory::HistoSys sys;
   sys.SetName( SysName );
-  
+
   sys.SetHistoNameLow( SysHistoNameLow );
   sys.SetHistoPathLow( SysHistoPathLow );
   sys.SetInputFileLow( SysHistoFileLow );
@@ -393,8 +379,8 @@ void RooStats::HistFactory::Sample::AddHistoSys( const HistoSys& Sys ) {
 }
 
 
-void RooStats::HistFactory::Sample::AddHistoFactor( std::string SysName, std::string SysHistoNameLow,  std::string SysHistoFileLow,  std::string SysHistoPathLow,  
-						    std::string SysHistoNameHigh, std::string SysHistoFileHigh, std::string SysHistoPathHigh ) {
+void RooStats::HistFactory::Sample::AddHistoFactor( std::string SysName, std::string SysHistoNameLow,  std::string SysHistoFileLow,  std::string SysHistoPathLow,
+                      std::string SysHistoNameHigh, std::string SysHistoFileHigh, std::string SysHistoPathHigh ) {
 
   RooStats::HistFactory::HistoFactor factor;
   factor.SetName( SysName );

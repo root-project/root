@@ -580,6 +580,10 @@ void RCanvasPainter::ProcessData(unsigned connid, const std::string &arg)
       } else {
          R__LOG_ERROR(CanvasPainerLog()) << "Fail to parse RDrawableRequest";
       }
+   } else if (check_header("CLEAR")) {
+
+      fCanvas.Wipe();
+      fCanvas.Modified();
    } else {
       R__LOG_ERROR(CanvasPainerLog()) << "Got not recognized message" << arg;
    }

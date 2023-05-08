@@ -1,105 +1,216 @@
-#include "RooRealVar.h"
-#include "RooConstVar.h"
-#include "RooWorkspace.h"
+// Tests for the RooJSONFactoryWSTool
+// Authors: Carsten D. Burgard, DESY/ATLAS, 12/2021
+//          Jonas Rembser, CERN 12/2022
 
-#include "TROOT.h"
-
+#include <RooFitHS3/JSONIO.h>
 #include <RooFitHS3/RooJSONFactoryWSTool.h>
 
-#include "gtest/gtest.h"
+#include <RooHistFunc.h>
+#include <RooHistPdf.h>
+#include <RooRealVar.h>
+#include <RooConstVar.h>
+#include <RooWorkspace.h>
+#include <RooGlobalFunc.h>
+#include <RooGaussian.h>
+#include <RooHelpers.h>
+#include <RooRealVar.h>
+#include <RooSimultaneous.h>
+#include <RooProdPdf.h>
+#include <RooPoisson.h>
+#include <RooCategory.h>
 
-#include "RooGlobalFunc.h"
+#include <TROOT.h>
 
-// includes for RooArgusBG
-#include "RooArgusBG.h"
-#include "RooGaussian.h"
-#include "RooAddPdf.h"
+#include <gtest/gtest.h>
 
-// includes for SimultaneousGaussians
-#include "RooRealVar.h"
-#include "RooSimultaneous.h"
-#include "RooProdPdf.h"
-#include "RooCategory.h"
+namespace {
 
+void setupKeys()
+{
+   static bool isAlreadySetup = false;
+   if (isAlreadySetup)
+      return;
 
-using namespace RooFit;
+   auto etcDir = std::string(TROOT::GetEtcDir());
+   RooFit::JSONIO::loadExportKeys(etcDir + "/RooFitHS3_wsexportkeys.json");
+   RooFit::JSONIO::loadFactoryExpressions(etcDir + "/RooFitHS3_wsfactoryexpressions.json");
+
+   isAlreadySetup = true;
+}
+
+// Validate the JSON IO for a given RooAbsReal in a RooWorkspace. The workspace
+// will be written out and read back, and then the values of the old and new
+// RooAbsReal will be compared for equality in each bin of the observable that
+// is called "x" by convention.
+int validate(RooWorkspace &ws1, std::string const &argName)
+{
+   RooWorkspace ws2;
+
+   RooJSONFactoryWSTool{ws2}.importJSONfromString(RooJSONFactoryWSTool{ws1}.exportJSONtoString());
+
+   RooRealVar &x1 = *ws1.var("x");
+   RooRealVar &x2 = *ws2.var("x");
+
+   RooAbsReal &arg1 = *ws1.function(argName);
+   RooAbsReal &arg2 = *ws2.function(argName);
+
+   RooArgSet nset1{x1};
+   RooArgSet nset2{x2};
+
+   bool allGood = true;
+   for (int i = 0; i < x1.numBins(); ++i) {
+      x1.setBin(i);
+      x2.setBin(i);
+      const double val1 = arg1.getVal(nset1);
+      const double val2 = arg2.getVal(nset2);
+      allGood &= val1 == val2;
+   }
+
+   return allGood ? 0 : 1;
+}
+
+int validate(std::vector<std::string> const &expressions)
+{
+   RooWorkspace ws;
+   for (std::size_t iExpr = 0; iExpr < expressions.size() - 1; ++iExpr) {
+      ws.factory(expressions[iExpr]);
+   }
+   const std::string argName = ws.factory(expressions.back())->GetName();
+   return validate(ws, argName);
+}
+
+int validate(RooAbsArg const &arg)
+{
+   RooWorkspace ws;
+   ws.import(arg, RooFit::Silence());
+   return validate(ws, arg.GetName());
+}
+
+} // namespace
+
+// Test that the IO of attributes and string attributes works.
+TEST(RooFitHS3, AttributesIO)
+{
+   setupKeys();
+
+   std::string jsonString;
+
+   // Export to JSON
+   {
+      RooWorkspace ws{"workspace"};
+      ws.factory("Gaussian::pdf(x[0, 10], mean[5], sigma[1.0, 0.1, 10])");
+      RooAbsPdf &pdf = *ws.pdf("pdf");
+
+      // set attributes
+      pdf.setAttribute("attr0");
+      pdf.setStringAttribute("key0", "val0");
+
+      jsonString = RooJSONFactoryWSTool{ws}.exportJSONtoString();
+   }
+
+   // Import JSON
+   RooWorkspace ws{"workspace"};
+   RooJSONFactoryWSTool{ws}.importJSONfromString(jsonString);
+   RooAbsPdf &pdf = *ws.pdf("pdf");
+
+   EXPECT_TRUE(pdf.getAttribute("attr0")) << "IO of attribute didn't work!";
+   EXPECT_FALSE(pdf.getAttribute("attr1")) << "unexpected attribute found!";
+
+   EXPECT_STREQ(pdf.getStringAttribute("key0"), "val0") << "IO of string attribute didn't work!";
+   EXPECT_STREQ(pdf.getStringAttribute("key1"), nullptr) << "unexpected string attribute found!";
+}
+
+TEST(RooFitHS3, RooAddPdf)
+{
+   int status =
+      validate({"Gaussian::signalModel(x[5.20, 5.30], sigmean[5.28, 5.20, 5.30], sigwidth[0.0027, 0.001, 1.])",
+                "ArgusBG::background(x, 5.291, argpar[-20.0, -100., -1.])",
+                "SUM::model(nsig[200, 0., 10000] * signalModel, nbkg[800, 0., 10000] * background)"});
+   EXPECT_EQ(status, 0);
+}
 
 TEST(RooFitHS3, RooArgusBG)
 {
-   auto &msg = RooMsgService::instance();
-   msg.setGlobalKillBelow(RooFit::WARNING);
+   int status = validate({"ArgusBG::argusBG(x[0, 20], x0[10], c[-1], p[0.5])"});
+   EXPECT_EQ(status, 0);
+}
 
-   // --- Observable ---
-   RooRealVar mes("mes", "m_{ES} (GeV)", 5.20, 5.30);
+TEST(RooFitHS3, RooBifurGauss)
+{
+   int status = validate({"BifurGauss::bifurGauss(x[0, 10], mean[5], sigmaL[1.0, 0.1, 10], sigmaR[2.0, 0.1, 10])"});
+   EXPECT_EQ(status, 0);
+}
 
-   // --- Parameters ---
-   RooRealVar sigmean("sigmean", "B^{#pm} mass", 5.28, 5.20, 5.30);
-   RooRealVar sigwidth("sigwidth", "B^{#pm} width", 0.0027, 0.001, 1.);
+TEST(RooFitHS3, RooCBShape)
+{
+   int status = validate({"CBShape::cbShape(x[-10, 10], x0[0], sigma[2.0], alpha[1.4], n[1.2])"});
+   EXPECT_EQ(status, 0);
+}
 
-   // --- Build Gaussian PDF ---
-   RooGaussian signalModel("signal", "signal PDF", mes, sigmean, sigwidth);
+/// Test that the IO of pdfs that contain RooConstVars works.
+TEST(RooFitHS3, RooConstVar)
+{
+   RooRealVar x{"x", "x", 100, 0, 1000};
+   RooConstVar mean{"mean", "mean", 100};
+   int status = validate(RooPoisson{"pdf_with_const_var", "pdf_with_const_var", x, mean});
+   EXPECT_EQ(status, 0);
+}
 
-   // --- Build Argus background PDF ---
-   RooRealVar argpar("argpar", "argus shape parameter", -20.0, -100., -1.);
-   RooArgusBG background("background", "Argus PDF", mes, RooConst(5.291), argpar);
+TEST(RooFitHS3, RooGaussian)
+{
+   int status = validate({"Gaussian::gaussian(x[0, 10], mean[5], sigma[1.0, 0.1, 10])"});
+   EXPECT_EQ(status, 0);
+}
 
-   // --- Construct signal+background PDF ---
-   RooRealVar nsig("nsig", "#signal events", 200, 0., 10000);
-   RooRealVar nbkg("nbkg", "#background events", 800, 0., 10000);
-   RooAddPdf model("model", "g+a", RooArgList(signalModel, background), RooArgList(nsig, nbkg));
+TEST(RooFitHS3, RooHistPdf)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
 
-   auto etcDir = std::string(TROOT::GetEtcDir());
-   RooJSONFactoryWSTool::loadExportKeys(etcDir + "/RooFitHS3_wsexportkeys.json");
-   RooJSONFactoryWSTool::loadFactoryExpressions(etcDir + "/RooFitHS3_wsfactoryexpressions.json");
-   
-   RooWorkspace work;
-   work.import(model);
-   RooJSONFactoryWSTool tool(work);
-   tool.exportJSON("argus.json");
-};
+   RooRealVar x{"x", "x", 0.0, 0.02};
+   x.setBins(2);
+
+   RooDataHist dataHist{"myDataHist", "myDataHist", x};
+   dataHist.set(0, 23, -1);
+   dataHist.set(1, 17, -1);
+
+   int status = validate(RooHistPdf{"histPdf", "histPdf", x, dataHist});
+   EXPECT_EQ(status, 0);
+}
+
+TEST(RooFitHS3, RooPoisson)
+{
+   int status = validate({"Poisson::poisson(x[0, 10], mean[5])"});
+   EXPECT_EQ(status, 0);
+}
+
+TEST(RooFitHS3, RooPolynomial)
+{
+   // Test different values for "lowestOrder"
+   int status = 0;
+   status = validate({"Polynomial::poly0(x[0, 10], {a_0[3.0], a_1[-0.3, -10, 10], a_2[0.01, -10, 10]}, 0)"});
+   EXPECT_EQ(status, 0);
+   status = validate({"Polynomial::poly1(x[0, 10], {a_1[-0.1, -10, 10], a_2[0.003, -10, 10]}, 1)"});
+   EXPECT_EQ(status, 0);
+   status = validate({"Polynomial::poly1(x[0, 10], {a_2[0.003, -10, 10]}, 2)"});
+   EXPECT_EQ(status, 0);
+}
 
 TEST(RooFitHS3, SimultaneousGaussians)
 {
-   using namespace RooFit;
-
-   // Import keys and factory expressions files for the RooJSONFactoryWSTool.
-   auto etcDir = std::string(TROOT::GetEtcDir());
-   RooJSONFactoryWSTool::loadExportKeys(etcDir + "/RooFitHS3_wsexportkeys.json");
-   RooJSONFactoryWSTool::loadFactoryExpressions(etcDir + "/RooFitHS3_wsfactoryexpressions.json");   
-
    // Create a test model: RooSimultaneous with Gaussian in one component, and
    // product of two Gaussians in the other.
    RooRealVar x("x", "x", -8, 8);
    RooRealVar mean("mean", "mean", 0, -8, 8);
    RooRealVar sigma("sigma", "sigma", 0.3, 0.1, 10);
    RooGaussian g1("g1", "g1", x, mean, sigma);
-   RooGaussian g2("g2", "g2", x, mean, RooConst(0.3));
+   RooGaussian g2("g2", "g2", x, mean, RooFit::RooConst(0.3));
    RooProdPdf model("model", "model", RooArgList{g1, g2});
    RooGaussian model_ctl("model_ctl", "model_ctl", x, mean, sigma);
    RooCategory sample("sample", "sample", {{"physics", 0}, {"control", 1}});
    RooSimultaneous simPdf("simPdf", "simultaneous pdf", sample);
    simPdf.addPdf(model, "physics");
    simPdf.addPdf(model_ctl, "control");
-   
-   // this is a handy way of triggering the creation of a ModelConfig upon re-import
-   simPdf.setAttribute("toplevel");
 
-   // Export to JSON
-   {
-      RooWorkspace ws{"workspace"};
-      ws.import(simPdf);
-      RooJSONFactoryWSTool tool{ws};
-      tool.exportJSON("simPdf.json");
-      // Output can be pretty-printed with `python -m json.tool simPdf.json`
-   }
-
-   // Import JSON
-   {
-      RooWorkspace ws{"workspace"};
-      RooJSONFactoryWSTool tool{ws};
-      tool.importJSON("simPdf.json");
-
-      ASSERT_TRUE(ws.pdf("g1"));
-      ASSERT_TRUE(ws.pdf("g2"));
-   }
+   int status = validate(simPdf);
+   EXPECT_EQ(status, 0);
 }

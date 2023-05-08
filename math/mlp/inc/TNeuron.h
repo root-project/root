@@ -31,7 +31,7 @@ class TNeuron : public TNamed {
    TNeuron(ENeuronType type = kSigmoid,
            const char* name = "", const char* title = "",
            const char* extF = "", const char* extD  = "" );
-   virtual ~TNeuron() {}
+   ~TNeuron() override {}
    inline TSynapse* GetPre(Int_t n) const { return (TSynapse*) fpre.At(n); }
    inline TSynapse* GetPost(Int_t n) const { return (TSynapse*) fpost.At(n); }
    inline TNeuron* GetInLayer(Int_t n) const { return (TNeuron*) flayer.At(n); }
@@ -84,7 +84,7 @@ class TNeuron : public TNamed {
    Double_t fDeDw;        ///<! buffer containing the last derivative of the error
    Double_t fDEDw;        ///<! buffer containing the sum over all examples of DeDw
 
-   ClassDef(TNeuron, 4)   // Neuron for MultiLayerPerceptrons
+   ClassDefOverride(TNeuron, 4)   // Neuron for MultiLayerPerceptrons
 };
 
 #endif

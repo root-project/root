@@ -34,7 +34,8 @@ DisableLeafProc("disable-sparc-leaf-proc",
 
 SparcFrameLowering::SparcFrameLowering(const SparcSubtarget &ST)
     : TargetFrameLowering(TargetFrameLowering::StackGrowsDown,
-                          ST.is64Bit() ? 16 : 8, 0, ST.is64Bit() ? 16 : 8) {}
+                          ST.is64Bit() ? Align(16) : Align(8), 0,
+                          ST.is64Bit() ? Align(16) : Align(8)) {}
 
 void SparcFrameLowering::emitSPAdjustment(MachineFunction &MF,
                                           MachineBasicBlock &MBB,
@@ -96,14 +97,9 @@ void SparcFrameLowering::emitPrologue(MachineFunction &MF,
   // Debug location must be unknown since the first debug location is used
   // to determine the end of the prologue.
   DebugLoc dl;
-  bool NeedsStackRealignment = RegInfo.needsStackRealignment(MF);
+  bool NeedsStackRealignment = RegInfo.shouldRealignStack(MF);
 
-  // FIXME: unfortunately, returning false from canRealignStack
-  // actually just causes needsStackRealignment to return false,
-  // rather than reporting an error, as would be sensible. This is
-  // poor, but fixing that bogosity is going to be a large project.
-  // For now, just see if it's lied, and report an error here.
-  if (!NeedsStackRealignment && MFI.getMaxAlignment() > getStackAlignment())
+  if (NeedsStackRealignment && !RegInfo.canRealignStack(MF))
     report_fatal_error("Function \"" + Twine(MF.getName()) + "\" required "
                        "stack re-alignment, but LLVM couldn't handle it "
                        "(probably because it has a dynamic alloca).");
@@ -145,9 +141,7 @@ void SparcFrameLowering::emitPrologue(MachineFunction &MF,
 
   // Finally, ensure that the size is sufficiently aligned for the
   // data on the stack.
-  if (MFI.getMaxAlignment() > 0) {
-    NumBytes = alignTo(NumBytes, MFI.getMaxAlignment());
-  }
+  NumBytes = alignTo(NumBytes, MFI.getMaxAlign());
 
   // Update stack size with corrected value.
   MFI.setStackSize(NumBytes);
@@ -188,9 +182,10 @@ void SparcFrameLowering::emitPrologue(MachineFunction &MF,
       regUnbiased = SP::O6;
 
     // andn %regUnbiased, MaxAlign-1, %regUnbiased
-    int MaxAlign = MFI.getMaxAlignment();
+    Align MaxAlign = MFI.getMaxAlign();
     BuildMI(MBB, MBBI, dl, TII.get(SP::ANDNri), regUnbiased)
-      .addReg(regUnbiased).addImm(MaxAlign - 1);
+        .addReg(regUnbiased)
+        .addImm(MaxAlign.value() - 1U);
 
     if (Bias) {
       // add %g1, -BIAS, %o6
@@ -252,14 +247,13 @@ bool SparcFrameLowering::hasFP(const MachineFunction &MF) const {
 
   const MachineFrameInfo &MFI = MF.getFrameInfo();
   return MF.getTarget().Options.DisableFramePointerElim(MF) ||
-      RegInfo->needsStackRealignment(MF) ||
-      MFI.hasVarSizedObjects() ||
-      MFI.isFrameAddressTaken();
+         RegInfo->hasStackRealignment(MF) || MFI.hasVarSizedObjects() ||
+         MFI.isFrameAddressTaken();
 }
 
-
-int SparcFrameLowering::getFrameIndexReference(const MachineFunction &MF, int FI,
-                                               unsigned &FrameReg) const {
+StackOffset
+SparcFrameLowering::getFrameIndexReference(const MachineFunction &MF, int FI,
+                                           Register &FrameReg) const {
   const SparcSubtarget &Subtarget = MF.getSubtarget<SparcSubtarget>();
   const MachineFrameInfo &MFI = MF.getFrameInfo();
   const SparcRegisterInfo *RegInfo = Subtarget.getRegisterInfo();
@@ -280,7 +274,7 @@ int SparcFrameLowering::getFrameIndexReference(const MachineFunction &MF, int FI
   } else if (isFixed) {
     // Otherwise, argument access should always use %fp.
     UseFP = true;
-  } else if (RegInfo->needsStackRealignment(MF)) {
+  } else if (RegInfo->hasStackRealignment(MF)) {
     // If there is dynamic stack realignment, all local object
     // references need to be via %sp, to take account of the
     // re-alignment.
@@ -295,10 +289,10 @@ int SparcFrameLowering::getFrameIndexReference(const MachineFunction &MF, int FI
 
   if (UseFP) {
     FrameReg = RegInfo->getFrameRegister(MF);
-    return FrameOffset;
+    return StackOffset::getFixed(FrameOffset);
   } else {
     FrameReg = SP::O6; // %sp
-    return FrameOffset + MF.getFrameInfo().getStackSize();
+    return StackOffset::getFixed(FrameOffset + MF.getFrameInfo().getStackSize());
   }
 }
 

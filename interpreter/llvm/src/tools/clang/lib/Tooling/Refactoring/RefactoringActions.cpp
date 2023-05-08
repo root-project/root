@@ -18,8 +18,8 @@ namespace {
 
 class DeclNameOption final : public OptionalRefactoringOption<std::string> {
 public:
-  StringRef getName() const { return "name"; }
-  StringRef getDescription() const {
+  StringRef getName() const override { return "name"; }
+  StringRef getDescription() const override {
     return "Name of the extracted declaration";
   }
 };
@@ -98,8 +98,8 @@ public:
 std::vector<std::unique_ptr<RefactoringAction>> createRefactoringActions() {
   std::vector<std::unique_ptr<RefactoringAction>> Actions;
 
-  Actions.push_back(llvm::make_unique<LocalRename>());
-  Actions.push_back(llvm::make_unique<ExtractRefactoring>());
+  Actions.push_back(std::make_unique<LocalRename>());
+  Actions.push_back(std::make_unique<ExtractRefactoring>());
 
   return Actions;
 }

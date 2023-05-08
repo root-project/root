@@ -64,7 +64,7 @@ public:
    TQpProbSparse(Int_t nx,Int_t my,Int_t mz);
    TQpProbSparse(const TQpProbSparse &another);
 
-   virtual ~TQpProbSparse() {}
+   ~TQpProbSparse() override {}
 
 #ifndef __CINT__
    virtual TQpDataBase      *MakeData      (Double_t *c,
@@ -77,24 +77,24 @@ public:
                                             Double_t *clo,Bool_t *iclo,
                                             Double_t *cup,Bool_t *icup);
 #endif
-   virtual TQpDataBase      *MakeData     (TVectorD     &c,
+   TQpDataBase      *MakeData     (TVectorD     &c,
                                             TMatrixDBase &Q_in,
                                             TVectorD     &xlo, TVectorD &ixlo,
                                             TVectorD     &xup, TVectorD &ixup,
                                             TMatrixDBase &A_in,TVectorD &bA,
                                             TMatrixDBase &C_in,
                                             TVectorD     &clo, TVectorD &iclo,
-                                            TVectorD     &cup, TVectorD &icup);
-   virtual TQpResidual      *MakeResiduals(const TQpDataBase *data);
-   virtual TQpVar           *MakeVariables(const TQpDataBase *data);
-   virtual TQpLinSolverBase *MakeLinSys   (const TQpDataBase *data);
+                                            TVectorD     &cup, TVectorD &icup) override;
+   TQpResidual      *MakeResiduals(const TQpDataBase *data) override;
+   TQpVar           *MakeVariables(const TQpDataBase *data) override;
+   TQpLinSolverBase *MakeLinSys   (const TQpDataBase *data) override;
 
-   virtual void JoinRHS       (TVectorD &rhs_in,TVectorD &rhs1_in,TVectorD &rhs2_in,TVectorD &rhs3_in);
-   virtual void SeparateVars  (TVectorD &x_in,TVectorD &y_in,TVectorD &z_in,TVectorD &vars_in);
+   void JoinRHS       (TVectorD &rhs_in,TVectorD &rhs1_in,TVectorD &rhs2_in,TVectorD &rhs3_in) override;
+   void SeparateVars  (TVectorD &x_in,TVectorD &y_in,TVectorD &z_in,TVectorD &vars_in) override;
            void MakeRandomData(TQpDataSparse *&data,TQpVar *&soln,Int_t nnzQ,Int_t nnzA,Int_t nnzC);
 
    TQpProbSparse &operator=(const TQpProbSparse &source);
 
-   ClassDef(TQpProbSparse,1)                   // Qp sparse problem formulation class
+   ClassDefOverride(TQpProbSparse,1)                   // Qp sparse problem formulation class
 };
 #endif

@@ -170,7 +170,7 @@ protected:
    typedef E    ElementType_t;
 
    TH3Adapter()
-      : fSrc(0), fW(0), fH(0), fD(0), fSliceSize(0)
+      : fSrc(nullptr), fW(0), fH(0), fD(0), fSliceSize(0)
    {
    }
 
@@ -225,7 +225,7 @@ class TF3Adapter : protected virtual TGridGeometry<Double_t> {
 protected:
    typedef Double_t ElementType_t;
 
-   TF3Adapter() : fTF3(0), fW(0), fH(0), fD(0)
+   TF3Adapter() : fTF3(nullptr), fW(0), fH(0), fD(0)
    {
    }
 
@@ -350,7 +350,7 @@ in this vertex using TF3.
 
 class TF3EdgeSplitter : protected virtual TGridGeometry<Double_t> {
 protected:
-   TF3EdgeSplitter() : fTF3(0)
+   TF3EdgeSplitter() : fTF3(nullptr)
    {
    }
 
@@ -446,7 +446,7 @@ private:
 
 public:
    TMeshBuilder(Bool_t averagedNormals, ValueType eps = 1e-7)
-      : fAvgNormals(averagedNormals), fMesh(0), fIso(), fEpsilon(eps)
+      : fAvgNormals(averagedNormals), fMesh(nullptr), fIso(), fEpsilon(eps)
    {
    }
 

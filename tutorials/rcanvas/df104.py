@@ -13,7 +13,7 @@
 ## This macro is replica of tutorials/dataframe/df104_HiggsToTwoPhotons.py, but with usage of ROOT7 graphics
 ## Run macro with python3 -i df104.py command to get interactive canvas
 ##
-## \macro_image (rcanvas_js)
+## \macro_image (df104.png)
 ## \macro_code
 ##
 ## \date 2021-06-15

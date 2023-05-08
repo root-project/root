@@ -6,7 +6,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-/// \file ROOT/RSysFile.cxx
+/// \file
 /// \ingroup rbrowser
 /// \author Sergey Linev <S.Linev@gsi.de>
 /// \date 2019-10-15
@@ -284,9 +284,9 @@ public:
          snprintf(tmp, sizeof(tmp), "%d-%02d-%02d %02d:%02d", newtime->tm_year + 1900,
                   newtime->tm_mon+1, newtime->tm_mday, newtime->tm_hour,
                   newtime->tm_min);
-         item->mtime = tmp;
+         item->SetMTime(tmp);
       } else {
-         item->mtime = "1901-01-01 00:00";
+         item->SetMTime("1901-01-01 00:00");
       }
 
       // file type
@@ -314,16 +314,16 @@ public:
                ((item->type & kS_IROTH) ? 'r' : '-'),
                ((item->type & kS_IWOTH) ? 'w' : '-'),
                ((item->type & kS_ISVTX) ? 't' : ((item->type & kS_IXOTH) ? 'x' : '-')));
-      item->ftype = tmp;
+      item->SetType(tmp);
 
       struct UserGroup_t *user_group = gSystem->GetUserInfo(item->uid);
       if (user_group) {
-         item->fuid = user_group->fUser;
-         item->fgid = user_group->fGroup;
+         item->SetUid(user_group->fUser.Data());
+         item->SetGid(user_group->fGroup.Data());
          delete user_group;
       } else {
-         item->fuid = std::to_string(item->uid);
-         item->fgid = std::to_string(item->gid);
+         item->SetUid(std::to_string(item->uid));
+         item->SetGid(std::to_string(item->gid));
       }
 
       return item;

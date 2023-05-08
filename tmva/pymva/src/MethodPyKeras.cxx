@@ -16,6 +16,7 @@
 #include "TMVA/Tools.h"
 #include "TMVA/Timer.h"
 #include "TSystem.h"
+#include "Math/Util.h"
 
 using namespace TMVA;
 
@@ -82,6 +83,7 @@ void MethodPyKeras::DeclareOptions() {
    DeclareOptionRef(fNumThreads, "NumThreads", "Number of CPU threads (only for Tensorflow backend)");
    DeclareOptionRef(fGpuOptions, "GpuOptions", "GPU options for tensorflow, such as allow_growth");
    DeclareOptionRef(fUseTFKeras, "tf.keras", "Use tensorflow from Keras");
+   DeclareOptionRef(fUseTFKeras, "tfkeras", "Use tensorflow from Keras");
    DeclareOptionRef(fVerbose, "Verbose", "Keras verbosity during training");
    DeclareOptionRef(fContinueTraining, "ContinueTraining", "Load weights from previous training");
    DeclareOptionRef(fSaveBestOnly, "SaveBestOnly", "Store only weights with smallest validation loss");
@@ -158,7 +160,7 @@ UInt_t TMVA::MethodPyKeras::GetNumValidationSamples()
 
 /// Function processing the options
 /// This is called only when creating the method before training not when
-/// readinf from XML file. Called from MethodBase::ProcessSetup
+/// reading from XML file. Called from MethodBase::ProcessSetup
 /// that is called from Factory::BookMethod
 void MethodPyKeras::ProcessOptions() {
 
@@ -167,14 +169,15 @@ void MethodPyKeras::ProcessOptions() {
       fFilenameTrainedModel = GetWeightFileDir() + "/TrainedModel_" + GetName() + ".h5";
    }
 
+   InitKeras();
+
    // Setup model, either the initial model from `fFilenameModel` or
    // the trained model from `fFilenameTrainedModel`
    if (fContinueTraining) Log() << kINFO << "Continue training with trained model" << Endl;
    SetupKerasModel(fContinueTraining);
 }
 
-void MethodPyKeras::SetupKerasModel(bool loadTrainedModel) {
-
+void MethodPyKeras::InitKeras() {
    // initialize first Keras. This is done only here when class has
    // all state variable set from options or read from XML file
    // Import Keras
@@ -314,6 +317,9 @@ void MethodPyKeras::SetupKerasModel(bool loadTrainedModel) {
       }
    }
 
+}
+
+void MethodPyKeras::SetupKerasModel(bool loadTrainedModel) {
    /*
     * Load Keras model from file
     */
@@ -361,19 +367,38 @@ void MethodPyKeras::SetupKerasModel(bool loadTrainedModel) {
    else if (GetAnalysisType() == Types::kRegression) fNOutputs = DataInfo().GetNTargets();
    else Log() << kFATAL << "Selected analysis type is not implemented" << Endl;
 
-   // Init evaluation (needed for getMvaValue)
-   fVals = new float[fNVars]; // holds values used for classification and regression
-   npy_intp dimsVals[2] = {(npy_intp)1, (npy_intp)fNVars};
-   PyArrayObject* pVals = (PyArrayObject*)PyArray_SimpleNewFromData(2, dimsVals, NPY_FLOAT, (void*)fVals);
-   PyDict_SetItemString(fLocalNS, "vals", (PyObject*)pVals);
-
-   fOutput.resize(fNOutputs); // holds classification probabilities or regression output
-   npy_intp dimsOutput[2] = {(npy_intp)1, (npy_intp)fNOutputs};
-   PyArrayObject* pOutput = (PyArrayObject*)PyArray_SimpleNewFromData(2, dimsOutput, NPY_FLOAT, (void*)&fOutput[0]);
-   PyDict_SetItemString(fLocalNS, "output", (PyObject*)pOutput);
-
    // Mark the model as setup
    fModelIsSetup = true;
+   fModelIsSetupForEval = false;
+}
+
+///Setting up model for evaluation
+/// Add here some needed optimizations like disabling eager execution
+void MethodPyKeras::SetupKerasModelForEval() {
+
+   InitKeras();
+
+   // disable eager execution (model will evaluate > 100 faster)
+   // need to be done before loading the model
+   if (fUseTFKeras){
+      PyRunString("tf.compat.v1.disable_eager_execution()","Failed to disable eager execution");
+      Log() << kINFO << "Disabled TF eager execution when evaluating model " << Endl;
+   }
+
+   SetupKerasModel(true);
+
+   // Init evaluation (needed for getMvaValue)
+   fVals.resize(fNVars); // holds values used for classification and regression
+   npy_intp dimsVals[2] = {(npy_intp)1, (npy_intp)fNVars};
+   PyArrayObject* pVals = (PyArrayObject*)PyArray_SimpleNewFromData(2, dimsVals, NPY_FLOAT, (void*)fVals.data());
+   PyDict_SetItemString(fLocalNS, "vals", (PyObject*)pVals);
+   // setup output variables
+   fOutput.resize(fNOutputs); // holds classification probabilities or regression output
+   npy_intp dimsOutput[2] = {(npy_intp)1, (npy_intp)fNOutputs};
+   PyArrayObject* pOutput = (PyArrayObject*)PyArray_SimpleNewFromData(2, dimsOutput, NPY_FLOAT, (void*)fOutput.data());
+   PyDict_SetItemString(fLocalNS, "output", (PyObject*)pOutput);
+
+   fModelIsSetupForEval = true;
 }
 
 /// Initialization function called from MethodBase::SetupMethod()
@@ -393,6 +418,7 @@ void MethodPyKeras::Init() {
 
    // Set flag that model is not setup
    fModelIsSetup = false;
+   fModelIsSetupForEval = false;
 }
 
 void MethodPyKeras::Train() {
@@ -633,16 +659,18 @@ Double_t MethodPyKeras::GetMvaValue(Double_t *errLower, Double_t *errUpper) {
 
    // Check whether the model is setup
    // NOTE: unfortunately this is needed because during evaluation ProcessOptions is not called again
-   if (!fModelIsSetup) {
+   if (!fModelIsSetupForEval) {
       // Setup the trained model
-      SetupKerasModel(true);
+      SetupKerasModelForEval();
    }
 
    // Get signal probability (called mvaValue here)
    const TMVA::Event* e = GetEvent();
    for (UInt_t i=0; i<fNVars; i++) fVals[i] = e->GetValue(i);
-   PyRunString("for i,p in enumerate(model.predict(vals)): output[i]=p\n",
-               "Failed to get predictions");
+   int verbose = (int) Verbose();
+   std::string code = "for i,p in enumerate(model.predict(vals, verbose=" + ROOT::Math::Util::ToString(verbose)
+                    + ")): output[i]=p\n";
+   PyRunString(code,"Failed to get predictions");
 
    return fOutput[TMVA::Types::kSignal];
 }
@@ -650,9 +678,9 @@ Double_t MethodPyKeras::GetMvaValue(Double_t *errLower, Double_t *errUpper) {
 std::vector<Double_t> MethodPyKeras::GetMvaValues(Long64_t firstEvt, Long64_t lastEvt, Bool_t logProgress) {
    // Check whether the model is setup
    // NOTE: Unfortunately this is needed because during evaluation ProcessOptions is not called again
-   if (!fModelIsSetup) {
+   if (!fModelIsSetupForEval) {
       // Setup the trained model
-      SetupKerasModel(true);
+      SetupKerasModelForEval();
    }
 
    // Load data to numpy array
@@ -711,16 +739,20 @@ std::vector<Double_t> MethodPyKeras::GetMvaValues(Long64_t firstEvt, Long64_t la
 std::vector<Float_t>& MethodPyKeras::GetRegressionValues() {
    // Check whether the model is setup
    // NOTE: unfortunately this is needed because during evaluation ProcessOptions is not called again
-   if (!fModelIsSetup){
+   if (!fModelIsSetupForEval){
       // Setup the model and load weights
-      SetupKerasModel(true);
+      //std::cout << "setup model for evaluation" << std::endl;
+      //PyRunString("tf.compat.v1.disable_eager_execution()","Failed to disable eager execution");
+      SetupKerasModelForEval();
    }
 
    // Get regression values
    const TMVA::Event* e = GetEvent();
    for (UInt_t i=0; i<fNVars; i++) fVals[i] = e->GetValue(i);
-   PyRunString("for i,p in enumerate(model.predict(vals)): output[i]=p\n",
-               "Failed to get predictions");
+   int verbose = (int) Verbose();
+   std::string code = "for i,p in enumerate(model.predict(vals, verbose=" + ROOT::Math::Util::ToString(verbose)
+                    + ")): output[i]=p\n";
+   PyRunString(code,"Failed to get predictions");
 
    // Use inverse transformation of targets to get final regression values
    Event * eTrans = new Event(*e);
@@ -739,16 +771,18 @@ std::vector<Float_t>& MethodPyKeras::GetRegressionValues() {
 std::vector<Float_t>& MethodPyKeras::GetMulticlassValues() {
    // Check whether the model is setup
    // NOTE: unfortunately this is needed because during evaluation ProcessOptions is not called again
-   if (!fModelIsSetup){
+   if (!fModelIsSetupForEval){
       // Setup the model and load weights
-      SetupKerasModel(true);
+      SetupKerasModelForEval();
    }
 
    // Get class probabilites
    const TMVA::Event* e = GetEvent();
    for (UInt_t i=0; i<fNVars; i++) fVals[i] = e->GetValue(i);
-   PyRunString("for i,p in enumerate(model.predict(vals)): output[i]=p\n",
-               "Failed to get predictions");
+   int verbose = (int) Verbose();
+   std::string code = "for i,p in enumerate(model.predict(vals, verbose=" + ROOT::Math::Util::ToString(verbose)
+                    + ")): output[i]=p\n";
+   PyRunString(code,"Failed to get predictions");
 
    return fOutput;
 }

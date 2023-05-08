@@ -160,7 +160,7 @@ class RooDataSet(object):
 
         return dataset
 
-    def to_numpy(self, copy=True, compute_derived_weight=False):
+    def to_numpy(self, copy=True):
         """Export a RooDataSet to a dictinary of numpy arrays.
 
         Args:
@@ -169,12 +169,6 @@ class RooDataSet(object):
                          own the same memory. If the dataset uses a
                          RooTreeDataStore, there will always be a copy and the
                          copy argument is ignored.
-            compute_derived_weight (bool): Sometimes, the weight variable is
-                not stored in the dataset, but it is a derived variable like a
-                RooFormulaVar. If the compute_derived_weight is True, the
-                weights will be computed in this case and also stored in the
-                output. Switched off by default because the computation is
-                relatively expensive.
 
         Returns:
             dict: A dictionary with the variable or weight names as keys and
@@ -202,21 +196,6 @@ class RooDataSet(object):
                 + self.store().__class__.__name__
                 + " is not supported."
             )
-
-        # Special case where the weight is a derived variable (e.g. a RooFormulaVar).
-        # We don't want to miss putting the weight in the output arrays, so we
-        # are forced to iterate over the dataset to compute the weight.
-        if compute_derived_weight:
-            # Check if self.weightVar() is not a nullptr by using implicit
-            # conversion from `nullptr` to Bool.
-            if self.weightVar():
-                wgt_var_name = self.weightVar().GetName()
-                if not wgt_var_name in data:
-                    weight_array = np.zeros(self.numEntries(), dtype=np.float64)
-                    for i in range(self.numEntries()):
-                        self.get(i)
-                        weight_array[i] = self.weight()
-                    data[wgt_var_name] = weight_array
 
         return data
 
@@ -246,16 +225,10 @@ class RooDataSet(object):
             data[column] = df[column].values
         return ROOT.RooDataSet.from_numpy(data, variables=variables, name=name, title=title, weight_name=weight_name)
 
-    def to_pandas(self, compute_derived_weight=False):
+    def to_pandas(self):
         """Export a RooDataSet to a pandas DataFrame.
 
         Args:
-            compute_derived_weight (bool): Sometimes, the weight variable is
-                not stored in the dataset, but it is a derived variable like a
-                RooFormulaVar. If the compute_derived_weight is True, the
-                weights will be computed in this case and also stored in the
-                output. Switched off by default because the computation is
-                relatively expensive.
 
         Note:
             Pandas copies the data from the numpy arrays when creating a

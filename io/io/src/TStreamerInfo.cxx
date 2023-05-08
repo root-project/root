@@ -1343,7 +1343,7 @@ namespace {
       Int_t oldv = oldClass->GetStreamerInfo()->GetClassVersion();
 
       if (newClass->GetStreamerInfos() && oldv < newClass->GetStreamerInfos()->GetSize() && newClass->GetStreamerInfos()->At(oldv) && strcmp(newClass->GetStreamerInfos()->At(oldv)->GetName(), oldClass->GetName()) != 0) {
-         // The new class has already a TStreamerInfo for the the same version as
+         // The new class has already a TStreamerInfo for the same version as
          // the old class and this was not the result of an import.  So we do not
          // have a match
          return kFALSE;
@@ -3034,14 +3034,12 @@ Bool_t TStreamerInfo::CompareContent(TClass *cl, TVirtualStreamerInfo *info, Boo
 
    TMemberInfo local(GetClass());
    TMemberInfo other(cl ? cl : info->GetClass());
-   UInt_t idx = 0;
    while(!done) {
       local.Clear();
       other.Clear();
       el = (TStreamerElement*)next();
       while (el && (el->IsBase() || el->IsA() == TStreamerArtificial::Class())) {
          el = (TStreamerElement*)next();
-         ++idx;
       }
       if (el) {
          local.SetName( el->GetName() );
@@ -3119,7 +3117,6 @@ Bool_t TStreamerInfo::CompareContent(TClass *cl, TVirtualStreamerInfo *info, Boo
          result = result && kFALSE;
          if (!complete) return result;
       }
-      ++idx;
    }
    return result;
 }
@@ -3484,15 +3481,8 @@ static void R__WriteMoveBodyPointersArrays(FILE *file, const TString &protoname,
             if (element->GetArrayDim() == 1) {
                fprintf(file,"   for (Int_t i=0;i<%d;i++) %s[i] = rhs.%s[i];\n",element->GetArrayLength(),ename,ename);
             } else if (element->GetArrayDim() >= 2) {
-               fprintf(file,"   for (Int_t i=0;i<%d;i++) (&(%s",element->GetArrayLength(),ename);
-               for (Int_t d = 0; d < element->GetArrayDim(); ++d) {
-                  fprintf(file,"[0]");
-               }
-               fprintf(file,"))[i] = (&(rhs.%s",ename);
-               for (Int_t d = 0; d < element->GetArrayDim(); ++d) {
-                  fprintf(file,"[0]");
-               }
-               fprintf(file,"))[i];\n");
+               fprintf(file,"   for (Int_t i=0;i<%d;i++) reinterpret_cast<%s *>(%s", element->GetArrayLength(), element->GetTypeName(), ename);
+               fprintf(file,")[i] = reinterpret_cast<%s const *>(rhs.%s)[i];\n", element->GetTypeName(), ename);
             }
          } else if (element->GetType() == TVirtualStreamerInfo::kSTLp) {
             if (!defMod) { fprintf(file,"   %s &modrhs = const_cast<%s &>( rhs );\n",protoname.Data(),protoname.Data()); defMod = kTRUE; };
@@ -4092,13 +4082,12 @@ Int_t TStreamerInfo::GenerateHeaderFile(const char *dirname, const TList *subCla
    TMakeProject::GenerateForwardDeclaration(fp, GetName(), inclist, kFALSE, needGenericTemplate, extrainfos);
    fprintf(fp,"\n");
 
-   UInt_t ninc = 0;
-   ninc += GenerateIncludes(fp, inclist, extrainfos);
+   GenerateIncludes(fp, inclist, extrainfos);
    if (subClasses) {
       TIter subnext(subClasses);
       TStreamerInfo *subinfo;
       while ((subinfo = (TStreamerInfo*)subnext())) {
-         ninc = subinfo->GenerateIncludes(fp, inclist, extrainfos);
+         subinfo->GenerateIncludes(fp, inclist, extrainfos);
       }
    }
    fprintf(fp,"\n");
@@ -4405,24 +4394,24 @@ T TStreamerInfo::GetTypedValueAux(Int_t type, void *ladd, Int_t k, Int_t len)
          }
 
          // pointer to an array of basic types  array[n]
-      case kOffsetP + kBool_t:    READ_ARRAY(Bool_t)
-      case kOffsetP + kChar_t:    READ_ARRAY(Char_t)
-      case kOffsetP + kShort_t:   READ_ARRAY(Short_t)
-      case kOffsetP + kInt_t:     READ_ARRAY(Int_t)
-      case kOffsetP + kLong_t:    READ_ARRAY(Long_t)
-      case kOffsetP + kLong64_t:  READ_ARRAY(Long64_t)
-      case kOffsetP + kFloat16_t:
-      case kOffsetP + kFloat_t:   READ_ARRAY(Float_t)
-      case kOffsetP + kDouble32_t:
-      case kOffsetP + kDouble_t:  READ_ARRAY(Double_t)
-      case kOffsetP + kUChar_t:   READ_ARRAY(UChar_t)
-      case kOffsetP + kUShort_t:  READ_ARRAY(UShort_t)
-      case kOffsetP + kUInt_t:    READ_ARRAY(UInt_t)
-      case kOffsetP + kULong_t:   READ_ARRAY(ULong_t)
+      case (unsigned)kOffsetP + kBool_t:    READ_ARRAY(Bool_t)
+      case (unsigned)kOffsetP + kChar_t:    READ_ARRAY(Char_t)
+      case (unsigned)kOffsetP + kShort_t:   READ_ARRAY(Short_t)
+      case (unsigned)kOffsetP + kInt_t:     READ_ARRAY(Int_t)
+      case (unsigned)kOffsetP + kLong_t:    READ_ARRAY(Long_t)
+      case (unsigned)kOffsetP + kLong64_t:  READ_ARRAY(Long64_t)
+      case (unsigned)kOffsetP + kFloat16_t:
+      case (unsigned)kOffsetP + kFloat_t:   READ_ARRAY(Float_t)
+      case (unsigned)kOffsetP + kDouble32_t:
+      case (unsigned)kOffsetP + kDouble_t:  READ_ARRAY(Double_t)
+      case (unsigned)kOffsetP + kUChar_t:   READ_ARRAY(UChar_t)
+      case (unsigned)kOffsetP + kUShort_t:  READ_ARRAY(UShort_t)
+      case (unsigned)kOffsetP + kUInt_t:    READ_ARRAY(UInt_t)
+      case (unsigned)kOffsetP + kULong_t:   READ_ARRAY(ULong_t)
 #if defined(_MSC_VER) && (_MSC_VER <= 1200)
-      case kOffsetP + kULong64_t: READ_ARRAY(Long64_t)
+      case (unsigned)kOffsetP + kULong64_t: READ_ARRAY(Long64_t)
 #else
-      case kOffsetP + kULong64_t: READ_ARRAY(ULong64_t)
+      case (unsigned)kOffsetP + kULong64_t: READ_ARRAY(ULong64_t)
 #endif
 
           // array counter //[n]

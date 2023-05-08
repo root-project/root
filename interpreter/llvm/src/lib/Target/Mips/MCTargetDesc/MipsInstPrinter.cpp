@@ -75,8 +75,9 @@ void MipsInstPrinter::printRegName(raw_ostream &OS, unsigned RegNo) const {
   OS << '$' << StringRef(getRegisterName(RegNo)).lower();
 }
 
-void MipsInstPrinter::printInst(const MCInst *MI, raw_ostream &O,
-                                StringRef Annot, const MCSubtargetInfo &STI) {
+void MipsInstPrinter::printInst(const MCInst *MI, uint64_t Address,
+                                StringRef Annot, const MCSubtargetInfo &STI,
+                                raw_ostream &O) {
   switch (MI->getOpcode()) {
   default:
     break;
@@ -108,8 +109,8 @@ void MipsInstPrinter::printInst(const MCInst *MI, raw_ostream &O,
   }
 
   // Try to print any aliases first.
-  if (!printAliasInstr(MI, O) && !printAlias(*MI, O))
-    printInstruction(MI, O);
+  if (!printAliasInstr(MI, Address, O) && !printAlias(*MI, O))
+    printInstruction(MI, Address, O);
   printAnnotation(O, Annot);
 
   switch (MI->getOpcode()) {

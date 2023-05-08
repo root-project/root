@@ -160,7 +160,7 @@ protected:
 
    static TGLColorSet fgDefaultColorSet;                 //! a shared, default color-set
    static Bool_t      fgUseDefaultColorSetForNewViewers; //! name says it all
-
+   static Float_t     fgAxisLabelScale; //! allow simple guide axes labels to be scaled relative to scene units
 
    ///////////////////////////////////////////////////////////////////////
    // Methods
@@ -210,9 +210,9 @@ public:
    virtual void   BeginScene() {}
    virtual Bool_t BuildingScene() const { return kFALSE; }
    virtual void   EndScene() {}
-   virtual Int_t  AddObject(const TBuffer3D&, Bool_t* = 0) { return TBuffer3D::kNone; }
-   virtual Int_t  AddObject(UInt_t, const TBuffer3D&, Bool_t* = 0) { return TBuffer3D::kNone; }
-   virtual Bool_t OpenComposite(const TBuffer3D&, Bool_t* = 0) { return kFALSE; }
+   virtual Int_t  AddObject(const TBuffer3D&, Bool_t* = nullptr) { return TBuffer3D::kNone; }
+   virtual Int_t  AddObject(UInt_t, const TBuffer3D&, Bool_t* = nullptr) { return TBuffer3D::kNone; }
+   virtual Bool_t OpenComposite(const TBuffer3D&, Bool_t* = nullptr) { return kFALSE; }
    virtual void   CloseComposite() {}
    virtual void   AddCompositeOp(UInt_t) {}
 
@@ -245,6 +245,7 @@ public:
    static TGLColorSet& GetDefaultColorSet();
    static void         UseDefaultColorSetForNewViewers(Bool_t x);
    static Bool_t       IsUsingDefaultColorSetForNewViewers();
+   static void         SetAxisLabelScale(Float_t als);
 
    const TGLRect& RefViewport()      const { return fViewport; }
    Int_t          ViewportDiagonal() const { return fViewport.Diagonal(); }
@@ -382,7 +383,7 @@ public:
 
    virtual void SelectionChanged();
    virtual void OverlayDragFinished();
-   virtual void RefreshPadEditor(TObject* obj=0);
+   virtual void RefreshPadEditor(TObject* obj=nullptr);
 
    virtual void RemoveOverlayElement(TGLOverlayElement* el);
 
@@ -440,9 +441,9 @@ public:
    Int_t      fNSteps;
 
    TGLFaderHelper() :
-      fViewer(0), fFadeTarget(0), fTime(0), fNSteps(0) {}
+      fViewer(nullptr), fFadeTarget(0), fTime(0), fNSteps(0) {}
    TGLFaderHelper(TGLViewer* v, Float_t fade, Float_t time, Int_t steps) :
-      fViewer(v),fFadeTarget(fade), fTime(time), fNSteps(steps) {}
+      fViewer(v), fFadeTarget(fade), fTime(time), fNSteps(steps) {}
    virtual ~TGLFaderHelper() {}
 
    void MakeFadeStep();

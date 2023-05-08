@@ -44,7 +44,7 @@ private:
    void     Reset();
 
 public:
-   TStructViewer(void* ptr = NULL, const char * clname = NULL);
+   TStructViewer(void* ptr = nullptr, const char * clname = nullptr);
    ~TStructViewer();
 
    void     Draw(Option_t *option = "");
@@ -57,7 +57,7 @@ public:
    void    *GetPointer() const;
    void     SetColor(TString name, Int_t color);
    void     SetLinksVisibility(Bool_t val);
-   void     SetPointer(void* ptr, const char* clname = NULL);
+   void     SetPointer(void* ptr, const char* clname = nullptr);
 
    ClassDef(TStructViewer, 0); // A 3D struct viewer
 };

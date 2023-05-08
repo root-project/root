@@ -20,8 +20,6 @@
 #include "llvm/Support/Allocator.h"
 #include <cassert>
 #include <cstdint>
-#include <memory>
-#include <vector>
 
 namespace llvm {
 namespace codeview {
@@ -43,14 +41,14 @@ class GlobalTypeTableBuilder : public TypeCollection {
   /// Contains a list of all records indexed by TypeIndex.toArrayIndex().
   SmallVector<ArrayRef<uint8_t>, 2> SeenRecords;
 
-  /// Contains a list of all hash values inexed by TypeIndex.toArrayIndex().
+  /// Contains a list of all hash values indexed by TypeIndex.toArrayIndex().
   SmallVector<GloballyHashedType, 2> SeenHashes;
 
 public:
   explicit GlobalTypeTableBuilder(BumpPtrAllocator &Storage);
   ~GlobalTypeTableBuilder();
 
-  // TypeTableCollection overrides
+  // TypeCollection overrides
   Optional<TypeIndex> getFirst() override;
   Optional<TypeIndex> getNext(TypeIndex Prev) override;
   CVType getType(TypeIndex Index) override;
@@ -58,6 +56,7 @@ public:
   bool contains(TypeIndex Index) override;
   uint32_t size() override;
   uint32_t capacity() override;
+  bool replaceType(TypeIndex &Index, CVType Data, bool Stabilize) override;
 
   // public interface
   void reset();
@@ -71,6 +70,11 @@ public:
   template <typename CreateFunc>
   TypeIndex insertRecordAs(GloballyHashedType Hash, size_t RecordSize,
                            CreateFunc Create) {
+    assert(RecordSize < UINT32_MAX && "Record too big");
+    assert(RecordSize % 4 == 0 &&
+           "RecordSize is not a multiple of 4 bytes which will cause "
+           "misalignment in the output TPI stream!");
+
     auto Result = HashedRecords.try_emplace(Hash, nextTypeIndex());
 
     if (LLVM_UNLIKELY(Result.second /*inserted*/ ||
@@ -112,4 +116,4 @@ public:
 } // end namespace codeview
 } // end namespace llvm
 
-#endif // LLVM_DEBUGINFO_CODEVIEW_MERGINGTYPETABLEBUILDER_H
+#endif // LLVM_DEBUGINFO_CODEVIEW_GLOBALTYPETABLEBUILDER_H

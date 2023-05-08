@@ -89,13 +89,13 @@ namespace Math {
          if (dim > 0) Init(dim);
       }
 
-      bool Init(size_t dim) {
+      bool Init(size_t dim) override {
          fWs = gsl_monte_vegas_alloc( dim);
          if (fWs) SetVegasParameters();
          return (fWs != 0);
       }
 
-      bool ReInit() {
+      bool ReInit() override {
          // according to the code - reinit just reset default GSL values
          if (!fWs) return false;
          int iret = gsl_monte_vegas_init( fWs );
@@ -103,7 +103,7 @@ namespace Math {
          return (iret == 0);
       }
 
-      void Clear() {
+      void Clear() override {
          if (fWs) gsl_monte_vegas_free( fWs);
          fWs = 0;
       }
@@ -115,7 +115,7 @@ namespace Math {
          if (fWs) SetVegasParameters();
       }
 
-      size_t NDim() const { return (fWs) ? fWs->dim : 0; }
+      size_t NDim() const override { return (fWs) ? fWs->dim : 0; }
 
       double Result() const {  return (fWs) ? fWs->result : -1;}
 
@@ -123,12 +123,12 @@ namespace Math {
 
       double Chisq() const {  return (fWs) ? fWs->chisq: -1;}
 
-      MCIntegration::Type Type() const { return MCIntegration::kVEGAS; }
+      MCIntegration::Type Type() const override { return MCIntegration::kVEGAS; }
 
       const VegasParameters & Parameters() const { return fParams; }
       VegasParameters & Parameters()  { return fParams; }
 
-      virtual ROOT::Math::IOptions * Options() const {
+      ROOT::Math::IOptions * Options() const override {
          return fParams();
       }
 
@@ -165,7 +165,7 @@ namespace Math {
       }
 
 
-      bool Init(size_t dim) {
+      bool Init(size_t dim) override {
          fWs = gsl_monte_miser_alloc( dim);
          // need this to set parameters according to dimension
          if (!fHaveNewParams) fParams = MiserParameters(dim);
@@ -173,7 +173,7 @@ namespace Math {
          return (fWs != 0);
       }
 
-      bool ReInit() {
+      bool ReInit() override {
          // according to the code - reinit just reset default GSL values
          if (!fWs) return false;
          int iret = gsl_monte_miser_init( fWs );
@@ -181,7 +181,7 @@ namespace Math {
          return (iret == 0);
       }
 
-      void Clear() {
+      void Clear() override {
          if (fWs) gsl_monte_miser_free( fWs);
          fWs = 0;
       }
@@ -194,15 +194,15 @@ namespace Math {
          if (fWs) SetMiserParameters();
       }
 
-      size_t NDim() const { return (fWs) ? fWs->dim : 0; }
+      size_t NDim() const override { return (fWs) ? fWs->dim : 0; }
 
-      MCIntegration::Type Type() const { return MCIntegration::kMISER; }
+      MCIntegration::Type Type() const override { return MCIntegration::kMISER; }
 
 
       const MiserParameters & Parameters() const { return fParams; }
       MiserParameters & Parameters()  { return fParams; }
 
-      virtual ROOT::Math::IOptions * Options() const {
+      ROOT::Math::IOptions * Options() const override {
          return fParams();
       }
 
@@ -235,19 +235,19 @@ namespace Math {
          fWs(0)
       {  }
 
-      bool Init(size_t dim) {
+      bool Init(size_t dim) override {
          fWs = gsl_monte_plain_alloc( dim);
          // no parameter exists for plain
          return (fWs != 0);
       }
 
-      bool ReInit() {
+      bool ReInit() override {
          if (!fWs) return false;
          int iret = gsl_monte_plain_init( fWs );
          return (iret == GSL_SUCCESS);
       }
 
-      void Clear() {
+      void Clear() override {
          if (fWs) gsl_monte_plain_free( fWs);
          fWs = 0;
       }
@@ -256,11 +256,11 @@ namespace Math {
 
       //void SetParameters(const struct PlainParameters &p);
 
-      MCIntegration::Type Type() const { return MCIntegration::kPLAIN; }
+      MCIntegration::Type Type() const override { return MCIntegration::kPLAIN; }
 
-      size_t NDim() const { return (fWs) ? fWs->dim : 0; }
+      size_t NDim() const override { return (fWs) ? fWs->dim : 0; }
 
-      virtual ROOT::Math::IOptions * Options() const {
+      ROOT::Math::IOptions * Options() const override {
          return 0;
       }
 

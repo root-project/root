@@ -397,14 +397,12 @@ Double_t TMVA::SimulatedAnnealing::Minimize( std::vector<Double_t>& parameters )
    Double_t startingTemperature = fMinTemperature*(fRanges.size())*2.0;
    currentTemperature = startingTemperature;
 
-   Int_t changes = 0;
    for (Int_t sample=0;sample<optimizeCalls;sample++) {
       GenerateNeighbour( parameters, oldParameters, currentTemperature );
       Double_t localFit = fFitterTarget.EstimatorFunction( parameters );
 
       if (localFit < currentFit) { //if better than last one
          currentFit = localFit;
-         changes++;
 
          if (currentFit < bestFit) {
             ReWriteParameters( parameters, bestParameters );

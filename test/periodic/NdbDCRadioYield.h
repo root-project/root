@@ -12,9 +12,9 @@ public:
    NdbDCRadioYield()
       : NdbMF(39, "Data covariances for radionuclide "
          "production yields") {}
-   ~NdbDCRadioYield() {}
+   ~NdbDCRadioYield() override {}
 
-   ClassDef(NdbDCRadioYield,1)
+   ClassDefOverride(NdbDCRadioYield,1)
 
 }; // NdbDCRadioYield
 

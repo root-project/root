@@ -38,7 +38,11 @@ public:
    virtual void     SetMarkerColor(Color_t mcolor=1) { fMarkerColor = mcolor;} ///< Set the marker color
    virtual void     SetMarkerColorAlpha(Color_t mcolor, Float_t malpha);
    virtual void     SetMarkerStyle(Style_t mstyle=1) { fMarkerStyle = mstyle;} ///< Set the marker style
-   virtual void     SetMarkerSize(Size_t msize=1)    { fMarkerSize  = msize;}  ///< Set the marker size
+   /// Set the marker size.
+   /// Note that the marker styles number 1 6 and 7 (the dots), cannot be scaled.
+   /// They are meant to be very fast to draw and are always drawn with the same number of pixels;
+   /// therefore this method does not apply on them.
+   virtual void     SetMarkerSize(Size_t msize=1)    { fMarkerSize  = msize;}
 
    static Style_t GetMarkerStyleBase(Style_t style);
    static Width_t GetMarkerLineWidth(Style_t style);

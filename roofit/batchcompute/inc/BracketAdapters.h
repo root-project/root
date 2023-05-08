@@ -55,7 +55,7 @@ class BracketAdapter {
 class BracketAdapterWithMask {
   public:
     /// Construct adapter from a fallback value and a batch of values.
-    /// - If `batch.size() == 0`, always return `payload`.
+    /// - If `batch.empty()`, always return `payload`.
     /// - Else, return `batch[i]`.
     BracketAdapterWithMask(double payload, const RooSpan<const double>& batch) noexcept :
     _isBatch(!batch.empty()),
@@ -64,7 +64,7 @@ class BracketAdapterWithMask {
     _mask(batch.size() > 1 ? ~static_cast<size_t>(0): 0)
     {
     }
-    
+
     /// Construct adapter from a batch of values.
     /// - If `batch.size() == 1`, always return the value at `batch[0]`.
     /// - Else, return `batch[i]`.
@@ -84,13 +84,13 @@ class BracketAdapterWithMask {
     _mask(other._mask)
     {
     }
-    
+
     BracketAdapterWithMask& operator= (const BracketAdapterWithMask& other) = delete;
 
     inline double operator[](std::size_t i) const noexcept {
       return _pointer[ i & _mask];
     }
-    
+
     inline bool isBatch() const noexcept {
       return _isBatch;
     }

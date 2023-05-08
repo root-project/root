@@ -250,7 +250,7 @@ still work.
 The most important command line options are:
 
 ``-help``
-  Print help message.
+  Print help message (``-help=1``).
 ``-seed``
   Random seed. If 0 (the default), the seed is generated.
 ``-runs``
@@ -258,7 +258,7 @@ The most important command line options are:
 ``-max_len``
   Maximum length of a test input. If 0 (the default), libFuzzer tries to guess
   a good value based on the corpus (and reports it).
-``len_control``
+``-len_control``
   Try generating small inputs first, then try larger inputs over time.
   Specifies the rate at which the length limit is increased (smaller == faster).
   Default is 100. If 0, immediately try inputs with size up to max_len.
@@ -287,7 +287,7 @@ The most important command line options are:
   that trigger new code coverage will be merged into the first corpus
   directory.  Defaults to 0. This flag can be used to minimize a corpus.
 ``-merge_control_file``
-  Specify a control file used for the merge proccess.
+  Specify a control file used for the merge process.
   If a merge process gets killed it tries to leave this file in a state
   suitable for resuming the merge. By default a temporary file will be used.
 ``-minimize_crash``
@@ -350,7 +350,7 @@ Output
 During operation the fuzzer prints information to ``stderr``, for example::
 
   INFO: Seed: 1523017872
-  INFO: Loaded 1 modules (16 guards): [0x744e60, 0x744ea0), 
+  INFO: Loaded 1 modules (16 guards): [0x744e60, 0x744ea0),
   INFO: -max_len is not provided, using 64
   INFO: A corpus is not provided, starting from an empty corpus
   #0	READ units: 1
@@ -409,8 +409,8 @@ Each output line also reports the following statistics (when non-zero):
 ``rss:``
   Current memory consumption.
 
-For ``NEW`` events, the output line also includes information about the mutation
-operation that produced the new input:
+For ``NEW`` and ``REDUCE`` events, the output line also includes information
+about the mutation operation that produced the new input:
 
 ``L:``
   Size of the new input in bytes.
@@ -449,7 +449,7 @@ A simple function that does something interesting if it receives the input
 You should get an error pretty quickly::
 
   INFO: Seed: 1523017872
-  INFO: Loaded 1 modules (16 guards): [0x744e60, 0x744ea0), 
+  INFO: Loaded 1 modules (16 guards): [0x744e60, 0x744ea0),
   INFO: -max_len is not provided, using 64
   INFO: A corpus is not provided, starting from an empty corpus
   #0	READ units: 1
@@ -515,7 +515,7 @@ and extra run-time flag ``-use_value_profile=1`` the fuzzer will
 collect value profiles for the parameters of compare instructions
 and treat some new values as new coverage.
 
-The current imlpementation does roughly the following:
+The current implementation does roughly the following:
 
 * The compiler instruments all CMP instructions with a callback that receives both CMP arguments.
 * The callback computes `(caller_pc&4095) | (popcnt(Arg1 ^ Arg2) << 12)` and uses this value to set a bit in a bitset.
@@ -571,7 +571,7 @@ Periodically restart both fuzzers so that they can use each other's findings.
 Currently, there is no simple way to run both fuzzing engines in parallel while sharing the same corpus dir.
 
 You may also use AFL on your target function ``LLVMFuzzerTestOneInput``:
-see an example `here <https://github.com/llvm/llvm-project/tree/master/compiler-rt/lib/fuzzer/afl>`__.
+see an example `here <https://github.com/llvm/llvm-project/tree/main/compiler-rt/lib/fuzzer/afl>`__.
 
 How good is my fuzzer?
 ----------------------
@@ -581,7 +581,7 @@ you will want to know whether the function or the corpus can be improved further
 One easy to use metric is, of course, code coverage.
 
 We recommend to use
-`Clang Coverage <http://clang.llvm.org/docs/SourceBasedCodeCoverage.html>`_,
+`Clang Coverage <https://clang.llvm.org/docs/SourceBasedCodeCoverage.html>`_,
 to visualize and study your code coverage
 (`example <https://github.com/google/fuzzer-test-suite/blob/master/tutorial/libFuzzerTutorial.md#visualizing-coverage>`_).
 
@@ -590,7 +590,7 @@ User-supplied mutators
 ----------------------
 
 LibFuzzer allows to use custom (user-supplied) mutators, see
-`Structure-Aware Fuzzing <https://github.com/google/fuzzer-test-suite/blob/master/tutorial/structure-aware-fuzzing.md>`_
+`Structure-Aware Fuzzing <https://github.com/google/fuzzing/blob/master/docs/structure-aware-fuzzing.md>`_
 for more details.
 
 Startup initialization
@@ -616,6 +616,35 @@ really need to access ``argv``/``argc``.
     ReadAndMaybeModify(argc, argv);
     return 0;
    }
+
+Using libFuzzer as a library
+----------------------------
+If the code being fuzzed must provide its own `main`, it's possible to
+invoke libFuzzer as a library. Be sure to pass ``-fsanitize=fuzzer-no-link``
+during compilation, and link your binary against the no-main version of
+libFuzzer. On Linux installations, this is typically located at:
+
+.. code-block:: bash
+
+  /usr/lib/<llvm-version>/lib/clang/<clang-version>/lib/linux/libclang_rt.fuzzer_no_main-<architecture>.a
+
+If building libFuzzer from source, this is located at the following path
+in the build output directory:
+
+.. code-block:: bash
+
+  lib/linux/libclang_rt.fuzzer_no_main-<architecture>.a
+
+From here, the code can do whatever setup it requires, and when it's ready
+to start fuzzing, it can call `LLVMFuzzerRunDriver`, passing in the program
+arguments and a callback. This callback is invoked just like
+`LLVMFuzzerTestOneInput`, and has the same signature.
+
+.. code-block:: c++
+
+  extern "C" int LLVMFuzzerRunDriver(int *argc, char ***argv,
+                    int (*UserCb)(const uint8_t *Data, size_t Size));
+
 
 
 Leaks
@@ -644,9 +673,9 @@ Developing libFuzzer
 
 LibFuzzer is built as a part of LLVM project by default on macos and Linux.
 Users of other operating systems can explicitly request compilation using
-``-DLIBFUZZER_ENABLE=YES`` flag.
+``-DCOMPILER_RT_BUILD_LIBFUZZER=ON`` flag.
 Tests are run using ``check-fuzzer`` target from the build directory
-which was configured with ``-DLIBFUZZER_ENABLE_TESTS=ON`` flag.
+which was configured with ``-DCOMPILER_RT_INCLUDE_TESTS=ON`` flag.
 
 .. code-block:: console
 
@@ -768,7 +797,7 @@ Trophies
 
 * WOFF2: `[1] <https://github.com/google/woff2/commit/a15a8ab>`__
 
-* LLVM: `Clang <https://llvm.org/bugs/show_bug.cgi?id=23057>`_, `Clang-format <https://llvm.org/bugs/show_bug.cgi?id=23052>`_, `libc++ <https://llvm.org/bugs/show_bug.cgi?id=24411>`_, `llvm-as <https://llvm.org/bugs/show_bug.cgi?id=24639>`_, `Demangler <https://bugs.chromium.org/p/chromium/issues/detail?id=606626>`_, Disassembler: http://reviews.llvm.org/rL247405, http://reviews.llvm.org/rL247414, http://reviews.llvm.org/rL247416, http://reviews.llvm.org/rL247417, http://reviews.llvm.org/rL247420, http://reviews.llvm.org/rL247422.
+* LLVM: `Clang <https://bugs.llvm.org/show_bug.cgi?id=23057>`_, `Clang-format <https://bugs.llvm.org/show_bug.cgi?id=23052>`_, `libc++ <https://bugs.llvm.org/show_bug.cgi?id=24411>`_, `llvm-as <https://bugs.llvm.org/show_bug.cgi?id=24639>`_, `Demangler <https://bugs.chromium.org/p/chromium/issues/detail?id=606626>`_, Disassembler: http://reviews.llvm.org/rL247405, http://reviews.llvm.org/rL247414, http://reviews.llvm.org/rL247416, http://reviews.llvm.org/rL247417, http://reviews.llvm.org/rL247420, http://reviews.llvm.org/rL247422.
 
 * Tensorflow: `[1] <https://da-data.blogspot.com/2017/01/finding-bugs-in-tensorflow-with.html>`__
 
@@ -781,18 +810,18 @@ Trophies
 .. _pcre2: http://www.pcre.org/
 .. _AFL: http://lcamtuf.coredump.cx/afl/
 .. _Radamsa: https://github.com/aoh/radamsa
-.. _SanitizerCoverage: http://clang.llvm.org/docs/SanitizerCoverage.html
-.. _SanitizerCoverageTraceDataFlow: http://clang.llvm.org/docs/SanitizerCoverage.html#tracing-data-flow
-.. _AddressSanitizer: http://clang.llvm.org/docs/AddressSanitizer.html
-.. _LeakSanitizer: http://clang.llvm.org/docs/LeakSanitizer.html
+.. _SanitizerCoverage: https://clang.llvm.org/docs/SanitizerCoverage.html
+.. _SanitizerCoverageTraceDataFlow: https://clang.llvm.org/docs/SanitizerCoverage.html#tracing-data-flow
+.. _AddressSanitizer: https://clang.llvm.org/docs/AddressSanitizer.html
+.. _LeakSanitizer: https://clang.llvm.org/docs/LeakSanitizer.html
 .. _Heartbleed: http://en.wikipedia.org/wiki/Heartbleed
-.. _FuzzerInterface.h: https://github.com/llvm/llvm-project/blob/master/compiler-rt/lib/fuzzer/FuzzerInterface.h
-.. _3.7.0: http://llvm.org/releases/3.7.0/docs/LibFuzzer.html
-.. _building Clang from trunk: http://clang.llvm.org/get_started.html
-.. _MemorySanitizer: http://clang.llvm.org/docs/MemorySanitizer.html
-.. _UndefinedBehaviorSanitizer: http://clang.llvm.org/docs/UndefinedBehaviorSanitizer.html
-.. _`coverage counters`: http://clang.llvm.org/docs/SanitizerCoverage.html#coverage-counters
+.. _FuzzerInterface.h: https://github.com/llvm/llvm-project/blob/main/compiler-rt/lib/fuzzer/FuzzerInterface.h
+.. _3.7.0: https://llvm.org/releases/3.7.0/docs/LibFuzzer.html
+.. _building Clang from trunk: https://clang.llvm.org/get_started.html
+.. _MemorySanitizer: https://clang.llvm.org/docs/MemorySanitizer.html
+.. _UndefinedBehaviorSanitizer: https://clang.llvm.org/docs/UndefinedBehaviorSanitizer.html
+.. _`coverage counters`: https://clang.llvm.org/docs/SanitizerCoverage.html#coverage-counters
 .. _`value profile`: #value-profile
-.. _`caller-callee pairs`: http://clang.llvm.org/docs/SanitizerCoverage.html#caller-callee-coverage
+.. _`caller-callee pairs`: https://clang.llvm.org/docs/SanitizerCoverage.html#caller-callee-coverage
 .. _BoringSSL: https://boringssl.googlesource.com/boringssl/
 

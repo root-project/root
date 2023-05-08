@@ -70,7 +70,7 @@ namespace llvm {
     }
 
     static std::string getGraphName(const SelectionDAG *G) {
-      return G->getMachineFunction().getName();
+      return std::string(G->getMachineFunction().getName());
     }
 
     static bool renderGraphFromBottomUp() {
@@ -164,6 +164,20 @@ void SelectionDAG::viewGraph() {
   viewGraph("");
 }
 
+/// Just dump dot graph to a user-provided path and title.
+/// This doesn't open the dot viewer program and
+/// helps visualization when outside debugging session.
+/// FileName expects absolute path. If provided
+/// without any path separators then the file
+/// will be created in the current directory.
+/// Error will be emitted if the path is insane.
+#if !defined(NDEBUG) || defined(LLVM_ENABLE_DUMP)
+LLVM_DUMP_METHOD void SelectionDAG::dumpDotGraph(const Twine &FileName,
+                                                 const Twine &Title) {
+  dumpDotGraphToFile(this, FileName, Title);
+}
+#endif
+
 /// clearGraphAttrs - Clear all previously defined node graph attributes.
 /// Intended to be used from a debugging tool (eg. gdb).
 void SelectionDAG::clearGraphAttrs() {
@@ -190,7 +204,7 @@ void SelectionDAG::setGraphAttrs(const SDNode *N, const char *Attrs) {
 
 /// getGraphAttrs - Get graph attributes for a node. (eg. "color=red".)
 /// Used from getNodeAttributes.
-const std::string SelectionDAG::getGraphAttrs(const SDNode *N) const {
+std::string SelectionDAG::getGraphAttrs(const SDNode *N) const {
 #ifndef NDEBUG
   std::map<const SDNode *, std::string>::const_iterator I =
     NodeGraphAttrs.find(N);

@@ -23,9 +23,6 @@ A RooEllipse is a two-dimensional ellipse that can be used to represent
 an error contour.
 **/
 
-
-#include "RooFit.h"
-
 #include "RooEllipse.h"
 #include "TMath.h"
 #include "RooMsgService.h"
@@ -43,15 +40,15 @@ ClassImp(RooEllipse);
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
 
-RooEllipse::RooEllipse() 
-{ 
+RooEllipse::RooEllipse()
+{
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor
 
-RooEllipse::~RooEllipse() 
+RooEllipse::~RooEllipse()
 {
 }
 
@@ -73,7 +70,7 @@ RooEllipse::~RooEllipse()
 /// The degenerate case |rho|=1 corresponds to a straight line and
 /// is handled as a special case.
 
-RooEllipse::RooEllipse(const char *name, Double_t x1, Double_t x2, Double_t s1, Double_t s2, Double_t rho, Int_t points) 
+RooEllipse::RooEllipse(const char *name, double x1, double x2, double s1, double s2, double rho, Int_t points)
 {
   SetName(name);
   SetTitle(name);
@@ -82,7 +79,7 @@ RooEllipse::RooEllipse(const char *name, Double_t x1, Double_t x2, Double_t s1, 
     coutE(InputArguments) << "RooEllipse::RooEllipse: bad parameter s1 or s2 < 0" << endl;
     return;
   }
-  Double_t tmp= 1-rho*rho;
+  double tmp= 1-rho*rho;
   if(tmp < 0) {
     coutE(InputArguments) << "RooEllipse::RooEllipse: bad parameter |rho| > 1" << endl;
     return;
@@ -95,7 +92,7 @@ RooEllipse::RooEllipse(const char *name, Double_t x1, Double_t x2, Double_t s1, 
     setYAxisLimits(x2-s2,x2+s2);
   }
   else {
-    Double_t r,psi,phi,u1,u2,xx1,xx2,dphi(2*TMath::Pi()/points);
+    double r,psi,phi,u1,u2,xx1,xx2,dphi(2*TMath::Pi()/points);
     for(Int_t index= 0; index < points; index++) {
       phi= index*dphi;
       // adjust the angular spacing of the points for the aspect ratio
@@ -107,12 +104,12 @@ RooEllipse::RooEllipse(const char *name, Double_t x1, Double_t x2, Double_t s1, 
       xx2= x2 + r*u2*s2;
       SetPoint(index, xx1, xx2);
       if(index == 0) {
-	setYAxisLimits(xx2,xx2);
-	// add an extra segment to close the curve
-	SetPoint(points, xx1, xx2);
+   setYAxisLimits(xx2,xx2);
+   // add an extra segment to close the curve
+   SetPoint(points, xx1, xx2);
       }
       else {
-	updateYAxisLimits(xx2);
+   updateYAxisLimits(xx2);
       }
     }
   }
@@ -123,7 +120,7 @@ RooEllipse::RooEllipse(const char *name, Double_t x1, Double_t x2, Double_t s1, 
 ////////////////////////////////////////////////////////////////////////////////
 /// Print name of ellipse on ostream
 
-void RooEllipse::printName(ostream& os) const 
+void RooEllipse::printName(ostream& os) const
 {
   os << GetName() ;
 }
@@ -132,7 +129,7 @@ void RooEllipse::printName(ostream& os) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Print title of ellipse on ostream
 
-void RooEllipse::printTitle(ostream& os) const 
+void RooEllipse::printTitle(ostream& os) const
 {
   os << GetName() ;
 }
@@ -141,16 +138,16 @@ void RooEllipse::printTitle(ostream& os) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Print class name of ellipse on ostream
 
-void RooEllipse::printClassName(ostream& os) const 
+void RooEllipse::printClassName(ostream& os) const
 {
-  os << IsA()->GetName() ;
+  os << ClassName() ;
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Print detailed multi line information on ellipse on ostreamx
 
-void RooEllipse::printMultiline(ostream& os, Int_t contents, Bool_t verbose, TString indent) const
+void RooEllipse::printMultiline(ostream& os, Int_t contents, bool verbose, TString indent) const
 {
   RooPlotable::printMultiline(os,contents,verbose,indent);
   for(Int_t index=0; index < fNpoints; index++) {

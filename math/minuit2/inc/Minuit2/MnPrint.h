@@ -73,13 +73,14 @@ std::ostream &operator<<(std::ostream &os, const std::pair<double, double> &poin
 class MnPrint {
 public:
    // want this to be an enum class for strong typing...
-   enum class Verbosity { Error = 0, Warn = 1, Info = 2, Debug = 3 };
+   enum class Verbosity { Error = 0, Warn = 1, Info = 2, Debug = 3, Trace = 4 };
 
    // ...but also want the values accessible from MnPrint scope for convenience
    static constexpr auto eError = Verbosity::Error;
    static constexpr auto eWarn = Verbosity::Warn;
    static constexpr auto eInfo = Verbosity::Info;
    static constexpr auto eDebug = Verbosity::Debug;
+   static constexpr auto eTrace = Verbosity::Trace;
 
    // used for one-line printing of fcn minimum state
    class Oneline {
@@ -110,6 +111,14 @@ public:
    static void AddFilter(const char *prefix);
    static void ClearFilter();
 
+   // Whether to cut the maximum number of parameters shown for vector and matrices
+   // set maximum number of printed parameters and return previous value
+   // A negative value will mean all parameters are printed
+   static int SetMaxNP(int value);
+
+   // retrieve maximum number of printed parameters
+   static int MaxNP();
+
    // set print level and return the previous one
    int SetLevel(int level);
 
@@ -138,6 +147,12 @@ public:
    void Debug(const Ts &... args)
    {
       Log(eDebug, args...);
+   }
+
+   template <class... Ts>
+   void Trace(const Ts &... args)
+   {
+      Log(eTrace, args...);
    }
 
 private:

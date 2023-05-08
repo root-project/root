@@ -46,8 +46,8 @@ private:
 protected:
 
 public:
-   TTreeTableInterface(TTree *tree = 0, const char *varexp = 0,
-                       const char *selection = 0, Option_t *option = 0,
+   TTreeTableInterface(TTree *tree = nullptr, const char *varexp = nullptr,
+                       const char *selection = nullptr, Option_t *option = nullptr,
                        Long64_t nentries = 0, Long64_t firstentry = 0);
    virtual ~TTreeTableInterface();
 
@@ -64,7 +64,7 @@ public:
    virtual void RemoveColumn(UInt_t position);
    virtual void SetFormula(TTreeFormula *formula, UInt_t position);
    virtual void SetSelection(const char *selection);
-   virtual void SetEntryList(TEntryList *entrylist = 0);
+   virtual void SetEntryList(TEntryList *entrylist = nullptr);
 
    ClassDef(TTreeTableInterface, 0) // Interface to data in a TTree
 };

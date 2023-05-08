@@ -1,4 +1,4 @@
-#include "ROOTUnitTestSupport.h"
+#include "ROOT/TestSupport.hxx"
 
 #include "TClass.h"
 #include "TClassTable.h"
@@ -134,16 +134,16 @@ const char *gCode = R"CODE(
 
 class WrongSetup : public TObject {
 public:
-   virtual ULong_t Hash() const { return 6; }
+   ULong_t Hash() const override { return 6; }
 
-   ClassDefInline(WrongSetup, 2);
+   ClassDefInlineOverride(WrongSetup, 2);
 };
 
 class InlineCompiledOnly : public TObject {
 public:
-   virtual ULong_t Hash() const { return 6; }
+   ULong_t Hash() const override { return 6; }
 
-   ClassDefInline(InlineCompiledOnly, 2);
+   ClassDefInlineOverride(InlineCompiledOnly, 2);
 };
 
 std::string errormessage(const std::string &baseclass, const std::string &seenclass)
@@ -165,7 +165,7 @@ void DeclareFailingClasses()
 TEST(HashRecursiveRemove, GetClassClassDefInline)
 {
    // On windows, the following might trigger a warning. Suppress it here:
-   ROOTUnitTestSupport::CheckDiagsRAII diagRAII;
+   ROOT::TestSupport::CheckDiagsRAII diagRAII;
    diagRAII.optionalDiag(kWarning, "TClassTable::Add", "class WrongSetup already in TClassTable");
 
    DeclareFailingClasses();

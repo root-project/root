@@ -21,12 +21,13 @@
 #include "RooPlot.h"
 
 #include "TNamed.h"
-#include "TFile.h"
 #include "TH1.h"
 
 #include <list>
 #include <string>
 #include <utility>
+
+class TFile;
 
 /*
  * The tolerance for the curve test is put to 0.4 instead of 0.2 to take into
@@ -36,35 +37,35 @@
 
 class RooUnitTest : public TNamed {
 public:
-  RooUnitTest(const char* name, TFile* refFile, Bool_t writeRef, Int_t verbose, std::string const& batchMode="off") ;
-  ~RooUnitTest() ;
-  
-  void setDebug(Bool_t flag) { _debug = flag ; }
+  RooUnitTest(const char* name, TFile* refFile, bool writeRef, Int_t verbose) ;
+  ~RooUnitTest() override ;
+
+  void setDebug(bool flag) { _debug = flag ; }
   void setSilentMode() ;
   void clearSilentMode() ;
-  void regPlot(RooPlot* frame, const char* refName) ;  
-  void regResult(RooFitResult* r, const char* refName) ;
-  void regValue(Double_t value, const char* refName) ;
+  void regPlot(RooPlot* frame, const char* refName) ;
+  void regResult(std::unique_ptr<RooFitResult> r, const char* refName) ;
+  void regValue(double value, const char* refName) ;
   void regTable(RooTable* t, const char* refName) ;
   void regWS(RooWorkspace* ws, const char* refName) ;
   void regTH(TH1* h, const char* refName) ;
   RooWorkspace* getWS(const char* refName) ;
-  Bool_t runTest() ;
-  Bool_t runCompTests() ;
-  Bool_t areTHidentical(TH1* htest, TH1* href) ;
+  bool runTest() ;
+  bool runCompTests() ;
+  bool areTHidentical(TH1* htest, TH1* href) ;
 
-  virtual Bool_t isTestAvailable() { return kTRUE ; }
-  virtual Bool_t testCode() = 0 ;  
+  virtual bool isTestAvailable() { return true ; }
+  virtual bool testCode() = 0 ;
 
-  virtual Double_t htol() { return 5e-4 ; } // histogram test tolerance (KS dist != prob)
+  virtual double htol() { return 5e-4 ; }  ///< histogram test tolerance (KS dist != prob)
 #ifdef R__FAST_MATH
-  virtual Double_t ctol() { return 2e-3 ; } // curve test tolerance
+  virtual double ctol() { return 2e-3 ; }  ///< curve test tolerance
 #else
-  virtual Double_t ctol() { return 4e-3 ; } // curve test tolerance
+  virtual double ctol() { return 4e-3 ; }  ///< curve test tolerance
 #endif
-  virtual Double_t fptol() { return 1e-5 ; } // fit parameter test tolerance
-  virtual Double_t fctol() { return 1e-4 ; } // fit correlation test tolerance
-  virtual Double_t vtol() { return 1e-3 ; } // value test tolerance
+  virtual double fptol() { return 1e-5 ; } ///< fit parameter test tolerance
+  virtual double fctol() { return 1e-4 ; } ///< fit correlation test tolerance
+  virtual double vtol() { return 1e-3 ; }  ///< value test tolerance
 
   static void setMemDir(TDirectory* memDir);
 
@@ -73,17 +74,16 @@ protected:
   static TDirectory* gMemDir ;
 
   TFile* _refFile ;
-  Bool_t _debug ;
-  Bool_t _write ;
+  bool _debug ;
+  bool _write ;
   Int_t _verb ;
-  std::string _batchMode="off";
    std::list<std::pair<RooPlot*, std::string> > _regPlots ;
    std::list<std::pair<RooFitResult*, std::string> > _regResults ;
-   std::list<std::pair<Double_t, std::string> > _regValues ;
+   std::list<std::pair<double, std::string> > _regValues ;
    std::list<std::pair<RooTable*,std::string> > _regTables ;
    std::list<std::pair<RooWorkspace*,std::string> > _regWS ;
    std::list<std::pair<TH1*,std::string> > _regTH ;
 
-  ClassDef(RooUnitTest,0) ; // Abstract base class for RooFit/RooStats unit regression tests
+  ClassDefOverride(RooUnitTest,0) ; // Abstract base class for RooFit/RooStats unit regression tests
 } ;
 #endif

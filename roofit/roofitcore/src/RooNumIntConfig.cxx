@@ -24,7 +24,6 @@ numeric integrators used by RooRealIntegral. RooRealIntegral and RooAbsPdf
 use this class in the (normalization) integral configuration interface
 **/
 
-#include "RooFit.h"
 #include "Riostream.h"
 
 #include "RooNumIntConfig.h"
@@ -32,9 +31,6 @@ use this class in the (normalization) integral configuration interface
 #include "RooAbsIntegrator.h"
 #include "RooNumIntFactory.h"
 #include "RooMsgService.h"
-
-#include "TClass.h"
-
 
 
 using namespace std;
@@ -45,7 +41,7 @@ ClassImp(RooNumIntConfig)
 ////////////////////////////////////////////////////////////////////////////////
 /// Return reference to instance of default numeric integrator configuration object
 
-RooNumIntConfig& RooNumIntConfig::defaultConfig() 
+RooNumIntConfig& RooNumIntConfig::defaultConfig()
 {
   static RooNumIntConfig theConfig;
   static bool initStarted = false;
@@ -66,12 +62,12 @@ RooNumIntConfig& RooNumIntConfig::defaultConfig()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor 
+/// Constructor
 
-RooNumIntConfig::RooNumIntConfig() : 
+RooNumIntConfig::RooNumIntConfig() :
   _epsAbs(1e-7),
   _epsRel(1e-7),
-  _printEvalCounter(kFALSE),
+  _printEvalCounter(false),
   _method1D("method1D","1D integration method"),
   _method2D("method2D","2D integration method"),
   _methodND("methodND","ND integration method"),
@@ -128,9 +124,9 @@ RooNumIntConfig::RooNumIntConfig(const RooNumIntConfig& other) :
 ////////////////////////////////////////////////////////////////////////////////
 /// Assignment operator from other RooNumIntConfig
 
-RooNumIntConfig& RooNumIntConfig::operator=(const RooNumIntConfig& other) 
+RooNumIntConfig& RooNumIntConfig::operator=(const RooNumIntConfig& other)
 {
-  // Prevent self-assignment 
+  // Prevent self-assignment
   if (&other==this) {
     return *this ;
   }
@@ -163,11 +159,11 @@ RooNumIntConfig& RooNumIntConfig::operator=(const RooNumIntConfig& other)
 ////////////////////////////////////////////////////////////////////////////////
 /// Add a configuration section for a particular integrator. Integrator name and capabilities are
 /// automatically determined from instance passed as 'proto'. The defaultConfig object is associated
-/// as the default configuration for the integrator. 
+/// as the default configuration for the integrator.
 
-Bool_t RooNumIntConfig::addConfigSection(const RooAbsIntegrator* proto, const RooArgSet& inDefaultConfig)
+bool RooNumIntConfig::addConfigSection(const RooAbsIntegrator* proto, const RooArgSet& inDefaultConfig)
 {
-  std::string name = proto->IsA()->GetName() ;
+  std::string name = proto->ClassName() ;
 
   // Register integrator for appropriate dimensionalities
   if (proto->canIntegrate1D()) {
@@ -190,13 +186,13 @@ Bool_t RooNumIntConfig::addConfigSection(const RooAbsIntegrator* proto, const Ro
       _methodNDOpen.defineType(name) ;
     }
   }
-  
+
   // Store default configuration parameters
   RooArgSet* config = (RooArgSet*) inDefaultConfig.snapshot() ;
   config->setName(name.c_str());
   _configSets.Add(config) ;
 
-  return kFALSE ;
+  return false ;
 }
 
 
@@ -204,7 +200,7 @@ Bool_t RooNumIntConfig::addConfigSection(const RooAbsIntegrator* proto, const Ro
 ////////////////////////////////////////////////////////////////////////////////
 /// Return section with configuration parameters for integrator with given (class) name
 
-RooArgSet& RooNumIntConfig::getConfigSection(const char* name)  
+RooArgSet& RooNumIntConfig::getConfigSection(const char* name)
 {
   return const_cast<RooArgSet&>((const_cast<const RooNumIntConfig*>(this)->getConfigSection(name))) ;
 }
@@ -218,7 +214,7 @@ const RooArgSet& RooNumIntConfig::getConfigSection(const char* name) const
   static RooArgSet dummy ;
   RooArgSet* config = (RooArgSet*) _configSets.FindObject(name) ;
   if (!config) {
-    oocoutE((TObject*)0,InputArguments) << "RooNumIntConfig::getConfigSection: ERROR: no configuration stored for integrator '" << name << "'" << endl ;
+    oocoutE(nullptr,InputArguments) << "RooNumIntConfig::getConfigSection: ERROR: no configuration stored for integrator '" << name << "'" << endl ;
     return dummy ;
   }
   return *config ;
@@ -227,20 +223,20 @@ const RooArgSet& RooNumIntConfig::getConfigSection(const char* name) const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set absolute convergence criteria (convergence if abs(Err)<newEpsAbs)
+/// Set absolute convergence criteria (convergence if std::abs(Err)<newEpsAbs)
 
-void RooNumIntConfig::setEpsAbs(Double_t newEpsAbs)
+void RooNumIntConfig::setEpsAbs(double newEpsAbs)
 {
   if (newEpsAbs<0) {
-    oocoutE((TObject*)0,InputArguments) << "RooNumIntConfig::setEpsAbs: ERROR: target absolute precision must be greater or equal than zero" << endl ;
+    oocoutE(nullptr,InputArguments) << "RooNumIntConfig::setEpsAbs: ERROR: target absolute precision must be greater or equal than zero" << endl ;
     return ;
   }
   _epsAbs = newEpsAbs ;
 }
 
 
-RooPrintable::StyleOption RooNumIntConfig::defaultPrintStyle(Option_t* opt) const 
-{ 
+RooPrintable::StyleOption RooNumIntConfig::defaultPrintStyle(Option_t* opt) const
+{
   if (!opt) {
     return kStandard ;
   }
@@ -251,18 +247,18 @@ RooPrintable::StyleOption RooNumIntConfig::defaultPrintStyle(Option_t* opt) cons
   if (o.Contains("v")) {
     return kVerbose ;
   }
-  return kStandard ; 
+  return kStandard ;
 }
 
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set relative convergence criteria (convergence if abs(Err)/abs(Int)<newEpsRel)
+/// Set relative convergence criteria (convergence if std::abs(Err)/abs(Int)<newEpsRel)
 
-void RooNumIntConfig::setEpsRel(Double_t newEpsRel) 
+void RooNumIntConfig::setEpsRel(double newEpsRel)
 {
   if (newEpsRel<0) {
-    oocoutE((TObject*)0,InputArguments) << "RooNumIntConfig::setEpsRel: ERROR: target absolute precision must be greater or equal than zero" << endl ;
+    oocoutE(nullptr,InputArguments) << "RooNumIntConfig::setEpsRel: ERROR: target absolute precision must be greater or equal than zero" << endl ;
     return ;
   }
   _epsRel = newEpsRel ;
@@ -273,13 +269,13 @@ void RooNumIntConfig::setEpsRel(Double_t newEpsRel)
 ////////////////////////////////////////////////////////////////////////////////
 /// Detailed printing interface
 
-void RooNumIntConfig::printMultiline(ostream &os, Int_t /*content*/, Bool_t verbose, TString indent) const
+void RooNumIntConfig::printMultiline(ostream &os, Int_t /*content*/, bool verbose, TString indent) const
 {
   os << indent << "Requested precision: " << _epsAbs << " absolute, " << _epsRel << " relative" << endl << endl ;
   if (_printEvalCounter) {
     os << indent << "Printing of function evaluation counter for each integration enabled" << endl << endl ;
   }
-  
+
   os << indent << "1-D integration method: " << _method1D.getCurrentLabel() ;
   if (_method1DOpen.getCurrentIndex()!=_method1D.getCurrentIndex()) {
     os << " (" << _method1DOpen.getCurrentLabel() << " if open-ended)" << endl ;
@@ -298,7 +294,7 @@ void RooNumIntConfig::printMultiline(ostream &os, Int_t /*content*/, Bool_t verb
   } else {
     os << endl ;
   }
-  
+
   if (verbose) {
 
     os << endl << "Available integration methods:" << endl << endl ;
@@ -315,11 +311,11 @@ void RooNumIntConfig::printMultiline(ostream &os, Int_t /*content*/, Bool_t verb
 
       os << "Configuration: " << endl ;
       configSet->printMultiline(os,kName|kValue) ;
-      //configSet->writeToStream(os,kFALSE) ;
+      //configSet->writeToStream(os,false) ;
 
       const char* depName = RooNumIntFactory::instance().getDepIntegratorName(configSet->GetName()) ;
       if (strlen(depName)>0) {
-	os << indent << "(Depends on '" << depName << "')" << endl ;
+   os << indent << "(Depends on '" << depName << "')" << endl ;
       }
       os << endl ;
 

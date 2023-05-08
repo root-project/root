@@ -347,14 +347,9 @@ class raw_ostream;
   public:
     static char ID;
 
-    SlotIndexes() : MachineFunctionPass(ID), mf(nullptr) {
-      initializeSlotIndexesPass(*PassRegistry::getPassRegistry());
-    }
+    SlotIndexes();
 
-    ~SlotIndexes() override {
-      // The indexList's nodes are all allocated in the BumpPtrAllocator.
-      indexList.clearAndLeakNodesUnsafely();
-    }
+    ~SlotIndexes() override;
 
     void getAnalysisUsage(AnalysisUsage &au) const override;
     void releaseMemory() override;
@@ -387,13 +382,15 @@ class raw_ostream;
     }
 
     /// Returns the base index for the given instruction.
-    SlotIndex getInstructionIndex(const MachineInstr &MI) const {
+    SlotIndex getInstructionIndex(const MachineInstr &MI,
+                                  bool IgnoreBundle = false) const {
       // Instructions inside a bundle have the same number as the bundle itself.
       auto BundleStart = getBundleStart(MI.getIterator());
       auto BundleEnd = getBundleEnd(MI.getIterator());
       // Use the first non-debug instruction in the bundle to get SlotIndex.
       const MachineInstr &BundleNonDebug =
-          *skipDebugInstructionsForward(BundleStart, BundleEnd);
+          IgnoreBundle ? MI
+                       : *skipDebugInstructionsForward(BundleStart, BundleEnd);
       assert(!BundleNonDebug.isDebugInstr() &&
              "Could not use a debug instruction to query mi2iMap.");
       Mi2IndexMap::const_iterator itr = mi2iMap.find(&BundleNonDebug);
@@ -578,7 +575,11 @@ class raw_ostream;
     /// Removes machine instruction (bundle) \p MI from the mapping.
     /// This should be called before MachineInstr::eraseFromParent() is used to
     /// remove a whole bundle or an unbundled instruction.
-    void removeMachineInstrFromMaps(MachineInstr &MI);
+    /// If \p AllowBundled is set then this can be used on a bundled
+    /// instruction; however, this exists to support handleMoveIntoBundle,
+    /// and in general removeSingleMachineInstrFromMaps should be used instead.
+    void removeMachineInstrFromMaps(MachineInstr &MI,
+                                    bool AllowBundled = false);
 
     /// Removes a single machine instruction \p MI from the mapping.
     /// This should be called before MachineInstr::eraseFromBundle() is used to
@@ -603,30 +604,27 @@ class raw_ostream;
     }
 
     /// Add the given MachineBasicBlock into the maps.
+    /// If it contains any instructions then they must already be in the maps.
+    /// This is used after a block has been split by moving some suffix of its
+    /// instructions into a newly created block.
     void insertMBBInMaps(MachineBasicBlock *mbb) {
-      MachineFunction::iterator nextMBB =
-        std::next(MachineFunction::iterator(mbb));
+      assert(mbb != &mbb->getParent()->front() &&
+             "Can't insert a new block at the beginning of a function.");
+      auto prevMBB = std::prev(MachineFunction::iterator(mbb));
 
-      IndexListEntry *startEntry = nullptr;
-      IndexListEntry *endEntry = nullptr;
-      IndexList::iterator newItr;
-      if (nextMBB == mbb->getParent()->end()) {
-        startEntry = &indexList.back();
-        endEntry = createEntry(nullptr, 0);
-        newItr = indexList.insertAfter(startEntry->getIterator(), endEntry);
-      } else {
-        startEntry = createEntry(nullptr, 0);
-        endEntry = getMBBStartIdx(&*nextMBB).listEntry();
-        newItr = indexList.insert(endEntry->getIterator(), startEntry);
-      }
+      // Create a new entry to be used for the start of mbb and the end of
+      // prevMBB.
+      IndexListEntry *startEntry = createEntry(nullptr, 0);
+      IndexListEntry *endEntry = getMBBEndIdx(&*prevMBB).listEntry();
+      IndexListEntry *insEntry =
+          mbb->empty() ? endEntry
+                       : getInstructionIndex(mbb->front()).listEntry();
+      IndexList::iterator newItr =
+          indexList.insert(insEntry->getIterator(), startEntry);
 
       SlotIndex startIdx(startEntry, SlotIndex::Slot_Block);
       SlotIndex endIdx(endEntry, SlotIndex::Slot_Block);
 
-      MachineFunction::iterator prevMBB(mbb);
-      assert(prevMBB != mbb->getParent()->end() &&
-             "Can't insert a new block at the beginning of a function.");
-      --prevMBB;
       MBBRanges[prevMBB->getNumber()].second = startIdx;
 
       assert(unsigned(mbb->getNumber()) == MBBRanges.size() &&

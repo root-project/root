@@ -31,6 +31,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Hist
     TFractionFitter.h
     THistRange.h
     TGraph2DErrors.h
+    TGraph2DAsymmErrors.h
     TGraph2D.h
     TGraphAsymmErrors.h
     TGraphMultiErrors.h
@@ -127,6 +128,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Hist
     TGraphDelaunay2D.cxx
     TGraphDelaunay.cxx
     TGraphErrors.cxx
+    TGraph2DAsymmErrors.cxx
     TGraphSmooth.cxx
     TGraphTime.cxx
     TH1.cxx

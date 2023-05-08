@@ -1,14 +1,12 @@
 /**
- *  \ingroup HistFactory 
+ *  \ingroup HistFactory
  */
 
 // A set of utils for navegating HistFactory models
-#include <stdexcept>    
+#include <stdexcept>
 #include <typeinfo>
 
 #include "RooStats/HistFactory/ParamHistFunc.h"
-#include "TIterator.h"
-#include "RooAbsArg.h"
 #include "RooAbsPdf.h"
 #include "RooArgSet.h"
 #include "RooArgList.h"
@@ -18,7 +16,6 @@
 #include "RooProdPdf.h"
 #include "TH1.h"
 
-#include "RooStats/HistFactory/HistFactorySimultaneous.h"
 #include "RooStats/HistFactory/HistFactoryModelUtils.h"
 
 namespace RooStats{
@@ -35,8 +32,8 @@ namespace HistFactory{
 
     bool verbose=false;
 
-    if(verbose) std::cout << "Getting the RooRealSumPdf for the channel: " 
-			  << sim_channel->GetName() << std::endl;
+    if(verbose) std::cout << "Getting the RooRealSumPdf for the channel: "
+           << sim_channel->GetName() << std::endl;
 
     std::string channelPdfName = sim_channel->GetName();
     std::string ChannelName = channelPdfName.substr(6, channelPdfName.size() );
@@ -45,31 +42,27 @@ namespace HistFactory{
     // ie the channel WITHOUT constraints
     std::string realSumPdfName = ChannelName + "_model";
 
-    RooAbsPdf* sum_pdf = NULL;        
-    TIterator* iter_sum_pdf = sim_channel->getComponents()->createIterator(); //serverIterator();
+    RooAbsPdf* sum_pdf = nullptr;
     bool FoundSumPdf=false;
-    RooAbsArg* sum_pdf_arg=NULL;
-    while((sum_pdf_arg=(RooAbsArg*)iter_sum_pdf->Next())) {
-      std::string NodeClassName = sum_pdf_arg->ClassName();
-      if( NodeClassName == std::string("RooRealSumPdf") ) {
-	FoundSumPdf=true;
-	sum_pdf = (RooAbsPdf*) sum_pdf_arg;
-	break;
+    for (auto *sum_pdf_arg : *sim_channel->getComponents()) {
+        std::string NodeClassName = sum_pdf_arg->ClassName();
+        if( NodeClassName == std::string("RooRealSumPdf") ) {
+            FoundSumPdf=true;
+           sum_pdf = static_cast<RooAbsPdf*>(sum_pdf_arg);
+        break;
       }
     }
     if( ! FoundSumPdf ) {
       if(verbose) {
-	std::cout << "Failed to find RooRealSumPdf for channel: " << sim_channel->GetName() << std::endl;
-	sim_channel->getComponents()->Print("V");
+   std::cout << "Failed to find RooRealSumPdf for channel: " << sim_channel->GetName() << std::endl;
+   sim_channel->getComponents()->Print("V");
       }
-      sum_pdf=NULL;
+      sum_pdf=nullptr;
       //throw std::runtime_error("Failed to find RooRealSumPdf for channel");
-    } 
+    }
     else {
       if(verbose) std::cout << "Found RooRealSumPdf: " << sum_pdf->GetName() << std::endl;
     }
-    delete iter_sum_pdf;
-    iter_sum_pdf = NULL;
 
     return sum_pdf;
 
@@ -77,7 +70,7 @@ namespace HistFactory{
 
 
  void FactorizeHistFactoryPdf(const RooArgSet &observables, RooAbsPdf &pdf, RooArgList &obsTerms, RooArgList &constraints) {
-   // utility function to factorize constraint terms from a pdf 
+   // utility function to factorize constraint terms from a pdf
    // (from G. Petrucciani)
    const std::type_info & id = typeid(pdf);
    if (id == typeid(RooProdPdf)) {
@@ -87,14 +80,13 @@ namespace HistFactory{
          RooAbsPdf *pdfi = (RooAbsPdf *) list.at(i);
             FactorizeHistFactoryPdf(observables, *pdfi, obsTerms, constraints);
          }
-      } else if (id == typeid(RooSimultaneous) || id == typeid(HistFactorySimultaneous) ) {    //|| id == typeid(RooSimultaneousOpt)) {
+      } else if (id == typeid(RooSimultaneous)) {    //|| id == typeid(RooSimultaneousOpt)) {
          RooSimultaneous *sim  = dynamic_cast<RooSimultaneous *>(&pdf);
-         RooAbsCategoryLValue *cat = (RooAbsCategoryLValue *) sim->indexCat().Clone();
+         std::unique_ptr<RooAbsCategoryLValue> cat{static_cast<RooAbsCategoryLValue *>(sim->indexCat().Clone())};
          for (int ic = 0, nc = cat->numBins((const char *)0); ic < nc; ++ic) {
             cat->setBin(ic);
             FactorizeHistFactoryPdf(observables, *sim->getPdf(cat->getCurrentLabel()), obsTerms, constraints);
          }
-         delete cat;
       } else if (pdf.dependsOn(observables)) {
          if (!obsTerms.contains(pdf)) obsTerms.add(pdf);
       } else {
@@ -102,110 +94,27 @@ namespace HistFactory{
       }
    }
 
-  /*
-  void getChannelsFromModel( RooAbsPdf* model, RooArgSet* channels, RooArgSet* channelsWithConstraints ) {
-
-    // Loop through the model
-    // Find all channels
-
-    std::string modelClassName = model->ClassName();
-    
-    if( modelClassName == std::string("RooSimultaneous") || model->InheritsFrom("RooSimultaneous") ) {
-
-      TIterator* simServerItr = model->serverIterator();
-
-      // Loop through the child nodes of the sim pdf
-      // and find the channel nodes
-      RooAbsArg* sim_channel_arg = NULL;
-      while(( sim_channel = (RooAbsArg*) simServerItr->Next() )) {
-
-	RooAbsPdf* sim_channel = (RooAbsPdf*) sim_channel_arg;
-
-	// Ignore the Channel Cat
-	std::string channelPdfName = sim_channel->GetName();
-	std::string channelClassName = sim_channel->ClassName();
-	if( channelClassName == std::string("RooCategory") ) continue;
-
-	// If we got here, we found a channel.
-	// Format is model_<ChannelName>
-
-	std::string ChannelName = channelPdfName.substr(6, channelPdfName.size() );
-
-	// Now, get the RooRealSumPdf
-	RooAbsPdf* sum_pdf = getSumPdfFromChannel( sim_channel );
-	
-	
-	/ *
-	// Now, get the RooRealSumPdf
-	// ie the channel WITHOUT constraints
-
-	std::string realSumPdfName = ChannelName + "_model";
-
-	RooAbsPdf* sum_pdf = NULL;        
-	TIterator* iter_sum_pdf = sim_channel->getComponents()->createIterator(); //serverIterator();
-	bool FoundSumPdf=false;
-	RooAbsArg* sum_pdf_arg=NULL;
-	while((sum_pdf_arg=(RooAbsArg*)iter_sum_pdf->Next())) {
-
-	  std::string NodeClassName = sum_pdf_arg->ClassName();
-	  if( NodeClassName == std::string("RooRealSumPdf") ) {
-	    FoundSumPdf=true;
-	    sum_pdf = (RooAbsPdf*) sum_pdf_arg;
-	    break;
-	  }
-	}
-	if( ! FoundSumPdf ) {
-	  std::cout << "Failed to find RooRealSumPdf for channel: " << sim_channel->GetName() << std::endl;
-	  sim_channel->getComponents()->Print("V");
-	  throw std::runtime_error("Failed to find RooRealSumPdf for channel");
-	}                                                  
-	delete iter_sum_pdf;
-	iter_sum_pdf = NULL;
-	* /
-
-	// Okay, now add to the arg sets
-	channels->add( *sum_pdf );
-	channelsWithConstraints->add( *sim_channel );
-
-      }
-
-      delete simServerItr;
-
-    }
-    else {
-      std::cout << "Model is not a RooSimultaneous or doesn't derive from one." << std::endl;
-      std::cout << "HistFactoryModelUtils isn't yet implemented for these pdf's" << std::endl;
-    }
-
-  }
-  */
 
   bool getStatUncertaintyFromChannel( RooAbsPdf* channel, ParamHistFunc*& paramfunc, RooArgList* gammaList ) {
 
     bool verbose=false;
 
     // Find the servers of this channel
-    //TIterator* iter = channel->serverIterator();
-    TIterator* iter = channel->getComponents()->createIterator(); //serverIterator();
     bool FoundParamHistFunc=false;
-    RooAbsArg* paramfunc_arg = NULL;        
-    while(( paramfunc_arg = (RooAbsArg*) iter->Next() )) {
+    for( auto *paramfunc_arg : *channel->getComponents() ) {
       std::string NodeName = paramfunc_arg->GetName();
       std::string NodeClassName = paramfunc_arg->ClassName();
       if( NodeClassName != std::string("ParamHistFunc") ) continue;
       if( NodeName.find("mc_stat_") != std::string::npos ) {
-	FoundParamHistFunc=true;
-	paramfunc = (ParamHistFunc*) paramfunc_arg;
-	break;
+        FoundParamHistFunc=true;
+        paramfunc = static_cast<ParamHistFunc*>(paramfunc_arg);
+        break;
       }
     }
     if( ! FoundParamHistFunc || !paramfunc ) {
       if(verbose) std::cout << "Failed to find ParamHistFunc for channel: " << channel->GetName() << std::endl;
       return false;
-    }                                               
-    
-    delete iter;
-    iter = NULL;
+    }
 
     // Now, get the set of gamma's
     gammaList = (RooArgList*) &( paramfunc->paramList());
@@ -214,34 +123,27 @@ namespace HistFactory{
     return true;
 
   }
-  
+
 
   void getDataValuesForObservables( std::map< std::string, std::vector<double> >& ChannelBinDataMap,
-				    RooAbsData* data, RooAbsPdf* pdf ) {
+                RooAbsData* data, RooAbsPdf* pdf ) {
 
     bool verbose=false;
-
-    //std::map< std::string, std::vector<int>  ChannelBinDataMap;
 
     RooSimultaneous* simPdf = (RooSimultaneous*) pdf;
 
     // get category label
-    RooArgSet* allobs = (RooArgSet*) data->get();
-    TIterator* obsIter = allobs->createIterator();
-    RooCategory* cat = NULL;
-    RooAbsArg* temp = NULL;
-    while( (temp=(RooAbsArg*) obsIter->Next())) {
-      // use dynamic cast here instead
+    RooCategory* cat = nullptr;
+    for (auto* temp : *data->get()) {
       if( strcmp(temp->ClassName(),"RooCategory")==0){
-	cat = (RooCategory*) temp;
-	break;
+          cat = static_cast<RooCategory*>(temp);
+        break;
       }
     }
     if(verbose) {
       if(!cat) std::cout <<"didn't find category"<< std::endl;
       else std::cout <<"found category"<< std::endl;
     }
-    delete obsIter;
 
     if (!cat) {
        std::cerr <<"Category not found"<< std::endl;
@@ -249,7 +151,7 @@ namespace HistFactory{
     }
 
     // split dataset
-    TList* dataByCategory = data->split(*cat);
+    std::unique_ptr<TList> dataByCategory{data->split(*cat)};
     if(verbose) dataByCategory->Print();
     // note :
     // RooAbsData* dataForChan = (RooAbsData*) dataByCategory->FindObject("");
@@ -269,7 +171,7 @@ namespace HistFactory{
       if(verbose) dataForChan->Print();
 
       // Generate observables defined by the pdf associated with this state
-      RooArgSet* obstmp = pdftmp->getObservables(*dataForChan->get()) ;   
+      RooArgSet* obstmp = pdftmp->getObservables(*dataForChan->get()) ;
       RooRealVar* obs = ((RooRealVar*)obstmp->first());
       if(verbose) obs->Print();
 
@@ -283,27 +185,29 @@ namespace HistFactory{
 
       // get num events expected in bin for obsVal
       // double nu = expected * fracAtObsValue;
+
+      // multidimensional way to get n
+      // credit goes to P. Hamilton
+      for (int i = 0; i < dataForChan->numEntries(); i++) {
+        const RooArgSet *tmpargs = dataForChan->get(i);
+         if (verbose)
+           tmpargs->Print();
+         const double n = dataForChan->weight();
+         if (verbose)
+           std::cout << "n" << i << " = " << n << std::endl;
+         ChannelBinDataMap[ChannelName].push_back(n);
+       }
       
-      // an easier way to get n
-      TH1* histForN = dataForChan->createHistogram("HhstForN",*obs);
-      for(int i=1; i<=histForN->GetNbinsX(); ++i){
-	double n = histForN->GetBinContent(i);
-	if(verbose) std::cout << "n" <<  i << " = " << n  << std::endl;
-	ChannelBinDataMap[ ChannelName ].push_back( n ); 
-      }
-      delete histForN;
-    
     } // End Loop Over Categories
 
     dataByCategory->Delete();
-    delete dataByCategory;
   }
 
 
-  int getStatUncertaintyConstraintTerm( RooArgList* constraints, RooRealVar* gamma_stat, 
-					RooAbsReal*& pois_nom, RooRealVar*& tau ) {
-    // Given a set of constraint terms, 
-    // find the poisson constraint for the 
+  int getStatUncertaintyConstraintTerm( RooArgList* constraints, RooRealVar* gamma_stat,
+               RooAbsReal*& pois_nom, RooRealVar*& tau ) {
+    // Given a set of constraint terms,
+    // find the poisson constraint for the
     // given gamma and return the mean
     // as well as the 'tau' parameter
 
@@ -311,39 +215,33 @@ namespace HistFactory{
 
     // To get the constraint term, loop over all constraint terms
     // and look for the gamma_stat name as well as '_constraint'
-    // std::string constraintTermName = std::string(gamma_stat->GetName()) + "_constraint";
-    TIterator* iter_list = constraints->createIterator();
-    RooAbsArg* term_constr=NULL;
+
     bool FoundConstraintTerm=false;
-    RooAbsPdf* constraintTerm=NULL;
-    while((term_constr=(RooAbsArg*)iter_list->Next())) {
+    RooAbsPdf* constraintTerm=nullptr;
+    for (auto *term_constr : *constraints) {
       std::string TermName = term_constr->GetName();
-      // std::cout << "Checking if is a constraint term: " << TermName << std::endl;
-      
-      //if( TermName.find(gamma_stat->GetName())!=string::npos ) {
       if( term_constr->dependsOn( *gamma_stat) ) {
-	if( TermName.find("_constraint")!=std::string::npos ) {
-	  FoundConstraintTerm=true;
-	  constraintTerm = (RooAbsPdf*) term_constr;
-	  break;
-	}
+        if( TermName.find("_constraint")!=std::string::npos ) {
+          FoundConstraintTerm=true;
+          constraintTerm = static_cast<RooAbsPdf*>(term_constr);
+          break;
+        }
       }
     }
     if( FoundConstraintTerm==false ) {
       std::cout << "Error: Couldn't find constraint term for parameter: " << gamma_stat->GetName()
-		<< " among constraints: " << constraints->GetName() <<  std::endl;
+      << " among constraints: " << constraints->GetName() <<  std::endl;
       constraints->Print("V");
       throw std::runtime_error("Failed to find Gamma ConstraintTerm");
       return -1;
     }
-    delete iter_list;
 
     /*
     RooAbsPdf* constraintTerm = (RooAbsPdf*) constraints->find( constraintTermName.c_str() );
-    if( constraintTerm == NULL ) {
+    if( constraintTerm == nullptr ) {
       std::cout << "Error: Couldn't find constraint term: " << constraintTermName
-		<< " for parameter: " << gamma_stat->GetName()
-		<< std::endl;
+      << " for parameter: " << gamma_stat->GetName()
+      << std::endl;
       throw std::runtime_error("Failed to find Gamma ConstraintTerm");
       return -1;
     }
@@ -352,19 +250,17 @@ namespace HistFactory{
     // Find the "data" of the poisson term
     // This is the nominal value
     bool FoundNomMean=false;
-    TIter iter_pois = constraintTerm->serverIterator(); //constraint_args
-    RooAbsArg* term_pois ;
-    while((term_pois=(RooAbsArg*)iter_pois.Next())) {
+    for (RooAbsArg * term_pois : constraintTerm->servers()) {
       std::string serverName = term_pois->GetName();
       //std::cout << "Checking Server: " << serverName << std::endl;
       if( serverName.find("nom_")!=std::string::npos ) {
-	FoundNomMean = true;  
-	pois_nom = (RooRealVar*) term_pois;
+   FoundNomMean = true;
+   pois_nom = (RooRealVar*) term_pois;
       }
     }
     if( !FoundNomMean || !pois_nom ) {
       std::cout << "Error: Did not find Nominal Pois Mean parameter in gamma constraint term PoissonMean: "
-		<< constraintTerm->GetName() << std::endl;
+      << constraintTerm->GetName() << std::endl;
       throw std::runtime_error("Failed to find Nom Pois Mean");
     }
     else {
@@ -374,20 +270,16 @@ namespace HistFactory{
     // Taking the constraint term (a Poisson), find
     // the "mean" which is the product: gamma*tau
     // Then, from that mean, find tau
-    TIter iter_constr = constraintTerm->serverIterator(); //constraint_args
-    RooAbsArg* pois_mean_arg=NULL;
-    bool FoundPoissonMean = false;
-    while(( pois_mean_arg = (RooAbsArg*) iter_constr.Next() )) {
-      std::string serverName = pois_mean_arg->GetName();
-      if( pois_mean_arg->dependsOn( *gamma_stat ) ) {
-	FoundPoissonMean=true;
-	// pois_mean = (RooAbsReal*) pois_mean_arg;
-	break;
+    RooAbsArg * pois_mean_arg = nullptr;
+    for (RooAbsArg * arg : constraintTerm->servers()) {
+      if( arg->dependsOn( *gamma_stat ) ) {
+        pois_mean_arg = arg;
+        break;
       }
     }
-    if( !FoundPoissonMean || !pois_mean_arg ) {
+    if( !pois_mean_arg ) {
       std::cout << "Error: Did not find PoissonMean parameter in gamma constraint term: "
-		<< constraintTerm->GetName() << std::endl;
+      << constraintTerm->GetName() << std::endl;
       throw std::runtime_error("Failed to find PoissonMean");
       return -1;
     }
@@ -395,20 +287,18 @@ namespace HistFactory{
       if(verbose) std::cout << "Found Poisson 'mean' term: " << pois_mean_arg->GetName() << std::endl;
     }
 
-    TIter iter_product = pois_mean_arg->serverIterator(); //constraint_args
-    RooAbsArg* term_in_product ;
     bool FoundTau=false;
-    while((term_in_product=(RooAbsArg*)iter_product.Next())) {
+    for(RooAbsArg* term_in_product : pois_mean_arg->servers()) {
       std::string serverName = term_in_product->GetName();
       //std::cout << "Checking Server: " << serverName << std::endl;
       if( serverName.find("_tau")!=std::string::npos ) {
-	FoundTau = true;  
-	tau = (RooRealVar*) term_in_product;
+   FoundTau = true;
+   tau = (RooRealVar*) term_in_product;
       }
     }
     if( !FoundTau || !tau ) {
       std::cout << "Error: Did not find Tau parameter in gamma constraint term PoissonMean: "
-		<< pois_mean_arg->GetName() << std::endl;
+      << pois_mean_arg->GetName() << std::endl;
       throw std::runtime_error("Failed to find Tau");
     }
     else {

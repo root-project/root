@@ -23,22 +23,20 @@ public:
    WrapperRooPdf(RooAbsPdf * pdf, const std::string xvar = "x", bool norm = true) :
       fNorm(norm),
       fPdf(pdf),
-      fX(0),
-      fParams(0)
+      fX(0)
    {
-      assert(fPdf != 0);
+      assert(fPdf != nullptr);
 
-      RooArgSet *vars = fPdf->getVariables();
+      std::unique_ptr<RooArgSet> vars{fPdf->getVariables()};
       RooAbsArg * arg = vars->find(xvar.c_str());  // code should abort if not found
       if (!arg) std::cout <<"Error - observable " << xvar << "is not in the list of pdf variables" << std::endl;
-      assert(arg != 0);
+      assert(arg != nullptr);
       RooArgSet obsList(*arg);
       //arg.setDirtyInhibit(true); // do have faster setter of values
       fX = fPdf->getObservables(obsList);
-      fParams = fPdf->getParameters(obsList);
-      assert(fX!=0);
-      assert(fParams!=0);
-      delete vars;
+      fParams = std::unique_ptr<RooArgSet>{fPdf->getParameters(obsList)};
+      assert(fX != nullptr);
+      assert(fParams != nullptr);
 #ifdef DEBUG
       fX->Print("v");
       fParams->Print("v");
@@ -54,15 +52,14 @@ public:
    WrapperRooPdf(RooAbsPdf * pdf, const RooArgSet & obsList, bool norm = true ) :
       fNorm(norm),
       fPdf(pdf),
-      fX(0),
-      fParams(0)
+      fX(nullptr)
    {
-      assert(fPdf != 0);
+      assert(fPdf != nullptr);
 
       fX = fPdf->getObservables(obsList);
-      fParams = fPdf->getParameters(obsList);
-      assert(fX!=0);
-      assert(fParams!=0);
+      fParams = std::unique_ptr<RooArgSet>{fPdf->getParameters(obsList)};
+      assert(fX != nullptr);
+      assert(fParams != nullptr);
 #ifdef DEBUG
       fX->Print("v");
       fParams->Print("v");
@@ -78,10 +75,9 @@ public:
    }
 
 
-   ~WrapperRooPdf() {
+   ~WrapperRooPdf() override {
       // need to delete observables and parameter list
       if (fX) delete fX;
-      if (fParams) delete fParams;
    }
 
    /**
@@ -92,18 +88,18 @@ public:
 #else
      ROOT::Math::IMultiGenFunction
 #endif
-     * Clone() const {
+     * Clone() const override {
       // copy the pdf function pointer
       return new WrapperRooPdf(fPdf, *fX, fNorm);
    }
 
-   unsigned int NPar() const {
+   unsigned int NPar() const override {
       return fParams->getSize();
    }
-   unsigned int NDim() const {
+   unsigned int NDim() const override {
       return fX->getSize();
    }
-   const double * Parameters() const {
+   const double * Parameters() const override {
       if (fParamValues.size() != NPar() )
          fParamValues.resize(NPar() );
 
@@ -113,19 +109,19 @@ public:
 
       RooRealVar* var = nullptr;
       while( ( var = dynamic_cast<RooRealVar*>(itr.Next() ) ) ) {
-         assert(var != 0);
+         assert(var != nullptr);
          *vpitr++ = var->getVal();
       }
       return &fParamValues.front();
    }
 
-   std::string ParameterName(unsigned int i) const {
+   std::string ParameterName(unsigned int i) const override {
       // iterate on parameters and set values
       TIter itr = fParams->createIterator() ;
       RooRealVar* var = nullptr;
       unsigned int index = 0;
       while( ( var = dynamic_cast<RooRealVar*>(itr.Next() ) ) ) {
-         assert(var != 0);
+         assert(var != nullptr);
          if (index == i) return std::string(var->GetName() );
          index++;
       }
@@ -137,7 +133,7 @@ public:
       set parameters. Order of parameter is the one defined by the RooPdf and must be checked by user
     */
 
-   void SetParameters(const double * p) {
+   void SetParameters(const double * p) override {
       DoSetParameters(p);
    }
 
@@ -162,16 +158,16 @@ public:
 
 private:
 
-   double DoEvalPar(const double * x, const double * p) const {
+   double DoEvalPar(const double * x, const double * p) const override {
 
       // should maybe be optimized ???
       DoSetParameters(p);
 
       // iterate on observables
       TIter itr = fX->createIterator() ;
-      RooRealVar* var = 0;
+      RooRealVar* var = nullptr;
       while( ( var = dynamic_cast<RooRealVar*>(itr.Next() ) ) ) {
-         assert(var != 0);
+         assert(var != nullptr);
 #ifndef _WIN32
          var->setDirtyInhibit(true);
 #endif
@@ -193,7 +189,7 @@ private:
       TIter itr = fParams->createIterator() ;
       RooRealVar* var = nullptr;
       while( ( var = dynamic_cast<RooRealVar*>(itr.Next() ) ) ) {
-         assert(var != 0);
+         assert(var != nullptr);
          var->setVal(*p++);
       }
       // debug
@@ -204,7 +200,7 @@ private:
    bool fNorm;
    mutable RooAbsPdf * fPdf;
    mutable RooArgSet * fX;
-   mutable RooArgSet * fParams;
+   mutable std::unique_ptr<RooArgSet> fParams;
    mutable std::vector<double> fParamValues;
 
 

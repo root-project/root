@@ -46,7 +46,7 @@ public:
    // - Thread #2) a task starts and overwrites thread-local TTreeReaderValues
    // - Thread #1) first task deletes TTreeReader
    // See https://github.com/root-project/root/commit/26e8ace6e47de6794ac9ec770c3bbff9b7f2e945
-   ~RTreeColumnReader() { fTreeValue.reset(); }
+   ~RTreeColumnReader() override { fTreeValue.reset(); }
 };
 
 /// RTreeColumnReader specialization for TTree values read via TTreeReaderArrays.
@@ -65,12 +65,16 @@ class R__CLING_PTRCHECK(off) RTreeColumnReader<RVec<T>> final : public ROOT::Det
    /// Signal whether we ever checked that the branch we are reading with a TTreeReaderArray stores array elements
    /// in contiguous memory.
    EStorageType fStorageType = EStorageType::kUnknown;
+   Long64_t fLastEntry = -1;
 
    /// Whether we already printed a warning about performing a copy of the TTreeReaderArray contents
    bool fCopyWarningPrinted = false;
 
-   void *GetImpl(Long64_t) final
+   void *GetImpl(Long64_t entry) final
    {
+      if (entry == fLastEntry)
+         return &fRVec; // we already pointed our fRVec to the right address
+
       auto &readerArray = *fTreeArray;
       // We only use TTreeReaderArrays to read columns that users flagged as type `RVec`, so we need to check
       // that the branch stores the array as contiguous memory that we can actually wrap in an `RVec`.
@@ -96,10 +100,10 @@ class R__CLING_PTRCHECK(off) RTreeColumnReader<RVec<T>> final : public ROOT::Det
             // the address returned by the GetAddress method
             auto readerArrayAddr = &readerArray.At(0);
             RVec<T> rvec(readerArrayAddr, readerArraySize);
-            std::swap(fRVec, rvec);
+            swap(fRVec, rvec);
          } else {
             RVec<T> emptyVec{};
-            std::swap(fRVec, emptyVec);
+            swap(fRVec, emptyVec);
          }
       } else {
          // The storage is not contiguous or we don't know yet: we cannot but copy into the rvec
@@ -116,12 +120,13 @@ class R__CLING_PTRCHECK(off) RTreeColumnReader<RVec<T>> final : public ROOT::Det
 #endif
          if (readerArraySize > 0) {
             RVec<T> rvec(readerArray.begin(), readerArray.end());
-            std::swap(fRVec, rvec);
+            swap(fRVec, rvec);
          } else {
             RVec<T> emptyVec{};
-            std::swap(fRVec, emptyVec);
+            swap(fRVec, emptyVec);
          }
       }
+      fLastEntry = entry;
       return &fRVec;
    }
 
@@ -132,7 +137,7 @@ public:
    }
 
    /// See the other class template specializations for an explanation.
-   ~RTreeColumnReader() { fTreeArray.reset(); }
+   ~RTreeColumnReader() override { fTreeArray.reset(); }
 };
 
 /// RTreeColumnReader specialization for arrays of boolean values read via TTreeReaderArrays.
@@ -158,10 +163,10 @@ class R__CLING_PTRCHECK(off) RTreeColumnReader<RVec<bool>> final : public ROOT::
       if (readerArraySize > 0) {
          // always perform a copy
          RVec<bool> rvec(readerArray.begin(), readerArray.end());
-         std::swap(fRVec, rvec);
+         swap(fRVec, rvec);
       } else {
          RVec<bool> emptyVec{};
-         std::swap(fRVec, emptyVec);
+         swap(fRVec, emptyVec);
       }
       return &fRVec;
    }
@@ -173,7 +178,7 @@ public:
    }
 
    /// See the other class template specializations for an explanation.
-   ~RTreeColumnReader() { fTreeArray.reset(); }
+   ~RTreeColumnReader() override { fTreeArray.reset(); }
 };
 
 } // namespace RDF

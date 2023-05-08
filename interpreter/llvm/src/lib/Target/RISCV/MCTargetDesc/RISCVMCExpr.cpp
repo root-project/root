@@ -13,7 +13,6 @@
 
 #include "RISCVMCExpr.h"
 #include "MCTargetDesc/RISCVAsmBackend.h"
-#include "RISCV.h"
 #include "RISCVFixupKinds.h"
 #include "llvm/BinaryFormat/ELF.h"
 #include "llvm/MC/MCAsmLayout.h"
@@ -47,7 +46,7 @@ void RISCVMCExpr::printImpl(raw_ostream &OS, const MCAsmInfo *MAI) const {
     OS << ')';
 }
 
-const MCFixup *RISCVMCExpr::getPCRelHiFixup() const {
+const MCFixup *RISCVMCExpr::getPCRelHiFixup(const MCFragment **DFOut) const {
   MCValue AUIPCLoc;
   if (!getSubExpr()->evaluateAsRelocatable(AUIPCLoc, nullptr, nullptr))
     return nullptr;
@@ -81,6 +80,8 @@ const MCFixup *RISCVMCExpr::getPCRelHiFixup() const {
     case RISCV::fixup_riscv_tls_got_hi20:
     case RISCV::fixup_riscv_tls_gd_hi20:
     case RISCV::fixup_riscv_pcrel_hi20:
+      if (DFOut)
+        *DFOut = DF;
       return &F;
     }
   }
@@ -88,93 +89,19 @@ const MCFixup *RISCVMCExpr::getPCRelHiFixup() const {
   return nullptr;
 }
 
-bool RISCVMCExpr::evaluatePCRelLo(MCValue &Res, const MCAsmLayout *Layout,
-                                  const MCFixup *Fixup) const {
-  // VK_RISCV_PCREL_LO has to be handled specially.  The MCExpr inside is
-  // actually the location of a auipc instruction with a VK_RISCV_PCREL_HI fixup
-  // pointing to the real target.  We need to generate an MCValue in the form of
-  // (<real target> + <offset from this fixup to the auipc fixup>).  The Fixup
-  // is pcrel relative to the VK_RISCV_PCREL_LO fixup, so we need to add the
-  // offset to the VK_RISCV_PCREL_HI Fixup from VK_RISCV_PCREL_LO to correct.
-
-  // Don't try to evaluate if the fixup will be forced as a relocation (e.g.
-  // as linker relaxation is enabled). If we evaluated pcrel_lo in this case,
-  // the modified fixup will be converted into a relocation that no longer
-  // points to the pcrel_hi as the linker requires.
-  auto &RAB =
-      static_cast<RISCVAsmBackend &>(Layout->getAssembler().getBackend());
-  if (RAB.willForceRelocations())
-    return false;
-
-  MCValue AUIPCLoc;
-  if (!getSubExpr()->evaluateAsValue(AUIPCLoc, *Layout))
-    return false;
-
-  const MCSymbolRefExpr *AUIPCSRE = AUIPCLoc.getSymA();
-  // Don't try to evaluate %pcrel_hi/%pcrel_lo pairs that cross fragment
-  // boundries.
-  if (!AUIPCSRE ||
-      findAssociatedFragment() != AUIPCSRE->findAssociatedFragment())
-    return false;
-
-  const MCSymbol *AUIPCSymbol = &AUIPCSRE->getSymbol();
-  if (!AUIPCSymbol)
-    return false;
-
-  const MCFixup *TargetFixup = getPCRelHiFixup();
-  if (!TargetFixup)
-    return false;
-
-  if ((unsigned)TargetFixup->getKind() != RISCV::fixup_riscv_pcrel_hi20)
-    return false;
-
-  MCValue Target;
-  if (!TargetFixup->getValue()->evaluateAsValue(Target, *Layout))
-    return false;
-
-  if (!Target.getSymA() || !Target.getSymA()->getSymbol().isInSection())
-    return false;
-
-  if (&Target.getSymA()->getSymbol().getSection() !=
-      findAssociatedFragment()->getParent())
-    return false;
-
-  uint64_t AUIPCOffset = AUIPCSymbol->getOffset();
-
-  Res = MCValue::get(Target.getSymA(), nullptr,
-                     Target.getConstant() + (Fixup->getOffset() - AUIPCOffset));
-  return true;
-}
-
 bool RISCVMCExpr::evaluateAsRelocatableImpl(MCValue &Res,
                                             const MCAsmLayout *Layout,
                                             const MCFixup *Fixup) const {
-  if (Kind == VK_RISCV_PCREL_LO && evaluatePCRelLo(Res, Layout, Fixup))
-    return true;
-
-  if (!getSubExpr()->evaluateAsRelocatable(Res, Layout, Fixup))
+  // Explicitly drop the layout and assembler to prevent any symbolic folding in
+  // the expression handling.  This is required to preserve symbolic difference
+  // expressions to emit the paired relocations.
+  if (!getSubExpr()->evaluateAsRelocatable(Res, nullptr, nullptr))
     return false;
 
-  // Some custom fixup types are not valid with symbol difference expressions
-  if (Res.getSymA() && Res.getSymB()) {
-    switch (getKind()) {
-    default:
-      return true;
-    case VK_RISCV_LO:
-    case VK_RISCV_HI:
-    case VK_RISCV_PCREL_LO:
-    case VK_RISCV_PCREL_HI:
-    case VK_RISCV_GOT_HI:
-    case VK_RISCV_TPREL_LO:
-    case VK_RISCV_TPREL_HI:
-    case VK_RISCV_TPREL_ADD:
-    case VK_RISCV_TLS_GOT_HI:
-    case VK_RISCV_TLS_GD_HI:
-      return false;
-    }
-  }
-
-  return true;
+  Res =
+      MCValue::get(Res.getSymA(), Res.getSymB(), Res.getConstant(), getKind());
+  // Custom fixup types are not valid with symbol difference expressions.
+  return Res.getSymB() ? getKind() == VK_RISCV_None : true;
 }
 
 void RISCVMCExpr::visitUsedExpr(MCStreamer &Streamer) const {
@@ -198,7 +125,8 @@ RISCVMCExpr::VariantKind RISCVMCExpr::getVariantKindForName(StringRef name) {
 
 StringRef RISCVMCExpr::getVariantKindName(VariantKind Kind) {
   switch (Kind) {
-  default:
+  case VK_RISCV_Invalid:
+  case VK_RISCV_None:
     llvm_unreachable("Invalid ELF symbol kind");
   case VK_RISCV_LO:
     return "lo";
@@ -220,7 +148,14 @@ StringRef RISCVMCExpr::getVariantKindName(VariantKind Kind) {
     return "tls_ie_pcrel_hi";
   case VK_RISCV_TLS_GD_HI:
     return "tls_gd_pcrel_hi";
+  case VK_RISCV_CALL:
+    return "call";
+  case VK_RISCV_CALL_PLT:
+    return "call_plt";
+  case VK_RISCV_32_PCREL:
+    return "32_pcrel";
   }
+  llvm_unreachable("Invalid ELF symbol kind");
 }
 
 static void fixELFSymbolsInTLSFixupsImpl(const MCExpr *Expr, MCAssembler &Asm) {

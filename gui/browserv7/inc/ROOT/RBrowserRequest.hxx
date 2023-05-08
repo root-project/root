@@ -33,6 +33,7 @@ public:
    bool reverse{false};   ///< reverse item order
    bool hidden{false};    ///< show hidden files
    bool reload{false};    ///< force items reload
+   int lastcycle{0};      ///< show only last cycle, -1 - off, 0 - not change, +1 on,
    std::string regex;     ///< applied regex
 };
 

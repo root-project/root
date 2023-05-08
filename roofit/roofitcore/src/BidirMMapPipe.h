@@ -786,7 +786,7 @@ class BidirMMapPipe {
          * @returns pipe read from
          *
          * since this is for C-style strings, we use malloc/realloc/free for
-         * strings. passing in a NULL pointer is valid here, and the routine
+         * strings. passing in a nullptr pointer is valid here, and the routine
          * will use realloc to allocate a chunk of memory of the right size.
          */
         BidirMMapPipe& operator>>(char* (&str));

@@ -20,7 +20,7 @@ RFilterBase::RFilterBase(RLoopManager *implPtr, std::string_view name, const uns
                          const RDFInternal::RColumnRegister &colRegister, const ColumnNames_t &columns,
                          const std::vector<std::string> &prevVariations, const std::string &variation)
    : RNodeBase(ROOT::Internal::RDF::Union(colRegister.GetVariationDeps(columns), prevVariations), implPtr),
-     fLastCheckedEntry(std::vector<Long64_t>(nSlots * RDFInternal::CacheLineStep<Long64_t>(), -1)),
+     fLastCheckedEntry(nSlots * RDFInternal::CacheLineStep<Long64_t>(), -1),
      fLastResult(nSlots * RDFInternal::CacheLineStep<int>()),
      fAccepted(nSlots * RDFInternal::CacheLineStep<ULong64_t>()),
      fRejected(nSlots * RDFInternal::CacheLineStep<ULong64_t>()), fName(name), fColumnNames(columns),
@@ -28,9 +28,9 @@ RFilterBase::RFilterBase(RLoopManager *implPtr, std::string_view name, const uns
 {
    const auto nColumns = fColumnNames.size();
    for (auto i = 0u; i < nColumns; ++i) {
-      fIsDefine[i] = fColRegister.HasName(fColumnNames[i]);
+      fIsDefine[i] = fColRegister.IsDefineOrAlias(fColumnNames[i]);
       if (fVariation != "nominal" && fIsDefine[i])
-         fColRegister.GetColumns().at(fColumnNames[i])->MakeVariations({fVariation});
+         fColRegister.GetDefine(fColumnNames[i])->MakeVariations({fVariation});
    }
 }
 

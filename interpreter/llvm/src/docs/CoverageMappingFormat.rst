@@ -12,49 +12,26 @@ Introduction
 ============
 
 LLVM's code coverage mapping format is used to provide code coverage
-analysis using LLVM's and Clang's instrumenation based profiling
+analysis using LLVM's and Clang's instrumentation based profiling
 (Clang's ``-fprofile-instr-generate`` option).
 
-This document is aimed at those who use LLVM's code coverage mapping to provide
-code coverage analysis for their own programs, and for those who would like
-to know how it works under the hood. A prior knowledge of how Clang's profile
-guided optimization works is useful, but not required.
+This document is aimed at those who would like to know how LLVM's code coverage
+mapping works under the hood. A prior knowledge of how Clang's profile guided
+optimization works is useful, but not required. For those interested in using
+LLVM to provide code coverage analysis for their own programs, see the `Clang
+documentation <https://clang.llvm.org/docs/SourceBasedCodeCoverage.html>`.
 
-We start by showing how to use LLVM and Clang for code coverage analysis,
-then we briefly describe LLVM's code coverage mapping format and the
+We start by briefly describing LLVM's code coverage mapping format and the
 way that Clang and LLVM's code coverage tool work with this format. After
 the basics are down, more advanced features of the coverage mapping format
 are discussed - such as the data structures, LLVM IR representation and
 the binary encoding.
 
-Quick Start
-===========
-
-Here's a short story that describes how to generate code coverage overview
-for a sample source file called *test.c*.
-
-* First, compile an instrumented version of your program using Clang's
-  ``-fprofile-instr-generate`` option with the additional ``-fcoverage-mapping``
-  option:
-
-  ``clang -o test -fprofile-instr-generate -fcoverage-mapping test.c``
-* Then, run the instrumented binary. The runtime will produce a file called
-  *default.profraw* containing the raw profile instrumentation data:
-
-  ``./test``
-* After that, merge the profile data using the *llvm-profdata* tool:
-
-  ``llvm-profdata merge -o test.profdata default.profraw``
-* Finally, run LLVM's code coverage tool (*llvm-cov*) to produce the code
-  coverage overview for the sample source file:
-
-  ``llvm-cov show ./test -instr-profile=test.profdata test.c``
-
 High Level Overview
 ===================
 
 LLVM's code coverage mapping format is designed to be a self contained
-data format, that can be embedded into the LLVM IR and object files.
+data format that can be embedded into the LLVM IR and into object files.
 It's described in this document as a **mapping** format because its goal is
 to store the data that is required for a code coverage tool to map between
 the specific source ranges in a file and the execution counts obtained
@@ -149,6 +126,25 @@ There are several kinds of mapping regions:
   <span style='background-color:#4A789C'>  return </span><span style='background-color:#7FCA9F'>MAX</span><span style='background-color:#4A789C'>(x, 42);                          </span> <span class='c1'>// Expansion Region from 3:10 to 3:13</span>
   <span style='background-color:#4A789C'>}</span>
   </pre>`
+* Branch regions associate instrumentable branch conditions in the source code
+  with a `coverage mapping counter`_ to track how many times an individual
+  condition evaluated to 'true' and another `coverage mapping counter`_ to
+  track how many times that condition evaluated to false.  Instrumentable
+  branch conditions may comprise larger boolean expressions using boolean
+  logical operators.  The 'true' and 'false' cases reflect unique branch paths
+  that can be traced back to the source code.
+  For example:
+
+  :raw-html:`<pre class='highlight' style='line-height:initial;'><span>int func(int x, int y) {
+  <span>  if (<span style='background-color:#4A789C'>(x &gt; 1)</span> || <span style='background-color:#4A789C'>(y &gt; 3)</span>) {</span>  <span class='c1'>// Branch Region from 3:6 to 3:12</span>
+  <span>                             </span><span class='c1'>// Branch Region from 3:17 to 3:23</span>
+  <span>    printf("%d\n", x);              </span>
+  <span>  } else {                                </span>
+  <span>    printf("\n");                         </span>
+  <span>  }</span>
+  <span>  return 0;                                 </span>
+  <span>}</span>
+  </pre>`
 
 .. _source code range:
 
@@ -221,12 +217,17 @@ counts for the unreachable lines and highlight the unreachable code.
 Without them, the tool would think that those lines and regions were still
 executed, as it doesn't possess the frontend's knowledge.
 
+Note that branch regions are created to track branch conditions in the source
+code and refer to two coverage mapping counters, one to track the number of
+times the branch condition evaluated to "true", and one to track the number of
+times the branch condition evaluated to "false".
+
 LLVM IR Representation
 ======================
 
-The coverage mapping data is stored in the LLVM IR using a single global
-constant structure variable called *__llvm_coverage_mapping*
-with the *__llvm_covmap* section specifier.
+The coverage mapping data is stored in the LLVM IR using a global constant
+structure variable called *__llvm_coverage_mapping* with the *IPSK_covmap*
+section specifier (i.e. ".lcovmap$M" on Windows and "__llvm_covmap" elsewhere).
 
 For example, let’s consider a C file and how it gets compiled to LLVM:
 
@@ -241,42 +242,61 @@ For example, let’s consider a C file and how it gets compiled to LLVM:
     return 13;
   }
 
-The coverage mapping variable generated by Clang has 3 fields:
+The coverage mapping variable generated by Clang has 2 fields:
 
 * Coverage mapping header.
 
-* An array of function records.
+* An optionally compressed list of filenames present in the translation unit.
 
-* Coverage mapping data which is an array of bytes. Zero paddings are added at the end to force 8 byte alignment.
+The variable has 8-byte alignment because ld64 cannot always pack symbols from
+different object files tightly (the word-level alignment assumption is baked in
+too deeply).
 
 .. code-block:: llvm
 
-  @__llvm_coverage_mapping = internal constant { { i32, i32, i32, i32 }, [2 x { i64, i32, i64 }], [40 x i8] }
-  { 
+  @__llvm_coverage_mapping = internal constant { { i32, i32, i32, i32 }, [32 x i8] }
+  {
     { i32, i32, i32, i32 } ; Coverage map header
     {
-      i32 2,  ; The number of function records
-      i32 20, ; The length of the string that contains the encoded translation unit filenames
-      i32 20, ; The length of the string that contains the encoded coverage mapping data
-      i32 2,  ; Coverage mapping format version
+      i32 0,  ; Always 0. In prior versions, the number of affixed function records
+      i32 32, ; The length of the string that contains the encoded translation unit filenames
+      i32 0,  ; Always 0. In prior versions, the length of the affixed string that contains the encoded coverage mapping data
+      i32 3,  ; Coverage mapping format version
     },
-    [2 x { i64, i32, i64 }] [ ; Function records
-     { i64, i32, i64 } {
-       i64 0x5cf8c24cdb18bdac, ; Function's name MD5
-       i32 9, ; Function's encoded coverage mapping data string length
-       i64 0  ; Function's structural hash
-     },
-     { i64, i32, i64 } { 
-       i64 0xe413754a191db537, ; Function's name MD5
-       i32 9, ; Function's encoded coverage mapping data string length
-       i64 0  ; Function's structural hash
-     }],
-   [40 x i8] c"..." ; Encoded data (dissected later)
+   [32 x i8] c"..." ; Encoded data (dissected later)
   }, section "__llvm_covmap", align 8
 
-The current version of the format is version 3. The only difference from version 2 is that a special encoding for column end locations was introduced to indicate gap regions.
+The current version of the format is version 6.
 
-The function record layout has evolved since version 1. In version 1, the function record for *foo* is defined as follows:
+There is one difference between versions 6 and 5:
+
+* The first entry in the filename list is the compilation directory. When the
+  filename is relative, the compilation directory is combined with the relative
+  path to get an absolute path. This can reduce size by omitting the duplicate
+  prefix in filenames.
+
+There is one difference between versions 5 and 4:
+
+* The notion of branch region has been introduced along with a corresponding
+  region kind.  Branch regions encode two counters, one to track how many
+  times a "true" branch condition is taken, and one to track how many times a
+  "false" branch condition is taken.
+
+There are two differences between versions 4 and 3:
+
+* Function records are now named symbols, and are marked *linkonce_odr*. This
+  allows linkers to merge duplicate function records. Merging of duplicate
+  *dummy* records (emitted for functions included-but-not-used in a translation
+  unit) reduces size bloat in the coverage mapping data. As part of this
+  change, region mapping information for a function is now included within the
+  function record, instead of being affixed to the coverage header.
+
+* The filename list for a translation unit may optionally be zlib-compressed.
+
+The only difference between versions 3 and 2 is that a special encoding for
+column end locations was introduced to indicate gap regions.
+
+In version 1, the function record for *foo* was defined as follows:
 
 .. code-block:: llvm
 
@@ -286,19 +306,27 @@ The function record layout has evolved since version 1. In version 1, the functi
        i64 0  ; Function's structural hash
      }
 
+In version 2, the function record for *foo* was defined as follows:
+
+.. code-block:: llvm
+
+     { i64, i32, i64 } {
+       i64 0x5cf8c24cdb18bdac, ; Function's name MD5
+       i32 9, ; Function's encoded coverage mapping data string length
+       i64 0  ; Function's structural hash
 
 Coverage Mapping Header:
 ------------------------
 
 The coverage mapping header has the following fields:
 
-* The number of function records.
+* The number of function records affixed to the coverage header. Always 0, but present for backwards compatibility.
 
 * The length of the string in the third field of *__llvm_coverage_mapping* that contains the encoded translation unit filenames.
 
-* The length of the string in the third field of *__llvm_coverage_mapping* that contains the encoded coverage mapping data.
+* The length of the string in the third field of *__llvm_coverage_mapping* that contains any encoded coverage mapping data affixed to the coverage header. Always 0, but present for backwards compatibility.
 
-* The format version. The current version is 3 (encoded as a 2).
+* The format version. The current version is 4 (encoded as a 3).
 
 .. _function records:
 
@@ -309,24 +337,11 @@ A function record is a structure of the following type:
 
 .. code-block:: llvm
 
-  { i64, i32, i64 }
+  { i64, i32, i64, i64, [? x i8] }
 
-It contains function name's MD5, the length of the encoded mapping data for that function, and function's 
-structural hash value.
-
-Encoded data:
--------------
-
-The encoded data is stored in a single string that contains
-the encoded filenames used by this translation unit and the encoded coverage
-mapping data for each function in this translation unit.
-
-The encoded data has the following structure:
-
-``[filenames, coverageMappingDataForFunctionRecord0, coverageMappingDataForFunctionRecord1, ..., padding]``
-
-If necessary, the encoded data is padded with zeroes so that the size
-of the data string is rounded up to the nearest multiple of 8 bytes.
+It contains the function name's MD5, the length of the encoded mapping data for
+that function, the function's structural hash value, the hash of the filenames
+in the function's translation unit, and the encoded mapping data.
 
 Dissecting the sample:
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -339,32 +354,18 @@ IR for the `coverage mapping sample`_ that was shown earlier:
 
   .. code-block:: llvm
 
-    c"\01\12/Users/alex/test.c\01\00\00\01\01\01\0C\02\02\01\00\00\01\01\04\0C\02\02\00\00"
+    c"\01\15\1Dx\DA\13\D1\0F-N-*\D6/+\CE\D6/\C9-\D0O\CB\CF\D7K\06\00N+\07]"
 
 * The string contains values that are encoded in the LEB128 format, which is
-  used throughout for storing integers. It also contains a string value.
+  used throughout for storing integers. It also contains a compressed payload.
 
-* The length of the substring that contains the encoded translation unit
-  filenames is the value of the second field in the *__llvm_coverage_mapping*
-  structure, which is 20, thus the filenames are encoded in this string:
+* The first three LEB128-encoded numbers in the sample specify the number of
+  filenames, the length of the uncompressed filenames, and the length of the
+  compressed payload (or 0 if compression is disabled). In this sample, there
+  is 1 filename that is 21 bytes in length (uncompressed), and stored in 29
+  bytes (compressed).
 
-  .. code-block:: llvm
-
-    c"\01\12/Users/alex/test.c"
-
-  This string contains the following data:
-
-  * Its first byte has a value of ``0x01``. It stores the number of filenames
-    contained in this string.
-  * Its second byte stores the length of the first filename in this string.
-  * The remaining 18 bytes are used to store the first filename.
-
-* The length of the substring that contains the encoded coverage mapping data
-  for the first function is the value of the third field in the first
-  structure in an array of `function records`_ stored in the
-  third field of the *__llvm_coverage_mapping* structure, which is the 9.
-  Therefore, the coverage mapping for the first function record is encoded
-  in this string:
+* The coverage mapping from the first function record is encoded in this string:
 
   .. code-block:: llvm
 
@@ -550,7 +551,8 @@ or
 
 ``[pseudo-counter]``
 
-The header encodes the region's counter and the region's kind.
+The header encodes the region's counter and the region's kind. A branch region
+will encode two counters.
 
 The value of the counter's tag distinguishes between the counters and
 pseudo-counters --- if the tag is zero, than this header contains a
@@ -583,6 +585,7 @@ the ordinary counter. It has the following interpretation:
 
   * 0 - This mapping region is a code region with a counter of zero.
   * 2 - This mapping region is a skipped region.
+  * 4 - This mapping region is a branch region.
 
 .. _source range:
 

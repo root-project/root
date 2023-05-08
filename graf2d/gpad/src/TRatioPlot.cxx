@@ -375,14 +375,14 @@ void TRatioPlot::SetupPads() {
 
    // this method will delete all the pads before recreating them
 
-   if (fUpperPad != 0) {
+   if (fUpperPad) {
       delete fUpperPad;
-      fUpperPad = 0;
+      fUpperPad = nullptr;
    }
 
-   if (fLowerPad != 0) {
+   if (fLowerPad) {
       delete fLowerPad;
-      fLowerPad = 0;
+      fLowerPad = nullptr;
    }
 
    if (!gPad) {
@@ -410,9 +410,9 @@ void TRatioPlot::SetupPads() {
    fUpperPad->Connect("Resized()", "TRatioPlot", this, "SubPadResized()");
    fLowerPad->Connect("Resized()", "TRatioPlot", this, "SubPadResized()");
 
-   if (fTopPad != 0) {
+   if (fTopPad) {
       delete fTopPad;
-      fTopPad = 0;
+      fTopPad = nullptr;
    }
 
    fTopPad = new TPad("top_pad", "", pm*f, pm, 1-pm*f, 1-pm);
@@ -609,7 +609,7 @@ void TRatioPlot::Draw(Option_t *option)
    if (fMode == TRatioPlot::CalculationMode::kFitResidual) {
       TF1 *func = dynamic_cast<TF1*>(fH1->GetListOfFunctions()->At(0));
 
-      if (func == 0) {
+      if (!func) {
          // this is checked in constructor and should thus not occur
          Error("BuildLowerPlot", "h1 does not have a fit function");
          return;
@@ -672,15 +672,15 @@ void TRatioPlot::Draw(Option_t *option)
 
 TGraph* TRatioPlot::GetLowerRefGraph() const
 {
-   if (fLowerPad == 0) {
+   if (!fLowerPad) {
       Error("GetLowerRefGraph", "Lower pad has not been defined");
-      return 0;
+      return nullptr;
    }
 
    TList *primlist = fLowerPad->GetListOfPrimitives();
    if (primlist->GetSize() == 0) {
       Error("GetLowerRefGraph", "Lower pad does not have primitives");
-      return 0;
+      return nullptr;
    }
 
    TObjLink *lnk = primlist->FirstLink();
@@ -696,7 +696,7 @@ TGraph* TRatioPlot::GetLowerRefGraph() const
    }
 
    Error("GetLowerRefGraph", "Did not find graph in list");
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -707,8 +707,8 @@ TGraph* TRatioPlot::GetLowerRefGraph() const
 TObject* TRatioPlot::GetUpperRefObject() const
 {
    TList *primlist = fUpperPad->GetListOfPrimitives();
-   TObject *refobj = 0;
-   for (Int_t i=0;i<primlist->GetSize();++i) {
+   TObject *refobj = nullptr;
+   for (Int_t i = 0; i < primlist->GetSize(); ++i) {
       refobj = primlist->At(i);
       if (refobj->InheritsFrom(TH1::Class()) || refobj->InheritsFrom(THStack::Class())) {
          return refobj;
@@ -716,7 +716,7 @@ TObject* TRatioPlot::GetUpperRefObject() const
    }
 
    Error("GetUpperRefObject", "No upper ref object of TH1 or THStack type found");
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -726,7 +726,8 @@ TAxis* TRatioPlot::GetUpperRefXaxis() const
 {
    TObject *refobj = GetUpperRefObject();
 
-   if (!refobj) return 0;
+   if (!refobj)
+      return nullptr;
 
    if (refobj->InheritsFrom(TH1::Class())) {
       return ((TH1*)refobj)->GetXaxis();
@@ -734,7 +735,7 @@ TAxis* TRatioPlot::GetUpperRefXaxis() const
       return ((THStack*)refobj)->GetXaxis();
    }
 
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -744,7 +745,8 @@ TAxis* TRatioPlot::GetUpperRefYaxis() const
 {
    TObject *refobj = GetUpperRefObject();
 
-   if (!refobj) return 0;
+   if (!refobj)
+      return nullptr;
 
    if (refobj->InheritsFrom(TH1::Class())) {
       return ((TH1*)refobj)->GetYaxis();
@@ -752,7 +754,7 @@ TAxis* TRatioPlot::GetUpperRefYaxis() const
       return ((THStack*)refobj)->GetYaxis();
    }
 
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -761,13 +763,10 @@ TAxis* TRatioPlot::GetUpperRefYaxis() const
 void TRatioPlot::CreateGridline()
 {
 
-   if (!fShowGridlines) {
+   if (!fShowGridlines)
       return; // don't draw them
-   }
 
-   TVirtualPad *padsav = gPad;
-
-   fLowerPad->cd();
+   TVirtualPad::TContext ctxt(fLowerPad, kTRUE);
 
    unsigned int dest = fGridlinePositions.size();
 
@@ -782,7 +781,6 @@ void TRatioPlot::CreateGridline()
       if (y < lowYFirst || lowYLast < y) {
          ++outofrange;
       }
-
    }
 
    dest = dest - outofrange;
@@ -804,7 +802,6 @@ void TRatioPlot::CreateGridline()
    Double_t first = fSharedXAxis->GetBinLowEdge(fSharedXAxis->GetFirst());
    Double_t last = fSharedXAxis->GetBinUpEdge(fSharedXAxis->GetLast());
 
-   TLine *line;
    unsigned int skipped = 0;
    for (unsigned int i=0;i<fGridlinePositions.size();++i) {
       y = fGridlinePositions[i];
@@ -815,15 +812,13 @@ void TRatioPlot::CreateGridline()
          continue;
       }
 
-      line = fGridlines.at(i-skipped);
+      auto line = fGridlines.at(i-skipped);
 
       line->SetX1(first);
       line->SetX2(last);
       line->SetY1(y);
       line->SetY2(y);
    }
-
-   padsav->cd();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -864,18 +859,16 @@ void TRatioPlot::SyncAxesRanges()
 Int_t TRatioPlot::BuildLowerPlot()
 {
    // Clear and delete the graph if not exists
-   if (fRatioGraph != 0) {
+   if (fRatioGraph) {
       fRatioGraph->IsA()->Destructor(fRatioGraph);
-      fRatioGraph = 0;
+      fRatioGraph = nullptr;
    }
 
-   if (fConfidenceInterval1 == 0) {
+   if (!fConfidenceInterval1)
       fConfidenceInterval1 = new TGraphErrors();
-   }
 
-   if (fConfidenceInterval2 == 0) {
+   if (!fConfidenceInterval2)
       fConfidenceInterval2 = new TGraphErrors();
-   }
 
    static Double_t divideGridlines[] = {0.7, 1.0, 1.3};
    static Double_t diffGridlines[] = {0.0};
@@ -966,7 +959,7 @@ Int_t TRatioPlot::BuildLowerPlot()
 
       TF1 *func = dynamic_cast<TF1*>(fH1->GetListOfFunctions()->At(0));
 
-      if (func == 0) {
+      if (!func) {
          // this is checked in constructor and should thus not occur
          Error("BuildLowerPlot", "h1 does not have a fit function");
          return 0;
@@ -994,7 +987,7 @@ Int_t TRatioPlot::BuildLowerPlot()
       Double_t cl1 = fCl1;
       Double_t cl2 = fCl2;
 
-      if (fFitResult != 0) {
+      if (fFitResult) {
          // use this to get conf int
 
          fFitResult->GetConfidenceIntervals(fH1->GetNbinsX(), 1, 1, x_arr, ci_arr1, cl1);
@@ -1007,11 +1000,11 @@ Int_t TRatioPlot::BuildLowerPlot()
             ci2.push_back(ci_arr2[i-1]);
          }
       } else {
-         (TVirtualFitter::GetFitter())->GetConfidenceIntervals(fH1->GetNbinsX(), 1, x_arr, ci_arr1, cl1);
+         TVirtualFitter::GetFitter()->GetConfidenceIntervals(fH1->GetNbinsX(), 1, x_arr, ci_arr1, cl1);
          for (Int_t i=1; i<=fH1->GetNbinsX();++i) {
             ci1.push_back(ci_arr1[i-1]);
          }
-         (TVirtualFitter::GetFitter())->GetConfidenceIntervals(fH1->GetNbinsX(), 1, x_arr, ci_arr2, cl2);
+         TVirtualFitter::GetFitter()->GetConfidenceIntervals(fH1->GetNbinsX(), 1, x_arr, ci_arr2, cl2);
          for (Int_t i=1; i<=fH1->GetNbinsX();++i) {
             ci2.push_back(ci_arr2[i-1]);
          }
@@ -1090,7 +1083,7 @@ Int_t TRatioPlot::BuildLowerPlot()
    // need to set back to "" since recreation. we don't ever want
    // title on lower graph
 
-   if (fRatioGraph == 0) {
+   if (!fRatioGraph) {
       Error("BuildLowerPlot", "Error creating lower graph");
       return 0;
    }
@@ -1108,8 +1101,7 @@ Int_t TRatioPlot::BuildLowerPlot()
 
 void TRatioPlot::CreateVisualAxes()
 {
-   TVirtualPad *padsav = gPad;
-   fTopPad->cd();
+   TVirtualPad::TContext ctxt(fTopPad, kTRUE);
 
    // this is for errors
    TString thisfunc = "CreateVisualAxes";
@@ -1181,22 +1173,22 @@ void TRatioPlot::CreateVisualAxes()
    if (lowlogy) lowyopt.Append("G");
 
    // only actually create them once, reuse otherwise b/c memory
-   if (fUpperGXaxis == 0) {
+   if (!fUpperGXaxis) {
       fUpperGXaxis = new TGaxis(0, 0, 1, 1, 0, 1, 510, "+U"+xopt);
       fUpperGXaxis->Draw();
    }
 
-   if (fUpperGYaxis == 0) {
+   if (!fUpperGYaxis) {
       fUpperGYaxis = new TGaxis(0, 0, 1, 1, upYFirst, upYLast, 510, "S"+upyopt);
       fUpperGYaxis->Draw();
    }
 
-   if (fLowerGXaxis == 0) {
+   if (!fLowerGXaxis) {
       fLowerGXaxis = new TGaxis(0, 0, 1, 1, first, last, 510, "+S"+xopt);
       fLowerGXaxis->Draw();
    }
 
-   if (fLowerGYaxis == 0) {
+   if (!fLowerGYaxis) {
       fLowerGYaxis = new TGaxis(0, 0, 1, 1, lowYFirst, lowYLast, 510, "-S"+lowyopt);
       fLowerGYaxis->Draw();
    }
@@ -1293,22 +1285,22 @@ void TRatioPlot::CreateVisualAxes()
    if (axistop || axisright) {
 
       // only actually create them once, reuse otherwise b/c memory
-      if (fUpperGXaxisMirror == 0) {
+      if (!fUpperGXaxisMirror) {
          fUpperGXaxisMirror = (TGaxis*)fUpperGXaxis->Clone();
          if (axistop) fUpperGXaxisMirror->Draw();
       }
 
-      if (fLowerGXaxisMirror == 0) {
+      if (!fLowerGXaxisMirror) {
          fLowerGXaxisMirror = (TGaxis*)fLowerGXaxis->Clone();
          if (axistop) fLowerGXaxisMirror->Draw();
       }
 
-      if (fUpperGYaxisMirror == 0) {
+      if (!fUpperGYaxisMirror) {
          fUpperGYaxisMirror = (TGaxis*)fUpperGYaxis->Clone();
          if (axisright) fUpperGYaxisMirror->Draw();
       }
 
-      if (fLowerGYaxisMirror == 0) {
+      if (!fLowerGYaxisMirror) {
          fLowerGYaxisMirror = (TGaxis*)fLowerGYaxis->Clone();
          if (axisright) fLowerGYaxisMirror->Draw();
       }
@@ -1372,8 +1364,6 @@ void TRatioPlot::CreateVisualAxes()
       fUpperGYaxisMirror->SetLabelSize(0.);
       fLowerGYaxisMirror->SetLabelSize(0.);
    }
-
-   padsav->cd();
 
 }
 
@@ -1610,7 +1600,7 @@ void TRatioPlot::SubPadResized()
 Bool_t TRatioPlot::IsDrawn()
 {
    TList *siblings = fParentPad->GetListOfPrimitives();
-   return siblings->FindObject(this) != 0;
+   return siblings->FindObject(this) != nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1618,7 +1608,7 @@ Bool_t TRatioPlot::IsDrawn()
 
 void TRatioPlot::SetSplitFraction(Float_t sf)
 {
-   if (fParentPad == 0) {
+   if (!fParentPad) {
       Warning("SetSplitFraction", "Can only be used after TRatioPlot has been drawn.");
       return;
    }
@@ -1639,7 +1629,7 @@ void TRatioPlot::SetSplitFraction(Float_t sf)
 
 void TRatioPlot::SetInsetWidth(Double_t width)
 {
-   if (fParentPad == 0) {
+   if (!fParentPad) {
       Warning("SetInsetWidth", "Can only be used after TRatioPlot has been drawn.");
       return;
    }

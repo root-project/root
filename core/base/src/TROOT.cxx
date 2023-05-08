@@ -574,13 +574,6 @@ namespace Internal {
       return 0;
 #endif
    }
-
-   ////////////////////////////////////////////////////////////////////////////////
-   /// Returns the size of the pool used for implicit multi-threading.
-   UInt_t GetImplicitMTPoolSize()
-   {
-      return GetThreadPoolSize();
-   }
 } // end of ROOT namespace
 
 TROOT *ROOT::Internal::gROOTLocal = ROOT::GetROOT();
@@ -813,6 +806,12 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    gStyle = nullptr;
    TStyle::BuildStyles();
    SetStyle(gEnv->GetValue("Canvas.Style", "Modern"));
+
+   const char *webdisplay = gSystem->Getenv("ROOT_WEBDISPLAY");
+   if (!webdisplay || !*webdisplay)
+      webdisplay = gEnv->GetValue("WebGui.Display", "");
+   if (webdisplay && *webdisplay)
+      SetWebDisplay(webdisplay);
 
    // Setup default (batch) graphics and GUI environment
    gBatchGuiFactory = new TGuiFactory;
@@ -2754,49 +2753,55 @@ void TROOT::SetMacroPath(const char *newpath)
 /// The input parameter `webdisplay` defines where web graphics is rendered.
 /// `webdisplay` parameter may contain:
 ///
+///  - "firefox": select Mozilla Firefox browser for interactive web display
+///  - "chrome": select Google Chrome browser for interactive web display
+///  - "edge": select Microsoft Edge browser for interactive web display
 ///  - "off": turns off the web display and comes back to normal graphics in
 ///    interactive mode.
-///  - "batch": turns the web display in batch mode. It can be prepended with
-///    another string which is considered as the new current web display.
-///  - "nobatch": turns the web display in interactive mode. It can be
-///    prepended with another string which is considered as the new current web display.
-///
-/// If the option "off" is not set, this method turns the normal graphics to
-/// "Batch" to avoid the loading of local graphics libraries.
+///  - "server:port": turns the web display into server mode with specified port. Web widgets will not be displayed,
+///    only text message with window URL will be printed on standard output
 
 void TROOT::SetWebDisplay(const char *webdisplay)
 {
-   const char *wd = webdisplay;
-   if (!wd)
-      wd = "";
+   const char *wd = webdisplay ? webdisplay : "";
+
+   // store default values to set them back when needed
+   static TString brName = gEnv->GetValue("Browser.Name", "");
+   static TString trName = gEnv->GetValue("TreeViewer.Name", "");
 
    if (!strcmp(wd, "off")) {
       fIsWebDisplay = kFALSE;
-      fIsWebDisplayBatch = kFALSE;
-      fWebDisplay = "";
-   } else if (!strncmp(wd, "server", 6)) {
-      fIsWebDisplay = kTRUE;
-      fIsWebDisplayBatch = kFALSE;
-      fWebDisplay = "server";
-      if (wd[6] == ':') {
-         auto port = TString(wd+7).Atoi();
-         if (port > 0)
-            gEnv->SetValue("WebGui.HttpPort", port);
-         else
-            Error("SetWebDisplay","Wrong port parameter %s for server", wd+7);
-      }
+      fWebDisplay = "off";
    } else {
       fIsWebDisplay = kTRUE;
-      if (!strncmp(wd, "batch", 5)) {
-         fIsWebDisplayBatch = kTRUE;
-         wd += 5;
-      } else if (!strncmp(wd, "nobatch", 7)) {
-         fIsWebDisplayBatch = kFALSE;
-         wd += 7;
+
+      // handle server mode
+      if (!strncmp(wd, "server", 6)) {
+         fWebDisplay = "server";
+         if (wd[6] == ':') {
+            if ((wd[7] >= '0') && (wd[7] <= '9')) {
+               auto port = TString(wd+7).Atoi();
+               if (port > 0)
+                  gEnv->SetValue("WebGui.HttpPort", port);
+               else
+                  Error("SetWebDisplay", "Wrong port parameter %s for server", wd+7);
+            } else if (wd[7]) {
+               gEnv->SetValue("WebGui.UnixSocket", wd+7);
+            }
+         }
+      } else if (!strcmp(wd, "on")) {
+         fWebDisplay = "";
       } else {
-         fIsWebDisplayBatch = kFALSE;
+         fWebDisplay = wd;
       }
-      fWebDisplay = wd;
+   }
+
+   if (fIsWebDisplay) {
+      gEnv->SetValue("Browser.Name", brName);
+      gEnv->SetValue("TreeViewer.Name", "RTreeViewer");
+   } else {
+      gEnv->SetValue("Browser.Name", "TRootBrowser");
+      gEnv->SetValue("TreeViewer.Name", trName);
    }
 }
 

@@ -48,7 +48,7 @@ TKeySQL::TKeySQL(TDirectory *mother, const TObject *obj, const char *name, const
    if (title)
       SetTitle(title);
 
-   StoreKeyObject((void *)obj, obj ? obj->IsA() : 0);
+   StoreKeyObject((void *)obj, obj ? obj->IsA() : nullptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -92,23 +92,23 @@ TKeySQL::TKeySQL(TDirectory *mother, Long64_t keyid, Long64_t objid, const char 
 Bool_t TKeySQL::IsKeyModified(const char *keyname, const char *keytitle, const char *keydatime, Int_t cycle,
                               const char *classname)
 {
-   Int_t len1 = (GetName() == 0) ? 0 : strlen(GetName());
-   Int_t len2 = (keyname == 0) ? 0 : strlen(keyname);
+   Int_t len1 = !GetName() ? 0 : strlen(GetName());
+   Int_t len2 = !keyname ? 0 : strlen(keyname);
    if (len1 != len2)
       return kTRUE;
    if ((len1 > 0) && (strcmp(GetName(), keyname) != 0))
       return kTRUE;
 
-   len1 = (GetTitle() == 0) ? 0 : strlen(GetTitle());
-   len2 = (keytitle == 0) ? 0 : strlen(keytitle);
+   len1 = !GetTitle() ? 0 : strlen(GetTitle());
+   len2 = !keytitle  ? 0 : strlen(keytitle);
    if (len1 != len2)
       return kTRUE;
    if ((len1 > 0) && (strcmp(GetTitle(), keytitle) != 0))
       return kTRUE;
 
    const char *tm = GetDatime().AsSQLString();
-   len1 = (tm == 0) ? 0 : strlen(tm);
-   len2 = (keydatime == 0) ? 0 : strlen(keydatime);
+   len1 = !tm ? 0 : strlen(tm);
+   len2 = !keydatime ? 0 : strlen(keydatime);
    if (len1 != len2)
       return kTRUE;
    if ((len1 > 0) && (strcmp(tm, keydatime) != 0))
@@ -117,8 +117,8 @@ Bool_t TKeySQL::IsKeyModified(const char *keyname, const char *keytitle, const c
    if (cycle != GetCycle())
       return kTRUE;
 
-   len1 = (GetClassName() == 0) ? 0 : strlen(GetClassName());
-   len2 = (classname == 0) ? 0 : strlen(classname);
+   len1 = !GetClassName() ? 0 : strlen(GetClassName());
+   len2 = !classname ? 0 : strlen(classname);
    if (len1 != len2)
       return kTRUE;
    if ((len1 > 0) && (strcmp(GetClassName(), classname) != 0))
@@ -135,7 +135,7 @@ void TKeySQL::Delete(Option_t * /*option*/)
 {
    TSQLFile *f = (TSQLFile *)GetFile();
 
-   if (f != 0)
+   if (f)
       f->DeleteKeyFromDB(GetDBKeyId());
 
    fMotherDir->GetListOfKeys()->Remove(this);
@@ -188,12 +188,12 @@ void TKeySQL::StoreKeyObject(const void *obj, const TClass *cl)
 
 Int_t TKeySQL::Read(TObject *tobj)
 {
-   if (tobj == 0)
+   if (!tobj)
       return 0;
 
-   void *res = ReadKeyObject(tobj, 0);
+   void *res = ReadKeyObject(tobj, nullptr);
 
-   return res == 0 ? 0 : 1;
+   return !res ? 0 : 1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -202,7 +202,7 @@ Int_t TKeySQL::Read(TObject *tobj)
 
 TObject *TKeySQL::ReadObj()
 {
-   TObject *tobj = (TObject *)ReadKeyObject(0, TObject::Class());
+   TObject *tobj = (TObject *)ReadKeyObject(nullptr, TObject::Class());
 
    if (tobj) {
       if (gROOT->GetForceStyle())
@@ -227,7 +227,7 @@ TObject *TKeySQL::ReadObj()
 
 TObject *TKeySQL::ReadObjWithBuffer(char * /*bufferRead*/)
 {
-   TObject *tobj = (TObject *)ReadKeyObject(0, TObject::Class());
+   TObject *tobj = (TObject *)ReadKeyObject(nullptr, TObject::Class());
 
    if (tobj) {
       if (gROOT->GetForceStyle())
@@ -251,7 +251,7 @@ TObject *TKeySQL::ReadObjWithBuffer(char * /*bufferRead*/)
 
 void *TKeySQL::ReadObjectAny(const TClass *expectedClass)
 {
-   void *res = ReadKeyObject(0, expectedClass);
+   void *res = ReadKeyObject(nullptr, expectedClass);
 
    if (res && (expectedClass == TDirectoryFile::Class())) {
       TDirectoryFile *dir = (TDirectoryFile *)res;
@@ -289,12 +289,12 @@ void *TKeySQL::ReadKeyObject(void *obj, const TClass *expectedClass)
 
    Int_t delta = 0;
 
-   if (expectedClass != 0) {
+   if (expectedClass) {
       delta = cl->GetBaseClassOffset(expectedClass);
       if (delta < 0) {
-         if (obj == 0)
+         if (!obj)
             cl->Destructor(res);
-         return 0;
+         return nullptr;
       }
       if (cl->GetState() > TClass::kEmulated && expectedClass->GetState() <= TClass::kEmulated) {
          // we cannot mix a compiled class with an emulated class in the inheritance

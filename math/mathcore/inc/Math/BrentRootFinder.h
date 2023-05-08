@@ -49,8 +49,8 @@ namespace Math {
    a small value speeds the algorithm up many times.
    Then, Brent's method is applied on the bracketed interval.
    It will use the Brent Method for finding function roots in a given interval.
-   If the Brent method fails to converge the bracketing is repeted on the latest best estimate of the
-   interval. The procedure is repeted with a maximum value (default =10) which can be set for all
+   If the Brent method fails to converge the bracketing is repeated on the latest best estimate of the
+   interval. The procedure is repeated with a maximum value (default =10) which can be set for all
    BrentRootFinder classes with the method SetDefaultNSearch
 
    This class is implemented from TF1::GetX() method.
@@ -68,7 +68,7 @@ namespace Math {
 
 
       /** Default Destructor. */
-      virtual ~BrentRootFinder() {}
+      ~BrentRootFinder() override {}
 
 
       /** Set function to solve and the interval in where to look for the root.
@@ -78,7 +78,7 @@ namespace Math {
           \@param xup Upper bound of the search interval.
       */
       using IRootFinderMethod::SetFunction;
-      bool SetFunction(const ROOT::Math::IGenFunction& f, double xlow, double xup);
+      bool SetFunction(const ROOT::Math::IGenFunction& f, double xlow, double xup) override;
 
 
       /** Returns the X value corresponding to the function value fy for (xmin<x<xmax).
@@ -94,7 +94,7 @@ namespace Math {
           \@param absTol desired absolute error in the minimum position.
           \@param absTol desired relative error in the minimum position.
       */
-      bool Solve(int maxIter = 100, double absTol = 1E-8, double relTol = 1E-10);
+      bool Solve(int maxIter = 100, double absTol = 1E-8, double relTol = 1E-10) override;
 
       /** Set the number of point used to bracket root using a grid */
       void SetNpx(int npx) { fNpx = npx; }
@@ -106,16 +106,16 @@ namespace Math {
       void SetLogScan(bool on) { fLogScan = on; }
 
       /** Returns root value. Need to call first Solve(). */
-      double Root() const { return fRoot; }
+      double Root() const override { return fRoot; }
 
       /** Returns status of last estimate. If = 0 is OK */
-      int Status() const { return fStatus; }
+      int Status() const override { return fStatus; }
 
       /** Return number of iteration used to find minimum */
-      int Iterations() const { return fNIter; }
+      int Iterations() const override { return fNIter; }
 
       /** Return name of root finder algorithm ("BrentRootFinder"). */
-      const char* Name() const;
+      const char* Name() const override;
 
       // static function used to modify the default parameters
 
@@ -132,14 +132,14 @@ namespace Math {
 
    private:
 
-      const IGenFunction* fFunction; // Pointer to the function.
-      bool fLogScan;                 // flag to control usage of a log scan
-      int fNIter;                    // Number of iterations needed for the last estimation.
-      int fNpx;                      // Number of points to bracket root with initial grid (def is 100)
-      int fStatus;                   // Status of code of the last estimate
-      double fXMin;                  // Lower bound of the search interval.
-      double fXMax;                  // Upper bound of the search interval
-      double fRoot;                  // Current stimation of the function root.
+      const IGenFunction* fFunction; ///< Pointer to the function.
+      bool fLogScan;                 ///< flag to control usage of a log scan
+      int fNIter;                    ///< Number of iterations needed for the last estimation.
+      int fNpx;                      ///< Number of points to bracket root with initial grid (def is 100)
+      int fStatus;                   ///< Status of code of the last estimate
+      double fXMin;                  ///< Lower bound of the search interval.
+      double fXMax;                  ///< Upper bound of the search interval
+      double fRoot;                  ///< Current estimation of the function root.
    };
 
 } // namespace Math

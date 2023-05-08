@@ -5,9 +5,8 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
-// This pass lowers all remaining coroutine intrinsics.
-//===----------------------------------------------------------------------===//
 
+#include "llvm/Transforms/Coroutines/CoroCleanup.h"
 #include "CoroInternal.h"
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/InstIterator.h"
@@ -73,10 +72,30 @@ bool Lowerer::lowerRemainingCoroIntrinsics(Function &F) {
         II->replaceAllUsesWith(ConstantInt::getTrue(Context));
         break;
       case Intrinsic::coro_id:
+      case Intrinsic::coro_id_retcon:
+      case Intrinsic::coro_id_retcon_once:
+      case Intrinsic::coro_id_async:
         II->replaceAllUsesWith(ConstantTokenNone::get(Context));
         break;
       case Intrinsic::coro_subfn_addr:
         lowerSubFn(Builder, cast<CoroSubFnInst>(II));
+        break;
+      case Intrinsic::coro_async_size_replace:
+        auto *Target = cast<ConstantStruct>(
+            cast<GlobalVariable>(II->getArgOperand(0)->stripPointerCasts())
+                ->getInitializer());
+        auto *Source = cast<ConstantStruct>(
+            cast<GlobalVariable>(II->getArgOperand(1)->stripPointerCasts())
+                ->getInitializer());
+        auto *TargetSize = Target->getOperand(1);
+        auto *SourceSize = Source->getOperand(1);
+        if (TargetSize->isElementWiseEqual(SourceSize)) {
+          break;
+        }
+        auto *TargetRelativeFunOffset = Target->getOperand(0);
+        auto *NewFuncPtrStruct = ConstantStruct::get(
+            Target->getType(), TargetRelativeFunOffset, SourceSize);
+        Target->replaceAllUsesWith(NewFuncPtrStruct);
         break;
       }
       II->eraseFromParent();
@@ -88,20 +107,34 @@ bool Lowerer::lowerRemainingCoroIntrinsics(Function &F) {
     // After replacement were made we can cleanup the function body a little.
     simplifyCFG(F);
   }
+
   return Changed;
 }
 
-//===----------------------------------------------------------------------===//
-//                              Top Level Driver
-//===----------------------------------------------------------------------===//
+static bool declaresCoroCleanupIntrinsics(const Module &M) {
+  return coro::declaresIntrinsics(
+      M, {"llvm.coro.alloc", "llvm.coro.begin", "llvm.coro.subfn.addr",
+          "llvm.coro.free", "llvm.coro.id", "llvm.coro.id.retcon",
+          "llvm.coro.id.retcon.once", "llvm.coro.async.size.replace"});
+}
+
+PreservedAnalyses CoroCleanupPass::run(Function &F,
+                                       FunctionAnalysisManager &AM) {
+  auto &M = *F.getParent();
+  if (!declaresCoroCleanupIntrinsics(M) ||
+      !Lowerer(M).lowerRemainingCoroIntrinsics(F))
+    return PreservedAnalyses::all();
+
+  return PreservedAnalyses::none();
+}
 
 namespace {
 
-struct CoroCleanup : FunctionPass {
+struct CoroCleanupLegacy : FunctionPass {
   static char ID; // Pass identification, replacement for typeid
 
-  CoroCleanup() : FunctionPass(ID) {
-    initializeCoroCleanupPass(*PassRegistry::getPassRegistry());
+  CoroCleanupLegacy() : FunctionPass(ID) {
+    initializeCoroCleanupLegacyPass(*PassRegistry::getPassRegistry());
   }
 
   std::unique_ptr<Lowerer> L;
@@ -109,10 +142,8 @@ struct CoroCleanup : FunctionPass {
   // This pass has work to do only if we find intrinsics we are going to lower
   // in the module.
   bool doInitialization(Module &M) override {
-    if (coro::declaresIntrinsics(M, {"llvm.coro.alloc", "llvm.coro.begin",
-                                     "llvm.coro.subfn.addr", "llvm.coro.free",
-                                     "llvm.coro.id"}))
-      L = llvm::make_unique<Lowerer>(M);
+    if (declaresCoroCleanupIntrinsics(M))
+      L = std::make_unique<Lowerer>(M);
     return false;
   }
 
@@ -129,8 +160,8 @@ struct CoroCleanup : FunctionPass {
 };
 }
 
-char CoroCleanup::ID = 0;
-INITIALIZE_PASS(CoroCleanup, "coro-cleanup",
+char CoroCleanupLegacy::ID = 0;
+INITIALIZE_PASS(CoroCleanupLegacy, "coro-cleanup",
                 "Lower all coroutine related intrinsics", false, false)
 
-Pass *llvm::createCoroCleanupPass() { return new CoroCleanup(); }
+Pass *llvm::createCoroCleanupLegacyPass() { return new CoroCleanupLegacy(); }

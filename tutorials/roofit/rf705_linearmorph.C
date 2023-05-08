@@ -15,7 +15,6 @@
 #include "RooGaussian.h"
 #include "RooPolynomial.h"
 #include "RooIntegralMorph.h"
-#include "RooNLLVar.h"
 #include "TCanvas.h"
 #include "TAxis.h"
 #include "RooPlot.h"
@@ -92,8 +91,8 @@ void rf705_linearmorph()
    RooDataSet *data = lmorph.generate(x, 1000);
 
    // Fit pdf to toy data
-   lmorph.setCacheAlpha(kTRUE);
-   lmorph.fitTo(*data, Verbose(kTRUE));
+   lmorph.setCacheAlpha(true);
+   lmorph.fitTo(*data, Verbose(true));
 
    // Plot fitted pdf and data overlaid
    RooPlot *frame2 = x.frame(Bins(100));
@@ -107,10 +106,10 @@ void rf705_linearmorph()
    RooPlot *frame3 = alpha.frame(Bins(100), Range(0.1, 0.9));
 
    // Make 2D pdf of histogram
-   RooNLLVar nll("nll", "nll", lmorph, *data);
-   nll.plotOn(frame3, ShiftToZero());
+   std::unique_ptr<RooAbsReal> nll{lmorph.createNLL(*data)};
+   nll->plotOn(frame3, ShiftToZero());
 
-   lmorph.setCacheAlpha(kFALSE);
+   lmorph.setCacheAlpha(false);
 
    TCanvas *c = new TCanvas("rf705_linearmorph", "rf705_linearmorph", 800, 800);
    c->Divide(2, 2);

@@ -93,7 +93,7 @@ public:
    TVirtualStreamerInfo  *GetInfo() override { return (TVirtualStreamerInfo*)fInfo; }
    void       ClassBegin(const TClass*, Version_t = -1) override {}
    void       ClassEnd(const TClass*) override {}
-   void       ClassMember(const char*, const char* = 0, Int_t = -1, Int_t = -1) override {}
+   void       ClassMember(const char*, const char * = nullptr, Int_t = -1, Int_t = -1) override {}
 
    Int_t      ReadBuf(void *buf, Int_t max) override;
    void       WriteBuf(const void *buf, Int_t max) override;

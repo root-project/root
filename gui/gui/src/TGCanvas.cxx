@@ -95,7 +95,7 @@ private:
    TGContainer   *fContainer;
 public:
    TGContainerKeyboardTimer(TGContainer *t) : TTimer(kKeyboardTime) { fContainer = t; }
-   Bool_t Notify();
+   Bool_t Notify() override;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -116,7 +116,7 @@ private:
    TGContainer   *fContainer;
 public:
    TGContainerScrollTimer(TGContainer *t) : TTimer(50) { fContainer = t; }
-   Bool_t Notify();
+   Bool_t Notify() override;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -134,7 +134,7 @@ Bool_t TGContainerScrollTimer::Notify()
 /// Create a viewport object.
 
 TGViewPort::TGViewPort(const TGWindow *p, UInt_t w, UInt_t h,
-                       UInt_t options, ULong_t back) :
+                       UInt_t options, Pixel_t back) :
     TGCompositeFrame(p, w, h, options, back)
 {
    fContainer = 0;
@@ -314,7 +314,7 @@ Bool_t TGViewPort::HandleConfigureNotify(Event_t *event)
 /// created by the TGCanvas).
 
 TGContainer::TGContainer(const TGWindow *p, UInt_t w, UInt_t h,
-                             UInt_t options, ULong_t back) :
+                             UInt_t options, Pixel_t back) :
    TGCompositeFrame(p, w, h, options, back)
 {
    fXp = fYp = fX0 = fY0 = fXf = fYf = fXDND = fYDND = 0;
@@ -358,7 +358,7 @@ TGContainer::TGContainer(const TGWindow *p, UInt_t w, UInt_t h,
 /// all the list items. It will be shown through a TGViewPort (which is
 /// created by the TGCanvas).
 
-TGContainer::TGContainer(TGCanvas *p, UInt_t options, ULong_t back) :
+TGContainer::TGContainer(TGCanvas *p, UInt_t options, Pixel_t back) :
    TGCompositeFrame(p->GetViewPort(), p->GetWidth(), p->GetHeight(), options, back)
 {
    fXp = fYp = fX0 = fY0 = fXf = fYf = fXDND = fYDND = 0;
@@ -2128,7 +2128,7 @@ const TGGC &TGContainer::GetLineGC()
 /// Create a canvas object.
 
 TGCanvas::TGCanvas(const TGWindow *p, UInt_t w, UInt_t h,
-                   UInt_t options, ULong_t back) :
+                   UInt_t options, Pixel_t back) :
     TGFrame(p, w, h, options, back)
 {
    fVport      = new TGViewPort(this, w-4, h-4, kChildFrame | kOwnBackground,

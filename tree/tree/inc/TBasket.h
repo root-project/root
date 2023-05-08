@@ -142,7 +142,7 @@ public:
    // Count of resets performed of basket size.
    Bool_t          GetResetAllocationCount() const { return fResetAllocation; }
 
-   Int_t           LoadBasketBuffers(Long64_t pos, Int_t len, TFile *file, TTree *tree = 0);
+   Int_t           LoadBasketBuffers(Long64_t pos, Int_t len, TFile *file, TTree *tree = nullptr);
    Long64_t        CopyTo(TFile *to);
 
            void    SetBranch(TBranch *branch) { fBranch = branch; }

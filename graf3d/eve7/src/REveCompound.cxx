@@ -143,18 +143,19 @@ void REveCompound::RemoveElementsLocal()
 /// Note that projected replicas of the compound will be added to
 /// the set in base-class function that handles projectable.
 
-void REveCompound::FillImpliedSelectedSet(Set_t& impSelSet)
+void REveCompound::FillImpliedSelectedSet(Set_t& impSelSet, const std::set<int>& sec_idcs)
 {
    Bool_t select_all = TestCSCBits(kCSCBImplySelectAllChildren);
 
    for (auto &c: fChildren) {
       if (select_all || c->GetCompound() == this) {
-         if (impSelSet.insert(c).second)
-            c->FillImpliedSelectedSet(impSelSet);
+         if (impSelSet.insert(c).second) {
+            c->FillImpliedSelectedSet(impSelSet, sec_idcs);
+         }
       }
    }
 
-   REveElement::FillImpliedSelectedSet(impSelSet);
+   REveElement::FillImpliedSelectedSet(impSelSet, sec_idcs);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

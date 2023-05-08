@@ -108,7 +108,7 @@ RooLegendre::RooLegendre(const RooLegendre& other, const char* name)
 ////////////////////////////////////////////////////////////////////////////////
 /// Note: P_0^0 = 1, so P_l^m = P_l^m P_0^0
 
-Double_t RooLegendre::evaluate() const
+double RooLegendre::evaluate() const
 {
 #ifdef R__HAS_MATHMORE
   double r = 1;
@@ -129,7 +129,7 @@ Double_t RooLegendre::evaluate() const
 namespace {
 //Author: Emmanouil Michalainas, CERN 26 August 2019
 
-void compute(	size_t batchSize, const int l1, const int m1, const int l2, const int m2,
+void compute(  size_t batchSize, const int l1, const int m1, const int l2, const int m2,
               double * __restrict output,
               double const * __restrict TH)
 {
@@ -137,13 +137,13 @@ void compute(	size_t batchSize, const int l1, const int m1, const int l2, const 
   double legendre1=1.0, legendreMinus1=1.0;
   if (l1+m1 > 0) {
     legendre1      = ROOT::Math::internal::legendre(l1,m1,1.0);
-    legendreMinus1 = ROOT::Math::internal::legendre(l1,m1,-1.0); 
+    legendreMinus1 = ROOT::Math::internal::legendre(l1,m1,-1.0);
   }
   if (l2+m2 > 0) {
-    legendre1      *= ROOT::Math::internal::legendre(l2,m2,1.0); 
-    legendreMinus1 *= ROOT::Math::internal::legendre(l2,m2,-1.0); 
+    legendre1      *= ROOT::Math::internal::legendre(l2,m2,1.0);
+    legendreMinus1 *= ROOT::Math::internal::legendre(l2,m2,-1.0);
   }
-  
+
   for (size_t i=0; i<batchSize; i++) {
     if (TH[i] <= -1.0) {
       output[i] = legendreMinus1;
@@ -180,11 +180,11 @@ RooSpan<double> RooLegendre::evaluateSpan(RooBatchCompute::RunContext& evalData,
 ////////////////////////////////////////////////////////////////////////////////
 
 namespace {
-  Bool_t fullRange(const RooRealProxy& x ,const char* range)
+  bool fullRange(const RooRealProxy& x ,const char* range)
   {
     return range == 0 || strlen(range) == 0
-        ? std::fabs(x.min() + 1.) < 1.e-8 && std::fabs(x.max() - 1.) < 1.e-8
-        : std::fabs(x.min(range) + 1.) < 1.e-8 && std::fabs(x.max(range) - 1.) < 1.e-8;
+        ? std::abs(x.min() + 1.) < 1.e-8 && std::abs(x.max() - 1.) < 1.e-8
+        : std::abs(x.min(range) + 1.) < 1.e-8 && std::abs(x.max(range) - 1.) < 1.e-8;
   }
 }
 
@@ -201,7 +201,7 @@ Int_t RooLegendre::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars
 /// this was verified to match mathematica for
 /// l1 in [0,2], m1 in [0,l1], l2 in [l1,4], m2 in [0,l2]
 
-Double_t RooLegendre::analyticalIntegral(Int_t code, const char* ) const
+double RooLegendre::analyticalIntegral(Int_t code, const char* ) const
 {
   R__ASSERT(code==1) ;
   if ( _m1==_m2 )                 return ( _l1 == _l2) ?  TMath::Factorial(_l1+_m2)/TMath::Factorial(_l1-_m1)*double(2)/(2*_l1+1) : 0.;
@@ -250,6 +250,6 @@ namespace {
         return m2[j-1];
     }
 }
-Double_t RooLegendre::maxVal( Int_t /*code*/) const {
+double RooLegendre::maxVal( Int_t /*code*/) const {
     return maxSingle(_l1,_m1)*maxSingle(_l2,_m2);
 }

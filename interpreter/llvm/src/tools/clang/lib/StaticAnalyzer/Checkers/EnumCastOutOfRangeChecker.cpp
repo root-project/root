@@ -83,7 +83,7 @@ void EnumCastOutOfRangeChecker::reportWarning(CheckerContext &C) const {
           new BuiltinBug(this, "Enum cast out of range",
                          "The value provided to the cast expression is not in "
                          "the valid range of values for the enum"));
-    C.emitReport(llvm::make_unique<BugReport>(
+    C.emitReport(std::make_unique<PathSensitiveBugReport>(
         *EnumValueCastOutOfRange, EnumValueCastOutOfRange->getDescription(),
         N));
   }
@@ -142,6 +142,6 @@ void ento::registerEnumCastOutOfRangeChecker(CheckerManager &mgr) {
   mgr.registerChecker<EnumCastOutOfRangeChecker>();
 }
 
-bool ento::shouldRegisterEnumCastOutOfRangeChecker(const LangOptions &LO) {
+bool ento::shouldRegisterEnumCastOutOfRangeChecker(const CheckerManager &mgr) {
   return true;
 }

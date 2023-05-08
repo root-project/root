@@ -16,9 +16,6 @@ namespace HistFactory {
   ///\ingroup HistFactory
   std::string channelNameFromPdf( RooAbsPdf* channelPdf );
 
-//   void getChannelsFromModel( RooAbsPdf* model, RooArgSet* channels,
-//               RooArgSet* channelsWithConstraints );
-
   ///\ingroup HistFactory
   void FactorizeHistFactoryPdf(const RooArgSet&, RooAbsPdf&, RooArgList&, RooArgList&);
   ///\ingroup HistFactory

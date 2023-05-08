@@ -31,6 +31,8 @@ part of the RooFit computation graph.
 #include "RooMsgService.h"
 #include "RooRealVar.h"
 
+#include <utility>
+
 using namespace std;
 using namespace RooFit;
 
@@ -56,7 +58,7 @@ void RooPolyFunc::addTerm(double coefficient)
 
    termList->addOwned(*exponents);
    termList->addOwned(*coeff);
-   this->_terms.push_back(move(termList));
+   _terms.push_back(std::move(termList));
 }
 
 void RooPolyFunc::addTerm(double coefficient, const RooAbsReal &var1, int exp1)
@@ -80,7 +82,7 @@ void RooPolyFunc::addTerm(double coefficient, const RooAbsReal &var1, int exp1)
 
    termList->addOwned(*exponents);
    termList->addOwned(*coeff);
-   this->_terms.push_back(move(termList));
+   _terms.push_back(std::move(termList));
 }
 
 void RooPolyFunc::addTerm(double coefficient, const RooAbsReal &var1, int exp1, const RooAbsReal &var2, int exp2)
@@ -105,7 +107,7 @@ void RooPolyFunc::addTerm(double coefficient, const RooAbsReal &var1, int exp1, 
    }
    termList->addOwned(*exponents);
    termList->addOwned(*coeff);
-   this->_terms.push_back(move(termList));
+   _terms.push_back(std::move(termList));
 }
 
 void RooPolyFunc::addTerm(double coefficient, const RooAbsCollection &exponents)
@@ -122,7 +124,7 @@ void RooPolyFunc::addTerm(double coefficient, const RooAbsCollection &exponents)
    auto coeff = new RooRealVar(coeff_name.c_str(), coeff_name.c_str(), coefficient);
    termList->addOwned(exponents);
    termList->addOwned(*coeff);
-   this->_terms.push_back(move(termList));
+   _terms.push_back(std::move(termList));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -156,22 +158,40 @@ RooPolyFunc::RooPolyFunc(const RooPolyFunc &other, const char *name)
    : RooAbsReal(other, name), _vars("vars", this, other._vars)
 {
    for (auto const &term : other._terms) {
-      this->_terms.emplace_back(std::make_unique<RooListProxy>(term->GetName(), this, *term));
+      _terms.emplace_back(std::make_unique<RooListProxy>(term->GetName(), this, *term));
    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Assignment operator
+/// Return to RooPolyFunc as a string
 
-RooPolyFunc &RooPolyFunc::operator=(const RooPolyFunc &other)
+std::string RooPolyFunc::asString() const
 {
-   RooAbsReal::operator=(other);
-   _vars = other._vars;
-
-   for (auto const &term : other._terms) {
-      this->_terms.emplace_back(std::make_unique<RooListProxy>(term->GetName(), this, *term));
+   std::stringstream ss;
+   bool first = true;
+   for (const auto &term : _terms) {
+      size_t n_vars = term->size() - 1;
+      auto coef = dynamic_cast<RooRealVar *>(term->at(n_vars));
+      if (coef->getVal() > 0 && !first)
+         ss << "+";
+      ss << coef->getVal();
+      first = true;
+      for (size_t i_var = 0; i_var < n_vars; ++i_var) {
+         auto var = dynamic_cast<RooRealVar *>(_vars.at(i_var));
+         auto exp = dynamic_cast<RooRealVar *>(term->at(i_var));
+         if (exp->getVal() == 0)
+            continue;
+         if (first)
+            ss << " * (";
+         else
+            ss << "*";
+         ss << "pow(" << var->GetName() << "," << exp->getVal() << ")";
+         first = false;
+      }
+      if (!first)
+         ss << ")";
    }
-   return *this;
+   return ss.str();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -209,32 +229,77 @@ void fixObservables(const RooAbsCollection &observables)
       var->setConstant(true);
    }
 }
-////////////////////////////////////////////////////////////////////////////////
-///// Taylor expanding given function in terms of observables around
-///// observableValues. Supports expansions upto order 2.
-///// \param[in] function of variables that is taylor expanded.
-///// \param[in] observables set of variables to perform the expansion.
-///// \param[in] observableValues co-ordinates around which expansion is performed.
-///// \param[in] order order of the expansion (0,1,2 supported).
-///// \param[in] eps1 precision for first derivative and second derivative.
-///// \param[in] eps2 precision for second partial derivative of cross-derivative.
-std::unique_ptr<RooAbsReal>
-RooPolyFunc::taylorExpand(const char *name, const char *title, RooAbsReal &func, const RooAbsCollection &observables,
-                          std::vector<double> const &observableValues, int order, double eps1, double eps2)
+
+//////////////////////////////////////////////////////////////////////////////
+/// Taylor expanding given function in terms of observables around
+/// observableValues. Supports expansions upto order 2.
+/// \param[in] func Function of variables that is taylor expanded.
+/// \param[in] observables Set of variables to perform the expansion.
+///            It's type is RooArgList to ensure that it is always ordered the
+///            same as the observableValues vector. However, duplicate
+///            observables are still not allowed.
+/// \param[in] order Order of the expansion (0,1,2 supported).
+/// \param[in] observableValues Coordinates around which expansion is
+///            performed. If empty, the nominal observable values are taken, if
+///            the size matches the size of the observables RooArgSet, the
+///            values are mapped to the observables in matching order. If it
+///            contains only one element, the same single value is used for all
+///            observables.
+/// \param[in] eps1 Precision for first derivative and second derivative.
+/// \param[in] eps2 Precision for second partial derivative of cross-derivative.
+std::unique_ptr<RooPolyFunc>
+RooPolyFunc::taylorExpand(const char *name, const char *title, RooAbsReal &func, const RooArgList &observables,
+                          int order, std::vector<double> const &observableValues, double eps1, double eps2)
 {
-   // create the taylor expansion polynomial
-   auto taylor_poly = std::make_unique<RooPolyFunc>(name, title, observables);
+   // Create the taylor expansion polynomial
+   auto taylorPoly = std::make_unique<RooPolyFunc>(name, title, observables);
+
+   // Verify that there are no duplicate observables
+   {
+      RooArgSet obsSet;
+      for (RooAbsArg *obs : observables) {
+         obsSet.add(*obs, /*silent*/ true); // we can be silent now, the error will come later
+      }
+      if (obsSet.size() != observables.size()) {
+         std::stringstream errorMsgStream;
+         errorMsgStream << "RooPolyFunc::taylorExpand(" << name << ") ERROR: duplicate input observables!";
+         const auto errorMsg = errorMsgStream.str();
+         oocoutE(taylorPoly.get(), InputArguments) << errorMsg << std::endl;
+         throw std::invalid_argument(errorMsg);
+      }
+   }
+
+   // Figure out the observable values around which to exapnd
+   std::vector<double> obsValues;
+   if (observableValues.empty()) {
+      obsValues.reserve(observables.size());
+      for (auto *var : static_range_cast<RooRealVar *>(observables)) {
+         obsValues.push_back(var->getVal());
+      }
+   } else if (observableValues.size() == 1) {
+      obsValues.resize(observables.size());
+      std::fill(obsValues.begin(), obsValues.end(), observableValues[0]);
+   } else if (observableValues.size() == observables.size()) {
+      obsValues = observableValues;
+   } else {
+      std::stringstream errorMsgStream;
+      errorMsgStream << "RooPolyFunc::taylorExpand(" << name
+                     << ") ERROR: observableValues must be empty, contain one element, or match observables.size()!";
+      const auto errorMsg = errorMsgStream.str();
+      oocoutE(taylorPoly.get(), InputArguments) << errorMsg << std::endl;
+      throw std::invalid_argument(errorMsg);
+   }
 
    // taylor expansion can be performed only for order 0, 1, 2 currently
    if (order >= 3 || order <= 0) {
       std::stringstream errorMsgStream;
       errorMsgStream << "RooPolyFunc::taylorExpand(" << name << ") ERROR: order must be 0, 1, or 2";
       const auto errorMsg = errorMsgStream.str();
-      oocoutE(taylor_poly.get(), InputArguments) << errorMsg << std::endl;
+      oocoutE(taylorPoly.get(), InputArguments) << errorMsg << std::endl;
       throw std::invalid_argument(errorMsg);
    }
 
-   setCoordinates(observables, observableValues);
+   setCoordinates(observables, obsValues);
 
    // estimate taylor expansion polynomial for different orders
    // f(x) = f(x=x0)
@@ -245,7 +310,7 @@ RooPolyFunc::taylorExpand(const char *name, const char *title, RooAbsReal &func,
    for (int i_order = 0; i_order <= order; ++i_order) {
       switch (i_order) {
       case 0: {
-         taylor_poly->addTerm(func.getVal());
+         taylorPoly->addTerm(func.getVal());
          break;
       }
       case 1: {
@@ -253,10 +318,10 @@ RooPolyFunc::taylorExpand(const char *name, const char *title, RooAbsReal &func,
             double var1_val = var->getVal();
             auto deriv = func.derivative(*var, 1, eps2);
             double deriv_val = deriv->getVal();
-            setCoordinates(observables, observableValues);
-            taylor_poly->addTerm(deriv_val, *var, 1);
+            setCoordinates(observables, obsValues);
+            taylorPoly->addTerm(deriv_val, *var, 1);
             if (var1_val != 0.0) {
-               taylor_poly->addTerm(deriv_val * var1_val * -1.0);
+               taylorPoly->addTerm(deriv_val * var1_val * -1.0);
             }
          }
          break;
@@ -271,17 +336,17 @@ RooPolyFunc::taylorExpand(const char *name, const char *title, RooAbsReal &func,
                if (strcmp(var1->GetName(), var2->GetName()) == 0) {
                   auto deriv2 = func.derivative(*var2, 2, eps2);
                   deriv_val = 0.5 * deriv2->getVal();
-                  setCoordinates(observables, observableValues);
+                  setCoordinates(observables, obsValues);
                } else {
                   auto deriv2 = deriv1->derivative(*var2, 1, eps2);
                   deriv_val = 0.5 * deriv2->getVal();
-                  setCoordinates(observables, observableValues);
+                  setCoordinates(observables, obsValues);
                }
-               taylor_poly->addTerm(deriv_val, *var1, 1, *var2, 1);
+               taylorPoly->addTerm(deriv_val, *var1, 1, *var2, 1);
                if (var1_val != 0.0 || var2_val != 0.0) {
-                  taylor_poly->addTerm(deriv_val * var1_val * var2_val);
-                  taylor_poly->addTerm(deriv_val * var2_val * -1.0, *var1, 1);
-                  taylor_poly->addTerm(deriv_val * var1_val * -1.0, *var2, 1);
+                  taylorPoly->addTerm(deriv_val * var1_val * var2_val);
+                  taylorPoly->addTerm(deriv_val * var2_val * -1.0, *var1, 1);
+                  taylorPoly->addTerm(deriv_val * var1_val * -1.0, *var2, 1);
                }
             }
          }
@@ -289,16 +354,5 @@ RooPolyFunc::taylorExpand(const char *name, const char *title, RooAbsReal &func,
       }
       }
    }
-   return taylor_poly;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Taylor expanding given function in terms of observables around
-/// defaultValue for all observables.
-std::unique_ptr<RooAbsReal> RooPolyFunc::taylorExpand(const char *name, const char *title, RooAbsReal &func,
-                                                      const RooAbsCollection &observables, double observablesValue,
-                                                      int order, double eps1, double eps2)
-{
-   return RooPolyFunc::taylorExpand(name, title, func, observables,
-                                    std::vector<double>(observables.size(), observablesValue), order, eps1, eps2);
+   return taylorPoly;
 }

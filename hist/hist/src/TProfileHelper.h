@@ -282,7 +282,7 @@ Long64_t TProfileHelper::Merge(T* p, TCollection *li) {
             }
          }
       }
-   }  while ( ( h = dynamic_cast<T*> ( next() ) ) != NULL );
+   }  while ( ( h = dynamic_cast<T*> ( next() ) ) != nullptr );
    if (!h && (*next) ) {
       Error("TProfileHelper::Merge","Attempt to merge object of class: %s to a %s",
             (*next)->ClassName(),p->ClassName());

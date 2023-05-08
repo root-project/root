@@ -15,7 +15,6 @@
 #include "ROOT/RDF/RFilterBase.hxx"
 #include "ROOT/RDF/RLoopManager.hxx"
 #include "ROOT/RDF/RRangeBase.hxx"
-#include "ROOT/RDF/RSlotStack.hxx"
 #include "ROOT/RDF/RVariationBase.hxx"
 #include "ROOT/RLogger.hxx"
 #include "RtypesCore.h" // Long64_t
@@ -26,7 +25,6 @@
 #include "TEntryList.h"
 #include "TFile.h"
 #include "TFriendElement.h"
-#include "TInterpreter.h"
 #include "TROOT.h" // IsImplicitMTEnabled
 #include "TTreeReader.h"
 #include "TTree.h" // For MaxTreeSizeRAII. Revert when #6640 will be solved.
@@ -34,12 +32,12 @@
 #ifdef R__USE_IMT
 #include "ROOT/TThreadExecutor.hxx"
 #include "ROOT/TTreeProcessorMT.hxx"
+#include "ROOT/RSlotStack.hxx"
 #endif
 
 #include <algorithm>
 #include <atomic>
 #include <cassert>
-#include <exception>
 #include <functional>
 #include <iostream>
 #include <memory>
@@ -128,7 +126,7 @@ static void ExploreBranch(TTree &t, std::set<std::string> &bNamesReg, ColumnName
          InsertBranchName(bNamesReg, bNames, std::string(branchDirectlyFromTree->GetFullName()), friendName,
                           allowDuplicates);
 
-      if (t.GetBranch(subBranchName.c_str()))
+      if (bNamesReg.find(subBranchName) == bNamesReg.end() && t.GetBranch(subBranchName.c_str()))
          InsertBranchName(bNamesReg, bNames, subBranchName, friendName, allowDuplicates);
    }
 }
@@ -301,6 +299,14 @@ DatasetLogInfo TreeDatasetLogInfo(const TTreeReader &r, unsigned int slot)
    return {std::move(what), static_cast<ULong64_t>(entryRange.first), end, slot};
 }
 
+static auto MakeDatasetColReadersKey(const std::string &colName, const std::type_info &ti)
+{
+   // We use a combination of column name and column type name as the key because in some cases we might end up
+   // with concrete readers that use different types for the same column, e.g. std::vector and RVec here:
+   //    df.Sum<vector<int>>("stdVectorBranch");
+   //    df.Sum<RVecI>("stdVectorBranch");
+   return colName + ':' + ti.name();
+}
 } // anonymous namespace
 
 namespace ROOT {
@@ -340,51 +346,59 @@ RLoopManager::RLoopManager(TTree *tree, const ColumnNames_t &defaultBranches)
    : fTree(std::shared_ptr<TTree>(tree, [](TTree *) {})), fDefaultColumns(defaultBranches),
      fNSlots(RDFInternal::GetNSlots()),
      fLoopType(ROOT::IsImplicitMTEnabled() ? ELoopType::kROOTFilesMT : ELoopType::kROOTFiles),
-     fNewSampleNotifier(fNSlots), fSampleInfos(fNSlots)
+     fNewSampleNotifier(fNSlots), fSampleInfos(fNSlots), fDatasetColumnReaders(fNSlots)
 {
 }
 
 RLoopManager::RLoopManager(ULong64_t nEmptyEntries)
    : fNEmptyEntries(nEmptyEntries), fNSlots(RDFInternal::GetNSlots()),
      fLoopType(ROOT::IsImplicitMTEnabled() ? ELoopType::kNoFilesMT : ELoopType::kNoFiles), fNewSampleNotifier(fNSlots),
-     fSampleInfos(fNSlots)
+     fSampleInfos(fNSlots), fDatasetColumnReaders(fNSlots)
 {
 }
 
 RLoopManager::RLoopManager(std::unique_ptr<RDataSource> ds, const ColumnNames_t &defaultBranches)
    : fDefaultColumns(defaultBranches), fNSlots(RDFInternal::GetNSlots()),
      fLoopType(ROOT::IsImplicitMTEnabled() ? ELoopType::kDataSourceMT : ELoopType::kDataSource),
-     fDataSource(std::move(ds)), fNewSampleNotifier(fNSlots), fSampleInfos(fNSlots)
+     fDataSource(std::move(ds)), fNewSampleNotifier(fNSlots), fSampleInfos(fNSlots), fDatasetColumnReaders(fNSlots)
 {
    fDataSource->SetNSlots(fNSlots);
 }
 
-RLoopManager::RLoopManager(ROOT::Internal::RDF::RDatasetSpec &&spec)
-   : fBeginEntry(spec.fEntryRange.fBegin), fEndEntry(spec.fEntryRange.fEnd), fNSlots(RDFInternal::GetNSlots()),
+RLoopManager::RLoopManager(ROOT::RDF::Experimental::RDatasetSpec &&spec)
+   : fBeginEntry(spec.GetEntryRangeBegin()),
+     fEndEntry(spec.GetEntryRangeEnd()),
+     fSamples(spec.MoveOutSamples()),
+     fNSlots(RDFInternal::GetNSlots()),
      fLoopType(ROOT::IsImplicitMTEnabled() ? ELoopType::kROOTFilesMT : ELoopType::kROOTFiles),
-     fNewSampleNotifier(fNSlots), fSampleInfos(fNSlots)
+     fNewSampleNotifier(fNSlots),
+     fSampleInfos(fNSlots),
+     fDatasetColumnReaders(fNSlots)
 {
-   auto chain = std::make_shared<TChain>(spec.fTreeNames.size() == 1 ? spec.fTreeNames[0].c_str() : "");
-   if (spec.fTreeNames.size() == 1) {
-      // A TChain has a global name, that is the name of single tree
-      // The global name of the chain is also the name of each tree in the list
-      // of files that make the chain.
-      for (const auto &f : spec.fFileNameGlobs)
-         chain->Add(f.c_str());
-   } else {
-      // Some other times, each different file has its own tree name, we need to
-      // reconstruct the full path to the tree in each file and pass that to
-      for (auto i = 0u; i < spec.fFileNameGlobs.size(); i++) {
-         const auto fullpath = spec.fFileNameGlobs[i] + "?#" + spec.fTreeNames[i];
+   auto chain = std::make_shared<TChain>("");
+   for (auto &sample : fSamples) {
+      const auto &trees = sample.GetTreeNames();
+      const auto &files = sample.GetFileNameGlobs();
+      for (auto i = 0u; i < files.size(); ++i) {
+         // We need to use `<filename>?#<treename>` as an argument to TChain::Add
+         // (see https://github.com/root-project/root/pull/8820 for why)
+         const auto fullpath = files[i] + "?#" + trees[i];
          chain->Add(fullpath.c_str());
+         // ...but instead we use `<filename>/<treename>` as a sample ID (cannot
+         // change this easily because of backward compatibility: the sample ID
+         // is exposed to users via RSampleInfo and DefinePerSample).
+         const auto sampleId = files[i] + '/' + trees[i];
+         fSampleMap.insert({sampleId, &sample});
       }
    }
+
    SetTree(std::move(chain));
 
    // Create the friends from the list of friends
-   const auto &friendNames = spec.fFriendInfo.fFriendNames;
-   const auto &friendFileNames = spec.fFriendInfo.fFriendFileNames;
-   const auto &friendChainSubNames = spec.fFriendInfo.fFriendChainSubNames;
+   const auto &friendInfo = spec.GetFriendInfo();
+   const auto &friendNames = friendInfo.fFriendNames;
+   const auto &friendFileNames = friendInfo.fFriendFileNames;
+   const auto &friendChainSubNames = friendInfo.fFriendChainSubNames;
    const auto nFriends = friendNames.size();
 
    for (auto i = 0u; i < nFriends; ++i) {
@@ -404,10 +418,11 @@ RLoopManager::RLoopManager(ROOT::Internal::RDF::RDatasetSpec &&spec)
          }
       } else {
          // Otherwise, the new friend chain needs to be built using the nomenclature
-         // "filename?#treename" as argument to `TChain::Add`
-         for (auto j = 0u; j < nFileNames; ++j) {
+         // "filename#?treename" as argument to `TChain::Add`.
+         // See https://github.com/root-project/root/pull/8820 for why "filename#?treename"
+         // is better than "filename#?treename".
+         for (auto j = 0u; j < nFileNames; ++j)
             frChain->Add((thisFriendFiles[j] + "?#" + thisFriendChainSubNames[j]).c_str());
-         }
       }
 
       // Make it friends with the main chain
@@ -417,18 +432,11 @@ RLoopManager::RLoopManager(ROOT::Internal::RDF::RDatasetSpec &&spec)
    }
 }
 
-struct RSlotRAII {
-   RSlotStack &fSlotStack;
-   unsigned int fSlot;
-   RSlotRAII(RSlotStack &slotStack) : fSlotStack(slotStack), fSlot(slotStack.GetSlot()) {}
-   ~RSlotRAII() { fSlotStack.ReturnSlot(fSlot); }
-};
-
 /// Run event loop with no source files, in parallel.
 void RLoopManager::RunEmptySourceMT()
 {
 #ifdef R__USE_IMT
-   RSlotStack slotStack(fNSlots);
+   ROOT::Internal::RSlotStack slotStack(fNSlots);
    // Working with an empty tree.
    // Evenly partition the entries according to fNSlots. Produce around 2 tasks per slot.
    const auto nEntriesPerSlot = fNEmptyEntries / (fNSlots * 2);
@@ -447,11 +455,11 @@ void RLoopManager::RunEmptySourceMT()
 
    // Each task will generate a subrange of entries
    auto genFunction = [this, &slotStack](const std::pair<ULong64_t, ULong64_t> &range) {
-      RSlotRAII slotRAII(slotStack);
+      ROOT::Internal::RSlotStackRAII slotRAII(slotStack);
       auto slot = slotRAII.fSlot;
       RCallCleanUpTask cleanup(*this, slot);
       InitNodeSlots(nullptr, slot);
-      R__LOG_INFO(RDFLogChannel()) << LogRangeProcessing({"an empty source", range.first, range.second, slot});
+      R__LOG_DEBUG(0, RDFLogChannel()) << LogRangeProcessing({"an empty source", range.first, range.second, slot});
       try {
          UpdateSampleInfo(slot, range);
          for (auto currEntry = range.first; currEntry < range.second; ++currEntry) {
@@ -474,7 +482,7 @@ void RLoopManager::RunEmptySourceMT()
 void RLoopManager::RunEmptySource()
 {
    InitNodeSlots(nullptr, 0);
-   R__LOG_INFO(RDFLogChannel()) << LogRangeProcessing({"an empty source", 0, fNEmptyEntries, 0u});
+   R__LOG_DEBUG(0, RDFLogChannel()) << LogRangeProcessing({"an empty source", 0, fNEmptyEntries, 0u});
    RCallCleanUpTask cleanup(*this);
    try {
       UpdateSampleInfo(/*slot*/0, {0, fNEmptyEntries});
@@ -491,18 +499,22 @@ void RLoopManager::RunEmptySource()
 void RLoopManager::RunTreeProcessorMT()
 {
 #ifdef R__USE_IMT
-   RSlotStack slotStack(fNSlots);
+   if (fEndEntry == fBeginEntry) // empty range => no work needed
+      return;
+   ROOT::Internal::RSlotStack slotStack(fNSlots);
    const auto &entryList = fTree->GetEntryList() ? *fTree->GetEntryList() : TEntryList();
-   auto tp = std::make_unique<ROOT::TTreeProcessorMT>(*fTree, entryList, fNSlots);
+   auto tp = (fBeginEntry != 0 || fEndEntry != std::numeric_limits<Long64_t>::max())
+                ? std::make_unique<ROOT::TTreeProcessorMT>(*fTree, fNSlots, std::make_pair(fBeginEntry, fEndEntry))
+                : std::make_unique<ROOT::TTreeProcessorMT>(*fTree, entryList, fNSlots);
 
    std::atomic<ULong64_t> entryCount(0ull);
 
    tp->Process([this, &slotStack, &entryCount](TTreeReader &r) -> void {
-      RSlotRAII slotRAII(slotStack);
+      ROOT::Internal::RSlotStackRAII slotRAII(slotStack);
       auto slot = slotRAII.fSlot;
       RCallCleanUpTask cleanup(*this, slot, &r);
       InitNodeSlots(&r, slot);
-      R__LOG_INFO(RDFLogChannel()) << LogRangeProcessing(TreeDatasetLogInfo(r, slot));
+      R__LOG_DEBUG(0, RDFLogChannel()) << LogRangeProcessing(TreeDatasetLogInfo(r, slot));
       const auto entryRange = r.GetEntriesRange(); // we trust TTreeProcessorMT to call SetEntriesRange
       const auto nEntries = entryRange.second - entryRange.first;
       auto count = entryCount.fetch_add(nEntries);
@@ -541,9 +553,10 @@ void RLoopManager::RunTreeReader()
    if (fBeginEntry != 0 || fEndEntry != std::numeric_limits<Long64_t>::max())
       if (r.SetEntriesRange(fBeginEntry, fEndEntry) != TTreeReader::kEntryValid)
          throw std::logic_error("Something went wrong in initializing the TTreeReader.");
+
    RCallCleanUpTask cleanup(*this, 0u, &r);
    InitNodeSlots(&r, 0);
-   R__LOG_INFO(RDFLogChannel()) << LogRangeProcessing(TreeDatasetLogInfo(r, 0u));
+   R__LOG_DEBUG(0, RDFLogChannel()) << LogRangeProcessing(TreeDatasetLogInfo(r, 0u));
 
    // recursive call to check filters and conditionally execute actions
    // in the non-MT case processing can be stopped early by ranges, hence the check on fNStopsReceived
@@ -569,7 +582,7 @@ void RLoopManager::RunTreeReader()
 void RLoopManager::RunDataSource()
 {
    assert(fDataSource != nullptr);
-   fDataSource->Initialise();
+   fDataSource->CallInitialize();
    auto ranges = fDataSource->GetEntryRanges();
    while (!ranges.empty() && fNStopsReceived < fNChildren) {
       InitNodeSlots(nullptr, 0u);
@@ -579,7 +592,7 @@ void RLoopManager::RunDataSource()
          for (const auto &range : ranges) {
             const auto start = range.first;
             const auto end = range.second;
-            R__LOG_INFO(RDFLogChannel()) << LogRangeProcessing({fDataSource->GetLabel(), start, end, 0u});
+            R__LOG_DEBUG(0, RDFLogChannel()) << LogRangeProcessing({fDataSource->GetLabel(), start, end, 0u});
             for (auto entry = start; entry < end && fNStopsReceived < fNChildren; ++entry) {
                if (fDataSource->SetEntry(0u, entry)) {
                   RunAndCheckFilters(0u, entry);
@@ -590,10 +603,10 @@ void RLoopManager::RunDataSource()
          std::cerr << "RDataFrame::Run: event loop was interrupted\n";
          throw;
       }
-      fDataSource->FinaliseSlot(0u);
+      fDataSource->CallFinalizeSlot(0u);
       ranges = fDataSource->GetEntryRanges();
    }
-   fDataSource->Finalise();
+   fDataSource->CallFinalize();
 }
 
 /// Run event loop over data accessed through a DataSource, in parallel.
@@ -601,19 +614,19 @@ void RLoopManager::RunDataSourceMT()
 {
 #ifdef R__USE_IMT
    assert(fDataSource != nullptr);
-   RSlotStack slotStack(fNSlots);
+   ROOT::Internal::RSlotStack slotStack(fNSlots);
    ROOT::TThreadExecutor pool;
 
    // Each task works on a subrange of entries
    auto runOnRange = [this, &slotStack](const std::pair<ULong64_t, ULong64_t> &range) {
-      RSlotRAII slotRAII(slotStack);
+      ROOT::Internal::RSlotStackRAII slotRAII(slotStack);
       const auto slot = slotRAII.fSlot;
       InitNodeSlots(nullptr, slot);
       RCallCleanUpTask cleanup(*this, slot);
       fDataSource->InitSlot(slot, range.first);
       const auto start = range.first;
       const auto end = range.second;
-      R__LOG_INFO(RDFLogChannel()) << LogRangeProcessing({fDataSource->GetLabel(), start, end, slot});
+      R__LOG_DEBUG(0, RDFLogChannel()) << LogRangeProcessing({fDataSource->GetLabel(), start, end, slot});
       try {
          for (auto entry = start; entry < end; ++entry) {
             if (fDataSource->SetEntry(slot, entry)) {
@@ -624,16 +637,16 @@ void RLoopManager::RunDataSourceMT()
          std::cerr << "RDataFrame::Run: event loop was interrupted\n";
          throw;
       }
-      fDataSource->FinaliseSlot(slot);
+      fDataSource->CallFinalizeSlot(slot);
    };
 
-   fDataSource->Initialise();
+   fDataSource->CallInitialize();
    auto ranges = fDataSource->GetEntryRanges();
    while (!ranges.empty()) {
       pool.Foreach(runOnRange, ranges);
       ranges = fDataSource->GetEntryRanges();
    }
-   fDataSource->Finalise();
+   fDataSource->CallFinalize();
 #endif // not implemented otherwise (never called)
 }
 
@@ -702,14 +715,13 @@ void RLoopManager::UpdateSampleInfo(unsigned int slot, TTreeReader &r) {
    auto *file = tree->GetCurrentFile();
    const std::string fname = file != nullptr ? file->GetName() : "#inmemorytree#";
 
-
    std::pair<Long64_t, Long64_t> range = r.GetEntriesRange();
    R__ASSERT(range.first >= 0);
    if (range.second == -1) {
       range.second = tree->GetEntries(); // convert '-1', i.e. 'until the end', to the actual entry number
    }
-
-   fSampleInfos[slot] = RSampleInfo(fname + "/" + treename, range);
+   const std::string &id = fname + '/' + treename;
+   fSampleInfos[slot] = fSampleMap.empty() ? RSampleInfo(id, range) : RSampleInfo(id, range, fSampleMap[id]);
 }
 
 /// Initialize all nodes of the functional graph before running the event loop.
@@ -760,9 +772,16 @@ void RLoopManager::CleanUpTask(TTreeReader *r, unsigned int slot)
    for (auto &ptr : fBookedActions)
       ptr->FinalizeSlot(slot);
    for (auto &ptr : fBookedFilters)
-      ptr->FinaliseSlot(slot);
+      ptr->FinalizeSlot(slot);
    for (auto &ptr : fBookedDefines)
-      ptr->FinaliseSlot(slot);
+      ptr->FinalizeSlot(slot);
+
+   if (fLoopType == ELoopType::kROOTFiles || fLoopType == ELoopType::kROOTFilesMT) {
+      // we are reading from a tree/chain and we need to re-create the RTreeColumnReaders at every task
+      // because the TTreeReader object changes at every task
+      for (auto &v : fDatasetColumnReaders[slot])
+         v.second.reset();
+   }
 }
 
 /// Add RDF nodes that require just-in-time compilation to the computation graph.
@@ -783,7 +802,8 @@ void RLoopManager::Jit()
    RDFInternal::InterpreterCalc(code, "RLoopManager::Run");
    s.Stop();
    R__LOG_INFO(RDFLogChannel()) << "Just-in-time compilation phase completed"
-                                << (s.RealTime() > 1e-3 ? " in " + std::to_string(s.RealTime()) + " seconds." : ".");
+                                << (s.RealTime() > 1e-3 ? " in " + std::to_string(s.RealTime()) + " seconds."
+                                                        : " in less than 1ms.");
 }
 
 /// Trigger counting of number of children nodes for each node of the functional graph.
@@ -802,7 +822,8 @@ void RLoopManager::EvalChildrenCounts()
 
 /// Start the event loop with a different mechanism depending on IMT/no IMT, data source/no data source.
 /// Also perform a few setup and clean-up operations (jit actions if necessary, clear booked actions after the loop...).
-void RLoopManager::Run()
+/// The jitting phase is skipped if the `jit` parameter is `false` (unsafe, use with care).
+void RLoopManager::Run(bool jit)
 {
    // Change value of TTree::GetMaxTreeSize only for this scope. Revert when #6640 will be solved.
    MaxTreeSizeRAII ctxtmts;
@@ -811,7 +832,8 @@ void RLoopManager::Run()
 
    ThrowIfNSlotsChanged(GetNSlots());
 
-   Jit();
+   if (jit)
+      Jit();
 
    InitNodes();
 
@@ -846,7 +868,7 @@ TTree *RLoopManager::GetTree() const
    return fTree.get();
 }
 
-void RLoopManager::Book(RDFInternal::RActionBase *actionPtr)
+void RLoopManager::Register(RDFInternal::RActionBase *actionPtr)
 {
    fBookedActions.emplace_back(actionPtr);
    AddSampleCallback(actionPtr, actionPtr->GetSampleCallback());
@@ -859,7 +881,7 @@ void RLoopManager::Deregister(RDFInternal::RActionBase *actionPtr)
    fSampleCallbacks.erase(actionPtr);
 }
 
-void RLoopManager::Book(RFilterBase *filterPtr)
+void RLoopManager::Register(RFilterBase *filterPtr)
 {
    fBookedFilters.emplace_back(filterPtr);
    if (filterPtr->HasName()) {
@@ -874,7 +896,7 @@ void RLoopManager::Deregister(RFilterBase *filterPtr)
    RDFInternal::Erase(filterPtr, fBookedNamedFilters);
 }
 
-void RLoopManager::Book(RRangeBase *rangePtr)
+void RLoopManager::Register(RRangeBase *rangePtr)
 {
    fBookedRanges.emplace_back(rangePtr);
 }
@@ -884,7 +906,7 @@ void RLoopManager::Deregister(RRangeBase *rangePtr)
    RDFInternal::Erase(rangePtr, fBookedRanges);
 }
 
-void RLoopManager::Book(RDefineBase *ptr)
+void RLoopManager::Register(RDefineBase *ptr)
 {
    fBookedDefines.emplace_back(ptr);
 }
@@ -895,7 +917,7 @@ void RLoopManager::Deregister(RDefineBase *ptr)
    fSampleCallbacks.erase(ptr);
 }
 
-void RLoopManager::Book(RDFInternal::RVariationBase *v)
+void RLoopManager::Register(RDFInternal::RVariationBase *v)
 {
    fBookedVariations.emplace_back(v);
 }
@@ -916,6 +938,15 @@ void RLoopManager::Report(ROOT::RDF::RCutFlowReport &rep) const
 {
    for (const auto &fPtr : fBookedNamedFilters)
       fPtr->FillReport(rep);
+}
+
+void RLoopManager::SetTree(std::shared_ptr<TTree> tree)
+{
+   fTree = std::move(tree);
+
+   TChain *ch = nullptr;
+   if ((ch = dynamic_cast<TChain *>(fTree.get())))
+      fNoCleanupNotifier.RegisterChain(*ch);
 }
 
 void RLoopManager::ToJitExec(const std::string &code) const
@@ -958,20 +989,25 @@ std::vector<RDFInternal::RActionBase *> RLoopManager::GetAllActions() const
    return actions;
 }
 
-std::shared_ptr<ROOT::Internal::RDF::GraphDrawing::GraphNode> RLoopManager::GetGraph()
+std::shared_ptr<ROOT::Internal::RDF::GraphDrawing::GraphNode> RLoopManager::GetGraph(
+   std::unordered_map<void *, std::shared_ptr<ROOT::Internal::RDF::GraphDrawing::GraphNode>> &visitedMap)
 {
+   // If there is already a node for the RLoopManager return it. If there is not, return a new one.
+   auto duplicateRLoopManagerIt = visitedMap.find((void *)this);
+   if (duplicateRLoopManagerIt != visitedMap.end())
+      return duplicateRLoopManagerIt->second;
+
    std::string name;
    if (fDataSource) {
       name = fDataSource->GetLabel();
    } else if (fTree) {
       name = fTree->GetName();
    } else {
-      name = std::to_string(fNEmptyEntries);
+      name = "Empty source\\nEntries: " + std::to_string(fNEmptyEntries);
    }
-
-   auto thisNode = std::make_shared<ROOT::Internal::RDF::GraphDrawing::GraphNode>(name);
-   thisNode->SetRoot();
-   thisNode->SetCounter(0);
+   auto thisNode = std::make_shared<ROOT::Internal::RDF::GraphDrawing::GraphNode>(
+      name, visitedMap.size(), ROOT::Internal::RDF::GraphDrawing::ENodeType::kRoot);
+   visitedMap[(void *)this] = thisNode;
    return thisNode;
 }
 
@@ -986,14 +1022,54 @@ const ColumnNames_t &RLoopManager::GetBranchNames()
    return fValidBranchNames;
 }
 
-bool RLoopManager::HasDSValuePtrs(const std::string &col) const
+/// Return true if AddDataSourceColumnReaders was called for column name col.
+bool RLoopManager::HasDataSourceColumnReaders(const std::string &col, const std::type_info &ti) const
 {
-   return fDSValuePtrMap.find(col) != fDSValuePtrMap.end();
+   const auto key = MakeDatasetColReadersKey(col, ti);
+   assert(fDataSource != nullptr);
+   // since data source column readers are always added for all slots at the same time,
+   // if the reader is present for slot 0 we have it for all other slots as well.
+   return fDatasetColumnReaders[0].find(key) != fDatasetColumnReaders[0].end();
 }
 
-void RLoopManager::AddDSValuePtrs(const std::string &col, const std::vector<void *> ptrs)
+void RLoopManager::AddDataSourceColumnReaders(const std::string &col,
+                                              std::vector<std::unique_ptr<RColumnReaderBase>> &&readers,
+                                              const std::type_info &ti)
 {
-   fDSValuePtrMap[col] = ptrs;
+   const auto key = MakeDatasetColReadersKey(col, ti);
+   assert(fDataSource != nullptr && !HasDataSourceColumnReaders(col, ti));
+   assert(readers.size() == fNSlots);
+
+   for (auto slot = 0u; slot < fNSlots; ++slot) {
+      fDatasetColumnReaders[slot][key] = std::move(readers[slot]);
+   }
+}
+
+// Differently from AddDataSourceColumnReaders, this can be called from multiple threads concurrently
+/// \brief Register a new RTreeColumnReader with this RLoopManager.
+/// \return A shared pointer to the inserted column reader.
+RColumnReaderBase *RLoopManager::AddTreeColumnReader(unsigned int slot, const std::string &col,
+                                                     std::unique_ptr<RColumnReaderBase> &&reader,
+                                                     const std::type_info &ti)
+{
+   auto &readers = fDatasetColumnReaders[slot];
+   const auto key = MakeDatasetColReadersKey(col, ti);
+   // if a reader for this column and this slot was already there, we are doing something wrong
+   assert(readers.find(key) == readers.end() || readers[key] == nullptr);
+   auto *rptr = reader.get();
+   readers[key] = std::move(reader);
+   return rptr;
+}
+
+RColumnReaderBase *
+RLoopManager::GetDatasetColumnReader(unsigned int slot, const std::string &col, const std::type_info &ti) const
+{
+   const auto key = MakeDatasetColReadersKey(col, ti);
+   auto it = fDatasetColumnReaders[slot].find(key);
+   if (it != fDatasetColumnReaders[slot].end())
+      return it->second.get();
+   else
+      return nullptr;
 }
 
 void RLoopManager::AddSampleCallback(void *nodePtr, SampleCallback_t &&callback)

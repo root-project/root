@@ -1,6 +1,6 @@
 {
     "RooGaussian": {
-        "type": "Gaussian",
+        "type": "gaussian_dist",
         "proxies": {
             "x": "x",
             "mean": "mean",
@@ -8,41 +8,41 @@
         }
     },
     "RooPoisson": {
-        "type": "Poisson",
+        "type": "poisson_dist",
         "proxies": {
             "x": "x",
             "mean": "mean"
         }
     },
     "RooExponential": {
-        "type": "Exponential",
+        "type": "exponential_dist",
         "proxies": {
             "x": "x",
             "c": "c"
         }
-    },    
+    },
     "RooProduct": {
-        "type": "prod",
+        "type": "product",
         "proxies": {
             "compRSet": "factors",
             "compCSet": "factors"
         }
     },
     "RooProdPdf": {
-        "type": "pdfprod",
+        "type": "product_dist",
         "proxies": {
             "pdfs": "factors"
         }
     },
     "ParamHistFunc": {
-        "type": "paramhist",
+        "type": "step",
         "proxies": {
-            "dataVars": "observables",
+            "dataVars": "variables",
             "paramSet": "parameters"
         }
     },
     "RooAddPdf": {
-        "type": "pdfsum",
+        "type": "mixture_dist",
         "proxies": {
             "refCoefNorm": "coefnormset",
             "pdfs": "summands",
@@ -54,14 +54,40 @@
         "proxies": {
             "set": "summands"
         }
-    },    
+    },
+    "RooBernstein": {
+        "type": "bernstein_poly_dist",
+        "proxies": {
+            "coefList": "coefficients",
+            "x": "x"	    
+        }
+    },        
     "RooArgusBG": {
-        "type": "ARGUS",
+        "type": "ARGUS_dist",
         "proxies": {
             "m": "mass",
             "m0": "resonance",
             "c": "slope",
             "p": "power"
+        }
+    },
+    "RooCBShape": {
+        "type": "crystalball_dist",
+        "proxies": {
+            "alpha": "alpha",
+            "m": "m",
+            "m0": "m0",
+            "n": "n",
+            "sigma": "sigma"
+        }
+    },
+    "RooBifurGauss": {
+        "type": "bifurkated_gaussian_dist",
+        "proxies": {
+            "x": "x",
+            "mean": "mean",
+            "sigmaL": "sigmaL",
+            "sigmaR": "sigmaR"	    
         }
     }
 }

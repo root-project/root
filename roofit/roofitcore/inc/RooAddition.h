@@ -27,55 +27,51 @@ class RooArgList ;
 class RooAddition : public RooAbsReal {
 public:
 
-  RooAddition() ;
-  RooAddition(const char *name, const char *title, const RooArgList& sumSet, Bool_t takeOwnerShip=kFALSE) ;
-  RooAddition(const char *name, const char *title, const RooArgList& sumSet1, const RooArgList& sumSet2, Bool_t takeOwnerShip=kFALSE) ;
-  virtual ~RooAddition() ;
+  RooAddition() : _cacheMgr(this,10) {}
+  RooAddition(const char *name, const char *title, const RooArgList& sumSet, bool takeOwnerShip=false) ;
+  RooAddition(const char *name, const char *title, const RooArgList& sumSet1, const RooArgList& sumSet2, bool takeOwnerShip=false) ;
 
-  RooAddition(const RooAddition& other, const char* name = 0);
-  virtual TObject* clone(const char* newname) const { return new RooAddition(*this, newname); }
+  RooAddition(const RooAddition& other, const char* name = nullptr);
+  TObject* clone(const char* newname) const override { return new RooAddition(*this, newname); }
 
-  virtual Double_t defaultErrorLevel() const ;
+  double defaultErrorLevel() const override ;
 
-  void printMetaArgs(std::ostream& os) const ;
+  void printMetaArgs(std::ostream& os) const override ;
 
   const RooArgList& list1() const { return _set ; }
   const RooArgList& list() const { return _set ; }
 
-  virtual Bool_t forceAnalyticalInt(const RooAbsArg& /*dep*/) const {
+  bool forceAnalyticalInt(const RooAbsArg& /*dep*/) const override {
       // Force RooRealIntegral to offer all observables for internal integration
-      return kTRUE ;
+      return true ;
   }
-  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& numVars, const char* rangeName=0) const;
-  Double_t analyticalIntegral(Int_t code, const char* rangeName=0) const ;
+  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& numVars, const char* rangeName=nullptr) const override;
+  double analyticalIntegral(Int_t code, const char* rangeName=nullptr) const override ;
 
-  Bool_t setData(RooAbsData& data, Bool_t cloneData=kTRUE) ;
+  bool setData(RooAbsData& data, bool cloneData=true) override ;
 
-  virtual std::list<Double_t>* binBoundaries(RooAbsRealLValue& /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const ;
-  virtual std::list<Double_t>* plotSamplingHint(RooAbsRealLValue& /*obs*/, Double_t /*xlo*/, Double_t /*xhi*/) const ;     
-  Bool_t isBinnedDistribution(const RooArgSet& obs) const  ;
+  std::list<double>* binBoundaries(RooAbsRealLValue& /*obs*/, double /*xlo*/, double /*xhi*/) const override ;
+  std::list<double>* plotSamplingHint(RooAbsRealLValue& /*obs*/, double /*xlo*/, double /*xhi*/) const override ;
+  bool isBinnedDistribution(const RooArgSet& obs) const override  ;
 
-  virtual void enableOffsetting(Bool_t) ;
-
-  void computeBatch(cudaStream_t*, double* output, size_t nEvents, RooFit::Detail::DataMap const&) const;
+  void computeBatch(cudaStream_t*, double* output, size_t nEvents, RooFit::Detail::DataMap const&) const override;
 
 protected:
 
-  RooArgList   _ownedList ;      // List of owned components
-  RooListProxy _set ;            // set of terms to be summed
+  RooArgList   _ownedList ;      ///< List of owned components
+  RooListProxy _set ;            ///< set of terms to be summed
 
   class CacheElem : public RooAbsCacheElement {
   public:
-      virtual ~CacheElem();
       // Payload
       RooArgList _I ;
-      virtual RooArgList containedArgs(Action) ;
+      RooArgList containedArgs(Action) override { return _I; }
   };
-  mutable RooObjCacheManager _cacheMgr ; //! The cache manager
+  mutable RooObjCacheManager _cacheMgr ; ///<! The cache manager
 
-  Double_t evaluate() const;
+  double evaluate() const override;
 
-  ClassDef(RooAddition,3) // Sum of RooAbsReal objects
+  ClassDefOverride(RooAddition,3) // Sum of RooAbsReal objects
 };
 
 #endif

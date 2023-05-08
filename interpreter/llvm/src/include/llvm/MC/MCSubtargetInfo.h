@@ -54,6 +54,7 @@ struct SubtargetFeatureKV {
 struct SubtargetSubTypeKV {
   const char *Key;                      ///< K-V key string
   FeatureBitArray Implies;              ///< K-V bit mask
+  FeatureBitArray TuneImplies;          ///< K-V bit mask
   const MCSchedModel *SchedModel;
 
   /// Compare routine for std::lower_bound
@@ -74,6 +75,7 @@ struct SubtargetSubTypeKV {
 class MCSubtargetInfo {
   Triple TargetTriple;
   std::string CPU; // CPU being targeted.
+  std::string TuneCPU; // CPU being tuned for.
   ArrayRef<SubtargetFeatureKV> ProcFeatures;  // Processor feature list
   ArrayRef<SubtargetSubTypeKV> ProcDesc;  // Processor descriptions
 
@@ -87,11 +89,12 @@ class MCSubtargetInfo {
   const unsigned *OperandCycles;       // Itinerary operand cycles
   const unsigned *ForwardingPaths;
   FeatureBitset FeatureBits;           // Feature bits for current CPU + FS
+  std::string FeatureString;           // Feature string
 
 public:
   MCSubtargetInfo(const MCSubtargetInfo &) = default;
-  MCSubtargetInfo(const Triple &TT, StringRef CPU, StringRef FS,
-                  ArrayRef<SubtargetFeatureKV> PF,
+  MCSubtargetInfo(const Triple &TT, StringRef CPU, StringRef TuneCPU,
+                  StringRef FS, ArrayRef<SubtargetFeatureKV> PF,
                   ArrayRef<SubtargetSubTypeKV> PD,
                   const MCWriteProcResEntry *WPR, const MCWriteLatencyEntry *WL,
                   const MCReadAdvanceEntry *RA, const InstrStage *IS,
@@ -103,11 +106,14 @@ public:
 
   const Triple &getTargetTriple() const { return TargetTriple; }
   StringRef getCPU() const { return CPU; }
+  StringRef getTuneCPU() const { return TuneCPU; }
 
   const FeatureBitset& getFeatureBits() const { return FeatureBits; }
   void setFeatureBits(const FeatureBitset &FeatureBits_) {
     FeatureBits = FeatureBits_;
   }
+
+  StringRef getFeatureString() const { return FeatureString; }
 
   bool hasFeature(unsigned Feature) const {
     return FeatureBits[Feature];
@@ -118,12 +124,12 @@ protected:
   ///
   /// FIXME: Find a way to stick this in the constructor, since it should only
   /// be called during initialization.
-  void InitMCProcessorInfo(StringRef CPU, StringRef FS);
+  void InitMCProcessorInfo(StringRef CPU, StringRef TuneCPU, StringRef FS);
 
 public:
-  /// Set the features to the default for the given CPU with an appended feature
-  /// string.
-  void setDefaultFeatures(StringRef CPU, StringRef FS);
+  /// Set the features to the default for the given CPU and TuneCPU, with ano
+  /// appended feature string.
+  void setDefaultFeatures(StringRef CPU, StringRef TuneCPU, StringRef FS);
 
   /// Toggle a feature and return the re-computed feature bits.
   /// This version does not change the implied bits.
@@ -210,17 +216,71 @@ public:
   void initInstrItins(InstrItineraryData &InstrItins) const;
 
   /// Resolve a variant scheduling class for the given MCInst and CPU.
-  virtual unsigned
-  resolveVariantSchedClass(unsigned SchedClass, const MCInst *MI,
-                           unsigned CPUID) const {
+  virtual unsigned resolveVariantSchedClass(unsigned SchedClass,
+                                            const MCInst *MI,
+                                            const MCInstrInfo *MCII,
+                                            unsigned CPUID) const {
     return 0;
   }
 
   /// Check whether the CPU string is valid.
   bool isCPUStringValid(StringRef CPU) const {
-    auto Found = std::lower_bound(ProcDesc.begin(), ProcDesc.end(), CPU);
+    auto Found = llvm::lower_bound(ProcDesc, CPU);
     return Found != ProcDesc.end() && StringRef(Found->Key) == CPU;
   }
+
+  virtual unsigned getHwMode() const { return 0; }
+
+  /// Return the cache size in bytes for the given level of cache.
+  /// Level is zero-based, so a value of zero means the first level of
+  /// cache.
+  ///
+  virtual Optional<unsigned> getCacheSize(unsigned Level) const;
+
+  /// Return the cache associatvity for the given level of cache.
+  /// Level is zero-based, so a value of zero means the first level of
+  /// cache.
+  ///
+  virtual Optional<unsigned> getCacheAssociativity(unsigned Level) const;
+
+  /// Return the target cache line size in bytes at a given level.
+  ///
+  virtual Optional<unsigned> getCacheLineSize(unsigned Level) const;
+
+  /// Return the target cache line size in bytes.  By default, return
+  /// the line size for the bottom-most level of cache.  This provides
+  /// a more convenient interface for the common case where all cache
+  /// levels have the same line size.  Return zero if there is no
+  /// cache model.
+  ///
+  virtual unsigned getCacheLineSize() const {
+    Optional<unsigned> Size = getCacheLineSize(0);
+    if (Size)
+      return *Size;
+
+    return 0;
+  }
+
+  /// Return the preferred prefetch distance in terms of instructions.
+  ///
+  virtual unsigned getPrefetchDistance() const;
+
+  /// Return the maximum prefetch distance in terms of loop
+  /// iterations.
+  ///
+  virtual unsigned getMaxPrefetchIterationsAhead() const;
+
+  /// \return True if prefetching should also be done for writes.
+  ///
+  virtual bool enableWritePrefetching() const;
+
+  /// Return the minimum stride necessary to trigger software
+  /// prefetching.
+  ///
+  virtual unsigned getMinPrefetchStride(unsigned NumMemAccesses,
+                                        unsigned NumStridedMemAccesses,
+                                        unsigned NumPrefetches,
+                                        bool HasCall) const;
 };
 
 } // end namespace llvm

@@ -105,8 +105,8 @@ needs to be added as follows:
 If you don't want to edit the central `json` files containing the
 factory expressions or export keys, you can also put your custom
 export keys or factory expressions into a different json file and load
-that using `RooJSONFactoryWSTool::loadExportKeys(const std::string
-&fname)` and `RooJSONFactoryWSTool::loadFactoryExpressions(const
+that using `RooFit::JSONIO::loadExportKeys(const std::string
+&fname)` and `RooFit::JSONIO::loadFactoryExpressions(const
 std::string &fname)`.
 
 If either the importer or the exporter cannot be created with factory
@@ -116,8 +116,8 @@ class to perform the import and export for you.
 ### Writing your own importers and exporters: Custom `C++` code
 
 In order to implement your own importer or exporter, you can inherit
-from the corresponding base classes `RooJSONFactoryWSTool::Importer`
-or `RooJSONFactoryWSTool::Exporter`, respectively. You can find
+from the corresponding base classes `RooFit::JSONIO::Importer`
+or `RooFit::JSONIO::Exporter`, respectively. You can find
 [simple examples](https://github.com/root-project/root/blob/master/roofit/hs3/src/JSONFactories_RooFitCore.cxx)
 as well as
 [more complicated ones](https://github.com/root-project/root/blob/master/roofit/hs3/src/JSONFactories_HistFactory.cxx)
@@ -126,7 +126,7 @@ in `ROOT`.
 Any importer should take the following form:
 
 ```C++
-    class MyClassFactory : public RooJSONFactoryWSTool::Importer {
+    class MyClassFactory : public RooFit::JSONIO::Importer {
     public:
        bool importFunction(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
        {
@@ -144,7 +144,7 @@ Any importer should take the following form:
           int member2(p["<class member key #2>"].val_int());
 
           MyClass theobj(name.c_str(), member1, member2);
-          tool->workspace()->import(theobj, RooFit::RecycleConflictNodes(true), RooFit::Silence(true));
+          tool->wsImport(theobj);
           return true;
        }
     };
@@ -157,7 +157,7 @@ than from `RooAbsReal`, you should define `importPdf` instead of
 Once your importer implementation exists, you need to register it with the tool using a line like the following:
 
 ```C++
-    RooJSONFactoryWSTool::registerImporter("<json key>", new MyClassFactory(), true);
+    RooFit::JSONIO::registerImporter("<json key>", new MyClassFactory(), true);
 ```
 
 As there can be several importers for the same `json` key, the last
@@ -168,7 +168,7 @@ added at the top of the priority list (`true`) or at the bottom
 The implementation of an exporter works in a very similar fashion:
 
 ```C++
-    class MyClassStreamer : public RooJSONFactoryWSTool::Exporter {
+    class MyClassStreamer : public RooFit::JSONIO::Exporter {
     public:
        std::string const &key() const override
        {
@@ -194,7 +194,7 @@ The implementation of an exporter works in a very similar fashion:
 Also this needs to be registered with the tool
 
 ```C++
-    RooJSONFactoryWSTool::registerExporter(MyClass::Class(), new MyClassStreamer(), true);
+    RooFit::JSONIO::registerExporter(MyClass::Class(), new MyClassStreamer(), true);
 ```
 
 For more complicated cases where members are lists of elements, the

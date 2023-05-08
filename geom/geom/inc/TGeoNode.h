@@ -70,7 +70,7 @@ public:
    virtual ~TGeoNode();
 
    void              Browse(TBrowser *b);
-   virtual void      cd() const {;}
+   virtual void      cd() const {}
    void              CheckOverlaps(Double_t ovlp=0.1, Option_t *option=""); // *MENU*
    void              CheckShapes();
    Int_t             CountDaughters(Bool_t unique_volumes=kFALSE);
@@ -87,7 +87,7 @@ public:
 
    Int_t             GetColour() const {return fVolume->GetLineColor();}
    virtual Int_t     GetIndex() const                    {return 0;}
-   virtual TGeoPatternFinder *GetFinder() const          {return 0;}
+   virtual TGeoPatternFinder *GetFinder() const          {return nullptr;}
    TGeoMedium       *GetMedium() const                   {return fVolume->GetMedium();}
    TGeoVolume       *GetMotherVolume() const             {return fMother;}
    Int_t             GetNdaughters() const {return fVolume->GetNdaughters();}
@@ -108,7 +108,7 @@ public:
    Bool_t            IsVisDaughters() const {return (TGeoAtt::IsVisDaughters() && fVolume->IsVisDaughters());}
    Bool_t            MayOverlap(Int_t iother) const;
 
-   virtual TGeoNode *MakeCopyNode() const {return 0;}
+   virtual TGeoNode *MakeCopyNode() const {return nullptr;}
    Double_t          Safety(const Double_t *point, Bool_t in=kTRUE) const;
    void              SaveAttributes(std::ostream &out);
    void              SetCurrentPoint(Double_t x, Double_t y, Double_t z) {fVolume->SetCurrentPoint(x,y,z);}// *MENU*
@@ -226,7 +226,7 @@ private:
    TGeoIteratorPlugin(const TGeoIteratorPlugin &);
    TGeoIteratorPlugin &operator=(const TGeoIteratorPlugin &);
 public:
-   TGeoIteratorPlugin() : TObject(),fIterator(0) {}
+   TGeoIteratorPlugin() : TObject(),fIterator(nullptr) {}
    virtual ~TGeoIteratorPlugin() {}
 
    virtual void      ProcessNode() = 0;
@@ -258,8 +258,8 @@ private:
 
    void            IncreaseArray();
 protected:
-   TGeoIterator() : fTop(0), fMustResume(0), fMustStop(0), fLevel(0), fType(0),
-                    fArray(0), fMatrix(0), fTopName(), fPlugin(0), fPluginAutoexec(kFALSE) { }
+   TGeoIterator() : fTop(nullptr), fMustResume(kFALSE), fMustStop(kFALSE), fLevel(0), fType(0),
+                    fArray(nullptr), fMatrix(nullptr), fTopName(), fPlugin(nullptr), fPluginAutoexec(kFALSE) { }
 
 public:
    TGeoIterator(TGeoVolume *top);
@@ -281,7 +281,7 @@ public:
 
    TGeoVolume     *GetTopVolume() const {return fTop;}
    Int_t           GetType() const {return fType;}
-   void            Reset(TGeoVolume *top=0);
+   void            Reset(TGeoVolume *top=nullptr);
    void            SetUserPlugin(TGeoIteratorPlugin *plugin);
    void            SetPluginAutoexec(Bool_t mode) {fPluginAutoexec = mode;}
    void            SetType(Int_t type) {fType = type;}

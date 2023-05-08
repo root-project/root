@@ -14,6 +14,7 @@ endif()
 
 ROOT_LINKER_LIBRARY(Imt
     src/base.cxx
+    src/RSlotStack.cxx
     src/TExecutor.cxx
     src/TTaskGroup.cxx
   DEPENDENCIES
@@ -34,6 +35,7 @@ if(imt)
     ROOT/TFuture.hxx
     ROOT/TTaskGroup.hxx
     ROOT/RTaskArena.hxx
+    ROOT/RSlotStack.hxx
     ROOT/TExecutor.hxx
     ROOT/TThreadExecutor.hxx
     LINKDEF

@@ -339,7 +339,7 @@ TProofPerfAnalysis::~TProofPerfAnalysis()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// If defined, add '- <this title>' to the canvas title 't'
+/// If defined, add '- `<this_title>`' to the canvas title 't'
 
 TString TProofPerfAnalysis::GetCanvasTitle(const char *t)
 {

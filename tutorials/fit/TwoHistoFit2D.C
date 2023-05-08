@@ -40,7 +40,7 @@ std::vector<std::pair<double, double> > coords;
 std::vector<double > values;
 std::vector<double > errors;
 
-void myFcn(Int_t & /*nPar*/, Double_t * /*grad*/ , Double_t &fval, Double_t *p, Int_t /*iflag */  )
+void myFcn(int & /*nPar*/, double * /*grad*/ , double &fval, double *p, int /*iflag */  )
 {
   int n = coords.size();
   double chi2 = 0;
@@ -70,7 +70,7 @@ void FillHisto(TH2D * h, int n, double * p) {
 
   double x, y;
   for (int i = 0; i < n; ++i) {
-    // generate randoms with larger gaussians
+    // generate randoms with larger Gaussians
     rndm.Rannor(x,y);
 
     double r = rndm.Rndm(1);

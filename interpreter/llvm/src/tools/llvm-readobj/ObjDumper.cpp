@@ -12,7 +12,6 @@
 //===----------------------------------------------------------------------===//
 
 #include "ObjDumper.h"
-#include "Error.h"
 #include "llvm-readobj.h"
 #include "llvm/Object/ObjectFile.h"
 #include "llvm/Support/Error.h"
@@ -23,9 +22,29 @@
 
 namespace llvm {
 
-ObjDumper::ObjDumper(ScopedPrinter &Writer) : W(Writer) {}
+static inline Error createError(const Twine &Msg) {
+  return createStringError(object::object_error::parse_failed, Msg);
+}
 
-ObjDumper::~ObjDumper() {
+ObjDumper::ObjDumper(ScopedPrinter &Writer, StringRef ObjName) : W(Writer) {
+  // Dumper reports all non-critical errors as warnings.
+  // It does not print the same warning more than once.
+  WarningHandler = [=](const Twine &Msg) {
+    if (Warnings.insert(Msg.str()).second)
+      reportWarning(createError(Msg), ObjName);
+    return Error::success();
+  };
+}
+
+ObjDumper::~ObjDumper() {}
+
+void ObjDumper::reportUniqueWarning(Error Err) const {
+  reportUniqueWarning(toString(std::move(Err)));
+}
+
+void ObjDumper::reportUniqueWarning(const Twine &Msg) const {
+  cantFail(WarningHandler(Msg),
+           "WarningHandler should always return ErrorSuccess");
 }
 
 static void printAsPrintable(raw_ostream &W, const uint8_t *Start, size_t Len) {
@@ -33,8 +52,27 @@ static void printAsPrintable(raw_ostream &W, const uint8_t *Start, size_t Len) {
     W << (isPrint(Start[i]) ? static_cast<char>(Start[i]) : '.');
 }
 
+void ObjDumper::printAsStringList(StringRef StringContent) {
+  const uint8_t *StrContent = StringContent.bytes_begin();
+  const uint8_t *CurrentWord = StrContent;
+  const uint8_t *StrEnd = StringContent.bytes_end();
+
+  while (CurrentWord <= StrEnd) {
+    size_t WordSize = strnlen(reinterpret_cast<const char *>(CurrentWord),
+                              StrEnd - CurrentWord);
+    if (!WordSize) {
+      CurrentWord++;
+      continue;
+    }
+    W.startLine() << format("[%6tx] ", CurrentWord - StrContent);
+    printAsPrintable(W.startLine(), CurrentWord, WordSize);
+    W.startLine() << '\n';
+    CurrentWord += WordSize + 1;
+  }
+}
+
 static std::vector<object::SectionRef>
-getSectionRefsByNameOrIndex(const object::ObjectFile *Obj,
+getSectionRefsByNameOrIndex(const object::ObjectFile &Obj,
                             ArrayRef<std::string> Sections) {
   std::vector<object::SectionRef> Ret;
   std::map<std::string, bool> SecNames;
@@ -44,14 +82,13 @@ getSectionRefsByNameOrIndex(const object::ObjectFile *Obj,
     if (!Section.getAsInteger(0, SecIndex))
       SecIndices.emplace(SecIndex, false);
     else
-      SecNames.emplace(Section, false);
+      SecNames.emplace(std::string(Section), false);
   }
 
-  SecIndex = Obj->isELF() ? 0 : 1;
-  for (object::SectionRef SecRef : Obj->sections()) {
-    StringRef SecName;
-    error(SecRef.getName(SecName));
-    auto NameIt = SecNames.find(SecName);
+  SecIndex = Obj.isELF() ? 0 : 1;
+  for (object::SectionRef SecRef : Obj.sections()) {
+    StringRef SecName = unwrapOrError(Obj.getFileName(), SecRef.getName());
+    auto NameIt = SecNames.find(std::string(SecName));
     if (NameIt != SecNames.end())
       NameIt->second = true;
     auto IndexIt = SecIndices.find(SecIndex);
@@ -62,62 +99,53 @@ getSectionRefsByNameOrIndex(const object::ObjectFile *Obj,
     SecIndex++;
   }
 
-  for (const std::pair<std::string, bool> &S : SecNames)
+  for (const std::pair<const std::string, bool> &S : SecNames)
     if (!S.second)
-      reportWarning(formatv("could not find section '{0}'", S.first).str());
+      reportWarning(
+          createError(formatv("could not find section '{0}'", S.first).str()),
+          Obj.getFileName());
+
   for (std::pair<unsigned, bool> S : SecIndices)
     if (!S.second)
-      reportWarning(formatv("could not find section {0}", S.first).str());
+      reportWarning(
+          createError(formatv("could not find section {0}", S.first).str()),
+          Obj.getFileName());
 
   return Ret;
 }
 
-void ObjDumper::printSectionsAsString(const object::ObjectFile *Obj,
+void ObjDumper::printSectionsAsString(const object::ObjectFile &Obj,
                                       ArrayRef<std::string> Sections) {
   bool First = true;
   for (object::SectionRef Section :
        getSectionRefsByNameOrIndex(Obj, Sections)) {
-    StringRef SectionName;
-    error(Section.getName(SectionName));
+    StringRef SectionName = unwrapOrError(Obj.getFileName(), Section.getName());
+
     if (!First)
       W.startLine() << '\n';
     First = false;
     W.startLine() << "String dump of section '" << SectionName << "':\n";
 
-    StringRef SectionContent = unwrapOrError(Section.getContents());
-
-    const uint8_t *SecContent = SectionContent.bytes_begin();
-    const uint8_t *CurrentWord = SecContent;
-    const uint8_t *SecEnd = SectionContent.bytes_end();
-
-    while (CurrentWord <= SecEnd) {
-      size_t WordSize = strnlen(reinterpret_cast<const char *>(CurrentWord),
-                                SecEnd - CurrentWord);
-      if (!WordSize) {
-        CurrentWord++;
-        continue;
-      }
-      W.startLine() << format("[%6tx] ", CurrentWord - SecContent);
-      printAsPrintable(W.startLine(), CurrentWord, WordSize);
-      W.startLine() << '\n';
-      CurrentWord += WordSize + 1;
-    }
+    StringRef SectionContent =
+        unwrapOrError(Obj.getFileName(), Section.getContents());
+    printAsStringList(SectionContent);
   }
 }
 
-void ObjDumper::printSectionsAsHex(const object::ObjectFile *Obj,
+void ObjDumper::printSectionsAsHex(const object::ObjectFile &Obj,
                                    ArrayRef<std::string> Sections) {
   bool First = true;
   for (object::SectionRef Section :
        getSectionRefsByNameOrIndex(Obj, Sections)) {
-    StringRef SectionName;
-    error(Section.getName(SectionName));
+    StringRef SectionName = unwrapOrError(Obj.getFileName(), Section.getName());
+
     if (!First)
       W.startLine() << '\n';
     First = false;
     W.startLine() << "Hex dump of section '" << SectionName << "':\n";
 
-    StringRef SectionContent = unwrapOrError(Section.getContents());
+    StringRef SectionContent =
+        unwrapOrError(Obj.getFileName(), Section.getContents());
     const uint8_t *SecContent = SectionContent.bytes_begin();
     const uint8_t *SecEnd = SecContent + SectionContent.size();
 
@@ -143,8 +171,9 @@ void ObjDumper::printSectionsAsHex(const object::ObjectFile *Obj,
       // Least, if we cut in a middle of a row, we add the remaining characters,
       // which is (8 - (k * 2)).
       if (i < 4)
-        W.startLine() << format("%*c", (4 - i) * 8 + (4 - i) + (8 - (k * 2)),
-                                ' ');
+        W.startLine() << format("%*c", (4 - i) * 8 + (4 - i), ' ');
+      if (k < 4)
+        W.startLine() << format("%*c", 8 - k * 2, ' ');
 
       TmpSecPtr = SecPtr;
       for (i = 0; TmpSecPtr + i < SecEnd && i < 16; ++i)

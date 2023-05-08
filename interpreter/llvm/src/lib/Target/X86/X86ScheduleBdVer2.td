@@ -269,6 +269,7 @@ def : WriteRes<WriteLoad,    [PdLoad]> { let Latency = 5; let ResourceCycles = [
 def : WriteRes<WriteStore,   [PdStore]>;
 def : WriteRes<WriteStoreNT, [PdStore]>;
 def : WriteRes<WriteMove,    [PdEX01]> { let ResourceCycles = [2]; }
+defm : X86WriteResUnsupported<WriteVecMaskedGatherWriteback>;
 
 // Load/store MXCSR.
 // FIXME: These are copy and pasted from WriteLoad/Store.
@@ -545,8 +546,40 @@ def PdWriteBTSRm : SchedWriteRes<[PdEX01, PdLoad]> {
 def : SchedAlias<WriteBitTestSetRegRMW, PdWriteBTSRm>;
 
 // This is for simple LEAs with one or two input operands.
-// FIXME: SAGU 3-operand LEA
-def : WriteRes<WriteLEA,              [PdEX01]> { let NumMicroOps = 2; }
+def : WriteRes<WriteLEA,              [PdEX01]> { let ResourceCycles = [2]; }
+
+// This write is used for slow LEA instructions.
+def PdWrite3OpsLEA : SchedWriteRes<[PdEX01]> {
+  let Latency = 2;
+  let ResourceCycles = [2];
+}
+
+// On Piledriver, a slow LEA is either a 3Ops LEA (base, index, offset),
+// or an LEA with a `Scale` value different than 1.
+def PdSlowLEAPredicate : MCSchedPredicate<
+  CheckAny<[
+    // A 3-operand LEA (base, index, offset).
+    IsThreeOperandsLEAFn,
+    // An LEA with a "Scale" different than 1.
+    CheckAll<[
+      CheckIsImmOperand<2>,
+      CheckNot<CheckImmOperand<2, 1>>
+    ]>
+  ]>
+>;
+
+def PdWriteLEA : SchedWriteVariant<[
+    SchedVar<PdSlowLEAPredicate, [PdWrite3OpsLEA]>,
+    SchedVar<NoSchedPred,        [WriteLEA]>
+]>;
+
+def : InstRW<[PdWriteLEA], (instrs LEA32r, LEA64r, LEA64_32r)>;
+
+def PdWriteLEA16r : SchedWriteRes<[PdEX01]> {
+  let ResourceCycles = [3];
+  let NumMicroOps = 2;
+}
+def : InstRW<[PdWriteLEA16r], (instrs LEA16r)>;
 
 // Bit counts.
 defm : PdWriteResExPair<WriteBSF,     [PdEX01],          3,  [6],     6, 2>;
@@ -726,8 +759,10 @@ defm : PdWriteRes<WriteFStoreNT,           [PdStore, PdFPU1,  PdFPSTO], 3>;
 defm : PdWriteRes<WriteFStoreNTX,          [PdStore, PdFPU1,  PdFPSTO], 3>;
 defm : PdWriteRes<WriteFStoreNTY,          [PdStore, PdFPU1,  PdFPSTO], 3, [2, 2, 2], 4>;
 
-defm : PdWriteRes<WriteFMaskedStore,       [PdStore, PdFPU01, PdFPFMA], 6, [1, 1, 188], 18>;
-defm : PdWriteRes<WriteFMaskedStoreY,      [PdStore, PdFPU01, PdFPFMA], 6, [2, 2, 376], 34>;
+defm : PdWriteRes<WriteFMaskedStore32,     [PdStore, PdFPU01, PdFPFMA], 6, [1, 1, 188], 18>;
+defm : PdWriteRes<WriteFMaskedStore64,     [PdStore, PdFPU01, PdFPFMA], 6, [1, 1, 188], 18>;
+defm : PdWriteRes<WriteFMaskedStore32Y,    [PdStore, PdFPU01, PdFPFMA], 6, [2, 2, 376], 34>;
+defm : PdWriteRes<WriteFMaskedStore64Y,    [PdStore, PdFPU01, PdFPFMA], 6, [2, 2, 376], 34>;
 
 defm : PdWriteRes<WriteFMove,              [PdFPU01, PdFPFMA]>;
 defm : PdWriteRes<WriteFMoveX,             [PdFPU01, PdFPFMA], 1, [1, 2]>;
@@ -764,6 +799,7 @@ defm : PdWriteResYMMPair<WriteFCmp64Y,      [PdFPU0, PdFPFMA],  2, [1, 2]>;
 defm : X86WriteResPairUnsupported<WriteFCmp64Z>;
 
 defm : PdWriteResXMMPair<WriteFCom,         [PdFPU0, PdFPFMA, PdEX0], 1, [], 2>;
+defm : PdWriteResXMMPair<WriteFComX,        [PdFPU0, PdFPFMA, PdEX0], 1, [], 2>;
 
 def PdWriteFCOMPm : SchedWriteRes<[PdFPU1, PdFPFMA]> {
   let Latency = 6;
@@ -1058,8 +1094,10 @@ def : InstRW<[PdWriteVMOVDQUYmr], (instrs VMOVDQUYmr)>;
 defm : PdWriteRes<WriteVecStoreNT,          [PdStore, PdFPU1,   PdFPSTO], 2>;
 defm : PdWriteRes<WriteVecStoreNTY,         [PdStore, PdFPU1,   PdFPSTO], 2, [2, 2, 2], 4>;
 
-defm : PdWriteRes<WriteVecMaskedStore,      [PdStore, PdFPU01, PdFPMAL], 6, [1, 1, 4]>;
-defm : PdWriteRes<WriteVecMaskedStoreY,     [PdStore, PdFPU01, PdFPMAL], 6, [2, 2, 4], 2>;
+defm : X86WriteResUnsupported<WriteVecMaskedStore32>;
+defm : X86WriteResUnsupported<WriteVecMaskedStore32Y>;
+defm : X86WriteResUnsupported<WriteVecMaskedStore64>;
+defm : X86WriteResUnsupported<WriteVecMaskedStore64Y>;
 
 defm : PdWriteRes<WriteVecMove,             [PdFPU01, PdFPMAL], 2>;
 defm : PdWriteRes<WriteVecMoveX,            [PdFPU01, PdFPMAL], 1, [1, 2]>;
@@ -1159,6 +1197,7 @@ defm : PdWriteResYMMPair<WriteVecTestY,      [PdFPU01, PdFPFMA, PdEX0], 1, [2, 4
 defm : X86WriteResPairUnsupported<WriteVecTestZ>;
 
 defm : PdWriteResXMMPair<WriteShuffle256,    [PdFPU01, PdFPMAL]>;
+defm : PdWriteResXMMPair<WriteVPMOV256,      [PdFPU01, PdFPMAL]>;
 defm : PdWriteResXMMPair<WriteVarShuffle256, [PdFPU01, PdFPMAL]>;
 
 defm : PdWriteResXMMPair<WriteVarVecShift,   [PdFPU01, PdFPMAL], 3, [1, 2]>;

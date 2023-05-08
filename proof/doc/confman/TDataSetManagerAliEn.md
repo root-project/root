@@ -106,7 +106,7 @@ urltemplate
     >
     > -   Template URL:
     >
-    >         root://alice-caf.cern.ch/<path>
+    >         root://alice-caf.cern.ch/`<path>`
     >
     > -   Source URL:
     >
@@ -404,7 +404,7 @@ Staging requests and monitoring can be done from within a PROOF session.
 :   Shows progress status of a previously given staging request with
     data specified by the query string.
 
-    Options are optional, and passed as-is to the `::Print()` method.
+    Options are optional, and passed as-is to the `::%Print()` method.
 
     > It is possible to show all the files marked as corrupted by the
     > daemon:

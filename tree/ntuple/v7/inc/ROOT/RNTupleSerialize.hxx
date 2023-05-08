@@ -91,24 +91,20 @@ public:
    private:
       std::uint32_t fHeaderSize = 0;
       std::uint32_t fHeaderCrc32 = 0;
-      std::vector<RClusterGroup> fClusterGroups;
       std::map<DescriptorId_t, DescriptorId_t> fMem2PhysFieldIDs;
       std::map<DescriptorId_t, DescriptorId_t> fMem2PhysColumnIDs;
       std::map<DescriptorId_t, DescriptorId_t> fMem2PhysClusterIDs;
+      std::map<DescriptorId_t, DescriptorId_t> fMem2PhysClusterGroupIDs;
       std::vector<DescriptorId_t> fPhys2MemFieldIDs;
       std::vector<DescriptorId_t> fPhys2MemColumnIDs;
       std::vector<DescriptorId_t> fPhys2MemClusterIDs;
+      std::vector<DescriptorId_t> fPhys2MemClusterGroupIDs;
+
    public:
       void SetHeaderSize(std::uint32_t size) { fHeaderSize = size; }
       std::uint32_t GetHeaderSize() const { return fHeaderSize; }
       void SetHeaderCRC32(std::uint32_t crc32) { fHeaderCrc32 = crc32; }
       std::uint32_t GetHeaderCRC32() const { return fHeaderCrc32; }
-      void AddClusterGroup(std::uint32_t nClusters, const REnvelopeLink &pageListEnvelope) {
-         fClusterGroups.push_back({nClusters, pageListEnvelope});
-      }
-      const std::vector<RClusterGroup> &GetClusterGroups() const {
-         return fClusterGroups;
-      }
       DescriptorId_t MapFieldId(DescriptorId_t memId) {
          auto physId = fPhys2MemFieldIDs.size();
          fMem2PhysFieldIDs[memId] = physId;
@@ -127,12 +123,21 @@ public:
          fPhys2MemClusterIDs.push_back(memId);
          return physId;
       }
+      DescriptorId_t MapClusterGroupId(DescriptorId_t memId)
+      {
+         auto physId = fPhys2MemClusterGroupIDs.size();
+         fMem2PhysClusterGroupIDs[memId] = physId;
+         fPhys2MemClusterGroupIDs.push_back(memId);
+         return physId;
+      }
       DescriptorId_t GetPhysFieldId(DescriptorId_t memId) const { return fMem2PhysFieldIDs.at(memId); }
       DescriptorId_t GetPhysColumnId(DescriptorId_t memId) const { return fMem2PhysColumnIDs.at(memId); }
       DescriptorId_t GetPhysClusterId(DescriptorId_t memId) const { return fMem2PhysClusterIDs.at(memId); }
+      DescriptorId_t GetPhysClusterGroupId(DescriptorId_t memId) const { return fMem2PhysClusterGroupIDs.at(memId); }
       DescriptorId_t GetMemFieldId(DescriptorId_t physId) const { return fPhys2MemFieldIDs[physId]; }
       DescriptorId_t GetMemColumnId(DescriptorId_t physId) const { return fPhys2MemColumnIDs[physId]; }
       DescriptorId_t GetMemClusterId(DescriptorId_t physId) const { return fPhys2MemClusterIDs[physId]; }
+      DescriptorId_t GetMemClusterGroupId(DescriptorId_t physId) const { return fPhys2MemClusterGroupIDs[physId]; }
    };
 
    /// Writes a CRC32 checksum of the byte range given by data and length.
@@ -215,6 +220,7 @@ public:
    static RResult<void> DeserializeFooterV1(const void *buffer,
                                             std::uint32_t bufSize,
                                             RNTupleDescriptorBuilder &descBuilder);
+   // The clusters vector must be initialized with the cluster summaries corresponding to the page list
    static RResult<void> DeserializePageListV1(const void *buffer,
                                               std::uint32_t bufSize,
                                               std::vector<RClusterDescriptorBuilder> &clusters);

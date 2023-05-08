@@ -240,7 +240,6 @@ static void AnnotateFieldDecl(clang::FieldDecl &decl,
    if (fieldSelRules.empty()) return;
 
    clang::ASTContext &C = decl.getASTContext();
-   clang::SourceRange commentRange; // Empty: this is a fake comment
 
    const std::string declName(decl.getNameAsString());
    std::string varName;
@@ -277,7 +276,7 @@ static void AnnotateFieldDecl(clang::FieldDecl &decl,
             // before persisting the ProtoClasses in the root pcms.
             // BEGIN ROOT PCMS
             if (name == propNames::comment) {
-               decl.addAttr(new(C) clang::AnnotateAttr(commentRange, C, value, 0));
+               decl.addAttr(clang::AnnotateAttr::CreateImplicit(C, value));
             }
             // END ROOT PCMS
 
@@ -287,7 +286,7 @@ static void AnnotateFieldDecl(clang::FieldDecl &decl,
                // This next line is here to use the root pcms. Indeed we need to annotate the AST
                // before persisting the ProtoClasses in the root pcms.
                // BEGIN ROOT PCMS
-               decl.addAttr(new(C) clang::AnnotateAttr(commentRange, C, "!", 0));
+               decl.addAttr(clang::AnnotateAttr::CreateImplicit(C, "!"));
                // END ROOT PCMS
                // The rest of the lines are not changed to leave in place the system which
                // works with bulk header parsing on library load.
@@ -295,7 +294,7 @@ static void AnnotateFieldDecl(clang::FieldDecl &decl,
                userDefinedProperty = name + propNames::separator + value;
             }
             ROOT::TMetaUtils::Info(nullptr, "%s %s\n", varName.c_str(), userDefinedProperty.c_str());
-            decl.addAttr(new(C) clang::AnnotateAttr(commentRange, C, userDefinedProperty, 0));
+            decl.addAttr(clang::AnnotateAttr::CreateImplicit(C, userDefinedProperty));
 
          }
       }
@@ -319,9 +318,6 @@ void AnnotateDecl(clang::CXXRecordDecl &CXXRD,
    llvm::StringRef comment;
 
    ASTContext &C = CXXRD.getASTContext();
-   Sema &S = interpreter.getCI()->getSema();
-
-   SourceRange commentRange;
 
    // Fetch the selection rule associated to this class
    clang::Decl *declBaseClassPtr = static_cast<clang::Decl *>(&CXXRD);
@@ -344,7 +340,7 @@ void AnnotateDecl(clang::CXXRecordDecl &CXXRD,
          const std::string &value = attr.second;
          userDefinedProperty = name + ROOT::TMetaUtils::propNames::separator + value;
          if (genreflex::verbose) std::cout << " * " << userDefinedProperty << std::endl;
-         CXXRD.addAttr(new(C) AnnotateAttr(commentRange, C, userDefinedProperty, 0));
+         CXXRD.addAttr(AnnotateAttr::CreateImplicit(C, userDefinedProperty));
       }
    }
 
@@ -359,10 +355,8 @@ void AnnotateDecl(clang::CXXRecordDecl &CXXRD,
       if (!(*I)->isImplicit()
             && (isa<CXXMethodDecl>(*I) || isa<FieldDecl>(*I) || isa<VarDecl>(*I))) {
 
-
          // For now we allow only a special macro (ClassDef) to have meaningful comments
-         SourceLocation maybeMacroLoc = (*I)->getLocation();
-         bool isClassDefMacro = maybeMacroLoc.isMacroID() && S.findMacroSpelling(maybeMacroLoc, "ClassDef");
+         bool isClassDefMacro = TMetaUtils::HasClassDefMacro(*I, interpreter);
          if (isClassDefMacro) {
             while (isa<NamedDecl>(*I) && cast<NamedDecl>(*I)->getName() != "DeclFileLine") {
                ++I;
@@ -371,19 +365,16 @@ void AnnotateDecl(clang::CXXRecordDecl &CXXRD,
 
          comment = ROOT::TMetaUtils::GetComment(**I, &commentSLoc);
          if (comment.size()) {
-            // Keep info for the source range of the comment in case we want to issue
-            // nice warnings, eg. empty comment and so on.
-            commentRange = SourceRange(commentSLoc, commentSLoc.getLocWithOffset(comment.size()));
             // The ClassDef annotation is for the class itself
             if (isClassDefMacro) {
-               CXXRD.addAttr(new(C) AnnotateAttr(commentRange, C, comment.str(), 0));
+               CXXRD.addAttr(AnnotateAttr::CreateImplicit(C, comment.str()));
             } else if (!isGenreflex) {
                // Here we check if we are in presence of a selection file so that
                // the comment does not ends up as a decoration in the AST,
                // Nevertheless, w/o PCMS this has no effect, since the headers
                // are parsed at runtime and the information in the AST dumped by
                // rootcling is not relevant.
-               (*I)->addAttr(new(C) AnnotateAttr(commentRange, C, comment.str(), 0));
+               (*I)->addAttr(AnnotateAttr::CreateImplicit(C, comment.str()));
             }
          }
          // Match decls with sel rules if we are in presence of a selection file
@@ -532,7 +523,7 @@ void SetRootSys()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Check whether the #pragma line contains expectedTokens (0-terminated array).
+/// Check whether the `#pragma` line contains expectedTokens (0-terminated array).
 
 bool ParsePragmaLine(const std::string &line,
                      const char *expectedTokens[],
@@ -1337,12 +1328,12 @@ void WriteNamespaceInit(const clang::NamespaceDecl *cl,
 /// array data member.
 /// In case of error, or if the size is not specified, GrabIndex returns 0.
 
-llvm::StringRef GrabIndex(const clang::FieldDecl &member, int printError)
+llvm::StringRef GrabIndex(const cling::Interpreter& interp, const clang::FieldDecl &member, int printError)
 {
    int error;
    llvm::StringRef where;
 
-   llvm::StringRef index = ROOT::TMetaUtils::DataMemberInfo__ValidArrayIndex(member, &error, &where);
+   llvm::StringRef index = ROOT::TMetaUtils::DataMemberInfo__ValidArrayIndex(interp, member, &error, &where);
    if (index.size() == 0 && printError) {
       const char *errorstring;
       switch (error) {
@@ -1525,7 +1516,7 @@ void WriteStreamer(const ROOT::TMetaUtils::AnnotatedRecordDecl &cl,
                      dictStream << "         ;//R__b.WriteArray(" << field_iter->getName().str() << ", __COUNTER__);" << std::endl;
                   }
                } else if (type.getTypePtr()->isPointerType()) {
-                  llvm::StringRef indexvar = GrabIndex(**field_iter, i == 0);
+                  llvm::StringRef indexvar = GrabIndex(interp, **field_iter, i == 0);
                   if (indexvar.size() == 0) {
                      if (i == 0) {
                         ROOT::TMetaUtils::Error(nullptr, "*** Datamember %s::%s: pointer to fundamental type (need manual intervention)\n", fullname.c_str(), field_iter->getName().str().c_str());
@@ -1926,7 +1917,7 @@ bool Which(cling::Interpreter &interp, const char *fname, string &pname)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// If the argument starts with MODULE/inc, strip it
-/// to make it the name we can use in #includes.
+/// to make it the name we can use in `#includes`.
 
 const char *CopyArg(const char *original)
 {
@@ -1996,8 +1987,8 @@ static bool WriteAST(llvm::StringRef fileName, clang::CompilerInstance *compiler
    clang::ASTWriter writer(stream, buffer, compilerInstance->getModuleCache(), /*Extensions=*/{});
    std::unique_ptr<llvm::raw_ostream> out =
       compilerInstance->createOutputFile(fileName, /*Binary=*/true,
-                                         /*RemoveFileOnSignal=*/false, /*InFile*/ "",
-                                         /*Extension=*/"", /*useTemporary=*/false,
+                                         /*RemoveFileOnSignal=*/false,
+                                         /*useTemporary=*/false,
                                          /*CreateMissingDirectories*/ false);
    if (!out) {
       ROOT::TMetaUtils::Error("WriteAST", "Couldn't open output stream to '%s'!\n", fileName.data());
@@ -2006,7 +1997,7 @@ static bool WriteAST(llvm::StringRef fileName, clang::CompilerInstance *compiler
 
    compilerInstance->getFrontendOpts().RelocatablePCH = true;
 
-   writer.WriteAST(compilerInstance->getSema(), fileName, module, iSysRoot);
+   writer.WriteAST(compilerInstance->getSema(), fileName.str(), module, iSysRoot);
 
    // Write the generated bitstream to "Out".
    out->write(&buffer.front(), buffer.size());
@@ -2131,7 +2122,7 @@ void AddPlatformDefines(std::vector<std::string> &clingArgs)
 
 std::string ExtractFileName(const std::string &path)
 {
-   return llvm::sys::path::filename(path);
+   return llvm::sys::path::filename(path).str();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2229,7 +2220,7 @@ int ExtractAutoloadKeys(std::list<std::string> &names,
 ////////////////////////////////////////////////////////////////////////////////
 /// Generate a rootmap file in the new format, like
 /// { decls }
-/// namespace A { namespace B { template <typename T> class myTemplate; } }
+/// `namespace A { namespace B { template <typename T> class myTemplate; } }`
 /// [libGpad.so libGraf.so libHist.so libMathCore.so]
 /// class TAttCanvas
 /// class TButton
@@ -2808,7 +2799,7 @@ void CreateDictHeader(std::ostream &dictStream, const std::string &main_dictname
                << "#include <string.h>\n"
                << "#include <assert.h>\n"
                << "#define G__DICTIONARY\n"
-               << "#include \"RConfig.h\"\n"
+               << "#include \"ROOT/RConfig.hxx\"\n"
                << "#include \"TClass.h\"\n"
                << "#include \"TDictAttributeMap.h\"\n"
                << "#include \"TInterpreter.h\"\n"
@@ -3008,7 +2999,7 @@ std::ostream *CreateStreamPtrForSplitDict(const std::string &dictpathname,
 ////////////////////////////////////////////////////////////////////////////////
 /// Transform -W statements in diagnostic pragmas for cling reacting on "-Wno-"
 /// For example
-/// -Wno-deprecated-declarations --> #pragma clang diagnostic ignored "-Wdeprecated-declarations"
+/// -Wno-deprecated-declarations --> `#pragma clang diagnostic ignored "-Wdeprecated-declarations"`
 
 static void CheckForMinusW(std::string arg,
                            std::list<std::string> &diagnosticPragmas)
@@ -3475,11 +3466,11 @@ public:
 
    ~TRootClingCallbacks(){};
 
-   virtual void InclusionDirective(clang::SourceLocation /*HashLoc*/, const clang::Token & /*IncludeTok*/,
-                                   llvm::StringRef FileName, bool IsAngled, clang::CharSourceRange /*FilenameRange*/,
-                                   const clang::FileEntry * /*File*/, llvm::StringRef /*SearchPath*/,
-                                   llvm::StringRef /*RelativePath*/, const clang::Module * /*Imported*/,
-                                   clang::SrcMgr::CharacteristicKind /*FileType*/)
+   void InclusionDirective(clang::SourceLocation /*HashLoc*/, const clang::Token & /*IncludeTok*/,
+                           llvm::StringRef FileName, bool IsAngled, clang::CharSourceRange /*FilenameRange*/,
+                           const clang::FileEntry * /*File*/, llvm::StringRef /*SearchPath*/,
+                           llvm::StringRef /*RelativePath*/, const clang::Module * /*Imported*/,
+                           clang::SrcMgr::CharacteristicKind /*FileType*/) override
    {
       if (isLocked) return;
       if (IsAngled) return;
@@ -3510,9 +3501,9 @@ public:
    // outside environment and pre-included files have no effect. This hook
    // informs rootcling when a new submodule is being built so that it can
    // make Core.Rtypes.h visible.
-   virtual void EnteredSubmodule(clang::Module* M,
-                                 clang::SourceLocation ImportLoc,
-                                 bool ForPragma) {
+   void EnteredSubmodule(clang::Module* M,
+                         clang::SourceLocation ImportLoc,
+                         bool ForPragma) override {
       assert(M);
       using namespace clang;
       if (llvm::StringRef(M->Name).endswith("ACLiC_dict")) {
@@ -3850,8 +3841,8 @@ gOptBareClingSink(llvm::cl::OneOrMore, llvm::cl::Sink,
 /// The names of all header files that are needed by the ModuleGenerator but are
 /// not in the given module will be inserted into the MissingHeader variable.
 /// Returns true iff the PCH was successfully generated.
-static bool ModuleContainsHeaders(TModuleGenerator &modGen, clang::Module *module,
-                                  std::vector<std::string> &missingHeaders)
+static bool ModuleContainsHeaders(TModuleGenerator &modGen, clang::HeaderSearch &headerSearch,
+                                  clang::Module *module, std::vector<std::array<std::string, 2>> &missingHeaders)
 {
    // Now we collect all header files from the previously collected modules.
    std::vector<clang::Module::Header> moduleHeaders;
@@ -3860,21 +3851,55 @@ static bool ModuleContainsHeaders(TModuleGenerator &modGen, clang::Module *modul
 
    bool foundAllHeaders = true;
 
+   auto isHeaderInModule = [&moduleHeaders](const std::string &header) {
+      for (const clang::Module::Header &moduleHeader : moduleHeaders)
+         if (header == moduleHeader.NameAsWritten)
+            return true;
+      return false;
+   };
+
    // Go through the list of headers that are required by the ModuleGenerator
    // and check for each header if it's in one of the modules we loaded.
    // If not, make sure we fail at the end and mark the header as missing.
    for (const std::string &header : modGen.GetHeaders()) {
-      bool headerFound = false;
-      for (const clang::Module::Header &moduleHeader : moduleHeaders) {
-         if (header == moduleHeader.NameAsWritten) {
-            headerFound = true;
-            break;
+      if (isHeaderInModule(header))
+         continue;
+
+      clang::ModuleMap::KnownHeader SuggestedModule;
+      const clang::DirectoryLookup *CurDir = nullptr;
+      if (auto FE = headerSearch.LookupFile(
+               header, clang::SourceLocation(),
+               /*isAngled*/ false,
+               /*FromDir*/ 0, CurDir,
+               clang::ArrayRef<std::pair<const clang::FileEntry *, const clang::DirectoryEntry *>>(),
+               /*SearchPath*/ 0,
+               /*RelativePath*/ 0,
+               /*RequestingModule*/ 0, &SuggestedModule,
+               /*IsMapped*/ 0,
+               /*IsFrameworkFound*/ nullptr,
+               /*SkipCache*/ false,
+               /*BuildSystemModule*/ false,
+               /*OpenFile*/ false,
+               /*CacheFail*/ false)) {
+         if (auto OtherModule = SuggestedModule.getModule()) {
+            std::string OtherModuleName;
+            auto TLM = OtherModule->getTopLevelModuleName();
+            if (!TLM.empty())
+               OtherModuleName = TLM.str();
+            else
+               OtherModuleName = OtherModule->Name;
+
+            // Don't complain about headers that are actually in by-products:
+            if (std::find(gOptModuleByproducts.begin(), gOptModuleByproducts.end(), OtherModuleName)
+                != gOptModuleByproducts.end())
+               continue;
+
+            missingHeaders.push_back({header, OtherModuleName});
          }
+      } else {
+         missingHeaders.push_back({header, {}});
       }
-      if (!headerFound) {
-         missingHeaders.push_back(header);
-         foundAllHeaders = false;
-      }
+      foundAllHeaders = false;
    }
    return foundAllHeaders;
 }
@@ -3900,17 +3925,20 @@ static bool CheckModuleValid(TModuleGenerator &modGen, const std::string &resour
 
    // Check if the loaded module covers all headers that were specified
    // by the user on the command line. This is an integrity check to
-   // ensure that our used module map is
-   std::vector<std::string> missingHeaders;
-   if (!ModuleContainsHeaders(modGen, module, missingHeaders)) {
+   // ensure that our used module map is not containing extraneous headers.
+   std::vector<std::array<std::string, 2>> missingHdrMod;
+   if (!ModuleContainsHeaders(modGen, headerSearch, module, missingHdrMod)) {
       // FIXME: Upgrade this to an error once modules are stable.
       std::stringstream msgStream;
-      msgStream << "warning: Couldn't find in "
-                << module->PresumedModuleMapFile
-                << " the following specified headers in "
-                << "the module " << module->Name << ":\n";
-      for (auto &H : missingHeaders) {
-         msgStream << "  " << H << "\n";
+      msgStream << "after creating module \"" << module->Name << "\" ";
+      if (!module->PresumedModuleMapFile.empty())
+         msgStream << "using modulemap \"" << module->PresumedModuleMapFile << "\" ";
+      msgStream << "the following headers are not part of that module:\n";
+      for (auto &H : missingHdrMod) {
+         msgStream << "  " << H[0];
+         if (!H[1].empty())
+            msgStream << " (already part of module \"" << H[1] << "\")";
+         msgStream << "\n";
       }
       std::string warningMessage = msgStream.str();
 
@@ -3933,6 +3961,9 @@ static bool CheckModuleValid(TModuleGenerator &modGen, const std::string &resour
 
       ROOT::TMetaUtils::Warning("CheckModuleValid", warningMessage.c_str());
       // We include the missing headers to fix the module for the user.
+      std::vector<std::string> missingHeaders;
+      std::transform(missingHdrMod.begin(), missingHdrMod.end(), missingHeaders.begin(),
+                     [](const std::array<std::string, 2>& HdrMod) { return HdrMod[0];});
       if (!IncludeHeaders(missingHeaders, interpreter)) {
          ROOT::TMetaUtils::Error("CheckModuleValid", "Couldn't include missing module headers for module '%s'!\n",
                                  module->Name.c_str());
@@ -3958,16 +3989,6 @@ int RootClingMain(int argc,
               char **argv,
               bool isGenreflex = false)
 {
-   // Define Options aliasses
-   auto &opts = llvm::cl::getRegisteredOptions();
-   auto &optHelp = *opts["help"];
-   llvm::cl::alias optHelpAlias1("h",
-                      llvm::cl::desc("Alias for -help"),
-                      llvm::cl::aliasopt(optHelp));
-   llvm::cl::alias optHelpAlias2("?",
-                      llvm::cl::desc("Alias for -help"),
-                      llvm::cl::aliasopt(optHelp));
-
    // Set number of required arguments. We cannot do this globally since it
    // would interfere with LLVM's option parsing.
    gOptDictionaryFileName.setNumOccurrencesFlag(llvm::cl::Required);
@@ -4003,6 +4024,16 @@ int RootClingMain(int argc,
    // Hide options from llvm which we got from static initialization of libCling.
    llvm::cl::HideUnrelatedOptions(/*keep*/gRootclingOptions);
 
+   // Define Options aliasses
+   auto &opts = llvm::cl::getRegisteredOptions();
+   llvm::cl::Option* optHelp = opts["help"];
+   llvm::cl::alias optHelpAlias1("h",
+                      llvm::cl::desc("Alias for -help"),
+                      llvm::cl::aliasopt(*optHelp));
+   llvm::cl::alias optHelpAlias2("?",
+                      llvm::cl::desc("Alias for -help"),
+                      llvm::cl::aliasopt(*optHelp));
+
    llvm::cl::ParseCommandLineOptions(argc, argv, "rootcling");
 
    std::string llvmResourceDir = std::string(gDriverConfig->fTROOT__GetEtcDir()) + "/cling";
@@ -4019,9 +4050,9 @@ int RootClingMain(int argc,
       for (const std::string& Opt : gOptBareClingSink)
          clingArgsC.push_back(Opt.c_str());
 
-      auto interp = llvm::make_unique<cling::Interpreter>(clingArgsC.size(),
-                                                          &clingArgsC[0],
-                                                          llvmResourceDir.c_str());
+      auto interp = std::make_unique<cling::Interpreter>(clingArgsC.size(),
+                                                         &clingArgsC[0],
+                                                         llvmResourceDir.c_str());
       // FIXME: Diagnose when we have misspelled a flag. Currently we show no
       // diagnostic and report exit as success.
       return interp->getDiagnostics().hasFatalErrorOccurred();
@@ -4080,7 +4111,7 @@ int RootClingMain(int argc,
          return 1;
       }
 
-      dictname = llvm::sys::path::filename(gOptDictionaryFileName);
+      dictname = llvm::sys::path::filename(gOptDictionaryFileName).str();
    }
 
    if (gOptForce && dictname.empty()) {
@@ -4113,8 +4144,8 @@ int RootClingMain(int argc,
         ROOT::TMetaUtils::Error("", "isysroot specified without a value.\n");
         return 1;
       }
-      clingArgs.push_back(gOptISysRoot.ArgStr);
-      clingArgs.push_back(gOptISysRoot.ValueStr);
+      clingArgs.push_back(gOptISysRoot.ArgStr.str());
+      clingArgs.push_back(gOptISysRoot.ValueStr.str());
    }
 
    // Check if we have a multi dict request but no target library
@@ -4244,8 +4275,7 @@ int RootClingMain(int argc,
       // Try to get the module name in the modulemap based on the filepath.
       moduleName = GetModuleNameFromRdictName(outputFile);
 
-      clingArgsInterpreter.push_back("-fmodule-name");
-      clingArgsInterpreter.push_back(moduleName.str());
+      clingArgsInterpreter.push_back("-fmodule-name=" + moduleName.str());
 
       std::string moduleCachePath = llvm::sys::path::parent_path(gOptSharedLibFileName).str();
       // FIXME: This is a horrible workaround to fix the incremental builds.
@@ -4387,7 +4417,7 @@ int RootClingMain(int argc,
          DepMod = GetModuleNameFromRdictName(DepMod);
          // We might deserialize.
          cling::Interpreter::PushTransactionRAII RAII(&interp);
-         if (!interp.loadModule(DepMod, /*complain*/false)) {
+         if (!interp.loadModule(DepMod.str(), /*complain*/false)) {
             ROOT::TMetaUtils::Error(nullptr, "Module '%s' failed to load.\n",
                                     DepMod.data());
          }
@@ -4521,7 +4551,7 @@ int RootClingMain(int argc,
          clang::PragmaNamespace(pragma) {}
       void HandlePragma(clang::Preprocessor &PP,
                         clang::PragmaIntroducer Introducer,
-                        clang::Token &tok) {
+                        clang::Token &tok) override {
          PP.DiscardUntilEndOfDirective();
       }
    };

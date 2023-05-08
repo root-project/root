@@ -8,7 +8,7 @@
  *                                                                    *
  **********************************************************************/
 
-// random engines based on ROOT 
+// random engines based on ROOT
 
 #ifndef ROOT_Math_StdEngine
 #define ROOT_Math_StdEngine
@@ -54,32 +54,32 @@ namespace ROOT {
       struct StdEngineType<std::random_device> {
          static const char *  Name() { return "std_random_device";}
       };
-      
-      
-      /** 
+
+
+      /**
           @ingroup Random
-          Class to wrap engines fron the C++ standard random library in 
-          the ROOT Random interface. 
-          This casess is then by used by the generic TRandoGen class 
+          Class to wrap engines fron the C++ standard random library in
+          the ROOT Random interface.
+          These cases are then used by the generic TRandomGen class
           to provide TRandom interrace generators for the C++ random generators.
 
-          See for examples the TRandomMT64 and TRandomRanlux48 generators 
-          which are typede's to TRandomGen instaniated with some 
-          random engine from the C++ standard library. 
+          See for examples the TRandomMT64 and TRandomRanlux48 generators
+          which are typede's to TRandomGen instantiated with some
+          random engine from the C++ standard library.
 
       */
 
-      template <class Generator> 
+      template <class Generator>
       class StdEngine {
 
 
       public:
 
-         typedef  StdRandomEngine BaseType; 
+         typedef  StdRandomEngine BaseType;
          typedef  typename Generator::result_type Result_t;
 
          StdEngine() : fGen() {
-            fCONS = 1./fGen.max(); 
+            fCONS = 1./fGen.max();
          }
 
 
@@ -96,11 +96,11 @@ namespace ROOT {
          }
 
          double operator() () {
-            return Rndm(); 
+            return Rndm();
          }
 
          static const char * Name()  {
-            return StdEngineType<Generator>::Name(); 
+            return StdEngineType<Generator>::Name();
          }
 
          static uint64_t MaxInt() { return Generator::max(); }

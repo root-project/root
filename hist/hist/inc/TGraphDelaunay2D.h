@@ -35,8 +35,8 @@ public:
 
 
 private:
-   TGraphDelaunay2D(const TGraphDelaunay2D&);            // Not implemented
-   TGraphDelaunay2D& operator=(const TGraphDelaunay2D&); // Not implemented
+   TGraphDelaunay2D(const TGraphDelaunay2D&) = delete;
+   TGraphDelaunay2D& operator=(const TGraphDelaunay2D&) = delete;
 
 protected:
 
@@ -47,7 +47,7 @@ public:
 
    typedef  ROOT::Math::Delaunay2D::Triangles Triangles;
 
-   TGraphDelaunay2D(TGraph2D *g = 0);
+   TGraphDelaunay2D(TGraph2D *g = nullptr);
 
    Double_t  ComputeZ(Double_t x, Double_t y) { return fDelaunay.Interpolate(x,y); }
    void      FindAllTriangles() { fDelaunay.FindAllTriangles(); }
@@ -65,7 +65,7 @@ public:
    Triangles::const_iterator begin() const { return fDelaunay.begin(); }
    Triangles::const_iterator end()  const { return fDelaunay.end(); }
 
-   ClassDef(TGraphDelaunay2D,1)  // Delaunay triangulation
+   ClassDefOverride(TGraphDelaunay2D,1)  // Delaunay triangulation
 
 private:
 

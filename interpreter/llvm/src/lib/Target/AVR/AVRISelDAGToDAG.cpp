@@ -242,16 +242,13 @@ bool AVRDAGToDAGISel::SelectInlineAsmMemoryOperand(const SDValue &Op,
     ConstantSDNode *ImmNode = dyn_cast<ConstantSDNode>(ImmOp);
 
     unsigned Reg;
-    bool CanHandleRegImmOpt = true;
-
-    CanHandleRegImmOpt &= ImmNode != 0;
-    CanHandleRegImmOpt &= ImmNode->getAPIntValue().getZExtValue() < 64;
+    bool CanHandleRegImmOpt = ImmNode && ImmNode->getAPIntValue().ult(64);
 
     if (CopyFromRegOp->getOpcode() == ISD::CopyFromReg) {
       RegisterSDNode *RegNode =
           cast<RegisterSDNode>(CopyFromRegOp->getOperand(1));
       Reg = RegNode->getReg();
-      CanHandleRegImmOpt &= (TargetRegisterInfo::isVirtualRegister(Reg) ||
+      CanHandleRegImmOpt &= (Register::isVirtualRegister(Reg) ||
                              AVR::PTRDISPREGSRegClass.contains(Reg));
     } else {
       CanHandleRegImmOpt = false;
@@ -265,7 +262,7 @@ bool AVRDAGToDAGISel::SelectInlineAsmMemoryOperand(const SDValue &Op,
       if (RI.getRegClass(Reg) != &AVR::PTRDISPREGSRegClass) {
         SDLoc dl(CopyFromRegOp);
 
-        unsigned VReg = RI.createVirtualRegister(&AVR::PTRDISPREGSRegClass);
+        Register VReg = RI.createVirtualRegister(&AVR::PTRDISPREGSRegClass);
 
         SDValue CopyToReg =
             CurDAG->getCopyToReg(CopyFromRegOp, dl, VReg, CopyFromRegOp);
@@ -294,7 +291,7 @@ bool AVRDAGToDAGISel::SelectInlineAsmMemoryOperand(const SDValue &Op,
   // More generic case.
   // Create chain that puts Op into pointer register
   // and return that register.
-  unsigned VReg = RI.createVirtualRegister(&AVR::PTRDISPREGSRegClass);
+  Register VReg = RI.createVirtualRegister(&AVR::PTRDISPREGSRegClass);
 
   SDValue CopyToReg = CurDAG->getCopyToReg(Op, dl, VReg, Op);
   SDValue CopyFromReg =

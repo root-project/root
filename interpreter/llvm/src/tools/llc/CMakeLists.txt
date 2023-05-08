@@ -4,6 +4,7 @@ set(LLVM_LINK_COMPONENTS
   AllTargetsDescs
   AllTargetsInfos
   Analysis
+  AsmParser
   AsmPrinter
   CodeGen
   Core
@@ -19,13 +20,12 @@ set(LLVM_LINK_COMPONENTS
   Vectorize
   )
 
-# Support plugins.
-set(LLVM_NO_DEAD_STRIP 1)
-
 add_llvm_tool(llc
   llc.cpp
 
   DEPENDS
   intrinsics_gen
+  SUPPORT_PLUGINS
   )
-export_executable_symbols(llc)
+
+export_executable_symbols_for_plugins(llc)

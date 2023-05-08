@@ -16,7 +16,7 @@
 /** \class TFitResultPtr
 Provides an indirection to the TFitResult class and with a semantics
 identical to a TFitResult pointer, i.e. it is like a smart pointer to a TFitResult.
-In addition it provides an automatic comversion to an integer. In this way it can be
+In addition it provides an automatic conversion to an integer. In this way it can be
 returned from the TH1::Fit method and the change in TH1::Fit be backward compatible.
  */
 

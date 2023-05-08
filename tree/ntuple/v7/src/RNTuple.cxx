@@ -25,7 +25,9 @@
 #include <ROOT/TTaskGroup.hxx>
 #endif
 
+#include <TBuffer.h>
 #include <TError.h>
+#include <TFile.h>
 #include <TROOT.h> // for IsImplicitMTEnabled()
 
 #include <algorithm>
@@ -68,13 +70,14 @@ void ROOT::Experimental::RNTupleImtTaskScheduler::Wait()
 
 
 void ROOT::Experimental::RNTupleReader::ConnectModel(const RNTupleModel &model) {
-   const auto &desc = fSource->GetDescriptor();
-   model.GetFieldZero()->SetOnDiskId(desc.GetFieldZeroId());
+   // We must not use the descriptor guard to prevent recursive locking in field.ConnectPageSource
+   model.GetFieldZero()->SetOnDiskId(fSource->GetSharedDescriptorGuard()->GetFieldZeroId());
    for (auto &field : *model.GetFieldZero()) {
       // If the model has been created from the descritor, the on-disk IDs are already set.
       // User-provided models instead need to find their corresponding IDs in the descriptor.
       if (field.GetOnDiskId() == kInvalidDescriptorId) {
-         field.SetOnDiskId(desc.FindFieldId(field.GetName(), field.GetParent()->GetOnDiskId()));
+         field.SetOnDiskId(
+            fSource->GetSharedDescriptorGuard()->FindFieldId(field.GetName(), field.GetParent()->GetOnDiskId()));
       }
       field.ConnectPageSource(*fSource);
    }
@@ -105,6 +108,7 @@ ROOT::Experimental::RNTupleReader::RNTupleReader(
    if (!fModel) {
       throw RException(R__FAIL("null model"));
    }
+   fModel->Freeze();
    InitPageSource();
    ConnectModel(*fModel);
 }
@@ -139,6 +143,12 @@ std::unique_ptr<ROOT::Experimental::RNTupleReader> ROOT::Experimental::RNTupleRe
    return std::make_unique<RNTupleReader>(Detail::RPageSource::Create(ntupleName, storage, options));
 }
 
+std::unique_ptr<ROOT::Experimental::RNTupleReader>
+ROOT::Experimental::RNTupleReader::Open(ROOT::Experimental::RNTuple *ntuple, const RNTupleReadOptions &options)
+{
+   return std::make_unique<RNTupleReader>(ntuple->MakePageSource(options));
+}
+
 std::unique_ptr<ROOT::Experimental::RNTupleReader> ROOT::Experimental::RNTupleReader::OpenFriends(
    std::span<ROpenSpec> ntuples)
 {
@@ -152,7 +162,7 @@ std::unique_ptr<ROOT::Experimental::RNTupleReader> ROOT::Experimental::RNTupleRe
 ROOT::Experimental::RNTupleModel *ROOT::Experimental::RNTupleReader::GetModel()
 {
    if (!fModel) {
-      fModel = fSource->GetDescriptor().GenerateModel();
+      fModel = fSource->GetSharedDescriptorGuard()->GenerateModel();
       ConnectModel(*fModel);
    }
    return fModel.get();
@@ -169,9 +179,16 @@ void ROOT::Experimental::RNTupleReader::PrintInfo(const ENTupleInfo what, std::o
       return;
    }
    */
-   std::string name = fSource->GetDescriptor().GetName();
    switch (what) {
    case ENTupleInfo::kSummary: {
+      std::string name;
+      std::unique_ptr<RNTupleModel> fullModel;
+      {
+         auto descriptorGuard = fSource->GetSharedDescriptorGuard();
+         name = descriptorGuard->GetName();
+         fullModel = descriptorGuard->GenerateModel();
+      }
+
       for (int i = 0; i < (width/2 + width%2 - 4); ++i)
             output << frameSymbol;
       output << " NTUPLE ";
@@ -188,7 +205,6 @@ void ROOT::Experimental::RNTupleReader::PrintInfo(const ENTupleInfo what, std::o
       RPrintSchemaVisitor printVisitor(output);
 
       // Note that we do not need to connect the model, we are only looking at its tree of fields
-      auto fullModel = fSource->GetDescriptor().GenerateModel();
       fullModel->GetFieldZero()->AcceptVisitor(prepVisitor);
 
       printVisitor.SetFrameSymbol(frameSymbol);
@@ -205,9 +221,7 @@ void ROOT::Experimental::RNTupleReader::PrintInfo(const ENTupleInfo what, std::o
       output << std::endl;
       break;
    }
-   case ENTupleInfo::kStorageDetails:
-      fSource->GetDescriptor().PrintInfo(output);
-      break;
+   case ENTupleInfo::kStorageDetails: fSource->GetSharedDescriptorGuard()->PrintInfo(output); break;
    case ENTupleInfo::kMetrics:
       fMetrics.Print(output);
       break;
@@ -267,6 +281,13 @@ void ROOT::Experimental::RNTupleReader::Show(NTupleSize_t index, const ENTupleSh
    }
 }
 
+const ROOT::Experimental::RNTupleDescriptor *ROOT::Experimental::RNTupleReader::GetDescriptor()
+{
+   auto descriptorGuard = fSource->GetSharedDescriptorGuard();
+   if (!fCachedDescriptor || fCachedDescriptor->GetGeneration() != descriptorGuard->GetGeneration())
+      fCachedDescriptor = descriptorGuard->Clone();
+   return fCachedDescriptor.get();
+}
 
 //------------------------------------------------------------------------------
 
@@ -284,6 +305,7 @@ ROOT::Experimental::RNTupleWriter::RNTupleWriter(
    if (!fSink) {
       throw RException(R__FAIL("null sink"));
    }
+   fModel->Freeze();
 #ifdef R__USE_IMT
    if (IsImplicitMTEnabled()) {
       fZipTasks = std::make_unique<RNTupleImtTaskScheduler>();
@@ -302,7 +324,7 @@ ROOT::Experimental::RNTupleWriter::RNTupleWriter(
 
 ROOT::Experimental::RNTupleWriter::~RNTupleWriter()
 {
-   CommitCluster();
+   CommitCluster(true /* commitClusterGroup */);
    fSink->CommitDataset();
 }
 
@@ -329,10 +351,21 @@ std::unique_ptr<ROOT::Experimental::RNTupleWriter> ROOT::Experimental::RNTupleWr
    return std::make_unique<RNTupleWriter>(std::move(model), std::move(sink));
 }
 
-
-void ROOT::Experimental::RNTupleWriter::CommitCluster()
+void ROOT::Experimental::RNTupleWriter::CommitClusterGroup()
 {
-   if (fNEntries == fLastCommitted) return;
+   if (fNEntries == fLastCommittedClusterGroup)
+      return;
+   fSink->CommitClusterGroup();
+   fLastCommittedClusterGroup = fNEntries;
+}
+
+void ROOT::Experimental::RNTupleWriter::CommitCluster(bool commitClusterGroup)
+{
+   if (fNEntries == fLastCommitted) {
+      if (commitClusterGroup)
+         CommitClusterGroup();
+      return;
+   }
    for (auto& field : *fModel->GetFieldZero()) {
       field.Flush();
       field.CommitCluster();
@@ -348,6 +381,9 @@ void ROOT::Experimental::RNTupleWriter::CommitCluster()
 
    fLastCommitted = fNEntries;
    fUnzippedClusterSize = 0;
+
+   if (commitClusterGroup)
+      CommitClusterGroup();
 }
 
 
@@ -357,4 +393,32 @@ void ROOT::Experimental::RNTupleWriter::CommitCluster()
 ROOT::Experimental::RCollectionNTupleWriter::RCollectionNTupleWriter(std::unique_ptr<REntry> defaultEntry)
    : fOffset(0), fDefaultEntry(std::move(defaultEntry))
 {
+}
+
+//------------------------------------------------------------------------------
+
+void ROOT::Experimental::RNTuple::Streamer(TBuffer &buf)
+{
+   static TClassRef RNTupleAnchorClass("ROOT::Experimental::Internal::RFileNTupleAnchor");
+
+   if (buf.IsReading()) {
+      RNTupleAnchorClass->ReadBuffer(buf, static_cast<Internal::RFileNTupleAnchor *>(this));
+      R__ASSERT(buf.GetParent() && buf.GetParent()->InheritsFrom("TFile"));
+      fFile = reinterpret_cast<TFile *>(buf.GetParent());
+   } else {
+      RNTupleAnchorClass->WriteBuffer(buf, static_cast<Internal::RFileNTupleAnchor *>(this));
+   }
+}
+
+std::unique_ptr<ROOT::Experimental::Detail::RPageSource>
+ROOT::Experimental::RNTuple::MakePageSource(const RNTupleReadOptions &options)
+{
+   if (!fFile)
+      throw RException(R__FAIL("This RNTuple object was not streamed from a file"));
+
+   // TODO(jblomer): Add RRawFile factory that create a raw file from a TFile. This may then duplicate the file
+   // descriptor (to avoid re-open).  There could also be a raw file that uses a TFile as a "backend" for TFile cases
+   // that are unsupported by raw file.
+   auto path = fFile->GetEndpointUrl()->GetFile();
+   return Detail::RPageSourceFile::CreateFromAnchor(GetAnchor(), path, options);
 }

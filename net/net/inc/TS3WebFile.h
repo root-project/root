@@ -75,9 +75,9 @@ private:
 
 protected:
    // Super-class methods extended by this class
-   virtual Int_t GetHead();
-   virtual void SetMsgReadBuffer10(const char* redirectLocation = 0, Bool_t tempRedirect = kFALSE);
-   virtual void ProcessHttpHeader(const TString& headerLine);
+   Int_t GetHead() override;
+   void SetMsgReadBuffer10(const char* redirectLocation = nullptr, Bool_t tempRedirect = kFALSE) override;
+   void ProcessHttpHeader(const TString& headerLine) override;
 
    // Modifiers of data members (to be used mainly by subclasses)
    void SetAccessKey(const TString& accessKey) { fS3Request.SetAccessKey(accessKey); }
@@ -100,9 +100,9 @@ public:
    const TUrl&     GetUrl() const { return fUrl; }
 
    // Modifiers
-   virtual Bool_t ReadBuffers(char* buf, Long64_t* pos, Int_t* len, Int_t nbuf);
+   Bool_t ReadBuffers(char* buf, Long64_t* pos, Int_t* len, Int_t nbuf) override;
 
-   ClassDef(TS3WebFile, 0)  // Read a ROOT file from a S3 server
+   ClassDefOverride(TS3WebFile, 0)  // Read a ROOT file from a S3 server
 };
 
 #endif // ROOT_TS3WebFile

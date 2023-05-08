@@ -122,6 +122,8 @@ public:
   std::pair<iterator, bool> try_emplace(ObjectKey &&K, Ts &&... Args) {
     return M.try_emplace(std::move(K), std::forward<Ts>(Args)...);
   }
+  bool erase(StringRef K);
+  void erase(iterator I) { M.erase(I); }
 
   iterator find(StringRef K) { return M.find_as(K); }
   const_iterator find(StringRef K) const { return M.find_as(K); }
@@ -166,44 +168,36 @@ public:
       emplace_back(V);
   }
 
-  Value &operator[](size_t I) { return V[I]; }
-  const Value &operator[](size_t I) const { return V[I]; }
-  Value &front() { return V.front(); }
-  const Value &front() const { return V.front(); }
-  Value &back() { return V.back(); }
-  const Value &back() const { return V.back(); }
-  Value *data() { return V.data(); }
-  const Value *data() const { return V.data(); }
+  Value &operator[](size_t I);
+  const Value &operator[](size_t I) const;
+  Value &front();
+  const Value &front() const;
+  Value &back();
+  const Value &back() const;
+  Value *data();
+  const Value *data() const;
 
-  iterator begin() { return V.begin(); }
-  const_iterator begin() const { return V.begin(); }
-  iterator end() { return V.end(); }
-  const_iterator end() const { return V.end(); }
+  iterator begin();
+  const_iterator begin() const;
+  iterator end();
+  const_iterator end() const;
 
-  bool empty() const { return V.empty(); }
-  size_t size() const { return V.size(); }
-  void reserve(size_t S) { V.reserve(S); }
+  bool empty() const;
+  size_t size() const;
+  void reserve(size_t S);
 
-  void clear() { V.clear(); }
-  void push_back(const Value &E) { V.push_back(E); }
-  void push_back(Value &&E) { V.push_back(std::move(E)); }
-  template <typename... Args> void emplace_back(Args &&... A) {
-    V.emplace_back(std::forward<Args>(A)...);
-  }
-  void pop_back() { V.pop_back(); }
+  void clear();
+  void push_back(const Value &E);
+  void push_back(Value &&E);
+  template <typename... Args> void emplace_back(Args &&...A);
+  void pop_back();
   // FIXME: insert() takes const_iterator since C++11, old libstdc++ disagrees.
-  iterator insert(iterator P, const Value &E) { return V.insert(P, E); }
-  iterator insert(iterator P, Value &&E) {
-    return V.insert(P, std::move(E));
-  }
-  template <typename It> iterator insert(iterator P, It A, It Z) {
-    return V.insert(P, A, Z);
-  }
-  template <typename... Args> iterator emplace(const_iterator P, Args &&... A) {
-    return V.emplace(P, std::forward<Args>(A)...);
-  }
+  iterator insert(iterator P, const Value &E);
+  iterator insert(iterator P, Value &&E);
+  template <typename It> iterator insert(iterator P, It A, It Z);
+  template <typename... Args> iterator emplace(const_iterator P, Args &&...A);
 
-  friend bool operator==(const Array &L, const Array &R) { return L.V == R.V; }
+  friend bool operator==(const Array &L, const Array &R);
 };
 inline bool operator!=(const Array &L, const Array &R) { return !(L == R); }
 
@@ -251,7 +245,14 @@ inline bool operator!=(const Array &L, const Array &R) { return !(L == R); }
 /// === Converting JSON values to C++ types ===
 ///
 /// The convention is to have a deserializer function findable via ADL:
-///     fromJSON(const json::Value&, T&)->bool
+///     fromJSON(const json::Value&, T&, Path) -> bool
+///
+/// The return value indicates overall success, and Path is used for precise
+/// error reporting. (The Path::Root passed in at the top level fromJSON call
+/// captures any nested error and can render it in context).
+/// If conversion fails, fromJSON calls Path::report() and immediately returns.
+/// This ensures that the first fatal error survives.
+///
 /// Deserializers are provided for:
 ///   - bool
 ///   - int and int64_t
@@ -327,32 +328,28 @@ public:
   Value(std::nullptr_t) : Type(T_Null) {}
   // Boolean (disallow implicit conversions).
   // (The last template parameter is a dummy to keep templates distinct.)
-  template <
-      typename T,
-      typename = typename std::enable_if<std::is_same<T, bool>::value>::type,
-      bool = false>
+  template <typename T,
+            typename = std::enable_if_t<std::is_same<T, bool>::value>,
+            bool = false>
   Value(T B) : Type(T_Boolean) {
     create<bool>(B);
   }
   // Integers (except boolean). Must be non-narrowing convertible to int64_t.
-  template <
-      typename T,
-      typename = typename std::enable_if<std::is_integral<T>::value>::type,
-      typename = typename std::enable_if<!std::is_same<T, bool>::value>::type>
+  template <typename T, typename = std::enable_if_t<std::is_integral<T>::value>,
+            typename = std::enable_if_t<!std::is_same<T, bool>::value>>
   Value(T I) : Type(T_Integer) {
     create<int64_t>(int64_t{I});
   }
   // Floating point. Must be non-narrowing convertible to double.
   template <typename T,
-            typename =
-                typename std::enable_if<std::is_floating_point<T>::value>::type,
+            typename = std::enable_if_t<std::is_floating_point<T>::value>,
             double * = nullptr>
   Value(T D) : Type(T_Double) {
     create<double>(double{D});
   }
   // Serializable types: with a toJSON(const T&)->Value function, found by ADL.
   template <typename T,
-            typename = typename std::enable_if<std::is_same<
+            typename = std::enable_if_t<std::is_same<
                 Value, decltype(toJSON(*(const T *)nullptr))>::value>,
             Value * = nullptr>
   Value(const T &V) : Value(toJSON(V)) {}
@@ -451,12 +448,12 @@ private:
   friend class Object;
 
   template <typename T, typename... U> void create(U &&... V) {
-    new (reinterpret_cast<T *>(Union.buffer)) T(std::forward<U>(V)...);
+    new (reinterpret_cast<T *>(&Union)) T(std::forward<U>(V)...);
   }
   template <typename T> T &as() const {
     // Using this two-step static_cast via void * instead of reinterpret_cast
     // silences a -Wstrict-aliasing false positive from GCC6 and earlier.
-    void *Storage = static_cast<void *>(Union.buffer);
+    void *Storage = static_cast<void *>(&Union);
     return *static_cast<T *>(Storage);
   }
 
@@ -482,6 +479,48 @@ private:
 
 bool operator==(const Value &, const Value &);
 inline bool operator!=(const Value &L, const Value &R) { return !(L == R); }
+
+// Array Methods
+inline Value &Array::operator[](size_t I) { return V[I]; }
+inline const Value &Array::operator[](size_t I) const { return V[I]; }
+inline Value &Array::front() { return V.front(); }
+inline const Value &Array::front() const { return V.front(); }
+inline Value &Array::back() { return V.back(); }
+inline const Value &Array::back() const { return V.back(); }
+inline Value *Array::data() { return V.data(); }
+inline const Value *Array::data() const { return V.data(); }
+
+inline typename Array::iterator Array::begin() { return V.begin(); }
+inline typename Array::const_iterator Array::begin() const { return V.begin(); }
+inline typename Array::iterator Array::end() { return V.end(); }
+inline typename Array::const_iterator Array::end() const { return V.end(); }
+
+inline bool Array::empty() const { return V.empty(); }
+inline size_t Array::size() const { return V.size(); }
+inline void Array::reserve(size_t S) { V.reserve(S); }
+
+inline void Array::clear() { V.clear(); }
+inline void Array::push_back(const Value &E) { V.push_back(E); }
+inline void Array::push_back(Value &&E) { V.push_back(std::move(E)); }
+template <typename... Args> inline void Array::emplace_back(Args &&...A) {
+  V.emplace_back(std::forward<Args>(A)...);
+}
+inline void Array::pop_back() { V.pop_back(); }
+inline typename Array::iterator Array::insert(iterator P, const Value &E) {
+  return V.insert(P, E);
+}
+inline typename Array::iterator Array::insert(iterator P, Value &&E) {
+  return V.insert(P, std::move(E));
+}
+template <typename It>
+inline typename Array::iterator Array::insert(iterator P, It A, It Z) {
+  return V.insert(P, A, Z);
+}
+template <typename... Args>
+inline typename Array::iterator Array::emplace(const_iterator P, Args &&...A) {
+  return V.emplace(P, std::forward<Args>(A)...);
+}
+inline bool operator==(const Array &L, const Array &R) { return L.V == R.V; }
 
 /// ObjectKey is a used to capture keys in Object. Like Value but:
 ///   - only strings are allowed
@@ -555,75 +594,173 @@ inline Object::Object(std::initializer_list<KV> Properties) {
 inline std::pair<Object::iterator, bool> Object::insert(KV E) {
   return try_emplace(std::move(E.K), std::move(E.V));
 }
+inline bool Object::erase(StringRef K) {
+  return M.erase(ObjectKey(K));
+}
+
+/// A "cursor" marking a position within a Value.
+/// The Value is a tree, and this is the path from the root to the current node.
+/// This is used to associate errors with particular subobjects.
+class Path {
+public:
+  class Root;
+
+  /// Records that the value at the current path is invalid.
+  /// Message is e.g. "expected number" and becomes part of the final error.
+  /// This overwrites any previously written error message in the root.
+  void report(llvm::StringLiteral Message);
+
+  /// The root may be treated as a Path.
+  Path(Root &R) : Parent(nullptr), Seg(&R) {}
+  /// Derives a path for an array element: this[Index]
+  Path index(unsigned Index) const { return Path(this, Segment(Index)); }
+  /// Derives a path for an object field: this.Field
+  Path field(StringRef Field) const { return Path(this, Segment(Field)); }
+
+private:
+  /// One element in a JSON path: an object field (.foo) or array index [27].
+  /// Exception: the root Path encodes a pointer to the Path::Root.
+  class Segment {
+    uintptr_t Pointer;
+    unsigned Offset;
+
+  public:
+    Segment() = default;
+    Segment(Root *R) : Pointer(reinterpret_cast<uintptr_t>(R)) {}
+    Segment(llvm::StringRef Field)
+        : Pointer(reinterpret_cast<uintptr_t>(Field.data())),
+          Offset(static_cast<unsigned>(Field.size())) {}
+    Segment(unsigned Index) : Pointer(0), Offset(Index) {}
+
+    bool isField() const { return Pointer != 0; }
+    StringRef field() const {
+      return StringRef(reinterpret_cast<const char *>(Pointer), Offset);
+    }
+    unsigned index() const { return Offset; }
+    Root *root() const { return reinterpret_cast<Root *>(Pointer); }
+  };
+
+  const Path *Parent;
+  Segment Seg;
+
+  Path(const Path *Parent, Segment S) : Parent(Parent), Seg(S) {}
+};
+
+/// The root is the trivial Path to the root value.
+/// It also stores the latest reported error and the path where it occurred.
+class Path::Root {
+  llvm::StringRef Name;
+  llvm::StringLiteral ErrorMessage;
+  std::vector<Path::Segment> ErrorPath; // Only valid in error state. Reversed.
+
+  friend void Path::report(llvm::StringLiteral Message);
+
+public:
+  Root(llvm::StringRef Name = "") : Name(Name), ErrorMessage("") {}
+  // No copy/move allowed as there are incoming pointers.
+  Root(Root &&) = delete;
+  Root &operator=(Root &&) = delete;
+  Root(const Root &) = delete;
+  Root &operator=(const Root &) = delete;
+
+  /// Returns the last error reported, or else a generic error.
+  Error getError() const;
+  /// Print the root value with the error shown inline as a comment.
+  /// Unrelated parts of the value are elided for brevity, e.g.
+  ///   {
+  ///      "id": 42,
+  ///      "name": /* expected string */ null,
+  ///      "properties": { ... }
+  ///   }
+  void printErrorContext(const Value &, llvm::raw_ostream &) const;
+};
 
 // Standard deserializers are provided for primitive types.
 // See comments on Value.
-inline bool fromJSON(const Value &E, std::string &Out) {
+inline bool fromJSON(const Value &E, std::string &Out, Path P) {
   if (auto S = E.getAsString()) {
-    Out = *S;
+    Out = std::string(*S);
     return true;
   }
+  P.report("expected string");
   return false;
 }
-inline bool fromJSON(const Value &E, int &Out) {
+inline bool fromJSON(const Value &E, int &Out, Path P) {
   if (auto S = E.getAsInteger()) {
     Out = *S;
     return true;
   }
+  P.report("expected integer");
   return false;
 }
-inline bool fromJSON(const Value &E, int64_t &Out) {
+inline bool fromJSON(const Value &E, int64_t &Out, Path P) {
   if (auto S = E.getAsInteger()) {
     Out = *S;
     return true;
   }
+  P.report("expected integer");
   return false;
 }
-inline bool fromJSON(const Value &E, double &Out) {
+inline bool fromJSON(const Value &E, double &Out, Path P) {
   if (auto S = E.getAsNumber()) {
     Out = *S;
     return true;
   }
+  P.report("expected number");
   return false;
 }
-inline bool fromJSON(const Value &E, bool &Out) {
+inline bool fromJSON(const Value &E, bool &Out, Path P) {
   if (auto S = E.getAsBoolean()) {
     Out = *S;
     return true;
   }
+  P.report("expected boolean");
   return false;
 }
-template <typename T> bool fromJSON(const Value &E, llvm::Optional<T> &Out) {
+inline bool fromJSON(const Value &E, std::nullptr_t &Out, Path P) {
+  if (auto S = E.getAsNull()) {
+    Out = *S;
+    return true;
+  }
+  P.report("expected null");
+  return false;
+}
+template <typename T>
+bool fromJSON(const Value &E, llvm::Optional<T> &Out, Path P) {
   if (E.getAsNull()) {
     Out = llvm::None;
     return true;
   }
   T Result;
-  if (!fromJSON(E, Result))
+  if (!fromJSON(E, Result, P))
     return false;
   Out = std::move(Result);
   return true;
 }
-template <typename T> bool fromJSON(const Value &E, std::vector<T> &Out) {
+template <typename T>
+bool fromJSON(const Value &E, std::vector<T> &Out, Path P) {
   if (auto *A = E.getAsArray()) {
     Out.clear();
     Out.resize(A->size());
     for (size_t I = 0; I < A->size(); ++I)
-      if (!fromJSON((*A)[I], Out[I]))
+      if (!fromJSON((*A)[I], Out[I], P.index(I)))
         return false;
     return true;
   }
+  P.report("expected array");
   return false;
 }
 template <typename T>
-bool fromJSON(const Value &E, std::map<std::string, T> &Out) {
+bool fromJSON(const Value &E, std::map<std::string, T> &Out, Path P) {
   if (auto *O = E.getAsObject()) {
     Out.clear();
     for (const auto &KV : *O)
-      if (!fromJSON(KV.second, Out[llvm::StringRef(KV.first)]))
+      if (!fromJSON(KV.second, Out[std::string(llvm::StringRef(KV.first))],
+                    P.field(KV.first)))
         return false;
     return true;
   }
+  P.report("expected object");
   return false;
 }
 
@@ -636,42 +773,59 @@ template <typename T> Value toJSON(const llvm::Optional<T> &Opt) {
 ///
 /// Example:
 /// \code
-///   bool fromJSON(const Value &E, MyStruct &R) {
-///     ObjectMapper O(E);
-///     if (!O || !O.map("mandatory_field", R.MandatoryField))
-///       return false;
-///     O.map("optional_field", R.OptionalField);
-///     return true;
+///   bool fromJSON(const Value &E, MyStruct &R, Path P) {
+///     ObjectMapper O(E, P);
+///     // When returning false, error details were already reported.
+///     return O && O.map("mandatory_field", R.MandatoryField) &&
+///         O.mapOptional("optional_field", R.OptionalField);
 ///   }
 /// \endcode
 class ObjectMapper {
 public:
-  ObjectMapper(const Value &E) : O(E.getAsObject()) {}
+  /// If O is not an object, this mapper is invalid and an error is reported.
+  ObjectMapper(const Value &E, Path P) : O(E.getAsObject()), P(P) {
+    if (!O)
+      P.report("expected object");
+  }
 
   /// True if the expression is an object.
   /// Must be checked before calling map().
-  operator bool() { return O; }
+  operator bool() const { return O; }
 
-  /// Maps a property to a field, if it exists.
-  template <typename T> bool map(StringRef Prop, T &Out) {
+  /// Maps a property to a field.
+  /// If the property is missing or invalid, reports an error.
+  template <typename T> bool map(StringLiteral Prop, T &Out) {
     assert(*this && "Must check this is an object before calling map()");
     if (const Value *E = O->get(Prop))
-      return fromJSON(*E, Out);
+      return fromJSON(*E, Out, P.field(Prop));
+    P.field(Prop).report("missing value");
     return false;
   }
 
   /// Maps a property to a field, if it exists.
+  /// If the property exists and is invalid, reports an error.
   /// (Optional requires special handling, because missing keys are OK).
-  template <typename T> bool map(StringRef Prop, llvm::Optional<T> &Out) {
+  template <typename T> bool map(StringLiteral Prop, llvm::Optional<T> &Out) {
     assert(*this && "Must check this is an object before calling map()");
     if (const Value *E = O->get(Prop))
-      return fromJSON(*E, Out);
+      return fromJSON(*E, Out, P.field(Prop));
     Out = llvm::None;
+    return true;
+  }
+
+  /// Maps a property to a field, if it exists.
+  /// If the property exists and is invalid, reports an error.
+  /// If the property does not exist, Out is unchanged.
+  template <typename T> bool mapOptional(StringLiteral Prop, T &Out) {
+    assert(*this && "Must check this is an object before calling map()");
+    if (const Value *E = O->get(Prop))
+      return fromJSON(*E, Out, P.field(Prop));
     return true;
   }
 
 private:
   const Object *O;
+  Path P;
 };
 
 /// Parses the provided JSON source, or returns a ParseError.
@@ -695,9 +849,24 @@ public:
   }
 };
 
+/// Version of parse() that converts the parsed value to the type T.
+/// RootName describes the root object and is used in error messages.
+template <typename T>
+Expected<T> parse(const llvm::StringRef &JSON, const char *RootName = "") {
+  auto V = parse(JSON);
+  if (!V)
+    return V.takeError();
+  Path::Root R(RootName);
+  T Result;
+  if (fromJSON(*V, Result, R))
+    return std::move(Result);
+  return R.getError();
+}
+
 /// json::OStream allows writing well-formed JSON without materializing
 /// all structures as json::Value ahead of time.
 /// It's faster, lower-level, and less safe than OS << json::Value.
+/// It also allows emitting more constructs, such as comments.
 ///
 /// Only one "top-level" object can be written to a stream.
 /// Simplest usage involves passing lambdas (Blocks) to fill in containers:
@@ -709,7 +878,7 @@ public:
 ///         J.attribute("timestamp", int64_t(E.Time));
 ///         J.attributeArray("participants", [&] {
 ///           for (const Participant &P : E.Participants)
-///             J.string(P.toString());
+///             J.value(P.toString());
 ///         });
 ///       });
 ///   });
@@ -783,6 +952,21 @@ class OStream {
     Contents();
     objectEnd();
   }
+  /// Emit an externally-serialized value.
+  /// The caller must write exactly one valid JSON value to the provided stream.
+  /// No validation or formatting of this value occurs.
+  void rawValue(llvm::function_ref<void(raw_ostream &)> Contents) {
+    rawValueBegin();
+    Contents(OS);
+    rawValueEnd();
+  }
+  void rawValue(llvm::StringRef Contents) {
+    rawValue([&](raw_ostream &OS) { OS << Contents; });
+  }
+  /// Emit a JavaScript comment associated with the next printed value.
+  /// The string must be valid until the next attribute or value is emitted.
+  /// Comments are not part of standard JSON, and many parsers reject them!
+  void comment(llvm::StringRef);
 
   // High level functions to output object attributes.
   // Valid only within an object (any number of times).
@@ -809,8 +993,10 @@ class OStream {
   void objectEnd();
   void attributeBegin(llvm::StringRef Key);
   void attributeEnd();
+  raw_ostream &rawValueBegin();
+  void rawValueEnd();
 
- private:
+private:
   void attributeImpl(llvm::StringRef Key, Block Contents) {
     attributeBegin(Key);
     Contents();
@@ -818,18 +1004,21 @@ class OStream {
   }
 
   void valueBegin();
+  void flushComment();
   void newline();
 
   enum Context {
     Singleton, // Top level, or object attribute.
     Array,
     Object,
+    RawValue, // External code writing a value to OS directly.
   };
   struct State {
     Context Ctx = Singleton;
     bool HasValue = false;
   };
   llvm::SmallVector<State, 16> Stack; // Never empty.
+  llvm::StringRef PendingComment;
   llvm::raw_ostream &OS;
   unsigned IndentSize;
   unsigned Indent = 0;

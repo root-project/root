@@ -42,7 +42,6 @@
 #include <limits>
 #include <list>
 #include <memory>
-#include <string>
 #include <system_error>
 
 using namespace llvm;
@@ -56,12 +55,6 @@ namespace {
   };
 
 } // end anonymous namespace
-
-static const std::array<StringRef, 17> validArchs = {
-    "i386",   "x86_64", "x86_64h",  "armv4t",  "arm",    "armv5e",
-    "armv6",  "armv6m", "armv7",    "armv7em", "armv7k", "armv7m",
-    "armv7s", "arm64",  "arm64_32", "ppc",     "ppc64",
-};
 
 static Error malformedError(const Twine &Msg) {
   return make_error<GenericBinaryError>("truncated or malformed object (" +
@@ -132,6 +125,10 @@ static StringRef parseSegmentOrSectionName(const char *P) {
 
 static unsigned getCPUType(const MachOObjectFile &O) {
   return O.getHeader().cputype;
+}
+
+static unsigned getCPUSubType(const MachOObjectFile &O) {
+  return O.getHeader().cpusubtype;
 }
 
 static uint32_t
@@ -1598,6 +1595,9 @@ MachOObjectFile::MachOObjectFile(MemoryBufferRef Object, bool IsLittleEndian,
        if ((Err = checkTwoLevelHintsCommand(*this, Load, I,
                                             &TwoLevelHintsLoadCmd, Elements)))
          return;
+    } else if (Load.C.cmd == MachO::LC_IDENT) {
+      // Note: LC_IDENT is ignored.
+      continue;
     } else if (isLoadCommandObsolete(Load.C.cmd)) {
       Err = malformedError("load command " + Twine(I) + " for cmd value of: " +
                            Twine(Load.C.cmd) + " is obsolete and not "
@@ -1806,8 +1806,8 @@ Expected<uint64_t> MachOObjectFile::getSymbolAddress(DataRefImpl Sym) const {
 }
 
 uint32_t MachOObjectFile::getSymbolAlignment(DataRefImpl DRI) const {
-  uint32_t flags = getSymbolFlags(DRI);
-  if (flags & SymbolRef::SF_Common) {
+  uint32_t Flags = cantFail(getSymbolFlags(DRI));
+  if (Flags & SymbolRef::SF_Common) {
     MachO::nlist_base Entry = getSymbolTableEntryBase(*this, DRI);
     return 1 << MachO::GET_COMM_ALIGN(Entry.n_desc);
   }
@@ -1835,6 +1835,8 @@ MachOObjectFile::getSymbolType(DataRefImpl Symb) const {
       if (!SecOrError)
         return SecOrError.takeError();
       section_iterator Sec = *SecOrError;
+      if (Sec == section_end())
+        return SymbolRef::ST_Other;
       if (Sec->isData() || Sec->isBSS())
         return SymbolRef::ST_Data;
       return SymbolRef::ST_Function;
@@ -1842,7 +1844,7 @@ MachOObjectFile::getSymbolType(DataRefImpl Symb) const {
   return SymbolRef::ST_Other;
 }
 
-uint32_t MachOObjectFile::getSymbolFlags(DataRefImpl DRI) const {
+Expected<uint32_t> MachOObjectFile::getSymbolFlags(DataRefImpl DRI) const {
   MachO::nlist_base Entry = getSymbolTableEntryBase(*this, DRI);
 
   uint8_t MachOType = Entry.n_type;
@@ -1951,6 +1953,11 @@ uint64_t MachOObjectFile::getSectionSize(DataRefImpl Sec) const {
   return SectSize;
 }
 
+ArrayRef<uint8_t> MachOObjectFile::getSectionContents(uint32_t Offset,
+                                                      uint64_t Size) const {
+  return arrayRefFromStringRef(getData().substr(Offset, Size));
+}
+
 Expected<ArrayRef<uint8_t>>
 MachOObjectFile::getSectionContents(DataRefImpl Sec) const {
   uint32_t Offset;
@@ -1966,7 +1973,7 @@ MachOObjectFile::getSectionContents(DataRefImpl Sec) const {
     Size = Sect.size;
   }
 
-  return arrayRefFromStringRef(getData().substr(Offset, Size));
+  return getSectionContents(Offset, Size);
 }
 
 uint64_t MachOObjectFile::getSectionAlignment(DataRefImpl Sec) const {
@@ -1992,13 +1999,12 @@ Expected<SectionRef> MachOObjectFile::getSection(unsigned SectionIndex) const {
 }
 
 Expected<SectionRef> MachOObjectFile::getSection(StringRef SectionName) const {
-  StringRef SecName;
   for (const SectionRef &Section : sections()) {
-    if (std::error_code E = Section.getName(SecName))
-      return errorCodeToError(E);
-    if (SecName == SectionName) {
+    auto NameOrErr = Section.getName();
+    if (!NameOrErr)
+      return NameOrErr.takeError();
+    if (*NameOrErr == SectionName)
       return Section;
-    }
   }
   return errorCodeToError(object_error::parse_failed);
 }
@@ -2026,6 +2032,20 @@ bool MachOObjectFile::isSectionBSS(DataRefImpl Sec) const {
   return !(Flags & MachO::S_ATTR_PURE_INSTRUCTIONS) &&
          (SectionType == MachO::S_ZEROFILL ||
           SectionType == MachO::S_GB_ZEROFILL);
+}
+
+bool MachOObjectFile::isDebugSection(DataRefImpl Sec) const {
+  Expected<StringRef> SectionNameOrErr = getSectionName(Sec);
+  if (!SectionNameOrErr) {
+    // TODO: Report the error message properly.
+    consumeError(SectionNameOrErr.takeError());
+    return false;
+  }
+  StringRef SectionName = SectionNameOrErr.get();
+  return SectionName.startswith("__debug") ||
+         SectionName.startswith("__zdebug") ||
+         SectionName.startswith("__apple") || SectionName == "__gdb_index" ||
+         SectionName == "__swift_ast";
 }
 
 unsigned MachOObjectFile::getSectionID(SectionRef Sec) const {
@@ -2567,7 +2587,7 @@ StringRef MachOObjectFile::getFileFormatName() const {
   }
 }
 
-Triple::ArchType MachOObjectFile::getArch(uint32_t CPUType) {
+Triple::ArchType MachOObjectFile::getArch(uint32_t CPUType, uint32_t CPUSubType) {
   switch (CPUType) {
   case MachO::CPU_TYPE_I386:
     return Triple::x86;
@@ -2682,6 +2702,12 @@ Triple MachOObjectFile::getArchTriple(uint32_t CPUType, uint32_t CPUSubType,
       if (ArchFlag)
         *ArchFlag = "arm64";
       return Triple("arm64-apple-darwin");
+    case MachO::CPU_SUBTYPE_ARM64E:
+      if (McpuDefault)
+        *McpuDefault = "apple-a12";
+      if (ArchFlag)
+        *ArchFlag = "arm64e";
+      return Triple("arm64e-apple-darwin");
     default:
       return Triple();
     }
@@ -2724,14 +2750,37 @@ Triple MachOObjectFile::getHostArch() {
 }
 
 bool MachOObjectFile::isValidArch(StringRef ArchFlag) {
-  return std::find(validArchs.cbegin(), validArchs.cend(), ArchFlag) !=
-         validArchs.cend();
+  auto validArchs = getValidArchs();
+  return llvm::is_contained(validArchs, ArchFlag);
 }
 
-ArrayRef<StringRef> MachOObjectFile::getValidArchs() { return validArchs; }
+ArrayRef<StringRef> MachOObjectFile::getValidArchs() {
+  static const std::array<StringRef, 18> ValidArchs = {{
+      "i386",
+      "x86_64",
+      "x86_64h",
+      "armv4t",
+      "arm",
+      "armv5e",
+      "armv6",
+      "armv6m",
+      "armv7",
+      "armv7em",
+      "armv7k",
+      "armv7m",
+      "armv7s",
+      "arm64",
+      "arm64e",
+      "arm64_32",
+      "ppc",
+      "ppc64",
+  }};
+
+  return ValidArchs;
+}
 
 Triple::ArchType MachOObjectFile::getArch() const {
-  return getArch(getCPUType(*this));
+  return getArch(getCPUType(*this), getCPUSubType(*this));
 }
 
 Triple MachOObjectFile::getArchTriple(const char **McpuDefault) const {
@@ -3204,24 +3253,13 @@ void MachORebaseEntry::moveNext() {
                                        SegmentOffset) << "\n");
       break;
     case MachO::REBASE_OPCODE_ADD_ADDR_IMM_SCALED:
+      SegmentOffset += ImmValue * PointerSize;
       error = O->RebaseEntryCheckSegAndOffsets(SegmentIndex, SegmentOffset,
                                                PointerSize);
       if (error) {
         *E = malformedError("for REBASE_OPCODE_ADD_ADDR_IMM_SCALED " +
                             Twine(error) + " for opcode at: 0x" +
                             Twine::utohexstr(OpcodeStart - Opcodes.begin()));
-        moveToEnd();
-        return;
-      }
-      SegmentOffset += ImmValue * PointerSize;
-      error = O->RebaseEntryCheckSegAndOffsets(SegmentIndex, SegmentOffset,
-                                               PointerSize);
-      if (error) {
-        *E =
-            malformedError("for REBASE_OPCODE_ADD_ADDR_IMM_SCALED "
-                           " (after adding immediate times the pointer size) " +
-                           Twine(error) + " for opcode at: 0x" +
-                           Twine::utohexstr(OpcodeStart - Opcodes.begin()));
         moveToEnd();
         return;
       }
@@ -3427,7 +3465,7 @@ iterator_range<rebase_iterator>
 MachOObjectFile::rebaseTable(Error &Err, MachOObjectFile *O,
                              ArrayRef<uint8_t> Opcodes, bool is64) {
   if (O->BindRebaseSectionTable == nullptr)
-    O->BindRebaseSectionTable = llvm::make_unique<BindRebaseSegInfo>(O);
+    O->BindRebaseSectionTable = std::make_unique<BindRebaseSegInfo>(O);
   MachORebaseEntry Start(&Err, O, Opcodes, is64);
   Start.moveToFirst();
 
@@ -3793,15 +3831,6 @@ void MachOBindEntry::moveNext() {
         moveToEnd();
         return;
       }
-      error = O->BindEntryCheckSegAndOffsets(SegmentIndex, SegmentOffset,
-                                             PointerSize);
-      if (error) {
-        *E = malformedError("for BIND_OPCODE_DO_BIND_ADD_ADDR_IMM_SCALED " +
-                            Twine(error) + " for opcode at: 0x" +
-                            Twine::utohexstr(OpcodeStart - Opcodes.begin()));
-        moveToEnd();
-        return;
-      }
       if (SymbolName == StringRef()) {
         *E = malformedError(
             "for BIND_OPCODE_DO_BIND_ADD_ADDR_IMM_SCALED "
@@ -3825,11 +3854,9 @@ void MachOBindEntry::moveNext() {
       error = O->BindEntryCheckSegAndOffsets(SegmentIndex, SegmentOffset +
                                              AdvanceAmount, PointerSize);
       if (error) {
-        *E =
-            malformedError("for BIND_OPCODE_DO_BIND_ADD_ADDR_IMM_SCALED "
-                           " (after adding immediate times the pointer size) " +
-                           Twine(error) + " for opcode at: 0x" +
-                           Twine::utohexstr(OpcodeStart - Opcodes.begin()));
+        *E = malformedError("for BIND_OPCODE_DO_BIND_ADD_ADDR_IMM_SCALED " +
+                            Twine(error) + " for opcode at: 0x" +
+                            Twine::utohexstr(OpcodeStart - Opcodes.begin()));
         moveToEnd();
         return;
       }
@@ -3993,7 +4020,11 @@ BindRebaseSegInfo::BindRebaseSegInfo(const object::MachOObjectFile *Obj) {
   uint64_t CurSegAddress;
   for (const SectionRef &Section : Obj->sections()) {
     SectionInfo Info;
-    Section.getName(Info.SectionName);
+    Expected<StringRef> NameOrErr = Section.getName();
+    if (!NameOrErr)
+      consumeError(NameOrErr.takeError());
+    else
+      Info.SectionName = *NameOrErr;
     Info.Address = Section.getAddress();
     Info.Size = Section.getSize();
     Info.SegmentName =
@@ -4094,7 +4125,7 @@ MachOObjectFile::bindTable(Error &Err, MachOObjectFile *O,
                            ArrayRef<uint8_t> Opcodes, bool is64,
                            MachOBindEntry::Kind BKind) {
   if (O->BindRebaseSectionTable == nullptr)
-    O->BindRebaseSectionTable = llvm::make_unique<BindRebaseSegInfo>(O);
+    O->BindRebaseSectionTable = std::make_unique<BindRebaseSegInfo>(O);
   MachOBindEntry Start(&Err, O, Opcodes, is64, BKind);
   Start.moveToFirst();
 
@@ -4610,7 +4641,7 @@ void MachOObjectFile::ReadULEB128s(uint64_t Index,
                                    SmallVectorImpl<uint64_t> &Out) const {
   DataExtractor extractor(ObjectFile::getData(), true, 0);
 
-  uint32_t offset = Index;
+  uint64_t offset = Index;
   uint64_t data = 0;
   while (uint64_t delta = extractor.getULEB128(&offset)) {
     data += delta;

@@ -16,7 +16,6 @@
 #include "ROOT/RStringView.hxx"
 
 #include <memory>
-#include <mutex>
 #include <string>
 #include <vector>
 
@@ -106,13 +105,16 @@ public:
    std::string GetTypeName(std::string_view colName) const final;
    std::vector<std::pair<ULong64_t, ULong64_t>> GetEntryRanges() final;
    bool SetEntry(unsigned int slot, ULong64_t entry) final;
-   void Initialise() final;
+   void Initialize() final;
    std::string GetLabel() final;
 
 protected:
    Record_t GetColumnReadersImpl(std::string_view name, const std::type_info &) final;
 };
 
+RDataFrame FromSqlite(std::string_view fileName, std::string_view query);
+
+R__DEPRECATED(6, 30, "Use FromSqlite instead.")
 RDataFrame MakeSqliteDataFrame(std::string_view fileName, std::string_view query);
 
 } // namespace RDF

@@ -50,7 +50,7 @@ protected:
    Bool_t       IsDelayed() const;
 
 public:
-   TGeoTubeEditor(const TGWindow *p = 0,
+   TGeoTubeEditor(const TGWindow *p = nullptr,
                   Int_t width = 140, Int_t height = 30,
                   UInt_t options = kChildFrame,
                   Pixel_t back = GetDefaultFrameBackground());
@@ -85,7 +85,7 @@ protected:
    virtual void ConnectSignals2Slots();   // Connect the signals to the slots
 
 public:
-   TGeoTubeSegEditor(const TGWindow *p = 0,
+   TGeoTubeSegEditor(const TGWindow *p = nullptr,
                    Int_t width = 140, Int_t height = 30,
                    UInt_t options = kChildFrame,
                    Pixel_t back = GetDefaultFrameBackground());
@@ -114,7 +114,7 @@ protected:
    TGNumberEntry   *fEPhhi;             // Number entry for phhi
 
 public:
-   TGeoCtubEditor(const TGWindow *p = 0,
+   TGeoCtubEditor(const TGWindow *p = nullptr,
                    Int_t width = 140, Int_t height = 30,
                    UInt_t options = kChildFrame,
                    Pixel_t back = GetDefaultFrameBackground());

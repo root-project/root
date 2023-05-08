@@ -9,16 +9,12 @@
  *************************************************************************/
 
 #include <ROOT/RDF/RJittedVariation.hxx>
-#include <ROOT/RDF/RLoopManager.hxx>
 
 #include <cassert>
 
 using namespace ROOT::Internal::RDF;
 
-RJittedVariation::~RJittedVariation()
-{
-   fLoopManager->Deregister(this);
-}
+RJittedVariation::~RJittedVariation() {}
 
 void RJittedVariation::InitSlot(TTreeReader *r, unsigned int slot)
 {

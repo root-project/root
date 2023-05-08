@@ -16,20 +16,40 @@
 #ifndef ROO_NUMBER
 #define ROO_NUMBER
 
-#include "Rtypes.h"
+#include <limits>
 
 class RooNumber {
 public:
+   /// Return internal infinity representation.
+   constexpr static double infinity()
+   {
+      // In the future, it should better do this:
+      //    return std::numeric_limits<double>::infinity();
 
-  virtual ~RooNumber() {} ;
+      // This assumes a well behaved IEEE-754 floating point implementation.
+      // The next line may generate a compiler warning that can be ignored.
+      return 1.0e30; // 1./0.;
+   }
+   /// Return true if x is infinite by RooNumber internal specification.
+   constexpr static int isInfinite(double x) { return (x >= +infinity()) ? +1 : ((x <= -infinity()) ? -1 : 0); }
 
-  static Double_t infinity() ;
-  static Int_t isInfinite(Double_t x) ;
+   /// Set the relative epsilon that is used by range checks in RooFit,
+   /// e.g., in RooAbsRealLValue::inRange().
+   inline static void setRangeEpsRel(double epsRel) { staticRangeEpsRel() = epsRel; }
+   /// Get the relative epsilon that is used by range checks in RooFit,
+   /// e.g., in RooAbsRealLValue::inRange().
+   inline static double rangeEpsRel() { return staticRangeEpsRel(); }
 
- private:
-  static Double_t _Infinity ;
+   /// Set the absolute epsilon that is used by range checks in RooFit,
+   /// e.g., in RooAbsRealLValue::inRange().
+   inline static void setRangeEpsAbs(double epsRel) { staticRangeEpsAbs() = epsRel; }
+   /// Get the absolute epsilon that is used by range checks in RooFit,
+   /// e.g., in RooAbsRealLValue::inRange().
+   inline static double rangeEpsAbs() { return staticRangeEpsAbs(); }
 
-  ClassDef(RooNumber,0) // wrapper class for portable numerics
+private:
+   static double &staticRangeEpsRel();
+   static double &staticRangeEpsAbs();
 };
 
 #endif

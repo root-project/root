@@ -106,10 +106,6 @@ and py = 0
 
 TSlider::TSlider(): TPad()
 {
-   fObject  = 0;
-   fMethod  = "";
-   fMinimum = 0;
-   fMaximum = 1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -117,7 +113,7 @@ TSlider::TSlider(): TPad()
 ///
 ///   x1,y1,x2,y2 are in pad user coordinates
 
-TSlider::TSlider(const char *name, const char *title, Double_t x1, Double_t y1,Double_t x2, Double_t  y2, Color_t color, Short_t bordersize, Short_t bordermode)
+TSlider::TSlider(const char *name, const char *title, Double_t x1, Double_t y1,Double_t x2, Double_t y2, Color_t color, Short_t bordersize, Short_t bordermode)
            :TPad(name,title,0.1,0.1,0.9,0.9,color,bordersize,bordermode)
 {
    if (!gPad) return;
@@ -136,10 +132,6 @@ TSlider::TSlider(const char *name, const char *title, Double_t x1, Double_t y1,D
    SetBit(kCanDelete);
    Modified(kTRUE);
 
-   fMinimum = 0;
-   fMaximum = 1;
-   fObject  = 0;
-   fMethod  = "";
    Double_t dx = PixeltoX(bordersize);
    Double_t dy = PixeltoY(-bordersize);
    TSliderBox *sbox = new TSliderBox(dx,dy,1-dx,1-dy,color,bordersize,-bordermode);
@@ -156,49 +148,33 @@ TSlider::~TSlider()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Paint this slider with its current attributes.
-
-void TSlider::Paint(Option_t *option)
-{
-   TPad::Paint(option);
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Save primitive as a C++ statement(s) on output stream out
 
 void TSlider::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 {
-   TPad *padsav = (TPad*)gPad;
    char quote = '"';
-   if (gROOT->ClassSaved(TSlider::Class())) {
+   if (gROOT->ClassSaved(TSlider::Class()))
       out<<"   ";
-   } else {
+   else
       out<<"   TSlider *";
-   }
-   out<<"slider = new TSlider("<<quote<<GetName()<<quote<<", "<<quote<<GetTitle()
-      <<quote
-      <<","<<fXlowNDC
-      <<","<<fYlowNDC
-      <<","<<fXlowNDC+fWNDC
-      <<","<<fYlowNDC+fHNDC
-      <<");"<<std::endl;
 
-   SaveFillAttributes(out,"slider",0,1001);
-   SaveLineAttributes(out,"slider",1,1,1);
+   auto sbox = dynamic_cast<TSliderBox*>(fPrimitives->FindObject("TSliderBox"));
 
-   if (GetBorderSize() != 2) {
-      out<<"   slider->SetBorderSize("<<GetBorderSize()<<");"<<std::endl;
-   }
-   if (GetBorderMode() != -1) {
-      out<<"   slider->SetBorderMode("<<GetBorderMode()<<");"<<std::endl;
-   }
-   Int_t lenMethod = strlen(GetMethod());
-   if (lenMethod > 0) {
-      out<<"   slider->SetMethod("<<quote<<GetMethod()<<quote<<");"<<std::endl;
-   }
+   out<<"slider = new TSlider("<<quote<<GetName()<<quote<<", "<<quote<<GetTitle()<<quote
+      <<", "<< gPad->GetX1() + (gPad->GetX2() - gPad->GetX1()) * GetXlowNDC()
+      <<", "<< gPad->GetY1() + (gPad->GetY2() - gPad->GetY1()) * GetYlowNDC()
+      <<", "<< gPad->GetX1() + (gPad->GetX2() - gPad->GetX1()) * (GetXlowNDC() + GetWNDC())
+      <<", "<< gPad->GetY1() + (gPad->GetY2() - gPad->GetY1()) * (GetYlowNDC() + GetHNDC())
+      <<", "<< (sbox ? sbox->GetFillColor() : GetFillColor()) <<", "<< GetBorderSize() <<", "<< GetBorderMode() <<");"<<std::endl;
 
-   out<<"   "<<padsav->GetName()<<"->cd();"<<std::endl;
-   padsav->cd();
+   SaveFillAttributes(out, "slider", 16, 1001);
+   SaveLineAttributes(out, "slider", 1, 1, 1);
+
+   out<<"   slider->SetRange("<< fMinimum <<", "<< fMaximum <<");"<<std::endl;
+
+   TString cmethod = GetMethod();
+   if (cmethod.Length() > 0)
+      out<<"   slider->SetMethod("<<quote<<cmethod.ReplaceSpecialCppChars()<<quote<<");"<<std::endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -206,7 +182,8 @@ void TSlider::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 
 void TSlider::SetRange(Double_t xmin, Double_t xmax)
 {
-   TSliderBox *sbox = (TSliderBox*)fPrimitives->FindObject("TSliderBox");
+   auto sbox = dynamic_cast<TSliderBox*>(fPrimitives->FindObject("TSliderBox"));
+
    if (sbox) {
       if (fAbsWNDC > fAbsHNDC) {
          sbox->SetX1(xmin);

@@ -188,6 +188,13 @@ def s_cc_out : OptionalDefOperand<OtherVT, (ops CCR), (ops (i32 CPSR))> {
   let DecoderMethod = "DecodeCCOutOperand";
 }
 
+// Transform to generate the inverse of a condition code during ISel
+def inv_cond_XFORM : SDNodeXForm<imm, [{
+  ARMCC::CondCodes CC = static_cast<ARMCC::CondCodes>(N->getZExtValue());
+  return CurDAG->getTargetConstant(ARMCC::getOppositeCondition(CC), SDLoc(N),
+                                   MVT::i32);
+}]>;
+
 // VPT predicate
 
 def VPTPredNOperand : AsmOperandClass {
@@ -198,7 +205,6 @@ def VPTPredROperand : AsmOperandClass {
   let Name = "VPTPredR";
   let PredicateMethod = "isVPTPred";
 }
-def undef_tied_input;
 
 // Operand classes for the cluster of MC operands describing a
 // VPT-predicated MVE instruction.
@@ -397,9 +403,15 @@ class InstTemplate<AddrMode am, int sz, IndexMode im,
   bit isUnaryDataProc = 0;
   bit canXformTo16Bit = 0;
   // The instruction is a 16-bit flag setting Thumb instruction. Used
-  // by the parser to determine whether to require the 'S' suffix on the
-  // mnemonic (when not in an IT block) or preclude it (when in an IT block).
+  // by the parser and if-converter to determine whether to require the 'S'
+  // suffix on the mnemonic (when not in an IT block) or preclude it (when
+  // in an IT block).
   bit thumbArithFlagSetting = 0;
+
+  bit validForTailPredication = 0;
+  bit retainsPreviousHalfElement = 0;
+  bit horizontalReduction = 0;
+  bit doubleWidthResult = 0;
 
   // If this is a pseudo instruction, mark it isCodeGenOnly.
   let isCodeGenOnly = !eq(!cast<string>(f), "Pseudo");
@@ -412,6 +424,10 @@ class InstTemplate<AddrMode am, int sz, IndexMode im,
   let TSFlags{14}    = canXformTo16Bit;
   let TSFlags{18-15} = D.Value;
   let TSFlags{19}    = thumbArithFlagSetting;
+  let TSFlags{20}    = validForTailPredication;
+  let TSFlags{21}    = retainsPreviousHalfElement;
+  let TSFlags{22}    = horizontalReduction;
+  let TSFlags{23}    = doubleWidthResult;
 
   let Constraints = cstr;
   let Itinerary = itin;
@@ -455,6 +471,7 @@ class AsmPseudoInst<string asm, dag iops, dag oops = (outs)>
   let isCodeGenOnly = 0; // So we get asm matcher for it.
   let AsmString = asm;
   let isPseudo = 1;
+  let hasNoSchedulingInfo = 1;
 }
 
 class ARMAsmPseudo<string asm, dag iops, dag oops = (outs)>
@@ -1111,6 +1128,9 @@ class Thumb2DSPPat<dag pattern, dag result> : Pat<pattern, result> {
 }
 class Thumb2DSPMulPat<dag pattern, dag result> : Pat<pattern, result> {
   list<Predicate> Predicates = [IsThumb2, UseMulOps, HasDSP];
+}
+class FPRegs16Pat<dag pattern, dag result> : Pat<pattern, result> {
+  list<Predicate> Predicates = [HasFPRegs16];
 }
 class FP16Pat<dag pattern, dag result> : Pat<pattern, result> {
   list<Predicate> Predicates = [HasFP16];
@@ -2282,7 +2302,7 @@ class N1ModImm<bit op23, bits<3> op21_19, bits<4> op11_8, bit op7, bit op6,
   let Inst{24}    = SIMM{7};
   let Inst{18-16} = SIMM{6-4};
   let Inst{3-0}   = SIMM{3-0};
-  let DecoderMethod = "DecodeNEONModImmInstruction";
+  let DecoderMethod = "DecodeVMOVModImmInstruction";
 }
 
 // NEON 2 vector register format.
@@ -2722,6 +2742,16 @@ def complexrotateop : Operand<i32> {
 def complexrotateopodd : Operand<i32> {
   let ParserMatchClass = ComplexRotationOperand<180, 90, "Odd", "90 or 270">;
   let PrintMethod = "printComplexRotationOp<180, 90>";
+}
+
+def MveSaturateOperand : AsmOperandClass {
+  let PredicateMethod = "isMveSaturateOp";
+  let DiagnosticString = "saturate operand must be 48 or 64";
+  let Name = "MveSaturate";
+}
+def saturateop : Operand<i32> {
+  let ParserMatchClass = MveSaturateOperand;
+  let PrintMethod = "printMveSaturateOp";
 }
 
 // Data type suffix token aliases. Implements Table A7-3 in the ARM ARM.

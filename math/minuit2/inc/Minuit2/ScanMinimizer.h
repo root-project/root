@@ -30,11 +30,11 @@ class ScanMinimizer : public ModularFunctionMinimizer {
 public:
    ScanMinimizer() : fSeedGenerator(SimplexSeedGenerator()), fBuilder(ScanBuilder()) {}
 
-   ~ScanMinimizer() {}
+   ~ScanMinimizer() override {}
 
-   const MinimumSeedGenerator &SeedGenerator() const { return fSeedGenerator; }
-   const MinimumBuilder &Builder() const { return fBuilder; }
-   MinimumBuilder &Builder() { return fBuilder; }
+   const MinimumSeedGenerator &SeedGenerator() const override { return fSeedGenerator; }
+   const MinimumBuilder &Builder() const override { return fBuilder; }
+   MinimumBuilder &Builder() override { return fBuilder; }
 
 private:
    SimplexSeedGenerator fSeedGenerator;

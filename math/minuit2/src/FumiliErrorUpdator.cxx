@@ -45,7 +45,7 @@ MinimumError FumiliErrorUpdator::Update(const MinimumState &s0, const MinimumPar
 {
    // calculate the error matrix using approximation of Fumili
    // use only first derivatives (see tutorial par. 5.1,5.2)
-   // The Fumili Hessian is provided by the FumiliGRadientCalculator class
+   // The Fumili Hessian is provided by the FumiliGradientCalculator class
    // we apply also the Marquard lambda factor to increase weight of diagonal term
    // as suggester in Numerical Receipt for Marquard method
 
@@ -57,7 +57,7 @@ MinimumError FumiliErrorUpdator::Update(const MinimumState &s0, const MinimumPar
 
    // get Hessian from Gradient calculator
 
-   MnAlgebraicSymMatrix h = fgc->Hessian();
+   MnAlgebraicSymMatrix h = fgc->GetHessian();
 
    int nvar = p1.Vec().size();
 

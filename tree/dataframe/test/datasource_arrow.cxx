@@ -99,7 +99,7 @@ TEST(RArrowDS, EntryRanges)
 {
    RArrowDS tds(createTestTable(), {});
    tds.SetNSlots(3U);
-   tds.Initialise();
+   tds.Initialize();
 
    // Still dividing in equal parts...
    auto ranges = tds.GetEntryRanges();
@@ -122,7 +122,7 @@ TEST(RArrowDS, ColumnReaders)
    auto valsAge = tds.GetColumnReaders<Long64_t>("Age");
    auto valsBabies = tds.GetColumnReaders<unsigned int>("Babies");
 
-   tds.Initialise();
+   tds.Initialize();
    auto ranges = tds.GetEntryRanges();
    auto slot = 0U;
    std::vector<Long64_t> RefsAge = {64, 50, 40, 30, 2, 0};
@@ -148,7 +148,7 @@ TEST(RArrowDS, ColumnReadersString)
    const auto nSlots = 3U;
    tds.SetNSlots(nSlots);
    auto vals = tds.GetColumnReaders<std::string>("Name");
-   tds.Initialise();
+   tds.Initialize();
    auto ranges = tds.GetEntryRanges();
    auto slot = 0U;
    std::vector<std::string> names = {"Harry", "Bob,Bob", "\"Joe\"", "Tom", " John  ", " Mary Ann "};
@@ -177,8 +177,6 @@ TEST(RArrowDS, SetNSlotsTwice)
    ASSERT_DEATH(theTest(), "Setting the number of slots even if the number of slots is different from zero.");
 }
 #endif
-
-#ifdef R__B64
 
 TEST(RArrowDS, FromARDF)
 {
@@ -251,5 +249,3 @@ TEST(RArrowDS, FromARDFWithJittingMT)
 }
 
 #endif // R__USE_IMT
-
-#endif // R__B64

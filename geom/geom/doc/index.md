@@ -404,7 +404,7 @@ There is also a list of specific rules:
     before closing the geometry and must not be positioned - it
     represents the global reference frame.
   - After building the full geometry tree, the geometry must be closed
-    (see the method **`TGeoManager`**`::CloseGeometry()`). Voxelization
+    (see the method **`TGeoManager::CloseGeometry()`**). Voxelization
     can be redone per volume after this process.
 
 The list is much bigger and we will describe in more detail the geometry
@@ -1537,7 +1537,7 @@ This implies by default that the point is also contained by `A_1`, since
 `B_1` have to be fully contained by this. After searching the point
 location, the modeller will consider that the point is located inside
 `B_1`, which will be considered as the representative object (node) for
-the current state. This is stored as: `TGeoNode *TGeoManager::fCurrentNode`
+the current state. This is stored as: `TGeoNode *TGeoNavigator::%fCurrentNode`
 and can be asked from the manager class
 only after the `'Where am I?'` was completed:
 

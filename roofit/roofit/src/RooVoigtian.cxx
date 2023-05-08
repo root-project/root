@@ -23,27 +23,39 @@ function (the default CERNlib C335 algorithm, and a faster, look-up-table
 based method). By default, RooVoigtian employs the default (CERNlib)
 algorithm. Select the faster algorithm either in the constructor, or with
 the selectFastAlgorithm() method.
+
+\note The "width" parameter that determines the Breit-Wigner shape
+      represents the **full width at half maximum (FWHM)** of the
+      Breit-Wigner (often referred to as \f$\Gamma\f$ or \f$2\gamma\f$).
 **/
 
-#include "RooVoigtian.h"
-#include "RooFit.h"
-#include "RooAbsReal.h"
-#include "RooRealVar.h"
-#include "RooMath.h"
-#include "RooBatchCompute.h"
+#include <RooVoigtian.h>
+
+#include <RooMath.h>
+#include <RooBatchCompute.h>
 
 #include <cmath>
 #include <complex>
-using namespace std;
 
 ClassImp(RooVoigtian);
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Construct a RooVoigtian PDF, which represents the convolution of a
+/// Breit-Wigner with a Gaussian.
+/// \param name Name that identifies the PDF in computations.
+/// \param title Title for plotting.
+/// \param _x The observable for the PDF.
+/// \param _mean The mean of the distribution.
+/// \param _width The **full width at half maximum (FWHM)** of the Breit-Wigner
+///               (often referred to as \f$\Gamma\f$ or \f$2\gamma\f$).
+/// \param _sigma The width of the Gaussian distribution.
+/// \param doFast Use the faster look-up-table-based method for the evaluation
+///               of the complex error function.
 
 RooVoigtian::RooVoigtian(const char *name, const char *title,
           RooAbsReal& _x, RooAbsReal& _mean,
           RooAbsReal& _width, RooAbsReal& _sigma,
-              Bool_t doFast) :
+              bool doFast) :
   RooAbsPdf(name,title),
   x("x","Dependent",this,_x),
   mean("mean","Mean",this,_mean),
@@ -66,13 +78,13 @@ RooVoigtian::RooVoigtian(const RooVoigtian& other, const char* name) :
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooVoigtian::evaluate() const
+double RooVoigtian::evaluate() const
 {
-  Double_t s = (sigma>0) ? sigma : -sigma ;
-  Double_t w = (width>0) ? width : -width ;
+  double s = (sigma>0) ? sigma : -sigma ;
+  double w = (width>0) ? width : -width ;
 
-  Double_t coef= -0.5/(s*s);
-  Double_t arg = x - mean;
+  double coef= -0.5/(s*s);
+  double arg = x - mean;
 
   // return constant for zero width and sigma
   if (s==0. && w==0.) return 1.;
@@ -81,14 +93,14 @@ Double_t RooVoigtian::evaluate() const
   if (s==0.) return (1./(arg*arg+0.25*w*w));
 
   // Gauss for zero width
-  if (w==0.) return exp(coef*arg*arg);
+  if (w==0.) return std::exp(coef*arg*arg);
 
   // actual Voigtian for non-trivial width and sigma
-  Double_t c = 1./(sqrt(2.)*s);
-  Double_t a = 0.5*c*w;
-  Double_t u = c*arg;
-  std::complex<Double_t> z(u,a) ;
-  std::complex<Double_t> v(0.) ;
+  double c = 1./(sqrt(2.)*s);
+  double a = 0.5*c*w;
+  double u = c*arg;
+  std::complex<double> z(u,a) ;
+  std::complex<double> v(0.) ;
 
   if (_doFast) {
     v = RooMath::faddeeva_fast(z);

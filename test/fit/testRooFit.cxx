@@ -213,34 +213,29 @@ int  FitUsingRooFit(TTree & tree, RooAbsPdf & pdf, RooArgSet & xvars) {
       int level = 2;
       std::cout << "num entries = " << data.numEntries() << std::endl;
       bool save = true;
-      pdf.getVariables()->Print("v"); // print the parameters
+      std::unique_ptr<RooArgSet>{pdf.getVariables()}->Print("v"); // print the parameters
       std::cout << "\n\nDo the fit now \n\n";
 #else
       int level = -1;
       bool save = false;
 #endif
 
-#ifndef _WIN32 // until a bug 30762 is fixed
-      RooFitResult * result = pdf.fitTo(data, RooFit::Minos(0), RooFit::Hesse(0) , RooFit::PrintLevel(level), RooFit::Save(save) );
-#else
-      RooFitResult * result = pdf.fitTo(data );
-#endif
+      std::unique_ptr<RooFitResult> result{pdf.fitTo(data, RooFit::Minos(0), RooFit::Hesse(0) , RooFit::PrintLevel(level), RooFit::Save(save) )};
 
 #ifdef DEBUG
-      assert(result != 0);
+      assert(result != nullptr);
       std::cout << " Roofit status " << result->status() << std::endl;
       result->Print();
 #endif
-      iret |= (result == 0);
+      iret |= (result == nullptr);
 
    }
 
    w.Stop();
 
    std::cout << "RooFit result " << std::endl;
-   RooArgSet * params = pdf.getParameters(xvars);
+   std::unique_ptr<RooArgSet> params{pdf.getParameters(xvars)};
    params->Print("v");
-   delete params;
 
 
    std::cout << "\nTime: \t" << w.RealTime() << " , " << w.CpuTime() << std::endl;

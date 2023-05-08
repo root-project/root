@@ -14,17 +14,12 @@
 //===----------------------------------------------------------------------===//
 
 #include "AMDGPU.h"
-#include "AMDGPUSubtarget.h"
-#include "R600InstrInfo.h"
 #include "MCTargetDesc/AMDGPUMCTargetDesc.h"
+#include "R600Subtarget.h"
 #include "llvm/CodeGen/DFAPacketizer.h"
 #include "llvm/CodeGen/MachineDominators.h"
-#include "llvm/CodeGen/MachineFunctionPass.h"
 #include "llvm/CodeGen/MachineLoopInfo.h"
-#include "llvm/CodeGen/Passes.h"
 #include "llvm/CodeGen/ScheduleDAG.h"
-#include "llvm/Support/Debug.h"
-#include "llvm/Support/raw_ostream.h"
 
 using namespace llvm;
 
@@ -90,7 +85,7 @@ private:
       if (DstIdx == -1) {
         continue;
       }
-      unsigned Dst = BI->getOperand(DstIdx).getReg();
+      Register Dst = BI->getOperand(DstIdx).getReg();
       if (isTrans || TII->isTransOnly(*BI)) {
         Result[Dst] = R600::PS;
         continue;
@@ -136,7 +131,7 @@ private:
       int OperandIdx = TII->getOperandIdx(MI.getOpcode(), Ops[i]);
       if (OperandIdx < 0)
         continue;
-      unsigned Src = MI.getOperand(OperandIdx).getReg();
+      Register Src = MI.getOperand(OperandIdx).getReg();
       const DenseMap<unsigned, unsigned>::const_iterator It = PVs.find(Src);
       if (It != PVs.end())
         MI.getOperand(OperandIdx).setReg(It->second);

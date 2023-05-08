@@ -21,7 +21,10 @@ static CPyCppyy::LowLevelView* ll_new(PyTypeObject* subtype, PyObject*, PyObject
 {
 // Create a new low level ptr type
     CPyCppyy::LowLevelView* pyobj = (CPyCppyy::LowLevelView*)subtype->tp_alloc(subtype, 0);
-    if (!pyobj) PyErr_Print();
+    if (!pyobj) {
+        PyErr_Print();
+        return nullptr;
+    }
     memset(&pyobj->fBufInfo, 0, sizeof(Py_buffer));
     pyobj->fBuf = nullptr;
     pyobj->fConverter = nullptr;

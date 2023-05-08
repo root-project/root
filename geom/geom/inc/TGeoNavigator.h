@@ -116,7 +116,7 @@ public :
    void                   ResetState();
    void                   ResetAll();
    Double_t               Safety(Bool_t inside=kFALSE);
-   TGeoNode              *SearchNode(Bool_t downwards=kFALSE, const TGeoNode *skipnode=0);
+   TGeoNode              *SearchNode(Bool_t downwards=kFALSE, const TGeoNode *skipnode=nullptr);
    TGeoNode              *Step(Bool_t is_geom=kTRUE, Bool_t cross=kTRUE);
    const Double_t        *GetLastPoint() const {return fLastPoint;}
    Int_t                  GetVirtualLevel();
@@ -219,12 +219,12 @@ private:
    TGeoNavigator         *fCurrentNavigator; // Current navigator
    TGeoManager           *fGeoManager;       // Manager to which it applies
 
-   TGeoNavigatorArray(const TGeoNavigatorArray&);
-   TGeoNavigatorArray& operator=(const TGeoNavigatorArray&);
+   TGeoNavigatorArray(const TGeoNavigatorArray&) = delete;
+   TGeoNavigatorArray& operator=(const TGeoNavigatorArray&) = delete;
 
 public:
-   TGeoNavigatorArray() : TObjArray(), fCurrentNavigator(0), fGeoManager(0) {}
-   TGeoNavigatorArray(TGeoManager *mgr) : TObjArray(), fCurrentNavigator(0), fGeoManager(mgr) {SetOwner();}
+   TGeoNavigatorArray() : TObjArray(), fCurrentNavigator(nullptr), fGeoManager(nullptr) {}
+   TGeoNavigatorArray(TGeoManager *mgr) : TObjArray(), fCurrentNavigator(nullptr), fGeoManager(mgr) {SetOwner();}
    virtual ~TGeoNavigatorArray() {}
 
    TGeoNavigator         *AddNavigator();

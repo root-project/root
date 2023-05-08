@@ -51,7 +51,7 @@ public:
    }
    // in principle function does not need to be cloned
 
-   virtual double Density(int ndim, double * x) {
+   double Density(int ndim, double * x) override {
       assert(ndim == (int) fFunc.NDim() );
       for (int i = 0; i < ndim; ++i)
          fX[i] = fMinX[i] + x[i] * fDeltaX[i];

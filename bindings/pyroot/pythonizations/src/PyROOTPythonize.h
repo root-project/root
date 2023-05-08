@@ -46,7 +46,7 @@ PyObject *GetEndianess(PyObject *self, PyObject *args);
 PyObject *GetDataPointer(PyObject *self, PyObject *args);
 PyObject *GetSizeOfType(PyObject *self, PyObject *args);
 
-PyObject *MakeNumpyDataFrame(PyObject *self, PyObject *obj);
+PyObject *MakeNumpyDataFrameImpl(PyObject *self, PyObject *obj);
 
 } // namespace PyROOT
 

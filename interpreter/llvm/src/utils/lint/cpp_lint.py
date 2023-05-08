@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 #
 # Checks C++ files to make sure they conform to LLVM standards, as specified in
 # http://llvm.org/docs/CodingStandards.html .
@@ -53,7 +53,7 @@ def VerifyIncludes(filename, lines):
     if system_header:
       curr_system_header = system_header.group(1)
 
-      # Is it blacklisted?
+      # Is it disallowed?
       if curr_system_header in DISALLOWED_SYSTEM_HEADERS:
         lint.append((filename, line_num,
                      'Disallowed system header: <%s>' % curr_system_header))

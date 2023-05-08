@@ -25,10 +25,10 @@
 #include <memory>
 #include <vector>
 
-
 namespace llvm {
 
 class CallLowering;
+class InlineAsmLowering;
 class InstrItineraryData;
 struct InstrStage;
 class InstructionSelector;
@@ -41,9 +41,6 @@ struct MCWriteProcResEntry;
 class RegisterBankInfo;
 class SDep;
 class SelectionDAGTargetInfo;
-struct SubtargetFeatureKV;
-struct SubtargetSubTypeKV;
-struct SubtargetInfoKV;
 class SUnit;
 class TargetFrameLowering;
 class TargetInstrInfo;
@@ -61,8 +58,8 @@ class Triple;
 ///
 class TargetSubtargetInfo : public MCSubtargetInfo {
 protected: // Can only create subclasses...
-  TargetSubtargetInfo(const Triple &TT, StringRef CPU, StringRef FS,
-                      ArrayRef<SubtargetFeatureKV> PF,
+  TargetSubtargetInfo(const Triple &TT, StringRef CPU, StringRef TuneCPU,
+                      StringRef FS, ArrayRef<SubtargetFeatureKV> PF,
                       ArrayRef<SubtargetSubTypeKV> PD,
                       const MCWriteProcResEntry *WPR,
                       const MCWriteLatencyEntry *WL,
@@ -102,15 +99,17 @@ public:
   }
   virtual const CallLowering *getCallLowering() const { return nullptr; }
 
+  virtual const InlineAsmLowering *getInlineAsmLowering() const {
+    return nullptr;
+  }
+
   // FIXME: This lets targets specialize the selector by subtarget (which lets
   // us do things like a dedicated avx512 selector).  However, we might want
   // to also specialize selectors by MachineFunction, which would let us be
   // aware of optsize/optnone and such.
-  virtual const InstructionSelector *getInstructionSelector() const {
+  virtual InstructionSelector *getInstructionSelector() const {
     return nullptr;
   }
-
-  virtual unsigned getHwMode() const { return 0; }
 
   /// Target can subclass this hook to select a different DAG scheduler.
   virtual RegisterScheduler::FunctionPassCtor
@@ -208,6 +207,10 @@ public:
   /// which is the preferred way to influence this.
   virtual bool enablePostRAScheduler() const;
 
+  /// True if the subtarget should run a machine scheduler after register
+  /// allocation.
+  virtual bool enablePostRAMachineScheduler() const;
+
   /// True if the subtarget should run the atomic expansion pass.
   virtual bool enableAtomicExpand() const;
 
@@ -222,9 +225,13 @@ public:
   virtual void overrideSchedPolicy(MachineSchedPolicy &Policy,
                                    unsigned NumRegionInstrs) const {}
 
-  // Perform target specific adjustments to the latency of a schedule
+  // Perform target-specific adjustments to the latency of a schedule
   // dependency.
-  virtual void adjustSchedDependency(SUnit *def, SUnit *use, SDep &dep) const {}
+  // If a pair of operands is associated with the schedule dependency, DefOpIdx
+  // and UseOpIdx are the indices of the operands in Def and Use, respectively.
+  // Otherwise, either may be -1.
+  virtual void adjustSchedDependency(SUnit *Def, int DefOpIdx, SUnit *Use,
+                                     int UseOpIdx, SDep &Dep) const {}
 
   // For use with PostRAScheduling: get the anti-dependence breaking that should
   // be performed before post-RA scheduling.
@@ -273,6 +280,12 @@ public:
   /// Enable use of alias analysis during code generation (during MI
   /// scheduling, DAGCombine, etc.).
   virtual bool useAA() const;
+
+  /// \brief Sink addresses into blocks using GEP instructions rather than
+  /// pointer casts and arithmetic.
+  virtual bool addrSinkUsingGEPs() const {
+    return useAA();
+  }
 
   /// Enable the use of the early if conversion pass.
   virtual bool enableEarlyIfConversion() const { return false; }

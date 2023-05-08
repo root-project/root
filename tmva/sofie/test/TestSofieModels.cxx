@@ -11,6 +11,7 @@
 #include "TMVA/RModelParser_ONNX.hxx"
 
 #include  "gtest/gtest.h"
+#define USE_ONNXSIM
 
 bool verbose = true;
 int sessionId = 0;
@@ -22,7 +23,7 @@ void ExecuteSofieParser(std::string modelName) {
    std::cout << "parsing file " << inputName << std::endl;
    SOFIE::RModel model = parser.Parse(inputName);
    std::cout << "generating model.....\n";
-   model.Generate(1, 1);
+   model.Generate();
    std::string outputName = modelName + ".hxx";
    std::cout << "writing model as header .....\n";
    model.OutputGenerated(); // outputName);
@@ -42,7 +43,7 @@ int DeclareCode(std::string modelName)
    code += "TMVA_SOFIE_" + modelName + "::Session s" + std::to_string(sessionId) + ";\n";
 
    gInterpreter->Declare(code.c_str());
-   return sessionId;  
+   return sessionId;
 }
 
 std::vector<float> RunInference(float * x, int sId) {
@@ -136,7 +137,8 @@ void TestConv( std::string type, int nbatches, bool useBN = false, int ngroups =
    printf("executing %s\n", command.c_str());
    gSystem->Exec(command.c_str());
 
-   // some model needs some semplifications
+   // some model needs some simplifications
+#ifdef USE_ONNXSIM
    if (usePool == 2) {
       printf("simplify onnx model using onnxsim tool \n");
       std::string cmd = "python3 -m onnxsim " + modelName + ".onnx " + modelName + ".onnx";
@@ -147,13 +149,14 @@ void TestConv( std::string type, int nbatches, bool useBN = false, int ngroups =
          return;
       }
    }
+#endif
 
-  
+
    ExecuteSofieParser(modelName);
 
    int id = DeclareCode(modelName);
 
-   // input data 
+   // input data
    std::vector<float> xinput(nbatches*inputSize);
    for (int ib = 0; ib < nbatches; ib++) {
       std::vector<float> x1(inputDim, float(ib + 1));
@@ -166,7 +169,7 @@ void TestConv( std::string type, int nbatches, bool useBN = false, int ngroups =
 
    auto result = RunInference(xinput.data(), id);
 
-   
+
    // read reference value from test file
    std::vector<float> refValue(result.size());
 
@@ -176,7 +179,7 @@ void TestConv( std::string type, int nbatches, bool useBN = false, int ngroups =
       if (verbose) std::cout << " result " << result.at(i) << " reference " << refValue[i] << std::endl;
       if (std::abs(refValue[i]) > 0.5)
          EXPECT_FLOAT_EQ(result.at(i), refValue[i]);
-      else 
+      else
          // expect float fails for small values
          EXPECT_NEAR(result.at(i), refValue[i], 10 * std::numeric_limits<float>::epsilon());
    }
@@ -203,6 +206,7 @@ void TestRecurrent(std::string type, int nbatches, int inputSize = 5, int seqSiz
    printf("executing %s\n", command.c_str());
    gSystem->Exec(command.c_str());
    // need to simplify obtained recurrent ONNX model
+#ifdef USE_ONNXSIM
    printf("simplify onnx model using onnxsim tool \n");
    std::string cmd = "python3 -m onnxsim " + modelName + ".onnx " + modelName + ".onnx";
    int ret = gSystem->Exec(cmd.c_str());
@@ -211,6 +215,7 @@ void TestRecurrent(std::string type, int nbatches, int inputSize = 5, int seqSiz
       GTEST_SKIP();
       return;
    }
+#endif
 
    ExecuteSofieParser(modelName);
 
@@ -255,6 +260,90 @@ void TestRecurrent(std::string type, int nbatches, int inputSize = 5, int seqSiz
          EXPECT_NEAR(result.at(i), refValue[i], 10 * std::numeric_limits<float>::epsilon());
    }
 }
+
+void TestConvTranspose( std::string type, int nbatches, bool useBN = false, int ngroups = 1, int nchannels = 2, int nd = 4, int nlayers = 4, int usePool = 0)
+{
+   std::string modelName = "ConvTrans" + type + "Model";
+   if (useBN) modelName += "_BN";
+   if (usePool == 1) modelName += "_MAXP";
+   if (usePool == 2) modelName += "_AVGP";
+   modelName += "_B" + std::to_string(nbatches);
+
+   // input size is fixed to (nb, nc, nd, nd)
+   int inputDim = nd;
+   if (type == "2d") inputDim *= nd;
+   if (type == "3d") inputDim *= nd*nd;
+
+   const int inputSize = nchannels * inputDim;
+
+   //const char *argv[5] = {}
+   std::string argv[5];
+
+   argv[0] = std::to_string(nbatches);
+   //.c_str();
+   argv[1] = std::to_string(nchannels);
+   argv[2] = std::to_string(nd);
+   argv[3] = std::to_string(ngroups); // for 3d this is depth size
+   argv[4] = std::to_string(nlayers);
+   std::string command = "python3 ConvTrans" + type + "ModelGenerator.py ";
+   for (int i = 0; i < 5; i++) {
+      command += " ";
+      command += argv[i];
+   }
+   if (useBN) command += "  --bn";
+   if (usePool == 1) command += " --maxpool";
+   if (usePool == 2) command += " --avgpool";
+   printf("executing %s\n", command.c_str());
+   gSystem->Exec(command.c_str());
+
+   // some model needs some semplifications
+   if (usePool == 2) {
+      printf("simplify onnx model using onnxsim tool \n");
+      std::string cmd = "python3 -m onnxsim " + modelName + ".onnx " + modelName + ".onnx";
+      int ret = gSystem->Exec(cmd.c_str());
+      if (ret != 0) {
+         std::cout << "Error when simplifing ONNX model with AveragePool layer using onnx-simplifier (onnxsim) - skip the test" << std::endl;
+         GTEST_SKIP();
+         return;
+      }
+   }
+
+
+   ExecuteSofieParser(modelName);
+
+   int id = DeclareCode(modelName);
+
+   // input data
+   std::vector<float> xinput(nbatches*inputSize);
+   for (int ib = 0; ib < nbatches; ib++) {
+      std::vector<float> x1(inputDim, float(ib + 1));
+      std::vector<float> x2(inputDim, -float(ib + 1));
+      for (int i = 0; i < inputDim; i++) x1[i] = float(i)*float(ib+1);
+      for (int i = 0; i < inputDim; i++) x2[i] = -float(i)*float(ib+1);
+      // x1 and x2 are the two channels, if more channels will be with zero
+      std::copy(x1.begin(), x1.end(), xinput.begin() + ib * inputSize);
+      if (nchannels > 1)
+         std::copy(x2.begin(), x2.end(), xinput.begin() + ib * inputSize + x1.size());
+   }
+
+   auto result = RunInference(xinput.data(), id);
+
+
+   // read reference value from test file
+   std::vector<float> refValue(result.size());
+
+   std::ifstream f(std::string(modelName + ".out").c_str());
+   for (size_t i = 0; i < refValue.size(); ++i) {
+      f >> refValue[i];
+      if (verbose) std::cout << " result " << result.at(i) << " reference " << refValue[i] << std::endl;
+      if (std::abs(refValue[i]) > 0.5)
+         EXPECT_FLOAT_EQ(result.at(i), refValue[i]);
+      else
+         // expect float fails for small values
+         EXPECT_NEAR(result.at(i), refValue[i], 10 * std::numeric_limits<float>::epsilon());
+   }
+}
+
 
 TEST(SOFIE, Linear_B1) {
    TestLinear(1);
@@ -303,7 +392,7 @@ TEST(SOFIE, Conv3d_B1)
    TestConv("3d", 1, false, 3, 2, 3, 1, 0);
 }
 
-// Tets recurrent network 
+// Tets recurrent network
 // test with avg pooling
 TEST(SOFIE, RNN_B1)
 {
@@ -318,4 +407,9 @@ TEST(SOFIE, LSTM_B1)
 TEST(SOFIE, GRU_B1)
 {
    TestRecurrent("GRU", 1, 3, 5, 4, 1);
+}
+
+TEST(SOFIE, CONVTRANS2D_B1)
+{
+   TestConvTranspose("2d", 1);
 }

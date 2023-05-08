@@ -27,9 +27,8 @@ public:
 
   RooBarlowBeestonLL() ;
   RooBarlowBeestonLL(const char *name, const char *title, RooAbsReal& nll /*, const RooArgSet& observables*/);
-  RooBarlowBeestonLL(const RooBarlowBeestonLL& other, const char* name=0) ;
-  virtual TObject* clone(const char* newname) const { return new RooBarlowBeestonLL(*this,newname); }
-  virtual ~RooBarlowBeestonLL() ;
+  RooBarlowBeestonLL(const RooBarlowBeestonLL& other, const char* name=nullptr) ;
+  TObject* clone(const char* newname) const override { return new RooBarlowBeestonLL(*this,newname); }
 
   // A simple class to store the
   // necessary objects for a
@@ -49,12 +48,8 @@ public:
   };
 
   void initializeBarlowCache();
-  bool getParameters(const RooArgSet* depList, RooArgSet& outputSet, bool stripDisconnected=true) const;
+  bool getParameters(const RooArgSet* depList, RooArgSet& outputSet, bool stripDisconnected=true) const override;
   RooAbsReal& nll() { return const_cast<RooAbsReal&>(_nll.arg()) ; }
-  virtual bool redirectServersHook(const RooAbsCollection& /*newServerList*/,
-                                   bool /*mustReplaceAll*/,
-                                   bool /*nameChange*/,
-                                   bool /*isRecursive*/) ;
   void setPdf(RooAbsPdf* pdf) { _pdf = pdf; }
   void setDataset(RooAbsData* data) { _data = data; }
 
@@ -66,12 +61,12 @@ protected:
   mutable std::map< std::string, std::vector< BarlowCache > > _barlowCache;
   mutable std::set< std::string > _statUncertParams;
   mutable std::map<std::string,bool> _paramFixed ; ///< Parameter constant status at last time of use
-  Double_t evaluate() const ;
+  double evaluate() const override ;
 
 private:
 
   // Real-valued function representing a Barlow-Beeston minimized profile likelihood of external (likelihood) function
-  ClassDef(RooStats::HistFactory::RooBarlowBeestonLL,0)
+  ClassDefOverride(RooStats::HistFactory::RooBarlowBeestonLL,0)
 };
 
   }

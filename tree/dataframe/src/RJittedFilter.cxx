@@ -28,7 +28,7 @@ RJittedFilter::RJittedFilter(RLoopManager *lm, std::string_view name, const std:
    // So RJittedFilters register themselves with RLoopManager at construction time and deregister themselves
    // in SetFilter, i.e. when they are sure that the concrete filter has been instantiated in jitted code and it has
    // been registered with RLoopManager, making the RJittedFilter registration redundant.
-   fLoopManager->Book(this);
+   fLoopManager->Register(this);
 }
 
 RJittedFilter::~RJittedFilter()
@@ -107,10 +107,10 @@ void RJittedFilter::ResetReportCount()
    fConcreteFilter->ResetReportCount();
 }
 
-void RJittedFilter::FinaliseSlot(unsigned int slot)
+void RJittedFilter::FinalizeSlot(unsigned int slot)
 {
    assert(fConcreteFilter != nullptr);
-   fConcreteFilter->FinaliseSlot(slot);
+   fConcreteFilter->FinalizeSlot(slot);
 }
 
 void RJittedFilter::InitNode()
@@ -128,11 +128,12 @@ void RJittedFilter::AddFilterName(std::vector<std::string> &filters)
    fConcreteFilter->AddFilterName(filters);
 }
 
-std::shared_ptr<RDFGraphDrawing::GraphNode> RJittedFilter::GetGraph()
+std::shared_ptr<RDFGraphDrawing::GraphNode>
+RJittedFilter::GetGraph(std::unordered_map<void *, std::shared_ptr<RDFGraphDrawing::GraphNode>> &visitedMap)
 {
    if (fConcreteFilter != nullptr) {
       // Here the filter exists, so it can be served
-      return fConcreteFilter->GetGraph();
+      return fConcreteFilter->GetGraph(visitedMap);
    }
    throw std::runtime_error("The Jitting should have been invoked before this method.");
 }

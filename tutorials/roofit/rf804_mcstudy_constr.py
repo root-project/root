@@ -42,14 +42,7 @@ sumc = ROOT.RooProdPdf("sumc", "sum with constraint", [sum, fconstraint])
 # ---------------------------------------------------
 
 # Perform toy study with internal constraint on f
-mcs = ROOT.RooMCStudy(
-    sumc,
-    {x},
-    ROOT.RooFit.Constrain({f}),
-    ROOT.RooFit.Silence(),
-    ROOT.RooFit.Binned(),
-    ROOT.RooFit.FitOptions(ROOT.RooFit.PrintLevel(-1)),
-)
+mcs = ROOT.RooMCStudy(sumc, {x}, Constrain={f}, Silence=True, Binned=True, FitOptions={"PrintLevel": -1})
 
 # Run 500 toys of 2000 events.
 # Before each toy is generated, value for the f is sampled from the constraint pdf and
@@ -57,14 +50,14 @@ mcs = ROOT.RooMCStudy(
 mcs.generateAndFit(500, 2000)
 
 # Make plot of distribution of generated value of f parameter
-h_f_gen = ROOT.RooAbsData.createHistogram(mcs.fitParDataSet(), "f_gen", -40)
+h_f_gen = mcs.fitParDataSet().createHistogram("f_gen", AutoBinning=40)
 
 # Make plot of distribution of fitted value of f parameter
-frame1 = mcs.plotParam(f, ROOT.RooFit.Bins(40))
+frame1 = mcs.plotParam(f, Bins=40)
 frame1.SetTitle("Distribution of fitted f values")
 
 # Make plot of pull distribution on f
-frame2 = mcs.plotPull(f, ROOT.RooFit.Bins(40), ROOT.RooFit.FitGauss())
+frame2 = mcs.plotPull(f, Bins=40, FitGauss=True)
 frame1.SetTitle("Distribution of f pull values")
 
 c = ROOT.TCanvas("rf804_mcstudy_constr", "rf804_mcstudy_constr", 1200, 400)

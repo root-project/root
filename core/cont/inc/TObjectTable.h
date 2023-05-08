@@ -54,11 +54,11 @@ public:
 
    void      Add(TObject *obj);
    void     *CheckPtrAndWarn(const char *msg, void *vp);
-   void      Delete(Option_t *opt = "");
+   void      Delete(Option_t *opt = "") override;
    Int_t     GetSize() const { return fSize; }
    Int_t     Instances() const { return fTally; }
    void      InstanceStatistics() const;
-   void      Print(Option_t *option="") const;
+   void      Print(Option_t *option="") const override;
    Bool_t    PtrIsValid(TObject *obj);
    void      Remove(TObject *obj);
    void      RemoveQuietly(TObject *obj);
@@ -68,7 +68,7 @@ public:
 
    static void AddObj(TObject *obj);
 
-   ClassDef(TObjectTable,0)  //Table of active objects
+   ClassDefOverride(TObjectTable,0)  //Table of active objects
 };
 
 
@@ -76,7 +76,7 @@ inline Bool_t TObjectTable::HighWaterMark()
    { return (Bool_t) (fTally >= ((3*fSize)/4)); }
 
 inline Bool_t TObjectTable::PtrIsValid(TObject *op)
-   { return fTable[FindElement(op)] != 0; }
+   { return fTable[FindElement(op)] != nullptr; }
 
 
 R__EXTERN TObjectTable *gObjectTable;

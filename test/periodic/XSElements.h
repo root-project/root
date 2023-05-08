@@ -36,7 +36,7 @@ protected:
 
 public:
    XSElement();
-   ~XSElement();
+   ~XSElement() override;
 
    inline char*    Name()      const { return name; }
    inline char*   Mnemonic()   const { return symbol; }
@@ -54,10 +54,10 @@ public:
    inline Bool_t  IsStable(int i)   const { return isotope_stable[i]; }
 
    void   Read(FILE *f);
-   Int_t   Read(const char *name) { return TObject::Read(name); }
+   Int_t   Read(const char *name) override { return TObject::Read(name); }
 protected:
    char*   ReadLine(FILE *f);
-   //ClassDef(XSElement,1)
+   //ClassDefOverride(XSElement,1)
 }; // XSElement
 
 /* =================== XSElements ===================== */
@@ -69,7 +69,7 @@ protected:
 
 public:
    XSElements( const char *filename );
-   ~XSElements();
+   ~XSElements() override;
 
    inline UInt_t   GetSize()   const   { return NElements; }
 
@@ -85,7 +85,7 @@ public:
    // Search for element either by name or mnemonic
    UInt_t      Find(const char *str);
 
-   //ClassDef(XSElements,1)
+   //ClassDefOverride(XSElements,1)
 }; // XSElements
 
 #endif

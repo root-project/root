@@ -49,7 +49,7 @@ class FumiliErrorUpdator : public MinimumErrorUpdator {
 public:
    FumiliErrorUpdator() {}
 
-   ~FumiliErrorUpdator() {}
+   ~FumiliErrorUpdator() override {}
 
    /**
 
@@ -87,7 +87,7 @@ public:
 
    */
 
-   virtual MinimumError Update(const MinimumState &, const MinimumParameters &, const FunctionGradient &) const;
+   MinimumError Update(const MinimumState &, const MinimumParameters &, const FunctionGradient &) const override;
 
 private:
 };

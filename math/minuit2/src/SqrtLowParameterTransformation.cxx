@@ -40,7 +40,7 @@ SqrtLowParameterTransformation::Ext2int(long double value, long double lower, co
 
 long double SqrtLowParameterTransformation::DInt2Ext(long double value, long double) const
 {
-   // derivative of internal to external transofrmation   :  d (Int2Ext) / d Int
+   // derivative of internal to external transformation   :  d (Int2Ext) / d Int
    long double val = value / (std::sqrt(value * value + 1.));
    return val;
 }

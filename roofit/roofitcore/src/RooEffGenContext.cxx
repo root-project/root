@@ -12,7 +12,6 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-
 /**
 \file RooEffGenContext.cxx
 \class RooEffGenContext
@@ -27,7 +26,6 @@ and applying an extra rejection step based on the efficiency function.
 
 #include <memory>
 
-#include "RooFit.h"
 #include "RooEffGenContext.h"
 #include "RooAbsPdf.h"
 #include "RooRandom.h"
@@ -39,18 +37,16 @@ ClassImp(RooEffGenContext);
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor of generator context for RooEffProd products
 
-RooEffGenContext::RooEffGenContext(const RooAbsPdf &model, 
-                                   const RooAbsPdf& pdf, const RooAbsReal& eff,
-                                   const RooArgSet &vars,
-                                   const RooDataSet *prototype, const RooArgSet* auxProto,
-                                   Bool_t verbose, const RooArgSet* /*forceDirect*/) :
-   RooAbsGenContext(model, vars, prototype, auxProto, verbose), _maxEff(0.)
+RooEffGenContext::RooEffGenContext(const RooAbsPdf &model, const RooAbsPdf &pdf, const RooAbsReal &eff,
+                                   const RooArgSet &vars, const RooDataSet *prototype, const RooArgSet *auxProto,
+                                   bool verbose, const RooArgSet * /*forceDirect*/)
+   : RooAbsGenContext(model, vars, prototype, auxProto, verbose), _maxEff(0.)
 {
-   RooArgSet x(eff,eff.GetName());
-   _cloneSet = static_cast<RooArgSet*>(x.snapshot(kTRUE));
-   _eff = dynamic_cast<RooAbsReal*>(_cloneSet->find(eff.GetName()));
+   RooArgSet x(eff, eff.GetName());
+   _cloneSet = static_cast<RooArgSet*>(x.snapshot(true));
+   _eff = dynamic_cast<RooAbsReal *>(_cloneSet->find(eff.GetName()));
    _generator = pdf.genContext(vars, prototype, auxProto, verbose);
-   _vars = static_cast<RooArgSet*>(vars.snapshot(kTRUE));
+   _vars = static_cast<RooArgSet*>(vars.snapshot(true));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -74,9 +70,9 @@ void RooEffGenContext::initGenerator(const RooArgSet &theEvent)
    // Check if PDF supports maximum finding
    Int_t code = _eff->getMaxVal(*_vars);
    if (!code) {
-     _maxEff = 1.;
+      _maxEff = 1.;
    } else {
-     _maxEff = _eff->maxVal(code);
+      _maxEff = _eff->maxVal(code);
    }
 }
 
@@ -91,12 +87,29 @@ void RooEffGenContext::generateEvent(RooArgSet &theEvent, Int_t remaining)
       _generator->generateEvent(theEvent, remaining);
       double val = _eff->getVal();
       if (val > _maxEff && !_eff->getMaxVal(*_vars)) {
-         coutE(Generation) << ClassName() << "::" << GetName() 
-              << ":generateEvent: value of efficiency is larger than assumed maximum of 1."  << std::endl;
+         coutE(Generation) << ClassName() << "::" << GetName()
+                           << ":generateEvent: value of efficiency is larger than assumed maximum of 1." << std::endl;
          continue;
       }
       if (val > RooRandom::uniform() * _maxEff) {
          break;
       }
    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Detailed printing interface
+
+void RooEffGenContext::printMultiline(ostream &os, Int_t content, bool verbose, TString indent) const
+{
+   RooAbsGenContext::printMultiline(os, content, verbose, indent);
+   os << indent << "--- RooEffGenContext ---" << endl;
+   os << indent << "Using EFF ";
+   _eff->printStream(os, kName | kArgs | kClassName, kSingleLine, indent);
+   os << indent << "PDF generator" << endl;
+
+   TString indent2(indent);
+   indent2.Append("    ");
+
+   _generator->printMultiline(os, content, verbose, indent2);
 }

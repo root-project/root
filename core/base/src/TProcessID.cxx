@@ -86,7 +86,7 @@ TProcessID::TProcessID()
    std::atomic_flag_clear( &fLock );
 
    fCount = 0;
-   fObjects = 0;
+   fObjects = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -95,7 +95,7 @@ TProcessID::TProcessID()
 TProcessID::~TProcessID()
 {
    delete fObjects;
-   fObjects = 0;
+   fObjects = nullptr;
 
    TProcessID *This = this; // We need a referencable value for the 1st argument
    gIsValidCache.compare_exchange_strong(This, nullptr);
@@ -228,7 +228,7 @@ void TProcessID::Clear(Option_t *)
          }
       }
    }
-   delete fObjects; fObjects = 0;
+   delete fObjects; fObjects = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -333,7 +333,7 @@ TObject *TProcessID::GetObjectWithID(UInt_t uidd)
 {
    Int_t uid = uidd & 0xffffff;  //take only the 24 lower bits
 
-   if (fObjects==0 || uid >= fObjects->GetSize()) return nullptr;
+   if (!fObjects || uid >= fObjects->GetSize()) return nullptr;
    return fObjects->UncheckedAt(uid);
 }
 
@@ -417,9 +417,9 @@ void TProcessID::RecursiveRemove(TObject *obj)
    if (obj == GetObjectWithID(uid)) {
       R__WRITE_LOCKGUARD(ROOT::gCoreMutex);
       // Only attempt to remove from the map the items that are already
-      // registered (because they are associated with a TProcessID with index 
+      // registered (because they are associated with a TProcessID with index
       // greater than 255.  Attempting to remove an item that is not in the map
-      // issues a Warning message.  
+      // issues a Warning message.
       if (fgObjPIDs && ((obj->GetUniqueID()&0xff000000)==0xff000000)) {
          ULong64_t hash = Void_Hash(obj);
          fgObjPIDs->Remove(hash,(Long64_t)obj);

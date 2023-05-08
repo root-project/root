@@ -37,9 +37,12 @@ protected:
    Double_t   *fZ;            ///<! Pointer to fGraph2D->fZ
    Double_t   *fXN;           ///<! Pointer to fDelaunay->fXN
    Double_t   *fYN;           ///<! Pointer to fDelaunay->fYN
-   Double_t   *fEX;           ///<! Pointer to fGraph2D->fXE
-   Double_t   *fEY;           ///<! Pointer to fGraph2D->fYE
-   Double_t   *fEZ;           ///<! Pointer to fGraph2D->fZE
+   Double_t   *fEXlow;        ///<! Pointer to fGraph2D->fXElow
+   Double_t   *fEXhigh;       ///<! Pointer to fGraph2D->fXEhigh
+   Double_t   *fEYlow;        ///<! Pointer to fGraph2D->fYElow
+   Double_t   *fEYhigh;       ///<! Pointer to fGraph2D->fYEhigh
+   Double_t   *fEZlow;        ///<! Pointer to fGraph2D->fZElow
+   Double_t   *fEZhigh;       ///<! Pointer to fGraph2D->fZEhigh
    Double_t    fXNmin;        ///<! Equal to fDelaunay->fXNmin
    Double_t    fXNmax;        ///<! Equal to fDelaunay->fXNmax
    Double_t    fYNmin;        ///<! Equal to fDelaunay->fYNmin
@@ -61,12 +64,12 @@ protected:
    TGraphDelaunay2D *fDelaunay2D; ///<! Pointer to the TGraphDelaunay2D to be painted
    TGraph2D *fGraph2D;            ///<! Pointer to the TGraph2D in fDelaunay
 
-   void     FindTriangles();
-   void     PaintLevels(Int_t *v, Double_t *x, Double_t *y, Int_t nblev=0, Double_t *glev=0);
-   void     PaintPolyMarker0(Int_t n, Double_t *x, Double_t *y);
+   void FindTriangles();
+   void PaintLevels(Int_t *v, Double_t *x, Double_t *y, Int_t nblev = 0, Double_t *glev = nullptr);
+   void PaintPolyMarker0(Int_t n, Double_t *x, Double_t *y);
 
-   void   PaintTriangles_old(Option_t *option);
-   void   PaintTriangles_new(Option_t *option);
+   void PaintTriangles_old(Option_t *option);
+   void PaintTriangles_new(Option_t *option);
 
 public:
 
@@ -74,17 +77,17 @@ public:
    TGraph2DPainter(TGraphDelaunay *gd);
    TGraph2DPainter(TGraphDelaunay2D *gd);
 
-   virtual ~TGraph2DPainter();
+   ~TGraph2DPainter() override;
 
    TList *GetContourList(Double_t contour);
-   void   Paint(Option_t *option);
+   void   Paint(Option_t *option) override;
    void   PaintContour(Option_t *option);
    void   PaintErrors(Option_t *option);
    void   PaintPolyMarker(Option_t *option);
    void   PaintPolyLine(Option_t *option);
    void   PaintTriangles(Option_t *option);
 
-   ClassDef(TGraph2DPainter,0)  // TGraph2D painter
+   ClassDefOverride(TGraph2DPainter,0)  // TGraph2D painter
 };
 
 #endif

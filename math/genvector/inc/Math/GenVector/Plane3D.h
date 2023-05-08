@@ -45,6 +45,8 @@ namespace Impl {
    i.e. fA**2 + fB**2 + fC**2 = 1
 
    @ingroup GenVector
+
+   @sa Overview of the @ref GenVector "physics vector library"
 */
 
 template <typename T = double>

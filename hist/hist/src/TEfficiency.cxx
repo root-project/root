@@ -46,6 +46,27 @@ ClassImp(TEfficiency);
     \ingroup Hist
     \brief Class to handle efficiency histograms
 
+- [I. Overview](\ref EFF01)
+- [II. Creating a TEfficiency object](\ref EFF02)
+   - [Example 1](\ref EFF02a)
+   - [Example 2](\ref EFF02b)
+- [III. Filling with events](\ref EFF03)
+- [IV. Statistic options](\ref EFF04)
+   - [Frequentist methods](\ref EFF04a)
+   - [Bayesian methods](\ref EFF04b)
+   - [IV.1 Coverage probabilities for different methods](\ref EFF041)
+- [V. Merging and combining TEfficiency objects](\ref EFF05)
+   - [Example](\ref EFF05a)
+   - [V.1 When should I use merging?](\ref EFF051)
+      - [Example](\ref EFF05b)
+   - [V.2 When should I use combining?](\ref EFF052)
+      - [Example](\ref EFF05c)
+- [VI. Further operations](\ref EFF06)
+   - [VI.1 Information about the internal histograms](\ref EFF061)
+   - [VI.2 Fitting](\ref EFF062)
+   - [VI.3 Draw a TEfficiency object](\ref EFF063)
+
+\anchor EFF01
 ## I. Overview
 This class handles the calculation of efficiencies and their uncertainties. It
 provides several statistical methods for calculating frequentist and Bayesian
@@ -69,6 +90,7 @@ procedure needs more effort but enables you to re-use the filled object in cases
 where you want to change one or more weights. This would not be possible if all
 events with different weights were filled in the same histogram.
 
+\anchor EFF02
 ## II. Creating a TEfficiency object
 If you start a new analysis, it is highly recommended to use the TEfficiency class
 from the beginning. You can then use one of the constructors for fixed or
@@ -96,7 +118,7 @@ to the current directory to avoid duplication of data. If you want to store the
 new object anyway, you can either write it directly by calling TObject::Write or attach it to a directory using TEfficiency::SetDirectory.
 This also applies to TEfficiency objects created by the copy constructor TEfficiency::TEfficiency(const TEfficiency& rEff).
 
-
+\anchor EFF02a
 ### Example 1
 
 ~~~~~~~~~~~~~~~{.cpp}
@@ -113,6 +135,7 @@ if(TEfficiency::CheckConsistency(h_pass,h_total))
 }
 ~~~~~~~~~~~~~~~
 
+\anchor EFF02b
 ### Example 2
 
 ~~~~~~~~~~~~~~~{.cpp}
@@ -134,6 +157,7 @@ In case you already have two filled histograms and you only want to
 plot them as a graph, you should rather use TGraphAsymmErrors::TGraphAsymmErrors(const TH1* pass,const TH1* total,Option_t* opt)
 to create a graph object.
 
+\anchor EFF03
 ## III. Filling with events
 You can fill the TEfficiency object by calling the TEfficiency::Fill(Bool_t bPassed,Double_t x,Double_t y,Double_t z) method.
 The "bPassed" boolean flag indicates whether the current event is good
@@ -163,21 +187,20 @@ Begin_Macro(source)
    }
 
    pEff->Draw("AP");
-
-   //only for this documentation
-   return c1;
 }
 End_Macro
 
 You can also set the number of passed or total events for a bin directly by
 using the TEfficiency::SetPassedEvents or TEfficiency::SetTotalEvents method.
 
+\anchor EFF04
 ## IV. Statistic options
 The calculation of the estimated efficiency depends on the chosen statistic
 option. Let k denotes the number of passed events and N the number of total
 events.
 
-###Frequentist methods
+\anchor EFF04a
+### Frequentist methods
 The expectation value of the number of passed events is given by the true
 efficiency times the total number of events. One can estimate the efficiency
 by replacing the expected number of passed events by the observed number of
@@ -187,6 +210,7 @@ passed events.
       k = \epsilon \times N    \Rightarrow    \hat{\varepsilon} = \frac{k}{N}
 \f]
 
+\anchor EFF04b
 ### Bayesian methods
 In Bayesian statistics a likelihood-function (how probable is it to get the
 observed data assuming a true efficiency) and a prior probability (what is the
@@ -317,10 +341,6 @@ Begin_Macro(source)
    pEff2->Draw("a4");
    pCopy2->Draw("same4");
    leg2->Draw("same");
-
-   //only for this documentation
-   c1->cd(0);
-   return c1;
 }
 End_Macro
 
@@ -331,44 +351,42 @@ parameters are shown in the plot below.
 
 Begin_Macro(source)
 {
-      //canvas only needed for the documentation
-      TCanvas* c1 = new TCanvas("c1","",600,400);
-      c1->SetFillStyle(1001);
-      c1->SetFillColor(kWhite);
+   //canvas only needed for the documentation
+   TCanvas* c1 = new TCanvas("c1","",600,400);
+   c1->SetFillStyle(1001);
+   c1->SetFillColor(kWhite);
 
-      //create different beta distributions
-      TF1* f1 = new TF1("f1","TMath::BetaDist(x,1,1)",0,1);
-      f1->SetLineColor(kBlue);
-      TF1* f2 = new TF1("f2","TMath::BetaDist(x,0.5,0.5)",0,1);
-      f2->SetLineColor(kRed);
-      TF1* f3 = new TF1("f3","TMath::BetaDist(x,1,5)",0,1);
-      f3->SetLineColor(kGreen+3);
-      f3->SetTitle("Beta distributions as priors;#epsilon;P(#epsilon)");
-      TF1* f4 = new TF1("f4","TMath::BetaDist(x,4,3)",0,1);
-      f4->SetLineColor(kViolet);
+   //create different beta distributions
+   TF1* f1 = new TF1("f1","TMath::BetaDist(x,1,1)",0,1);
+   f1->SetLineColor(kBlue);
+   TF1* f2 = new TF1("f2","TMath::BetaDist(x,0.5,0.5)",0,1);
+   f2->SetLineColor(kRed);
+   TF1* f3 = new TF1("f3","TMath::BetaDist(x,1,5)",0,1);
+   f3->SetLineColor(kGreen+3);
+   f3->SetTitle("Beta distributions as priors;#epsilon;P(#epsilon)");
+   TF1* f4 = new TF1("f4","TMath::BetaDist(x,4,3)",0,1);
+   f4->SetLineColor(kViolet);
 
-      //add legend
-      TLegend* leg = new TLegend(0.25,0.5,0.85,0.89);
-      leg->SetFillColor(kWhite);
-      leg->SetFillStyle(1001);
-      leg->AddEntry(f1,"a=1, b=1","L");
-      leg->AddEntry(f2,"a=0.5, b=0.5","L");
-      leg->AddEntry(f3,"a=1, b=5","L");
-      leg->AddEntry(f4,"a=4, b=3","L");
+   //add legend
+   TLegend* leg = new TLegend(0.25,0.5,0.85,0.89);
+   leg->SetFillColor(kWhite);
+   leg->SetFillStyle(1001);
+   leg->AddEntry(f1,"a=1, b=1","L");
+   leg->AddEntry(f2,"a=0.5, b=0.5","L");
+   leg->AddEntry(f3,"a=1, b=5","L");
+   leg->AddEntry(f4,"a=4, b=3","L");
 
-      f3->Draw();
-      f1->Draw("same");
-      f2->Draw("Same");
-      f4->Draw("same");
-      leg->Draw("same");
-
-      //only for this documentation
-      return c1;
+   f3->Draw();
+   f1->Draw("same");
+   f2->Draw("Same");
+   f4->Draw("same");
+   leg->Draw("same");
 }
 End_Macro
 
 
-## IV.1 Coverage probabilities for different methods
+\anchor EFF041
+### IV.1 Coverage probabilities for different methods
 The following pictures illustrate the actual coverage probability for the
 different values of the true efficiency and the total number of events when a
 confidence level of 95% is desired.
@@ -392,8 +410,10 @@ confidence level of 95% is desired.
 
 The average (over all possible true efficiencies) coverage probability for
 different number of total events is shown in the next picture.
+
 \image html av_cov.png "Average Coverage"
 
+\anchor EFF05
 ## V. Merging and combining TEfficiency objects
 In many applications, the efficiency should be calculated for an inhomogeneous
 sample in the sense that it contains events with different weights. In order
@@ -409,6 +429,7 @@ histogram. In the case of many different or even continuously distributed
 weights, this approach becomes cumbersome. One possibility to overcome this
 problem is the usage of binned weights.
 
+\anchor EFF05a
 ### Example
 In particle physics weights arises from the fact that you want to
 normalise your results to a certain reference value. A very common formula for
@@ -433,6 +454,7 @@ The reason for different weights can therefore be:
 Depending on the actual meaning of different weights in your case, you
 should either merge or combine them to get the overall efficiency.
 
+\anchor EFF051
 ### V.1 When should I use merging?
 If the weights are artificial and do not represent real alternative hypotheses,
 you should merge the different TEfficiency objects. That means especially for
@@ -452,6 +474,7 @@ changed.
    \frac{1}{w_{new}} = \frac{1}{w_{1}} + \frac{1}{w_{2}}
 \f]
 
+\anchor EFF05b
 ### Example:
 If you use two samples with different numbers of generated events for the same
 process and you want to normalise both to the same integrated luminosity and
@@ -464,6 +487,7 @@ result as if you would have a big sample with all events in it.
    w_{1} = \frac{\sigma L}{\epsilon N_{1}}, w_{2} = \frac{\sigma L}{\epsilon N_{2}} \Rightarrow w_{new} = \frac{\sigma L}{\epsilon (N_{1} + N_{2})} = \frac{1}{\frac{1}{w_{1}} + \frac{1}{w_{2}}}
 \f]
 
+\anchor EFF052
 ### V.2 When should I use combining?
 You should combine TEfficiency objects whenever the weights represent
 alternatives processes for the efficiency. As the combination of two TEfficiency
@@ -494,6 +518,7 @@ confidence\ level = 1 - \alpha \\
 \f}
 
 
+\anchor EFF05c
 ###Example:
 If you use cuts to select electrons which can originate from two different
 processes, you can determine the selection efficiency for each process. The
@@ -506,9 +531,11 @@ p_{1} = \frac{\sigma_{1}}{\sigma_{1} + \sigma_{2}} = \frac{N_{1}w_{1}}{N_{1}w_{1
 p_{2} = \frac{\sigma_{2}}{\sigma_{1} + \sigma_{2}} = \frac{N_{2}w_{2}}{N_{1}w_{1} + N_{2}w_{2}}
 \f]
 
+\anchor EFF06
 ## VI. Further operations
 
-### VI.Information about the internal histograms
+\anchor EFF061
+### VI.1 Information about the internal histograms
 The methods TEfficiency::GetPassedHistogram and TEfficiency::GetTotalHistogram
 return a constant pointer to the internal histograms. They can be used to
 obtain information about the internal histograms (e.g., the binning, number of passed / total events in a bin, mean values...).
@@ -550,6 +577,7 @@ the replacement by passing the "f" option. Then the user has to ensure that the
 other internal histogram is replaced as well and that the TEfficiency object is
 in a valid state.
 
+\anchor EFF062
 ### VI.2 Fitting
 The efficiency can be fitted using the TEfficiency::Fit function which internally uses
 the TBinomialEfficiencyFitter::Fit method.
@@ -573,8 +601,7 @@ Begin_Macro(source)
 
    bool bPassed;
    double x;
-   for(int i=0; i<10000; ++i)
-   {
+   for (int i=0; i<10000; ++i) {
       //simulate events with variable under investigation
       x = rand3.Uniform(10);
       //check selection: bPassed = DoesEventPassSelection(x)
@@ -595,12 +622,10 @@ Begin_Macro(source)
    pEff->GetListOfFunctions()->AddFirst(f2);
 
    pEff->Draw("AP");
-
-   //only for this documentation
-   return c1;
 }
 End_Macro
 
+\anchor EFF063
 ### VI.3 Draw a TEfficiency object
 A TEfficiency object can be drawn by calling the usual TEfficiency::Draw method.
 At the moment drawing is only supported for 1- and 2-dimensional TEfficiency objects.
@@ -732,8 +757,8 @@ fPaintHisto(0),
 fWeight(kDefWeight)
 {
    // do not add new created histograms to gDirectory
-   {  
-      // use separate scope for TContext 
+   {
+      // use separate scope for TContext
       TDirectory::TContext ctx(nullptr);
       fTotalHistogram = new TH1D("total","total",nbins,xbins);
       fPassedHistogram = new TH1D("passed","passed",nbins,xbins);
@@ -979,22 +1004,22 @@ fWeight(kDefWeight)
 ///      by calling Write().
 
 TEfficiency::TEfficiency(const TEfficiency& rEff):
-TNamed(),
-TAttLine(),
-TAttFill(),
-TAttMarker(),
-fBeta_alpha(rEff.fBeta_alpha),
-fBeta_beta(rEff.fBeta_beta),
-fBeta_bin_params(rEff.fBeta_bin_params),
-fConfLevel(rEff.fConfLevel),
-fDirectory(0),
-fFunctions(0),
-fPaintGraph(0),
-fPaintHisto(0),
-fWeight(rEff.fWeight)
+   TNamed(),
+   TAttLine(),
+   TAttFill(),
+   TAttMarker(),
+   fBeta_alpha(rEff.fBeta_alpha),
+   fBeta_beta(rEff.fBeta_beta),
+   fBeta_bin_params(rEff.fBeta_bin_params),
+   fConfLevel(rEff.fConfLevel),
+   fDirectory(0),
+   fFunctions(0),
+   fPaintGraph(0),
+   fPaintHisto(0),
+   fWeight(rEff.fWeight)
 {
    // copy TObject bits
-   ((TObject&)rEff).Copy(*this);
+   rEff.TObject::Copy(*this);
 
    // do not add cloned histograms to gDirectory
    {

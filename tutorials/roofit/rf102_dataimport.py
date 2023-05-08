@@ -7,8 +7,7 @@
 ## \macro_code
 ##
 ## \date February 2018
-## \author Clemens Lange
-## \author Wouter Verkerke (C version)
+## \authors Clemens Lange, Wouter Verkerke (C version)
 
 import ROOT
 from array import array
@@ -57,8 +56,7 @@ dh = ROOT.RooDataHist("dh", "dh", [x], Import=hh)
 
 # Plot and fit a RooDataHist
 # ---------------------------------------------------
-# Make plot of binned dataset showing Poisson error bars (ROOT.RooFit
-# default)
+# Make plot of binned dataset showing Poisson error bars (RooFit default)
 frame = x.frame(Title="Imported ROOT.TH1 with Poisson error bars")
 dh.plotOn(frame)
 
@@ -103,7 +101,7 @@ y = ROOT.RooRealVar("y", "y", -10, 10)
 # and RRV y defines a range [-10,10] this means that the ROOT.RooDataSet
 # below will have less entries than the ROOT.TTree 'tree'
 
-ds = ROOT.RooDataSet("ds", "ds", {x, y}, ROOT.RooFit.Import(tree))
+ds = ROOT.RooDataSet("ds", "ds", {x, y}, Import=tree)
 
 # Use ascii import/export for datasets
 # ------------------------------------------------------------------------------------

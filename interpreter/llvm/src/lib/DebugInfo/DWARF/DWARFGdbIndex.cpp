@@ -71,8 +71,8 @@ void DWARFGdbIndex::dumpSymbolTable(raw_ostream &OS) const {
     StringRef Name = ConstantPoolStrings.substr(
         ConstantPoolOffset - StringPoolOffset + E.NameOffset);
 
-    auto CuVector = std::find_if(
-        ConstantPoolVectors.begin(), ConstantPoolVectors.end(),
+    auto CuVector = llvm::find_if(
+        ConstantPoolVectors,
         [&](const std::pair<uint32_t, SmallVector<uint32_t, 0>> &V) {
           return V.first == E.VecOffset;
         });
@@ -112,7 +112,7 @@ void DWARFGdbIndex::dump(raw_ostream &OS) {
 }
 
 bool DWARFGdbIndex::parseImpl(DataExtractor Data) {
-  uint32_t Offset = 0;
+  uint64_t Offset = 0;
 
   // Only version 7 is supported at this moment.
   Version = Data.getU32(&Offset);

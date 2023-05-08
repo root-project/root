@@ -39,14 +39,14 @@ public:
    TColor &operator=(const TColor &color);
    virtual ~TColor();
    const char   *AsHexString() const;
-   void          Copy(TObject &color) const;
+   void          Copy(TObject &color) const override;
    static void   CreateColorWheel();
    static void   CreateColorsGray();
    static void   CreateColorsCircle(Int_t offset, const char *name, UChar_t *rgb);
    static void   CreateColorsRectangle(Int_t offset, const char *name, UChar_t *rgb);
    static Int_t  CreateColorTableFromFile(TString fileName, Float_t alpha=1.);
    static Int_t  CreateGradientColorTable(UInt_t Number, Double_t* Stops,
-                    Double_t* Red, Double_t* Green, Double_t* Blue, UInt_t NColors, Float_t alpha=1.);
+                    Double_t* Red, Double_t* Green, Double_t* Blue, UInt_t NColors, Float_t alpha=1., Bool_t setPalette=kTRUE);
    static Int_t  GetColorPalette(Int_t i);
    static Int_t  GetNumberOfColors();
    virtual void  GetRGB(Float_t &r, Float_t &g, Float_t &b) const
@@ -63,8 +63,8 @@ public:
    Float_t       GetSaturation() const { return IsGrayscale() ? 0 : fSaturation; }
    Float_t       GetAlpha() const { return fAlpha; }
    virtual Float_t GetGrayscale() const { /*ITU*/ return 0.299f*fRed + 0.587f*fGreen + 0.114f*fBlue; }
-   virtual void  ls(Option_t *option="") const;
-   virtual void  Print(Option_t *option="") const;
+   void          ls(Option_t *option="") const override;
+   void          Print(Option_t *option="") const override;
    virtual void  SetAlpha(Float_t a) { fAlpha = a; }
    virtual void  SetRGB(Float_t r, Float_t g, Float_t b);
 
@@ -94,15 +94,15 @@ public:
    static void    Pixel2RGB(ULong_t pixel, Int_t &r, Int_t &g, Int_t &b);
    static void    Pixel2RGB(ULong_t pixel, Float_t &r, Float_t &g, Float_t &b);
    static const char *PixelAsHexString(ULong_t pixel);
-   static void    SaveColor(std::ostream &out, Int_t ci);
+   static Bool_t  SaveColor(std::ostream &out, Int_t ci);
    static void    SetColorThreshold(Float_t t);
    static Bool_t  DefinedColors();
    static void    InvertPalette();
    static Bool_t  IsGrayscale();
    static void    SetGrayscale(Bool_t set = kTRUE);
-   static void    SetPalette(Int_t ncolors, Int_t *colors,Float_t alpha=1.);
+   static void    SetPalette(Int_t ncolors, Int_t *colors, Float_t alpha=1.);
 
-   ClassDef(TColor,2)  //Color defined by RGB or HLS
+   ClassDefOverride(TColor,2)  //Color defined by RGB or HLS
 };
 
    enum EColorPalette {kDeepSea=51,          kGreyScale=52,    kDarkBodyRadiator=53,
@@ -125,6 +125,7 @@ public:
                        kStarryNight=102,     kSunset=103,      kTemperatureMap=104,
                        kThermometer=105,     kValentine=106,   kVisibleSpectrum=107,
                        kWaterMelon=108,      kCool=109,        kCopper=110,
-                       kGistEarth=111,       kViridis=112,     kCividis=113};
+                       kGistEarth=111,       kViridis=112,     kCividis=113,
+                       kRainbow=kRainBow,    kDarkRainbow=kDarkRainBow};
 #endif
 

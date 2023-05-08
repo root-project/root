@@ -39,7 +39,7 @@ public:
    static void LoadMacro(const char *name);
 
    // execute a python stand-alone script, with argv CLI arguments
-   static void ExecScript(const char *name, int argc = 0, const char **argv = 0);
+   static void ExecScript(const char *name, int argc = 0, const char **argv = nullptr);
 
    // execute a python statement (e.g. "import ROOT" )
    static Bool_t Exec(const char *cmd);

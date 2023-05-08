@@ -219,8 +219,6 @@ std::string GetBranchOrLeafTypeName(TTree &t, const std::string &colName)
 /// column created by Define. Throws if type name deduction fails.
 /// Note that for fixed- or variable-sized c-style arrays the returned type name will be RVec<T>.
 /// vector2rvec specifies whether typename 'std::vector<T>' should be converted to 'RVec<T>' or returned as is
-/// customColID is only used if isDefine is true, and must correspond to the custom column's unique identifier
-/// returned by its `GetID()` method.
 std::string ColumnName2ColumnTypeName(const std::string &colName, TTree *tree, RDataSource *ds, RDefineBase *define,
                                       bool vector2rvec)
 {
@@ -384,7 +382,7 @@ unsigned int GetColumnWidth(const std::vector<std::string>& names, const unsigne
 }
 
 void CheckReaderTypeMatches(const std::type_info &colType, const std::type_info &requestedType,
-                            const std::string &colName, const std::string &where)
+                            const std::string &colName)
 {
    // Here we compare names and not typeinfos since they may come from two different contexts: a compiled
    // and a jitted one.
@@ -397,7 +395,7 @@ void CheckReaderTypeMatches(const std::type_info &colType, const std::type_info 
    if (diffTypes && !inheritedType()) {
       const auto tName = TypeID2TypeName(requestedType);
       const auto colTypeName = TypeID2TypeName(colType);
-      std::string errMsg = where + ": type mismatch: column \"" + colName + "\" is being used as ";
+      std::string errMsg = "RDataFrame: type mismatch: column \"" + colName + "\" is being used as ";
       if (tName.empty()) {
          errMsg += requestedType.name();
          errMsg += " (extracted from type info)";

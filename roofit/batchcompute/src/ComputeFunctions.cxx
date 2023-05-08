@@ -24,14 +24,13 @@ https://developer.nvidia.com/blog/cuda-pro-tip-write-flexible-kernels-grid-strid
 **/
 
 #include "RooBatchCompute.h"
+#include "RooNaNPacker.h"
 #include "RooVDTHeaders.h"
 #include "Batches.h"
 
 #include <TMath.h>
 
-#include <complex>
-
-#include "faddeeva_impl.h"
+#include <RooHeterogeneousMath.h>
 
 #ifdef __CUDACC__
 #define BEGIN blockDim.x *blockIdx.x + threadIdx.x
@@ -67,6 +66,21 @@ __rooglobal__ void computeArgusBG(BatchesHandle batches)
          batches._output[i] = 0.0;
       else
          batches._output[i] = m[i] * fast_exp(batches._output[i]);
+   }
+}
+
+__rooglobal__ void computeBMixDecay(BatchesHandle batches)
+{
+   Batch coef0 = batches[0];
+   Batch coef1 = batches[1];
+   Batch tagFlav = batches[2];
+   Batch delMistag = batches[3];
+   Batch mixState = batches[4];
+   Batch mistag = batches[5];
+
+   for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
+      batches._output[i] =
+         coef0[i] * (1.0 - tagFlav[i] * delMistag[0]) + coef1[i] * (mixState[i] * (1.0 - 2.0 * mistag[0]));
    }
 }
 
@@ -273,6 +287,13 @@ __rooglobal__ void computeChiSquare(BatchesHandle batches)
    }
 }
 
+__rooglobal__ void computeDeltaFunction(BatchesHandle batches)
+{
+   for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
+      batches._output[i] = 0.0 + (batches[0][i] == 1.0);
+   }
+}
+
 __rooglobal__ void computeDstD0BG(BatchesHandle batches)
 {
    Batch DM = batches[0], DM0 = batches[1], C = batches[2], A = batches[3], B = batches[4];
@@ -319,13 +340,60 @@ __rooglobal__ void computeGamma(BatchesHandle batches)
       }
 }
 
+__rooglobal__ void computeGaussModelExpBasis(BatchesHandle batches)
+{
+   const double root2 = std::sqrt(2.);
+   const double root2pi = std::sqrt(2. * std::atan2(0., -1.));
+
+   const bool isMinus = batches.extraArg(0) < 0.0;
+   const bool isPlus = batches.extraArg(0) > 0.0;
+
+   for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
+
+      const double x = batches[0][i];
+      const double mean = batches[1][i] * batches[2][i];
+      const double sigma = batches[3][i] * batches[4][i];
+      const double tau = batches[5][i];
+
+      if (tau == 0.0) {
+         // Straight Gaussian, used for unconvoluted PDF or expBasis with 0 lifetime
+         double xprime = (x - mean) / sigma;
+         double result = std::exp(-0.5 * xprime * xprime) / (sigma * root2pi);
+         if (!isMinus && !isPlus)
+            result *= 2;
+         batches._output[i] = result;
+      } else {
+         // Convolution with exp(-t/tau)
+         const double xprime = (x - mean) / tau;
+         const double c = sigma / (root2 * tau);
+         const double u = xprime / (2 * c);
+
+         double result = 0.0;
+         if (!isMinus)
+            result += RooHeterogeneousMath::evalCerf(0, -u, c).real();
+         if (!isPlus)
+            result += RooHeterogeneousMath::evalCerf(0, u, c).real();
+         batches._output[i] = result;
+      }
+   }
+}
+
 __rooglobal__ void computeGaussian(BatchesHandle batches)
 {
-   auto x = batches[0], mean = batches[1], sigma = batches[2];
+   auto x = batches[0];
+   auto mean = batches[1];
+   auto sigma = batches[2];
    for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
       const double arg = x[i] - mean[i];
       const double halfBySigmaSq = -0.5 / (sigma[i] * sigma[i]);
       batches._output[i] = fast_exp(arg * arg * halfBySigmaSq);
+   }
+}
+
+__rooglobal__ void computeIdentity(BatchesHandle batches)
+{
+   for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
+      batches._output[i] = batches[0][i];
    }
 }
 
@@ -459,6 +527,44 @@ __rooglobal__ void computeLognormal(BatchesHandle batches)
    }
 }
 
+__rooglobal__ void computeNormalizedPdf(BatchesHandle batches)
+{
+   auto rawVal = batches[0];
+   auto normVal = batches[1];
+
+   int nEvalErrorsType0 = 0;
+   int nEvalErrorsType1 = 0;
+   int nEvalErrorsType2 = 0;
+
+   for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
+      double out = 0.0;
+      // batches._output[i] = rawVal[i] / normVar[i];
+      if (normVal[i] < 0. || (normVal[i] == 0. && rawVal[i] != 0)) {
+         // Unreasonable normalisations. A zero integral can be tolerated if the function vanishes, though.
+         out = RooNaNPacker::packFloatIntoNaN(-normVal[i] + (rawVal[i] < 0. ? -rawVal[i] : 0.));
+         nEvalErrorsType0++;
+      } else if (rawVal[i] < 0.) {
+         // The pdf value is less than zero.
+         out = RooNaNPacker::packFloatIntoNaN(-rawVal[i]);
+         nEvalErrorsType1++;
+      } else if (std::isnan(rawVal[i])) {
+         // The pdf value is Not-a-Number.
+         out = rawVal[i];
+         nEvalErrorsType2++;
+      } else {
+         out = (rawVal[i] == 0. && normVal[i] == 0.) ? 0. : rawVal[i] / normVal[i];
+      }
+      batches._output[i] = out;
+   }
+
+   if (nEvalErrorsType0 > 0)
+      batches.setExtraArg(0, batches.extraArg(0) + nEvalErrorsType0);
+   if (nEvalErrorsType1 > 1)
+      batches.setExtraArg(1, batches.extraArg(1) + nEvalErrorsType1);
+   if (nEvalErrorsType2 > 2)
+      batches.setExtraArg(2, batches.extraArg(2) + nEvalErrorsType2);
+}
+
 /* TMath::ASinH(x) needs to be replaced with ln( x + sqrt(x^2+1))
  * argasinh -> the argument of TMath::ASinH()
  * argln -> the argument of the logarithm that replaces AsinH
@@ -517,41 +623,19 @@ __rooglobal__ void computePoisson(BatchesHandle batches)
 
 __rooglobal__ void computePolynomial(BatchesHandle batches)
 {
-   Batch X = batches[0];
-   const int nCoef = batches.getNExtraArgs() - 1;
-   const int lowestOrder = batches.extraArg(nCoef);
-   if (nCoef == 0) {
-      for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP)
-         batches._output[i] = (lowestOrder > 0.0);
-      return;
-   } else
-      for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP)
-         batches._output[i] = batches.extraArg(nCoef - 1);
+   const int nCoef = batches.extraArg(0);
+   const std::size_t nEvents = batches.getNEvents();
+   Batch x = batches[nCoef];
 
-   /* Indexes are in range 0..nCoef-1 but coefList[nCoef-1]
-    * has already been processed. In order to traverse the list,
-    * with step of 2 we have to start at index nCoef-3 and use
-    * coefList[k+1] and coefList[k]
-    */
-   for (int k = nCoef - 3; k >= 0; k -= 2)
-      for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP)
-         batches._output[i] = X[i] * (batches._output[i] * X[i] + batches.extraArg(k + 1)) + batches.extraArg(k);
+   for (size_t i = BEGIN; i < nEvents; i += STEP) {
+      batches._output[i] = batches[nCoef - 1][i];
+   }
 
-   // If nCoef is even, then the coefList[0] didn't get processed
-   if (nCoef % 2 == 0)
-      for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP)
-         batches._output[i] = batches._output[i] * X[i] + batches.extraArg(0);
-
-   // Increase the order of the polynomial, first by myltiplying with X[i]^2
-   if (lowestOrder != 0) {
-      for (int k = 2; k <= lowestOrder; k += 2)
-         for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP)
-            batches._output[i] *= X[i] * X[i];
-
-      for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
-         if (lowestOrder % 2 == 1)
-            batches._output[i] *= X[i];
-         batches._output[i] += 1.0;
+   // Indexes are in range 0..nCoef-1 but coefList[nCoef-1] has already been
+   // processed.
+   for (int k = nCoef - 2; k >= 0; k--) {
+      for (size_t i = BEGIN; i < nEvents; i += STEP) {
+         batches._output[i] = batches[k][i] + x[i] * batches._output[i];
       }
    }
 }
@@ -559,17 +643,116 @@ __rooglobal__ void computePolynomial(BatchesHandle batches)
 __rooglobal__ void computeProdPdf(BatchesHandle batches)
 {
    const int nPdfs = batches.extraArg(0);
-   for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP)
+   for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
       batches._output[i] = 1.;
-   for (int pdf = 0; pdf < nPdfs; pdf++)
-      for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP)
+   }
+   for (int pdf = 0; pdf < nPdfs; pdf++) {
+      for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
          batches._output[i] *= batches[pdf][i];
+      }
+   }
 }
 
 __rooglobal__ void computeRatio(BatchesHandle batches)
 {
-   for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP)
+   for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
       batches._output[i] = batches[0][i] / batches[1][i];
+   }
+}
+
+__rooglobal__ void computeTruthModelExpBasis(BatchesHandle batches)
+{
+
+   const bool isMinus = batches.extraArg(0) < 0.0;
+   const bool isPlus = batches.extraArg(0) > 0.0;
+   for (std::size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
+      double x = batches[0][i];
+      // Enforce sign compatibility
+      const bool isOutOfSign = (isMinus && x > 0.0) || (isPlus && x < 0.0);
+      batches._output[i] = isOutOfSign ? 0.0 : fast_exp(-std::abs(x) / batches[1][i]);
+   }
+}
+
+__rooglobal__ void computeTruthModelSinBasis(BatchesHandle batches)
+{
+   const bool isMinus = batches.extraArg(0) < 0.0;
+   const bool isPlus = batches.extraArg(0) > 0.0;
+   for (std::size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
+      double x = batches[0][i];
+      // Enforce sign compatibility
+      const bool isOutOfSign = (isMinus && x > 0.0) || (isPlus && x < 0.0);
+      batches._output[i] = isOutOfSign ? 0.0 : fast_exp(-std::abs(x) / batches[1][i]) * fast_sin(x * batches[2][i]);
+   }
+}
+
+__rooglobal__ void computeTruthModelCosBasis(BatchesHandle batches)
+{
+   const bool isMinus = batches.extraArg(0) < 0.0;
+   const bool isPlus = batches.extraArg(0) > 0.0;
+   for (std::size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
+      double x = batches[0][i];
+      // Enforce sign compatibility
+      const bool isOutOfSign = (isMinus && x > 0.0) || (isPlus && x < 0.0);
+      batches._output[i] = isOutOfSign ? 0.0 : fast_exp(-std::abs(x) / batches[1][i]) * fast_cos(x * batches[2][i]);
+   }
+}
+
+__rooglobal__ void computeTruthModelLinBasis(BatchesHandle batches)
+{
+   const bool isMinus = batches.extraArg(0) < 0.0;
+   const bool isPlus = batches.extraArg(0) > 0.0;
+   for (std::size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
+      double x = batches[0][i];
+      // Enforce sign compatibility
+      const bool isOutOfSign = (isMinus && x > 0.0) || (isPlus && x < 0.0);
+      if (isOutOfSign) {
+         batches._output[i] = 0.0;
+      } else {
+         const double tscaled = std::abs(x) / batches[1][i];
+         batches._output[i] = fast_exp(-tscaled) * tscaled;
+      }
+   }
+}
+
+__rooglobal__ void computeTruthModelQuadBasis(BatchesHandle batches)
+{
+   const bool isMinus = batches.extraArg(0) < 0.0;
+   const bool isPlus = batches.extraArg(0) > 0.0;
+   for (std::size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
+      double x = batches[0][i];
+      // Enforce sign compatibility
+      const bool isOutOfSign = (isMinus && x > 0.0) || (isPlus && x < 0.0);
+      if (isOutOfSign) {
+         batches._output[i] = 0.0;
+      } else {
+         const double tscaled = std::abs(x) / batches[1][i];
+         batches._output[i] = fast_exp(-tscaled) * tscaled * tscaled;
+      }
+   }
+}
+
+__rooglobal__ void computeTruthModelSinhBasis(BatchesHandle batches)
+{
+   const bool isMinus = batches.extraArg(0) < 0.0;
+   const bool isPlus = batches.extraArg(0) > 0.0;
+   for (std::size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
+      double x = batches[0][i];
+      // Enforce sign compatibility
+      const bool isOutOfSign = (isMinus && x > 0.0) || (isPlus && x < 0.0);
+      batches._output[i] = isOutOfSign ? 0.0 : fast_exp(-std::abs(x) / batches[1][i]) * sinh(x * batches[2][i] * 0.5);
+   }
+}
+
+__rooglobal__ void computeTruthModelCoshBasis(BatchesHandle batches)
+{
+   const bool isMinus = batches.extraArg(0) < 0.0;
+   const bool isPlus = batches.extraArg(0) > 0.0;
+   for (std::size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
+      double x = batches[0][i];
+      // Enforce sign compatibility
+      const bool isOutOfSign = (isMinus && x > 0.0) || (isPlus && x < 0.0);
+      batches._output[i] = isOutOfSign ? 0.0 : fast_exp(-std::abs(x) / batches[1][i]) * cosh(x * batches[2][i] * .5);
+   }
 }
 
 __rooglobal__ void computeVoigtian(BatchesHandle batches)
@@ -588,14 +771,16 @@ __rooglobal__ void computeVoigtian(BatchesHandle batches)
          batches._output[i] = invSqrt2 / S[i];
    }
 
-   for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP)
+   for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
       if (S[i] != 0.0 && W[i] != 0.0) {
          if (batches._output[i] < 0)
             batches._output[i] = -batches._output[i];
          const double factor = W[i] > 0.0 ? 0.5 : -0.5;
-         std::complex<double> z(batches._output[i] * (X[i] - M[i]), factor * batches._output[i] * W[i]);
-         batches._output[i] *= faddeeva_impl::faddeeva(z).real();
+         RooHeterogeneousMath::STD::complex<double> z(batches._output[i] * (X[i] - M[i]),
+                                                      factor * batches._output[i] * W[i]);
+         batches._output[i] *= RooHeterogeneousMath::faddeeva(z).real();
       }
+   }
 }
 
 /// Returns a std::vector of pointers to the compute functions in this file.
@@ -603,6 +788,7 @@ std::vector<void (*)(BatchesHandle)> getFunctions()
 {
    return {computeAddPdf,
            computeArgusBG,
+           computeBMixDecay,
            computeBernstein,
            computeBifurGauss,
            computeBreitWigner,
@@ -610,19 +796,30 @@ std::vector<void (*)(BatchesHandle)> getFunctions()
            computeCBShape,
            computeChebychev,
            computeChiSquare,
+           computeDeltaFunction,
            computeDstD0BG,
            computeExponential,
            computeGamma,
+           computeGaussModelExpBasis,
            computeGaussian,
+           computeIdentity,
            computeJohnson,
            computeLandau,
            computeLognormal,
            computeNegativeLogarithms,
+           computeNormalizedPdf,
            computeNovosibirsk,
            computePoisson,
            computePolynomial,
            computeProdPdf,
            computeRatio,
+           computeTruthModelExpBasis,
+           computeTruthModelSinBasis,
+           computeTruthModelCosBasis,
+           computeTruthModelLinBasis,
+           computeTruthModelQuadBasis,
+           computeTruthModelSinhBasis,
+           computeTruthModelCoshBasis,
            computeVoigtian};
 }
 } // End namespace RF_ARCH

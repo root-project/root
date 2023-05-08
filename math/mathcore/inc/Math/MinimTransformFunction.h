@@ -22,6 +22,8 @@
 
 #include <vector>
 #include <map>
+#include <memory>
+#include <iostream>
 
 namespace ROOT {
 
@@ -45,7 +47,7 @@ public:
 
 
    /**
-     Constructor from a IMultiGradFunction interface (which is managed by the class)
+     Constructor from a IMultiGradFunction interface that is externally managed
      vector specifying the variable types (free, bounded or fixed, defined in enum EMinimVariableTypes )
      variable values (used for the fixed ones) and a map with the bounds (for the bounded variables)
 
@@ -55,22 +57,19 @@ public:
 
 
    /**
-      Destructor (delete function pointer)
+      Destructor (no operation)
    */
-   ~MinimTransformFunction ()  {
-      if (fFunc) delete fFunc;
-   }
-
+   ~MinimTransformFunction () override  { }
 
    // method inherited from IFunction interface
 
-   unsigned int NDim() const { return fIndex.size(); }
+   unsigned int NDim() const override { return fIndex.size(); }
 
    unsigned int NTot() const { return fFunc->NDim(); }
 
    /// clone:  not supported (since unique_ptr used in the fVariables)
-   IMultiGenFunction * Clone() const {
-      return 0;
+   IMultiGenFunction * Clone() const override {
+      return nullptr;
    }
 
 
@@ -105,7 +104,7 @@ public:
 private:
 
    /// function evaluation
-   virtual double DoEval(const double * x) const {
+   double DoEval(const double * x) const override {
 #ifndef DO_THREADSAFE
       return (*fFunc)(Transformation(x));
 #else
@@ -116,7 +115,7 @@ private:
    }
 
    /// calculate derivatives
-   virtual double DoDerivative (const double * x, unsigned int icoord  ) const {
+   double DoDerivative (const double * x, unsigned int icoord  ) const override {
       const MinimTransformVariable & var = fVariables[ fIndex[icoord] ];
       double dExtdInt = (var.IsLimited() ) ? var.DerivativeIntToExt( x[icoord] ) : 1.0;
       double deriv =  fFunc->Derivative( Transformation(x) , fIndex[icoord] );
@@ -138,10 +137,10 @@ private:
 
 private:
 
-   mutable std::vector<double>  fX;              // internal cached of external values
-   std::vector<MinimTransformVariable> fVariables;    // vector of variable settings and tranformation function
-   std::vector<unsigned int>      fIndex;        // vector with external indices for internal variables
-   const IMultiGradFunction * fFunc;             // user function
+   mutable std::vector<double>  fX;                 ///< internal cached of external values
+   std::vector<MinimTransformVariable> fVariables;  ///< vector of variable settings and tranformation function
+   std::vector<unsigned int>      fIndex;           ///< vector with external indices for internal variables
+   const IMultiGradFunction * fFunc;                ///< user function
 
 };
 

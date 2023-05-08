@@ -35,7 +35,8 @@ namespace RDFGraphDrawing = ROOT::Internal::RDF::GraphDrawing;
 namespace GraphDrawing {
 std::shared_ptr<GraphNode> AddDefinesToGraph(std::shared_ptr<GraphNode> node,
                                              const RDFInternal::RColumnRegister &colRegister,
-                                             const std::vector<std::string> &prevNodeDefines);
+                                             const std::vector<std::string> &prevNodeDefines,
+                                             std::unordered_map<void *, std::shared_ptr<GraphNode>> &visitedMap);
 } // namespace GraphDrawing
 
 // clang-format off
@@ -57,7 +58,7 @@ class R__CLING_PTRCHECK(off) RAction : public RActionBase {
    const std::shared_ptr<PrevNode> fPrevNodePtr;
    PrevNode &fPrevNode;
    /// Column readers per slot and per input column
-   std::vector<std::array<std::unique_ptr<RColumnReaderBase>, ColumnTypes_t::list_size>> fValues;
+   std::vector<std::array<RColumnReaderBase *, ColumnTypes_t::list_size>> fValues;
 
    /// The nth flag signals whether the nth input column is a custom column or not.
    std::array<bool, ColumnTypes_t::list_size> fIsDefine;
@@ -67,23 +68,17 @@ public:
       : RActionBase(pd->GetLoopManagerUnchecked(), columns, colRegister, pd->GetVariations()),
         fHelper(std::forward<Helper>(h)), fPrevNodePtr(std::move(pd)), fPrevNode(*fPrevNodePtr), fValues(GetNSlots())
    {
-      fLoopManager->Book(this);
+      fLoopManager->Register(this);
 
       const auto nColumns = columns.size();
-      const auto &customCols = GetColRegister();
       for (auto i = 0u; i < nColumns; ++i)
-         fIsDefine[i] = customCols.HasName(columns[i]);
+         fIsDefine[i] = colRegister.IsDefineOrAlias(columns[i]);
    }
 
    RAction(const RAction &) = delete;
    RAction &operator=(const RAction &) = delete;
-   ~RAction()
-   {
-      // must Deregister objects from the RLoopManager here, before the fPrevNode data member is destroyed:
-      // otherwise if fPrevNode is the RLoopManager, it will be destroyed before the calls to Deregister happen.
-      RActionBase::GetColRegister().Clear(); // triggers RDefine deregistration
-      fLoopManager->Deregister(this);
-   }
+
+   ~RAction() { fLoopManager->Deregister(this); }
 
    /**
       Retrieve a wrapper to the result of the action that knows how to merge
@@ -99,9 +94,8 @@ public:
    void InitSlot(TTreeReader *r, unsigned int slot) final
    {
       RDFInternal::RColumnReadersInfo info{RActionBase::GetColumnNames(), RActionBase::GetColRegister(),
-                                           fIsDefine.data(), fLoopManager->GetDSValuePtrs(),
-                                           fLoopManager->GetDataSource()};
-      fValues[slot] = RDFInternal::MakeColumnReaders(slot, r, ColumnTypes_t{}, info);
+                                           fIsDefine.data(), *fLoopManager};
+      fValues[slot] = RDFInternal::GetColumnReaders(slot, r, ColumnTypes_t{}, info);
       fHelper.InitTask(r, slot);
    }
 
@@ -109,7 +103,7 @@ public:
    void CallExec(unsigned int slot, Long64_t entry, TypeList<ColTypes...>, std::index_sequence<S...>)
    {
       fHelper.Exec(slot, fValues[slot][S]->template Get<ColTypes>(entry)...);
-      (void)entry; // avoid "unused parameter" warnings
+      (void)entry; // avoid unused parameter warning (gcc 12.1)
    }
 
    void Run(unsigned int slot, Long64_t entry) final
@@ -124,8 +118,7 @@ public:
    /// Clean-up operations to be performed at the end of a task.
    void FinalizeSlot(unsigned int slot) final
    {
-      for (auto &v : fValues[slot])
-         v.reset();
+      fValues[slot].fill(nullptr);
       fHelper.CallFinalizeTask(slot);
    }
 
@@ -137,18 +130,21 @@ public:
       SetHasRun();
    }
 
-   std::shared_ptr<RDFGraphDrawing::GraphNode> GetGraph() final
+   std::shared_ptr<RDFGraphDrawing::GraphNode>
+   GetGraph(std::unordered_map<void *, std::shared_ptr<RDFGraphDrawing::GraphNode>> &visitedMap) final
    {
-      auto prevNode = fPrevNode.GetGraph();
-      auto prevColumns = prevNode->GetDefinedColumns();
+      auto prevNode = fPrevNode.GetGraph(visitedMap);
+      const auto &prevColumns = prevNode->GetDefinedColumns();
 
       // Action nodes do not need to go through CreateFilterNode: they are never common nodes between multiple branches
-      auto thisNode = std::make_shared<RDFGraphDrawing::GraphNode>(fHelper.GetActionName());
+      const auto nodeType = HasRun() ? RDFGraphDrawing::ENodeType::kUsedAction : RDFGraphDrawing::ENodeType::kAction;
+      auto thisNode =
+         std::make_shared<RDFGraphDrawing::GraphNode>(fHelper.GetActionName(), visitedMap.size(), nodeType);
+      visitedMap[(void *)this] = thisNode;
 
-      auto upmostNode = AddDefinesToGraph(thisNode, GetColRegister(), prevColumns);
+      auto upmostNode = AddDefinesToGraph(thisNode, GetColRegister(), prevColumns, visitedMap);
 
       thisNode->AddDefinedColumns(GetColRegister().GetNames());
-      thisNode->SetAction(HasRun());
       upmostNode->SetPrevNode(prevNode);
       return thisNode;
    }

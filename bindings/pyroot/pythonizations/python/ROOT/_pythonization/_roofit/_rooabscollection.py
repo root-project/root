@@ -27,18 +27,24 @@ class RooAbsCollection(object):
     \endcode
     """
 
-    @cpp_signature("RooAbsArg *RooAbsCollection::addClone(const RooAbsArg& var, Bool_t silent=kFALSE) ;")
     def addClone(self, arg, silent=False):
-        r"""The RooAbsCollection::addClone() function is pythonized with the command argument pythonization.
-        The keywords must correspond to the CmdArgs of the function.
-        """
         clonedArg = self._addClone(arg, silent)
-        SetOwnership(clonedArg, False)
+        # There are two overloads of RooAbsCollection::addClone():
+        #
+        #   - RooAbsArg *addClone(const RooAbsArg& var, bool silent=false);
+        #   - void addClone(const RooAbsCollection& list, bool silent=false);
+        #
+        # In the case of the RooAbsArg overload, we need to tell Python that it
+        # doesn't own the returned pointer. That's because the function name
+        # contains "Clone", which makes cppyy guess that the returned pointer
+        # points to a clone owned by the caller. In the case of the
+        # RooAbsCollection input, the return value will be `None` and we don't
+        # need to change any ownership flags (in fact, calling
+        # SetOwnership(None, False) would cause a crash).
+        if clonedArg is not None:
+            SetOwnership(clonedArg, False)
 
-    @cpp_signature("Bool_t RooAbsCollection::addOwned(RooAbsArg& var, Bool_t silent=kFALSE);")
     def addOwned(self, arg, silent=False):
-        r"""The RooAbsCollection::addOwned() function is pythonized with the command argument pythonization.
-        The keywords must correspond to the CmdArgs of the function."""
         self._addOwned(arg, silent)
         SetOwnership(arg, False)
 

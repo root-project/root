@@ -16,6 +16,10 @@
 
 #include "gtest/gtest.h"
 
+// Backward compatibility for gtest version < 1.10.0
+#ifndef INSTANTIATE_TEST_SUITE_P
+#define INSTANTIATE_TEST_SUITE_P INSTANTIATE_TEST_CASE_P
+#endif
 
 TEST(RooCategory, CategoryDefineMultiState) {
   RooCategory myCat("myCat", "A category", { {"0Lep", 0}, {"1Lep", 1}, {"2Lep", 2}, {"3Lep", 3} });
@@ -171,7 +175,7 @@ struct DummyClass : public RooAbsPdf {
       }
     }
 
-    double evaluate() const {
+    double evaluate() const override {
       return 1.;
     }
 
@@ -179,7 +183,7 @@ struct DummyClass : public RooAbsPdf {
       clearValueAndShapeDirty();
     }
 
-    TObject* clone(const char*) const {
+    TObject* clone(const char*) const override {
       return new TObject();
     }
 

@@ -46,7 +46,7 @@ private:
    TObject              *fChain;          // actual TDSet or TChain
 
 public:
-   TNewChainDlg(const TGWindow *p=0, const TGWindow *main=0);
+   TNewChainDlg(const TGWindow *p=nullptr, const TGWindow *main=nullptr);
    virtual ~TNewChainDlg();
 
    void         UpdateList();
@@ -90,7 +90,7 @@ private:
 
 public:
    TNewQueryDlg(TSessionViewer *gui, Int_t Width, Int_t Height,
-                   TQueryDescription *query = 0, Bool_t editmode = kFALSE);
+                   TQueryDescription *query = nullptr, Bool_t editmode = kFALSE);
    virtual ~TNewQueryDlg();
    void     Build(TSessionViewer *gui);
    void     OnNewQueryMore();

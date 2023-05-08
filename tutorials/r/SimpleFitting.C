@@ -1,6 +1,6 @@
 /// \file
 /// \ingroup tutorial_r
-/// \notebook
+///
 /// Create an exponential fitting
 /// The idea is to create a set of numbers x,y with  the function x^3 and some noise from ROOT,
 /// fit the function to get the exponent (which must be near 3) and plot the points with noise,

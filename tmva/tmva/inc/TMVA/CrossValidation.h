@@ -152,18 +152,17 @@ private:
    Bool_t fCorrelations;
    TString fCvFactoryOptions;
    Bool_t fDrawProgressBar;
-   Bool_t fFoldFileOutput; //! If true: generate output file for each fold
-   Bool_t fFoldStatus;     //! If true: dataset is prepared
+   Bool_t fFoldFileOutput;    ///<! If true: generate output file for each fold
+   Bool_t fFoldStatus;        ///<! If true: dataset is prepared
    TString fJobName;
-   UInt_t fNumFolds; //! Number of folds to prepare
-   UInt_t fNumWorkerProcs; //! Number of processes to use for fold evaluation.
-                           //!(Default, no parallel evaluation)
+   UInt_t fNumFolds;          ///<! Number of folds to prepare
+   UInt_t fNumWorkerProcs;    ///<! Number of processes to use for fold evaluation. (Default, no parallel evaluation)
    TString fOutputFactoryOptions;
-   TString fOutputEnsembling; //! How to combine output of individual folds
+   TString fOutputEnsembling; ///<! How to combine output of individual folds
    TFile *fOutputFile;
    Bool_t fSilent;
    TString fSplitExprString;
-   std::vector<CrossValidationResult> fResults; //!
+   std::vector<CrossValidationResult> fResults; ///<!
    Bool_t fROC;
    TString fTransformations;
    Bool_t fVerbose;

@@ -30,7 +30,7 @@ public:
    VariableSelectionRule(long index, ESelect sel, std::string attributeName, std::string attributeValue, cling::Interpreter &interp, const char* selFileName = "", long lineno=1)
        : BaseSelectionRule(index, sel, attributeName, attributeValue, interp,selFileName, lineno){}
 
-   void Print(std::ostream &out) const;
+   void Print(std::ostream &out) const final;
 };
 
 typedef VariableSelectionRule FunctionSelectionRule; // Function selection rules are the same as Variable selection rules

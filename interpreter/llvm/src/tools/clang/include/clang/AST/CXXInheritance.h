@@ -76,9 +76,8 @@ public:
 
   CXXBasePath() = default;
 
-  /// The set of declarations found inside this base class
-  /// subobject.
-  DeclContext::lookup_result Decls;
+  /// The declarations found inside this base class subobject.
+  DeclContext::lookup_iterator Decls;
 
   void clear() {
     SmallVectorImpl<CXXBasePathElement>::clear();
@@ -119,7 +118,7 @@ class CXXBasePaths {
   friend class CXXRecordDecl;
 
   /// The type from which this search originated.
-  CXXRecordDecl *Origin = nullptr;
+  const CXXRecordDecl *Origin = nullptr;
 
   /// Paths - The actual set of paths that can be taken from the
   /// derived class to the same base class.
@@ -149,12 +148,6 @@ class CXXBasePaths {
   /// to help build the set of paths.
   CXXBasePath ScratchPath;
 
-  /// Array of the declarations that have been found. This
-  /// array is constructed only if needed, e.g., to iterate over the
-  /// results within LookupResult.
-  std::unique_ptr<NamedDecl *[]> DeclsFound;
-  unsigned NumDeclsFound = 0;
-
   /// FindAmbiguities - Whether Sema::IsDerivedFrom should try find
   /// ambiguous paths while it is looking for a path from a derived
   /// type to a base type.
@@ -169,8 +162,6 @@ class CXXBasePaths {
   /// if it finds a path that goes across a virtual base. The virtual class
   /// is also recorded.
   bool DetectVirtual;
-
-  void ComputeDeclsFound();
 
   bool lookupInBases(ASTContext &Context, const CXXRecordDecl *Record,
                      CXXRecordDecl::BaseMatchesCallback BaseMatches,
@@ -198,8 +189,6 @@ public:
 
   using decl_range = llvm::iterator_range<decl_iterator>;
 
-  decl_range found_decls();
-
   /// Determine whether the path from the most-derived type to the
   /// given base type is ambiguous (i.e., it refers to multiple subobjects of
   /// the same base type).
@@ -225,8 +214,8 @@ public:
 
   /// Retrieve the type from which this base-paths search
   /// began
-  CXXRecordDecl *getOrigin() const { return Origin; }
-  void setOrigin(CXXRecordDecl *Rec) { Origin = Rec; }
+  const CXXRecordDecl *getOrigin() const { return Origin; }
+  void setOrigin(const CXXRecordDecl *Rec) { Origin = Rec; }
 
   /// Clear the base-paths results.
   void clear();
@@ -371,6 +360,30 @@ class CXXFinalOverriderMap
 /// A set of all the primary bases for a class.
 class CXXIndirectPrimaryBaseSet
   : public llvm::SmallSet<const CXXRecordDecl*, 32> {};
+
+inline bool
+inheritanceModelHasVBPtrOffsetField(MSInheritanceModel Inheritance) {
+  return Inheritance == MSInheritanceModel::Unspecified;
+}
+
+// Only member pointers to functions need a this adjustment, since it can be
+// combined with the field offset for data pointers.
+inline bool inheritanceModelHasNVOffsetField(bool IsMemberFunction,
+                                             MSInheritanceModel Inheritance) {
+  return IsMemberFunction && Inheritance >= MSInheritanceModel::Multiple;
+}
+
+inline bool
+inheritanceModelHasVBTableOffsetField(MSInheritanceModel Inheritance) {
+  return Inheritance >= MSInheritanceModel::Virtual;
+}
+
+inline bool inheritanceModelHasOnlyOneField(bool IsMemberFunction,
+                                            MSInheritanceModel Inheritance) {
+  if (IsMemberFunction)
+    return Inheritance <= MSInheritanceModel::Single;
+  return Inheritance <= MSInheritanceModel::Multiple;
+}
 
 } // namespace clang
 

@@ -16,74 +16,65 @@
 #ifndef ROO_GRID
 #define ROO_GRID
 
-#include "TObject.h"
-#include "RooPrintable.h"
+#include <RtypesCore.h>
+
+#include <ostream>
+#include <vector>
 
 class RooAbsFunc;
 
-class RooGrid : public TObject, public RooPrintable {
+// Utility class for RooMCIntegrator holding a multi-dimensional grid
+class RooGrid {
 public:
-  RooGrid() ;
+  RooGrid() {}
   RooGrid(const RooAbsFunc &function);
-  virtual ~RooGrid();
 
   // Printing interface
-  virtual void printName(std::ostream& os) const ;
-  virtual void printTitle(std::ostream& os) const ;
-  virtual void printClassName(std::ostream& os) const ;
-  virtual void printMultiline(std::ostream& os, Int_t contents, Bool_t verbose=kFALSE, TString indent="") const;
+  void print(std::ostream& os, bool verbose=false, std::string const& indent="") const;
 
-  inline virtual void Print(Option_t *options= 0) const {
-    printStream(defaultPrintStream(),defaultPrintContents(options),defaultPrintStyle(options));
-  }
-
-  inline Bool_t isValid() const { return _valid; }
+  inline bool isValid() const { return _valid; }
   inline UInt_t getDimension() const { return _dim; }
-  inline Double_t getVolume() const { return _vol; }
+  inline double getVolume() const { return _vol; }
   inline UInt_t getNBins() const { return _bins; }
   inline UInt_t getNBoxes() const { return _boxes; }
   inline void setNBoxes(UInt_t boxes) { _boxes= boxes; }
 
-  inline Double_t *createPoint() const { return _valid ? new Double_t[_dim] : 0; }
-  inline UInt_t *createIndexVector() const { return _valid ? new UInt_t[_dim] : 0; }
-
-  Bool_t initialize(const RooAbsFunc &function);
+  bool initialize(const RooAbsFunc &function);
   void resize(UInt_t bins);
   void resetValues();
-  void generatePoint(const UInt_t box[], Double_t x[], UInt_t bin[],
-		     Double_t &vol, Bool_t useQuasiRandom= kTRUE) const;
-  void accumulate(const UInt_t bin[], Double_t amount);
-  void refine(Double_t alpha= 1.5);
+  void generatePoint(const UInt_t box[], double x[], UInt_t bin[],
+           double &vol, bool useQuasiRandom= true) const;
+  void accumulate(const UInt_t bin[], double amount);
+  void refine(double alpha= 1.5);
 
   void firstBox(UInt_t box[]) const;
-  Bool_t nextBox(UInt_t box[]) const;
+  bool nextBox(UInt_t box[]) const;
 
   enum { maxBins = 50 }; // must be even
 
   // Accessor for the j-th normalized grid point along the i-th dimension
-public:
-  inline Double_t coord(Int_t i, Int_t j) const { return _xi[i*_dim + j]; }
-  inline Double_t value(Int_t i,Int_t j) const { return _d[i*_dim + j]; }
-protected:
-  inline Double_t& coord(Int_t i, Int_t j) { return _xi[i*_dim + j]; }
-  inline Double_t& value(Int_t i,Int_t j) { return _d[i*_dim + j]; }
-  inline Double_t& newCoord(Int_t i) { return _xin[i]; }
+  inline double coord(Int_t i, Int_t j) const { return _xi[i*_dim + j]; }
+  inline double value(Int_t i,Int_t j) const { return _d[i*_dim + j]; }
 
 protected:
+  inline double& coord(Int_t i, Int_t j) { return _xi[i*_dim + j]; }
+  inline double& value(Int_t i,Int_t j) { return _d[i*_dim + j]; }
+  inline double& newCoord(Int_t i) { return _xin[i]; }
 
-  Bool_t _valid;              // Is configuration valid
-  UInt_t _dim,_bins,_boxes;   // Number of dimensions, bins and boxes
-  Double_t _vol;              // Volume
+  bool _valid = false;         ///< Is configuration valid
+  UInt_t _dim = 0;             ///< Number of dimensions, bins and boxes
+  UInt_t _bins = 0;            ///< Number of bins
+  UInt_t _boxes = 0;           ///<Numbser of boxes
+  double _vol = 0.0;           ///< Volume
 
-  Double_t *_xl;     //! Internal workspace
-  Double_t *_xu;     //! Internal workspace
-  Double_t *_delx;   //! Internal workspace
-  Double_t *_d;      //! Internal workspace
-  Double_t *_xi;     //! Internal workspace
-  Double_t *_xin;    //! Internal workspace
-  Double_t *_weight; //! Internal workspace
+  std::vector<double> _xl;     ///<! Internal workspace
+  std::vector<double> _xu;     ///<! Internal workspace
+  std::vector<double> _delx;   ///<! Internal workspace
+  std::vector<double> _d;      ///<! Internal workspace
+  std::vector<double> _xi;     ///<! Internal workspace
+  std::vector<double> _xin;    ///<! Internal workspace
+  std::vector<double> _weight; ///<! Internal workspace
 
-  ClassDef(RooGrid,1) // Utility class for RooMCIntegrator holding a multi-dimensional grid
 };
 
 #endif

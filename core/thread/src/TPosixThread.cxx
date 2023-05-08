@@ -37,13 +37,13 @@ Int_t TPosixThread::Run(TThread *th, const int affinity)
    pthread_attr_init(attr);
    
    if (affinity >= 0) {
-   #ifdef R__MACOSX
-      Warning("Run", "Affinity setting not yet implemented on MacOS");
-   #else
+   #ifdef __GLIBC__
       cpu_set_t cpuset;
       CPU_ZERO(&cpuset);
       CPU_SET(affinity, &cpuset);
       pthread_attr_setaffinity_np(attr, sizeof(cpu_set_t), &cpuset);
+   #else
+      Warning("Run", "Affinity setting not yet implemented on this platform");
    #endif
    }
 

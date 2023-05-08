@@ -331,6 +331,9 @@
 #   if __GNUC__ > 4 || ( __GNUC__ == 4 && __GNUC_MINOR__ > 1)
 #      define R__PRAGMA_DIAGNOSTIC
 #   endif
+#   if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+#      define R__BYTESWAP
+#   endif
 #endif
 
 #if defined(R__MACOSX) && !defined(MAC_OS_X_VERSION_10_12)
@@ -492,12 +495,12 @@
 #define _R_DEPRECATED_REMOVE_NOW(REASON) __attribute__((REMOVE_THIS_NOW))
 #endif
 
-/* USE AS `R__DEPRECATED(6,28, "Not threadsafe; use TFoo::Bar().")`
-   To be removed by 6.28 */
-#if ROOT_VERSION_CODE <= ROOT_VERSION(6,27,0)
-# define _R__DEPRECATED_628(REASON) _R__DEPRECATED_LATER(REASON)
+/* USE AS `R__DEPRECATED(6,30, "Not threadsafe; use TFoo::Bar().")`
+   To be removed by 6.30 */
+#if ROOT_VERSION_CODE <= ROOT_VERSION(6,29,0)
+# define _R__DEPRECATED_630(REASON) _R__DEPRECATED_LATER(REASON)
 #else
-# define _R__DEPRECATED_628(REASON) _R_DEPRECATED_REMOVE_NOW(REASON)
+# define _R__DEPRECATED_630(REASON) _R_DEPRECATED_REMOVE_NOW(REASON)
 #endif
 
 /* USE AS `R__DEPRECATED(7,00, "Not threadsafe; use TFoo::Bar().")`

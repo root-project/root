@@ -6,8 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#define DEBUG_TYPE "hexagon-lir"
-
+#include "HexagonLoopIdiomRecognition.h"
 #include "llvm/ADT/APInt.h"
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/SetVector.h"
@@ -18,14 +17,13 @@
 #include "llvm/ADT/Triple.h"
 #include "llvm/Analysis/AliasAnalysis.h"
 #include "llvm/Analysis/InstructionSimplify.h"
+#include "llvm/Analysis/LoopAnalysisManager.h"
 #include "llvm/Analysis/LoopInfo.h"
 #include "llvm/Analysis/LoopPass.h"
 #include "llvm/Analysis/MemoryLocation.h"
 #include "llvm/Analysis/ScalarEvolution.h"
-#include "llvm/Analysis/ScalarEvolutionExpander.h"
 #include "llvm/Analysis/ScalarEvolutionExpressions.h"
 #include "llvm/Analysis/TargetLibraryInfo.h"
-#include "llvm/Transforms/Utils/Local.h"
 #include "llvm/Analysis/ValueTracking.h"
 #include "llvm/IR/Attributes.h"
 #include "llvm/IR/BasicBlock.h"
@@ -42,11 +40,14 @@
 #include "llvm/IR/Instructions.h"
 #include "llvm/IR/IntrinsicInst.h"
 #include "llvm/IR/Intrinsics.h"
+#include "llvm/IR/IntrinsicsHexagon.h"
 #include "llvm/IR/Module.h"
+#include "llvm/IR/PassManager.h"
 #include "llvm/IR/PatternMatch.h"
 #include "llvm/IR/Type.h"
 #include "llvm/IR/User.h"
 #include "llvm/IR/Value.h"
+#include "llvm/InitializePasses.h"
 #include "llvm/Pass.h"
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/CommandLine.h"
@@ -57,6 +58,8 @@
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Transforms/Scalar.h"
 #include "llvm/Transforms/Utils.h"
+#include "llvm/Transforms/Utils/Local.h"
+#include "llvm/Transforms/Utils/ScalarEvolutionExpander.h"
 #include <algorithm>
 #include <array>
 #include <cassert>
@@ -69,6 +72,8 @@
 #include <set>
 #include <utility>
 #include <vector>
+
+#define DEBUG_TYPE "hexagon-lir"
 
 using namespace llvm;
 
@@ -93,9 +98,9 @@ static cl::opt<bool> OnlyNonNestedMemmove("only-nonnested-memmove-idiom",
   cl::Hidden, cl::init(true),
   cl::desc("Only enable generating memmove in non-nested loops"));
 
-cl::opt<bool> HexagonVolatileMemcpy("disable-hexagon-volatile-memcpy",
-  cl::Hidden, cl::init(false),
-  cl::desc("Enable Hexagon-specific memcpy for volatile destination."));
+static cl::opt<bool> HexagonVolatileMemcpy(
+    "disable-hexagon-volatile-memcpy", cl::Hidden, cl::init(false),
+    cl::desc("Enable Hexagon-specific memcpy for volatile destination."));
 
 static cl::opt<unsigned> SimplifyLimit("hlir-simplify-limit", cl::init(10000),
   cl::Hidden, cl::desc("Maximum number of simplification steps in HLIR"));
@@ -106,135 +111,150 @@ static const char *HexagonVolatileMemcpyName
 
 namespace llvm {
 
-  void initializeHexagonLoopIdiomRecognizePass(PassRegistry&);
-  Pass *createHexagonLoopIdiomPass();
+void initializeHexagonLoopIdiomRecognizeLegacyPassPass(PassRegistry &);
+Pass *createHexagonLoopIdiomPass();
 
 } // end namespace llvm
 
 namespace {
 
-  class HexagonLoopIdiomRecognize : public LoopPass {
-  public:
-    static char ID;
+class HexagonLoopIdiomRecognize {
+public:
+  explicit HexagonLoopIdiomRecognize(AliasAnalysis *AA, DominatorTree *DT,
+                                     LoopInfo *LF, const TargetLibraryInfo *TLI,
+                                     ScalarEvolution *SE)
+      : AA(AA), DT(DT), LF(LF), TLI(TLI), SE(SE) {}
 
-    explicit HexagonLoopIdiomRecognize() : LoopPass(ID) {
-      initializeHexagonLoopIdiomRecognizePass(*PassRegistry::getPassRegistry());
-    }
+  bool run(Loop *L);
 
-    StringRef getPassName() const override {
-      return "Recognize Hexagon-specific loop idioms";
-    }
+private:
+  int getSCEVStride(const SCEVAddRecExpr *StoreEv);
+  bool isLegalStore(Loop *CurLoop, StoreInst *SI);
+  void collectStores(Loop *CurLoop, BasicBlock *BB,
+                     SmallVectorImpl<StoreInst *> &Stores);
+  bool processCopyingStore(Loop *CurLoop, StoreInst *SI, const SCEV *BECount);
+  bool coverLoop(Loop *L, SmallVectorImpl<Instruction *> &Insts) const;
+  bool runOnLoopBlock(Loop *CurLoop, BasicBlock *BB, const SCEV *BECount,
+                      SmallVectorImpl<BasicBlock *> &ExitBlocks);
+  bool runOnCountableLoop(Loop *L);
 
-   void getAnalysisUsage(AnalysisUsage &AU) const override {
-      AU.addRequired<LoopInfoWrapperPass>();
-      AU.addRequiredID(LoopSimplifyID);
-      AU.addRequiredID(LCSSAID);
-      AU.addRequired<AAResultsWrapperPass>();
-      AU.addPreserved<AAResultsWrapperPass>();
-      AU.addRequired<ScalarEvolutionWrapperPass>();
-      AU.addRequired<DominatorTreeWrapperPass>();
-      AU.addRequired<TargetLibraryInfoWrapperPass>();
-      AU.addPreserved<TargetLibraryInfoWrapperPass>();
-    }
+  AliasAnalysis *AA;
+  const DataLayout *DL;
+  DominatorTree *DT;
+  LoopInfo *LF;
+  const TargetLibraryInfo *TLI;
+  ScalarEvolution *SE;
+  bool HasMemcpy, HasMemmove;
+};
 
-    bool runOnLoop(Loop *L, LPPassManager &LPM) override;
+class HexagonLoopIdiomRecognizeLegacyPass : public LoopPass {
+public:
+  static char ID;
 
-  private:
-    int getSCEVStride(const SCEVAddRecExpr *StoreEv);
-    bool isLegalStore(Loop *CurLoop, StoreInst *SI);
-    void collectStores(Loop *CurLoop, BasicBlock *BB,
-        SmallVectorImpl<StoreInst*> &Stores);
-    bool processCopyingStore(Loop *CurLoop, StoreInst *SI, const SCEV *BECount);
-    bool coverLoop(Loop *L, SmallVectorImpl<Instruction*> &Insts) const;
-    bool runOnLoopBlock(Loop *CurLoop, BasicBlock *BB, const SCEV *BECount,
-        SmallVectorImpl<BasicBlock*> &ExitBlocks);
-    bool runOnCountableLoop(Loop *L);
+  explicit HexagonLoopIdiomRecognizeLegacyPass() : LoopPass(ID) {
+    initializeHexagonLoopIdiomRecognizeLegacyPassPass(
+        *PassRegistry::getPassRegistry());
+  }
 
-    AliasAnalysis *AA;
-    const DataLayout *DL;
-    DominatorTree *DT;
-    LoopInfo *LF;
-    const TargetLibraryInfo *TLI;
-    ScalarEvolution *SE;
-    bool HasMemcpy, HasMemmove;
+  StringRef getPassName() const override {
+    return "Recognize Hexagon-specific loop idioms";
+  }
+
+  void getAnalysisUsage(AnalysisUsage &AU) const override {
+    AU.addRequired<LoopInfoWrapperPass>();
+    AU.addRequiredID(LoopSimplifyID);
+    AU.addRequiredID(LCSSAID);
+    AU.addRequired<AAResultsWrapperPass>();
+    AU.addRequired<ScalarEvolutionWrapperPass>();
+    AU.addRequired<DominatorTreeWrapperPass>();
+    AU.addRequired<TargetLibraryInfoWrapperPass>();
+    AU.addPreserved<TargetLibraryInfoWrapperPass>();
+  }
+
+  bool runOnLoop(Loop *L, LPPassManager &LPM) override;
+};
+
+struct Simplifier {
+  struct Rule {
+    using FuncType = std::function<Value *(Instruction *, LLVMContext &)>;
+    Rule(StringRef N, FuncType F) : Name(N), Fn(F) {}
+    StringRef Name; // For debugging.
+    FuncType Fn;
   };
 
-  struct Simplifier {
-    struct Rule {
-      using FuncType = std::function<Value* (Instruction*, LLVMContext&)>;
-      Rule(StringRef N, FuncType F) : Name(N), Fn(F) {}
-      StringRef Name;   // For debugging.
-      FuncType Fn;
-    };
+  void addRule(StringRef N, const Rule::FuncType &F) {
+    Rules.push_back(Rule(N, F));
+  }
 
-    void addRule(StringRef N, const Rule::FuncType &F) {
-      Rules.push_back(Rule(N, F));
+private:
+  struct WorkListType {
+    WorkListType() = default;
+
+    void push_back(Value *V) {
+      // Do not push back duplicates.
+      if (!S.count(V)) {
+        Q.push_back(V);
+        S.insert(V);
+      }
     }
 
+    Value *pop_front_val() {
+      Value *V = Q.front();
+      Q.pop_front();
+      S.erase(V);
+      return V;
+    }
+
+    bool empty() const { return Q.empty(); }
+
   private:
-    struct WorkListType {
-      WorkListType() = default;
+    std::deque<Value *> Q;
+    std::set<Value *> S;
+  };
 
-      void push_back(Value* V) {
-        // Do not push back duplicates.
-        if (!S.count(V)) { Q.push_back(V); S.insert(V); }
-      }
+  using ValueSetType = std::set<Value *>;
 
-      Value *pop_front_val() {
-        Value *V = Q.front(); Q.pop_front(); S.erase(V);
-        return V;
-      }
+  std::vector<Rule> Rules;
 
-      bool empty() const { return Q.empty(); }
+public:
+  struct Context {
+    using ValueMapType = DenseMap<Value *, Value *>;
 
-    private:
-      std::deque<Value*> Q;
-      std::set<Value*> S;
-    };
+    Value *Root;
+    ValueSetType Used;   // The set of all cloned values used by Root.
+    ValueSetType Clones; // The set of all cloned values.
+    LLVMContext &Ctx;
 
-    using ValueSetType = std::set<Value *>;
-
-    std::vector<Rule> Rules;
-
-  public:
-    struct Context {
-      using ValueMapType = DenseMap<Value *, Value *>;
-
-      Value *Root;
-      ValueSetType Used;    // The set of all cloned values used by Root.
-      ValueSetType Clones;  // The set of all cloned values.
-      LLVMContext &Ctx;
-
-      Context(Instruction *Exp)
+    Context(Instruction *Exp)
         : Ctx(Exp->getParent()->getParent()->getContext()) {
-        initialize(Exp);
-      }
+      initialize(Exp);
+    }
 
-      ~Context() { cleanup(); }
+    ~Context() { cleanup(); }
 
-      void print(raw_ostream &OS, const Value *V) const;
-      Value *materialize(BasicBlock *B, BasicBlock::iterator At);
+    void print(raw_ostream &OS, const Value *V) const;
+    Value *materialize(BasicBlock *B, BasicBlock::iterator At);
 
-    private:
-      friend struct Simplifier;
+  private:
+    friend struct Simplifier;
 
-      void initialize(Instruction *Exp);
-      void cleanup();
+    void initialize(Instruction *Exp);
+    void cleanup();
 
-      template <typename FuncT> void traverse(Value *V, FuncT F);
-      void record(Value *V);
-      void use(Value *V);
-      void unuse(Value *V);
+    template <typename FuncT> void traverse(Value *V, FuncT F);
+    void record(Value *V);
+    void use(Value *V);
+    void unuse(Value *V);
 
-      bool equal(const Instruction *I, const Instruction *J) const;
-      Value *find(Value *Tree, Value *Sub) const;
-      Value *subst(Value *Tree, Value *OldV, Value *NewV);
-      void replace(Value *OldV, Value *NewV);
-      void link(Instruction *I, BasicBlock *B, BasicBlock::iterator At);
-    };
-
-    Value *simplify(Context &C);
+    bool equal(const Instruction *I, const Instruction *J) const;
+    Value *find(Value *Tree, Value *Sub) const;
+    Value *subst(Value *Tree, Value *OldV, Value *NewV);
+    void replace(Value *OldV, Value *NewV);
+    void link(Instruction *I, BasicBlock *B, BasicBlock::iterator At);
   };
+
+  Value *simplify(Context &C);
+};
 
   struct PE {
     PE(const Simplifier::Context &c, Value *v = nullptr) : C(c), V(v) {}
@@ -251,10 +271,10 @@ namespace {
 
 } // end anonymous namespace
 
-char HexagonLoopIdiomRecognize::ID = 0;
+char HexagonLoopIdiomRecognizeLegacyPass::ID = 0;
 
-INITIALIZE_PASS_BEGIN(HexagonLoopIdiomRecognize, "hexagon-loop-idiom",
-    "Recognize Hexagon-specific loop idioms", false, false)
+INITIALIZE_PASS_BEGIN(HexagonLoopIdiomRecognizeLegacyPass, "hexagon-loop-idiom",
+                      "Recognize Hexagon-specific loop idioms", false, false)
 INITIALIZE_PASS_DEPENDENCY(LoopInfoWrapperPass)
 INITIALIZE_PASS_DEPENDENCY(LoopSimplify)
 INITIALIZE_PASS_DEPENDENCY(LCSSAWrapperPass)
@@ -262,8 +282,8 @@ INITIALIZE_PASS_DEPENDENCY(ScalarEvolutionWrapperPass)
 INITIALIZE_PASS_DEPENDENCY(DominatorTreeWrapperPass)
 INITIALIZE_PASS_DEPENDENCY(TargetLibraryInfoWrapperPass)
 INITIALIZE_PASS_DEPENDENCY(AAResultsWrapperPass)
-INITIALIZE_PASS_END(HexagonLoopIdiomRecognize, "hexagon-loop-idiom",
-    "Recognize Hexagon-specific loop idioms", false, false)
+INITIALIZE_PASS_END(HexagonLoopIdiomRecognizeLegacyPass, "hexagon-loop-idiom",
+                    "Recognize Hexagon-specific loop idioms", false, false)
 
 template <typename FuncT>
 void Simplifier::Context::traverse(Value *V, FuncT F) {
@@ -632,9 +652,9 @@ Value *PolynomialMultiplyRecognize::getCountIV(BasicBlock *BB) {
     if (!isa<ConstantInt>(InitV) || !cast<ConstantInt>(InitV)->isZero())
       continue;
     Value *IterV = PN->getIncomingValueForBlock(BB);
-    if (!isa<BinaryOperator>(IterV))
-      continue;
     auto *BO = dyn_cast<BinaryOperator>(IterV);
+    if (!BO)
+      continue;
     if (BO->getOpcode() != Instruction::Add)
       continue;
     Value *IncV = nullptr;
@@ -1971,7 +1991,7 @@ mayLoopAccessLocation(Value *Ptr, ModRefInfo Access, Loop *L,
   // Get the location that may be stored across the loop.  Since the access
   // is strided positively through memory, we say that the modified location
   // starts at the pointer and has infinite size.
-  LocationSize AccessSize = LocationSize::unknown();
+  LocationSize AccessSize = LocationSize::afterPointer();
 
   // If the loop iterates a fixed number of times, we can refine the access
   // size to be exactly the size of the memset, which is (BECount+1)*StoreSize
@@ -2020,7 +2040,7 @@ bool HexagonLoopIdiomRecognize::processCopyingStore(Loop *CurLoop,
   // See if the pointer expression is an AddRec like {base,+,1} on the current
   // loop, which indicates a strided load.  If we have something else, it's a
   // random load we can't handle.
-  LoadInst *LI = dyn_cast<LoadInst>(SI->getValueOperand());
+  auto *LI = cast<LoadInst>(SI->getValueOperand());
   auto *LoadEv = cast<SCEVAddRecExpr>(SE->getSCEV(LI->getPointerOperand()));
 
   // The trip count of the loop and the base pointer of the addrec SCEV is
@@ -2273,14 +2293,12 @@ CleanupAndExit:
                       : CondBuilder.CreateBitCast(LoadBasePtr, Int32PtrTy);
       NewCall = CondBuilder.CreateCall(Fn, {Op0, Op1, NumWords});
     } else {
-      NewCall = CondBuilder.CreateMemMove(StoreBasePtr, SI->getAlignment(),
-                                          LoadBasePtr, LI->getAlignment(),
-                                          NumBytes);
+      NewCall = CondBuilder.CreateMemMove(
+          StoreBasePtr, SI->getAlign(), LoadBasePtr, LI->getAlign(), NumBytes);
     }
   } else {
-    NewCall = Builder.CreateMemCpy(StoreBasePtr, SI->getAlignment(),
-                                   LoadBasePtr, LI->getAlignment(),
-                                   NumBytes);
+    NewCall = Builder.CreateMemCpy(StoreBasePtr, SI->getAlign(), LoadBasePtr,
+                                   LI->getAlign(), NumBytes);
     // Okay, the memcpy has been formed.  Zap the original store and
     // anything that feeds into it.
     RecursivelyDeleteTriviallyDeadInstructions(SI, TLI);
@@ -2335,7 +2353,7 @@ bool HexagonLoopIdiomRecognize::coverLoop(Loop *L,
         continue;
       if (!Worklist.count(&In) && In.mayHaveSideEffects())
         return false;
-      for (const auto &K : In.users()) {
+      for (auto K : In.users()) {
         Instruction *UseI = dyn_cast<Instruction>(K);
         if (!UseI)
           continue;
@@ -2404,12 +2422,9 @@ bool HexagonLoopIdiomRecognize::runOnCountableLoop(Loop *L) {
   return Changed;
 }
 
-bool HexagonLoopIdiomRecognize::runOnLoop(Loop *L, LPPassManager &LPM) {
+bool HexagonLoopIdiomRecognize::run(Loop *L) {
   const Module &M = *L->getHeader()->getParent()->getParent();
   if (Triple(M.getTargetTriple()).getArch() != Triple::hexagon)
-    return false;
-
-  if (skipLoop(L))
     return false;
 
   // If the loop could not be converted to canonical form, it must have an
@@ -2422,12 +2437,7 @@ bool HexagonLoopIdiomRecognize::runOnLoop(Loop *L, LPPassManager &LPM) {
   if (Name == "memset" || Name == "memcpy" || Name == "memmove")
     return false;
 
-  AA = &getAnalysis<AAResultsWrapperPass>().getAAResults();
   DL = &L->getHeader()->getModule()->getDataLayout();
-  DT = &getAnalysis<DominatorTreeWrapperPass>().getDomTree();
-  LF = &getAnalysis<LoopInfoWrapperPass>().getLoopInfo();
-  TLI = &getAnalysis<TargetLibraryInfoWrapperPass>().getTLI();
-  SE = &getAnalysis<ScalarEvolutionWrapperPass>().getSE();
 
   HasMemcpy = TLI->has(LibFunc_memcpy);
   HasMemmove = TLI->has(LibFunc_memmove);
@@ -2437,6 +2447,30 @@ bool HexagonLoopIdiomRecognize::runOnLoop(Loop *L, LPPassManager &LPM) {
   return false;
 }
 
+bool HexagonLoopIdiomRecognizeLegacyPass::runOnLoop(Loop *L,
+                                                    LPPassManager &LPM) {
+  if (skipLoop(L))
+    return false;
+
+  auto *AA = &getAnalysis<AAResultsWrapperPass>().getAAResults();
+  auto *DT = &getAnalysis<DominatorTreeWrapperPass>().getDomTree();
+  auto *LF = &getAnalysis<LoopInfoWrapperPass>().getLoopInfo();
+  auto *TLI = &getAnalysis<TargetLibraryInfoWrapperPass>().getTLI(
+      *L->getHeader()->getParent());
+  auto *SE = &getAnalysis<ScalarEvolutionWrapperPass>().getSE();
+  return HexagonLoopIdiomRecognize(AA, DT, LF, TLI, SE).run(L);
+}
+
 Pass *llvm::createHexagonLoopIdiomPass() {
-  return new HexagonLoopIdiomRecognize();
+  return new HexagonLoopIdiomRecognizeLegacyPass();
+}
+
+PreservedAnalyses
+HexagonLoopIdiomRecognitionPass::run(Loop &L, LoopAnalysisManager &AM,
+                                     LoopStandardAnalysisResults &AR,
+                                     LPMUpdater &U) {
+  return HexagonLoopIdiomRecognize(&AR.AA, &AR.DT, &AR.LI, &AR.TLI, &AR.SE)
+                 .run(&L)
+             ? getLoopPassPreservedAnalyses()
+             : PreservedAnalyses::all();
 }

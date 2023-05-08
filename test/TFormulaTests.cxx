@@ -42,7 +42,7 @@ protected:
   
 public:
                TFormulaTests(TString name, TString formula): TFormula(name,formula){}
-   virtual     ~TFormulaTests(){}
+       ~TFormulaTests() override{}
    Bool_t      ParserNew();
    Bool_t      GetVarVal();
    Bool_t      GetParVal();

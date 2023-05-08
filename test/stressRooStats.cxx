@@ -25,13 +25,6 @@
 #include "RooNumIntConfig.h"
 #include "RooMsgService.h"
 #include "RooResolutionModel.h"
-#include "RooPlot.h"
-#include "RooFitResult.h"
-#include "RooDouble.h"
-#include "RooWorkspace.h"
-#include "Roo1DTable.h"
-#include "RooCurve.h"
-#include "RooHist.h"
 #include "RooRandom.h"
 #include "RooTrace.h"
 
@@ -62,7 +55,7 @@ void StatusPrint(const Int_t id, const TString &title, const Int_t status, const
 ////////////////////////////////////////////////////////////////////////////////
 /// width of lines when printing test results
 
-Int_t stressRooStats(const char* refFile, Bool_t writeRef, Int_t verbose, Bool_t allTests, Bool_t oneTest, Int_t testNumber, Bool_t dryRun, Bool_t doDump, Bool_t doTreeStore)
+Int_t stressRooStats(const char* refFile, bool writeRef, Int_t verbose, bool allTests, bool oneTest, Int_t testNumber, bool dryRun, bool doDump, bool doTreeStore)
 {
    const Int_t lineWidth = 120;
 
@@ -74,7 +67,7 @@ Int_t stressRooStats(const char* refFile, Bool_t writeRef, Int_t verbose, Bool_t
       RooAbsData::setDefaultStorageType(RooAbsData::Tree) ;
    }
 
-   TFile* fref = 0 ;
+   TFile* fref = nullptr ;
    if (!dryRun) {
       if (TString(refFile).Contains("http:")) {
          if (writeRef) {
@@ -215,7 +208,7 @@ Int_t stressRooStats(const char* refFile, Bool_t writeRef, Int_t verbose, Bool_t
          for (iter = testList.begin(), i = 1; iter != testList.end(); iter++, i++) {
             if (!oneTest || testNumber == i) {
                if (doDump) {
-                  (*iter)->setDebug(kTRUE);
+                  (*iter)->setDebug(true);
                }
                int status =  (*iter)->isTestAvailable() ? (*iter)->runTest() : -1;
                StatusPrint(i, (*iter)->GetName(), status , lineWidth);
@@ -234,15 +227,11 @@ Int_t stressRooStats(const char* refFile, Bool_t writeRef, Int_t verbose, Bool_t
 
 
    //Print table with results
-   Bool_t UNIX = strcmp(gSystem->GetName(), "Unix") == 0;
+   bool UNIX = strcmp(gSystem->GetName(), "Unix") == 0;
    cout << setw(lineWidth) << setfill('*') << "" << endl;
    if (UNIX) {
       TString sp = gSystem->GetFromPipe("uname -a");
       cout << "* SYS: " << sp << endl;
-      if (strstr(gSystem->GetBuildNode(), "Linux")) {
-         sp = gSystem->GetFromPipe("lsb_release -d -s");
-         cout << "* SYS: " << sp << endl;
-      }
       if (strstr(gSystem->GetBuildNode(), "Darwin")) {
          sp  = gSystem->GetFromPipe("sw_vers -productVersion");
          sp += " Mac OS X ";
@@ -277,7 +266,7 @@ Int_t stressRooStats(const char* refFile, Bool_t writeRef, Int_t verbose, Bool_t
    }
 
    delete gBenchmark ;
-   gBenchmark = 0 ;
+   gBenchmark = nullptr ;
 
    // Some of the object are multiple times in the list, let's make sure they
    // are not deleted twice.
@@ -298,38 +287,43 @@ Int_t stressRooStats(const char* refFile, Bool_t writeRef, Int_t verbose, Bool_t
 
 int main(int argc, const char *argv[])
 {
-   Bool_t doWrite     = kFALSE;
+   bool doWrite     = false;
    Int_t  verbose     =      0;
-   Bool_t allTests    = kFALSE;
-   Bool_t oneTest     = kFALSE;
+   bool allTests    = false;
+   bool oneTest     = false;
    Int_t testNumber   =      0;
-   Bool_t dryRun      = kFALSE;
-   Bool_t doDump      = kFALSE;
-   Bool_t doTreeStore = kFALSE;
+   bool dryRun      = false;
+   bool doDump      = false;
+   bool doTreeStore = false;
+   std::string batchMode = "off";
 
    //string refFileName = "http://root.cern.ch/files/stressRooStats_v534_ref.root" ;
-   string refFileName = "$ROOTSYS/test/stressRooStats_ref.root" ;
+   string refFileName = "stressRooStats_ref.root" ;
    string minimizerName = "Minuit";
 
    // Parse command line arguments
    for (Int_t i = 1 ;  i < argc ; i++) {
       string arg = argv[i] ;
 
-      if (arg == "-f") {
+      if (arg=="-b") {
+         std::string mode = argv[i+1];
+         batchMode = mode;
+         std::cout << "stressRooStats: BatchMode set to " << mode << std::endl;
+      } else if (arg == "-f") {
          cout << "stressRooStats: using reference file " << argv[i + 1] << endl ;
          refFileName = argv[++i] ;
       } else if (arg == "-w") {
          cout << "stressRooStats: running in writing mode to update reference file" << endl ;
-         doWrite = kTRUE ;
+         doWrite = true ;
       } else if (arg == "-mc") {
          cout << "stressRooStats: running in memcheck mode, no regression tests are performed" << endl;
-         dryRun = kTRUE;
+         dryRun = true;
       } else if (arg == "-min" || arg == "-minim") {
          cout << "stressRooStats: running using minimizer " << argv[i +1]  << endl;
          minimizerName = argv[++i] ;
       } else if (arg == "-ts") {
          cout << "stressRooStats: setting tree-based storage for datasets" << endl;
-         doTreeStore = kTRUE;
+         doTreeStore = true;
       } else if (arg == "-v") {
          cout << "stressRooStats: running in verbose mode" << endl;
          verbose = 1;
@@ -341,17 +335,17 @@ int main(int argc, const char *argv[])
          verbose = 3;
       } else if (arg == "-a") {
          cout << "stressRooStats: deploying full suite of tests" << endl;
-         allTests = kTRUE;
+         allTests = true;
       } else if (arg == "-n") {
          cout << "stressRooStats: running single test" << endl;
-         oneTest = kTRUE;
+         oneTest = true;
          testNumber = atoi(argv[++i]);
       } else if (arg == "-d") {
          cout << "stressRooStats: setting gDebug to " << argv[i + 1] << endl;
          gDebug = atoi(argv[++i]);
       } else if (arg == "-c") {
          cout << "stressRooStats: dumping comparison file for failed tests " << endl;
-         doDump = kTRUE;
+         doDump = true;
       } else if (arg == "-h") {
          cout << "usage: stressRooStats [ options ] " << endl;
          cout << "" << endl;
@@ -387,16 +381,17 @@ int main(int argc, const char *argv[])
 
    // set minimizer
     // use Minut2 if available
-   std::string minimizerType = minimizerName;
    // check in case of Minuit2 and set Minuit in case we cannot use it
-   if (minimizerType == "Minuit2") {
+   if (minimizerName == "Minuit2") {
       int prec = gErrorIgnoreLevel;
       gErrorIgnoreLevel = kFatal;
-      if (gSystem->Load("libMinuit2") < 0) minimizerType = "Minuit";
+      if (gSystem->Load("libMinuit2") < 0) minimizerName = "Minuit";
       gErrorIgnoreLevel=prec;
    }
-   ROOT::Math::MinimizerOptions::SetDefaultMinimizer(minimizerType.c_str());
+   ROOT::Math::MinimizerOptions::SetDefaultMinimizer(minimizerName.c_str());
 
+   // set default BatchMode backend
+   RooFit::Experimental::defaultBatchMode() = batchMode;
 
    gBenchmark = new TBenchmark();
    return stressRooStats(refFileName.c_str(), doWrite, verbose, allTests, oneTest, testNumber, dryRun, doDump, doTreeStore);
@@ -406,15 +401,16 @@ int main(int argc, const char *argv[])
 
 Int_t stressRooStats()
 {
-   Bool_t doWrite     = kFALSE;
+   bool doWrite     = false;
    Int_t  verbose     =      0;
-   Bool_t allTests    = kFALSE;
-   Bool_t oneTest     = kFALSE;
+   bool allTests    = false;
+   bool oneTest     = false;
    Int_t testNumber   =      0;
-   Bool_t dryRun      = kFALSE;
-   Bool_t doDump      = kFALSE;
-   Bool_t doTreeStore = kFALSE;
-   string refFileName = "$ROOTSYS/test/stressRooStats_ref.root";
+   bool dryRun      = false;
+   bool doDump      = false;
+   bool doTreeStore = false;
+   string refFileName = "stressRooStats_ref.root";
+
    return stressRooStats(refFileName.c_str(), doWrite, verbose, allTests, oneTest, testNumber, dryRun, doDump, doTreeStore);
 }
 

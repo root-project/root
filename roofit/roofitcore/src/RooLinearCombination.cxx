@@ -15,9 +15,9 @@
 
 //////////////////////////////////////////////////////////////////////////////
 /// \class RooLinearCombination
-/// RooLinearCombination is a class that helps perform linear combination of 
-/// floating point numbers and permits handling them as multiprecision 
-/// 
+/// RooLinearCombination is a class that helps perform linear combination of
+/// floating point numbers and permits handling them as multiprecision
+///
 
 #include "RooLinearCombination.h"
 
@@ -59,10 +59,10 @@ RooLinearCombination::RooLinearCombination(const RooLinearCombination &other,
 void RooLinearCombination::printArgs(std::ostream &os) const {
   // detailed printing method
   os << "[";
-  const std::size_t n(this->_actualVars.getSize());
+  const std::size_t n(_actualVars.getSize());
   for (std::size_t i = 0; i < n; ++i) {
     const RooAbsReal *r =
-        static_cast<const RooAbsReal *>(this->_actualVars.at(i));
+        static_cast<const RooAbsReal *>(_actualVars.at(i));
     double c(_coefficients[i]);
     if (c > 0 && i > 0)
       os << "+";
@@ -78,11 +78,11 @@ RooLinearCombination::~RooLinearCombination() {
 TObject *RooLinearCombination::clone(const char *newname) const {
   // create a clone (deep copy) of this object
   RooLinearCombination *retval = new RooLinearCombination(newname);
-  const std::size_t n(this->_actualVars.getSize());
+  const std::size_t n(_actualVars.getSize());
   for (std::size_t i = 0; i < n; ++i) {
     const RooAbsReal *r =
-        static_cast<const RooAbsReal *>(this->_actualVars.at(i));
-    retval->add(this->_coefficients[i], static_cast<RooAbsReal *>(r->clone()));
+        static_cast<const RooAbsReal *>(_actualVars.at(i));
+    retval->add(_coefficients[i], static_cast<RooAbsReal *>(r->clone()));
   }
   return retval;
 }
@@ -95,43 +95,43 @@ void RooLinearCombination::add(RooFit::SuperFloat c, RooAbsReal *t) {
 
 void RooLinearCombination::setCoefficient(size_t idx, RooFit::SuperFloat c) {
   // set the coefficient with the given index
-  this->_coefficients[idx] = c;
+  _coefficients[idx] = c;
 }
 
 RooFit::SuperFloat RooLinearCombination::getCoefficient(size_t idx) {
   // get the coefficient with the given index
-  return this->_coefficients[idx];
+  return _coefficients[idx];
 }
 
-Double_t RooLinearCombination::evaluate() const {
+double RooLinearCombination::evaluate() const {
   // call the evaluation
 #ifdef USE_UBLAS
     RooFit::SuperFloat result;
   result.assign(0.0);
-  const std::size_t n(this->_actualVars.getSize());
+  const std::size_t n(_actualVars.getSize());
   for (std::size_t i = 0; i < n; ++i) {
       RooFit::SuperFloat tmp;
-    tmp.assign(static_cast<const RooAbsReal *>(this->_actualVars.at(i))->getVal());
-    result += this->_coefficients[i] * tmp;
+    tmp.assign(static_cast<const RooAbsReal *>(_actualVars.at(i))->getVal());
+    result += _coefficients[i] * tmp;
   }
   return result.convert_to<double>();
-#else    
-  const std::size_t n(this->_actualVars.getSize());    
-  std::vector<double> values(n);    
-  for (std::size_t i = 0; i < n; ++i) {    
-    values[i] = _coefficients[i] * static_cast<const RooAbsReal *>(this->_actualVars.at(i))->getVal();    
-  }    
-  // the values might span multiple orders of magnitudes, and to minimize    
-  // precision loss, we sum up the values from the smallest to the largest    
-  // absolute value.    
-  std::sort(values.begin(), values.end(), [](double const& x, double const& y){ return std::abs(x) < std::abs(y); });    
-  return ROOT::Math::KahanSum<double>::Accumulate(values.begin(), values.end()).Sum();    
+#else
+  const std::size_t n(_actualVars.getSize());
+  std::vector<double> values(n);
+  for (std::size_t i = 0; i < n; ++i) {
+    values[i] = _coefficients[i] * static_cast<const RooAbsReal *>(_actualVars.at(i))->getVal();
+  }
+  // the values might span multiple orders of magnitudes, and to minimize
+  // precision loss, we sum up the values from the smallest to the largest
+  // absolute value.
+  std::sort(values.begin(), values.end(), [](double const& x, double const& y){ return std::abs(x) < std::abs(y); });
+  return ROOT::Math::KahanSum<double>::Accumulate(values.begin(), values.end()).Sum();
 #endif
 }
 
-std::list<Double_t> *RooLinearCombination::binBoundaries(RooAbsRealLValue &obs,
-                                                      Double_t xlo,
-                                                      Double_t xhi) const {
+std::list<double> *RooLinearCombination::binBoundaries(RooAbsRealLValue &obs,
+                                                      double xlo,
+                                                      double xhi) const {
   // Forward the plot sampling hint from the p.d.f. that defines the observable
   // obs
   for(auto const& func : _actualVars) {
@@ -143,9 +143,9 @@ std::list<Double_t> *RooLinearCombination::binBoundaries(RooAbsRealLValue &obs,
   return 0;
 }
 
-std::list<Double_t> *RooLinearCombination::plotSamplingHint(RooAbsRealLValue &obs,
-                                                         Double_t xlo,
-                                                         Double_t xhi) const {
+std::list<double> *RooLinearCombination::plotSamplingHint(RooAbsRealLValue &obs,
+                                                         double xlo,
+                                                         double xhi) const {
   // Forward the plot sampling hint from the p.d.f. that defines the observable
   // obs
   for(auto const& func : _actualVars) {

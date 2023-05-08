@@ -34,6 +34,8 @@ namespace Math {
       Phi is restricted to be in the range [-PI,PI)
 
       @ingroup GenVector
+
+      @sa Overview of the @ref GenVector "physics vector library"
   */
 
 template <class T>

@@ -31,11 +31,17 @@
 // Include some forward declares that must come before cmath.
 #include <__clang_cuda_math_forward_declares.h>
 
+// Define __CUDACC__ early as libstdc++ standard headers with GNU extensions
+// enabled depend on it to avoid using __float128, which is unsupported in
+// CUDA.
+#define __CUDACC__
+
 // Include some standard headers to avoid CUDA headers including them
 // while some required macros (like __THROW) are in a weird state.
 #include <cmath>
 #include <cstdlib>
 #include <stdlib.h>
+#undef __CUDACC__
 
 // Preserve common macros that will be changed below by us or by CUDA
 // headers.
@@ -48,7 +54,7 @@
 #include "cuda.h"
 #if !defined(CUDA_VERSION)
 #error "cuda.h did not define CUDA_VERSION"
-#elif CUDA_VERSION < 7000 || CUDA_VERSION > 10010
+#elif CUDA_VERSION < 7000
 #error "Unsupported CUDA version!"
 #endif
 
@@ -83,13 +89,15 @@
 #if CUDA_VERSION < 9000
 #define __CUDABE__
 #else
+#define __CUDACC__
 #define __CUDA_LIBDEVICE__
 #endif
 // Disables definitions of device-side runtime support stubs in
 // cuda_device_runtime_api.h
+#include "host_defines.h"
+#undef __CUDACC__
 #include "driver_types.h"
 #include "host_config.h"
-#include "host_defines.h"
 
 // Temporarily replace "nv_weak" with weak, so __attribute__((nv_weak)) in
 // cuda_device_runtime_api.h ends up being __attribute__((weak)) which is the
@@ -141,11 +149,12 @@ inline __host__ double __signbitd(double x) {
 // to provide our own.
 #include <__clang_cuda_libdevice_declares.h>
 
-// Wrappers for many device-side standard library functions became compiler
-// builtins in CUDA-9 and have been removed from the CUDA headers. Clang now
-// provides its own implementation of the wrappers.
+// Wrappers for many device-side standard library functions, incl. math
+// functions, became compiler builtins in CUDA-9 and have been removed from the
+// CUDA headers. Clang now provides its own implementation of the wrappers.
 #if CUDA_VERSION >= 9000
 #include <__clang_cuda_device_functions.h>
+#include <__clang_cuda_math.h>
 #endif
 
 // __THROW is redefined to be empty by device_functions_decls.h in CUDA. Clang's
@@ -340,9 +349,14 @@ extern "C" {
 __device__ int vprintf(const char *, const char *);
 __device__ void free(void *) __attribute((nothrow));
 __device__ void *malloc(size_t) __attribute((nothrow)) __attribute__((malloc));
+
+// __assertfail() used to have a `noreturn` attribute. Unfortunately that
+// contributed to triggering the longstanding bug in ptxas when assert was used
+// in sufficiently convoluted code. See
+// https://bugs.llvm.org/show_bug.cgi?id=27738 for the details.
 __device__ void __assertfail(const char *__message, const char *__file,
                              unsigned __line, const char *__function,
-                             size_t __charSize) __attribute__((noreturn));
+                             size_t __charSize);
 
 // In order for standard assert() macro on linux to work we need to
 // provide device-side __assert_fail()
@@ -368,28 +382,36 @@ __device__ static inline void *malloc(size_t __size) {
 // Out-of-line implementations from __clang_cuda_builtin_vars.h.  These need to
 // come after we've pulled in the definition of uint3 and dim3.
 
+__device__ inline __cuda_builtin_threadIdx_t::operator dim3() const {
+  return dim3(x, y, z);
+}
+
 __device__ inline __cuda_builtin_threadIdx_t::operator uint3() const {
-  uint3 ret;
-  ret.x = x;
-  ret.y = y;
-  ret.z = z;
-  return ret;
+  return {x, y, z};
+}
+
+__device__ inline __cuda_builtin_blockIdx_t::operator dim3() const {
+  return dim3(x, y, z);
 }
 
 __device__ inline __cuda_builtin_blockIdx_t::operator uint3() const {
-  uint3 ret;
-  ret.x = x;
-  ret.y = y;
-  ret.z = z;
-  return ret;
+  return {x, y, z};
 }
 
 __device__ inline __cuda_builtin_blockDim_t::operator dim3() const {
   return dim3(x, y, z);
 }
 
+__device__ inline __cuda_builtin_blockDim_t::operator uint3() const {
+  return {x, y, z};
+}
+
 __device__ inline __cuda_builtin_gridDim_t::operator dim3() const {
   return dim3(x, y, z);
+}
+
+__device__ inline __cuda_builtin_gridDim_t::operator uint3() const {
+  return {x, y, z};
 }
 
 #include <__clang_cuda_cmath.h>

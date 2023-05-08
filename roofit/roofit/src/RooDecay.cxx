@@ -31,7 +31,6 @@ for the analytical convolution with a RooResolutionModel. See RooAbsAnaConvPdf.
 
 #include "RooDecay.h"
 
-#include "RooFit.h"
 #include "RooRealVar.h"
 #include "RooRandom.h"
 
@@ -91,14 +90,14 @@ RooDecay::~RooDecay()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Double_t RooDecay::coefficient(Int_t /*basisIndex*/) const
+double RooDecay::coefficient(Int_t /*basisIndex*/) const
 {
   return 1 ;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Int_t RooDecay::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t /*staticInitOK*/) const
+Int_t RooDecay::getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, bool /*staticInitOK*/) const
 {
   if (matchArgs(directVars,generateVars,_t)) return 1 ;
   return 0 ;
@@ -112,8 +111,8 @@ void RooDecay::generateEvent(Int_t code)
 
   // Generate delta-t dependent
   while(1) {
-    Double_t rand = RooRandom::uniform() ;
-    Double_t tval(0) ;
+    double rand = RooRandom::uniform() ;
+    double tval(0) ;
 
     switch(_type) {
     case SingleSided:

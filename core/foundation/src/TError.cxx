@@ -66,6 +66,7 @@ ErrorSystemMsgHandlerFunc_t SetErrorSystemMsgHandler(ErrorSystemMsgHandlerFunc_t
 /// A very simple error handler that is usually replaced by the TROOT default error handler.
 /// The minimal error handler is not serialized across threads, so that output of multi-threaded programs
 /// can get scrambled
+/// @note `abort()` is only called if `abort_bool` is `true` and `level >= gErrorIgnoreLevel`
 void MinimalErrorHandler(Int_t level, Bool_t abort_bool, const char *location, const char *msg)
 {
    if (level < gErrorIgnoreLevel)
@@ -239,8 +240,9 @@ void Warning(const char *location, const char *fmt, ...)
 ////////////////////////////////////////////////////////////////////////////////
 /// Use this function in case of a fatal error. It will abort the program.
 
-// Fatal() *might* not abort the program (if gAbortLevel > kFatal) - but for all
-// reasonable settings it *will* abort. So let's be reasonable wrt Coverity:
+/// @warning Fatal() *will* not abort the program if `gErrorIgnoreLevel > kFatal`
+/// - but for all reasonable settings it *will* abort.
+// So let's be reasonable wrt Coverity:
 // coverity[+kill]
 void Fatal(const char *location, const char *fmt, ...)
 {

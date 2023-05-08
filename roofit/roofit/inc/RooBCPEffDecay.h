@@ -35,18 +35,18 @@ public:
        RooAbsReal& effRatio, RooAbsReal& delMistag,
        const RooResolutionModel& model, DecayType type=DoubleSided) ;
 
-  RooBCPEffDecay(const RooBCPEffDecay& other, const char* name=0);
-  virtual TObject* clone(const char* newname) const { return new RooBCPEffDecay(*this,newname) ; }
-  virtual ~RooBCPEffDecay();
+  RooBCPEffDecay(const RooBCPEffDecay& other, const char* name=nullptr);
+  TObject* clone(const char* newname) const override { return new RooBCPEffDecay(*this,newname) ; }
+  ~RooBCPEffDecay() override;
 
-  virtual Double_t coefficient(Int_t basisIndex) const ;
+  double coefficient(Int_t basisIndex) const override ;
 
-  virtual Int_t getCoefAnalyticalIntegral(Int_t coef, RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const ;
-  virtual Double_t coefAnalyticalIntegral(Int_t coef, Int_t code, const char* rangeName=0) const ;
+  Int_t getCoefAnalyticalIntegral(Int_t coef, RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=nullptr) const override ;
+  double coefAnalyticalIntegral(Int_t coef, Int_t code, const char* rangeName=nullptr) const override ;
 
-  Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, Bool_t staticInitOK=kTRUE) const;
-  void initGenerator(Int_t code) ;
-  void generateEvent(Int_t code) ;
+  Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, bool staticInitOK=true) const override;
+  void initGenerator(Int_t code) override ;
+  void generateEvent(Int_t code) override ;
 
 protected:
 
@@ -60,14 +60,14 @@ protected:
   RooRealProxy _tau ;
   RooRealProxy _dm ;
   RooCategoryProxy _tag ;
-  Double_t _genB0Frac ;
+  double _genB0Frac ;
 
   DecayType _type ;
   Int_t _basisExp ;
   Int_t _basisSin ;
   Int_t _basisCos ;
 
-  ClassDef(RooBCPEffDecay,1) // B Mixing decay PDF
+  ClassDefOverride(RooBCPEffDecay,1) // B Mixing decay PDF
 };
 
 #endif
