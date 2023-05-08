@@ -10,7 +10,6 @@ ROOTTEST_GENERATE_REFLEX_DICTIONARY(AtlasTest2 AtlasTest2.h SELECTION AtlasTest2
 ROOTTEST_ADD_TEST(execAtlasTest2
                   MACRO execAtlasTest2.C
                   OUTREF execAtlasTest2.ref
-                  ${WILLFAIL_ON_WIN32}
                   DEPENDS ${GENERATE_REFLEX_TEST})
 
 ROOTTEST_GENERATE_REFLEX_DICTIONARY(classesDictSelection classesDictSelection.h SELECTION classesDictSelection_selection.xml NO_ROOTMAP)
