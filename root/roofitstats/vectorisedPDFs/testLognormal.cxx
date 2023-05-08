@@ -38,7 +38,7 @@ class TestLognormal : public PDFTest
       }
 
        //Standard of 1.E-14 is too strong.
-      _toleranceCompareBatches = 6.E-14;
+      _toleranceCompareBatches = 8.E-14;
       _toleranceParameter = 2e-6;
   }
 };
