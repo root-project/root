@@ -78,12 +78,12 @@ void annotation3d()
    l2->Draw();
 
    // Draw text Annotations
-   TLatex3D *txt = new TLatex3D(-0.45, -0.2, 0.3, "f(y,x_{0})");
+   TAnnotation *txt = new TAnnotation(-0.45, -0.2, 0.3, "f(y,x_{0})");
    txt->SetTextFont(42);
    txt->SetTextColor(kRed);
    txt->Draw();
 
-   TLatex3D *txt1 = new TLatex3D(0.5, 0.5, 0.3, "f(x,y)");
+   TAnnotation *txt1 = new TAnnotation(0.5, 0.5, 0.3, "f(x,y)");
    txt1->SetTextColor(kBlue);
    txt1->SetTextFont(42);
    txt1->Draw();

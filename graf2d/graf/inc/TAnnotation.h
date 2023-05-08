@@ -9,28 +9,28 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TText3D
-#define ROOT_TText3D
+#ifndef ROOT_TAnnotation
+#define ROOT_TAnnotation
 
 
-#include "TText.h"
+#include "TLatex.h"
 
-class TText3D : public TText {
+class TAnnotation : public TLatex {
 
 protected:
    double fZ{0}; ///< Z position of text
 
 public:
 
-   TText3D() {}
-   TText3D(Double_t x, Double_t y, Double_t z, const char *text);
-   virtual ~TText3D();
-   virtual TText3D *DrawText3D(Double_t x, Double_t y, Double_t z, const char *text);
+   TAnnotation() {}
+   TAnnotation(Double_t x, Double_t y, Double_t z, const char *text);
+   virtual ~TAnnotation();
+   virtual TAnnotation *DrawText3D(Double_t x, Double_t y, Double_t z, const char *text);
    void ls(Option_t *option="") const override;
    void Paint(Option_t *option="") override;
    void Print(Option_t *option="") const override;
 
-   ClassDefOverride(TText3D,1)  //Text 3D
+   ClassDefOverride(TAnnotation,1)  //Annotation in 2d or 3D
 };
 
 #endif

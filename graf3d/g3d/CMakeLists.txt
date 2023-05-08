@@ -32,8 +32,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Graf3d
     TPointSet3D.h
     TPolyLine3D.h
     TPolyMarker3D.h
-    TText3D.h
-    TLatex3D.h
     TRotMatrix.h
     TShape.h
     TSPHE.h
@@ -68,8 +66,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Graf3d
     TPointSet3D.cxx
     TPolyLine3D.cxx
     TPolyMarker3D.cxx
-    TText3D.cxx
-    TLatex3D.cxx
     TRotMatrix.cxx
     TShape.cxx
     TSPHE.cxx

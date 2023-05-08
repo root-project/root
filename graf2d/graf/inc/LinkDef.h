@@ -21,6 +21,7 @@
 #pragma link C++ class TArc+;
 #pragma link C++ class TArrow+;
 #pragma link C++ class TAttImage;
+#pragma link C++ class TAnnotation+;
 #pragma link C++ class TBox-;
 #pragma link C++ class TCandle-;
 #pragma link C++ class TCrown+;

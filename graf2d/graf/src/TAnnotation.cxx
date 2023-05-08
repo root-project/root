@@ -1,4 +1,4 @@
-// @(#)root/g3d:$Id$
+// @(#)root/graf:$Id$
 // Author: Olivier Couet   03/05/23
 
 /*************************************************************************
@@ -10,19 +10,21 @@
  *************************************************************************/
 
 #include "TROOT.h"
-#include "TText3D.h"
+#include "TAnnotation.h"
 #include "TVirtualPad.h"
 #include "TView.h"
 #include "TVirtualViewer3D.h"
 
 
-ClassImp(TText3D);
+ClassImp(TAnnotation);
 
-/** \class TText3D
-\ingroup g3d
-A 3-dimensional text.
+/** \class TAnnotation
+\ingroup BasicGraphics
+
+An annotation is a TLatex which can be drawn in a 2D or 3D space.
 
 Example:
+
 Begin_Macro(source)
 {
    auto hsurf1 = new TH2F("hsurf1","3D text example ",30,-4,4,30,-20,20);
@@ -33,26 +35,29 @@ Begin_Macro(source)
       hsurf1->Fill(2+0.5*px,2*py-10.,0.1);
    }
    hsurf1->Draw("SURF1");
-
    int binx,biny,binz;
    int bmax = hsurf1->GetMaximumBin(binx,biny,binz);
-
    double xm = hsurf1->GetXaxis()->GetBinCenter(binx);
    double ym = hsurf1->GetYaxis()->GetBinCenter(biny);
    double zm = hsurf1->GetMaximum();
-
-   auto t = new TText3D(xm,ym,zm,Form("Maximum = %g",zm));
+   auto t = new TAnnotation(xm,ym,zm,Form("Maximum = %g",zm));
    t->SetTextFont(42);
    t->SetTextSize(0.03);
    t->Draw();
 }
+End_Macro
+
+Another example:
+
+Begin_Macro(source)
+../../../tutorials/graphs/annotation3d.C
 End_Macro
 */
 
 ////////////////////////////////////////////////////////////////////////////////
 /// 3-D text  default constructor.
 
-TText3D::TText3D(Double_t x, Double_t y, Double_t z, const char *text)
+TAnnotation::TAnnotation(Double_t x, Double_t y, Double_t z, const char *text)
 {
    fX = x;
    fY = y;
@@ -65,14 +70,14 @@ TText3D::TText3D(Double_t x, Double_t y, Double_t z, const char *text)
 /// 3-D text default destructor.
 
 
-TText3D::~TText3D()
+TAnnotation::~TAnnotation()
 {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// List this 3-D text with its attributes.
 
-void TText3D::ls(Option_t *) const
+void TAnnotation::ls(Option_t *) const
 {
    TROOT::IndentLevel();
    printf("OBJ: %s\t%s  \tX= %f Y=%f Z=%f \n",IsA()->GetName(),GetTitle(),fX,fY,fZ);
@@ -82,9 +87,9 @@ void TText3D::ls(Option_t *) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw this text with new coordinates.
 
-TText3D *TText3D::DrawText3D(Double_t x, Double_t y, Double_t z, const char *text)
+TAnnotation *TAnnotation::DrawText3D(Double_t x, Double_t y, Double_t z, const char *text)
 {
-   TText3D *newtext = new TText3D(x, y, z, text);
+   TAnnotation *newtext = new TAnnotation(x, y, z, text);
    TAttText::Copy(*newtext);
    newtext->SetBit(kCanDelete);
    if (TestBit(kTextNDC)) newtext->SetNDC();
@@ -94,28 +99,24 @@ TText3D *TText3D::DrawText3D(Double_t x, Double_t y, Double_t z, const char *tex
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Paint a TText3D.
+/// Paint a TAnnotation.
 
-void TText3D::Paint(Option_t * /* option */ )
+void TAnnotation::Paint(Option_t * /* option */ )
 {
    TView *view = gPad->GetView();
    if (!view) {
-      PaintText(fX,fY,GetTitle());
+      PaintLatex(fX,fY,GetTextAngle(),GetTextSize(),GetTitle());
    } else {
-      double xyz[3];
-      xyz[0] = fX;
-      xyz[1] = fY;
-      xyz[2] = fZ;
-      Double_t xpad[3];
+      Double_t xyz[3] = { fX, fY, fZ }, xpad[3];
       view->WCtoNDC(xyz, &xpad[0]);
-      PaintText(xpad[0],xpad[1],GetTitle());
+      PaintLatex(xpad[0],xpad[1],GetTextAngle(),GetTextSize(),GetTitle());
    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Dump this text with its attributes.
 
-void TText3D::Print(Option_t *) const
+void TAnnotation::Print(Option_t *) const
 {
    printf("Text  X=%f Y=%f Z = %f Text=%s Font=%d Size=%f",fX,fY,fZ,GetTitle(),GetTextFont(),GetTextSize());
    if (GetTextColor() != 1 ) printf(" Color=%d",GetTextColor());
