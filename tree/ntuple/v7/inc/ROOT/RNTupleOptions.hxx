@@ -66,6 +66,11 @@ protected:
    bool fHasSmallClusters = false;
 
 public:
+   /// A maximum size of 512MB still allows for a vector of bool to be stored in a small cluster.  This is the
+   /// worst case wrt. the maximum required size of the index column.  A 32bit index column can address 512MB
+   /// of 1-bit (on disk size) bools.
+   static constexpr std::uint64_t kMaxSmallClusterSize = 512 * 1024 * 1024;
+
    virtual ~RNTupleWriteOptions() = default;
    virtual std::unique_ptr<RNTupleWriteOptions> Clone() const;
 
