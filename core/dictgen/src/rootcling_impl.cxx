@@ -2827,8 +2827,6 @@ void CreateDictHeader(std::ostream &dictStream, const std::string &main_dictname
 
 void AddNamespaceSTDdeclaration(std::ostream &dictStream)
 {
-   dictStream  << "// The generated code does not explicitly qualify STL entities\n"
-               << "namespace std {} using namespace std;\n\n";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -4446,7 +4444,7 @@ int RootClingMain(int argc,
 
    if (interp.declare("#include <string>\n" // For the list of 'opaque' typedef to also include string.
                       "#include <RtypesCore.h>\n" // For initializing TNormalizedCtxt.
-                      "namespace std {} using namespace std;") != cling::Interpreter::kSuccess) {
+                      ) != cling::Interpreter::kSuccess) {
       ROOT::TMetaUtils::Error(nullptr, "Error loading the default header files.\n");
       return 1;
    }
@@ -4657,16 +4655,6 @@ int RootClingMain(int argc,
       CreateDictHeader(dictStream, main_dictname);
       if (gOptSplit)
          CreateDictHeader(*splitDictStream, main_dictname);
-
-      if (!gOptNoGlobalUsingStd) {
-         // ACLiC'ed macros might rely on `using namespace std` in front of user headers
-         if (isACLiC) {
-            AddNamespaceSTDdeclaration(dictStream);
-            if (gOptSplit) {
-               AddNamespaceSTDdeclaration(*splitDictStream);
-            }
-         }
-      }
    }
 
    //---------------------------------------------------------------------------
@@ -4884,15 +4872,6 @@ int RootClingMain(int argc,
             GenerateNecessaryIncludes(*splitDictStream, includeForSource, extraIncludes);
          }
       }
-      if (!gOptNoGlobalUsingStd) {
-         // ACLiC'ed macros might have relied on `using namespace std` in front of user headers
-         if (!isACLiC) {
-            AddNamespaceSTDdeclaration(dictStream);
-            if (gOptSplit) {
-               AddNamespaceSTDdeclaration(*splitDictStream);
-            }
-         }
-      }
       if (gDriverConfig->fInitializeStreamerInfoROOTFile) {
          gDriverConfig->fInitializeStreamerInfoROOTFile(modGen.GetModuleFileName().c_str());
       }
@@ -4904,13 +4883,6 @@ int RootClingMain(int argc,
          constructorTypes.emplace_back("TRootIOCtor", interp);
          constructorTypes.emplace_back("__void__", interp); // ROOT-7723
          constructorTypes.emplace_back("", interp);
-      }
-   }
-   if (!gOptIgnoreExistingDict && gOptNoGlobalUsingStd) {
-      AddNamespaceSTDdeclaration(dictStream);
-
-      if (gOptSplit && splitDictStream) {
-         AddNamespaceSTDdeclaration(*splitDictStream);
       }
    }
 
