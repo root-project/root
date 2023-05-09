@@ -110,7 +110,7 @@ template <typename T>
 class HistoTestFixture : public ::testing::Test {
 protected:
    // Includes u/overflow bins. Uneven number chosen to have a center bin.
-   const static int numBins = 5;
+   const static int numBins = 7;
 
    // Variables for defining fixed bins.
    const double startBin = 1;
@@ -129,7 +129,7 @@ protected:
    double *stats, *expectedStats;
    int nStats;
 
-   CUDAhist::RHnCUDA<histType, dim> histogram;
+   const CUDAhist::RHnCUDA<histType, dim> histogram;
 
    HistoTestFixture() : histogram(Repeat<int, dim>(numBins), Repeat<double, dim>(startBin), Repeat<double, dim>(endBin))
    {
@@ -283,16 +283,16 @@ TEST(HistoTestFixture, FillIntClamp)
       h.Fill({3}, -1);                 // Should keep min value
    }
 
-   int r[6];
+   int result[6];
    double s[4];
-   h.RetrieveResults(r, s);
+   h.RetrieveResults(result, s);
 
-   EXPECT_EQ(r[0], 0);
-   EXPECT_EQ(r[1], INT_MAX);
-   EXPECT_EQ(r[2], INT_MAX);
-   EXPECT_EQ(r[3], -INT_MAX);
-   EXPECT_EQ(r[4], -INT_MAX);
-   EXPECT_EQ(r[5], 0);
+   EXPECT_EQ(result[0], 0);
+   EXPECT_EQ(result[1], INT_MAX);
+   EXPECT_EQ(result[2], INT_MAX);
+   EXPECT_EQ(result[3], -INT_MAX);
+   EXPECT_EQ(result[4], -INT_MAX);
+   EXPECT_EQ(result[5], 0);
 }
 
 TEST(HistoTestFixture, FillShortClamp)
@@ -313,10 +313,10 @@ TEST(HistoTestFixture, FillShortClamp)
       }
    }
 
-   short r[10];
+   short result[10];
    double s[4];
-   h.RetrieveResults(r, s);
+   h.RetrieveResults(result, s);
 
    int expected[10] = {0, 32767, 32767, -32767, -32767, 32767, 32767, -32767, -32767, 0};
-   CHECK_ARRAY(r, expected, 10);
+   CHECK_ARRAY(result, expected, 10);
 }
