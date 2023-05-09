@@ -1,4 +1,4 @@
-// @(#)root/graf:$Id$
+// @(#)root/gpad:$Id$
 // Author: Olivier Couet   03/05/23
 
 /*************************************************************************
@@ -19,7 +19,7 @@
 ClassImp(TAnnotation);
 
 /** \class TAnnotation
-\ingroup BasicGraphics
+\ingroup gpad
 
 An annotation is a TLatex which can be drawn in a 2D or 3D space.
 

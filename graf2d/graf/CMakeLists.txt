@@ -14,7 +14,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Graf
     TArc.h
     TArrow.h
     TAttImage.h
-    TAnnotation.h
     TBox.h
     TCandle.h
     TCrown.h
@@ -53,7 +52,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Graf
     src/TArc.cxx
     src/TArrow.cxx
     src/TAttImage.cxx
-    src/TAnnotation.cxx
     src/TBox.cxx
     src/TCandle.cxx
     src/TCrown.cxx
