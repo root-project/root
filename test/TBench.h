@@ -9,7 +9,6 @@ namespace stdext {}
 #include <set>
 #include <map>
 
-#ifndef WIN32
 using std::vector;
 using std::list;
 using std::deque;
@@ -17,10 +16,6 @@ using std::set;
 using std::multiset;
 using std::map;
 using std::multimap;
-#else
-using namespace std;
-using namespace stdext;
-#endif
 
 //-------------------------------------------------------------
 class THit {
