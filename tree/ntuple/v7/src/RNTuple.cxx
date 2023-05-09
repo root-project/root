@@ -333,7 +333,9 @@ void ROOT::Experimental::RNTupleWriter::CommitCluster(bool commitClusterGroup)
          CommitClusterGroup();
       return;
    }
-   if (fSink->GetWriteOptions().GetHasSmallClusters() && (fUnzippedClusterSize > 512 * 1024 * 1024)) {
+   if (fSink->GetWriteOptions().GetHasSmallClusters() &&
+      (fUnzippedClusterSize > RNTupleWriteOptions::kMaxSmallClusterSize))
+   {
       throw RException(R__FAIL("invalid attempt to write a cluster > 512MiB with 'small clusters' option enabled"));
    }
    for (auto &field : *fModel->GetFieldZero()) {
