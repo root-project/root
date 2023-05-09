@@ -1744,14 +1744,13 @@ static void ResolveTypedefImpl(const char *tname,
 
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Return the name of type 'tname' with all its typedef components replaced
+/// by the actual type its points to
+/// For example for `typedef MyObj MyObjTypedef;`
+/// `vector<MyObjTypedef>` return `vector<MyObj>`
 
 string TClassEdit::ResolveTypedef(const char *tname, bool /* resolveAll */)
 {
-   // Return the name of type 'tname' with all its typedef components replaced
-   // by the actual type its points to
-   // For example for "typedef MyObj MyObjTypedef;"
-   //    vector<MyObjTypedef> return vector<MyObj>
-   //
 
    if (!tname || *tname == 0)
       return "";
@@ -1780,14 +1779,12 @@ string TClassEdit::ResolveTypedef(const char *tname, bool /* resolveAll */)
 
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Return the name of type 'tname' with all STL classes prepended by "std::".
+/// For example for `vector<set<auto_ptr<int*> > >` return
+/// std::vector<std::set<std::auto_ptr<int*> > >`
 
 string TClassEdit::InsertStd(const char *tname)
 {
-   // Return the name of type 'tname' with all STL classes prepended by "std::".
-   // For example for "vector<set<auto_ptr<int*> > >" it returns
-   //    "std::vector<std::set<std::auto_ptr<int*> > >"
-   //
-
    static const char* sSTLtypes[] = {
       "allocator",
       "auto_ptr",
@@ -1963,7 +1960,7 @@ string TClassEdit::InsertStd(const char *tname)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// An helper class to dismount the name and remount it changed whenever
+/// A helper class to dismount the name and remount it changed whenever
 /// necessary
 
 class NameCleanerForIO {
