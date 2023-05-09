@@ -836,7 +836,7 @@ public:
    RNullableField &operator=(RNullableField &&other) = default;
    ~RNullableField() override;
 
-   bool IsDense() const { return GetColumnRepresentative() == ColumnRepresentation_t({EColumnType::kBit}); }
+   bool IsDense() const { return GetColumnRepresentative()[0] ==  EColumnType::kBit; }
    bool IsSparse() const { return !IsDense(); }
    void SetDense() { SetColumnRepresentative({EColumnType::kBit}); }
    void SetSparse() { SetColumnRepresentative({EColumnType::kSplitIndex32}); }
