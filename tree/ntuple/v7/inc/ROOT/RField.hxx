@@ -886,7 +886,15 @@ public:
    {
       return Detail::RFieldValue(this, static_cast<T *>(where), std::forward<ArgsT>(args)...);
    }
-   ROOT::Experimental::Detail::RFieldValue GenerateValue(void *where) final { return GenerateValue(where, T()); }
+   ROOT::Experimental::Detail::RFieldValue GenerateValue(void *where) final
+   {
+      if constexpr (std::is_default_constructible_v<T>) {
+         return GenerateValue(where, T());
+      } else {
+         // If there is no default constructor, try with the IO constructor
+         return GenerateValue(where, T(static_cast<TRootIOCtor *>(nullptr)));
+      }
+   }
 };
 
 template <typename T, typename = void>

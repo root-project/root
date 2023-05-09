@@ -533,11 +533,13 @@ TYPED_TEST(UniquePtr, Basics)
 
       AddUniquePtrField<bool, typename TestFixture::Tag_t>(*model, "PBool");
       AddUniquePtrField<CustomStruct, typename TestFixture::Tag_t>(*model, "PCustomStruct");
+      AddUniquePtrField<IOConstructor, typename TestFixture::Tag_t>(*model, "PIOConstructor");
       AddUniquePtrField<std::unique_ptr<std::string>, typename TestFixture::Tag_t>(*model, "PPString");
       AddUniquePtrField<std::array<char, 2>, typename TestFixture::Tag_t>(*model, "PArray");
 
       EXPECT_EQ("std::unique_ptr<bool>", model->GetField("PBool")->GetType());
       EXPECT_EQ(std::string("std::unique_ptr<CustomStruct>"), model->GetField("PCustomStruct")->GetType());
+      EXPECT_EQ(std::string("std::unique_ptr<IOConstructor>"), model->GetField("PIOConstructor")->GetType());
       EXPECT_EQ(std::string("std::unique_ptr<std::unique_ptr<std::string>>"), model->GetField("PPString")->GetType());
       EXPECT_EQ(std::string("std::unique_ptr<std::array<char,2>>"), model->GetField("PArray")->GetType());
 
@@ -551,37 +553,44 @@ TYPED_TEST(UniquePtr, Basics)
       if constexpr (std::is_same_v<typename TestFixture::Tag_t, RTagNullableFieldSparse>) {
          EXPECT_TRUE(dynamic_cast<const RUniquePtrField *>(writer->GetModel()->GetField("PBool"))->IsSparse());
          EXPECT_TRUE(dynamic_cast<const RUniquePtrField *>(writer->GetModel()->GetField("PCustomStruct"))->IsSparse());
+         EXPECT_TRUE(dynamic_cast<const RUniquePtrField *>(writer->GetModel()->GetField("PIOConstructor"))->IsSparse());
          EXPECT_TRUE(dynamic_cast<const RUniquePtrField *>(writer->GetModel()->GetField("PPString"))->IsSparse());
          EXPECT_TRUE(dynamic_cast<const RUniquePtrField *>(writer->GetModel()->GetField("PArray"))->IsSparse());
       }
       if constexpr (std::is_same_v<typename TestFixture::Tag_t, RTagNullableFieldDense>) {
          EXPECT_TRUE(dynamic_cast<const RUniquePtrField *>(writer->GetModel()->GetField("PBool"))->IsDense());
          EXPECT_TRUE(dynamic_cast<const RUniquePtrField *>(writer->GetModel()->GetField("PCustomStruct"))->IsDense());
+         EXPECT_TRUE(dynamic_cast<const RUniquePtrField *>(writer->GetModel()->GetField("PIOConstructor"))->IsDense());
          EXPECT_TRUE(dynamic_cast<const RUniquePtrField *>(writer->GetModel()->GetField("PPString"))->IsDense());
          EXPECT_TRUE(dynamic_cast<const RUniquePtrField *>(writer->GetModel()->GetField("PArray"))->IsDense());
       }
 
       auto pBool = writer->GetModel()->Get<std::unique_ptr<bool>>("PBool");
       auto pCustomStruct = writer->GetModel()->Get<std::unique_ptr<CustomStruct>>("PCustomStruct");
+      auto pIOConstructor = writer->GetModel()->Get<std::unique_ptr<IOConstructor>>("PIOConstructor");
       auto ppString = writer->GetModel()->Get<std::unique_ptr<std::unique_ptr<std::string>>>("PPString");
       auto pArray = writer->GetModel()->Get<std::unique_ptr<std::array<char, 2>>>("PArray");
 
       *pBool = std::make_unique<bool>(true);
       EXPECT_EQ(nullptr, pCustomStruct->get());
+      EXPECT_EQ(nullptr, pIOConstructor->get());
       EXPECT_EQ(nullptr, ppString->get());
       EXPECT_EQ(nullptr, pArray->get());
       writer->Fill();
       *pBool = nullptr;
       *pCustomStruct = std::make_unique<CustomStruct>();
+      *pIOConstructor = std::make_unique<IOConstructor>(nullptr);
       *ppString = std::make_unique<std::unique_ptr<std::string>>(std::make_unique<std::string>());
       *pArray = std::make_unique<std::array<char, 2>>();
       writer->Fill();
       (*pCustomStruct)->a = 42.0;
+      (*pIOConstructor)->a = 13;
       (*(*ppString))->assign("abc");
       (*pArray)->at(1) = 'x';
       writer->Fill();
       *pBool = std::make_unique<bool>(false);
       *pCustomStruct = nullptr;
+      *pIOConstructor = nullptr;
       *ppString = nullptr;
       *pArray = nullptr;
       writer->Fill();
@@ -594,24 +603,28 @@ TYPED_TEST(UniquePtr, Basics)
    auto model = reader->GetModel();
    EXPECT_EQ("std::unique_ptr<bool>", model->GetField("PBool")->GetType());
    EXPECT_EQ(std::string("std::unique_ptr<CustomStruct>"), model->GetField("PCustomStruct")->GetType());
+   EXPECT_EQ(std::string("std::unique_ptr<IOConstructor>"), model->GetField("PIOConstructor")->GetType());
    EXPECT_EQ(std::string("std::unique_ptr<std::unique_ptr<std::string>>"), model->GetField("PPString")->GetType());
    EXPECT_EQ(std::string("std::unique_ptr<std::array<char,2>>"), model->GetField("PArray")->GetType());
 
    auto entry = reader->GetModel()->GetDefaultEntry();
    auto pBool = entry->Get<std::unique_ptr<bool>>("PBool");
    auto pCustomStruct = entry->Get<std::unique_ptr<CustomStruct>>("PCustomStruct");
+   auto pIOConstructor = entry->Get<std::unique_ptr<IOConstructor>>("PIOConstructor");
    auto ppString = entry->Get<std::unique_ptr<std::unique_ptr<std::string>>>("PPString");
    auto pArray = entry->Get<std::unique_ptr<std::array<char, 2>>>("PArray");
 
    reader->LoadEntry(0);
    EXPECT_TRUE(*(pBool->get()));
    EXPECT_EQ(nullptr, pCustomStruct->get());
+   EXPECT_EQ(nullptr, pIOConstructor->get());
    EXPECT_EQ(nullptr, ppString->get());
    EXPECT_EQ(nullptr, pArray->get());
 
    reader->LoadEntry(1);
    EXPECT_EQ(nullptr, pBool->get());
    EXPECT_FLOAT_EQ(0.0, pCustomStruct->get()->a);
+   EXPECT_EQ(7, pIOConstructor->get()->a);
    EXPECT_TRUE(ppString->get()->get()->empty());
    EXPECT_EQ(0, pArray->get()->at(0));
    EXPECT_EQ(0, pArray->get()->at(1));
@@ -619,6 +632,7 @@ TYPED_TEST(UniquePtr, Basics)
    reader->LoadEntry(2);
    EXPECT_EQ(nullptr, pBool->get());
    EXPECT_FLOAT_EQ(42.0, pCustomStruct->get()->a);
+   EXPECT_EQ(13, pIOConstructor->get()->a);
    EXPECT_EQ("abc", *(ppString->get()->get()));
    EXPECT_EQ(0, pArray->get()->at(0));
    EXPECT_EQ('x', pArray->get()->at(1));
@@ -626,12 +640,14 @@ TYPED_TEST(UniquePtr, Basics)
    reader->LoadEntry(3);
    EXPECT_FALSE(*(pBool->get()));
    EXPECT_EQ(nullptr, pCustomStruct->get());
+   EXPECT_EQ(nullptr, pIOConstructor->get());
    EXPECT_EQ(nullptr, ppString->get());
    EXPECT_EQ(nullptr, pArray->get());
 
    reader->LoadEntry(4);
    EXPECT_FALSE(*(pBool->get()));
    EXPECT_EQ(nullptr, pCustomStruct->get());
+   EXPECT_EQ(nullptr, pIOConstructor->get());
    EXPECT_EQ("de", *(ppString->get()->get()));
    EXPECT_EQ(nullptr, pArray->get());
 }
