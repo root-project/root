@@ -45,8 +45,6 @@
 #include "XrdOuc/XrdOucHash.hh"
 #include "XrdClient/XrdClientVector.hh"
 
-using namespace std;
-
 class XrdClientInputBuffer {
 
 private:
