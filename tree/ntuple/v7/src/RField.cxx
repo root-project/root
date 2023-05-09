@@ -2471,13 +2471,15 @@ void ROOT::Experimental::RUniquePtrField::ReadGlobalImpl(NTupleSize_t globalInde
       return;
    }
 
-   if (!isValidValue && isValidItem) {
+   if (!isValidItem) // On-disk value missing; nothing else to do
+      return;
+
+   if (!isValidValue) {
       itemValue = fSubFields[0]->GenerateValue();
       ptr->reset(itemValue.Get<char>());
    }
 
-   if (isValidItem)
-      fSubFields[0]->Read(itemIndex, &itemValue);
+   fSubFields[0]->Read(itemIndex, &itemValue);
 }
 
 ROOT::Experimental::Detail::RFieldValue ROOT::Experimental::RUniquePtrField::GenerateValue(void *where)
