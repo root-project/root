@@ -123,14 +123,8 @@ __device__ inline void AddBinContent(int *histogram, int bin, double weight)
 
    do {
       assumed = old;
-      newVal = assumed + long(weight);
-
-      if (newVal > -INT_MAX && newVal < INT_MAX)
-         old = atomicCAS(&histogram[bin], assumed, (int)newVal);
-      else if (newVal <= -INT_MAX)
-         old = atomicCAS(&histogram[bin], assumed, -INT_MAX);
-      else // newVal >= INT_MAX
-         old = atomicCAS(&histogram[bin], assumed, INT_MAX);
+      newVal = max(long(-INT_MAX), min(assumed + long(weight), long(INT_MAX)));
+      old = atomicCAS(&histogram[bin], assumed, newVal);
    } while (assumed != old); // Repeat on failure/when the bin was already updated by another thread
 }
 
@@ -148,7 +142,7 @@ __global__ void HistoKernel(T *histogram, CUDAhist::RAxis *axes, int nBins, doub
 
    // Initialize a local per-block histogram
    for (auto i = localTid; i < nBins; i += blockDim.x) {
-      sMem[localTid] = 0;
+      sMem[i] = 0;
    }
    __syncthreads();
 
