@@ -1317,16 +1317,14 @@ png2ASImage_int( void *data, png_rw_ptr read_fn, ASImageImportParams *params )
    				else
 					color_type = PNG_COLOR_TYPE_GRAY_ALPHA ;
   */
-				if (png_get_sRGB (png_ptr, info_ptr, &intent))
-				{
-                    png_set_gamma (png_ptr, params->gamma, DEFAULT_PNG_IMAGE_GAMMA);
-				}else if (png_get_gAMA (png_ptr, info_ptr, &image_gamma) && bit_depth >= 8)
-				{/* don't gamma-correct 1, 2, 4 bpp grays as we loose data this way */
-					png_set_gamma (png_ptr, params->gamma, image_gamma);
-				}else
-				{
-                    png_set_gamma (png_ptr, params->gamma, DEFAULT_PNG_IMAGE_GAMMA);
-				}
+			if (png_get_sRGB (png_ptr, info_ptr, &intent)) {
+				png_set_gamma (png_ptr, params->gamma > 0 ? params->gamma : DEFAULT_PNG_IMAGE_GAMMA, DEFAULT_PNG_IMAGE_GAMMA);
+			} else if (png_get_gAMA (png_ptr, info_ptr, &image_gamma) && bit_depth >= 8) {
+				/* don't gamma-correct 1, 2, 4 bpp grays as we loose data this way */
+				png_set_gamma (png_ptr, params->gamma > 0 ? params->gamma : DEFAULT_PNG_IMAGE_GAMMA , image_gamma);
+			} else {
+				png_set_gamma (png_ptr, params->gamma > 0 ? params->gamma : DEFAULT_PNG_IMAGE_GAMMA, DEFAULT_PNG_IMAGE_GAMMA);
+			}
 
 				/* Optional call to gamma correct and add the background to the palette
 				 * and update info structure.  REQUIRED if you are expecting libpng to
