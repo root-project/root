@@ -122,7 +122,6 @@
 #pragma link C++ class RooFormulaVar+ ;
 #pragma link C++ class RooGenContext+ ;
 #pragma link C++ class RooGenericPdf+ ;
-#pragma link C++ class RooGenProdProj+ ;
 #pragma link C++ class RooHist+ ;
 #pragma link C++ class RooImproperIntegrator1D+ ;
 #pragma link C++ class RooIntegrator1D+ ;
