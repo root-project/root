@@ -123,7 +123,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooGenContext.h
     RooGenericPdf.h
     RooGenFitStudy.h
-    RooGenProdProj.h
     RooGlobalFunc.h
     RooGrid.h
     RooHistError.h

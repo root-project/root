@@ -138,6 +138,13 @@ RooMomentMorphFuncND already normalizes itself in pdf mode.
 RooWrapperPdf pdf{"pdf_name", "pdf_name", func, /*selfNormalized=*/true};
 ```
 
+### Removal of serveral internal classes from the public RooFit interface
+
+Several RooFit classes of which the headers are publically exposed in the interface were only meant as implementation details of other RooFit classes.
+Some of these classes are now removed from the public interface:
+
+1. `RooGenProdProj`, which was an implementation detail of the `RooProdPdf`
+
 ## 2D Graphics Libraries
 
 
