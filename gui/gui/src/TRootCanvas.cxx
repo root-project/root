@@ -1543,6 +1543,7 @@ void TRootCanvas::ShowEditor(Bool_t show)
    }
    else {
       lambda_show();
+      Resize(w, h);
    }
 }
 
