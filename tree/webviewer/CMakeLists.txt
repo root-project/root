@@ -11,5 +11,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTreeViewer
     src/RTreeViewer.cxx
   DEPENDENCIES
     Tree
+    Hist
     ROOTWebDisplay
 )
