@@ -4434,8 +4434,24 @@ int RootClingMain(int argc,
       // ROOTCINT uses to define a few header implicitly, we need to do it explicitly.
       if (interp.declare("#include <assert.h>\n"
                          "#include \"Rtypes.h\"\n"
-                         "#include \"TObject.h\"") != cling::Interpreter::kSuccess
-         ) {
+                         "#include \"TObject.h\"\n"
+                         "#include <bitset>\n"
+                         "#include <forward_list>\n"
+                         "#include <list>\n"
+                         "#include <map>\n"
+                         "#include <memory>\n"
+                         "#include <set>\n"
+                         "#include <string>\n"
+                         "#include <unordered_map>\n"
+                         "#include <unordered_set>\n"
+                         "#include <utility>\n"
+                         "#include <vector>\n"
+                         "using std::allocator; using std::bitset; using std::default_delete; using "
+                         "std::forward_list; using std::list; using std::map; using std::multimap; using "
+                         "std::multiset; using std::pair; using std::set; using std::shared_ptr; using std::string; "
+                         "using std::unique_ptr; using std::unordered_multimap; using std::unordered_map; using "
+                         "std::unordered_multiset; using std::unordered_set; using std::vector;") !=
+          cling::Interpreter::kSuccess) {
          // There was an error.
          ROOT::TMetaUtils::Error(nullptr, "Error loading the default rootcling header files.\n");
          return 1;
@@ -4633,8 +4649,6 @@ int RootClingMain(int argc,
    }
 
    std::ostream &dictStream = (!gOptIgnoreExistingDict && !gOptDictionaryFileName.empty()) ? fileout : std::cout;
-   bool isACLiC = gOptDictionaryFileName.getValue().find("_ACLiC_dict") != std::string::npos;
-
    if (!gOptIgnoreExistingDict) {
       // Now generate a second stream for the split dictionary if it is necessary
       if (gOptSplit) {
