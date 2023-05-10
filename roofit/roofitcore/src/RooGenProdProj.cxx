@@ -40,22 +40,6 @@ analytically. Remaining non-factorising observables are integrated numerically.
 #include "RooErrorHandler.h"
 #include "RooProduct.h"
 
-using namespace std;
-
-ClassImp(RooGenProdProj);
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Default constructor
-
-RooGenProdProj::RooGenProdProj() :
-  _compSetOwnedN(0),
-  _compSetOwnedD(0),
-  _haveD(false)
-{
-}
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor for a normalization projection of the product of p.d.f.s _prodSet
@@ -64,19 +48,16 @@ RooGenProdProj::RooGenProdProj() :
 RooGenProdProj::RooGenProdProj(const char *name, const char *title, const RooArgSet& _prodSet, const RooArgSet& _intSet,
                 const RooArgSet& _normSet, const char* isetRangeName, const char* normRangeName, bool doFactorize) :
   RooAbsReal(name, title),
-  _compSetOwnedN(0),
-  _compSetOwnedD(0),
   _compSetN("compSetN","Set of integral components owned by numerator",this,false),
   _compSetD("compSetD","Set of integral components owned by denominator",this,false),
-  _intList("intList","List of integrals",this,true),
-  _haveD(false)
+  _intList("intList","List of integrals",this,true)
 {
   // Set expensive object cache to that of first item in prodSet
   setExpensiveObjectCache(_prodSet.first()->expensiveObjectCache()) ;
 
   // Create owners of components created in ctor
-  _compSetOwnedN = new RooArgSet ;
-  _compSetOwnedD = new RooArgSet ;
+  _compSetOwnedN = std::make_unique<RooArgSet>();
+  _compSetOwnedD = std::make_unique<RooArgSet>();
 
   RooAbsReal* numerator = makeIntegral("numerator",_prodSet,_intSet,*_compSetOwnedN,isetRangeName,doFactorize) ;
   RooAbsReal* denominator = makeIntegral("denominator",_prodSet,_normSet,*_compSetOwnedD,normRangeName,doFactorize) ;
@@ -104,18 +85,16 @@ RooGenProdProj::RooGenProdProj(const char *name, const char *title, const RooArg
 
 RooGenProdProj::RooGenProdProj(const RooGenProdProj& other, const char* name) :
   RooAbsReal(other, name),
-  _compSetOwnedN(0),
-  _compSetOwnedD(0),
   _compSetN("compSetN","Set of integral components owned by numerator",this),
   _compSetD("compSetD","Set of integral components owned by denominator",this),
   _intList("intList","List of integrals",this)
 {
   // Copy constructor
-  _compSetOwnedN = new RooArgSet;
+  _compSetOwnedN = std::make_unique<RooArgSet>();
   other._compSetN.snapshot(*_compSetOwnedN);
   _compSetN.add(*_compSetOwnedN) ;
 
-  _compSetOwnedD = new RooArgSet;
+  _compSetOwnedD = std::make_unique<RooArgSet>();
   other._compSetD.snapshot(*_compSetOwnedD);
   _compSetD.add(*_compSetOwnedD) ;
 
@@ -133,18 +112,6 @@ RooGenProdProj::RooGenProdProj(const RooGenProdProj& other, const char* name) :
     _intList.add(*_compSetD.find(other._intList.at(1)->GetName())) ;
   }
 }
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooGenProdProj::~RooGenProdProj()
-{
-  if (_compSetOwnedN) delete _compSetOwnedN ;
-  if (_compSetOwnedD) delete _compSetOwnedD ;
-}
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -302,10 +269,3 @@ void RooGenProdProj::operModeHook()
   _intList.at(0)->setOperMode(_operMode) ;
   if (_haveD) _intList.at(1)->setOperMode(Auto) ; // Denominator always stays in Auto mode (normalization integral)
 }
-
-
-
-
-
-
-
