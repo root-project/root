@@ -130,7 +130,7 @@ Instead of using the removed `RooMomentMorphND` (which is the pdf), you now need
 change its behavior to exactly match the formter `RooMomentMorphND`, and then wrap it into a pdf object:
 
 ```C++
-RooMomentMorphFuncND func{<c'tor args you previously passed to RooMomentMorphFunc>};
+RooMomentMorphFuncND func{<constructor args you previously passed to RooMomentMorphFunc>};
 
 func.setPdfMode(); // change behavior to be exactly like the former RooMomentMorphND
 
@@ -165,6 +165,8 @@ Some of these classes are now removed from the public interface:
    finding, so the `RooAbsRootFinder` is removed. In the rare case where you
    might have used it, please ROOT's other functionalities: RooFit is not for
    root finding.
+4. The `RooFormula` class, which was not meant as a user-facing class, but as a
+   shared implementation detail of `RooFormulaVar` and `RooGenericPdf`.
 
 ## 2D Graphics Libraries
 
