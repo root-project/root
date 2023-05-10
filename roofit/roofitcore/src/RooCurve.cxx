@@ -43,8 +43,9 @@ To retrieve a RooCurve from a RooPlot, use RooPlot::getCurve().
 #include "RooRealVar.h"
 #include "RooRealIntegral.h"
 #include "RooRealBinding.h"
-#include "RooScaledFunc.h"
 #include "RooMsgService.h"
+#include "RooProduct.h"
+#include "RooConstVar.h"
 
 #include "Riostream.h"
 #include "TMath.h"
@@ -108,16 +109,8 @@ RooCurve::RooCurve(const RooAbsReal &f, RooAbsRealLValue &x, double xlo, double 
   }
   setYAxisLabel(title.Data());
 
-  RooAbsFunc *funcPtr = 0;
-  RooAbsFunc *rawPtr  = 0;
-  funcPtr= f.bindVars(x,normVars,true);
-
-  // apply a scale factor if necessary
-  if(scaleFactor != 1) {
-    rawPtr= funcPtr;
-    funcPtr= new RooScaledFunc(*rawPtr,scaleFactor);
-  }
-  assert(0 != funcPtr);
+  RooProduct scaledFunc{"scaled_func", "scaled_func", {f, RooFit::RooConst(scaleFactor)}};
+  std::unique_ptr<RooAbsFunc> funcPtr{scaledFunc.bindVars(x, normVars, true)};
 
   // calculate the points to add to our curve
   double prevYMax = getYAxisMax() ;
@@ -142,9 +135,6 @@ RooCurve::RooCurve(const RooAbsReal &f, RooAbsRealLValue &x, double xlo, double 
   }
   initialize();
 
-  // cleanup
-  delete funcPtr;
-  if(rawPtr) delete rawPtr;
   if (shiftToZero) shiftCurveToZero(prevYMax) ;
 
   // Adjust limits
