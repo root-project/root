@@ -49,7 +49,6 @@
 #include "RooAbsCategoryLValue.h"
 #include "RooCustomizer.h"
 #include "RooAbsData.h"
-#include "RooScaledFunc.h"
 #include "RooAddPdf.h"
 #include "RooCmdConfig.h"
 #include "RooCategory.h"
@@ -62,6 +61,7 @@
 #include "RooGlobalFunc.h"
 #include "RooParamBinning.h"
 #include "RooProfileLL.h"
+#include "RooProduct.h"
 #include "RooFunctor.h"
 #include "RooDerivative.h"
 #include "RooXYChi2Var.h"
@@ -2120,8 +2120,8 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, PlotOpt o) const
     // Do _not_ activate cache-and-track as necessary information to define normalization observables are not present in the underlying dataset
     dwa.constOptimizeTestStatistic(Activate,false) ;
 
-    RooRealBinding projBind(dwa,*plotVar) ;
-    RooScaledFunc scaleBind(projBind,o.scaleFactor);
+    RooProduct scaledDwa{"scaled_dwa", "Data Weighted average", dwa, {RooFit::RooConst(o.scaleFactor)}};
+    RooRealBinding scaleBind(scaledDwa,*plotVar) ;
 
     // Set default range, if not specified
     if (o.rangeLo==0 && o.rangeHi==0) {
@@ -2482,12 +2482,11 @@ RooPlot* RooAbsReal::plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asym
     //RooDataWeightedAverage dwa(Form("%sDataWgtAvg",GetName()),"Data Weighted average",*funcAsym,*projDataSel,*projDataSel->get(),o.numCPU,o.interleave,true) ;
     dwa.constOptimizeTestStatistic(Activate) ;
 
-    RooRealBinding projBind(dwa,*plotVar) ;
-
     ((RooAbsReal*)posProj)->attachDataSet(*projDataSel) ;
     ((RooAbsReal*)negProj)->attachDataSet(*projDataSel) ;
 
-    RooScaledFunc scaleBind(projBind,o.scaleFactor);
+    RooProduct scaledDwa{"scaled_dwa", "Data Weighted average", {dwa, RooFit::RooConst(o.scaleFactor)}};
+    RooRealBinding scaleBind(scaledDwa,*plotVar) ;
 
     // Set default range, if not specified
     if (o.rangeLo==0 && o.rangeHi==0) {
