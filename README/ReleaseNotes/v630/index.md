@@ -157,6 +157,13 @@ Some of these classes are now removed from the public interface:
    RooRealBinding binding(func, x) ;
    RooScaledFunc scaledBinding(binding, scaleFactor);
    ```
+3. The `RooAbsRootFinder`, which was the base class of `RooBrentRootFinder`.
+   The `RooAbsRootFinder` was only used as the base class of
+   `RooBrentRootFinder`, which is an implementation detail of several
+   RooFit/RooStats functions. However, polymorphism never not relevant for root
+   finding, so the `RooAbsRootFinder` is removed. In the rare case where you
+   might have used it, please ROOT's other functionalities: RooFit is not for
+   root finding.
 
 ## 2D Graphics Libraries
 
