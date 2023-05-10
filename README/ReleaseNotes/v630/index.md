@@ -144,6 +144,19 @@ Several RooFit classes of which the headers are publically exposed in the interf
 Some of these classes are now removed from the public interface:
 
 1. `RooGenProdProj`, which was an implementation detail of the `RooProdPdf`
+2. `RooScaledFunc`, which was an implementaiton detail of the plotting in RooFit
+   In the supposedly very rare case where you used this class in your own
+   implementations, just multiply the underlying RooAbsReal function with the
+   scale factor and create a RooRealBinding, e.g.:
+   ```c++
+   RooProduct scaledFunc{"scaled_func", "", func, scaleFactor};
+   RooRealBinding scaleBind(scaledFunc, x) ;
+   ```
+   instead of:
+   ```c++
+   RooRealBinding binding(func, x) ;
+   RooScaledFunc scaledBinding(binding, scaleFactor);
+   ```
 
 ## 2D Graphics Libraries
 

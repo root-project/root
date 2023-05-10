@@ -210,7 +210,6 @@
     for (TObject * binning : onfile._altBinning) { _altBinning[binning->GetName()] = static_cast<RooAbsBinning*>(binning); } \
   }"
 #pragma link C++ class RooRefCountList+ ;
-#pragma link C++ class RooScaledFunc+ ;
 #pragma link C++ class RooSegmentedIntegrator1D+ ;
 #pragma link C++ class RooSegmentedIntegrator2D+ ;
 #pragma link C++ class RooSetProxy+ ;
