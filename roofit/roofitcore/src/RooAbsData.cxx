@@ -83,6 +83,7 @@ observable snapshots are stored in the dataset.
 #include "TMath.h"
 #include "TTree.h"
 
+#include "RooFormula.h"
 #include "RooFormulaVar.h"
 #include "RooCmdConfig.h"
 #include "RooAbsRealLValue.h"

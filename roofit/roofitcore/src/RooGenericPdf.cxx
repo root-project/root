@@ -47,11 +47,18 @@ the names of the arguments are not hard coded.
 #include "RooStreamParser.h"
 #include "RooMsgService.h"
 #include "RooArgList.h"
+#include "RooFormula.h"
 
 using namespace std;
 
 ClassImp(RooGenericPdf);
 
+RooGenericPdf::RooGenericPdf() {}
+
+RooGenericPdf::~RooGenericPdf()
+{
+   if(_formula) delete _formula;
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -104,8 +111,7 @@ RooGenericPdf::RooGenericPdf(const RooGenericPdf& other, const char* name) :
 RooFormula& RooGenericPdf::formula() const
 {
   if (!_formula) {
-    const_cast<std::unique_ptr<RooFormula>&>(_formula).reset(
-        new RooFormula(GetName(),_formExpr.Data(),_actualVars));
+    _formula = new RooFormula(GetName(),_formExpr.Data(),_actualVars);
     const_cast<TString&>(_formExpr) = _formula->formulaString().c_str();
   }
   return *_formula ;
@@ -140,17 +146,6 @@ bool RooGenericPdf::setFormula(const char* inFormula)
   setValueDirty() ;
   return false ;
 }
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Check if given value is valid
-
-bool RooGenericPdf::isValidReal(double /*value*/, bool /*printError*/) const
-{
-  return true ;
-}
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -188,6 +183,8 @@ void RooGenericPdf::printMetaArgs(ostream& os) const
   os << "formula=\"" << _formExpr << "\" " ;
 }
 
+
+void RooGenericPdf::dumpFormula() { formula().dump() ; }
 
 
 ////////////////////////////////////////////////////////////////////////////////
