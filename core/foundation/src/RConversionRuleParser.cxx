@@ -475,10 +475,11 @@ namespace ROOT
 
    static void WriteAutoVariables( const std::list<std::string>& target,
                                    const SourceTypeList_t& source,
-                                   MembersTypeMap_t& members,
-                                   std::string& className, std::string& mappedName,
+                                   const MembersTypeMap_t& members,
+                                   std::string className, const std::string& mappedName,
                                    std::ostream& output )
    {
+      className = TClassEdit::InsertStd(className.c_str());
       if (!source.empty()) {
          Bool_t start = true;
          SourceTypeList_t::const_iterator it;
@@ -616,18 +617,20 @@ namespace ROOT
 
          std::list<std::string>::const_iterator it;
          for( it = target.begin(); it != target.end(); ++it ) {
-            Internal::TSchemaType memData = members[*it];
+            const Internal::TSchemaType &memData = members.find(*it)->second;
             output << "      static Long_t offset_" << *it << " = ";
             output << "cls->GetDataMemberOffset(\"" << *it << "\");";
             output << std::endl;
+            std::string memDataType = TClassEdit::InsertStd(memData.fType.c_str());
             if (memData.fDimensions.size()) {
-               output << "      typedef " << memData.fType << " " << *it << "_t" << memData.fDimensions << ";" << std::endl;
+               output << "      typedef " << memDataType << " " << *it << "_t" << memData.fDimensions << ";"
+                      << std::endl;
                output << "      " << *it << "_t& " << *it << " = ";
                output << "*(" << *it << "_t *)(target+offset_" << *it;
                output << ");" << std::endl;
             } else {
-               output << "      " << memData.fType << "& " << *it << " = ";
-               output << "*(" << memData.fType << "*)(target+offset_" << *it;
+               output << "      " << memDataType << "& " << *it << " = ";
+               output << "*(" << memDataType << "*)(target+offset_" << *it;
                output << ");" << std::endl;
             }
          }

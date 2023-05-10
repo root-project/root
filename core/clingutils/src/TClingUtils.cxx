@@ -1715,13 +1715,11 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
    std::string csymbol = classname;
    std::string args;
 
-   if ( ! TClassEdit::IsStdClass( classname.c_str() ) ) {
+   csymbol = TClassEdit::InsertStd(csymbol.c_str());
 
-      // Prefix the full class name with '::' except for the STL
-      // containers and std::string.  This is to request the
-      // real class instead of the class in the namespace ROOT::Shadow
-      csymbol.insert(0,"::");
-   }
+   // Prefix the full class name with '::', to refert to the
+   // real class instead of the class in the namespace ROOT::Shadow
+   csymbol.insert(0,"::");
 
    int stl = TClassEdit::IsSTLCont(classname);
    bool bset = TClassEdit::IsSTLBitset(classname.c_str());
@@ -1988,7 +1986,8 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
       // FIXME Workaround: for the moment we do not generate coll proxies with unique ptrs since
       // they imply copies and therefore do not compile.
       auto classNameForIO = TClassEdit::GetNameForIO(classname);
-      finalString << "      instance.AdoptCollectionProxyInfo(TCollectionProxyInfo::Generate(TCollectionProxyInfo::" << methodTCP << "< " << classNameForIO.c_str() << " >()));" << "\n";
+      classNameForIO = TClassEdit::InsertStd(classNameForIO.c_str());
+      finalString << "      instance.AdoptCollectionProxyInfo(TCollectionProxyInfo::Generate(TCollectionProxyInfo::" << methodTCP << "< " << classNameForIO << " >()));" << "\n";
 
       needCollectionProxy = true;
    }
@@ -2378,15 +2377,12 @@ void ROOT::TMetaUtils::WriteAuxFunctions(std::ostream& finalString,
    //    operator delete
    //    operator delete[]
 
-   ROOT::TMetaUtils::GetCppName(mappedname,classname.c_str());
+   classname = TClassEdit::InsertStd(classname.c_str());
 
-   if ( ! TClassEdit::IsStdClass( classname.c_str() ) ) {
-
-      // Prefix the full class name with '::' except for the STL
-      // containers and std::string.  This is to request the
-      // real class instead of the class in the namespace ROOT::Shadow
-      classname.insert(0,"::");
-   }
+   // Prefix the full class name with '::' except for the STL
+   // containers and std::string.  This is to request the
+   // real class instead of the class in the namespace ROOT::Shadow
+   classname.insert(0,"::");
 
    finalString << "namespace ROOT {" << "\n";
 

@@ -859,6 +859,7 @@ int STLContainerStreamer(const clang::FieldDecl &m,
    if (!tmplt_specialization) return 0;
 
    string stlType(ROOT::TMetaUtils::ShortTypeName(mTypename.c_str()));
+   stlType = TClassEdit::InsertStd(stlType.c_str());
    string stlName;
    stlName = ROOT::TMetaUtils::ShortTypeName(m.getName().str().c_str());
 
@@ -1171,6 +1172,8 @@ void WriteClassFunctions(const clang::CXXRecordDecl *cl, std::ostream &dictStrea
       enclSpaceNesting = ROOT::TMetaUtils::WriteNamespaceHeader(dictStream, cl);
    }
 
+   clsname = TClassEdit::InsertStd(clsname.c_str());
+
    if (autoLoad)
       dictStream << "#include \"TInterpreter.h\"\n";
 
@@ -1189,16 +1192,22 @@ void WriteClassFunctions(const clang::CXXRecordDecl *cl, std::ostream &dictStrea
    dictStream << "//_______________________________________"
               << "_______________________________________" << std::endl;
    if (add_template_keyword) dictStream << "template <> ";
-   dictStream << "const char *" << clsname << "::ImplFileName()"  << std::endl << "{" << std::endl
-              << "   return ::ROOT::GenerateInitInstanceLocal((const ::" << fullname
-              << "*)nullptr)->GetImplFileName();" << std::endl << "}" << std::endl << std::endl
+   dictStream << "const char *" << clsname << "::ImplFileName()" << std::endl
+              << "{" << std::endl
+              << "   return ::ROOT::GenerateInitInstanceLocal((const ::" << clsname << "*)nullptr)->GetImplFileName();"
+              << std::endl
+              << "}" << std::endl
+              << std::endl
 
               << "//_______________________________________"
               << "_______________________________________" << std::endl;
    if (add_template_keyword) dictStream << "template <> ";
-   dictStream << "int " << clsname << "::ImplFileLine()" << std::endl << "{" << std::endl
-              << "   return ::ROOT::GenerateInitInstanceLocal((const ::" << fullname
-              << "*)nullptr)->GetImplFileLine();" << std::endl << "}" << std::endl << std::endl
+   dictStream << "int " << clsname << "::ImplFileLine()" << std::endl
+              << "{" << std::endl
+              << "   return ::ROOT::GenerateInitInstanceLocal((const ::" << clsname << "*)nullptr)->GetImplFileLine();"
+              << std::endl
+              << "}" << std::endl
+              << std::endl
 
               << "//_______________________________________"
               << "_______________________________________" << std::endl;
@@ -1208,20 +1217,21 @@ void WriteClassFunctions(const clang::CXXRecordDecl *cl, std::ostream &dictStrea
    // Trigger autoloading if dictionary is split
    if (autoLoad)
       dictStream << "   gInterpreter->AutoLoad(\"" << fullname << "\");\n";
-   dictStream    << "   fgIsA = ::ROOT::GenerateInitInstanceLocal((const ::" << fullname
-                 << "*)nullptr)->GetClass();" << std::endl
-                 << "   return fgIsA;\n"
-                 << "}" << std::endl << std::endl
+   dictStream << "   fgIsA = ::ROOT::GenerateInitInstanceLocal((const ::" << clsname << "*)nullptr)->GetClass();"
+              << std::endl
+              << "   return fgIsA;\n"
+              << "}" << std::endl
+              << std::endl
 
-                 << "//_______________________________________"
-                 << "_______________________________________" << std::endl;
+              << "//_______________________________________"
+              << "_______________________________________" << std::endl;
    if (add_template_keyword) dictStream << "template <> ";
    dictStream << "TClass *" << clsname << "::Class()" << std::endl << "{" << std::endl;
    if (autoLoad) {
       dictStream << "   Dictionary();\n";
    } else {
       dictStream << "   if (!fgIsA.load()) { R__LOCKGUARD(gInterpreterMutex); fgIsA = ::ROOT::GenerateInitInstanceLocal((const ::";
-      dictStream << fullname << "*)nullptr)->GetClass(); }" << std::endl;
+      dictStream << clsname << "*)nullptr)->GetClass(); }" << std::endl;
    }
    dictStream    << "   return fgIsA;" << std::endl
                  << "}" << std::endl << std::endl;
@@ -1386,6 +1396,7 @@ void WriteStreamer(const ROOT::TMetaUtils::AnnotatedRecordDecl &cl,
    if (ROOT::TMetaUtils::GetNameWithinNamespace(fullname, clsname, nsname, clxx)) {
       enclSpaceNesting = ROOT::TMetaUtils::WriteNamespaceHeader(dictStream, cl);
    }
+   clsname = TClassEdit::InsertStd(clsname.c_str());
 
    dictStream << "//_______________________________________"
               << "_______________________________________" << std::endl;
@@ -1788,19 +1799,22 @@ void WriteAutoStreamer(const ROOT::TMetaUtils::AnnotatedRecordDecl &cl,
    if (ROOT::TMetaUtils::GetNameWithinNamespace(fullname, clsname, nsname, clxx)) {
       enclSpaceNesting = ROOT::TMetaUtils::WriteNamespaceHeader(dictStream, cl);
    }
+   clsname = TClassEdit::InsertStd(clsname.c_str());
 
    dictStream << "//_______________________________________"
               << "_______________________________________" << std::endl;
    if (add_template_keyword) dictStream << "template <> ";
    dictStream << "void " << clsname << "::Streamer(TBuffer &R__b)" << std::endl
               << "{" << std::endl
-              << "   // Stream an object of class " << fullname << "." << std::endl << std::endl
+              << "   // Stream an object of class " << fullname << "." << std::endl
+              << std::endl
               << "   if (R__b.IsReading()) {" << std::endl
-              << "      R__b.ReadClassBuffer(" << fullname << "::Class(),this);" << std::endl
+              << "      R__b.ReadClassBuffer(" << clsname << "::Class(),this);" << std::endl
               << "   } else {" << std::endl
-              << "      R__b.WriteClassBuffer(" << fullname << "::Class(),this);" << std::endl
+              << "      R__b.WriteClassBuffer(" << clsname << "::Class(),this);" << std::endl
               << "   }" << std::endl
-              << "}" << std::endl << std::endl;
+              << "}" << std::endl
+              << std::endl;
 
    while (enclSpaceNesting) {
       dictStream << "} // namespace " << nsname << std::endl;
