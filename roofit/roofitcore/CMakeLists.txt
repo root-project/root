@@ -53,7 +53,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooAbsProxy.h
     RooAbsReal.h
     RooAbsRealLValue.h
-    RooAbsRootFinder.h
     RooAbsSelfCachedPdf.h
     RooAbsSelfCachedReal.h
     RooAbsString.h
@@ -278,7 +277,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooAbsProxy.cxx
     src/RooAbsReal.cxx
     src/RooAbsRealLValue.cxx
-    src/RooAbsRootFinder.cxx
     src/RooAbsStudy.cxx
     src/RooAbsTestStatistic.cxx
     src/RooAcceptReject.cxx

@@ -33,16 +33,20 @@ in the GNU scientific library (v0.99).
 using namespace std;
 
 ClassImp(RooBrentRootFinder);
-;
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor taking function binding as input
 
 RooBrentRootFinder::RooBrentRootFinder(const RooAbsFunc& function) :
-  RooAbsRootFinder(function),
+  _function(&function), _valid(function.isValid()),
   _tol(2.2204460492503131e-16)
 {
+  if(_function->getDimension() != 1) {
+    oocoutE(nullptr,Eval) << "RooBrentRootFinder:: cannot find roots for function of dimension "
+               << _function->getDimension() << endl;
+    _valid= false;
+  }
 }
 
 
