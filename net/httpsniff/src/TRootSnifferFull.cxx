@@ -436,6 +436,23 @@ Bool_t TRootSnifferFull::ProduceImage(Int_t kind, const std::string &path, const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Invokes TRootSniffer::ProduceIamge, converting kind into TImage::EImageFileTypes type
+
+Bool_t TRootSnifferFull::CallProduceImage(const std::string &kind, const std::string &path, const std::string &options, std::string &res)
+{
+   if (kind == "png")
+      return ProduceImage(TImage::kPng, path, options, res);
+
+   if (kind == "jpeg")
+      return ProduceImage(TImage::kJpeg, path, options, res);
+
+   if (kind == "gif")
+      return ProduceImage(TImage::kGif, path, options, res);
+
+   return kFALSE;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Produce XML data for specified item
 ///
 /// For object conversion TBufferXML is used

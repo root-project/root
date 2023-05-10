@@ -24,7 +24,6 @@
 #include "TObjString.h"
 #include "TObjArray.h"
 #include "TUrl.h"
-#include "TImage.h"
 #include "TVirtualMutex.h"
 #include "TRootSnifferStore.h"
 #include "THttpCallArg.h"
@@ -1465,12 +1464,19 @@ Bool_t TRootSniffer::ProduceBinary(const std::string & /*path*/, const std::stri
 ///
 ///      http://localhost:8080/Files/hsimple.root/hpx/get.png?w=500&h=500&opt=lego1
 ///
-///  Return is memory with produced image
-///  Memory must be released by user with free(ptr) call
+///  Returns produced image in the res string
 ///
 ///  Method implemented only in TRootSnifferFull class
 
 Bool_t TRootSniffer::ProduceImage(Int_t /*kind*/, const std::string & /*path*/, const std::string & /*options*/, std::string & /*res*/)
+{
+   return kFALSE;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Invokes TRootSniffer::ProduceIamge, converting kind into TImage::EImageFileTypes type
+
+Bool_t TRootSniffer::CallProduceImage(const std::string &/*kind*/, const std::string &/*path*/, const std::string &/*options*/, std::string &/*res*/)
 {
    return kFALSE;
 }
@@ -1503,13 +1509,13 @@ Bool_t TRootSniffer::Produce(const std::string &path, const std::string &file, c
       return ProduceBinary(path, options, res);
 
    if (file == "root.png")
-      return ProduceImage(TImage::kPng, path, options, res);
+      return CallProduceImage("png", path, options, res);
 
    if (file == "root.jpeg")
-      return ProduceImage(TImage::kJpeg, path, options, res);
+      return CallProduceImage("jpeg", path, options, res);
 
    if (file == "root.gif")
-      return ProduceImage(TImage::kGif, path, options, res);
+      return CallProduceImage("gif", path, options, res);
 
    if (file == "exe.bin")
       return ProduceExe(path, options, 2, res);

@@ -42,6 +42,8 @@ protected:
 
    Bool_t ProduceExe(const std::string &path, const std::string &options, Int_t reskind, std::string &res) override;
 
+   Bool_t CallProduceImage(const std::string &kind, const std::string &path, const std::string &options, std::string &res) override;
+
 public:
    TRootSnifferFull(const char *name, const char *objpath = "Objects");
    virtual ~TRootSnifferFull();
