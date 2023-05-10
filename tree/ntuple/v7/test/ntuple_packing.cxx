@@ -213,7 +213,7 @@ TEST(Packing, OnDiskEncoding)
       *e->Get<float>("float") = std::nextafterf(1.f, 2.f); // 0 01111111 00000000000000000000001 == 0x3f800001
       *e->Get<double>("double") = std::nextafter(1., 2.);  // 0x3ff0 0000 0000 0001
       *e->Get<ClusterSize_t>("index32") = 39916801;        // 0x0261 1501
-      *e->Get<ClusterSize_t>("index64") = 39916801;        // 0x0261 1501
+      *e->Get<ClusterSize_t>("index64") = 0x0706050403020100L;
       e->Get<std::string>("str")->assign("abc");
 
       writer->Fill(*e);
@@ -224,7 +224,7 @@ TEST(Packing, OnDiskEncoding)
       *e->Get<float>("float") = std::nextafterf(1.f, 0.f);            // 0 01111110 11111111111111111111111 = 0x3f7fffff
       *e->Get<double>("double") = std::numeric_limits<double>::max(); // 0x7fef ffff ffff ffff
       *e->Get<ClusterSize_t>("index32") = 39916808;                   // d(previous) == 7
-      *e->Get<ClusterSize_t>("index64") = 39916808;                   // d(previous) == 7
+      *e->Get<ClusterSize_t>("index64") = 0x070605040302010DL;        // d(previous) == 13
       e->Get<std::string>("str")->assign("de");
 
       writer->Fill(*e);
@@ -268,8 +268,8 @@ TEST(Packing, OnDiskEncoding)
    EXPECT_EQ(memcmp(sealedPage.fBuffer, expIndex32, sizeof(expIndex32)), 0);
 
    source->LoadSealedPage(fnGetColumnId("index64"), RClusterIndex(0, 0), sealedPage);
-   unsigned char expIndex64[] = {0x01, 0x07, 0x15, 0x00, 0x61, 0x00, 0x02, 0x00,
-                                 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+   unsigned char expIndex64[] = {0x00, 0x0D, 0x01, 0x00, 0x02, 0x00, 0x03, 0x00,
+                                 0x04, 0x00, 0x05, 0x00, 0x06, 0x00, 0x07, 0x00};
    EXPECT_EQ(memcmp(sealedPage.fBuffer, expIndex64, sizeof(expIndex64)), 0);
 
    auto reader = RNTupleReader(std::move(source));
