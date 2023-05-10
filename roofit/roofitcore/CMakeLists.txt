@@ -55,7 +55,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooAbsRealLValue.h
     RooAbsSelfCachedPdf.h
     RooAbsSelfCachedReal.h
-    RooAbsString.h
     RooAbsStudy.h
     RooAbsTestStatistic.h
     RooAdaptiveIntegratorND.h
