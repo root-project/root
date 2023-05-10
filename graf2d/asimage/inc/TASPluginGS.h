@@ -31,6 +31,8 @@ public:
    TASPluginGS(const char *ext);
    virtual ~TASPluginGS();
 
+   ULong_t Hash() const override { return fExtension.Hash(); }
+
    ASImage *File2ASImage(const char *filename) override;
 
    ClassDefOverride(TASPluginGS, 0)  // PS/EPS/PDF plugin based on GhostScript interpreter

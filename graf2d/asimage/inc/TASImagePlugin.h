@@ -27,7 +27,9 @@ class TASImagePlugin : public TImagePlugin {
 
 public:
    TASImagePlugin(const char *ext) : TImagePlugin(ext) { }
-   virtual ~TASImagePlugin() { }
+   virtual ~TASImagePlugin() { ROOT::CallRecursiveRemoveIfNeeded(*this); }
+
+   ULong_t Hash() const override { return fExtension.Hash(); }
 
    unsigned char *ReadFile(const char * /*filename*/, UInt_t & /*w*/,  UInt_t & /*h*/) override { return nullptr; }
    Bool_t WriteFile(const char * /*filename*/, unsigned char * /*argb*/, UInt_t /*w*/,  UInt_t  /*h*/) override { return kFALSE; }
