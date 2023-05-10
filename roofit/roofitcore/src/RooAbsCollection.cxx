@@ -31,7 +31,6 @@ implemented using the container denoted by RooAbsCollection::Storage_t.
 #include "TClass.h"
 #include "TRegexp.h"
 #include "RooStreamParser.h"
-#include "RooFormula.h"
 #include "RooAbsRealLValue.h"
 #include "RooAbsCategoryLValue.h"
 #include "RooStringVar.h"

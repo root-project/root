@@ -1,7 +1,7 @@
 // Tests for the RooFormula
 // Author: Stephan Hageboeck, CERN  2020
 
-#include "RooFormula.h"
+#include "../src/RooFormula.h"
 #include "RooRealVar.h"
 
 #include "ROOT/TestSupport.hxx"

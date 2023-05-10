@@ -17,7 +17,6 @@
 #define ROO_FORMULA_VAR
 
 #include "RooAbsReal.h"
-#include "RooFormula.h"
 #include "RooArgList.h"
 #include "RooListProxy.h"
 #include "RooTrace.h"
@@ -26,17 +25,19 @@
 #include <list>
 
 class RooArgSet ;
+class RooFormula ;
 
 class RooFormulaVar : public RooAbsReal {
 public:
   // Constructors, assignment etc
-  RooFormulaVar() { }
+  RooFormulaVar();
+  ~RooFormulaVar() override;
   RooFormulaVar(const char *name, const char *title, const char* formula, const RooArgList& dependents, bool checkVariables = true);
   RooFormulaVar(const char *name, const char *title, const RooArgList& dependents, bool checkVariables = true);
   RooFormulaVar(const RooFormulaVar& other, const char* name=nullptr);
   TObject* clone(const char* newname) const override { return new RooFormulaVar(*this,newname); }
 
-  inline bool ok() const { return getFormula().ok() ; }
+  bool ok() const;
   const char* expression() const { return _formExpr.Data(); }
   const RooArgList& dependents() const { return _actualVars; }
 
@@ -59,11 +60,7 @@ public:
 
   // Debugging
   /// Dump the formula to stdout.
-  void dumpFormula() { getFormula().dump() ; }
-  /// Get reference to the internal formula object.
-  const RooFormula& formula() const {
-    return getFormula();
-  }
+  void dumpFormula();
 
   double defaultErrorLevel() const override ;
 
@@ -72,11 +69,7 @@ public:
 
   // Function evaluation
   double evaluate() const override ;
-  inline void computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const override
-  {
-    formula().computeBatch(stream, output, nEvents, dataMap);
-  }
-
+  void computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const override;
 
   protected:
   // Post-processing of server redirection
@@ -88,7 +81,7 @@ public:
   RooFormula& getFormula() const;
 
   RooListProxy _actualVars ;     ///< Actual parameters used by formula engine
-  std::unique_ptr<RooFormula> _formula{nullptr}; ///<! Formula engine
+  mutable RooFormula *_formula = nullptr; ///<! Formula engine
   mutable RooArgSet* _nset{nullptr}; ///<! Normalization set to be passed along to contents
   TString _formExpr ;            ///< Formula expression string
 

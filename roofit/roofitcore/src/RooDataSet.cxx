@@ -88,6 +88,7 @@ the new `RooAbsData::uniqueId()`.
 #include "RooAbsReal.h"
 #include "Roo1DTable.h"
 #include "RooCategory.h"
+#include "RooFormula.h"
 #include "RooFormulaVar.h"
 #include "RooArgList.h"
 #include "RooRealVar.h"

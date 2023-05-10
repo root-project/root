@@ -70,8 +70,6 @@ Check the tutorial rf506_msgservice.C for details.
 
 using namespace std;
 
-ClassImp(RooFormula);
-
 namespace {
 
 ////////////////////////////////////////////////////////////////////////////////
