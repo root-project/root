@@ -2370,11 +2370,10 @@ void ROOT::Experimental::RNullableField::GenerateColumnsImpl()
 void ROOT::Experimental::RNullableField::GenerateColumnsImpl(const RNTupleDescriptor &desc)
 {
    auto onDiskTypes = EnsureCompatibleColumnTypes(desc);
-   switch (onDiskTypes[0]) {
-   case EColumnType::kBit:
+   if (onDiskTypes[0] == EColumnType::kBit) {
       fColumns.emplace_back(Detail::RColumn::Create<bool>(RColumnModel(EColumnType::kBit), 0));
-      break;
-   default: fColumns.emplace_back(Detail::RColumn::Create<ClusterSize_t>(RColumnModel(onDiskTypes[0]), 0)); break;
+   } else {
+      fColumns.emplace_back(Detail::RColumn::Create<ClusterSize_t>(RColumnModel(onDiskTypes[0]), 0));
    }
 }
 
