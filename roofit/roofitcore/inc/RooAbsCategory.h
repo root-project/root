@@ -23,12 +23,7 @@
 #include <functional>
 #include <vector>
 
-#ifdef R__LESS_INCLUDES
 class RooCatType;
-#else
-#include "RooCatType.h"
-#endif
-
 class TTree;
 class RooVectorDataStore;
 class Roo1DTable;
