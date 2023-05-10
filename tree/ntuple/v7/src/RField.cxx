@@ -484,12 +484,9 @@ void ROOT::Experimental::Detail::RFieldBase::RemoveReadCallback(size_t idx)
    fIsSimple = (fTraits & kTraitMappable) && fReadCallbacks.empty();
 }
 
-void ROOT::Experimental::Detail::RFieldBase::ConnectPageSink(RPageSink &pageSink)
+void ROOT::Experimental::Detail::RFieldBase::AutoAdjustColumnTypes(const RNTupleWriteOptions &options)
 {
-   R__ASSERT(fColumns.empty());
-
-   /// Fix-up default encoding: if the ntuple is uncompressed, the default encoding should be non-split
-   if ((pageSink.GetWriteOptions().GetCompression() == 0) && HasDefaultColumnRepresentative()) {
+   if ((options.GetCompression() == 0) && HasDefaultColumnRepresentative()) {
       ColumnRepresentation_t rep = GetColumnRepresentative();
       for (auto &colType : rep) {
          switch (colType) {
@@ -505,7 +502,8 @@ void ROOT::Experimental::Detail::RFieldBase::ConnectPageSink(RPageSink &pageSink
       }
       SetColumnRepresentative(rep);
    }
-   if (pageSink.GetWriteOptions().GetHasSmallClusters()) {
+
+   if (options.GetHasSmallClusters()) {
       ColumnRepresentation_t rep = GetColumnRepresentative();
       for (auto &colType : rep) {
          switch (colType) {
@@ -516,6 +514,13 @@ void ROOT::Experimental::Detail::RFieldBase::ConnectPageSink(RPageSink &pageSink
       }
       SetColumnRepresentative(rep);
    }
+}
+
+void ROOT::Experimental::Detail::RFieldBase::ConnectPageSink(RPageSink &pageSink)
+{
+   R__ASSERT(fColumns.empty());
+
+   AutoAdjustColumnTypes(pageSink.GetWriteOptions());
 
    GenerateColumnsImpl();
    if (!fColumns.empty())
