@@ -331,7 +331,7 @@ class ROOTFacade(types.ModuleType):
                 import warnings
                 warnings.warn("MakeNumpyDataFrame is deprecated since v6.28 and will be removed in v6.30."\
                               "Please use FromNumpy instead.", FutureWarning)
-                MakeNumpyDataFrame(*args, **kwargs)
+                return MakeNumpyDataFrame(*args, **kwargs)
             ns.MakeNumpyDataFrame = DeprecatedMakeNumpy
             ns.FromNumpy = MakeNumpyDataFrame
 
