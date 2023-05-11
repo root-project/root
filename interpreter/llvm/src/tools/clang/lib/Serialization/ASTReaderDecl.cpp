@@ -3149,8 +3149,27 @@ static bool isSameEntity(NamedDecl *X, NamedDecl *Y) {
 
     ASTContext &C = FuncX->getASTContext();
 
-    const Expr *XRC = FuncX->getTrailingRequiresClause();
-    const Expr *YRC = FuncY->getTrailingRequiresClause();
+    // The trailing require clause of instantiated function may change during
+    // the semantic analysis. Trying to get the primary template function (if
+    // exists) to compare the primary trailing require clause.
+    auto TryToGetPrimaryTemplatedFunction =
+        [](const FunctionDecl *FD) -> const FunctionDecl * {
+      switch (FD->getTemplatedKind()) {
+      case FunctionDecl::TK_FunctionTemplate:
+        return FD->getDescribedFunctionTemplate()->getTemplatedDecl();
+      case FunctionDecl::TK_MemberSpecialization:
+        return FD->getInstantiatedFromMemberFunction();
+      case FunctionDecl::TK_FunctionTemplateSpecialization:
+        return FD->getPrimaryTemplate()->getTemplatedDecl();
+      default:
+        return FD;
+      }
+    };
+    const FunctionDecl *PrimaryX = TryToGetPrimaryTemplatedFunction(FuncX);
+    const FunctionDecl *PrimaryY = TryToGetPrimaryTemplatedFunction(FuncY);
+
+    const Expr *XRC = PrimaryX->getTrailingRequiresClause();
+    const Expr *YRC = PrimaryY->getTrailingRequiresClause();
     if (!XRC != !YRC)
       return false;
     if (XRC) {
