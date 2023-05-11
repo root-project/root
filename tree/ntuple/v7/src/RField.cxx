@@ -2348,7 +2348,8 @@ const ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations &
 ROOT::Experimental::RNullableField::GetColumnRepresentations() const
 {
    static RColumnRepresentations representations(
-      {{EColumnType::kSplitIndex32}, {EColumnType::kIndex32}, {EColumnType::kBit}}, {});
+      {{EColumnType::kSplitIndex64}, {EColumnType::kIndex64}, {EColumnType::kSplitIndex32}, {EColumnType::kIndex32},
+       {EColumnType::kBit}}, {});
    return representations;
 }
 
