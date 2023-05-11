@@ -22,7 +22,6 @@ The structure can be Refit() to occupy a single contiguous array.
 */
 
 ClassImp(TEveChunkManager);
-ClassImp(TEveChunkManager::iterator);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Release all memory chunks.

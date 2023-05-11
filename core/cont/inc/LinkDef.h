@@ -56,9 +56,6 @@
 #pragma link C++ class TVirtualCollectionProxy-;
 
 #pragma link C++ class std::vector<Int_t>;
-#pragma link C++ class std::vector<Int_t>::iterator;
-#pragma link C++ class std::vector<Int_t>::const_iterator;
-#pragma link C++ class std::vector<Int_t>::reverse_iterator;
 
 #pragma link C++ nestedclass;
 #pragma link C++ nestedtypedef;

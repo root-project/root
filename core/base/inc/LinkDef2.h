@@ -12,8 +12,6 @@
 
 #ifdef __CLING__
 #include <string>
-#pragma link C++ class string::iterator;
-#pragma link C++ class string::const_iterator;
 #else
 #include "dll_stl/str.h"
 #endif
@@ -24,15 +22,9 @@
 #pragma create TClass string;
 #pragma link C++ class std::vector<string>;
 #pragma link C++ operator std::vector<string>;
-#pragma link C++ class std::vector<string>::iterator;
-#pragma link C++ class std::vector<string>::const_iterator;
-#pragma link C++ class std::vector<string>::reverse_iterator;
 
 #pragma link C++ class std::vector<TString>;
 #pragma link C++ operators std::vector<TString>;
-#pragma link C++ class std::vector<TString>::iterator;
-#pragma link C++ class std::vector<TString>::const_iterator;
-#pragma link C++ class std::vector<TString>::reverse_iterator;
 
 #include <vector>
 

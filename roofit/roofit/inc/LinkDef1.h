@@ -55,7 +55,6 @@
 #pragma link C++ class RooStepFunction+ ;
 #pragma link C++ class RooMultiBinomial+ ;
 /* #pragma link C++ class std::vector< TVector2 >; */
-/* #pragma link C++ class std::vector< TVector2 >::iterator ; */
 /* #pragma link C++ class RooPolyMorph2D+ ; */
 //
 #pragma link C++ class RooUniform+ ;

@@ -105,7 +105,6 @@
 
 // TEveChunkManager
 #pragma link C++ class TEveChunkManager+;
-#pragma link C++ class TEveChunkManager::iterator-;
 
 // TEveEventManager
 #pragma link C++ class TEveEventManager+;
@@ -123,15 +122,11 @@
 #pragma link C++ class TEveElementEditor+;
 
 #pragma link C++ class std::list<TEveElement*>;
-#pragma link C++ class std::list<TEveElement*>::iterator;
-#pragma link C++ class std::list<TEveElement*>::const_iterator;
 #pragma link C++ typedef TEveElement::List_t;
 #pragma link C++ typedef TEveElement::List_i;
 #pragma link C++ typedef TEveElement::List_ci;
 
 #pragma link C++ class std::set<TEveElement*>;
-#pragma link C++ class std::set<TEveElement*>::iterator;
-#pragma link C++ class std::set<TEveElement*>::const_iterator;
 #pragma link C++ typedef TEveElement::Set_t;
 #pragma link C++ typedef TEveElement::Set_i;
 #pragma link C++ typedef TEveElement::Set_ci;
@@ -192,8 +187,6 @@
 #pragma link C++ class TEveProjection+;
 #pragma link C++ class TEveProjection::PreScaleEntry_t+;
 #pragma link C++ class std::vector<TEveProjection::PreScaleEntry_t>;
-#pragma link C++ class std::vector<TEveProjection::PreScaleEntry_t>::iterator;
-#pragma link C++ operators std::vector<TEveProjection::PreScaleEntry_t>::iterator;
 #pragma link C++ typedef TEveProjection::vPreScale_t;
 #pragma link C++ typedef TEveProjection::vPreScale_i;
 #pragma link C++ class TEveRhoZProjection+;

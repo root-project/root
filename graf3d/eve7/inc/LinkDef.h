@@ -242,7 +242,6 @@
 
 // REveChunkManager
 #pragma link C++ class ROOT::Experimental::REveChunkManager+;
-#pragma link C++ class ROOT::Experimental::REveChunkManager::iterator;
 
 // Tables
 #pragma link C++ class ROOT::Experimental::REveTableViewInfo;
