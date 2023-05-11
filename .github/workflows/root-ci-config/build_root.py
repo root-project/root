@@ -249,7 +249,7 @@ def run_ctest(shell_log: str, extra_ctest_flags: str) -> str:
     """, shell_log)
 
     if result != 0:
-        print_warning("Some tests failed")
+        die(result, "Some tests failed", shell_log)
 
     return shell_log
 
