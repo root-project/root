@@ -200,7 +200,7 @@ protected:
    /// Called by `ConnectPageSource()` only once connected; derived classes may override this
    /// as appropriate
    virtual void OnConnectPageSource() {}
-   /// When connecting a field to a page source, the field's default column representation is subject
+   /// When connecting a field to a page sink, the field's default column representation is subject
    /// to adjustment according to the write options. E.g., if compression is turned off, encoded columns
    /// are changed to their unencoded counterparts.
    void AutoAdjustColumnTypes(const RNTupleWriteOptions &options);
