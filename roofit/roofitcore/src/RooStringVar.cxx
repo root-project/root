@@ -35,7 +35,7 @@ RooStringVar is a RooAbsArg implementing string values.
 /// Constructor with initial value. The size argument is ignored.
 RooStringVar::RooStringVar(const char *name, const char *title, const char* value, Int_t) :
   RooAbsArg(name, title),
-  _string(value)
+  _string(value), _stringAddr(&_string)
 {
   setValueDirty();
 }
@@ -47,7 +47,7 @@ RooStringVar::RooStringVar(const char *name, const char *title, const char* valu
 
 RooStringVar::RooStringVar(const RooStringVar& other, const char* name) :
   RooAbsArg(other, name),
-  _string(other._string)
+  _string(other._string), _stringAddr(&_string)
 {
   setValueDirty();
 }
@@ -105,7 +105,7 @@ void RooStringVar::attachToTree(TTree& t, Int_t)
   // First determine if branch is taken
   TBranch* branch ;
   if ((branch = t.GetBranch(GetName()))) {
-    t.SetBranchAddress(GetName(), &_string);
+    t.SetBranchAddress(GetName(), &_stringAddr);
   } else {
     t.Branch(GetName(), &_string);
   }
