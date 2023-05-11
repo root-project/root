@@ -342,7 +342,7 @@ void RooCurve::addPoints(const RooAbsFunc &func, double xlo, double xhi,
   for (unsigned int step=0; step < xval.size(); ++step) {
     double xx = xval[step];
     if (step == static_cast<unsigned int>(minPoints-1))
-      xx -= 1e-15;
+      xx -= 1e-9 * dx;
 
     yval[step]= func(&xx);
     if (_showProgress) {
