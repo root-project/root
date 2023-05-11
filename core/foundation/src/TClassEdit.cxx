@@ -1785,7 +1785,7 @@ string TClassEdit::ResolveTypedef(const char *tname, bool /* resolveAll */)
 
 string TClassEdit::InsertStd(const char *tname)
 {
-   static const char* sSTLtypes[] = {
+   static const char *sSTLtypes[] = {
       "allocator",
       "auto_ptr",
       "bad_alloc",
@@ -1819,6 +1819,7 @@ string TClassEdit::InsertStd(const char *tname)
       "ctype_byname",
       "ctype",
       "deque",
+      "discard_block_engine",
       "divides",
       "domain_error",
       "equal_to",
@@ -1853,6 +1854,7 @@ string TClassEdit::InsertStd(const char *tname)
       "mask_array",
       "mem_fun",
       "mem_fun_ref",
+      "mersenne_twister_engine",
       "messages",
       "messages_byname",
       "minus",
@@ -1893,6 +1895,7 @@ string TClassEdit::InsertStd(const char *tname)
       "string",
       "strstream",
       "strstreambuf",
+      "subtract_with_carry_engine",
       "time_get_byname",
       "time_get",
       "time_put_byname",
