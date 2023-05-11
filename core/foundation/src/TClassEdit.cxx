@@ -1787,7 +1787,7 @@ string TClassEdit::InsertStd(const char *tname)
 {
    static const char *sSTLtypes[] = {
       "allocator",
-      "auto_ptr",
+      "any",
       "bad_alloc",
       "bad_cast",
       "bad_exception",
@@ -1818,6 +1818,7 @@ string TClassEdit::InsertStd(const char *tname)
       "complex",
       "ctype_byname",
       "ctype",
+      "default_delete",
       "deque",
       "discard_block_engine",
       "divides",
@@ -1889,6 +1890,7 @@ string TClassEdit::InsertStd(const char *tname)
       "reverse_iterator",
       "runtime_error",
       "set",
+      "shared_ptr",
       "slice_array",
       "slice",
       "stack",
@@ -1896,13 +1898,15 @@ string TClassEdit::InsertStd(const char *tname)
       "strstream",
       "strstreambuf",
       "subtract_with_carry_engine",
+      "thread",
       "time_get_byname",
       "time_get",
       "time_put_byname",
       "time_put",
+      "tuple",
       "unary_function",
       "unary_negate",
-      "unique_pointer",
+      "unique_ptr",
       "underflow_error",
       "unordered_map",
       "unordered_multimap",
@@ -1910,6 +1914,7 @@ string TClassEdit::InsertStd(const char *tname)
       "unordered_set",
       "valarray",
       "vector",
+      "weak_ptr",
       "wstring"
    };
 
