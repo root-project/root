@@ -811,8 +811,10 @@ void THttpServer::ReplaceJSROOTLinks(std::shared_ptr<THttpCallArg> &arg)
       }
    }
 
-   if (!repl.empty())
+   if (!repl.empty()) {
       arg->ReplaceAllinContent("=\"jsrootsys/", repl);
+      arg->ReplaceAllinContent("from './jsrootsys/", TString::Format("from '%s", repl.substr(2).c_str()).Data());
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
