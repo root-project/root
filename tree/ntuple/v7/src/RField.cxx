@@ -153,6 +153,9 @@ std::pair<std::string, std::string> GetNormalizedType(const std::string &typeNam
    // The following types are asummed to be canonical names; thus, do not perform `typedef` resolution on those
    if (normalizedType == "ROOT::Experimental::ClusterSize_t")
       return std::make_pair(normalizedType, "");
+   // We want the template parameter to stay in "std::uint32_t" / "std::uint64_t" form
+   if (normalizedType.substr(0, 39) == "ROOT::Experimental::RNTupleCardinality<")
+      return std::make_pair(normalizedType, "");
 
    std::string resolvedType = TClassEdit::ResolveTypedef(normalizedType.c_str());
    if (resolvedType == normalizedType)
@@ -255,8 +258,6 @@ ROOT::Experimental::Detail::RFieldBase::Create(const std::string &fieldName, con
 
    if (normalizedType == "ROOT::Experimental::ClusterSize_t") {
       result = std::make_unique<RField<ClusterSize_t>>(fieldName);
-   } else if (normalizedType == "ROOT::Experimental::RNTupleCardinality") {
-      result = std::make_unique<RField<RNTupleCardinality>>(fieldName);
    } else if (normalizedType == "bool") {
       result = std::make_unique<RField<bool>>(fieldName);
    } else if (normalizedType == "char") {
@@ -337,6 +338,17 @@ ROOT::Experimental::Detail::RFieldBase::Create(const std::string &fieldName, con
    } else if (normalizedType == ":Collection:") {
       // TODO: create an RCollectionField?
       result = std::make_unique<RField<ClusterSize_t>>(fieldName);
+   } else if (normalizedType.substr(0, 39) == "ROOT::Experimental::RNTupleCardinality<") {
+      auto innerTypes = TokenizeTypeList(normalizedType.substr(39, normalizedType.length() - 40));
+      if (innerTypes.size() != 1)
+         return R__FAIL(std::string("Field ") + fieldName + " has invalid cardinality template: " + normalizedType);
+      if (innerTypes[0] == "std::uint32_t") {
+         result = std::make_unique<RField<RNTupleCardinality<std::uint32_t>>>(fieldName);
+      } else if (innerTypes[0] == "std::uint64_t") {
+         result = std::make_unique<RField<RNTupleCardinality<std::uint64_t>>>(fieldName);
+      } else {
+         return R__FAIL(std::string("Field ") + fieldName + " has invalid cardinality template: " + normalizedType);
+      }
    }
 
    if (!result) {
@@ -673,25 +685,35 @@ void ROOT::Experimental::RField<ROOT::Experimental::ClusterSize_t>::AcceptVisito
 //------------------------------------------------------------------------------
 
 const ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations &
-ROOT::Experimental::RField<ROOT::Experimental::RNTupleCardinality>::GetColumnRepresentations() const
+ROOT::Experimental::RCardinalityField::GetColumnRepresentations() const
 {
    static RColumnRepresentations representations(
-      {{EColumnType::kSplitIndex32}, {EColumnType::kIndex32}, {EColumnType::kSplitIndex64}, {EColumnType::kIndex64}},
+      {{EColumnType::kSplitIndex64}, {EColumnType::kIndex64}, {EColumnType::kSplitIndex32}, {EColumnType::kIndex32}},
       {});
    return representations;
 }
 
-void ROOT::Experimental::RField<ROOT::Experimental::RNTupleCardinality>::GenerateColumnsImpl(
-   const RNTupleDescriptor &desc)
+void ROOT::Experimental::RCardinalityField::GenerateColumnsImpl(const RNTupleDescriptor &desc)
 {
    auto onDiskTypes = EnsureCompatibleColumnTypes(desc);
    fColumns.emplace_back(Detail::RColumn::Create<ClusterSize_t>(RColumnModel(onDiskTypes[0]), 0));
 }
 
-void ROOT::Experimental::RField<ROOT::Experimental::RNTupleCardinality>::AcceptVisitor(
-   Detail::RFieldVisitor &visitor) const
+void ROOT::Experimental::RCardinalityField::AcceptVisitor(Detail::RFieldVisitor &visitor) const
 {
    visitor.VisitCardinalityField(*this);
+}
+
+const ROOT::Experimental::RField<ROOT::Experimental::RNTupleCardinality<std::uint32_t>> *
+ROOT::Experimental::RCardinalityField::Is32Bit() const
+{
+   return dynamic_cast<const RField<RNTupleCardinality<std::uint32_t>> *>(this);
+}
+
+const ROOT::Experimental::RField<ROOT::Experimental::RNTupleCardinality<std::uint64_t>> *
+ROOT::Experimental::RCardinalityField::Is64Bit() const
+{
+   return dynamic_cast<const RField<RNTupleCardinality<std::uint64_t>> *>(this);
 }
 
 //------------------------------------------------------------------------------

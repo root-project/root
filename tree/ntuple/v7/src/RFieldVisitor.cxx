@@ -254,11 +254,19 @@ void ROOT::Experimental::RPrintValueVisitor::VisitUInt64Field(const RField<std::
    fOutput << *fValue.Get<std::uint64_t>();
 }
 
-void ROOT::Experimental::RPrintValueVisitor::VisitCardinalityField(const RField<RNTupleCardinality> &field)
+void ROOT::Experimental::RPrintValueVisitor::VisitCardinalityField(const RCardinalityField &field)
 {
    PrintIndent();
    PrintName(field);
-   fOutput << static_cast<std::size_t>(*fValue.Get<RNTupleCardinality>());
+   if (field.Is32Bit()) {
+      fOutput << *fValue.Get<std::uint32_t>();
+      return;
+   }
+   if (field.Is64Bit()) {
+      fOutput << *fValue.Get<std::uint64_t>();
+      return;
+   }
+   fOutput << "\"unsupported cardinality size type\"";
 }
 
 void ROOT::Experimental::RPrintValueVisitor::VisitBitsetField(const RBitsetField &field)

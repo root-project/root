@@ -1135,12 +1135,13 @@ public:
 /// An artificial field that transforms an RNTuple column that contains the offset of collections into
 /// collection sizes. It is only used for reading, e.g. as projected field or as an artificial field that provides the
 /// "number of" RDF columns for collections (e.g. `R_rdf_sizeof_jets` for a collection named `jets`).
-template <>
-class RField<RNTupleCardinality> : public Detail::RFieldBase {
+/// It is used in the templated RField<RNTupleCardinality<SizeT>> form, which represents the collection sizes either
+/// as 32bit unsigned int (std::uint32_t) or as 64bit unsigned int (std::uint64_t).
+class RCardinalityField : public Detail::RFieldBase {
 protected:
-   std::unique_ptr<ROOT::Experimental::Detail::RFieldBase> CloneImpl(std::string_view newName) const final
+   RCardinalityField(std::string_view fieldName, std::string_view typeName)
+      : Detail::RFieldBase(fieldName, typeName, ENTupleStructure::kLeaf, false /* isSimple */)
    {
-      return std::make_unique<RField<RNTupleCardinality>>(newName);
    }
 
    const RColumnRepresentations &GetColumnRepresentations() const final;
@@ -1149,11 +1150,27 @@ protected:
    void GenerateColumnsImpl(const RNTupleDescriptor &) final;
 
 public:
-   static std::string TypeName() { return "ROOT::Experimental::RNTupleCardinality"; }
-   explicit RField(std::string_view name)
-      : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, false /* isSimple */)
+   RCardinalityField(RCardinalityField &&other) = default;
+   RCardinalityField &operator=(RCardinalityField &&other) = default;
+   ~RCardinalityField() = default;
+
+   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
+
+   const RField<RNTupleCardinality<std::uint32_t>> *Is32Bit() const;
+   const RField<RNTupleCardinality<std::uint64_t>> *Is64Bit() const;
+};
+
+template <typename SizeT>
+class RField<RNTupleCardinality<SizeT>> : public RCardinalityField {
+protected:
+   std::unique_ptr<ROOT::Experimental::Detail::RFieldBase> CloneImpl(std::string_view newName) const final
    {
+      return std::make_unique<RField<RNTupleCardinality<SizeT>>>(newName);
    }
+
+public:
+   static std::string TypeName() { return "ROOT::Experimental::RNTupleCardinality<" + RField<SizeT>::TypeName() + ">"; }
+   explicit RField(std::string_view name) : RCardinalityField(name, TypeName()) {}
    RField(RField &&other) = default;
    RField &operator=(RField &&other) = default;
    ~RField() = default;
@@ -1162,15 +1179,15 @@ public:
    template <typename... ArgsT>
    ROOT::Experimental::Detail::RFieldValue GenerateValue(void *where, ArgsT &&...args)
    {
-      return Detail::RFieldValue(this, static_cast<RNTupleCardinality *>(where), std::forward<ArgsT>(args)...);
+      return Detail::RFieldValue(this, static_cast<RNTupleCardinality<SizeT> *>(where), std::forward<ArgsT>(args)...);
    }
    ROOT::Experimental::Detail::RFieldValue GenerateValue(void *where) final { return GenerateValue(where, 0); }
    Detail::RFieldValue CaptureValue(void *where) override
    {
       return Detail::RFieldValue(true /* captureFlag */, this, where);
    }
-   size_t GetValueSize() const final { return sizeof(RNTupleCardinality); }
-   size_t GetAlignment() const final { return alignof(RNTupleCardinality); }
+   size_t GetValueSize() const final { return sizeof(RNTupleCardinality<SizeT>); }
+   size_t GetAlignment() const final { return alignof(RNTupleCardinality<SizeT>); }
 
    /// Get the number of elements of the collection identified by globalIndex
    void ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue *value) final
@@ -1178,7 +1195,7 @@ public:
       RClusterIndex collectionStart;
       ClusterSize_t size;
       fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, &size);
-      *value->Get<RNTupleCardinality>() = size;
+      *value->Get<RNTupleCardinality<SizeT>>() = size;
    }
 
    /// Get the number of elements of the collection identified by clusterIndex
@@ -1187,10 +1204,8 @@ public:
       RClusterIndex collectionStart;
       ClusterSize_t size;
       fPrincipalColumn->GetCollectionInfo(clusterIndex, &collectionStart, &size);
-      *value->Get<RNTupleCardinality>() = size;
+      *value->Get<RNTupleCardinality<SizeT>>() = size;
    }
-
-   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
 };
 
 template <>

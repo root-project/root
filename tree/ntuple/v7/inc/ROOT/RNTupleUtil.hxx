@@ -63,9 +63,14 @@ struct RClusterSize {
 using ClusterSize_t = RClusterSize;
 constexpr ClusterSize_t kInvalidClusterIndex(std::uint64_t(-1));
 
-/// Helper type to present an offset column as array of collection sizes. See RField<RNTupleCardinality> for details.
+/// Helper types to present an offset column as array of collection sizes.
+/// See RField<RNTupleCardinality<SizeT>> for details.
+template <typename SizeT>
 struct RNTupleCardinality {
-   using ValueType = std::size_t;
+   static_assert(std::is_same_v<SizeT, std::uint32_t> || std::is_same_v<SizeT, std::uint64_t>,
+                 "RNTupleCardinality is only support with std::uint32_t or std::uint64_t template parameters");
+
+   using ValueType = SizeT;
 
    RNTupleCardinality() : fValue(0) {}
    explicit constexpr RNTupleCardinality(ValueType value) : fValue(value) {}
