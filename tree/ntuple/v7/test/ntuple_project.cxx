@@ -19,7 +19,7 @@ TEST(RNTupleProjection, Basics)
       else
          return "vec._0";
    });
-   auto f3 = RFieldBase::Create("vecSize", "ROOT::Experimental::RNTupleCardinality").Unwrap();
+   auto f3 = RFieldBase::Create("vecSize", "ROOT::Experimental::RNTupleCardinality<std::uint64_t>").Unwrap();
    model->AddProjectedField(std::move(f3), [](const std::string &) { return "vec"; });
 
    {
@@ -30,7 +30,7 @@ TEST(RNTupleProjection, Basics)
    auto reader = RNTupleReader::Open("A", fileGuard.GetPath());
    auto viewMissingE = reader->GetView<float>("missingE");
    auto viewAliasVec = reader->GetView<std::vector<float>>("aliasVec");
-   auto viewVecSize = reader->GetView<ROOT::Experimental::RNTupleCardinality>("vecSize");
+   auto viewVecSize = reader->GetView<ROOT::Experimental::RNTupleCardinality<std::uint64_t>>("vecSize");
    EXPECT_FLOAT_EQ(42.0, viewMissingE(0));
    EXPECT_EQ(2U, viewAliasVec(0).size());
    EXPECT_FLOAT_EQ(1.0, viewAliasVec(0).at(0));

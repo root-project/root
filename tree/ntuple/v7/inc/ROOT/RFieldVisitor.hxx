@@ -52,7 +52,7 @@ public:
    virtual void VisitCollectionClassField(const RCollectionClassField &field) { VisitField(field); }
    virtual void VisitRecordField(const RRecordField &field) { VisitField(field); }
    virtual void VisitClusterSizeField(const RField<ClusterSize_t> &field) { VisitField(field); }
-   virtual void VisitCardinalityField(const RField<RNTupleCardinality> &field) { VisitField(field); }
+   virtual void VisitCardinalityField(const RCardinalityField &field) { VisitField(field); }
    virtual void VisitDoubleField(const RField<double> &field) { VisitField(field); }
    virtual void VisitFloatField(const RField<float> &field) { VisitField(field); }
    virtual void VisitCharField(const RField<char> &field) { VisitField(field); }
@@ -209,8 +209,8 @@ public:
    void VisitUInt16Field(const RField<std::uint16_t> &field) final;
    void VisitUInt32Field(const RField<std::uint32_t> &field) final;
    void VisitUInt64Field(const RField<std::uint64_t> &field) final;
-   void VisitCardinalityField(const RField<RNTupleCardinality> &field) final;
 
+   void VisitCardinalityField(const RCardinalityField &field) final;
    void VisitArrayField(const RArrayField &field) final;
    void VisitClassField(const RClassField &field) final;
    void VisitRecordField(const RRecordField &field) final;
