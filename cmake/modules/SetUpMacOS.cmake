@@ -110,3 +110,18 @@ if(CMAKE_GENERATOR MATCHES Xcode)
     set( CMAKE_ARCHIVE_OUTPUT_DIRECTORY_${_conf} ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY} )
   endforeach()
 endif()
+
+#---Avoid using a x86_64 Ninja executable with on a arm64 MacOS
+#---This issue leads to the external being build for x86_64 instead of arm64
+execute_process(COMMAND lipo -archs ${CMAKE_MAKE_PROGRAM} OUTPUT_VARIABLE _NINJA_ARCH OUTPUT_STRIP_TRAILING_WHITESPACE)
+if(CMAKE_GENERATOR MATCHES Ninja)
+
+  set( _NINJA_ARCH_LIST ${_NINJA_ARCH} )
+  separate_arguments(_NINJA_ARCH_LIST) # This replace space with semi-colons
+  if (NOT "${CMAKE_HOST_SYSTEM_PROCESSOR}" IN_LIST _NINJA_ARCH_LIST)
+    message(FATAL_ERROR
+            " ${CMAKE_MAKE_PROGRAM} does not support ${CMAKE_HOST_SYSTEM_PROCESSOR}.\n"
+            " It only supports ${_NINJA_ARCH_LIST}.\n"
+            " Downloading the latest version of Ninja might solve the problem.\n")
+  endif()
+endif()
