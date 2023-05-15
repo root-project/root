@@ -17,6 +17,7 @@
 #include <RooBinWidthFunction.h>
 #include <RooCategory.h>
 #include <RooDataHist.h>
+#include <RooExpPoly.h>
 #include <RooFit/Detail/JSONInterface.h>
 #include <RooFitHS3/JSONIO.h>
 #include <RooFormulaVar.h>
@@ -208,6 +209,37 @@ public:
       }
 
       tool->wsEmplace<RooPolynomial>(name, *x, coefs, lowestOrder);
+      return true;
+   }
+};
+
+class RooExpPolyFactory : public RooFit::JSONIO::Importer {
+public:
+   bool importPdf(RooJSONFactoryWSTool *tool, const JSONNode &p) const override
+   {
+      std::string name(RooJSONFactoryWSTool::name(p));
+      if (!p.has_child("coefficients")) {
+         RooJSONFactoryWSTool::error("no coefficients given in '" + name + "'");
+      }
+      RooAbsReal *x = tool->requestArg<RooAbsReal>(p, "x");
+      RooArgList coefs;
+      int order = 0;
+      int lowestOrder = 0;
+      for (const auto &coef : p["coefficients"].children()) {
+         // As long as the coefficients match the default coefficients in
+         // RooFit, we don't have to instantiate RooFit objects but can
+         // increase the lowestOrder flag.
+         if (order == 0 && coef.val() == "1.0") {
+            ++lowestOrder;
+         } else if (coefs.empty() && coef.val() == "0.0") {
+            ++lowestOrder;
+         } else {
+            coefs.add(*tool->request<RooAbsReal>(coef.val(), name));
+         }
+         ++order;
+      }
+
+      tool->wsEmplace<RooExpPoly>(name, *x, coefs, lowestOrder);
       return true;
    }
 };
@@ -406,6 +438,28 @@ public:
    }
 };
 
+class RooExpPolyStreamer : public RooFit::JSONIO::Exporter {
+public:
+   std::string const &key() const override;
+   bool exportObject(RooJSONFactoryWSTool *, const RooAbsArg *func, JSONNode &elem) const override
+   {
+      auto *pdf = static_cast<const RooExpPoly *>(func);
+      elem["type"] << key();
+      elem["x"] << pdf->x().GetName();
+      auto &coefs = elem["coefficients"];
+      // Write out the default coefficient that RooFit uses for the lower
+      // orders before the order of the first coefficient. Like this, the
+      // output is more self-documenting.
+      for (int i = 0; i < pdf->lowestOrder(); ++i) {
+         coefs.append_child() << (i == 0 ? "1.0" : "0.0");
+      }
+      for (const auto &coef : pdf->coefList()) {
+         coefs.append_child() << coef->GetName();
+      }
+      return true;
+   }
+};
+
 class RooMultiVarGaussianStreamer : public RooFit::JSONIO::Exporter {
 public:
    std::string const &key() const override;
@@ -458,6 +512,7 @@ DEFINE_EXPORTER_KEY(RooHistFuncStreamer, "histogram");
 DEFINE_EXPORTER_KEY(RooHistPdfStreamer, "histogram_dist");
 DEFINE_EXPORTER_KEY(RooBinSamplingPdfStreamer, "binsampling");
 DEFINE_EXPORTER_KEY(RooBinWidthFunctionStreamer, "binwidth");
+DEFINE_EXPORTER_KEY(RooExpPolyStreamer, "exp_poly_dist");
 DEFINE_EXPORTER_KEY(RooPolynomialStreamer, "polynomial_dist");
 DEFINE_EXPORTER_KEY(RooMultiVarGaussianStreamer, "multinormal_dist");
 DEFINE_EXPORTER_KEY(RooTFnBindingStreamer, "generic_function");
@@ -478,6 +533,7 @@ STATIC_EXECUTE([]() {
    registerImporter<RooBinWidthFunctionFactory>("binwidth", false);
    registerImporter<RooRealSumPdfFactory>("weighted_sum_dist", false);
    registerImporter<RooRealSumFuncFactory>("weighted_sum", false);
+   registerImporter<RooExpPolyFactory>("exp_poly_dist", false);
    registerImporter<RooPolynomialFactory>("polynomial_dist", false);
    registerImporter<RooMultiVarGaussianFactory>("multinormal_dist", false);
 
@@ -489,6 +545,7 @@ STATIC_EXECUTE([]() {
    registerExporter<RooFormulaArgStreamer<RooFormulaVar>>(RooFormulaVar::Class(), false);
    registerExporter<RooRealSumPdfStreamer>(RooRealSumPdf::Class(), false);
    registerExporter<RooRealSumFuncStreamer>(RooRealSumFunc::Class(), false);
+   registerExporter<RooExpPolyStreamer>(RooExpPoly::Class(), false);
    registerExporter<RooPolynomialStreamer>(RooPolynomial::Class(), false);
    registerExporter<RooMultiVarGaussianStreamer>(RooMultiVarGaussian::Class(), false);
    registerExporter<RooTFnBindingStreamer>(RooTFnBinding::Class(), false);

@@ -55,13 +55,21 @@
             "set": "summands"
         }
     },
+    "RooPower": {
+        "type": "power_dist",
+        "proxies": {
+            "coefList": "coefficients",
+            "expList": "exponents",
+            "x": "x"
+        }
+    },
     "RooBernstein": {
         "type": "bernstein_poly_dist",
         "proxies": {
             "coefList": "coefficients",
-            "x": "x"	    
+            "x": "x"
         }
-    },        
+    },
     "RooArgusBG": {
         "type": "ARGUS_dist",
         "proxies": {
@@ -87,7 +95,7 @@
             "x": "x",
             "mean": "mean",
             "sigmaL": "sigmaL",
-            "sigmaR": "sigmaR"	    
+            "sigmaR": "sigmaR"
         }
     }
 }

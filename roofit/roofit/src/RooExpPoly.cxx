@@ -62,7 +62,9 @@ ClassImp(RooExpPoly);
 /// \f]
 
 RooExpPoly::RooExpPoly(const char *name, const char *title, RooAbsReal &x, const RooArgList &coefList, int lowestOrder)
-   : RooAbsPdf(name, title), _x("x", "Dependent", this, x), _coefList("coefList", "List of coefficients", this),
+   : RooAbsPdf(name, title),
+     _x("x", "Dependent", this, x),
+     _coefList("coefList", "List of coefficients", this),
      _lowestOrder(lowestOrder)
 {
    // Check lowest order
@@ -83,18 +85,12 @@ RooExpPoly::RooExpPoly(const char *name, const char *title, RooAbsReal &x, const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-RooExpPoly::RooExpPoly(const char *name, const char *title, RooAbsReal &x)
-   : RooAbsPdf(name, title), _x("x", "Dependent", this, x), _coefList("coefList", "List of coefficients", this),
-     _lowestOrder(1)
-{
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
 
 RooExpPoly::RooExpPoly(const RooExpPoly &other, const char *name)
-   : RooAbsPdf(other, name), _x("x", this, other._x), _coefList("coefList", this, other._coefList),
+   : RooAbsPdf(other, name),
+     _x("x", this, other._x),
+     _coefList("coefList", this, other._coefList),
      _lowestOrder(other._lowestOrder)
 {
 }
