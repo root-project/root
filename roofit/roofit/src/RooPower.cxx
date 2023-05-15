@@ -53,7 +53,9 @@ ClassImp(RooPower);
 
 RooPower::RooPower(const char *name, const char *title, RooAbsReal &x, const RooArgList &coefList,
                    const RooArgList &expList)
-   : RooAbsPdf(name, title), _x("x", "Dependent", this, x), _coefList("coefList", "List of coefficients", this),
+   : RooAbsPdf(name, title),
+     _x("x", "Dependent", this, x),
+     _coefList("coefList", "List of coefficients", this),
      _expList("expList", "List of exponents", this)
 {
    if (coefList.size() != expList.size()) {
@@ -80,18 +82,12 @@ RooPower::RooPower(const char *name, const char *title, RooAbsReal &x, const Roo
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-RooPower::RooPower(const char *name, const char *title, RooAbsReal &x)
-   : RooAbsPdf(name, title), _x("x", "Dependent", this, x), _coefList("coefList", "List of coefficients", this),
-     _expList("expList", "List of exponents", this)
-{
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor
 
 RooPower::RooPower(const RooPower &other, const char *name)
-   : RooAbsPdf(other, name), _x("x", this, other._x), _coefList("coefList", this, other._coefList),
+   : RooAbsPdf(other, name),
+     _x("x", this, other._x),
+     _coefList("coefList", this, other._coefList),
      _expList("expList", this, other._expList)
 {
 }
