@@ -5365,7 +5365,8 @@ int ROOT::TMetaUtils::AST2SourceTools::FwdDeclIfTmplSpec(const clang::RecordDecl
             }
             defString += argFwdDecl + '\n';
          }
-         defString += "template <> class " + normalizedName + ';';
+         std::string normalizedNameWithStd = TClassEdit::InsertStd(normalizedName.c_str());
+         defString += "template <> class " + normalizedNameWithStd + ';';
          return 0;
       }
    }
