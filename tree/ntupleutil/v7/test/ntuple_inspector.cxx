@@ -31,10 +31,9 @@ TEST(RNTupleInspector, CreateFromPointer)
 
 TEST(RNTupleInspector, CreateFromString)
 {
-   FileRaii fileGuard("test_ntuple_inspector_open_from_string.root");
+   FileRaii fileGuard("test_ntuple_inspector_create_from_string.root");
    {
-      auto model = RNTupleModel::Create();
-      RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
+      RNTupleWriter::Recreate(RNTupleModel::Create(), "ntuple", fileGuard.GetPath());
    }
 
    auto inspector = RNTupleInspector::Create("ntuple", fileGuard.GetPath()).Unwrap();
