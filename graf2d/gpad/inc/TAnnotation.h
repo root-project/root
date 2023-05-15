@@ -25,9 +25,10 @@ public:
    TAnnotation() {}
    TAnnotation(Double_t x, Double_t y, Double_t z, const char *text);
    virtual ~TAnnotation();
-   virtual TAnnotation *DrawText3D(Double_t x, Double_t y, Double_t z, const char *text);
+   virtual TAnnotation *DrawAnnotation(Double_t x, Double_t y, Double_t z, const char *text);
    void ls(Option_t *option="") const override;
    void Paint(Option_t *option="") override;
+   void PaintAnnotation(Double_t x, Double_t y, Double_t z, Double_t angle, Double_t size, const Char_t *text);
    void Print(Option_t *option="") const override;
 
    ClassDefOverride(TAnnotation,1)  //Annotation in 2d or 3D

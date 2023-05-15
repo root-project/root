@@ -55,7 +55,7 @@ End_Macro
 */
 
 ////////////////////////////////////////////////////////////////////////////////
-/// 3-D text  default constructor.
+/// annotation default constructor.
 
 TAnnotation::TAnnotation(Double_t x, Double_t y, Double_t z, const char *text)
 {
@@ -67,7 +67,7 @@ TAnnotation::TAnnotation(Double_t x, Double_t y, Double_t z, const char *text)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// 3-D text default destructor.
+/// annotation default destructor.
 
 
 TAnnotation::~TAnnotation()
@@ -75,7 +75,7 @@ TAnnotation::~TAnnotation()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// List this 3-D text with its attributes.
+/// List this annotation with its attributes.
 
 void TAnnotation::ls(Option_t *) const
 {
@@ -85,40 +85,48 @@ void TAnnotation::ls(Option_t *) const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Draw this text with new coordinates.
+/// Draw this annotation with new coordinates.
 
-TAnnotation *TAnnotation::DrawText3D(Double_t x, Double_t y, Double_t z, const char *text)
+TAnnotation *TAnnotation::DrawAnnotation(Double_t x, Double_t y, Double_t z, const char *text)
 {
-   TAnnotation *newtext = new TAnnotation(x, y, z, text);
-   TAttText::Copy(*newtext);
-   newtext->SetBit(kCanDelete);
-   if (TestBit(kTextNDC)) newtext->SetNDC();
-   newtext->AppendPad();
-   return newtext;
+   TAnnotation *newannotation = new TAnnotation(x, y, z, text);
+   TAttText::Copy(*newannotation);
+   newannotation->SetBit(kCanDelete);
+   if (TestBit(kTextNDC)) newannotation->SetNDC();
+   newannotation->AppendPad();
+   return newannotation;
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+/// Paint this annotation with new coordinates.
+
+void TAnnotation::PaintAnnotation(Double_t x, Double_t y, Double_t z, Double_t angle, Double_t size, const Char_t *text)
+{
+   TView *view = gPad->GetView();
+   if (!view) {
+      PaintLatex(x, y, angle, size, text);
+   } else {
+      Double_t xyz[3] = { x, y, z }, xpad[3];
+      view->WCtoNDC(xyz, &xpad[0]);
+      PaintLatex(xpad[0], xpad[1], angle, size, text);
+   }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Paint a TAnnotation.
 
 void TAnnotation::Paint(Option_t * /* option */ )
 {
-   TView *view = gPad->GetView();
-   if (!view) {
-      PaintLatex(fX,fY,GetTextAngle(),GetTextSize(),GetTitle());
-   } else {
-      Double_t xyz[3] = { fX, fY, fZ }, xpad[3];
-      view->WCtoNDC(xyz, &xpad[0]);
-      PaintLatex(xpad[0],xpad[1],GetTextAngle(),GetTextSize(),GetTitle());
-   }
+   PaintAnnotation(fX, fY, fZ, GetTextAngle(),GetTextSize(),GetTitle());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Dump this text with its attributes.
+/// Dump this annotation with its attributes.
 
 void TAnnotation::Print(Option_t *) const
 {
-   printf("Text  X=%f Y=%f Z = %f Text=%s Font=%d Size=%f",fX,fY,fZ,GetTitle(),GetTextFont(),GetTextSize());
+   printf("Annotation  X=%f Y=%f Z = %f Text=%s Font=%d Size=%f",fX,fY,fZ,GetTitle(),GetTextFont(),GetTextSize());
    if (GetTextColor() != 1 ) printf(" Color=%d",GetTextColor());
    if (GetTextAlign() != 10) printf(" Align=%d",GetTextAlign());
    if (GetTextAngle() != 0 ) printf(" Angle=%f",GetTextAngle());
