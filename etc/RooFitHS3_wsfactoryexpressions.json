@@ -71,6 +71,14 @@
             "coefficients"
         ]
     },
+    "power_dist": {
+        "class": "RooPower",
+        "arguments": [
+            "x",
+            "coefficients",
+            "exponents"
+        ]
+    },
     "crystalball_dist": {
         "class": "RooCBShape",
         "arguments": [
