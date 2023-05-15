@@ -20,6 +20,8 @@
 #include <ROOT/RNTuple.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
 
+#include <TFile.h>
+
 #include <cstdlib>
 #include <memory>
 
