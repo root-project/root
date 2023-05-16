@@ -67,6 +67,13 @@ Therefore, the behavior of `TMath::AreEqualAbs()` was changed to return always `
 
 ## RooFit Libraries
 
+### Changes in RooFormulaVar and RooGenericPdf
+
+The TFormula-based RooFit classes `RooFormulaVar` and `RooGenericPdf` change a bit their behavior to be more consistent:
+
+1. No matter which variables you pass to the constructor, only the variables that the formula depends on are registered as value servers.
+2. Similarly, the `dependents()` method of RooFormulaVar and RooGenericPdf will only return the list of actual value servers.
+
 ### Removal of the RooGenFunction and RooMultiGenFunction classes
 
 The `RooGenFunction` was only a lightweight adaptor that exports a RooAbsReal as a `ROOT::Math::IGenFunction`.

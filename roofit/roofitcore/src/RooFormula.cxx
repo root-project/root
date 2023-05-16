@@ -386,7 +386,9 @@ bool RooFormula::changeDependents(const RooAbsCollection& newDeps, bool mustRepl
   //Change current servers to new servers with the same name given in list
   bool errorStat = false;
 
-  for (const auto arg : _origList) {
+  // We only consider the usedVariables() for replacement, because only these
+  // are registered as servers.
+  for (const auto arg : usedVariables()) {
     RooAbsReal* replace = (RooAbsReal*) arg->findNewServer(newDeps,nameChange) ;
     if (replace) {
       _origList.replace(*arg, *replace);
