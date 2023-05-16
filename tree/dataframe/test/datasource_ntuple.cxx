@@ -124,6 +124,7 @@ TEST_F(RNTupleDSTest, Read)
    ReadTest(fNtplName, fFileName);
 }
 
+#ifdef R__USE_IMT
 struct IMTRAII {
    IMTRAII() { ROOT::EnableImplicitMT(); }
    ~IMTRAII() { ROOT::DisableImplicitMT(); }
@@ -135,3 +136,4 @@ TEST_F(RNTupleDSTest, ReadMT)
 
    ReadTest(fNtplName, fFileName);
 }
+#endif
