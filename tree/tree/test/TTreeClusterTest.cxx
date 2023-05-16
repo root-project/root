@@ -7,7 +7,7 @@
 
 class TTreeClusterTest : public ::testing::Test {
 protected:
-   virtual void SetUp()
+   void SetUp() override
    {
       auto random = new TRandom(836);
       auto file = new TFile("TTreeClusterTest.root", "RECREATE");

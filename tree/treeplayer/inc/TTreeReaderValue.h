@@ -181,7 +181,7 @@ public:
 protected:
    // FIXME: use IsA() instead once we have ClassDefTInline
    /// Get the template argument as a string.
-   virtual const char* GetDerivedTypeName() const {
+   const char* GetDerivedTypeName() const override {
       static const std::string sElementTypeName = GetElementTypeName(typeid(T));
       return sElementTypeName.data();
    }

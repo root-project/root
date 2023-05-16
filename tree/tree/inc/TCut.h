@@ -35,7 +35,7 @@ public:
    TCut(const char *title);
    TCut(const char *name, const char *title);
    TCut(const TCut &cut);
-   virtual ~TCut();
+   ~TCut() override;
 
    // Assignment
    TCut&    operator=(const char *rhs);

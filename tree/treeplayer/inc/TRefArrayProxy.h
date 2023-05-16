@@ -24,12 +24,12 @@ public:
    // The implicit's constructor and destructor have the correct implementation.
 
    // TVirtualRefProxy overload: Clone the reference proxy (virtual constructor)
-   virtual TVirtualRefProxy* Clone() const        { return new TRefArrayProxy(*this);}
+   TVirtualRefProxy* Clone() const override        { return new TRefArrayProxy(*this);}
    // TVirtualRefProxy overload: Flag to indicate if this is a container reference
-   virtual Bool_t HasCounter()  const             { return kTRUE;                    }
+   Bool_t HasCounter()  const override             { return kTRUE;                    }
    // TVirtualRefProxy overload: Access referenced object(-data)
-   virtual void* GetObject(TFormLeafInfoReference* info, void* data, Int_t instance);
+   void* GetObject(TFormLeafInfoReference* info, void* data, Int_t instance) override;
    // TVirtualRefProxy overload: Access to container size (if container reference (ie TRefArray) etc)
-   virtual Int_t  GetCounterValue(TFormLeafInfoReference* info, void *data);
+   Int_t  GetCounterValue(TFormLeafInfoReference* info, void *data) override;
 };
 #endif // ROOT_TRefArrayProxy

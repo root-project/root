@@ -79,29 +79,29 @@ protected:
    BasketInfo &GetBasketInfo(TBranch *b, size_t basketNumber);
    BasketInfo &GetBasketInfo(size_t bi, size_t basketNumber);
 
-   virtual void SetFile(TFile *newfile) {
+   void SetFile(TFile *newfile) override {
       fFile = newfile;
    }
 
 public:
    TTreePerfStats();
    TTreePerfStats(const char *name, TTree *T);
-   virtual ~TTreePerfStats();
-   virtual void     Browse(TBrowser *b);
-   virtual Int_t    DistancetoPrimitive(Int_t px, Int_t py);
-   virtual void     Draw(Option_t *option="");
-   virtual void     ExecuteEvent(Int_t event, Int_t px, Int_t py);
+   ~TTreePerfStats() override;
+   void     Browse(TBrowser *b) override;
+   Int_t    DistancetoPrimitive(Int_t px, Int_t py) override;
+   void     Draw(Option_t *option="") override;
+   void     ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
    virtual void     Finish();
-   virtual Long64_t GetBytesRead() const {return fBytesRead;}
+   Long64_t GetBytesRead() const override {return fBytesRead;}
    virtual Long64_t GetBytesReadExtra() const {return fBytesReadExtra;}
    virtual Double_t GetCpuTime()   const {return fCpuTime;}
    virtual Double_t GetDiskTime()  const {return fDiskTime;}
    TGraphErrors    *GetGraphIO()     {return fGraphIO;}
    TGraphErrors    *GetGraphTime()   {return fGraphTime;}
    const char      *GetHostInfo() const{return fHostInfo.Data();}
-   const char      *GetName()    const{return fName.Data();}
+   const char      *GetName()    const override{return fName.Data();}
    virtual Int_t    GetNleaves() const {return fNleaves;}
-   virtual Long64_t GetNumEvents() const {return 0;}
+   Long64_t GetNumEvents() const override {return 0;}
    TPaveText       *GetPave()      {return fPave;}
    virtual Int_t    GetReadaheadSize() const {return fReadaheadSize;}
    virtual Int_t    GetReadCalls() const {return fReadCalls;}
@@ -109,25 +109,25 @@ public:
    TStopwatch      *GetStopwatch() const {return fWatch;}
    virtual Int_t    GetTreeCacheSize() const {return fTreeCacheSize;}
    virtual Double_t GetUnzipTime() const {return fUnzipTime; }
-   virtual void     Paint(Option_t *chopt="");
-   virtual void     Print(Option_t *option="") const;
+   void     Paint(Option_t *chopt="") override;
+   void     Print(Option_t *option="") const override;
 
-   virtual void     SimpleEvent(EEventType) {}
-   virtual void     PacketEvent(const char *, const char *, const char *,
-                            Long64_t , Double_t ,Double_t , Double_t ,Long64_t ) {}
-   virtual void     FileEvent(const char *, const char *, const char *, const char *, Bool_t) {}
-   virtual void     FileOpenEvent(TFile *, const char *, Double_t) {}
-   virtual void     FileReadEvent(TFile *file, Int_t len, Double_t start);
-   virtual void     UnzipEvent(TObject *tree, Long64_t pos, Double_t start, Int_t complen, Int_t objlen);
-   virtual void     RateEvent(Double_t , Double_t , Long64_t , Long64_t) {}
+   void     SimpleEvent(EEventType) override {}
+   void     PacketEvent(const char *, const char *, const char *,
+                            Long64_t , Double_t ,Double_t , Double_t ,Long64_t ) override {}
+   void     FileEvent(const char *, const char *, const char *, const char *, Bool_t) override {}
+   void     FileOpenEvent(TFile *, const char *, Double_t) override {}
+   void     FileReadEvent(TFile *file, Int_t len, Double_t start) override;
+   void     UnzipEvent(TObject *tree, Long64_t pos, Double_t start, Int_t complen, Int_t objlen) override;
+   void     RateEvent(Double_t , Double_t , Long64_t , Long64_t) override {}
 
-   virtual void     SaveAs(const char *filename="",Option_t *option="") const;
-   virtual void     SavePrimitive(std::ostream &out, Option_t *option = "");
-   virtual void     SetBytesRead(Long64_t nbytes) {fBytesRead = nbytes;}
+   void     SaveAs(const char *filename="",Option_t *option="") const override;
+   void     SavePrimitive(std::ostream &out, Option_t *option = "") override;
+   void     SetBytesRead(Long64_t nbytes) override {fBytesRead = nbytes;}
    virtual void     SetBytesReadExtra(Long64_t nbytes) {fBytesReadExtra = nbytes;}
    virtual void     SetCompress(Double_t cx) {fCompress = cx;}
    virtual void     SetDiskTime(Double_t t) {fDiskTime = t;}
-   virtual void     SetNumEvents(Long64_t) {}
+   void     SetNumEvents(Long64_t) override {}
    virtual void     SetCpuTime(Double_t cptime) {fCpuTime = cptime;}
    virtual void     SetGraphIO(TGraphErrors *gr) {fGraphIO = gr;}
    virtual void     SetGraphTime(TGraphErrors *gr) {fGraphTime = gr;}
@@ -141,16 +141,16 @@ public:
    virtual void     SetTreeCacheSize(Int_t nbytes) {fTreeCacheSize = nbytes;}
    virtual void     SetUnzipTime(Double_t uztime) {fUnzipTime = uztime;}
 
-   virtual void     PrintBasketInfo(Option_t *option = "") const;
-   virtual void     SetLoaded(TBranch *b, size_t basketNumber) { ++GetBasketInfo(b, basketNumber).fLoaded; }
-   virtual void     SetLoaded(size_t bi, size_t basketNumber) { ++GetBasketInfo(bi, basketNumber).fLoaded; }
-   virtual void     SetLoadedMiss(TBranch *b, size_t basketNumber) { ++GetBasketInfo(b, basketNumber).fLoadedMiss; }
-   virtual void     SetLoadedMiss(size_t bi, size_t basketNumber) { ++GetBasketInfo(bi, basketNumber).fLoadedMiss; }
-   virtual void     SetMissed(TBranch *b, size_t basketNumber) { ++GetBasketInfo(b, basketNumber).fMissed; }
-   virtual void     SetMissed(size_t bi, size_t basketNumber) { ++GetBasketInfo(bi, basketNumber).fMissed; }
-   virtual void     SetUsed(TBranch *b, size_t basketNumber) { ++GetBasketInfo(b, basketNumber).fUsed; }
-   virtual void     SetUsed(size_t bi, size_t basketNumber) { ++GetBasketInfo(bi, basketNumber).fUsed; }
-   virtual void     UpdateBranchIndices(TObjArray *branchNames);
+   void     PrintBasketInfo(Option_t *option = "") const override;
+   void     SetLoaded(TBranch *b, size_t basketNumber) override { ++GetBasketInfo(b, basketNumber).fLoaded; }
+   void     SetLoaded(size_t bi, size_t basketNumber) override { ++GetBasketInfo(bi, basketNumber).fLoaded; }
+   void     SetLoadedMiss(TBranch *b, size_t basketNumber) override { ++GetBasketInfo(b, basketNumber).fLoadedMiss; }
+   void     SetLoadedMiss(size_t bi, size_t basketNumber) override { ++GetBasketInfo(bi, basketNumber).fLoadedMiss; }
+   void     SetMissed(TBranch *b, size_t basketNumber) override { ++GetBasketInfo(b, basketNumber).fMissed; }
+   void     SetMissed(size_t bi, size_t basketNumber) override { ++GetBasketInfo(bi, basketNumber).fMissed; }
+   void     SetUsed(TBranch *b, size_t basketNumber) override { ++GetBasketInfo(b, basketNumber).fUsed; }
+   void     SetUsed(size_t bi, size_t basketNumber) override { ++GetBasketInfo(bi, basketNumber).fUsed; }
+   void     UpdateBranchIndices(TObjArray *branchNames) override;
 
    BasketList_t     GetDuplicateBasketCache() const;
 

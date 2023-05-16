@@ -22,7 +22,7 @@ public:
    static constexpr double fDoubleInitial = 3.0;
 
 protected:
-   virtual void SetUp()
+   void SetUp() override
    {
       auto hfile = std::make_unique<TFile>(fFileName.c_str(), "RECREATE", "TTree float and double micro benchmark ROOT file");
       hfile->SetCompressionLevel(0); // No compression at all.

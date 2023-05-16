@@ -310,7 +310,7 @@ public:
 
    TTree();
    TTree(const char* name, const char* title, Int_t splitlevel = 99, TDirectory* dir = gDirectory);
-   virtual ~TTree();
+   ~TTree() override;
 
    TTree(const TTree& tt) = delete;
    TTree& operator=(const TTree& tt) = delete;
@@ -676,7 +676,7 @@ protected:
 public:
    TTreeFriendLeafIter(const TTree* t, Bool_t dir = kIterForward);
    TTreeFriendLeafIter(const TTreeFriendLeafIter &iter);
-   ~TTreeFriendLeafIter() { SafeDelete(fLeafIter); SafeDelete(fTreeIter); }
+   ~TTreeFriendLeafIter() override { SafeDelete(fLeafIter); SafeDelete(fTreeIter); }
    TIterator &operator=(const TIterator &rhs) override;
    TTreeFriendLeafIter &operator=(const TTreeFriendLeafIter &rhs);
 

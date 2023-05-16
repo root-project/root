@@ -37,7 +37,7 @@ protected:
 public:
    TLeafD32();
    TLeafD32(TBranch *parent, const char *name, const char *type);
-   virtual ~TLeafD32();
+   ~TLeafD32() override;
 
    DeserializeType GetDeserializeType() const override { return DeserializeType::kExternal; }
    void            Export(TClonesArray *list, Int_t n) override;

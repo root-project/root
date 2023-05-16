@@ -48,7 +48,7 @@ private:
 public:
    TTreeResult();
    TTreeResult(Int_t nfields);
-   virtual ~TTreeResult();
+   ~TTreeResult() override;
 
    void        Close(Option_t *option="") override;
    Int_t       GetFieldCount() override;

@@ -46,7 +46,7 @@ public:
 
 public:
    TTVRecord();                                 ///< Default constructor
-   ~TTVRecord() {}                              ///< Destructor
+   ~TTVRecord() override {}                              ///< Destructor
 
    void           ExecuteUserCode();
    void           FormFrom(TTreeViewer *tv);
@@ -54,7 +54,7 @@ public:
    const char    *GetX() const {return fX;}
    const char    *GetY() const {return fY;}
    const char    *GetZ() const {return fZ;}
-   virtual const char *GetName() const {return fName;}
+   const char *GetName() const override {return fName;}
    const char    *GetUserCode() const {return fUserCode;}
    Bool_t         HasUserCode() const {return fUserCode.Length() != 0 ? kTRUE : kFALSE;}
    Bool_t         MustExecuteCode() const {return fAutoexec;}
@@ -83,8 +83,8 @@ private:
 
 public:
    TTVSession(TTreeViewer *tv);
-   ~TTVSession();
-   virtual const char *GetName() const      {return fName;}
+   ~TTVSession() override;
+   const char *GetName() const override      {return fName;}
    void           SetName(const char *name) {fName = name;}
    void           SetRecordName(const char* name);
    TTVRecord     *AddRecord(Bool_t fromFile = kFALSE);

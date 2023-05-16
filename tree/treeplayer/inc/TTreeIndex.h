@@ -50,25 +50,25 @@ private:
 public:
    TTreeIndex();
    TTreeIndex(const TTree *T, const char *majorname, const char *minorname);
-   virtual               ~TTreeIndex();
-   virtual void           Append(const TVirtualIndex *,Bool_t delaySort = kFALSE);
+                 ~TTreeIndex() override;
+   void           Append(const TVirtualIndex *,Bool_t delaySort = kFALSE) override;
    bool                   ConvertOldToNew();
    Long64_t               FindValues(Long64_t major, Long64_t minor) const;
-   virtual Long64_t       GetEntryNumberFriend(const TTree *parent);
-   virtual Long64_t       GetEntryNumberWithIndex(Long64_t major, Long64_t minor) const;
-   virtual Long64_t       GetEntryNumberWithBestIndex(Long64_t major, Long64_t minor) const;
+   Long64_t       GetEntryNumberFriend(const TTree *parent) override;
+   Long64_t       GetEntryNumberWithIndex(Long64_t major, Long64_t minor) const override;
+   Long64_t       GetEntryNumberWithBestIndex(Long64_t major, Long64_t minor) const override;
    virtual Long64_t      *GetIndex()        const {return fIndex;}
    virtual Long64_t      *GetIndexValues()  const {return fIndexValues;}
    virtual Long64_t      *GetIndexValuesMinor()  const;
-   const char            *GetMajorName()    const {return fMajorName.Data();}
-   const char            *GetMinorName()    const {return fMinorName.Data();}
-   virtual Long64_t       GetN()            const {return fN;}
+   const char            *GetMajorName()    const override {return fMajorName.Data();}
+   const char            *GetMinorName()    const override {return fMinorName.Data();}
+   Long64_t       GetN()            const override {return fN;}
    virtual TTreeFormula  *GetMajorFormula();
    virtual TTreeFormula  *GetMinorFormula();
-   virtual Bool_t         IsValidFor(const TTree *parent);
-   virtual void           Print(Option_t *option="") const;
-   virtual void           UpdateFormulaLeaves(const TTree *parent);
-   virtual void           SetTree(TTree *T);
+   Bool_t         IsValidFor(const TTree *parent) override;
+   void           Print(Option_t *option="") const override;
+   void           UpdateFormulaLeaves(const TTree *parent) override;
+   void           SetTree(TTree *T) override;
 
    ClassDef(TTreeIndex,2);  //A Tree Index with majorname and minorname.
 };

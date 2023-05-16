@@ -80,7 +80,7 @@ protected:
 
 public:
    TTreeDrawArgsParser();
-   ~TTreeDrawArgsParser();
+   ~TTreeDrawArgsParser() override;
 
    Bool_t         Parse(const char *varexp, const char *selection, Option_t *option);
    Bool_t         GetAdd() const { return fAdd; }

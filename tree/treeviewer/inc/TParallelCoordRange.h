@@ -44,23 +44,23 @@ private:
 public:
    TParallelCoordRange();
    TParallelCoordRange(TParallelCoordVar *var, Double_t min=0, Double_t max=0, TParallelCoordSelect* sel=nullptr);
-   virtual ~TParallelCoordRange();
+   ~TParallelCoordRange() override;
 
    virtual void BringOnTop() ;// *MENU*
-   virtual void Delete(const Option_t* options=""); // *MENU*
-   virtual Int_t DistancetoPrimitive(Int_t px, Int_t py);
-   virtual void Draw(Option_t *options="");
-   virtual void ExecuteEvent(Int_t entry, Int_t px, Int_t py);
+   void Delete(const Option_t* options="") override; // *MENU*
+   Int_t DistancetoPrimitive(Int_t px, Int_t py) override;
+   void Draw(Option_t *options="") override;
+   void ExecuteEvent(Int_t entry, Int_t px, Int_t py) override;
    virtual Double_t GetMin() {return fMin;}
    virtual Double_t GetMax() {return fMax;}
    TParallelCoordVar* GetVar() {return fVar;}
    TParallelCoordSelect* GetSelection() {return fSelect;}
    Bool_t IsIn(Double_t evtval);
-   virtual void Paint(Option_t *options);
-   virtual void Print(Option_t *options) const; // *MENU*
+   void Paint(Option_t *options) override;
+   void Print(Option_t *options) const override; // *MENU*
    virtual void SendToBack(); // *MENU*
-   virtual void SetLineColor(Color_t col);
-   virtual void SetLineWidth(Width_t wid);
+   void SetLineColor(Color_t col) override;
+   void SetLineWidth(Width_t wid) override;
 
    ClassDef(TParallelCoordRange,1); // A TParallelCoordRange is a range used for parallel coordinates plots.
 };
@@ -79,9 +79,9 @@ private:
 public:
    TParallelCoordSelect();    // Default constructor.
    TParallelCoordSelect(const char* title); // Normal constructor.
-   ~TParallelCoordSelect();   // Destructor.
+   ~TParallelCoordSelect() override;   // Destructor.
 
-   const char* GetTitle() const {return fTitle.Data();}
+   const char* GetTitle() const override {return fTitle.Data();}
    void        SetActivated(Bool_t on);
    void        SetShowRanges(Bool_t s);
    void        SetTitle(const char* title) {fTitle = title;}
