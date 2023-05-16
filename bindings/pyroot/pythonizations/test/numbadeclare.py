@@ -536,7 +536,7 @@ class NumbaDeclareArray(unittest.TestCase):
             return x[::-1]
 
         for v in [[True, False]]:
-            x1 = g2b(np.array(v, dtype=np.bool))
+            x1 = g2b(np.array(v, dtype=bool))
             x2 = ROOT.Numba.g2b(ROOT.VecOps.RVec('bool')(v))
             self.assertEqual(x1[0], bool(x2[0]))
             self.assertEqual(x1[1], bool(x2[1]))
@@ -551,7 +551,7 @@ class NumbaDeclareArray(unittest.TestCase):
             return (x > 1) | y
 
         for vf, vb in [[[1.0, 2.0], [True, False]]]:
-            x1 = g2fb(np.array(vf, dtype=np.float32), np.array(vb, dtype=np.bool))
+            x1 = g2fb(np.array(vf, dtype=np.float32), np.array(vb, dtype=bool))
             x2 = ROOT.Numba.g2fb(ROOT.VecOps.RVec('float')(vf), ROOT.VecOps.RVec('bool')(vb))
             self.assertEqual(x1[0], bool(x2[0]))
             self.assertEqual(x1[1], bool(x2[1]))
