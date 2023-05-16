@@ -168,7 +168,9 @@ TEST(RNTuple, SchemaExtensionProject)
 // Based on the RealWorld1 test in `ntuple_extended.cxx`, but here some fields are added after the fact
 TEST(RNTuple, SchemaExtensionRealWorld1)
 {
+#ifdef R__USE_IMT
    ROOT::EnableImplicitMT();
+#endif
    FileRaii fileGuard("test_ntuple_schemaext_realworld1.root");
 
    // See https://github.com/olifre/root-io-bench/blob/master/benchmark.cpp
