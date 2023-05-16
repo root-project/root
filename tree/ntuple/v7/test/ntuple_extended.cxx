@@ -278,7 +278,7 @@ TEST(RNTuple, SmallClusters)
       EXPECT_EQ(EColumnType::kSplitIndex64, desc->GetColumnDescriptor(colId).GetModel().GetType());
       reader->LoadEntry(0);
       auto entry = reader->GetModel()->GetDefaultEntry();
-      EXPECT_FLOAT_EQ(1u, entry->Get<std::vector<float>>("vec")->size());
+      EXPECT_EQ(1u, entry->Get<std::vector<float>>("vec")->size());
       EXPECT_FLOAT_EQ(1.0, entry->Get<std::vector<float>>("vec")->at(0));
    }
 
@@ -298,7 +298,7 @@ TEST(RNTuple, SmallClusters)
       EXPECT_EQ(EColumnType::kSplitIndex32, desc->GetColumnDescriptor(colId).GetModel().GetType());
       reader->LoadEntry(0);
       auto entry = reader->GetModel()->GetDefaultEntry();
-      EXPECT_FLOAT_EQ(1u, entry->Get<std::vector<float>>("vec")->size());
+      EXPECT_EQ(1u, entry->Get<std::vector<float>>("vec")->size());
       EXPECT_FLOAT_EQ(1.0, entry->Get<std::vector<float>>("vec")->at(0));
    }
 
