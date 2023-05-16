@@ -38,7 +38,7 @@ public:
    TMPWorkerTree(const std::vector<std::string> &fileNames, TEntryList *entries, const std::string &treeName,
                  UInt_t nWorkers, ULong64_t maxEntries, ULong64_t firstEntry);
    TMPWorkerTree(TTree *tree, TEntryList *entries, UInt_t nWorkers, ULong64_t maxEntries, ULong64_t firstEntry);
-   virtual ~TMPWorkerTree();
+   ~TMPWorkerTree() override;
 
    // It doesn't make sense to copy a TMPWorker (each one has a uniq_ptr to its socket)
    TMPWorkerTree(const TMPWorkerTree &) = delete;
@@ -48,8 +48,8 @@ protected:
 
    void         CloseFile();
    ULong64_t    EvalMaxEntries(ULong64_t maxEntries);
-   void         HandleInput(MPCodeBufPair& msg); ///< Execute instructions received from a MP client
-   void Init(int fd, UInt_t workerN);
+   void         HandleInput(MPCodeBufPair& msg) override; ///< Execute instructions received from a MP client
+   void Init(int fd, UInt_t workerN) override;
    Int_t LoadTree(UInt_t code, MPCodeBufPair &msg, Long64_t &start, Long64_t &finish, TEntryList **enl,
                   std::string &errmsg);
    TFile       *OpenFile(const std::string& fileName);
@@ -90,11 +90,11 @@ public:
         fCanReduce(false)
    {
    }
-   virtual ~TMPWorkerTreeFunc() {}
+   ~TMPWorkerTreeFunc() override {}
 
 private:
-   void Process(UInt_t code, MPCodeBufPair &msg);
-   void SendResult();
+   void Process(UInt_t code, MPCodeBufPair &msg) override;
+   void SendResult() override;
 
    F  fProcFunc; ///< copy the function to be executed
    /// the results of the executions of fProcFunc merged together
@@ -116,11 +116,11 @@ public:
       : TMPWorkerTree(tree, entries, nWorkers, maxEntries, firstEntry), fSelector(selector), fCallBegin(true)
    {
    }
-   virtual ~TMPWorkerTreeSel() {}
+   ~TMPWorkerTreeSel() override {}
 
 private:
-   void Process(UInt_t code, MPCodeBufPair &msg);
-   void SendResult();
+   void Process(UInt_t code, MPCodeBufPair &msg) override;
+   void SendResult() override;
 
    TSelector &fSelector; ///< pointer to the selector to be used to process the tree. It is null if we are not using a TSelector.
    bool fCallBegin = true;

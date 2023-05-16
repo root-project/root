@@ -113,7 +113,7 @@ public:
    TBasket();
    TBasket(TDirectory *motherDir);
    TBasket(const char *name, const char *title, TBranch *branch);
-   virtual ~TBasket();
+   ~TBasket() override;
 
    virtual void    AdjustSize(Int_t newsize);
    virtual void    DeleteEntryOffset();

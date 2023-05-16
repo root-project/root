@@ -41,7 +41,7 @@ namespace {
    // Reader interface for clones arrays
    class TClonesReader: public TVirtualCollectionReader {
    public:
-      ~TClonesReader() {}
+      ~TClonesReader() override {}
       TClonesArray* GetCA(ROOT::Detail::TBranchProxy* proxy) {
          if (!proxy->Read()){
             fReadStatus = TTreeReaderValueBase::kReadError;
@@ -51,14 +51,14 @@ namespace {
          fReadStatus = TTreeReaderValueBase::kReadSuccess;
          return (TClonesArray*) proxy->GetWhere();
       }
-      virtual size_t GetSize(ROOT::Detail::TBranchProxy* proxy) {
+      size_t GetSize(ROOT::Detail::TBranchProxy* proxy) override {
          TClonesArray *myClonesArray = GetCA(proxy);
          if (myClonesArray){
             return myClonesArray->GetEntries();
          }
          else return 0;
       }
-      virtual void* At(ROOT::Detail::TBranchProxy* proxy, size_t idx) {
+      void* At(ROOT::Detail::TBranchProxy* proxy, size_t idx) override {
          TClonesArray *myClonesArray = GetCA(proxy);
          if (myClonesArray){
             return myClonesArray->UncheckedAt(idx);
@@ -70,7 +70,7 @@ namespace {
    // Reader interface for STL
    class TSTLReader final: public TVirtualCollectionReader {
    public:
-      ~TSTLReader() {}
+      ~TSTLReader() override {}
       TVirtualCollectionProxy* GetCP(ROOT::Detail::TBranchProxy* proxy) {
          if (!proxy->Read()) {
             fReadStatus = TTreeReaderValueBase::kReadError;
@@ -85,13 +85,13 @@ namespace {
          return (TVirtualCollectionProxy*) proxy->GetCollection();
       }
 
-      virtual size_t GetSize(ROOT::Detail::TBranchProxy* proxy) {
+      size_t GetSize(ROOT::Detail::TBranchProxy* proxy) override {
          TVirtualCollectionProxy *myCollectionProxy = GetCP(proxy);
          if (!myCollectionProxy) return 0;
          return myCollectionProxy->Size();
       }
 
-      virtual void* At(ROOT::Detail::TBranchProxy* proxy, size_t idx) {
+      void* At(ROOT::Detail::TBranchProxy* proxy, size_t idx) override {
          TVirtualCollectionProxy *myCollectionProxy = GetCP(proxy);
          if (!myCollectionProxy) return 0;
          if (myCollectionProxy->HasPointers()){
@@ -123,7 +123,7 @@ namespace {
          return fLocalCollection;
       }
 
-      virtual size_t GetSize(ROOT::Detail::TBranchProxy* proxy) {
+      size_t GetSize(ROOT::Detail::TBranchProxy* proxy) override {
          TVirtualCollectionProxy *myCollectionProxy = GetCP(proxy);
          if (!myCollectionProxy) return 0;
          /// In the case of std::vector<bool> `PushProxy` also creates a temporary bool variable the address of which
@@ -133,7 +133,7 @@ namespace {
          return myCollectionProxy->Size();
       }
 
-      virtual void* At(ROOT::Detail::TBranchProxy* proxy, size_t idx) {
+      void* At(ROOT::Detail::TBranchProxy* proxy, size_t idx) override {
          TVirtualCollectionProxy *myCollectionProxy = GetCP(proxy);
          if (!myCollectionProxy) return 0;
          // Here we do not use a RAII but we empty the proxy to then fill it.
@@ -157,7 +157,7 @@ namespace {
       Int_t fBasicTypeSize;
    public:
       TObjectArrayReader() : fBasicTypeSize(-1) { }
-      ~TObjectArrayReader() {}
+      ~TObjectArrayReader() override {}
       TVirtualCollectionProxy* GetCP(ROOT::Detail::TBranchProxy* proxy) {
          if (!proxy->Read()){
             fReadStatus = TTreeReaderValueBase::kReadError;
@@ -167,12 +167,12 @@ namespace {
          fReadStatus = TTreeReaderValueBase::kReadSuccess;
          return (TVirtualCollectionProxy*) proxy->GetCollection();
       }
-      virtual size_t GetSize(ROOT::Detail::TBranchProxy* proxy) {
+      size_t GetSize(ROOT::Detail::TBranchProxy* proxy) override {
          TVirtualCollectionProxy *myCollectionProxy = GetCP(proxy);
          if (!myCollectionProxy) return 0;
          return myCollectionProxy->Size();
       }
-      virtual void* At(ROOT::Detail::TBranchProxy* proxy, size_t idx) {
+      void* At(ROOT::Detail::TBranchProxy* proxy, size_t idx) override {
          if (!proxy->Read()) return 0;
 
          Int_t objectSize;
@@ -303,12 +303,12 @@ namespace {
    public:
       TArrayFixedSizeReader(Int_t sizeArg) : fSize(sizeArg) {}
 
-      virtual size_t GetSize(ROOT::Detail::TBranchProxy* /*proxy*/) { return fSize; }
+      size_t GetSize(ROOT::Detail::TBranchProxy* /*proxy*/) override { return fSize; }
    };
 
    class TBasicTypeArrayReader final: public TVirtualCollectionReader {
    public:
-      ~TBasicTypeArrayReader() {}
+      ~TBasicTypeArrayReader() override {}
 
       TVirtualCollectionProxy* GetCP (ROOT::Detail::TBranchProxy *proxy) {
          if (!proxy->Read()){
@@ -320,13 +320,13 @@ namespace {
          return (TVirtualCollectionProxy*) proxy->GetCollection();
       }
 
-      virtual size_t GetSize(ROOT::Detail::TBranchProxy* proxy){
+      size_t GetSize(ROOT::Detail::TBranchProxy* proxy) override{
          TVirtualCollectionProxy *myCollectionProxy = GetCP(proxy);
          if (!myCollectionProxy) return 0;
          return myCollectionProxy->Size();
       }
 
-      virtual void* At(ROOT::Detail::TBranchProxy* proxy, size_t idx){
+      void* At(ROOT::Detail::TBranchProxy* proxy, size_t idx) override{
          TVirtualCollectionProxy *myCollectionProxy = GetCP(proxy);
          if (!myCollectionProxy) return 0;
          return (Byte_t*)myCollectionProxy->At(idx) + proxy->GetOffset();
@@ -339,7 +339,7 @@ namespace {
    public:
       TBasicTypeClonesReader(Int_t offsetArg) : fOffset(offsetArg) {}
 
-      virtual void* At(ROOT::Detail::TBranchProxy* proxy, size_t idx){
+      void* At(ROOT::Detail::TBranchProxy* proxy, size_t idx) override{
          TClonesArray *myClonesArray = GetCA(proxy);
          if (!myClonesArray) return 0;
          return (Byte_t*)myClonesArray->At(idx) + fOffset;
@@ -353,12 +353,12 @@ namespace {
    public:
       TLeafReader(TTreeReaderValueBase *valueReaderArg) : fValueReader(valueReaderArg), fElementSize(-1) {}
 
-      virtual size_t GetSize(ROOT::Detail::TBranchProxy* /*proxy*/){
+      size_t GetSize(ROOT::Detail::TBranchProxy* /*proxy*/) override{
          TLeaf *myLeaf = fValueReader->GetLeaf();
          return myLeaf ? myLeaf->GetLen() : 0; // Error will be printed by GetLeaf
       }
 
-      virtual void* At(ROOT::Detail::TBranchProxy* /*proxy*/, size_t idx){
+      void* At(ROOT::Detail::TBranchProxy* /*proxy*/, size_t idx) override{
          ProxyRead();
          void *address = fValueReader->GetAddress();
          if (fElementSize == -1){

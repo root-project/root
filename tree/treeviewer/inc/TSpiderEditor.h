@@ -71,7 +71,7 @@ public:
                  Int_t width = 140, Int_t height = 30,
                  UInt_t options = kChildFrame,
                  Pixel_t back = GetDefaultFrameBackground());
-   ~TSpiderEditor();
+   ~TSpiderEditor() override;
 
    virtual void         DoAddVar();
    virtual void         DoDeleteVar();
@@ -84,7 +84,7 @@ public:
    virtual void         DoSetNx();
    virtual void         DoSetNy();
    virtual void         DoSetPlotType();
-   virtual void         SetModel(TObject* obj);
+   void         SetModel(TObject* obj) override;
    virtual void         DoAvLineStyle(Int_t);
    virtual void         DoAvLineWidth(Int_t);
    virtual void         DoAvLineColor(Pixel_t);

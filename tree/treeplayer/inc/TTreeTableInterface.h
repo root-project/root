@@ -49,14 +49,14 @@ public:
    TTreeTableInterface(TTree *tree = nullptr, const char *varexp = nullptr,
                        const char *selection = nullptr, Option_t *option = nullptr,
                        Long64_t nentries = 0, Long64_t firstentry = 0);
-   virtual ~TTreeTableInterface();
+   ~TTreeTableInterface() override;
 
-   virtual Double_t    GetValue(UInt_t row, UInt_t column);
-   virtual const char *GetValueAsString(UInt_t row, UInt_t column);
-   virtual const char *GetRowHeader(UInt_t row);
-   virtual const char *GetColumnHeader(UInt_t column);
-   virtual UInt_t      GetNRows();
-   virtual UInt_t      GetNColumns();
+   Double_t    GetValue(UInt_t row, UInt_t column) override;
+   const char *GetValueAsString(UInt_t row, UInt_t column) override;
+   const char *GetRowHeader(UInt_t row) override;
+   const char *GetColumnHeader(UInt_t column) override;
+   UInt_t      GetNRows() override;
+   UInt_t      GetNColumns() override;
    virtual TEntryList *GetEntryList() { return fEntries; }
 
    virtual void AddColumn(const char *expression, UInt_t position);

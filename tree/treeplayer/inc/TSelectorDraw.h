@@ -74,9 +74,9 @@ private:
 
 public:
    TSelectorDraw();
-   virtual ~TSelectorDraw();
+   ~TSelectorDraw() override;
 
-   virtual void      Begin(TTree *tree);
+   void      Begin(TTree *tree) override;
    virtual Int_t     GetAction() const {return fAction;}
    virtual Bool_t    GetCleanElist() const {return fCleanElist;}
    virtual Int_t     GetDimension() const {return fDimension;}
@@ -107,16 +107,16 @@ public:
    /// See TSelectorDraw::GetVal
    virtual Double_t *GetV4() const   {return GetVal(3);}
    virtual Double_t *GetW() const    {return fW;}
-   virtual Bool_t    Notify();
-   virtual Bool_t    Process(Long64_t /*entry*/) { return kFALSE; }
-   virtual void      ProcessFill(Long64_t entry);
+   Bool_t    Notify() override;
+   Bool_t    Process(Long64_t /*entry*/) override { return kFALSE; }
+   void      ProcessFill(Long64_t entry) override;
    virtual void      ProcessFillMultiple(Long64_t entry);
    virtual void      ProcessFillObject(Long64_t entry);
    virtual void      SetEstimate(Long64_t n);
    virtual UInt_t    SplitNames(const TString &varexp, std::vector<TString> &names);
    virtual void      TakeAction();
    virtual void      TakeEstimate();
-   virtual void      Terminate();
+   void      Terminate() override;
 
    ClassDef(TSelectorDraw,1);  //A specialized TSelector for TTree::Draw
 };

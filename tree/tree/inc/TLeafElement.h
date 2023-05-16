@@ -44,7 +44,7 @@ private:
 public:
    TLeafElement();
    TLeafElement(TBranch *parent, const char *name, Int_t id, Int_t type);
-   virtual ~TLeafElement();
+   ~TLeafElement() override;
 
    Bool_t           CanGenerateOffsetArray() override { return fLeafCount && fLenType; }
    virtual Int_t   *GenerateOffsetArrayBase(Int_t /*base*/, Int_t /*events*/) { return nullptr; }

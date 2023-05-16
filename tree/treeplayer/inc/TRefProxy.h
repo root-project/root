@@ -38,25 +38,25 @@ public:
    TRefProxy &operator=(const TRefProxy& c) { fClass =c.fClass; return *this; }
 
    /// TVirtualRefProxy overload: Release the reference proxy (virtual destructor)
-   virtual void Release()                         { delete this;                }
+   void Release() override                         { delete this;                }
    /// TVirtualRefProxy overload: Clone the reference proxy (virtual constructor)
-   virtual TVirtualRefProxy* Clone() const        { return new TRefProxy(*this);}
+   TVirtualRefProxy* Clone() const override        { return new TRefProxy(*this);}
    /// TVirtualRefProxy overload: Setter of reference class (executed when the proxy is adopted)
-   virtual void SetClass(TClass *cl)              { fClass = cl;                }
+   void SetClass(TClass *cl) override              { fClass = cl;                }
    /// TVirtualRefProxy overload: Getter of reference class (executed when the proxy is adopted)
-   virtual TClass * GetClass() const              { return fClass;              }
+   TClass * GetClass() const override              { return fClass;              }
    /// TVirtualRefProxy overload: Access to value class
-   virtual TClass* GetValueClass(void* data) const;
+   TClass* GetValueClass(void* data) const override;
    /// TVirtualRefProxy overload: Prepare reused reference object (e.g. ZERO data pointers)
-   virtual void* GetPreparedReference(void* data) {  return data;               }
+   void* GetPreparedReference(void* data) override {  return data;               }
    /// TVirtualRefProxy overload: Update (and propagate) cached information
-   virtual Bool_t Update();
+   Bool_t Update() override;
    /// TVirtualRefProxy overload: Flag to indicate if this is a container reference
-   virtual Bool_t HasCounter()  const             { return kFALSE;              }
+   Bool_t HasCounter()  const override             { return kFALSE;              }
    /// TVirtualRefProxy overload: Access to container size (if container reference (ie TRefArray) etc)
-   virtual Int_t  GetCounterValue(TFormLeafInfoReference* /* info */, void* /* data */)
+   Int_t  GetCounterValue(TFormLeafInfoReference* /* info */, void* /* data */) override
    {  return 0;                                                                 }
    /// TVirtualRefProxy overload: Access referenced object(-data)
-   virtual void* GetObject(TFormLeafInfoReference* info, void* data, int instance);
+   void* GetObject(TFormLeafInfoReference* info, void* data, int instance) override;
 };
 #endif // ROOT_TRefProxy
