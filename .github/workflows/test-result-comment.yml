@@ -13,7 +13,7 @@ jobs:
   comment-test-results:
     name: Publish Test Results
 
-    if: github.event.workflow_run.event == 'pull_request'
+    if: 'github.event.workflow_run.event == "pull_request" && !cancelled()'
 
     runs-on: ubuntu-latest
 
