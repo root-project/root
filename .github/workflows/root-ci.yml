@@ -131,6 +131,7 @@ jobs:
                     --repository     ${{ github.server_url }}/${{ github.repository }}"
 
       - name: Upload test results
+        if:   ${{ !cancelled() }}
         uses: actions/upload-artifact@v3
         with:
           name:  Test Results ${{ matrix.platform }} ${{ matrix.arch }} ${{ matrix.config }}
@@ -356,6 +357,7 @@ jobs:
               "
 
       - name: Upload test results
+        if:   ${{ !cancelled() }}
         uses: actions/upload-artifact@v3
         with:
           name:  Test Results ${{ matrix.image }} ${{ matrix.config }}
