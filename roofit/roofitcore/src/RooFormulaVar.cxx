@@ -80,13 +80,12 @@ RooFormulaVar::RooFormulaVar(const char *name, const char *title, const char* in
   _actualVars("actualVars","Variables used by formula expression",this),
   _formExpr(inFormula)
 {
-  _actualVars.add(dependents) ;
-
-  if (_actualVars.empty()) {
+  if (dependents.empty()) {
     _value = traceEval(nullptr);
   } else {
-    _formula = new RooFormula(GetName(), _formExpr, _actualVars, checkVariables);
+    _formula = new RooFormula(GetName(), _formExpr, dependents, checkVariables);
     _formExpr = _formula->formulaString().c_str();
+    _actualVars.add(_formula->actualDependents());
   }
 }
 
@@ -104,13 +103,12 @@ RooFormulaVar::RooFormulaVar(const char *name, const char *title, const RooArgLi
   _actualVars("actualVars","Variables used by formula expression",this),
   _formExpr(title)
 {
-  _actualVars.add(dependents) ;
-
-  if (_actualVars.empty()) {
+  if (dependents.empty()) {
     _value = traceEval(0);
   } else {
-    _formula = new RooFormula(GetName(), _formExpr, _actualVars, checkVariables);
+    _formula = new RooFormula(GetName(), _formExpr, dependents, checkVariables);
     _formExpr = _formula->formulaString().c_str();
+    _actualVars.add(_formula->actualDependents());
   }
 }
 

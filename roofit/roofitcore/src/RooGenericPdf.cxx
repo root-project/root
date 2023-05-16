@@ -69,10 +69,13 @@ RooGenericPdf::RooGenericPdf(const char *name, const char *title, const RooArgLi
   _actualVars("actualVars","Variables used by PDF expression",this),
   _formExpr(title)
 {
-  _actualVars.add(dependents) ;
-  formula();
-
-  if (_actualVars.empty()) _value = traceEval(0) ;
+  if (dependents.empty()) {
+    _value = traceEval(nullptr);
+  } else {
+    _formula = new RooFormula(GetName(), _formExpr, dependents);
+    _formExpr = _formula->formulaString().c_str();
+    _actualVars.add(_formula->actualDependents());
+  }
 }
 
 
@@ -86,10 +89,13 @@ RooGenericPdf::RooGenericPdf(const char *name, const char *title,
   _actualVars("actualVars","Variables used by PDF expression",this),
   _formExpr(inFormula)
 {
-  _actualVars.add(dependents) ;
-  formula();
-
-  if (_actualVars.empty()) _value = traceEval(0) ;
+  if (dependents.empty()) {
+    _value = traceEval(0);
+  } else {
+    _formula = new RooFormula(GetName(), _formExpr, dependents);
+    _formExpr = _formula->formulaString().c_str();
+    _actualVars.add(_formula->actualDependents());
+  }
 }
 
 
