@@ -2839,6 +2839,24 @@ void CreateDictHeader(std::ostream &dictStream, const std::string &main_dictname
                << "#include \"TCollectionProxyInfo.h\"\n"
                << "/*******************************************************************/\n\n"
                << "#include \"TDataMember.h\"\n\n"; // To set their transiency
+
+   if (main_dictname.length() > 11 && main_dictname.substr(main_dictname.length() - 11) == "_ACLiC_dict")
+      dictStream << "#include <bitset>\n"
+                    "#include <forward_list>\n"
+                    "#include <list>\n"
+                    "#include <map>\n"
+                    "#include <memory>\n"
+                    "#include <set>\n"
+                    "#include <string>\n"
+                    "#include <unordered_map>\n"
+                    "#include <unordered_set>\n"
+                    "#include <utility>\n"
+                    "#include <vector>\n"
+                    "using std::allocator; using std::bitset; using std::default_delete; using "
+                    "std::forward_list; using std::list; using std::map; using std::multimap; using "
+                    "std::multiset; using std::pair; using std::set; using std::shared_ptr; using std::string; "
+                    "using std::unique_ptr; using std::unordered_multimap; using std::unordered_map; using "
+                    "std::unordered_multiset; using std::unordered_set; using std::vector;\n";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
