@@ -142,19 +142,6 @@ void RooGenericPdf::computeBatch(cudaStream_t* stream, double* output, size_t nE
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Change formula expression to given expression
-
-bool RooGenericPdf::setFormula(const char* inFormula)
-{
-  if (formula().reCompile(inFormula)) return true ;
-
-  _formExpr = inFormula ;
-  setValueDirty() ;
-  return false ;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
 /// Propagate server changes to embedded formula object
 
 bool RooGenericPdf::redirectServersHook(const RooAbsCollection& newServerList, bool mustReplaceAll, bool nameChange, bool isRecursive)
@@ -196,15 +183,10 @@ void RooGenericPdf::dumpFormula() { formula().dump() ; }
 ////////////////////////////////////////////////////////////////////////////////
 /// Read object contents from given stream
 
-bool RooGenericPdf::readFromStream(istream& is, bool compact, bool /*verbose*/)
+bool RooGenericPdf::readFromStream(istream& /*is*/, bool /*compact*/, bool /*verbose*/)
 {
-  if (compact) {
-    coutE(InputArguments) << "RooGenericPdf::readFromStream(" << GetName() << "): can't read in compact mode" << endl ;
-    return true ;
-  } else {
-    RooStreamParser parser(is) ;
-    return setFormula(parser.readLine()) ;
-  }
+  coutE(InputArguments) << "RooGenericPdf::readFromStream(" << GetName() << "): can't read" << std::endl;
+  return true;
 }
 
 
@@ -219,6 +201,3 @@ void RooGenericPdf::writeToStream(ostream& os, bool compact) const
     os << GetTitle() ;
   }
 }
-
-
-

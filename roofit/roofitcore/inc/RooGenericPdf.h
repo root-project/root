@@ -55,8 +55,6 @@ protected:
   double evaluate() const override ;
   void computeBatch(cudaStream_t*, double* output, size_t nEvents, RooFit::Detail::DataMap const&) const override;
 
-  bool setFormula(const char* formula) ;
-
   // Post-processing of server redirection
   bool redirectServersHook(const RooAbsCollection& newServerList, bool mustReplaceAll, bool nameChange, bool isRecursive) override ;
 

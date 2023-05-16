@@ -28,7 +28,6 @@ class RooAbsReal;
 class RooFormula : public TNamed, public RooPrintable {
 public:
    // Constructors etc.
-   RooFormula();
    RooFormula(const char *name, const char *formula, const RooArgList &varList, bool checkVariables = true);
    RooFormula(const RooFormula &other, const char *name = nullptr);
    TObject *Clone(const char *newName = nullptr) const override { return new RooFormula(*this, newName); }
@@ -56,7 +55,6 @@ public:
 
    /// DEBUG: Dump state information
    void dump() const;
-   bool reCompile(const char *newFormula);
 
    void printValue(std::ostream &os) const override;
    void printName(std::ostream &os) const override;
