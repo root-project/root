@@ -113,6 +113,13 @@ public:
 protected:
    std::string fNTupleName;
    RTaskScheduler *fTaskScheduler = nullptr;
+   void WaitForAllTasks()
+   {
+      if (!fTaskScheduler)
+         return;
+      fTaskScheduler->Wait();
+      fTaskScheduler->Reset();
+   }
 
 public:
    explicit RPageStorage(std::string_view name);

@@ -125,10 +125,7 @@ ROOT::Experimental::Detail::RPageSinkBuf::CommitSealedPageImpl(DescriptorId_t ph
 std::uint64_t
 ROOT::Experimental::Detail::RPageSinkBuf::CommitClusterImpl(ROOT::Experimental::NTupleSize_t nEntries)
 {
-   if (fTaskScheduler) {
-      fTaskScheduler->Wait();
-      fTaskScheduler->Reset();
-   }
+   WaitForAllTasks();
 
    // If we have only sealed pages in all buffered columns, commit them in a single `CommitSealedPageV()` call
    bool singleCommitCall = std::all_of(fBufferedColumns.begin(), fBufferedColumns.end(),
