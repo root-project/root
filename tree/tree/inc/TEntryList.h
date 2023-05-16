@@ -59,7 +59,7 @@ class TEntryList: public TNamed
    TEntryList(const char *name, const char *title, const char *treename, const char *filename);
    TEntryList(const TTree *tree);
    TEntryList(const TEntryList& elist);
-   virtual ~TEntryList();
+   ~TEntryList() override;
 
    virtual void        Add(const TEntryList *elist);
    void                AddSubList(TEntryList *elist);
@@ -96,7 +96,7 @@ class TEntryList: public TNamed
    virtual void        Reset();
    virtual Int_t       ScanPaths(TList *roots, Bool_t notify = kTRUE);
 
-   virtual void        Print(const Option_t* option = "") const;
+   void        Print(const Option_t* option = "") const override;
    virtual void        SetDirectory(TDirectory *dir);
    virtual void        SetEntriesToProcess(Long64_t nen) { fEntriesToProcess = nen; }
    virtual void        SetShift(Bool_t shift) { fShift = shift; };

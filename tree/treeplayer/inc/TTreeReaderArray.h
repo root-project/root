@@ -35,11 +35,11 @@ Base class of TTreeReaderArray.
       std::size_t GetSize() const { return fImpl->GetSize(GetProxy()); }
       Bool_t IsEmpty() const { return !GetSize(); }
 
-      virtual EReadStatus GetReadStatus() const { return fImpl ? fImpl->fReadStatus : kReadError; }
+      EReadStatus GetReadStatus() const override { return fImpl ? fImpl->fReadStatus : kReadError; }
 
    protected:
       void *UntypedAt(std::size_t idx) const { return fImpl->At(GetProxy(), idx); }
-      virtual void CreateProxy();
+      void CreateProxy() override;
       bool GetBranchAndLeaf(TBranch* &branch, TLeaf* &myLeaf,
                             TDictionary* &branchActualType);
       void SetImpl(TBranch* branch, TLeaf* myLeaf);
@@ -216,7 +216,7 @@ public:
 
 protected:
 #define R__TTreeReaderArray_TypeString(T) #T
-   virtual const char *GetDerivedTypeName() const { return R__TTreeReaderArray_TypeString(T); }
+   const char *GetDerivedTypeName() const override { return R__TTreeReaderArray_TypeString(T); }
 #undef R__TTreeReaderArray_TypeString
    // FIXME: re-introduce once we have ClassDefTInline!
    // ClassDefT(TTreeReaderArray, 0);//Accessor to member of an object stored in a collection
