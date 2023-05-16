@@ -3872,7 +3872,8 @@ Long64_t TTree::Draw(const char* varexp, const TCut& selection, Option_t* option
 ///                   (to create histograms in the 2, 3, and 4 dimensional case,
 ///                   see section "Saving the result of Draw to an histogram")
 ///   - "e1:e2:e3:e4:e5" with option "GL5D" produces a 5D plot using OpenGL. `gStyle->SetCanvasPreferGL(true)` is needed.
-///   - An arbitrary number of variables can be used with option "PARA" and "GOFF".
+///   - Any number of variables no fewer than two can be used with the options "CANDLE" and "PARA"
+///   - An arbitrary number of variables can be used with the option "GOFF"
 ///
 ///   Examples:
 ///    - "x": the simplest case, it draws a 1-Dim histogram of column x
