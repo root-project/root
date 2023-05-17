@@ -175,7 +175,6 @@ called for each data event.
 #include "RooVDTHeaders.h"
 #include "RooFit/TestStatistics/buildLikelihood.h"
 #include "RooFit/TestStatistics/RooRealL.h"
-#include "RooFit/TestStatistics/optional_parameter_types.h"
 #include "RunContext.h"
 #include "ConstraintHelpers.h"
 
@@ -1014,12 +1013,14 @@ RooFit::OwningPtr<RooAbsReal> RooAbsPdf::createNLL(RooAbsData& data, const RooLi
 
       const std::string rangeName = pc.getString("globstag", "", false);
 
-      RooFit::TestStatistics::ConstrainedParameters cPars(cParsSet);
-      RooFit::TestStatistics::ExternalConstraints extCons(extConsSet);
-      RooFit::TestStatistics::GlobalObservables glObs(glObsSet);
+      RooFit::TestStatistics::NLLFactory builder{*this, data};
+      builder.Extended(ext)
+             .ConstrainedParameters(cParsSet)
+             .ExternalConstraints(extConsSet)
+             .GlobalObservables(glObsSet)
+             .GlobalObservablesTag(rangeName.c_str());
 
-      return RooFit::OwningPtr<RooAbsReal>{new RooFit::TestStatistics::RooRealL("likelihood", "",
-          RooFit::TestStatistics::buildLikelihood(this, &data, ext, cPars, extCons, glObs, rangeName))};
+      return RooFit::OwningPtr<RooAbsReal>{new RooFit::TestStatistics::RooRealL("likelihood", "", builder.build())};
   }
 
   // Decode command line arguments
