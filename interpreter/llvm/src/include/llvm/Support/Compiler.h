@@ -126,8 +126,7 @@
 #if (__has_attribute(visibility) || LLVM_GNUC_PREREQ(4, 0, 0)) &&              \
     !defined(__MINGW32__) && !defined(__CYGWIN__) && !defined(_WIN32)
 #define LLVM_LIBRARY_VISIBILITY __attribute__ ((visibility("hidden")))
-//#define LLVM_EXTERNAL_VISIBILITY __attribute__ ((visibility("default")))
-#define LLVM_EXTERNAL_VISIBILITY
+#define LLVM_EXTERNAL_VISIBILITY __attribute__ ((visibility("default")))
 #else
 #define LLVM_LIBRARY_VISIBILITY
 #define LLVM_EXTERNAL_VISIBILITY
