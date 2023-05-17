@@ -13,6 +13,7 @@
 #ifndef ROOT_ROOFIT_TESTSTATISTICS_likelihood_builders
 #define ROOT_ROOFIT_TESTSTATISTICS_likelihood_builders
 
+#include <RooGlobalFunc.h>
 #include <RooFit/TestStatistics/RooAbsL.h>
 
 #include <memory>
@@ -34,8 +35,11 @@ public:
    NLLFactory &ExternalConstraints(const RooArgSet &externalconstraints);
    NLLFactory &GlobalObservables(const RooArgSet &globalObservables);
    NLLFactory &GlobalObservablesTag(const char *globalObservablesTag);
+   NLLFactory &BatchMode(RooFit::BatchModeOption batchMode);
 
 private:
+   std::vector<std::unique_ptr<RooAbsL>> getSimultaneousComponents();
+
    RooAbsPdf &_pdf;
    RooAbsData &_data;
 
@@ -44,6 +48,7 @@ private:
    RooArgSet _externalConstraints;
    RooArgSet _globalObservables;
    std::string _globalObservablesTag;
+   RooFit::BatchModeOption _batchMode = RooFit::BatchModeOption::Off;
 };
 
 /// Delegating function to build a likelihood without additional arguments.

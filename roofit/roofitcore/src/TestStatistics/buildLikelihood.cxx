@@ -193,34 +193,31 @@ RooAbsPdf *getBinnedPdf(RooAbsPdf *pdf)
    return binnedPdf;
 }
 
+} // namespace
+
 /*
- * \brief Build a set of likelihood components to build a likelihood from a simultaneous pdf
+ * \brief Build a set of likelihood components to build a likelihood from a simultaneous pdf.
  *
- * \param[in] pdf Raw pointer to the pdf
- * \param[in] data Raw pointer to the dataset
- * \param[in] extended Set extended term calculation on, off or use Extended::Auto to determine automatically based on
- * the pdf whether to activate or not.
  * \return A vector to RooAbsL unique_ptrs that contain all component binned and/or
  * unbinned likelihoods. Note: subsidiary components are not included; use getConstraintsSet and/or
  * buildSubsidiaryLikelihood to add those.
  */
-std::vector<std::unique_ptr<RooAbsL>>
-getSimultaneousComponents(RooAbsPdf *pdf, RooAbsData *data, RooAbsL::Extended extended)
+std::vector<std::unique_ptr<RooAbsL>> NLLFactory::getSimultaneousComponents()
 {
-   auto sim_pdf = dynamic_cast<RooSimultaneous *>(pdf);
+   auto sim_pdf = dynamic_cast<RooSimultaneous *>(&_pdf);
 
    // the rest of this function is an adaptation of RooAbsTestStatistic::initSimMode:
 
-   RooAbsCategoryLValue &simCat = (RooAbsCategoryLValue &)sim_pdf->indexCat();
+   auto &simCat = const_cast<RooAbsCategoryLValue &>(sim_pdf->indexCat());
 
    // note: this is valid for simultaneous likelihoods, not for other test statistic types (e.g. chi2) for which this
    // should return true.
-   bool process_empty_data_sets = RooAbsL::isExtendedHelper(pdf, extended);
+   bool process_empty_data_sets = RooAbsL::isExtendedHelper(&_pdf, _extended);
 
    TString simCatName(simCat.GetName());
    // Note: important not to use cloned dataset here (possible when this code is run in Roo[...]L ctor), use the
    // original one (which is data_ in Roo[...]L ctors, but data here)
-   std::unique_ptr<TList> dsetList{data->split(*sim_pdf, process_empty_data_sets)};
+   std::unique_ptr<TList> dsetList{_data.split(*sim_pdf, process_empty_data_sets)};
    if (!dsetList) {
       throw std::logic_error(
          "getSimultaneousComponents ERROR, index category of simultaneous pdf is missing in dataset, aborting");
@@ -232,7 +229,7 @@ getSimultaneousComponents(RooAbsPdf *pdf, RooAbsData *data, RooAbsL::Extended ex
    for (const auto &catState : simCat) {
       // Retrieve the PDF for this simCat state
       RooAbsPdf *component_pdf = sim_pdf->getPdf(catState.first.c_str());
-      auto dset = (RooAbsData *)dsetList->FindObject(catState.first.c_str());
+      auto *dset = static_cast<RooAbsData *>(dsetList->FindObject(catState.first.c_str()));
 
       if (component_pdf && dset && (0. != dset->sumEntries() || process_empty_data_sets)) {
          ++N_components;
@@ -250,12 +247,11 @@ getSimultaneousComponents(RooAbsPdf *pdf, RooAbsData *data, RooAbsL::Extended ex
       const std::string &catName = catState.first;
       // Retrieve the PDF for this simCat state
       RooAbsPdf *component_pdf = sim_pdf->getPdf(catName.c_str());
-      auto dset = (RooAbsData *)dsetList->FindObject(catName.c_str());
+      auto *dset = static_cast<RooAbsData *>(dsetList->FindObject(catName.c_str()));
 
       if (component_pdf && dset && (0. != dset->sumEntries() || process_empty_data_sets)) {
-         ooccoutI((TObject *)nullptr, Fitting)
-            << "getSimultaneousComponents: creating slave calculator #" << n << " for state " << catName << " ("
-            << dset->numEntries() << " dataset entries)" << std::endl;
+         ooccoutI(nullptr, Fitting) << "getSimultaneousComponents: creating slave calculator #" << n << " for state "
+                                    << catName << " (" << dset->numEntries() << " dataset entries)" << std::endl;
 
          RooAbsPdf *binnedPdf = getBinnedPdf(component_pdf);
          bool binnedL = (binnedPdf != nullptr);
@@ -275,7 +271,8 @@ getSimultaneousComponents(RooAbsPdf *pdf, RooAbsData *data, RooAbsL::Extended ex
          if (binnedL) {
             components.push_back(std::make_unique<RooBinnedL>((binnedPdf ? binnedPdf : component_pdf), dset));
          } else {
-            components.push_back(std::make_unique<RooUnbinnedL>((binnedPdf ? binnedPdf : component_pdf), dset));
+            components.push_back(
+               std::make_unique<RooUnbinnedL>((binnedPdf ? binnedPdf : component_pdf), dset, _extended, _batchMode));
          }
          //         }
          components.back()->setSimCount(N_components);
@@ -284,16 +281,18 @@ getSimultaneousComponents(RooAbsPdf *pdf, RooAbsData *data, RooAbsL::Extended ex
 
          std::unique_ptr<RooArgSet> actualParams{binnedPdf ? binnedPdf->getParameters(dset)
                                                            : component_pdf->getParameters(dset)};
-         std::unique_ptr<RooArgSet> selTargetParams{
-            (RooArgSet *)pdf->getParameters(*data)->selectCommon(*actualParams)};
+         RooArgSet params;
+         _pdf.getParameters(_data.get(), params);
+         RooArgSet selTargetParams;
+         params.selectCommon(*actualParams, selTargetParams);
 
          assert(selTargetParams.equals(*components.back()->getParameters()));
 
          ++n;
       } else {
          if ((!dset || (0. != dset->sumEntries() && !process_empty_data_sets)) && component_pdf) {
-            ooccoutD((TObject *)nullptr, Fitting) << "getSimultaneousComponents: state " << catName
-                                                  << " has no data entries, no slave calculator created" << std::endl;
+            ooccoutD(nullptr, Fitting) << "getSimultaneousComponents: state " << catName
+                                       << " has no data entries, no slave calculator created" << std::endl;
          }
       }
    }
@@ -301,8 +300,6 @@ getSimultaneousComponents(RooAbsPdf *pdf, RooAbsData *data, RooAbsL::Extended ex
 
    return components;
 }
-
-} // namespace
 
 /// Create a likelihood builder for a given pdf and dataset.
 /// \param[in] pdf Raw pointer to the pdf
@@ -330,11 +327,11 @@ std::unique_ptr<RooAbsL> NLLFactory::build()
    std::vector<std::unique_ptr<RooAbsL>> components;
 
    if (dynamic_cast<RooSimultaneous const *>(&_pdf)) {
-      components = getSimultaneousComponents(&_pdf, &_data, _extended);
+      components = getSimultaneousComponents();
    } else if (auto binnedPdf = getBinnedPdf(&_pdf)) {
       likelihood = std::make_unique<RooBinnedL>(binnedPdf, &_data);
    } else { // unbinned
-      likelihood = std::make_unique<RooUnbinnedL>(&_pdf, &_data, _extended);
+      likelihood = std::make_unique<RooUnbinnedL>(&_pdf, &_data, _extended, _batchMode);
    }
 
    auto subsidiary = buildSubsidiaryL(&_pdf, &_data, _constrainedParameters, _externalConstraints, _globalObservables,
@@ -396,6 +393,12 @@ NLLFactory &NLLFactory::GlobalObservables(const RooArgSet &globalObservables)
 NLLFactory &NLLFactory::GlobalObservablesTag(const char *globalObservablesTag)
 {
    _globalObservablesTag = globalObservablesTag;
+   return *this;
+}
+
+NLLFactory &NLLFactory::BatchMode(RooFit::BatchModeOption batchMode)
+{
+   _batchMode = batchMode;
    return *this;
 }
 

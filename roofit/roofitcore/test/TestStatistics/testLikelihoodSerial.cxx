@@ -435,18 +435,10 @@ TEST_F(LikelihoodSerialTest, BatchedUnbinnedGaussianND)
    bool batch_mode = true;
 
    std::tie(nll, pdf, data, values) = generate_ND_gaussian_pdf_nll(w, N, 1000, batch_mode);
-
-   // TODO: the result from the new test statistics is not correct unless the
-   // coefficient normalization set is fixed manually. Probably this works
-   // better when the new test statistics are migrated to the new BatchMode,
-   // and then this line can be deleted.
-   pdf->fixAddCoefNormalization(*data->get(), false);
-
-   likelihood = RooFit::TestStatistics::buildLikelihood(pdf, data);
-   dynamic_cast<RooFit::TestStatistics::RooUnbinnedL *>(likelihood.get())->setUseBatchedEvaluations(true);
-   auto nll_ts = LikelihoodWrapper::create(RooFit::TestStatistics::LikelihoodMode::serial, likelihood, clean_flags);
-
    auto nll0 = nll->getVal();
+
+   likelihood = RooFit::TestStatistics::NLLFactory{*pdf, *data}.BatchMode(RooFit::BatchModeOption::Cpu).build();
+   auto nll_ts = LikelihoodWrapper::create(RooFit::TestStatistics::LikelihoodMode::serial, likelihood, clean_flags);
 
    nll_ts->evaluate();
    auto nll1 = nll_ts->getResult();
