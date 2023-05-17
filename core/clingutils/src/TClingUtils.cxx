@@ -5099,6 +5099,49 @@ bool ROOT::TMetaUtils::IsHeaderName(const std::string &filename)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Get the using decls (and corresponding `#includes`) injected into cling for
+/// backward compatibility with the earlier `using namespace std`.
+std::string ROOT::TMetaUtils::GetInjectedUsingDecls() {
+   return R"CODE(#include <array>
+#include <bitset>
+#include <cmath>
+#include <iostream>
+#include <list>
+#include <map>
+#include <memory>
+#include <set>
+#include <string>
+#include <unordered_map>
+#include <unordered_set>
+#include <utility>
+#include <vector>
+using std::abs;
+using std::fabs;
+using std::array;
+using std::bitset;
+using std::cerr;
+using std::cos;
+using std::cout;
+using std::endl;
+using std::list;
+using std::map;
+using std::multimap;
+using std::multiset;
+using std::pair;
+using std::round;
+using std::set;
+using std::sin;
+using std::shared_ptr;
+using std::string;
+using std::tan;
+using std::unique_ptr;
+using std::unordered_map;
+using std::unordered_set;
+using std::vector;
+)CODE";
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 const std::string ROOT::TMetaUtils::AST2SourceTools::Decls2FwdDecls(const std::vector<const clang::Decl *> &decls,
                                                                     cling::Interpreter::IgnoreFilesFunc_t ignoreFiles,

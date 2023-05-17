@@ -1330,9 +1330,8 @@ static void RegisterPreIncludedHeaders(cling::Interpreter &clingInterp)
 #ifndef R__WIN32
    PreIncludes += "#include <cassert>\n";
 #endif
-   PreIncludes += "#include <string>\n"
-      "#include <vector>\n"
-      "using std::string; using std::vector;\n";
+   PreIncludes += ROOT::TMetaUtils::GetInjectedUsingDecls();
+
    clingInterp.declare(PreIncludes);
 }
 
