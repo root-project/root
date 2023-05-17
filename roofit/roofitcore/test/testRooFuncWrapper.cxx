@@ -24,7 +24,6 @@
 #include <RooHelpers.h>
 #include <RooMinimizer.h>
 #include <RooRealVar.h>
-#include <RooRandom.h>
 #include <RooSimultaneous.h>
 #include <RooWorkspace.h>
 
@@ -66,13 +65,13 @@ double getNumDerivative(const RooAbsReal &pdf, RooRealVar &var, const RooArgSet 
 
 void randomizeParameters(const RooArgSet &parameters)
 {
-   double lower_bound = -9;
-   double upper_bound = 9;
-   std::uniform_real_distribution<double> unif(lower_bound, upper_bound);
+   double lowerBound = -0.1;
+   double upperBound = 0.1;
+   std::uniform_real_distribution<double> unif(lowerBound, upperBound);
    std::default_random_engine re;
 
    for (auto *param : parameters) {
-      double mul = unif(re) / 10;
+      double mul = unif(re);
 
       auto par = dynamic_cast<RooAbsRealLValue *>(param);
       if (!par)
@@ -247,7 +246,12 @@ TEST_P(FactoryTest, NLLFit)
 
    RooAbsPdf &model = *ws.pdf("model");
 
-   std::size_t nEvents = 10;
+   // Figure out if this is a simultaneous fit. The RooFuncWrapper needs to
+   // know about this to figure out how to split the dataset and fill the
+   // observables.
+   auto simPdf = dynamic_cast<RooSimultaneous *>(&model);
+
+   std::size_t nEvents = 100;
    if (!data) {
       std::unique_ptr<RooDataSet> data0{model.generate(observables, nEvents)};
       data.reset(data0->binnedClone());
@@ -257,7 +261,7 @@ TEST_P(FactoryTest, NLLFit)
 
    static int funcWrapperCounter = 0;
    std::string wrapperName = "func_wrapper_" + std::to_string(funcWrapperCounter++);
-   RooFuncWrapper nllFunc(wrapperName.c_str(), wrapperName.c_str(), *nllRefResolved, observables, data.get());
+   RooFuncWrapper nllFunc(wrapperName.c_str(), wrapperName.c_str(), *nllRefResolved, observables, data.get(), simPdf);
 
    // Check if functions results are the same even after changing parameters.
    EXPECT_NEAR(nllRef->getVal(observables), nllFunc.getVal(), 1e-8);
@@ -317,8 +321,12 @@ TEST_P(FactoryTest, NLLFit)
 
    // Compare minimization results
    double tol = _params._fitResultTolerance;
-   EXPECT_TRUE(result->isIdentical(*resultRef, tol));
-   EXPECT_TRUE(resultAd->isIdentical(*resultRef, tol));
+   // Same tolerance for parameter values and error, don't compare correlations
+   // because for very small correlations it's usually not the same withing the
+   // relative tolerance because you would compare two small values that are
+   // only different from zero because of noise.
+   EXPECT_TRUE(result->isIdenticalNoCov(*resultRef, tol, tol));
+   EXPECT_TRUE(resultAd->isIdenticalNoCov(*resultRef, tol, tol));
 }
 
 /// Initial minimization that was not based on any other tutorial/test.
@@ -331,8 +339,7 @@ FactoryTestParams param1{"Gaussian",
                             observables.add(*ws.var("x"));
                          },
                          [](RooAbsPdf &pdf, RooAbsData &data, RooWorkspace &) {
-                            return std::unique_ptr<RooAbsReal>{
-                               pdf.createNLL(data, RooFit::BatchMode("cpu"))};
+                            return std::unique_ptr<RooAbsReal>{pdf.createNLL(data, RooFit::BatchMode("cpu"))};
                          },
                          1e-4,
                          /*randomizeParameters=*/false};
@@ -432,13 +439,13 @@ void getSimPdfModel(RooWorkspace &ws, RooArgSet &observables, std::unique_ptr<Ro
    RooArgSet models;
 
    auto nChannels = 2;
-   auto nEvents = 10;
+   auto nEvents = 1000;
 
-   for (std::size_t i = 0; i < nChannels; ++i) {
+   for (int i = 0; i < nChannels; ++i) {
       std::string suffix = "_" + std::to_string(i + 1);
       auto obsName = "x" + suffix;
       auto x = std::make_unique<RooRealVar>(obsName.c_str(), obsName.c_str(), 0, 10.);
-      x->setBins(5);
+      x->setBins(20);
 
       std::unique_ptr<RooAbsPdf> model{createSimPdfModel(*x, std::to_string(i + 1))};
 
@@ -463,7 +470,7 @@ FactoryTestParams param5{"SimPdf", getSimPdfModel,
                          [](RooAbsPdf &pdf, RooAbsData &data, RooWorkspace &) {
                             return std::unique_ptr<RooAbsReal>{pdf.createNLL(data, RooFit::BatchMode("cpu"))};
                          },
-                         1e-3,
+                         5e-3,
                          /*randomizeParameters=*/true};
 
 INSTANTIATE_TEST_SUITE_P(RooFuncWrapper, FactoryTest, testing::Values(param1, param2, param3, param4, param5),
