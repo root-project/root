@@ -75,6 +75,9 @@ protected:
     bool cacheSource() { return _cacheSource ; }
     void setCacheSource(bool flag) { _cacheSource = flag ; }
 
+    // Not Relevant for RooAbsCachedReal, only the RooAbsCachedPdf.
+    void setUnitNorm() { }
+
   private:
     // Payload
     RooHistFunc*      _func ;
@@ -83,6 +86,8 @@ protected:
     RooAbsReal*       _sourceClone ;
     bool            _cacheSource ;
   } ;
+
+  using CacheElem = FuncCacheElem;
 
   FuncCacheElem* getCache(const RooArgSet* nset) const ;
 

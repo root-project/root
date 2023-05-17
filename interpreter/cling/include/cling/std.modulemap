@@ -254,6 +254,11 @@ module "std" [system] {
     export *
     header "memory"
   }
+  module "memory_resource" [optional] {
+    requires cplusplus17
+    export *
+    header "memory_resource"
+  }
   module "mutex" {
     export *
     header "mutex"
@@ -265,6 +270,11 @@ module "std" [system] {
   module "numeric" {
     export *
     header "numeric"
+  }
+  module "optional" {
+    requires cplusplus17
+    export *
+    header "optional"
   }
   module "ostream" {
     export *
@@ -299,6 +309,11 @@ module "std" [system] {
 //    export *
 //    header "setjmp.h"
 //  }
+  module "span" {
+    requires cplusplus20
+    export *
+    header "span"
+  }
   module "sstream" {
     export *
     header "sstream"
@@ -441,6 +456,11 @@ module "std" [system] {
     export *
     header "bits/exception_defines.h"
   }
+  module "bits_invoke_h" {
+    export *
+    export bits_move_h
+    header "bits/invoke.h"
+  }
   module "bits/ios_base.h" {
     export *
     header "bits/ios_base.h"
@@ -453,6 +473,10 @@ module "std" [system] {
   module "bits/locale_facets.h" {
     export *
     header "bits/locale_facets.h"
+  }
+  module "bits_move_h" {
+    export *
+    header "bits/move.h"
   }
   module "bits_stl_algobase_h" {
     export *
@@ -486,6 +510,11 @@ module "std" [system] {
     export *
     header "bits/stl_tree.h"
   }
+  module "bits/range_access.h" {
+    export *
+    export bits_stl_iterator_h
+    header "bits/range_access.h"
+  }
   module "bits/ranges_algo.h" {
     requires cplusplus20
     export *
@@ -499,12 +528,19 @@ module "std" [system] {
     export initializer_list
     header "bits/ranges_algobase.h"
   }
-  explicit module "bits_ranges_base_h" {
+  explicit module "bits_ranges_base_h" [optional] {
     requires cplusplus20
     export *
     export bits_stl_iterator_h
     export initializer_list
     header "bits/ranges_base.h"
+  }
+  module "bits/ranges_util.h" [optional] {
+    requires cplusplus20
+    export *
+    export bits_invoke_h
+    export utility
+    header "bits/ranges_util.h"
   }
   module "bits_stl_algo_h" {
     export *
@@ -519,5 +555,15 @@ module "std" [system] {
     export *
     export bits_stl_algobase_h
     header "bits/uniform_int_dist.h"
+  }
+  module "bits/utility.h" [optional] {
+    requires cplusplus17
+    export *
+    header "bits/utility.h"
+  }
+  module "bits/uses_allocator_args.h" [optional] {
+    requires cplusplus17
+    export *
+    header "bits/uses_allocator_args.h"
   }
 }

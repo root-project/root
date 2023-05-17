@@ -29,80 +29,12 @@ starts with the coefficient that goes with \f$ T_1(x)=x \f$ (i.e. the linear ter
 #include "RooNameReg.h"
 #include "RooBatchCompute.h"
 
+#include <RooFit/Detail/AnalyticalIntegrals.h>
+#include <RooFit/Detail/EvaluateFuncs.h>
+
 #include <cmath>
 
 ClassImp(RooChebychev);
-
-namespace { // anonymous namespace to hide implementation details
-/// use fast FMA if available, fall back to normal arithmetic if not
-static inline double fast_fma(
-   const double x, const double y, const double z) noexcept
-{
-#if defined(FP_FAST_FMA) // check if std::fma has fast hardware implementation
-   return std::fma(x, y, z);
-#else // defined(FP_FAST_FMA)
-   // std::fma might be slow, so use a more pedestrian implementation
-#if defined(__clang__)
-#pragma STDC FP_CONTRACT ON // hint clang that using an FMA is okay here
-#endif // defined(__clang__)
-   return (x * y) + z;
-#endif // defined(FP_FAST_FMA)
-}
-
-/// Chebychev polynomials of first or second kind
-enum class Kind : int { First = 1, Second = 2 };
-
-/** @brief ChebychevIterator evaluates increasing orders at given x
- *
- * @author Manuel Schiller <Manuel.Schiller@glasgow.ac.uk>
- * @date 2019-03-24
- */
-template <typename T, Kind KIND>
-class ChebychevIterator {
-private:
-   T _last = 1;
-   T _curr = 0;
-   T _twox = 0;
-
-public:
-   /// default constructor
-   constexpr ChebychevIterator() = default;
-   /// copy constructor
-   ChebychevIterator(const ChebychevIterator &) = default;
-   /// move constructor
-   ChebychevIterator(ChebychevIterator &&) = default;
-   /// construct from given x in [-1, 1]
-   constexpr ChebychevIterator(const T &x)
-       : _curr(static_cast<int>(KIND) * x), _twox(2 * x)
-   {}
-
-   /// (copy) assignment
-   ChebychevIterator &operator=(const ChebychevIterator &) = default;
-   /// move assignment
-   ChebychevIterator &operator=(ChebychevIterator &&) = default;
-
-   /// get value of Chebychev polynomial at current order
-   constexpr inline T operator*() const noexcept { return _last; }
-   // get value of Chebychev polynomial at (current + 1) order
-   constexpr inline T lookahead() const noexcept { return _curr; }
-   /// move on to next order, return reference to new value
-   inline ChebychevIterator &operator++() noexcept
-   {
-      //T newval = fast_fma(_twox, _curr, -_last);
-      T newval = _twox*_curr -_last;
-      _last = _curr;
-      _curr = newval;
-      return *this;
-   }
-   /// move on to next order, return copy of new value
-   inline ChebychevIterator operator++(int) noexcept
-   {
-      ChebychevIterator retVal(*this);
-      operator++();
-      return retVal;
-   }
-};
-} // anonymous namespace
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -160,24 +92,25 @@ double RooChebychev::evaluate() const
   // first bring the range of the variable _x to the normalised range [-1, 1]
   // calculate sum_k c_k T_k(x) where x is given in the normalised range,
   // c_0 = 1, and the higher coefficients are given in _coefList
-  const double xmax = _x.max(_refRangeName?_refRangeName->GetName():0);
-  const double xmin = _x.min(_refRangeName?_refRangeName->GetName():0);
-  // transform to range [-1, +1]
-  const double x = (_x - 0.5 * (xmax + xmin)) / (0.5 * (xmax - xmin));
-  // extract current values of coefficients
-  using size_type = typename RooListProxy::Storage_t::size_type;
-  const size_type iend = _coefList.size();
-  double sum = 1.;
-  if (iend > 0) {
-     ChebychevIterator<double, Kind::First> chit(x);
-     ++chit;
-     for (size_type i = 0; iend != i; ++i, ++chit) {
-        auto c = static_cast<const RooAbsReal &>(_coefList[i]).getVal();
-        //sum = fast_fma(*chit, c, sum);
-        sum += *chit*c;
-     }
-  }
-  return sum;
+  double xmax = _x.max(_refRangeName ? _refRangeName->GetName() : 0);
+  double xmin = _x.min(_refRangeName ? _refRangeName->GetName() : 0);
+
+  std::vector<double> coeffs;
+  for (auto it : _coefList)
+     coeffs.push_back(static_cast<const RooAbsReal &>(*it).getVal());
+  return RooFit::Detail::EvaluateFuncs::chebychevEvaluate(coeffs.data(), _coefList.size(), _x, xmin, xmax);
+}
+
+void RooChebychev::translate(RooFit::Detail::CodeSquashContext &ctx) const
+{
+   // first bring the range of the variable _x to the normalised range [-1, 1]
+   // calculate sum_k c_k T_k(x) where x is given in the normalised range,
+   // c_0 = 1, and the higher coefficients are given in _coefList
+   double xmax = _x.max(_refRangeName ? _refRangeName->GetName() : 0);
+   double xmin = _x.min(_refRangeName ? _refRangeName->GetName() : 0);
+
+   ctx.addResult(this,
+                 ctx.buildCall("RooFit::Detail::EvaluateFuncs::chebychevEvaluate", _coefList, _coefList.size(), _x, xmin, xmax));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -208,49 +141,27 @@ double RooChebychev::analyticalIntegral(Int_t code, const char* rangeName) const
 {
   assert(1 == code); (void)code;
 
-  const double xmax = _x.max(_refRangeName?_refRangeName->GetName():0);
-  const double xmin = _x.min(_refRangeName?_refRangeName->GetName():0);
-  const double halfrange = .5 * (xmax - xmin), mid = .5 * (xmax + xmin);
-  // the full range of the function is mapped to the normalised [-1, 1] range
-  const double b = (_x.max(rangeName) - mid) / halfrange;
-  const double a = (_x.min(rangeName) - mid) / halfrange;
+  double xmax = _x.max(_refRangeName ? _refRangeName->GetName() : 0);
+  double xmaxFull = _x.max(rangeName);
+  double xmin = _x.min(_refRangeName ? _refRangeName->GetName() : 0);
+  double xminFull = _x.min(rangeName);
+  unsigned int sz = _coefList.size();
 
-  // take care to multiply with the right factor to account for the mapping to
-  // normalised range [-1, 1]
-  return halfrange * evalAnaInt(a, b);
+  std::vector<double> coeffs;
+  for (auto it : _coefList)
+     coeffs.push_back(static_cast<const RooAbsReal &>(*it).getVal());
+
+  return RooFit::Detail::AnalyticalIntegrals::chebychevIntegral(coeffs.data(), sz, xmin, xmax, xminFull, xmaxFull);
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
-double RooChebychev::evalAnaInt(const double a, const double b) const
+std::string RooChebychev::buildCallToAnalyticIntegral(Int_t /* code */, const char *rangeName,
+                                                      RooFit::Detail::CodeSquashContext &ctx) const
 {
-   // coefficient for integral(T_0(x)) is 1 (implicit), integrate by hand
-   // T_0(x) and T_1(x), and use for n > 1: integral(T_n(x) dx) =
-   // (T_n+1(x) / (n + 1) - T_n-1(x) / (n - 1)) / 2
-   double sum = b - a; // integrate T_0(x) by hand
+   double xmax = _x.max(_refRangeName ? _refRangeName->GetName() : 0);
+   double xmaxFull = _x.max(rangeName);
+   double xmin = _x.min(_refRangeName ? _refRangeName->GetName() : 0);
+   double xminFull = _x.min(rangeName);
+   unsigned int sz = _coefList.size();
 
-   using size_type = typename RooListProxy::Storage_t::size_type;
-   const size_type iend = _coefList.size();
-   if (iend > 0) {
-      {
-         // integrate T_1(x) by hand...
-         const double c = static_cast<const RooAbsReal &>(_coefList[0]).getVal();
-         sum = fast_fma(0.5 * (b + a) * (b - a), c, sum);
-      }
-      if (1 < iend) {
-         ChebychevIterator<double, Kind::First> bit(b), ait(a);
-         ++bit, ++ait;
-         double nminus1 = 1.;
-         for (size_type i = 1; iend != i; ++i) {
-            // integrate using recursion relation
-            const double c = static_cast<const RooAbsReal &>(_coefList[i]).getVal();
-            const double term2 = (*bit - *ait) / nminus1;
-            ++bit, ++ait, ++nminus1;
-            const double term1 = (bit.lookahead() - ait.lookahead()) / (nminus1 + 1.);
-            const double intTn = 0.5 * (term1 - term2);
-            sum = fast_fma(intTn, c, sum);
-         }
-      }
-  }
-  return sum;
+   return ctx.buildCall("RooFit::Detail::AnalyticalIntegrals::chebychevIntegral", _coefList, sz, xmin, xmax, xminFull, xmaxFull);
 }

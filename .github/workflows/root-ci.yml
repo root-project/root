@@ -229,6 +229,9 @@ jobs:
         # Common configs: {Release,Debug,RelWithDebInfo)
         # Build options: https://root.cern/install/build_from_source/#all-build-options
         include:
+          - image: fedora38
+            config: Debug
+
           - image: fedora37
             config: Debug
 
@@ -358,7 +361,7 @@ jobs:
           name:  Test Results ${{ matrix.image }} ${{ matrix.config }}
           path: /tmp/workspace/build/TestResults.xml
       - name: Setup tmate session
-        if: ${{ failure() }}
+        if: failure() && runner.debug == '1'
         uses: mxschmitt/action-tmate@v3
         with:
           sudo: false

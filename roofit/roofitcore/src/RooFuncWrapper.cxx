@@ -87,7 +87,7 @@ void RooFuncWrapper::loadParamsAndData(std::string funcName, RooAbsArg const *he
 
    // Extract observables
    std::stack<std::vector<double>> vectorBuffers; // for data loading
-   auto spans = RooFit::BatchModeDataHelpers::getDataSpans(*data, "", "", vectorBuffers, true);
+   auto spans = RooFit::BatchModeDataHelpers::getDataSpans(*data, "", nullptr, true, false, vectorBuffers);
 
    for (auto const &item : spans) {
       std::size_t n = item.second.size();

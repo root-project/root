@@ -71,6 +71,7 @@ public:
     RooDataHist* hist() { return _hist.get() ; }
     const RooArgSet& nset() { return _nset ; }
     RooChangeTracker* paramTracker() { return _paramTracker.get() ; }
+    void setUnitNorm() { pdf()->setUnitNorm(true); }
 
   private:
     // Payload
@@ -81,6 +82,8 @@ public:
     std::unique_ptr<RooAbsReal>  _norm ;
 
   } ;
+
+  using CacheElem = PdfCacheElem;
 
   protected:
 

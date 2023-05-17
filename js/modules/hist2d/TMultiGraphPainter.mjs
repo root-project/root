@@ -1,8 +1,9 @@
-import { create, isFunc, clTObjString, clTHashList, kNoZoom } from '../core.mjs';
+import { create, isFunc, clTH1I, clTH2I, clTObjString, clTHashList, kNoZoom } from '../core.mjs';
 import { DrawOptions } from '../base/BasePainter.mjs';
 import { ObjectPainter } from '../base/ObjectPainter.mjs';
 import { TH1Painter, PadDrawOptions } from './TH1Painter.mjs';
 import { TGraphPainter } from './TGraphPainter.mjs';
+
 
 /**
  * @summary Painter for TMultiGraph object.
@@ -155,7 +156,7 @@ class TMultiGraphPainter extends ObjectPainter {
       if (!histo) {
          let xaxis, yaxis;
          if (this._3d) {
-            histo = create('TH2I');
+            histo = create(clTH2I);
             xaxis = histo.fXaxis;
             xaxis.fXmin = 0;
             xaxis.fXmax = graphs.arr.length;
@@ -170,7 +171,7 @@ class TMultiGraphPainter extends ObjectPainter {
             xaxis = histo.fYaxis;
             yaxis = histo.fZaxis;
          } else {
-            histo = create('TH1I');
+            histo = create(clTH1I);
             xaxis = histo.fXaxis;
             yaxis = histo.fYaxis;
          }

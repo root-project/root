@@ -5,7 +5,9 @@
 #include <array>
 #include <utility>
 
-namespace CUDAhist {
+namespace ROOT {
+namespace Experimental {
+namespace CUDAHist {
 
 struct RAxis {
    int fNbins;  ///< Number of bins(1D) WITH u/overflow
@@ -64,5 +66,7 @@ protected:
    void ExecuteCUDAHisto();
 };
 
-} // namespace CUDAhist
+} // namespace CUDAHist
+} // namespace Experimental
+} // namespace ROOT
 #endif

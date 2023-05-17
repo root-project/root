@@ -52,7 +52,7 @@ void StatusPrint(Int_t id,const TString &title,Int_t status)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Int_t stressRooFit(const char* refFile, bool writeRef, Int_t doVerbose, Int_t oneTest, bool dryRun, bool doDump, bool doTreeStore, std::string const& batchMode)
+Int_t stressRooFit(const char* refFile, bool writeRef, Int_t doVerbose, Int_t oneTest, bool dryRun, bool doDump, bool doTreeStore)
 {
   Int_t retVal = 0;
   // Save memory directory location
@@ -102,62 +102,62 @@ Int_t stressRooFit(const char* refFile, bool writeRef, Int_t doVerbose, Int_t on
   timer.Start();
 
   list<RooUnitTest*> testList ;
-  testList.push_back(new TestBasic101(fref,writeRef,doVerbose,batchMode)) ;
-  testList.push_back(new TestBasic102(fref,writeRef,doVerbose,batchMode)) ;
-  testList.push_back(new TestBasic103(fref,writeRef,doVerbose,batchMode)) ;
-  testList.push_back(new TestBasic105(fref,writeRef,doVerbose,batchMode)) ;
-  testList.push_back(new TestBasic108(fref,writeRef,doVerbose,batchMode)) ;
-  testList.push_back(new TestBasic109(fref,writeRef,doVerbose,batchMode)) ;
-  testList.push_back(new TestBasic110(fref,writeRef,doVerbose,batchMode)) ;
-  testList.push_back(new TestBasic111(fref,writeRef,doVerbose,batchMode)) ;
-  testList.push_back(new TestBasic201(fref,writeRef,doVerbose,batchMode)) ;
-  testList.push_back(new TestBasic202(fref,writeRef,doVerbose,batchMode)) ;
-  testList.push_back(new TestBasic203(fref,writeRef,doVerbose,batchMode)) ;
-  testList.push_back(new TestBasic204(fref,writeRef,doVerbose,batchMode)) ;
-  testList.push_back(new TestBasic205(fref,writeRef,doVerbose,batchMode)) ;
-  testList.push_back(new TestBasic208(fref,writeRef,doVerbose,batchMode)) ;
-  testList.push_back(new TestBasic209(fref,writeRef,doVerbose,batchMode)) ;
-  testList.push_back(new TestBasic301(fref,writeRef,doVerbose,batchMode)) ;
-  testList.push_back(new TestBasic302(fref,writeRef,doVerbose,batchMode)) ;
-  testList.push_back(new TestBasic303(fref,writeRef,doVerbose,batchMode)) ;
-  testList.push_back(new TestBasic304(fref,writeRef,doVerbose,batchMode)) ;
-  testList.push_back(new TestBasic305(fref,writeRef,doVerbose,batchMode)) ;
-  testList.push_back(new TestBasic306(fref,writeRef,doVerbose,batchMode)) ;
-  testList.push_back(new TestBasic307(fref,writeRef,doVerbose,batchMode)) ;
-  testList.push_back(new TestBasic308(fref,writeRef,doVerbose,batchMode)) ;
-  testList.push_back(new TestBasic310(fref,writeRef,doVerbose,batchMode)) ;
-  testList.push_back(new TestBasic311(fref,writeRef,doVerbose,batchMode)) ;
-  testList.push_back(new TestBasic312(fref,writeRef,doVerbose,batchMode)) ;
-  testList.push_back(new TestBasic313(fref,writeRef,doVerbose,batchMode)) ;
-  testList.push_back(new TestBasic315(fref,writeRef,doVerbose,batchMode)) ;
-  testList.push_back(new TestBasic314(fref,writeRef,doVerbose,batchMode)) ;
-  testList.push_back(new TestBasic316(fref,writeRef,doVerbose,batchMode)) ;
-  testList.push_back(new TestBasic402(fref,writeRef,doVerbose,batchMode)) ;
-  testList.push_back(new TestBasic403(fref,writeRef,doVerbose,batchMode)) ;
-  testList.push_back(new TestBasic404(fref,writeRef,doVerbose,batchMode)) ;
-  testList.push_back(new TestBasic405(fref,writeRef,doVerbose,batchMode)) ;
-  testList.push_back(new TestBasic406(fref,writeRef,doVerbose,batchMode)) ;
-  testList.push_back(new TestBasic501(fref,writeRef,doVerbose,batchMode)) ;
-  testList.push_back(new TestBasic599(fref,writeRef,doVerbose,batchMode)) ;
-  testList.push_back(new TestBasic601(fref,writeRef,doVerbose,batchMode)) ;
-  testList.push_back(new TestBasic602(fref,writeRef,doVerbose,batchMode)) ;
-  testList.push_back(new TestBasic604(fref,writeRef,doVerbose,batchMode)) ;
-  testList.push_back(new TestBasic605(fref,writeRef,doVerbose,batchMode)) ;
-  testList.push_back(new TestBasic606(fref,writeRef,doVerbose,batchMode)) ;
-  testList.push_back(new TestBasic607(fref,writeRef,doVerbose,batchMode)) ;
-  testList.push_back(new TestBasic609(fref,writeRef,doVerbose,batchMode)) ;
-  testList.push_back(new TestBasic701(fref,writeRef,doVerbose,batchMode)) ;
-  testList.push_back(new TestBasic702(fref,writeRef,doVerbose,batchMode)) ;
-  testList.push_back(new TestBasic703(fref,writeRef,doVerbose,batchMode)) ;
-  testList.push_back(new TestBasic704(fref,writeRef,doVerbose,batchMode)) ;
-  testList.push_back(new TestBasic705(fref,writeRef,doVerbose,batchMode)) ;
-  testList.push_back(new TestBasic706(fref,writeRef,doVerbose,batchMode)) ;
-  testList.push_back(new TestBasic707(fref,writeRef,doVerbose,batchMode)) ;
-  testList.push_back(new TestBasic708(fref,writeRef,doVerbose,batchMode)) ;
-  testList.push_back(new TestBasic801(fref,writeRef,doVerbose,batchMode)) ;
-  testList.push_back(new TestBasic802(fref,writeRef,doVerbose,batchMode)) ;
-  testList.push_back(new TestBasic803(fref,writeRef,doVerbose,batchMode)) ;
-  testList.push_back(new TestBasic804(fref,writeRef,doVerbose,batchMode)) ;
+  testList.push_back(new TestBasic101(fref,writeRef,doVerbose)) ;
+  testList.push_back(new TestBasic102(fref,writeRef,doVerbose)) ;
+  testList.push_back(new TestBasic103(fref,writeRef,doVerbose)) ;
+  testList.push_back(new TestBasic105(fref,writeRef,doVerbose)) ;
+  testList.push_back(new TestBasic108(fref,writeRef,doVerbose)) ;
+  testList.push_back(new TestBasic109(fref,writeRef,doVerbose)) ;
+  testList.push_back(new TestBasic110(fref,writeRef,doVerbose)) ;
+  testList.push_back(new TestBasic111(fref,writeRef,doVerbose)) ;
+  testList.push_back(new TestBasic201(fref,writeRef,doVerbose)) ;
+  testList.push_back(new TestBasic202(fref,writeRef,doVerbose)) ;
+  testList.push_back(new TestBasic203(fref,writeRef,doVerbose)) ;
+  testList.push_back(new TestBasic204(fref,writeRef,doVerbose)) ;
+  testList.push_back(new TestBasic205(fref,writeRef,doVerbose)) ;
+  testList.push_back(new TestBasic208(fref,writeRef,doVerbose)) ;
+  testList.push_back(new TestBasic209(fref,writeRef,doVerbose)) ;
+  testList.push_back(new TestBasic301(fref,writeRef,doVerbose)) ;
+  testList.push_back(new TestBasic302(fref,writeRef,doVerbose)) ;
+  testList.push_back(new TestBasic303(fref,writeRef,doVerbose)) ;
+  testList.push_back(new TestBasic304(fref,writeRef,doVerbose)) ;
+  testList.push_back(new TestBasic305(fref,writeRef,doVerbose)) ;
+  testList.push_back(new TestBasic306(fref,writeRef,doVerbose)) ;
+  testList.push_back(new TestBasic307(fref,writeRef,doVerbose)) ;
+  testList.push_back(new TestBasic308(fref,writeRef,doVerbose)) ;
+  testList.push_back(new TestBasic310(fref,writeRef,doVerbose)) ;
+  testList.push_back(new TestBasic311(fref,writeRef,doVerbose)) ;
+  testList.push_back(new TestBasic312(fref,writeRef,doVerbose)) ;
+  testList.push_back(new TestBasic313(fref,writeRef,doVerbose)) ;
+  testList.push_back(new TestBasic315(fref,writeRef,doVerbose)) ;
+  testList.push_back(new TestBasic314(fref,writeRef,doVerbose)) ;
+  testList.push_back(new TestBasic316(fref,writeRef,doVerbose)) ;
+  testList.push_back(new TestBasic402(fref,writeRef,doVerbose)) ;
+  testList.push_back(new TestBasic403(fref,writeRef,doVerbose)) ;
+  testList.push_back(new TestBasic404(fref,writeRef,doVerbose)) ;
+  testList.push_back(new TestBasic405(fref,writeRef,doVerbose)) ;
+  testList.push_back(new TestBasic406(fref,writeRef,doVerbose)) ;
+  testList.push_back(new TestBasic501(fref,writeRef,doVerbose)) ;
+  testList.push_back(new TestBasic599(fref,writeRef,doVerbose)) ;
+  testList.push_back(new TestBasic601(fref,writeRef,doVerbose)) ;
+  testList.push_back(new TestBasic602(fref,writeRef,doVerbose)) ;
+  testList.push_back(new TestBasic604(fref,writeRef,doVerbose)) ;
+  testList.push_back(new TestBasic605(fref,writeRef,doVerbose)) ;
+  testList.push_back(new TestBasic606(fref,writeRef,doVerbose)) ;
+  testList.push_back(new TestBasic607(fref,writeRef,doVerbose)) ;
+  testList.push_back(new TestBasic609(fref,writeRef,doVerbose)) ;
+  testList.push_back(new TestBasic701(fref,writeRef,doVerbose)) ;
+  testList.push_back(new TestBasic702(fref,writeRef,doVerbose)) ;
+  testList.push_back(new TestBasic703(fref,writeRef,doVerbose)) ;
+  testList.push_back(new TestBasic704(fref,writeRef,doVerbose)) ;
+  testList.push_back(new TestBasic705(fref,writeRef,doVerbose)) ;
+  testList.push_back(new TestBasic706(fref,writeRef,doVerbose)) ;
+  testList.push_back(new TestBasic707(fref,writeRef,doVerbose)) ;
+  testList.push_back(new TestBasic708(fref,writeRef,doVerbose)) ;
+  testList.push_back(new TestBasic801(fref,writeRef,doVerbose)) ;
+  testList.push_back(new TestBasic802(fref,writeRef,doVerbose)) ;
+  testList.push_back(new TestBasic803(fref,writeRef,doVerbose)) ;
+  testList.push_back(new TestBasic804(fref,writeRef,doVerbose)) ;
 
   cout << "*  Starting  S T R E S S  basic suite                            *" <<endl;
   cout << "******************************************************************" <<endl;
@@ -352,8 +352,11 @@ int main(int argc,const char *argv[])
     cout << "stressRooFit: WARNING running in write mode, but reference file is web file, writing local file instead: " << refFileName << endl ;
   }
 
+  // set default BatchMode backend
+  RooFit::Experimental::defaultBatchMode() = batchMode;
+
   gBenchmark = new TBenchmark();
-  Int_t retVal = stressRooFit(refFileName.c_str(),doWrite,doVerbose,oneTest,dryRun,doDump,doTreeStore,batchMode);
+  Int_t retVal = stressRooFit(refFileName.c_str(),doWrite,doVerbose,oneTest,dryRun,doDump,doTreeStore);
   return retVal;
 }
 
@@ -367,11 +370,10 @@ Int_t stressRooFit()
    Int_t dryRun       = false ;
    bool doDump      = false ;
    bool doTreeStore = false ;
-   std::string batchMode = "off";
 
    //string refFileName = "http://root.cern.ch/files/stressRooFit_v534_ref.root" ;
    string refFileName = "stressRooFit_ref.root" ;
-   return stressRooFit(refFileName.c_str(),doWrite,doVerbose,oneTest,dryRun,doDump,doTreeStore,batchMode);
+   return stressRooFit(refFileName.c_str(),doWrite,doVerbose,oneTest,dryRun,doDump,doTreeStore);
 }
 
 #endif

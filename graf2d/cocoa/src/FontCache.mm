@@ -417,6 +417,9 @@ void FontCache::FreeFontNames(char **fontList)
 //______________________________________________________________________________
 unsigned FontCache::GetTextWidth(FontStruct_t font, const char *text, int nChars)
 {
+   if (nChars == 0)
+      return 0;
+
    typedef std::vector<CGSize>::size_type size_type;
    //
    CTFontRef fontRef = (CTFontRef)font;

@@ -10,6 +10,8 @@
 #include "TH1.h"
 #include "TAxis.h"
 
+using namespace ROOT::Experimental::CUDAHist;
+
 // Helper function for toggling ON CUDA histogramming.
 char env[] = "CUDA_HIST";
 void EnableCUDA()
@@ -129,7 +131,7 @@ protected:
    double *stats, *expectedStats;
    int nStats;
 
-   const CUDAhist::RHnCUDA<histType, dim> histogram;
+   const RHnCUDA<histType, dim> histogram;
 
    HistoTestFixture() : histogram(Repeat<int, dim>(numBins), Repeat<double, dim>(startBin), Repeat<double, dim>(endBin))
    {
@@ -272,7 +274,7 @@ TYPED_TEST(HistoTestFixture, FillFixedBinsWeighted)
 
 TEST(HistoTestFixture, FillIntClamp)
 {
-   auto h = CUDAhist::RHnCUDA<int, 1>({6}, {0}, {4});
+   auto h = RHnCUDA<int, 1>({6}, {0}, {4});
    h.Fill({0}, INT_MAX);
    h.Fill({3}, -INT_MAX);
 
@@ -297,7 +299,7 @@ TEST(HistoTestFixture, FillIntClamp)
 
 TEST(HistoTestFixture, FillShortClamp)
 {
-   auto h = CUDAhist::RHnCUDA<short, 1>({10}, {0}, {8});
+   auto h = RHnCUDA<short, 1>({10}, {0}, {8});
 
    // Filling short histograms is implemented using atomic operations on integers so we test each case
    // twice to test the for correct filling of the lower and upper bits.

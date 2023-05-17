@@ -156,6 +156,7 @@ endif()
 
 if(sqlite)
   target_sources(ROOTDataFrame PRIVATE src/RSqliteDS.cxx)
+  target_include_directories(ROOTDataFrame PRIVATE ${SQLITE_INCLUDE_DIR})
   target_link_libraries(ROOTDataFrame PRIVATE ${SQLITE_LIBRARIES})
 endif()
 

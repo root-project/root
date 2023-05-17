@@ -37,9 +37,6 @@ Lightweight interface adaptor that binds a RooAbsPdf to TFOAM
 
 using namespace std;
 
-ClassImp(RooTFoamBinding);
-;
-
 
 ////////////////////////////////////////////////////////////////////////////////
 

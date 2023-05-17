@@ -153,7 +153,7 @@ BuildAction(const ColumnNames_t &bl, const std::shared_ptr<ActionResultType> &h,
    // tree/dataframe/test/datagframe_helpers.cxx
    if constexpr (has_getxaxis_v<ActionResultType>) {
       if (getenv("CUDA_HIST")) {
-         using Helper_t = CUDAFillHelper<ActionResultType>;
+         using Helper_t = ROOT::Experimental::Internal::RDF::CUDAFillHelper<ActionResultType>;
          using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<ColTypes...>>;
          return std::make_unique<Action_t>(Helper_t(h, nSlots), bl, std::move(prevNode), colRegister);
       }
@@ -179,7 +179,7 @@ BuildAction(const ColumnNames_t &bl, const std::shared_ptr<::TH1D> &h, const uns
 
 #ifdef ROOT_RDF_CUDA
    if (getenv("CUDA_HIST")) {
-      using Helper_t = CUDAFillHelper<::TH1D>;
+      using Helper_t = ROOT::Experimental::Internal::RDF::CUDAFillHelper<::TH1D>;
       using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<ColTypes...>>;
       return std::make_unique<Action_t>(Helper_t(h, nSlots), bl, std::move(prevNode), colRegister);
    } else

@@ -26,7 +26,8 @@ function readStyleFromURL(url) {
       let optimize = d.get('optimize');
       if (optimize) {
          optimize = parseInt(optimize);
-         if (Number.isInteger(optimize)) settings.OptimizeDraw = optimize;
+         if (Number.isInteger(optimize))
+            settings.OptimizeDraw = optimize;
       }
    }
 
@@ -45,6 +46,9 @@ function readStyleFromURL(url) {
 
    if (d.has('prefer_saved_points'))
       settings.PreferSavedPoints = true;
+
+   if (d.has('with_credentials'))
+      settings.WithCredentials = true;
 
    let inter = d.get('interactive');
    if (inter === 'nomenu')
@@ -74,8 +78,8 @@ function readStyleFromURL(url) {
    get_bool('tooltip', 'Tooltip');
 
    let mathjax = d.get('mathjax', null), latex = d.get('latex', null);
-
-   if ((mathjax !== null) && (mathjax != '0') && (latex === null)) latex = 'math';
+   if ((mathjax !== null) && (mathjax != '0') && (latex === null))
+      latex = 'math';
    if (latex !== null)
       settings.Latex = constants.Latex.fromString(latex);
 
@@ -145,7 +149,7 @@ function readStyleFromURL(url) {
   * import { buildGUI } from '/path_to_jsroot/modules/gui.mjs';
   * buildGUI('guiDiv'); */
 async function buildGUI(gui_element, gui_kind = '') {
-   let myDiv = isStr(gui_element) ? d3_select('#' + gui_element) : d3_select(gui_element);
+   let myDiv = d3_select(isStr(gui_element) ? `#${gui_element}` : gui_element);
    if (myDiv.empty())
       return Promise.reject(Error('no div for gui found'));
 
@@ -176,7 +180,7 @@ async function buildGUI(gui_element, gui_kind = '') {
       } else {
          d3_select('html').style('height','100%');
          d3_select('body').style('min-height','100%').style('margin',0).style('overflow','hidden');
-         myDiv.style('position','absolute').style('left',0).style('top',0).style('bottom',0).style('right',0).style('padding',1);
+         myDiv.style('position','absolute').style('inset','0px').style('padding','1px');
       }
    }
 

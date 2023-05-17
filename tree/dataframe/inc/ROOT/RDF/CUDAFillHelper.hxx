@@ -31,8 +31,10 @@
 #include <array>
 
 namespace ROOT {
+namespace Experimental {
 namespace Internal {
 namespace RDF {
+using namespace ROOT::Internal::RDF;
 using Hist_t = ::TH1D;
 
 // clang-format off
@@ -63,7 +65,7 @@ class R__CLING_PTRCHECK(off) CUDAFillHelper : public RActionImpl<CUDAFillHelper<
    static constexpr size_t dim = getHistDim((HIST *)nullptr);
 
    std::vector<HIST *> fObjects;
-   std::vector<CUDAhist::RHnCUDA<decltype(getHistType((HIST *)nullptr)), dim> *> fCudaHist;
+   std::vector<ROOT::Experimental::CUDAHist::RHnCUDA<decltype(getHistType((HIST *)nullptr)), dim> *> fCudaHist;
 
    template <typename H = HIST, typename = decltype(std::declval<H>().Reset())>
    void ResetIfPossible(H *h)
@@ -222,7 +224,7 @@ public:
       }
 
       fCudaHist[i] =
-         new CUDAhist::RHnCUDA<decltype(getHistType((HIST *)nullptr)), dim>(ncells, xlow, xhigh, binEdges.data());
+         new CUDAHist::RHnCUDA<decltype(getHistType((HIST *)nullptr)), dim>(ncells, xlow, xhigh, binEdges.data());
    }
 
    CUDAFillHelper(const std::shared_ptr<HIST> &h, const unsigned int nSlots)
@@ -375,6 +377,7 @@ public:
 
 } // namespace RDF
 } // namespace Internal
+} // namespace Experimental
 } // namespace ROOT
 
 #endif
