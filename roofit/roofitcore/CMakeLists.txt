@@ -237,7 +237,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooFit/TestStatistics/RooSumL.h
     RooFit/TestStatistics/RooRealL.h
     RooFit/TestStatistics/RooUnbinnedL.h
-    RooFit/TestStatistics/optional_parameter_types.h
     RooFit/TestStatistics/buildLikelihood.h
     RunContext.h
   SOURCES
@@ -468,7 +467,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/TestStatistics/RooSumL.cxx
     src/TestStatistics/RooRealL.cxx
     src/TestStatistics/RooUnbinnedL.cxx
-    src/TestStatistics/optional_parameter_types.cxx
     src/TestStatistics/buildLikelihood.cxx
     ${RooFitMPTestStatisticsSources}
   DICTIONARY_OPTIONS

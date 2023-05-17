@@ -362,10 +362,11 @@ TEST(SimBinnedConstrainedTestBasic, BasicParameters)
 
    const double nll0 = nll->getVal();
 
-   std::shared_ptr<RooFit::TestStatistics::RooAbsL> likelihood = RooFit::TestStatistics::buildLikelihood(
-      pdf, data, RooFit::TestStatistics::GlobalObservables({*w.var("alpha_bkg_obs_A"), *w.var("alpha_bkg_obs_B")}));
-   auto clean_flags = std::make_shared<RooFit::TestStatistics::WrapperCalculationCleanFlags>();
-   auto nll_ts = LikelihoodWrapper::create(RooFit::TestStatistics::LikelihoodMode::serial, likelihood, clean_flags);
+   auto nll_ts = LikelihoodWrapper::create(RooFit::TestStatistics::LikelihoodMode::serial,
+                                           RooFit::TestStatistics::NLLFactory{*pdf, *data}
+                                              .GlobalObservables({*w.var("alpha_bkg_obs_A"), *w.var("alpha_bkg_obs_B")})
+                                              .build(),
+                                           std::make_unique<RooFit::TestStatistics::WrapperCalculationCleanFlags>());
 
    nll_ts->evaluate();
    auto nll1 = nll_ts->getResult();
