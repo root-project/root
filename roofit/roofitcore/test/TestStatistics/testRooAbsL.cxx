@@ -22,7 +22,6 @@
 #include <RooFit/TestStatistics/RooUnbinnedL.h>
 #include <RooFit/TestStatistics/RooBinnedL.h>
 #include <RooFit/TestStatistics/RooSumL.h>
-#include <RooFit/TestStatistics/optional_parameter_types.h>
 #include <RooFit/TestStatistics/buildLikelihood.h>
 #include <RooFit/TestStatistics/RooRealL.h>
 
@@ -188,9 +187,9 @@ TEST_F(RooAbsLTest, SumLikelihoodIntrospection)
 TEST_F(SimBinnedConstrainedTest, SumSubsidiaryLikelihoodIntrospection)
 {
 
-   likelihood = RooFit::TestStatistics::buildLikelihood(
-      pdf, data.get(),
-      RooFit::TestStatistics::GlobalObservables({*w.var("alpha_bkg_obs_A"), *w.var("alpha_bkg_obs_B")}));
+   likelihood = RooFit::TestStatistics::NLLFactory{*pdf, *data}
+                   .GlobalObservables({*w.var("alpha_bkg_obs_A"), *w.var("alpha_bkg_obs_B")})
+                   .build();
 
    EXPECT_STREQ("RooSumL", (likelihood->GetClassName()).c_str());
    EXPECT_STREQ("RooSumL::model", (likelihood->GetInfo()).c_str());
@@ -224,9 +223,9 @@ TEST_F(SimBinnedConstrainedTest, EventSections)
 {
    // Test whether the summed total of multiple sections gives the same result
    // as an evaluation with a single section over the whole event range.
-   likelihood = RooFit::TestStatistics::buildLikelihood(
-      pdf, data.get(),
-      RooFit::TestStatistics::GlobalObservables({*w.var("alpha_bkg_obs_A"), *w.var("alpha_bkg_obs_B")}));
+   likelihood = RooFit::TestStatistics::NLLFactory{*pdf, *data}
+                   .GlobalObservables({*w.var("alpha_bkg_obs_A"), *w.var("alpha_bkg_obs_B")})
+                   .build();
 
    auto whole = likelihood->evaluatePartition({0, 1}, 0, likelihood->getNComponents());
    auto part1 = likelihood->evaluatePartition({0, 0.5}, 0, likelihood->getNComponents());
@@ -279,9 +278,9 @@ TEST_F(SimBinnedConstrainedTest, SubEventSections)
    // number (less) of events than the RooSumL itself. Moreover, this more
    // complex likelihood has an extended term and a subsidiary component
    // which also depend on section so will also be checked here.
-   likelihood = RooFit::TestStatistics::buildLikelihood(
-      pdf, data.get(),
-      RooFit::TestStatistics::GlobalObservables({*w.var("alpha_bkg_obs_A"), *w.var("alpha_bkg_obs_B")}));
+   likelihood = RooFit::TestStatistics::NLLFactory{*pdf, *data}
+                   .GlobalObservables({*w.var("alpha_bkg_obs_A"), *w.var("alpha_bkg_obs_B")})
+                   .build();
 
    auto whole = likelihood->evaluatePartition({0, 1}, 0, likelihood->getNComponents());
 
