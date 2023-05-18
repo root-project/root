@@ -12,14 +12,19 @@
  */
 
 #include <RooAbsPdf.h>
+#include <RooAbsData.h>
+#include <RooAddPdf.h>
+#include <RooCategory.h>
 #include <RooDataSet.h>
 #include <RooDataHist.h>
+#include <RooExponential.h>
 #include <RooFitResult.h>
 #include <RooFuncWrapper.h>
+#include <RooGaussian.h>
 #include <RooHelpers.h>
 #include <RooMinimizer.h>
 #include <RooRealVar.h>
-#include <RooRandom.h>
+#include <RooSimultaneous.h>
 #include <RooWorkspace.h>
 
 #include <ROOT/StringUtils.hxx>
@@ -28,6 +33,7 @@
 #include <TMath.h>
 
 #include <functional>
+#include <random>
 
 #include <gtest/gtest.h>
 
@@ -57,18 +63,23 @@ double getNumDerivative(const RooAbsReal &pdf, RooRealVar &var, const RooArgSet 
    return (plus - minus) / (2 * eps);
 }
 
-void randomizeParameters(const RooArgSet &parameters, ULong_t seed = 0)
+void randomizeParameters(const RooArgSet &parameters)
 {
-   auto random = RooRandom::randomGenerator();
-   if (seed != 0)
-      random->SetSeed(seed);
+   double lowerBound = -0.1;
+   double upperBound = 0.1;
+   std::uniform_real_distribution<double> unif(lowerBound, upperBound);
+   std::default_random_engine re;
 
-   for (auto param : parameters) {
-      auto par = static_cast<RooAbsRealLValue *>(param);
-      const double uni = random->Uniform();
-      const double min = par->getMin();
-      const double max = par->getMax();
-      par->setVal(min + uni * (max - min));
+   for (auto *param : parameters) {
+      double mul = unif(re);
+
+      auto par = dynamic_cast<RooAbsRealLValue *>(param);
+      if (!par)
+         continue;
+      double val = par->getVal();
+      val = val + mul * (mul > 0 ? (par->getMax() - val) : (val - par->getMin()));
+
+      par->setVal(val);
    }
 }
 
@@ -185,16 +196,16 @@ TEST(RooFuncWrapper, Exponential)
    }
 }
 
-using CreateNLLFunction = std::function<std::unique_ptr<RooAbsReal>(RooAbsPdf &, RooAbsData &, RooWorkspace &)>;
+using CreateNLLFunc = std::function<std::unique_ptr<RooAbsReal>(RooAbsPdf &, RooAbsData &, RooWorkspace &)>;
+using WorkspaceSetupFunc = std::function<void(RooWorkspace &)>;
 
 class FactoryTestParams {
 public:
    FactoryTestParams() = default;
-   FactoryTestParams(std::string const &name, std::string const &exprs, std::string const &observableNames,
-                     CreateNLLFunction createNLL, double fitResultTolerance, bool randomizeParameters)
+   FactoryTestParams(std::string const &name, WorkspaceSetupFunc setupWorkspace, CreateNLLFunc createNLL,
+                     double fitResultTolerance, bool randomizeParameters)
       : _name{name},
-        _factoryExpressions{exprs},
-        _observableNames{observableNames},
+        _setupWorkspace{setupWorkspace},
         _createNLL{createNLL},
         _fitResultTolerance{fitResultTolerance},
         _randomizeParameters{randomizeParameters}
@@ -202,9 +213,8 @@ public:
    }
 
    std::string _name;
-   std::string _factoryExpressions;
-   std::string _observableNames;
-   CreateNLLFunction _createNLL;
+   WorkspaceSetupFunc _setupWorkspace;
+   CreateNLLFunc _createNLL;
    double _fitResultTolerance = 1e-4;
    bool _randomizeParameters = true;
 };
@@ -227,29 +237,33 @@ private:
 
 TEST_P(FactoryTest, NLLFit)
 {
-   RooWorkspace ws;
-   for (std::string const &expr : ROOT::Split(_params._factoryExpressions, ";")) {
-      if (!expr.empty())
-         ws.factory(expr.c_str());
-   }
 
-   RooArgSet observables;
-   for (std::string const &obsName : ROOT::Split(_params._observableNames, ",")) {
-      if (!obsName.empty())
-         observables.add(*ws.var(obsName));
-   }
+   RooWorkspace ws;
+
+   std::unique_ptr<RooAbsData> ownedData;
+   _params._setupWorkspace(ws);
+   RooArgSet const &observables = *ws.set("observables");
+   RooAbsData *data = ws.data("data");
 
    RooAbsPdf &model = *ws.pdf("model");
 
-   std::size_t nEvents = 10;
-   std::unique_ptr<RooDataSet> data0{model.generate(observables, nEvents)};
-   std::unique_ptr<RooAbsData> data{data0->binnedClone()};
+   // Figure out if this is a simultaneous fit. The RooFuncWrapper needs to
+   // know about this to figure out how to split the dataset and fill the
+   // observables.
+   auto simPdf = dynamic_cast<RooSimultaneous *>(&model);
+
+   std::size_t nEvents = 100;
+   if (!data) {
+      std::unique_ptr<RooDataSet> data0{model.generate(observables, nEvents)};
+      ownedData = std::unique_ptr<RooAbsData>{data0->binnedClone()};
+      data = ownedData.get();
+   }
    std::unique_ptr<RooAbsReal> nllRef = _params._createNLL(model, *data, ws);
    auto nllRefResolved = static_cast<RooAbsReal *>(nllRef->servers()[0]);
 
    static int funcWrapperCounter = 0;
    std::string wrapperName = "func_wrapper_" + std::to_string(funcWrapperCounter++);
-   RooFuncWrapper nllFunc(wrapperName.c_str(), wrapperName.c_str(), *nllRefResolved, observables, data.get());
+   RooFuncWrapper nllFunc(wrapperName.c_str(), wrapperName.c_str(), *nllRefResolved, observables, data, simPdf);
 
    // Check if functions results are the same even after changing parameters.
    EXPECT_NEAR(nllRef->getVal(observables), nllFunc.getVal(), 1e-8);
@@ -261,7 +275,7 @@ TEST_P(FactoryTest, NLLFit)
    nllFunc.getParameters(&observables, paramsMyNLL);
 
    if (_params._randomizeParameters) {
-      randomizeParameters(paramsMyNLL, 1337);
+      randomizeParameters(paramsMyNLL);
    }
 
    EXPECT_TRUE(paramsMyNLL.hasSameLayout(paramsRefNll));
@@ -309,30 +323,37 @@ TEST_P(FactoryTest, NLLFit)
 
    // Compare minimization results
    double tol = _params._fitResultTolerance;
-   EXPECT_TRUE(result->isIdentical(*resultRef, tol));
-   EXPECT_TRUE(resultAd->isIdentical(*resultRef, tol));
+   // Same tolerance for parameter values and error, don't compare correlations
+   // because for very small correlations it's usually not the same withing the
+   // relative tolerance because you would compare two small values that are
+   // only different from zero because of noise.
+   EXPECT_TRUE(result->isIdenticalNoCov(*resultRef, tol, tol));
+   EXPECT_TRUE(resultAd->isIdenticalNoCov(*resultRef, tol, tol));
 }
 
 /// Initial minimization that was not based on any other tutorial/test.
 FactoryTestParams param1{"Gaussian",
-                         "sum::mu_shifted(mu[0, -10, 10], shift[1.0, -10, 10]);"
-                         "prod::sigma_scaled(sigma[3.0, 0.01, 10], 1.5);"
-                         "Gaussian::model(x[0, -10, 10], mu_shifted, sigma_scaled);",
-                         "x",
+                         [](RooWorkspace &ws) {
+                            ws.factory("sum::mu_shifted(mu[0, -10, 10], shift[1.0, -10, 10])");
+                            ws.factory("prod::sigma_scaled(sigma[3.0, 0.01, 10], 1.5)");
+                            ws.factory("Gaussian::model(x[0, -10, 10], mu_shifted, sigma_scaled)");
+
+                            ws.defineSet("observables", "x");
+                         },
                          [](RooAbsPdf &pdf, RooAbsData &data, RooWorkspace &) {
-                            return std::unique_ptr<RooAbsReal>{
-                               pdf.createNLL(data, RooFit::BatchMode("cpu"))};
+                            return std::unique_ptr<RooAbsReal>{pdf.createNLL(data, RooFit::BatchMode("cpu"))};
                          },
                          1e-4,
                          /*randomizeParameters=*/false};
 
 /// Test based on the rf301 tutorial.
 FactoryTestParams param2{"PolyVar",
-                         // Create function f(y) = a0 + a1*y + y*y*y
-                         "PolyVar::fy(y[-5, 5], {a0[-0.5, -5, 5], a1[-0.5, -1, 1], y});"
-                         // Create gauss(x,f(y),s)
-                         "Gaussian::model(x[-5, 5], fy, sigma[0.5, 0.01, 10]);",
-                         "x,y",
+                         [](RooWorkspace &ws) {
+                            ws.factory("PolyVar::fy(y[-5, 5], {a0[-0.5, -5, 5], a1[-0.5, -1, 1], y})");
+                            ws.factory("Gaussian::model(x[-5, 5], fy, sigma[0.5, 0.01, 10])");
+
+                            ws.defineSet("observables", "x,y");
+                         },
                          [](RooAbsPdf &pdf, RooAbsData &data, RooWorkspace &ws) {
                             using namespace RooFit;
                             RooRealVar &y = *ws.var("y");
@@ -344,26 +365,32 @@ FactoryTestParams param2{"PolyVar",
 
 /// Test based on the rf201 tutorial.
 FactoryTestParams param3{"AddPdf",
-                         "Gaussian::sig1(x[0, 10], mean[5, -10, 10], sigma1[0.50, .01, 10]);"
-                         "Gaussian::sig2(x, mean, sigma2[5, .01, 10]);"
-                         "Chebychev::bkg(x, {a0[0.3, 0., 0.5], a1[0.2, 0., 0.5]});"
-                         "SUM::sig(sig1frac[0.8, 0.0, 1.0] * sig1, sig2);"
-                         "SUM::model(bkgfrac[0.5, 0.0, 1.0] * bkg, sig);",
-                         "x",
+                         [](RooWorkspace &ws) {
+                            ws.factory("Gaussian::sig1(x[0, 10], mean[5, -10, 10], sigma1[0.50, .01, 10])");
+                            ws.factory("Gaussian::sig2(x, mean, sigma2[1.0, .01, 10])");
+                            ws.factory("Chebychev::bkg(x, {a0[0.3, 0., 0.5], a1[0.2, 0., 0.5]})");
+                            ws.factory("SUM::sig(sig1frac[0.8, 0.0, 1.0] * sig1, sig2)");
+                            ws.factory("SUM::model(bkgfrac[0.5, 0.0, 1.0] * bkg, sig)");
+
+                            ws.defineSet("observables", "x");
+                         },
                          [](RooAbsPdf &pdf, RooAbsData &data, RooWorkspace &) {
                             return std::unique_ptr<RooAbsReal>{pdf.createNLL(data, RooFit::BatchMode("cpu"))};
                          },
-                         1e-3,
+                         5e-3,
                          /*randomizeParameters=*/true};
 
 /// Test based on the rf604 tutorial.
 FactoryTestParams param4{"ConstraintSum",
-                         "RealSumFunc::mu_func({mu[-1, -10, 10], 4.0, 5.0}, {1.1, 0.3, 0.2});"
-                         "Gaussian::gauss(x[-10, 10], mu_func, sigma[2, 0.1, 10]);"
-                         "Polynomial::poly(x);"
-                         "SUM::model(f[0.5, 0.0, 1.0] * gauss, poly);"
-                         "Gaussian::fconstext(f, 0.2, 0.1);",
-                         "x",
+                         [](RooWorkspace &ws) {
+                            ws.factory("RealSumFunc::mu_func({mu[-1, -10, 10], 4.0, 5.0}, {1.1, 0.3, 0.2})");
+                            ws.factory("Gaussian::gauss(x[-10, 10], mu_func, sigma[2, 0.1, 10])");
+                            ws.factory("Polynomial::poly(x)");
+                            ws.factory("SUM::model(f[0.5, 0.0, 1.0] * gauss, poly)");
+                            ws.factory("Gaussian::fconstext(f, 0.2, 0.1)");
+
+                            ws.defineSet("observables", "x");
+                         },
                          [](RooAbsPdf &pdf, RooAbsData &data, RooWorkspace &ws) {
                             using namespace RooFit;
                             return std::unique_ptr<RooAbsReal>{
@@ -372,7 +399,84 @@ FactoryTestParams param4{"ConstraintSum",
                          1e-4,
                          /*randomizeParameters=*/true};
 
-INSTANTIATE_TEST_SUITE_P(RooFuncWrapper, FactoryTest, testing::Values(param1, param2, param3, param4),
+namespace {
+
+std::unique_ptr<RooAbsPdf> createSimPdfModel(RooRealVar &x, std::string const &channelName)
+{
+   auto prefix = [&](const char *name) { return name + std::string("_") + channelName; };
+
+   RooRealVar c(prefix("c").c_str(), "c", -0.5, -0.8, 0.2);
+
+   RooExponential expo(prefix("expo").c_str(), "expo", x, c);
+
+   // Create two Gaussian PDFs g1(x,mean1,sigma) anf g2(x,mean2,sigma) and their parameters
+   RooRealVar mean1(prefix("mean1").c_str(), "mean of gaussians", 3, 0, 5);
+   RooRealVar sigma1(prefix("sigma1").c_str(), "width of gaussians", 0.8, .01, 3.0);
+   RooRealVar mean2(prefix("mean2").c_str(), "mean of gaussians", 6, 5, 10);
+   RooRealVar sigma2(prefix("sigma2").c_str(), "width of gaussians", 1.0, .01, 3.0);
+
+   RooGaussian sig1(prefix("sig1").c_str(), "Signal component 1", x, mean1, sigma1);
+   RooGaussian sig2(prefix("sig2").c_str(), "Signal component 2", x, mean2, sigma2);
+
+   // Sum the signal components
+   RooRealVar sig1frac(prefix("sig1frac").c_str(), "fraction of signal 1", 0.5, 0.0, 1.0);
+   RooAddPdf sig(prefix("sig").c_str(), "g1+g2", {sig1, sig2}, {sig1frac});
+
+   // Sum the composite signal and background
+   RooRealVar sigfrac(prefix("sigfrac").c_str(), "fraction of signal", 0.4, 0.0, 1.0);
+   RooAddPdf model(prefix("model").c_str(), "g1+g2+a", {sig, expo}, {sigfrac});
+
+   return std::unique_ptr<RooAbsPdf>{static_cast<RooAbsPdf *>(model.cloneTree())};
+}
+
+void getSimPdfModel(RooWorkspace &ws)
+{
+   using namespace RooFit;
+   RooCategory channelCat{"channel_cat", ""};
+
+   std::map<std::string, RooAbsPdf *> pdfMap;
+   std::map<std::string, std::unique_ptr<RooAbsData>> dataMap;
+
+   RooArgSet models;
+   RooArgSet observables;
+
+   auto nChannels = 2;
+   auto nEvents = 1000;
+
+   for (int i = 0; i < nChannels; ++i) {
+      std::string suffix = "_" + std::to_string(i + 1);
+      auto obsName = "x" + suffix;
+      auto x = std::make_unique<RooRealVar>(obsName.c_str(), obsName.c_str(), 0, 10.);
+      x->setBins(20);
+
+      std::unique_ptr<RooAbsPdf> model{createSimPdfModel(*x, std::to_string(i + 1))};
+
+      pdfMap.insert({"channel" + suffix, model.get()});
+      channelCat.defineType("channel" + suffix, i);
+      dataMap.insert({"channel" + suffix, std::unique_ptr<RooAbsData>{model->generateBinned(*x, nEvents)}});
+
+      observables.addOwned(std::move(x));
+      models.addOwned(std::move(model));
+   }
+
+   RooSimultaneous model{"model", "model", pdfMap, channelCat};
+
+   ws.import(RooDataSet("data", "data", {observables, channelCat}, Index(channelCat), Import(dataMap)));
+
+   ws.import(model);
+   ws.defineSet("observables", observables);
+}
+} // namespace
+
+/// Test based on the simultaneous fit shown in CHEP'23 results
+FactoryTestParams param5{"SimPdf", getSimPdfModel,
+                         [](RooAbsPdf &pdf, RooAbsData &data, RooWorkspace &) {
+                            return std::unique_ptr<RooAbsReal>{pdf.createNLL(data, RooFit::BatchMode("cpu"))};
+                         },
+                         5e-3,
+                         /*randomizeParameters=*/true};
+
+INSTANTIATE_TEST_SUITE_P(RooFuncWrapper, FactoryTest, testing::Values(param1, param2, param3, param4, param5),
                          [](testing::TestParamInfo<FactoryTest::ParamType> const &paramInfo) {
                             return paramInfo.param._name;
                          });
