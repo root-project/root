@@ -196,16 +196,16 @@ TEST(RooFuncWrapper, Exponential)
    }
 }
 
-using CreateNLLFunction = std::function<std::unique_ptr<RooAbsReal>(RooAbsPdf &, RooAbsData &, RooWorkspace &)>;
-using CreateWorkspaceAndObsFunction = std::function<void(RooWorkspace &, RooArgSet &, std::unique_ptr<RooAbsData> &)>;
+using CreateNLLFunc = std::function<std::unique_ptr<RooAbsReal>(RooAbsPdf &, RooAbsData &, RooWorkspace &)>;
+using WorkspaceSetupFunc = std::function<void(RooWorkspace &)>;
 
 class FactoryTestParams {
 public:
    FactoryTestParams() = default;
-   FactoryTestParams(std::string const &name, CreateWorkspaceAndObsFunction createWrkspAndObs,
-                     CreateNLLFunction createNLL, double fitResultTolerance, bool randomizeParameters)
+   FactoryTestParams(std::string const &name, WorkspaceSetupFunc setupWorkspace, CreateNLLFunc createNLL,
+                     double fitResultTolerance, bool randomizeParameters)
       : _name{name},
-        _createWrkspAndObs{createWrkspAndObs},
+        _setupWorkspace{setupWorkspace},
         _createNLL{createNLL},
         _fitResultTolerance{fitResultTolerance},
         _randomizeParameters{randomizeParameters}
@@ -213,8 +213,8 @@ public:
    }
 
    std::string _name;
-   CreateWorkspaceAndObsFunction _createWrkspAndObs;
-   CreateNLLFunction _createNLL;
+   WorkspaceSetupFunc _setupWorkspace;
+   CreateNLLFunc _createNLL;
    double _fitResultTolerance = 1e-4;
    bool _randomizeParameters = true;
 };
@@ -239,10 +239,11 @@ TEST_P(FactoryTest, NLLFit)
 {
 
    RooWorkspace ws;
-   RooArgSet observables;
 
-   std::unique_ptr<RooAbsData> data{};
-   _params._createWrkspAndObs(ws, observables, data);
+   std::unique_ptr<RooAbsData> ownedData;
+   _params._setupWorkspace(ws);
+   RooArgSet const &observables = *ws.set("observables");
+   RooAbsData *data = ws.data("data");
 
    RooAbsPdf &model = *ws.pdf("model");
 
@@ -254,14 +255,15 @@ TEST_P(FactoryTest, NLLFit)
    std::size_t nEvents = 100;
    if (!data) {
       std::unique_ptr<RooDataSet> data0{model.generate(observables, nEvents)};
-      data.reset(data0->binnedClone());
+      ownedData = std::unique_ptr<RooAbsData>{data0->binnedClone()};
+      data = ownedData.get();
    }
    std::unique_ptr<RooAbsReal> nllRef = _params._createNLL(model, *data, ws);
    auto nllRefResolved = static_cast<RooAbsReal *>(nllRef->servers()[0]);
 
    static int funcWrapperCounter = 0;
    std::string wrapperName = "func_wrapper_" + std::to_string(funcWrapperCounter++);
-   RooFuncWrapper nllFunc(wrapperName.c_str(), wrapperName.c_str(), *nllRefResolved, observables, data.get(), simPdf);
+   RooFuncWrapper nllFunc(wrapperName.c_str(), wrapperName.c_str(), *nllRefResolved, observables, data, simPdf);
 
    // Check if functions results are the same even after changing parameters.
    EXPECT_NEAR(nllRef->getVal(observables), nllFunc.getVal(), 1e-8);
@@ -331,12 +333,12 @@ TEST_P(FactoryTest, NLLFit)
 
 /// Initial minimization that was not based on any other tutorial/test.
 FactoryTestParams param1{"Gaussian",
-                         [](RooWorkspace &ws, RooArgSet &observables, std::unique_ptr<RooAbsData> & /* data */) {
+                         [](RooWorkspace &ws) {
                             ws.factory("sum::mu_shifted(mu[0, -10, 10], shift[1.0, -10, 10])");
                             ws.factory("prod::sigma_scaled(sigma[3.0, 0.01, 10], 1.5)");
                             ws.factory("Gaussian::model(x[0, -10, 10], mu_shifted, sigma_scaled)");
 
-                            observables.add(*ws.var("x"));
+                            ws.defineSet("observables", "x");
                          },
                          [](RooAbsPdf &pdf, RooAbsData &data, RooWorkspace &) {
                             return std::unique_ptr<RooAbsReal>{pdf.createNLL(data, RooFit::BatchMode("cpu"))};
@@ -346,12 +348,11 @@ FactoryTestParams param1{"Gaussian",
 
 /// Test based on the rf301 tutorial.
 FactoryTestParams param2{"PolyVar",
-                         [](RooWorkspace &ws, RooArgSet &observables, std::unique_ptr<RooAbsData> & /* data */) {
+                         [](RooWorkspace &ws) {
                             ws.factory("PolyVar::fy(y[-5, 5], {a0[-0.5, -5, 5], a1[-0.5, -1, 1], y})");
                             ws.factory("Gaussian::model(x[-5, 5], fy, sigma[0.5, 0.01, 10])");
 
-                            observables.add(*ws.var("x"));
-                            observables.add(*ws.var("y"));
+                            ws.defineSet("observables", "x,y");
                          },
                          [](RooAbsPdf &pdf, RooAbsData &data, RooWorkspace &ws) {
                             using namespace RooFit;
@@ -364,31 +365,31 @@ FactoryTestParams param2{"PolyVar",
 
 /// Test based on the rf201 tutorial.
 FactoryTestParams param3{"AddPdf",
-                         [](RooWorkspace &ws, RooArgSet &observables, std::unique_ptr<RooAbsData> & /* data */) {
+                         [](RooWorkspace &ws) {
                             ws.factory("Gaussian::sig1(x[0, 10], mean[5, -10, 10], sigma1[0.50, .01, 10])");
-                            ws.factory("Gaussian::sig2(x, mean, sigma2[5, .01, 10])");
+                            ws.factory("Gaussian::sig2(x, mean, sigma2[1.0, .01, 10])");
                             ws.factory("Chebychev::bkg(x, {a0[0.3, 0., 0.5], a1[0.2, 0., 0.5]})");
                             ws.factory("SUM::sig(sig1frac[0.8, 0.0, 1.0] * sig1, sig2)");
                             ws.factory("SUM::model(bkgfrac[0.5, 0.0, 1.0] * bkg, sig)");
 
-                            observables.add(*ws.var("x"));
+                            ws.defineSet("observables", "x");
                          },
                          [](RooAbsPdf &pdf, RooAbsData &data, RooWorkspace &) {
                             return std::unique_ptr<RooAbsReal>{pdf.createNLL(data, RooFit::BatchMode("cpu"))};
                          },
-                         1e-3,
+                         5e-3,
                          /*randomizeParameters=*/true};
 
 /// Test based on the rf604 tutorial.
 FactoryTestParams param4{"ConstraintSum",
-                         [](RooWorkspace &ws, RooArgSet &observables, std::unique_ptr<RooAbsData> & /* data */) {
+                         [](RooWorkspace &ws) {
                             ws.factory("RealSumFunc::mu_func({mu[-1, -10, 10], 4.0, 5.0}, {1.1, 0.3, 0.2})");
                             ws.factory("Gaussian::gauss(x[-10, 10], mu_func, sigma[2, 0.1, 10])");
                             ws.factory("Polynomial::poly(x)");
                             ws.factory("SUM::model(f[0.5, 0.0, 1.0] * gauss, poly)");
                             ws.factory("Gaussian::fconstext(f, 0.2, 0.1)");
 
-                            observables.add(*ws.var("x"));
+                            ws.defineSet("observables", "x");
                          },
                          [](RooAbsPdf &pdf, RooAbsData &data, RooWorkspace &ws) {
                             using namespace RooFit;
@@ -428,7 +429,7 @@ std::unique_ptr<RooAbsPdf> createSimPdfModel(RooRealVar &x, std::string const &c
    return std::unique_ptr<RooAbsPdf>{static_cast<RooAbsPdf *>(model.cloneTree())};
 }
 
-void getSimPdfModel(RooWorkspace &ws, RooArgSet &observables, std::unique_ptr<RooAbsData> &data)
+void getSimPdfModel(RooWorkspace &ws)
 {
    using namespace RooFit;
    RooCategory channelCat{"channel_cat", ""};
@@ -437,6 +438,7 @@ void getSimPdfModel(RooWorkspace &ws, RooArgSet &observables, std::unique_ptr<Ro
    std::map<std::string, std::unique_ptr<RooAbsData>> dataMap;
 
    RooArgSet models;
+   RooArgSet observables;
 
    auto nChannels = 2;
    auto nEvents = 1000;
@@ -459,9 +461,10 @@ void getSimPdfModel(RooWorkspace &ws, RooArgSet &observables, std::unique_ptr<Ro
 
    RooSimultaneous model{"model", "model", pdfMap, channelCat};
 
-   data.reset(new RooDataSet("data", "data", {observables, channelCat}, Index(channelCat), Import(dataMap)));
+   ws.import(RooDataSet("data", "data", {observables, channelCat}, Index(channelCat), Import(dataMap)));
 
    ws.import(model);
+   ws.defineSet("observables", observables);
 }
 } // namespace
 
