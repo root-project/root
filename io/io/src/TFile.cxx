@@ -1365,8 +1365,12 @@ TFile::InfoListRet TFile::GetStreamerInfoListImpl(bool lookupSICache)
          // key data must be excluded from the hash, otherwise the timestamp will
          // always lead to unique hashes for each file
          hash = fgTsSIHashes.Hash(buf + key->GetKeylen(), fNbytesInfo - key->GetKeylen());
-         if (fgTsSIHashes.Find(hash)) {
-            if (gDebug > 0) Info("GetStreamerInfo", "The streamer info record for file %s has already been treated, skipping it.", GetName());
+         auto si_uids = fgTsSIHashes.Find(hash);
+         if (si_uids) {
+            if (gDebug > 0)
+               Info("GetStreamerInfo", "The streamer info record for file %s has already been treated, skipping it.", GetName());
+            for(auto uid : *si_uids)
+               fClassIndex->fArray[uid] = 1;
             return {nullptr, 0, hash};
          }
       }
@@ -3613,6 +3617,7 @@ void TFile::ReadStreamerInfo()
       }
    }
 
+   std::vector<Int_t> si_uids;
    // loop on all TStreamerInfo classes
    for (int mode=0;mode<2; ++mode) {
       // In order for the collection proxy to be initialized properly, we need
@@ -3663,7 +3668,10 @@ void TFile::ReadStreamerInfo()
             Int_t uid = info->GetNumber();
             Int_t asize = fClassIndex->GetSize();
             if (uid >= asize && uid <100000) fClassIndex->Set(2*asize);
-            if (uid >= 0 && uid < fClassIndex->GetSize()) fClassIndex->fArray[uid] = 1;
+            if (uid >= 0 && uid < fClassIndex->GetSize()) {
+               si_uids.push_back(uid);
+               fClassIndex->fArray[uid] = 1;
+            }
             else if (!isstl && !info->GetClass()->IsSyntheticPair()) {
                printf("ReadStreamerInfo, class:%s, illegal uid=%d\n",info->GetName(),uid);
             }
@@ -3679,7 +3687,7 @@ void TFile::ReadStreamerInfo()
 #ifdef R__USE_IMT
    // We are done processing the record, let future calls and other threads that it
    // has been done.
-   fgTsSIHashes.Insert(listRetcode.fHash);
+   fgTsSIHashes.Insert(listRetcode.fHash, std::move(si_uids));
 #endif
 }
 
