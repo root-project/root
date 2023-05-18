@@ -16,28 +16,24 @@
 
   \param -a   Append to the output
   \param -f   Force overwriting of output file.
-  \param -f[0-9] Set target compression level. 0 = uncompressed, 6 = highly compressed.
+  \param -f[0-9] Set target compression level. 0 = uncompressed, 9 = highly compressed. Default is 1 (kDefaultZLIB).
+                 You can also specify the full compresion algorithm, e.g. -f206
   \param -fk  Sets the target file to contain the baskets with the same compression
               as the input files (unless -O is specified). Compresses the meta data
               using the compression level specified in the first input or the
               compression setting after fk (for example 206 when using -fk206)
   \param -ff  The compression level used is the one specified in the first input
-
   \param -k   Skip corrupt or non-existent files, do not exit
   \param -O   Re-optimize basket size when merging TTree
+  \param -T   Do not merge Trees
   \param -v   Explicitly set the verbosity level: 0 request no output, 99 is the default
-  \param -j   Parallelise the execution in multiple processes
-  \param -dbg  Parallelise the execution in multiple processes in debug mode (Does not delete  partial  files  stored
-              inside working directory)
+  \param -j   Parallelise the execution in `J` processes. If the number of processes is not specified, use the system maximum.
+  \param -dbg Enable verbosity. If -j was specified, do not not delete partial files stored inside working directory.
   \param -d   Carry out the partial multiprocess execution in the specified directory
-  \param -n   Open at most `n` at once (use 0 to request to use the system maximum)
-  \param -experimental-io-features `<feature>` Enables the corresponding experimental feature for output trees
+  \param -n   Open at most `N` files at once (use 0 to request to use the system maximum)
+  \param -cachesize Resize the prefetching cache use to speed up I/O operations (use 0 to disable).
+  \param -experimental-io-features `<feature>` Enables the corresponding experimental feature for output trees. \see ROOT::Experimental::EIOFeatures
   \return hadd returns a status code: 0 if OK, -1 otherwise
-
-  When the -f option is specified, one can also specify the compression
-  level of the target file. By default the compression level is 1 (kDefaultZLIB), but
-  if "-f0" is specified, the target file will not be compressed.
-  if "-f6" is specified, the compression level 6 will be used.
 
   For example assume 3 files f1, f2, f3 containing histograms hn and Trees Tn
    - f1 with h1 h2 h3 T1
@@ -127,7 +123,7 @@ int main( int argc, char **argv )
 {
    if ( argc < 3 || "-h" == std::string(argv[1]) || "--help" == std::string(argv[1]) ) {
          fprintf(stderr, kCommandLineOptionsHelp);
-         return 1;
+         return (argc == 2 && ("-h" == std::string(argv[1]) || "--help" == std::string(argv[1]))) ? 0 : 1;
    }
 
    ROOT::TIOFeatures features;
