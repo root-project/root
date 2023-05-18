@@ -34,11 +34,8 @@
 // #include "TMap.h"
 // #endif
 
-#ifdef R__USE_IMT
 #include "ROOT/TRWSpinLock.hxx"
 #include <mutex>
-#endif
-
 
 class TMap;
 class TFree;
@@ -117,8 +114,8 @@ protected:
 
 #ifdef R__USE_IMT
    std::mutex                                 fWriteMutex;  ///<!Lock for writing baskets / keys into the file.
-   static ROOT::Internal::RConcurrentHashColl fgTsSIHashes; ///<!TS Set of hashes built from read streamer infos
 #endif
+   static ROOT::Internal::RConcurrentHashColl fgTsSIHashes; ///<!TS Set of hashes built from read streamer infos
 
    static TList    *fgAsyncOpenRequests; //List of handles for pending open requests
 
