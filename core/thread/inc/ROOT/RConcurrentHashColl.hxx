@@ -12,6 +12,7 @@
 #define ROOT_RConcurrentHashColl
 
 #include <memory>
+#include <vector>
 #include "Rtypes.h"
 
 namespace ROOT {
@@ -20,12 +21,15 @@ class TRWSpinLock;
 
 namespace Internal {
 
-struct RHashSet;
+struct RHashMap;
+using RUidColl = std::vector<Int_t>;
 
-/// This class is a TS set of unsigned set
+/// This class is a thread-safe associative collection connecting
+/// a 256 bits digest/hash to a collection of uid (integer)
+/// This is used in the handling of the StreamerInfo record in TFile.
 class RConcurrentHashColl {
 private:
-   mutable std::unique_ptr<RHashSet> fHashSet;
+   mutable std::unique_ptr<RHashMap> fHashMap;
    mutable std::unique_ptr<ROOT::TRWSpinLock> fRWLock;
 
 public:
@@ -38,16 +42,23 @@ public:
       HashValue() = default;
       HashValue(const char *data, int len);
       ULong64_t const *Get() const { return fDigest; }
+
+      /// Return the hash value for this object
+      size_t Hash() const noexcept {
+         std::hash<ULong64_t> hasher;
+         return hasher(fDigest[0]) ^ hasher(fDigest[1])
+               ^ hasher(fDigest[2]) ^ hasher(fDigest[3]);
+      }
    };
 
    RConcurrentHashColl();
    ~RConcurrentHashColl();
 
    /// Return true if the hash is already in already there
-   bool Find(const HashValue &hash) const;
+   const RUidColl *Find(const HashValue &hash) const;
 
    /// If the hash is there, return false. Otherwise, insert the hash and return true;
-   bool Insert(const HashValue &hash) const;
+   bool Insert(const HashValue &hash, RUidColl &&coll) const;
 
    /// Return the hash object corresponding to the buffer.
    static HashValue Hash(char *buf, int len);
