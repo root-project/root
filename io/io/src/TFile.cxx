@@ -147,9 +147,7 @@ Bool_t   TFile::fgCacheFileForce = kFALSE;
 Bool_t   TFile::fgCacheFileDisconnected = kTRUE;
 UInt_t   TFile::fgOpenTimeout = TFile::kEternalTimeout;
 Bool_t   TFile::fgOnlyStaged = kFALSE;
-#ifdef R__USE_IMT
 ROOT::Internal::RConcurrentHashColl TFile::fgTsSIHashes;
-#endif
 
 #ifdef R__MACOSX
 /* On macOS getxattr takes two extra arguments that should be set to 0 */
@@ -1360,7 +1358,6 @@ TFile::InfoListRet TFile::GetStreamerInfoListImpl(bool lookupSICache)
          return {nullptr, 1, hash};
       }
 
-#ifdef R__USE_IMT
       if (lookupSICache) {
          // key data must be excluded from the hash, otherwise the timestamp will
          // always lead to unique hashes for each file
@@ -1374,9 +1371,6 @@ TFile::InfoListRet TFile::GetStreamerInfoListImpl(bool lookupSICache)
             return {nullptr, 0, hash};
          }
       }
-#else
-      (void) lookupSICache;
-#endif
       key->ReadKeyBuffer(buf);
       list = dynamic_cast<TList*>(key->ReadObjWithBuffer(buffer.data()));
       if (list) list->SetOwner();
@@ -3684,11 +3678,9 @@ void TFile::ReadStreamerInfo()
    list->Clear();  //this will delete all TStreamerInfo objects with kCanDelete bit set
    delete list;
 
-#ifdef R__USE_IMT
    // We are done processing the record, let future calls and other threads that it
    // has been done.
    fgTsSIHashes.Insert(listRetcode.fHash, std::move(si_uids));
-#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////
