@@ -135,7 +135,10 @@ bool CPyCppyy::MemoryRegulator::RecursiveRemove(
             CPyCppyy_NoneType.tp_traverse   = Py_TYPE(pyobj)->tp_traverse;
             CPyCppyy_NoneType.tp_clear      = Py_TYPE(pyobj)->tp_clear;
             CPyCppyy_NoneType.tp_free       = Py_TYPE(pyobj)->tp_free;
-            CPyCppyy_NoneType.tp_flags      = Py_TYPE(pyobj)->tp_flags;
+#ifdef Py_TPFLAGS_MANAGED_DICT
+            CPyCppyy_NoneType.tp_flags     |= (Py_TYPE(pyobj)->tp_flags & Py_TPFLAGS_MANAGED_DICT);
+#endif
+            CPyCppyy_NoneType.tp_flags     |= (Py_TYPE(pyobj)->tp_flags & Py_TPFLAGS_HAVE_GC);
         } else if (CPyCppyy_NoneType.tp_traverse != Py_TYPE(pyobj)->tp_traverse) {
         // TODO: SystemError?
             std::cerr << "in CPyCppyy::MemoryRegulater, unexpected object of type: "
