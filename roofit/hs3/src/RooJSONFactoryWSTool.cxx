@@ -412,11 +412,19 @@ std::unique_ptr<RooAbsData> loadData(const JSONNode &p, RooWorkspace &workspace)
 }
 
 void importAnalysis(const RooFit::Detail::JSONNode &rootnode, const RooFit::Detail::JSONNode &analysisNode,
-                    const RooFit::Detail::JSONNode &likelihoodsNode, RooWorkspace &workspace)
+                    const RooFit::Detail::JSONNode &likelihoodsNode, RooWorkspace &workspace,
+                    const std::vector<std::unique_ptr<RooAbsData>> &datas)
 {
    // if this is a toplevel pdf, also create a modelConfig for it
-   std::string mcname = "ModelConfig";
-   workspace.import(RooStats::ModelConfig{mcname.c_str(), analysisNode["name"].val().c_str()});
+
+   auto *mcNameNode = findRooFitInternal(rootnode, "ModelConfigs", analysisNode["name"].val(), "mcName");
+   std::string mcname = mcNameNode ? mcNameNode->val() : analysisNode["name"].val().c_str();
+   if (workspace.obj(mcname))
+      return;
+
+   workspace.import(RooStats::ModelConfig{mcname.c_str(), mcname.c_str()});
+   auto *mc = static_cast<RooStats::ModelConfig *>(workspace.obj(mcname));
+   mc->SetWS(workspace);
 
    std::vector<std::string> nllDistNames;
    std::vector<std::string> nllDataNames;
@@ -428,8 +436,14 @@ void importAnalysis(const RooFit::Detail::JSONNode &rootnode, const RooFit::Deta
    for (auto &nameNode : (*nllNode)["distributions"].children()) {
       nllDistNames.push_back(nameNode.val());
    }
+   RooArgSet observables;
    for (auto &nameNode : (*nllNode)["data"].children()) {
       nllDataNames.push_back(nameNode.val());
+      for (const auto &d : datas) {
+         if (d->GetName() == nameNode.val()) {
+            observables.add(*d->get());
+         }
+      }
    }
 
    auto *pdfNameNode = findRooFitInternal(rootnode, "ModelConfigs", analysisNode["name"].val(), "pdfName");
@@ -439,9 +453,7 @@ void importAnalysis(const RooFit::Detail::JSONNode &rootnode, const RooFit::Deta
    if (!pdf)
       std::runtime_error("pdf not found!");
 
-   auto &mc = *static_cast<RooStats::ModelConfig *>(workspace.obj(mcname));
-   mc.SetWS(workspace);
-   mc.SetPdf(*pdf);
+   mc->SetPdf(*pdf);
 
    auto readArgSet = [&](std::string const &name) {
       RooArgSet out;
@@ -451,7 +463,8 @@ void importAnalysis(const RooFit::Detail::JSONNode &rootnode, const RooFit::Deta
       return out;
    };
 
-   mc.SetParametersOfInterest(readArgSet("parameters_of_interest"));
+   mc->SetParametersOfInterest(readArgSet("parameters_of_interest"));
+   mc->SetObservables(observables);
 
    if (auto *mcAuxNode = findRooFitInternal(rootnode, "ModelConfigs", analysisNode["name"].val())) {
       if (auto found = mcAuxNode->find("combined_data_name")) {
@@ -1257,6 +1270,7 @@ void RooJSONFactoryWSTool::exportSingleModelConfig(JSONNode &rootnode, RooStats:
    auto &modelConfigAux = getRooFitInternal(rootnode, "ModelConfigs", analysisName);
    modelConfigAux.set_map();
    modelConfigAux["pdfName"] << pdf->GetName();
+   modelConfigAux["mcName"] << mc.GetName();
 }
 
 void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
@@ -1480,22 +1494,23 @@ void RooJSONFactoryWSTool::importAllNodes(const RooFit::Detail::JSONNode &n)
       }
    }
 
-   combineDatasets(*_rootnodeInput, datas);
-
    // Now, read in analyses and likelihoods if there are any
+
    if (auto analysesNode = n.find("analyses")) {
       for (JSONNode const &analysisNode : analysesNode->children()) {
-         importAnalysis(*_rootnodeInput, analysisNode, n["likelihoods"], _workspace);
+         importAnalysis(*_rootnodeInput, analysisNode, n["likelihoods"], _workspace, datas);
       }
    }
 
-   _rootnodeInput = nullptr;
-   _domains.reset();
+   combineDatasets(*_rootnodeInput, datas);
 
    for (auto const &d : datas) {
       if (d)
          _workspace.import(*d);
    }
+
+   _rootnodeInput = nullptr;
+   _domains.reset();
 }
 
 bool RooJSONFactoryWSTool::importJSON(std::istream &is)
