@@ -245,9 +245,12 @@ def show_node_state(shell_log: str, options: str) -> str:
 
 @github_log_group("Run tests")
 def run_ctest(shell_log: str, extra_ctest_flags: str) -> str:
+    # Especially Debug builds require a lot of memory, make sure to use only an
+    # appropriate number of parallel test instances.
+    parallel = os.cpu_count() // 2 + 1
     result, shell_log = subprocess_with_log(f"""
         cd '{WORKDIR}/build'
-        ctest --output-on-failure --parallel {os.cpu_count()} --output-junit TestResults.xml {extra_ctest_flags}
+        ctest --output-on-failure --parallel {parallel} --output-junit TestResults.xml {extra_ctest_flags}
     """, shell_log)
 
     if result != 0:
