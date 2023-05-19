@@ -1466,6 +1466,30 @@ RDataFrame::RDataFrame(std::unique_ptr<ROOT::RDF::RDataSource> ds, const ColumnN
 /// spec.AddFriend([("tree1", "a.root"), ("tree2", "b.root")], "alias")
 /// df = ROOT.RDataFrame(spec)
 /// ~~~
+///
+/// ~~~{.cpp}
+/////First, create a dummy root file with two trees,
+/////outputTree1 (w/ cols x and y) and outputTree2,
+/////(w/ cols z)
+///ROOT::RDataFrame df(10); //Empty dataframe of ten rows
+///auto columns = df.Define("x", []{return 1;}, {}).Define("y", "2").Define("z", "3"); //define 3 columns x, y, z
+///columns.Display({"x","y"}, 10)->Print(); //print out first 10 rows
+/////snap columns x and y to outputTree1 and column z
+/////to outputTree2 in outputFile.root
+///columns.Snapshot("outputTree1", "outputFile.root", {"x", "y"});
+///ROOT::RDF::RSnapshotOptions opts;
+///opts.fMode = "update";
+///columns.Snapshot("outputTree2", "outputFile.root", {"z"}, opts);
+/////Now create the RDataFrame
+///ROOT::RDF::Experimental::RDatasetSpec x;
+///std::vector<std::string> files = {"outputFile.root"};
+/////create RSample object with name myPhysicsDf and tree outputTree1
+///ROOT::RDF::Experimental::RSample r("myPhysicsDf", "outputTree1", files);
+///x.AddSample(r); //add RDatasetSpec to RDatasetSpec
+///x.WithGlobalFriends("outputTree2", files); //add friend tree outputTree2
+///ROOT::RDataFrame df(x); //create RDataFrame df
+///df.Display({"x","y","z"}, 10)->Print(); //all three columns are printed
+///~~~
 RDataFrame::RDataFrame(ROOT::RDF::Experimental::RDatasetSpec spec)
    : RInterface(std::make_shared<RDFDetail::RLoopManager>(std::move(spec)))
 {
