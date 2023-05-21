@@ -604,6 +604,11 @@ The following fundamental types are stored as `leaf` fields with a single column
 Possibly available `const` and `volatile` qualifiers of the C++ types are ignored for serialization.
 If the ntuple is stored uncompressed, the default changes from split encoding to non-split encoding where applicable.
 
+### Low-precision Floating Points
+
+The ROOT type `Double32_t` is stored on disk as a `double` field with a `SplitReal32` column representation.
+The field's type alias is set to `Double32_t`.
+
 ### STL Types and Collections
 
 The following STL and collection types are supported.
