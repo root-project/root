@@ -733,7 +733,6 @@ TEST(RNTuple, Double32)
    auto fldD1 = RFieldBase::Create("d1", "double").Unwrap();
    fldD1->SetColumnRepresentative({EColumnType::kReal32});
    auto fldD2 = RFieldBase::Create("d2", "Double32_t").Unwrap();
-   EXPECT_EQ(EColumnType::kSplitReal32, fldD2->GetColumnRepresentative()[0]);
    EXPECT_EQ("Double32_t", fldD2->GetTypeAlias());
 
    auto model = RNTupleModel::Create();
@@ -805,6 +804,29 @@ TEST(RNTuple, Double32)
    EXPECT_DOUBLE_EQ(std::numeric_limits<float>::infinity(), *d2Float);
    readerFloat->LoadEntry(5);
    EXPECT_DOUBLE_EQ(std::numeric_limits<float>::denorm_min(), *d2Float);
+}
+
+TEST(RNTuple, Double32Extended)
+{
+   FileRaii fileGuard("test_ntuple_double32_extended.root");
+
+   auto fldObj = RFieldBase::Create("obj", "LowPrecisionFloats").Unwrap();
+   auto model = RNTupleModel::Create();
+   model->AddField(std::move(fldObj));
+
+   {
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
+      writer->Fill();
+   }
+
+   auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
+   auto obj = reader->GetModel()->GetDefaultEntry()->Get<LowPrecisionFloats>("obj");
+   EXPECT_EQ("Double32_t", reader->GetModel()->GetField("obj")->GetSubFields()[1]->GetTypeAlias());
+   EXPECT_EQ("Double32_t", reader->GetModel()->GetField("obj")->GetSubFields()[2]->GetSubFields()[0]->GetTypeAlias());
+   EXPECT_DOUBLE_EQ(0.0, obj->a);
+   EXPECT_DOUBLE_EQ(1.0, obj->b);
+   EXPECT_DOUBLE_EQ(2.0, obj->c[0]);
+   EXPECT_DOUBLE_EQ(3.0, obj->c[1]);
 }
 
 TEST(RNTuple, TClass)
