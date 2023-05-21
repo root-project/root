@@ -726,6 +726,69 @@ TEST(RNTuple, Casting)
    EXPECT_EQ(137, *fieldCast2);
 }
 
+TEST(RNTuple, Double32)
+{
+   FileRaii fileGuard("test_ntuple_double32.root");
+
+   auto fldD1 = RFieldBase::Create("d1", "double").Unwrap();
+   // auto fldD2 = RFieldBase::Create("d2", "Double32_t").Unwrap();
+   fldD1->SetColumnRepresentative({EColumnType::kReal32});
+   // EXPECT_EQ(EColumnType::kSplitReal32, fldD2->GetColumnRepresentative()[0]);
+
+   auto model = RNTupleModel::Create();
+   model->AddField(std::move(fldD1));
+   // model->AddField(std::move(fldD2));
+
+   {
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
+      auto d1 = writer->GetModel()->GetDefaultEntry()->Get<double>("d1");
+      *d1 = 0.0;
+      writer->Fill();
+      *d1 = std::numeric_limits<float>::max();
+      writer->Fill();
+      *d1 = std::numeric_limits<float>::min();
+      writer->Fill();
+      *d1 = std::numeric_limits<float>::lowest();
+      writer->Fill();
+      *d1 = std::numeric_limits<float>::infinity();
+      writer->Fill();
+      *d1 = std::numeric_limits<float>::denorm_min();
+      writer->Fill();
+   }
+
+   auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
+   EXPECT_EQ(EColumnType::kReal32, reader->GetModel()->GetField("d1")->GetColumnRepresentative()[0]);
+   auto d1 = reader->GetModel()->GetDefaultEntry()->Get<double>("d1");
+   reader->LoadEntry(0);
+   EXPECT_DOUBLE_EQ(0.0, *d1);
+   reader->LoadEntry(1);
+   EXPECT_DOUBLE_EQ(std::numeric_limits<float>::max(), *d1);
+   reader->LoadEntry(2);
+   EXPECT_DOUBLE_EQ(std::numeric_limits<float>::min(), *d1);
+   reader->LoadEntry(3);
+   EXPECT_DOUBLE_EQ(std::numeric_limits<float>::lowest(), *d1);
+   reader->LoadEntry(4);
+   EXPECT_DOUBLE_EQ(std::numeric_limits<float>::infinity(), *d1);
+   reader->LoadEntry(5);
+   EXPECT_DOUBLE_EQ(std::numeric_limits<float>::denorm_min(), *d1);
+
+   auto modelFloat = RNTupleModel::Create();
+   auto d1Float = modelFloat->MakeField<float>("d1");
+   auto readerFloat = RNTupleReader::Open(std::move(modelFloat), "ntuple", fileGuard.GetPath());
+   readerFloat->LoadEntry(0);
+   EXPECT_FLOAT_EQ(0.0, *d1Float);
+   readerFloat->LoadEntry(1);
+   EXPECT_DOUBLE_EQ(std::numeric_limits<float>::max(), *d1Float);
+   readerFloat->LoadEntry(2);
+   EXPECT_DOUBLE_EQ(std::numeric_limits<float>::min(), *d1Float);
+   readerFloat->LoadEntry(3);
+   EXPECT_DOUBLE_EQ(std::numeric_limits<float>::lowest(), *d1Float);
+   readerFloat->LoadEntry(4);
+   EXPECT_DOUBLE_EQ(std::numeric_limits<float>::infinity(), *d1Float);
+   readerFloat->LoadEntry(5);
+   EXPECT_DOUBLE_EQ(std::numeric_limits<float>::denorm_min(), *d1Float);
+}
+
 TEST(RNTuple, TClass)
 {
    FileRaii fileGuard("test_ntuple_tclass.ntuple");

@@ -815,7 +815,8 @@ void ROOT::Experimental::RField<float>::AcceptVisitor(Detail::RFieldVisitor &vis
 const ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations &
 ROOT::Experimental::RField<double>::GetColumnRepresentations() const
 {
-   static RColumnRepresentations representations({{EColumnType::kSplitReal64}, {EColumnType::kReal64}}, {{}});
+   static RColumnRepresentations representations(
+      {{EColumnType::kSplitReal64}, {EColumnType::kReal64}, {EColumnType::kSplitReal32}, {EColumnType::kReal32}}, {});
    return representations;
 }
 
@@ -833,6 +834,11 @@ void ROOT::Experimental::RField<double>::GenerateColumnsImpl(const RNTupleDescri
 void ROOT::Experimental::RField<double>::AcceptVisitor(Detail::RFieldVisitor &visitor) const
 {
    visitor.VisitDoubleField(*this);
+}
+
+void ROOT::Experimental::RField<double>::SetDouble32()
+{
+   SetColumnRepresentative({EColumnType::kSplitReal32});
 }
 
 //------------------------------------------------------------------------------
