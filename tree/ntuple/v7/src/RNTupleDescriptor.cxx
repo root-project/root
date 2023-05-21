@@ -33,16 +33,10 @@
 
 bool ROOT::Experimental::RFieldDescriptor::operator==(const RFieldDescriptor &other) const
 {
-   return fFieldId == other.fFieldId &&
-          fFieldVersion == other.fFieldVersion &&
-          fTypeVersion == other.fTypeVersion &&
-          fFieldName == other.fFieldName &&
-          fFieldDescription == other.fFieldDescription &&
-          fTypeName == other.fTypeName &&
-          fNRepetitions == other.fNRepetitions &&
-          fStructure == other.fStructure &&
-          fParentId == other.fParentId &&
-          fLinkIds == other.fLinkIds;
+   return fFieldId == other.fFieldId && fFieldVersion == other.fFieldVersion && fTypeVersion == other.fTypeVersion &&
+          fFieldName == other.fFieldName && fFieldDescription == other.fFieldDescription &&
+          fTypeName == other.fTypeName && fTypeAlias == other.fTypeAlias && fNRepetitions == other.fNRepetitions &&
+          fStructure == other.fStructure && fParentId == other.fParentId && fLinkIds == other.fLinkIds;
 }
 
 ROOT::Experimental::RFieldDescriptor
@@ -55,6 +49,7 @@ ROOT::Experimental::RFieldDescriptor::Clone() const
    clone.fFieldName = fFieldName;
    clone.fFieldDescription = fFieldDescription;
    clone.fTypeName = fTypeName;
+   clone.fTypeAlias = fTypeAlias;
    clone.fNRepetitions = fNRepetitions;
    clone.fStructure = fStructure;
    clone.fParentId = fParentId;
@@ -79,7 +74,7 @@ ROOT::Experimental::RFieldDescriptor::CreateField(const RNTupleDescriptor &ntplD
       return collectionField;
    }
 
-   auto field = Detail::RFieldBase::Create(GetFieldName(), GetTypeName()).Unwrap();
+   auto field = Detail::RFieldBase::Create(GetFieldName(), GetTypeName(), GetTypeAlias()).Unwrap();
    field->SetOnDiskId(fFieldId);
    for (auto &f : *field)
       f.SetOnDiskId(ntplDesc.FindFieldId(f.GetName(), f.GetParent()->GetOnDiskId()));
@@ -565,6 +560,7 @@ ROOT::Experimental::RFieldDescriptorBuilder::FromField(const Detail::RFieldBase&
       .FieldName(field.GetName())
       .FieldDescription(field.GetDescription())
       .TypeName(field.GetType())
+      .TypeAlias(field.GetTypeAlias())
       .Structure(field.GetStructure())
       .NRepetitions(field.GetNRepetitions());
    return fieldDesc;

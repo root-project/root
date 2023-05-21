@@ -56,7 +56,7 @@ std::uint32_t SerializeFieldV1(const ROOT::Experimental::RFieldDescriptor &field
    }
    pos += RNTupleSerializer::SerializeString(fieldDesc.GetFieldName(), *where);
    pos += RNTupleSerializer::SerializeString(fieldDesc.GetTypeName(), *where);
-   pos += RNTupleSerializer::SerializeString("" /* type alias */, *where);
+   pos += RNTupleSerializer::SerializeString(fieldDesc.GetTypeAlias(), *where);
    pos += RNTupleSerializer::SerializeString(fieldDesc.GetFieldDescription(), *where);
 
    auto size = pos - base;
@@ -142,7 +142,7 @@ RResult<std::uint32_t> DeserializeFieldV1(
 
    std::string fieldName;
    std::string typeName;
-   std::string aliasName; // so far unused
+   std::string aliasName;
    std::string description;
    result = RNTupleSerializer::DeserializeString(bytes, fnFrameSizeLeft(), fieldName).Unwrap();
    if (!result)
@@ -160,7 +160,7 @@ RResult<std::uint32_t> DeserializeFieldV1(
    if (!result)
       return R__FORWARD_ERROR(result);
    bytes += result.Unwrap();
-   fieldDesc.FieldName(fieldName).TypeName(typeName).FieldDescription(description);
+   fieldDesc.FieldName(fieldName).TypeName(typeName).TypeAlias(aliasName).FieldDescription(description);
 
    return frameSize;
 }

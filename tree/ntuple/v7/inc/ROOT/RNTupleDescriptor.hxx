@@ -71,6 +71,8 @@ private:
    std::string fFieldDescription;
    /// The C++ type that was used when writing the field
    std::string fTypeName;
+   /// A typedef or using directive that resolved to the type name during field creation
+   std::string fTypeAlias;
    /// The number of elements per entry for fixed-size arrays
    std::uint64_t fNRepetitions = 0;
    /// The structural information carried by this field in the data model tree
@@ -101,6 +103,7 @@ public:
    std::string GetFieldName() const { return fFieldName; }
    std::string GetFieldDescription() const { return fFieldDescription; }
    std::string GetTypeName() const { return fTypeName; }
+   std::string GetTypeAlias() const { return fTypeAlias; }
    std::uint64_t GetNRepetitions() const { return fNRepetitions; }
    ENTupleStructure GetStructure() const { return fStructure; }
    DescriptorId_t GetParentId() const { return fParentId; }
@@ -883,6 +886,11 @@ public:
    }
    RFieldDescriptorBuilder& TypeName(const std::string& typeName) {
       fField.fTypeName = typeName;
+      return *this;
+   }
+   RFieldDescriptorBuilder &TypeAlias(const std::string &typeAlias)
+   {
+      fField.fTypeAlias = typeAlias;
       return *this;
    }
    RFieldDescriptorBuilder& NRepetitions(std::uint64_t nRepetitions) {
