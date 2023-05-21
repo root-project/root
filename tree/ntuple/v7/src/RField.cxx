@@ -244,8 +244,8 @@ ROOT::Experimental::Detail::RFieldBase::Create(const std::string &fieldName, con
       // TODO(jalopezg): support multi-dimensional row-major (C order) arrays in RArrayField
       if (arraySize.size() > 1)
          return R__FAIL("multi-dimensional array type not supported " + normalizedType);
-      auto itemField = Create(GetNormalizedType(arrayBaseType), arrayBaseType);
-      return {std::make_unique<RArrayField>(fieldName, itemField.Unwrap(), arraySize[0])};
+      auto itemField = Create(GetNormalizedType(arrayBaseType), arrayBaseType).Unwrap();
+      return {std::make_unique<RArrayField>(fieldName, std::move(itemField), arraySize[0])};
    }
 
    std::unique_ptr<ROOT::Experimental::Detail::RFieldBase> result;
@@ -527,6 +527,9 @@ void ROOT::Experimental::Detail::RFieldBase::AutoAdjustColumnTypes(const RNTuple
       }
       SetColumnRepresentative(rep);
    }
+
+   if (fTypeAlias == "Double32_t")
+      SetColumnRepresentative({EColumnType::kSplitReal32});
 }
 
 void ROOT::Experimental::Detail::RFieldBase::ConnectPageSink(RPageSink &pageSink)
@@ -842,7 +845,6 @@ void ROOT::Experimental::RField<double>::AcceptVisitor(Detail::RFieldVisitor &vi
 
 void ROOT::Experimental::RField<double>::SetDouble32()
 {
-   SetColumnRepresentative({EColumnType::kSplitReal32});
    fTypeAlias = "Double32_t";
 }
 

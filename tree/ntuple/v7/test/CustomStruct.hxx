@@ -1,6 +1,7 @@
 #ifndef ROOT7_RNTuple_Test_CustomStruct
 #define ROOT7_RNTuple_Test_CustomStruct
 
+#include <RtypesCore.h> // for Double32_t
 #include <TRootIOCtor.h>
 
 #include <cstdint>
@@ -62,6 +63,13 @@ public:
    IOConstructor(TRootIOCtor *) {};
 
    int a = 7;
+};
+
+class LowPrecisionFloats {
+public:
+   double a = 0.0;
+   Double32_t b = 1.0;
+   Double32_t c[2] = {2.0, 3.0};
 };
 
 /// The classes below are based on an excerpt provided by Marcin Nowak (EP-UAT)
