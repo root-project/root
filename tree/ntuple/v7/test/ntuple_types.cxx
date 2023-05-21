@@ -731,9 +731,10 @@ TEST(RNTuple, Double32)
    FileRaii fileGuard("test_ntuple_double32.root");
 
    auto fldD1 = RFieldBase::Create("d1", "double").Unwrap();
-   auto fldD2 = RFieldBase::Create("d2", "Double32_t").Unwrap();
    fldD1->SetColumnRepresentative({EColumnType::kReal32});
+   auto fldD2 = RFieldBase::Create("d2", "Double32_t").Unwrap();
    EXPECT_EQ(EColumnType::kSplitReal32, fldD2->GetColumnRepresentative()[0]);
+   EXPECT_EQ("Double32_t", fldD2->GetTypeAlias());
 
    auto model = RNTupleModel::Create();
    model->AddField(std::move(fldD1));
@@ -765,7 +766,9 @@ TEST(RNTuple, Double32)
 
    auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
    EXPECT_EQ(EColumnType::kReal32, reader->GetModel()->GetField("d1")->GetColumnRepresentative()[0]);
+   EXPECT_EQ("", reader->GetModel()->GetField("d1")->GetTypeAlias());
    EXPECT_EQ(EColumnType::kSplitReal32, reader->GetModel()->GetField("d2")->GetColumnRepresentative()[0]);
+   EXPECT_EQ("Double32_t", reader->GetModel()->GetField("d2")->GetTypeAlias());
    auto d1 = reader->GetModel()->GetDefaultEntry()->Get<double>("d1");
    auto d2 = reader->GetModel()->GetDefaultEntry()->Get<double>("d2");
    reader->LoadEntry(0);

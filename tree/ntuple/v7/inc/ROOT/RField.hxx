@@ -258,7 +258,8 @@ public:
    std::unique_ptr<RFieldBase> Clone(std::string_view newName) const;
 
    /// Factory method to resurrect a field from the stored on-disk type information
-   static RResult<std::unique_ptr<RFieldBase>> Create(const std::string &fieldName, const std::string &typeName);
+   static RResult<std::unique_ptr<RFieldBase>>
+   Create(const std::string &fieldName, const std::string &typeName, const std::string &typeAlias = "");
    /// Check whether a given string is a valid field name
    static RResult<void> EnsureValidFieldName(std::string_view fieldName);
 

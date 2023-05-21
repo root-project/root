@@ -233,13 +233,12 @@ std::string ROOT::Experimental::Detail::RFieldBase::GetQualifiedFieldName() cons
 }
 
 ROOT::Experimental::RResult<std::unique_ptr<ROOT::Experimental::Detail::RFieldBase>>
-ROOT::Experimental::Detail::RFieldBase::Create(const std::string &fieldName, const std::string &typeName)
+ROOT::Experimental::Detail::RFieldBase::Create(const std::string &fieldName, const std::string &typeName,
+                                               const std::string &typeAlias)
 {
    std::string normalizedType(GetNormalizedType(typeName));
    if (normalizedType.empty())
       return R__FAIL("no type name specified for Field " + fieldName);
-
-   std::unique_ptr<ROOT::Experimental::Detail::RFieldBase> result;
 
    if (auto [arrayBaseType, arraySize] = ParseArrayType(normalizedType); !arraySize.empty()) {
       // TODO(jalopezg): support multi-dimensional row-major (C order) arrays in RArrayField
@@ -248,6 +247,8 @@ ROOT::Experimental::Detail::RFieldBase::Create(const std::string &fieldName, con
       auto itemField = Create(GetNormalizedType(arrayBaseType), arrayBaseType);
       return {std::make_unique<RArrayField>(fieldName, itemField.Unwrap(), arraySize[0])};
    }
+
+   std::unique_ptr<ROOT::Experimental::Detail::RFieldBase> result;
 
    if (normalizedType == "ROOT::Experimental::ClusterSize_t") {
       result = std::make_unique<RField<ClusterSize_t>>(fieldName);
@@ -280,6 +281,8 @@ ROOT::Experimental::Detail::RFieldBase::Create(const std::string &fieldName, con
    } else if (normalizedType == "Double32_t") {
       result = std::make_unique<RField<double>>(fieldName);
       static_cast<RField<double> *>(result.get())->SetDouble32();
+      // Prevent the type alias from being reset by returning early
+      return result;
    } else if (normalizedType == "std::string") {
       result = std::make_unique<RField<std::string>>(fieldName);
    } else if (normalizedType == "std::vector<bool>") {
@@ -298,45 +301,40 @@ ROOT::Experimental::Detail::RFieldBase::Create(const std::string &fieldName, con
       auto arrayLength = std::stoi(arrayDef[1]);
       auto itemField = Create(GetNormalizedType(arrayDef[0]), arrayDef[0]);
       result = std::make_unique<RArrayField>(fieldName, itemField.Unwrap(), arrayLength);
-   }
-   if (normalizedType.substr(0, 13) == "std::variant<") {
+   } else if (normalizedType.substr(0, 13) == "std::variant<") {
       auto innerTypes = TokenizeTypeList(normalizedType.substr(13, normalizedType.length() - 14));
       std::vector<RFieldBase *> items;
       for (unsigned int i = 0; i < innerTypes.size(); ++i) {
          items.emplace_back(Create("_" + std::to_string(i), innerTypes[i]).Unwrap().release());
       }
       result = std::make_unique<RVariantField>(fieldName, items);
-   }
-   if (normalizedType.substr(0, 10) == "std::pair<") {
+   } else if (normalizedType.substr(0, 10) == "std::pair<") {
       auto innerTypes = TokenizeTypeList(normalizedType.substr(10, normalizedType.length() - 11));
       if (innerTypes.size() != 2)
          return R__FAIL("the type list for std::pair must have exactly two elements");
       std::array<std::unique_ptr<RFieldBase>, 2> items{Create("_0", innerTypes[0]).Unwrap(),
                                                        Create("_1", innerTypes[1]).Unwrap()};
       result = std::make_unique<RPairField>(fieldName, items);
-   }
-   if (normalizedType.substr(0, 11) == "std::tuple<") {
+   } else if (normalizedType.substr(0, 11) == "std::tuple<") {
       auto innerTypes = TokenizeTypeList(normalizedType.substr(11, normalizedType.length() - 12));
       std::vector<std::unique_ptr<RFieldBase>> items;
       for (unsigned int i = 0; i < innerTypes.size(); ++i) {
          items.emplace_back(Create("_" + std::to_string(i), innerTypes[i]).Unwrap());
       }
       result = std::make_unique<RTupleField>(fieldName, items);
-   }
-   if (normalizedType.substr(0, 12) == "std::bitset<") {
+   } else if (normalizedType.substr(0, 12) == "std::bitset<") {
       auto size = std::stoull(normalizedType.substr(12, normalizedType.length() - 13));
       result = std::make_unique<RBitsetField>(fieldName, size);
-   }
-   if (normalizedType.substr(0, 16) == "std::unique_ptr<") {
+   } else if (normalizedType.substr(0, 16) == "std::unique_ptr<") {
       std::string itemTypeName = normalizedType.substr(16, normalizedType.length() - 17);
       auto itemField = Create("_0", itemTypeName).Unwrap();
       auto normalizedInnerTypeName = itemField->GetType();
       result = std::make_unique<RUniquePtrField>(fieldName, "std::unique_ptr<" + normalizedInnerTypeName + ">",
                                                  std::move(itemField));
+   } else if (normalizedType == ":Collection:") {
+      // TODO: create an RCollectionField?
+      result = std::make_unique<RField<ClusterSize_t>>(fieldName);
    }
-   // TODO: create an RCollectionField?
-   if (normalizedType == ":Collection:")
-     result = std::make_unique<RField<ClusterSize_t>>(fieldName);
 
    if (!result) {
       auto cl = TClass::GetClass(normalizedType.c_str());
@@ -348,8 +346,10 @@ ROOT::Experimental::Detail::RFieldBase::Create(const std::string &fieldName, con
       }
    }
 
-   if (result)
+   if (result) {
+      result->fTypeAlias = typeAlias;
       return result;
+   }
    return R__FAIL(std::string("Field ") + fieldName + " has unknown type " + normalizedType);
 }
 
@@ -375,6 +375,7 @@ std::unique_ptr<ROOT::Experimental::Detail::RFieldBase>
 ROOT::Experimental::Detail::RFieldBase::Clone(std::string_view newName) const
 {
    auto clone = CloneImpl(newName);
+   clone->fTypeAlias = fTypeAlias;
    clone->fOnDiskId = fOnDiskId;
    clone->fDescription = fDescription;
    // We can just copy the pointer because fColumnRepresentative points into a static structure
