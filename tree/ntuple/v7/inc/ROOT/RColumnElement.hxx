@@ -745,6 +745,26 @@ public:
 };
 
 template <>
+class RColumnElement<double, EColumnType::kReal32> : public RColumnElementCastLE<double, float> {
+public:
+   static constexpr std::size_t kSize = sizeof(double);
+   static constexpr std::size_t kBitsOnStorage = sizeof(float) * 8;
+   explicit RColumnElement(double *value) : RColumnElementCastLE(value, kSize) {}
+   bool IsMappable() const final { return kIsMappable; }
+   std::size_t GetBitsOnStorage() const final { return kBitsOnStorage; }
+};
+
+template <>
+class RColumnElement<double, EColumnType::kSplitReal32> : public RColumnElementSplitLE<double, float> {
+public:
+   static constexpr std::size_t kSize = sizeof(double);
+   static constexpr std::size_t kBitsOnStorage = sizeof(float) * 8;
+   explicit RColumnElement(double *value) : RColumnElementSplitLE(value, kSize) {}
+   bool IsMappable() const final { return kIsMappable; }
+   std::size_t GetBitsOnStorage() const final { return kBitsOnStorage; }
+};
+
+template <>
 class RColumnElement<ClusterSize_t, EColumnType::kIndex64> : public RColumnElementLE<std::uint64_t> {
 public:
    static constexpr std::size_t kSize = sizeof(ClusterSize_t);
