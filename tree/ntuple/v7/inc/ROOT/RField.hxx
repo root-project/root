@@ -159,6 +159,8 @@ protected:
    std::vector<std::unique_ptr<RColumn>> fColumns;
    /// Properties of the type that allow for optimizations of collections of that type
    int fTraits = 0;
+   /// A typedef or using name that was used when creating the field
+   std::string fTypeAlias;
    /// List of functions to be called after reading a value
    std::vector<ReadCallback_t> fReadCallbacks;
    /// C++ type version cached from the descriptor after a call to `ConnectPageSource()`
@@ -332,6 +334,7 @@ public:
    /// Returns the field name and parent field names separated by dots ("grandparent.parent.child")
    std::string GetQualifiedFieldName() const;
    std::string GetType() const { return fType; }
+   std::string GetTypeAlias() const { return fTypeAlias; }
    ENTupleStructure GetStructure() const { return fStructure; }
    std::size_t GetNRepetitions() const { return fNRepetitions; }
    NTupleSize_t GetNElements() const { return fPrincipalColumn->GetNElements(); }

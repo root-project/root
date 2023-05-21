@@ -277,6 +277,9 @@ ROOT::Experimental::Detail::RFieldBase::Create(const std::string &fieldName, con
       result = std::make_unique<RField<float>>(fieldName);
    } else if (normalizedType == "double") {
       result = std::make_unique<RField<double>>(fieldName);
+   } else if (normalizedType == "Double32_t") {
+      result = std::make_unique<RField<double>>(fieldName);
+      static_cast<RField<double> *>(result.get())->SetDouble32();
    } else if (normalizedType == "std::string") {
       result = std::make_unique<RField<std::string>>(fieldName);
    } else if (normalizedType == "std::vector<bool>") {
@@ -839,6 +842,7 @@ void ROOT::Experimental::RField<double>::AcceptVisitor(Detail::RFieldVisitor &vi
 void ROOT::Experimental::RField<double>::SetDouble32()
 {
    SetColumnRepresentative({EColumnType::kSplitReal32});
+   fTypeAlias = "Double32_t";
 }
 
 //------------------------------------------------------------------------------
