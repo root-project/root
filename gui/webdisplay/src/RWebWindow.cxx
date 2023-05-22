@@ -79,10 +79,10 @@ RWebWindow::~RWebWindow()
    StopThread();
 
    if (fMaster) {
-      fMaster->RemoveEmbedWindow(fMasterConnId, fMasterChannel);
+      for (auto &entry : fMasterConns)
+         fMaster->RemoveEmbedWindow(entry.connid, entry.channel);
       fMaster.reset();
-      fMasterConnId = 0;
-      fMasterChannel = -1;
+      fMasterConns.clear();
    }
 
    if (fWSHandler)
@@ -102,11 +102,8 @@ RWebWindow::~RWebWindow()
 
       for (auto &conn : lst) {
          conn->fActive = false;
-         for (auto &elem: conn->fEmbed) {
-            elem.second->fMaster.reset();
-            elem.second->fMasterConnId = 0;
-            elem.second->fMasterChannel = -1;
-         }
+         for (auto &elem: conn->fEmbed)
+            elem.second->RemoveMasterConnection();
          conn->fEmbed.clear();
       }
 
@@ -309,15 +306,34 @@ std::shared_ptr<RWebWindow::WebConn> RWebWindow::RemoveConnection(unsigned wsid)
    }
 
    if (res) {
-      for (auto &elem: res->fEmbed) {
-         elem.second->fMaster.reset();
-         elem.second->fMasterConnId = 0;
-         elem.second->fMasterChannel = -1;
-      }
+      for (auto &elem: res->fEmbed)
+         elem.second->RemoveMasterConnection(res->fConnId);
       res->fEmbed.clear();
    }
 
    return res;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Remove master connection - if any
+
+void RWebWindow::RemoveMasterConnection(unsigned connid)
+{
+   if (!fMaster) return;
+
+   if (connid == 0) {
+      fMasterConns.clear();
+   } else {
+      for (auto iter = fMasterConns.begin(); iter != fMasterConns.end(); ++iter)
+         if (iter->connid == connid) {
+            fMasterConns.erase(iter);
+            break;
+         }
+   }
+
+   if (fMasterConns.size() == 0)
+      fMaster.reset();
+
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -1252,8 +1268,21 @@ int RWebWindow::GetSendQueueLength(unsigned connid) const
 
 void RWebWindow::SubmitData(unsigned connid, bool txt, std::string &&data, int chid)
 {
-   if (fMaster)
-      return fMaster->SubmitData(fMasterConnId, txt, std::move(data), fMasterChannel);
+   if (fMaster) {
+      int cnt = 0;
+      for (auto & entry : fMasterConns)
+         if (!connid || entry.connid == connid)
+            cnt++;
+
+      for (auto & entry : fMasterConns)
+         if (!connid || entry.connid == connid) {
+            if (--cnt)
+               fMaster->SubmitData(entry.connid, txt, std::string(data), entry.channel);
+            else
+               fMaster->SubmitData(entry.connid, txt, std::move(data), entry.channel);
+         }
+      return;
+   }
 
    auto arr = GetConnections(connid);
    auto cnt = arr.size();
@@ -1553,12 +1582,12 @@ void RWebWindow::Run(double tm)
 /////////////////////////////////////////////////////////////////////////////////
 /// Add embed window
 
-unsigned RWebWindow::AddEmbedWindow(std::shared_ptr<RWebWindow> window, int channel)
+unsigned RWebWindow::AddEmbedWindow(std::shared_ptr<RWebWindow> window, unsigned connid, int channel)
 {
    if (channel < 2)
       return 0;
 
-   auto arr = GetConnections(0, true);
+   auto arr = GetConnections(connid, true);
    if (arr.size() == 0)
       return 0;
 
@@ -1628,12 +1657,19 @@ unsigned RWebWindow::ShowWindow(std::shared_ptr<RWebWindow> window, const RWebDi
       return 0;
 
    if (args.GetBrowserKind() == RWebDisplayArgs::kEmbedded) {
-      unsigned connid = args.fMaster ? args.fMaster->AddEmbedWindow(window, args.fMasterChannel) : 0;
+      if (args.fMaster && window->fMaster && window->fMaster != args.fMaster) {
+         R__LOG_ERROR(WebGUILog()) << "Cannot use different master for same RWebWindow";
+         return 0;
+      }
+
+      unsigned connid = args.fMaster ? args.fMaster->AddEmbedWindow(window, args.fMasterConnection, args.fMasterChannel) : 0;
 
       if (connid > 0) {
+
+         window->RemoveMasterConnection(connid);
+
          window->fMaster = args.fMaster;
-         window->fMasterConnId = connid;
-         window->fMasterChannel = args.fMasterChannel;
+         window->fMasterConns.emplace_back(connid, args.fMasterChannel);
 
          // inform client that connection is established and window initialized
          args.fMaster->SubmitData(connid, true, "EMBED_DONE"s, args.fMasterChannel);
