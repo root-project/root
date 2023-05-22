@@ -218,7 +218,7 @@ namespace Internal {
       fIsA = nullptr;
       using ROOT::Internal::gROOTLocal;
       if (!gROOTLocal || !gROOTLocal->Initialized() || !gROOTLocal->GetListOfClasses()) return;
-      if (fAction) GetAction().Unregister(GetClassName());
+      if (fAction) GetAction().Unregister(GetClassName(), fClass);
    }
 
    const Internal::TInitBehavior &TGenericClassInfo::GetAction() const
