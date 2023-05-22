@@ -214,11 +214,14 @@ namespace Internal {
       delete fCollectionProxyInfo;
       delete fCollectionStreamerInfo;
       delete fStreamer;
-      if (!fClass) delete fIsA; // fIsA is adopted by the class if any.
+      if (!fClass)
+         delete fIsA; // fIsA is adopted by the class if any.
       fIsA = nullptr;
       using ROOT::Internal::gROOTLocal;
-      if (!gROOTLocal || !gROOTLocal->Initialized() || !gROOTLocal->GetListOfClasses()) return;
-      if (fAction) GetAction().Unregister(GetClassName(), fClass);
+      if (!gROOTLocal || !gROOTLocal->Initialized() || !gROOTLocal->GetListOfClasses())
+         return;
+      if (fAction)
+         GetAction().Unregister(GetClassName(), fClass);
    }
 
    const Internal::TInitBehavior &TGenericClassInfo::GetAction() const
