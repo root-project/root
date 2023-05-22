@@ -77,6 +77,7 @@ public:
    virtual Int_t     Add(TChain* chain);
    virtual Int_t     Add(const char* name, Long64_t nentries = TTree::kMaxEntries);
    virtual Int_t     AddFile(const char* name, Long64_t nentries = TTree::kMaxEntries, const char* tname = "");
+   virtual Int_t     AddFileList(const char* filelist);
    virtual Int_t     AddFileInfoList(TCollection* list, Long64_t nfiles = TTree::kMaxEntries);
    virtual TFriendElement *AddFriend(const char* chainname, const char* dummy = "");
    virtual TFriendElement *AddFriend(const char* chainname, TFile* dummy);
@@ -170,7 +171,8 @@ public:
    virtual void      SetWeight(Double_t w=1, Option_t *option="");
    virtual void      UseCache(Int_t maxCacheSize = 10, Int_t pageSize = 0);
 
-   ClassDef(TChain,5)  //A chain of TTrees
+   static std::vector<std::string> ReadFileList (const std::string& filelist);
+   ClassDef(TChain,6)  //A chain of TTrees
 };
 
 #endif // ROOT_TChain

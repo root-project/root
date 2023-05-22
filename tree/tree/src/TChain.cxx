@@ -27,6 +27,7 @@ the trees in the chain.
 #include "TChain.h"
 
 #include <iostream>
+#include <fstream>
 #include <cfloat>
 #include <string>
 
@@ -62,6 +63,7 @@ the trees in the chain.
 #include "TVirtualPerfStats.h"
 #include "strlcpy.h"
 #include "snprintf.h"
+#include "ROOT/StringUtils.hxx"
 
 ClassImp(TChain);
 
@@ -575,6 +577,33 @@ Int_t TChain::AddFile(const char* name, Long64_t nentries /* = TTree::kMaxEntrie
       ResetBit(kProofUptodate);
 
    return 1;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Add a new list of files to this chain.
+///
+/// Filename formats are similar to TChain::Add. Wildcards are not
+/// applied. urls may also contain query and fragment identifiers
+/// where the tree name can be specified in the url fragment.
+/// \param[in] filelist The file which contains a list of files to be added. Each string from file will be passed to TChain::AddFile but if starting with '#' it will be ignored
+/// \returns Sum of returns of TChain::AddFile, see TChain::AddFile signature
+Int_t TChain::AddFileList(const char* filelist)
+{
+   if (filelist == 0 || filelist[0] == '\0') {
+      Error("AddFilelist", "No file names; no trees have been added to the chain");
+      return 0;
+   }
+
+   Int_t sum_results = 0;
+   std::vector<std::string> input_file_list = TChain::ReadFileList(filelist);
+   if (input_file_list.empty()) { Error("AddFilelist", "Empty or missing filelist; no trees have been added to the chain"); }
+   for (auto f: input_file_list) {
+     Int_t result = AddFile(f.c_str());
+     sum_results += result;
+     }
+
+return sum_results;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3100,3 +3129,28 @@ void TChain::Streamer(TBuffer& b)
 void TChain::UseCache(Int_t /* maxCacheSize */, Int_t /* pageSize */)
 {
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Read and split into white-space separated components a (txt) file
+/// A component string starting with '#' will be ignored
+/// \param[in] str File to read
+/// \param[out] std::vector<std::string> A vector of strings
+std::vector<std::string> TChain::ReadFileList (const std::string& filelist) {
+    std::vector<std::string> input_file_list;
+    std::fstream infile(filelist, std::ios::in);
+    if (infile.is_open()) {
+        std::string line;
+        while( std::getline(infile, line) ) {
+            for (const auto& p: ROOT::Split(line.c_str(), " ", true)) {
+                int valid_chars_in_line = 0;  // check for whitespace line
+                for (auto& c: p) { if (!std::isspace(static_cast<unsigned char>(c))) { valid_chars_in_line++; } }
+                if (valid_chars_in_line == 0) continue;
+                if (p[0] != '#') { input_file_list.push_back(p);}
+                }
+            }
+        }
+    else {
+        ::Error("TChain::ReadFileList", "cannot open file %s", filelist.c_str());
+        }
+    return input_file_list;
+    }
