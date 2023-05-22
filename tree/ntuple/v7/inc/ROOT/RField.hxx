@@ -1352,7 +1352,7 @@ public:
    size_t GetAlignment() const final { return alignof(double); }
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
 
-   // Set the column representation to 16 bit floating point and the type alias to Double32_t
+   // Set the column representation to 32 bit floating point and the type alias to Double32_t
    void SetDouble32();
 };
 
