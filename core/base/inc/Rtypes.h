@@ -122,7 +122,7 @@ namespace ROOT {
                               Int_t dl, Int_t il);
    extern void AddClass(const char *cname, Version_t id, const std::type_info &info,
                         DictFuncPtr_t dict, Int_t pragmabits);
-   extern void RemoveClass(const char *cname);
+   extern void RemoveClass(const char *cname, TClass *cl);
    extern void ResetClassVersion(TClass*, const char*, Short_t);
    extern void AddClassAlternate(const char *normName, const char *alternate);
 
@@ -153,7 +153,7 @@ namespace ROOT {
       virtual void Register(const char *cname, Version_t id,
                             const std::type_info &info,
                             DictFuncPtr_t dict, Int_t pragmabits) const = 0;
-      virtual void Unregister(const char *classname) const = 0;
+      virtual void Unregister(const char *classname, TClass *cl) const = 0;
       virtual TClass *CreateClass(const char *cname, Version_t id,
                                   const std::type_info &info, TVirtualIsAProxy *isa,
                                   const char *dfil, const char *ifil,
@@ -168,8 +168,8 @@ namespace ROOT {
          ROOT::AddClass(cname, id, info, dict, pragmabits);
       }
 
-      void Unregister(const char *classname) const override {
-         ROOT::RemoveClass(classname);
+      void Unregister(const char *classname, TClass *cl) const override {
+         ROOT::RemoveClass(classname, cl);
       }
 
       TClass *CreateClass(const char *cname, Version_t id,

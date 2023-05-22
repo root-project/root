@@ -98,7 +98,7 @@ R__EXTERN TClassTable *gClassTable;
 namespace ROOT {
    extern void AddClass(const char *cname, Version_t id, DictFuncPtr_t dict,
                         Int_t pragmabits);
-   extern void RemoveClass(const char *cname);
+   extern void RemoveClass(const char *cname, TClass *cl);
 }
 
 #endif
