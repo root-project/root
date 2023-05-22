@@ -79,9 +79,9 @@ RWebDisplayArgs::RWebDisplayArgs(int width, int height, int x, int y, const std:
 /// Constructor.
 /// Let specify master window and channel (if reserved already)
 
-RWebDisplayArgs::RWebDisplayArgs(std::shared_ptr<RWebWindow> master, int channel)
+RWebDisplayArgs::RWebDisplayArgs(std::shared_ptr<RWebWindow> master, unsigned conndid, int channel)
 {
-   SetMasterWindow(master, channel);
+   SetMasterWindow(master, conndid, channel);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
@@ -265,12 +265,13 @@ std::string RWebDisplayArgs::GetBrowserName() const
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
-/// Assign window and channel id where other window will be embed
+/// Assign window, connection and channel id where other window will be embed
 
-void RWebDisplayArgs::SetMasterWindow(std::shared_ptr<RWebWindow> master, int channel)
+void RWebDisplayArgs::SetMasterWindow(std::shared_ptr<RWebWindow> master, unsigned connid, int channel)
 {
    SetBrowserKind(kEmbedded);
    fMaster = master;
+   fMasterConnection = connid;
    fMasterChannel = channel;
 }
 

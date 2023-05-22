@@ -68,6 +68,7 @@ protected:
    void *fDriverData{nullptr};    ///<! special data delivered to driver, can be used for QWebEngine
 
    std::shared_ptr<RWebWindow> fMaster; ///<!  master window
+   unsigned fMasterConnection{0};       ///<!  used master connection
    int fMasterChannel{-1};              ///<!  used master channel
 
    bool SetSizeAsStr(const std::string &str);
@@ -82,7 +83,7 @@ public:
 
    RWebDisplayArgs(int width, int height, int x = -1, int y = -1, const std::string &browser = "");
 
-   RWebDisplayArgs(std::shared_ptr<RWebWindow> master, int channel = -1);
+   RWebDisplayArgs(std::shared_ptr<RWebWindow> master, unsigned conndid = 0, int channel = -1);
 
    virtual ~RWebDisplayArgs();
 
@@ -93,7 +94,7 @@ public:
    EBrowserKind GetBrowserKind() const { return fKind; }
    std::string GetBrowserName() const;
 
-   void SetMasterWindow(std::shared_ptr<RWebWindow> master, int channel = -1);
+   void SetMasterWindow(std::shared_ptr<RWebWindow> master, unsigned connid = 0, int channel = -1);
 
    /// returns true if interactive browser window supposed to be started
    bool IsInteractiveBrowser() const

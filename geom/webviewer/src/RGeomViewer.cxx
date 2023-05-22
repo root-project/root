@@ -257,8 +257,10 @@ void RGeomViewer::WebWindowCallback(unsigned connid, const std::string &arg)
    } else if (arg.compare(0, 9, "HCHANNEL:") == 0) {
 
       int chid = std::stoi(arg.substr(9));
-      fWebHierarchy = std::make_shared<RGeomHierarchy>(fDesc);
-      fWebHierarchy->Show({ fWebWindow, chid });
+
+      if (!fWebHierarchy)
+         fWebHierarchy = std::make_shared<RGeomHierarchy>(fDesc);
+      fWebHierarchy->Show({ fWebWindow, connid, chid });
 
    } else if (arg.compare(0, 4, "GET:") == 0) {
       // provide exact shape
