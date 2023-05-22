@@ -1,25 +1,23 @@
 {
     "misc": {
         "ROOT_internal": {
-            "combined_datas": [
-                {
+            "combined_datas": {
+                "observed" : {
                     "index_cat": "channelCat",
                     "indices": [0],
-                    "labels": ["channel1"],
-                    "name": "observed"
+                    "labels": ["channel1"]
                 }
-            ],
-            "combined_distributions": [
-                {
+            },
+            "combined_distributions": {
+                "main" : {
                     "distributions": [
                         "model_channel1"
                     ],
                     "index_cat": "channelCat",
                     "indices": [0],
-                    "labels": ["channel1"],
-                    "name": "main"
+                    "labels": ["channel1"]
                 }
-            ],
+            },
             "ModelConfigs": {
                 "main": {
                     "combined_data_name": "observed",
