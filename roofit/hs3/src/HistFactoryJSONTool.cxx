@@ -330,7 +330,11 @@ void exportMeasurement(RooStats::HistFactory::Measurement &measurement, JSONNode
       channelNames.push_back(c.GetName());
    }
 
-   RooJSONFactoryWSTool::writeCombinedDataName(n, "simPdf", "obsData");
+   auto &modelConfigAux = RooJSONFactoryWSTool::getRooFitInternal(n, "ModelConfigs", "simPdf");
+   modelConfigAux.set_map();
+   modelConfigAux["combined_data_name"] << "obsData";
+   modelConfigAux["pdfName"] << "simPdf";
+   modelConfigAux["mcName"] << "ModelConfig";
 
    // Finally write lumi constraint
    auto &lumiConstraint = RooJSONFactoryWSTool::appendNamedChild(pdflist, "lumiConstraint");
