@@ -1851,7 +1851,13 @@ void TCling::LoadPCM(std::string pcmFileNameFullPath)
 
       cling::Interpreter::PushTransactionRAII deserRAII(GetInterpreterImpl());
       LoadPCMImpl(pcmMemFile);
-      fPendingRdicts.erase(pendingRdict);
+      // Currently the module file are never unloaded (even if the library is
+      // unloaded) and, of course, never reloaded.
+      // Consequently, we must NOT remove the `pendingRdict` from the list
+      // of pending dictionary, otherwise if a library is unloaded and then
+      // reload we will be unable to update properly the TClass object
+      // (because we wont be able to load the rootpcm file by executing the
+      // above lines)
 
       return;
    }
