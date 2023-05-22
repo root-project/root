@@ -163,8 +163,11 @@ public:
       const char *what() const noexcept override { return _message.c_str(); }
    };
 
-   static void
-   writeCombinedDataName(RooFit::Detail::JSONNode &rootnode, std::string const &pdfName, std::string const &dataName);
+   template <typename... Keys_t>
+   static RooFit::Detail::JSONNode &getRooFitInternal(RooFit::Detail::JSONNode &node, Keys_t const &...keys)
+   {
+      return node.get("misc", "ROOT_internal", keys...);
+   }
 
    static void
    exportHisto(RooArgSet const &vars, std::size_t n, double const *contents, RooFit::Detail::JSONNode &output);
