@@ -949,7 +949,7 @@ void ROOT::ResetClassVersion(TClass *cl, const char *cname, Short_t newid)
 /// Global function called by the dtor of a class's init class
 /// (see the ClassImp macro).
 
-void ROOT::RemoveClass(const char *cname)
+void ROOT::RemoveClass(const char *cname, TClass *oldcl)
 {
    // don't delete class information since it is needed by the I/O system
    // to write the StreamerInfo to file
@@ -959,14 +959,8 @@ void ROOT::RemoveClass(const char *cname)
       // pointer is now invalid ....
       // We still keep the TClass object around because TFile needs to
       // get to the TStreamerInfo.
-      if (gROOT && gROOT->GetListOfClasses()) {
-         TObject *pcname;
-         if ((pcname = gROOT->GetListOfClasses()->FindObject(cname))) {
-            TClass *cl = dynamic_cast<TClass*>(pcname);
-            if (cl)
-               cl->SetUnloaded();
-         }
-      }
+      if (oldcl)
+         oldcl->SetUnloaded();
       TClassTable::Remove(cname);
    }
 }
