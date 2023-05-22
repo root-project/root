@@ -95,8 +95,6 @@ tool.writedoc("hs3.tex")
 
 using RooFit::Detail::JSONNode;
 using RooFit::Detail::JSONTree;
-
-using RooFit::Detail::JSONNode;
 using RooFit::JSONIO::Detail::Domains;
 
 bool matches(const RooJSONFactoryWSTool::CombinedData &data, const RooSimultaneous *pdf)
@@ -113,7 +111,7 @@ struct Var {
    std::vector<double> bounds;
 
    Var(int n) : nbins(n), min(0), max(n) {}
-   Var(const RooFit::Detail::JSONNode &val);
+   Var(const JSONNode &val);
 };
 
 bool isNumber(const std::string &str)
@@ -284,12 +282,6 @@ JSONNode const *findRooFitInternal(JSONNode const &node, Keys_t const &...keys)
    return node.find("misc", "ROOT_internal", keys...);
 }
 
-template <typename... Keys_t>
-JSONNode &getRooFitInternal(JSONNode &node, Keys_t const &...keys)
-{
-   return node.get("misc", "ROOT_internal", keys...);
-}
-
 bool isLiteralConstVar(RooAbsArg const &arg)
 {
    bool isRooConstVar = dynamic_cast<RooConstVar const *>(&arg);
@@ -309,7 +301,8 @@ void exportAttributes(const RooAbsArg *arg, JSONNode &rootnode)
       if (node)
          return;
 
-      node = &RooJSONFactoryWSTool::appendNamedChild(getRooFitInternal(rootnode, "attributes"), arg->GetName());
+      node = &RooJSONFactoryWSTool::appendNamedChild(RooJSONFactoryWSTool::getRooFitInternal(rootnode, "attributes"),
+                                                     arg->GetName());
    };
 
    // We have to remember if the variable was a constant RooRealVar or a
@@ -411,13 +404,13 @@ std::unique_ptr<RooAbsData> loadData(const JSONNode &p, RooWorkspace &workspace)
    return nullptr;
 }
 
-void importAnalysis(const RooFit::Detail::JSONNode &rootnode, const RooFit::Detail::JSONNode &analysisNode,
-                    const RooFit::Detail::JSONNode &likelihoodsNode, RooWorkspace &workspace,
-                    const std::vector<std::unique_ptr<RooAbsData>> &datas)
+void importAnalysis(const JSONNode &rootnode, const JSONNode &analysisNode, const JSONNode &likelihoodsNode,
+                    RooWorkspace &workspace, const std::vector<std::unique_ptr<RooAbsData>> &datas)
 {
    // if this is a toplevel pdf, also create a modelConfig for it
+   JSONNode const *mcAuxNode = findRooFitInternal(rootnode, "ModelConfigs", analysisNode["name"].val());
 
-   auto *mcNameNode = findRooFitInternal(rootnode, "ModelConfigs", analysisNode["name"].val(), "mcName");
+   JSONNode const *mcNameNode = mcAuxNode ? mcAuxNode->find("mcName") : nullptr;
    std::string mcname = mcNameNode ? mcNameNode->val() : analysisNode["name"].val().c_str();
    if (workspace.obj(mcname))
       return;
@@ -446,7 +439,7 @@ void importAnalysis(const RooFit::Detail::JSONNode &rootnode, const RooFit::Deta
       }
    }
 
-   auto *pdfNameNode = findRooFitInternal(rootnode, "ModelConfigs", analysisNode["name"].val(), "pdfName");
+   JSONNode const *pdfNameNode = mcAuxNode ? mcAuxNode->find("pdfName") : nullptr;
    std::string const pdfName = pdfNameNode ? pdfNameNode->val() : "simPdf";
 
    auto *pdf = static_cast<RooSimultaneous *>(workspace.pdf(pdfName));
@@ -466,14 +459,14 @@ void importAnalysis(const RooFit::Detail::JSONNode &rootnode, const RooFit::Deta
    mc->SetParametersOfInterest(readArgSet("parameters_of_interest"));
    mc->SetObservables(observables);
 
-   if (auto *mcAuxNode = findRooFitInternal(rootnode, "ModelConfigs", analysisNode["name"].val())) {
+   if (mcAuxNode) {
       if (auto found = mcAuxNode->find("combined_data_name")) {
          pdf->setStringAttribute("combined_data_name", found->val().c_str());
       }
    }
 }
 
-void combinePdfs(const RooFit::Detail::JSONNode &rootnode, RooWorkspace &ws)
+void combinePdfs(const JSONNode &rootnode, RooWorkspace &ws)
 {
    auto *combinedPdfInfoNode = findRooFitInternal(rootnode, "combined_distributions");
 
@@ -513,7 +506,7 @@ void combinePdfs(const RooFit::Detail::JSONNode &rootnode, RooWorkspace &ws)
    }
 }
 
-void combineDatasets(const RooFit::Detail::JSONNode &rootnode, std::vector<std::unique_ptr<RooAbsData>> &datas)
+void combineDatasets(const JSONNode &rootnode, std::vector<std::unique_ptr<RooAbsData>> &datas)
 {
    auto *combinedDataInfoNode = findRooFitInternal(rootnode, "combined_datas");
 
@@ -905,8 +898,7 @@ void RooJSONFactoryWSTool::importFunction(const JSONNode &p, bool isPdf)
    }
 }
 
-void RooJSONFactoryWSTool::exportHisto(RooArgSet const &vars, std::size_t n, double const *contents,
-                                       RooFit::Detail::JSONNode &output)
+void RooJSONFactoryWSTool::exportHisto(RooArgSet const &vars, std::size_t n, double const *contents, JSONNode &output)
 {
    auto &observablesNode = output["axes"];
    for (RooRealVar *var : static_range_cast<RooRealVar *>(vars)) {
@@ -919,7 +911,7 @@ void RooJSONFactoryWSTool::exportHisto(RooArgSet const &vars, std::size_t n, dou
    return exportArray(n, contents, output["contents"]);
 }
 
-void RooJSONFactoryWSTool::exportArray(std::size_t n, double const *contents, RooFit::Detail::JSONNode &output)
+void RooJSONFactoryWSTool::exportArray(std::size_t n, double const *contents, JSONNode &output)
 {
    output.set_seq();
    for (std::size_t i = 0; i < n; ++i) {
@@ -933,7 +925,7 @@ void RooJSONFactoryWSTool::exportArray(std::size_t n, double const *contents, Ro
    }
 }
 
-void RooJSONFactoryWSTool::exportCategory(RooAbsCategory const &cat, RooFit::Detail::JSONNode &node)
+void RooJSONFactoryWSTool::exportCategory(RooAbsCategory const &cat, JSONNode &node)
 {
    auto &labels = node["labels"].set_seq();
    auto &indices = node["indices"].set_seq();
@@ -1197,15 +1189,6 @@ std::string RooJSONFactoryWSTool::name(const JSONNode &n)
    return n["name"].val();
 }
 
-void RooJSONFactoryWSTool::writeCombinedDataName(JSONNode &rootnode, std::string const &pdfName,
-                                                 std::string const &dataName)
-{
-   auto &modelConfigAux = getRooFitInternal(rootnode, "ModelConfigs", pdfName);
-   modelConfigAux.set_map();
-
-   modelConfigAux["combined_data_name"] << dataName;
-}
-
 void RooJSONFactoryWSTool::exportModelConfig(JSONNode &rootnode, RooStats::ModelConfig const &mc,
                                              const std::vector<CombinedData> &combDataSets)
 {
@@ -1442,7 +1425,7 @@ bool RooJSONFactoryWSTool::exportYML(std::string const &filename)
    return this->exportYML(out);
 }
 
-void RooJSONFactoryWSTool::importAllNodes(const RooFit::Detail::JSONNode &n)
+void RooJSONFactoryWSTool::importAllNodes(const JSONNode &n)
 {
    _domains = std::make_unique<Domains>();
    if (auto domains = n.find("domains"))

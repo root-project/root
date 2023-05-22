@@ -19,7 +19,14 @@
                     "labels": ["channel1"],
                     "name": "main"
                 }
-            ]
+            ],
+            "ModelConfigs": {
+                "main": {
+                    "combined_data_name": "observed",
+                    "mcName": "ModelConfig",
+                    "pdfName": "main"
+                }
+            }
         }
     },
     "analyses": [
