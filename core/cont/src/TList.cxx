@@ -763,9 +763,12 @@ TList::TObjLinkPtr_t TList::NewOptLink(TObject *obj, Option_t *opt, const TObjLi
 
 void TList::RecursiveRemove(TObject *obj)
 {
-   R__COLLECTION_WRITE_GUARD();
+   // Note, we can assume that the Collection Read lock is held, see
+   // THashList::RecursiveRemove for a more complete discussion.
+   if (!obj || (fSize == 0 && fCache.expired()))
+      return;
 
-   if (!obj) return;
+   R__COLLECTION_WRITE_GUARD();
 
    // When fCache is set and has no previous and next node, it represents
    // the node being cleared and/or deleted.
@@ -778,9 +781,6 @@ void TList::RecursiveRemove(TObject *obj)
          }
       }
    }
-
-   if (!fFirst.get())
-      return;
 
    auto lnk  = fFirst;
    decltype(lnk) next;
