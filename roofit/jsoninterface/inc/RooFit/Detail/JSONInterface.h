@@ -93,9 +93,7 @@ public:
    virtual JSONNode &operator<<(bool b) = 0;
    virtual const JSONNode &operator>>(std::string &v) const = 0;
    virtual JSONNode &operator[](std::string const &k) = 0;
-   virtual JSONNode &operator[](size_t pos) = 0;
    virtual const JSONNode &operator[](std::string const &k) const = 0;
-   virtual const JSONNode &operator[](size_t pos) const = 0;
    virtual bool is_container() const = 0;
    virtual bool is_map() const = 0;
    virtual bool is_seq() const = 0;
@@ -171,6 +169,7 @@ public:
    JSONNode &get(std::string const &key)
    {
       auto &n = *this;
+      n.set_map();
       return n[key];
    }
 
