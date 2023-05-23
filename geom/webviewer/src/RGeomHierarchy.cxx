@@ -21,7 +21,7 @@ using namespace ROOT::Experimental;
 //////////////////////////////////////////////////////////////////////////////////////////////
 /// constructor
 
-RGeomHierarchy::RGeomHierarchy(RGeomDescription &desc) :
+RGeomHierarchy::RGeomHierarchy(RGeomDescription &desc, bool use_server_threads) :
   fDesc(desc)
 {
    fWebWindow = RWebWindow::Create();
@@ -29,6 +29,9 @@ RGeomHierarchy::RGeomHierarchy(RGeomDescription &desc) :
 
    fWebWindow->SetDefaultPage("file:rootui5sys/geom/index.html");
    fWebWindow->SetGeometry(600, 900); // configure predefined window geometry
+
+   if (use_server_threads)
+      fWebWindow->UseServerThreads();
 
    fDesc.AddSignalHandler(this, [this](const std::string &kind) { ProcessSignal(kind); });
 }
@@ -46,6 +49,8 @@ RGeomHierarchy::~RGeomHierarchy()
 
 void RGeomHierarchy::WebWindowCallback(unsigned connid, const std::string &arg)
 {
+   printf("RGeomHierarchy::WebWindowCallback connid %u arg %s\n", connid, arg.c_str());
+
    if (arg.compare(0,6, "BRREQ:") == 0) {
       // central place for processing browser requests
       auto json = fDesc.ProcessBrowserRequest(arg.substr(6));
