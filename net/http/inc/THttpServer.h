@@ -51,6 +51,7 @@ protected:
    std::string fDrawPage;        ///<! file name for drawing of single element
    std::string fDrawPageCont;    ///<! content of draw html page
    std::string fCors;            ///<! CORS: sets Access-Control-Allow-Origin header for ProcessRequest responses
+   std::string fCorsCredentials; ///<! CORS: add Access-Control-Allow-Credentials: true response header
 
    std::mutex fMutex;                                        ///<! mutex to protect list with arguments
    std::queue<std::shared_ptr<THttpCallArg>> fArgs;          ///<! submitted arguments
@@ -111,6 +112,15 @@ public:
 
    /** Returns specified CORS domain */
    const char *GetCors() const { return fCors.c_str(); }
+
+   /** Enable/disable usage Access-Control-Allow-Credentials response header */
+   void SetCorsCredentials(const std::string &value = "true") { fCorsCredentials = value; }
+
+   /** Returns kTRUE if Access-Control-Allow-Credentials header should be used */
+   Bool_t IsCorsCredentials() const { return !fCorsCredentials.empty(); }
+
+   /** Returns specified CORS credentials value - if any */
+   const char *GetCorsCredentials() const { return fCorsCredentials.c_str(); }
 
    /** set name of top item in objects hierarchy */
    void SetTopName(const char *top) { fTopName = top; }
