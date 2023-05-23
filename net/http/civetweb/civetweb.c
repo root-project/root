@@ -2028,6 +2028,7 @@ enum {
 	ACCESS_CONTROL_ALLOW_ORIGIN,
 	ACCESS_CONTROL_ALLOW_METHODS,
 	ACCESS_CONTROL_ALLOW_HEADERS,
+	ACCESS_CONTROL_ALLOW_CREDENTIALS,
 	ERROR_PAGES,
 #if !defined(NO_CACHING)
 	STATIC_FILE_MAX_AGE,
@@ -2182,6 +2183,7 @@ static const struct mg_option config_options[] = {
     {"access_control_allow_origin", MG_CONFIG_TYPE_STRING, "*"},
     {"access_control_allow_methods", MG_CONFIG_TYPE_STRING, "*"},
     {"access_control_allow_headers", MG_CONFIG_TYPE_STRING, "*"},
+    {"access_control_allow_credentials", MG_CONFIG_TYPE_STRING, ""},
     {"error_pages", MG_CONFIG_TYPE_DIRECTORY, NULL},
 #if !defined(NO_CACHING)
     {"static_file_max_age", MG_CONFIG_TYPE_NUMBER, "3600"},
@@ -9894,8 +9896,8 @@ handle_static_file_request(struct mg_connection *conn,
 	char gz_path[UTF8_PATH_MAX];
 	const char *encoding = 0;
 	const char *origin_hdr;
-	const char *cors_orig_cfg;
-	const char *cors1, *cors2;
+	const char *cors_orig_cfg, *cors_cred_cfg;
+	const char *cors1, *cors2, *cors3, *cors4;
 	int is_head_request;
 
 #if defined(USE_ZLIB)
@@ -10051,6 +10053,15 @@ handle_static_file_request(struct mg_connection *conn,
 		cors1 = cors2 = "";
 	}
 
+   /* Credentials CORS header */
+	cors_cred_cfg = conn->dom_ctx->config[ACCESS_CONTROL_ALLOW_CREDENTIALS];
+	if (cors_cred_cfg && *cors_cred_cfg && origin_hdr) {
+		cors3 = "Access-Control-Allow-Credentials";
+		cors4 = cors_cred_cfg;
+	} else {
+		cors3 = cors4 = "";
+	}
+
 	/* Prepare Etag, and Last-Modified headers. */
 	gmt_time_string(lm, sizeof(lm), &filep->stat.last_modified);
 	construct_etag(etag, sizeof(etag), &filep->stat);
@@ -10065,6 +10076,9 @@ handle_static_file_request(struct mg_connection *conn,
 	                       (int)mime_vec.len);
 	if (cors1[0] != 0) {
 		mg_response_header_add(conn, cors1, cors2, -1);
+	}
+	if (cors3[0] != 0) {
+		mg_response_header_add(conn, cors3, cors4, -1);
 	}
 	mg_response_header_add(conn, "Last-Modified", lm, -1);
 	mg_response_header_add(conn, "Etag", etag, -1);
@@ -12080,8 +12094,8 @@ handle_ssi_file_request(struct mg_connection *conn,
 {
 	char date[64];
 	time_t curtime = time(NULL);
-	const char *cors_orig_cfg;
-	const char *cors1, *cors2;
+	const char *cors_orig_cfg, *cors_cred_cfg;
+	const char *cors1, *cors2, *cors3, *cors4;
 
 	if ((conn == NULL) || (path == NULL) || (filep == NULL)) {
 		return;
@@ -12094,6 +12108,15 @@ handle_ssi_file_request(struct mg_connection *conn,
 		cors2 = cors_orig_cfg;
 	} else {
 		cors1 = cors2 = "";
+	}
+
+	cors_cred_cfg = conn->dom_ctx->config[ACCESS_CONTROL_ALLOW_CREDENTIALS];
+	if (cors_cred_cfg && *cors_cred_cfg && mg_get_header(conn, "Origin")) {
+		/* Credentials CORS header */
+		cors3 = "Access-Control-Allow-Credentials";
+		cors4 = cors_cred_cfg;
+	} else {
+		cors3 = cors4 = "";
 	}
 
 	if (!mg_fopen(conn, path, MG_FOPEN_MODE_READ, filep)) {
@@ -12118,6 +12141,9 @@ handle_ssi_file_request(struct mg_connection *conn,
 		mg_response_header_add(conn, "Content-Type", "text/html", -1);
 		if (cors1[0]) {
 			mg_response_header_add(conn, cors1, cors2, -1);
+		}
+		if (cors3[0]) {
+			mg_response_header_add(conn, cors3, cors4, -1);
 		}
 		mg_response_header_send(conn);
 
@@ -14114,6 +14140,8 @@ handle_request(struct mg_connection *conn)
 		    conn->dom_ctx->config[ACCESS_CONTROL_ALLOW_METHODS];
 		const char *cors_orig_cfg =
 		    conn->dom_ctx->config[ACCESS_CONTROL_ALLOW_ORIGIN];
+		const char *cors_cred_cfg =
+		    conn->dom_ctx->config[ACCESS_CONTROL_ALLOW_CREDENTIALS];
 		const char *cors_origin =
 		    get_header(ri->http_headers, ri->num_headers, "Origin");
 		const char *cors_acrm = get_header(ri->http_headers,
@@ -14163,6 +14191,12 @@ handle_request(struct mg_connection *conn)
 					                                    : cors_hdr_cfg));
 				}
 			}
+			if (cors_cred_cfg && *cors_cred_cfg) {
+				mg_printf(conn,
+					"Access-Control-Allow-Credentials: %s\r\n",
+					cors_cred_cfg);
+			}
+
 			mg_printf(conn, "Access-Control-Max-Age: 60\r\n");
 
 			mg_printf(conn, "\r\n");
