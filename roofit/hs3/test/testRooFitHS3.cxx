@@ -177,6 +177,12 @@ TEST(RooFitHS3, RooExpPoly)
    EXPECT_EQ(status, 0);
 }
 
+TEST(RooFitHS3, RooGamma)
+{
+   int status = validate({"Gamma::gamma_dist(x[5.0, 10.0], gamma[1.0, 0.1, 10.0], beta[1.0, 0.1, 10.0], mu[5.0])"});
+   EXPECT_EQ(status, 0);
+}
+
 TEST(RooFitHS3, RooGaussian)
 {
    int status = validate({"Gaussian::gaussian(x[0, 10], mean[5], sigma[1.0, 0.1, 10])"});
@@ -195,6 +201,18 @@ TEST(RooFitHS3, RooHistPdf)
    dataHist.set(1, 17, -1);
 
    int status = validate(RooHistPdf{"histPdf", "histPdf", x, dataHist});
+   EXPECT_EQ(status, 0);
+}
+
+TEST(RooFitHS3, RooLandau)
+{
+   int status = validate({"Landau::landau(x[0, 10], mean[5], sigma[1.0, 0.1, 10])"});
+   EXPECT_EQ(status, 0);
+}
+
+TEST(RooFitHS3, RooLognormal)
+{
+   int status = validate({"Lognormal::lognormal(x[0.1, 2.0], m0[0.0, 0.1, 10], k[3.0, 1.1, 10])"});
    EXPECT_EQ(status, 0);
 }
 
@@ -220,6 +238,13 @@ TEST(RooFitHS3, RooPower)
 {
    int status = 0;
    status = validate({"Power::power(x[0, 10], {a_0[3.0], a_1[-0.3, -10, 10]}, {1.0, 2.0})"});
+   EXPECT_EQ(status, 0);
+}
+
+TEST(RooFitHS3, RooUniform)
+{
+   int status = 0;
+   status = validate({"Uniform::uniform({x[0.0, 10.0], y[0.0, 5.0]})"});
    EXPECT_EQ(status, 0);
 }
 
