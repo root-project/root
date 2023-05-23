@@ -43,7 +43,6 @@ RConcurrentHashColl::RConcurrentHashColl()
 
 RConcurrentHashColl::~RConcurrentHashColl() = default;
 
-/// Return true if the hash is already in already there
 const RUidColl* RConcurrentHashColl::Find(const HashValue &hash) const
 {
    ROOT::TRWSpinLockReadGuard rg(*fRWLock);
@@ -54,13 +53,11 @@ const RUidColl* RConcurrentHashColl::Find(const HashValue &hash) const
       return nullptr;
 }
 
-/// If the buffer is there, return false. Otherwise, insert the hash and return true
 RConcurrentHashColl::HashValue RConcurrentHashColl::Hash(char *buffer, int len)
 {
    return HashValue(buffer, len);
 }
 
-/// If the buffer is there, return false. Otherwise, insert the hash and return true
 bool RConcurrentHashColl::Insert(const HashValue &hash, RUidColl &&values) const
 {
    ROOT::TRWSpinLockWriteGuard wg(*fRWLock);
