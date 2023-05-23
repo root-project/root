@@ -152,19 +152,9 @@ TJSONTree::Node &TJSONTree::Node::operator[](std::string const &k)
    return Impl::mkNode(tree, k, node->get()[k]);
 }
 
-TJSONTree::Node &TJSONTree::Node::operator[](size_t pos)
-{
-   return Impl::mkNode(tree, "", node->get()[pos]);
-}
-
 const TJSONTree::Node &TJSONTree::Node::operator[](std::string const &k) const
 {
    return Impl::mkNode(tree, k, node->get()[k]);
-}
-
-const TJSONTree::Node &TJSONTree::Node::operator[](size_t pos) const
-{
-   return Impl::mkNode(tree, "", node->get()[pos]);
 }
 
 bool TJSONTree::Node::is_container() const
