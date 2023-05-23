@@ -11671,7 +11671,9 @@ void ASTReader::FinishedDeserializing() {
     if (ReadTimer)
       ReadTimer->stopTimer();
 
+#if 0
     diagnoseOdrViolations();
+#endif
 
     // We are not in recursive loading, so it's safe to pass the "interesting"
     // decls to the consumer.
