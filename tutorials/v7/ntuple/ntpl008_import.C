@@ -47,10 +47,10 @@ void ntpl008_import()
    // RNTupleImporter::Create() returns a wrapper for an RNTupleImporter. If the creation fails,
    // the result will contain an exception. Calling Unwrap() returns the actual RNTupleImporter
    // class or throws the exception in case of errors.
-   auto importer = RNTupleImporter::Create(kTreeFileName, kTreeName, kNTupleFileName).Unwrap();
+   auto importer = RNTupleImporter::Create(kTreeFileName, kTreeName, kNTupleFileName);
 
    // Using `ThrowOnError()` makes sure that the macro abort if the import fails.
-   importer->Import().ThrowOnError();
+   importer->Import();
 
    // Inspect the schema of the written RNTuple
    auto file = std::unique_ptr<TFile>(TFile::Open(kNTupleFileName));
