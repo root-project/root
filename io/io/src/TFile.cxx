@@ -14,29 +14,8 @@
 \class TFile
 \ingroup IO
 
-A ROOT file is a suite of consecutive data records (TKey instances) with
-a well defined format.
-
-If the key is located past the 32 bit file limit (> 2 GB) then some fields will
-be 8 instead of 4 bytes:
-
-Byte Range      | Member Name | Description
-----------------|-----------|--------------
-1->4            | Nbytes    | Length of compressed object (in bytes)
-5->6            | Version   | TKey version identifier
-7->10           | ObjLen    | Length of uncompressed object
-11->14          | Datime    | Date and time when object was written to file
-15->16          | KeyLen    | Length of the key structure (in bytes)
-17->18          | Cycle     | Cycle of key
-19->22 [19->26] | SeekKey   | Pointer to record itself (consistency check)
-23->26 [27->34] | SeekPdir  | Pointer to directory header
-27->27 [35->35] | lname     | Number of bytes in the class name
-28->.. [36->..] | ClassName | Object Class Name
-..->..          | lname     | Number of bytes in the object name
-..->..          | Name      | lName bytes with the name of the object
-..->..          | lTitle    | Number of bytes in the object title
-..->..          | Title     | Title of the object
------>          | DATA      | Data bytes associated to the object
+A ROOT file is composed of a header, followed by consecutive data records
+(`TKey` instances) with a well defined format.
 
 The first data record starts at byte fBEGIN (currently set to kBEGIN).
 Bytes 1->kBEGIN contain the file description, when fVersion >= 1000000
@@ -57,6 +36,35 @@ Byte Range      | Record Name | Description
 38->41 [46->53] | fSeekInfo   | Pointer to TStreamerInfo record
 42->45 [54->57] | fNbytesInfo | Number of bytes in TStreamerInfo record
 46->63 [58->75] | fUUID       | Universal Unique ID
+
+For the purpose of magic bytes in the context of ROOT files' MIME definition,
+the following additional requirements are introduced:
+- The value of `fBEGIN` is fixed at 100.
+- The four bytes starting at position 96 are reserved and must be 0.
+If any changes to this need to be made, `media-types@iana.org` needs to be
+notified in accordance with RFC 6838.
+
+The key structure is as follows; if a key is located past the 32 bit file
+limit (> 2 GB) then some fields will be 8 instead of 4 bytes (see parts marked
+with square brackets below):
+
+Byte Range      | Member Name | Description
+----------------|-----------|--------------
+1->4            | Nbytes    | Length of compressed object (in bytes)
+5->6            | Version   | TKey version identifier
+7->10           | ObjLen    | Length of uncompressed object
+11->14          | Datime    | Date and time when object was written to file
+15->16          | KeyLen    | Length of the key structure (in bytes)
+17->18          | Cycle     | Cycle of key
+19->22 [19->26] | SeekKey   | Pointer to record itself (consistency check)
+23->26 [27->34] | SeekPdir  | Pointer to directory header
+27->27 [35->35] | lname     | Number of bytes in the class name
+28->.. [36->..] | ClassName | Object Class Name
+..->..          | lname     | Number of bytes in the object name
+..->..          | Name      | lName bytes with the name of the object
+..->..          | lTitle    | Number of bytes in the object title
+..->..          | Title     | Title of the object
+----->          | DATA      | Data bytes associated to the object
 
 Begin_Macro
 ../../../tutorials/io/file.C
