@@ -1414,20 +1414,8 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
 
   void HistoToWorkspaceFactoryFast::GuessObsNameVec(const TH1* hist)
   {
-    fObsNameVec.clear();
-
-    // determine histogram dimensionality
-    unsigned int histndim(1);
-    std::string classname = hist->ClassName();
-    if      (classname.find("TH1")==0) { histndim=1; }
-    else if (classname.find("TH2")==0) { histndim=2; }
-    else if (classname.find("TH3")==0) { histndim=3; }
-
-    for ( unsigned int idx=0; idx<histndim; ++idx ) {
-      if (idx==0) { fObsNameVec.push_back("x"); }
-      if (idx==1) { fObsNameVec.push_back("y"); }
-      if (idx==2) { fObsNameVec.push_back("z"); }
-    }
+    fObsNameVec = std::vector<string>{"x", "y", "z"};
+    fObsNameVec.resize(hist->GetDimension());
   }
 
 
@@ -1512,9 +1500,16 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
     for(RooAbsData * data : chs[0]->allData()) {
       // We are excluding the Asimov data, because it needs to be regenerated
       // later after the parameter values are set.
-      if(std::string("asimovData") != data->GetName()) {
-        MergeDataSets(combined, chs, ch_names, data->GetName(), obsList, channelCat);
+      if(std::string("asimovData") == data->GetName()) {
+        continue;
       }
+      // Loop through channels, get their individual datasets,
+      // and add them to the combined dataset
+      std::map<std::string, RooAbsData*> dataMap;
+      for(unsigned int i = 0; i < ch_names.size(); ++i){
+        dataMap[ch_names[i]] = chs[i]->data(data->GetName());
+      }
+      combined->import(RooDataSet{data->GetName(), "", obsList, Index(*channelCat), WeightVar("weightVar"), Import(dataMap)});
     }
 
 
@@ -1584,57 +1579,6 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
     }
 
     return combined;
-  }
-
-
-  RooDataSet* HistoToWorkspaceFactoryFast::MergeDataSets(RooWorkspace* combined,
-                      std::vector<std::unique_ptr<RooWorkspace>>& wspace_vec,
-                      std::vector<std::string> const& channel_names,
-                      std::string const& dataSetName,
-                      RooArgList const& obsList,
-                      RooCategory* channelCat) {
-
-    // Create the total dataset
-    std::unique_ptr<RooDataSet> simData;
-
-    // Loop through channels, get their individual datasets,
-    // and add them to the combined dataset
-    for(unsigned int i = 0; i< channel_names.size(); ++i){
-
-      // Grab the dataset for the existing channel
-      cxcoutPHF << "Merging data for channel " << channel_names[i].c_str() << std::endl;
-      RooDataSet* obsDataInChannel = (RooDataSet*) wspace_vec[i]->data(dataSetName.c_str());
-      if( !obsDataInChannel ) {
-   std::cout << "Error: Can't find DataSet: " << dataSetName
-        << " in channel: " << channel_names.at(i)
-        << std::endl;
-   throw hf_exc();
-      }
-
-      // Create the new Dataset
-      auto tempData = std::make_unique<RooDataSet>(channel_names[i].c_str(),"",
-                    obsList, Index(*channelCat),
-                    WeightVar("weightVar"),
-                    Import(channel_names[i].c_str(),*obsDataInChannel));
-      if(simData) {
-   simData->append(*tempData);
-      }
-      else {
-   simData = std::move(tempData);
-      }
-    } // End Loop Over Channels
-
-    // Check that we successfully created the dataset
-    // and import it into the workspace
-    if(simData) {
-      combined->import(*simData, Rename(dataSetName.c_str()));
-      return static_cast<RooDataSet*>(combined->data(dataSetName));
-    }
-    else {
-      std::cout << "Error: Unable to merge observable datasets" << std::endl;
-      throw hf_exc();
-      return nullptr;
-    }
   }
 
 
@@ -1750,14 +1694,6 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
 
       double histValue  = nominal->GetBinContent( binNumber );
       double histError  = error->GetBinContent( binNumber );
-      /*
-      std::cout << " Getting Bin content for Stat Uncertainty"
-      << " Nom name: " << nominal->GetName()
-      << " Err name: " << error->GetName()
-      << " HistNumber: " << i_hist << " bin: " << binNumber
-      << " Value: " << histValue << " Error: " << histError
-      << std::endl;
-      */
 
       if( histError != histError ) {
         cxcoutE(HistFactory) << "In histogram " << error->GetName()
