@@ -330,7 +330,7 @@ public:
       const RooHistFunc *hf = static_cast<const RooHistFunc *>(func);
       elem["type"] << key();
       RooDataHist const &dh = hf->dataHist();
-      tool->exportHisto(*dh.get(), dh.numEntries(), dh.weightArray(), elem["data"]);
+      tool->exportHisto(*dh.get(), dh.numEntries(), dh.weightArray(), elem["data"].set_map());
       return true;
    }
 };
@@ -357,7 +357,7 @@ public:
       const RooHistPdf *hf = static_cast<const RooHistPdf *>(func);
       elem["type"] << key();
       RooDataHist const &dh = hf->dataHist();
-      tool->exportHisto(*dh.get(), dh.numEntries(), dh.weightArray(), elem["data"]);
+      tool->exportHisto(*dh.get(), dh.numEntries(), dh.weightArray(), elem["data"].set_map());
       return true;
    }
 };
@@ -424,7 +424,7 @@ public:
       auto *pdf = static_cast<const RooPolynomial *>(func);
       elem["type"] << key();
       elem["x"] << pdf->x().GetName();
-      auto &coefs = elem["coefficients"];
+      auto &coefs = elem["coefficients"].set_seq();
       // Write out the default coefficient that RooFit uses for the lower
       // orders before the order of the first coefficient. Like this, the
       // output is more self-documenting.
@@ -446,7 +446,7 @@ public:
       auto *pdf = static_cast<const RooExpPoly *>(func);
       elem["type"] << key();
       elem["x"] << pdf->x().GetName();
-      auto &coefs = elem["coefficients"];
+      auto &coefs = elem["coefficients"].set_seq();
       // Write out the default coefficient that RooFit uses for the lower
       // orders before the order of the first coefficient. Like this, the
       // output is more self-documenting.

@@ -306,8 +306,8 @@ void exportMeasurement(RooStats::HistFactory::Measurement &measurement, JSONNode
    }
 
    // the data
-   auto &child1 = n.get("misc", "ROOT_internal", "combined_datas")["obsData"];
-   auto &child2 = n.get("misc", "ROOT_internal", "combined_distributions")["simPdf"];
+   auto &child1 = n.get("misc", "ROOT_internal", "combined_datas").set_map()["obsData"].set_map();
+   auto &child2 = n.get("misc", "ROOT_internal", "combined_distributions").set_map()["simPdf"].set_map();
 
    child1["index_cat"] << "channelCat";
    auto &labels1 = child1["labels"].set_seq();
@@ -333,14 +333,13 @@ void exportMeasurement(RooStats::HistFactory::Measurement &measurement, JSONNode
       channelNames.push_back(c.GetName());
    }
 
-   auto &modelConfigAux = RooJSONFactoryWSTool::getRooFitInternal(n, "ModelConfigs", "simPdf");
-   modelConfigAux.set_map();
+   auto &modelConfigAux = RooJSONFactoryWSTool::getRooFitInternal(n, "ModelConfigs", "simPdf").set_map();
    modelConfigAux["combined_data_name"] << "obsData";
    modelConfigAux["pdfName"] << "simPdf";
    modelConfigAux["mcName"] << "ModelConfig";
 
    // Finally write lumi constraint
-   auto &lumiConstraint = RooJSONFactoryWSTool::appendNamedChild(pdflist, "lumiConstraint");
+   auto &lumiConstraint = RooJSONFactoryWSTool::appendNamedChild(pdflist, "lumiConstraint").set_map();
    lumiConstraint["mean"] << "nominalLumi";
    lumiConstraint["sigma"] << (measurement.GetLumi() * measurement.GetLumiRelErr());
    lumiConstraint["type"] << "gaussian_dist";
