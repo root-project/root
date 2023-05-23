@@ -37,7 +37,7 @@ protected:
 
 public:
 
-   RGeomHierarchy(RGeomDescription &desc);
+   RGeomHierarchy(RGeomDescription &desc, bool use_server_threads = false);
    virtual ~RGeomHierarchy();
 
    void Show(const RWebDisplayArgs &args = "");
