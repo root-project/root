@@ -82,13 +82,6 @@ namespace RooStats{
               const std::vector<RooProduct*>& sampleScaleFactors,
               std::vector<std::vector<RooAbsArg*>>&  sampleHistFuncs) const;
 
-      RooDataSet* MergeDataSets(RooWorkspace* combined,
-            std::vector<std::unique_ptr<RooWorkspace>>& wspace_vec,
-            std::vector<std::string> const& channel_names,
-            std::string const& dataSetName,
-            RooArgList const& obsList,
-            RooCategory* channelCat);
-
       RooHistFunc* MakeExpectedHistFunc(const TH1* hist, RooWorkspace* proto, std::string prefix,
           const RooArgList& observables) const;
 
