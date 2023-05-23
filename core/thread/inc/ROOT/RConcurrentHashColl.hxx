@@ -54,10 +54,12 @@ public:
    RConcurrentHashColl();
    ~RConcurrentHashColl();
 
-   /// Return true if the hash is already in already there
+   /// Return the collection of UID corresponding to the hash if the hash has
+   /// already been seen or nullptr otherwise.
    const RUidColl *Find(const HashValue &hash) const;
 
-   /// If the hash is there, return false. Otherwise, insert the hash and return true;
+   /// If the hash is there, return false. Otherwise, insert the hash and UID
+   /// collection and return true.
    bool Insert(const HashValue &hash, RUidColl &&coll) const;
 
    /// Return the hash object corresponding to the buffer.
