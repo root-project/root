@@ -609,6 +609,11 @@ Bool_t TCivetweb::Create(const char *args)
                GetServer()->SetCors(cors && *cors ? cors : "*");
             }
 
+            if (GetServer() && url.HasOption("cred_cors")) {
+               const char *cred = url.GetValueFromOptions("cred_cors");
+               GetServer()->SetCorsCredentials(cred && *cred ? cred : "true");
+            }
+
             if (url.HasOption("nocache"))
                fMaxAge = 0;
 
@@ -620,7 +625,7 @@ Bool_t TCivetweb::Create(const char *args)
       }
    }
 
-   const char *options[25];
+   const char *options[30];
    int op = 0;
 
    Info("Create", "Starting HTTP server on port %s", sport.Data());
@@ -660,6 +665,17 @@ Bool_t TCivetweb::Create(const char *args)
    if (max_age.Length() > 0) {
       options[op++] = "static_file_max_age";
       options[op++] = max_age.Data();
+   }
+
+   if (GetServer() && GetServer()->IsCors()) {
+      // also used for the file transfer
+      options[op++] = "access_control_allow_origin";
+      options[op++] = GetServer()->GetCors();
+   }
+
+   if (GetServer() && GetServer()->IsCorsCredentials()) {
+      options[op++] = "access_control_allow_credentials";
+      options[op++] = GetServer()->GetCorsCredentials();
    }
 
    options[op++] = "enable_directory_listing";
