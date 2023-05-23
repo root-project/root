@@ -491,8 +491,10 @@ public:
       pip.setPositiveDefinite(p["positiveDefinite"].val_bool());
 
       if (p.has_child("interpolationCodes")) {
-         for (size_t i = 0; i < vars.size(); ++i) {
-            pip.setInterpCode(*static_cast<RooAbsReal *>(vars.at(i)), p["interpolationCodes"][i].val_int(), true);
+         std::size_t i = 0;
+         for (auto const &node : p["interpolationCodes"].children()) {
+            pip.setInterpCode(*static_cast<RooAbsReal *>(vars.at(i)), node.val_int(), true);
+            ++i;
          }
       }
 
@@ -533,8 +535,10 @@ public:
       auto &fip = tool->wsEmplace<RooStats::HistFactory::FlexibleInterpVar>(name, vars, nom, low, high);
 
       if (p.has_child("interpolationCodes")) {
-         for (size_t i = 0; i < vars.size(); ++i) {
-            fip.setInterpCode(*static_cast<RooAbsReal *>(vars.at(i)), p["interpolationCodes"][i].val_int());
+         size_t i = 0;
+         for (auto const &node : p["interpolationCodes"].children()) {
+            fip.setInterpCode(*static_cast<RooAbsReal *>(vars.at(i)), node.val_int());
+            ++i;
          }
       }
 
@@ -885,8 +889,8 @@ bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname
          tool->queueExport(*sys.param);
          mod["constraint"] << toString(sys.constraint);
          auto &data = mod["data"].set_map();
-         RooJSONFactoryWSTool::exportArray(nBins, sys.low.data(), data["lo"]["contents"]);
-         RooJSONFactoryWSTool::exportArray(nBins, sys.high.data(), data["hi"]["contents"]);
+         RooJSONFactoryWSTool::exportArray(nBins, sys.low.data(), data["lo"].set_map()["contents"]);
+         RooJSONFactoryWSTool::exportArray(nBins, sys.high.data(), data["hi"].set_map()["contents"]);
       }
 
       for (const auto &sys : sample.shapesys) {
@@ -914,9 +918,10 @@ bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname
          }
          observablesWritten = true;
       }
-      RooJSONFactoryWSTool::exportArray(nBins, sample.hist.data(), s["data"]["contents"]);
+      auto &dataNode = s["data"].set_map();
+      RooJSONFactoryWSTool::exportArray(nBins, sample.hist.data(), dataNode["contents"]);
       if (!sample.histError.empty()) {
-         RooJSONFactoryWSTool::exportArray(nBins, sample.histError.data(), s["data"]["errors"]);
+         RooJSONFactoryWSTool::exportArray(nBins, sample.histError.data(), dataNode["errors"]);
       }
    }
    return true;

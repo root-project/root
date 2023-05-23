@@ -203,22 +203,10 @@ TRYMLTree::Node &TRYMLTree::Node::operator[](std::string const &k)
    return Impl::mkNode(tree, node->get()[c4::to_csubstr(tree->incache(k))]);
 }
 
-TRYMLTree::Node &TRYMLTree::Node::operator[](size_t pos)
-{
-   // get a child node with the given index
-   return Impl::mkNode(tree, node->get()[pos]);
-}
-
 const TRYMLTree::Node &TRYMLTree::Node::operator[](std::string const &k) const
 {
    // get a child node with the given key (const version)
    return Impl::mkNode(tree, node->get()[c4::to_csubstr(tree->incache(k))]);
-}
-
-const TRYMLTree::Node &TRYMLTree::Node::operator[](size_t pos) const
-{
-   // get a child node with the given index (const version)
-   return Impl::mkNode(tree, node->get()[pos]);
 }
 
 bool TRYMLTree::Node::is_container() const

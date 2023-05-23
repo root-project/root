@@ -46,9 +46,7 @@ public:
       Node &operator<<(bool b) override;
       const Node &operator>>(std::string &v) const override;
       Node &operator[](std::string const &k) override;
-      Node &operator[](size_t pos) override;
       const Node &operator[](std::string const &k) const override;
-      const Node &operator[](size_t pos) const override;
       bool is_container() const override;
       bool is_map() const override;
       bool is_seq() const override;
