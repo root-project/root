@@ -221,7 +221,6 @@ if(builtin_llvm)
 
   set(CLANG_ENABLE_STATIC_ANALYZER OFF CACHE BOOL "")
   set(CLANG_ENABLE_ARCMT OFF CACHE BOOL "")
-  set(CLANG_ENABLE_FORMAT OFF CACHE BOOL "")
 
   #---Remove the inherited include_directories()
   set_directory_properties(PROPERTIES INCLUDE_DIRECTORIES "")
