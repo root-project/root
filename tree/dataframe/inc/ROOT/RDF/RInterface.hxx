@@ -1908,8 +1908,8 @@ public:
       const auto validatedColumns = GetValidatedColumnNames(2, userColumns);
 
       // We build a default name and title based on the input columns
-      const auto g_name = validatedColumns[0] + "_vs_" + validatedColumns[1];
-      const auto g_title = validatedColumns[0] + " vs " + validatedColumns[1];
+      const auto g_name = validatedColumns[1] + "_vs_" + validatedColumns[0];
+      const auto g_title = validatedColumns[1] + " vs " + validatedColumns[0];
       graph->SetNameTitle(g_name.c_str(), g_title.c_str());
       graph->GetXaxis()->SetTitle(validatedColumns[0].c_str());
       graph->GetYaxis()->SetTitle(validatedColumns[1].c_str());
@@ -1962,8 +1962,8 @@ public:
       const auto validatedColumns = GetValidatedColumnNames(6, userColumns);
 
       // We build a default name and title based on the input columns
-      const auto g_name = validatedColumns[0] + "_vs_" + validatedColumns[1];
-      const auto g_title = validatedColumns[0] + " vs " + validatedColumns[1];
+      const auto g_name = validatedColumns[1] + "_vs_" + validatedColumns[0];
+      const auto g_title = validatedColumns[1] + " vs " + validatedColumns[0];
       graph->SetNameTitle(g_name.c_str(), g_title.c_str());
       graph->GetXaxis()->SetTitle(validatedColumns[0].c_str());
       graph->GetYaxis()->SetTitle(validatedColumns[1].c_str());
