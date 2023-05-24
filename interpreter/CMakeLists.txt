@@ -19,7 +19,6 @@ set(LLVM_INCLUDE_TESTS OFF CACHE BOOL "")
 set(LLVM_INCLUDE_BENCHMARKS OFF CACHE BOOL "")
 set(CLANG_INCLUDE_TESTS OFF CACHE BOOL "")
 set(LLVM_INCLUDE_EXAMPLES OFF CACHE BOOL "")
-set(LLVM_CXX_STD "c++${CMAKE_CXX_STANDARD}" CACHE STRING "")
 set(CLANG_BUILD_TOOLS OFF CACHE BOOL "")
 # It looks like that turning off CLANG_BUILD_TOOLS is not enough.
 set(CLANG_TOOL_ARCMT_TEST_BUILD OFF CACHE BOOL "")
@@ -60,12 +59,6 @@ endif()
 # to serialize access to llvm.  We can later review how to make this finer grained by using llvm's own locking
 # mechanism.
 set(LLVM_ENABLE_THREADS OFF CACHE BOOL "")
-
-if(CMAKE_CXX_STANDARD EQUAL 17)
-  set(LLVM_ENABLE_CXX1Z ON CACHE BOOL "" FORCE)
-elseif(CMAKE_CXX_STANDARD EQUAL 14)
-  set(LLVM_ENABLE_CXX1Y ON CACHE BOOL "" FORCE)
-endif()
 
 # The llvm::ReverseIterate<bool>::value symbol from llvm's SmallPtrSet.h
 # somehow lands in our cling libraries on OS X and doesn't get hidden
