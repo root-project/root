@@ -116,7 +116,7 @@ namespace RooStats {
       static void FillBins(const RooAbsPdf & pdf, const RooArgList &obs, RooAbsData & data, int &index,  double
                            &binVolume, int &ibin);
 
-      static double EvaluateNLL(RooAbsPdf & pdf, RooAbsData& data, const RooArgSet * condObs, const RooArgSet * globObs, const RooArgSet *poiSet = nullptr );
+      static double EvaluateNLL(RooStats::ModelConfig const& modelConfig, RooAbsData& data, const RooArgSet *poiSet = nullptr );
 
       static bool SetObsToExpected(RooAbsPdf &pdf, const RooArgSet &obs);
       static bool SetObsToExpected(RooProdPdf &prod, const RooArgSet &obs);
