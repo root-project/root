@@ -7404,7 +7404,7 @@ Int_t THistPainter::PaintInitH()
             xmax = 0;
             xmin *= 2;
          } else {
-            xmin = -1;
+            xmin = 0;
             xmax = 1;
          }
       }
