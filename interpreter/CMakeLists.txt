@@ -41,8 +41,6 @@ set(LLVM_BUILD_TOOLS OFF CACHE BOOL "")
 set(LLVM_TOOL_LLVM_AR_BUILD OFF CACHE BOOL "")
 set(CLANG_TOOL_CLANG_OFFLOAD_BUNDLER_BUILD OFF CACHE BOOL "")
 set(LLVM_FORCE_USE_OLD_TOOLCHAIN ON CACHE BOOL "")
-# Support gcc 4.8 and higher.
-set(LLVM_TEMPORARILY_ALLOW_OLD_TOOLCHAIN ON CACHE BOOL "")
 
 # Prevent Clang from finding CUDA just to determine the architecture for OpenMP
 # offloading, which we are not interested in. If the CUDA package was already
