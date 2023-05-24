@@ -223,7 +223,7 @@ else()
     "Known values are zlib, lzma, lz4, zstd (case-insensitive).")
 endif()
 
-#--- The 'all' option swithes ON major options---------------------------------------------------
+#--- The 'all' option switches ON major options---------------------------------------------------
 if(all)
  set(alien_defvalue ON)
  set(arrow_defvalue ON)
@@ -258,6 +258,7 @@ if(all)
  set(pythia8_defvalue ON)
  set(pyroot_defvalue ON)
  set(qt5web_defvalue ON)
+ set(qt6web_defvalue ON)
  set(r_defvalue ON)
  set(roofit_defvalue ON)
  set(roofit_multiprocess_defvalue ON)
@@ -412,6 +413,12 @@ if(webgui)
   elseif(NOT http)
     set(http ON CACHE BOOL "(Enabled since it's needed by webgui)" FORCE)
   endif()
+endif()
+
+if(NOT webgui)
+   set(qt5web OFF CACHE BOOL "Disabled because webgui not build" FORCE)
+   set(qt6web OFF CACHE BOOL "Disabled because webgui not build" FORCE)
+   set(cefweb OFF CACHE BOOL "Disabled because webgui not build" FORCE)
 endif()
 
 #---Removed options------------------------------------------------------------
