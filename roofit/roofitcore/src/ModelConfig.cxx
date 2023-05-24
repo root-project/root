@@ -39,10 +39,13 @@ specific value. Examples:
 \f[
   \mathrm{Constraint}_b = \mathrm{Gauss}(b_0 \, | \, b, 0.2)
 \f]
+- **External constraints** Include given external constraints to likelihood by multiplying them with the original
+likelihood.
 */
 
 #include <RooFit/ModelConfig.h>
 
+#include <RooFitResult.h>
 #include <RooMsgService.h>
 #include <RooRealVar.h>
 
@@ -96,7 +99,7 @@ void ModelConfig::GuessObsAndNuisance(const RooAbsData &data, bool printModelCon
       const RooArgSet *obs = GetPdf()->getObservables(data);
       co.remove(*obs);
       removeConstantParameters(co);
-      if (co.getSize() > 0)
+      if (!co.empty())
          SetGlobalObservables(co);
 
       // TODO BUG This does not work as observables with the same name are already in the workspace.
@@ -118,7 +121,7 @@ void ModelConfig::GuessObsAndNuisance(const RooAbsData &data, bool printModelCon
       RooArgSet p(params);
       p.remove(*GetParametersOfInterest());
       removeConstantParameters(p);
-      if (p.getSize() > 0)
+      if (!p.empty())
          SetNuisanceParameters(p);
    }
 
@@ -353,10 +356,110 @@ bool ModelConfig::SetHasOnlyParameters(const RooArgSet &set, const char *errorMs
       }
    }
 
-   if (errorMsgPrefix && nonparams.getSize() > 0) {
+   if (errorMsgPrefix && !nonparams.empty()) {
       cout << errorMsgPrefix << " ERROR: specified set contains non-parameters: " << nonparams << endl;
    }
    return (nonparams.empty());
+}
+
+/// Specify the external constraints.
+void ModelConfig::SetExternalConstraints(const RooArgSet &set)
+{
+   fExtConstraintsName = std::string(GetName()) + "_ExternalConstraints";
+   DefineSetInWS(fExtConstraintsName.c_str(), set);
+}
+
+/// Specify the conditional observables.
+void ModelConfig::SetConditionalObservables(const RooArgSet &set)
+{
+   if (!SetHasOnlyParameters(set, "ModelConfig::SetConditionalObservables"))
+      return;
+   fConditionalObsName = std::string(GetName()) + "_ConditionalObservables";
+   DefineSetInWS(fConditionalObsName.c_str(), set);
+}
+
+/// Specify the global observables.
+void ModelConfig::SetGlobalObservables(const RooArgSet &set)
+{
+
+   if (!SetHasOnlyParameters(set, "ModelConfig::SetGlobalObservables"))
+      return;
+
+   // make global observables constant
+   for (auto *arg : set) {
+      arg->setAttribute("Constant", true);
+   }
+
+   fGlobalObsName = std::string(GetName()) + "_GlobalObservables";
+   DefineSetInWS(fGlobalObsName.c_str(), set);
+}
+
+namespace {
+
+std::unique_ptr<RooLinkedList>
+finalizeCmdList(ModelConfig const &modelConfig, RooLinkedList const &cmdList, std::vector<RooCmdArg> &cmdArgs)
+{
+   auto addCmdArg = [&](RooCmdArg const &cmdArg) {
+      if (cmdList.FindObject(cmdArg.GetName())) {
+         std::stringstream ss;
+         ss << "Illegal command argument \"" << cmdArg.GetName()
+            << "\" passed to ModelConfig::createNLL(). This option is retrieved from the ModelConfig itself.";
+         const std::string errorMsg = ss.str();
+         oocoutE(&modelConfig, InputArguments) << errorMsg << std::endl;
+         throw std::runtime_error(errorMsg);
+      }
+      cmdArgs.push_back(cmdArg);
+   };
+
+   if (auto args = modelConfig.GetConditionalObservables()) {
+      addCmdArg(RooFit::ConditionalObservables(*args));
+   }
+
+   if (auto args = modelConfig.GetGlobalObservables()) {
+      addCmdArg(RooFit::GlobalObservables(*args));
+   }
+
+   if (auto args = modelConfig.GetExternalConstraints()) {
+      addCmdArg(RooFit::ExternalConstraints(*args));
+   }
+
+   auto finalCmdList = std::make_unique<RooLinkedList>(cmdList);
+   for (RooCmdArg &arg : cmdArgs) {
+      finalCmdList->Add(&arg);
+   }
+
+   return finalCmdList;
+}
+
+} // namespace
+
+/// Wrapper around RooAbsPdf::createNLL(RooAbsData&, const RooLinkedList&), where
+/// the pdf and some configuration options are retrieved from the ModelConfig.
+///
+/// The options taken from the ModelConfig are:
+///
+///   * ConditionalObservables()
+///   * GlobalObservables()
+///   * ExternalConstraints()
+///
+/// Except for the options above, you can still pass all the other command
+/// arguments supported by RooAbsPdf::createNLL().
+std::unique_ptr<RooAbsReal> ModelConfig::createNLL(RooAbsData &data, const RooLinkedList &cmdList) const
+{
+   std::vector<RooCmdArg> cmdArgs;
+   auto finalCmdList = finalizeCmdList(*this, cmdList, cmdArgs);
+   return std::unique_ptr<RooAbsReal>{GetPdf()->createNLL(data, *finalCmdList)};
+}
+
+/// Wrapper around RooAbsPdf::fitTo(RooAbsData&, const RooLinkedList&), where
+/// the pdf and some configuration options are retrieved from the ModelConfig.
+///
+/// Sett ModelConfig::createNLL() for more information.
+std::unique_ptr<RooFitResult> ModelConfig::fitTo(RooAbsData &data, const RooLinkedList &cmdList)
+{
+   std::vector<RooCmdArg> cmdArgs;
+   auto finalCmdList = finalizeCmdList(*this, cmdList, cmdArgs);
+   return std::unique_ptr<RooFitResult>{GetPdf()->fitTo(data, *finalCmdList)};
 }
 
 } // end namespace RooStats
