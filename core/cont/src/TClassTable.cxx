@@ -521,8 +521,8 @@ void TClassTable::AddAlternate(const char *normName, const char *alternate)
             fprintf(stderr,"Error in TClassTable::AddAlternate: "
                     "Second registration of %s with a different normalized name (old: '%s', new: '%s')\n",
                     alternate, a->fNormName, normName);
-            return;
          }
+         return;
       }
    }
 
