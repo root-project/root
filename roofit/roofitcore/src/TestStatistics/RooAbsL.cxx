@@ -31,7 +31,7 @@ namespace RooFit {
 namespace TestStatistics {
 
 // static function
-bool RooAbsL::isExtendedHelper(RooAbsPdf* pdf, Extended extended)
+bool RooAbsL::isExtendedHelper(RooAbsPdf *pdf, Extended extended)
 {
    switch (extended) {
    case RooAbsL::Extended::No: {
@@ -49,9 +49,10 @@ bool RooAbsL::isExtendedHelper(RooAbsPdf* pdf, Extended extended)
    }
 }
 
-/// After handling cloning (or not) of the pdf and dataset, the public constructors call this private constructor to handle common tasks.
-RooAbsL::RooAbsL(std::shared_ptr<RooAbsPdf> pdf, std::shared_ptr<RooAbsData> data,
-                 std::size_t N_events, std::size_t N_components, Extended extended)
+/// After handling cloning (or not) of the pdf and dataset, the public constructors call this private constructor to
+/// handle common tasks.
+RooAbsL::RooAbsL(std::shared_ptr<RooAbsPdf> pdf, std::shared_ptr<RooAbsData> data, std::size_t N_events,
+                 std::size_t N_components, Extended extended)
    : pdf_(std::move(pdf)), data_(std::move(data)), N_events_(N_events), N_components_(N_components)
 {
    extended_ = isExtendedHelper(pdf_.get(), extended);
@@ -71,33 +72,43 @@ RooAbsL::RooAbsL(std::shared_ptr<RooAbsPdf> pdf, std::shared_ptr<RooAbsData> dat
 /// \param in Struct containing raw pointers to the pdf and dataset that are to be cloned.
 /// \param N_events The number of events in this likelihood's dataset.
 /// \param N_components The number of components in the likelihood.
-/// \param extended Set extended term calculation on, off or use Extended::Auto to determine automatically based on the pdf whether to activate or not.
+/// \param extended Set extended term calculation on, off or use Extended::Auto to determine automatically based on the
+/// pdf whether to activate or not.
 RooAbsL::RooAbsL(RooAbsL::ClonePdfData in, std::size_t N_events, std::size_t N_components, Extended extended)
-  : RooAbsL(std::shared_ptr<RooAbsPdf>(static_cast<RooAbsPdf *>(in.pdf->cloneTree())),
-     std::shared_ptr<RooAbsData>(static_cast<RooAbsData *>(in.data->Clone())), N_events, N_components, extended)
+   : RooAbsL(std::shared_ptr<RooAbsPdf>(static_cast<RooAbsPdf *>(in.pdf->cloneTree())),
+             std::shared_ptr<RooAbsData>(static_cast<RooAbsData *>(in.data->Clone())), N_events, N_components, extended)
 {
    initClones(*in.pdf, *in.data);
 }
 
 /// Constructor that does not clone pdf/data and uses the shared_ptr aliasing constructor to make it non-owning.
 ///
-/// This constructor is used for classes where a reference to the external pdf/dataset is good enough (RooSumL and RooSubsidiaryL).
+/// This constructor is used for classes where a reference to the external pdf/dataset is good enough (RooSumL and
+/// RooSubsidiaryL).
 ///
 /// \param inpdf Raw pointer to the pdf.
 /// \param indata Raw pointer to the dataset.
 /// \param N_events The number of events in this likelihood's dataset.
 /// \param N_components The number of components in the likelihood.
-/// \param extended Set extended term calculation on, off or use Extended::Auto to determine automatically based on the pdf whether to activate or not.
+/// \param extended Set extended term calculation on, off or use Extended::Auto to determine automatically based on the
+/// pdf whether to activate or not.
 RooAbsL::RooAbsL(RooAbsPdf *inpdf, RooAbsData *indata, std::size_t N_events, std::size_t N_components,
                  Extended extended)
-   : RooAbsL({std::shared_ptr<RooAbsPdf>(nullptr), inpdf}, {std::shared_ptr<RooAbsData>(nullptr), indata}, N_events, N_components, extended)
-{}
-
+   : RooAbsL({std::shared_ptr<RooAbsPdf>(nullptr), inpdf}, {std::shared_ptr<RooAbsData>(nullptr), indata}, N_events,
+             N_components, extended)
+{
+}
 
 RooAbsL::RooAbsL(const RooAbsL &other)
-   : pdf_(other.pdf_), data_(other.data_), N_events_(other.N_events_), N_components_(other.N_components_), extended_(other.extended_), sim_count_(other.sim_count_)
+   : pdf_(other.pdf_),
+     data_(other.data_),
+     N_events_(other.N_events_),
+     N_components_(other.N_components_),
+     extended_(other.extended_),
+     sim_count_(other.sim_count_)
 {
-   // it can never be one, since we just copied the shared_ptr; if it is, something really weird is going on; also they must be equal (usually either zero or two)
+   // it can never be one, since we just copied the shared_ptr; if it is, something really weird is going on; also they
+   // must be equal (usually either zero or two)
    assert((pdf_.use_count() != 1) && (data_.use_count() != 1) && (pdf_.use_count() == data_.use_count()));
    if ((pdf_.use_count() > 1) && (data_.use_count() > 1)) {
       pdf_.reset(static_cast<RooAbsPdf *>(other.pdf_->cloneTree()));
@@ -159,8 +170,8 @@ void RooAbsL::initClones(RooAbsPdf &inpdf, RooAbsData &indata)
 
       if (!realReal->getBinning().lowBoundFunc() && realReal->getMin() < (datReal->getMin() - 1e-6)) {
          oocoutE(nullptr, InputArguments) << "RooAbsL: ERROR minimum of FUNC observable " << arg->GetName() << "("
-                                               << realReal->getMin() << ") is smaller than that of " << arg->GetName()
-                                               << " in the dataset (" << datReal->getMin() << ")" << std::endl;
+                                          << realReal->getMin() << ") is smaller than that of " << arg->GetName()
+                                          << " in the dataset (" << datReal->getMin() << ")" << std::endl;
          RooErrorHandler::softAbort();
          return;
       }
@@ -188,9 +199,9 @@ void RooAbsL::initClones(RooAbsPdf &inpdf, RooAbsData &indata)
 
    //// If dataset is binned, activate caching of bins that are invalid because they're outside the
    //// updated range definition (WVE need to add virtual interface here)
-   //RooDataHist *tmph = dynamic_cast<RooDataHist *>(data_.get());
-   //if (tmph) {
-      //tmph->cacheValidEntries();
+   // RooDataHist *tmph = dynamic_cast<RooDataHist *>(data_.get());
+   // if (tmph) {
+   // tmph->cacheValidEntries();
    //}
 
    // This is deferred from part 2 - but must happen after part 3 - otherwise invalid bins cannot be properly marked in
@@ -228,7 +239,8 @@ void RooAbsL::constOptimizeTestStatistic(RooAbsArg::ConstOpCode opcode, bool doA
 {
    // to be further implemented, this is just a first test implementation
    if (opcode == RooAbsArg::Activate) {
-      ConstantTermsOptimizer::enableConstantTermsOptimization(pdf_.get(), normSet_.get(), data_.get(), doAlsoTrackingOpt);
+      ConstantTermsOptimizer::enableConstantTermsOptimization(pdf_.get(), normSet_.get(), data_.get(),
+                                                              doAlsoTrackingOpt);
    }
 }
 
