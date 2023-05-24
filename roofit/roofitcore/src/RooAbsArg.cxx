@@ -2540,3 +2540,20 @@ std::unique_ptr<RooAbsArg> RooAbsArg::compileForNormSet(RooArgSet const & normSe
    ctx.compileServers(*newArg, normSet);
    return newArg;
 }
+
+
+/// Sets the token for retrieving results in the BatchMode. For internal use only.
+void RooAbsArg::setDataToken(std::size_t index)
+{
+   if (_dataToken == index) {
+      return;
+   }
+   if (_dataToken != std::numeric_limits<std::size_t>::max()) {
+      std::stringstream errMsg;
+      errMsg << "The data token for \"" << GetName() << "\" is already set!"
+             << " Are you trying to evaluate the same object by multiple RooFitDriver instances?"
+             << " This is not allowed.";
+      throw std::runtime_error(errMsg.str());
+   }
+   _dataToken = index;
+}
