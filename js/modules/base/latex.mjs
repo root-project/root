@@ -1331,4 +1331,3 @@ async function typesetMathjax(node) {
 }
 
 export { symbols_map, translateLaTeX, producePlainText, isPlainText, produceLatex, loadMathjax, produceMathjax, typesetMathjax };
-

@@ -964,11 +964,10 @@ class TPavePainter extends ObjectPainter {
          });
    }
 
-   /** @summary Fill context menu for the TPave object */
-   fillContextMenu(menu) {
+   /** @summary Fill context menu items for the TPave object */
+   fillContextMenuItems(menu) {
       let pave = this.getObject();
 
-      menu.add(`header: ${pave._typename}::${pave.fName}`);
       if (this.isStats()) {
          menu.add('Default position', () => {
             pave.fX2NDC = gStyle.fStatX;
@@ -1077,13 +1076,6 @@ class TPavePainter extends ObjectPainter {
             });
          });
       }
-
-      menu.addAttributesMenu(this);
-
-      if ((menu.size() > 0) && this.showInspector('check'))
-         menu.add('Inspect', this.showInspector);
-
-      return menu.size() > 0;
    }
 
    /** @summary Show pave context menu */

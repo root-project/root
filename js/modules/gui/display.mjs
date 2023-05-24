@@ -1780,5 +1780,5 @@ class BrowserLayout {
 
 } // class BrowserLayout
 
-export { MDIDisplay, CustomDisplay, BatchDisplay, GridDisplay, TabsDisplay, FlexibleDisplay, BrowserLayout,
-         getHPainter, setHPainter };
+export { MDIDisplay, CustomDisplay, BatchDisplay, GridDisplay, TabsDisplay, FlexibleDisplay,
+         BrowserLayout, getHPainter, setHPainter };

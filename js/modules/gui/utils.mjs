@@ -551,7 +551,6 @@ function getColorExec(col, method) {
    return `exec:${method}(${id})`;
 }
 
-
 export { showProgress, closeCurrentWindow, loadOpenui5, ToolbarIcons, registerForResize,
          detectRightButton, addMoveHandler, injectStyle,
          selectgStyle, saveSettings, readSettings, saveStyle, readStyle,

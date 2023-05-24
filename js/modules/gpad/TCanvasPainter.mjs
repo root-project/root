@@ -4,7 +4,6 @@ import { closeCurrentWindow, showProgress, loadOpenui5, ToolbarIcons, getColorEx
 import { GridDisplay, getHPainter } from '../gui/display.mjs';
 import { getElementRect } from '../base/BasePainter.mjs';
 import { cleanup, resize, selectActivePad, EAxisBits } from '../base/ObjectPainter.mjs';
-import { TAxisPainter } from './TAxisPainter.mjs';
 import { TFramePainter } from './TFramePainter.mjs';
 import { TPadPainter, clTButton } from './TPadPainter.mjs';
 
@@ -402,8 +401,10 @@ class TCanvasPainter extends TPadPainter {
 
    /** @summary Handle pad button click event */
    clickPadButton(funcname, evnt) {
-      if (funcname == 'ToggleGed') return this.activateGed(this, null, 'toggle');
-      if (funcname == 'ToggleStatus') return this.activateStatusBar('toggle');
+      if (funcname == 'ToggleGed')
+         return this.activateGed(this, null, 'toggle');
+      if (funcname == 'ToggleStatus')
+         return this.activateStatusBar('toggle');
       super.clickPadButton(funcname, evnt);
    }
 
@@ -613,6 +614,7 @@ class TCanvasPainter extends TPadPainter {
             break;
          case 'frame': // when changing frame
          case 'zoom':  // when changing zoom inside frame
+         case 'padpos': // when changing pad position
             if (!isFunc(painter.getWebPadOptions))
                painter = painter.getPadPainter();
             if (isFunc(painter.getWebPadOptions))

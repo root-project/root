@@ -11,7 +11,7 @@ let version_id = 'dev';
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-let version_date = '5/05/2023';
+let version_date = '24/05/2023';
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -7975,9 +7975,16 @@ class DrawOptions {
 
    /** @summary Returns remaining part of found option as integer. */
    partAsInt(offset, dflt) {
+      let mult = 1, last = this.part ? this.part[this.part.length - 1] : '';
+      if (last == 'K')
+         mult = 1e3;
+      else if (last == 'M')
+         mult = 1e6;
+      else if (last == 'G')
+         mult = 1e9;
       let val = this.part.replace(/^\D+/g, '');
       val = val ? parseInt(val, 10) : Number.NaN;
-      return !Number.isInteger(val) ? (dflt || 0) : val + (offset || 0);
+      return !Number.isInteger(val) ? (dflt || 0) : mult*val + (offset || 0);
    }
 
    /** @summary Returns remaining part of found option as float. */
@@ -12065,18 +12072,26 @@ class ObjectPainter extends BasePainter {
    /** @summary Fill context menu for the object
      * @private */
    fillContextMenu(menu) {
-      let title = this.getObjectHint(), obj = this.getObject();
-      if (obj?._typename)
-         title = `${obj._typename}::${title}`;
+      let name = this.getObject()?.fName || '',
+          cl = this.getClassName();
+
+      let p = cl.lastIndexOf('::');
+      if (p > 0) cl = cl.slice(p+2);
+      let title = cl && name ? `${cl}:${name}` : cl ? cl : name || 'object';
 
       menu.add(`header:${title}`);
 
-      menu.addAttributesMenu(this);
+      let size0 = menu.size();
 
-      if ((menu.size() > 0) && this.showInspector('check'))
+      if (isFunc(this.fillContextMenuItems))
+         this.fillContextMenuItems(menu);
+
+      if ((menu.size() > size0) && this.showInspector('check'))
          menu.add('Inspect', this.showInspector);
 
-      return menu.size() > 0;
+      menu.addAttributesMenu(this);
+
+      return menu.size() > size0;
    }
 
    /** @summary shows objects status
@@ -41965,6 +41980,170 @@ class Scene extends Object3D {
 
 }
 
+class InstancedBufferAttribute extends BufferAttribute {
+
+	constructor( array, itemSize, normalized, meshPerAttribute = 1 ) {
+
+		super( array, itemSize, normalized );
+
+		this.isInstancedBufferAttribute = true;
+
+		this.meshPerAttribute = meshPerAttribute;
+
+	}
+
+	copy( source ) {
+
+		super.copy( source );
+
+		this.meshPerAttribute = source.meshPerAttribute;
+
+		return this;
+
+	}
+
+	toJSON() {
+
+		const data = super.toJSON();
+
+		data.meshPerAttribute = this.meshPerAttribute;
+
+		data.isInstancedBufferAttribute = true;
+
+		return data;
+
+	}
+
+}
+
+const _instanceLocalMatrix = /*@__PURE__*/ new Matrix4();
+const _instanceWorldMatrix = /*@__PURE__*/ new Matrix4();
+
+const _instanceIntersects = [];
+
+const _identity = /*@__PURE__*/ new Matrix4();
+const _mesh = /*@__PURE__*/ new Mesh();
+
+class InstancedMesh extends Mesh {
+
+	constructor( geometry, material, count ) {
+
+		super( geometry, material );
+
+		this.isInstancedMesh = true;
+
+		this.instanceMatrix = new InstancedBufferAttribute( new Float32Array( count * 16 ), 16 );
+		this.instanceColor = null;
+
+		this.count = count;
+
+		this.frustumCulled = false;
+
+		for ( let i = 0; i < count; i ++ ) {
+
+			this.setMatrixAt( i, _identity );
+
+		}
+
+	}
+
+	copy( source, recursive ) {
+
+		super.copy( source, recursive );
+
+		this.instanceMatrix.copy( source.instanceMatrix );
+
+		if ( source.instanceColor !== null ) this.instanceColor = source.instanceColor.clone();
+
+		this.count = source.count;
+
+		return this;
+
+	}
+
+	getColorAt( index, color ) {
+
+		color.fromArray( this.instanceColor.array, index * 3 );
+
+	}
+
+	getMatrixAt( index, matrix ) {
+
+		matrix.fromArray( this.instanceMatrix.array, index * 16 );
+
+	}
+
+	raycast( raycaster, intersects ) {
+
+		const matrixWorld = this.matrixWorld;
+		const raycastTimes = this.count;
+
+		_mesh.geometry = this.geometry;
+		_mesh.material = this.material;
+
+		if ( _mesh.material === undefined ) return;
+
+		for ( let instanceId = 0; instanceId < raycastTimes; instanceId ++ ) {
+
+			// calculate the world matrix for each instance
+
+			this.getMatrixAt( instanceId, _instanceLocalMatrix );
+
+			_instanceWorldMatrix.multiplyMatrices( matrixWorld, _instanceLocalMatrix );
+
+			// the mesh represents this single instance
+
+			_mesh.matrixWorld = _instanceWorldMatrix;
+
+			_mesh.raycast( raycaster, _instanceIntersects );
+
+			// process the result of raycast
+
+			for ( let i = 0, l = _instanceIntersects.length; i < l; i ++ ) {
+
+				const intersect = _instanceIntersects[ i ];
+				intersect.instanceId = instanceId;
+				intersect.object = this;
+				intersects.push( intersect );
+
+			}
+
+			_instanceIntersects.length = 0;
+
+		}
+
+	}
+
+	setColorAt( index, color ) {
+
+		if ( this.instanceColor === null ) {
+
+			this.instanceColor = new InstancedBufferAttribute( new Float32Array( this.instanceMatrix.count * 3 ), 3 );
+
+		}
+
+		color.toArray( this.instanceColor.array, index * 3 );
+
+	}
+
+	setMatrixAt( index, matrix ) {
+
+		matrix.toArray( this.instanceMatrix.array, index * 16 );
+
+	}
+
+	updateMorphTargets() {
+
+	}
+
+	dispose() {
+
+		this.dispatchEvent( { type: 'dispose' } );
+
+	}
+
+}
+
 class LineBasicMaterial extends Material {
 
 	constructor( parameters ) {
@@ -57113,7 +57292,8 @@ const Box3D = {
                 new Vector3(0, 0, 0), new Vector3(0, 0, 1) ],
     Indexes: [ 0,2,1, 2,3,1, 4,6,5, 6,7,5, 4,5,1, 5,0,1, 7,6,2, 6,3,2, 5,7,0, 7,2,0, 1,3,4, 3,6,4 ],
     Normals: [ 1,0,0, -1,0,0, 0,1,0, 0,-1,0, 0,0,1, 0,0,-1 ],
-    Segments: [0, 2, 2, 7, 7, 5, 5, 0, 1, 3, 3, 6, 6, 4, 4, 1, 1, 0, 3, 2, 6, 7, 4, 5]  // segments addresses Vertices
+    Segments: [0, 2, 2, 7, 7, 5, 5, 0, 1, 3, 3, 6, 6, 4, 4, 1, 1, 0, 3, 2, 6, 7, 4, 5],  // segments addresses Vertices
+    MeshSegments: undefined
 };
 
 // these segments address vertices from the mesh, we can use positions from box mesh
@@ -57853,8 +58033,6 @@ function drawXYZ(toplevel, AxisPainter, opts) {
          let draw_width = text3d.boundingBox.max.x - text3d.boundingBox.min.x,
              draw_height = text3d.boundingBox.max.y - text3d.boundingBox.min.y;
          text3d.center = true; // place central
-
-
 
          text3d.offsety = this.x_handle.labelsOffset + (grmaxy - grminy) * 0.005;
 
@@ -59713,7 +59891,7 @@ class TAxisPainter extends ObjectPainter {
       } else if (this.kind == 'func') {
          this.func = this.createFuncHandle(opts.axis_func, 0, smin, smax);
       } else {
-         this.func = linear().domain([smin,smax]);
+         this.func = linear().domain([smin, smax]);
       }
 
       if (this.vertical ^ this.reverse) {
@@ -64217,8 +64395,17 @@ class StandaloneMenu extends JSRootMenu {
       if (name.indexOf('header:') == 0)
          return curr.push({ text: name.slice(7), header: true });
 
-      if ((name == 'endsub:') || (name == 'endcolumn:'))
+      if (name == 'endsub:') {
+         this.stack.pop();
+         curr = this.stack[this.stack.length-1];
+         if (curr[curr.length-1].sub.length == 0)
+            curr[curr.length-1].sub = undefined;
+         return;
+      }
+
+      if (name == 'endcolumn:')
          return this.stack.pop();
+
 
       if (isFunc(arg)) { title = func; func = arg; arg = name; }
 
@@ -64618,6 +64805,9 @@ function addDragHandler(_painter, arg) {
    let painter = _painter, pp = painter.getPadPainter();
    if (pp?._fast_drawing) return;
 
+   if (!isFunc(arg.getDrawG))
+      arg.getDrawG = () => painter?.draw_g;
+
    function makeResizeElements(group, handler) {
       function addElement(cursor, d) {
          let clname = 'js_' + cursor.replace(/[-]/g, '_'),
@@ -64650,7 +64840,9 @@ function addDragHandler(_painter, arg) {
          drag_rect = null;
       }
 
-      if (!painter.draw_g)
+      let draw_g = arg.getDrawG();
+
+      if (!draw_g)
          return false;
 
       let oldx = arg.x, oldy = arg.y;
@@ -64663,26 +64855,30 @@ function addDragHandler(_painter, arg) {
 
       arg.x = newx; arg.y = newy; arg.width = newwidth; arg.height = newheight;
 
-      painter.draw_g.attr('transform', makeTranslate(newx,newy));
+      if (!arg.no_transform)
+         draw_g.attr('transform', makeTranslate(newx, newy));
 
       setPainterTooltipEnabled(painter, true);
 
-      makeResizeElements(painter.draw_g);
+      makeResizeElements(draw_g);
 
       if (change_size || change_pos) {
          if (change_size && isFunc(arg.resize))
             arg.resize(newwidth, newheight);
+
          if (change_pos && isFunc(arg.move))
             arg.move(newx, newy, newx - oldx, newy - oldy);
 
          if (change_size || change_pos) {
             if (arg.obj) {
-               let rect = pp.getPadRect();
+               let rect = arg.pad_rect ?? pp.getPadRect();
                arg.obj.fX1NDC = newx / rect.width;
                arg.obj.fX2NDC = (newx + newwidth) / rect.width;
                arg.obj.fY1NDC = 1 - (newy + newheight) / rect.height;
                arg.obj.fY2NDC = 1 - newy / rect.height;
                arg.obj.modified_NDC = true; // indicate that NDC was interactively changed, block in updated
+            } else if (isFunc(arg.move_resize)) {
+               arg.move_resize(newx, newy, newwidth, newheight);
             }
             if (isFunc(arg.redraw))
                arg.redraw(arg);
@@ -64697,6 +64893,7 @@ function addDragHandler(_painter, arg) {
    drag_move
       .on('start', function(evnt) {
          if (detectRightButton(evnt.sourceEvent) || drag_kind) return;
+         if (isFunc(arg.is_disabled) && arg.is_disabled()) return;
 
          closeMenu(); // close menu
 
@@ -64705,9 +64902,7 @@ function addDragHandler(_painter, arg) {
          evnt.sourceEvent.preventDefault();
          evnt.sourceEvent.stopPropagation();
 
-         let pad_rect = pp.getPadRect();
-
-         let handle = {
+         let pad_rect = arg.pad_rect ?? pp.getPadRect(), handle = {
             x: arg.x, y: arg.y, width: arg.width, height: arg.height,
             acc_x1: arg.x, acc_y1: arg.y,
             pad_w: pad_rect.width - arg.width,
@@ -64718,7 +64913,7 @@ function addDragHandler(_painter, arg) {
 
          drag_painter = painter;
          drag_kind = 'move';
-         drag_rect = select(painter.draw_g.node().parentNode).append('path')
+         drag_rect = select(arg.getDrawG().node().parentNode).append('path')
             .attr('d', `M${handle.acc_x1},${handle.acc_y1}${handle.path}`)
             .style('cursor', 'move')
             .style('pointer-events', 'none') // let forward double click to underlying elements
@@ -64766,14 +64961,14 @@ function addDragHandler(_painter, arg) {
    drag_resize
       .on('start', function(evnt) {
          if (detectRightButton(evnt.sourceEvent) || drag_kind) return;
+         if (isFunc(arg.is_disabled) && arg.is_disabled()) return;
 
          evnt.sourceEvent.stopPropagation();
          evnt.sourceEvent.preventDefault();
 
          setPainterTooltipEnabled(painter, false); // disable tooltip
 
-         let pad_rect = pp.getPadRect(),
-             handle = {
+         let pad_rect = arg.pad_rect ?? pp.getPadRect(), handle = {
             x: arg.x, y: arg.y, width: arg.width, height: arg.height,
             acc_x1: arg.x, acc_y1: arg.y,
             acc_x2: arg.x + arg.width, acc_y2: arg.y + arg.height,
@@ -64782,7 +64977,7 @@ function addDragHandler(_painter, arg) {
 
          drag_painter = painter;
          drag_kind = 'resize';
-         drag_rect = select(painter.draw_g.node().parentNode)
+         drag_rect = select(arg.getDrawG().node().parentNode)
             .append('rect')
             .style('cursor', select(this).style('cursor'))
             .attr('x', handle.acc_x1)
@@ -64834,10 +65029,10 @@ function addDragHandler(_painter, arg) {
       });
 
    if (!arg.only_resize)
-      painter.draw_g.style('cursor', 'move').call(drag_move);
+      arg.getDrawG().style('cursor', 'move').call(drag_move);
 
    if (!arg.only_move)
-      makeResizeElements(painter.draw_g, drag_resize);
+      makeResizeElements(arg.getDrawG(), drag_resize);
 }
 
 const TooltipHandler = {
@@ -69188,7 +69383,10 @@ function getButtonSize(handler, fact) {
    return Math.round((fact || 1) * (handler.iscan || !handler.has_canvas ? 16 : 12));
 }
 
-function toggleButtonsVisibility(handler, action) {
+function toggleButtonsVisibility(handler, action, evnt) {
+   evnt?.preventDefault();
+   evnt?.stopPropagation();
+
    let group = handler.getLayerSvg('btns_layer', handler.this_pad_name),
        btn = group.select("[name='Toggle']");
 
@@ -69203,8 +69401,13 @@ function toggleButtonsVisibility(handler, action) {
 
    let is_visible = false;
    switch(action) {
-      case 'enable': is_visible = true; break;
-      case 'enterbtn': return; // do nothing, just cleanup timeout
+      case 'enable':
+         is_visible = true;
+         handler.btns_active_flag = true;
+         break;
+      case 'enterbtn':
+         handler.btns_active_flag = true;
+         return; // do nothing, just cleanup timeout
       case 'timeout': is_visible = false; break;
       case 'toggle':
          state = !state;
@@ -69213,6 +69416,7 @@ function toggleButtonsVisibility(handler, action) {
          break;
       case 'disable':
       case 'leavebtn':
+         handler.btns_active_flag = false;
          if (!state) btn.property('timout_handler', setTimeout(() => toggleButtonsVisibility(handler, 'timeout'), 1200));
          return;
    }
@@ -69277,7 +69481,7 @@ let PadButtonsHandler = {
          ctrl = ToolbarIcons.createSVG(group, ToolbarIcons.rect, getButtonSize(this), 'Toggle tool buttons')
                             .attr('name', 'Toggle').attr('x', 0).attr('y', 0)
                             .property('buttons_state', (settings.ToolBar !== 'popup'))
-                            .on('click', () => toggleButtonsVisibility(this, 'toggle'))
+                            .on('click', evnt => toggleButtonsVisibility(this, 'toggle', evnt))
                             .on('mouseenter', () => toggleButtonsVisibility(this, 'enable'))
                             .on('mouseleave', () => toggleButtonsVisibility(this, 'disable'));
 
@@ -69809,17 +70013,32 @@ class TPadPainter extends ObjectPainter {
          if (!isBatchMode() || (this.pad.fFillStyle > 0) || ((this.pad.fLineStyle > 0) && (this.pad.fLineColor > 0)))
             svg_border = svg_pad.append('svg:path').attr('class', 'root_pad_border');
 
-         if (!isBatchMode())
+         if (!isBatchMode()) {
             svg_border.style('pointer-events', 'visibleFill') // get events also for not visible rect
                       .on('dblclick', evnt => this.enlargePad(evnt, true))
                       .on('click', () => this.selectObjectPainter())
                       .on('mouseenter', () => this.showObjectStatus())
                       .on('contextmenu', settings.ContextMenu ? evnt => this.padContextMenu(evnt) : null);
 
-         svg_pad.append('svg:g').attr('class','primitives_layer');
+            if (!this.iscan)
+               addDragHandler(this, { x, y, width: w, height: h, no_transform: true,
+                                      is_disabled: () => svg_can.property('pad_enlarged') || this.btns_active_flag,
+                                      getDrawG: () => this.svg_this_pad(),
+                                      pad_rect: { width, height },
+                                      minwidth: 20, minheight: 20,
+                                      move_resize: (_x, _y, _w, _h) => {
+                                         this.pad.fAbsWNDC = _w / width;
+                                         this.pad.fAbsHNDC = _h / height;
+                                         this.pad.fAbsXlowNDC = _x / width;
+                                         this.pad.fAbsYlowNDC = 1 - (_y + _h) / height;
+                                      },
+                                      redraw: () => this.interactiveRedraw('pad', 'padpos') });
+         }
+
+         svg_pad.append('svg:g').attr('class', 'primitives_layer');
          if (!isBatchMode())
             btns = svg_pad.append('svg:g')
-                          .attr('class','btns_layer')
+                          .attr('class', 'btns_layer')
                           .property('leftside', settings.ToolBarSide != 'left')
                           .property('vertical', settings.ToolBarVert);
       }
@@ -71163,11 +71382,8 @@ class TPadPainter extends ObjectPainter {
 
       if (funcname == 'PadContextMenus') {
 
-         if (evnt) {
-            evnt.preventDefault();
-            evnt.stopPropagation();
-         }
-
+         evnt?.preventDefault();
+         evnt?.stopPropagation();
          if (closeMenu()) return;
 
          createMenu$1(evnt, this).then(menu => {
@@ -71216,7 +71432,7 @@ class TPadPainter extends ObjectPainter {
 
       this.painters.forEach(pp => {
          if (isFunc(pp.clickPadButton))
-            pp.clickPadButton(funcname);
+            pp.clickPadButton(funcname, evnt);
 
          if (!done && isFunc(pp.clickButton))
             done = pp.clickButton(funcname);
@@ -71770,8 +71986,10 @@ class TCanvasPainter extends TPadPainter {
 
    /** @summary Handle pad button click event */
    clickPadButton(funcname, evnt) {
-      if (funcname == 'ToggleGed') return this.activateGed(this, null, 'toggle');
-      if (funcname == 'ToggleStatus') return this.activateStatusBar('toggle');
+      if (funcname == 'ToggleGed')
+         return this.activateGed(this, null, 'toggle');
+      if (funcname == 'ToggleStatus')
+         return this.activateStatusBar('toggle');
       super.clickPadButton(funcname, evnt);
    }
 
@@ -71981,6 +72199,7 @@ class TCanvasPainter extends TPadPainter {
             break;
          case 'frame': // when changing frame
          case 'zoom':  // when changing zoom inside frame
+         case 'padpos': // when changing pad position
             if (!isFunc(painter.getWebPadOptions))
                painter = painter.getPadPainter();
             if (isFunc(painter.getWebPadOptions))
@@ -73160,11 +73379,10 @@ class TPavePainter extends ObjectPainter {
          });
    }
 
-   /** @summary Fill context menu for the TPave object */
-   fillContextMenu(menu) {
+   /** @summary Fill context menu items for the TPave object */
+   fillContextMenuItems(menu) {
       let pave = this.getObject();
 
-      menu.add(`header: ${pave._typename}::${pave.fName}`);
       if (this.isStats()) {
          menu.add('Default position', () => {
             pave.fX2NDC = gStyle.fStatX;
@@ -73273,13 +73491,6 @@ class TPavePainter extends ObjectPainter {
             });
          });
       }
-
-      menu.addAttributesMenu(this);
-
-      if ((menu.size() > 0) && this.showInspector('check'))
-         menu.add('Inspect', this.showInspector);
-
-      return menu.size() > 0;
    }
 
    /** @summary Show pave context menu */
@@ -75146,13 +75357,11 @@ class THistPainter extends ObjectPainter {
    }
 
    /** @summary Fill histogram context menu */
-   fillContextMenu(menu) {
+   fillContextMenuItems(menu) {
 
       let histo = this.getHisto(),
           fp = this.getFramePainter();
       if (!histo) return;
-
-      menu.add(`header:${histo._typename}::${histo.fName}`);
 
       if (this.options.Axis <= 0)
          menu.addchk(this.toggleStat('only-check'), 'Show statbox', () => this.toggleStat());
@@ -75220,12 +75429,8 @@ class THistPainter extends ObjectPainter {
             menu.add('Reset camera', () => main.control.reset());
       }
 
-      menu.addAttributesMenu(this);
-
       if (this.histogram_updated && fp.zoomChangedInteractive())
          menu.add('Let update zoom', () => fp.zoomChangedInteractive('reset'));
-
-      return true;
    }
 
    /** @summary Auto zoom into histogram non-empty range
@@ -77012,8 +77217,7 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
  * @private
  */
 
-function setHistTitle(histo, title)
-{
+function setHistTitle(histo, title) {
    if (!histo) return;
    if (title.indexOf(';') < 0) {
       histo.fTitle = title;
@@ -84493,7 +84697,8 @@ class ClonedNodes {
       return node ? node.name : '';
    }
 
-   /** @summary Returns description for provide stack */
+   /** @summary Returns description for provided stack
+     * @desc If specified, absolute matrix is also calculated */
    resolveStack(stack, withmatrix) {
 
       let res = { id: 0, obj: null, node: this.nodes[0], name: this.name_prefix || '' };
@@ -84712,11 +84917,8 @@ class ClonedNodes {
 
       let volume = node.fVolume;
 
-      let prop = { name: getObjectName(volume), nname: getObjectName(node), volume: node.fVolume, shape: volume.fShape, material: null, chlds: null };
-
-      if (node.fVolume.fNodes !== null) prop.chlds = node.fVolume.fNodes.arr;
-
-      if (volume) prop.linewidth = volume.fLineWidth;
+      let prop = { name: getObjectName(volume), nname: getObjectName(node), volume, shape: volume.fShape, material: null,
+                   chlds: volume.fNodes?.arr, linewidth: volume.fLineWidth };
 
       {
 
@@ -84770,11 +84972,16 @@ class ClonedNodes {
           force = isObject(options) || (options === 'force');
 
       for(let lvl = 0; lvl <= stack.length; ++lvl) {
-         let nchld = (lvl > 0) ? stack[lvl-1] : 0;
-         // extract current node
-         if (lvl > 0)  node = this.nodes[node.chlds[nchld]];
+         let nchld = (lvl > 0) ? stack[lvl-1] : 0,
+             // extract current node
+             child = (lvl > 0) ? this.nodes[node.chlds[nchld]] : node,
+             obj3d = undefined;
+         if (!child) {
+            console.error(`Wrong stack ${JSON.stringify(stack)} for nodes at level ${lvl}, node.id ${node.id}, numnodes ${this.nodes.length}, nchld ${nchld}, numchilds ${node.chlds.length}, chldid ${node.chlds[nchld]}`);
+            return null;
+         }
 
-         let obj3d = undefined;
+         node = child;
 
          if (three_prnt.children)
             for (let i = 0; i < three_prnt.children.length; ++i) {
@@ -84847,6 +85054,180 @@ class ClonedNodes {
       }
 
       return three_prnt;
+   }
+
+   /** @summary Create mesh for single physical node */
+   createEntryMesh(ctrl, toplevel, entry, shape, colors) {
+      if (!shape || !shape.ready)
+         return null;
+
+      entry.done = true; // mark entry is created
+      shape.used = true; // indicate that shape was used in building
+
+      if (!shape.geom || !shape.nfaces) {
+         // node is visible, but shape does not created
+         this.createObject3D(entry.stack, toplevel, 'delete_mesh');
+         return null;
+      }
+
+      let prop = this.getDrawEntryProperties(entry, colors),
+          obj3d = this.createObject3D(entry.stack, toplevel, ctrl),
+          matrix = obj3d.absMatrix || obj3d.matrixWorld, mesh;
+
+      prop.material.wireframe = ctrl.wireframe;
+
+      prop.material.side = ctrl.doubleside ? DoubleSide : FrontSide;
+
+      if (matrix.determinant() > -0.9) {
+         mesh = new Mesh(shape.geom, prop.material);
+      } else {
+         mesh = createFlippedMesh(shape, prop.material);
+      }
+
+      obj3d.add(mesh);
+
+      if (obj3d.absMatrix) {
+         mesh.matrix.copy(obj3d.absMatrix);
+         mesh.matrix.decompose(mesh.position, mesh.quaternion, mesh.scale);
+         mesh.updateMatrixWorld();
+      }
+
+      // keep full stack of nodes
+      mesh.stack = entry.stack;
+      mesh.renderOrder = this.maxdepth - entry.stack.length; // order of transparency handling
+
+      // keep hierarchy level
+      mesh.$jsroot_order = obj3d.$jsroot_depth;
+
+      if (ctrl.info?.num_meshes !== undefined) {
+         ctrl.info.num_meshes++;
+         ctrl.info.num_faces += shape.nfaces;
+      }
+
+      // set initial render order, when camera moves, one must refine it
+      //mesh.$jsroot_order = mesh.renderOrder =
+      //   this._clones.maxdepth - ((obj3d.$jsroot_depth !== undefined) ? obj3d.$jsroot_depth : entry.stack.length);
+
+      return mesh;
+
+   }
+
+   /** @summary Check if instancing can be used for the nodes */
+   createInstancedMeshes(ctrl, toplevel, draw_nodes, build_shapes, colors) {
+      if (ctrl.instancing < 0)
+         return false;
+
+      // first delete previous data
+      let used_shapes = [], max_entries = 1;
+
+      for (let n = 0; n < draw_nodes.length; ++n) {
+         let entry = draw_nodes[n];
+         if (entry.done) continue;
+
+         /// shape can be provided with entry itself
+         let shape = entry.server_shape || build_shapes[entry.shapeid];
+         if (!shape || !shape.ready) {
+            console.warn(`Problem with shape id ${entry.shapeid} when building`);
+            return false;
+         }
+
+         // ignore shape without geometry
+         if (!shape.geom || !shape.nfaces)
+            continue;
+
+         if (shape.instances === undefined) {
+            shape.instances = [];
+            used_shapes.push(shape);
+         }
+
+         let instance = shape.instances.find(i => i.nodeid == entry.nodeid);
+
+         if (instance) {
+            instance.entries.push(entry);
+            max_entries = Math.max(max_entries, instance.entries.length);
+         } else {
+            shape.instances.push({ nodeid: entry.nodeid, entries: [ entry ]});
+         }
+      }
+
+      let make_sense = ctrl.instancing > 0 ? (max_entries > 2) :
+                        (draw_nodes.length > 10000) && (max_entries > 10);
+
+      if (!make_sense) {
+         used_shapes.forEach(shape => { delete shape.instances; });
+         return false;
+      }
+
+      used_shapes.forEach(shape => {
+         shape.used = true;
+         shape.instances.forEach(instance => {
+            let entry0 = instance.entries[0],
+                prop = this.getDrawEntryProperties(entry0, colors);
+
+            prop.material.wireframe = ctrl.wireframe;
+
+            prop.material.side = ctrl.doubleside ? DoubleSide : FrontSide;
+
+            if (instance.entries.length == 1) {
+               this.createEntryMesh(ctrl, toplevel, entry0, shape, colors);
+            } else {
+               let arr1 = [], arr2 = [], stacks1 = [], stacks2 = [];
+
+               instance.entries.forEach(entry => {
+                  let info = this.resolveStack(entry.stack, true);
+
+                  if (info.matrix.determinant() > -0.9) {
+                     arr1.push(info.matrix);
+                     stacks1.push(entry.stack);
+                  } else {
+                     arr2.push(info.matrix);
+                     stacks2.push(entry.stack);
+                  }
+                  entry.done = true;
+               });
+
+               if (arr1.length > 0) {
+                  let mesh1 = new InstancedMesh(shape.geom, prop.material, arr1.length);
+
+                  mesh1.stacks = stacks1;
+                  arr1.forEach((matrix,i) => mesh1.setMatrixAt(i, matrix));
+
+                  toplevel.add(mesh1);
+
+                  mesh1.renderOrder = 1;
+
+                  mesh1.$jsroot_order = 1;
+                  ctrl.info.num_meshes++;
+                  ctrl.info.num_faces += shape.nfaces*arr1.length;
+               }
+
+               if (arr2.length > 0) {
+                  if (shape.geomZ === undefined)
+                     shape.geomZ = createFlippedGeom(shape.geom);
+
+                  let mesh2 = new InstancedMesh(shape.geomZ, prop.material, arr2.length);
+
+                  mesh2.stacks = stacks2;
+                  let m = new Matrix4().makeScale(1,1,-1);
+                  arr2.forEach((matrix,i) => {
+                     mesh2.setMatrixAt(i, matrix.multiply(m));
+                  });
+                  mesh2._flippedMesh = true;
+
+                  toplevel.add(mesh2);
+
+                  mesh2.renderOrder = 1;
+                  mesh2.$jsroot_order = 1;
+                  ctrl.info.num_meshes++;
+                  ctrl.info.num_faces += shape.nfaces*arr2.length;
+               }
+            }
+         });
+
+         delete shape.instances;
+      });
+
+      return true;
    }
 
    /** @summary Get volume boundary */
@@ -85134,7 +85515,7 @@ class ClonedNodes {
 
          res.shapes++;
          if (!item.used) res.notusedshapes++;
-         res.faces += item.nfaces*item.refcnt;
+         res.faces += item.nfaces * item.refcnt;
 
          if (res.faces >= limit) {
             res.done = true;
@@ -85184,6 +85565,60 @@ class ClonedNodes {
    }
 }
 
+function createFlippedGeom(geom) {
+
+   let pos = geom.getAttribute('position').array,
+       norm = geom.getAttribute('normal').array,
+       index = geom.getIndex();
+
+   if (index) {
+      // we need to unfold all points to
+      let arr = index.array,
+          i0 = geom.drawRange.start,
+          ilen = geom.drawRange.count;
+      if (i0 + ilen > arr.length) ilen = arr.length - i0;
+
+      let dpos = new Float32Array(ilen*3), dnorm = new Float32Array(ilen*3);
+      for (let ii = 0; ii < ilen; ++ii) {
+         let k = arr[i0 + ii];
+         if ((k < 0) || (k*3 >= pos.length))
+            console.log(`strange index ${k*3} totallen = ${pos.length}`);
+         dpos[ii*3] = pos[k*3];
+         dpos[ii*3+1] = pos[k*3+1];
+         dpos[ii*3+2] = pos[k*3+2];
+         dnorm[ii*3] = norm[k*3];
+         dnorm[ii*3+1] = norm[k*3+1];
+         dnorm[ii*3+2] = norm[k*3+2];
+      }
+
+      pos = dpos; norm = dnorm;
+   }
+
+   let len = pos.length,
+       newpos = new Float32Array(len),
+       newnorm = new Float32Array(len);
+
+   // we should swap second and third point in each face
+   for (let n = 0, shift = 0; n < len; n += 3) {
+      newpos[n]   = pos[n+shift];
+      newpos[n+1] = pos[n+1+shift];
+      newpos[n+2] = -pos[n+2+shift];
+
+      newnorm[n]   = norm[n+shift];
+      newnorm[n+1] = norm[n+1+shift];
+      newnorm[n+2] = -norm[n+2+shift];
+
+      shift+=3; if (shift===6) shift=-3; // values 0,3,-3
+   }
+
+   let geomZ = new BufferGeometry();
+   geomZ.setAttribute('position', new BufferAttribute(newpos, 3));
+   geomZ.setAttribute('normal', new BufferAttribute(newnorm, 3));
+
+   return geomZ;
+}
+
+
 /** @summary Create flipped mesh for the shape
   * @desc When transformation matrix includes one or several inversion of axis,
   * one should inverse geometry object, otherwise three.js cannot correctly draw it
@@ -85192,63 +85627,11 @@ class ClonedNodes {
   * @private */
 function createFlippedMesh(shape, material) {
 
-   let flip =  new Vector3(1,1,-1);
+   if (shape.geomZ === undefined)
+      shape.geomZ = createFlippedGeom(shape.geom);
 
-   if (shape.geomZ === undefined) {
-
-      let pos = shape.geom.getAttribute('position').array,
-          norm = shape.geom.getAttribute('normal').array,
-          index = shape.geom.getIndex();
-
-      if (index) {
-         // we need to unfold all points to
-         let arr = index.array,
-             i0 = shape.geom.drawRange.start,
-             ilen = shape.geom.drawRange.count;
-         if (i0 + ilen > arr.length) ilen = arr.length - i0;
-
-         let dpos = new Float32Array(ilen*3), dnorm = new Float32Array(ilen*3);
-         for (let ii = 0; ii < ilen; ++ii) {
-            let k = arr[i0 + ii];
-            if ((k < 0) || (k*3 >= pos.length))
-               console.log(`strange index ${k*3} totallen = ${pos.length}`);
-            dpos[ii*3] = pos[k*3];
-            dpos[ii*3+1] = pos[k*3+1];
-            dpos[ii*3+2] = pos[k*3+2];
-            dnorm[ii*3] = norm[k*3];
-            dnorm[ii*3+1] = norm[k*3+1];
-            dnorm[ii*3+2] = norm[k*3+2];
-         }
-
-         pos = dpos; norm = dnorm;
-      }
-
-      let len = pos.length, n, shift = 0,
-          newpos = new Float32Array(len),
-          newnorm = new Float32Array(len);
-
-      // we should swap second and third point in each face
-      for (n = 0; n < len; n += 3) {
-         newpos[n]   = pos[n+shift];
-         newpos[n+1] = pos[n+1+shift];
-         newpos[n+2] = -pos[n+2+shift];
-
-         newnorm[n]   = norm[n+shift];
-         newnorm[n+1] = norm[n+1+shift];
-         newnorm[n+2] = -norm[n+2+shift];
-
-         shift+=3; if (shift===6) shift=-3; // values 0,3,-3
-      }
-
-      shape.geomZ = new BufferGeometry();
-      shape.geomZ.setAttribute('position', new BufferAttribute(newpos, 3));
-      shape.geomZ.setAttribute('normal', new BufferAttribute(newnorm, 3));
-      // normals are calculated with normal geometry and correctly scaled
-      // geom.computeVertexNormals();
-   }
-
-   let mesh = new Mesh( shape.geomZ, material );
-   mesh.scale.copy(flip);
+   let mesh = new Mesh(shape.geomZ, material);
+   mesh.scale.copy(new Vector3(1,1,-1));
    mesh.updateMatrix();
 
    mesh._flippedMesh = true;
@@ -85257,12 +85640,25 @@ function createFlippedMesh(shape, material) {
 }
 
 /** @summary extract code of Box3.expandByObject
-  * @desc Major difference - do not traverse hierarchy
+  * @desc Major difference - do not traverse hierarchy, support InstancedMesh
   * @private */
 function getBoundingBox(node, box3, local_coordinates) {
    if (!node?.geometry) return box3;
 
    if (!box3) box3 = new Box3().makeEmpty();
+
+   if (node.isInstancedMesh) {
+      let m = new Matrix4(), b = new Box3().makeEmpty();
+
+      node.geometry.computeBoundingBox();
+
+      for ( let i = 0; i < node.count; i ++ ) {
+         node.getMatrixAt( i, m );
+         b.copy( node.geometry.boundingBox ).applyMatrix4( m );
+         box3.union( b );
+      }
+      return box3;
+   }
 
    if (!local_coordinates) node.updateWorldMatrix(false, false);
 
@@ -85794,6 +86190,17 @@ function updateBrowserIcons(obj, hpainter) {
 }
 
 
+/** @summary Return stack for the item from list of intersection
+  * @private */
+function getIntersectStack(item) {
+   let obj = item?.object;
+   if (!obj) return null;
+   if (obj.stack)
+      return obj.stack;
+   if (obj.stacks && item.instanceId !== undefined && item.instanceId < obj.stacks.length)
+      return obj.stacks[item.instanceId];
+}
+
 /**
   * @summary Toolbar for geometry painter
   *
@@ -85879,7 +86286,7 @@ class GeoDrawingControl extends InteractiveControl {
 
    constructor(mesh, bloom) {
       super();
-      this.mesh = (mesh && mesh.material) ? mesh : null;
+      this.mesh = mesh?.material ? mesh : null;
       this.bloom = bloom;
    }
 
@@ -85889,9 +86296,38 @@ class GeoDrawingControl extends InteractiveControl {
    }
 
    /** @summary draw special */
-   drawSpecial(col /*, indx*/) {
+   drawSpecial(col, indx) {
       let c = this.mesh;
-      if (!c || !c.material) return;
+      if (!c?.material) return;
+
+      if (c.isInstancedMesh) {
+
+         if (c._highlight_mesh) {
+            c.remove(c._highlight_mesh);
+            delete c._highlight_mesh;
+         }
+
+         if (col && indx !== undefined) {
+            let h = new Mesh(c.geometry, c.material.clone());
+
+            if (this.bloom) {
+               h.layers.enable(_BLOOM_SCENE);
+               h.material.emissive = new Color$1(0x00ff00);
+            } else {
+               h.material.color = new Color$1( col );
+               h.material.opacity = 1.;
+            }
+            let m = new Matrix4();
+            c.getMatrixAt(indx, m);
+            h.applyMatrix4(m);
+            c.add(h);
+
+            h.jsroot_special = true; // exclude from intersections
+
+            c._highlight_mesh = h;
+         }
+         return true;
+      }
 
       if (col) {
          if (!c.origin)
@@ -85975,7 +86411,17 @@ class TGeoPainter extends ObjectPainter {
          clip: [{ name: 'x', enabled: false, value: 0, min: -100, max: 100 },
                 { name: 'y', enabled: false, value: 0, min: -100, max: 100 },
                 { name: 'z', enabled: false, value: 0, min: -100, max: 100 }],
-         ssao: { enabled: false, output: SSAOPass.OUTPUT.Default, kernelRadius: 0, minDistance: 0.001, maxDistance: 0.1 },
+         ssao: {
+            enabled: false, output: SSAOPass.OUTPUT.Default, kernelRadius: 0, minDistance: 0.001, maxDistance: 0.1,
+            outputItems: [
+               { name: 'Default', value: SSAOPass.OUTPUT.Default },
+               { name: 'SSAO Only', value: SSAOPass.OUTPUT.SSAO },
+               { name: 'SSAO Only + Blur', value: SSAOPass.OUTPUT.Blur },
+               { name: 'Beauty', value: SSAOPass.OUTPUT.Beauty },
+               { name: 'Depth', value: SSAOPass.OUTPUT.Depth },
+               { name: 'Normal', value: SSAOPass.OUTPUT.Normal }
+            ]
+         },
          bloom: { enabled: true, strength: 1.5 },
          info: { num_meshes: 0, num_faces: 0, num_shapes: 0 },
          highlight: false,
@@ -85986,25 +86432,37 @@ class TGeoPainter extends ObjectPainter {
          update_browser: true,
          light: { kind: 'points', top: false, bottom: false, left: false, right: false, front: false, specular: true, power: 1 },
          trans_radial: 0,
-         trans_z: 0
+         trans_z: 0,
+         depthMethodItems: [
+            { name: 'Default', value: 'dflt' },
+            { name: 'Raytraicing', value: 'ray' },
+            { name: 'Boundary box', value: 'box' },
+            { name: 'Mesh size', value: 'size' },
+            { name: 'Central point', value: 'pnt' }
+          ],
+          cameraKindItems: [
+            { name: 'Perspective', value: 'perspective' },
+            { name: 'Perspective (Floor XOZ)', value: 'perspXOZ' },
+            { name: 'Perspective (Floor YOZ)', value: 'perspYOZ' },
+            { name: 'Perspective (Floor XOY)', value: 'perspXOY' },
+            { name: 'Orthographic (XOY)', value: 'orthoXOY' },
+            { name: 'Orthographic (XOZ)', value: 'orthoXOZ' },
+            { name: 'Orthographic (ZOY)', value: 'orthoZOY' },
+            { name: 'Orthographic (ZOX)', value: 'orthoZOX' },
+            { name: 'Orthographic (XnOY)', value: 'orthoXNOY' },
+            { name: 'Orthographic (XnOZ)', value: 'orthoXNOZ' },
+            { name: 'Orthographic (ZnOY)', value: 'orthoZNOY' },
+            { name: 'Orthographic (ZnOX)', value: 'orthoZNOX' }
+         ],
+         cameraOverlayItems: [
+            { name: 'None', value: 'none' },
+            { name: 'Bar', value: 'bar' },
+            { name: 'Axis', value: 'axis' },
+            { name: 'Grid', value: 'grid' },
+            { name: 'Grid background', value: 'gridb' },
+            { name: 'Grid foreground', value: 'gridf' }
+         ]
       };
-
-      this.ctrl.depthMethodItems = [
-         { name: 'Default', value: 'dflt' },
-         { name: 'Raytraicing', value: 'ray' },
-         { name: 'Boundary box', value: 'box' },
-         { name: 'Mesh size', value: 'size' },
-         { name: 'Central point', value: 'pnt' }
-       ];
-
-      this.ctrl.ssao.outputItems = [
-         { name: 'Default', value: SSAOPass.OUTPUT.Default },
-         { name: 'SSAO Only', value: SSAOPass.OUTPUT.SSAO },
-         { name: 'SSAO Only + Blur', value: SSAOPass.OUTPUT.Blur },
-         { name: 'Beauty', value: SSAOPass.OUTPUT.Beauty },
-         { name: 'Depth', value: SSAOPass.OUTPUT.Depth },
-         { name: 'Normal', value: SSAOPass.OUTPUT.Normal }
-      ];
 
       this.cleanup(true);
    }
@@ -86281,14 +86739,16 @@ class TGeoPainter extends ObjectPainter {
          opt = opt.slice(4);
 
       let res = { _grid: false, _bound: false, _debug: false,
-                  _full: false, _axis: 0,
+                  _full: false, _axis: 0, instancing: 0,
                   _count: false, wireframe: false,
                    scale: new Vector3(1,1,1), zoom: 1.0, rotatey: 0, rotatez: 0,
-                   more: 1, maxlimit: 100000,
+                   more: 1, maxfaces: 0,
                    vislevel: undefined, maxnodes: undefined, dflt_colors: false,
                    use_worker: false, show_controls: false,
                    highlight: false, highlight_scene: false, no_screen: false,
-                   project: '', is_main: false, tracks: false, showtop: false, can_rotate: true, ortho_camera: false,
+                   project: '', projectPos: undefined,
+                   is_main: false, tracks: false, showtop: false, can_rotate: true,
+                   camera_kind: 'perspective', camera_overlay: 'none',
                    clipx: false, clipy: false, clipz: false, usessao: false, usebloom: true, outline: false,
                    script_name: '', transparency: 0, rotate: false, background: '#FFFFFF',
                    depthMethod: 'dflt', mouse_tmout: 50, trans_radial: 0, trans_z: 0 };
@@ -86332,8 +86792,15 @@ class TGeoPainter extends ObjectPainter {
       if (d.check('SHOWTOP')) res.showtop = true; // only for TGeoManager
       if (d.check('NO_SCREEN')) res.no_screen = true; // ignore kVisOnScreen bits for visibility
 
-      if (d.check('ORTHO_CAMERA_ROTATE')) { res.ortho_camera = true; res.can_rotate = true; }
-      if (d.check('ORTHO_CAMERA')) { res.ortho_camera = true; res.can_rotate = false; }
+      if (d.check('NOINSTANCING')) res.instancing = -1; // disable usage of InstancedMesh
+      if (d.check('INSTANCING')) res.instancing = 1; // force usage of InstancedMesh
+
+      if (d.check('ORTHO_CAMERA')) { res.camera_kind = 'orthoXOY'; res.can_rotate = false; }
+      if (d.check('ORTHO', true)) { res.camera_kind = 'ortho' + d.part; res.can_rotate = false; }
+      if (d.check('OVERLAY', true)) res.camera_overlay = d.part.toLowerCase();
+      if (d.check('CAN_ROTATE')) res.can_rotate = true;
+      if (d.check('PERSPECTIVE')) { res.camera_kind = 'perspective'; res.can_rotate = true; }
+      if (d.check('PERSP', true)) { res.camera_kind = 'persp' + d.part; res.can_rotate = true; }
       if (d.check('MOUSE_CLICK')) res.mouse_click = true;
 
       if (d.check('DEPTHRAY') || d.check('DRAY')) res.depthMethod = 'ray';
@@ -86345,7 +86812,22 @@ class TGeoPainter extends ObjectPainter {
       if (d.check('ZOOM', true)) res.zoom = d.partAsFloat(0, 100) / 100;
       if (d.check('ROTY', true)) res.rotatey = d.partAsFloat();
       if (d.check('ROTZ', true)) res.rotatez = d.partAsFloat();
-      if (d.check('VISLVL', true)) res.vislevel = d.partAsInt();
+
+      const getCamPart = () => {
+         let neg = 1;
+         if (d.part[0] == 'N') {
+            neg = -1;
+            d.part = d.part.slice(1);
+         }
+         return neg * d.partAsFloat();
+      };
+
+      if (d.check('CAMX', true)) res.camx = getCamPart();
+      if (d.check('CAMY', true)) res.camy = getCamPart();
+      if (d.check('CAMZ', true)) res.camz = getCamPart();
+      if (d.check('CAMLX', true)) res.camlx = getCamPart();
+      if (d.check('CAMLY', true)) res.camly = getCamPart();
+      if (d.check('CAMLZ', true)) res.camlz = getCamPart();
 
       if (d.check('BLACK')) res.background = '#000000';
       if (d.check('WHITE')) res.background = '#FFFFFF';
@@ -86365,9 +86847,12 @@ class TGeoPainter extends ObjectPainter {
       if (d.check('R3D_', true))
          res.Render3D = constants$1.Render3D.fromString(d.part.toLowerCase());
 
-      if (d.check('MORE3')) res.more = 3;
-      if (d.check('MORE')) res.more = 2;
-      if (d.check('ALL')) { res.more = 10; res.vislevel = 9; }
+      if (d.check('MORE', true)) res.more = d.partAsInt(0, 2) ?? 2;
+      if (d.check('ALL')) { res.more = 100; res.vislevel = 99; }
+
+      if (d.check('VISLVL', true)) res.vislevel = d.partAsInt();
+      if (d.check('MAXNODES', true)) res.maxnodes = d.partAsInt();
+      if (d.check('MAXFACES', true)) res.maxfaces = d.partAsInt();
 
       if (d.check('CONTROLS') || d.check('CTRL')) res.show_controls = true;
 
@@ -86411,7 +86896,7 @@ class TGeoPainter extends ObjectPainter {
       if (d.check('OPACITY',true))
          res.transparency = 1 - d.partAsInt(0,100)/100;
 
-      if (d.check('AXISCENTER') || d.check('AC')) res._axis = 2;
+      if (d.check('AXISCENTER') || d.check('AXISC') || d.check('AC')) res._axis = 2;
 
       if (d.check('TRR',true)) res.trans_radial = d.partAsInt()/100;
       if (d.check('TRZ',true)) res.trans_z = d.partAsInt()/100;
@@ -86513,7 +86998,11 @@ class TGeoPainter extends ObjectPainter {
       });
       menu.addchk(this.ctrl.show_controls, 'Show Controls', () => this.showControlOptions('toggle'));
 
-      menu.addchk(this.ctrl._axis, 'Show axes', () => this.setAxesDraw('toggle'));
+      menu.add('sub:Show axes', () => this.setAxesDraw('toggle'));
+      menu.addchk(this.ctrl._axis == 0, 'off', 0, arg => this.setAxesDraw(parseInt(arg)));
+      menu.addchk(this.ctrl._axis == 1, 'side', 1, arg => this.setAxesDraw(parseInt(arg)));
+      menu.addchk(this.ctrl._axis == 2, 'center', 2, arg => this.setAxesDraw(parseInt(arg)));
+      menu.add('endsub:');
 
       if (this.geo_manager)
          menu.addchk(this.ctrl.showtop, 'Show top volume', () => this.setShowTop(!this.ctrl.showtop));
@@ -86531,8 +87020,37 @@ class TGeoPainter extends ObjectPainter {
       });
       menu.add('Reset camera position', () => this.focusCamera());
 
-      if (!this._geom_viewer)
-         menu.add('Get camera position', () => menu.info('Position (as url)', '&opt=' + this.produceCameraUrl()));
+      if (!this._geom_viewer) {
+         menu.add('sub:Camera');
+
+         menu.add('Get position', () => menu.info('Position (as url)', '&opt=' + this.produceCameraUrl()));
+         if (!this.isOrthoCamera())
+            menu.add('Absolute position', () => {
+               let url =  this.produceCameraUrl(true), p = url.indexOf('camlx');
+               menu.info('Position (as url)', '&opt=' + ((p < 0) ? url : url.slice(0,p) + '\n' + url.slice(p)));
+            });
+
+         menu.add('sub:Kind');
+         this.ctrl.cameraKindItems.forEach(item =>
+            menu.addchk(this.ctrl.camera_kind == item.value, item.name, item.value, arg => {
+               this.ctrl.camera_kind = arg;
+               this.changeCamera();
+            }));
+         menu.add('endsub:');
+
+         if (this.isOrthoCamera()) {
+            menu.addchk(this.ctrl.can_rotate, 'Can rotate', () => this.changeCanRotate(!this.ctrl.can_rotate));
+            menu.add('sub:Overlay');
+            this.ctrl.cameraOverlayItems.forEach(item =>
+               menu.addchk(this.ctrl.camera_overlay == item.value, item.name, item.value, arg => {
+                  this.ctrl.camera_overlay = arg;
+                  this.changeCamera();
+               }));
+            menu.add('endsub:');
+         }
+
+         menu.add('endsub:');
+      }
 
       if (!this.ctrl.project)
          menu.addchk(this.ctrl.rotate, 'Autorotate', () => this.setAutoRotate(!this.ctrl.rotate));
@@ -86580,47 +87098,94 @@ class TGeoPainter extends ObjectPainter {
          ctrl.trans_z = ctrl.trans_radial = 0;
 
       this._toplevel.traverse(mesh => {
-         if (mesh.stack === undefined) return;
+         if (mesh.stack !== undefined) {
 
-         let node = mesh.parent;
+            let node = mesh.parent;
 
-         if (arg == 'reset') {
-            if (node.matrix0) {
-               node.matrix.copy(node.matrix0);
-               node.matrix.decompose( node.position, node.quaternion, node.scale );
-               node.matrixWorldNeedsUpdate = true;
+            if (arg == 'reset') {
+               if (node.matrix0) {
+                  node.matrix.copy(node.matrix0);
+                  node.matrix.decompose(node.position, node.quaternion, node.scale);
+                  node.matrixWorldNeedsUpdate = true;
+               }
+               delete node.matrix0;
+               delete node.vect0;
+               delete node.vect1;
+               delete node.minvert;
+               return;
             }
-            delete node.matrix0;
-            delete node.vect0;
-            delete node.vect1;
-            delete node.minvert;
-            return;
+
+            if (node.vect0 === undefined) {
+               node.matrix0 = node.matrix.clone();
+               node.minvert = new Matrix4().copy(node.matrixWorld).invert();
+
+               let box3 = getBoundingBox(mesh, null, true),
+                   signz = mesh._flippedMesh ? -1 : 1;
+
+               // real center of mesh in local coordinates
+               node.vect0 = new Vector3((box3.max.x + box3.min.x) / 2, (box3.max.y + box3.min.y) / 2, signz * (box3.max.z + box3.min.z) / 2).applyMatrix4(node.matrixWorld);
+               node.vect1 = new Vector3(0,0,0).applyMatrix4(node.minvert);
+            }
+
+            vect2.set(ctrl.trans_radial * node.vect0.x, ctrl.trans_radial * node.vect0.y, ctrl.trans_z * node.vect0.z).applyMatrix4(node.minvert).sub(node.vect1);
+
+            node.matrix.multiplyMatrices(node.matrix0, translation.makeTranslation(vect2.x, vect2.y, vect2.z));
+            node.matrix.decompose(node.position, node.quaternion, node.scale);
+            node.matrixWorldNeedsUpdate = true;
+         } else if (mesh.stacks !== undefined) {
+
+            mesh.instanceMatrix.needsUpdate = true;
+
+            if (arg == 'reset') {
+               mesh.trans?.forEach((item,i) => {
+                  mesh.setMatrixAt(i, item.matrix0);
+               });
+               delete mesh.trans;
+               return;
+            }
+
+            if (mesh.trans === undefined) {
+               mesh.trans = new Array(mesh.count);
+
+               mesh.geometry.computeBoundingBox();
+
+               for (let i = 0; i < mesh.count; i++) {
+                  let item = {
+                     matrix0: new Matrix4(),
+                     minvert: new Matrix4()
+                  };
+
+                  mesh.trans[i] = item;
+
+                  mesh.getMatrixAt(i, item.matrix0);
+                  item.minvert.copy(item.matrix0).invert();
+
+                  let box3 = new Box3().copy(mesh.geometry.boundingBox).applyMatrix4(item.matrix0),
+                      signz = 1; //mesh._flippedMesh ? -1 : 1;
+
+                  item.vect0 = new Vector3((box3.max.x + box3.min.x) / 2, (box3.max.y + box3.min.y) / 2, signz * (box3.max.z + box3.min.z) / 2);// .applyMatrix4(item.matrix0);
+                  item.vect1 = new Vector3(0,0,0).applyMatrix4(item.minvert);
+               }
+            }
+
+            let mm = new Matrix4();
+
+            mesh.trans?.forEach((item,i) => {
+               vect2.set(ctrl.trans_radial * item.vect0.x, ctrl.trans_radial * item.vect0.y, ctrl.trans_z * item.vect0.z).applyMatrix4(item.minvert).sub(item.vect1);
+
+               mm.multiplyMatrices(item.matrix0, translation.makeTranslation(vect2.x, vect2.y, vect2.z));
+
+               mesh.setMatrixAt(i, mm);
+            });
+
          }
-
-         if (node.vect0 === undefined) {
-            node.matrix0 = node.matrix.clone();
-            node.minvert = new Matrix4().copy(node.matrixWorld).invert();
-
-            let box3 = getBoundingBox(mesh, null, true),
-                signz = mesh._flippedMesh ? -1 : 1;
-
-            // real center of mesh in local coordinates
-            node.vect0 = new Vector3((box3.max.x  + box3.min.x) / 2, (box3.max.y  + box3.min.y) / 2, signz * (box3.max.z  + box3.min.z) / 2).applyMatrix4(node.matrixWorld);
-            node.vect1 = new Vector3(0,0,0).applyMatrix4(node.minvert);
-         }
-
-         vect2.set(ctrl.trans_radial * node.vect0.x, ctrl.trans_radial * node.vect0.y, ctrl.trans_z * node.vect0.z).applyMatrix4(node.minvert).sub(node.vect1);
-
-         node.matrix.multiplyMatrices(node.matrix0, translation.makeTranslation(vect2.x, vect2.y, vect2.z));
-         node.matrix.decompose( node.position, node.quaternion, node.scale );
-         node.matrixWorldNeedsUpdate = true;
       });
 
       this._toplevel.updateMatrixWorld();
 
       // axes drawing always triggers rendering
       if (arg != 'norender')
-         this.drawSimpleAxis();
+         this.drawAxesAndOverlay();
    }
 
    /** @summary Should be called when autorotate property changed */
@@ -86633,7 +87198,7 @@ class TGeoPainter extends ObjectPainter {
       if (isStr(this.ctrl._axis))
          this.ctrl._axis = parseInt(this.ctrl._axis);
 
-      this.drawSimpleAxis();
+      this.drawAxesAndOverlay();
    }
 
    /** @summary Method should be called to change background color */
@@ -86774,18 +87339,31 @@ class TGeoPainter extends ObjectPainter {
       appearance.add(this.ctrl, 'wireframe').name('Wireframe')
                      .listen().onChange(() => this.changedWireFrame());
 
-      this.ctrl._axis_cfg = 0;
-      appearance.add(this.ctrl, '_axis', { 'none': 0, 'show': 1, 'center': 2 }).name('Axes')
+      appearance.add(this.ctrl, '_axis', { none: 0, side: 1, center: 2 }).name('Axes')
                     .onChange(() => this.changedAxes());
 
       if (!this.ctrl.project)
          appearance.add(this.ctrl, 'rotate').name('Autorotate')
                       .listen().onChange(() => this.changedAutoRotate());
 
-      appearance.add(this, 'focusCamera').name('Reset camera position');
+      // Camera options
+      let camera = this._datgui.addFolder('Camera'), camcfg = {}, overlaysfg = {};
+
+      this.ctrl.cameraKindItems.forEach(i => { camcfg[i.name] = i.value; });
+      this.ctrl.cameraOverlayItems.forEach(i => { overlaysfg[i.name] = i.value; });
+
+      camera.add(this.ctrl, 'camera_kind', camcfg)
+            .name('Kind').listen().onChange(() => this.changeCamera());
+
+      camera.add(this.ctrl, 'can_rotate').name('Allow rotate')
+                .listen().onChange(() => this.changeCanRotate());
+
+      camera.add(this, 'focusCamera').name('Reset position');
+
+      camera.add(this.ctrl, 'camera_overlay', overlaysfg)
+            .name('Overlay').listen().onChange(() => this.changeCamera());
 
       // Advanced Options
-
       if (this._webgl) {
          let advanced = this._datgui.addFolder('Advanced'), depthcfg = {};
          this.ctrl.depthMethodItems.forEach(i => { depthcfg[i.name] = i.value; });
@@ -86796,9 +87374,6 @@ class TGeoPainter extends ObjectPainter {
          advanced.add( this.ctrl, 'depthMethod', depthcfg)
              .name('Rendering order')
              .onChange(method => this.changedDepthMethod(method));
-
-         advanced.add(this.ctrl, 'ortho_camera').name('Orhographic camera')
-                 .listen().onChange(() => this.changeCamera());
 
          advanced.add(this, 'resetAdvanced').name('Reset');
       }
@@ -86867,24 +87442,43 @@ class TGeoPainter extends ObjectPainter {
          });
    }
 
+   /** @summary Handle change of can rotate */
+   changeCanRotate(on) {
+      if (on !== undefined)
+         this.ctrl.can_rotate = on;
+      if (this._controls)
+         this._controls.enableRotate = this.ctrl.can_rotate;
+   }
+
    /** @summary Handle change of camera kind */
    changeCamera() {
       // force control recreation
       if (this._controls) {
           this._controls.cleanup();
           delete this._controls;
-       }
+      }
 
-       this.removeBloom();
-       this.removeSSAO();
+      this.removeBloom();
+      this.removeSSAO();
 
       // recreate camera
       this.createCamera();
 
       this.createSpecialEffects();
 
-      this._first_drawing = true;
-      this.startDrawGeometry(true);
+      // set proper position
+      this.adjustCameraPosition(true);
+
+      // this.drawOverlay();
+
+      this.addOrbitControls();
+
+      this.render3D();
+
+      // delete this._scene_size; // ensure reassign of camera position
+
+      // this._first_drawing = true;
+      // this.startDrawGeometry(true);
    }
 
    /** @summary create bloom effect */
@@ -86948,9 +87542,8 @@ class TGeoPainter extends ObjectPainter {
          let numitems = 0, numnodes = 0, cnt = 0;
          if (intersects)
             for (let n = 0; n < intersects.length; ++n) {
-               let obj = intersects[n].object;
-               if (obj.stack) numnodes++;
-               if (obj.geo_name) numitems++;
+               if (getIntersectStack(intersects[n])) numnodes++;
+               if (intersects[n].geo_name) numitems++;
             }
 
          if (numnodes + numitems === 0) {
@@ -86962,7 +87555,7 @@ class TGeoPainter extends ObjectPainter {
 
             for (let n = 0; n < intersects.length; ++n) {
                let obj = intersects[n].object,
-                   name, itemname, hdr;
+                   name, itemname, hdr, stack = getIntersectStack(intersects[n]);
 
                if (obj.geo_name) {
                   itemname = obj.geo_name;
@@ -86971,9 +87564,9 @@ class TGeoPainter extends ObjectPainter {
                   name = itemname.slice(itemname.lastIndexOf('/')+1);
                   if (!name) name = itemname;
                   hdr = name;
-               } else if (obj.stack) {
-                  name = this._clones.getStackName(obj.stack);
-                  itemname = this.getStackFullName(obj.stack);
+               } else if (stack) {
+                  name = this._clones.getStackName(stack);
+                  itemname = this.getStackFullName(stack);
                   hdr = this.getItemName();
                   if (name.indexOf('Nodes/') === 0)
                      hdr = name.slice(6);
@@ -87000,9 +87593,10 @@ class TGeoPainter extends ObjectPainter {
                   if (cnt > 1)
                      menu.add('Hide all before', n, indx => {
                         let items = [];
-                        for (let i = 0; i < indx; ++i)
-                           if (intersects[i].object.stack)
-                              items.push(this.getStackFullName(intersects[i].object.stack));
+                        for (let i = 0; i < indx; ++i) {
+                           let stack = getIntersectStack(intersects[i]);
+                           if (stack) items.push(this.getStackFullName(stack));
+                        }
                         this.hidePhysicalNode(items);
                      });
                } else if (obj.geo_name) {
@@ -87068,14 +87662,14 @@ class TGeoPainter extends ObjectPainter {
 
                      this.testGeomChanges();// while many volumes may disappear, recheck all of them
                   }, 'Hide all logical nodes of that kind');
-                  menu.add('Hide only this', n, function(indx) {
-                     this._clones.setPhysNodeVisibility(intersects[indx].object?.stack, false);
+                  menu.add('Hide only this', n, indx => {
+                     this._clones.setPhysNodeVisibility(getIntersectStack(intersects[indx]), false);
                      this.testGeomChanges();
                   }, 'Hide only this physical node');
                   if (n > 1)
-                     menu.add('Hide all before', n, function(indx) {
+                     menu.add('Hide all before', n, indx => {
                         for (let k = 0; k < indx; ++k)
-                           this._clones.setPhysNodeVisibility(intersects[k].object?.stack, false);
+                           this._clones.setPhysNodeVisibility(getIntersectStack(intersects[k]), false);
                         this.testGeomChanges();
                      }, 'Hide all physical nodes before that');
                }
@@ -87103,14 +87697,14 @@ class TGeoPainter extends ObjectPainter {
       for (let n = intersects.length - 1; n >= 0; --n) {
 
          let obj = intersects[n].object,
-            unique = obj.visible && ((obj.stack !== undefined) || (obj.geo_name !== undefined));
+             unique = obj.visible && (getIntersectStack(intersects[n]) || (obj.geo_name !== undefined));
 
          if (unique && obj.material && (obj.material.opacity !== undefined))
             unique = (obj.material.opacity >= 0.1);
 
          if (obj.jsroot_special) unique = false;
 
-         for (let k = 0; (k < n) && unique;++k)
+         for (let k = 0; (k < n) && unique; ++k)
             if (intersects[k].object === obj)
                unique = false;
 
@@ -87298,7 +87892,8 @@ class TGeoPainter extends ObjectPainter {
 
       this._controls.mouse_tmout = this.ctrl.mouse_tmout; // set larger timeout for geometry processing
 
-      if (!this.ctrl.can_rotate) this._controls.enableRotate = false;
+      if (!this.ctrl.can_rotate)
+         this._controls.enableRotate = false;
 
       this._controls.contextMenu = this.orbitContext.bind(this);
 
@@ -87307,16 +87902,16 @@ class TGeoPainter extends ObjectPainter {
          // painter already cleaned up, ignore any incoming events
          if (!this.ctrl || !this._controls) return;
 
-         let active_mesh = null, tooltip = null, resolve = null, names = [], geo_object, geo_index;
+         let active_mesh = null, tooltip = null, resolve = null, names = [], geo_object, geo_index, geo_stack;
 
          // try to find mesh from intersections
          for (let k = 0; k < intersects.length; ++k) {
-            let obj = intersects[k].object, info = null;
+            let obj = intersects[k].object, info = null, stack = getIntersectStack(intersects[k]);
             if (!obj || !obj.visible) continue;
             if (obj.geo_object)
                info = obj.geo_name;
-            else if (obj.stack)
-               info = this.getStackFullName(obj.stack);
+            else if (stack)
+               info = this.getStackFullName(stack);
             if (!info) continue;
 
             if (info.indexOf('<prnt>') == 0)
@@ -87333,7 +87928,12 @@ class TGeoPainter extends ObjectPainter {
                   if ((geo_index !== undefined) && isStr(tooltip))
                      tooltip += ' indx:' + JSON.stringify(geo_index);
                }
-               if (active_mesh.stack) resolve = this.resolveStack(active_mesh.stack);
+               geo_stack = stack;
+
+               if (geo_stack) {
+                  resolve = this.resolveStack(geo_stack);
+                  if (obj.stacks) geo_index = intersects[k].instanceId;
+               }
             }
          }
 
@@ -87344,7 +87944,8 @@ class TGeoPainter extends ObjectPainter {
             this.activateInBrowser(names);
          }
 
-         if (!resolve?.obj) return tooltip;
+         if (!resolve?.obj)
+            return tooltip;
 
          let lines = provideObjectInfo(resolve.obj);
          lines.unshift(tooltip);
@@ -87366,10 +87967,10 @@ class TGeoPainter extends ObjectPainter {
                this._last_hidden.forEach(obj => { obj.visible = true; });
             delete this._last_hidden;
             delete this._last_manifest;
-            this.render3D();
          } else {
             this.adjustCameraPosition(true);
          }
+         this.render3D();
       };
    }
 
@@ -87465,7 +88066,7 @@ class TGeoPainter extends ObjectPainter {
             }
          }
 
-         this._current_face_limit = this.ctrl.maxlimit;
+         this._current_face_limit = this.ctrl.maxfaces;
          if (matrix) this._current_face_limit *= 1.25;
 
          // here we decide if we need worker for the drawings
@@ -87591,6 +88192,7 @@ class TGeoPainter extends ObjectPainter {
 
          if (this.isStage(stageBuild)) {
             // building shapes
+
             let res = this._clones.buildShapes(this._build_shapes, this._current_face_limit, 500);
             if (res.done) {
                this.ctrl.info.num_shapes = this._build_shapes.length;
@@ -87598,38 +88200,33 @@ class TGeoPainter extends ObjectPainter {
             } else {
                this.ctrl.info.num_shapes = res.shapes;
                this.drawing_log = `Creating: ${res.shapes} / ${this._build_shapes.length} shapes,  ${res.faces} faces`;
-               if (res.notusedshapes < 30) return true;
+               return true;
+               //if (res.notusedshapes < 30) return true;
             }
          }
 
          // final stage, create all meshes
 
          let tm0 = new Date().getTime(), ready = true,
-             toplevel = this.ctrl.project ? this._full_geom : this._toplevel;
+             toplevel = this.ctrl.project ? this._full_geom : this._toplevel,
+             build_instanced = false;
 
-         for (let n = 0; n < this._draw_nodes.length; ++n) {
-            let entry = this._draw_nodes[n];
-            if (entry.done) continue;
+         if (!this.ctrl.project)
+            build_instanced = this._clones.createInstancedMeshes(this.ctrl, toplevel, this._draw_nodes, this._build_shapes, getRootColors());
 
-            /// shape can be provided with entry itself
-            let shape = entry.server_shape || this._build_shapes[entry.shapeid];
-            if (!shape.ready) {
-               if (this.isStage(stageBuildReady)) console.warn('shape marked as not ready when should');
-               ready = false;
-               continue;
+         if (!build_instanced)
+            for (let n = 0; n < this._draw_nodes.length; ++n) {
+               let entry = this._draw_nodes[n];
+               if (entry.done) continue;
+
+               /// shape can be provided with entry itself
+               let shape = entry.server_shape || this._build_shapes[entry.shapeid];
+
+               this.createEntryMesh(entry, shape, toplevel);
+
+               let tm1 = new Date().getTime();
+               if (tm1 - tm0 > 500) { ready = false; break; }
             }
-
-            entry.done = true;
-            shape.used = true; // indicate that shape was used in building
-
-            if (this.createEntryMesh(entry, shape, toplevel)) {
-               this.ctrl.info.num_meshes++;
-               this.ctrl.info.num_faces += shape.nfaces;
-            }
-
-            let tm1 = new Date().getTime();
-            if (tm1 - tm0 > 500) { ready = false; break; }
-         }
 
          if (ready) {
             if (this.ctrl.project) {
@@ -87671,12 +88268,6 @@ class TGeoPainter extends ObjectPainter {
    /** @summary Insert appropriate mesh for given entry */
    createEntryMesh(entry, shape, toplevel) {
 
-      if (!shape.geom || (shape.nfaces === 0)) {
-         // node is visible, but shape does not created
-         this._clones.createObject3D(entry.stack, toplevel, 'delete_mesh');
-         return false;
-      }
-
       // workaround for the TGeoOverlap, where two branches should get predefined color
       if (this._splitColors && entry.stack) {
          if (entry.stack[0] === 0)
@@ -87685,49 +88276,18 @@ class TGeoPainter extends ObjectPainter {
             entry.custom_color = 'blue';
       }
 
-      let prop = this._clones.getDrawEntryProperties(entry, getRootColors()),
-          obj3d = this._clones.createObject3D(entry.stack, toplevel, this.ctrl),
-          matrix = obj3d.absMatrix || obj3d.matrixWorld, mesh;
+      let mesh = this._clones.createEntryMesh(this.ctrl, toplevel, entry, shape, getRootColors());
 
-      prop.material.wireframe = this.ctrl.wireframe;
-
-      prop.material.side = this.ctrl.bothSides ? DoubleSide : FrontSide;
-
-      if (matrix.determinant() > -0.9) {
-         mesh = new Mesh(shape.geom, prop.material);
-      } else {
-         mesh = createFlippedMesh(shape, prop.material);
-      }
-
-      obj3d.add(mesh);
-
-      if (obj3d.absMatrix) {
-         mesh.matrix.copy(obj3d.absMatrix);
-         mesh.matrix.decompose(mesh.position, mesh.quaternion, mesh.scale);
-         mesh.updateMatrixWorld();
-      }
-
-      // keep full stack of nodes
-      mesh.stack = entry.stack;
-      mesh.renderOrder = this._clones.maxdepth - entry.stack.length; // order of transparency handling
-
-      // keep hierarchy level
-      mesh.$jsroot_order = obj3d.$jsroot_depth;
-
-      // set initial render order, when camera moves, one must refine it
-      //mesh.$jsroot_order = mesh.renderOrder =
-      //   this._clones.maxdepth - ((obj3d.$jsroot_depth !== undefined) ? obj3d.$jsroot_depth : entry.stack.length);
-
-      if (this.ctrl._debug || this.ctrl._full) {
+      if (mesh && (this.ctrl._debug || this.ctrl._full)) {
          let wfg = new WireframeGeometry( mesh.geometry ),
-             wfm = new LineBasicMaterial({ color: prop.fillcolor, linewidth: prop.linewidth || 1 }),
+             wfm = new LineBasicMaterial({ color: mesh.material.color, linewidth: 1 }),
              helper = new LineSegments(wfg, wfm);
-         obj3d.add(helper);
+         mesh.parent.add(helper);
       }
 
-      if (this.ctrl._bound || this.ctrl._full) {
+      if (mesh && (this.ctrl._bound || this.ctrl._full)) {
          let boxHelper = new BoxHelper( mesh );
-         obj3d.add( boxHelper );
+         mesh.parent.add(boxHelper);
       }
 
       return true;
@@ -87763,9 +88323,6 @@ class TGeoPainter extends ObjectPainter {
          let entry = nodes[k],
              shape = entry.server_shape;
          if (!shape?.ready) continue;
-
-         entry.done = true;
-         shape.used = true; // indicate that shape was used in building
 
          if (this.createEntryMesh(entry, shape, this._toplevel))
             real_nodes.push(entry);
@@ -87808,7 +88365,7 @@ class TGeoPainter extends ObjectPainter {
 
       topitem.traverse(mesh => {
          if (check_any || (mesh.stack && (mesh instanceof Mesh)) ||
-             (mesh.main_track && (mesh instanceof LineSegments)))
+             (mesh.main_track && (mesh instanceof LineSegments)) || (mesh.stacks && (mesh instanceof InstancedMesh)))
             getBoundingBox(mesh, box3);
       });
 
@@ -87916,6 +88473,11 @@ class TGeoPainter extends ObjectPainter {
       if (need_render) this.render3D();
    }
 
+   /** @summary Returns true if orthogarphic camera is used */
+   isOrthoCamera() {
+      return this.ctrl.camera_kind.indexOf('ortho') == 0;
+   }
+
    /** @summary Create configured camera */
    createCamera() {
 
@@ -87925,7 +88487,7 @@ class TGeoPainter extends ObjectPainter {
           delete this._camera;
        }
 
-      if (this.ctrl.ortho_camera) {
+      if (this.isOrthoCamera()) {
          this._camera = new OrthographicCamera(-this._scene_width/2, this._scene_width/2, this._scene_height/2, -this._scene_height/2, 1, 10000);
       } else {
          this._camera = new PerspectiveCamera(25, this._scene_width / this._scene_height, 1, 10000);
@@ -88031,7 +88593,7 @@ class TGeoPainter extends ObjectPainter {
 
          this._animating = false;
 
-         this.ctrl.bothSides = false; // both sides need for clipping
+         this.ctrl.doubleside = false; // both sides need for clipping
          this.createSpecialEffects();
 
          if (this._fit_main_area && !this._webgl) {
@@ -88135,11 +88697,38 @@ class TGeoPainter extends ObjectPainter {
    }
 
    /** @summary Returns url parameters defining camera position.
-     * @desc It is zoom, roty, rotz parameters
-     * These parameters applied from default position which is shift along X axis */
-   produceCameraUrl(prec) {
+     * @desc Either absolute position are provided (arg == true) or zoom, roty, rotz parameters */
+   produceCameraUrl(arg) {
 
-      if (!this._lookat || !this._camera0pos || !this._camera || !this.ctrl) return;
+      if (!this._camera)
+         return '';
+
+      if (this._camera.isOrthographicCamera) {
+         let zoom = Math.round(this._camera.zoom * 100);
+         return this.ctrl.camera_kind + (zoom == 100 ? '' : `,zoom=${zoom}`);
+      }
+
+      let kind = '';
+      if (this.ctrl.camera_kind != 'perspective')
+        kind = this.ctrl.camera_kind + ',';
+
+      if (arg === true) {
+         let p = this._camera?.position, t = this._controls?.target;
+         if (!p || !t) return '';
+
+         const conv = v => {
+            let s = '';
+            if (v < 0) { s = 'n'; v = -v; }
+            return s + v.toFixed(0);
+         };
+
+         let res = `${kind}camx${conv(p.x)},camy${conv(p.y)},camz${conv(p.z)}`;
+         if (t.x || t.y || t.z) res += `,camlx${conv(t.x)},camly${conv(t.y)},camlz${conv(t.z)}`;
+         return res;
+      }
+
+      if (!this._lookat || !this._camera0pos || !this._camera || !this.ctrl)
+         return '';
 
       let pos1 = new Vector3().add(this._camera0pos).sub(this._lookat),
           pos2 = new Vector3().add(this._camera.position).sub(this._lookat),
@@ -88158,9 +88747,7 @@ class TGeoPainter extends ObjectPainter {
 
       if (roty < 0) roty += 360;
       if (rotz < 0) rotz += 360;
-      prec = prec || 0;
-
-      return `roty${roty.toFixed(prec)},rotz${rotz.toFixed(prec)},zoom${zoom.toFixed(prec)}`;
+      return `${kind}roty${roty.toFixed(0)},rotz${rotz.toFixed(0)},zoom${zoom.toFixed(0)}`;
    }
 
    /** @summary Calculates current zoom factor */
@@ -88188,14 +88775,18 @@ class TGeoPainter extends ObjectPainter {
       // console.log('min,max', box.min.x, box.max.x, box2.min.x, box2.max.x);
 
       // if detect of coordinates fails - ignore
-      if (!Number.isFinite(box.min.x)) return;
+      if (!Number.isFinite(box.min.x)) {
+         console.log('FAILS to get geometry bounding box');
+         return;
+      }
 
       let sizex = box.max.x - box.min.x,
           sizey = box.max.y - box.min.y,
           sizez = box.max.z - box.min.z,
           midx = (box.max.x + box.min.x)/2,
           midy = (box.max.y + box.min.y)/2,
-          midz = (box.max.z + box.min.z)/2;
+          midz = (box.max.z + box.min.z)/2,
+          more = this.ctrl._axis || (this.ctrl.camera_overlay == 'bar')  ? 0.2 : 0.1;
 
       if (this._scene_size && !force) {
          const d = this._scene_size, test = (v1, v2, scale) => {
@@ -88216,9 +88807,9 @@ class TGeoPainter extends ObjectPainter {
       this._overall_size = 2 * Math.max(sizex, sizey, sizez);
 
       this._camera.near = this._overall_size / 350;
-      this._camera.far = this._overall_size * 12;
+      this._camera.far = this._overall_size * 100;
       this._scene.fog.near = this._overall_size * 2;
-      this._scene.fog.far = this._overall_size * 12;
+      this._scene.fog.far = this._overall_size * 100;
 
       if (first_time)
          for (let naxis = 0; naxis < 3; ++naxis) {
@@ -88236,19 +88827,15 @@ class TGeoPainter extends ObjectPainter {
                cc.value = cc.max;
          }
 
-      if (this.ctrl.ortho_camera) {
-         this._camera.left = box.min.x;
-         this._camera.right = box.max.x;
-         this._camera.top = box.max.y;
-         this._camera.bottom = box.min.y;
-      }
-
-      // this._camera.far = 100000000000;
-
-      this._camera.updateProjectionMatrix();
-
       let k = 2*this.ctrl.zoom,
-          max_all = Math.max(sizex,sizey,sizez);
+          max_all = Math.max(sizex, sizey, sizez),
+          sign = this.ctrl.camera_kind.indexOf('N') > 0 ? -1 : 1;
+
+      this._lookat = new Vector3(midx, midy, midz);
+      this._camera0pos = new Vector3(-2*max_all, 0, 0); // virtual 0 position, where rotation starts
+
+      this._camera.updateMatrixWorld();
+      this._camera.updateProjectionMatrix();
 
       if ((this.ctrl.rotatey || this.ctrl.rotatez) && this.ctrl.can_rotate) {
 
@@ -88269,24 +88856,103 @@ class TGeoPainter extends ObjectPainter {
             this._camera.position.applyEuler(euler);
             this._camera.position.add(new Vector3(midx,midy,midz));
          }
-
-      } else if (this.ctrl.ortho_camera) {
-         this._camera.position.set(midx, midy, Math.max(sizex,sizey));
+      } else if (this.ctrl.camx !== undefined && this.ctrl.camy !== undefined && this.ctrl.camz !== undefined) {
+         this._camera.position.set(this.ctrl.camx, this.ctrl.camy, this.ctrl.camz);
+         this._lookat.set(this.ctrl.camlx || 0, this.ctrl.camly || 0, this.ctrl.camlz || 0);
+         this.ctrl.camx = this.ctrl.camy = this.ctrl.camz = this.ctrl.camlx = this.ctrl.camly = this.ctrl.camlz = undefined;
+      } else if ((this.ctrl.camera_kind == 'orthoXOY') || (this.ctrl.camera_kind == 'orthoXNOY')) {
+         this._camera.up.set(0, 1, 0);
+         this._camera.position.set(sign < 0 ? midx*2 : 0, 0, midz + sign*sizez*2);
+         this._lookat.set(sign < 0 ? midx*2 : 0, 0, midz);
+         this._camera.left = box.min.x - more*sizex;
+         this._camera.right = box.max.x + more*sizex;
+         this._camera.top = box.max.y + more*sizey;
+         this._camera.bottom = box.min.y - more*sizey;
+         if (!keep_zoom) this._camera.zoom = this.ctrl.zoom || 1;
+         this._camera.orthoSign = sign;
+         this._camera.orthoZ = [midz, sizez/2];
+      } else if ((this.ctrl.camera_kind == 'orthoXOZ') || (this.ctrl.camera_kind == 'orthoXNOZ')) {
+         this._camera.up.set(0, 0, 1);
+         this._camera.position.set(sign < 0 ? midx*2 : 0, midy - sign*sizey*2, 0);
+         this._lookat.set(sign < 0 ? midx*2 : 0, midy, 0);
+         this._camera.left = box.min.x - more*sizex;
+         this._camera.right = box.max.x + more*sizex;
+         this._camera.top = box.max.z + more*sizez;
+         this._camera.bottom = box.min.z - more*sizez;
+         if (!keep_zoom) this._camera.zoom = this.ctrl.zoom || 1;
+         this._camera.orthoIndicies = [0, 2, 1];
+         this._camera.orthoRotation = geom => geom.rotateX(Math.PI/2);
+         this._camera.orthoSign = sign;
+         this._camera.orthoZ = [midy, -sizey/2];
+      } else if ((this.ctrl.camera_kind == 'orthoZOY') || (this.ctrl.camera_kind == 'orthoZNOY')) {
+         this._camera.up.set(0, 1, 0);
+         this._camera.position.set(midx - sign*sizex*2, 0, sign < 0 ? midz*2 : 0);
+         this._lookat.set(midx, 0, sign < 0 ? midz*2 : 0);
+         this._camera.left = box.min.z - more*sizez;
+         this._camera.right = box.max.z + more*sizez;
+         this._camera.top = box.max.y + more*sizey;
+         this._camera.bottom = box.min.y - more*sizey;
+         if (!keep_zoom) this._camera.zoom = this.ctrl.zoom || 1;
+         this._camera.orthoIndicies = [2, 1, 0];
+         this._camera.orthoRotation = geom => geom.rotateY(-Math.PI/2);
+         this._camera.orthoSign = sign;
+         this._camera.orthoZ = [midx, -sizex/2];
+      } else if ((this.ctrl.camera_kind == 'orthoZOX') || (this.ctrl.camera_kind == 'orthoZNOX')) {
+         this._camera.up.set(1, 0, 0);
+         this._camera.position.set(0, midy - sign*sizey*2, sign > 0 ? midz*2 : 0);
+         this._lookat.set(0, midy, sign > 0 ? midz*2 : 0);
+         this._camera.left = box.min.z - more*sizez;
+         this._camera.right = box.max.z + more*sizez;
+         this._camera.top = box.max.x + more*sizex;
+         this._camera.bottom = box.min.x - more*sizex;
+         if (!keep_zoom) this._camera.zoom = this.ctrl.zoom || 1;
+         this._camera.orthoIndicies = [2, 0, 1];
+         this._camera.orthoRotation = geom => geom.rotateX(Math.PI/2).rotateY(Math.PI/2);
+         this._camera.orthoSign = sign;
+         this._camera.orthoZ = [midy, -sizey/2];
       } else if (this.ctrl.project) {
          switch (this.ctrl.project) {
             case 'x': this._camera.position.set(k*1.5*Math.max(sizey,sizez), 0, 0); break;
             case 'y': this._camera.position.set(0, k*1.5*Math.max(sizex,sizez), 0); break;
             case 'z': this._camera.position.set(0, 0, k*1.5*Math.max(sizex,sizey)); break;
          }
+      } else if (this.ctrl.camera_kind == 'perspXOZ') {
+         this._camera.up.set(0,1,0);
+         this._camera.position.set(midx - 3*max_all, midy, midz);
+      } else if (this.ctrl.camera_kind == 'perspYOZ') {
+         this._camera.up.set(1,0,0);
+         this._camera.position.set(midx, midy - 3*max_all, midz);
+      } else if (this.ctrl.camera_kind == 'perspXOY') {
+         this._camera.up.set(0,0,1);
+         this._camera.position.set(midx - 3*max_all, midy, midz);
       } else if (this.ctrl._yup) {
+         this._camera.up.set(0,1,0);
          this._camera.position.set(midx-k*Math.max(sizex,sizez), midy+k*sizey, midz-k*Math.max(sizex,sizez));
       } else {
+         this._camera.up.set(0,0,1);
          this._camera.position.set(midx-k*Math.max(sizex,sizey), midy-k*Math.max(sizex,sizey), midz+k*sizez);
       }
 
-      this._lookat = new Vector3(midx, midy, midz);
-      this._camera0pos = new Vector3(-2*max_all, 0, 0); // virtual 0 position, where rotation starts
+      if (this._camera.isOrthographicCamera && this.isOrthoCamera() && this._scene_width && this._scene_height) {
+         let screen_ratio = this._scene_width / this._scene_height,
+             szx = (this._camera.right - this._camera.left), szy = this._camera.top - this._camera.bottom;
+
+         if (screen_ratio > szx / szy) {
+            // screen wider than actual geometry
+            let m = (this._camera.right + this._camera.left) / 2;
+            this._camera.left = m - szy * screen_ratio / 2;
+            this._camera.right = m + szy * screen_ratio / 2;
+         } else {
+            // screen heigher than actual geometry
+            let m = (this._camera.top + this._camera.bottom) / 2;
+            this._camera.top  = m + szx / screen_ratio / 2;
+            this._camera.bottom = m - szx / screen_ratio / 2;
+         }
+
+      }
+
       this._camera.lookAt(this._lookat);
+      this._camera.updateProjectionMatrix();
 
       this.changedLight(box);
 
@@ -88300,7 +88966,7 @@ class TGeoPainter extends ObjectPainter {
          this.startDrawGeometry();
    }
 
-   /** @summary Specifies camera position */
+   /** @summary Specifies camera position as rotation around geometry center */
    setCameraPosition(rotatey, rotatez, zoom) {
       if (!this.ctrl) return;
       this.ctrl.rotatey = rotatey || 0;
@@ -88312,6 +88978,20 @@ class TGeoPainter extends ObjectPainter {
          preserve_zoom = true;
       }
       this.adjustCameraPosition(false, preserve_zoom);
+   }
+
+   /** @summary Specifies camera position and point to which it looks to
+       @desc Both specified in absolute coordinates */
+   setCameraPositionAndLook(camx, camy, camz, lookx, looky, lookz) {
+      if (!this.ctrl)
+         return;
+      this.ctrl.camx = camx;
+      this.ctrl.camy = camy;
+      this.ctrl.camz = camz;
+      this.ctrl.camlx = lookx;
+      this.ctrl.camly = looky;
+      this.ctrl.camlz = lookz;
+      this.adjustCameraPosition(false);
    }
 
    /** @summary focus on item */
@@ -88328,8 +89008,10 @@ class TGeoPainter extends ObjectPainter {
    /** @summary focus camera on speicifed position */
    focusCamera(focus, autoClip) {
 
-      if (this.ctrl.project || this.ctrl.ortho_camera)
-         return this.adjustCameraPosition();
+      if (this.ctrl.project || this.isOrthoCamera()) {
+         this.adjustCameraPosition(true);
+         return this.render3D();
+      }
 
       let box = new Box3();
       if (focus === undefined) {
@@ -89131,8 +89813,9 @@ class TGeoPainter extends ObjectPainter {
             if (!lvl && this.geo_manager.fVisLevel)
                lvl = this.geo_manager.fVisLevel;
             if (!maxnodes)
-               maxnodes = this.geo_manager.fMaxVisNodes;
+               maxnodes = this.geo_manager.fMaxVisNodes * (this.ctrl.more || 1);
          }
+
          this._clones.setVisLevel(lvl);
          this._clones.setMaxVisNodes(maxnodes);
 
@@ -89204,8 +89887,8 @@ class TGeoPainter extends ObjectPainter {
       return promise.then(() => {
 
          // this is limit for the visible faces, number of volumes does not matter
-         if (this._first_drawing)
-            this.ctrl.maxlimit = (this._webgl ? 200000 : 100000) * this.ctrl.more;
+         if (this._first_drawing && !this.ctrl.maxfaces)
+            this.ctrl.maxfaces = 200000 * this.ctrl.more;
 
          // set top painter only when first child exists
          this.setAsMainPainter();
@@ -89232,7 +89915,7 @@ class TGeoPainter extends ObjectPainter {
           info = main.querySelector('.geo_info');
 
       if (!msg) {
-         info.remove();
+         info?.remove();
       } else {
          let spent = (new Date().getTime() - this._start_drawing_time)*1e-3;
          if (!info) {
@@ -89306,8 +89989,10 @@ class TGeoPainter extends ObjectPainter {
      * @param force - if specified, forces calculations of render order */
    testCameraPosition(force) {
       this._camera.updateMatrixWorld();
-      let origin = this._camera.position.clone();
 
+      this.drawOverlay();
+
+      let origin = this._camera.position.clone();
       if (!force && this._last_camera_position) {
          // if camera position does not changed a lot, ignore such change
          let dist = this._last_camera_position.distanceTo(origin);
@@ -89315,6 +90000,14 @@ class TGeoPainter extends ObjectPainter {
       }
 
       this._last_camera_position = origin; // remember current camera position
+
+      if (this.ctrl._axis) {
+         let vect = (this._controls?.target || this._lookat).clone().sub(this._camera.position).normalize();
+         this.getExtrasContainer('get', 'axis')?.traverse(obj3d => {
+            if (isFunc(obj3d._axis_flip))
+               obj3d._axis_flip(vect);
+         });
+      }
 
       if (!this.ctrl.project)
          produceRenderOrder(this._toplevel, origin, this.ctrl.depthMethod, this._clones);
@@ -89379,7 +90072,6 @@ class TGeoPainter extends ObjectPainter {
          this._camera.layers.set( _ENTIRE_SCENE );
          this._renderer.render(this._scene, this._camera);
       } else {
-    //     this._renderer.logarithmicDepthBuffer = true;
          this._renderer.render(this._scene, this._camera);
       }
 
@@ -89521,24 +90213,213 @@ class TGeoPainter extends ObjectPainter {
          this._slave_painters[k].startDrawGeometry();
    }
 
-   /** @summary Draw axes if configured, otherwise just remove completely
-     * @return {Promise} when norender not specified */
-   drawSimpleAxis(norender) {
+   /** @summary Draw axes and camera overlay */
+   drawAxesAndOverlay(norender) {
+      let res1 = this.drawAxes(),
+          res2 = this.drawOverlay();
+
+      if (!res1 && !res2)
+         return norender ? null : this.render3D();
+      else
+         return this.changedDepthMethod(norender ? 'norender' : undefined);
+   }
+
+   /** @summary Draw overlay for the orthographic cameras */
+   drawOverlay() {
+
+      this.getExtrasContainer('delete', 'overlay');
+      if (!this.isOrthoCamera() || (this.ctrl.camera_overlay == 'none'))
+         return false;
+
+      let zoom = 0.5 / this._camera.zoom,
+          midx = (this._camera.left + this._camera.right) / 2,
+          midy = (this._camera.bottom + this._camera.top) / 2,
+          xmin = midx - (this._camera.right - this._camera.left) * zoom,
+          xmax = midx + (this._camera.right - this._camera.left) * zoom,
+          ymin = midy - (this._camera.top - this._camera.bottom) * zoom,
+          ymax = midy + (this._camera.top - this._camera.bottom) * zoom,
+          tick_size = (ymax - ymin) * 0.02,
+          text_size = (ymax - ymin) * 0.015,
+          grid_gap = (ymax - ymin) * 0.001,
+          x1 = xmin + text_size * 5, x2 = xmax - text_size * 5,
+          y1 = ymin + text_size * 3, y2 = ymax - text_size * 3;
+
+      let  x_handle = new TAxisPainter(null, create$1(clTAxis));
+      x_handle.configureAxis('xaxis', x1, x2, x1, x2, false, [x1, x2],
+                             { log: 0, reverse: false });
+      let y_handle = new TAxisPainter(null, create$1(clTAxis));
+      y_handle.configureAxis('yaxis', y1, y2, y1, y2, false, [y1, y2],
+                              { log: 0, reverse: false });
+
+      let buf, pos, ii = this._camera.orthoIndicies ?? [0, 1, 2], midZ = 0, gridZ = 0;
+
+      if (this._camera.orthoZ)
+         gridZ = midZ = this._camera.orthoZ[0];
+
+      const addPoint = (x, y, z) => {
+         buf[pos+ii[0]] = x;
+         buf[pos+ii[1]] = y;
+         buf[pos+ii[2]] = z ?? gridZ;
+         pos += 3;
+      }, createText = (lbl, size) => {
+         let text3d = new TextGeometry(lbl, { font: HelveticerRegularFont, size, height: 0, curveSegments: 5 });
+         text3d.computeBoundingBox();
+         text3d._width = text3d.boundingBox.max.x - text3d.boundingBox.min.x;
+         text3d._height = text3d.boundingBox.max.y - text3d.boundingBox.min.y;
+
+         text3d.translate(-text3d._width/2, -text3d._height/2, 0);
+         if (this._camera.orthoSign < 0)
+            text3d.rotateY(Math.PI);
+
+         if (isFunc(this._camera.orthoRotation))
+            this._camera.orthoRotation(text3d);
+
+         return text3d;
+      }, createTextMesh = (geom, material, x, y, z) => {
+         let tgt = [0, 0, 0];
+         tgt[ii[0]] = x;
+         tgt[ii[1]] = y;
+         tgt[ii[2]] = z ?? gridZ;
+         let mesh = new Mesh(geom, material);
+         mesh.translateX(tgt[0]).translateY(tgt[1]).translateZ(tgt[2]);
+         return mesh;
+      };
+
+      if (this.ctrl.camera_overlay == 'bar') {
+
+         let container = this.getExtrasContainer('create', 'overlay');
+
+         let x1 = xmin * 0.15 + xmax * 0.85,
+             x2 = xmin * 0.05 + xmax * 0.95,
+             y1 = ymax * 0.9 + ymin * 0.1,
+             y2 = ymax * 0.86 + ymin * 0.14;
+
+         let ticks = x_handle.createTicks();
+
+         if (ticks.major?.length > 1) {
+            x1 = ticks.major[ticks.major.length-2];
+            x2 = ticks.major[ticks.major.length-1];
+         }
+
+         buf = new Float32Array(3*6); pos = 0;
+
+         addPoint(x1, y1, midZ);
+         addPoint(x1, y2, midZ);
+
+         addPoint(x1, (y1 + y2) / 2, midZ);
+         addPoint(x2, (y1 + y2) / 2, midZ);
+
+         addPoint(x2, y1, midZ);
+         addPoint(x2, y2, midZ);
+
+         let lineMaterial = new LineBasicMaterial({ color: 'green' }),
+             textMaterial = new MeshBasicMaterial({ color: 'green', vertexColors: false });
+
+         container.add(createLineSegments(buf, lineMaterial));
+
+         let text3d = createText(x_handle.format(x2-x1, true), Math.abs(y2-y1));
+
+         container.add(createTextMesh(text3d, textMaterial, (x2 + x1) / 2, (y1 + y2) / 2 + text3d._height * 0.8, midZ));
+         return true;
+      }
+
+      let show_grid = this.ctrl.camera_overlay.indexOf('grid') == 0;
+
+      if (show_grid && this._camera.orthoZ) {
+         if (this.ctrl.camera_overlay == 'gridf')
+            gridZ += this._camera.orthoSign * this._camera.orthoZ[1];
+         else if (this.ctrl.camera_overlay == 'gridb')
+            gridZ -= this._camera.orthoSign * this._camera.orthoZ[1];
+      }
+
+      if ((this.ctrl.camera_overlay == 'axis') || show_grid) {
+
+         let container = this.getExtrasContainer('create', 'overlay');
+
+         let lineMaterial = new LineBasicMaterial({ color: new Color$1('black') }),
+             gridMaterial1 = show_grid ? new LineBasicMaterial({ color: new Color$1(0xbbbbbb) }) : null,
+             gridMaterial2 = show_grid ? new LineDashedMaterial({ color: new Color$1(0xdddddd), dashSize: grid_gap, gapSize: grid_gap }) : null,
+             textMaterial = new MeshBasicMaterial({ color: 'black', vertexColors: false });
+
+         let xticks = x_handle.createTicks();
+
+         while (xticks.next()) {
+            let x = xticks.tick, k = (xticks.kind == 1) ? 1. : 0.6;
+
+            if (show_grid) {
+               buf = new Float32Array(2*3); pos = 0;
+               addPoint(x, ymax - k*tick_size - grid_gap);
+               addPoint(x, ymin + k*tick_size + grid_gap);
+               container.add(createLineSegments(buf, xticks.kind == 1 ? gridMaterial1 : gridMaterial2));
+            }
+
+            buf = new Float32Array(4*3); pos = 0;
+            addPoint(x, ymax);
+            addPoint(x, ymax - k*tick_size);
+            addPoint(x, ymin);
+            addPoint(x, ymin + k*tick_size);
+
+            container.add(createLineSegments(buf, lineMaterial));
+
+            if (xticks.kind != 1) continue;
+
+            let text3d = createText(x_handle.format(x, true), text_size);
+
+            container.add(createTextMesh(text3d, textMaterial, x, ymax - tick_size - text_size/2 - text3d._height/2));
+
+            container.add(createTextMesh(text3d, textMaterial, x, ymin + tick_size + text_size/2 + text3d._height/2));
+         }
+
+         let yticks = y_handle.createTicks();
+
+         while (yticks.next()) {
+            let y = yticks.tick, k = (yticks.kind == 1) ? 1. : 0.6;
+
+            if (show_grid) {
+               buf = new Float32Array(2*3); pos = 0;
+               addPoint(xmin + k*tick_size + grid_gap, y);
+               addPoint(xmax - k*tick_size - grid_gap, y);
+               container.add(createLineSegments(buf, yticks.kind == 1 ? gridMaterial1 : gridMaterial2));
+            }
+
+            buf = new Float32Array(4*3); pos = 0;
+            addPoint(xmin, y);
+            addPoint(xmin + k*tick_size, y);
+            addPoint(xmax, y);
+            addPoint(xmax - k*tick_size, y);
+
+            container.add(createLineSegments(buf, lineMaterial));
+
+            if (yticks.kind != 1) continue;
+
+            let text3d = createText(y_handle.format(y, true), text_size);
+
+            container.add(createTextMesh(text3d, textMaterial, xmin + tick_size + text_size/2 + text3d._width/2, y));
+
+            container.add(createTextMesh(text3d, textMaterial, xmax - tick_size - text_size/2 - text3d._width/2, y));
+         }
+         return true;
+      }
+
+      return false;
+   }
+
+   /** @summary Draw axes if configured, otherwise just remove completely */
+   drawAxes() {
       this.getExtrasContainer('delete', 'axis');
 
       if (!this.ctrl._axis)
-         return norender ? null : this.render3D();
+         return false;
 
       let box = this.getGeomBoundingBox(this._toplevel, this.superimpose ? 'original' : undefined),
           container = this.getExtrasContainer('create', 'axis'),
-          text_size = 0.02 * Math.max((box.max.x - box.min.x), (box.max.y - box.min.y), (box.max.z - box.min.z)),
-          center = [0,0,0],
-          names = ['x','y','z'],
-          labels = ['X','Y','Z'],
-          colors = ['red','green','blue'],
-          ortho = this.ctrl.ortho_camera,
-          yup = [this.ctrl._yup, this.ctrl._yup, this.ctrl._yup],
-          numaxis = 3;
+          text_size = 0.02 * Math.max(box.max.x - box.min.x, box.max.y - box.min.y, box.max.z - box.min.z),
+          center = [0, 0, 0],
+          names = ['x', 'y', 'z'],
+          labels = ['X', 'Y', 'Z'],
+          colors = ['red', 'green', 'blue'],
+          ortho = this.isOrthoCamera(),
+          ckind = this.ctrl.camera_kind ?? 'perspective';
 
       if (this.ctrl._axis == 2)
          for (let naxis = 0; naxis < 3; ++naxis) {
@@ -89547,16 +90428,9 @@ class TGeoPainter extends ObjectPainter {
             center[naxis] = (box.min[name] + box.max[name])/2;
          }
 
-      // only two dimensions are seen by ortho camera, X draws Z, can be configured better later
-      if (this.ctrl.ortho_camera) {
-         numaxis = 2;
-         labels[0] = labels[2];
-         colors[0] = colors[2];
-         yup[0] = yup[2];
-         ortho = true;
-      }
-
-      for (let naxis = 0; naxis < numaxis; ++naxis) {
+      for (let naxis = 0; naxis < 3; ++naxis) {
+         // exclude axis which is not seen
+         if (ortho && ckind.indexOf(labels[naxis]) < 0) continue;
 
          let buf = new Float32Array(6),
              color = colors[naxis],
@@ -89575,7 +90449,7 @@ class TGeoPainter extends ObjectPainter {
             return val.toExponential(2);
          };
 
-         let lbl = valueToString(box.max[name]);
+         let lbl = valueToString(box.max[name]) + ' ' + labels[naxis];
 
          buf[0] = box.min.x;
          buf[1] = box.min.y;
@@ -89586,9 +90460,9 @@ class TGeoPainter extends ObjectPainter {
          buf[5] = box.min.z;
 
          switch (naxis) {
-           case 0: buf[3] = box.max.x; lbl = (yup[0] && !ortho) ? `${labels[0]} ${lbl}` : `${lbl} ${labels[0]}`; break;
-           case 1: buf[4] = box.max.y; lbl = yup[1] ? `${lbl} ${labels[1]}` : `${labels[1]} ${lbl}`; break;
-           case 2: buf[5] = box.max.z; lbl += ' ' + labels[2]; break;
+           case 0: buf[3] = box.max.x; break;
+           case 1: buf[4] = box.max.y; break;
+           case 2: buf[5] = box.max.z; break;
          }
 
          if (this.ctrl._axis == 2)
@@ -89618,41 +90492,80 @@ class TGeoPainter extends ObjectPainter {
          let text3d = new TextGeometry(lbl, { font: HelveticerRegularFont, size: text_size, height: 0, curveSegments: 5 });
          mesh = new Mesh(text3d, textMaterial);
          mesh._axis_draw = true; // skip from clipping
+
+         function setSideRotation(mesh, normal) {
+            mesh._other_side = false;
+            mesh._axis_norm = normal ?? new Vector3(1, 0, 0);
+            mesh._axis_flip = function(vect) {
+               let other_side = vect.dot(this._axis_norm) < 0;
+               if (this._other_side != other_side) {
+                  this._other_side = other_side;
+                  this.rotateY(Math.PI);
+               }
+            };
+         }
+         function setTopRotation(mesh, first_angle = -1) {
+            mesh._last_angle = first_angle;
+            mesh._axis_flip = function(vect) {
+               let angle = 0;
+               switch (this._axis_name) {
+                  case 'x': angle = -Math.atan2(vect.y, vect.z); break;
+                  case 'y': angle = -Math.atan2(vect.z, vect.x); break;
+                  default: angle = Math.atan2(vect.y, vect.x);
+               }
+               angle = Math.round(angle / Math.PI * 2 + 2) % 4;
+               if (this._last_angle != angle) {
+                  this.rotateX((angle - this._last_angle) * Math.PI/2);
+                  this._last_angle = angle;
+               }
+            };
+         }
          let textbox = new Box3().setFromObject(mesh);
+
+         text3d.translate(-textbox.max.x*0.5, -textbox.max.y/2, 0);
 
          mesh.translateX(buf[3]);
          mesh.translateY(buf[4]);
          mesh.translateZ(buf[5]);
 
-         if (yup[naxis]) {
-            switch (naxis) {
-               case 0:
-                  if (!ortho) {
-                     mesh.rotateY(Math.PI);
-                     mesh.translateX(-textbox.max.x-text_size*0.5);
-                  } else {
-                     mesh.translateX(text_size*0.5);
-                  }
-                  mesh.translateY(-textbox.max.y/2);
-                  break;
-               case 1:
-                  if (!ortho) {
-                     mesh.rotateX(-Math.PI/2);
-                     mesh.rotateY(-Math.PI/2);
-                  } else {
-                     mesh.rotateZ(Math.PI/2);
-                  }
-                  mesh.translateX(text_size*0.5);
-                  mesh.translateY(-textbox.max.y/2);
-                  break;
-               case 2: mesh.rotateY(-Math.PI/2); mesh.translateX(text_size*0.5); mesh.translateY(-textbox.max.y/2); break;
-           }
-         } else {
-            switch (naxis) {
-               case 0: mesh.rotateX(Math.PI/2); mesh.translateY(-textbox.max.y/2); mesh.translateX(text_size*0.5); break;
-               case 1: mesh.rotateX(Math.PI/2); mesh.rotateY(-Math.PI/2); mesh.translateX(-textbox.max.x-text_size*0.5); mesh.translateY(-textbox.max.y/2); break;
-               case 2: mesh.rotateX(Math.PI/2); mesh.rotateZ(Math.PI/2); mesh.translateX(text_size*0.5); mesh.translateY(-textbox.max.y/2); break;
+         mesh._axis_name = name;
+
+         if (naxis === 0) {
+            if (ortho && ckind.indexOf('OX') > 0) {
+               setTopRotation(mesh, 0);
+            } else if (ortho ? ckind.indexOf('OY') > 0 : this.ctrl._yup) {
+               setSideRotation(mesh, new Vector3(0, 0, -1));
+            } else {
+               setSideRotation(mesh, new Vector3(0, 1, 0));
+               mesh.rotateX(Math.PI/2);
             }
+
+            mesh.translateX(text_size*0.5 + textbox.max.x*0.5);
+         } else if (naxis == 1) {
+            if (ortho ? ckind.indexOf('OY') > 0 : this.ctrl._yup) {
+               setTopRotation(mesh, 2);
+               mesh.rotateX(-Math.PI/2);
+               mesh.rotateY(-Math.PI/2);
+               mesh.translateX(text_size*0.5 + textbox.max.x*0.5);
+            } else {
+               setSideRotation(mesh);
+               mesh.rotateX(Math.PI/2);
+               mesh.rotateY(-Math.PI/2);
+               mesh.translateX(-textbox.max.x*0.5 - text_size*0.5);
+            }
+
+         } else if (naxis == 2) {
+            if (ortho ? ckind.indexOf('OZ') < 0 : this.ctrl._yup) {
+               let zox = ortho && (ckind.indexOf('ZOX') > 0 || ckind.indexOf('ZNOX') > 0);
+               setSideRotation(mesh, zox ? new Vector3(0, -1, 0) : undefined);
+               mesh.rotateY(-Math.PI/2);
+               if (zox) mesh.rotateX(-Math.PI/2);
+            } else {
+               setTopRotation(mesh);
+               mesh.rotateX(Math.PI/2);
+               mesh.rotateZ(Math.PI/2);
+            }
+            mesh.translateX(text_size*0.5 + textbox.max.x*0.5);
          }
 
          container.add(mesh);
@@ -89663,46 +90576,55 @@ class TGeoPainter extends ObjectPainter {
          mesh._axis_draw = true; // skip from clipping
          textbox = new Box3().setFromObject(mesh);
 
+         text3d.translate(-textbox.max.x*0.5, -textbox.max.y/2, 0);
+
+         mesh._axis_name = name;
+
          mesh.translateX(buf[0]);
          mesh.translateY(buf[1]);
          mesh.translateZ(buf[2]);
 
-         if (yup[naxis]) {
-            switch (naxis) {
-               case 0:
-                  if (!ortho) {
-                     mesh.rotateY(Math.PI);
-                     mesh.translateX(text_size*0.5);
-                  } else {
-                     mesh.translateX(-textbox.max.x-text_size*0.5);
-                  }
-                  mesh.translateY(-textbox.max.y/2);
-                  break;
-               case 1:
-                  if (!ortho) {
-                     mesh.rotateX(-Math.PI/2);
-                     mesh.rotateY(-Math.PI/2);
-                  } else {
-                     mesh.rotateZ(Math.PI/2);
-                  }
-                  mesh.translateY(-textbox.max.y/2);
-                  mesh.translateX(-textbox.max.x-text_size*0.5);
-                  break;
-               case 2: mesh.rotateY(-Math.PI/2);  mesh.translateX(-textbox.max.x-text_size*0.5); mesh.translateY(-textbox.max.y/2); break;
+         if (naxis === 0) {
+            if (ortho && ckind.indexOf('OX') > 0) {
+               setTopRotation(mesh, 0);
+            } else if (ortho ? ckind.indexOf('OY') > 0 : this.ctrl._yup) {
+               setSideRotation(mesh, new Vector3(0, 0, -1));
+            } else {
+               setSideRotation(mesh, new Vector3(0, 1, 0));
+               mesh.rotateX(Math.PI/2);
             }
-         } else {
-            switch (naxis) {
-               case 0: mesh.rotateX(Math.PI/2); mesh.translateX(-textbox.max.x-text_size*0.5); mesh.translateY(-textbox.max.y/2); break;
-               case 1: mesh.rotateX(Math.PI/2); mesh.rotateY(-Math.PI/2); mesh.translateY(-textbox.max.y/2); mesh.translateX(text_size*0.5); break;
-               case 2: mesh.rotateX(Math.PI/2); mesh.rotateZ(Math.PI/2);  mesh.translateX(-textbox.max.x-text_size*0.5); mesh.translateY(-textbox.max.y/2); break;
+            mesh.translateX(-text_size*0.5 - textbox.max.x*0.5);
+         } else if (naxis == 1) {
+            if (ortho ? ckind.indexOf('OY') > 0 : this.ctrl._yup) {
+               setTopRotation(mesh, 2);
+               mesh.rotateX(-Math.PI/2);
+               mesh.rotateY(-Math.PI/2);
+               mesh.translateX(-textbox.max.x*0.5 - text_size*0.5);
+            } else {
+               setSideRotation(mesh);
+               mesh.rotateX(Math.PI/2);
+               mesh.rotateY(-Math.PI/2);
+               mesh.translateX(textbox.max.x*0.5 + text_size*0.5);
             }
+         } else if (naxis == 2) {
+            if (ortho ? ckind.indexOf('OZ') < 0 : this.ctrl._yup) {
+               let zox = ortho && (ckind.indexOf('ZOX') > 0 || ckind.indexOf('ZNOX') > 0);
+               setSideRotation(mesh, zox ? new Vector3(0, -1, 0) : undefined);
+               mesh.rotateY(-Math.PI/2);
+               if (zox) mesh.rotateX(-Math.PI/2);
+            } else {
+               setTopRotation(mesh);
+               mesh.rotateX(Math.PI/2);
+               mesh.rotateZ(Math.PI/2);
+            }
+            mesh.translateX(-textbox.max.x*0.5 - text_size*0.5);
          }
 
          container.add(mesh);
       }
 
       // after creating axes trigger rendering and recalculation of depth
-      return this.changedDepthMethod(norender ? 'norender' : undefined);
+      return true;
    }
 
    /** @summary Set axes visibility 0 - off, 1 - on, 2 - centered */
@@ -89711,7 +90633,7 @@ class TGeoPainter extends ObjectPainter {
          this.ctrl._axis = this.ctrl._axis ? 0 : 1;
       else
          this.ctrl._axis = (typeof on == 'number') ? on : (on ? 1 : 0);
-      return this.drawSimpleAxis();
+      return this.drawAxesAndOverlay();
    }
 
    /** @summary Set auto rotate mode */
@@ -89839,7 +90761,7 @@ class TGeoPainter extends ObjectPainter {
             }
          });
 
-      this.ctrl.bothSides = any_clipping;
+      this.ctrl.doubleside = any_clipping;
 
       if (!without_render) this.render3D(0);
 
@@ -89903,8 +90825,10 @@ class TGeoPainter extends ObjectPainter {
          if (full_redraw && (this.ctrl.trans_radial || this.ctrl.trans_z))
             this.changedTransformation('norender');
 
-         if (full_redraw && this.ctrl._axis)
-            this.drawSimpleAxis(true);
+         if (full_redraw)
+            return this.drawAxesAndOverlay(true);
+
+      }).then(() => {
 
          this._scene.overrideMaterial = null;
 
@@ -90137,14 +91061,14 @@ class TGeoPainter extends ObjectPainter {
       this._scene_height = height;
 
       if (this._camera && this._renderer) {
-         if (this._camera.type == 'PerspectiveCamera')
+         if (this._camera.isPerspectiveCamera)
             this._camera.aspect = this._scene_width / this._scene_height;
+         else if (this._camera.isOrthographicCamera)
+            this.adjustCameraPosition(true, true);
          this._camera.updateProjectionMatrix();
          this._renderer.setSize( this._scene_width, this._scene_height, !this._fit_main_area );
-         if (this._effectComposer)
-            this._effectComposer.setSize( this._scene_width, this._scene_height );
-         if (this._bloomComposer)
-            this._bloomComposer.setSize( this._scene_width, this._scene_height );
+         this._effectComposer?.setSize( this._scene_width, this._scene_height );
+         this._bloomComposer?.setSize( this._scene_width, this._scene_height );
 
          if (this.isStage(stageInit))
             this.render3D();
@@ -90544,7 +91468,7 @@ function provideMenu(menu, item, hpainter) {
          menu.add('endsub:');
       }
 
-      menu.addchk(is_visible, 'Lofical vis',
+      menu.addchk(is_visible, 'Logical vis',
             geoBITS.kVisThis, ToggleMenuBit, 'Logical node visibility - all instances');
       menu.addchk(testGeoBit(vol, geoBITS.kVisDaughters), 'Daughters',
             geoBITS.kVisDaughters, ToggleMenuBit, 'Logical node daugthers visibility');
@@ -90756,6 +91680,7 @@ function drawAxis3D() {
   * @param {Number} [opt.vislevel] - visibility level like TGeoManager, when not specified - show all
   * @param {Number} [opt.numnodes=1000] - maximal number of visible nodes
   * @param {Number} [opt.numfaces=100000] - approx maximal number of created triangles
+  * @param {Number} [opt.instancing=-1] - <0 disable use of InstancedMesh, =0 only for large geometries, >0 enforce usage of InstancedMesh
   * @param {boolean} [opt.doubleside=false] - use double-side material
   * @param {boolean} [opt.wireframe=false] - show wireframe for created shapes
   * @param {boolean} [opt.dflt_colors=false] - use default ROOT colors
@@ -90775,6 +91700,11 @@ function build(obj, opt) {
    if (!opt.frustum) opt.frustum = null;
 
    opt.res_mesh = opt.res_faces = 0;
+
+   if (opt.instancing === undefined)
+      opt.instancing = -1;
+
+   opt.info = { num_meshes: 0, num_faces: 0 };
 
    let clones = null, visibles = null;
 
@@ -90867,6 +91797,11 @@ function build(obj, opt) {
    let toplevel = new Object3D();
    toplevel.clones = clones; // keep reference on JSROOT data
 
+   let colors = getRootColors();
+
+   if (clones.createInstancedMeshes(opt, toplevel, visibles, shapes, colors))
+      return toplevel;
+
    for (let n = 0; n < visibles.length; ++n) {
       let entry = visibles[n];
       if (entry.done) continue;
@@ -90876,50 +91811,11 @@ function build(obj, opt) {
          console.warn('shape marked as not ready when should');
          break;
       }
-      entry.done = true;
-      shape.used = true; // indicate that shape was used in building
 
-      if (!shape.geom || (shape.nfaces === 0)) {
-         // node is visible, but shape does not created
-         clones.createObject3D(entry.stack, toplevel, 'delete_mesh');
-         continue;
-      }
+      let mesh = clones.createEntryMesh(opt, toplevel, entry, shape, colors);
 
-      let prop = clones.getDrawEntryProperties(entry, getRootColors());
-
-      opt.res_mesh++;
-      opt.res_faces += shape.nfaces;
-
-      let obj3d = clones.createObject3D(entry.stack, toplevel, opt);
-
-      prop.material.wireframe = opt.wireframe;
-
-      prop.material.side = opt.doubleside ? DoubleSide : FrontSide;
-
-      let mesh = null, matrix = obj3d.absMatrix || obj3d.matrixWorld;
-
-      if (matrix.determinant() > -0.9) {
-         mesh = new Mesh(shape.geom, prop.material);
-      } else {
-         mesh = createFlippedMesh(shape, prop.material);
-      }
-
-      mesh.name = clones.getNodeName(entry.nodeid);
-      mesh.stack = entry.stack;
-
-      obj3d.add(mesh);
-
-      if (obj3d.absMatrix) {
-         mesh.matrix.copy(obj3d.absMatrix);
-         mesh.matrix.decompose( obj3d.position, obj3d.quaternion, obj3d.scale );
-         mesh.updateMatrixWorld();
-      }
-
-      // specify rendering order, required for transparency handling
-      //if (obj3d.$jsroot_depth !== undefined)
-      //   mesh.renderOrder = clones.maxdepth - obj3d.$jsroot_depth;
-      //else
-      //   mesh.renderOrder = clones.maxdepth - entry.stack.length;
+      if (mesh)
+         mesh.name = clones.getNodeName(entry.nodeid);
    }
 
    return toplevel;
@@ -108084,13 +108980,9 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
    }
 
    /** @summary Fill context menu */
-   fillContextMenu(menu) {
-      super.fillContextMenu(menu);
-
+   fillContextMenuItems(menu) {
       if (!this.snapid)
          menu.addchk(this.testEditable(), 'Editable', () => { this.testEditable('toggle'); this.drawGraph(); });
-
-      return menu.size() > 0;
    }
 
    /** @summary Execute menu command
@@ -110599,9 +111491,18 @@ class TASImagePainter extends ObjectPainter {
 
    /** @summary Decode options string  */
    decodeOptions(opt) {
+      const d = new DrawOptions(opt);
+
       this.options = { Zscale: false };
 
-      if (opt && (opt.indexOf('z') >= 0)) this.options.Zscale = true;
+      let obj = this.getObject();
+
+      if (d.check('CONST')) {
+         this.options.constRatio = true;
+         if (obj) obj.fConstRatio = true;
+         console.log('use const');
+      }
+      if (d.check('Z')) this.options.Zscale = true;
    }
 
    /** @summary Create RGBA buffers */
@@ -110662,24 +111563,14 @@ class TASImagePainter extends ObjectPainter {
 
       if (min >= max) max = min + 1;
 
-      let xmin = 0, xmax = obj.fWidth, ymin = 0, ymax = obj.fHeight; // dimension in pixels
-
-      if (fp && (fp.zoom_xmin != fp.zoom_xmax)) {
-         xmin = Math.round(fp.zoom_xmin * obj.fWidth);
-         xmax = Math.round(fp.zoom_xmax * obj.fWidth);
-      }
-
-      if (fp && (fp.zoom_ymin != fp.zoom_ymax)) {
-         ymin = Math.round(fp.zoom_ymin * obj.fHeight);
-         ymax = Math.round(fp.zoom_ymax * obj.fHeight);
-      }
+      let z = this.getImageZoomRange(fp, obj.fConstRatio, obj.fWidth, obj.fHeight);
 
       let pr = isNodeJs() ?
-                 Promise.resolve().then(function () { return _rollup_plugin_ignore_empty_module_placeholder$1; }).then(h => h.default.createCanvas(xmax - xmin, ymax - ymin)) :
+                 Promise.resolve().then(function () { return _rollup_plugin_ignore_empty_module_placeholder$1; }).then(h => h.default.createCanvas(z.xmax - z.xmin, z.ymax - z.ymin)) :
                  new Promise(resolveFunc => {
                     let c = document.createElement('canvas');
-                    c.width = xmax - xmin;
-                    c.height = ymax - ymin;
+                    c.width = z.xmax - z.xmin;
+                    c.height = z.ymax - z.ymin;
                     resolveFunc(c);
                  });
 
@@ -110689,10 +111580,10 @@ class TASImagePainter extends ObjectPainter {
              imageData = context.getImageData(0, 0, canvas.width, canvas.height),
              arr = imageData.data;
 
-         for(let i = ymin; i < ymax; ++i) {
-            let dst = (ymax - i - 1) * (xmax - xmin) * 4,
+         for(let i = z.ymin; i < z.ymax; ++i) {
+            let dst = (z.ymax - i - 1) * (z.xmax - z.xmin) * 4,
                 row = i * obj.fWidth;
-            for(let j = xmin; j < xmax; ++j) {
+            for(let j = z.xmin; j < z.xmax; ++j) {
                let iii = Math.round((obj.fImgBuf[row + j] - min) / (max - min) * nlevels) * 4;
                // copy rgba value for specified point
                arr[dst++] = this.rgba[iii++];
@@ -110704,12 +111595,44 @@ class TASImagePainter extends ObjectPainter {
 
          context.putImageData(imageData, 0, 0);
 
-         return { url: canvas.toDataURL(), constRatio: obj.fConstRatio, is_buf: true };
+         return { url: canvas.toDataURL(), constRatio: obj.fConstRatio, can_zoom: true };
       });
    }
 
-   /** @summary Produce data url from png data */
-   async makeUrlFromPngBuf(obj) {
+   getImageZoomRange(fp, constRatio, width, height) {
+      let res = { xmin: 0, xmax: width, ymin: 0, ymax: height };
+      if (!fp) return res;
+
+      let offx = 0, offy = 0, sizex = width, sizey = height;
+
+      if (constRatio && fp) {
+         let image_ratio = height/width,
+             frame_ratio = fp.getFrameHeight() / fp.getFrameWidth();
+
+         if (image_ratio > frame_ratio) {
+            let w2 = height / frame_ratio;
+            offx = Math.round((w2 - width)/2);
+            sizex = Math.round(w2);
+         } else {
+            let h2 = frame_ratio * width;
+            offy = Math.round((h2 - height)/2);
+            sizey = Math.round(h2);
+         }
+      }
+
+      if (fp.zoom_xmin != fp.zoom_xmax) {
+         res.xmin = Math.min(width, Math.max(0, Math.round(fp.zoom_xmin * sizex) - offx));
+         res.xmax = Math.min(width, Math.max(0, Math.round(fp.zoom_xmax * sizex) - offx));
+      }
+      if (fp.zoom_ymin != fp.zoom_ymax) {
+         res.ymin = Math.min(height, Math.max(0, Math.round(fp.zoom_ymin * sizey) - offy));
+         res.ymax = Math.min(height, Math.max(0, Math.round(fp.zoom_ymax * sizey) - offy));
+      }
+      return res;
+   }
+
+   /** @summary Produce data url from png buffer */
+   async makeUrlFromPngBuf(obj, fp) {
       let buf = obj.fPngBuf, pngbuf = '';
 
       if (isStr(buf))
@@ -110718,7 +111641,60 @@ class TASImagePainter extends ObjectPainter {
          for (let k = 0; k < buf.length; ++k)
             pngbuf += String.fromCharCode(buf[k] < 0 ? 256 + buf[k] : buf[k]);
 
-      return { url: 'data:image/png;base64,' + btoa_func(pngbuf), constRatio: true };
+
+      let res = { url: 'data:image/png;base64,' + btoa_func(pngbuf), constRatio: obj.fConstRatio, can_zoom: fp && !isNodeJs() };
+
+      if (!res.can_zoom || ((fp?.zoom_xmin === fp?.zoom_xmax) && (fp?.zoom_ymin === fp?.zoom_ymax)))
+         return res;
+
+      return new Promise(resolveFunc => {
+
+         let image = document.createElement('img');
+
+         image.onload = () => {
+            let canvas = document.createElement('canvas');
+            canvas.width = image.width;
+            canvas.height = image.height;
+
+            let context = canvas.getContext('2d');
+            context.drawImage(image, 0, 0);
+
+            let arr = context.getImageData(0,0, image.width, image.height).data;
+
+            let z = this.getImageZoomRange(fp, res.constRatio, image.width, image.height);
+
+            let canvas2 = document.createElement('canvas');
+            canvas2.width = z.xmax - z.xmin;
+            canvas2.height = z.ymax - z.ymin;
+
+            let context2 = canvas2.getContext('2d'),
+                imageData2 = context2.getImageData(0, 0, canvas2.width, canvas2.height),
+                arr2 = imageData2.data;
+
+            for(let i = z.ymin; i < z.ymax; ++i) {
+                let dst = (z.ymax - i - 1) * (z.xmax - z.xmin) * 4,
+                    src = ((image.height - i - 1) * image.width + z.xmin) * 4;
+                for(let j = z.xmin; j < z.xmax; ++j) {
+                   // copy rgba value for specified point
+                   arr2[dst++] = arr[src++];
+                   arr2[dst++] = arr[src++];
+                   arr2[dst++] = arr[src++];
+                   arr2[dst++] = arr[src++];
+                }
+            }
+
+            context2.putImageData(imageData2, 0, 0);
+
+            res.url = canvas2.toDataURL();
+
+            resolveFunc(res);
+         };
+
+         image.onerror = () => resolveFunc(res);
+
+         image.src = res.url;
+
+      });
    }
 
    /** @summary Draw image */
@@ -110773,25 +111749,34 @@ class TASImagePainter extends ObjectPainter {
 
       let promise;
 
-      if (obj.fImgBuf && obj.fPalette) {
+      if (obj.fImgBuf && obj.fPalette)
          promise = this.makeUrlFromImageBuf(obj, fp);
-      } else if (obj.fPngBuf) {
-         promise = this.makeUrlFromPngBuf(obj);
-      } else {
-         promise = Promise.resolve({});
-      }
+      else if (obj.fPngBuf)
+         promise = this.makeUrlFromPngBuf(obj, fp);
+      else
+         promise = Promise.resolve(null);
 
       return promise.then(res => {
 
-         if (res.url)
-            this.createG(fp ? true : false)
-                .append('image')
-                .attr('href', res.url)
-                .attr('width', rect.width)
-                .attr('height', rect.height)
-                .attr('preserveAspectRatio', res.constRatio ? null : 'none');
+         if (!res?.url)
+            return this;
 
-         if (!res.url || !this.isMainPainter() || !res.is_buf || !fp)
+         let img = this.createG(fp ? true : false)
+             .append('image')
+             .attr('href', res.url)
+             .attr('width', rect.width)
+             .attr('height', rect.height)
+             .attr('preserveAspectRatio', res.constRatio ? null : 'none');
+
+         if (!isBatchMode() && (settings.MoveResize || settings.ContextMenu))
+            img.style('pointer-events', 'visibleFill');
+
+         if (!isBatchMode() && res.can_zoom)
+            img.style('cursor', 'pointer');
+
+         assignContextMenu(this);
+
+         if (!fp || !res.can_zoom)
             return this;
 
          return this.drawColorPalette(this.options.Zscale, true).then(() => {
@@ -110802,16 +111787,29 @@ class TASImagePainter extends ObjectPainter {
       });
    }
 
+   /** @summary Fill TASImage context */
+   fillContextMenuItems(menu) {
+      let obj = this.getObject();
+      if (obj)
+         menu.addchk(obj.fConstRatio, 'Const ratio', flag => {
+            obj.fConstRatio = flag;
+            this.interactiveRedraw('pad', `exec:SetConstRatio(${flag})`);
+         }, 'Change const ratio flag of image');
+      if (obj?.fPalette)
+         menu.addchk(this.options.Zscale, 'Color palette', flag => {
+            this.options.Zscale = flag;
+            this.drawColorPalette(flag, true);
+         }, 'Toggle color palette');
+   }
+
    /** @summary Checks if it makes sense to zoom inside specified axis range */
    canZoomInside(axis,min,max) {
       let obj = this.getObject();
 
-      if (!obj?.fImgBuf)
+      if (!obj)
          return false;
 
-      if ((axis == 'x') && ((max - min) * obj.fWidth > 3)) return true;
-
-      if ((axis == 'y') && ((max - min) * obj.fHeight > 3)) return true;
+      if (((axis == 'x') || (axis == 'y')) && (max - min > 0.01)) return true;
 
       return false;
    }
@@ -110857,7 +111855,6 @@ class TASImagePainter extends ObjectPainter {
          return pal_painter.drawPave('');
       }
 
-
       let prev_name = this.selectCurrentPad(this.getPadName());
 
       return TPavePainter.draw(this.getDom(), this.draw_palette).then(p => {
@@ -110883,15 +111880,8 @@ class TASImagePainter extends ObjectPainter {
    }
 
    /** @summary Redraw image */
-   redraw(reason) {
-      let img = this.draw_g?.select('image'),
-          fp = this.getFramePainter();
-
-      if (img && !img.empty() && (reason !== 'zoom') && fp) {
-         img.attr('width', fp.getFrameWidth()).attr('height', fp.getFrameHeight());
-      } else {
-         return this.drawImage();
-      }
+   redraw() {
+      return this.drawImage();
    }
 
    /** @summary Process click on TASImage-defined buttons */
@@ -110918,6 +111908,7 @@ class TASImagePainter extends ObjectPainter {
    /** @summary Draw TASImage object */
    static async draw(dom, obj, opt) {
       let painter = new TASImagePainter(dom, obj, opt);
+      painter.setAsMainPainter();
       painter.decodeOptions(opt);
       return ensureTCanvas(painter, false)
                  .then(() => painter.drawImage())
@@ -113113,7 +114104,7 @@ class RFramePainter extends RObjectPainter {
          // take zooming out of pad or axis attributes - skip!
       // }
 
-      if ((this.zoom_ymin == this.zoom_ymax) && (opts.zoom_ymin != opts.zoom_ymax) && !this.zoomChangedInteractive('y')) {
+      if ((opts.zoom_ymin != opts.zoom_ymax) && ((this.zoom_ymin == this.zoom_ymax) || !this.zoomChangedInteractive('y'))) {
          this.zoom_ymin = opts.zoom_ymin;
          this.zoom_ymax = opts.zoom_ymax;
       }
@@ -115403,11 +116394,8 @@ class RPadPainter extends RObjectPainter {
 
       if (funcname == 'PadContextMenus') {
 
-         if (evnt) {
-            evnt.preventDefault();
-            evnt.stopPropagation();
-         }
-
+         evnt?.preventDefault();
+         evnt?.stopPropagation();
          if (closeMenu()) return;
 
          createMenu$1(evnt, this).then(menu => {
@@ -115458,7 +116446,7 @@ class RPadPainter extends RObjectPainter {
          let pp = this.painters[i];
 
          if (isFunc(pp.clickPadButton))
-            pp.clickPadButton(funcname);
+            pp.clickPadButton(funcname, evnt);
 
          if (!done && isFunc(pp.clickButton))
             done = pp.clickButton(funcname);
@@ -116784,8 +117772,10 @@ class RCanvasPainter extends RPadPainter {
    /** @summary Handle pad button click event
      * @private */
    clickPadButton(funcname, evnt) {
-      if (funcname == 'ToggleGed') return this.activateGed(this, null, 'toggle');
-      if (funcname == 'ToggleStatus') return this.activateStatusBar('toggle');
+      if (funcname == 'ToggleGed')
+         return this.activateGed(this, null, 'toggle');
+      if (funcname == 'ToggleStatus')
+         return this.activateStatusBar('toggle');
       super.clickPadButton(funcname, evnt);
    }
 
@@ -118710,9 +119700,7 @@ class RHistPainter extends RObjectPainter {
    }
 
    /** @summary Fill histogram context menu */
-   fillContextMenu(menu) {
-
-      menu.add('header:v7histo::anyname');
+   fillContextMenuItems(menu) {
 
       if (this.draw_content) {
          menu.addchk(this.toggleStat('only-check'), 'Show statbox', () => this.toggleStat());
@@ -118768,12 +119756,8 @@ class RHistPainter extends RObjectPainter {
             menu.add('Reset camera', () => main.control.reset());
       }
 
-      menu.addAttributesMenu(this);
-
       if (this.histogram_updated && fp.zoomChangedInteractive())
          menu.add('Let update zoom', () => fp.zoomChangedInteractive('reset'));
-
-      return true;
    }
 
    /** @summary Update palette drawing */

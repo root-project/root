@@ -1001,8 +1001,17 @@ class StandaloneMenu extends JSRootMenu {
       if (name.indexOf('header:') == 0)
          return curr.push({ text: name.slice(7), header: true });
 
-      if ((name == 'endsub:') || (name == 'endcolumn:'))
+      if (name == 'endsub:') {
+         this.stack.pop();
+         curr = this.stack[this.stack.length-1];
+         if (curr[curr.length-1].sub.length == 0)
+            curr[curr.length-1].sub = undefined;
+         return;
+      }
+
+      if (name == 'endcolumn:')
          return this.stack.pop();
+
 
       if (isFunc(arg)) { title = func; func = arg; arg = name; }
 
@@ -1371,4 +1380,3 @@ function assignContextMenu(painter, kind) {
 }
 
 export { createMenu, closeMenu, showPainterMenu, assignContextMenu };
-

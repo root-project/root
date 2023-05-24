@@ -507,8 +507,10 @@ class RCanvasPainter extends RPadPainter {
    /** @summary Handle pad button click event
      * @private */
    clickPadButton(funcname, evnt) {
-      if (funcname == 'ToggleGed') return this.activateGed(this, null, 'toggle');
-      if (funcname == 'ToggleStatus') return this.activateStatusBar('toggle');
+      if (funcname == 'ToggleGed')
+         return this.activateGed(this, null, 'toggle');
+      if (funcname == 'ToggleStatus')
+         return this.activateStatusBar('toggle');
       super.clickPadButton(funcname, evnt);
    }
 

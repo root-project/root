@@ -447,7 +447,7 @@ class TAxisPainter extends ObjectPainter {
       } else if (this.kind == 'func') {
          this.func = this.createFuncHandle(opts.axis_func, 0, smin, smax);
       } else {
-         this.func = d3_scaleLinear().domain([smin,smax]);
+         this.func = d3_scaleLinear().domain([smin, smax]);
       }
 
       if (this.vertical ^ this.reverse) {

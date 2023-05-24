@@ -1315,13 +1315,9 @@ class TGraphPainter extends ObjectPainter {
    }
 
    /** @summary Fill context menu */
-   fillContextMenu(menu) {
-      super.fillContextMenu(menu);
-
+   fillContextMenuItems(menu) {
       if (!this.snapid)
          menu.addchk(this.testEditable(), 'Editable', () => { this.testEditable('toggle'); this.drawGraph(); });
-
-      return menu.size() > 0;
    }
 
    /** @summary Execute menu command

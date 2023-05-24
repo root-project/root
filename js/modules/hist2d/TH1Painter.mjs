@@ -1195,8 +1195,7 @@ class TH1Painter extends THistPainter {
  * @private
  */
 
-function setHistTitle(histo, title)
-{
+function setHistTitle(histo, title) {
    if (!histo) return;
    if (title.indexOf(';') < 0) {
       histo.fTitle = title;

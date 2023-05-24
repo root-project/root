@@ -58,4 +58,3 @@ class RH1Painter extends RH1Painter2D {
 } // class RH1Painter
 
 export { RH1Painter };
-
