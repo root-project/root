@@ -975,13 +975,17 @@ TNamed *ROOT::RegisterClassTemplate(const char *name, const char *file,
 
    TString classname(name);
    Ssiz_t loc = classname.Index("<");
-   if (loc >= 1) classname.Remove(loc);
+   if (loc >= 1)
+      classname.Remove(loc);
+   TNamed *reg = (TNamed*)table.FindObject(classname);
    if (file) {
-      TNamed *obj = new TNamed((const char*)classname, file);
-      obj->SetUniqueID(line);
-      table.Add(obj);
-      return obj;
+      if (reg)
+         reg->SetTitle(file);
+      else {
+         reg = new TNamed((const char*)classname, file);
+         table.Add(reg);
+      }
+      reg->SetUniqueID(line);
    }
-
-   return (TNamed*)table.FindObject(classname);
+   return reg;
 }
