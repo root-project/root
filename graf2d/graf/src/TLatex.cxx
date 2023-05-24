@@ -2203,8 +2203,10 @@ Int_t TLatex::PaintLatex1(Double_t x, Double_t y, Double_t angle, Double_t size,
    Int_t length = newText.Length() ;
    const Char_t *text = newText.Data() ;
 
-   fX=x;
-   fY=y;
+   Double_t xsave = fX;
+   Double_t ysave = fY;
+   fX = x;
+   fY = y;
    x = gPad->XtoAbsPixel(x);
    y = gPad->YtoAbsPixel(y);
    fShow = kFALSE ;
@@ -2253,6 +2255,8 @@ Int_t TLatex::PaintLatex1(Double_t x, Double_t y, Double_t angle, Double_t size,
    SetLineWidth(lineW);
    SetLineColor(lineC);
    fTabSize.clear();
+   fX = xsave;
+   fY = ysave;
    if (fError) return 0;
    return 1;
 }

@@ -11,6 +11,7 @@
 
 ROOT_STANDARD_LIBRARY_PACKAGE(Gpad
   HEADERS
+    TAnnotation.h
     TAttCanvas.h
     TButton.h
     TCanvas.h
@@ -31,6 +32,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Gpad
     TViewer3DPad.h
     TView.h
   SOURCES
+    src/TAnnotation.cxx
     src/TAttCanvas.cxx
     src/TButton.cxx
     src/TCanvas.cxx
