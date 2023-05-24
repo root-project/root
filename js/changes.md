@@ -20,7 +20,7 @@
 17. Introduce settings.WithCredentials, set xhr.withCredentials = true when submitting HTTP requests
 18. Let superimpose TH3 and geo drawings
 19. Apply pad draw options like 'gridx' or 'logy' to all subpads
-20. Support new TScatter class
+20. Support new TScatter and TAnnotation classes
 21. Implement moving and resizing of subpads
 22. Implement zooming in the TASImage
 23. Let configure position and direction of camera for TGeo, let create URL for that
