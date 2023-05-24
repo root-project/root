@@ -225,9 +225,6 @@ if(builtin_llvm)
   #---Remove the inherited include_directories()
   set_directory_properties(PROPERTIES INCLUDE_DIRECTORIES "")
 
-  #---Disable VCS writing to prevent that we always have to rebuild when someone touched the git HEAD
-  set(LLVM_APPEND_VC_REV OFF CACHE BOOL "Disabled LLVM revision dependency" FORCE)
-
   #---Add the sub-directory excluding all the targets from all-----------------------------------------
   if(CMAKE_GENERATOR MATCHES "Xcode")
     add_subdirectory(llvm/src)
