@@ -41,6 +41,9 @@ function addDragHandler(_painter, arg) {
    let painter = _painter, pp = painter.getPadPainter();
    if (pp?._fast_drawing) return;
 
+   if (!isFunc(arg.getDrawG))
+      arg.getDrawG = () => painter?.draw_g;
+
    function makeResizeElements(group, handler) {
       function addElement(cursor, d) {
          let clname = 'js_' + cursor.replace(/[-]/g, '_'),
@@ -73,7 +76,9 @@ function addDragHandler(_painter, arg) {
          drag_rect = null;
       }
 
-      if (!painter.draw_g)
+      let draw_g = arg.getDrawG();
+
+      if (!draw_g)
          return false;
 
       let oldx = arg.x, oldy = arg.y;
@@ -86,26 +91,30 @@ function addDragHandler(_painter, arg) {
 
       arg.x = newx; arg.y = newy; arg.width = newwidth; arg.height = newheight;
 
-      painter.draw_g.attr('transform', makeTranslate(newx,newy));
+      if (!arg.no_transform)
+         draw_g.attr('transform', makeTranslate(newx, newy));
 
       setPainterTooltipEnabled(painter, true);
 
-      makeResizeElements(painter.draw_g);
+      makeResizeElements(draw_g);
 
       if (change_size || change_pos) {
          if (change_size && isFunc(arg.resize))
             arg.resize(newwidth, newheight);
+
          if (change_pos && isFunc(arg.move))
             arg.move(newx, newy, newx - oldx, newy - oldy);
 
          if (change_size || change_pos) {
             if (arg.obj) {
-               let rect = pp.getPadRect();
+               let rect = arg.pad_rect ?? pp.getPadRect();
                arg.obj.fX1NDC = newx / rect.width;
                arg.obj.fX2NDC = (newx + newwidth) / rect.width;
                arg.obj.fY1NDC = 1 - (newy + newheight) / rect.height;
                arg.obj.fY2NDC = 1 - newy / rect.height;
                arg.obj.modified_NDC = true; // indicate that NDC was interactively changed, block in updated
+            } else if (isFunc(arg.move_resize)) {
+               arg.move_resize(newx, newy, newwidth, newheight);
             }
             if (isFunc(arg.redraw))
                arg.redraw(arg);
@@ -120,6 +129,7 @@ function addDragHandler(_painter, arg) {
    drag_move
       .on('start', function(evnt) {
          if (detectRightButton(evnt.sourceEvent) || drag_kind) return;
+         if (isFunc(arg.is_disabled) && arg.is_disabled()) return;
 
          closeMenu(); // close menu
 
@@ -128,9 +138,7 @@ function addDragHandler(_painter, arg) {
          evnt.sourceEvent.preventDefault();
          evnt.sourceEvent.stopPropagation();
 
-         let pad_rect = pp.getPadRect();
-
-         let handle = {
+         let pad_rect = arg.pad_rect ?? pp.getPadRect(), handle = {
             x: arg.x, y: arg.y, width: arg.width, height: arg.height,
             acc_x1: arg.x, acc_y1: arg.y,
             pad_w: pad_rect.width - arg.width,
@@ -141,7 +149,7 @@ function addDragHandler(_painter, arg) {
 
          drag_painter = painter;
          drag_kind = 'move';
-         drag_rect = d3_select(painter.draw_g.node().parentNode).append('path')
+         drag_rect = d3_select(arg.getDrawG().node().parentNode).append('path')
             .attr('d', `M${handle.acc_x1},${handle.acc_y1}${handle.path}`)
             .style('cursor', 'move')
             .style('pointer-events', 'none') // let forward double click to underlying elements
@@ -189,14 +197,14 @@ function addDragHandler(_painter, arg) {
    drag_resize
       .on('start', function(evnt) {
          if (detectRightButton(evnt.sourceEvent) || drag_kind) return;
+         if (isFunc(arg.is_disabled) && arg.is_disabled()) return;
 
          evnt.sourceEvent.stopPropagation();
          evnt.sourceEvent.preventDefault();
 
          setPainterTooltipEnabled(painter, false); // disable tooltip
 
-         let pad_rect = pp.getPadRect(),
-             handle = {
+         let pad_rect = arg.pad_rect ?? pp.getPadRect(), handle = {
             x: arg.x, y: arg.y, width: arg.width, height: arg.height,
             acc_x1: arg.x, acc_y1: arg.y,
             acc_x2: arg.x + arg.width, acc_y2: arg.y + arg.height,
@@ -205,7 +213,7 @@ function addDragHandler(_painter, arg) {
 
          drag_painter = painter;
          drag_kind = 'resize';
-         drag_rect = d3_select(painter.draw_g.node().parentNode)
+         drag_rect = d3_select(arg.getDrawG().node().parentNode)
             .append('rect')
             .style('cursor', d3_select(this).style('cursor'))
             .attr('x', handle.acc_x1)
@@ -257,10 +265,10 @@ function addDragHandler(_painter, arg) {
       });
 
    if (!arg.only_resize)
-      painter.draw_g.style('cursor', 'move').call(drag_move);
+      arg.getDrawG().style('cursor', 'move').call(drag_move);
 
    if (!arg.only_move)
-      makeResizeElements(painter.draw_g, drag_resize);
+      makeResizeElements(arg.getDrawG(), drag_resize);
 }
 
 const TooltipHandler = {
@@ -2832,4 +2840,3 @@ class TFramePainter extends ObjectPainter {
 } // class TFramePainter
 
 export { addDragHandler, TooltipHandler, FrameInteractive, TFramePainter };
-

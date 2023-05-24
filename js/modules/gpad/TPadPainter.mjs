@@ -6,6 +6,7 @@ import { ColorPalette, adoptRootColors, extendRootColors, getRGBfromTColor } fro
 import { getElementRect, getAbsPosInCanvas, DrawOptions, compressSVG, makeTranslate, svgToImage } from '../base/BasePainter.mjs';
 import { ObjectPainter, selectActivePad, getActivePad } from '../base/ObjectPainter.mjs';
 import { TAttLineHandler } from '../base/TAttLineHandler.mjs';
+import { addDragHandler } from './TFramePainter.mjs';
 import { createMenu, closeMenu } from '../gui/menu.mjs';
 import { ToolbarIcons, registerForResize, saveFile } from '../gui/utils.mjs';
 import { BrowserLayout } from '../gui/display.mjs';
@@ -16,7 +17,10 @@ function getButtonSize(handler, fact) {
    return Math.round((fact || 1) * (handler.iscan || !handler.has_canvas ? 16 : 12));
 }
 
-function toggleButtonsVisibility(handler, action) {
+function toggleButtonsVisibility(handler, action, evnt) {
+   evnt?.preventDefault();
+   evnt?.stopPropagation();
+
    let group = handler.getLayerSvg('btns_layer', handler.this_pad_name),
        btn = group.select("[name='Toggle']");
 
@@ -31,8 +35,13 @@ function toggleButtonsVisibility(handler, action) {
 
    let is_visible = false;
    switch(action) {
-      case 'enable': is_visible = true; break;
-      case 'enterbtn': return; // do nothing, just cleanup timeout
+      case 'enable':
+         is_visible = true;
+         handler.btns_active_flag = true;
+         break;
+      case 'enterbtn':
+         handler.btns_active_flag = true;
+         return; // do nothing, just cleanup timeout
       case 'timeout': is_visible = false; break;
       case 'toggle':
          state = !state;
@@ -41,6 +50,7 @@ function toggleButtonsVisibility(handler, action) {
          break;
       case 'disable':
       case 'leavebtn':
+         handler.btns_active_flag = false;
          if (!state) btn.property('timout_handler', setTimeout(() => toggleButtonsVisibility(handler, 'timeout'), 1200));
          return;
    }
@@ -105,7 +115,7 @@ let PadButtonsHandler = {
          ctrl = ToolbarIcons.createSVG(group, ToolbarIcons.rect, getButtonSize(this), 'Toggle tool buttons')
                             .attr('name', 'Toggle').attr('x', 0).attr('y', 0)
                             .property('buttons_state', (settings.ToolBar !== 'popup'))
-                            .on('click', () => toggleButtonsVisibility(this, 'toggle'))
+                            .on('click', evnt => toggleButtonsVisibility(this, 'toggle', evnt))
                             .on('mouseenter', () => toggleButtonsVisibility(this, 'enable'))
                             .on('mouseleave', () => toggleButtonsVisibility(this, 'disable'));
 
@@ -637,17 +647,32 @@ class TPadPainter extends ObjectPainter {
          if (!isBatchMode() || (this.pad.fFillStyle > 0) || ((this.pad.fLineStyle > 0) && (this.pad.fLineColor > 0)))
             svg_border = svg_pad.append('svg:path').attr('class', 'root_pad_border');
 
-         if (!isBatchMode())
+         if (!isBatchMode()) {
             svg_border.style('pointer-events', 'visibleFill') // get events also for not visible rect
                       .on('dblclick', evnt => this.enlargePad(evnt, true))
                       .on('click', () => this.selectObjectPainter())
                       .on('mouseenter', () => this.showObjectStatus())
                       .on('contextmenu', settings.ContextMenu ? evnt => this.padContextMenu(evnt) : null);
 
-         svg_pad.append('svg:g').attr('class','primitives_layer');
+            if (!this.iscan)
+               addDragHandler(this, { x, y, width: w, height: h, no_transform: true,
+                                      is_disabled: () => svg_can.property('pad_enlarged') || this.btns_active_flag,
+                                      getDrawG: () => this.svg_this_pad(),
+                                      pad_rect: { width, height },
+                                      minwidth: 20, minheight: 20,
+                                      move_resize: (_x, _y, _w, _h) => {
+                                         this.pad.fAbsWNDC = _w / width;
+                                         this.pad.fAbsHNDC = _h / height;
+                                         this.pad.fAbsXlowNDC = _x / width;
+                                         this.pad.fAbsYlowNDC = 1 - (_y + _h) / height;
+                                      },
+                                      redraw: () => this.interactiveRedraw('pad', 'padpos') });
+         }
+
+         svg_pad.append('svg:g').attr('class', 'primitives_layer');
          if (!isBatchMode())
             btns = svg_pad.append('svg:g')
-                          .attr('class','btns_layer')
+                          .attr('class', 'btns_layer')
                           .property('leftside', settings.ToolBarSide != 'left')
                           .property('vertical', settings.ToolBarVert);
       }
@@ -1991,11 +2016,8 @@ class TPadPainter extends ObjectPainter {
 
       if (funcname == 'PadContextMenus') {
 
-         if (evnt) {
-            evnt.preventDefault();
-            evnt.stopPropagation();
-         }
-
+         evnt?.preventDefault();
+         evnt?.stopPropagation();
          if (closeMenu()) return;
 
          createMenu(evnt, this).then(menu => {
@@ -2044,7 +2066,7 @@ class TPadPainter extends ObjectPainter {
 
       this.painters.forEach(pp => {
          if (isFunc(pp.clickPadButton))
-            pp.clickPadButton(funcname);
+            pp.clickPadButton(funcname, evnt);
 
          if (!done && isFunc(pp.clickButton))
             done = pp.clickButton(funcname);

@@ -7,7 +7,7 @@
 4. Correctly handle 'same0' draw option for TH2
 5. Fix several issues with axis reverse order
 6. Implement reverse axis on lego plots
-7. Add interactivity (moving, context menu) for TLine, TBox, TText, TLatex, TDiamond, TGaxis
+7. Add interactivity (moving, context menu) for TLine, TBox, TText, TLatex, TDiamond, TGaxis, TASImage
 8. Support more kinds of log scales - ln and logN where N is any positive integer
 9. Use new gStyle attributes for candle and violin plots
 10. Implement autoplace for TLegend, also via context menu
@@ -21,9 +21,15 @@
 18. Let superimpose TH3 and geo drawings
 19. Apply pad draw options like 'gridx' or 'logy' to all subpads
 20. Support new TScatter class
-21. Fix - rescan sumw2 when update TH1
-22. Fix - correct placing for TLegend header
-23. Fix - correctly align sub/super scripts in complex TLatex
+21. Implement moving and resizing of subpads
+22. Implement zooming in the TASImage
+23. Let configure position and direction of camera for TGeo, let create URL for that
+24. Support labels rotation for simple axis in geometry
+25. Support many orthographic cameras with overlayed grid/labels
+26. Support InstancedMesh for TGeo drawing, let show really large geometries
+27. Fix - rescan sumw2 when update TH1
+28. Fix - correct placing for TLegend header
+29. Fix - correctly align sub/super scripts in complex TLatex
 
 
 ## Changes in 7.3.1

@@ -1416,5 +1416,4 @@ class RH2Painter extends RHistPainter {
 
 } //  class RH2Painter
 
-
 export { RH2Painter };

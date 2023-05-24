@@ -495,5 +495,4 @@ class RHistStatsPainter extends RPavePainter {
 
 } // class RHistStatsPainter
 
-
 export { RPavePainter, RLegendPainter, RPaveTextPainter, RHistStatsPainter };

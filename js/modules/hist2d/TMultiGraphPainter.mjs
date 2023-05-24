@@ -294,5 +294,4 @@ class TMultiGraphPainter extends ObjectPainter {
 
 } // class TMultiGraphPainter
 
-
 export { TMultiGraphPainter };
