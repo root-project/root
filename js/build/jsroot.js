@@ -998,7 +998,7 @@ const prROOT = 'ROOT.', clTObject = 'TObject', clTNamed = 'TNamed', clTString = 
       clTPave = 'TPave', clTPaveText = 'TPaveText', clTPaveStats = 'TPaveStats', clTPavesText = 'TPavesText',
       clTPaveLabel = 'TPaveLabel', clTDiamond = 'TDiamond',
       clTLegend = 'TLegend', clTLegendEntry = 'TLegendEntry', clTPaletteAxis = 'TPaletteAxis',
-      clTText = 'TText', clTLatex = 'TLatex', clTMathText = 'TMathText',
+      clTText = 'TText', clTLatex = 'TLatex', clTMathText = 'TMathText', clTAnnotation = 'TAnnotation',
       clTColor = 'TColor', clTLine = 'TLine', clTBox = 'TBox', clTPolyLine = 'TPolyLine',
       clTPolyLine3D = 'TPolyLine3D', clTPolyMarker3D = 'TPolyMarker3D',
       clTAttPad = 'TAttPad', clTPad = 'TPad', clTCanvas = 'TCanvas', clTAttCanvas = 'TAttCanvas',
@@ -1755,6 +1755,7 @@ addMethods: addMethods,
 atob_func: atob_func,
 browser: browser$1,
 btoa_func: btoa_func,
+clTAnnotation: clTAnnotation,
 clTAttCanvas: clTAttCanvas,
 clTAttFill: clTAttFill,
 clTAttLine: clTAttLine,
@@ -57626,6 +57627,8 @@ function create3DScene(render3d, x3dscale, y3dscale) {
    this.scene.add(this.toplevel);
    this.scene_width = sz.width;
    this.scene_height = sz.height;
+   this.scene_x = sz.x ?? 0;
+   this.scene_y = sz.y ?? 0;
 
    this.camera = new PerspectiveCamera(45, this.scene_width / this.scene_height, 1, 40*this.size_z3d);
 
@@ -57782,6 +57785,12 @@ function render3D(tmout) {
       this.enable_highlight = (this.first_render_tm < 1200) && this.isTooltipAllowed();
       console.log(`three.js r${REVISION}, first render tm = ${this.first_render_tm}`);
    }
+
+   if (this.processRender3D)
+      this.getPadPainter()?.painters?.forEach(objp => {
+         if (isFunc(objp.handleRender3D))
+            objp.handleRender3D();
+      });
 }
 
 /** @summary Check is 3D drawing need to be resized
@@ -58510,10 +58519,39 @@ function drawXYZ(toplevel, AxisPainter, opts) {
    }
 }
 
+
+/** @summary Converts 3D coordiante to the pad NDC
+  * @private */
+function convert3DtoPadNDC(x, y, z) {
+
+   x = this.x_handle.gr(x);
+   y = this.y_handle.gr(y);
+   z = this.z_handle.gr(z);
+
+   let vector = new Vector3().set( x, y, z );
+
+   // map to normalized device coordinate (NDC) space
+   vector.project( this.camera );
+
+   vector.x = (vector.x + 1) / 2;
+   vector.y = (vector.y + 1) / 2;
+
+   let pp = this.getPadPainter(),
+       pw = pp?.getPadWidth(),
+       ph = pp?.getPadHeight();
+
+   if (pw && ph) {
+      vector.x = (this.scene_x + vector.x * this.scene_width) / pw;
+      vector.y = (this.scene_y + vector.y * this.scene_height) / ph;
+   }
+
+   return vector;
+}
+
 /** @summary Assign 3D methods for frame painter
   * @private */
 function assignFrame3DMethods(fpainter) {
-   Object.assign(fpainter, { create3DScene, render3D, resize3D, highlightBin3D, set3DOptions, drawXYZ });
+   Object.assign(fpainter, { create3DScene, render3D, resize3D, highlightBin3D, set3DOptions, drawXYZ, convert3DtoPadNDC });
 }
 
 
@@ -98453,6 +98491,7 @@ const drawFuncs = { lst: [
    { name: clTLatex, icon: 'img_text', draw: () => import_more().then(h => h.drawText), direct: true },
    { name: clTMathText, sameas: clTLatex },
    { name: clTText, sameas: clTLatex },
+   { name: clTAnnotation, sameas: clTLatex },
    { name: /^TH1/, icon: 'img_histo1d', class: () => Promise.resolve().then(function () { return TH1Painter$1; }).then(h => h.TH1Painter), opt: ';hist;P;P0;E;E1;E2;E3;E4;E1X0;L;LF2;B;B1;A;TEXT;LEGO;same', ctrl: 'l' },
    { name: clTProfile, icon: 'img_profile', class: () => Promise.resolve().then(function () { return TH1Painter$1; }).then(h => h.TH1Painter), opt: ';E0;E1;E2;p;AH;hist' },
    { name: clTH2Poly, icon: 'img_histo2d', class: () => Promise.resolve().then(function () { return TH2Painter$1; }).then(h => h.TH2Painter), opt: ';COL;COL0;COLZ;LCOL;LCOL0;LCOLZ;LEGO;TEXT;same', expand_item: 'fBins', theonly: true },
@@ -98489,7 +98528,7 @@ const drawFuncs = { lst: [
    { name: 'kind:Text', icon: 'img_text', func: drawRawText },
    { name: clTObjString, icon: 'img_text', func: drawRawText },
    { name: clTF1, icon: 'img_tf1', class: () => Promise.resolve().then(function () { return TF1Painter$1; }).then(h => h.TF1Painter) },
-   { name: clTF2, icon: 'img_tf2', draw: () => Promise.resolve().then(function () { return TF2; }).then(h => h.drawTF2) },
+   { name: clTF2, icon: 'img_tf2', draw: () => Promise.resolve().then(function () { return TF2; }).then(h => h.drawTF2), opt: ';BOX;ARR;SURF;SURF1;SURF2;SURF4;SURF6;LEGO;LEGO0;LEGO1;LEGO2;LEGO3;LEGO4;same' },
    { name: clTSpline3, icon: 'img_tf1', class: () => Promise.resolve().then(function () { return TSplinePainter$1; }).then(h => h.TSplinePainter) },
    { name: 'TSpline5', sameas: clTSpline3 },
    { name: clTEllipse, icon: 'img_graph', draw: () => import_more().then(h => h.drawEllipse), direct: true },
@@ -98995,7 +99034,8 @@ async function makeSVG(args) {
 internals.addDrawFunc = addDrawFunc;
 
 function assignPadPainterDraw(PadPainterClass) {
-   PadPainterClass.prototype.drawObject = draw;
+   PadPainterClass.prototype.drawObject = async (...args) =>
+      draw(...args).catch(err => { console.log(err?.message ?? err); return null; } );
    PadPainterClass.prototype.getObjectDrawSettings = getDrawSettings;
 }
 
@@ -105514,11 +105554,18 @@ async function drawText$1() {
        h = pp.getPadHeight(),
        pos_x = text.fX, pos_y = text.fY,
        use_frame = false,
-       fact = 1., main = this.getFramePainter();
+       fact = 1., main = this.getFramePainter(),
+       annot = this.matchObjectType(clTAnnotation);
 
    this.createAttText({ attr: text });
 
-   if (text.TestBit(BIT(14))) {
+   if (annot && main?.mode3d && isFunc(main?.convert3DtoPadNDC)) {
+      let pos = main.convert3DtoPadNDC(text.fX, text.fY, text.fZ);
+      pos_x = pos.x;
+      pos_y = pos.y;
+      this.isndc = true;
+      annot = '3d';
+   } else if (text.TestBit(BIT(14))) {
       // NDC coordinates
       this.isndc = true;
    } else if (main && !main.mode3d) {
@@ -105542,7 +105589,7 @@ async function drawText$1() {
 
    let arg = this.textatt.createArg({ x: this.pos_x, y: this.pos_y, text: text.fTitle, latex: 0 });
 
-   if (text._typename == clTLatex) {
+   if ((text._typename == clTLatex) || annot) {
       arg.latex = 1;
       fact = 0.9;
    } else if (text._typename == clTMathText) {
@@ -105560,7 +105607,7 @@ async function drawText$1() {
       this.pos_dx = this.pos_dy = 0;
 
       if (!this.moveDrag)
-         this.moveDrag = function(dx,dy) {
+         this.moveDrag = function(dx, dy) {
             this.pos_dx += dx;
             this.pos_dy += dy;
             this.draw_g.attr('transform', makeTranslate(this.pos_dx, this.pos_dy));
@@ -105575,7 +105622,17 @@ async function drawText$1() {
             this.submitCanvExec(`SetX(${text.fX});;SetY(${text.fY});;`);
          };
 
-      addMoveHandler(this);
+      if (annot != '3d') {
+         addMoveHandler(this);
+      } else {
+         main.processRender3D = true;
+         this.handleRender3D = () => {
+            let pos = main.convert3DtoPadNDC(text.fX, text.fY, text.fZ),
+                new_x = this.axisToSvg('x', pos.x, true),
+                new_y = this.axisToSvg('y', pos.y, true);
+            this.draw_g.attr('transform', makeTranslate(new_x - this.pos_x, new_y - this.pos_y));
+         };
+      }
 
       assignContextMenu(this);
 
@@ -123265,6 +123322,7 @@ exports.browser = browser$1;
 exports.btoa_func = btoa_func;
 exports.buildGUI = buildGUI;
 exports.buildSvgCurve = buildSvgCurve;
+exports.clTAnnotation = clTAnnotation;
 exports.clTAttCanvas = clTAttCanvas;
 exports.clTAttFill = clTAttFill;
 exports.clTAttLine = clTAttLine;
