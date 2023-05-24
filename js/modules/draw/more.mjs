@@ -1,4 +1,4 @@
-import { BIT, isBatchMode, clTLatex, clTMathText, clTPolyLine } from '../core.mjs';
+import { BIT, isBatchMode, isFunc, clTLatex, clTMathText, clTAnnotation, clTPolyLine } from '../core.mjs';
 import { rgb as d3_rgb, select as d3_select } from '../d3.mjs';
 import { BasePainter, makeTranslate } from '../base/BasePainter.mjs';
 import { addMoveHandler } from '../gui/utils.mjs';
@@ -14,11 +14,18 @@ async function drawText() {
        h = pp.getPadHeight(),
        pos_x = text.fX, pos_y = text.fY,
        use_frame = false,
-       fact = 1., main = this.getFramePainter();
+       fact = 1., main = this.getFramePainter(),
+       annot = this.matchObjectType(clTAnnotation);
 
    this.createAttText({ attr: text });
 
-   if (text.TestBit(BIT(14))) {
+   if (annot && main?.mode3d && isFunc(main?.convert3DtoPadNDC)) {
+      let pos = main.convert3DtoPadNDC(text.fX, text.fY, text.fZ);
+      pos_x = pos.x;
+      pos_y = pos.y;
+      this.isndc = true;
+      annot = '3d';
+   } else if (text.TestBit(BIT(14))) {
       // NDC coordinates
       this.isndc = true;
    } else if (main && !main.mode3d) {
@@ -44,7 +51,7 @@ async function drawText() {
 
    let arg = this.textatt.createArg({ x: this.pos_x, y: this.pos_y, text: text.fTitle, latex: 0 });
 
-   if (text._typename == clTLatex) {
+   if ((text._typename == clTLatex) || annot) {
       arg.latex = 1;
       fact = 0.9;
    } else if (text._typename == clTMathText) {
@@ -62,7 +69,7 @@ async function drawText() {
       this.pos_dx = this.pos_dy = 0;
 
       if (!this.moveDrag)
-         this.moveDrag = function(dx,dy) {
+         this.moveDrag = function(dx, dy) {
             this.pos_dx += dx;
             this.pos_dy += dy;
             this.draw_g.attr('transform', makeTranslate(this.pos_dx, this.pos_dy));
@@ -77,7 +84,17 @@ async function drawText() {
             this.submitCanvExec(`SetX(${text.fX});;SetY(${text.fY});;`);
          }
 
-      addMoveHandler(this);
+      if (annot != '3d') {
+         addMoveHandler(this);
+      } else {
+         main.processRender3D = true;
+         this.handleRender3D = () => {
+            let pos = main.convert3DtoPadNDC(text.fX, text.fY, text.fZ),
+                new_x = this.axisToSvg('x', pos.x, true),
+                new_y = this.axisToSvg('y', pos.y, true);
+            this.draw_g.attr('transform', makeTranslate(new_x - this.pos_x, new_y - this.pos_y));
+         };
+      }
 
       assignContextMenu(this);
 
