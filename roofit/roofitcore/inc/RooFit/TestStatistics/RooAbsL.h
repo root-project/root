@@ -40,14 +40,12 @@ public:
    public:
       ClonePdfData(RooAbsPdf *inPdf, RooAbsData *inData) : pdf{inPdf}, data{inData} {}
       ClonePdfData(std::unique_ptr<RooAbsPdf> inPdf, RooAbsData *inData)
-         : pdf{inPdf.get()}, data{inData}, _ownedPdf{std::move(inPdf)}
+         : pdf{inPdf.get()}, data{inData}, ownedPdf{std::move(inPdf)}
       {
       }
       RooAbsPdf *pdf = nullptr;
       RooAbsData *data = nullptr;
-
-   private:
-      std::shared_ptr<RooAbsPdf> _ownedPdf;
+      std::shared_ptr<RooAbsPdf> ownedPdf;
    };
 
 private:
