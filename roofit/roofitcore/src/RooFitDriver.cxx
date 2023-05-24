@@ -124,7 +124,6 @@ struct NodeInfo {
    bool hasLogged = false;
    std::size_t outputSize = 1;
    std::size_t lastSetValCount = std::numeric_limits<std::size_t>::max();
-   std::size_t originalDataToken = 0;
    double scalarBuffer = 0.0;
    std::vector<NodeInfo *> serverInfos;
    std::vector<NodeInfo *> clientInfos;
@@ -176,7 +175,6 @@ RooFitDriver::RooFitDriver(const RooAbsReal &absReal, RooFit::BatchModeOption ba
       nodeInfo.iNode = iNode;
       nodeInfos[arg] = &nodeInfo;
 
-      nodeInfo.originalDataToken = arg->dataToken();
       arg->setDataToken(iNode);
 
       if (dynamic_cast<RooRealVar const *>(arg)) {
@@ -285,7 +283,7 @@ void RooFitDriver::setData(DataSpansMap const &dataSpans)
 RooFitDriver::~RooFitDriver()
 {
    for (auto &info : _nodes) {
-      info.absArg->setDataToken(info.originalDataToken);
+      info.absArg->resetDataToken();
    }
 
    if (_batchMode == RooFit::BatchModeOption::Cuda) {

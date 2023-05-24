@@ -705,8 +705,8 @@ private:
   /// Returns the token for retrieving results in the BatchMode. For internal use only.
   std::size_t dataToken() const { return _dataToken; }
 
-  /// Sets the token for retrieving results in the BatchMode. For internal use only.
-  void setDataToken(std::size_t index) { _dataToken = index; }
+  void setDataToken(std::size_t index);
+  void resetDataToken() { _dataToken = std::numeric_limits<std::size_t>::max(); }
  protected:
 
 
@@ -733,7 +733,7 @@ private:
 
   mutable RooWorkspace *_myws; //! In which workspace do I live, if any
 
-  std::size_t _dataToken = 0; //! Set by the RooFitDriver for this arg to retrieve its result in the run context
+  std::size_t _dataToken = std::numeric_limits<std::size_t>::max(); //! Set by the RooFitDriver for this arg to retrieve its result in the run context
 
   /// \cond Internal
   // Legacy streamers need the following statics:
