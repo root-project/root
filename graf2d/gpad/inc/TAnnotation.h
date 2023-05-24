@@ -31,6 +31,9 @@ public:
    void PaintAnnotation(Double_t x, Double_t y, Double_t z, Double_t angle, Double_t size, const Char_t *text);
    void Print(Option_t *option="") const override;
 
+   void SetZ(double z) { fZ = z; } // *MENU*
+   double GetZ() const { return fZ; }
+
    ClassDefOverride(TAnnotation,1)  //Annotation in 2d or 3D
 };
 
