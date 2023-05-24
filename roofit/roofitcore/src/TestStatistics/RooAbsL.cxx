@@ -75,7 +75,8 @@ RooAbsL::RooAbsL(std::shared_ptr<RooAbsPdf> pdf, std::shared_ptr<RooAbsData> dat
 /// \param extended Set extended term calculation on, off or use Extended::Auto to determine automatically based on the
 /// pdf whether to activate or not.
 RooAbsL::RooAbsL(RooAbsL::ClonePdfData in, std::size_t N_events, std::size_t N_components, Extended extended)
-   : RooAbsL(std::shared_ptr<RooAbsPdf>(static_cast<RooAbsPdf *>(in.pdf->cloneTree())),
+   : RooAbsL(in.ownedPdf ? std::move(in.ownedPdf)
+                         : std::unique_ptr<RooAbsPdf>(static_cast<RooAbsPdf *>(in.pdf->cloneTree())),
              std::shared_ptr<RooAbsData>(static_cast<RooAbsData *>(in.data->Clone())), N_events, N_components, extended)
 {
    initClones(*in.pdf, *in.data);
