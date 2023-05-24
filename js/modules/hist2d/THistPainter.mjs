@@ -1,6 +1,6 @@
 import { gStyle, BIT, settings, constants, internals, create, isObject, isFunc, isStr, getPromise,
-         clTList, clTPave, clTPaveText, clTPaveStats, clTPaletteAxis,
-         clTAxis, clTGaxis, clTF1, clTProfile, kNoZoom, clTCutG, kNoStats } from '../core.mjs';
+         clTList, clTPaveText, clTPaveStats, clTPaletteAxis,
+         clTAxis, clTF1, clTProfile, kNoZoom, clTCutG, kNoStats } from '../core.mjs';
 import { getColor, getColorPalette } from '../base/colors.mjs';
 import { DrawOptions } from '../base/BasePainter.mjs';
 import { ObjectPainter, EAxisBits } from '../base/ObjectPainter.mjs';
@@ -1575,13 +1575,11 @@ class THistPainter extends ObjectPainter {
    }
 
    /** @summary Fill histogram context menu */
-   fillContextMenu(menu) {
+   fillContextMenuItems(menu) {
 
       let histo = this.getHisto(),
           fp = this.getFramePainter();
       if (!histo) return;
-
-      menu.add(`header:${histo._typename}::${histo.fName}`);
 
       if (this.options.Axis <= 0)
          menu.addchk(this.toggleStat('only-check'), 'Show statbox', () => this.toggleStat());
@@ -1649,12 +1647,8 @@ class THistPainter extends ObjectPainter {
             menu.add('Reset camera', () => main.control.reset());
       }
 
-      menu.addAttributesMenu(this);
-
       if (this.histogram_updated && fp.zoomChangedInteractive())
          menu.add('Let update zoom', () => fp.zoomChangedInteractive('reset'));
-
-      return true;
    }
 
    /** @summary Auto zoom into histogram non-empty range

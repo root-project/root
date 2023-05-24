@@ -1402,11 +1402,8 @@ class RPadPainter extends RObjectPainter {
 
       if (funcname == 'PadContextMenus') {
 
-         if (evnt) {
-            evnt.preventDefault();
-            evnt.stopPropagation();
-         }
-
+         evnt?.preventDefault();
+         evnt?.stopPropagation();
          if (closeMenu()) return;
 
          createMenu(evnt, this).then(menu => {
@@ -1457,7 +1454,7 @@ class RPadPainter extends RObjectPainter {
          let pp = this.painters[i];
 
          if (isFunc(pp.clickPadButton))
-            pp.clickPadButton(funcname);
+            pp.clickPadButton(funcname, evnt);
 
          if (!done && isFunc(pp.clickButton))
             done = pp.clickButton(funcname);

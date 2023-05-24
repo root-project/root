@@ -173,9 +173,16 @@ class DrawOptions {
 
    /** @summary Returns remaining part of found option as integer. */
    partAsInt(offset, dflt) {
+      let mult = 1, last = this.part ? this.part[this.part.length - 1] : '';
+      if (last == 'K')
+         mult = 1e3;
+      else if (last == 'M')
+         mult = 1e6;
+      else if (last == 'G')
+         mult = 1e9;
       let val = this.part.replace(/^\D+/g, '');
       val = val ? parseInt(val, 10) : Number.NaN;
-      return !Number.isInteger(val) ? (dflt || 0) : val + (offset || 0);
+      return !Number.isInteger(val) ? (dflt || 0) : mult*val + (offset || 0);
    }
 
    /** @summary Returns remaining part of found option as float. */

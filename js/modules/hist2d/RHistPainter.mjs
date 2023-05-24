@@ -614,9 +614,7 @@ class RHistPainter extends RObjectPainter {
    }
 
    /** @summary Fill histogram context menu */
-   fillContextMenu(menu) {
-
-      menu.add('header:v7histo::anyname');
+   fillContextMenuItems(menu) {
 
       if (this.draw_content) {
          menu.addchk(this.toggleStat('only-check'), 'Show statbox', () => this.toggleStat());
@@ -672,12 +670,8 @@ class RHistPainter extends RObjectPainter {
             menu.add('Reset camera', () => main.control.reset());
       }
 
-      menu.addAttributesMenu(this);
-
       if (this.histogram_updated && fp.zoomChangedInteractive())
          menu.add('Let update zoom', () => fp.zoomChangedInteractive('reset'));
-
-      return true;
    }
 
    /** @summary Update palette drawing */

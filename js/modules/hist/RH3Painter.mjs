@@ -768,5 +768,4 @@ function drawHistDisplayItem(dom, obj, opt) {
    return null;
 }
 
-
 export { RH3Painter, drawHistDisplayItem };
