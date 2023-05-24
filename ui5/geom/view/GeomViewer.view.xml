@@ -168,7 +168,6 @@
                              <core:Item key="2" text="centered"/>
                           </ComboBox>
                        </HBox>
-                       <Button text="Reset camera" press="cameraReset" tooltip="Set default camera position"/>
                     </VBox>
                   </IconTabFilter>
 
@@ -180,6 +179,32 @@
             </IconTabBar>
             <IconTabBar expanded="false">
                 <items>
+                  <IconTabFilter text="Camera">
+                    <VBox>
+                       <HBox class="sapUiTinyMargin" justifyContent="SpaceBetween" alignItems="Center">
+                          <Label text="Kind"  wrapping="true"/>
+                          <ComboBox selectedKey="{/camera_kind}"
+                                    change="cameraKindChanged"
+                                    items="{ path: '/cameraKindItems' }">
+                              <core:Item key="{value}" text="{name}" />
+                          </ComboBox>
+                       </HBox>
+                       <HBox class="sapUiTinyMargin" justifyContent="SpaceBetween" alignItems="Center">
+                          <Label text="Overlay"  wrapping="true"/>
+                          <ComboBox selectedKey="{/camera_overlay}"
+                                    change="cameraOverlayChanged"
+                                    items="{ path: '/cameraOverlayItems' }">
+                                 <core:Item key="{value}" text="{name}" />
+                          </ComboBox>
+                       </HBox>
+                       <HBox class="sapUiTinyMargin" justifyContent="SpaceBetween" alignItems="Center">
+                          <CheckBox text="Can rotate" selected="{/can_rotate}" select="cameraCanRotateChanged"/>
+                          <Button text="Reset position" press="cameraReset" tooltip="Set default camera position"/>
+                       </HBox>
+                    </VBox>
+                  </IconTabFilter>
+
+
                   <IconTabFilter text="Advanced">
                      <VBox>
                      <CheckBox text="Depth test" selected="{/depthTest}" select="depthTestChanged"/>

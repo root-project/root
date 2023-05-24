@@ -757,6 +757,18 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          this.processPainterChange('focusCamera');
       },
 
+      cameraCanRotateChanged() {
+         this.processPainterChange('changeCanRotate');
+      },
+
+      cameraKindChanged() {
+         this.processPainterChange('changeCamera');
+      },
+
+      cameraOverlayChanged() {
+         this.processPainterChange('changeCamera');
+      },
+
       depthTestChanged() {
          this.processPainterChange('changedDepthTest');
       },
