@@ -108,8 +108,8 @@ private:
    std::uint64_t fOnDiskSize = 0;
    std::uint64_t fInMemorySize = 0;
 
-   std::vector<RColumnInfo> fColumnInfo;
-   std::vector<RFieldInfo> fFieldInfo;
+   std::map<int, RColumnInfo> fColumnInfo;
+   std::map<int, RFieldInfo> fFieldInfo;
 
    RNTupleInspector(std::unique_ptr<Detail::RPageSource> pageSource);
 
