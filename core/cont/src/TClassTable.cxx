@@ -501,7 +501,7 @@ void TClassTable::Add(TProtoClass *proto)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void TClassTable::AddAlternate(const char *normName, const char *alternate)
+ROOT::TClassAlt* TClassTable::AddAlternate(const char *normName, const char *alternate)
 {
    // This will be set at the lastest during TROOT construction, so before
    // any threading could happen.
@@ -519,11 +519,40 @@ void TClassTable::AddAlternate(const char *normName, const char *alternate)
                     "Second registration of %s with a different normalized name (old: '%s', new: '%s')\n",
                     alternate, a->fNormName, normName);
          }
-         return;
+         return nullptr;
       }
    }
 
    fgAlternate[slot] = new TClassAlt(alternate,normName,fgAlternate[slot]);
+   return fgAlternate[slot];
+}
+
+////////////////////////////////////////////////////////////////////////////////
+///
+void TClassTable::RemoveAlternate(ROOT::TClassAlt *alt)
+{
+   if (!alt || !gClassTable)
+      return;
+
+   std::lock_guard<std::mutex> lock(GetClassTableMutex());
+
+   UInt_t slot = ROOT::ClassTableHash(alt->fName, fgSize);
+
+   if (!fgAlternate[slot])
+      return;
+
+   if (fgAlternate[slot] == alt)
+      fgAlternate[slot] = alt->fNext.release();
+   else {
+      for (TClassAlt *a = fgAlternate[slot]; a; a = a->fNext.get()) {
+         if (a->fNext.get() == alt) {
+            a->fNext.swap( alt->fNext );
+	    assert( alt == alt->fNext.get());
+	    alt->fNext.release();
+	 }
+      }
+   }
+   delete alt;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -893,13 +922,24 @@ void ROOT::AddClass(const char *cname, Version_t id,
 /// Global function called by GenerateInitInstance.
 /// (see the ClassImp macro).
 
-void ROOT::AddClassAlternate(const char *normName, const char *alternate)
+ROOT::TClassAlt* ROOT::AddClassAlternate(const char *normName, const char *alternate)
 {
    if (!TROOT::Initialized() && !gClassTable) {
       GetDelayedAddClassAlternate().emplace_back(normName, alternate);
+      // If a library is loaded before gROOT is initialized we can assume
+      // it is hard linked along side libCore (or is libCore) thus can't
+      // really be unloaded.
+      return nullptr;
    } else {
-      TClassTable::AddAlternate(normName, alternate);
+      return TClassTable::AddAlternate(normName, alternate);
    }
+}
+
+void ROOT::RemoveClassAlternate(TClassAlt *alt)
+{
+   // This routine is meant to be called (indirectly) by dlclose so we
+   // we are guaranteed that the library initialization has completed.
+   TClassTable::RemoveAlternate(alt);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
