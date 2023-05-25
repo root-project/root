@@ -71,6 +71,7 @@ namespace ROOT {
       Detail::TCollectionProxyInfo *fCollectionStreamerInfo;
       std::vector<ROOT::Internal::TSchemaHelper>  fReadRules;
       std::vector<ROOT::Internal::TSchemaHelper>  fReadRawRules;
+      std::vector<ROOT::TClassAlt*>               fAlternate;
 
    public:
       TGenericClassInfo(const char *fullClassname,
@@ -116,6 +117,7 @@ namespace ROOT {
 
       TClass                           *IsA(const void *obj);
 
+      void                              AdoptAlternate(ROOT::TClassAlt *alt);
       Short_t                           AdoptStreamer(TClassStreamer*);
       Short_t                           AdoptCollectionProxy(TVirtualCollectionProxy*);
       void                              AdoptCollectionProxyInfo(Detail::TCollectionProxyInfo*);
