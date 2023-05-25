@@ -99,14 +99,14 @@ void ROOT::Experimental::RNTupleInspector::CollectFieldInfo()
             inMemSize += colInfo.GetInMemorySize();
          }
 
-         fFieldInfo.emplace(fieldId, RFieldInfo(fieldDescriptor, onDiskSize, inMemSize));
+         fFieldInfo.emplace(fieldId, RFieldTreeInfo(fieldDescriptor, onDiskSize, inMemSize));
          fieldIdQueue.push_back(fieldId);
       }
    }
 }
 
 std::vector<ROOT::Experimental::DescriptorId_t>
-ROOT::Experimental::RNTupleInspector::GetColumnsForFieldTree(DescriptorId_t fieldId)
+ROOT::Experimental::RNTupleInspector::GetColumnsForFieldTree(DescriptorId_t fieldId) const
 {
    std::vector<DescriptorId_t> colIds;
    std::deque<DescriptorId_t> fieldIdQueue{fieldId};
@@ -137,6 +137,7 @@ ROOT::Experimental::RNTupleInspector::Create(std::unique_ptr<ROOT::Experimental:
    auto inspector = std::unique_ptr<RNTupleInspector>(new RNTupleInspector(std::move(pageSource)));
 
    inspector->CollectColumnInfo();
+   inspector->CollectFieldInfo();
 
    return inspector;
 }
@@ -171,16 +172,13 @@ ROOT::Experimental::RNTupleInspector::Create(std::string_view ntupleName, std::s
    inspector->fSourceFile = std::move(sourceFile);
 
    inspector->CollectColumnInfo();
+   inspector->CollectFieldInfo();
 
    return inspector;
 }
 
-int ROOT::Experimental::RNTupleInspector::GetFieldTypeCount(std::string_view typeName, bool includeSubFields)
+int ROOT::Experimental::RNTupleInspector::GetFieldTypeCount(std::string_view typeName, bool includeSubFields) const
 {
-   if (fFieldInfo.empty()) {
-      CollectFieldInfo();
-   }
-
    int typeCount = 0;
 
    for (auto &[fldId, fldInfo] : fFieldInfo) {
@@ -196,7 +194,7 @@ int ROOT::Experimental::RNTupleInspector::GetFieldTypeCount(std::string_view typ
    return typeCount;
 }
 
-int ROOT::Experimental::RNTupleInspector::GetColumnTypeCount(ROOT::Experimental::EColumnType colType)
+int ROOT::Experimental::RNTupleInspector::GetColumnTypeCount(ROOT::Experimental::EColumnType colType) const
 {
    int typeCount = 0;
 
@@ -210,7 +208,7 @@ int ROOT::Experimental::RNTupleInspector::GetColumnTypeCount(ROOT::Experimental:
 }
 
 const ROOT::Experimental::RNTupleInspector::RColumnInfo &
-ROOT::Experimental::RNTupleInspector::GetColumnInfo(DescriptorId_t physicalColumnId)
+ROOT::Experimental::RNTupleInspector::GetColumnInfo(DescriptorId_t physicalColumnId) const
 {
    if (physicalColumnId > fDescriptor->GetNPhysicalColumns()) {
       throw RException(R__FAIL("No column with physical ID " + std::to_string(physicalColumnId) + " present"));
@@ -219,22 +217,18 @@ ROOT::Experimental::RNTupleInspector::GetColumnInfo(DescriptorId_t physicalColum
    return fColumnInfo.at(physicalColumnId);
 }
 
-const ROOT::Experimental::RNTupleInspector::RFieldInfo &
-ROOT::Experimental::RNTupleInspector::GetFieldInfo(DescriptorId_t fieldId)
+const ROOT::Experimental::RNTupleInspector::RFieldTreeInfo &
+ROOT::Experimental::RNTupleInspector::GetFieldInfo(DescriptorId_t fieldId) const
 {
    if (fieldId >= fDescriptor->GetNFields()) {
       throw RException(R__FAIL("No field with ID " + std::to_string(fieldId) + " present"));
    }
 
-   if (fFieldInfo.empty()) {
-      CollectFieldInfo();
-   }
-
    return fFieldInfo.at(fieldId);
 }
 
-const ROOT::Experimental::RNTupleInspector::RFieldInfo &
-ROOT::Experimental::RNTupleInspector::GetFieldInfo(std::string_view fieldName)
+const ROOT::Experimental::RNTupleInspector::RFieldTreeInfo &
+ROOT::Experimental::RNTupleInspector::GetFieldInfo(std::string_view fieldName) const
 {
    DescriptorId_t fieldId = fDescriptor->FindFieldId(fieldName);
 

@@ -58,6 +58,7 @@ std::cout << "The compression factor is " << std::fixed << std::setprecision(2)
 // clang-format on
 class RNTupleInspector {
 public:
+   /// Holds column-level storage information.
    class RColumnInfo {
    private:
       const RColumnDescriptor &fColumnDescriptor;
@@ -76,28 +77,29 @@ public:
            fNElements(nElems){};
       ~RColumnInfo() = default;
 
-      const RColumnDescriptor &GetDescriptor() { return fColumnDescriptor; }
-      std::uint64_t GetOnDiskSize() { return fOnDiskSize; }
-      std::uint64_t GetInMemorySize() { return fInMemorySize; }
-      std::uint64_t GetElementSize() { return fElementSize; }
-      std::uint64_t GetNElements() { return fNElements; }
-      EColumnType GetType() { return fColumnDescriptor.GetModel().GetType(); }
+      const RColumnDescriptor &GetDescriptor() const { return fColumnDescriptor; }
+      std::uint64_t GetOnDiskSize() const { return fOnDiskSize; }
+      std::uint64_t GetInMemorySize() const { return fInMemorySize; }
+      std::uint64_t GetElementSize() const { return fElementSize; }
+      std::uint64_t GetNElements() const { return fNElements; }
+      EColumnType GetType() const { return fColumnDescriptor.GetModel().GetType(); }
    };
 
-   class RFieldInfo {
+   /// Holds field-level storage information. Includes storage information of the sub-fields.
+   class RFieldTreeInfo {
    private:
-      const RFieldDescriptor &fFieldDescriptor;
+      const RFieldDescriptor &fRootFieldDescriptor;
       std::uint64_t fOnDiskSize = 0;
       std::uint64_t fInMemorySize = 0;
 
    public:
-      RFieldInfo(const RFieldDescriptor &fieldDesc, std::uint64_t onDiskSize, std::uint64_t inMemSize)
-         : fFieldDescriptor(fieldDesc), fOnDiskSize(onDiskSize), fInMemorySize(inMemSize){};
-      ~RFieldInfo() = default;
+      RFieldTreeInfo(const RFieldDescriptor &fieldDesc, std::uint64_t onDiskSize, std::uint64_t inMemSize)
+         : fRootFieldDescriptor(fieldDesc), fOnDiskSize(onDiskSize), fInMemorySize(inMemSize){};
+      ~RFieldTreeInfo() = default;
 
-      const RFieldDescriptor &GetDescriptor() { return fFieldDescriptor; }
-      std::uint64_t GetOnDiskSize() { return fOnDiskSize; }
-      std::uint64_t GetInMemorySize() { return fInMemorySize; }
+      const RFieldDescriptor &GetDescriptor() const { return fRootFieldDescriptor; }
+      std::uint64_t GetOnDiskSize() const { return fOnDiskSize; }
+      std::uint64_t GetInMemorySize() const { return fInMemorySize; }
    };
 
 private:
@@ -109,7 +111,7 @@ private:
    std::uint64_t fInMemorySize = 0;
 
    std::map<int, RColumnInfo> fColumnInfo;
-   std::map<int, RFieldInfo> fFieldInfo;
+   std::map<int, RFieldTreeInfo> fFieldInfo;
 
    RNTupleInspector(std::unique_ptr<Detail::RPageSource> pageSource);
 
@@ -120,14 +122,13 @@ private:
    /// This method is called when the `RNTupleInspector` is initially created.
    void CollectColumnInfo();
 
-   /// Gather field-level information and store it in `fFieldInfo`.
+   /// Gather field-level information and store it in `fFieldTreeInfo`.
    ///
-   /// Contrary to `CollectColumnInfo`, this method is only called (and thus, `fFieldInfo`
-   /// is only populated) when a field-related inspector method is called.
+   /// This method is called when the `RNTupleInspector` is initially created.
    void CollectFieldInfo();
 
    /// Get the IDs of the columns that make up the given field, including its sub-fields.
-   std::vector<DescriptorId_t> GetColumnsForFieldTree(DescriptorId_t fieldId);
+   std::vector<DescriptorId_t> GetColumnsForFieldTree(DescriptorId_t fieldId) const;
 
 public:
    RNTupleInspector(const RNTupleInspector &other) = delete;
@@ -142,33 +143,33 @@ public:
    static std::unique_ptr<RNTupleInspector> Create(std::string_view ntupleName, std::string_view storage);
 
    /// Get the descriptor for the RNTuple being inspected.
-   RNTupleDescriptor *GetDescriptor() { return fDescriptor.get(); }
+   RNTupleDescriptor *GetDescriptor() const { return fDescriptor.get(); }
 
    /// Get the compression settings of the RNTuple being inspected.
-   int GetCompressionSettings() { return fCompressionSettings; }
+   int GetCompressionSettings() const { return fCompressionSettings; }
 
    /// Get the on-disk, compressed size of the RNTuple being inspected, in bytes.
    /// Does **not** include the size of the header and footer.
-   std::uint64_t GetOnDiskSize() { return fOnDiskSize; }
+   std::uint64_t GetOnDiskSize() const { return fOnDiskSize; }
 
    /// Get the total, in-memory size of the RNTuple being inspected, in bytes.
    /// Does **not** include the size of the header and footer.
-   std::uint64_t GetInMemorySize() { return fInMemorySize; }
+   std::uint64_t GetInMemorySize() const { return fInMemorySize; }
 
    /// Get the compression factor of the RNTuple being inspected.
-   float GetCompressionFactor() { return (float)fInMemorySize / (float)fOnDiskSize; }
+   float GetCompressionFactor() const { return (float)fInMemorySize / (float)fOnDiskSize; }
 
-   const RColumnInfo &GetColumnInfo(DescriptorId_t physicalColumnId);
+   const RColumnInfo &GetColumnInfo(DescriptorId_t physicalColumnId) const;
 
-   const RFieldInfo &GetFieldInfo(DescriptorId_t fieldId);
-   const RFieldInfo &GetFieldInfo(std::string_view fieldName);
+   const RFieldTreeInfo &GetFieldInfo(DescriptorId_t fieldId) const;
+   const RFieldTreeInfo &GetFieldInfo(std::string_view fieldName) const;
 
    /// Get the number of fields of a given type or class present in the RNTuple.
    /// TODO: Add regex support.
-   int GetFieldTypeCount(std::string_view typeName, bool includeSubFields = true);
+   int GetFieldTypeCount(std::string_view typeName, bool includeSubFields = true) const;
 
    /// Get the number of columns of a given type present in the RNTuple.
-   int GetColumnTypeCount(EColumnType colType);
+   int GetColumnTypeCount(EColumnType colType) const;
 };
 } // namespace Experimental
 } // namespace ROOT
