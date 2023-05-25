@@ -66,6 +66,7 @@ private:
    void assignToGPU(NodeInfo &info);
    void computeCPUNode(const RooAbsArg *node, NodeInfo &info);
    void setOperMode(RooAbsArg *arg, RooAbsArg::OperMode opMode);
+   void syncDataTokens();
 
    ///////////////////////////
    // Private member variables
