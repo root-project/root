@@ -704,7 +704,7 @@ private:
 
   /// Returns the token for retrieving results in the BatchMode. For internal use only.
   std::size_t dataToken() const { return _dataToken; }
-
+  bool hasDataToken() const { return _dataToken != std::numeric_limits<std::size_t>::max(); }
   void setDataToken(std::size_t index);
   void resetDataToken() { _dataToken = std::numeric_limits<std::size_t>::max(); }
  protected:

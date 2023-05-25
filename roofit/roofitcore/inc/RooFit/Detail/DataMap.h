@@ -85,25 +85,29 @@ public:
    auto size() const { return _dataMap.size(); }
    auto resize(std::size_t n) { return _dataMap.resize(n); }
 
-   inline auto &at(RooAbsArg const *arg, RooAbsArg const * /*caller*/ = nullptr)
+   inline void set(RooAbsArg const *arg, RooSpan<const double> const &span)
    {
+      if (!arg->hasDataToken())
+         return;
       std::size_t idx = arg->dataToken();
-      return _dataMap[idx];
+      _dataMap[idx] = span;
    }
 
-   inline auto &at(RooAbsArg const *arg, RooAbsArg const *caller = nullptr) const
+   RooSpan<const double> at(RooAbsArg const *arg, RooAbsArg const * caller = nullptr);
+
+   inline RooSpan<const double> at(RooAbsArg const *arg, RooAbsArg const *caller = nullptr) const
    {
       return const_cast<DataMap *>(this)->at(arg, caller);
    }
 
    template <class T>
-   inline auto &at(RooTemplateProxy<T> const &proxy)
+   inline RooSpan<const double> at(RooTemplateProxy<T> const &proxy)
    {
       return at(&proxy.arg(), proxy.owner());
    }
 
    template <class T>
-   inline auto &at(RooTemplateProxy<T> const &proxy) const
+   inline RooSpan<const double> at(RooTemplateProxy<T> const &proxy) const
    {
       return at(&proxy.arg(), proxy.owner());
    }
