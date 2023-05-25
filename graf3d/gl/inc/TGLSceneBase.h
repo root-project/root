@@ -70,13 +70,13 @@ protected:
 
 public:
    TGLSceneBase();
-   virtual ~TGLSceneBase();
+   ~TGLSceneBase() override;
 
    void AddViewer(TGLViewerBase* viewer);
    void RemoveViewer(TGLViewerBase* viewer);
    void TagViewersChanged();
 
-   virtual const char* LockIdStr() const;
+   const char* LockIdStr() const override;
 
    virtual const char  *GetName()  const { return fName; }
    virtual const char  *GetTitle() const { return fTitle; }
@@ -139,7 +139,7 @@ public:
    { if (!fBoundingBoxValid) CalcBoundingBox(); return fBoundingBox; }
 
 
-   ClassDef(TGLSceneBase, 0) // Base-class for OpenGL scenes.
+   ClassDefOverride(TGLSceneBase, 0) // Base-class for OpenGL scenes.
 }; // endclass TGLSceneBase
 
 

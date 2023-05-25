@@ -122,11 +122,11 @@ private:
 public:
    TGLViewerEditor(const TGWindow *p=nullptr, Int_t width=140, Int_t height=30,
                    UInt_t options=kChildFrame, Pixel_t back=GetDefaultFrameBackground());
-   ~TGLViewerEditor();
+   ~TGLViewerEditor() override;
 
    virtual void ViewerRedraw();
 
-   virtual void SetModel(TObject* obj);
+   void SetModel(TObject* obj) override;
 
    void SetGuides();
    void DoClearColor(Pixel_t color);
@@ -161,7 +161,7 @@ public:
    static TGNumberEntry* MakeLabeledNEntry(TGCompositeFrame* p, const char* name,
                                            Int_t labelw, Int_t nd=7, Int_t s=5);
 
-   ClassDef(TGLViewerEditor, 0); //GUI for editing TGLViewer attributes
+   ClassDefOverride(TGLViewerEditor, 0); //GUI for editing TGLViewer attributes
 };
 
 #endif

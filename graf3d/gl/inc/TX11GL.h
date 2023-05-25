@@ -38,50 +38,50 @@ private:
 
 public:
    TX11GLManager();
-   ~TX11GLManager();
+   ~TX11GLManager() override;
 
    //All public functions are TGLManager's final-overriders
 
    //index returned can be used as a result of gVirtualX->InitWindow
-   Int_t    InitGLWindow(Window_t winID);
+   Int_t    InitGLWindow(Window_t winID) override;
    //winInd is the index, returned by InitGLWindow
-   Int_t    CreateGLContext(Int_t winInd);
+   Int_t    CreateGLContext(Int_t winInd) override;
 
    //[            Off-screen rendering part
    //create pixmap to read GL buffer into it,
    //ctxInd is the index, returned by CreateGLContext
-   Bool_t   AttachOffScreenDevice(Int_t ctxInd, Int_t x, Int_t y, UInt_t w, UInt_t h);
-   Bool_t   ResizeOffScreenDevice(Int_t devInd, Int_t x, Int_t y, UInt_t w, UInt_t h);
+   Bool_t   AttachOffScreenDevice(Int_t ctxInd, Int_t x, Int_t y, UInt_t w, UInt_t h) override;
+   Bool_t   ResizeOffScreenDevice(Int_t devInd, Int_t x, Int_t y, UInt_t w, UInt_t h) override;
    //analog of gVirtualX->SelectWindow(fPixmapID) => gVirtualGL->SelectOffScreenDevice(fPixmapID)
-   void     SelectOffScreenDevice(Int_t devInd);
+   void     SelectOffScreenDevice(Int_t devInd) override;
    //Index of pixmap, valid for gVirtualX
-   Int_t    GetVirtualXInd(Int_t devInd);
+   Int_t    GetVirtualXInd(Int_t devInd) override;
    //copy pixmap into window directly/by pad
-   void     MarkForDirectCopy(Int_t devInd, Bool_t);
+   void     MarkForDirectCopy(Int_t devInd, Bool_t) override;
    //Off-screen device holds sizes for glViewport
-   void     ExtractViewport(Int_t devInd, Int_t *vp);
+   void     ExtractViewport(Int_t devInd, Int_t *vp) override;
    //Read GL buffer into pixmap
-   void     ReadGLBuffer(Int_t devInd);
+   void     ReadGLBuffer(Int_t devInd) override;
    //]
 
    //Make the gl context current
-   Bool_t   MakeCurrent(Int_t devInd);
+   Bool_t   MakeCurrent(Int_t devInd) override;
    //Sswap buffers or copies pixmap (XCopyArea)
-   void     Flush(Int_t ctxInd);
+   void     Flush(Int_t ctxInd) override;
    //Generic function for gl context and off-screen device deletion
-   void     DeleteGLContext(Int_t devInd);
+   void     DeleteGLContext(Int_t devInd) override;
 
    //used by viewer
-   Bool_t   SelectManip(TVirtualGLManip *manip, const TGLCamera *camera, const TGLRect *rect, const TGLBoundingBox *sceneBox);
+   Bool_t   SelectManip(TVirtualGLManip *manip, const TGLCamera *camera, const TGLRect *rect, const TGLBoundingBox *sceneBox) override;
    //
-   Bool_t   PlotSelected(TVirtualGLPainter *plot, Int_t px, Int_t py);
-   char    *GetPlotInfo(TVirtualGLPainter *plot, Int_t px, Int_t py);
+   Bool_t   PlotSelected(TVirtualGLPainter *plot, Int_t px, Int_t py) override;
+   char    *GetPlotInfo(TVirtualGLPainter *plot, Int_t px, Int_t py) override;
    //
-   void     PaintSingleObject(TVirtualGLPainter *);
-   void     PanObject(TVirtualGLPainter *o, Int_t x, Int_t y);
-   void     PrintViewer(TVirtualViewer3D *vv);
+   void     PaintSingleObject(TVirtualGLPainter *) override;
+   void     PanObject(TVirtualGLPainter *o, Int_t x, Int_t y) override;
+   void     PrintViewer(TVirtualViewer3D *vv) override;
 
-   Bool_t   HighColorFormat(Int_t /*ctxInd*/){return kFALSE;}
+   Bool_t   HighColorFormat(Int_t /*ctxInd*/) override{return kFALSE;}
 
    struct TGLContext_t;
 
@@ -93,7 +93,7 @@ private:
    TX11GLManager(const TX11GLManager &);
    TX11GLManager &operator = (const TX11GLManager &);
 
-   ClassDef(TX11GLManager, 0) //X11-specific version of TGLManager
+   ClassDefOverride(TX11GLManager, 0) //X11-specific version of TGLManager
 };
 
 

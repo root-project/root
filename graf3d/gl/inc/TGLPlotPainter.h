@@ -149,7 +149,7 @@ private:
    void   DrawSliceTextured(Double_t pos)const;
    void   DrawSliceFrame(Int_t low, Int_t up)const;
 
-   ClassDef(TGLTH3Slice, 0) // TH3 slice
+   ClassDefOverride(TGLTH3Slice, 0) // TH3 slice
 };
 
 
@@ -237,10 +237,10 @@ public:
    virtual void     InitGL()const = 0;
    virtual void     DeInitGL()const = 0;
    virtual void     DrawPlot()const = 0;
-   virtual void     Paint();
+   void     Paint() override;
 
    //Checks, if mouse cursor is above plot.
-   virtual Bool_t   PlotSelected(Int_t px, Int_t py);
+   Bool_t   PlotSelected(Int_t px, Int_t py) override;
    //Init geometry does plot's specific initialization.
    virtual Bool_t   InitGeometry() = 0;
 
@@ -297,7 +297,7 @@ protected:
    void             RestoreModelviewMatrix()const;
    void             RestoreProjectionMatrix()const;
 
-   ClassDef(TGLPlotPainter, 0) //Base for gl plots
+   ClassDefOverride(TGLPlotPainter, 0) //Base for gl plots
 };
 
 /*

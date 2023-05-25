@@ -48,7 +48,7 @@ private:
 
 public:
    TGLAxis();
-   virtual ~TGLAxis();
+   ~TGLAxis() override;
 
    void PaintGLAxis             (const Double_t p1[3], const Double_t p2[3],
                                  Double_t wmin , Double_t wmax , Int_t ndiv,
@@ -68,7 +68,7 @@ public:
    void SetGridLength           (Double_t grid){fGridLength = grid;}
    void SetLabelsAngles         (Double_t a1, Double_t a2, Double_t a3);
 
-   ClassDef(TGLAxis,0) // a GL Axis
+   ClassDefOverride(TGLAxis,0) // a GL Axis
 };
 
 #endif

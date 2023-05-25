@@ -31,17 +31,17 @@ protected:
 
 public:
    TH2GL();
-   virtual ~TH2GL();
+   ~TH2GL() override;
 
-   virtual Bool_t SetModel(TObject* obj, const Option_t *opt = nullptr);
-   virtual void   SetBBox();
-   virtual void   DirectDraw(TGLRnrCtx & rnrCtx) const;
+   Bool_t SetModel(TObject* obj, const Option_t *opt = nullptr) override;
+   void   SetBBox() override;
+   void   DirectDraw(TGLRnrCtx & rnrCtx) const override;
 
    // To support two-level selection
    // virtual Bool_t SupportsSecondarySelect() const { return kTRUE; }
    // virtual void ProcessSelection(UInt_t* ptr, TGLViewer*, TGLScene*);
 
-   ClassDef(TH2GL, 0); // GL renderer for TH2.
+   ClassDefOverride(TH2GL, 0); // GL renderer for TH2.
 }; // endclass TH2GL
 
 #endif

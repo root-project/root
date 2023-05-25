@@ -42,7 +42,7 @@ protected:
    Bool_t              fZoomMode;   // Zoom mode for the entire parent TPad
    Bool_t              fStickyZoom; // StickyZoom mode:  zoom will not be disabled    after zooming attempt if true
 
-   virtual void        Copy(TObject &hnew) const;
+   void        Copy(TObject &hnew) const override;
    void                InitSet();
    Bool_t              SwitchZoom();
 
@@ -50,12 +50,12 @@ public:
    TAxis3D();
    TAxis3D(Option_t *option);
    TAxis3D(const TAxis3D &axis);
-   virtual ~TAxis3D(){}
+   ~TAxis3D() override{}
 
-   virtual void     Browse(TBrowser *b);
+   void     Browse(TBrowser *b) override;
 
-   virtual Int_t    DistancetoPrimitive(Int_t px, Int_t py);
-   virtual void     ExecuteEvent(Int_t event, Int_t px, Int_t py);
+   Int_t    DistancetoPrimitive(Int_t px, Int_t py) override;
+   void     ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
 
    Bool_t & StickyZoom(){return fStickyZoom;}
    Bool_t & Zoom(){return fZoomMode;}
@@ -74,18 +74,18 @@ public:
 
    virtual void     GetLowEdge(Axis_t *edge) {fAxis[0].GetLowEdge(edge);}
 
-   virtual char    *GetObjectInfo(Int_t px, Int_t py) const;
+   char    *GetObjectInfo(Int_t px, Int_t py) const override;
 
-   Option_t        *GetOption() const {return fOption.Data();}
+   Option_t        *GetOption() const override {return fOption.Data();}
 
    virtual TAxis   *GetXaxis() {return &fAxis[0];}
    virtual TAxis   *GetYaxis() {return &fAxis[1];}
    virtual TAxis   *GetZaxis() {return &fAxis[2];}
-   virtual Bool_t   IsFolder() const { return kTRUE;}
-   virtual void     Paint(Option_t *option="");
+   Bool_t   IsFolder() const override { return kTRUE;}
+   void     Paint(Option_t *option="") override;
    void             PaintAxis(TGaxis *axis, Float_t ang);
    static Double_t *PixeltoXYZ(Double_t px, Double_t py, Double_t *point3D, TView *view = nullptr);
-   virtual void     SavePrimitive(std::ostream &out, Option_t *option = "");
+   void     SavePrimitive(std::ostream &out, Option_t *option = "") override;
 
    virtual void     SetAxisColor(Color_t color=1, Option_t *axis="*"); // *MENU*
    virtual void     SetAxisRange(Double_t xmin, Double_t xmax, Option_t *axis="*");
@@ -104,9 +104,9 @@ public:
    virtual void     SetZTitle(const char *title) {fAxis[2].SetTitle(title);} // *MENU*
    static  TAxis3D *ToggleRulers(TVirtualPad *pad = nullptr);
    static  TAxis3D *ToggleZoom(TVirtualPad *pad = nullptr);
-   void             UseCurrentStyle();
+   void             UseCurrentStyle() override;
 
-   ClassDef(TAxis3D,1)  //3-D ruler painting class
+   ClassDefOverride(TAxis3D,1)  //3-D ruler painting class
 };
 
 

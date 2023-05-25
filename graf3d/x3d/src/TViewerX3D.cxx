@@ -109,19 +109,19 @@ private:
 public:
    TX3DContainer(TViewerX3D *c, Window_t id, const TGWindow *parent);
 
-   Bool_t  HandleButton(Event_t *ev)
+   Bool_t  HandleButton(Event_t *ev) override
                   {  x3d_dispatch_event(gVirtualX->GetNativeEvent());
                      return fViewer->HandleContainerButton(ev); }
-   Bool_t  HandleConfigureNotify(Event_t *ev)
+   Bool_t  HandleConfigureNotify(Event_t *ev) override
                   {  TGFrame::HandleConfigureNotify(ev);
                      return x3d_dispatch_event(gVirtualX->GetNativeEvent()); }
-   Bool_t  HandleKey(Event_t *)
+   Bool_t  HandleKey(Event_t *) override
                   {  return x3d_dispatch_event(gVirtualX->GetNativeEvent()); }
-   Bool_t  HandleMotion(Event_t *)
+   Bool_t  HandleMotion(Event_t *) override
                   {  return x3d_dispatch_event(gVirtualX->GetNativeEvent()); }
-   Bool_t  HandleExpose(Event_t *)
+   Bool_t  HandleExpose(Event_t *) override
                   {  return x3d_dispatch_event(gVirtualX->GetNativeEvent()); }
-   Bool_t  HandleColormapChange(Event_t *)
+   Bool_t  HandleColormapChange(Event_t *) override
                   {  return x3d_dispatch_event(gVirtualX->GetNativeEvent()); }
 };
 

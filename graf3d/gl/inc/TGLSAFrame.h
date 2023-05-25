@@ -37,12 +37,12 @@ private:
 public:
    TGLSAFrame(TGLSAViewer &viewer);
    TGLSAFrame(const TGWindow *parent, TGLSAViewer &viewer);
-   virtual ~TGLSAFrame();
+   ~TGLSAFrame() override;
 
-   Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2);
-   void   CloseWindow();
+   Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2) override;
+   void   CloseWindow() override;
 
-   ClassDef(TGLSAFrame, 0) // GUI frame for standalone viewer
+   ClassDefOverride(TGLSAFrame, 0) // GUI frame for standalone viewer
 };
 
 #endif

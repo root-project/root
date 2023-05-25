@@ -73,7 +73,7 @@ protected:
 public:
    TGLAnnotation(TGLViewerBase *parent, const char *text, Float_t posx, Float_t posy);
    TGLAnnotation(TGLViewerBase *parent, const char *text, Float_t posx, Float_t posy, TGLVector3 ref);
-   virtual ~TGLAnnotation();
+   ~TGLAnnotation() override;
 
    void  SetText(const TString& x)   { fText = x; }
    const TString& GetText()    const { return fText; }
@@ -99,18 +99,18 @@ public:
    TGLFont::ETextAlignH_e GetTextAlign() const { return fTextAlign; }
    void SetTextAlign(TGLFont::ETextAlignH_e a) { fTextAlign = a; }
 
-   virtual Bool_t MouseEnter(TGLOvlSelectRecord& selRec);
-   virtual Bool_t Handle(TGLRnrCtx& rnrCtx, TGLOvlSelectRecord& selRec,
-                         Event_t* event);
-   virtual void   MouseLeave();
+   Bool_t MouseEnter(TGLOvlSelectRecord& selRec) override;
+   Bool_t Handle(TGLRnrCtx& rnrCtx, TGLOvlSelectRecord& selRec,
+                         Event_t* event) override;
+   void   MouseLeave() override;
 
    void CloseEditor();
 
    void UpdateText();
 
-   virtual void   Render(TGLRnrCtx& rnrCtx);
+   void   Render(TGLRnrCtx& rnrCtx) override;
 
-   ClassDef(TGLAnnotation, 0); // GL-annotation.
+   ClassDefOverride(TGLAnnotation, 0); // GL-annotation.
 };
 
 #endif

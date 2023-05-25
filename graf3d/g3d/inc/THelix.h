@@ -50,14 +50,14 @@ public:
           Double_t const* range=nullptr, EHelixRangeType rtype=kHelixZ,
           Double_t const* axis=nullptr);
    THelix(const THelix &helix);
-   virtual ~THelix();
+   ~THelix() override;
 
-   virtual void    Copy(TObject &helix) const;
-   virtual void    Draw(Option_t *option="");
-   Option_t       *GetOption() const {return fOption.Data();}
-   virtual void    Print(Option_t *option="") const;
-   virtual void    SavePrimitive(std::ostream &out, Option_t *option = "");
-   virtual void    SetOption(Option_t *option="") {fOption = option;}
+   void    Copy(TObject &helix) const override;
+   void    Draw(Option_t *option="") override;
+   Option_t       *GetOption() const override {return fOption.Data();}
+   void    Print(Option_t *option="") const override;
+   void    SavePrimitive(std::ostream &out, Option_t *option = "") override;
+   void    SetOption(Option_t *option="") override {fOption = option;}
    virtual void    SetAxis(Double_t const* axis);       //Define new axis
    virtual void    SetAxis(Double_t x, Double_t y, Double_t z);
    virtual void    SetRange(Double_t * range, EHelixRangeType rtype=kHelixZ);
@@ -66,7 +66,7 @@ public:
                             Double_t const* range=nullptr, EHelixRangeType type=kUnchanged,
                             Double_t const* axis=nullptr);
 
-   ClassDef(THelix,2)  //A Helix drawn as a PolyLine3D
+   ClassDefOverride(THelix,2)  //A Helix drawn as a PolyLine3D
 };
 
 #endif

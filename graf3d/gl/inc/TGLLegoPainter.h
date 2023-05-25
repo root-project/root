@@ -61,12 +61,12 @@ public:
    TGLLegoPainter(TH1 *hist, TGLPlotCamera *camera, TGLPlotCoordinates *coord);
 
    //TGLPlotPainter's final-overriders
-   char        *GetPlotInfo(Int_t px, Int_t py);
-   Bool_t       InitGeometry();
-   void         StartPan(Int_t px, Int_t py);
-   void         Pan(Int_t px, Int_t py);
-   void         AddOption(const TString &stringOption);
-   void         ProcessEvent(Int_t event, Int_t px, Int_t py);
+   char        *GetPlotInfo(Int_t px, Int_t py) override;
+   Bool_t       InitGeometry() override;
+   void         StartPan(Int_t px, Int_t py) override;
+   void         Pan(Int_t px, Int_t py) override;
+   void         AddOption(const TString &stringOption) override;
+   void         ProcessEvent(Int_t event, Int_t px, Int_t py) override;
 
 private:
    //Auxilary functions.
@@ -75,10 +75,10 @@ private:
    Bool_t       InitGeometryCylindrical();
    Bool_t       InitGeometrySpherical();
    //Overriders
-   void         InitGL()const;
-   void         DeInitGL()const;
+   void         InitGL()const override;
+   void         DeInitGL()const override;
 
-   void         DrawPlot()const;
+   void         DrawPlot()const override;
 
    void         DrawLegoCartesian()const;
    void         DrawLegoPolar()const;
@@ -87,17 +87,17 @@ private:
 
    void         SetLegoColor()const;
 
-   void         DrawSectionXOZ()const;
-   void         DrawSectionYOZ()const;
-   void         DrawSectionXOY()const;
+   void         DrawSectionXOZ()const override;
+   void         DrawSectionYOZ()const override;
+   void         DrawSectionXOY()const override;
 
    Bool_t       ClampZ(Double_t &zVal)const;
    Bool_t       PreparePalette()const;
 
    void         DrawPalette()const;
-   void         DrawPaletteAxis()const;
+   void         DrawPaletteAxis()const override;
 
-   ClassDef(TGLLegoPainter, 0)//Lego painter
+   ClassDefOverride(TGLLegoPainter, 0)//Lego painter
 };
 
 #endif

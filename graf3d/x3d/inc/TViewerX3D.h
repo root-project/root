@@ -73,7 +73,7 @@ public:
               UInt_t width = 800, UInt_t height = 600);
    TViewerX3D(TVirtualPad *pad, Option_t *option, const char *title,
               Int_t x, Int_t y, UInt_t width, UInt_t height);
-   virtual ~TViewerX3D();
+   ~TViewerX3D() override;
 
    Int_t    ExecCommand(Int_t px, Int_t py, char command);
    void     GetPosition(Float_t &longitude, Float_t &latitude, Float_t &psi);
@@ -85,22 +85,22 @@ public:
    void     PaintPolyMarker(const TBuffer3D & buffer) const;
 
    // TVirtualViewer3D interface
-   virtual Bool_t PreferLocalFrame() const { return kFALSE; }
-   virtual void   BeginScene();
-   virtual Bool_t BuildingScene()    const { return fBuildingScene; }
-   virtual void   EndScene();
-   virtual Int_t  AddObject(const TBuffer3D & buffer, Bool_t * addChildren = nullptr);
-   virtual Int_t  AddObject(UInt_t placedID, const TBuffer3D & buffer, Bool_t * addChildren = nullptr);
+   Bool_t PreferLocalFrame() const override { return kFALSE; }
+   void   BeginScene() override;
+   Bool_t BuildingScene()    const override { return fBuildingScene; }
+   void   EndScene() override;
+   Int_t  AddObject(const TBuffer3D & buffer, Bool_t * addChildren = nullptr) override;
+   Int_t  AddObject(UInt_t placedID, const TBuffer3D & buffer, Bool_t * addChildren = nullptr) override;
 
    // Composite shapes not supported on this viewer currently - ignore.
    // Will result in a set of component shapes
-   virtual Bool_t OpenComposite(const TBuffer3D & /*buffer*/, Bool_t * = nullptr) { return kTRUE; }
-   virtual void   CloseComposite() {};
-   virtual void   AddCompositeOp(UInt_t /*operation*/) {};
+   Bool_t OpenComposite(const TBuffer3D & /*buffer*/, Bool_t * = nullptr) override { return kTRUE; }
+   void   CloseComposite() override {};
+   void   AddCompositeOp(UInt_t /*operation*/) override {};
 
    Bool_t   ProcessFrameMessage(Long_t msg, Long_t parm1, Long_t parm2);
 
-   ClassDef(TViewerX3D,0)  //Interface to the X3D viewer
+   ClassDefOverride(TViewerX3D,0)  //Interface to the X3D viewer
 };
 
 #endif

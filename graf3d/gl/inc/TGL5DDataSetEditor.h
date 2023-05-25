@@ -113,9 +113,9 @@ private:
 public:
    TGL5DDataSetEditor(const TGWindow *p = nullptr, Int_t width = 140, Int_t height = 30,
                       UInt_t options = kChildFrame, Pixel_t back = GetDefaultFrameBackground());
-   ~TGL5DDataSetEditor();
+   ~TGL5DDataSetEditor() override;
 
-   virtual void   SetModel(TObject* obj);
+   void   SetModel(TObject* obj) override;
 
    //Slots for "Grid" tab events.
    void GridParametersChanged();
@@ -146,7 +146,7 @@ public:
    void NContoursChanged();
 
 
-   ClassDef(TGL5DDataSetEditor, 0); //GUI for editing OpenGL 5D Viewer attributes
+   ClassDefOverride(TGL5DDataSetEditor, 0); //GUI for editing OpenGL 5D Viewer attributes
 };
 
 #endif

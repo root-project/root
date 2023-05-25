@@ -45,7 +45,7 @@ public:
    TPolyMarker3D(Int_t n, Double_t *p, Marker_t marker=1, Option_t *option="");
    TPolyMarker3D(const TPolyMarker3D &p);
    TPolyMarker3D& operator=(const TPolyMarker3D&);
-   virtual ~TPolyMarker3D();
+   ~TPolyMarker3D() override;
 
    void              Copy(TObject &polymarker) const override;
    Int_t             DistancetoPrimitive(Int_t px, Int_t py)  override;

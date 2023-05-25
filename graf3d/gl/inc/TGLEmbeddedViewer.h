@@ -36,12 +36,12 @@ private:
 public:
    TGLEmbeddedViewer(const TGWindow *parent, TVirtualPad *pad = nullptr, Int_t border=2);
    TGLEmbeddedViewer(const TGWindow *parent, TVirtualPad *pad, TGedEditor *ged, Int_t border=2);
-   ~TGLEmbeddedViewer();
+   ~TGLEmbeddedViewer() override;
 
-   virtual void CreateGLWidget();
-   virtual void DestroyGLWidget();
+   void CreateGLWidget() override;
+   void DestroyGLWidget() override;
 
-   virtual const char *GetName() const { return "GLViewer"; }
+   const char *GetName() const override { return "GLViewer"; }
 
    TGCompositeFrame*   GetFrame() const { return fFrame; }
 
@@ -50,7 +50,7 @@ public:
    TGLOrthoCamera     *GetOrthoZOYCamera() { return &fOrthoZOYCamera; }
    TGLOrthoCamera     *GetOrthoZOXCamera() { return &fOrthoZOXCamera; }
 
-   ClassDef(TGLEmbeddedViewer, 0); // Embedded GL viewer.
+   ClassDefOverride(TGLEmbeddedViewer, 0); // Embedded GL viewer.
 };
 
 #endif

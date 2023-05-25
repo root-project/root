@@ -96,14 +96,14 @@ public:
    TGLSAViewer(TVirtualPad* pad, TGLFormat* format=nullptr);
    TGLSAViewer(const TGWindow* parent, TVirtualPad *pad, TGedEditor *ged=nullptr,
                TGLFormat* format=nullptr);
-   ~TGLSAViewer();
+   ~TGLSAViewer() override;
 
-   virtual void CreateGLWidget();
-   virtual void DestroyGLWidget();
+   void CreateGLWidget() override;
+   void DestroyGLWidget() override;
 
-   virtual const char* GetName() const { return "GLViewer"; }
+   const char* GetName() const override { return "GLViewer"; }
 
-   virtual void SelectionChanged();
+   void SelectionChanged() override;
 
    void   Show();
    void   Close();
@@ -129,7 +129,7 @@ public:
 
    static void SetMenuHidingTimeout(Long_t timeout);
 
-   ClassDef(TGLSAViewer, 0); // Standalone GL viewer.
+   ClassDefOverride(TGLSAViewer, 0); // Standalone GL viewer.
 };
 
 #endif

@@ -35,13 +35,13 @@ private:
 public:
    TGLScaleManip();
    TGLScaleManip(TGLPhysicalShape * shape);
-   virtual ~TGLScaleManip();
+   ~TGLScaleManip() override;
 
-   virtual void   Draw(const TGLCamera & camera) const;
-   virtual Bool_t HandleButton(const Event_t & event, const TGLCamera & camera);
-   virtual Bool_t HandleMotion(const Event_t & event, const TGLCamera & camera);
+   void   Draw(const TGLCamera & camera) const override;
+   Bool_t HandleButton(const Event_t & event, const TGLCamera & camera) override;
+   Bool_t HandleMotion(const Event_t & event, const TGLCamera & camera) override;
 
-   ClassDef(TGLScaleManip,0) // GL scaling manipulator widget
+   ClassDefOverride(TGLScaleManip,0) // GL scaling manipulator widget
 };
 
 #endif

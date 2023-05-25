@@ -48,17 +48,17 @@ protected:
    TTUBE& operator=(const TTUBE&);
 
    virtual void    MakeTableOfCoSin() const;  // Create the table of the fSiTab; fCoTab
-   virtual void    SetPoints(Double_t *points) const;
+   void    SetPoints(Double_t *points) const override;
    virtual void    SetSegsAndPols(TBuffer3D & buffer) const;
 
 public:
    TTUBE();
    TTUBE(const char *name, const char *title, const char *material, Float_t rmin, Float_t rmax, Float_t dz, Float_t aspect=1);
    TTUBE(const char *name, const char *title, const char *material, Float_t rmax, Float_t dz);
-   virtual ~TTUBE();
+   ~TTUBE() override;
 
-   virtual Int_t   DistancetoPrimitive(Int_t px, Int_t py);
-   virtual const TBuffer3D &GetBuffer3D(Int_t reqSections) const;
+   Int_t   DistancetoPrimitive(Int_t px, Int_t py) override;
+   const TBuffer3D &GetBuffer3D(Int_t reqSections) const override;
    virtual Float_t GetRmin() const  {return fRmin;}
    virtual Float_t GetRmax() const  {return fRmax;}
    virtual Float_t GetDz()   const  {return fDz;}
@@ -67,9 +67,9 @@ public:
    virtual Int_t   GetNumberOfDivisions () const {if (fNdiv) return fNdiv; else return kDivNum;}
    virtual void    SetNumberOfDivisions (Int_t ndiv);
    virtual void    SetAspectRatio(Float_t factor=1){fAspectRatio = factor;}
-   virtual void    Sizeof3D() const;
+   void    Sizeof3D() const override;
 
-   ClassDef(TTUBE,3)  //TUBE shape
+   ClassDefOverride(TTUBE,3)  //TUBE shape
 };
 
 #endif

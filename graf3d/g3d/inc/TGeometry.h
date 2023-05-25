@@ -64,12 +64,12 @@ protected:
 public:
    TGeometry();
    TGeometry(const char *name, const char *title);
-   virtual           ~TGeometry();
-   virtual void      Browse(TBrowser *b);
+             ~TGeometry() override;
+   void      Browse(TBrowser *b) override;
    virtual void      cd(const char *path=nullptr);
-   virtual void      Draw(Option_t *option="");
-   virtual TObject  *FindObject(const char *name) const;
-   virtual TObject  *FindObject(const TObject *obj) const;
+   void      Draw(Option_t *option="") override;
+   TObject  *FindObject(const char *name) const override;
+   TObject  *FindObject(const TObject *obj) const override;
    Float_t           GetBomb() const {return fBomb;}
    Int_t             GeomLevel() const {return fGeomLevel;}
    THashList        *GetListOfShapes() const  {return fShapes;}
@@ -88,17 +88,17 @@ public:
    TRotMatrix       *GetCurrentPosition(Double_t *x,Double_t *y,Double_t *z) const;
    TRotMatrix       *GetCurrentPosition(Float_t *x,Float_t *y,Float_t *z) const;
    Bool_t            GetCurrentReflection() const;
-   Bool_t            IsFolder() const {return kTRUE;}
+   Bool_t            IsFolder() const override {return kTRUE;}
    virtual void      Local2Master(Double_t *local, Double_t *master);
    virtual void      Local2Master(Float_t *local, Float_t *master);
-   virtual void      ls(Option_t *option="rsn2") const;
+   void      ls(Option_t *option="rsn2") const override;
    virtual void      Master2Local(Double_t *master, Double_t *local);
    virtual void      Master2Local(Float_t *master, Float_t *local);
    virtual void      Node(const char *name, const char *title, const char *shapename, Double_t x=0, Double_t y=0, Double_t z=0
                         , const char *matrixname="", Option_t *option="");
    virtual Int_t     PushLevel(){return fGeomLevel++;}
    virtual Int_t     PopLevel(){return fGeomLevel>0?fGeomLevel--:0;}
-   virtual void      RecursiveRemove(TObject *obj);
+   void      RecursiveRemove(TObject *obj) override;
    virtual void      SetBomb(Float_t bomb=1.4) {fBomb = bomb;}
    virtual void      SetCurrentNode(TNode *node) {fCurrentNode = node;}
    virtual void      SetGeomLevel(Int_t level=0){fGeomLevel=level;}
@@ -116,7 +116,7 @@ public:
                                       Double_t x, Double_t y, Double_t z, Double_t *matrix,
                                       Double_t *dxnew, Double_t *rmatnew);
 
-   ClassDef(TGeometry,2)  //Structure for Matrices, Shapes and Nodes
+   ClassDefOverride(TGeometry,2)  //Structure for Matrices, Shapes and Nodes
 };
 
 

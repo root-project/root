@@ -65,18 +65,18 @@ public:
    TGLSurfacePainter(TH1 *hist, TGLPlotCamera *camera, TGLPlotCoordinates *coord);
 
    //TGLPlotPainter's final-overriders.
-   char  *GetPlotInfo(Int_t px, Int_t py);
-   Bool_t InitGeometry();
-   void   StartPan(Int_t px, Int_t py);
-   void   Pan(Int_t px, Int_t py);
-   void   AddOption(const TString &stringOption);
-   void   ProcessEvent(Int_t event, Int_t px, Int_t py);
+   char  *GetPlotInfo(Int_t px, Int_t py) override;
+   Bool_t InitGeometry() override;
+   void   StartPan(Int_t px, Int_t py) override;
+   void   Pan(Int_t px, Int_t py) override;
+   void   AddOption(const TString &stringOption) override;
+   void   ProcessEvent(Int_t event, Int_t px, Int_t py) override;
 
 private:
-   void   InitGL()const;
-   void   DeInitGL()const;
+   void   InitGL()const override;
+   void   DeInitGL()const override;
 
-   void   DrawPlot()const;
+   void   DrawPlot()const override;
 
    void   SetNormals();
    void   SetSurfaceColor()const;
@@ -87,9 +87,9 @@ private:
    Bool_t InitGeometrySpherical();
 
    void   DrawProjections()const;
-   void   DrawSectionXOZ()const;
-   void   DrawSectionYOZ()const;
-   void   DrawSectionXOY()const;
+   void   DrawSectionXOZ()const override;
+   void   DrawSectionYOZ()const override;
+   void   DrawSectionXOY()const override;
 
    void   ClampZ(Double_t &zVal)const;
 
@@ -104,11 +104,11 @@ private:
    Bool_t HasProjections()const;
 
    void   DrawPalette()const;
-   void   DrawPaletteAxis()const;
+   void   DrawPaletteAxis()const override;
 
    static TRandom *fgRandom;
 
-   ClassDef(TGLSurfacePainter, 0)//Surface painter.
+   ClassDefOverride(TGLSurfacePainter, 0)//Surface painter.
 };
 
 #endif

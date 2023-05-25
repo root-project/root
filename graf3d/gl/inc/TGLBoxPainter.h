@@ -59,34 +59,34 @@ public:
    TGLBoxPainter(TH1 *hist, TPolyMarker3D * pm,
                  TGLPlotCamera *camera, TGLPlotCoordinates *coord);
 
-   char   *GetPlotInfo(Int_t px, Int_t py);
-   Bool_t  InitGeometry();
-   void    StartPan(Int_t px, Int_t py);
-   void    Pan(Int_t px, Int_t py);
-   void    AddOption(const TString &stringOption);
-   void    ProcessEvent(Int_t event, Int_t px, Int_t py);
+   char   *GetPlotInfo(Int_t px, Int_t py) override;
+   Bool_t  InitGeometry() override;
+   void    StartPan(Int_t px, Int_t py) override;
+   void    Pan(Int_t px, Int_t py) override;
+   void    AddOption(const TString &stringOption) override;
+   void    ProcessEvent(Int_t event, Int_t px, Int_t py) override;
 
 private:
    //Overriders
-   void    InitGL()const;
-   void    DeInitGL()const;
+   void    InitGL()const override;
+   void    DeInitGL()const override;
 
-   void    DrawPlot()const;
+   void    DrawPlot()const override;
    //Special type of TH3:
    void    DrawCloud()const;
 
    void    SetPlotColor()const;
 
-   void    DrawSectionXOZ()const;
-   void    DrawSectionYOZ()const;
-   void    DrawSectionXOY()const;
+   void    DrawSectionXOZ()const override;
+   void    DrawSectionYOZ()const override;
+   void    DrawSectionXOY()const override;
 
    void    DrawPalette()const;
-   void    DrawPaletteAxis()const;
+   void    DrawPaletteAxis()const override;
 
    Bool_t  HasSections()const;
 
-   ClassDef(TGLBoxPainter, 0)//Box painter
+   ClassDefOverride(TGLBoxPainter, 0)//Box painter
 };
 
 #endif
