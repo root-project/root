@@ -51,26 +51,71 @@ namespace ROOT {
 //_______________________________________________________________________________
 /**
    Abstract Minimizer class, defining  the interface for the various minimizer
-   (like Minuit2, Minuit, GSL, etc..)
-   Plug-in's exist in ROOT to be able to instantiate the derived classes like
-   ROOT::Math::GSLMinimizer or ROOT::Math::Minuit2Minimizer via the
-   plug-in manager.
+   (like Minuit2, Minuit, GSL, etc..) in ROOT.
+   Plug-in's exist in ROOT to be able to instantiate the derived classes without linking the library
+   using the static function ROOT::Math::Factory::CreateMinimizer.
 
-   Provides interface for setting the function to be minimized.
-   The function must  implemente the multi-dimensional generic interface
-   ROOT::Math::IBaseFunctionMultiDim.
-   If the function provides gradient calculation
-   (implements the ROOT::Math::IGradientFunctionMultiDim interface) this will be
-   used by the Minimizer.
+   Here is the list of all possible minimizers and their respective methods (algorithms) that can be instantiated:
+   The name shown below can be used to create them. More documentation can be found in the respective class
 
-   It Defines also interface for setting the initial values for the function variables (which are the parameters in
+   - Minuit   (class TMinuitMinimizer)
+      - Migrad (default)
+      - MigradImproved  (Migrad with adding a method to improve minimization when ends-up in a local minimum, see par. 6.3 of [Minuit tutorial on Function Minimization](https://seal.web.cern.ch/documents/minuit/mntutorial.pdf))
+      - Simplex
+      - Minimize (a combination of Simplex + Migrad)
+      - Minimize
+      - Scan
+      - Seek
+
+   - Minuit2 (class ROOT::Minuit2::Minuit2Minimizer)
+     - Migrad (default)
+     - Simplex
+     - Minimize
+     - Fumili (Fumili2)
+     - Scan
+
+   - Fumili (class TFumiliMinimizer)
+
+   - GSLMultiMin (class ROOT::Math::GSLMinimizer) available when ROOT is built with `mathmore` support
+     - BFGS2 (Default)
+     - BFGS
+     - ConjugateFR
+     - ConjugatePR
+     - SteepestDescent
+
+   - GSLMultiFit (class ROOT::Math::GSLNLMinimizer) available when ROOT is built `mathmore` support
+
+   - GSLSimAn  (class ROOT::Math::GSLSimAnMinimizer) available when ROOT is built with `mathmore` support
+
+   - Genetic  (class ROOT::Math::GeneticMinimizer)
+
+   - RMinimizer (class ROOT::Math::RMinimizer)  available when ROOT is built with `r` support
+     - BFGS (default)
+     - L-BFGS-S
+     - Nelder-Mead
+     - CG
+     - and more methods, see the Details in the documentation of the function `optimix` of the [optmix R package](https://cran.r-project.org/web/packages/optimx/optimx.pdf)
+
+
+   The Minimizer class provides the interface to perform the minimization including
+
+
+   In addition to provide the API for function minimization (via ROOT::Math::Minimizer::Minimize) the Minimizer class  provides:
+   - the interface for setting the function to be minimized. The objective function passed to the Minimizer must  implement the multi-dimensional generic interface
+   ROOT::Math::IBaseFunctionMultiDim. If the function provides gradient calculation (e.g. implementing the ROOT::Math::IGradientFunctionMultiDim interface)
+   the gradient will be used by the Minimizer class, when needed. There are convenient classes for the users to wrap their own functions in this required interface for minimization.
+   These are the `ROOT::Math::Functor` class and the `ROOT::Math::GradFunctor` class for wrapping functions providing both evaluation and gradient. Some methods, like Fumili, Fumili2 and GSLMultiFit are
+   specialized method for least-square and also likelihood minimizations. They require then that the given function implements in addition
+   the `ROOT::Math::FitMethodFunction` interface.
+   - The interface for setting the initial values for the function variables (which are the parameters in
    of the model function in case of solving for fitting) and specifying their limits.
+   - The interface to set and retrieve basic minimization parameters. These parameter are controlled by the class `ROOT::Math::MinimizerOptions`.
+   When no parameters are specified the default ones are used. Specific Minimizer options can also be passed via the `MinimizerOptions` class.
+   For the list of the available option parameter one must look at the documentation of the corresponding derived class.
+   - The interface to retrieve the result of minimization ( minimum X values, function value, gradient, error on the minimum, etc...)
+   - The interface to perform a Scan, Hesse or a Contour plot (for the minimizers that support this, i.e. Minuit and Minuit2)
 
-   It defines the interface to set and retrieve basic minimization parameters
-   (for specific Minimizer parameters one must use the derived classes).
-
-   Then it defines the interface to retrieve the result of minimization ( minimum X values, function value,
-   gradient, error on the minimum, etc...)
+   An example on how to use this interface is the tutorial NumericalMinimization.C in the tutorials/fit directory.
 
    @ingroup MultiMin
 */
