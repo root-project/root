@@ -189,11 +189,16 @@ ROOT::Experimental::RClusterDescriptor ROOT::Experimental::RClusterDescriptor::C
 
 bool ROOT::Experimental::RNTupleDescriptor::operator==(const RNTupleDescriptor &other) const
 {
-   return fName == other.fName && fDescription == other.fDescription && fNEntries == other.fNEntries &&
-          fGeneration == other.fGeneration && fFieldDescriptors == other.fFieldDescriptors &&
+   // clang-format off
+   return fName == other.fName &&
+          fDescription == other.fDescription &&
+          fNEntries == other.fNEntries &&
+          fGeneration == other.fGeneration &&
+          fFieldDescriptors == other.fFieldDescriptors &&
           fColumnDescriptors == other.fColumnDescriptors &&
           fClusterGroupDescriptors == other.fClusterGroupDescriptors &&
           fClusterDescriptors == other.fClusterDescriptors;
+   // clang-format on
 }
 
 ROOT::Experimental::NTupleSize_t
