@@ -49,7 +49,7 @@ protected:
 
 public:
    TGLClipSetSubEditor(const TGWindow* p);
-   virtual ~TGLClipSetSubEditor() {}
+   ~TGLClipSetSubEditor() override {}
 
    void SetModel(TGLClipSet* m);
 
@@ -61,7 +61,7 @@ public:
    void UpdateViewerClip();
    void ResetViewerClip();
 
-   ClassDef(TGLClipSetSubEditor, 0); // Sub-editor for TGLClipSet.
+   ClassDefOverride(TGLClipSetSubEditor, 0); // Sub-editor for TGLClipSet.
 };
 
 
@@ -77,11 +77,11 @@ protected:
 
 public:
    TGLClipSetEditor(const TGWindow *p = nullptr, Int_t width=170, Int_t height=30, UInt_t options=kChildFrame, Pixel_t back=GetDefaultFrameBackground());
-   virtual ~TGLClipSetEditor() {}
+   ~TGLClipSetEditor() override {}
 
-   virtual void SetModel(TObject* obj);
+   void SetModel(TObject* obj) override;
 
-   ClassDef(TGLClipSetEditor, 0); // GUI editor for TGLClipSet.
+   ClassDefOverride(TGLClipSetEditor, 0); // GUI editor for TGLClipSet.
 };
 
 #endif

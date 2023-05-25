@@ -146,14 +146,14 @@ protected:
 
 public:
    TGLAxisPainterBox();
-   virtual ~TGLAxisPainterBox();
+   ~TGLAxisPainterBox() override;
 
    void SetAxis3DTitlePos(TGLRnrCtx &rnrCtx);
    void DrawAxis3D(TGLRnrCtx &rnrCtx);
 
    void PlotStandard(TGLRnrCtx &rnrCtx, TH1* histo, const TGLBoundingBox& bbox);
 
-   ClassDef(TGLAxisPainterBox, 0); // Painter of GL axes for a 3D box.
+   ClassDefOverride(TGLAxisPainterBox, 0); // Painter of GL axes for a 3D box.
 };
 
 #endif
