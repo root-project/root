@@ -460,7 +460,6 @@ protected:
 
   //---------- Interface to access batch data ---------------------------
   //
-  friend class BatchInterfaceAccessor;
 
  private:
   void checkBatchComputation(const RooBatchCompute::RunContext& evalData, std::size_t evtNo, const RooArgSet* normSet = nullptr, double relAccuracy = 1.E-13) const;
@@ -471,8 +470,17 @@ protected:
   //--------------------------------------------------------------------
 
  protected:
+  friend class BatchInterfaceAccessor;
+  friend class RooVectorDataStore;
+  friend class RooRealBinding;
+  friend class RooRealSumPdf;
+  friend class RooRealSumFunc;
+  friend class RooAddHelpers;
+  friend class RooAddPdf;
+  friend class RooAddModel;
+  friend class RooFit::Detail::DataMap;
+
   // Hooks for RooDataSet interface
-  friend class RooVectorDataStore ;
   void syncCache(const RooArgSet* set=nullptr) override { getVal(set) ; }
   void copyCache(const RooAbsArg* source, bool valueOnly=false, bool setValDirty=true) override ;
   void attachToTree(TTree& t, Int_t bufSize=32000) override ;
@@ -480,7 +488,6 @@ protected:
   void setTreeBranchStatus(TTree& t, bool active) override ;
   void fillTreeBranch(TTree& t) override ;
 
-  friend class RooRealBinding ;
   double _plotMin = 0.0;       ///< Minimum of plot range
   double _plotMax = 0.0;       ///< Maximum of plot range
   Int_t _plotBins = 100;       ///< Number of plot bins
@@ -551,12 +558,6 @@ protected:
 
   bool redirectServersHook(const RooAbsCollection & newServerList, bool mustReplaceAll,
                                    bool nameChange, bool isRecursiveStep) override;
-
-  friend class RooRealSumPdf ;
-  friend class RooRealSumFunc;
-  friend class RooAddHelpers ;
-  friend class RooAddPdf ;
-  friend class RooAddModel ;
 
   static void globalSelectComp(bool flag) ;
   bool _selectComp = true;         //! Component selection flag for RooAbsPdf::plotCompOn
