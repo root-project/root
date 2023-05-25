@@ -38,7 +38,7 @@ class TInspectorObject : public TObject
 public:
 
    TInspectorObject(void *obj, TClass *cl) : fObj(obj),fClass(cl) {}
-   ~TInspectorObject() {}
+   ~TInspectorObject() override {}
 
    void   *GetObject() const { return fObj; };
    void    Inspect() const override

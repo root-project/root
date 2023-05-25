@@ -60,7 +60,7 @@ public:
    TGaxis(Double_t xmin,Double_t ymin,Double_t xmax,Double_t ymax,
           const char *funcname, Int_t ndiv=510, Option_t *chopt="",
           Double_t gridlength = 0);
-   virtual ~TGaxis();
+   ~TGaxis() override;
 
    virtual void        AdjustBinSize(Double_t A1,  Double_t A2,  Int_t nold
                                     ,Double_t &BinLow, Double_t &BinHigh, Int_t &nbins, Double_t &BinWidth);
