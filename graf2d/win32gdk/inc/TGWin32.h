@@ -398,7 +398,7 @@ public:
    static void Lock();
    static void Unlock();
 
-   ClassDef(TGWin32,0)  //Interface to Win32
+   ClassDefOverride(TGWin32,0)  //Interface to Win32
 };
 
 #endif

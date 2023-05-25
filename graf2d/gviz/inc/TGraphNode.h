@@ -40,20 +40,20 @@ public:
 
    TGraphNode();
    TGraphNode(const char *name, const char *title="");
-   virtual ~TGraphNode();
+   ~TGraphNode() override;
 
    void           CreateGVNode(GVizAgraph_t *gv);
-   virtual Int_t  DistancetoPrimitive(Int_t px, Int_t py);
-   virtual void   ExecuteEvent(Int_t event, Int_t px, Int_t py);
+   Int_t  DistancetoPrimitive(Int_t px, Int_t py) override;
+   void   ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
    void           SetGVNode(GVizAgnode_t *gvn) {fGVNode = gvn;}
-   virtual void   SetTextAngle(Float_t) {}
+   void   SetTextAngle(Float_t) override {}
    GVizAgnode_t  *GetGVNode() {return fGVNode;}
    void           Layout();
-   virtual void   Paint(Option_t *option="");
-   virtual void   SavePrimitive(std::ostream &, Option_t *);
+   void   Paint(Option_t *option="") override;
+   void   SavePrimitive(std::ostream &, Option_t *) override;
    void           SaveAttributes(std::ostream &);
 
-   ClassDef(TGraphNode,2)  //Graph node class
+   ClassDefOverride(TGraphNode,2)  //Graph node class
 };
 
 #endif

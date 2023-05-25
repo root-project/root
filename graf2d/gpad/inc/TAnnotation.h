@@ -24,7 +24,7 @@ public:
 
    TAnnotation() {}
    TAnnotation(Double_t x, Double_t y, Double_t z, const char *text);
-   virtual ~TAnnotation();
+   ~TAnnotation() override;
    virtual TAnnotation *DrawAnnotation(Double_t x, Double_t y, Double_t z, const char *text);
    void ls(Option_t *option="") const override;
    void Paint(Option_t *option="") override;
