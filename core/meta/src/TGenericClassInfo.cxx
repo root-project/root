@@ -220,6 +220,8 @@ namespace Internal {
       using ROOT::Internal::gROOTLocal;
       if (!gROOTLocal || !gROOTLocal->Initialized() || !gROOTLocal->GetListOfClasses())
          return;
+      for(auto alt : fAlternate)
+         ROOT::RemoveClassAlternate(alt);
       if (fAction)
          GetAction().Unregister(GetClassName(), fClass);
    }
@@ -422,6 +424,11 @@ namespace Internal {
       ROOT::ResetClassVersion(fClass, GetClassName(),version);
       fVersion = version;
       return version;
+   }
+
+   void TGenericClassInfo::AdoptAlternate(ROOT::TClassAlt *alt)
+   {
+      fAlternate.push_back(alt);
    }
 
    void TGenericClassInfo::AdoptCollectionProxyInfo(TCollectionProxyInfo *info)

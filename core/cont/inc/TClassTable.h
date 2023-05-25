@@ -68,27 +68,28 @@ public:
 
    ~TClassTable();
 
-   static void          Add(const char *cname, Version_t id,
-                            const std::type_info &info, DictFuncPtr_t dict,
-                            Int_t pragmabits);
-   static void          Add(TProtoClass *protoClass);
-   static void          AddAlternate(const char *normname, const char *alternate);
-   static char         *At(UInt_t index);
-   int                  Classes();
-   static Bool_t        Check(const char *cname, std::string &normname);
-   static Version_t     GetID(const char *cname);
-   static Int_t         GetPragmaBits(const char *name);
-   static DictFuncPtr_t GetDict(const char *cname);
-   static DictFuncPtr_t GetDict(const std::type_info& info);
-   static DictFuncPtr_t GetDictNorm(const char *cname);
-   static TProtoClass  *GetProto(const char *cname);
-   static TProtoClass  *GetProtoNorm(const char *cname);
-   static void          Init();
-   static char         *Next();
-   void                 Print(Option_t *option="") const override;
-   static void          PrintTable();
-   static void          Remove(const char *cname);
-   static void          Terminate();
+   static void             Add(const char *cname, Version_t id,
+                               const std::type_info &info, DictFuncPtr_t dict,
+                               Int_t pragmabits);
+   static void             Add(TProtoClass *protoClass);
+   static ROOT::TClassAlt *AddAlternate(const char *normname, const char *alternate);
+   static char            *At(UInt_t index);
+   int                     Classes();
+   static Bool_t           Check(const char *cname, std::string &normname);
+   static Version_t        GetID(const char *cname);
+   static Int_t            GetPragmaBits(const char *name);
+   static DictFuncPtr_t    GetDict(const char *cname);
+   static DictFuncPtr_t    GetDict(const std::type_info& info);
+   static DictFuncPtr_t    GetDictNorm(const char *cname);
+   static TProtoClass     *GetProto(const char *cname);
+   static TProtoClass     *GetProtoNorm(const char *cname);
+   static void             Init();
+   static char            *Next();
+   void                    Print(Option_t *option="") const override;
+   static void             PrintTable();
+   static void             Remove(const char *cname);
+   static void             RemoveAlternate(ROOT::TClassAlt *alt);
+   static void             Terminate();
 
    ClassDefOverride(TClassTable,0)  //Table of known classes
 };

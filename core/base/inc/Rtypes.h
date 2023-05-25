@@ -105,6 +105,7 @@ template <class Tmpl> TBuffer &operator<<(TBuffer &buf, const Tmpl *obj);
 namespace ROOT {
 
    class TGenericClassInfo;
+   class TClassAlt;
    typedef void *(*NewFunc_t)(void *);
    typedef void *(*NewArrFunc_t)(Long_t size, void *arena);
    typedef void  (*DelFunc_t)(void *);
@@ -124,7 +125,8 @@ namespace ROOT {
                         DictFuncPtr_t dict, Int_t pragmabits);
    extern void RemoveClass(const char *cname, TClass *cl);
    extern void ResetClassVersion(TClass*, const char*, Short_t);
-   extern void AddClassAlternate(const char *normName, const char *alternate);
+   extern ROOT::TClassAlt* AddClassAlternate(const char *normName, const char *alternate);
+   extern void RemoveClassAlternate(ROOT::TClassAlt*);
 
    extern TNamed *RegisterClassTemplate(const char *name,
                                         const char *file, Int_t line);
