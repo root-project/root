@@ -32,7 +32,7 @@ private:
 public:
    TGLText();
    TGLText(Double_t x, Double_t y, Double_t z, const char *text);
-   virtual ~TGLText();
+   ~TGLText() override;
 
    FTFont* GetFont() { return fGLTextFont; }
 
@@ -43,7 +43,7 @@ public:
    void BBox(const char* string, float& llx, float& lly, float& llz,
                                  float& urx, float& ury, float& urz);
 
-   ClassDef(TGLText,0) // a GL text
+   ClassDefOverride(TGLText,0) // a GL text
 };
 
 #endif

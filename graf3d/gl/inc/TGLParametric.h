@@ -72,17 +72,17 @@ public:
 
    void         EvalVertex(TGLVertex3 &newVertex, Double_t u, Double_t v)const;
 
-   Int_t        DistancetoPrimitive(Int_t px, Int_t py);
-   void         ExecuteEvent(Int_t event, Int_t px, Int_t py);
-   char        *GetObjectInfo(Int_t px, Int_t py) const;
-   void         Paint(Option_t *option);
+   Int_t        DistancetoPrimitive(Int_t px, Int_t py) override;
+   void         ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
+   char        *GetObjectInfo(Int_t px, Int_t py) const override;
+   void         Paint(Option_t *option) override;
 
 private:
 
    TGLParametricEquation(const TGLParametricEquation &);
    TGLParametricEquation &operator = (const TGLParametricEquation &);
 
-   ClassDef(TGLParametricEquation, 0)//Equation of parametric surface.
+   ClassDefOverride(TGLParametricEquation, 0)//Equation of parametric surface.
 };
 
 class TGLParametricPlot : public TGLPlotPainter {
@@ -112,31 +112,31 @@ private:
 public:
    TGLParametricPlot(TGLParametricEquation *equation, TGLPlotCamera *camera);
 
-   Bool_t   InitGeometry();
-   void     StartPan(Int_t px, Int_t py);
-   void     Pan(Int_t px, Int_t py);
-   char    *GetPlotInfo(Int_t px, Int_t py);
-   void     AddOption(const TString &option);
-   void     ProcessEvent(Int_t event, Int_t px, Int_t py);
+   Bool_t   InitGeometry() override;
+   void     StartPan(Int_t px, Int_t py) override;
+   void     Pan(Int_t px, Int_t py) override;
+   char    *GetPlotInfo(Int_t px, Int_t py) override;
+   void     AddOption(const TString &option) override;
+   void     ProcessEvent(Int_t event, Int_t px, Int_t py) override;
 
 private:
-   void     InitGL()const;
-   void     DeInitGL()const;
+   void     InitGL()const override;
+   void     DeInitGL()const override;
 
-   void     DrawPlot()const;
+   void     DrawPlot()const override;
 
    void     InitColors();
 
-   void     DrawSectionXOZ()const;
-   void     DrawSectionYOZ()const;
-   void     DrawSectionXOY()const;
+   void     DrawSectionXOZ()const override;
+   void     DrawSectionYOZ()const override;
+   void     DrawSectionXOY()const override;
 
    void     SetSurfaceColor()const;
 
    TGLParametricPlot(const TGLParametricPlot &);
    TGLParametricPlot &operator = (const TGLParametricPlot &);
 
-   ClassDef(TGLParametricPlot, 0)//Parametric plot's painter.
+   ClassDefOverride(TGLParametricPlot, 0)//Parametric plot's painter.
 };
 
 #endif

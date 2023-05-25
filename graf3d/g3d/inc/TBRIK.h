@@ -30,20 +30,20 @@ protected:
    Float_t fDy;        // half length in y
    Float_t fDz;        // half length in z
 
-   virtual void    SetPoints(Double_t * points) const;
+   void    SetPoints(Double_t * points) const override;
 public:
    TBRIK();
    TBRIK(const char *name, const char *title, const char *material, Float_t dx, Float_t dy, Float_t dz);
-   virtual ~TBRIK();
+   ~TBRIK() override;
 
-   virtual Int_t   DistancetoPrimitive(Int_t px, Int_t py);
-   virtual const TBuffer3D &GetBuffer3D(Int_t reqSections) const;
+   Int_t   DistancetoPrimitive(Int_t px, Int_t py) override;
+   const TBuffer3D &GetBuffer3D(Int_t reqSections) const override;
    Float_t         GetDx() const {return fDx;}
    Float_t         GetDy() const {return fDy;}
    Float_t         GetDz() const {return fDz;}
-   virtual void    Sizeof3D() const;
+   void    Sizeof3D() const override;
 
-   ClassDef(TBRIK,1)  //TBRIK shape
+   ClassDefOverride(TBRIK,1)  //TBRIK shape
 };
 
 #endif

@@ -70,20 +70,20 @@ private:
    void CreateGeoControls();
    void CreateColorControls();
 
-   virtual void DoRedraw();
+   void DoRedraw() override;
 
 public:
    TGLPShapeObjEditor(const TGWindow *p = nullptr,
                       Int_t width = 140, Int_t height = 30,
                       UInt_t options = kChildFrame,
                       Pixel_t back = GetDefaultFrameBackground());
-   ~TGLPShapeObjEditor();
+   ~TGLPShapeObjEditor() override;
 
    // Virtuals from TGLPShapeRef
-   virtual void SetPShape(TGLPhysicalShape * shape);
-   virtual void PShapeModified();
+   void SetPShape(TGLPhysicalShape * shape) override;
+   void PShapeModified() override;
 
-   virtual void SetModel(TObject* obj);
+   void SetModel(TObject* obj) override;
 
    // geometry
    void SetCenter(const Double_t *center);
@@ -104,7 +104,7 @@ public:
    void DoColorSlider(Int_t val);
    void DoColorButton();
 
-   ClassDef(TGLPShapeObjEditor, 0); //GUI for editing attributes of a physical-shape.
+   ClassDefOverride(TGLPShapeObjEditor, 0); //GUI for editing attributes of a physical-shape.
 };
 
 #endif
