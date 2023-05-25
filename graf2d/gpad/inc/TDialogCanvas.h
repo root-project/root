@@ -30,7 +30,7 @@ public:
    TDialogCanvas();
    TDialogCanvas(const char *name, const char *title, Int_t ww, Int_t wh);
    TDialogCanvas(const char *name, const char *title, Int_t wtopx, Int_t wtopy, UInt_t ww, UInt_t wh);
-   virtual      ~TDialogCanvas();
+        ~TDialogCanvas() override;
    virtual void Apply(const char *action="");
    virtual void BuildStandardButtons();
    void         Divide(Int_t nx=1, Int_t ny=1, Float_t xmargin=0.01, Float_t ymargin=0.01, Int_t color=0) override;

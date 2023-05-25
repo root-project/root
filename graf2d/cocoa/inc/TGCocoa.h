@@ -60,24 +60,24 @@ public:
    TGCocoa();
    TGCocoa(const char *name, const char *title);
 
-   ~TGCocoa();
+   ~TGCocoa() override;
 
    //TVirtualX final overriders.
    //I split them in a group not to get lost in this fat interface.
 
    ///////////////////////////////////////
    //General.
-   virtual Bool_t      Init(void *display);
-   virtual Int_t       OpenDisplay(const char *displayName);
-   virtual const char *DisplayName(const char *);
-   virtual Int_t       SupportsExtension(const char *extensionName)const;
-   virtual void        CloseDisplay();
-   virtual Display_t   GetDisplay()const;
-   virtual Visual_t    GetVisual()const;
-   virtual Int_t       GetScreen()const;
-   virtual UInt_t      ScreenWidthMM()const;
-   virtual Int_t       GetDepth()const;
-   virtual void        Update(Int_t mode);
+   Bool_t      Init(void *display) override;
+   Int_t       OpenDisplay(const char *displayName) override;
+   const char *DisplayName(const char *) override;
+   Int_t       SupportsExtension(const char *extensionName)const override;
+   void        CloseDisplay() override;
+   Display_t   GetDisplay()const override;
+   Visual_t    GetVisual()const override;
+   Int_t       GetScreen()const override;
+   UInt_t      ScreenWidthMM()const override;
+   Int_t       GetDepth()const override;
+   void        Update(Int_t mode) override;
 
    //Non-virtual functions.
            void                         ReconfigureDisplay();
@@ -87,81 +87,81 @@ public:
 
    ///////////////////////////////////////
    //Window management part:
-   virtual Window_t  GetDefaultRootWindow()const;
+   Window_t  GetDefaultRootWindow()const override;
    //-Functions used by TCanvas/TPad (work with window, selected by SelectWindow).
-   virtual Int_t     InitWindow(ULong_t window);
-   virtual Window_t  GetWindowID(Int_t wid);//TGCocoa simply returns wid.
-   virtual void      SelectWindow(Int_t wid);
-   virtual void      ClearWindow();
-   virtual void      GetGeometry(Int_t wid, Int_t &x, Int_t &y, UInt_t &w, UInt_t &h);
-   virtual void      MoveWindow(Int_t wid, Int_t x, Int_t y);
-   virtual void      RescaleWindow(Int_t wid, UInt_t w, UInt_t h);
-   virtual void      ResizeWindow(Int_t wid);
-   virtual void      UpdateWindow(Int_t mode);
-   virtual Window_t  GetCurrentWindow()const;
-   virtual void      CloseWindow();
-   virtual Int_t     AddWindow(ULong_t qwid, UInt_t w, UInt_t h); //-"Qt ROOT".
-   virtual void      RemoveWindow(ULong_t qwid); //-"Qt ROOT".
+   Int_t     InitWindow(ULong_t window) override;
+   Window_t  GetWindowID(Int_t wid) override;//TGCocoa simply returns wid.
+   void      SelectWindow(Int_t wid) override;
+   void      ClearWindow() override;
+   void      GetGeometry(Int_t wid, Int_t &x, Int_t &y, UInt_t &w, UInt_t &h) override;
+   void      MoveWindow(Int_t wid, Int_t x, Int_t y) override;
+   void      RescaleWindow(Int_t wid, UInt_t w, UInt_t h) override;
+   void      ResizeWindow(Int_t wid) override;
+   void      UpdateWindow(Int_t mode) override;
+   Window_t  GetCurrentWindow()const override;
+   void      CloseWindow() override;
+   Int_t     AddWindow(ULong_t qwid, UInt_t w, UInt_t h) override; //-"Qt ROOT".
+   void      RemoveWindow(ULong_t qwid) override; //-"Qt ROOT".
 
 
    //-Functions used by GUI.
-   virtual Window_t  CreateWindow(Window_t parent, Int_t x, Int_t y,
+   Window_t  CreateWindow(Window_t parent, Int_t x, Int_t y,
                                   UInt_t w, UInt_t h, UInt_t border,
                                   Int_t depth, UInt_t clss,
                                   void *visual, SetWindowAttributes_t *attr,
-                                  UInt_t wtype);
+                                  UInt_t wtype) override;
 
 
-   virtual void      DestroyWindow(Window_t wid);
-   virtual void      DestroySubwindows(Window_t wid);
+   void      DestroyWindow(Window_t wid) override;
+   void      DestroySubwindows(Window_t wid) override;
 
-   virtual void      GetWindowAttributes(Window_t wid, WindowAttributes_t &attr);
-   virtual void      ChangeWindowAttributes(Window_t wid, SetWindowAttributes_t *attr);
-   virtual void      SelectInput(Window_t wid, UInt_t evmask);//Can also be in events-related part.
+   void      GetWindowAttributes(Window_t wid, WindowAttributes_t &attr) override;
+   void      ChangeWindowAttributes(Window_t wid, SetWindowAttributes_t *attr) override;
+   void      SelectInput(Window_t wid, UInt_t evmask) override;//Can also be in events-related part.
 
            void      ReparentChild(Window_t wid, Window_t pid, Int_t x, Int_t y);//Non-overrider.
            void      ReparentTopLevel(Window_t wid, Window_t pid, Int_t x, Int_t y);//Non-overrider.
-   virtual void      ReparentWindow(Window_t wid, Window_t pid, Int_t x, Int_t y);
+   void      ReparentWindow(Window_t wid, Window_t pid, Int_t x, Int_t y) override;
 
-   virtual void      MapWindow(Window_t wid);
-   virtual void      MapSubwindows(Window_t wid);
-   virtual void      MapRaised(Window_t wid);
-   virtual void      UnmapWindow(Window_t wid);
-   virtual void      RaiseWindow(Window_t wid);
-   virtual void      LowerWindow(Window_t wid);
+   void      MapWindow(Window_t wid) override;
+   void      MapSubwindows(Window_t wid) override;
+   void      MapRaised(Window_t wid) override;
+   void      UnmapWindow(Window_t wid) override;
+   void      RaiseWindow(Window_t wid) override;
+   void      LowerWindow(Window_t wid) override;
 
-   virtual void      MoveWindow(Window_t wid, Int_t x, Int_t y);
-   virtual void      MoveResizeWindow(Window_t wid, Int_t x, Int_t y, UInt_t w, UInt_t h);
-   virtual void      ResizeWindow(Window_t wid, UInt_t w, UInt_t h);
-   virtual void      IconifyWindow(Window_t wid);
-   virtual void      TranslateCoordinates(Window_t src, Window_t dest, Int_t src_x,Int_t src_y,
-                                          Int_t &dest_x, Int_t &dest_y, Window_t &child);
-   virtual void      GetWindowSize(Drawable_t wid, Int_t &x, Int_t &y, UInt_t &w, UInt_t &h);
+   void      MoveWindow(Window_t wid, Int_t x, Int_t y) override;
+   void      MoveResizeWindow(Window_t wid, Int_t x, Int_t y, UInt_t w, UInt_t h) override;
+   void      ResizeWindow(Window_t wid, UInt_t w, UInt_t h) override;
+   void      IconifyWindow(Window_t wid) override;
+   void      TranslateCoordinates(Window_t src, Window_t dest, Int_t src_x,Int_t src_y,
+                                          Int_t &dest_x, Int_t &dest_y, Window_t &child) override;
+   void      GetWindowSize(Drawable_t wid, Int_t &x, Int_t &y, UInt_t &w, UInt_t &h) override;
 
 
-   virtual void      SetWindowBackground(Window_t wid, ULong_t color);
-   virtual void      SetWindowBackgroundPixmap(Window_t wid, Pixmap_t pxm);
+   void      SetWindowBackground(Window_t wid, ULong_t color) override;
+   void      SetWindowBackgroundPixmap(Window_t wid, Pixmap_t pxm) override;
 
-   virtual Window_t  GetParent(Window_t wid)const;
+   Window_t  GetParent(Window_t wid)const override;
 
-   virtual void      SetWindowName(Window_t wid, char *name);
-   virtual void      SetIconName(Window_t wid, char *name);
-   virtual void      SetIconPixmap(Window_t wid, Pixmap_t pix);
-   virtual void      SetClassHints(Window_t wid, char *className, char *resourceName);
+   void      SetWindowName(Window_t wid, char *name) override;
+   void      SetIconName(Window_t wid, char *name) override;
+   void      SetIconPixmap(Window_t wid, Pixmap_t pix) override;
+   void      SetClassHints(Window_t wid, char *className, char *resourceName) override;
    //Non-rectangular window:
-   virtual void      ShapeCombineMask(Window_t wid, Int_t x, Int_t y, Pixmap_t mask);
+   void      ShapeCombineMask(Window_t wid, Int_t x, Int_t y, Pixmap_t mask) override;
 
    //End window-management part.
    ///////////////////////////////////////
 
    /////////////////////////////
    //Set of "Window manager hints".
-   virtual void      SetMWMHints(Window_t winID, UInt_t value, UInt_t decorators, UInt_t inputMode);
-   virtual void      SetWMPosition(Window_t winID, Int_t x, Int_t y);
-   virtual void      SetWMSize(Window_t winID, UInt_t w, UInt_t h);
-   virtual void      SetWMSizeHints(Window_t winID, UInt_t wMin, UInt_t hMin, UInt_t wMax, UInt_t hMax, UInt_t wInc, UInt_t hInc);
-   virtual void      SetWMState(Window_t winID, EInitialState state);
-   virtual void      SetWMTransientHint(Window_t winID, Window_t mainWinID);
+   void      SetMWMHints(Window_t winID, UInt_t value, UInt_t decorators, UInt_t inputMode) override;
+   void      SetWMPosition(Window_t winID, Int_t x, Int_t y) override;
+   void      SetWMSize(Window_t winID, UInt_t w, UInt_t h) override;
+   void      SetWMSizeHints(Window_t winID, UInt_t wMin, UInt_t hMin, UInt_t wMax, UInt_t hMax, UInt_t wInc, UInt_t hInc) override;
+   void      SetWMState(Window_t winID, EInitialState state) override;
+   void      SetWMTransientHint(Window_t winID, Window_t mainWinID) override;
    //"Window manager hints".
    /////////////////////////////
 
@@ -169,24 +169,24 @@ public:
    ///////////////////////////////////////
    //GUI-rendering part.
            void      DrawLineAux(Drawable_t wid, const GCValues_t &gcVals, Int_t x1, Int_t y1, Int_t x2, Int_t y2);//Non-overrider.
-   virtual void      DrawLine(Drawable_t wid, GContext_t gc, Int_t x1, Int_t y1, Int_t x2, Int_t y2);
+   void      DrawLine(Drawable_t wid, GContext_t gc, Int_t x1, Int_t y1, Int_t x2, Int_t y2) override;
            void      DrawSegmentsAux(Drawable_t wid, const GCValues_t &gcVals, const Segment_t *segments, Int_t nSegments);//Non-overrider.
-   virtual void      DrawSegments(Drawable_t wid, GContext_t gc, Segment_t *segments, Int_t nSegments);
+   void      DrawSegments(Drawable_t wid, GContext_t gc, Segment_t *segments, Int_t nSegments) override;
            void      DrawRectangleAux(Drawable_t wid, const GCValues_t &gcVals, Int_t x, Int_t y, UInt_t w, UInt_t h);//Non-overrider.
-   virtual void      DrawRectangle(Drawable_t wid, GContext_t gc, Int_t x, Int_t y, UInt_t w, UInt_t h);
+   void      DrawRectangle(Drawable_t wid, GContext_t gc, Int_t x, Int_t y, UInt_t w, UInt_t h) override;
            void      FillRectangleAux(Drawable_t wid, const GCValues_t &gcVals, Int_t x, Int_t y, UInt_t w, UInt_t h);//Non-overrider.
-   virtual void      FillRectangle(Drawable_t wid, GContext_t gc, Int_t x, Int_t y, UInt_t w, UInt_t h);
+   void      FillRectangle(Drawable_t wid, GContext_t gc, Int_t x, Int_t y, UInt_t w, UInt_t h) override;
            void      FillPolygonAux(Window_t wid, const GCValues_t &gcVals, const Point_t *polygon, Int_t nPoints) ;//Non-overrider.
-   virtual void      FillPolygon(Window_t wid, GContext_t gc, Point_t *polygon, Int_t nPoints);
+   void      FillPolygon(Window_t wid, GContext_t gc, Point_t *polygon, Int_t nPoints) override;
            void      CopyAreaAux(Drawable_t src, Drawable_t dst, const GCValues_t &gc, Int_t srcX, Int_t srcY, UInt_t width,
                                  UInt_t height, Int_t dstX, Int_t dstY);//Non-overrider.
-   virtual void      CopyArea(Drawable_t src, Drawable_t dst, GContext_t gc, Int_t srcX, Int_t srcY, UInt_t width,
-                              UInt_t height, Int_t dstX, Int_t dstY);
+   void      CopyArea(Drawable_t src, Drawable_t dst, GContext_t gc, Int_t srcX, Int_t srcY, UInt_t width,
+                              UInt_t height, Int_t dstX, Int_t dstY) override;
            void      DrawStringAux(Drawable_t wid, const GCValues_t &gc, Int_t x, Int_t y, const char *s, Int_t len);//Non-overrider.
-   virtual void      DrawString(Drawable_t wid, GContext_t gc, Int_t x, Int_t y, const char *s, Int_t len);
+   void      DrawString(Drawable_t wid, GContext_t gc, Int_t x, Int_t y, const char *s, Int_t len) override;
            void      ClearAreaAux(Window_t wid, Int_t x, Int_t y, UInt_t w, UInt_t h);//Non-overrider.
-   virtual void      ClearArea(Window_t wid, Int_t x, Int_t y, UInt_t w, UInt_t h);
-   virtual void      ClearWindow(Window_t wid);
+   void      ClearArea(Window_t wid, Int_t x, Int_t y, UInt_t w, UInt_t h) override;
+   void      ClearWindow(Window_t wid) override;
    //End of GUI-rendering part.
    ///////////////////////////////////////
 
@@ -194,113 +194,113 @@ public:
    ///////////////////////////////////////
    //Pixmap management.
    //-Used by TCanvas/TPad classes:
-   virtual Int_t     OpenPixmap(UInt_t w, UInt_t h);
-   virtual Int_t     ResizePixmap(Int_t wid, UInt_t w, UInt_t h);
-   virtual void      SelectPixmap(Int_t qpixid);
-   virtual void      CopyPixmap(Int_t wid, Int_t xpos, Int_t ypos);
-   virtual void      ClosePixmap();
+   Int_t     OpenPixmap(UInt_t w, UInt_t h) override;
+   Int_t     ResizePixmap(Int_t wid, UInt_t w, UInt_t h) override;
+   void      SelectPixmap(Int_t qpixid) override;
+   void      CopyPixmap(Int_t wid, Int_t xpos, Int_t ypos) override;
+   void      ClosePixmap() override;
    //Used by GUI.
-   virtual Pixmap_t  CreatePixmap(Drawable_t wid, UInt_t w, UInt_t h);
-   virtual Pixmap_t  CreatePixmap(Drawable_t wid, const char *bitmap, UInt_t width, UInt_t height,
+   Pixmap_t  CreatePixmap(Drawable_t wid, UInt_t w, UInt_t h) override;
+   Pixmap_t  CreatePixmap(Drawable_t wid, const char *bitmap, UInt_t width, UInt_t height,
                                   ULong_t foregroundColor, ULong_t backgroundColor,
-                                  Int_t depth);
-   virtual Pixmap_t  CreatePixmapFromData(unsigned char *bits, UInt_t width, UInt_t height);
-   virtual Pixmap_t  CreateBitmap(Drawable_t wid, const char *bitmap,
-                                  UInt_t width, UInt_t height);
+                                  Int_t depth) override;
+   Pixmap_t  CreatePixmapFromData(unsigned char *bits, UInt_t width, UInt_t height) override;
+   Pixmap_t  CreateBitmap(Drawable_t wid, const char *bitmap,
+                                  UInt_t width, UInt_t height) override;
            void      DeletePixmapAux(Pixmap_t pixmapID);//Non-overrider.
-   virtual void      DeletePixmap(Pixmap_t pixmapID);
+   void      DeletePixmap(Pixmap_t pixmapID) override;
 
    //-"Qt ROOT".
-   virtual Int_t     AddPixmap(ULong_t pixid, UInt_t w, UInt_t h);
-   virtual unsigned char *GetColorBits(Drawable_t wid, Int_t x, Int_t y, UInt_t w, UInt_t h);
+   Int_t     AddPixmap(ULong_t pixid, UInt_t w, UInt_t h) override;
+   unsigned char *GetColorBits(Drawable_t wid, Int_t x, Int_t y, UInt_t w, UInt_t h) override;
    //End of pixmap management.
    /////////////////////////////
 
 
    /////////////////////////////
    //"Images" - emulation of XCreateImage/XPutImage etc.
-   virtual Drawable_t   CreateImage(UInt_t width, UInt_t height);
-   virtual void         GetImageSize(Drawable_t wid, UInt_t &width, UInt_t &height);
-   virtual void         PutPixel(Drawable_t wid, Int_t x, Int_t y, ULong_t pixel);
-   virtual void         PutImage(Drawable_t wid, GContext_t gc, Drawable_t img, Int_t dx, Int_t dy,
-                                 Int_t x, Int_t y, UInt_t w, UInt_t h);
-   virtual void         DeleteImage(Drawable_t img);
+   Drawable_t   CreateImage(UInt_t width, UInt_t height) override;
+   void         GetImageSize(Drawable_t wid, UInt_t &width, UInt_t &height) override;
+   void         PutPixel(Drawable_t wid, Int_t x, Int_t y, ULong_t pixel) override;
+   void         PutImage(Drawable_t wid, GContext_t gc, Drawable_t img, Int_t dx, Int_t dy,
+                                 Int_t x, Int_t y, UInt_t w, UInt_t h) override;
+   void         DeleteImage(Drawable_t img) override;
    //"Images".
    /////////////////////////////
 
    /////////////////////////////
    //Mouse (cursor, events, etc.)
-   virtual void      GrabButton(Window_t wid, EMouseButton button, UInt_t modifier,
+   void      GrabButton(Window_t wid, EMouseButton button, UInt_t modifier,
                                 UInt_t evmask, Window_t confine, Cursor_t cursor,
-                                Bool_t grab = kTRUE);
-   virtual void      GrabPointer(Window_t wid, UInt_t evmask, Window_t confine,
+                                Bool_t grab = kTRUE) override;
+   void      GrabPointer(Window_t wid, UInt_t evmask, Window_t confine,
                                  Cursor_t cursor, Bool_t grab = kTRUE,
-                                 Bool_t owner_events = kTRUE);
-   virtual void      ChangeActivePointerGrab(Window_t, UInt_t, Cursor_t);//Noop.
+                                 Bool_t owner_events = kTRUE) override;
+   void      ChangeActivePointerGrab(Window_t, UInt_t, Cursor_t) override;//Noop.
    //End of mouse related part.
    /////////////////////////////
 
    /////////////////////////////
    //Keyboard management.
-   virtual void      SetKeyAutoRepeat(Bool_t on = kTRUE);
-   virtual void      GrabKey(Window_t wid, Int_t keycode, UInt_t modifier, Bool_t grab = kTRUE);
-   virtual Int_t     KeysymToKeycode(UInt_t keysym);
-   virtual Window_t  GetInputFocus();
-   virtual void      SetInputFocus(Window_t wid);
-   virtual void      LookupString(Event_t *event, char *buf, Int_t buflen, UInt_t &keysym);
+   void      SetKeyAutoRepeat(Bool_t on = kTRUE) override;
+   void      GrabKey(Window_t wid, Int_t keycode, UInt_t modifier, Bool_t grab = kTRUE) override;
+   Int_t     KeysymToKeycode(UInt_t keysym) override;
+   Window_t  GetInputFocus() override;
+   void      SetInputFocus(Window_t wid) override;
+   void      LookupString(Event_t *event, char *buf, Int_t buflen, UInt_t &keysym) override;
    //End of keyboard management.
    /////////////////////////////
 
    /////////////////////////////
    //Font management.
-   virtual FontStruct_t LoadQueryFont(const char *font_name);
-   virtual FontH_t      GetFontHandle(FontStruct_t fs);
-   virtual void         DeleteFont(FontStruct_t fs);
-   virtual Bool_t       HasTTFonts() const;
-   virtual Int_t        TextWidth(FontStruct_t font, const char *s, Int_t len);
-   virtual void         GetFontProperties(FontStruct_t font, Int_t &max_ascent, Int_t &max_descent);
-   virtual FontStruct_t GetFontStruct(FontH_t fh);
-   virtual void         FreeFontStruct(FontStruct_t fs);
-   virtual char       **ListFonts(const char *fontname, Int_t max, Int_t &count);
-   virtual void         FreeFontNames(char **fontlist);
+   FontStruct_t LoadQueryFont(const char *font_name) override;
+   FontH_t      GetFontHandle(FontStruct_t fs) override;
+   void         DeleteFont(FontStruct_t fs) override;
+   Bool_t       HasTTFonts() const override;
+   Int_t        TextWidth(FontStruct_t font, const char *s, Int_t len) override;
+   void         GetFontProperties(FontStruct_t font, Int_t &max_ascent, Int_t &max_descent) override;
+   FontStruct_t GetFontStruct(FontH_t fh) override;
+   void         FreeFontStruct(FontStruct_t fs) override;
+   char       **ListFonts(const char *fontname, Int_t max, Int_t &count) override;
+   void         FreeFontNames(char **fontlist) override;
    //End of font management.
    /////////////////////////////
 
    /////////////////////////////
    //Color management.
-   virtual Bool_t       ParseColor(Colormap_t cmap, const char *cname, ColorStruct_t &color);
-   virtual Bool_t       AllocColor(Colormap_t cmap, ColorStruct_t &color);
-   virtual void         QueryColor(Colormap_t cmap, ColorStruct_t &color);
-   virtual void         FreeColor(Colormap_t cmap, ULong_t pixel);
-   virtual ULong_t      GetPixel(Color_t cindex);
-   virtual void         GetPlanes(Int_t &nplanes);
-   virtual void         GetRGB(Int_t index, Float_t &r, Float_t &g, Float_t &b);
-   virtual void         SetRGB(Int_t cindex, Float_t r, Float_t g, Float_t b);
-   virtual Colormap_t   GetColormap() const;
+   Bool_t       ParseColor(Colormap_t cmap, const char *cname, ColorStruct_t &color) override;
+   Bool_t       AllocColor(Colormap_t cmap, ColorStruct_t &color) override;
+   void         QueryColor(Colormap_t cmap, ColorStruct_t &color) override;
+   void         FreeColor(Colormap_t cmap, ULong_t pixel) override;
+   ULong_t      GetPixel(Color_t cindex) override;
+   void         GetPlanes(Int_t &nplanes) override;
+   void         GetRGB(Int_t index, Float_t &r, Float_t &g, Float_t &b) override;
+   void         SetRGB(Int_t cindex, Float_t r, Float_t g, Float_t b) override;
+   Colormap_t   GetColormap() const override;
 
    //End of color management.
    /////////////////////////////
 
    /////////////////////////////
    //Context management.
-   virtual GContext_t   CreateGC(Drawable_t wid, GCValues_t *gval);
-   virtual void         SetForeground(GContext_t gc, ULong_t foreground);
-   virtual void         ChangeGC(GContext_t gc, GCValues_t *gval);
-   virtual void         CopyGC(GContext_t org, GContext_t dest, Mask_t mask);
-   virtual void         GetGCValues(GContext_t gc, GCValues_t &gval);
-   virtual void         DeleteGC(GContext_t gc);
+   GContext_t   CreateGC(Drawable_t wid, GCValues_t *gval) override;
+   void         SetForeground(GContext_t gc, ULong_t foreground) override;
+   void         ChangeGC(GContext_t gc, GCValues_t *gval) override;
+   void         CopyGC(GContext_t org, GContext_t dest, Mask_t mask) override;
+   void         GetGCValues(GContext_t gc, GCValues_t &gval) override;
+   void         DeleteGC(GContext_t gc) override;
    //Context management.
    /////////////////////////////
 
    /////////////////////////////
    //Cursors.
-   virtual Cursor_t     CreateCursor(ECursor cursor);
-   virtual void         SetCursor(Window_t wid, Cursor_t curid);
-   virtual void         SetCursor(Int_t win, ECursor cursor);
-   virtual void         QueryPointer(Int_t &x, Int_t &y);
-   virtual void         QueryPointer(Window_t wid, Window_t &rootw, Window_t &childw,
+   Cursor_t     CreateCursor(ECursor cursor) override;
+   void         SetCursor(Window_t wid, Cursor_t curid) override;
+   void         SetCursor(Int_t win, ECursor cursor) override;
+   void         QueryPointer(Int_t &x, Int_t &y) override;
+   void         QueryPointer(Window_t wid, Window_t &rootw, Window_t &childw,
                                      Int_t &root_x, Int_t &root_y, Int_t &win_x,
-                                     Int_t &win_y, UInt_t &mask);
+                                     Int_t &win_y, UInt_t &mask) override;
    //Cursors.
    /////////////////////////////
 
@@ -308,34 +308,34 @@ public:
    /////////////////////////////
    //OpenGL.
    //We have a mix of Handle_t, Window_t (both are long) and Int_t (this is an obsolete version).
-   virtual Double_t  GetOpenGLScalingFactor();
-   virtual Window_t  CreateOpenGLWindow(Window_t parentID, UInt_t width, UInt_t height, const std::vector<std::pair<UInt_t, Int_t> > &format);
-   virtual Handle_t  CreateOpenGLContext(Window_t windowID, Handle_t sharedContext);
-   virtual void      CreateOpenGLContext(Int_t wid);
-   virtual Bool_t    MakeOpenGLContextCurrent(Handle_t ctx, Window_t windowID);
-   virtual Handle_t  GetCurrentOpenGLContext();
-   virtual void      FlushOpenGLBuffer(Handle_t ctxID);
+   Double_t  GetOpenGLScalingFactor() override;
+   Window_t  CreateOpenGLWindow(Window_t parentID, UInt_t width, UInt_t height, const std::vector<std::pair<UInt_t, Int_t> > &format) override;
+   Handle_t  CreateOpenGLContext(Window_t windowID, Handle_t sharedContext) override;
+   void      CreateOpenGLContext(Int_t wid) override;
+   Bool_t    MakeOpenGLContextCurrent(Handle_t ctx, Window_t windowID) override;
+   Handle_t  GetCurrentOpenGLContext() override;
+   void      FlushOpenGLBuffer(Handle_t ctxID) override;
 
-   virtual void      DeleteOpenGLContext(Int_t ctxID);
+   void      DeleteOpenGLContext(Int_t ctxID) override;
    //OpenGL.
    /////////////////////////////
 
    /////////////////////////////
    //TPad's/TCanvas' specific - "double buffer" (off-screen rendering) + 'xor' mode.
-   virtual void      SetDoubleBuffer(Int_t wid, Int_t mode);
-   virtual void      SetDoubleBufferOFF();
-   virtual void      SetDoubleBufferON();
-   virtual void      SetDrawMode(EDrawMode mode);
+   void      SetDoubleBuffer(Int_t wid, Int_t mode) override;
+   void      SetDoubleBufferOFF() override;
+   void      SetDoubleBufferON() override;
+   void      SetDrawMode(EDrawMode mode) override;
    //TPad's/TCanvas'.
    /////////////////////////////
 
    /////////////////////////////
    //Event management.
-   virtual void      SendEvent(Window_t wid, Event_t *ev);
-   virtual void      NextEvent(Event_t &event);
-   virtual Int_t     EventsPending();
-   virtual Bool_t    CheckEvent(Window_t wid, EGEventType type, Event_t &ev);
-   virtual Handle_t  GetNativeEvent() const;
+   void      SendEvent(Window_t wid, Event_t *ev) override;
+   void      NextEvent(Event_t &event) override;
+   Int_t     EventsPending() override;
+   Bool_t    CheckEvent(Window_t wid, EGEventType type, Event_t &ev) override;
+   Handle_t  GetNativeEvent() const override;
    //Event management.
    /////////////////////////////
 
@@ -343,90 +343,90 @@ public:
    //"Drag and drop" and "Copy and paste" (quotes are intentional :)).
 
    //Names here are total mess, but this comes from TVirtualX interface.
-   virtual Atom_t    InternAtom(const char *atom_name, Bool_t only_if_exist);
+   Atom_t    InternAtom(const char *atom_name, Bool_t only_if_exist) override;
 
-   virtual void      SetPrimarySelectionOwner(Window_t wid);
-   virtual Bool_t    SetSelectionOwner(Window_t windowID, Atom_t &selectionID);
-   virtual Window_t  GetPrimarySelectionOwner();
+   void      SetPrimarySelectionOwner(Window_t wid) override;
+   Bool_t    SetSelectionOwner(Window_t windowID, Atom_t &selectionID) override;
+   Window_t  GetPrimarySelectionOwner() override;
 
-   virtual void      ConvertPrimarySelection(Window_t wid, Atom_t clipboard, Time_t when);
-   virtual void      ConvertSelection(Window_t, Atom_t&, Atom_t&, Atom_t&, Time_t&);
-   virtual Int_t     GetProperty(Window_t, Atom_t, Long_t, Long_t, Bool_t, Atom_t,
-                                    Atom_t*, Int_t*, ULong_t*, ULong_t*, unsigned char**);
-   virtual void      GetPasteBuffer(Window_t wid, Atom_t atom, TString &text, Int_t &nchar,
-                                    Bool_t del);
+   void      ConvertPrimarySelection(Window_t wid, Atom_t clipboard, Time_t when) override;
+   void      ConvertSelection(Window_t, Atom_t&, Atom_t&, Atom_t&, Time_t&) override;
+   Int_t     GetProperty(Window_t, Atom_t, Long_t, Long_t, Bool_t, Atom_t,
+                                    Atom_t*, Int_t*, ULong_t*, ULong_t*, unsigned char**) override;
+   void      GetPasteBuffer(Window_t wid, Atom_t atom, TString &text, Int_t &nchar,
+                                    Bool_t del) override;
 
-   virtual void      ChangeProperty(Window_t wid, Atom_t property, Atom_t type,
-                                    UChar_t *data, Int_t len);
-   virtual void      ChangeProperties(Window_t wid, Atom_t property, Atom_t type,
-                                      Int_t format, UChar_t *data, Int_t len);
-   virtual void      DeleteProperty(Window_t, Atom_t&);
+   void      ChangeProperty(Window_t wid, Atom_t property, Atom_t type,
+                                    UChar_t *data, Int_t len) override;
+   void      ChangeProperties(Window_t wid, Atom_t property, Atom_t type,
+                                      Int_t format, UChar_t *data, Int_t len) override;
+   void      DeleteProperty(Window_t, Atom_t&) override;
 
-   virtual void      SetDNDAware(Window_t, Atom_t *);
-   virtual Bool_t    IsDNDAware(Window_t win, Atom_t *typelist);
+   void      SetDNDAware(Window_t, Atom_t *) override;
+   Bool_t    IsDNDAware(Window_t win, Atom_t *typelist) override;
 
-   virtual void      SetTypeList(Window_t win, Atom_t prop, Atom_t *typelist);
+   void      SetTypeList(Window_t win, Atom_t prop, Atom_t *typelist) override;
    //FindRWindow is in DND part, since it looks for a DND aware window.
-   virtual Window_t  FindRWindow(Window_t win, Window_t dragwin, Window_t input, int x, int y, int maxd);
+   Window_t  FindRWindow(Window_t win, Window_t dragwin, Window_t input, int x, int y, int maxd) override;
    //"Drag and drop" and "Copy and paste".
    /////////////////////////////
 
    //The remaining bunch of functions is not sorted yet (and not implemented at the moment).
 
-   virtual UInt_t    ExecCommand(TGWin32Command *code);
-   virtual void      GetCharacterUp(Float_t &chupx, Float_t &chupy);
+   UInt_t    ExecCommand(TGWin32Command *code) override;
+   void      GetCharacterUp(Float_t &chupx, Float_t &chupy) override;
 
-   virtual Int_t     GetDoubleBuffer(Int_t wid);
+   Int_t     GetDoubleBuffer(Int_t wid) override;
 
-   virtual Pixmap_t  ReadGIF(Int_t x0, Int_t y0, const char *file, Window_t wid);
-   virtual Int_t     RequestLocator(Int_t mode, Int_t ctyp, Int_t &x, Int_t &y);
-   virtual Int_t     RequestString(Int_t x, Int_t y, char *text);
+   Pixmap_t  ReadGIF(Int_t x0, Int_t y0, const char *file, Window_t wid) override;
+   Int_t     RequestLocator(Int_t mode, Int_t ctyp, Int_t &x, Int_t &y) override;
+   Int_t     RequestString(Int_t x, Int_t y, char *text) override;
 
-   virtual void      SetCharacterUp(Float_t chupx, Float_t chupy);
-   virtual void      SetClipOFF(Int_t wid);
-   virtual void      SetClipRegion(Int_t wid, Int_t x, Int_t y, UInt_t w, UInt_t h);
+   void      SetCharacterUp(Float_t chupx, Float_t chupy) override;
+   void      SetClipOFF(Int_t wid) override;
+   void      SetClipRegion(Int_t wid, Int_t x, Int_t y, UInt_t w, UInt_t h) override;
 
-   virtual void      SetTextMagnitude(Float_t mgn);
+   void      SetTextMagnitude(Float_t mgn) override;
 
-   virtual void      Sync(Int_t mode);
-   virtual void      Warp(Int_t ix, Int_t iy, Window_t wid);
-   virtual Int_t     WriteGIF(char *name);
-   virtual void      WritePixmap(Int_t wid, UInt_t w, UInt_t h, char *pxname);
+   void      Sync(Int_t mode) override;
+   void      Warp(Int_t ix, Int_t iy, Window_t wid) override;
+   Int_t     WriteGIF(char *name) override;
+   void      WritePixmap(Int_t wid, UInt_t w, UInt_t h, char *pxname) override;
 
-   virtual Bool_t       NeedRedraw(ULong_t tgwindow, Bool_t force);
+   Bool_t       NeedRedraw(ULong_t tgwindow, Bool_t force) override;
 
 
-   virtual Bool_t       CreatePictureFromFile(Drawable_t wid, const char *filename,
+   Bool_t       CreatePictureFromFile(Drawable_t wid, const char *filename,
                                               Pixmap_t &pict, Pixmap_t &pict_mask,
-                                              PictureAttributes_t &attr);
-   virtual Bool_t       CreatePictureFromData(Drawable_t wid, char **data,
+                                              PictureAttributes_t &attr) override;
+   Bool_t       CreatePictureFromData(Drawable_t wid, char **data,
                                               Pixmap_t &pict, Pixmap_t &pict_mask,
-                                              PictureAttributes_t &attr);
-   virtual Bool_t       ReadPictureDataFromFile(const char *filename, char ***ret_data);
-   virtual void         DeletePictureData(void *data);
-   virtual void         SetDashes(GContext_t gc, Int_t offset, const char *dash_list, Int_t n);
+                                              PictureAttributes_t &attr) override;
+   Bool_t       ReadPictureDataFromFile(const char *filename, char ***ret_data) override;
+   void         DeletePictureData(void *data) override;
+   void         SetDashes(GContext_t gc, Int_t offset, const char *dash_list, Int_t n) override;
 
 
-   virtual void         Bell(Int_t percent);
+   void         Bell(Int_t percent) override;
 
-   virtual void         WMDeleteNotify(Window_t wid);
+   void         WMDeleteNotify(Window_t wid) override;
 
-   virtual void         SetClipRectangles(GContext_t gc, Int_t x, Int_t y, Rectangle_t *recs, Int_t n);
-   virtual Region_t     CreateRegion();
-   virtual void         DestroyRegion(Region_t reg);
-   virtual void         UnionRectWithRegion(Rectangle_t *rect, Region_t src, Region_t dest);
-   virtual Region_t     PolygonRegion(Point_t *points, Int_t np, Bool_t winding);
-   virtual void         UnionRegion(Region_t rega, Region_t regb, Region_t result);
-   virtual void         IntersectRegion(Region_t rega, Region_t regb, Region_t result);
-   virtual void         SubtractRegion(Region_t rega, Region_t regb, Region_t result);
-   virtual void         XorRegion(Region_t rega, Region_t regb, Region_t result);
-   virtual Bool_t       EmptyRegion(Region_t reg);
-   virtual Bool_t       PointInRegion(Int_t x, Int_t y, Region_t reg);
-   virtual Bool_t       EqualRegion(Region_t rega, Region_t regb);
-   virtual void         GetRegionBox(Region_t reg, Rectangle_t *rect);
+   void         SetClipRectangles(GContext_t gc, Int_t x, Int_t y, Rectangle_t *recs, Int_t n) override;
+   Region_t     CreateRegion() override;
+   void         DestroyRegion(Region_t reg) override;
+   void         UnionRectWithRegion(Rectangle_t *rect, Region_t src, Region_t dest) override;
+   Region_t     PolygonRegion(Point_t *points, Int_t np, Bool_t winding) override;
+   void         UnionRegion(Region_t rega, Region_t regb, Region_t result) override;
+   void         IntersectRegion(Region_t rega, Region_t regb, Region_t result) override;
+   void         SubtractRegion(Region_t rega, Region_t regb, Region_t result) override;
+   void         XorRegion(Region_t rega, Region_t regb, Region_t result) override;
+   Bool_t       EmptyRegion(Region_t reg) override;
+   Bool_t       PointInRegion(Int_t x, Int_t y, Region_t reg) override;
+   Bool_t       EqualRegion(Region_t rega, Region_t regb) override;
+   void         GetRegionBox(Region_t reg, Rectangle_t *rect) override;
    //
 
-   virtual Bool_t       IsCmdThread()const { return kTRUE; }
+   Bool_t       IsCmdThread()const override { return kTRUE; }
 
    //Non virtual, non-overriding functions.
    ROOT::MacOSX::X11::EventTranslator *GetEventTranslator()const;
@@ -473,7 +473,7 @@ private:
    TGCocoa(const TGCocoa &rhs);
    TGCocoa &operator = (const TGCocoa &rhs);
 
-   ClassDef(TGCocoa, 0); //TVirtualX for MacOS X.
+   ClassDefOverride(TGCocoa, 0); //TVirtualX for MacOS X.
 };
 
 #endif

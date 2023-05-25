@@ -42,7 +42,7 @@ public:
    TMathText();
    TMathText(Double_t x, Double_t y, const char *text);
    TMathText(const TMathText &text);
-   virtual ~TMathText();
+   ~TMathText() override;
    void Copy(TObject &text) const override;
    TMathText *DrawMathText(Double_t x, Double_t y, const char *text);
    void GetBoundingBox(UInt_t &w, UInt_t &h, Bool_t angle = kFALSE) override;

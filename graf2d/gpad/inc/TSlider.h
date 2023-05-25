@@ -29,7 +29,7 @@ private:
 public:
    TSlider();
    TSlider(const char *name, const char *title, Double_t x1, Double_t y1, Double_t x2, Double_t y2, Color_t color=16, Short_t bordersize=2, Short_t bordermode =-1);
-   virtual ~TSlider();
+   ~TSlider() override;
    TObject      *GetObject()  const { return fObject; }
    Double_t      GetMinimum() const { return fMinimum; }
    Double_t      GetMaximum() const { return fMaximum; }

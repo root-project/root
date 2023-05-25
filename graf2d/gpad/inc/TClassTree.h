@@ -59,7 +59,7 @@ protected:
 public:
    TClassTree();
    TClassTree(const char *name, const char *classes="");
-   virtual      ~TClassTree();
+        ~TClassTree() override;
             void Draw(const char *classes ="") override;
    virtual Int_t FindClass(const char *classname);
    const char   *GetClasses() const {return fClasses.Data();}

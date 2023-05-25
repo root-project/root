@@ -27,7 +27,7 @@ class TASImagePlugin : public TImagePlugin {
 
 public:
    TASImagePlugin(const char *ext) : TImagePlugin(ext) { }
-   virtual ~TASImagePlugin() { ROOT::CallRecursiveRemoveIfNeeded(*this); }
+   ~TASImagePlugin() override { ROOT::CallRecursiveRemoveIfNeeded(*this); }
 
    ULong_t Hash() const override { return fExtension.Hash(); }
 

@@ -96,7 +96,7 @@ public:
    TLatex();
    TLatex(Double_t x, Double_t y, const char *text);
    TLatex(const TLatex &text);
-   virtual ~TLatex();
+   ~TLatex() override;
 
    void             Copy(TObject &text) const override;
 

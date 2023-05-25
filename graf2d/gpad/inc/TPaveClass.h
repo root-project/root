@@ -29,7 +29,7 @@ public:
    TPaveClass();
    TPaveClass(Double_t x1, Double_t y1,Double_t x2 ,Double_t y2, const char *label, TClassTree *classtree);
    TPaveClass(const TPaveClass &PaveVar);
-   virtual      ~TPaveClass();
+        ~TPaveClass() override;
 
    void          Copy(TObject &PaveVar) const override;
    virtual void  DrawClasses(const char *classes="this");   // *MENU*

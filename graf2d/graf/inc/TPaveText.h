@@ -30,7 +30,7 @@ public:
    TPaveText();
    TPaveText(Double_t x1, Double_t y1,Double_t x2 ,Double_t y2, Option_t *option="br");
    TPaveText(const TPaveText &pavetext);
-   virtual ~TPaveText();
+   ~TPaveText() override;
    TPaveText& operator=(const TPaveText&);
 
    virtual TBox    *AddBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2);

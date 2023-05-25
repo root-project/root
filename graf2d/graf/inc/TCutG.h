@@ -31,7 +31,7 @@ public:
    TCutG(const char *name, Int_t n=0);
    TCutG(const char *name, Int_t n, const Float_t *x, const Float_t *y);
    TCutG(const char *name, Int_t n, const Double_t *x, const Double_t *y);
-   virtual ~TCutG();
+   ~TCutG() override;
 
    TCutG &operator=(const TCutG &);
    virtual Double_t Area() const;

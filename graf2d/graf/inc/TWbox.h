@@ -28,7 +28,7 @@ public:
    TWbox(Double_t x1, Double_t y1,Double_t x2 ,Double_t y2,
          Color_t color=18, Short_t bordersize=5 ,Short_t bordermode=1);
    TWbox(const TWbox &wbox);
-   virtual ~TWbox() = default;
+   ~TWbox() override = default;
 
    TWbox &operator=(const TWbox &src);
 

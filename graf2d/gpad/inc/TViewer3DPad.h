@@ -27,7 +27,7 @@ private:
 
 public:
    TViewer3DPad(TVirtualPad & pad) : fPad(pad), fBuilding(kFALSE) {};
-   ~TViewer3DPad() {};
+   ~TViewer3DPad() override {};
 
    Bool_t PreferLocalFrame() const override;
    void   BeginScene() override;

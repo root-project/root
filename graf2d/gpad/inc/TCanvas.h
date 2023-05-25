@@ -102,7 +102,7 @@ public:
    TCanvas(const char *name, const char *title, Int_t wtopx, Int_t wtopy,
            Int_t ww, Int_t wh);
    TCanvas(const char *name, Int_t ww, Int_t wh, Int_t winid);
-   virtual ~TCanvas();
+   ~TCanvas() override;
 
    //-- used by friend TThread class
    void Constructor();

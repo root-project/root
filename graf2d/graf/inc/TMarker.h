@@ -34,7 +34,7 @@ public:
    TMarker();
    TMarker(Double_t x, Double_t y, Int_t marker);
    TMarker(const TMarker &marker);
-   virtual ~TMarker();
+   ~TMarker() override;
 
    void             Copy(TObject &marker) const override;
    Int_t            DistancetoPrimitive(Int_t px, Int_t py) override;

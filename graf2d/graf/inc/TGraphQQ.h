@@ -34,7 +34,7 @@ public:
    TGraphQQ(Int_t n, Double_t *x);
    TGraphQQ(Int_t n, Double_t *x, TF1 *f);
    TGraphQQ(Int_t nx, Double_t *x, Int_t ny, Double_t *y);
-   virtual ~TGraphQQ();
+   ~TGraphQQ() override;
 
    void SetFunction(TF1 *f);
    Double_t  GetXq1() const {return fXq1;}

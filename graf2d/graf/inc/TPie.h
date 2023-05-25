@@ -52,7 +52,7 @@ public:
    TPie(const char *,const char *, Int_t, Float_t *, Int_t *cols = nullptr, const char *lbls[] = nullptr);
    TPie(const TH1 *h);
    TPie(const TPie&);
-   ~TPie();
+   ~TPie() override;
 
    Int_t          DistancetoPrimitive(Int_t px, Int_t py) override;
    Int_t          DistancetoSlice(Int_t,Int_t);

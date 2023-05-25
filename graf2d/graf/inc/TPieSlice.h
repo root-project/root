@@ -30,7 +30,7 @@ protected:
 public:
    TPieSlice();
    TPieSlice(const char *, const char *, TPie *, Double_t val = 0);
-   virtual ~TPieSlice() {}
+   ~TPieSlice() override {}
 
    void           Copy(TObject &slice) const override;
    Int_t          DistancetoPrimitive(Int_t,Int_t) override;

@@ -42,7 +42,7 @@ public:
    TPolyLine(Int_t n, Float_t *x, Float_t *y, Option_t *option="");
    TPolyLine(Int_t n, Double_t *x, Double_t *y, Option_t *option="");
    TPolyLine(const TPolyLine &polyline);
-   virtual ~TPolyLine();
+   ~TPolyLine() override;
 
    void               Copy(TObject &polyline) const override;
    Int_t              DistancetoPrimitive(Int_t px, Int_t py) override;

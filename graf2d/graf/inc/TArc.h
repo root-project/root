@@ -30,7 +30,7 @@ public:
    TArc(Double_t x1, Double_t y1,Double_t radius
       , Double_t phimin=0,Double_t phimax=360);
    TArc(const TArc &arc);
-   virtual ~TArc();
+   ~TArc() override;
 
    void Copy(TObject &arc) const override;
    virtual TArc *DrawArc(Double_t x1, Double_t y1, Double_t radius

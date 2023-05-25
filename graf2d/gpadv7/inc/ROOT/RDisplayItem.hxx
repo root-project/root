@@ -77,7 +77,7 @@ public:
 
    const RDrawable *GetDrawable() const { return fDrawable; }
 
-   virtual ~RDrawableDisplayItem();
+   ~RDrawableDisplayItem() override;
 
 };
 
