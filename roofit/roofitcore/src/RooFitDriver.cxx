@@ -160,7 +160,6 @@ RooFitDriver::RooFitDriver(const RooAbsReal &absReal, RooFit::BatchModeOption ba
    _dataMapCPU.resize(serverSet.size());
    _dataMapCUDA.resize(serverSet.size());
 
-   std::unordered_map<TNamed const *, std::size_t> tokens;
    std::map<RooFit::Detail::DataKey, NodeInfo *> nodeInfos;
 
    // Fill the ordered nodes list and initialize the node info structs.
@@ -168,17 +167,15 @@ RooFitDriver::RooFitDriver(const RooAbsReal &absReal, RooFit::BatchModeOption ba
    std::size_t iNode = 0;
    for (RooAbsArg *arg : serverSet) {
 
-      tokens[arg->namePtr()] = iNode;
-
       auto &nodeInfo = _nodes[iNode];
       nodeInfo.absArg = arg;
       nodeInfo.iNode = iNode;
       nodeInfos[arg] = &nodeInfo;
 
-      arg->setDataToken(iNode);
-
       if (dynamic_cast<RooRealVar const *>(arg)) {
          nodeInfo.isVariable = true;
+      } else {
+         arg->setDataToken(iNode);
       }
       if (dynamic_cast<RooAbsCategory const *>(arg)) {
          nodeInfo.isCategory = true;
@@ -195,15 +192,35 @@ RooFitDriver::RooFitDriver(const RooAbsReal &absReal, RooFit::BatchModeOption ba
             info.serverInfos.emplace_back(serverInfo);
             serverInfo->clientInfos.emplace_back(&info);
          }
-         server->setDataToken(tokens.at(server->namePtr()));
       }
    }
+
+   syncDataTokens();
 
    if (_batchMode == RooFit::BatchModeOption::Cuda) {
       // create events and streams for every node
       for (auto &info : _nodes) {
          info.event = RooBatchCompute::dispatchCUDA->newCudaEvent(true);
          info.stream = RooBatchCompute::dispatchCUDA->newCudaStream();
+      }
+   }
+}
+
+/// If there are servers with the same name that got de-duplicated in the
+/// `_nodes` list, we need to set their data tokens too. We find such nodes by
+/// visiting the servers of every known node.
+void RooFitDriver::syncDataTokens()
+{
+   for (NodeInfo &info : _nodes) {
+      std::size_t iValueServer = 0;
+      for (RooAbsArg *server : info.absArg->servers()) {
+         if (server->isValueServer(*info.absArg)) {
+            auto *knownServer = info.serverInfos[iValueServer]->absArg;
+            if (knownServer->hasDataToken()) {
+               server->setDataToken(knownServer->dataToken());
+            }
+            ++iValueServer;
+         }
       }
    }
 }
@@ -222,6 +239,7 @@ void RooFitDriver::setData(DataSpansMap const &dataSpans)
    // they are used in the computation graph. If yes, add the span to the data
    // map and set the node info accordingly.
    std::size_t totalSize = 0;
+   std::size_t iNode = 0;
    for (auto &info : _nodes) {
       if (info.buffer) {
          delete info.buffer;
@@ -229,7 +247,8 @@ void RooFitDriver::setData(DataSpansMap const &dataSpans)
       }
       auto found = dataSpans.find(info.absArg->namePtr());
       if (found != dataSpans.end()) {
-         _dataMapCPU.at(info.absArg) = found->second;
+         info.absArg->setDataToken(iNode);
+         _dataMapCPU.set(info.absArg, found->second);
          info.outputSize = found->second.size();
          info.fromDataset = true;
          info.isDirty = false;
@@ -239,9 +258,11 @@ void RooFitDriver::setData(DataSpansMap const &dataSpans)
          info.fromDataset = false;
          info.isDirty = true;
       }
+      ++iNode;
    }
 
    determineOutputSizes();
+   syncDataTokens();
 
    for (auto &info : _nodes) {
       // In principle we don't need dirty flag propagation because the driver
@@ -268,9 +289,9 @@ void RooFitDriver::setData(DataSpansMap const &dataSpans)
       std::size_t size = info.outputSize;
       if (size == 1) {
          // Scalar observables from the data don't need to be copied to the GPU
-         _dataMapCUDA.at(info.absArg) = _dataMapCPU.at(info.absArg);
+         _dataMapCUDA.set(info.absArg, _dataMapCPU.at(info.absArg));
       } else {
-         _dataMapCUDA.at(info.absArg) = RooSpan<double>(_cudaMemDataset + idx, size);
+         _dataMapCUDA.set(info.absArg, {_cudaMemDataset + idx, size});
          RooBatchCompute::dispatchCUDA->memcpyToCUDA(_cudaMemDataset + idx, _dataMapCPU.at(info.absArg).data(),
                                                      size * sizeof(double));
          idx += size;
@@ -316,7 +337,7 @@ void RooFitDriver::computeCPUNode(const RooAbsArg *node, NodeInfo &info)
    if (nOut == 1) {
       buffer = &info.scalarBuffer;
       if (_batchMode == RooFit::BatchModeOption::Cuda) {
-         _dataMapCUDA.at(node) = RooSpan<const double>(buffer, nOut);
+         _dataMapCUDA.set(node, {buffer, nOut});
       }
    } else {
       if (!info.hasLogged && _batchMode == RooFit::BatchModeOption::Cuda) {
@@ -333,10 +354,10 @@ void RooFitDriver::computeCPUNode(const RooAbsArg *node, NodeInfo &info)
       }
       buffer = info.buffer->cpuWritePtr();
    }
-   _dataMapCPU.at(node) = RooSpan<const double>(buffer, nOut);
+   _dataMapCPU.set(node, {buffer, nOut});
    nodeAbsReal->computeBatch(nullptr, buffer, nOut, _dataMapCPU);
    if (info.copyAfterEvaluation) {
-      _dataMapCUDA.at(node) = RooSpan<const double>(info.buffer->gpuReadPtr(), nOut);
+      _dataMapCUDA.set(node, {info.buffer->gpuReadPtr(), nOut});
       if (info.event) {
          RooBatchCompute::dispatchCUDA->cudaEventRecord(info.event, info.stream);
       }
@@ -475,17 +496,17 @@ void RooFitDriver::assignToGPU(NodeInfo &info)
    double *buffer = nullptr;
    if (nOut == 1) {
       buffer = &info.scalarBuffer;
-      _dataMapCPU.at(node) = RooSpan<const double>(buffer, nOut);
+      _dataMapCPU.set(node, {buffer, nOut});
    } else {
       info.buffer = info.copyAfterEvaluation ? _bufferManager.makePinnedBuffer(nOut, info.stream)
                                              : _bufferManager.makeGpuBuffer(nOut);
       buffer = info.buffer->gpuWritePtr();
    }
-   _dataMapCUDA.at(node) = RooSpan<const double>(buffer, nOut);
+   _dataMapCUDA.set(node, {buffer, nOut});
    node->computeBatch(info.stream, buffer, nOut, _dataMapCUDA);
    RooBatchCompute::dispatchCUDA->cudaEventRecord(info.event, info.stream);
    if (info.copyAfterEvaluation) {
-      _dataMapCPU.at(node) = RooSpan<const double>(info.buffer->cpuReadPtr(), nOut);
+      _dataMapCPU.set(node, {info.buffer->cpuReadPtr(), nOut});
    }
 }
 
@@ -587,8 +608,8 @@ void RooFitDriver::print(std::ostream &os) const
    printHorizontalRow();
 }
 
-RooAbsRealWrapper::RooAbsRealWrapper(std::unique_ptr<RooFitDriver> driver, std::string const &rangeName, RooSimultaneous const *simPdf,
-                  bool takeGlobalObservablesFromData)
+RooAbsRealWrapper::RooAbsRealWrapper(std::unique_ptr<RooFitDriver> driver, std::string const &rangeName,
+                                     RooSimultaneous const *simPdf, bool takeGlobalObservablesFromData)
    : RooAbsReal{"RooFitDriverWrapper", "RooFitDriverWrapper"},
      _driver{std::move(driver)},
      _topNode("topNode", "top node", this, _driver->topNode()),
@@ -610,7 +631,8 @@ RooAbsRealWrapper::RooAbsRealWrapper(const RooAbsRealWrapper &other, const char 
 {
 }
 
-bool RooAbsRealWrapper::getParameters(const RooArgSet *observables, RooArgSet &outputSet, bool /*stripDisconnected*/) const
+bool RooAbsRealWrapper::getParameters(const RooArgSet *observables, RooArgSet &outputSet,
+                                      bool /*stripDisconnected*/) const
 {
    outputSet.add(_parameters);
    if (observables) {

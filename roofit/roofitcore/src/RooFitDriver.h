@@ -67,6 +67,7 @@ private:
    void computeCPUNode(const RooAbsArg *node, NodeInfo &info);
    void setOperMode(RooAbsArg *arg, RooAbsArg::OperMode opMode);
    void determineOutputSizes();
+   void syncDataTokens();
 
    ///////////////////////////
    // Private member variables
