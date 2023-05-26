@@ -25,6 +25,7 @@
 
 #include <algorithm>
 #include <chrono>
+#include <deque>
 #include <functional>
 #include <iterator>
 #include <map>
@@ -506,6 +507,31 @@ public:
             fColumns.emplace_back(logicalId);
          }
       }
+
+      RColumnDescriptorIterable(const RNTupleDescriptor &ntuple)
+         : fNTuple(ntuple)
+      {
+         std::deque<DescriptorId_t> fieldIdQueue{ntuple.GetFieldZeroId()};
+
+         while (!fieldIdQueue.empty()) {
+            auto currFieldId = fieldIdQueue.front();
+            fieldIdQueue.pop_front();
+
+            for (const auto &field : ntuple.GetFieldIterable(currFieldId)) {
+               auto fieldId = field.GetId();
+
+               for (unsigned int i = 0; true; ++i) {
+                  auto logicalId = ntuple.FindLogicalColumnId(fieldId, i);
+                  if (logicalId == kInvalidDescriptorId)
+                     break;
+                  fColumns.emplace_back(logicalId);
+               }
+
+               fieldIdQueue.push_back(fieldId);
+            }
+         }
+      }
+
       RIterator begin() { return RIterator(fNTuple, fColumns, 0); }
       RIterator end() { return RIterator(fNTuple, fColumns, fColumns.size()); }
    };
@@ -716,6 +742,10 @@ public:
       return GetFieldIterable(GetFieldZeroId(), comparator);
    }
 
+   RColumnDescriptorIterable GetColumnIterable() const
+   {
+      return RColumnDescriptorIterable(*this);
+   }
    RColumnDescriptorIterable GetColumnIterable(const RFieldDescriptor &fieldDesc) const
    {
       return RColumnDescriptorIterable(*this, fieldDesc);

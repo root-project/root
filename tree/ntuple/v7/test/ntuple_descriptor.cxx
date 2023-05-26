@@ -427,6 +427,13 @@ TEST(RColumnDescriptorIterable, IterateOverColumns)
       counter++;
    }
    EXPECT_EQ(3, counter);
+
+   counter = 0;
+   for (const auto &c : desc->GetColumnIterable()) {
+      (void)c;
+      counter++;
+   }
+   EXPECT_EQ(desc->GetNLogicalColumns(), counter);
 }
 
 TEST(RClusterDescriptor, GetBytesOnStorage)
