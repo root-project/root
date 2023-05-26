@@ -1,0 +1,69 @@
+name: Bug Report
+description: Create a report to get an issue fixed.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: Thanks for taking the time to fill out this bug report!
+  - type: checkboxes
+    id: check-duplicates
+    attributes:
+      label: Check duplicate issues.
+      description: Please search in [GitHub](https://github.com/root-project/root/issues?q=is%3Aissue) AND [Jira](<https://sft.its.cern.ch/jira/issues/?jql=project %3D ROOT>) for existing reports of your issue.
+      options:
+        - label: Checked for duplicates
+    validations:
+      required: true
+  - type: textarea
+    id: bug-description
+    attributes:
+      label: Describe the bug
+      description: A clear and concise description of what the wrong behavior is.
+    validations:
+      required: true
+  - type: textarea
+    id: expected-behaviour
+    attributes:
+      label: What is the expected behaviour?
+      description: A clear and concise description of what you expected to happen.
+    validations:
+      required: false
+  - type: textarea
+    id: to-reproduce
+    attributes:
+      label: How to reproduce?
+      description: |
+        Describe the steps to reproduce the behavior:
+        1. Your code that triggers the issue: at least a part; ideally something we can run ourselves.
+        2. Don't forget to attach the required input files!
+        3. How to run your code and / or build it, e.g. `root myMacro.C`, ...
+    validations:
+      required: true
+  - type: input
+    id: root-version
+    attributes:
+      label: ROOT version
+      description: What version of ROOT are you running?
+    validations:
+      required: true
+  - type: input
+    id: root-install-how
+    attributes:
+      label: How did you install ROOT?
+      placeholder: Package manager, website download, conda, custom build...
+    validations:
+      required: true
+  - type: input
+    id: operating-system
+    attributes:
+      label: Which operating system are you using?
+      placeholder: Windows, MacOS, Linux (which distribution?)
+    validations:
+      required: true
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional context
+      description: Add any other context about the bug here.
+    validations:
+      required: false
