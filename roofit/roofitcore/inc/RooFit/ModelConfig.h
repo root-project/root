@@ -232,8 +232,13 @@ public:
 
       if (GetWS()->pdf(name))
          fPdfName = name;
-      else
-         coutE(ObjectHandling) << "pdf " << name << " does not exist in workspace" << std::endl;
+      else{
+         std::stringstream ss;
+         ss << "pdf " << name << " does not exist in workspace" ;
+         const std::string errorMsg = ss.str();
+         coutE(ObjectHandling) << errorMsg << std::endl;
+         throw std::runtime_error(errorMsg);
+      }
    }
 
    /// Specify the name of the PDF in the workspace to be used.
@@ -244,8 +249,13 @@ public:
 
       if (GetWS()->pdf(name))
          fPriorPdfName = name;
-      else
-         coutE(ObjectHandling) << "pdf " << name << " does not exist in workspace" << std::endl;
+      else{
+         std::stringstream ss;
+         ss << "pdf " << name << " does not exist in workspace" ;
+         const std::string errorMsg = ss.str();
+         coutE(ObjectHandling) << errorMsg << std::endl;
+         throw std::runtime_error(errorMsg);
+      }
    }
 
    /// Specify the name of the dataset in the workspace to be used.
@@ -256,8 +266,13 @@ public:
 
       if (GetWS()->data(name))
          fProtoDataName = name;
-      else
-         coutE(ObjectHandling) << "dataset " << name << " does not exist in workspace" << std::endl;
+      else{
+         std::stringstream ss;
+         ss << "dataset " << name << " does not exist in workspace" ;
+         const std::string errorMsg = ss.str();
+         coutE(ObjectHandling) << errorMsg << std::endl;
+         throw std::runtime_error(errorMsg);
+      }
    }
 
    /* getter methods */
