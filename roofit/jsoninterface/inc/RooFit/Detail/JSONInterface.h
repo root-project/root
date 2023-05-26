@@ -223,6 +223,27 @@ std::vector<T> &operator<<(std::vector<T> &v, RooFit::Detail::JSONNode const &n)
    return v;
 }
 
+template <>
+inline int JSONNode::val_t<int>() const
+{
+   return val_int();
+}
+template <>
+inline double JSONNode::val_t<double>() const
+{
+   return val_double();
+}
+template <>
+inline bool JSONNode::val_t<bool>() const
+{
+   return val_bool();
+}
+template <>
+inline std::string JSONNode::val_t<std::string>() const
+{
+   return val();
+}
+
 } // namespace Detail
 } // namespace RooFit
 
