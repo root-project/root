@@ -69,27 +69,6 @@ std::ostream &operator<<(std::ostream &os, JSONNode const &s)
    return os;
 }
 
-template <>
-int JSONNode::val_t<int>() const
-{
-   return val_int();
-}
-template <>
-double JSONNode::val_t<double>() const
-{
-   return val_double();
-}
-template <>
-bool JSONNode::val_t<bool>() const
-{
-   return val_bool();
-}
-template <>
-std::string JSONNode::val_t<std::string>() const
-{
-   return val();
-}
-
 std::unique_ptr<JSONTree> JSONTree::create()
 {
    return std::make_unique<Tree_t>();
