@@ -804,8 +804,8 @@ TEST(RDFSimpleTests, AutomaticNamesOfHisto1DAndGraph)
    EXPECT_STREQ(hxy->GetTitle(), "x, weights: y");
    EXPECT_STREQ(hxy->GetXaxis()->GetTitle(), "x");
    EXPECT_STREQ(hxy->GetYaxis()->GetTitle(), "count * y");
-   EXPECT_STREQ(gxy->GetName(), "x_vs_y");
-   EXPECT_STREQ(gxy->GetTitle(), "x vs y");
+   EXPECT_STREQ(gxy->GetName(), "y_vs_x");
+   EXPECT_STREQ(gxy->GetTitle(), "y vs x");
    EXPECT_STREQ(gxy->GetXaxis()->GetTitle(), "x");
    EXPECT_STREQ(gxy->GetYaxis()->GetTitle(), "y");
 
