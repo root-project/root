@@ -676,6 +676,12 @@ Bool_t TCivetweb::Create(const char *args)
    if (GetServer() && GetServer()->IsCorsCredentials()) {
       options[op++] = "access_control_allow_credentials";
       options[op++] = GetServer()->GetCorsCredentials();
+      // enables partial files reading with credentials
+      // can be enabled after nect civetweb upgrade
+      // options[op++] = "access_control_expose_headers";
+      // options[op++] = "Accept-Ranges";
+      // options[op++] = "access_control_allow_methods";
+      // options[op++] = "GET, HEAD, OPTIONS";
    }
 
    options[op++] = "enable_directory_listing";
