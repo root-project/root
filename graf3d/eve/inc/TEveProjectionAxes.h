@@ -51,7 +51,7 @@ protected:
 
 public:
    TEveProjectionAxes(TEveProjectionManager* m, Bool_t useColorSet = kTRUE);
-   virtual ~TEveProjectionAxes();
+   ~TEveProjectionAxes() override;
 
    TEveProjectionManager* GetManager()      { return fManager; }
 
@@ -65,12 +65,12 @@ public:
    void            SetDrawOrigin(Bool_t x)   { fDrawOrigin = x; }
    Bool_t          GetDrawOrigin() const     { return fDrawOrigin; }
 
-   virtual void    Paint(Option_t* option="");
-   virtual void    ComputeBBox();
+   void    Paint(Option_t* option="") override;
+   void    ComputeBBox() override;
 
-   virtual const   TGPicture* GetListTreeIcon(Bool_t open=kFALSE);
+   const   TGPicture* GetListTreeIcon(Bool_t open=kFALSE) override;
 
-   ClassDef(TEveProjectionAxes, 0); // Class to draw scales in non-linear projections.
+   ClassDefOverride(TEveProjectionAxes, 0); // Class to draw scales in non-linear projections.
 };
 
 #endif

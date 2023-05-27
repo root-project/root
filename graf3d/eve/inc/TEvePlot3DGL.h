@@ -32,20 +32,20 @@ protected:
 
 public:
    TEvePlot3DGL();
-   virtual ~TEvePlot3DGL() {}
+   ~TEvePlot3DGL() override {}
 
-   virtual Bool_t KeepDuringSmartRefresh() const { return kFALSE; }
+   Bool_t KeepDuringSmartRefresh() const override { return kFALSE; }
 
-   virtual Bool_t SetModel(TObject* obj, const Option_t *opt = nullptr);
-   virtual void   SetBBox();
+   Bool_t SetModel(TObject* obj, const Option_t *opt = nullptr) override;
+   void   SetBBox() override;
 
-   virtual void DirectDraw(TGLRnrCtx & rnrCtx) const;
+   void DirectDraw(TGLRnrCtx & rnrCtx) const override;
 
    // To support two-level selection
    // virtual Bool_t SupportsSecondarySelect() const { return kTRUE; }
    // virtual void ProcessSelection(TGLRnrCtx & rnrCtx, TGLSelectRecord & rec);
 
-   ClassDef(TEvePlot3DGL, 0); // GL renderer class for TEvePlot3D.
+   ClassDefOverride(TEvePlot3DGL, 0); // GL renderer class for TEvePlot3D.
 };
 
 #endif

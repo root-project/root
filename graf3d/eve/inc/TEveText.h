@@ -44,7 +44,7 @@ protected:
 
 public:
    TEveText(const char* txt="");
-   virtual ~TEveText() {}
+   ~TEveText() override {}
 
    Int_t   GetFontSize() const { return fFontSize; }
    Int_t   GetFontFile() const { return fFontFile; }
@@ -69,12 +69,12 @@ public:
    Float_t  GetPolygonOffset(Int_t i) const { return fPolygonOffset[i]; }
    void     SetPolygonOffset(Float_t factor, Float_t units);
 
-   virtual void   Paint(Option_t* option="");
-   virtual void   ComputeBBox();
+   void   Paint(Option_t* option="") override;
+   void   ComputeBBox() override;
 
-   virtual const TGPicture* GetListTreeIcon(Bool_t open=kFALSE);
+   const TGPicture* GetListTreeIcon(Bool_t open=kFALSE) override;
 
-   ClassDef(TEveText, 0); // Class for visualisation of text with FTGL font.
+   ClassDefOverride(TEveText, 0); // Class for visualisation of text with FTGL font.
 };
 
 #endif

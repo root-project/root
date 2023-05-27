@@ -35,18 +35,18 @@ protected:
 
 public:
    TEveBoxSetGL();
-   virtual ~TEveBoxSetGL();
+   ~TEveBoxSetGL() override;
 
-   virtual Bool_t ShouldDLCache(const TGLRnrCtx& rnrCtx) const;
-   virtual void   DLCacheDrop();
-   virtual void   DLCachePurge();
+   Bool_t ShouldDLCache(const TGLRnrCtx& rnrCtx) const override;
+   void   DLCacheDrop() override;
+   void   DLCachePurge() override;
 
-   virtual Bool_t SetModel(TObject* obj, const Option_t *opt = nullptr);
-   virtual void   DirectDraw(TGLRnrCtx& rnrCtx) const;
+   Bool_t SetModel(TObject* obj, const Option_t *opt = nullptr) override;
+   void   DirectDraw(TGLRnrCtx& rnrCtx) const override;
 
    virtual void Render(TGLRnrCtx& rnrCtx);
 
-   ClassDef(TEveBoxSetGL, 0); // GL-renderer for TEveBoxSet class.
+   ClassDefOverride(TEveBoxSetGL, 0); // GL-renderer for TEveBoxSet class.
 };
 
 #endif

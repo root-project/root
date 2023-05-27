@@ -442,33 +442,33 @@ public:
    TEveElementList(const char* n="TEveElementList", const char* t="",
                    Bool_t doColor=kFALSE, Bool_t doTransparency=kFALSE);
    TEveElementList(const TEveElementList& e);
-   virtual ~TEveElementList() {}
+   ~TEveElementList() override {}
 
-   virtual TObject* GetObject(const TEveException& /*eh*/="TEveElementList::GetObject ") const
+   TObject* GetObject(const TEveException& /*eh*/="TEveElementList::GetObject ") const override
    { const TObject* obj = this; return const_cast<TObject*>(obj); }
 
-   virtual TEveElementList* CloneElement() const;
+   TEveElementList* CloneElement() const override;
 
-   virtual const char* GetElementName()  const { return GetName();  }
-   virtual const char* GetElementTitle() const { return GetTitle(); }
+   const char* GetElementName()  const override { return GetName();  }
+   const char* GetElementTitle() const override { return GetTitle(); }
 
-   virtual void SetElementName (const char* name)
+   void SetElementName (const char* name) override
    { TNamed::SetName(name); NameTitleChanged(); }
 
-   virtual void SetElementTitle(const char* title)
+   void SetElementTitle(const char* title) override
    { TNamed::SetTitle(title); NameTitleChanged(); }
 
-   virtual void SetElementNameTitle(const char* name, const char* title)
+   void SetElementNameTitle(const char* name, const char* title) override
    { TNamed::SetNameTitle(name, title); NameTitleChanged(); }
 
    TClass* GetChildClass() const { return fChildClass; }
    void    SetChildClass(TClass* c) { fChildClass = c; }
 
-   virtual Bool_t  AcceptElement(TEveElement* el);
+   Bool_t  AcceptElement(TEveElement* el) override;
 
-   virtual TClass* ProjectedClass(const TEveProjection* p) const;
+   TClass* ProjectedClass(const TEveProjection* p) const override;
 
-   ClassDef(TEveElementList, 0); // List of TEveElement objects with a possibility to limit the class of accepted elements.
+   ClassDefOverride(TEveElementList, 0); // List of TEveElement objects with a possibility to limit the class of accepted elements.
 };
 
 
@@ -485,12 +485,12 @@ private:
 
 public:
    TEveElementListProjected();
-   virtual ~TEveElementListProjected() {}
+   ~TEveElementListProjected() override {}
 
-   virtual void UpdateProjection();
-   virtual TEveElement* GetProjectedAsElement() { return this; }
+   void UpdateProjection() override;
+   TEveElement* GetProjectedAsElement() override { return this; }
 
-   ClassDef(TEveElementListProjected, 0); // Projected TEveElementList.
+   ClassDefOverride(TEveElementListProjected, 0); // Projected TEveElementList.
 };
 
 #endif

@@ -57,7 +57,7 @@ protected:
 
 public:
    TEveSelection(const char* n="TEveSelection", const char* t="");
-   virtual ~TEveSelection() {}
+   ~TEveSelection() override {}
 
    void SetHighlightMode();
 
@@ -67,13 +67,13 @@ public:
    Bool_t GetIsMaster()       const { return fIsMaster; }
    void   SetIsMaster(Bool_t m)     { fIsMaster = m; }
 
-   virtual Bool_t AcceptElement(TEveElement* el);
+   Bool_t AcceptElement(TEveElement* el) override;
 
-   virtual void AddElement(TEveElement* el);
-   virtual void RemoveElement(TEveElement* el);
-   virtual void RemoveElementLocal(TEveElement* el);
-   virtual void RemoveElements();
-   virtual void RemoveElementsLocal();
+   void AddElement(TEveElement* el) override;
+   void RemoveElement(TEveElement* el) override;
+   void RemoveElementLocal(TEveElement* el) override;
+   void RemoveElements() override;
+   void RemoveElementsLocal() override;
 
    virtual void RemoveImpliedSelected(TEveElement* el);
 
@@ -101,7 +101,7 @@ public:
 
    // ----------------------------------------------------------------
 
-   ClassDef(TEveSelection, 0); // Container for selected and highlighted elements.
+   ClassDefOverride(TEveSelection, 0); // Container for selected and highlighted elements.
 };
 
 #endif
