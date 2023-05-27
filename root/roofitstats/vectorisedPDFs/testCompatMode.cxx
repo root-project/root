@@ -33,24 +33,21 @@ class TestRooPolynomial : public PDFTest
     TestRooPolynomial() :
       PDFTest("Polynomial(...)")
   {
-      auto x = new RooRealVar("x", "x", 0, 10);
-      auto a1 = new RooRealVar("a1", "First coefficient", 5, 0, 10);
-      auto a2 = new RooRealVar("a2", "Second coefficient", 1, 0, 10);
-      auto a3 = new RooFormulaVar("a3", "Third coefficient", "a1+a2", RooArgList(*a1, *a2));
+      auto x = std::make_unique<RooRealVar>("x", "x", 0, 10);
+      auto a1 = std::make_unique<RooRealVar>("a1", "First coefficient", 5, 0, 10);
+      auto a2 = std::make_unique<RooRealVar>("a2", "Second coefficient", 1, 0, 10);
+      auto a3 = std::make_unique<RooFormulaVar>("a3", "Third coefficient", "a1+a2", RooArgList(*a1, *a2));
 
       _pdf = std::make_unique<RooPolynomial>("pol", "Polynomial", *x, RooArgList(*a1, *a2, *a3));
 
 
-      for (auto var : {x, a1}) {
-        _variables.addOwned(*var);
+      _variables.addOwned(std::move(x));
+      _variables.addOwned(std::move(a1));
 //        _variablesToPlot.add(var);
-      }
 
-      for (auto par : {a2}) {
-        _parameters.addOwned(*par);
-      }
+      _parameters.addOwned(std::move(a2));
 
-      _otherObjects.addOwned(*a3);
+      _otherObjects.addOwned(std::move(a3));
   }
 };
 
@@ -186,18 +183,17 @@ class TestNonVecGauss : public PDFTest
   protected:
     TestNonVecGauss() :
       PDFTest("GaussNoBatches", 200000) {
-      auto x = new RooRealVar("x", "x", -10, 10);
-      auto mean = new RooRealVar("mean", "mean of gaussian", 1, -10, 10);
-      auto sigma = new RooRealVar("sigma", "width of gaussian", 1, 0.1, 10);
+      auto x = std::make_unique<RooRealVar>("x", "x", -10, 10);
+      auto mean = std::make_unique<RooRealVar>("mean", "mean of gaussian", 1, -10, 10);
+      auto sigma = std::make_unique<RooRealVar>("sigma", "width of gaussian", 1, 0.1, 10);
 
       // Build gaussian p.d.f in terms of x,mean and sigma
       _pdf = std::make_unique<RooNonVecGaussian>("gauss", "gaussian PDF", *x, *mean, *sigma);
 
-      _variables.addOwned(*x);
+      _variables.addOwned(std::move(x));
 
-      for (auto par : {mean, sigma}) {
-        _parameters.addOwned(*par);
-      }
+      _parameters.addOwned(std::move(mean));
+      _parameters.addOwned(std::move(sigma));
 
       _toleranceCompareLogs = 2.5E-14;
     }
@@ -220,19 +216,18 @@ class TestNonVecGaussWeighted : public PDFTestWeightedData
       PDFTestWeightedData("GaussNoBatchesWithWeights", 50000)
   {
       // Declare variables x,mean,sigma with associated name, title, initial value and allowed range
-      auto x = new RooRealVar("x", "x", -10, 10);
-      auto mean = new RooRealVar("mean", "mean of gaussian", 1, -10, 10);
-      auto sigma = new RooRealVar("sigma", "width of gaussian", 2.3, 0.1, 10);
+      auto x = std::make_unique<RooRealVar>("x", "x", -10, 10);
+      auto mean = std::make_unique<RooRealVar>("mean", "mean of gaussian", 1, -10, 10);
+      auto sigma = std::make_unique<RooRealVar>("sigma", "width of gaussian", 2.3, 0.1, 10);
 
       // Build gaussian p.d.f in terms of x,mean and sigma
       _pdf = std::make_unique<RooNonVecGaussian>("gauss", "gaussian PDF", *x, *mean, *sigma);
 
 
-      _variables.addOwned(*x);
+      _variables.addOwned(std::move(x));
 
-      for (auto par : {mean, sigma}) {
-        _parameters.addOwned(*par);
-      }
+      _parameters.addOwned(std::move(mean));
+      _parameters.addOwned(std::move(sigma));
 
       _toleranceCompareLogs = 2.5E-14;
   }
@@ -255,22 +250,19 @@ class TestNonVecGaussInMeanAndX : public PDFTest
       PDFTest("GaussNoBatches(x, mean)")
   {
       // Declare variables x,mean,sigma with associated name, title, initial value and allowed range
-      auto x = new RooRealVar("x", "x", -10, 10);
-      auto mean = new RooRealVar("mean", "mean of gaussian", 1, -10, 10);
-      auto sigma = new RooRealVar("sigma", "width of gaussian", 1, 0.1, 10);
+      auto x = std::make_unique<RooRealVar>("x", "x", -10, 10);
+      auto mean = std::make_unique<RooRealVar>("mean", "mean of gaussian", 1, -10, 10);
+      auto sigma = std::make_unique<RooRealVar>("sigma", "width of gaussian", 1, 0.1, 10);
 
       // Build gaussian p.d.f in terms of x,mean and sigma
       _pdf = std::make_unique<RooNonVecGaussian>("gauss", "gaussian PDF", *x, *mean, *sigma);
 
 
-      for (auto var : {x, mean}) {
-        _variables.addOwned(*var);
+      _variables.addOwned(std::move(x));
+      _variables.addOwned(std::move(mean));
 //        _variablesToPlot.add(var);
-      }
 
-      for (auto par : {sigma}) {
-        _parameters.addOwned(*par);
-      }
+      _parameters.addOwned(std::move(sigma));
   }
 };
 
@@ -281,7 +273,3 @@ COMPARE_FIXED_VALUES_NORM_LOG(TestNonVecGaussInMeanAndX, CompareFixedNormLog)
 FIT_TEST_SCALAR(TestNonVecGaussInMeanAndX, RunScalar)
 FIT_TEST_BATCH(TestNonVecGaussInMeanAndX, RunBatch)
 FIT_TEST_BATCH_VS_SCALAR(TestNonVecGaussInMeanAndX, CompareBatchScalar)
-
-
-
-

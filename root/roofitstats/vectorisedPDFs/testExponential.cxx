@@ -28,21 +28,17 @@ class TestExponential : public PDFTest
       PDFTest("Exp(x, c1)", 100000)
   {
       //Beyond ~19, the VDT polynomials break down when c1 is very negative
-      auto x = new RooRealVar("x", "x", 0.001, 18.);
-      auto c1 = new RooRealVar("c1", "c1", -0.2, -50., -0.001);
+      auto x = std::make_unique<RooRealVar>("x", "x", 0.001, 18.);
+      auto c1 = std::make_unique<RooRealVar>("c1", "c1", -0.2, -50., -0.001);
       _pdf = std::make_unique<RooExponential>("expo1", "expo1", *x, *c1);
 
-      for (auto var : {x}) {
-        _variables.addOwned(*var);
-      }
+      _variables.addOwned(std::move(x));
 
 //      for (auto var : {x}) {
 //        _variablesToPlot.add(*var);
 //      }
 
-      for (auto par : {c1}) {
-        _parameters.addOwned(*par);
-      }
+      _parameters.addOwned(std::move(c1));
 
       _toleranceCompareLogs = 3E-13;
       // For i686, this needs to be a bit less strict:

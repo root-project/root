@@ -198,8 +198,8 @@ void PDFTest::compareFixedValues(double& maximalError, bool normalise, bool comp
 
   const double toleranceCompare = compareLogs ? _toleranceCompareLogs : _toleranceCompareBatches;
 
-  RooArgSet* observables = _pdf->getObservables(*_dataUniform);
-  RooArgSet* parameters  = _pdf->getParameters(*_dataUniform);
+  std::unique_ptr<RooArgSet> observables{_pdf->getObservables(*_dataUniform)};
+  std::unique_ptr<RooArgSet> parameters{_pdf->getParameters(*_dataUniform)};
 
   auto callBatchFunc = [this](const RooAbsPdf& pdf) {
       return pdf.getValues(*_dataUniform);
@@ -262,7 +262,7 @@ void PDFTest::compareFixedValues(double& maximalError, bool normalise, bool comp
   {
     MyTimer singleTimer("Evaluate scalar" + timerSuffix + _name);
     for (int i=0; i < _dataUniform->numEntries(); ++i) {
-      *observables = *_dataUniform->get(i);
+      observables->assign(*_dataUniform->get(i));
       outputsScalar[i] = callScalarFunc(*_pdf, normSet);
     }
     if (runTimer)
@@ -318,7 +318,7 @@ void PDFTest::compareFixedValues(double& maximalError, bool normalise, bool comp
          (fabs(relDiff) > 1.E-10 && fabs(outputsScalar[i]) > 1.E-300) ||
          (fabs(relDiff) > 1.E-9)) {
       if (nOff < 5) {
-        *observables = *_dataUniform->get(i);
+        observables->assign(*_dataUniform->get(i));
         std::cout << "Compare event " << i << "\t" << std::setprecision(15);
         observables->printStream(std::cout, RooPrintable::kValue | RooPrintable::kName, RooPrintable::kStandard, "  ");
         _parameters.Print("V");
@@ -333,7 +333,7 @@ void PDFTest::compareFixedValues(double& maximalError, bool normalise, bool comp
 
 #ifdef ROOFIT_CHECK_CACHED_VALUES
       try {
-        *observables = *_dataUniform->get(i);
+        observables->assign(*_dataUniform->get(i));
         _pdf->getVal(normSet);
 
         BatchInterfaceAccessor::checkBatchComputation(*_pdf,
@@ -468,13 +468,13 @@ std::unique_ptr<RooFitResult> PDFTest::runBatchFit(RooAbsPdf* pdf) {
   }
 
   MyTimer batchTimer("Fitting batch mode " + _name);
-  auto result = pdf->fitTo(*_dataFit,
+  std::unique_ptr<RooFitResult> result{pdf->fitTo(*_dataFit,
       RooFit::BatchMode("cpu"),
       RooFit::SumW2Error(false),
       RooFit::Optimize(1),
       RooFit::PrintLevel(_printLevel), RooFit::Save(),
       _multiProcess > 0 ? RooFit::NumCPU(_multiProcess) : RooCmdArg()
-  );
+  )};
   std::cout << batchTimer;
   EXPECT_NE(result, nullptr);
   if (!result)
@@ -484,7 +484,7 @@ std::unique_ptr<RooFitResult> PDFTest::runBatchFit(RooAbsPdf* pdf) {
 
   makePlots(::testing::UnitTest::GetInstance()->current_test_info()->name()+std::string("_batch_postfit"));
 
-  return std::unique_ptr<RooFitResult>(result);
+  return result;
 }
 
 std::unique_ptr<RooFitResult> PDFTest::runScalarFit(RooAbsPdf* pdf) {
@@ -494,8 +494,8 @@ std::unique_ptr<RooFitResult> PDFTest::runScalarFit(RooAbsPdf* pdf) {
   kickParameters();
   makePlots(::testing::UnitTest::GetInstance()->current_test_info()->name()+std::string("_scalar_prefit"));
 
-  auto pars = pdf->getParameters(*_dataFit);
-  *pars = _parameters;
+  std::unique_ptr<RooArgSet> pars{pdf->getParameters(*_dataFit)};
+  pars->assign(_parameters);
 
   for (unsigned int index = 0; index < pars->size(); ++index) {
     auto pdfParameter = static_cast<RooAbsReal*>((*pars)[index]);
@@ -515,12 +515,12 @@ std::unique_ptr<RooFitResult> PDFTest::runScalarFit(RooAbsPdf* pdf) {
   }
 
   MyTimer singleTimer("Fitting scalar mode " + _name);
-  auto result = pdf->fitTo(*_dataFit,
+  std::unique_ptr<RooFitResult> result{pdf->fitTo(*_dataFit,
       RooFit::BatchMode("off"),
       RooFit::SumW2Error(false),
       RooFit::PrintLevel(_printLevel), RooFit::Save(),
       _multiProcess > 0 ? RooFit::NumCPU(_multiProcess) : RooCmdArg()
-  );
+  )};
   std::cout << singleTimer;
   EXPECT_NE(result, nullptr);
   if (!result)
@@ -531,7 +531,7 @@ std::unique_ptr<RooFitResult> PDFTest::runScalarFit(RooAbsPdf* pdf) {
 
   makePlots(::testing::UnitTest::GetInstance()->current_test_info()->name()+std::string("_scalar_postfit"));
 
-  return std::unique_ptr<RooFitResult>(result);
+  return result;
 }
 
 

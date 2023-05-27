@@ -23,20 +23,19 @@ class TestBreitWigner : public PDFTest
     TestBreitWigner() :
       PDFTest("BreitWigner", 100000)
   {
-        auto x = new RooRealVar("x", "x", -10, 10);
-        auto mean = new RooRealVar("mean", "mean", 1, -7, 7);
-        auto width = new RooRealVar("a2", "a2", 1.8, 0.5, 2.5);
+        auto x = std::make_unique<RooRealVar>("x", "x", -10, 10);
+        auto mean = std::make_unique<RooRealVar>("mean", "mean", 1, -7, 7);
+        auto width = std::make_unique<RooRealVar>("a2", "a2", 1.8, 0.5, 2.5);
 
         _pdf = std::make_unique<RooBreitWigner>("breitWigner", "breitWigner PDF", *x, *mean, *width);
 
 
-      _variables.addOwned(*x);
-
 //      _variablesToPlot.add(*x);
 
-      for (auto par : {mean, width}) {
-        _parameters.addOwned(*par);
-      }
+      _variables.addOwned(std::move(x));
+
+      _parameters.addOwned(std::move(mean));
+      _parameters.addOwned(std::move(width));
 
       _toleranceCompareLogs = 5.e-13;
       _toleranceCorrelation = 0.007;

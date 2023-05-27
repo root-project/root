@@ -28,35 +28,35 @@ class TestGaussPlusPoisson : public PDFTest
       PDFTest("Gauss + Poisson", 100000)
     {
       // Declare variables x,mean,sigma with associated name, title, initial value and allowed range
-      auto x = new RooRealVar("x", "x", -1.5, 40.5);
+      auto x = std::make_unique<RooRealVar>("x", "x", -1.5, 40.5);
       x->setBins(42);//Prettier plots for Poisson
 
-      auto mean = new RooRealVar("mean", "mean of gaussian", 20., -10, 30);
-      auto sigma = new RooRealVar("sigma", "width of gaussian", 4., 0.5, 10);
+      auto mean = std::make_unique<RooRealVar>("mean", "mean of gaussian", 20., -10, 30);
+      auto sigma = std::make_unique<RooRealVar>("sigma", "width of gaussian", 4., 0.5, 10);
 
       // Build gaussian p.d.f in terms of x,mean and sigma
-      auto gauss = new RooGaussian("gauss", "gaussian PDF", *x, *mean, *sigma);
+      auto gauss = std::make_unique<RooGaussian>("gauss", "gaussian PDF", *x, *mean, *sigma);
 
-      auto meanPois = new RooRealVar("meanPois", "Mean of Poisson", 10.3, 0, 30);
-      auto pois = new RooPoisson("Pois", "Poisson PDF", *x, *meanPois, true);
+      auto meanPois = std::make_unique<RooRealVar>("meanPois", "Mean of Poisson", 10.3, 0, 30);
+      auto pois = std::make_unique<RooPoisson>("Pois", "Poisson PDF", *x, *meanPois, true);
 
-      auto fractionGaus = new RooRealVar("fractionGaus", "Fraction of Gauss component", 0.5, 0., 1.);
+      auto fractionGaus = std::make_unique<RooRealVar>("fractionGaus", "Fraction of Gauss component", 0.5, 0., 1.);
       auto sumGausPois = std::make_unique<RooAddPdf>("SumGausPois", "Sum of Gaus and Poisson",
           RooArgSet(*gauss, *pois), *fractionGaus);
       sumGausPois->fixCoefNormalization(*x);
       _pdf = std::move(sumGausPois);
 
-      _variables.addOwned(*x);
+      _variables.addOwned(std::move(x));
 
 //      _variablesToPlot.add(x);
 
-      for (auto par : {mean, sigma, meanPois, fractionGaus}) {
-        _parameters.addOwned(*par);
-      }
+      _parameters.addOwned(std::move(mean));
+      _parameters.addOwned(std::move(sigma));
+      _parameters.addOwned(std::move(meanPois));
+      _parameters.addOwned(std::move(fractionGaus));
 
-      for (auto obj : std::initializer_list<RooAbsPdf*>{gauss, pois}) {
-        _otherObjects.addOwned(*obj);
-      }
+      _otherObjects.addOwned(std::move(gauss));
+      _otherObjects.addOwned(std::move(pois));
 
       // Gauss is slightly less accurate
       _toleranceCompareBatches = 2.E-13;
@@ -80,23 +80,23 @@ class TestGaussPlusGaussPlusExp : public PDFTest
     TestGaussPlusGaussPlusExp() :
       PDFTest("Gauss + Gauss + Exp", 100001)
     {
-      auto x = new RooRealVar("x", "x", 0., 100.);
+      auto x = std::make_unique<RooRealVar>("x", "x", 0., 100.);
 
-      auto c = new RooRealVar("c", "c", -0.05, -100., -0.005);
-      auto expo = new RooExponential("expo", "expo", *x, *c);
+      auto c = std::make_unique<RooRealVar>("c", "c", -0.05, -100., -0.005);
+      auto expo = std::make_unique<RooExponential>("expo", "expo", *x, *c);
 
 
-      auto mean = new RooRealVar("mean1", "mean of gaussian", 30., -10, 100);
-      auto sigma = new RooRealVar("sigma1", "width of gaussian", 4., 0.1, 20);
-      auto gauss = new RooGaussian("gauss1", "gaussian PDF", *x, *mean, *sigma);
+      auto mean = std::make_unique<RooRealVar>("mean1", "mean of gaussian", 30., -10, 100);
+      auto sigma = std::make_unique<RooRealVar>("sigma1", "width of gaussian", 4., 0.1, 20);
+      auto gauss = std::make_unique<RooGaussian>("gauss1", "gaussian PDF", *x, *mean, *sigma);
 
-      auto mean2 = new RooRealVar("mean2", "mean of gaussian", 60., 50, 100);
-      auto sigma2 = new RooRealVar("sigma2", "width of gaussian", 10., 0.1, 20);
-      auto gauss2 = new RooGaussian("gauss2", "gaussian PDF", *x, *mean2, *sigma2);
+      auto mean2 = std::make_unique<RooRealVar>("mean2", "mean of gaussian", 60., 50, 100);
+      auto sigma2 = std::make_unique<RooRealVar>("sigma2", "width of gaussian", 10., 0.1, 20);
+      auto gauss2 = std::make_unique<RooGaussian>("gauss2", "gaussian PDF", *x, *mean2, *sigma2);
 
-      auto nGauss = new RooRealVar("nGauss", "Fraction of Gauss component", 800., 0., 1.E6);
-      auto nGauss2 = new RooRealVar("nGauss2", "Fraction of Gauss component", 600., 0., 1.E6);
-      auto nExp = new RooRealVar("nExp", "Number of events in exp", 1000, 0, 1.E6);
+      auto nGauss = std::make_unique<RooRealVar>("nGauss", "Fraction of Gauss component", 800., 0., 1.E6);
+      auto nGauss2 = std::make_unique<RooRealVar>("nGauss2", "Fraction of Gauss component", 600., 0., 1.E6);
+      auto nExp = std::make_unique<RooRealVar>("nExp", "Number of events in exp", 1000, 0, 1.E6);
       auto sum2GausExp = std::make_unique<RooAddPdf>("Sum2GausExp", "Sum of Gaus and Exponentials",
           RooArgSet(*gauss, *gauss2, *expo),
           RooArgSet(*nGauss, *nGauss2, *nExp));
@@ -104,19 +104,21 @@ class TestGaussPlusGaussPlusExp : public PDFTest
       _pdf = std::move(sum2GausExp);
 
 
-      _variables.addOwned(*x);
+      _variables.addOwned(std::move(x));
 
-      for (auto par : {c, mean, sigma, mean2, sigma2}) {
-        _parameters.addOwned(*par);
-      }
+      _parameters.addOwned(std::move(c));
+      _parameters.addOwned(std::move(mean));
+      _parameters.addOwned(std::move(sigma));
+      _parameters.addOwned(std::move(mean2));
+      _parameters.addOwned(std::move(sigma2));
 
-      for (auto par : {nGauss, nGauss2, nExp}) {
-        _yields.addOwned(*par);
-      }
+      _yields.addOwned(std::move(nGauss));
+      _yields.addOwned(std::move(nGauss2));
+      _yields.addOwned(std::move(nExp));
 
-      for (auto obj : std::initializer_list<RooAbsPdf*>{expo, gauss, gauss2}) {
-        _otherObjects.addOwned(*obj);
-      }
+      _otherObjects.addOwned(std::move(expo));
+      _otherObjects.addOwned(std::move(gauss));
+      _otherObjects.addOwned(std::move(gauss2));
 
       _toleranceCompareLogs = 4.3E-14;
 

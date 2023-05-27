@@ -25,20 +25,18 @@ class TestLegendre : public PDFTest
     TestLegendre() :
       PDFTest("Legendre", 100000)
   {
-    auto x = new RooRealVar("x", "x", 0.5, 0.1, 1.0);
+    auto x = std::make_unique<RooRealVar>("x", "x", 0.5, 0.1, 1.0);
     auto coef = new RooRealVar("coef", "coef", 0.5, 0.3, 1.0);
     auto coef2 = new RooRealVar("coef2", "coef2", 100, 80, 120);
     
     auto uniform = new RooUniform("uniform","uniform",*x);
     
     auto legendre = new RooLegendre("Legendre", "Legendre PDF", *x, 3, 2, 2, 1);
-    _pdf = std::make_unique<RooRealSumPdf>("Sum","sum",RooArgList(*legendre,*uniform),RooArgList(*coef,*coef2),true);
-    
-    for (auto var : {x}) {
-    _variables.addOwned(*var);      
-    }
+    _pdf = std::make_unique<RooRealSumPdf>("Sum","sum",RooArgList{*legendre,*uniform},RooArgList{*coef,*coef2},true);
     
     _variablesToPlot.add(*x);
+
+    _variables.addOwned(std::move(x));
   }
 };
 

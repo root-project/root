@@ -24,20 +24,19 @@ class TestChebychev2 : public PDFTest
     TestChebychev2() :
       PDFTest("Chebychev2", 100000)
   {
-        auto x = new RooRealVar("x", "x", -10, 10);
-        auto a1 = new RooRealVar("a1", "a1", 0.3, -0.5, 0.5);
-        auto a2 = new RooRealVar("a2", "a2", -0.2, -0.5, 0.5);
+        auto x = std::make_unique<RooRealVar>("x", "x", -10, 10);
+        auto a1 = std::make_unique<RooRealVar>("a1", "a1", 0.3, -0.5, 0.5);
+        auto a2 = std::make_unique<RooRealVar>("a2", "a2", -0.2, -0.5, 0.5);
 
         _pdf = std::make_unique<RooChebychev>("chebychev2", "chebychev PDF 2 coefficients", *x, RooArgSet(*a1,*a2));
 
 
-      _variables.addOwned(*x);
-
       //_variablesToPlot.add(*x);
 
-      for (auto par : {a1, a2}) {
-        _parameters.addOwned(*par);
-      }
+      _variables.addOwned(std::move(x));
+
+      _parameters.addOwned(std::move(a1));
+      _parameters.addOwned(std::move(a2));
   }
 };
 
@@ -54,25 +53,26 @@ class TestChebychev5 : public PDFTest
     TestChebychev5() :
       PDFTest("Chebychev5", 50000)
   {
-        auto x = new RooRealVar("x", "x", -10, 10);
-        auto a1 = new RooRealVar("a1", "a1", 0.15, -0.3, 0.3);
-        auto a2 = new RooRealVar("a2", "a2", -0.15, -0.3, 0.3);
+        auto x = std::make_unique<RooRealVar>("x", "x", -10, 10);
+        auto a1 = std::make_unique<RooRealVar>("a1", "a1", 0.15, -0.3, 0.3);
+        auto a2 = std::make_unique<RooRealVar>("a2", "a2", -0.15, -0.3, 0.3);
         auto a3 = new RooRealVar("a3", "a3", 0.20, 0.10, 0.30);
-        auto a4 = new RooRealVar("a4", "a4", 0.35, 0.3, 0.5);
-        auto a5 = new RooRealVar("a5", "a5", -0.07, -0.2, 0.2);
+        auto a4 = std::make_unique<RooRealVar>("a4", "a4", 0.35, 0.3, 0.5);
+        auto a5 = std::make_unique<RooRealVar>("a5", "a5", -0.07, -0.2, 0.2);
         a2->setConstant(true);
         a3->setConstant(true);
 
-        _pdf = std::make_unique<RooChebychev>("chebychev5", "chebychev PDF 5 coefficients", *x, RooArgSet(*a1, *a2, *a3, *a4, *a5));
-
-
-      _variables.addOwned(*x);
+        _pdf = std::make_unique<RooChebychev>("chebychev5", "chebychev PDF 5 coefficients", *x, RooArgSet{*a1, *a2, *a3, *a4, *a5});
 
       //_variablesToPlot.add(*x);
 
-      for (auto par : {a1, a2, a4, a5}) {
-        _parameters.addOwned(*par);
-      }
+      _variables.addOwned(std::move(x));
+
+      _parameters.addOwned(std::move(a1));
+      _parameters.addOwned(std::move(a2));
+      _parameters.addOwned(std::move(a4));
+      _parameters.addOwned(std::move(a5));
+
       _toleranceParameter = 2e-6;
 
   }

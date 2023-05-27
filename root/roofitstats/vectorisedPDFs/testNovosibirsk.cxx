@@ -24,24 +24,22 @@ class TestNovosibirsk : public PDFTest
     TestNovosibirsk() :
       PDFTest("Novosibirsk", 100000)
   {
-      auto x = new RooRealVar("x", "x", 0, -5, 1.1);
-      auto peak = new RooRealVar("peak", "peak", 0.5, 0, 1);
-      auto width = new RooRealVar("width", "width", 1.1, 0.5, 3.);
-      auto tail = new RooRealVar("tail", "tail", 1.0, 0.5, 1.1);
+      auto x = std::make_unique<RooRealVar>("x", "x", 0, -5, 1.1);
+      auto peak = std::make_unique<RooRealVar>("peak", "peak", 0.5, 0, 1);
+      auto width = std::make_unique<RooRealVar>("width", "width", 1.1, 0.5, 3.);
+      auto tail = std::make_unique<RooRealVar>("tail", "tail", 1.0, 0.5, 1.1);
 
       _pdf = std::make_unique<RooNovosibirsk>("Novosibirsk", "Novosibirsk", *x, *peak, *width, *tail);
-
-      for (auto var : {x}) {
-        _variables.addOwned(*var);
-      }
 
 //      for (auto var : {x}) {
 //        _variablesToPlot.add(*var);
 //      }
 
-      for (auto par : { peak, width, tail}) {
-        _parameters.addOwned(*par);
-      }
+      _variables.addOwned(std::move(x));
+
+      _parameters.addOwned(std::move(peak));
+      _parameters.addOwned(std::move(width));
+      _parameters.addOwned(std::move(tail));
 
       _toleranceParameter = 1e-4;
   }

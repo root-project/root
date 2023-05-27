@@ -30,42 +30,44 @@ class TestNestedPDFs : public PDFTest
     TestNestedPDFs() :
       PDFTest("Gauss + RooRealSumPdf(pol2)", 50000)
   {
-      auto x = new RooRealVar("x", "x", -5., 5.);
+      auto x = std::make_unique<RooRealVar>("x", "x", -5., 5.);
 
       // Implement a polynomial. Value ranges are chosen to keep it positive.
       // Note that even though the parameters are constant for the fit, they are still
       // varied within their ranges when testing the function at random parameter points.
-      auto a0 = new RooRealVar("a0", "a0", 2., 3., 10.);
-      auto a1 = new RooRealVar("a1", "a1", -2, -2.1, -1.9);
-      auto a2 = new RooRealVar("a2", "a2", 1., 1., 5.);
+      auto a0 = std::make_unique<RooRealVar>("a0", "a0", 2., 3., 10.);
+      auto a1 = std::make_unique<RooRealVar>("a1", "a1", -2, -2.1, -1.9);
+      auto a2 = std::make_unique<RooRealVar>("a2", "a2", 1., 1., 5.);
       a0->setConstant(true);
       a1->setConstant(true);
       auto xId = new RooProduct("xId", "x", RooArgList(*x));
       auto xSq = new RooProduct("xSq", "x^2", RooArgList(*x, *x));
       auto one = new RooConstVar("one", "one", 1.);
-      auto pol = new RooRealSumPdf("pol", "pol", RooArgList(*one, *xId, *xSq), RooArgList(*a0, *a1, *a2));
+      auto pol = std::make_unique<RooRealSumPdf>("pol", "pol", RooArgList{*one, *xId, *xSq}, RooArgList{*a0, *a1, *a2});
 
-      auto mean = new RooRealVar("mean", "mean of gaussian", 2., 0., 20.);
-      auto sigma = new RooRealVar("sigma", "width of gaussian", 0.337, 0.1, 10);
+      auto mean = std::make_unique<RooRealVar>("mean", "mean of gaussian", 2., 0., 20.);
+      auto sigma = std::make_unique<RooRealVar>("sigma", "width of gaussian", 0.337, 0.1, 10);
       sigma->setConstant();
-      auto gauss = new RooGaussian("gauss", "gaussian PDF", *x, *mean, *sigma);
+      auto gauss = std::make_unique<RooGaussian>("gauss", "gaussian PDF", *x, *mean, *sigma);
 
-      auto nGauss = new RooRealVar("nGauss", "Fraction of Gauss component", 0.05, 0., 0.5);
+      auto nGauss = std::make_unique<RooRealVar>("nGauss", "Fraction of Gauss component", 0.05, 0., 0.5);
       _pdf = std::make_unique<RooAddPdf>("SumGausPol", "Sum of a Gauss and a simple polynomial",
-          RooArgSet(*gauss, *pol),
-          RooArgSet(*nGauss));
-
-      _variables.addOwned(*x);
+          RooArgSet{*gauss, *pol},
+          RooArgSet{*nGauss});
 
 //      _variablesToPlot.add(*x);
 
-      for (auto par : std::initializer_list<RooAbsArg*>{mean, sigma, a0, a1, a2, nGauss}) {
-        _parameters.addOwned(*par);
-      }
+      _variables.addOwned(std::move(x));
 
-      for (auto obj : std::initializer_list<RooAbsArg*>{gauss, pol}) {
-        _otherObjects.addOwned(*obj);
-      }
+      _parameters.addOwned(std::move(mean));
+      _parameters.addOwned(std::move(sigma));
+      _parameters.addOwned(std::move(a0));
+      _parameters.addOwned(std::move(a1));
+      _parameters.addOwned(std::move(a2));
+      _parameters.addOwned(std::move(nGauss));
+
+      _otherObjects.addOwned(std::move(gauss));
+      _otherObjects.addOwned(std::move(pol));
 
 //      RooMsgService::instance().getStream(0).minLevel = RooFit::DEBUG;
 

@@ -23,21 +23,21 @@ class TestVoigtian : public PDFTest
     TestVoigtian() :
       PDFTest("Voigtian", 100000)
   {
-        auto x = new RooRealVar("x", "x", 1, 0.1, 10);
-        auto mean = new RooRealVar("mean", "mean", 1, 0.1, 10);
-        auto width = new RooRealVar("width", "width", 0.8, 0.1, 0.9);
-        auto sigma = new RooRealVar("sigma", "sigma", 0.7, 0.1, 0.9);
+        auto x = std::make_unique<RooRealVar>("x", "x", 1, 0.1, 10);
+        auto mean = std::make_unique<RooRealVar>("mean", "mean", 1, 0.1, 10);
+        auto width = std::make_unique<RooRealVar>("width", "width", 0.8, 0.1, 0.9);
+        auto sigma = std::make_unique<RooRealVar>("sigma", "sigma", 0.7, 0.1, 0.9);
 
         _pdf = std::make_unique<RooVoigtian>("Voigtian", "Voigtian PDF", *x, *mean, *width, *sigma);
 
 
-      _variables.addOwned(*x);
-
 //      _variablesToPlot.add(*x);
 
-      for (auto par : {mean, width, sigma}) {
-        _parameters.addOwned(*par);
-      }
+      _variables.addOwned(std::move(x));
+
+      _parameters.addOwned(std::move(mean));
+      _parameters.addOwned(std::move(width));
+      _parameters.addOwned(std::move(sigma));
 
       _toleranceParameter = 2.E-5;
       _toleranceCorrelation = 4.E-4;
@@ -58,23 +58,20 @@ class TestVoigtianInXandMean : public PDFTest
     TestVoigtianInXandMean() :
       PDFTest("Voigtian(x,m)", 100000)
   {
-        auto x = new RooRealVar("x", "x", 1, 0.1, 10);
-        auto mean = new RooRealVar("mean", "mean", 1, 0.1, 10);
-        auto width = new RooRealVar("width", "width", 0.5, 0.1, 0.9);
-        auto sigma = new RooRealVar("sigma", "sigma", 0.5, 0.1, 0.9);
+        auto x = std::make_unique<RooRealVar>("x", "x", 1, 0.1, 10);
+        auto mean = std::make_unique<RooRealVar>("mean", "mean", 1, 0.1, 10);
+        auto width = std::make_unique<RooRealVar>("width", "width", 0.5, 0.1, 0.9);
+        auto sigma = std::make_unique<RooRealVar>("sigma", "sigma", 0.5, 0.1, 0.9);
 
         _pdf = std::make_unique<RooVoigtian>("Voigtian", "Voigtian PDF", *x, *mean, *width, *sigma);
 
-
-      for (auto var: {x,mean} ) {
-        _variables.addOwned(*var);
-      }
-
       //_variablesToPlot.add(*x);
 
-      for (auto par : {width, sigma}) {
-        _parameters.addOwned(*par);
-      }
+      _variables.addOwned(std::move(x));
+      _variables.addOwned(std::move(mean));
+
+      _parameters.addOwned(std::move(width));
+      _parameters.addOwned(std::move(sigma));
 
   }
 };

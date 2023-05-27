@@ -23,22 +23,22 @@ class TestCBShape : public PDFTest
     TestCBShape() :
       PDFTest("CBShape", 100000)
   {
-        auto m = new RooRealVar("m", "m", -10, 10);
-        auto m0 = new RooRealVar("m0", "m0", 1, -7, 7);
-        auto sigma = new RooRealVar("sigma", "sigma", 1, 0.5, 2.5);
-        auto alpha = new RooRealVar("alpha", "alpha", 1, -3, 3);
-        auto n = new RooRealVar("n", "n", 1, 0.5, 2.5);
+        auto m = std::make_unique<RooRealVar>("m", "m", -10, 10);
+        auto m0 = std::make_unique<RooRealVar>("m0", "m0", 1, -7, 7);
+        auto sigma = std::make_unique<RooRealVar>("sigma", "sigma", 1, 0.5, 2.5);
+        auto alpha = std::make_unique<RooRealVar>("alpha", "alpha", 1, -3, 3);
+        auto n = std::make_unique<RooRealVar>("n", "n", 1, 0.5, 2.5);
 
         _pdf = std::make_unique<RooCBShape>("CBShape", "CBShape PDF", *m, *m0, *sigma, *alpha, *n);
 
-
-      _variables.addOwned(*m);
-
       //_variablesToPlot.add(*m);
 
-      for (auto par : {m0, sigma, alpha, n}) {
-        _parameters.addOwned(*par);
-      }
+      _variables.addOwned(std::move(m));
+
+      _parameters.addOwned(std::move(m0));
+      _parameters.addOwned(std::move(sigma));
+      _parameters.addOwned(std::move(alpha));
+      _parameters.addOwned(std::move(n));
 
       // For i686:
       _toleranceParameter = 1.E-5;

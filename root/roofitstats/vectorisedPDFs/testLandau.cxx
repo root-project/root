@@ -24,20 +24,19 @@ class TestLandauEvil: public PDFTest
       PDFTest("Landau_evil", 100000)
     {
       // Declare variables x,mean,sigma with associated name, title, initial value and allowed range
-        auto x = new RooRealVar("x", "x", -250, 3000);
-        auto mean = new RooRealVar("mean", "mean of landau", 10, -100, 300);
-        auto sigma = new RooRealVar("sigma", "width of landau", 100, 1, 300);
+        auto x = std::make_unique<RooRealVar>("x", "x", -250, 3000);
+        auto mean = std::make_unique<RooRealVar>("mean", "mean of landau", 10, -100, 300);
+        auto sigma = std::make_unique<RooRealVar>("sigma", "width of landau", 100, 1, 300);
 
         // Build landau p.d.f in terms of x, mean and sigma
         _pdf = std::make_unique<RooLandau>("landau", "landau PDF", *x, *mean, *sigma);
 
-      _variables.addOwned(*x);
+      _variables.addOwned(std::move(x));
 
       //_variablesToPlot.add(*x);
 
-      for (auto par : {mean, sigma}) {
-        _parameters.addOwned(*par);
-      }
+      _parameters.addOwned(std::move(mean));
+      _parameters.addOwned(std::move(sigma));
 
       _toleranceParameter = 8.E-6;
     }
@@ -58,20 +57,19 @@ class TestLandau: public PDFTest
       PDFTest("Landau_convenient", 100000)
     {
       // Declare variables x,mean,sigma with associated name, title, initial value and allowed range
-        auto x = new RooRealVar("x", "x", -3, 40);
-        auto mean = new RooRealVar("mean", "mean of landau", 1, -5, 10);
-        auto sigma = new RooRealVar("sigma", "width of landau", 3, 1, 6);
+        auto x = std::make_unique<RooRealVar>("x", "x", -3, 40);
+        auto mean = std::make_unique<RooRealVar>("mean", "mean of landau", 1, -5, 10);
+        auto sigma = std::make_unique<RooRealVar>("sigma", "width of landau", 3, 1, 6);
 
         // Build landau p.d.f in terms of x, mean and sigma
         _pdf = std::make_unique<RooLandau>("landau", "landau PDF", *x, *mean, *sigma);
 
-      _variables.addOwned(*x);
+      _variables.addOwned(std::move(x));
 
 //      _variablesToPlot.add(x);
 
-      for (auto par : {mean, sigma}) {
-        _parameters.addOwned(*par);
-      }
+      _parameters.addOwned(std::move(mean));
+      _parameters.addOwned(std::move(sigma));
 
       _toleranceParameter = 8.E-6;
     }

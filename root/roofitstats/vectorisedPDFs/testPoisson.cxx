@@ -25,16 +25,13 @@ class TestPoisson : public PDFTest
     TestPoisson() :
       PDFTest("Poisson", 100000)
   {
-      auto x = new RooRealVar("x", "x", -10, 100);
-      auto mean = new RooRealVar("mean", "Mean of Poisson", 2., 0., 50);
+      auto x = std::make_unique<RooRealVar>("x", "x", -10, 100);
+      auto mean = std::make_unique<RooRealVar>("mean", "Mean of Poisson", 2., 0., 50);
       _pdf = std::make_unique<RooPoisson>("Pois", "Poisson PDF", *x, *mean);
 
-      _variables.addOwned(*x);
+      _variables.addOwned(std::move(x));
 
-      for (auto par : {mean}) {
-        _parameters.addOwned(*par);
-      }
-
+      _parameters.addOwned(std::move(mean));
   }
 };
 
@@ -48,16 +45,13 @@ class TestPoissonOddMean : public PDFTest
     TestPoissonOddMean() :
       PDFTest("PoissonOddMean", 100000)
   {
-      auto x = new RooRealVar("x", "x", -10, 50);
-      auto mean = new RooRealVar("mean", "Mean of Poisson", 7.5, 0., 50);
+      auto x = std::make_unique<RooRealVar>("x", "x", -10, 50);
+      auto mean = std::make_unique<RooRealVar>("mean", "Mean of Poisson", 7.5, 0., 50);
       _pdf = std::make_unique<RooPoisson>("Pois", "Poisson PDF", *x, *mean);
 
-      _variables.addOwned(*x);
+      _variables.addOwned(std::move(x));
 
-      for (auto par : {mean}) {
-        _parameters.addOwned(*par);
-      }
-
+      _parameters.addOwned(std::move(mean));
   }
 };
 
@@ -71,15 +65,13 @@ class TestPoissonOddMeanNoRounding : public PDFTest
     TestPoissonOddMeanNoRounding() :
       PDFTest("PoissonOddMeanNoRounding", 100000)
   {
-      auto x = new RooRealVar("x", "x", 0., 100);
-      auto mean = new RooRealVar("mean", "Mean of Poisson", 7.8529298854862928, 0., 10);
+      auto x = std::make_unique<RooRealVar>("x", "x", 0., 100);
+      auto mean = std::make_unique<RooRealVar>("mean", "Mean of Poisson", 7.8529298854862928, 0., 10);
       _pdf = std::make_unique<RooPoisson>("Pois", "Poisson PDF", *x, *mean, true);
 
-      _variables.addOwned(*x);
+      _variables.addOwned(std::move(x));
 
-      for (auto par : {mean}) {
-        _parameters.addOwned(*par);
-      }
+      _parameters.addOwned(std::move(mean));
 
       _toleranceParameter = 1.2E-5;
       // For i686, this needs to be a bit less strict:

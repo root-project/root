@@ -24,18 +24,17 @@ class TestLognormal : public PDFTest
     TestLognormal() :
       PDFTest("Lognormal", 100000)
   {
-        auto x = new RooRealVar("x", "x", 1, 0.1, 10);
-        auto m0 = new RooRealVar("m0", "m0", 5, 0.1, 10);
-        auto k = new RooRealVar("k", "k", 0.6, 0.1, 0.9);
+        auto x = std::make_unique<RooRealVar>("x", "x", 1, 0.1, 10);
+        auto m0 = std::make_unique<RooRealVar>("m0", "m0", 5, 0.1, 10);
+        auto k = std::make_unique<RooRealVar>("k", "k", 0.6, 0.1, 0.9);
 
         _pdf = std::make_unique<RooLognormal>("Lognormal", "Lognormal PDF", *x, *m0, *k);
 
 
-      _variables.addOwned(*x);
+      _variables.addOwned(std::move(x));
 
-      for (auto par : {m0, k}) {
-        _parameters.addOwned(*par);
-      }
+      _parameters.addOwned(std::move(m0));
+      _parameters.addOwned(std::move(k));
 
        //Standard of 1.E-14 is too strong.
       _toleranceCompareBatches = 8.E-14;
@@ -56,21 +55,18 @@ class TestLognormalInMeanAndX : public PDFTest
     TestLognormalInMeanAndX() :
       PDFTest("Lognormal(x, mean)", 100000)
   {
-        auto x = new RooRealVar("x", "x", 1, 0.1, 10);
-        auto m0 = new RooRealVar("m0", "m0", 1, 0.1, 10);
-        auto k = new RooRealVar("k", "k", 2, 1.1, 10);
+        auto x = std::make_unique<RooRealVar>("x", "x", 1, 0.1, 10);
+        auto m0 = std::make_unique<RooRealVar>("m0", "m0", 1, 0.1, 10);
+        auto k = std::make_unique<RooRealVar>("k", "k", 2, 1.1, 10);
 
         _pdf = std::make_unique<RooLognormal>("Lognormal", "Lognormal PDF", *x, *m0, *k);
 
-
-      for (auto var : {x, m0}) {
-        _variables.addOwned(*var);
-      }
       //_variablesToPlot.add(*x);
 
-      for (auto par : {k}) {
-        _parameters.addOwned(*par);
-      }
+      _variables.addOwned(std::move(x));
+      _variables.addOwned(std::move(m0));
+
+      _parameters.addOwned(std::move(k));
 
       // Standard of 1.E-14 is slightly too strong.
       _toleranceCompareBatches = 2.E-14;
