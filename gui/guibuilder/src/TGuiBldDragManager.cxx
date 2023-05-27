@@ -120,11 +120,11 @@ public:
    TList          *fWidgets;  // list of widgets
 
 public:
-   virtual ~TGuiBldMenuDialog();
+   ~TGuiBldMenuDialog() override;
    TGuiBldMenuDialog(const TGWindow *main, TObject *obj, TMethod *method);
 
    const char *GetParameters();
-   void CloseWindow();
+   void CloseWindow() override;
    void ConnectButtonSignals();
    void Build();
    void Popup();
@@ -674,7 +674,7 @@ private:
 public:
    TGuiBldDragManagerRepeatTimer(TGuiBldDragManager *m, Long_t ms) :
                                  TTimer(ms, kTRUE) { fManager = m; }
-   Bool_t Notify() { fManager->HandleTimer(this); Reset(); return kFALSE; }
+   Bool_t Notify() override { fManager->HandleTimer(this); Reset(); return kFALSE; }
 };
 
 
@@ -687,9 +687,9 @@ private:
 
 public:
    TGGrabRect(Int_t type);
-   ~TGGrabRect() {}
+   ~TGGrabRect() override {}
 
-   Bool_t HandleButton(Event_t *ev);
+   Bool_t HandleButton(Event_t *ev) override;
    ECursor GetType() const { return fType; }
 };
 
@@ -769,7 +769,7 @@ class TGAroundFrame : public TGFrame {
 
 public:
    TGAroundFrame();
-   ~TGAroundFrame() {}
+   ~TGAroundFrame() override {}
 };
 
 ////////////////////////////////////////////////////////////////////////////////

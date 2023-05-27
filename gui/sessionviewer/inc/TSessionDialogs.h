@@ -47,7 +47,7 @@ private:
 
 public:
    TNewChainDlg(const TGWindow *p=nullptr, const TGWindow *main=nullptr);
-   virtual ~TNewChainDlg();
+   ~TNewChainDlg() override;
 
    void         UpdateList();
    virtual void OnDoubleClick(TGLVEntry*,Int_t);
@@ -55,10 +55,10 @@ public:
    void         OnElementClicked(TGLVEntry* entry, Int_t btn);
    void         OnElementSelected(TObject *obj); //*SIGNAL*
 
-   virtual Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2);
-   virtual void CloseWindow();
+   Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2) override;
+   void CloseWindow() override;
 
-   ClassDef(TNewChainDlg, 0) // New chain dialog
+   ClassDefOverride(TNewChainDlg, 0) // New chain dialog
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -91,7 +91,7 @@ private:
 public:
    TNewQueryDlg(TSessionViewer *gui, Int_t Width, Int_t Height,
                    TQueryDescription *query = nullptr, Bool_t editmode = kFALSE);
-   virtual ~TNewQueryDlg();
+   ~TNewQueryDlg() override;
    void     Build(TSessionViewer *gui);
    void     OnNewQueryMore();
    void     OnBrowseChain();
@@ -101,13 +101,13 @@ public:
    void     OnBtnCloseClicked();
    void     OnBtnSubmitClicked();
    void     OnElementSelected(TObject *obj);
-   void     CloseWindow();
+   void     CloseWindow() override;
    void     Popup();
    void     SettingsChanged();
    void     UpdateFields(TQueryDescription *desc);
-   virtual Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2);
+   Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2) override;
 
-   ClassDef(TNewQueryDlg, 0) // New query dialog
+   ClassDefOverride(TNewQueryDlg, 0) // New query dialog
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -137,10 +137,10 @@ private:
 
 public:
    TUploadDataSetDlg(TSessionViewer *gui, Int_t w, Int_t h);
-   virtual ~TUploadDataSetDlg();
+   ~TUploadDataSetDlg() override;
 
-   virtual void   CloseWindow();
-   virtual Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2);
+   void   CloseWindow() override;
+   Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2) override;
    void           AddFiles(const char *fileName);
    void           AddFiles(TList *fileList);
    void           BrowseFiles();
@@ -151,7 +151,7 @@ public:
    void           OnOverwriteFiles(Bool_t on);
    void           OnAppendFiles(Bool_t on);
 
-   ClassDef(TUploadDataSetDlg, 0) // New query dialog
+   ClassDefOverride(TUploadDataSetDlg, 0) // New query dialog
 };
 
 #endif

@@ -42,10 +42,10 @@ public:
                   Int_t width = 140, Int_t height = 30,
                   UInt_t options = kChildFrame,
                   Pixel_t back = GetDefaultFrameBackground());
-   virtual ~TAttTextEditor();
+   ~TAttTextEditor() override;
 
-   virtual void     SetModel(TObject* obj);
-   virtual Bool_t   ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2);
+   void     SetModel(TObject* obj) override;
+   Bool_t   ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2) override;
    virtual void     DoTextAlphaColor(ULongptr_t p);
    virtual void     DoAlpha();
    virtual void     DoAlphaField();
@@ -53,7 +53,7 @@ public:
    virtual void     GetCurAlpha();
    virtual void     DoTextColor(Pixel_t color);
 
-   ClassDef(TAttTextEditor,0)  //GUI for editing text attributes
+   ClassDefOverride(TAttTextEditor,0)  //GUI for editing text attributes
 };
 
 #endif

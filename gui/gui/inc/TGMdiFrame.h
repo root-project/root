@@ -56,7 +56,7 @@ public:
    TGMdiFrame(TGMdiMainFrame *main, Int_t w, Int_t h,
               UInt_t options = 0,
               Pixel_t back = GetDefaultFrameBackground());
-   virtual ~TGMdiFrame();
+   ~TGMdiFrame() override;
 
    void              Move(Int_t x, Int_t y) override;
    virtual Bool_t    CloseWindow();     //*SIGNAL*

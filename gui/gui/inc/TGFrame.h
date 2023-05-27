@@ -147,7 +147,7 @@ public:
    TGFrame(const TGWindow *p = nullptr, UInt_t w = 1, UInt_t h = 1,
            UInt_t options = 0, Pixel_t back = GetDefaultFrameBackground());
    TGFrame(TGClient *c, Window_t id, const TGWindow *parent = nullptr);
-   virtual ~TGFrame();
+   ~TGFrame() override;
 
    virtual void DeleteWindow();
    virtual void ReallyDelete() { delete this; }
@@ -305,7 +305,7 @@ public:
                     UInt_t options = 0,
                     Pixel_t back = GetDefaultFrameBackground());
    TGCompositeFrame(TGClient *c, Window_t id, const TGWindow *parent = nullptr);
-   virtual ~TGCompositeFrame();
+   ~TGCompositeFrame() override;
 
    virtual TList *GetList() const { return fList; }
 
@@ -443,7 +443,7 @@ private:
 public:
    TGMainFrame(const TGWindow *p = nullptr, UInt_t w = 1, UInt_t h = 1,
                UInt_t options = kVerticalFrame);
-   virtual ~TGMainFrame();
+   ~TGMainFrame() override;
 
    Bool_t HandleKey(Event_t *event) override;
    Bool_t HandleClientMessage(Event_t *event) override;
@@ -553,7 +553,7 @@ public:
                 GContext_t norm = GetDefaultGC()(),
                 FontStruct_t font = GetDefaultFontStruct(),
                 Pixel_t back = GetDefaultFrameBackground());
-   virtual ~TGGroupFrame();
+   ~TGGroupFrame() override;
 
    TGDimension GetDefaultSize() const override;
    void  DrawBorder() override;

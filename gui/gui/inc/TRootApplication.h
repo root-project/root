@@ -31,7 +31,7 @@ private:
 
 public:
    TRootApplication(const char *appClassName, Int_t *argc, char **argv);
-   virtual ~TRootApplication();
+   ~TRootApplication() override;
 
    TGClient *Client() const { return fClient; }
 

@@ -35,7 +35,7 @@ class TWebPainting : public TObject {
    public:
 
       TWebPainting();
-      virtual ~TWebPainting() = default;
+      ~TWebPainting() override = default;
 
       Bool_t IsEmpty() const { return fOper.empty() && (fBuf.GetSize() == 0); }
 

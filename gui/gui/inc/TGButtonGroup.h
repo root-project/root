@@ -51,7 +51,7 @@ public:
                  FontStruct_t font = GetDefaultFontStruct(),
                  Pixel_t back = GetDefaultFrameBackground());
 
-   virtual ~TGButtonGroup();
+   ~TGButtonGroup() override;
 
    virtual void Pressed(Int_t id)  { Emit("Pressed(Int_t)",id); }   //*SIGNAL*
    virtual void Released(Int_t id) { Emit("Released(Int_t)",id);}   //*SIGNAL*
@@ -102,7 +102,7 @@ public:
       TGButtonGroup(parent, title, kChildFrame | kVerticalFrame,
                     norm, font, back) {}
 
-   virtual ~TGVButtonGroup() {}
+   ~TGVButtonGroup() override {}
    void SavePrimitive(std::ostream &out, Option_t *option = "") override;
 
    ClassDefOverride(TGVButtonGroup,0)  // A button group with one vertical column
@@ -120,7 +120,7 @@ public:
       TGButtonGroup(parent, title, kChildFrame | kHorizontalFrame,
                     norm, font, back) { }
 
-   virtual ~TGHButtonGroup() {}
+   ~TGHButtonGroup() override {}
    void SavePrimitive(std::ostream &out, Option_t *option = "") override;
 
    ClassDefOverride(TGHButtonGroup,0)  // A button group with one horizontal row

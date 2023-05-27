@@ -120,7 +120,7 @@ public:
    {
    }
 
-   virtual ~RWebBrowserHandle()
+   ~RWebBrowserHandle() override
    {
 #ifdef _MSC_VER
       if (fHasPid)

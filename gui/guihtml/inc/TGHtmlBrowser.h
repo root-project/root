@@ -57,9 +57,9 @@ protected:
 public:
    TGHtmlBrowser(const char *filename = nullptr, const TGWindow *p = nullptr,
                  UInt_t w = 900, UInt_t h = 600);
-   virtual ~TGHtmlBrowser() {}
+   ~TGHtmlBrowser() override {}
 
-   virtual Bool_t    ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t);
+   Bool_t    ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t) override;
    void              Selected(const char *txt);
    void              URLChanged();
    void              Back();
@@ -71,7 +71,7 @@ public:
    void              MouseDown(const char *);
    void              Clicked(char *uri) { Emit("Clicked(char *)",uri); } // *SIGNAL*
 
-   ClassDef(TGHtmlBrowser, 0) // very simple html browser
+   ClassDefOverride(TGHtmlBrowser, 0) // very simple html browser
 };
 
 #endif

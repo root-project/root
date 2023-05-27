@@ -46,7 +46,7 @@ public:
    TGStatusBar(const TGWindow *p = nullptr, UInt_t w = 4, UInt_t h = 2,
                UInt_t options = kSunkenFrame | kHorizontalFrame,
                Pixel_t back = GetDefaultFrameBackground());
-   virtual ~TGStatusBar();
+   ~TGStatusBar() override;
 
    void         DrawBorder() override;
    virtual void SetText(TGString *text, Int_t partidx = 0);

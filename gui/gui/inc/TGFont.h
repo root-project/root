@@ -119,7 +119,7 @@ protected:
 
 public:
    TGTextLayout(): fFont(nullptr), fString(""), fWidth(0), fNumChunks(0), fChunks(nullptr) {}
-   virtual ~TGTextLayout();
+   ~TGTextLayout() override;
 
    void   DrawText(Drawable_t dst, GContext_t gc, Int_t x, Int_t y,
                    Int_t firstChar, Int_t lastChar) const;
@@ -178,7 +178,7 @@ protected:
                            const char *start, int numChars,
                            int curX, int newX, int y) const;
 public:
-   virtual ~TGFont();
+   ~TGFont() override;
 
    FontH_t      GetFontHandle() const { return fFontH; }
    FontStruct_t GetFontStruct() const { return fFontStruct; }
@@ -236,7 +236,7 @@ protected:
 
 public:
    TGFontPool(TGClient *client);
-   virtual ~TGFontPool();
+   ~TGFontPool() override;
 
    TGFont  *GetFont(const char *font, Bool_t fixedDefault = kTRUE);
    TGFont  *GetFont(const TGFont *font);

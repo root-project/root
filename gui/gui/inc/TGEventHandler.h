@@ -35,7 +35,7 @@ private:
 public:
    TGEventHandler(const char *name, TGWindow *w, TObject *obj, const char *title="") :
       TNamed(name, title), fIsActive(kTRUE), fWindow(w), fObject(obj) { }
-   virtual ~TGEventHandler() { }
+   ~TGEventHandler() override { }
 
    void           Activate() { fIsActive = kTRUE; }
    void           DeActivate() { fIsActive = kFALSE; }

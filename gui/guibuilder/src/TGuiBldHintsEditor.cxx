@@ -48,7 +48,7 @@ public:
 
 public:
    TGuiBldHintsManager(const TGWindow *p, TGuiBldEditor *editor, TGuiBldHintsEditor *hints);
-   virtual ~TGuiBldHintsManager() { }
+   ~TGuiBldHintsManager() override { }
    void ChangeSelected(TGFrame *frame);
 };
 
