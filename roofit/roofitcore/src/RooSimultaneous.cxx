@@ -541,8 +541,7 @@ Int_t RooSimultaneous::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& an
 
   // Create the partial integral set for this request
   for(auto * proxy : static_range_cast<RooRealProxy*>(_pdfProxyList)) {
-    RooAbsReal* pdfInt = proxy->arg().createIntegral(analVars,normSet,0,rangeName) ;
-    cache->_partIntList.addOwned(*pdfInt) ;
+    cache->_partIntList.addOwned(std::unique_ptr<RooAbsReal>{proxy->arg().createIntegral(analVars,normSet,0,rangeName)});
   }
 
   // Store the partial integral list and return the assigned code ;

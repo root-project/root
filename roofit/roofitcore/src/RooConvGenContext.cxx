@@ -91,8 +91,7 @@ RooConvGenContext::RooConvGenContext(const RooAbsAnaConvPdf &model, const RooArg
     coutE(Generation) << "RooConvGenContext::RooConvGenContext(" << GetName() << ") Couldn't deep-clone resolution model, abort," << std::endl;
     RooErrorHandler::softAbort() ;
   }
-  auto modelClone = static_cast<RooResolutionModel*>(_modelCloneSet->find(model._convSet.at(0)->GetName())->Clone("smearing"));
-  _modelCloneSet->addOwned(*modelClone) ;
+  std::unique_ptr<RooResolutionModel> modelClone{static_cast<RooResolutionModel*>(_modelCloneSet->find(model._convSet.at(0)->GetName())->Clone("smearing"))};
   modelClone->changeBasis(0) ;
   convV = dynamic_cast<RooRealVar*>(&modelClone->convVar());
   if (!convV) {
@@ -106,6 +105,8 @@ RooConvGenContext::RooConvGenContext(const RooAbsAnaConvPdf &model, const RooArg
   _modelVars->add(modelClone->convVar()) ;
   _convVarName = modelClone->convVar().GetName() ;
   _modelGen.reset(modelClone->genContext(*_modelVars,prototype,auxProto,verbose));
+
+  _modelCloneSet->addOwned(std::move(modelClone));
 
   if (prototype) {
     _pdfVars->add(*prototype->get()) ;

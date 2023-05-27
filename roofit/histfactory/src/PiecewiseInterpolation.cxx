@@ -92,7 +92,7 @@ PiecewiseInterpolation::PiecewiseInterpolation(const char* name, const char* tit
     }
     _lowSet.add(*comp) ;
     if (takeOwnership) {
-      _ownedList.addOwned(*comp) ;
+      _ownedList.addOwned(std::unique_ptr<RooAbsArg>{comp});
     }
   }
 
@@ -105,7 +105,7 @@ PiecewiseInterpolation::PiecewiseInterpolation(const char* name, const char* tit
     }
     _highSet.add(*comp) ;
     if (takeOwnership) {
-      _ownedList.addOwned(*comp) ;
+      _ownedList.addOwned(std::unique_ptr<RooAbsArg>{comp});
     }
   }
 
@@ -118,7 +118,7 @@ PiecewiseInterpolation::PiecewiseInterpolation(const char* name, const char* tit
     }
     _paramSet.add(*comp) ;
     if (takeOwnership) {
-      _ownedList.addOwned(*comp) ;
+      _ownedList.addOwned(std::unique_ptr<RooAbsArg>{comp});
     }
     _interpCode.push_back(0); // default code: linear interpolation
   }
@@ -126,7 +126,7 @@ PiecewiseInterpolation::PiecewiseInterpolation(const char* name, const char* tit
 
   // Choose special integrator by default
   specialIntegratorConfig(true)->method1D().setLabel("RooBinIntegrator") ;
-  TRACE_CREATE
+  TRACE_CREATE;
 }
 
 
@@ -145,7 +145,7 @@ PiecewiseInterpolation::PiecewiseInterpolation(const PiecewiseInterpolation& oth
   _interpCode(other._interpCode)
 {
   // Member _ownedList is intentionally not copy-constructed -- ownership is not transferred
-  TRACE_CREATE
+  TRACE_CREATE;
 }
 
 
@@ -155,7 +155,7 @@ PiecewiseInterpolation::PiecewiseInterpolation(const PiecewiseInterpolation& oth
 
 PiecewiseInterpolation::~PiecewiseInterpolation()
 {
-  TRACE_DESTROY
+  TRACE_DESTROY;
 }
 
 
@@ -506,19 +506,16 @@ Int_t PiecewiseInterpolation::getAnalyticalIntegralWN(RooArgSet& allVars, RooArg
 
   // Make list of function projection and normalization integrals
   RooAbsReal *func ;
-  RooAbsReal *funcInt;
 
   // do variations 
   for (auto it = _paramSet.begin(); it != _paramSet.end(); ++it)
   {
     auto i = it - _paramSet.begin();
     func = static_cast<RooAbsReal *>(_lowSet.at(i));
-    funcInt = func->createIntegral(analVars) ;
-    cache->_lowIntList.addOwned(*funcInt) ;
+    cache->_lowIntList.addOwned(std::unique_ptr<RooAbsReal>{func->createIntegral(analVars)});
 
     func = static_cast<RooAbsReal *>(_highSet.at(i));
-    funcInt = func->createIntegral(analVars) ;
-    cache->_highIntList.addOwned(*funcInt);
+    cache->_highIntList.addOwned(std::unique_ptr<RooAbsReal>{func->createIntegral(analVars)});
   }
 
   // Store cache element
