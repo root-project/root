@@ -31,16 +31,16 @@ protected:
 
 public:
    TEveLineGL();
-   virtual ~TEveLineGL() {}
+   ~TEveLineGL() override {}
 
-   virtual Bool_t SetModel(TObject* obj, const Option_t *opt = nullptr);
-   virtual void   DirectDraw(TGLRnrCtx & rnrCtx) const;
+   Bool_t SetModel(TObject* obj, const Option_t *opt = nullptr) override;
+   void   DirectDraw(TGLRnrCtx & rnrCtx) const override;
 
    // To support two-level selection
    // virtual Bool_t SupportsSecondarySelect() const { return kTRUE; }
    // virtual void ProcessSelection(UInt_t* ptr, TGLViewer*, TGLScene*);
 
-   ClassDef(TEveLineGL, 0); // GL-renderer for TEveLine class.
+   ClassDefOverride(TEveLineGL, 0); // GL-renderer for TEveLine class.
 };
 
 #endif

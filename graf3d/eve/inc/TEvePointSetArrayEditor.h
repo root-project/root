@@ -36,13 +36,13 @@ protected:
 public:
    TEvePointSetArrayEditor(const TGWindow *p = nullptr, Int_t width=170, Int_t height=30,
                            UInt_t options=kChildFrame, Pixel_t back=GetDefaultFrameBackground());
-   ~TEvePointSetArrayEditor();
+   ~TEvePointSetArrayEditor() override;
 
-   virtual void SetModel(TObject* obj);
+   void SetModel(TObject* obj) override;
 
    void DoRange();
 
-   ClassDef(TEvePointSetArrayEditor, 0); // Editor for TEvePointSetArray class.
+   ClassDefOverride(TEvePointSetArrayEditor, 0); // Editor for TEvePointSetArray class.
 };
 
 #endif

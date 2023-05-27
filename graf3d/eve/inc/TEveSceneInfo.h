@@ -34,21 +34,21 @@ protected:
 
 public:
    TEveSceneInfo(TEveViewer* viewer, TEveScene* scene, TGLSceneInfo* sinfo);
-   virtual ~TEveSceneInfo() {}
+   ~TEveSceneInfo() override {}
 
    TEveViewer   * GetViewer()      const { return fViewer; }
    TEveScene    * GetScene()       const { return fScene;  }
    TGLSceneInfo * GetGLSceneInfo() const { return fGLSceneInfo; }
    TGLSceneBase * GetGLScene()     const;
 
-   virtual Bool_t SingleRnrState() const { return kTRUE; }
+   Bool_t SingleRnrState() const override { return kTRUE; }
 
-   virtual void   AddStamp(UChar_t bits);
+   void   AddStamp(UChar_t bits) override;
 
-   virtual Bool_t AcceptElement(TEveElement* el);
-   virtual Bool_t HandleElementPaste(TEveElement* el);
+   Bool_t AcceptElement(TEveElement* el) override;
+   Bool_t HandleElementPaste(TEveElement* el) override;
 
-   ClassDef(TEveSceneInfo, 0); // TEveUtil representation of TGLSceneInfo.
+   ClassDefOverride(TEveSceneInfo, 0); // TEveUtil representation of TGLSceneInfo.
 };
 
 #endif

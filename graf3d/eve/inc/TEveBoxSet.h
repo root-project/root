@@ -65,7 +65,7 @@ protected:
 
 public:
    TEveBoxSet(const char* n="TEveBoxSet", const char* t="");
-   virtual ~TEveBoxSet() {}
+   ~TEveBoxSet() override {}
 
    void Reset(EBoxType_e boxType, Bool_t valIsCol, Int_t chunkSize);
    void Reset();
@@ -79,7 +79,7 @@ public:
 
    void AddHex(const TEveVector& pos, Float_t r, Float_t angle, Float_t depth);
 
-   virtual void ComputeBBox();
+   void ComputeBBox() override;
    // virtual void Paint(Option_t* option = "");
 
    void Test(Int_t nboxes);
@@ -97,7 +97,7 @@ public:
    Int_t GetBoxSkip()   const { return fBoxSkip; }
    void  SetBoxSkip(Int_t bs) { fBoxSkip = bs; }
 
-   ClassDef(TEveBoxSet, 0); // Collection of 3D primitives (fixed-size boxes, boxes of different sizes, or arbitrary sexto-epipeds); each primitive can be assigned a signal value and a TRef.
+   ClassDefOverride(TEveBoxSet, 0); // Collection of 3D primitives (fixed-size boxes, boxes of different sizes, or arbitrary sexto-epipeds); each primitive can be assigned a signal value and a TRef.
 };
 
 #endif

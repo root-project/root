@@ -65,7 +65,7 @@ public:
 
    void ResetPdgCode() { fPdgCode = 0; }
 
-   ClassDef(REveMCTrack, 1); // Monte Carlo track (also used in VSD).
+   ClassDefOverride(REveMCTrack, 1); // Monte Carlo track (also used in VSD).
 };
 
 ////////////////////////////////////////////////////////////////////////////////

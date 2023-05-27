@@ -42,11 +42,11 @@ protected:
 public:
    TEveScene(const char* n="TEveScene", const char* t="");
    TEveScene(TGLScenePad* gl_scene, const char* n="TEveScene", const char* t="");
-   virtual ~TEveScene();
+   ~TEveScene() override;
 
-   virtual void CollectSceneParents(List_t& scenes);
+   void CollectSceneParents(List_t& scenes) override;
 
-   virtual Bool_t SingleRnrState() const { return kTRUE; }
+   Bool_t SingleRnrState() const override { return kTRUE; }
 
    void   Changed()         { fChanged = kTRUE; }
    Bool_t IsChanged() const { return fChanged;  }
@@ -60,15 +60,15 @@ public:
    TGLScenePad* GetGLScene() const { return fGLScene; }
    void SetGLScene(TGLScenePad* s) { fGLScene = s; }
 
-   virtual void SetName(const char* n);
-   virtual void Paint(Option_t* option = "");
+   void SetName(const char* n) override;
+   void Paint(Option_t* option = "") override;
 
    void DestroyElementRenderers(TEveElement* element);
    void DestroyElementRenderers(TObject* rnrObj);
 
-   virtual const TGPicture* GetListTreeIcon(Bool_t open=kFALSE);
+   const TGPicture* GetListTreeIcon(Bool_t open=kFALSE) override;
 
-   ClassDef(TEveScene, 0); // Reve representation of TGLScene.
+   ClassDefOverride(TEveScene, 0); // Reve representation of TGLScene.
 };
 
 
@@ -86,7 +86,7 @@ protected:
 
 public:
    TEveSceneList(const char* n="TEveSceneList", const char* t="");
-   virtual ~TEveSceneList() {}
+   ~TEveSceneList() override {}
 
    void DestroyScenes();
 
@@ -97,7 +97,7 @@ public:
 
    void ProcessSceneChanges(Bool_t dropLogicals, TExMap* stampMap);
 
-   ClassDef(TEveSceneList, 0); // List of Scenes providing common operations on TEveScene collections.
+   ClassDefOverride(TEveSceneList, 0); // List of Scenes providing common operations on TEveScene collections.
 };
 
 #endif

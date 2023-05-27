@@ -34,12 +34,12 @@ protected:
 
 public:
    REveSelectorToEventList(TEventList *evl, const char *sel);
-   virtual ~REveSelectorToEventList() {}
+   ~REveSelectorToEventList() override {}
 
-   virtual Int_t Version() const { return 1; }
-   virtual Bool_t Process(Long64_t entry);
+   Int_t Version() const override { return 1; }
+   Bool_t Process(Long64_t entry) override;
 
-   ClassDef(REveSelectorToEventList, 2); // TSelector that stores entry numbers of matching TTree entries into an event-list.
+   ClassDefOverride(REveSelectorToEventList, 2); // TSelector that stores entry numbers of matching TTree entries into an event-list.
 };
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -92,11 +92,11 @@ protected:
 
 public:
    REvePointSelector(TTree *t = nullptr, REvePointSelectorConsumer *c = nullptr, const char *vexp = "", const char *sel = "");
-   virtual ~REvePointSelector() {}
+   ~REvePointSelector() override {}
 
    virtual Long64_t Select(const char *selection = nullptr);
    virtual Long64_t Select(TTree *t, const char *selection = nullptr);
-   virtual void TakeAction();
+   void TakeAction() override;
 
    TTree *GetTree() const { return fSelectTree; }
    void SetTree(TTree *t) { fSelectTree = t; }
@@ -115,7 +115,7 @@ public:
 
    Int_t GetSubIdNum() const { return fSubIdNum; }
 
-   ClassDef(REvePointSelector, 2); // TSelector for direct extraction of point-like data from a Tree.
+   ClassDefOverride(REvePointSelector, 2); // TSelector for direct extraction of point-like data from a Tree.
 };
 
 } // namespace Experimental

@@ -46,10 +46,10 @@ protected:
 
 public:
    TEveJetCone(const Text_t* n="TEveJetCone", const Text_t* t="");
-   virtual ~TEveJetCone() {}
+   ~TEveJetCone() override {}
 
-   virtual void    ComputeBBox();
-   virtual TClass* ProjectedClass(const TEveProjection* p) const;
+   void    ComputeBBox() override;
+   TClass* ProjectedClass(const TEveProjection* p) const override;
 
    void  SetApex(const TEveVector& a)      { fApex = a; }
    void  SetCylinder(Float_t r, Float_t z) { fLimits.Set(0, r, z); fThetaC = fLimits.Theta(); }
@@ -61,7 +61,7 @@ public:
    Int_t AddCone(Float_t eta, Float_t phi, Float_t cone_r, Float_t length=0);
    Int_t AddEllipticCone(Float_t eta, Float_t phi, Float_t reta, Float_t rphi, Float_t length=0);
 
-   ClassDef(TEveJetCone, 0); // Short description.
+   ClassDefOverride(TEveJetCone, 0); // Short description.
 };
 
 
@@ -79,22 +79,22 @@ private:
    TEveJetConeProjected& operator=(const TEveJetConeProjected&); // Not implemented
 
 protected:
-   virtual void SetDepthLocal(Float_t d);
+   void SetDepthLocal(Float_t d) override;
 
 public:
    TEveJetConeProjected(const char* n="TEveJetConeProjected", const char* t="");
-   virtual ~TEveJetConeProjected();
+   ~TEveJetConeProjected() override;
 
    // For TAttBBox:
-   virtual void ComputeBBox();
+   void ComputeBBox() override;
 
    // Projected:
-   virtual void SetProjection(TEveProjectionManager* mng, TEveProjectable* model);
-   virtual void UpdateProjection();
+   void SetProjection(TEveProjectionManager* mng, TEveProjectable* model) override;
+   void UpdateProjection() override;
 
-   virtual TEveElement* GetProjectedAsElement() { return this; }
+   TEveElement* GetProjectedAsElement() override { return this; }
 
-   ClassDef(TEveJetConeProjected, 0); // Projection of TEveJetCone.
+   ClassDefOverride(TEveJetConeProjected, 0); // Projection of TEveJetCone.
 };
 
 #endif

@@ -33,7 +33,7 @@ protected:
 
 public:
    TEvePlot3D(const char* n="TEvePlot3D", const char* t="");
-   virtual ~TEvePlot3D() {}
+   ~TEvePlot3D() override {}
 
    void SetPlot(TObject* obj, const TString& opt) { fPlot = obj; fPlotOption = opt; }
 
@@ -50,9 +50,9 @@ public:
    Bool_t   GetLogY() const { return fLogY; }
    Bool_t   GetLogZ() const { return fLogZ; }
 
-   virtual void Paint(Option_t* option="");
+   void Paint(Option_t* option="") override;
 
-   ClassDef(TEvePlot3D, 0); // Short description.
+   ClassDefOverride(TEvePlot3D, 0); // Short description.
 };
 
 #endif

@@ -32,15 +32,15 @@ protected:
 public:
    TEveViewerListEditor(const TGWindow *p = nullptr, Int_t width=170, Int_t height=30,
          UInt_t options=kChildFrame, Pixel_t back=GetDefaultFrameBackground());
-   virtual ~TEveViewerListEditor() {}
+   ~TEveViewerListEditor() override {}
 
-   virtual void SetModel(TObject* obj);
+   void SetModel(TObject* obj) override;
 
    // Declare callback/slot methods
    void DoBrightness();
    void SwitchColorSet();
 
-   ClassDef(TEveViewerListEditor, 0); // GUI editor for TEveViewerList.
+   ClassDefOverride(TEveViewerListEditor, 0); // GUI editor for TEveViewerList.
 };
 
 #endif

@@ -164,23 +164,23 @@ private:
 
 public:
    TEveRhoZProjection();
-   virtual ~TEveRhoZProjection() {}
+   ~TEveRhoZProjection() override {}
 
-   virtual Bool_t      Is2D() const { return kTRUE;  }
-   virtual Bool_t      Is3D() const { return kFALSE; }
+   Bool_t      Is2D() const override { return kTRUE;  }
+   Bool_t      Is3D() const override { return kFALSE; }
 
-   virtual void        ProjectPoint(Float_t& x, Float_t& y, Float_t& z, Float_t d, EPProc_e proc = kPP_Full);
+   void        ProjectPoint(Float_t& x, Float_t& y, Float_t& z, Float_t d, EPProc_e proc = kPP_Full) override;
 
-   virtual void        SetCenter(TEveVector& v);
-   virtual Float_t*    GetProjectedCenter() { return fProjectedCenter.Arr(); }
+   void        SetCenter(TEveVector& v) override;
+   Float_t*    GetProjectedCenter() override { return fProjectedCenter.Arr(); }
 
-   virtual Bool_t      HasSeveralSubSpaces() const { return kTRUE; }
-   virtual Bool_t      AcceptSegment(TEveVector& v1, TEveVector& v2, Float_t tolerance) const;
-   virtual Int_t       SubSpaceId(const TEveVector& v) const;
-   virtual Bool_t      IsOnSubSpaceBoundrary(const TEveVector& v) const;
-   virtual void        SetDirectionalVector(Int_t screenAxis, TEveVector& vec);
+   Bool_t      HasSeveralSubSpaces() const override { return kTRUE; }
+   Bool_t      AcceptSegment(TEveVector& v1, TEveVector& v2, Float_t tolerance) const override;
+   Int_t       SubSpaceId(const TEveVector& v) const override;
+   Bool_t      IsOnSubSpaceBoundrary(const TEveVector& v) const override;
+   void        SetDirectionalVector(Int_t screenAxis, TEveVector& vec) override;
 
-   ClassDef(TEveRhoZProjection, 0); // Rho/Z non-linear projection.
+   ClassDefOverride(TEveRhoZProjection, 0); // Rho/Z non-linear projection.
 };
 
 
@@ -192,14 +192,14 @@ class TEveRPhiProjection : public TEveProjection
 {
 public:
    TEveRPhiProjection();
-   virtual ~TEveRPhiProjection() {}
+   ~TEveRPhiProjection() override {}
 
-   virtual Bool_t Is2D() const { return kTRUE;  }
-   virtual Bool_t Is3D() const { return kFALSE; }
+   Bool_t Is2D() const override { return kTRUE;  }
+   Bool_t Is3D() const override { return kFALSE; }
 
-   virtual void   ProjectPoint(Float_t& x, Float_t& y, Float_t& z, Float_t d, EPProc_e proc = kPP_Full);
+   void   ProjectPoint(Float_t& x, Float_t& y, Float_t& z, Float_t d, EPProc_e proc = kPP_Full) override;
 
-   ClassDef(TEveRPhiProjection, 0); // XY non-linear projection.
+   ClassDefOverride(TEveRPhiProjection, 0); // XY non-linear projection.
 };
 
 
@@ -214,19 +214,19 @@ private:
 
 public:
    TEveXZProjection();
-   virtual ~TEveXZProjection() {}
+   ~TEveXZProjection() override {}
 
-   virtual Bool_t Is2D() const { return kTRUE;  }
-   virtual Bool_t Is3D() const { return kFALSE; }
+   Bool_t Is2D() const override { return kTRUE;  }
+   Bool_t Is3D() const override { return kFALSE; }
 
-   virtual void   ProjectPoint(Float_t& x, Float_t& y, Float_t& z, Float_t d, EPProc_e proc = kPP_Full);
+   void   ProjectPoint(Float_t& x, Float_t& y, Float_t& z, Float_t d, EPProc_e proc = kPP_Full) override;
 
-   virtual void     SetCenter(TEveVector& v);
-   virtual Float_t* GetProjectedCenter() { return fProjectedCenter.Arr(); }
+   void     SetCenter(TEveVector& v) override;
+   Float_t* GetProjectedCenter() override { return fProjectedCenter.Arr(); }
 
-   virtual void     SetDirectionalVector(Int_t screenAxis, TEveVector& vec);
+   void     SetDirectionalVector(Int_t screenAxis, TEveVector& vec) override;
 
-   ClassDef(TEveXZProjection, 0); // XZ non-linear projection.
+   ClassDefOverride(TEveXZProjection, 0); // XZ non-linear projection.
 };
 
 
@@ -241,19 +241,19 @@ private:
 
 public:
    TEveYZProjection();
-   virtual ~TEveYZProjection() {}
+   ~TEveYZProjection() override {}
 
-   virtual Bool_t Is2D() const { return kTRUE;  }
-   virtual Bool_t Is3D() const { return kFALSE; }
+   Bool_t Is2D() const override { return kTRUE;  }
+   Bool_t Is3D() const override { return kFALSE; }
 
-   virtual void   ProjectPoint(Float_t& x, Float_t& y, Float_t& z, Float_t d, EPProc_e proc = kPP_Full);
+   void   ProjectPoint(Float_t& x, Float_t& y, Float_t& z, Float_t d, EPProc_e proc = kPP_Full) override;
 
-   virtual void     SetCenter(TEveVector& v);
-   virtual Float_t* GetProjectedCenter() { return fProjectedCenter.Arr(); }
+   void     SetCenter(TEveVector& v) override;
+   Float_t* GetProjectedCenter() override { return fProjectedCenter.Arr(); }
 
-   virtual void     SetDirectionalVector(Int_t screenAxis, TEveVector& vec);
+   void     SetDirectionalVector(Int_t screenAxis, TEveVector& vec) override;
 
-   ClassDef(TEveYZProjection, 0); // XY non-linear projection.
+   ClassDefOverride(TEveYZProjection, 0); // XY non-linear projection.
 };
 
 
@@ -268,19 +268,19 @@ private:
 
 public:
    TEveZXProjection();
-   virtual ~TEveZXProjection() {}
+   ~TEveZXProjection() override {}
 
-   virtual Bool_t Is2D() const { return kTRUE;  }
-   virtual Bool_t Is3D() const { return kFALSE; }
+   Bool_t Is2D() const override { return kTRUE;  }
+   Bool_t Is3D() const override { return kFALSE; }
 
-   virtual void   ProjectPoint(Float_t& x, Float_t& y, Float_t& z, Float_t d, EPProc_e proc = kPP_Full);
+   void   ProjectPoint(Float_t& x, Float_t& y, Float_t& z, Float_t d, EPProc_e proc = kPP_Full) override;
 
-   virtual void     SetCenter(TEveVector& v);
-   virtual Float_t* GetProjectedCenter() { return fProjectedCenter.Arr(); }
+   void     SetCenter(TEveVector& v) override;
+   Float_t* GetProjectedCenter() override { return fProjectedCenter.Arr(); }
 
-   virtual void     SetDirectionalVector(Int_t screenAxis, TEveVector& vec);
+   void     SetDirectionalVector(Int_t screenAxis, TEveVector& vec) override;
 
-   ClassDef(TEveZXProjection, 0); // XZ non-linear projection.
+   ClassDefOverride(TEveZXProjection, 0); // XZ non-linear projection.
 };
 
 
@@ -295,19 +295,19 @@ private:
 
 public:
    TEveZYProjection();
-   virtual ~TEveZYProjection() {}
+   ~TEveZYProjection() override {}
 
-   virtual Bool_t Is2D() const { return kTRUE;  }
-   virtual Bool_t Is3D() const { return kFALSE; }
+   Bool_t Is2D() const override { return kTRUE;  }
+   Bool_t Is3D() const override { return kFALSE; }
 
-   virtual void   ProjectPoint(Float_t& x, Float_t& y, Float_t& z, Float_t d, EPProc_e proc = kPP_Full);
+   void   ProjectPoint(Float_t& x, Float_t& y, Float_t& z, Float_t d, EPProc_e proc = kPP_Full) override;
 
-   virtual void     SetCenter(TEveVector& v);
-   virtual Float_t* GetProjectedCenter() { return fProjectedCenter.Arr(); }
+   void     SetCenter(TEveVector& v) override;
+   Float_t* GetProjectedCenter() override { return fProjectedCenter.Arr(); }
 
-   virtual void     SetDirectionalVector(Int_t screenAxis, TEveVector& vec);
+   void     SetDirectionalVector(Int_t screenAxis, TEveVector& vec) override;
 
-   ClassDef(TEveZYProjection, 0); // XY non-linear projection.
+   ClassDefOverride(TEveZYProjection, 0); // XY non-linear projection.
 };
 
 
@@ -319,14 +319,14 @@ class TEve3DProjection : public TEveProjection
 {
 public:
    TEve3DProjection();
-   virtual ~TEve3DProjection() {}
+   ~TEve3DProjection() override {}
 
-   virtual Bool_t Is2D() const { return kFALSE; }
-   virtual Bool_t Is3D() const { return kTRUE;  }
+   Bool_t Is2D() const override { return kFALSE; }
+   Bool_t Is3D() const override { return kTRUE;  }
 
-   virtual void   ProjectPoint(Float_t& x, Float_t& y, Float_t& z, Float_t d, EPProc_e proc = kPP_Full);
+   void   ProjectPoint(Float_t& x, Float_t& y, Float_t& z, Float_t d, EPProc_e proc = kPP_Full) override;
 
-   ClassDef(TEve3DProjection, 0); // 3D scaling "projection"
+   ClassDefOverride(TEve3DProjection, 0); // 3D scaling "projection"
 };
 
 // AMT: temporary workaround till root pactches are integrated in CMSSW

@@ -40,7 +40,7 @@ protected:
 
 public:
    TEveProjectionManager(TEveProjection::EPType_e type=TEveProjection::kPT_Unknown);
-   virtual ~TEveProjectionManager();
+   ~TEveProjectionManager() override;
 
    void AddDependent(TEveElement* el);
    void RemoveDependent(TEveElement* el);
@@ -59,7 +59,7 @@ public:
    void            SetImportEmpty(Bool_t ie)  { fImportEmpty = ie;   }
    Bool_t          GetImportEmpty()     const { return fImportEmpty; }
 
-   virtual Bool_t  HandleElementPaste(TEveElement* el);
+   Bool_t  HandleElementPaste(TEveElement* el) override;
 
    virtual TEveElement* ImportElementsRecurse(TEveElement* el,
                                               TEveElement* parent);
@@ -72,9 +72,9 @@ public:
    virtual void    ProjectChildren();
    virtual void    ProjectChildrenRecurse(TEveElement* el);
 
-   virtual void    ComputeBBox();
+   void    ComputeBBox() override;
 
-   ClassDef(TEveProjectionManager, 0); // Manager class for steering of projections and managing projected objects.
+   ClassDefOverride(TEveProjectionManager, 0); // Manager class for steering of projections and managing projected objects.
 };
 
 #endif

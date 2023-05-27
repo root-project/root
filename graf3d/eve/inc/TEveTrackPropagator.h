@@ -76,12 +76,12 @@ public:
    TEveMagFieldConst(Double_t x, Double_t y, Double_t z) :
       TEveMagField(), fB(x, y, z)
    { fFieldConstant = kTRUE; }
-   virtual ~TEveMagFieldConst() {}
+   ~TEveMagFieldConst() override {}
 
-   virtual Double_t    GetMaxFieldMagD() const { return fB.Mag(); };
-   virtual TEveVectorD GetFieldD(Double_t /*x*/, Double_t /*y*/, Double_t /*z*/) const { return fB; }
+   Double_t    GetMaxFieldMagD() const override { return fB.Mag(); };
+   TEveVectorD GetFieldD(Double_t /*x*/, Double_t /*y*/, Double_t /*z*/) const override { return fB; }
 
-   ClassDef(TEveMagFieldConst, 0); // Interface to constant magnetic field.
+   ClassDefOverride(TEveMagFieldConst, 0); // Interface to constant magnetic field.
 };
 
 
@@ -103,14 +103,14 @@ public:
    {
       fFieldConstant = kFALSE;
    }
-   virtual ~TEveMagFieldDuo() {}
+   ~TEveMagFieldDuo() override {}
 
-   virtual Double_t GetMaxFieldMagD() const { return std::max(fBIn.Mag(), fBOut.Mag()); }
+   Double_t GetMaxFieldMagD() const override { return std::max(fBIn.Mag(), fBOut.Mag()); }
 
-   virtual TEveVectorD GetFieldD(Double_t x, Double_t y, Double_t /*z*/) const
+   TEveVectorD GetFieldD(Double_t x, Double_t y, Double_t /*z*/) const override
    { return  ((x*x+y*y)<fR2) ? fBIn : fBOut; }
 
-   ClassDef(TEveMagFieldDuo, 0); // Interface to magnetic field with two different values depending on radius.
+   ClassDefOverride(TEveMagFieldDuo, 0); // Interface to magnetic field with two different values depending on radius.
 };
 
 
@@ -245,13 +245,13 @@ protected:
 public:
    TEveTrackPropagator(const char* n="TEveTrackPropagator", const char* t="",
                        TEveMagField* field=nullptr, Bool_t own_field=kTRUE);
-   virtual ~TEveTrackPropagator();
+   ~TEveTrackPropagator() override;
 
-   virtual void OnZeroRefCount();
+   void OnZeroRefCount() override;
 
-   virtual void CheckReferenceCount(const TEveException& eh="TEveElement::CheckReferenceCount ");
+   void CheckReferenceCount(const TEveException& eh="TEveElement::CheckReferenceCount ") override;
 
-   virtual void ElementChanged(Bool_t update_scenes=kTRUE, Bool_t redraw=kFALSE);
+   void ElementChanged(Bool_t update_scenes=kTRUE, Bool_t redraw=kFALSE) override;
 
    // propagation
    void   InitTrack(const TEveVectorD& v, Int_t charge);
@@ -345,7 +345,7 @@ public:
    static Double_t             fgEditorMaxR;  // Max R that can be set in GUI editor.
    static Double_t             fgEditorMaxZ;  // Max Z that can be set in GUI editor.
 
-   ClassDef(TEveTrackPropagator, 0); // Calculates path of a particle taking into account special path-marks and imposed boundaries.
+   ClassDefOverride(TEveTrackPropagator, 0); // Calculates path of a particle taking into account special path-marks and imposed boundaries.
 };
 
 //______________________________________________________________________________

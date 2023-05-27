@@ -39,9 +39,9 @@ protected:
 public:
    TEveProjectionAxesEditor(const TGWindow *p = nullptr, Int_t width=170, Int_t height=30,
                             UInt_t options=kChildFrame, Pixel_t back=GetDefaultFrameBackground());
-   virtual ~TEveProjectionAxesEditor() {}
+   ~TEveProjectionAxesEditor() override {}
 
-   virtual void SetModel(TObject* obj);
+   void SetModel(TObject* obj) override;
 
    // Declare callback/slot methods
 
@@ -51,7 +51,7 @@ public:
    void DoDrawCenter();
    void DoDrawOrigin();
 
-   ClassDef(TEveProjectionAxesEditor, 0); // GUI editor for TEveProjectionAxes.
+   ClassDefOverride(TEveProjectionAxesEditor, 0); // GUI editor for TEveProjectionAxes.
 };
 
 #endif

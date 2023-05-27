@@ -41,21 +41,21 @@ protected:
 
 public:
    TEvePolygonSetProjectedGL();
-   virtual  ~TEvePolygonSetProjectedGL() {}
+    ~TEvePolygonSetProjectedGL() override {}
 
-   virtual Bool_t SetModel(TObject* obj, const Option_t *opt = nullptr);
-   virtual void   SetBBox();
-   virtual void   Draw(TGLRnrCtx& rnrCtx) const;
-   virtual void   DirectDraw(TGLRnrCtx& rnrCtx) const;
+   Bool_t SetModel(TObject* obj, const Option_t *opt = nullptr) override;
+   void   SetBBox() override;
+   void   Draw(TGLRnrCtx& rnrCtx) const override;
+   void   DirectDraw(TGLRnrCtx& rnrCtx) const override;
 
-   virtual void   DrawHighlight(TGLRnrCtx& rnrCtx, const TGLPhysicalShape* pshp, Int_t lvl=-1) const;
+   void   DrawHighlight(TGLRnrCtx& rnrCtx, const TGLPhysicalShape* pshp, Int_t lvl=-1) const override;
 
-   virtual Bool_t IgnoreSizeForOfInterest() const { return kTRUE; }
+   Bool_t IgnoreSizeForOfInterest() const override { return kTRUE; }
 
 private:
    void DrawOutline() const;
 
-   ClassDef(TEvePolygonSetProjectedGL,0);  // GL-renderer for TEvePolygonSetProjected class.
+   ClassDefOverride(TEvePolygonSetProjectedGL,0);  // GL-renderer for TEvePolygonSetProjected class.
 };
 
 #endif

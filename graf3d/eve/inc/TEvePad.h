@@ -21,16 +21,16 @@ public:
    TEvePad(const char* name, const char* title,
            Double_t xlow, Double_t ylow, Double_t xup, Double_t yup,
            Color_t color = -1, Short_t bordersize = -1, Short_t bordermode = -2);
-   virtual ~TEvePad() {}
+   ~TEvePad() override {}
 
-   virtual Bool_t    IsBatch() const { return kTRUE; }
+   Bool_t    IsBatch() const override { return kTRUE; }
 
-   virtual void      Update() { PaintModified(); }
+   void      Update() override { PaintModified(); }
 
-   virtual TVirtualViewer3D *GetViewer3D(Option_t * /*type*/ = "")
+   TVirtualViewer3D *GetViewer3D(Option_t * /*type*/ = "") override
    { return fViewer3D; }
 
-   ClassDef(TEvePad, 1); // Internal TEveUtil pad class (sub-class of TPad) overriding handling of updates and 3D-viewers.
+   ClassDefOverride(TEvePad, 1); // Internal TEveUtil pad class (sub-class of TPad) overriding handling of updates and 3D-viewers.
 };
 
 #endif

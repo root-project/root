@@ -43,7 +43,7 @@ class REveException : public std::exception {
 public:
    REveException() = default;
    explicit REveException(const std::string &s) : fWhat(s) {}
-   virtual ~REveException() noexcept {}
+   ~REveException() noexcept override {}
    void append(const std::string &s) { fWhat.append(s); }
 
    const char *what() const noexcept override { return fWhat.c_str(); }

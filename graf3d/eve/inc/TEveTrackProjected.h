@@ -32,24 +32,24 @@ private:
 protected:
    std::vector<Int_t>   fBreakPoints; // indices of track break-points
 
-   virtual void SetDepthLocal(Float_t d);
+   void SetDepthLocal(Float_t d) override;
 
 public:
    TEveTrackProjected();
-   virtual ~TEveTrackProjected() {}
+   ~TEveTrackProjected() override {}
 
-   virtual void SetProjection(TEveProjectionManager* mng, TEveProjectable* model);
+   void SetProjection(TEveProjectionManager* mng, TEveProjectable* model) override;
 
-   virtual void UpdateProjection();
-   virtual TEveElement* GetProjectedAsElement() { return this; }
-   virtual void MakeTrack(Bool_t recurse=kTRUE);
+   void UpdateProjection() override;
+   TEveElement* GetProjectedAsElement() override { return this; }
+   void MakeTrack(Bool_t recurse=kTRUE) override;
 
 
    void         PrintLineSegments();
 
-   virtual void SecSelected(TEveTrack*); // marked as signal in TEveTrack
+   void SecSelected(TEveTrack*) override; // marked as signal in TEveTrack
 
-   ClassDef(TEveTrackProjected, 0); // Projected copy of a TEveTrack.
+   ClassDefOverride(TEveTrackProjected, 0); // Projected copy of a TEveTrack.
 };
 
 
@@ -65,20 +65,20 @@ private:
    TEveTrackListProjected& operator=(const TEveTrackListProjected&); // Not implemented
 
 protected:
-   virtual void SetDepthLocal(Float_t d);
+   void SetDepthLocal(Float_t d) override;
 
 public:
    TEveTrackListProjected();
-   virtual ~TEveTrackListProjected() {}
+   ~TEveTrackListProjected() override {}
 
-   virtual void SetProjection(TEveProjectionManager* proj, TEveProjectable* model);
-   virtual void UpdateProjection()  {}
-   virtual TEveElement* GetProjectedAsElement() { return this; }
+   void SetProjection(TEveProjectionManager* proj, TEveProjectable* model) override;
+   void UpdateProjection() override  {}
+   TEveElement* GetProjectedAsElement() override { return this; }
 
-   virtual void SetDepth(Float_t d);
+   void SetDepth(Float_t d) override;
    virtual void SetDepth(Float_t d, TEveElement* el);
 
-   ClassDef(TEveTrackListProjected, 0); // Specialization of TEveTrackList for holding TEveTrackProjected objects.
+   ClassDefOverride(TEveTrackListProjected, 0); // Specialization of TEveTrackList for holding TEveTrackProjected objects.
 };
 
 #endif
