@@ -252,11 +252,10 @@ endif()
 
 if(NOT ROOT_imt_FOUND)
   set(imt_veto multicore/imt*.C multicore/mt*.C)
-else()
-  if(MSVC)
-    #---Multiproc is not supported on Windows
-    set(imt_veto ${imt_veto} multicore/mp*.C multicore/mtbb201_parallelHistoFill.C)
-  endif()
+endif()
+if(MSVC)
+  #---Multiproc is not supported on Windows
+  set(imt_veto ${imt_veto} multicore/mp*.C multicore/mtbb201_parallelHistoFill.C)
 endif()
 
 if(ROOT_CLASSIC_BUILD)
@@ -361,7 +360,7 @@ if(root7)
     list(APPEND root7_veto rcanvas/rbox.py)
   endif()
 else()
-  if(MSVC AND CMAKE_SIZEOF_VOID_P EQUAL 8 AND NOT win_broken_tests)
+  if(MSVC AND NOT win_broken_tests)
     list(APPEND root7_veto dataframe/df013_InspectAnalysis.C)
   endif()
   file(GLOB v7_veto_files RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/ v7/*.py v7/*.cxx v7/*/*.cxx v7/*.C v7/*/*.C rcanvas/*.py rcanvas/*.cxx)
@@ -804,6 +803,7 @@ if(ROOT_pyroot_FOUND)
   # and add it to the list "fixtureLists" below.
   file(GLOB requires_numpy   RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
       dataframe/df026_AsNumpyArrays.py
+      dataframe/df032_RDFFromNumpy.py
       fit/combinedFit.py
       fit/multifit.py
       roofit/rf409_NumPyPandasToRooFit.py)

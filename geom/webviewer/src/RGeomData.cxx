@@ -769,12 +769,16 @@ std::string RGeomDescription::ProcessBrowserRequest(const std::string &msg)
       for (auto &item : fDesc)
          vect[cnt++]= &item;
 
-      res = "DESCR:"s + TBufferJSON::ToJSON(&vect,GetJsonComp()).Data();
+      res = "DESCR:"s + TBufferJSON::ToJSON(&vect, GetJsonComp()).Data();
 
       if (fVisibility.size() > 0) {
          res += ":__PHYSICAL_VISIBILITY__:";
-         res += TBufferJSON::ToJSON(&fVisibility,GetJsonComp()).Data();
+         res += TBufferJSON::ToJSON(&fVisibility, GetJsonComp()).Data();
       }
+
+      res += ":__SELECTED_STACK__:";
+      res += TBufferJSON::ToJSON(&fSelectedStack, GetJsonComp()).Data();
+
    } else {
       std::vector<RGeoItem> temp_nodes;
       bool toplevel = request->path.empty();
@@ -802,7 +806,10 @@ std::string RGeomDescription::ProcessBrowserRequest(const std::string &msg)
                int pvis = IsPhysNodeVisible(stack);
                temp_nodes.emplace_back(iter.GetName(), iter.NumChilds(),
                                        iter.GetNodeId(), iter.GetColor(), iter.GetMaterial(), iter.GetVisible(), pvis < 0 ? iter.GetVisible() : pvis);
-               if (toplevel) temp_nodes.back().SetExpanded(true);
+               if (toplevel)
+                  temp_nodes.back().SetExpanded(true);
+               if (stack == fSelectedStack)
+                  temp_nodes.back().SetTop(true);
                request->number--;
 
                if (stack.size() > 0)
@@ -1061,13 +1068,8 @@ RGeomDescription::ShapeDescr &RGeomDescription::MakeShapeDescr(TGeoShape *shape)
 
             auto size_of_polygon = mesh->SizeOfPoly(polyIndex);
 
-            if (size_of_polygon == 3) {
-               num_polynoms += 1;
-            } else if (size_of_polygon == 4) {
-               num_polynoms += 2;
-            } else {
-               R__LOG_ERROR(RGeomLog()) << "CSG polygon has unsupported number of vertices " << size_of_polygon;
-            }
+            if (size_of_polygon >= 3)
+               num_polynoms += (size_of_polygon - 2);
          }
 
          Int_t index_buffer_size = num_polynoms * 3,  // triangle indexes
@@ -1096,18 +1098,18 @@ RGeomDescription::ShapeDescr &RGeomDescription::MakeShapeDescr(TGeoShape *shape)
          for (unsigned polyIndex = 0; polyIndex < mesh->NumberOfPolys(); ++polyIndex) {
             auto size_of_polygon = mesh->SizeOfPoly(polyIndex);
 
-            if ((size_of_polygon == 3) || (size_of_polygon == 4))  {
-               // add first triangle
+            // add first triangle
+            if (size_of_polygon >= 3)
                for (int i = 0; i < 3; ++i)
                   indexes[pos++] = mesh->GetVertexIndex(polyIndex, i);
-            }
 
-            if (size_of_polygon == 4) {
-               // add second triangle
-               indexes[pos++] = mesh->GetVertexIndex(polyIndex, 0);
-               indexes[pos++] = mesh->GetVertexIndex(polyIndex, 2);
-               indexes[pos++] = mesh->GetVertexIndex(polyIndex, 3);
-            }
+            // add following triangles
+            if (size_of_polygon > 3)
+               for (unsigned vertex = 3; vertex < size_of_polygon; vertex++) {
+                  indexes[pos++] = mesh->GetVertexIndex(polyIndex, 0);
+                  indexes[pos++] = mesh->GetVertexIndex(polyIndex, vertex-1);
+                  indexes[pos++] = mesh->GetVertexIndex(polyIndex, vertex);
+               }
          }
 
       }

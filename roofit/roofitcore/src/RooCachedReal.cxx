@@ -190,12 +190,9 @@ RooArgSet* RooCachedReal::actualObservables(const RooArgSet& nset) const
 /// the cache observables. If this p.d.f is operated in automatic mode,
 /// return the parameters of the external input p.d.f
 
-RooArgSet* RooCachedReal::actualParameters(const RooArgSet& nset) const
+RooFit::OwningPtr<RooArgSet> RooCachedReal::actualParameters(const RooArgSet& nset) const
 {
-  if (_cacheObs.getSize()>0) {
-    return func.arg().getParameters(_cacheObs) ;
-  }
-  return func.arg().getParameters(nset) ;
+   return func->getParameters(_cacheObs.empty() ? nset : _cacheObs);
 }
 
 

@@ -1,8 +1,8 @@
 import { select as d3_select } from './d3.mjs';
 import { loadScript, findFunction, internals, getPromise, isNodeJs, isObject, isFunc, isStr, _ensureJSROOT,
-         clTObjString, clTList, clTHashList, clTMap, clTObjArray, clTClonesArray,
+         prROOT, clTObjString, clTList, clTHashList, clTMap, clTObjArray, clTClonesArray,
          clTPave, clTPaveText, clTPavesText, clTPaveStats, clTPaveLabel, clTDiamond, clTLegend, clTPaletteAxis,
-         clTText, clTLine, clTBox, clTLatex, clTMathText, clTMultiGraph, clTH2, clTF1, clTF2, clTProfile, clTProfile2D,
+         clTText, clTLine, clTBox, clTLatex, clTMathText, clTAnnotation, clTMultiGraph, clTH2, clTF1, clTF2, clTProfile, clTProfile2D,
          clTColor, clTHStack, clTGraph, clTGraph2DErrors, clTGraph2DAsymmErrors,
          clTGraphPolar, clTGraphPolargram, clTGraphTime, clTCutG, clTPolyLine, clTPolyLine3D, clTPolyMarker3D,
          clTPad, clTStyle, clTCanvas, clTGaxis, clTGeoVolume, nsREX } from './core.mjs';
@@ -17,7 +17,7 @@ async function import_more() { return import('./draw/more.mjs'); }
 
 async function import_geo() {
    return import('./geom/TGeoPainter.mjs').then(geo => {
-      let handle = getDrawHandle('ROOT.TGeoVolumeAssembly');
+      let handle = getDrawHandle(prROOT + 'TGeoVolumeAssembly');
       if (handle) handle.icon = 'img_geoassembly';
       return geo;
    });
@@ -44,6 +44,7 @@ const drawFuncs = { lst: [
    { name: clTLatex, icon: 'img_text', draw: () => import_more().then(h => h.drawText), direct: true },
    { name: clTMathText, sameas: clTLatex },
    { name: clTText, sameas: clTLatex },
+   { name: clTAnnotation, sameas: clTLatex },
    { name: /^TH1/, icon: 'img_histo1d', class: () => import('./hist/TH1Painter.mjs').then(h => h.TH1Painter), opt: ';hist;P;P0;E;E1;E2;E3;E4;E1X0;L;LF2;B;B1;A;TEXT;LEGO;same', ctrl: 'l' },
    { name: clTProfile, icon: 'img_profile', class: () => import('./hist/TH1Painter.mjs').then(h => h.TH1Painter), opt: ';E0;E1;E2;p;AH;hist' },
    { name: clTH2Poly, icon: 'img_histo2d', class: () => import('./hist/TH2Painter.mjs').then(h => h.TH2Painter), opt: ';COL;COL0;COLZ;LCOL;LCOL0;LCOLZ;LEGO;TEXT;same', expand_item: 'fBins', theonly: true },
@@ -69,6 +70,7 @@ const drawFuncs = { lst: [
    { name: clTCutG, sameas: clTGraph },
    { name: /^RooHist/, sameas: clTGraph },
    { name: /^RooCurve/, sameas: clTGraph },
+   { name: 'TScatter', icon: 'img_graph', class: () => import('./hist2d/TScatterPainter.mjs').then(h => h.TScatterPainter), opt: ';A' },
    { name: 'RooPlot', icon: 'img_canvas', func: drawRooPlot },
    { name: 'TRatioPlot', icon: 'img_mgraph', class: () => import('./draw/TRatioPlotPainter.mjs').then(h => h.TRatioPlotPainter), opt: '' },
    { name: clTMultiGraph, icon: 'img_mgraph', class: () => import('./hist/TMultiGraphPainter.mjs').then(h => h.TMultiGraphPainter), opt: ';l;p;3d', expand_item: 'fGraphs' },
@@ -79,7 +81,7 @@ const drawFuncs = { lst: [
    { name: 'kind:Text', icon: 'img_text', func: drawRawText },
    { name: clTObjString, icon: 'img_text', func: drawRawText },
    { name: clTF1, icon: 'img_tf1', class: () => import('./hist/TF1Painter.mjs').then(h => h.TF1Painter) },
-   { name: clTF2, icon: 'img_tf2', draw: () => import('./draw/TF2.mjs').then(h => h.drawTF2) },
+   { name: clTF2, icon: 'img_tf2', draw: () => import('./draw/TF2.mjs').then(h => h.drawTF2), opt: ';BOX;ARR;SURF;SURF1;SURF2;SURF4;SURF6;LEGO;LEGO0;LEGO1;LEGO2;LEGO3;LEGO4;same' },
    { name: clTSpline3, icon: 'img_tf1', class: () => import('./draw/TSplinePainter.mjs').then(h => h.TSplinePainter) },
    { name: 'TSpline5', sameas: clTSpline3 },
    { name: clTEllipse, icon: 'img_graph', draw: () => import_more().then(h => h.drawEllipse), direct: true },
@@ -94,7 +96,7 @@ const drawFuncs = { lst: [
    { name: 'TCurlyLine', sameas: clTPolyLine },
    { name: 'TCurlyArc', sameas: clTPolyLine },
    { name: 'TParallelCoord', icon: 'img_graph', dummy: true },
-   { name: clTGaxis, icon: 'img_graph', draw: () => import('./gpad/TCanvasPainter.mjs').then(h => h.drawTGaxis) },
+   { name: clTGaxis, icon: 'img_graph', class: () => import('./draw/TGaxisPainter.mjs').then(h => h.TGaxisPainter) },
    { name: clTBox, icon: 'img_graph', draw: () => import_more().then(h => h.drawBox), direct: true },
    { name: 'TWbox', sameas: clTBox },
    { name: 'TSliderBox', sameas: clTBox },
@@ -187,7 +189,7 @@ function getDrawHandle(kind, selector) {
    if ((selector === null) && (kind in drawFuncs.cache))
       return drawFuncs.cache[kind];
 
-   let search = (kind.indexOf('ROOT.') == 0) ? kind.slice(5) : 'kind:' + kind, counter = 0;
+   let search = (kind.indexOf(prROOT) == 0) ? kind.slice(5) : `kind:${kind}`, counter = 0;
    for (let i = 0; i < drawFuncs.lst.length; ++i) {
       let h = drawFuncs.lst[i];
       if (isStr(h.name)) {
@@ -197,7 +199,7 @@ function getDrawHandle(kind, selector) {
       }
 
       if (h.sameas) {
-         let hs = getDrawHandle('ROOT.' + h.sameas, selector);
+         let hs = getDrawHandle(prROOT + h.sameas, selector);
          if (hs) {
             for (let key in hs)
                if (h[key] === undefined)
@@ -274,7 +276,7 @@ function getDrawSettings(kind, selector) {
    if (isany && (res.opts === null)) res.opts = [''];
 
    // if no any handle found, let inspect ROOT-based objects
-   if (!isany && (kind.indexOf('ROOT.') == 0) && !noinspect) res.opts = [];
+   if (!isany && (kind.indexOf(prROOT) == 0) && !noinspect) res.opts = [];
 
    if (!noinspect && res.opts)
       res.opts.push('inspect');
@@ -288,7 +290,7 @@ function getDrawSettings(kind, selector) {
 
 /** @summary Set default draw option for provided class */
 function setDefaultDrawOpt(classname, opt) {
-   let handle = getDrawHandle('ROOT.' + classname, 0);
+   let handle = getDrawHandle(prROOT + classname, 0);
    if (handle)
       handle.dflt = opt;
 }
@@ -315,7 +317,7 @@ async function draw(dom, obj, opt) {
    let handle, type_info;
    if ('_typename' in obj) {
       type_info = 'type ' + obj._typename;
-      handle = getDrawHandle('ROOT.' + obj._typename, opt);
+      handle = getDrawHandle(prROOT + obj._typename, opt);
    } else if ('_kind' in obj) {
       type_info = 'kind ' + obj._kind;
       handle = getDrawHandle(obj._kind, opt);
@@ -426,7 +428,7 @@ async function redraw(dom, obj, opt) {
 
    let can_painter = getElementCanvPainter(dom), handle, res_painter = null, redraw_res;
    if (obj._typename)
-      handle = getDrawHandle(`ROOT.${obj._typename}`);
+      handle = getDrawHandle(prROOT + obj._typename);
    if (handle?.draw_field && obj[handle.draw_field])
       obj = obj[handle.draw_field];
 
@@ -479,7 +481,7 @@ function addStreamerInfosForPainter(lst) {
          let element = si.fElements.arr[j];
          if (element.fTypeName !== 'BASE') continue;
 
-         let handle = getDrawHandle('ROOT.' + element.fName);
+         let handle = getDrawHandle(prROOT + element.fName);
          if (handle && !handle.for_derived)
             handle = null;
 
@@ -498,7 +500,7 @@ function addStreamerInfosForPainter(lst) {
    }
 
    lst.arr.forEach(si => {
-      if (getDrawHandle('ROOT.' + si.fName) !== null) return;
+      if (getDrawHandle(prROOT + si.fName) !== null) return;
 
       let handle = checkBaseClasses(si, 0);
       if (handle) {
@@ -586,7 +588,8 @@ async function makeSVG(args) {
 internals.addDrawFunc = addDrawFunc;
 
 function assignPadPainterDraw(PadPainterClass) {
-   PadPainterClass.prototype.drawObject = draw;
+   PadPainterClass.prototype.drawObject = async (...args) =>
+      draw(...args).catch(err => { console.log(err?.message ?? err); return null; } );
    PadPainterClass.prototype.getObjectDrawSettings = getDrawSettings;
 }
 

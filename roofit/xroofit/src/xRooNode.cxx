@@ -5746,8 +5746,8 @@ public:
       RooAbsPdf *clonePdf = dynamic_cast<RooAbsPdf *>(cloneFunc);
       RooArgSet *errorParams = cloneFunc->getObservables(fpf_stripped);
 
-      RooArgSet *nset =
-         nset_in.getSize() == 0 ? cloneFunc->getParameters(*errorParams) : cloneFunc->getObservables(nset_in);
+      std::unique_ptr<RooArgSet> nset =
+         nset_in.empty() ? std::unique_ptr<RooArgSet>{cloneFunc->getParameters(*errorParams)} : std::unique_ptr<RooArgSet>{cloneFunc->getObservables(nset_in)};
 
       // Make list of parameter instances of cloneFunc in order of error matrix
       RooArgList paramList;
@@ -5776,13 +5776,13 @@ public:
 
          // Make Plus variation
          ((RooRealVar *)paramList.at(ivar))->setVal(cenVal + errVal);
-         plusVar.push_back((fExpectedEventsMode ? 1. : cloneFunc->getVal(nset)) *
-                           (clonePdf ? clonePdf->expectedEvents(nset) : 1.));
+         plusVar.push_back((fExpectedEventsMode ? 1. : cloneFunc->getVal(&*nset)) *
+                           (clonePdf ? clonePdf->expectedEvents(&*nset) : 1.));
 
          // Make Minus variation
          ((RooRealVar *)paramList.at(ivar))->setVal(cenVal - errVal);
-         minusVar.push_back((fExpectedEventsMode ? 1. : cloneFunc->getVal(nset)) *
-                            (clonePdf ? clonePdf->expectedEvents(nset) : 1.));
+         minusVar.push_back((fExpectedEventsMode ? 1. : cloneFunc->getVal(&*nset)) *
+                            (clonePdf ? clonePdf->expectedEvents(&*nset) : 1.));
 
          ((RooRealVar *)paramList.at(ivar))->setVal(cenVal);
       }
@@ -5808,7 +5808,6 @@ public:
 
       delete cloneFunc;
       delete errorParams;
-      delete nset;
 
       return sqrt(sum);
    }

@@ -33,7 +33,6 @@ R__LOAD_LIBRARY(ROOTNTuple)
 
 // Import classes from experimental namespace for the time being
 using ENTupleInfo = ROOT::Experimental::ENTupleInfo;
-using ENTupleShowFormat = ROOT::Experimental::ENTupleShowFormat;
 using RNTupleModel = ROOT::Experimental::RNTupleModel;
 using RNTupleReader = ROOT::Experimental::RNTupleReader;
 using RNTupleWriter = ROOT::Experimental::RNTupleWriter;
@@ -90,8 +89,8 @@ void ntpl005_introspection() {
    // Display information about the storage layout of the data
    ntuple->PrintInfo(ENTupleInfo::kStorageDetails);
 
-   // Display the first entry; no model was defined, hence we use kCompleteJSON to force showing all fields
-   ntuple->Show(0, ENTupleShowFormat::kCompleteJSON);
+   // Display the first entry
+   ntuple->Show(0);
 
    // Collect I/O runtime counters when processing the data set.
    // Maintaining the counters comes with a small performance overhead, so it has to be explicitly enabled

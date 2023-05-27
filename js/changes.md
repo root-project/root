@@ -3,18 +3,45 @@
 ## Changes in dev
 1. Upgrade d3.js to v7.8.2
 2. Upgrade three.js to r149
-3. Support "[cutg]" draw option for TH2
-4. Correctly handle "same0" draw option for TH2
+3. Support '[cutg]' draw option for TH2
+4. Correctly handle 'same0' draw option for TH2
 5. Fix several issues with axis reverse order
 6. Implement reverse axis on lego plots
-7. Add interactivity (moving, context menu) for TLine, TBox, TText, TLatex
+7. Add interactivity (moving, context menu) for TLine, TBox, TText, TLatex, TDiamond, TGaxis, TASImage
 8. Support more kinds of log scales - ln and logN where N is any positive integer
 9. Use new gStyle attributes for candle and violin plots
-10. Implement autoplace for TLegend
+10. Implement autoplace for TLegend, also via context menu
 11. Change algorithm of building smooth (bezier) curves
 12. Adjust TAxis title positioning to native ROOT behavior
 13. Let change physical node visibility in TGeo drawings
 14. Use TGaxis attributes from gStyle - fAxisMaxDigits, fStripDecimals and exponent offset
+15. Implement "projxy" draw option for TH2 - like projxy3 or projx1_y5
+16. Support custom function in TGaxis - when drawn in TWebCanvas
+17. Introduce settings.WithCredentials, set xhr.withCredentials = true when submitting HTTP requests
+18. Let superimpose TH3 and geo drawings
+19. Apply pad draw options like 'gridx' or 'logy' to all subpads
+20. Support new TScatter and TAnnotation classes
+21. Implement moving and resizing of subpads
+22. Implement zooming in the TASImage
+23. Let configure position and direction of camera for TGeo, let create URL for that
+24. Support labels rotation for simple axis in geometry
+25. Support many orthographic cameras with overlayed grid/labels
+26. Support InstancedMesh for TGeo drawing, let show really large geometries
+27. Fix - rescan sumw2 when update TH1
+28. Fix - correct placing for TLegend header
+29. Fix - correctly align sub/super scripts in complex TLatex
+
+
+## Changes in 7.3.1
+1. Fix - TGeo update in the TWebCanvas
+2. Fix - several tutorials with three.js modules loading
+3. Fix - redraw pad when change text align attributes
+4. Fix - pad ranges for TWebCanvas, handle log2 scales
+5. Fix - support candle and violin options when creating string draw option
+6. Fix - labels and tooltips on reversed axes
+7. Fix - zooming on TRatioPlot
+8. Fix - pad ranges calculations for TWebCanvas
+9. Fix - set proper background for geo drawing
 
 
 ## Changes in 7.3.0

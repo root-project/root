@@ -12,9 +12,9 @@ using ROOT::Experimental::RNTupleReader;
 using ROOT::Experimental::RNTupleWriteOptions;
 using ROOT::Experimental::RNTupleWriter;
 
-TEST(RNTupleInspector, Name)
+TEST(RNTupleInspector, CreateFromPointer)
 {
-   FileRaii fileGuard("test_ntuple_inspector_name.root");
+   FileRaii fileGuard("test_ntuple_inspector_create_from_pointer.root");
    {
       auto model = RNTupleModel::Create();
       RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard.GetPath());
@@ -23,8 +23,24 @@ TEST(RNTupleInspector, Name)
    std::unique_ptr<TFile> file(TFile::Open(fileGuard.GetPath().c_str()));
    auto ntuple = file->Get<RNTuple>("ntuple");
    auto inspector = RNTupleInspector::Create(ntuple).Unwrap();
-
    EXPECT_EQ("ntuple", inspector->GetName());
+
+   auto nullNTuple = file->Get<RNTuple>("null");
+   EXPECT_THROW(RNTupleInspector::Create(nullNTuple), ROOT::Experimental::RException);
+}
+
+TEST(RNTupleInspector, CreateFromString)
+{
+   FileRaii fileGuard("test_ntuple_inspector_create_from_string.root");
+   {
+      RNTupleWriter::Recreate(RNTupleModel::Create(), "ntuple", fileGuard.GetPath());
+   }
+
+   auto inspector = RNTupleInspector::Create("ntuple", fileGuard.GetPath()).Unwrap();
+   EXPECT_EQ("ntuple", inspector->GetName());
+
+   EXPECT_THROW(RNTupleInspector::Create("nonexistent", fileGuard.GetPath()), ROOT::Experimental::RException);
+   EXPECT_THROW(RNTupleInspector::Create("ntuple", "nonexistent.root"), ROOT::Experimental::RException);
 }
 
 TEST(RNTupleInspector, NEntries)

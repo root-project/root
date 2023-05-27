@@ -51,8 +51,8 @@ int main(int argc, char **argv)
 
 class TestRooRealLPlot : public RooUnitTest {
 public:
-   TestRooRealLPlot(TFile &refFile, bool writeRef, int verbose, std::string const &batchMode)
-      : RooUnitTest("Plotting and minimization with RooFit::TestStatistics", &refFile, writeRef, verbose, batchMode){};
+   TestRooRealLPlot(TFile &refFile, bool writeRef, int verbose)
+      : RooUnitTest("Plotting and minimization with RooFit::TestStatistics", &refFile, writeRef, verbose){};
    bool testCode() override
    {
 
@@ -71,7 +71,7 @@ public:
       // --------------------------------------------------------------------------------
 
       // Creating a RooAbsL likelihood
-      RooAbsReal *likelihood = w.pdf("model")->createNLL(d, ModularL(true));
+      std::unique_ptr<RooAbsReal> likelihood{w.pdf("model")->createNLL(d, ModularL(true))};
 
       // Creating a minimizer and explicitly setting type of parallelization
       std::size_t nWorkers = 1;
@@ -105,7 +105,7 @@ TEST(TestStatisticsPlot, RooRealL)
 
    TFile fref("TestStatistics_ref.root");
 
-   TestRooRealLPlot plotTest{fref, false, 0, "off"};
+   TestRooRealLPlot plotTest{fref, false, 0};
    bool result = plotTest.runTest();
    ASSERT_TRUE(result);
 }

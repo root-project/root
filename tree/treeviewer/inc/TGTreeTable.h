@@ -26,9 +26,9 @@ public:
    TGTreeTable(TGWindow *p = nullptr, Int_t id = -1, TTree *tree = nullptr,
                const char *expression = nullptr, const char *selection = nullptr,
                const char *option = nullptr, UInt_t nrows = 50, UInt_t ncolumns = 10);
-   ~TGTreeTable();
+   ~TGTreeTable() override;
 
-   ClassDef(TGTreeTable, 0) // A TGTable that owns it's TTreeTableIngeface.
+   ClassDefOverride(TGTreeTable, 0) // A TGTable that owns it's TTreeTableIngeface.
 };
 
 #endif

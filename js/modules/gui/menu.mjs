@@ -6,6 +6,7 @@ import { TAttMarkerHandler } from '../base/TAttMarkerHandler.mjs';
 import { getSvgLineStyle } from '../base/TAttLineHandler.mjs';
 import { FontHandler } from '../base/FontHandler.mjs';
 
+
 /**
  * @summary Abstract class for creating context menu
  *
@@ -372,30 +373,6 @@ class JSRootMenu {
          this.add('angle');
    }
 
-   /** @summary Fill context menu for text attributes
-     * @private */
-   addTextAttributesMenu(painter, prefix) {
-      let obj = painter.getObject();
-      if ((obj?.fTextColor === undefined) || (obj?.fTextAlign === undefined) || (obj?.fTextFont === undefined)) return;
-
-      this.add('sub:' + (prefix || 'Text'));
-      this.addColorMenu('color', obj.fTextColor,
-         arg => { painter.getObject().fTextColor = arg; painter.interactiveRedraw(true, getColorExec(arg, 'SetTextColor')); });
-
-      let align = [11, 12, 13, 21, 22, 23, 31, 32, 33];
-
-      this.add('sub:align');
-      for (let n = 0; n < align.length; ++n)
-         this.addchk(align[n] == obj.fTextAlign, align[n], align[n],
-            arg => { painter.getObject().fTextAlign = parseInt(arg); painter.interactiveRedraw('pad', `exec:SetTextAlign(${arg})`); });
-      this.add('endsub:');
-
-      this.addFontMenu('font', obj.fTextFont,
-         fnt => { painter.getObject().fTextFont = fnt; painter.interactiveRedraw(true, `exec:SetTextFont(${fnt})`); });
-
-      this.add('endsub:');
-   }
-
    /** @summary Add line style menu
      * @private */
    addLineStyleMenu(name, value, set_func) {
@@ -436,27 +413,30 @@ class JSRootMenu {
    /** @summary Add font selection menu
      * @private */
    addFontMenu(name, value, set_func) {
+      let prec = value && Number.isInteger(value) ? value % 10 : 2;
+
       this.add('sub:' + name, () => {
          this.input('Enter font id from [0..20]', Math.floor(value/10), 'int', 0, 20).then(id => {
-            if ((id >= 0) && (id <= 20)) set_func(id*10 + 2);
+            if ((id >= 0) && (id <= 20)) set_func(id*10 + prec);
          });
       });
 
       this.add('column:');
 
       for (let n = 1; n < 20; ++n) {
-         let handler = new FontHandler(n*10+2, 14),
+         let id = n*10 + prec,
+             handler = new FontHandler(id, 14),
              txt = d3_select(document.createElementNS('http://www.w3.org/2000/svg', 'text')),
-             fullname = handler.getFontName(),
-             name = ' ' + fullname.split(' ')[0] + ' ';
-         if (handler.weight) { name = 'b' + name; fullname += ' ' + handler.weight; }
-         if (handler.style) { name = handler.style[0] + name; fullname += ' ' + handler.style; }
-         txt.attr('x', 1).attr('y',15).text(name);
+             fullname = handler.getFontName(), qual = '';
+         if (handler.weight) { qual += 'b'; fullname += ' ' + handler.weight; }
+         if (handler.style) { qual += handler.style[0]; fullname += ' ' + handler.style; }
+         if (qual) qual = ' ' + qual;
+         txt.attr('x', 1).attr('y',15).text(fullname.split(' ')[0] + qual);
          handler.setFont(txt);
 
-         let rect = (value != n*10+2) ? '' : `<rect width='90' height='18' style='fill:none;stroke:black'></rect>`,
+         let rect = (value != id) ? '' : `<rect width='90' height='18' style='fill:none;stroke:black'></rect>`,
              svg = `<svg width='90' height='18'>${txt.node().outerHTML}${rect}</svg>`;
-         this.add(svg, n, arg => set_func(parseInt(arg)*10+2), fullname);
+         this.add(svg, id, arg => set_func(parseInt(arg)), `${id}: ${fullname}`);
 
          if (n == 10) {
             this.add('endcolumn:');
@@ -465,6 +445,26 @@ class JSRootMenu {
       }
 
       this.add('endcolumn:');
+      this.add('endsub:');
+   }
+
+   /** @summary Add align selection menu
+     * @private */
+   addAlignMenu(name, value, set_func) {
+      this.add(`sub:${name}`, () => {
+         this.input('Enter align like 12 or 31', value).then(arg => {
+            let id = parseInt(arg);
+            if ((id < 11) || (id > 33)) return;
+            let h = Math.floor(id/10), v = id % 10;
+            if ((h > 0) && (h < 4) && (v > 0) && (v < 4)) set_func(id);
+         });
+      });
+
+      const hnames = ['left', 'middle', 'right'], vnames = ['bottom', 'centered', 'top'];
+      for (let h = 1; h < 4; ++h)
+         for (let v = 1; v < 4; ++v)
+            this.addchk(h*10+v == value, `${h*10+v}: ${hnames[h-1]} ${vnames[h-1]}`, h*10+v, arg => set_func(parseInt(arg)));
+
       this.add('endsub:');
    }
 
@@ -478,7 +478,7 @@ class JSRootMenu {
       if (!preffix) preffix = '';
 
       if (painter.lineatt?.used) {
-         this.add('sub:' + preffix + 'Line att');
+         this.add(`sub:${preffix}Line att`);
          this.addSizeMenu('width', 1, 10, 1, painter.lineatt.width,
             arg => { painter.lineatt.change(undefined, arg); painter.interactiveRedraw(true, `exec:SetLineWidth(${arg})`); });
          this.addColorMenu('color', painter.lineatt.color,
@@ -505,7 +505,7 @@ class JSRootMenu {
       }
 
       if (painter.fillatt?.used) {
-         this.add('sub:' + preffix + 'Fill att');
+         this.add(`sub:${preffix}Fill att`);
          this.addColorMenu('color', painter.fillatt.colorindx, arg => {
             painter.fillatt.change(arg, undefined, painter.getCanvSvg());
             painter.interactiveRedraw(true, getColorExec(arg, 'SetFillColor'));
@@ -518,7 +518,7 @@ class JSRootMenu {
       }
 
       if (painter.markeratt?.used) {
-         this.add('sub:' + preffix + 'Marker att');
+         this.add(`sub:${preffix}Marker att`);
          this.addColorMenu('color', painter.markeratt.color,
             arg => { painter.markeratt.change(arg); painter.interactiveRedraw(true, getColorExec(arg, 'SetMarkerColor'));});
          this.addSizeMenu('size', 0.5, 6, 0.5, painter.markeratt.size,
@@ -528,7 +528,6 @@ class JSRootMenu {
          let supported = [1, 2, 3, 4, 5, 6, 7, 8, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34];
 
          for (let n = 0; n < supported.length; ++n) {
-
             let clone = new TAttMarkerHandler({ style: supported[n], color: painter.markeratt.color, size: 1.7 }),
                 svg = `<svg width='60' height='18'><text x='1' y='12' style='font-size:12px'>${supported[n].toString()}</text><path stroke='black' fill='${clone.fill?'black':'none'}' d='${clone.create(40, 8)}'></path></svg>`;
 
@@ -538,14 +537,40 @@ class JSRootMenu {
          this.add('endsub:');
          this.add('endsub:');
       }
+
+      if (painter.textatt?.used) {
+         this.add(`sub:${preffix}Text att`);
+
+         this.addFontMenu('font', painter.textatt.font,
+                         arg => { painter.textatt.change(arg); painter.interactiveRedraw(true, `exec:SetTextFont(${arg})`); });
+
+         let rel = painter.textatt.size < 1.;
+
+         this.addSizeMenu('size', rel ? 0.03 : 6, rel ? 0.20 : 26, rel ? 0.01 : 2, painter.textatt.size,
+            arg => { painter.textatt.change(undefined, parseFloat(arg)); painter.interactiveRedraw(true, `exec:SetTextSize(${arg})`); });
+
+         this.addColorMenu('color', painter.textatt.color,
+            arg => { painter.textatt.change(undefined, undefined, arg); painter.interactiveRedraw(true, getColorExec(arg, 'SetTextColor')); });
+
+         this.addAlignMenu('align', painter.textatt.align, arg => {
+            painter.textatt.change(undefined, undefined, undefined, arg); painter.interactiveRedraw(true, `exec:SetTextAlign(${arg})`);
+         });
+
+         this.addSizeMenu('angle', -180, 180, 45, painter.textatt.angle,
+            arg => { painter.textatt.change(undefined,  undefined, undefined, undefined, parseFloat(arg)); painter.interactiveRedraw(true, `exec:SetTextAngle(${arg})`); });
+
+         this.add('endsub:');
+      }
+
    }
 
    /** @summary Fill context menu for axis
      * @private */
    addTAxisMenu(EAxisBits, painter, faxis, kind) {
+      let is_gaxis = faxis._typename == clTGaxis;
+
       this.add('Divisions', () => this.input('Set Ndivisions', faxis.fNdivisions, 'int', 0).then(val => {
-         faxis.fNdivisions = val;
-         painter.interactiveRedraw('pad', `exec:SetNdivisions(${val})`, kind);
+         faxis.fNdivisions = val;  painter.interactiveRedraw('pad', `exec:SetNdivisions(${val})`, kind);
       }));
 
       this.add('sub:Labels');
@@ -564,7 +589,8 @@ class JSRootMenu {
       this.add('sub:Title');
       this.add('SetTitle', () => {
          this.input('Enter axis title', faxis.fTitle).then(t => {
-            faxis.fTitle = t; painter.interactiveRedraw('pad', `exec:SetTitle("${t}")`, kind);
+            faxis.fTitle = t;
+            painter.interactiveRedraw('pad', `exec:SetTitle("${t}")`, kind);
          });
       });
       this.addchk(faxis.TestBit(EAxisBits.kCenterTitle), 'Center',
@@ -572,9 +598,14 @@ class JSRootMenu {
       this.addchk(faxis.TestBit(EAxisBits.kOppositeTitle), 'Opposite',
              () => { faxis.InvertBit(EAxisBits.kOppositeTitle); painter.redrawPad(); });
       this.addchk(faxis.TestBit(EAxisBits.kRotateTitle), 'Rotate',
-            arg => { faxis.InvertBit(EAxisBits.kRotateTitle); painter.interactiveRedraw('pad', `exec:RotateTitle(${arg})`, kind); });
-      this.addColorMenu('Color', faxis.fTitleColor,
-            arg => { faxis.fTitleColor = arg; painter.interactiveRedraw('pad', getColorExec(arg, 'SetTitleColor'), kind); });
+            arg => { faxis.InvertBit(EAxisBits.kRotateTitle); painter.interactiveRedraw('pad', is_gaxis ? `exec:SetBit(TAxis::kRotateTitle, ${arg ? true : false})` : `exec:RotateTitle(${arg})`, kind); });
+      if (is_gaxis) {
+         this.addColorMenu('Color', faxis.fTextColor,
+               arg => { faxis.fTextColor = arg; painter.interactiveRedraw('pad', getColorExec(arg, 'SetTitleColor'), kind); });
+      } else {
+         this.addColorMenu('Color', faxis.fTitleColor,
+               arg => { faxis.fTitleColor = arg; painter.interactiveRedraw('pad', getColorExec(arg, 'SetTitleColor'), kind); });
+      }
       this.addSizeMenu('Offset', 0, 3, 0.2, faxis.fTitleOffset,
                       arg => { faxis.fTitleOffset = arg; painter.interactiveRedraw('pad', `exec:SetTitleOffset(${arg})`, kind); });
       a = faxis.fTitleSize >= 1;
@@ -582,11 +613,11 @@ class JSRootMenu {
                       arg => { faxis.fTitleSize = arg; painter.interactiveRedraw('pad', `exec:SetTitleSize(${arg})`, kind); });
       this.add('endsub:');
       this.add('sub:Ticks');
-      if (faxis._typename == clTGaxis) {
+      if (is_gaxis) {
          this.addColorMenu('Color', faxis.fLineColor,
-                  arg => { faxis.fLineColor = arg; painter.interactiveRedraw('pad'); });
+                  arg => { faxis.fLineColor = arg; painter.interactiveRedraw('pad', getColorExec(arg, 'SetLineColor'), kind); });
          this.addSizeMenu('Size', -0.05, 0.055, 0.01, faxis.fTickSize,
-                  arg => { faxis.fTickSize = arg; painter.interactiveRedraw('pad'); });
+                  arg => { faxis.fTickSize = arg; painter.interactiveRedraw('pad', `exec:SetTickLength(${arg})`, kind); });
       } else {
          this.addColorMenu('Color', faxis.fAxisColor,
                   arg => { faxis.fAxisColor = arg; painter.interactiveRedraw('pad', getColorExec(arg, 'SetAxisColor'), kind); });
@@ -594,6 +625,11 @@ class JSRootMenu {
                   arg => { faxis.fTickLength = arg; painter.interactiveRedraw('pad', `exec:SetTickLength(${arg})`, kind); });
       }
       this.add('endsub:');
+
+      if (is_gaxis)
+         this.add('Options', () => this.input('Enter TGaxis options like +L or -G', faxis.fChopt, 'string').then(arg => {
+             faxis.fChopt = arg; painter.interactiveRedraw('pad', `exec:SetOption("${arg}")`, kind);
+         }));
    }
 
    /** @summary Fill menu to edit settings properties
@@ -622,6 +658,7 @@ class JSRootMenu {
       this.addSizeMenu('Max ranges', 1, 1000, [1, 10, 20, 50, 200, 1000], settings.MaxRanges, value => { settings.MaxRanges = value; }, 'Maximal number of ranges in single http request');
 
       this.addchk(settings.HandleWrongHttpResponse, 'Handle wrong http response', flag => { settings.HandleWrongHttpResponse = flag; });
+      this.addchk(settings.WithCredentials, 'With credentials', flag => { settings.WithCredentials = flag; }, 'Submit http request with user credentials');
 
       this.add('endsub:');
 
@@ -964,8 +1001,17 @@ class StandaloneMenu extends JSRootMenu {
       if (name.indexOf('header:') == 0)
          return curr.push({ text: name.slice(7), header: true });
 
-      if ((name == 'endsub:') || (name == 'endcolumn:'))
+      if (name == 'endsub:') {
+         this.stack.pop();
+         curr = this.stack[this.stack.length-1];
+         if (curr[curr.length-1].sub.length == 0)
+            curr[curr.length-1].sub = undefined;
+         return;
+      }
+
+      if (name == 'endcolumn:')
          return this.stack.pop();
+
 
       if (isFunc(arg)) { title = func; func = arg; arg = name; }
 
@@ -1021,18 +1067,18 @@ class StandaloneMenu extends JSRootMenu {
          outer.style.top = top + 'px';
 
          injectStyle(
-            `.jsroot_ctxt_container {
-                position: absolute; top: 0; user-select: none; z-index: 100000; background-color: rgb(250, 250, 250); margin: 0; padding: 0px; width: auto;
-                min-width: 100px; box-shadow: 0px 0px 10px rgb(0, 0, 0, 0.2); border: 3px solid rgb(215, 215, 215); font-family: Arial, helvetica, sans-serif, serif;
-                font-size: 13px; color: rgb(0, 0, 0, 0.8);
-             }
-             .jsroot_ctxt_column { float: left; }
-             .jsroot_ctxt_divider { width: 85%; margin: 3px auto; border: 1px solid rgb(0, 0, 0, 0.15); }
-             .jsroot_ctxt_header { background-color: lightblue; padding: 3px 7px; font-weight: bold; border-bottom: 1px; }
-             .jsroot_ctxt_text { margin: 0; padding: 3px 7px; pointer-events: none; white-space: nowrap; }
-             .jsroot_ctxt_extraText { margin: 0; padding: 3px 7px; color: rgb(0, 0, 0, 0.6); }
-             .jsroot_ctxt_focus { background-color: rgb(220, 220, 220); }
-             .jsroot_ctxt_item:hover { background-color: rgb(235, 235, 235); }`, this.element);
+            `.jsroot_ctxt_container {`+
+            `   position: absolute; top: 0; user-select: none; z-index: 100000; background-color: rgb(250, 250, 250); margin: 0; padding: 0px; width: auto;`+
+            `   min-width: 100px; box-shadow: 0px 0px 10px rgb(0, 0, 0, 0.2); border: 3px solid rgb(215, 215, 215); font-family: Arial, helvetica, sans-serif, serif;`+
+            `   font-size: 13px; color: rgb(0, 0, 0, 0.8);`+
+            `}`+
+            `.jsroot_ctxt_column { float: left; }`+
+            `.jsroot_ctxt_divider { width: 85%; margin: 3px auto; border: 1px solid rgb(0, 0, 0, 0.15); }`+
+            `.jsroot_ctxt_header { background-color: lightblue; padding: 3px 7px; font-weight: bold; border-bottom: 1px; }`+
+            `.jsroot_ctxt_text { margin: 0; padding: 3px 7px; pointer-events: none; white-space: nowrap; }`+
+            `.jsroot_ctxt_extraText { margin: 0; padding: 3px 7px; color: rgb(0, 0, 0, 0.6); }`+
+            `.jsroot_ctxt_focus { background-color: rgb(220, 220, 220); }`+
+            `.jsroot_ctxt_item:hover { background-color: rgb(235, 235, 235); }`, this.element);
       } else if ((left < 0) && (top == left)) {
          // column
          outer.className = 'jsroot_ctxt_column';
@@ -1251,13 +1297,13 @@ class StandaloneMenu extends JSRootMenu {
           </div>`);
 
       injectStyle(
-         `.jsroot_dialog_block { z-index: 100000; position: absolute; top: 0; left: 0; right: 0; bottom: 0; opacity: 0.2; background-color: white; }
-          .jsroot_dialog { z-index: 100001; position: absolute; left: 50%; top: 50%; }
-          .jsroot_dialog_body { position: relative; left: -50%; top: -50%; border: solid green 3px; padding: 5px; display: flex; flex-flow: column; background-color: white; }
-          .jsroot_dialog_header { flex: 0 1 auto; padding: 5px; }
-          .jsroot_dialog_content { flex: 1 1 auto; padding: 5px; }
-          .jsroot_dialog_footer { flex: 0 1 auto; padding: 5px; }
-          .jsroot_dialog_button { float: right; margin-right: 1em; }`, element.node());
+         `.jsroot_dialog_block { z-index: 100000; position: absolute; top: 0; left: 0; right: 0; bottom: 0; opacity: 0.2; background-color: white; }`+
+         `.jsroot_dialog { z-index: 100001; position: absolute; left: 50%; top: 50%; }`+
+         `.jsroot_dialog_body { position: relative; left: -50%; top: -50%; border: solid green 3px; padding: 5px; display: flex; flex-flow: column; background-color: white; }`+
+         `.jsroot_dialog_header { flex: 0 1 auto; padding: 5px; }`+
+         `.jsroot_dialog_content { flex: 1 1 auto; padding: 5px; }`+
+         `.jsroot_dialog_footer { flex: 0 1 auto; padding: 5px; }`+
+         `.jsroot_dialog_button { float: right; margin-right: 1em; }`, element.node());
 
       return new Promise(resolveFunc => {
          element.on('keyup', evnt => {
@@ -1334,4 +1380,3 @@ function assignContextMenu(painter, kind) {
 }
 
 export { createMenu, closeMenu, showPainterMenu, assignContextMenu };
-

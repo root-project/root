@@ -31,7 +31,6 @@ implemented using the container denoted by RooAbsCollection::Storage_t.
 #include "TClass.h"
 #include "TRegexp.h"
 #include "RooStreamParser.h"
-#include "RooFormula.h"
 #include "RooAbsRealLValue.h"
 #include "RooAbsCategoryLValue.h"
 #include "RooStringVar.h"
@@ -42,8 +41,9 @@ implemented using the container denoted by RooAbsCollection::Storage_t.
 #include "RooRealVar.h"
 #include "RooGlobalFunc.h"
 #include "RooMsgService.h"
-#include "strlcpy.h"
+#include <RooHelpers.h>
 
+#include <strlcpy.h>
 #include <algorithm>
 #include <iomanip>
 #include <iostream>
@@ -253,71 +253,8 @@ RooAbsCollection* RooAbsCollection::snapshot(bool deepCopy) const
 
 bool RooAbsCollection::snapshot(RooAbsCollection& output, bool deepCopy) const
 {
-  // Copy contents
-  output.reserve(_list.size());
-  for (auto orig : _list) {
-    output.add(*static_cast<RooAbsArg*>(orig->Clone()));
-  }
-
-  // Add external dependents
-  bool error(false) ;
-  if (deepCopy) {
-    // Recursively add clones of all servers
-    // Can only do index access because collection might reallocate when growing
-    for (Storage_t::size_type i = 0; i < output._list.size(); ++i) {
-      const auto var = output._list[i];
-      error |= output.addServerClonesToList(*var);
-    }
-  }
-
-  // Handle eventual error conditions
-  if (error) {
-    coutE(ObjectHandling) << "RooAbsCollection::snapshot(): Errors occurred in deep clone process, snapshot not created" << std::endl;
-    output._ownCont = true ;
-    return true ;
-  }
-
-
-
-   // Redirect all server connections to internal list members
-  for (auto var : output) {
-    var->redirectServers(output,deepCopy);
-  }
-
-
-  // Transfer ownership of contents to list
-  output._ownCont = true ;
-  return false ;
+  return RooHelpers::Detail::snapshotImpl(*this, output, deepCopy, nullptr);
 }
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Add clones of servers of given argument to end of list
-
-bool RooAbsCollection::addServerClonesToList(const RooAbsArg& var)
-{
-  bool ret(false) ;
-
-  // This can be a very heavy operation if existing elements depend on many others,
-  // so make sure that we have the hash map available for faster finding.
-  if (var.servers().size() > 20 || _list.size() > 30)
-    useHashMapForFind(true);
-
-  for (const auto server : var.servers()) {
-    RooAbsArg* tmp = find(*server) ;
-
-    if (!tmp) {
-      auto* serverClone = static_cast<RooAbsArg*>(server->Clone());
-      serverClone->setAttribute("SnapShot_ExtRefClone") ;
-      insert(serverClone);
-      ret |= addServerClonesToList(*server) ;
-    }
-  }
-
-  return ret ;
-}
-
 
 
 ////////////////////////////////////////////////////////////////////////////////

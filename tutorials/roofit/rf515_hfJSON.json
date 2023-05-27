@@ -1,24 +1,37 @@
 {
-    "misc" : { "ROOT_internal" : {
-        "ModelConfigs" : {
-            "main": {
-                "combined_data_name": "observed"
+    "misc": {
+        "ROOT_internal": {
+            "combined_datas": {
+                "observed" : {
+                    "index_cat": "channelCat",
+                    "indices": [0],
+                    "labels": ["channel1"]
+                }
+            },
+            "combined_distributions": {
+                "main" : {
+                    "distributions": [
+                        "model_channel1"
+                    ],
+                    "index_cat": "channelCat",
+                    "indices": [0],
+                    "labels": ["channel1"]
+                }
+            },
+            "ModelConfigs": {
+                "main": {
+                    "combined_data_name": "observed",
+                    "mcName": "ModelConfig",
+                    "pdfName": "main"
+                }
             }
-        },
-        "channel_names" : {
-            "main": ["channel1"]
         }
-    }},
+    },
     "analyses": [
         {
             "name": "main",
             "likelihood": "main_likelihood",
-            "pois": [
-                "mu"
-            ],
-            "observables": [
-                "obs_x_channel1"
-            ]
+            "parameters_of_interest": ["mu"]
         }
     ],
     "likelihoods": [
@@ -117,7 +130,8 @@
                     "max": 2
                 }
             ],
-            "contents": [122, 112]
+            "contents": [122, 112],
+            "type": "binned"
         }
     ]
 }

@@ -57,7 +57,8 @@ function closeCurrentWindow() {
    window.open('', '_self').close();
 }
 
-
+/** @summary Tries to open ui5
+  * @private */
 function tryOpenOpenUI(sources, args) {
    if (!sources || (sources.length == 0)) {
       if (args.rejectFunc) {
@@ -79,12 +80,13 @@ function tryOpenOpenUI(sources, args) {
    // use nojQuery while we are already load jquery and jquery-ui, later one can use directly sap-ui-core.js
 
    // this is location of openui5 scripts when working with THttpServer or when scripts are installed inside JSROOT
-   element.setAttribute('src', src + 'resources/sap-ui-core.js'); // latest openui5 version
+   element.setAttribute('src', src + (args.ui5dbg ? 'resources/sap-ui-core-dbg.js' : 'resources/sap-ui-core.js')); // latest openui5 version
 
    element.setAttribute('data-sap-ui-libs', args.openui5libs ?? 'sap.m, sap.ui.layout, sap.ui.unified, sap.ui.commons');
 
    element.setAttribute('data-sap-ui-theme', args.openui5theme || 'sap_belize');
    element.setAttribute('data-sap-ui-compatVersion', 'edge');
+   element.setAttribute('data-sap-ui-async', 'true');
    // element.setAttribute('data-sap-ui-bindingSyntax', 'complex');
 
    element.setAttribute('data-sap-ui-preload', 'async'); // '' to disable Component-preload.js
@@ -106,8 +108,9 @@ function tryOpenOpenUI(sources, args) {
 }
 
 
-// return Promise let loader wait before dependent source will be invoked
-
+/** @summary load openui5
+  * @return {Promise} for loading ready
+  * @private */
 async function loadOpenui5(args) {
    // very simple - openui5 was loaded before and will be used as is
    if (typeof sap == 'object')
@@ -137,10 +140,14 @@ async function loadOpenui5(args) {
          case 'jsroot': openui5_sources.push(openui5_root); openui5_root = ''; break;
          default: openui5_sources.push(args.openui5src); break;
       }
+   } else if (args.ui5dbg) {
+      openui5_root = ''; // exclude ROOT version in debug mode
    }
 
-   if (openui5_root && (openui5_sources.indexOf(openui5_root) < 0)) openui5_sources.push(openui5_root);
-   if (openui5_dflt && (openui5_sources.indexOf(openui5_dflt) < 0)) openui5_sources.push(openui5_dflt);
+   if (openui5_root && (openui5_sources.indexOf(openui5_root) < 0))
+      openui5_sources.push(openui5_root);
+   if (openui5_dflt && (openui5_sources.indexOf(openui5_dflt) < 0))
+      openui5_sources.push(openui5_dflt);
 
    return new Promise((resolve, reject) => {
 
@@ -163,7 +170,6 @@ async function loadOpenui5(args) {
 
       tryOpenOpenUI(openui5_sources, args);
    });
-
 }
 
 // some icons taken from http://uxrepo.com/
@@ -273,6 +279,8 @@ function registerForResize(handle, delay) {
    });
 }
 
+/** @summary Detect mouse right button
+  * @private */
 function detectRightButton(event) {
    if ('buttons' in event) return event.buttons === 2;
    if ('which' in event) return event.which === 3;
@@ -390,6 +398,8 @@ function selectgStyle(name) {
    }
 }
 
+/** @summary Save object as a cookie
+  * @private */
 function saveCookie(obj, expires, name) {
    let arg = (expires <= 0) ? '' : btoa_func(JSON.stringify(obj)),
        d = new Date();
@@ -397,6 +407,8 @@ function saveCookie(obj, expires, name) {
    document.cookie = `${name}=${arg}; expires=${d.toUTCString()}; SameSite=None; Secure; path=/;`;
 }
 
+/** @summary Read cookie with specified name
+  * @private */
 function readCookie(name) {
    if (typeof document == 'undefined') return null;
    let decodedCookie = decodeURIComponent(document.cookie),
@@ -456,7 +468,6 @@ function readStyle(only_check = false, name = 'jsroot_style') {
 }
 
 let _saveFileFunc = null;
-
 
 /** @summary Returns image file content as it should be stored on the disc
   * @desc Replaces all kind of base64 coding
@@ -539,7 +550,6 @@ function getColorExec(col, method) {
 
    return `exec:${method}(${id})`;
 }
-
 
 export { showProgress, closeCurrentWindow, loadOpenui5, ToolbarIcons, registerForResize,
          detectRightButton, addMoveHandler, injectStyle,

@@ -22,7 +22,6 @@
 #include <RooFit/TestStatistics/RooUnbinnedL.h>
 #include <RooFit/TestStatistics/RooBinnedL.h>
 #include <RooFit/TestStatistics/RooSumL.h>
-#include <RooFit/TestStatistics/optional_parameter_types.h>
 #include <RooFit/TestStatistics/buildLikelihood.h>
 #include <RooFit/TestStatistics/RooRealL.h>
 
@@ -133,7 +132,7 @@ TEST_F(LikelihoodSerialBinnedDatasetTest, UnbinnedPdf)
 {
    data = std::unique_ptr<RooDataHist>{pdf->generateBinned(*w.var("x"))};
 
-   nll.reset(pdf->createNLL(*data));
+   nll = std::unique_ptr<RooAbsReal>{pdf->createNLL(*data)};
 
    likelihood = RooFit::TestStatistics::buildLikelihood(pdf, data.get());
    auto nll_ts = LikelihoodWrapper::create(RooFit::TestStatistics::LikelihoodMode::serial, likelihood, clean_flags);
@@ -205,7 +204,7 @@ TEST_F(LikelihoodSerialTest, SimBinned)
    pdf = w.pdf("model");
    data = std::unique_ptr<RooDataSet>{pdf->generate({*w.var("x"), *w.cat("index")}, RooFit::AllBinned())};
 
-   nll.reset(pdf->createNLL(*data));
+   nll = std::unique_ptr<RooAbsReal>{pdf->createNLL(*data)};
 
    likelihood = RooFit::TestStatistics::buildLikelihood(pdf, data.get());
    auto nll_ts = LikelihoodWrapper::create(RooFit::TestStatistics::LikelihoodMode::serial, likelihood, clean_flags);
@@ -227,8 +226,8 @@ TEST_F(LikelihoodSerialTest, BinnedConstrained)
 
    // Generate template histograms
 
-   RooDataHist *h_sig = w.pdf("g")->generateBinned(*w.var("x"), 1000);
-   RooDataHist *h_bkg = w.pdf("u")->generateBinned(*w.var("x"), 1000);
+   std::unique_ptr<RooDataHist> h_sig{w.pdf("g")->generateBinned(*w.var("x"), 1000)};
+   std::unique_ptr<RooDataHist> h_bkg{w.pdf("u")->generateBinned(*w.var("x"), 1000)};
 
    w.import(*h_sig, RooFit::Rename("h_sig"));
    w.import(*h_bkg, RooFit::Rename("h_bkg"));
@@ -248,14 +247,13 @@ TEST_F(LikelihoodSerialTest, BinnedConstrained)
    // Construct dataset from physics pdf
    data = std::unique_ptr<RooDataHist>{w.pdf("model_phys")->generateBinned(*w.var("x"))};
 
-   nll.reset(pdf->createNLL(*data, RooFit::GlobalObservables(*w.var("alpha_bkg_obs"))));
+   nll = std::unique_ptr<RooAbsReal>{pdf->createNLL(*data, RooFit::GlobalObservables(*w.var("alpha_bkg_obs")))};
 
    // --------
 
    auto nll0 = nll->getVal();
 
-   likelihood = RooFit::TestStatistics::buildLikelihood(
-      pdf, data.get(), RooFit::TestStatistics::GlobalObservables(RooArgSet(*w.var("alpha_bkg_obs"))));
+   likelihood = RooFit::TestStatistics::NLLFactory{*pdf, *data}.GlobalObservables(*w.var("alpha_bkg_obs")).build();
    auto nll_ts = LikelihoodWrapper::create(RooFit::TestStatistics::LikelihoodMode::serial, likelihood, clean_flags);
 
    nll_ts->evaluate();
@@ -276,7 +274,7 @@ TEST_F(LikelihoodSerialTest, SimUnbinned)
    // Construct dataset from physics pdf
    data = std::unique_ptr<RooDataSet>{pdf->generate({*w.var("x"), *w.cat("index")})};
 
-   nll.reset(pdf->createNLL(*data));
+   nll = std::unique_ptr<RooAbsReal>{pdf->createNLL(*data)};
 
    // --------
 
@@ -311,7 +309,7 @@ TEST_F(LikelihoodSerialTest, SimUnbinnedNonExtended)
 
    pdf = w.pdf("model");
 
-   nll.reset(pdf->createNLL(*data));
+   nll = std::unique_ptr<RooAbsReal>{pdf->createNLL(*data)};
 
    likelihood = RooFit::TestStatistics::buildLikelihood(pdf, data.get());
    auto nll_ts = LikelihoodWrapper::create(RooFit::TestStatistics::LikelihoodMode::serial, likelihood, clean_flags);
@@ -374,16 +372,16 @@ protected:
 TEST_F(LikelihoodSerialSimBinnedConstrainedTest, BasicParameters)
 {
    // original test:
-   nll.reset(pdf->createNLL(
-      *data, RooFit::GlobalObservables(RooArgSet(*w.var("alpha_bkg_obs_A"), *w.var("alpha_bkg_obs_B")))));
+   nll = std::unique_ptr<RooAbsReal>{pdf->createNLL(
+      *data, RooFit::GlobalObservables(RooArgSet(*w.var("alpha_bkg_obs_A"), *w.var("alpha_bkg_obs_B"))))};
 
    // --------
 
    auto nll0 = nll->getVal();
 
-   likelihood = RooFit::TestStatistics::buildLikelihood(
-      pdf, data.get(),
-      RooFit::TestStatistics::GlobalObservables({*w.var("alpha_bkg_obs_A"), *w.var("alpha_bkg_obs_B")}));
+   likelihood = RooFit::TestStatistics::NLLFactory{*pdf, *data}
+                   .GlobalObservables({*w.var("alpha_bkg_obs_A"), *w.var("alpha_bkg_obs_B")})
+                   .build();
    auto nll_ts = LikelihoodWrapper::create(RooFit::TestStatistics::LikelihoodMode::serial, likelihood, clean_flags);
 
    nll_ts->evaluate();
@@ -395,16 +393,18 @@ TEST_F(LikelihoodSerialSimBinnedConstrainedTest, BasicParameters)
 TEST_F(LikelihoodSerialSimBinnedConstrainedTest, ConstrainedAndOffset)
 {
    // a variation to test some additional parameters (ConstrainedParameters and offsetting)
-   nll.reset(pdf->createNLL(*data, RooFit::Constrain(RooArgSet(*w.var("alpha_bkg_obs_A"))),
-                            RooFit::GlobalObservables(RooArgSet(*w.var("alpha_bkg_obs_B"))), RooFit::Offset(true)));
+   nll = std::unique_ptr<RooAbsReal>{pdf->createNLL(*data, RooFit::Constrain(RooArgSet(*w.var("alpha_bkg_obs_A"))),
+                                                    RooFit::GlobalObservables(RooArgSet(*w.var("alpha_bkg_obs_B"))),
+                                                    RooFit::Offset(true))};
 
    // --------
 
    auto nll0 = nll->getVal();
 
-   likelihood = RooFit::TestStatistics::buildLikelihood(
-      pdf, data.get(), RooFit::TestStatistics::ConstrainedParameters(RooArgSet(*w.var("alpha_bkg_obs_A"))),
-      RooFit::TestStatistics::GlobalObservables(RooArgSet(*w.var("alpha_bkg_obs_B"))));
+   likelihood = RooFit::TestStatistics::NLLFactory{*pdf, *data}
+                   .ConstrainedParameters(*w.var("alpha_bkg_obs_A"))
+                   .GlobalObservables(*w.var("alpha_bkg_obs_B"))
+                   .build();
    auto nll_ts = LikelihoodWrapper::create(RooFit::TestStatistics::LikelihoodMode::serial, likelihood, clean_flags);
    nll_ts->enableOffsetting(true);
 
@@ -435,18 +435,10 @@ TEST_F(LikelihoodSerialTest, BatchedUnbinnedGaussianND)
    bool batch_mode = true;
 
    std::tie(nll, pdf, data, values) = generate_ND_gaussian_pdf_nll(w, N, 1000, batch_mode);
-
-   // TODO: the result from the new test statistics is not correct unless the
-   // coefficient normalization set is fixed manually. Probably this works
-   // better when the new test statistics are migrated to the new BatchMode,
-   // and then this line can be deleted.
-   pdf->fixAddCoefNormalization(*data->get(), false);
-
-   likelihood = RooFit::TestStatistics::buildLikelihood(pdf, data.get());
-   dynamic_cast<RooFit::TestStatistics::RooUnbinnedL *>(likelihood.get())->setUseBatchedEvaluations(true);
-   auto nll_ts = LikelihoodWrapper::create(RooFit::TestStatistics::LikelihoodMode::serial, likelihood, clean_flags);
-
    auto nll0 = nll->getVal();
+
+   likelihood = RooFit::TestStatistics::NLLFactory{*pdf, *data}.BatchMode(RooFit::BatchModeOption::Cpu).build();
+   auto nll_ts = LikelihoodWrapper::create(RooFit::TestStatistics::LikelihoodMode::serial, likelihood, clean_flags);
 
    nll_ts->evaluate();
    auto nll1 = nll_ts->getResult();

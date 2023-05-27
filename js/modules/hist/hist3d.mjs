@@ -108,7 +108,7 @@ function create3DScene(render3d, x3dscale, y3dscale) {
 
       if (!this.mode3d) return;
 
-      if (!this.clear3dCanvas) {
+      if (!isFunc(this.clear3dCanvas)) {
          console.error(`Strange, why mode3d=${this.mode3d} is configured!!!!`);
          return;
       }
@@ -118,7 +118,7 @@ function create3DScene(render3d, x3dscale, y3dscale) {
       this.clear3dCanvas();
 
       disposeThreejsObject(this.scene);
-      if (this.control) this.control.cleanup();
+      this.control?.cleanup();
 
       cleanupRender3D(this.renderer);
 
@@ -182,6 +182,8 @@ function create3DScene(render3d, x3dscale, y3dscale) {
    this.scene.add(this.toplevel);
    this.scene_width = sz.width;
    this.scene_height = sz.height;
+   this.scene_x = sz.x ?? 0;
+   this.scene_y = sz.y ?? 0;
 
    this.camera = new PerspectiveCamera(45, this.scene_width / this.scene_height, 1, 40*this.size_z3d);
 
@@ -338,6 +340,12 @@ function render3D(tmout) {
       this.enable_highlight = (this.first_render_tm < 1200) && this.isTooltipAllowed();
       console.log(`three.js r${REVISION}, first render tm = ${this.first_render_tm}`);
    }
+
+   if (this.processRender3D)
+      this.getPadPainter()?.painters?.forEach(objp => {
+         if (isFunc(objp.handleRender3D))
+            objp.handleRender3D();
+      });
 }
 
 /** @summary Check is 3D drawing need to be resized
@@ -589,8 +597,6 @@ function drawXYZ(toplevel, AxisPainter, opts) {
          let draw_width = text3d.boundingBox.max.x - text3d.boundingBox.min.x,
              draw_height = text3d.boundingBox.max.y - text3d.boundingBox.min.y;
          text3d.center = true; // place central
-
-
 
          text3d.offsety = this.x_handle.labelsOffset + (grmaxy - grminy) * 0.005;
 
@@ -1068,10 +1074,39 @@ function drawXYZ(toplevel, AxisPainter, opts) {
    }
 }
 
+
+/** @summary Converts 3D coordiante to the pad NDC
+  * @private */
+function convert3DtoPadNDC(x, y, z) {
+
+   x = this.x_handle.gr(x);
+   y = this.y_handle.gr(y);
+   z = this.z_handle.gr(z);
+
+   let vector = new Vector3().set( x, y, z );
+
+   // map to normalized device coordinate (NDC) space
+   vector.project( this.camera );
+
+   vector.x = (vector.x + 1) / 2;
+   vector.y = (vector.y + 1) / 2;
+
+   let pp = this.getPadPainter(),
+       pw = pp?.getPadWidth(),
+       ph = pp?.getPadHeight();
+
+   if (pw && ph) {
+      vector.x = (this.scene_x + vector.x * this.scene_width) / pw;
+      vector.y = (this.scene_y + vector.y * this.scene_height) / ph;
+   }
+
+   return vector;
+}
+
 /** @summary Assign 3D methods for frame painter
   * @private */
 function assignFrame3DMethods(fpainter) {
-   Object.assign(fpainter, { create3DScene, render3D, resize3D, highlightBin3D, set3DOptions, drawXYZ });
+   Object.assign(fpainter, { create3DScene, render3D, resize3D, highlightBin3D, set3DOptions, drawXYZ, convert3DtoPadNDC });
 }
 
 
@@ -2008,6 +2043,5 @@ function drawBinsSurf3D(painter, is_v7 = false) {
       );
    }
 }
-
 
 export { assignFrame3DMethods, drawBinsLego, drawBinsError3D, drawBinsContour3D, drawBinsSurf3D };

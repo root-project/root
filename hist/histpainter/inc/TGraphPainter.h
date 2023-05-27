@@ -26,6 +26,7 @@
 
 class TGraph;
 class TF1;
+class TScatter;
 
 class TGraphPainter : public TVirtualGraphPainter {
 
@@ -36,16 +37,16 @@ public:
    ~TGraphPainter() override;
 
    void           ComputeLogs(Int_t npoints, Int_t opt);
-   Int_t  DistancetoPrimitiveHelper(TGraph *theGraph, Int_t px, Int_t py) override;
-   void   DrawPanelHelper(TGraph *theGraph) override;
-   void   ExecuteEventHelper(TGraph *theGraph, Int_t event, Int_t px, Int_t py) override;
-   char  *GetObjectInfoHelper(TGraph *theGraph, Int_t px, Int_t py) const override;
+   Int_t          DistancetoPrimitiveHelper(TGraph *theGraph, Int_t px, Int_t py) override;
+   void           DrawPanelHelper(TGraph *theGraph) override;
+   void           ExecuteEventHelper(TGraph *theGraph, Int_t event, Int_t px, Int_t py) override;
+   char          *GetObjectInfoHelper(TGraph *theGraph, Int_t px, Int_t py) const override;
    virtual Int_t  GetHighlightPoint(TGraph *theGraph) const;
    virtual void   HighlightPoint(TGraph *theGraph, Int_t hpoint, Int_t distance);
    virtual void   PaintHighlightPoint(TGraph *theGraph, Option_t *option);
    void           PaintHelper(TGraph *theGraph, Option_t *option) override;
-   void   PaintGraph(TGraph *theGraph, Int_t npoints, const Double_t *x, const Double_t *y, Option_t *chopt) override;
-   void   PaintGrapHist(TGraph *theGraph, Int_t npoints, const Double_t *x, const Double_t *y, Option_t *chopt) override;
+   void           PaintGraph(TGraph *theGraph, Int_t npoints, const Double_t *x, const Double_t *y, Option_t *chopt) override;
+   void           PaintGrapHist(TGraph *theGraph, Int_t npoints, const Double_t *x, const Double_t *y, Option_t *chopt) override;
    void           PaintGraphAsymmErrors(TGraph *theGraph, Option_t *option);
    void           PaintGraphMultiErrors(TGraph *theGraph, Option_t *option);
    void           PaintGraphBentErrors(TGraph *theGraph, Option_t *option);
@@ -54,17 +55,18 @@ public:
    void           PaintGraphQQ(TGraph *theGraph, Option_t *option);
    void           PaintGraphReverse(TGraph *theGraph, Option_t *option);
    void           PaintGraphSimple(TGraph *theGraph, Option_t *option);
+   void           PaintScatter(TScatter *theScatter, Option_t *option) override;
    void           PaintPolyLineHatches(TGraph *theGraph, Int_t n, const Double_t *x, const Double_t *y);
    void           PaintStats(TGraph *theGraph, TF1 *fit) override;
-   void   SetHighlight(TGraph *theGraph) override;
+   void           SetHighlight(TGraph *theGraph) override;
    void           Smooth(TGraph *theGraph, Int_t npoints, Double_t *x, Double_t *y, Int_t drawtype);
    static void    SetMaxPointsPerLine(Int_t maxp=50);
 
 protected:
 
-   static Int_t   fgMaxPointsPerLine;  //Number of points per chunks' line when drawing a graph.
+   static Int_t   fgMaxPointsPerLine;  ///< Number of points per chunks' line when drawing a graph.
 
-   std::vector<Double_t> gxwork, gywork, gxworkl, gyworkl; // buffers for coordinates
+   std::vector<Double_t> gxwork, gywork, gxworkl, gyworkl; ///< Internal buffers for coordinates. Used for graphs painting.
 
    ClassDefOverride(TGraphPainter,0)  // TGraph painter
 };

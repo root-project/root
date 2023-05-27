@@ -106,7 +106,7 @@ public:
 
    TLeaf();
    TLeaf(TBranch *parent, const char *name, const char *type);
-   virtual ~TLeaf();
+   ~TLeaf() override;
 
            void     Browse(TBrowser *b) override;
    virtual Bool_t   CanGenerateOffsetArray() {return fLeafCount;} // overload and return true if this leaf can generate its own offset array.

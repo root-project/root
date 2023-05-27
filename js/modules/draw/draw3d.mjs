@@ -64,4 +64,3 @@ async function drawPolyLine3D() {
 }
 
 export { drawPolyMarker3D, drawPolyLine3D };
-

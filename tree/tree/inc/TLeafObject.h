@@ -51,7 +51,7 @@ public:
 
    TLeafObject();
    TLeafObject(TBranch *parent, const char *name, const char *type);
-   virtual ~TLeafObject();
+   ~TLeafObject() override;
 
    Bool_t          CanGenerateOffsetArray() override { return false; }
    void            FillBasket(TBuffer &b) override;

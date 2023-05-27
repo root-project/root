@@ -58,8 +58,8 @@ TDirectory* RooUnitTest::gMemDir = nullptr;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooUnitTest::RooUnitTest(const char* name, TFile* refFile, bool writeRef, Int_t verbose, std::string const& batchMode) : TNamed(name,name),
-                                  _refFile(refFile), _debug(false), _write(writeRef), _verb(verbose), _batchMode(batchMode)
+RooUnitTest::RooUnitTest(const char* name, TFile* refFile, bool writeRef, Int_t verbose) : TNamed(name,name),
+                                  _refFile(refFile), _debug(false), _write(writeRef), _verb(verbose)
 {
 }
 
@@ -94,13 +94,11 @@ void RooUnitTest::regPlot(RooPlot* frame, const char* refName)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void RooUnitTest::regResult(RooFitResult* r, const char* refName)
+void RooUnitTest::regResult(std::unique_ptr<RooFitResult> r, const char* refName)
 {
   if (_refFile) {
     string refNameStr(refName) ;
-    _regResults.push_back(make_pair(r,refNameStr)) ;
-  } else {
-    delete r ;
+    _regResults.push_back(make_pair(r.release(),refNameStr)) ;
   }
 }
 

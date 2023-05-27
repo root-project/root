@@ -1332,18 +1332,25 @@ Bool_t TTreeCache::FillBuffer()
    Long64_t maxReadEntry = minEntry; // If we are stopped before the end of the 2nd pass, this marker will where we need to start next time.
    Int_t nReadPrefRequest = 0;
    auto perfStats = GetTree()->GetPerfStats();
+
+   struct collectionInfo {
+      Int_t fClusterStart{-1}; // First basket belonging to the current cluster
+      Int_t fCurrent{-1};       // Currently visited basket
+      Bool_t fLoadedOnce{kFALSE};
+
+      void Rewind() { fCurrent = (fClusterStart >= 0) ? fClusterStart : 0; }
+   };
+   std::vector<collectionInfo> cursor(fNbranches);
+
+   // Main loop to fill the cache, inside each loop we will loop over
+   // all the cached branch and collect the baskets within the 'current'
+   // range/cluster.  If there is still space in the cache after that, we
+   // will do another iteration to add one more cluster to the cache.
+   // i.e. essentially loop over the clusters.
    do {
       prevNtot = ntotCurrentBuf;
       Long64_t lowestMaxEntry = fEntryMax; // The lowest maximum entry in the TTreeCache for each branch for each pass.
 
-      struct collectionInfo {
-         Int_t fClusterStart{-1}; // First basket belonging to the current cluster
-         Int_t fCurrent{0};       // Currently visited basket
-         Bool_t fLoadedOnce{kFALSE};
-
-         void Rewind() { fCurrent = (fClusterStart >= 0) ? fClusterStart : 0; }
-      };
-      std::vector<collectionInfo> cursor(fNbranches);
       Bool_t reachedEnd = kFALSE;
       Bool_t skippedFirst = kFALSE;
       Bool_t oncePerBranch = kFALSE;
@@ -1414,6 +1421,10 @@ Bool_t TTreeCache::FillBuffer()
 
             if (pass == kRewind)
                cursor[i].Rewind();
+            else if (cursor[i].fCurrent == -1) {
+               auto start = TMath::BinarySearch(b->GetWriteBasket() + 1, entries, minEntry);
+               cursor[i].fCurrent = (start < 0) ? 0 : start;
+            }
             for (auto &j = cursor[i].fCurrent; j < nb; j++) {
                // This basket has already been read, skip it
 

@@ -227,6 +227,7 @@ The header consists of the following elements:
  - List frame: list of alias column record frames
  - List frame: list of extra type information
 
+The last four list frames containing information about fields and columns are collectively referred to as _schema description_.
 The release candidate tag is used to mark unstable implementations of the file format.
 Production code sets the tag to zero.
 
@@ -400,7 +401,7 @@ The footer envelope has the following structure:
 
 - Feature flags
 - Header checksum (CRC32)
-- List frame of extension header envelope links
+- Schema extension record frame
 - List frame of column group record frames
 - List frame of cluster summary record frames
 - List frame of cluster group record frames
@@ -408,8 +409,10 @@ The footer envelope has the following structure:
 
 The header checksum can be used to cross-check that header and footer belong together.
 
-The extension headers are just additional headers with an empty name and description.
-They are necessary when fields have been backfilled during writing.
+The schema extension record frame contains an additional schema description that is incremental with respect to the schema contained in the header (see Section Header Envelope).
+In general, a schema extension is optional and thus this record frame might be empty.
+The interpretation of the information contained therein should be identical as if it was found directly at the end of the header.
+This is necessary when fields have been added during writing.
 
 The ntuple meta-data can be split over multiple meta-data envelopes (see below).
 
@@ -635,8 +638,11 @@ Multi-dimensional arrays of the form `T[N][M]...` are currently not supported.
 #### std::variant<T1, T2, ..., Tn>
 
 Variants are stored in $n+1$ fields:
-  - Variant mother field of type Switch; the dispatch tag points to the principle column of the active type
+  - Variant mother field with one column of type Switch; the dispatch tag points to the principal column of the active type
   - Child fields of types `T1`, ..., `Tn`; their names are `_0`, `_1`, ...
+
+The dispatch tag ranges from 1 to $n$.
+A value of 0 indicates that the variant is in the invalid state, i.e., it does not hold any of the valid alternatives.
 
 #### std::pair<T1, T2>
 
@@ -646,7 +652,25 @@ The child fileds are named `_0` and `_1`.
 #### std::tuple<T1, T2, ..., Tn>
 
 A tuple is stored using an empty mother field with $n$ subfields of type `T1`, `T2`, ..., `Tn`. All types must have RNTuple I/O support.
-The child fileds are named `_0`, `_1`, ...
+The child fields are named `_0`, `_1`, ...
+
+#### std::bitset<N>
+
+A bitset is stored as a repetitive leaf field with an attached `Bit` column.
+The bitset size `N` is stored as repetition parameter in the field meta-data.
+Within the repetition blocks, bits are stored in little-endian order, i.e. the least significant bits come first.
+
+#### std::unique_ptr<T>, std::optional<T>
+
+A unique pointer and an optional type have the same on disk representation.
+They are represented as a collection of `T`s of zero or one elements.
+A collection mother field has a single subfield named `_0` for `T`, where `T` must have RNTuple I/O support.
+Note that RNTuple does not support polymorphism, so the type `T` is expected to be `T` and not a child class of `T`.
+
+By default, the mother field has a principal column of type `(Split)Index[64|32]`.
+This is called sparse representation.
+The alternative, dense representation uses a `Bit` column to mask non-existing instances of the subfield.
+In this second case, a default-constructed `T` (or, if applicable, a `T` constructed by the ROOT I/O constructor) is stored on disk for the non-existing instances.
 
 ### User-defined classes
 

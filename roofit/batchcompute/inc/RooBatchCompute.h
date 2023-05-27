@@ -13,10 +13,12 @@
 #ifndef ROOFIT_BATCHCOMPUTE_ROOBATCHCOMPUTE_H
 #define ROOFIT_BATCHCOMPUTE_ROOBATCHCOMPUTE_H
 
-#include "RooBatchComputeTypes.h"
+#include <RooBatchComputeTypes.h>
 
-#include "DllImport.h" //for R__EXTERN, needed for windows
-#include "TError.h"
+#include <DllImport.h> //for R__EXTERN, needed for windows
+#include <TError.h>
+
+#include <Math/Util.h>
 
 #include <functional>
 #include <string>
@@ -25,7 +27,7 @@
  * Namespace for dispatching RooFit computations to various backends.
  *
  * This namespace contains an interface for providing high-performance computation functions for use in
- * RooAbsReal::evaluateSpan(), see RooBatchComputeInterface.
+ * RooAbsReal::computeBatch(), see RooBatchComputeInterface.
  *
  * Furthermore, several implementations of this interface can be created, which reside in RooBatchCompute::RF_ARCH,
  * where RF_ARCH may be replaced by the architecture that this implementation targets, e.g. SSE, AVX, etc.
@@ -52,12 +54,14 @@ enum Computer {
    DstD0BG,
    Exponential,
    Gamma,
+   GaussModelExpBasis,
    Gaussian,
    Identity,
    Johnson,
    Landau,
    Lognormal,
    NegativeLogarithms,
+   NormalizedPdf,
    Novosibirsk,
    Poisson,
    Polynomial,
@@ -73,11 +77,18 @@ enum Computer {
    Voigtian
 };
 
+struct ReduceNLLOutput {
+   ROOT::Math::KahanSum<double> nllSum;
+   std::size_t nLargeValues = 0;
+   std::size_t nNonPositiveValues = 0;
+   std::size_t nNaNValues = 0;
+};
+
 /**
  * \class RooBatchComputeInterface
  * \ingroup Roobatchcompute
  * \brief The interface which should be implemented to provide optimised computation functions for implementations of
- * RooAbsReal::evaluateSpan().
+ * RooAbsReal::computeBatch().
  *
  * The class RooBatchComputeInterface provides the mechanism for external modules (like RooFit) to call
  * functions from the library. The power lies in the virtual functions that can resolve to different
@@ -96,8 +107,18 @@ enum Computer {
 class RooBatchComputeInterface {
 public:
    virtual ~RooBatchComputeInterface() = default;
-   virtual void compute(cudaStream_t *, Computer, RestrictArr, size_t, const VarVector &, const ArgVector & = {}) = 0;
-   virtual double sumReduce(cudaStream_t *, InputArr input, size_t n) = 0;
+   virtual void compute(cudaStream_t *, Computer, RestrictArr, size_t, const VarVector &, ArgVector &) = 0;
+   inline void compute(cudaStream_t *stream, Computer comp, RestrictArr output, size_t size, const VarVector &vars)
+   {
+      ArgVector extraArgs{};
+      compute(stream, comp, output, size, vars, extraArgs);
+   }
+
+   virtual double reduceSum(cudaStream_t *, InputArr input, size_t n) = 0;
+   virtual ReduceNLLOutput reduceNLL(cudaStream_t *, RooSpan<const double> probas, RooSpan<const double> weightSpan,
+                                     RooSpan<const double> weights, double weightSum,
+                                     RooSpan<const double> binVolumes) = 0;
+
    virtual Architecture architecture() const = 0;
    virtual std::string architectureName() const = 0;
 

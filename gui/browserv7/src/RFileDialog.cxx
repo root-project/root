@@ -466,7 +466,7 @@ std::shared_ptr<RFileDialog> RFileDialog::Embedded(const std::shared_ptr<RWebWin
       dialog->SetNameFilters(*arr);
    }
 
-   dialog->Show({window, chid});
+   dialog->Show({window, 0, chid});
 
    // use callback to release pointer, actually not needed but just to avoid compiler warning
    dialog->SetCallback([dialog](const std::string &) mutable { dialog.reset(); });

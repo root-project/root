@@ -1,10 +1,12 @@
 import { select as d3_select, pointer as d3_pointer } from '../d3.mjs';
-import { settings, constants, internals, isNodeJs, getPromise, BIT, clTObjString, clTAxis, isObject, isFunc, isStr } from '../core.mjs';
+import { settings, constants, internals, isNodeJs, getPromise, BIT,
+         prROOT, clTObjString, clTAxis, isObject, isFunc, isStr } from '../core.mjs';
 import { isPlainText, producePlainText, produceLatex, produceMathjax, typesetMathjax } from './latex.mjs';
 import { getElementRect, BasePainter, makeTranslate } from './BasePainter.mjs';
 import { TAttMarkerHandler } from './TAttMarkerHandler.mjs';
 import { TAttFillHandler } from './TAttFillHandler.mjs';
 import { TAttLineHandler } from './TAttLineHandler.mjs';
+import { TAttTextHandler } from './TAttTextHandler.mjs';
 import { FontHandler } from './FontHandler.mjs';
 import { getRootColors } from './colors.mjs';
 
@@ -166,7 +168,7 @@ class ObjectPainter extends BasePainter {
       if (!obj?._typename || !isFunc(pp?.getObjectDrawSettings))
          return [];
 
-      return pp.getObjectDrawSettings(`ROOT.${obj._typename}`, 'nosame')?.opts;
+      return pp.getObjectDrawSettings(prROOT + obj._typename, 'nosame')?.opts;
    }
 
    /** @summary Central place to update objects drawing
@@ -631,6 +633,29 @@ class ObjectPainter extends BasePainter {
       return handler;
    }
 
+   /** @summary Creates text attributes object.
+     * @param {object} args - either TAttText or see constructor arguments of {@link TAttTextHandler}
+     * @protected */
+   createAttText(args) {
+      if (!isObject(args))
+         args = { std: true };
+      else if (args.fTextFont !== undefined && args.fTextSize !== undefined && args.fTextSize !== undefined)
+         args = { attr: args, std: false };
+
+      if (args.std === undefined) args.std = true;
+      if (args.painter === undefined) args.painter = this;
+
+      let handler = args.std ? this.textatt : null;
+
+      if (!handler)
+         handler = new TAttTextHandler(args);
+      else if (!handler.changed || args.force)
+         handler.setArgs(args);
+
+      if (args.std) this.textatt = handler;
+      return handler;
+   }
+
    /** @summary Creates fill attributes object.
      * @desc Method dedicated to create fill attributes, bound to canvas SVG
      * otherwise newly created patters will not be usable in the canvas
@@ -761,18 +786,26 @@ class ObjectPainter extends BasePainter {
    /** @summary Fill context menu for the object
      * @private */
    fillContextMenu(menu) {
-      let title = this.getObjectHint(), obj = this.getObject();
-      if (obj?._typename)
-         title = `${obj._typename}::${title}`;
+      let name = this.getObject()?.fName || '',
+          cl = this.getClassName();
+
+      let p = cl.lastIndexOf('::');
+      if (p > 0) cl = cl.slice(p+2);
+      let title = cl && name ? `${cl}:${name}` : cl ? cl : name || 'object';
 
       menu.add(`header:${title}`);
 
-      menu.addAttributesMenu(this);
+      let size0 = menu.size();
 
-      if ((menu.size() > 0) && this.showInspector('check'))
+      if (isFunc(this.fillContextMenuItems))
+         this.fillContextMenuItems(menu);
+
+      if ((menu.size() > size0) && this.showInspector('check'))
          menu.add('Inspect', this.showInspector);
 
-      return menu.size() > 0;
+      menu.addAttributesMenu(this);
+
+      return menu.size() > size0;
    }
 
    /** @summary shows objects status
@@ -1407,7 +1440,7 @@ class ObjectPainter extends BasePainter {
    }
 
    /** @summary Provide projection areas
-     * @param kind - 'X', 'Y' or ''
+     * @param kind - 'X', 'Y', 'XY' or ''
      * @private */
    async provideSpecialDrawArea(kind) {
       if (kind == this._special_draw_area)
@@ -1419,13 +1452,15 @@ class ObjectPainter extends BasePainter {
       });
    }
 
-   /** @summary Provide projection areas
-     * @param kind - 'X', 'Y' or ''
+   /** @summary Draw in special projection areas
+     * @param obj - object to draw
+     * @param opt - draw option
+     * @param kind - '', 'X', 'Y'
      * @private */
-   async drawInSpecialArea(obj, opt) {
+   async drawInSpecialArea(obj, opt, kind) {
       let canp = this.getCanvPainter();
       if (this._special_draw_area && isFunc(canp?.drawProjection))
-         return canp.drawProjection(this._special_draw_area, obj, opt);
+         return canp.drawProjection(kind || this._special_draw_area, obj, opt);
 
       return false;
    }

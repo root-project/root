@@ -35,6 +35,9 @@
 #include <cstdio>
 #include <cstring>
 #include <string>
+#if (__cplusplus >= 202002L)
+#  include <compare>
+#endif
 
 class TRegexp;
 class TPRegexp;
@@ -166,6 +169,14 @@ operator+(T f, const TString &s);
 
 friend Bool_t  operator==(const TString &s1, const TString &s2);
 friend Bool_t  operator==(const TString &s1, const char *s2);
+#if __cplusplus >= 202002L
+friend std::strong_ordering operator<=>(const TString &s1, const TString &s2) {
+   const int cmp = s1.CompareTo(s2);
+   if (cmp == 0) return std::strong_ordering::equal;
+   if (cmp < 0) return std::strong_ordering::less;
+   return std::strong_ordering::greater;
+}
+#endif
 
 private:
 #ifdef R__BYTESWAP

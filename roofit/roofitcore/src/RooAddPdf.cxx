@@ -491,6 +491,10 @@ double RooAddPdf::getValV(const RooArgSet* normSet) const
   return _value;
 }
 
+void RooAddPdf::translate(RooFit::Detail::CodeSquashContext &ctx) const
+{
+   RooRealSumPdf::translateImpl(ctx, this, _pdfList, _coefList);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute addition of PDFs in batches.

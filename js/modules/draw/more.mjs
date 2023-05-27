@@ -1,4 +1,4 @@
-import { BIT, isBatchMode, clTLatex, clTMathText, clTPolyLine } from '../core.mjs';
+import { BIT, isBatchMode, isFunc, clTLatex, clTMathText, clTAnnotation, clTPolyLine } from '../core.mjs';
 import { rgb as d3_rgb, select as d3_select } from '../d3.mjs';
 import { BasePainter, makeTranslate } from '../base/BasePainter.mjs';
 import { addMoveHandler } from '../gui/utils.mjs';
@@ -13,12 +13,19 @@ async function drawText() {
        w = pp.getPadWidth(),
        h = pp.getPadHeight(),
        pos_x = text.fX, pos_y = text.fY,
-       tcolor = this.getColor(text.fTextColor),
        use_frame = false,
-       fact = 1., textsize = text.fTextSize || 0.05,
-       main = this.getFramePainter();
+       fact = 1., main = this.getFramePainter(),
+       annot = this.matchObjectType(clTAnnotation);
 
-   if (text.TestBit(BIT(14))) {
+   this.createAttText({ attr: text });
+
+   if (annot && main?.mode3d && isFunc(main?.convert3DtoPadNDC)) {
+      let pos = main.convert3DtoPadNDC(text.fX, text.fY, text.fZ);
+      pos_x = pos.x;
+      pos_y = pos.y;
+      this.isndc = true;
+      annot = '3d';
+   } else if (text.TestBit(BIT(14))) {
       // NDC coordinates
       this.isndc = true;
    } else if (main && !main.mode3d) {
@@ -33,7 +40,6 @@ async function drawText() {
       this.isndc = true;
       pos_x = pos_y = 0.5;
       text.fTextAlign = 22;
-      if (!tcolor) tcolor = 'black';
    }
 
    this.createG(use_frame);
@@ -43,11 +49,9 @@ async function drawText() {
    this.pos_x = this.axisToSvg('x', pos_x, this.isndc);
    this.pos_y = this.axisToSvg('y', pos_y, this.isndc);
 
-   let arg = { align: text.fTextAlign, x: this.pos_x, y: this.pos_y, text: text.fTitle, color: tcolor, latex: 0 };
+   let arg = this.textatt.createArg({ x: this.pos_x, y: this.pos_y, text: text.fTitle, latex: 0 });
 
-   if (text.fTextAngle) arg.rotate = -text.fTextAngle;
-
-   if (text._typename == clTLatex) {
+   if ((text._typename == clTLatex) || annot) {
       arg.latex = 1;
       fact = 0.9;
    } else if (text._typename == clTMathText) {
@@ -55,7 +59,7 @@ async function drawText() {
       fact = 0.8;
    }
 
-   this.startTextDrawing(text.fTextFont, Math.round((textsize > 1) ? textsize : textsize*Math.min(w,h)*fact));
+   this.startTextDrawing(this.textatt.font, this.textatt.getSize(w, h, fact, 0.05));
 
    this.drawText(arg);
 
@@ -65,7 +69,7 @@ async function drawText() {
       this.pos_dx = this.pos_dy = 0;
 
       if (!this.moveDrag)
-         this.moveDrag = function(dx,dy) {
+         this.moveDrag = function(dx, dy) {
             this.pos_dx += dx;
             this.pos_dy += dy;
             this.draw_g.attr('transform', makeTranslate(this.pos_dx, this.pos_dy));
@@ -80,7 +84,17 @@ async function drawText() {
             this.submitCanvExec(`SetX(${text.fX});;SetY(${text.fY});;`);
          }
 
-      addMoveHandler(this);
+      if (annot != '3d') {
+         addMoveHandler(this);
+      } else {
+         main.processRender3D = true;
+         this.handleRender3D = () => {
+            let pos = main.convert3DtoPadNDC(text.fX, text.fY, text.fZ),
+                new_x = this.axisToSvg('x', pos.x, true),
+                new_y = this.axisToSvg('y', pos.y, true);
+            this.draw_g.attr('transform', makeTranslate(new_x - this.pos_x, new_y - this.pos_y));
+         };
+      }
 
       assignContextMenu(this);
 

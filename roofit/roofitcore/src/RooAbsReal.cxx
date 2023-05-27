@@ -49,7 +49,6 @@
 #include "RooAbsCategoryLValue.h"
 #include "RooCustomizer.h"
 #include "RooAbsData.h"
-#include "RooScaledFunc.h"
 #include "RooAddPdf.h"
 #include "RooCmdConfig.h"
 #include "RooCategory.h"
@@ -62,6 +61,7 @@
 #include "RooGlobalFunc.h"
 #include "RooParamBinning.h"
 #include "RooProfileLL.h"
+#include "RooProduct.h"
 #include "RooFunctor.h"
 #include "RooDerivative.h"
 #include "RooXYChi2Var.h"
@@ -245,7 +245,7 @@ double RooAbsReal::getValV(const RooArgSet* nset) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute batch of values for input data stored in `evalData`.
 ///
-/// This is a faster, multi-value version of getVal(). It calls evaluateSpan() to trigger computations, and
+/// This is a faster, multi-value version of getVal(). It calls computeBatch() to trigger computations, and
 /// finalises those (e.g. error checking or automatic normalisation) before returning a span with the results.
 /// This span will also be stored in `evalData`, so subsquent calls of getValues() will return immediately.
 ///
@@ -280,9 +280,9 @@ RooSpan<const double> RooAbsReal::getValues(RooBatchCompute::RunContext& evalDat
 
 ////////////////////////////////////////////////////////////////////////////////
 
-std::vector<double> RooAbsReal::getValues(RooAbsData const& data, RooFit::BatchModeOption batchMode) const {
+std::vector<double> RooAbsReal::getValues(RooAbsData const& data) const {
   std::unique_ptr<RooAbsReal> clone = RooFit::Detail::compileForNormSet<RooAbsReal>(*this, *data.get());
-  ROOT::Experimental::RooFitDriver driver(*clone, batchMode);
+  ROOT::Experimental::RooFitDriver driver(*clone, RooFit::BatchModeOption::Cpu);
   driver.setData(data, "");
   return driver.getValues();
 }
@@ -2120,8 +2120,8 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, PlotOpt o) const
     // Do _not_ activate cache-and-track as necessary information to define normalization observables are not present in the underlying dataset
     dwa.constOptimizeTestStatistic(Activate,false) ;
 
-    RooRealBinding projBind(dwa,*plotVar) ;
-    RooScaledFunc scaleBind(projBind,o.scaleFactor);
+    RooProduct scaledDwa{"scaled_dwa", "Data Weighted average", dwa, {RooFit::RooConst(o.scaleFactor)}};
+    RooRealBinding scaleBind(scaledDwa,*plotVar) ;
 
     // Set default range, if not specified
     if (o.rangeLo==0 && o.rangeHi==0) {
@@ -2482,12 +2482,11 @@ RooPlot* RooAbsReal::plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asym
     //RooDataWeightedAverage dwa(Form("%sDataWgtAvg",GetName()),"Data Weighted average",*funcAsym,*projDataSel,*projDataSel->get(),o.numCPU,o.interleave,true) ;
     dwa.constOptimizeTestStatistic(Activate) ;
 
-    RooRealBinding projBind(dwa,*plotVar) ;
-
     ((RooAbsReal*)posProj)->attachDataSet(*projDataSel) ;
     ((RooAbsReal*)negProj)->attachDataSet(*projDataSel) ;
 
-    RooScaledFunc scaleBind(projBind,o.scaleFactor);
+    RooProduct scaledDwa{"scaled_dwa", "Data Weighted average", {dwa, RooFit::RooConst(o.scaleFactor)}};
+    RooRealBinding scaleBind(scaledDwa,*plotVar) ;
 
     // Set default range, if not specified
     if (o.rangeLo==0 && o.rangeHi==0) {
@@ -3801,7 +3800,7 @@ void RooAbsReal::preferredObservableScanOrder(const RooArgSet& obs, RooArgSet& o
 ////////////////////////////////////////////////////////////////////////////////
 /// Calls createRunningIntegral(const RooArgSet&, const RooCmdArg&, const RooCmdArg&, const RooCmdArg&, const RooCmdArg&, const RooCmdArg&, const RooCmdArg&, const RooCmdArg&, const RooCmdArg&)
 
-RooAbsReal* RooAbsReal::createRunningIntegral(const RooArgSet& iset, const RooArgSet& nset)
+RooFit::OwningPtr<RooAbsReal> RooAbsReal::createRunningIntegral(const RooArgSet& iset, const RooArgSet& nset)
 {
   return createRunningIntegral(iset,RooFit::SupNormSet(nset)) ;
 }
@@ -3845,7 +3844,7 @@ RooAbsReal* RooAbsReal::createRunningIntegral(const RooArgSet& iset, const RooAr
 /// | `ScanAll()`                            | Always apply scanning technique
 /// | `ScanNone()`                           | Never apply scanning technique
 
-RooAbsReal* RooAbsReal::createRunningIntegral(const RooArgSet& iset, const RooCmdArg& arg1, const RooCmdArg& arg2,
+RooFit::OwningPtr<RooAbsReal> RooAbsReal::createRunningIntegral(const RooArgSet& iset, const RooCmdArg& arg1, const RooCmdArg& arg2,
              const RooCmdArg& arg3, const RooCmdArg& arg4, const RooCmdArg& arg5,
              const RooCmdArg& arg6, const RooCmdArg& arg7, const RooCmdArg& arg8)
 {
@@ -3905,14 +3904,14 @@ RooAbsReal* RooAbsReal::createRunningIntegral(const RooArgSet& iset, const RooCm
 /// Utility function for createRunningIntegral that construct an object
 /// implementing the numeric scanning technique for calculating the running integral
 
-RooAbsReal* RooAbsReal::createScanRI(const RooArgSet& iset, const RooArgSet& nset, Int_t numScanBins, Int_t intOrder)
+RooFit::OwningPtr<RooAbsReal> RooAbsReal::createScanRI(const RooArgSet& iset, const RooArgSet& nset, Int_t numScanBins, Int_t intOrder)
 {
   std::string name = std::string(GetName()) + "_NUMRUNINT_" + integralNameSuffix(iset,&nset).Data() ;
   RooRealVar* ivar = (RooRealVar*) iset.first() ;
   ivar->setBins(numScanBins,"numcdf") ;
-  RooNumRunningInt* ret = new RooNumRunningInt(name.c_str(),name.c_str(),*this,*ivar,"numrunint") ;
+  auto ret = std::make_unique<RooNumRunningInt>(name.c_str(),name.c_str(),*this,*ivar,"numrunint") ;
   ret->setInterpolationOrder(intOrder) ;
-  return ret ;
+  return RooFit::OwningPtr<RooAbsReal>{ret.release()};
 }
 
 
@@ -3922,7 +3921,7 @@ RooAbsReal* RooAbsReal::createScanRI(const RooArgSet& iset, const RooArgSet& nse
 /// object implementing the standard (analytical) integration
 /// technique for calculating the running integral.
 
-RooAbsReal* RooAbsReal::createIntRI(const RooArgSet& iset, const RooArgSet& nset)
+RooFit::OwningPtr<RooAbsReal> RooAbsReal::createIntRI(const RooArgSet& iset, const RooArgSet& nset)
 {
   // Make std::list of input arguments keeping only RooRealVars
   RooArgList ilist ;
@@ -3967,14 +3966,14 @@ RooAbsReal* RooAbsReal::createIntRI(const RooArgSet& iset, const RooArgSet& nset
   // Construct final normalization set for c.d.f = integrated observables + any extra specified by user
   RooArgSet finalNset(nset) ;
   finalNset.add(cloneList,true) ;
-  RooAbsReal* cdf = tmp->createIntegral(cloneList,finalNset,"CDF") ;
+  std::unique_ptr<RooAbsReal> cdf{tmp->createIntegral(cloneList,finalNset,"CDF")};
 
   // Transfer ownership of cloned items to top-level c.d.f object
   cdf->addOwnedComponents(*tmp) ;
   cdf->addOwnedComponents(cloneList) ;
   cdf->addOwnedComponents(loList) ;
 
-  return cdf ;
+  return RooFit::OwningPtr<RooAbsReal>{cdf.release()};
 }
 
 
@@ -4560,95 +4559,6 @@ void RooAbsReal::setParameterizeIntegral(const RooArgSet& paramVars)
 }
 
 
-////////////////////////////////////////////////////////////////////////////////
-/// Evaluate this object for a batch/span of data points.
-/// This is the backend used by getValues() to perform computations. A span pointing to the computation results
-/// will be stored in `evalData`, and also be returned to getValues(), which then finalises the computation.
-///
-/// \note Derived classes should override this function to reach maximal performance. If this function is not overridden, the slower,
-/// single-valued evaluate() will be called in a loop.
-///
-/// A computation proceeds as follows:
-/// - Request input data from all our servers using `getValues(evalData, normSet)`. Those will return
-///   - batches of size 1 if their value is constant over the entire dataset.
-///   - batches of the size of the dataset stored in `evalData` otherwise.
-///   If `evalData` already contains values for those objects, these will return data
-///   without recomputing those.
-/// - Create a new batch in `evalData` of the same size as those returned from the servers.
-/// - Use the input data to perform the computations, and store those in the batch.
-///
-/// \note Error checking and normalisation (of PDFs) will be performed in getValues().
-///
-/// \param[in,out] evalData Object holding data that should be used in computations.
-/// Computation results have to be stored here.
-/// \param[in]  normSet  Optional normalisation set passed down to the servers of this object.
-/// \return     Span pointing to the results. The memory is owned by `evalData`.
-RooSpan<double> RooAbsReal::evaluateSpan(RooBatchCompute::RunContext& evalData, const RooArgSet* normSet) const {
-
-  // Find all servers that are serving real numbers to us, retrieve their batch data,
-  // and switch them into "always clean" operating mode, so they return always the last-set value.
-  struct ServerData {
-    RooAbsReal* server;
-    RooSpan<const double> batch;
-    double oldValue;
-    RooAbsArg::OperMode oldOperMode;
-  };
-  std::vector<ServerData> ourServers;
-  std::size_t dataSize = 1;
-
-  for (auto absArgServer : servers()) {
-    if (absArgServer->IsA()->InheritsFrom(RooAbsReal::Class()) && absArgServer->isValueServer(*this)) {
-      auto server = static_cast<RooAbsReal*>(absArgServer);
-      ourServers.push_back({server,
-          server->getValues(evalData, normSet),
-          server->getVal(normSet),
-          server->operMode()});
-      // Prevent the server from evaluating; just return cached result, which we will side load:
-      server->setOperMode(RooAbsArg::AClean);
-      dataSize = std::max(dataSize, ourServers.back().batch.size());
-    }
-  }
-
-
-  // Make sure that we restore all state when we finish:
-  struct RestoreStateRAII {
-    RestoreStateRAII(std::vector<ServerData>& servers) :
-      _servers{servers} { }
-
-    ~RestoreStateRAII() {
-      for (auto& serverData : _servers) {
-        serverData.server->setCachedValue(serverData.oldValue, true);
-        serverData.server->setOperMode(serverData.oldOperMode);
-      }
-    }
-
-    std::vector<ServerData>& _servers;
-  } restoreState{ourServers};
-
-
-  // Advising to implement the batch interface makes only sense if the batch was not a scalar.
-  // Otherwise, there would be no speedup benefit.
-  if(dataSize > 1 && RooMsgService::instance().isActive(this, RooFit::FastEvaluations, RooFit::INFO)) {
-    coutI(FastEvaluations) << "The class " << ClassName() << " does not implement the faster batch evaluation interface."
-        << " Consider requesting or implementing it to benefit from a speed up." << std::endl;
-  }
-
-
-  // For each event, write temporary values into our servers' caches, and run a single-value computation.
-  auto outputData = evalData.makeBatch(this, dataSize);
-
-  for (std::size_t i=0; i < outputData.size(); ++i) {
-    for (auto& serv : ourServers) {
-      serv.server->setCachedValue(serv.batch[std::min(i, serv.batch.size()-1)], /*notifyClients=*/ false);
-    }
-
-    outputData[i] = evaluate();
-  }
-
-  return outputData;
-}
-
-
 /** Base function for computing multiple values of a RooAbsReal
 \param output The array where the results are stored
 \param nEvents The number of events to be processed
@@ -4725,8 +4635,22 @@ void RooAbsReal::computeBatch(cudaStream_t*, double* output, size_t nEvents, Roo
   }
 }
 
-
-
+////////////////////////////////////////////////////////////////////////////////
+/// This function defines the analytical integral translation for the class.
+///
+/// \param[in] code The code that decides the integrands.
+/// \param[in] rangeName Name of the normalization range.
+/// \param[in] ctx An object to manage auxilary information for code-squashing.
+///
+/// \returns The representative code string of the integral for the given object.
+std::string RooAbsReal::buildCallToAnalyticIntegral(Int_t /* code */, const char * /* rangeName */,
+                                                    RooFit::Detail::CodeSquashContext & /*ctx*/) const
+{
+   std::stringstream errorMsg;
+   errorMsg << "An analytical integral function for class \"" << ClassName() << "\" has not yet been implemented.";
+   coutE(Minimization) << errorMsg.str() << std::endl;
+   throw std::runtime_error(errorMsg.str().c_str());
+}
 
 double RooAbsReal::_DEBUG_getVal(const RooArgSet* normalisationSet) const {
 

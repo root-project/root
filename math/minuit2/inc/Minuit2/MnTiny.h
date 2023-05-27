@@ -23,7 +23,7 @@ public:
 
    double One() const;
 
-   double operator()(volatile double epsp1) const;
+   double operator()(double epsp1) const;
 
 private:
    double fOne;

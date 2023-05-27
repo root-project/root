@@ -14,7 +14,7 @@ on:
       - 'documentation/**'
 
   push:
-    branches: 
+    branches:
       - 'master'
       - 'v*-*-*-patches'
 
@@ -64,8 +64,160 @@ env:
   OS_REGION_NAME: 'cern'
 
 jobs:
+  build-macos:
+    if: github.repository_owner == 'root-project' || github.event_name == 'pull_request'
+
+    permissions:
+      contents: read
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: mac13
+            arch: ARM64
+            config: Release
+
+    name: ${{ matrix.platform }} ${{ matrix.arch }} ${{ matrix.config }}
+
+    runs-on: # Using '[self-hosted, ..., ...]' does not work for some reason :)
+      - self-hosted
+      - macOS
+      - ${{ matrix.arch }}
+      - ${{ matrix.platform }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Pull Request Build
+        if: github.event_name == 'pull_request'
+        env:
+          INCREMENTAL: ${{ !contains(github.event.pull_request.labels.*.name, 'clean build') }}
+        run: ".github/workflows/root-ci-config/build_root.py
+                    --buildtype      ${{ matrix.config }}
+                    --platform       ${{ matrix.platform }}
+                    --incremental    $INCREMENTAL
+                    --base_ref       ${{ github.base_ref }}
+                    --head_ref       refs/pull/${{ github.event.pull_request.number }}/head
+                    --repository     ${{ github.server_url }}/${{ github.repository }}"
+
+      - name: Workflow dispatch
+        if:   github.event_name == 'workflow_dispatch'
+        run: ".github/workflows/root-ci-config/build_root.py
+                    --buildtype      ${{ matrix.config }}
+                    --platform       ${{ matrix.platform }}
+                    --incremental    ${{ inputs.incremental }}
+                    --base_ref       ${{ inputs.base_ref }}
+                    --head_ref       ${{ inputs.head_ref }}
+                    --repository     ${{ github.server_url }}/${{ github.repository }}"
+
+      - name: Nightly build
+        if:   github.event_name == 'schedule'
+        run: ".github/workflows/root-ci-config/build_root.py
+                    --buildtype      ${{ matrix.config }}
+                    --platform       ${{ matrix.platform }}
+                    --incremental    false
+                    --base_ref       ${{ github.ref_name }}
+                    --repository     ${{ github.server_url }}/${{ github.repository }}"
+
+      - name: Update artifacts after push to release branch
+        if:   github.event_name == 'push'
+        run: ".github/workflows/root-ci-config/build_root.py
+                    --buildtype      ${{ matrix.config }}
+                    --platform       ${{ matrix.platform }}
+                    --incremental    false
+                    --base_ref       ${{ github.ref_name }}
+                    --repository     ${{ github.server_url }}/${{ github.repository }}"
+
+      - name: Upload test results
+        if:   ${{ !cancelled() }}
+        uses: actions/upload-artifact@v3
+        with:
+          name:  Test Results ${{ matrix.platform }} ${{ matrix.arch }} ${{ matrix.config }}
+          path: /tmp/workspace/build/TestResults.xml
+
+
+  build-windows:
+    if: github.repository_owner == 'root-project' || github.event_name == 'pull_request'
+
+    permissions:
+      contents: read
+
+    strategy:
+      fail-fast: false
+      matrix:
+        config: ["Debug", "Release"]
+        target_arch: [x64, x86]
+
+    name: Windows 10 ${{ matrix.target_arch }} ${{ matrix.config }}
+
+    runs-on: # Using '[self-hosted, windows, ${{ matrix.arch }}]' does not work for some reason :)
+      - self-hosted
+      - windows
+      - x64 # machine host, not build target
+      - target${{ matrix.target_arch }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Pull Request Build
+        if: github.event_name == 'pull_request' && matrix.config == 'Release'
+        env:
+          INCREMENTAL: ${{ !contains(github.event.pull_request.labels.*.name, 'clean build') }}
+        shell: cmd
+        run: "C:\\setenv.bat ${{ matrix.target_arch }} &&
+              python .github/workflows/root-ci-config/build_root.py
+                    --buildtype    ${{ matrix.config }}
+                    --platform     windows10
+                    --incremental  $INCREMENTAL
+                    --base_ref     ${{ github.base_ref }}
+                    --head_ref     refs/pull/${{ github.event.pull_request.number }}/head
+                    --repository   ${{ github.server_url }}/${{ github.repository }}
+                    --architecture ${{ matrix.target_arch }}  "
+
+      - name: Workflow dispatch/call
+        if:   github.event_name == 'workflow_dispatch'
+        shell: cmd
+        run: "C:\\setenv.bat ${{ matrix.target_arch }} &&
+              python .github/workflows/root-ci-config/build_root.py
+                    --buildtype    ${{ matrix.config }}
+                    --platform     windows10
+                    --incremental  ${{ inputs.incremental }}
+                    --base_ref     ${{ inputs.base_ref }}
+                    --head_ref     ${{ inputs.head_ref }}
+                    --repository   ${{ github.server_url }}/${{ github.repository }}
+                    --architecture ${{ matrix.target_arch }}  "
+
+      - name: Nightly build
+        if:   github.event_name == 'schedule'
+        shell: cmd
+        run: "C:\\setenv.bat ${{ matrix.target_arch }} &&
+              python .github/workflows/root-ci-config/build_root.py
+                    --buildtype    ${{ matrix.config }}
+                    --platform     windows10
+                    --incremental  false
+                    --base_ref     ${{ github.ref_name }}
+                    --repository   ${{ github.server_url }}/${{ github.repository }}
+                    --architecture ${{ matrix.target_arch }}  "
+
+      - name: Update artifacts after push to release branch
+        if:   github.event_name == 'push' && matrix.config == 'Release'
+        shell: cmd
+        run: "C:\\setenv.bat ${{ matrix.target_arch }} &&
+              python .github/workflows/root-ci-config/build_root.py
+                    --buildtype      ${{ matrix.config }}
+                    --platform       windows10
+                    --incremental    false
+                    --base_ref       ${{ github.ref_name }}
+                    --repository     ${{ github.server_url }}/${{ github.repository }}
+                    --architecture   ${{ matrix.target_arch }}  "
+
+
   build-linux:
-    if: github.repository_owner == 'root-project'
+    if: github.repository_owner == 'root-project' || github.event_name == 'pull_request'
+
     permissions:
       contents: read
 
@@ -78,24 +230,30 @@ jobs:
         # Common configs: {Release,Debug,RelWithDebInfo)
         # Build options: https://root.cern/install/build_from_source/#all-build-options
         include:
+          - image: fedora38
+            config: Debug
+
           - image: fedora37
             config: Debug
 
-          - image: centos8
+          - image: alma8
             config: Release
 
           - image: ubuntu20
             config: Release
 
-          - image: ubuntu22
+          - image: ubuntu2210
             config: Release
-            overrides: ["testing=Off", "roottest=Off"]
 
           - image: ubuntu22
             config: Debug
-            overrides: ["DLLVM_BUILD_TYPE=Debug", "soversion=On"]
+            overrides: ["imt=Off"]
 
-    runs-on: [self-hosted, linux, x64]
+    runs-on:
+      - self-hosted
+      - linux
+      - x64
+
     name: ${{ matrix.image }} ${{ matrix.config }} ${{ join( matrix.overrides, ', ' ) }}
 
     container:
@@ -138,7 +296,7 @@ jobs:
 
           for ENTRY in $OVERRIDES; do
               KEY=$( echo "$ENTRY" | cut -d '=' -f 1 )
-              
+
               # Add entry to file if not exists, otherwise replace
 
               if grep -q "$KEY=" "$FILE"; then
@@ -193,18 +351,27 @@ jobs:
         run: ".github/workflows/root-ci-config/build_root.py
                     --buildtype      ${{ matrix.config }}
                     --platform       ${{ matrix.image }}
-                    --incremental    true
+                    --incremental    false
                     --base_ref       ${{ github.ref_name }}
                     --repository     ${{ github.server_url }}/${{ github.repository }}
               "
-        
+
       - name: Upload test results
+        if:   ${{ !cancelled() }}
         uses: actions/upload-artifact@v3
         with:
           name:  Test Results ${{ matrix.image }} ${{ matrix.config }}
           path: /tmp/workspace/build/TestResults.xml
+      - name: Setup tmate session
+        if: failure() && runner.debug == '1'
+        uses: mxschmitt/action-tmate@v3
+        with:
+          sudo: false
+        # When debugging increase to a suitable value!
+        timeout-minutes: ${{ github.event.pull_request && 40 || 20 }}
 
   event_file:
+    if: github.repository_owner == 'root-project' || github.event_name == 'pull_request'
     name: "Upload Event Payload"
     runs-on: ubuntu-latest
     steps:

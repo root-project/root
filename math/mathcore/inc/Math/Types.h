@@ -14,6 +14,7 @@
 
 #ifdef __clang__
 #pragma clang diagnostic ignored "-Wconditional-uninitialized"
+#pragma clang diagnostic ignored "-Wdeprecated-copy"
 #endif
 
 #include <Vc/Vc>

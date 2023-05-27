@@ -1,5 +1,5 @@
 import { select as d3_select, drag as d3_drag } from '../d3.mjs';
-import { browser, internals, toJSON, settings, isFunc, isStr } from '../core.mjs';
+import { browser, internals, toJSON, settings, isObject, isFunc, isStr } from '../core.mjs';
 import { compressSVG, BasePainter } from '../base/BasePainter.mjs';
 import { getElementCanvPainter, selectActivePad, cleanup, resize, ObjectPainter } from '../base/ObjectPainter.mjs';
 import { createMenu } from './menu.mjs';
@@ -208,7 +208,7 @@ class GridDisplay extends MDIDisplay {
       this.simple_layout = false;
 
       let dom = this.selectDom();
-      dom.style('overflow','hidden');
+      dom.style('overflow', 'hidden');
 
       if (kind === 'simple') {
          this.simple_layout = true;
@@ -217,9 +217,17 @@ class GridDisplay extends MDIDisplay {
          return;
       }
 
-      let num = 2, arr = undefined, sizes = undefined;
+      let num = 2, arr, sizes, chld_sizes;
 
-      if ((kind.indexOf('grid') == 0) || kind2) {
+      if (kind == 'projxy') {
+         this.vertical = false;
+         this.use_separarators = true;
+         arr = [2, 2];
+         sizes = [1,3];
+         chld_sizes = [[3,1], [3,1]];
+         kind = '';
+         this.match_sizes = true;
+      } else if ((kind.indexOf('grid') == 0) || kind2) {
          if (kind2) kind = kind + 'x' + kind2;
                else kind = kind.slice(4).trim();
          this.use_separarators = false;
@@ -285,20 +293,23 @@ class GridDisplay extends MDIDisplay {
          }
       }
 
-      if (sizes && (sizes.length!==num)) sizes = undefined;
+      if (sizes?.length !== num)
+         sizes = undefined;
+      if (chld_sizes?.length !== num)
+         chld_sizes = undefined;
 
       if (!this.simple_layout) {
          injectStyle(
-            `.jsroot_vline:after { content:""; position: absolute; top: 0; bottom: 0; left: 50%; border-left: 1px dotted #ff0000; }
-             .jsroot_hline:after { content:""; position: absolute; left: 0; right: 0; top: 50%; border-top: 1px dotted #ff0000; }
-             .jsroot_separator { pointer-events: all; border: 0; margin: 0; padding: 0; }`, dom.node(), 'grid_style');
-         this.createGroup(this, dom, num, arr, sizes);
+            '.jsroot_vline:after { content:""; position: absolute; top: 0; bottom: 0; left: 50%; border-left: 1px dotted #ff0000; }'+
+            '.jsroot_hline:after { content:""; position: absolute; left: 0; right: 0; top: 50%; border-top: 1px dotted #ff0000; }'+
+            '.jsroot_separator { pointer-events: all; border: 0; margin: 0; padding: 0; }', dom.node(), 'grid_style');
+         this.createGroup(this, dom, num, arr, sizes, chld_sizes);
       }
    }
 
    /** @summary Create frames group
      * @private */
-   createGroup(handle, main, num, childs, sizes) {
+   createGroup(handle, main, num, childs, sizes, childs_sizes) {
 
       if (!sizes) sizes = new Array(num);
       let sum1 = 0, sum2 = 0;
@@ -311,20 +322,25 @@ class GridDisplay extends MDIDisplay {
       }
 
       for (let cnt = 0; cnt < num; ++cnt) {
-         let group = { id: cnt, drawid: -1, position: 0, size: sizes[cnt] };
+         let group = { id: cnt, drawid: -1, position: 0, size: sizes[cnt], parent: handle };
          if (cnt > 0) group.position = handle.groups[cnt-1].position + handle.groups[cnt-1].size;
          group.position0 = group.position;
 
-         if (!childs || !childs[cnt] || childs[cnt]<2) group.drawid = this.framecnt++;
+         if (!childs || !childs[cnt] || childs[cnt] < 2)
+            group.drawid = this.framecnt++;
 
          handle.groups.push(group);
 
          let elem = main.append('div').attr('groupid', group.id);
 
+         // remember HTML node only when need to match sizes of different groups
+         if (handle.match_sizes)
+            group.node = elem.node();
+
          if (handle.vertical)
-            elem.style('float', 'bottom').style('height',group.size+'%').style('width','100%');
+            elem.style('float', 'bottom').style('height', group.size.toFixed(2)+'%').style('width','100%');
          else
-            elem.style('float', 'left').style('width',group.size+'%').style('height','100%');
+            elem.style('float', 'left').style('width', group.size.toFixed(2)+'%').style('height','100%');
 
          if (group.drawid >= 0) {
             elem.classed('jsroot_newgrid', true);
@@ -334,15 +350,15 @@ class GridDisplay extends MDIDisplay {
             elem.style('display','flex').style('flex-direction', handle.vertical ? 'row' : 'column');
          }
 
-         if (childs && (childs[cnt]>1)) {
+         if (childs && (childs[cnt] > 1)) {
             group.vertical = !handle.vertical;
             group.groups = [];
             elem.style('overflow','hidden');
-            this.createGroup(group, elem, childs[cnt]);
+            this.createGroup(group, elem, childs[cnt], null, childs_sizes ? childs_sizes[cnt] : null);
          }
       }
 
-      if (this.use_separarators && this.createSeparator)
+      if (this.use_separarators && isFunc(this.createSeparator))
          for (let cnt = 1; cnt < num; ++cnt)
             this.createSeparator(handle, main, handle.groups[cnt]);
    }
@@ -350,31 +366,36 @@ class GridDisplay extends MDIDisplay {
    /** @summary Handle interactive sepearator movement
      * @private */
    handleSeparator(elem, action) {
-      let separ = d3_select(elem),
-          parent = elem.parentNode,
-          handle = separ.property('handle'),
-          id = separ.property('separator_id'),
-          group = handle.groups[id];
 
-       const findGroup = grid => {
-         let chld = parent.firstChild;
+      const findGroup = (node, grid) => {
+         let chld = node?.firstChild;
          while (chld) {
             if (chld.getAttribute('groupid') == grid)
                return d3_select(chld);
             chld = chld.nextSibling;
          }
          // should never happen, but keep it here like
-         return d3_select(parent).select(`[groupid='${grid}']`);
-       }, setGroupSize = grid => {
-          let name = handle.vertical ? 'height' : 'width',
-              size = handle.groups[grid].size+'%';
-          findGroup(grid).style(name, size)
-                         .selectAll('.jsroot_separator').style(name, size);
-       }, resizeGroup = grid => {
-          let sel = findGroup(grid);
-          if (!sel.classed('jsroot_newgrid')) sel = sel.select('.jsroot_newgrid');
-          sel.each(function() { resize(this); });
-       };
+         return d3_select(node).select(`[groupid='${grid}']`);
+      }, setGroupSize = (h, node, grid) => {
+         let name = h.vertical ? 'height' : 'width',
+             size = h.groups[grid].size.toFixed(2)+'%';
+         findGroup(node, grid).style(name, size)
+                              .selectAll('.jsroot_separator').style(name, size);
+      }, resizeGroup = (node, grid) => {
+         let sel = findGroup(node, grid);
+         if (!sel.classed('jsroot_newgrid'))
+            sel = sel.select('.jsroot_newgrid');
+         sel.each(function() { resize(this); });
+      }, posSepar = (h, group, separ) => {
+         separ.style(h.vertical ? 'top' : 'left', `calc(${group.position.toFixed(2)}% - 2px)`);
+      };
+
+      let separ = d3_select(elem),
+          parent = elem.parentNode,
+          handle = separ.property('handle'),
+          id = separ.property('separator_id'),
+          group = handle.groups[id],
+          needResize = false, needSetSize = false;
 
       if (action == 'start') {
          group.startpos = group.position;
@@ -383,43 +404,73 @@ class GridDisplay extends MDIDisplay {
       }
 
       if (action == 'end') {
-         if (Math.abs(group.startpos - group.position) >= 0.5) {
-            resizeGroup(id-1);
-            resizeGroup(id);
-          }
-          return;
-      }
-
-      let pos;
-      if (action == 'restore') {
-          pos = group.position0;
-      } else if (handle.vertical) {
-          group.acc_drag += action.dy;
-          pos = group.startpos + ((group.acc_drag + 2) / parent.clientHeight) * 100;
+         if (Math.abs(group.startpos - group.position) < 0.5)
+            return;
+         needResize = true;
       } else {
-          group.acc_drag += action.dx;
-          pos = group.startpos + ((group.acc_drag + 2) / parent.clientWidth) * 100;
+
+         let pos;
+         if (action == 'restore') {
+             pos = group.position0;
+         } else if (handle.vertical) {
+             group.acc_drag += action.dy;
+             pos = group.startpos + ((group.acc_drag + 2) / parent.clientHeight) * 100;
+         } else {
+             group.acc_drag += action.dx;
+             pos = group.startpos + ((group.acc_drag + 2) / parent.clientWidth) * 100;
+         }
+
+         let diff = group.position - pos;
+
+         if (Math.abs(diff) < 0.3) return; // if no significant change, do nothing
+
+         // do not change if size too small
+         if (Math.min(handle.groups[id-1].size - diff, group.size+diff) < 3) return;
+
+         handle.groups[id-1].size -= diff;
+         group.size += diff;
+         group.position = pos;
+
+         posSepar(handle, group, separ);
+
+         needSetSize = true;
+         needResize = (action == 'restore');
       }
 
-      let diff = group.position - pos;
+      if (needSetSize) {
+         setGroupSize(handle, parent, id-1);
+         setGroupSize(handle, parent, id);
+      }
 
-      if (Math.abs(diff) < 0.3) return; // if no significant change, do nothing
+      if (needResize) {
+         resizeGroup(parent, id-1);
+         resizeGroup(parent, id);
+      }
 
-      // do not change if size too small
-      if (Math.min(handle.groups[id-1].size-diff, group.size+diff) < 3) return;
+      // now handling match of the sizes
+      if (!handle.parent?.match_sizes)
+         return;
 
-      handle.groups[id-1].size -= diff;
-      group.size += diff;
-      group.position = pos;
-
-      separ.style(handle.vertical ? 'top' : 'left', `calc(${pos}% - 2px)`);
-
-      setGroupSize(id-1);
-      setGroupSize(id);
-
-      if (action == 'restore') {
-          resizeGroup(id-1);
-          resizeGroup(id);
+      for (let k = 0; k < handle.parent.groups.length; ++k) {
+         let hh = handle.parent.groups[k];
+         if ((hh === handle) || !hh.node) continue;
+         hh.groups[id].size = handle.groups[id].size;
+         hh.groups[id].position = handle.groups[id].position;
+         hh.groups[id-1].size = handle.groups[id-1].size;
+         hh.groups[id-1].position = handle.groups[id-1].position;
+         if (needSetSize) {
+            d3_select(hh.node).selectAll('.jsroot_separator').each(function() {
+               let s = d3_select(this);
+               if (s.property('separator_id') === id)
+                  posSepar(hh, hh.groups[id], s);
+            });
+            setGroupSize(hh, hh.node, id-1);
+            setGroupSize(hh, hh.node, id);
+         }
+         if (needResize) {
+            resizeGroup(hh.node, id-1);
+            resizeGroup(hh.node, id);
+          }
       }
    }
 
@@ -433,8 +484,8 @@ class GridDisplay extends MDIDisplay {
            .property('handle', handle)
            .property('separator_id', group.id)
            .style('position', 'absolute')
-           .style(handle.vertical ? 'top' : 'left', `calc(${group.position}% - 2px)`)
-           .style(handle.vertical ? 'width' : 'height', (handle.size || 100)+'%')
+           .style(handle.vertical ? 'top' : 'left', `calc(${group.position.toFixed(2)}% - 2px)`)
+           .style(handle.vertical ? 'width' : 'height', (handle.size?.toFixed(2) || 100)+'%')
            .style(handle.vertical ? 'height' : 'width', '5px')
            .style('cursor', handle.vertical ? 'ns-resize' : 'ew-resize');
 
@@ -447,7 +498,7 @@ class GridDisplay extends MDIDisplay {
 
       // need to get touches events handling in drag
       if (browser.touches && !main.on('touchmove'))
-         main.on('touchmove', function() { });
+         main.on('touchmove', function() {});
    }
 
 
@@ -622,15 +673,15 @@ class TabsDisplay extends MDIDisplay {
           text_color = settings.DarkMode ? '#ddd' : 'inherit';
 
       injectStyle(
-         `.jsroot_tabs { display: flex; flex-direction: column; position: absolute; overflow: hidden; inset: 0px 0px 0px 0px; }
-          .jsroot_tabs_labels { white-space: nowrap; position: relative; overflow-x: auto; }
-          .jsroot_tabs_labels .jsroot_tabs_label {
-             color: ${text_color}; background: ${lbl_color}; border: 1px solid ${lbl_border}; display: inline-block; font-size: 1rem; left: 1px;
-             margin-left: 3px; padding: 0px 5px 1px 5px; position: relative; vertical-align: bottom;
-          }
-          .jsroot_tabs_main { margin: 0; flex: 1 1 0%; position: relative; }
-          .jsroot_tabs_main .jsroot_tabs_draw { overflow: hidden; background: ${bkgr_color}; position: absolute; top: 0px; bottom: 0px; left: 0px; right: 0px; }`,
-          dom.node(), 'tabs_style');
+         `.jsroot_tabs { display: flex; flex-direction: column; position: absolute; overflow: hidden; inset: 0px 0px 0px 0px; }`+
+         `.jsroot_tabs_labels { white-space: nowrap; position: relative; overflow-x: auto; }`+
+         `.jsroot_tabs_labels .jsroot_tabs_label {`+
+             `color: ${text_color}; background: ${lbl_color}; border: 1px solid ${lbl_border}; display: inline-block; font-size: 1rem; left: 1px;`+
+             `margin-left: 3px; padding: 0px 5px 1px 5px; position: relative; vertical-align: bottom;`+
+         `}`+
+         `.jsroot_tabs_main { margin: 0; flex: 1 1 0%; position: relative; }`+
+         `.jsroot_tabs_main .jsroot_tabs_draw { overflow: hidden; background: ${bkgr_color}; position: absolute; top: 0px; bottom: 0px; left: 0px; right: 0px; }`,
+         dom.node(), 'tabs_style');
 
       let frame_id = this.cnt++, mdi = this, lbl = title;
 
@@ -877,14 +928,14 @@ class FlexibleDisplay extends MDIDisplay {
           top = dom.select('.jsroot_flex_top');
 
       injectStyle(
-         `.jsroot_flex_top { overflow: auto; position: relative; height: 100%; width: 100%; }
-          .jsroot_flex_btn { float: right; padding: 0; width: 1.4em; text-align: center; font-size: 10px; margin-top: 2px; margin-right: 4px; }
-          .jsroot_flex_header { height: 23px; overflow: hidden; background-color: lightblue; }
-          .jsroot_flex_header p { margin: 1px; float: left; font-size: 14px; padding-left: 5px; }
-          .jsroot_flex_draw { overflow: hidden; width: 100%; height: calc(100% - 24px); }
-          .jsroot_flex_frame { border: 1px solid black; box-shadow: 1px 1px 2px 2px #aaa; background: white; }
-          .jsroot_flex_resize { position: absolute; right: 2px; bottom: 2px; overflow: hidden; cursor: nwse-resize; }
-          .jsroot_flex_resizable_helper { border: 2px dotted #00F; }`, dom.node(), 'flex_style');
+         `.jsroot_flex_top { overflow: auto; position: relative; height: 100%; width: 100%; }`+
+         `.jsroot_flex_btn { float: right; padding: 0; width: 1.4em; text-align: center; font-size: 10px; margin-top: 2px; margin-right: 4px; }`+
+         `.jsroot_flex_header { height: 23px; overflow: hidden; background-color: lightblue; }`+
+         `.jsroot_flex_header p { margin: 1px; float: left; font-size: 14px; padding-left: 5px; }`+
+         `.jsroot_flex_draw { overflow: hidden; width: 100%; height: calc(100% - 24px); }`+
+         `.jsroot_flex_frame { border: 1px solid black; box-shadow: 1px 1px 2px 2px #aaa; background: white; }`+
+         `.jsroot_flex_resize { position: absolute; right: 2px; bottom: 2px; overflow: hidden; cursor: nwse-resize; }`+
+         `.jsroot_flex_resizable_helper { border: 2px dotted #00F; }`, dom.node(), 'flex_style');
 
       if (top.empty())
          top = dom.append('div').classed('jsroot_flex_top', true);
@@ -1228,23 +1279,23 @@ class BrowserLayout {
           input_style = settings.DarkMode ? `background-color: #222; color: ${text_color}` : '';
 
       injectStyle(
-         `.jsroot_browser { pointer-events: none; position: absolute; left: 0; top: 0; bottom: 0; right:0; margin: 0; border: 0; overflow: hidden; }
-          .jsroot_draw_area { background-color: ${bkgr_color}; overflow: hidden; margin: 0; border: 0; }
-          .jsroot_browser_area { color: ${text_color}; background-color: ${bkgr_color}; font-size: 12px; font-family: Verdana; pointer-events: all; box-sizing: initial; }
-          .jsroot_browser_area input { ${input_style} }
-          .jsroot_browser_area select { ${input_style} }
-          .jsroot_browser_title { font-family: Verdana; font-size: 20px; color: ${title_color}; }
-          .jsroot_browser_btns { pointer-events: all; opacity: 0; display:flex; flex-direction: column; }
-          .jsroot_browser_btns:hover { opacity: 0.3; }
-          .jsroot_browser_area p { margin-top: 5px; margin-bottom: 5px; white-space: nowrap; }
-          .jsroot_browser_hierarchy { flex: 1; margin-top: 2px; }
-          .jsroot_status_area { background-color: ${bkgr_color}; overflow: hidden; font-size: 12px; font-family: Verdana; pointer-events: all; }
-          .jsroot_float_browser { border: solid 3px white; }
-          .jsroot_browser_resize { position: absolute; right: 3px; bottom: 3px; margin-bottom: 0px; margin-right: 0px; opacity: 0.5; cursor: se-resize; z-index: 1; }
-          .jsroot_status_label { margin: 3px; margin-left: 5px; font-size: 14px; vertical-align: middle; white-space: nowrap; }
-          .jsroot_separator { pointer-events: all; border: 0; margin: 0; padding: 0; }
-          .jsroot_h_separator { cursor: ns-resize; background-color: azure; }
-          .jsroot_v_separator { cursor: ew-resize; background-color: azure; }`, this.main().node(), 'browser_layout_style');
+         `.jsroot_browser { pointer-events: none; position: absolute; left: 0; top: 0; bottom: 0; right:0; margin: 0; border: 0; overflow: hidden; }`+
+         `.jsroot_draw_area { background-color: ${bkgr_color}; overflow: hidden; margin: 0; border: 0; }`+
+         `.jsroot_browser_area { color: ${text_color}; background-color: ${bkgr_color}; font-size: 12px; font-family: Verdana; pointer-events: all; box-sizing: initial; }`+
+         `.jsroot_browser_area input { ${input_style} }`+
+         `.jsroot_browser_area select { ${input_style} }`+
+         `.jsroot_browser_title { font-family: Verdana; font-size: 20px; color: ${title_color}; }`+
+         `.jsroot_browser_btns { pointer-events: all; opacity: 0; display:flex; flex-direction: column; }`+
+         `.jsroot_browser_btns:hover { opacity: 0.3; }`+
+         `.jsroot_browser_area p { margin-top: 5px; margin-bottom: 5px; white-space: nowrap; }`+
+         `.jsroot_browser_hierarchy { flex: 1; margin-top: 2px; }`+
+         `.jsroot_status_area { background-color: ${bkgr_color}; overflow: hidden; font-size: 12px; font-family: Verdana; pointer-events: all; }`+
+         `.jsroot_float_browser { border: solid 3px white; }`+
+         `.jsroot_browser_resize { position: absolute; right: 3px; bottom: 3px; margin-bottom: 0px; margin-right: 0px; opacity: 0.5; cursor: se-resize; z-index: 1; }`+
+         `.jsroot_status_label { margin: 3px; margin-left: 5px; font-size: 14px; vertical-align: middle; white-space: nowrap; }`+
+         `.jsroot_separator { pointer-events: all; border: 0; margin: 0; padding: 0; }`+
+         `.jsroot_h_separator { cursor: ns-resize; background-color: azure; }`+
+         `.jsroot_v_separator { cursor: ew-resize; background-color: azure; }`, this.main().node(), 'browser_layout_style');
    }
 
    /** @summary method used to create basic elements
@@ -1414,7 +1465,7 @@ class BrowserLayout {
 
       // need to get touches events handling in drag
       if (browser.touches && !main.on('touchmove'))
-         main.on('touchmove', function() { });
+         main.on('touchmove', () => {});
 
       if (!height || isStr(height)) height = this.last_hsepar_height || 20;
 
@@ -1492,7 +1543,7 @@ class BrowserLayout {
 
    /** @summary Show status information inside special fields of browser layout */
    showStatus(...msgs) {
-      if (!this.status_layout) return;
+      if (!isObject(this.status_layout) || !isFunc(this.status_layout.getGridFrame)) return;
 
       let maxh = 0;
       for (let n = 0; n < 4; ++n) {
@@ -1717,7 +1768,7 @@ class BrowserLayout {
 
         // need to get touches events handling in drag
         if (browser.touches && !main.on('touchmove'))
-           main.on('touchmove', function() { });
+           main.on('touchmove', () => {});
 
         this.adjustSeparators(250, null, true, true);
      }
@@ -1729,5 +1780,5 @@ class BrowserLayout {
 
 } // class BrowserLayout
 
-export { MDIDisplay, CustomDisplay, BatchDisplay, GridDisplay, TabsDisplay, FlexibleDisplay, BrowserLayout,
-         getHPainter, setHPainter };
+export { MDIDisplay, CustomDisplay, BatchDisplay, GridDisplay, TabsDisplay, FlexibleDisplay,
+         BrowserLayout, getHPainter, setHPainter };

@@ -77,9 +77,7 @@ protected:
    // which are only functional after module has been attached to a RooMCStudy object
 
    /// Refit model using original or specified data sample
-   RooFitResult* refit(RooAbsData* inGenSample=nullptr) {
-     if (_mcs) return _mcs->refit(inGenSample) ; else return nullptr ;
-   }
+   RooFit::OwningPtr<RooFitResult> refit(RooAbsData* inGenSample=nullptr);
 
    /// Return generate sample
    RooAbsData* genSample() {

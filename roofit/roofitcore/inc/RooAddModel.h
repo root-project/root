@@ -20,7 +20,6 @@
 #include "RooListProxy.h"
 #include "RooSetProxy.h"
 #include "RooAICRegistry.h"
-#include "RooNormSetCache.h"
 #include "RooObjCacheManager.h"
 
 class AddCacheElem;
@@ -36,6 +35,9 @@ public:
 
   double evaluate() const override ;
   bool checkObservables(const RooArgSet* nset) const override ;
+
+  void computeBatch(cudaStream_t*, double* output, size_t nEvents, RooFit::Detail::DataMap const&) const override;
+  inline bool canComputeBatchWithCuda() const override { return true; }
 
   Int_t basisCode(const char* name) const override ;
 

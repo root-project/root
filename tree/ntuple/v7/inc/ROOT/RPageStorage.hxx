@@ -47,6 +47,7 @@ class RColumn;
 class RColumnElementBase;
 class RNTupleCompressor;
 class RNTupleDecompressor;
+struct RNTupleModelChangeset;
 class RPagePool;
 class RFieldBase;
 
@@ -112,6 +113,13 @@ public:
 protected:
    std::string fNTupleName;
    RTaskScheduler *fTaskScheduler = nullptr;
+   void WaitForAllTasks()
+   {
+      if (!fTaskScheduler)
+         return;
+      fTaskScheduler->Wait();
+      fTaskScheduler->Reset();
+   }
 
 public:
    explicit RPageStorage(std::string_view name);
@@ -265,6 +273,10 @@ public:
    /// To do so, Create() calls CreateImpl() after updating the descriptor.
    /// Create() associates column handles to the columns referenced by the model
    void Create(RNTupleModel &model);
+   /// Incorporate incremental changes to the model into the ntuple descriptor. This happens, e.g. if new fields were
+   /// added after the initial call to `RPageSink::Create(RNTupleModel &)`
+   virtual void UpdateSchema(const RNTupleModelChangeset &changeset);
+
    /// Write a page to the storage. The column must have been added before.
    void CommitPage(ColumnHandle_t columnHandle, const RPage &page);
    /// Write a preprocessed page to storage. The column must have been added before.

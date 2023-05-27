@@ -27,7 +27,7 @@ public:
    TLegendEntry();
    TLegendEntry(const TObject *obj, const char *label = nullptr, Option_t *option="lpf" );
    TLegendEntry( const TLegendEntry &entry );
-   virtual ~TLegendEntry();
+   ~TLegendEntry() override;
    void                  Copy( TObject &obj ) const override;
    virtual const char   *GetLabel() const { return fLabel.Data(); }
    virtual TObject      *GetObject() const { return fObject; }

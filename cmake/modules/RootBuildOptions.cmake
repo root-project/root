@@ -120,7 +120,7 @@ ROOT_BUILD_OPTION(cocoa OFF "Use native Cocoa/Quartz graphics backend (MacOS X o
 ROOT_BUILD_OPTION(coverage OFF "Enable compile flags for coverage testing")
 ROOT_BUILD_OPTION(cuda OFF "Enable support for CUDA (requires CUDA toolkit >= 7.5)")
 ROOT_BUILD_OPTION(cudnn ON "Enable support for cuDNN (default when Cuda is enabled)")
-ROOT_BUILD_OPTION(cxxmodules OFF "Enable support for C++ modules")
+ROOT_BUILD_OPTION(cxxmodules OFF "Enable support for C++ modules (deprecated)")
 ROOT_BUILD_OPTION(daos OFF "Enable RNTuple support for Intel DAOS")
 ROOT_BUILD_OPTION(dataframe ON "Enable ROOT RDataFrame")
 ROOT_BUILD_OPTION(test_distrdf_pyspark OFF "Enable distributed RDataFrame tests that use pyspark")
@@ -223,7 +223,7 @@ else()
     "Known values are zlib, lzma, lz4, zstd (case-insensitive).")
 endif()
 
-#--- The 'all' option swithes ON major options---------------------------------------------------
+#--- The 'all' option switches ON major options---------------------------------------------------
 if(all)
  set(alien_defvalue ON)
  set(arrow_defvalue ON)
@@ -258,6 +258,7 @@ if(all)
  set(pythia8_defvalue ON)
  set(pyroot_defvalue ON)
  set(qt5web_defvalue ON)
+ set(qt6web_defvalue ON)
  set(r_defvalue ON)
  set(roofit_defvalue ON)
  set(roofit_multiprocess_defvalue ON)
@@ -414,6 +415,12 @@ if(webgui)
   endif()
 endif()
 
+if(NOT webgui)
+   set(qt5web OFF CACHE BOOL "Disabled because webgui not build" FORCE)
+   set(qt6web OFF CACHE BOOL "Disabled because webgui not build" FORCE)
+   set(cefweb OFF CACHE BOOL "Disabled because webgui not build" FORCE)
+endif()
+
 #---Removed options------------------------------------------------------------
 foreach(opt afdsmgrd afs bonjour castor chirp geocad glite globus hdfs ios
             krb5 ldap memstat qt qtgsi rfio ruby sapdb srp table python vmc)
@@ -423,7 +430,7 @@ foreach(opt afdsmgrd afs bonjour castor chirp geocad glite globus hdfs ios
 endforeach()
 
 #---Deprecated options------------------------------------------------------------------------
-foreach(opt alien)
+foreach(opt alien cxxmodules)
   if(${opt})
     message(DEPRECATION ">>> Option '${opt}' is deprecated and will be removed in the next release of ROOT. Please contact root-dev@cern.ch should you still need it.")
   endif()

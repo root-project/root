@@ -2,10 +2,11 @@
 // Authors: Carsten D. Burgard, DESY/ATLAS, 12/2021
 //          Jonas Rembser, CERN 12/2022
 
+#include <RooFitHS3/JSONIO.h>
 #include <RooFitHS3/RooJSONFactoryWSTool.h>
 #include <RooFitHS3/HistFactoryJSONTool.h>
+#include <RooFit/ModelConfig.h>
 
-#include <RooStats/ModelConfig.h>
 #include <RooStats/HistFactory/Measurement.h>
 #include <RooStats/HistFactory/MakeModelAndMeasurementsFast.h>
 
@@ -21,49 +22,53 @@ namespace {
 // If the JSON files should be written out for debugging purpose.
 const bool writeJsonFiles = false;
 
+void setupKeys()
+{
+   static bool isAlreadySetup = false;
+   if (isAlreadySetup)
+      return;
+
+   auto etcDir = std::string(TROOT::GetEtcDir());
+   RooFit::JSONIO::loadExportKeys(etcDir + "/RooFitHS3_wsexportkeys.json");
+   RooFit::JSONIO::loadFactoryExpressions(etcDir + "/RooFitHS3_wsfactoryexpressions.json");
+
+   isAlreadySetup = true;
+}
+
+class HistoWriter {
+public:
+   HistoWriter(int nbinsx, double xlow, double xup) : _nbinsx{nbinsx}, _xlow{xlow}, _xup{xup} {}
+   void operator()(std::string const &name, std::vector<float> const &arr)
+   {
+      // to test code paths where name and title is treated differently
+      std::string title = name + "_title";
+      auto histo = std::make_unique<TH1F>(name.c_str(), title.c_str(), _nbinsx, _xlow, _xup);
+      for (int i = 0; i < _nbinsx; ++i) {
+         histo->SetBinContent(i + 1, arr[i]);
+      }
+      histo->Write();
+   }
+
+private:
+   int _nbinsx = 0;
+   double _xlow = 0.0;
+   double _xup = 0.0;
+};
+
 void createInputFile(std::string const &inputFileName)
 {
-
-   TH1F data("data", "data", 2, 1.0, 2.0);
-
-   TH1F signal("signal", "signal histogram (pb)", 2, 1.0, 2.0);
-   TH1F systUncDo("shapeUnc_sigDo", "signal shape uncert.", 2, 1.0, 2.0);
-   TH1F systUncUp("shapeUnc_sigUp", "signal shape uncert.", 2, 1.0, 2.0);
-
-   TH1F background1("background1", "background 1 histogram (pb)", 2, 1.0, 2.0);
-   TH1F background2("background2", "background 2 histogram (pb)", 2, 1.0, 2.0);
-   TH1F background1_statUncert("background1_statUncert", "statUncert", 2, 1.0, 2.0);
-
-   data.SetBinContent(1, 122.);
-   data.SetBinContent(2, 112.);
-
-   signal.SetBinContent(1, 20.);
-   signal.SetBinContent(2, 10.);
-
-   systUncDo.SetBinContent(1, 15.);
-   systUncDo.SetBinContent(2, 8.);
-
-   systUncUp.SetBinContent(1, 29.);
-   systUncUp.SetBinContent(2, 13.);
-
-   background1.SetBinContent(1, 100.);
-   background1.SetBinContent(2, 0.);
-
-   background2.SetBinContent(1, 0.);
-   background2.SetBinContent(2, 100.);
-
-   background1_statUncert.SetBinContent(1, 0.05);
-   background1_statUncert.SetBinContent(2, 0.05);
-
    TFile file{inputFileName.c_str(), "RECREATE"};
 
-   data.Write();
-   signal.Write();
-   systUncDo.Write();
-   systUncUp.Write();
-   background1.Write();
-   background2.Write();
-   background1_statUncert.Write();
+   HistoWriter hw{2, 1.0, 2.0};
+
+   hw("data", {122., 112.});
+   hw("signal", {20., 10.});
+   hw("shapeUnc_sigDo", {15., 8.});
+   hw("shapeUnc_sigUp", {29., 13.});
+
+   hw("background1", {100., 0.});
+   hw("background2", {0., 100.});
+   hw("background1_statUncert", {0.05, 0.05});
 }
 
 std::unique_ptr<RooStats::HistFactory::Measurement>
@@ -107,14 +112,11 @@ measurement(const char *inputFileName = "test_hs3_histfactory_json_input.root")
 
 } // namespace
 
-TEST(TestHS3HistFactoryJSON, Create)
+TEST(TestHS3HistFactoryJSON, HistFactoryJSONTool)
 {
    RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
-}
 
-TEST(TestHS3HistFactoryJSON, Closure)
-{
-   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+   setupKeys();
 
    std::unique_ptr<RooStats::HistFactory::Measurement> meas = measurement();
    if (writeJsonFiles) {
@@ -136,7 +138,7 @@ TEST(TestHS3HistFactoryJSON, Closure)
    RooAbsPdf *pdf = mc->GetPdf();
    EXPECT_TRUE(pdf != nullptr);
 
-   RooAbsPdf *pdfFromJson = wsFromJson.pdf(meas->GetName());
+   RooAbsPdf *pdfFromJson = mcFromJson->GetPdf();
    EXPECT_TRUE(pdfFromJson != nullptr);
 
    RooAbsData *data = ws->data("obsData");
@@ -145,32 +147,27 @@ TEST(TestHS3HistFactoryJSON, Closure)
    RooAbsData *dataFromJson = wsFromJson.data("obsData");
    EXPECT_TRUE(dataFromJson != nullptr);
 
+   RooArgSet const &globs = *mc->GetGlobalObservables();
+
    using namespace RooFit;
+   using Res = std::unique_ptr<RooFitResult>;
 
-   std::unique_ptr<RooFitResult> result{pdf->fitTo(*data, Strategy(1), Minos(*mc->GetParametersOfInterest()),
-                                                   GlobalObservables(*mc->GetGlobalObservables()), PrintLevel(-1),
-                                                   Save())};
+   Res result{pdf->fitTo(*data, Strategy(1), Minos(*mc->GetParametersOfInterest()), GlobalObservables(globs),
+                         PrintLevel(-1), Save())};
 
-   std::unique_ptr<RooFitResult> resultFromJson{
-      pdfFromJson->fitTo(*dataFromJson, Strategy(1), Minos(*mcFromJson->GetParametersOfInterest()),
-                         GlobalObservables(*mcFromJson->GetGlobalObservables()), PrintLevel(-1), Save())};
+   Res resultFromJson{pdfFromJson->fitTo(*dataFromJson, Strategy(1), Minos(*mcFromJson->GetParametersOfInterest()),
+                                         GlobalObservablesTag("globs"), PrintLevel(-1), Save())};
 
-   // TODO:
-   //   * fix issues that prevent us from increasing precision
-   //   * do also the reverse comparison to check that the set of constant parameters matches
-   // EXPECT_TRUE(result->isIdenticalNoCov(*resultFromJSON, 10.0, 0.01));
-   EXPECT_TRUE(resultFromJson->isIdenticalNoCov(*result, 10.0, 0.01));
-
-   const double muVal = ws->var("mu")->getVal();
-   const double muJsonVal = wsFromJson.var("mu")->getVal();
-
-   EXPECT_NEAR(muJsonVal, muVal, 1e-4);         // absolute tolerance
-   EXPECT_NEAR(muJsonVal, muVal, 1e-4 * muVal); // relative tolerance
+   // Do also the reverse comparison to check that the set of constant parameters matches
+   EXPECT_TRUE(result->isIdentical(*resultFromJson));
+   EXPECT_TRUE(resultFromJson->isIdentical(*result));
 }
 
 TEST(TestHS3HistFactoryJSON, ClosureLoop)
 {
    RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   setupKeys();
 
    std::unique_ptr<RooStats::HistFactory::Measurement> meas = measurement();
    std::unique_ptr<RooWorkspace> ws{RooStats::HistFactory::MakeModelAndMeasurementFast(*meas)};
@@ -181,9 +178,6 @@ TEST(TestHS3HistFactoryJSON, ClosureLoop)
    RooAbsPdf *pdf = mc->GetPdf();
    EXPECT_TRUE(pdf != nullptr);
 
-   // For now, this is the way to tell the JSONIO what the combined datasets are
-   pdf->setStringAttribute("combined_data_name", "obsData");
-
    std::string const &js = RooJSONFactoryWSTool{*ws}.exportJSONtoString();
    if (writeJsonFiles) {
       RooJSONFactoryWSTool{*ws}.exportJSON("hf2.json");
@@ -193,10 +187,14 @@ TEST(TestHS3HistFactoryJSON, ClosureLoop)
    RooJSONFactoryWSTool newtool{newws};
    newtool.importJSONfromString(js);
 
-   // To check that JSON > WS > JSON doesn't change the JSON
+   std::string const &js3 = RooJSONFactoryWSTool{newws}.exportJSONtoString();
+
    if (writeJsonFiles) {
       RooJSONFactoryWSTool{newws}.exportJSON("hf3.json");
    }
+
+   // Chack that JSON > WS > JSON doesn't change the JSON
+   EXPECT_EQ(js, js3) << "The JSON -> WS -> JSON roundtrip did not result in the original JSON!";
 
    auto *newmc = dynamic_cast<RooStats::ModelConfig *>(newws.obj("ModelConfig"));
    EXPECT_TRUE(newmc != nullptr);
@@ -210,25 +208,18 @@ TEST(TestHS3HistFactoryJSON, ClosureLoop)
    RooAbsData *newdata = newws.data("obsData");
    EXPECT_TRUE(newdata != nullptr);
 
+   RooArgSet const &globs = *mc->GetGlobalObservables();
+
    using namespace RooFit;
+   using Res = std::unique_ptr<RooFitResult>;
 
-   std::unique_ptr<RooFitResult> result{pdf->fitTo(*data, Strategy(1), Minos(*mc->GetParametersOfInterest()),
-                                                   GlobalObservables(*mc->GetGlobalObservables()), PrintLevel(-1),
-                                                   Save())};
+   Res result{pdf->fitTo(*data, Strategy(1), Minos(*mc->GetParametersOfInterest()), GlobalObservables(globs),
+                         PrintLevel(-1), Save())};
 
-   std::unique_ptr<RooFitResult> newresult{
-      newpdf->fitTo(*newdata, Strategy(1), Minos(*newmc->GetParametersOfInterest()),
-                    GlobalObservables(*newmc->GetGlobalObservables()), PrintLevel(-1), Save())};
+   Res resultFromJson{newpdf->fitTo(*newdata, Strategy(1), Minos(*newmc->GetParametersOfInterest()),
+                                    GlobalObservablesTag("globs"), PrintLevel(-1), Save())};
 
-   // TODO:
-   //   * fix issues that prevent us from increasing precision
-   //   * do also the reverse comparison to check that the set of constant parameters matches
-   // EXPECT_TRUE(result->isIdenticalNoCov(*newresult, 10.0, 0.01));
-   EXPECT_TRUE(newresult->isIdenticalNoCov(*result, 10.0, 0.01));
-
-   const double muVal = ws->var("mu")->getVal();
-   const double muNewVal = newws.var("mu")->getVal();
-
-   EXPECT_NEAR(muNewVal, muVal, 1e-4);         // absolute tolerance
-   EXPECT_NEAR(muNewVal, muVal, 1e-4 * muVal); // relative tolerance
+   // Do also the reverse comparison to check that the set of constant parameters matches
+   EXPECT_TRUE(result->isIdentical(*resultFromJson));
+   EXPECT_TRUE(resultFromJson->isIdentical(*result));
 }

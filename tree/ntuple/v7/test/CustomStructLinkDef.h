@@ -11,6 +11,9 @@
 #pragma link C++ class DerivedC+;
 #pragma link C++ class StructWithArrays + ;
 #pragma link C++ class TestEBO+;
+#pragma link C++ class IOConstructor+;
+
+#pragma link C++ class EdmWrapper<CustomStruct> +;
 
 #pragma link C++ class IAuxSetOption+;
 #pragma link C++ class PackedParameters+;

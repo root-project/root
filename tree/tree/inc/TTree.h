@@ -310,7 +310,7 @@ public:
 
    TTree();
    TTree(const char* name, const char* title, Int_t splitlevel = 99, TDirectory* dir = gDirectory);
-   virtual ~TTree();
+   ~TTree() override;
 
    TTree(const TTree& tt) = delete;
    TTree& operator=(const TTree& tt) = delete;
@@ -430,6 +430,7 @@ public:
    virtual Long64_t        Draw(const char* varexp, const char* selection, Option_t* option = "", Long64_t nentries = kMaxEntries, Long64_t firstentry = 0); // *MENU*
    virtual void            DropBaskets();
    virtual void            DropBuffers(Int_t nbytes);
+           Bool_t          EnableCache();
    virtual Int_t           Fill();
    virtual TBranch        *FindBranch(const char* name);
    virtual TLeaf          *FindLeaf(const char* name);
@@ -675,7 +676,7 @@ protected:
 public:
    TTreeFriendLeafIter(const TTree* t, Bool_t dir = kIterForward);
    TTreeFriendLeafIter(const TTreeFriendLeafIter &iter);
-   ~TTreeFriendLeafIter() { SafeDelete(fLeafIter); SafeDelete(fTreeIter); }
+   ~TTreeFriendLeafIter() override { SafeDelete(fLeafIter); SafeDelete(fTreeIter); }
    TIterator &operator=(const TIterator &rhs) override;
    TTreeFriendLeafIter &operator=(const TTreeFriendLeafIter &rhs);
 

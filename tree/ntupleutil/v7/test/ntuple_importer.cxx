@@ -249,7 +249,7 @@ TEST(RNTupleImporter, FixedSizeArray)
       char c[4] = {'R', 'O', 'O', 'T'};
       tree->Branch("a", a, "a[1]/I");
       tree->Branch("b", b, "b[2]/I");
-      tree->Branch("c", c, "c[4]/C");
+      tree->Branch("c", c, "c[4]/B");
       struct {
          Int_t a = 1;
          Int_t b[2] = {2, 3};

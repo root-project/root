@@ -12,14 +12,26 @@ sap.ui.define([
    'sap/m/ButtonType',
    'sap/ui/layout/Splitter',
    'sap/ui/layout/SplitterLayoutData'
-], function (Controller, Component, JSONModel, XMLView, MessageToast, Dialog, List, InputListItem, Input, Button, ButtonType, Splitter, SplitterLayoutData) {
+], function (Controller,
+             Component,
+             JSONModel,
+             XMLView,
+             MessageToast,
+             Dialog,
+             List,
+             InputListItem,
+             Input,
+             Button,
+             ButtonType,
+             Splitter,
+             SplitterLayoutData) {
    "use strict";
 
    function chk_icon(flag) {
       return flag ? "sap-icon://accept" : "sap-icon://decline";
    }
 
-   let CController = Controller.extend("rootui5.canv.controller.Canvas", {
+   return Controller.extend('rootui5.canv.controller.Canvas', {
 
       onInit() {
          this._Page = this.getView().byId("CanvasMainPage");
@@ -81,8 +93,7 @@ sap.ui.define([
       },
 
       isv7() {
-         let cp = this.getCanvasPainter();
-         return cp?.v7canvas;
+         return this.getCanvasPainter()?.v7canvas;
       },
 
       executeObjectMethod(painter, method, menu_obj_id) {
@@ -281,18 +292,15 @@ sap.ui.define([
       },
 
       onInterruptPress() {
-         let p = this.getCanvasPainter();
-         if (p) p.sendWebsocket("INTERRUPT");
+         this.getCanvasPainter()?.sendWebsocket("INTERRUPT");
       },
 
       onQuitRootPress() {
-         let p = this.getCanvasPainter();
-         if (p) p.sendWebsocket("QUIT");
+         this.getCanvasPainter()?.sendWebsocket("QUIT");
       },
 
       onReloadPress() {
-         let p = this.getCanvasPainter();
-         if (p) p.sendWebsocket("RELOAD");
+         this.getCanvasPainter()?.sendWebsocket("RELOAD");
       },
 
       isGedEditor() {
@@ -316,9 +324,11 @@ sap.ui.define([
       },
 
       getLeftController(name) {
-         if (this.getView().getModel().getProperty("/LeftArea") != name) return null;
-         let split = this.getView().byId("MainAreaSplitter");
-         return split ? split.getContentAreas()[0].getController() : null;
+         if (this.getView().getModel().getProperty("/LeftArea") != name)
+            return null;
+         let split = this.getView().byId("MainAreaSplitter"),
+             cont = split ? split.getContentAreas() : [];
+         return cont && cont[0] && cont[0].getController ? cont[0].getController() : null;
       },
 
       toggleGedEditor() {
@@ -365,10 +375,12 @@ sap.ui.define([
 
          let can_elem = this.getView().byId('MainPanel');
 
+         let w = this.getView().$().width();
+
          return XMLView.create({
              viewName,
              viewData,
-             layoutData: new SplitterLayoutData({ resizable: true, size: '250px' }),
+             layoutData: new SplitterLayoutData({ resizable: true, size: Math.round(w*0.25) + 'px' }),
              height: (panel_name == 'Panel') ? '100%' : undefined
          }).then(oView => {
 
@@ -391,21 +403,18 @@ sap.ui.define([
 
       getBottomController() {
          if (!this.bottomVisible) return null;
-         let split = this.getView().byId("MainAreaSplitter"),
+         let split = this.getView().byId('BottomAreaSplitter'),
              cont = split.getContentAreas(),
-             vsplit = cont[cont.length-1],
-             vcont = vsplit.getContentAreas(),
-             bottom = vcont[vcont.length-1];
-         return bottom ? bottom.getController() : null;
+             bottom = cont[cont.length-1];
+         return bottom?.getController();
       },
 
-      drawInProjectionArea(obj, opt) {
-         let cp = this.getCanvasPainter();
-         if (typeof cp?.drawObject != 'function')
-            return Promise.resolve(null);
+      drawInProjectionArea(obj, opt, kind) {
+         let cp = this.getCanvasPainter(),
+             ctrl = (kind == 'X') ? this.getBottomController() : this.getLeftController('Panel');
 
-         let ctrl = this.getBottomController();
-         if (!ctrl) ctrl = this.getLeftController('Panel');
+         if (!ctrl || (typeof cp?.drawObject != 'function'))
+            return Promise.resolve(null);
 
          return ctrl.getRenderPromise().then(dom => {
             dom.style.overflow = "hidden";
@@ -417,9 +426,9 @@ sap.ui.define([
       },
 
       showProjectionArea(kind) {
-         let bottom = null;
-         return this.showBottomArea(kind == "X")
-             .then(area => { bottom = area; return this.showLeftArea(kind == "Y" ? "Panel" : ""); })
+         let bottom = null, is_xy = kind == 'XY';
+         return this.showBottomArea((kind == 'X') || is_xy, is_xy)
+             .then(area => { bottom = area; return this.showLeftArea((kind == 'Y') || is_xy ? 'Panel' : ''); })
              .then(left => {
 
                let ctrl = bottom || left;
@@ -431,12 +440,28 @@ sap.ui.define([
             });
       },
 
-      showBottomArea(is_on) {
+      handleBottomResize(evnt) {
+         let sz = evnt.getParameters().newSizes;
+         if (!sz) return;
+
+         let ctrl = this.getLeftController('Panel');
+         if (!ctrl) return;
+
+         let fullHeight = this.getView().$().height();
+         if (fullHeight && sz[0]) {
+            // ctrl.getView().setHeight(Math.round(sz[0]/fullHeight) + '%');
+            ctrl.getView().$().height(sz[0] + 'px');
+            if (typeof ctrl.invokeResizeTimeout == 'function')
+               ctrl.invokeResizeTimeout(10);
+         }
+      },
+
+      showBottomArea(is_on, with_handler) {
 
          if (this.bottomVisible == is_on)
             return Promise.resolve(this.getBottomController());
 
-         let split = this.getView().byId("MainAreaSplitter");
+         let split = this.getView().byId("BottomAreaSplitter");
          if (!split) return Promise.resolve(null);
 
          let cont = split.getContentAreas();
@@ -444,31 +469,22 @@ sap.ui.define([
          this.bottomVisible = !this.bottomVisible;
 
          if (!this.bottomVisible) {
-            // vertical splitter exists - toggle it
-            let vsplit = cont[cont.length-1],
-                main = vsplit.removeContentArea(0);
-
-            vsplit.destroyContentAreas();
-            split.removeContentArea(vsplit);
-            split.addContentArea(main);
+            // just remove bottom controller
+            split.removeContentArea(cont.length-1);
             return Promise.resolve(null);
          }
 
-         // remove panel with normal drawing
-         split.removeContentArea(cont[cont.length-1]);
-
-         let vsplit = new Splitter({ orientation: "Vertical" });
-
-         split.addContentArea(vsplit);
-
-         vsplit.addContentArea(cont[cont.length-1]);
+         let h = this.getView().$().height();
 
          return XMLView.create({
+            viewData: {},
             viewName: 'rootui5.canv.view.Panel',
-            layoutData: new SplitterLayoutData({ resizable: true, size: "200px" }),
-            height: "100%"
+            layoutData: new SplitterLayoutData({ resizable: true, size: Math.round(h*0.25) + 'px'}),
+            height: '100%'
          }).then(oView => {
-            vsplit.addContentArea(oView);
+            split.addContentArea(oView);
+            if (with_handler)
+               split.attachResize(null, this.handleBottomResize, this);
             return oView.getController();
          });
       },
@@ -638,7 +654,5 @@ sap.ui.define([
          return Promise.resolve(true);
       }
    });
-
-   return CController;
 
 });

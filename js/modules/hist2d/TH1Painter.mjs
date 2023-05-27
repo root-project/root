@@ -1,6 +1,6 @@
 import { gStyle, settings, isBatchMode, clTF1, kNoZoom } from '../core.mjs';
 import { rgb as d3_rgb } from '../d3.mjs';
-import { floatToString, buildSvgCurve } from '../base/BasePainter.mjs';
+import { floatToString, buildSvgCurve, addHighlightStyle } from '../base/BasePainter.mjs';
 import { THistPainter } from './THistPainter.mjs';
 
 
@@ -253,7 +253,7 @@ class TH1Painter extends THistPainter {
       if (this.isTProfile()) {
 
          if (print_entries > 0)
-            stat.addText('Entries = ' + stat.format(data.entries,'entries'));
+            stat.addText('Entries = ' + stat.format(data.entries, 'entries'));
 
          if (print_mean > 0) {
             stat.addText('Mean = ' + stat.format(data.meanx));
@@ -362,14 +362,14 @@ class TH1Painter extends THistPainter {
          }
 
          if (show_text && y) {
-            let lbl = (y === Math.round(y)) ? y.toString() : floatToString(y, gStyle.fPaintTextFormat);
+            let text = (y === Math.round(y)) ? y.toString() : floatToString(y, gStyle.fPaintTextFormat);
 
             if (pmain.swap_xy)
-               this.drawText({ align: 12, x: Math.round(gry1 + text_size/2), y: Math.round(grx1+0.1), height: Math.round(w*0.8), text: lbl, color: text_col, latex: 0 });
+               this.drawText({ align: 12, x: Math.round(gry1 + text_size/2), y: Math.round(grx1+0.1), height: Math.round(w*0.8), text, color: text_col, latex: 0 });
             else if (text_angle)
-               this.drawText({ align: 12, x: grx1+w/2, y: Math.round(gry1 - 2 - text_size/5), width: 0, height: 0, rotate: text_angle, text: lbl, color: text_col, latex: 0 });
+               this.drawText({ align: 12, x: grx1+w/2, y: Math.round(gry1 - 2 - text_size/5), width: 0, height: 0, rotate: text_angle, text, color: text_col, latex: 0 });
             else
-               this.drawText({ align: 22, x: Math.round(grx1 + w*0.1), y: Math.round(gry1-2-text_size), width: Math.round(w*0.8), height: text_size, text: lbl, color: text_col, latex: 0 });
+               this.drawText({ align: 22, x: Math.round(grx1 + w*0.1), y: Math.round(gry1 - 2 - text_size), width: Math.round(w*0.8), height: text_size, text, color: text_col, latex: 0 });
          }
       }
 
@@ -976,8 +976,9 @@ class TH1Painter extends THistPainter {
 
          if (ttrect.empty())
             ttrect = this.draw_g.append('svg:rect')
-                                .attr('class', 'tooltip_bin h1bin')
-                                .style('pointer-events', 'none');
+                                .attr('class', 'tooltip_bin')
+                                .style('pointer-events', 'none')
+                                .call(addHighlightStyle);
 
          res.changed = ttrect.property('current_bin') !== findbin;
 
@@ -1194,8 +1195,7 @@ class TH1Painter extends THistPainter {
  * @private
  */
 
-function setHistTitle(histo, title)
-{
+function setHistTitle(histo, title) {
    if (!histo) return;
    if (title.indexOf(';') < 0) {
       histo.fTitle = title;

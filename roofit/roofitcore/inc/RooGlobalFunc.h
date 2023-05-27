@@ -66,7 +66,7 @@ enum MPSplit { BulkPartition=0, Interleave=1, SimComponents=2, Hybrid=3 } ;
 
 /// For setting the batch mode flag with the BatchMode() command argument to
 /// RooAbsPdf::fitTo()
-enum class BatchModeOption { Off, Cpu, Cuda, Old };
+enum class BatchModeOption { Off, Cpu, Cuda };
 
 /// For setting the offset mode with the Offset() command argument to
 /// RooAbsPdf::fitTo()
@@ -195,7 +195,6 @@ RooCmdArg OwnLinked() ;
 // RooAbsPdf::printLatex arguments
 RooCmdArg Columns(Int_t ncol) ;
 RooCmdArg OutputFile(const char* fileName) ;
-RooCmdArg Format(const char* format, Int_t sigDigit) ;
 RooCmdArg Format(const char* what, const RooCmdArg& arg1=RooCmdArg::none(), const RooCmdArg& arg2=RooCmdArg::none(),
                  const RooCmdArg& arg3=RooCmdArg::none(),const RooCmdArg& arg4=RooCmdArg::none(),
                  const RooCmdArg& arg5=RooCmdArg::none(),const RooCmdArg& arg6=RooCmdArg::none(),

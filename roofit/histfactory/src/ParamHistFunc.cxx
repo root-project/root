@@ -46,7 +46,6 @@
 #include "RooRealVar.h"
 #include "RooArgList.h"
 #include "RooWorkspace.h"
-#include "RunContext.h"
 
 #include "TH1.h"
 
@@ -674,7 +673,6 @@ double ParamHistFunc::analyticalIntegralWN(Int_t /*code*/, const RooArgSet* /*no
 
   for (unsigned int i=0; i < _paramSet.size(); ++i) {
     const auto& param = static_cast<const RooAbsReal&>(_paramSet[i]);
-    assert(static_cast<Int_t>(i) == _dataSet.getIndex(param)); // We assume that each parameter i belongs to bin i
 
     // Get the gamma's value
     const double paramVal = param.getVal();

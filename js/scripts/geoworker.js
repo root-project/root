@@ -6,7 +6,7 @@ import('../modules/three.mjs').then(handle => {
    if (console) console.log(`geoworker started three.js r${THREE.REVISION}`);
 });
 
-import('../modules/geobase.mjs').then(handle => {
+import('../modules/geom/geobase.mjs').then(handle => {
    ClonedNodes = handle.ClonedNodes;
    createFrustum = handle.createFrustum;
 });

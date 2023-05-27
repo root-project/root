@@ -63,7 +63,7 @@ public:
   bool forceAnalyticalInt(const RooAbsArg& dep) const override ;
 
   virtual double coefficient(Int_t basisIndex) const = 0 ;
-  virtual RooArgSet* coefVars(Int_t coefIdx) const ;
+  virtual RooFit::OwningPtr<RooArgSet> coefVars(Int_t coefIdx) const ;
 
   bool isDirectGenSafe(const RooAbsArg& arg) const override ;
 
@@ -79,6 +79,8 @@ public:
   const RooAbsRealLValue* convVar() const {
     return const_cast<RooAbsAnaConvPdf*>(this)->convVar();
   }
+
+  std::unique_ptr<RooAbsArg> compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileContext & ctx) const override;
 
 protected:
   double getCoefNorm(Int_t coefIdx, const RooArgSet* nset, const TNamed* rangeName) const ;

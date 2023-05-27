@@ -1,5 +1,5 @@
 import { BIT, isArrayProto, isRootCollection, isObject, isFunc, isStr, getMethods,
-         create, createHistogram, createTGraph,
+         create, createHistogram, createTGraph, prROOT,
          clTObject, clTObjString, clTHashList, clTPolyMarker3D, clTH1, clTH2, clTH3, kNoStats } from './core.mjs';
 import { kChar, kShort, kInt, kFloat,
          kCharStar, kDouble, kDouble32,
@@ -939,7 +939,7 @@ class TDrawSelector extends TSelector {
    }
 
    /** @summary Show progress */
-   ShowProgress(/*value*/) { }
+   ShowProgress(/*value*/) {}
 
    /** @summary Get bins for bits histogram */
    getBitsBins(nbits, res) {
@@ -2712,7 +2712,7 @@ function treeHierarchy(node, obj) {
 
       let subitem = {
             _name: ClearName(branch.fName),
-            _kind: 'ROOT.' + branch._typename,
+            _kind: prROOT + branch._typename,
             _title: branch.fTitle,
             _obj: branch
       };
@@ -2738,7 +2738,7 @@ function treeHierarchy(node, obj) {
                  bnode._childs.push({
                     _name: '@size',
                     _title: 'container size',
-                    _kind: 'ROOT.TLeafElement',
+                    _kind: prROOT + 'TLeafElement',
                     _icon: 'img_leaf',
                     _obj: bobj.fLeaves.arr[0],
                     _more: false
@@ -2759,7 +2759,7 @@ function treeHierarchy(node, obj) {
                      bnode._childs.push({
                         _name: key+'()',
                         _title: `function ${key} of class ${object_class}`,
-                        _kind: 'ROOT.' + clTBranchFunc, // fictional class, only for drawing
+                        _kind: prROOT + clTBranchFunc, // fictional class, only for drawing
                         _obj: { _typename: clTBranchFunc, branch: bobj, func: key },
                         _more: false
                      });
@@ -2778,7 +2778,7 @@ function treeHierarchy(node, obj) {
             branch.fLeaves.arr[j].$branch = branch; // keep branch pointer for drawing
             let leafitem = {
                _name : ClearName(branch.fLeaves.arr[j].fName),
-               _kind : 'ROOT.' + branch.fLeaves.arr[j]._typename,
+               _kind : prROOT + branch.fLeaves.arr[j]._typename,
                _obj: branch.fLeaves.arr[j]
             }
             subitem._childs.push(leafitem);

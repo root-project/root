@@ -71,6 +71,7 @@ public:
     RooDataHist* hist() { return _hist.get() ; }
     const RooArgSet& nset() { return _nset ; }
     RooChangeTracker* paramTracker() { return _paramTracker.get() ; }
+    void setUnitNorm() { pdf()->setUnitNorm(true); }
 
   private:
     // Payload
@@ -81,6 +82,8 @@ public:
     std::unique_ptr<RooAbsReal>  _norm ;
 
   } ;
+
+  using CacheElem = PdfCacheElem;
 
   protected:
 
@@ -101,7 +104,7 @@ public:
   }
   virtual const char* inputBaseName() const = 0 ;
   virtual RooArgSet* actualObservables(const RooArgSet& nset) const = 0 ;
-  virtual RooArgSet* actualParameters(const RooArgSet& nset) const = 0 ;
+  virtual RooFit::OwningPtr<RooArgSet> actualParameters(const RooArgSet& nset) const = 0 ;
   virtual RooAbsArg& pdfObservable(RooAbsArg& histObservable) const { return histObservable ; }
   virtual void fillCacheObject(PdfCacheElem& cache) const = 0 ;
 

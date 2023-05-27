@@ -261,6 +261,25 @@ void ROOT::Experimental::RPrintValueVisitor::VisitCardinalityField(const RField<
    fOutput << static_cast<std::size_t>(*fValue.Get<RNTupleCardinality>());
 }
 
+void ROOT::Experimental::RPrintValueVisitor::VisitBitsetField(const RBitsetField &field)
+{
+   constexpr auto nBitsULong = sizeof(unsigned long) * 8;
+   const auto *asULongArray = fValue.Get<unsigned long>();
+
+   PrintIndent();
+   PrintName(field);
+   fOutput << "\"";
+   std::size_t i = 0;
+   std::string str;
+   for (std::size_t word = 0; word < (field.GetN() + nBitsULong - 1) / nBitsULong; ++word) {
+      for (std::size_t mask = 0; (mask < nBitsULong) && (i < field.GetN()); ++mask, ++i) {
+         bool isSet = (asULongArray[word] & (static_cast<unsigned long>(1) << mask)) != 0;
+         str = std::to_string(isSet) + str;
+      }
+   }
+   fOutput << str << "\"";
+}
+
 void ROOT::Experimental::RPrintValueVisitor::VisitArrayField(const RArrayField &field)
 {
    PrintCollection(field);
@@ -324,6 +343,22 @@ void ROOT::Experimental::RPrintValueVisitor::VisitRecordField(const RRecordField
    }
    PrintIndent();
    fOutput << "}";
+}
+
+void ROOT::Experimental::RPrintValueVisitor::VisitNullableField(const RNullableField &field)
+{
+   PrintIndent();
+   PrintName(field);
+   auto elems = field.SplitValue(fValue);
+   if (elems.empty()) {
+      fOutput << "null";
+   } else {
+      RPrintOptions options;
+      options.fPrintSingleLine = true;
+      options.fPrintName = false;
+      RPrintValueVisitor visitor(elems[0], fOutput, fLevel, options);
+      elems[0].GetField()->AcceptVisitor(visitor);
+   }
 }
 
 void ROOT::Experimental::RPrintValueVisitor::VisitCollectionClassField(const RCollectionClassField &field)

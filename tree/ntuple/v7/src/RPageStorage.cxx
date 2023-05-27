@@ -40,6 +40,8 @@ ROOT::Experimental::Detail::RPageStorage::RPageStorage(std::string_view name) : 
 
 ROOT::Experimental::Detail::RPageStorage::~RPageStorage()
 {
+   // Wait for unterminated tasks, if any, as they may still hold a reference to `this`
+   WaitForAllTasks();
 }
 
 
@@ -309,37 +311,42 @@ ROOT::Experimental::Detail::RPageSink::AddColumn(DescriptorId_t fieldId, const R
    return ColumnHandle_t{columnId, &column};
 }
 
-void ROOT::Experimental::Detail::RPageSink::Create(RNTupleModel &model)
+void ROOT::Experimental::Detail::RPageSink::UpdateSchema(const RNTupleModelChangeset &changeset)
 {
-   fDescriptorBuilder.SetNTuple(fNTupleName, model.GetDescription());
    const auto &descriptor = fDescriptorBuilder.GetDescriptor();
-
-   auto &fieldZero = *model.GetFieldZero();
-   fDescriptorBuilder.AddField(RFieldDescriptorBuilder::FromField(fieldZero).FieldId(0).MakeDescriptor().Unwrap());
-   fieldZero.SetOnDiskId(0);
-   for (auto &f : fieldZero) {
+   auto addField = [&](RFieldBase &f) {
       auto fieldId = descriptor.GetNFields();
       fDescriptorBuilder.AddField(RFieldDescriptorBuilder::FromField(f).FieldId(fieldId).MakeDescriptor().Unwrap());
       fDescriptorBuilder.AddFieldLink(f.GetParent()->GetOnDiskId(), fieldId);
       f.SetOnDiskId(fieldId);
       f.ConnectPageSink(*this); // issues in turn one or several calls to AddColumn()
-   }
-
-   model.GetProjectedFields().GetFieldZero()->SetOnDiskId(0);
-   for (auto &f : *model.GetProjectedFields().GetFieldZero()) {
+   };
+   auto addProjectedField = [&](RFieldBase &f) {
       auto fieldId = descriptor.GetNFields();
       fDescriptorBuilder.AddField(RFieldDescriptorBuilder::FromField(f).FieldId(fieldId).MakeDescriptor().Unwrap());
       fDescriptorBuilder.AddFieldLink(f.GetParent()->GetOnDiskId(), fieldId);
       f.SetOnDiskId(fieldId);
-      auto sourceFieldId = model.GetProjectedFields().GetSourceField(&f)->GetOnDiskId();
+      auto sourceFieldId = changeset.fModel.GetProjectedFields().GetSourceField(&f)->GetOnDiskId();
       for (const auto &source : descriptor.GetColumnIterable(sourceFieldId)) {
          auto targetId = descriptor.GetNLogicalColumns();
          fDescriptorBuilder.AddColumn(targetId, source.GetLogicalId(), fieldId, source.GetModel(), source.GetIndex());
       }
+   };
+
+   const auto nColumnsBeforeUpdate = descriptor.GetNPhysicalColumns();
+   for (auto f : changeset.fAddedFields) {
+      addField(*f);
+      for (auto &descendant : *f)
+         addField(descendant);
+   }
+   for (auto f : changeset.fAddedProjectedFields) {
+      addProjectedField(*f);
+      for (auto &descendant : *f)
+         addProjectedField(descendant);
    }
 
-   auto nColumns = descriptor.GetNPhysicalColumns();
-   for (DescriptorId_t i = 0; i < nColumns; ++i) {
+   const auto nColumns = descriptor.GetNPhysicalColumns();
+   for (DescriptorId_t i = nColumnsBeforeUpdate; i < nColumns; ++i) {
       RClusterDescriptor::RColumnRange columnRange;
       columnRange.fPhysicalColumnId = i;
       columnRange.fFirstElementIndex = 0;
@@ -351,13 +358,36 @@ void ROOT::Experimental::Detail::RPageSink::Create(RNTupleModel &model)
       fOpenPageRanges.emplace_back(std::move(pageRange));
    }
 
+   // Mapping of memory to on-disk column IDs usually happens during serialization of the ntuple header. If the
+   // header was already serialized, this has to be done manually as it is required for page list serialization.
+   if (fSerializationContext.GetHeaderSize() > 0)
+      fSerializationContext.MapSchema(descriptor, /*forHeaderExtension=*/true);
+}
+
+void ROOT::Experimental::Detail::RPageSink::Create(RNTupleModel &model)
+{
+   fDescriptorBuilder.SetNTuple(fNTupleName, model.GetDescription());
+   const auto &descriptor = fDescriptorBuilder.GetDescriptor();
+
+   auto &fieldZero = *model.GetFieldZero();
+   fDescriptorBuilder.AddField(RFieldDescriptorBuilder::FromField(fieldZero).FieldId(0).MakeDescriptor().Unwrap());
+   fieldZero.SetOnDiskId(0);
+   model.GetProjectedFields().GetFieldZero()->SetOnDiskId(0);
+
+   RNTupleModelChangeset initialChangeset{model};
+   for (auto f : fieldZero.GetSubFields())
+      initialChangeset.fAddedFields.emplace_back(f);
+   for (auto f : model.GetProjectedFields().GetFieldZero()->GetSubFields())
+      initialChangeset.fAddedProjectedFields.emplace_back(f);
+   UpdateSchema(initialChangeset);
+
    fSerializationContext = Internal::RNTupleSerializer::SerializeHeaderV1(nullptr, descriptor);
    auto buffer = std::make_unique<unsigned char[]>(fSerializationContext.GetHeaderSize());
    fSerializationContext = Internal::RNTupleSerializer::SerializeHeaderV1(buffer.get(), descriptor);
-
    CreateImpl(model, buffer.get(), fSerializationContext.GetHeaderSize());
-}
 
+   fDescriptorBuilder.BeginHeaderExtension();
+}
 
 void ROOT::Experimental::Detail::RPageSink::CommitPage(ColumnHandle_t columnHandle, const RPage &page)
 {

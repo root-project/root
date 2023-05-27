@@ -143,6 +143,7 @@ const void *TText::GetWcsTitle(void) const
 
 Int_t TText::DistancetoPrimitive(Int_t px, Int_t py)
 {
+   if (!gPad) return 9999;
    Int_t ptx, pty;
 
    TAttText::Modify();  // change text attributes only if necessary
@@ -478,6 +479,7 @@ void TText::GetBoundingBox(UInt_t &w, UInt_t &h, Bool_t angle)
       return;
    }
 
+   if (!gPad) return;
    if (angle) {
       Int_t cBoxX[4], cBoxY[4];
       Int_t ptx, pty;
@@ -522,6 +524,7 @@ void TText::GetBoundingBox(UInt_t &w, UInt_t &h, Bool_t angle)
 
 void TText::GetTextAscentDescent(UInt_t &a, UInt_t &d, const char *text) const
 {
+   if (!gPad) return;
    Double_t     wh = (Double_t)gPad->XtoPixel(gPad->GetX2());
    Double_t     hh = (Double_t)gPad->YtoPixel(gPad->GetY1());
    Double_t tsize;
@@ -557,6 +560,7 @@ void TText::GetTextAscentDescent(UInt_t &a, UInt_t &d, const char *text) const
 
 void TText::GetTextAscentDescent(UInt_t &a, UInt_t &d, const wchar_t *text) const
 {
+   if (!gPad) return;
    Double_t     wh = (Double_t)gPad->XtoPixel(gPad->GetX2());
    Double_t     hh = (Double_t)gPad->YtoPixel(gPad->GetY1());
    Double_t tsize;
@@ -586,6 +590,7 @@ void TText::GetTextAscentDescent(UInt_t &a, UInt_t &d, const wchar_t *text) cons
 
 void TText::GetTextExtent(UInt_t &w, UInt_t &h, const char *text) const
 {
+   if (!gPad) return;
    Double_t     wh = (Double_t)gPad->XtoPixel(gPad->GetX2());
    Double_t     hh = (Double_t)gPad->YtoPixel(gPad->GetY1());
    Double_t tsize;
@@ -614,6 +619,7 @@ void TText::GetTextExtent(UInt_t &w, UInt_t &h, const char *text) const
 
 void TText::GetTextAdvance(UInt_t &a, const char *text, const Bool_t kern) const
 {
+   if (!gPad) return;
    Double_t     wh = (Double_t)gPad->XtoPixel(gPad->GetX2());
    Double_t     hh = (Double_t)gPad->YtoPixel(gPad->GetY1());
    Double_t tsize;
@@ -649,6 +655,7 @@ void TText::GetTextAdvance(UInt_t &a, const char *text, const Bool_t kern) const
 
 void TText::GetTextExtent(UInt_t &w, UInt_t &h, const wchar_t *text) const
 {
+   if (!gPad) return;
    Double_t     wh = (Double_t)gPad->XtoPixel(gPad->GetX2());
    Double_t     hh = (Double_t)gPad->YtoPixel(gPad->GetY1());
    Double_t tsize;
@@ -679,6 +686,7 @@ void TText::ls(Option_t *) const
 
 void TText::Paint(Option_t *)
 {
+   if (!gPad) return;
    TAttText::Modify();  //Change text attributes only if necessary
    if (TestBit(kTextNDC)) gPad->PaintTextNDC(fX,fY,GetTitle());
    else                   gPad->PaintText(gPad->XtoPad(fX),gPad->YtoPad(fY),GetTitle());
@@ -883,7 +891,8 @@ Rectangle_t TText::GetBBox()
       case 3 : Dy = 0      ; break;
    }
 
-   Rectangle_t BBox;
+   Rectangle_t BBox{0,0,0,0};
+   if (!gPad) return BBox;
    BBox.fX = gPad->XtoPixel(fX)-Dx;
    BBox.fY = gPad->YtoPixel(fY)-Dy;
    BBox.fWidth  = w;
@@ -896,7 +905,8 @@ Rectangle_t TText::GetBBox()
 
 TPoint TText::GetBBoxCenter()
 {
-   TPoint p;
+   TPoint p(0,0);
+   if (!gPad) return (p);
    p.SetX(gPad->XtoPixel(fX));
    p.SetY(gPad->YtoPixel(fY));
    return(p);
@@ -907,6 +917,7 @@ TPoint TText::GetBBoxCenter()
 
 void TText::SetBBoxCenter(const TPoint &p)
 {
+   if (!gPad) return;
    this->SetX(gPad->PixeltoX(p.GetX()));
    this->SetY(gPad->PixeltoY(p.GetY()-gPad->VtoPixel(0)));
 }
@@ -916,6 +927,7 @@ void TText::SetBBoxCenter(const TPoint &p)
 
 void TText::SetBBoxCenterX(const Int_t x)
 {
+   if (!gPad) return;
    this->SetX(gPad->PixeltoX(x));
 }
 
@@ -924,6 +936,7 @@ void TText::SetBBoxCenterX(const Int_t x)
 
 void TText::SetBBoxCenterY(const Int_t y)
 {
+   if (!gPad) return;
    this->SetY(gPad->PixeltoY(y - gPad->VtoPixel(0)));
 }
 

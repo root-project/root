@@ -40,7 +40,7 @@ private:
 public:
    TNtuple();
    TNtuple(const char *name,const char *title, const char *varlist, Int_t bufsize=32000);
-   virtual ~TNtuple();
+   ~TNtuple() override;
 
            void      Browse(TBrowser *b) override;
            TTree    *CloneTree(Long64_t nentries = -1, Option_t* option = "") override;

@@ -23,6 +23,7 @@ ROOT's RDataFrame allows to analyse data stored in TTrees with a high level inte
 #include "ROOT/RStringView.hxx"
 #include "RtypesCore.h"
 
+#include <initializer_list>
 #include <memory>
 #include <string>
 #include <vector>
@@ -43,6 +44,9 @@ public:
    RDataFrame(std::string_view treeName, std::string_view filenameglob, const ColumnNames_t &defaultColumns = {});
    RDataFrame(std::string_view treename, const std::vector<std::string> &filenames,
               const ColumnNames_t &defaultColumns = {});
+   RDataFrame(std::string_view treename, std::initializer_list<std::string> filenames,
+              const ColumnNames_t &defaultColumns = {}):
+              RDataFrame(treename, std::vector<std::string>(std::move(filenames)), defaultColumns) {}
    RDataFrame(std::string_view treeName, ::TDirectory *dirPtr, const ColumnNames_t &defaultColumns = {});
    RDataFrame(TTree &tree, const ColumnNames_t &defaultColumns = {});
    RDataFrame(ULong64_t numEntries);

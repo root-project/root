@@ -62,15 +62,6 @@ enum class ENTupleInfo {
    kMetrics, // internals performance counters, requires that EnableMetrics() was called
 };
 
-/**
- * Listing of the different entry output formats of RNTupleReader::Show()
- */
-enum class ENTupleShowFormat {
-   kCurrentModelJSON, // prints a single entry/row with the current active model in JSON format.
-   kCompleteJSON,  // prints a single entry/row with all the fields in JSON format.
-};
-
-
 #ifdef R__USE_IMT
 class TTaskGroup;
 class RNTupleImtTaskScheduler : public Detail::RPageStorage::RTaskScheduler {
@@ -248,8 +239,7 @@ public:
    /// Shows the values of the i-th entry/row, starting with 0 for the first entry. By default,
    /// prints the output in JSON format.
    /// Uses the visitor pattern to traverse through each field of the given entry.
-   void Show(NTupleSize_t index, const ENTupleShowFormat format = ENTupleShowFormat::kCurrentModelJSON,
-             std::ostream &output = std::cout);
+   void Show(NTupleSize_t index, std::ostream &output = std::cout);
 
    /// Analogous to Fill(), fills the default entry of the model. Returns false at the end of the ntuple.
    /// On I/O errors, raises an exception.
@@ -280,7 +270,7 @@ public:
    ///
    /// auto ntuple = RNTupleReader::Open("myNTuple", "some/file.root");
    /// for (auto i : ntuple->GetEntryRange()) {
-   ///    ntuple->Show(i, ENTupleShowFormat::kCompleteJSON);
+   ///    ntuple->Show(i);
    /// }
    /// ~~~
    RNTupleGlobalRange GetEntryRange() { return RNTupleGlobalRange(0, GetNEntries()); }
@@ -366,6 +356,8 @@ triggered by Flush() or by destructing the ntuple.  On I/O errors, an exception 
 */
 // clang-format on
 class RNTupleWriter {
+   friend RNTupleModel::RUpdater;
+
 private:
    /// The page sink's parallel page compression scheduler if IMT is on.
    /// Needs to be destructed after the page sink is destructed and so declared before.
@@ -438,6 +430,30 @@ public:
    const Detail::RNTupleMetrics &GetMetrics() const { return fMetrics; }
 
    const RNTupleModel *GetModel() const { return fModel.get(); }
+
+   /// Get a `RNTupleModel::RUpdater` that provides limited support for incremental updates to the underlying
+   /// model, e.g. addition of new fields.
+   ///
+   /// **Example: add a new field after the model has been used to construct a `RNTupleWriter` object**
+   /// ~~~ {.cpp}
+   /// #include <ROOT/RNTuple.hxx>
+   /// using ROOT::Experimental::RNTupleModel;
+   /// using ROOT::Experimental::RNTupleWriter;
+   ///
+   /// auto model = RNTupleModel::Create();
+   /// auto fldFloat = model->MakeField<float>("fldFloat");
+   /// auto writer = RNTupleWriter::Recreate(std::move(model), "myNTuple", "some/file.root");
+   /// auto updater = writer->CreateModelUpdater();
+   /// updater->BeginUpdate();
+   /// updater->AddField(std::make_unique<RField<float>>("pt"));
+   /// updater->CommitUpdate();
+   ///
+   /// // ...
+   /// ~~~
+   std::unique_ptr<RNTupleModel::RUpdater> CreateModelUpdater()
+   {
+      return std::unique_ptr<RNTupleModel::RUpdater>(new RNTupleModel::RUpdater(*this));
+   }
 };
 
 // clang-format off

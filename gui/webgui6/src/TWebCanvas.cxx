@@ -29,6 +29,7 @@
 #include "TObjArray.h"
 #include "TArrayI.h"
 #include "TList.h"
+#include "TF1.h"
 #include "TH1.h"
 #include "TH1K.h"
 #include "THStack.h"
@@ -36,6 +37,8 @@
 #include "TEnv.h"
 #include "TError.h"
 #include "TGraph.h"
+#include "TGaxis.h"
+#include "TScatter.h"
 #include "TCutG.h"
 #include "TBufferJSON.h"
 #include "TBase64.h"
@@ -108,6 +111,7 @@ Bool_t TWebCanvas::IsJSSupportedClass(TObject *obj, Bool_t many_primitives)
    } supported_classes[] = {{"TH1", true},
                             {"TF1", true},
                             {"TGraph", true},
+                            {"TScatter"},
                             {"TFrame"},
                             {"THStack"},
                             {"TMultiGraph"},
@@ -122,6 +126,7 @@ Bool_t TWebCanvas::IsJSSupportedClass(TObject *obj, Bool_t many_primitives)
                             {"TEllipse", true, true},  // can be handled via TWebPainter, disable for large number of primitives (like in greyscale.C)
                             {"TText"},
                             {"TLatex"},
+                            {"TAnnotation"},
                             {"TMathText"},
                             {"TMarker"},
                             {"TPolyMarker"},
@@ -385,6 +390,10 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
             if (!has_histo && (strlen(obj->GetTitle()) > 0))
                need_title = obj->GetTitle();
          }
+      } else if (obj->InheritsFrom(TScatter::Class())) {
+         need_frame = true;
+         if (strlen(obj->GetTitle()) > 0)
+            need_title = obj->GetTitle();
       } else if (obj->InheritsFrom(TPaveText::Class())) {
          if (strcmp(obj->GetName(), "title") == 0)
             title = static_cast<TPaveText *>(obj);
@@ -474,7 +483,7 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
 
          while ((fobj = fiter()) != nullptr) {
            if (fobj->InheritsFrom(TPaveStats::Class()))
-               stats = dynamic_cast<TPaveStats *> (fobj);
+              stats = dynamic_cast<TPaveStats *> (fobj);
            else if (fobj->InheritsFrom("TPaletteAxis"))
               palette = fobj;
          }
@@ -583,6 +592,54 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
          if (funcs)
             fPrimitivesLists.Add(funcs);
          first_obj = false;
+      } else if (obj->InheritsFrom(TScatter::Class())) {
+         flush_master();
+
+         TScatter *scatter = (TScatter *)obj;
+         auto funcs = scatter->GetGraph()->GetListOfFunctions();
+
+         TIter fiter(funcs);
+         TObject *fobj = nullptr, *palette = nullptr;
+
+         while ((fobj = fiter()) != nullptr) {
+            if (fobj->InheritsFrom("TPaletteAxis"))
+               palette = fobj;
+         }
+
+         // ensure histogram exists on server to draw it properly on clients side
+         if (!IsReadOnly() && first_obj)
+            scatter->GetHistogram();
+
+         if (!palette && CanCreateObject("TPaletteAxis")) {
+            std::stringstream exec;
+            exec << "new TPaletteAxis(0,0,0,0,0,0);";
+            palette = (TObject *)gROOT->ProcessLine(exec.str().c_str());
+            if (palette)
+               funcs->AddFirst(palette);
+         }
+
+         TString scopt = iter.GetOption();
+         if (title && first_obj) scopt.Append(";;use_pad_title");
+         if (palette) scopt.Append(";;use_pad_palette");
+
+         paddata.NewPrimitive(obj, scopt.Data()).SetSnapshot(TWebSnapshot::kObject, obj);
+
+         fiter.Reset();
+         while ((fobj = fiter()) != nullptr)
+            CreateObjectSnapshot(paddata, pad, fobj, fiter.GetOption());
+
+         if (funcs)
+            fPrimitivesLists.Add(funcs);
+
+         first_obj = false;
+      } else if (obj->InheritsFrom(TGaxis::Class())) {
+         flush_master();
+         auto gaxis = static_cast<TGaxis *> (obj);
+         auto func = gaxis->GetFunction();
+         if (func)
+            paddata.NewPrimitive(func, "__ignore_drawing__").SetSnapshot(TWebSnapshot::kObject, func);
+
+         paddata.NewPrimitive(obj, iter.GetOption()).SetSnapshot(TWebSnapshot::kObject, obj);
       } else if (IsJSSupportedClass(obj, usemaster)) {
          flush_master();
          paddata.NewPrimitive(obj, iter.GetOption()).SetSnapshot(TWebSnapshot::kObject, obj);
@@ -1045,7 +1102,7 @@ Bool_t TWebCanvas::DecodePadOptions(const std::string &msg, bool process_execs)
          if (hmin == hmax)
             hmin = hmax = -1111;
 
-         if (!hist_holder) {
+         if (!hist_holder || (hist_holder->IsA() == TScatter::Class())) {
             hist->SetMinimum(hmin);
             hist->SetMaximum(hmax);
          } else {
@@ -1884,6 +1941,7 @@ TObject *TWebCanvas::FindPrimitive(const std::string &sid, int idcnt, TPad *pad,
 
       TH1 *h1 = obj->InheritsFrom(TH1::Class()) ? static_cast<TH1 *>(obj) : nullptr;
       TGraph *gr = obj->InheritsFrom(TGraph::Class()) ? static_cast<TGraph *>(obj) : nullptr;
+      TScatter *scatter = obj->InheritsFrom(TScatter::Class()) ? static_cast<TScatter *>(obj) : nullptr;
       TMultiGraph *mg = obj->InheritsFrom(TMultiGraph::Class()) ? static_cast<TMultiGraph *>(obj) : nullptr;
       THStack *hs = obj->InheritsFrom(THStack::Class()) ? static_cast<THStack *>(obj) : nullptr;
 
@@ -1895,6 +1953,8 @@ TObject *TWebCanvas::FindPrimitive(const std::string &sid, int idcnt, TPad *pad,
             return h1;
          if (gr)
             return getHistogram(gr);
+         if (scatter)
+            return getHistogram(scatter);
          if (mg && opt.Contains("A"))
             return getHistogram(mg);
          if (hs)
@@ -1917,6 +1977,8 @@ TObject *TWebCanvas::FindPrimitive(const std::string &sid, int idcnt, TPad *pad,
                obj = h1 = getHistogram(mg);
             else if (hs)
                obj = h1 = getHistogram(hs);
+            else if (scatter)
+               obj = h1 = getHistogram(scatter);
 
             kind.erase(0,4);
             if (!kind.empty() && (kind[0]=='#')) kind.erase(0,1);
@@ -1930,9 +1992,9 @@ TObject *TWebCanvas::FindPrimitive(const std::string &sid, int idcnt, TPad *pad,
          if (h1 && (kind == "z"))
             return h1->GetZaxis();
 
-         if ((h1 || gr) && !kind.empty() && (kind.compare(0,5,"func_") == 0)) {
+         if ((h1 || gr || scatter) && !kind.empty() && (kind.compare(0,5,"func_") == 0)) {
             auto funcname = kind.substr(5);
-            TCollection *col = h1 ? h1->GetListOfFunctions() : gr->GetListOfFunctions();
+            TCollection *col = h1 ? h1->GetListOfFunctions() : (gr ? gr->GetListOfFunctions() : scatter->GetGraph()->GetListOfFunctions());
             return col ? col->FindObject(funcname.c_str()) : nullptr;
          }
 
@@ -1951,8 +2013,8 @@ TObject *TWebCanvas::FindPrimitive(const std::string &sid, int idcnt, TPad *pad,
          return obj;
       }
 
-      if (h1 || gr) {
-         TIter fiter(h1 ? h1->GetListOfFunctions() : gr->GetListOfFunctions());
+      if (h1 || gr || scatter) {
+         TIter fiter(h1 ? h1->GetListOfFunctions() : (gr ? gr->GetListOfFunctions() : scatter->GetGraph()->GetListOfFunctions()));
          TObject *fobj = nullptr;
          while ((fobj = fiter()) != nullptr)
             if (TString::Hash(&fobj, sizeof(fobj)) == id) {

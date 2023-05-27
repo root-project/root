@@ -166,7 +166,7 @@ public:
    TTreeReader(const char* keyname, TDirectory* dir, TEntryList* entryList = nullptr);
    TTreeReader(const char *keyname, TEntryList *entryList = nullptr) : TTreeReader(keyname, nullptr, entryList) {}
 
-   ~TTreeReader();
+   ~TTreeReader() override;
 
    void SetTree(TTree* tree, TEntryList* entryList = nullptr);
    void SetTree(const char* keyname, TEntryList* entryList = nullptr) {
@@ -234,7 +234,7 @@ public:
    /// through `reader.GetEntryList()->GetEntry(reader.GetCurrentEntry())`.
    Long64_t GetCurrentEntry() const { return fEntry; }
 
-   Bool_t Notify();
+   Bool_t Notify() override;
 
    /// Return an iterator to the 0th TTree entry.
    Iterator_t begin() {
@@ -310,7 +310,7 @@ private:
    friend class ROOT::Internal::TTreeReaderValueBase;
    friend class ROOT::Internal::TTreeReaderArrayBase;
 
-   ClassDef(TTreeReader, 0); // A simple interface to read trees
+   ClassDefOverride(TTreeReader, 0); // A simple interface to read trees
 };
 
 #endif // defined TTreeReader

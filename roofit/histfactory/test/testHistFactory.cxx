@@ -4,9 +4,10 @@
 #include "RooStats/HistFactory/Measurement.h"
 #include "RooStats/HistFactory/MakeModelAndMeasurementsFast.h"
 #include "RooStats/HistFactory/Sample.h"
-#include "RooStats/ModelConfig.h"
+#include "RooFit/ModelConfig.h"
 
 #include "RooFit/Common.h"
+#include "RooDataHist.h"
 #include "RooWorkspace.h"
 #include "RooArgSet.h"
 #include "RooSimultaneous.h"
@@ -15,7 +16,6 @@
 #include "RooHelpers.h"
 #include "RooFitResult.h"
 #include "RooPlot.h"
-#include "RunContext.h"
 
 #include "TROOT.h"
 #include "TFile.h"
@@ -431,24 +431,12 @@ TEST_P(HFFixture, BatchEvaluation) {
   ASSERT_NE(mc, nullptr);
 
   // Test evaluating the model:
-  RooBatchCompute::RunContext evalDataOrig;
-  auto batch = evalDataOrig.makeBatch(obs, 2);
-  obs->setBin(0);
-  batch[0] = obs->getVal();
-  obs->setBin(1);
-  batch[1] = obs->getVal();
+  RooDataHist dataHist{"dataHist", "dataHist", *obs};
 
-  RooBatchCompute::RunContext evalData1;
-  evalData1.spans = evalDataOrig.spans;
-  auto results = channelPdf->getValues(evalData1, nullptr);
-  RooBatchCompute::RunContext evalData2;
-  evalData2.spans = evalDataOrig.spans;
-  auto normResults = channelPdf->getValues(evalData2, mc->GetObservables());
+  std::vector<double> normResults = channelPdf->getValues(dataHist);
 
   for (unsigned int i=0; i < 2; ++i) {
     obs->setBin(i);
-    EXPECT_NEAR(results[i],
-        _targetNominal[i]/obs->getBinWidth(i), 1.E-9);
     EXPECT_NEAR(normResults[i],
         _targetNominal[i]/obs->getBinWidth(i)/(_targetNominal[0]+_targetNominal[1]), 1.E-9);
   }
@@ -462,31 +450,17 @@ TEST_P(HFFixture, BatchEvaluation) {
 
     // Test syst up:
     var->setVal(1.);
-    RooBatchCompute::RunContext evalData3;
-    evalData3.spans = evalDataOrig.spans;
-    auto resultsSyst = channelPdf->getValues(evalData3, nullptr);
-    RooBatchCompute::RunContext evalData4;
-    evalData4.spans = evalDataOrig.spans;
-    auto normResultsSyst = channelPdf->getValues(evalData4, mc->GetObservables());
+    std::vector<double> normResultsSyst = channelPdf->getValues(dataHist);
     for (unsigned int i=0; i < 2; ++i) {
-      EXPECT_NEAR(resultsSyst[i],
-          _targetSysUp[i]/obs->getBinWidth(i), 1.E-6);
       EXPECT_NEAR(normResultsSyst[i],
           _targetSysUp[i]/obs->getBinWidth(i)/(_targetSysUp[0]+_targetSysUp[1]), 1.E-6);
     }
 
     // Test syst down:
     var->setVal(-1.);
-    RooBatchCompute::RunContext evalData5;
-    evalData5.spans = evalDataOrig.spans;
-    resultsSyst = channelPdf->getValues(evalData5, nullptr);
-    RooBatchCompute::RunContext evalData6;
-    evalData6.spans = evalDataOrig.spans;
-    normResultsSyst = channelPdf->getValues(evalData6, mc->GetObservables());
+    normResultsSyst = channelPdf->getValues(dataHist);
     for (unsigned int i=0; i < 2; ++i) {
       obs->setBin(i);
-      EXPECT_NEAR(resultsSyst[i],
-          _targetSysDo[i]/obs->getBinWidth(i), 1.E-6);
       EXPECT_NEAR(normResultsSyst[i],
           _targetSysDo[i]/obs->getBinWidth(i)/(_targetSysDo[0]+_targetSysDo[1]), 1.E-6);
     }
@@ -515,7 +489,7 @@ TEST_P(HFFixture, Fit) {
   ASSERT_NE(mc, nullptr);
 
   for (bool batchFit : {true, false}) {
-    for (bool constTermOptimisation : {true, false}) { // This tests both correct pre-caching of constant terms and (if false) that all evaluateSpan() are correct.
+    for (bool constTermOptimisation : {true, false}) { // This tests both correct pre-caching of constant terms and (if false) that all computeBatch() are correct.
       SCOPED_TRACE(batchFit ? "Batch fit" : "Normal fit");
       SCOPED_TRACE(constTermOptimisation ? "const term optimisation" : "No const term optimisation");
 
@@ -537,19 +511,19 @@ TEST_P(HFFixture, Fit) {
         poi->setConstant();
       }
 
-      auto fitResult = simPdf->fitTo(*data,
+      std::unique_ptr<RooFitResult> fitResult{simPdf->fitTo(*data,
           RooFit::BatchMode(batchFit),
           RooFit::Optimize(constTermOptimisation),
           RooFit::GlobalObservables(*mc->GetGlobalObservables()),
           RooFit::Save(),
-          RooFit::PrintLevel(verbose ? 1 : -1));
+          RooFit::PrintLevel(verbose ? 1 : -1))};
       ASSERT_NE(fitResult, nullptr);
       if (verbose)
         fitResult->Print();
       EXPECT_EQ(fitResult->status(), 0);
 
 
-      auto checkParam = [fitResult](const std::string& param, double target, double absPrecision) {
+      auto checkParam = [&fitResult](const std::string& param, double target, double absPrecision) {
         auto par = dynamic_cast<RooRealVar*>(fitResult->floatParsFinal().find(param.c_str()));
         if (!par) {
           // Parameter was constant in this fit

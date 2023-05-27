@@ -1178,6 +1178,9 @@ void TSelectorDraw::ProcessFill(Long64_t entry)
       return;
    }
 
+   if (fNfill >= fTree->GetEstimate())
+      fNfill = 0;
+
    // simple case with no multiplicity
    if (fForceRead && fManager->GetNdata() <= 0) return;
 
@@ -1193,7 +1196,6 @@ void TSelectorDraw::ProcessFill(Long64_t entry)
    fNfill++;
    if (fNfill >= fTree->GetEstimate()) {
       TakeAction();
-      fNfill = 0;
    }
 }
 
@@ -1203,6 +1205,9 @@ void TSelectorDraw::ProcessFill(Long64_t entry)
 
 void TSelectorDraw::ProcessFillMultiple(Long64_t entry)
 {
+   if (fNfill >= fTree->GetEstimate())
+      fNfill = 0;
+
    // Grab the array size of the formulas for this entry
    Int_t ndata = fManager->GetNdata();
 
@@ -1234,7 +1239,6 @@ void TSelectorDraw::ProcessFillMultiple(Long64_t entry)
       fNfill++;
       if (fNfill >= fTree->GetEstimate()) {
          TakeAction();
-         fNfill = 0;
       }
    } else {
       for (Int_t i = 0; i < fDimension; ++i) {
@@ -1244,7 +1248,10 @@ void TSelectorDraw::ProcessFillMultiple(Long64_t entry)
    Double_t ww = fW[nfill0];
 
    for (Int_t i = 1; i < ndata; i++) {
-      if (subList && !subList->Contains(i)) continue;
+      if (fNfill >= fTree->GetEstimate())
+         fNfill = 0;
+      if (subList && !subList->Contains(i))
+         continue;
       if (fSelectMultiple) {
          // coverity[var_deref_model] fSelectMultiple==kTRUE => fSelect != 0
          ww = fWeight * fSelect->EvalInstance(i);
@@ -1265,7 +1272,6 @@ void TSelectorDraw::ProcessFillMultiple(Long64_t entry)
       fNfill++;
       if (fNfill >= fTree->GetEstimate()) {
          TakeAction();
-         fNfill = 0;
       }
    }
 }
@@ -1277,6 +1283,9 @@ void TSelectorDraw::ProcessFillMultiple(Long64_t entry)
 void TSelectorDraw::ProcessFillObject(Long64_t /*entry*/)
 {
    // Complex case with multiplicity.
+
+   if (fNfill >= fTree->GetEstimate())
+      fNfill = 0;
 
    // Grab the array size of the formulas for this entry
    Int_t ndata = fManager->GetNdata();
@@ -1331,7 +1340,6 @@ void TSelectorDraw::ProcessFillObject(Long64_t /*entry*/)
       }
       if (fNfill >= fTree->GetEstimate()) {
          TakeAction();
-         fNfill = 0;
       }
    }
 
@@ -1818,7 +1826,11 @@ void TSelectorDraw::TakeEstimate()
 
 void TSelectorDraw::Terminate()
 {
-   if (fNfill) TakeAction();
+   // We take action (in Process) when we reach GetEstimate but
+   // we reset at the beginning of Process, so
+   // if fNfill == GetEstimate(), we just took action.
+   if (fNfill && fNfill < fTree->GetEstimate())
+      TakeAction();
 
    if ((fSelectedRows == 0) && (TestBit(kCustomHistogram) == 0)) fDraw = 1; // do not draw
 

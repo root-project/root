@@ -811,8 +811,10 @@ void THttpServer::ReplaceJSROOTLinks(std::shared_ptr<THttpCallArg> &arg)
       }
    }
 
-   if (!repl.empty())
+   if (!repl.empty()) {
       arg->ReplaceAllinContent("=\"jsrootsys/", repl);
+      arg->ReplaceAllinContent("from './jsrootsys/", TString::Format("from '%s", repl.substr(2).c_str()).Data());
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1065,9 +1067,11 @@ void THttpServer::ProcessRequest(std::shared_ptr<THttpCallArg> arg)
    // try to avoid caching on the browser
    arg->AddNoCacheHeader();
 
-   // potentially add cors header
+   // potentially add cors headers
    if (IsCors())
       arg->AddHeader("Access-Control-Allow-Origin", GetCors());
+   if (IsCorsCredentials())
+      arg->AddHeader("Access-Control-Allow-Credentials", GetCorsCredentials());
 }
 
 ////////////////////////////////////////////////////////////////////////////////

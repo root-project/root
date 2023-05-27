@@ -27,9 +27,15 @@ namespace {
 
 void setupKeys()
 {
+   static bool isAlreadySetup = false;
+   if (isAlreadySetup)
+      return;
+
    auto etcDir = std::string(TROOT::GetEtcDir());
    RooFit::JSONIO::loadExportKeys(etcDir + "/RooFitHS3_wsexportkeys.json");
    RooFit::JSONIO::loadFactoryExpressions(etcDir + "/RooFitHS3_wsfactoryexpressions.json");
+
+   isAlreadySetup = true;
 }
 
 // Validate the JSON IO for a given RooAbsReal in a RooWorkspace. The workspace
@@ -150,6 +156,27 @@ TEST(RooFitHS3, RooConstVar)
    EXPECT_EQ(status, 0);
 }
 
+TEST(RooFitHS3, RooExponential)
+{
+   int status = validate({"Exponential::exponential(x[0, 10], c[-0.1])"});
+   EXPECT_EQ(status, 0);
+}
+
+TEST(RooFitHS3, RooExpPoly)
+{
+   // To silence the numeric differentiation
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   // Test different values for "lowestOrder"
+   int status = 0;
+   status = validate({"ExpPoly::exppoly0(x[0, 10], {a_0[3.0], a_1[-0.3, -10, 10], a_2[0.01, -10, 10]}, 0)"});
+   EXPECT_EQ(status, 0);
+   status = validate({"ExpPoly::exppoly1(x[0, 10], {a_1[-0.1, -10, 10], a_2[0.003, -10, 10]}, 1)"});
+   EXPECT_EQ(status, 0);
+   status = validate({"ExpPoly::exppoly1(x[0, 10], {a_2[0.003, -10, 10]}, 2)"});
+   EXPECT_EQ(status, 0);
+}
+
 TEST(RooFitHS3, RooGaussian)
 {
    int status = validate({"Gaussian::gaussian(x[0, 10], mean[5], sigma[1.0, 0.1, 10])"});
@@ -164,8 +191,8 @@ TEST(RooFitHS3, RooHistPdf)
    x.setBins(2);
 
    RooDataHist dataHist{"myDataHist", "myDataHist", x};
-   dataHist.set(0, 25.0, 5.0);
-   dataHist.set(1, 25.0, 5.0);
+   dataHist.set(0, 23, -1);
+   dataHist.set(1, 17, -1);
 
    int status = validate(RooHistPdf{"histPdf", "histPdf", x, dataHist});
    EXPECT_EQ(status, 0);
@@ -189,22 +216,22 @@ TEST(RooFitHS3, RooPolynomial)
    EXPECT_EQ(status, 0);
 }
 
+TEST(RooFitHS3, RooPower)
+{
+   int status = 0;
+   status = validate({"Power::power(x[0, 10], {a_0[3.0], a_1[-0.3, -10, 10]}, {1.0, 2.0})"});
+   EXPECT_EQ(status, 0);
+}
+
 TEST(RooFitHS3, SimultaneousGaussians)
 {
-   using namespace RooFit;
-
-   // Import keys and factory expressions files for the RooJSONFactoryWSTool.
-   auto etcDir = std::string(TROOT::GetEtcDir());
-   RooFit::JSONIO::loadExportKeys(etcDir + "/RooFitHS3_wsexportkeys.json");
-   RooFit::JSONIO::loadFactoryExpressions(etcDir + "/RooFitHS3_wsfactoryexpressions.json");
-
    // Create a test model: RooSimultaneous with Gaussian in one component, and
    // product of two Gaussians in the other.
    RooRealVar x("x", "x", -8, 8);
    RooRealVar mean("mean", "mean", 0, -8, 8);
    RooRealVar sigma("sigma", "sigma", 0.3, 0.1, 10);
    RooGaussian g1("g1", "g1", x, mean, sigma);
-   RooGaussian g2("g2", "g2", x, mean, RooConst(0.3));
+   RooGaussian g2("g2", "g2", x, mean, 0.3);
    RooProdPdf model("model", "model", RooArgList{g1, g2});
    RooGaussian model_ctl("model_ctl", "model_ctl", x, mean, sigma);
    RooCategory sample("sample", "sample", {{"physics", 0}, {"control", 1}});
@@ -212,22 +239,6 @@ TEST(RooFitHS3, SimultaneousGaussians)
    simPdf.addPdf(model, "physics");
    simPdf.addPdf(model_ctl, "control");
 
-   // this is a handy way of triggering the creation of a ModelConfig upon re-import
-   simPdf.setAttribute("toplevel");
-
-   std::string jsonString;
-
-   // Export to JSON
-   {
-      RooWorkspace ws{"workspace"};
-      ws.import(simPdf, RooFit::Silence());
-      jsonString = RooJSONFactoryWSTool{ws}.exportJSONtoString();
-   }
-
-   // Import JSON
-   RooWorkspace ws{"workspace"};
-   RooJSONFactoryWSTool{ws}.importJSONfromString(jsonString);
-
-   EXPECT_TRUE(ws.pdf("g1"));
-   EXPECT_TRUE(ws.pdf("g2"));
+   int status = validate(simPdf);
+   EXPECT_EQ(status, 0);
 }

@@ -800,9 +800,21 @@ sap.ui.define([], function() {
          }
       }
 
-      UT_EveViewSubscribed(el) {
+      UT_EveViewerUpdate(el) {
          if (el.hasOwnProperty('pendInstance')) {
             this.controllers[0].makeEveViewController(el);
+            return;
+         }
+
+         // function can be called from import scene, or scene update
+         if (el.changeBit === undefined || el.changeBit === 0)
+            return;
+
+         for (const evl of this.controllers) {
+            if (typeof evl.eveViewerId !== 'undefined' && evl.eveViewerId == el.fElementId)
+            {
+               evl.updateViewerAttributes();
+            }
          }
       }
 

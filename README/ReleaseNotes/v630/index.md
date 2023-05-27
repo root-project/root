@@ -38,6 +38,10 @@ The following people have contributed to this new version:
 - The TStorage reallocation routine without a size (`TStorage::ReAlloc(void *ovp, size_t size`) and heap
 related routines (`TStorage::AddToHeap`, `TStorage::IsOnHeap`, `TStorage::GetHeapBegin`, `TStorage::GetHeapEnd`)
 that were deprecated in v6.02/00.
+- The deprecated `Format(const char* option, int sigDigits)` option for `RooAbsPdf::paramOn()` was removed. Please use the `Format(const char* option, ...)` overload that takes command arguments.
+- The deprecated `RooAbsPdf::paramOn()` overload that directly takes a formatting string was removed. Please take the overload that uses command arguments.
+- The `RooCatType` class was deprecated in ROOT 6.22 and its original `RooCatType.h` header is now removed. If you still need access to this class, please include `RooFitLegacy/RooCatTypeLegacy.h`.
+- The `RooAbsString` that was only an alias for `RooStringVar` got removed.
 
 ## Core Libraries
 
@@ -62,6 +66,13 @@ This is unexpected, because one would expect that if two numbers are considered 
 Therefore, the behavior of `TMath::AreEqualAbs()` was changed to return always `true` if the `==` comparision would return `true`.
 
 ## RooFit Libraries
+
+### Changes in RooFormulaVar and RooGenericPdf
+
+The TFormula-based RooFit classes `RooFormulaVar` and `RooGenericPdf` change a bit their behavior to be more consistent:
+
+1. No matter which variables you pass to the constructor, only the variables that the formula depends on are registered as value servers.
+2. Similarly, the `dependents()` method of RooFormulaVar and RooGenericPdf will only return the list of actual value servers.
 
 ### Removal of the RooGenFunction and RooMultiGenFunction classes
 
@@ -115,6 +126,54 @@ the RooDataHist version instead took the sum of weights squared, which
 is equivalent to the squared weight error.
 
 Therefore, the virtual `RooAbsData::add(row, weight, weightError)` function was removed.
+
+### Removal of `RooMomentMorphND` class
+
+The `RooMomentMorphND` and `RooMomentMorphFuncND` were almost exactly the same,
+only that one inherited from `RooAbsPdf` and the other from `RooAbsReal`.
+
+Thanks to the `RooWrapperPdf`, this code duplication in the RooFit implementation can now be avoided.
+Instead of using the removed `RooMomentMorphND` (which is the pdf), you now need to use the `RooMomentMorphFuncND`,
+change its behavior to exactly match the formter `RooMomentMorphND`, and then wrap it into a pdf object:
+
+```C++
+RooMomentMorphFuncND func{<constructor args you previously passed to RooMomentMorphFunc>};
+
+func.setPdfMode(); // change behavior to be exactly like the former RooMomentMorphND
+
+// Pass the selfNormalized=true` flag to the wrapper because the
+RooMomentMorphFuncND already normalizes itself in pdf mode.
+RooWrapperPdf pdf{"pdf_name", "pdf_name", func, /*selfNormalized=*/true};
+```
+
+### Removal of serveral internal classes from the public RooFit interface
+
+Several RooFit classes of which the headers are publically exposed in the interface were only meant as implementation details of other RooFit classes.
+Some of these classes are now removed from the public interface:
+
+1. `RooGenProdProj`, which was an implementation detail of the `RooProdPdf`
+2. `RooScaledFunc`, which was an implementaiton detail of the plotting in RooFit
+   In the supposedly very rare case where you used this class in your own
+   implementations, just multiply the underlying RooAbsReal function with the
+   scale factor and create a RooRealBinding, e.g.:
+   ```c++
+   RooProduct scaledFunc{"scaled_func", "", func, scaleFactor};
+   RooRealBinding scaleBind(scaledFunc, x) ;
+   ```
+   instead of:
+   ```c++
+   RooRealBinding binding(func, x) ;
+   RooScaledFunc scaledBinding(binding, scaleFactor);
+   ```
+3. The `RooAbsRootFinder`, which was the base class of `RooBrentRootFinder`.
+   The `RooAbsRootFinder` was only used as the base class of
+   `RooBrentRootFinder`, which is an implementation detail of several
+   RooFit/RooStats functions. However, polymorphism never not relevant for root
+   finding, so the `RooAbsRootFinder` is removed. In the rare case where you
+   might have used it, please ROOT's other functionalities: RooFit is not for
+   root finding.
+4. The `RooFormula` class, which was not meant as a user-facing class, but as a
+   shared implementation detail of `RooFormulaVar` and `RooGenericPdf`.
 
 ## 2D Graphics Libraries
 

@@ -27,7 +27,6 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          // this.websocket = Component.getOwnerComponentFor(this.getView()).getComponentData().conn_handle;
 
          this.websocket.setReceiver(this);
-         this.websocket.connect(viewData.conn_href);
 
          this.queue = []; // received draw messages
 
@@ -42,7 +41,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          this.getView().setModel(this.cfg_model);
 
          this.nobrowser = this.websocket.getUserArgs('nobrowser') || this.jsroot.decodeUrl().has('nobrowser');
-         this.show_columns = !this.nobrowser && this.websocket.getUserArgs('show_columns') || this.jsroot.decodeUrl().has('show_columns');
+         this.show_columns = (!this.nobrowser && this.websocket.getUserArgs('show_columns')) || this.jsroot.decodeUrl().has('show_columns');
 
          if (this.nobrowser) {
             // remove main area - plain geometry drawing
@@ -55,6 +54,8 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          } else {
             this.getView().byId('expandMaster').setVisible(this.show_columns);
          }
+
+         this.websocket.connect(viewData.conn_href);
 
          Promise.all([import(this.jsroot.source_dir + 'modules/geom/geobase.mjs'), import(this.jsroot.source_dir + 'modules/geom/TGeoPainter.mjs')]).then(arr => {
             this.geo = Object.assign({}, arr[0], arr[1]);
@@ -754,6 +755,18 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
       cameraReset() {
          this.processPainterChange('focusCamera');
+      },
+
+      cameraCanRotateChanged() {
+         this.processPainterChange('changeCanRotate');
+      },
+
+      cameraKindChanged() {
+         this.processPainterChange('changeCamera');
+      },
+
+      cameraOverlayChanged() {
+         this.processPainterChange('changeCamera');
       },
 
       depthTestChanged() {

@@ -235,18 +235,21 @@ TEST(RNTuple, PageFillingString) {
       *fldX = "";
       ntuple->Fill();
       ntuple->CommitCluster();
-      // 2 pages: 16 and 8 characters
-      *fldX = "012345678901234567890123";
+      // 2 pages: 16 and 10 characters
+      *fldX = "01234567890123456789012";
       ntuple->Fill();
+      *fldX = "012";
+      ntuple->Fill(); // main write page is half full here; RColumn::AppendV should flush the shadow page
    }
 
    auto ntuple = RNTupleReader::Open("ntpl", fileGuard.GetPath());
    auto viewX = ntuple->GetView<std::string>("x");
-   ASSERT_EQ(4u, ntuple->GetNEntries());
-   EXPECT_EQ("01234567890123456",        viewX(0));
-   EXPECT_EQ("0123456789012345",         viewX(1));
-   EXPECT_EQ("",                         viewX(2));
-   EXPECT_EQ("012345678901234567890123", viewX(3));
+   ASSERT_EQ(5u, ntuple->GetNEntries());
+   EXPECT_EQ("01234567890123456",       viewX(0));
+   EXPECT_EQ("0123456789012345",        viewX(1));
+   EXPECT_EQ("",                        viewX(2));
+   EXPECT_EQ("01234567890123456789012", viewX(3));
+   EXPECT_EQ("012",                     viewX(4));
 
    const auto desc = ntuple->GetDescriptor();
    EXPECT_EQ(4u, desc->GetNClusters());
@@ -265,7 +268,7 @@ TEST(RNTuple, PageFillingString) {
    const auto &pr4 = cd4.GetPageRange(1);
    ASSERT_EQ(2u, pr4.fPageInfos.size());
    EXPECT_EQ(16u, pr4.fPageInfos[0].fNElements);
-   EXPECT_EQ(8u, pr4.fPageInfos[1].fNElements);
+   EXPECT_EQ(10u, pr4.fPageInfos[1].fNElements);
 }
 
 TEST(RPageSinkBuf, Basics)
@@ -369,7 +372,9 @@ TEST(RPageSinkBuf, Basics)
 }
 
 TEST(RPageSinkBuf, ParallelZip) {
+#ifdef R__USE_IMT
    ROOT::EnableImplicitMT();
+#endif
 
    FileRaii fileGuard("test_ntuple_sinkbuf_pzip.root");
    {
@@ -395,7 +400,11 @@ TEST(RPageSinkBuf, ParallelZip) {
             auto *parallel_zip = ntuple->GetMetrics().GetCounter(
                "RNTupleWriter.RPageSinkBuf.ParallelZip");
             ASSERT_FALSE(parallel_zip == nullptr);
+#ifdef R__USE_IMT
             EXPECT_EQ(1, parallel_zip->GetValueAsInt());
+#else
+            EXPECT_EQ(0, parallel_zip->GetValueAsInt());
+#endif
          }
       }
    }
@@ -419,7 +428,9 @@ TEST(RPageSinkBuf, CommitSealedPageV)
    RNTupleWriteOptions options;
    options.SetApproxUnzippedPageSize(8);
 
+#ifdef R__USE_IMT
    ROOT::DisableImplicitMT();
+#endif
    {
       std::unique_ptr<RPageSink> sink(new RPageSinkMock(options));
       auto &counters = static_cast<RPageSinkMock *>(sink.get())->fCounters;
@@ -437,7 +448,9 @@ TEST(RPageSinkBuf, CommitSealedPageV)
       EXPECT_EQ(0, counters.fNCommitSealedPage);
       EXPECT_EQ(0, counters.fNCommitSealedPageV);
    }
+#ifdef R__USE_IMT
    ROOT::EnableImplicitMT();
+#endif
    {
       std::unique_ptr<RPageSink> sink(new RPageSinkMock(options));
       auto &counters = static_cast<RPageSinkMock *>(sink.get())->fCounters;
@@ -449,10 +462,15 @@ TEST(RPageSinkBuf, CommitSealedPageV)
       ntuple->Fill();
       ntuple->Fill();
       ntuple->CommitCluster();
+#ifdef R__USE_IMT
       // All pages in all columns committed via a single call to `CommitSealedPageV()`
       EXPECT_EQ(0, counters.fNCommitPage);
-      EXPECT_EQ(0, counters.fNCommitSealedPage);
       EXPECT_EQ(1, counters.fNCommitSealedPageV);
+#else
+      EXPECT_EQ(2, counters.fNCommitPage);
+      EXPECT_EQ(0, counters.fNCommitSealedPageV);
+#endif
+      EXPECT_EQ(0, counters.fNCommitSealedPage);
    }
 }
 

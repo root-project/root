@@ -44,7 +44,7 @@ private:
 
 public:
    TGX11TTF(const TGX11 &org);
-   virtual ~TGX11TTF() { }
+   ~TGX11TTF() override { }
 
    Bool_t Init(void *display) override;
    void   DrawText(Int_t x, Int_t y, Float_t angle, Float_t mgn,

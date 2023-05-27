@@ -738,6 +738,15 @@ public:
       return VaryImpl<false>(colNames, std::forward<F>(expression), inputColumns, variationTags, variationName);
    }
 
+   /// Overload to avoid ambiguity between C++20 string, vector<string> construction from init list.
+   template <typename F>
+   RInterface<Proxied, DS_t>
+   Vary(std::initializer_list<std::string> colNames, F &&expression, const ColumnNames_t &inputColumns,
+        const std::vector<std::string> &variationTags, std::string_view variationName)
+   {
+      return Vary(std::vector<std::string>(colNames), std::forward<F>(expression), inputColumns, variationTags, variationName);
+   }
+
    /// \brief Register systematic variations for one or more existing columns using auto-generated tags.
    /// This overload of Vary takes a nVariations parameter instead of a list of tag names. Tag names
    /// will be auto-generated as the sequence 0...nVariations-1.
@@ -755,6 +764,15 @@ public:
          variationTags.emplace_back(std::to_string(i));
 
       return Vary(colNames, std::forward<F>(expression), inputColumns, std::move(variationTags), variationName);
+   }
+
+   /// Overload to avoid ambiguity between C++20 string, vector<string> construction from init list.
+   template <typename F>
+   RInterface<Proxied, DS_t>
+   Vary(std::initializer_list<std::string> colNames, F &&expression, const ColumnNames_t &inputColumns,
+        std::size_t nVariations, std::string_view variationName)
+   {
+      return Vary(std::vector<std::string>(colNames), std::forward<F>(expression), inputColumns, nVariations, variationName);
    }
 
    /// \brief Register systematic variations for an existing column.
@@ -831,6 +849,13 @@ public:
          variationTags.emplace_back(std::to_string(i));
 
       return Vary(colNames, expression, std::move(variationTags), variationName);
+   }
+
+   /// Overload to avoid ambiguity between C++20 string, vector<string> construction from init list.
+   RInterface<Proxied, DS_t> Vary(std::initializer_list<std::string> colNames, std::string_view expression,
+                                  std::size_t nVariations, std::string_view variationName)
+   {
+      return Vary(std::vector<std::string>(colNames), expression, nVariations, variationName);
    }
 
    /// \brief Register systematic variations for one or more existing columns.
@@ -2784,7 +2809,7 @@ private:
              bool IsFStringConv = std::is_convertible<F, std::string>::value,
              bool IsRetTypeDefConstr = std::is_default_constructible<RetType>::value>
    std::enable_if_t<!IsFStringConv && !IsRetTypeDefConstr, RInterface<Proxied, DS_t>>
-   DefineImpl(std::string_view, F, const ColumnNames_t &)
+   DefineImpl(std::string_view, F, const ColumnNames_t &, const std::string &)
    {
       static_assert(std::is_default_constructible<typename TTraits::CallableTraits<F>::ret_type>::value,
                     "Error in `Define`: type returned by expression is not default-constructible");

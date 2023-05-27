@@ -254,6 +254,11 @@ module "std" [system] {
     export *
     header "memory"
   }
+  module "memory_resource" [optional] {
+    requires cplusplus17
+    export *
+    header "memory_resource"
+  }
   module "mutex" {
     export *
     header "mutex"
@@ -265,6 +270,11 @@ module "std" [system] {
   module "numeric" {
     export *
     header "numeric"
+  }
+  module "optional" {
+    requires cplusplus17
+    export *
+    header "optional"
   }
   module "ostream" {
     export *
@@ -299,6 +309,11 @@ module "std" [system] {
 //    export *
 //    header "setjmp.h"
 //  }
+  module "span" {
+    requires cplusplus20
+    export *
+    header "span"
+  }
   module "sstream" {
     export *
     header "sstream"
@@ -429,6 +444,10 @@ module "std" [system] {
     export *
     header "bits/basic_ios.h"
   }
+  module "bits/chrono.h" [optional] {
+    export *
+    header "bits/chrono.h"
+  }
   module "bits/cpp_type_traits.h" {
     export *
     header "bits/cpp_type_traits.h"
@@ -436,6 +455,11 @@ module "std" [system] {
   module "bits/exception_defines.h" {
     export *
     header "bits/exception_defines.h"
+  }
+  module "bits_invoke_h" {
+    export *
+    export bits_move_h
+    header "bits/invoke.h"
   }
   module "bits/ios_base.h" {
     export *
@@ -450,6 +474,10 @@ module "std" [system] {
     export *
     header "bits/locale_facets.h"
   }
+  module "bits_move_h" {
+    export *
+    header "bits/move.h"
+  }
   module "bits_stl_algobase_h" {
     export *
     header "bits/stl_algobase.h"
@@ -459,7 +487,12 @@ module "std" [system] {
     export *
     header "bits/stl_iterator.h"
   }
-  module "bits/stl_iterator_base_types.h" {
+  module "bits/stl_iterator_base_funcs.h" {
+    export *
+    export bits_stl_iterator_base_types_h
+    header "bits/stl_iterator_base_funcs.h"
+  }
+  module "bits_stl_iterator_base_types_h" {
     export *
     export bits_stl_algobase_h
     header "bits/stl_iterator_base_types.h"
@@ -477,26 +510,59 @@ module "std" [system] {
     export *
     header "bits/stl_tree.h"
   }
+  module "bits/range_access.h" {
+    export *
+    export bits_stl_iterator_h
+    header "bits/range_access.h"
+  }
   module "bits/ranges_algo.h" {
     requires cplusplus20
     export *
     export utility
+    export bits_stl_algo_h
     header "bits/ranges_algo.h"
   }
-  module "bits/ranges_algobase.h" {
+   module "bits/ranges_algobase.h" {
     requires cplusplus20
     export *
+    export initializer_list
     header "bits/ranges_algobase.h"
   }
-  module "bits/ranges_base.h" {
+  explicit module "bits_ranges_base_h" [optional] {
     requires cplusplus20
     export *
     export bits_stl_iterator_h
+    export initializer_list
     header "bits/ranges_base.h"
+  }
+  module "bits/ranges_util.h" [optional] {
+    requires cplusplus20
+    export *
+    export bits_invoke_h
+    export utility
+    header "bits/ranges_util.h"
+  }
+  module "bits_stl_algo_h" {
+    export *
+    header "bits/stl_algo.h"
+  }
+  module "bits/stl_construct.h" {
+    export *
+    export bits_stl_iterator_base_types_h
+    header "bits/stl_construct.h"
   }
   module "bits/uniform_int_dist.h" {
     export *
     export bits_stl_algobase_h
     header "bits/uniform_int_dist.h"
+  }
+  module "bits/utility.h" [optional] {
+    export *
+    header "bits/utility.h"
+  }
+  module "bits/uses_allocator_args.h" [optional] {
+    requires cplusplus17
+    export *
+    header "bits/uses_allocator_args.h"
   }
 }

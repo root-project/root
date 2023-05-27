@@ -70,9 +70,10 @@ void LikelihoodJob::init_vars()
    save_vars_.removeAll();
 
    // Retrieve non-constant parameters
-   auto vars = std::make_unique<RooArgSet>(
-      *likelihood_->getParameters()); // TODO: make sure this is the right list of parameters, compare to original
-                                      // implementation in RooRealMPFE.cxx
+   std::unique_ptr<RooArgSet> vars{likelihood_->getParameters()};
+   // TODO: make sure this is the right list of parameters, compare to original
+   // implementation in RooRealMPFE.cxx
+
    RooArgList varList(*vars);
 
    // Save in lists

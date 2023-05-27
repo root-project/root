@@ -43,9 +43,9 @@ if (Clang_DIR)
   list(APPEND _clad_extra_cmake_args -DClang_DIR=${Clang_DIR} -DClang_CONFIG_EXTRA_PATH_HINTS=${Clang_Config_ExtraPathHints})
 endif(Clang_DIR)
 
-if (LLVM_TEMPORARILY_ALLOW_OLD_TOOLCHAIN)
-  list(APPEND _clad_extra_cmake_args -DLLVM_TEMPORARILY_ALLOW_OLD_TOOLCHAIN=${LLVM_TEMPORARILY_ALLOW_OLD_TOOLCHAIN})
-endif(LLVM_TEMPORARILY_ALLOW_OLD_TOOLCHAIN)
+if (LLVM_FORCE_USE_OLD_TOOLCHAIN)
+  list(APPEND _clad_extra_cmake_args -DLLVM_FORCE_USE_OLD_TOOLCHAIN=${LLVM_FORCE_USE_OLD_TOOLCHAIN})
+endif(LLVM_FORCE_USE_OLD_TOOLCHAIN)
 
 if (CLING_INCLUDE_TESTS)
   list(APPEND _clad_extra_cmake_args -DLLVM_EXTERNAL_LIT=${LLVM_MAIN_SRC_DIR}/utils/lit/lit.py)
@@ -63,11 +63,20 @@ set(_clad_cmake_logging_settings
 
 list(APPEND _clad_cmake_logging_settings LOG_OUTPUT_ON_FAILURE ON)
 
+list(APPEND _clad_patches_list "clad_array_size_type.patch" "clad_local_array.patch" "clad_fma.patch")
+set(_clad_patch_command
+      ${CMAKE_COMMAND} -E copy_directory
+      ${CMAKE_SOURCE_DIR}/interpreter/cling/tools/plugins/clad/patches <SOURCE_DIR>
+      && git checkout <SOURCE_DIR>
+      && git apply --ignore-space-change --ignore-whitespace ${_clad_patches_list}
+      )
+
 ExternalProject_Add(
   clad
   GIT_REPOSITORY https://github.com/vgvassilev/clad.git
   GIT_TAG v1.1
   UPDATE_COMMAND ""
+  PATCH_COMMAND ${_clad_patch_command}
   CMAKE_ARGS -G ${CMAKE_GENERATOR}
              -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
              -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}

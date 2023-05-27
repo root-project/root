@@ -27,7 +27,7 @@
 
 
 // from roofit
-#include "RooStats/ModelConfig.h"
+#include "RooFit/ModelConfig.h"
 
 // from this package
 #include "RooStats/HistFactory/Measurement.h"
@@ -186,19 +186,18 @@ RooWorkspace* RooStats::HistFactory::MakeModelAndMeasurementFast( RooStats::Hist
       RooWorkspace* ws_single = factory.MakeSingleChannelModel( measurement, channel );
       channel_workspaces.emplace_back(ws_single);
 
-      // Make the output
-      std::string ChannelFileName = measurement.GetOutputFilePrefix() + "_"
-   + ch_name + "_" + rowTitle + "_model.root";
-      ws_single->writeToFile( ChannelFileName.c_str() );
-
-      // Now, write the measurement to the file
-      // Make a new measurement for only this channel
-      RooStats::HistFactory::Measurement meas_chan( measurement );
-      meas_chan.GetChannels().clear();
-      meas_chan.GetChannels().push_back( channel );
-      cxcoutIHF << "Opening File to hold channel: " << ChannelFileName << std::endl;
       {
-        std::unique_ptr<TFile> chanFile{TFile::Open( ChannelFileName.c_str(), "UPDATE" )};
+        // Make the output
+        std::string ChannelFileName = measurement.GetOutputFilePrefix() + "_"
+    + ch_name + "_" + rowTitle + "_model.root";
+        cxcoutIHF << "Opening File to hold channel: " << ChannelFileName << std::endl;
+        std::unique_ptr<TFile> chanFile{TFile::Open( ChannelFileName.c_str(), "RECREATE" )};
+        chanFile->WriteTObject(ws_single);
+        // Now, write the measurement to the file
+        // Make a new measurement for only this channel
+        RooStats::HistFactory::Measurement meas_chan( measurement );
+        meas_chan.GetChannels().clear();
+        meas_chan.GetChannels().push_back( channel );
         cxcoutIHF << "About to write channel measurement to file" << std::endl;
         meas_chan.writeToFile( chanFile.get() );
         cxcoutPHF << "Successfully wrote channel to file" << std::endl;
@@ -241,17 +240,17 @@ RooWorkspace* RooStats::HistFactory::MakeModelAndMeasurementFast( RooStats::Hist
     // Get the Parameter of interest as a RooRealVar
     RooRealVar* poi = dynamic_cast<RooRealVar*>( ws->var(measurement.GetPOI()));
 
-    std::string CombinedFileName = measurement.GetOutputFilePrefix() + "_combined_"
-      + rowTitle + "_model.root";
-    cxcoutPHF << "Writing combined workspace to file: " << CombinedFileName << std::endl;
-    ws->writeToFile( CombinedFileName.c_str() );
-    cxcoutPHF << "Writing combined measurement to file: " << CombinedFileName << std::endl;
     {
-      std::unique_ptr<TFile> combFile{TFile::Open( CombinedFileName.c_str(), "UPDATE" )};
+      std::string CombinedFileName = measurement.GetOutputFilePrefix() + "_combined_"
+        + rowTitle + "_model.root";
+      cxcoutPHF << "Writing combined workspace to file: " << CombinedFileName << std::endl;
+      std::unique_ptr<TFile> combFile{TFile::Open( CombinedFileName.c_str(), "RECREATE" )};
       if( combFile == nullptr ) {
         cxcoutEHF << "Error: Failed to open file " << CombinedFileName << std::endl;
         throw hf_exc();
       }
+      combFile->WriteTObject(ws);
+      cxcoutPHF << "Writing combined measurement to file: " << CombinedFileName << std::endl;
       measurement.writeToFile( combFile.get() );
     }
 
@@ -379,8 +378,8 @@ void RooStats::HistFactory::FitModelAndPlot(const std::string& MeasurementName,
   fprintf(tableFile, " %.4f / %.4f  ", poi->getErrorLo(), poi->getErrorHi());
 
   // Make the Profile Likelihood Plot
-  RooAbsReal* nll = model->createNLL(*simData);
-  RooAbsReal* profile = nll->createProfile(*poi);
+  std::unique_ptr<RooAbsReal> nll{model->createNLL(*simData)};
+  std::unique_ptr<RooAbsReal> profile{nll->createProfile(*poi)};
   if( profile==nullptr ) {
     cxcoutEHF << "Error: Failed to make ProfileLikelihood for: " << poi->GetName()
          << " using model: " << model->GetName()

@@ -66,7 +66,6 @@ private:
    void assignToGPU(NodeInfo &info);
    void computeCPUNode(const RooAbsArg *node, NodeInfo &info);
    void setOperMode(RooAbsArg *arg, RooAbsArg::OperMode opMode);
-   void determineOutputSizes();
 
    ///////////////////////////
    // Private member variables
@@ -90,8 +89,6 @@ private:
 
    // RAII structures to reset state of computation graph after driver destruction
    std::stack<RooHelpers::ChangeOperModeRAII> _changeOperModeRAIIs;
-
-   std::vector<std::unique_ptr<RooAbsData>> _splittedDataSets;
 };
 
 } // end namespace Experimental

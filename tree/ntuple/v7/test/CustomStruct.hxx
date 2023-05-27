@@ -1,6 +1,8 @@
 #ifndef ROOT7_RNTuple_Test_CustomStruct
 #define ROOT7_RNTuple_Test_CustomStruct
 
+#include <TRootIOCtor.h>
+
 #include <cstdint>
 #include <string>
 #include <variant>
@@ -45,6 +47,21 @@ struct EmptyBase {
 };
 struct alignas(std::uint64_t) TestEBO : public EmptyBase {
    std::uint64_t u64;
+};
+
+template <typename T>
+class EdmWrapper {
+public:
+   bool fIsPresent = true;
+   T fMember;
+};
+
+class IOConstructor {
+public:
+   IOConstructor() = delete;
+   IOConstructor(TRootIOCtor *) {};
+
+   int a = 7;
 };
 
 /// The classes below are based on an excerpt provided by Marcin Nowak (EP-UAT)

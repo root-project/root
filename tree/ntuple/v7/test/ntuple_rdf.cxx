@@ -36,7 +36,9 @@ TEST(RNTuple, RDF)
       ntuple->Fill();
    }
 
+#ifdef R__USE_IMT
    ROOT::EnableImplicitMT();
+#endif
    auto f = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str()));
    auto rdf = ROOT::RDF::Experimental::FromRNTuple(f->Get<RNTuple>("myNTuple"));
    EXPECT_EQ(42.0, *rdf.Min("pt"));

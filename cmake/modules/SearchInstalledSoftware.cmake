@@ -147,10 +147,11 @@ if(builtin_freetype)
   message(STATUS "Building freetype version ${freetype_version} included in ROOT itself")
   set(FREETYPE_LIBRARY ${CMAKE_BINARY_DIR}/FREETYPE-prefix/src/FREETYPE/objs/.libs/${CMAKE_STATIC_LIBRARY_PREFIX}freetype${CMAKE_STATIC_LIBRARY_SUFFIX})
   if(WIN32)
+    set(freetypebuild "Release")
+    set(freetypelib freetype.lib)
     if(winrtdebug)
       set(freetypebuild "Debug")
-    else()
-      set(freetypebuild "Release")
+      set(freetypelib freetyped.lib)
     endif()
     ExternalProject_Add(
       FREETYPE
@@ -159,7 +160,7 @@ if(builtin_freetype)
       INSTALL_DIR ${CMAKE_BINARY_DIR}
       CMAKE_ARGS -G ${CMAKE_GENERATOR} -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX} -DFT_DISABLE_BZIP2=TRUE
       BUILD_COMMAND ${CMAKE_COMMAND} --build . --config ${freetypebuild}
-      INSTALL_COMMAND ${CMAKE_COMMAND} -E copy_if_different ${freetypebuild}/freetype.lib ${FREETYPE_LIBRARY}
+      INSTALL_COMMAND ${CMAKE_COMMAND} -E copy_if_different ${freetypebuild}/${freetypelib} ${FREETYPE_LIBRARY}
       LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 0
       BUILD_BYPRODUCTS ${FREETYPE_LIBRARY}
       TIMEOUT 600
@@ -1336,88 +1337,55 @@ if(builtin_tbb AND NO_CONNECTION)
 endif()
 
 if(builtin_tbb)
-  set(tbb_builtin_version 2019_U9)
-  set(tbb_sha256 15652f5328cf00c576f065e5cd3eaf3317422fe82afb67a9bcec0dc065bd2abe)
-  if(CMAKE_CXX_COMPILER_ID MATCHES Clang)
-    set(_tbb_compiler compiler=clang)
-  elseif(CMAKE_CXX_COMPILER_ID STREQUAL Intel)
-    set(_tbb_compiler compiler=icc)
-  elseif(CMAKE_CXX_COMPILER_ID STREQUAL GNU)
-    set(_tbb_compiler compiler=gcc)
-  endif()
-  if(${ROOT_ARCHITECTURE} MATCHES "macosxarm64")
-    set(tbb_command patch -p1 -i ${CMAKE_SOURCE_DIR}/builtins/tbb/patches/apple-m1.patch)
-  else()
-    set(tbb_command "")
-  endif()
+  set(tbb_url ${lcgpackages}/oneTBB-2021.9.0.tar.gz)
+  set(tbb_sha256 1ce48f34dada7837f510735ff1172f6e2c261b09460e3bf773b49791d247d24e)
+
   if(MSVC)
-    set(vsdir "vs2013")
-    if(CMAKE_SIZEOF_VOID_P EQUAL 8)
-      set(tbb_arch x64)
-    else()
-      set(tbb_arch Win32)
+    set(tbb_build Release)
+    if(winrtdebug)
+      set(tbb_build Debug)
+      set(tbbsuffix "_debug")
     endif()
-    set(TBB_LIBRARIES ${CMAKE_BINARY_DIR}/lib/tbb.lib)
+    set(TBB_LIBRARIES ${CMAKE_BINARY_DIR}/lib/tbb12${tbbsuffix}.lib)
     ExternalProject_Add(
       TBB
-      URL ${lcgpackages}/tbb-${tbb_builtin_version}.tar.gz
+      URL ${tbb_url}
       URL_HASH SHA256=${tbb_sha256}
       INSTALL_DIR ${CMAKE_BINARY_DIR}
-      CONFIGURE_COMMAND devenv.exe /useenv /upgrade build/${vsdir}/makefile.sln
-      BUILD_COMMAND MSBuild.exe build/${vsdir}/makefile.sln /p:Configuration=Release /p:Platform=${tbb_arch}
-      INSTALL_COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/${tbb_arch}/Release/tbb.dll ${CMAKE_BINARY_DIR}/bin/
-              COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/${tbb_arch}/Release/tbbmalloc.dll ${CMAKE_BINARY_DIR}/bin/
-              COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/${tbb_arch}/Release/tbbmalloc_proxy.dll ${CMAKE_BINARY_DIR}/bin/
-              COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/${tbb_arch}/Release/tbb.lib ${CMAKE_BINARY_DIR}/lib/
-              COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/${tbb_arch}/Release/tbbmalloc.lib ${CMAKE_BINARY_DIR}/lib/
-              COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/${tbb_arch}/Release/tbbmalloc_proxy.lib ${CMAKE_BINARY_DIR}/lib/
-              COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/${tbb_arch}/Release/tbb.pdb ${CMAKE_BINARY_DIR}/bin/
-              COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/${tbb_arch}/Release/tbbmalloc.pdb ${CMAKE_BINARY_DIR}/bin/
-              COMMAND ${CMAKE_COMMAND} -E copy_if_different build/${vsdir}/${tbb_arch}/Release/tbbmalloc_proxy.pdb ${CMAKE_BINARY_DIR}/bin/
-              COMMAND ${CMAKE_COMMAND} -Dinstall_dir=<INSTALL_DIR> -Dsource_dir=<SOURCE_DIR>
-                                       -P ${CMAKE_SOURCE_DIR}/cmake/scripts/InstallTBB.cmake
-      BUILD_IN_SOURCE 1
-      LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
+      CMAKE_ARGS -DCMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD} -DTBB_ENABLE_IPO=OFF -DTBB_TEST=Off -DTBB_STRICT=Off -DTBBMALLOC_BUILD=Off -DTBBMALLOC_PROXY_BUILD=Off "-DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}" "-DCMAKE_INSTALL_LIBDIR=${CMAKE_BINARY_DIR}/lib" "-DCMAKE_INSTALL_INCLUDEDIR=${CMAKE_BINARY_DIR}/include"
+      BUILD_COMMAND ${CMAKE_COMMAND} --build . --config ${tbb_build}
+      INSTALL_COMMAND ${CMAKE_COMMAND}  --install . --config ${tbb_build}
+      LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 LOG_OUTPUT_ON_FAILURE 1
       BUILD_BYPRODUCTS ${TBB_LIBRARIES}
       TIMEOUT 600
     )
-    install(DIRECTORY ${CMAKE_BINARY_DIR}/bin/ DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT libraries FILES_MATCHING PATTERN "tbb*")
-    install(DIRECTORY ${CMAKE_BINARY_DIR}/lib/ DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries FILES_MATCHING PATTERN "tbb*")
+    install(DIRECTORY ${CMAKE_BINARY_DIR}/bin/ DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT libraries FILES_MATCHING PATTERN "tbb*.dll")
+    install(DIRECTORY ${CMAKE_BINARY_DIR}/lib/ DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries FILES_MATCHING PATTERN "tbb*.lib")
   else()
-    ROOT_ADD_CXX_FLAG(_tbb_cxxflags -mno-rtm)
-    # Here we check that the CMAKE_OSX_SYSROOT variable is not empty otherwise
-    # it can happen that a "-isysroot" switch is added without an argument.
-    if(APPLE AND CMAKE_OSX_SYSROOT)
-      set(_tbb_cxxflags "${_tbb_cxxflags} -isysroot ${CMAKE_OSX_SYSROOT}")
-      set(_tbb_ldflags "${_tbb_ldflags} -isysroot ${CMAKE_OSX_SYSROOT}")
-    endif()
     set(TBB_LIBRARIES ${CMAKE_BINARY_DIR}/lib/libtbb${CMAKE_SHARED_LIBRARY_SUFFIX})
     ExternalProject_Add(
       TBB
-      URL ${lcgpackages}/tbb-${tbb_builtin_version}.tar.gz
+      URL ${tbb_url}
       URL_HASH SHA256=${tbb_sha256}
       INSTALL_DIR ${CMAKE_BINARY_DIR}
-      PATCH_COMMAND sed -i -e "/clang -v/s@-v@--version@" build/macos.inc
-      COMMAND ${tbb_command}
-      CONFIGURE_COMMAND ""
-      BUILD_COMMAND make ${_tbb_compiler} cpp0x=1 "CXXFLAGS=${_tbb_cxxflags}" CPLUS=${CMAKE_CXX_COMPILER} CONLY=${CMAKE_C_COMPILER} "LDFLAGS=${_tbb_ldflags}"
-      INSTALL_COMMAND ${CMAKE_COMMAND} -Dinstall_dir=<INSTALL_DIR> -Dsource_dir=<SOURCE_DIR>
-                                       -P ${CMAKE_SOURCE_DIR}/cmake/scripts/InstallTBB.cmake
-      INSTALL_COMMAND ""
-      BUILD_IN_SOURCE 1
-      LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
+      CMAKE_ARGS -DCMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD} -DTBB_ENABLE_IPO=OFF -DTBB_TEST=Off -DTBB_STRICT=Off -DTBBMALLOC_BUILD=Off -DTBBMALLOC_PROXY_BUILD=Off "-DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}" "-DCMAKE_INSTALL_LIBDIR=${CMAKE_BINARY_DIR}/lib" "-DCMAKE_INSTALL_INCLUDEDIR=${CMAKE_BINARY_DIR}/include"
+      LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 LOG_OUTPUT_ON_FAILURE 1
       BUILD_BYPRODUCTS ${TBB_LIBRARIES}
       TIMEOUT 600
     )
     install(DIRECTORY ${CMAKE_BINARY_DIR}/lib/ DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries FILES_MATCHING PATTERN "libtbb*")
   endif()
+
   ExternalProject_Add_Step(
      TBB tbb2externals
      COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_BINARY_DIR}/include/tbb ${CMAKE_BINARY_DIR}/ginclude/tbb
+     COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_BINARY_DIR}/include/oneapi ${CMAKE_BINARY_DIR}/ginclude/oneapi
      DEPENDEES install
   )
   set(TBB_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/ginclude)
   set(TBB_CXXFLAGS "-DTBB_SUPPRESS_DEPRECATED_MESSAGES=1")
+  # The following line is needed to generate the proper dependency with: BUILTINS TBB (in Imt)
+  # and generated with this syntax: add_dependencies(${library} ${${arg1}_TARGET})
   set(TBB_TARGET TBB)
 endif()
 
@@ -1748,7 +1716,7 @@ if(cuda OR tmva-gpu)
       find_program(CUDA_NVCC_EXECUTABLE
         NAMES nvcc nvcc.exe
         PATHS "${CUDA_TOOLKIT_ROOT_DIR}"
-          ENV CUDA_TOOKIT_ROOT
+          ENV CUDA_TOOLKIT_ROOT
           ENV CUDA_PATH
           ENV CUDA_BIN_PATH
         PATH_SUFFIXES bin bin64
@@ -2025,13 +1993,17 @@ if (builtin_gtest)
     )
 
   if(MSVC)
+    set(gtestbuild "Release")
+    if(winrtdebug)
+      set(gtestbuild "Debug")
+    endif()
     set(EXTRA_GTEST_OPTS
       -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG:PATH=${_gtest_byproduct_binary_dir}/lib/
       -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_MINSIZEREL:PATH=${_gtest_byproduct_binary_dir}/lib/
       -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE:PATH=${_gtest_byproduct_binary_dir}/lib/
       -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELWITHDEBINFO:PATH=${_gtest_byproduct_binary_dir}/lib/
       -Dgtest_force_shared_crt=ON
-      BUILD_COMMAND ${CMAKE_COMMAND} --build <BINARY_DIR> --config Release)
+      BUILD_COMMAND ${CMAKE_COMMAND} --build <BINARY_DIR> --config ${gtestbuild})
   endif()
   if(APPLE)
     set(EXTRA_GTEST_OPTS
@@ -2150,8 +2122,8 @@ if(webgui)
   endif()
   ExternalProject_Add(
     RENDERCORE
-    URL ${CMAKE_SOURCE_DIR}/builtins/rendercore/RenderCore.tar.gz
-    URL_HASH SHA256=a0b1cc0d4e8d739b113ace87e33de77572cf019772899549cb082088943513e1
+    URL ${CMAKE_SOURCE_DIR}/builtins/rendercore/RenderCore-1.1.tar.gz
+    URL_HASH SHA256=2cb8c722193ae0ddffde3b1c4b24fc877c9bb2c9ebacdaa6f3860b81991e8737
     CONFIGURE_COMMAND ""
     BUILD_COMMAND ""
     INSTALL_COMMAND ""

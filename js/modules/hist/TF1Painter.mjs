@@ -1,4 +1,4 @@
-import { settings, create, gStyle, isStr, clTF2 } from '../core.mjs';
+import { settings, create, gStyle, isStr, clTH1I, clTF2 } from '../core.mjs';
 import { DrawOptions, buildSvgCurve } from '../base/BasePainter.mjs';
 import { ObjectPainter } from '../base/ObjectPainter.mjs';
 import { TH1Painter } from '../hist2d/TH1Painter.mjs';
@@ -53,6 +53,7 @@ function proivdeEvalPar(obj) {
                .replace(/\b(cos)\b/gi, 'Math.cos')
                .replace(/\b(tan)\b/gi, 'Math.tan')
                .replace(/\b(exp)\b/gi, 'Math.exp')
+               .replace(/\b(log10)\b/gi, 'Math.log10')
                .replace(/\b(pow)\b/gi, 'Math.pow')
                .replace(/pi/g, 'Math.PI');
   for (let n = 2; n < 10; ++n)
@@ -184,7 +185,7 @@ class TF1Painter extends ObjectPainter {
          if (ymin < 0.0) ymin *= (1 + gStyle.fHistTopMargin);
       }
 
-      let histo = create('TH1I'),
+      let histo = create(clTH1I),
           tf1 = this.getObject();
 
       histo.fName = tf1.fName + '_hist';

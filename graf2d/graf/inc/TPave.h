@@ -40,7 +40,7 @@ public:
    TPave(Double_t x1, Double_t y1,Double_t x2 ,Double_t y2,
          Int_t bordersize=4 ,Option_t *option="br");
    TPave(const TPave &pave);
-   virtual ~TPave();
+   ~TPave() override;
 
    TPave &operator=(const TPave &src);
 
@@ -79,10 +79,10 @@ public:
    virtual void   SetX2NDC(Double_t x2) {fX2NDC=x2;}
    virtual void   SetY1NDC(Double_t y1) {fY1NDC=y1;}
    virtual void   SetY2NDC(Double_t y2) {fY2NDC=y2;}
-   virtual void   SetX1(Double_t x1) override;
-   virtual void   SetX2(Double_t x2) override;
-   virtual void   SetY1(Double_t y1) override;
-   virtual void   SetY2(Double_t y2) override;
+   void   SetX1(Double_t x1) override;
+   void   SetX2(Double_t x2) override;
+   void   SetY1(Double_t y1) override;
+   void   SetY2(Double_t y2) override;
 
    ClassDefOverride(TPave,3)  //Pave. A box with shadowing
 };

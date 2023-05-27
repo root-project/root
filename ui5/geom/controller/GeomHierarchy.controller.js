@@ -7,6 +7,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                'sap/ui/unified/Menu',
                'sap/ui/unified/MenuItem',
                'sap/ui/core/Popup',
+               'sap/ui/core/Icon',
                'sap/m/MessageToast',
                'sap/ui/layout/HorizontalLayout',
                'sap/m/CheckBox'
@@ -19,6 +20,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             Menu,
             MenuItem,
             Popup,
+            Icon,
             MessageToast,
             HorizontalLayout,
             mCheckBox) {
@@ -85,10 +87,15 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             label: 'Description',
             tooltip: 'Name of geometry nodes',
             autoResizable: true,
-            width: '15rem',
+            width: show_columns ? '50%' : '100%',
             visible: true,
             tooltip: "{name}",
-            template: new mText({text: "{name}", tooltip: "{name}", wrapping: false})
+            template: new HorizontalLayout({
+                  content: [
+                     new Icon({ visible: '{top}', src: 'sap-icon://badge', tooltip: '{name} selected as top node' }).addStyleClass('sapUiTinyMarginEnd'),
+                     new mText({ text: '{name}', tooltip: '{name}', wrapping: false })
+                  ]
+            })
          }));
 
          if (show_columns) {
@@ -100,7 +107,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                tooltip: 'Visibility flags',
                autoResizable: true,
                visible: true,
-               width: '5rem',
+               width: '20%',
                template: new HorizontalLayout({
                   content: [
                      new mCheckBox({ enabled: true, visible: true, selected: "{_node/visible}", select: evnt => this.changeVisibility(evnt), tooltip: '{name} logical node visibility' }),
@@ -112,7 +119,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             t.addColumn(new tableColumn('columnColor', {
                label: 'Color',
                tooltip: 'Color of geometry volumes',
-               width: '2rem',
+               width: '10%',
                autoResizable: true,
                visible: true,
                template: new GeomColorBox({color: "{_node/color}", visible: "{= !!${_node/color}}"})
@@ -120,7 +127,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             t.addColumn(new tableColumn('columnMaterial', {
                label: 'Material',
                tooltip: 'Material of the volumes',
-               width: '6rem',
+               width: '20%',
                autoResizable: true,
                visible: true,
                template: new mText({text: "{_node/material}", wrapping: false})
@@ -273,7 +280,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          let mhdr = msg.slice(0,6);
          msg = msg.slice(6);
 
-         console.log(`RECV ${mhdr} len: ${msg.length} ${msg.slice(0,70)} ...`);
+         // console.log(`RECV ${mhdr} len: ${msg.length} ${msg.slice(0,70)} ...`);
 
          switch (mhdr) {
          case "DESCR:":  // browser hierarchy
@@ -286,8 +293,6 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             let bresp = JSON.parse(msg);
             if (this.model)
                this.model.processResponse(bresp);
-            if (bresp?.path?.length == 0)
-               this.byId("treeTable").autoResizeColumn(0);
             break;
          case "FOUND:":  // text message for found query
             this.showTextInBrowser(msg);
@@ -317,8 +322,16 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          if (!this.model) return;
 
          if (is_original) {
-            let suffix = ':__PHYSICAL_VISIBILITY__:',
-                 p = msg.indexOf(suffix);
+            let suffix = ':__SELECTED_STACK__:', p = msg.indexOf(suffix);
+            if (p > 0) {
+               this.selectedStack = JSON.parse(msg.slice(p+suffix.length));
+               msg = msg.slice(0, p);
+            } else {
+               delete this.selectedStack;
+            }
+
+            suffix = ':__PHYSICAL_VISIBILITY__:';
+            p = msg.indexOf(suffix);
             if (p > 0) {
                this.physVisibility = JSON.parse(msg.slice(p+suffix.length));
                msg = msg.slice(0, p);
@@ -392,6 +405,34 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             this.physVisibility.push(item);
             return item;
          }
+      },
+
+      /** @summary Returns true if node identified by path is selected */
+      getPhysTopNode(path) {
+         if (!this.fullModel)
+            return false;
+
+         let stack = this.getStackByPath(this.fullModel, path);
+         if (!stack)
+            return !this.selectedStack;
+
+         if (!this.selectedStack) return false;
+
+         let len = this.selectedStack.length;
+         if (len != stack.length)
+            return false;
+
+         for (let k = 0; k < len; ++k)
+            if (stack[k] != this.selectedStack[k])
+               return false;
+
+         return true;
+      },
+
+      /** @summary Set top node by path */
+      setPhysTopNode(path) {
+         if (this.fullModel)
+            this.selectedStack = this.getStackByPath(this.fullModel, path);
       },
 
       /** @summary Show special message insted of nodes hierarchy */
@@ -510,24 +551,25 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
          oEvent.preventDefault();
 
-         // var oRowContext = oEvent.getParameter("rowBindingContext");
-
          if (!this._oIdContextMenu) {
             this._oIdContextMenu = new Menu();
             this.getView().addDependent(this._oIdContextMenu);
          }
 
          this._oIdContextMenu.destroyItems();
-         this._oIdContextMenu.addItem(new MenuItem({
-            text: 'Set as top',
-            select: () => {
-               if (this.standalone) {
-                  MessageToast.show('Set as top not yet supported in standalone mode');
-               } else {
+         if (!this.standalone)
+            this._oIdContextMenu.addItem(new MenuItem({
+               text: 'Set as top',
+               select: () => {
+                  this.setPhysTopNode(prop.path);
                   this.websocket.send('SETTOP:' + JSON.stringify(prop.path));
+
+                  let len = this.model?.getLength() ?? 0;
+                  for (let n = 0; n < len; ++n)
+                     this.model?.setProperty(`/nodes/${n}/top`, false);
+                  this.model?.setProperty(ctxt.getPath() + '/top', true);
                }
-            }
-         }));
+            }));
 
          let text = 'Search for ', value;
          if ((colid == 'columnMaterial') && prop._elem.material) {
@@ -612,7 +654,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                this.submitSearchQuery('', true, true);
             }
          }
-      },
+      }
 
    });
 

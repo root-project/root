@@ -230,37 +230,26 @@ ROOT::Experimental::RNTupleReader *ROOT::Experimental::RNTupleReader::GetDisplay
    return fDisplayReader.get();
 }
 
-void ROOT::Experimental::RNTupleReader::Show(NTupleSize_t index, const ENTupleShowFormat format, std::ostream &output)
+void ROOT::Experimental::RNTupleReader::Show(NTupleSize_t index, std::ostream &output)
 {
-   RNTupleReader *reader = this;
-   REntry *entry = GetModel()->GetDefaultEntry();
+   auto reader = GetDisplayReader();
+   auto entry = reader->GetModel()->GetDefaultEntry();
 
-   switch (format) {
-   case ENTupleShowFormat::kCompleteJSON:
-      reader = GetDisplayReader();
-      entry = reader->GetModel()->GetDefaultEntry();
-      // Fall through
-   case ENTupleShowFormat::kCurrentModelJSON:
-      reader->LoadEntry(index);
-      output << "{";
-      for (auto iValue = entry->begin(); iValue != entry->end();) {
+   reader->LoadEntry(index);
+   output << "{";
+   for (auto iValue = entry->begin(); iValue != entry->end();) {
+      output << std::endl;
+      RPrintValueVisitor visitor(*iValue, output, 1 /* level */);
+      iValue->GetField()->AcceptVisitor(visitor);
+
+      if (++iValue == entry->end()) {
          output << std::endl;
-         RPrintValueVisitor visitor(*iValue, output, 1 /* level */);
-         iValue->GetField()->AcceptVisitor(visitor);
-
-         if (++iValue == entry->end()) {
-            output << std::endl;
-            break;
-         } else {
-            output << ",";
-         }
+         break;
+      } else {
+         output << ",";
       }
-      output << "}" << std::endl;
-      break;
-   default:
-      // Unhandled case, internal error
-      R__ASSERT(false);
    }
+   output << "}" << std::endl;
 }
 
 const ROOT::Experimental::RNTupleDescriptor *ROOT::Experimental::RNTupleReader::GetDescriptor()
@@ -302,8 +291,12 @@ ROOT::Experimental::RNTupleWriter::RNTupleWriter(std::unique_ptr<ROOT::Experimen
 
 ROOT::Experimental::RNTupleWriter::~RNTupleWriter()
 {
-   CommitCluster(true /* commitClusterGroup */);
-   fSink->CommitDataset();
+   try {
+      CommitCluster(true /* commitClusterGroup */);
+      fSink->CommitDataset();
+   } catch (const RException &err) {
+      R__LOG_ERROR(NTupleLog()) << "failure committing ntuple: " << err.GetError().GetReport();
+   }
 }
 
 std::unique_ptr<ROOT::Experimental::RNTupleWriter>
@@ -339,6 +332,11 @@ void ROOT::Experimental::RNTupleWriter::CommitCluster(bool commitClusterGroup)
       if (commitClusterGroup)
          CommitClusterGroup();
       return;
+   }
+   if (fSink->GetWriteOptions().GetHasSmallClusters() &&
+      (fUnzippedClusterSize > RNTupleWriteOptions::kMaxSmallClusterSize))
+   {
+      throw RException(R__FAIL("invalid attempt to write a cluster > 512MiB with 'small clusters' option enabled"));
    }
    for (auto &field : *fModel->GetFieldZero()) {
       field.Flush();

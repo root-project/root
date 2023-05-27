@@ -14,14 +14,7 @@
 
 #include <sstream>
 
-#include "nlohmann/json.hpp"
-
-// TJSONTree interface
-
-TJSONTree::Node &TJSONTree::rootnode()
-{
-   return root;
-}
+#include <nlohmann/json.hpp>
 
 // TJSONTree methods
 
@@ -40,19 +33,9 @@ TJSONTree::Node &TJSONTree::incache(const TJSONTree::Node &n)
    return _nodecache.back();
 }
 
-TJSONTree *TJSONTree::Node::get_tree()
-{
-   return tree;
-}
-
 const TJSONTree::Node::Impl &TJSONTree::Node::get_node() const
 {
    return *node;
-}
-
-const TJSONTree *TJSONTree::Node::get_tree() const
-{
-   return tree;
 }
 
 TJSONTree::Node::Impl &TJSONTree::Node::get_node()
@@ -152,6 +135,12 @@ TJSONTree::Node &TJSONTree::Node::operator<<(double d)
    return *this;
 }
 
+TJSONTree::Node &TJSONTree::Node::operator<<(bool b)
+{
+   node->get() = b;
+   return *this;
+}
+
 const TJSONTree::Node &TJSONTree::Node::operator>>(std::string &v) const
 {
    v = node->get().get<std::string>();
@@ -213,10 +202,10 @@ bool isResettingPossible(nlohmann::json const &node)
 }
 } // namespace
 
-void TJSONTree::Node::set_map()
+TJSONTree::Node &TJSONTree::Node::set_map()
 {
    if (node->get().type() == nlohmann::json::value_t::object)
-      return;
+      return *this;
 
    if (isResettingPossible(node->get())) {
       node->get() = nlohmann::json::object();
@@ -224,12 +213,13 @@ void TJSONTree::Node::set_map()
       throw std::runtime_error("cannot declare " + this->key() + " to be of map-type, already of type " +
                                node->get().type_name());
    }
+   return *this;
 }
 
-void TJSONTree::Node::set_seq()
+TJSONTree::Node &TJSONTree::Node::set_seq()
 {
    if (node->get().type() == nlohmann::json::value_t::array)
-      return;
+      return *this;
 
    if (isResettingPossible(node->get())) {
       node->get() = nlohmann::json::array();
@@ -237,6 +227,7 @@ void TJSONTree::Node::set_seq()
       throw std::runtime_error("cannot declare " + this->key() + " to be of seq-type, already of type " +
                                node->get().type_name());
    }
+   return *this;
 }
 
 void TJSONTree::Node::clear()
@@ -289,7 +280,7 @@ bool TJSONTree::Node::val_bool() const
 
 bool TJSONTree::Node::has_key() const
 {
-   return node->key().size() > 0;
+   return !node->key().empty();
 }
 
 bool TJSONTree::Node::has_val() const
@@ -351,7 +342,9 @@ public:
    }
    bool equal(const typename child_iterator::Impl &other) const override
    {
-      auto it = dynamic_cast<const ChildItImpl<Nd, NdType, json_it> *>(&other);
+      // We can use static_cast here because we never compare Iterators for
+      // different JSON node types.
+      auto it = static_cast<const ChildItImpl<Nd, NdType, json_it> *>(&other);
       return it && it->iter == this->iter;
    }
 

@@ -34,7 +34,7 @@ protected:
 
 public:
    TVirtualIndex();
-   virtual               ~TVirtualIndex();
+                 ~TVirtualIndex() override;
    virtual void           Append(const TVirtualIndex *,Bool_t delaySort = kFALSE) = 0;
    virtual Long64_t       GetEntryNumberFriend(const TTree * /*parent*/) = 0;
    virtual Long64_t       GetEntryNumberWithIndex(Long64_t major, Long64_t minor) const = 0;

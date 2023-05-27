@@ -28,52 +28,16 @@ for analytical convolutions with classes inheriting from RooAbsAnaConvPdf
 #include "RooMath.h"
 #include "RooRealConstant.h"
 #include "RooRandom.h"
+#include "RooBatchCompute.h"
 
 #include "TError.h"
 
-
-namespace {
-
-////////////////////////////////////////////////////////////////////////////////
-/// use the approximation: erf(z) = exp(-z*z)/(std::sqrt(pi)*z)
-/// to explicitly cancel the divergent exp(y*y) behaviour of
-/// CWERF for z = x + i y with large negative y
-
-std::complex<double> evalCerfApprox(double _x, double u, double c)
-{
-  static const double rootpi= std::sqrt(std::atan2(0.,-1.));
-  const std::complex<double> z(_x * c, u + c);
-  const std::complex<double> zc(u + c, - _x * c);
-  const std::complex<double> zsq((z.real() + z.imag()) * (z.real() - z.imag()),
-     2. * z.real() * z.imag());
-  const std::complex<double> v(-zsq.real() - u*u, -zsq.imag());
-  const std::complex<double> ev = std::exp(v);
-  const std::complex<double> mez2zcrootpi = -std::exp(zsq)/(zc*rootpi);
-
-  return 2. * (ev * (mez2zcrootpi + 1.));
-}
-
-// Calculate exp(-u^2) cwerf(swt*c + i(u+c)), taking care of numerical instabilities
-inline std::complex<double> evalCerf(double swt, double u, double c)
-{
-  if(swt == 0.0) {
-    // For a purely complex argument z, the faddeeva function equals to
-    // exp(z*z) * erfc(z). Together with coefficient exp(-u*u), this means the
-    // function can be simplified to:
-    const double z = u + c;
-    return z > -4.0 ? (std::exp(c * (c + 2.*u)) * std::erfc(z)) : evalCerfApprox(0.,u,c);
-    // This version with std::erfc is about twice as fast as the faddeeva_fast
-    // code path, speeding up in particular the analytical convolution of an
-    // exponential decay with a Gaussian (like in RooDecay).
-  }
-  std::complex<double> z(swt*c,u+c);
-  return (z.imag()>-4.0) ? (std::exp(-u*u)*RooMath::faddeeva_fast(z)) : evalCerfApprox(swt,u,c);
-}
-
-} // namespace
-
+#include <RooHeterogeneousMath.h>
 
 using namespace std;
+
+using RooHeterogeneousMath::evalCerf;
+using RooHeterogeneousMath::evalCerfApprox;
 
 ClassImp(RooGaussModel);
 
@@ -169,88 +133,128 @@ Int_t RooGaussModel::basisCode(const char* name) const
 
 double RooGaussModel::evaluate() const
 {
+   auto arg1 = static_cast<RooAbsReal*>(basis().getParameter(1));
+   auto arg2 = static_cast<RooAbsReal*>(basis().getParameter(2));
+   double param1 = arg1 ? arg1->getVal() : 0.0;
+   double param2 = arg2 ? arg2->getVal() : 0.0;
+   return evaluate(x, mean * msf, sigma * ssf, param1, param2, _basisCode);
+}
+
+void RooGaussModel::computeBatch(cudaStream_t *stream, double *output, size_t size,
+                                 RooFit::Detail::DataMap const &dataMap) const
+{
+   auto xVals = dataMap.at(x);
+   auto meanVals = dataMap.at(mean);
+   auto meanSfVals = dataMap.at(msf);
+   auto sigmaVals = dataMap.at(sigma);
+   auto sigmaSfVals = dataMap.at(ssf);
+
+   auto param1 = static_cast<RooAbsReal *>(basis().getParameter(1));
+   auto param2 = static_cast<RooAbsReal *>(basis().getParameter(2));
+   const double zeroVal = 0.0;
+   auto param1Vals = param1 ? dataMap.at(param1) : RooSpan<const double>{&zeroVal, 1};
+   auto param2Vals = param2 ? dataMap.at(param2) : RooSpan<const double>{&zeroVal, 1};
+
+   BasisType basisType = getBasisType(_basisCode);
+   double basisSign = _basisCode - 10 * (basisType - 1) - 2;
+
+   auto dispatch = stream ? RooBatchCompute::dispatchCUDA : RooBatchCompute::dispatchCPU;
+
+   // We have an implementation also for CUDA right now only for the most used
+   // basis type, which is expBasis. If the need to support other basis types
+   // arises, they can be implemented following this example. Remember to also
+   // adapt RooGaussModel::canComputeBatchWithCuda().
+   if (basisType == expBasis) {
+      RooBatchCompute::ArgVector extraArgs{basisSign};
+      dispatch->compute(stream, RooBatchCompute::GaussModelExpBasis, output, size,
+                        {xVals, meanVals, meanSfVals, sigmaVals, sigmaSfVals, param1Vals}, extraArgs);
+      return;
+   }
+
+   // For now, if the arrays don't have the expected input shape, fall back to the scalar mode
+   if (xVals.size() != size || meanVals.size() != 1 || meanSfVals.size() != 1 || sigmaVals.size() != 1 ||
+       sigmaSfVals.size() != 1 || param1Vals.size() != 1 || param2Vals.size() != 1) {
+      return RooAbsPdf::computeBatch(stream, output, size, dataMap);
+   }
+
+   for (unsigned int i = 0; i < size; ++i) {
+      output[i] = evaluate(xVals[i], meanVals[0] * meanSfVals[0], sigmaVals[0] * sigmaSfVals[0], param1Vals[0],
+                           param2Vals[0], _basisCode);
+   }
+}
+
+double RooGaussModel::evaluate(double x, double mean, double sigma, double param1, double param2, int basisCode)
+{
   // *** 1st form: Straight Gaussian, used for unconvoluted PDF or expBasis with 0 lifetime ***
   static double root2(std::sqrt(2.)) ;
   static double root2pi(std::sqrt(2.*std::atan2(0.,-1.))) ;
   static double rootpi(std::sqrt(std::atan2(0.,-1.))) ;
 
-  BasisType basisType = (BasisType)( (_basisCode == 0) ? 0 : (_basisCode/10) + 1 );
-  BasisSign basisSign = (BasisSign)( _basisCode - 10*(basisType-1) - 2 ) ;
+  BasisType basisType = getBasisType(basisCode);
+  BasisSign basisSign = (BasisSign)( basisCode - 10*(basisType-1) - 2 ) ;
 
-  double tau = (_basisCode!=noBasis)?((RooAbsReal*)basis().getParameter(1))->getVal():0 ;
-  if (basisType == coshBasis && _basisCode!=noBasis ) {
-     double dGamma = ((RooAbsReal*)basis().getParameter(2))->getVal();
+  double tau = (basisCode!=noBasis) ? param1 : 0.0;
+  if (basisType == coshBasis && basisCode!=noBasis ) {
+     double dGamma = param2;
      if (dGamma==0) basisType = expBasis;
   }
 
   if (basisType==none || ((basisType==expBasis || basisType==cosBasis) && tau==0.)) {
-    double xprime = (x-(mean*msf))/(sigma*ssf) ;
-    if (verboseEval()>2) cout << "RooGaussModel::evaluate(" << GetName() << ") 1st form" << endl ;
-
-    double result = std::exp(-0.5*xprime*xprime)/(sigma*ssf*root2pi) ;
-    if (_basisCode!=0 && basisSign==Both) result *= 2 ;
+    double xprime = (x-mean)/sigma ;
+    double result = std::exp(-0.5*xprime*xprime)/(sigma*root2pi) ;
+    if (basisCode!=0 && basisSign==Both) result *= 2 ;
     return result ;
   }
 
   // *** 2nd form: 0, used for sinBasis, linBasis, and quadBasis with tau=0 ***
   if (tau==0) {
-    if (verboseEval()>2) cout << "RooGaussModel::evaluate(" << GetName() << ") 2nd form" << endl ;
     return 0. ;
   }
 
   // *** 3nd form: Convolution with exp(-t/tau), used for expBasis and cosBasis(omega=0) ***
-  double omega =  (basisType==sinBasis  || basisType==cosBasis)  ? ((RooAbsReal*)basis().getParameter(2))->getVal() : 0 ;
-  double dgamma = (basisType==sinhBasis || basisType==coshBasis) ? ((RooAbsReal*)basis().getParameter(2))->getVal() : 0 ;
+  double omega =  (basisType==sinBasis  || basisType==cosBasis)  ? param2 : 0 ;
+  double dgamma = (basisType==sinhBasis || basisType==coshBasis) ? param2 : 0 ;
   double _x = omega *tau ;
   double _y = tau*dgamma/2;
-  double xprime = (x-(mean*msf))/tau ;
-  double c = (sigma*ssf)/(root2*tau) ;
+  double xprime = (x-mean)/tau ;
+  double c = sigma/(root2*tau) ;
   double u = xprime/(2*c) ;
 
   if (basisType==expBasis || (basisType==cosBasis && _x==0.)) {
-    if (verboseEval()>2) cout << "RooGaussModel::evaluate(" << GetName() << ") 3d form tau=" << tau << endl ;
     double result(0) ;
     if (basisSign!=Minus) result += evalCerf(0,-u,c).real();
     if (basisSign!=Plus)  result += evalCerf(0, u,c).real();
-    if (TMath::IsNaN(result)) { cxcoutE(Tracing) << "RooGaussModel::getVal(" << GetName() << ") got nan during case 1 " << endl; }
     return result ;
   }
 
   // *** 4th form: Convolution with exp(-t/tau)*sin(omega*t), used for sinBasis(omega<>0,tau<>0) ***
   if (basisType==sinBasis) {
-    if (verboseEval()>2) cout << "RooGaussModel::evaluate(" << GetName() << ") 4th form omega = " << omega << ", tau = " << tau << endl ;
     double result(0) ;
     if (_x==0.) return result ;
     if (basisSign!=Minus) result += -evalCerf(-_x,-u,c).imag();
     if (basisSign!=Plus)  result += -evalCerf( _x, u,c).imag();
-    if (TMath::IsNaN(result)) cxcoutE(Tracing) << "RooGaussModel::getVal(" << GetName() << ") got nan during case 3 " << endl;
     return result ;
   }
 
   // *** 5th form: Convolution with exp(-t/tau)*cos(omega*t), used for cosBasis(omega<>0) ***
   if (basisType==cosBasis) {
-    if (verboseEval()>2) cout << "RooGaussModel::evaluate(" << GetName() << ") 5th form omega = " << omega << ", tau = " << tau << endl ;
     double result(0) ;
     if (basisSign!=Minus) result += evalCerf(-_x,-u,c).real();
     if (basisSign!=Plus)  result += evalCerf( _x, u,c).real();
-    if (TMath::IsNaN(result)) cxcoutE(Tracing) << "RooGaussModel::getVal(" << GetName() << ") got nan during case 4 " << endl;
     return result ;
   }
 
   // ***8th form: Convolution with exp(-|t|/tau)*cosh(dgamma*t/2), used for         coshBasisSum ***
   if (basisType==coshBasis || basisType ==sinhBasis) {
-    if (verboseEval()>2) cout << "RooGaussModel::evaluate(" << GetName() << ") 8th form tau = " << tau << endl ;
     double result(0);
     int sgn = ( basisType == coshBasis ? +1 : -1 );
     if (basisSign!=Minus) result += 0.5*(    evalCerf(0,-u,c*(1-_y)).real()+sgn*evalCerf(0,-u,c*(1+_y)).real()) ;
     if (basisSign!=Plus)  result += 0.5*(sgn*evalCerf(0, u,c*(1-_y)).real()+    evalCerf(0, u,c*(1+_y)).real()) ;
-    if (TMath::IsNaN(result)) cxcoutE(Tracing) << "RooGaussModel::getVal(" << GetName() << ") got nan during case 8 " << endl;
     return result ;
   }
 
   // *** 6th form: Convolution with (t/tau)*exp(-t/tau), used for linBasis ***
   if (basisType==linBasis) {
-    if (verboseEval()>2) cout << "RooGaussModel::evaluate(" << GetName() << ") 6th form tau = " << tau << endl ;
     R__ASSERT(basisSign==Plus);  // This should only be for positive times
 
     double f0 = std::exp(-xprime+c*c) * RooMath::erfc(-u+c);
@@ -260,7 +264,6 @@ double RooGaussModel::evaluate() const
 
   // *** 7th form: Convolution with (t/tau)^2*exp(-t/tau), used for quadBasis ***
   if (basisType==quadBasis) {
-    if (verboseEval()>2) cout << "RooGaussModel::evaluate(" << GetName() << ") 7th form tau = " << tau << endl ;
     R__ASSERT(basisSign==Plus);  // This should only be for positive times
 
     double f0 = std::exp(-xprime+c*c) * RooMath::erfc(-u+c);

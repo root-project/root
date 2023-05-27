@@ -1095,21 +1095,21 @@ Int_t TTreePlayer::MakeClass(const char *classname, const char *option)
    if (opt.Contains("selector")) {
       fprintf(fp,"\n");
       fprintf(fp,"   %s(TTree * /*tree*/ =0) : fChain(0) { }\n",classname) ;
-      fprintf(fp,"   virtual ~%s() { }\n",classname);
-      fprintf(fp,"   virtual Int_t   Version() const { return 2; }\n");
-      fprintf(fp,"   virtual void    Begin(TTree *tree);\n");
-      fprintf(fp,"   virtual void    SlaveBegin(TTree *tree);\n");
-      fprintf(fp,"   virtual void    Init(TTree *tree);\n");
-      fprintf(fp,"   virtual Bool_t  Notify();\n");
-      fprintf(fp,"   virtual Bool_t  Process(Long64_t entry);\n");
-      fprintf(fp,"   virtual Int_t   GetEntry(Long64_t entry, Int_t getall = 0) { return fChain ? fChain->GetTree()->GetEntry(entry, getall) : 0; }\n");
-      fprintf(fp,"   virtual void    SetOption(const char *option) { fOption = option; }\n");
-      fprintf(fp,"   virtual void    SetObject(TObject *obj) { fObject = obj; }\n");
-      fprintf(fp,"   virtual void    SetInputList(TList *input) { fInput = input; }\n");
-      fprintf(fp,"   virtual TList  *GetOutputList() const { return fOutput; }\n");
-      fprintf(fp,"   virtual void    SlaveTerminate();\n");
-      fprintf(fp,"   virtual void    Terminate();\n\n");
-      fprintf(fp,"   ClassDef(%s,0);\n",classname);
+      fprintf(fp,"   ~%s() override { }\n",classname);
+      fprintf(fp,"   Int_t  Version() const override { return 2; }\n");
+      fprintf(fp,"   void   Begin(TTree *tree) override;\n");
+      fprintf(fp,"   void   SlaveBegin(TTree *tree) override;\n");
+      fprintf(fp,"   void   Init(TTree *tree) override;\n");
+      fprintf(fp,"   Bool_t Notify() override;\n");
+      fprintf(fp,"   Bool_t Process(Long64_t entry) override;\n");
+      fprintf(fp,"   Int_t  GetEntry(Long64_t entry, Int_t getall = 0) override { return fChain ? fChain->GetTree()->GetEntry(entry, getall) : 0; }\n");
+      fprintf(fp,"   void   SetOption(const char *option) override { fOption = option; }\n");
+      fprintf(fp,"   void   SetObject(TObject *obj) override { fObject = obj; }\n");
+      fprintf(fp,"   void   SetInputList(TList *input) override { fInput = input; }\n");
+      fprintf(fp,"   TList* GetOutputList() const override { return fOutput; }\n");
+      fprintf(fp,"   void   SlaveTerminate() override;\n");
+      fprintf(fp,"   void   Terminate() override;\n\n");
+      fprintf(fp,"   ClassDefOverride(%s,0);\n",classname);
       fprintf(fp,"};\n");
       fprintf(fp,"\n");
       fprintf(fp,"#endif\n");
@@ -2253,12 +2253,14 @@ Long64_t TTreePlayer::Process(TSelector *selector,Option_t *option, Long64_t nen
       //set the file cache
       TTreeCache *tpf = 0;
       TFile *curfile = fTree->GetCurrentFile();
-      if (curfile && fTree->GetCacheSize() > 0) {
+      if (curfile) {
          tpf = (TTreeCache*)curfile->GetCacheRead(fTree);
          if (tpf)
             tpf->SetEntryRange(firstentry,firstentry+nentries);
          else {
-            fTree->SetCacheSize(fTree->GetCacheSize());
+            // Create the TTreeCache with the default size unless the
+            // user explicitly disabled it.
+            fTree->EnableCache();
             tpf = (TTreeCache*)curfile->GetCacheRead(fTree);
             if (tpf) tpf->SetEntryRange(firstentry,firstentry+nentries);
          }

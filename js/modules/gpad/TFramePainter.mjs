@@ -1,12 +1,12 @@
 import { gStyle, settings, isBatchMode, isFunc, isStr, browser, clTAxis, kNoZoom } from '../core.mjs';
 import { select as d3_select, pointer as d3_pointer, pointers as d3_pointers, drag as d3_drag } from '../d3.mjs';
+import { getElementRect, getAbsPosInCanvas, makeTranslate, addHighlightStyle } from '../base/BasePainter.mjs';
 import { getActivePad, ObjectPainter, EAxisBits } from '../base/ObjectPainter.mjs';
 import { getSvgLineStyle } from '../base/TAttLineHandler.mjs';
 import { TAxisPainter } from './TAxisPainter.mjs';
-import { getElementRect, getAbsPosInCanvas, makeTranslate } from '../base/BasePainter.mjs';
 import { FontHandler } from '../base/FontHandler.mjs';
 import { createMenu, closeMenu } from '../gui/menu.mjs';
-import { detectRightButton, injectStyle } from '../gui/utils.mjs';
+import { detectRightButton } from '../gui/utils.mjs';
 
 
 const logminfactorX = 0.0001, logminfactorY = 3e-4;
@@ -41,6 +41,9 @@ function addDragHandler(_painter, arg) {
    let painter = _painter, pp = painter.getPadPainter();
    if (pp?._fast_drawing) return;
 
+   if (!isFunc(arg.getDrawG))
+      arg.getDrawG = () => painter?.draw_g;
+
    function makeResizeElements(group, handler) {
       function addElement(cursor, d) {
          let clname = 'js_' + cursor.replace(/[-]/g, '_'),
@@ -73,7 +76,9 @@ function addDragHandler(_painter, arg) {
          drag_rect = null;
       }
 
-      if (!painter.draw_g)
+      let draw_g = arg.getDrawG();
+
+      if (!draw_g)
          return false;
 
       let oldx = arg.x, oldy = arg.y;
@@ -86,26 +91,30 @@ function addDragHandler(_painter, arg) {
 
       arg.x = newx; arg.y = newy; arg.width = newwidth; arg.height = newheight;
 
-      painter.draw_g.attr('transform', makeTranslate(newx,newy));
+      if (!arg.no_transform)
+         draw_g.attr('transform', makeTranslate(newx, newy));
 
       setPainterTooltipEnabled(painter, true);
 
-      makeResizeElements(painter.draw_g);
+      makeResizeElements(draw_g);
 
       if (change_size || change_pos) {
          if (change_size && isFunc(arg.resize))
             arg.resize(newwidth, newheight);
+
          if (change_pos && isFunc(arg.move))
             arg.move(newx, newy, newx - oldx, newy - oldy);
 
          if (change_size || change_pos) {
             if (arg.obj) {
-               let rect = pp.getPadRect();
+               let rect = arg.pad_rect ?? pp.getPadRect();
                arg.obj.fX1NDC = newx / rect.width;
                arg.obj.fX2NDC = (newx + newwidth) / rect.width;
                arg.obj.fY1NDC = 1 - (newy + newheight) / rect.height;
                arg.obj.fY2NDC = 1 - newy / rect.height;
                arg.obj.modified_NDC = true; // indicate that NDC was interactively changed, block in updated
+            } else if (isFunc(arg.move_resize)) {
+               arg.move_resize(newx, newy, newwidth, newheight);
             }
             if (isFunc(arg.redraw))
                arg.redraw(arg);
@@ -115,18 +124,12 @@ function addDragHandler(_painter, arg) {
       return change_size || change_pos;
    };
 
-   // add interactive styles when frame painter not there
-   if (_painter) {
-      let fp = _painter.getFramePainter();
-      if (!fp || fp.mode3d)
-         injectFrameStyle(_painter.draw_g);
-   }
-
    let drag_move = d3_drag().subject(Object);
 
    drag_move
       .on('start', function(evnt) {
          if (detectRightButton(evnt.sourceEvent) || drag_kind) return;
+         if (isFunc(arg.is_disabled) && arg.is_disabled()) return;
 
          closeMenu(); // close menu
 
@@ -135,9 +138,7 @@ function addDragHandler(_painter, arg) {
          evnt.sourceEvent.preventDefault();
          evnt.sourceEvent.stopPropagation();
 
-         let pad_rect = pp.getPadRect();
-
-         let handle = {
+         let pad_rect = arg.pad_rect ?? pp.getPadRect(), handle = {
             x: arg.x, y: arg.y, width: arg.width, height: arg.height,
             acc_x1: arg.x, acc_y1: arg.y,
             pad_w: pad_rect.width - arg.width,
@@ -148,12 +149,12 @@ function addDragHandler(_painter, arg) {
 
          drag_painter = painter;
          drag_kind = 'move';
-         drag_rect = d3_select(painter.draw_g.node().parentNode).append('path')
-            .classed('zoom', true)
+         drag_rect = d3_select(arg.getDrawG().node().parentNode).append('path')
             .attr('d', `M${handle.acc_x1},${handle.acc_y1}${handle.path}`)
             .style('cursor', 'move')
             .style('pointer-events', 'none') // let forward double click to underlying elements
-            .property('drag_handle', handle);
+            .property('drag_handle', handle)
+            .call(addHighlightStyle, true);
 
       }).on('drag', function(evnt) {
          if (!is_dragging(painter, 'move')) return;
@@ -196,15 +197,14 @@ function addDragHandler(_painter, arg) {
    drag_resize
       .on('start', function(evnt) {
          if (detectRightButton(evnt.sourceEvent) || drag_kind) return;
+         if (isFunc(arg.is_disabled) && arg.is_disabled()) return;
 
          evnt.sourceEvent.stopPropagation();
          evnt.sourceEvent.preventDefault();
 
          setPainterTooltipEnabled(painter, false); // disable tooltip
 
-         let pad_rect = pp.getPadRect();
-
-         let handle = {
+         let pad_rect = arg.pad_rect ?? pp.getPadRect(), handle = {
             x: arg.x, y: arg.y, width: arg.width, height: arg.height,
             acc_x1: arg.x, acc_y1: arg.y,
             acc_x2: arg.x + arg.width, acc_y2: arg.y + arg.height,
@@ -213,15 +213,15 @@ function addDragHandler(_painter, arg) {
 
          drag_painter = painter;
          drag_kind = 'resize';
-         drag_rect = d3_select(painter.draw_g.node().parentNode)
+         drag_rect = d3_select(arg.getDrawG().node().parentNode)
             .append('rect')
-            .classed('zoom', true)
             .style('cursor', d3_select(this).style('cursor'))
             .attr('x', handle.acc_x1)
             .attr('y', handle.acc_y1)
             .attr('width', handle.acc_x2 - handle.acc_x1)
             .attr('height', handle.acc_y2 - handle.acc_y1)
-            .property('drag_handle', handle);
+            .property('drag_handle', handle)
+            .call(addHighlightStyle, true);
 
       }).on('drag', function(evnt) {
          if (!is_dragging(painter, 'resize')) return;
@@ -265,10 +265,10 @@ function addDragHandler(_painter, arg) {
       });
 
    if (!arg.only_resize)
-      painter.draw_g.style('cursor', 'move').call(drag_move);
+      arg.getDrawG().style('cursor', 'move').call(drag_move);
 
    if (!arg.only_move)
-      makeResizeElements(painter.draw_g, drag_resize);
+      makeResizeElements(arg.getDrawG(), drag_resize);
 }
 
 const TooltipHandler = {
@@ -605,14 +605,6 @@ const TooltipHandler = {
 } // TooltipHandler
 
 
-function injectFrameStyle(draw_g) {
-   injectStyle(`
-.jsroot rect.h1bin { stroke: #4572A7; fill: #4572A7; opacity: 0; }
-.jsroot rect.zoom { stroke: steelblue; fill-opacity: 0.1; }
-.jsroot path.zoom { stroke: steelblue; fill-opacity: 0.1; }
-.jsroot svg:not(:root) { overflow: hidden; }`, draw_g.node());
-}
-
 /** @summary Set of frame interactivity methods
   * @private */
 
@@ -626,8 +618,6 @@ const FrameInteractive = {
       if (!this._frame_rotate && !this._frame_fixpos)
          addDragHandler(this, { obj: this, x: this._frame_x, y: this._frame_y, width: this.getFrameWidth(), height: this.getFrameHeight(),
                                 only_resize: true, minwidth: 20, minheight: 20, redraw: () => this.sizeChanged() });
-
-      injectFrameStyle(this.draw_g);
 
       let main_svg = this.draw_g.select('.main_layer');
 
@@ -929,8 +919,8 @@ const FrameInteractive = {
 
          this.zoom_rect = this.getFrameSvg()
                               .append('rect')
-                              .attr('class', 'zoom')
-                              .style('pointer-events','none');
+                              .style('pointer-events','none')
+                              .call(addHighlightStyle, true);
       }
 
       this.zoom_rect.attr('x', x).attr('y', y).attr('width', w).attr('height', h);
@@ -1122,12 +1112,12 @@ const FrameInteractive = {
       setPainterTooltipEnabled(this, false);
 
       this.zoom_rect = this.getFrameSvg().append('rect')
-            .attr('class', 'zoom')
             .attr('id', 'zoomRect')
             .attr('x', this.zoom_curr[0])
             .attr('y', this.zoom_curr[1])
             .attr('width', this.zoom_origin[0] - this.zoom_curr[0])
-            .attr('height', this.zoom_origin[1] - this.zoom_curr[1]);
+            .attr('height', this.zoom_origin[1] - this.zoom_curr[1])
+            .call(addHighlightStyle, true);
 
       d3_select(window).on('touchmove.zoomRect', evnt => this.moveTouchZoom(evnt))
                        .on('touchcancel.zoomRect', evnt => this.endTouchZoom(evnt))
@@ -1756,7 +1746,7 @@ class TFramePainter extends ObjectPainter {
          }
       }
 
-      if ((opts.zoom_ymin != opts.zoom_ymax) && (this.zoom_ymin == this.zoom_ymax) && !this.zoomChangedInteractive('y')) {
+      if ((opts.zoom_ymin != opts.zoom_ymax) && ((this.zoom_ymin == this.zoom_ymax) || !this.zoomChangedInteractive('y'))) {
          this.zoom_ymin = opts.zoom_ymin;
          this.zoom_ymax = opts.zoom_ymax;
       }
@@ -2850,4 +2840,3 @@ class TFramePainter extends ObjectPainter {
 } // class TFramePainter
 
 export { addDragHandler, TooltipHandler, FrameInteractive, TFramePainter };
-

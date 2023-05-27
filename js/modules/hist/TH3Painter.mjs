@@ -1,6 +1,5 @@
-import { gStyle, settings } from '../core.mjs';
-import { REVISION, Matrix4,
-         BufferGeometry, BufferAttribute, Mesh, MeshBasicMaterial, MeshLambertMaterial,
+import { gStyle, settings, isFunc } from '../core.mjs';
+import { REVISION, Matrix4, BufferGeometry, BufferAttribute, Mesh, MeshBasicMaterial, MeshLambertMaterial,
          LineBasicMaterial, SphereGeometry } from '../three.mjs';
 import { TRandom, floatToString } from '../base/BasePainter.mjs';
 import { ensureTCanvas } from '../gpad/TCanvasPainter.mjs';
@@ -233,7 +232,7 @@ class TH3Painter extends THistPainter {
                if (bin_content <= content_lmt) continue;
                let num = Math.round(bin_content*coef);
 
-               for (let n=0;n<num;++n) {
+               for (let n = 0; n < num; ++n) {
                   let binx = histo.fXaxis.GetBinCoord(i + rnd.random()),
                       biny = histo.fYaxis.GetBinCoord(j + rnd.random()),
                       binz = histo.fZaxis.GetBinCoord(k + rnd.random());
@@ -252,7 +251,7 @@ class TH3Painter extends THistPainter {
 
          mesh.bins = bins;
          mesh.painter = this;
-         mesh.tip_color = (histo.fMarkerColor===3) ? 0xFF0000 : 0x00FF00;
+         mesh.tip_color = histo.fMarkerColor === 3 ? 0xFF0000 : 0x00FF00;
 
          mesh.tooltip = function(intersect) {
             if (!Number.isInteger(intersect.index)) {
@@ -582,16 +581,11 @@ class TH3Painter extends THistPainter {
          main.toplevel.add(combined_bins);
 
          if (helper_kind[nseq] > 0) {
-            let lcolor = this.getColor(histo.fLineColor),
-                helper_material = new LineBasicMaterial({ color: lcolor }),
-                lines = null;
-
-            if (helper_kind[nseq] === 1) {
-               // reuse positions from the mesh - only special index was created
-               lines = createLineSegments(bin_verts[nseq], helper_material, helper_indexes[nseq]);
-            } else {
-               lines = createLineSegments(helper_positions[nseq], helper_material);
-            }
+            let helper_material = new LineBasicMaterial({ color: this.getColor(histo.fLineColor) }),
+                lines = (helper_kind[nseq] === 1)
+                   // reuse positions from the mesh - only special index was created
+                   ? createLineSegments(bin_verts[nseq], helper_material, helper_indexes[nseq])
+                   : createLineSegments(helper_positions[nseq], helper_material);
 
             main.toplevel.add(lines);
          }
@@ -642,7 +636,7 @@ class TH3Painter extends THistPainter {
    /** @summary Checks if it makes sense to zoom inside specified axis range */
    canZoomInside(axis,min,max) {
       let obj = this.getHisto();
-      if (obj) obj = obj['f'+axis.toUpperCase()+'axis'];
+      if (obj) obj = obj[`f${axis.toUpperCase()}axis`];
       return !obj || (obj.FindBin(max,0.5) - obj.FindBin(min,0) > 1);
    }
 
@@ -659,7 +653,7 @@ class TH3Painter extends THistPainter {
       if ((i1 === i2) || (j1 === j2) || (k1 === k2)) return;
 
       // first find minimum
-      let min = histo.getBinContent(i1 + 1, j1 + 1, k1+1);
+      let min = histo.getBinContent(i1+1, j1+1, k1+1);
       for (i = i1; i < i2; ++i)
          for (j = j1; j < j2; ++j)
             for (k = k1; k < k2; ++k)

@@ -43,6 +43,7 @@ public:
       Node &operator<<(std::string const &s) override;
       Node &operator<<(int i) override;
       Node &operator<<(double d) override;
+      Node &operator<<(bool b) override;
       const Node &operator>>(std::string &v) const override;
       Node &operator[](std::string const &k) override;
       Node &operator[](size_t pos) override;
@@ -51,8 +52,8 @@ public:
       bool is_container() const override;
       bool is_map() const override;
       bool is_seq() const override;
-      void set_map() override;
-      void set_seq() override;
+      Node &set_map() override;
+      Node &set_seq() override;
       void clear() override;
       std::string key() const override;
       std::string val() const override;

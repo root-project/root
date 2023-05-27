@@ -30,8 +30,9 @@ a RooPlot.
 #include "RooAbsRealLValue.h"
 #include "RooHistError.h"
 #include "RooCurve.h"
-#include "RooScaledFunc.h"
 #include "RooMsgService.h"
+#include "RooProduct.h"
+#include "RooConstVar.h"
 
 #include "TH1.h"
 #include "Riostream.h"
@@ -286,17 +287,8 @@ RooHist::RooHist(const RooAbsReal &f, RooAbsRealLValue &x, double xErrorFrac, do
   }
   setYAxisLabel(title.c_str());
 
-  std::unique_ptr<RooAbsFunc> rawPtr;
-  std::unique_ptr<RooAbsFunc> funcPtr{f.bindVars(x,normVars,true)};
-
-  // apply a scale factor if necessary
-  if(scaleFactor != 1) {
-    rawPtr= std::move(funcPtr);
-    funcPtr = std::make_unique<RooScaledFunc>(*rawPtr,scaleFactor);
-  }
-
-  // apply a scale factor if necessary
-  assert(funcPtr);
+  RooProduct scaledFunc{"scaled_func", "scaled_func", {f, RooFit::RooConst(scaleFactor)}};
+  std::unique_ptr<RooAbsFunc> funcPtr{scaledFunc.bindVars(x, normVars, true)};
 
   // calculate the points to add to our curve
   int xbins = x.numBins();
