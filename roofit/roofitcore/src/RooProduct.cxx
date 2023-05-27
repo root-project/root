@@ -221,7 +221,7 @@ Int_t RooProduct::getPartIntList(const RooArgSet* iset, const char *isetRange) c
     return code;
   }
 
-  ProdMap* map = groupProductTerms(*iset);
+  std::unique_ptr<ProdMap> map{groupProductTerms(*iset)};
 
   cxcoutD(Integration) << "RooProduct::getPartIntList(" << GetName() << ") groupProductTerms returned map" ;
   if (dologD(Integration)) {
@@ -237,7 +237,6 @@ Int_t RooProduct::getPartIntList(const RooArgSet* iset, const char *isetRange) c
       delete iter->second ;
     }
 
-    delete map ;
     return -1; // RRI caller will zero analVars if return code = 0....
   }
   cache = new CacheElem();
@@ -246,8 +245,9 @@ Int_t RooProduct::getPartIntList(const RooArgSet* iset, const char *isetRange) c
     RooAbsReal *term(0);
     if (i->second->getSize()>1) { // create a RooProd for this subexpression
       const char *name = makeFPName("SUBPROD_",*i->second);
-      term = new RooProduct(name,name,*i->second);
-      cache->_ownedList.addOwned(*term);
+      auto ownedTerm = std::make_unique<RooProduct>(name,name,*i->second);
+      term = ownedTerm.get();
+      cache->_ownedList.addOwned(std::move(ownedTerm));
       cxcoutD(Integration) << "RooProduct::getPartIntList(" << GetName() << ") created subexpression " << term->GetName() << endl;
     } else {
       assert(i->second->getSize()==1);
@@ -258,10 +258,10 @@ Int_t RooProduct::getPartIntList(const RooArgSet* iset, const char *isetRange) c
       cache->_prodList.add(*term);
       cxcoutD(Integration) << "RooProduct::getPartIntList(" << GetName() << ") adding simple factor " << term->GetName() << endl;
     } else {
-      RooAbsReal *integral = term->createIntegral(*i->first,isetRange);
+      std::unique_ptr<RooAbsReal> integral{term->createIntegral(*i->first,isetRange)};
       cache->_prodList.add(*integral);
-      cache->_ownedList.addOwned(*integral);
       cxcoutD(Integration) << "RooProduct::getPartIntList(" << GetName() << ") adding integral for " << term->GetName() << " : " << integral->GetName() << endl;
+      cache->_ownedList.addOwned(std::move(integral));
     }
   }
   // add current set-up to cache, and return index..
@@ -274,7 +274,6 @@ Int_t RooProduct::getPartIntList(const RooArgSet* iset, const char *isetRange) c
     delete iter->first ;
     delete iter->second ;
   }
-  delete map ;
   return code;
 }
 

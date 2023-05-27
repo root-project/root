@@ -80,9 +80,9 @@ RooMultiVarGaussian::RooMultiVarGaussian(const char *name, const char *title,
   const RooArgList& fpf = fr.floatParsFinal() ;
   for (Int_t i=0 ; i<fpf.getSize() ; i++) {
     if (xvec.find(fpf.at(i)->GetName())) {
-      RooRealVar* parclone = (RooRealVar*) fpf.at(i)->Clone(Form("%s_centralvalue",fpf.at(i)->GetName())) ;
+      std::unique_ptr<RooRealVar> parclone{static_cast<RooRealVar*>(fpf.at(i)->Clone(Form("%s_centralvalue",fpf.at(i)->GetName())))};
       parclone->setConstant(true) ;
-      _mu.addOwned(*parclone) ;
+      _mu.addOwned(std::move(parclone));
       munames.push_back(fpf.at(i)->GetName()) ;
     }
   }

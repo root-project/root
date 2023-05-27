@@ -103,14 +103,14 @@ double  RooStats::RatioOfProfiledLikelihoodsTestStat::Evaluate(RooAbsData& data,
    if (fDetailedOutputEnabled) {
       fDetailedOutput = new RooArgSet();
       for (auto const *var : static_range_cast<RooRealVar *>(*nullset)) {
-         RooRealVar* cloneVar = new RooRealVar(TString::Format("nullprof_%s", var->GetName()),
+         auto cloneVar = std::make_unique<RooRealVar>(TString::Format("nullprof_%s", var->GetName()),
                                                TString::Format("%s for null", var->GetTitle()), var->getVal());
-         fDetailedOutput->addOwned(*cloneVar);
+         fDetailedOutput->addOwned(std::move(cloneVar));
       }
       for (auto const *var : static_range_cast<RooRealVar *>(*altset)) {
-         RooRealVar* cloneVar = new RooRealVar(TString::Format("altprof_%s", var->GetName()),
+         auto cloneVar = std::make_unique<RooRealVar>(TString::Format("altprof_%s", var->GetName()),
                                                TString::Format("%s for null", var->GetTitle()), var->getVal());
-         fDetailedOutput->addOwned(*cloneVar);
+         fDetailedOutput->addOwned(std::move(cloneVar));
       }
    }
 

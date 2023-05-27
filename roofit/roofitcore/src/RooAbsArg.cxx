@@ -788,15 +788,12 @@ bool RooAbsArg::getObservables(const RooAbsCollection* dataList, RooArgSet& outp
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a RooArgSet with all components (branch nodes) of the
 /// expression tree headed by this object.
-RooArgSet* RooAbsArg::getComponents() const
+RooFit::OwningPtr<RooArgSet> RooAbsArg::getComponents() const
 {
-  TString name(GetName()) ;
-  name.Append("_components") ;
-
-  RooArgSet* set = new RooArgSet(name) ;
+  RooArgSet* set = new RooArgSet((std::string(GetName()) + "_components").c_str()) ;
   branchNodeServerList(set) ;
 
-  return set ;
+  return RooFit::OwningPtr<RooArgSet>{set};
 }
 
 

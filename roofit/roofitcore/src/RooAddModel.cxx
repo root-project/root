@@ -499,8 +499,7 @@ void RooAddModel::getCompIntList(const RooArgSet* nset, const RooArgSet* iset, p
   for (auto obj : _pdfList) {
     auto model = static_cast<RooResolutionModel*>(obj);
 
-    RooAbsReal* intPdf = model->createIntegral(*iset,nset,0,isetRangeName) ;
-    cache->_intList.addOwned(*intPdf) ;
+    cache->_intList.addOwned(std::unique_ptr<RooAbsReal>{model->createIntegral(*iset,nset,0,isetRangeName)});
   }
 
   // Store the partial integral list and return the assigned code ;

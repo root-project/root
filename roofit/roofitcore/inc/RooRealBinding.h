@@ -56,7 +56,7 @@ protected:
   const RooArgSet *_nset;
   mutable bool _xvecValid;
   bool _clipInvalid ;
-  mutable double* _xsave ;
+  mutable std::vector<double> _xsave ;
   const TNamed* _rangeName ; ///<!
 
   mutable std::vector<RooAbsReal*> _compList ; ///<!

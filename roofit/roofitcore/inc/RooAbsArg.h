@@ -313,7 +313,7 @@ public:
   bool observableOverlaps(const RooArgSet* depList, const RooAbsArg& testArg) const ;
   virtual bool checkObservables(const RooArgSet* nset) const ;
   bool recursiveCheckObservables(const RooArgSet* nset) const ;
-  RooArgSet* getComponents() const ;
+  RooFit::OwningPtr<RooArgSet> getComponents() const ;
 
 
 
