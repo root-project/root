@@ -34,7 +34,7 @@ private:
 public:
    TRootHelpDialog(const TGWindow *main = nullptr, const char *title = "ROOT Help Dialog",
                    UInt_t w = 1, UInt_t h = 1);
-   virtual ~TRootHelpDialog();
+   ~TRootHelpDialog() override;
 
    void   SetText(const char *helpText);
    void   AddText(const char *helpText);

@@ -102,7 +102,7 @@ private:
 public:
    TRootCanvas(TCanvas *c = nullptr, const char *name = "ROOT Canvas", UInt_t width = 500, UInt_t height = 300);
    TRootCanvas(TCanvas *c, const char *name, Int_t x, Int_t y, UInt_t width, UInt_t height);
-   virtual ~TRootCanvas();
+   ~TRootCanvas() override;
 
    void     AdjustSize();
    void     Close() override;

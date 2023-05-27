@@ -29,12 +29,12 @@ private:
 
 public:
    TStylePreview(const TGWindow *p, TStyle *style, TVirtualPad *currentPad);
-   virtual ~TStylePreview();
+   ~TStylePreview() override;
    void Update(TStyle *style, TVirtualPad *pad);
    void MapTheWindow();
    TCanvas *GetMainCanvas();
 
-   ClassDef(TStylePreview, 0) // Preview window used by the TStyleManager class
+   ClassDefOverride(TStylePreview, 0) // Preview window used by the TStyleManager class
 };
 
 #endif

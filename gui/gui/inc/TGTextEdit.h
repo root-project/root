@@ -70,7 +70,7 @@ public:
    TGTextEdit(const TGWindow *parent, UInt_t w, UInt_t h, const char *string,
               Int_t id = -1, UInt_t sboptions = 0, Pixel_t back = GetWhitePixel());
 
-   virtual ~TGTextEdit();
+   ~TGTextEdit() override;
 
    virtual Bool_t SaveFile(const char *fname, Bool_t saveas = kFALSE);
            void   Clear(Option_t * = "") override;

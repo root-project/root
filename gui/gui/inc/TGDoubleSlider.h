@@ -71,7 +71,7 @@ public:
                   Bool_t reversed = kFALSE,
                   Bool_t mark_ends = kFALSE);
 
-   virtual ~TGDoubleSlider() { }
+   ~TGDoubleSlider() override { }
 
    Bool_t HandleButton(Event_t *event) override = 0;
    Bool_t HandleMotion(Event_t *event) override = 0;
@@ -181,7 +181,7 @@ public:
                    Bool_t reversed = kFALSE,
                    Bool_t mark_ends = kFALSE);
 
-   virtual ~TGDoubleVSlider();
+   ~TGDoubleVSlider() override;
 
    Bool_t HandleButton(Event_t *event) override;
    Bool_t HandleMotion(Event_t *event) override;
@@ -207,7 +207,7 @@ public:
                    Bool_t reversed = kFALSE,
                    Bool_t mark_ends = kFALSE);
 
-   virtual ~TGDoubleHSlider();
+   ~TGDoubleHSlider() override;
 
    Bool_t HandleButton(Event_t *event) override;
    Bool_t HandleMotion(Event_t *event) override;

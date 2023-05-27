@@ -73,7 +73,7 @@ public:
               EListViewMode viewMode = kLVList, UInt_t options = kVerticalFrame,
               Pixel_t back = GetWhitePixel());
 
-   virtual ~TGFileItem();
+   ~TGFileItem() override;
 
    void     SetViewMode(EListViewMode viewMode) override;
 
@@ -144,7 +144,7 @@ public:
    TGFileContainer(TGCanvas *p, UInt_t options = kSunkenFrame,
                    Pixel_t back = GetDefaultFrameBackground());
 
-   virtual ~TGFileContainer();
+   ~TGFileContainer() override;
 
    Bool_t HandleTimer(TTimer *t) override;
    void StopRefreshTimer();

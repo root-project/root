@@ -72,7 +72,7 @@ public:
    TGPack(const TGWindow *p = nullptr, UInt_t w = 1, UInt_t h = 1, UInt_t options = 0,
           Pixel_t back = GetDefaultFrameBackground());
    TGPack(TGClient *c, Window_t id, const TGWindow *parent = nullptr);
-   virtual ~TGPack();
+   ~TGPack() override;
 
    virtual void AddFrameWithWeight(TGFrame *f, TGLayoutHints* l, Float_t w);
    void AddFrame(TGFrame *f, TGLayoutHints* l = nullptr) override;

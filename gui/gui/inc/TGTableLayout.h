@@ -46,7 +46,7 @@ public:
          fAttachRight(attach_right),
          fAttachTop(attach_top),
          fAttachBottom(attach_bottom) { }
-   virtual ~TGTableLayoutHints() { }
+   ~TGTableLayoutHints() override { }
 
    UInt_t GetAttachLeft() const { return fAttachLeft; }
    UInt_t GetAttachRight() const { return fAttachRight; }
@@ -103,7 +103,7 @@ public:
 
    TGTableLayout(TGCompositeFrame *main, UInt_t nrows, UInt_t ncols,
                  Bool_t homogeneous = kFALSE, Int_t sep = 0, Int_t hints = 0);
-   virtual ~TGTableLayout();
+   ~TGTableLayout() override;
 
    void Layout() override;
    TGDimension GetDefaultSize() const override; // return sum of all child sizes

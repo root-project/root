@@ -40,7 +40,7 @@ protected:
 public:
 
    TGCommandPlugin(const TGWindow *p, UInt_t w, UInt_t h);
-   virtual ~TGCommandPlugin();
+   ~TGCommandPlugin() override;
 
    void           CheckRemote(const char * /*str*/);
    void           HandleArrows(Int_t keysym);

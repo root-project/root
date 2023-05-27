@@ -440,7 +440,7 @@ private:
 
 public:
    TStyleManager(const TGWindow *);
-   virtual ~TStyleManager();
+   ~TStyleManager() override;
 
    static void Show();
    static void Terminate();
@@ -469,7 +469,7 @@ public:
    void DoSelectNoCanvas();                  // SLOT
    void DoSelectCanvas(TVirtualPad *pad,
          TObject *obj, Int_t mouseButton);   // SLOT
-   void CloseWindow();                       // SLOT
+   void CloseWindow() override;                       // SLOT
 
 // GENERAL
    void ModFillColor();                      // SLOT
@@ -651,7 +651,7 @@ public:
    void ModPaperSizePredef();                // SLOT
    void ModPaperSizeXY();                    // SLOT
 
-   ClassDef(TStyleManager, 0) // Graphical User Interface for managing styles
+   ClassDefOverride(TStyleManager, 0) // Graphical User Interface for managing styles
 };
 
 #endif
