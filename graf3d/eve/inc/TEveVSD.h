@@ -49,7 +49,7 @@ public:
 
 public:
    TEveVSD(const char* name="TEveVSD", const char* title="");
-   virtual ~TEveVSD();
+   ~TEveVSD() override;
 
    virtual void SetDirectory(TDirectory* dir);
 
@@ -64,7 +64,7 @@ public:
 
    static void DisableTObjectStreamersForVSDStruct();
 
-   ClassDef(TEveVSD, 1); // Visualization Summary Data - a collection of trees holding standard event data in experiment independent format.
+   ClassDefOverride(TEveVSD, 1); // Visualization Summary Data - a collection of trees holding standard event data in experiment independent format.
 };
 
 #endif

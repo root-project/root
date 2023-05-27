@@ -39,43 +39,43 @@ protected:
 
 public:
    TEveListTreeItem(TEveElement* el) : TGListTreeItem(), fElement(el) {}
-   virtual ~TEveListTreeItem() {}
+   ~TEveListTreeItem() override {}
 
-   virtual Bool_t          IsActive()       const { return fElement->GetSelectedLevel() != 0; }
-   virtual Pixel_t         GetActiveColor() const;
-   virtual void            SetActive(Bool_t)      { NotSupported("SetActive"); }
+   Bool_t          IsActive()       const override { return fElement->GetSelectedLevel() != 0; }
+   Pixel_t         GetActiveColor() const override;
+   void            SetActive(Bool_t) override      { NotSupported("SetActive"); }
 
-   virtual const char     *GetText()          const { return fElement->GetElementName(); }
-   virtual Int_t           GetTextLength()    const { return strlen(fElement->GetElementName()); }
-   virtual const char     *GetTipText()       const { return fElement->GetElementTitle(); }
-   virtual Int_t           GetTipTextLength() const { return strlen(fElement->GetElementTitle()); }
-   virtual void            SetText(const char *)    { NotSupported("SetText"); }
-   virtual void            SetTipText(const char *) { NotSupported("SetTipText"); }
+   const char     *GetText()          const override { return fElement->GetElementName(); }
+   Int_t           GetTextLength()    const override { return strlen(fElement->GetElementName()); }
+   const char     *GetTipText()       const override { return fElement->GetElementTitle(); }
+   Int_t           GetTipTextLength() const override { return strlen(fElement->GetElementTitle()); }
+   void            SetText(const char *) override    { NotSupported("SetText"); }
+   void            SetTipText(const char *) override { NotSupported("SetTipText"); }
 
-   virtual void            SetUserData(void *, Bool_t=kFALSE) { NotSupported("SetUserData"); }
-   virtual void           *GetUserData() const { return fElement; }
+   void            SetUserData(void *, Bool_t=kFALSE) override { NotSupported("SetUserData"); }
+   void           *GetUserData() const override { return fElement; }
 
-   virtual const TGPicture*GetPicture()         const { return fElement->GetListTreeIcon(fOpen); }
-   virtual const TGPicture*GetCheckBoxPicture() const { return fElement->GetListTreeCheckBoxIcon(); }
+   const TGPicture*GetPicture()         const override { return fElement->GetListTreeIcon(fOpen); }
+   const TGPicture*GetCheckBoxPicture() const override { return fElement->GetListTreeCheckBoxIcon(); }
 
-   virtual void            SetPictures(const TGPicture*, const TGPicture*) { NotSupported("SetUserData"); }
-   virtual void            SetCheckBoxPictures(const TGPicture*, const TGPicture*) { NotSupported("SetUserData"); }
+   void            SetPictures(const TGPicture*, const TGPicture*) override { NotSupported("SetUserData"); }
+   void            SetCheckBoxPictures(const TGPicture*, const TGPicture*) override { NotSupported("SetUserData"); }
 
-   virtual void            SetCheckBox(Bool_t=kTRUE) { NotSupported("SetCheckBox"); }
-   virtual Bool_t          HasCheckBox()       const { return kTRUE; }
-   virtual void            CheckItem(Bool_t=kTRUE)   { printf("TEveListTreeItem::CheckItem - to be ignored ... all done via signal Checked().\n"); }
-   virtual void            Toggle();
-   virtual Bool_t          IsChecked()         const { return fElement->GetRnrState(); }
+   void            SetCheckBox(Bool_t=kTRUE) override { NotSupported("SetCheckBox"); }
+   Bool_t          HasCheckBox()       const override { return kTRUE; }
+   void            CheckItem(Bool_t=kTRUE) override   { printf("TEveListTreeItem::CheckItem - to be ignored ... all done via signal Checked().\n"); }
+   void            Toggle() override;
+   Bool_t          IsChecked()         const override { return fElement->GetRnrState(); }
 
    // Propagation of checked-state form children to parents. Not needed, ignore.
 
    // Item coloration (underline + minibox)
-   virtual Bool_t          HasColor()  const { return fElement->HasMainColor(); }
-   virtual Color_t         GetColor()  const { return fElement->GetMainColor(); }
-   virtual void            SetColor(Color_t) { NotSupported("SetColor"); }
-   virtual void            ClearColor()      { NotSupported("ClearColor"); }
+   Bool_t          HasColor()  const override { return fElement->HasMainColor(); }
+   Color_t         GetColor()  const override { return fElement->GetMainColor(); }
+   void            SetColor(Color_t) override { NotSupported("SetColor"); }
+   void            ClearColor() override      { NotSupported("ClearColor"); }
 
-   ClassDef(TEveListTreeItem,0); // Special llist-tree-item for Eve.
+   ClassDefOverride(TEveListTreeItem,0); // Special llist-tree-item for Eve.
 };
 
 
@@ -103,7 +103,7 @@ protected:
 
 public:
    TEveGListTreeEditorFrame(const TGWindow *p = nullptr, Int_t width=250, Int_t height=700);
-   virtual ~TEveGListTreeEditorFrame();
+   ~TEveGListTreeEditorFrame() override;
 
    void ConnectSignals();
    void DisconnectSignals();
@@ -121,7 +121,7 @@ public:
 
    static void SetEditorClass(const char* edclass);
 
-   ClassDef(TEveGListTreeEditorFrame, 0); // Composite GUI frame for parallel display of a TGListTree and TEveGedEditor.
+   ClassDefOverride(TEveGListTreeEditorFrame, 0); // Composite GUI frame for parallel display of a TGListTree and TEveGedEditor.
 };
 
 // ----------------------------------------------------------------
@@ -142,11 +142,11 @@ protected:
 
 public:
    TEveBrowser(UInt_t w, UInt_t h);
-   virtual ~TEveBrowser() { CloseTabs(); }
+   ~TEveBrowser() override { CloseTabs(); }
 
-   virtual void ReallyDelete();
-   virtual void CloseTab(Int_t id);
-   virtual void CloseWindow();
+   void ReallyDelete() override;
+   void CloseTab(Int_t id) override;
+   void CloseWindow() override;
 
    void InitPlugins(Option_t *opt="FI");
 
@@ -164,7 +164,7 @@ public:
 
    void SanitizeTabCounts();
 
-   ClassDef(TEveBrowser, 0); // Specialization of TRootBrowser for Eve.
+   ClassDefOverride(TEveBrowser, 0); // Specialization of TRootBrowser for Eve.
 };
 
 #endif

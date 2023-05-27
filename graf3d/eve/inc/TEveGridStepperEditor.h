@@ -40,7 +40,7 @@ protected:
 
 public:
    TEveGridStepperSubEditor(const TGWindow* p);
-   virtual ~TEveGridStepperSubEditor() {}
+   ~TEveGridStepperSubEditor() override {}
 
    void SetModel(TEveGridStepper* m);
 
@@ -49,7 +49,7 @@ public:
    void DoNs();
    void DoDs();
 
-   ClassDef(TEveGridStepperSubEditor, 0); // Sub-editor for TEveGridStepper class.
+   ClassDefOverride(TEveGridStepperSubEditor, 0); // Sub-editor for TEveGridStepper class.
 };
 
 
@@ -65,11 +65,11 @@ protected:
 
 public:
    TEveGridStepperEditor(const TGWindow *p = nullptr, Int_t width=170, Int_t height=30, UInt_t options=kChildFrame, Pixel_t back=GetDefaultFrameBackground());
-   virtual ~TEveGridStepperEditor() {}
+   ~TEveGridStepperEditor() override {}
 
-   virtual void SetModel(TObject* obj);
+   void SetModel(TObject* obj) override;
 
-   ClassDef(TEveGridStepperEditor, 0); // Editor for TEveGridStepper class.
+   ClassDefOverride(TEveGridStepperEditor, 0); // Editor for TEveGridStepper class.
 };
 
 #endif

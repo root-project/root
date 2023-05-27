@@ -46,16 +46,16 @@ protected:
 public:
    TEveDigitSetEditor(const TGWindow *p = nullptr, Int_t width=170, Int_t height=30,
                       UInt_t options = kChildFrame, Pixel_t back=GetDefaultFrameBackground());
-   virtual ~TEveDigitSetEditor() {}
+   ~TEveDigitSetEditor() override {}
 
-   virtual void SetModel(TObject* obj);
+   void SetModel(TObject* obj) override;
 
    // Declare callback/slot methods
    void DoHisto();
    void DoRangeHisto();
    void PlotHisto(Int_t min, Int_t max);
 
-   ClassDef(TEveDigitSetEditor, 0); // Editor for TEveDigitSet class.
+   ClassDefOverride(TEveDigitSetEditor, 0); // Editor for TEveDigitSet class.
 };
 
 #endif

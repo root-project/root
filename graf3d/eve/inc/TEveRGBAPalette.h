@@ -77,7 +77,7 @@ public:
    TEveRGBAPalette();
    TEveRGBAPalette(Int_t min, Int_t max, Bool_t interp=kTRUE,
                    Bool_t showdef=kTRUE, Bool_t fixcolrng=kFALSE);
-   virtual ~TEveRGBAPalette();
+   ~TEveRGBAPalette() override;
 
    void SetupColorArray() const;
    void ClearColorArray();
@@ -151,13 +151,13 @@ public:
    void   SetOverColorPixel(Pixel_t pix);
    void   SetOverColorRGBA(UChar_t r, UChar_t g, UChar_t b, UChar_t a=255);
 
-   virtual void OnZeroRefCount() { delete this; }
+   void OnZeroRefCount() override { delete this; }
 
    // ================================================================
 
    void MinMaxValChanged(); // *SIGNAL*
 
-   ClassDef(TEveRGBAPalette, 0); // A generic, speed-optimised mapping from value to RGBA color supporting different wrapping and range truncation modes.
+   ClassDefOverride(TEveRGBAPalette, 0); // A generic, speed-optimised mapping from value to RGBA color supporting different wrapping and range truncation modes.
 };
 
 

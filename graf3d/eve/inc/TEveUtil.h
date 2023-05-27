@@ -106,11 +106,11 @@ public:
    TEveException(const char* s)    : TString(s) {}
    TEveException(const std::string& s);
 
-   virtual ~TEveException() noexcept {}
+   ~TEveException() noexcept override {}
 
-   virtual const char* what() const noexcept { return Data(); }
+   const char* what() const noexcept override { return Data(); }
 
-   ClassDef(TEveException, 1); // Exception-type thrown by Eve classes.
+   ClassDefOverride(TEveException, 1); // Exception-type thrown by Eve classes.
 };
 
 TEveException operator+(const TEveException &s1, const std::string  &s2);
@@ -193,7 +193,7 @@ protected:
 
 public:
    TEveRefBackPtr();
-   virtual ~TEveRefBackPtr();
+   ~TEveRefBackPtr() override;
 
    TEveRefBackPtr(const TEveRefBackPtr&);
    TEveRefBackPtr& operator=(const TEveRefBackPtr&);
@@ -205,7 +205,7 @@ public:
 
    virtual void StampBackPtrElements(UChar_t stamps);
 
-   ClassDef(TEveRefBackPtr, 0); // Base-class for reference-counted objects with reverse references to TEveElement objects.
+   ClassDefOverride(TEveRefBackPtr, 0); // Base-class for reference-counted objects with reverse references to TEveElement objects.
 };
 
 #endif

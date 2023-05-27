@@ -45,20 +45,20 @@ protected:
 
 public:
    TEveCalo2DGL();
-   virtual ~TEveCalo2DGL() {}
+   ~TEveCalo2DGL() override {}
 
-   virtual Bool_t SetModel(TObject* obj, const Option_t *opt = nullptr);
-   virtual void   SetBBox();
+   Bool_t SetModel(TObject* obj, const Option_t *opt = nullptr) override;
+   void   SetBBox() override;
 
-   virtual void DirectDraw(TGLRnrCtx & rnrCtx) const;
-   virtual void DrawHighlight(TGLRnrCtx& rnrCtx, const TGLPhysicalShape* ps, Int_t lvl=-1) const;
+   void DirectDraw(TGLRnrCtx & rnrCtx) const override;
+   void DrawHighlight(TGLRnrCtx& rnrCtx, const TGLPhysicalShape* ps, Int_t lvl=-1) const override;
 
    // To support two-level selection
-   virtual Bool_t SupportsSecondarySelect() const { return kTRUE; }
-   virtual Bool_t AlwaysSecondarySelect()   const { return kTRUE; }
-   virtual void ProcessSelection(TGLRnrCtx & rnrCtx, TGLSelectRecord & rec);
+   Bool_t SupportsSecondarySelect() const override { return kTRUE; }
+   Bool_t AlwaysSecondarySelect()   const override { return kTRUE; }
+   void ProcessSelection(TGLRnrCtx & rnrCtx, TGLSelectRecord & rec) override;
 
-   ClassDef(TEveCalo2DGL, 0); // GL renderer class for TEveCalo2D.
+   ClassDefOverride(TEveCalo2DGL, 0); // GL renderer class for TEveCalo2D.
 };
 
 #endif

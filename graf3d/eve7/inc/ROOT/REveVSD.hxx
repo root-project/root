@@ -69,7 +69,7 @@ public:
 
    static void DisableTObjectStreamersForVSDStruct();
 
-   ClassDef(REveVSD, 1); // Visualization Summary Data - a collection of trees holding standard event data in experiment independent format.
+   ClassDefOverride(REveVSD, 1); // Visualization Summary Data - a collection of trees holding standard event data in experiment independent format.
 };
 
 } // namespace Experimental

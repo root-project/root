@@ -70,9 +70,9 @@ public:
    TEveTrack(TEveRecTrack* t, TEveTrackPropagator* prop=nullptr);
    TEveTrack(TEveRecTrackD* t, TEveTrackPropagator* prop=nullptr);
    TEveTrack(const TEveTrack& t);
-   virtual ~TEveTrack();
+   ~TEveTrack() override;
 
-   virtual void ComputeBBox();
+   void ComputeBBox() override;
 
    virtual void SetStdTitle();
 
@@ -120,14 +120,14 @@ public:
 
    virtual void SecSelected(TEveTrack*); // *SIGNAL*
 
-   virtual const TGPicture* GetListTreeIcon(Bool_t open=kFALSE);
+   const TGPicture* GetListTreeIcon(Bool_t open=kFALSE) override;
 
-   virtual void CopyVizParams(const TEveElement* el);
-   virtual void WriteVizParams(std::ostream& out, const TString& var);
+   void CopyVizParams(const TEveElement* el) override;
+   void WriteVizParams(std::ostream& out, const TString& var) override;
 
-   virtual TClass* ProjectedClass(const TEveProjection* p) const;
+   TClass* ProjectedClass(const TEveProjection* p) const override;
 
-   ClassDef(TEveTrack, 0); // Track with given vertex, momentum and optional referece-points (path-marks) along its path.
+   ClassDefOverride(TEveTrack, 0); // Track with given vertex, momentum and optional referece-points (path-marks) along its path.
 };
 
 /******************************************************************************/
@@ -166,7 +166,7 @@ protected:
 public:
    TEveTrackList(TEveTrackPropagator* prop=nullptr);
    TEveTrackList(const char* name, TEveTrackPropagator* prop=nullptr);
-   virtual ~TEveTrackList();
+   ~TEveTrackList() override;
 
    void  MakeTracks(Bool_t recurse=kTRUE);
    void  FindMomentumLimits(Bool_t recurse=kTRUE);
@@ -179,19 +179,19 @@ public:
 
    //--------------------------------
 
-   virtual void   SetMainColor(Color_t c);
-   virtual void   SetLineColor(Color_t c) { SetMainColor(c); }
+   void   SetMainColor(Color_t c) override;
+   void   SetLineColor(Color_t c) override { SetMainColor(c); }
    virtual void   SetLineColor(Color_t c, TEveElement* el);
-   virtual void   SetLineWidth(Width_t w);
+   void   SetLineWidth(Width_t w) override;
    virtual void   SetLineWidth(Width_t w, TEveElement* el);
-   virtual void   SetLineStyle(Style_t s);
+   void   SetLineStyle(Style_t s) override;
    virtual void   SetLineStyle(Style_t s, TEveElement* el);
 
-   virtual void   SetMarkerColor(Color_t c);
+   void   SetMarkerColor(Color_t c) override;
    virtual void   SetMarkerColor(Color_t c, TEveElement* el);
-   virtual void   SetMarkerSize(Size_t s);
+   void   SetMarkerSize(Size_t s) override;
    virtual void   SetMarkerSize(Size_t s, TEveElement* el);
-   virtual void   SetMarkerStyle(Style_t s);
+   void   SetMarkerStyle(Style_t s) override;
    virtual void   SetMarkerStyle(Style_t s, TEveElement* el);
 
    void   SetRnrLine(Bool_t rnr);
@@ -219,12 +219,12 @@ public:
    TEveTrack* FindTrackByLabel(Int_t label); // *MENU*
    TEveTrack* FindTrackByIndex(Int_t index); // *MENU*
 
-   virtual void CopyVizParams(const TEveElement* el);
-   virtual void WriteVizParams(std::ostream& out, const TString& var);
+   void CopyVizParams(const TEveElement* el) override;
+   void WriteVizParams(std::ostream& out, const TString& var) override;
 
-   virtual TClass* ProjectedClass(const TEveProjection* p) const;
+   TClass* ProjectedClass(const TEveProjection* p) const override;
 
-   ClassDef(TEveTrackList, 0); // A list of tracks supporting change of common attributes and selection based on track parameters.
+   ClassDefOverride(TEveTrackList, 0); // A list of tracks supporting change of common attributes and selection based on track parameters.
 };
 
 #endif
