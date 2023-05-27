@@ -14,13 +14,14 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-#include "RooRealVar.h"
-#include "RooDataHist.h"
-#include "RooGaussian.h"
-#include "RooHelpers.h"
-#include "RooRandom.h"
+#include <RooDataHist.h>
+#include <RooFitResult.h>
+#include <RooGaussian.h>
+#include <RooHelpers.h>
+#include <RooRandom.h>
+#include <RooRealVar.h>
 
-#include "gtest/gtest.h"
+#include <gtest/gtest.h>
 
 #include <chrono>
 

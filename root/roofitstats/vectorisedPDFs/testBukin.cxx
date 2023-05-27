@@ -25,9 +25,9 @@ class TestBukin : public PDFTest
     TestBukin() :
       PDFTest("Bukin", 100000)
   { 
-      auto x = new RooRealVar("x", "x", 0.6, -15., 10.);
-      auto Xp = new RooRealVar("Xp", "Xp", 0.5, -3., 5.);
-      auto sigp = new RooRealVar("sigp", "sigp", 3., 1., 5.);
+      auto x = std::make_unique<RooRealVar>("x", "x", 0.6, -15., 10.);
+      auto Xp = std::make_unique<RooRealVar>("Xp", "Xp", 0.5, -3., 5.);
+      auto sigp = std::make_unique<RooRealVar>("sigp", "sigp", 3., 1., 5.);
       auto xi = new RooRealVar("xi", "xi", -0.2, -0.3, 0.3);
       auto rho1 = new RooRealVar("rho1", "rho1", -0.1, -0.3, -0.05);
       auto rho2 = new RooRealVar("rho2", "rho2", 0.15, 0.05, 0.25);
@@ -36,17 +36,15 @@ class TestBukin : public PDFTest
       rho1->setConstant(true);
       rho2->setConstant(true);
       
-      for (auto var : {x}) {
-        _variables.addOwned(*var);
-      }
+      _variables.addOwned(std::move(x));
 
       //for (auto var : {x}) {
         //_variablesToPlot.add(*var);
       //}
 
-      for (auto par : {Xp, sigp}) {
-        _parameters.addOwned(*par);
-      }
+      _parameters.addOwned(std::move(Xp));
+      _parameters.addOwned(std::move(sigp));
+
       _toleranceParameter = 3e-5;
       _toleranceCompareBatches = 2.5e-14;
       //_toleranceCompareLogs{2.E-14};

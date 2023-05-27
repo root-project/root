@@ -23,8 +23,8 @@ class TestBernstein2 : public PDFTest
     TestBernstein2() :
       PDFTest("Bernstein2", 100000)
   {
-        auto x = new RooRealVar("x", "x", -10, 10);
-        auto a1 = new RooRealVar("a1", "a1", 1, 0.8, 1.2);
+        auto x = std::make_unique<RooRealVar>("x", "x", -10, 10);
+        auto a1 = std::make_unique<RooRealVar>("a1", "a1", 1, 0.8, 1.2);
         auto a2 = new RooRealVar("a2", "a2", 1.5, 1.2, 1.8);
         a2->setConstant(true);
 
@@ -32,13 +32,12 @@ class TestBernstein2 : public PDFTest
         *x, RooArgSet(*a1,*a2));
 
 
-      _variables.addOwned(*x);
+      _variables.addOwned(std::move(x));
 
       //_variablesToPlot.add(*x);
 
-      for (auto par : {a1}) {
-        _parameters.addOwned(*par);
-      }
+      _parameters.addOwned(std::move(a1));
+
       _toleranceParameter = 1.5e-6;
   }
 };
@@ -56,12 +55,12 @@ class TestBernstein5 : public PDFTest
     TestBernstein5() :
       PDFTest("Bernstein5", 100000)
   {
-        auto x = new RooRealVar("x", "x", -100, 50);
-        auto a1 = new RooRealVar("a1", "a1", 0.8, 0.6, 1.2);
+        auto x = std::make_unique<RooRealVar>("x", "x", -100, 50);
+        auto a1 = std::make_unique<RooRealVar>("a1", "a1", 0.8, 0.6, 1.2);
         auto a2 = new RooRealVar("a2", "a2", 0.0, -1.0, 1.0);
         auto a3 = new RooRealVar("a3", "a3", 0.09, 0.05, 0.4);
         auto a4 = new RooRealVar("a4", "a4", 0.0, 0.2, 0.8);
-        auto a5 = new RooRealVar("a5", "a5", 0.09, 0.05, 0.5);
+        auto a5 = std::make_unique<RooRealVar>("a5", "a5", 0.09, 0.05, 0.5);
         a4->setConstant(true);
         a3->setConstant(true);
         a2->setConstant(true);
@@ -69,13 +68,12 @@ class TestBernstein5 : public PDFTest
         _pdf = std::make_unique<RooBernstein>("bernstein5", "bernstein PDF 5 coefficients", *x, RooArgSet(*a1, *a2, *a3, *a4, *a5));
 
 
-      _variables.addOwned(*x);
+      _variables.addOwned(std::move(x));
 
       //_variablesToPlot.add(*x);
 
-      for (auto par : { a1, a5}) {
-        _parameters.addOwned(*par);
-      }
+      _parameters.addOwned(std::move(a1));
+      _parameters.addOwned(std::move(a5));
   }
 };
 

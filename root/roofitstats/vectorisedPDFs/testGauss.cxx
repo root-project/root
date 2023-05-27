@@ -26,21 +26,20 @@ class TestGauss : public PDFTest
       PDFTest("Gauss", 200000)
   {
       // Declare variables x,mean,sigma with associated name, title, initial value and allowed range
-        auto x = new RooRealVar("x", "x", -10, 10);
-        auto mean = new RooRealVar("mean", "mean of gaussian", 1, -10, 10);
-        auto sigma = new RooRealVar("sigma", "width of gaussian", 1, 0.1, 10);
+        auto x = std::make_unique<RooRealVar>("x", "x", -10, 10);
+        auto mean = std::make_unique<RooRealVar>("mean", "mean of gaussian", 1, -10, 10);
+        auto sigma = std::make_unique<RooRealVar>("sigma", "width of gaussian", 1, 0.1, 10);
 
         // Build gaussian p.d.f in terms of x,mean and sigma
         _pdf = std::make_unique<RooGaussian>("gauss", "gaussian PDF", *x, *mean, *sigma);
 
 
-      _variables.addOwned(*x);
-
 //      _variablesToPlot.add(x);
 
-      for (auto par : {mean, sigma}) {
-        _parameters.addOwned(*par);
-      }
+      _variables.addOwned(std::move(x));
+
+      _parameters.addOwned(std::move(mean));
+      _parameters.addOwned(std::move(sigma));
 
       // Standard of 1.E-14 is slightly too strong.
       _toleranceCompareBatches = 3.E-14;
@@ -65,19 +64,18 @@ class TestGaussWeighted : public PDFTestWeightedData
       PDFTestWeightedData("GaussWithWeights", 100000)
   {
       // Declare variables x,mean,sigma with associated name, title, initial value and allowed range
-      auto x = new RooRealVar("x", "x", -10, 10);
-      auto mean = new RooRealVar("mean", "mean of gaussian", 1, -10, 10);
-      auto sigma = new RooRealVar("sigma", "width of gaussian", 1, 0.1, 10);
+      auto x = std::make_unique<RooRealVar>("x", "x", -10, 10);
+      auto mean = std::make_unique<RooRealVar>("mean", "mean of gaussian", 1, -10, 10);
+      auto sigma = std::make_unique<RooRealVar>("sigma", "width of gaussian", 1, 0.1, 10);
 
       // Build gaussian p.d.f in terms of x,mean and sigma
       _pdf = std::make_unique<RooGaussian>("gauss", "gaussian PDF", *x, *mean, *sigma);
 
 
-      _variables.addOwned(*x);
+      _variables.addOwned(std::move(x));
 
-      for (auto par : {mean, sigma}) {
-        _parameters.addOwned(*par);
-      }
+      _parameters.addOwned(std::move(mean));
+      _parameters.addOwned(std::move(sigma));
 
       _multiProcess = 4;
   }
@@ -95,22 +93,20 @@ class TestGaussInMeanAndX : public PDFTest
       PDFTest("Gauss(x, mean)")
   {
       // Declare variables x,mean,sigma with associated name, title, initial value and allowed range
-      auto x = new RooRealVar("x", "x", -10, 10);
-      auto mean = new RooRealVar("mean", "mean of gaussian", 1, -10, 10);
-      auto sigma = new RooRealVar("sigma", "width of gaussian", 1, 0.1, 10);
+      auto x = std::make_unique<RooRealVar>("x", "x", -10, 10);
+      auto mean = std::make_unique<RooRealVar>("mean", "mean of gaussian", 1, -10, 10);
+      auto sigma = std::make_unique<RooRealVar>("sigma", "width of gaussian", 1, 0.1, 10);
 
       // Build gaussian p.d.f in terms of x,mean and sigma
       _pdf = std::make_unique<RooGaussian>("gauss", "gaussian PDF", *x, *mean, *sigma);
 
 
-      for (auto var : {x, mean}) {
-        _variables.addOwned(*var);
 //        _variablesToPlot.add(var);
-      }
 
-      for (auto par : {sigma}) {
-        _parameters.addOwned(*par);
-      }
+      _variables.addOwned(std::move(x));
+      _variables.addOwned(std::move(mean));
+
+      _parameters.addOwned(std::move(sigma));
   }
 };
 
@@ -129,27 +125,24 @@ class TestGaussWithFormulaParameters : public PDFTest
       PDFTest("Gauss(x, mean)", 50000)
   {
       // Declare variables x,mean,sigma with associated name, title, initial value and allowed range
-      auto x = new RooRealVar("x", "x", 0, 30);
-      auto a1 = new RooRealVar("a1", "First coefficient", 5, 0, 10);
-      auto a2 = new RooRealVar("a2", "Second coefficient", 1, 0, 10);
-      auto mean = new RooFormulaVar("mean", "mean", "a1+a2", RooArgList(*a1, *a2));
-      auto sigma = new RooFormulaVar("sigma", "sigma", "1.7*mean", RooArgList(*mean));
+      auto x = std::make_unique<RooRealVar>("x", "x", 0, 30);
+      auto a1 = std::make_unique<RooRealVar>("a1", "First coefficient", 5, 0, 10);
+      auto a2 = std::make_unique<RooRealVar>("a2", "Second coefficient", 1, 0, 10);
+      auto mean = std::make_unique<RooFormulaVar>("mean", "mean", "a1+a2", RooArgList(*a1, *a2));
+      auto sigma = std::make_unique<RooFormulaVar>("sigma", "sigma", "1.7*mean", RooArgList(*mean));
 
       // Build gaussian p.d.f in terms of x,mean and sigma
       _pdf = std::make_unique<RooGaussian>("gauss", "gaussian PDF", *x, *mean, *sigma);
 
-
-      for (auto var : {x, a1}) {
-        _variables.addOwned(*var);
 //        _variablesToPlot.add(*var);
-      }
 
-      for (auto par : {a2}) {
-        _parameters.addOwned(*par);
-      }
+      _variables.addOwned(std::move(x));
+      _variables.addOwned(std::move(a1));
 
-      _otherObjects.addOwned(*mean);
-      _otherObjects.addOwned(*sigma);
+      _parameters.addOwned(std::move(a2));
+
+      _otherObjects.addOwned(std::move(mean));
+      _otherObjects.addOwned(std::move(sigma));
 
       _toleranceCompareBatches = 2.E-14;
   }

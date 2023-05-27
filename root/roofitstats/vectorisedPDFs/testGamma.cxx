@@ -24,23 +24,21 @@ class TestGamma : public PDFTest
     TestGamma() :
       PDFTest("Gamma", 100000)
   {
-    auto x = new RooRealVar("x", "x", 5, 4, 10);
-    auto gamma = new RooRealVar("gamma", "N+1", 6, 4, 8);
+    auto x = std::make_unique<RooRealVar>("x", "x", 5, 4, 10);
+    auto gamma = std::make_unique<RooRealVar>("gamma", "N+1", 6, 4, 8);
     gamma->setConstant();
-    auto beta = new RooRealVar("beta", "beta", 1.5, 0.5, 10);
-    auto mu = new RooRealVar("mu", "mu", 0.2, -1., 1.);
+    auto beta = std::make_unique<RooRealVar>("beta", "beta", 1.5, 0.5, 10);
+    auto mu = std::make_unique<RooRealVar>("mu", "mu", 0.2, -1., 1.);
     mu->setConstant();
     
     // Build gaussian p.d.f in terms of x,mean and sigma
     _pdf = std::make_unique<RooGamma>("Gamma", "Gamma PDF", *x, *gamma, *beta, *mu);
     
-    for (auto var : {x}) {
-    _variables.addOwned(*var);      
-    }
+    _variables.addOwned(std::move(x));      
 
-    for (auto par : {gamma, beta, mu}) {
-      _parameters.addOwned(*par);
-    }
+    _parameters.addOwned(std::move(gamma));
+    _parameters.addOwned(std::move(beta));
+    _parameters.addOwned(std::move(mu));
     
 //    _variablesToPlot.add(*x);
     _toleranceCompareBatches = 1.2E-14;

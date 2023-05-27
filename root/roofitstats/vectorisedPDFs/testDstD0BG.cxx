@@ -24,21 +24,17 @@ class TestDstD0BG : public PDFTest
     TestDstD0BG() :
       PDFTest("DstD0BG", 100000)
   { 
-      auto m = new RooRealVar("m", "m", 2.0, 1.61, 3);
+      auto m = std::make_unique<RooRealVar>("m", "m", 2.0, 1.61, 3);
       auto m0 = new RooRealVar("m0", "m0", 1.6);
-      auto C = new RooRealVar("C", "C", 1, 0.1, 2);
+      auto C = std::make_unique<RooRealVar>("C", "C", 1, 0.1, 2);
       auto A = new RooRealVar("A", "A", -1.2);
       auto B = new RooRealVar("B", "B", 0.1);
 
       _pdf = std::make_unique<RooDstD0BG>("DstD0BG", "DstD0BG", *m, *m0, *C, *A, *B);
 
-      for (auto var : {m}) {
-        _variables.addOwned(*var);
-      }
+      _variables.addOwned(std::move(m));
 
-      for (auto par : {C}) {
-        _parameters.addOwned(*par);
-      }
+      _parameters.addOwned(std::move(C));
 
     _toleranceCompareBatches = 3.E-14;
     _toleranceCompareLogs    = 3.E-10;

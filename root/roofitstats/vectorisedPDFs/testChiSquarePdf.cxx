@@ -23,21 +23,18 @@ class TestChiSquarePdfinX: public PDFTest
     TestChiSquarePdfinX() :
       PDFTest("ChiSquarePdf", 100000)
     {
-      auto x = new RooRealVar("x", "x", 0.1, 100);
-      auto ndof = new RooRealVar("ndof", "ndof of chiSquarePdf", 2, 1, 5);
+      auto x = std::make_unique<RooRealVar>("x", "x", 0.1, 100);
+      auto ndof = std::make_unique<RooRealVar>("ndof", "ndof of chiSquarePdf", 2, 1, 5);
       
       // Build chiSquarePdf p.d.f 
       _pdf = std::make_unique<RooChiSquarePdf>("chiSquarePdf", "chiSquarePdf PDF", *x, *ndof);
       
-      for (auto var : {x}) {
-        _variables.addOwned(*var);
-      }
-      
       //      _variablesToPlot.add(x);
+
+      _variables.addOwned(std::move(x));
       
-      for (auto par : {ndof}) {
-        _parameters.addOwned(*par);
-      }
+      _parameters.addOwned(std::move(ndof));
+
       _toleranceCompareLogs = 5e-14;
     }
 };

@@ -26,24 +26,25 @@ class TestJohnson : public PDFTest
     TestJohnson() :
       PDFTest("Johnson", 200000)
   {
-      auto mass = new RooRealVar("mass", "mass", 0., 0., 500.);
-      auto mu = new RooRealVar("mu", "Location parameter of normal distribution", 300., 0., 500.);
-      auto lambda = new RooRealVar ("lambda", "Two sigma of normal distribution", 100., 10, 200.);
-      auto gamma = new RooRealVar ("gamma", "gamma", 0.5, -10., 10.);
-      auto delta = new RooRealVar ("delta", "delta", 2., 1., 10.);
+      auto mass = std::make_unique<RooRealVar>("mass", "mass", 0., 0., 500.);
+      auto mu = std::make_unique<RooRealVar>("mu", "Location parameter of normal distribution", 300., 0., 500.);
+      auto lambda = std::make_unique<RooRealVar> ("lambda", "Two sigma of normal distribution", 100., 10, 200.);
+      auto gamma = std::make_unique<RooRealVar> ("gamma", "gamma", 0.5, -10., 10.);
+      auto delta = std::make_unique<RooRealVar> ("delta", "delta", 2., 1., 10.);
       // delta is highly correlated with lambda. This troubles the fit.
       delta->setConstant();
 
       _pdf = std::make_unique<RooJohnson>("johnson", "johnson", *mass, *mu, *lambda, *gamma, *delta, -1.E300);
 
 
-      _variables.addOwned(*mass);
+      _variables.addOwned(std::move(mass));
 
 //      _variablesToPlot.add(*mass);
 
-      for (auto par : {mu, lambda, gamma, delta}) {
-        _parameters.addOwned(*par);
-      }
+      _parameters.addOwned(std::move(mu));
+      _parameters.addOwned(std::move(lambda));
+      _parameters.addOwned(std::move(gamma));
+      _parameters.addOwned(std::move(delta));
 
       _toleranceCompareBatches = 6.E-12;
       _toleranceCompareLogs = 6.E-12;
@@ -69,23 +70,23 @@ class TestJohnsonInMassAndMu : public PDFTest
     TestJohnsonInMassAndMu() :
       PDFTest("Johnson in mass and mu", 200000)
   {
-      auto mass = new RooRealVar("mass", "mass", 0., -100., 500.);
-      auto mu = new RooRealVar("mu", "Location parameter of normal distribution", 100., 90., 110.);
-      auto lambda = new RooRealVar ("lambda", "Two sigma of normal distribution", 20., 10., 30.);
-      auto gamma = new RooRealVar ("gamma", "gamma", -0.7, -2., 2.);
-      auto delta = new RooRealVar ("delta", "delta", 1.337, 0.9, 2.);
+      auto mass = std::make_unique<RooRealVar>("mass", "mass", 0., -100., 500.);
+      auto mu = std::make_unique<RooRealVar>("mu", "Location parameter of normal distribution", 100., 90., 110.);
+      auto lambda = std::make_unique<RooRealVar> ("lambda", "Two sigma of normal distribution", 20., 10., 30.);
+      auto gamma = std::make_unique<RooRealVar> ("gamma", "gamma", -0.7, -2., 2.);
+      auto delta = std::make_unique<RooRealVar> ("delta", "delta", 1.337, 0.9, 2.);
 
       _pdf = std::make_unique<RooJohnson>("johnson", "johnson", *mass, *mu, *lambda, *gamma, *delta);
 
 
-      _variables.addOwned(*mass);
-      _variables.addOwned(*mu);
+      _variables.addOwned(std::move(mass));
+      _variables.addOwned(std::move(mu));
 
 //      _variablesToPlot.add(*mass);
 
-      for (auto par : {gamma, lambda, delta}) {
-        _parameters.addOwned(*par);
-      }
+      _parameters.addOwned(std::move(lambda));
+      _parameters.addOwned(std::move(gamma));
+      _parameters.addOwned(std::move(delta));
 
       _toleranceCompareBatches = 6.E-12;
       _toleranceCompareLogs = 6.E-12;
@@ -113,25 +114,23 @@ class TestJohnsonWithFormulaParameters : public PDFTest
       PDFTest("Johnson with formula", 100000)
   {
       // Declare variables x,mean,sigma with associated name, title, initial value and allowed range
-      auto mass = new RooRealVar("mass", "mass", 0., -500., 500.);
-      auto mu = new RooRealVar("mu", "Location parameter of normal distribution", -50, -150., 200.);
-      auto lambda = new RooRealVar ("lambda", "Two sigma of normal distribution", 120., 10, 180.);
-      auto gamma = new RooRealVar ("gamma", "gamma", -1.8, -10., 10.);
-      auto delta = new RooFormulaVar("delta", "delta", "1.337 + 0.1*gamma", RooArgList(*gamma));
+      auto mass = std::make_unique<RooRealVar>("mass", "mass", 0., -500., 500.);
+      auto mu = std::make_unique<RooRealVar>("mu", "Location parameter of normal distribution", -50, -150., 200.);
+      auto lambda = std::make_unique<RooRealVar> ("lambda", "Two sigma of normal distribution", 120., 10, 180.);
+      auto gamma = std::make_unique<RooRealVar> ("gamma", "gamma", -1.8, -10., 10.);
+      auto delta = std::make_unique<RooFormulaVar>("delta", "delta", "1.337 + 0.1*gamma", RooArgList(*gamma));
 
       _pdf = std::make_unique<RooJohnson>("johnson", "johnson", *mass, *mu, *lambda, *gamma, *delta, -1.E300);
 
 //      _variablesToPlot.add(*mass);
 
-      for (auto var : {mass}) {
-        _variables.addOwned(*var);
-      }
+      _variables.addOwned(std::move(mass));
 
-      for (auto par : {mu, lambda, gamma}) {
-        _parameters.addOwned(*par);
-      }
+      _parameters.addOwned(std::move(mu));
+      _parameters.addOwned(std::move(lambda));
+      _parameters.addOwned(std::move(gamma));
 
-      _otherObjects.addOwned(*delta);
+      _otherObjects.addOwned(std::move(delta));
 
       _toleranceCompareBatches = 6.E-12;
       _toleranceCompareLogs = 6.E-12;
