@@ -53,7 +53,7 @@ ClassImp(RooRealBinding);
 /// range.
 
 RooRealBinding::RooRealBinding(const RooAbsReal& func, const RooArgSet &vars, const RooArgSet* nset, bool clipInvalid, const TNamed* rangeName) :
-  RooAbsFunc(vars.getSize()), _func(&func), _vars(), _nset(nset), _clipInvalid(clipInvalid), _xsave(0), _rangeName(rangeName), _funcSave(0)
+  RooAbsFunc(vars.getSize()), _func(&func), _vars(), _nset(nset), _clipInvalid(clipInvalid), _rangeName(rangeName), _funcSave(0)
 {
   // check that all of the arguments are real valued and store them
   for (unsigned int index=0; index < vars.size(); ++index) {
@@ -86,20 +86,13 @@ RooRealBinding::RooRealBinding(const RooAbsReal& func, const RooArgSet &vars, co
 
 RooRealBinding::RooRealBinding(const RooRealBinding& other, const RooArgSet* nset) :
   RooAbsFunc(other), _func(other._func), _vars(other._vars), _nset(nset?nset:other._nset), _xvecValid(other._xvecValid),
-  _clipInvalid(other._clipInvalid), _xsave(0), _rangeName(other._rangeName), _funcSave(other._funcSave)
+  _clipInvalid(other._clipInvalid), _rangeName(other._rangeName), _funcSave(other._funcSave)
 {
 
 }
 
 
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooRealBinding::~RooRealBinding()
-{
-  if (_xsave) delete[] _xsave ;
-}
-
+RooRealBinding::~RooRealBinding() = default;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -107,16 +100,15 @@ RooRealBinding::~RooRealBinding()
 
 void RooRealBinding::saveXVec() const
 {
-  if (!_xsave) {
-    _xsave = new double[getDimension()] ;
-    RooArgSet* comps = _func->getComponents() ;
+  if (_xsave.empty()) {
+    _xsave.resize(getDimension());
+    std::unique_ptr<RooArgSet> comps{_func->getComponents()};
     for (auto* arg : dynamic_range_cast<RooAbsArg*>(*comps)) {
       if (arg) {
         _compList.push_back(static_cast<RooAbsReal*>(arg)) ;
-        _compSave.push_back(0) ;
+        _compSave.push_back(0.0) ;
       }
     }
-    delete comps ;
   }
   _funcSave = _func->_value ;
 
@@ -140,7 +132,7 @@ void RooRealBinding::saveXVec() const
 
 void RooRealBinding::restoreXVec() const
 {
-  if (!_xsave) {
+  if (_xsave.empty()) {
     return ;
   }
   _func->_value = _funcSave ;

@@ -183,14 +183,14 @@ Int_t RooAbsAnaConvPdf::declareBasis(const char* expression, const RooArgList& p
     basisName.Append(arg->GetName()) ;
   }
 
-  RooFormulaVar* basisFunc = new RooFormulaVar(basisName, expression, basisArgs);
+  auto basisFunc = std::make_unique<RooFormulaVar>(basisName, expression, basisArgs);
   basisFunc->setAttribute("RooWorkspace::Recycle") ;
   basisFunc->setAttribute("NOCacheAndTrack") ;
   basisFunc->setOperMode(operMode()) ;
-  _basisList.addOwned(*basisFunc) ;
 
   // Instantiate resModel x basisFunc convolution
-  RooAbsReal* conv = ((RooResolutionModel*)_model.absArg())->convolution(basisFunc,this) ;
+  RooAbsReal* conv = static_cast<RooResolutionModel*>(_model.absArg())->convolution(basisFunc.get(),this);
+  _basisList.addOwned(std::move(basisFunc));
   if (!conv) {
     coutE(InputArguments) << "RooAbsAnaConvPdf::declareBasis(" << GetName() << "): unable to construct convolution with basis function '"
            << expression << "'" << endl ;
@@ -595,8 +595,7 @@ double RooAbsAnaConvPdf::getCoefNorm(Int_t coefIdx, const RooArgSet* nset, const
     makeCoefVarList(cache->_coefVarList) ;
 
     for (i=0 ; i<cache->_coefVarList.getSize() ; i++) {
-      RooAbsReal* coefInt = static_cast<RooAbsReal&>(*cache->_coefVarList.at(i)).createIntegral(*nset,RooNameReg::str(rangeName)) ;
-      cache->_normList.addOwned(*coefInt) ;
+      cache->_normList.addOwned(std::unique_ptr<RooAbsReal>{static_cast<RooAbsReal&>(*cache->_coefVarList.at(i)).createIntegral(*nset,RooNameReg::str(rangeName))});
     }
 
     _coefNormMgr.setObj(nset,0,cache,rangeName) ;

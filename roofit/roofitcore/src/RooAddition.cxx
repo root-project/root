@@ -57,14 +57,14 @@ RooAddition::RooAddition(const char* name, const char* title, const RooArgList& 
   , _set("!set","set of components",this)
   , _cacheMgr(this,10)
 {
-  for (const auto comp : sumSet) {
+  for (RooAbsArg *comp : sumSet) {
     if (!dynamic_cast<RooAbsReal*>(comp)) {
       coutE(InputArguments) << "RooAddition::ctor(" << GetName() << ") ERROR: component " << comp->GetName()
              << " is not of type RooAbsReal" << std::endl;
       RooErrorHandler::softAbort() ;
     }
     _set.add(*comp) ;
-    if (takeOwnership) _ownedList.addOwned(*comp) ;
+    if (takeOwnership) _ownedList.addOwned(std::unique_ptr<RooAbsArg>{comp});
   }
 
 }
@@ -117,12 +117,12 @@ RooAddition::RooAddition(const char* name, const char* title, const RooArgList& 
     _name.Append( "_x_");
     _name.Append(comp2->GetName());
     _name.Append( "]");
-    RooProduct  *prod = new RooProduct( _name, _name , RooArgSet(*comp1, *comp2) /*, takeOwnership */ ) ;
+    auto prod = std::make_unique<RooProduct>( _name, _name , RooArgSet(*comp1, *comp2) /*, takeOwnership */ );
     _set.add(*prod);
-    _ownedList.addOwned(*prod) ;
+    _ownedList.addOwned(std::move(prod));
     if (takeOwnership) {
-        _ownedList.addOwned(*comp1) ;
-        _ownedList.addOwned(*comp2) ;
+        _ownedList.addOwned(std::unique_ptr<RooAbsArg>{comp1});
+        _ownedList.addOwned(std::unique_ptr<RooAbsArg>{comp2});
     }
   }
 }
@@ -257,9 +257,8 @@ Int_t RooAddition::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars
 
   // we don't, so we make it right here....
   cache = new CacheElem;
-  for (const auto arg : _set) {// checked in c'tor that this will work...
-      RooAbsReal *I = static_cast<const RooAbsReal*>(arg)->createIntegral(analVars,rangeName);
-      cache->_I.addOwned(*I);
+  for (auto *arg : static_range_cast<RooAbsReal const*>(_set)) {// checked in c'tor that this will work...
+      cache->_I.addOwned(std::unique_ptr<RooAbsReal>{arg->createIntegral(analVars,rangeName)});
   }
 
   Int_t code = _cacheMgr.setObj(&analVars,&analVars,(RooAbsCacheElement*)cache,RooNameReg::ptr(rangeName));

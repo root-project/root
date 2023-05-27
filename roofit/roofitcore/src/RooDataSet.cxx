@@ -1299,10 +1299,11 @@ void RooDataSet::append(RooDataSet& data)
 RooAbsArg* RooDataSet::addColumn(RooAbsArg& var, bool adjustRange)
 {
   checkInit() ;
-  RooAbsArg* ret = _dstore->addColumn(var,adjustRange) ;
-  _vars.addOwned(*ret) ;
+  std::unique_ptr<RooAbsArg> ret{_dstore->addColumn(var,adjustRange)};
+  RooAbsArg* retPtr = ret.get();
+  _vars.addOwned(std::move(ret));
   initialize(_wgtVar?_wgtVar->GetName():0) ;
-  return ret ;
+  return retPtr;
 }
 
 
