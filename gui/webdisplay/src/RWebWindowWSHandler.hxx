@@ -114,7 +114,7 @@ public:
    {
    }
 
-   virtual ~RWebWindowWSHandler() = default;
+   ~RWebWindowWSHandler() override = default;
 
    /// returns content of default web-page
    /// THttpWSHandler interface

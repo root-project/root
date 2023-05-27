@@ -71,7 +71,7 @@ public:
               UInt_t options = kHorizontalFrame | kSunkenFrame | kDoubleBorder,
               Pixel_t back = GetWhitePixel());
 
-   virtual ~TGComboBox();
+   ~TGComboBox() override;
 
    void DrawBorder() override;
    TGDimension GetDefaultSize() const override { return TGDimension(fWidth, fHeight); }
@@ -184,7 +184,7 @@ public:
    TGFontTypeComboBox(const TGWindow *p = nullptr, Int_t id = -1,
             UInt_t options = kHorizontalFrame | kSunkenFrame | kDoubleBorder,
             Pixel_t bask = GetWhitePixel());
-   virtual ~TGFontTypeComboBox();
+   ~TGFontTypeComboBox() override;
 
    ClassDefOverride(TGFontTypeComboBox, 0)  // Font type combobox widget
 };

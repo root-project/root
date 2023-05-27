@@ -39,7 +39,7 @@ public:
      kStyle = 5        ///< gStyle object
    };
 
-   virtual ~TWebSnapshot();
+   ~TWebSnapshot() override;
 
    void SetObjectIDAsPtr(void *ptr);
    void SetObjectID(const std::string &id) { fObjectID = id; }

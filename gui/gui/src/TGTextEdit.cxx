@@ -63,7 +63,7 @@ class TGTextEditHist : public TList {
 
 public:
    TGTextEditHist() {}
-   virtual ~TGTextEditHist() { Delete(); }
+   ~TGTextEditHist() override { Delete(); }
 
    Bool_t Notify() override
    { //
@@ -197,7 +197,7 @@ public:
       fText = new TGText(dtc.fText);
       fBreakLine = dtc.fBreakLine;
    }
-   virtual ~TDelTextCom() { delete fText; }
+   ~TDelTextCom() override { delete fText; }
 
    TDelTextCom &operator=(const TDelTextCom &dtc) {
       if (this != &dtc) {

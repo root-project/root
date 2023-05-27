@@ -1842,7 +1842,7 @@ public:
     : TGPictureButton(p, pic, id), fTimer(0), fIgnoreNextFire(0),
        fStep(TGNumberFormat::kNSSSmall), fStepLog(logstep), fDoLogStep(logstep)
        { fEditDisabled = kEditDisable | kEditDisableGrab; }
-   virtual ~TGRepeatFireButton() { delete fTimer; }
+   ~TGRepeatFireButton() override { delete fTimer; }
 
    Bool_t HandleButton(Event_t *event) override;
    void   FireButton();

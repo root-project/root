@@ -74,7 +74,7 @@ public:
       fEventTime = t;
    }
 
-   ClassDef(TRecEvent,1) // Abstract class. Defines basic interface for storing information about ROOT events
+   ClassDefOverride(TRecEvent,1) // Abstract class. Defines basic interface for storing information about ROOT events
 };
 
 
@@ -108,18 +108,18 @@ public:
       return fText.Data();
    }
 
-   virtual ERecEventType GetType() const {
+   ERecEventType GetType() const override {
       // Returns what kind of event it stores (commandline event)
       return TRecEvent::kCmdEvent;
    }
 
-   virtual void ReplayEvent(Bool_t) {
+   void ReplayEvent(Bool_t) override {
       // Stored command is executed again
       std::cout << GetText() << std::endl;
       gApplication->ProcessLine(GetText());
    }
 
-   ClassDef(TRecCmdEvent,1) // Class stores information about 1 commandline event (= 1 command typed by user in commandline)
+   ClassDefOverride(TRecCmdEvent,1) // Class stores information about 1 commandline event (= 1 command typed by user in commandline)
 };
 
 
@@ -153,18 +153,18 @@ public:
       return fText;
    }
 
-   virtual ERecEventType GetType() const {
+   ERecEventType GetType() const override {
       // Returns what kind of event it stores (Especial event)
       return TRecEvent::kExtraEvent;
    }
 
-   virtual void ReplayEvent(Bool_t) {
+   void ReplayEvent(Bool_t) override {
       // Stored event is executed again
 
       gApplication->ProcessLine(GetText());
    }
 
-   ClassDef(TRecExtraEvent,1) // Class stores information about extra events
+   ClassDefOverride(TRecExtraEvent,1) // Class stores information about extra events
 };
 
 
@@ -220,15 +220,15 @@ public:
       kROOT_MESSAGE     = 10002
    };
 
-   virtual ERecEventType GetType() const {
+   ERecEventType GetType() const override {
       // Returns what kind of event it stores (GUI event)
       return TRecEvent::kGuiEvent;
    }
 
-   virtual void    ReplayEvent(Bool_t showMouseCursor = kTRUE);
+   void    ReplayEvent(Bool_t showMouseCursor = kTRUE) override;
    static Event_t *CreateEvent(TRecGuiEvent *ge);
 
-   ClassDef(TRecGuiEvent,1) // Class stores information about 1 GUI event in ROOT
+   ClassDefOverride(TRecGuiEvent,1) // Class stores information about 1 GUI event in ROOT
 };
 
 
@@ -258,7 +258,7 @@ public:
    // Creates a new key-value mapping of window IDs
    TRecWinPair(Window_t key, Window_t value): fKey(key), fValue(value) {}
 
-   ClassDef(TRecWinPair,1) // Class used for storing of window IDs mapping. Needed for replaying events.
+   ClassDefOverride(TRecWinPair,1) // Class used for storing of window IDs mapping. Needed for replaying events.
 };
 
 
@@ -301,9 +301,9 @@ public:
    TRecorder(const char *filename, Option_t *option = "READ");
 
    // Deletes recorder together with its current state
-   virtual ~TRecorder();
+   ~TRecorder() override;
 
-   void Browse(TBrowser *);
+   void Browse(TBrowser *) override;
 
    // Starts recording of events to the given file
    void Start(const char *filename, Option_t *option = "RECREATE", Window_t *w = nullptr, Int_t winCount = 0);
@@ -338,7 +338,7 @@ public:
    // Saves all the canvases previous to the TRecorder
    void PrevCanvases(const char *filename, Option_t *option);
 
-   ClassDef(TRecorder,2) // Class provides direct recorder/replayer interface for a user.
+   ClassDefOverride(TRecorder,2) // Class provides direct recorder/replayer interface for a user.
 };
 
 /** \class TRecorderState
@@ -395,7 +395,7 @@ Not intended to be used by a user directly.
 class TRecorderReplaying : public TRecorderState
 {
 private:
-   virtual  ~TRecorderReplaying();
+    ~TRecorderReplaying() override;
    Bool_t   PrepareNextEvent();
    Bool_t   RemapWindowReferences();
    Bool_t   CanOverlap();
@@ -463,16 +463,16 @@ protected:
    Bool_t     Initialize(TRecorder *r, Bool_t showMouseCursor, TRecorder::EReplayModes mode);
 
 public:
-   virtual TRecorder::ERecorderState GetState() const { return TRecorder::kReplaying; }
+   TRecorder::ERecorderState GetState() const override { return TRecorder::kReplaying; }
 
-   virtual void   Pause(TRecorder *r);
+   void   Pause(TRecorder *r) override;
    virtual void   Continue();
-   virtual void   ReplayStop(TRecorder *r);
+   void   ReplayStop(TRecorder *r) override;
 
    void           RegisterWindow(Window_t w);   //SLOT
    void           ReplayRealtime();             //SLOT
 
-   ClassDef(TRecorderReplaying, 0) // Represents state of TRecorder when replaying
+   ClassDefOverride(TRecorderReplaying, 0) // Represents state of TRecorder when replaying
 };
 
 /** \class TRecorderRecording
@@ -487,7 +487,7 @@ Not intended to be used by a user directly.
 class TRecorderRecording: public TRecorderState
 {
 private:
-   virtual ~TRecorderRecording();
+   ~TRecorderRecording() override;
    Bool_t  IsFiltered(Window_t id);
    void    SetTypeOfConfigureNotify(Event_t *e);
    void    CopyEvent(Event_t *e, Window_t wid);
@@ -529,9 +529,9 @@ protected:
    Bool_t StartRecording();
 
 public:
-   virtual TRecorder::ERecorderState GetState() const { return TRecorder::kRecording; }
+   TRecorder::ERecorderState GetState() const override { return TRecorder::kRecording; }
 
-   virtual void Stop(TRecorder *r, Bool_t guiCommand);
+   void Stop(TRecorder *r, Bool_t guiCommand) override;
 
    void  RegisterWindow(Window_t w);               //SLOT
    void  RecordCmdEvent(const char *line);         //SLOT
@@ -546,7 +546,7 @@ public:
 
    void  RecordExtraEvent(TString line, TTime extTime);
 
-   ClassDef(TRecorderRecording, 0) // Represents state of TRecorder when recording events
+   ClassDefOverride(TRecorderRecording, 0) // Represents state of TRecorder when recording events
 };
 
 /** \class TRecorderInactive
@@ -567,23 +567,23 @@ private:
    TSeqCollection *fCollect;
 
 public:
-   virtual        ~TRecorderInactive() {}
+          ~TRecorderInactive() override {}
    TRecorderInactive() : fCollect(nullptr) {}
 
-   virtual void   ListCmd(const char *filename);
-   virtual void   ListGui(const char *filename);
+   void   ListCmd(const char *filename) override;
+   void   ListGui(const char *filename) override;
 
-   virtual void   Start(TRecorder *r, const char *filename, Option_t *option, Window_t *w = nullptr, Int_t winCount = 0);
-   virtual Bool_t Replay(TRecorder *r, const char *filename, Bool_t showMouseCursor, TRecorder::EReplayModes mode);
+   void   Start(TRecorder *r, const char *filename, Option_t *option, Window_t *w = nullptr, Int_t winCount = 0) override;
+   Bool_t Replay(TRecorder *r, const char *filename, Bool_t showMouseCursor, TRecorder::EReplayModes mode) override;
 
-   virtual TRecorder::ERecorderState GetState() const { return TRecorder::kInactive; }
+   TRecorder::ERecorderState GetState() const override { return TRecorder::kInactive; }
 
    static void    DumpRootEvent(TRecGuiEvent *e, Int_t n);
    static long    DisplayValid(Long_t n) { return ( n < 0 ? -1 : n); }
 
-   void PrevCanvases(const char *filename, Option_t *option);
+   void PrevCanvases(const char *filename, Option_t *option) override;
 
-   ClassDef(TRecorderInactive, 0) // Represents state of TRecorder after its creation
+   ClassDefOverride(TRecorderInactive, 0) // Represents state of TRecorder after its creation
 };
 
 /** \class TRecorderPaused
@@ -602,7 +602,7 @@ Not intended to be used by a user directly.
 class TRecorderPaused: public TRecorderState
 {
 private:
-   virtual ~TRecorderPaused() {}
+   ~TRecorderPaused() override {}
 
    TRecorderReplaying       *fReplayingState;      // Replaying that is paused
 
@@ -611,12 +611,12 @@ protected:
    TRecorderPaused(TRecorderReplaying *state);
 
 public:
-   virtual TRecorder::ERecorderState GetState() const { return TRecorder::kPaused; }
+   TRecorder::ERecorderState GetState() const override { return TRecorder::kPaused; }
 
-   virtual void Resume(TRecorder *r);
-   virtual void ReplayStop(TRecorder *r);
+   void Resume(TRecorder *r) override;
+   void ReplayStop(TRecorder *r) override;
 
-   ClassDef(TRecorderPaused, 0) // Represents state of TRecorder when paused
+   ClassDefOverride(TRecorderPaused, 0) // Represents state of TRecorder when paused
 };
 
 
@@ -649,13 +649,13 @@ private:
 
 public:
    TGRecorder(const TGWindow *p = nullptr, UInt_t w = 230, UInt_t h = 150);
-   virtual ~TGRecorder();
+   ~TGRecorder() override;
 
    void StartStop();
    void Update();
    void Replay();
 
-   ClassDef(TGRecorder,0) // GUI class of the event recorder.
+   ClassDefOverride(TGRecorder,0) // GUI class of the event recorder.
 };
 
 #endif // ROOT_TRecorder

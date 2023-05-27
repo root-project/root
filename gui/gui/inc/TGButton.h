@@ -100,7 +100,7 @@ public:
 
    TGButton(const TGWindow *p = nullptr, Int_t id = -1, GContext_t norm = GetDefaultGC()(),
             UInt_t option = kRaisedFrame | kDoubleBorder);
-   virtual ~TGButton();
+   ~TGButton() override;
 
    Bool_t               HandleButton(Event_t *event) override;
    Bool_t               HandleCrossing(Event_t *event) override;
@@ -181,7 +181,7 @@ public:
                 FontStruct_t font = GetDefaultFontStruct(),
                 UInt_t option = kRaisedFrame | kDoubleBorder);
 
-   virtual ~TGTextButton();
+   ~TGTextButton() override;
 
    TGDimension        GetDefaultSize() const override;
 
@@ -249,7 +249,7 @@ public:
    TGPictureButton(const TGWindow *p = nullptr, const char* pic = nullptr, Int_t id = -1,
                    GContext_t norm = GetDefaultGC()(),
                    UInt_t option = kRaisedFrame | kDoubleBorder);
-   virtual ~TGPictureButton();
+   ~TGPictureButton() override;
 
    virtual void     SetPicture(const TGPicture *new_pic);
    virtual void     SetDisabledPicture(const TGPicture *pic);
@@ -299,7 +299,7 @@ public:
                  GContext_t norm = GetDefaultGC()(),
                  FontStruct_t font = GetDefaultFontStruct(),
                  UInt_t option = 0);
-   virtual ~TGCheckButton();
+   ~TGCheckButton() override;
 
    TGDimension    GetDefaultSize() const override;
 
@@ -355,7 +355,7 @@ public:
                  GContext_t norm = GetDefaultGC()(),
                  FontStruct_t font = GetDefaultFontStruct(),
                  UInt_t option = 0);
-   virtual ~TGRadioButton();
+   ~TGRadioButton() override;
 
    TGDimension    GetDefaultSize() const override;
 
@@ -418,7 +418,7 @@ public:
                 FontStruct_t fontstruct = GetDefaultFontStruct(),
                 UInt_t option = kRaisedFrame | kDoubleBorder);
 
-   virtual ~TGSplitButton();
+   ~TGSplitButton() override;
 
    TGDimension  GetDefaultSize() const override;
 

@@ -36,7 +36,7 @@ protected:
 
 public:
    TGDockButton(const TGCompositeFrame *p = nullptr, Int_t id = 1);
-   virtual ~TGDockButton();
+   ~TGDockButton() override;
 
    Bool_t HandleCrossing(Event_t *event) override;
 
@@ -70,7 +70,7 @@ protected:
 
 public:
    TGUndockedFrame(const TGWindow *p = nullptr, TGDockableFrame *dockable = nullptr);
-   virtual ~TGUndockedFrame();
+   ~TGUndockedFrame() override;
 
    void FixSize();
    void CloseWindow() override;
@@ -104,7 +104,7 @@ protected:
 public:
    TGDockableFrame(const TGWindow *p = nullptr, Int_t id = -1,
                    UInt_t options = kHorizontalFrame);
-   virtual ~TGDockableFrame();
+   ~TGDockableFrame() override;
 
    void AddFrame(TGFrame *f, TGLayoutHints *hints) override;
 

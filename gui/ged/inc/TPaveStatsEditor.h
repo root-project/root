@@ -46,14 +46,14 @@ public:
                     Int_t width = 140, Int_t height = 30,
                     UInt_t options = kChildFrame,
                     Pixel_t back = GetDefaultFrameBackground());
-   virtual ~TPaveStatsEditor();
+   ~TPaveStatsEditor() override;
 
-   virtual void   SetModel(TObject* obj);
+   void   SetModel(TObject* obj) override;
    virtual void   DoStatOptions();
    virtual void   DoFitOptions();
    virtual void   SetValuesON(Bool_t on);
 
-   ClassDef(TPaveStatsEditor,0)  // GUI for editing TPaveStats
+   ClassDefOverride(TPaveStatsEditor,0)  // GUI for editing TPaveStats
 };
 
 #endif

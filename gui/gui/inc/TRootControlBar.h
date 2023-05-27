@@ -30,7 +30,7 @@ private:
 public:
    TRootControlBar(TControlBar *c = nullptr, const char *title = "ROOT Control Bar",
                    Int_t x = -999, Int_t y = -999);
-   virtual ~TRootControlBar();
+   ~TRootControlBar() override;
 
    void Create() override;
    void Hide() override;

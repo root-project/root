@@ -166,7 +166,7 @@ public:
    TGMdiMainFrame(const TGWindow *p, TGMdiMenuBar *menu, Int_t w, Int_t h,
                   UInt_t options = 0,
                   Pixel_t back = GetDefaultFrameBackground());
-   virtual ~TGMdiMainFrame();
+   ~TGMdiMainFrame() override;
 
    Bool_t           HandleKey(Event_t *event) override;
    Bool_t           ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2) override;

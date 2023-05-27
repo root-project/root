@@ -39,7 +39,7 @@ private:
 public:
    TGShutterItem(const TGWindow *p = nullptr, TGHotString *s = nullptr, Int_t id = -1,
                  UInt_t options = 0);
-   virtual ~TGShutterItem();
+   ~TGShutterItem() override;
 
    TGButton *GetButton() const { return fButton; }
    TGFrame  *GetContainer() const { return fCanvas->GetContainer(); }
@@ -71,7 +71,7 @@ private:
 
 public:
    TGShutter(const TGWindow *p = nullptr, UInt_t options = kSunkenFrame);
-   virtual ~TGShutter();
+   ~TGShutter() override;
 
    virtual void   AddItem(TGShutterItem *item);
    virtual void   RemoveItem(const char *name);

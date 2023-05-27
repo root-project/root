@@ -28,7 +28,7 @@ class TRootGuiFactory : public TGuiFactory {
 
 public:
    TRootGuiFactory(const char *name = "Root", const char *title = "ROOT GUI Factory");
-   virtual ~TRootGuiFactory() {}
+   ~TRootGuiFactory() override {}
 
    TApplicationImp *CreateApplicationImp(const char *classname, int *argc, char **argv) override;
 

@@ -455,7 +455,7 @@ void TGIconLBEntry::SetPicture(const TGPicture *pic)
 class TGLBFrameElement : public TGFrameElement {
 public:
    TGLBFrameElement(TGFrame *f, TGLayoutHints *l) : TGFrameElement(f, l) {}
-   virtual ~TGLBFrameElement() {}
+   ~TGLBFrameElement() override {}
 
    Bool_t IsSortable() const override { return kTRUE; }
    Int_t  Compare(const TObject *obj) const override

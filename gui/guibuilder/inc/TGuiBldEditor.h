@@ -52,7 +52,7 @@ private:
 
 public:
    TGuiBldEditor(const TGWindow *p = nullptr);
-   virtual ~TGuiBldEditor();
+   ~TGuiBldEditor() override;
 
    Int_t    GetXPos() const { return fXpos->GetIntNumber(); }
    Int_t    GetYPos() const { return fYpos->GetIntNumber(); }
@@ -69,13 +69,13 @@ public:
    void     Reset();
    TGuiBldHintsEditor *GetHintsEditor() const { return fHintsFrame; }
 
-   void     RemoveFrame(TGFrame *);
+   void     RemoveFrame(TGFrame *) override;
    void     TabSelected(Int_t id);
    void     UpdateSelected(TGFrame* = nullptr); //*SIGNAL*
    void     ChangeSelected(TGFrame*);     //*SIGNAL*
    void     SwitchLayout();
 
-   ClassDef(TGuiBldEditor,0)  // frame property editor
+   ClassDefOverride(TGuiBldEditor,0)  // frame property editor
 };
 
 #endif

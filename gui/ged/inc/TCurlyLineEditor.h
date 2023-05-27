@@ -39,17 +39,17 @@ public:
                 Int_t width = 140, Int_t height = 30,
                 UInt_t options = kChildFrame,
                 Pixel_t back = GetDefaultFrameBackground());
-   virtual ~TCurlyLineEditor();
+   ~TCurlyLineEditor() override;
 
-   virtual void   SetModel(TObject* obj);
-   virtual void   ActivateBaseClassEditors(TClass* cl);
+   void   SetModel(TObject* obj) override;
+   void   ActivateBaseClassEditors(TClass* cl) override;
    virtual void   DoStartXY();
    virtual void   DoEndXY();
    virtual void   DoAmplitude();
    virtual void   DoWaveLength();
    virtual void   DoWavy();
 
-   ClassDef(TCurlyLineEditor,0)  // GUI for editing arrow attributes
+   ClassDefOverride(TCurlyLineEditor,0)  // GUI for editing arrow attributes
 };
 
 #endif

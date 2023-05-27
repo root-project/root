@@ -77,7 +77,7 @@ public:
 
    TGLayoutHints(const TGLayoutHints &lh);
 
-   virtual ~TGLayoutHints();
+   ~TGLayoutHints() override;
 
    ULong_t GetLayoutHints() const { return fLayoutHints; }
    Int_t   GetPadTop() const { return fPadtop; }
@@ -115,7 +115,7 @@ public:
 
    TGFrameElement() : fFrame(nullptr), fState(0), fLayout(nullptr) { }
    TGFrameElement(TGFrame *f, TGLayoutHints *l);
-   ~TGFrameElement();
+   ~TGFrameElement() override;
 
    void Print(Option_t* option = "") const override;
    void ls(Option_t* option = "") const override { Print(option); }

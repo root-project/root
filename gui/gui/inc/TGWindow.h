@@ -78,7 +78,7 @@ public:
             UInt_t wtype = 0);
    TGWindow(TGClient *c, Window_t id, const TGWindow *parent = nullptr);
 
-   virtual ~TGWindow();
+   ~TGWindow() override;
 
    const TGWindow *GetParent() const { return fParent; }
    virtual const TGWindow *GetMainFrame() const;
@@ -142,7 +142,7 @@ class TGUnknownWindowHandler : public TObject {
 
 public:
    TGUnknownWindowHandler() {}
-   virtual ~TGUnknownWindowHandler() {}
+   ~TGUnknownWindowHandler() override {}
 
    virtual Bool_t HandleEvent(Event_t *) = 0;
 

@@ -77,7 +77,7 @@ protected:
 
 public:
    TGFileBrowser(const TGWindow *p, TBrowser *b = nullptr, UInt_t w = 200, UInt_t h = 400);
-   virtual ~TGFileBrowser();
+   ~TGFileBrowser() override;
 
    void         Add(TObject *obj, const char *name = nullptr, Int_t check = -1) override;
    void         BrowseObj(TObject *obj) override;

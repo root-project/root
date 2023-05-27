@@ -80,12 +80,12 @@ private:
 
 public:
    TAdvancedGraphicsDialog(const TGWindow *p, const TGWindow *main);
-   ~TAdvancedGraphicsDialog();
+   ~TAdvancedGraphicsDialog() override;
 
    void DoDraw();
    void DoChangedScanPar(Int_t selected);
 
-   ClassDef(TAdvancedGraphicsDialog, 0)  // Simple input dialog
+   ClassDefOverride(TAdvancedGraphicsDialog, 0)  // Simple input dialog
 };
 
 #endif

@@ -24,7 +24,7 @@ public:
    TGString(const char *s) : TString(s) { }
    TGString(Int_t number) : TString() { *this += number; }
    TGString(const TGString *s);
-   virtual ~TGString() {}
+   ~TGString() override {}
 
    Int_t GetLength() const { return Length(); }
    const char  *GetString() const { return Data(); }

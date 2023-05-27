@@ -26,7 +26,7 @@ protected:
 
 public:
    TWebControlBar(TControlBar *bar, const char *title, Int_t x, Int_t y);
-   virtual ~TWebControlBar() = default;
+   ~TWebControlBar() override = default;
 
    void Create() override { }
    void Hide() override;

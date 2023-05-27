@@ -31,7 +31,7 @@ private:
 
 public:
    TRootContextMenu(TContextMenu *c = nullptr, const char *name = "ROOT Context Menu");
-   virtual ~TRootContextMenu();
+   ~TRootContextMenu() override;
 
    void   DisplayPopup(Int_t x, Int_t y) override;
    void   Dialog(TObject *object, TMethod *method) override;

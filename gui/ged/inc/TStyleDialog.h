@@ -44,14 +44,14 @@ private:
 public:
    TStyleDialog(TStyleManager *sm, TStyle *cur, Int_t mode,
                   TVirtualPad *currentPad = nullptr);
-   virtual ~TStyleDialog();
+   ~TStyleDialog() override;
 
    void DoCloseWindow();                  // SLOT
    void DoCancel();                       // SLOT
    void DoOK();                           // SLOT
    void DoUpdate();                       // SLOT
 
-   ClassDef(TStyleDialog, 0) // Dialog box used by the TStyleManager class
+   ClassDefOverride(TStyleDialog, 0) // Dialog box used by the TStyleManager class
 };
 
 #endif

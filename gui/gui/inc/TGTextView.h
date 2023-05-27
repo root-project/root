@@ -72,7 +72,7 @@ public:
    TGTextView(const TGWindow *parent, UInt_t w, UInt_t h, const char *string,
               Int_t id = -1, UInt_t sboptions = 0, Pixel_t back = GetWhitePixel());
 
-   virtual ~TGTextView();
+   ~TGTextView() override;
 
    virtual Bool_t IsSaved() { fIsSaved = fText->IsSaved(); return fIsSaved;}
    virtual Long_t ToObjXCoord(Long_t xCoord, Long_t line);

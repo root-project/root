@@ -152,7 +152,7 @@ protected:
 
 public:
    TWebCanvas(TCanvas *c, const char *name, Int_t x, Int_t y, UInt_t width, UInt_t height, Bool_t readonly = kTRUE);
-   virtual ~TWebCanvas() = default;
+   ~TWebCanvas() override = default;
 
    void ShowWebWindow(const ROOT::Experimental::RWebDisplayArgs &user_args = "");
 

@@ -339,7 +339,7 @@ private:
 
 public:
    TRootIconList(TRootIconBox* box = nullptr);
-   virtual ~TRootIconList();
+   ~TRootIconList() override;
    void              UpdateName();
    const char       *GetTitle() const  override{ return "ListView Container"; }
    Bool_t            IsFolder() const override { return kFALSE; }
@@ -418,7 +418,7 @@ public:
                 UInt_t options = kSunkenFrame,
                 ULong_t back = GetDefaultFrameBackground());
 
-   virtual ~TRootIconBox();
+   ~TRootIconBox() override;
 
    void   AddObjItem(const char *name, TObject *obj, TClass *cl);
    void   GetObjPictures(const TGPicture **pic, const TGPicture **spic,

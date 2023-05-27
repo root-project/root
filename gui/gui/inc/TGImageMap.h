@@ -41,7 +41,7 @@ public:
    TGRegion(Int_t n, Int_t *x, Int_t *y, Bool_t winding = kFALSE);
    TGRegion(const TArrayS &x, const TArrayS &y, Bool_t winding = kFALSE);
    TGRegion(const TGRegion &reg);
-   virtual ~TGRegion();
+   ~TGRegion() override;
 
    Bool_t      Contains(const TPoint &p) const;
    Bool_t      Contains(Int_t x, Int_t y) const;
@@ -90,7 +90,7 @@ public:
    TGRegionWithId(Int_t id, Int_t n, TPoint *points, Bool_t winding = kFALSE);
    TGRegionWithId(const TGRegionWithId &reg);
    TGRegionWithId(const TGRegion &reg, Int_t id);
-   virtual ~TGRegionWithId();
+   ~TGRegionWithId() override;
 
    Int_t        GetId() const { return fId; }
    TGToolTip   *GetToolTipText() const { return fTip; }
@@ -126,7 +126,7 @@ protected:
 public:
    TGImageMap(const TGWindow *p = nullptr, const TGPicture *pic = nullptr);
    TGImageMap(const TGWindow *p, const TString &pic);
-   virtual ~TGImageMap();
+   ~TGImageMap() override;
 
    Bool_t HandleButton(Event_t *event) override;
    Bool_t HandleDoubleClick(Event_t *event) override;

@@ -59,7 +59,7 @@ public:
    TGSpeedo(const TGWindow *p, Float_t smin, Float_t smax,
             const char *lbl1 = "", const char *lbl2 = "",
             const char *dsp1 = "", const char *dsp2 = "", int id = -1);
-   virtual ~TGSpeedo();
+   ~TGSpeedo() override;
 
    TGDimension          GetDefaultSize() const override;
    Bool_t               HandleButton(Event_t *event) override;

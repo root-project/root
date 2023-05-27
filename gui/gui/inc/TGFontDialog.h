@@ -67,7 +67,7 @@ public:
    TGFontDialog(const TGWindow *parent = nullptr, const TGWindow *t = nullptr,
                 FontProp_t *fontProp = nullptr, const TString &sample = "",
                 char **fontList = nullptr, Bool_t wait = kTRUE);
-   virtual ~TGFontDialog();
+   ~TGFontDialog() override;
 
    virtual void SetFont(TGFont *font);
    virtual void SetColor(Pixel_t color);

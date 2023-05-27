@@ -79,7 +79,7 @@ public:
              const TString& name, const TString& cname, TGString **subnames = nullptr,
              UInt_t options = kChildFrame, Pixel_t back = GetWhitePixel());
 
-   virtual ~TGLVEntry();
+   ~TGLVEntry() override;
 
    virtual void SetViewMode(EListViewMode viewMode);
 
@@ -143,7 +143,7 @@ public:
    TGListView(const TGWindow *p, UInt_t w, UInt_t h,
               UInt_t options = kSunkenFrame | kDoubleBorder,
               Pixel_t back = GetDefaultFrameBackground());
-   virtual ~TGListView();
+   ~TGListView() override;
 
    virtual void   ResizeColumns();
    void           Layout() override;
@@ -200,7 +200,7 @@ public:
    TGLVContainer(TGCanvas *p, UInt_t options = kSunkenFrame,
                  Pixel_t back = GetDefaultFrameBackground());
 
-   virtual ~TGLVContainer();
+   ~TGLVContainer() override;
 
    TGListView  *GetListView() const { return fListView; }
 

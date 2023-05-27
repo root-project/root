@@ -78,7 +78,7 @@ private:
 public:
    TGMenuEntry(): fEntryId(0), fUserData(nullptr), fType(), fStatus(0),
       fEx(0), fEy(0), fEw(0), fEh(0), fLabel(nullptr), fShortcut(nullptr), fPic(nullptr), fPopup(nullptr) { }
-   virtual ~TGMenuEntry() { if (fLabel) delete fLabel; if (fShortcut) delete fShortcut; }
+   ~TGMenuEntry() override { if (fLabel) delete fLabel; if (fShortcut) delete fShortcut; }
 
    Int_t          GetEntryId() const { return fEntryId; }
    const char    *GetName() const override { return fLabel ? fLabel->GetString() : nullptr; }
@@ -160,7 +160,7 @@ private:
 public:
    TGPopupMenu(const TGWindow *p = nullptr, UInt_t w = 10, UInt_t h = 10,
                UInt_t options = 0);
-   virtual ~TGPopupMenu();
+   ~TGPopupMenu() override;
 
    virtual void AddEntry(TGHotString *s, Int_t id, void *ud = nullptr,
                          const TGPicture *p = nullptr, TGMenuEntry *before = nullptr);
@@ -263,7 +263,7 @@ public:
                GContext_t norm = GetDefaultGC()(),
                FontStruct_t font = GetDefaultFontStruct(),
                UInt_t options = 0);
-   virtual ~TGMenuTitle() { if (fLabel) delete fLabel; }
+   ~TGMenuTitle() override { if (fLabel) delete fLabel; }
 
    Pixel_t      GetTextColor() const { return fTextColor; }
    void         SetTextColor(Pixel_t col) { fTextColor = col; }
@@ -310,7 +310,7 @@ private:
 public:
    TGMenuBar(const TGWindow *p = nullptr, UInt_t w = 60, UInt_t h = 20,
              UInt_t options = kHorizontalFrame | kRaisedFrame);
-   virtual ~TGMenuBar();
+   ~TGMenuBar() override;
 
    virtual void AddPopup(TGHotString *s, TGPopupMenu *menu, TGLayoutHints *l,
                          TGPopupMenu *before = nullptr);

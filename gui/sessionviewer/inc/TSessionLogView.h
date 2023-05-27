@@ -31,20 +31,20 @@ private:
 
 public:
    TSessionLogView(TSessionViewer *viewer, UInt_t w, UInt_t h);
-   virtual ~TSessionLogView();
+   ~TSessionLogView() override;
 
    void   AddBuffer(const char *buffer);
    void   LoadBuffer(const char *buffer);
    void   LoadFile(const char *file);
 
-   Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2);
+   Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2) override;
 
-   void   CloseWindow();
+   void   CloseWindow() override;
    void   ClearLogView();
    void   Popup();
    void   SetTitle();
 
-   ClassDef(TSessionLogView, 0)  // PROOF progress dialog
+   ClassDefOverride(TSessionLogView, 0)  // PROOF progress dialog
 };
 
 #endif

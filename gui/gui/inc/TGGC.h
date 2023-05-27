@@ -35,7 +35,7 @@ protected:
 public:
    TGGC(GCValues_t *values = nullptr);
    TGGC(const TGGC &g);
-   virtual ~TGGC();
+   ~TGGC() override;
    TGGC &operator=(const TGGC &rhs);
 
    GContext_t GetGC() const { return fContext; }
@@ -124,7 +124,7 @@ protected:
 
 public:
    TGGCPool(TGClient *client);
-   virtual ~TGGCPool();
+   ~TGGCPool() override;
 
    TGGC *GetGC(GCValues_t *values, Bool_t rw = kFALSE);
    TGGC *GetGC(GContext_t gct);

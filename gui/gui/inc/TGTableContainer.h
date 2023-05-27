@@ -22,7 +22,7 @@ protected:
 
 public:
    TGTableFrame(const TGWindow *p, UInt_t nrows, UInt_t ncolumns);
-   virtual ~TGTableFrame() { delete fFrame; }
+   ~TGTableFrame() override { delete fFrame; }
 
    TGFrame *GetFrame() const { return fFrame; }
 
@@ -44,7 +44,7 @@ public:
    TGTableHeaderFrame(const TGWindow *p, TGTable *table = nullptr, UInt_t w = 1,
                       UInt_t h = 1, EHeaderType type = kColumnHeader,
                       UInt_t option = 0);
-   ~TGTableHeaderFrame() {}
+   ~TGTableHeaderFrame() override {}
 
    virtual void DrawRegion(Int_t x, Int_t y, UInt_t w, UInt_t h);
 

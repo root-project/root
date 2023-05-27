@@ -33,7 +33,7 @@ public:
 
    TGuiBldAction(const char *name = nullptr, const char *title = nullptr,
                  Int_t type = kGuiBldCtor, TGLayoutHints *hints = nullptr);
-   virtual ~TGuiBldAction();
+   ~TGuiBldAction() override;
 
    ClassDefOverride(TGuiBldAction,0)  // gui builder action
 };

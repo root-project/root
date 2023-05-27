@@ -45,7 +45,7 @@ public:
    TGToolBar(const TGWindow *p = nullptr, UInt_t w = 1, UInt_t h = 1,
              UInt_t options = kHorizontalFrame,
              Pixel_t back = GetDefaultFrameBackground());
-   virtual ~TGToolBar();
+   ~TGToolBar() override;
 
    virtual TGButton *AddButton(const TGWindow *w, ToolBarData_t *button, Int_t spacing = 0);
    virtual TGButton *AddButton(const TGWindow *w, TGPictureButton *button, Int_t spacing = 0);

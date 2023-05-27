@@ -32,13 +32,13 @@ public:
    TGSplitter(const TGWindow *p = nullptr, UInt_t w = 2, UInt_t h = 4,
               UInt_t options = kChildFrame,
               Pixel_t back = GetDefaultFrameBackground());
-   virtual ~TGSplitter() { }
+   ~TGSplitter() override { }
 
    virtual void   SetFrame(TGFrame *frame, Bool_t prev) = 0;
 
-   virtual Bool_t HandleButton(Event_t *event) override = 0;
-   virtual Bool_t HandleMotion(Event_t *event) override = 0;
-   virtual Bool_t HandleCrossing(Event_t *event) override = 0;
+   Bool_t HandleButton(Event_t *event) override = 0;
+   Bool_t HandleMotion(Event_t *event) override = 0;
+   Bool_t HandleCrossing(Event_t *event) override = 0;
 
    void DragStarted();      // *SIGNAL*
    void Moved(Int_t delta); // *SIGNAL*
@@ -70,7 +70,7 @@ public:
                UInt_t options = kChildFrame,
                Pixel_t back = GetDefaultFrameBackground());
    TGVSplitter(const TGWindow *p, UInt_t w, UInt_t h, Bool_t external);
-   virtual ~TGVSplitter();
+   ~TGVSplitter() override;
 
    void           DrawBorder() override;
    void           SetFrame(TGFrame *frame, Bool_t left) override;
@@ -107,7 +107,7 @@ public:
                UInt_t options = kChildFrame,
                Pixel_t back = GetDefaultFrameBackground());
    TGHSplitter(const TGWindow *p, UInt_t w, UInt_t h, Bool_t external);
-   virtual ~TGHSplitter();
+   ~TGHSplitter() override;
 
    void           DrawBorder() override;
    void           SetFrame(TGFrame *frame, Bool_t above) override;
@@ -133,7 +133,7 @@ public:
    TGVFileSplitter(const TGWindow *p = nullptr, UInt_t w = 4, UInt_t h = 4,
                UInt_t options = kChildFrame,
                Pixel_t back = GetDefaultFrameBackground());
-   virtual ~TGVFileSplitter();
+   ~TGVFileSplitter() override;
 
    Bool_t HandleDoubleClick(Event_t *) override;
    Bool_t HandleButton(Event_t *event) override;

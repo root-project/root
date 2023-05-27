@@ -42,7 +42,7 @@ public:
    TBrowserPlugin(const char *name, const char *cmd = "", Int_t tab = 1,
                   Int_t sub = -1) : TNamed(name, cmd), fTab(tab),
       fSubTab(sub), fCommand(cmd) { }
-   virtual ~TBrowserPlugin() {}
+   ~TBrowserPlugin() override {}
 
    void     SetTab(Int_t tab) { fTab = tab; }
    void     SetSubTab(Int_t sub) { fSubTab = sub; }
@@ -123,7 +123,7 @@ public:
 
    TRootBrowser(TBrowser *b = nullptr, const char *name = "ROOT Browser", UInt_t width = 800, UInt_t height = 500, Option_t *opt = "", Bool_t initshow = kTRUE);
    TRootBrowser(TBrowser *b, const char *name, Int_t x, Int_t y, UInt_t width, UInt_t height, Option_t *opt = "", Bool_t initshow = kTRUE);
-   virtual ~TRootBrowser();
+   ~TRootBrowser() override;
 
    void              InitPlugins(Option_t *opt="");
 

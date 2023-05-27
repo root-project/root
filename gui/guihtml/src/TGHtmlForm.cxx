@@ -281,7 +281,7 @@ class TGHtmlLBEntry : public TGTextLBEntry {
 public:
    TGHtmlLBEntry(const TGWindow *p, TGString *s, TGString *val, int ID) :
       TGTextLBEntry(p, s, ID) { fVal = val; }
-   virtual ~TGHtmlLBEntry() { if (fVal) delete fVal; }
+   ~TGHtmlLBEntry() override { if (fVal) delete fVal; }
 
    const char *GetValue() const { return fVal ? fVal->GetString() : 0; }
 

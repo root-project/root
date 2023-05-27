@@ -163,7 +163,7 @@ protected:
    void        CreateMinimizationTab();
    void        MakeTitle(TGCompositeFrame *parent, const char *title);
    TF1*        HasFitFunction();
-   void        SetEditable(Bool_t);
+   void        SetEditable(Bool_t) override;
 
 private:
    TFitEditor(const TFitEditor&);              // not implemented
@@ -173,12 +173,12 @@ private:
 
 public:
    TFitEditor(TVirtualPad* pad, TObject *obj);
-   virtual ~TFitEditor();
+   ~TFitEditor() override;
 
    TList*  GetListOfFittingFunctions(TObject *obj = nullptr);
 
    static  TFitEditor *GetInstance(TVirtualPad* pad = nullptr, TObject *obj = nullptr);
-   virtual Option_t  *GetDrawOption() const;
+   Option_t  *GetDrawOption() const override;
    virtual void       Hide();
    virtual void       Show(TVirtualPad* pad, TObject *obj);
 
@@ -187,10 +187,10 @@ public:
    virtual void       Terminate();
            void       UpdateGUI();
 
-   virtual void   CloseWindow();
+   void   CloseWindow() override;
    virtual void   ConnectSlots();
    virtual void   DisconnectSlots();
-   virtual void   RecursiveRemove(TObject* obj);
+   void   RecursiveRemove(TObject* obj) override;
 
 protected:
    virtual void   SetCanvas(TCanvas *c);
@@ -239,7 +239,7 @@ public:
    typedef std::vector<FuncParamData_t > FuncParams_t;
 
    friend class FitEditorUnitTesting;
-   ClassDef(TFitEditor,0)  //Fit Panel interface
+   ClassDefOverride(TFitEditor,0)  //Fit Panel interface
 };
 
 #endif
