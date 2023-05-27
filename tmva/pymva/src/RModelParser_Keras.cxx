@@ -46,6 +46,7 @@ std::unique_ptr<ROperator> MakeKerasActivation(PyObject *fLayer);   // For insta
 std::unique_ptr<ROperator> MakeKerasReLU(PyObject *fLayer);         // For instantiating ROperator for Keras ReLU layer
 std::unique_ptr<ROperator> MakeKerasSelu(PyObject *fLayer);         // For instantiating ROperator for Keras Selu layer
 std::unique_ptr<ROperator> MakeKerasSigmoid(PyObject *fLayer);      // For instantiating ROperator for Keras Sigmoid layer
+std::unique_ptr<ROperator> MakeKerasSwish(PyObject *fLayer);        // For instantiating ROperator for Keras Swish layer
 std::unique_ptr<ROperator> MakeKerasPermute(PyObject *fLayer);      // For instantiating ROperator for Keras Permute Layer
 std::unique_ptr<ROperator> MakeKerasBatchNorm(PyObject *fLayer);    // For instantiating ROperator for Keras Batch Normalization Layer
 std::unique_ptr<ROperator> MakeKerasReshape(PyObject *fLayer);      // For instantiating ROperator for Keras Reshape Layer
@@ -71,6 +72,7 @@ const KerasMethodMap mapKerasLayer = {
    {"BatchNormalization", &MakeKerasBatchNorm},
    {"Reshape", &MakeKerasReshape},
    {"Concatenate", &MakeKerasConcat},
+   {"Swish", &MakeKerasSwish},
    {"Add", &MakeKerasBinary},
    {"Subtract", &MakeKerasBinary},
    {"Multiply", &MakeKerasBinary},
@@ -533,11 +535,37 @@ std::unique_ptr<ROperator> MakeKerasTanh(PyObject* fLayer){
          op.reset(new ROperator_Tanh<float>(fLayerInputName, fLayerOutputName));
          break;
          default:
-         throw std::runtime_error("TMVA::SOFIE - Unsupported - Operator Sigmoid does not yet support input type " + fLayerDType);
+         throw std::runtime_error("TMVA::SOFIE - Unsupported - Operator Tanh does not yet support input type " + fLayerDType);
          }
    return op;
 }
 
+//////////////////////////////////////////////////////////////////////////////////
+/// \brief Prepares a ROperator object for Keras Swish activation
+///
+/// \param[in] fLayer Python Keras layer as a Dictionary object
+/// \return Unique pointer to ROperator object
+///
+/// For instantiating a ROperator_Swish object, the names of
+/// input & output tensors and the data-type of the layer are extracted.
+std::unique_ptr<ROperator> MakeKerasSwish(PyObject* fLayer){
+      PyObject* fInputs  = GetValueFromDict(fLayer,"layerInput");
+      PyObject* fOutputs = GetValueFromDict(fLayer,"layerOutput");
+
+      std::string fLayerDType = PyStringAsString(GetValueFromDict(fLayer,"layerDType"));
+      std::string fLayerInputName  = PyStringAsString(PyList_GetItem(fInputs,0));
+      std::string fLayerOutputName = PyStringAsString(PyList_GetItem(fOutputs,0));
+
+      std::unique_ptr<ROperator> op;
+      switch(ConvertStringToType(fLayerDType)){
+         case ETensorType::FLOAT:
+         op.reset(new ROperator_Swish<float>(fLayerInputName, fLayerOutputName));
+         break;
+         default:
+         throw std::runtime_error("TMVA::SOFIE - Unsupported - Operator Swish does not yet support input type " + fLayerDType);
+         }
+   return op;
+}
 
 //////////////////////////////////////////////////////////////////////////////////
 /// \brief Prepares a ROperator object for Keras Permute layer
