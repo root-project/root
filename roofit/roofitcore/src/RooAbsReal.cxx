@@ -954,29 +954,28 @@ const RooAbsReal *RooAbsReal::createPlotProjection(const RooArgSet &dependentVar
   title.Prepend("Projection of ");
 
 
-  RooAbsReal* projected= theClone->createIntegral(*projectedVars,normSet,rangeName) ;
+  std::unique_ptr<RooAbsReal> projected{theClone->createIntegral(*projectedVars,normSet,rangeName)};
 
-  if(0 == projected || !projected->isValid()) {
+  if(nullptr == projected || !projected->isValid()) {
     coutE(Plotting) << ClassName() << "::" << GetName() << ":createPlotProjection: cannot integrate out ";
     projectedVars->printStream(std::cout,kName|kArgs,kSingleLine);
-    // cleanup and exit
-    if(0 != projected) delete projected;
     return 0;
   }
 
   if(projected->InheritsFrom(RooRealIntegral::Class())){
-    static_cast<RooRealIntegral*>(projected)->setAllowComponentSelection(true);
+    static_cast<RooRealIntegral&>(*projected).setAllowComponentSelection(true);
   }
 
   projected->SetName(name.Data()) ;
   projected->SetTitle(title.Data()) ;
 
   // Add the projection integral to the cloneSet so that it eventually gets cleaned up by the caller.
-  cloneSet->addOwned(*projected);
+  RooAbsReal *projectedPtr = projected.get();
+  cloneSet->addOwned(std::move(projected));
 
   // return a const pointer to remind the caller that they do not delete the returned object
   // directly (it is contained in the cloneSet instead).
-  return projected;
+  return projectedPtr;
 }
 
 

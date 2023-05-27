@@ -835,15 +835,12 @@ std::unique_ptr<RooProdPdf::CacheElem> RooProdPdf::createCacheElem(const RooArgS
         vector<RooAbsReal*> func = processProductTerm(nset, iset, isetRangeName, term, termNSet, termISet, isOwned);
         if (func[0]) {
           cache->_partList.add(*func[0]);
-          if (isOwned) cache->_ownedList.addOwned(*func[0]);
+          if (isOwned) cache->_ownedList.addOwned(std::unique_ptr<RooAbsArg>{func[0]});
 
           cache->_normList.emplace_back(norm->snapshot(false));
 
-          cache->_numList.addOwned(*func[1]);
-          cache->_denList.addOwned(*func[2]);
-//          cout << "func[0]=" << func[0]->ClassName() << "::" << func[0]->GetName() << endl;
-//          cout << "func[1]=" << func[1]->ClassName() << "::" << func[1]->GetName() << endl;
-//          cout << "func[2]=" << func[2]->ClassName() << "::" << func[2]->GetName() << endl;
+          cache->_numList.addOwned(std::unique_ptr<RooAbsArg>{func[1]});
+          cache->_denList.addOwned(std::unique_ptr<RooAbsArg>{func[2]});
         }
       } else {
 //        cout << "processing composite item" << endl;
@@ -870,7 +867,7 @@ std::unique_ptr<RooProdPdf::CacheElem> RooProdPdf::createCacheElem(const RooArgS
 //       cout << GetName() << ": created composite term component " << func[0]->GetName() << endl;
    if (func[0]) {
      compTermSet.add(*func[0]);
-     if (isOwned) cache->_ownedList.addOwned(*func[0]);
+     if (isOwned) cache->_ownedList.addOwned(std::unique_ptr<RooAbsArg>{func[0]});
      compTermNorm.add(*norm, false);
 
      compTermNum.add(*func[1]);
@@ -922,8 +919,9 @@ std::unique_ptr<RooProdPdf::CacheElem> RooProdPdf::createCacheElem(const RooArgS
       cache->_ownedList.addOwned(std::move(prodtmp_num));
       cache->_ownedList.addOwned(std::move(prodtmp_den));
       cache->_numList.addOwned(std::move(numtmp));
-      cache->_denList.addOwned(*(RooAbsArg*)RooFit::RooConst(1).clone("1"));
-      cache->_normList.emplace_back(compTermNorm.snapshot(false));
+      cache->_denList.addOwned(std::unique_ptr<RooAbsArg>{static_cast<RooAbsArg*>(RooFit::RooConst(1).clone("1"))});
+      cache->_normList.emplace_back(std::make_unique<RooArgSet>());
+      compTermNorm.snapshot(*cache->_normList.back(), false);
     }
   }
 

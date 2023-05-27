@@ -501,7 +501,7 @@ RooAbsArg* RooCustomizer::doBuild(const char* masterCatState, bool verbose)
    // Add to one-time use list and life-time use list
    clonedMasterNodes.add(*clone) ;
    if (_owning) {
-     _cloneNodeListOwned->addOwned(*clone) ;
+     _cloneNodeListOwned->addOwned(std::unique_ptr<RooAbsArg>{clone});
    } else {
      _cloneNodeListOwned->add(*clone) ;
    }

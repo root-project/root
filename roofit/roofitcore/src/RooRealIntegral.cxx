@@ -318,10 +318,10 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
       _valid= false;
     }
     if (!function.dependsOn(*arg)) {
-      RooAbsArg* argClone = (RooAbsArg*) arg->Clone() ;
-      _facListOwned.addOwned(*argClone) ;
+      std::unique_ptr<RooAbsArg> argClone{static_cast<RooAbsArg*>(arg->Clone())};
       _facList.add(*argClone) ;
       addServer(*argClone,false,true) ;
+      _facListOwned.addOwned(std::move(argClone));
     }
   }
 
@@ -745,10 +745,10 @@ RooRealIntegral::RooRealIntegral(const RooRealIntegral& other, const char* name)
  _funcNormSet.reset(other._funcNormSet ? static_cast<RooArgSet*>(other._funcNormSet->snapshot(false)) : nullptr);
 
  for (const auto arg : other._facList) {
-   RooAbsArg* argClone = (RooAbsArg*) arg->Clone() ;
-   _facListOwned.addOwned(*argClone) ;
+   std::unique_ptr<RooAbsArg> argClone{static_cast<RooAbsArg*>(arg->Clone())};
    _facList.add(*argClone) ;
    addServer(*argClone,false,true) ;
+   _facListOwned.addOwned(std::move(argClone));
  }
 
  other._intList.snapshot(_saveInt) ;

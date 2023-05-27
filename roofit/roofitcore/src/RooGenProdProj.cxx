@@ -203,7 +203,7 @@ RooAbsReal* RooGenProdProj::makeIntegral(const char* name, const RooArgSet& comp
       Int_t code = pdf->getAnalyticalIntegralWN(anaIntSet,anaSet,0,isetRangeName) ;
       if (code!=0) {
         // Analytical integral, create integral object
-        RooAbsReal* pai = pdf->createIntegral(anaSet,emptyNormSet,isetRangeName) ;
+        std::unique_ptr<RooAbsReal> pai{pdf->createIntegral(anaSet,emptyNormSet,isetRangeName)};
         pai->setOperMode(_operMode) ;
 
         // Add to integral to product
@@ -213,7 +213,7 @@ RooAbsReal* RooGenProdProj::makeIntegral(const char* name, const RooArgSet& comp
         numIntSet.remove(anaSet) ;
 
         // Declare ownership of integral
-        saveSet.addOwned(*pai) ;
+        saveSet.addOwned(std::move(pai));
       } else {
         // Analytic integration of factorizable observable not possible, add straight pdf to product
         prodSet.add(*pdf) ;
