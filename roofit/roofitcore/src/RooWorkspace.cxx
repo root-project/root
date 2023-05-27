@@ -674,7 +674,7 @@ bool RooWorkspace::import(const RooAbsArg& inArg,
       recycledNodes.add(*_allOwnedNodes.find(node->GetName())) ;
 
       // Delete clone of incoming node
-      nodesToBeDeleted.addOwned(*node) ;
+      nodesToBeDeleted.addOwned(std::unique_ptr<RooAbsArg>{node});
 
       //cout << "WV: recycling existing node " << existingNode << " = " << existingNode->GetName() << " for imported node " << node << endl ;
 
@@ -684,7 +684,7 @@ bool RooWorkspace::import(const RooAbsArg& inArg,
         coutI(ObjectHandling) << "RooWorkspace::import(" << GetName() << ") importing " << node->ClassName() << "::"
             << node->GetName() << endl ;
       }
-      _allOwnedNodes.addOwned(*node) ;
+      _allOwnedNodes.addOwned(std::unique_ptr<RooAbsArg>{node});
       if (_openTrans) {
         _sandboxNodes.add(*node) ;
       } else {

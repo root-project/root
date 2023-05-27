@@ -244,10 +244,9 @@ bool RooRandomizeParamMCSModule::initializeInstance()
     uiter->_param = actualPar ;
 
     // Add variable to summary dataset to hold generator value
-    TString parName = Form("%s_gen",uiter->_param->GetName()) ;
-    TString parTitle = Form("%s as generated",uiter->_param->GetTitle()) ;
-    RooRealVar* par_gen = new RooRealVar(parName.Data(),parTitle.Data(),0) ;
-    _genParSet.addOwned(*par_gen) ;
+    std::string parName = std::string(uiter->_param->GetName()) + "_gen";
+    std::string parTitle = std::string(uiter->_param->GetTitle()) + " as generated";
+    _genParSet.addOwned(std::make_unique<RooRealVar>(parName.c_str(),parTitle.c_str(),0));
   }
 
   // Loop over all gaussian smearing parameters
@@ -264,10 +263,9 @@ bool RooRandomizeParamMCSModule::initializeInstance()
     giter->_param = actualPar ;
 
     // Add variable to summary dataset to hold generator value
-    TString parName = Form("%s_gen",giter->_param->GetName()) ;
-    TString parTitle = Form("%s as generated",giter->_param->GetTitle()) ;
-    RooRealVar* par_gen = new RooRealVar(parName.Data(),parTitle.Data(),0) ;
-    _genParSet.addOwned(*par_gen) ;
+    std::string parName = std::string(giter->_param->GetName()) + "_gen";
+    std::string parTitle = std::string(giter->_param->GetTitle()) + " as generated";
+    _genParSet.addOwned(std::make_unique<RooRealVar>(parName.c_str(),parTitle.c_str(),0));
   }
 
 
@@ -290,10 +288,9 @@ bool RooRandomizeParamMCSModule::initializeInstance()
 
     // Add variables to summary dataset to hold generator values
     for(auto * param : static_range_cast<RooRealVar*>(usiter->_pset)) {
-      TString parName = Form("%s_gen",param->GetName()) ;
-      TString parTitle = Form("%s as generated",param->GetTitle()) ;
-      RooRealVar* par_gen = new RooRealVar(parName.Data(),parTitle.Data(),0) ;
-      _genParSet.addOwned(*par_gen) ;
+      std::string parName = std::string(param->GetName()) + "_gen";
+      std::string parTitle = std::string(param->GetTitle()) + " as generated";
+      _genParSet.addOwned(std::make_unique<RooRealVar>(parName.c_str(),parTitle.c_str(),0));
     }
   }
 
@@ -317,10 +314,9 @@ bool RooRandomizeParamMCSModule::initializeInstance()
 
     // Add variables to summary dataset to hold generator values
     for(auto * param : static_range_cast<RooRealVar*>(ugiter->_pset)) {
-      TString parName = Form("%s_gen",param->GetName()) ;
-      TString parTitle = Form("%s as generated",param->GetTitle()) ;
-      RooRealVar* par_gen = new RooRealVar(parName.Data(),parTitle.Data(),0) ;
-      _genParSet.addOwned(*par_gen) ;
+      std::string parName = std::string(param->GetName()) + "_gen";
+      std::string parTitle = std::string(param->GetTitle()) + " as generated";
+      _genParSet.addOwned(std::make_unique<RooRealVar>(parName.c_str(),parTitle.c_str(),0));
     }
   }
 
