@@ -72,7 +72,7 @@ const KerasMethodMap mapKerasLayer = {
    {"BatchNormalization", &MakeKerasBatchNorm},
    {"Reshape", &MakeKerasReshape},
    {"Concatenate", &MakeKerasConcat},
-   {"Swish", &MakeKerasSwish},
+   {"swish", &MakeKerasSwish},
    {"Add", &MakeKerasBinary},
    {"Subtract", &MakeKerasBinary},
    {"Multiply", &MakeKerasBinary},
