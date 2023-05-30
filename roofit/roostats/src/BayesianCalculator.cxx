@@ -913,7 +913,7 @@ RooAbsReal* BayesianCalculator::GetPosteriorFunction() const
       }
       else
          // case of using RooFit for the integration
-         fIntegratedLikelihood = fLikelihood->createIntegral(fNuisanceParameters);
+         fIntegratedLikelihood = std::unique_ptr<RooAbsReal>{fLikelihood->createIntegral(fNuisanceParameters)}.release();
 
 
    }

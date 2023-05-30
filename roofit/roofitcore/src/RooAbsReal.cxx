@@ -521,7 +521,7 @@ RooAbsReal* RooAbsReal::createProfile(const RooArgSet& paramsOfInterest)
 /// | `NumIntConfig(const RooNumIntConfig&)` | Use given configuration for any numeric integration, if necessary
 /// | `Range(const char* name)`              | Integrate only over given range. Multiple ranges may be specified by passing multiple Range() arguments
 
-RooAbsReal* RooAbsReal::createIntegral(const RooArgSet& iset, const RooCmdArg& arg1, const RooCmdArg& arg2,
+RooFit::OwningPtr<RooAbsReal> RooAbsReal::createIntegral(const RooArgSet& iset, const RooCmdArg& arg1, const RooCmdArg& arg2,
                    const RooCmdArg& arg3, const RooCmdArg& arg4, const RooCmdArg& arg5,
                    const RooCmdArg& arg6, const RooCmdArg& arg7, const RooCmdArg& arg8) const
 {
@@ -562,12 +562,12 @@ RooAbsReal* RooAbsReal::createIntegral(const RooArgSet& iset, const RooCmdArg& a
 /// aspect of the integral. It will not force the integral to be performed numerically, which is
 /// decided automatically by RooRealIntegral.
 
-RooAbsReal* RooAbsReal::createIntegral(const RooArgSet& iset, const RooArgSet* nset,
+RooFit::OwningPtr<RooAbsReal> RooAbsReal::createIntegral(const RooArgSet& iset, const RooArgSet* nset,
                    const RooNumIntConfig* cfg, const char* rangeName) const
 {
   if (!rangeName || strchr(rangeName,',')==0) {
     // Simple case: integral over full range or single limited range
-    return createIntObj(iset,nset,cfg,rangeName) ;
+    return RooFit::OwningPtr<RooAbsReal>{createIntObj(iset,nset,cfg,rangeName)};
   }
 
   // Integral over multiple ranges
@@ -594,7 +594,7 @@ RooAbsReal* RooAbsReal::createIntegral(const RooArgSet& iset, const RooArgSet* n
   TString fullName(GetName()) ;
   fullName.Append(integralNameSuffix(iset,nset,rangeName)) ;
 
-  return new RooAddition(fullName.Data(),title.Data(),components,true) ;
+  return RooFit::OwningPtr<RooAbsReal>{new RooAddition(fullName.Data(), title.Data(), components, true)};
 }
 
 
@@ -3920,8 +3920,8 @@ RooFit::OwningPtr<RooAbsReal> RooAbsReal::createRunningIntegral(const RooArgSet&
     return createScanRI(iset,nset,numScanBins,intOrder) ;
   }
   if (doScanNum) {
-    std::unique_ptr<RooRealIntegral> tmp{static_cast<RooRealIntegral*>(createIntegral(iset))};
-    Int_t isNum= (tmp->numIntRealVars().size()==1) ;
+    std::unique_ptr<RooAbsReal> tmp{createIntegral(iset)} ;
+    Int_t isNum= !static_cast<RooRealIntegral&>(*tmp).numIntRealVars().empty();
 
     if (isNum) {
       coutI(NumIntegration) << "RooAbsPdf::createRunningIntegral(" << GetName() << ") integration over observable(s) " << iset << " involves numeric integration," << std::endl
@@ -3932,7 +3932,7 @@ RooFit::OwningPtr<RooAbsReal> RooAbsReal::createRunningIntegral(const RooArgSet&
 
     return isNum ? createScanRI(iset,nset,numScanBins,intOrder) : createIntRI(iset,nset) ;
   }
-  return 0 ;
+  return nullptr;
 }
 
 
