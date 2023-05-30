@@ -70,15 +70,6 @@ RooBinnedGenContext::RooBinnedGenContext(const RooAbsPdf &model, const RooArgSet
   _pdf->recursiveRedirectServers(_theEvent) ;
   _vars = std::unique_ptr<RooArgSet>{_pdf->getObservables(vars)};
 
-  // If pdf has boundary definitions, follow those for the binning
-  for (auto* rvar: dynamic_range_cast<RooRealVar*>(*_vars)) {
-    if (rvar) {
-      list<double>* binb = model.binBoundaries(*rvar,rvar->getMin(),rvar->getMax()) ;
-      delete binb ;
-    }
-  }
-
-
   // Create empty RooDataHist
   _hist = std::make_unique<RooDataHist>("genData","genData",*_vars);
 
