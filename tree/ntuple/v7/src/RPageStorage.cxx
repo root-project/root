@@ -38,12 +38,7 @@ ROOT::Experimental::Detail::RPageStorage::RPageStorage(std::string_view name) : 
 {
 }
 
-ROOT::Experimental::Detail::RPageStorage::~RPageStorage()
-{
-   // Wait for unterminated tasks, if any, as they may still hold a reference to `this`
-   WaitForAllTasks();
-}
-
+ROOT::Experimental::Detail::RPageStorage::~RPageStorage() {}
 
 //------------------------------------------------------------------------------
 
