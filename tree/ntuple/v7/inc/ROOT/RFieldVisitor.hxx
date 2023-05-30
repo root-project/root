@@ -69,6 +69,7 @@ public:
    virtual void VisitVectorField(const RVectorField &field) { VisitField(field); }
    virtual void VisitVectorBoolField(const RField<std::vector<bool>> &field) { VisitField(field); }
    virtual void VisitRVecField(const RRVecField &field) { VisitField(field); }
+   virtual void VisitSetField(const RSetField &field) { VisitField(field); }
 }; // class RFieldVisitor
 
 } // namespace Detail
@@ -221,6 +222,7 @@ public:
    void VisitBitsetField(const RBitsetField &field) final;
    void VisitNullableField(const RNullableField &field) final;
    void VisitEnumField(const REnumField &field) final;
+   void VisitSetField(const RSetField &field) final;
 };
 
 
