@@ -66,7 +66,7 @@ public:
    Float_t   GetTextMagnitude() override;
    Window_t  GetWindowID(Int_t wid) override;
    Bool_t    HasTTFonts() const override;
-   Int_t     InitWindow(ULong_t window) override;
+   Int_t     InitWindow(ULongptr_t window) override;
    void      MoveWindow(Int_t wid, Int_t x, Int_t y) override;
    Int_t     OpenPixmap(UInt_t w, UInt_t h) override;
    void      QueryPointer(Int_t &ix, Int_t &iy) override;
@@ -259,8 +259,8 @@ public:
    void         DeleteImage(Drawable_t img) override;
    unsigned char *GetColorBits(Drawable_t wid, Int_t x, Int_t y, UInt_t width, UInt_t height) override;
    Pixmap_t     CreatePixmapFromData(unsigned char *bits, UInt_t width, UInt_t height) override;
-   Int_t        AddWindow(ULong_t qwid, UInt_t w, UInt_t h) override;
-   void         RemoveWindow(ULong_t qwid) override;
+   Int_t        AddWindow(ULongptr_t qwid, UInt_t w, UInt_t h) override;
+   void         RemoveWindow(ULongptr_t qwid) override;
    void         ShapeCombineMask(Window_t id, Int_t x, Int_t y, Pixmap_t mask) override;
 
    void         DeleteProperty(Window_t, Atom_t&) override;
