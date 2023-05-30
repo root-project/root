@@ -68,24 +68,26 @@ RooFirstMoment::RooFirstMoment(const char* name, const char* title, RooAbsReal& 
 {
   setExpensiveObjectCache(func.expensiveObjectCache()) ;
 
-  string pname=Form("%s_product",name) ;
+  std::string pname = std::string(name) + "_product";
 
-  RooProduct* XF = new RooProduct(pname.c_str(),pname.c_str(),RooArgSet(x,func)) ;
+  auto XF = std::make_unique<RooProduct>(pname.c_str(),pname.c_str(),RooArgSet(x,func));
   XF->setExpensiveObjectCache(func.expensiveObjectCache()) ;
 
   if (func.isBinnedDistribution(x)) {
     XF->specialIntegratorConfig(true)->method1D().setLabel("RooBinIntegrator");
   }
 
-  RooRealIntegral* intXF = (RooRealIntegral*) XF->createIntegral(x) ;
-  RooRealIntegral* intF =  (RooRealIntegral*) func.createIntegral(x) ;
-  intXF->setCacheNumeric(true) ;
-  intF->setCacheNumeric(true) ;
+  std::unique_ptr<RooAbsReal> intXF{XF->createIntegral(x)};
+  std::unique_ptr<RooAbsReal> intF{func.createIntegral(x)};
+  static_cast<RooRealIntegral&>(*intXF).setCacheNumeric(true) ;
+  static_cast<RooRealIntegral&>(*intF).setCacheNumeric(true) ;
 
   _xf.setArg(*XF) ;
   _ixf.setArg(*intXF) ;
   _if.setArg(*intF) ;
-  addOwnedComponents(RooArgSet(*XF,*intXF,*intF)) ;
+  addOwnedComponents(std::move(XF)) ;
+  addOwnedComponents(std::move(intXF));
+  addOwnedComponents(std::move(intF));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -100,9 +102,9 @@ RooFirstMoment::RooFirstMoment(const char* name, const char* title, RooAbsReal& 
 
   _nset.add(nset) ;
 
-  string pname=Form("%s_product",name) ;
+  std::string pname = std::string(name) + "_product";
 
-  RooProduct* XF = new RooProduct(pname.c_str(),pname.c_str(),RooArgSet(x,func)) ;
+  auto XF = std::make_unique<RooProduct>(pname.c_str(),pname.c_str(),RooArgSet(x,func)) ;
   XF->setExpensiveObjectCache(func.expensiveObjectCache()) ;
 
   if (func.isBinnedDistribution(x)) {
@@ -116,15 +118,17 @@ RooFirstMoment::RooFirstMoment(const char* name, const char* title, RooAbsReal& 
 
   RooArgSet intSet(x) ;
   if (intNSet) intSet.add(_nset,true) ;
-  RooRealIntegral* intXF = (RooRealIntegral*) XF->createIntegral(intSet,&_nset) ;
-  RooRealIntegral* intF =  (RooRealIntegral*) func.createIntegral(intSet,&_nset) ;
-  intXF->setCacheNumeric(true) ;
-  intF->setCacheNumeric(true) ;
+  std::unique_ptr<RooAbsReal> intXF{XF->createIntegral(intSet, &_nset)};
+  std::unique_ptr<RooAbsReal> intF{func.createIntegral(intSet, &_nset)};
+  static_cast<RooRealIntegral&>(*intXF).setCacheNumeric(true) ;
+  static_cast<RooRealIntegral&>(*intF).setCacheNumeric(true) ;
 
   _xf.setArg(*XF) ;
   _ixf.setArg(*intXF) ;
   _if.setArg(*intF) ;
-  addOwnedComponents(RooArgSet(*XF,*intXF,*intF)) ;
+  addOwnedComponents(std::move(XF)) ;
+  addOwnedComponents(std::move(intXF));
+  addOwnedComponents(std::move(intF));
 }
 
 

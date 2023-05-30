@@ -2121,15 +2121,15 @@ std::string RooFactoryWSTool::SpecialsIFace::create(RooFactoryWSTool& ft, const 
     std::unique_ptr<RooAbsReal> integral;
     if (pargv.size()==2) {
       if (range && strlen(range)) {
-        integral.reset(func.createIntegral(ft.asSET(intobs),Range(range)));
+        integral = std::unique_ptr<RooAbsReal>{func.createIntegral(ft.asSET(intobs),Range(range))};
       } else {
-        integral.reset(func.createIntegral(ft.asSET(intobs)));
+        integral = std::unique_ptr<RooAbsReal>{func.createIntegral(ft.asSET(intobs))};
       }
     } else {
       if (range && strlen(range)) {
-        integral.reset(func.createIntegral(ft.asSET(intobs),Range(range),NormSet(ft.asSET(pargv[2].c_str()))));
+        integral = std::unique_ptr<RooAbsReal>{func.createIntegral(ft.asSET(intobs),Range(range),NormSet(ft.asSET(pargv[2].c_str())))};
       } else {
-        integral.reset(func.createIntegral(ft.asSET(intobs),NormSet(ft.asSET(pargv[2].c_str()))));
+        integral = std::unique_ptr<RooAbsReal>{func.createIntegral(ft.asSET(intobs),NormSet(ft.asSET(pargv[2].c_str())))};
       }
     }
 

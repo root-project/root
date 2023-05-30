@@ -524,7 +524,7 @@ const RooAbsReal* RooAbsPdf::getNormObj(const RooArgSet* nset, const RooArgSet* 
   // If not create it now
   RooArgSet depList;
   getObservables(iset, depList);
-  RooAbsReal* norm = createIntegral(depList,*nset, *getIntegratorConfig(), RooNameReg::str(rangeName)) ;
+  RooAbsReal* norm = std::unique_ptr<RooAbsReal>{createIntegral(depList,*nset, *getIntegratorConfig(), RooNameReg::str(rangeName))}.release();
 
   // Store it in the cache
   cache = new CacheElem(*norm) ;
@@ -600,7 +600,7 @@ bool RooAbsPdf::syncNormalization(const RooArgSet* nset, bool adjustProxies) con
     const char* nr = (_normRangeOverride.Length()>0 ? _normRangeOverride.Data() : (_normRange.Length()>0 ? _normRange.Data() : 0)) ;
 
 //     cout << "RooAbsPdf::syncNormalization(" << GetName() << ") rangeName for normalization is " << (nr?nr:"<null>") << endl ;
-    RooAbsReal* normInt = createIntegral(depList,*getIntegratorConfig(),nr) ;
+    RooAbsReal* normInt = std::unique_ptr<RooAbsReal>{createIntegral(depList,*getIntegratorConfig(),nr)}.release();
     normInt->getVal() ;
 //     cout << "resulting normInt = " << normInt->GetName() << endl ;
 
@@ -3340,8 +3340,8 @@ RooFit::OwningPtr<RooAbsReal> RooAbsPdf::createCdf(const RooArgSet& iset, const 
     return createScanCdf(iset,nset,numScanBins,intOrder) ;
   }
   if (doScanNum) {
-    std::unique_ptr<RooRealIntegral> tmp{static_cast<RooRealIntegral*>(createIntegral(iset))} ;
-    Int_t isNum= (tmp->numIntRealVars().getSize()>0) ;
+    std::unique_ptr<RooAbsReal> tmp{createIntegral(iset)} ;
+    Int_t isNum= !static_cast<RooRealIntegral&>(*tmp).numIntRealVars().empty();
 
     if (isNum) {
       coutI(NumIntegration) << "RooAbsPdf::createCdf(" << GetName() << ") integration over observable(s) " << iset << " involves numeric integration," << endl
