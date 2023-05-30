@@ -183,7 +183,7 @@ RooAbsCachedReal::FuncCacheElem::FuncCacheElem(const RooAbsCachedReal& self, con
   _cacheSource = false ;
   _sourceClone = 0 ;
 
-  RooArgSet* nset2 = self.actualObservables(nset?*nset:RooArgSet()) ;
+  std::unique_ptr<RooArgSet> nset2{self.actualObservables(nset?*nset:RooArgSet())};
 
   RooArgSet orderedObs ;
   self.preferredObservableScanOrder(*nset2,orderedObs) ;
@@ -194,7 +194,7 @@ RooAbsCachedReal::FuncCacheElem::FuncCacheElem(const RooAbsCachedReal& self, con
   _hist = new RooDataHist(hname,hname,*nset2,self.binningName()) ;
   _hist->removeSelfFromDir() ;
 
-  RooArgSet* observables= self.actualObservables(*nset2) ;
+  std::unique_ptr<RooArgSet> observables{self.actualObservables(*nset2)};
 
   // Create RooHistFunc
   TString funcname = self.inputBaseName() ;
@@ -215,9 +215,6 @@ RooAbsCachedReal::FuncCacheElem::FuncCacheElem(const RooAbsCachedReal& self, con
   // Introduce formal dependency of RooHistFunc on parameters so that const optimization code
   // makes the correct decisions
   _func->addServerList(*params) ;
-
-  delete observables ;
-  delete nset2 ;
 }
 
 

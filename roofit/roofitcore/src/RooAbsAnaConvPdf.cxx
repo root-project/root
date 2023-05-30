@@ -259,10 +259,9 @@ RooAbsGenContext* RooAbsAnaConvPdf::genContext(const RooArgSet &vars, const RooD
   RooResolutionModel* conv = dynamic_cast<RooResolutionModel*>(_model.absArg());
   assert(conv);
 
-  RooArgSet* modelDep = _model.absArg()->getObservables(&vars) ;
+  std::unique_ptr<RooArgSet> modelDep {_model->getObservables(&vars)};
   modelDep->remove(*convVar(),true,true) ;
   Int_t numAddDep = modelDep->getSize() ;
-  delete modelDep ;
 
   // Check if physics PDF and resolution model can both directly generate the convolution variable
   RooArgSet dummy ;

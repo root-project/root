@@ -47,7 +47,7 @@ protected:
   const char* binningName() const override { return _binningName.c_str() ; }
   FuncCacheElem* createCache(const RooArgSet* nset) const override ;
   const char* inputBaseName() const override ;
-  RooArgSet* actualObservables(const RooArgSet& nset) const override ;
+  RooFit::OwningPtr<RooArgSet> actualObservables(const RooArgSet& nset) const override ;
   RooFit::OwningPtr<RooArgSet> actualParameters(const RooArgSet& nset) const override ;
   void fillCacheObject(FuncCacheElem& cacheFunc) const override ;
   double evaluate() const override ;

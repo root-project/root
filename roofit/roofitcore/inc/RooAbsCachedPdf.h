@@ -103,7 +103,7 @@ public:
     return new PdfCacheElem(*this,nset) ;
   }
   virtual const char* inputBaseName() const = 0 ;
-  virtual RooArgSet* actualObservables(const RooArgSet& nset) const = 0 ;
+  virtual RooFit::OwningPtr<RooArgSet> actualObservables(const RooArgSet& nset) const = 0 ;
   virtual RooFit::OwningPtr<RooArgSet> actualParameters(const RooArgSet& nset) const = 0 ;
   virtual RooAbsArg& pdfObservable(RooAbsArg& histObservable) const { return histObservable ; }
   virtual void fillCacheObject(PdfCacheElem& cache) const = 0 ;

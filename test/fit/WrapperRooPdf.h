@@ -22,8 +22,7 @@ public:
     */
    WrapperRooPdf(RooAbsPdf * pdf, const std::string xvar = "x", bool norm = true) :
       fNorm(norm),
-      fPdf(pdf),
-      fX(0)
+      fPdf(pdf)
    {
       assert(fPdf != nullptr);
 
@@ -33,7 +32,7 @@ public:
       assert(arg != nullptr);
       RooArgSet obsList(*arg);
       //arg.setDirtyInhibit(true); // do have faster setter of values
-      fX = fPdf->getObservables(obsList);
+      fX = std::unique_ptr<RooArgSet>{fPdf->getObservables(obsList)};
       fParams = std::unique_ptr<RooArgSet>{fPdf->getParameters(obsList)};
       assert(fX != nullptr);
       assert(fParams != nullptr);
@@ -51,12 +50,11 @@ public:
     */
    WrapperRooPdf(RooAbsPdf * pdf, const RooArgSet & obsList, bool norm = true ) :
       fNorm(norm),
-      fPdf(pdf),
-      fX(nullptr)
+      fPdf(pdf)
    {
       assert(fPdf != nullptr);
 
-      fX = fPdf->getObservables(obsList);
+      fX = std::unique_ptr<RooArgSet>{fPdf->getObservables(obsList)};
       fParams = std::unique_ptr<RooArgSet>{fPdf->getParameters(obsList)};
       assert(fX != nullptr);
       assert(fParams != nullptr);
@@ -74,11 +72,6 @@ public:
 
    }
 
-
-   ~WrapperRooPdf() override {
-      // need to delete observables and parameter list
-      if (fX) delete fX;
-   }
 
    /**
       clone the function
@@ -177,7 +170,7 @@ private:
       //fX->Print("v");
 
       if (fNorm)
-         return fPdf->getVal(fX);
+         return fPdf->getVal(fX.get());
       else
          return fPdf->getVal();  // get unnormalized value
 
@@ -199,7 +192,7 @@ private:
 
    bool fNorm;
    mutable RooAbsPdf * fPdf;
-   mutable RooArgSet * fX;
+   mutable std::unique_ptr<RooArgSet> fX;
    mutable std::unique_ptr<RooArgSet> fParams;
    mutable std::vector<double> fParamValues;
 
