@@ -157,8 +157,8 @@ private:
 
   CacheElem* getCacheElem(RooArgSet const* nset) const ;
   void rearrangeProduct(CacheElem&) const;
-  RooAbsReal* specializeIntegral(RooAbsReal& orig, const char* targetRangeName) const ;
-  RooAbsReal* specializeRatio(RooFormulaVar& input, const char* targetRangeName) const ;
+  std::unique_ptr<RooAbsReal> specializeIntegral(RooAbsReal& orig, const char* targetRangeName) const ;
+  std::unique_ptr<RooAbsReal> specializeRatio(RooFormulaVar& input, const char* targetRangeName) const ;
   double calculate(const RooProdPdf::CacheElem& cache, bool verbose=false) const ;
   void calculateBatch(const RooProdPdf::CacheElem& cache, cudaStream_t*, double* output, size_t nEvents, RooFit::Detail::DataMap const&) const;
 
