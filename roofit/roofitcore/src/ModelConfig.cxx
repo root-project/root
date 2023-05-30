@@ -89,15 +89,12 @@ void ModelConfig::GuessObsAndNuisance(const RooAbsData &data, bool printModelCon
 
    // observables
    if (!GetObservables()) {
-      const RooArgSet *obs = GetPdf()->getObservables(data);
-      SetObservables(*obs);
-      delete obs;
+      SetObservables(*std::unique_ptr<RooArgSet>{GetPdf()->getObservables(data)});
    }
    // global observables
    if (!GetGlobalObservables()) {
       RooArgSet co(*GetObservables());
-      const RooArgSet *obs = GetPdf()->getObservables(data);
-      co.remove(*obs);
+      co.remove(*std::unique_ptr<RooArgSet>{GetPdf()->getObservables(data)});
       removeConstantParameters(co);
       if (!co.empty())
          SetGlobalObservables(co);
@@ -108,7 +105,6 @@ void ModelConfig::GuessObsAndNuisance(const RooAbsData &data, bool printModelCon
       o.remove(co);
       SetObservables(o);
       */
-      delete obs;
    }
 
    // parameters

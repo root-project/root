@@ -93,9 +93,8 @@ RooSimSplitGenContext::RooSimSplitGenContext(const RooSimultaneous &model, const
     auto pdf = static_cast<RooAbsPdf*>(proxy->absArg());
 
     // Create generator context for this PDF
-    RooArgSet* compVars = pdf->getObservables(pdfVars) ;
+    std::unique_ptr<RooArgSet> compVars{pdf->getObservables(pdfVars)};
     RooAbsGenContext* cx = pdf->autoGenContext(*compVars,0,0,verbose,autoBinned,binnedTag) ;
-    delete compVars ;
 
     const auto state = idxCat.lookupIndex(proxy->name());
 
