@@ -1,5 +1,5 @@
 import { select as d3_select, drag as d3_drag } from '../d3.mjs';
-import { browser, internals, toJSON, settings, isFunc, isStr } from '../core.mjs';
+import { browser, internals, toJSON, settings, isObject, isFunc, isStr } from '../core.mjs';
 import { compressSVG, BasePainter } from '../base/BasePainter.mjs';
 import { getElementCanvPainter, selectActivePad, cleanup, resize, ObjectPainter } from '../base/ObjectPainter.mjs';
 import { createMenu } from './menu.mjs';
@@ -1492,7 +1492,7 @@ class BrowserLayout {
 
    /** @summary Show status information inside special fields of browser layout */
    showStatus(...msgs) {
-      if (!this.status_layout) return;
+      if (!isObject(this.status_layout) || !isFunc(this.status_layout.getGridFrame)) return;
 
       let maxh = 0;
       for (let n = 0; n < 4; ++n) {
