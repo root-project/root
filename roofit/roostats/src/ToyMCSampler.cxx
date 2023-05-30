@@ -291,15 +291,13 @@ SamplingDistribution* ToyMCSampler::GetSamplingDistribution(RooArgSet& paramPoin
       }
    }
 
-   RooDataSet* r = GetSamplingDistributions(paramPointIn);
+   std::unique_ptr<RooDataSet> r{GetSamplingDistributions(paramPointIn)};
    if(r == nullptr || r->numEntries() == 0) {
       oocoutW(nullptr, Generation) << "no sampling distribution generated" << endl;
       return nullptr;
    }
 
-   SamplingDistribution* samp = new SamplingDistribution( r->GetName(), r->GetTitle(), *r );
-   delete r;
-   return samp;
+   return new SamplingDistribution( r->GetName(), r->GetTitle(), *r );
 }
 
 ////////////////////////////////////////////////////////////////////////////////
