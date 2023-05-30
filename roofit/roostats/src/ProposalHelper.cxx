@@ -77,10 +77,8 @@ ProposalFunction* ProposalHelper::GetProposalFunction()
 {
    if (fPdf == nullptr)
       CreatePdf();
-   // kbelasco: check here for memory leaks: does RooAddPdf make copies or
-   // take ownership of components, coeffs
-   RooArgList* components = new RooArgList();
-   RooArgList* coeffs = new RooArgList();
+   RooArgList components;
+   RooArgList coeffs;
    if (fCluesPdf == nullptr)
       CreateCluesPdf();
    if (fCluesPdf != nullptr) {
@@ -88,17 +86,17 @@ ProposalFunction* ProposalHelper::GetProposalFunction()
          fCluesFrac = DEFAULT_CLUES_FRAC;
       printf("added clues from dataset %s with fraction %g\n",
             fClues->GetName(), fCluesFrac);
-      components->add(*fCluesPdf);
-      coeffs->add(RooConst(fCluesFrac));
+      components.add(*fCluesPdf);
+      coeffs.add(RooConst(fCluesFrac));
    }
    if (fUniFrac > 0.) {
       CreateUniformPdf();
-      components->add(*fUniformPdf);
-      coeffs->add(RooConst(fUniFrac));
+      components.add(*fUniformPdf);
+      coeffs.add(RooConst(fUniFrac));
    }
-   components->add(*fPdf);
+   components.add(*fPdf);
    RooAddPdf* addPdf = new RooAddPdf("proposalFunction", "Proposal Density",
-         *components, *coeffs);
+         components, coeffs);
    fPdfProp->SetPdf(*addPdf);
    fPdfProp->SetOwnsPdf(true);
    if (fCacheSize > 0)
