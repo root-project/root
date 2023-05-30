@@ -947,12 +947,13 @@ std::unique_ptr<RooProdPdf::CacheElem> RooProdPdf::createCacheElem(const RooArgS
 
 std::unique_ptr<RooAbsReal> RooProdPdf::makeCondPdfRatioCorr(RooAbsReal& pdf, const RooArgSet& termNset, const RooArgSet& /*termImpSet*/, const char* normRangeTmp, const char* refRange) const
 {
-  RooAbsReal* ratio_num = pdf.createIntegral(termNset,normRangeTmp) ;
-  RooAbsReal* ratio_den = pdf.createIntegral(termNset,refRange) ;
+  std::unique_ptr<RooAbsReal> ratio_num{pdf.createIntegral(termNset,normRangeTmp)};
+  std::unique_ptr<RooAbsReal> ratio_den{pdf.createIntegral(termNset,refRange)};
   auto ratio = std::make_unique<RooFormulaVar>(Form("ratio(%s,%s)",ratio_num->GetName(),ratio_den->GetName()),"@0/@1",
                   RooArgList(*ratio_num,*ratio_den)) ;
 
-  ratio->addOwnedComponents(RooArgSet(*ratio_num,*ratio_den)) ;
+  ratio->addOwnedComponents(std::move(ratio_num));
+  ratio->addOwnedComponents(std::move(ratio_den));
   ratio->setAttribute("RATIO_TERM") ;
   return ratio ;
 }
@@ -980,7 +981,7 @@ void RooProdPdf::rearrangeProduct(RooProdPdf::CacheElem& cache) const
   }
 
 
-  map<string,RooArgSet> denListList ;
+  std::map<std::string,RooArgSet> denListList ;
   RooArgSet specIntDeps ;
   string specIntRange ;
 
@@ -1084,7 +1085,7 @@ void RooProdPdf::rearrangeProduct(RooProdPdf::CacheElem& cache) const
 //        cout << "depends in value of ratio" << endl ;
 
        // Make specialize ratio instance
-       RooAbsReal* specializedRatio = specializeRatio(*(RooFormulaVar*)ratio,iter->c_str()) ;
+       std::unique_ptr<RooAbsReal> specializedRatio{specializeRatio(*(RooFormulaVar*)ratio,iter->c_str())};
 
 //        cout << "specRatio = " << endl ;
 //        specializedRatio->printComponentTree() ;
@@ -1111,19 +1112,21 @@ void RooProdPdf::rearrangeProduct(RooProdPdf::CacheElem& cache) const
 //        cout << "customized function = " << endl ;
 //        partCust->printComponentTree() ;
 
-       RooAbsReal* specializedPartCust = specializeIntegral(*(RooAbsReal*)partCust,iter->c_str()) ;
+       std::unique_ptr<RooAbsReal> specializedPartCust{specializeIntegral(*(RooAbsReal*)partCust,iter->c_str())};
 
        // Finally divide again by ratio
        string name = Form("%s_divided_by_ratio",specializedPartCust->GetName()) ;
-       RooFormulaVar* specIntFinal = new RooFormulaVar(name.c_str(),"@0/@1",RooArgList(*specializedPartCust,*specializedRatio)) ;
+       auto specIntFinal = std::make_unique<RooFormulaVar>(name.c_str(),"@0/@1",RooArgList(*specializedPartCust,*specializedRatio)) ;
+       specIntFinal->addOwnedComponents(std::move(specializedPartCust));
+       specIntFinal->addOwnedComponents(std::move(specializedRatio));
 
-       denListList[*iter].add(*specIntFinal) ;
+       denListList[*iter].addOwned(std::move(specIntFinal));
      } else {
 
 //        cout << "does NOT depend on value of ratio" << endl ;
 //        parg->Print("t") ;
 
-       denListList[*iter].add(*specializeIntegral(*parg,iter->c_str())) ;
+       denListList[*iter].addOwned(specializeIntegral(*parg,iter->c_str()));
 
      }
    }
@@ -1132,7 +1135,7 @@ void RooProdPdf::rearrangeProduct(RooProdPdf::CacheElem& cache) const
 
    if (ratio) {
 
-     RooAbsReal* specRatio = specializeRatio(*(RooFormulaVar*)ratio,iter->c_str()) ;
+     std::unique_ptr<RooAbsReal> specRatio{specializeRatio(*(RooFormulaVar*)ratio,iter->c_str())};
 
      // If integral is 'Int r(y)*g(y) dy ' then divide a posteriori by r(y)
 //      cout << "have ratio, orig den = " << den->GetName() << endl ;
@@ -1140,25 +1143,29 @@ void RooProdPdf::rearrangeProduct(RooProdPdf::CacheElem& cache) const
      RooArgSet tmp(origNumTerm) ;
      tmp.add(*specRatio) ;
      const string pname = makeRGPPName("PROD",tmp,RooArgSet(),RooArgSet(),0) ;
-     RooProduct* specDenProd = new RooProduct(pname.c_str(),pname.c_str(),tmp) ;
-     RooAbsReal* specInt(0) ;
+     auto specDenProd = std::make_unique<RooProduct>(pname.c_str(),pname.c_str(),tmp) ;
+     std::unique_ptr<RooAbsReal> specInt;
 
      if (den->InheritsFrom(RooRealIntegral::Class())) {
-       specInt = specDenProd->createIntegral(((RooRealIntegral*)den)->intVars(),iter->c_str()) ;
+       specInt = std::unique_ptr<RooAbsReal>{specDenProd->createIntegral(((RooRealIntegral*)den)->intVars(),iter->c_str())};
+       specInt->addOwnedComponents(std::move(specDenProd));
      } else if (den->InheritsFrom(RooAddition::Class())) {
        RooAddition* orig = (RooAddition*)den ;
        RooRealIntegral* origInt = (RooRealIntegral*) orig->list1().first() ;
-       specInt = specDenProd->createIntegral(origInt->intVars(),iter->c_str()) ;
+       specInt = std::unique_ptr<RooAbsReal>{specDenProd->createIntegral(origInt->intVars(),iter->c_str())};
+       specInt->addOwnedComponents(std::move(specDenProd));
      } else {
        throw string("this should not happen") ;
      }
 
      //RooAbsReal* specInt = specializeIntegral(*den,iter->c_str()) ;
      string name = Form("%s_divided_by_ratio",specInt->GetName()) ;
-     RooFormulaVar* specIntFinal = new RooFormulaVar(name.c_str(),"@0/@1",RooArgList(*specInt,*specRatio)) ;
-     denListList[*iter].add(*specIntFinal) ;
+     auto specIntFinal = std::make_unique<RooFormulaVar>(name.c_str(),"@0/@1",RooArgList(*specInt,*specRatio)) ;
+     specIntFinal->addOwnedComponents(std::move(specInt));
+     specIntFinal->addOwnedComponents(std::move(specRatio));
+     denListList[*iter].addOwned(std::move(specIntFinal));
    } else {
-     denListList[*iter].add(*specializeIntegral(*den,iter->c_str())) ;
+     denListList[*iter].addOwned(specializeIntegral(*den,iter->c_str()));
    }
 
       }
@@ -1183,13 +1190,14 @@ void RooProdPdf::rearrangeProduct(RooProdPdf::CacheElem& cache) const
     name = Form("%s_denominator_comp_%s",GetName(),iter->first.c_str()) ;
     // WVE FIX THIS (2)
     RooProduct* prod_comp = new RooProduct(name.c_str(),name.c_str(),iter->second) ;
+    prod_comp->addOwnedComponents(std::move(iter->second));
     products.add(*prod_comp) ;
   }
   name = Form("%s_denominator_sum",GetName()) ;
   RooAbsReal* norm = new RooAddition(name.c_str(),name.c_str(),products) ;
   norm->addOwnedComponents(products) ;
 
-  if (specIntDeps.getSize()>0) {
+  if (!specIntDeps.empty()) {
     // Apply posterior integration required for SPECINT case
 
     string namesr = Form("SPEC_RATIO(%s,%s)",numerator->GetName(),norm->GetName()) ;
@@ -1221,31 +1229,31 @@ void RooProdPdf::rearrangeProduct(RooProdPdf::CacheElem& cache) const
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooAbsReal* RooProdPdf::specializeRatio(RooFormulaVar& input, const char* targetRangeName) const
+std::unique_ptr<RooAbsReal> RooProdPdf::specializeRatio(RooFormulaVar& input, const char* targetRangeName) const
 {
   RooRealIntegral* numint = (RooRealIntegral*) input.getParameter(0) ;
   RooRealIntegral* denint = (RooRealIntegral*) input.getParameter(1) ;
 
-  RooAbsReal* numint_spec = specializeIntegral(*numint,targetRangeName) ;
+  std::unique_ptr<RooAbsReal> numint_spec{specializeIntegral(*numint,targetRangeName)};
 
-  RooAbsReal* ret =  new RooFormulaVar(Form("ratio(%s,%s)",numint_spec->GetName(),denint->GetName()),"@0/@1",RooArgList(*numint_spec,*denint)) ;
-  ret->addOwnedComponents(*numint_spec) ;
+  std::unique_ptr<RooAbsReal> ret = std::make_unique<RooFormulaVar>(Form("ratio(%s,%s)",numint_spec->GetName(),denint->GetName()),"@0/@1",RooArgList(*numint_spec,*denint)) ;
+  ret->addOwnedComponents(std::move(numint_spec));
 
-  return ret ;
+  return ret;
 }
 
 
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooAbsReal* RooProdPdf::specializeIntegral(RooAbsReal& input, const char* targetRangeName) const
+std::unique_ptr<RooAbsReal> RooProdPdf::specializeIntegral(RooAbsReal& input, const char* targetRangeName) const
 {
   if (input.InheritsFrom(RooRealIntegral::Class())) {
 
     // If input is integral, recreate integral but override integration range to be targetRangeName
     RooRealIntegral* orig = (RooRealIntegral*)&input ;
 //     cout << "creating integral: integrand =  " << orig->integrand().GetName() << " vars = " << orig->intVars() << " range = " << targetRangeName << endl ;
-    return orig->integrand().createIntegral(orig->intVars(),targetRangeName) ;
+    return std::unique_ptr<RooAbsReal>{orig->integrand().createIntegral(orig->intVars(),targetRangeName)};
 
   } else if (input.InheritsFrom(RooAddition::Class())) {
 
@@ -1253,14 +1261,12 @@ RooAbsReal* RooProdPdf::specializeIntegral(RooAbsReal& input, const char* target
     RooAddition* orig = (RooAddition*)&input ;
     RooRealIntegral* origInt = (RooRealIntegral*) orig->list1().first() ;
 //     cout << "creating integral from addition: integrand =  " << origInt->integrand().GetName() << " vars = " << origInt->intVars() << " range = " << targetRangeName << endl ;
-    return origInt->integrand().createIntegral(origInt->intVars(),targetRangeName) ;
-
-  } else {
-
-//     cout << "specializeIntegral: unknown input type " << input.ClassName() << "::" << input.GetName() << endl ;
+    return std::unique_ptr<RooAbsReal>{origInt->integrand().createIntegral(origInt->intVars(),targetRangeName)};
   }
 
-  return &input ;
+  std::stringstream errMsg;
+  errMsg << "specializeIntegral: unknown input type " << input.ClassName() << "::" << input.GetName();
+  throw std::runtime_error(errMsg.str());
 }
 
 
