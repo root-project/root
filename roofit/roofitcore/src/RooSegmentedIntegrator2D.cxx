@@ -42,7 +42,6 @@ numerical integration algorithm.
 using namespace std;
 
 ClassImp(RooSegmentedIntegrator2D);
-;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -54,23 +53,24 @@ void RooSegmentedIntegrator2D::registerIntegrator(RooNumIntFactory& fact)
 }
 
 
-
-////////////////////////////////////////////////////////////////////////////////
-/// Default constructor
-
-RooSegmentedIntegrator2D::RooSegmentedIntegrator2D() :
-  _xIntegrator(0), _xint(0)
-{
-}
+RooSegmentedIntegrator2D::RooSegmentedIntegrator2D() = default;
+RooSegmentedIntegrator2D::~RooSegmentedIntegrator2D() = default;
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor of integral on given function binding and with given configuration. The
 /// integration limits are taken from the definition in the function binding
 
-RooSegmentedIntegrator2D::RooSegmentedIntegrator2D(const RooAbsFunc& function, const RooNumIntConfig& config) :
-  RooSegmentedIntegrator1D(*(_xint=new RooIntegratorBinding(*(_xIntegrator=new RooSegmentedIntegrator1D(function,config)))),config)
+RooSegmentedIntegrator2D::RooSegmentedIntegrator2D(const RooAbsFunc &function, const RooNumIntConfig &config)
 {
+   _xIntegrator = std::make_unique<RooSegmentedIntegrator1D>(function, config);
+   _xint = std::make_unique<RooIntegratorBinding>(*_xIntegrator);
+   _function = _xint.get();
+   _config = config;
+   _nseg = (Int_t)config.getConfigSection(ClassName()).getRealValue("numSeg", 3);
+   _useIntegrandLimits = true;
+
+   _valid = initialize();
 }
 
 
@@ -78,11 +78,19 @@ RooSegmentedIntegrator2D::RooSegmentedIntegrator2D(const RooAbsFunc& function, c
 /// Constructor integral on given function binding, with given configuration and
 /// explicit definition of integration range
 
-RooSegmentedIntegrator2D::RooSegmentedIntegrator2D(const RooAbsFunc& function, double xmin, double xmax,
-             double ymin, double ymax,
-             const RooNumIntConfig& config) :
-  RooSegmentedIntegrator1D(*(_xint=new RooIntegratorBinding(*(_xIntegrator=new RooSegmentedIntegrator1D(function,ymin,ymax,config)))),xmin,xmax,config)
+RooSegmentedIntegrator2D::RooSegmentedIntegrator2D(const RooAbsFunc &function, double xmin, double xmax, double ymin,
+                                                   double ymax, const RooNumIntConfig &config)
 {
+   _xIntegrator = std::make_unique<RooSegmentedIntegrator1D>(function, ymin, ymax, config);
+   _xint = std::make_unique<RooIntegratorBinding>(*_xIntegrator);
+   _function = _xint.get();
+   _config = config;
+   _nseg = (Int_t)config.getConfigSection(ClassName()).getRealValue("numSeg", 3);
+   _useIntegrandLimits = false;
+   _xmin = xmin;
+   _xmax = xmax;
+
+   _valid = initialize();
 }
 
 
@@ -93,18 +101,6 @@ RooAbsIntegrator* RooSegmentedIntegrator2D::clone(const RooAbsFunc& function, co
 {
   return new RooSegmentedIntegrator2D(function,config) ;
 }
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooSegmentedIntegrator2D::~RooSegmentedIntegrator2D()
-{
-  delete _xint ;
-  delete _xIntegrator ;
-}
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -126,7 +122,7 @@ bool RooSegmentedIntegrator2D::checkLimits() const
   bool ret =  (RooNumber::isInfinite(_xmin) || RooNumber::isInfinite(_xmax)) ? false : true;
 
   // Adjust component integrators, if already created
-  if (_array && ret) {
+  if (!_array.empty() && ret) {
     double segSize = (_xmax - _xmin) / _nseg ;
     Int_t i ;
     for (i=0 ; i<_nseg ; i++) {
@@ -136,6 +132,3 @@ bool RooSegmentedIntegrator2D::checkLimits() const
 
   return ret ;
 }
-
-
-

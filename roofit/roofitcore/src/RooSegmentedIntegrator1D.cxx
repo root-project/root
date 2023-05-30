@@ -40,7 +40,6 @@ numerical integration algorithm.
 using namespace std;
 
 ClassImp(RooSegmentedIntegrator1D);
-;
 
 // Register this class with RooNumIntConfig
 
@@ -54,16 +53,8 @@ void RooSegmentedIntegrator1D::registerIntegrator(RooNumIntFactory& fact)
 }
 
 
-
-////////////////////////////////////////////////////////////////////////////////
-/// Constructor
-///
-/// coverity[UNINIT_CTOR]
-
-RooSegmentedIntegrator1D::RooSegmentedIntegrator1D() : _array(0)
-{
-}
-
+RooSegmentedIntegrator1D::RooSegmentedIntegrator1D() = default;
+RooSegmentedIntegrator1D::~RooSegmentedIntegrator1D() = default;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -108,21 +99,18 @@ RooAbsIntegrator* RooSegmentedIntegrator1D::clone(const RooAbsFunc& function, co
 }
 
 
-
-typedef RooIntegrator1D* pRooIntegrator1D ;
-
 ////////////////////////////////////////////////////////////////////////////////
 /// One-time integrator initialization
 
 bool RooSegmentedIntegrator1D::initialize()
 {
-  _array = 0 ;
+  _array.clear();
 
   bool limitsOK = checkLimits();
   if (!limitsOK) return false ;
 
   // Make array of integrators for each segment
-  _array = new pRooIntegrator1D[_nseg] ;
+  _array.resize(_nseg);
 
   Int_t i ;
 
@@ -133,27 +121,11 @@ bool RooSegmentedIntegrator1D::initialize()
   _config.setEpsAbs(_config.epsAbs()/sqrt(1.*_nseg)) ;
 
   for (i=0 ; i<_nseg ; i++) {
-    _array[i] = new RooIntegrator1D(*_function,_xmin+i*segSize,_xmin+(i+1)*segSize,_config) ;
+    _array[i] = std::make_unique<RooIntegrator1D>(*_function,_xmin+i*segSize,_xmin+(i+1)*segSize,_config) ;
   }
 
   return true ;
 }
-
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooSegmentedIntegrator1D::~RooSegmentedIntegrator1D()
-{
-  if (_array) {
-    for (Int_t i=0 ; i<_nseg ; i++) {
-      delete _array[i] ;
-    }
-    delete [] _array ;
-  }
-}
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -193,7 +165,7 @@ bool RooSegmentedIntegrator1D::checkLimits() const
   bool ret =  (RooNumber::isInfinite(_xmin) || RooNumber::isInfinite(_xmax)) ? false : true;
 
   // Adjust component integrators, if already created
-  if (_array && ret) {
+  if (!_array.empty() && ret) {
     double segSize = (_xmax - _xmin) / _nseg ;
     Int_t i ;
     for (i=0 ; i<_nseg ; i++) {
@@ -222,4 +194,3 @@ double RooSegmentedIntegrator1D::integral(const double *yvec)
 
   return result;
 }
-

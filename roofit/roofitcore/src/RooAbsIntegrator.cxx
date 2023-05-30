@@ -32,17 +32,8 @@ functions that implement the RooAbsFunc interface.
 using namespace std;
 
 ClassImp(RooAbsIntegrator);
-;
 
-
-////////////////////////////////////////////////////////////////////////////////
-/// Default constructor
-
-RooAbsIntegrator::RooAbsIntegrator() : _function(0), _valid(false), _printEvalCounter(false)
-{
-}
-
-
+RooAbsIntegrator::RooAbsIntegrator() = default;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy constructor

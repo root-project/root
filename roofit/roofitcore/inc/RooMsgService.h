@@ -203,9 +203,9 @@ protected:
 
   std::vector<StreamConfig> _streams ;
   std::stack<std::vector<StreamConfig> > _streamsSaved ;
-  std::ostream* _devnull ;
+  std::unique_ptr<std::ofstream> _devnull ;
 
-  std::map<std::string,std::ostream*> _files ;
+  std::map<std::string,std::unique_ptr<std::ostream>> _files ;
   RooFit::MsgLevel _globMinLevel ;
   RooFit::MsgLevel _lastMsgLevel ;
 
@@ -218,7 +218,7 @@ protected:
   RooMsgService() ;
   RooMsgService(const RooMsgService&) ;
 
-  RooWorkspace* _debugWorkspace ;
+  std::unique_ptr<RooWorkspace> _debugWorkspace;
 
   Int_t _debugCode ;
 
