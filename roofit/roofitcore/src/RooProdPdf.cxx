@@ -1181,7 +1181,7 @@ void RooProdPdf::rearrangeProduct(RooProdPdf::CacheElem& cache) const
   string name = Form("%s_numerator",GetName()) ;
   // WVE FIX THIS (2)
 
-  RooAbsReal* numerator = new RooProduct(name.c_str(),name.c_str(),nomList) ;
+  std::unique_ptr<RooAbsReal> numerator = std::make_unique<RooProduct>(name.c_str(),name.c_str(),nomList) ;
 
   RooArgSet products ;
 //   cout << "nomList = " << nomList << endl ;
@@ -1202,11 +1202,11 @@ void RooProdPdf::rearrangeProduct(RooProdPdf::CacheElem& cache) const
 
     string namesr = Form("SPEC_RATIO(%s,%s)",numerator->GetName(),norm->GetName()) ;
     RooFormulaVar* ndr = new RooFormulaVar(namesr.c_str(),"@0/@1",RooArgList(*numerator,*norm)) ;
+    ndr->addOwnedComponents(std::move(numerator));
 
     // Integral of ratio
-    RooAbsReal* numtmp = ndr->createIntegral(specIntDeps,specIntRange.c_str()) ;
+    numerator = std::unique_ptr<RooAbsReal>{ndr->createIntegral(specIntDeps,specIntRange.c_str())};
 
-    numerator = numtmp ;
     norm = (RooAbsReal*) RooFit::RooConst(1).Clone() ;
   }
 
@@ -1220,7 +1220,7 @@ void RooProdPdf::rearrangeProduct(RooProdPdf::CacheElem& cache) const
   // WVE DEBUG
   //RooMsgService::instance().debugWorkspace()->import(RooArgSet(*numerator,*norm)) ;
 
-  cache._rearrangedNum.reset(numerator);
+  cache._rearrangedNum = std::move(numerator);
   cache._rearrangedDen.reset(norm);
   cache._isRearranged = true ;
 
@@ -1390,7 +1390,7 @@ std::vector<RooAbsReal*> RooProdPdf::processProductTerm(const RooArgSet* nset, c
 
       RooAbsPdf* pdf = (RooAbsPdf*) term->first() ;
 
-      RooAbsReal* partInt = pdf->createIntegral(termISet,termNSet,isetRangeName) ;
+      RooAbsReal* partInt = std::unique_ptr<RooAbsReal>{pdf->createIntegral(termISet,termNSet,isetRangeName)}.release();
       partInt->setOperMode(operMode()) ;
       partInt->setStringAttribute("PROD_TERM_TYPE","IIIa") ;
 
@@ -1401,8 +1401,8 @@ std::vector<RooAbsReal*> RooProdPdf::processProductTerm(const RooArgSet* nset, c
       ret[0] = partInt ;
 
       // Split mode results
-      ret[1] = pdf->createIntegral(termISet,isetRangeName) ;
-      ret[2] = pdf->createIntegral(termNSet,normRange()) ;
+      ret[1] = std::unique_ptr<RooAbsReal>{pdf->createIntegral(termISet,isetRangeName)}.release();
+      ret[2] = std::unique_ptr<RooAbsReal>{pdf->createIntegral(termNSet,normRange())}.release();
 
       return ret ;
 
@@ -1428,8 +1428,8 @@ std::vector<RooAbsReal*> RooProdPdf::processProductTerm(const RooArgSet* nset, c
       // WVE FIX THIS
       RooProduct* tmp_prod = new RooProduct(name1.c_str(),name1.c_str(),*term) ;
 
-      ret[1] = tmp_prod->createIntegral(termISet,isetRangeName) ;
-      ret[2] = tmp_prod->createIntegral(termNSet,normRange()) ;
+      ret[1] = std::unique_ptr<RooAbsReal>{tmp_prod->createIntegral(termISet,isetRangeName)}.release();
+      ret[2] = std::unique_ptr<RooAbsReal>{tmp_prod->createIntegral(termNSet,normRange())}.release();
 
       return ret ;
     }
@@ -1457,8 +1457,8 @@ std::vector<RooAbsReal*> RooProdPdf::processProductTerm(const RooArgSet* nset, c
     // WVE FIX THIS
     RooProduct* tmp_prod = new RooProduct(name1.c_str(),name1.c_str(),*term) ;
 
-    ret[1] = tmp_prod->createIntegral(termISet,isetRangeName) ;
-    ret[2] = tmp_prod->createIntegral(termNSet,normRange()) ;
+    ret[1] = std::unique_ptr<RooAbsReal>{tmp_prod->createIntegral(termISet,isetRangeName)}.release();
+    ret[2] = std::unique_ptr<RooAbsReal>{tmp_prod->createIntegral(termNSet,normRange())}.release();
 
     return ret ;
   }
@@ -1495,8 +1495,8 @@ std::vector<RooAbsReal*> RooProdPdf::processProductTerm(const RooArgSet* nset, c
 
       ret[0] = partInt ;
 
-      ret[1] = pdf->createIntegral(RooArgSet()) ;
-      ret[2] = pdf->createIntegral(termNSet,normRange()) ;
+      ret[1] = std::unique_ptr<RooAbsReal>{pdf->createIntegral(RooArgSet())}.release();
+      ret[2] = std::unique_ptr<RooAbsReal>{pdf->createIntegral(termNSet,normRange())}.release();
 
       return ret ;
 
@@ -1510,8 +1510,9 @@ std::vector<RooAbsReal*> RooProdPdf::processProductTerm(const RooArgSet* nset, c
       pdf->setStringAttribute("PROD_TERM_TYPE","IVb") ;
       ret[0] = pdf ;
 
-      ret[1] = pdf->createIntegral(RooArgSet()) ;
-      ret[2] = termNSet.getSize()>0 ? pdf->createIntegral(termNSet,normRange()) : ((RooAbsReal*)RooFit::RooConst(1).clone("1")) ;
+      ret[1] = std::unique_ptr<RooAbsReal>{pdf->createIntegral(RooArgSet())}.release();
+      ret[2] = !termNSet.empty() ? std::unique_ptr<RooAbsReal>{pdf->createIntegral(termNSet,normRange())}.release()
+                                 : ((RooAbsReal*)RooFit::RooConst(1).clone("1"));
       return ret  ;
     }
   }
