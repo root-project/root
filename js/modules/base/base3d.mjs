@@ -1,5 +1,5 @@
 import { select as d3_select } from '../d3.mjs';
-import { HelveticerRegularJson, Font, WebGLRenderer, WebGLRenderTarget,
+import { HelveticerRegularJson, Font, WebGLRenderer, WebGL1Renderer, WebGLRenderTarget,
          CanvasTexture, TextureLoader,
          BufferGeometry, BufferAttribute, Float32BufferAttribute,
          Vector2, Vector3, Color, Points, PointsMaterial,
@@ -421,7 +421,7 @@ async function createRender3D(width, height, render3d, args) {
          args.context = gl;
          gl.canvas = args.canvas;
 
-         let r = new WebGLRenderer(args);
+         let r = new WebGL1Renderer(args);
 
          r.jsroot_output = new WebGLRenderTarget(width, height);
          r.setRenderTarget(r.jsroot_output);
@@ -904,7 +904,7 @@ function createOrbitControl(painter, camera, scene, renderer, lookat) {
       // domElement gives correct coordinate with canvas render, but isn't always right for webgl renderer
       if (!this.renderer) return [];
 
-      let sz = (this.renderer instanceof WebGLRenderer) ? this.renderer.getSize(new Vector2()) : this.renderer.domElement,
+      let sz = (this.renderer instanceof SVGRenderer) ? this.renderer.domElement : this.renderer.getSize(new Vector2()),
           pnt = { x: mouse.x / sz.width * 2 - 1, y: -mouse.y / sz.height * 2 + 1 };
 
       this.camera.updateMatrix();

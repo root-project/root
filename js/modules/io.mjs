@@ -2757,6 +2757,12 @@ class TFile {
          const len = res.getResponseHeader('Content-Length');
          if (len) this.fEND = parseInt(len);
              else this.fAcceptRanges = false;
+         const kind = res.getResponseHeader('Server');
+         if (isStr(kind) && kind.indexOf('SimpleHTTP') == 0) {
+            this.fMaxRanges = 1;
+            this.fUseStampPar = false;
+         }
+
          return this.readKeys();
       });
    }
