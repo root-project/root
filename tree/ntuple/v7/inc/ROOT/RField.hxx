@@ -37,6 +37,7 @@
 #include <iterator>
 #include <memory>
 #include <new>
+#include <set>
 #include <string>
 #include <type_traits>
 #include <typeinfo>
@@ -1105,6 +1106,38 @@ public:
    void CommitCluster() final;
 };
 
+/// The generic field for a std::set<Type>
+class RSetField : public Detail::RFieldBase {
+private:
+   std::size_t fItemSize;
+
+protected:
+   ClusterSize_t fNWritten;
+
+   std::unique_ptr<Detail::RFieldBase> CloneImpl(std::string_view newName) const override;
+   std::size_t AppendImpl(const Detail::RFieldValue &value) override;
+   const RColumnRepresentations &GetColumnRepresentations() const final;
+   void GenerateColumnsImpl() final;
+   void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
+   void ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue *value) override;
+
+public:
+   RSetField(std::string_view fieldName, std::unique_ptr<Detail::RFieldBase> itemField);
+   RSetField(RSetField &&other) = default;
+   RSetField &operator=(RSetField &&other) = default;
+   ~RSetField() override = default;
+
+   using Detail::RFieldBase::GenerateValue;
+   Detail::RFieldValue GenerateValue(void *where) override;
+   void DestroyValue(const Detail::RFieldValue &value, bool dtorOnly = false) override;
+   Detail::RFieldValue CaptureValue(void *where) override;
+   std::vector<Detail::RFieldValue> SplitValue(const Detail::RFieldValue &value) const final;
+   size_t GetValueSize() const override { return sizeof(std::set<char>); }
+   size_t GetAlignment() const override { return std::alignment_of<std::set<char>>(); }
+   void CommitCluster() final;
+   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
+};
+
 /// The field for values that may or may not be present in an entry. Parent class for unique pointer field and
 /// optional field. A nullable field cannot be instantiated itself but only its descendants.
 /// The RNullableField takes care of the on-disk representation. Child classes are responsible for the in-memory
@@ -2083,6 +2116,80 @@ public:
    RField(RField &&other) = default;
    RField &operator=(RField &&other) = default;
    ~RField() override = default;
+};
+
+template <typename ItemT> // TODO (fdegeus): Add comparator
+class RField<std::set<ItemT>> : public RSetField {
+   using ContainerT = typename std::set<ItemT>;
+
+protected:
+   std::unique_ptr<Detail::RFieldBase> CloneImpl(std::string_view newName) const final
+   {
+      auto newItemField = fSubFields[0]->Clone(fSubFields[0]->GetName());
+      return std::make_unique<RField<std::set<ItemT>>>(newName, std::move(newItemField));
+   }
+   std::size_t AppendImpl(const Detail::RFieldValue &value) final
+   {
+      auto typedValue = value.Get<ContainerT>();
+      auto nbytes = 0;
+      auto count = typedValue->size();
+      for (auto item : *typedValue) {
+         auto itemValue = fSubFields[0]->CaptureValue(static_cast<void *>(&item));
+         nbytes += fSubFields[0]->Append(itemValue);
+      }
+      Detail::RColumnElement<ClusterSize_t, EColumnType::kUnknown> elemIndex(&this->fNWritten);
+      this->fNWritten += count;
+      fColumns[0]->Append(elemIndex);
+      return nbytes + sizeof(elemIndex);
+   }
+   void ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue *value) final
+   {
+      auto typedValue = value->Get<ContainerT>();
+      RClusterIndex collectionStart;
+      ClusterSize_t nItems;
+      fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, &nItems);
+      typedValue->clear();
+      for (unsigned i = 0; i < nItems; ++i) {
+         ItemT item;
+         auto itemValue = fSubFields[0]->CaptureValue(&item);
+         fSubFields[0]->Read(collectionStart + i, &itemValue);
+         typedValue->emplace(item);
+      }
+   }
+
+public:
+   static std::string TypeName() { return "std::set<" + RField<ItemT>::TypeName() + ">"; }
+
+   RField(std::string_view name, std::unique_ptr<Detail::RFieldBase> itemField) : RSetField(name, std::move(itemField))
+   {
+   }
+   explicit RField(std::string_view name) : RSetField(name, std::make_unique<RField<ItemT>>("_0")) {}
+   RField(RField &&other) = default;
+   RField &operator=(RField &&other) = default;
+   ~RField() override = default;
+
+   using Detail::RFieldBase::GenerateValue;
+   template <typename... ArgsT>
+   ROOT::Experimental::Detail::RFieldValue GenerateValue(void *where, ArgsT &&...args)
+   {
+      return Detail::RFieldValue(this, static_cast<ContainerT *>(where), std::forward<ArgsT>(args)...);
+   }
+   ROOT::Experimental::Detail::RFieldValue GenerateValue(void *where) final
+   {
+      return GenerateValue(where, ContainerT());
+   }
+   Detail::RFieldValue CaptureValue(void *where) final
+   {
+      return Detail::RFieldValue(true /* captureFlag */, this, static_cast<ContainerT *>(where));
+   }
+   void DestroyValue(const Detail::RFieldValue &value, bool dtorOnly = false) final
+   {
+      reinterpret_cast<ContainerT *>(value.GetRawPtr())->~set();
+      if (!dtorOnly)
+         free(reinterpret_cast<ContainerT *>(value.GetRawPtr()));
+   }
+   size_t GetValueSize() const final { return sizeof(ContainerT); }
+   size_t GetAlignment() const final { return std::alignment_of<ContainerT>(); }
 };
 
 template <typename... ItemTs>
