@@ -289,6 +289,33 @@ Error RTDynamicLibrarySearchGenerator::tryToGenerate(
   return JD.define(absoluteSymbols(std::move(NewSymbols)), CurrentRT());
 }
 
+/// A definition generator that calls a user-provided function that is
+/// responsible for providing symbol addresses.
+/// This is used by `IncrementalJIT::getGenerator()` to yield a generator that
+/// resolves symbols defined in the IncrementalJIT object on which the function
+/// is called, which in turn may be used to provide lookup across different
+/// IncrementalJIT instances.
+class DelegateGenerator : public DefinitionGenerator {
+  using LookupFunc = std::function<Expected<JITEvaluatedSymbol>(StringRef)>;
+  LookupFunc lookup;
+
+public:
+  DelegateGenerator(LookupFunc lookup) : lookup(lookup) {}
+
+  Error tryToGenerate(LookupState& LS, LookupKind K, JITDylib& JD,
+                      JITDylibLookupFlags JDLookupFlags,
+                      const SymbolLookupSet& LookupSet) override {
+    SymbolMap Symbols;
+    for (auto& KV : LookupSet) {
+      if (auto Addr = lookup(*KV.first))
+        Symbols[KV.first] = Addr.get();
+    }
+    if (Symbols.empty())
+      return Error::success();
+    return JD.define(absoluteSymbols(std::move(Symbols)));
+  }
+};
+
 static std::unique_ptr<TargetMachine>
 CreateTargetMachine(const clang::CompilerInstance& CI) {
   CodeGenOpt::Level OptLevel = CodeGenOpt::Default;
@@ -442,6 +469,11 @@ IncrementalJIT::IncrementalJIT(
     logAllUnhandledErrors(std::move(Err), errs(), "cling JIT session error: ");
   };
   Jit->getExecutionSession().setErrorReporter(ErrorReporter);
+}
+
+std::unique_ptr<llvm::orc::DefinitionGenerator> IncrementalJIT::getGenerator() {
+  return std::make_unique<DelegateGenerator>(
+      [&](StringRef UnmangledName) { return Jit->lookup(UnmangledName); });
 }
 
 void IncrementalJIT::addModule(Transaction& T) {
