@@ -329,6 +329,7 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
    }
    paddata.SetSnapshot(TWebSnapshot::kSubPad, pad); // add ref to the pad
    paddata.SetWithoutPrimitives(!process_primitives);
+   paddata.SetHasExecs(pad->GetListOfExecs()); // if pad execs are there provide more events from client
 
    // check style changes every time when creating canvas snapshot
    if (resfunc && (GetStyleDelivery() > 0)) {
@@ -1210,7 +1211,7 @@ void TWebCanvas::ProcessLinesForObject(TObject *obj, const std::string &lines)
 
       std::stringstream exec;
       exec << "((" << obj->ClassName() << " *) " << std::hex << std::showbase << (size_t)obj << ")->" << sub << ";";
-      Info("ProcessData", "Obj %s Execute %s", obj->GetName(), exec.str().c_str());
+      Info("ProcessLinesForObject", "Obj %s Execute %s", obj->GetName(), exec.str().c_str());
       gROOT->ProcessLine(exec.str().c_str());
    }
 }
