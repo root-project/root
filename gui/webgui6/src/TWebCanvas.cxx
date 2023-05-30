@@ -1998,6 +1998,11 @@ TObject *TWebCanvas::FindPrimitive(const std::string &sid, int idcnt, TPad *pad,
             return col ? col->FindObject(funcname.c_str()) : nullptr;
          }
 
+         if ((h1 || gr) && !kind.empty() && (kind.compare(0,5,"indx_") == 0)) {
+            auto col = h1 ? h1->GetListOfFunctions() : gr->GetListOfFunctions();
+            return col ? col->At(std::stoi(kind.substr(5))) : nullptr;
+         }
+
          if (!kind.empty() && (kind.compare(0,7,"member_") == 0)) {
             auto member = kind.substr(7);
             auto offset = obj->IsA() ? obj->IsA()->GetDataMemberOffset(member.c_str()) : 0;
