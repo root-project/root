@@ -716,6 +716,19 @@ bool RooAbsArg::getParameters(const RooArgSet* observables, RooArgSet& outputSet
 }
 
 
+/// Given a set of possible observables, return the observables that this PDF depends on.
+RooFit::OwningPtr<RooArgSet> RooAbsArg::getObservables(const RooArgSet &set, bool valueOnly) const
+{
+   return getObservables(&set, valueOnly);
+}
+
+/// Return the observables of this pdf given the observables defined by `data`.
+RooFit::OwningPtr<RooArgSet> RooAbsArg::getObservables(const RooAbsData &data) const
+{
+   return getObservables(&data);
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a list of leaf nodes in the arg tree starting with
 /// ourself as top node that match any of the names of the variable list
@@ -723,9 +736,9 @@ bool RooAbsArg::getParameters(const RooArgSet* observables, RooArgSet& outputSet
 /// function is responsible for deleting the returned argset.
 /// The complement of this function is getParameters().
 
-RooArgSet* RooAbsArg::getObservables(const RooAbsData* set) const
+RooFit::OwningPtr<RooArgSet> RooAbsArg::getObservables(const RooAbsData* set) const
 {
-  if (!set) return new RooArgSet ;
+  if (!set) return RooFit::OwningPtr<RooArgSet>{new RooArgSet};
 
   return getObservables(set->get()) ;
 }
@@ -738,11 +751,11 @@ RooArgSet* RooAbsArg::getObservables(const RooAbsData* set) const
 /// for deleting the returned argset. The complement of this function
 /// is getParameters().
 
-RooArgSet* RooAbsArg::getObservables(const RooArgSet* dataList, bool valueOnly) const
+RooFit::OwningPtr<RooArgSet> RooAbsArg::getObservables(const RooArgSet* dataList, bool valueOnly) const
 {
   auto depList = new RooArgSet;
   getObservables(dataList, *depList, valueOnly);
-  return depList;
+  return RooFit::OwningPtr<RooArgSet>{depList};
 }
 
 
@@ -783,6 +796,25 @@ bool RooAbsArg::getObservables(const RooAbsCollection* dataList, RooArgSet& outp
   }
 
   return false;
+}
+
+
+/// \deprecated Use getObservables()
+RooFit::OwningPtr<RooArgSet> RooAbsArg::getDependents(const RooArgSet &set) const
+{
+   return getObservables(set);
+}
+
+/// \deprecated Use getObservables()
+RooFit::OwningPtr<RooArgSet> RooAbsArg::getDependents(const RooAbsData *set) const
+{
+   return getObservables(set);
+}
+
+/// \deprecated Use getObservables()
+RooFit::OwningPtr<RooArgSet> RooAbsArg::getDependents(const RooArgSet *depList) const
+{
+   return getObservables(depList);
 }
 
 
@@ -913,10 +945,7 @@ bool RooAbsArg::observableOverlaps(const RooAbsData* dset, const RooAbsArg& test
 
 bool RooAbsArg::observableOverlaps(const RooArgSet* nset, const RooAbsArg& testArg) const
 {
-  RooArgSet* depList = getObservables(nset) ;
-  bool ret = testArg.dependsOn(*depList) ;
-  delete depList ;
-  return ret ;
+   return testArg.dependsOn(*std::unique_ptr<RooArgSet>{getObservables(nset)});
 }
 
 

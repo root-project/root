@@ -133,14 +133,14 @@ RooIntegralMorph::RooIntegralMorph(const RooIntegralMorph& other, const char* na
 /// Returns the 'x' observable unless doCacheAlpha is set in which
 /// case a set with both x and alpha
 
-RooArgSet* RooIntegralMorph::actualObservables(const RooArgSet& /*nset*/) const
+RooFit::OwningPtr<RooArgSet> RooIntegralMorph::actualObservables(const RooArgSet& /*nset*/) const
 {
   RooArgSet* obs = new RooArgSet ;
   if (_cacheAlpha) {
     obs->add(alpha.arg()) ;
   }
   obs->add(x.arg()) ;
-  return obs ;
+  return RooFit::OwningPtr<RooArgSet>{obs};
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -149,9 +149,9 @@ RooArgSet* RooIntegralMorph::actualObservables(const RooArgSet& /*nset*/) const
 
 RooFit::OwningPtr<RooArgSet> RooIntegralMorph::actualParameters(const RooArgSet& /*nset*/) const
 {
-  auto par1 = pdf1.arg().getParameters(static_cast<RooArgSet*>(nullptr));
+  auto par1 = pdf1->getParameters(static_cast<RooArgSet*>(nullptr));
   RooArgSet par2;
-  pdf2.arg().getParameters(nullptr, par2);
+  pdf2->getParameters(nullptr, par2);
   par1->add(par2,true) ;
   par1->remove(x.arg(),true,true) ;
   if (!_cacheAlpha) {

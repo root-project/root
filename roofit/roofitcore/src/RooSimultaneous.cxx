@@ -1048,15 +1048,11 @@ RooDataSet* RooSimultaneous::generateSimGlobal(const RooArgSet& whatVars, Int_t 
       RooAbsPdf* pdftmp = getPdf(nameIdx.first);
 
       // Generate only global variables defined by the pdf associated with this state
-      RooArgSet* globtmp = pdftmp->getObservables(whatVars) ;
-      RooDataSet* tmp = pdftmp->generate(*globtmp,1) ;
+      std::unique_ptr<RooArgSet> globtmp{pdftmp->getObservables(whatVars)};
+      std::unique_ptr<RooDataSet> tmp{pdftmp->generate(*globtmp,1)};
 
       // Transfer values to output placeholder
       globClone->assign(*tmp->get(0)) ;
-
-      // Cleanup
-      delete globtmp ;
-      delete tmp ;
     }
     data->add(*globClone) ;
   }

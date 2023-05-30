@@ -80,7 +80,7 @@ RooConvGenContext::RooConvGenContext(const RooAbsAnaConvPdf &model, const RooArg
   convV->removeRange();
 
   // Create generator for physics X truth model
-  _pdfVars.reset(pdfClone->getObservables(&vars));
+  _pdfVars = std::unique_ptr<RooArgSet>{pdfClone->getObservables(&vars)};
   _pdfGen.reset(pdfClone->genContext(*_pdfVars,prototype,auxProto,verbose));
 
   // Clone resolution model and use as normal PDF
@@ -98,7 +98,7 @@ RooConvGenContext::RooConvGenContext(const RooAbsAnaConvPdf &model, const RooArg
   convV->removeRange();
 
   // Create generator for resolution model as PDF
-  _modelVars.reset(modelClone->getObservables(&vars));
+  _modelVars = std::unique_ptr<RooArgSet>{modelClone->getObservables(&vars)};
 
   _modelVars->add(modelClone->convVar()) ;
   _convVarName = modelClone->convVar().GetName() ;

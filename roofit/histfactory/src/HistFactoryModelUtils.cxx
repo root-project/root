@@ -171,7 +171,7 @@ namespace HistFactory{
       if(verbose) dataForChan->Print();
 
       // Generate observables defined by the pdf associated with this state
-      RooArgSet* obstmp = pdftmp->getObservables(*dataForChan->get()) ;
+      std::unique_ptr<RooArgSet> obstmp{pdftmp->getObservables(*dataForChan->get())};
       RooRealVar* obs = ((RooRealVar*)obstmp->first());
       if(verbose) obs->Print();
 
