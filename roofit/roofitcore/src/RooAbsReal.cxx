@@ -546,12 +546,10 @@ RooFit::OwningPtr<RooAbsReal> RooAbsReal::createIntegral(const RooArgSet& iset, 
 {
   if (!rangeName || strchr(rangeName,',')==0) {
     // Simple case: integral over full range or single limited range
-    return RooFit::OwningPtr<RooAbsReal>{createIntObj(iset,nset,cfg,rangeName)};
+    return createIntObj(iset,nset,cfg,rangeName);
   }
 
   // Integral over multiple ranges
-  RooArgSet components ;
-
   std::vector<std::string> tokens = ROOT::Split(rangeName, ",");
 
   if(RooHelpers::checkIfRangesOverlap(iset, tokens)) {
@@ -563,22 +561,24 @@ RooFit::OwningPtr<RooAbsReal> RooAbsReal::createIntegral(const RooArgSet& iset, 
     throw std::invalid_argument(errMsgString);
   }
 
+  RooArgSet components ;
   for (const std::string& token : tokens) {
-    RooAbsReal* compIntegral = createIntObj(iset,nset,cfg, token.c_str());
-    components.add(*compIntegral);
+    components.addOwned(std::unique_ptr<RooAbsReal>{createIntObj(iset,nset,cfg, token.c_str())});
   }
 
   const std::string title = std::string("Integral of ") + GetTitle();
   const std::string fullName = std::string(GetName()) + integralNameSuffix(iset,nset,rangeName).Data();
 
-  return RooFit::OwningPtr<RooAbsReal>{new RooAddition(fullName.c_str(), title.c_str(), components, true)};
+  auto out = std::make_unique<RooAddition>(fullName.c_str(), title.c_str(), components);
+  out->addOwnedComponents(std::move(components));
+  return RooFit::Detail::owningPtr<RooAbsReal>(std::move(out));
 }
 
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Internal utility function for createIntegral() that creates the actual integral object.
-RooAbsReal* RooAbsReal::createIntObj(const RooArgSet& iset2, const RooArgSet* nset2,
+RooFit::OwningPtr<RooAbsReal> RooAbsReal::createIntObj(const RooArgSet& iset2, const RooArgSet* nset2,
                  const RooNumIntConfig* cfg, const char* rangeName) const
 {
   // Make internal use copies of iset and nset
@@ -597,7 +597,8 @@ RooAbsReal* RooAbsReal::createIntObj(const RooArgSet& iset2, const RooArgSet* ns
     const std::string title = std::string("Integral of ") + GetTitle();
     const std::string name = std::string(GetName()) + integralNameSuffix(iset,nset,rangeName).Data();
 
-    return new RooRealIntegral(name.c_str(), title.c_str(), *this, iset, nset, cfg, rangeName);
+    auto out = std::make_unique<RooRealIntegral>(name.c_str(), title.c_str(), *this, iset, nset, cfg, rangeName);
+    return RooFit::Detail::owningPtr<RooAbsReal>(std::move(out));
   }
 
   // Process integration over remaining integration variables
@@ -663,7 +664,7 @@ RooAbsReal* RooAbsReal::createIntObj(const RooArgSet& iset2, const RooArgSet* ns
       cxcoutD(Caching) << "RooAbsReal::createIntObj(" << GetName() << ") INFO: constructing " << cacheParams.size()
            << "-dim value cache for integral over " << iset2 << " as a function of " << cacheParams << " in range " << (rangeName?rangeName:"<none>") <<  std::endl ;
       std::string name = Form("%s_CACHE_[%s]",integral->GetName(),cacheParams.contentsString().c_str()) ;
-      RooCachedReal* cachedIntegral = new RooCachedReal(name.c_str(),name.c_str(),*integral,cacheParams) ;
+      auto cachedIntegral = std::make_unique<RooCachedReal>(name.c_str(),name.c_str(),*integral,cacheParams);
       cachedIntegral->setInterpolationOrder(2) ;
       cachedIntegral->addOwnedComponents(std::move(integral));
       cachedIntegral->setCacheSource(true) ;
@@ -671,11 +672,11 @@ RooAbsReal* RooAbsReal::createIntObj(const RooArgSet& iset2, const RooArgSet* ns
    cachedIntegral->setOperMode(ADirty) ;
       }
       //cachedIntegral->disableCache(true) ;
-      return cachedIntegral;
+      return RooFit::Detail::owningPtr<RooAbsReal>(std::move(cachedIntegral));
     }
   }
 
-  return integral.release();
+  return RooFit::Detail::owningPtr(std::move(integral));
 }
 
 
@@ -3910,7 +3911,7 @@ RooFit::OwningPtr<RooAbsReal> RooAbsReal::createScanRI(const RooArgSet& iset, co
   ivar->setBins(numScanBins,"numcdf") ;
   auto ret = std::make_unique<RooNumRunningInt>(name.c_str(),name.c_str(),*this,*ivar,"numrunint") ;
   ret->setInterpolationOrder(intOrder) ;
-  return RooFit::OwningPtr<RooAbsReal>{ret.release()};
+  return RooFit::Detail::owningPtr(std::move(ret));
 }
 
 
@@ -3972,7 +3973,7 @@ RooFit::OwningPtr<RooAbsReal> RooAbsReal::createIntRI(const RooArgSet& iset, con
   cdf->addOwnedComponents(cloneList) ;
   cdf->addOwnedComponents(loList) ;
 
-  return RooFit::OwningPtr<RooAbsReal>{cdf.release()};
+  return RooFit::Detail::owningPtr(std::move(cdf));
 }
 
 
