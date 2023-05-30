@@ -14,6 +14,7 @@
 ################################################################################
 
 from JupyROOT.helpers import utils
+import platform
 import ROOT
 
 # Jit a wrapper for the ttabcom
@@ -106,8 +107,11 @@ class CppCompleter(object):
     def activate(self):
         self.active = True
         if self.firstActivation:
-            utils.declareCppCode('#include "dlfcn.h"')
-            dlOpenRint = 'dlopen("libRint.so",RTLD_NOW);'
+            if platform.system() == 'Windows':
+                dlOpenRint = 'gInterpreter->LoadFile("libRint.dll");'
+            else:
+                utils.declareCppCode('#include "dlfcn.h"')
+                dlOpenRint = 'dlopen("libRint.so",RTLD_NOW);'
             utils.processCppCode(dlOpenRint)
             utils.declareCppCode(_TTabComHookCode)
             self.hook = ROOT._TTabComHook

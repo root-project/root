@@ -62,10 +62,10 @@ def GetDisplayer(poller):
 class MagicLoader(object):
     '''Class to load JupyROOT Magics'''
     def __init__(self,kernel):
-         magics_path = os.path.dirname(__file__)+"/magics/*.py"
+         magics_path = os.path.dirname(__file__)+os.sep+"magics"+os.sep+"*.py"
          for file in glob(magics_path):
               if file != magics_path.replace("*.py","__init__.py"):
-                  module_path="JupyROOT.kernel.magics."+file.split("/")[-1].replace(".py","")
+                  module_path="JupyROOT.kernel.magics."+file.split(os.sep)[-1].replace(".py","")
                   try:
                       module = importlib.import_module(module_path)
                       module.register_magics(kernel)
