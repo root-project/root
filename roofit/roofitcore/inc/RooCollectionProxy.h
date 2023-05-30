@@ -113,7 +113,17 @@ public:
    }
 
    using RooAbsCollection::addOwned;
+
+// The following function is not memory safe, because it takes ownership of var
+// without moving it. It is not publically available in the memory safe
+// interfaces mode.
+#ifdef ROOFIT_MEMORY_SAFE_INTERFACES
+protected:
+#endif
    bool addOwned(RooAbsArg &var, bool silent = false) override;
+#ifdef ROOFIT_MEMORY_SAFE_INTERFACES
+public:
+#endif
 
    using RooAbsCollection::addClone;
    RooAbsArg *addClone(const RooAbsArg &var, bool silent = false) override;
