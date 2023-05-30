@@ -100,7 +100,7 @@ protected:
   }
   virtual FuncCacheElem* createCache(const RooArgSet* nset) const ;
   virtual const char* inputBaseName() const = 0 ;
-  virtual RooArgSet* actualObservables(const RooArgSet& nset) const = 0 ;
+  virtual RooFit::OwningPtr<RooArgSet> actualObservables(const RooArgSet& nset) const = 0 ;
   virtual RooFit::OwningPtr<RooArgSet> actualParameters(const RooArgSet& nset) const = 0 ;
   virtual void fillCacheObject(FuncCacheElem& cache) const = 0 ;
 
