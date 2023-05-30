@@ -62,6 +62,7 @@ protected:
    bool fReadOnly{true};                                   ///< when canvas or pad are in readonly mode
    bool fSetObjectIds{true};                               ///<! set objects ids
    bool fWithoutPrimitives{false};                         ///< true when primitives not send while there are no modifications
+   bool fHasExecs{false};                                  ///< if true, more interactive evente will be delivered from client
    std::vector<std::unique_ptr<TWebSnapshot>> fPrimitives; ///< list of all primitives, drawn in the pad
 
 public:
@@ -76,6 +77,8 @@ public:
 
    void SetWithoutPrimitives(bool on = true) { fWithoutPrimitives = on; }
 
+   void SetHasExecs(bool on = true) { fHasExecs = on; }
+
    bool IsReadOnly() const { return fReadOnly; }
 
    bool IsSetObjectIds() const { return fSetObjectIds; }
@@ -86,7 +89,7 @@ public:
 
    TWebSnapshot &NewSpecials();
 
-   ClassDefOverride(TPadWebSnapshot, 2) // Pad painting snapshot, used for JSROOT
+   ClassDefOverride(TPadWebSnapshot, 3) // Pad painting snapshot, used for JSROOT
 };
 
 // =================================================================================
