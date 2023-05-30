@@ -567,12 +567,10 @@ RooFit::OwningPtr<RooAbsReal> RooAbsReal::createIntegral(const RooArgSet& iset, 
 {
   if (!rangeName || strchr(rangeName,',')==0) {
     // Simple case: integral over full range or single limited range
-    return RooFit::OwningPtr<RooAbsReal>{createIntObj(iset,nset,cfg,rangeName)};
+    return createIntObj(iset,nset,cfg,rangeName);
   }
 
   // Integral over multiple ranges
-  RooArgSet components ;
-
   std::vector<std::string> tokens = ROOT::Split(rangeName, ",");
 
   if(RooHelpers::checkIfRangesOverlap(iset, tokens)) {
@@ -584,9 +582,9 @@ RooFit::OwningPtr<RooAbsReal> RooAbsReal::createIntegral(const RooArgSet& iset, 
     throw std::invalid_argument(errMsgString);
   }
 
+  RooArgSet components ;
   for (const std::string& token : tokens) {
-    RooAbsReal* compIntegral = createIntObj(iset,nset,cfg, token.c_str());
-    components.add(*compIntegral);
+    components.addOwned(std::unique_ptr<RooAbsReal>{createIntObj(iset,nset,cfg, token.c_str())});
   }
 
   TString title(GetTitle()) ;
@@ -594,14 +592,16 @@ RooFit::OwningPtr<RooAbsReal> RooAbsReal::createIntegral(const RooArgSet& iset, 
   TString fullName(GetName()) ;
   fullName.Append(integralNameSuffix(iset,nset,rangeName)) ;
 
-  return RooFit::OwningPtr<RooAbsReal>{new RooAddition(fullName.Data(), title.Data(), components, true)};
+  auto out = std::make_unique<RooAddition>(fullName.Data(), title.Data(), components);
+  out->addOwnedComponents(std::move(components));
+  return RooFit::Detail::owningPtr<RooAbsReal>(std::move(out));
 }
 
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Internal utility function for createIntegral() that creates the actual integral object.
-RooAbsReal* RooAbsReal::createIntObj(const RooArgSet& iset2, const RooArgSet* nset2,
+RooFit::OwningPtr<RooAbsReal> RooAbsReal::createIntObj(const RooArgSet& iset2, const RooArgSet* nset2,
                  const RooNumIntConfig* cfg, const char* rangeName) const
 {
   // Make internal use copies of iset and nset
@@ -612,22 +612,20 @@ RooAbsReal* RooAbsReal::createIntObj(const RooArgSet& iset2, const RooArgSet* ns
   // Initialize local variables perparing for recursive loop
   bool error = false ;
   const RooAbsReal* integrand = this ;
-  RooAbsReal* integral = 0 ;
+  std::unique_ptr<RooAbsReal> integral;
 
   // Handle trivial case of no integration here explicitly
   if (iset.empty()) {
 
-    TString title(GetTitle()) ;
-    title.Prepend("Integral of ") ;
+    const std::string title = std::string("Integral of ") + GetTitle();
+    const std::string name = std::string(GetName()) + integralNameSuffix(iset,nset,rangeName).Data();
 
-    TString name(GetName()) ;
-    name.Append(integralNameSuffix(iset,nset,rangeName)) ;
-
-    return new RooRealIntegral(name,title,*this,iset,nset,cfg,rangeName) ;
+    auto out = std::make_unique<RooRealIntegral>(name.c_str(), title.c_str(), *this, iset, nset, cfg, rangeName);
+    return RooFit::Detail::owningPtr<RooAbsReal>(std::move(out));
   }
 
   // Process integration over remaining integration variables
-  while(iset.getSize()>0) {
+  while(!iset.empty()) {
 
 
     // Find largest set of observables that can be integrated in one go
@@ -642,41 +640,38 @@ RooAbsReal* RooAbsReal::createIntObj(const RooArgSet& iset2, const RooArgSet* ns
     }
 
     // Prepare name and title of integral to be created
-    TString title(integrand->GetTitle()) ;
-    title.Prepend("Integral of ") ;
+    const std::string title = std::string("Integral of ") + integrand->GetTitle();
+    const std::string name = std::string(integrand->GetName()) + integrand->integralNameSuffix(innerSet,nset,rangeName).Data();
 
-    TString name(integrand->GetName()) ;
-    name.Append(integrand->integralNameSuffix(innerSet,nset,rangeName)) ;
+    std::unique_ptr<RooAbsReal> innerIntegral = std::move(integral);
 
     // Construct innermost integral
-    integral = new RooRealIntegral(name,title,*integrand,innerSet,nset,cfg,rangeName) ;
+    integral = std::make_unique<RooRealIntegral>(name.c_str(),title.c_str(),*integrand,innerSet,nset,cfg,rangeName);
 
     // Integral of integral takes ownership of innermost integral
-    if (integrand != this) {
-      integral->addOwnedComponents(*integrand) ;
+    if (innerIntegral) {
+      integral->addOwnedComponents(std::move(innerIntegral));
     }
 
     // Remove already integrated observables from to-do std::list
     iset.remove(innerSet) ;
 
     // Send info message on recursion if needed
-    if (integrand == this && iset.getSize()>0) {
+    if (integrand == this && !iset.empty()) {
       coutI(Integration) << GetName() << " : multidimensional integration over observables with parameterized ranges in terms of other integrated observables detected, using recursive integration strategy to construct final integral" << std::endl ;
     }
 
     // Prepare for recursion, next integral should integrate last integrand
-    integrand = integral ;
+    integrand = integral.get();
 
 
     // Only need normalization set in innermost integration
-    nset = 0 ;
+    nset = nullptr;
   }
 
   if (error) {
     coutE(Integration) << GetName() << " : ERROR while defining recursive integral over observables with parameterized integration ranges, please check that integration rangs specify uniquely defined integral " << std::endl;
-    delete integral ;
-    integral = 0 ;
-    return integral ;
+    return nullptr;
   }
 
 
@@ -688,23 +683,23 @@ RooAbsReal* RooAbsReal::createIntObj(const RooArgSet& iset2, const RooArgSet* ns
 
     RooArgSet cacheParams = RooHelpers::selectFromArgSet(*intParams, cacheParamsStr);
 
-    if (cacheParams.getSize()>0) {
-      cxcoutD(Caching) << "RooAbsReal::createIntObj(" << GetName() << ") INFO: constructing " << cacheParams.getSize()
+    if (!cacheParams.empty()) {
+      cxcoutD(Caching) << "RooAbsReal::createIntObj(" << GetName() << ") INFO: constructing " << cacheParams.size()
            << "-dim value cache for integral over " << iset2 << " as a function of " << cacheParams << " in range " << (rangeName?rangeName:"<none>") <<  std::endl ;
       std::string name = Form("%s_CACHE_[%s]",integral->GetName(),cacheParams.contentsString().c_str()) ;
-      RooCachedReal* cachedIntegral = new RooCachedReal(name.c_str(),name.c_str(),*integral,cacheParams) ;
+      auto cachedIntegral = std::make_unique<RooCachedReal>(name.c_str(),name.c_str(),*integral,cacheParams);
       cachedIntegral->setInterpolationOrder(2) ;
-      cachedIntegral->addOwnedComponents(*integral) ;
+      cachedIntegral->addOwnedComponents(std::move(integral));
       cachedIntegral->setCacheSource(true) ;
       if (integral->operMode()==ADirty) {
    cachedIntegral->setOperMode(ADirty) ;
       }
       //cachedIntegral->disableCache(true) ;
-      integral = cachedIntegral ;
+      return RooFit::Detail::owningPtr<RooAbsReal>(std::move(cachedIntegral));
     }
   }
 
-  return integral ;
+  return RooFit::Detail::owningPtr(std::move(integral));
 }
 
 
@@ -3948,7 +3943,7 @@ RooFit::OwningPtr<RooAbsReal> RooAbsReal::createScanRI(const RooArgSet& iset, co
   ivar->setBins(numScanBins,"numcdf") ;
   auto ret = std::make_unique<RooNumRunningInt>(name.c_str(),name.c_str(),*this,*ivar,"numrunint") ;
   ret->setInterpolationOrder(intOrder) ;
-  return RooFit::OwningPtr<RooAbsReal>{ret.release()};
+  return RooFit::Detail::owningPtr(std::move(ret));
 }
 
 
@@ -4010,7 +4005,7 @@ RooFit::OwningPtr<RooAbsReal> RooAbsReal::createIntRI(const RooArgSet& iset, con
   cdf->addOwnedComponents(cloneList) ;
   cdf->addOwnedComponents(loList) ;
 
-  return RooFit::OwningPtr<RooAbsReal>{cdf.release()};
+  return RooFit::Detail::owningPtr(std::move(cdf));
 }
 
 
