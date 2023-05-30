@@ -1,4 +1,4 @@
-// https://root.cern/js/ v7.3.1
+// https://root.cern/js/ v7.3.2
 (function (global, factory) {
 typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
 typeof define === 'function' && define.amd ? define(['exports'], factory) :
@@ -7,11 +7,11 @@ typeof define === 'function' && define.amd ? define(['exports'], factory) :
 
 /** @summary version id
   * @desc For the JSROOT release the string in format 'major.minor.patch' like '7.0.0' */
-let version_id = '7.3.1';
+let version_id = '7.3.x';
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-let version_date = '28/03/2023';
+let version_date = '30/05/2023';
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -45365,7 +45365,7 @@ function normal_cdf_c(x, sigma, x0 = 0) {
   * @memberof Math */
 function normal_cdf(x, sigma, x0 = 0) {
    let z = (x-x0)/(sigma*kSqrt2);
-   if (z < -1.) return erfc(-z);
+   if (z < -1.) return 0.5*erfc(-z);
    else         return 0.5*(1.0 + erf(z));
 }
 
@@ -53583,7 +53583,7 @@ class BrowserLayout {
 
    /** @summary Show status information inside special fields of browser layout */
    showStatus(...msgs) {
-      if (!this.status_layout) return;
+      if (!isObject(this.status_layout) || !isFunc(this.status_layout.getGridFrame)) return;
 
       let maxh = 0;
       for (let n = 0; n < 4; ++n) {
@@ -73372,7 +73372,7 @@ class TGeoPainter extends ObjectPainter {
           info = main.querySelector('.geo_info');
 
       if (!msg) {
-         info.remove();
+         info?.remove();
       } else {
          let spent = (new Date().getTime() - this._start_drawing_time)*1e-3;
          if (!info) {
@@ -79832,8 +79832,11 @@ class TDrawSelector extends TSelector {
          res.max = this.hist_args[axisid * 3 + 2];
       } else {
 
-         res.min = Math.min.apply(null, arr);
-         res.max = Math.max.apply(null, arr);
+         res.min = res.max = arr[0];
+         for (let i = 1; i < arr.length; ++i) {
+            res.min = Math.min(res.min, arr[i]);
+            res.max = Math.max(res.max, arr[i]);
+         }
 
          if (this.hist_nbins)
             nbins = res.nbins = this.hist_nbins;
@@ -92189,6 +92192,8 @@ class TGraphPainter$1 extends ObjectPainter {
       painter.decodeOptions(opt, true);
       painter.createBins();
       painter.createStat();
+
+      let graph = painter.getObject();
       if (!settings.DragGraphs && !graph.TestBit(kNotEditable))
          graph.InvertBit(kNotEditable);
 
