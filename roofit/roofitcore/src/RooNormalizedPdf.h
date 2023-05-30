@@ -21,7 +21,7 @@ public:
    RooNormalizedPdf(RooAbsPdf &pdf, RooArgSet const &normSet)
       : _pdf("numerator", "numerator", this, pdf),
         _normIntegral("denominator", "denominator", this,
-                      *pdf.createIntegral(normSet, *pdf.getIntegratorConfig(), pdf.normRange()), true, false, true),
+                      *std::unique_ptr<RooAbsReal>{pdf.createIntegral(normSet, *pdf.getIntegratorConfig(), pdf.normRange())}.release(), true, false, true),
         _normSet{normSet}
    {
       auto name = std::string(pdf.GetName()) + "_over_" + _normIntegral->GetName();

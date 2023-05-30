@@ -65,7 +65,7 @@ public:
   bool selfNormalized() const override { return true; }
 
   /// Forwards to the PDF's implementation.
-  RooAbsReal* createIntegral(const RooArgSet& iset,
+  RooFit::OwningPtr<RooAbsReal> createIntegral(const RooArgSet& iset,
                              const RooArgSet* nset=nullptr,
                              const RooNumIntConfig* cfg=nullptr,
                              const char* rangeName=nullptr) const override {
