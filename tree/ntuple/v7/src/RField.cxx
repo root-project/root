@@ -183,6 +183,8 @@ std::string GetNormalizedTypeName(const std::string &typeName)
       normalizedType = "std::" + normalizedType;
    if (normalizedType.substr(0, 11) == "unique_ptr<")
       normalizedType = "std::" + normalizedType;
+   if (normalizedType.substr(0, 4) == "set<")
+      normalizedType = "std::" + normalizedType;
 
    return normalizedType;
 }
@@ -365,6 +367,10 @@ ROOT::Experimental::Detail::RFieldBase::Create(const std::string &fieldName, con
       auto normalizedInnerTypeName = itemField->GetType();
       result = std::make_unique<RUniquePtrField>(fieldName, "std::unique_ptr<" + normalizedInnerTypeName + ">",
                                                  std::move(itemField));
+   } else if (canonicalType.substr(0, 9) == "std::set<") {
+      std::string itemTypeName = canonicalType.substr(9, canonicalType.length() - 10);
+      auto itemField = Create("_0", itemTypeName);
+      result = std::make_unique<RSetField>(fieldName, itemField.Unwrap());   
    } else if (canonicalType == ":Collection:") {
       // TODO: create an RCollectionField?
       result = std::make_unique<RField<ClusterSize_t>>(fieldName);
@@ -2374,6 +2380,91 @@ size_t ROOT::Experimental::RVariantField::GetValueSize() const
 void ROOT::Experimental::RVariantField::CommitCluster()
 {
    std::fill(fNWritten.begin(), fNWritten.end(), 0);
+}
+
+//------------------------------------------------------------------------------
+
+ROOT::Experimental::RSetField::RSetField(std::string_view fieldName, std::unique_ptr<Detail::RFieldBase> itemField)
+   : ROOT::Experimental::Detail::RFieldBase(fieldName, "std::set<" + itemField->GetType() + ">",
+                                            ENTupleStructure::kCollection, false /* isSimple */),
+     fItemSize(itemField->GetValueSize()),
+     fNWritten(0)
+{
+   Attach(std::move(itemField));
+}
+
+std::unique_ptr<ROOT::Experimental::Detail::RFieldBase>
+ROOT::Experimental::RSetField::CloneImpl(std::string_view newName) const
+{
+   auto newItemField = fSubFields[0]->Clone(fSubFields[0]->GetName());
+   return std::make_unique<RSetField>(newName, std::move(newItemField));
+}
+
+const ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations &
+ROOT::Experimental::RSetField::GetColumnRepresentations() const
+{
+   static RColumnRepresentations representations(
+      {{EColumnType::kSplitIndex64}, {EColumnType::kIndex64}, {EColumnType::kSplitIndex32}, {EColumnType::kIndex32}},
+      {});
+   return representations;
+}
+
+void ROOT::Experimental::RSetField::GenerateColumnsImpl()
+{
+   fColumns.emplace_back(Detail::RColumn::Create<ClusterSize_t>(RColumnModel(GetColumnRepresentative()[0]), 0));
+}
+
+void ROOT::Experimental::RSetField::GenerateColumnsImpl(const RNTupleDescriptor &desc)
+{
+   auto onDiskTypes = EnsureCompatibleColumnTypes(desc);
+   fColumns.emplace_back(Detail::RColumn::Create<ClusterSize_t>(RColumnModel(onDiskTypes[0]), 0));
+}
+
+std::size_t ROOT::Experimental::RSetField::AppendImpl(const Detail::RFieldValue & /*value*/)
+{
+   // TODO(fdegeus)
+   R__ASSERT(false);
+   return -1;
+}
+
+void ROOT::Experimental::RSetField::ReadGlobalImpl(NTupleSize_t /*globalIndex*/, Detail::RFieldValue * /*value*/)
+{
+   // TODO(fdegeus)
+   R__ASSERT(false);
+}
+
+ROOT::Experimental::Detail::RFieldValue ROOT::Experimental::RSetField::GenerateValue(void *where)
+{
+   return Detail::RFieldValue(this, reinterpret_cast<std::set<char> *>(where));
+}
+
+void ROOT::Experimental::RSetField::DestroyValue(const Detail::RFieldValue & /*value*/, bool /*dtorOnly*/)
+{
+   // TODO(fdegeus)
+   R__ASSERT(false);
+}
+
+ROOT::Experimental::Detail::RFieldValue ROOT::Experimental::RSetField::CaptureValue(void *where)
+{
+   return Detail::RFieldValue(true /* captureFlag */, this, where);
+}
+
+std::vector<ROOT::Experimental::Detail::RFieldValue>
+ROOT::Experimental::RSetField::SplitValue(const Detail::RFieldValue & /*value*/) const
+{
+   //  TODO(fdegeus)
+   R__ASSERT(false);
+   return {};
+}
+
+void ROOT::Experimental::RSetField::CommitCluster()
+{
+   fNWritten = 0;
+}
+
+void ROOT::Experimental::RSetField::AcceptVisitor(Detail::RFieldVisitor &visitor) const
+{
+   visitor.VisitSetField(*this);
 }
 
 //------------------------------------------------------------------------------

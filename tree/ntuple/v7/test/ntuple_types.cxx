@@ -302,6 +302,58 @@ TEST(RNTuple, StdTuple)
    }
 }
 
+TEST(RNTuple, StdSet)
+{
+   auto field = RField<std::set<int64_t>>("setField");
+   EXPECT_STREQ("std::set<std::int64_t>", field.GetType().c_str());
+   auto otherField = RFieldBase::Create("test", "std::set<int64_t>").Unwrap();
+   EXPECT_STREQ(field.GetType().c_str(), otherField->GetType().c_str());
+   EXPECT_EQ((sizeof(std::set<int64_t>)), field.GetValueSize());
+   EXPECT_EQ((sizeof(std::set<int64_t>)), otherField->GetValueSize());
+   EXPECT_EQ((alignof(std::set<int64_t>)), field.GetAlignment());
+   EXPECT_EQ((alignof(std::set<int64_t>)), otherField->GetAlignment());
+
+   // TODO(fdegeus): add and test custom comparators
+   // auto setSetField = RField<std::set<std::set<CustomStruct>>>("setSetField");
+   // EXPECT_STREQ("std::set<std::set<CustomStruct>>", setSetField.GetType().c_str());
+
+   FileRaii fileGuard("test_ntuple_rfield_stdset.root");
+   {
+      auto model = RNTupleModel::Create();
+      auto set_field = model->MakeField<std::set<float>>({"mySet", "float set"});
+      auto mySet2 = model->MakeField<std::set<std::string>>({"mySet2", "string set"});
+      auto mySet3 = model->MakeField<std::set<std::set<char>>>({"mySet3", "nested set"});
+
+      // TODO(fdegeus): add and test non-templated set fields
+      // auto mySet2 = RFieldBase::Create("mySet2", "std::set<std::string>").Unwrap();
+      // auto mySet3 = RFieldBase::Create("mySet3", "std::set<std::set<char>>").Unwrap();
+      // model->AddField(std::move(mySet2));
+      // model->AddField(std::move(mySet3));
+
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "set_ntuple", fileGuard.GetPath());
+      auto set_field2 = ntuple->GetModel()->GetDefaultEntry()->Get<std::set<std::string>>("mySet2");
+      auto set_field3 = ntuple->GetModel()->GetDefaultEntry()->Get<std::set<std::set<char>>>("mySet3");
+      for (int i = 0; i < 2; i++) {
+         *set_field = {static_cast<float>(i), 3.14, 0.42};
+         *set_field2 = {"Hello", "world!", std::to_string(i)};
+         *set_field3 = {{static_cast<char>(i), 'a'}, {'r', 'o', 'o', 't'}, {'h', 'i'}};
+         ntuple->Fill();
+      }
+   }
+
+   auto ntuple = RNTupleReader::Open("set_ntuple", fileGuard.GetPath());
+   EXPECT_EQ(2, ntuple->GetNEntries());
+
+   auto viewSet = ntuple->GetView<std::set<float>>("mySet");
+   auto viewSet2 = ntuple->GetView<std::set<std::string>>("mySet2");
+   auto viewSet3 = ntuple->GetView<std::set<std::set<char>>>("mySet3");
+   for (auto i : ntuple->GetEntryRange()) {
+      EXPECT_EQ(std::set<float>({static_cast<float>(i), 3.14, 0.42}), viewSet(i));
+      EXPECT_EQ(std::set<std::string>({"Hello", "world!", std::to_string(i)}), viewSet2(i));
+      EXPECT_EQ(std::set<std::set<char>>({{static_cast<char>(i), 'a'}, {'r', 'o', 'o', 't'}, {'h', 'i'}}), viewSet3(i));
+   }
+}
+
 TEST(RNTuple, Int64)
 {
    auto field = RFieldBase::Create("test", "std::int64_t").Unwrap();

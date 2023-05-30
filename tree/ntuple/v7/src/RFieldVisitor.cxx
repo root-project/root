@@ -401,6 +401,11 @@ void ROOT::Experimental::RPrintValueVisitor::VisitRVecField(const RRVecField &fi
    PrintCollection(field);
 }
 
+void ROOT::Experimental::RPrintValueVisitor::VisitSetField(const RSetField &field)
+{
+   PrintCollection(field);
+}
+
 //---------------------------- RNTupleFormatter --------------------------------
 
 
