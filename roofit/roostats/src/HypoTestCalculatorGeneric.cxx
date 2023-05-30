@@ -110,7 +110,7 @@ HypoTestResult* HypoTestCalculatorGeneric::GetHypoTest() const {
    const_cast<ModelConfig*>(fNullModel)->GuessObsAndNuisance(*fData);
    const_cast<ModelConfig*>(fAltModel)->GuessObsAndNuisance(*fData);
 
-   const RooArgSet * nullSnapshot = fNullModel->GetSnapshot();
+   std::unique_ptr<const RooArgSet> nullSnapshot {fNullModel->GetSnapshot()};
    if(nullSnapshot == nullptr) {
       oocoutE(nullptr,Generation) << "Null model needs a snapshot. Set using modelconfig->SetSnapshot(poi)." << endl;
       return 0;
@@ -132,7 +132,7 @@ HypoTestResult* HypoTestCalculatorGeneric::GetHypoTest() const {
    // save all parameters so we can set them back to what they were
    std::unique_ptr<RooArgSet> bothParams{fNullModel->GetPdf()->getParameters(*fData)};
    bothParams->add(*altParams,false);
-   RooArgSet *saveAll = (RooArgSet*) bothParams->snapshot();
+   std::unique_ptr<RooArgSet> saveAll {(RooArgSet*) bothParams->snapshot()};
 
    // check whether we have a ToyMCSampler and if so, keep a pointer to it
    ToyMCSampler* toymcs = dynamic_cast<ToyMCSampler*>( fTestStatSampler );
@@ -142,17 +142,16 @@ HypoTestResult* HypoTestCalculatorGeneric::GetHypoTest() const {
    RooArgSet nullP(*nullSnapshot);
    double obsTestStat;
 
-   RooArgList* allTS = nullptr;
+   std::unique_ptr<RooArgList> allTS;
    if( toymcs ) {
-      allTS = toymcs->EvaluateAllTestStatistics(*const_cast<RooAbsData*>(fData), nullP);
+      allTS = std::unique_ptr<RooArgList>{toymcs->EvaluateAllTestStatistics(*const_cast<RooAbsData*>(fData), nullP)};
       if (!allTS) return 0;
       //oocoutP(nullptr,Generation) << "All Test Statistics on data: " << endl;
       //allTS->Print("v");
       RooRealVar* firstTS = (RooRealVar*)allTS->at(0);
       obsTestStat = firstTS->getVal();
       if (allTS->getSize()<=1) {
-        delete allTS;
-        allTS= 0;  // don't save
+        allTS = nullptr; // don't save
       }
    }else{
       obsTestStat = fTestStatSampler->EvaluateTestStatistic(*const_cast<RooAbsData*>(fData), nullP);
@@ -228,11 +227,11 @@ HypoTestResult* HypoTestCalculatorGeneric::GetHypoTest() const {
    HypoTestResult* res = new HypoTestResult(resultname.c_str());
    res->SetPValueIsRightTail(fTestStatSampler->GetTestStatistic()->PValueIsRightTail());
    res->SetTestStatisticData(obsTestStat);
-   res->SetAltDistribution(samp_alt);
-   res->SetNullDistribution(samp_null);
+   res->SetAltDistribution(samp_alt); // takes ownership of samp_alt
+   res->SetNullDistribution(samp_null); // takes ownership of samp_null
    res->SetAltDetailedOutput( detOut_alt );
    res->SetNullDetailedOutput( detOut_null );
-   res->SetAllTestStatisticsData( allTS );
+   res->SetAllTestStatisticsData( allTS.get() );
 
    const RooArgSet *aset = GetFitInfo();
    if (aset != nullptr) {
@@ -242,9 +241,6 @@ HypoTestResult* HypoTestCalculatorGeneric::GetHypoTest() const {
    }
 
    bothParams->assign(*saveAll);
-   delete allTS;
-   delete saveAll;
-   delete nullSnapshot;
    PostHook();
    return res;
 }

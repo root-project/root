@@ -111,31 +111,26 @@ ProposalFunction* ProposalHelper::GetProposalFunction()
 
 void ProposalHelper::CreatePdf()
 {
-   // kbelasco: check here for memory leaks:
-   // does RooMultiVarGaussian make copies of xVec and muVec?
-   // or should we delete them?
    if (fVars == nullptr) {
       coutE(InputArguments) << "ProposalHelper::CreatePdf(): " <<
          "Variables to create proposal function for are not set." << endl;
       return;
    }
-   RooArgList* xVec = new RooArgList();
-   RooArgList* muVec = new RooArgList();
+   RooArgList xVec{};
+   RooArgList muVec{};
    RooRealVar* clone; 
    for (auto *r : static_range_cast<RooRealVar *> (*fVars)){
-      xVec->add(*r);
+      xVec.add(*r);
       TString cloneName = TString::Format("%s%s", "mu__", r->GetName());
       clone = static_cast<RooRealVar*>(r->clone(cloneName.Data()));
-      muVec->add(*clone);
+      muVec.add(*clone);
       if (fUseUpdates)
          fPdfProp->AddMapping(*clone, *r);
    }
    if (fCovMatrix == nullptr)
-      CreateCovMatrix(*xVec);
-   fPdf = new RooMultiVarGaussian("mvg", "MVG Proposal", *xVec, *muVec,
+      CreateCovMatrix(xVec);
+   fPdf = new RooMultiVarGaussian("mvg", "MVG Proposal", xVec, muVec,
                                   *fCovMatrix);
-   delete xVec;
-   delete muVec;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
