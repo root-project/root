@@ -33,6 +33,14 @@ ROOT::Experimental::Detail::RPageSinkBuf::RPageSinkBuf(std::unique_ptr<RPageSink
    fMetrics.ObserveMetrics(fInnerSink->GetMetrics());
 }
 
+ROOT::Experimental::Detail::RPageSinkBuf::~RPageSinkBuf()
+{
+   // Wait for unterminated tasks, if any, as they may still hold a reference to `this`.
+   // This cannot be moved to the base class destructor, given non-static members have been destroyed by the time the
+   // base class destructor is invoked.
+   WaitForAllTasks();
+}
+
 void ROOT::Experimental::Detail::RPageSinkBuf::CreateImpl(const RNTupleModel &model,
                                                           unsigned char * /* serializedHeader */,
                                                           std::uint32_t /* length */)
