@@ -868,7 +868,7 @@ class TGeoPainter extends ObjectPainter {
                    highlight: false, highlight_scene: false, no_screen: false,
                    project: '', projectPos: undefined,
                    is_main: false, tracks: false, showtop: false, can_rotate: true,
-                   camera_kind: 'perspective', camera_overlay: 'none',
+                   camera_kind: 'perspective', camera_overlay: 'gridb',
                    clipx: false, clipy: false, clipz: false, usessao: false, usebloom: true, outline: false,
                    script_name: '', transparency: 0, rotate: false, background: '#FFFFFF',
                    depthMethod: 'dflt', mouse_tmout: 50, trans_radial: 0, trans_z: 0 };
@@ -915,8 +915,8 @@ class TGeoPainter extends ObjectPainter {
       if (d.check('NOINSTANCING')) res.instancing = -1; // disable usage of InstancedMesh
       if (d.check('INSTANCING')) res.instancing = 1; // force usage of InstancedMesh
 
-      if (d.check('ORTHO_CAMERA')) { res.camera_kind = 'orthoXOY'; res.can_rotate = false; }
-      if (d.check('ORTHO', true)) { res.camera_kind = 'ortho' + d.part; res.can_rotate = false; }
+      if (d.check('ORTHO_CAMERA')) { res.camera_kind = 'orthoXOY'; res.can_rotate = 0; }
+      if (d.check('ORTHO', true)) { res.camera_kind = 'ortho' + d.part; res.can_rotate = 0; }
       if (d.check('OVERLAY', true)) res.camera_overlay = d.part.toLowerCase();
       if (d.check('CAN_ROTATE')) res.can_rotate = true;
       if (d.check('PERSPECTIVE')) { res.camera_kind = 'perspective'; res.can_rotate = true; }
@@ -982,9 +982,9 @@ class TGeoPainter extends ObjectPainter {
       if (d.check('CLIPZ')) res.clipz = true;
       if (d.check('CLIP')) res.clipx = res.clipy = res.clipz = true;
 
-      if (d.check('PROJX', true)) { res.project = 'x'; if (d.partAsInt(1) > 0) res.projectPos = d.partAsInt(); res.can_rotate = false; }
-      if (d.check('PROJY', true)) { res.project = 'y'; if (d.partAsInt(1) > 0) res.projectPos = d.partAsInt(); res.can_rotate = false; }
-      if (d.check('PROJZ', true)) { res.project = 'z'; if (d.partAsInt(1) > 0) res.projectPos = d.partAsInt(); res.can_rotate = false; }
+      if (d.check('PROJX', true)) { res.project = 'x'; if (d.partAsInt(1) > 0) res.projectPos = d.partAsInt(); res.can_rotate = 0; }
+      if (d.check('PROJY', true)) { res.project = 'y'; if (d.partAsInt(1) > 0) res.projectPos = d.partAsInt(); res.can_rotate = 0; }
+      if (d.check('PROJZ', true)) { res.project = 'z'; if (d.partAsInt(1) > 0) res.projectPos = d.partAsInt(); res.can_rotate = 0; }
 
       if (d.check('DFLT_COLORS') || d.check('DFLT')) res.dflt_colors = true;
       if (d.check('SSAO')) res.usessao = true;
@@ -1138,10 +1138,14 @@ class TGeoPainter extends ObjectPainter {
       menu.addchk(this.ctrl.highlight_scene, 'Highlight scene', () => {
          this.ctrl.highlight_scene = !this.ctrl.highlight_scene;
       });
-      menu.add('Reset camera position', () => this.focusCamera());
+
+      menu.add('sub:Camera');
+      menu.add('Reset position', () => this.focusCamera());
+      if (!this.ctrl.project)
+          menu.addchk(this.ctrl.rotate, 'Autorotate', () => this.setAutoRotate(!this.ctrl.rotate));
 
       if (!this._geom_viewer) {
-         menu.add('sub:Camera');
+         menu.addchk(this.canRotateCamera(), 'Can rotate', () => this.changeCanRotate(!this.ctrl.can_rotate));
 
          menu.add('Get position', () => menu.info('Position (as url)', '&opt=' + this.produceCameraUrl()));
          if (!this.isOrthoCamera())
@@ -1158,8 +1162,8 @@ class TGeoPainter extends ObjectPainter {
             }));
          menu.add('endsub:');
 
+
          if (this.isOrthoCamera()) {
-            menu.addchk(this.ctrl.can_rotate, 'Can rotate', () => this.changeCanRotate(!this.ctrl.can_rotate));
             menu.add('sub:Overlay');
             this.ctrl.cameraOverlayItems.forEach(item =>
                menu.addchk(this.ctrl.camera_overlay == item.value, item.name, item.value, arg => {
@@ -1169,11 +1173,10 @@ class TGeoPainter extends ObjectPainter {
             menu.add('endsub:');
          }
 
-         menu.add('endsub:');
       }
+      menu.add('endsub:');
 
-      if (!this.ctrl.project)
-         menu.addchk(this.ctrl.rotate, 'Autorotate', () => this.setAutoRotate(!this.ctrl.rotate));
+
       menu.addchk(this.ctrl.select_in_view, 'Select in view', () => {
          this.ctrl.select_in_view = !this.ctrl.select_in_view;
          if (this.ctrl.select_in_view) this.startDrawGeometry();
@@ -1475,7 +1478,7 @@ class TGeoPainter extends ObjectPainter {
       camera.add(this.ctrl, 'camera_kind', camcfg)
             .name('Kind').listen().onChange(() => this.changeCamera());
 
-      camera.add(this.ctrl, 'can_rotate').name('Allow rotate')
+      camera.add(this.ctrl, 'can_rotate').name('Can rotate')
                 .listen().onChange(() => this.changeCanRotate());
 
       camera.add(this, 'focusCamera').name('Reset position');
@@ -2000,6 +2003,15 @@ class TGeoPainter extends ObjectPainter {
          this.ctrl.depthMethod = method;
    }
 
+   /** @summary Returns if camera can rotated */
+   canRotateCamera() {
+      if (this.ctrl.can_rotate === false)
+         return false;
+      if (!this.ctrl.can_rotate && (this.isOrthoCamera() || this.ctrl.project))
+         return false;
+      return true;
+   }
+
    /** @summary Add orbit control */
    addOrbitControls() {
 
@@ -2012,7 +2024,7 @@ class TGeoPainter extends ObjectPainter {
 
       this._controls.mouse_tmout = this.ctrl.mouse_tmout; // set larger timeout for geometry processing
 
-      if (!this.ctrl.can_rotate)
+      if (!this.canRotateCamera())
          this._controls.enableRotate = false;
 
       this._controls.contextMenu = this.orbitContext.bind(this);

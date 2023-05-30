@@ -189,7 +189,7 @@ const symbolsRegexCache = new RegExp('(' + Object.keys(symbols_map).join('|').re
 
 /** @summary Simple replacement of latex letters
   * @private */
-const translateLaTeX = (str, more) => {
+const translateLaTeX = str => {
    while ((str.length > 2) && (str[0] == '{') && (str[str.length - 1] == '}'))
       str = str.slice(1, str.length - 1);
 
@@ -212,8 +212,8 @@ function approximateLabelWidth(label, font, fsize) {
    let sum = 0;
    for (let i = 0; i < len; ++i) {
       let code = label.charCodeAt(i);
-      if ((code >= 32) && (code<127))
-         sum += base_symbols_width[code-32];
+      if ((code >= 32) && (code < 127))
+         sum += base_symbols_width[code - 32];
       else
          sum += extra_symbols_width[code] || 1000;
    }
@@ -309,7 +309,7 @@ function parseLatex(node, arg, label, curr) {
 
    const extendPosition = (x1, y1, x2, y2) => {
       if (!curr.rect) {
-         curr.rect = { x1: x1, y1: y1, x2: x2, y2: y2 };
+         curr.rect = { x1, y1, x2, y2 };
       } else {
          curr.rect.x1 = Math.min(curr.rect.x1, x1);
          curr.rect.y1 = Math.min(curr.rect.y1, y1);
@@ -322,6 +322,11 @@ function parseLatex(node, arg, label, curr) {
 
       if (!curr.parent)
          arg.text_rect = curr.rect;
+   };
+
+   const addSpaces = nspaces => {
+      extendPosition(curr.x, curr.y, curr.x + nspaces * curr.fsize * 0.4, curr.y);
+      shiftX(nspaces * curr.fsize * 0.4);
    };
 
    /** Position pos.g node which directly attached to curr.g and uses curr.g coordinates */
@@ -346,14 +351,12 @@ function parseLatex(node, arg, label, curr) {
       let gg = currG();
 
       // this is indicator that gg element will be the only one, one can use directly main container
-      if ((nelements == 1) && !label && !curr.x && !curr.y) {
+      if ((nelements == 1) && !label && !curr.x && !curr.y)
          return gg;
-      }
 
       gg = gg.append('svg:g');
 
-      gg.attr('transform', makeTranslate(curr.x,curr.y));
-      return gg;
+      return gg.attr('transform', makeTranslate(curr.x, curr.y));
    };
 
    const extractSubLabel = (check_first, lbrace, rbrace) => {
@@ -426,7 +429,23 @@ function parseLatex(node, arg, label, curr) {
 
          nelements++;
 
-         let s = translateLaTeX(label.slice(0, best));
+         let s = translateLaTeX(label.slice(0, best)),
+             nbeginspaces = 0, nendspaces = 0;
+
+         while ((nbeginspaces < s.length) && (s[nbeginspaces] == ' '))
+            nbeginspaces++;
+
+         if (nbeginspaces > 0) {
+            addSpaces(nbeginspaces);
+            s = s.slice(nbeginspaces);
+         }
+
+         while ((nendspaces < s.length) && (s[s.length - 1 - nendspaces] == ' '))
+            nendspaces++;
+
+         if (nendspaces > 0)
+            s = s.slice(0, s.length - nendspaces);
+
          if (s || alone) {
             // if single text element created, place it directly in the node
             let g = curr.g || (alone ? node : currG()),
@@ -466,10 +485,13 @@ function parseLatex(node, arg, label, curr) {
 
             if (!alone) {
                shiftX(rect.width);
+               addSpaces(nendspaces);
             } else if (curr.deco) {
                elem.attr('text-decoration', curr.deco);
                delete curr.deco; // inform that decoration was applied
             }
+         } else {
+            addSpaces(nendspaces);
          }
       }
 
@@ -489,7 +511,7 @@ function parseLatex(node, arg, label, curr) {
 
          parseLatex(gg, arg, sublabel, subpos);
 
-         let minw = curr.fsize*0.6, xpos = 0,
+         let minw = curr.fsize * 0.6, xpos = 0,
              w = subpos.rect.width,
              y1 = Math.round(subpos.rect.y1),
              dy2 = Math.round(curr.fsize*0.1), dy = dy2*2,
@@ -855,7 +877,7 @@ let _mj_loading;
   * @desc one need not only to load script but wait for initialization
   * @private */
 async function loadMathjax() {
-   let loading = (_mj_loading !== undefined);
+   let loading = _mj_loading !== undefined;
 
    if (!loading && (typeof globalThis.MathJax != 'undefined'))
       return globalThis.MathJax;
@@ -866,7 +888,7 @@ async function loadMathjax() {
 
    if (loading) return promise;
 
-   let svg_config = {
+   let svg = {
        scale: 1,                      // global scaling factor for all expressions
        minScale: .5,                  // smallest scaling factor to use
        mtextInheritFont: false,       // true to make mtext elements use surrounding font
@@ -893,7 +915,7 @@ async function loadMathjax() {
          tex: {
             packages: {'[+]': ['color', 'upgreek', 'mathtools', 'physics']}
          },
-         svg: svg_config,
+         svg,
          startup: {
             ready() {
                MathJax.startup.defaultReady();
@@ -909,10 +931,12 @@ async function loadMathjax() {
                .then(() => promise);
    }
 
-   let myJSDOM;
+   let JSDOM;
 
-   return _loadJSDOM().then(handle => { myJSDOM = handle.JSDOM; return import('mathjax'); }).then(mj => {
-
+   return _loadJSDOM().then(handle => {
+      JSDOM = handle.JSDOM;
+      return import('mathjax');
+   }).then(mj => {
       // return Promise with mathjax loading
       mj.init({
          loader: {
@@ -921,9 +945,9 @@ async function loadMathjax() {
           tex: {
              packages: {'[+]': ['color', 'upgreek', 'mathtools', 'physics']}
           },
-          svg: svg_config,
+          svg,
           config: {
-             JSDOM: myJSDOM
+             JSDOM
           },
           startup: {
              typeset: false,
@@ -1310,7 +1334,7 @@ async function produceMathjax(painter, mj_node, arg) {
        options = { em: arg.font.size, ex: arg.font.size/2, family: arg.font.name, scale: 1, containerWidth: -1, lineWidth: 100000 };
 
    return loadMathjax()
-          .then(() => MathJax.tex2svgPromise(mtext, options))
+          .then(mj => mj.tex2svgPromise(mtext, options))
           .then(elem => {
               // when adding element to new node, it will be removed from original parent
               let svg = elem.querySelector('svg');
@@ -1327,7 +1351,7 @@ async function produceMathjax(painter, mj_node, arg) {
 /** @summary Just typeset HTML node with MathJax
   * @private */
 async function typesetMathjax(node) {
-   return loadMathjax().then(() => MathJax.typesetPromise(node ? [node] : undefined));
+   return loadMathjax().then(mj => mj.typesetPromise(node ? [node] : undefined));
 }
 
 export { symbols_map, translateLaTeX, producePlainText, isPlainText, produceLatex, loadMathjax, produceMathjax, typesetMathjax };
