@@ -484,10 +484,10 @@ void ToyMCSampler::GenerateGlobalObservables(RooAbsPdf& pdf) const {
                channelCat.setIndex(i);
                RooAbsPdf* pdftmp = simPdf->getPdf(channelCat.getCurrentLabel());
                assert(pdftmp);
-               RooArgSet* globtmp = pdftmp->getObservables(*fGlobalObservables);
+               std::unique_ptr<RooArgSet> globtmp{pdftmp->getObservables(*fGlobalObservables)};
                RooAbsPdf::GenSpec* gs = pdftmp->prepareMultiGen(*globtmp, NumEvents(1));
                _pdfList.push_back(pdftmp);
-               _obsList.emplace_back(globtmp);
+               _obsList.emplace_back(std::move(globtmp));
                _gsList.emplace_back(gs);
             }
          }

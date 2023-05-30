@@ -772,13 +772,13 @@ namespace RooStats {
      const std::string& ChannelName = nameIdx.first;
      fChannelNameVec.push_back( ChannelName );
      RooAbsPdf* pdftmp = simPdf->getPdf(ChannelName.c_str()) ;
-     RooArgSet* obstmp = pdftmp->getObservables(*observables) ;
+     RooArgSet* obstmp = std::unique_ptr<RooArgSet>{pdftmp->getObservables(*observables)}.release();
      fChannelPdfMap[ChannelName] = pdftmp;
      fChannelObservMap[ChannelName] =  obstmp;
    }
 
       } else {
-   RooArgSet* obstmp = modelPdf->getObservables(*observables) ;
+   RooArgSet* obstmp = std::unique_ptr<RooArgSet>{modelPdf->getObservables(*observables)}.release();
    // The channel name is model_CHANNEL
    std::string ChannelName = modelPdf->GetName();
    ChannelName = ChannelName.replace(0, 6, "");

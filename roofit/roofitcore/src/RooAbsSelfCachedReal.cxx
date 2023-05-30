@@ -99,7 +99,7 @@ void RooAbsSelfCachedReal::fillCacheObject(RooAbsCachedReal::FuncCacheElem& cach
 /// Defines observables to be cached, given a set of user defined observables
 /// Returns the subset of nset that are observables this p.d.f
 
-RooArgSet* RooAbsSelfCachedReal::actualObservables(const RooArgSet& nset) const
+RooFit::OwningPtr<RooArgSet> RooAbsSelfCachedReal::actualObservables(const RooArgSet& nset) const
 {
   // Make list of servers
   RooArgSet serverSet;
@@ -109,7 +109,7 @@ RooArgSet* RooAbsSelfCachedReal::actualObservables(const RooArgSet& nset) const
   }
 
   // Return servers that are in common with given normalization set
-  return (RooArgSet*) serverSet.selectCommon(nset);
+  return RooFit::OwningPtr<RooArgSet>{(RooArgSet*) serverSet.selectCommon(nset)};
 
 }
 

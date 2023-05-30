@@ -191,7 +191,7 @@ void RooAbsOptTestStatistic::initSlave(RooAbsReal& real, RooAbsData& indata, con
   _funcCloneSet = 0 ;
 
   // Attach FUNC to data set
-  _funcObsSet = _funcClone->getObservables(indata) ;
+  _funcObsSet = std::unique_ptr<RooArgSet>{_funcClone->getObservables(indata)}.release();
 
   if (_funcClone->getAttribute("BinnedLikelihood")) {
     _funcClone->setAttribute("BinnedLikelihoodActive") ;
