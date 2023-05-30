@@ -440,7 +440,7 @@ protected:
          const RooArgSet& set) const ;
 
 
-  RooAbsReal* createIntObj(const RooArgSet& iset, const RooArgSet* nset, const RooNumIntConfig* cfg, const char* rangeName) const ;
+  RooFit::OwningPtr<RooAbsReal> createIntObj(const RooArgSet& iset, const RooArgSet* nset, const RooNumIntConfig* cfg, const char* rangeName) const ;
   void findInnerMostIntegration(const RooArgSet& allObs, RooArgSet& innerObs, const char* rangeName) const ;
 
 

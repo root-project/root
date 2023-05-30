@@ -1036,7 +1036,7 @@ RooFit::OwningPtr<RooAbsReal> RooAbsPdf::createNLL(RooAbsData& data, const RooLi
              .GlobalObservables(glObsSet)
              .GlobalObservablesTag(rangeName.c_str());
 
-      return RooFit::OwningPtr<RooAbsReal>{new RooFit::TestStatistics::RooRealL("likelihood", "", builder.build())};
+      return RooFit::Detail::owningPtr(std::make_unique<RooFit::TestStatistics::RooRealL>("likelihood", "", builder.build()));
   }
 
   // Decode command line arguments
@@ -1159,7 +1159,7 @@ RooFit::OwningPtr<RooAbsReal> RooAbsPdf::createNLL(RooAbsData& data, const RooLi
        compiledConstr->addOwnedComponents(std::move(constr));
     }
 
-    return RooFit::OwningPtr<RooAbsReal>{RooFit::BatchModeHelpers::createNLL(
+    return RooFit::Detail::owningPtr(RooFit::BatchModeHelpers::createNLL(
             std::move(pdfClone),
             data,
             std::move(compiledConstr),
@@ -1169,7 +1169,7 @@ RooFit::OwningPtr<RooAbsReal> RooAbsPdf::createNLL(RooAbsData& data, const RooLi
             pc.getDouble("IntegrateBins"),
             batchMode,
             offset,
-            takeGlobalObservablesFromData).release()};
+            takeGlobalObservablesFromData));
   }
 
   // Construct NLL
@@ -1224,7 +1224,7 @@ RooFit::OwningPtr<RooAbsReal> RooAbsPdf::createNLL(RooAbsData& data, const RooLi
     nll->enableOffsetting(true) ;
   }
 
-  return RooFit::OwningPtr<RooAbsReal>{nll.release()};
+  return RooFit::Detail::owningPtr(std::move(nll));
 }
 
 
@@ -1753,7 +1753,7 @@ RooFit::OwningPtr<RooFitResult> RooAbsPdf::fitTo(RooAbsData& data, const RooLink
   cfg.enableParallelGradient = pc.getInt("enableParallelGradient");
   cfg.enableParallelDescent = pc.getInt("enableParallelDescent");
   cfg.timingAnalysis = pc.getInt("timingAnalysis");
-  return RooFit::OwningPtr<RooFitResult>{minimizeNLL(*nll, data, cfg).release()};
+  return RooFit::Detail::owningPtr(minimizeNLL(*nll, data, cfg));
 }
 
 
@@ -3420,7 +3420,7 @@ RooFit::OwningPtr<RooAbsReal> RooAbsPdf::createScanCdf(const RooArgSet& iset, co
   ivar->setBins(numScanBins,"numcdf") ;
   auto ret = std::make_unique<RooNumCdf>(name.c_str(),name.c_str(),*this,*ivar,"numcdf");
   ret->setInterpolationOrder(intOrder) ;
-  return RooFit::OwningPtr<RooAbsReal>{ret.release()};
+  return RooFit::Detail::owningPtr(std::move(ret));
 }
 
 
