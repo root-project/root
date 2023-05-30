@@ -65,7 +65,7 @@ ClassImp(RooCurve);
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.
 
-RooCurve::RooCurve() : _showProgress(false)
+RooCurve::RooCurve()
 {
   initialize();
 }
@@ -116,13 +116,10 @@ RooCurve::RooCurve(const RooAbsReal &f, RooAbsRealLValue &x, double xlo, double 
   double prevYMax = getYAxisMax() ;
   if(xbins > 0){
     // regular mode - use the sampling hint to decide where to evaluate the pdf
-    list<double>* hint = f.plotSamplingHint(x,xlo,xhi) ;
-    addPoints(*funcPtr,xlo,xhi,xbins+1,prec,resolution,wmode,nEvalError,doEEVal,eeVal,hint);
+    std::unique_ptr<std::list<double>> hint{f.plotSamplingHint(x,xlo,xhi)};
+    addPoints(*funcPtr,xlo,xhi,xbins+1,prec,resolution,wmode,nEvalError,doEEVal,eeVal,hint.get());
     if (_showProgress) {
       ccoutP(Plotting) << endl ;
-    }
-    if (hint) {
-      delete hint ;
     }
   } else {
     // if number of bins is set to <= 0, skip any interpolation and just evaluate the pdf at the bin centers
@@ -155,8 +152,7 @@ RooCurve::RooCurve(const RooAbsReal &f, RooAbsRealLValue &x, double xlo, double 
 
 RooCurve::RooCurve(const char *name, const char *title, const RooAbsFunc &func,
          double xlo, double xhi, UInt_t minPoints, double prec, double resolution,
-         bool shiftToZero, WingMode wmode, Int_t nEvalError, Int_t doEEVal, double eeVal) :
-  _showProgress(false)
+         bool shiftToZero, WingMode wmode, Int_t nEvalError, Int_t doEEVal, double eeVal)
 {
   SetName(name);
   SetTitle(title);
@@ -187,8 +183,7 @@ RooCurve::RooCurve(const char *name, const char *title, const RooAbsFunc &func,
 /// \param[in] scale1 Scale y values for c1 by this factor.
 /// \param[in] scale2 Scale y values for c2 by this factor.
 
-RooCurve::RooCurve(const char* name, const char* title, const RooCurve& c1, const RooCurve& c2, double scale1, double scale2) :
-  _showProgress(false)
+RooCurve::RooCurve(const char* name, const char* title, const RooCurve& c1, const RooCurve& c2, double scale1, double scale2)
 {
   initialize() ;
   SetName(name) ;
