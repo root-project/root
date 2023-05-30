@@ -1,8 +1,8 @@
 # JSROOT changelog
 
 ## Changes in dev
-1. Upgrade d3.js to v7.8.2
-2. Upgrade three.js to r149
+1. Upgrade d3.js to v7.8.4
+2. Upgrade three.js to r152, with WebGL2 for interactive, WebGL1 for node.js
 3. Support '[cutg]' draw option for TH2
 4. Correctly handle 'same0' draw option for TH2
 5. Fix several issues with axis reverse order
@@ -30,6 +30,13 @@
 27. Fix - rescan sumw2 when update TH1
 28. Fix - correct placing for TLegend header
 29. Fix - correctly align sub/super scripts in complex TLatex
+30. Fix - failure in normal_cdf calculation
+
+
+## Changes in 7.3.2
+1. Fix - undefined graph in TGraphPainter
+2. Fix - error in showing info in the geo painter
+3. Fix - stack limitation with Math.min.apply in tree draw
 
 
 ## Changes in 7.3.1

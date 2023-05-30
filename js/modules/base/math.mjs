@@ -290,7 +290,7 @@ function normal_cdf_c(x, sigma, x0 = 0) {
   * @memberof Math */
 function normal_cdf(x, sigma, x0 = 0) {
    let z = (x-x0)/(sigma*kSqrt2);
-   if (z < -1.) return erfc(-z);
+   if (z < -1.) return 0.5*erfc(-z);
    else         return 0.5*(1.0 + erf(z));
 }
 

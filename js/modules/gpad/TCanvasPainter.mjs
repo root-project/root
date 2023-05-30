@@ -614,11 +614,13 @@ class TCanvasPainter extends TPadPainter {
             break;
          case 'frame': // when changing frame
          case 'zoom':  // when changing zoom inside frame
-         case 'padpos': // when changing pad position
             if (!isFunc(painter.getWebPadOptions))
                painter = painter.getPadPainter();
             if (isFunc(painter.getWebPadOptions))
                msg = 'OPTIONS6:' + painter.getWebPadOptions('only_this');
+            break;
+         case 'padpos': // when changing pad position
+            msg = 'OPTIONS6:' + painter.getWebPadOptions('with_subpads');
             break;
          case 'drawopt':
             if (painter.snapid)

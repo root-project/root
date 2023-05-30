@@ -1,5 +1,5 @@
-// https://d3js.org v7.8.2 Copyright 2010-2021 Mike Bostock
-var version = "7.8.2";
+// https://d3js.org v7.8.4 Copyright 2010-2021 Mike Bostock
+var version = "7.8.4";
 
 function define(constructor, factory, prototype) {
   constructor.prototype = factory.prototype = prototype;

@@ -80,10 +80,17 @@ class TScatterPainter extends TGraphPainter {
       if (!this.fPalette)
          this.fPalette = getColorPalette(this.options.Palette);
 
-      let minc = Math.min.apply(Math, scatter.fColor),
-          maxc = Math.max.apply(Math, scatter.fColor),
-          mins = Math.min.apply(Math, scatter.fSize),
-          maxs = Math.max.apply(Math, scatter.fSize);
+      let minc = scatter.fColor[0], maxc = scatter.fColor[0],
+          mins = scatter.fSize[0], maxs = scatter.fSize[0];
+      for (let i = 1; i < scatter.fColor.length; ++i) {
+          minc = Math.min(minc, scatter.fColor[i]);
+          maxc = Math.max(maxc, scatter.fColor[i]);
+      }
+
+      for (let i = 1; i < scatter.fSize.length; ++i) {
+          mins = Math.min(mins, scatter.fSize[i]);
+          maxs = Math.max(maxs, scatter.fSize[i]);
+      }
 
       if (maxc <= minc) maxc = minc + 1;
       if (maxs <= mins) maxs = mins + 1;
