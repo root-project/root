@@ -39,7 +39,7 @@ namespace Experimental {
 
 // clang-format off
 /**
-\class ROOT::Experimental::Detail::RNTupleImporter
+\class ROOT::Experimental::RNTupleImporter
 \ingroup NTuple
 \brief Converts a TTree into an RNTuple
 
@@ -59,7 +59,14 @@ Note that input file and output file can be identical if the ntuple is stored un
 (use `SetNTupleName()`).
 
 By default, the RNTuple is compressed with zstd, independent of the input compression. The compression settings
-(and other output parameters) can be changed by `SetWriteOptions()`.
+(and other output parameters) can be changed by `SetWriteOptions()`. For example, to compress the imported RNTuple
+using lz4 (with compression level 4) instead:
+
+~~~ {.cpp}
+auto writeOptions = importer->GetWriteOptions();
+writeOptions.SetCompression(404);
+importer->SetWriteOptions(writeOptions);
+~~~
 
 Most RNTuple fields have a type identical to the corresponding TTree input branch. Exceptions are
   - C string branches are translated to std::string fields
@@ -81,7 +88,6 @@ Most RNTuple fields have a type identical to the corresponding TTree input branc
     These projections are meta-data only operations and don't involve duplicating the data.
 
 Current limitations of the importer:
-  - Importing collection proxies is untested
   - No support for trees containing TObject (or derived classes) or TClonesArray collections
   - Due to RNTuple currently storing data fully split, "don't split" markers are ignored
   - Some types are not (yet) available in RNTuple, such as pointers, Double32_t or std::map

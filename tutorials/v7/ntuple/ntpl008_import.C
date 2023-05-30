@@ -47,11 +47,6 @@ void ntpl008_import()
    // Create a new RNTupleImporter object.
    auto importer = RNTupleImporter::Create(kTreeFileName, kTreeName, kNTupleFileName);
 
-   // Configure the RNTuple to be compressed using the zstd algorithm.
-   auto writeOptions = importer->GetWriteOptions();
-   writeOptions.SetCompression(505);
-   importer->SetWriteOptions(writeOptions);
-
    // Begin importing.
    importer->Import();
 
