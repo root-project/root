@@ -342,7 +342,7 @@ private:
 public:
 
    // Virtual copy constructor.
-   virtual TVirtualCollectionProxy* Generate() const override;
+   TVirtualCollectionProxy* Generate() const override;
 
    // Copy constructor.
    TGenCollectionProxy(const TGenCollectionProxy& copy);
@@ -357,7 +357,7 @@ public:
    TGenCollectionProxy(const ROOT::Detail::TCollectionProxyInfo &info, TClass *cl);
 
    // Standard destructor.
-   virtual ~TGenCollectionProxy();
+   ~TGenCollectionProxy() override;
 
    // Reset the info gathered from StreamerInfos and value's TClass.
    Bool_t Reset() override;
@@ -482,7 +482,7 @@ struct AnyCollectionProxy : public TGenCollectionProxy  {
       fFeed           = T::feed;
       CheckFunctions();
    }
-   virtual ~AnyCollectionProxy() {  }
+   ~AnyCollectionProxy() override {  }
 };
 
 #endif

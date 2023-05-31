@@ -789,7 +789,7 @@ class TSqlCmdsBuffer : public TObject {
 public:
    TSqlCmdsBuffer(TSQLFile *f, TSQLClassInfo *info) : TObject(), fFile(f), fInfo(info), fBlobStmt(nullptr), fNormStmt(nullptr) {}
 
-   virtual ~TSqlCmdsBuffer()
+   ~TSqlCmdsBuffer() override
    {
       fNormCmds.Delete();
       fBlobCmds.Delete();
@@ -844,7 +844,7 @@ public:
 
    TSQLStatement *fRegStmt;
 
-   virtual ~TSqlRegistry()
+   ~TSqlRegistry() override
    {
       fPool.DeleteValues();
       fLongStrValues.Delete();
@@ -1089,7 +1089,7 @@ public:
       fMaxStrSize = reg->fFile->SQLSmallTextTypeLimit();
    }
 
-   virtual ~TSqlRawBuffer()
+   ~TSqlRawBuffer() override
    {
       // close blob statement for Oracle
       TSQLStatement *stmt = fCmdBuf->fBlobStmt;

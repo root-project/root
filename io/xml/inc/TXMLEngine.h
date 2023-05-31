@@ -43,7 +43,7 @@ protected:
 
 public:
    TXMLEngine();
-   virtual ~TXMLEngine();
+   ~TXMLEngine() override;
 
    void SetSkipComments(Bool_t on = kTRUE) { fSkipComments = on; }
    Bool_t GetSkipComments() const { return fSkipComments; }

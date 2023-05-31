@@ -71,7 +71,7 @@ public:
       kUser3 = BIT(23)  // free for user
    };
 
-   virtual ~TBufferIO();
+   ~TBufferIO() override;
 
    Int_t GetVersionOwner() const override;
 

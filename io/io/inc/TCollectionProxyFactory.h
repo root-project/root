@@ -165,7 +165,7 @@ public:
    /// Initializing constructor
    TCollectionClassStreamer() : TClassStreamer(nullptr) {                        }
    /// Standard destructor
-   virtual ~TCollectionClassStreamer()                  {                        }
+   ~TCollectionClassStreamer() override                  {                        }
    /// Streamer for I/O handling
    void operator()(TBuffer &buff, void *obj) override { Streamer(buff,obj,0,fOnFileClass); }
 
@@ -212,7 +212,7 @@ public:
    TCollectionMemberStreamer(const TCollectionMemberStreamer& c)
       : TMemberStreamer(c), TCollectionStreamer(c)   { }
    /// Standard destructor
-   virtual ~TCollectionMemberStreamer()             { }
+   ~TCollectionMemberStreamer() override             { }
    /// Streamer for I/O handling
    void operator()(TBuffer &buff,void *obj, Int_t siz = 0) override
    { Streamer(buff, obj, siz, nullptr); /* FIXME */ }

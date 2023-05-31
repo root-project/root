@@ -38,7 +38,7 @@ public:
    TKeySQL(TDirectory *mother, const void *obj, const TClass *cl, const char *name, const char *title = nullptr);
    TKeySQL(TDirectory *mother, Long64_t keyid, Long64_t objid, const char *name, const char *title,
            const char *keydatetime, Int_t cycle, const char *classname);
-   virtual ~TKeySQL() = default;
+   ~TKeySQL() override = default;
 
    Bool_t IsKeyModified(const char *keyname, const char *keytitle, const char *keydatime, Int_t cycle, const char *classname);
 

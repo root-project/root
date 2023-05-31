@@ -31,27 +31,27 @@ private:
    TDCacheFile() : fStatCached(kFALSE) { }
 
    // Interface to basic system I/O routines
-   Int_t    SysOpen(const char *pathname, Int_t flags, UInt_t mode);
-   Int_t    SysClose(Int_t fd);
-   Int_t    SysRead(Int_t fd, void *buf, Int_t len);
-   Int_t    SysWrite(Int_t fd, const void *buf, Int_t len);
-   Long64_t SysSeek(Int_t fd, Long64_t offset, Int_t whence);
-   Int_t    SysStat(Int_t fd, Long_t *id, Long64_t *size, Long_t *flags, Long_t *modtime);
-   Int_t    SysSync(Int_t fd);
+   Int_t    SysOpen(const char *pathname, Int_t flags, UInt_t mode) override;
+   Int_t    SysClose(Int_t fd) override;
+   Int_t    SysRead(Int_t fd, void *buf, Int_t len) override;
+   Int_t    SysWrite(Int_t fd, const void *buf, Int_t len) override;
+   Long64_t SysSeek(Int_t fd, Long64_t offset, Int_t whence) override;
+   Int_t    SysStat(Int_t fd, Long_t *id, Long64_t *size, Long_t *flags, Long_t *modtime) override;
+   Int_t    SysSync(Int_t fd) override;
 
 public:
    TDCacheFile(const char *path, Option_t *option="",
                const char *ftitle="", Int_t compress = ROOT::RCompressionSetting::EDefaults::kUseCompiledDefault);
 
-   ~TDCacheFile();
+   ~TDCacheFile() override;
 
-   Bool_t  ReadBuffer(char *buf, Int_t len);
-   Bool_t  ReadBuffer(char *buf, Long64_t pos, Int_t len);
-   Bool_t  WriteBuffer(const char *buf, Int_t len);
+   Bool_t  ReadBuffer(char *buf, Int_t len) override;
+   Bool_t  ReadBuffer(char *buf, Long64_t pos, Int_t len) override;
+   Bool_t  WriteBuffer(const char *buf, Int_t len) override;
 
-   Bool_t  ReadBuffers(char *buf, Long64_t *pos, Int_t *len, Int_t nbuf);
+   Bool_t  ReadBuffers(char *buf, Long64_t *pos, Int_t *len, Int_t nbuf) override;
 
-   void    ResetErrno() const;
+   void    ResetErrno() const override;
 
    static Bool_t Stage(const char *path, UInt_t secs,
                        const char *location = 0);
@@ -72,7 +72,7 @@ public:
    static TString GetDcapPath(const char *path);
 
 
-   ClassDef(TDCacheFile,1)  //A ROOT file that reads/writes via a dCache server
+   ClassDefOverride(TDCacheFile,1)  //A ROOT file that reads/writes via a dCache server
 };
 
 
@@ -81,20 +81,20 @@ class TDCacheSystem : public TSystem {
 private:
    void    *fDirp;   ///< directory handler
 
-   void    *GetDirPtr() const { return fDirp; }
+   void    *GetDirPtr() const override { return fDirp; }
 
 public:
    TDCacheSystem();
-   virtual ~TDCacheSystem() { }
+   ~TDCacheSystem() override { }
 
-   Int_t       MakeDirectory(const char *name);
-   void       *OpenDirectory(const char *name);
-   void        FreeDirectory(void *dirp);
-   const char *GetDirEntry(void *dirp);
-   Int_t       GetPathInfo(const char *path, FileStat_t &buf);
-   Bool_t      AccessPathName(const char *path, EAccessMode mode);
+   Int_t       MakeDirectory(const char *name) override;
+   void       *OpenDirectory(const char *name) override;
+   void        FreeDirectory(void *dirp) override;
+   const char *GetDirEntry(void *dirp) override;
+   Int_t       GetPathInfo(const char *path, FileStat_t &buf) override;
+   Bool_t      AccessPathName(const char *path, EAccessMode mode) override;
 
-   ClassDef(TDCacheSystem,0)  // Directory handler for DCache
+   ClassDefOverride(TDCacheSystem,0)  // Directory handler for DCache
 };
 
 #endif
