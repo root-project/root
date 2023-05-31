@@ -2592,7 +2592,7 @@ double RooAbsReal::getPropagatedError(const RooFitResult &fr, const RooArgSet &n
      if(rrvFitRes->namePtr() == namePtr()) return rrvFitRes->getError();
 
      // Strip out parameters with zero error
-     if (rrvFitRes->getError() <= rrvFitRes->getVal() * std::numeric_limits<double>::epsilon()) continue;
+     if (rrvFitRes->getError() <= std::abs(rrvFitRes->getVal()) * std::numeric_limits<double>::epsilon()) continue;
 
      // Ignore parameters in the fit result that this RooAbsReal doesn't depend on
      if(!rrvInAbsReal) continue;
