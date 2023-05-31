@@ -44,7 +44,7 @@ void rf610_visualerror()
    RooAbsData *d = model.generateBinned(x, 1000);
 
    // Perform fit and save fit result
-   RooFitResult *r = model.fitTo(*d, Save());
+   std::unique_ptr<RooFitResult> r{model.fitTo(*d, Save())};
 
    // V i s u a l i z e   f i t   e r r o r
    // -------------------------------------
