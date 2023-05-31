@@ -9,16 +9,9 @@
 # @author Pere Mato, CERN
 ############################################################################
 
-if(alien)
-  add_definitions(-DALIENDSMGR)
-  set(PROOF_EXTRA_HEADERS TDataSetManagerAliEn.h)
-  set(PROOF_EXTRA_SOURCES src/TDataSetManagerAliEn.cxx)
-endif()
-
 ROOT_STANDARD_LIBRARY_PACKAGE(Proof
   HEADERS
     TCondor.h
-    TDataSetManagerAliEn.h
     TDataSetManagerFile.h
     TDataSetManager.h
     TDSet.h

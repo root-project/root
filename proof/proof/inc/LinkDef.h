@@ -61,12 +61,6 @@
 #pragma link C++ class TDataSetManager;
 #pragma link C++ class TDataSetManagerFile;
 
-// Dictionary for TDataSetManagerAliEn only if requested
-#ifdef ALIENDSMGR
-#pragma link C++ class TDataSetManagerAliEn;
-#pragma link C++ class TAliEnFind;
-#endif
-
 #pragma link C++ class TSelVerifyDataSet+;
 
 // For backward compatibility with old client / masters
