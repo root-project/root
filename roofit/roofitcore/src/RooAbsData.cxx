@@ -148,32 +148,10 @@ RooAbsData::StorageType RooAbsData::getDefaultStorageType( )
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-void RooAbsData::claimVars(RooAbsData* data)
-{
-  _dcc[data]++ ;
-  //cout << "RooAbsData(" << data << ") claim incremented to " << _dcc[data] << endl ;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// If return value is true variables can be deleted
-
-bool RooAbsData::releaseVars(RooAbsData* data)
-{
-  if (_dcc[data]>0) {
-    _dcc[data]-- ;
-  }
-
-  //cout << "RooAbsData(" << data << ") claim decremented to " << _dcc[data] << endl ;
-  return (_dcc[data]==0) ;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
 
 RooAbsData::RooAbsData()
 {
-  claimVars(this) ;
   storageType = defaultStorageType;
 
   RooTrace::create(this) ;
@@ -220,8 +198,6 @@ RooAbsData::RooAbsData(RooStringView name, RooStringView title, const RooArgSet&
    } else {
       storageType = RooAbsData::Composite;
    }
-   // cout << "created dataset " << this << endl ;
-   claimVars(this);
 
    initializeVars(vars);
 
@@ -239,8 +215,6 @@ RooAbsData::RooAbsData(const RooAbsData& other, const char* newname) :
   _cachedVars("Cached Variables"),
   _namePtr(newname ? RooNameReg::instance().constPtr(newname) : other._namePtr)
 {
-  //cout << "created dataset " << this << endl ;
-  claimVars(this) ;
   _vars.addClone(other._vars) ;
 
   // reconnect any parameterized ranges to internal dataset observables
@@ -280,7 +254,6 @@ RooAbsData& RooAbsData::operator=(const RooAbsData& other) {
   TNamed::operator=(other);
   RooPrintable::operator=(other);
 
-  claimVars(this);
   _vars.Clear();
   _vars.addClone(other._vars);
   _namePtr = other._namePtr;
@@ -335,12 +308,6 @@ void RooAbsData::copyGlobalObservables(const RooAbsData& other) {
 
 RooAbsData::~RooAbsData()
 {
-  if (releaseVars(this)) {
-    // will cause content to be deleted subsequently in dtor
-  } else {
-    _vars.releaseOwnership() ;
-  }
-
   // Delete owned dataset components
   for(map<std::string,RooAbsData*>::iterator iter = _ownedComponents.begin() ; iter!= _ownedComponents.end() ; ++iter) {
     delete iter->second ;
