@@ -389,8 +389,10 @@ bool RooAbsCollection::addOwned(RooAbsArg& var, bool silent)
 bool RooAbsCollection::addOwned(std::unique_ptr<RooAbsArg> var, bool silent) {
   bool result = addOwned(*var.release(), silent);
   if(!result) {
-    throw std::runtime_error(std::string("RooAbsCollection::addOwned could not add the argument to the")
-                             + " collection! The ownership would not be well defined if we ignore this.");
+    auto errMsg = std::string("RooAbsCollection::addOwned could not add the argument to the")
+                             + " collection! The ownership would not be well defined if we ignore this.";
+    coutE(ObjectHandling) << errMsg << std::endl;
+    throw std::runtime_error(errMsg);
   }
   return result;
 }
@@ -492,15 +494,17 @@ bool RooAbsCollection::addOwned(const RooAbsCollection& list, bool silent)
 bool RooAbsCollection::addOwned(RooAbsCollection&& list, bool silent)
 {
   if(list.isOwning()) {
-    list.releaseOwnership();
+    list._ownCont = false;
   }
   if(list.empty()) return false;
 
   bool result = addOwned(list, silent);
 
   if(!result) {
-    throw std::runtime_error(std::string("RooAbsCollection::addOwned could not add the argument to the")
-                             + " collection! The ownership would not be well defined if we ignore this.");
+    auto errMsg = std::string("RooAbsCollection::addOwned could not add the argument to the")
+                             + " collection! The ownership would not be well defined if we ignore this.";
+    coutE(ObjectHandling) << errMsg << std::endl;
+    throw std::runtime_error(errMsg);
   }
 
   // So far, comps has only released the ownership, but it is still valid.
@@ -553,24 +557,8 @@ bool RooAbsCollection::replace(const RooAbsCollection &other)
 }
 
 
-
-////////////////////////////////////////////////////////////////////////////////
-/// Replace var1 with var2 and return true for success. Fails if
-/// this list is a copy of another, if var1 is not already in this set,
-/// or if var2 is already in this set. var1 and var2 do not need to have
-/// the same name.
-
-bool RooAbsCollection::replace(const RooAbsArg& var1, const RooAbsArg& var2)
+bool RooAbsCollection::replaceImpl(const RooAbsArg& var1, const RooAbsArg& var2)
 {
-  // check that this isn't a copy of a list
-  if(_ownCont) {
-    std::stringstream errMsg;
-    errMsg << "RooAbsCollection: cannot replace variables in a copied list";
-    coutE(ObjectHandling) << errMsg.str() << std::endl;
-    // better than returning "false" and leaving the collection in a broken state:
-    throw std::invalid_argument(errMsg.str());
-  }
-
   // is var1 already in this list?
   const char *name= var1.GetName();
   auto var1It = std::find(_list.begin(), _list.end(), &var1);
@@ -598,13 +586,58 @@ bool RooAbsCollection::replace(const RooAbsArg& var1, const RooAbsArg& var2)
   }
   *var1It = const_cast<RooAbsArg*>(&var2); //FIXME try to get rid of const_cast
 
-  if (_allRRV && dynamic_cast<const RooRealVar*>(&var2)==nullptr) {
+  if (_allRRV && dynamic_cast<const RooRealVar*>(&var2) == nullptr) {
     _allRRV=false ;
   }
 
   return true;
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+/// Replace var1 with var2 and return true for success. Fails if
+/// this list is a copy of another, if var1 is not already in this set,
+/// or if var2 is already in this set. var1 and var2 do not need to have
+/// the same name.
+
+bool RooAbsCollection::replace(const RooAbsArg &var1, const RooAbsArg &var2)
+{
+   // check that this isn't a copy of a list
+   if (_ownCont) {
+      std::string errMsg = "RooAbsCollection: cannot replace variables in a copied list";
+      coutE(ObjectHandling) << errMsg << std::endl;
+      throw std::runtime_error(errMsg);
+   }
+
+   return replaceImpl(var1, var2);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Replace var1 with var2 and return true for success. Fails if
+/// this list is a copy of another, if var1 is not already in this set,
+/// or if var2 is already in this set. var1 and var2 do not need to have
+/// the same name.
+
+bool RooAbsCollection::replace(RooAbsArg *var1, std::unique_ptr<RooAbsArg> var2)
+{
+   // To accept an owning var2, the collection must be owning.
+   if (!_ownCont) {
+      std::string errMsg =
+         "RooAbsCollection::replace(RooAbsArg *, std::unique_ptr<RooAbsArg>) can't be used on a non-owning collection!";
+      coutE(ObjectHandling) << errMsg << std::endl;
+      throw std::runtime_error(errMsg);
+   }
+
+   bool success = replaceImpl(*var1, *var2.release());
+   if (!success) {
+      auto errMsg = std::string("RooAbsCollection::replace(RooAbsArg *, std::unique_ptr<RooAbsArg>) did not succeed!") +
+                    "The ownership would not be well defined if we ignore this.";
+      coutE(ObjectHandling) << errMsg << std::endl;
+      throw std::runtime_error(errMsg);
+   }
+   delete var1;
+   return success;
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////

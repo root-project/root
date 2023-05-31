@@ -130,6 +130,7 @@ public:
   bool addOwned(std::unique_ptr<RooAbsArg> var, bool silent=false);
   virtual RooAbsArg *addClone(const RooAbsArg& var, bool silent=false) ;
   virtual bool replace(const RooAbsArg& var1, const RooAbsArg& var2) ;
+  bool replace(RooAbsArg* var1, std::unique_ptr<RooAbsArg> var2) ;
   virtual bool remove(const RooAbsArg& var, bool silent=false, bool matchByNameOnly=false) ;
   virtual void removeAll() ;
 
@@ -438,6 +439,8 @@ private:
 #else
 #error "Please remove this unneeded code."
 #endif
+
+  bool replaceImpl(const RooAbsArg& var1, const RooAbsArg& var2);
 
   using HashAssistedFind = RooFit::Detail::HashAssistedFind;
   mutable std::unique_ptr<HashAssistedFind> _hashAssistedFind; ///<!
