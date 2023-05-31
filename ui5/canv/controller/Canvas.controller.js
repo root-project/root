@@ -123,7 +123,7 @@ sap.ui.define([
       },
 
       /** @summary function used to activate GED in full canvas */
-      activateGed(painter, kind, mode) {
+      activateGed(painter /*, kind, mode */) {
 
          let canvp = this.getCanvasPainter();
 
@@ -344,7 +344,7 @@ sap.ui.define([
              model = this.getView().getModel(),
              curr = model.getProperty('/LeftArea');
 
-         if (!split || (curr === panel_name))
+         if (!split || (curr === panel_name) || (!curr && !panel_name))
             return Promise.resolve(null);
 
          model.setProperty("/LeftArea", panel_name);
@@ -505,13 +505,16 @@ sap.ui.define([
          if ((new_state === undefined) || (new_state == "toggle"))
             new_state = !this.isStatusShown();
 
-         this._Page.setShowFooter(new_state);
          this.getView().getModel().setProperty("/StatusIcon", chk_icon(new_state));
 
-         let canvp = this.getCanvasPainter();
-         if (canvp) {
-            canvp.enforceCanvasSize = true;
-            canvp.processChanges("sbits", canvp);
+         if (this.isStatusShown() != new_state) {
+
+            this._Page.setShowFooter(new_state);
+            let canvp = this.getCanvasPainter();
+            if (canvp) {
+               canvp.enforceCanvasSize = true;
+               canvp.processChanges("sbits", canvp);
+            }
          }
       },
 
@@ -545,11 +548,13 @@ sap.ui.define([
          if ((new_state === undefined) || (new_state == "toggle"))
             new_state = !this._Page.getShowHeader();
          this.getView().getModel().setProperty("/MenuBarIcon", chk_icon(new_state));
-         this._Page.setShowHeader(new_state);
 
-         let canvp = this.getCanvasPainter();
-         if (canvp)
-            canvp.enforceCanvasSize = true;
+         if (this.isMenuBarShow() != new_state) {
+            this._Page.setShowHeader(new_state);
+            let canvp = this.getCanvasPainter();
+            if (canvp)
+               canvp.enforceCanvasSize = true;
+         }
       },
 
       onDivideDialog() {
