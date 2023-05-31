@@ -49,7 +49,7 @@ public:
    };
 
    TBufferJSON(TBuffer::EMode mode = TBuffer::kWrite);
-   virtual ~TBufferJSON();
+   ~TBufferJSON() override;
 
    void SetCompact(int level);
    void SetTypenameTag(const char *tag = "_typename");

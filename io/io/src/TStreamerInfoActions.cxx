@@ -1030,7 +1030,7 @@ namespace TStreamerInfoActions
    public:
       TVectorLoopConfig(TVirtualCollectionProxy *proxy, Long_t increment, Bool_t /* read */) : TLoopConfiguration(proxy), fIncrement(increment) {};
       //virtual void PrintDebug(TBuffer &buffer, void *);
-      virtual ~TVectorLoopConfig() {};
+      ~TVectorLoopConfig() override {};
       void Print() const override
       {
          printf("TVectorLoopConfig: increment=%ld\n",fIncrement);
@@ -1051,7 +1051,7 @@ namespace TStreamerInfoActions
    public:
       TAssocLoopConfig(TVirtualCollectionProxy *proxy, Bool_t /* read */) : TLoopConfiguration(proxy) {};
       //virtual void PrintDebug(TBuffer &buffer, void *);
-      virtual ~TAssocLoopConfig() {};
+      ~TAssocLoopConfig() override {};
       void Print() const override
       {
          printf("TAssocLoopConfig: proxy=%s\n",fProxy->GetCollectionClass()->GetName());
@@ -1098,7 +1098,7 @@ namespace TStreamerInfoActions
       {
          Init(read);
       }
-      virtual ~TGenericLoopConfig() {};
+      ~TGenericLoopConfig() override {};
       void Print() const override
       {
          printf("TGenericLoopConfig: proxy=%s\n",fProxy->GetCollectionClass()->GetName());
@@ -1570,7 +1570,7 @@ namespace TStreamerInfoActions
          }
 
       }
-      virtual ~TConfigurationUseCache() {}
+      ~TConfigurationUseCache() override {}
       TConfiguration *Copy() override
       {
          TConfigurationUseCache *copy = new TConfigurationUseCache(*this);

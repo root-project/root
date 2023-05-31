@@ -28,7 +28,7 @@ private:
 
 public:
    TDOMParser();
-   virtual ~TDOMParser();
+   ~TDOMParser() override;
 
    Int_t   ParseFile(const char *filename) override;
    Int_t   ParseBuffer(const char *buffer, Int_t len) override;

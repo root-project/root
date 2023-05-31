@@ -76,7 +76,7 @@ public:
    enum { kDefaultMapSize = 0x80000 }; // default size of mapped heap is 500 KB
 
    // Should both be protected (waiting for cint)
-   virtual ~TMapFile();
+   ~TMapFile() override;
    void *operator new(size_t sz) { return TObject::operator new(sz); }
    void *operator new[](size_t sz) { return TObject::operator new[](sz); }
    void *operator new(size_t sz, void *vp) { return TObject::operator new(sz, vp); }

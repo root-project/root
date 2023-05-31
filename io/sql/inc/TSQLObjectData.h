@@ -28,7 +28,7 @@ class TSQLObjectInfo : public TObject {
 public:
    TSQLObjectInfo();
    TSQLObjectInfo(Long64_t objid, const char *classname, Version_t version);
-   virtual ~TSQLObjectInfo();
+   ~TSQLObjectInfo() override;
 
    Long64_t GetObjId() const { return fObjId; }
    const char *GetObjClassName() const { return fClassName.Data(); }
@@ -52,7 +52,7 @@ public:
    TSQLObjectData(TSQLClassInfo *sqlinfo, Long64_t objid, TSQLResult *classdata, TSQLRow *classrow,
                   TSQLResult *blobdata, TSQLStatement *blobstmt);
 
-   virtual ~TSQLObjectData();
+   ~TSQLObjectData() override;
 
    Long64_t GetObjId() const { return fObjId; }
    TSQLClassInfo *GetInfo() const { return fInfo; }
@@ -110,7 +110,7 @@ class TSQLObjectDataPool : public TObject {
 public:
    TSQLObjectDataPool();
    TSQLObjectDataPool(TSQLClassInfo *info, TSQLResult *data);
-   virtual ~TSQLObjectDataPool();
+   ~TSQLObjectDataPool() override;
 
    TSQLClassInfo *GetSqlInfo() const { return fInfo; }
    TSQLResult *GetClassData() const { return fClassData; }

@@ -24,7 +24,7 @@ class TConvertClonesArrayToProxy : public TMemberStreamer {
    TClass *fCollectionClass;
 public:
    TConvertClonesArrayToProxy(TVirtualCollectionProxy *proxy, Bool_t isPointer, Bool_t isPrealloc);
-   ~TConvertClonesArrayToProxy();
+   ~TConvertClonesArrayToProxy() override;
    void operator()(TBuffer &b, void *pmember, Int_t size=0) override;
 };
 

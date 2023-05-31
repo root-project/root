@@ -34,7 +34,7 @@ private:
 
 public:
    TSAXParser();
-   virtual ~TSAXParser();
+   ~TSAXParser() override;
 
            Int_t           ParseFile(const char *filename) override;
            Int_t           ParseBuffer(const char *contents, Int_t len) override;

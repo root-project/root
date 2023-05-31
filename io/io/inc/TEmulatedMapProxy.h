@@ -35,7 +35,7 @@ public:
    TEmulatedMapProxy(const char* cl_name, Bool_t silent);
 
    // Standard destructor
-   virtual ~TEmulatedMapProxy();
+   ~TEmulatedMapProxy() override;
 
    // Return the address of the value at index 'idx'
    void *At(UInt_t idx) override;

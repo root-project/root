@@ -25,24 +25,24 @@ private:
    TGFALFile() : fStatCached(kFALSE) { }
 
    // Interface to basic system I/O routines
-   Int_t    SysOpen(const char *pathname, Int_t flags, UInt_t mode);
-   Int_t    SysClose(Int_t fd);
-   Int_t    SysRead(Int_t fd, void *buf, Int_t len);
-   Int_t    SysWrite(Int_t fd, const void *buf, Int_t len);
-   Long64_t SysSeek(Int_t fd, Long64_t offset, Int_t whence);
-   Int_t    SysStat(Int_t fd, Long_t *id, Long64_t *size, Long_t *flags, Long_t *modtime);
-   Int_t    SysSync(Int_t) { /* no fsync for GFAL */ return 0; }
+   Int_t    SysOpen(const char *pathname, Int_t flags, UInt_t mode) override;
+   Int_t    SysClose(Int_t fd) override;
+   Int_t    SysRead(Int_t fd, void *buf, Int_t len) override;
+   Int_t    SysWrite(Int_t fd, const void *buf, Int_t len) override;
+   Long64_t SysSeek(Int_t fd, Long64_t offset, Int_t whence) override;
+   Int_t    SysStat(Int_t fd, Long_t *id, Long64_t *size, Long_t *flags, Long_t *modtime) override;
+   Int_t    SysSync(Int_t) override { /* no fsync for GFAL */ return 0; }
 
 public:
    TGFALFile(const char *url, Option_t *option="",
              const char *ftitle="", Int_t compress = ROOT::RCompressionSetting::EDefaults::kUseCompiledDefault);
-   ~TGFALFile();
+   ~TGFALFile() override;
 
-   Bool_t  ReadBuffer(char *buf, Int_t len);
-   Bool_t  ReadBuffer(char *buf, Long64_t pos, Int_t len);
-   Bool_t  WriteBuffer(const char *buf, Int_t len);
+   Bool_t  ReadBuffer(char *buf, Int_t len) override;
+   Bool_t  ReadBuffer(char *buf, Long64_t pos, Int_t len) override;
+   Bool_t  WriteBuffer(const char *buf, Int_t len) override;
 
-   ClassDef(TGFALFile,1)  //A ROOT file that reads/writes via a GFAL
+   ClassDefOverride(TGFALFile,1)  //A ROOT file that reads/writes via a GFAL
 };
 
 
@@ -51,20 +51,20 @@ class TGFALSystem : public TSystem {
 private:
    void    *fDirp;   // directory handler
 
-   void    *GetDirPtr() const { return fDirp; }
+   void    *GetDirPtr() const override { return fDirp; }
 
 public:
    TGFALSystem();
-   virtual ~TGFALSystem() { }
+   ~TGFALSystem() override { }
 
-   Int_t       MakeDirectory(const char *name);
-   void       *OpenDirectory(const char *name);
-   void        FreeDirectory(void *dirp);
-   const char *GetDirEntry(void *dirp);
-   Int_t       GetPathInfo(const char *path, FileStat_t &buf);
-   Bool_t      AccessPathName(const char *path, EAccessMode mode);
+   Int_t       MakeDirectory(const char *name) override;
+   void       *OpenDirectory(const char *name) override;
+   void        FreeDirectory(void *dirp) override;
+   const char *GetDirEntry(void *dirp) override;
+   Int_t       GetPathInfo(const char *path, FileStat_t &buf) override;
+   Bool_t      AccessPathName(const char *path, EAccessMode mode) override;
 
-   ClassDef(TGFALSystem,0)  // Directory handler for GFAL
+   ClassDefOverride(TGFALSystem,0)  // Directory handler for GFAL
 };
 
 #endif

@@ -29,7 +29,7 @@ private:
 
 public:
    TXMLDocument(_xmlDoc *doc);
-   virtual ~TXMLDocument();
+   ~TXMLDocument() override;
 
    TXMLNode   *GetRootNode() const;
 

@@ -28,7 +28,7 @@ private:
 public:
    TKeyMapFile();
    TKeyMapFile(const char *name, const char *classname, TMapFile *mapfile);
-   virtual ~TKeyMapFile() {}
+   ~TKeyMapFile() override {}
    void      Browse(TBrowser *b) override;
 
    ClassDefOverride(TKeyMapFile,0);  //Utility class for browsing TMapFile objects.
