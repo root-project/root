@@ -54,7 +54,7 @@ def write_man(parser, fileName):
 			listOptions = [arg.dest]
 		else:
 			listOptions = arg.option_strings
-		options = "\ ".join(listOptions)
+		options = " ".join(listOptions)
 		if help != None:
 			file.write(".IP {}\n".format(options))
 			file.write(help.replace("\n","\n.IP\n")+ "\n")
