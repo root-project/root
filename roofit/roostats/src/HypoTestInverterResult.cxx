@@ -171,7 +171,6 @@ HypoTestInverterResult::HypoTestInverterResult( const char* name,
    // to avoid I/O problem of the Result class -
    // make the set owning the cloned copy (use clone instead of Clone to not copying all links)
    fParameters.removeAll();
-   fParameters.takeOwnership();
    fParameters.addOwned(std::unique_ptr<RooRealVar>{static_cast<RooRealVar *>(scannedVariable.clone(scannedVariable.GetName()))});
 }
 

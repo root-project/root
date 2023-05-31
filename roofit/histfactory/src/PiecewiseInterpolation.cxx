@@ -70,8 +70,11 @@ PiecewiseInterpolation::PiecewiseInterpolation() : _normIntMgr(this)
 PiecewiseInterpolation::PiecewiseInterpolation(const char* name, const char* title, const RooAbsReal& nominal,
                       const RooArgList& lowSet,
                       const RooArgList& highSet,
-                      const RooArgList& paramSet,
-                      bool takeOwnership) :
+                      const RooArgList& paramSet
+#ifndef ROOFIT_MEMORY_SAFE_INTERFACES
+                     , bool takeOwnership
+#endif
+  ) :
   RooAbsReal(name, title),
   _normIntMgr(this),
   _nominal("!nominal","nominal value", this, (RooAbsReal&)nominal),
@@ -94,9 +97,11 @@ PiecewiseInterpolation::PiecewiseInterpolation(const char* name, const char* tit
       RooErrorHandler::softAbort() ;
     }
     _lowSet.add(*comp) ;
+#ifndef ROOFIT_MEMORY_SAFE_INTERFACES
     if (takeOwnership) {
       _ownedList.addOwned(std::unique_ptr<RooAbsArg>{comp});
     }
+#endif
   }
 
 
@@ -107,9 +112,11 @@ PiecewiseInterpolation::PiecewiseInterpolation(const char* name, const char* tit
       RooErrorHandler::softAbort() ;
     }
     _highSet.add(*comp) ;
+#ifndef ROOFIT_MEMORY_SAFE_INTERFACES
     if (takeOwnership) {
       _ownedList.addOwned(std::unique_ptr<RooAbsArg>{comp});
     }
+#endif
   }
 
 
@@ -120,9 +127,11 @@ PiecewiseInterpolation::PiecewiseInterpolation(const char* name, const char* tit
       RooErrorHandler::softAbort() ;
     }
     _paramSet.add(*comp) ;
+#ifndef ROOFIT_MEMORY_SAFE_INTERFACES
     if (takeOwnership) {
       _ownedList.addOwned(std::unique_ptr<RooAbsArg>{comp});
     }
+#endif
     _interpCode.push_back(0); // default code: linear interpolation
   }
 

@@ -50,7 +50,7 @@ template <typename T>
 OwningPtr<T> owningPtr(std::unique_ptr<T> &&ptr)
 {
 #ifdef ROOFIT_OWNING_PTR_IS_UNIQUE_PTR
-   return ptr;
+   return std::move(ptr);
 #else
    return ptr.release();
 #endif
