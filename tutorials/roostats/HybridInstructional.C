@@ -193,7 +193,7 @@ ClassImp(BinCountTestStat)
    // numeric RooFit Z_Gamma
    w->var("y")->setVal(100);
    w->var("x")->setVal(150);
-   RooAbsReal *cdf = w->pdf("averagedModel")->createCdf(*w->var("x"));
+   std::unique_ptr<RooAbsReal> cdf{w->pdf("averagedModel")->createCdf(*w->var("x"))};
    cdf->getVal(); // get ugly print messages out of the way
    cout << "-----------------------------------------" << endl;
    cout << "Part 2" << endl;

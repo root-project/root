@@ -57,7 +57,7 @@ void rf901_numintconfig()
    RooMsgService::instance().addStream(DEBUG, Topic(Integration));
 
    // Calculate integral over landau with default choice of numeric integrator
-   RooAbsReal *intLandau = landau.createIntegral(x);
+   std::unique_ptr<RooAbsReal> intLandau{landau.createIntegral(x)};
    double val = intLandau->getVal();
    cout << " [1] int_dx landau(x) = " << setprecision(15) << val << endl;
 
@@ -74,7 +74,7 @@ void rf901_numintconfig()
 #endif
 
    // Calculate integral over landau with custom integral specification
-   RooAbsReal *intLandau2 = landau.createIntegral(x, NumIntConfig(customConfig));
+   std::unique_ptr<RooAbsReal> intLandau2{landau.createIntegral(x, NumIntConfig(customConfig))};
    double val2 = intLandau2->getVal();
    cout << " [2] int_dx landau(x) = " << val2 << endl;
 
@@ -85,7 +85,7 @@ void rf901_numintconfig()
    landau.setIntegratorConfig(customConfig);
 
    // Calculate integral over landau custom numeric integrator specified as object default
-   RooAbsReal *intLandau3 = landau.createIntegral(x);
+   std::unique_ptr<RooAbsReal> intLandau3{landau.createIntegral(x)};
    double val3 = intLandau3->getVal();
    cout << " [3] int_dx landau(x) = " << val3 << endl;
 

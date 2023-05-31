@@ -48,7 +48,7 @@ void rf505_asciicfg()
    // -----------------------------------------------------------
 
    // Obtain set of parameters
-   RooArgSet *params = model.getParameters(x);
+   std::unique_ptr<RooArgSet> params{model.getParameters(x)};
 
    // Write parameters to file
    params->writeToFile("rf505_asciicfg_example.txt");

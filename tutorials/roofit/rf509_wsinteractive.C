@@ -40,17 +40,12 @@ void rf509_wsinteractive()
    // U s e   w o r k s p a c e   c o n t e n t s
    // ----------------------------------------------
 
-   // Old syntax to use the name space prefix operator to access the workspace contents
-   //
-   // RooDataSet* d = w::model.generate(w::x,1000) ;
-   // RooFitResult* r = w::model.fitTo(*d) ;
-
    // use normal workspace methods
    RooAbsPdf *model = w1->pdf("model");
    RooRealVar *x = w1->var("x");
 
    RooDataSet *d = model->generate(*x, 1000);
-   RooFitResult *r = model->fitTo(*d);
+   std::unique_ptr<RooFitResult> r{model->fitTo(*d)};
 
    // old syntax to access the variable x
    // RooPlot* frame = w::x.frame() ;

@@ -60,10 +60,10 @@ void rf407_latextables()
    // ----------------------------------------------------------------------------------------
 
    // Make list of model parameters
-   RooArgSet *params = model.getParameters(x);
+   std::unique_ptr<RooArgSet> params{model.getParameters(x)};
 
    // Save snapshot of prefit parameters
-   RooArgSet *initParams = (RooArgSet *)params->snapshot();
+   std::unique_ptr<RooArgSet> initParams{static_cast<RooArgSet *>(params->snapshot())};
 
    // Do fit to data, to obtain error estimates on parameters
    RooDataSet *data = model.generate(x, 1000);

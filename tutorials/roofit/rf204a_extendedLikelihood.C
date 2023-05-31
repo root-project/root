@@ -95,7 +95,7 @@ void rf204a_extendedLikelihood()
    // the interpretation of the coefficients is tied to the fit range
    // that's used in the first fit
    RooAddPdf model1(model);
-   RooFitResult* r = model1.fitTo(*data,Save()) ;
+   std::unique_ptr<RooFitResult> r{model1.fitTo(*data,Save())};
    r->Print() ;
 
    RooPlot * frame = x.frame(Title("Full range fitted"));
@@ -114,9 +114,7 @@ void rf204a_extendedLikelihood()
    x.setRange("right", 6., 10.);
 
    RooAddPdf model2(model);
-   RooFitResult* r2 = model2.fitTo(*data,
-      Range("left,right"),
-      Save()) ;
+   std::unique_ptr<RooFitResult> r2{model2.fitTo(*data, Range("left,right"), Save())};
    r2->Print();
 
 
@@ -137,9 +135,7 @@ void rf204a_extendedLikelihood()
    x.setRange("leftToMiddle",  0., 5.);
 
    RooAddPdf model3(model);
-   RooFitResult* r3 = model3.fitTo(*data,
-      Range("leftToMiddle"),
-      Save()) ;
+   std::unique_ptr<RooFitResult> r3{model3.fitTo(*data, Range("leftToMiddle"), Save())};
    r3->Print();
 
 

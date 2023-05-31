@@ -46,7 +46,7 @@ void rf601_intminuit()
    RooDataSet *data = model.generate(x, 1000);
 
    // Construct unbinned likelihood of model w.r.t. data
-   RooAbsReal *nll = model.createNLL(*data);
+   std::unique_ptr<RooAbsReal> nll{model.createNLL(*data)};
 
    // I n t e r a c t i v e   m i n i m i z a t i o n ,   e r r o r   a n a l y s i s
    // -------------------------------------------------------------------------------

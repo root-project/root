@@ -304,8 +304,8 @@ void TwoSidedFrequentistUpperLimitWithBands(const char *infile = "", const char 
    // Now we generate the expected bands and power-constraint
 
    // First: find parameter point for mu=0, with conditional MLEs for nuisance parameters
-   RooAbsReal *nll = mc->GetPdf()->createNLL(*data);
-   RooAbsReal *profile = nll->createProfile(*mc->GetParametersOfInterest());
+   std::unique_ptr<RooAbsReal> nll{mc->GetPdf()->createNLL(*data)};
+   std::unique_ptr<RooAbsReal> profile{nll->createProfile(*mc->GetParametersOfInterest())};
    firstPOI->setVal(0.);
    profile->getVal(); // this will do fit and set nuisance parameters to profiled values
    RooArgSet *poiAndNuisance = new RooArgSet();
@@ -358,16 +358,14 @@ void TwoSidedFrequentistUpperLimitWithBands(const char *infile = "", const char 
       if (!simPdf) {
          RooDataSet *one = mc->GetPdf()->generate(*mc->GetGlobalObservables(), 1);
          const RooArgSet *values = one->get();
-         RooArgSet *allVars = mc->GetPdf()->getVariables();
-         *allVars = *values;
-         delete allVars;
+         std::unique_ptr<RooArgSet> allVars{mc->GetPdf()->getVariables()};
+         allVars->assign(*values);
          delete one;
       } else {
          RooDataSet *one = simPdf->generateSimGlobal(*mc->GetGlobalObservables(), 1);
          const RooArgSet *values = one->get();
-         RooArgSet *allVars = mc->GetPdf()->getVariables();
-         *allVars = *values;
-         delete allVars;
+         std::unique_ptr<RooArgSet> allVars{mc->GetPdf()->getVariables()};
+         allVars->assign(*values);
          delete one;
       }
 
@@ -449,7 +447,4 @@ void TwoSidedFrequentistUpperLimitWithBands(const char *infile = "", const char 
    cout << "\nobserved 95% upper-limit " << interval->UpperLimit(*firstPOI) << endl;
    cout << "CLb strict [P(toy>obs|0)] for observed 95% upper-limit " << CLb << endl;
    cout << "CLb inclusive [P(toy>=obs|0)] for observed 95% upper-limit " << CLbinclusive << endl;
-
-   delete profile;
-   delete nll;
 }

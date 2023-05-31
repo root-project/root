@@ -151,7 +151,7 @@ void StandardHistFactoryPlotsWithCategories(const char *infile = "", const char 
       RooCategory *channelCat = (RooCategory *)(&simPdf->indexCat());
       auto const& catName = channelCat->begin()->first;
       RooAbsPdf *pdftmp = ((RooSimultaneous *)mc->GetPdf())->getPdf(catName.c_str());
-      RooArgSet *obstmp = pdftmp->getObservables(*mc->GetObservables());
+      std::unique_ptr<RooArgSet> obstmp{pdftmp->getObservables(*mc->GetObservables())};
       obs = ((RooRealVar *)obstmp->first());
       RooPlot *frame = obs->frame();
       cout << Form("%s==%s::%s", channelCat->GetName(), channelCat->GetName(), catName.c_str()) << endl;
@@ -203,7 +203,7 @@ void StandardHistFactoryPlotsWithCategories(const char *infile = "", const char 
          RooAbsPdf *pdftmp = simPdf->getPdf(catName.c_str());
 
          // Generate observables defined by the pdf associated with this state
-         RooArgSet *obstmp = pdftmp->getObservables(*mc->GetObservables());
+         std::unique_ptr<RooArgSet> obstmp{pdftmp->getObservables(*mc->GetObservables())};
          //      obstmp->Print();
 
          obs = ((RooRealVar *)obstmp->first());

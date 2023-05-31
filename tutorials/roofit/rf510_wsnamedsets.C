@@ -111,7 +111,7 @@ void fillWorkspace(RooWorkspace &w)
    // of defineSet must be set to import them on the fly. Named sets contain only references
    // to the original variables, therefore the value of observables in named sets already
    // reflect their 'current' value
-   RooArgSet *params = (RooArgSet *)model.getParameters(x);
+   std::unique_ptr<RooArgSet> params{model.getParameters(x)};
    w.defineSet("parameters", *params);
    w.defineSet("observables", x);
 

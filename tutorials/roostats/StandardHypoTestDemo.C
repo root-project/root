@@ -330,12 +330,11 @@ void StandardHypoTestDemo(const char *infile = "", const char *workspaceName = "
 
       const RooArgSet *nuisParams =
          (bModel->GetNuisanceParameters()) ? bModel->GetNuisanceParameters() : sbModel->GetNuisanceParameters();
-      RooArgSet *np = nuisPdf->getObservables(*nuisParams);
+      std::unique_ptr<RooArgSet> np{nuisPdf->getObservables(*nuisParams)};
       if (np->getSize() == 0) {
          Warning("StandardHypoTestDemo",
                  "Prior nuisance does not depend on nuisance parameters. They will be smeared in their full range");
       }
-      delete np;
 
       ((HybridCalculator *)hypoCalc)->ForcePriorNuisanceAlt(*nuisPdf);
       ((HybridCalculator *)hypoCalc)->ForcePriorNuisanceNull(*nuisPdf);
