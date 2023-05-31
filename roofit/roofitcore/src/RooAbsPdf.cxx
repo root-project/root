@@ -1848,14 +1848,15 @@ RooAbsReal* RooAbsPdf::createChi2(RooDataHist& data, const RooCmdArg& arg1,  con
     for (std::string& token : ROOT::Split(rangeName, ",")) {
       RooCmdArg subRangeCmd = RooFit::Range(token.c_str()) ;
       // Construct chi2 while substituting original RangeWithName argument with subrange argument created above
-      RooAbsReal* chi2Comp = new RooChi2Var(Form("%s_%s", baseName.c_str(), token.c_str()), "chi^2", *this, data,
+      auto chi2Comp = std::make_unique<RooChi2Var>(Form("%s_%s", baseName.c_str(), token.c_str()), "chi^2", *this, data,
                    &arg1==rarg?subRangeCmd:arg1,&arg2==rarg?subRangeCmd:arg2,
                    &arg3==rarg?subRangeCmd:arg3,&arg4==rarg?subRangeCmd:arg4,
                    &arg5==rarg?subRangeCmd:arg5,&arg6==rarg?subRangeCmd:arg6,
                    &arg7==rarg?subRangeCmd:arg7,&arg8==rarg?subRangeCmd:arg8) ;
-      chi2List.add(*chi2Comp) ;
+      chi2List.addOwned(std::move(chi2Comp));
     }
-    chi2 = new RooAddition(baseName.c_str(),"chi^2",chi2List,true) ;
+    chi2 = new RooAddition(baseName.c_str(),"chi^2",chi2List);
+    chi2->addOwnedComponents(std::move(chi2List));
   }
   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors) ;
 

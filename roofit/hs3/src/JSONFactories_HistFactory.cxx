@@ -328,8 +328,7 @@ bool importHistSample(RooJSONFactoryWSTool &tool, RooDataHist &dh, RooArgSet con
          normElems.add(v);
       }
       if (!histNps.empty()) {
-         auto &v =
-            tool.wsEmplace<PiecewiseInterpolation>("histoSys_" + prefixedName, hf, histoLo, histoHi, histNps, false);
+         auto &v = tool.wsEmplace<PiecewiseInterpolation>("histoSys_" + prefixedName, hf, histoLo, histoHi, histNps);
          v.setAllInterpCodes(4); // default interpCode for HistFactory
          shapeElems.add(v);
       } else {
