@@ -47,6 +47,7 @@ WINDOWS = (os.name == 'nt')
 WORKDIR = '/tmp/workspace' if not WINDOWS else 'C:/ROOT-CI'
 COMPRESSIONLEVEL = 6 if not WINDOWS else 1
 
+
 def main():
     # openstack.enable_logging(debug=True)
 
@@ -177,7 +178,7 @@ def cleanup_previous_build(shell_log):
 
 
 @github_log_group("Pull/clone branch")
-def git_pull(repository:str, branch: str, shell_log: str):
+def git_pull(repository: str, branch: str, shell_log: str):
     returncode = 1
 
     for attempts in range(5):
@@ -225,7 +226,7 @@ def download_artifacts(obj_prefix: str, shell_log: str):
 
 @github_log_group("Node state")
 def show_node_state(shell_log: str, options: str) -> str:
-    result, shell_log = subprocess_with_log(f"""
+    result, shell_log = subprocess_with_log("""
         which cmake
         cmake --version
         which c++ || true
