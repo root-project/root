@@ -44,7 +44,8 @@ namespace HistFactory{
 
     RooAbsPdf* sum_pdf = nullptr;
     bool FoundSumPdf=false;
-    for (auto *sum_pdf_arg : *sim_channel->getComponents()) {
+    std::unique_ptr<RooArgSet> components{sim_channel->getComponents()};
+    for (auto *sum_pdf_arg : *components) {
         std::string NodeClassName = sum_pdf_arg->ClassName();
         if( NodeClassName == std::string("RooRealSumPdf") ) {
             FoundSumPdf=true;
@@ -101,7 +102,8 @@ namespace HistFactory{
 
     // Find the servers of this channel
     bool FoundParamHistFunc=false;
-    for( auto *paramfunc_arg : *channel->getComponents() ) {
+    std::unique_ptr<RooArgSet> components{channel->getComponents()};
+    for( auto *paramfunc_arg : *components) {
       std::string NodeName = paramfunc_arg->GetName();
       std::string NodeClassName = paramfunc_arg->ClassName();
       if( NodeClassName != std::string("ParamHistFunc") ) continue;
