@@ -15,7 +15,7 @@
 
 // Define ROOFIT_MEMORY_SAFE_INTERFACES to change RooFit interfaces to be
 // memory safe.
-// #define ROOFIT_MEMORY_SAFE_INTERFACES
+#define ROOFIT_MEMORY_SAFE_INTERFACES
 
 #include <memory>
 
