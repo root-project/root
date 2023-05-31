@@ -278,8 +278,6 @@ public:
   bool hasFilledCache() const ;
 
   void addOwnedComponent(const char* idxlabel, RooAbsData& data) ;
-  static void claimVars(RooAbsData*) ;
-  static bool releaseVars(RooAbsData*) ;
 
   enum StorageType { Tree, Vector, Composite };
 
