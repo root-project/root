@@ -54,7 +54,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTTMVASofieParser
     src/ParseFuseConvAdd.cxx
     src/ParseFuseConvTransposeAdd.cxx
     src/ParseFuseMatMulAdd.cxx
-    src/ParseMatMul.cxx
     ${PROTO_SRCS}
   LIBRARIES
     ${Protobuf_LIBRARIES}

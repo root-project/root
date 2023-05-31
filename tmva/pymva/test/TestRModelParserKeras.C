@@ -416,7 +416,7 @@ TEST(RModelParser_Keras, SWISH)
 {
     constexpr float TOLERANCE = DEFAULT_TOLERANCE;
     float input[]={1,1,1,1,1,1,1,1};
-    TMVA_SOFIE_KerasModelSwish::Session s("swish_model.dat");
+    TMVA_SOFIE_swish_model::Session s("KerasSwish_model.dat");
     std::vector<float> output = s.infer(input);
 
     Py_Initialize();
