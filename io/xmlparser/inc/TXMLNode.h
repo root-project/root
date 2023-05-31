@@ -42,7 +42,7 @@ public:
 
    TXMLNode(_xmlNode *node, TXMLNode *parent = nullptr, TXMLNode *previous = nullptr);
 
-   virtual ~TXMLNode();
+   ~TXMLNode() override;
 
    EXMLElementType GetNodeType() const;
    const char *GetNodeName() const;

@@ -95,7 +95,7 @@ public:
    TMemFile(const char *name, const ZeroCopyView_t &datarange);
    TMemFile(const char *name, std::unique_ptr<TBufferFile> buffer);
    TMemFile(const TMemFile &orig);
-   virtual ~TMemFile();
+   ~TMemFile() override;
 
    virtual Long64_t CopyTo(void *to, Long64_t maxsize) const;
    virtual void     CopyTo(TBuffer &tobuf) const;

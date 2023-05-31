@@ -111,7 +111,7 @@ namespace TStreamerInfoActions {
       {
          // Usual constructor.
       }
-      ~TConfiguredAction() {
+      ~TConfiguredAction() override {
          // Usual destructor.
          // Idea: the configuration ownership might be moved to a single list so that
          // we can shared them between the optimized and non-optimized list of actions.
@@ -191,7 +191,7 @@ namespace TStreamerInfoActions {
             SetBit((UInt_t)EStatusBits::kVectorPtrLooper);
          fActions.reserve(maxdata);
       };
-      ~TActionSequence() {
+      ~TActionSequence() override {
          delete fLoopConfig;
       }
 
