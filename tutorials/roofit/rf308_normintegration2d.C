@@ -49,7 +49,7 @@ void rf308_normintegration2d()
 
    // Create object representing integral over gx
    // which is used to calculate  gx_Norm[x,y] == gx / gx_Int[x,y]
-   RooAbsReal *igxy = gxy.createIntegral(RooArgSet(x, y));
+   std::unique_ptr<RooAbsReal> igxy{gxy.createIntegral(RooArgSet(x, y))};
    cout << "gx_Int[x,y] = " << igxy->getVal() << endl;
 
    // NB: it is also possible to do the following
@@ -72,7 +72,7 @@ void rf308_normintegration2d()
    // Create an integral of gxy_Norm[x,y] over x and y in range "signal"
    // This is the fraction of of pdf gxy_Norm[x,y] which is in the
    // range named "signal"
-   RooAbsReal *igxy_sig = gxy.createIntegral(RooArgSet(x, y), NormSet(RooArgSet(x, y)), Range("signal"));
+   std::unique_ptr<RooAbsReal> igxy_sig{gxy.createIntegral({x, y}, NormSet(RooArgSet(x, y)), Range("signal"))};
    cout << "gx_Int[x,y|signal]_Norm[x,y] = " << igxy_sig->getVal() << endl;
 
    // C o n s t r u c t   c u m u l a t i v e   d i s t r i b u t i o n   f u n c t i o n   f r o m   p d f
@@ -80,7 +80,7 @@ void rf308_normintegration2d()
 
    // Create the cumulative distribution function of gx
    // i.e. calculate Int[-10,x] gx(x') dx'
-   RooAbsReal *gxy_cdf = gxy.createCdf(RooArgSet(x, y));
+   std::unique_ptr<RooAbsReal> gxy_cdf{gxy.createCdf(RooArgSet(x, y))};
 
    // Plot cdf of gx versus x
    TH1 *hh_cdf = gxy_cdf->createHistogram("hh_cdf", x, Binning(40), YVar(y, Binning(40)));

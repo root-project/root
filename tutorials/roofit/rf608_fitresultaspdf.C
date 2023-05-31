@@ -52,7 +52,7 @@ void rf608_fitresultaspdf()
    // F i t   m o d e l   t o   d a t a
    // ----------------------------------
 
-   RooFitResult *r = model.fitTo(*data, Save());
+   std::unique_ptr<RooFitResult> r{model.fitTo(*data, Save())};
 
    // C r e a t e M V   G a u s s i a n   p d f   o f   f i t t e d    p a r a m e t e r s
    // ------------------------------------------------------------------------------------

@@ -135,7 +135,7 @@ void rs101_limitexample()
    //  fc.SaveBeltToFile(true); // optional
    std::unique_ptr<PointSetInterval> fcint{static_cast<PointSetInterval*>(fc.GetInterval())};
 
-   RooFitResult *fit = modelWithConstraints->fitTo(data, Save(true), PrintLevel(-1));
+   std::unique_ptr<RooFitResult> fit{modelWithConstraints->fitTo(data, Save(true), PrintLevel(-1))};
 
    // Third, use a Calculator based on Markov Chain monte carlo
    // Before configuring the calculator, let's make a ProposalFunction

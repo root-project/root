@@ -60,7 +60,7 @@ void rf313_paramranges()
    // ----------------------------------------------------------------------------------
 
    // Create integral over normalized pdf model over x,y,z in "R" region
-   RooAbsReal *intPdf = pxyz.createIntegral(RooArgSet(x, y, z), RooArgSet(x, y, z), "R");
+   std::unique_ptr<RooAbsReal> intPdf{pxyz.createIntegral(RooArgSet(x, y, z), RooArgSet(x, y, z), "R")};
 
    // Plot value of integral as function of pdf parameter z0
    RooPlot *frame = z0.frame(Title("Integral of pxyz over x,y,z in region R"));
