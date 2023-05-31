@@ -1913,29 +1913,26 @@ void RooLagrangianMorphFunc::init()
    checkNameConflict(_config.paramCards, _operators);
    this->collectInputs(file);
    closeFile(file);
-   RooRealVar *nNP0 = new RooRealVar("nNP0", "nNP0", 1., 0, 1.);
+   auto nNP0 = std::make_unique<RooRealVar>("nNP0", "nNP0", 1., 0, 1.);
    nNP0->setStringAttribute("NewPhysics", "0");
    nNP0->setConstant(true);
-   _flags.add(*nNP0);
-   RooRealVar *nNP1 = new RooRealVar("nNP1", "nNP1", 1., 0, 1.);
+   _flags.addOwned(std::move(nNP0));
+   auto nNP1 = std::make_unique<RooRealVar>("nNP1", "nNP1", 1., 0, 1.);
    nNP1->setStringAttribute("NewPhysics", "1");
    nNP1->setConstant(true);
-   _flags.add(*nNP1);
-   RooRealVar *nNP2 = new RooRealVar("nNP2", "nNP2", 1., 0, 1.);
+   _flags.addOwned(std::move(nNP1));
+   auto nNP2 = std::make_unique<RooRealVar>("nNP2", "nNP2", 1., 0, 1.);
    nNP2->setStringAttribute("NewPhysics", "2");
    nNP2->setConstant(true);
-   _flags.add(*nNP2);
-   RooRealVar *nNP3 = new RooRealVar("nNP3", "nNP3", 1., 0, 1.);
+   _flags.addOwned(std::move(nNP2));
+   auto nNP3 = std::make_unique<RooRealVar>("nNP3", "nNP3", 1., 0, 1.);
    nNP3->setStringAttribute("NewPhysics", "3");
    nNP3->setConstant(true);
-   _flags.add(*nNP3);
-   RooRealVar *nNP4 = new RooRealVar("nNP4", "nNP4", 1., 0, 1.);
+   _flags.addOwned(std::move(nNP3));
+   auto nNP4 = std::make_unique<RooRealVar>("nNP4", "nNP4", 1., 0, 1.);
    nNP4->setStringAttribute("NewPhysics", "4");
    nNP4->setConstant(true);
-   _flags.add(*nNP4);
-   // we can't use `addOwned` before, because the RooListProxy doesn't overload
-   // `addOwned` correctly (it might in the future, then this can be changed).
-   _flags.takeOwnership();
+   _flags.addOwned(std::move(nNP4));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
