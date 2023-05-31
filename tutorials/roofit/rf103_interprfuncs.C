@@ -83,8 +83,8 @@ void rf103_interprfuncs()
    // -------------------------------------------------------------------
 
    // Fit g2 to data from g1
-   RooFitResult *r = g2.fitTo(*data2, Save());
-   r->Print();
+   std::unique_ptr<RooFitResult> fitResult{g2.fitTo(*data2, Save())};
+   fitResult->Print();
 
    // Plot data on frame and overlay projection of g2
    RooPlot *xframe2 = x.frame(Title("Tailored Gaussian pdf"));
