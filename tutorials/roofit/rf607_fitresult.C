@@ -62,7 +62,7 @@ void rf607_fitresult()
    // -------------------------------------------------------------
 
    // Perform fit and save result
-   RooFitResult *r = model.fitTo(*data, Save());
+   std::unique_ptr<RooFitResult> r{model.fitTo(*data, Save())};
 
    // P r i n t   f i t   r e s u l t s
    // ---------------------------------

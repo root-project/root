@@ -153,9 +153,9 @@ void StandardBayesianNumericalDemo(const char *infile = "", const char *workspac
    if (nSigmaNuisance > 0) {
       RooAbsPdf *pdf = mc->GetPdf();
       assert(pdf);
-      RooFitResult *res =
+      std::unique_ptr<RooFitResult> res{
          pdf->fitTo(*data, Save(true), Minimizer(ROOT::Math::MinimizerOptions::DefaultMinimizerType().c_str()),
-                    Hesse(true), PrintLevel(ROOT::Math::MinimizerOptions::DefaultPrintLevel() - 1));
+                    Hesse(true), PrintLevel(ROOT::Math::MinimizerOptions::DefaultPrintLevel() - 1))};
 
       res->Print();
       RooArgList nuisPar(*mc->GetNuisanceParameters());
