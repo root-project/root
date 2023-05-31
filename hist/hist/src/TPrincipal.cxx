@@ -671,7 +671,7 @@ void TPrincipal::MakeHistograms(const char *name, Option_t *opt)
          // histogram.
          Double_t xlowb  = fMeanValues(i) - 4 * fSigmas(i);
          Double_t xhighb = fMeanValues(i) + 4 * fSigmas(i);
-         Int_t    xbins  = fNumberOfDataPoints/100;
+         Int_t    xbins  = (fNumberOfDataPoints > 0 && fNumberOfDataPoints < 100 ? 1 : fNumberOfDataPoints/100);
          hX[i]           = new TH1F(Form("%s_x%03d", name, i),
             Form("Pattern space, variable %d", i),
             xbins,xlowb,xhighb);
@@ -683,7 +683,7 @@ void TPrincipal::MakeHistograms(const char *name, Option_t *opt)
          // The upper limit below is arbitrary!!!
          Double_t dlowb  = 0;
          Double_t dhighb = 20;
-         Int_t    dbins  = fNumberOfDataPoints/100;
+         Int_t    dbins  = (fNumberOfDataPoints > 0 && fNumberOfDataPoints < 100 ? 1 : fNumberOfDataPoints/100);
          hD[i]           = new TH2F(Form("%s_d%03d", name, i),
             Form("Distance from pattern to "
             "feature space, variable %d", i),
