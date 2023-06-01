@@ -125,9 +125,9 @@ public:
    TGeoTessellated(const char *name, int nfacets = 0);
    TGeoTessellated(const char *name, const std::vector<Vertex_t> &vertices);
    // destructor
-   virtual ~TGeoTessellated() {}
+   ~TGeoTessellated() override {}
 
-   void ComputeBBox();
+   void ComputeBBox() override;
    void CloseShape(bool check = true, bool fixFlipped = true, bool verbose = true);
 
    bool AddFacet(const Vertex_t &pt0, const Vertex_t &pt1, const Vertex_t &pt2);
@@ -144,19 +144,19 @@ public:
    const TGeoFacet &GetFacet(int i) const { return fFacets[i]; }
    const Vertex_t &GetVertex(int i) const { return fVertices[i]; }
 
-   virtual void AfterStreamer();
-   virtual int DistancetoPrimitive(int, int) { return 99999; }
-   virtual const TBuffer3D &GetBuffer3D(int reqSections, Bool_t localFrame) const;
-   virtual void GetMeshNumbers(int &nvert, int &nsegs, int &npols) const;
-   virtual int GetNmeshVertices() const { return fNvert; }
-   virtual void InspectShape() const {}
-   virtual TBuffer3D *MakeBuffer3D() const;
-   virtual void Print(Option_t *option = "") const;
-   virtual void SavePrimitive(std::ostream &, Option_t *) {}
-   virtual void SetPoints(double *points) const;
-   virtual void SetPoints(Float_t *points) const;
-   virtual void SetSegsAndPols(TBuffer3D &buff) const;
-   virtual void Sizeof3D() const {}
+   void AfterStreamer() override;
+   int DistancetoPrimitive(int, int) override { return 99999; }
+   const TBuffer3D &GetBuffer3D(int reqSections, Bool_t localFrame) const override;
+   void GetMeshNumbers(int &nvert, int &nsegs, int &npols) const override;
+   int GetNmeshVertices() const override { return fNvert; }
+   void InspectShape() const override {}
+   TBuffer3D *MakeBuffer3D() const override;
+   void Print(Option_t *option = "") const override;
+   void SavePrimitive(std::ostream &, Option_t *) override {}
+   void SetPoints(double *points) const override;
+   void SetPoints(Float_t *points) const override;
+   void SetSegsAndPols(TBuffer3D &buff) const override;
+   void Sizeof3D() const override {}
 
    /// Resize and center the shape in a box of size maxsize
    void ResizeCenter(double maxsize);
@@ -173,7 +173,7 @@ public:
    /// Reader from .obj format
    static TGeoTessellated *ImportFromObjFormat(const char *objfile, bool check = false, bool verbose = false);
 
-   ClassDef(TGeoTessellated, 1) // tessellated shape class
+   ClassDefOverride(TGeoTessellated, 1) // tessellated shape class
 };
 
 #endif

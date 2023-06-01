@@ -66,7 +66,7 @@ public:
    TGeoBoolNode(TGeoShape *left, TGeoShape *right, TGeoMatrix *lmat = nullptr, TGeoMatrix *rmat = nullptr);
 
    // destructor
-   virtual ~TGeoBoolNode();
+   ~TGeoBoolNode() override;
    // methods
    virtual void      ComputeBBox(Double_t &dx, Double_t &dy, Double_t &dz, Double_t *origin) = 0;
    virtual void      ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm) = 0;
@@ -111,7 +111,7 @@ public:
    TGeoUnion(TGeoShape *left, TGeoShape *right, TGeoMatrix *lmat = nullptr, TGeoMatrix *rmat = nullptr);
 
    // destructor
-   virtual ~TGeoUnion();
+   ~TGeoUnion() override;
    // methods
    void      ComputeBBox(Double_t &dx, Double_t &dy, Double_t &dz, Double_t *origin) override;
    void      ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm) override;
@@ -150,7 +150,7 @@ public:
    TGeoIntersection(TGeoShape *left, TGeoShape *right, TGeoMatrix *lmat = nullptr, TGeoMatrix *rmat = nullptr);
 
    // destructor
-   virtual ~TGeoIntersection();
+   ~TGeoIntersection() override;
    // methods
    void      ComputeBBox(Double_t &dx, Double_t &dy, Double_t &dz, Double_t *origin) override;
    void      ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm) override;
@@ -188,7 +188,7 @@ public:
    TGeoSubtraction(TGeoShape *left, TGeoShape *right, TGeoMatrix *lmat = nullptr, TGeoMatrix *rmat = nullptr);
 
    // destructor
-   virtual ~TGeoSubtraction();
+   ~TGeoSubtraction() override;
    // methods
    void      ComputeBBox(Double_t &dx, Double_t &dy, Double_t &dz, Double_t *origin) override;
    void      ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm) override;

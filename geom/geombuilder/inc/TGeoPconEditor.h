@@ -64,8 +64,8 @@ public:
                    Int_t width = 140, Int_t height = 30,
                    UInt_t options = kChildFrame,
                    Pixel_t back = GetDefaultFrameBackground());
-   virtual ~TGeoPconEditor();
-   virtual void   SetModel(TObject *obj);
+   ~TGeoPconEditor() override;
+   void   SetModel(TObject *obj) override;
 
    void           DoModified();
    void           DoName();
@@ -75,7 +75,7 @@ public:
    virtual void   DoApply();
    virtual void   DoUndo();
 
-   ClassDef(TGeoPconEditor,0)   // TGeoPcon editor
+   ClassDefOverride(TGeoPconEditor,0)   // TGeoPcon editor
 };
 
 
@@ -91,7 +91,7 @@ protected:
 
 public:
    TGeoPconSection(const TGWindow *p, UInt_t w, UInt_t h, Int_t id);
-   virtual ~TGeoPconSection();
+   ~TGeoPconSection() override;
    void         HideDaughters();
    Double_t     GetZ() const;
    Double_t     GetRmin() const;
@@ -106,6 +106,6 @@ public:
 
    virtual void Changed(Int_t i);   // *SIGNAL*
 
-   ClassDef(TGeoPconSection,0)   // TGeoPcon section
+   ClassDefOverride(TGeoPconSection,0)   // TGeoPcon section
 };
 #endif

@@ -23,20 +23,20 @@ protected:
    Int_t                fNedgesi;           // Initial number of edges
    TGNumberEntry       *fENedges;           // Number entry for nsections
 
-   virtual void CreateEdges();
+   void CreateEdges() override;
 
 public:
    TGeoPgonEditor(const TGWindow *p = nullptr,
                    Int_t width = 140, Int_t height = 30,
                    UInt_t options = kChildFrame,
                    Pixel_t back = GetDefaultFrameBackground());
-   virtual ~TGeoPgonEditor();
-   virtual void   SetModel(TObject *obj);
+   ~TGeoPgonEditor() override;
+   void   SetModel(TObject *obj) override;
 
    void           DoNedges();
-   virtual void   DoApply();
-   virtual void   DoUndo();
+   void   DoApply() override;
+   void   DoUndo() override;
 
-   ClassDef(TGeoPgonEditor,0)   // TGeoPgon editor
+   ClassDefOverride(TGeoPgonEditor,0)   // TGeoPgon editor
 };
 #endif

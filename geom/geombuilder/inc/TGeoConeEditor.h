@@ -58,8 +58,8 @@ public:
                   Int_t width = 140, Int_t height = 30,
                   UInt_t options = kChildFrame,
                   Pixel_t back = GetDefaultFrameBackground());
-   virtual ~TGeoConeEditor();
-   virtual void   SetModel(TObject *obj);
+   ~TGeoConeEditor() override;
+   void   SetModel(TObject *obj) override;
 
    void           DoRmin1();
    void           DoRmin2();
@@ -71,7 +71,7 @@ public:
    virtual void   DoApply();
    virtual void   DoUndo();
 
-   ClassDef(TGeoConeEditor,0)   // TGeoCone editor
+   ClassDefOverride(TGeoConeEditor,0)   // TGeoCone editor
 };
 
 
@@ -88,23 +88,23 @@ protected:
    TGNumberEntry   *fEPhi1;             // Number entry for phi1
    TGNumberEntry   *fEPhi2;             // Number entry for phi2
 
-   virtual void ConnectSignals2Slots();   // Connect the signals to the slots
+   void ConnectSignals2Slots() override;   // Connect the signals to the slots
 
 public:
    TGeoConeSegEditor(const TGWindow *p = nullptr,
                    Int_t width = 140, Int_t height = 30,
                    UInt_t options = kChildFrame,
                    Pixel_t back = GetDefaultFrameBackground());
-   virtual ~TGeoConeSegEditor();
-   virtual void   SetModel(TObject *obj);
+   ~TGeoConeSegEditor() override;
+   void   SetModel(TObject *obj) override;
 
    void           DoPhi();
    void           DoPhi1();
    void           DoPhi2();
-   virtual void   DoApply();
-   virtual void   DoUndo();
+   void   DoApply() override;
+   void   DoUndo() override;
 
-   ClassDef(TGeoConeSegEditor,0)   // TGeoConeSeg editor
+   ClassDefOverride(TGeoConeSegEditor,0)   // TGeoConeSeg editor
 };
 
 #endif

@@ -38,7 +38,7 @@ protected:
 public:
    TVirtualGeoTrack();
    TVirtualGeoTrack(Int_t id, Int_t pdgcode, TVirtualGeoTrack *parent=nullptr, TObject *particle=nullptr);
-   virtual ~TVirtualGeoTrack();
+   ~TVirtualGeoTrack() override;
 
    virtual TVirtualGeoTrack *AddDaughter(Int_t id, Int_t pdgcode, TObject *particle=nullptr) = 0;
    virtual Int_t       AddDaughter(TVirtualGeoTrack *other) = 0;
@@ -49,7 +49,7 @@ public:
    TVirtualGeoTrack   *GetDaughter(Int_t index) const {return (TVirtualGeoTrack*)fTracks->At(index);}
    TVirtualGeoTrack   *GetMother() const {return fParent;}
    TObject            *GetMotherParticle() const {return fParent ? fParent->GetParticle() : nullptr;}
-   virtual const char *GetName() const;
+   const char *GetName() const override;
    Int_t               GetNdaughters() const {return fTracks ? fTracks->GetEntriesFast() : 0;}
    virtual Int_t       GetNpoints() const = 0;
    Int_t               GetParentId() const   {return fParent?fParent->GetId():-1;}
@@ -62,7 +62,7 @@ public:
    virtual const Double_t *GetPoint(Int_t i) const = 0;
    Bool_t              HasPoints() const {return (GetNpoints()==0)?kFALSE:kTRUE;}
    Bool_t              IsInTimeRange() const;
-   virtual void        Paint(Option_t *option="") = 0;
+   void        Paint(Option_t *option="") override = 0;
    virtual void        PaintCollect(Double_t /*time*/, Double_t * /*box*/) {}
    virtual void        PaintCollectTrack(Double_t /*time*/, Double_t * /*box*/) {}
    virtual void        PaintTrack(Option_t *option="") = 0;
@@ -73,7 +73,7 @@ public:
    void                SetId(Int_t id)       {fId = id;}
    virtual void        SetPDG(Int_t pdgcode) {fPDG = pdgcode;}
 
-   ClassDef(TVirtualGeoTrack, 1)              // virtual geometry tracks
+   ClassDefOverride(TVirtualGeoTrack, 1)              // virtual geometry tracks
 };
 
 #endif

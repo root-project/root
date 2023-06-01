@@ -67,7 +67,7 @@ public:
    TGeoElement(const char *name, const char *title, Int_t nisotopes);
    TGeoElement(const char *name, const char *title, Int_t z, Int_t n, Double_t a);
    // destructor
-   virtual ~TGeoElement();
+   ~TGeoElement() override;
    // methods
    virtual Int_t            ENDFCode()    const { return 0;}
    Int_t                    Z() const {return fZ;}
@@ -86,7 +86,7 @@ public:
    Bool_t                   IsDefined() const {return TObject::TestBit(kElemDefined);}
    virtual Bool_t           IsRadioNuclide() const {return kFALSE;}
    Bool_t                   IsUsed() const {return TObject::TestBit(kElemUsed);}
-   virtual void             Print(Option_t *option = "") const;
+   void             Print(Option_t *option = "") const override;
    void                     SetDefined(Bool_t flag=kTRUE) {TObject::SetBit(kElemDefined,flag);}
    void                     SetUsed(Bool_t flag=kTRUE) {TObject::SetBit(kElemUsed,flag);}
    static TGeoElementTable *GetElementTable();
@@ -95,7 +95,7 @@ public:
    // Tsai formula for the radiation length
    inline Double_t          GetfRadTsai() const {return fRadTsai;}
 
-   ClassDef(TGeoElement, 3)              // base element class
+   ClassDefOverride(TGeoElement, 3)              // base element class
 };
 
 ////////////////////////////////////////////////////////////////////////////
@@ -115,15 +115,15 @@ protected:
 public:
    TGeoIsotope();
    TGeoIsotope(const char *name, Int_t z, Int_t n, Double_t a);
-   virtual ~TGeoIsotope() {}
+   ~TGeoIsotope() override {}
 
    Int_t                    GetZ() const {return fZ;}
    Int_t                    GetN() const {return fN;}
    Double_t                 GetA() const {return fA;}
    static TGeoIsotope      *FindIsotope(const char *name);
-   virtual void             Print(Option_t *option = "") const;
+   void             Print(Option_t *option = "") const override;
 
-   ClassDef(TGeoIsotope, 1)              // Isotope class defined by Z,N,A
+   ClassDefOverride(TGeoIsotope, 1)              // Isotope class defined by Z,N,A
 };
 
 ////////////////////////////////////////////////////////////////////////////
@@ -166,7 +166,7 @@ public:
          Double_t deltaM, Double_t halfLife, const char* JP,
          Double_t natAbun, Double_t th_f, Double_t tg_f, Double_t th_s,
          Double_t tg_s, Int_t status);
-   virtual ~TGeoElementRN();
+   ~TGeoElementRN() override;
 
    void                     AddDecay(Int_t decay, Int_t diso, Double_t branchingRatio, Double_t qValue);
    void                     AddDecay(TGeoDecayChannel *dc);
@@ -175,9 +175,9 @@ public:
    static Int_t             ENDF(Int_t a, Int_t z, Int_t iso) {return 10000*z+10*a+iso;}
 
    // Getters
-   virtual Int_t            ENDFCode()    const {return fENDFcode;}
-   virtual Double_t         GetSpecificActivity() const;
-   virtual Bool_t           IsRadioNuclide() const {return kTRUE;}
+   Int_t            ENDFCode()    const override {return fENDFcode;}
+   Double_t         GetSpecificActivity() const override;
+   Bool_t           IsRadioNuclide() const override {return kTRUE;}
    Int_t                    MassNo()      const {return (Int_t)fA;}
    Int_t                    AtomicNo()    const {return fZ;}
    Int_t                    IsoNo()       const {return fIso;}
@@ -200,11 +200,11 @@ public:
    Bool_t                   CheckDecays() const;
    Int_t                    DecayResult(TGeoDecayChannel *dc) const;
    void                     FillPopulation(TObjArray *population, Double_t precision=0.001, Double_t factor=1.);
-   virtual void             Print(Option_t *option = "") const;
+   void             Print(Option_t *option = "") const override;
    static TGeoElementRN    *ReadElementRN(const char *record, Int_t &ndecays);
-   virtual void             SavePrimitive(std::ostream &out, Option_t *option = "");
+   void             SavePrimitive(std::ostream &out, Option_t *option = "") override;
 
-   ClassDef(TGeoElementRN, 2)           // radionuclides class
+   ClassDefOverride(TGeoElementRN, 2)           // radionuclides class
 };
 
 ////////////////////////////////////////////////////////////////////////////
@@ -246,13 +246,13 @@ public:
                   : fDecay(decay), fDiso(diso), fBranchingRatio(branchingRatio), fQvalue(qValue), fParent(nullptr), fDaughter(nullptr) {}
    TGeoDecayChannel(const TGeoDecayChannel &dc) : TObject(dc),fDecay(dc.fDecay),fDiso(dc.fDiso),fBranchingRatio(dc.fBranchingRatio),
                                                   fQvalue(dc.fQvalue),fParent(dc.fParent),fDaughter(dc.fDaughter) {}
-   virtual ~TGeoDecayChannel() {}
+   ~TGeoDecayChannel() override {}
 
    TGeoDecayChannel& operator=(const TGeoDecayChannel& dc);
 
    // Getters
    Int_t                    GetIndex()       const;
-   virtual const char      *GetName()        const;
+   const char      *GetName()        const override;
    UInt_t                   Decay()          const {return fDecay;}
    Double_t                 BranchingRatio() const {return fBranchingRatio;}
    Double_t                 Qvalue()         const {return fQvalue;}
@@ -264,12 +264,12 @@ public:
    void                     SetParent(TGeoElementRN *parent) {fParent = parent;}
    void                     SetDaughter(TGeoElementRN *daughter) {fDaughter = daughter;}
    // Services
-   virtual void             Print(Option_t *opt = " ") const;
+   void             Print(Option_t *opt = " ") const override;
    static TGeoDecayChannel *ReadDecay(const char *record);
-   virtual void             SavePrimitive(std::ostream &out, Option_t *option = "");
+   void             SavePrimitive(std::ostream &out, Option_t *option = "") override;
    virtual void             DecayShift(Int_t &dA, Int_t &dZ, Int_t &dI) const ;
 
-   ClassDef(TGeoDecayChannel,1)    // Decay channel for Elements
+   ClassDefOverride(TGeoDecayChannel,1)    // Decay channel for Elements
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -298,25 +298,25 @@ public:
    TGeoBatemanSol(TGeoElementRN *elem);
    TGeoBatemanSol(const TObjArray *chain);
    TGeoBatemanSol(const TGeoBatemanSol& other);
-   ~TGeoBatemanSol();
+   ~TGeoBatemanSol() override;
 
    TGeoBatemanSol& operator=(const TGeoBatemanSol& other);
    TGeoBatemanSol& operator+=(const TGeoBatemanSol& other);
 
    Double_t                 Concentration(Double_t time) const;
-   virtual void             Draw(Option_t *option="");
+   void             Draw(Option_t *option="") override;
    void                     GetCoeff(Int_t i, Double_t &cn, Double_t &lambda) const {cn=fCoeff[i].cn; lambda=fCoeff[i].lambda;}
    void                     GetRange(Double_t &tmin, Double_t &tmax) const {tmin=fTmin; tmax=fTmax;}
    TGeoElementRN           *GetElement()    const {return fElem;}
    TGeoElementRN           *GetTopElement() const {return fElemTop;}
    Int_t                    GetNcoeff()     const  {return fNcoeff;}
-   virtual void             Print(Option_t *option = "") const;
+   void             Print(Option_t *option = "") const override;
    void                     SetRange(Double_t tmin=0., Double_t tmax=0.) {fTmin=tmin; fTmax=tmax;}
    void                     SetFactor(Double_t factor) {fFactor = factor;}
    void                     FindSolution(const TObjArray *array);
    void                     Normalize(Double_t factor);
 
-   ClassDef(TGeoBatemanSol,1)       // Solution for the Bateman equation
+   ClassDefOverride(TGeoBatemanSol,1)       // Solution for the Bateman equation
 };
 
 ////////////////////////////////////////////////////////////////////////////
@@ -390,7 +390,7 @@ public:
    TGeoElementTable();
    TGeoElementTable(Int_t nelements);
    // destructor
-   virtual ~TGeoElementTable();
+   ~TGeoElementTable() override;
    // methods
 
    enum EGeoETStatus {
@@ -417,9 +417,9 @@ public:
    Int_t                    GetNelements() const {return fNelements;}
    Int_t                    GetNelementsRN() const {return fNelementsRN;}
    void                     ExportElementsRN(const char *filename="");
-   virtual void             Print(Option_t *option = "") const;
+   void             Print(Option_t *option = "") const override;
 
-   ClassDef(TGeoElementTable,4)              // table of elements
+   ClassDefOverride(TGeoElementTable,4)              // table of elements
 };
 
 #endif
