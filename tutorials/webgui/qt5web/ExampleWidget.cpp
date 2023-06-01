@@ -123,6 +123,8 @@ void ExampleWidget::ImportCmsGeometry()
    // specify JSROOT draw options - here clipping on X,Y,Z axes
    viewer->SetDrawOptions("clipxyz");
 
+   viewer->SetShowHierarchy(false);
+
    // set default limits for number of visible nodes and faces
    // when viewer created, initial values exported from TGeoManager
    viewer->SetLimits();

@@ -30,7 +30,7 @@ RCanvasWidget::RCanvasWidget(QWidget *parent) : QWidget(parent)
 
    fCanvas = ROOT::Experimental::RCanvas::Create("ExampleCanvas");
 
-   auto where = ROOT::Experimental::RWebDisplayArgs::GetQt5EmbedQualifier(this, "noopenui");
+   auto where = ROOT::Experimental::RWebDisplayArgs::GetQt5EmbedQualifier(this, "noopenui", QT_VERSION);
 
    fCanvas->Show(where);
 
