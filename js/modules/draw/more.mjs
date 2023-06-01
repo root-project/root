@@ -125,7 +125,7 @@ function drawPolyLine() {
    if (dofill)
       cmd += 'Z';
 
-   let elem =  this.draw_g.append('svg:path').attr('d', cmd);
+   let elem = this.draw_g.append('svg:path').attr('d', cmd);
 
    if (dofill)
       elem.call(this.fillatt.func);

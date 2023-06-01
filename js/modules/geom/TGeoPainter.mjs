@@ -1150,7 +1150,7 @@ class TGeoPainter extends ObjectPainter {
          menu.add('Get position', () => menu.info('Position (as url)', '&opt=' + this.produceCameraUrl()));
          if (!this.isOrthoCamera())
             menu.add('Absolute position', () => {
-               let url =  this.produceCameraUrl(true), p = url.indexOf('camlx');
+               let url = this.produceCameraUrl(true), p = url.indexOf('camlx');
                menu.info('Position (as url)', '&opt=' + ((p < 0) ? url : url.slice(0,p) + '\n' + url.slice(p)));
             });
 
@@ -1866,7 +1866,7 @@ class TGeoPainter extends ObjectPainter {
           frustum = createFrustum(matrix);
 
       // check if overall bounding box seen
-      if (!frustum.CheckBox(this.getGeomBoundingBox(this._toplevel)))
+      if (!frustum.CheckBox(this.getGeomBoundingBox()))
          this.startDrawGeometry();
    }
 
@@ -2192,7 +2192,7 @@ class TGeoPainter extends ObjectPainter {
             frustum = createFrustum(matrix);
 
             // check if overall bounding box seen
-            if (frustum.CheckBox(this.getGeomBoundingBox(this._toplevel))) {
+            if (frustum.CheckBox(this.getGeomBoundingBox())) {
                matrix = null; // not use camera for the moment
                frustum = null;
             }
@@ -2483,17 +2483,37 @@ class TGeoPainter extends ObjectPainter {
       return this._main_painter._toplevel;
    }
 
+   /** @summary Extend custom geometry bounding box */
+   extendCustomBoundingBox(box) {
+      if (!box) return;
+      if (!this._customBoundingBox)
+         this._customBoundingBox = new Box3().makeEmpty();
+
+      let origin = this._customBoundingBox.clone();
+      this._customBoundingBox.union(box);
+
+      if (!this._customBoundingBox.equals(origin))
+         this._adjust_camera_with_render = true;
+   }
+
    /** @summary Calculate geometry bounding box */
    getGeomBoundingBox(topitem, scalar) {
       let box3 = new Box3(), check_any = !this._clones;
+      if (topitem === undefined)
+         topitem = this._toplevel;
+
+      box3.makeEmpty();
+
+      if (this._customBoundingBox && (topitem === this._toplevel)) {
+         box3.union(this._customBoundingBox);
+         return box3;
+      }
 
       if (!topitem) {
          box3.min.x = box3.min.y = box3.min.z = -1;
          box3.max.x = box3.max.y = box3.max.z = 1;
          return box3;
       }
-
-      box3.makeEmpty();
 
       topitem.traverse(mesh => {
          if (check_any || (mesh.stack && (mesh instanceof Mesh)) ||
@@ -2555,7 +2575,7 @@ class TGeoPainter extends ObjectPainter {
 
       let need_render = !box;
 
-      if (!box) box = this.getGeomBoundingBox(this._toplevel);
+      if (!box) box = this.getGeomBoundingBox();
 
       let sizex = box.max.x - box.min.x,
           sizey = box.max.y - box.min.y,
@@ -2798,8 +2818,8 @@ class TGeoPainter extends ObjectPainter {
 
    /** @summary returns maximal dimension */
    getOverallSize(force) {
-      if (!this._overall_size || force) {
-         let box = this.getGeomBoundingBox(this._toplevel);
+      if (!this._overall_size || force || this._customBoundingBox) {
+         let box = this.getGeomBoundingBox();
 
          // if detect of coordinates fails - ignore
          if (!Number.isFinite(box.min.x)) return 1000;
@@ -2899,12 +2919,14 @@ class TGeoPainter extends ObjectPainter {
    adjustCameraPosition(arg, keep_zoom) {
       if (!this._toplevel || this.superimpose) return;
 
-      let force = (arg === true), first_time = (arg == 'first') || force,
-          box = this.getGeomBoundingBox(this._toplevel);
+      let force = (arg === true),
+          first_time = (arg == 'first') || force,
+          only_set = (arg == 'only_set'),
+          box = this.getGeomBoundingBox();
 
       // let box2 = new Box3().makeEmpty();
       // box2.expandByObject(this._toplevel, true);
-      // console.log('min,max', box.min.x, box.max.x, box2.min.x, box2.max.x);
+      // console.log('min,max', box.min.x, box.max.x, box.min.y, box.max.y, box.min.z, box.max.z );
 
       // if detect of coordinates fails - ignore
       if (!Number.isFinite(box.min.x)) {
@@ -3090,11 +3112,11 @@ class TGeoPainter extends ObjectPainter {
 
       if (this._controls) {
          this._controls.target.copy(this._lookat);
-         this._controls.update();
+         if (!only_set) this._controls.update();
       }
 
       // recheck which elements to draw
-      if (this.ctrl.select_in_view)
+      if (this.ctrl.select_in_view && !only_set)
          this.startDrawGeometry();
    }
 
@@ -3147,7 +3169,7 @@ class TGeoPainter extends ObjectPainter {
 
       let box = new Box3();
       if (focus === undefined) {
-         box = this.getGeomBoundingBox(this._toplevel);
+         box = this.getGeomBoundingBox();
       } else if (focus instanceof Mesh) {
          box.setFromObject(focus);
       } else {
@@ -3410,7 +3432,8 @@ class TGeoPainter extends ObjectPainter {
       if (this._extraObjects === undefined)
          this._extraObjects = create(clTList);
 
-      if (this._extraObjects.arr.indexOf(obj) >= 0) return false;
+      if (this._extraObjects.arr.indexOf(obj) >= 0)
+         return false;
 
       this._extraObjects.Add(obj, itemname);
 
@@ -3462,7 +3485,7 @@ class TGeoPainter extends ObjectPainter {
 
    /** @summary Draw extra object like tracks
      * @return {Promise} for ready */
-   async drawExtras(obj, itemname, add_objects) {
+   async drawExtras(obj, itemname, add_objects, not_wait_render) {
       // if object was hidden via menu, do not redraw it with next draw call
       if (!obj?._typename || (!add_objects && obj.$hidden_via_menu))
          return false;
@@ -3470,6 +3493,8 @@ class TGeoPainter extends ObjectPainter {
       let do_render = false;
       if (add_objects === undefined) {
          add_objects = true;
+         do_render = true;
+      } else if (not_wait_render) {
          do_render = true;
       }
 
@@ -3506,10 +3531,14 @@ class TGeoPainter extends ObjectPainter {
       }
 
       return getPromise(promise).then(is_any => {
-         if (!is_any || !do_render) return is_any;
+         if (!is_any || !do_render)
+            return is_any;
 
          this.updateClipping(true);
-         return this.render3D(100);
+
+         let pr = this.render3D(100, not_wait_render ? 'nopromise' : false);
+
+         return not_wait_render ? this : pr;
       });
    }
 
@@ -4163,7 +4192,7 @@ class TGeoPainter extends ObjectPainter {
          return this;
       }
 
-      let ret_promise = (tmout !== undefined) && (tmout > 0);
+      let ret_promise = (tmout !== undefined) && (tmout > 0) && (measure != 'nopromise');
 
       if (tmout === undefined) tmout = 5; // by default, rendering happens with timeout
 
@@ -4171,14 +4200,15 @@ class TGeoPainter extends ObjectPainter {
          if (isBatchMode()) tmout = 1; // use minimal timeout in batch mode
          if (ret_promise)
             return new Promise(resolveFunc => {
-               if (!this._render_resolveFuncs) this._render_resolveFuncs = [];
+               if (!this._render_resolveFuncs)
+                  this._render_resolveFuncs = [];
                this._render_resolveFuncs.push(resolveFunc);
                if (!this.render_tmout)
-                  this.render_tmout = setTimeout(() => this.render3D(0, measure), tmout);
+                  this.render_tmout = setTimeout(() => this.render3D(0), tmout);
             });
 
          if (!this.render_tmout)
-            this.render_tmout = setTimeout(() => this.render3D(0, measure), tmout);
+            this.render_tmout = setTimeout(() => this.render3D(0), tmout);
          return this;
       }
 
@@ -4190,6 +4220,11 @@ class TGeoPainter extends ObjectPainter {
       beforeRender3D(this._renderer);
 
       let tm1 = new Date();
+
+      if (this._adjust_camera_with_render) {
+         this.adjustCameraPosition('only_set');
+         delete this._adjust_camera_with_render;
+      }
 
       this.testCameraPosition(tmout === -1);
 
@@ -4211,7 +4246,7 @@ class TGeoPainter extends ObjectPainter {
 
       this.last_render_tm = tm2.getTime();
 
-      if ((this.first_render_tm === 0) && measure) {
+      if ((this.first_render_tm === 0) && (measure === true)) {
          this.first_render_tm = tm2.getTime() - tm1.getTime();
          console.log(`three.js r${REVISION}, first render tm = ${this.first_render_tm}`);
       }
@@ -4219,8 +4254,9 @@ class TGeoPainter extends ObjectPainter {
       afterRender3D(this._renderer);
 
       if (this._render_resolveFuncs) {
-         this._render_resolveFuncs.forEach(func => func(this));
+         let arr = this._render_resolveFuncs;
          delete this._render_resolveFuncs;
+         arr.forEach(func => func(this));
       }
    }
 
@@ -5764,29 +5800,18 @@ function createItem(node, obj, name) {
   * @private */
 async function drawDummy3DGeom(painter) {
 
-   let extra = painter.getObject(),
-       min = [-1, -1, -1], max = [1, 1, 1];
-
-   if (extra.fP?.length)
-      for(let k = 0; k < extra.fP.length; k += 3)
-         for (let i = 0; i < 3; ++i) {
-            min[i] = Math.min(min[i], extra.fP[k+i]);
-            max[i] = Math.max(max[i], extra.fP[k+i]);
-         }
-
-
    let shape = create(clTNamed);
    shape._typename = clTGeoBBox;
-   shape.fDX = max[0] - min[0];
-   shape.fDY = max[1] - min[1];
-   shape.fDZ = max[2] - min[2];
+   shape.fDX = 1e-10;
+   shape.fDY = 1e-10;
+   shape.fDZ = 1e-10;
    shape.fShapeId = 1;
    shape.fShapeBits = 0;
-   shape.fOrigin = [0,0,0];
+   shape.fOrigin = [0, 0, 0];
 
    let obj = Object.assign(create(clTNamed),
                 { _typename: clTEveGeoShapeExtract,
-                  fTrans: [1,0,0,0, 0,1,0,0, 0,0,1,0, (min[0]+max[0])/2, (min[1]+max[1])/2, (min[2]+max[2])/2, 0],
+                  fTrans: [1,0,0,0, 0,1,0,0, 0,0,1,0, 0, 0, 0, 0],
                   fShape: shape, fRGBA: [0, 0, 0, 0], fElements: null, fRnrSelf: false });
 
    let opt = '', pp = painter.getPadPainter();
@@ -5795,7 +5820,7 @@ async function drawDummy3DGeom(painter) {
       opt = 'bkgr_' +  pp.pad.fFillColor;
 
    return TGeoPainter.draw(painter.getDom(), obj, opt)
-                     .then(geop => geop.drawExtras(extra));
+                     .then(geop => { geop._dummy = true; return geop; });
 }
 
 /** @summary Direct draw function for TAxis3D

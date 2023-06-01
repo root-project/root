@@ -7,6 +7,7 @@ import { TH1Painter, setHistTitle, PadDrawOptions } from './TH1Painter.mjs';
 import { TAttLineHandler } from '../base/TAttLineHandler.mjs';
 import { TAttFillHandler } from '../base/TAttFillHandler.mjs';
 import { addMoveHandler } from '../gui/utils.mjs';
+import { assignContextMenu } from '../gui/menu.mjs';
 
 
 const kNotEditable = BIT(18),   // bit set if graph is non editable
@@ -907,8 +908,10 @@ class TGraphPainter extends ObjectPainter {
          this.extractGmeErrors(0); // ensure that first block kept at the end
       }
 
-      if (!isBatchMode())
+      if (!isBatchMode()) {
          addMoveHandler(this, this.testEditable());
+         assignContextMenu(this);
+      }
    }
 
    /** @summary Provide tooltip at specified point */

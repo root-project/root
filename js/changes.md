@@ -1,36 +1,35 @@
 # JSROOT changelog
 
 ## Changes in dev
-1. Upgrade d3.js to v7.8.4
-2. Upgrade three.js to r152, with WebGL2 for interactive, WebGL1 for node.js
-3. Support '[cutg]' draw option for TH2
-4. Correctly handle 'same0' draw option for TH2
-5. Fix several issues with axis reverse order
-6. Implement reverse axis on lego plots
-7. Add interactivity (moving, context menu) for TLine, TBox, TText, TLatex, TDiamond, TGaxis, TASImage
-8. Support more kinds of log scales - ln and logN where N is any positive integer
+1. Upgrade d3.js v7.6.1 -> v7.8.4
+2. Upgrade three.js r146 -> r151
+3. Support `[cutg]` draw option for TH2
+4. Correctly handle `same0` draw option for TH2
+5. Fix several issues with axis reverse order, support on lego plots
+6. Support more kinds of log scales - ln and logN where N is any positive integer
+7. Adjust TAxis title positioning to native ROOT behavior
+8. Add interactivity (moving, context menu) for TLine, TBox, TText, TLatex, TDiamond, TGaxis, TASImage
 9. Use new gStyle attributes for candle and violin plots
 10. Implement autoplace for TLegend, also via context menu
 11. Change algorithm of building smooth (bezier) curves
-12. Adjust TAxis title positioning to native ROOT behavior
-13. Let change physical node visibility in TGeo drawings
-14. Use TGaxis attributes from gStyle - fAxisMaxDigits, fStripDecimals and exponent offset
-15. Implement "projxy" draw option for TH2 - like projxy3 or projx1_y5
-16. Support custom function in TGaxis - when drawn in TWebCanvas
-17. Introduce settings.WithCredentials, set xhr.withCredentials = true when submitting HTTP requests
-18. Let superimpose TH3 and geo drawings
-19. Apply pad draw options like 'gridx' or 'logy' to all subpads
-20. Support new TScatter and TAnnotation classes
-21. Implement moving and resizing of subpads
-22. Implement zooming in the TASImage
-23. Let configure position and direction of camera for TGeo, let create URL for that
-24. Support labels rotation for simple axis in geometry
-25. Support many orthographic cameras with overlayed grid/labels
-26. Support InstancedMesh for TGeo drawing, let show really large geometries
-27. Fix - rescan sumw2 when update TH1
-28. Fix - correct placing for TLegend header
-29. Fix - correctly align sub/super scripts in complex TLatex
-30. Fix - failure in normal_cdf calculation
+12. Let change physical node visibility in TGeo drawings
+13. Use TGaxis attributes from gStyle - fAxisMaxDigits, fStripDecimals and exponent offset
+14. Implement "projxy" draw option for TH2 - like projxy3 or projx1_y5
+15. Support custom function in TGaxis - when drawn in TWebCanvas
+16. Introduce settings.WithCredentials, set xhr.withCredentials = true when submitting HTTP requests
+17. Let superimpose TH3 and geo drawings
+18. Apply pad draw options like 'gridx' or 'logy' to all subpads
+19. Support new TScatter and TAnnotation classes
+20. Implement moving and resizing of subpads
+21. Implement zooming in the TASImage
+22. Let configure position and direction of camera for TGeo, let create URL for that
+23. Support labels rotation for simple axis in geometry
+24. Support many orthographic cameras with overlayed grid/labels
+25. Support InstancedMesh for TGeo drawing, let show really large geometries
+26. Fix - rescan sumw2 when update TH1
+27. Fix - correct placing for TLegend header
+28. Fix - correctly align sub/super scripts in complex TLatex
+29. Fix - failure in normal_cdf calculation
 
 
 ## Changes in 7.3.2
