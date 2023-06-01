@@ -42,7 +42,7 @@ public:
    TGeoMedium(const char *name, Int_t numed, const TGeoMaterial *mat, Double_t *params=nullptr);
    TGeoMedium(const char *name, Int_t numed, Int_t imat, Int_t isvol, Int_t ifield,
               Double_t fieldm, Double_t tmaxfd, Double_t stemax, Double_t deemax, Double_t epsil, Double_t stmin);
-   virtual ~TGeoMedium();
+   ~TGeoMedium() override;
    // methods
    virtual Int_t            GetByteCount() const {return sizeof(*this);}
    Int_t                    GetId()   const     {return fId;}
@@ -50,11 +50,11 @@ public:
    void                     SetParam(Int_t i, Double_t val)   {fParams[i] = val;}
    const char              *GetPointerName() const;
    TGeoMaterial            *GetMaterial() const {return fMaterial;}
-   virtual void             SavePrimitive(std::ostream &out, Option_t *option = "");
+   void             SavePrimitive(std::ostream &out, Option_t *option = "") override;
    void                     SetId(Int_t id)     {fId = id;}
    void                     SetMaterial(TGeoMaterial *mat) {fMaterial = mat;}
    virtual void             SetCerenkovProperties(TObject* cerenkov) {fMaterial->SetCerenkovProperties(cerenkov);}
-   ClassDef(TGeoMedium, 1)              // tracking medium
+   ClassDefOverride(TGeoMedium, 1)              // tracking medium
 
 };
 

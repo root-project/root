@@ -29,7 +29,7 @@ protected:
 
 public:
    TGeoGlobalMagField();
-   virtual ~TGeoGlobalMagField();
+   ~TGeoGlobalMagField() override;
 
    // Using SetField() makes a given field global. The field manager owns it from now on.
    TVirtualMagField       *GetField() const {return fField;}
@@ -44,7 +44,7 @@ public:
    // Inline access to Field() method
    void                    Field(const Double_t *x, Double_t *B) {if (fField) fField->Field(x,B);}
 
-   ClassDef(TGeoGlobalMagField, 0)              // Global field manager
+   ClassDefOverride(TGeoGlobalMagField, 0)              // Global field manager
 };
 
 #endif

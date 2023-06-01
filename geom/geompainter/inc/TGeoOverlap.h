@@ -62,13 +62,13 @@ public:
    TGeoOverlap(const char *name, TGeoVolume *vol1, TGeoVolume *vol2,
                const TGeoMatrix *matrix1, const TGeoMatrix *matrix2,
                Bool_t isovlp=kTRUE,  Double_t ovlp=0.01);
-   virtual           ~TGeoOverlap();
+             ~TGeoOverlap() override;
 
-   void              Browse(TBrowser *b);
-   virtual Int_t     Compare(const TObject *obj) const;
-   virtual Int_t     DistancetoPrimitive(Int_t px, Int_t py);
-   virtual void      Draw(Option_t *option=""); // *MENU*
-   virtual void      ExecuteEvent(Int_t event, Int_t px, Int_t py);
+   void              Browse(TBrowser *b) override;
+   Int_t     Compare(const TObject *obj) const override;
+   Int_t     DistancetoPrimitive(Int_t px, Int_t py) override;
+   void      Draw(Option_t *option="") override; // *MENU*
+   void      ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
    TPolyMarker3D    *GetPolyMarker() const {return fMarker;}
    TGeoVolume       *GetFirstVolume() const {return fVolume1;}
    TGeoVolume       *GetSecondVolume() const {return fVolume2;}
@@ -77,12 +77,12 @@ public:
    Double_t          GetOverlap() const {return fOverlap;}
    Bool_t            IsExtrusion() const {return TObject::TestBit(kGeoExtrusion);}
    Bool_t            IsOverlap() const {return TObject::TestBit(kGeoOverlap);}
-   Bool_t            IsFolder() const {return kFALSE;}
-   virtual Bool_t    IsSortable() const {return kTRUE;}
-   virtual void      Paint(Option_t *option="");
-   virtual void      Print(Option_t *option="") const; // *MENU*
+   Bool_t            IsFolder() const override {return kFALSE;}
+   Bool_t    IsSortable() const override {return kTRUE;}
+   void      Paint(Option_t *option="") override;
+   void      Print(Option_t *option="") const override; // *MENU*
    virtual void      PrintInfo() const;
-   virtual void      Sizeof3D() const;
+   void      Sizeof3D() const override;
    void              SampleOverlap(Int_t npoints=1000000); // *MENU*
    void              SetIsExtrusion(Bool_t flag=kTRUE) {TObject::SetBit(kGeoExtrusion,flag); TObject::SetBit(kGeoOverlap,!flag);}
    void              SetIsOverlap(Bool_t flag=kTRUE) {TObject::SetBit(kGeoOverlap,flag); TObject::SetBit(kGeoExtrusion,!flag);}
@@ -94,7 +94,7 @@ public:
    void              SetOverlap(Double_t ovlp)  {fOverlap=ovlp;}
    void              Validate() const; // *MENU*
 
-   ClassDef(TGeoOverlap, 2)         // base class for geometical overlaps
+   ClassDefOverride(TGeoOverlap, 2)         // base class for geometical overlaps
 };
 
 #endif
