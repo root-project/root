@@ -291,8 +291,13 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             break;
          case "BREPL:":   // browser reply
             let bresp = JSON.parse(msg);
-            if (this.model)
-               this.model.processResponse(bresp);
+
+            let br = this.byId("treeTable")
+            br?.setNoData("");
+            br?.setShowNoData(false);
+
+            this.model?.setNoData(false);
+            this.model?.processResponse(bresp);
             break;
          case "FOUND:":  // text message for found query
             this.showTextInBrowser(msg);
@@ -308,6 +313,11 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             break;
          case 'HIGHL:':
             this.highlighRowWithPath(JSON.parse(msg)); //
+            break;
+         case 'SETSR:':
+            this.getView().byId("searchNode").setValue(msg);
+            if (!msg)
+               this.doReload(false);
             break;
          default:
             console.error(`Non recognized msg ${mhdr} len=${msg.length}`);
@@ -507,6 +517,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
       /** @summary when new query entered in the seach field */
       onSearch(oEvt, direct) {
+
          let query = (typeof oEvt == 'string' && direct) ? oEvt : oEvt.getSource().getValue();
 
          if (!this.standalone) {
@@ -550,6 +561,8 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
              prop = ctxt?.getProperty(ctxt.getPath());
 
          oEvent.preventDefault();
+
+         if (!prop?._elem) return;
 
          if (!this._oIdContextMenu) {
             this._oIdContextMenu = new Menu();
