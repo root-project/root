@@ -13,6 +13,7 @@
 #include "TCanvas.h"
 #include "TH1.h"
 #include "TH2.h"
+#include "TROOT.h"
 #include "TMath.h"
 #include "TFile.h"
 #include "TGeoManager.h"
@@ -37,7 +38,9 @@ ExampleWidget::ExampleWidget(QWidget *parent, const char* name) :
    QObject::connect(InfoBtn, &QPushButton::clicked, this, &ExampleWidget::InfoButton_clicked);
    QObject::connect(CmsBtn, &QPushButton::clicked, this, &ExampleWidget::CmsButton_clicked);
    QObject::connect(GeoCanvasBtn, &QPushButton::clicked, this, &ExampleWidget::GeoCanvasButton_clicked);
+   QObject::connect(StandaloneBtn, &QPushButton::clicked, this, &ExampleWidget::StandaloneBtn_clicked);
    QObject::connect(ExitBtn, &QPushButton::clicked, this, &ExampleWidget::ExitButton_clicked);
+
 
    setAttribute(Qt::WA_DeleteOnClose);
 
@@ -286,7 +289,6 @@ void ExampleWidget::InfoButton_clicked()
    QMessageBox::information(this,"QtRoot standalone example","Demo how QRootCanvas can be inserted into the QWidget");
 }
 
-
 void ExampleWidget::CmsButton_clicked()
 {
    if (fxTabWidget->count() > 3) {
@@ -308,6 +310,24 @@ void ExampleWidget::GeoCanvasButton_clicked()
    fxTabWidget->setCurrentIndex(2);
 }
 
+void ExampleWidget::StandaloneBtn_clicked()
+{
+#if QT_VERSION < QT_VERSION_CHECK(6,0,0)
+   gROOT->SetWebDisplay("qt5");
+#else
+   gROOT->SetWebDisplay("qt6");
+#endif
+
+   auto h1 = new TH1F("gaus_standalone","Example of standalone TCanvas", 100, -5, 5);
+   h1->FillRandom("gaus", 10000);
+   h1->SetDirectory(nullptr);
+
+   auto c = new TCanvas("standalone", "Standalone canvas");
+   h1->Draw("hist");
+
+   c->Modified();
+   c->Update();
+}
 
 void ExampleWidget::ExitButton_clicked()
 {

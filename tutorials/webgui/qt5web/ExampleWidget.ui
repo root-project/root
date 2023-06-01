@@ -53,19 +53,38 @@
                       <property name="text" >
                         <string>Info</string>
                       </property>
+                      <property name="toolTip" >
+                         <string>Show application info dialog</string>
+                      </property>
                     </widget>
                   </item>
                   <item>
                     <widget class="QPushButton" name="CmsBtn" >
+                      <property name="toolTip" >
+                         <string>Show CMS geometry from https://root.cern/files/cms.root</string>
+                      </property>
                       <property name="text" >
-                        <string>CMS geometry</string>
+                         <string>CMS geometry</string>
                       </property>
                     </widget>
                   </item>
                   <item>
                     <widget class="QPushButton" name="GeoCanvasBtn" >
                       <property name="text" >
-                        <string>TGeo in TCanvas</string>
+                        <string>TGeo in canvas</string>
+                      </property>
+                      <property name="toolTip" >
+                         <string>Display simple geometry in TCanvas</string>
+                      </property>
+                    </widget>
+                  </item>
+                  <item>
+                    <widget class="QPushButton" name="StandaloneBtn" >
+                      <property name="text" >
+                        <string>Standalone</string>
+                      </property>
+                      <property name="toolTip" >
+                         <string>Start standalone TCanvas qt5web widget</string>
                       </property>
                     </widget>
                   </item>
