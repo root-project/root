@@ -49,8 +49,6 @@ RGeomHierarchy::~RGeomHierarchy()
 
 void RGeomHierarchy::WebWindowCallback(unsigned connid, const std::string &arg)
 {
-   printf("RGeomHierarchy::WebWindowCallback connid %u arg %s\n", connid, arg.c_str());
-
    if (arg.compare(0,6, "BRREQ:") == 0) {
       // central place for processing browser requests
       auto json = fDesc.ProcessBrowserRequest(arg.substr(6));
@@ -73,8 +71,16 @@ void RGeomHierarchy::WebWindowCallback(unsigned connid, const std::string &arg)
       }
    } else if (arg.compare(0, 7, "SETTOP:") == 0) {
       auto path = TBufferJSON::FromJSON<std::vector<std::string>>(arg.substr(7));
-      if (path && fDesc.SelectTop(*path))
+      if (path && fDesc.SelectTop(*path)) {
          fDesc.IssueSignal(this, "SelectTop");
+         auto num = fWebWindow->NumConnections();
+
+         for (int n = 0; n < num; ++n) {
+            auto id = fWebWindow->GetConnectionId(n);
+            if (id != connid)
+               fWebWindow->Send(id, "UPDATE"s);
+         }
+      }
    } else if (arg.compare(0, 6, "HOVER:") == 0) {
       auto path = TBufferJSON::FromJSON<std::vector<std::string>>(arg.substr(6));
       if (path) {
