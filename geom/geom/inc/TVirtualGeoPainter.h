@@ -54,7 +54,7 @@ enum EGeoBombOption {
 
 public:
    TVirtualGeoPainter(TGeoManager *manager);
-   virtual ~TVirtualGeoPainter();
+   ~TVirtualGeoPainter() override;
 
    virtual void       AddSize3D(Int_t numpoints, Int_t numsegs, Int_t numpolys) = 0;
    virtual TVirtualGeoTrack *AddTrack(Int_t id, Int_t pdgcode, TObject *particle) = 0;
@@ -106,7 +106,7 @@ public:
                             Double_t rmin=0., Double_t rmax=9999999, Option_t *option="") = 0;
    virtual void       ModifiedPad(Bool_t update=kFALSE) const = 0;
    virtual void       OpProgress(const char *opname, Long64_t current, Long64_t size, TStopwatch *watch=nullptr, Bool_t last=kFALSE, Bool_t refresh=kFALSE, const char *msg="") = 0;
-   virtual void       Paint(Option_t *option="") = 0;
+   void       Paint(Option_t *option="") override = 0;
    virtual void       PaintNode(TGeoNode *node, Option_t *option="", TGeoMatrix* global=nullptr) = 0;
    virtual void       PaintShape(TGeoShape *shape, Option_t *option="") = 0;
    virtual void       PaintOverlap(void *ovlp, Option_t *option="")  = 0;
@@ -139,7 +139,7 @@ public:
    virtual void       UnbombTranslation(const Double_t *tr, Double_t *bombtr) = 0;
    virtual Double_t   Weight(Double_t precision, Option_t *option="v") = 0;
 
-   ClassDef(TVirtualGeoPainter,0)  //Abstract interface for geometry painters
+   ClassDefOverride(TVirtualGeoPainter,0)  //Abstract interface for geometry painters
 };
 
 #endif

@@ -53,8 +53,8 @@ public:
                    Int_t width = 140, Int_t height = 30,
                    UInt_t options = kChildFrame,
                    Pixel_t back = GetDefaultFrameBackground());
-   virtual ~TGeoTranslationEditor();
-   virtual void   SetModel(TObject *obj);
+   ~TGeoTranslationEditor() override;
+   void   SetModel(TObject *obj) override;
 
    void           DoDx();
    void           DoDy();
@@ -66,7 +66,7 @@ public:
    void           DoCancel();
    void           DoUndo();
 
-   ClassDef(TGeoTranslationEditor,0)   // TGeoTranslation editor
+   ClassDefOverride(TGeoTranslationEditor,0)   // TGeoTranslation editor
 };
 
 
@@ -103,8 +103,8 @@ public:
                    Int_t width = 140, Int_t height = 30,
                    UInt_t options = kChildFrame,
                    Pixel_t back = GetDefaultFrameBackground());
-   virtual ~TGeoRotationEditor();
-   virtual void   SetModel(TObject *obj);
+   ~TGeoRotationEditor() override;
+   void   SetModel(TObject *obj) override;
 
    void           DoRotPhi();
    void           DoRotTheta();
@@ -117,7 +117,7 @@ public:
    void           DoCancel();
    void           DoUndo();
 
-   ClassDef(TGeoRotationEditor,0)   // TGeoRotation editor
+   ClassDefOverride(TGeoRotationEditor,0)   // TGeoRotation editor
 };
 
 
@@ -160,8 +160,8 @@ public:
                    Int_t width = 140, Int_t height = 30,
                    UInt_t options = kChildFrame,
                    Pixel_t back = GetDefaultFrameBackground());
-   virtual ~TGeoCombiTransEditor();
-   virtual void   SetModel(TObject *obj);
+   ~TGeoCombiTransEditor() override;
+   void   SetModel(TObject *obj) override;
 
    void           DoDx();
    void           DoDy();
@@ -177,7 +177,7 @@ public:
    void           DoCancel();
    void           DoUndo();
 
-   ClassDef(TGeoCombiTransEditor,0)   // TGeoCombiTrans editor
+   ClassDefOverride(TGeoCombiTransEditor,0)   // TGeoCombiTrans editor
 };
 
 #endif

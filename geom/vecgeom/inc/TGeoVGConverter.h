@@ -25,11 +25,11 @@
 class TGeoVGConverter : public TVirtualGeoConverter {
 public:
    TGeoVGConverter(TGeoManager *manager);
-   virtual ~TGeoVGConverter();
+   ~TGeoVGConverter() override;
 
-   virtual void       ConvertGeometry();
+   void       ConvertGeometry() override;
 
-   ClassDef(TGeoVGConverter,0)  // VecGeom geometry converter
+   ClassDefOverride(TGeoVGConverter,0)  // VecGeom geometry converter
 };
 
 #endif

@@ -105,7 +105,7 @@ public:
    }
 
    // should be here, one needs virtual table for correct streaming of RRootBrowserReply
-   virtual ~RGeoItem() = default;
+   ~RGeoItem() override = default;
 
    void SetTop(bool on = true) { top = on; }
 };
@@ -123,14 +123,14 @@ class RGeomRawRenderInfo : public RGeomRenderInfo  {
 public:
    std::vector<unsigned char> raw;  ///< float vertices as raw data, JSON_base64
    std::vector<int> idx;            ///< vertex indexes, always triangles
-   virtual ~RGeomRawRenderInfo() = default;
+   ~RGeomRawRenderInfo() override = default;
 };
 
 /** Render info with shape itself - client can produce shape better */
 class RGeomShapeRenderInfo : public RGeomRenderInfo  {
 public:
    TGeoShape *shape{nullptr}; ///< original shape - can be much less than binary data
-   virtual ~RGeomShapeRenderInfo() = default;
+   ~RGeomShapeRenderInfo() override = default;
 };
 
 

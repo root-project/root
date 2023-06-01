@@ -47,36 +47,36 @@ protected:
 public:
    TGeoTrack();
    TGeoTrack(Int_t id, Int_t pdgcode, TVirtualGeoTrack *parent=nullptr, TObject *particle=nullptr);
-   virtual ~TGeoTrack();
+   ~TGeoTrack() override;
 
-   virtual TVirtualGeoTrack *AddDaughter(Int_t id, Int_t pdgcode, TObject *particle=nullptr);
-   virtual Int_t       AddDaughter(TVirtualGeoTrack *other);
-   virtual void        AddPoint(Double_t x, Double_t y, Double_t z, Double_t t);
+   TVirtualGeoTrack *AddDaughter(Int_t id, Int_t pdgcode, TObject *particle=nullptr) override;
+   Int_t       AddDaughter(TVirtualGeoTrack *other) override;
+   void        AddPoint(Double_t x, Double_t y, Double_t z, Double_t t) override;
    virtual void        AnimateTrack(Double_t tmin=0, Double_t tmax=5E-8, Double_t nframes=200, Option_t *option="/*"); // *MENU*
-   void                Browse(TBrowser *b);
-   virtual Int_t       DistancetoPrimitive(Int_t px, Int_t py);
-   virtual void        Draw(Option_t *option=""); // *MENU*
-   virtual void        ExecuteEvent(Int_t event, Int_t px, Int_t py);
-   virtual char       *GetObjectInfo(Int_t px, Int_t py) const;
-   virtual Int_t       GetNpoints() const {return (fNpoints>>2);}
-   virtual Int_t       GetPoint(Int_t i, Double_t &x, Double_t &y, Double_t &z, Double_t &t) const;
-   virtual const Double_t *GetPoint(Int_t i) const;
+   void                Browse(TBrowser *b) override;
+   Int_t       DistancetoPrimitive(Int_t px, Int_t py) override;
+   void        Draw(Option_t *option="") override; // *MENU*
+   void        ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
+   char       *GetObjectInfo(Int_t px, Int_t py) const override;
+   Int_t       GetNpoints() const override {return (fNpoints>>2);}
+   Int_t       GetPoint(Int_t i, Double_t &x, Double_t &y, Double_t &z, Double_t &t) const override;
+   const Double_t *GetPoint(Int_t i) const override;
    Int_t               GetPoint(Double_t tof, Double_t *point, Int_t istart=0) const;
-   Bool_t              IsFolder() const {return (GetNdaughters()>0)?kTRUE:kFALSE;}
-   virtual void        Paint(Option_t *option="");
-   virtual void        PaintCollect(Double_t time, Double_t *box);
-   virtual void        PaintCollectTrack(Double_t time, Double_t *box);
+   Bool_t              IsFolder() const override {return (GetNdaughters()>0)?kTRUE:kFALSE;}
+   void        Paint(Option_t *option="") override;
+   void        PaintCollect(Double_t time, Double_t *box) override;
+   void        PaintCollectTrack(Double_t time, Double_t *box) override;
    void                PaintMarker(Double_t *point, Option_t *option="");
-   virtual void        PaintTrack(Option_t *option="");
-   virtual void        Print(Option_t *option="") const; // *MENU*
-   virtual void        ResetTrack();
+   void        PaintTrack(Option_t *option="") override;
+   void        Print(Option_t *option="") const override; // *MENU*
+   void        ResetTrack() override;
    Int_t               SearchPoint(Double_t time, Int_t istart=0) const;
    void                SetBits(Bool_t is_default=kTRUE, Bool_t is_onelevel=kFALSE,
                                Bool_t is_all=kFALSE, Bool_t is_type=kFALSE);
    Int_t               Size(Int_t &imin, Int_t &imax);
    virtual void        Sizeof3D() const;
 
-   ClassDef(TGeoTrack, 1)              // geometry tracks class
+   ClassDefOverride(TGeoTrack, 1)              // geometry tracks class
 };
 
 #endif

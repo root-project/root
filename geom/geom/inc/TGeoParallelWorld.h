@@ -38,7 +38,7 @@ public:
    TGeoParallelWorld(const char *name, TGeoManager *mgr);
 
    // destructor
-   virtual ~TGeoParallelWorld();
+   ~TGeoParallelWorld() override;
    // API for adding components nodes
    void              AddNode(const char *path);
    // Activate/deactivate  overlap usage
@@ -68,9 +68,9 @@ public:
 
    // Utilities
    void              CheckOverlaps(Double_t ovlp=0.001); // default 10 microns
-   void              Draw(Option_t *option);
+   void              Draw(Option_t *option) override;
 
-   ClassDef(TGeoParallelWorld, 3)     // parallel world base class
+   ClassDefOverride(TGeoParallelWorld, 3)     // parallel world base class
 };
 
 #endif

@@ -61,7 +61,7 @@ public:
    TGeoChecker();
    TGeoChecker(TGeoManager *geom);
    // destructor
-   virtual ~TGeoChecker();
+   ~TGeoChecker() override;
    // methods
    virtual void     CheckBoundaryErrors(Int_t ntracks=1000000, Double_t radius=-1.);
    virtual void     CheckBoundaryReference(Int_t icheck=-1);
@@ -92,7 +92,7 @@ public:
    Bool_t           TestVoxels(TGeoVolume *vol, Int_t npoints=1000000);
    Double_t         Weight(Double_t precision=0.01, Option_t *option="v");
 
-   ClassDef(TGeoChecker, 2)               // a simple geometry checker
+   ClassDefOverride(TGeoChecker, 2)               // a simple geometry checker
 };
 
 #endif

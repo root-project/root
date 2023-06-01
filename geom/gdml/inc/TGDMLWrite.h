@@ -56,7 +56,7 @@ class TGeoBorderSurface;
 class TGDMLWrite : public TObject {
 public:
    TGDMLWrite();
-   virtual ~TGDMLWrite();
+   ~TGDMLWrite() override;
 
    static void StartGDMLWriting(TGeoManager * geomanager, const char* filename, TString option) {
       //static function -
@@ -246,7 +246,7 @@ private:
    void WriteGDMLfile(TGeoManager * geomanager, TGeoVolume* top_vol, TList* materialsLst, const char* filename, TString option);
    void ExtractVolumes(TGeoVolume* topVolume);    //result <volume> node...  + corresp. shape
 
-   ClassDef(TGDMLWrite, 0)    //imports GDML using DOM and binds it to ROOT
+   ClassDefOverride(TGDMLWrite, 0)    //imports GDML using DOM and binds it to ROOT
 };
 
 #endif /* ROOT_TGDMLWRITE */

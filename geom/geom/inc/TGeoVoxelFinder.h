@@ -94,7 +94,7 @@ protected:
 public :
    TGeoVoxelFinder();
    TGeoVoxelFinder(TGeoVolume *vol);
-   virtual ~TGeoVoxelFinder();
+   ~TGeoVoxelFinder() override;
    void                DaughterToMother(Int_t id, const Double_t *local, Double_t *master) const;
    virtual Double_t    Efficiency();
    virtual Int_t      *GetCheckList(const Double_t *point, Int_t &nelem, TGeoStateInfo &td);
@@ -105,7 +105,7 @@ public :
    Bool_t              NeedRebuild() const {return TObject::TestBit(kGeoRebuildVoxels);}
    Double_t           *GetBoxes() const {return fBoxes;}
    Bool_t              IsSafeVoxel(const Double_t *point, Int_t inode, Double_t minsafe) const;
-   virtual void        Print(Option_t *option="") const;
+   void        Print(Option_t *option="") const override;
    void                PrintVoxelLimits(const Double_t *point) const;
    void                SetInvalid(Bool_t flag=kTRUE) {TObject::SetBit(kGeoInvalidVoxels, flag);}
    void                SetNeedRebuild(Bool_t flag=kTRUE) {TObject::SetBit(kGeoRebuildVoxels, flag);}
@@ -113,7 +113,7 @@ public :
    virtual void        SortCrossedVoxels(const Double_t *point, const Double_t *dir, TGeoStateInfo &td);
    virtual void        Voxelize(Option_t *option="");
 
-   ClassDef(TGeoVoxelFinder, 4)                // voxel finder class
+   ClassDefOverride(TGeoVoxelFinder, 4)                // voxel finder class
 };
 
 #endif

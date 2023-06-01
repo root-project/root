@@ -87,7 +87,7 @@ private :
 public :
    TGeoNavigator();
    TGeoNavigator(TGeoManager* geom);
-   virtual ~TGeoNavigator();
+   ~TGeoNavigator() override;
 
    void                   BuildCache(Bool_t dummy=kFALSE, Bool_t nodeid=kFALSE);
    Bool_t                 cd(const char *path="");
@@ -201,7 +201,7 @@ public :
    Bool_t                 PopPoint(Int_t index) {fCurrentOverlapping=fCache->PopState(fNmany,index, fPoint); fCurrentNode=fCache->GetNode(); fLevel=fCache->GetLevel(); fGlobalMatrix=fCache->GetCurrentMatrix();return fCurrentOverlapping;}
    void                   PopDummy(Int_t ipop=9999) {fCache->PopDummy(ipop);}
 
-   ClassDef(TGeoNavigator, 0)          // geometry navigator class
+   ClassDefOverride(TGeoNavigator, 0)          // geometry navigator class
 };
 
 #include "TObjArray.h"
@@ -225,13 +225,13 @@ private:
 public:
    TGeoNavigatorArray() : TObjArray(), fCurrentNavigator(nullptr), fGeoManager(nullptr) {}
    TGeoNavigatorArray(TGeoManager *mgr) : TObjArray(), fCurrentNavigator(nullptr), fGeoManager(mgr) {SetOwner();}
-   virtual ~TGeoNavigatorArray() {}
+   ~TGeoNavigatorArray() override {}
 
    TGeoNavigator         *AddNavigator();
    inline TGeoNavigator  *GetCurrentNavigator() const {return fCurrentNavigator;}
    TGeoNavigator         *SetCurrentNavigator(Int_t inav) {return (fCurrentNavigator=(TGeoNavigator*)At(inav));}
 
-   ClassDef(TGeoNavigatorArray, 0)       // An array of navigators
+   ClassDefOverride(TGeoNavigatorArray, 0)       // An array of navigators
 };
 #endif
 

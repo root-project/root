@@ -20,7 +20,7 @@ class TGeoExtension : public TObject
 {
 protected:
    TGeoExtension() : TObject() {}
-   virtual ~TGeoExtension() {}
+   ~TGeoExtension() override {}
 
 public:
    // Method called whenever requiring a pointer to the extension
@@ -30,13 +30,13 @@ public:
    // Equivalent to delete()
    virtual void           Release() const = 0;
 
-   ClassDef(TGeoExtension, 1)       // User extension for volumes and nodes
+   ClassDefOverride(TGeoExtension, 1)       // User extension for volumes and nodes
 };
 
 class TGeoRCExtension : public TGeoExtension
 {
 protected:
-   virtual ~TGeoRCExtension() {delete fUserObject;}
+   ~TGeoRCExtension() override {delete fUserObject;}
 public:
    TGeoRCExtension() : TGeoExtension(), fRC(0), fUserObject(nullptr) { fRC++; }
    TGeoRCExtension(TObject *obj) : TGeoExtension(), fRC(0), fUserObject(obj) { fRC++; }

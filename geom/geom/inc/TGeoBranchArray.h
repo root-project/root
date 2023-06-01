@@ -83,7 +83,7 @@ public:
    void UpdateArray(size_t nobj);
 
    // Destructor. Release instance to be called instead
-   virtual ~TGeoBranchArray() {}
+   ~TGeoBranchArray() override {}
 
    Bool_t operator ==(const TGeoBranchArray& other) const;
    Bool_t operator !=(const TGeoBranchArray& other) const;
@@ -94,7 +94,7 @@ public:
 
    void              AddLevel(Int_t dindex);
    static Long64_t   BinarySearch(Long64_t n, const TGeoBranchArray **array, TGeoBranchArray *value);
-   virtual Int_t     Compare(const TObject *obj) const;
+   Int_t     Compare(const TObject *obj) const override;
    void              CleanMatrix();
    TGeoNode        **GetArray() const    {return fArray;}
    size_t            GetLevel() const    {return fLevel;}
@@ -106,13 +106,13 @@ public:
    void              GetPath(TString &path) const;
    void              Init(TGeoNode **branch, TGeoMatrix *global, Int_t level);
    void              InitFromNavigator(TGeoNavigator *nav);
-   virtual Bool_t    IsSortable() const {return kTRUE;}
+   Bool_t    IsSortable() const override {return kTRUE;}
    Bool_t            IsOutside() const {return (fLevel<0)?kTRUE:kFALSE;}
-   virtual void      Print(Option_t *option="") const;
+   void      Print(Option_t *option="") const override;
    static void       Sort(Int_t n, TGeoBranchArray **array, Int_t *index, Bool_t down=kTRUE);
    void              UpdateNavigator(TGeoNavigator *nav) const;
 
-   ClassDef(TGeoBranchArray, 4)
+   ClassDefOverride(TGeoBranchArray, 4)
 };
 
 struct compareBAasc {

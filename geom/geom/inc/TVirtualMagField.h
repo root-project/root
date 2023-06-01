@@ -18,11 +18,11 @@ class TVirtualMagField : public TNamed
 public:
    TVirtualMagField()                 : TNamed() {}
    TVirtualMagField(const char *name) : TNamed(name,"") {}
-   virtual ~TVirtualMagField();
+   ~TVirtualMagField() override;
 
    virtual void Field(const Double_t *x, Double_t *B) = 0;
 
-   ClassDef(TVirtualMagField, 1)              // Abstract base field class
+   ClassDefOverride(TVirtualMagField, 1)              // Abstract base field class
 };
 
 
@@ -44,7 +44,7 @@ protected:
 public:
    TGeoUniformMagField();
    TGeoUniformMagField(Double_t Bx, Double_t By, Double_t Bz);
-   virtual ~TGeoUniformMagField() {}
+   ~TGeoUniformMagField() override {}
 
    void            Field(const Double_t * /*x*/, Double_t *B) override {B[0]=fB[0]; B[1]=fB[1]; B[2]=fB[2];}
 

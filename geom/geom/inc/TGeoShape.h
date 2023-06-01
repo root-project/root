@@ -82,7 +82,7 @@ public:
    TGeoShape();
    TGeoShape(const char *name);
    // destructor
-   virtual ~TGeoShape();
+   ~TGeoShape() override;
    // methods
 
    static Double_t       Big() {return 1.E30;}
@@ -100,7 +100,7 @@ public:
    virtual Bool_t        Contains(const Double_t *point) const         = 0;
    virtual void          Contains_v(const Double_t *, Bool_t *, Int_t) const {}
    virtual Bool_t        CouldBeCrossed(const Double_t *point, const Double_t *dir) const = 0;
-   virtual Int_t         DistancetoPrimitive(Int_t px, Int_t py) = 0;
+   Int_t         DistancetoPrimitive(Int_t px, Int_t py) override = 0;
    virtual Double_t      DistFromInside(const Double_t *point, const Double_t *dir, Int_t iact=1,
                                    Double_t step=TGeoShape::Big(), Double_t *safe=nullptr) const = 0;
    virtual void          DistFromInside_v(const Double_t *, const Double_t *, Double_t *, Int_t, Double_t *) const {}
@@ -111,8 +111,8 @@ public:
                                       Double_t sm, Double_t cm, Bool_t in=kTRUE);
    virtual TGeoVolume   *Divide(TGeoVolume *voldiv, const char *divname, Int_t iaxis, Int_t ndiv,
                                 Double_t start, Double_t step)   = 0;
-   virtual void          Draw(Option_t *option=""); // *MENU*
-   virtual void          ExecuteEvent(Int_t event, Int_t px, Int_t py);
+   void          Draw(Option_t *option="") override; // *MENU*
+   void          ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
    virtual const char   *GetAxisName(Int_t iaxis) const = 0;
    virtual Double_t      GetAxisRange(Int_t iaxis, Double_t &xlo, Double_t &xhi) const = 0;
    virtual void          GetBoundingCylinder(Double_t *param) const = 0;
@@ -123,7 +123,7 @@ public:
    Int_t                 GetId() const  {return fShapeId;}
    virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape *mother, TGeoMatrix *mat) const  = 0;
    virtual void          GetMeshNumbers(Int_t &/*nvert*/, Int_t &/*nsegs*/, Int_t &/*npols*/) const {}
-   virtual const char   *GetName() const;
+   const char   *GetName() const override;
    virtual Int_t         GetNmeshVertices() const {return 0;}
    const char           *GetPointerName() const;
    virtual Bool_t        IsAssembly() const {return kFALSE;}
@@ -142,7 +142,7 @@ public:
    virtual void          InspectShape() const                    = 0;
    virtual TBuffer3D    *MakeBuffer3D() const {return nullptr;}
    static void           NormalPhi(const Double_t *point, const Double_t *dir, Double_t *norm, Double_t c1, Double_t s1, Double_t c2, Double_t s2);
-   virtual void          Paint(Option_t *option="");
+   void          Paint(Option_t *option="") override;
    virtual Double_t      Safety(const Double_t *point, Bool_t in=kTRUE) const = 0;
    virtual void          Safety_v(const Double_t *, const Bool_t *, Double_t *, Int_t) const {}
    static  Double_t      SafetyPhi(const Double_t *point, Bool_t in, Double_t phi1, Double_t phi2);
@@ -164,7 +164,7 @@ public:
    Int_t    TestShapeBits(UInt_t f) const { return (Int_t) (fShapeBits & f); }
    void     InvertShapeBit(UInt_t f) { fShapeBits ^= f & kBitMask32; }
 
-   ClassDef(TGeoShape, 2)           // base class for shapes
+   ClassDefOverride(TGeoShape, 2)           // base class for shapes
 };
 
 #endif

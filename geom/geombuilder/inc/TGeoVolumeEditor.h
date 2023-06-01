@@ -82,9 +82,9 @@ public:
                     Int_t width = 140, Int_t height = 30,
                     UInt_t options = kChildFrame,
                     Pixel_t back = GetDefaultFrameBackground());
-   virtual ~TGeoVolumeEditor();
-   virtual void   SetModel(TObject *obj);
-   virtual void   ActivateBaseClassEditors(TClass* cl);
+   ~TGeoVolumeEditor() override;
+   void   SetModel(TObject *obj) override;
+   void   ActivateBaseClassEditors(TClass* cl) override;
 
    void           DoAddNode();
    void           DoVolumeName();
@@ -111,7 +111,7 @@ public:
    void           DoApplyDiv();
    void           DoRaytrace();
 
-   ClassDef(TGeoVolumeEditor,0)   // TGeoVolume editor
+   ClassDefOverride(TGeoVolumeEditor,0)   // TGeoVolume editor
 };
 
 #endif

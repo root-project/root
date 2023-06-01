@@ -58,8 +58,8 @@ public:
                    Int_t width = 140, Int_t height = 30,
                    UInt_t options = kChildFrame,
                    Pixel_t back = GetDefaultFrameBackground());
-   virtual ~TGeoParaEditor();
-   virtual void   SetModel(TObject *obj);
+   ~TGeoParaEditor() override;
+   void   SetModel(TObject *obj) override;
 
    void           DoX();
    void           DoY();
@@ -72,7 +72,7 @@ public:
    void           DoApply();
    void           DoUndo();
 
-   ClassDef(TGeoParaEditor,0)   // TGeoPara editor
+   ClassDefOverride(TGeoParaEditor,0)   // TGeoPara editor
 };
 
 #endif

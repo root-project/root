@@ -31,7 +31,7 @@ public:
    void print() const {printf("MyExtension object %p\n", this);}
 private:
    mutable Int_t        fRC;           // Reference counter
-   ClassDef(MyExtension,1)
+   ClassDefOverride(MyExtension,1)
 };
 ~~~
 

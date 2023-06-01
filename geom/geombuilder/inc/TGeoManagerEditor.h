@@ -112,9 +112,9 @@ public:
                     Int_t width = 140, Int_t height = 30,
                     UInt_t options = kChildFrame,
                     Pixel_t back = GetDefaultFrameBackground());
-   virtual ~TGeoManagerEditor();
+   ~TGeoManagerEditor() override;
    static void    LoadLib();
-   virtual void   SetModel(TObject *obj);
+   void   SetModel(TObject *obj) override;
 
    virtual void   SelectedSlot(TVirtualPad* pad, TObject* obj, Int_t event);
    void           ConnectSelected(TCanvas *c);
@@ -168,7 +168,7 @@ public:
    void           DoExportGeometry();
    void           DoCloseGeometry();
 
-   ClassDef(TGeoManagerEditor,0)   // TGeoManager editor
+   ClassDefOverride(TGeoManagerEditor,0)   // TGeoManager editor
 };
 
 #endif

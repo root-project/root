@@ -55,8 +55,8 @@ public:
                    Int_t width = 140, Int_t height = 30,
                    UInt_t options = kChildFrame,
                    Pixel_t back = GetDefaultFrameBackground());
-   virtual ~TGeoBBoxEditor();
-   virtual void   SetModel(TObject *obj);
+   ~TGeoBBoxEditor() override;
+   void   SetModel(TObject *obj) override;
 
    void           DoDx();
    void           DoDy();
@@ -69,7 +69,7 @@ public:
    void           DoApply();
    void           DoUndo();
 
-   ClassDef(TGeoBBoxEditor,0)   // TGeoBBox editor
+   ClassDefOverride(TGeoBBoxEditor,0)   // TGeoBBox editor
 };
 
 #endif

@@ -37,7 +37,7 @@ public:
    TGDMLMatrix(const char *name, size_t rows,size_t cols);
    TGDMLMatrix(const TGDMLMatrix& rhs);
    TGDMLMatrix& operator=(const TGDMLMatrix& rhs);
-  ~TGDMLMatrix() { delete [] fMatrix; }
+  ~TGDMLMatrix() override { delete [] fMatrix; }
 
    void        Set(size_t r, size_t c, Double_t a);
    Double_t    Get(size_t r, size_t c) const;
@@ -46,7 +46,7 @@ public:
    void        SetMatrixAsString(const char *mat) { fTitle = mat; }
    const char *GetMatrixAsString() const { return fTitle.Data(); }
 
-   void        Print(Option_t *option="") const;
+   void        Print(Option_t *option="") const override;
 
  private:
 
@@ -55,7 +55,7 @@ public:
    size_t fNcols = 0;                // Number of columns
    Double_t *fMatrix = nullptr;      // [fNelem] Matrix elements
 
-   ClassDef(TGDMLMatrix, 1)          // Class representing a matrix used temporary for GDML parsing
+   ClassDefOverride(TGDMLMatrix, 1)          // Class representing a matrix used temporary for GDML parsing
 };
 
 #endif /* ROOT_TGDMLMATRIX */

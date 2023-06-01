@@ -165,7 +165,7 @@ public:
    TGeoManager();
    TGeoManager(const char *name, const char *title);
    // destructor
-   virtual ~TGeoManager();
+   ~TGeoManager() override;
    //--- adding geometrical objects
    Int_t                  AddMaterial(const TGeoMaterial *material);
    Int_t                  AddOverlap(const TNamed *ovlp);
@@ -184,7 +184,7 @@ public:
    void                   RegisterMatrix(const TGeoMatrix *matrix);
    void                   SortOverlaps();
    //--- browsing and tree navigation
-   void                   Browse(TBrowser *b);
+   void                   Browse(TBrowser *b) override;
    void                   SetVisibility(TObject *obj, Bool_t vis);
    virtual Bool_t         cd(const char *path=""); // *MENU*
    Bool_t                 CheckPath(const char *path) const;
@@ -199,7 +199,7 @@ public:
    Int_t                  GetNmany() const {return GetCurrentNavigator()->GetNmany();}
    const char            *GetPdgName(Int_t pdg) const;
    void                   SetPdgName(Int_t pdg, const char *name);
-   Bool_t                 IsFolder() const { return kTRUE; }
+   Bool_t                 IsFolder() const override { return kTRUE; }
    //--- visualization settings
    virtual void           Edit(Option_t *option="");  // *MENU*
    void                   BombTranslation(const Double_t *tr, Double_t *bombtr);
@@ -445,7 +445,7 @@ public:
    //--- utilities
    Int_t                  CountNodes(const TGeoVolume *vol=nullptr, Int_t nlevels=10000, Int_t option=0);
    void                   CountLevels();
-   virtual void           ExecuteEvent(Int_t event, Int_t px, Int_t py);
+   void           ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
    static Int_t           Parse(const char* expr, TString &expr1, TString &expr2, TString &expr3);
    Int_t                  ReplaceVolume(TGeoVolume *vorig, TGeoVolume *vnew);
    Int_t                  TransformVolumeToAssembly(const char *vname);
@@ -596,7 +596,7 @@ public:
    void                  SetUseParallelWorldNav(Bool_t flag);
    Bool_t                IsParallelWorldNav() const {return fUsePWNav;}
 
-   ClassDef(TGeoManager, 17)          // geometry manager
+   ClassDefOverride(TGeoManager, 17)          // geometry manager
 };
 
 R__EXTERN TGeoManager *gGeoManager;

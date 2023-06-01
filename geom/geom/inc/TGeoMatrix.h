@@ -61,7 +61,7 @@ protected:
 public :
    TGeoMatrix();
    TGeoMatrix(const char *name);
-   virtual ~TGeoMatrix();
+   ~TGeoMatrix() override;
 
    Bool_t               IsIdentity()    const {return !TestBit(kGeoGenTrans);}
    Bool_t               IsTranslation() const {return TestBit(kGeoTranslation);}
@@ -92,7 +92,7 @@ public :
    virtual void         MasterToLocalVect(const Double_t *master, Double_t *local) const;
    virtual void         MasterToLocalBomb(const Double_t *master, Double_t *local) const;
    static void          Normalize(Double_t *vect);
-   void                 Print(Option_t *option="") const; // *MENU*
+   void                 Print(Option_t *option="") const override; // *MENU*
    virtual void         RotateX(Double_t) {}
    virtual void         RotateY(Double_t) {}
    virtual void         RotateZ(Double_t) {}
@@ -106,7 +106,7 @@ public :
    virtual void         SetDz(Double_t) {}
    void                 SetShared(Bool_t flag=kTRUE) {SetBit(kGeoShared, flag);}
 
-   ClassDef(TGeoMatrix, 1)                 // base geometrical transformation class
+   ClassDefOverride(TGeoMatrix, 1)                 // base geometrical transformation class
 };
 
 ////////////////////////////////////////////////////////////////////////////
@@ -128,7 +128,7 @@ public :
    TGeoTranslation(const TGeoMatrix &other);
    TGeoTranslation(Double_t dx, Double_t dy, Double_t dz);
    TGeoTranslation(const char *name, Double_t dx, Double_t dy, Double_t dz);
-   virtual ~TGeoTranslation() {}
+   ~TGeoTranslation() override {}
 
    TGeoTranslation &operator  =(const TGeoTranslation &other) {return TGeoTranslation::operator=((TGeoMatrix&)other);}
    TGeoTranslation &operator  =(const TGeoMatrix &matrix);
@@ -138,30 +138,30 @@ public :
    Bool_t           operator ==(const TGeoTranslation &other) const;
 
    void                 Add(const TGeoTranslation *other);
-   TGeoHMatrix          Inverse() const;
-   virtual void         LocalToMaster(const Double_t *local, Double_t *master) const;
-   virtual void         LocalToMasterVect(const Double_t *local, Double_t *master) const;
-   virtual void         LocalToMasterBomb(const Double_t *local, Double_t *master) const;
-   virtual TGeoMatrix  *MakeClone() const;
-   virtual void         MasterToLocal(const Double_t *master, Double_t *local) const;
-   virtual void         MasterToLocalVect(const Double_t *master, Double_t *local) const;
-   virtual void         MasterToLocalBomb(const Double_t *master, Double_t *local) const;
-   virtual void         RotateX(Double_t angle);
-   virtual void         RotateY(Double_t angle);
-   virtual void         RotateZ(Double_t angle);
-   virtual void         SavePrimitive(std::ostream &out, Option_t *option = "");
+   TGeoHMatrix          Inverse() const override;
+   void         LocalToMaster(const Double_t *local, Double_t *master) const override;
+   void         LocalToMasterVect(const Double_t *local, Double_t *master) const override;
+   void         LocalToMasterBomb(const Double_t *local, Double_t *master) const override;
+   TGeoMatrix  *MakeClone() const override;
+   void         MasterToLocal(const Double_t *master, Double_t *local) const override;
+   void         MasterToLocalVect(const Double_t *master, Double_t *local) const override;
+   void         MasterToLocalBomb(const Double_t *master, Double_t *local) const override;
+   void         RotateX(Double_t angle) override;
+   void         RotateY(Double_t angle) override;
+   void         RotateZ(Double_t angle) override;
+   void         SavePrimitive(std::ostream &out, Option_t *option = "") override;
    void                 Subtract(const TGeoTranslation *other);
    void                 SetTranslation(Double_t dx, Double_t dy, Double_t dz);
    void                 SetTranslation(const TGeoMatrix &other);
-   virtual void         SetDx(Double_t dx) {SetTranslation(dx, fTranslation[1], fTranslation[2]);}
-   virtual void         SetDy(Double_t dy) {SetTranslation(fTranslation[0], dy, fTranslation[2]);}
-   virtual void         SetDz(Double_t dz) {SetTranslation(fTranslation[0], fTranslation[1], dz);}
+   void         SetDx(Double_t dx) override {SetTranslation(dx, fTranslation[1], fTranslation[2]);}
+   void         SetDy(Double_t dy) override {SetTranslation(fTranslation[0], dy, fTranslation[2]);}
+   void         SetDz(Double_t dz) override {SetTranslation(fTranslation[0], fTranslation[1], dz);}
 
-   virtual const Double_t    *GetTranslation() const {return &fTranslation[0];}
-   virtual const Double_t    *GetRotationMatrix() const {return &kIdentityMatrix[0];}
-   virtual const Double_t    *GetScale()       const {return &kUnitScale[0];}
+   const Double_t    *GetTranslation() const override {return &fTranslation[0];}
+   const Double_t    *GetRotationMatrix() const override {return &kIdentityMatrix[0];}
+   const Double_t    *GetScale()       const override {return &kUnitScale[0];}
 
-   ClassDef(TGeoTranslation, 1)                 // translation class
+   ClassDefOverride(TGeoTranslation, 1)                 // translation class
 };
 
 ////////////////////////////////////////////////////////////////////////////
@@ -186,7 +186,7 @@ public :
    TGeoRotation(const char *name, Double_t phi, Double_t theta, Double_t psi);
    TGeoRotation(const char *name, Double_t theta1, Double_t phi1, Double_t theta2, Double_t phi2,
                 Double_t theta3, Double_t phi3);
-   virtual ~TGeoRotation() {}
+   ~TGeoRotation() override {}
 
    TGeoRotation &operator  =(const TGeoRotation &other) {return TGeoRotation::operator=((TGeoMatrix&)other);}
    TGeoRotation &operator  =(const TGeoMatrix &other);
@@ -196,29 +196,29 @@ public :
    Bool_t        operator ==(const TGeoRotation &other) const;
 
    Bool_t               IsValid() const;
-   TGeoHMatrix          Inverse() const;
-   void                 Clear(Option_t *option ="");
+   TGeoHMatrix          Inverse() const override;
+   void                 Clear(Option_t *option ="") override;
    Double_t             Determinant() const;
    void                 FastRotZ(const Double_t *sincos);
    void                 GetAngles(Double_t &theta1, Double_t &phi1, Double_t &theta2, Double_t &phi2,
                                   Double_t &theta3, Double_t &phi3) const;
    void                 GetAngles(Double_t &phi, Double_t &theta, Double_t &psi) const;
    Double_t             GetPhiRotation(Bool_t fixX=kFALSE) const;
-   virtual void         LocalToMaster(const Double_t *local, Double_t *master) const;
-   virtual void         LocalToMasterVect(const Double_t *local, Double_t *master) const {TGeoRotation::LocalToMaster(local, master);}
-   virtual void         LocalToMasterBomb(const Double_t *local, Double_t *master) const {TGeoRotation::LocalToMaster(local, master);}
-   virtual TGeoMatrix  *MakeClone() const;
-   virtual void         MasterToLocal(const Double_t *master, Double_t *local) const;
-   virtual void         MasterToLocalVect(const Double_t *master, Double_t *local) const {TGeoRotation::MasterToLocal(master, local);}
-   virtual void         MasterToLocalBomb(const Double_t *master, Double_t *local) const {TGeoRotation::MasterToLocal(master, local);}
+   void         LocalToMaster(const Double_t *local, Double_t *master) const override;
+   void         LocalToMasterVect(const Double_t *local, Double_t *master) const override {TGeoRotation::LocalToMaster(local, master);}
+   void         LocalToMasterBomb(const Double_t *local, Double_t *master) const override {TGeoRotation::LocalToMaster(local, master);}
+   TGeoMatrix  *MakeClone() const override;
+   void         MasterToLocal(const Double_t *master, Double_t *local) const override;
+   void         MasterToLocalVect(const Double_t *master, Double_t *local) const override {TGeoRotation::MasterToLocal(master, local);}
+   void         MasterToLocalBomb(const Double_t *master, Double_t *local) const override {TGeoRotation::MasterToLocal(master, local);}
    void                 MultiplyBy(const TGeoRotation *rot, Bool_t after=kTRUE);
-   virtual void         RotateX(Double_t angle);
-   virtual void         RotateY(Double_t angle);
-   virtual void         RotateZ(Double_t angle);
-   virtual void         SavePrimitive(std::ostream &out, Option_t *option = "");
-   virtual void         ReflectX(Bool_t leftside, Bool_t rotonly=kFALSE);
-   virtual void         ReflectY(Bool_t leftside, Bool_t rotonly=kFALSE);
-   virtual void         ReflectZ(Bool_t leftside, Bool_t rotonly=kFALSE);
+   void         RotateX(Double_t angle) override;
+   void         RotateY(Double_t angle) override;
+   void         RotateZ(Double_t angle) override;
+   void         SavePrimitive(std::ostream &out, Option_t *option = "") override;
+   void         ReflectX(Bool_t leftside, Bool_t rotonly=kFALSE) override;
+   void         ReflectY(Bool_t leftside, Bool_t rotonly=kFALSE) override;
+   void         ReflectZ(Bool_t leftside, Bool_t rotonly=kFALSE) override;
    void                 SetAngles(Double_t phi, Double_t theta, Double_t psi);
    void                 SetAngles(Double_t theta1, Double_t phi1, Double_t theta2, Double_t phi2,
                                   Double_t theta3, Double_t phi3);
@@ -226,11 +226,11 @@ public :
    void                 SetRotation(const TGeoMatrix &other);
    void                 GetInverse(Double_t *invmat) const;
 
-   virtual const Double_t    *GetTranslation()    const {return &kNullVector[0];}
-   virtual const Double_t    *GetRotationMatrix() const {return &fRotationMatrix[0];}
-   virtual const Double_t    *GetScale()          const {return &kUnitScale[0];}
+   const Double_t    *GetTranslation()    const override {return &kNullVector[0];}
+   const Double_t    *GetRotationMatrix() const override {return &fRotationMatrix[0];}
+   const Double_t    *GetScale()          const override {return &kUnitScale[0];}
 
-   ClassDef(TGeoRotation, 1)               // rotation class
+   ClassDefOverride(TGeoRotation, 1)               // rotation class
 };
 
 ////////////////////////////////////////////////////////////////////////////
@@ -251,7 +251,7 @@ public :
    TGeoScale(const TGeoMatrix &other);
    TGeoScale(Double_t sx, Double_t sy, Double_t sz);
    TGeoScale(const char *name, Double_t sx, Double_t sy, Double_t sz);
-   virtual ~TGeoScale();
+   ~TGeoScale() override;
 
    TGeoScale  &operator  =(const TGeoScale &other) {return TGeoScale::operator=((TGeoMatrix&)other);}
    TGeoScale  &operator  =(const TGeoMatrix &other);
@@ -260,25 +260,25 @@ public :
    TGeoHMatrix operator  *(const TGeoMatrix &right) const;
    Bool_t      operator ==(const TGeoScale &other) const;
 
-   TGeoHMatrix          Inverse() const;
+   TGeoHMatrix          Inverse() const override;
    void                 SetScale(Double_t sx, Double_t sy, Double_t sz);
    void                 SetScale(const TGeoMatrix &other);
-   virtual void         LocalToMaster(const Double_t *local, Double_t *master) const;
+   void         LocalToMaster(const Double_t *local, Double_t *master) const override;
    Double_t             LocalToMaster(Double_t dist, const Double_t *dir=nullptr) const;
-   virtual void         LocalToMasterVect(const Double_t *local, Double_t *master) const {TGeoScale::LocalToMaster(local, master);}
-   virtual TGeoMatrix  *MakeClone() const;
-   virtual void         MasterToLocal(const Double_t *master, Double_t *local) const;
+   void         LocalToMasterVect(const Double_t *local, Double_t *master) const override {TGeoScale::LocalToMaster(local, master);}
+   TGeoMatrix  *MakeClone() const override;
+   void         MasterToLocal(const Double_t *master, Double_t *local) const override;
    Double_t             MasterToLocal(Double_t dist, const Double_t *dir=nullptr) const;
-   virtual void         MasterToLocalVect(const Double_t *master, Double_t *local) const {TGeoScale::MasterToLocal(master, local);}
-   virtual void         ReflectX(Bool_t, Bool_t) {fScale[0]=-fScale[0]; SetBit(kGeoReflection, !IsReflection());}
-   virtual void         ReflectY(Bool_t, Bool_t) {fScale[1]=-fScale[1]; SetBit(kGeoReflection, !IsReflection());}
-   virtual void         ReflectZ(Bool_t, Bool_t) {fScale[2]=-fScale[2]; SetBit(kGeoReflection, !IsReflection());}
+   void         MasterToLocalVect(const Double_t *master, Double_t *local) const override {TGeoScale::MasterToLocal(master, local);}
+   void         ReflectX(Bool_t, Bool_t) override {fScale[0]=-fScale[0]; SetBit(kGeoReflection, !IsReflection());}
+   void         ReflectY(Bool_t, Bool_t) override {fScale[1]=-fScale[1]; SetBit(kGeoReflection, !IsReflection());}
+   void         ReflectZ(Bool_t, Bool_t) override {fScale[2]=-fScale[2]; SetBit(kGeoReflection, !IsReflection());}
 
-   virtual const Double_t    *GetTranslation()    const {return &kNullVector[0];}
-   virtual const Double_t    *GetRotationMatrix() const {return &kIdentityMatrix[0];}
-   virtual const Double_t    *GetScale()          const {return &fScale[0];}
+   const Double_t    *GetTranslation()    const override {return &kNullVector[0];}
+   const Double_t    *GetRotationMatrix() const override {return &kIdentityMatrix[0];}
+   const Double_t    *GetScale()          const override {return &fScale[0];}
 
-   ClassDef(TGeoScale, 1)                 // scaling class
+   ClassDefOverride(TGeoScale, 1)                 // scaling class
 };
 
 ////////////////////////////////////////////////////////////////////////////
@@ -308,23 +308,23 @@ public :
    TGeoCombiTrans  operator  *(const TGeoMatrix &other) const;
    Bool_t          operator ==(const TGeoMatrix &other) const;
 
-   virtual ~TGeoCombiTrans();
+   ~TGeoCombiTrans() override;
 
-   void                 Clear(Option_t *option ="");
-   TGeoHMatrix          Inverse() const;
-   virtual TGeoMatrix  *MakeClone() const;
+   void                 Clear(Option_t *option ="") override;
+   TGeoHMatrix          Inverse() const override;
+   TGeoMatrix  *MakeClone() const override;
    void                 Multiply(const TGeoMatrix *right);
-   virtual void         RegisterYourself();
-   virtual void         RotateX(Double_t angle);
-   virtual void         RotateY(Double_t angle);
-   virtual void         RotateZ(Double_t angle);
-   virtual void         ReflectX(Bool_t leftside, Bool_t rotonly=kFALSE);
-   virtual void         ReflectY(Bool_t leftside, Bool_t rotonly=kFALSE);
-   virtual void         ReflectZ(Bool_t leftside, Bool_t rotonly=kFALSE);
-   virtual void         SavePrimitive(std::ostream &out, Option_t *option = "");
-   virtual void         SetDx(Double_t dx) {SetTranslation(dx, fTranslation[1], fTranslation[2]);}
-   virtual void         SetDy(Double_t dy) {SetTranslation(fTranslation[0], dy, fTranslation[2]);}
-   virtual void         SetDz(Double_t dz) {SetTranslation(fTranslation[0], fTranslation[1], dz);}
+   void         RegisterYourself() override;
+   void         RotateX(Double_t angle) override;
+   void         RotateY(Double_t angle) override;
+   void         RotateZ(Double_t angle) override;
+   void         ReflectX(Bool_t leftside, Bool_t rotonly=kFALSE) override;
+   void         ReflectY(Bool_t leftside, Bool_t rotonly=kFALSE) override;
+   void         ReflectZ(Bool_t leftside, Bool_t rotonly=kFALSE) override;
+   void         SavePrimitive(std::ostream &out, Option_t *option = "") override;
+   void         SetDx(Double_t dx) override {SetTranslation(dx, fTranslation[1], fTranslation[2]);}
+   void         SetDy(Double_t dy) override {SetTranslation(fTranslation[0], dy, fTranslation[2]);}
+   void         SetDz(Double_t dz) override {SetTranslation(fTranslation[0], fTranslation[1], dz);}
    void                 SetTranslation(const TGeoTranslation &tr);
    void                 SetTranslation(Double_t dx, Double_t dy, Double_t dz);
    void                 SetTranslation(Double_t *vect);
@@ -333,11 +333,11 @@ public :
 
    TGeoRotation              *GetRotation() const    {return fRotation;}
 
-   virtual const Double_t    *GetTranslation()    const {return &fTranslation[0];}
-   virtual const Double_t    *GetRotationMatrix() const;
-   virtual const Double_t    *GetScale()          const {return &kUnitScale[0];}
+   const Double_t    *GetTranslation()    const override {return &fTranslation[0];}
+   const Double_t    *GetRotationMatrix() const override;
+   const Double_t    *GetScale()          const override {return &kUnitScale[0];}
 
-   ClassDef(TGeoCombiTrans, 1)            // rotation + translation
+   ClassDefOverride(TGeoCombiTrans, 1)            // rotation + translation
 };
 
 ////////////////////////////////////////////////////////////////////////////
@@ -358,18 +358,18 @@ public :
                 Double_t sx, Double_t sy, Double_t sz, TGeoRotation *rot);
    TGeoGenTrans(const char *name, Double_t dx, Double_t dy, Double_t dz,
                 Double_t sx, Double_t sy, Double_t sz, TGeoRotation *rot);
-   virtual ~TGeoGenTrans();
+   ~TGeoGenTrans() override;
 
-   void                 Clear(Option_t *option ="");
-   TGeoHMatrix          Inverse() const;
+   void                 Clear(Option_t *option ="") override;
+   TGeoHMatrix          Inverse() const override;
    void                 SetScale(Double_t sx, Double_t sy, Double_t sz);
    void                 SetScale(Double_t *scale) {memcpy(&fScale[0], scale, 3*sizeof(Double_t));}
-   virtual TGeoMatrix  *MakeClone() const {return nullptr;}
+   TGeoMatrix  *MakeClone() const override {return nullptr;}
    Bool_t               Normalize();
 
-   virtual const Double_t    *GetScale()     const {return &fScale[0];}
+   const Double_t    *GetScale()     const override {return &fScale[0];}
 
-   ClassDef(TGeoGenTrans, 1)            // rotation + translation + scale
+   ClassDefOverride(TGeoGenTrans, 1)            // rotation + translation + scale
 };
 
 ////////////////////////////////////////////////////////////////////////////
@@ -387,23 +387,23 @@ private:
 public :
    TGeoIdentity();
    TGeoIdentity(const char *name);
-   virtual ~TGeoIdentity() {}
+   ~TGeoIdentity() override {}
 
-   TGeoHMatrix          Inverse() const;
-   virtual void         LocalToMaster(const Double_t *local, Double_t *master) const {memcpy(master, local, 3*sizeof(Double_t));}
-   virtual void         LocalToMasterVect(const Double_t *local, Double_t *master) const {memcpy(master, local, 3*sizeof(Double_t));}
-   virtual void         LocalToMasterBomb(const Double_t *local, Double_t *master) const {TGeoIdentity::LocalToMaster(local, master);}
-   virtual TGeoMatrix  *MakeClone() const {return nullptr;}
-   virtual void         MasterToLocal(const Double_t *master, Double_t *local) const {memcpy(local, master, 3*sizeof(Double_t));}
-   virtual void         MasterToLocalVect(const Double_t *master, Double_t *local) const {memcpy(local, master, 3*sizeof(Double_t));}
-   virtual void         MasterToLocalBomb(const Double_t *master, Double_t *local) const {TGeoIdentity::MasterToLocal(master, local);}
+   TGeoHMatrix          Inverse() const override;
+   void         LocalToMaster(const Double_t *local, Double_t *master) const override {memcpy(master, local, 3*sizeof(Double_t));}
+   void         LocalToMasterVect(const Double_t *local, Double_t *master) const override {memcpy(master, local, 3*sizeof(Double_t));}
+   void         LocalToMasterBomb(const Double_t *local, Double_t *master) const override {TGeoIdentity::LocalToMaster(local, master);}
+   TGeoMatrix  *MakeClone() const override {return nullptr;}
+   void         MasterToLocal(const Double_t *master, Double_t *local) const override {memcpy(local, master, 3*sizeof(Double_t));}
+   void         MasterToLocalVect(const Double_t *master, Double_t *local) const override {memcpy(local, master, 3*sizeof(Double_t));}
+   void         MasterToLocalBomb(const Double_t *master, Double_t *local) const override {TGeoIdentity::MasterToLocal(master, local);}
 
-   virtual const Double_t    *GetTranslation() const {return &kNullVector[0];}
-   virtual const Double_t    *GetRotationMatrix() const {return &kIdentityMatrix[0];}
-   virtual const Double_t    *GetScale()       const {return &kUnitScale[0];}
-   virtual void         SavePrimitive(std::ostream &, Option_t * = "") {}
+   const Double_t    *GetTranslation() const override {return &kNullVector[0];}
+   const Double_t    *GetRotationMatrix() const override {return &kIdentityMatrix[0];}
+   const Double_t    *GetScale()       const override {return &kUnitScale[0];}
+   void         SavePrimitive(std::ostream &, Option_t * = "") override {}
 
-   ClassDef(TGeoIdentity, 1)                 // identity transformation class
+   ClassDefOverride(TGeoIdentity, 1)                 // identity transformation class
 };
 
 
@@ -429,7 +429,7 @@ public :
    TGeoHMatrix(const TGeoHMatrix &other) : TGeoHMatrix((TGeoMatrix&)other) {}
    TGeoHMatrix(const TGeoMatrix &matrix);
    TGeoHMatrix(const char *name);
-   virtual ~TGeoHMatrix();
+   ~TGeoHMatrix() override;
 
    TGeoHMatrix& operator  =(const TGeoHMatrix &other) {return TGeoHMatrix::operator=((TGeoMatrix&)other);}
    TGeoHMatrix& operator  =(const TGeoMatrix *other);
@@ -438,40 +438,40 @@ public :
    TGeoHMatrix  operator  *(const TGeoMatrix &other) const;
    Bool_t       operator ==(const TGeoMatrix &other) const;
 
-   void                 Clear(Option_t *option ="");
+   void                 Clear(Option_t *option ="") override;
    void                 CopyFrom(const TGeoMatrix *other);
    Double_t             Determinant() const;
    void                 FastRotZ(const Double_t *sincos);
-   TGeoHMatrix          Inverse() const;
-   virtual TGeoMatrix  *MakeClone() const;
+   TGeoHMatrix          Inverse() const override;
+   TGeoMatrix  *MakeClone() const override;
    void                 Multiply(const TGeoMatrix *right);
    void                 Multiply(const TGeoMatrix &right) {Multiply(&right);}
    void                 MultiplyLeft(const TGeoMatrix *left);
    void                 MultiplyLeft(const TGeoMatrix &left) {MultiplyLeft(&left);}
 
-   virtual void         RotateX(Double_t angle);
-   virtual void         RotateY(Double_t angle);
-   virtual void         RotateZ(Double_t angle);
-   virtual void         ReflectX(Bool_t leftside, Bool_t rotonly=kFALSE);
-   virtual void         ReflectY(Bool_t leftside, Bool_t rotonly=kFALSE);
-   virtual void         ReflectZ(Bool_t leftside, Bool_t rotonly=kFALSE);
-   virtual void         SavePrimitive(std::ostream &out, Option_t *option = "");
-   virtual void         SetDx(Double_t dx) {fTranslation[0] = dx; SetBit(kGeoTranslation);}
-   virtual void         SetDy(Double_t dy) {fTranslation[1] = dy; SetBit(kGeoTranslation);}
-   virtual void         SetDz(Double_t dz) {fTranslation[2] = dz; SetBit(kGeoTranslation);}
+   void         RotateX(Double_t angle) override;
+   void         RotateY(Double_t angle) override;
+   void         RotateZ(Double_t angle) override;
+   void         ReflectX(Bool_t leftside, Bool_t rotonly=kFALSE) override;
+   void         ReflectY(Bool_t leftside, Bool_t rotonly=kFALSE) override;
+   void         ReflectZ(Bool_t leftside, Bool_t rotonly=kFALSE) override;
+   void         SavePrimitive(std::ostream &out, Option_t *option = "") override;
+   void         SetDx(Double_t dx) override {fTranslation[0] = dx; SetBit(kGeoTranslation);}
+   void         SetDy(Double_t dy) override {fTranslation[1] = dy; SetBit(kGeoTranslation);}
+   void         SetDz(Double_t dz) override {fTranslation[2] = dz; SetBit(kGeoTranslation);}
    void                 SetTranslation(const Double_t *vect) {SetBit(kGeoTranslation); memcpy(&fTranslation[0], vect, 3*sizeof(Double_t));}
    void                 SetRotation(const Double_t *matrix) {SetBit(kGeoRotation); memcpy(&fRotationMatrix[0], matrix, 9*sizeof(Double_t));}
    void                 SetScale(const Double_t *scale) {SetBit(kGeoScale); memcpy(&fScale[0], scale, 3*sizeof(Double_t));}
 
 
-   virtual const Double_t    *GetTranslation() const {return &fTranslation[0];}
-   virtual const Double_t    *GetRotationMatrix() const {return &fRotationMatrix[0];}
-   virtual const Double_t    *GetScale() const {return &fScale[0];}
+   const Double_t    *GetTranslation() const override {return &fTranslation[0];}
+   const Double_t    *GetRotationMatrix() const override {return &fRotationMatrix[0];}
+   const Double_t    *GetScale() const override {return &fScale[0];}
 
    virtual Double_t    *GetTranslation() {return &fTranslation[0];}
    virtual Double_t    *GetRotationMatrix() {return &fRotationMatrix[0];}
    virtual Double_t    *GetScale() {return &fScale[0];}
-   ClassDef(TGeoHMatrix, 1)                 // global matrix class
+   ClassDefOverride(TGeoHMatrix, 1)                 // global matrix class
 };
 
 

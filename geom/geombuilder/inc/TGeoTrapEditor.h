@@ -65,8 +65,8 @@ public:
                    Int_t width = 140, Int_t height = 30,
                    UInt_t options = kChildFrame,
                    Pixel_t back = GetDefaultFrameBackground());
-   virtual ~TGeoTrapEditor();
-   virtual void   SetModel(TObject *obj);
+   ~TGeoTrapEditor() override;
+   void   SetModel(TObject *obj) override;
 
    void           DoH1();
    void           DoBl1();
@@ -82,7 +82,7 @@ public:
    virtual void   DoApply();
    virtual void   DoUndo();
 
-   ClassDef(TGeoTrapEditor,0)   // TGeoTrap editor
+   ClassDefOverride(TGeoTrapEditor,0)   // TGeoTrap editor
 };
 
 class TGeoGtraEditor : public TGeoTrapEditor {
@@ -97,14 +97,14 @@ public:
                    Int_t width = 140, Int_t height = 30,
                    UInt_t options = kChildFrame,
                    Pixel_t back = GetDefaultFrameBackground());
-   virtual ~TGeoGtraEditor();
-   virtual void   SetModel(TObject *obj);
+   ~TGeoGtraEditor() override;
+   void   SetModel(TObject *obj) override;
 
    void           DoTwist();
-   virtual void   DoApply();
-   virtual void   DoUndo();
+   void   DoApply() override;
+   void   DoUndo() override;
 
-   ClassDef(TGeoGtraEditor,0)   // TGeoTrap editor
+   ClassDefOverride(TGeoGtraEditor,0)   // TGeoTrap editor
 };
 
 #endif
