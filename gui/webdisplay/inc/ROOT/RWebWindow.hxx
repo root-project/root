@@ -173,7 +173,7 @@ private:
 
    void CompleteWSSend(unsigned wsid);
 
-   ConnectionsList_t GetConnections(unsigned connid = 0, bool only_active = false) const;
+   ConnectionsList_t GetWindowConnections(unsigned connid = 0, bool only_active = false) const;
 
    std::shared_ptr<WebConn> FindOrCreateConnection(unsigned wsid, bool make_new, const char *query);
 
@@ -310,6 +310,8 @@ public:
    int NumConnections(bool with_pending = false) const;
 
    unsigned GetConnectionId(int num = 0) const;
+
+   std::vector<unsigned> GetConnections(unsigned excludeid = 0) const;
 
    bool HasConnection(unsigned connid = 0, bool only_active = true) const;
 
