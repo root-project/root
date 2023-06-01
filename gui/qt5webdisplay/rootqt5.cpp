@@ -81,7 +81,7 @@ protected:
 
       Qt5Creator() = default;
 
-      virtual ~Qt5Creator()
+      ~Qt5Creator() override
       {
          /** Code executed during exit and sometime crashes.
           *  Disable it, while not clear if defaultProfile can be still used - seems to be not */
@@ -227,13 +227,21 @@ protected:
 public:
    RQt5WebDisplayHandle(const std::string &url) : RWebDisplayHandle(url) {}
 
-   virtual ~RQt5WebDisplayHandle()
+   ~RQt5WebDisplayHandle() override
    {
       // now view can be safely destroyed
       if (fView) {
          delete fView;
          fView = nullptr;
       }
+   }
+
+   bool Resize(int width, int height) override
+   {
+      if (!fView)
+         return false;
+      fView->resize(QSize(width, height));
+      return true;
    }
 
    static void AddCreator()

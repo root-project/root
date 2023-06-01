@@ -88,6 +88,30 @@ void GuiHandler::PlatformTitleChange(CefRefPtr<CefBrowser> browser, const CefStr
    XStoreName(display, browser->GetHost()->GetWindowHandle(), titleStr.c_str());
 }
 
+bool GuiHandler::PlatformResize(CefRefPtr<CefBrowser> browser, int width, int height)
+{
+   ::Display *display = cef_get_xdisplay();
+   if (!display) return false;
+
+   // Retrieve the X11 window handle for the browser.
+   ::Window window = browser->GetHost()->GetWindowHandle();
+   if (window == kNullWindowHandle)
+      return false;
+
+   int result = XResizeWindow(display, window, width, height);
+   if (result == BadWindow) {
+      printf("   bad window in XResizeWindow\n");
+      return false;
+   }
+
+   if (result == BadValue) {
+      printf("   bad values in XResizeWindow %d %d\n", width, height);
+      return false;
+   }
+   XFlush(display);
+   return true;
+}
+
 #else
 
 bool GuiHandler::PlatformInit()
@@ -98,6 +122,11 @@ bool GuiHandler::PlatformInit()
 void GuiHandler::PlatformTitleChange(CefRefPtr<CefBrowser>, const CefString &)
 {
    // do nothing
+}
+
+bool GuiHandler::PlatformResize(CefRefPtr<CefBrowser>, int, int)
+{
+   return false;
 }
 
 
