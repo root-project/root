@@ -74,7 +74,8 @@ ROOT::Experimental::RFieldDescriptor::CreateField(const RNTupleDescriptor &ntplD
       return collectionField;
    }
 
-   auto field = Detail::RFieldBase::Create(GetFieldName(), GetTypeName(), GetTypeAlias()).Unwrap();
+   auto field =
+      Detail::RFieldBase::Create(GetFieldName(), GetTypeAlias().empty() ? GetTypeName() : GetTypeAlias()).Unwrap();
    field->SetOnDiskId(fFieldId);
    for (auto &f : *field)
       f.SetOnDiskId(ntplDesc.FindFieldId(f.GetName(), f.GetParent()->GetOnDiskId()));

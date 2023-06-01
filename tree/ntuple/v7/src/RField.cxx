@@ -146,33 +146,37 @@ std::tuple<std::string, std::vector<size_t>> ParseArrayType(std::string_view typ
    return std::make_tuple(std::string{typeName}, sizeVec);
 }
 
-std::string GetNormalizedType(const std::string &typeName) {
+/// Returns the normalized resolved type and the normalized typedef before typedef resolution. If the given type
+/// is not a typedef, the second element of the returned pair is the empty string.
+std::pair<std::string, std::string> GetNormalizedType(const std::string &typeName) {
    std::string normalizedType(TClassEdit::CleanType(typeName.c_str(), /*mode=*/2));
    // The following types are asummed to be canonical names; thus, do not perform `typedef` resolution on those
    if (normalizedType == "ROOT::Experimental::ClusterSize_t")
-      return normalizedType;
+      return std::make_pair(normalizedType, "");
 
-   normalizedType = TClassEdit::ResolveTypedef(normalizedType.c_str());
-   auto translatedType = typeTranslationMap.find(normalizedType);
+   std::string resolvedType = TClassEdit::ResolveTypedef(normalizedType.c_str());
+   if (resolvedType == normalizedType)
+      normalizedType = "";
+   auto translatedType = typeTranslationMap.find(resolvedType);
    if (translatedType != typeTranslationMap.end())
-      normalizedType = translatedType->second;
+      resolvedType = translatedType->second;
 
-   if (normalizedType.substr(0, 7) == "vector<")
-      normalizedType = "std::" + normalizedType;
-   if (normalizedType.substr(0, 6) == "array<")
-      normalizedType = "std::" + normalizedType;
-   if (normalizedType.substr(0, 8) == "variant<")
-      normalizedType = "std::" + normalizedType;
-   if (normalizedType.substr(0, 5) == "pair<")
-      normalizedType = "std::" + normalizedType;
-   if (normalizedType.substr(0, 6) == "tuple<")
-      normalizedType = "std::" + normalizedType;
-   if (normalizedType.substr(0, 7) == "bitset<")
-      normalizedType = "std::" + normalizedType;
-   if (normalizedType.substr(0, 11) == "unique_ptr<")
-      normalizedType = "std::" + normalizedType;
+   if (resolvedType.substr(0, 7) == "vector<")
+      resolvedType = "std::" + resolvedType;
+   if (resolvedType.substr(0, 6) == "array<")
+      resolvedType = "std::" + resolvedType;
+   if (resolvedType.substr(0, 8) == "variant<")
+      resolvedType = "std::" + resolvedType;
+   if (resolvedType.substr(0, 5) == "pair<")
+      resolvedType = "std::" + resolvedType;
+   if (resolvedType.substr(0, 6) == "tuple<")
+      resolvedType = "std::" + resolvedType;
+   if (resolvedType.substr(0, 7) == "bitset<")
+      resolvedType = "std::" + resolvedType;
+   if (resolvedType.substr(0, 11) == "unique_ptr<")
+      resolvedType = "std::" + resolvedType;
 
-   return normalizedType;
+   return std::make_pair(resolvedType, normalizedType);
 }
 
 /// Retrieve the addresses of the data members of a generic RVec from a pointer to the beginning of the RVec object.
@@ -233,10 +237,9 @@ std::string ROOT::Experimental::Detail::RFieldBase::GetQualifiedFieldName() cons
 }
 
 ROOT::Experimental::RResult<std::unique_ptr<ROOT::Experimental::Detail::RFieldBase>>
-ROOT::Experimental::Detail::RFieldBase::Create(const std::string &fieldName, const std::string &typeName,
-                                               const std::string &typeAlias)
+ROOT::Experimental::Detail::RFieldBase::Create(const std::string &fieldName, const std::string &typeName)
 {
-   std::string normalizedType(GetNormalizedType(typeName));
+   auto [normalizedType, typeAlias] = GetNormalizedType(typeName);
    if (normalizedType.empty())
       return R__FAIL("no type name specified for Field " + fieldName);
 
@@ -244,7 +247,7 @@ ROOT::Experimental::Detail::RFieldBase::Create(const std::string &fieldName, con
       // TODO(jalopezg): support multi-dimensional row-major (C order) arrays in RArrayField
       if (arraySize.size() > 1)
          return R__FAIL("multi-dimensional array type not supported " + normalizedType);
-      auto itemField = Create(GetNormalizedType(arrayBaseType), arrayBaseType).Unwrap();
+      auto itemField = Create("_0", arrayBaseType).Unwrap();
       return {std::make_unique<RArrayField>(fieldName, std::move(itemField), arraySize[0])};
    }
 
@@ -299,7 +302,7 @@ ROOT::Experimental::Detail::RFieldBase::Create(const std::string &fieldName, con
       auto arrayDef = TokenizeTypeList(normalizedType.substr(11, normalizedType.length() - 12));
       R__ASSERT(arrayDef.size() == 2);
       auto arrayLength = std::stoi(arrayDef[1]);
-      auto itemField = Create(GetNormalizedType(arrayDef[0]), arrayDef[0]);
+      auto itemField = Create("_0", arrayDef[0]);
       result = std::make_unique<RArrayField>(fieldName, itemField.Unwrap(), arrayLength);
    } else if (normalizedType.substr(0, 13) == "std::variant<") {
       auto innerTypes = TokenizeTypeList(normalizedType.substr(13, normalizedType.length() - 14));
