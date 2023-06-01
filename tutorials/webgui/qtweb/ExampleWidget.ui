@@ -13,13 +13,13 @@
       </rect>
     </property>
     <property name="windowTitle" >
-      <string>Qt5Web ROOT example</string>
+      <string>QtWeb ROOT example</string>
     </property>
     <layout class="QGridLayout" >
       <item row="0" column="0" >
         <widget class="QLabel" name="textLabel1" >
           <property name="text" >
-            <string>This is an example of using ROO5 qt5web components. &lt;br>It shows some default Qt5 widgets plus RCanvas and TCanvas with graphics inside</string>
+            <string>This is an example of using ROOT qt5web/qt6web components. &lt;br>It shows some default Qt widgets plus RCanvas and TCanvas with graphics inside</string>
           </property>
           <property name="wordWrap" >
             <bool>false</bool>
@@ -36,7 +36,7 @@
               <item row="0" column="0" >
                 <widget class="QLabel" name="InfoLabel1" >
                   <property name="text" >
-                    <string>This is just example of using standard Qt5 components</string>
+                    <string>This is just example of using standard Qt components</string>
                   </property>
                   <property name="alignment" >
                     <set>Qt::AlignVCenter</set>
