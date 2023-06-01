@@ -10,8 +10,8 @@ sap.ui.define([
    'sap/m/Input',
    'sap/m/Button',
    'sap/m/ButtonType',
-   'sap/ui/layout/Splitter',
-   'sap/ui/layout/SplitterLayoutData'
+   'sap/ui/layout/SplitterLayoutData',
+   'sap/ui/core/ResizeHandler'
 ], function (Controller,
              Component,
              JSONModel,
@@ -23,8 +23,8 @@ sap.ui.define([
              Input,
              Button,
              ButtonType,
-             Splitter,
-             SplitterLayoutData) {
+             SplitterLayoutData,
+             ResizeHandler) {
    "use strict";
 
    function chk_icon(flag) {
@@ -87,6 +87,16 @@ sap.ui.define([
             if (!cp.embed_canvas && ws?.addReloadKeyHandler)
                ws.addReloadKeyHandler();
          }
+
+         if (!cp.embed_canvas)
+            ResizeHandler.register(this.getView(), () => {
+               cp._ignore_resize = true;
+               // ensure that all elements get there proper sizes
+               // otherwise canvas resize handler fails to determine real canvas size
+               this.getView().rerender();
+               delete cp._ignore_resize;
+               cp.checkCanvasResize();
+            });
       },
 
       onAfterRendering() {
@@ -550,10 +560,10 @@ sap.ui.define([
          this.getView().getModel().setProperty("/MenuBarIcon", chk_icon(new_state));
 
          if (this.isMenuBarShow() != new_state) {
-            this._Page.setShowHeader(new_state);
             let canvp = this.getCanvasPainter();
             if (canvp)
                canvp.enforceCanvasSize = true;
+            this._Page.setShowHeader(new_state);
          }
       },
 
