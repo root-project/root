@@ -806,7 +806,7 @@ bool RWebWindow::ProcessWS(THttpCallArg &arg)
 
    if (nchannel == 0) {
       // special system channel
-      if ((cdata.find("READY=") == 0) && !conn->fReady) {
+      if ((cdata.compare(0, 6, "READY=") == 0) && !conn->fReady) {
          std::string key = cdata.substr(6);
 
          if (key.empty() && IsNativeOnlyConn()) {
@@ -828,12 +828,20 @@ bool RWebWindow::ProcessWS(THttpCallArg &arg)
             ProvideQueueEntry(conn->fConnId, kind_Connect, ""s);
             conn->fReady = 10;
          }
-      } else if (cdata.compare(0,8,"CLOSECH=") == 0) {
+      } else if (cdata.compare(0, 8, "CLOSECH=") == 0) {
          int channel = std::stoi(cdata.substr(8));
          auto iter = conn->fEmbed.find(channel);
          if (iter != conn->fEmbed.end()) {
             iter->second->ProvideQueueEntry(conn->fConnId, kind_Disconnect, ""s);
             conn->fEmbed.erase(iter);
+         }
+      } else if (cdata.compare(0, 7, "RESIZE=") == 0) {
+         auto p = cdata.find(",");
+         if (p != std::string::npos) {
+            auto width = std::stoi(cdata.substr(7, p - 7));
+            auto height = std::stoi(cdata.substr(p + 1));
+            if ((width > 0) && (height > 0) && conn->fDisplayHandle)
+               conn->fDisplayHandle->Resize(width, height);
          }
       } else if (cdata == "GENERATE_KEY") {
 

@@ -226,7 +226,6 @@ RCefWebDisplayHandle::~RCefWebDisplayHandle()
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// Closes associated browser window
 
-
 void RCefWebDisplayHandle::CloseBrowser()
 {
    if (fBrowser) {
@@ -235,8 +234,6 @@ void RCefWebDisplayHandle::CloseBrowser()
       fBrowser = nullptr;
    }
 }
-
-
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// Process system events until browser content is available
@@ -277,6 +274,18 @@ bool RCefWebDisplayHandle::WaitForContent(int tmout_sec, const std::string &extr
    return !GetContent().empty();
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////
+/// Resize browser window
+
+bool RCefWebDisplayHandle::Resize(int width, int height)
+{
+   if (!fBrowser)
+      return false;
+   return GuiHandler::PlatformResize(fBrowser, width, height);
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+/// Add CEF creator
 
 void RCefWebDisplayHandle::AddCreator()
 {
@@ -285,6 +294,8 @@ void RCefWebDisplayHandle::AddCreator()
       GetMap().emplace("cef", std::make_unique<CefCreator>());
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////
+/// Helper struct to add creator
 
 struct RCefCreatorReg {
    RCefCreatorReg() { RCefWebDisplayHandle::AddCreator(); }
