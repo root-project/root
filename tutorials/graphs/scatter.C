@@ -28,9 +28,9 @@ void scatter()
       s[i] = 400*r->Rndm(i);
    }
 
-   auto scat = new TScatter(n, x, y,c,s);
-   scat->SetMarkerStyle(20);
-   scat->SetMarkerColor(kRed);
-   scat->SetTitle("Scatter plot;X;Y");
-   scat->Draw("A");
+   auto scatter = new TScatter(n, x, y, c, s);
+   scatter->SetMarkerStyle(20);
+   scatter->SetMarkerColor(kRed);
+   scatter->SetTitle("Scatter plot;X;Y");
+   scatter->Draw("A");
 }
