@@ -96,7 +96,7 @@ RWebWindow::~RWebWindow()
    if (fMgr) {
 
       // make copy of all connections
-      auto lst = GetConnections();
+      auto lst = GetWindowConnections();
 
       {
          // clear connections vector under mutex
@@ -1049,7 +1049,7 @@ bool RWebWindow::CheckDataToSend(std::shared_ptr<WebConn> &conn)
 void RWebWindow::CheckDataToSend(bool only_once)
 {
    // make copy of all connections to be independent later, only active connections are checked
-   auto arr = GetConnections(0, true);
+   auto arr = GetWindowConnections(0, true);
 
    do {
       bool isany = false;
@@ -1213,6 +1213,32 @@ unsigned RWebWindow::GetConnectionId(int num) const
 }
 
 ///////////////////////////////////////////////////////////////////////////////////
+/// returns vector with all existing connections ids
+/// One also can exclude specified connection from return result,
+/// which can be useful to be able reply too all but this connections
+
+std::vector<unsigned> RWebWindow::GetConnections(unsigned excludeid) const
+{
+   std::vector<unsigned> res;
+
+   bool is_master = !!fMaster;
+
+   std::lock_guard<std::mutex> grd(fConnMutex);
+
+   if (is_master) {
+      for (auto & entry : fMasterConns)
+         if (entry.connid != excludeid)
+            res.emplace_back(entry.connid);
+   } else {
+      for (auto & entry : fConn)
+         if (entry->fActive && (entry->fConnId != excludeid))
+            res.emplace_back(entry->fConnId);
+   }
+
+   return res;
+}
+
+///////////////////////////////////////////////////////////////////////////////////
 /// returns true if specified connection id exists
 /// \param connid       connection id (0 - any)
 /// \param only_active  when true only active connection will be checked, otherwise also pending (not yet established) connections are checked
@@ -1262,7 +1288,7 @@ void RWebWindow::CloseConnection(unsigned connid)
 /// \param connid  connection id, when 0 - all existing connections are returned
 /// \param only_active  when true, only active (already established) connections are returned
 
-RWebWindow::ConnectionsList_t RWebWindow::GetConnections(unsigned connid, bool only_active) const
+RWebWindow::ConnectionsList_t RWebWindow::GetWindowConnections(unsigned connid, bool only_active) const
 {
    ConnectionsList_t arr;
 
@@ -1290,7 +1316,7 @@ RWebWindow::ConnectionsList_t RWebWindow::GetConnections(unsigned connid, bool o
 
 bool RWebWindow::CanSend(unsigned connid, bool direct) const
 {
-   auto arr = GetConnections(connid, direct); // for direct sending connection has to be active
+   auto arr = GetWindowConnections(connid, direct); // for direct sending connection has to be active
 
    auto maxqlen = GetMaxQueueLength();
 
@@ -1317,7 +1343,7 @@ int RWebWindow::GetSendQueueLength(unsigned connid) const
 {
    int maxq = -1;
 
-   for (auto &conn : GetConnections(connid)) {
+   for (auto &conn : GetWindowConnections(connid)) {
       std::lock_guard<std::mutex> grd(conn->fMutex);
       int len = conn->fQueue.size();
       if (len > maxq) maxq = len;
@@ -1346,7 +1372,7 @@ void RWebWindow::SubmitData(unsigned connid, bool txt, std::string &&data, int c
       return;
    }
 
-   auto arr = GetConnections(connid);
+   auto arr = GetWindowConnections(connid);
    auto cnt = arr.size();
    auto maxqlen = GetMaxQueueLength();
 
@@ -1649,7 +1675,7 @@ unsigned RWebWindow::AddEmbedWindow(std::shared_ptr<RWebWindow> window, unsigned
    if (channel < 2)
       return 0;
 
-   auto arr = GetConnections(connid, true);
+   auto arr = GetWindowConnections(connid, true);
    if (arr.size() == 0)
       return 0;
 
@@ -1667,7 +1693,7 @@ unsigned RWebWindow::AddEmbedWindow(std::shared_ptr<RWebWindow> window, unsigned
 
 void RWebWindow::RemoveEmbedWindow(unsigned connid, int channel)
 {
-   auto arr = GetConnections(connid);
+   auto arr = GetWindowConnections(connid);
 
    for (auto &conn : arr) {
       auto iter = conn->fEmbed.find(channel);
