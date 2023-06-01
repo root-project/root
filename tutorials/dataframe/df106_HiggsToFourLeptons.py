@@ -18,32 +18,24 @@
 ##
 ## \date March 2020
 ## \author Stefan Wunsch (KIT, CERN)
+## \date May 2023
+## \author Marta Czurylo (CERN)
 
 import ROOT
-import json
-import os
 
-# Create a ROOT dataframe for each dataset
-# Note that we load the filenames from the external json file placed in the same folder than this script.
-path = "root://eospublic.cern.ch//eos/opendata/atlas/OutreachDatasets/2020-01-22"
-files = json.load(open(os.path.join(ROOT.gROOT.GetTutorialsDir(), "dataframe/df106_HiggsToFourLeptons.json")))
+# Create the RDataFrame from the spec json file. The spec4lep.json is provided in the same folder as this tutorial.
 
-processes = files.keys()
-df = {}
-xsecs = {}
-sumws = {}
-samples = []
-for p in processes:
-    for d in files[p]:
-        # Construct the dataframes
-        folder = d[0] # Folder name
-        sample = d[1] # Sample name
-        xsecs[sample] = d[2] # Cross-section
-        sumws[sample] = d[3] # Sum of weights
-        samples.append(sample)
-        df[sample] = ROOT.RDataFrame("mini", "{}/4lep/{}/{}.4lep.root".format(path, folder, sample))
+df = ROOT.RDF.Experimental.FromSpec("df106_HiggsToFourLeptons_spec.json") #creates a single dataframe for all the samples
+
+# Access metadata information that is stored in the json config file of the RDataFrame
+
+df = df.DefinePerSample("xsecs", 'rdfsampleinfo_.GetD("xsecs")') #GetD for "double"
+df = df.DefinePerSample("lumi", 'rdfsampleinfo_.GetD("lumi")') 
+df = df.DefinePerSample("sumws", 'rdfsampleinfo_.GetD("sumws")')
+df = df.DefinePerSample("sample_category", 'rdfsampleinfo_.GetS("sample_category")') #GetS for "string"
 
 # Select events for the analysis
+
 ROOT.gInterpreter.Declare("""
 using cRVecF = const ROOT::RVecF &;
 bool GoodElectronsAndMuons(const ROOT::RVecI & type, cRVecF pt, cRVecF eta, cRVecF phi, cRVecF e, cRVecF trackd0pv, cRVecF tracksigd0pv, cRVecF z0)
@@ -60,40 +52,45 @@ bool GoodElectronsAndMuons(const ROOT::RVecI & type, cRVecF pt, cRVecF eta, cRVe
 }
 """)
 
-for s in samples:
-    # Select electron or muon trigger
-    df[s] = df[s].Filter("trigE || trigM")
+# Select electron or muon trigger
+df = df.Filter("trigE || trigM")
 
     # Select events with exactly four good leptons conserving charge and lepton numbers
     # Note that all collections are RVecs and good_lep is the mask for the good leptons.
     # The lepton types are PDG numbers and set to 11 or 13 for an electron or muon
     # irrespective of the charge.
-    df[s] = df[s].Define("good_lep", "abs(lep_eta) < 2.5 && lep_pt > 5000 && lep_ptcone30 / lep_pt < 0.3 && lep_etcone20 / lep_pt < 0.3")\
-                 .Filter("Sum(good_lep) == 4")\
-                 .Filter("Sum(lep_charge[good_lep]) == 0")\
-                 .Define("goodlep_sumtypes", "Sum(lep_type[good_lep])")\
-                 .Filter("goodlep_sumtypes == 44 || goodlep_sumtypes == 52 || goodlep_sumtypes == 48")
 
-    # Apply additional cuts depending on lepton flavour
-    df[s] = df[s].Filter("GoodElectronsAndMuons(lep_type[good_lep], lep_pt[good_lep], lep_eta[good_lep], lep_phi[good_lep], lep_E[good_lep], lep_trackd0pvunbiased[good_lep], lep_tracksigd0pvunbiased[good_lep], lep_z0[good_lep])")
+df = df.Define("good_lep", "abs(lep_eta) < 2.5 && lep_pt > 5000 && lep_ptcone30 / lep_pt < 0.3 && lep_etcone20 / lep_pt < 0.3")\
+            .Filter("Sum(good_lep) == 4")\
+             .Filter("Sum(lep_charge[good_lep]) == 0")\
+             .Define("goodlep_sumtypes", "Sum(lep_type[good_lep])")\
+             .Filter("goodlep_sumtypes == 44 || goodlep_sumtypes == 52 || goodlep_sumtypes == 48")
 
-    # Create new columns with the kinematics of good leptons
-    df[s] = df[s].Define("goodlep_pt", "lep_pt[good_lep]")\
+# Apply additional cuts depending on lepton flavour
+df = df.Filter("GoodElectronsAndMuons(lep_type[good_lep], lep_pt[good_lep], lep_eta[good_lep], lep_phi[good_lep], lep_E[good_lep], lep_trackd0pvunbiased[good_lep], lep_tracksigd0pvunbiased[good_lep], lep_z0[good_lep])")
+
+# Create new columns with the kinematics of good leptons
+df = df.Define("goodlep_pt", "lep_pt[good_lep]")\
                  .Define("goodlep_eta", "lep_eta[good_lep]")\
                  .Define("goodlep_phi", "lep_phi[good_lep]")\
                  .Define("goodlep_E", "lep_E[good_lep]")
 
-    # Select leptons with high transverse momentum
-    df[s] = df[s].Filter("goodlep_pt[0] > 25000 && goodlep_pt[1] > 15000 && goodlep_pt[2] > 10000")
+# Select leptons with high transverse momentum
+df = df.Filter("goodlep_pt[0] > 25000 && goodlep_pt[1] > 15000 && goodlep_pt[2] > 10000")
 
-# Apply luminosity, scale factors and MC weights for simulated events
-lumi = 10064.0
-for s in samples:
-    if "data" in s:
-        df[s] = df[s].Define("weight", "1.0")
-    else:
-        df[s] = df[s].Define("weight", "scaleFactor_ELE * scaleFactor_MUON * scaleFactor_LepTRIGGER * scaleFactor_PILEUP * mcWeight * {} / {} * {}".format(xsecs[s], sumws[s], lumi))
+# Reweighting of the samples is different for "data" and "MC". This is the function to add reweighting for MC samples
+ROOT.gInterpreter.Declare("""
+double weights(float scaleFactor_1, float scaleFactor_2, float scaleFactor_3, float scaleFactor_4, float mcWeight_, double xsecs_, double sumws_, double lumi_)
+{
+    double weight_ = scaleFactor_1 * scaleFactor_2 * scaleFactor_3 * scaleFactor_4 * mcWeight_ * xsecs_/sumws_ * lumi_;
+    return (weight_);
+}
+""")
 
+# Use DefinePerSample to define which samples need reweighting
+df = df.DefinePerSample("reweighting", 'rdfsampleinfo_.Contains("mc")')
+df = df.Define("weight", 'double x; if (reweighting) {return weights(scaleFactor_ELE, scaleFactor_MUON, scaleFactor_LepTRIGGER, scaleFactor_PILEUP, mcWeight, xsecs, sumws, lumi);} else {return 1.;}')
+                        
 # Compute invariant mass of the four lepton system and make a histogram
 ROOT.gInterpreter.Declare("""
 float ComputeInvariantMass(cRVecF pt, cRVecF eta, cRVecF phi, cRVecF e)
@@ -105,36 +102,21 @@ float ComputeInvariantMass(cRVecF pt, cRVecF eta, cRVecF phi, cRVecF e)
     return (p1 + p2 + p3 + p4).M() / 1000;
 }
 """)
+df = df.Define("m4l", "ComputeInvariantMass(goodlep_pt, goodlep_eta, goodlep_phi, goodlep_E)")
 
-histos = {}
-for s in samples:
-    df[s] = df[s].Define("m4l", "ComputeInvariantMass(goodlep_pt, goodlep_eta, goodlep_phi, goodlep_E)")
-    histos[s] = df[s].Histo1D(ROOT.RDF.TH1DModel(s, "m4l", 24, 80, 170), "m4l", "weight")
+# Book histograms for the four different samples: data, higgs, zz and other (this is specific to this particular analysis)
+histos = [] 
+for sample_category in ["data", "higgs", "zz", "other"]:
+    histos.append(df.Filter(f"sample_category == \"{sample_category}\"").Histo1D(ROOT.RDF.TH1DModel(f"\"{sample_category}\"", "m4l", 24, 80, 170), "m4l", "weight"))
 
-# Run the event loop and merge histograms of the respective processes
 
-# RunGraphs allows to run the event loops of the separate RDataFrame graphs
-# concurrently. This results in an improved usage of the available resources
-# if each separate RDataFrame can not utilize all available resources, e.g.,
-# because not enough data is available.
-ROOT.RDF.RunGraphs([histos[s] for s in samples])
-
-def merge_histos(label):
-    h = None
-    for i, d in enumerate(files[label]):
-        t = histos[d[1]].GetValue()
-        if i == 0: h = t.Clone()
-        else: h.Add(t)
-    h.SetNameTitle(label, label)
-    return h
-
-data = merge_histos("data")
-higgs = merge_histos("higgs")
-zz = merge_histos("zz")
-other = merge_histos("other")
+h_data = histos[0].GetValue()
+h_higgs = histos[1].GetValue()
+h_zz = histos[2].GetValue()
+h_other = histos[3].GetValue()
 
 # Apply MC correction for ZZ due to missing gg->ZZ process
-zz.Scale(1.3)
+h_zz.Scale(1.3) 
 
 # Create the plot
 
@@ -150,12 +132,15 @@ pad.Draw()
 pad.cd()
 
 # Draw stack with MC contributions
+
 stack = ROOT.THStack()
-for h, color in zip([other, zz, higgs], [(155, 152, 204), (100, 192, 232), (191, 34, 41)]):
+
+for h, color in zip([h_other, h_zz, h_higgs], [(155, 152, 204), (100, 192, 232), (191, 34, 41)]):
     h.SetLineWidth(1)
     h.SetLineColor(1)
     h.SetFillColor(ROOT.TColor.GetColor(*color))
     stack.Add(h)
+
 stack.Draw("HIST")
 stack.GetXaxis().SetLabelSize(0.04)
 stack.GetXaxis().SetTitleSize(0.045)
@@ -167,12 +152,11 @@ stack.GetYaxis().SetTitleSize(0.045)
 stack.SetMaximum(33)
 stack.GetYaxis().ChangeLabel(1, -1, 0)
 
-# Draw data
-data.SetMarkerStyle(20)
-data.SetMarkerSize(1.2)
-data.SetLineWidth(2)
-data.SetLineColor(ROOT.kBlack)
-data.Draw("E SAME")
+h_data.SetMarkerStyle(20)
+h_data.SetMarkerSize(1.2)
+h_data.SetLineWidth(2)
+h_data.SetLineColor(ROOT.kBlack)
+h_data.Draw("E SAME") #draw data with errorbars 
 
 # Add legend
 legend = ROOT.TLegend(0.60, 0.65, 0.92, 0.92)
@@ -181,10 +165,10 @@ legend.SetFillStyle(0)
 legend.SetBorderSize(0)
 legend.SetTextSize(0.04)
 legend.SetTextAlign(32)
-legend.AddEntry(data, "Data" ,"lep")
-legend.AddEntry(higgs, "Higgs", "f")
-legend.AddEntry(zz, "ZZ", "f")
-legend.AddEntry(other, "Other", "f")
+legend.AddEntry(h_data, "Data" ,"lep")
+legend.AddEntry(h_higgs, "Higgs", "f")
+legend.AddEntry(h_zz, "ZZ", "f")
+legend.AddEntry(h_other, "Other", "f")
 legend.Draw("SAME")
 
 # Add ATLAS label
