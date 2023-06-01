@@ -22,10 +22,13 @@
 ## \author Marta Czurylo (CERN)
 
 import ROOT
+import os
 
 # Create the RDataFrame from the spec json file. The spec4lep.json is provided in the same folder as this tutorial.
 
-df = ROOT.RDF.Experimental.FromSpec("df106_HiggsToFourLeptons_spec.json") #creates a single dataframe for all the samples
+my_spec = os.path.join(ROOT.gROOT.GetTutorialsDir(), "dataframe", "df106_HiggsToFourLeptons_spec.json")
+
+df = ROOT.RDF.Experimental.FromSpec(my_spec) #creates a single dataframe for all the samples
 
 # Access metadata information that is stored in the json config file of the RDataFrame
 
