@@ -776,6 +776,8 @@ class THistPainter extends ObjectPainter {
             let obj = objp.getObject();
             if (obj?.fName)
                objp.snapid = `${snapid}#func_${obj.fName}`;
+            else if (objp.child_painter_indx !== undefined)
+               objp.snapid = `${snapid}#indx_${objp.child_painter_indx}`;
          }
        }, 'objects');
    }
@@ -1406,8 +1408,10 @@ class THistPainter extends ObjectPainter {
                                                : pp.drawObject(this.getDom(), func, opt);
 
       return promise.then(painter => {
-         if (isObject(painter))
+         if (isObject(painter)) {
             painter.child_painter_id = this.hist_painter_id;
+            if (!only_extra) painter.child_painter_indx = indx;
+         }
 
          return this.drawNextFunction(indx+1, only_extra);
       });

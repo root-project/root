@@ -581,9 +581,9 @@ function igam(a, x) {
 
    // LM: for negative values returns 1.0 instead of zero
    // This is correct if a is a negative integer since Gamma(-n) = +/- inf
-   if (a <= 0)  return 1.0;
+   if (a <= 0) return 1.0;
 
-   if (x <= 0)  return 0.0;
+   if (x <= 0) return 0.0;
 
    if ((x > 1.0) && (x > a))
       return 1.0 - igamc(a,x);
@@ -613,7 +613,7 @@ function igam(a, x) {
 function igami(a, y0) {
    // check the domain
    if (a <= 0) {
-      console.error('igami : Wrong domain for parameter a (must be > 0)');
+      console.error(`igami : Wrong domain for parameter a = ${a} (must be > 0)`);
       return 0;
    }
    if (y0 <= 0) {

@@ -312,7 +312,7 @@ function addMoveHandler(painter, enabled) {
    if (painter.draw_g.property('assigned_move')) return;
 
    let drag_move = d3_drag().subject(Object),
-      not_changed = true, move_disabled = false;
+       not_changed = true, move_disabled = false;
 
    drag_move
       .on('start', function(evnt) {
@@ -338,7 +338,14 @@ function addMoveHandler(painter, enabled) {
          evnt.sourceEvent.stopPropagation();
          if (this.moveEnd)
             this.moveEnd(not_changed);
-         this.getPadPainter()?.selectObjectPainter(this);
+
+         let arg = null;
+         if (not_changed) {
+            // if not changed - provide click position
+            let pos = d3_pointer(evnt, this.draw_g.node());
+            arg = { x: pos[0], y: pos[1], dbl: false };
+         }
+         this.getPadPainter()?.selectObjectPainter(this, arg);
       }.bind(painter));
 
    painter.draw_g
