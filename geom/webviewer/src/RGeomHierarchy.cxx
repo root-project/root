@@ -61,7 +61,7 @@ void RGeomHierarchy::WebWindowCallback(unsigned connid, const std::string &arg)
          std::string hjson, json;
          fDesc.SearchVisibles(query, hjson, json);
          // send reply with appropriate header - NOFOUND, FOUND0:, FOUND1:
-         fWebWindow->Send(connid, hjson);
+         fWebWindow->Send(0, hjson);
          // inform viewer that search is changed
          if (fDesc.SetSearch(query, json))
             fDesc.IssueSignal(this, json.empty() ? "ClearSearch" : "ChangeSearch");
@@ -69,17 +69,20 @@ void RGeomHierarchy::WebWindowCallback(unsigned connid, const std::string &arg)
          fDesc.SetSearch(""s, ""s);
          fDesc.IssueSignal(this, "ClearSearch");
       }
+
+      auto connids = fWebWindow->GetConnections(connid);
+
+      for (auto id : connids)
+         fWebWindow->Send(id, "SETSR:"s + query);
+
    } else if (arg.compare(0, 7, "SETTOP:") == 0) {
       auto path = TBufferJSON::FromJSON<std::vector<std::string>>(arg.substr(7));
       if (path && fDesc.SelectTop(*path)) {
          fDesc.IssueSignal(this, "SelectTop");
-         auto num = fWebWindow->NumConnections();
+         auto connids = fWebWindow->GetConnections(connid);
 
-         for (int n = 0; n < num; ++n) {
-            auto id = fWebWindow->GetConnectionId(n);
-            if (id != connid)
-               fWebWindow->Send(id, "UPDATE"s);
-         }
+         for (auto id : connids)
+            fWebWindow->Send(id, "UPDATE"s);
       }
    } else if (arg.compare(0, 6, "HOVER:") == 0) {
       auto path = TBufferJSON::FromJSON<std::vector<std::string>>(arg.substr(6));
