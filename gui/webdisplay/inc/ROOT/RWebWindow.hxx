@@ -210,6 +210,10 @@ private:
 
    void RemoveEmbedWindow(unsigned connid, int channel);
 
+   void AddMasterConnection(std::shared_ptr<RWebWindow> window, unsigned connid, int channel);
+
+   std::vector<MasterConn> GetMasterConnections(unsigned connid = 0) const;
+
    void RemoveMasterConnection(unsigned connid = 0);
 
    bool ProcessBatchHolder(std::shared_ptr<THttpCallArg> &arg);

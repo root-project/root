@@ -79,10 +79,15 @@ RWebWindow::~RWebWindow()
    StopThread();
 
    if (fMaster) {
-      for (auto &entry : fMasterConns)
+      std::vector<MasterConn> lst;
+      {
+         std::lock_guard<std::mutex> grd(fConnMutex);
+         std::swap(lst, fMasterConns);
+      }
+
+      for (auto &entry : lst)
          fMaster->RemoveEmbedWindow(entry.connid, entry.channel);
       fMaster.reset();
-      fMasterConns.clear();
    }
 
    if (fWSHandler)
@@ -314,6 +319,41 @@ std::shared_ptr<RWebWindow::WebConn> RWebWindow::RemoveConnection(unsigned wsid)
    return res;
 }
 
+
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Add new master connection
+/// If there are many connections - only same master is allowed
+
+void RWebWindow::AddMasterConnection(std::shared_ptr<RWebWindow> window, unsigned connid, int channel)
+{
+   if (fMaster && fMaster != window)
+      R__LOG_ERROR(WebGUILog()) << "Cannot configure different masters at the same time";
+
+   fMaster = window;
+
+   std::lock_guard<std::mutex> grd(fConnMutex);
+
+   fMasterConns.emplace_back(connid, channel);
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Get list of master connections
+
+std::vector<RWebWindow::MasterConn> RWebWindow::GetMasterConnections(unsigned connid) const
+{
+   std::vector<MasterConn> lst;
+   if (!fMaster)
+      return lst;
+
+   std::lock_guard<std::mutex> grd(fConnMutex);
+
+   for (auto & entry : fMasterConns)
+      if (!connid || entry.connid == connid)
+         lst.emplace_back(entry);
+
+   return lst;
+}
+
 //////////////////////////////////////////////////////////////////////////////////////////
 /// Remove master connection - if any
 
@@ -321,19 +361,26 @@ void RWebWindow::RemoveMasterConnection(unsigned connid)
 {
    if (!fMaster) return;
 
-   if (connid == 0) {
-      fMasterConns.clear();
-   } else {
-      for (auto iter = fMasterConns.begin(); iter != fMasterConns.end(); ++iter)
-         if (iter->connid == connid) {
-            fMasterConns.erase(iter);
-            break;
-         }
+   bool isany = false;
+
+   {
+      std::lock_guard<std::mutex> grd(fConnMutex);
+
+      if (connid == 0) {
+         fMasterConns.clear();
+      } else {
+         for (auto iter = fMasterConns.begin(); iter != fMasterConns.end(); ++iter)
+            if (iter->connid == connid) {
+               fMasterConns.erase(iter);
+               break;
+            }
+      }
+
+      isany = fMasterConns.size() > 0;
    }
 
-   if (fMasterConns.size() == 0)
+   if (!isany)
       fMaster.reset();
-
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -1115,7 +1162,13 @@ std::string RWebWindow::GetUserArgs() const
 
 int RWebWindow::NumConnections(bool with_pending) const
 {
+   bool is_master = !!fMaster;
+
    std::lock_guard<std::mutex> grd(fConnMutex);
+
+   if (is_master)
+      return fMasterConns.size();
+
    auto sz = fConn.size();
    if (with_pending)
       sz += fPendingConn.size();
@@ -1149,7 +1202,13 @@ void RWebWindow::RecordData(const std::string &fname, const std::string &fprefix
 
 unsigned RWebWindow::GetConnectionId(int num) const
 {
+   bool is_master = !!fMaster;
+
    std::lock_guard<std::mutex> grd(fConnMutex);
+
+   if (is_master)
+      return (num >= 0) && (num < (int)fMasterConns.size()) ? fMasterConns[num].connid : 0;
+
    return ((num >= 0) && (num < (int)fConn.size()) && fConn[num]->fActive) ? fConn[num]->fConnId : 0;
 }
 
@@ -1277,18 +1336,13 @@ int RWebWindow::GetSendQueueLength(unsigned connid) const
 void RWebWindow::SubmitData(unsigned connid, bool txt, std::string &&data, int chid)
 {
    if (fMaster) {
-      int cnt = 0;
-      for (auto & entry : fMasterConns)
-         if (!connid || entry.connid == connid)
-            cnt++;
-
-      for (auto & entry : fMasterConns)
-         if (!connid || entry.connid == connid) {
-            if (--cnt)
-               fMaster->SubmitData(entry.connid, txt, std::string(data), entry.channel);
-            else
-               fMaster->SubmitData(entry.connid, txt, std::move(data), entry.channel);
-         }
+      auto lst = GetMasterConnections(connid);
+      auto cnt = lst.size();
+      for (auto & entry : lst)
+         if (--cnt)
+            fMaster->SubmitData(entry.connid, txt, std::string(data), entry.channel);
+         else
+            fMaster->SubmitData(entry.connid, txt, std::move(data), entry.channel);
       return;
    }
 
@@ -1676,8 +1730,7 @@ unsigned RWebWindow::ShowWindow(std::shared_ptr<RWebWindow> window, const RWebDi
 
          window->RemoveMasterConnection(connid);
 
-         window->fMaster = args.fMaster;
-         window->fMasterConns.emplace_back(connid, args.fMasterChannel);
+         window->AddMasterConnection(args.fMaster, connid, args.fMasterChannel);
 
          // inform client that connection is established and window initialized
          args.fMaster->SubmitData(connid, true, "EMBED_DONE"s, args.fMasterChannel);
