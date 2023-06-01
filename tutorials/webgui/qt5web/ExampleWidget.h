@@ -45,6 +45,7 @@ class ExampleWidget : public QWidget, public Ui::ExampleWidget
       void InfoButton_clicked();
       void CmsButton_clicked();
       void GeoCanvasButton_clicked();
+      void StandaloneBtn_clicked();
       void ExitButton_clicked();
 };
 
