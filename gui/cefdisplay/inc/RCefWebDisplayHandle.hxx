@@ -52,6 +52,8 @@ public:
 
    bool WaitForContent(int tmout_sec, const std::string &extra_args);
 
+   bool Resize(int, int) override;
+
    static void AddCreator();
 
 };

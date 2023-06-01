@@ -97,6 +97,9 @@ public:
    /// get content
    const std::string &GetContent() const { return fContent; }
 
+   /// resize web window - if possible
+   virtual bool Resize(int, int) { return false; }
+
    static std::unique_ptr<RWebDisplayHandle> Display(const RWebDisplayArgs &args);
 
    static bool DisplayUrl(const std::string &url);

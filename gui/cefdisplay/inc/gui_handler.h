@@ -57,7 +57,7 @@ protected:
 
    std::vector<THttpServer *> fServers;
 
-   bool is_closing_;
+   bool is_closing_{false};
 
 public:
    explicit GuiHandler(bool use_views = false);
@@ -77,16 +77,16 @@ public:
    virtual void OnBeforeClose(CefRefPtr<CefBrowser> browser) override;
 
    // CefLoadHandler methods:
-   virtual void OnLoadError(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, ErrorCode errorCode,
-                            const CefString &errorText, const CefString &failedUrl) override;
+   void OnLoadError(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, ErrorCode errorCode,
+                    const CefString &errorText, const CefString &failedUrl) override;
 
    // CefDisplayHandler methods:
-   virtual void OnTitleChange(CefRefPtr<CefBrowser> browser, const CefString &title) override;
+   void OnTitleChange(CefRefPtr<CefBrowser> browser, const CefString &title) override;
 
-   virtual bool OnConsoleMessage(CefRefPtr<CefBrowser> browser,
-                                 cef_log_severity_t level,
-                                 const CefString &message, const CefString &source,
-                                 int line) override;
+   bool OnConsoleMessage(CefRefPtr<CefBrowser> browser,
+                         cef_log_severity_t level,
+                         const CefString &message, const CefString &source,
+                         int line) override;
 
    // Request that all existing browser windows close.
    void CloseAllBrowsers(bool force_close);
@@ -94,7 +94,7 @@ public:
    bool IsClosing() const { return is_closing_; }
 
    // CefRequestHandler methods:
-   virtual CefRefPtr<CefResourceRequestHandler> GetResourceRequestHandler(
+   CefRefPtr<CefResourceRequestHandler> GetResourceRequestHandler(
          CefRefPtr<CefBrowser> browser,
          CefRefPtr<CefFrame> frame,
          CefRefPtr<CefRequest> request,
@@ -104,13 +104,13 @@ public:
          bool& disable_default_handling) override { return this; }
 
    // CefResourceRequestHandler methods:
-   virtual cef_return_value_t OnBeforeResourceLoad(
+   cef_return_value_t OnBeforeResourceLoad(
          CefRefPtr<CefBrowser> browser,
          CefRefPtr<CefFrame> frame,
          CefRefPtr<CefRequest> request,
          CefRefPtr<CefResourceLoadCallBack> callback) override;
 
-   virtual CefRefPtr<CefResourceHandler> GetResourceHandler(
+   CefRefPtr<CefResourceHandler> GetResourceHandler(
          CefRefPtr<CefBrowser> browser,
          CefRefPtr<CefFrame> frame,
          CefRefPtr<CefRequest> request) override;
@@ -122,6 +122,8 @@ public:
    static bool PlatformInit();
 
    static std::string GetDataURI(const std::string& data, const std::string& mime_type);
+
+   static bool PlatformResize(CefRefPtr<CefBrowser> browser, int width, int height);
 
 private:
 
