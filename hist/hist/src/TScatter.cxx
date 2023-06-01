@@ -33,7 +33,7 @@ ClassImp(TScatter);
 /** \class TScatter
     \ingroup Graphs
 A TScatter is able to draw four variables scatter plot on a single plot. The two first
-variables are the x and y position of the markers and the third is mapped on the current
+variables are the x and y position of the markers, the third is mapped on the current
 color map and the fourth on the marker size.
 
 The following example demonstrates how it works:
