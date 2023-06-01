@@ -1,4 +1,4 @@
-# qt5web example
+# qtweb example
 
 Demonstration how different ROOT web-based widgets can be embed into qt application
 
@@ -6,20 +6,12 @@ Demonstration how different ROOT web-based widgets can be embed into qt applicat
 
 Create build directory and call:
 
-    cmake $ROOTSYS/tutorials/webgui/qt5web
+    cmake $ROOTSYS/tutorials/webgui/qtweb
     make -j
 
-ROOT should be compiled with configured `-Dqt5web=ON`.
-As a result, `qt5web` application should be created.
-
-## Compile on Linux with qt6
-
-    cmake $ROOTSYS/tutorials/webgui/qt5web -Dwith_qt6=ON
-    make -j
-
-ROOT should be compiled with configured `-Dqt5web=ON`.
-As a result, `qt6web` application should be created.
-
+ROOT should be compiled with configured `-Dqt5web=ON` or `-Dqt6web=ON`.
+If both are present, one can use selector `-Dwithqt=5` or `-Dwithqt=6`
+As a result, `qtweb` application should be created.
 
 ## Compile on Windows
 
@@ -41,15 +33,15 @@ Configure ROOT, create build directory and build qt5web tutorial:
     cd C:\
     mkdir qt5web
     cd C:\qt5web
-    cmake -G"Visual Studio 16 2019" -A Win32 -Thost=x64 c:\root\tutorials\webgui\qt5web
+    cmake -G"Visual Studio 16 2019" -A Win32 -Thost=x64 c:\root\tutorials\webgui\qtweb
     cmake --build . --config Release -- /maxcpucount
 
-As a result, `Release\qt5web.exe` executable should be created.
+As a result, `Release\qtweb.exe` executable should be created.
 
 
 ## Demo application
 
-Application based on `QTabWidget` with four tabs - standard Qt5 widget,
+Application based on `QTabWidget` with four tabs - standard Qt widget,
 TCanvas, RCanvas and geometry drawing. Both canvas variants include different histograms drawing.
 
 
@@ -60,7 +52,7 @@ in the project and let compile, linking with ROOT basic libraries `root-config -
 `RCanvasWidget` is just `QWidget` which internally embed `RCanvas` drawing.
 See `ExampleWidget.ui` file how to embed such custom widget in normal qt ui file.
 
-To let ROOT work inside Qt5 event loop, one should instantiate `TApplication` object and
+To let ROOT work inside Qt event loop, one should instantiate `TApplication` object and
 regularly call `gSystem->ProcessEvents()` - see how it is done in `ExampleMain.cpp`.
 
 Author: Sergey Linev

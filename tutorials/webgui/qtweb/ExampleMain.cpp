@@ -45,6 +45,8 @@ int main(int argc, char **argv)
    // top widget
    ExampleWidget* widget = new ExampleWidget();
 
+   widget->setWindowTitle(QString("QtWeb application, build with qt ") + QT_VERSION_STR);
+
    QObject::connect(&myapp, &QApplication::lastWindowClosed, &myapp, &QApplication::quit);
 
    widget->show();
