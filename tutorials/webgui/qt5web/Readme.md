@@ -12,6 +12,14 @@ Create build directory and call:
 ROOT should be compiled with configured `-Dqt5web=ON`.
 As a result, `qt5web` application should be created.
 
+## Compile on Linux with qt6
+
+    cmake $ROOTSYS/tutorials/webgui/qt5web -Dwith_qt6=ON
+    make -j
+
+ROOT should be compiled with configured `-Dqt5web=ON`.
+As a result, `qt6web` application should be created.
+
 
 ## Compile on Windows
 

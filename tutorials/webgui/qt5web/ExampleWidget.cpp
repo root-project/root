@@ -27,11 +27,17 @@
 #include <ROOT/RGeomViewer.hxx>
 
 #include <QMessageBox>
+#include <QPushButton>
 
 ExampleWidget::ExampleWidget(QWidget *parent, const char* name) :
    QWidget(parent)
 {
    setupUi(this);
+
+   QObject::connect(InfoBtn, &QPushButton::clicked, this, &ExampleWidget::InfoButton_clicked);
+   QObject::connect(CmsBtn, &QPushButton::clicked, this, &ExampleWidget::CmsButton_clicked);
+   QObject::connect(GeoCanvasBtn, &QPushButton::clicked, this, &ExampleWidget::GeoCanvasButton_clicked);
+   QObject::connect(ExitBtn, &QPushButton::clicked, this, &ExampleWidget::ExitButton_clicked);
 
    setAttribute(Qt::WA_DeleteOnClose);
 
@@ -115,19 +121,17 @@ void ExampleWidget::ImportCmsGeometry()
    gGeoManager->GetVolume("EAP4")->SetLineColor(7);
    gGeoManager->GetVolume("HTC1")->SetLineColor(2);
 
-   viewer->SetGeometry(gGeoManager);
-
-   // select volume to draw
-   viewer->SelectVolume("CMSE");
+   // select geometry and volume to draw
+   viewer->SetGeometry(gGeoManager, "CMSE");
 
    // specify JSROOT draw options - here clipping on X,Y,Z axes
    viewer->SetDrawOptions("clipxyz");
 
-   viewer->SetShowHierarchy(false);
-
    // set default limits for number of visible nodes and faces
    // when viewer created, initial values exported from TGeoManager
    viewer->SetLimits();
+
+   viewer->Update();
 }
 
 void ExampleWidget::DrawGeometryInCanvas()
