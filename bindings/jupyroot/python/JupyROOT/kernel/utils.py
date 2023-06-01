@@ -65,7 +65,9 @@ class MagicLoader(object):
          magics_path = os.path.dirname(__file__)+os.sep+"magics"+os.sep+"*.py"
          for file in glob(magics_path):
               if file != magics_path.replace("*.py","__init__.py"):
-                  module_path="JupyROOT.kernel.magics."+file.split(os.sep)[-1].replace(".py","")
+module_prefix = "JupyROOT.kernel.magics."
+module_name = os.path.splitext(os.path.basename(file))[0]
+module_path = module_prefix + module_name
                   try:
                       module = importlib.import_module(module_path)
                       module.register_magics(kernel)
