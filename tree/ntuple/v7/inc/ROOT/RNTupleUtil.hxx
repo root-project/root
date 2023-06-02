@@ -68,7 +68,7 @@ constexpr ClusterSize_t kInvalidClusterIndex(std::uint64_t(-1));
 template <typename SizeT>
 struct RNTupleCardinality {
    static_assert(std::is_same_v<SizeT, std::uint32_t> || std::is_same_v<SizeT, std::uint64_t>,
-                 "RNTupleCardinality is only support with std::uint32_t or std::uint64_t template parameters");
+                 "RNTupleCardinality is only supported with std::uint32_t or std::uint64_t template parameters");
 
    using ValueType = SizeT;
 
