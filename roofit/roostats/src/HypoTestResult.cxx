@@ -110,9 +110,9 @@ HypoTestResult::HypoTestResult(const char* name, double nullp, double altp) :
 
 HypoTestResult::HypoTestResult(const HypoTestResult& other) :
    TNamed(other),
-   fNullPValue(NaN), fAlternatePValue(NaN),
-   fNullPValueError(0), fAlternatePValueError(0),
-   fTestStatisticData(NaN),
+   fNullPValue(other.fNullPValue), fAlternatePValue(other.fAlternatePValue),
+   fNullPValueError(other.fNullPValueError), fAlternatePValueError(other.fAlternatePValueError),
+   fTestStatisticData(other.fTestStatisticData),
    fAllTestStatisticsData(nullptr),
    fNullDistr(nullptr), fAltDistr(nullptr),
    fNullDetailedOutput(nullptr), fAltDetailedOutput(nullptr),
