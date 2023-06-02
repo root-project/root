@@ -402,11 +402,11 @@ double AsymptoticCalculator::EvaluateNLL(RooStats::ModelConfig const& modelConfi
           }
        }
 
-       RooFitResult * result = 0;
+       std::unique_ptr<RooFitResult> result;
 
        // ignore errors in Hesse or in Improve and also when matrix was made pos def (status returned = 1)
        if (status >= 0) {
-          result = minim.save();
+          result = std::unique_ptr<RooFitResult>{minim.save()};
        }
        if (result){
           if (!RooStats::IsNLLOffset() )
@@ -425,9 +425,6 @@ double AsymptoticCalculator::EvaluateNLL(RooStats::ModelConfig const& modelConfi
        }
 
        minim.optimizeConst(false);
-       if (result) delete result;
-
-
     }
 
     double muTest = 0;

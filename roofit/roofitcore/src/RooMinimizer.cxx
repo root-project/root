@@ -584,7 +584,7 @@ void RooMinimizer::optimizeConst(int flag)
 /// EDM setting, number of calls with evaluation problems, the minimized
 /// function value and the full correlation matrix.
 
-RooFitResult *RooMinimizer::save(const char *userName, const char *userTitle)
+RooFit::OwningPtr<RooFitResult> RooMinimizer::save(const char *userName, const char *userTitle)
 {
    if (_theFitter->GetMinimizer() == 0) {
       coutW(Minimization) << "RooMinimizer::save: Error, run minimization before!" << endl;
@@ -594,7 +594,7 @@ RooFitResult *RooMinimizer::save(const char *userName, const char *userTitle)
    TString name, title;
    name = userName ? userName : Form("%s", _fcn->getFunctionName().c_str());
    title = userTitle ? userTitle : Form("%s", _fcn->getFunctionTitle().c_str());
-   RooFitResult *fitRes = new RooFitResult(name, title);
+   auto fitRes = std::make_unique<RooFitResult>(name, title);
 
    // Move eventual fixed parameters in floatList to constList
    RooArgList saveConstList(*(_fcn->GetConstParamList()));
@@ -640,7 +640,7 @@ RooFitResult *RooMinimizer::save(const char *userName, const char *userTitle)
 
    fitRes->setStatusHistory(_statusHistory);
 
-   return fitRes;
+   return RooFit::Detail::owningPtr(std::move(fitRes));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -808,12 +808,12 @@ void RooMinimizer::applyCovarianceMatrix(TMatrixDSym const &V)
    _fcn->ApplyCovarianceMatrix(*_extV);
 }
 
-RooFitResult *RooMinimizer::lastMinuitFit()
+RooFit::OwningPtr<RooFitResult> RooMinimizer::lastMinuitFit()
 {
    return RooMinimizer::lastMinuitFit({});
 }
 
-RooFitResult *RooMinimizer::lastMinuitFit(const RooArgList &varList)
+RooFit::OwningPtr<RooFitResult> RooMinimizer::lastMinuitFit(const RooArgList &varList)
 {
    // Import the results of the last fit performed, interpreting
    // the fit parameters as the given varList of parameters.
@@ -841,7 +841,7 @@ RooFitResult *RooMinimizer::lastMinuitFit(const RooArgList &varList)
       }
    }
 
-   RooFitResult *res = new RooFitResult("lastMinuitFit", "Last MINUIT fit");
+   auto res = std::make_unique<RooFitResult>("lastMinuitFit", "Last MINUIT fit");
 
    // Extract names of fit parameters
    // and construct corresponding RooRealVars
@@ -910,7 +910,7 @@ RooFitResult *RooMinimizer::lastMinuitFit(const RooArgList &varList)
    }
    res->fillCorrMatrix(globalCC, corrs, covs);
 
-   return res;
+   return RooFit::Detail::owningPtr(std::move(res));
 }
 
 /// Try to recover from invalid function values. When invalid function values
