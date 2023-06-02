@@ -7,7 +7,9 @@
 ## pdf = f_bkg * bkg(x,a0,a1) + (1-fbkg) * (f_sig1 * sig1(x,m,s1 + (1-f_sig1) * sig2(x,m,s2)))
 ## ```
 ##
+## \macro_image
 ## \macro_code
+## \macro_output
 ##
 ## \date February 2018
 ## \authors Clemens Lange, Wouter Verkerke (C++ version)
@@ -57,7 +59,7 @@ model = ROOT.RooAddPdf("model", "g1+g2+a", [bkg, sig], [bkgfrac])
 data = model.generate({x}, 1000)
 
 # Fit model to data
-model.fitTo(data)
+model.fitTo(data, PrintLevel=-1)
 
 # Plot data and PDF overlaid
 xframe = x.frame(Title="Example of composite pdf=(sig1+sig2)+bkg")

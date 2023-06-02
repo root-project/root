@@ -10,8 +10,8 @@
 /// This tutorial requires FFT3 to be enabled.
 ///
 /// \macro_image
-/// \macro_output
 /// \macro_code
+/// \macro_output
 ///
 /// \date July 2008
 /// \author Wouter Verkerke
@@ -61,7 +61,7 @@ void rf208_convolution()
    RooDataSet *data = lxg.generate(t, 10000);
 
    // Fit gxlx to data
-   lxg.fitTo(*data);
+   lxg.fitTo(*data, PrintLevel(-1));
 
    // Plot data, landau pdf, landau (X) gauss pdf
    RooPlot *frame = t.frame(Title("landau (x) gauss convolution"));

@@ -4,8 +4,8 @@
 /// Validation and MC studies: RooMCStudy - Using the randomizer and profile likelihood add-on models
 ///
 /// \macro_image
-/// \macro_output
 /// \macro_code
+/// \macro_output
 ///
 /// \date July 2008
 /// \author Wouter Verkerke
