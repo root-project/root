@@ -4,7 +4,9 @@
 ## Likelihood and minimization: setting up a chi^2 fit to an unbinned dataset with X,Y,err(Y)
 ## values (and optionally err(X) values)
 ##
+## \macro_image
 ## \macro_code
+## \macro_output
 ##
 ## \date February 2018
 ## \authors Clemens Lange, Wouter Verkerke (C++ version)

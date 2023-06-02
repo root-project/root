@@ -5,7 +5,9 @@
 ## to a dataset D(x,cut), cut is a category encoding a selection whose efficiency as function
 ## of x should be described by eff(x)
 ##
+## \macro_image
 ## \macro_code
+## \macro_output
 ##
 ## \date February 2018
 ## \authors Clemens Lange, Wouter Verkerke (C++ version)
@@ -61,7 +63,7 @@ data = model.generate({x, y, cut}, 10000)
 # --------------------------------------------------------------------------
 
 # Fit conditional efficiency pdf to data
-effPdf.fitTo(data, ConditionalObservables={x, y})
+effPdf.fitTo(data, ConditionalObservables={x, y}, PrintLevel=-1)
 
 # Plot fitted, data efficiency
 # --------------------------------------------------------

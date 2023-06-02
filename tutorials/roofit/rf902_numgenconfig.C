@@ -4,8 +4,8 @@
 /// Numeric algorithm tuning: configuration and customization of how MC sampling algorithms on specific pdfs are
 /// executed
 ///
-/// \macro_output
 /// \macro_code
+/// \macro_output
 ///
 /// \date July 2008
 /// \author Wouter Verkerke

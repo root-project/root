@@ -4,8 +4,8 @@
 /// Multidimensional models: conditional pdf with per-event errors
 ///
 /// \macro_image
-/// \macro_output
 /// \macro_code
+/// \macro_output
 ///
 /// \date July 2008
 /// \author Wouter Verkerke
@@ -57,7 +57,7 @@ void rf306_condpereventerrors()
    // ---------------------------------------------------------------------
 
    // Specify dterr as conditional observable
-   decay_gm.fitTo(*data, ConditionalObservables(dterr));
+   decay_gm.fitTo(*data, ConditionalObservables(dterr), PrintLevel(-1));
 
    // P l o t   c o n d i t i o n a l   d e c a y _ d m ( d t | d t e r r )
    // ---------------------------------------------------------------------

@@ -5,8 +5,8 @@
 /// snapshots in workspaces
 ///
 /// \macro_image
-/// \macro_output
 /// \macro_code
+/// \macro_output
 ///
 /// \date April 2009
 /// \author Wouter Verkerke
@@ -43,7 +43,7 @@ void rf510_wsnamedsets()
    RooDataSet *data = model->generate(*w->set("observables"), 1000);
 
    // Fit model to data
-   model->fitTo(*data);
+   model->fitTo(*data, PrintLevel(-1));
 
    // Plot fitted model and data on frame of first (only) observable
    RooPlot *frame = ((RooRealVar *)w->set("observables")->first())->frame();

@@ -3,7 +3,9 @@
 ## \notebook
 ## Special pdf's: using a pdf defined by a sum of real-valued amplitude components
 ##
+## \macro_image
 ## \macro_code
+## \macro_output
 ##
 ## \date February 2018
 ## \authors Clemens Lange, Wouter Verkerke (C++ version)
@@ -45,7 +47,7 @@ pdf = ROOT.RooRealSumPdf("pdf", "pdf", [ampl1, ampl2], [f1, f2])
 data = pdf.generate({t, cosa}, 10000)
 
 # Fit pdf to toy data with only amplitude strength floating
-pdf.fitTo(data)
+pdf.fitTo(data, PrintLevel=-1)
 
 # Plot amplitude sum pdf
 # -------------------------------------------

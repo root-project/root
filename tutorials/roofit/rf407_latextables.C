@@ -3,8 +3,8 @@
 /// \notebook -nodraw
 /// Data and categories: latex printing of lists and sets of RooArgSets
 ///
-/// \macro_output
 /// \macro_code
+/// \macro_output
 ///
 /// \date July 2008
 /// \author Wouter Verkerke
@@ -67,7 +67,7 @@ void rf407_latextables()
 
    // Do fit to data, to obtain error estimates on parameters
    RooDataSet *data = model.generate(x, 1000);
-   model.fitTo(*data);
+   model.fitTo(*data, PrintLevel(-1));
 
    // P r i n t   l a t ex   t a b l e   o f   p a r a m e t e r s   o f   p d f
    // --------------------------------------------------------------------------
