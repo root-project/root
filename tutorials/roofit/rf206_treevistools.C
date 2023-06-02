@@ -3,8 +3,8 @@
 /// \notebook -nodraw
 /// Addition and convolution: tools for visualization of RooAbsArg expression trees
 ///
-/// \macro_output
 /// \macro_code
+/// \macro_output
 ///
 /// \date July 2008
 /// \author Wouter Verkerke

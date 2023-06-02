@@ -48,8 +48,8 @@
 /// If the fit is unbiased and the parameter uncertainties are estimated correctly, the pull distribution should be a Gaussian centered around zero with a width of one.
 ///
 /// \macro_image
-/// \macro_output
 /// \macro_code
+/// \macro_output
 ///
 /// \date November 2019
 /// \author Christoph Langenbruch

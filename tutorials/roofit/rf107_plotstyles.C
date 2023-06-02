@@ -4,8 +4,8 @@
 /// Basic functionality: various plotting styles of data, functions in a RooPlot
 ///
 /// \macro_image
-/// \macro_output
 /// \macro_code
+/// \macro_output
 ///
 /// \date July 2008
 /// \author Wouter Verkerke
@@ -36,7 +36,7 @@ void rf107_plotstyles()
    RooDataSet *data = gauss.generate(x, 100);
 
    // Fit pdf to data
-   gauss.fitTo(*data);
+   gauss.fitTo(*data, PrintLevel(-1));
 
    // M a k e   p l o t   f r a m e s
    // -------------------------------

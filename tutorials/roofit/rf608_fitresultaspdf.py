@@ -4,7 +4,9 @@
 ## Likelihood and minimization: representing the parabolic approximation of the fit as a
 ## multi-variate Gaussian on the parameters of the fitted pdf
 ##
+## \macro_image
 ## \macro_code
+## \macro_output
 ##
 ## \date February 2018
 ## \authors Clemens Lange, Wouter Verkerke (C++ version)
@@ -35,7 +37,7 @@ data = model.generate({x}, 1000)
 # Fit model to data
 # ----------------------------------
 
-r = model.fitTo(data, Save=True)
+r = model.fitTo(data, Save=True, PrintLevel=-1)
 
 # Create MV Gaussian pdf of fitted parameters
 # ------------------------------------------------------------------------------------

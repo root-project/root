@@ -4,8 +4,8 @@
 /// Basic functionality: interpreted functions and PDFs.
 ///
 /// \macro_image
-/// \macro_output
 /// \macro_code
+/// \macro_output
 ///
 /// \date July 2008
 /// \author Wouter Verkerke
@@ -47,7 +47,7 @@ void rf103_interprfuncs()
    RooDataSet *data = genpdf.generate(x, 10000);
 
    // Fit the interpreted pdf to the generated data
-   genpdf.fitTo(*data);
+   genpdf.fitTo(*data, PrintLevel(-1));
 
    // Make a plot of the data and the pdf overlaid
    RooPlot *xframe = x.frame(Title("Interpreted expression pdf"));
@@ -83,7 +83,7 @@ void rf103_interprfuncs()
    // -------------------------------------------------------------------
 
    // Fit g2 to data from g1
-   std::unique_ptr<RooFitResult> fitResult{g2.fitTo(*data2, Save())};
+   std::unique_ptr<RooFitResult> fitResult{g2.fitTo(*data2, Save(), PrintLevel(-1))};
    fitResult->Print();
 
    // Plot data on frame and overlay projection of g2

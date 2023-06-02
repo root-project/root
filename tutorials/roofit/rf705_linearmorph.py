@@ -6,7 +6,9 @@
 ##
 ## Linear interpolation between p.d.f shapes using the 'Alex Read' algorithm
 ##
+## \macro_image
 ## \macro_code
+## \macro_output
 ##
 ## \date February 2018
 ## \authors Clemens Lange, Wouter Verkerke (C version)
@@ -84,7 +86,7 @@ data = lmorph.generate({x}, 1000)
 
 # Fit pdf to toy data
 lmorph.setCacheAlpha(True)
-lmorph.fitTo(data, Verbose=True)
+lmorph.fitTo(data, Verbose=True, PrintLevel=-1)
 
 # Plot fitted pdf and data overlaid
 frame2 = x.frame(Bins=100)
