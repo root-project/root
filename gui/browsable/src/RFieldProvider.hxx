@@ -166,10 +166,9 @@ class RFieldProvider : public RProvider {
       {
          if (const auto f32 = field.Is32Bit()) {
             FillHistogram(*f32);
-            return;
-         }
-         if (const auto f64 = field.Is64Bit())
+         } else if (const auto f64 = field.Is64Bit()) {
             FillHistogram(*f64);
+         }
       }
    }; // class RDrawVisitor
 
