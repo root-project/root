@@ -529,20 +529,16 @@ class RH1Painter extends RHistPainter {
          }
       }
 
-      let close_path = '',
-          fill_for_interactive = !isBatchMode() && this.fillatt.empty() && options.Hist && settings.Tooltip && !draw_markers && !show_line;
-      if (!this.fillatt.empty() || fill_for_interactive) {
-         let h0 = height + 3;
-         if (fill_for_interactive) {
-            let gry0 = Math.round(funcs.gry(0));
-            if (gry0 <= 0)
-               h0 = -3;
-            else if (gry0 < height)
-               h0 = gry0;
-         }
-         close_path = `L${currx},${h0}H${startx}Z`;
-         if (res) res += close_path;
+      let fill_for_interactive = !isBatchMode() && this.fillatt.empty() && options.Hist && settings.Tooltip && !draw_markers && !show_line,
+          h0 = height + 3;
+      if (!fill_for_interactive) {
+         let gry0 = Math.round(funcs.gry(0));
+         if (gry0 <= 0)
+            h0 = -3;
+         else if (gry0 < height)
+            h0 = gry0;
       }
+      let close_path = `L${currx},${h0}H${startx}Z`;
 
       if (draw_markers || show_line) {
          if (path_fill)
@@ -562,9 +558,9 @@ class RH1Painter extends RHistPainter {
                    .style('pointer-events', isBatchMode() ? null : 'visibleFill');
 
          if (path_line) {
-            if (!this.fillatt.empty())
+            if (!this.fillatt.empty() && !options.Hist)
                this.draw_g.append('svg:path')
-                     .attr('d', options.Fill ? (path_line + close_path) : res)
+                     .attr('d', path_line + close_path)
                      .call(this.fillatt.func);
 
             this.draw_g.append('svg:path')
@@ -580,7 +576,7 @@ class RH1Painter extends RHistPainter {
 
       } else if (res && options.Hist) {
          this.draw_g.append('svg:path')
-                    .attr('d', res)
+                    .attr('d', res + ((!this.fillatt.empty() || fill_for_interactive) ? close_path : ''))
                     .style('stroke-linejoin','miter')
                     .call(this.lineatt.func)
                     .call(this.fillatt.func);
