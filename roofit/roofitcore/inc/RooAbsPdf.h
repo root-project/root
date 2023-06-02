@@ -208,7 +208,7 @@ public:
   // Chi^2 fits to histograms
   using RooAbsReal::chi2FitTo ;
   using RooAbsReal::createChi2 ;
-  RooFitResult* chi2FitTo(RooDataHist& data, const RooLinkedList& cmdList) override ;
+  RooFit::OwningPtr<RooFitResult> chi2FitTo(RooDataHist& data, const RooLinkedList& cmdList) override ;
   RooAbsReal* createChi2(RooDataHist& data, const RooCmdArg& arg1=RooCmdArg::none(),  const RooCmdArg& arg2=RooCmdArg::none(),
              const RooCmdArg& arg3=RooCmdArg::none(),  const RooCmdArg& arg4=RooCmdArg::none(), const RooCmdArg& arg5=RooCmdArg::none(),
              const RooCmdArg& arg6=RooCmdArg::none(),  const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none()) override ;

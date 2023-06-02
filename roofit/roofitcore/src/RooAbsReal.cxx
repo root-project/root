@@ -4189,7 +4189,7 @@ double RooAbsReal::findRoot(RooRealVar& x, double xmin, double xmax, double yval
 /// </table>
 ///
 
-RooFitResult* RooAbsReal::chi2FitTo(RooDataHist& data, const RooCmdArg& arg1,  const RooCmdArg& arg2,
+RooFit::OwningPtr<RooFitResult> RooAbsReal::chi2FitTo(RooDataHist& data, const RooCmdArg& arg1,  const RooCmdArg& arg2,
                 const RooCmdArg& arg3,  const RooCmdArg& arg4, const RooCmdArg& arg5,
                 const RooCmdArg& arg6,  const RooCmdArg& arg7, const RooCmdArg& arg8)
 {
@@ -4207,7 +4207,7 @@ RooFitResult* RooAbsReal::chi2FitTo(RooDataHist& data, const RooCmdArg& arg1,  c
 ////////////////////////////////////////////////////////////////////////////////
 /// \copydoc RooAbsReal::chi2FitTo(RooDataHist&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&)
 
-RooFitResult* RooAbsReal::chi2FitTo(RooDataHist& data, const RooLinkedList& cmdList)
+RooFit::OwningPtr<RooFitResult> RooAbsReal::chi2FitTo(RooDataHist& data, const RooLinkedList& cmdList)
 {
   // Select the pdf-specific commands
   RooCmdConfig pc(Form("RooAbsPdf::chi2FitTo(%s)",GetName())) ;
@@ -4217,9 +4217,7 @@ RooFitResult* RooAbsReal::chi2FitTo(RooDataHist& data, const RooLinkedList& cmdL
   RooLinkedList chi2CmdList = pc.filterCmdList(fitCmdList,"Range,RangeWithName,NumCPU,Optimize,IntegrateBins") ;
 
   std::unique_ptr<RooAbsReal> chi2{createChi2(data,chi2CmdList)};
-  RooFitResult* ret = chi2FitDriver(*chi2,fitCmdList) ;
-
-  return ret ;
+  return chi2FitDriver(*chi2,fitCmdList) ;
 }
 
 
@@ -4304,7 +4302,7 @@ RooAbsReal* RooAbsReal::createChi2(RooDataHist& data, const RooLinkedList& cmdLi
 ///                                   a positive value is will print details of each error up to numErr messages per p.d.f component.
 /// </table>
 
-RooFitResult* RooAbsReal::chi2FitTo(RooDataSet& xydata, const RooCmdArg& arg1,  const RooCmdArg& arg2,
+RooFit::OwningPtr<RooFitResult> RooAbsReal::chi2FitTo(RooDataSet& xydata, const RooCmdArg& arg1,  const RooCmdArg& arg2,
                   const RooCmdArg& arg3,  const RooCmdArg& arg4, const RooCmdArg& arg5,
                   const RooCmdArg& arg6,  const RooCmdArg& arg7, const RooCmdArg& arg8)
 {
@@ -4322,7 +4320,7 @@ RooFitResult* RooAbsReal::chi2FitTo(RooDataSet& xydata, const RooCmdArg& arg1,  
 ////////////////////////////////////////////////////////////////////////////////
 /// \copydoc RooAbsReal::chi2FitTo(RooDataSet&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&)
 
-RooFitResult* RooAbsReal::chi2FitTo(RooDataSet& xydata, const RooLinkedList& cmdList)
+RooFit::OwningPtr<RooFitResult> RooAbsReal::chi2FitTo(RooDataSet& xydata, const RooLinkedList& cmdList)
 {
   // Select the pdf-specific commands
   RooCmdConfig pc(Form("RooAbsPdf::chi2FitTo(%s)",GetName())) ;
@@ -4332,9 +4330,7 @@ RooFitResult* RooAbsReal::chi2FitTo(RooDataSet& xydata, const RooLinkedList& cmd
   RooLinkedList chi2CmdList = pc.filterCmdList(fitCmdList,"YVar,Integrate") ;
 
   std::unique_ptr<RooAbsReal> xychi2{createChi2(xydata,chi2CmdList)};
-  RooFitResult* ret = chi2FitDriver(*xychi2,fitCmdList) ;
-
-  return ret ;
+  return chi2FitDriver(*xychi2,fitCmdList) ;
 }
 
 
@@ -4406,7 +4402,7 @@ RooAbsReal* RooAbsReal::createChi2(RooDataSet& data, const RooLinkedList& cmdLis
 ////////////////////////////////////////////////////////////////////////////////
 /// Internal driver function for chi2 fits
 
-RooFitResult* RooAbsReal::chi2FitDriver(RooAbsReal& fcn, RooLinkedList& cmdList)
+RooFit::OwningPtr<RooFitResult> RooAbsReal::chi2FitDriver(RooAbsReal& fcn, RooLinkedList& cmdList)
 {
   // Select the pdf-specific commands
   RooCmdConfig pc(Form("RooAbsPdf::chi2FitDriver(%s)",GetName())) ;
@@ -4430,7 +4426,7 @@ RooFitResult* RooAbsReal::chi2FitDriver(RooAbsReal& fcn, RooLinkedList& cmdList)
   // Process and check varargs
   pc.process(cmdList) ;
   if (!pc.ok(true)) {
-    return 0 ;
+    return nullptr;
   }
 
   // Decode command line arguments
@@ -4449,7 +4445,7 @@ RooFitResult* RooAbsReal::chi2FitDriver(RooAbsReal& fcn, RooLinkedList& cmdList)
   Int_t doWarn   = pc.getInt("doWarn") ;
   const RooArgSet* minosSet = pc.getSet("minosSet");
 
-  RooFitResult *ret = 0 ;
+  std::unique_ptr<RooFitResult> ret;
 
   // Instantiate MINUIT
   RooMinimizer m(fcn) ;
@@ -4509,12 +4505,10 @@ RooFitResult* RooAbsReal::chi2FitDriver(RooAbsReal& fcn, RooLinkedList& cmdList)
   if (doSave) {
     std::string name = Form("fitresult_%s",fcn.GetName()) ;
     std::string title = Form("Result of fit of %s ",GetName()) ;
-    ret = m.save(name.c_str(),title.c_str()) ;
+    ret = std::unique_ptr<RooFitResult>{m.save(name.c_str(),title.c_str())};
   }
 
-  // Cleanup
-  return ret ;
-
+  return RooFit::Detail::owningPtr(std::move(ret));
 }
 
 
