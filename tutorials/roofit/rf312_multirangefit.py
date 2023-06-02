@@ -4,6 +4,7 @@
 ## Multidimensional models: performing fits in multiple (disjoint) ranges in one or more dimensions
 ##
 ## \macro_code
+## \macro_output
 ##
 ## \date February 2018
 ## \authors Clemens Lange, Wouter Verkerke (C++ version)
@@ -75,18 +76,18 @@ y.setRange("FULL", -10, +10)
 
 # Perform fit in SideBand1 region (ROOT.RooAddPdf coefficients will be
 # interpreted in full range)
-r_sb1 = model.fitTo(modelData, Range="SB1", Save=True)
+r_sb1 = model.fitTo(modelData, Range="SB1", Save=True, PrintLevel=-1)
 
 # Perform fit in SideBand2 region (ROOT.RooAddPdf coefficients will be
 # interpreted in full range)
-r_sb2 = model.fitTo(modelData, Range="SB2", Save=True)
+r_sb2 = model.fitTo(modelData, Range="SB2", Save=True, PrintLevel=-1)
 
 # Perform fits in joint sideband regions
 # -----------------------------------------------------------------------------
 
 # Now perform fit to joint 'L-shaped' sideband region 'SB1|SB2'
 # (ROOT.RooAddPdf coefficients will be interpreted in full range)
-r_sb12 = model.fitTo(modelData, Range="SB1,SB2", Save=True)
+r_sb12 = model.fitTo(modelData, Range="SB1,SB2", Save=True, PrintLevel=-1)
 
 # Print results for comparison
 r_sb1.Print()

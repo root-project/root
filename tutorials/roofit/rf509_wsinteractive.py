@@ -4,7 +4,9 @@
 ## Organization and simultaneous fits: easy interactive access to workspace contents - CINT
 ## to CLING code migration
 ##
+## \macro_image
 ## \macro_code
+## \macro_output
 ##
 ## \date February 2018
 ## \authors Clemens Lange, Wouter Verkerke (C++ version)
@@ -78,7 +80,7 @@ model = w["model"]
 x = w["x"]
 
 d = model.generate({x}, 1000)
-r = model.fitTo(d)
+r = model.fitTo(d, PrintLevel=-1)
 
 # old syntax to access the variable x
 # frame = w.x.frame()

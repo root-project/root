@@ -3,8 +3,8 @@
 /// \notebook -nodraw
 /// Organisation and simultaneous fits: reading and writing ASCII configuration files
 ///
-/// \macro_output
 /// \macro_code
+/// \macro_output
 ///
 /// \date July 2008
 /// \author Wouter Verkerke
@@ -42,7 +42,7 @@ void rf505_asciicfg()
    // -----------------------------------------
 
    RooDataSet *d = model.generate(x, 1000);
-   model.fitTo(*d);
+   model.fitTo(*d, PrintLevel(-1));
 
    // W r i t e   p a r a m e t e r s   t o   a s c i i   f i l e
    // -----------------------------------------------------------

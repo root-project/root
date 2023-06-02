@@ -3,8 +3,8 @@
 /// \notebook -nodraw
 /// Numeric algorithm tuning: configuration and customization of how numeric (partial) integrals are executed
 ///
-/// \macro_output
 /// \macro_code
+/// \macro_output
 ///
 /// \date July 2008
 /// \author Wouter Verkerke

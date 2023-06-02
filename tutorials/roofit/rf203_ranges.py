@@ -3,7 +3,9 @@
 ## \notebook
 ## Addition and convolution: fitting and plotting in sub ranges
 ##
+## \macro_image
 ## \macro_code
+## \macro_output
 ##
 ## \date February 2018
 ## \authors Clemens Lange, Wouter Verkerke (C++ version)
@@ -35,7 +37,7 @@ modelData = model.generate({x}, 10000)
 # ---------------------------
 
 # Fit pdf to all data
-r_full = model.fitTo(modelData, Save=True)
+r_full = model.fitTo(modelData, Save=True, PrintLevel=-1)
 
 # Fit partial range
 # ----------------------------------
@@ -44,7 +46,7 @@ r_full = model.fitTo(modelData, Save=True)
 x.setRange("signal", -3, 3)
 
 # Fit pdf only to data in "signal" range
-r_sig = model.fitTo(modelData, Save=True, Range="signal")
+r_sig = model.fitTo(modelData, Save=True, Range="signal", PrintLevel=-1)
 
 # Plot/print results
 # ---------------------------------------

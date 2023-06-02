@@ -4,7 +4,9 @@
 ## Basic functionality: examples on normalization and integration of pdfs, construction
 ## of cumulative distribution functions from monodimensional pdfs
 ##
+## \macro_image
 ## \macro_code
+## \macro_output
 ##
 ## \date February 2018
 ## \authors Clemens Lange, Wouter Verkerke (C++ version)

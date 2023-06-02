@@ -6,8 +6,8 @@
 /// of x should be described by eff(x)
 ///
 /// \macro_image
-/// \macro_output
 /// \macro_code
+/// \macro_output
 ///
 /// \date February 2018
 /// \authors Clemens Lange, Wouter Verkerke (C++ version)
@@ -74,7 +74,7 @@ void rf702_efficiencyfit_2D(bool flat = false)
    // --------------------------------------------------------------------------
 
    // Fit conditional efficiency pdf to data
-   effPdf.fitTo(*data, ConditionalObservables(RooArgSet(x, y)));
+   effPdf.fitTo(*data, ConditionalObservables(RooArgSet(x, y)), PrintLevel(-1));
 
    // P l o t   f i t t e d ,   d a t a   e f f i c i e n c y
    // --------------------------------------------------------

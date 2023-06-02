@@ -3,7 +3,9 @@
 ## \notebook
 ## Basic functionality: adding boxes with parameters to RooPlots and decorating with arrows, etc...
 ##
+## \macro_image
 ## \macro_code
+## \macro_output
 ##
 ## \authors Clemens Lange, Wouter Verkerke (C++ version)
 
@@ -24,7 +26,7 @@ gauss = ROOT.RooGaussian("gauss", "gauss", x, mean, sigma)
 data = gauss.generate({x}, 1000)
 
 # Fit pdf to data
-gauss.fitTo(data)
+gauss.fitTo(data, PrintLevel=-1)
 
 # Plot pdf and data
 # -------------------------------------

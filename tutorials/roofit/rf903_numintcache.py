@@ -3,7 +3,9 @@
 ## \notebook
 ## Numeric algorithm tuning: caching of slow numeric integrals and parameterizations of slow numeric integrals
 ##
+## \macro_image
 ## \macro_code
+## \macro_output
 ##
 ## \date February 2018
 ## \authors Clemens Lange, Wouter Verkerke (C++ version)
@@ -90,7 +92,7 @@ model = w["model"]
 d = model.generate({w["x"], w["y"], w["z"]}, 1000)
 
 # ROOT.This is slow in mode 0, fast in mode 1
-model.fitTo(d, Verbose=True, Timer=True)
+model.fitTo(d, Verbose=True, Timer=True, PrintLevel=-1)
 
 # Projection on x (always slow as 2D integral over Y, at fitted value of a
 # is not cached)

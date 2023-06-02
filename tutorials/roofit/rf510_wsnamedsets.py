@@ -7,7 +7,9 @@
 ## Working with named parameter sets and parameter snapshots in
 ## workspaces
 ##
+## \macro_image
 ## \macro_code
+## \macro_output
 ##
 ## \date February 2018
 ## \authors Clemens Lange, Wouter Verkerke (C version)
@@ -107,7 +109,7 @@ model = w["model"]
 data = model.generate(w.set("observables"), 1000)
 
 # Fit model to data
-model.fitTo(data)
+model.fitTo(data, PrintLevel=-1)
 
 # Plot fitted model and data on frame of first (only) observable
 frame = (w.set("observables").first()).frame()

@@ -3,7 +3,9 @@
 ## \notebook
 ## Multidimensional models: projecting pdf and data slices in discrete observables
 ##
+## \macro_image
 ## \macro_code
+## \macro_output
 ##
 ## \date February 2018
 ## \authors Clemens Lange, Wouter Verkerke (C++ version)

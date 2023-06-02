@@ -71,7 +71,7 @@ void rf307_fullpereventerrors()
    // ---------------------------------------------------------------------
 
    // Specify dterr as conditional observable
-   model.fitTo(*data);
+   model.fitTo(*data, PrintLevel(-1));
 
    // P l o t   c o n d i t i o n a l   d e c a y _ d m ( d t | d t e r r )
    // ---------------------------------------------------------------------

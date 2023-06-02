@@ -4,8 +4,8 @@
 /// Basic functionality: adding boxes with parameters, statistics to RooPlots, decorating with arrows, text etc...
 ///
 /// \macro_image
-/// \macro_output
 /// \macro_code
+/// \macro_output
 ///
 /// \date July 2008
 /// \author Wouter Verkerke
@@ -38,7 +38,7 @@ void rf106_plotdecoration()
    RooDataSet *data = gauss.generate(x, 1000);
 
    // Fit pdf to data
-   gauss.fitTo(*data);
+   gauss.fitTo(*data, PrintLevel(-1));
 
    // P l o t   p . d . f   a n d   d a t a
    // -------------------------------------

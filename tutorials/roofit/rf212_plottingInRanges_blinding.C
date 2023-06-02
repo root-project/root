@@ -48,7 +48,7 @@ void rf212_plottingInRanges_blinding()
   // The fit should be done only in the unblinded regions, otherwise it would
   // try to make the model adapt to the empty bins in the blinded region.
   tau.setVal(-2.);
-  expo.fitTo(*blindedData, Range("left,right"));
+  expo.fitTo(*blindedData, Range("left,right"), PrintLevel(-1));
 
   // Clear the "fitrange" attribute of the PDF. Otherwise, the fitrange would
   // be automatically taken as the NormRange() for plotting. We want to avoid

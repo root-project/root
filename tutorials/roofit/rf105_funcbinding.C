@@ -4,8 +4,8 @@
 /// Basic functionality: binding ROOT math functions as RooFit functions and pdfs
 ///
 /// \macro_image
-/// \macro_output
 /// \macro_code
+/// \macro_output
 ///
 /// \date July 2008
 /// \author Wouter Verkerke
@@ -54,7 +54,7 @@ void rf105_funcbinding()
 
    // Generate some events and fit
    RooDataSet *data = beta->generate(x2, 10000);
-   beta->fitTo(*data);
+   beta->fitTo(*data, PrintLevel(-1));
 
    // Plot data and pdf on frame
    RooPlot *frame2 = x2.frame(Title("ROOT::Math::Beta bound as RooFit pdf"));

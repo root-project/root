@@ -4,6 +4,7 @@
 ## Data and categories: latex printing of lists and sets of RooArgSets
 ##
 ## \macro_code
+## \macro_output
 ##
 ## \date February 2018
 ## \authors Clemens Lange, Wouter Verkerke (C++ version)
@@ -57,7 +58,7 @@ initParams = params.snapshot()
 
 # Do fit to data, obtain error estimates on parameters
 data = model.generate({x}, 1000)
-model.fitTo(data)
+model.fitTo(data, PrintLevel=-1)
 
 # Print LateX table of parameters of pdf
 # --------------------------------------------------------------------------

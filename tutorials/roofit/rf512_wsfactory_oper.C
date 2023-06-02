@@ -4,8 +4,8 @@
 /// Organization and simultaneous fits: operator expressions and expression-based basic
 /// pdfs in the workspace factory syntax
 ///
-/// \macro_output
 /// \macro_code
+/// \macro_output
 ///
 /// \date July 2009
 /// \author Wouter Verkerke

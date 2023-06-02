@@ -4,8 +4,8 @@
 /// Likelihood and minimization: demonstration of options of the RooFitResult class
 ///
 /// \macro_image
-/// \macro_output
 /// \macro_code
+/// \macro_output
 ///
 /// \date July 2008
 /// \author Wouter Verkerke
@@ -62,7 +62,7 @@ void rf607_fitresult()
    // -------------------------------------------------------------
 
    // Perform fit and save result
-   std::unique_ptr<RooFitResult> r{model.fitTo(*data, Save())};
+   std::unique_ptr<RooFitResult> r{model.fitTo(*data, Save(), PrintLevel(-1))};
 
    // P r i n t   f i t   r e s u l t s
    // ---------------------------------

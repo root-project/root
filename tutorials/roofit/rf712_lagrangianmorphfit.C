@@ -6,8 +6,8 @@
 /// a fit is performed on a pseudo-dataset.
 ///
 /// \macro_image
-/// \macro_output
 /// \macro_code
+/// \macro_output
 ///
 /// \date January 2022
 /// \author Rahul Balasubramanian
@@ -88,7 +88,7 @@ void rf712_lagrangianmorphfit()
    // ---------------------------------------------
    // wrapper pdf to normalise morphing function to a morphing pdf
    RooWrapperPdf model("wrap_pdf", "wrap_pdf", morphfunc);
-   auto fitres = model.fitTo(*pseudo_dh, SumW2Error(true), Optimize(false), Save());
+   auto fitres = model.fitTo(*pseudo_dh, SumW2Error(true), Optimize(false), Save(), PrintLevel(-1));
    auto hcorr = fitres->correlationHist();
 
    // E x t r a c t  p o s t f i t  d i s t r i b u t i o n

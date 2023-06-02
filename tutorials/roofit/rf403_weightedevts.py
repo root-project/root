@@ -6,7 +6,9 @@
 ##
 ## Using weights in unbinned datasets
 ##
+## \macro_image
 ## \macro_code
+## \macro_output
 ##
 ## \date February 2018
 ## \authors Clemens Lange, Wouter Verkerke (C version)
@@ -64,7 +66,7 @@ p2 = ROOT.RooPolynomial("p2", "p2", x, [a0, a1, a2], 0)
 #       event weights represent Poisson statistics themselves.
 #
 # Fit with 'wrong' errors
-r_ml_wgt = p2.fitTo(wdata, Save=True)
+r_ml_wgt = p2.fitTo(wdata, Save=True, PrintLevel=-1)
 
 # A first order correction to estimated parameter errors in an
 # (unbinned) ML fit can be obtained by calculating the
@@ -79,7 +81,7 @@ r_ml_wgt = p2.fitTo(wdata, Save=True)
 #
 # A fit in self mode can be performed as follows:
 
-r_ml_wgt_corr = p2.fitTo(wdata, Save=True, SumW2Error=True)
+r_ml_wgt_corr = p2.fitTo(wdata, Save=True, SumW2Error=True, PrintLevel=-1)
 
 # Plot weighted data and fit result
 # ---------------------------------------------------------------
@@ -107,8 +109,8 @@ data3 = genPdf.generate({x}, 43000)
 
 # Fit the 2nd order polynomial to both unweighted datasets and save the
 # results for comparison
-r_ml_unw10 = p2.fitTo(data2, Save=True)
-r_ml_unw43 = p2.fitTo(data3, Save=True)
+r_ml_unw10 = p2.fitTo(data2, Save=True, PrintLevel=-1)
+r_ml_unw43 = p2.fitTo(data3, Save=True, PrintLevel=-1)
 
 # Chis2 fit of pdf to binned weighted dataset
 # ---------------------------------------------------------------------------

@@ -3,7 +3,9 @@
 ## \notebook
 ## Multidimensional models: marginizalization of multi-dimensional pdfs through integration
 ##
+## \macro_image
 ## \macro_code
+## \macro_output
 ##
 ## \date February 2018
 ## \authors Clemens Lange, Wouter Verkerke (C++ version)
@@ -56,7 +58,7 @@ modelx = model.createProjection({y})
 data = modelx.generateBinned({x}, 1000)
 
 # Fit modelx to toy data
-modelx.fitTo(data, Verbose=True)
+modelx.fitTo(data, Verbose=True, PrintLevel=-1)
 
 # Plot modelx over data
 frame = x.frame(40)

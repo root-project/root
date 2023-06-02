@@ -23,8 +23,8 @@
 /// before ROOT 6.24. Positive values activate the recovery. Values between 1. and 10. were found to be a
 /// good default. If no argument is passed, RooFit uses 10.
 ///
-/// \macro_output
 /// \macro_code
+/// \macro_output
 ///
 /// \date 10/2020
 /// \author Stephan Hageboeck

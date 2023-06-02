@@ -4,7 +4,9 @@
 ## 'BASIC FUNCTIONALITY' RooFit tutorial macro #102
 ## Importing data from ROOT TTrees and THx histograms
 ##
+## \macro_image
 ## \macro_code
+## \macro_output
 ##
 ## \date February 2018
 ## \authors Clemens Lange, Wouter Verkerke (C version)
@@ -64,7 +66,7 @@ dh.plotOn(frame)
 mean = ROOT.RooRealVar("mean", "mean", 0, -10, 10)
 sigma = ROOT.RooRealVar("sigma", "sigma", 3, 0.1, 10)
 gauss = ROOT.RooGaussian("gauss", "gauss", x, mean, sigma)
-gauss.fitTo(dh)
+gauss.fitTo(dh, PrintLevel=-1)
 gauss.plotOn(frame)
 
 # Plot and fit a RooDataHist with internal errors

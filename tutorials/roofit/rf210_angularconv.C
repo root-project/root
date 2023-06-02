@@ -14,8 +14,8 @@
 /// This tutorial requires FFT3 to be enabled.
 ///
 /// \macro_image
-/// \macro_output
 /// \macro_code
+/// \macro_output
 ///
 /// \date April 2009
 /// \author Wouter Verkerke
@@ -71,7 +71,7 @@ void rf210_angularconv()
    RooDataSet *data_psi = Mpsi.generate(psi, 10000);
 
    // Fit convoluted model as function of angle psi
-   Mpsi.fitTo(*data_psi);
+   Mpsi.fitTo(*data_psi, PrintLevel(-1));
 
    // Plot cos(psi) frame with Mf(cpsi)
    RooPlot *frame1 = psi.frame(Title("Cyclical convolution in angle psi"));
@@ -103,7 +103,7 @@ void rf210_angularconv()
    psi.setConstant(true);
 
    // Fit convoluted model as function of cos(psi)
-   Mcpsi.fitTo(*data_cpsi);
+   Mcpsi.fitTo(*data_cpsi, PrintLevel(-1));
 
    // Plot cos(psi) frame with Mf(cpsi)
    RooPlot *frame2 = cpsi.frame(Title("Same convolution in psi, expressed in cos(psi)"));

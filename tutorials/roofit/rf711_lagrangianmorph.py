@@ -6,8 +6,8 @@
 ## to obtain the distribution for any value of the coefficient.
 ##
 ## \macro_image
-## \macro_output
 ## \macro_code
+## \macro_output
 ##
 ## \date January 2022
 ## \author Rahul Balasubramanian

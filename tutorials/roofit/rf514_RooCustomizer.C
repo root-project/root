@@ -5,8 +5,8 @@
 /// As an extra complication, some of the new parameters need to be functions
 /// of a mass parameter.
 ///
-/// \macro_output
 /// \macro_code
+/// \macro_output
 ///
 /// \author Stephan Hageboeck, CERN
 

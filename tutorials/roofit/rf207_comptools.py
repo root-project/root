@@ -5,6 +5,7 @@
 ## Tools and utilities for manipulation of composite objects
 ##
 ## \macro_code
+## \macro_output
 ##
 ## \date February 2018
 ## \authors Clemens Lange, Wouter Verkerke (C version)

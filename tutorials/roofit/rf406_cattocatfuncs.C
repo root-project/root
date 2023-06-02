@@ -3,8 +3,8 @@
 /// \notebook -nodraw
 /// Data and categories: demonstration of discrete-->discrete (invertible) functions
 ///
-/// \macro_output
 /// \macro_code
+/// \macro_output
 ///
 /// \date July 2008
 /// \author Wouter Verkerke

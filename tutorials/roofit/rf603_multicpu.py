@@ -3,7 +3,9 @@
 ## \notebook
 ## Likelihood and minimization: setting up a multi-core parallelized unbinned maximum likelihood fit
 ##
+## \macro_image
 ## \macro_code
+## \macro_output
 ##
 ## \date February 2018
 ## \authors Clemens Lange, Wouter Verkerke (C++ version)
@@ -46,7 +48,7 @@ data = model.generate({x, y, z}, 200000)
 # it back to MINUIT.
 
 # Use four processes and time results both in wall time and CPU time
-model.fitTo(data, NumCPU=4, Timer=True)
+model.fitTo(data, NumCPU=4, Timer=True, PrintLevel=-1)
 
 # Parallel MC projections
 # ----------------------------------------------

@@ -3,7 +3,9 @@
 ## \notebook
 ## This tutorial illustrates the basic features of RooFit.
 ##
+## \macro_image
 ## \macro_code
+## \macro_output
 ##
 ## \date February 2018
 ## \authors Clemens Lange, Wouter Verkerke (C++ version)
@@ -49,7 +51,7 @@ gauss.plotOn(xframe2)
 # Fit model to data
 # -----------------------------
 # Fit pdf to data
-gauss.fitTo(data)
+gauss.fitTo(data, PrintLevel=-1)
 
 # Print values of mean and sigma (that now reflect fitted values and
 # errors)

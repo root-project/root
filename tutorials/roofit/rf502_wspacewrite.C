@@ -3,8 +3,8 @@
 /// \notebook -nodraw
 /// Organisation and simultaneous fits: creating and writing a workspace
 ///
-/// \macro_output
 /// \macro_code
+/// \macro_output
 ///
 /// \date July 2008
 /// \author Wouter Verkerke

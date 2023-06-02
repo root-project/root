@@ -5,8 +5,8 @@
 /// to CLING code migration
 ///
 /// \macro_image
-/// \macro_output
 /// \macro_code
+/// \macro_output
 ///
 /// \date April 2009
 /// \author Wouter Verkerke
@@ -45,7 +45,7 @@ void rf509_wsinteractive()
    RooRealVar *x = w1->var("x");
 
    RooDataSet *d = model->generate(*x, 1000);
-   std::unique_ptr<RooFitResult> r{model->fitTo(*d)};
+   std::unique_ptr<RooFitResult> r{model->fitTo(*d, PrintLevel(-1))};
 
    // old syntax to access the variable x
    // RooPlot* frame = w::x.frame() ;

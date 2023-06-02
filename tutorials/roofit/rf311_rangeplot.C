@@ -4,8 +4,8 @@
 /// Multidimensional models: projecting pdf and data ranges in continuous observables
 ///
 /// \macro_image
-/// \macro_output
 /// \macro_code
+/// \macro_output
 ///
 /// \date July 2008
 /// \author Wouter Verkerke

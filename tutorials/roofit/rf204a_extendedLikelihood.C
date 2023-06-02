@@ -8,8 +8,8 @@
 ///  used for extension.
 ///  This can be solved by using a RooAddPdf for extending the model.
 ///
-/// \macro_output
 /// \macro_code
+/// \macro_output
 ///
 /// \date December 2018
 /// \author Stephan Hageboeck
@@ -95,7 +95,7 @@ void rf204a_extendedLikelihood()
    // the interpretation of the coefficients is tied to the fit range
    // that's used in the first fit
    RooAddPdf model1(model);
-   std::unique_ptr<RooFitResult> r{model1.fitTo(*data,Save())};
+   std::unique_ptr<RooFitResult> r{model1.fitTo(*data,Save(), PrintLevel(-1))};
    r->Print() ;
 
    RooPlot * frame = x.frame(Title("Full range fitted"));
@@ -114,7 +114,7 @@ void rf204a_extendedLikelihood()
    x.setRange("right", 6., 10.);
 
    RooAddPdf model2(model);
-   std::unique_ptr<RooFitResult> r2{model2.fitTo(*data, Range("left,right"), Save())};
+   std::unique_ptr<RooFitResult> r2{model2.fitTo(*data, Range("left,right"), Save(), PrintLevel(-1))};
    r2->Print();
 
 
@@ -135,7 +135,7 @@ void rf204a_extendedLikelihood()
    x.setRange("leftToMiddle",  0., 5.);
 
    RooAddPdf model3(model);
-   std::unique_ptr<RooFitResult> r3{model3.fitTo(*data, Range("leftToMiddle"), Save())};
+   std::unique_ptr<RooFitResult> r3{model3.fitTo(*data, Range("leftToMiddle"), Save(), PrintLevel(-1))};
    r3->Print();
 
 

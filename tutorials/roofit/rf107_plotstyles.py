@@ -3,7 +3,9 @@
 ## \notebook
 ## Basic functionality: demonstration of various plotting styles of data, functions in a RooPlot
 ##
+## \macro_image
 ## \macro_code
+## \macro_output
 ##
 ## \date February 2018
 ## \authors Clemens Lange, Wouter Verkerke (C++ version)
@@ -26,7 +28,7 @@ gauss = ROOT.RooGaussian("gauss", "gauss", x, mean, sigma)
 data = gauss.generate({x}, 100)
 
 # Fit pdf to data
-gauss.fitTo(data)
+gauss.fitTo(data, PrintLevel=-1)
 
 # Make plot frames
 # -------------------------------

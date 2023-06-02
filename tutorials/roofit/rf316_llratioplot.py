@@ -4,7 +4,9 @@
 ## Multidimensional models: using the likelihood ratio techique to construct a signal
 ## enhanced one-dimensional projection of a multi-dimensional pdf
 ##
+## \macro_image
 ## \macro_code
+## \macro_output
 ##
 ## \date February 2018
 ## \authors Clemens Lange, Wouter Verkerke (C++ version)

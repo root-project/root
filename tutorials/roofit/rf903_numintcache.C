@@ -4,8 +4,8 @@
 /// Numeric algorithm tuning: caching of slow numeric integrals and parameterization of slow numeric integrals
 ///
 /// \macro_image
-/// \macro_output
 /// \macro_code
+/// \macro_output
 ///
 /// \date July 2008
 /// \author Wouter Verkerke
@@ -63,7 +63,7 @@ void rf903_numintcache(Int_t mode = 0)
    RooDataSet *d = w1->pdf("model")->generate(RooArgSet(*w1->var("x"), *w1->var("y"), *w1->var("z")), 1000);
 
    // This is slow in mode 0, but fast in mode 1
-   w1->pdf("model")->fitTo(*d, Verbose(true), Timer(true));
+   w1->pdf("model")->fitTo(*d, Verbose(true), Timer(true), PrintLevel(-1));
 
    // Projection on x (always slow as 2D integral over Y,Z at fitted value of a is not cached)
    RooPlot *framex = w1->var("x")->frame(Title("Projection of 3D model on X"));

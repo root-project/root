@@ -60,7 +60,7 @@ data = model.generate({dt, dterr}, 10000)
 # ---------------------------------------------------------------------
 
 # Specify dterr as conditional observable
-model.fitTo(data)
+model.fitTo(data, PrintLevel=-1)
 
 # Plot conditional decay_dm(dt|dterr)
 # ---------------------------------------------------------------------

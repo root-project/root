@@ -6,7 +6,9 @@
 ##
 ## Understanding and customizing error handling in likelihood evaluations
 ##
+## \macro_image
 ## \macro_code
+## \macro_output
 ##
 ## \date February 2018
 ## \authors Clemens Lange, Wouter Verkerke (C version)
