@@ -1454,7 +1454,7 @@ std::unique_ptr<RooFitResult> RooAbsPdf::minimizeNLL(RooAbsReal & nll,
   if (cfg.doSave) {
     auto name = std::string("fitresult_") + GetName() + "_" + data.GetName();
     auto title = std::string("Result of fit of p.d.f. ") + GetName() + " to dataset " + data.GetName();
-    ret.reset(m.save(name.c_str(),title.c_str()));
+    ret = std::unique_ptr<RooFitResult>{m.save(name.c_str(),title.c_str())};
     if((cfg.doSumW2==1 || cfg.doAsymptotic==1) && m.getNPar()>0) ret->setCovQual(corrCovQual);
   }
 
@@ -1771,7 +1771,7 @@ RooFit::OwningPtr<RooFitResult> RooAbsPdf::fitTo(RooAbsData& data, const RooLink
 ////////////////////////////////////////////////////////////////////////////////
 /// Calls RooAbsPdf::createChi2(RooDataSet& data, const RooLinkedList& cmdList) and returns fit result.
 
-RooFitResult* RooAbsPdf::chi2FitTo(RooDataHist& data, const RooLinkedList& cmdList)
+RooFit::OwningPtr<RooFitResult> RooAbsPdf::chi2FitTo(RooDataHist& data, const RooLinkedList& cmdList)
 {
   // Select the pdf-specific commands
   RooCmdConfig pc(Form("RooAbsPdf::chi2FitTo(%s)",GetName())) ;

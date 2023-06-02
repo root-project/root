@@ -64,14 +64,14 @@ namespace RooStats {
     RooFit::OwningPtr<RooAbsReal> DoGlobalFit() const;
 
     /// minimize likelihood
-    static RooFitResult * DoMinimizeNLL(RooAbsReal * nll);
+    static RooFit::OwningPtr<RooFitResult> DoMinimizeNLL(RooAbsReal * nll);
 
 
-    mutable RooFitResult * fFitResult;  //// internal  result of global fit
+    mutable std::unique_ptr<RooFitResult> fFitResult;  //// internal  result of global fit
     mutable bool fGlobalFitDone;        ///< flag to control if a global fit has been done
 
 
-    ClassDefOverride(ProfileLikelihoodCalculator,2) // A concrete implementation of CombinedCalculator that uses the ProfileLikelihood ratio.
+    ClassDefOverride(ProfileLikelihoodCalculator,3) // A concrete implementation of CombinedCalculator that uses the ProfileLikelihood ratio.
 
    };
 }
