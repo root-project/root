@@ -1068,8 +1068,37 @@ public:
    void DestroyValue(const Detail::RFieldValue &value, bool dtorOnly = false) override;
 };
 
-/// Template specializations for concrete C++ types
+/// An artificial field that transforms an RNTuple column that contains the offset of collections into
+/// collection sizes. It is only used for reading, e.g. as projected field or as an artificial field that provides the
+/// "number of" RDF columns for collections (e.g. `R_rdf_sizeof_jets` for a collection named `jets`).
+/// It is used in the templated RField<RNTupleCardinality<SizeT>> form, which represents the collection sizes either
+/// as 32bit unsigned int (std::uint32_t) or as 64bit unsigned int (std::uint64_t).
+class RCardinalityField : public Detail::RFieldBase {
+protected:
+   RCardinalityField(std::string_view fieldName, std::string_view typeName)
+      : Detail::RFieldBase(fieldName, typeName, ENTupleStructure::kLeaf, false /* isSimple */)
+   {
+   }
 
+   const RColumnRepresentations &GetColumnRepresentations() const final;
+   // Field is only used for reading
+   void GenerateColumnsImpl() final { throw RException(R__FAIL("Cardinality fields must only be used for reading")); }
+   void GenerateColumnsImpl(const RNTupleDescriptor &) final;
+
+public:
+   RCardinalityField(RCardinalityField &&other) = default;
+   RCardinalityField &operator=(RCardinalityField &&other) = default;
+   ~RCardinalityField() = default;
+
+   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
+
+   const RField<RNTupleCardinality<std::uint32_t>> *Is32Bit() const;
+   const RField<RNTupleCardinality<std::uint64_t>> *Is64Bit() const;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+/// Template specializations for concrete C++ types
+////////////////////////////////////////////////////////////////////////////////
 
 template <>
 class RField<ClusterSize_t> : public Detail::RFieldBase {
@@ -1130,34 +1159,6 @@ public:
       fPrincipalColumn->GetCollectionInfo(clusterIndex, collectionStart, size);
    }
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
-};
-
-/// An artificial field that transforms an RNTuple column that contains the offset of collections into
-/// collection sizes. It is only used for reading, e.g. as projected field or as an artificial field that provides the
-/// "number of" RDF columns for collections (e.g. `R_rdf_sizeof_jets` for a collection named `jets`).
-/// It is used in the templated RField<RNTupleCardinality<SizeT>> form, which represents the collection sizes either
-/// as 32bit unsigned int (std::uint32_t) or as 64bit unsigned int (std::uint64_t).
-class RCardinalityField : public Detail::RFieldBase {
-protected:
-   RCardinalityField(std::string_view fieldName, std::string_view typeName)
-      : Detail::RFieldBase(fieldName, typeName, ENTupleStructure::kLeaf, false /* isSimple */)
-   {
-   }
-
-   const RColumnRepresentations &GetColumnRepresentations() const final;
-   // Field is only used for reading
-   void GenerateColumnsImpl() final { throw RException(R__FAIL("Cardinality fields must only be used for reading")); }
-   void GenerateColumnsImpl(const RNTupleDescriptor &) final;
-
-public:
-   RCardinalityField(RCardinalityField &&other) = default;
-   RCardinalityField &operator=(RCardinalityField &&other) = default;
-   ~RCardinalityField() = default;
-
-   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
-
-   const RField<RNTupleCardinality<std::uint32_t>> *Is32Bit() const;
-   const RField<RNTupleCardinality<std::uint64_t>> *Is64Bit() const;
 };
 
 template <typename SizeT>
