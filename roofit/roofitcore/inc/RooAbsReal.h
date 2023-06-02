@@ -179,10 +179,10 @@ public:
   bool getForceNumInt() const { return _forceNumInt ; }
 
   // Chi^2 fits to histograms
-  virtual RooFitResult* chi2FitTo(RooDataHist& data, const RooCmdArg& arg1=RooCmdArg::none(),  const RooCmdArg& arg2=RooCmdArg::none(),
+  virtual RooFit::OwningPtr<RooFitResult> chi2FitTo(RooDataHist& data, const RooCmdArg& arg1=RooCmdArg::none(),  const RooCmdArg& arg2=RooCmdArg::none(),
                               const RooCmdArg& arg3=RooCmdArg::none(),  const RooCmdArg& arg4=RooCmdArg::none(), const RooCmdArg& arg5=RooCmdArg::none(),
                               const RooCmdArg& arg6=RooCmdArg::none(),  const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none()) ;
-  virtual RooFitResult* chi2FitTo(RooDataHist& data, const RooLinkedList& cmdList) ;
+  virtual RooFit::OwningPtr<RooFitResult> chi2FitTo(RooDataHist& data, const RooLinkedList& cmdList) ;
 
   virtual RooAbsReal* createChi2(RooDataHist& data, const RooLinkedList& cmdList) ;
   virtual RooAbsReal* createChi2(RooDataHist& data, const RooCmdArg& arg1=RooCmdArg::none(),  const RooCmdArg& arg2=RooCmdArg::none(),
@@ -190,10 +190,10 @@ public:
              const RooCmdArg& arg6=RooCmdArg::none(),  const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none()) ;
 
   // Chi^2 fits to X-Y datasets
-  virtual RooFitResult* chi2FitTo(RooDataSet& xydata, const RooCmdArg& arg1=RooCmdArg::none(),  const RooCmdArg& arg2=RooCmdArg::none(),
+  virtual RooFit::OwningPtr<RooFitResult> chi2FitTo(RooDataSet& xydata, const RooCmdArg& arg1=RooCmdArg::none(),  const RooCmdArg& arg2=RooCmdArg::none(),
                               const RooCmdArg& arg3=RooCmdArg::none(),  const RooCmdArg& arg4=RooCmdArg::none(), const RooCmdArg& arg5=RooCmdArg::none(),
                               const RooCmdArg& arg6=RooCmdArg::none(),  const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none()) ;
-  virtual RooFitResult* chi2FitTo(RooDataSet& xydata, const RooLinkedList& cmdList) ;
+  virtual RooFit::OwningPtr<RooFitResult> chi2FitTo(RooDataSet& xydata, const RooLinkedList& cmdList) ;
 
   virtual RooAbsReal* createChi2(RooDataSet& data, const RooLinkedList& cmdList) ;
   virtual RooAbsReal* createChi2(RooDataSet& data, const RooCmdArg& arg1=RooCmdArg::none(),  const RooCmdArg& arg2=RooCmdArg::none(),
@@ -419,7 +419,7 @@ protected:
 
  protected:
 
-  RooFitResult* chi2FitDriver(RooAbsReal& fcn, RooLinkedList& cmdList) ;
+  RooFit::OwningPtr<RooFitResult> chi2FitDriver(RooAbsReal& fcn, RooLinkedList& cmdList);
 
   void plotOnCompSelect(RooArgSet* selNodes) const ;
   RooPlot* plotOnWithErrorBand(RooPlot* frame,const RooFitResult& fr, double Z, const RooArgSet* params, const RooLinkedList& argList, bool method1) const ;
