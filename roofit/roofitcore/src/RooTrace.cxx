@@ -24,6 +24,64 @@ objects. When tracing is active, a table of live RooFit objects
 is kept that can be queried at any time. In verbose mode, messages
 are printed in addition at the construction and destruction of
 each object.
+
+Usage example:
+\code{.cpp}
+void exampleRooTrace()
+{
+   using namespace RooFit;
+
+   // Activate RooFit memory tracing
+   RooTrace::active(true);
+ 
+   // Construct gauss(x,m,s)
+   RooRealVar x("x", "x", -10, 10);
+   RooRealVar m("m", "m", 0, -10, 10);
+   RooRealVar s("s", "s", 1, -10, 10);
+   RooGaussian gauss("g", "g", x, m, s);
+ 
+   // Show dump of all RooFit object in memory
+   RooTrace::dump();
+ 
+   // Activate verbose mode
+   RooTrace::verbose(true);
+ 
+   // Construct poly(x,p0)
+   RooRealVar p0("p0", "p0", 0.01, 0., 1.);
+   RooPolynomial poly("p", "p", x, p0);
+ 
+   // Put marker in trace list for future reference
+   RooTrace::mark();
+ 
+   // Construct model = f*gauss(x) + (1-f)*poly(x)
+   RooRealVar f("f", "f", 0.5, 0., 1.);
+   RooAddPdf model("model", "model", RooArgSet(gauss, poly), f);
+ 
+   // Show object added to memory since marker
+   RooTrace::printObjectCounts();
+ 
+   // Since verbose mode is still on, you will see messages
+   // pertaining to destructor calls of all RooFit objects
+   // made in this macro
+   //
+   // A call to RooTrace::dump() at the end of this macro
+   // should show that there a no RooFit object left in memory
+}
+\endcode
+
+\note In the ROOT releases, the RooTrace is disabled at compile time and the
+example above will not print any objects. If you are an advanced developer who
+wants to use the RooTrace, you need to recompile ROOT after changing the
+`TRACE_CREATE` and `TRACE_DESTROY` macros in RooTrace.h to call the RooTrace
+functions:
+
+\code{.cpp}
+#define TRACE_CREATE RooTrace::create(this);
+#define TRACE_DESTROY RooTrace::destroy(this);
+\endcode
+
+However, as ROOT is not build with this by default, the RooTrace is not tested
+and there is no gurantee that this works.
 **/
 
 #include "RooTrace.h"
