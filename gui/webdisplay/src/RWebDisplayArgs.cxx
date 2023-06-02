@@ -344,9 +344,9 @@ std::string RWebDisplayArgs::GetCustomExec() const
 ///
 ///     auto view = qparent->findChild<QWebEngineView*>("RootWebView");
 
-std::string RWebDisplayArgs::GetQt5EmbedQualifier(const void *qparent, const std::string &urlopt)
+std::string RWebDisplayArgs::GetQt5EmbedQualifier(const void *qparent, const std::string &urlopt, unsigned qtversion)
 {
-   std::string where = "qt5";
+   std::string where = (qtversion >= 0x60000) ? "qt6" : "qt5";
    if (qparent) {
       where.append(":");
       where.append(std::to_string((uintptr_t) qparent));
@@ -357,4 +357,3 @@ std::string RWebDisplayArgs::GetQt5EmbedQualifier(const void *qparent, const std
    }
    return where;
 }
-
