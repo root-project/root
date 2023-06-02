@@ -8,6 +8,7 @@
 ## Basic import options are demonstrated in rf102_dataimport.py
 ##
 ## \macro_code
+## \macro_output
 ##
 ## \date February 2018
 ## \authors Clemens Lange, Wouter Verkerke (C version)

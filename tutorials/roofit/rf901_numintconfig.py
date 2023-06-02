@@ -4,6 +4,7 @@
 ## Numeric algorithm tuning: configuration and customization of how numeric (partial) integrals are executed
 ##
 ## \macro_code
+## \macro_output
 ##
 ## \date February 2018
 ## \authors Clemens Lange, Wouter Verkerke (C++ version)

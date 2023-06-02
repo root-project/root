@@ -3,8 +3,8 @@
 /// \notebook -nodraw
 /// Likelihood and minimization: fitting with constraints
 ///
-/// \macro_output
 /// \macro_code
+/// \macro_output
 ///
 /// \date 07/2008
 /// \author Wouter Verkerke

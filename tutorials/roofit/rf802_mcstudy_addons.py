@@ -5,7 +5,9 @@
 ##
 ## RooMCStudy: using separate fit and generator models, the chi^2 calculator model
 ##
+## \macro_image
 ## \macro_code
+## \macro_output
 ##
 ## \date February 2018
 ## \author Clemens Lange

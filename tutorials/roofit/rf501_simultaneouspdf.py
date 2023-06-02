@@ -4,7 +4,9 @@
 ## Organization and simultaneous fits: using simultaneous pdfs to describe simultaneous
 ## fits to multiple datasets
 ##
+## \macro_image
 ## \macro_code
+## \macro_output
 ##
 ## \date February 2018
 ## \authors Clemens Lange, Wouter Verkerke (C++ version)
@@ -84,7 +86,7 @@ simPdf = ROOT.RooSimultaneous("simPdf", "simultaneous pdf", {"physics": model, "
 # ---------------------------------------------------
 
 # Perform simultaneous fit of model to data and model_ctl to data_ctl
-fitResult = simPdf.fitTo(combData, PrintLevel=-1, Save=True)
+fitResult = simPdf.fitTo(combData, PrintLevel=-1, Save=True, PrintLevel=-1)
 fitResult.Print()
 
 # Plot model slices on data slices
