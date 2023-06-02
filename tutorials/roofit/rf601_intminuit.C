@@ -62,7 +62,7 @@ void rf601_intminuit()
 
    // Print values of all parameters, that reflect values (and error estimates)
    // that are back propagated from MINUIT
-   model.getParameters(x)->Print("s");
+   std::unique_ptr<RooArgSet>{model.getParameters(x)}->Print("s");
 
    // Disable verbose logging
    m.setVerbose(false);
@@ -89,14 +89,14 @@ void rf601_intminuit()
    // matrix, the EDM, the minimized FCN , the last MINUIT status code and
    // the number of times the RooFit function object has indicated evaluation
    // problems (e.g. zero probabilities during likelihood evaluation)
-   RooFitResult *r = m.save();
+   std::unique_ptr<RooFitResult> fitResult{m.save()};
 
    // Make contour plot of mx vs sx at 1,2,3 sigma
    RooPlot *frame = m.contour(frac, sigma_g2, 1, 2, 3);
    frame->SetTitle("Minuit contour plot");
 
    // Print the fit result snapshot
-   r->Print("v");
+   fitResult->Print("v");
 
    // C h a n g e   p a r a m e t e r   v a l u e s ,   f l o a t i n g
    // -----------------------------------------------------------------
