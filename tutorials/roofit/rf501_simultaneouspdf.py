@@ -86,7 +86,7 @@ simPdf = ROOT.RooSimultaneous("simPdf", "simultaneous pdf", {"physics": model, "
 # ---------------------------------------------------
 
 # Perform simultaneous fit of model to data and model_ctl to data_ctl
-fitResult = simPdf.fitTo(combData, PrintLevel=-1, Save=True, PrintLevel=-1)
+fitResult = simPdf.fitTo(combData, PrintLevel=-1, Save=True)
 fitResult.Print()
 
 # Plot model slices on data slices
