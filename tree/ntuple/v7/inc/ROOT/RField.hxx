@@ -1092,8 +1092,8 @@ public:
 
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
 
-   const RField<RNTupleCardinality<std::uint32_t>> *Is32Bit() const;
-   const RField<RNTupleCardinality<std::uint64_t>> *Is64Bit() const;
+   const RField<RNTupleCardinality<std::uint32_t>> *As32Bit() const;
+   const RField<RNTupleCardinality<std::uint64_t>> *As64Bit() const;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
