@@ -48,7 +48,7 @@ public:
    enum EExitStatus { kFinished, kStopped, kAborted };
 
    TVirtualProofPlayer() { ResetBit(TVirtualProofPlayer::kIsSubmerger); }
-   virtual ~TVirtualProofPlayer() { }
+   ~TVirtualProofPlayer() override { }
 
    virtual Long64_t  Process(TDSet *set,
                              const char *selector, Option_t *option = "",
@@ -139,7 +139,7 @@ public:
 
    static TVirtualProofPlayer *Create(const char *player, TProof *p, TSocket *s = 0);
 
-   ClassDef(TVirtualProofPlayer,0)  // Abstract PROOF player
+   ClassDefOverride(TVirtualProofPlayer,0)  // Abstract PROOF player
 };
 
 #endif

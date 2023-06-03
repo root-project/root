@@ -84,7 +84,7 @@ public:
    TFileStat(TFileNode *node, TDSetElement *elem, TList *file);
 
    Bool_t         IsDone() const {return fIsDone;}
-   Bool_t         IsSortable() const { return kTRUE; }
+   Bool_t         IsSortable() const override { return kTRUE; }
    void           SetDone() {fIsDone = kTRUE;}
    TFileNode     *GetNode() const {return fNode;}
    TDSetElement  *GetElement() const {return fElement;}
@@ -92,7 +92,7 @@ public:
    void           MoveNextEntry(Long64_t step) {fNextEntry += step;}
 
    // This method is used to keep a sorted list of remaining files to be processed
-   Int_t          Compare(const TObject* obj) const
+   Int_t          Compare(const TObject* obj) const override
    {
       // Return -1 if elem.entries < obj.elem.entries, 0 if elem.entries equal
       // and 1 if elem.entries < obj.elem.entries.
@@ -113,7 +113,7 @@ public:
       // No info: assume equal (no change in order)
       return 0;
    }
-   void Print(Option_t * = 0) const
+   void Print(Option_t * = 0) const override
    {  // Notify file name and entries
       Printf("TFileStat: %s %lld", fElement ? fElement->GetName() : "---",
                                    fElement ? fElement->GetNum() : -1);
@@ -153,7 +153,7 @@ private:
 
 public:
    TFileNode(const char *name, Int_t strategy, TSortedList *files);
-   ~TFileNode() { delete fFiles; delete fActFiles; }
+   ~TFileNode() override { delete fFiles; delete fActFiles; }
 
    void        IncMySlaveCnt() { fMySlaveCnt++; }
    Int_t       GetMySlaveCnt() const { return fMySlaveCnt; }
@@ -165,7 +165,7 @@ public:
    Int_t       GetRunSlaveCnt() const { return fRunSlaveCnt; }
    Int_t       GetExtSlaveCnt() const { return fExtSlaveCnt; }
    Int_t       GetNumberOfActiveFiles() const { return fActFiles->GetSize(); }
-   Bool_t      IsSortable() const { return kTRUE; }
+   Bool_t      IsSortable() const override { return kTRUE; }
    Int_t       GetNumberOfFiles() { return fFiles->GetSize(); }
    void        IncProcessed(Long64_t nEvents)
                   { fProcessed += nEvents; }
@@ -176,10 +176,10 @@ public:
    Long64_t    GetEventsLeftPerSlave() const
       { return ((fEvents - fProcessed)/(fRunSlaveCnt + 1)); }
    void        IncEvents(Long64_t nEvents) { fEvents += nEvents; }
-   const char *GetName() const { return fNodeName.Data(); }
+   const char *GetName() const override { return fNodeName.Data(); }
    Long64_t    GetNEvents() const { return fEvents; }
 
-   void Print(Option_t * = 0) const
+   void Print(Option_t * = 0) const override
    {
       TFileStat *fs = 0;
       TDSetElement *e = 0;
@@ -258,7 +258,7 @@ public:
       if (fActFileNext == 0) fActFileNext = fActFiles->First();
    }
 
-   Int_t Compare(const TObject *other) const
+   Int_t Compare(const TObject *other) const override
    {
       // Must return -1 if this is smaller than obj, 0 if objects are equal
       // and 1 if this is larger than obj.
@@ -344,7 +344,7 @@ private:
 
 public:
    TSlaveStat(TSlave *slave);
-   ~TSlaveStat();
+   ~TSlaveStat() override;
    TFileNode  *GetFileNode() const { return fFileNode; }
    Long64_t    GetEntriesProcessed() const { return fStatus?fStatus->GetEntries():-1; }
    Double_t    GetProcTime() const { return fStatus?fStatus->GetProcTime():-1; }
@@ -358,7 +358,7 @@ public:
       return fFileNode?(fFileNode->GetEventsLeftPerSlave()):0; }
    TList      *GetProcessedSubSet() { return fDSubSet; }
    TProofProgressStatus *GetProgressStatus() { return fStatus; }
-   TProofProgressStatus *AddProcessed(TProofProgressStatus *st = 0);
+   TProofProgressStatus *AddProcessed(TProofProgressStatus *st = 0) override;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -83,7 +83,7 @@ public:
    TProofPerfAnalysis(const char *perffile, const char *title = "",
                   const char *treename = "PROOF_PerfStats");
    TProofPerfAnalysis(TTree *tree, const char *title = "");
-   virtual ~TProofPerfAnalysis();
+   ~TProofPerfAnalysis() override;
 
    Bool_t IsValid() const { return (fFile && fTree) ? kTRUE : kFALSE; }
    Bool_t WrkInfoOK() const { return (fWrksInfo.GetSize() > 0) ? kTRUE : kFALSE; }
@@ -115,7 +115,7 @@ public:
    void  SetDebug(Int_t d = 0);   // Setter for the verbosity level
    static void  SetgDebug(Bool_t on = kTRUE);   // Overall verbosity level
 
-   ClassDef(TProofPerfAnalysis, 0)   // Set of tools to analyse the performance tree
+   ClassDefOverride(TProofPerfAnalysis, 0)   // Set of tools to analyse the performance tree
 };
 
 #endif

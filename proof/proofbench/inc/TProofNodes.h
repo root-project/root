@@ -41,7 +41,7 @@ private:
 public:
    TProofNodes(TProof* proof);
 
-   virtual ~TProofNodes();
+   ~TProofNodes() override;
    Int_t ActivateWorkers(Int_t nwrks);
    Int_t ActivateWorkers(const char *workers);
    Int_t GetMaxWrksPerNode() const { return fMaxWrksNode; }
@@ -52,9 +52,9 @@ public:
    Int_t GetNActives() const { return fNActiveWrks; }
    TMap* GetMapOfNodes() const { return fNodes; }
    TMap* GetMapOfActiveNodes() const { return fActiveNodes; }
-   void Print(Option_t* option="") const;
+   void Print(Option_t* option="") const override;
 
-   ClassDef(TProofNodes, 0) //Node and worker information
+   ClassDefOverride(TProofNodes, 0) //Node and worker information
 };
 
 #endif
