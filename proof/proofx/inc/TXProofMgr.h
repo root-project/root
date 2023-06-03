@@ -52,48 +52,48 @@ private:
 
 public:
    TXProofMgr(const char *url, Int_t loglevel = -1, const char *alias = "");
-   virtual ~TXProofMgr();
+   ~TXProofMgr() override;
 
-   Bool_t      HandleInput(const void *);
-   Bool_t      HandleError(const void *in = 0);
+   Bool_t      HandleInput(const void *) override;
+   Bool_t      HandleError(const void *in = 0) override;
 
-   Bool_t      IsValid() const { return fSocket; }
-   void        SetInvalid();
+   Bool_t      IsValid() const override { return fSocket; }
+   void        SetInvalid() override;
 
-   TProof     *AttachSession(Int_t id, Bool_t gui = kFALSE)
+   TProof     *AttachSession(Int_t id, Bool_t gui = kFALSE) override
                       { return TProofMgr::AttachSession(id, gui); }
-   TProof     *AttachSession(TProofDesc *d, Bool_t gui = kFALSE);
-   void        DetachSession(Int_t, Option_t * = "");
-   void        DetachSession(TProof *, Option_t * = "");
-   const char *GetMssUrl(Bool_t = kFALSE);
+   TProof     *AttachSession(TProofDesc *d, Bool_t gui = kFALSE) override;
+   void        DetachSession(Int_t, Option_t * = "") override;
+   void        DetachSession(TProof *, Option_t * = "") override;
+   const char *GetMssUrl(Bool_t = kFALSE) override;
    TProofLog  *GetSessionLogs(Int_t ridx = 0, const char *stag = 0,
                               const char *pattern = "-v \"| SvcMsg\"",
-                              Bool_t rescan = kFALSE);
-   Bool_t      MatchUrl(const char *url);
-   void        ShowROOTVersions();
-   TList      *QuerySessions(Option_t *opt = "S");
-   TObjString *ReadBuffer(const char *file, Long64_t ofs, Int_t len);
-   TObjString *ReadBuffer(const char *file, const char *pattern);
-   Int_t       Reset(Bool_t hard = kFALSE, const char *usr = 0);
-   Int_t       SendMsgToUsers(const char *msg, const char *usr = 0);
-   Int_t       SetROOTVersion(const char *tag);
-   void        ShowWorkers();
+                              Bool_t rescan = kFALSE) override;
+   Bool_t      MatchUrl(const char *url) override;
+   void        ShowROOTVersions() override;
+   TList      *QuerySessions(Option_t *opt = "S") override;
+   TObjString *ReadBuffer(const char *file, Long64_t ofs, Int_t len) override;
+   TObjString *ReadBuffer(const char *file, const char *pattern) override;
+   Int_t       Reset(Bool_t hard = kFALSE, const char *usr = 0) override;
+   Int_t       SendMsgToUsers(const char *msg, const char *usr = 0) override;
+   Int_t       SetROOTVersion(const char *tag) override;
+   void        ShowWorkers() override;
 
    // Remote file system actions
-   Int_t       Cp(const char *src, const char *dst = 0, const char *opts = 0);
-   void        Find(const char *what = "~/", const char *how = "-type f", const char *where = 0);
-   void        Grep(const char *what, const char *how = 0, const char *where = 0);
-   void        Ls(const char *what = "~/", const char *how = 0, const char *where = 0);
-   void        More(const char *what, const char *how = 0, const char *where = 0);
-   Int_t       Rm(const char *what, const char *how = 0, const char *where = 0);
-   void        Tail(const char *what, const char *how = 0, const char *where = 0);
-   Int_t       Md5sum(const char *what, TString &sum, const char *where = 0);
-   Int_t       Stat(const char *what, FileStat_t &st, const char *where = 0);
+   Int_t       Cp(const char *src, const char *dst = 0, const char *opts = 0) override;
+   void        Find(const char *what = "~/", const char *how = "-type f", const char *where = 0) override;
+   void        Grep(const char *what, const char *how = 0, const char *where = 0) override;
+   void        Ls(const char *what = "~/", const char *how = 0, const char *where = 0) override;
+   void        More(const char *what, const char *how = 0, const char *where = 0) override;
+   Int_t       Rm(const char *what, const char *how = 0, const char *where = 0) override;
+   void        Tail(const char *what, const char *how = 0, const char *where = 0) override;
+   Int_t       Md5sum(const char *what, TString &sum, const char *where = 0) override;
+   Int_t       Stat(const char *what, FileStat_t &st, const char *where = 0) override;
 
-   Int_t       GetFile(const char *remote, const char *local, const char *opt = 0);
-   Int_t       PutFile(const char *local, const char *remote, const char *opt = 0);
+   Int_t       GetFile(const char *remote, const char *local, const char *opt = 0) override;
+   Int_t       PutFile(const char *local, const char *remote, const char *opt = 0) override;
 
-   ClassDef(TXProofMgr,0)  // XrdProofd PROOF manager interface
+   ClassDefOverride(TXProofMgr,0)  // XrdProofd PROOF manager interface
 };
 
 #endif

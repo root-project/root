@@ -103,7 +103,7 @@ public:
                 const char *dir = 0, Long64_t first = 0, Long64_t num = -1,
                 const char *msd = 0, const char *dataset = 0);
    TDSetElement(const TDSetElement& elem);
-   virtual ~TDSetElement();
+   ~TDSetElement() override;
 
    virtual TList   *GetListOfFriends() const { return fFriends; }
    virtual void     AddFriend(TDSetElement *friendElement, const char *alias);
@@ -124,7 +124,7 @@ public:
    void             AddAssocObj(TObject *assocobj);
    TList           *GetListOfAssocObjs() const { return fAssocObjList; }
    TObject         *GetAssocObj(Long64_t i, Bool_t isentry = kFALSE);
-   void             Print(Option_t *options="") const;
+   void             Print(Option_t *options="") const override;
    Long64_t         GetTDSetOffset() const { return fTDSetOffset; }
    void             SetTDSetOffset(Long64_t offset) { fTDSetOffset = offset; }
    void             SetEntryList(TObject *aList, Long64_t first = -1, Long64_t num = -1);
@@ -133,8 +133,8 @@ public:
    void             Validate(TDSetElement *elem);
    void             Invalidate() { fValid = kFALSE; }
    void             SetValid() { fValid = kTRUE; }
-   Int_t            Compare(const TObject *obj) const;
-   Bool_t           IsSortable() const { return kTRUE; }
+   Int_t            Compare(const TObject *obj) const override;
+   Bool_t           IsSortable() const override { return kTRUE; }
    Int_t            Lookup(Bool_t force = kFALSE);
    void             SetLookedUp() { SetBit(kHasBeenLookedUp); }
    TFileInfo       *GetFileInfo(const char *type = "TTree");
@@ -146,7 +146,7 @@ public:
 
    Int_t            MergeElement(TDSetElement *elem);
 
-   ClassDef(TDSetElement,9)  // A TDSet element
+   ClassDefOverride(TDSetElement,9)  // A TDSet element
 };
 
 
@@ -188,7 +188,7 @@ public:
    TDSet(const char *name, const char *objname = "*",
          const char *dir = "/", const char *type = 0);
    TDSet(const TChain &chain, Bool_t withfriends = kTRUE);
-   virtual ~TDSet();
+   ~TDSet() override;
 
    virtual Bool_t        Add(const char *file, const char *objname = 0,
                              const char *dir = 0, Long64_t first = 0,
@@ -213,11 +213,11 @@ public:
    virtual Long64_t      Draw(const char *varexp, const TCut &selection,
                               Option_t *option = "", Long64_t nentries = -1,
                               Long64_t firstentry = 0); // *MENU*
-   virtual void          Draw(Option_t *opt) { Draw(opt, "", "", -1, 0); }
+   void          Draw(Option_t *opt) override { Draw(opt, "", "", -1, 0); }
 
    Int_t                 ExportFileList(const char *filepath, Option_t *opt = "");
 
-   void                  Print(Option_t *option="") const;
+   void                  Print(Option_t *option="") const override;
 
    void                  SetObjName(const char *objname);
    void                  SetDirectory(const char *dir);
@@ -259,7 +259,7 @@ public:
 
    void                  SetWriteV3(Bool_t on = kTRUE);
 
-   ClassDef(TDSet,9)  // Data set for remote processing (PROOF)
+   ClassDefOverride(TDSet,9)  // Data set for remote processing (PROOF)
 };
 
 #endif

@@ -35,24 +35,24 @@ private:
 
    Bool_t        fTerminated; //true if Terminate() has been already called
 
-   Int_t         Setup();
+   Int_t         Setup() override;
    Int_t         SetupOnFork(const char *ord);
 
 public:
    TProofServLite(Int_t *argc, char **argv, FILE *flog = 0);
-   virtual ~TProofServLite();
+   ~TProofServLite() override;
 
-   Int_t         CreateServer();
+   Int_t         CreateServer() override;
 
-   void          HandleFork(TMessage *mess);
+   void          HandleFork(TMessage *mess) override;
 
    //void          HandleUrgentData();
-   void          HandleSigPipe();
-   void          HandleTermination();
+   void          HandleSigPipe() override;
+   void          HandleTermination() override;
 
-   void          Terminate(Int_t status);
+   void          Terminate(Int_t status) override;
 
-   ClassDef(TProofServLite,0)  //PROOF-Lite Server Application Interface
+   ClassDefOverride(TProofServLite,0)  //PROOF-Lite Server Application Interface
 };
 
 #endif

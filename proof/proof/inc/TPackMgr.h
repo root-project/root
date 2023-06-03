@@ -56,11 +56,11 @@ private:
 
 public:
    TPackMgr(const char *dir, const char *key = "L0");
-   virtual ~TPackMgr();
+   ~TPackMgr() override;
 
-   const char       *GetName() const { return fName.Data(); }
-   void              SetName(const char *name) { fName = name; }
-   const char       *GetTitle() const { return GetDir(); }
+   const char       *GetName() const override { return fName.Data(); }
+   void              SetName(const char *name) override { fName = name; }
+   const char       *GetTitle() const override { return GetDir(); }
 
    TLockPath        *GetLock() { return &fLock; }
 
@@ -103,7 +103,7 @@ public:
    static Int_t      FindParPath(TPackMgr *packmgr, const char *pack, TString &par);
    static Bool_t     IsEnabled(const char *pack, TPackMgr *packmgr = nullptr);
 
-   ClassDef(TPackMgr,0)  // Package manager interface
+   ClassDefOverride(TPackMgr,0)  // Package manager interface
 };
 
 #endif

@@ -88,16 +88,16 @@ private:
 public:
    TPacketizer(TDSet *dset, TList *slaves, Long64_t first, Long64_t num,
                 TList *input, TProofProgressStatus *st);
-   virtual ~TPacketizer();
+   ~TPacketizer() override;
 
-   Int_t         AddWorkers(TList *workers);
-   TDSetElement *GetNextPacket(TSlave *sl, TMessage *r);
+   Int_t         AddWorkers(TList *workers) override;
+   TDSetElement *GetNextPacket(TSlave *sl, TMessage *r) override;
    Long64_t      GetEntriesProcessed(TSlave *sl) const;
 
-   Float_t       GetCurrentRate(Bool_t &all);
-   Int_t         GetActiveWorkers();
+   Float_t       GetCurrentRate(Bool_t &all) override;
+   Int_t         GetActiveWorkers() override;
 
-   ClassDef(TPacketizer,0)  //Generate work packets for parallel processing
+   ClassDefOverride(TPacketizer,0)  //Generate work packets for parallel processing
 };
 
 #endif

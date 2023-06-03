@@ -76,7 +76,7 @@ protected:
 public:
    TEventIter();
    TEventIter(TDSet *dset, TSelector *sel, Long64_t first, Long64_t num);
-   virtual ~TEventIter();
+   ~TEventIter() override;
 
    virtual Long64_t  GetCacheSize() = 0;
    virtual Int_t     GetLearnEntries() = 0;
@@ -90,7 +90,7 @@ public:
 
    static TEventIter *Create(TDSet *dset, TSelector *sel, Long64_t first, Long64_t num);
 
-   ClassDef(TEventIter,0)  // Event iterator used by TProofPlayer's
+   ClassDefOverride(TEventIter,0)  // Event iterator used by TProofPlayer's
 };
 
 
@@ -106,14 +106,14 @@ private:
 public:
    TEventIterUnit();
    TEventIterUnit(TDSet *dset, TSelector *sel, Long64_t num);
-   ~TEventIterUnit() { }
+   ~TEventIterUnit() override { }
 
-   Long64_t GetCacheSize() {return -1;}
-   Int_t    GetLearnEntries() {return -1;}
-   Long64_t GetNextEvent();
-   Int_t    GetNextPacket(Long64_t &first, Long64_t &num);
+   Long64_t GetCacheSize() override {return -1;}
+   Int_t    GetLearnEntries() override {return -1;}
+   Long64_t GetNextEvent() override;
+   Int_t    GetNextPacket(Long64_t &first, Long64_t &num) override;
 
-   ClassDef(TEventIterUnit,0)  // Event iterator for objects
+   ClassDefOverride(TEventIterUnit,0)  // Event iterator for objects
 };
 
 
@@ -128,19 +128,19 @@ private:
    TObject *fObj;          // object found
 
 protected:
-   void PreProcessEvent(Long64_t);
+   void PreProcessEvent(Long64_t) override;
 
 public:
    TEventIterObj();
    TEventIterObj(TDSet *dset, TSelector *sel, Long64_t first, Long64_t num);
-   ~TEventIterObj();
+   ~TEventIterObj() override;
 
-   Long64_t GetCacheSize() {return -1;}
-   Int_t    GetLearnEntries() {return -1;}
-   Long64_t GetNextEvent();
-   Int_t    GetNextPacket(Long64_t &first, Long64_t &num);
+   Long64_t GetCacheSize() override {return -1;}
+   Int_t    GetLearnEntries() override {return -1;}
+   Long64_t GetNextEvent() override;
+   Int_t    GetNextPacket(Long64_t &first, Long64_t &num) override;
 
-   ClassDef(TEventIterObj,0)  // Event iterator for objects
+   ClassDefOverride(TEventIterObj,0)  // Event iterator for objects
 };
 
 
@@ -166,26 +166,26 @@ private:
       TFile    *fFile;
       TList    *fTrees;
       TFileTree(const char *name, TFile *f, Bool_t islocal);
-      virtual ~TFileTree();
+      ~TFileTree() override;
    };
 
    TTree* Load(TDSetElement *elem, Bool_t &localfile, const char *objname = 0);
    TTree* GetTrees(TDSetElement *elem);
 
 protected:
-   void PreProcessEvent(Long64_t ent);
+   void PreProcessEvent(Long64_t ent) override;
 
 public:
    TEventIterTree();
    TEventIterTree(TDSet *dset, TSelector *sel, Long64_t first, Long64_t num);
-   ~TEventIterTree();
+   ~TEventIterTree() override;
 
-   Long64_t GetCacheSize();
-   Int_t    GetLearnEntries();
-   Long64_t GetNextEvent();
-   Int_t    GetNextPacket(Long64_t &first, Long64_t &num);
+   Long64_t GetCacheSize() override;
+   Int_t    GetLearnEntries() override;
+   Long64_t GetNextEvent() override;
+   Int_t    GetNextPacket(Long64_t &first, Long64_t &num) override;
 
-   ClassDef(TEventIterTree,0)  // Event iterator for Trees
+   ClassDefOverride(TEventIterTree,0)  // Event iterator for Trees
 };
 
 #endif

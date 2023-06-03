@@ -38,18 +38,18 @@ private:
                      Long64_t entries, Long64_t first, TDSet *dset,
                      const char *selec, TObject *elist = 0);
 
-   void  RecordEnd(EQueryStatus status, TList *outlist = 0)
+   void  RecordEnd(EQueryStatus status, TList *outlist = 0) override
          { TQueryResult::RecordEnd(status, outlist); }
 
-   void  SetFinalized() { TQueryResult::SetFinalized(); }
+   void  SetFinalized() override { TQueryResult::SetFinalized(); }
    void  SetResultFile(const char *rf) { fResultFile = rf; }
    void  SetRunning(Int_t startlog, const char *par, Int_t nwrks);
 
 public:
    TProofQueryResult() : TQueryResult(), fStartLog(-1) { }
-   virtual ~TProofQueryResult() { }
+   ~TProofQueryResult() override { }
 
-   ClassDef(TProofQueryResult,1)  //Class describing a PROOF query
+   ClassDefOverride(TProofQueryResult,1)  //Class describing a PROOF query
 };
 
 #endif

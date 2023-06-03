@@ -67,13 +67,13 @@ public:
    inline void     SetCPUTime(Double_t procTime) { fCPUTime = procTime; }
    inline void     IncCPUTime(Double_t procTime) { fCPUTime += procTime; }
    void     SetLastUpdate(Double_t updtTime = 0);
-   void     Print(Option_t* option = "") const;
+   void     Print(Option_t* option = "") const override;
 
    TProofProgressStatus operator-(TProofProgressStatus &st);
    TProofProgressStatus &operator+=(const TProofProgressStatus &st);
    TProofProgressStatus &operator-=(const TProofProgressStatus &st);
 
-   ClassDef(TProofProgressStatus,2) // Proof progress status class
+   ClassDefOverride(TProofProgressStatus,2) // Proof progress status class
 };
 
 #endif

@@ -44,7 +44,7 @@ namespace {
    public:
       TSetSelDataMembers(const TOutputListSelectorDataMap& owner, TCollection* dmInfo, TList* output);
       using TMemberInspector::Inspect;
-      void Inspect(TClass *cl, const char *parent, const char *name, const void *addr, Bool_t isTransient);
+      void Inspect(TClass *cl, const char *parent, const char *name, const void *addr, Bool_t isTransient) override;
       Ssiz_t GetNumSet() const { return fNumSet; }
    private:
       TCollection* fDMInfo; // output list object name / member name pairs for output list entries
@@ -116,9 +116,9 @@ namespace {
    class TCollectDataMembers: public TMemberInspector {
    public:
       TCollectDataMembers(const TOutputListSelectorDataMap& owner): fOwner(owner) { }
-      ~TCollectDataMembers();
+      ~TCollectDataMembers() override;
       using TMemberInspector::Inspect;
-      void Inspect(TClass *cl, const char *parent, const char *name, const void *addr, Bool_t isTransient);
+      void Inspect(TClass *cl, const char *parent, const char *name, const void *addr, Bool_t isTransient) override;
       TExMap& GetMemberPointers() { return fMap; }
    private:
       TExMap fMap; //map of data member's value to TDataMember

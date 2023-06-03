@@ -91,7 +91,7 @@ public:
                         fDataSet(0), fMerger(0) { }
    TProofOutputFile(const char *path, const char *option = "M", const char *dsname = 0);
    TProofOutputFile(const char *path, ERunType type, UInt_t opt = kRemote, const char *dsname = 0);
-   virtual ~TProofOutputFile();
+   ~TProofOutputFile() override;
 
    const char *GetDir(Bool_t raw = kFALSE) const { return (raw) ? fRawDir : fDir; }
    TFileCollection *GetFileCollection();
@@ -115,13 +115,13 @@ public:
    Int_t AdoptFile(TFile *f);                    // Adopt a TFile already open
    TFile* OpenFile(const char *opt);             // Open a file with the specified name in fFileName1
    Long64_t Merge(TCollection *list);
-   void Print(Option_t *option = "") const;
+   void Print(Option_t *option = "") const override;
    void SetOutputFileName(const char *name);
    void ResetFileCollection() { fDataSet = 0; }
 
    static Int_t AssertDir(const char *dirpath);
 
-   ClassDef(TProofOutputFile,5) // Wrapper class to steer the merging of files produced on workers
+   ClassDefOverride(TProofOutputFile,5) // Wrapper class to steer the merging of files produced on workers
 };
 
 #endif

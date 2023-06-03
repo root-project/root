@@ -43,15 +43,15 @@ private:
    TString fName;
 public:
    TPBReadType(EReadType type = kReadOpt) : fType(type), fName("PROOF_Benchmark_ReadType") { }
-   virtual ~TPBReadType() { }
+   ~TPBReadType() override { }
 
    EReadType GetType() const { return fType; }
    Bool_t IsReadFull() const { return (fType == kReadFull) ? kTRUE : kFALSE; }
    Bool_t IsReadOpt() const { return (fType == kReadOpt) ? kTRUE : kFALSE; }
    Bool_t IsReadNo() const { return (fType == kReadNo) ? kTRUE : kFALSE; }
-   const char *GetName() const { return fName; }
+   const char *GetName() const override { return fName; }
 
-   ClassDef(TPBReadType, 1)     // Streamable PBReadType
+   ClassDefOverride(TPBReadType, 1)     // Streamable PBReadType
 };
 
 class TPBHistType : public TObject {
@@ -68,16 +68,16 @@ private:
    TString fName;
 public:
    TPBHistType(EHistType type = kHist1D) : fType(type), fName("PROOF_Benchmark_HistType") { }
-   virtual ~TPBHistType() { }
+   ~TPBHistType() override { }
 
    EHistType GetType() const { return fType; }
    Bool_t IsHist1D() const { return (fType == kHist1D) ? kTRUE : kFALSE; }
    Bool_t IsHist2D() const { return (fType == kHist2D) ? kTRUE : kFALSE; }
    Bool_t IsHist3D() const { return (fType == kHist3D) ? kTRUE : kFALSE; }
    Bool_t IsHistAll() const { return (fType == kHistAll) ? kTRUE : kFALSE; }
-   const char *GetName() const { return fName; }
+   const char *GetName() const override { return fName; }
 
-   ClassDef(TPBHistType, 1)     // Streamable PBHistType
+   ClassDefOverride(TPBHistType, 1)     // Streamable PBHistType
 };
 
 class TPBHandleDSType : public TObject {
@@ -93,16 +93,16 @@ private:
    TString fName;
 public:
    TPBHandleDSType(EHandleDSType type = kReleaseCache) : fType(type), fName("PROOF_Benchmark_HandleDSType") { }
-   virtual ~TPBHandleDSType() { }
+   ~TPBHandleDSType() override { }
 
    EHandleDSType GetType() const { return fType; }
    Bool_t IsReleaseCache() const { return (fType == kReleaseCache) ? kTRUE : kFALSE; }
    Bool_t IsCheckCache() const { return (fType == kCheckCache) ? kTRUE : kFALSE; }
    Bool_t IsRemoveFiles() const { return (fType == kRemoveFiles) ? kTRUE : kFALSE; }
    Bool_t IsCopyFiles() const { return (fType == kCopyFiles) ? kTRUE : kFALSE; }
-   const char *GetName() const { return fName; }
+   const char *GetName() const override { return fName; }
 
-   ClassDef(TPBHandleDSType, 1)     // Streamable PBHandleDSType
+   ClassDefOverride(TPBHandleDSType, 1)     // Streamable PBHandleDSType
 };
 
 #endif

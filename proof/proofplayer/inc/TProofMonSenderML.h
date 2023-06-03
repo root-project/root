@@ -36,18 +36,18 @@ public:
 
    TProofMonSenderML(const char *serv, const char *tag, const char *id = 0,
                      const char *subid = 0, const char *opt = "");
-   virtual ~TProofMonSenderML();
+   ~TProofMonSenderML() override;
 
    // Summary record
-   Int_t SendSummary(TList *, const char *);
+   Int_t SendSummary(TList *, const char *) override;
 
    // Information about the dataset(s) processed
-   Int_t SendDataSetInfo(TDSet *, TList *, const char *, const char *);
+   Int_t SendDataSetInfo(TDSet *, TList *, const char *, const char *) override;
 
    // Detailed infoirmation about files
-   Int_t SendFileInfo(TDSet *, TList *, const char *, const char *);
+   Int_t SendFileInfo(TDSet *, TList *, const char *, const char *) override;
 
-   ClassDef(TProofMonSenderML, 0); // Interface for PROOF monitoring
+   ClassDefOverride(TProofMonSenderML, 0); // Interface for PROOF monitoring
 };
 
 #endif

@@ -73,14 +73,14 @@ private:
 
 public:
    TSlaveStat(TSlave *sl, TList *input);
-   ~TSlaveStat();
+   ~TSlaveStat() override;
 
 //   void        GetCurrentTime();
 
    void        UpdatePerformance(Double_t time);
-   TProofProgressStatus *AddProcessed(TProofProgressStatus *st);
+   TProofProgressStatus *AddProcessed(TProofProgressStatus *st) override;
 
-//   ClassDef(TPacketizerUnit::TSlaveStat, 0);
+//   ClassDefOverride(TPacketizerUnit::TSlaveStat, 0);
 };
 
 ////////////////////////////////////////////////////////////////////////////////

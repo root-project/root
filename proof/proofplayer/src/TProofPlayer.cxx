@@ -116,7 +116,7 @@ private:
 public:
    TDispatchTimer(TProofPlayer *p) : TTimer(1000, kFALSE), fPlayer(p) { }
 
-   Bool_t Notify();
+   Bool_t Notify() override;
 };
 ////////////////////////////////////////////////////////////////////////////////
 /// Handle expiration of the timer associated with dispatching pending
@@ -145,7 +145,7 @@ private:
 public:
    TProctimeTimer(TProofPlayer *p, Long_t to) : TTimer(to, kFALSE), fPlayer(p) { }
 
-   Bool_t Notify();
+   Bool_t Notify() override;
 };
 ////////////////////////////////////////////////////////////////////////////////
 /// Handle expiration of the timer associated with dispatching pending
@@ -174,7 +174,7 @@ private:
 public:
    TStopTimer(TProofPlayer *p, Bool_t abort, Int_t to);
 
-   Bool_t Notify();
+   Bool_t Notify() override;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -35,12 +35,12 @@ public:
    TDSetProxy();
    TDSetProxy(const char *type, const char *objname = "*", const char *dir = "/");
 
-   void           Reset();
-   TDSetElement  *Next(Long64_t totalEntries = -1);
+   void           Reset() override;
+   TDSetElement  *Next(Long64_t totalEntries = -1) override;
 
    void  SetProofServ(TProofServ *serv);
 
-   ClassDef(TDSetProxy,1)  // TDSet proxy for use on slaves
+   ClassDefOverride(TDSetProxy,1)  // TDSet proxy for use on slaves
 };
 
 #endif

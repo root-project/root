@@ -92,7 +92,7 @@ public:
 
    TProofBench(const char *url, const char *outfile = "<default>", const char *proofopt = 0);
 
-   virtual ~TProofBench();
+   ~TProofBench() override;
 
    Int_t RunCPU(Long64_t nevents=-1, Int_t start=-1, Int_t stop=-1, Int_t step=-1);
    Int_t RunCPUx(Long64_t nevents=-1, Int_t start=-1, Int_t stop=-1);
@@ -140,7 +140,7 @@ public:
 
    static TList *GetGraphs() { return fgGraphs; }
 
-   ClassDef(TProofBench, 0)   // Steering class for PROOF benchmarks
+   ClassDefOverride(TProofBench, 0)   // Steering class for PROOF benchmarks
 };
 
 #endif

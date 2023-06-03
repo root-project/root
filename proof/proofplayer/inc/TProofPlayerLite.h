@@ -28,29 +28,29 @@
 class TProofPlayerLite : public TProofPlayerRemote {
 
 protected:
-   Bool_t  HandleTimer(TTimer *timer);
+   Bool_t  HandleTimer(TTimer *timer) override;
 
    Int_t   MakeSelector(const char *selfile);
-   void    SetupFeedback();
+   void    SetupFeedback() override;
 
 public:
    TProofPlayerLite(TProof *proof = 0) : TProofPlayerRemote(proof) { }
 
-   virtual ~TProofPlayerLite() { }   // Owns the fOutput list
+   ~TProofPlayerLite() override { }   // Owns the fOutput list
 
    Long64_t       Process(TDSet *set, const char *selector,
                           Option_t *option = "", Long64_t nentries = -1,
-                          Long64_t firstentry = 0);
+                          Long64_t firstentry = 0) override;
    Long64_t       Process(TDSet *set, TSelector *selector,
                           Option_t *option = "", Long64_t nentries = -1,
-                          Long64_t firstentry = 0);
-   Long64_t       Finalize(Bool_t force = kFALSE, Bool_t sync = kFALSE);
-   Long64_t       Finalize(TQueryResult *qr)
+                          Long64_t firstentry = 0) override;
+   Long64_t       Finalize(Bool_t force = kFALSE, Bool_t sync = kFALSE) override;
+   Long64_t       Finalize(TQueryResult *qr) override
                             { return TProofPlayerRemote::Finalize(qr); }
 
-   void           StoreFeedback(TObject *slave, TList *out); // Adopts the list
+   void           StoreFeedback(TObject *slave, TList *out) override; // Adopts the list
 
-   ClassDef(TProofPlayerLite,0)  // PROOF player running in PROOF-Lite
+   ClassDefOverride(TProofPlayerLite,0)  // PROOF player running in PROOF-Lite
 };
 
 #endif

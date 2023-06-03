@@ -48,7 +48,7 @@ public:
 
    static TXSocketHandler *GetSocketHandler(TFileHandler *h = 0, TSocket *s = 0);
 
-   ClassDef(TXSocketHandler, 0) //Input handler class for xproofd sockets
+   ClassDefOverride(TXSocketHandler, 0) //Input handler class for xproofd sockets
 };
 
 #endif

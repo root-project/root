@@ -57,14 +57,14 @@ private:
 public:
    TProofResourcesStatic();
    TProofResourcesStatic(const char *confDir, const char *fileName);
-   virtual ~TProofResourcesStatic();
+   ~TProofResourcesStatic() override;
 
-   TProofNodeInfo *GetMaster();
-   TList          *GetSubmasters();
-   TList          *GetWorkers();
+   TProofNodeInfo *GetMaster() override;
+   TList          *GetSubmasters() override;
+   TList          *GetWorkers() override;
    TString         GetFileName() const { return fFileName; }
 
-   ClassDef(TProofResourcesStatic,0) // Class to handle PROOF static config
+   ClassDefOverride(TProofResourcesStatic,0) // Class to handle PROOF static config
 };
 
 #endif

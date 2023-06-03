@@ -62,12 +62,12 @@ private:
 
 public:
    TSlaveStat(TSlave *sl, TList *input);
-   ~TSlaveStat();
+   ~TSlaveStat() override;
 
    void        GetCurrentTime();
 
    void        UpdatePerformance(Double_t time);
-   TProofProgressStatus *AddProcessed(TProofProgressStatus *st);
+   TProofProgressStatus *AddProcessed(TProofProgressStatus *st) override;
 };
 
 // Iterator wrapper
@@ -79,11 +79,11 @@ private:
 
 public:
    TIterObj(const char *n, TIter *iter) : fName(n), fIter(iter) { }
-   virtual ~TIterObj() { if (fIter) delete fIter; }
+   ~TIterObj() override { if (fIter) delete fIter; }
 
-   const char *GetName() const {return fName;}
+   const char *GetName() const override {return fName;}
    TIter      *GetIter() const {return fIter;}
-   void        Print(Option_t* option = "") const;
+   void        Print(Option_t* option = "") const override;
 };
 
 ClassImp(TPacketizerFile);

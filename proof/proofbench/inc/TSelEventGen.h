@@ -56,22 +56,22 @@ public :
 
 //   TSelEventGen(TTree *);
    TSelEventGen();
-   virtual ~TSelEventGen() { }
-   virtual Int_t   Version() const {return 1;}
-   virtual void    Begin(TTree *);
-   virtual void    SlaveBegin(TTree *tree);
-   virtual void    Init(TTree *tree);
-   virtual Bool_t  Notify();
-   virtual Bool_t  Process(Long64_t entry);
-   virtual void    SetOption(const char *option) { fOption = option; }
-   virtual void    SetObject(TObject *obj) { fObject = obj; }
-   virtual void    SetInputList(TList *input) {fInput = input;}
-   virtual TList  *GetOutputList() const { return fOutput; }
-   virtual void    SlaveTerminate();
-   virtual void    Terminate();
-   virtual void    Print(Option_t *option="") const;
+   ~TSelEventGen() override { }
+   Int_t   Version() const override {return 1;}
+   void    Begin(TTree *) override;
+   void    SlaveBegin(TTree *tree) override;
+   void    Init(TTree *tree) override;
+   Bool_t  Notify() override;
+   Bool_t  Process(Long64_t entry) override;
+   void    SetOption(const char *option) override { fOption = option; }
+   void    SetObject(TObject *obj) override { fObject = obj; }
+   void    SetInputList(TList *input) override {fInput = input;}
+   TList  *GetOutputList() const override { return fOutput; }
+   void    SlaveTerminate() override;
+   void    Terminate() override;
+   void    Print(Option_t *option="") const override;
 
-   ClassDef(TSelEventGen,0)     //PROOF selector for event file generation
+   ClassDefOverride(TSelEventGen,0)     //PROOF selector for event file generation
 };
 
 #endif
