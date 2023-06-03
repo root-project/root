@@ -40,21 +40,21 @@ private:
 public :
 
    TSelHandleDataSet() : fType(0) { }
-   virtual ~TSelHandleDataSet() { }
-   virtual Int_t   Version() const {return 2;}
-   virtual void    Begin(TTree *) { }
-   virtual void    SlaveBegin(TTree *);
-   virtual void    Init(TTree *) { }
-   virtual Bool_t  Notify() { return kTRUE; }
-   virtual Bool_t  Process(Long64_t entry);
-   virtual void    SetOption(const char *option) { fOption = option; }
-   virtual void    SetObject(TObject *obj) { fObject = obj; }
-   virtual void    SetInputList(TList *input) {fInput = input;}
-   virtual TList  *GetOutputList() const { return fOutput; }
-   virtual void    SlaveTerminate() { }
-   virtual void    Terminate() { }
+   ~TSelHandleDataSet() override { }
+   Int_t   Version() const override {return 2;}
+   void    Begin(TTree *) override { }
+   void    SlaveBegin(TTree *) override;
+   void    Init(TTree *) override { }
+   Bool_t  Notify() override { return kTRUE; }
+   Bool_t  Process(Long64_t entry) override;
+   void    SetOption(const char *option) override { fOption = option; }
+   void    SetObject(TObject *obj) override { fObject = obj; }
+   void    SetInputList(TList *input) override {fInput = input;}
+   TList  *GetOutputList() const override { return fOutput; }
+   void    SlaveTerminate() override { }
+   void    Terminate() override { }
 
-   ClassDef(TSelHandleDataSet,0)     //PROOF selector for event file generation
+   ClassDefOverride(TSelHandleDataSet,0)     //PROOF selector for event file generation
 };
 
 #endif
