@@ -164,9 +164,9 @@ class RFieldProvider : public RProvider {
       void VisitUInt8Field(const RField<std::uint8_t> &field) final { FillHistogram(field); }
       void VisitCardinalityField(const ROOT::Experimental::RCardinalityField &field) final
       {
-         if (const auto f32 = field.Is32Bit()) {
+         if (const auto f32 = field.As32Bit()) {
             FillHistogram(*f32);
-         } else if (const auto f64 = field.Is64Bit()) {
+         } else if (const auto f64 = field.As64Bit()) {
             FillHistogram(*f64);
          }
       }

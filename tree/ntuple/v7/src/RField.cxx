@@ -705,13 +705,13 @@ void ROOT::Experimental::RCardinalityField::AcceptVisitor(Detail::RFieldVisitor 
 }
 
 const ROOT::Experimental::RField<ROOT::Experimental::RNTupleCardinality<std::uint32_t>> *
-ROOT::Experimental::RCardinalityField::Is32Bit() const
+ROOT::Experimental::RCardinalityField::As32Bit() const
 {
    return dynamic_cast<const RField<RNTupleCardinality<std::uint32_t>> *>(this);
 }
 
 const ROOT::Experimental::RField<ROOT::Experimental::RNTupleCardinality<std::uint64_t>> *
-ROOT::Experimental::RCardinalityField::Is64Bit() const
+ROOT::Experimental::RCardinalityField::As64Bit() const
 {
    return dynamic_cast<const RField<RNTupleCardinality<std::uint64_t>> *>(this);
 }

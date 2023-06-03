@@ -258,11 +258,11 @@ void ROOT::Experimental::RPrintValueVisitor::VisitCardinalityField(const RCardin
 {
    PrintIndent();
    PrintName(field);
-   if (field.Is32Bit()) {
+   if (field.As32Bit()) {
       fOutput << *fValue.Get<std::uint32_t>();
       return;
    }
-   if (field.Is64Bit()) {
+   if (field.As64Bit()) {
       fOutput << *fValue.Get<std::uint64_t>();
       return;
    }
