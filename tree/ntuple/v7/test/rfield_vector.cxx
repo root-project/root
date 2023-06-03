@@ -131,9 +131,12 @@ TEST(RNTuple, InsideCollection)
    field->SetOnDiskId(idKlassVec);
    field->ConnectPageSource(*source);
 
-   auto fieldCardinality = RFieldBase::Create("", "ROOT::Experimental::RNTupleCardinality<std::uint64_t>").Unwrap();
-   fieldCardinality->SetOnDiskId(idKlassVec);
-   fieldCardinality->ConnectPageSource(*source);
+   auto fieldCardinality64 = RFieldBase::Create("", "ROOT::Experimental::RNTupleCardinality<std::uint64_t>").Unwrap();
+   fieldCardinality64->SetOnDiskId(idKlassVec);
+   fieldCardinality64->ConnectPageSource(*source);
+   auto fieldCardinality32 = RFieldBase::Create("", "ROOT::Experimental::RNTupleCardinality<std::uint32_t>").Unwrap();
+   fieldCardinality32->SetOnDiskId(idKlassVec);
+   fieldCardinality32->ConnectPageSource(*source);
 
    auto value = field->GenerateValue();
    field->Read(0, &value);
@@ -142,10 +145,15 @@ TEST(RNTuple, InsideCollection)
    EXPECT_EQ(42.0, (*aVec)[0]);
    field->DestroyValue(value);
 
-   auto valueCardinality = fieldCardinality->GenerateValue();
-   fieldCardinality->Read(0, &valueCardinality);
-   EXPECT_EQ(1U, *valueCardinality.Get<std::uint64_t>());
-   fieldCardinality->DestroyValue(valueCardinality);
+   auto valueCardinality64 = fieldCardinality64->GenerateValue();
+   fieldCardinality64->Read(0, &valueCardinality64);
+   EXPECT_EQ(1U, *valueCardinality64.Get<std::uint64_t>());
+   fieldCardinality64->DestroyValue(valueCardinality64);
+
+   auto valueCardinality32 = fieldCardinality32->GenerateValue();
+   fieldCardinality32->Read(0, &valueCardinality32);
+   EXPECT_EQ(1U, *valueCardinality32.Get<std::uint32_t>());
+   fieldCardinality32->DestroyValue(valueCardinality32);
 
    // TODO: test reading of "klassVec.v1"
 }
