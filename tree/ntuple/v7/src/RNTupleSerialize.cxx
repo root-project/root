@@ -804,6 +804,9 @@ RResult<std::uint32_t> ROOT::Experimental::Internal::RNTupleSerializer::Deserial
 std::uint32_t ROOT::Experimental::Internal::RNTupleSerializer::SerializeLocator(
    const RNTupleLocator &locator, void *buffer)
 {
+   if (locator.fType > RNTupleLocator::kLastSerializableType)
+      throw RException(R__FAIL("locator is not serializable"));
+
    std::uint32_t size = 0;
    if (locator.fType == RNTupleLocator::kTypeFile) {
       if (static_cast<std::int32_t>(locator.fBytesOnStorage) < 0)
