@@ -707,13 +707,16 @@ The on-disk representation is similar to a `std::vector<T>` where `T` is the val
   - Child field of type `T`, which must by a type with RNTuple I/O support.
     The name of the child field is `_0`.
 
-### ROOT::Experimental::RNTupleCardinality
+### ROOT::Experimental::RNTupleCardinality<SizeT>
 
-A field whose type is `ROOT::Experimental::RNTupleCardinality` is associated to a single column of type (Split)Index32 or (Split)Index64.
+A field whose type is `ROOT::Experimental::RNTupleCardinality<SizeT>` is associated to a single column of type (Split)Index32 or (Split)Index64.
 This field presents the offsets in the index column as lengths that correspond to the cardinality of the pointed-to collection.
 
 The value for the $i$-th element is computed by subtracting the $(i-1)$-th value from the $i$-th value in the index column.
 If $i == 0$, i.e. it falls on the start of a cluster, the $(i-1)$-th value in the index column is assumed to be 0, e.g. given the index column values `[1, 1, 3]`, the values yielded by `RNTupleCardinality` shall be `[1, 0, 2]`.
+
+The `SizeT` template parameter defines the in-memory integer type of the collection size.
+The valid types are `std::uint32_t` and `std::uint64_t`.
 
 ## Limits
 
