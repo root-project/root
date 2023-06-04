@@ -11,7 +11,6 @@
 #ifndef ROOT_RDF_RVARIATION
 #define ROOT_RDF_RVARIATION
 
-#include "Utils.hxx" // IsRVec
 #include "ColumnReaderUtils.hxx"
 #include "RColumnReaderBase.hxx"
 #include "RLoopManager.hxx"
