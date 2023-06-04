@@ -11,6 +11,7 @@
 #ifndef ROOT_RDF_RINTERFACEBASE
 #define ROOT_RDF_RINTERFACEBASE
 
+#include "ROOT/RVec.hxx"
 #include <ROOT/RDF/InterfaceUtils.hxx>
 #include <ROOT/RDF/RColumnRegister.hxx>
 #include <ROOT/RDF/RDisplay.hxx>
@@ -80,10 +81,10 @@ protected:
       }
       RDFInternal::CheckValidCppVarName(variationName, "Vary");
 
-      static_assert(RDFInternal::IsRVec<RetType>::value, "Vary expressions must return an RVec.");
+      static_assert(ROOT::Internal::VecOps::IsRVec<RetType>::value, "Vary expressions must return an RVec.");
 
       if (colNames.size() > 1) { // we are varying multiple columns simultaneously, RetType is RVec<RVec<T>>
-         constexpr bool hasInnerRVec = RDFInternal::IsRVec<typename RetType::value_type>::value;
+         constexpr bool hasInnerRVec = ROOT::Internal::VecOps::IsRVec<typename RetType::value_type>::value;
          if (!hasInnerRVec)
             throw std::runtime_error("This Vary call is varying multiple columns simultaneously but the expression "
                                      "does not return an RVec of RVecs.");
