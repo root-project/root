@@ -14,3 +14,15 @@
  *************************************************************************/
 
 #include <ROOT/RPage.hxx>
+
+namespace ROOT {
+namespace Experimental {
+
+namespace Detail {
+
+const std::unique_ptr<unsigned char[]> RPage::pageZero = std::make_unique<unsigned char[]>(RPage::kPageZeroSize);
+
+} // namespace Detail
+
+} // namespace Experimental
+} // namespace ROOT
