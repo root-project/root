@@ -33,6 +33,7 @@
 #include <algorithm>
 #include <cstdio>
 #include <cstdlib>
+#include <cstring>
 #include <iostream>
 #include <utility>
 
@@ -282,7 +283,7 @@ ROOT::Experimental::RNTupleDescriptor ROOT::Experimental::Detail::RPageSourceFil
       auto clusters = RClusterGroupDescriptorBuilder::GetClusterSummaries(ntplDesc, cgDesc.GetId());
       Internal::RNTupleSerializer::DeserializePageListV1(buffer.get(), cgDesc.GetPageListLength(), clusters);
       for (std::size_t i = 0; i < clusters.size(); ++i) {
-         ntplDesc.AddClusterDetails(clusters[i].MoveDescriptor().Unwrap());
+         ntplDesc.AddClusterDetails(clusters[i].AddDeferredColumnRanges(ntplDesc).MoveDescriptor().Unwrap());
       }
    }
 
@@ -305,9 +306,14 @@ void ROOT::Experimental::Detail::RPageSourceFile::LoadSealedPage(DescriptorId_t 
    const auto bytesOnStorage = pageInfo.fLocator.fBytesOnStorage;
    sealedPage.fSize = bytesOnStorage;
    sealedPage.fNElements = pageInfo.fNElements;
-   if (sealedPage.fBuffer)
+   if (!sealedPage.fBuffer)
+      return;
+   if (pageInfo.fLocator.fType != RNTupleLocator::kTypePageZero) {
       fReader.ReadBuffer(const_cast<void *>(sealedPage.fBuffer), bytesOnStorage,
                          pageInfo.fLocator.GetPosition<std::uint64_t>());
+   } else {
+      memcpy(const_cast<void *>(sealedPage.fBuffer), RPage::GetPageZeroBuffer(), bytesOnStorage);
+   }
 }
 
 ROOT::Experimental::Detail::RPage
@@ -325,6 +331,15 @@ ROOT::Experimental::Detail::RPageSourceFile::PopulatePageFromCluster(ColumnHandl
 
    const void *sealedPageBuffer = nullptr; // points either to directReadBuffer or to a read-only page in the cluster
    std::unique_ptr<unsigned char []> directReadBuffer; // only used if cluster pool is turned off
+
+   if (pageInfo.fLocator.fType == RNTupleLocator::kTypePageZero) {
+      auto pageZero = RPage::MakePageZero(columnId, elementSize);
+      pageZero.GrowUnchecked(pageInfo.fNElements);
+      pageZero.SetWindow(clusterInfo.fColumnOffset + pageInfo.fFirstInPage,
+                         RPage::RClusterInfo(clusterId, clusterInfo.fColumnOffset));
+      fPagePool->RegisterPage(pageZero, RPageDeleter([](const RPage &, void *) {}, nullptr));
+      return pageZero;
+   }
 
    if (fOptions.GetClusterCache() == RNTupleReadOptions::EClusterCache::kOff) {
       directReadBuffer = std::make_unique<unsigned char[]>(bytesOnStorage);
@@ -445,6 +460,7 @@ ROOT::Experimental::Detail::RPageSourceFile::PrepareSingleCluster(
 
    std::vector<ROnDiskPageLocator> onDiskPages;
    auto activeSize = 0;
+   auto pageZeroMap = std::make_unique<ROnDiskPageMap>();
    {
       auto descriptorGuard = GetSharedDescriptorGuard();
       const auto &clusterDesc = descriptorGuard->GetClusterDescriptor(clusterKey.fClusterId);
@@ -455,9 +471,16 @@ ROOT::Experimental::Detail::RPageSourceFile::PrepareSingleCluster(
          NTupleSize_t pageNo = 0;
          for (const auto &pageInfo : pageRange.fPageInfos) {
             const auto &pageLocator = pageInfo.fLocator;
-            activeSize += pageLocator.fBytesOnStorage;
-            onDiskPages.push_back(
-               {physicalColumnId, pageNo, pageLocator.GetPosition<std::uint64_t>(), pageLocator.fBytesOnStorage, 0});
+            if (pageLocator.fType == RNTupleLocator::kTypePageZero) {
+               // Zero pages can be directly inserted into a page map that will be adopted below
+               ROnDiskPage::Key key(physicalColumnId, pageNo);
+               pageZeroMap->Register(
+                  key, ROnDiskPage(const_cast<void *>(RPage::GetPageZeroBuffer()), pageLocator.fBytesOnStorage));
+            } else {
+               activeSize += pageLocator.fBytesOnStorage;
+               onDiskPages.push_back(
+                  {physicalColumnId, pageNo, pageLocator.GetPosition<std::uint64_t>(), pageLocator.fBytesOnStorage, 0});
+            }
             ++pageNo;
          }
       }
@@ -543,6 +566,7 @@ ROOT::Experimental::Detail::RPageSourceFile::PrepareSingleCluster(
 
    auto cluster = std::make_unique<RCluster>(clusterKey.fClusterId);
    cluster->Adopt(std::move(pageMap));
+   cluster->Adopt(std::move(pageZeroMap));
    for (auto colId : clusterKey.fPhysicalColumnSet)
       cluster->SetColumnAvailable(colId);
    return cluster;
