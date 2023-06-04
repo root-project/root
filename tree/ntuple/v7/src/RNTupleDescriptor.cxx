@@ -130,6 +130,39 @@ ROOT::Experimental::RClusterDescriptor::RPageRange::Find(ROOT::Experimental::RCl
    return RPageInfoExtended{pageInfo, firstInPage, pageNo};
 }
 
+std::size_t
+ROOT::Experimental::RClusterDescriptor::RPageRange::ExtendToFitColumnRange(const RColumnRange &columnRange,
+                                                                           const Detail::RColumnElementBase &element,
+                                                                           std::size_t pageSize)
+{
+   R__ASSERT(fPhysicalColumnId == columnRange.fPhysicalColumnId);
+
+   const auto nElements = std::accumulate(fPageInfos.begin(), fPageInfos.end(), 0U,
+                                          [](std::size_t n, const auto &PI) { return n + PI.fNElements; });
+   const auto nElementsRequired = static_cast<std::uint64_t>(columnRange.fNElements);
+
+   if (nElementsRequired == nElements)
+      return 0U;
+   R__ASSERT((nElementsRequired > nElements) && "invalid attempt to shrink RPageRange");
+
+   std::vector<RPageInfo> pageInfos;
+   // Synthesize new `RPageInfo`s as needed
+   const std::uint64_t nElementsPerPage = pageSize / element.GetSize();
+   R__ASSERT(nElementsPerPage > 0);
+   for (auto nRemainingElements = nElementsRequired - nElements; nRemainingElements > 0;) {
+      RPageInfo PI;
+      PI.fNElements = std::min(nElementsPerPage, nRemainingElements);
+      PI.fLocator.fType = RNTupleLocator::kTypePageZero;
+      PI.fLocator.fBytesOnStorage = element.GetPackedSize(PI.fNElements);
+      pageInfos.emplace_back(PI);
+      nRemainingElements -= PI.fNElements;
+   }
+
+   pageInfos.insert(pageInfos.end(), std::make_move_iterator(fPageInfos.begin()),
+                    std::make_move_iterator(fPageInfos.end()));
+   std::swap(fPageInfos, pageInfos);
+   return nElementsRequired - nElements;
+}
 
 bool ROOT::Experimental::RClusterDescriptor::operator==(const RClusterDescriptor &other) const
 {
