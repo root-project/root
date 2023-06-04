@@ -19,7 +19,7 @@
 
 #ifdef _OPENMP
 #include <omp.h>
-#endif
+#endif // _OPENMP
 
 #include <cmath>
 #include <cassert>
@@ -30,6 +30,16 @@
 namespace ROOT {
 
 namespace Minuit2 {
+
+namespace {
+
+#ifndef _OPENMP
+constexpr bool useOpenMP = false;
+#else
+constexpr bool useOpenMP = true;
+#endif
+
+} // namespace
 
 FunctionGradient Numerical2PGradientCalculator::operator()(const MinimumParameters &par) const
 {
@@ -97,34 +107,38 @@ operator()(const MinimumParameters &par, const FunctionGradient &Gradient) const
 
    print.Debug("Calculating gradient around function value", fcnmin, "\n\t at point", par.Vec());
 
-#ifndef _OPENMP
-
-   MPIProcess mpiproc(n, 0);
+   std::unique_ptr<MPIProcess>  mpiproc;
 
    // for serial execution this can be outside the loop
-   MnAlgebraicVector x = par.Vec();
+   std::unique_ptr<MnAlgebraicVector>  parVecOutside;
 
-   unsigned int startElementIndex = mpiproc.StartElementIndex();
-   unsigned int endElementIndex = mpiproc.EndElementIndex();
+   if(!useOpenMP) {
+      mpiproc = std::make_unique<MPIProcess>(n, 0);
+      parVecOutside = std::make_unique<MnAlgebraicVector>(par.Vec());
+   }
 
-   for (unsigned int i = startElementIndex; i < endElementIndex; i++) {
+   unsigned int startElementIndex = 0;
+   unsigned int endElementIndex = int(n);
 
-#else
+   if(!useOpenMP) {
+      startElementIndex = mpiproc->StartElementIndex();
+      endElementIndex = mpiproc->EndElementIndex();
+   }
 
-   // parallelize this loop using OpenMP
-//#define N_PARALLEL_PAR 5
 #pragma omp parallel
 #pragma omp for
-   //#pragma omp for schedule (static, N_PARALLEL_PAR)
+//#define N_PARALLEL_PAR 5
+//#pragma omp for schedule (static, N_PARALLEL_PAR)
+   for (unsigned int i = startElementIndex; i < endElementIndex; i++) {
 
-   for (int i = 0; i < int(n); i++) {
-
-#endif
-
-#ifdef _OPENMP
       // create in loop since each thread will use its own copy
-      MnAlgebraicVector x = par.Vec();
-#endif
+      std::unique_ptr<MnAlgebraicVector>  parVecInside;
+
+      if(useOpenMP) {
+         parVecInside = std::make_unique<MnAlgebraicVector>(par.Vec());
+      }
+
+      MnAlgebraicVector& x = useOpenMP ? *parVecInside : *parVecOutside;
 
       double xtf = x(i);
       double epspri = eps2 + std::fabs(grd(i) * eps2);
@@ -169,30 +183,23 @@ operator()(const MinimumParameters &par, const FunctionGradient &Gradient) const
          grd(i) = 0.5 * (fs1 - fs2) / step;
          g2(i) = (fs1 + fs2 - 2. * fcnmin) / step / step;
 
-#ifdef _OPENMP
 #pragma omp critical
-#endif
          {
-#ifdef _OPENMP
-            // must create thread-local MnPrint instances when printing inside threads
-            MnPrint printtl("Numerical2PGradientCalculator[OpenMP]");
-#endif
+            std::unique_ptr<MnPrint> printtl;
+            if(useOpenMP) {
+               // must create thread-local MnPrint instances when printing inside threads
+               printtl = std::make_unique<MnPrint>("Numerical2PGradientCalculator[OpenMP]");
+            }
+
+            MnPrint& printhere = useOpenMP ? *printtl : print;
             if (i == 0 && j == 0) {
-#ifdef _OPENMP
-               printtl.Trace([&](std::ostream &os) {
-#else
-               print.Trace([&](std::ostream &os) {
-#endif
+               printhere.Trace([&](std::ostream &os) {
                   os << std::setw(10) << "parameter" << std::setw(6) << "cycle" << std::setw(15) << "x" << std::setw(15)
                      << "step" << std::setw(15) << "f1" << std::setw(15) << "f2" << std::setw(15) << "grd"
                      << std::setw(15) << "g2" << std::endl;
                });
             }
-#ifdef _OPENMP
-            printtl.Trace([&](std::ostream &os) {
-#else
-            print.Trace([&](std::ostream &os) {
-#endif
+            printhere.Trace([&](std::ostream &os) {
                const int pr = os.precision(13);
                const int iext = Trafo().ExtOfInt(i);
                os << std::setw(10) << Trafo().Name(iext) << std::setw(5) << j << "  " << x(i) << " " << step << " "
@@ -215,11 +222,11 @@ operator()(const MinimumParameters &par, const FunctionGradient &Gradient) const
       //     vgstp(i) = gstep;
    }
 
-#ifndef _OPENMP
-   mpiproc.SyncVector(grd);
-   mpiproc.SyncVector(g2);
-   mpiproc.SyncVector(gstep);
-#endif
+   if(useOpenMP) {
+      mpiproc->SyncVector(grd);
+      mpiproc->SyncVector(g2);
+      mpiproc->SyncVector(gstep);
+   }
 
    // print after parallel processing to avoid synchronization issues
    print.Debug([&](std::ostream &os) {
