@@ -266,7 +266,7 @@ void ROOT::Experimental::RPrintValueVisitor::VisitCardinalityField(const RCardin
       fOutput << *fValue.Get<std::uint64_t>();
       return;
    }
-   fOutput << "\"unsupported cardinality size type\"";
+   R__ASSERT(false && "unsupported cardinality size type");
 }
 
 void ROOT::Experimental::RPrintValueVisitor::VisitBitsetField(const RBitsetField &field)
