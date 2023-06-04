@@ -18,6 +18,7 @@
 #include <ROOT/RNTupleDescriptor.hxx>
 #include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RNTupleUtil.hxx>
+#include <ROOT/RPage.hxx>
 #include <ROOT/RStringView.hxx>
 
 #include <RZip.h>
@@ -473,6 +474,52 @@ ROOT::Experimental::RClusterDescriptorBuilder::CommitColumnRange(DescriptorId_t 
    return RResult<void>::Success();
 }
 
+ROOT::Experimental::RClusterDescriptorBuilder &
+ROOT::Experimental::RClusterDescriptorBuilder::AddDeferredColumnRanges(const RNTupleDescriptor &desc)
+{
+   auto traverseSubtree = [&](DescriptorId_t rootFieldId, std::size_t nRepetitionsAtThisLevel, const auto &visitField,
+                              const auto &enterSubtree) -> void {
+      visitField(rootFieldId, nRepetitionsAtThisLevel);
+      for (const auto &f : desc.GetFieldIterable(rootFieldId)) {
+         const std::size_t nRepetitions = std::max(f.GetNRepetitions(), std::size_t{1U}) * nRepetitionsAtThisLevel;
+         enterSubtree(f.GetId(), nRepetitions, visitField, enterSubtree);
+      }
+   };
+
+   // Deferred columns can only be part of the header extension
+   auto xHeader = desc.GetHeaderExtension();
+   if (!xHeader)
+      return *this;
+
+   // Ensure that all columns in the header extension have their associated `R(Column|Page)Range`
+   for (const auto &topLevelFieldId : xHeader->GetTopLevelFields(desc)) {
+      traverseSubtree(
+         topLevelFieldId, std::max(desc.GetFieldDescriptor(topLevelFieldId).GetNRepetitions(), std::size_t{1U}),
+         [&](DescriptorId_t fieldId, std::size_t nRepetitions) {
+            for (const auto &c : desc.GetColumnIterable(fieldId)) {
+               const DescriptorId_t physicalId = c.GetPhysicalId();
+               auto &columnRange = fCluster.fColumnRanges[physicalId];
+               auto &pageRange = fCluster.fPageRanges[physicalId];
+               // Initialize a RColumnRange for `physicalId` if it was not there
+               if (columnRange.fPhysicalColumnId == kInvalidDescriptorId) {
+                  columnRange.fPhysicalColumnId = physicalId;
+                  pageRange.fPhysicalColumnId = physicalId;
+               }
+               // Fixup the RColumnRange and RPageRange in deferred columns.  We know waht the first element index and
+               // number of elements should have been if the column was not deferred; fixup those and let
+               // `ExtendToFitColumnRange()` synthesize RPageInfos accordingly.
+               if (c.IsDeferredColumn()) {
+                  columnRange.fFirstElementIndex = fCluster.GetFirstEntryIndex() * nRepetitions;
+                  columnRange.fNElements = fCluster.GetNEntries() * nRepetitions;
+                  const auto element = Detail::RColumnElementBase::Generate<void>(c.GetModel().GetType());
+                  pageRange.ExtendToFitColumnRange(columnRange, *element, Detail::RPage::kPageZeroSize);
+               }
+            }
+         },
+         traverseSubtree);
+   }
+   return *this;
+}
 
 ROOT::Experimental::RResult<ROOT::Experimental::RClusterDescriptor>
 ROOT::Experimental::RClusterDescriptorBuilder::MoveDescriptor()
