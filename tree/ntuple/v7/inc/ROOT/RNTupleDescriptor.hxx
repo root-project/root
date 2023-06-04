@@ -44,7 +44,8 @@ class RNTupleDescriptorBuilder;
 class RNTupleModel;
 
 namespace Detail {
-   class RFieldBase;
+class RColumnElementBase;
+class RFieldBase;
 }
 
 
@@ -277,6 +278,13 @@ public:
       bool operator==(const RPageRange &other) const {
          return fPhysicalColumnId == other.fPhysicalColumnId && fPageInfos == other.fPageInfos;
       }
+
+      /// Extend this RPageRange to fit the given RColumnRange, i.e. prepend as many synthetic RPageInfos as needed to
+      /// cover the range in `columnRange`. `RPageInfo`s are constructed to contain as many elements of type `element`
+      /// given a page size limit of `pageSize` (in bytes); the locator for the referenced pages is `kTypePageZero`.
+      /// This function is used to make up `RPageRange`s for clusters that contain deferred columns.
+      std::size_t ExtendToFitColumnRange(const RColumnRange &columnRange, const Detail::RColumnElementBase &element,
+                                         std::size_t pageSize);
    };
 
 private:
