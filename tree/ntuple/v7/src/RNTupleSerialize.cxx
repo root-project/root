@@ -243,8 +243,11 @@ RResult<std::uint32_t> DeserializeColumnV1(
    bytes += RNTupleSerializer::DeserializeUInt16(bytes, bitsOnStorage);
    bytes += RNTupleSerializer::DeserializeUInt32(bytes, fieldId);
    bytes += RNTupleSerializer::DeserializeUInt32(bytes, flags);
-   if (flags & RNTupleSerializer::kFlagDeferredColumn)
+   if (flags & RNTupleSerializer::kFlagDeferredColumn) {
+      if (fnFrameSizeLeft() < sizeof(std::uint64_t))
+         return R__FAIL("column record frame too short");
       bytes += RNTupleSerializer::DeserializeUInt64(bytes, firstElementIdx);
+   }
 
    if (ROOT::Experimental::Detail::RColumnElementBase::GetBitsOnStorage(type) != bitsOnStorage)
       return R__FAIL("column element size mismatch");
