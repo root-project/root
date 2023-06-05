@@ -47,7 +47,7 @@ namespace ROOT {
          @ingroup Random
       */
 
-      class MersenneTwisterEngine : public TRandomEngine {
+      class MersenneTwisterEngine final : public TRandomEngine {
 
 
       public:
@@ -55,6 +55,9 @@ namespace ROOT {
          typedef  TRandomEngine BaseType;
          typedef  uint32_t Result_t;
          typedef  uint32_t StateInt_t;
+
+          // number of random bits generated
+          static constexpr uint32_t kNumberOfBits = 32;
 
 
          MersenneTwisterEngine(uint32_t seed=4357)  {
@@ -75,9 +78,9 @@ namespace ROOT {
          }
 
          /// minimum integer taht can be generated
-         static unsigned int MinInt() { return 0; }
+         static constexpr unsigned int MinInt() { return 0; }
          /// maximum integer that can be generated
-         static unsigned int MaxInt() { return 0xffffffff; }  //  2^32 -1
+         static constexpr unsigned int MaxInt() { return 0xffffffff; }  //  2^32 -1
 
          static int Size() { return kSize; }
 

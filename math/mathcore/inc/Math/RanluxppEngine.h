@@ -34,6 +34,19 @@ public:
    RanluxppEngine(uint64_t seed = 314159265);
    ~RanluxppEngine() override;
 
+   typedef TRandomEngine BaseType;
+
+   typedef uint64_t Result_t;
+
+   // number of random bits generated
+   static constexpr uint32_t kNumberOfBits = 48;
+
+   /// minimum integer taht can be generated
+   static constexpr uint64_t MinInt() { return 0; }
+
+   /// maximum integer taht can be generated
+   static constexpr uint64_t MaxInt() { return (1ULL<<48) - 1; }  //  2^48 -1
+
    /// Generate a double-precision random number with 48 bits of randomness
    double Rndm() override;
    /// Generate a double-precision random number (non-virtual method)

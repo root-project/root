@@ -108,18 +108,6 @@ namespace Math {
    }
 
    template<int N, int S>
-   uint64_t MixMaxEngine<N,S>::MaxInt() { 
-      //return mixmax::mixmax_engine<N>::max();
-      return  2305843009213693951ULL; 
-   }
-
-   template<int N, int S>
-   uint64_t MixMaxEngine<N,S>::MinInt() { 
-      //return mixmax::mixmax_engine<N>::min();
-      return 0; 
-   }
-
-   template<int N, int S>
    void MixMaxEngine<N,S>::RndmArray(int n, double *array){
       // Return an array of n random numbers uniformly distributed in ]0,1]
       for (int i = 0; i < n; ++i)
