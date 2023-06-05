@@ -423,5 +423,4 @@ void ScipyMinimizer::AddConstraintFunction(std::function<double(const std::vecto
 
    Py_DECREF(ConstError);
    Py_DECREF(module);
-   PyPrint(fConstraintsList);
 }
