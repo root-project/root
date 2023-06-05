@@ -86,7 +86,7 @@ protected:
       Int_t numee=0, bool doEEVal=false, double eeVal=0.0);
 
 
-  void shiftCurveToZero(double prevYMax) ;
+  void shiftCurveToZero();
 
   bool _showProgress = false; ///<! Show progress indication when adding points
 
