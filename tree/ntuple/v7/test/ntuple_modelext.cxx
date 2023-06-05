@@ -92,6 +92,7 @@ TEST(RNTuple, ModelExtensionMultiple)
       ntuple->Fill();
       *fieldPt = 2.0;
       ntuple->Fill();
+      ntuple->CommitCluster();
       *fieldPt = 4.0;
       ntuple->Fill();
 
@@ -337,6 +338,10 @@ TEST(RNTuple, ModelExtensionComplex)
          ntuple->Fill();
       }
 
+      // Force the serialization of a page list which will not know about the deferred columns coming later.
+      // `RClusterDescriptorBuilder::AddDeferredColumnRanges()` should thus make up page ranges for the missing columns
+      ntuple->CommitCluster(true /* commitClusterGroup */);
+
       modelUpdater->BeginUpdate();
       std::vector<double> dblVec;
       doubleAoA_t doubleAoA;
@@ -348,6 +353,10 @@ TEST(RNTuple, ModelExtensionComplex)
          updateLateFields1(i, dblVec, doubleAoA);
          ntuple->Fill();
       }
+
+      // A `R(Column|Page)Range` should also be generated in the previous cluster for the columns associated to the
+      // `std::variant` field below
+      ntuple->CommitCluster();
 
       modelUpdater->BeginUpdate();
       std::variant<std::uint64_t, double> var;
