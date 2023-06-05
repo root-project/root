@@ -78,13 +78,15 @@ void RooFuncWrapper::loadParamsAndData(std::string funcName, RooAbsArg const *he
       spans = RooFit::BatchModeDataHelpers::getDataSpans(*data, "", simPdf, true, false, vectorBuffers);
    }
 
+   std::size_t idx = 0;
    for (auto const &item : spans) {
       std::size_t n = item.second.size();
-      _obsInfos.emplace(item.first, ObsInfo{_observables.size(), n});
+      _obsInfos.emplace(item.first, ObsInfo{idx, n});
       _observables.reserve(_observables.size() + n);
       for (std::size_t i = 0; i < n; ++i) {
          _observables.push_back(item.second[i]);
       }
+      idx += n;
    }
 
    // Extract parameters
