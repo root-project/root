@@ -317,20 +317,27 @@ The column type and bits on storage integers can have one of the following value
 | 0x07 |   64 | Real64       | IEEE-754 double precision float                                               |
 | 0x08 |   32 | Real32       | IEEE-754 single precision float                                               |
 | 0x09 |   16 | Real16       | IEEE-754 half precision float                                                 |
-| 0x0A |   64 | Int64        | Two's complement, little-endian 8 byte integer                                |
-| 0x0B |   32 | Int32        | Two's complement, little-endian 4 byte integer                                |
-| 0x0C |   16 | Int16        | Two's complement, little-endian 2 byte integer                                |
-| 0x0D |    8 | Int8         | Two's complement, 1 byte integer                                              |
+| 0x16 |   64 | Int64        | Two's complement, little-endian 8 byte signed integer                         |
+| 0x0A |   64 | UInt64       | Two's complement, little-endian 8 byte unsigned integer                       |
+| 0x17 |   32 | Int32        | Two's complement, little-endian 4 byte signed integer                         |
+| 0x0B |   32 | UInt32       | Two's complement, little-endian 4 byte unsigned integer                       |
+| 0x18 |   16 | Int16        | Two's complement, little-endian 2 byte signed integer                         |
+| 0x0C |   16 | UInt16       | Two's complement, little-endian 2 byte unsigned integer                       |
+| 0x19 |    8 | Int8         | Two's complement, 1 byte signed integer                                       |
+| 0x0D |    8 | UInt8        | Two's complement, 1 byte unsigned integer                                     |
 | 0x0E |   64 | SplitIndex64 | Like Index64 but pages are stored in split + delta encoding                   |
 | 0x0F |   32 | SplitIndex32 | Like Index32 but pages are stored in split + delta encoding                   |
 | 0x10 |   64 | SplitReal64  | Like Real64 but in split encoding                                             |
 | 0x11 |   32 | SplitReal32  | Like Real32 but in split encoding                                             |
 | 0x12 |   16 | SplitReal16  | Like Real16 but in split encoding                                             |
-| 0x13 |   64 | SplitInt64   | Like Int64 but in split encoding                                              |
-| 0x14 |   32 | SplitInt32   | Like Int32 but in split encoding                                              |
-| 0x15 |   16 | SplitInt16   | Like Int16 but in split encoding                                              |
+| 0x1A |   64 | SplitInt64   | Like Int64 but in split encoding                                              |
+| 0x13 |   64 | SplitUInt64  | Like UInt64 but in split encoding                                             |
+| 0x1B |   64 | SplitInt32   | Like Int32 but in split encoding                                              |
+| 0x14 |   32 | SplitUInt32  | Like UInt32 but in split encoding                                             |
+| 0x1C |   16 | SplitInt16   | Like Int16 but in split encoding                                              |
+| 0x15 |   16 | SplitUInt16  | Like UInt16 but in split encoding                                             |
 
-Future versions of the file format may introduce addtional column types
+Future versions of the file format may introduce additional column types
 without changing the minimum version of the header.
 Old readers need to ignore these columns and fields constructed from such columns.
 Old readers can, however, figure out the number of elements stored in such unknown columns.
@@ -594,10 +601,15 @@ The following fundamental types are stored as `leaf` fields with a single column
 -----------------------------------|------------------------|-----------------------|
 | bool                             | Bit                    |                       |
 | char                             | Char                   |                       |
-| int8_t, uint_8_t, unsigned char  | Int8                   |                       |
-| int16_t, uint16_t                | SplitInt16             | Int16                 |
-| int32_t, uint32_t                | SplitInt32             | Int32                 |
-| int64_t, uint64_t                | SplitInt64             | Int64                 |
+| int8_t                           | Int8                   |                       |
+| uint_8_t, unsigned char          | UInt8                  |                       |
+| int16_t                          | SplitInt16             | Int16                 |
+| uint16_t                         | SplitUInt16            | UInt16                |
+| int16_t                          | SplitInt16             | Int16                 |
+| uint32_t                         | SplitUInt32            | UInt32                |
+| int32_t                          | SplitInt32             | Int32                 |
+| uint64_t                         | SplitUInt64            | UInt64                |
+| int64_t                          | SplitInt64             | Int64                 |
 | float                            | SplitReal32            | Real32                |
 | double                           | SplitReal64            | Real64                |
 
