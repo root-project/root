@@ -2507,7 +2507,7 @@ void TH1::ClearUnderflowAndOverflow()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///  Compute integral (cumulative sum of bins)
+///  Compute integral (cumulative sum of bins areas)
 ///  The result stored in fIntegral is used by the GetRandom functions.
 ///  This function is automatically called by GetRandom when the fIntegral
 ///  array does not exist or when the number of entries in the histogram
@@ -2537,6 +2537,13 @@ Double_t TH1::ComputeIntegral(Bool_t onlyPositive)
          for (Int_t binx=1; binx <= nbinsx; ++binx) {
             ++ibin;
             Double_t y = RetrieveBinContent(GetBin(binx, biny, binz));
+
+	    Double_t xWidth=fXaxis.GetBinWidth(binx);
+	    Double_t yWidth=(fDimension > 1) ? fYaxis.GetBinWidth(biny) : 1;
+	    Double_t zWidth=(fDimension > 2) ? fZaxis.GetBinWidth(binz) : 1;
+	    y=y*xWidth*yWidth*zWidth;
+
+	    
             if (onlyPositive && y < 0) {
                  Error("ComputeIntegral","Bin content is negative - return a NaN value");
                  fIntegral[nbins] = TMath::QuietNaN();
