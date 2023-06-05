@@ -762,10 +762,28 @@ double RooAddPdf::expectedEvents(const RooArgSet* nset) const
 
   if (cache.doProjection()) {
 
+    // The normalization set in which the individual expected number of events
+    // are evaluated. It has to be the same set in which the coefficients are
+    // defined, because the transformation from that set to nset is done with
+    // the projection factor from the cache. If there is no reference set for
+    // the coefficients, the projection is only for range reasons and the
+    // expected events are evaluated in nset itself.
+    const RooArgSet *ncompNormSet = !_refCoefNorm.empty() ? &_refCoefNorm : nset;
+
     for (std::size_t i = 0; i < _pdfList.size(); ++i) {
-      double ncomp = _allExtendable ? static_cast<RooAbsPdf&>(_pdfList[i]).expectedEvents(nset)
+      // There are two cases covered here:
+      //   1. The expected events is the sum of expectedEvents() for each pdf
+      //   2. Get the expected events from the coeffiecients
+      // For case #2, multiplying with coefProjectionFactor(i) gives the right
+      // coefs for this RooAddPdf to be normalized over nset, while the coefs
+      // where determined with the components normalized over _refCoefNorm. To
+      // reuse the same projection factor also in the first case, we evaluate
+      // the individual expected events for _refCoefNorm as well. This is done
+      // to avoid confusion about different projection factors extracted from
+      // cache, as like this we only need one factor for each pdf.
+      double ncomp = _allExtendable ? static_cast<RooAbsPdf&>(_pdfList[i]).expectedEvents(ncompNormSet)
                                     : static_cast<RooAbsReal&>(_coefList[i]).getVal(nset);
-      expectedTotal += cache.rangeProjScaleFactor(i) * ncomp ;
+      expectedTotal += cache.coefProjectionFactor(i) * ncomp ;
 
     }
 
@@ -790,11 +808,24 @@ std::unique_ptr<RooAbsReal> RooAddPdf::createExpectedEventsFunc(const RooArgSet 
 {
    std::unique_ptr<RooAbsReal> out;
 
+   // Make sure _refCoefNorm is defined
+   materializeRefCoefNormFromAttribute();
+
+   // If the _refCoefNorm is empty or it's equal to normSet anyway, this is not
+   // a conditional pdf and we don't need to do any transformation. See also
+   // RooAddPdf::compileForNormSet() for more explanations on a similar logic.
+   const bool doCoefProjection = !_refCoefNorm.empty() && nset && !nset->equals(_refCoefNorm);
+
    auto name = std::string(GetName()) + "_expectedEvents";
    if (_allExtendable) {
       RooArgSet sumSet;
+      // Like in expectedEvents(), the expected number of events of the
+      // components are evaluated in the set in which the coefficients are
+      // defined, because the transformation to nset is done by the projection
+      // integral that is multiplied in below.
+      const RooArgSet *compNormSet = doCoefProjection ? &_refCoefNorm : nset;
       for (auto *pdf : static_range_cast<RooAbsPdf *>(_pdfList)) {
-         sumSet.addOwned(pdf->createExpectedEventsFunc(nset));
+         sumSet.addOwned(pdf->createExpectedEventsFunc(compNormSet));
       }
       out = std::make_unique<RooAddition>(name.c_str(), name.c_str(), sumSet);
       out->addOwnedComponents(std::move(sumSet));
@@ -804,17 +835,11 @@ std::unique_ptr<RooAbsReal> RooAddPdf::createExpectedEventsFunc(const RooArgSet 
 
    RooArgList prodList;
 
-   // Make sure _refCoefNorm is defined
-   materializeRefCoefNormFromAttribute();
+   if (doCoefProjection) {
+      prodList.addOwned(std::unique_ptr<RooAbsReal>{createIntegral(*nset, _refCoefNorm)});
+   }
 
    if (!_allExtendable) {
-      // If the _refCoefNorm is empty or it's equal to normSet anyway, this is not
-      // a conditional pdf and we don't need to do any transformation. See also
-      // RooAddPdf::compileForNormSet() for more explanations on a similar logic.
-      if (!_refCoefNorm.empty() && !nset->equals(_refCoefNorm)) {
-         prodList.addOwned(std::unique_ptr<RooAbsReal>{createIntegral(*nset, _refCoefNorm)});
-      }
-
       // Optionally multiply with fractional normalization. I this case, we
       // replace the original factor stored in "out".
       if (!_normRange.IsNull()) {
