@@ -760,7 +760,7 @@ void ROOT::Experimental::RField<char>::AcceptVisitor(Detail::RFieldVisitor &visi
 const ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations &
 ROOT::Experimental::RField<std::int8_t>::GetColumnRepresentations() const
 {
-   static RColumnRepresentations representations({{EColumnType::kInt8}}, {{}});
+   static RColumnRepresentations representations({{EColumnType::kInt8}}, {{EColumnType::kUInt8}});
    return representations;
 }
 
@@ -785,7 +785,7 @@ void ROOT::Experimental::RField<std::int8_t>::AcceptVisitor(Detail::RFieldVisito
 const ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations &
 ROOT::Experimental::RField<std::uint8_t>::GetColumnRepresentations() const
 {
-   static RColumnRepresentations representations({{EColumnType::kInt8}}, {{}});
+   static RColumnRepresentations representations({{EColumnType::kUInt8}}, {{EColumnType::kInt8}});
    return representations;
 }
 
@@ -810,7 +810,7 @@ void ROOT::Experimental::RField<std::uint8_t>::AcceptVisitor(Detail::RFieldVisit
 const ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations &
 ROOT::Experimental::RField<bool>::GetColumnRepresentations() const
 {
-   static RColumnRepresentations representations({{EColumnType::kBit}}, {{}});
+   static RColumnRepresentations representations({{EColumnType::kBit}}, {});
    return representations;
 }
 
@@ -835,7 +835,7 @@ void ROOT::Experimental::RField<bool>::AcceptVisitor(Detail::RFieldVisitor &visi
 const ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations &
 ROOT::Experimental::RField<float>::GetColumnRepresentations() const
 {
-   static RColumnRepresentations representations({{EColumnType::kSplitReal32}, {EColumnType::kReal32}}, {{}});
+   static RColumnRepresentations representations({{EColumnType::kSplitReal32}, {EColumnType::kReal32}}, {});
    return representations;
 }
 
@@ -892,7 +892,8 @@ void ROOT::Experimental::RField<double>::SetDouble32()
 const ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations &
 ROOT::Experimental::RField<std::int16_t>::GetColumnRepresentations() const
 {
-   static RColumnRepresentations representations({{EColumnType::kSplitInt16}, {EColumnType::kInt16}}, {{}});
+   static RColumnRepresentations representations({{EColumnType::kSplitInt16}, {EColumnType::kInt16}},
+                                                 {{EColumnType::kSplitUInt16}, {EColumnType::kUInt16}});
    return representations;
 }
 
@@ -917,7 +918,8 @@ void ROOT::Experimental::RField<std::int16_t>::AcceptVisitor(Detail::RFieldVisit
 const ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations &
 ROOT::Experimental::RField<std::uint16_t>::GetColumnRepresentations() const
 {
-   static RColumnRepresentations representations({{EColumnType::kSplitInt16}, {EColumnType::kInt16}}, {{}});
+   static RColumnRepresentations representations({{EColumnType::kSplitUInt16}, {EColumnType::kUInt16}},
+                                                 {{EColumnType::kSplitInt16}, {EColumnType::kInt16}});
    return representations;
 }
 
@@ -942,7 +944,8 @@ void ROOT::Experimental::RField<std::uint16_t>::AcceptVisitor(Detail::RFieldVisi
 const ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations &
 ROOT::Experimental::RField<std::int32_t>::GetColumnRepresentations() const
 {
-   static RColumnRepresentations representations({{EColumnType::kSplitInt32}, {EColumnType::kInt32}}, {{}});
+   static RColumnRepresentations representations({{EColumnType::kSplitInt32}, {EColumnType::kInt32}},
+                                                 {{EColumnType::kSplitUInt32}, {EColumnType::kUInt32}});
    return representations;
 }
 
@@ -967,7 +970,8 @@ void ROOT::Experimental::RField<std::int32_t>::AcceptVisitor(Detail::RFieldVisit
 const ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations &
 ROOT::Experimental::RField<std::uint32_t>::GetColumnRepresentations() const
 {
-   static RColumnRepresentations representations({{EColumnType::kSplitInt32}, {EColumnType::kInt32}}, {{}});
+   static RColumnRepresentations representations({{EColumnType::kSplitUInt32}, {EColumnType::kUInt32}},
+                                                 {{EColumnType::kSplitInt32}, {EColumnType::kInt32}});
    return representations;
 }
 
@@ -992,7 +996,8 @@ void ROOT::Experimental::RField<std::uint32_t>::AcceptVisitor(Detail::RFieldVisi
 const ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations &
 ROOT::Experimental::RField<std::uint64_t>::GetColumnRepresentations() const
 {
-   static RColumnRepresentations representations({{EColumnType::kSplitInt64}, {EColumnType::kInt64}}, {{}});
+   static RColumnRepresentations representations({{EColumnType::kSplitUInt64}, {EColumnType::kUInt64}},
+                                                 {{EColumnType::kSplitInt64}, {EColumnType::kInt64}});
    return representations;
 }
 
@@ -1018,7 +1023,12 @@ const ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations &
 ROOT::Experimental::RField<std::int64_t>::GetColumnRepresentations() const
 {
    static RColumnRepresentations representations({{EColumnType::kSplitInt64}, {EColumnType::kInt64}},
-                                                 {{EColumnType::kInt32}, {EColumnType::kSplitInt32}});
+                                                 {{EColumnType::kSplitUInt64},
+                                                  {EColumnType::kUInt64},
+                                                  {EColumnType::kInt32},
+                                                  {EColumnType::kSplitInt32},
+                                                  {EColumnType::kUInt32},
+                                                  {EColumnType::kSplitUInt32}});
    return representations;
 }
 
