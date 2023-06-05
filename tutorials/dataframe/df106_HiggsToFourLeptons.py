@@ -24,18 +24,19 @@
 import ROOT
 import os
 
-# Create the RDataFrame from the spec json file. The spec4lep.json is provided in the same folder as this tutorial.
+# Create the RDataFrame from the spec json file. The df106_HiggsToFourLeptons_spec.json is provided in the same folder as this tutorial
 
 my_spec = os.path.join(ROOT.gROOT.GetTutorialsDir(), "dataframe", "df106_HiggsToFourLeptons_spec.json")
 
-df = ROOT.RDF.Experimental.FromSpec(my_spec) #creates a single dataframe for all the samples
+df = ROOT.RDF.Experimental.FromSpec(my_spec) # Creates a single dataframe for all the samples
 
-# Access metadata information that is stored in the json config file of the RDataFrame
+# Access metadata information that is stored in the JSON config file of the RDataFrame
+# The metadata contained in the JSON file is accessible within a `DefinePerSample` call, through the `RDFSampleInfo` class
 
-df = df.DefinePerSample("xsecs", 'rdfsampleinfo_.GetD("xsecs")') #GetD for "double"
+df = df.DefinePerSample("xsecs", 'rdfsampleinfo_.GetD("xsecs")')
 df = df.DefinePerSample("lumi", 'rdfsampleinfo_.GetD("lumi")') 
 df = df.DefinePerSample("sumws", 'rdfsampleinfo_.GetD("sumws")')
-df = df.DefinePerSample("sample_category", 'rdfsampleinfo_.GetS("sample_category")') #GetS for "string"
+df = df.DefinePerSample("sample_category", 'rdfsampleinfo_.GetS("sample_category")')
 
 # Select events for the analysis
 
@@ -58,25 +59,25 @@ bool GoodElectronsAndMuons(const ROOT::RVecI & type, cRVecF pt, cRVecF eta, cRVe
 # Select electron or muon trigger
 df = df.Filter("trigE || trigM")
 
-    # Select events with exactly four good leptons conserving charge and lepton numbers
-    # Note that all collections are RVecs and good_lep is the mask for the good leptons.
-    # The lepton types are PDG numbers and set to 11 or 13 for an electron or muon
-    # irrespective of the charge.
+# Select events with exactly four good leptons conserving charge and lepton numbers
+# Note that all collections are RVecs and good_lep is the mask for the good leptons.
+# The lepton types are PDG numbers and set to 11 or 13 for an electron or muon
+# irrespective of the charge.
 
 df = df.Define("good_lep", "abs(lep_eta) < 2.5 && lep_pt > 5000 && lep_ptcone30 / lep_pt < 0.3 && lep_etcone20 / lep_pt < 0.3")\
-            .Filter("Sum(good_lep) == 4")\
-             .Filter("Sum(lep_charge[good_lep]) == 0")\
-             .Define("goodlep_sumtypes", "Sum(lep_type[good_lep])")\
-             .Filter("goodlep_sumtypes == 44 || goodlep_sumtypes == 52 || goodlep_sumtypes == 48")
+       .Filter("Sum(good_lep) == 4")\
+       .Filter("Sum(lep_charge[good_lep]) == 0")\
+       .Define("goodlep_sumtypes", "Sum(lep_type[good_lep])")\
+       .Filter("goodlep_sumtypes == 44 || goodlep_sumtypes == 52 || goodlep_sumtypes == 48")
 
 # Apply additional cuts depending on lepton flavour
 df = df.Filter("GoodElectronsAndMuons(lep_type[good_lep], lep_pt[good_lep], lep_eta[good_lep], lep_phi[good_lep], lep_E[good_lep], lep_trackd0pvunbiased[good_lep], lep_tracksigd0pvunbiased[good_lep], lep_z0[good_lep])")
 
 # Create new columns with the kinematics of good leptons
 df = df.Define("goodlep_pt", "lep_pt[good_lep]")\
-                 .Define("goodlep_eta", "lep_eta[good_lep]")\
-                 .Define("goodlep_phi", "lep_phi[good_lep]")\
-                 .Define("goodlep_E", "lep_E[good_lep]")
+       .Define("goodlep_eta", "lep_eta[good_lep]")\
+       .Define("goodlep_phi", "lep_phi[good_lep]")\
+       .Define("goodlep_E", "lep_E[good_lep]")
 
 # Select leptons with high transverse momentum
 df = df.Filter("goodlep_pt[0] > 25000 && goodlep_pt[1] > 15000 && goodlep_pt[2] > 10000")
@@ -110,7 +111,7 @@ df = df.Define("m4l", "ComputeInvariantMass(goodlep_pt, goodlep_eta, goodlep_phi
 # Book histograms for the four different samples: data, higgs, zz and other (this is specific to this particular analysis)
 histos = [] 
 for sample_category in ["data", "higgs", "zz", "other"]:
-    histos.append(df.Filter(f"sample_category == \"{sample_category}\"").Histo1D(ROOT.RDF.TH1DModel(f"\"{sample_category}\"", "m4l", 24, 80, 170), "m4l", "weight"))
+    histos.append(df.Filter(f"sample_category == \"{sample_category}\"").Histo1D(ROOT.RDF.TH1DModel(f"{sample_category}", "m4l", 24, 80, 170), "m4l", "weight"))
 
 
 h_data = histos[0].GetValue()
