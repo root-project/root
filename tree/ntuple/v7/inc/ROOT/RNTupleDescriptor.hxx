@@ -473,6 +473,8 @@ public:
       const RNTupleDescriptor &fNTuple;
       /// The descriptor ids of the columns ordered by index id
       std::vector<DescriptorId_t> fColumns = {};
+
+      void CollectColumnIds(DescriptorId_t fieldId);
    public:
       class RIterator {
       private:
@@ -497,40 +499,8 @@ public:
          bool operator==(const iterator &rh) const { return fIndex == rh.fIndex; }
       };
 
-      RColumnDescriptorIterable(const RNTupleDescriptor &ntuple, const RFieldDescriptor &field)
-         : fNTuple(ntuple)
-      {
-         for (unsigned int i = 0; true; ++i) {
-            auto logicalId = ntuple.FindLogicalColumnId(field.GetId(), i);
-            if (logicalId == kInvalidDescriptorId)
-               break;
-            fColumns.emplace_back(logicalId);
-         }
-      }
-
-      RColumnDescriptorIterable(const RNTupleDescriptor &ntuple)
-         : fNTuple(ntuple)
-      {
-         std::deque<DescriptorId_t> fieldIdQueue{ntuple.GetFieldZeroId()};
-
-         while (!fieldIdQueue.empty()) {
-            auto currFieldId = fieldIdQueue.front();
-            fieldIdQueue.pop_front();
-
-            for (const auto &field : ntuple.GetFieldIterable(currFieldId)) {
-               auto fieldId = field.GetId();
-
-               for (unsigned int i = 0; true; ++i) {
-                  auto logicalId = ntuple.FindLogicalColumnId(fieldId, i);
-                  if (logicalId == kInvalidDescriptorId)
-                     break;
-                  fColumns.emplace_back(logicalId);
-               }
-
-               fieldIdQueue.push_back(fieldId);
-            }
-         }
-      }
+      RColumnDescriptorIterable(const RNTupleDescriptor &ntuple, const RFieldDescriptor &field);
+      RColumnDescriptorIterable(const RNTupleDescriptor &ntuple);
 
       RIterator begin() { return RIterator(fNTuple, fColumns, 0); }
       RIterator end() { return RIterator(fNTuple, fColumns, fColumns.size()); }

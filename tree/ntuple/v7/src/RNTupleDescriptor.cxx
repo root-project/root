@@ -334,6 +334,41 @@ ROOT::Experimental::RNTupleDescriptor::RHeaderExtension::GetTopLevelFields(const
    return fields;
 }
 
+void ROOT::Experimental::RNTupleDescriptor::RColumnDescriptorIterable::CollectColumnIds(DescriptorId_t fieldId) {
+   for (unsigned int i = 0; true; ++i) {
+      auto logicalId = fNTuple.FindLogicalColumnId(fieldId, i);
+      if (logicalId == kInvalidDescriptorId)
+         break;
+      fColumns.emplace_back(logicalId);
+   }
+}
+
+ROOT::Experimental::RNTupleDescriptor::RColumnDescriptorIterable::RColumnDescriptorIterable(
+   const RNTupleDescriptor &ntuple, const RFieldDescriptor &field)
+   : fNTuple(ntuple)
+{
+   CollectColumnIds(field.GetId());
+}
+
+ROOT::Experimental::RNTupleDescriptor::RColumnDescriptorIterable::RColumnDescriptorIterable(
+   const RNTupleDescriptor &ntuple)
+   : fNTuple(ntuple)
+{
+   std::deque<DescriptorId_t> fieldIdQueue{ntuple.GetFieldZeroId()};
+
+   while (!fieldIdQueue.empty()) {
+      auto currFieldId = fieldIdQueue.front();
+      fieldIdQueue.pop_front();
+
+      CollectColumnIds(currFieldId);
+
+      for (const auto &field : ntuple.GetFieldIterable(currFieldId)) {
+         auto fieldId = field.GetId();
+         fieldIdQueue.push_back(fieldId);
+      }
+   }
+}
+
 ROOT::Experimental::RResult<void>
 ROOT::Experimental::RNTupleDescriptor::AddClusterDetails(RClusterDescriptor &&clusterDesc)
 {
