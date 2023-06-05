@@ -214,6 +214,13 @@ jobs:
                     --repository     ${{ github.server_url }}/${{ github.repository }}
                     --architecture   ${{ matrix.target_arch }}  "
 
+      - name: Upload test results
+        if:   ${{ !cancelled() }}
+        uses: actions/upload-artifact@v3
+        with:
+          name:  Test Results Windows ${{ matrix.target_arch }} ${{ matrix.config }}
+          path: C:/ROOT-CI/build/TestResults.xml
+
 
   build-linux:
     if: github.repository_owner == 'root-project' || github.event_name == 'pull_request'
