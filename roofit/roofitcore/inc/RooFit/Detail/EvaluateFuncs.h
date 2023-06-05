@@ -74,6 +74,12 @@ inline double constraintSumEvaluate(double const *comp, unsigned int compSize)
    return sum;
 }
 
+inline unsigned int getUniformBinning(double low, double high, double val, unsigned int numBins)
+{
+   double binWidth = (high - low) / numBins;
+   return val >= high ? numBins - 1 : std::abs((val - low) / binWidth);
+}
+
 } // namespace EvaluateFuncs
 
 } // namespace Detail

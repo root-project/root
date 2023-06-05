@@ -99,6 +99,9 @@ public:
   Int_t getBin() const;
   std::vector<Int_t> getBins(RooFit::Detail::DataMap const& dataMap) const;
 
+  void translate(RooFit::Detail::CodeSquashContext &ctx) const override;
+  std::string
+  buildCallToAnalyticIntegral(int code, const char *rangeName, RooFit::Detail::CodeSquashContext &ctx) const override;
 protected:
 
   bool importWorkspaceHook(RooWorkspace& ws) override ;

@@ -210,8 +210,12 @@ public:
   double const* wgtErrHiArray() const { return _errHi; }
   double const* sumW2Array()    const { return _sumw2; }
 
-protected:
+  std::string calculateTreeIndexForCodeSquash(RooAbsArg const *klass, RooFit::Detail::CodeSquashContext &ctx,
+                                              const RooAbsCollection &coords, bool reverse = false) const;
+  std::string declWeightArrayForCodeSquash(RooAbsArg const *klass, RooFit::Detail::CodeSquashContext &ctx,
+                                           bool correctForBinSize) const;
 
+  protected:
   friend class RooDataHistSliceIter ;
 
   std::size_t calcTreeIndex(const RooAbsCollection& coords, bool fast) const;
