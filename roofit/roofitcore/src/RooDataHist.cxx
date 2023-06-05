@@ -988,8 +988,61 @@ Int_t RooDataHist::getIndex(const RooAbsCollection& coord, bool fast) const {
   return calcTreeIndex(coord, fast);
 }
 
+std::string RooDataHist::declWeightArrayForCodeSquash(RooAbsArg const *klass, RooFit::Detail::CodeSquashContext &ctx,
+                                                      bool correctForBinSize) const
+{
+   std::string weightName = ctx.makeValidVarName(klass->GetName()) + "_HistWeights";
 
+   std::string arrayDecl = "double " + weightName + "[" + std::to_string(_arrSize) + "] = {";
+   for (Int_t i = 0; i < _arrSize; i++) {
+      arrayDecl += " " + std::to_string(_wgt[i]) + (correctForBinSize ? " / " + std::to_string(_binv[i]) : "") + ",";
+   }
+   arrayDecl.back() = ' ';
+   arrayDecl += "};\n";
 
+   ctx.addToCodeBody(arrayDecl, true);
+
+   return weightName;
+}
+
+std::string RooDataHist::calculateTreeIndexForCodeSquash(RooAbsArg const *klass, RooFit::Detail::CodeSquashContext &ctx,
+                                                         const RooAbsCollection &coords, bool reverse) const
+{
+   assert(coords.size() == _vars.size());
+
+   std::string idxName = "idx_" + ctx.getTmpVarName();
+   ctx.addToCodeBody(klass, "unsigned int " + idxName + " = 0;\n");
+   int idxMult = 1;
+
+   for (std::size_t i = 0; i < _vars.size(); ++i) {
+
+      std::size_t iVar = reverse ? _vars.size() - 1 - i : i;
+      const RooAbsArg *internalVar = _vars[iVar];
+      const RooAbsArg *theVar = coords[iVar];
+
+      const RooAbsBinning *binning = _lvbins[iVar].get();
+      if (!binning) {
+         coutE(InputArguments) << "RooHistPdf::weight(" << GetName()
+                               << ") ERROR: Code Squashing currently does not support category values." << std::endl;
+         return "";
+      } else if (!dynamic_cast<RooUniformBinning const *>(binning)) {
+         coutE(InputArguments) << "RooHistPdf::weight(" << GetName()
+                               << ") ERROR: Code Squashing currently only supports uniformly binned cases."
+                               << std::endl;
+         return "";
+      }
+
+      std::string const &bin = ctx.buildCall("RooFit::Detail::EvaluateFuncs::getUniformBinning", binning->lowBound(),
+                                             binning->highBound(), *theVar, binning->numBins());
+      ctx.addToCodeBody(klass, idxName + " += " + std::to_string(idxMult) + " * " + bin + ";\n");
+
+      // Use RooAbsLValue here because it also generalized to categories, which
+      // is useful in the future. dynamic_cast because it's a cross-cast.
+      idxMult *= dynamic_cast<RooAbsLValue const *>(internalVar)->numBins();
+   }
+
+   return idxName;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate the bin index corresponding to the coordinates passed as argument.

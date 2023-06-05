@@ -319,8 +319,24 @@ void RooNLLVarNew::translate(RooFit::Detail::CodeSquashContext &ctx) const
    // brackets of the loop is written at the end of the scopes lifetime.
    {
       auto scope = ctx.beginLoop(this);
-      ctx.addToCodeBody(this, resName + " -= " + ctx.getResult(_weightVar.arg()) + " * std::log(" +
-                                 ctx.getResult(_pdf.arg()) + ");\n");
+      std::string const &weight = ctx.getResult(_weightVar.arg());
+      std::string const &pdfName = ctx.getResult(_pdf.arg());
+
+      if (_binnedL) {
+         // Since we only support uniform binning, bin width is the same for all.
+         if (!_pdf->getAttribute("BinnedLikelihoodActiveYields")) {
+            std::stringstream errorMsg;
+            errorMsg << "RooNLLVarNew::translate(): binned likelihood optimization is only supported when raw pdf "
+                        "values can be interpreted as yields."
+                     << " This is not the case for HistFactory models written with ROOT versions before 6.26.00";
+            coutE(InputArguments) << errorMsg.str() << std::endl;
+         }
+         std::string muName = pdfName;
+         ctx.addToCodeBody(this, resName + " +=  -1 * (-" + muName + " + " + weight + " * std::log(" + muName +
+                                    ") - TMath::LnGamma(" + weight + "+ 1));\n");
+      } else {
+         ctx.addToCodeBody(this, resName + " -= " + weight + " * std::log(" + pdfName + ");\n");
+      }
    }
    if (_expectedEvents) {
       std::string expected = ctx.getResult(**_expectedEvents);

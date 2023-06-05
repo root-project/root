@@ -14,6 +14,7 @@
 #include <RooAbsPdf.h>
 #include <RooAbsData.h>
 #include <RooAddPdf.h>
+#include <RooBinWidthFunction.h>
 #include <RooCategory.h>
 #include <RooDataSet.h>
 #include <RooDataHist.h>
@@ -21,11 +22,17 @@
 #include <RooFitResult.h>
 #include <RooFuncWrapper.h>
 #include <RooGaussian.h>
+#include <RooHistFunc.h>
+#include <RooHistPdf.h>
 #include <RooHelpers.h>
 #include <RooMinimizer.h>
+#include <RooPolynomial.h>
+#include <RooProduct.h>
 #include <RooRealVar.h>
+#include <RooRealSumPdf.h>
 #include <RooSimultaneous.h>
 #include <RooWorkspace.h>
+#include <RooStats/HistFactory/ParamHistFunc.h>
 
 #include <ROOT/StringUtils.hxx>
 #include <TROOT.h>
@@ -488,8 +495,98 @@ FactoryTestParams param6{"GaussianExtended",
                          },
                          1e-4,
                          /*randomizeParameters=*/false};
+namespace {
+void getDataHistModel(RooWorkspace &ws)
+{
+   RooRealVar x("x", "x", 6, 0, 20);
+   RooPolynomial p("p", "p", x, RooArgList(0.01, -0.01, 0.0004));
 
-INSTANTIATE_TEST_SUITE_P(RooFuncWrapper, FactoryTest, testing::Values(param1, param2, param3, param4, param5, param6),
+   // Sample 500 events from p
+   x.setBins(10);
+   std::unique_ptr<RooDataSet> data1{p.generate(x, 500)};
+
+   // Create a binned dataset with 10 bins and 500 events
+   std::unique_ptr<RooDataHist> hist1{p.generateBinned(x, 500)};
+
+   // Represent data in dh as pdf in x
+   RooHistPdf histpdf("histpdf", "histpdf", x, *hist1, 0);
+
+   RooRealVar mean("mean", "mean of gaussian", 6, 5, 10);
+   RooRealVar sigma("sigma", "width of gaussian", 1.0, .01, 3.0);
+
+   RooGaussian gauss("gauss", "gauss", x, mean, sigma);
+   RooRealVar frac("frac", "faction of histpdf", 0.5, 0, 1);
+   RooAddPdf model("model", "model", {histpdf, gauss}, frac);
+
+   ws.import(model);
+   ws.defineSet("observables", {x});
+}
+} // namespace
+
+/// Test based on rf706 tutorial
+FactoryTestParams param7{"HistPdf", getDataHistModel,
+                         [](RooAbsPdf &pdf, RooAbsData &data, RooWorkspace &) {
+                            return std::unique_ptr<RooAbsReal>{pdf.createNLL(data, RooFit::BatchMode("cpu"))};
+                         },
+                         1e-4,
+                         /*randomizeParameters=*/true};
+
+namespace {
+void getDataHistFuncModel(RooWorkspace &ws)
+{
+   using namespace RooFit;
+
+   int nEvents = 1000;
+   int numBins = 5;
+
+   ws.factory("x[0, 0, " + std::to_string(3 * numBins) + "]");
+
+   auto &x = *ws.var("x");
+   x.setBins(numBins);
+
+   // The parameters represent the expected events in each bin
+   RooArgList params = ParamHistFunc::createParamSet(ws, "gamma", x, 0, 1000);
+   for (auto *param : static_range_cast<RooRealVar *>(params)) {
+      param->setVal(nEvents / numBins);
+   }
+   // Constructing a bin width function is a bit tedious. But including it is
+   // required to use the binned likelihood optimization.
+   RooDataHist dataHist{"data_hist", "data_hist", x};
+   RooHistFunc histFunc{"hist_func", "hist_func", x, dataHist};
+   RooBinWidthFunction bwf{"bwf", "bwf", histFunc, true};
+   ParamHistFunc phf{"phf", "phf", x, params};
+   RooProduct prod{"prod", "prod", phf, bwf};
+   RooRealSumPdf pdf{"pdf", "pdf", prod, RooArgList{1.0}};
+
+   // Enable the binned likelihood optimization to avoid integrals
+   // (like in HistFactory).
+   pdf.setAttribute("BinnedLikelihood");
+
+   ws.import(pdf);
+
+   // We have to wrap the pdf in a RooSimultaneous, otherwise the
+   // BinnedLikelihood optimization doesn't work.
+   ws.factory("SIMUL::model( cat[A=0], A=pdf)");
+   auto &model = *ws.pdf("model");
+   auto &cat = *ws.cat("cat");
+
+   std::unique_ptr<RooDataHist> data{model.generateBinned({x, cat}, nEvents)};
+   data->SetName("data");
+   ws.import(*data);
+
+   ws.defineSet("observables", *model.getObservables(*data));
+}
+} // namespace
+
+FactoryTestParams param8{"HistFuncPdf", getDataHistFuncModel,
+                         [](RooAbsPdf &pdf, RooAbsData &data, RooWorkspace &) {
+                            return std::unique_ptr<RooAbsReal>{pdf.createNLL(data, RooFit::BatchMode("cpu"))};
+                         },
+                         1e-4,
+                         /*randomizeParameters=*/true};
+
+INSTANTIATE_TEST_SUITE_P(RooFuncWrapper, FactoryTest,
+                         testing::Values(param1, param2, param3, param4, param5, param6, param7, param8),
                          [](testing::TestParamInfo<FactoryTest::ParamType> const &paramInfo) {
                             return paramInfo.param._name;
                          });

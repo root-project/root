@@ -114,10 +114,17 @@ private:
 
    void addResult(TNamed const *key, std::string const &value);
 
-   template <class T, typename std::enable_if<std::is_arithmetic<T>{}, bool>::type = true>
+   template <class T, typename std::enable_if<std::is_floating_point<T>{}, bool>::type = true>
    std::string buildArg(T x)
    {
       return RooNumber::toString(x);
+   }
+
+   // If input is integer, we want to print it into the code like one (i.e. avoid the unnecessary '.0000').
+   template <class T, typename std::enable_if<std::is_integral<T>{}, bool>::type = true>
+   std::string buildArg(T x)
+   {
+      return std::to_string(x);
    }
 
    std::string buildArg(std::string const &x) { return x; }
