@@ -54,11 +54,14 @@ namespace {
 //   - Delta:     Delta encoding stores on disk the delta to the previous element.  This is useful for offsets,
 //                because it transforms potentially large offset values into small deltas, which are then better
 //                suited for split encoding.
+//   - Zigzag:    Zigzag encoding is used on signed integers only. It maps x to 2x if x is positive and to -(2x+1) if
+//                x is negative. For series of positive and negative values of small absolute value, it will produce
+//                a bit pattern that is favorable for split encoding.
 //
 // Encodings/conversions can be fused:
 //
-//  - Delta + Splitting (there is no only-delta encoding)
-//  - (Delta + ) Splitting + Casting
+//  - Delta/Zigzag + Splitting (there is no only-delta/zigzag encoding)
+//  - (Delta/Zigzag + ) Splitting + Casting
 //  - Everything + Byteswap
 
 /// \brief Copy and byteswap `count` elements of size `N` from `source` to `destination`.
@@ -193,6 +196,47 @@ static void CastDeltaSplitUnpack(void *destination, const void *source, std::siz
       }
       ByteSwapIfNecessary(val);
       dst[i] = (i == 0) ? val : dst[i - 1] + val;
+   }
+}
+
+/// \brief Packing of columns with zigzag + split encoding
+///
+/// Apply split encoding to zigzag-encoded values, used for signed integers
+template <typename DestT, typename SourceT>
+static void CastZigzagSplitPack(void *destination, const void *source, std::size_t count)
+{
+   using USource_t = std::make_unsigned_t<SourceT>;
+   constexpr std::size_t kNBitsSourceT = sizeof(SourceT) * 8;
+   constexpr std::size_t N = sizeof(DestT);
+   auto src = reinterpret_cast<const SourceT *>(source);
+   auto splitArray = reinterpret_cast<char *>(destination);
+   for (std::size_t i = 0; i < count; ++i) {
+      DestT val = (static_cast<USource_t>(src[i]) << 1) | (static_cast<USource_t>(src[i]) >> (kNBitsSourceT - 1));
+      ByteSwapIfNecessary(val);
+      for (std::size_t b = 0; b < N; ++b) {
+         splitArray[b * count + i] = reinterpret_cast<char *>(&val)[b];
+      }
+   }
+}
+
+/// \brief Unsplit and unwind zigzag encoding
+///
+/// Unsplit a column and reverse the zigzag encoding, used for signed integer columns
+template <typename DestT, typename SourceT>
+static void CastZigzagSplitUnpack(void *destination, const void *source, std::size_t count)
+{
+   using UDest_t = std::make_unsigned_t<DestT>;
+   constexpr std::size_t kNBitsDestT = sizeof(DestT) * 8;
+   constexpr std::size_t N = sizeof(SourceT);
+   auto splitArray = reinterpret_cast<const char *>(source);
+   auto dst = reinterpret_cast<DestT *>(destination);
+   for (std::size_t i = 0; i < count; ++i) {
+      SourceT val = 0;
+      for (std::size_t b = 0; b < N; ++b) {
+         reinterpret_cast<char *>(&val)[b] = splitArray[b * count + i];
+      }
+      ByteSwapIfNecessary(val);
+      dst[i] = (static_cast<UDest_t>(val) >> 1) | (static_cast<UDest_t>(val) << (kNBitsDestT - 1));
    }
 }
 
@@ -355,6 +399,27 @@ public:
       CastDeltaSplitUnpack<CppT, NarrowT>(dst, src, count);
    }
 }; // class RColumnElementDeltaSplitLE
+
+/**
+ * Base class for zigzag + split columns (signed integer columns) whose on-storage representation is little-endian.
+ * The implementation of `Pack` and `Unpack` takes care of splitting and, if necessary, byteswap.
+ * The NarrowT target type should be an unsigned integer, which can be smaller than the CppT source type.
+ */
+template <typename CppT, typename UNarrowT>
+class RColumnElementZigzagSplitLE : public RColumnElementBase {
+public:
+   static constexpr bool kIsMappable = false;
+   RColumnElementZigzagSplitLE(void *rawContent, std::size_t size) : RColumnElementBase(rawContent, size) {}
+
+   void Pack(void *dst, void *src, std::size_t count) const final
+   {
+      CastZigzagSplitPack<UNarrowT, CppT>(dst, src, count);
+   }
+   void Unpack(void *dst, void *src, std::size_t count) const final
+   {
+      CastZigzagSplitUnpack<CppT, UNarrowT>(dst, src, count);
+   }
+}; // class RColumnElementZigzagSplitLE
 
 ////////////////////////////////////////////////////////////////////////////////
 // Pairs of C++ type and column type, like float and EColumnType::kReal32
