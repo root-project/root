@@ -228,11 +228,11 @@ TEST(RNTuple, Int64)
    model->AddField(std::move(f2));
 
    auto f3 = std::make_unique<RField<std::uint64_t>>("i3");
-   f3->SetColumnRepresentative({ROOT::Experimental::EColumnType::kInt64});
+   f3->SetColumnRepresentative({ROOT::Experimental::EColumnType::kUInt64});
    model->AddField(std::move(f3));
 
    auto f4 = std::make_unique<RField<std::uint64_t>>("i4");
-   f4->SetColumnRepresentative({ROOT::Experimental::EColumnType::kSplitInt64});
+   f4->SetColumnRepresentative({ROOT::Experimental::EColumnType::kSplitUInt64});
    model->AddField(std::move(f4));
 
    {
@@ -251,9 +251,9 @@ TEST(RNTuple, Int64)
              (*desc->GetColumnIterable(desc->FindFieldId("i1")).begin()).GetModel().GetType());
    EXPECT_EQ(ROOT::Experimental::EColumnType::kSplitInt64,
              (*desc->GetColumnIterable(desc->FindFieldId("i2")).begin()).GetModel().GetType());
-   EXPECT_EQ(ROOT::Experimental::EColumnType::kInt64,
+   EXPECT_EQ(ROOT::Experimental::EColumnType::kUInt64,
              (*desc->GetColumnIterable(desc->FindFieldId("i3")).begin()).GetModel().GetType());
-   EXPECT_EQ(ROOT::Experimental::EColumnType::kSplitInt64,
+   EXPECT_EQ(ROOT::Experimental::EColumnType::kSplitUInt64,
              (*desc->GetColumnIterable(desc->FindFieldId("i4")).begin()).GetModel().GetType());
    reader->LoadEntry(0);
    EXPECT_EQ(std::numeric_limits<std::int64_t>::max() - 137,
@@ -284,11 +284,11 @@ TEST(RNTuple, Int32)
    model->AddField(std::move(f2));
 
    auto f3 = std::make_unique<RField<std::uint32_t>>("i3");
-   f3->SetColumnRepresentative({ROOT::Experimental::EColumnType::kInt32});
+   f3->SetColumnRepresentative({ROOT::Experimental::EColumnType::kUInt32});
    model->AddField(std::move(f3));
 
    auto f4 = std::make_unique<RField<std::uint32_t>>("i4");
-   f4->SetColumnRepresentative({ROOT::Experimental::EColumnType::kSplitInt32});
+   f4->SetColumnRepresentative({ROOT::Experimental::EColumnType::kSplitUInt32});
    model->AddField(std::move(f4));
 
    {
@@ -307,9 +307,9 @@ TEST(RNTuple, Int32)
              (*desc->GetColumnIterable(desc->FindFieldId("i1")).begin()).GetModel().GetType());
    EXPECT_EQ(ROOT::Experimental::EColumnType::kSplitInt32,
              (*desc->GetColumnIterable(desc->FindFieldId("i2")).begin()).GetModel().GetType());
-   EXPECT_EQ(ROOT::Experimental::EColumnType::kInt32,
+   EXPECT_EQ(ROOT::Experimental::EColumnType::kUInt32,
              (*desc->GetColumnIterable(desc->FindFieldId("i3")).begin()).GetModel().GetType());
-   EXPECT_EQ(ROOT::Experimental::EColumnType::kSplitInt32,
+   EXPECT_EQ(ROOT::Experimental::EColumnType::kSplitUInt32,
              (*desc->GetColumnIterable(desc->FindFieldId("i4")).begin()).GetModel().GetType());
    reader->LoadEntry(0);
    EXPECT_EQ(std::numeric_limits<std::int32_t>::max() - 137,
@@ -342,11 +342,11 @@ TEST(RNTuple, Int16)
    model->AddField(std::move(f2));
 
    auto f3 = std::make_unique<RField<std::uint16_t>>("i3");
-   f3->SetColumnRepresentative({ROOT::Experimental::EColumnType::kInt16});
+   f3->SetColumnRepresentative({ROOT::Experimental::EColumnType::kUInt16});
    model->AddField(std::move(f3));
 
    auto f4 = std::make_unique<RField<std::uint16_t>>("i4");
-   f4->SetColumnRepresentative({ROOT::Experimental::EColumnType::kSplitInt16});
+   f4->SetColumnRepresentative({ROOT::Experimental::EColumnType::kSplitUInt16});
    model->AddField(std::move(f4));
 
    {
@@ -365,9 +365,9 @@ TEST(RNTuple, Int16)
              (*desc->GetColumnIterable(desc->FindFieldId("i1")).begin()).GetModel().GetType());
    EXPECT_EQ(ROOT::Experimental::EColumnType::kSplitInt16,
              (*desc->GetColumnIterable(desc->FindFieldId("i2")).begin()).GetModel().GetType());
-   EXPECT_EQ(ROOT::Experimental::EColumnType::kInt16,
+   EXPECT_EQ(ROOT::Experimental::EColumnType::kUInt16,
              (*desc->GetColumnIterable(desc->FindFieldId("i3")).begin()).GetModel().GetType());
-   EXPECT_EQ(ROOT::Experimental::EColumnType::kSplitInt16,
+   EXPECT_EQ(ROOT::Experimental::EColumnType::kSplitUInt16,
              (*desc->GetColumnIterable(desc->FindFieldId("i4")).begin()).GetModel().GetType());
    reader->LoadEntry(0);
    EXPECT_EQ(std::numeric_limits<std::int16_t>::max() - 137,
