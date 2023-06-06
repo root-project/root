@@ -284,7 +284,6 @@
 // Old LinkDef4.h
 #pragma link C++ class RooConstraintSum+ ;
 #pragma link C++ class RooRecursiveFraction+ ;
-#pragma link C++ class RooDataWeightedAverage+ ;
 #pragma link C++ class RooFracRemainder+ ;
 #pragma link C++ class RooAbsCachedReal+ ;
 #pragma link C++ class RooAbsSelfCachedReal+ ;

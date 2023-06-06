@@ -56,7 +56,6 @@
 #include "RooAddition.h"
 #include "RooDataSet.h"
 #include "RooDataHist.h"
-#include "RooFitLegacy/RooDataWeightedAverage.h"
 #include "RooNumRunningInt.h"
 #include "RooGlobalFunc.h"
 #include "RooParamBinning.h"
@@ -2162,36 +2161,6 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, PlotOpt o) const
     // Construct scaled data weighted average
     ScaledDataWeightedAverage scaleBind{*projection, *projDataSel, o.scaleFactor, *plotVar};
 
-    // Validate the scaled data weighted average
-    {
-      // Construct optimized data weighted average using the old
-      // RooDataWeightedAverage. It is much slower than the new implementation,
-      // but it will only be evaluated once to valideate the new implementation.
-      RooAbsTestStatistic::Configuration cfg;
-      cfg.nCPU = o.numCPU;
-      cfg.interleave = o.interleave;
-      RooDataWeightedAverage dwa(Form("%sDataWgtAvg",GetName()),"Data Weighted average",*projection,*projDataSel,RooArgSet()/**projDataSel->get()*/,
-              std::move(cfg), true) ;
-      //RooDataWeightedAverage dwa(Form("%sDataWgtAvg",GetName()),"Data Weighted average",*projection,*projDataSel,*projDataSel->get(),o.numCPU,o.interleave,true) ;
-
-      // Do _not_ activate cache-and-track as necessary information to define normalization observables are not present in the underlying dataset
-      dwa.constOptimizeTestStatistic(Activate,false) ;
-
-      RooProduct scaledDwa{"scaled_dwa", "Data Weighted average", dwa, {RooFit::RooConst(o.scaleFactor)}};
-      RooRealBinding scaleBindRef(scaledDwa,*plotVar) ;
-
-      const double testVal = plotVar->getVal();
-      const double refVal = scaleBindRef(&testVal);
-      const double newVal = scaleBind(&testVal);
-      if(std::abs(newVal - refVal) / refVal > 1e-6) {
-        std::stringstream ss;
-        ss << "Error in RooAbsReal::plotOn(): The data-weighted average gave a wrong result! "
-           << newVal << " vs. " << refVal << ". Please open an issue to report this implementation error.";
-        const std::string errMsg = ss.str();
-        coutE(Plotting) << errMsg << std::endl;
-      }
-    }
-
     // Set default range, if not specified
     if (o.rangeLo==0 && o.rangeHi==0) {
       o.rangeLo = frame->GetXaxis()->GetXmin() ;
@@ -2545,31 +2514,6 @@ RooPlot* RooAbsReal::plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asym
 
     // Construct scaled data weighted average
     ScaledDataWeightedAverage scaleBind{funcAsym, *projDataSel, o.scaleFactor, *plotVar};
-
-    // Validate the scaled data weighted average
-    {
-      RooAbsTestStatistic::Configuration cfg;
-      cfg.nCPU = o.numCPU;
-      cfg.interleave = o.interleave;
-      RooDataWeightedAverage dwa(Form("%sDataWgtAvg",GetName()),"Data Weighted average",funcAsym,*projDataSel,RooArgSet()/**projDataSel->get()*/,
-              std::move(cfg),true) ;
-      //RooDataWeightedAverage dwa(Form("%sDataWgtAvg",GetName()),"Data Weighted average",*funcAsym,*projDataSel,*projDataSel->get(),o.numCPU,o.interleave,true) ;
-      dwa.constOptimizeTestStatistic(Activate) ;
-
-      RooProduct scaledDwa{"scaled_dwa", "Data Weighted average", {dwa, RooFit::RooConst(o.scaleFactor)}};
-      RooRealBinding scaleBindRef(scaledDwa,*plotVar) ;
-
-      const double testVal = plotVar->getVal();
-      const double refVal = scaleBindRef(&testVal);
-      const double newVal = scaleBind(&testVal);
-      if(std::abs(newVal - refVal) / refVal > 1e-6) {
-        std::stringstream ss;
-        ss << "Error in RooAbsReal::plotOn(): The data-weighted average gave a wrong result! "
-           << newVal << " vs. " << refVal << ". Please open an issue to report this implementation error.";
-        const std::string errMsg = ss.str();
-        coutE(Plotting) << errMsg << std::endl;
-      }
-    }
 
     // Set default range, if not specified
     if (o.rangeLo==0 && o.rangeHi==0) {

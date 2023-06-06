@@ -225,7 +225,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     RooBinWidthFunction.h
     RooFitLegacy/RooCatTypeLegacy.h
     RooFitLegacy/RooCategorySharedProperties.h
-    RooFitLegacy/RooDataWeightedAverage.h
     RooFitLegacy/RooTreeData.h
     RooFit/TestStatistics/LikelihoodGradientWrapper.h
     RooFit/TestStatistics/LikelihoodWrapper.h
@@ -314,7 +313,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/RooDataHistSliceIter.cxx
     src/RooDataProjBinding.cxx
     src/RooDataSet.cxx
-    src/RooDataWeightedAverage.cxx
     src/RooDerivative.cxx
     src/RooDirItem.cxx
     src/RooDLLSignificanceMCSModule.cxx
