@@ -149,8 +149,8 @@ private:
    /// Translate an entry index to a column element index of the principal column and viceversa.  These functions
    /// take into account the role and number of repetitions on each level of the field hierarchy as follows:
    /// - Top level fields: element index == entry index
-   /// - Record fields: propagate their principal column index to the principal columns of direct descendant fields
-   /// - Collection and variant fields: set the principal column index of their childs to 0
+   /// - Record fields propagate their principal column index to the principal columns of direct descendant fields
+   /// - Collection and variant fields set the principal column index of their childs to 0
    ///
    /// The column element index also depends on the number of repetitions of each field in the hierarchy, e.g., given a
    /// field with type `std::array<std::array<float, 4>, 2>`, this function returns 8 for the inner-most field.
@@ -346,7 +346,7 @@ public:
    ENTupleStructure GetStructure() const { return fStructure; }
    std::size_t GetNRepetitions() const { return fNRepetitions; }
    NTupleSize_t GetNElements() const { return fPrincipalColumn->GetNElements(); }
-   /// Returns the global index of the first entry that has a stored on-disk value. For late added fields, this allows
+   /// Returns the global index of the first entry that has a stored on-disk value. For deferred fields, this allows
    /// for differentiating zero-initialized values read before the addition of the field from actual stored data.
    NTupleSize_t GetFirstEntry() const;
    RFieldBase *GetParent() const { return fParent; }

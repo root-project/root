@@ -477,6 +477,9 @@ ROOT::Experimental::RClusterDescriptorBuilder::CommitColumnRange(DescriptorId_t 
 ROOT::Experimental::RClusterDescriptorBuilder &
 ROOT::Experimental::RClusterDescriptorBuilder::AddDeferredColumnRanges(const RNTupleDescriptor &desc)
 {
+   /// Carries out a depth-first traversal of a field subtree rooted at `rootFieldId`.  For each field, `visitField` is
+   /// called passing the field ID and the number of overall repetitions, taking into account the repetitions of each
+   /// parent field in the hierarchy.
    auto traverseSubtree = [&](DescriptorId_t rootFieldId, std::size_t nRepetitionsAtThisLevel, const auto &visitField,
                               const auto &enterSubtree) -> void {
       visitField(rootFieldId, nRepetitionsAtThisLevel);
