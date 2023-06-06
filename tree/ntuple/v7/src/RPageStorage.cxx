@@ -157,6 +157,8 @@ std::unique_ptr<unsigned char []> ROOT::Experimental::Detail::RPageSource::Unsea
       // We cannot simply map the sealed page as we don't know its life time. Specialized page sources
       // may decide to implement to not use UnsealPage but to custom mapping / decompression code.
       // Note that usually pages are compressed.
+      // TODO(jalopezg): unsealing a page zero should be a no-op (i.e., no additional memcpy), but the current prototype
+      // of `UnsealPage()` prevents that
       memcpy(pageBuffer.get(), sealedPage.fBuffer, bytesPacked);
    }
 
@@ -347,6 +349,9 @@ void ROOT::Experimental::Detail::RPageSink::UpdateSchema(const RNTupleModelChang
    for (DescriptorId_t i = nColumnsBeforeUpdate; i < nColumns; ++i) {
       RClusterDescriptor::RColumnRange columnRange;
       columnRange.fPhysicalColumnId = i;
+      // We set the first element index in the current cluster to the first element that is part of a materialized page
+      // (i.e., that is part of a page list). For deferred columns, however, the column range is fixed up as needed by
+      // `RClusterDescriptorBuilder::AddDeferredColumnRanges()` on read back.
       columnRange.fFirstElementIndex = descriptor.GetColumnDescriptor(i).GetFirstElementIndex();
       columnRange.fNElements = 0;
       columnRange.fCompressionSettings = GetWriteOptions().GetCompression();

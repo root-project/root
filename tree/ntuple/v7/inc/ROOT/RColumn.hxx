@@ -117,6 +117,7 @@ public:
    /// Connect the column to a page storage.  If `pageStorage` is a page sink, `firstElementIndex` can be used to
    /// specify the first column element index with backing storage for this column.  On read back, elements before
    /// `firstElementIndex` will cause the zero page to be mapped.
+   /// TODO(jalopezg): at this point it would be nicer to distinguish between connecting a page sink and a page source
    void Connect(DescriptorId_t fieldId, RPageStorage *pageStorage, NTupleSize_t firstElementIndex = 0U);
 
    void Append(const RColumnElementBase &element) {
