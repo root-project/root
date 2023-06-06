@@ -506,9 +506,12 @@ ROOT::Experimental::RClusterDescriptorBuilder::AddDeferredColumnRanges(const RNT
                   columnRange.fPhysicalColumnId = physicalId;
                   pageRange.fPhysicalColumnId = physicalId;
                }
-               // Fixup the RColumnRange and RPageRange in deferred columns.  We know waht the first element index and
-               // number of elements should have been if the column was not deferred; fixup those and let
+               // Fixup the RColumnRange and RPageRange in deferred columns.  We know what the first element index and
+               // number of elements should have been if the column was not deferred; fix those and let
                // `ExtendToFitColumnRange()` synthesize RPageInfos accordingly.
+               // Note that a column whose first element index is != 0 already met the criteria of
+               // `RFieldBase::EntryToColumnElementIndex()`, i.e. it is a principal column reachable from the field zero
+               // excluding subfields of collection and variant fields.
                if (c.IsDeferredColumn()) {
                   columnRange.fFirstElementIndex = fCluster.GetFirstEntryIndex() * nRepetitions;
                   columnRange.fNElements = fCluster.GetNEntries() * nRepetitions;
