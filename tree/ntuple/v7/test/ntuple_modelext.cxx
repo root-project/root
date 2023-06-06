@@ -368,6 +368,21 @@ TEST(RNTuple, ModelExtensionComplex)
          updateLateFields2(i, var);
          ntuple->Fill();
       }
+
+      modelUpdater->BeginUpdate();
+      bool b = false;
+      EmptyBase noColumns{};
+      modelUpdater->AddField<bool>("b", &b);
+      modelUpdater->AddField<EmptyBase>("noColumns", &noColumns);
+      modelUpdater->CommitUpdate();
+      for (unsigned int i = 30000; i < 40000; ++i) {
+         updateInitialFields(i, *u32, *dbl);
+         updateLateFields1(i, dblVec, doubleAoA);
+         updateLateFields2(i, var);
+	 b = !b;
+	 chksumWrite += static_cast<double>(b);
+         ntuple->Fill();
+      }
    }
 
    auto modelRead = RNTupleModel::Create();
@@ -376,9 +391,12 @@ TEST(RNTuple, ModelExtensionComplex)
    auto dblVec = modelRead->MakeField<std::vector<double>>("dblVec");
    auto doubleAoA = modelRead->MakeField<doubleAoA_t>("doubleAoA");
    auto var = modelRead->MakeField<std::variant<std::uint64_t, double>>("var");
+   auto b = modelRead->MakeField<bool>("b");
+   auto noColumns = modelRead->MakeField<EmptyBase>("noColumns");
 
    double chksumRead = 0.0;
    auto ntuple = RNTupleReader::Open(std::move(modelRead), "myNTuple", fileGuard.GetPath());
+   EXPECT_EQ(40000U, ntuple->GetNEntries());
    for (auto entryId : *ntuple) {
       ntuple->LoadEntry(entryId);
       chksumRead += static_cast<double>(*u32) + *dbl;
@@ -394,6 +412,8 @@ TEST(RNTuple, ModelExtensionComplex)
       } else {
          chksumRead += std::get<double>(*var);
       }
+      chksumRead += static_cast<double>(*b);
+      (void)*noColumns;
    }
 
    // The floating point arithmetic should have been executed in the same order for reading and writing,
