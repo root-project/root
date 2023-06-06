@@ -288,6 +288,7 @@ public:
       /// cover the range in `columnRange`. `RPageInfo`s are constructed to contain as many elements of type `element`
       /// given a page size limit of `pageSize` (in bytes); the locator for the referenced pages is `kTypePageZero`.
       /// This function is used to make up `RPageRange`s for clusters that contain deferred columns.
+      /// \return The number of column elements covered by the synthesized RPageInfos
       std::size_t ExtendToFitColumnRange(const RColumnRange &columnRange, const Detail::RColumnElementBase &element,
                                          std::size_t pageSize);
    };
