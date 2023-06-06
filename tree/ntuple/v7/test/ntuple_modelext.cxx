@@ -1,5 +1,38 @@
 #include "ntuple_test.hxx"
 
+namespace {
+struct RFieldBaseTest : public ROOT::Experimental::Detail::RFieldBase {
+   /// Returns the global index of the first entry that has a stored on-disk value.  For deferred fields, this allows
+   /// for differentiating zero-initialized values read before the addition of the field from actual stored data.
+   NTupleSize_t GetFirstEntry() const
+   {
+      auto fnColumnElementIndexToEntry = [&](NTupleSize_t columnElementIndex) -> std::size_t {
+         std::size_t result = columnElementIndex;
+         for (auto f = static_cast<const RFieldBase *>(this); f != nullptr; f = f->GetParent()) {
+            auto parent = f->GetParent();
+            if (parent && (parent->GetStructure() == ROOT::Experimental::kCollection ||
+                           parent->GetStructure() == ROOT::Experimental::kVariant))
+               return 0U;
+            result /= std::max(f->GetNRepetitions(), std::size_t{1U});
+         }
+         return result;
+      };
+
+      if (fPrincipalColumn)
+         return fnColumnElementIndexToEntry(fPrincipalColumn->GetFirstElementIndex());
+      if (!fSubFields.empty())
+         return static_cast<const RFieldBaseTest &>(*fSubFields[0]).GetFirstEntry();
+      R__ASSERT(false);
+      return 0;
+   }
+};
+
+static std::size_t GetFirstEntry(const RFieldBase *f)
+{
+   return static_cast<const RFieldBaseTest *>(f)->GetFirstEntry();
+}
+} // anonymous namespace
+
 TEST(RNTuple, ModelExtensionSimple)
 {
    FileRaii fileGuard("test_ntuple_modelext_simple.root");
@@ -28,8 +61,8 @@ TEST(RNTuple, ModelExtensionSimple)
    auto ntuple = RNTupleReader::Open("myNTuple", fileGuard.GetPath());
    EXPECT_EQ(4U, ntuple->GetNEntries());
    EXPECT_EQ(4U, ntuple->GetDescriptor()->GetNFields());
-   EXPECT_EQ(0U, ntuple->GetModel()->GetField("pt")->GetFirstEntry());
-   EXPECT_EQ(2U, ntuple->GetModel()->GetField("array")->GetFirstEntry());
+   EXPECT_EQ(0U, GetFirstEntry(ntuple->GetModel()->GetField("pt")));
+   EXPECT_EQ(2U, GetFirstEntry(ntuple->GetModel()->GetField("array")));
 
    auto pt = ntuple->GetView<float>("pt");
    auto array = ntuple->GetView<std::array<double, 2>>("array");
@@ -126,11 +159,11 @@ TEST(RNTuple, ModelExtensionMultiple)
    auto ntuple = RNTupleReader::Open("myNTuple", fileGuard.GetPath());
    EXPECT_EQ(5U, ntuple->GetNEntries());
    EXPECT_EQ(7U, ntuple->GetDescriptor()->GetNFields());
-   EXPECT_EQ(0U, ntuple->GetModel()->GetField("pt")->GetFirstEntry());
-   EXPECT_EQ(3U, ntuple->GetModel()->GetField("vec")->GetFirstEntry());
-   EXPECT_EQ(3U, ntuple->GetModel()->GetField("f")->GetFirstEntry());
-   EXPECT_EQ(3U, ntuple->GetModel()->GetField("u8")->GetFirstEntry());
-   EXPECT_EQ(3U, ntuple->GetModel()->GetField("str")->GetFirstEntry());
+   EXPECT_EQ(0U, GetFirstEntry(ntuple->GetModel()->GetField("pt")));
+   EXPECT_EQ(3U, GetFirstEntry(ntuple->GetModel()->GetField("vec")));
+   EXPECT_EQ(3U, GetFirstEntry(ntuple->GetModel()->GetField("f")));
+   EXPECT_EQ(3U, GetFirstEntry(ntuple->GetModel()->GetField("u8")));
+   EXPECT_EQ(3U, GetFirstEntry(ntuple->GetModel()->GetField("str")));
 
    auto pt = ntuple->GetView<float>("pt");
    auto vec = ntuple->GetView<std::vector<std::uint32_t>>("vec");
@@ -379,8 +412,8 @@ TEST(RNTuple, ModelExtensionComplex)
          updateInitialFields(i, *u32, *dbl);
          updateLateFields1(i, dblVec, doubleAoA);
          updateLateFields2(i, var);
-	 b = !b;
-	 chksumWrite += static_cast<double>(b);
+         b = !b;
+         chksumWrite += static_cast<double>(b);
          ntuple->Fill();
       }
    }

@@ -450,29 +450,6 @@ ROOT::Experimental::Detail::RFieldBase::EntryToColumnElementIndex(ROOT::Experime
    return result;
 }
 
-ROOT::Experimental::NTupleSize_t ROOT::Experimental::Detail::RFieldBase::ColumnElementIndexToEntry(
-   ROOT::Experimental::NTupleSize_t columnElementIndex) const
-{
-   std::size_t result = columnElementIndex;
-   for (auto f = this; f != nullptr; f = f->GetParent()) {
-      auto parent = f->GetParent();
-      if (parent && (parent->GetStructure() == kCollection || parent->GetStructure() == kVariant))
-         return 0U;
-      result /= std::max(f->GetNRepetitions(), std::size_t{1U});
-   }
-   return result;
-}
-
-ROOT::Experimental::NTupleSize_t ROOT::Experimental::Detail::RFieldBase::GetFirstEntry() const
-{
-   if (fPrincipalColumn)
-      return ColumnElementIndexToEntry(fPrincipalColumn->GetFirstElementIndex());
-   if (!fSubFields.empty())
-      return fSubFields[0]->GetFirstEntry();
-   R__ASSERT(false);
-   return 0;
-}
-
 std::vector<ROOT::Experimental::Detail::RFieldBase *> ROOT::Experimental::Detail::RFieldBase::GetSubFields() const
 {
    std::vector<RFieldBase *> result;
