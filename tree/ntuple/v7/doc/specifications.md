@@ -348,7 +348,8 @@ If flag 0x08 (deferred column) is set, the index of the first element in this co
 In this case, an additional 64bit integer containing the first element index follows the flags field.
 Compliant implementations should yield synthetic data pages made up of 0x00 bytes when trying to read back elements in the range $[0, firstElementIndex-1]$.
 This results in zero-initialized values in the aforementioned range for fields of any supported C++ type, including `std::variant<Ts...>` and collections such as `std::vector<T>`.
-Deferred columns can only appear in the schema extension record frame (see Section Footer Envelope).
+The leading zero pages of deferred columns are _not_ part of the page list, i.e. they have no page locator.
+In practice, deferred columns only appear in the schema extension record frame (see Section Footer Envelope).
 
 #### Alias columns
 
