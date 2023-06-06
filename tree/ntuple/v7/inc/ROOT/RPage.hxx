@@ -40,9 +40,6 @@ with the page pool and allocated/freed by the page storage.
 */
 // clang-format on
 class RPage {
-   /// The 'zero' page used in `RColumn::MapPage()` if there is no on-disk data for a particular deferred column
-   static const std::unique_ptr<unsigned char[]> pageZero;
-
 public:
    static constexpr size_t kPageZeroSize = 64 * 1024;
 
@@ -137,9 +134,11 @@ public:
    /// invoking `GrowUnchecked()` and `SetWindow()` as appropriate.
    static RPage MakePageZero(ColumnId_t columnId, ClusterSize_t::ValueType elementSize)
    {
-      return RPage{columnId, pageZero.get(), elementSize, /*maxElements=*/(kPageZeroSize / elementSize)};
+      return RPage{columnId, const_cast<void *>(GetPageZeroBuffer()), elementSize,
+                   /*maxElements=*/(kPageZeroSize / elementSize)};
    }
-   static const void *GetPageZeroBuffer() { return pageZero.get(); }
+   /// Return a pointer to the page zero buffer used if there is no on-disk data for a particular deferred column
+   static const void *GetPageZeroBuffer();
 
    bool IsNull() const { return fBuffer == nullptr; }
    bool IsPageZero() const { return fBuffer == GetPageZeroBuffer(); }

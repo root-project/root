@@ -20,7 +20,11 @@ namespace Experimental {
 
 namespace Detail {
 
-const std::unique_ptr<unsigned char[]> RPage::pageZero = std::make_unique<unsigned char[]>(RPage::kPageZeroSize);
+const void *RPage::GetPageZeroBuffer()
+{
+   static const auto pageZero = std::make_unique<unsigned char[]>(kPageZeroSize);
+   return pageZero.get();
+}
 
 } // namespace Detail
 
