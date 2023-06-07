@@ -7,51 +7,132 @@ from dataclasses import dataclass, field
 from itertools import accumulate
 from math import floor
 
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from DistRDF._graph_cache import ExecutionIdentifier
 
 import ROOT
 
 logger = logging.getLogger(__name__)
 
 
+@dataclass
 class DataRange:
     """
     A logical range of entries in which a dataset is split. Depending on the
     input data source, this can have different attributes.
+
+    Attributes:
+
+    exec_id: An identifier for the current execution.
+
+    id: A sequential counter to identify this range.
     """
-    pass
+    exec_id: ExecutionIdentifier
+    id: int
 
 
+@dataclass
 class EmptySourceRange(DataRange):
     """
     Empty source range of entries
 
     Attributes:
 
-    id (int): Sequential counter to identify this range. It is used to assign
-        a filename to a partial Snapshot in case it was requested. The id is
-        assigned in `get_balanced_ranges` to ensure that each distributed
-        RDataFrame run has a list of ranges with sequential ids starting from
-        zero.
-
     start (int): Starting entry of this range.
 
     end (int): Ending entry of this range.
     """
-
-    def __init__(self, rangeid, start, end):
-        """set attributes"""
-        self.id = rangeid
-        self.start = start
-        self.end = end
+    start: int
+    end: int
 
 
-def get_balanced_ranges(nentries, npartitions):
+@dataclass
+class TreeRangePerc(DataRange):
+    """
+    Range of percentages to be considered for a list of trees. Building block
+    for an actual range of entries of a distributed task.
+
+    Attributes:
+
+    treenames: List of tree names.
+
+    filenames: List of files to be processed with this range.
+
+    first_file_idx: Index of the first file that this range will consider.
+
+    last_file_idx: Index of the last file that this range will consider.
+
+    first_tree_start_perc: Percentage of the first tree from which this range will
+        begin reading entries.
+
+    last_tree_end_perc: Percentage of the last tree at which this range will
+        end reading entries.
+
+    friendinfo: Information about friend trees of the chain built for this
+        range. Not None if the user provided a TTree or TChain in the
+        distributed RDataFrame constructor.
+    """
+    treenames: List[str]
+    filenames: List[str]
+    first_file_idx: int
+    last_file_idx: int
+    first_tree_start_perc: float
+    last_tree_end_perc: float
+    friendinfo: Optional[ROOT.Internal.TreeUtils.RFriendInfo]
+
+
+@dataclass
+class TreeRange(DataRange):
+    """
+    Range of entries in one of the trees in the chain of a single distributed task.
+
+    The entries are local with respect to the list of files that are processed
+    in this range. These files are a subset of the global list of input files of
+    the original dataset.
+
+    Attributes:
+
+    treenames: List of tree names.
+
+    filenames: List of files to be processed with this range.
+
+    globalstart: Starting entry relative to the TChain made with the trees in
+        this range.
+
+    globalend: Ending entry relative to the TChain made with the trees in this
+        range.
+
+    friendinfo: Information about friend trees of the chain built for this
+        range. Not None if the user provided a TTree or TChain in the
+        distributed RDataFrame constructor.
+    """
+    treenames: List[str]
+    filenames: List[str]
+    globalstart: int
+    globalend: int
+    friendinfo: Optional[ROOT.Internal.TreeUtils.RFriendInfo]
+
+
+@dataclass
+class TaskTreeEntries:
+    """
+    Entries corresponding to each tree assigned to a certain task, plus the
+    actual number of entries that task will be processing. This information will
+    be aggregated along with the main mergeable results in distributed
+    execution. It serves as a sanity check that exactly the total amount of
+    entries in the dataset is processed in the application.
+    """
+    processed_entries: int = 0
+    trees_with_entries: Dict[str, int] = field(default_factory=dict)
+
+
+def get_balanced_ranges(nentries, npartitions, exec_id: ExecutionIdentifier):
     """
     Builds range pairs from the given values of the number of entries in
-    the dataset and number of partitions required. Each range contains the
-    same amount of entries, except for those cases where the number of
-    entries is not a multiple of the partitions.
+    the dataset and number of partitions required. The `nentries` are divided
+    uniformly among the `npartitions`.
 
     Args:
         nentries (int): The number of entries in a dataset.
@@ -85,76 +166,10 @@ def get_balanced_ranges(nentries, npartitions):
             end = i = end + 1
             remainder -= 1
 
-        ranges.append(EmptySourceRange(rangeid, start, end))
+        ranges.append(EmptySourceRange(exec_id, rangeid, start, end))
         rangeid += 1
 
     return ranges
-
-
-@dataclass
-class TreeRange(DataRange):
-    """
-    Range of entries in one of the trees in the chain of a single distributed task.
-
-    The entries are local with respect to the list of files that are processed
-    in this range. These files are a subset of the global list of input files of
-    the original dataset.
-
-    Attributes:
-
-    id: Sequential counter to identify this range. It is used to assign a
-        filename to a partial Snapshot in case it was requested.
-
-    treenames: List of tree names.
-
-    filenames: List of files to be processed with this range.
-
-    globalstart: Starting entry relative to the TChain made with the trees in
-        this range.
-
-    globalend: Ending entry relative to the TChain made with the trees in this
-        range.
-
-    friendinfo: Information about friend trees of the chain built for this
-        range. Not None if the user provided a TTree or TChain in the
-        distributed RDataFrame constructor.
-    """
-
-    id: int
-    treenames: List[str]
-    filenames: List[str]
-    globalstart: int
-    globalend: int
-    friendinfo: Optional[ROOT.Internal.TreeUtils.RFriendInfo]
-
-
-@dataclass
-class TreeRangePerc(DataRange):
-    """
-    Range of percentages to be considered for a list of trees. Building block
-    for an actual range of entries of a distributed task.
-    """
-    id: int
-    treenames: List[str]
-    filenames: List[str]
-    first_file_idx: int
-    last_file_idx: int
-    first_tree_start_perc: float
-    last_tree_end_perc: float
-    friendinfo: Optional[ROOT.Internal.TreeUtils.RFriendInfo]
-
-
-@dataclass
-class TaskTreeEntries:
-    """
-    Entries corresponding to each tree assigned to a certain task, plus the
-    actual number of entries that task will be processing. This information will
-    be aggregated along with the main mergeable results in distributed
-    execution. It serves as a sanity check that exactly the total amount of
-    entries in the dataset is processed in the application.
-    """
-    processed_entries: int = 0
-    trees_with_entries: Dict[str, int] = field(default_factory=dict)
 
 
 def get_clusters_and_entries(treename: str, filename: str) -> Tuple[List[int], int]:
@@ -179,7 +194,8 @@ def get_clusters_and_entries(treename: str, filename: str) -> Tuple[List[int], i
 
 
 def get_percentage_ranges(treenames: List[str], filenames: List[str], npartitions: int,
-                          friendinfo: Optional[ROOT.Internal.TreeUtils.RFriendInfo]) -> List[TreeRangePerc]:
+                          friendinfo: Optional[ROOT.Internal.TreeUtils.RFriendInfo],
+                          exec_id: ExecutionIdentifier) -> List[TreeRangePerc]:
     """
     Create a list of tasks that will process the given trees partitioning them
     by percentages.
@@ -228,8 +244,9 @@ def get_percentage_ranges(treenames: List[str], filenames: List[str], npartition
         # We need to transmit the full list of treenames and filenames to each
         # task, in order to properly align the full dataset considering friends.
         return [
-            TreeRangePerc(rangeid, treenames, filenames, start_sample_idxs[rangeid], end_sample_idxs[rangeid],
-                          first_tree_start_perc_tasks[rangeid], last_tree_end_perc_tasks[rangeid], friendinfo)
+            TreeRangePerc(
+                exec_id, rangeid, treenames, filenames, start_sample_idxs[rangeid], end_sample_idxs[rangeid],
+                first_tree_start_perc_tasks[rangeid], last_tree_end_perc_tasks[rangeid], friendinfo)
             for rangeid in range(npartitions)
         ]
     else:
@@ -245,7 +262,7 @@ def get_percentage_ranges(treenames: List[str], filenames: List[str], npartition
         # equal to the number of files assigned to that task.
         return [
             TreeRangePerc(
-                rangeid, tasktreenames[rangeid], taskfilenames[rangeid], 0, len(taskfilenames[rangeid]),
+                exec_id, rangeid, tasktreenames[rangeid], taskfilenames[rangeid], 0, len(taskfilenames[rangeid]),
                 first_tree_start_perc_tasks[rangeid], last_tree_end_perc_tasks[rangeid], friendinfo
             )
             for rangeid in range(npartitions)
@@ -391,7 +408,7 @@ def get_clustered_range_from_percs(percrange: TreeRangePerc) -> Tuple[Optional[T
 
     entries_in_trees = TaskTreeEntries(globalend - globalstart, trees_with_entries)
 
-    treerange = TreeRange(percrange.id, percrange.treenames, percrange.filenames,
-                            globalstart, globalend, percrange.friendinfo)
+    treerange = TreeRange(percrange.exec_id, percrange.id, percrange.treenames, percrange.filenames,
+                          globalstart, globalend, percrange.friendinfo)
 
     return treerange, entries_in_trees
