@@ -19,6 +19,8 @@ from typing import Any, Dict, List, Tuple, TYPE_CHECKING, Union
 
 import ROOT
 
+from DistRDF._graph_cache import ExecutionIdentifier, _ACTIONS_REGISTER
+from DistRDF.Backends import Utils
 from DistRDF.CppWorkflow import CppWorkflow
 
 from DistRDF.Operation import Action, AsNumpy, InstantAction, Operation, Snapshot, VariationsFor
@@ -51,7 +53,7 @@ def _(operation: Union[Action, InstantAction], promise: Any, results: list) -> N
 
 @append_node_to_results.register
 def _(operation: Snapshot, promise: Any, results: list) -> None:
-    results.append(SnapshotResult(operation.args[0], [operation.args[1]]))
+    results.append(SnapshotResult(operation.args[0], [operation.args[1]], promise))
 
 
 @singledispatch
@@ -190,7 +192,8 @@ def generate_computation_graph(graph: Dict[int, Node], starting_node: ROOT.RDF.R
     return promises
 
 
-def trigger_computation_graph(graph: Dict[int, Node], starting_node: ROOT.RDF.RNode, range_id: int) -> List:
+def trigger_computation_graph(
+    graph: Dict[int, Node], starting_node: ROOT.RDF.RNode, range_id: int, exec_id: ExecutionIdentifier) -> List:
     """
     Trigger the computation graph.
 
@@ -213,7 +216,16 @@ def trigger_computation_graph(graph: Dict[int, Node], starting_node: ROOT.RDF.RN
         list: A list of objects that can be either used as or converted into
             mergeable values.
     """
-    actions = generate_computation_graph(graph, starting_node, range_id)
+    if exec_id not in _ACTIONS_REGISTER:
+        # Fill the cache with the future results
+        actions = generate_computation_graph(graph, starting_node, range_id)
+        _ACTIONS_REGISTER[exec_id] = actions
+    else:
+        # Create clones according to different types of actions
+        actions = [
+            Utils.clone_action(action, range_id)
+            for action in _ACTIONS_REGISTER[exec_id]
+        ]
 
     # Trigger computation graph with the GIL released
     rnode = ROOT.RDF.AsRNode(starting_node)
