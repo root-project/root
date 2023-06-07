@@ -1,0 +1,38 @@
+name: SonarCloud
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened]
+jobs:
+  build:
+    if: github.repository_owner == 'root-project' || github.event_name == 'pull_request'
+
+    permissions:
+      contents: read
+
+    name: Build and analyze
+    runs-on:
+      - self-hosted
+      - linux
+      - x64
+    container:
+      image: registry.cern.ch/root-ci/ubuntu22:buildready
+      options: '--security-opt label=disable --rm'
+      env:
+        PYTHONUNBUFFERED: true
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+          ref: ${{ github.event.pull_request.head.sha }} # We do not run any user-provided code.
+      - name: Create compile_commands.json
+        run: |
+          cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=On -S . -B builddir -Dall=On -DCMAKE_BUILD_TYPE=Release
+      - name: Install sonar-scanner and build-wrapper
+        uses: SonarSource/sonarcloud-github-c-cpp@v1
+      - name: Install Nodejs
+        uses: actions/setup-node@v3
+      - name: Run sonar-scanner
+        run: |
+          sonar-scanner -X
