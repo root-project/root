@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import Union, TYPE_CHECKING
 
 import ROOT
+from ROOT._pythonization._rdataframe import AsNumpyResult
 
 if TYPE_CHECKING:
     from DistRDF.Backends.Base import BaseBackend
@@ -48,3 +49,7 @@ class SnapshotResult(object):
             snapshot_chain.Add(filename)
         # Create a new rdf with the chain and return that to user
         return backend.make_dataframe(snapshot_chain)
+
+
+# A type alias to signify any type of result that can be returned from the RDataFrame API
+RDataFrameFutureResult = Union[ROOT.RDF.RResultPtr, ROOT.RDF.Experimental.RResultMap, SnapshotResult, AsNumpyResult]
