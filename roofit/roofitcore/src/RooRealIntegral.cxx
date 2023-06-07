@@ -1168,3 +1168,10 @@ Int_t RooRealIntegral::getCacheAllNumeric()
 {
   return _cacheAllNDim ;
 }
+
+
+std::unique_ptr<RooAbsArg>
+RooRealIntegral::compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileContext &ctx) const
+{
+   return RooAbsReal::compileForNormSet(_funcNormSet ? *_funcNormSet : normSet, ctx);
+}
