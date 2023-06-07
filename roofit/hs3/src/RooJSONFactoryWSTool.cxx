@@ -431,6 +431,13 @@ void importAnalysis(const JSONNode &rootnode, const JSONNode &analysisNode, cons
    for (auto &nameNode : (*nllNode)["distributions"].children()) {
       nllDistNames.push_back(nameNode.val());
    }
+   RooArgSet extConstraints;
+   for (auto &nameNode : (*nllNode)["aux_distributions"].children()) {
+      RooAbsArg *extConstraint = workspace.arg(nameNode.val());
+      if (extConstraint) {
+         extConstraints.add(*extConstraint);
+      }
+   }
    RooArgSet observables;
    for (auto &nameNode : (*nllNode)["data"].children()) {
       nllDataNames.push_back(nameNode.val());
@@ -449,6 +456,9 @@ void importAnalysis(const JSONNode &rootnode, const JSONNode &analysisNode, cons
       std::runtime_error("pdf not found!");
 
    mc->SetPdf(*pdf);
+
+   if(!extConstraints.empty())
+      mc->SetExternalConstraints(extConstraints);
 
    auto readArgSet = [&](std::string const &name) {
       RooArgSet out;
@@ -1243,6 +1253,13 @@ void RooJSONFactoryWSTool::exportSingleModelConfig(JSONNode &rootnode, RooStats:
       if (dataComponents) {
          const auto &d = dataComponents->find(item.first);
          nllNode["data"].append_child() << d->second;
+      }
+   }
+   if (mc.GetExternalConstraints()) {
+      auto &extConstrNode = nllNode["aux_distributions"];
+      extConstrNode.set_seq();
+      for (const auto &constr : *mc.GetExternalConstraints()) {
+         extConstrNode.append_child() << constr->GetName();
       }
    }
 
