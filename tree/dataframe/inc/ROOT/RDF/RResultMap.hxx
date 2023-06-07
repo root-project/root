@@ -52,6 +52,39 @@ MakeResultMap(std::shared_ptr<T> nominalResult, std::vector<std::shared_ptr<T>> 
    return ROOT::RDF::Experimental::RResultMap<T>(std::move(nominalResult), std::move(variedResults), std::move(keys),
                                                  lm, std::move(nominalAction), std::move(variedAction));
 }
+
+/**
+ * \brief Clones an RResultMap and its corresponding RVariedAction
+ *
+ * \tparam T The type of the results held by the map.
+ * \param inmap The map.
+ * \return ROOT::RDF::Experimental::RResultMap<T> A new map with the cloned variations.
+ */
+template <typename T>
+ROOT::RDF::Experimental::RResultMap<T> CloneResultAndAction(const ROOT::RDF::Experimental::RResultMap<T> &inmap)
+{
+   std::shared_ptr<T> nominalResult{inmap.fMap.at("nominal")};
+   auto nominalAction{inmap.fNominalAction->CloneAction(reinterpret_cast<void *>(&nominalResult))};
+
+   std::size_t nVariations{inmap.fMap.size() - 1};
+   std::vector<std::shared_ptr<T>> variedResults;
+   variedResults.reserve(nVariations);
+   for (auto i = 0u; i < nVariations; ++i)
+      variedResults.emplace_back(new T{*nominalResult});
+
+   std::vector<void *> typeErasedResults;
+   typeErasedResults.reserve(nVariations);
+   for (auto &res : variedResults)
+      typeErasedResults.push_back(&res);
+   auto variedAction{inmap.fVariedAction->CloneAction(reinterpret_cast<void *>(&typeErasedResults))};
+
+   std::vector<std::string> variationNames{inmap.fKeys};
+   Erase<std::string>("nominal", variationNames);
+
+   return ROOT::RDF::Experimental::RResultMap<T>(std::move(nominalResult), std::move(variedResults),
+                                                 std::move(variationNames), *(inmap.fLoopManager),
+                                                 std::move(nominalAction), std::move(variedAction));
+}
 } // namespace RDF
 } // namespace Internal
 
@@ -75,6 +108,7 @@ class RResultMap {
                                          std::shared_ptr<ROOT::Internal::RDF::RActionBase> nominalAction,
                                          std::shared_ptr<ROOT::Internal::RDF::RActionBase> variedAction);
 
+   friend RResultMap ROOT::Internal::RDF::CloneResultAndAction<T>(const RResultMap<T> &inmap);
    friend std::unique_ptr<ROOT::Detail::RDF::RMergeableVariations<T>>
    ROOT::Detail::RDF::GetMergeableValue<T>(RResultMap<T> &rmap);
 

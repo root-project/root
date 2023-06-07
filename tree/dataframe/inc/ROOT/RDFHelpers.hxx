@@ -248,6 +248,9 @@ RResultMap<T> VariationsFor(RResultPtr<T> resPtr)
                                         *resPtr.fLoopManager, std::move(nominalAction), std::move(variedAction));
 }
 
+using SnapshotPtr_t = ROOT::RDF::RResultPtr<ROOT::RDF::RInterface<ROOT::Detail::RDF::RLoopManager, void>>;
+SnapshotPtr_t VariationsFor(SnapshotPtr_t resPtr);
+
 } // namespace Experimental
 } // namespace RDF
 } // namespace ROOT

@@ -92,3 +92,8 @@ void ROOT::RDF::RunGraphs(std::vector<RResultHandle> handles)
       << "Finished RunGraphs run (" << uniqueLoops.size() << " unique computation graphs, " << sw.CpuTime() << "s CPU, "
       << sw.RealTime() << "s elapsed).";
 }
+
+ROOT::RDF::Experimental::SnapshotPtr_t ROOT::RDF::Experimental::VariationsFor(ROOT::RDF::Experimental::SnapshotPtr_t)
+{
+   throw std::logic_error("Varying a Snapshot result is not implemented yet.");
+}
