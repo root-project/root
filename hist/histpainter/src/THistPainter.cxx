@@ -7628,6 +7628,21 @@ void THistPainter::PaintH3Box(Int_t iopt)
       PaintPalette();
    }
 
+   //Draw stats and fit results
+   TF1 *fit  = nullptr;
+   TIter next(fFunctions);
+   while (auto obj = next()) {
+      if (obj->InheritsFrom(TF1::Class())) {
+         fit = (TF1*)obj;
+         break;
+      }
+   }
+   if ((Hoption.Same%10) != 1) {
+      if (!fH->TestBit(TH1::kNoStats)) {  // bit set via TH1::SetStats
+         PaintStat3(gStyle->GetOptStat(),fit);
+      }
+   }
+
    fLego.reset();
 
    fH->SetFillStyle(fillsav);
@@ -7819,6 +7834,21 @@ void THistPainter::PaintH3BoxRaster()
    }
    PaintTitle();
 
+   //Draw stats and fit results
+   TF1 *fit  = nullptr;
+   TIter next(fFunctions);
+   while (auto obj = next()) {
+      if (obj->InheritsFrom(TF1::Class())) {
+         fit = (TF1*)obj;
+         break;
+      }
+   }
+   if ((Hoption.Same%10) != 1) {
+      if (!fH->TestBit(TH1::kNoStats)) {  // bit set via TH1::SetStats
+         PaintStat3(gStyle->GetOptStat(),fit);
+      }
+   }
+
    fLego.reset();
 }
 
@@ -7928,6 +7958,21 @@ void THistPainter::PaintH3Iso()
    }
 
    PaintTitle();
+
+   //Draw stats and fit results
+   TF1 *fit  = nullptr;
+   TIter next(fFunctions);
+   while (auto obj = next()) {
+      if (obj->InheritsFrom(TF1::Class())) {
+         fit = (TF1*)obj;
+         break;
+      }
+   }
+   if ((Hoption.Same%10) != 1) {
+      if (!fH->TestBit(TH1::kNoStats)) {  // bit set via TH1::SetStats
+         PaintStat3(gStyle->GetOptStat(),fit);
+      }
+   }
 
    fLego.reset();
 }
