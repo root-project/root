@@ -44,6 +44,12 @@
     targetClass="RooStats::HistFactory::HistoSys" target="" \
     code="{newObj->SetHistoLow ( onfile.fhLow.ReleaseObject() ); \
            newObj->SetHistoHigh( onfile.fhHigh.ReleaseObject() ); }"
+#pragma link C++ class RooStats::HistFactory::OverallSys+ ;
+#pragma link C++ class RooStats::HistFactory::NormFactor+ ;
+#pragma link C++ class RooStats::HistFactory::Systematic+ ;
+#pragma link C++ class RooStats::HistFactory::HistoFactor+ ;
+#pragma link C++ class RooStats::HistFactory::ShapeSys+ ;
+#pragma link C++ class RooStats::HistFactory::ShapeFactor+ ;
 
 #pragma link C++ class std::vector< RooStats::HistFactory::Channel >+ ;
 #pragma link C++ class std::vector< RooStats::HistFactory::Sample >+ ;
