@@ -186,7 +186,7 @@ def _(resultptr):
     of the dataset and the path to the partial snapshot. We can directly return
     the object, no extra work needed.
     """
-    return resultptr
+    return SnapshotResult(resultptr.treename, resultptr.filenames)
 
 
 @singledispatch
@@ -241,3 +241,38 @@ def _(mergeable: ROOT.Detail.RDF.RMergeableVariationsBase, node, backend):
     the RMergeableVariations class.
     """
     node.value = mergeable
+
+
+@singledispatch
+def clone_action(result_promise, _):
+    """
+    Clone the action held by an RResultPtr or RResultMap, registering it with
+    its RLoopManager.
+    """
+    return ROOT.Internal.RDF.CloneResultAndAction(result_promise)
+
+
+@clone_action.register(AsNumpyResult)
+def _(asnumpyres, _):
+    asnumpyres._result_ptrs = {
+        col: ROOT.Internal.RDF.CloneResultAndAction(ptr)
+        for (col, ptr) in asnumpyres._result_ptrs.items()
+    }
+    return asnumpyres
+
+
+@clone_action.register(SnapshotResult)
+def _(snap, range_id: int):
+    # Create output file name for the cloned Snapshot
+    if snap.filenames[0].endswith(".root"):
+        name_with_old_id = snap.filenames[0][:-5]
+    else:
+        name_with_old_id = snap.filenames[0]
+    last_underscore = name_with_old_id.rfind("_")
+    basename = name_with_old_id[:last_underscore]
+    path_with_range = f"{basename}_{range_id}.root"
+
+    # Actually clone the RDF C++ Snapshot node with the new file name
+    resptr = ROOT.Internal.RDF.CloneResultAndAction(snap._resultptr, path_with_range)
+
+    return SnapshotResult(snap.treename, [path_with_range], resptr)
