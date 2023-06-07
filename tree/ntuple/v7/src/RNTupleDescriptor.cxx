@@ -481,11 +481,11 @@ ROOT::Experimental::RClusterDescriptorBuilder::AddDeferredColumnRanges(const RNT
    /// Carries out a depth-first traversal of a field subtree rooted at `rootFieldId`.  For each field, `visitField` is
    /// called passing the field ID and the number of overall repetitions, taking into account the repetitions of each
    /// parent field in the hierarchy.
-   auto fnTraverseSubtree = [&](DescriptorId_t rootFieldId, std::size_t nRepetitionsAtThisLevel, const auto &visitField,
-                                const auto &enterSubtree) -> void {
+   auto fnTraverseSubtree = [&](DescriptorId_t rootFieldId, std::uint64_t nRepetitionsAtThisLevel,
+                                const auto &visitField, const auto &enterSubtree) -> void {
       visitField(rootFieldId, nRepetitionsAtThisLevel);
       for (const auto &f : desc.GetFieldIterable(rootFieldId)) {
-         const std::size_t nRepetitions = std::max(f.GetNRepetitions(), std::size_t{1U}) * nRepetitionsAtThisLevel;
+         const std::uint64_t nRepetitions = std::max(f.GetNRepetitions(), std::uint64_t{1U}) * nRepetitionsAtThisLevel;
          enterSubtree(f.GetId(), nRepetitions, visitField, enterSubtree);
       }
    };
@@ -498,8 +498,8 @@ ROOT::Experimental::RClusterDescriptorBuilder::AddDeferredColumnRanges(const RNT
    // Ensure that all columns in the header extension have their associated `R(Column|Page)Range`
    for (const auto &topLevelFieldId : xHeader->GetTopLevelFields(desc)) {
       fnTraverseSubtree(
-         topLevelFieldId, std::max(desc.GetFieldDescriptor(topLevelFieldId).GetNRepetitions(), std::size_t{1U}),
-         [&](DescriptorId_t fieldId, std::size_t nRepetitions) {
+         topLevelFieldId, std::max(desc.GetFieldDescriptor(topLevelFieldId).GetNRepetitions(), std::uint64_t{1U}),
+         [&](DescriptorId_t fieldId, std::uint64_t nRepetitions) {
             for (const auto &c : desc.GetColumnIterable(fieldId)) {
                const DescriptorId_t physicalId = c.GetPhysicalId();
                auto &columnRange = fCluster.fColumnRanges[physicalId];
