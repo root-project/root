@@ -19,7 +19,6 @@ ROOTTEST_ADD_TEST(execrefDefaultParams
 ROOTTEST_ADD_TEST(runlongArgTest
                   MACRO runlongArgTest.C
                   OUTREF longArgTest.ref
-                  WILLFAIL
                   LABELS roottest regression cling)
 
 ROOTTEST_ADD_TEST(runstaticfunc
