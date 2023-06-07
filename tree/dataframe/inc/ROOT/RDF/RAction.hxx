@@ -168,8 +168,19 @@ public:
          std::move(helpers), GetColumnNames(), fPrevNodePtr, GetColRegister()});
    }
 
-private:
+   /**
+    * \brief Returns a new action with a cloned helper.
+    *
+    * \param[in] newResult The result to be filled by the new action (needed to clone the helper).
+    * \return A unique pointer to the new action.
+    */
+   std::unique_ptr<RActionBase> CloneAction(void *newResult) final
+   {
+      return std::make_unique<RAction>(fHelper.CallMakeNew(newResult), GetColumnNames(), fPrevNodePtr,
+                                       GetColRegister());
+   }
 
+private:
    ROOT::RDF::SampleCallback_t GetSampleCallback() final { return fHelper.GetSampleCallback(); }
 };
 
