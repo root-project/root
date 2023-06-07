@@ -93,6 +93,8 @@ public:
 
   void translate(RooFit::Detail::CodeSquashContext &ctx) const override;
 
+  std::unique_ptr<RooAbsArg> compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileContext & ctx) const override;
+
   protected:
   void selectNormalization(const RooArgSet* depSet=nullptr, bool force=false) override;
   void selectNormalizationRange(const char* rangeName=nullptr, bool force=false) override;
