@@ -13,6 +13,8 @@
 
 import ROOT
 
+ROOT.gSystem.Load("libHistFactory")
+
 # start by creating an empty workspace
 ws = ROOT.RooWorkspace("workspace")
 
