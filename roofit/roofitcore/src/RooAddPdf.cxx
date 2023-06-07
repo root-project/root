@@ -75,6 +75,7 @@ An (enforced) condition for this assumption is that each \f$ \mathrm{PDF}_i \f$ 
 #include "RooRealConstant.h"
 #include "RooRealSumPdf.h"
 #include "RooRecursiveFraction.h"
+#include "RooGenericPdf.h"
 
 #include <algorithm>
 #include <memory>
@@ -828,4 +829,54 @@ bool RooAddPdf::redirectServersHook(const RooAbsCollection & newServerList, bool
   // to the right observables anymore. We need to reset it.
   _copyOfLastNormSet.reset();
   return RooAbsPdf::redirectServersHook(newServerList, mustReplaceAll, nameChange, isRecursiveStep);
+}
+
+
+std::unique_ptr<RooAbsArg>
+RooAddPdf::compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileContext &ctx) const
+{
+   auto newArg = std::unique_ptr<RooAbsReal>{static_cast<RooAbsReal *>(Clone())};
+   ctx.markAsCompiled(*newArg);
+
+   // In case conditional observables, e.g. p(x|y), the _refCoefNorm is set to
+   // all observables (x, y) and the normSet doesn't contain the condidional
+   // observables (so it only contains x in this example).
+
+   // If the _refCoefNorm is empty or it's equal to normSet anyway, this is not
+   // a conditional pdf and we don't need to do any transformation.
+   if(_refCoefNorm.empty() || normSet.equals(_refCoefNorm)) {
+     ctx.compileServers(*newArg, normSet);
+     return newArg;
+   }
+
+   // In the conditional case, things become more complicated. The original
+   // getValV() method is covering this case with very complicated logic,
+   // caching multiple new RooFit objects to scale the individual coefficients
+   // of the RooAddPdf.
+   //
+   // However, it's not complicated what we need to do mathematically:
+   //
+   // Since:
+   //   1. p(x, y) = p(x | y) * p(y)
+   //   2. p(y) = Integral of p(x, y) over x
+   //
+   // We conculde:
+   //                      p(x, y)
+   //   p(x | y) = --------------------------
+   //              Integral of p(x, y) over x
+   //
+   // What follows is the implementation of this formula in RooFit. By doing
+   // this here in complieForNormSet(), we don't invoke the old RooAddPdf
+   // projection caches (note that no conditional pdfs are on the right hand
+   // side of the equation).
+   std::string finalName = std::string(GetName()) + "_conditional";
+   std::unique_ptr<RooAbsReal> denom{newArg->createIntegral(normSet, _refCoefNorm)};
+   auto finalArg = std::make_unique<RooGenericPdf>(finalName.c_str(), "@0/@1", RooArgList{*newArg, *denom});
+   ctx.compileServers(*denom, _refCoefNorm);
+   ctx.markAsCompiled(*denom);
+   ctx.markAsCompiled(*finalArg);
+   ctx.compileServers(*newArg, _refCoefNorm);
+   finalArg->addOwnedComponents(std::move(newArg));
+   finalArg->addOwnedComponents(std::move(denom));
+   return finalArg;
 }
