@@ -27,21 +27,6 @@ namespace HistFactory {
     Type GetType( const std::string& Name );
   }
 
-
-  // Base class for common functions
-  /*
-  class Systematic {
-
-  public:
-
-    virtual void Print(std::ostream& = std::cout);
-    virtual void writeToFile(const std::string& FileName,
-              const std::string& Directory);
-
-
-  };
-  */
-
 /** \class OverallSys
  * \ingroup HistFactory
  * Configuration for a constrained overall systematic to scale sample normalisations.
