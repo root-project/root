@@ -37,6 +37,26 @@
 #include <unordered_set>
 #include <vector>
 
+#if defined (__FreeBSD__)
+#   include <sys/user.h>
+#   include <sys/types.h>
+#   include <sys/param.h>
+#   include <sys/queue.h>
+
+// so this is a hack to avoid libprocstat clobbering the elf includes.
+// No idea if this will keep working
+# ifndef ZFS
+#   define ZFS
+#   define thisisabloodyhackZFS
+# endif
+#   include <libprocstat.h>
+# ifdef thisisabloodyhackZFS
+#   undef ZFS
+# endif
+#undef thisisabloodyhackZFS
+
+#   include <libutil.h>
+#endif
 
 #ifdef LLVM_ON_UNIX
 #include <dlfcn.h>
@@ -1363,6 +1383,17 @@ namespace cling {
       if (_NSGetExecutablePath(buf, &bufsize) >= 0)
         return cached_realpath(buf);
       return cached_realpath(info.dli_fname);
+# elif defined (__FreeBSD__)
+      procstat* ps = procstat_open_sysctl();  //
+      kinfo_proc* kp = kinfo_getproc(getpid());
+
+      char buf[PATH_MAX] = "";
+      if (kp!=NULL) {
+        procstat_getpathname(ps, kp, buf, sizeof(buf));
+      };
+      free(kp);
+      procstat_close(ps);
+      return cached_realpath(buf);
 # elif defined(LLVM_ON_UNIX)
       char buf[PATH_MAX] = { 0 };
       // Cross our fingers that /proc/self/exe exists.

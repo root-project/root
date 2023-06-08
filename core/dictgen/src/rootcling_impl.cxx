@@ -54,6 +54,14 @@
 #include <mach-o/dyld.h>
 #endif
 
+#ifdef R__FBSD
+#include <sys/param.h>
+#include <sys/user.h>
+#include <sys/types.h>
+#include <libutil.h>
+#include <libprocstat.h>
+#endif // R__FBSD
+
 #if !defined(R__WIN32)
 #include <limits.h>
 #include <unistd.h>
@@ -205,6 +213,19 @@ const char *GetExePath()
       buf[ret] = 0;
       exepath = buf;
     }
+#endif
+#if defined R__FBSD || defined __FreeBSD__
+  procstat* ps = procstat_open_sysctl();  //
+  kinfo_proc* kp = kinfo_getproc(getpid());
+
+  if (kp!=NULL) {
+     char path_str[PATH_MAX] = "";
+     procstat_getpathname(ps, kp, path_str, sizeof(path_str));
+     exepath = path_str;
+  }
+
+  free(kp);
+  procstat_close(ps);
 #endif
 #ifdef _WIN32
     char *buf = new char[MAX_MODULE_NAME32 + 1];

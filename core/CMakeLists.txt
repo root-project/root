@@ -81,6 +81,10 @@ target_link_libraries(Core
     ${ROOT_ATOMIC_LIBS}
 )
 
+if (CMAKE_SYSTEM_NAME MATCHES FreeBSD)
+	target_link_libraries(Core PUBLIC util procstat)
+endif()
+
 target_include_directories(Core PUBLIC
    $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/ginclude>
 )

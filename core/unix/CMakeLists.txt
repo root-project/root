@@ -16,4 +16,8 @@ set_property(TARGET Core APPEND PROPERTY DICT_HEADERS TUnixSystem.h)
 target_sources(Core PRIVATE src/TUnixSystem.cxx)
 target_include_directories(Core PRIVATE inc ../clib/res)
 
+if (CMAKE_SYSTEM_NAME MATCHES FreeBSD)
+	target_link_libraries(Core PRIVATE execinfo util)
+endif()
+
 ROOT_INSTALL_HEADERS()

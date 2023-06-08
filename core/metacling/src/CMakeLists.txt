@@ -195,3 +195,8 @@ if(APPLE)
 elseif(NOT MSVC)
   target_link_libraries(Cling PUBLIC -Wl,--unresolved-symbols=ignore-in-object-files)
 endif()
+
+if (CMAKE_SYSTEM_NAME MATCHES FreeBSD)
+	target_link_libraries(Cling PUBLIC util procstat)
+endif()
+
