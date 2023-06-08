@@ -1539,8 +1539,7 @@ TEST_P(RDFVary, VarySnapshot)
                .Snapshot<int>("t", fname, {"x"});
    EXPECT_THROW(
       try { VariationsFor(h); } catch (const std::logic_error &err) {
-         const auto msg = "The MakeNew method is not implemented for this action helper (Snapshot). "
-                          "Cannot Vary its result.";
+         const auto msg = "Varying a Snapshot result is not implemented yet.";
          EXPECT_STREQ(err.what(), msg);
          throw;
       },
