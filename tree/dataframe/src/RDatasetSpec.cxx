@@ -100,6 +100,22 @@ RDatasetSpec::WithGlobalFriends(const std::string &treeName, const std::string &
    return *this;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// \brief Add friend tree to RDatasetSpec object
+///
+/// \param[in] treeName Name of the tree.
+/// \param[in] fileNameGlob Path to the file. Refer to TChain::Add for globbing rules.
+/// \param[in] alias Alias for this friend.
+///
+/// ### Example usage:
+/// ~~~{.cpp}
+/// ROOT::RDF::Experimental::RDatasetSpec x;
+/// std::vector<std::string> files = {"outputFile.root"};
+/// //create RSample object with name myPhysicsDf and tree outputTree1
+/// ROOT::RDF::Experimental::RSample r("myPhysicsDf", "outputTree1", files);
+/// x.AddSample(r); //add RDatasetSpec to RDatasetSpec
+/// x.WithGlobalFriends("outputTree2", files); //add friend tree outputTree2
+/// ~~~
 RDatasetSpec &RDatasetSpec::WithGlobalFriends(const std::string &treeName,
                                               const std::vector<std::string> &fileNameGlobs, const std::string &alias)
 {
