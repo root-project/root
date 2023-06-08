@@ -46,7 +46,6 @@
            newObj->SetHistoHigh( onfile.fhHigh.ReleaseObject() ); }"
 #pragma link C++ class RooStats::HistFactory::OverallSys+ ;
 #pragma link C++ class RooStats::HistFactory::NormFactor+ ;
-#pragma link C++ class RooStats::HistFactory::Systematic+ ;
 #pragma link C++ class RooStats::HistFactory::HistoFactor+ ;
 #pragma link C++ class RooStats::HistFactory::ShapeSys+ ;
 #pragma link C++ class RooStats::HistFactory::ShapeFactor+ ;
