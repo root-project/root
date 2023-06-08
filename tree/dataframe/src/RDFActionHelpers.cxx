@@ -107,31 +107,6 @@ void BufferedFillHelper::Finalize()
    }
 }
 
-template void BufferedFillHelper::Exec(unsigned int, const std::vector<float> &);
-template void BufferedFillHelper::Exec(unsigned int, const std::vector<double> &);
-template void BufferedFillHelper::Exec(unsigned int, const std::vector<char> &);
-template void BufferedFillHelper::Exec(unsigned int, const std::vector<int> &);
-template void BufferedFillHelper::Exec(unsigned int, const std::vector<unsigned int> &);
-template void BufferedFillHelper::Exec(unsigned int, const std::vector<float> &, const std::vector<float> &);
-template void BufferedFillHelper::Exec(unsigned int, const std::vector<double> &, const std::vector<double> &);
-template void BufferedFillHelper::Exec(unsigned int, const std::vector<char> &, const std::vector<char> &);
-template void BufferedFillHelper::Exec(unsigned int, const std::vector<int> &, const std::vector<int> &);
-template void
-BufferedFillHelper::Exec(unsigned int, const std::vector<unsigned int> &, const std::vector<unsigned int> &);
-
-// TODO
-// template void MinHelper::Exec(unsigned int, const std::vector<float> &);
-// template void MinHelper::Exec(unsigned int, const std::vector<double> &);
-// template void MinHelper::Exec(unsigned int, const std::vector<char> &);
-// template void MinHelper::Exec(unsigned int, const std::vector<int> &);
-// template void MinHelper::Exec(unsigned int, const std::vector<unsigned int> &);
-
-// template void MaxHelper::Exec(unsigned int, const std::vector<float> &);
-// template void MaxHelper::Exec(unsigned int, const std::vector<double> &);
-// template void MaxHelper::Exec(unsigned int, const std::vector<char> &);
-// template void MaxHelper::Exec(unsigned int, const std::vector<int> &);
-// template void MaxHelper::Exec(unsigned int, const std::vector<unsigned int> &);
-
 MeanHelper::MeanHelper(const std::shared_ptr<double> &meanVPtr, const unsigned int nSlots)
    : fResultMean(meanVPtr), fCounts(nSlots, 0), fSums(nSlots, 0), fPartialMeans(nSlots), fCompensations(nSlots)
 {
