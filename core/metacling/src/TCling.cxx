@@ -3279,6 +3279,9 @@ static int callback_for_dl_iterate_phdr(struct dl_phdr_info *info, size_t size, 
    if (!sKnownLoadedLibBaseAddrs.count(info->dlpi_addr)) {
       // Skip \0, "", and kernel pseudo-libs linux-vdso.so.1 or linux-gate.so.1
       if (info->dlpi_name && info->dlpi_name[0]
+#if defined(R__FBSD)
+          && strstr(info->dlpi_name, "[vdso]")
+#endif
           && strncmp(info->dlpi_name, "linux-vdso.so", 13)
           && strncmp(info->dlpi_name, "linux-vdso32.so", 15)
           && strncmp(info->dlpi_name, "linux-vdso64.so", 15)
