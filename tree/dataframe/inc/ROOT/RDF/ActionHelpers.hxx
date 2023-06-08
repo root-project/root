@@ -336,18 +336,6 @@ public:
    }
 };
 
-extern template void BufferedFillHelper::Exec(unsigned int, const std::vector<float> &);
-extern template void BufferedFillHelper::Exec(unsigned int, const std::vector<double> &);
-extern template void BufferedFillHelper::Exec(unsigned int, const std::vector<char> &);
-extern template void BufferedFillHelper::Exec(unsigned int, const std::vector<int> &);
-extern template void BufferedFillHelper::Exec(unsigned int, const std::vector<unsigned int> &);
-extern template void BufferedFillHelper::Exec(unsigned int, const std::vector<float> &, const std::vector<float> &);
-extern template void BufferedFillHelper::Exec(unsigned int, const std::vector<double> &, const std::vector<double> &);
-extern template void BufferedFillHelper::Exec(unsigned int, const std::vector<char> &, const std::vector<char> &);
-extern template void BufferedFillHelper::Exec(unsigned int, const std::vector<int> &, const std::vector<int> &);
-extern template void
-BufferedFillHelper::Exec(unsigned int, const std::vector<unsigned int> &, const std::vector<unsigned int> &);
-
 /// The generic Fill helper: it calls Fill on per-thread objects and then Merge to produce a final result.
 /// For one-dimensional histograms, if no axes are specified, RDataFrame uses BufferedFillHelper instead.
 template <typename HIST = Hist_t>
