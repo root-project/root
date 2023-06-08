@@ -302,12 +302,15 @@ public:
       thisWBuf.insert(thisWBuf.end(), vs.size(), w);
    }
 
-   // ROOT-10092: Filling with a scalar as first column and a collection as second is not supported
    template <typename T, typename W, std::enable_if_t<IsDataContainer<W>::value && !IsDataContainer<T>::value, int> = 0>
-   void Exec(unsigned int, const T &, const W &)
+   void Exec(unsigned int slot, const T v, const W &ws)
    {
-      throw std::runtime_error(
-        "Cannot fill object if the type of the first column is a scalar and the one of the second a container.");
+      UpdateMinMax(slot, v);
+      auto &thisBuf = fBuffers[slot];
+      thisBuf.insert(thisBuf.end(), ws.size(), v);
+
+      auto &thisWBuf = fWBuffers[slot];
+      thisWBuf.insert(thisWBuf.end(), ws.begin(), ws.end());
    }
 
    Hist_t &PartialUpdate(unsigned int);
