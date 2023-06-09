@@ -39,6 +39,31 @@ class RooWorkspace(object):
         # The key is passed to the general `RooWorkspace::obj()` function.
         return self.obj(key)
 
+    def __setitem__(self, key, value):
+        # Check if initialization is done with string
+        if(isinstance(value, str)):
+            if(not self.obj(key)):
+                parenthesis_index = -1
+                for i in range(0,len(value)):
+                    if(value[i]=='[' or value[i]=='('):
+                        parenthesis_index = i
+                        break
+                # Initializes variables
+                if value[parenthesis_index]=='[' and parenthesis_index!=-1:
+                    expr = key + value
+                    self.factory(expr)
+                # Initializes functions and p.d.f.s
+                elif value[parenthesis_index]=='(' and parenthesis_index!=-1:
+                    expr = value[0:parenthesis_index] + "::" + key + value[parenthesis_index:]
+                    self.factory(expr)
+                # Else raises a Syntax error
+                else:
+                    raise SyntaxError("Invalid syntax")
+            else:
+                raise RuntimeError("ERROR importing object named " + key + " another instance with same name already in the workspace and no conflict resolution protocol specified")
+        else:
+            raise TypeError("Object of type 'str' expected but " + type(value) + " was given")
+
     @cpp_signature(
         [
             "Bool_t RooWorkspace::import(const RooAbsArg& arg,"
