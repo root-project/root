@@ -270,7 +270,7 @@ BuildAction(const ColumnNames_t &colNames, const std::shared_ptr<SnapshotHelperA
       std::vector<bool> isDef;
       isDef.reserve(sizeof...(ColTypes));
       for (auto i = 0u; i < sizeof...(ColTypes); ++i)
-         isDef[i] = colRegister.IsDefineOrAlias(colNames[i]);
+         isDef.push_back(colRegister.IsDefineOrAlias(colNames[i]));
       return isDef;
    };
    std::vector<bool> isDefine = makeIsDefine();
