@@ -18,6 +18,7 @@
 
 #include <ROOT/RStringView.hxx>
 #include <ROOT/TypeTraits.hxx>
+#include <ROOT/RVec.hxx>
 #include <Rtypes.h> // R__CLING_PTRCHECK, Long64_t
 
 #include <array>
@@ -54,7 +55,7 @@ bool ResultsSizeEq(const T &results, std::size_t expected, std::size_t nColumns,
 }
 
 template <typename T>
-std::size_t GetNVariations(const RVec<T> &results)
+std::size_t GetNVariations(const ROOT::RVec<T> &results)
 {
    return results.size();
 }
@@ -94,7 +95,7 @@ bool ResultsSizeEq(const T &results, std::size_t expected, std::size_t /*nColumn
 }
 
 template <typename T>
-std::size_t GetNVariations(const std::vector<RVec<T>> &results)
+std::size_t GetNVariations(const std::vector<ROOT::RVec<T>> &results)
 {
    assert(!results.empty());
    return results[0].size();
