@@ -34,7 +34,7 @@ namespace RDFGraphDrawing = ROOT::Internal::RDF::GraphDrawing;
 
 namespace GraphDrawing {
 std::shared_ptr<GraphNode> AddDefinesToGraph(std::shared_ptr<GraphNode> node,
-                                             const RDFInternal::RColumnRegister &colRegister,
+                                             const RColumnRegister &colRegister,
                                              const std::vector<std::string> &prevNodeDefines,
                                              std::unordered_map<void *, std::shared_ptr<GraphNode>> &visitedMap);
 } // namespace GraphDrawing
@@ -58,7 +58,7 @@ class R__CLING_PTRCHECK(off) RAction : public RActionBase {
    const std::shared_ptr<PrevNode> fPrevNodePtr;
    PrevNode &fPrevNode;
    /// Column readers per slot and per input column
-   std::vector<std::array<RColumnReaderBase *, ColumnTypes_t::list_size>> fValues;
+   std::vector<std::array<RDFDetail::RColumnReaderBase *, ColumnTypes_t::list_size>> fValues;
 
    /// The nth flag signals whether the nth input column is a custom column or not.
    std::array<bool, ColumnTypes_t::list_size> fIsDefine;
@@ -93,9 +93,9 @@ public:
 
    void InitSlot(TTreeReader *r, unsigned int slot) final
    {
-      RDFInternal::RColumnReadersInfo info{RActionBase::GetColumnNames(), RActionBase::GetColRegister(),
+      RColumnReadersInfo info{RActionBase::GetColumnNames(), RActionBase::GetColRegister(),
                                            fIsDefine.data(), *fLoopManager};
-      fValues[slot] = RDFInternal::GetColumnReaders(slot, r, ColumnTypes_t{}, info);
+      fValues[slot] = GetColumnReaders(slot, r, ColumnTypes_t{}, info);
       fHelper.InitTask(r, slot);
    }
 

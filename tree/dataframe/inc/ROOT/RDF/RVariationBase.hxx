@@ -43,15 +43,16 @@ protected:
    std::string fType;                        ///< The type of the custom column as a text string.
    std::vector<Long64_t> fLastCheckedEntry;
    RColumnRegister fColumnRegister;
-   RLoopManager *fLoopManager;
-   ColumnNames_t fInputColumns;
+   ROOT::Detail::RDF::RLoopManager *fLoopManager;
+   ROOT::RDF::ColumnNames_t fInputColumns;
    /// The nth flag signals whether the nth input column is a custom column or not.
    ROOT::RVecB fIsDefine;
 
 public:
    RVariationBase(const std::vector<std::string> &colNames, std::string_view variationName,
                   const std::vector<std::string> &variationTags, std::string_view type,
-                  const RColumnRegister &colRegister, RLoopManager &lm, const ColumnNames_t &inputColNames);
+                  const RColumnRegister &colRegister, ROOT::Detail::RDF::RLoopManager &lm,
+                  const ROOT::RDF::ColumnNames_t &inputColNames);
 
    RVariationBase(const RVariationBase &) = delete;
    RVariationBase(RVariationBase &&) = default;

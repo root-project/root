@@ -24,8 +24,6 @@ namespace ROOT {
 namespace Detail {
 namespace RDF {
 
-using namespace ROOT::TypeTraits;
-
 template <typename F>
 class R__CLING_PTRCHECK(off) RDefinePerSample final : public RDefineBase {
    using RetType_t = typename CallableTraits<F>::ret_type;

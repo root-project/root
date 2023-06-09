@@ -12,23 +12,21 @@
 
 #include <cassert>
 
-using namespace ROOT::Detail::RDF;
+ROOT::Detail::RDF::RJittedDefine::~RJittedDefine() {}
 
-RJittedDefine::~RJittedDefine() {}
-
-void RJittedDefine::InitSlot(TTreeReader *r, unsigned int slot)
+void ROOT::Detail::RDF::RJittedDefine::InitSlot(TTreeReader *r, unsigned int slot)
 {
    assert(fConcreteDefine != nullptr);
    fConcreteDefine->InitSlot(r, slot);
 }
 
-void *RJittedDefine::GetValuePtr(unsigned int slot)
+void *ROOT::Detail::RDF::RJittedDefine::GetValuePtr(unsigned int slot)
 {
    assert(fConcreteDefine != nullptr);
    return fConcreteDefine->GetValuePtr(slot);
 }
 
-const std::type_info &RJittedDefine::GetTypeId() const
+const std::type_info &ROOT::Detail::RDF::RJittedDefine::GetTypeId() const
 {
    if (fConcreteDefine)
       return fConcreteDefine->GetTypeId();
@@ -39,31 +37,31 @@ const std::type_info &RJittedDefine::GetTypeId() const
                                "retrieved. This should never happen, please report this as a bug.");
 }
 
-void RJittedDefine::Update(unsigned int slot, Long64_t entry)
+void ROOT::Detail::RDF::RJittedDefine::Update(unsigned int slot, Long64_t entry)
 {
    assert(fConcreteDefine != nullptr);
    fConcreteDefine->Update(slot, entry);
 }
 
-void RJittedDefine::Update(unsigned int slot, const ROOT::RDF::RSampleInfo &id)
+void ROOT::Detail::RDF::RJittedDefine::Update(unsigned int slot, const ROOT::RDF::RSampleInfo &id)
 {
    assert(fConcreteDefine != nullptr);
    fConcreteDefine->Update(slot, id);
 }
 
-void RJittedDefine::FinalizeSlot(unsigned int slot)
+void ROOT::Detail::RDF::RJittedDefine::FinalizeSlot(unsigned int slot)
 {
    assert(fConcreteDefine != nullptr);
    fConcreteDefine->FinalizeSlot(slot);
 }
 
-void RJittedDefine::MakeVariations(const std::vector<std::string> &variations)
+void ROOT::Detail::RDF::RJittedDefine::MakeVariations(const std::vector<std::string> &variations)
 {
    assert(fConcreteDefine != nullptr);
    return fConcreteDefine->MakeVariations(variations);
 }
 
-RDefineBase &RJittedDefine::GetVariedDefine(const std::string &variationName)
+ROOT::Detail::RDF::RDefineBase &ROOT::Detail::RDF::RJittedDefine::GetVariedDefine(const std::string &variationName)
 {
    assert(fConcreteDefine != nullptr);
    return fConcreteDefine->GetVariedDefine(variationName);

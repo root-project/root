@@ -32,7 +32,8 @@ namespace ROOT {
 namespace Detail {
 namespace RDF {
 
-using namespace ROOT::TypeTraits;
+using ROOT::TypeTraits::CallableTraits;
+using ROOT::TypeTraits::TypeList;
 
 // clang-format off
 namespace ExtraArgsForDefine {
@@ -179,8 +180,8 @@ public:
    }
 };
 
-} // ns RDF
-} // ns Detail
-} // ns ROOT
+} // namespace RDF
+} // namespace Detail
+} // namespace ROOT
 
 #endif // ROOT_RDF_RDEFINE

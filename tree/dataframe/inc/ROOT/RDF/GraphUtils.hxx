@@ -80,7 +80,7 @@ public:
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Starting from a Filter or Range, prints the branch it belongs to
    template <typename Proxied, typename DataSource>
-   std::string RepresentGraph(RInterface<Proxied, DataSource> &rInterface)
+   std::string RepresentGraph(ROOT::RDF::RInterface<Proxied, DataSource> &rInterface)
    {
       auto loopManager = rInterface.GetLoopManager();
       loopManager->Jit();
@@ -91,7 +91,7 @@ public:
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Starting from an action, prints the branch it belongs to
    template <typename T>
-   std::string RepresentGraph(const RResultPtr<T> &resultPtr)
+   std::string RepresentGraph(const ROOT::RDF::RResultPtr<T> &resultPtr)
    {
       auto loopManager = resultPtr.fLoopManager;
 

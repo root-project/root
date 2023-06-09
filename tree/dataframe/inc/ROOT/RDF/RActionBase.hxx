@@ -35,7 +35,10 @@ namespace GraphDrawing {
 class GraphNode;
 }
 
-using namespace ROOT::Detail::RDF;
+using ROOT::RDF::ColumnNames_t;
+using ROOT::Internal::RDF::RColumnRegister;
+using ROOT::Detail::RDF::RLoopManager;
+using ROOT::Detail::RDF::RMergeableValueBase;
 
 class RActionBase {
 protected:

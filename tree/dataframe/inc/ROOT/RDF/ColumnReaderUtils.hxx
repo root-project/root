@@ -37,12 +37,12 @@ namespace ROOT {
 namespace Internal {
 namespace RDF {
 
-using namespace ROOT::TypeTraits;
+using ROOT::TypeTraits::TypeList;
 namespace RDFDetail = ROOT::Detail::RDF;
 
 template <typename T>
-RDFDetail::RColumnReaderBase *GetColumnReader(unsigned int slot, RColumnReaderBase *defineOrVariationReader,
-                                              RLoopManager &lm, TTreeReader *r, const std::string &colName)
+RDFDetail::RColumnReaderBase *GetColumnReader(unsigned int slot, RDFDetail::RColumnReaderBase *defineOrVariationReader,
+                                              RDFDetail::RLoopManager &lm, TTreeReader *r, const std::string &colName)
 {
    if (defineOrVariationReader != nullptr)
       return defineOrVariationReader;
@@ -68,7 +68,7 @@ struct RColumnReadersInfo {
    const std::vector<std::string> &fColNames;
    RColumnRegister &fColRegister;
    const bool *fIsDefine;
-   RLoopManager &fLoopManager;
+   RDFDetail::RLoopManager &fLoopManager;
 };
 
 /// Create a group of column readers, one per type in the parameter pack.

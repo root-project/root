@@ -15,10 +15,8 @@
 
 #include <cassert>
 
-using namespace ROOT::Detail::RDF;
-
-RJittedFilter::RJittedFilter(RLoopManager *lm, std::string_view name, const std::vector<std::string> &variations)
-   : RFilterBase(lm, name, lm->GetNSlots(), RDFInternal::RColumnRegister(nullptr), /*columnNames*/ {}, variations)
+ROOT::Detail::RDF::RJittedFilter::RJittedFilter(RLoopManager *lm, std::string_view name, const std::vector<std::string> &variations)
+   : ROOT::Detail::RDF::RFilterBase(lm, name, lm->GetNSlots(), RDFInternal::RColumnRegister(nullptr), /*columnNames*/ {}, variations)
 {
    // Jitted nodes of the computation graph (e.g. RJittedAction, RJittedDefine) usually don't need to register
    // themselves with the RLoopManager: the _concrete_ nodes will be registered with the RLoopManager right before
@@ -31,7 +29,7 @@ RJittedFilter::RJittedFilter(RLoopManager *lm, std::string_view name, const std:
    fLoopManager->Register(this);
 }
 
-RJittedFilter::~RJittedFilter()
+ROOT::Detail::RDF::RJittedFilter::~RJittedFilter()
 {
    // This should be a no-op in most sane cases: the RJittedFilter should already have been deregistered in SetFilter.
    // However, in the edge case in which the branch of the computation graph that included this RJittedFilter went out
@@ -40,86 +38,86 @@ RJittedFilter::~RJittedFilter()
    fLoopManager->Deregister(this);
 }
 
-void RJittedFilter::SetFilter(std::unique_ptr<RFilterBase> f)
+void ROOT::Detail::RDF::RJittedFilter::SetFilter(std::unique_ptr<RFilterBase> f)
 {
    // the concrete filter has been registered with RLoopManager on creation, so let's deregister ourselves
    fLoopManager->Deregister(this);
    fConcreteFilter = std::move(f);
 }
 
-void RJittedFilter::InitSlot(TTreeReader *r, unsigned int slot)
+void ROOT::Detail::RDF::RJittedFilter::InitSlot(TTreeReader *r, unsigned int slot)
 {
    assert(fConcreteFilter != nullptr);
    fConcreteFilter->InitSlot(r, slot);
 }
 
-bool RJittedFilter::CheckFilters(unsigned int slot, Long64_t entry)
+bool ROOT::Detail::RDF::RJittedFilter::CheckFilters(unsigned int slot, Long64_t entry)
 {
    assert(fConcreteFilter != nullptr);
    return fConcreteFilter->CheckFilters(slot, entry);
 }
 
-void RJittedFilter::Report(ROOT::RDF::RCutFlowReport &cr) const
+void ROOT::Detail::RDF::RJittedFilter::Report(ROOT::RDF::RCutFlowReport &cr) const
 {
    assert(fConcreteFilter != nullptr);
    fConcreteFilter->Report(cr);
 }
 
-void RJittedFilter::PartialReport(ROOT::RDF::RCutFlowReport &cr) const
+void ROOT::Detail::RDF::RJittedFilter::PartialReport(ROOT::RDF::RCutFlowReport &cr) const
 {
    assert(fConcreteFilter != nullptr);
    fConcreteFilter->PartialReport(cr);
 }
 
-void RJittedFilter::FillReport(ROOT::RDF::RCutFlowReport &cr) const
+void ROOT::Detail::RDF::RJittedFilter::FillReport(ROOT::RDF::RCutFlowReport &cr) const
 {
    assert(fConcreteFilter != nullptr);
    fConcreteFilter->FillReport(cr);
 }
 
-void RJittedFilter::IncrChildrenCount()
+void ROOT::Detail::RDF::RJittedFilter::IncrChildrenCount()
 {
    assert(fConcreteFilter != nullptr);
    fConcreteFilter->IncrChildrenCount();
 }
 
-void RJittedFilter::StopProcessing()
+void ROOT::Detail::RDF::RJittedFilter::StopProcessing()
 {
    assert(fConcreteFilter != nullptr);
    fConcreteFilter->StopProcessing();
 }
 
-void RJittedFilter::ResetChildrenCount()
+void ROOT::Detail::RDF::RJittedFilter::ResetChildrenCount()
 {
    assert(fConcreteFilter != nullptr);
    fConcreteFilter->ResetChildrenCount();
 }
 
-void RJittedFilter::TriggerChildrenCount()
+void ROOT::Detail::RDF::RJittedFilter::TriggerChildrenCount()
 {
    assert(fConcreteFilter != nullptr);
    fConcreteFilter->TriggerChildrenCount();
 }
 
-void RJittedFilter::ResetReportCount()
+void ROOT::Detail::RDF::RJittedFilter::ResetReportCount()
 {
    assert(fConcreteFilter != nullptr);
    fConcreteFilter->ResetReportCount();
 }
 
-void RJittedFilter::FinalizeSlot(unsigned int slot)
+void ROOT::Detail::RDF::RJittedFilter::FinalizeSlot(unsigned int slot)
 {
    assert(fConcreteFilter != nullptr);
    fConcreteFilter->FinalizeSlot(slot);
 }
 
-void RJittedFilter::InitNode()
+void ROOT::Detail::RDF::RJittedFilter::InitNode()
 {
    assert(fConcreteFilter != nullptr);
    fConcreteFilter->InitNode();
 }
 
-void RJittedFilter::AddFilterName(std::vector<std::string> &filters)
+void ROOT::Detail::RDF::RJittedFilter::AddFilterName(std::vector<std::string> &filters)
 {
    if (fConcreteFilter == nullptr) {
       // No event loop performed yet, but the JITTING must be performed.
@@ -128,8 +126,8 @@ void RJittedFilter::AddFilterName(std::vector<std::string> &filters)
    fConcreteFilter->AddFilterName(filters);
 }
 
-std::shared_ptr<RDFGraphDrawing::GraphNode>
-RJittedFilter::GetGraph(std::unordered_map<void *, std::shared_ptr<RDFGraphDrawing::GraphNode>> &visitedMap)
+std::shared_ptr<ROOT::Internal::RDF::GraphDrawing::GraphNode>
+ROOT::Detail::RDF::RJittedFilter::GetGraph(std::unordered_map<void *, std::shared_ptr<ROOT::Internal::RDF::GraphDrawing::GraphNode>> &visitedMap)
 {
    if (fConcreteFilter != nullptr) {
       // Here the filter exists, so it can be served
@@ -138,7 +136,7 @@ RJittedFilter::GetGraph(std::unordered_map<void *, std::shared_ptr<RDFGraphDrawi
    throw std::runtime_error("The Jitting should have been invoked before this method.");
 }
 
-std::shared_ptr<RNodeBase> RJittedFilter::GetVariedFilter(const std::string &variationName)
+std::shared_ptr<ROOT::Detail::RDF::RNodeBase> ROOT::Detail::RDF::RJittedFilter::GetVariedFilter(const std::string &variationName)
 {
    assert(fConcreteFilter != nullptr);
    return fConcreteFilter->GetVariedFilter(variationName);

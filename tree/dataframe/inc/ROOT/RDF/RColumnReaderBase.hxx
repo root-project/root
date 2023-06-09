@@ -18,7 +18,7 @@ namespace Detail {
 namespace RDF {
 
 /**
-\class ROOT::Internal::RDF::RColumnReaderBase
+\class ROOT::Detail::RDF::RColumnReaderBase
 \ingroup dataframe
 \brief Pure virtual base class for all column reader types
 

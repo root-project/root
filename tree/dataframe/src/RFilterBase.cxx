@@ -14,9 +14,7 @@
 #include "ROOT/RDF/Utils.hxx"
 #include <numeric> // std::accumulate
 
-using namespace ROOT::Detail::RDF;
-
-RFilterBase::RFilterBase(RLoopManager *implPtr, std::string_view name, const unsigned int nSlots,
+ROOT::Detail::RDF::RFilterBase::RFilterBase(RLoopManager *implPtr, std::string_view name, const unsigned int nSlots,
                          const RDFInternal::RColumnRegister &colRegister, const ColumnNames_t &columns,
                          const std::vector<std::string> &prevVariations, const std::string &variation)
    : RNodeBase(ROOT::Internal::RDF::Union(colRegister.GetVariationDeps(columns), prevVariations), implPtr),
@@ -35,19 +33,19 @@ RFilterBase::RFilterBase(RLoopManager *implPtr, std::string_view name, const uns
 }
 
 // outlined to pin virtual table
-RFilterBase::~RFilterBase() {}
+ROOT::Detail::RDF::RFilterBase::~RFilterBase() {}
 
-bool RFilterBase::HasName() const
+bool ROOT::Detail::RDF::RFilterBase::HasName() const
 {
    return !fName.empty();
 }
 
-std::string RFilterBase::GetName() const
+std::string ROOT::Detail::RDF::RFilterBase::GetName() const
 {
    return fName;
 }
 
-void RFilterBase::FillReport(ROOT::RDF::RCutFlowReport &rep) const
+void ROOT::Detail::RDF::RFilterBase::FillReport(ROOT::RDF::RCutFlowReport &rep) const
 {
    if (fName.empty()) // FillReport is no-op for unnamed filters
       return;
@@ -56,7 +54,7 @@ void RFilterBase::FillReport(ROOT::RDF::RCutFlowReport &rep) const
    rep.AddCut({fName, accepted, all});
 }
 
-void RFilterBase::InitNode()
+void ROOT::Detail::RDF::RFilterBase::InitNode()
 {
    if (!fName.empty()) // if this is a named filter we care about its report count
       ResetReportCount();

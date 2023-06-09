@@ -12,35 +12,34 @@
 
 #include <cassert>
 
-using namespace ROOT::Internal::RDF;
+ROOT::Internal::RDF::RJittedVariation::~RJittedVariation() {}
 
-RJittedVariation::~RJittedVariation() {}
-
-void RJittedVariation::InitSlot(TTreeReader *r, unsigned int slot)
+void ROOT::Internal::RDF::RJittedVariation::InitSlot(TTreeReader *r, unsigned int slot)
 {
    assert(fConcreteVariation != nullptr);
    fConcreteVariation->InitSlot(r, slot);
 }
 
-void *RJittedVariation::GetValuePtr(unsigned int slot, const std::string &column, const std::string &variation)
+void *ROOT::Internal::RDF::RJittedVariation::GetValuePtr(unsigned int slot, const std::string &column,
+                                                         const std::string &variation)
 {
    assert(fConcreteVariation != nullptr);
    return fConcreteVariation->GetValuePtr(slot, column, variation);
 }
 
-const std::type_info &RJittedVariation::GetTypeId() const
+const std::type_info &ROOT::Internal::RDF::RJittedVariation::GetTypeId() const
 {
    assert(fConcreteVariation != nullptr);
    return fConcreteVariation->GetTypeId();
 }
 
-void RJittedVariation::Update(unsigned int slot, Long64_t entry)
+void ROOT::Internal::RDF::RJittedVariation::Update(unsigned int slot, Long64_t entry)
 {
    assert(fConcreteVariation != nullptr);
    fConcreteVariation->Update(slot, entry);
 }
 
-void RJittedVariation::FinalizeSlot(unsigned int slot)
+void ROOT::Internal::RDF::RJittedVariation::FinalizeSlot(unsigned int slot)
 {
    assert(fConcreteVariation != nullptr);
    fConcreteVariation->FinalizeSlot(slot);

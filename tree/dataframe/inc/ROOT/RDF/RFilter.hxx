@@ -32,15 +32,14 @@ namespace ROOT {
 
 namespace Internal {
 namespace RDF {
-using namespace ROOT::Detail::RDF;
 
 // fwd decl for RFilter
 namespace GraphDrawing {
 std::shared_ptr<GraphNode>
-CreateFilterNode(const RFilterBase *filterPtr, std::unordered_map<void *, std::shared_ptr<GraphNode>> &visitedMap);
+CreateFilterNode(const ROOT::Detail::RDF::RFilterBase *filterPtr, std::unordered_map<void *, std::shared_ptr<GraphNode>> &visitedMap);
 
 std::shared_ptr<GraphNode> AddDefinesToGraph(std::shared_ptr<GraphNode> node,
-                                             const RDFInternal::RColumnRegister &colRegister,
+                                             const RColumnRegister &colRegister,
                                              const std::vector<std::string> &prevNodeDefines,
                                              std::unordered_map<void *, std::shared_ptr<GraphNode>> &visitedMap);
 } // ns GraphDrawing
@@ -50,8 +49,9 @@ std::shared_ptr<GraphNode> AddDefinesToGraph(std::shared_ptr<GraphNode> node,
 
 namespace Detail {
 namespace RDF {
-using namespace ROOT::TypeTraits;
+
 namespace RDFGraphDrawing = ROOT::Internal::RDF::GraphDrawing;
+namespace RDFInternal = ROOT::Internal::RDF;
 class RJittedFilter;
 
 template <typename FilterF, typename PrevNodeRaw>

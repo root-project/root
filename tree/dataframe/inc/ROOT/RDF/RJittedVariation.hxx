@@ -32,7 +32,8 @@ class RJittedVariation : public RVariationBase {
 public:
    RJittedVariation(const std::vector<std::string> &colNames, std::string_view variationName,
                     const std::vector<std::string> &variationTags, std::string_view type,
-                    const RColumnRegister &colRegister, RLoopManager &lm, const ColumnNames_t &inputColNames)
+                    const RColumnRegister &colRegister, ROOT::Detail::RDF::RLoopManager &lm,
+                    const ROOT::RDF::ColumnNames_t &inputColNames)
       : RVariationBase(colNames, variationName, variationTags, type, colRegister, lm, inputColNames)
    {
    }

@@ -31,9 +31,6 @@
 #include <cstring>
 #include <typeinfo>
 
-using namespace ROOT::Detail::RDF;
-using namespace ROOT::RDF;
-
 ROOT::Experimental::RLogChannel &ROOT::Detail::RDF::RDFLogChannel()
 {
    static ROOT::Experimental::RLogChannel c("ROOT.RDF");
@@ -314,7 +311,7 @@ std::vector<std::string> ReplaceDotWithUnderscore(const std::vector<std::string>
 
 void InterpreterDeclare(const std::string &code)
 {
-   R__LOG_DEBUG(10, RDFLogChannel()) << "Declaring the following code to cling:\n\n" << code << '\n';
+   R__LOG_DEBUG(10, ROOT::Detail::RDF::RDFLogChannel()) << "Declaring the following code to cling:\n\n" << code << '\n';
 
    if (!gInterpreter->Declare(code.c_str())) {
       const auto msg =
@@ -326,7 +323,7 @@ void InterpreterDeclare(const std::string &code)
 
 Long64_t InterpreterCalc(const std::string &code, const std::string &context)
 {
-   R__LOG_DEBUG(10, RDFLogChannel()) << "Jitting and executing the following code:\n\n" << code << '\n';
+   R__LOG_DEBUG(10, ROOT::Detail::RDF::RDFLogChannel()) << "Jitting and executing the following code:\n\n" << code << '\n';
 
    TInterpreter::EErrorCode errorCode(TInterpreter::kNoError); // storage for cling errors
 

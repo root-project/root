@@ -26,10 +26,16 @@ namespace RDF {
 
 RVariationBase::RVariationBase(const std::vector<std::string> &colNames, std::string_view variationName,
                                const std::vector<std::string> &variationTags, std::string_view type,
-                               const RColumnRegister &colRegister, RLoopManager &lm, const ColumnNames_t &inputColNames)
-   : fColNames(colNames), fVariationNames(variationTags), fType(type),
-     fLastCheckedEntry(lm.GetNSlots() * CacheLineStep<Long64_t>(), -1), fColumnRegister(colRegister), fLoopManager(&lm),
-     fInputColumns(inputColNames), fIsDefine(inputColNames.size())
+                               const RColumnRegister &colRegister, ROOT::Detail::RDF::RLoopManager &lm,
+                               const ROOT::RDF::ColumnNames_t &inputColNames)
+   : fColNames(colNames),
+     fVariationNames(variationTags),
+     fType(type),
+     fLastCheckedEntry(lm.GetNSlots() * CacheLineStep<Long64_t>(), -1),
+     fColumnRegister(colRegister),
+     fLoopManager(&lm),
+     fInputColumns(inputColNames),
+     fIsDefine(inputColNames.size())
 {
    // prepend the variation name to each tag
    for (auto &tag : fVariationNames)

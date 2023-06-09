@@ -64,12 +64,16 @@
 namespace ROOT {
 namespace Internal {
 namespace RDF {
-using namespace ROOT::TypeTraits;
-using namespace ROOT::VecOps;
-using namespace ROOT::RDF;
-using namespace ROOT::Detail::RDF;
 
+using ROOT::TypeTraits::CallableTraits;
+using ROOT::TypeTraits::TypeList;
+using ROOT::RDF::ColumnNames_t;
+using ROOT::RDF::RCutFlowReport;
+using ROOT::RDF::RSnapshotOptions;
+using ROOT::RDF::RSampleInfo;
 using Hist_t = ::TH1D;
+
+namespace RDFDetail = ROOT::Detail::RDF;
 
 class RBranchSet {
    std::vector<TBranch *> fBranches;
@@ -144,7 +148,7 @@ template <typename T>
 using Results = std::conditional_t<std::is_same<T, bool>::value, std::deque<T>, std::vector<T>>;
 
 template <typename F>
-class R__CLING_PTRCHECK(off) ForeachSlotHelper : public RActionImpl<ForeachSlotHelper<F>> {
+class R__CLING_PTRCHECK(off) ForeachSlotHelper : public RDFDetail::RActionImpl<ForeachSlotHelper<F>> {
    F fCallable;
 
 public:
@@ -170,7 +174,7 @@ public:
    std::string GetActionName() { return "ForeachSlot"; }
 };
 
-class R__CLING_PTRCHECK(off) CountHelper : public RActionImpl<CountHelper> {
+class R__CLING_PTRCHECK(off) CountHelper : public RDFDetail::RActionImpl<CountHelper> {
    std::shared_ptr<ULong64_t> fResultCount;
    Results<ULong64_t> fCounts;
 
@@ -185,9 +189,9 @@ public:
    void Finalize();
 
    // Helper functions for RMergeableValue
-   std::unique_ptr<RMergeableValueBase> GetMergeableValue() const final
+   std::unique_ptr<RDFDetail::RMergeableValueBase> GetMergeableValue() const final
    {
-      return std::make_unique<RMergeableCount>(*fResultCount);
+      return std::make_unique<RDFDetail::RMergeableCount>(*fResultCount);
    }
 
    ULong64_t &PartialUpdate(unsigned int slot);
@@ -202,7 +206,7 @@ public:
 };
 
 template <typename RNode_t>
-class R__CLING_PTRCHECK(off) ReportHelper : public RActionImpl<ReportHelper<RNode_t>> {
+class R__CLING_PTRCHECK(off) ReportHelper : public RDFDetail::RActionImpl<ReportHelper<RNode_t>> {
    std::shared_ptr<RCutFlowReport> fReport;
    /// Non-owning pointer, never null. As usual, the node is owned by its children nodes (and therefore indirectly by
    /// the RAction corresponding to this action helper).
@@ -236,7 +240,7 @@ public:
 /// thread, making it impossible to merge the per-thread results.
 /// Instead, this helper delays the decision on the axes limits until all threads have done processing, synchronizing
 /// the decision on the limits as part of the merge operation.
-class R__CLING_PTRCHECK(off) BufferedFillHelper : public RActionImpl<BufferedFillHelper> {
+class R__CLING_PTRCHECK(off) BufferedFillHelper : public RDFDetail::RActionImpl<BufferedFillHelper> {
    // this sets a total initial size of 16 MB for the buffers (can increase)
    static constexpr unsigned int fgTotalBufSize = 2097152;
    using BufEl_t = double;
@@ -320,9 +324,9 @@ public:
    void Finalize();
 
    // Helper functions for RMergeableValue
-   std::unique_ptr<RMergeableValueBase> GetMergeableValue() const final
+   std::unique_ptr<RDFDetail::RMergeableValueBase> GetMergeableValue() const final
    {
-      return std::make_unique<RMergeableFill<Hist_t>>(*fResultHist);
+      return std::make_unique<RDFDetail::RMergeableFill<Hist_t>>(*fResultHist);
    }
 
    std::string GetActionName()
@@ -342,7 +346,7 @@ public:
 /// The generic Fill helper: it calls Fill on per-thread objects and then Merge to produce a final result.
 /// For one-dimensional histograms, if no axes are specified, RDataFrame uses BufferedFillHelper instead.
 template <typename HIST = Hist_t>
-class R__CLING_PTRCHECK(off) FillHelper : public RActionImpl<FillHelper<HIST>> {
+class R__CLING_PTRCHECK(off) FillHelper : public RDFDetail::RActionImpl<FillHelper<HIST>> {
    std::vector<HIST *> fObjects;
 
    template <typename H = HIST, typename = decltype(std::declval<H>().Reset())>
@@ -528,9 +532,9 @@ public:
    HIST &PartialUpdate(unsigned int slot) { return *fObjects[slot]; }
 
    // Helper functions for RMergeableValue
-   std::unique_ptr<RMergeableValueBase> GetMergeableValue() const final
+   std::unique_ptr<RDFDetail::RMergeableValueBase> GetMergeableValue() const final
    {
-      return std::make_unique<RMergeableFill<HIST>>(*fObjects[0]);
+      return std::make_unique<RDFDetail::RMergeableFill<HIST>>(*fObjects[0]);
    }
 
    // if the fObjects vector type is derived from TObject, return the name of the object
@@ -557,7 +561,7 @@ public:
    }
 };
 
-class R__CLING_PTRCHECK(off) FillTGraphHelper : public ROOT::Detail::RDF::RActionImpl<FillTGraphHelper> {
+class R__CLING_PTRCHECK(off) FillTGraphHelper : public RDFDetail::RActionImpl<FillTGraphHelper> {
 public:
    using Result_t = ::TGraph;
 
@@ -627,9 +631,9 @@ public:
    }
 
    // Helper functions for RMergeableValue
-   std::unique_ptr<RMergeableValueBase> GetMergeableValue() const final
+   std::unique_ptr<RDFDetail::RMergeableValueBase> GetMergeableValue() const final
    {
-      return std::make_unique<RMergeableFill<Result_t>>(*fGraphs[0]);
+      return std::make_unique<RDFDetail::RMergeableFill<Result_t>>(*fGraphs[0]);
    }
 
    std::string GetActionName() { return "Graph"; }
@@ -645,7 +649,7 @@ public:
 };
 
 class R__CLING_PTRCHECK(off) FillTGraphAsymmErrorsHelper
-   : public ROOT::Detail::RDF::RActionImpl<FillTGraphAsymmErrorsHelper> {
+   : public RDFDetail::RActionImpl<FillTGraphAsymmErrorsHelper> {
 public:
    using Result_t = ::TGraphAsymmErrors;
 
@@ -733,9 +737,9 @@ public:
    }
 
    // Helper functions for RMergeableValue
-   std::unique_ptr<RMergeableValueBase> GetMergeableValue() const final
+   std::unique_ptr<RDFDetail::RMergeableValueBase> GetMergeableValue() const final
    {
-      return std::make_unique<RMergeableFill<Result_t>>(*fGraphAsymmErrors[0]);
+      return std::make_unique<RDFDetail::RMergeableFill<Result_t>>(*fGraphAsymmErrors[0]);
    }
 
    std::string GetActionName() { return "GraphAsymmErrors"; }
@@ -770,7 +774,7 @@ void FillColl(bool v, COLL& c) {
 // Case 1.: The column is not an RVec, the collection is not a vector
 // No optimisations, no transformations: just copies.
 template <typename RealT_t, typename T, typename COLL>
-class R__CLING_PTRCHECK(off) TakeHelper : public RActionImpl<TakeHelper<RealT_t, T, COLL>> {
+class R__CLING_PTRCHECK(off) TakeHelper : public RDFDetail::RActionImpl<TakeHelper<RealT_t, T, COLL>> {
    Results<std::shared_ptr<COLL>> fColls;
 
 public:
@@ -820,7 +824,7 @@ public:
 // Optimisations, no transformations: just copies.
 template <typename RealT_t, typename T>
 class R__CLING_PTRCHECK(off) TakeHelper<RealT_t, T, std::vector<T>>
-   : public RActionImpl<TakeHelper<RealT_t, T, std::vector<T>>> {
+   : public RDFDetail::RActionImpl<TakeHelper<RealT_t, T, std::vector<T>>> {
    Results<std::shared_ptr<std::vector<T>>> fColls;
 
 public:
@@ -873,7 +877,7 @@ public:
 // No optimisations, transformations from RVecs to vectors
 template <typename RealT_t, typename COLL>
 class R__CLING_PTRCHECK(off) TakeHelper<RealT_t, RVec<RealT_t>, COLL>
-   : public RActionImpl<TakeHelper<RealT_t, RVec<RealT_t>, COLL>> {
+   : public RDFDetail::RActionImpl<TakeHelper<RealT_t, RVec<RealT_t>, COLL>> {
    Results<std::shared_ptr<COLL>> fColls;
 
 public:
@@ -918,7 +922,7 @@ public:
 // Optimisations, transformations from RVecs to vectors
 template <typename RealT_t>
 class R__CLING_PTRCHECK(off) TakeHelper<RealT_t, RVec<RealT_t>, std::vector<RealT_t>>
-   : public RActionImpl<TakeHelper<RealT_t, RVec<RealT_t>, std::vector<RealT_t>>> {
+   : public RDFDetail::RActionImpl<TakeHelper<RealT_t, RVec<RealT_t>, std::vector<RealT_t>>> {
 
    Results<std::shared_ptr<std::vector<std::vector<RealT_t>>>> fColls;
 
@@ -992,7 +996,7 @@ extern template class TakeHelper<double, double, std::vector<double>>;
 #endif
 
 template <typename ResultType>
-class R__CLING_PTRCHECK(off) MinHelper : public RActionImpl<MinHelper<ResultType>> {
+class R__CLING_PTRCHECK(off) MinHelper : public RDFDetail::RActionImpl<MinHelper<ResultType>> {
    std::shared_ptr<ResultType> fResultMin;
    Results<ResultType> fMins;
 
@@ -1024,9 +1028,9 @@ public:
    }
 
    // Helper functions for RMergeableValue
-   std::unique_ptr<RMergeableValueBase> GetMergeableValue() const final
+   std::unique_ptr<RDFDetail::RMergeableValueBase> GetMergeableValue() const final
    {
-      return std::make_unique<RMergeableMin<ResultType>>(*fResultMin);
+      return std::make_unique<RDFDetail::RMergeableMin<ResultType>>(*fResultMin);
    }
 
    ResultType &PartialUpdate(unsigned int slot) { return fMins[slot]; }
@@ -1048,7 +1052,7 @@ public:
 // extern template void MinHelper::Exec(unsigned int, const std::vector<unsigned int> &);
 
 template <typename ResultType>
-class R__CLING_PTRCHECK(off) MaxHelper : public RActionImpl<MaxHelper<ResultType>> {
+class R__CLING_PTRCHECK(off) MaxHelper : public RDFDetail::RActionImpl<MaxHelper<ResultType>> {
    std::shared_ptr<ResultType> fResultMax;
    Results<ResultType> fMaxs;
 
@@ -1081,9 +1085,9 @@ public:
    }
 
    // Helper functions for RMergeableValue
-   std::unique_ptr<RMergeableValueBase> GetMergeableValue() const final
+   std::unique_ptr<RDFDetail::RMergeableValueBase> GetMergeableValue() const final
    {
-      return std::make_unique<RMergeableMax<ResultType>>(*fResultMax);
+      return std::make_unique<RDFDetail::RMergeableMax<ResultType>>(*fResultMax);
    }
 
    ResultType &PartialUpdate(unsigned int slot) { return fMaxs[slot]; }
@@ -1105,7 +1109,7 @@ public:
 // extern template void MaxHelper::Exec(unsigned int, const std::vector<unsigned int> &);
 
 template <typename ResultType>
-class R__CLING_PTRCHECK(off) SumHelper : public RActionImpl<SumHelper<ResultType>> {
+class R__CLING_PTRCHECK(off) SumHelper : public RDFDetail::RActionImpl<SumHelper<ResultType>> {
    std::shared_ptr<ResultType> fResultSum;
    Results<ResultType> fSums;
    Results<ResultType> fCompensations;
@@ -1171,9 +1175,9 @@ public:
    }
 
    // Helper functions for RMergeableValue
-   std::unique_ptr<RMergeableValueBase> GetMergeableValue() const final
+   std::unique_ptr<RDFDetail::RMergeableValueBase> GetMergeableValue() const final
    {
-      return std::make_unique<RMergeableSum<ResultType>>(*fResultSum);
+      return std::make_unique<RDFDetail::RMergeableSum<ResultType>>(*fResultSum);
    }
 
    ResultType &PartialUpdate(unsigned int slot) { return fSums[slot]; }
@@ -1188,7 +1192,7 @@ public:
    }
 };
 
-class R__CLING_PTRCHECK(off) MeanHelper : public RActionImpl<MeanHelper> {
+class R__CLING_PTRCHECK(off) MeanHelper : public RDFDetail::RActionImpl<MeanHelper> {
    std::shared_ptr<double> fResultMean;
    std::vector<ULong64_t> fCounts;
    std::vector<double> fSums;
@@ -1221,10 +1225,10 @@ public:
    void Finalize();
 
    // Helper functions for RMergeableValue
-   std::unique_ptr<RMergeableValueBase> GetMergeableValue() const final
+   std::unique_ptr<RDFDetail::RMergeableValueBase> GetMergeableValue() const final
    {
       const ULong64_t counts = std::accumulate(fCounts.begin(), fCounts.end(), 0ull);
-      return std::make_unique<RMergeableMean>(*fResultMean, counts);
+      return std::make_unique<RDFDetail::RMergeableMean>(*fResultMean, counts);
    }
 
    double &PartialUpdate(unsigned int slot);
@@ -1244,7 +1248,7 @@ extern template void MeanHelper::Exec(unsigned int, const std::vector<char> &);
 extern template void MeanHelper::Exec(unsigned int, const std::vector<int> &);
 extern template void MeanHelper::Exec(unsigned int, const std::vector<unsigned int> &);
 
-class R__CLING_PTRCHECK(off) StdDevHelper : public RActionImpl<StdDevHelper> {
+class R__CLING_PTRCHECK(off) StdDevHelper : public RDFDetail::RActionImpl<StdDevHelper> {
    // Number of subsets of data
    unsigned int fNSlots;
    std::shared_ptr<double> fResultStdDev;
@@ -1275,12 +1279,12 @@ public:
    void Finalize();
 
    // Helper functions for RMergeableValue
-   std::unique_ptr<RMergeableValueBase> GetMergeableValue() const final
+   std::unique_ptr<RDFDetail::RMergeableValueBase> GetMergeableValue() const final
    {
       const ULong64_t counts = std::accumulate(fCounts.begin(), fCounts.end(), 0ull);
       const Double_t mean =
          std::inner_product(fMeans.begin(), fMeans.end(), fCounts.begin(), 0.) / static_cast<Double_t>(counts);
-      return std::make_unique<RMergeableStdDev>(*fResultStdDev, counts, mean);
+      return std::make_unique<RDFDetail::RMergeableStdDev>(*fResultStdDev, counts, mean);
    }
 
    std::string GetActionName() { return "StdDev"; }
@@ -1299,7 +1303,7 @@ extern template void StdDevHelper::Exec(unsigned int, const std::vector<int> &);
 extern template void StdDevHelper::Exec(unsigned int, const std::vector<unsigned int> &);
 
 template <typename PrevNodeType>
-class R__CLING_PTRCHECK(off) DisplayHelper : public RActionImpl<DisplayHelper<PrevNodeType>> {
+class R__CLING_PTRCHECK(off) DisplayHelper : public RDFDetail::RActionImpl<DisplayHelper<PrevNodeType>> {
 private:
    using Display_t = ROOT::RDF::RDisplay;
    std::shared_ptr<Display_t> fDisplayerHelper;
@@ -1511,7 +1515,7 @@ void ValidateSnapshotOutput(const RSnapshotOptions &opts, const std::string &tre
 
 /// Helper object for a single-thread Snapshot action
 template <typename... ColTypes>
-class R__CLING_PTRCHECK(off) SnapshotHelper : public RActionImpl<SnapshotHelper<ColTypes...>> {
+class R__CLING_PTRCHECK(off) SnapshotHelper : public RDFDetail::RActionImpl<SnapshotHelper<ColTypes...>> {
    std::string fFileName;
    std::string fDirName;
    std::string fTreeName;
@@ -1642,7 +1646,7 @@ public:
 
 /// Helper object for a multi-thread Snapshot action
 template <typename... ColTypes>
-class R__CLING_PTRCHECK(off) SnapshotHelperMT : public RActionImpl<SnapshotHelperMT<ColTypes...>> {
+class R__CLING_PTRCHECK(off) SnapshotHelperMT : public RDFDetail::RActionImpl<SnapshotHelperMT<ColTypes...>> {
    unsigned int fNSlots;
    std::unique_ptr<ROOT::TBufferMerger> fMerger; // must use a ptr because TBufferMerger is not movable
    std::vector<std::shared_ptr<ROOT::TBufferMergerFile>> fOutputFiles;
@@ -1810,7 +1814,7 @@ public:
 template <typename Acc, typename Merge, typename R, typename T, typename U,
           bool MustCopyAssign = std::is_same<R, U>::value>
 class R__CLING_PTRCHECK(off) AggregateHelper
-   : public RActionImpl<AggregateHelper<Acc, Merge, R, T, U, MustCopyAssign>> {
+   : public RDFDetail::RActionImpl<AggregateHelper<Acc, Merge, R, T, U, MustCopyAssign>> {
    Acc fAggregate;
    Merge fMerge;
    std::shared_ptr<U> fResult;
@@ -1875,9 +1879,9 @@ public:
    }
 };
 
-} // end of NS RDF
-} // end of NS Internal
-} // end of NS ROOT
+} // namespace RDF
+} // namespace Internal
+} // namespace ROOT
 
 /// \endcond
 

@@ -32,6 +32,9 @@ namespace ROOT {
 namespace Internal {
 namespace RDF {
 
+using ROOT::RDF::ColumnNames_t;
+
+namespace RDFDetail = ROOT::Detail::RDF;
 namespace RDFGraphDrawing = ROOT::Internal::RDF::GraphDrawing;
 
 /// Just like an RAction, but it has N action helpers (one per variation + nominal) and N previous nodes.
@@ -40,14 +43,14 @@ class R__CLING_PTRCHECK(off) RVariedAction final : public RActionBase {
    using TypeInd_t = std::make_index_sequence<ColumnTypes_t::list_size>;
    // If the PrevNode is a RJittedFilter, our collection of previous nodes will have to use the RNodeBase type:
    // we'll have a RJittedFilter for the nominal case, but the others will be concrete filters.
-   using PrevNodeType = std::conditional_t<std::is_same<PrevNode, RJittedFilter>::value, RFilterBase, PrevNode>;
+   using PrevNodeType = std::conditional_t<std::is_same<PrevNode, RDFDetail::RJittedFilter>::value, RDFDetail::RFilterBase, PrevNode>;
 
    std::vector<Helper> fHelpers; ///< Action helpers per variation.
    /// Owning pointers to upstream nodes for each systematic variation (with the "nominal" at index 0).
    std::vector<std::shared_ptr<PrevNodeType>> fPrevNodes;
 
    /// Column readers per slot (outer dimension), per variation and per input column (inner dimension, std::array).
-   std::vector<std::vector<std::array<RColumnReaderBase *, ColumnTypes_t::list_size>>> fInputValues;
+   std::vector<std::vector<std::array<RDFDetail::RColumnReaderBase *, ColumnTypes_t::list_size>>> fInputValues;
 
    /// The nth flag signals whether the nth input column is a custom column or not.
    std::array<bool, ColumnTypes_t::list_size> fIsDefine;
@@ -57,7 +60,7 @@ class R__CLING_PTRCHECK(off) RVariedAction final : public RActionBase {
       const auto &variations = GetVariations();
       std::vector<std::shared_ptr<PrevNodeType>> prevFilters;
       prevFilters.reserve(variations.size());
-      if (static_cast<RNodeBase *>(nominal.get()) == fLoopManager) {
+      if (static_cast<RDFDetail::RNodeBase *>(nominal.get()) == fLoopManager) {
          // just fill this with the RLoopManager N times
          prevFilters.resize(variations.size(), nominal);
       } else {
@@ -103,7 +106,7 @@ public:
 
    void InitSlot(TTreeReader *r, unsigned int slot) final
    {
-      RDFInternal::RColumnReadersInfo info{GetColumnNames(), GetColRegister(), fIsDefine.data(), *fLoopManager};
+      ROOT::Internal::RDF::RColumnReadersInfo info{GetColumnNames(), GetColRegister(), fIsDefine.data(), *fLoopManager};
 
       // get readers for each systematic variation
       for (const auto &variation : GetVariations())
@@ -177,7 +180,7 @@ public:
       Retrieve a container holding the names and values of the variations. It
       knows how to merge with others of the same type.
    */
-   std::unique_ptr<RMergeableValueBase> GetMergeableValue() const final
+   std::unique_ptr<RDFDetail::RMergeableValueBase> GetMergeableValue() const final
    {
       std::vector<std::string> keys{GetVariations()};
 

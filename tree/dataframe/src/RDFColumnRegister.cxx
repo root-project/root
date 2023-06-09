@@ -18,9 +18,14 @@
 #include <cassert>
 #include <set>
 
-namespace ROOT {
-namespace Internal {
-namespace RDF {
+using ROOT::RDF::ColumnNames_t;
+using ROOT::Internal::RDF::RDefineReader;
+using ROOT::Internal::RDF::RDefinesWithReaders;
+using ROOT::Internal::RDF::RVariationReader;
+using ROOT::Internal::RDF::RVariationsWithReaders;
+using ROOT::Internal::RDF::RColumnRegister;
+
+namespace RDFDetail = ROOT::Detail::RDF;
 
 RDefinesWithReaders::RDefinesWithReaders(std::shared_ptr<RDefineBase> define, unsigned int nSlots)
    : fDefine(std::move(define)), fReadersPerVariation(nSlots)
@@ -316,7 +321,3 @@ RDFDetail::RColumnReaderBase *RColumnRegister::GetReader(unsigned int slot, cons
 
    return nullptr;
 }
-
-} // namespace RDF
-} // namespace Internal
-} // namespace ROOT
