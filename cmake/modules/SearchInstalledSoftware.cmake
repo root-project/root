@@ -916,6 +916,7 @@ if(fitsio OR builtin_cfitsio)
         TIMEOUT 600
       )
       set(CFITSIO_INCLUDE_DIR ${CMAKE_BINARY_DIR}/CFITSIO-prefix/src/CFITSIO)
+      install(DIRECTORY ${CMAKE_BINARY_DIR}/bin/ DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT libraries FILES_MATCHING PATTERN "cfitsio*.dll")
     else()
       ExternalProject_Add(
         CFITSIO
