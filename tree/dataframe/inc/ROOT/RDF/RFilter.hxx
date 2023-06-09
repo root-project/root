@@ -49,6 +49,9 @@ std::shared_ptr<GraphNode> AddDefinesToGraph(std::shared_ptr<GraphNode> node, co
 namespace Detail {
 namespace RDF {
 
+using ROOT::TypeTraits::CallableTraits;
+using ROOT::TypeTraits::TypeList;
+
 namespace RDFGraphDrawing = ROOT::Internal::RDF::GraphDrawing;
 namespace RDFInternal = ROOT::Internal::RDF;
 class RJittedFilter;

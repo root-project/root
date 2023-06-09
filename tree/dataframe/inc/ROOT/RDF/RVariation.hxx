@@ -39,6 +39,9 @@ class RDataSource;
 namespace Internal {
 namespace RDF {
 
+using ROOT::TypeTraits::CallableTraits;
+using ROOT::TypeTraits::TypeList;
+
 /// @name Helper functions for the case of a single column being varied.
 ///@{
 template <typename T>
