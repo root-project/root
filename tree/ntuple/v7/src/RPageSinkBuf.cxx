@@ -162,7 +162,7 @@ ROOT::Experimental::Detail::RPageSinkBuf::CommitClusterImpl(ROOT::Experimental::
       // In practice, either all (see above) or none of the buffered pages have been sealed, depending on whether
       // a task scheduler is available. The rare condition of a few columns consisting only of sealed pages should
       // not happen unless the API is misused.
-      if (bufColumn.HasSealedPagesOnly())
+      if (!bufColumn.IsEmpty() && bufColumn.HasSealedPagesOnly())
          throw RException(R__FAIL("only a few columns have all pages sealed"));
 
       // Slow path: if the buffered column contains both sealed and unsealed pages, commit them one by one.
