@@ -426,7 +426,7 @@ TEST(RPageSinkBuf, ParallelZip) {
 TEST(RPageSinkBuf, CommitSealedPageV)
 {
    RNTupleWriteOptions options;
-   options.SetApproxUnzippedPageSize(8);
+   options.SetApproxUnzippedPageSize(16);
 
 #ifdef R__USE_IMT
    ROOT::DisableImplicitMT();
@@ -436,15 +436,16 @@ TEST(RPageSinkBuf, CommitSealedPageV)
       auto &counters = static_cast<RPageSinkMock *>(sink.get())->fCounters;
 
       auto model = RNTupleModel::Create();
-      auto u32Field = model->MakeField<std::uint32_t>("u32");
-      auto u16Field = model->MakeField<std::uint16_t>("u16");
+      auto u64Field = model->MakeField<std::uint64_t>("u64");
+      auto u32Field = model->MakeField<std::uint16_t>("u32");
+      auto strField = model->MakeField<std::string>("str");
       auto ntuple = std::make_unique<RNTupleWriter>(std::move(model), std::make_unique<RPageSinkBuf>(std::move(sink)));
       ntuple->Fill();
       ntuple->Fill();
       ntuple->Fill();
       ntuple->CommitCluster();
       // Parallel zip not available; all pages committed separately
-      EXPECT_EQ(3, counters.fNCommitPage);
+      EXPECT_EQ(5, counters.fNCommitPage);
       EXPECT_EQ(0, counters.fNCommitSealedPage);
       EXPECT_EQ(0, counters.fNCommitSealedPageV);
    }
@@ -456,8 +457,9 @@ TEST(RPageSinkBuf, CommitSealedPageV)
       auto &counters = static_cast<RPageSinkMock *>(sink.get())->fCounters;
 
       auto model = RNTupleModel::Create();
+      auto u64Field = model->MakeField<std::uint64_t>("u64");
       auto u32Field = model->MakeField<std::uint32_t>("u32");
-      auto u16Field = model->MakeField<std::uint16_t>("u16");
+      auto strField = model->MakeField<std::string>("str");
       auto ntuple = std::make_unique<RNTupleWriter>(std::move(model), std::make_unique<RPageSinkBuf>(std::move(sink)));
       ntuple->Fill();
       ntuple->Fill();
@@ -467,7 +469,7 @@ TEST(RPageSinkBuf, CommitSealedPageV)
       EXPECT_EQ(0, counters.fNCommitPage);
       EXPECT_EQ(1, counters.fNCommitSealedPageV);
 #else
-      EXPECT_EQ(2, counters.fNCommitPage);
+      EXPECT_EQ(3, counters.fNCommitPage);
       EXPECT_EQ(0, counters.fNCommitSealedPageV);
 #endif
       EXPECT_EQ(0, counters.fNCommitSealedPage);
