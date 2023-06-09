@@ -10,6 +10,7 @@
 #pragma link C++ class DerivedB+;
 #pragma link C++ class DerivedC+;
 #pragma link C++ class StructWithArrays + ;
+#pragma link C++ class EmptyStruct + ;
 #pragma link C++ class TestEBO+;
 #pragma link C++ class IOConstructor+;
 
