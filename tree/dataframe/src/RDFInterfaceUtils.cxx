@@ -689,10 +689,10 @@ BookFilterJit(std::shared_ptr<RDFDetail::RNodeBase> *prevNodeOnHeap, std::string
 }
 
 /// Book the jitting of a Define call
-std::shared_ptr<RDFDetail::RJittedDefine> BookDefineJit(std::string_view name, std::string_view expression, RLoopManager &lm,
-                                             RDataSource *ds, const RColumnRegister &colRegister,
-                                             const ColumnNames_t &branches,
-                                             std::shared_ptr<RDFDetail::RNodeBase> *upcastNodeOnHeap)
+std::shared_ptr<RDFDetail::RJittedDefine>
+BookDefineJit(std::string_view name, std::string_view expression, RLoopManager &lm, RDataSource *ds,
+              const RColumnRegister &colRegister, const ColumnNames_t &branches,
+              std::shared_ptr<RDFDetail::RNodeBase> *upcastNodeOnHeap)
 {
    auto *const tree = lm.GetTree();
    const auto &dsColumns = ds ? ds->GetColumnNames() : ColumnNames_t{};
@@ -732,9 +732,9 @@ std::shared_ptr<RDFDetail::RJittedDefine> BookDefineJit(std::string_view name, s
 }
 
 /// Book the jitting of a DefinePerSample call
-std::shared_ptr<RDFDetail::RJittedDefine> BookDefinePerSampleJit(std::string_view name, std::string_view expression,
-                                                      RLoopManager &lm, const RColumnRegister &colRegister,
-                                                      std::shared_ptr<RDFDetail::RNodeBase> *upcastNodeOnHeap)
+std::shared_ptr<RDFDetail::RJittedDefine>
+BookDefinePerSampleJit(std::string_view name, std::string_view expression, RLoopManager &lm,
+                       const RColumnRegister &colRegister, std::shared_ptr<RDFDetail::RNodeBase> *upcastNodeOnHeap)
 {
    const auto funcName = DeclareFunction(std::string(expression), {"rdfslot_", "rdfsampleinfo_"},
                                          {"unsigned int", "const ROOT::RDF::RSampleInfo"});

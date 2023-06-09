@@ -33,8 +33,7 @@ namespace RDFDetail = ROOT::Detail::RDF;
 namespace RDFGraphDrawing = ROOT::Internal::RDF::GraphDrawing;
 
 namespace GraphDrawing {
-std::shared_ptr<GraphNode> AddDefinesToGraph(std::shared_ptr<GraphNode> node,
-                                             const RColumnRegister &colRegister,
+std::shared_ptr<GraphNode> AddDefinesToGraph(std::shared_ptr<GraphNode> node, const RColumnRegister &colRegister,
                                              const std::vector<std::string> &prevNodeDefines,
                                              std::unordered_map<void *, std::shared_ptr<GraphNode>> &visitedMap);
 } // namespace GraphDrawing
@@ -93,8 +92,8 @@ public:
 
    void InitSlot(TTreeReader *r, unsigned int slot) final
    {
-      RColumnReadersInfo info{RActionBase::GetColumnNames(), RActionBase::GetColRegister(),
-                                           fIsDefine.data(), *fLoopManager};
+      RColumnReadersInfo info{RActionBase::GetColumnNames(), RActionBase::GetColRegister(), fIsDefine.data(),
+                              *fLoopManager};
       fValues[slot] = GetColumnReaders(slot, r, ColumnTypes_t{}, info);
       fHelper.InitTask(r, slot);
    }

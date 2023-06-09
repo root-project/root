@@ -65,12 +65,12 @@ namespace ROOT {
 namespace Internal {
 namespace RDF {
 
-using ROOT::TypeTraits::CallableTraits;
-using ROOT::TypeTraits::TypeList;
 using ROOT::RDF::ColumnNames_t;
 using ROOT::RDF::RCutFlowReport;
-using ROOT::RDF::RSnapshotOptions;
 using ROOT::RDF::RSampleInfo;
+using ROOT::RDF::RSnapshotOptions;
+using ROOT::TypeTraits::CallableTraits;
+using ROOT::TypeTraits::TypeList;
 using Hist_t = ::TH1D;
 
 namespace RDFDetail = ROOT::Detail::RDF;
@@ -648,8 +648,7 @@ public:
    }
 };
 
-class R__CLING_PTRCHECK(off) FillTGraphAsymmErrorsHelper
-   : public RDFDetail::RActionImpl<FillTGraphAsymmErrorsHelper> {
+class R__CLING_PTRCHECK(off) FillTGraphAsymmErrorsHelper : public RDFDetail::RActionImpl<FillTGraphAsymmErrorsHelper> {
 public:
    using Result_t = ::TGraphAsymmErrors;
 

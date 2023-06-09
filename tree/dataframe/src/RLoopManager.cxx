@@ -439,7 +439,8 @@ void RLoopManager::RunEmptySourceMT()
       auto slot = slotRAII.fSlot;
       RDFDetail::RCallCleanUpTask cleanup(*this, slot);
       InitNodeSlots(nullptr, slot);
-      R__LOG_DEBUG(0, RDFDetail::RDFLogChannel()) << LogRangeProcessing({"an empty source", range.first, range.second, slot});
+      R__LOG_DEBUG(0, RDFDetail::RDFLogChannel())
+         << LogRangeProcessing({"an empty source", range.first, range.second, slot});
       try {
          UpdateSampleInfo(slot, range);
          for (auto currEntry = range.first; currEntry < range.second; ++currEntry) {
@@ -462,8 +463,8 @@ void RLoopManager::RunEmptySourceMT()
 void RLoopManager::RunEmptySource()
 {
    InitNodeSlots(nullptr, 0);
-   R__LOG_DEBUG(0, RDFDetail::RDFLogChannel()) << LogRangeProcessing(
-      {"an empty source", fEmptyEntryRange.first, fEmptyEntryRange.second, 0u});
+   R__LOG_DEBUG(0, RDFDetail::RDFLogChannel())
+      << LogRangeProcessing({"an empty source", fEmptyEntryRange.first, fEmptyEntryRange.second, 0u});
    RDFDetail::RCallCleanUpTask cleanup(*this);
    try {
       UpdateSampleInfo(/*slot*/ 0, fEmptyEntryRange);
@@ -574,7 +575,8 @@ void RLoopManager::RunDataSource()
          for (const auto &range : ranges) {
             const auto start = range.first;
             const auto end = range.second;
-            R__LOG_DEBUG(0, RDFDetail::RDFLogChannel()) << LogRangeProcessing({fDataSource->GetLabel(), start, end, 0u});
+            R__LOG_DEBUG(0, RDFDetail::RDFLogChannel())
+               << LogRangeProcessing({fDataSource->GetLabel(), start, end, 0u});
             for (auto entry = start; entry < end && fNStopsReceived < fNChildren; ++entry) {
                if (fDataSource->SetEntry(0u, entry)) {
                   RunAndCheckFilters(0u, entry);
@@ -783,9 +785,9 @@ void RLoopManager::Jit()
    s.Start();
    RDFInternal::InterpreterCalc(code, "RLoopManager::Run");
    s.Stop();
-   R__LOG_INFO(RDFDetail::RDFLogChannel()) << "Just-in-time compilation phase completed"
-                                << (s.RealTime() > 1e-3 ? " in " + std::to_string(s.RealTime()) + " seconds."
-                                                        : " in less than 1ms.");
+   R__LOG_INFO(RDFDetail::RDFLogChannel())
+      << "Just-in-time compilation phase completed"
+      << (s.RealTime() > 1e-3 ? " in " + std::to_string(s.RealTime()) + " seconds." : " in less than 1ms.");
 }
 
 /// Trigger counting of number of children nodes for each node of the functional graph.
@@ -835,8 +837,8 @@ void RLoopManager::Run(bool jit)
 
    fNRuns++;
 
-   R__LOG_INFO(RDFDetail::RDFLogChannel()) << "Finished event loop number " << fNRuns - 1 << " (" << s.CpuTime() << "s CPU, "
-                                << s.RealTime() << "s elapsed).";
+   R__LOG_INFO(RDFDetail::RDFLogChannel()) << "Finished event loop number " << fNRuns - 1 << " (" << s.CpuTime()
+                                           << "s CPU, " << s.RealTime() << "s elapsed).";
 }
 
 /// Return the list of default columns -- empty if none was provided when constructing the RDataFrame
@@ -1031,8 +1033,8 @@ void RLoopManager::AddDataSourceColumnReaders(const std::string &col,
 /// \brief Register a new RTreeColumnReader with this RLoopManager.
 /// \return A shared pointer to the inserted column reader.
 RDFDetail::RColumnReaderBase *RLoopManager::AddTreeColumnReader(unsigned int slot, const std::string &col,
-                                                     std::unique_ptr<RDFDetail::RColumnReaderBase> &&reader,
-                                                     const std::type_info &ti)
+                                                                std::unique_ptr<RDFDetail::RColumnReaderBase> &&reader,
+                                                                const std::type_info &ti)
 {
    auto &readers = fDatasetColumnReaders[slot];
    const auto key = MakeDatasetColReadersKey(col, ti);

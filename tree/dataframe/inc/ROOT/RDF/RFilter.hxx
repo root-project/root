@@ -35,16 +35,15 @@ namespace RDF {
 
 // fwd decl for RFilter
 namespace GraphDrawing {
-std::shared_ptr<GraphNode>
-CreateFilterNode(const ROOT::Detail::RDF::RFilterBase *filterPtr, std::unordered_map<void *, std::shared_ptr<GraphNode>> &visitedMap);
+std::shared_ptr<GraphNode> CreateFilterNode(const ROOT::Detail::RDF::RFilterBase *filterPtr,
+                                            std::unordered_map<void *, std::shared_ptr<GraphNode>> &visitedMap);
 
-std::shared_ptr<GraphNode> AddDefinesToGraph(std::shared_ptr<GraphNode> node,
-                                             const RColumnRegister &colRegister,
+std::shared_ptr<GraphNode> AddDefinesToGraph(std::shared_ptr<GraphNode> node, const RColumnRegister &colRegister,
                                              const std::vector<std::string> &prevNodeDefines,
                                              std::unordered_map<void *, std::shared_ptr<GraphNode>> &visitedMap);
 } // ns GraphDrawing
 
-} // ns RDF
+} // namespace RDF
 } // ns Internal
 
 namespace Detail {

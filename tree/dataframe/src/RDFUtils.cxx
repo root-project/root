@@ -323,7 +323,8 @@ void InterpreterDeclare(const std::string &code)
 
 Long64_t InterpreterCalc(const std::string &code, const std::string &context)
 {
-   R__LOG_DEBUG(10, ROOT::Detail::RDF::RDFLogChannel()) << "Jitting and executing the following code:\n\n" << code << '\n';
+   R__LOG_DEBUG(10, ROOT::Detail::RDF::RDFLogChannel()) << "Jitting and executing the following code:\n\n"
+                                                        << code << '\n';
 
    TInterpreter::EErrorCode errorCode(TInterpreter::kNoError); // storage for cling errors
 

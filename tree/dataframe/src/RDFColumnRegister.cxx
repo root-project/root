@@ -18,12 +18,12 @@
 #include <cassert>
 #include <set>
 
-using ROOT::RDF::ColumnNames_t;
+using ROOT::Internal::RDF::RColumnRegister;
 using ROOT::Internal::RDF::RDefineReader;
 using ROOT::Internal::RDF::RDefinesWithReaders;
 using ROOT::Internal::RDF::RVariationReader;
 using ROOT::Internal::RDF::RVariationsWithReaders;
-using ROOT::Internal::RDF::RColumnRegister;
+using ROOT::RDF::ColumnNames_t;
 
 namespace RDFDetail = ROOT::Detail::RDF;
 

@@ -43,7 +43,8 @@ class R__CLING_PTRCHECK(off) RVariedAction final : public RActionBase {
    using TypeInd_t = std::make_index_sequence<ColumnTypes_t::list_size>;
    // If the PrevNode is a RJittedFilter, our collection of previous nodes will have to use the RNodeBase type:
    // we'll have a RJittedFilter for the nominal case, but the others will be concrete filters.
-   using PrevNodeType = std::conditional_t<std::is_same<PrevNode, RDFDetail::RJittedFilter>::value, RDFDetail::RFilterBase, PrevNode>;
+   using PrevNodeType =
+      std::conditional_t<std::is_same<PrevNode, RDFDetail::RJittedFilter>::value, RDFDetail::RFilterBase, PrevNode>;
 
    std::vector<Helper> fHelpers; ///< Action helpers per variation.
    /// Owning pointers to upstream nodes for each systematic variation (with the "nominal" at index 0).

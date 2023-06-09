@@ -236,8 +236,7 @@ using displayHelperArgs_t = std::pair<size_t, std::shared_ptr<ROOT::RDF::RDispla
 template <typename... ColTypes, typename PrevNodeType>
 std::unique_ptr<RActionBase>
 BuildAction(const ColumnNames_t &bl, const std::shared_ptr<displayHelperArgs_t> &helperArgs, const unsigned int,
-            std::shared_ptr<PrevNodeType> prevNode, ActionTags::Display,
-            const RColumnRegister &colRegister)
+            std::shared_ptr<PrevNodeType> prevNode, ActionTags::Display, const RColumnRegister &colRegister)
 {
    using Helper_t = DisplayHelper<PrevNodeType>;
    using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<ColTypes...>>;
@@ -329,17 +328,18 @@ void CheckForNoVariations(const std::string &where, std::string_view definedColV
 
 std::string PrettyPrintAddr(const void *const addr);
 
-std::shared_ptr<RDFDetail::RJittedFilter> BookFilterJit(std::shared_ptr<RDFDetail::RNodeBase> *prevNodeOnHeap, std::string_view name,
-                                             std::string_view expression, const ColumnNames_t &branches,
-                                             const RColumnRegister &colRegister, TTree *tree, RDataSource *ds);
+std::shared_ptr<RDFDetail::RJittedFilter>
+BookFilterJit(std::shared_ptr<RDFDetail::RNodeBase> *prevNodeOnHeap, std::string_view name, std::string_view expression,
+              const ColumnNames_t &branches, const RColumnRegister &colRegister, TTree *tree, RDataSource *ds);
 
-std::shared_ptr<RDFDetail::RJittedDefine> BookDefineJit(std::string_view name, std::string_view expression, RLoopManager &lm,
-                                             RDataSource *ds, const RColumnRegister &colRegister,
-                                             const ColumnNames_t &branches, std::shared_ptr<RDFDetail::RNodeBase> *prevNodeOnHeap);
+std::shared_ptr<RDFDetail::RJittedDefine>
+BookDefineJit(std::string_view name, std::string_view expression, RLoopManager &lm, RDataSource *ds,
+              const RColumnRegister &colRegister, const ColumnNames_t &branches,
+              std::shared_ptr<RDFDetail::RNodeBase> *prevNodeOnHeap);
 
-std::shared_ptr<RDFDetail::RJittedDefine> BookDefinePerSampleJit(std::string_view name, std::string_view expression,
-                                                      RLoopManager &lm, const RColumnRegister &colRegister,
-                                                      std::shared_ptr<RDFDetail::RNodeBase> *upcastNodeOnHeap);
+std::shared_ptr<RDFDetail::RJittedDefine>
+BookDefinePerSampleJit(std::string_view name, std::string_view expression, RLoopManager &lm,
+                       const RColumnRegister &colRegister, std::shared_ptr<RDFDetail::RNodeBase> *upcastNodeOnHeap);
 
 std::shared_ptr<RJittedVariation>
 BookVariationJit(const std::vector<std::string> &colNames, std::string_view variationName,
@@ -474,8 +474,9 @@ template <typename F>
 auto MakeDefineNode(DefineTypes::RDefineTag, std::string_view name, std::string_view dummyType, F &&f,
                     const ColumnNames_t &cols, RColumnRegister &colRegister, RLoopManager &lm)
 {
-   return std::unique_ptr<RDFDetail::RDefineBase>(new RDFDetail::RDefine<std::decay_t<F>, RDFDetail::ExtraArgsForDefine::None>(
-      name, dummyType, std::forward<F>(f), cols, colRegister, lm));
+   return std::unique_ptr<RDFDetail::RDefineBase>(
+      new RDFDetail::RDefine<std::decay_t<F>, RDFDetail::ExtraArgsForDefine::None>(name, dummyType, std::forward<F>(f),
+                                                                                   cols, colRegister, lm));
 }
 
 template <typename F>

@@ -121,7 +121,8 @@ class RInterface : public RInterfaceBase {
    friend class RInterface;
 
    friend void RDFInternal::TriggerRun(ROOT::RDF::RNode &node);
-   friend void RDFInternal::ChangeEmptyEntryRange(const ROOT::RDF::RNode &node, std::pair<ULong64_t, ULong64_t> &&newRange);
+   friend void
+   RDFInternal::ChangeEmptyEntryRange(const ROOT::RDF::RNode &node, std::pair<ULong64_t, ULong64_t> &&newRange);
 
    std::shared_ptr<Proxied> fProxiedPtr; ///< Smart pointer to the graph node encapsulated by this RInterface.
 
@@ -170,7 +171,8 @@ public:
    /// Note that it is not a problem to pass RNode's by value.
    operator RNode() const
    {
-      return ROOT::RDF::RNode(std::static_pointer_cast<::ROOT::Detail::RDF::RNodeBase>(fProxiedPtr), *fLoopManager, fColRegister);
+      return ROOT::RDF::RNode(std::static_pointer_cast<::ROOT::Detail::RDF::RNodeBase>(fProxiedPtr), *fLoopManager,
+                              fColRegister);
    }
 
    ////////////////////////////////////////////////////////////////////////////

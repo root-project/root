@@ -15,8 +15,10 @@
 
 #include <cassert>
 
-ROOT::Detail::RDF::RJittedFilter::RJittedFilter(RLoopManager *lm, std::string_view name, const std::vector<std::string> &variations)
-   : ROOT::Detail::RDF::RFilterBase(lm, name, lm->GetNSlots(), RDFInternal::RColumnRegister(nullptr), /*columnNames*/ {}, variations)
+ROOT::Detail::RDF::RJittedFilter::RJittedFilter(RLoopManager *lm, std::string_view name,
+                                                const std::vector<std::string> &variations)
+   : ROOT::Detail::RDF::RFilterBase(lm, name, lm->GetNSlots(), RDFInternal::RColumnRegister(nullptr),
+                                    /*columnNames*/ {}, variations)
 {
    // Jitted nodes of the computation graph (e.g. RJittedAction, RJittedDefine) usually don't need to register
    // themselves with the RLoopManager: the _concrete_ nodes will be registered with the RLoopManager right before
@@ -126,8 +128,8 @@ void ROOT::Detail::RDF::RJittedFilter::AddFilterName(std::vector<std::string> &f
    fConcreteFilter->AddFilterName(filters);
 }
 
-std::shared_ptr<ROOT::Internal::RDF::GraphDrawing::GraphNode>
-ROOT::Detail::RDF::RJittedFilter::GetGraph(std::unordered_map<void *, std::shared_ptr<ROOT::Internal::RDF::GraphDrawing::GraphNode>> &visitedMap)
+std::shared_ptr<ROOT::Internal::RDF::GraphDrawing::GraphNode> ROOT::Detail::RDF::RJittedFilter::GetGraph(
+   std::unordered_map<void *, std::shared_ptr<ROOT::Internal::RDF::GraphDrawing::GraphNode>> &visitedMap)
 {
    if (fConcreteFilter != nullptr) {
       // Here the filter exists, so it can be served
@@ -136,7 +138,8 @@ ROOT::Detail::RDF::RJittedFilter::GetGraph(std::unordered_map<void *, std::share
    throw std::runtime_error("The Jitting should have been invoked before this method.");
 }
 
-std::shared_ptr<ROOT::Detail::RDF::RNodeBase> ROOT::Detail::RDF::RJittedFilter::GetVariedFilter(const std::string &variationName)
+std::shared_ptr<ROOT::Detail::RDF::RNodeBase>
+ROOT::Detail::RDF::RJittedFilter::GetVariedFilter(const std::string &variationName)
 {
    assert(fConcreteFilter != nullptr);
    return fConcreteFilter->GetVariedFilter(variationName);

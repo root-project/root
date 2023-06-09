@@ -63,9 +63,9 @@ struct RInferredType {
 namespace Internal {
 namespace RDF {
 
-using ROOT::TypeTraits::RemoveFirstParameter_t;
-using ROOT::RDF::RDataSource;
 using ROOT::Detail::RDF::RDefineBase;
+using ROOT::RDF::RDataSource;
+using ROOT::TypeTraits::RemoveFirstParameter_t;
 
 /// Check for container traits.
 ///
