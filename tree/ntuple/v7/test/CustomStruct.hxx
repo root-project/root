@@ -44,9 +44,8 @@ struct StructWithArrays {
    float f[2];
 };
 
-struct EmptyBase {
-};
-struct alignas(std::uint64_t) TestEBO : public EmptyBase {
+struct EmptyStruct {};
+struct alignas(std::uint64_t) TestEBO : public EmptyStruct {
    std::uint64_t u64;
 };
 

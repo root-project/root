@@ -404,9 +404,9 @@ TEST(RNTuple, ModelExtensionComplex)
 
       modelUpdater->BeginUpdate();
       bool b = false;
-      EmptyBase noColumns{};
+      EmptyStruct noColumns{};
       modelUpdater->AddField<bool>("b", &b);
-      modelUpdater->AddField<EmptyBase>("noColumns", &noColumns);
+      modelUpdater->AddField<EmptyStruct>("noColumns", &noColumns);
       modelUpdater->CommitUpdate();
       for (unsigned int i = 30000; i < 40000; ++i) {
          updateInitialFields(i, *u32, *dbl);
@@ -425,7 +425,7 @@ TEST(RNTuple, ModelExtensionComplex)
    auto doubleAoA = modelRead->MakeField<doubleAoA_t>("doubleAoA");
    auto var = modelRead->MakeField<std::variant<std::uint64_t, double>>("var");
    auto b = modelRead->MakeField<bool>("b");
-   auto noColumns = modelRead->MakeField<EmptyBase>("noColumns");
+   auto noColumns = modelRead->MakeField<EmptyStruct>("noColumns");
 
    double chksumRead = 0.0;
    auto ntuple = RNTupleReader::Open(std::move(modelRead), "myNTuple", fileGuard.GetPath());
