@@ -16,6 +16,7 @@
 #include "RLoopManager.hxx"
 #include "RVariationBase.hxx"
 
+#include <ROOT/RDF/RLoopManager.hxx>
 #include <ROOT/RStringView.hxx>
 #include <ROOT/TypeTraits.hxx>
 #include <ROOT/RVec.hxx>
@@ -182,7 +183,7 @@ class R__CLING_PTRCHECK(off) RVariation final : public RVariationBase {
 public:
    RVariation(const std::vector<std::string> &colNames, std::string_view variationName, F expression,
               const std::vector<std::string> &variationTags, std::string_view type, const RColumnRegister &defines,
-              RLoopManager &lm, const ColumnNames_t &inputColNames)
+              ROOT::Detail::RDF::RLoopManager &lm, const ROOT::RDF::ColumnNames_t &inputColNames)
       : RVariationBase(colNames, variationName, variationTags, type, defines, lm, inputColNames),
         fExpression(std::move(expression)),
         fLastResults(lm.GetNSlots() * CacheLineStep<Result_t>()),
