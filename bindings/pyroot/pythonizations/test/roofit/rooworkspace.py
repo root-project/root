@@ -39,6 +39,17 @@ class RooWorkspace_test(unittest.TestCase):
         self.assertEqual(x.GetName(), "x")
         self.assertEqual(x.getVal(), self.x.getVal())
 
+    def test_setItem_using_dictionary(self):
+         # Test to check if new variables are created
+        self.ws["z"] = "[3]"
+        self.assertEqual(self.ws["z"].GetName(),"z")
+        self.assertEqual(self.ws["z"].getVal(),3.0)
+
+        # Test to check if new p.d.f.s are created
+        self.ws["gauss"] = "Gaussian(x[0.0, 10.0], mu[5.0], sigma[2.0, 0.01, 10.0])"
+        self.assertEqual(self.ws["gauss"].getMean(), self.ws["mu"])
+        self.assertEqual(self.ws["gauss"].getSigma(), self.ws["sigma"])
+        self.assertEqual(self.ws["gauss"].getX(), self.ws["x"])
 
 if __name__ == "__main__":
     unittest.main()
