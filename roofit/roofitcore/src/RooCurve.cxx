@@ -248,8 +248,6 @@ void RooCurve::shiftCurveToZero()
    double minVal = std::numeric_limits<double>::infinity();
    double maxVal = -std::numeric_limits<double>::infinity();
 
-   std::cout << "GetN() " << GetN() << std::endl;
-
    // First iteration, find current lowest point
    for (int i = 1; i < GetN() - 1; i++) {
       double x;
@@ -267,7 +265,6 @@ void RooCurve::shiftCurveToZero()
       SetPoint(i, x, y - minVal);
    }
 
-   std::cout << maxVal << "   " << minVal << std::endl;
    setYAxisLimits(0, maxVal - minVal);
 }
 
