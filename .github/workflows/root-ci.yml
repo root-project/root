@@ -94,12 +94,13 @@ jobs:
         if: github.event_name == 'pull_request'
         env:
           INCREMENTAL: ${{ !contains(github.event.pull_request.labels.*.name, 'clean build') }}
+          GITHUB_PR_ORIGIN: ${{ github.event.pull_request.head.repo.clone_url }}
         run: ".github/workflows/root-ci-config/build_root.py
                     --buildtype      ${{ matrix.config }}
                     --platform       ${{ matrix.platform }}
                     --incremental    $INCREMENTAL
                     --base_ref       ${{ github.base_ref }}
-                    --head_ref       refs/pull/${{ github.event.pull_request.number }}/head
+                    --head_ref       refs/pull/${{ github.event.pull_request.number }}/head:${{ github.event.pull_request.head.ref }}
                     --repository     ${{ github.server_url }}/${{ github.repository }}"
 
       - name: Workflow dispatch
@@ -166,6 +167,7 @@ jobs:
         if: github.event_name == 'pull_request' && matrix.config == 'Release'
         env:
           INCREMENTAL: ${{ !contains(github.event.pull_request.labels.*.name, 'clean build') }}
+          GITHUB_PR_ORIGIN: ${{ github.event.pull_request.head.repo.clone_url }}
         shell: cmd
         run: "C:\\setenv.bat ${{ matrix.target_arch }} &&
               python .github/workflows/root-ci-config/build_root.py
@@ -173,7 +175,7 @@ jobs:
                     --platform     windows10
                     --incremental  $INCREMENTAL
                     --base_ref     ${{ github.base_ref }}
-                    --head_ref     refs/pull/${{ github.event.pull_request.number }}/head
+                    --head_ref     refs/pull/${{ github.event.pull_request.number }}/head:${{ github.event.pull_request.head.ref }}
                     --repository   ${{ github.server_url }}/${{ github.repository }}
                     --architecture ${{ matrix.target_arch }}  "
 
@@ -323,12 +325,13 @@ jobs:
         if: github.event_name == 'pull_request'
         env:
           INCREMENTAL: ${{ !contains(github.event.pull_request.labels.*.name, 'clean build') }}
+          GITHUB_PR_ORIGIN: ${{ github.event.pull_request.head.repo.clone_url }}
         run: ".github/workflows/root-ci-config/build_root.py
                     --buildtype      ${{ matrix.config }}
                     --platform       ${{ matrix.image }}
                     --incremental    $INCREMENTAL
                     --base_ref       ${{ github.base_ref }}
-                    --head_ref       refs/pull/${{ github.event.pull_request.number }}/head
+                    --head_ref       refs/pull/${{ github.event.pull_request.number }}/head:${{ github.event.pull_request.head.ref }}
                     --repository     ${{ github.server_url }}/${{ github.repository }}
               "
 

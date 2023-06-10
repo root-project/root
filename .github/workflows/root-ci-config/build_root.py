@@ -63,7 +63,7 @@ def main():
     parser.add_argument("--incremental",  default="false",   help="Do incremental build")
     parser.add_argument("--buildtype",    default="Release", help="Release|Debug|RelWithDebInfo")
     parser.add_argument("--base_ref",     default=None,      help="Ref to target branch")
-    parser.add_argument("--head_ref",     default=None,      help="Ref to feature branch")
+    parser.add_argument("--head_ref",     default=None,      help="Ref to feature branch; it may contain a :<dst> part")
     parser.add_argument("--architecture", default=None,      help="Windows only, target arch")
     parser.add_argument("--repository",   default="https://github.com/root-project/root.git",
                         help="url to repository")
@@ -314,9 +314,8 @@ def build(options, buildtype, shell_log):
 
 @github_log_group("Rebase")
 def rebase(base_ref, head_ref, shell_log) -> str:
-    # This mental gymnastics is neccessary because the the CMake build fetches
-    # roottest based on the current branch name of ROOT
-    #
+    head_ref_src, _, head_ref_dst = head_ref.partition(":")
+    head_ref_dst = head_ref_dst or "__tmp"
     # rebase fails unless user.email and user.name is set
     result, shell_log = subprocess_with_log(f"""
         cd '{WORKDIR}/src'
@@ -324,12 +323,9 @@ def rebase(base_ref, head_ref, shell_log) -> str:
         git config user.email "rootci@root.cern"
         git config user.name 'ROOT Continous Integration'
 
-        git fetch origin {head_ref}:__tmp
-        git checkout __tmp
-
+        git fetch origin {head_ref_src}:{head_ref_dst}
+        git checkout {head_ref_dst}
         git rebase {base_ref}
-        git checkout {base_ref}
-        git reset --hard __tmp
     """, shell_log)
 
     if result != 0:
