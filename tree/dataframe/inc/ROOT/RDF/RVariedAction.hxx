@@ -103,7 +103,7 @@ public:
 
    void InitSlot(TTreeReader *r, unsigned int slot) final
    {
-      RDFInternal::RColumnReadersInfo info{GetColumnNames(), GetColRegister(), fIsDefine.data(), *fLoopManager};
+      RColumnReadersInfo info{GetColumnNames(), GetColRegister(), fIsDefine.data(), *fLoopManager};
 
       // get readers for each systematic variation
       for (const auto &variation : GetVariations())
