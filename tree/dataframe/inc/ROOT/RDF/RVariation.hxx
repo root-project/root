@@ -182,13 +182,14 @@ public:
               const std::vector<std::string> &variationTags, std::string_view type, const RColumnRegister &defines,
               RLoopManager &lm, const ColumnNames_t &inputColNames)
       : RVariationBase(colNames, variationName, variationTags, type, defines, lm, inputColNames),
-        fExpression(std::move(expression)), fLastResults(lm.GetNSlots() * RDFInternal::CacheLineStep<Result_t>()),
+        fExpression(std::move(expression)),
+        fLastResults(lm.GetNSlots() * CacheLineStep<Result_t>()),
         fValues(lm.GetNSlots())
    {
       fLoopManager->Register(this);
 
       for (auto i = 0u; i < lm.GetNSlots(); ++i)
-         ResizeResults(fLastResults[i * RDFInternal::CacheLineStep<Result_t>()], colNames.size(), variationTags.size());
+         ResizeResults(fLastResults[i * CacheLineStep<Result_t>()], colNames.size(), variationTags.size());
    }
 
    RVariation(const RVariation &) = delete;
