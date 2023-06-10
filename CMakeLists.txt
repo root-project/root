@@ -759,10 +759,6 @@ if(testing)
   endif()
 
   if(rootbench)
-    find_package(Git REQUIRED)
-    execute_process(COMMAND ${GIT_EXECUTABLE} rev-parse --abbrev-ref HEAD
-                    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-                    OUTPUT_VARIABLE GIT_BRANCH OUTPUT_STRIP_TRAILING_WHITESPACE)
     #---Is the rootbench source directory around?
     if(IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/rootbench)
       set(rootbenchdir ${CMAKE_CURRENT_SOURCE_DIR}/rootbench)
@@ -777,7 +773,8 @@ if(testing)
       add_subdirectory(${rootbenchdir} rootbench)
     else()
       message("-- Could not find rootbench directory! Cloning from the repository...")
-      execute_process(COMMAND ${GIT_EXECUTABLE} clone -b ${GIT_BRANCH}
+      find_package(Git REQUIRED)
+      execute_process(COMMAND ${GIT_EXECUTABLE} clone -b master
                       https://github.com/root-project/rootbench.git
                       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
       add_subdirectory(rootbench)
