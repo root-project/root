@@ -476,7 +476,20 @@ FactoryTestParams param5{"SimPdf", getSimPdfModel,
                          5e-3,
                          /*randomizeParameters=*/true};
 
-INSTANTIATE_TEST_SUITE_P(RooFuncWrapper, FactoryTest, testing::Values(param1, param2, param3, param4, param5),
+FactoryTestParams param6{"GaussianExtended",
+                         [](RooWorkspace &ws) {
+                            ws.factory("Gaussian::gauss(x[0, -10, 10], mu[0, -10, 10], sigma[3.0, 0.01, 10])");
+                            ws.factory("ExtendPdf::model(gauss, n[100, 0, 10000])");
+                            ws.defineSet("observables", "x");
+                         },
+                         [](RooAbsPdf &pdf, RooAbsData &data, RooWorkspace &) {
+                            return std::unique_ptr<RooAbsReal>{
+                               pdf.createNLL(data, RooFit::BatchMode("cpu"), RooFit::Extended(true))};
+                         },
+                         1e-4,
+                         /*randomizeParameters=*/false};
+
+INSTANTIATE_TEST_SUITE_P(RooFuncWrapper, FactoryTest, testing::Values(param1, param2, param3, param4, param5, param6),
                          [](testing::TestParamInfo<FactoryTest::ParamType> const &paramInfo) {
                             return paramInfo.param._name;
                          });

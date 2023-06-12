@@ -287,17 +287,21 @@ double RooNLLVarNew::finalizeResult(ROOT::Math::KahanSum<double> result, double 
 
 void RooNLLVarNew::translate(RooFit::Detail::CodeSquashContext &ctx) const
 {
+   std::string weightSumName = ctx.makeValidVarName(GetName()) + "WeightSum";
    std::string resName = ctx.makeValidVarName(GetName()) + "Result";
    ctx.addResult(this, resName);
-   ctx.addToGlobalScope("double " + resName + " = 0;\n");
+   ctx.addToGlobalScope("double " + weightSumName + " = 0.0;\n");
+   ctx.addToGlobalScope("double " + resName + " = 0.0;\n");
 
+   const bool needWeightSum = _expectedEvents || _simCount > 1;
+
+   if (needWeightSum) {
+      auto scope = ctx.beginLoop(this);
+      ctx.addToCodeBody(weightSumName + " += " + ctx.getResult(*_weightVar) + ";\n");
+   }
    if (_simCount > 1) {
-
-      {
-         auto scope = ctx.beginLoop(this);
-         ctx.addToCodeBody(resName + " += " + ctx.getResult(_weightVar.arg()) + ";\n");
-      }
-      ctx.addToCodeBody(resName + " *= std::log(" + std::to_string(static_cast<double>(_simCount)) + ");\n");
+      std::string simCountStr = std::to_string(static_cast<double>(_simCount));
+      ctx.addToCodeBody(resName + " += " + weightSumName + " * std::log(" + simCountStr + ");\n");
    }
 
    // Begin loop scope for the observables and weight variable. If the weight
@@ -307,5 +311,9 @@ void RooNLLVarNew::translate(RooFit::Detail::CodeSquashContext &ctx) const
       auto scope = ctx.beginLoop(this);
       ctx.addToCodeBody(this, resName + " -= " + ctx.getResult(_weightVar.arg()) + " * std::log(" +
                                  ctx.getResult(_pdf.arg()) + ");\n");
+   }
+   if (_expectedEvents) {
+      std::string expected = ctx.getResult(**_expectedEvents);
+      ctx.addToCodeBody(resName + " += " + expected + " - " + weightSumName + " * std::log(" + expected + ");\n");
    }
 }
