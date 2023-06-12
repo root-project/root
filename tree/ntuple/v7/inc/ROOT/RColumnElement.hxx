@@ -542,6 +542,45 @@ public:
 ////////////////////////////////////////////////////////////////////////////////
 
 template <>
+class RColumnElement<RColumnSwitch, EColumnType::kSwitch> : public RColumnElementBase {
+public:
+   static constexpr bool kIsMappable = false;
+   static constexpr std::size_t kSize = sizeof(ROOT::Experimental::RColumnSwitch);
+   static constexpr std::size_t kBitsOnStorage = 64;
+   explicit RColumnElement(RColumnSwitch *value) : RColumnElementBase(value, kSize) {}
+   bool IsMappable() const final { return kIsMappable; }
+   std::size_t GetBitsOnStorage() const final { return kBitsOnStorage; }
+
+   void Pack(void *dst, void *src, std::size_t count) const final
+   {
+      auto srcArray = reinterpret_cast<ROOT::Experimental::RColumnSwitch *>(src);
+      auto uint64Array = reinterpret_cast<std::uint64_t *>(dst);
+      for (std::size_t i = 0; i < count; ++i) {
+         uint64Array[i] =
+            (static_cast<std::uint64_t>(srcArray[i].GetTag()) << 44) | (srcArray[i].GetIndex() & 0x0fffffffffff);
+#if R__LITTLE_ENDIAN == 0
+         uint64Array[i] = RByteSwap<8>::bswap(uint64Array[i]);
+#endif
+      }
+   }
+
+   void Unpack(void *dst, void *src, std::size_t count) const final
+   {
+      auto uint64Array = reinterpret_cast<std::uint64_t *>(src);
+      auto dstArray = reinterpret_cast<ROOT::Experimental::RColumnSwitch *>(dst);
+      for (std::size_t i = 0; i < count; ++i) {
+#if R__LITTLE_ENDIAN == 1
+         const auto value = uint64Array[i];
+#else
+         const auto value = RByteSwap<8>::bswap(uint64Array[i]);
+#endif
+         dstArray[i] = ROOT::Experimental::RColumnSwitch(
+            ClusterSize_t{static_cast<RClusterSize::ValueType>(value & 0x0fffffffffff)}, (value >> 44));
+      }
+   }
+};
+
+template <>
 class RColumnElement<bool, EColumnType::kBit> : public RColumnElementBase {
 public:
    static constexpr bool kIsMappable = false;
@@ -554,6 +593,10 @@ public:
    void Pack(void *dst, void *src, std::size_t count) const final;
    void Unpack(void *dst, void *src, std::size_t count) const final;
 };
+
+// TODO(jblomer): the following template specializations follow the same scheme.
+// It would be easier to read if they were specified as macros of the form
+// #define DECLARE_RCOLUMN_ELEMENT_SPEC(CppT, ColumnT, BaseClassT, isMappable) /*...*/
 
 template <>
 class RColumnElement<char, EColumnType::kByte> : public RColumnElementBase {
@@ -1037,45 +1080,6 @@ public:
    explicit RColumnElement(ClusterSize_t *value) : RColumnElementDeltaSplitLE(value, kSize) {}
    bool IsMappable() const final { return kIsMappable; }
    std::size_t GetBitsOnStorage() const final { return kBitsOnStorage; }
-};
-
-template <>
-class RColumnElement<RColumnSwitch, EColumnType::kSwitch> : public RColumnElementBase {
-public:
-   static constexpr bool kIsMappable = false;
-   static constexpr std::size_t kSize = sizeof(ROOT::Experimental::RColumnSwitch);
-   static constexpr std::size_t kBitsOnStorage = 64;
-   explicit RColumnElement(RColumnSwitch *value) : RColumnElementBase(value, kSize) {}
-   bool IsMappable() const final { return kIsMappable; }
-   std::size_t GetBitsOnStorage() const final { return kBitsOnStorage; }
-
-   void Pack(void *dst, void *src, std::size_t count) const final
-   {
-      auto srcArray = reinterpret_cast<ROOT::Experimental::RColumnSwitch *>(src);
-      auto uint64Array = reinterpret_cast<std::uint64_t *>(dst);
-      for (std::size_t i = 0; i < count; ++i) {
-         uint64Array[i] =
-            (static_cast<std::uint64_t>(srcArray[i].GetTag()) << 44) | (srcArray[i].GetIndex() & 0x0fffffffffff);
-#if R__LITTLE_ENDIAN == 0
-         uint64Array[i] = RByteSwap<8>::bswap(uint64Array[i]);
-#endif
-      }
-   }
-
-   void Unpack(void *dst, void *src, std::size_t count) const final
-   {
-      auto uint64Array = reinterpret_cast<std::uint64_t *>(src);
-      auto dstArray = reinterpret_cast<ROOT::Experimental::RColumnSwitch *>(dst);
-      for (std::size_t i = 0; i < count; ++i) {
-#if R__LITTLE_ENDIAN == 1
-         const auto value = uint64Array[i];
-#else
-         const auto value = RByteSwap<8>::bswap(uint64Array[i]);
-#endif
-         dstArray[i] = ROOT::Experimental::RColumnSwitch(
-            ClusterSize_t{static_cast<RClusterSize::ValueType>(value & 0x0fffffffffff)}, (value >> 44));
-      }
-   }
 };
 
 template <typename CppT>
