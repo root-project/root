@@ -72,15 +72,24 @@ RooNLLVarNew::RooNLLVarNew(const char *name, const char *title, RooAbsPdf &pdf, 
                            bool isExtended, RooFit::OffsetMode offsetMode)
    : RooAbsReal(name, title),
      _pdf{"pdf", "pdf", this, pdf},
-     _observables{getObs(pdf, observables)},
-     _isExtended{isExtended},
-     _binnedL{pdf.getAttribute("BinnedLikelihoodActive")},
      _weightVar{"weightVar", "weightVar", this, *dummyVar(weightVarName), true, false, true},
      _weightSquaredVar{weightVarNameSumW2, weightVarNameSumW2, this, *dummyVar("weightSquardVar"), true, false, true},
-     _binVolumeVar{"binVolumeVar", "binVolumeVar", this, *dummyVar("_bin_volume"), true, false, true}
+     _binVolumeVar{"binVolumeVar", "binVolumeVar", this, *dummyVar("_bin_volume"), true, false, true},
+     _binnedL{pdf.getAttribute("BinnedLikelihoodActive")}
 {
+   RooArgSet obs{getObs(pdf, observables)};
+
    if (_binnedL) {
-      fillBinWidthsFromPdfBoundaries(pdf);
+      fillBinWidthsFromPdfBoundaries(pdf, obs);
+   }
+
+   if (isExtended && !_binnedL) {
+      std::unique_ptr<RooAbsReal> expectedEvents = pdf.createExpectedEventsFunc(&obs);
+      if (expectedEvents) {
+         _expectedEvents =
+            std::make_unique<RooTemplateProxy<RooAbsReal>>("expectedEvents", "expectedEvents", this, *expectedEvents);
+         addOwnedComponents(std::move(expectedEvents));
+      }
    }
 
    resetWeightVarNames();
@@ -91,29 +100,31 @@ RooNLLVarNew::RooNLLVarNew(const char *name, const char *title, RooAbsPdf &pdf, 
 RooNLLVarNew::RooNLLVarNew(const RooNLLVarNew &other, const char *name)
    : RooAbsReal(other, name),
      _pdf{"pdf", this, other._pdf},
-     _observables{other._observables},
-     _isExtended{other._isExtended},
+     _weightVar{"weightVar", this, other._weightVar},
+     _weightSquaredVar{"weightSquaredVar", this, other._weightSquaredVar},
      _weightSquared{other._weightSquared},
      _binnedL{other._binnedL},
      _doOffset{other._doOffset},
      _simCount{other._simCount},
      _prefix{other._prefix},
-     _weightVar{"weightVar", this, other._weightVar},
-     _weightSquaredVar{"weightSquaredVar", this, other._weightSquaredVar}
+     _binw{other._binw}
 {
+   if (other._expectedEvents) {
+      _expectedEvents = std::make_unique<RooTemplateProxy<RooAbsReal>>("expectedEvents", this, *other._expectedEvents);
+   }
 }
 
-void RooNLLVarNew::fillBinWidthsFromPdfBoundaries(RooAbsReal const &pdf)
+void RooNLLVarNew::fillBinWidthsFromPdfBoundaries(RooAbsReal const &pdf, RooArgSet const &observables)
 {
    // Check if the bin widths were already filled
    if (!_binw.empty()) {
       return;
    }
 
-   if (_observables.size() != 1) {
+   if (observables.size() != 1) {
       throw std::runtime_error("BinnedPdf optimization only works with a 1D pdf.");
    } else {
-      auto *var = static_cast<RooRealVar *>(_observables.first());
+      auto *var = static_cast<RooRealVar *>(observables.first());
       std::list<double> *boundaries = pdf.binBoundaries(*var, var->getMin(), var->getMax());
       std::list<double>::iterator biter = boundaries->begin();
       _binw.resize(boundaries->size() - 1);
@@ -186,7 +197,7 @@ void RooNLLVarNew::computeBatch(cudaStream_t *stream, double *output, size_t /*n
 
    _sumWeight =
       weights.size() == 1 ? weights[0] * probas.size() : dispatch->reduceSum(stream, weights.data(), weights.size());
-   if (_isExtended && _weightSquared && _sumWeight2 == 0.0) {
+   if (_expectedEvents && _weightSquared && _sumWeight2 == 0.0) {
       _sumWeight2 = weights.size() == 1 ? weightsSumW2[0] * probas.size()
                                         : dispatch->reduceSum(stream, weightsSumW2.data(), weightsSumW2.size());
    }
@@ -205,9 +216,9 @@ void RooNLLVarNew::computeBatch(cudaStream_t *stream, double *output, size_t /*n
       _pdf->logEvalError("getLogVal() top-level p.d.f evaluates to NaN");
    }
 
-   if (_isExtended) {
-      double expected = _pdf->expectedEvents(&_observables);
-      nllOut.nllSum += _pdf->extendedTerm(_sumWeight, expected, _weightSquared ? _sumWeight2 : 0.0, _doBinOffset);
+   if (_expectedEvents) {
+      RooSpan<const double> expected = dataMap.at(*_expectedEvents);
+      nllOut.nllSum += _pdf->extendedTerm(_sumWeight, expected[0], _weightSquared ? _sumWeight2 : 0.0, _doBinOffset);
    }
 
    output[0] = finalizeResult(nllOut.nllSum, _sumWeight);
