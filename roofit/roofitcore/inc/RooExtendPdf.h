@@ -48,6 +48,8 @@ public:
   double expectedEvents(const RooArgSet* nset) const override ;
   std::unique_ptr<RooAbsReal> createExpectedEventsFunc(const RooArgSet* nset) const override;
 
+  void translate(RooFit::Detail::CodeSquashContext &ctx) const override;
+
 protected:
 
   RooTemplateProxy<RooAbsPdf>  _pdf;  ///< Input p.d.f
