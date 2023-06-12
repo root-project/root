@@ -1,6 +1,10 @@
 # JSROOT changelog
 
 ## Changes in 7.3.x
+1. Fix - do not allow move float browser too far left/top
+
+
+## Changes in 7.3.3
 1. Fix - failure in normal_cdf calculation
 2. Fix - check in TTree::Draw for null buffer
 3. Fix - do not rise exception in treeProcess
