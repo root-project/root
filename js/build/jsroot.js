@@ -7,11 +7,11 @@ typeof define === 'function' && define.amd ? define(['exports'], factory) :
 
 /** @summary version id
   * @desc For the JSROOT release the string in format 'major.minor.patch' like '7.0.0' */
-let version_id = '7.3.x';
+let version_id = '7.3.3';
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-let version_date = '2/06/2023';
+let version_date = '12/06/2023';
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -40362,7 +40362,7 @@ function createSVGRenderer(as_is, precision, doc) {
      svg_style: {},
      path_attr: {},
      accPath: '',
-     createElementNS(ns,kind) {
+     createElementNS(ns, kind) {
         if (kind == 'path')
            return {
               _wrapper: this,
@@ -40403,12 +40403,17 @@ function createSVGRenderer(as_is, precision, doc) {
      }
    };
 
-   let originalDocument = globalThis.document;
-   globalThis.document = doc_wrapper;
+   let originalDocument;
+
+   if (isNodeJs()) {
+      originalDocument = globalThis.document;
+      globalThis.document = doc_wrapper;
+   }
 
    let rndr = new SVGRenderer();
 
-   globalThis.document = originalDocument;
+   if (isNodeJs())
+      globalThis.document = originalDocument;
 
    rndr.doc_wrapper = doc_wrapper; // use it to get final SVG code
 
@@ -40416,11 +40421,13 @@ function createSVGRenderer(as_is, precision, doc) {
 
    rndr.render = function (scene, camera) {
       let originalDocument = globalThis.document;
-      globalThis.document = this.doc_wrapper;
+      if (isNodeJs())
+         globalThis.document = this.doc_wrapper;
 
       this.originalRender(scene, camera);
 
-      globalThis.document = originalDocument;
+      if (isNodeJs())
+         globalThis.document = originalDocument;
    };
 
    rndr.clearHTML = function() {
@@ -50336,8 +50343,8 @@ const FrameInteractive = {
                               .on('touchend', null, true);
          } else if (settings.ContextMenu) {
             this.zoom_curr = arr[0];
-            this.getFrameSvg().on('touchcancel', this.endTouchSel.bind(this))
-                              .on('touchend', this.endTouchSel.bind(this));
+            this.getFrameSvg().on('touchcancel', evnt => this.endTouchMenu('', evnt))
+                              .on('touchend', evnt => this.endTouchMenu('', evnt));
             evnt.preventDefault();
             evnt.stopPropagation();
          }
@@ -74174,14 +74181,14 @@ class TGeoPainter extends ObjectPainter {
             if (obj.fVolume && obj.fVolume.$geo_painter===this) delete obj.fVolume.$geo_painter;
          }
 
-         if (this._main_painter) {
+         if (this._main_painter?._slave_painters) {
             let pos = this._main_painter._slave_painters.indexOf(this);
             if (pos >= 0) this._main_painter._slave_painters.splice(pos,1);
          }
 
-         for (let k = 0; k < this._slave_painters.length;++k) {
+         for (let k = 0; k < this._slave_painters?.length; ++k) {
             let slave = this._slave_painters[k];
-            if (slave && (slave._main_painter===this)) slave._main_painter = null;
+            if (slave && (slave._main_painter === this)) slave._main_painter = null;
          }
 
          delete this.geo_manager;

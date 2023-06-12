@@ -1655,18 +1655,16 @@ class BrowserLayout {
            let sl = area.style('left'), st = area.style('top');
            this._float_left = parseInt(sl.slice(0,sl.length-2));
            this._float_top = parseInt(st.slice(0,st.length-2));
-           this._max_left = main.node().clientWidth - area.node().offsetWidth - 1;
-           this._max_top = main.node().clientHeight - area.node().offsetHeight - 1;
+           this._max_left = Math.max(0, main.node().clientWidth - area.node().offsetWidth - 1);
+           this._max_top = Math.max(0, main.node().clientHeight - area.node().offsetHeight - 1);
 
         }).filter(evnt => {
             return main.select('.jsroot_browser_title').node() === evnt.target;
         }).on('drag', evnt => {
            this._float_left += evnt.dx;
            this._float_top += evnt.dy;
-
            area.style('left', Math.min(Math.max(0, this._float_left), this._max_left) + 'px')
                .style('top', Math.min(Math.max(0, this._float_top), this._max_top) + 'px');
-
            this.setButtonsPosition();
         });
 
