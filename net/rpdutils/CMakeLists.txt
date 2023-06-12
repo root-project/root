@@ -61,3 +61,8 @@ target_include_directories(SrvAuth PRIVATE
    ${CMAKE_SOURCE_DIR}/net/auth/inc
    ${CMAKE_SOURCE_DIR}/rpdutils/res
 )
+
+if (CMAKE_SYSTEM_NAME MATCHES FreeBSD)
+	target_link_libraries(SrvAuth PRIVATE crypt)
+endif()
+
