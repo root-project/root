@@ -752,3 +752,10 @@ std::unique_ptr<RooAbsArg> RooRealSumPdf::compileForNormSet(RooArgSet const &nor
    newArg->addOwnedComponents(std::move(pdfClone));
    return newArg;
 }
+
+std::unique_ptr<RooAbsReal> RooRealSumPdf::createExpectedEventsFunc(const RooArgSet *nset) const
+{
+   if (nset == nullptr)
+      return nullptr;
+   return std::unique_ptr<RooAbsReal>{createIntegral(*nset, *getIntegratorConfig(), normRange())};
+}

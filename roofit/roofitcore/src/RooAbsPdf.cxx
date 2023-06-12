@@ -3665,3 +3665,16 @@ RooAbsPdf::compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileCo
    newArg->addOwnedComponents(std::move(pdfClone));
    return newArg;
 }
+
+/// Returns an object that represents the expected number of events for a given
+/// normalization set, similar to how createIntegral() returns an object that
+/// returns the integral. This is used to build the computation graph for the
+/// final likelihood.
+std::unique_ptr<RooAbsReal> RooAbsPdf::createExpectedEventsFunc(const RooArgSet * /*nset*/) const
+{
+   std::stringstream errMsg;
+   errMsg << "The pdf \"" << GetName() << "\" of type " << ClassName()
+          << " did not overload RooAbsPdf::createExpectedEventsFunc()!";
+   coutE(InputArguments) << errMsg.str() << std::endl;
+   return nullptr;
+}

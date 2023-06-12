@@ -62,6 +62,7 @@ public:
 
   ExtendMode extendMode() const override ;
   double expectedEvents(const RooArgSet* nset) const override ;
+  std::unique_ptr<RooAbsReal> createExpectedEventsFunc(const RooArgSet* nset) const override;
 
   const RooArgList& pdfList() const { return _pdfList ; }
 

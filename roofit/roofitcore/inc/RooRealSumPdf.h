@@ -70,6 +70,8 @@ public:
 
   std::unique_ptr<RooAbsArg> compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileContext & ctx) const override;
 
+  std::unique_ptr<RooAbsReal> createExpectedEventsFunc(const RooArgSet* nset) const override;
+
 protected:
 
   class CacheElem : public RooAbsCacheElement {
