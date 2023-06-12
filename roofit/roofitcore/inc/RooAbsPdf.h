@@ -293,6 +293,8 @@ public:
     return expectedEvents(&nset) ;
   }
 
+  virtual std::unique_ptr<RooAbsReal> createExpectedEventsFunc(const RooArgSet* nset) const;
+
   // Printing interface (human readable)
   void printValue(std::ostream& os) const override ;
   void printMultiline(std::ostream& os, Int_t contents, bool verbose=false, TString indent="") const override ;

@@ -65,6 +65,8 @@ An (enforced) condition for this assumption is that each \f$ \mathrm{PDF}_i \f$ 
 
 #include "RooAddPdf.h"
 
+#include "RooAddition.h"
+#include "RooRealSumFunc.h"
 #include "RooAddHelpers.h"
 #include "RooAddGenContext.h"
 #include "RooBatchCompute.h"
@@ -76,6 +78,8 @@ An (enforced) condition for this assumption is that each \f$ \mathrm{PDF}_i \f$ 
 #include "RooRealSumPdf.h"
 #include "RooRecursiveFraction.h"
 #include "RooGenericPdf.h"
+#include "RooProduct.h"
+#include "RooRatio.h"
 
 #include <algorithm>
 #include <memory>
@@ -726,6 +730,71 @@ double RooAddPdf::expectedEvents(const RooArgSet* nset) const
   return expectedTotal ;
 }
 
+
+std::unique_ptr<RooAbsReal> RooAddPdf::createExpectedEventsFunc(const RooArgSet *nset) const
+{
+   std::unique_ptr<RooAbsReal> out;
+
+   auto name = std::string(GetName()) + "_expectedEvents";
+   if (_allExtendable) {
+      RooArgSet sumSet;
+      for (auto *pdf : static_range_cast<RooAbsPdf *>(_pdfList)) {
+         sumSet.addOwned(pdf->createExpectedEventsFunc(nset));
+      }
+      out = std::make_unique<RooAddition>(name.c_str(), name.c_str(), sumSet);
+      out->addOwnedComponents(std::move(sumSet));
+   } else {
+      out = std::make_unique<RooAddition>(name.c_str(), name.c_str(), _coefList);
+   }
+
+   RooArgList prodList;
+
+   if (!_allExtendable) {
+      // If the _refCoefNorm is empty or it's equal to normSet anyway, this is not
+      // a conditional pdf and we don't need to do any transformation. See also
+      // RooAddPdf::compleForNormSet() for more explanations on a similar logic.
+      if (!_refCoefNorm.empty() && !nset->equals(_refCoefNorm)) {
+         prodList.addOwned(std::unique_ptr<RooAbsReal>{createIntegral(*nset, _refCoefNorm)});
+      }
+
+      // Optionally multiply with fractional normalization. I this case, we
+      // replace the original factor stored in "out".
+      if (_normRange) {
+         std::unique_ptr<RooAbsReal> owner;
+         RooArgList terms;
+         // The integrals own each other in a chain. We do this because it's
+         // not possible to add two objects with the same name via
+         // addOwnedComponents(), and it happens in some user models that some
+         // component pdfs are the same. Hence, the integrals might share names
+         // too and we can't add them all in one go as owned objects of the
+         // final integral sum.
+         for (auto *pdf : static_range_cast<RooAbsPdf *>(_pdfList)) {
+            auto next = std::unique_ptr<RooAbsReal>{pdf->createIntegral(*nset, *nset, _normRange)};
+            terms.add(*next);
+            if (owner)
+               next->addOwnedComponents(std::move(owner));
+            owner = std::move(next);
+         }
+         auto fracIntegName = std::string(GetName()) + "_integSum";
+         auto fracInteg =
+            std::make_unique<RooRealSumFunc>(fracIntegName.c_str(), fracIntegName.c_str(), _coefList, terms);
+         fracInteg->addOwnedComponents(std::move(owner));
+
+         out = std::move(fracInteg);
+      }
+   }
+
+   std::string finalName = std::string(out->GetName()) + "_finalized";
+   if (prodList.empty()) {
+      // If there are no additional factors, just return the single factor we have
+      return out;
+   } else {
+      prodList.addOwned(std::move(out));
+   }
+   auto finalOut = std::make_unique<RooProduct>(finalName.c_str(), finalName.c_str(), prodList);
+   finalOut->addOwnedComponents(std::move(prodList));
+   return finalOut;
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////

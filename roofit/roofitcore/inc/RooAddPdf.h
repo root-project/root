@@ -66,6 +66,8 @@ public:
   /// is the sum of all coefficients.
   double expectedEvents(const RooArgSet* nset) const override;
 
+  std::unique_ptr<RooAbsReal> createExpectedEventsFunc(const RooArgSet* nset) const override;
+
   const RooArgList& pdfList() const {
     // Return list of component p.d.fs
     return _pdfList ;

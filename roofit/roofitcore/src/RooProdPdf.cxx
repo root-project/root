@@ -1650,9 +1650,18 @@ double RooProdPdf::expectedEvents(const RooArgSet* nset) const
     throw std::logic_error(std::string("RooProdPdf ") + GetName() + " could not be extended.");
   }
 
-  return ((RooAbsPdf*)_pdfList.at(_extendedIndex))->expectedEvents(nset) ;
+  return static_cast<RooAbsPdf*>(_pdfList.at(_extendedIndex))->expectedEvents(nset) ;
 }
 
+std::unique_ptr<RooAbsReal> RooProdPdf::createExpectedEventsFunc(const RooArgSet* nset) const
+{
+  if (_extendedIndex<0) {
+    coutF(Generation) << "Requesting expected number of events from a RooProdPdf that does not contain an extended p.d.f" << endl ;
+    throw std::logic_error(std::string("RooProdPdf ") + GetName() + " could not be extended.");
+  }
+
+  return static_cast<RooAbsPdf*>(_pdfList.at(_extendedIndex))->createExpectedEventsFunc(nset);
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2325,6 +2334,10 @@ public:
 
    ExtendMode extendMode() const override { return _prodPdf->extendMode(); }
    double expectedEvents(const RooArgSet * /*nset*/) const override { return _prodPdf->expectedEvents(&_normSet); }
+   std::unique_ptr<RooAbsReal> createExpectedEventsFunc(const RooArgSet * /*nset*/) const override
+   {
+      return _prodPdf->createExpectedEventsFunc(&_normSet);
+   }
 
    // Analytical Integration handling
    bool forceAnalyticalInt(const RooAbsArg &dep) const override { return _prodPdf->forceAnalyticalInt(dep); }
