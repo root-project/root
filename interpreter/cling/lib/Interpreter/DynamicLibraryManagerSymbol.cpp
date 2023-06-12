@@ -47,15 +47,15 @@
 // No idea if this will keep working
 # ifndef ZFS
 #   define ZFS
-#   define thisisabloodyhackZFS
+#   define defined_ZFS_for_libprocstat
 # endif
-#   include <libprocstat.h>
-# ifdef thisisabloodyhackZFS
+# include <libprocstat.h>
+# ifdef defined_ZFS_for_libprocstat
 #   undef ZFS
+#   undef defined_ZFS_for_libprocstat
 # endif
-#undef thisisabloodyhackZFS
 
-#   include <libutil.h>
+# include <libutil.h>
 #endif
 
 #ifdef LLVM_ON_UNIX
