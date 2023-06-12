@@ -267,6 +267,11 @@ freebsd)
    auxcflags="${cxxversionflag}"
    auxlibs="-lm -lg++"
    ;;
+freebsdx8664)
+   # FreeBSD with libc5
+   auxcflags="${cxxversionflag}"
+   auxlibs="-lm -lg++"
+   ;;
 freebsd4)
    # FreeBSD 4 with glibc
    auxcflags="${cxxversionflag}"
@@ -368,7 +373,21 @@ esac
 ### compiler dependent settings ###
 
 case $arch in
-freebsd* | openbsd* | linux*)
+freebsd*)
+   auxcflags="-pthread -D_REENTRANT $auxcflags"
+   auxlibs="-pthread $auxlibs"
+
+   for f in $features ; do
+      if test "x$f" = "xrpath" ; then
+         auxlibs="-Wl,-rpath,$libdir $auxlibs"
+      fi
+      if test "x$f" = "xlibcxx" ; then
+         auxcflags="-stdlib=libc++ $auxcflags"
+         auxlibs="-stdlib=libc++ $auxlibs"
+      fi
+   done
+   ;;
+openbsd* | linux*)
    auxcflags="-pthread $auxcflags"
    auxlibs="-pthread $auxlibs"
 
