@@ -48,9 +48,9 @@ double ConstRosenBrock(const std::vector<double> &x)
    return x[0] * x[0] - x[1] * x[1] + 1;
 }
 // NOTE: "dogleg" is problematic, requires better tuning of the parameters
-std::string methods[] = {"Nelder-Mead", "L-BFGS-B",  "Powell",      "CG",           "BFGS",
-                         "TNC",         "COBYLA",    "SLSQP",       "trust-constr", "Newton-CG",
-                         "trust-ncg", "trust-exact", "trust-krylov"};
+std::string methods[] = {"Nelder-Mead", "L-BFGS-B",    "Powell",      "CG",           "BFGS",
+                         "TNC",         "COBYLA",      "SLSQP",       "trust-constr", "Newton-CG",
+                         "trust-ncg",   "trust-exact", "trust-krylov"};
 
 // Testing fit using class with gradient
 class ScipyFitClass : public ::testing::Test {
@@ -78,15 +78,15 @@ public:
       minimizer->SetVariable(1, "y", variable[1], step[1]);
       if (useConstraint)
          minimizer->AddConstraintFunction(ConstRosenBrock, "ineq");
-      
+
       minimizer->Minimize();
    }
 };
 
-TEST_F(ScipyFitClass, Fit) 
+TEST_F(ScipyFitClass, Fit)
 {
    for (const std::string &text : methods) {
-      Fit(text.c_str(),false);
+      Fit(text.c_str(), false);
       EXPECT_EQ(1000000, minimizer->MaxFunctionCalls());
 
       EXPECT_EQ(100000, minimizer->MaxIterations());
@@ -116,7 +116,6 @@ TEST_F(ScipyFitClass, Fit)
       ASSERT_NEAR(0, RosenBrock(x), 0.5);
    }
 }
-
 
 TEST_F(ScipyFitClass, FitContraint) // using constraint function
 {

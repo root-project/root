@@ -74,7 +74,7 @@ ScipyMinimizer::ScipyMinimizer() : BasicMinimizer()
    fOptions.SetMinimizerType("Scipy");
    fOptions.SetMinimizerAlgorithm("L-BFGS-B");
    PyInitialize();
-   fHessianFunc = nullptr; 
+   fHessianFunc = nullptr;
    // set extra options
    SetAlgoExtraOptions();
    fConstraintsList = PyList_New(0);
@@ -239,13 +239,13 @@ bool ScipyMinimizer::Minimize()
 
       if (GetVariableSettings(i, varsettings)) {
          if (varsettings.HasLowerLimit()) {
-            foundBounds=true;
+            foundBounds = true;
             PyList_SetItem(pylimits_lower, i, PyFloat_FromDouble(varsettings.LowerLimit()));
          } else {
             PyList_SetItem(pylimits_lower, i, PyFloat_FromDouble(-NPY_INFINITY));
          }
          if (varsettings.HasUpperLimit()) {
-            foundBounds=true;
+            foundBounds = true;
             PyList_SetItem(pylimits_upper, i, PyFloat_FromDouble(varsettings.UpperLimit()));
          } else {
             PyList_SetItem(pylimits_upper, i, PyFloat_FromDouble(NPY_INFINITY));
@@ -255,35 +255,32 @@ bool ScipyMinimizer::Minimize()
       }
    }
    PyObject *pybounds = Py_None;
-   if(foundBounds)
-   {
+   if (foundBounds) {
       PyTuple_SetItem(pybounds_args, 0, pylimits_lower);
       PyTuple_SetItem(pybounds_args, 1, pylimits_upper);
       pybounds = PyObject_CallObject(fBoundsMod, pybounds_args);
    }
- 
+
    // minimize(fun, x0, args=(), method=None, jac=None, hess=None, hessp=None, bounds=None, constraints=(), tol=None,
    // callback=None, options=None)
    PyObject *args = Py_BuildValue("(OO)", fTarget, x0);
-   PyObject *kw = Py_BuildValue("{s:s,s:O,,s:O,s:O,s:O,s:d,s:O}", "method", method.c_str(), "jac", fJacobian, "hess",
-                                fHessian, "bounds", pybounds,"constraints",fConstraintsList, "tol", Tolerance(),
-                                "options", pyoptions);
-   if(PrintLevel()>0)
-   {
-      std::cout<<"========Minimizer Parameters========\n";
+   PyObject *kw =
+      Py_BuildValue("{s:s,s:O,,s:O,s:O,s:O,s:d,s:O}", "method", method.c_str(), "jac", fJacobian, "hess", fHessian,
+                    "bounds", pybounds, "constraints", fConstraintsList, "tol", Tolerance(), "options", pyoptions);
+   if (PrintLevel() > 0) {
+      std::cout << "========Minimizer Parameters========\n";
       PyPrint(kw);
-      std::cout<<"====================================\n";
+      std::cout << "====================================\n";
    }
    PyObject *result = PyObject_Call(fMinimize, args, kw);
    if (result == NULL) {
       PyErr_Print();
       return false;
    }
-   if(PrintLevel()>0)
-   {
-      std::cout<<"========Minimizer Results========\n";
+   if (PrintLevel() > 0) {
+      std::cout << "========Minimizer Results========\n";
       PyPrint(result);
-      std::cout<<"=================================\n";
+      std::cout << "=================================\n";
    }
    Py_DECREF(pybounds);
    Py_DECREF(args);
@@ -323,8 +320,10 @@ bool ScipyMinimizer::Minimize()
    std::cout << "=== Status: " << status << std::endl;
    std::cout << "=== Message: " << message << std::endl;
    std::cout << "=== Function calls: " << nfev << std::endl;
-   if(success) fStatus=0;
-   else fStatus = status; //suggested by Lorenzo.
+   if (success)
+      fStatus = 0;
+   else
+      fStatus = status; // suggested by Lorenzo.
 
    Py_DECREF(result);
    return success;
