@@ -147,11 +147,6 @@ public:
    virtual bool Minimize() override;
 
    virtual void SetHessianFunction(std::function<bool(const std::vector<double> &, double *)>) override;
-   template <class T>
-   void SetExtraOption(const char *key, T value)
-   {
-      fExtraOpts.SetValue(key, value);
-   }
 
 protected:
    ClassDef(ScipyMinimizer, 0) //

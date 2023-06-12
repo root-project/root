@@ -50,7 +50,6 @@ int scipy()
       minimizer.SetMaxFunctionCalls(1000000);
       minimizer.SetMaxIterations(100000);
       minimizer.SetTolerance(1e-3);
-      minimizer.SetExtraOption("gtol",1e-3);
       ROOT::Math::GradFunctor f(&RosenBrock,&RosenBrockGrad,2); 
       double step[2] = {0.01,0.01};
       double variable[2] = { -1.2,1.0};
