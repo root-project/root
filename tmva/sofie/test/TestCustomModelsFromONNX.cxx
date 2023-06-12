@@ -239,6 +239,9 @@
 #include "GatherNegativeIndices_FromONNX.hxx"
 #include "input_models/references/GatherNegativeIndices.ref.hxx"
 
+#include "Range_FromONNX.hxx"
+#include "input_models/references/Range.ref.hxx"
+
 #include "gtest/gtest.h"
 
 constexpr float DEFAULT_TOLERANCE = 1e-3f;
@@ -1029,6 +1032,29 @@ TEST(ONNX, Shape){
    EXPECT_EQ(output.size(), sizeof(Shape_ExpectedOutput::outputs) / sizeof(float));
 
    int *correct = Shape_ExpectedOutput::outputs;
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+   }
+
+}
+
+
+TEST(ONNX, Range){
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   // Preparing the standard  input
+   std::vector<float> input({
+      3,10,2
+   });
+
+   TMVA_SOFIE_Range::Session s("Range_FromONNX.dat");
+   auto output = s.infer(input.data());
+   // Checking output size
+   EXPECT_EQ(output.size(), sizeof(Range_ExpectedOutput::outputs) / sizeof(float));
+
+   int *correct = Range_ExpectedOutput::outputs;
 
    // Checking every output value, one by one
    for (size_t i = 0; i < output.size(); ++i) {
