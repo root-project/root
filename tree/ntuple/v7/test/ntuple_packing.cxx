@@ -142,13 +142,15 @@ TYPED_TEST(PackingInt, SplitInt)
    element.Pack(nullptr, nullptr, 0);
    element.Unpack(nullptr, nullptr, 0);
 
-   std::array<Pod_t, 5> mem{0, std::is_signed_v<Pod_t> ? -42 : 1, 42, std::numeric_limits<Narrow_t>::min(),
-                            std::numeric_limits<Narrow_t>::max()};
-   std::array<Pod_t, 5> packed;
-   std::array<Pod_t, 5> cmp;
+   std::array<Pod_t, 9> mem{0, std::is_signed_v<Pod_t> ? -42 : 1, 42, std::numeric_limits<Narrow_t>::min(),
+                            std::numeric_limits<Narrow_t>::min() + 1, std::numeric_limits<Narrow_t>::min() + 2,
+                            std::numeric_limits<Narrow_t>::max(), std::numeric_limits<Narrow_t>::max() - 1,
+                            std::numeric_limits<Narrow_t>::max() - 2};
+   std::array<Pod_t, 9> packed;
+   std::array<Pod_t, 9> cmp;
 
-   element.Pack(packed.data(), mem.data(), 5);
-   element.Unpack(cmp.data(), packed.data(), 5);
+   element.Pack(packed.data(), mem.data(), 9);
+   element.Unpack(cmp.data(), packed.data(), 9);
 
    EXPECT_EQ(mem, cmp);
 }
