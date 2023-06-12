@@ -177,6 +177,31 @@ TEST(RNTupleImporter, FieldName)
    EXPECT_EQ(42, *reader->GetModel()->Get<std::int32_t>("a"));
 }
 
+TEST(RNTupleImporter, ConvertDotsInBranchNames)
+{
+   FileRaii fileGuard("test_ntuple_importer_field_name.root");
+   {
+      std::unique_ptr<TFile> file(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
+      auto tree = std::make_unique<TTree>("tree", "");
+      Int_t a = 42;
+      tree->Branch("a.a", &a);
+      tree->Fill();
+      tree->Write();
+   }
+
+   auto importer = RNTupleImporter::Create(fileGuard.GetPath(), "tree", fileGuard.GetPath());
+   importer->SetIsQuiet(true);
+   importer->SetNTupleName("ntuple");
+
+   EXPECT_THROW(importer->Import(), ROOT::Experimental::RException);
+
+   importer->SetConvertDotsInBranchNames(true);
+   importer->Import();
+   auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
+   reader->LoadEntry(0);
+   EXPECT_EQ(42, *reader->GetModel()->Get<std::int32_t>("a_a"));
+}
+
 TEST(RNTupleImporter, CString)
 {
    FileRaii fileGuard("test_ntuple_importer_cstring.root");

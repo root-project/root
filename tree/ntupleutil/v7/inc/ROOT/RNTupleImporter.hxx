@@ -222,6 +222,10 @@ private:
    std::unique_ptr<TFile> fDestFile;
    RNTupleWriteOptions fWriteOptions;
 
+   /// Whether or not dot characters in branch names should be converted to underscores. If this option is not set and a
+   /// branch with a '.' is encountered, the importer will throw an exception.
+   bool fConvertDotsInBranchNames = false;
+
    /// The maximum number of entries to import. When this value is -1 (default), import all entries.
    std::int64_t fMaxEntries = -1;
 
@@ -264,6 +268,10 @@ public:
    void SetWriteOptions(RNTupleWriteOptions options) { fWriteOptions = options; }
    void SetNTupleName(const std::string &name) { fNTupleName = name; }
    void SetMaxEntries(std::uint64_t maxEntries) { fMaxEntries = maxEntries; };
+
+   /// Whereas branch names may contain dots, RNTuple field names may not. By setting this option, dot characters are
+   /// automatically converted into underscores to prevent the importer from throwing an exception.
+   void SetConvertDotsInBranchNames(bool value) { fConvertDotsInBranchNames = value; }
 
    /// Whether or not information and progress is printed to stdout.
    void SetIsQuiet(bool value) { fIsQuiet = value; }
