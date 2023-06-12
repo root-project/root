@@ -64,23 +64,22 @@ private:
    double evaluate() const override { return _value; }
    void resetWeightVarNames();
    double finalizeResult(ROOT::Math::KahanSum<double> result, double weightSum) const;
-   void fillBinWidthsFromPdfBoundaries(RooAbsReal const &pdf);
+   void fillBinWidthsFromPdfBoundaries(RooAbsReal const &pdf, RooArgSet const &observables);
    double computeBatchBinnedL(RooSpan<const double> preds, RooSpan<const double> weights) const;
 
    RooTemplateProxy<RooAbsPdf> _pdf;
-   RooArgSet _observables;
+   RooTemplateProxy<RooAbsReal> _weightVar;
+   RooTemplateProxy<RooAbsReal> _weightSquaredVar;
+   RooTemplateProxy<RooAbsReal> _binVolumeVar;
+   std::unique_ptr<RooTemplateProxy<RooAbsReal>> _expectedEvents;
    mutable double _sumWeight = 0.0;  //!
    mutable double _sumWeight2 = 0.0; //!
-   bool _isExtended;
    bool _weightSquared = false;
    bool _binnedL = false;
    bool _doOffset = false;
    bool _doBinOffset = false;
    int _simCount = 1;
    std::string _prefix;
-   RooTemplateProxy<RooAbsReal> _weightVar;
-   RooTemplateProxy<RooAbsReal> _weightSquaredVar;
-   RooTemplateProxy<RooAbsReal> _binVolumeVar;
    std::vector<double> _binw;
    mutable ROOT::Math::KahanSum<double> _offset{0.}; ///<! Offset as KahanSum to avoid loss of precision
 

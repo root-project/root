@@ -20,8 +20,11 @@ class RooNormalizedPdf : public RooAbsPdf {
 public:
    RooNormalizedPdf(RooAbsPdf &pdf, RooArgSet const &normSet)
       : _pdf("numerator", "numerator", this, pdf),
-        _normIntegral("denominator", "denominator", this,
-                      *std::unique_ptr<RooAbsReal>{pdf.createIntegral(normSet, *pdf.getIntegratorConfig(), pdf.normRange())}.release(), true, false, true),
+        _normIntegral(
+           "denominator", "denominator", this,
+           *std::unique_ptr<RooAbsReal>{pdf.createIntegral(normSet, *pdf.getIntegratorConfig(), pdf.normRange())}
+               .release(),
+           true, false, true),
         _normSet{normSet}
    {
       auto name = std::string(pdf.GetName()) + "_over_" + _normIntegral->GetName();
@@ -55,9 +58,11 @@ public:
    }
 
    ExtendMode extendMode() const override { return static_cast<RooAbsPdf &>(*_pdf).extendMode(); }
-   double expectedEvents(const RooArgSet * /*nset*/) const override
+   double expectedEvents(const RooArgSet * /*nset*/) const override { return _pdf->expectedEvents(&_normSet); }
+
+   std::unique_ptr<RooAbsReal> createExpectedEventsFunc(const RooArgSet * /*nset*/) const override
    {
-      return static_cast<RooAbsPdf &>(*_pdf).expectedEvents(&_normSet);
+      return _pdf->createExpectedEventsFunc(&_normSet);
    }
 
    void translate(RooFit::Detail::CodeSquashContext &ctx) const override;
@@ -78,9 +83,9 @@ protected:
    };
 
 private:
-   RooRealProxy _pdf;
+   RooTemplateProxy<RooAbsPdf> _pdf;
    RooRealProxy _normIntegral;
-   RooArgSet const &_normSet;
+   RooArgSet _normSet;
 };
 
 #endif
