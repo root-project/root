@@ -97,24 +97,24 @@ ROOT::Experimental::Detail::RPageSinkBuf::CommitPageImpl(ColumnHandle_t columnHa
    // make sure the page is aware of how many elements it will have
    bufPage.GrowUnchecked(page.GetNElements());
    memcpy(bufPage.GetBuffer(), page.GetBuffer(), page.GetNBytes());
-   // Safety: RColumnBuf::iterators are guaranteed to be valid until the
-   // element is destroyed. In other words, all buffered page iterators are
+   // Safety: References are guaranteed to be valid until the
+   // element is destroyed. In other words, all buffered page elements are
    // valid until the return value of DrainBufferedPages() goes out of scope in
    // CommitCluster().
-   RColumnBuf::iterator zipItem = fBufferedColumns.at(columnHandle.fPhysicalId).BufferPage(columnHandle, bufPage);
+   auto &zipItem = fBufferedColumns.at(columnHandle.fPhysicalId).BufferPage(columnHandle, bufPage);
    if (!fTaskScheduler) {
       return RNTupleLocator{};
    }
    fCounters->fParallelZip.SetValue(1);
    // Thread safety: Each thread works on a distinct zipItem which owns its
    // compression buffer.
-   zipItem->AllocateSealedPageBuf();
-   R__ASSERT(zipItem->fBuf);
-   auto sealedPage = fBufferedColumns.at(columnHandle.fPhysicalId).RegisterSealedPage();
-   fTaskScheduler->AddTask([this, zipItem, sealedPage, colId = columnHandle.fPhysicalId] {
-      *sealedPage = SealPage(zipItem->fPage, *fBufferedColumns.at(colId).GetHandle().fColumn->GetElement(),
-                             GetWriteOptions().GetCompression(), zipItem->fBuf.get());
-      zipItem->fSealedPage = &(*sealedPage);
+   zipItem.AllocateSealedPageBuf();
+   R__ASSERT(zipItem.fBuf);
+   auto &sealedPage = fBufferedColumns.at(columnHandle.fPhysicalId).RegisterSealedPage();
+   fTaskScheduler->AddTask([this, &zipItem, &sealedPage, colId = columnHandle.fPhysicalId] {
+      sealedPage = SealPage(zipItem.fPage, *fBufferedColumns.at(colId).GetHandle().fColumn->GetElement(),
+                            GetWriteOptions().GetCompression(), zipItem.fBuf.get());
+      zipItem.fSealedPage = &sealedPage;
    });
 
    // we're feeding bad locators to fOpenPageRanges but it should not matter

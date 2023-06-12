@@ -66,19 +66,18 @@ private:
       RColumnBuf& operator=(RColumnBuf&&) = default;
       ~RColumnBuf() = default;
 
-      using iterator = std::deque<RPageZipItem>::iterator;
-      /// Returns an iterator to the newly buffered page. The iterator remains
+      /// Returns a reference to the newly buffered page. The reference remains
       /// valid until the return value of DrainBufferedPages() is destroyed.
-      iterator BufferPage(
+      RPageZipItem &BufferPage(
          RPageStorage::ColumnHandle_t columnHandle, const RPage &page)
       {
          if (!fCol) {
             fCol = columnHandle;
          }
-         // Safety: Insertion at the end of a deque never invalidates existing
-         // iterators.
+         // Safety: Insertion at the end of a deque never invalidates references
+         // to existing elements.
          fBufferedPages.push_back(RPageZipItem(page));
-         return std::prev(fBufferedPages.end());
+         return fBufferedPages.back();
       }
       const RPageStorage::ColumnHandle_t &GetHandle() const { return fCol; }
       bool IsEmpty() const { return fBufferedPages.empty(); }
@@ -86,7 +85,7 @@ private:
       const RPageStorage::SealedPageSequence_t &GetSealedPages() const { return fSealedPages; }
 
       using BufferedPages_t = std::tuple<std::deque<RPageZipItem>, RPageStorage::SealedPageSequence_t>;
-      // When the return value of DrainBufferedPages() is destroyed, all iterators
+      // When the return value of DrainBufferedPages() is destroyed, all references
       // returned by GetBuffer are invalidated.
       BufferedPages_t DrainBufferedPages()
       {
@@ -96,11 +95,11 @@ private:
          return drained;
       }
 
-      // The returned iterator points to a default-constructed RSealedPage. This iterator can be used
+      // The returned reference points to a default-constructed RSealedPage. It can be used
       // to fill in data after sealing.
-      RPageStorage::SealedPageSequence_t::iterator RegisterSealedPage()
+      RSealedPage &RegisterSealedPage()
       {
-         return fSealedPages.emplace(std::end(fSealedPages));
+         return fSealedPages.emplace_back();
       }
 
    private:
