@@ -38,25 +38,25 @@
 #include <vector>
 
 #if defined (__FreeBSD__)
-#   include <sys/user.h>
-#   include <sys/types.h>
-#   include <sys/param.h>
-#   include <sys/queue.h>
+#include <sys/user.h>
+#include <sys/types.h>
+#include <sys/param.h>
+#include <sys/queue.h>
 
-// so this is a hack to avoid libprocstat clobbering the elf includes.
-// No idea if this will keep working
+// libprocstat pulls in sys/elf.h which seems to clash with llvm/BinaryFormat/ELF.h
+// similar collision happens with ZFS. Defining ZFS disables this include.
 # ifndef ZFS
 #   define ZFS
 #   define defined_ZFS_for_libprocstat
 # endif
-# include <libprocstat.h>
+#include <libprocstat.h>
 # ifdef defined_ZFS_for_libprocstat
 #   undef ZFS
 #   undef defined_ZFS_for_libprocstat
 # endif
 
-# include <libutil.h>
-#endif
+#include <libutil.h>
+# endif
 
 #ifdef LLVM_ON_UNIX
 #include <dlfcn.h>
