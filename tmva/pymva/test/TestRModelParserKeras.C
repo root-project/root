@@ -8,6 +8,7 @@
 #include "KerasBinaryOpModel.hxx"
 #include "KerasActivationsModel.hxx"
 #include "KerasModelWithCustomOp.hxx"
+#include "KerasSwish_model.hxx"
 
 #include <Python.h>
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
@@ -408,6 +409,45 @@ TEST(RModelParser_Keras, ACTIVATIONS)
     //Testing the actual and expected output tensor values
     for (size_t i = 0; i < outputActivations.size(); ++i) {
       EXPECT_LE(std::abs(outputActivations[i] - pOutputActivations[i]), TOLERANCE);
+    }
+}
+
+TEST(RModelParser_Keras, SWISH)
+{
+    constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+    float input[]={1,1,1,1,1,1,1,1};
+    TMVA_SOFIE_swish_model::Session s("KerasSwish_model.dat");
+    std::vector<float> output = s.infer(input);
+
+    Py_Initialize();
+    PyObject* main = PyImport_AddModule("__main__");
+    PyObject* fGlobalNS = PyModule_GetDict(main);
+    PyObject* fLocalNS = PyDict_New();
+    if (!fGlobalNS) {
+        throw std::runtime_error("Can't init global namespace for Python");
+        }
+    if (!fLocalNS) {
+        throw std::runtime_error("Can't init local namespace for Python");
+        }
+    PyRun_String("import os",Py_single_input,fGlobalNS,fLocalNS);
+    PyRun_String("os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'",Py_single_input,fGlobalNS,fLocalNS);
+    PyRun_String("from tensorflow.keras.models import load_model",Py_single_input,fGlobalNS,fLocalNS);
+    PyRun_String("import numpy",Py_single_input,fGlobalNS,fLocalNS);
+    PyRun_String("model=load_model('swish_model.h5')",Py_single_input,fGlobalNS,fLocalNS);
+    PyRun_String("input=numpy.ones((1,8))",Py_single_input,fGlobalNS,fLocalNS);
+    PyRun_String("output=model(input).numpy()",Py_single_input,fGlobalNS,fLocalNS);
+    PyRun_String("outputSize=output.size",Py_single_input,fGlobalNS,fLocalNS);
+    std::size_t pOutputSize=(std::size_t)PyLong_AsLong(PyDict_GetItemString(fLocalNS,"outputSize"));
+
+    //Testing the actual and expected output tensor sizes
+    EXPECT_EQ(output.size(), pOutputSize);
+
+    PyArrayObject* pValues=(PyArrayObject*)PyDict_GetItemString(fLocalNS,"output");
+    float* pOutput=(float*)PyArray_DATA(pValues);
+
+    //Testing the actual and expected output tensor values
+    for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output[i] - pOutput[i]), TOLERANCE);
     }
 }
 
