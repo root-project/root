@@ -59,7 +59,6 @@
 #include <unistd.h>
 #endif
 
-
 #include "cling/Interpreter/Interpreter.h"
 #include "cling/Interpreter/InterpreterCallbacks.h"
 #include "cling/Interpreter/LookupHelper.h"

@@ -163,7 +163,7 @@ clang/LLVM technology.
 #include <dlfcn.h>
 #endif
 
-#ifdef R__LINUX
+#if defined(R__LINUX) || defined(R__FBSD)
 # ifndef _GNU_SOURCE
 #  define _GNU_SOURCE
 # endif
@@ -3264,7 +3264,7 @@ static bool R__UpdateLibFileForLinking(TString &lib)
 }
 #endif // R__MACOSX
 
-#ifdef R__LINUX
+#if defined (R__LINUX) || defined (R__FBSD)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Callback for dl_iterate_phdr(), see `man dl_iterate_phdr`.
@@ -3290,7 +3290,7 @@ static int callback_for_dl_iterate_phdr(struct dl_phdr_info *info, size_t size, 
    return 0;
 }
 
-#endif // R__LINUX
+#endif // R__LINUX || R__FBSD
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3337,7 +3337,7 @@ void TCling::UpdateListOfLoadedSharedLibraries()
       ++imageIndex;
    }
    fPrevLoadedDynLibInfo = (void*)(size_t)imageIndex;
-#elif defined(R__LINUX)
+#elif defined(R__LINUX) || defined(R__FBSD)
    // fPrevLoadedDynLibInfo is unused on Linux.
    (void) fPrevLoadedDynLibInfo;
 
