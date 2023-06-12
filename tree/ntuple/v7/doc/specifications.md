@@ -619,7 +619,6 @@ The following fundamental types are stored as `leaf` fields with a single column
 | uint_8_t, unsigned char          | UInt8                  |                       |
 | int16_t                          | SplitInt16             | Int16                 |
 | uint16_t                         | SplitUInt16            | UInt16                |
-| int16_t                          | SplitInt16             | Int16                 |
 | uint32_t                         | SplitUInt32            | UInt32                |
 | int32_t                          | SplitInt32             | Int32                 |
 | uint64_t                         | SplitUInt64            | UInt64                |
