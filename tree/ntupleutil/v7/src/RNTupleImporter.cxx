@@ -228,11 +228,7 @@ ROOT::Experimental::RResult<void> ROOT::Experimental::RNTupleImporter::PrepareSc
             fieldType = "std::array<" + fieldType + "," + std::to_string(countval) + ">";
 
          if (fConvertDotsInBranchNames) {
-            // If present, remove the trailing dot at the end of a field name. For an explanation as to why some branch
-            // names have this, see https://root.cern/doc/master/classTTree.html#a9193737b5c102ef8d7301410adf73e2f.
-            fieldName.erase(fieldName.find_last_not_of(".") + 1, std::string::npos);
-
-            // Replace any other occurrence with an underscore.
+            // Replace any occurrence of a dot ('.') with an underscore.
             std::replace(fieldName.begin(), fieldName.end(), '.', '_');
          }
 
