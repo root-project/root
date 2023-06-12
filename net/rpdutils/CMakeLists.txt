@@ -63,6 +63,6 @@ target_include_directories(SrvAuth PRIVATE
 )
 
 if (CMAKE_SYSTEM_NAME MATCHES FreeBSD)
-	target_link_libraries(SrvAuth PRIVATE crypt)
+  target_link_libraries(SrvAuth PRIVATE crypt)
 endif()
 

@@ -197,6 +197,6 @@ elseif(NOT MSVC)
 endif()
 
 if (CMAKE_SYSTEM_NAME MATCHES FreeBSD)
-	target_link_libraries(Cling PUBLIC util procstat)
+  target_link_libraries(Cling PUBLIC util procstat)
 endif()
 

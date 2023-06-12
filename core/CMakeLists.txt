@@ -82,7 +82,7 @@ target_link_libraries(Core
 )
 
 if (CMAKE_SYSTEM_NAME MATCHES FreeBSD)
-	target_link_libraries(Core PUBLIC util procstat)
+  target_link_libraries(Core PUBLIC util procstat)
 endif()
 
 target_include_directories(Core PUBLIC
