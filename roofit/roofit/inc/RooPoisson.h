@@ -44,6 +44,10 @@ public:
   /// Get the mean parameter.
   RooAbsReal const& getMean() const { return mean.arg(); }
 
+  void translate(RooFit::Detail::CodeSquashContext &ctx) const override;
+  std::string
+  buildCallToAnalyticIntegral(int code, const char *rangeName, RooFit::Detail::CodeSquashContext &ctx) const override;
+
 protected:
 
   RooRealProxy x ;
