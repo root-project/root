@@ -34,7 +34,7 @@ jobs:
           apt -y install llvm-13-dev libclang-13-dev libxrootd-dev libgtest-dev
       - name: Create compile_commands.json
         run: |
-          cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=On -S . -B builddir -Dall=On -Dveccore=Off -Dvdt=Off -Dvc=Off -DCMAKE_BUILD_TYPE=Release -Dbuiltin_clang=Off -Dbuiltin_llvm=Off -DCLANG_RESOURCE_DIR_VERSION=13
+          cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=On -S . -B builddir -Dtesting=On -Droottest=Off -Dbuiltin_gtest=Off -Dall=On -Dveccore=Off -Dvdt=Off -Dvc=Off -DCMAKE_BUILD_TYPE=Release -Dbuiltin_clang=Off -Dbuiltin_llvm=Off -DCLANG_RESOURCE_DIR_VERSION=13
       - name: Install sonar-scanner and build-wrapper
         uses: SonarSource/sonarcloud-github-c-cpp@v1
       - name: Install Nodejs
