@@ -61,6 +61,8 @@ private:
    ///////////////////////////
    // Private member functions
 
+   void processVariable(NodeInfo &nodeInfo);
+   void setClientsDirty(NodeInfo &nodeInfo);
    double getValHeterogeneous();
    void markGPUNodes();
    void assignToGPU(NodeInfo &info);

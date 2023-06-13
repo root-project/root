@@ -364,6 +364,31 @@ void RooFitDriver::computeCPUNode(const RooAbsArg *node, NodeInfo &info)
    }
 }
 
+/// Process a variable in the computation graph. This is a separate non-inlined
+/// function such that we can see in performance profiles how long this takes.
+void RooFitDriver::processVariable(NodeInfo &nodeInfo)
+{
+   RooAbsArg *node = nodeInfo.absArg;
+   auto *var = static_cast<RooRealVar const *>(node);
+   if (nodeInfo.lastSetValCount != var->valueResetCounter()) {
+      nodeInfo.lastSetValCount = var->valueResetCounter();
+      for (NodeInfo *clientInfo : nodeInfo.clientInfos) {
+         clientInfo->isDirty = true;
+      }
+      computeCPUNode(node, nodeInfo);
+      nodeInfo.isDirty = false;
+   }
+}
+
+/// Flags all the clients of a given node dirty. This is a separate non-inlined
+/// function such that we can see in performance profiles how long this takes.
+void RooFitDriver::setClientsDirty(NodeInfo &nodeInfo)
+{
+   for (NodeInfo *clientInfo : nodeInfo.clientInfos) {
+      clientInfo->isDirty = true;
+   }
+}
+
 /// Returns the value of the top node in the computation graph
 double RooFitDriver::getVal()
 {
@@ -374,24 +399,13 @@ double RooFitDriver::getVal()
    }
 
    for (auto &nodeInfo : _nodes) {
-      RooAbsArg *node = nodeInfo.absArg;
       if (!nodeInfo.fromDataset) {
          if (nodeInfo.isVariable) {
-            auto *var = static_cast<RooRealVar const *>(node);
-            if (nodeInfo.lastSetValCount != var->valueResetCounter()) {
-               nodeInfo.lastSetValCount = var->valueResetCounter();
-               for (NodeInfo *clientInfo : nodeInfo.clientInfos) {
-                  clientInfo->isDirty = true;
-               }
-               computeCPUNode(node, nodeInfo);
-               nodeInfo.isDirty = false;
-            }
+            processVariable(nodeInfo);
          } else {
             if (nodeInfo.isDirty) {
-               for (NodeInfo *clientInfo : nodeInfo.clientInfos) {
-                  clientInfo->isDirty = true;
-               }
-               computeCPUNode(node, nodeInfo);
+               setClientsDirty(nodeInfo);
+               computeCPUNode(nodeInfo.absArg, nodeInfo);
                nodeInfo.isDirty = false;
             }
          }
