@@ -27,6 +27,7 @@ jobs:
           for d in bindings benchmark benchmarks gn test tests unittest unittests; do
             find . -name $d -prune -exec rm -r "{}" \;
           done
+          rm -r llvm/utils/vscode
           rm llvm/.git*
       - name: Compare Clang
         run: diff -ur llvm-project/clang root/interpreter/llvm/src/tools/clang
