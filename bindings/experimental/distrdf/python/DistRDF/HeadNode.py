@@ -93,9 +93,8 @@ class HeadNode(Node, ABC):
         # Uniquely identify each computation graph execution of this RDataFrame
         # The uuid can be set here
         self.rdf_uuid = uuid.uuid4()
-        # We need the hash of the current computation graph to properly create
-        # the identifier, so this is a transient attribute.
-        self.exec_id: Optional[_graph_cache.ExecutionIdentifier] = None
+        # The full identifier is created at the beginning of each execution
+        self.exec_id: _graph_cache.ExecutionIdentifier = None
 
         # Internal attribute to keep track of the number of partitions. We also
         # check whether it was specified by the user when creating the dataframe.
@@ -197,16 +196,12 @@ class HeadNode(Node, ABC):
         # between runs (e.g. changing the number of available cores).
         self.npartitions = self.backend.optimize_npartitions()
 
-        # Build the full execution identifier with the hash of the current
-        # computation graph.
-        graph_dict = self._generate_graph_dict()
-        graph_hash = hash(frozenset(graph_dict.items()))
-        self.exec_id = _graph_cache.ExecutionIdentifier(self.rdf_uuid, graph_hash)
+        self.exec_id = _graph_cache.ExecutionIdentifier(self.rdf_uuid, uuid.uuid4())
 
         if optimized:
-            computation_graph_callable = partial(ComputationGraphGenerator.run_with_cppworkflow, graph_dict)
+            computation_graph_callable = partial(ComputationGraphGenerator.run_with_cppworkflow, self._generate_graph_dict())
         else:
-            computation_graph_callable = partial(ComputationGraphGenerator.trigger_computation_graph, graph_dict)
+            computation_graph_callable = partial(ComputationGraphGenerator.trigger_computation_graph, self._generate_graph_dict())
 
         mapper = partial(distrdf_mapper,
                          build_rdf_from_range=self._generate_rdf_creator(),
