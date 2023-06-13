@@ -1,4 +1,4 @@
-1# File: roottest/python/stl/PyROOT_stltests.py
+# File: roottest/python/stl/PyROOT_stltests.py
 # Author: Wim Lavrijsen (LBNL, WLavrijsen@lbl.gov)
 # Created: 10/25/05
 # Last: 02/28/16
