@@ -304,7 +304,7 @@ void TMonaLisaWriter::Init(const char *monserver, const char *montag, const char
       fApmon->setJobMonitoring(false);
       //((ApMon*)fApmon)->setSysMonitoring(false);
       //((ApMon*)fApmon)->setGenMonitoring(false);
-   } catch (runtime_error &e) {
+   } catch (std::runtime_error &e) {
       Error("TMonaLisaWriter", "Error initializing ApMon: %s", e.what());
       Error("TMonaLisaWriter", "Disabling apmon.");
       fInitialized = kFALSE;
@@ -894,7 +894,8 @@ Bool_t TMonaLisaWriter::SendFileCheckpoint(TFile *file)
    if (!mi) {
 
       mi = new MonitoredTFileInfo(file, timenow);
-      if (mi) fMonInfoRepo->insert( make_pair( file->GetUniqueID(), mi ) );
+      if (mi)
+         fMonInfoRepo->insert(std::make_pair(file->GetUniqueID(), mi));
    }
 
    // And now we get those partial values
