@@ -18,6 +18,8 @@ Poisson pdf
 #include "RooNaNPacker.h"
 #include "RooBatchCompute.h"
 
+#include "RooFit/Detail/AnalyticalIntegrals.h"
+#include "RooFit/Detail/EvaluateFuncs.h"
 #include "Math/ProbFuncMathCore.h"
 
 ClassImp(RooPoisson);
@@ -59,7 +61,16 @@ double RooPoisson::evaluate() const
     np.setPayload(-mean);
     return np._payload;
   }
-  return TMath::Poisson(k,mean) ;
+  return RooFit::Detail::EvaluateFuncs::poissonEvaluate(k, mean);
+}
+
+void RooPoisson::translate(RooFit::Detail::CodeSquashContext &ctx) const
+{
+   std::string xName = ctx.getResult(x);
+   if (!_noRounding)
+      xName = "std::floor(" + xName + ")";
+
+   ctx.addResult(this, ctx.buildCall("RooFit::Detail::EvaluateFuncs::poissonEvaluate", xName, mean));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -87,62 +98,25 @@ double RooPoisson::analyticalIntegral(Int_t code, const char* rangeName) const
 {
   R__ASSERT(code == 1 || code == 2) ;
 
-  const double mu = mean; // evaluating the proxy once for less overhead
+  RooRealProxy const &integrand = code == 1 ? x : mean;
+  return RooFit::Detail::AnalyticalIntegrals::poissonIntegral(
+     code, mean, _noRounding ? x : std::floor(x), integrand.min(rangeName), integrand.max(rangeName), _protectNegative);
+}
 
-  if(_protectNegative && mu < 0.0) {
-    return std::exp(-2.0 * mu); // make it fall quickly
-  }
+std::string
+RooPoisson::buildCallToAnalyticIntegral(int code, const char *rangeName, RooFit::Detail::CodeSquashContext &ctx) const
+{
+   R__ASSERT(code == 1 || code == 2);
+   std::string xName = ctx.getResult(x);
+   if (!_noRounding)
+      xName = "std::floor(" + xName + ")";
 
-  if (code == 1) {
-    // Implement integral over x as summation. Add special handling in case
-    // range boundaries are not on integer values of x
-    const double xmin = std::max(0., x.min(rangeName));
-    const double xmax = x.max(rangeName);
-
-    if (xmax < 0. || xmax < xmin) {
-      return 0.;
-    }
-    const double delta = 100.0 * std::sqrt(mu);
-    // If the limits are more than many standard deviations away from the mean,
-    // we might as well return the integral of the full Poisson distribution to
-    // save computing time.
-    if (xmin < std::max(mu - delta, 0.0) && xmax > mu + delta) {
-      return 1.;
-    }
-
-    // The range as integers. ixmin is included, ixmax outside.
-    const unsigned int ixmin = xmin;
-    const unsigned int ixmax = std::min(xmax + 1.,
-                                        (double)std::numeric_limits<unsigned int>::max());
-
-    // Sum from 0 to just before the bin outside of the range.
-    if (ixmin == 0) {
-      return ROOT::Math::poisson_cdf(ixmax - 1, mu);
-    }
-    else {
-      // If necessary, subtract from 0 to the beginning of the range
-      if (ixmin <= mu) {
-        return ROOT::Math::poisson_cdf(ixmax - 1, mu) - ROOT::Math::poisson_cdf(ixmin - 1, mu);
-      }
-      else {
-        //Avoid catastrophic cancellation in the high tails:
-        return ROOT::Math::poisson_cdf_c(ixmin - 1, mu) - ROOT::Math::poisson_cdf_c(ixmax - 1, mu);
-      }
-
-    }
-
-  } else if(code == 2) {
-
-    // the integral with respect to the mean is the integral of a gamma distribution
-
-    // negative ix does not need protection (gamma returns 0.0)
-    const double ix = _noRounding ? x + 1 : int(TMath::Floor(x)) + 1.0;
-
-    using ROOT::Math::gamma_cdf;
-    return gamma_cdf(mean.max(rangeName), ix, 1.0) - gamma_cdf(mean.min(rangeName), ix, 1.0);
-  }
-
-  return 0.0;
+   RooRealProxy const &integrand = code == 1 ? x : mean;
+   // Since the integral function is the same for both codes, we need to make sure the indexed observables do not appear
+   // in the function if they are not required.
+   xName = code == 1 ? "0" : xName;
+   return ctx.buildCall("RooFit::Detail::AnalyticalIntegrals::poissonIntegral", code, mean, xName,
+                        integrand.min(rangeName), integrand.max(rangeName), _protectNegative);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
