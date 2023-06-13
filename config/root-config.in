@@ -803,8 +803,11 @@ while test $# -gt 0; do
       ### number of available cores
       ncpu=1
       case $arch in
-      freebsd* | openbsd* | linux*)
+      openbsd* | linux*)
          ncpu=$(awk '/^processor/ {++n} END {print n}' /proc/cpuinfo)
+         ;;
+      freebsd*)
+         ncpu=$(sysctl -n hw.ncpu)
          ;;
       macosx*)
          ncpu=$(sysctl -n hw.ncpu)
