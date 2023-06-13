@@ -32,7 +32,7 @@ jobs:
           apt -y install llvm-13-dev libclang-13-dev
       - name: Create compile_commands.json
         run: |
-          cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=On -S . -B builddir -Dall=On -DCMAKE_BUILD_TYPE=Release -Dbuiltin_clang=Off -Dbuiltin_llvm=Off
+          cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=On -S . -B builddir -Dall=On -DCMAKE_BUILD_TYPE=Release -Dbuiltin_clang=Off -Dbuiltin_llvm=Off -DCLANG_RESOURCE_DIR_VERSION=13
       - name: Install sonar-scanner and build-wrapper
         uses: SonarSource/sonarcloud-github-c-cpp@v1
       - name: Install Nodejs
