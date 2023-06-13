@@ -28,8 +28,8 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }} # We do not run any user-provided code.
       - name: install external llvm, clang
         run: |
-          apt update
-          apt install llvm-13-dev libclang-13-dev
+          apt update -qq
+          apt -y install llvm-13-dev libclang-13-dev
       - name: Create compile_commands.json
         run: |
           cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=On -S . -B builddir -Dall=On -DCMAKE_BUILD_TYPE=Release -Dbuiltin_clang=Off -Dbuiltin_llvm-Off
