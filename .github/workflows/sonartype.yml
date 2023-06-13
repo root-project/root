@@ -26,9 +26,12 @@ jobs:
         with:
           fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
           ref: ${{ github.event.pull_request.head.sha }} # We do not run any user-provided code.
+      - name: install external llvm, clang
+        run: |
+          apt install llvm-13-dev libclang-13-dev
       - name: Create compile_commands.json
         run: |
-          cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=On -S . -B builddir -Dall=On -DCMAKE_BUILD_TYPE=Release
+          cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=On -S . -B builddir -Dall=On -DCMAKE_BUILD_TYPE=Release -Dbuiltin_clang=Off -Dbuiltin_llvm-Off
       - name: Install sonar-scanner and build-wrapper
         uses: SonarSource/sonarcloud-github-c-cpp@v1
       - name: Install Nodejs
