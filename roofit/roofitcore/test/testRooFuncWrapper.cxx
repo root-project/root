@@ -26,6 +26,7 @@
 #include <RooHistPdf.h>
 #include <RooHelpers.h>
 #include <RooMinimizer.h>
+#include <RooPoisson.h>
 #include <RooPolynomial.h>
 #include <RooProduct.h>
 #include <RooRealVar.h>
@@ -585,8 +586,36 @@ FactoryTestParams param8{"HistFuncPdf", getDataHistFuncModel,
                          1e-4,
                          /*randomizeParameters=*/true};
 
+FactoryTestParams param9{"Poisson",
+                         [](RooWorkspace &ws) {
+                            ws.factory("sum::mu_shifted(mu[0, -10, 10], shift[1.0, -10, 10])");
+                            ws.factory("Poisson::model(x[5, -10, 10], mu_shifted)");
+                            ws.defineSet("observables", "x");
+                         },
+                         [](RooAbsPdf &pdf, RooAbsData &data, RooWorkspace &) {
+                            return std::unique_ptr<RooAbsReal>{pdf.createNLL(data, RooFit::BatchMode("cpu"))};
+                         },
+                         1e-4,
+                         /*randomizeParameters=*/false};
+
+// A RooPoisson where x is not rounded, like it is used in HistFactory
+FactoryTestParams param10{"PoissonNoRounding",
+                          [](RooWorkspace &ws) {
+                             ws.factory("sum::mu_shifted(mu[0, -10, 10], shift[1.0, -10, 10])");
+                             ws.factory("Poisson::model(x[5, -10, 10], mu_shifted)");
+                             auto poisson = static_cast<RooPoisson *>(ws.pdf("model"));
+                             poisson->setNoRounding(true);
+                             ws.defineSet("observables", "x");
+                          },
+                          [](RooAbsPdf &pdf, RooAbsData &data, RooWorkspace &) {
+                             return std::unique_ptr<RooAbsReal>{pdf.createNLL(data, RooFit::BatchMode("cpu"))};
+                          },
+                          1e-4,
+                          /*randomizeParameters=*/false};
+
 INSTANTIATE_TEST_SUITE_P(RooFuncWrapper, FactoryTest,
-                         testing::Values(param1, param2, param3, param4, param5, param6, param7, param8),
+                         testing::Values(param1, param2, param3, param4, param5, param6, param7, param8, param9,
+                                         param10),
                          [](testing::TestParamInfo<FactoryTest::ParamType> const &paramInfo) {
                             return paramInfo.param._name;
                          });
