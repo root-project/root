@@ -35,4 +35,4 @@ jobs:
         uses: actions/setup-node@v3
       - name: Run sonar-scanner
         run: |
-          sonar-scanner
+          sonar-scanner -X
