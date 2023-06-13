@@ -18,12 +18,12 @@ class ExecutionIdentifier:
 
     Attributes:
 
-    uuid: An identifier for the specific RDataFrame instance.
-    graph_hash: The hash of the computation graph sent to the workers for the
-        current execution.
+    rdf_uuid: An identifier for the specific RDataFrame instance.
+    graph_uuid: An identifier for the computation graph sent to the workers for
+        the current execution.
     """
-    uuid: uuid.UUID
-    graph_hash: int
+    rdf_uuid: uuid.UUID
+    graph_uuid: uuid.UUID
 
 
 _RDF_REGISTER: Dict[ExecutionIdentifier, ROOT.RDataFrame] = {}
