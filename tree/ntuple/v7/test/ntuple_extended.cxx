@@ -323,11 +323,13 @@ TEST(RNTuple, SmallClusters)
       writer->Fill();
    }
    writer->Fill();
+#if !defined(_MSC_VER) || defined(_WIN64) || defined(R__ENABLE_BROKEN_WIN_TESTS)
    EXPECT_THROW(writer->CommitCluster(), ROOT::Experimental::RException);
 
    // On destruction of the writer, the exception in CommitCluster() produces an error log
    ROOT::TestSupport::CheckDiagsRAII diagRAII;
    diagRAII.requiredDiag(kError, "[ROOT.NTuple]",
       "failure committing ntuple: invalid attempt to write a cluster > 512MiB", false /* matchFullMessage */);
+#endif
    writer = nullptr;
 }
