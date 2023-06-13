@@ -286,12 +286,12 @@ LDFLAGS       = $(OPT)
 SOFLAGS       = -shared -Wl,-x
 endif
 
-ifeq ($(ARCH),freebsdx8664)
+ifeq ($(findstring freebsd,$(ARCH)),freebsd)
 # FreeBSD with libc
 CXX           = c++
-CXXFLAGS      = $(OPT) -W -Wall -fPIC
+CXXFLAGS      = $(OPT2) -W -Wall -fPIC
 LD            = $(CXX)
-LDFLAGS       = $(OPT)
+LDFLAGS       = $(OPT2)
 SOFLAGS       = -shared -Wl,-x
 endif
 

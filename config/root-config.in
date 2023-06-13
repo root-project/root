@@ -279,8 +279,10 @@ freebsd4)
    ;;
 freebsd5|freebsd7)
    # FreeBSD 5/7 with glibc
+freebsd*)
+   # FreeBSD
    auxcflags="${cxxversionflag}"
-   auxlibs="-lm -lstdc++"
+   auxlibs="-lm"
    ;;
 openbsd)
    # OpenBSD with libc
