@@ -132,9 +132,7 @@ extern "C" {
 
 #include "Riostream.h"
 using namespace std;
-// Next line should not exist. It is now there for testing
-// pourpuses.
-#undef R__HAS_MATHMORE
+
 
 unsigned int __DRAW__ = 0;
 unsigned int __WRITE__ = 0; // write fitted object in a file
@@ -1173,7 +1171,7 @@ void init_structures()
 
    // Different vectors containing the list of algorithms to be used.
    vector<algoType> commonAlgos;
-   vector<algoType> simplexAlgos;
+   vector<algoType> extraAlgos;
    vector<algoType> specialAlgos;
    vector<algoType> noGraphAlgos;
    vector<algoType> noGraphErrorAlgos;
@@ -1186,22 +1184,23 @@ void init_structures()
    commonAlgos.push_back( algoType( "Minuit2",     "Migrad",      "X", CompareResult(), true)  ); //reference
    commonAlgos.push_back( algoType( "Minuit",      "Migrad",      "X", CompareResult())  );
    commonAlgos.push_back( algoType( "Minuit",      "Minimize",    "X", CompareResult())  );
-   commonAlgos.push_back( algoType( "Minuit",      "Scan",        "X", CompareResult(0)) );  // mask this
-   //commonAlgos.push_back( algoType( "Minuit",      "Seek",        "X", CompareResult(defCmpOpt,5,0.1)) );
-   commonAlgos.push_back( algoType( "Minuit",      "Seek",        "X", CompareResult(0)) );  //mask
    commonAlgos.push_back( algoType( "Minuit2",     "Minimize",    "X", CompareResult())  );
-   commonAlgos.push_back( algoType( "Minuit2",     "Scan",        "X", CompareResult(0)) );  // mask
-#ifdef R__HAS_MATHMORE
-   commonAlgos.push_back( algoType( "GSLMultiMin", "conjugatefr", "X", CompareResult()) );
-   commonAlgos.push_back( algoType( "GSLMultiMin", "conjugatepr", "X", CompareResult()) );
-   commonAlgos.push_back( algoType( "GSLMultiMin", "bfgs2",       "X", CompareResult()) );
-   commonAlgos.push_back( algoType( "GSLSimAn",    "",            "X", CompareResult()) );
-#endif
+   // extra algorithm
+   extraAlgos.push_back( algoType( "Minuit",      "Scan",        "X", CompareResult(0)) );  // mask this
+   //commonAlgos.push_back( algoType( "Minuit",      "Seek",        "X", CompareResult(defCmpOpt,5,0.1)) );
+   extraAlgos.push_back( algoType( "Minuit",      "Seek",        "X", CompareResult(0)) );  //mask
+   extraAlgos.push_back( algoType( "Minuit2",     "Scan",        "X", CompareResult(0)) );  // mask
 
-   // additional type of fits
-   simplexAlgos.push_back( algoType( "Minuit",      "Simplex",     "X", CompareResult()) );
+   extraAlgos.push_back( algoType( "Minuit",      "Simplex",     "X", CompareResult(cmpChi2,0,1)) );
    //simplex MInuit2 does not work well (needs to be checked)
    // simplexAlgos.push_back( algoType( "Minuit2",     "Simplex",     "", CompareResult())  );
+#ifdef R__HAS_MATHMORE
+   extraAlgos.push_back( algoType( "GSLMultiMin", "conjugatefr", "X", CompareResult(cmpChi2)) );
+   extraAlgos.push_back( algoType( "GSLMultiMin", "conjugatepr", "X", CompareResult(cmpChi2)) );
+   extraAlgos.push_back( algoType( "GSLMultiMin", "bfgs2",       "X", CompareResult(cmpChi2)) );
+   extraAlgos.push_back( algoType( "GSLSimAn",    "",            "X", CompareResult(cmpChi2,0,1.)) );
+#endif
+
 
    specialAlgos.push_back( algoType( "Minuit",      "Migrad",      "WX", CompareResult(cmpPars)) );
 
@@ -1252,12 +1251,13 @@ void init_structures()
    histGaus2D.push_back( algoType( "Fumili",      ""      ,      "X",   CompareResult(cmpPars,6)) );
 
 #ifdef R__HAS_MATHMORE
-   histGaus2D.push_back( algoType( "GSLMultiMin", "conjugatefr", "X", CompareResult(cmpPars,6)) );
-   histGaus2D.push_back( algoType( "GSLMultiMin", "conjugatepr", "X", CompareResult(cmpPars,6)) );
-   histGaus2D.push_back( algoType( "GSLMultiMin", "bfgs2",       "X", CompareResult(cmpPars,6)) );
-   histGaus2D.push_back( algoType( "GSLSimAn",    "",            "X", CompareResult(cmpPars,6)) );
+   // compare only Chi2 value since parameter error is not estimated in GSLMultiMin
+   histGaus2D.push_back( algoType( "GSLMultiMin", "conjugatefr", "X", CompareResult(cmpChi2)) );
+   histGaus2D.push_back( algoType( "GSLMultiMin", "conjugatepr", "X", CompareResult(cmpChi2)) );
+   histGaus2D.push_back( algoType( "GSLMultiMin", "bfgs2",       "X", CompareResult(cmpChi2)) );
+   histGaus2D.push_back( algoType( "GSLSimAn",    "",            "X", CompareResult(cmpChi2, 0, 1.)) );
 
-   histGaus2D.push_back( algoType( "GSLMultiFit", "",            "X",   CompareResult() );
+   histGaus2D.push_back( algoType( "GSLMultiFit", "",            "X",   CompareResult() ));
 #endif
    histGaus2D.push_back( algoType( "Minuit",      "Simplex",     "X",   CompareResult(cmpPars,6)) );
    // minuit2 simplex fails in 2d
@@ -1270,7 +1270,7 @@ void init_structures()
    histGaus2D.push_back( algoType( "Fumili",      ""      ,      "GX", CompareResult(0)) );
    histGaus2D.push_back( algoType( "Minuit2",     "Fumili",      "GX", CompareResult(0)) );
 #ifdef R__HAS_MATHMORE
-   histGaus2D.push_back( algoType( "GSLMultiFit", "",            "GX",   CompareResult() );
+   histGaus2D.push_back( algoType( "GSLMultiFit", "",            "GX",   CompareResult()) );
 #endif
    // I - L algos
    histGaus2D.push_back( algoType( "Minuit",      "Migrad",      "L",  CompareResult(),true) );
@@ -1295,11 +1295,11 @@ void init_structures()
 
    // algorithms only for GraphErrors (excluding error in X)
    graphErrorAlgos.push_back( algoType( "Minuit2",    "Migrad",      "EX0", CompareResult(),true) );
-   graphErrorAlgos.push_back( algoType( "Minuit",   "Migrad",      "EX0", CompareResult()) );
+   graphErrorAlgos.push_back( algoType( "Minuit",    "Migrad",      "EX0", CompareResult()) );
    graphErrorAlgos.push_back( algoType( "Minuit2",   "Fumili",      "EX0", CompareResult()) );
    graphErrorAlgos.push_back( algoType( "Fumili",          "",      "EX0", CompareResult()) );
 #ifdef R__HAS_MATHMORE
-   graphErrorAlgos.push_back( algoType( "GSLMultiFit",    "",        "EX0", CompareResult(),true );
+   graphErrorAlgos.push_back( algoType( "GSLMultiFit",    "",        "EX0", CompareResult(),true ));
 #endif
 
    // For testing the linear fitter we can force the use by setting Linear the default minimizer and use
@@ -1312,25 +1312,26 @@ void init_structures()
    listAlgosTGraph.clear();
    listAlgosTGraphError.clear();
    listTH2DAlgos.clear();
+   listAlgosTGraph2D.clear();
    listAlgosTGraph2DError.clear();
 
    listLinearAlgos.push_back( linearAlgos );
 
 
    listTH1DAlgos.push_back( commonAlgos );
-   listTH1DAlgos.push_back( simplexAlgos );
+   listTH1DAlgos.push_back( extraAlgos );
    listTH1DAlgos.push_back( specialAlgos );
    listTH1DAlgos.push_back( noGraphErrorAlgos );
    listTH1DAlgos.push_back( noGraphAlgos );
 
 
    listAlgosTGraph.push_back( commonAlgos );
-   listAlgosTGraph.push_back( simplexAlgos );
+   listAlgosTGraph.push_back( extraAlgos );
    listAlgosTGraph.push_back( specialAlgos );
    listAlgosTGraph.push_back( noGraphErrorAlgos );
 
    listAlgosTGraphError.push_back( commonAlgos );
-   listAlgosTGraphError.push_back( simplexAlgos );
+   listAlgosTGraphError.push_back( extraAlgos );
    listAlgosTGraphError.push_back( specialAlgos );
    listAlgosTGraphError.push_back( graphErrorAlgos );
 
@@ -1344,9 +1345,8 @@ void init_structures()
    listAlgosTGraph2DError.push_back( specialAlgos );
    listAlgosTGraph2DError.push_back( graphErrorAlgos );
 
-   listTreeAlgos.resize(2);
-   listTreeAlgos[0] = commonAlgos;
-   listTreeAlgos[1] = simplexAlgos;
+   listTreeAlgos.clear();
+   listTreeAlgos.push_back(commonAlgos);
 
    vector<ParLimit> emptyLimits(0);
    l1DFunctions.clear();
