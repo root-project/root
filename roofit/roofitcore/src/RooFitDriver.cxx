@@ -612,6 +612,19 @@ void RooFitDriver::print(std::ostream &os) const
    printHorizontalRow();
 }
 
+RooArgSet RooFitDriver::getParameters() const
+{
+   RooArgSet parameters;
+   for (auto &nodeInfo : _nodes) {
+      if (!nodeInfo.fromDataset && nodeInfo.isVariable) {
+         parameters.add(*nodeInfo.absArg);
+      }
+   }
+   // Just like in RooAbsArg::getParameters(), we sort the parameters alphabetically.
+   parameters.sort();
+   return parameters;
+}
+
 RooAbsRealWrapper::RooAbsRealWrapper(std::unique_ptr<RooFitDriver> driver, std::string const &rangeName,
                                      RooSimultaneous const *simPdf, bool takeGlobalObservablesFromData)
    : RooAbsReal{"RooFitDriverWrapper", "RooFitDriverWrapper"},
@@ -628,7 +641,6 @@ RooAbsRealWrapper::RooAbsRealWrapper(const RooAbsRealWrapper &other, const char 
      _driver{other._driver},
      _topNode("topNode", this, other._topNode),
      _data{other._data},
-     _parameters{other._parameters},
      _rangeName{other._rangeName},
      _simPdf{other._simPdf},
      _takeGlobalObservablesFromData{other._takeGlobalObservablesFromData}
@@ -638,7 +650,7 @@ RooAbsRealWrapper::RooAbsRealWrapper(const RooAbsRealWrapper &other, const char 
 bool RooAbsRealWrapper::getParameters(const RooArgSet *observables, RooArgSet &outputSet,
                                       bool /*stripDisconnected*/) const
 {
-   outputSet.add(_parameters);
+   outputSet.add(_driver->getParameters());
    if (observables) {
       outputSet.remove(*observables);
    }
@@ -655,17 +667,6 @@ bool RooAbsRealWrapper::getParameters(const RooArgSet *observables, RooArgSet &o
 bool RooAbsRealWrapper::setData(RooAbsData &data, bool /*cloneData*/)
 {
    _data = &data;
-
-   // Figure out what are the parameters for the current dataset
-   _parameters.clear();
-   RooArgSet params;
-   _driver->topNode().getParameters(_data->get(), params, true);
-   for (RooAbsArg *param : params) {
-      if (!param->getAttribute("__obs__")) {
-         _parameters.add(*param);
-      }
-   }
-
    _driver->setData(*_data, _rangeName, _simPdf, /*skipZeroWeights=*/true, _takeGlobalObservablesFromData);
    return true;
 }

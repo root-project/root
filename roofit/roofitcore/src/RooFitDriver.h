@@ -50,6 +50,8 @@ public:
                 bool skipZeroWeights = false, bool takeGlobalObservablesFromData = true);
    void setData(DataSpansMap const &dataSpans);
 
+   RooArgSet getParameters() const;
+
    ~RooFitDriver();
    std::vector<double> getValues();
    double getVal();
