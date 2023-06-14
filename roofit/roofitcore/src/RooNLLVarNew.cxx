@@ -26,6 +26,7 @@ functions from `RooBatchCompute` library to provide faster computation times.
 
 #include <RooBatchCompute.h>
 #include <RooNaNPacker.h>
+#include <RooConstVar.h>
 #include <RooRealVar.h>
 #include "RooFit/Detail/Buffers.h"
 
@@ -54,9 +55,10 @@ RooArgSet getObs(RooAbsArg const &arg, RooArgSet const &observables)
    return out;
 }
 
-RooRealVar *dummyVar(const char *name)
+// Use RooConstVar for dummies such that they don't get included in getParameters().
+RooConstVar *dummyVar(const char *name)
 {
-   return new RooRealVar(name, name, 1.0);
+   return new RooConstVar(name, name, 1.0);
 }
 
 } // namespace
