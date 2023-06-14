@@ -299,6 +299,11 @@ THnBase* THnBase::CreateHnAny(const char* name, const char* title,
    // Get the dimension of the TH1
    int ndim = h->GetDimension();
 
+   if (ndim > 3) {
+      ::Error("THnBase::CreateHnAny", "Can only handle 1..3 dimensional histograms!");
+      return nullptr;
+   }
+
    // Axis properties
    int nbins[3] = {0,0,0};
    double minRange[3] = {0.,0.,0.};
