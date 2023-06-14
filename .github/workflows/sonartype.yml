@@ -40,8 +40,8 @@ jobs:
         uses: SonarSource/sonarcloud-github-c-cpp@v1
       - name: Install Nodejs
         run: |
-          curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
-          sudo apt-get install -y nodejs
+          curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+          apt-get install -y nodejs
       - name: Run sonar-scanner
         run: |
           sonar-scanner
