@@ -2396,10 +2396,10 @@ RooProdPdf::compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileC
       auto nsetForServer = fillNormSetForServer(normSet, *server);
       RooArgSet const &nset = nsetForServer ? *nsetForServer : normSet;
 
-      auto depList = new RooArgSet; // INTENTIONAL LEAK FOR NOW!
-      server->getObservables(&nset, *depList);
+      RooArgSet depList;
+      server->getObservables(&nset, depList);
 
-      ctx.compileServer(*server, *prodPdfClone, *depList);
+      ctx.compileServer(*server, *prodPdfClone, depList);
    }
 
    auto fixedProdPdf = std::make_unique<RooFixedProdPdf>(std::move(prodPdfClone), normSet);
