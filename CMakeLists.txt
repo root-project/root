@@ -168,11 +168,11 @@ include(RootMacros)
 include(CheckAssembler)
 include(CheckIntrinsics)
 
-# relatedrepo_GetInfo(REPO_NAME <repo> ORIGIN_PREFIX <originp> UPSTREAM_PREFIX <upstreamp>
-#                     FETCHURL_VARIABLE <output_url> FETCHREF_VARIABLE <output_ref>)
+# relatedrepo_GetClosestMatch(REPO_NAME <repo> ORIGIN_PREFIX <originp> UPSTREAM_PREFIX <upstreamp>
+#                             FETCHURL_VARIABLE <output_url> FETCHREF_VARIABLE <output_ref>)
 # Return the clone URL and head/tag of the closest match for `repo` (e.g. roottest), based on the
 # current head name.
-function(relatedrepo_GetInfo)
+function(relatedrepo_GetClosestMatch)
   cmake_parse_arguments(_ "" "REPO_NAME;ORIGIN_PREFIX;UPSTREAM_PREFIX;FETCHURL_VARIABLE;FETCHREF_VARIABLE" "" ${ARGN})
 
   set(${__FETCHURL_VARIABLE} ${__UPSTREAM_PREFIX}/${__REPO_NAME} PARENT_SCOPE)
@@ -234,9 +234,9 @@ function(relatedrepo_Clone I_name)
                     remote get-url origin OUTPUT_VARIABLE originurl OUTPUT_STRIP_TRAILING_WHITESPACE)
   endif()
   string(REGEX REPLACE "/root(\.git)?$" "" originprefix ${originurl})
-  relatedrepo_GetInfo(REPO_NAME ${I_name}
-                      ORIGIN_PREFIX ${originprefix} UPSTREAM_PREFIX https://github.com/root-project
-                      FETCHURL_VARIABLE git_clone_url FETCHREF_VARIABLE git_clone_ref)
+  relatedrepo_GetClosestMatch(REPO_NAME ${I_name}
+                              ORIGIN_PREFIX ${originprefix} UPSTREAM_PREFIX https://github.com/root-project
+                              FETCHURL_VARIABLE git_clone_url FETCHREF_VARIABLE git_clone_ref)
 
   message(STATUS "Cloning ${I_name} from '${git_clone_url}' (${git_clone_ref})")
   if(NOT "${git_clone_ref}" STREQUAL "")
