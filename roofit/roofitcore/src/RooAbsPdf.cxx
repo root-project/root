@@ -1132,14 +1132,14 @@ RooFit::OwningPtr<RooAbsReal> RooAbsPdf::createNLL(RooAbsData& data, const RooLi
     TString oldNormRange = _normRange;
     setNormRange(rangeName);
 
-    auto normSet = new RooArgSet; // INTENTIONAL LEAK FOR NOW!
-    getObservables(data.get(), *normSet);
-    normSet->remove(projDeps, true, true);
+    RooArgSet normSet;
+    getObservables(data.get(), normSet);
+    normSet.remove(projDeps, true, true);
 
     this->setAttribute("SplitRange", splitRange);
     this->setStringAttribute("RangeName", rangeName);
 
-    std::unique_ptr<RooAbsPdf> pdfClone = RooFit::Detail::compileForNormSet(*this, *normSet);
+    std::unique_ptr<RooAbsPdf> pdfClone = RooFit::Detail::compileForNormSet(*this, normSet);
 
     // reset attributes
     this->setAttribute("SplitRange", false);
