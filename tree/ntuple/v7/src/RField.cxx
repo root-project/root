@@ -1082,7 +1082,7 @@ std::size_t ROOT::Experimental::RField<std::string>::AppendImpl(const ROOT::Expe
    fColumns[1]->AppendV(elemChars, length);
    fIndex += length;
    fColumns[0]->Append(fElemIndex);
-   return length + sizeof(fElemIndex);
+   return length + fColumns[0]->GetElement()->GetPackedSize();
 }
 
 void ROOT::Experimental::RField<std::string>::ReadGlobalImpl(
@@ -1395,7 +1395,7 @@ std::size_t ROOT::Experimental::RCollectionClassField::AppendImpl(const Detail::
    Detail::RColumnElement<ClusterSize_t> elemIndex(&fNWritten);
    fNWritten += count;
    fColumns[0]->Append(elemIndex);
-   return nbytes + sizeof(elemIndex);
+   return nbytes + fColumns[0]->GetElement()->GetPackedSize();
 }
 
 void ROOT::Experimental::RCollectionClassField::ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue *value)
@@ -1640,7 +1640,7 @@ std::size_t ROOT::Experimental::RVectorField::AppendImpl(const Detail::RFieldVal
    Detail::RColumnElement<ClusterSize_t> elemIndex(&fNWritten);
    fNWritten += count;
    fColumns[0]->Append(elemIndex);
-   return nbytes + sizeof(elemIndex);
+   return nbytes + fColumns[0]->GetElement()->GetPackedSize();
 }
 
 void ROOT::Experimental::RVectorField::ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue *value)
@@ -1781,7 +1781,7 @@ std::size_t ROOT::Experimental::RRVecField::AppendImpl(const Detail::RFieldValue
    Detail::RColumnElement<ClusterSize_t> elemIndex(&fNWritten);
    fNWritten += *sizePtr;
    fColumns[0]->Append(elemIndex);
-   return nbytes + sizeof(elemIndex);
+   return nbytes + fColumns[0]->GetElement()->GetPackedSize();
 }
 
 void ROOT::Experimental::RRVecField::ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue *value)
@@ -2021,7 +2021,7 @@ std::size_t ROOT::Experimental::RField<std::vector<bool>>::AppendImpl(const Deta
    Detail::RColumnElement<ClusterSize_t> elemIndex(&fNWritten);
    fNWritten += count;
    fColumns[0]->Append(elemIndex);
-   return count + sizeof(elemIndex);
+   return count + fColumns[0]->GetElement()->GetPackedSize();
 }
 
 void ROOT::Experimental::RField<std::vector<bool>>::ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue* value)

@@ -318,11 +318,14 @@ TEST(RNTuple, SmallClusters)
    auto fldVec = model->MakeField<std::vector<float>>("vec");
    RNTupleWriteOptions options;
    options.SetHasSmallClusters(true);
+   options.SetCompression(0);
    options.SetMaxUnzippedClusterSize(1000 * 1000 * 1000); // 1GB
+   options.SetApproxZippedClusterSize(1000 * 1000 * 1000); // 1GB
    auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath(), options);
    fldVec->push_back(1.0);
    // One float and one 32bit integer per entry
-   for (unsigned int i = 0; i < (300 * 1000 * 1000) / 8; ++i) {
+   constexpr std::size_t nEntries = RNTupleWriteOptions::kMaxSmallClusterSize / (sizeof(float) + sizeof(std::int32_t));
+   for (unsigned int i = 0; i < nEntries; ++i) {
       writer->Fill();
    }
    writer->Fill();
