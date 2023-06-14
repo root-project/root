@@ -658,7 +658,7 @@ Double_t TF2::GetSave(const Double_t *xx)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return Integral of a 2d function in range [ax,bx],[ay,by]
-/// with desired relative accuracy (default value of eps is 1.e-9)
+/// with desired relative accuracy (defined by eps)
 
 Double_t TF2::Integral(Double_t ax, Double_t bx, Double_t ay, Double_t by, Double_t epsrel)
 {
