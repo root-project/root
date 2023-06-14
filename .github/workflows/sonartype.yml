@@ -10,10 +10,6 @@ jobs:
       contents: read
 
     name: Build and analyze
-    runs-on:
-      - self-hosted
-      - linux
-      - x64
     container:
       image: registry.cern.ch/root-ci/ubuntu22:buildready
       options: '--security-opt label=disable --rm'
