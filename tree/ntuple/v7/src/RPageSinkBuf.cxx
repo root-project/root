@@ -22,6 +22,15 @@
 
 #include <algorithm>
 
+void ROOT::Experimental::Detail::RPageSinkBuf::RColumnBuf::DropBufferedPages()
+{
+   for (auto &bufPage : fBufferedPages) {
+      fCol.fColumn->GetPageSink()->ReleasePage(bufPage.fPage);
+   }
+   fBufferedPages.clear();
+   fSealedPages.clear();
+}
+
 ROOT::Experimental::Detail::RPageSinkBuf::RPageSinkBuf(std::unique_ptr<RPageSink> inner)
    : RPageSink(inner->GetNTupleName(), inner->GetWriteOptions())
    , fMetrics("RPageSinkBuf")
@@ -149,11 +158,8 @@ ROOT::Experimental::Detail::RPageSinkBuf::CommitClusterImpl(ROOT::Experimental::
       }
       fInnerSink->CommitSealedPageV(toCommit);
 
-      for (auto &bufColumn : fBufferedColumns) {
-         auto drained = bufColumn.DrainBufferedPages();
-         for (auto &bufPage : std::get<std::deque<RColumnBuf::RPageZipItem>>(drained))
-            ReleasePage(bufPage.fPage);
-      }
+      for (auto &bufColumn : fBufferedColumns)
+         bufColumn.DropBufferedPages();
       return fInnerSink->CommitCluster(nEntries);
    }
 
