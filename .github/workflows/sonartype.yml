@@ -26,6 +26,7 @@ jobs:
         # install builtins that do not get built by CMAKE_EXPORT_COMPILE_COMMANDS
         # and would cause parse errors
         run: |
+          if [ "x${SONAR_TOKEN}" == "x"]; then echo 'NO SONAT_TOKEN!' >> $GITHUB_OUTPUT; exit 1; fi
           apt update -qq
           apt -y install llvm-13-dev libclang-13-dev libxrootd-dev libgtest-dev
       - name: Create compile_commands.json
