@@ -1216,7 +1216,23 @@ RooSimultaneous::compileForNormSet(RooArgSet const &normSet, RooFit::Detail::Com
          pdf.setNormRange(RooHelpers::getRangeNameForSimComponent(rangeName, splitRange, catName).c_str());
       }
 
-      auto *pdfFinal = RooFit::Detail::CompileContext{*pdfNormSet}.compile(pdf, *newSimPdf, *pdfNormSet);
+      // If this is a binned likelihood, we're flagging it in the context.
+      // Then, the RooBinWidthFunctions know that they should not put
+      // themselves in the computation graph. Like this, the pdf values can
+      // directly be interpreted as yields, without multiplying them with the
+      // bin widths again in the NLL. However, the NLL class has to be careful
+      // to only skip the bin with multiplication when there actually were
+      // RooBinWidthFunctions! This is not the case for old workspace before
+      // ROOT 6.26. Therefore, we use the "BinnedLikelihoodActiveYields"
+      // attribute to let the NLL know what it should do.
+      RooFit::Detail::CompileContext pdfContext{*pdfNormSet};
+      pdfContext.setLikelihoodMode(ctx.likelihoodMode());
+      pdfContext.setBinnedLikelihoodMode(ctx.likelihoodMode() && binnedInfo.isBinnedL);
+      auto *pdfFinal = pdfContext.compile(pdf, *newSimPdf, *pdfNormSet);
+      if(pdfContext.binWidthFuncFlag()) {
+         pdfFinal->setAttribute("BinnedLikelihoodActiveYields");
+      }
+
       pdfFinal->fixAddCoefNormalization(*pdfNormSet, false);
 
       pdfClone->SetName((std::string("_") + pdfClone->GetName()).c_str());

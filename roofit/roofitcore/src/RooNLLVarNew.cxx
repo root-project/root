@@ -81,7 +81,10 @@ RooNLLVarNew::RooNLLVarNew(const char *name, const char *title, RooAbsPdf &pdf, 
 {
    RooArgSet obs{getObs(pdf, observables)};
 
-   if (_binnedL) {
+   // In the "BinnedLikelihoodActiveYields" mode, the pdf values can directly
+   // be interpreted as yields and don't need to be multiplied by the bin
+   // widths. That's why we don't need to even fill them in this case.
+   if (_binnedL && !pdf.getAttribute("BinnedLikelihoodActiveYields")) {
       fillBinWidthsFromPdfBoundaries(pdf, obs);
    }
 
@@ -147,13 +150,18 @@ double RooNLLVarNew::computeBatchBinnedL(RooSpan<const double> preds, RooSpan<co
    ROOT::Math::KahanSum<double> result{0.0};
    ROOT::Math::KahanSum<double> sumWeightKahanSum{0.0};
 
+   const bool predsAreYields = _binw.empty();
+
    for (std::size_t i = 0; i < preds.size(); ++i) {
 
       double eventWeight = weights[i];
 
       // Calculate log(Poisson(N|mu) for this bin
       double N = eventWeight;
-      double mu = preds[i] * _binw[i];
+      double mu = preds[i];
+      if (!predsAreYields) {
+         mu *= _binw[i];
+      }
 
       if (mu <= 0 && N > 0) {
 

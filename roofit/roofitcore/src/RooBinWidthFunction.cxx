@@ -26,7 +26,9 @@
 
 #include "RooBinWidthFunction.h"
 
+#include "RooConstVar.h"
 #include "RooDataHist.h"
+#include "RooGlobalFunc.h"
 
 bool RooBinWidthFunction::_enabled = true;
 
@@ -82,4 +84,23 @@ void RooBinWidthFunction::computeBatch(cudaStream_t*, double* output, size_t, Ro
       }
     }
   }
+}
+
+
+std::unique_ptr<RooAbsArg>
+RooBinWidthFunction::compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileContext &ctx) const
+{
+   // If this is a binned likelihood, the pdf values can be directly
+   // interpreted as yields for Poisson terms in the NLL, and it doesn't make
+   // sense to divide them by the bin width to get a probability density. The
+   // NLL would only have to multiply by the bin with again.
+   if (ctx.binnedLikelihoodMode()) {
+      auto newArg = std::unique_ptr<RooAbsReal>{static_cast<RooAbsReal *>(RooFit::RooConst(1.0).Clone())};
+      ctx.markAsCompiled(*newArg);
+      // To propagate the information to the NLL that the pdf values can
+      // directly be interpreted as yields.
+      ctx.setBinWidthFuncFlag(true);
+      return newArg;
+   }
+   return RooAbsReal::compileForNormSet(normSet, ctx);
 }
