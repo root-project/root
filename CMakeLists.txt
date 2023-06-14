@@ -753,6 +753,7 @@ endif()
 configure_file(${CMAKE_SOURCE_DIR}/cmake/modules/CTestCustom.cmake ${CMAKE_BINARY_DIR} COPYONLY)
 if(testing)
   include(RootCTest)
+  set(upstreamprefix https://github.com/root-project)
 
   if(roottest)
     find_package(Git REQUIRED)
@@ -767,7 +768,7 @@ if(testing)
     endif()
     string(REGEX REPLACE "/root(\.git)?$" "" originprefix ${originurl})
     relatedrepo_GetClosestMatch(REPO_NAME roottest
-                                ORIGIN_PREFIX ${originprefix} UPSTREAM_PREFIX https://github.com/root-project
+                                ORIGIN_PREFIX ${originprefix} UPSTREAM_PREFIX ${upstreamprefix}
                                 FETCHURL_VARIABLE roottest_url FETCHREF_VARIABLE roottest_ref)
     # Use `-Droottest_checkout=FORCE` to force fetch and checkout in an existing repository
     relatedrepo_Checkout(REPO_NAME roottest FETCHURL ${roottest_url} FETCHREF "${roottest_ref}"
@@ -780,26 +781,14 @@ if(testing)
   endif()
 
   if(rootbench)
-    #---Is the rootbench source directory around?
-    if(IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/rootbench)
-      set(rootbenchdir ${CMAKE_CURRENT_SOURCE_DIR}/rootbench)
-    else()
-      # Need to break into two steps in case the source dir is a symlink
-      get_filename_component(_source_dir ${CMAKE_CURRENT_SOURCE_DIR} REALPATH)
-      set(rootbenchdir ${_source_dir}/../rootbench)
+    find_package(Git REQUIRED)
+    relatedrepo_Checkout(REPO_NAME rootbench FETCHURL ${upstreamprefix} FETCHREF master
+                         REPO_DIR_VARIABLE rootbench_dir ${rootbench_checkout})
+    if(NOT IS_DIRECTORY ${rootbench_dir})
+      message(FATAL_ERROR "Expected rootbench at '${rootbench_dir}' (not a directory?)")
     endif()
-
-    if(IS_DIRECTORY ${rootbenchdir})
-      file(REMOVE_RECURSE ${CMAKE_CURRENT_BINARY_DIR}/rootbench)
-      add_subdirectory(${rootbenchdir} rootbench)
-    else()
-      message("-- Could not find rootbench directory! Cloning from the repository...")
-      find_package(Git REQUIRED)
-      execute_process(COMMAND ${GIT_EXECUTABLE} clone -b master
-                      https://github.com/root-project/rootbench.git
-                      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
-      add_subdirectory(rootbench)
-    endif()
+    file(REMOVE_RECURSE ${CMAKE_CURRENT_BINARY_DIR}/rootbench)
+    add_subdirectory(${rootbench_dir} rootbench)
   endif()
 endif()
 
