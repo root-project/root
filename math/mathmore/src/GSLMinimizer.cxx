@@ -260,7 +260,7 @@ bool GSLMinimizer::Minimize() {
       return true;
    }
    else {
-      if (debugLevel >= -1 ) {
+      if (debugLevel > 0 ) {
          std::cout << "GSLMinimizer: Minimization did not converge" << std::endl;
          if (iterFailed) {
             if (status == GSL_ENOPROG) // case status 27
