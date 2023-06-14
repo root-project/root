@@ -528,10 +528,10 @@ public:
 
    /// The type of a non-modifying view on a bin.
    using ConstHistBinStat_t =
-      RHistBinStat<const RHistData, typename STAT<DIMENSIONS, PRECISION>::ConstBinStat_t...>;
+      RHistBinStat<const RHistData, typename STAT<DIMENSIONS, PRECISION>::ConstBinStat_t>;
 
    /// The type of a modifying view on a bin.
-   using HistBinStat_t = RHistBinStat<RHistData, typename STAT<DIMENSIONS, PRECISION>::BinStat_t...>;
+   using HistBinStat_t = RHistBinStat<RHistData, typename STAT<DIMENSIONS, PRECISION>::BinStat_t>;
 
    /// Number of dimensions of the coordinates.
    static constexpr int GetNDim() noexcept { return DIMENSIONS; }
