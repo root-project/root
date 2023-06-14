@@ -168,19 +168,24 @@ include(RootMacros)
 include(CheckAssembler)
 include(CheckIntrinsics)
 
-# relatedrepo_GetInfo - Return the clone URL and best candidate head/tag to checkout for a related repo
-function(relatedrepo_GetInfo I_name I_prefix I_upstreamprefix O_cloneurl O_candidateref)
-  set(${O_cloneurl} ${I_upstreamprefix}/${I_name} PARENT_SCOPE)
+# relatedrepo_GetInfo(REPO_NAME <repo> ORIGIN_PREFIX <originp> UPSTREAM_PREFIX <upstreamp>
+#                     FETCHURL_VARIABLE <output_url> FETCHREF_VARIABLE <output_ref>)
+# Return the clone URL and head/tag of the closest match for `repo` (e.g. roottest), based on the
+# current head name.
+function(relatedrepo_GetInfo)
+  cmake_parse_arguments(_ "" "REPO_NAME;ORIGIN_PREFIX;UPSTREAM_PREFIX;FETCHURL_VARIABLE;FETCHREF_VARIABLE" "" ${ARGN})
 
+  set(${__FETCHURL_VARIABLE} ${__UPSTREAM_PREFIX}/${__REPO_NAME} PARENT_SCOPE)
+  
   if(NOT IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/.git)
-    set(${O_candidateref} v${ROOT_MAJOR_VERSION}-${ROOT_MINOR_VERSION}-${ROOT_PATCH_VERSION} PARENT_SCOPE)
+    set(${__FETCHREF_VARIABLE} v${ROOT_MAJOR_VERSION}-${ROOT_MINOR_VERSION}-${ROOT_PATCH_VERSION} PARENT_SCOPE)
     return()
   endif()
 
   execute_process(COMMAND ${GIT_EXECUTABLE} --git-dir=${CMAKE_CURRENT_SOURCE_DIR}/.git
                   rev-parse --abbrev-ref HEAD
                   OUTPUT_VARIABLE current_head OUTPUT_STRIP_TRAILING_WHITESPACE)
-  set(${O_candidateref} ${current_head} PARENT_SCOPE)
+  set(${__FETCHREF_VARIABLE} ${current_head} PARENT_SCOPE)
 
   # `current_head` is a well-known branch, e.g. master, or v6-28-00-patches.  Use the matching branch
   # upstream as the fork repository may be out-of-sync
@@ -191,17 +196,16 @@ function(relatedrepo_GetInfo I_name I_prefix I_upstreamprefix O_cloneurl O_candi
       execute_process(COMMAND ${GIT_EXECUTABLE} --git-dir=${CMAKE_CURRENT_SOURCE_DIR}/.git
                       for-each-ref --points-at=latest-stable^2 --format=%\(refname:short\)
                       OUTPUT_VARIABLE current_head OUTPUT_STRIP_TRAILING_WHITESPACE)
-      set(${O_candidateref} ${current_head} PARENT_SCOPE)
+      set(${__FETCHREF_VARIABLE} ${current_head} PARENT_SCOPE)
     endif()
     return()
   endif()
 
   # Otherwise, try to use a branch that matches `current_head` in the fork repository
-  execute_process(COMMAND ${GIT_EXECUTABLE} --git-dir=${CMAKE_CURRENT_SOURCE_DIR}/.git
-                  ls-remote --heads --tags ${I_prefix}/${I_name} ${current_head}
-                  OUTPUT_VARIABLE matching_refs)
+  execute_process(COMMAND ${GIT_EXECUTABLE} ls-remote --heads --tags
+                  ${__ORIGIN_PREFIX}/${__REPO_NAME} ${current_head} OUTPUT_VARIABLE matching_refs)
   if(NOT "${matching_refs}" STREQUAL "")
-    set(${O_cloneurl} ${I_prefix}/${I_name} PARENT_SCOPE)
+    set(${__FETCHURL_VARIABLE} ${__ORIGIN_PREFIX}/${__REPO_NAME} PARENT_SCOPE)
     return()
   endif()
 
@@ -210,14 +214,13 @@ function(relatedrepo_GetInfo I_name I_prefix I_upstreamprefix O_cloneurl O_candi
                   describe --all --abbrev=0 HEAD^
                   OUTPUT_VARIABLE closest_ref OUTPUT_STRIP_TRAILING_WHITESPACE)
   string(REGEX REPLACE "^(heads|tags)/" "" candidate_head ${closest_ref})
-  execute_process(COMMAND ${GIT_EXECUTABLE} --git-dir=${CMAKE_CURRENT_SOURCE_DIR}/.git
-                  ls-remote --heads --tags ${I_upstreamprefix}/${I_name} ${candidate_head}
-                  OUTPUT_VARIABLE matching_refs)
+  execute_process(COMMAND ${GIT_EXECUTABLE} ls-remote --heads --tags
+                  ${__UPSTREAM_PREFIX}/${__REPO_NAME} ${candidate_head} OUTPUT_VARIABLE matching_refs)
   if(NOT "${matching_refs}" STREQUAL "")
-    set(${O_candidateref} ${candidate_head} PARENT_SCOPE)
+    set(${__FETCHREF_VARIABLE} ${candidate_head} PARENT_SCOPE)
     return()
   endif()
-  set(${O_candidateref} "" PARENT_SCOPE)
+  set(${__FETCHREF_VARIABLE} "" PARENT_SCOPE)
 endfunction()
 
 # relatedrepo_Clone - Clone and checkout an appropriate branch of a related repository, e.g. roottest.
@@ -231,7 +234,9 @@ function(relatedrepo_Clone I_name)
                     remote get-url origin OUTPUT_VARIABLE originurl OUTPUT_STRIP_TRAILING_WHITESPACE)
   endif()
   string(REGEX REPLACE "/root(\.git)?$" "" originprefix ${originurl})
-  relatedrepo_GetInfo(${I_name} ${originprefix} https://github.com/root-project git_clone_url git_clone_ref)
+  relatedrepo_GetInfo(REPO_NAME ${I_name}
+                      ORIGIN_PREFIX ${originprefix} UPSTREAM_PREFIX https://github.com/root-project
+                      FETCHURL_VARIABLE git_clone_url FETCHREF_VARIABLE git_clone_ref)
 
   message(STATUS "Cloning ${I_name} from '${git_clone_url}' (${git_clone_ref})")
   if(NOT "${git_clone_ref}" STREQUAL "")
