@@ -19,6 +19,9 @@ jobs:
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
     steps:
+      - name: Check secret
+        run: |
+          if [ "x${SONAR_TOKEN}" == "x" ]; then echo 'ERROR: no SONAR_TOKEN!'; exit 1; fi
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
@@ -27,7 +30,6 @@ jobs:
         # install builtins that do not get built by CMAKE_EXPORT_COMPILE_COMMANDS
         # and would cause parse errors
         run: |
-          if [ "x${SONAR_TOKEN}" == "x"]; then echo 'NO SONAT_TOKEN!' >> $GITHUB_OUTPUT; exit 1; fi
           apt update -qq
           apt -y install llvm-13-dev libclang-13-dev libxrootd-dev libgtest-dev
       - name: Create compile_commands.json
