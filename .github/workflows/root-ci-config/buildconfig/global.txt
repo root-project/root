@@ -90,6 +90,7 @@ roofit_multiprocess=OFF
 root7=ON
 rootbench=OFF
 roottest=ON
+roottest_checkout=FORCE
 rpath=ON
 runtime_cxxmodules=ON
 shadowpw=OFF
