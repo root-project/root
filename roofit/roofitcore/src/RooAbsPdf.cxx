@@ -1139,7 +1139,10 @@ RooFit::OwningPtr<RooAbsReal> RooAbsPdf::createNLL(RooAbsData& data, const RooLi
     this->setAttribute("SplitRange", splitRange);
     this->setStringAttribute("RangeName", rangeName);
 
-    std::unique_ptr<RooAbsPdf> pdfClone = RooFit::Detail::compileForNormSet(*this, normSet);
+    RooFit::Detail::CompileContext ctx{normSet};
+    ctx.setLikelihoodMode(true);
+    std::unique_ptr<RooAbsArg> head = this->compileForNormSet(normSet, ctx);
+    std::unique_ptr<RooAbsPdf> pdfClone = std::unique_ptr<RooAbsPdf>{static_cast<RooAbsPdf *>(head.release())};
 
     // reset attributes
     this->setAttribute("SplitRange", false);

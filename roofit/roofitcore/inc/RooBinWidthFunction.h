@@ -53,6 +53,8 @@ public:
 
   ~RooBinWidthFunction() override { }
 
+  std::unique_ptr<RooAbsArg> compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileContext & ctx) const override;
+
   /// Copy the object and return as TObject*.
   TObject* clone(const char* newname = nullptr) const override {
     return new RooBinWidthFunction(*this, newname);
