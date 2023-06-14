@@ -136,22 +136,8 @@ void ODRHash::AddNestedNameSpecifier(const NestedNameSpecifier *NNS) {
 }
 
 void ODRHash::AddTemplateName(TemplateName Name) {
-  auto Kind = Name.getKind();
-  ID.AddInteger(Kind);
-
-  switch (Kind) {
-  case TemplateName::Template:
-    AddDecl(Name.getAsTemplateDecl());
-    break;
-  // TODO: Support these cases.
-  case TemplateName::OverloadedTemplate:
-  case TemplateName::AssumedTemplate:
-  case TemplateName::QualifiedTemplate:
-  case TemplateName::DependentTemplate:
-  case TemplateName::SubstTemplateTemplateParm:
-  case TemplateName::SubstTemplateTemplateParmPack:
-    break;
-  }
+  if (auto *TD = Name.getAsTemplateDecl())
+    AddDecl(TD);
 }
 
 void ODRHash::AddTemplateArgument(TemplateArgument TA) {
