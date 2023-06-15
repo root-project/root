@@ -94,7 +94,7 @@ public:
 // TMutex m; R__LOCKGUARD(&m);
 // Warning: if program is compiled without pthread support, _REENTRANT will
 // be undefined and the macro has (silently) no effect, no locks are performed.
-#if defined (_REENTRANT) || defined (WIN32)
+#if defined (_REENTRANT) || defined (WIN32) || defined (R__FBSD)
 
 #define R__LOCKGUARD(mutex) TLockGuard _R__UNIQUE_(R__guard)(mutex)
 #define R__LOCKGUARD2(mutex)                             \
