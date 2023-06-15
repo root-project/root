@@ -327,12 +327,6 @@ class ROOTFacade(types.ModuleType):
         try:
             # Inject FromNumpy function
             from libROOTPythonizations import MakeNumpyDataFrame
-            def DeprecatedMakeNumpy(*args, **kwargs):
-                import warnings
-                warnings.warn("MakeNumpyDataFrame is deprecated since v6.28 and will be removed in v6.30."\
-                              "Please use FromNumpy instead.", FutureWarning)
-                return MakeNumpyDataFrame(*args, **kwargs)
-            ns.MakeNumpyDataFrame = DeprecatedMakeNumpy
             ns.FromNumpy = MakeNumpyDataFrame
 
             if sys.version_info >= (3, 8):
