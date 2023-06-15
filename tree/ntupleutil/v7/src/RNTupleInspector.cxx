@@ -176,7 +176,8 @@ ROOT::Experimental::RNTupleInspector::Create(std::string_view ntupleName, std::s
    return inspector;
 }
 
-size_t ROOT::Experimental::RNTupleInspector::GetFieldTypeCount(std::string_view typeName, bool includeSubFields) const
+size_t
+ROOT::Experimental::RNTupleInspector::GetFieldTypeCount(const std::regex &typeNamePattern, bool includeSubFields) const
 {
    size_t typeCount = 0;
 
@@ -185,12 +186,18 @@ size_t ROOT::Experimental::RNTupleInspector::GetFieldTypeCount(std::string_view 
          continue;
       }
 
-      if (typeName == fldInfo.GetDescriptor().GetTypeName()) {
+      if (std::regex_match(fldInfo.GetDescriptor().GetTypeName(), typeNamePattern)) {
          typeCount++;
       }
    }
 
    return typeCount;
+}
+
+size_t
+ROOT::Experimental::RNTupleInspector::GetFieldTypeCount(std::string_view typeNamePattern, bool includeSubFields) const
+{
+   return GetFieldTypeCount(std::regex{std::string(typeNamePattern)}, includeSubFields);
 }
 
 size_t ROOT::Experimental::RNTupleInspector::GetColumnTypeCount(ROOT::Experimental::EColumnType colType) const
