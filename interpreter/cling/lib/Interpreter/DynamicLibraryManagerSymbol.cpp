@@ -1384,7 +1384,7 @@ namespace cling {
         return cached_realpath(buf);
       return cached_realpath(info.dli_fname);
 # elif defined (__FreeBSD__)
-      procstat* ps = procstat_open_sysctl();  //
+      procstat* ps = procstat_open_sysctl();
       kinfo_proc* kp = kinfo_getproc(getpid());
 
       char buf[PATH_MAX] = "";
