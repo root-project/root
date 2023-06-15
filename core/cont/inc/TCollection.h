@@ -358,7 +358,7 @@ template <typename T>
 using TRangeDynCast = ROOT::Detail::TRangeCast<T, true>;
 
 // Zero overhead macros in case not compiled with thread support
-#if defined (_REENTRANT) || defined (WIN32)
+#if defined (_REENTRANT) || defined (WIN32) || defined (R__FBSD)
 
 #define R__COLL_COND_MUTEX(mutex) this->IsUsingRWLock() ? mutex : nullptr
 
