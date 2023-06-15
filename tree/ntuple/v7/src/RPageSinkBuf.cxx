@@ -28,6 +28,8 @@ void ROOT::Experimental::Detail::RPageSinkBuf::RColumnBuf::DropBufferedPages()
       fCol.fColumn->GetPageSink()->ReleasePage(bufPage.fPage);
    }
    fBufferedPages.clear();
+   // Each RSealedPage points to the same region as `fBuf` for some element in `fBufferedPages`; thus, no further
+   // clean-up is required
    fSealedPages.clear();
 }
 
