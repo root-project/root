@@ -22,17 +22,18 @@
 class RooExtendedTerm : public RooAbsPdf {
 public:
 
-  RooExtendedTerm() ;
+  RooExtendedTerm() = default;
   RooExtendedTerm(const char *name, const char *title, const RooAbsReal& n) ;
   RooExtendedTerm(const RooExtendedTerm& other, const char* name=nullptr) ;
   TObject* clone(const char* newname) const override { return new RooExtendedTerm(*this,newname) ; }
-  ~RooExtendedTerm() override ;
 
   double evaluate() const override { return 1. ; }
 
   ExtendMode extendMode() const override { return CanBeExtended ; }
   /// Return number of expected events, in other words the value of the associated n parameter.
   double expectedEvents(const RooArgSet* nset) const override ;
+
+  std::unique_ptr<RooAbsReal> createExpectedEventsFunc(const RooArgSet* nset) const override;
 
 protected:
 
