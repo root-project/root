@@ -108,11 +108,13 @@ private:
 
    private:
       RPageStorage::ColumnHandle_t fCol;
-      // Using a deque guarantees that element iterators are never invalidated
-      // by appends to the end of the iterator by BufferPage.
+      /// Using a deque guarantees that element iterators are never invalidated
+      /// by appends to the end of the iterator by BufferPage.
       std::deque<RPageZipItem> fBufferedPages;
-      // Pages that have been already sealed by a concurrent task. A vector commit can be issued if all
-      // buffered pages have been sealed.
+      /// Pages that have been already sealed by a concurrent task. A vector commit can be issued if all
+      /// buffered pages have been sealed.
+      /// Note that each RSealedPage refers to the same buffer as `fBufferedPages[i].fBuf` for some value of `i`, and
+      /// thus owned by RPageZipItem
       RPageStorage::SealedPageSequence_t fSealedPages;
    };
 
