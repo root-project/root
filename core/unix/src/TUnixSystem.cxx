@@ -420,7 +420,7 @@ static const char *GetExePath()
 #elif defined(R__SOLARIS)
       int ret = readlink("/proc/self/path/a.out", buf, kMAXPATHLEN);
 #elif defined(R__FBSD)
-      procstat* ps = procstat_open_sysctl();  //
+      procstat* ps = procstat_open_sysctl();
       kinfo_proc* kp = kinfo_getproc(getpid());
 
       int ret{0};
