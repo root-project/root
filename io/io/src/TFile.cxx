@@ -170,7 +170,7 @@ ROOT::Internal::RConcurrentHashColl TFile::fgTsSIHashes;
 #define getxattr(path, name, value, size) getxattr(path, name, value, size, 0u, 0)
 #endif
 #ifdef R__FBSD
-#define getxattr(path,name,value,size) extattr_get_file(path, EXTATTR_NAMESPACE_USER, name, value, size)
+#define getxattr(path, name, value, size) extattr_get_file(path, EXTATTR_NAMESPACE_USER, name, value, size)
 #endif
 
 const Int_t kBEGIN = 100;
