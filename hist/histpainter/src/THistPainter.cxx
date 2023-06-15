@@ -90,10 +90,10 @@
 - [The error bars options](\ref HP09)
 - [The bar chart option](\ref HP100)
 - [The "BAR" and "HBAR" options](\ref HP10)
-- [The SCATter plot option (default for 2D histograms)](\ref HP11)
+- [The SCATter plot option](\ref HP11)
 - [The ARRow option](\ref HP12)
 - [The BOX option](\ref HP13)
-- [The COLor option](\ref HP14)
+- [The COLor option  (default for 2D and 3D histograms)](\ref HP14)
 - [The CANDLE and VIOLIN options](\ref HP140)
    - [The CANDLE option](\ref HP140a)
    - [The VIOLIN option](\ref HP140b)
@@ -277,15 +277,15 @@ using `TH1::GetOption`:
 
 | Option       | Description                                                      |
 |--------------|------------------------------------------------------------------|
-| " "          | Default (scatter plot).|
+| " "          | Default (color plot).|
 | "ARR"        | Arrow mode. Shows gradient between adjacent cells.|
-| "BOX"        | A box is drawn for each cell with surface proportional to the content's absolute value. A negative content is marked with a X.|
+| "BOX"        | A box is drawn for each cell with surface proportional to the content's absolute value. A negative content is marked with a X. |
 | "BOX1"       | A button is drawn for each cell with surface proportional to content's absolute value. A sunken button is drawn for negative values a raised one for positive.|
-| "COL"        | A box is drawn for each cell with a color scale varying with contents. All the none empty bins are painted. Empty bins are not painted unless some bins have a negative content because in that case the null bins might be not empty.  `TProfile2D` histograms are handled differently because, for this type of 2D histograms, it is possible to know if an empty bin has been filled or not. So even if all the bins' contents are positive some empty bins might be painted. And vice versa, if some bins have a negative content some empty bins might be not painted.|
+| "COL"        | A box is drawn for each cell with a color scale varying with contents. All the none empty bins are painted. Empty bins are not painted unless some bins have a negative content because in that case the null bins might be not empty.  `TProfile2D` histograms are handled differently because, for this type of 2D histograms, it is possible to know if an empty bin has been filled or not. So even if all the bins' contents are positive some empty bins might be painted. And vice versa, if some bins have a negative content some empty bins might be not painted (default).|
 | "COLZ"       | Same as "COL". In addition the color palette is also drawn.|
 | "COL2"       | Alternative rendering algorithm to "COL". Can significantly improve rendering performance for large, non-sparse 2-D histograms.|
 | "COLZ2"      | Same as "COL2". In addition the color palette is also drawn.|
-| "Z CJUST"   | In combination with colored options "COL","CONT0" etc: Justify labels in the color palette at color boudaries. For more details see `TPaletteAxis`|
+| "Z CJUST"   | In combination with colored options "COL","CONT0" etc: Justify labels in the color palette at color boundaries. For more details see `TPaletteAxis`|
 | "CANDLE"     | Draw a candle plot along X axis.|
 | "CANDLEX"    | Same as "CANDLE".|
 | "CANDLEY"    | Draw a candle plot along Y axis.|
@@ -323,7 +323,7 @@ using `TH1::GetOption`:
 | "FB"         | With LEGO or SURFACE, suppress the Front-Box.|
 | "BB"         | With LEGO or SURFACE, suppress the Back-Box.|
 | "A"          | With LEGO or SURFACE, suppress the axis.|
-| "SCAT"       | Draw a scatter-plot (default).|
+| "SCAT"       | Draw a scatter-plot.|
 | "[cutg]"     | Draw only the sub-range selected by the TCutG named "cutg".|
 
 
@@ -332,7 +332,7 @@ using `TH1::GetOption`:
 
 | Option   | Description                                                       |
 |----------|-------------------------------------------------------------------|
-| " "      | Default (scatter plot).|
+| " "      | Default (color plot).|
 | "ISO"    | Draw a Gouraud shaded 3d iso surface through a 3d histogram. It paints one surface at the value computed as follow: `SumOfWeights/(NbinsX*NbinsY*NbinsZ)`.|
 | "BOX"    | Draw a for each cell with volume proportional to the content's absolute value. An hidden line removal algorithm is used|
 | "BOX1"   | Same as BOX but an hidden surface removal algorithm is used|
@@ -834,7 +834,7 @@ the option `SAME`. They allow to plot the histograms next to each other.
 
 
 \anchor HP11
-### The SCATter plot option (default for 2D histograms)
+### The SCATter plot option
 
 
 For each cell (i,j) a number of points proportional to the cell content is
@@ -1024,11 +1024,10 @@ End_Macro
 
 
 \anchor HP14
-### The COLor option
+### The COLor option (default for 2D histograms)
 
-
-For each cell (i,j) a box is drawn with a color proportional to the cell
-content.
+The magnitude of individual cell (i,j) is represented as a color picked in the current color palette.
+This data visualization technique is often called a heat map (or heat-map).
 
 The color table used is defined in the current style.
 
@@ -2331,8 +2330,8 @@ The following options are supported:
 
 | Option   | Description                                                       |
 |----------|-------------------------------------------------------------------|
-| "SCAT"   | Draw a scatter plot (default).|
-| "COL"    | Draw a color plot. All the bins are painted even the empty bins.|
+| "SCAT"   | Draw a scatter plot.|
+| "COL"    | Draw a color plot. All the bins are painted even the empty bins (default).|
 | "COLZ"   | Same as "COL". In addition the color palette is also drawn.|
 | "0"      | When used with any COL options, the empty bins are not drawn.|
 | "TEXT"   | Draw bin contents as text (format set via `gStyle->SetPaintTextFormat`).|
@@ -2575,16 +2574,17 @@ End_Macro
 
 | Option   | Description                                                       |
 |----------|-------------------------------------------------------------------|
+| "SCAT"   | Draw a scatter plot.|
 | "ISO"    | Draw a Gouraud shaded 3d iso surface through a 3d histogram. It paints one surface at the value computed as follow: `SumOfWeights/(NbinsX*NbinsY*NbinsZ)`|
 | "BOX"    | Draw a for each cell with volume proportional to the content's absolute value. An hidden line removal algorithm is used|
 | "BOX1"   | Same as BOX but an hidden surface removal algorithm is used|
-| "BOX2"   | The boxes' colors are picked in the current palette according to the bins' contents|
+| "BOX2"   | Same as "COL". The boxes' colors are picked in the current palette according to the bins' contents (default)|
 | "BOX2Z"  | Same as "BOX2". In addition the color palette is also drawn.|
 | "BOX3"   | Same as BOX1, but the border lines of each lego-bar are not drawn.|
 
 Note that instead of `BOX` one can also use `LEGO`.
 
-By default, like 2D histograms, 3D histograms are drawn as scatter plots.
+By default, 3D histograms are drawn as a colored box plots.
 
 The following example shows a 3D histogram plotted as a scatter plot.
 
@@ -2592,7 +2592,7 @@ Begin_Macro(source)
 {
    auto c06 = new TCanvas("c06","c06",600,400);
    gStyle->SetOptStat(kFALSE);
-   auto h3scat = new TH3F("h3scat","Option SCAT (default) ",15,-2,2,15,-2,2,15,0,4);
+   auto h3scat = new TH3F("h3scat","Option SCAT",15,-2,2,15,-2,2,15,0,4);
    double x, y, z;
    for (Int_t i=0;i<10000;i++) {
       gRandom->Rannor(x, y);
@@ -2644,7 +2644,7 @@ Begin_Macro(source)
 {
    auto c56 = new TCanvas("c56","c56",600,400);
    gStyle->SetOptStat(kFALSE);
-   auto h3box = new TH3F("h3box","Option BOX2",10,-2.,2.,10,-2.,2.,10,-0.5,2.);
+   auto h3box = new TH3F("h3box","Option BOX2 (default)",10,-2.,2.,10,-2.,2.,10,-0.5,2.);
    double x, y, z;
    for (Int_t i=0;i<10000;i++) {
       gRandom->Rannor(x, y);
@@ -4052,7 +4052,7 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
    MakeCuts(chopt);
 
    for (Int_t i=0;i<nch;i++) chopt[i] = toupper(chopt[i]);
-   if (hdim > 1) Hoption.Scat = 1;
+   if (hdim > 1) Hoption.Color = 1; // Default drawing option for 2D and 3D histograms
    if (!nch) Hoption.Hist = 1;
    if (fFunctions->First()) Hoption.Func = 1;
    if (fH->GetSumw2N() && hdim == 1) Hoption.Error = 2;
@@ -4076,7 +4076,7 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
 
    l = strstr(chopt,"SPEC");
    if (l) {
-      Hoption.Scat = 0;
+      Hoption.Color = 0;
       memcpy(l,"    ",4);
       Int_t bs=0;
       l = strstr(chopt,"BF(");
@@ -4126,6 +4126,13 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
       if (l[4] == '0') { Hoption.Same += 10; l[4] = ' '; }
    }
 
+   l = strstr(chopt,"SCAT");
+   if (l) {
+      Hoption.Scat = 1;
+      memcpy(l,"   ",4);
+      Hoption.Color = 0;
+   }
+
    l = strstr(chopt,"PIE");
    if (l) {
       Hoption.Pie = 1;
@@ -4137,19 +4144,19 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
    if (l) {
       TCandle candle;
       Hoption.Candle = candle.ParseOption(l);
-      Hoption.Scat = 0;
+      Hoption.Color = 0;
    }
 
    l = strstr(chopt,"VIOLIN");
    if (l) {
       TCandle candle;
       Hoption.Candle = candle.ParseOption(l);
-      Hoption.Scat = 0;
+      Hoption.Color = 0;
    }
 
    l = strstr(chopt,"LEGO");
    if (l) {
-      Hoption.Scat = 0;
+      Hoption.Color = 0;
       Hoption.Lego = 1; memcpy(l,"    ",4);
       if (l[4] == '1') { Hoption.Lego = 11; l[4] = ' '; }
       if (l[4] == '2') { Hoption.Lego = 12; l[4] = ' '; }
@@ -4163,7 +4170,7 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
 
    l = strstr(chopt,"SURF");
    if (l) {
-      Hoption.Scat = 0;
+      Hoption.Color = 0;
       Hoption.Surf = 1; memcpy(l,"    ",4);
       if (l[4] == '1') { Hoption.Surf = 11; l[4] = ' '; }
       if (l[4] == '2') { Hoption.Surf = 12; l[4] = ' '; }
@@ -4188,6 +4195,7 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
       memcpy(l,"    ",3);
       l = strstr(chopt,"FB");   if (l) { Hoption.FrontBox = 0; memcpy(l,"  ",2); }
       l = strstr(chopt,"BB");   if (l) { Hoption.BackBox = 0;  memcpy(l,"  ",2); }
+      Hoption.Color = 0;
    }
 
    l = strstr(chopt,"LIST");    if (l) { Hoption.List = 1;  memcpy(l,"    ",4);}
@@ -4196,7 +4204,7 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
    if (l) {
       memcpy(l,"    ",4);
       if (hdim>1) {
-         Hoption.Scat = 0;
+         Hoption.Color = 0;
          Hoption.Contour = 1;
          if (l[4] == '1') { Hoption.Contour = 11; l[4] = ' '; }
          if (l[4] == '2') { Hoption.Contour = 12; l[4] = ' '; }
@@ -4231,7 +4239,7 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
       memcpy(l,"   ", 3);
       if (hdim>1) {
          Hoption.Arrow  = 1;
-         Hoption.Scat = 0;
+         Hoption.Color = 0;
          l = strstr(chopt,"COL"); if (l) { Hoption.Arrow  = 2;  memcpy(l,"   ",3); }
          l = strstr(chopt,"Z");   if (l) { Hoption.Zscale = 1;  memcpy(l," ",1); }
       } else {
@@ -4242,7 +4250,7 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
    if (l) {
       memcpy(l,"   ", 3);
       if (hdim>1) {
-         Hoption.Scat = 0;
+         Hoption.Color = 0;
          Hoption.Box  = 1;
          if (l[3] == '1') { Hoption.Box = 11; l[3] = ' '; }
          if (l[3] == '2') { Hoption.Box = 12; l[3] = ' '; }
@@ -4264,14 +4272,13 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
       memcpy(l,"    ", 4);
       l = strstr(chopt,"N");
       if (l && fH->InheritsFrom(TH2Poly::Class())) Hoption.Text += 3000;
-      Hoption.Scat = 0;
+      Hoption.Color = 0;
    }
    l = strstr(chopt,"COLZ");
    if (l) {
       memcpy(l,"    ",4);
       if (hdim>1) {
          Hoption.Color  = 1;
-         Hoption.Scat   = 0;
          Hoption.Zscale = 1;
          if (l[4] == '2') { Hoption.Color = 3; l[4] = ' '; }
          l = strstr(chopt,"0");  if (l) { Hoption.Zero  = 1;  memcpy(l," ",1); }
@@ -4285,7 +4292,6 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
       memcpy(l,"   ", 3);
       if (hdim>1) {
          Hoption.Color = 1;
-         Hoption.Scat  = 0;
          if (l[3] == '2') { Hoption.Color = 3; l[3] = ' '; }
          l = strstr(chopt,"0");  if (l) { Hoption.Zero  = 1;  memcpy(l," ",1); }
          l = strstr(chopt,"1");  if (l) { Hoption.Color = 2;  memcpy(l," ",1); }
@@ -4305,7 +4311,6 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
 
    l = strstr(chopt,"TRI");
    if (l) {
-      Hoption.Scat = 0;
       Hoption.Color  = 0;
       Hoption.Tri = 1; memcpy(l,"   ",3);
       l = strstr(chopt,"FB");   if (l) { Hoption.FrontBox = 0; memcpy(l,"  ",2); }
@@ -4330,7 +4335,7 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
       Hoption.Proj = 4; memcpy(l,"        ",9);    //Parabolic projection
    }
    if (Hoption.Proj > 0) {
-      Hoption.Scat = 0;
+      Hoption.Color = 0;
       Hoption.Contour = 14;
    }
 
@@ -4348,7 +4353,7 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
    if (strstr(chopt,"P0"))  Hoption.Mark =10;
 
    if (fH->InheritsFrom(TH2Poly::Class())) {
-      if (Hoption.Fill+Hoption.Line+Hoption.Mark != 0 ) Hoption.Scat = 0;
+      if (Hoption.Fill+Hoption.Line+Hoption.Mark != 0 ) Hoption.Color = 0;
    }
 
    if (strstr(chopt,"E")) {
@@ -4372,7 +4377,7 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
       } else {
          if (Hoption.Error == 0) {
             Hoption.Error = 100;
-            Hoption.Scat  = 0;
+            Hoption.Color  = 0;
          }
          if (Hoption.Text) {
             Hoption.Text += 2000;
@@ -6960,43 +6965,59 @@ void THistPainter::PaintH3(Option_t *option)
    TString opt = option;
    opt.ToLower();
    Int_t irep;
+   Float_t NEntries = fH->GetEntries();
 
-   if (fCurrentF3) {
+   if (fCurrentF3 || strstr(opt,"tf3")) {
       PaintTF3();
       return;
-   } else if (Hoption.Box || Hoption.Lego) {
-      if (Hoption.Box == 11 || Hoption.Lego == 11) {
-         PaintH3Box(1);
-      } else if (Hoption.Box == 12 || Hoption.Lego == 12) {
-         PaintH3Box(2);
-      } else if (Hoption.Box == 13 || Hoption.Lego == 13) {
-         PaintH3Box(3);
-      } else {
-         PaintH3BoxRaster();
-      }
-      return;
-   } else if (strstr(opt,"iso")) {
-      PaintH3Iso();
-      return;
-   } else if (strstr(opt,"tf3")) {
-      PaintTF3();
-      return;
-   } else {
-      cmd.Form("TPolyMarker3D::PaintH3((TH1 *)0x%zx,\"%s\");",(size_t)fH,option);
    }
+
+   if (NEntries > 0) {
+      if (Hoption.Box || Hoption.Lego || Hoption.Color) {
+         if (Hoption.Box == 11 || Hoption.Lego == 11) {
+            PaintH3Box(1);
+         } else if (Hoption.Box == 12 || Hoption.Lego == 12 || Hoption.Color == 1) {
+            PaintH3Box(2);
+         } else if (Hoption.Box == 13 || Hoption.Lego == 13) {
+            PaintH3Box(3);
+         } else {
+            PaintH3BoxRaster();
+         }
+         return;
+      }
+
+      if (strstr(opt,"iso")) {
+         PaintH3Iso();
+         return;
+      }
+   }
+
+   TView *view = gPad ? gPad->GetView() : nullptr;
+   if (!view) return;
 
    if (strstr(opt,"fb")) Hoption.FrontBox = 0;
    if (strstr(opt,"bb")) Hoption.BackBox = 0;
 
-   TView *view = gPad ? gPad->GetView() : nullptr;
-   if (!view) return;
    Double_t thedeg =  90 - gPad->GetTheta();
    Double_t phideg = -90 - gPad->GetPhi();
    Double_t psideg = view->GetPsi();
    view->SetView(phideg, thedeg, psideg, irep);
 
-   // Paint the data
-   gROOT->ProcessLine(cmd.Data());
+   if(NEntries > 0) { // Paint as 3D scatter plot
+      cmd.Form("TPolyMarker3D::PaintH3((TH1 *)0x%zx,\"%s\");",(size_t)fH,option);
+      gROOT->ProcessLine(cmd.Data());
+   } else {
+      TAxis* xAxis  = fH->GetXaxis();
+      TAxis* yAxis  = fH->GetYaxis();
+      TAxis* zAxis  = fH->GetZaxis();
+      Double_t xmin = xAxis->GetXmin();
+      Double_t xmax = xAxis->GetXmax();
+      Double_t ymin = yAxis->GetXmin();
+      Double_t ymax = yAxis->GetXmax();
+      Double_t zmin = zAxis->GetXmin();
+      Double_t zmax = zAxis->GetXmax();
+      view->SetRange(xmin, ymin, zmin, xmax, ymax, zmax);  // Set the axis limits (Xmin, Ymin, Zmin, Xmax, Ymax, Zmax)
+   }
 
    if (Hoption.Same) return;
 
