@@ -1950,25 +1950,34 @@ RooArgSet* RooProdPdf::getConstraints(const RooArgSet& observables, RooArgSet& c
   auto constrainedParamsNamePtrs = sortedNamePtrs(constrainedParams);
 
   // Loop over PDF components
-  for(auto * pdf : static_range_cast<RooAbsPdf*>(_pdfList)) {
-    // A constraint term is a p.d.f that does not depend on any of the listed observables
-    // but does depends on any of the parameters that should be constrained
+  for (std::size_t iPdf = 0; iPdf < _pdfList.size(); ++iPdf) {
+    auto * pdf = static_cast<RooAbsPdf*>(&_pdfList[iPdf]);
+
     RooArgSet tmp;
     pdf->getParameters(nullptr, tmp);
-    auto tmpNamePtrs = sortedNamePtrs(tmp);
-    // Before, there were calls to `pdf->dependsOn()` here, but they were very
-    // expensive for large computation graphs! Given that we have to traverse
-    // the computation graph with a call to `pdf->getParameters()` anyway, we
-    // can just check if the set of all variables operlaps with the observables
-    // or constraind parameters.
-    //
-    // We are using an optimized implementation of overlap checking. Because
-    // the overlap is checked by name, we can check overlap of the
-    // corresponding name pointers. The optimization can't be in
-    // RooAbsCollection itself, because it is crucial that the memory for the
-    // non-tmp name pointers is not reallocated for each pdf.
-    if (!sortedNamePtrsOverlap(tmpNamePtrs, observablesNamePtrs) &&
-        sortedNamePtrsOverlap(tmpNamePtrs, constrainedParamsNamePtrs)) {
+
+    // A constraint term is a p.d.f that doesn't contribute to the
+    // expectedEvents() and does not depend on any of the listed observables
+    // but does depends on any of the parameters that should be constrained
+    bool isConstraint = false;
+
+    if(static_cast<int>(iPdf) != _extendedIndex) {
+      auto tmpNamePtrs = sortedNamePtrs(tmp);
+      // Before, there were calls to `pdf->dependsOn()` here, but they were very
+      // expensive for large computation graphs! Given that we have to traverse
+      // the computation graph with a call to `pdf->getParameters()` anyway, we
+      // can just check if the set of all variables operlaps with the observables
+      // or constraind parameters.
+      //
+      // We are using an optimized implementation of overlap checking. Because
+      // the overlap is checked by name, we can check overlap of the
+      // corresponding name pointers. The optimization can't be in
+      // RooAbsCollection itself, because it is crucial that the memory for the
+      // non-tmp name pointers is not reallocated for each pdf.
+      isConstraint = !sortedNamePtrsOverlap(tmpNamePtrs, observablesNamePtrs) &&
+                     sortedNamePtrsOverlap(tmpNamePtrs, constrainedParamsNamePtrs);
+    }
+    if (isConstraint) {
       constraints.add(*pdf) ;
       conParams.add(tmp,true) ;
     } else {
@@ -2021,11 +2030,14 @@ RooArgSet* RooProdPdf::getConstraints(const RooArgSet& observables, RooArgSet& c
 RooArgSet* RooProdPdf::getConnectedParameters(const RooArgSet& observables) const
 {
   RooArgSet* connectedPars  = new RooArgSet("connectedPars") ;
-  for (const auto arg : _pdfList) {
-    // Check if term is relevant
-    if (arg->dependsOn(observables)) {
+  for (std::size_t iPdf = 0; iPdf < _pdfList.size(); ++iPdf) {
+    auto * pdf = static_cast<RooAbsPdf*>(&_pdfList[iPdf]);
+    // Check if term is relevant, either because it provides a probablity
+    // density in the observables or because it is used for the expected
+    // events.
+    if (static_cast<int>(iPdf) == _extendedIndex || pdf->dependsOn(observables)) {
       RooArgSet tmp;
-      arg->getParameters(&observables, tmp);
+      pdf->getParameters(&observables, tmp);
       connectedPars->add(tmp) ;
     }
   }
