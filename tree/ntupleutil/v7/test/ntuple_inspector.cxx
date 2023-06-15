@@ -224,6 +224,9 @@ TEST(RNTupleInspector, FieldTypeCount)
    EXPECT_EQ(1, inspector->GetFieldTypeCount("std::vector<HitUtil>"));
    EXPECT_EQ(0, inspector->GetFieldTypeCount("std::vector<HitUtil>", false));
 
+   EXPECT_EQ(2, inspector->GetFieldTypeCount("std::vector<.*>"));
+   EXPECT_EQ(0, inspector->GetFieldTypeCount("std::vector<.*>", false));
+
    EXPECT_EQ(3, inspector->GetFieldTypeCount("BaseUtil"));
    EXPECT_EQ(0, inspector->GetFieldTypeCount("BaseUtil", false));
 

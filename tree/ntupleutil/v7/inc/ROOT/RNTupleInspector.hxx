@@ -25,6 +25,7 @@
 #include <cstdlib>
 #include <memory>
 #include <vector>
+#include <regex>
 
 namespace ROOT {
 namespace Experimental {
@@ -159,9 +160,10 @@ public:
    const RFieldTreeInfo &GetFieldTreeInfo(DescriptorId_t fieldId) const;
    const RFieldTreeInfo &GetFieldTreeInfo(std::string_view fieldName) const;
 
-   /// Get the number of fields of a given type or class present in the RNTuple.
-   /// TODO: Add regex support.
-   size_t GetFieldTypeCount(std::string_view typeName, bool includeSubFields = true) const;
+   /// Get the number of fields of a given type or class present in the RNTuple. The type name may contain regular
+   /// expression patterns in order to be able to group multiple kinds of types or classes.
+   size_t GetFieldTypeCount(const std::regex &typeNamePattern, bool includeSubFields = true) const;
+   size_t GetFieldTypeCount(std::string_view typeNamePattern, bool includeSubFields = true) const;
 
    /// Get the number of columns of a given type present in the RNTuple.
    size_t GetColumnTypeCount(EColumnType colType) const;
