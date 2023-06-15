@@ -21,6 +21,7 @@
 #include <ROOT/RRawFile.hxx>
 #include <ROOT/RNTupleZip.hxx>
 
+#include <Byteswap.h>
 #include <TError.h>
 #include <TFile.h>
 #include <TKey.h>
@@ -35,6 +36,15 @@
 #include <string>
 #include <chrono>
 
+#ifndef R__LITTLE_ENDIAN
+#ifdef R__BYTESWAP
+// `R__BYTESWAP` is defined in RConfig.hxx for little-endian architectures; undefined otherwise
+#define R__LITTLE_ENDIAN 1
+#else
+#define R__LITTLE_ENDIAN 0
+#endif
+#endif /* R__LITTLE_ENDIAN */
+
 namespace {
 
 // The following types are used to read and write the TFile binary format
@@ -43,7 +53,14 @@ namespace {
 class RUInt16BE {
 private:
    std::uint16_t fValBE = 0;
-   static std::uint16_t Swap(std::uint16_t val) { return (val & 0x00FF) << 8 | (val & 0xFF00) >> 8; }
+   static std::uint16_t Swap(std::uint16_t val)
+   {
+#if R__LITTLE_ENDIAN == 1
+      return RByteSwap<sizeof(fValBE)>::bswap(val);
+#else
+      return val;
+#endif
+   }
 
 public:
    RUInt16BE() = default;
@@ -62,8 +79,11 @@ private:
    std::uint32_t fValBE = 0;
    static std::uint32_t Swap(std::uint32_t val)
    {
-      auto x = (val & 0x0000FFFF) << 16 | (val & 0xFFFF0000) >> 16;
-      return (x & 0x00FF00FF) << 8 | (x & 0xFF00FF00) >> 8;
+#if R__LITTLE_ENDIAN == 1
+      return RByteSwap<sizeof(fValBE)>::bswap(val);
+#else
+      return val;
+#endif
    }
 
 public:
@@ -83,8 +103,11 @@ private:
    std::int32_t fValBE = 0;
    static std::int32_t Swap(std::int32_t val)
    {
-      auto x = (val & 0x0000FFFF) << 16 | (val & 0xFFFF0000) >> 16;
-      return (x & 0x00FF00FF) << 8 | (x & 0xFF00FF00) >> 8;
+#if R__LITTLE_ENDIAN == 1
+      return RByteSwap<sizeof(fValBE)>::bswap(val);
+#else
+      return val;
+#endif
    }
 
 public:
@@ -104,9 +127,11 @@ private:
    std::uint64_t fValBE = 0;
    static std::uint64_t Swap(std::uint64_t val)
    {
-      auto x = (val & 0x00000000FFFFFFFF) << 32 | (val & 0xFFFFFFFF00000000) >> 32;
-      x = (x & 0x0000FFFF0000FFFF) << 16 | (x & 0xFFFF0000FFFF0000) >> 16;
-      return (x & 0x00FF00FF00FF00FF) << 8 | (x & 0xFF00FF00FF00FF00) >> 8;
+#if R__LITTLE_ENDIAN == 1
+      return RByteSwap<sizeof(fValBE)>::bswap(val);
+#else
+      return val;
+#endif
    }
 
 public:
