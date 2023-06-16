@@ -401,27 +401,6 @@ double gausNd(double *x, double *p) {
    return f;
 }
 
-const double minX = -5.;
-const double maxX = +5.;
-const double minY = -5.;
-const double maxY = +5.;
-const int nbinsX = 30;
-const int nbinsY = 30;
-
-// Options to indicate how the test has to be run
-enum testOpt {
-   testOptPars  = 1,  // Check parameters
-   testOptChi   = 2,  // Check Chi2 Test
-   testOptErr   = 4,  // Show the errors
-   testOptColor = 8,  // Show wrong output in color
-   testOptDebug = 16, // Print out debug version
-   testOptCheck = 32, // Make the checks
-   testOptFitDbg = 64 // Make fit verbose
-};
-
-// Default options that all tests will have
-int defaultOptions = testOptCheck;// | testOptDebug;
-
 // Object to manage the fitter depending on the options used
 template <typename T>
 class ObjectWrapper {
