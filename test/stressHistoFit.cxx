@@ -590,7 +590,7 @@ int testFit(int itest, const char* str1, const char* str2, const char* str3,
          }
          fflush(stdout);
       }
-      setColor(0);
+      if (opts & testOptColor ) setColor(0);
    }
 
    if ( opts & testOptErr )
@@ -651,7 +651,7 @@ int testFit(int itest, const char* str1, const char* str2, const char* str3,
 
    if ( opts != 0 )
    {
-      setColor(0);
+      if ( opts & testOptColor ) setColor(0);
       if ( debug )
          printf("\n");
    }
