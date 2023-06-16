@@ -135,16 +135,16 @@ public:
 
       //TODO: see why it fails for a small number of observations
       // Create Gaussian model, generate data set and define
-      RooWorkspace* w = new RooWorkspace("w");
-      w->factory("Gaussian::gauss(x[-5,5], mean[0,-5,5], sigma[1])");
-      RooDataSet *data = w->pdf("gauss")->generate(*w->var("x"), N);
+      RooWorkspace ws{"w"};
+      ws.factory("Gaussian::gauss(x[-5,5], mean[0,-5,5], sigma[1])");
+      std::unique_ptr<RooDataSet> data{ws.pdf("gauss")->generate(*ws.var("x"), N)};
 
       if (_write == true) {
 
          // Calculate likelihood interval from data via analytic methods
-         Double_t estMean = data->mean(*w->var("x"));
+         Double_t estMean = data->mean(*ws.var("x"));
          Double_t intervalHalfWidth =
-            normal_quantile_c((1.0 - fConfidenceLevel) / 2.0, w->var("sigma")->getValV() / sqrt((double)N));
+            normal_quantile_c((1.0 - fConfidenceLevel) / 2.0, ws.var("sigma")->getValV() / sqrt((double)N));
          Double_t lowerLimit = estMean - intervalHalfWidth;
          Double_t upperLimit = estMean + intervalHalfWidth;
 
@@ -155,22 +155,18 @@ public:
       } else {
 
          // Calculate likelihood interval using the ProfileLikelihoodCalculator
-         ProfileLikelihoodCalculator *plc = new ProfileLikelihoodCalculator(*data, *w->pdf("gauss"), *w->var("mean"));
+         ProfileLikelihoodCalculator *plc = new ProfileLikelihoodCalculator(*data, *ws.pdf("gauss"), *ws.var("mean"));
          plc->SetConfidenceLevel(fConfidenceLevel);
          LikelihoodInterval *interval = plc->GetInterval();
 
          // Register analytically computed limits in the reference file
-         regValue(interval->LowerLimit(*w->var("mean")), lowerLimitString);
-         regValue(interval->UpperLimit(*w->var("mean")), upperLimitString);
+         regValue(interval->LowerLimit(*ws.var("mean")), lowerLimitString);
+         regValue(interval->UpperLimit(*ws.var("mean")), upperLimitString);
 
          // Cleanup branch objects
          delete plc;
          delete interval;
       }
-
-      // Cleanup local objects
-      delete data;
-      delete w;
 
       return true ;
    }

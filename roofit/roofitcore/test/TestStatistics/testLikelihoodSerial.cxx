@@ -83,8 +83,8 @@ protected:
       w.factory("Uniform::u(x)");
 
       // Generate template histograms
-      RooDataHist *h_sig = w.pdf("g")->generateBinned(*w.var("x"), 1000);
-      RooDataHist *h_bkg = w.pdf("u")->generateBinned(*w.var("x"), 1000);
+      std::unique_ptr<RooDataHist> h_sig{w.pdf("g")->generateBinned(*w.var("x"), 1000)};
+      std::unique_ptr<RooDataHist> h_bkg{w.pdf("u")->generateBinned(*w.var("x"), 1000)};
 
       w.import(*h_sig, RooFit::Rename("h_sig"));
       w.import(*h_bkg, RooFit::Rename("h_bkg"));
@@ -178,9 +178,9 @@ TEST_F(LikelihoodSerialTest, SimBinned)
    w.factory("Uniform::u(x)");
 
    // Generate template histograms
-   RooDataHist *h_sigA = w.pdf("gA")->generateBinned(*w.var("x"), 1000);
-   RooDataHist *h_sigB = w.pdf("gB")->generateBinned(*w.var("x"), 1000);
-   RooDataHist *h_bkg = w.pdf("u")->generateBinned(*w.var("x"), 1000);
+   std::unique_ptr<RooDataHist> h_sigA{w.pdf("gA")->generateBinned(*w.var("x"), 1000)};
+   std::unique_ptr<RooDataHist> h_sigB{w.pdf("gB")->generateBinned(*w.var("x"), 1000)};
+   std::unique_ptr<RooDataHist> h_bkg{w.pdf("u")->generateBinned(*w.var("x"), 1000)};
 
    w.import(*h_sigA, RooFit::Rename("h_sigA"));
    w.import(*h_sigB, RooFit::Rename("h_sigB"));

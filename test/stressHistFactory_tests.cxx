@@ -392,7 +392,7 @@ private:
       return false;
     }
 
-    RooDataSet* pSamplingPoints = rPDF1.generate(rAllObservables,NumEvents(iSamplingPoints));
+    std::unique_ptr<RooDataSet> pSamplingPoints{rPDF1.generate(rAllObservables,NumEvents(iSamplingPoints))};
     TH1F* h_diff = new TH1F("h_diff","relative difference between both PDF;#Delta;Points / 1e-4",200,-0.01,0.01);
 
     float fPDF1value, fPDF2value;
@@ -426,7 +426,6 @@ private:
     }
 
     // clean up
-    delete pSamplingPoints;
     delete h_diff;
 
     if(!bResult)

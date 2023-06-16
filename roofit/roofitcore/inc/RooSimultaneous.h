@@ -88,7 +88,7 @@ public:
   const RooAbsCategoryLValue& indexCat() const { return (RooAbsCategoryLValue&) _indexCat.arg() ; }
 
 
-  RooDataSet* generateSimGlobal(const RooArgSet& whatVars, Int_t nEvents) override ;
+  RooFit::OwningPtr<RooDataSet> generateSimGlobal(const RooArgSet& whatVars, Int_t nEvents) override ;
 
   virtual RooDataHist* fillDataHist(RooDataHist *hist, const RooArgSet* nset, double scaleFactor,
                 bool correctForBinVolume=false, bool showProgress=false) const ;

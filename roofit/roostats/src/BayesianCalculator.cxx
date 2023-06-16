@@ -473,7 +473,6 @@ public:
       fPdf(&pdf),
       fPoi(&poi),
       fNuisParams(nuisParams),
-      fGenParams(0),
       fNumIterations(niter),
       fError(-1),
       fRedoToys(redoToys)
@@ -504,12 +503,9 @@ public:
       }
    }
 
-   ~PosteriorFunctionFromToyMC() override { if (fGenParams) delete fGenParams; }
-
    // generate first n-samples of the nuisance parameters
    void GenerateToys() const {
-      if (fGenParams) delete fGenParams;
-      fGenParams = fPdf->generate(fNuisParams, fNumIterations);
+      fGenParams = std::unique_ptr<RooDataSet>{fPdf->generate(fNuisParams, fNumIterations)};
       if(fGenParams==0) {
          ooccoutE(nullptr,InputArguments) << "PosteriorFunctionFromToyMC - failed to generate nuisance parameters" << std::endl;
       }
@@ -625,7 +621,7 @@ private:
    mutable RooAbsPdf * fPdf;
    RooRealVar * fPoi;
    RooArgList fNuisParams;
-   mutable RooDataSet * fGenParams;
+   mutable std::unique_ptr<RooDataSet> fGenParams;
    int fNumIterations;
    mutable double fError;
    bool fRedoToys;                    // do toys every iteration

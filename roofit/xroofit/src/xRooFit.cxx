@@ -340,7 +340,7 @@ xRooFit::generateFrom(RooAbsPdf &pdf, const std::shared_ptr<const RooFitResult> 
          _out.first->add(_tmp);
       } else {
          if (_pdf->canBeExtended()) {
-            _out.first.reset(_pdf->generate(*_obs, RooFit::Extended(), RooFit::ExpectedData(expected)));
+            _out.first = std::unique_ptr<RooDataSet>{_pdf->generate(*_obs, RooFit::Extended(), RooFit::ExpectedData(expected))};
          } else {
             if (expected) {
                // use AsymptoticCalculator because generate expected not working correctly on unextended pdf?
@@ -348,7 +348,7 @@ xRooFit::generateFrom(RooAbsPdf &pdf, const std::shared_ptr<const RooFitResult> 
                // ObsToExpected?
                _out.first.reset(RooStats::AsymptoticCalculator::GenerateAsimovData(*_pdf, *_obs));
             } else {
-               _out.first.reset(_pdf->generate(*_obs, RooFit::ExpectedData(expected)));
+               _out.first = std::unique_ptr<RooDataSet>{_pdf->generate(*_obs, RooFit::ExpectedData(expected))};
             }
          }
       }

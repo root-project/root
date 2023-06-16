@@ -68,7 +68,7 @@ public:
 
       // generate small dataset for use in fitting below, also cloned versions
       // with one or two global observables attached
-      _data.reset(_ws.pdf("model")->generate(*_ws.var("x"), 50));
+      _data = std::unique_ptr<RooDataSet>{_ws.pdf("model")->generate(*_ws.var("x"), 50)};
 
       _dataWithMeanSigmaGlobs.reset(static_cast<RooDataSet *>(_data->Clone()));
       _dataWithMeanSigmaGlobs->SetName((std::string(_data->GetName()) + "_gm_gs").c_str());

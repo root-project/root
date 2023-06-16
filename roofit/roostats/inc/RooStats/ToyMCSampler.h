@@ -235,7 +235,7 @@ class ToyMCSampler: public TestStatSampler {
       const RooArgList* EvaluateAllTestStatistics(RooAbsData& data, const RooArgSet& poi, DetailedOutputAggregator& detOutAgg);
 
       /// helper for GenerateToyData
-      RooAbsData* Generate(RooAbsPdf &pdf, RooArgSet &observables, const RooDataSet *protoData=nullptr, int forceEvents=0) const;
+      std::unique_ptr<RooAbsData> Generate(RooAbsPdf &pdf, RooArgSet &observables, const RooDataSet *protoData=nullptr, int forceEvents=0) const;
 
       /// helper method for clearing  the cache
       virtual void ClearCache();

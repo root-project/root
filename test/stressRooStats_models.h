@@ -26,22 +26,22 @@ void buildSimultaneousModel(RooWorkspace *w)
    w->factory("SIMUL::sim_pdf(index[cat1,cat2],cat1=ext_pdf1,cat2=ext_pdf2)");
 
    // create combined signal + background model configuration
-   ModelConfig *sbModel = new ModelConfig("S+B", w);
-   sbModel->SetObservables("x1,x2,index");
-   sbModel->SetParametersOfInterest("sig");
-   sbModel->SetGlobalObservables("gbkg1,gbkg2");
-   sbModel->SetNuisanceParameters("bkg1,bkg2");
-   sbModel->SetPdf("sim_pdf");
-   w->import(*sbModel);
+   ModelConfig sbModel{"S+B", w};
+   sbModel.SetObservables("x1,x2,index");
+   sbModel.SetParametersOfInterest("sig");
+   sbModel.SetGlobalObservables("gbkg1,gbkg2");
+   sbModel.SetNuisanceParameters("bkg1,bkg2");
+   sbModel.SetPdf("sim_pdf");
+   w->import(sbModel);
 
    // create combined background model configuration
-   ModelConfig *bModel = new ModelConfig(*sbModel);
-   bModel->SetName("B");
-   w->import(*bModel);
+   ModelConfig bModel{sbModel};
+   bModel.SetName("B");
+   w->import(bModel);
 
    // define data set
    RooRandom::randomGenerator()->Rndm();  //wast a number to get a better dataset (not too high significance) and closer to expected
-   RooDataSet *data = w->pdf("sim_pdf")->generate(*sbModel->GetObservables(), Extended(), Name("data"));
+   std::unique_ptr<RooDataSet> data{w->pdf("sim_pdf")->generate(*sbModel.GetObservables(), Extended(), Name("data"))};
    w->import(*data);
 }
 
@@ -135,21 +135,20 @@ void buildPoissonEfficiencyModel(RooWorkspace *w)
    w->factory("PROD::pdf(poiss, constrb, constre)");
 
    // create model configuration
-   ModelConfig *sbModel = new ModelConfig("S+B", w);
-   sbModel->SetObservables("x");
-   sbModel->SetParametersOfInterest("sig");
-   sbModel->SetNuisanceParameters("b1,e1");
-   sbModel->SetGlobalObservables("b0,e0");
-   sbModel->SetPdf("pdf");
-   w->import(*sbModel);
+   ModelConfig sbModel{"S+B", w};
+   sbModel.SetObservables("x");
+   sbModel.SetParametersOfInterest("sig");
+   sbModel.SetNuisanceParameters("b1,e1");
+   sbModel.SetGlobalObservables("b0,e0");
+   sbModel.SetPdf("pdf");
+   w->import(sbModel);
 
-   ModelConfig *bModel = new ModelConfig(*sbModel);
-   bModel->SetName("B");
-   w->import(*bModel);
+   ModelConfig bModel{sbModel};
+   bModel.SetName("B");
+   w->import(bModel);
 
    // define data set and import it into workspace
-   RooDataSet *data = new RooDataSet("data", "data", *sbModel->GetObservables());
-   w->import(*data);
+   w->import(RooDataSet("data", "data", *sbModel.GetObservables()));
 }
 
 
