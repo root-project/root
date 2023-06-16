@@ -33,7 +33,7 @@ private:
    {
       RooHelpers::LocalChangeMsgLevel chmsglvl{RooFit::WARNING, 0u, RooFit::NumIntegration, true};
 
-      datap.reset(prod.generate(x, 1000));
+      datap = std::unique_ptr<RooDataSet>{prod.generate(x, 1000)};
       a.setConstant(true);
 
       _optimize = std::get<0>(GetParam());
