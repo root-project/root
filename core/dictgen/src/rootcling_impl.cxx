@@ -215,7 +215,7 @@ const char *GetExePath()
       exepath = buf;
     }
 #endif
-#if defined R__FBSD || defined __FreeBSD__
+#if defined(R__FBSD)
   procstat* ps = procstat_open_sysctl();  //
   kinfo_proc* kp = kinfo_getproc(getpid());
 
