@@ -112,30 +112,27 @@ const std::string& GetFallbackRootSys() {
    static std::string fallback;
    if (!fallback.empty())
       return fallback;
+
+   auto parent_path = [](std::string path) {
+     return path.substr(0, path.find_last_of("/\\"));
+   };
+
 #ifdef WIN32
    static char lpFilename[_MAX_PATH];
    if (::GetModuleFileNameA(
           NULL,                   // handle to module to find filename for
           lpFilename,             // pointer to buffer to receive module path
           sizeof(lpFilename))) {  // size of buffer, in characters
-      auto parent_path = [](std::string path) {
-         return path.substr(0, path.find_last_of("/\\"));
-      };
       fallback = parent_path(parent_path(lpFilename));
    }
 #elif defined __FreeBSD__
   procstat* ps = procstat_open_sysctl();  //
   kinfo_proc* kp = kinfo_getproc(getpid());
 
+  char lpFilename[PATH_MAX] = "";
   if (kp!=NULL) {
-     char path_str[PATH_MAX] = "";
-     procstat_getpathname(ps, kp, path_str, sizeof(path_str));
-     std::string execpath(path_str);
-     
-      auto parent_path = [](std::string path) {
-         return path.substr(0, path.find_last_of("/\\"));
-      };
-      fallback = parent_path(parent_path({path_str}));
+     procstat_getpathname(ps, kp, lpFilename, sizeof(lpFilename));
+      fallback = parent_path(parent_path({lpFilename}));
   }
 
   free(kp);
