@@ -138,7 +138,6 @@ called for each data event.
 
 #include "RooNormalizedPdf.h"
 #include "RooMsgService.h"
-#include "RooDataSet.h"
 #include "RooArgSet.h"
 #include "RooArgProxy.h"
 #include "RooRealProxy.h"
@@ -2032,7 +2031,7 @@ RooAbsGenContext* RooAbsPdf::autoGenContext(const RooArgSet &vars, const RooData
 /// - chatLevel
 /// \see rf902_numgenconfig.C
 
-RooDataSet *RooAbsPdf::generate(const RooArgSet& whatVars, const RooCmdArg& arg1,const RooCmdArg& arg2,
+RooFit::OwningPtr<RooDataSet> RooAbsPdf::generate(const RooArgSet& whatVars, const RooCmdArg& arg1,const RooCmdArg& arg2,
             const RooCmdArg& arg3,const RooCmdArg& arg4, const RooCmdArg& arg5,const RooCmdArg& arg6)
 {
   // Select the pdf-specific commands
@@ -2054,7 +2053,7 @@ RooDataSet *RooAbsPdf::generate(const RooArgSet& whatVars, const RooCmdArg& arg1
   // Process and check varargs
   pc.process(arg1,arg2,arg3,arg4,arg5,arg6) ;
   if (!pc.ok(true)) {
-    return 0 ;
+    return nullptr;
   }
 
   // Decode command line arguments
@@ -2094,11 +2093,11 @@ RooDataSet *RooAbsPdf::generate(const RooArgSet& whatVars, const RooCmdArg& arg1
 
 
   // Forward to appropriate implementation
-  RooDataSet* data ;
+  std::unique_ptr<RooDataSet> data;
   if (protoData) {
-    data = generate(whatVars,*protoData,Int_t(nEvents),verbose,randProto,resampleProto) ;
+    data = std::unique_ptr<RooDataSet>{generate(whatVars,*protoData,Int_t(nEvents),verbose,randProto,resampleProto)};
   } else {
-     data = generate(whatVars,nEvents,verbose,autoBinned,binnedTag,expectedData, extended) ;
+     data = std::unique_ptr<RooDataSet>{generate(whatVars,nEvents,verbose,autoBinned,binnedTag,expectedData, extended)};
   }
 
   // Rename dataset to given name if supplied
@@ -2106,7 +2105,7 @@ RooDataSet *RooAbsPdf::generate(const RooArgSet& whatVars, const RooCmdArg& arg1
     data->SetName(dsetName) ;
   }
 
-  return data ;
+  return RooFit::Detail::owningPtr(std::move(data));
 }
 
 
@@ -2170,7 +2169,7 @@ RooAbsPdf::GenSpec* RooAbsPdf::prepareMultiGen(const RooArgSet &whatVars,
 /// combination than calling the standard generate() multiple times as
 /// initialization overhead is only incurred once.
 
-RooDataSet *RooAbsPdf::generate(RooAbsPdf::GenSpec& spec) const
+RooFit::OwningPtr<RooDataSet> RooAbsPdf::generate(RooAbsPdf::GenSpec& spec) const
 {
   //Int_t nEvt = spec._extended ? RooRandom::randomGenerator()->Poisson(spec._nGen) : spec._nGen ;
   //Int_t nEvt = spec._extended ? RooRandom::randomGenerator()->Poisson(spec._nGen==0?expectedEvents(spec._whatVars):spec._nGen) : spec._nGen ;
@@ -2178,10 +2177,10 @@ RooDataSet *RooAbsPdf::generate(RooAbsPdf::GenSpec& spec) const
 
   double nEvt =  spec._nGen == 0 ?  expectedEvents(spec._whatVars) : spec._nGen;
 
-  RooDataSet* ret = generate(*spec._genContext,spec._whatVars,spec._protoData, nEvt,false,spec._randProto,spec._resampleProto,
-              spec._init,spec._extended) ;
+  std::unique_ptr<RooDataSet> ret{generate(*spec._genContext,spec._whatVars,spec._protoData, nEvt,false,spec._randProto,spec._resampleProto,
+              spec._init,spec._extended)};
   spec._init = true ;
-  return ret ;
+  return RooFit::Detail::owningPtr(std::move(ret));
 }
 
 
@@ -2207,10 +2206,10 @@ RooDataSet *RooAbsPdf::generate(RooAbsPdf::GenSpec& spec) const
 /// \return New dataset. Returns zero in case of an error. The caller takes ownership of the returned
 /// dataset.
 
-RooDataSet *RooAbsPdf::generate(const RooArgSet &whatVars, double nEvents, bool verbose, bool autoBinned, const char* binnedTag, bool expectedData, bool extended) const
+RooFit::OwningPtr<RooDataSet> RooAbsPdf::generate(const RooArgSet &whatVars, double nEvents, bool verbose, bool autoBinned, const char* binnedTag, bool expectedData, bool extended) const
 {
   if (nEvents==0 && extendMode()==CanNotBeExtended) {
-    return new RooDataSet("emptyData","emptyData",whatVars) ;
+    return RooFit::Detail::owningPtr(std::make_unique<RooDataSet>("emptyData","emptyData",whatVars));
   }
 
   // Request for binned generation
@@ -2219,14 +2218,14 @@ RooDataSet *RooAbsPdf::generate(const RooArgSet &whatVars, double nEvents, bool 
     context->setExpectedData(true) ;
   }
 
-  RooDataSet *generated = 0;
+  std::unique_ptr<RooDataSet> generated;
   if(0 != context && context->isValid()) {
-     generated= context->generate(nEvents, false, extended);
+     generated = std::unique_ptr<RooDataSet>{context->generate(nEvents, false, extended)};
   }
   else {
     coutE(Generation)  << "RooAbsPdf::generate(" << GetName() << ") cannot create a valid context" << endl;
   }
-  return generated;
+  return RooFit::Detail::owningPtr(std::move(generated));
 }
 
 
@@ -2235,15 +2234,15 @@ RooDataSet *RooAbsPdf::generate(const RooArgSet &whatVars, double nEvents, bool 
 ////////////////////////////////////////////////////////////////////////////////
 /// Internal method
 
-RooDataSet *RooAbsPdf::generate(RooAbsGenContext& context, const RooArgSet &whatVars, const RooDataSet *prototype,
+std::unique_ptr<RooDataSet> RooAbsPdf::generate(RooAbsGenContext& context, const RooArgSet &whatVars, const RooDataSet *prototype,
             double nEvents, bool /*verbose*/, bool randProtoOrder, bool resampleProto,
             bool skipInit, bool extended) const
 {
   if (nEvents==0 && (prototype==0 || prototype->numEntries()==0)) {
-    return new RooDataSet("emptyData","emptyData",whatVars) ;
+    return std::make_unique<RooDataSet>("emptyData","emptyData",whatVars);
   }
 
-  RooDataSet *generated = 0;
+  std::unique_ptr<RooDataSet> generated;
 
   // Resampling implies reshuffling in the implementation
   if (resampleProto) {
@@ -2258,7 +2257,7 @@ RooDataSet *RooAbsPdf::generate(RooAbsGenContext& context, const RooArgSet &what
   }
 
   if(context.isValid()) {
-    generated= context.generate(nEvents,skipInit,extended);
+    generated = std::unique_ptr<RooDataSet>{context.generate(nEvents,skipInit,extended)};
   }
   else {
     coutE(Generation) << "RooAbsPdf::generate(" << GetName() << ") do not have a valid generator context" << endl;
@@ -2291,17 +2290,15 @@ RooDataSet *RooAbsPdf::generate(RooAbsGenContext& context, const RooArgSet &what
 /// \return The new dataset. Returns zero in case of an error. The caller takes ownership of the
 /// returned dataset.
 
-RooDataSet *RooAbsPdf::generate(const RooArgSet &whatVars, const RooDataSet& prototype,
+RooFit::OwningPtr<RooDataSet> RooAbsPdf::generate(const RooArgSet &whatVars, const RooDataSet& prototype,
             Int_t nEvents, bool verbose, bool randProtoOrder, bool resampleProto) const
 {
   std::unique_ptr<RooAbsGenContext> context{genContext(whatVars,&prototype,0,verbose)};
   if (context) {
-    RooDataSet* data =  generate(*context,whatVars,&prototype,nEvents,verbose,randProtoOrder,resampleProto) ;
-    return data ;
-  } else {
-    coutE(Generation) << "RooAbsPdf::generate(" << GetName() << ") ERROR creating generator context" << endl ;
-    return nullptr;
+    return RooFit::Detail::owningPtr(generate(*context,whatVars,&prototype,nEvents,verbose,randProtoOrder,resampleProto));
   }
+  coutE(Generation) << "RooAbsPdf::generate(" << GetName() << ") ERROR creating generator context" << endl ;
+  return nullptr;
 }
 
 
@@ -2422,7 +2419,7 @@ bool RooAbsPdf::isDirectGenSafe(const RooAbsArg& arg) const
 /// | `ExpectedData()`          | Return a binned dataset _without_ statistical fluctuations (also aliased as Asimov())
 ///
 
-RooDataHist *RooAbsPdf::generateBinned(const RooArgSet& whatVars, const RooCmdArg& arg1,const RooCmdArg& arg2,
+RooFit::OwningPtr<RooDataHist> RooAbsPdf::generateBinned(const RooArgSet& whatVars, const RooCmdArg& arg1,const RooCmdArg& arg2,
                    const RooCmdArg& arg3,const RooCmdArg& arg4, const RooCmdArg& arg5,const RooCmdArg& arg6) const
 {
 
@@ -2438,7 +2435,7 @@ RooDataHist *RooAbsPdf::generateBinned(const RooArgSet& whatVars, const RooCmdAr
   // Process and check varargs
   pc.process(arg1,arg2,arg3,arg4,arg5,arg6) ;
   if (!pc.ok(true)) {
-    return 0 ;
+    return nullptr;
   }
 
   // Decode command line arguments
@@ -2466,14 +2463,14 @@ RooDataHist *RooAbsPdf::generateBinned(const RooArgSet& whatVars, const RooCmdAr
   }
 
   // Forward to appropriate implementation
-  RooDataHist* data = generateBinned(whatVars,nEvents,expectedData,extended) ;
+  auto data = generateBinned(whatVars,nEvents,expectedData,extended);
 
   // Rename dataset to given name if supplied
   if (dsetName && strlen(dsetName)>0) {
     data->SetName(dsetName) ;
   }
 
-  return data ;
+  return data;
 }
 
 
@@ -2504,16 +2501,15 @@ RooDataHist *RooAbsPdf::generateBinned(const RooArgSet& whatVars, const RooCmdAr
 /// Any variables of this PDF that are not in `whatVars` will use their
 /// current values and be treated as fixed parameters.
 /// \return RooDataHist* owned by the caller. Returns `nullptr` in case of an error.
-RooDataHist *RooAbsPdf::generateBinned(const RooArgSet &whatVars, double nEvents, bool expectedData, bool extended) const
+RooFit::OwningPtr<RooDataHist> RooAbsPdf::generateBinned(const RooArgSet &whatVars, double nEvents, bool expectedData, bool extended) const
 {
   // Create empty RooDataHist
-  RooDataHist* hist = new RooDataHist("genData","genData",whatVars) ;
+  auto hist = std::make_unique<RooDataHist>("genData","genData",whatVars);
 
   // Scale to number of events and introduce Poisson fluctuations
   if (nEvents<=0) {
     if (!canBeExtended()) {
       coutE(InputArguments) << "RooAbsPdf::generateBinned(" << GetName() << ") ERROR: No event count provided and p.d.f does not provide expected number of events" << endl ;
-      delete hist ;
       return nullptr;
     } else {
 
@@ -2527,7 +2523,7 @@ RooDataHist *RooAbsPdf::generateBinned(const RooArgSet &whatVars, double nEvents
   }
 
   // Sample p.d.f. distribution
-  fillDataHist(hist,&whatVars,1,true) ;
+  fillDataHist(hist.get(),&whatVars,1,true) ;
 
   vector<int> histOut(hist->numEntries()) ;
   double histMax(-1) ;
@@ -2616,7 +2612,7 @@ RooDataHist *RooAbsPdf::generateBinned(const RooArgSet &whatVars, double nEvents
 
   }
 
-  return hist;
+  return RooFit::Detail::owningPtr(std::move(hist));
 }
 
 
@@ -2624,7 +2620,7 @@ RooDataHist *RooAbsPdf::generateBinned(const RooArgSet &whatVars, double nEvents
 ////////////////////////////////////////////////////////////////////////////////
 /// Special generator interface for generation of 'global observables' -- for RooStats tools
 
-RooDataSet* RooAbsPdf::generateSimGlobal(const RooArgSet& whatVars, Int_t nEvents)
+RooFit::OwningPtr<RooDataSet> RooAbsPdf::generateSimGlobal(const RooArgSet& whatVars, Int_t nEvents)
 {
   return generate(whatVars,nEvents) ;
 }

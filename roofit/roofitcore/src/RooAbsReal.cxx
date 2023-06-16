@@ -2793,10 +2793,10 @@ RooPlot* RooAbsReal::plotOnWithErrorBand(RooPlot* frame,const RooFitResult& fr, 
     // Generate variation curves with above set of parameter values
     double ymin = frame->GetMinimum() ;
     double ymax = frame->GetMaximum() ;
-    RooDataSet* d = paramPdf->generate(errorParams,n) ;
+    std::unique_ptr<RooDataSet> generatedData{paramPdf->generate(errorParams,n)};
     std::vector<RooCurve*> cvec ;
-    for (int i=0 ; i<d->numEntries() ; i++) {
-      cloneParams.assign(*d->get(i)) ;
+    for (int i=0 ; i<generatedData->numEntries() ; i++) {
+      cloneParams.assign(*generatedData->get(i)) ;
       plotFunc(*cloneFunc);
       cvec.push_back(frame->getCurve()) ;
       frame->remove(0,false) ;
