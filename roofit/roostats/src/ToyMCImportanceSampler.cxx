@@ -328,7 +328,7 @@ RooAbsData* ToyMCImportanceSampler::GenerateToyData(
    if( fGenerateFromNull ) {
       //cout << "gen from null" << endl;
       allVars->assign(*fNullSnapshots[fIndexGenDensity]);
-      data = Generate(*fNullDensities[fIndexGenDensity], observables);
+      data = Generate(*fNullDensities[fIndexGenDensity], observables).release();
    }else{
       // need to be careful here not to overwrite the current state of the
       // nuisance parameters, ie they must not be part of the snapshot
@@ -336,7 +336,7 @@ RooAbsData* ToyMCImportanceSampler::GenerateToyData(
       if(fImportanceSnapshots[fIndexGenDensity]) {
         allVars->assign(*fImportanceSnapshots[fIndexGenDensity]);
       }
-      data = Generate(*fImportanceDensities[fIndexGenDensity], observables);
+      data = Generate(*fImportanceDensities[fIndexGenDensity], observables).release();
    }
    //cout << "data generated: " << data << endl;
 
