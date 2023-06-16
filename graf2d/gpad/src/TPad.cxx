@@ -2267,7 +2267,7 @@ void TPad::ExecuteEventAxis(Int_t event, Int_t px, Int_t py, TAxis *axis)
    static Int_t axisNumber;
    static Double_t ratio1, ratio2;
    static Int_t px1old, py1old, px2old, py2old;
-   Int_t bin1, bin2, first, last;
+   Int_t nbd, inc, bin1, bin2, first, last;
    Double_t temp, xmin,xmax;
    Bool_t opaque  = gPad->OpaqueMoving();
    static std::unique_ptr<TBox> zoombox;
@@ -2403,8 +2403,10 @@ void TPad::ExecuteEventAxis(Int_t event, Int_t px, Int_t py, TAxis *axis)
    break;
 
    case kWheelUp:
-      bin1 = axis->GetFirst()+1;
-      bin2 = axis->GetLast()-1;
+      nbd  = (axis->GetLast()-axis->GetFirst());
+      inc  = TMath::Max(nbd/100,1);
+      bin1 = axis->GetFirst()+inc;
+      bin2 = axis->GetLast()-inc;
       bin1 = TMath::Max(bin1, 1);
       bin2 = TMath::Min(bin2, axis->GetNbins());
       if (bin2>bin1) {
@@ -2415,8 +2417,10 @@ void TPad::ExecuteEventAxis(Int_t event, Int_t px, Int_t py, TAxis *axis)
    break;
 
    case kWheelDown:
-      bin1 = axis->GetFirst()-1;
-      bin2 = axis->GetLast()+1;
+      nbd  = (axis->GetLast()-axis->GetFirst());
+      inc  = TMath::Max(nbd/100,1);
+      bin1 = axis->GetFirst()-inc;
+      bin2 = axis->GetLast()+inc;
       bin1 = TMath::Max(bin1, 1);
       bin2 = TMath::Min(bin2, axis->GetNbins());
       if (bin2>bin1) {
