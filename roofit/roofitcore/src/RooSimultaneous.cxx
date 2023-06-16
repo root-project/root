@@ -1035,13 +1035,13 @@ RooDataHist* RooSimultaneous::fillDataHist(RooDataHist *hist,
 ////////////////////////////////////////////////////////////////////////////////
 /// Special generator interface for generation of 'global observables' -- for RooStats tools
 
-RooDataSet* RooSimultaneous::generateSimGlobal(const RooArgSet& whatVars, Int_t nEvents)
+RooFit::OwningPtr<RooDataSet> RooSimultaneous::generateSimGlobal(const RooArgSet& whatVars, Int_t nEvents)
 {
   // Make set with clone of variables (placeholder for output)
   RooArgSet globClone;
   whatVars.snapshot(globClone);
 
-  RooDataSet* data = new RooDataSet("gensimglobal","gensimglobal",whatVars) ;
+  auto data = std::make_unique<RooDataSet>("gensimglobal","gensimglobal",whatVars);
 
   for (Int_t i=0 ; i<nEvents ; i++) {
     for (const auto& nameIdx : indexCat()) {
@@ -1060,7 +1060,7 @@ RooDataSet* RooSimultaneous::generateSimGlobal(const RooArgSet& whatVars, Int_t 
     data->add(globClone) ;
   }
 
-  return data ;
+  return RooFit::Detail::owningPtr(std::move(data));
 }
 
 
