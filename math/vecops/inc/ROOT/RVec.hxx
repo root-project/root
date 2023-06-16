@@ -2380,7 +2380,7 @@ RVec<T> Take(const RVec<T> &v, const int n)
 /// Take(x,-1,1)
 /// // (ROOT::VecOps::RVec<int>) { 4 }
 /// Take(x,4,1)
-/// (ROOT::VecOps::RVec<int>) { 1, 2, 3, 4 }
+/// // (ROOT::VecOps::RVec<int>) { 1, 2, 3, 4 }
 /// ~~~
 template <typename T>
 RVec<T> Take(const RVec<T> &v, const int n, const T default_val)
