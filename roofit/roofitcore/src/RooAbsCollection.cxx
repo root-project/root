@@ -672,12 +672,6 @@ bool RooAbsCollection::remove(const RooAbsCollection& list, bool /*silent*/, boo
 
     _list.erase(std::remove_if(_list.begin(), _list.end(), nameMatchAndMark), _list.end());
 
-    std::set<const RooAbsArg*> toBeDeleted(markedItems.begin(), markedItems.end());
-    if (_ownCont) {
-      for (auto arg : toBeDeleted) {
-        delete arg;
-      }
-    }
   }
   else {
     auto argMatchAndMark = [&list, &markedItems](const RooAbsArg* elm) {
@@ -694,6 +688,13 @@ bool RooAbsCollection::remove(const RooAbsCollection& list, bool /*silent*/, boo
   if (_hashAssistedFind && oldSize != _list.size()) {
     for( auto& var : markedItems ) {
       _hashAssistedFind->erase(var);
+    }
+  }
+  
+  if (matchByNameOnly && _ownCont) {
+    std::set<const RooAbsArg*> toBeDeleted(markedItems.begin(), markedItems.end());
+    for (auto arg : toBeDeleted) {
+        delete arg;
     }
   }
 
