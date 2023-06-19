@@ -81,6 +81,7 @@ You can directly see RDataFrame in action in our [tutorials](https://root.cern.c
    - [Computation graphs (storing and reusing sets of transformations)](\ref callgraphs)
    - [Visualizing the computation graph](\ref representgraph)
    - [Activating RDataFrame execution logs](\ref rdf-logging)
+   - [Creating RDataFrame from dataset specification file] (\ref rdf-from-spec)
 - [Efficient analysis in Python](\ref python)
 - <a class="el" href="classROOT_1_1RDataFrame.html#reference" onclick="javascript:toggleInherit('pub_methods_classROOT_1_1RDF_1_1RInterface')">Class reference</a>
 
@@ -1337,6 +1338,71 @@ verbosity = ROOT.Experimental.RLogScopedVerbosity(ROOT.Detail.RDF.RDFLogChannel(
 
 More information (e.g. start and end of each multi-thread task) is printed using `ELogLevel.kDebug` and even more
 (e.g. a full dump of the generated code that RDataFrame just-in-time-compiles) using `ELogLevel.kDebug+10`.
+
+\anchor rdf-from-spec
+### Creating an RDataFrame from dataset specification file 
+
+RDataFrame can be created using a dataset specification JSON file: 
+
+~~~{.python}
+import ROOT
+
+df = ROOT.RDF.Experimental.FromSpec("spec.json")
+~~~
+
+The input dataset specification JSON file needs to be provided by the user and it describes all necessary samples and
+their associated metadata information. The main required key is the "samples" (at least one sample is needed) and the
+required sub-keys for each sample are "trees" and "files". Additionally, one can specify a metadata dictionary for each
+sample in the "metadata" key.
+
+A simple example for the formatting of the specification in the JSON file is the following:
+
+~~~{.cpp}
+{
+   "samples": {
+      "sampleA": {
+         "trees": ["tree1", "tree2"],
+         "files": ["file1.root", "file2.root"],
+         "metadata": {
+            "lumi": 10000.0, 
+            "xsec": 1.0,
+            "sample_category" = "data"
+            }
+      },
+      "sampleB": {
+         "trees": ["tree3", "tree4"],
+         "files": ["file3.root", "file4.root"],
+         "metadata": {
+            "lumi": 0.5, 
+            "xsec": 1.5,
+            "sample_category" = "MC_background"
+            }
+      }
+   }
+}
+~~~
+
+The metadata information from the specification file can be then accessed using the DefinePerSample function.
+For example, to access luminosity information (stored as a double):
+
+~~~{.python}
+df.DefinePerSample("lumi", 'rdfsampleinfo_.GetD("lumi")')
+~~~
+
+or sample_category information (stored as a string):
+
+~~~{.python}
+df.DefinePerSample("sample_category", 'rdfsampleinfo_.GetS("sample_category")')
+~~~
+
+or directly the filename:
+
+~~~{.python}
+df.DefinePerSample("name", "rdfsampleinfo_.GetSampleName()")
+~~~
+
+An example implementation of the "FromSpec" method is available in tutorial: df106_HiggstoFourLeptons.py, which also
+provides a corresponding exemplary JSON file for the dataset specification.
 */
 // clang-format on
 
@@ -1474,6 +1540,36 @@ RDataFrame::RDataFrame(ROOT::RDF::Experimental::RDatasetSpec spec)
 namespace RDF {
 namespace Experimental {
 
+////////////////////////////////////////////////////////////////////////////
+/// \brief Create the RDataFrame from the dataset specification file.
+/// \param[in] jsonFile Path to the dataset specification JSON file. 
+///
+/// The input dataset specification JSON file must include a number of keys that
+/// describe all the necessary samples and their associated metadata information.
+/// The main key, "samples", is required and at least one sample is needed. Each
+/// sample must have at least one key "trees" and at least one key "files" from
+/// which the data is read. Optionally, one or more metadata information can be
+/// added, as well as the friend list information.
+///
+/// ### Example specification file JSON:
+/// The following is an example of the dataset specification JSON file formatting: 
+///~~~{.cpp}
+/// {
+///    "samples": {
+///       "sampleA": {
+///          "trees": ["tree1", "tree2"],
+///          "files": ["file1.root", "file2.root"],
+///          "metadata": {"lumi": 1.0, }
+///       },
+///       "sampleB": {
+///          "trees": ["tree3", "tree4"],
+///          "files": ["file3.root", "file4.root"],
+///          "metadata": {"lumi": 0.5, }
+///       },
+///       ...
+///     },
+/// }
+///~~~
 ROOT::RDataFrame FromSpec(const std::string &jsonFile)
 {
    const nlohmann::json fullData = nlohmann::json::parse(std::ifstream(jsonFile));
@@ -1493,7 +1589,7 @@ ROOT::RDataFrame FromSpec(const std::string &jsonFile)
          "metadata": {"lumi": 0.5, }
       },
       ...
-    },
+   },
 })");
    }
 
