@@ -99,8 +99,8 @@ protected:
 
          for (auto i = 0u; i < colTypes.size(); ++i) {
             const auto *define = fColRegister.GetDefine(colNames[i]);
-            const auto &expectedTypeID = define ? define->GetTypeId() : RDFInternal::TypeName2TypeID(colTypes[i]);
-            if (innerTypeID != expectedTypeID)
+            const auto *expectedTypeID = define ? &define->GetTypeId() : &RDFInternal::TypeName2TypeID(colTypes[i]);
+            if (innerTypeID != *expectedTypeID)
                throw std::runtime_error("Varied values for column \"" + colNames[i] + "\" have a different type (" +
                                         RDFInternal::TypeID2TypeName(innerTypeID) + ") than the nominal value (" +
                                         colTypes[i] + ").");
@@ -109,9 +109,9 @@ protected:
          const auto &retTypeID = typeid(typename RetType::value_type);
          const auto &colName = colNames[0]; // we have only one element in there
          const auto *define = fColRegister.GetDefine(colName);
-         const auto &expectedTypeID =
-            define ? define->GetTypeId() : RDFInternal::TypeName2TypeID(GetColumnType(colName));
-         if (retTypeID != expectedTypeID)
+         const auto *expectedTypeID =
+            define ? &define->GetTypeId() : &RDFInternal::TypeName2TypeID(GetColumnType(colName));
+         if (retTypeID != *expectedTypeID)
             throw std::runtime_error("Varied values for column \"" + colName + "\" have a different type (" +
                                      RDFInternal::TypeID2TypeName(retTypeID) + ") than the nominal value (" +
                                      GetColumnType(colName) + ").");
