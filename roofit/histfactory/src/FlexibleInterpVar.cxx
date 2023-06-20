@@ -341,7 +341,7 @@ double FlexibleInterpVar::evaluate() const
       }
       double paramVal = static_cast<const RooAbsReal *>(&_paramList[i])->getVal();
       total = RooFit::Detail::EvaluateFuncs::flexibleInterp(
-         _interpCode[i], _polCoeff.data() + 6 * i, _low[i], _high[i], _interpBoundary, _nominal, paramVal, total);
+         _interpCode[i], _low[i], _high[i], _interpBoundary, _nominal, paramVal, total, _polCoeff.data() + 6 * i);
    }
 
   if(total<=0) {
@@ -363,8 +363,8 @@ void FlexibleInterpVar::translate(RooFit::Detail::CodeSquashContext &ctx) const
    for (std::size_t i = 0; i < n; ++i) {
       code += resName + " = " +
               ctx.buildCall("RooFit::Detail::EvaluateFuncs::flexibleInterp", _interpCode[i],
-                            RooSpan<const double>{polCoeff.data() + 6 * i, 6}, _low[i], _high[i], _interpBoundary,
-                            _nominal, _paramList[i], resName) +
+                            _low[i], _high[i], _interpBoundary,
+                            _nominal, _paramList[i], resName, RooSpan<const double>{polCoeff.data() + 6 * i, 6}) +
               ";\n";
    }
    code += resName + " = " + resName + " <= 0 ? TMath::Limits<double>::Min() : " + resName + ";\n";
@@ -386,9 +386,9 @@ void FlexibleInterpVar::computeBatch(cudaStream_t* /*stream*/, double* output, s
         coutE(InputArguments) << "FlexibleInterpVar::evaluate ERROR:  param " << i << " with unknown interpolation code"
                               << endl;
      }
-     total = RooFit::Detail::EvaluateFuncs::flexibleInterp(_interpCode[i], _polCoeff.data() + 6 * i, _low[i],
+     total = RooFit::Detail::EvaluateFuncs::flexibleInterp(_interpCode[i], _low[i],
                                                                           _high[i], _interpBoundary, _nominal,
-                                                                          dataMap.at(&_paramList[i])[0], total);
+                                                                          dataMap.at(&_paramList[i])[0], total, _polCoeff.data() + 6 * i);
   }
 
   if(total<=0) {

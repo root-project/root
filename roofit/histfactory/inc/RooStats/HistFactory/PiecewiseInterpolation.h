@@ -68,6 +68,8 @@ public:
   std::list<double>* plotSamplingHint(RooAbsRealLValue& obs, double xlo, double xhi) const override ;
   bool isBinnedDistribution(const RooArgSet& obs) const override ;
 
+  void translate(RooFit::Detail::CodeSquashContext &ctx) const override;
+
 protected:
 
   class CacheElem : public RooAbsCacheElement {
