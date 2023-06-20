@@ -352,8 +352,8 @@ TFitResultPtr HFit::Fit(FitObject * h1, TF1 *f1 , Foption_t & fitOption , const 
 
 
    // check if can use option user
-   //typedef  void (* MinuitFCN_t )(int &npar, double *gin, double &f, double *u, int flag);
    TVirtualFitter::FCNFunc_t  userFcn = nullptr;
+   // option user is enabled only when running in serial mode
    if (fitOption.User && TVirtualFitter::GetFitter() ) {
       userFcn = (TVirtualFitter::GetFitter())->GetFCN();
       (TVirtualFitter::GetFitter())->SetUserFunc(f1);
@@ -407,6 +407,7 @@ TFitResultPtr HFit::Fit(FitObject * h1, TF1 *f1 , Foption_t & fitOption , const 
       // if using Fitter class must be done here
       // use old style Minuit for TMinuit and if no corrections have been applied
       if (!fitOption.Quiet) {
+         R__LOCKGUARD(gROOTMutex);
          if (fitter->GetMinimizer() && fitConfig.MinimizerType() == "Minuit" &&
              !fitConfig.NormalizeErrors() && fitOption.Like <= 1) {
             fitter->GetMinimizer()->PrintResults(); // use old style Minuit
@@ -418,10 +419,9 @@ TFitResultPtr HFit::Fit(FitObject * h1, TF1 *f1 , Foption_t & fitOption , const 
          }
       }
 
-
-      // store result in the backward compatible VirtualFitter
-      // in case multi-thread is not enabled
-      if (!gGlobalMutex) {
+      // store result in the backward compatible TVirtualFitter
+      {
+         R__LOCKGUARD(gROOTMutex);
          TVirtualFitter * lastFitter = TVirtualFitter::GetFitter();
          TBackCompFitter * bcfitter = new TBackCompFitter(fitter, fitdata);
          bcfitter->SetFitOption(fitOption);
@@ -443,10 +443,6 @@ TFitResultPtr HFit::Fit(FitObject * h1, TF1 *f1 , Foption_t & fitOption , const 
          //N.B=  this might create a memory leak if user does not delete the fitter they create
          TVirtualFitter::SetFitter( bcfitter );
       }
-
-      // use old-style for printing the results
-      // if (fitOption.Verbose) bcfitter->PrintResults(2,0.);
-      // else if (!fitOption.Quiet) bcfitter->PrintResults(1,0.);
 
       if (fitOption.StoreResult)
       {
@@ -781,7 +777,15 @@ void ROOT::Fit::FitOptionsMake(EFitObjectType type, const char *option, Foption_
       if (opt.Contains("W")) fitOption.W1     = 1; // ignorer all point errors when fitting
    }
 
-   if (opt.Contains("U")) fitOption.User    = 1;
+   if (opt.Contains("U")) {
+      // user option can work only when not running in multiple threads
+      if (gGlobalMutex || !ROOT::IsImplicitMTEnabled()) {
+         fitOption.User    = 1;
+      } else {
+         Warning("FitOptionsMake","Cannot use User (U) fit option when running in multi-thread mode. The option is ignored");
+         fitOption.User = 0;
+      }
+   }
    if (opt.Contains("Q")) fitOption.Quiet   = 1;
    if (opt.Contains("V")) {fitOption.Verbose = 1; fitOption.Quiet   = 0;}
 
@@ -928,29 +932,25 @@ TFitResultPtr ROOT::Fit::UnBinFit(ROOT::Fit::UnBinData * data, TF1 * fitfunc, Fo
 
    }
 
-   // store result in the backward compatible VirtualFitter
-   // in case not running in a multi-thread enabled mode
-   if (gGlobalMutex) {
+   // store fitting result in the backward compatible TVirtualFitter object
+   // lock in case running in a multi-thread enabled mode
+   {
+      R__LOCKGUARD(gROOTMutex);
       TVirtualFitter * lastFitter = TVirtualFitter::GetFitter();
-      // pass ownership of Fitter and Fitdata to TBackCompFitter (fitter pointer cannot be used afterwards)
       TBackCompFitter * bcfitter = new TBackCompFitter(fitter, fitdata);
       // cannot use anymore now fitdata (given away ownership)
       fitdata = nullptr;
       bcfitter->SetFitOption(fitOption);
-      //bcfitter->SetObjectFit(fTree);
       bcfitter->SetUserFunc(fitfunc);
-
+      // delete previous fitter and replace with the new one
       if (lastFitter) delete lastFitter;
       TVirtualFitter::SetFitter( bcfitter );
 
-      // use old-style for printing the results
-      // if (fitOption.Verbose) bcfitter->PrintResults(2,0.);
-      // else if (!fitOption.Quiet) bcfitter->PrintResults(1,0.);
-
+      // print results
+      if (fitOption.Verbose) fitResult.PrintCovMatrix(std::cout);
+      else if (!fitOption.Quiet) fitResult.Print(std::cout);
    }
-   // print results
-   if (fitOption.Verbose) fitResult.PrintCovMatrix(std::cout);
-   else if (!fitOption.Quiet) fitResult.Print(std::cout);
+
 
    if (fitOption.StoreResult)
    {
