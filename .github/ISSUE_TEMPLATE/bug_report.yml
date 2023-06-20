@@ -39,7 +39,7 @@ body:
         3. How to run your code and / or build it, e.g. `root myMacro.C`, ...
     validations:
       required: true
-  - type: input
+  - type: textarea
     id: root-version
     attributes:
       label: ROOT version
