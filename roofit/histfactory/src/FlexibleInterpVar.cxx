@@ -25,6 +25,7 @@
 #include "RooMsgService.h"
 #include "RooTrace.h"
 
+#include "RooFit/Detail/EvaluateFuncs.h"
 #include "RooStats/HistFactory/FlexibleInterpVar.h"
 
 using namespace std;
@@ -33,6 +34,49 @@ ClassImp(RooStats::HistFactory::FlexibleInterpVar);
 
 using namespace RooStats;
 using namespace HistFactory;
+
+namespace {
+
+void fillPolCoeff(double *polCoeff, double const *low, double const *high, double boundary, unsigned int n,
+                  double nominal)
+{
+   // code for polynomial interpolation used when interpCode=4
+   double x0 = boundary;
+
+   // cache the polynomial coefficient values
+   // which do not depend on x but on the boundaries values
+   for (unsigned int j = 0; j < n; j++) {
+      // location of the 6 coefficient for the j-th variable
+      unsigned int offset = j * 6;
+
+      // GHL: Swagato's suggestions
+      double pow_up = std::pow(high[j] / nominal, x0);
+      double pow_down = std::pow(low[j] / nominal, x0);
+      double logHi = std::log(high[j]);
+      double logLo = std::log(low[j]);
+      double pow_up_log = high[j] <= 0.0 ? 0.0 : pow_up * logHi;
+      double pow_down_log = low[j] <= 0.0 ? 0.0 : -pow_down * logLo;
+      double pow_up_log2 = high[j] <= 0.0 ? 0.0 : pow_up_log * logHi;
+      double pow_down_log2 = low[j] <= 0.0 ? 0.0 : -pow_down_log * logLo;
+
+      double S0 = (pow_up + pow_down) / 2;
+      double A0 = (pow_up - pow_down) / 2;
+      double S1 = (pow_up_log + pow_down_log) / 2;
+      double A1 = (pow_up_log - pow_down_log) / 2;
+      double S2 = (pow_up_log2 + pow_down_log2) / 2;
+      double A2 = (pow_up_log2 - pow_down_log2) / 2;
+
+      // cache  coefficient of the polynomial
+      polCoeff[0 + offset] = 1. / (8 * x0) * (15 * A0 - 7 * x0 * S1 + x0 * x0 * A2);
+      polCoeff[1 + offset] = 1. / (8 * x0 * x0) * (-24 + 24 * S0 - 9 * x0 * A1 + x0 * x0 * S2);
+      polCoeff[2 + offset] = 1. / (4 * std::pow(x0, 3)) * (-5 * A0 + 5 * x0 * S1 - x0 * x0 * A2);
+      polCoeff[3 + offset] = 1. / (4 * std::pow(x0, 4)) * (12 - 12 * S0 + 7 * x0 * A1 - x0 * x0 * S2);
+      polCoeff[4 + offset] = 1. / (8 * std::pow(x0, 5)) * (+3 * A0 - 3 * x0 * S1 + x0 * x0 * A2);
+      polCoeff[5 + offset] = 1. / (8 * std::pow(x0, 6)) * (-8 + 8 * S0 - 5 * x0 * A1 + x0 * x0 * S2);
+   }
+}
+
+} // namespace
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
@@ -271,85 +315,6 @@ void FlexibleInterpVar::printAllInterpCodes(){
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-double FlexibleInterpVar::PolyInterpValue(int i, double x) const {
-   // code for polynomial interpolation used when interpCode=4
-
-   double boundary = _interpBoundary;
-
-   double x0 = boundary;
-
-
-   // cache the polynomial coefficient values
-   // which do not depend on x but on the boundaries values
-   if (!_logInit) {
-
-      _logInit=true ;
-
-      unsigned int n = _low.size();
-      assert(n == _high.size() );
-
-      _polCoeff.resize(n*6) ;
-
-      for (unsigned int j = 0; j < n ; j++) {
-
-         // location of the 6 coefficient for the j-th variable
-         double * coeff = &_polCoeff[j * 6];
-
-         // GHL: Swagato's suggestions
-         double pow_up       =  std::pow(_high[j]/_nominal, x0);
-         double pow_down     =  std::pow(_low[j]/_nominal,  x0);
-         double logHi        =  std::log(_high[j]) ;
-         double logLo        =  std::log(_low[j] );
-         double pow_up_log   = _high[j] <= 0.0 ? 0.0 : pow_up      * logHi;
-         double pow_down_log = _low[j] <= 0.0 ? 0.0 : -pow_down    * logLo;
-         double pow_up_log2  = _high[j] <= 0.0 ? 0.0 : pow_up_log  * logHi;
-         double pow_down_log2= _low[j] <= 0.0 ? 0.0 : -pow_down_log* logLo;
-
-         double S0 = (pow_up+pow_down)/2;
-         double A0 = (pow_up-pow_down)/2;
-         double S1 = (pow_up_log+pow_down_log)/2;
-         double A1 = (pow_up_log-pow_down_log)/2;
-         double S2 = (pow_up_log2+pow_down_log2)/2;
-         double A2 = (pow_up_log2-pow_down_log2)/2;
-
-         //fcns+der+2nd_der are eq at bd
-
-         // cache  coefficient of the polynomial
-         coeff[0] = 1./(8*x0)        *(      15*A0 -  7*x0*S1 + x0*x0*A2);
-         coeff[1] = 1./(8*x0*x0)     *(-24 + 24*S0 -  9*x0*A1 + x0*x0*S2);
-         coeff[2] = 1./(4*pow(x0, 3))*(    -  5*A0 +  5*x0*S1 - x0*x0*A2);
-         coeff[3] = 1./(4*pow(x0, 4))*( 12 - 12*S0 +  7*x0*A1 - x0*x0*S2);
-         coeff[4] = 1./(8*pow(x0, 5))*(    +  3*A0 -  3*x0*S1 + x0*x0*A2);
-         coeff[5] = 1./(8*pow(x0, 6))*( -8 +  8*S0 -  5*x0*A1 + x0*x0*S2);
-
-      }
-
-   }
-
-   // GHL: Swagato's suggestions
-   // if( _low[i] == 0 ) _low[i] = 0.0001;
-   // if( _high[i] == 0 ) _high[i] = 0.0001;
-
-   // get pointer to location of coefficients in the vector
-
-   assert(int(_polCoeff.size()) > i );
-   const double * coefficients = &_polCoeff.front() + 6*i;
-
-   double a = coefficients[0];
-   double b = coefficients[1];
-   double c = coefficients[2];
-   double d = coefficients[3];
-   double e = coefficients[4];
-   double f = coefficients[5];
-
-
-   // evaluate the 6-th degree polynomial using Horner's method
-   double value = 1. + x * (a + x * ( b + x * ( c + x * ( d + x * ( e + x * f ) ) ) ) );
-   return value;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Const getters
 
 const RooListProxy& FlexibleInterpVar::variables() const { return _paramList; }
@@ -357,93 +322,27 @@ double FlexibleInterpVar::nominal() const { return _nominal; }
 const std::vector<double>& FlexibleInterpVar::low() const { return _low; }
 const std::vector<double>& FlexibleInterpVar::high() const { return _high; }
 
-void FlexibleInterpVar::processParam(std::size_t i, double paramVal, double & total) const
-{
-    Int_t icode = _interpCode[i] ;
-
-    switch(icode) {
-
-    case 0: {
-      // piece-wise linear
-      if(paramVal>0)
-   total +=  paramVal*(_high[i] - _nominal );
-      else
-   total += paramVal*(_nominal - _low[i]);
-      break ;
-    }
-    case 1: {
-      // pice-wise log
-      if(paramVal>=0)
-   total *= pow(_high[i]/_nominal, +paramVal);
-      else
-   total *= pow(_low[i]/_nominal,  -paramVal);
-      break ;
-    }
-    case 2: {
-      // parabolic with linear
-      double a = 0.5*(_high[i]+_low[i])-_nominal;
-      double b = 0.5*(_high[i]-_low[i]);
-      double c = 0;
-      if(paramVal>1 ){
-   total += (2*a+b)*(paramVal-1)+_high[i]-_nominal;
-      } else if(paramVal<-1 ) {
-   total += -1*(2*a-b)*(paramVal+1)+_low[i]-_nominal;
-      } else {
-   total +=  a*pow(paramVal,2) + b*paramVal+c;
-      }
-      break ;
-    }
-    case 3: {
-      //parabolic version of log-normal
-      double a = 0.5*(_high[i]+_low[i])-_nominal;
-      double b = 0.5*(_high[i]-_low[i]);
-      double c = 0;
-      if(paramVal>1 ){
-   total += (2*a+b)*(paramVal-1)+_high[i]-_nominal;
-      } else if(paramVal<-1 ) {
-   total += -1*(2*a-b)*(paramVal+1)+_low[i]-_nominal;
-      } else {
-   total +=  a*pow(paramVal,2) + b*paramVal+c;
-      }
-      break ;
-    }
-
-    case 4: {
-      double boundary = _interpBoundary;
-      double x = paramVal;
-      //std::cout << icode << " param " << param->GetName() << "  " << paramVal << " boundary " << boundary << std::endl;
-
-      if(x >= boundary)
-      {
-         total *= std::pow(_high[i]/_nominal, +paramVal);
-      }
-      else if (x <= -boundary)
-      {
-         total *= std::pow(_low[i]/_nominal, -paramVal);
-      }
-      else if (x != 0)
-      {
-         total *= PolyInterpValue(i, x);
-      }
-      break ;
-    }
-    default: {
-      coutE(InputArguments) << "FlexibleInterpVar::evaluate ERROR:  param " << i
-             << " with unknown interpolation code" << endl ;
-    }
-    }
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculate and return value of polynomial
 
 double FlexibleInterpVar::evaluate() const
 {
-  double total(_nominal) ;
+   if (!_logInit) {
+      _logInit = true;
+      _polCoeff.resize(6 * _paramList.size());
+      fillPolCoeff(_polCoeff.data(), _low.data(), _high.data(), _interpBoundary, _paramList.size(), _nominal);
+   }
 
-  for (std::size_t i = 0; i < _paramList.size(); ++i) {
-    processParam(i, static_cast<const RooAbsReal*>(&_paramList[i])->getVal(), total);
-  }
+   double total(_nominal);
+   for (std::size_t i = 0; i < _paramList.size(); ++i) {
+      if (_interpCode[i] < 0 || _interpCode[i] > 4) {
+         coutE(InputArguments) << "FlexibleInterpVar::evaluate ERROR:  param " << i
+                               << " with unknown interpolation code" << endl;
+      }
+      double paramVal = static_cast<const RooAbsReal *>(&_paramList[i])->getVal();
+      total = RooFit::Detail::EvaluateFuncs::flexibleInterp(
+         _interpCode[i], _polCoeff.data() + 6 * i, _low[i], _high[i], _interpBoundary, _nominal, paramVal, total);
+   }
 
   if(total<=0) {
      total= TMath::Limits<double>::Min();
@@ -452,12 +351,44 @@ double FlexibleInterpVar::evaluate() const
   return total;
 }
 
+void FlexibleInterpVar::translate(RooFit::Detail::CodeSquashContext &ctx) const
+{
+   unsigned int n = _interpCode.size();
+   std::vector<double> polCoeff(6 * _paramList.size());
+   fillPolCoeff(polCoeff.data(), _low.data(), _high.data(), _interpBoundary, _paramList.size(), _nominal);
+
+   std::string resName = "total_" + ctx.getTmpVarName();
+   ctx.addToCodeBody(this, "double " + resName + " = " + std::to_string(_nominal) + ";\n");
+   std::string code = "";
+   for (std::size_t i = 0; i < n; ++i) {
+      code += resName + " = " +
+              ctx.buildCall("RooFit::Detail::EvaluateFuncs::flexibleInterp", _interpCode[i],
+                            RooSpan<const double>{polCoeff.data() + 6 * i, 6}, _low[i], _high[i], _interpBoundary,
+                            _nominal, _paramList[i], resName) +
+              ";\n";
+   }
+   code += resName + " = " + resName + " <= 0 ? TMath::Limits<double>::Min() : " + resName + ";\n";
+   ctx.addToCodeBody(this, code);
+   ctx.addResult(this, resName);
+}
+
 void FlexibleInterpVar::computeBatch(cudaStream_t* /*stream*/, double* output, size_t /*nEvents*/, RooFit::Detail::DataMap const& dataMap) const
 {
+   if (!_logInit) {
+      _logInit = true;
+      _polCoeff.resize(6 * _paramList.size());
+      fillPolCoeff(_polCoeff.data(), _low.data(), _high.data(), _interpBoundary, _paramList.size(), _nominal);
+   }
   double total(_nominal) ;
 
   for (std::size_t i = 0; i < _paramList.size(); ++i) {
-    processParam(i, dataMap.at(&_paramList[i])[0], total);
+     if (_interpCode[i] < 0 || _interpCode[i] > 4) {
+        coutE(InputArguments) << "FlexibleInterpVar::evaluate ERROR:  param " << i << " with unknown interpolation code"
+                              << endl;
+     }
+     total = RooFit::Detail::EvaluateFuncs::flexibleInterp(_interpCode[i], _polCoeff.data() + 6 * i, _low[i],
+                                                                          _high[i], _interpBoundary, _nominal,
+                                                                          dataMap.at(&_paramList[i])[0], total);
   }
 
   if(total<=0) {
@@ -483,5 +414,3 @@ void FlexibleInterpVar::printFlexibleInterpVars(ostream& os) const
        <<endl;
   }
 }
-
-
