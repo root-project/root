@@ -19,6 +19,8 @@ namespace SOFIE{
       return opA | static_cast<std::underlying_type_t<Options>>(opB);
    }
 
+   enum class WeightFileType { None, RootBinary, Text };
+
    RModel::RModel(RModel&& other){
       fInputTensorInfos = std::move(other.fInputTensorInfos);
       fReadyInputTensorInfos = std::move(other.fReadyInputTensorInfos);
@@ -489,42 +491,144 @@ namespace SOFIE{
                    slength + " , read \" + std::to_string(length) ;\n";
             fGC += "      throw std::runtime_error(err_msg);\n";
             fGC += "    }\n";
-            fGC += "    for (int i =0; i < length; ++i) \n";
-            fGC += "       f >> " + tensor_name + "[i];\n";
-         }
+
+            fGC += "   std::vector<float> " + tensor_name + "(length);\n";
+            fGC += "   for (int i = 0; i < length; ++i)\n";
+            fGC += "      f >> " + tensor_name + "[i];\n";
+
+            // Store the loaded tensor into fInitializedTensors
+            fGC += "   InitializedTensor tensor;\n";
+            fGC += "   tensor.fType = ETensorType::FLOAT;\n";
+            fGC += "   tensor.fShape = {";
+            for (size_t j = 0; j < i.second.fShape.size(); ++j) {
+               if (j > 0)
+                  fGC += ",";
+               fGC += std::to_string(i.second.fShape[j]);
+            }
+         fGC += "};\n";
+         fGC += "   tensor.fSize = " + slength + ";\n";
+         fGC += "   tensor.fData = std::make_shared<std::vector<float>>(" + tensor_name + ");\n";
+         fGC += "   tensor.fPersistentData = nullptr;\n";
+         fGC += "   fInitializedTensors[\"" + i.first + "\"] = tensor;\n";
       }
-      fGC += "   f.close();\n";
+   }
+   fGC += "   f.close();\n";
+
+   // generate the code to read initialized tensors from a ROOT data file
+   std::string rootFilename = filename + ".root";
+   fGC += "   TFile rootFile(\"" + rootFilename + "\", \"READ\");\n";
+   fGC += "   if (!rootFile.IsOpen()){\n";
+   fGC += "      throw std::runtime_error(\"tmva-sofie failed to open ROOT file for input weights\");\n";
+   fGC += "   }\n";
+
+   for (auto &i : fInitializedTensors) {
+      if (i.second.fType == ETensorType::FLOAT) {
+         std::string tensor_name = "tensor_" + i.first;
+         fGC += "   float* " + tensor_name + " = nullptr;\n";
+         fGC += "   rootFile.GetObject(\"" + tensor_name + "\", " + tensor_name + ");\n";
+         fGC += "   if (" + tensor_name + " == nullptr) {\n";
+         fGC += "      throw std::runtime_error(\"tmva-sofie failed to read tensor " + i.first + " from ROOT file\");\n";
+         fGC += "   }\n";
+
+         // Store the loaded tensor into fInitializedTensors
+         fGC += "   InitializedTensor tensor;\n";
+         fGC += "   tensor.fType = ETensorType::FLOAT;\n";
+         fGC += "   tensor.fShape = {";
+         for (size_t j = 0; j < i.second.fShape.size(); ++j) {
+            if (j > 0)
+               fGC += ",";
+            fGC += std::to_string(i.second.fShape[j]);
+         }
+         fGC += "};\n";
+         fGC += "   tensor.fSize = 0;\n";
+         fGC += "   tensor.fData = std::shared_ptr<void>(" + tensor_name + ", [](float* p){});\n";
+         fGC += "   tensor.fPersistentData = nullptr;\n";
+         fGC += "   fInitializedTensors[" + i.first + "] = tensor;\n";
+      }
    }
 
-   void RModel::WriteInitializedTensorsToFile(std::string filename) {
-      // write the initialized tensors in a text file
-      if (filename == ""){
-         filename = fName + ".data";
-      }
+   fGC += "   rootFile.Close();\n";
+}
 
-      std::ofstream f;
-      f.open(filename);
-      if (!f.is_open()){
-         throw std::runtime_error("tmva-sofie failed to open file for tensor weight data");
+void RModel::WriteInitializedTensorsToFile(std::string filename) {
+  // Determine the file extension based on the weight file type
+  std::string fileExtension;
+  switch (fUseWeightFile) {
+    case WeightFileType::None:
+      fileExtension = ".dat";
+      break;
+    case WeightFileType::RootBinary:
+      fileExtension = ".root";
+      break;
+    case WeightFileType::Text:
+      fileExtension = ".txt";
+      break;
+  }
+
+  // If filename is empty, use the model name as the base filename
+  if (filename.empty()) {
+    filename = fName + fileExtension;
+  }
+
+  // Write the initialized tensors to the file
+  if (fUseWeightFile == WeightFileType::RootBinary) {
+    TFile outputFile(filename.c_str(), "RECREATE");
+
+    std::vector<std::pair<std::string, InitializedTensor>> items;
+    for (const auto& item : fInitializedTensors) {
+      items.emplace_back(item.first, item.second);
+    }
+
+    for (const auto& item : items) {
+      std::string tensorName = "tensor_" + item.first;
+      size_t length = 1;
+      for (auto dim : item.second.fShape) {
+         length *= dim;
       }
-      for (auto& i: fInitializedTensors){
-         if (i.second.fType == ETensorType::FLOAT){
-            size_t length = 1;
-            for (auto &dim : i.second.fShape) {
-               length *= dim;
-            }
-            std::string tensor_name = "tensor_" + i.first;
-            f << tensor_name << " " << length << "\n";
-            const float * data = (std::static_pointer_cast<float>(i.second.fData)).get();
-            for (size_t idx = 0; idx < length - 1; idx++) {
-               f << std::setprecision(std::numeric_limits<float>::max_digits10) << data[idx] << " ";
-            }
-            f << std::setprecision(std::numeric_limits<float>::max_digits10) << data[length - 1];
-            f << "\n";
-         }
+      if(item.second.fType == ETensorType::FLOAT){
+      std::vector<float> tensorDataVector(item.s, item.second.fData, item.second.fData + length);
+      outputFile.WriteObjectAny(&tensorDataVector, "std::vector<float>",tensorName.c_str());
+      } 
+      else if(item.second.fType == ETensorType::DOUBLE){
+      std::vector<float> tensorDataVector(item.s, item.second.fData, item.second.fData + length);
+      outputFile.WriteObjectAny(&tensorDataVector, "std::vector<double>",tensorName.c_str());
       }
-      f.close();
-   }
+      else if(item.second.fType == ETensorType::INT64){
+      std::vector<float> tensorDataVector(item.s, item.second.fData, item.second.fData + length);
+      outputFile.WriteObjectAny(&tensorDataVector, "std::vector<int>",tensorName.c_str());
+      } 
+    }
+    outputFile.Write();
+    outputFile.Close();
+  }
+
+  // Write the initialized tensors to a text file
+  if (fUseWeightFile == WeightFileType::Text) {
+    std::ofstream f(filename);
+    if (!f.is_open()) {
+      throw std::runtime_error("Failed to open file for tensor weight data: " + filename);
+    }
+
+    for (const auto& item : fInitializedTensors) {
+      if (item.second.fType == ETensorType::FLOAT) {
+        size_t length = 1;
+        for (auto dim : item.second.fShape) {
+          length *= dim;
+        }
+
+        std::string tensorName = "tensor_" + item.first;
+        f << tensorName << " " << length << "\n";
+
+        const float* data = static_cast<const float*>(item.second.fData.get());
+        for (size_t idx = 0; idx < length - 1; idx++) {
+          f << std::setprecision(std::numeric_limits<float>::max_digits10) << data[idx] << " ";
+        }
+        f << std::setprecision(std::numeric_limits<float>::max_digits10) << data[length - 1];
+        f << "\n";
+      }
+    }
+   f.close();
+  }
 
    void RModel::PrintRequiredInputTensors(){
       std::cout << "Model requires following inputs:\n";
