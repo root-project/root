@@ -464,7 +464,7 @@ void importAnalysis(const JSONNode &rootnode, const JSONNode &analysisNode, cons
 
    mc->SetPdf(*pdf);
 
-   if(!extConstraints.empty())
+   if (!extConstraints.empty())
       mc->SetExternalConstraints(extConstraints);
 
    auto readArgSet = [&](std::string const &name) {
@@ -477,6 +477,20 @@ void importAnalysis(const JSONNode &rootnode, const JSONNode &analysisNode, cons
 
    mc->SetParametersOfInterest(readArgSet("parameters_of_interest"));
    mc->SetObservables(observables);
+   RooArgSet pars;
+   pdf->getParameters(&observables, pars);
+   RooArgSet nps;
+   RooArgSet globs;
+   for (const auto &p : pars) {
+      if (mc->GetParametersOfInterest()->find(*p))
+         continue;
+      if (p->isConstant())
+         globs.add(*p);
+      else
+         nps.add(*p);
+   }
+   mc->SetGlobalObservables(globs);
+   mc->SetNuisanceParameters(nps);
 
    if (mcAuxNode) {
       if (auto found = mcAuxNode->find("combined_data_name")) {
