@@ -47,7 +47,7 @@ public:
 
       Config() {}
 
-      std::function<void(double *)> gradFunc;
+      bool useGradient = true; // Use the gradient provided by the RooAbsReal, if there is one.
 
       double recoverFromNaN = 10.; // RooAbsMinimizerFcn config
       int printEvalErrors = 10;    // RooAbsMinimizerFcn config

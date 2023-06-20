@@ -167,7 +167,7 @@ void RooFuncWrapper::declareAndDiffFunction(std::string funcName, std::string co
    _grad = reinterpret_cast<Grad>(gInterpreter->ProcessLine((wrapperName + ";").c_str()));
 }
 
-void RooFuncWrapper::getGradient(double *out) const
+void RooFuncWrapper::gradient(double *out) const
 {
    updateGradientVarBuffer();
    std::fill(out, out + _params.size(), 0.0);

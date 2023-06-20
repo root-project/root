@@ -133,7 +133,7 @@ TEST(RooFuncWrapper, GaussianNormalizedHardcoded)
    // Get AD based derivative
    // Get number of actual parameters directly from the wrapper as not always will they be the same as paramsMyGauss.
    std::vector<double> dMyGauss(gaussFunc.getNumParams(), 0);
-   gaussFunc.getGradient(dMyGauss.data());
+   gaussFunc.gradient(dMyGauss.data());
 
    // Check if derivatives are equal
    EXPECT_NEAR(getNumDerivative(gauss, x, normSet), dMyGauss[0], 1e-8);
@@ -168,7 +168,7 @@ TEST(RooFuncWrapper, GaussianNormalized)
 
    // Get AD based derivative
    std::vector<double> dMyGauss(gaussFunc.getNumParams(), 0);
-   gaussFunc.getGradient(dMyGauss.data());
+   gaussFunc.gradient(dMyGauss.data());
 
    // Check if derivatives are equal
    for (std::size_t i = 0; i < paramsGauss.size(); ++i) {
@@ -195,7 +195,7 @@ TEST(RooFuncWrapper, Exponential)
 
    // Get AD based derivative
    std::vector<double> dExpo(expoFunc.getNumParams(), 0);
-   expoFunc.getGradient(dExpo.data());
+   expoFunc.gradient(dExpo.data());
 
    // Check if derivatives are equal
    for (std::size_t i = 0; i < params.size(); ++i) {
@@ -291,7 +291,7 @@ TEST_P(FactoryTest, NLLFit)
 
    // Get AD based derivative
    std::vector<double> dMyNLL(nllFunc.getNumParams(), 0);
-   nllFunc.getGradient(dMyNLL.data());
+   nllFunc.gradient(dMyNLL.data());
 
    // Check if derivatives are equal
    for (std::size_t i = 0; i < paramsMyNLL.size(); ++i) {
@@ -313,18 +313,13 @@ TEST_P(FactoryTest, NLLFit)
       return result;
    };
 
-   // Minimize the RooFuncWrapper Implementation
-   auto result = runMinimizer(nllFunc);
+   // Minimize the RooFuncWrapper Implementation without AD
+   RooMinimizer::Config minimizerCfgNoAd;
+   minimizerCfgNoAd.useGradient = false;
+   auto result = runMinimizer(nllFunc, minimizerCfgNoAd);
 
    // Minimize the RooFuncWrapper Implementation with AD
-   RooMinimizer::Config minimizerCfgAd;
-   std::size_t nGradientCalls = 0;
-   minimizerCfgAd.gradFunc = [&](double *out) {
-      nllFunc.getGradient(out);
-      ++nGradientCalls;
-   };
-   auto resultAd = runMinimizer(nllFunc, minimizerCfgAd);
-   EXPECT_GE(nGradientCalls, 1); // make sure the gradient function was actually called
+   auto resultAd = runMinimizer(nllFunc);
 
    // Minimize the reference NLL
    auto resultRef = runMinimizer(*nllRef);
