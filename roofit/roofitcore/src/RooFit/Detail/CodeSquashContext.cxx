@@ -251,6 +251,21 @@ std::string CodeSquashContext::buildArg(RooAbsCollection const &in)
    return savedName;
 }
 
+std::string CodeSquashContext::buildArg(RooSpan<const double> arr)
+{
+   unsigned int n = arr.size();
+   std::string arrName = getTmpVarName();
+   std::string arrDecl = "double " + arrName + "[" + std::to_string(n) + "] = {";
+   for (unsigned int i = 0; i < n; i++) {
+      arrDecl += " " + std::to_string(arr[i]) + ",";
+   }
+   arrDecl.back() = '}';
+   arrDecl += ";\n";
+   addToCodeBody(arrDecl, true);
+
+   return arrName;
+}
+
 bool CodeSquashContext::isScopeIndependent(RooAbsArg const *in) const
 {
    return !in->isReducerNode() && outputSize(in->namePtr()) == 1;

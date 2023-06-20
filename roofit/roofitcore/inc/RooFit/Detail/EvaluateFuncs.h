@@ -97,6 +97,65 @@ inline double poissonEvaluate(double x, double par)
    }
 }
 
+/// Evaluate the 6-th degree polynomial using Horner's method.
+inline double interpolate6thDegreeHornerPolynomial(double const *p, double x)
+{
+   return 1. + x * (p[0] + x * (p[1] + x * (p[2] + x * (p[3] + x * (p[4] + x * p[5])))));
+}
+
+inline double flexibleInterp(unsigned int code, double *polCoeff, double low, double high, double boundary,
+                             double nominal, double paramVal, double total)
+{
+   if (code == 0) {
+      // piece-wise linear
+      if (paramVal > 0)
+         return total + paramVal * (high - nominal);
+      else
+         return total + paramVal * (nominal - low);
+   } else if (code == 1) {
+      // pice-wise log
+      if (paramVal >= 0)
+         return total * std::pow(high / nominal, +paramVal);
+      else
+         return total * std::pow(low / nominal, -paramVal);
+   } else if (code == 2) {
+      // parabolic with linear
+      double a = 0.5 * (high + low) - nominal;
+      double b = 0.5 * (high - low);
+      double c = 0;
+      if (paramVal > 1) {
+         return total + (2 * a + b) * (paramVal - 1) + high - nominal;
+      } else if (paramVal < -1) {
+         return total + -1 * (2 * a - b) * (paramVal + 1) + low - nominal;
+      } else {
+         return total + a * std::pow(paramVal, 2) + b * paramVal + c;
+      }
+   } else if (code == 3) {
+      // parabolic version of log-normal
+      double a = 0.5 * (high + low) - nominal;
+      double b = 0.5 * (high - low);
+      double c = 0;
+      if (paramVal > 1) {
+         return total + (2 * a + b) * (paramVal - 1) + high - nominal;
+      } else if (paramVal < -1) {
+         return total + -1 * (2 * a - b) * (paramVal + 1) + low - nominal;
+      } else {
+         return total + a * std::pow(paramVal, 2) + b * paramVal + c;
+      }
+   } else if (code == 4) {
+      double x = paramVal;
+      if (x >= boundary) {
+         return total * std::pow(high / nominal, +paramVal);
+      } else if (x <= -boundary) {
+         return total * std::pow(low / nominal, -paramVal);
+      }
+
+      return total * interpolate6thDegreeHornerPolynomial(polCoeff, x);
+   }
+
+   return total;
+}
+
 } // namespace EvaluateFuncs
 
 } // namespace Detail

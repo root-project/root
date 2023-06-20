@@ -106,6 +106,7 @@ public:
    std::string makeValidVarName(TString in) const;
 
    std::string buildArg(RooAbsCollection const &x);
+   std::string buildArg(RooSpan<const double> arr);
 
 private:
    bool isScopeIndependent(RooAbsArg const *in) const;
