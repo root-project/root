@@ -147,7 +147,7 @@ RooNonCPEigenDecay::RooNonCPEigenDecay( const char *name, const char *title,
   _tag      ( "tag",      "CP state",           this, tag      ),
   _rhoQ     ( "rhoQ",     "Charge of the rho",  this, rhoQ     ),
   _correctQ ( "correctQ", "correction of rhoQ", this, correctQ ),
-  _wQ      ( "wQ", "mischarge", this, *(new RooRealVar( "wQ", "wQ", 0 )), true, false, true ),
+  _wQ      ( "wQ", "mischarge", this, std::make_unique<RooRealVar>( "wQ", "wQ", 0 ), true, false),
   _genB0Frac     ( 0 ),
   _genRhoPlusFrac( 0 ),
   _type     ( type )
