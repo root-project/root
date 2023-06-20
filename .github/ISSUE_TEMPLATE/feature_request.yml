@@ -2,6 +2,9 @@ name: Feature request
 description: Propose a new feature for ROOT.
 labels: ["new feature"]
 body:
+  - type: markdown
+    attributes:
+      value: Thanks for taking the time to fill out this feature request! Note that you can also prefill this template (from v6.28/06) using: `root -b -e '.gh feature' -q`
   - type: textarea
     id: problem-description
     attributes:
