@@ -53,9 +53,9 @@ constexpr const char *RooNLLVarNew::weightVarNameSumW2;
 namespace {
 
 // Use RooConstVar for dummies such that they don't get included in getParameters().
-RooConstVar *dummyVar(const char *name)
+std::unique_ptr<RooConstVar> dummyVar(const char *name)
 {
-   return new RooConstVar(name, name, 1.0);
+   return std::make_unique<RooConstVar>(name, name, 1.0);
 }
 
 // Helper class to represent a template pdf based on the fit dataset.
@@ -128,8 +128,8 @@ RooNLLVarNew::RooNLLVarNew(const char *name, const char *title, RooAbsPdf &pdf, 
                            bool isExtended, RooFit::OffsetMode offsetMode)
    : RooAbsReal(name, title),
      _pdf{"pdf", "pdf", this, pdf},
-     _weightVar{"weightVar", "weightVar", this, *dummyVar(weightVarName), true, false, true},
-     _weightSquaredVar{weightVarNameSumW2, weightVarNameSumW2, this, *dummyVar("weightSquardVar"), true, false, true},
+     _weightVar{"weightVar", "weightVar", this, dummyVar(weightVarName)},
+     _weightSquaredVar{weightVarNameSumW2, weightVarNameSumW2, this, dummyVar("weightSquardVar")},
      _binnedL{pdf.getAttribute("BinnedLikelihoodActive")}
 {
    RooArgSet obs;
