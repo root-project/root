@@ -258,7 +258,11 @@ namespace Math {
       if (covmat) {
          gsl_matrix_const_view A = gsl_matrix_const_view_array(covmat, dim, dim);
          gsl_matrix_memcpy(&L.matrix, &A.matrix);
+#if ((GSL_MAJOR_VERSION >= 2) && (GSL_MINOR_VERSION > 2))
          gsl_linalg_cholesky_decomp1(&L.matrix);
+#else
+         gsl_linalg_cholesky_decomp(&L.matrix);
+#endif
       }
       // if covMat is not provide we use directly L
       gsl_ran_multivariate_gaussian(fRng->Rng(), &mu.vector, &L.matrix, &x.vector);
