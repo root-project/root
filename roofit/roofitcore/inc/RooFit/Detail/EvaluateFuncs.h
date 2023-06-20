@@ -103,8 +103,8 @@ inline double interpolate6thDegreeHornerPolynomial(double const *p, double x)
    return 1. + x * (p[0] + x * (p[1] + x * (p[2] + x * (p[3] + x * (p[4] + x * p[5])))));
 }
 
-inline double flexibleInterp(unsigned int code, double *polCoeff, double low, double high, double boundary,
-                             double nominal, double paramVal, double total)
+inline double flexibleInterp(unsigned int code, double low, double high, double boundary, double nominal,
+                             double paramVal, double total, double *polCoeff)
 {
    if (code == 0) {
       // piece-wise linear
@@ -154,6 +154,68 @@ inline double flexibleInterp(unsigned int code, double *polCoeff, double low, do
    }
 
    return total;
+}
+
+inline double
+piecewiseInterpolation(unsigned int code, double low, double high, double nominal, double param, double sum)
+{
+   if (code == 4) {
+
+      // WVE ****************************************************************
+      // WVE *** THIS CODE IS CRITICAL TO HISTFACTORY FIT CPU PERFORMANCE ***
+      // WVE *** Do not modify unless you know what you are doing...      ***
+      // WVE ****************************************************************
+
+      double x = param;
+      if (x > 1.0) {
+         return sum + x * (high - nominal);
+      } else if (x < -1.0) {
+         return sum + x * (nominal - low);
+      } else {
+         double eps_plus = high - nominal;
+         double eps_minus = nominal - low;
+         double S = 0.5 * (eps_plus + eps_minus);
+         double A = 0.0625 * (eps_plus - eps_minus);
+
+         // fcns+der+2nd_der are eq at bd
+         double val = nominal + x * (S + x * A * (15 + x * x * (-10 + x * x * 3)));
+
+         if (val < 0)
+            val = 0;
+         return sum + val - nominal;
+      }
+      // WVE ****************************************************************
+   } else {
+
+      double x0 = 1.0; // boundary;
+      double x = param;
+
+      if (x > x0 || x < -x0) {
+         if (x > 0)
+            return sum + x * (high - nominal);
+         else
+            return sum + x * (nominal - low);
+      } else if (nominal != 0) {
+         double eps_plus = high - nominal;
+         double eps_minus = nominal - low;
+         double S = (eps_plus + eps_minus) / 2;
+         double A = (eps_plus - eps_minus) / 2;
+
+         // fcns+der are eq at bd
+         double a = S;
+         double b = 3 * A / (2 * x0);
+         // double c = 0;
+         double d = -A / (2 * x0 * x0 * x0);
+
+         double val = nominal + a * x + b * std::pow(x, 2) + 0 /*c*pow(x, 3)*/ + d * std::pow(x, 4);
+         if (val < 0)
+            val = 0;
+
+         return sum + val - nominal;
+      }
+   }
+
+   return sum;
 }
 
 } // namespace EvaluateFuncs
