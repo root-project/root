@@ -86,6 +86,30 @@ class TestClasNumba:
                 tuple(x == y for x, y in numba_calc_pt_vec(vec_lv)))
         assert self.compare(calc_pt_vec, numba_calc_pt_vec, 1, vec_lv)
 
+    def test03_inheritance(self):
+        """This test shows one of the limitations of the current support"""
+
+        from numba.core.errors import TypingError
+
+        ROOT.gInterpreter.Declare("""
+        class Base {
+          public:
+            int get_one() {
+                return 1;
+            }
+        };
+
+        class Derived : public Base {};
+        """)
+
+        @numba.njit
+        def call_get_one(obj):
+            return obj.get_one()
+
+        assert call_get_one(ROOT.Base()) == 1
+        with pytest.raises(TypingError):
+            call_get_one(ROOT.Derived())
+
 
 if __name__ == "__main__":
     # The call to sys.exit is needed otherwise CTest would just ignore the
