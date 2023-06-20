@@ -22,9 +22,8 @@ public:
       : _pdf("numerator", "numerator", this, pdf),
         _normIntegral(
            "denominator", "denominator", this,
-           *std::unique_ptr<RooAbsReal>{pdf.createIntegral(normSet, *pdf.getIntegratorConfig(), pdf.normRange())}
-               .release(),
-           true, false, true),
+           std::unique_ptr<RooAbsReal>{pdf.createIntegral(normSet, *pdf.getIntegratorConfig(), pdf.normRange())},
+           true, false),
         _normSet{normSet}
    {
       auto name = std::string(pdf.GetName()) + "_over_" + _normIntegral->GetName();
