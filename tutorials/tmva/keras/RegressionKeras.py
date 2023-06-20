@@ -22,7 +22,7 @@ from tensorflow.keras.optimizers import SGD
 TMVA.Tools.Instance()
 TMVA.PyMethodBase.PyInitialize()
 
-output = TFile.Open('TMVA.root', 'RECREATE')
+output = TFile.Open('TMVA_Regression_Keras.root', 'RECREATE')
 factory = TMVA.Factory('TMVARegression', output,
         '!V:!Silent:Color:DrawProgressBar:Transformations=D,G:AnalysisType=Regression')
 
