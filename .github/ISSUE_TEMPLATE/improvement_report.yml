@@ -33,7 +33,7 @@ body:
     attributes:
       label: ROOT version
       description: What version of ROOT are you running?
-      placeholder: Unix `root -b -q | xclip -sel clip`, Windows: `root -b -q | clip.exe`
+      placeholder: Unix `root -b -q | xclip -sel clip`, Windows `root -b -q | clip.exe`
     validations:
       required: true
   - type: input
