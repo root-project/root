@@ -44,7 +44,7 @@ namespace ROOT {
 namespace Internal {
 
 // To honor cgroup quotas if set: see https://github.com/oneapi-src/oneTBB/issues/190
-int LogicalCPUBandwithControl()
+int LogicalCPUBandwidthControl()
 {
 #ifdef R__LINUX
    // Check for CFS bandwith control
@@ -77,7 +77,7 @@ RTaskArenaWrapper::RTaskArenaWrapper(unsigned maxConcurrency) : fTBBArena(new RO
 {
    const unsigned tbbDefaultNumberThreads = fTBBArena->max_concurrency(); // not initialized, automatic state
    maxConcurrency = maxConcurrency > 0 ? std::min(maxConcurrency, tbbDefaultNumberThreads) : tbbDefaultNumberThreads;
-   const unsigned bcCpus = LogicalCPUBandwithControl();
+   const unsigned bcCpus = LogicalCPUBandwidthControl();
    if (maxConcurrency > bcCpus) {
       Warning("RTaskArenaWrapper", "CPU Bandwith Control Active. Proceeding with %d threads accordingly", bcCpus);
       maxConcurrency = bcCpus;
