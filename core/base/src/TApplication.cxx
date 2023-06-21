@@ -1054,9 +1054,9 @@ void TApplication::OpenGitHubIssue(const TString &type)
     // https://docs.github.com/en/issues/tracking-your-work-with-issues/creating-an-issue#creating-an-issue-from-a-url-query
 
     if (type == "bug") {
-       OpenInBrowser("\"https://github.com/root-project/root/issues/new?labels=bug&template=bug_report.yml&root-version="+GetSetup()+"\"");
+      OpenInBrowser("\"https://github.com/root-project/root/issues/new?labels=bug&template=bug_report.yml&root-version="+FormatHttpUrl(GetSetup())+"\"");
     } else if (type == "improvement") {
-       OpenInBrowser("\"https://github.com/root-project/root/issues/new?labels=improvement&template=improvement_report.yml&root-version="+GetSetup()+"\"");
+      OpenInBrowser("\"https://github.com/root-project/root/issues/new?labels=improvement&template=improvement_report.yml&root-version="+FormatHttpUrl(GetSetup())+"\"");
     } else if (type == "feature") {
     OpenInBrowser("\"https://github.com/root-project/root/issues/new?labels=new+feature&template=feature_request.yml\"");
 } else {
