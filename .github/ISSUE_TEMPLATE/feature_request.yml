@@ -4,32 +4,24 @@ labels: ["new feature"]
 body:
   - type: markdown
     attributes:
-      value: Thanks for taking the time to fill out this feature request! Note that you can also prefill this template (from v6.28/06) using `root -b -e '.gh feature' -q`
+      value: Thank you for taking the time to fill out this feature request! Note that since v6.28/06 you can also prefill this template using `root -q -e '.gh feature'`
   - type: textarea
-    id: problem-description
+    id: feature-description
     attributes:
-      label: Is your feature request related to a problem? Please describe.
-      description: A clear and concise description of what the problem is. E.g "I always have to [...] when I want to [...]".
-    validations:
-      required: false
-  - type: textarea
-    id: expected-behaviour
-    attributes:
-      label: Describe the solution you'd like
-      description: A clear and concise description of what you want to happen.
+      label: Feature description
+      description: What problem does the feature solve? How does the solution look like?
     validations:
       required: true
   - type: textarea
     id: alternatives
     attributes:
-      label: Describe alternatives you've considered
-      description: Can you think of alternative solutions or features?
+      label: Alternatives considered
+      description: Can you think of any alternative solutions to the proposed feature?
     validations:
       required: false
   - type: textarea
     id: additional-context
     attributes:
       label: Additional context
-      description: Add any other context or screenshots about the feature requested here.
     validations:
       required: false
