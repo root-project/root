@@ -15,6 +15,7 @@
 #define RooFit_Detail_EvaluateFuncs_h
 
 #include <TMath.h>
+#include <Math/PdfFuncMathCore.h>
 
 #include <cmath>
 
@@ -216,6 +217,15 @@ piecewiseInterpolation(unsigned int code, double low, double high, double nomina
    }
 
    return sum;
+}
+
+inline double logNormalEvaluate(double x, double k, double m0)
+{
+   double ln_k = TMath::Abs(TMath::Log(k));
+   double ln_m0 = TMath::Log(m0);
+
+   double ret = ROOT::Math::lognormal_pdf(x, ln_m0, ln_k);
+   return ret;
 }
 
 } // namespace EvaluateFuncs

@@ -234,6 +234,17 @@ poissonIntegral(int code, double mu, double x, double integrandMin, double integ
    return ROOT::Math::gamma_cdf(integrandMax, ix, 1.0) - ROOT::Math::gamma_cdf(integrandMin, ix, 1.0);
 }
 
+inline double logNormalIntegral(double xMin, double xMax, double m0, double k)
+{
+   double root2 = std::sqrt(2.);
+
+   double ln_k = TMath::Abs(TMath::Log(k));
+   double ret =
+      0.5 * (TMath::Erf(TMath::Log(xMax / m0) / (root2 * ln_k)) - TMath::Erf(TMath::Log(xMin / m0) / (root2 * ln_k)));
+
+   return ret;
+}
+
 } // namespace AnalyticalIntegrals
 
 } // namespace Detail
