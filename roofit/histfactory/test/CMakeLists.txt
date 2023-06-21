@@ -10,4 +10,8 @@ ROOT_ADD_GTEST(testHistFactory testHistFactory.cxx
   LIBRARIES RooFitCommon RooFitCore RooFit RooStats HistFactory
   COPY_TO_BUILDDIR ${CMAKE_CURRENT_SOURCE_DIR}/ref_6.16_example_UsingC_channel1_meas_model.root ${CMAKE_CURRENT_SOURCE_DIR}/ref_6.16_example_UsingC_combined_meas_model.root)
 
+if(clad)
+    target_compile_definitions(testHistFactory PUBLIC TEST_CODEGEN_AD)
+endif(clad)
+
 ROOT_ADD_GTEST(testParamHistFunc testParamHistFunc.cxx LIBRARIES RooFitCore HistFactory)
