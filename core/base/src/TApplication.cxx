@@ -643,8 +643,10 @@ void TApplication::OpenInBrowser(const TString &url)
    } else {
       // Else the user will have a warning and the URL in the terminal.
       Warning("OpenInBrowser", "The $DISPLAY is not set! Please open (e.g. Ctrl-click) %s\n", url.Data());
+      return;
    }
 #endif
+   Info("OpenInBrowser", "A new tab should have opened in your browser.");
 }
 
 namespace {
@@ -1067,8 +1069,8 @@ void TApplication::OpenGitHubIssue(const TString &type)
          "\"https://github.com/root-project/root/issues/new?labels=new+feature&template=feature_request.yml\"");
    } else {
       Warning("OpenGitHubIssue",
-              "cannot find \"%s\" as type for a GitHub issue\n"
-              "Available types are 'bug', 'feature' or 'improvement'.",
+              "Cannot find GitHub issue type \"%s\".\n"
+              "Available types are 'bug', 'feature' and 'improvement'.",
               type.Data());
    }
 }
