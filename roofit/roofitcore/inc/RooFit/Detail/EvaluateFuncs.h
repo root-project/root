@@ -234,6 +234,28 @@ flexibleInterp(unsigned int code, double low, double high, double boundary, doub
    return 0.0;
 }
 
+inline double flexibleInterpEvaluate(unsigned int code, double *params, unsigned int n, double *low, double *high,
+                                     double boundary, double nominal)
+{
+   double total = nominal;
+   for (std::size_t i = 0; i < n; ++i) {
+      total += flexibleInterp(code, low[i], high[i], boundary, nominal, params[i], total);
+   }
+
+   return total <= 0 ? TMath::Limits<double>::Min() : total;
+}
+
+inline double piecewiseInterpolationEvaluate(unsigned int code, double *low, double *high, double nominal,
+                                             double *params, unsigned int n)
+{
+   double total = nominal;
+   for (std::size_t i = 0; i < n; ++i) {
+      total += flexibleInterp(code, low[i], high[i], 1.0, nominal, params[i], total);
+   }
+
+   return total;
+}
+
 inline double logNormalEvaluate(double x, double k, double m0)
 {
    return ROOT::Math::lognormal_pdf(x, std::log(m0), std::abs(std::log(k)));
