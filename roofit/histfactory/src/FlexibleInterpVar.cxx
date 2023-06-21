@@ -222,27 +222,26 @@ void FlexibleInterpVar::translate(RooFit::Detail::CodeSquashContext &ctx) const
 {
    unsigned int n = _interpCode.size();
 
-   std::string resName = "total_" + ctx.getTmpVarName();
-   ctx.addToCodeBody(this, "double " + resName + " = " + std::to_string(_nominal) + ";\n");
-   std::string code;
-   for (std::size_t i = 0; i < n; ++i) {
-
-      int interpCode = _interpCode[i];
-      if (interpCode < 0 || interpCode > 4) {
-         coutE(InputArguments) << "FlexibleInterpVar::evaluate ERROR:  param " << i
-                               << " with unknown interpolation code" << std::endl;
-      }
-      // To get consistent codes with the PiecewiseInterpolation
-      if (interpCode == 4) {
-         interpCode = 5;
-      }
-      code += resName + " += " +
-              ctx.buildCall("RooFit::Detail::EvaluateFuncs::flexibleInterp", interpCode, _low[i], _high[i],
-                            _interpBoundary, _nominal, _paramList[i], resName) +
-              ";\n";
+   int interpCode = _interpCode[0];
+   if (interpCode < 0 || interpCode > 4) {
+      coutE(InputArguments) << "FlexibleInterpVar::evaluate ERROR:  param " << 0
+                            << " with unknown interpolation code" << std::endl;
    }
-   code += resName + " = " + resName + " <= 0 ? TMath::Limits<double>::Min() : " + resName + ";\n";
-   ctx.addToCodeBody(this, code);
+   // To get consistent codes with the PiecewiseInterpolation
+   if (interpCode == 4) {
+      interpCode = 5;
+   }
+
+   for (unsigned int i = 1; i < n; i++) {
+      if (_interpCode[i] != _interpCode[0]) {
+         coutE(InputArguments) << "FlexibleInterpVar::evaluate ERROR:  Code Squashing AD does not yet support having "
+                                  "different interpolation codes for the same class object "
+                               << std::endl;
+      }
+   }
+
+   std::string const &resName = ctx.buildCall("RooFit::Detail::EvaluateFuncs::flexibleInterpEvaluate", interpCode,
+                                              _paramList, n, _low, _high, _interpBoundary, _nominal);
    ctx.addResult(this, resName);
 }
 
