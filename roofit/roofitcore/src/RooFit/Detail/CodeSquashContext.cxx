@@ -180,9 +180,9 @@ void CodeSquashContext::endLoop(LoopScope const &scope)
 }
 
 /// @brief Get a unique variable name to be used in the generated code.
-std::string CodeSquashContext::getTmpVarName()
+std::string CodeSquashContext::getTmpVarName() const
 {
-   return "tmpVar" + std::to_string(_tmpVarIdx++);
+   return "t" + std::to_string(_tmpVarIdx++);
 }
 
 /// @brief A function to save an expression that includes/depends on the result of the input node.
@@ -190,7 +190,8 @@ std::string CodeSquashContext::getTmpVarName()
 /// @param valueToSave The actual string value to save as a temporary.
 void CodeSquashContext::addResult(RooAbsArg const *in, std::string const &valueToSave)
 {
-   std::string savedName = RooFit::Detail::makeValidVarName(in->GetName());
+   //std::string savedName = RooFit::Detail::makeValidVarName(in->GetName());
+   std::string savedName = getTmpVarName();
 
    // Only save values if they contain operations.
    bool hasOperations = valueToSave.find_first_of(":-+/*") != std::string::npos;
@@ -234,21 +235,6 @@ std::string CodeSquashContext::buildArg(RooAbsCollection const &in)
 
    listNames.insert({in.uniqueId().value(), savedName});
    return savedName;
-}
-
-std::string CodeSquashContext::buildArg(std::span<const double> arr)
-{
-   unsigned int n = arr.size();
-   std::string arrName = getTmpVarName();
-   std::string arrDecl = "double " + arrName + "[" + std::to_string(n) + "] = {";
-   for (unsigned int i = 0; i < n; i++) {
-      arrDecl += " " + std::to_string(arr[i]) + ",";
-   }
-   arrDecl.back() = '}';
-   arrDecl += ";\n";
-   addToCodeBody(arrDecl, true);
-
-   return arrName;
 }
 
 bool CodeSquashContext::isScopeIndependent(RooAbsArg const *in) const
