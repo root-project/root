@@ -78,6 +78,11 @@ double RooLognormal::evaluate() const
   return ret ;
 }
 
+void RooLognormal::translate(RooFit::Detail::CodeSquashContext &ctx) const
+{
+   ctx.addResult(this, ctx.buildCall("RooFit::Detail::EvaluateFuncs::logNormalEvaluate", x, k, m0));
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute multiple values of Lognormal distribution.
 void RooLognormal::computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const
@@ -107,6 +112,15 @@ double RooLognormal::analyticalIntegral(Int_t code, const char* rangeName) const
   double ret = 0.5*( RooMath::erf( TMath::Log(x.max(rangeName)/m0)/(root2*ln_k) ) - RooMath::erf( TMath::Log(x.min(rangeName)/m0)/(root2*ln_k) ) ) ;
 
   return ret ;
+}
+
+std::string
+RooLognormal::buildCallToAnalyticIntegral(int code, const char *rangeName, RooFit::Detail::CodeSquashContext &ctx) const
+{
+   R__ASSERT(code == 1);
+
+   return ctx.buildCall("RooFit::Detail::AnalyticalIntegrals::logNormalIntegral", x.min(rangeName), x.max(rangeName),
+                        m0, k);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
