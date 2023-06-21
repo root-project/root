@@ -323,7 +323,7 @@ using `TH1::GetOption`:
 | "FB"         | With LEGO or SURFACE, suppress the Front-Box.|
 | "BB"         | With LEGO or SURFACE, suppress the Back-Box.|
 | "A"          | With LEGO or SURFACE, suppress the axis.|
-| "SCAT"       | Draw a scatter-plot.|
+| "SCAT"       | Draw a scatter-plot (deprecated option).|
 | "[cutg]"     | Draw only the sub-range selected by the TCutG named "cutg".|
 
 
@@ -835,6 +835,10 @@ the option `SAME`. They allow to plot the histograms next to each other.
 
 \anchor HP11
 ### The SCATter plot option
+
+\attention
+Use of option `SCAT` is now deprecated. It use to be the default drawing option for 2D and
+3D histograms. The new default option is now `COL` (heat-map).
 
 
 For each cell (i,j) a number of points proportional to the cell content is
@@ -2330,7 +2334,7 @@ The following options are supported:
 
 | Option   | Description                                                       |
 |----------|-------------------------------------------------------------------|
-| "SCAT"   | Draw a scatter plot.|
+| "SCAT"   | Draw a scatter plot (deprecated).|
 | "COL"    | Draw a color plot. All the bins are painted even the empty bins (default).|
 | "COLZ"   | Same as "COL". In addition the color palette is also drawn.|
 | "0"      | When used with any COL options, the empty bins are not drawn.|
@@ -2574,7 +2578,7 @@ End_Macro
 
 | Option   | Description                                                       |
 |----------|-------------------------------------------------------------------|
-| "SCAT"   | Draw a scatter plot.|
+| "SCAT"   | Draw a scatter plot (deprecated).|
 | "ISO"    | Draw a Gouraud shaded 3d iso surface through a 3d histogram. It paints one surface at the value computed as follow: `SumOfWeights/(NbinsX*NbinsY*NbinsZ)`|
 | "BOX"    | Draw a for each cell with volume proportional to the content's absolute value. An hidden line removal algorithm is used|
 | "BOX1"   | Same as BOX but an hidden surface removal algorithm is used|
@@ -4128,6 +4132,7 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
 
    l = strstr(chopt,"SCAT");
    if (l) {
+      Warning("MakeChopt","option SCAT is deprecated.");
       Hoption.Scat = 1;
       memcpy(l,"   ",4);
       Hoption.Color = 0;
