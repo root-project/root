@@ -751,6 +751,7 @@ static TString FormatHttpUrl(TString text)
    text.ReplaceAll("\"","%22");
    text.ReplaceAll("`","%60");
    text.ReplaceAll("+","%2B");
+   text.ReplaceAll("/","%2F");
    return text;
 }
 } // namespace
