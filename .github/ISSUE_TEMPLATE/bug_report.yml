@@ -4,7 +4,7 @@ labels: ["bug"]
 body:
   - type: markdown
     attributes:
-      value: Thanks for taking the time to fill out this bug report! Note that you can also prefill this template (from v6.28/06) using: `root -b -e '.gh bug' -q`
+      value: Thanks for taking the time to fill out this bug report! Note that you can also prefill this template (from v6.28/06) using `root -b -e '.gh bug' -q`
   - type: checkboxes
     id: check-duplicates
     attributes:
