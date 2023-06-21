@@ -232,7 +232,10 @@ void RooHistPdf::rooHistTranslateImpl(RooAbsArg const *klass, RooFit::Detail::Co
 
    std::string const &idxName = dataHist->calculateTreeIndexForCodeSquash(klass, ctx, obs);
    std::string const &weightName = dataHist->declWeightArrayForCodeSquash(klass, ctx, correctForBinSize);
-   ctx.addResult(klass, weightName + "[" + idxName + "]");
+   std::string res = weightName;
+   if (weightName[0] == '_')
+      res += "[" + idxName + "]";
+   ctx.addResult(klass, res);
 }
 
 void RooHistPdf::translate(RooFit::Detail::CodeSquashContext &ctx) const

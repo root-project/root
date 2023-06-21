@@ -326,13 +326,12 @@ void RooRealSumPdf::translateImpl(RooFit::Detail::CodeSquashContext &ctx, RooAbs
       std::string const &funcName = ctx.buildArg(funcList);
       std::string const &coeffName = ctx.buildArg(coefList);
       std::string const &coeffSize = std::to_string(coefList.size());
-      std::string const &className = klass->GetName();
 
       sum = ctx.getTmpVarName();
       lastCoeff = ctx.getTmpVarName();
       ctx.addToCodeBody(klass, "double " + sum + " = 0, " + lastCoeff + "= 0;\n");
 
-      std::string iterator = "i_" + className;
+      std::string iterator = "i_" + ctx.getTmpVarName();
       std::string subscriptExpr = "[" + iterator + "]";
 
       std::string code = "for(int " + iterator + " = 0; " + iterator + " < " + coeffSize + "; " + iterator + "++) {\n" +

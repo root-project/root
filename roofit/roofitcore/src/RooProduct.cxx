@@ -22,6 +22,7 @@
 Represents the product of a given set of RooAbsReal objects.
 **/
 
+#include "RooConstVar.h"
 #include "RooProduct.h"
 
 #include "RooNameReg.h"
@@ -492,6 +493,9 @@ void RooProduct::translate(RooFit::Detail::CodeSquashContext &ctx) const
    // Build a (node1 * node2 * node3 * ...) like expression.
    result = '(';
    for (RooAbsArg* item : _compRSet) {
+      RooConstVar *constItem = dynamic_cast<RooConstVar *>(item);
+      if (constItem && constItem->getValV(nullptr) == 1)
+         continue;
       result += ctx.getResult(*item) + "*";
    }
    result.back() = ')';
