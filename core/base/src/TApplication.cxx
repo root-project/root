@@ -985,8 +985,9 @@ TString TApplication::GetSetup()
    TString setup = "";
    for (auto& line : lines) {
       setup.Append(line);
-      setup.Append("\n");
+      setup.Append('\n');
    }
+   setup.Chop(); // trim final `\n`
    return setup;
 }
 
