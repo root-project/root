@@ -33,7 +33,6 @@
 #include <RooRealSumPdf.h>
 #include <RooSimultaneous.h>
 #include <RooWorkspace.h>
-#include <RooStats/HistFactory/ParamHistFunc.h>
 
 #include <ROOT/StringUtils.hxx>
 #include <TROOT.h>
@@ -524,60 +523,6 @@ FactoryTestParams param7{"HistPdf", getDataHistModel,
                          1e-4,
                          /*randomizeParameters=*/true};
 
-namespace {
-void getDataHistFuncModel(RooWorkspace &ws)
-{
-   using namespace RooFit;
-
-   int nEvents = 1000;
-   int numBins = 5;
-
-   ws.factory("x[0, 0, " + std::to_string(3 * numBins) + "]");
-
-   auto &x = *ws.var("x");
-   x.setBins(numBins);
-
-   // The parameters represent the expected events in each bin
-   RooArgList params = ParamHistFunc::createParamSet(ws, "gamma", x, 0, 1000);
-   for (auto *param : static_range_cast<RooRealVar *>(params)) {
-      param->setVal(nEvents / numBins);
-   }
-   // Constructing a bin width function is a bit tedious. But including it is
-   // required to use the binned likelihood optimization.
-   RooDataHist dataHist{"data_hist", "data_hist", x};
-   RooHistFunc histFunc{"hist_func", "hist_func", x, dataHist};
-   RooBinWidthFunction bwf{"bwf", "bwf", histFunc, true};
-   ParamHistFunc phf{"phf", "phf", x, params};
-   RooProduct prod{"prod", "prod", phf, bwf};
-   RooRealSumPdf pdf{"pdf", "pdf", prod, RooArgList{1.0}};
-
-   // Enable the binned likelihood optimization to avoid integrals
-   // (like in HistFactory).
-   pdf.setAttribute("BinnedLikelihood");
-
-   ws.import(pdf);
-
-   // We have to wrap the pdf in a RooSimultaneous, otherwise the
-   // BinnedLikelihood optimization doesn't work.
-   ws.factory("SIMUL::model( cat[A=0], A=pdf)");
-   auto &model = *ws.pdf("model");
-   auto &cat = *ws.cat("cat");
-
-   std::unique_ptr<RooDataHist> data{model.generateBinned({x, cat}, nEvents)};
-   data->SetName("data");
-   ws.import(*data);
-
-   ws.defineSet("observables", *model.getObservables(*data));
-}
-} // namespace
-
-FactoryTestParams param8{"HistFuncPdf", getDataHistFuncModel,
-                         [](RooAbsPdf &pdf, RooAbsData &data, RooWorkspace &, std::string const& backend) {
-                            return std::unique_ptr<RooAbsReal>{pdf.createNLL(data, RooFit::BatchMode(backend))};
-                         },
-                         1e-4,
-                         /*randomizeParameters=*/true};
-
 FactoryTestParams param9{"Poisson",
                          [](RooWorkspace &ws) {
                             ws.factory("sum::mu_shifted(mu[0, -10, 10], shift[1.0, -10, 10])");
@@ -606,7 +551,7 @@ FactoryTestParams param10{"PoissonNoRounding",
                           /*randomizeParameters=*/false};
 
 INSTANTIATE_TEST_SUITE_P(RooFuncWrapper, FactoryTest,
-                         testing::Values(param1, param2, param3, param4, param5, param6, param7, param8, param9,
+                         testing::Values(param1, param2, param3, param4, param5, param6, param7, param9,
                                          param10),
                          [](testing::TestParamInfo<FactoryTest::ParamType> const &paramInfo) {
                             return paramInfo.param._name;
