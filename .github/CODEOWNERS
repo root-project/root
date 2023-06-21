@@ -21,7 +21,7 @@
 /html/ @Axel-Naumann
 /icons/ @bellenot
 /interpreter/ @Axel-Naumann
-/interpreter/llvm/ @vgvassilev
+/interpreter/llvm-project/ @vgvassilev
 interpreter/cling/tools/packaging @vgvassilev
 /io/ @pcanal
 /io/xml/ @pcanal @linev
