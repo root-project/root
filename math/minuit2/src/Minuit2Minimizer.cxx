@@ -550,7 +550,10 @@ bool Minuit2Minimizer::Minimize()
       fMinimum = new ROOT::Minuit2::FunctionMinimum(min);
    }
 
-   // check if Hesse needs to be run
+   // check if Hesse needs to be run. We do it when is requested (IsValidError() == true)
+   // (IsValidError() means the flag to get correct error from the Minimizer is set (Minimizer::SetValidError())
+   // AND when we have a valid minimum,
+   // AND  when the the current covariance matrix is estimated using the iterative approximation (Dcovar != 0 , i.e. Hesse has not computed  before)
    if (fMinimum->IsValid() && IsValidError() && fMinimum->State().Error().Dcovar() != 0) {
       // run Hesse (Hesse will add results in the last state of fMinimum
       ROOT::Minuit2::MnHesse hesse(strategy);
