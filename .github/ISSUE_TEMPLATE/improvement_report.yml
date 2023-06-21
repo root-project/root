@@ -4,49 +4,31 @@ labels: ["improvement"]
 body:
   - type: markdown
     attributes:
-      value: Thanks for taking the time to fill out this improvement suggestion! Note that you can also prefill this template (from v6.28/06) using `root -b -e '.gh improvement' -q`
+      value: Thank you for taking the time to fill out this improvement suggestion! Note that since v6.28/06 you can also prefill this template using `root -q -e '.gh improvement'`
   - type: textarea
     id: improvement-description
     attributes:
-      label: Explain what you would like to see improved
-    validations:
-      required: true
-  - type: textarea
-    id: how-to-improve
-    attributes:
-      label: Share how it could be improved
-    validations:
-      required: false
-  - type: textarea
-    id: to-reproduce
-    attributes:
-      label: How to reproduce?
-      description: |
-        Describe the steps to reproduce the behavior:
-        1. Your code that triggers the issue: at least a part; ideally something we can run ourselves.
-        2. Don't forget to attach the required input files!
-        3. How to run your code and / or build it, e.g. `root myMacro.C`, ...
+      label: Explain what you would like to see improved and how.
     validations:
       required: true
   - type: textarea
     id: root-version
     attributes:
       label: ROOT version
-      description: What version of ROOT are you running?
-      placeholder: Unix `root -b -q | xclip -sel clip`, Windows `root -b -q | clip.exe`
+      description: On Linux/MacOS, `root -b -q | xclip -sel clip`. On Windows, `root -b -q | clip.exe`
     validations:
       required: true
   - type: input
     id: root-install-how
     attributes:
-      label: How did you install ROOT?
-      placeholder: package manager, website download, conda, custom build...
+      label: Installation method
+      placeholder: Package manager (which?), pre-built binary, build from source, ...
     validations:
       required: true
   - type: input
     id: operating-system
     attributes:
-      label: Which operating system are you using?
+      label: Operating system
       placeholder: Windows, MacOS, Linux (which distribution?)
     validations:
       required: true
@@ -54,6 +36,5 @@ body:
     id: additional-context
     attributes:
       label: Additional context
-      description: Add any other context about the problem here.
     validations:
       required: false
