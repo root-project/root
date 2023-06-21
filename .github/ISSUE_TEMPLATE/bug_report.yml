@@ -4,7 +4,7 @@ labels: ["bug"]
 body:
   - type: markdown
     attributes:
-      value: Thanks for taking the time to fill out this bug report! Note that you can also prefill this template (from v6.28/06) using: `root -b -e '.gh bug' -q`
+      value: Thanks for taking the time to fill out this bug report! Note that you can also prefill this template (from v6.28/06) using `root -b -e '.gh bug' -q`
   - type: checkboxes
     id: check-duplicates
     attributes:
@@ -44,7 +44,7 @@ body:
     attributes:
       label: ROOT version
       description: What version of ROOT are you running?
-      placeholder: Unix `root -b -q | xclip -sel clip`, Windows: `root -b -q | clip.exe`
+      placeholder: Unix `root -b -q | xclip -sel clip`, Windows `root -b -q | clip.exe`
     validations:
       required: true
   - type: input

@@ -4,7 +4,7 @@ labels: ["improvement"]
 body:
   - type: markdown
     attributes:
-      value: Thanks for taking the time to fill out this improvement suggestion! Note that you can also prefill this template (from v6.28/06) using: `root -b -e '.gh improvement' -q`
+      value: Thanks for taking the time to fill out this improvement suggestion! Note that you can also prefill this template (from v6.28/06) using `root -b -e '.gh improvement' -q`
   - type: textarea
     id: improvement-description
     attributes:
@@ -33,7 +33,7 @@ body:
     attributes:
       label: ROOT version
       description: What version of ROOT are you running?
-      placeholder: Unix `root -b -q | xclip -sel clip`, Windows: `root -b -q | clip.exe`
+      placeholder: Unix `root -b -q | xclip -sel clip`, Windows `root -b -q | clip.exe`
     validations:
       required: true
   - type: input
