@@ -35,49 +35,6 @@ ClassImp(RooStats::HistFactory::FlexibleInterpVar);
 using namespace RooStats;
 using namespace HistFactory;
 
-namespace {
-
-void fillPolCoeff(double *polCoeff, double const *low, double const *high, double boundary, unsigned int n,
-                  double nominal)
-{
-   // code for polynomial interpolation used when interpCode=4
-   double x0 = boundary;
-
-   // cache the polynomial coefficient values
-   // which do not depend on x but on the boundaries values
-   for (unsigned int j = 0; j < n; j++) {
-      // location of the 6 coefficient for the j-th variable
-      unsigned int offset = j * 6;
-
-      // GHL: Swagato's suggestions
-      double pow_up = std::pow(high[j] / nominal, x0);
-      double pow_down = std::pow(low[j] / nominal, x0);
-      double logHi = std::log(high[j]);
-      double logLo = std::log(low[j]);
-      double pow_up_log = high[j] <= 0.0 ? 0.0 : pow_up * logHi;
-      double pow_down_log = low[j] <= 0.0 ? 0.0 : -pow_down * logLo;
-      double pow_up_log2 = high[j] <= 0.0 ? 0.0 : pow_up_log * logHi;
-      double pow_down_log2 = low[j] <= 0.0 ? 0.0 : -pow_down_log * logLo;
-
-      double S0 = (pow_up + pow_down) / 2;
-      double A0 = (pow_up - pow_down) / 2;
-      double S1 = (pow_up_log + pow_down_log) / 2;
-      double A1 = (pow_up_log - pow_down_log) / 2;
-      double S2 = (pow_up_log2 + pow_down_log2) / 2;
-      double A2 = (pow_up_log2 - pow_down_log2) / 2;
-
-      // cache  coefficient of the polynomial
-      polCoeff[0 + offset] = 1. / (8 * x0) * (15 * A0 - 7 * x0 * S1 + x0 * x0 * A2);
-      polCoeff[1 + offset] = 1. / (8 * x0 * x0) * (-24 + 24 * S0 - 9 * x0 * A1 + x0 * x0 * S2);
-      polCoeff[2 + offset] = 1. / (4 * std::pow(x0, 3)) * (-5 * A0 + 5 * x0 * S1 - x0 * x0 * A2);
-      polCoeff[3 + offset] = 1. / (4 * std::pow(x0, 4)) * (12 - 12 * S0 + 7 * x0 * A1 - x0 * x0 * S2);
-      polCoeff[4 + offset] = 1. / (8 * std::pow(x0, 5)) * (+3 * A0 - 3 * x0 * S1 + x0 * x0 * A2);
-      polCoeff[5 + offset] = 1. / (8 * std::pow(x0, 6)) * (-8 + 8 * S0 - 5 * x0 * A1 + x0 * x0 * S2);
-   }
-}
-
-} // namespace
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
 
@@ -85,7 +42,6 @@ FlexibleInterpVar::FlexibleInterpVar()
 {
   _nominal = 0;
   _interpBoundary=1.;
-  _logInit = false ;
   TRACE_CREATE
 }
 
@@ -99,8 +55,6 @@ FlexibleInterpVar::FlexibleInterpVar(const char* name, const char* title,
   _paramList("paramList","List of paramficients",this),
   _nominal(argNominal), _low(lowVec), _high(highVec), _interpBoundary(1.)
 {
-  _logInit = false ;
-
   for (auto param : paramList) {
     if (!dynamic_cast<RooAbsReal*>(param)) {
       coutE(InputArguments) << "FlexibleInterpVar::ctor(" << GetName() << ") ERROR: paramficient " << param->GetName()
@@ -136,8 +90,6 @@ FlexibleInterpVar::FlexibleInterpVar(const char* name, const char* title,
     _high.push_back(val->getVal()) ;
   }
 
-  _logInit = false ;
-
   for (auto param : paramList) {
     if (!dynamic_cast<RooAbsReal*>(param)) {
       coutE(InputArguments) << "FlexibleInterpVar::ctor(" << GetName() << ") ERROR: paramficient " << param->GetName()
@@ -169,8 +121,6 @@ FlexibleInterpVar::FlexibleInterpVar(const char* name, const char* title,
   _paramList("paramList","List of paramficients",this),
   _nominal(argNominal), _low(lowVec), _high(highVec), _interpCode(code), _interpBoundary(1.)
 {
-  _logInit = false ;
-
   for (auto param : paramList) {
     if (!dynamic_cast<RooAbsReal*>(param)) {
       coutE(InputArguments) << "FlexibleInterpVar::ctor(" << GetName() << ") ERROR: paramficient " << param->GetName()
@@ -188,7 +138,7 @@ FlexibleInterpVar::FlexibleInterpVar(const char* name, const char* title,
      R__ASSERT(_low.size() == _interpCode.size());
   }
 
-  TRACE_CREATE
+  TRACE_CREATE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -199,8 +149,7 @@ FlexibleInterpVar::FlexibleInterpVar(const char* name, const char* title) :
   _paramList("paramList","List of coefficients",this),
   _nominal(0), _interpBoundary(1.)
 {
-  _logInit = false ;
-  TRACE_CREATE
+  TRACE_CREATE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -211,10 +160,7 @@ FlexibleInterpVar::FlexibleInterpVar(const FlexibleInterpVar& other, const char*
   _nominal(other._nominal), _low(other._low), _high(other._high), _interpCode(other._interpCode), _interpBoundary(other._interpBoundary)
 
 {
-  // Copy constructor
-  _logInit = false ;
-  TRACE_CREATE
-
+  TRACE_CREATE;
 }
 
 
@@ -223,7 +169,7 @@ FlexibleInterpVar::FlexibleInterpVar(const FlexibleInterpVar& other, const char*
 
 FlexibleInterpVar::~FlexibleInterpVar()
 {
-  TRACE_DESTROY
+  TRACE_DESTROY;
 }
 
 
@@ -239,7 +185,6 @@ void FlexibleInterpVar::setInterpCode(RooAbsReal& param, int code){
                             << " is now " << code << std::endl;
       _interpCode.at(index) = code;
       // GHL: Adding suggestion by Swagato:
-      _logInit = false ;
       setValueDirty();
   }
 }
@@ -251,9 +196,7 @@ void FlexibleInterpVar::setAllInterpCodes(int code){
     _interpCode.at(i) = code;
   }
   // GHL: Adding suggestion by Swagato:
-  _logInit = false ;
   setValueDirty();
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -261,8 +204,6 @@ void FlexibleInterpVar::setAllInterpCodes(int code){
 void FlexibleInterpVar::setNominal(double newNominal){
   coutW(InputArguments) << "FlexibleInterpVar::setNominal : nominal is now " << newNominal << endl ;
   _nominal = newNominal;
-
-  _logInit = false ;
 
   setValueDirty();
 }
@@ -280,8 +221,6 @@ void FlexibleInterpVar::setLow(RooAbsReal& param, double newLow){
     _low.at(index) = newLow;
   }
 
-  _logInit = false ;
-
   setValueDirty();
 }
 
@@ -298,7 +237,6 @@ void FlexibleInterpVar::setHigh(RooAbsReal& param, double newHigh){
     _high.at(index) = newHigh;
   }
 
-  _logInit = false ;
   setValueDirty();
 }
 
@@ -327,12 +265,6 @@ const std::vector<double>& FlexibleInterpVar::high() const { return _high; }
 
 double FlexibleInterpVar::evaluate() const
 {
-   if (!_logInit) {
-      _logInit = true;
-      _polCoeff.resize(6 * _paramList.size());
-      fillPolCoeff(_polCoeff.data(), _low.data(), _high.data(), _interpBoundary, _paramList.size(), _nominal);
-   }
-
    double total(_nominal);
    for (std::size_t i = 0; i < _paramList.size(); ++i) {
       if (_interpCode[i] < 0 || _interpCode[i] > 4) {
@@ -341,7 +273,7 @@ double FlexibleInterpVar::evaluate() const
       }
       double paramVal = static_cast<const RooAbsReal *>(&_paramList[i])->getVal();
       total = RooFit::Detail::EvaluateFuncs::flexibleInterp(
-         _interpCode[i], _low[i], _high[i], _interpBoundary, _nominal, paramVal, total, _polCoeff.data() + 6 * i);
+         _interpCode[i], _low[i], _high[i], _interpBoundary, _nominal, paramVal, total);
    }
 
   if(total<=0) {
@@ -354,8 +286,6 @@ double FlexibleInterpVar::evaluate() const
 void FlexibleInterpVar::translate(RooFit::Detail::CodeSquashContext &ctx) const
 {
    unsigned int n = _interpCode.size();
-   std::vector<double> polCoeff(6 * _paramList.size());
-   fillPolCoeff(polCoeff.data(), _low.data(), _high.data(), _interpBoundary, _paramList.size(), _nominal);
 
    std::string resName = "total_" + ctx.getTmpVarName();
    ctx.addToCodeBody(this, "double " + resName + " = " + std::to_string(_nominal) + ";\n");
@@ -364,7 +294,7 @@ void FlexibleInterpVar::translate(RooFit::Detail::CodeSquashContext &ctx) const
       code += resName + " = " +
               ctx.buildCall("RooFit::Detail::EvaluateFuncs::flexibleInterp", _interpCode[i],
                             _low[i], _high[i], _interpBoundary,
-                            _nominal, _paramList[i], resName, RooSpan<const double>{polCoeff.data() + 6 * i, 6}) +
+                            _nominal, _paramList[i], resName) +
               ";\n";
    }
    code += resName + " = " + resName + " <= 0 ? TMath::Limits<double>::Min() : " + resName + ";\n";
@@ -374,11 +304,6 @@ void FlexibleInterpVar::translate(RooFit::Detail::CodeSquashContext &ctx) const
 
 void FlexibleInterpVar::computeBatch(cudaStream_t* /*stream*/, double* output, size_t /*nEvents*/, RooFit::Detail::DataMap const& dataMap) const
 {
-   if (!_logInit) {
-      _logInit = true;
-      _polCoeff.resize(6 * _paramList.size());
-      fillPolCoeff(_polCoeff.data(), _low.data(), _high.data(), _interpBoundary, _paramList.size(), _nominal);
-   }
   double total(_nominal) ;
 
   for (std::size_t i = 0; i < _paramList.size(); ++i) {
@@ -388,7 +313,7 @@ void FlexibleInterpVar::computeBatch(cudaStream_t* /*stream*/, double* output, s
      }
      total = RooFit::Detail::EvaluateFuncs::flexibleInterp(_interpCode[i], _low[i],
                                                                           _high[i], _interpBoundary, _nominal,
-                                                                          dataMap.at(&_paramList[i])[0], total, _polCoeff.data() + 6 * i);
+                                                                          dataMap.at(&_paramList[i])[0], total);
   }
 
   if(total<=0) {

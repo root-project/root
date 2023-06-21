@@ -98,14 +98,19 @@ inline double poissonEvaluate(double x, double par)
    }
 }
 
-/// Evaluate the 6-th degree polynomial using Horner's method.
-inline double interpolate6thDegreeHornerPolynomial(double const *p, double x)
+inline double interpolate6thDegree(double x, double low, double high, double nominal, double boundary)
 {
-   return 1. + x * (p[0] + x * (p[1] + x * (p[2] + x * (p[3] + x * (p[4] + x * p[5])))));
+   double t = x / boundary;
+   double eps_plus = high - nominal;
+   double eps_minus = nominal - low;
+   double S = 0.5 * (eps_plus + eps_minus);
+   double A = 0.0625 * (eps_plus - eps_minus);
+
+   return x * (S + t * A * (15 + t * t * (-10 + t * t * 3)));
 }
 
 inline double flexibleInterp(unsigned int code, double low, double high, double boundary, double nominal,
-                             double paramVal, double total, double *polCoeff)
+                             double paramVal, double total)
 {
    if (code == 0) {
       // piece-wise linear
@@ -151,7 +156,7 @@ inline double flexibleInterp(unsigned int code, double low, double high, double 
          return total * std::pow(low / nominal, -paramVal);
       }
 
-      return total * interpolate6thDegreeHornerPolynomial(polCoeff, x);
+      return total * std::exp(interpolate6thDegree(x, std::log(low), std::log(high), std::log(nominal), boundary));
    }
 
    return total;
@@ -173,13 +178,8 @@ piecewiseInterpolation(unsigned int code, double low, double high, double nomina
       } else if (x < -1.0) {
          return sum + x * (nominal - low);
       } else {
-         double eps_plus = high - nominal;
-         double eps_minus = nominal - low;
-         double S = 0.5 * (eps_plus + eps_minus);
-         double A = 0.0625 * (eps_plus - eps_minus);
-
          // fcns+der+2nd_der are eq at bd
-         double val = nominal + x * (S + x * A * (15 + x * x * (-10 + x * x * 3)));
+         double val = nominal + interpolate6thDegree(x, low, high, nominal, 1.0);
 
          if (val < 0)
             val = 0;
