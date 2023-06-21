@@ -8,7 +8,7 @@
 
 #ifdef R__USE_IMT
 
-const unsigned maxConcurrency = ROOT::Internal::LogicalCPUBandwithControl();
+const unsigned maxConcurrency = ROOT::Internal::LogicalCPUBandwidthControl();
 
 TEST(TBBGlobalControl, RTaskArena)
 {
