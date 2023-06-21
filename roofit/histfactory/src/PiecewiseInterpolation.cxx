@@ -189,19 +189,22 @@ void PiecewiseInterpolation::translate(RooFit::Detail::CodeSquashContext &ctx) c
    unsigned int n = _interpCode.size();
 
    std::string resName = "total_" + ctx.getTmpVarName();
-   ctx.addToCodeBody(this, "double " + resName + " = " + ctx.getResult(_nominal) + ";\n");
-   std::string code;
    for (std::size_t i = 0; i < n; ++i) {
       if (_interpCode[i] < 0 || _interpCode[i] > 5) {
          coutE(InputArguments) << "PiecewiseInterpolation::evaluate ERROR:  " << _paramSet[i].GetName()
                                << " with unknown interpolation code" << _interpCode[i] << endl;
       }
-      std::string funcCall;
-       funcCall = ctx.buildCall("RooFit::Detail::EvaluateFuncs::flexibleInterp", _interpCode[i], _lowSet[i],
-                                _highSet[i], 1.0, _nominal, _paramSet[i], resName);
-
-      code += resName + " += " + funcCall + ";\n";
+      if (_interpCode[i] != _interpCode[0]) {
+         coutE(InputArguments) << "FlexibleInterpVar::evaluate ERROR:  Code Squashing AD does not yet support having "
+                                  "different interpolation codes for the same class object "
+                               << endl;
+      }
    }
+   std::string funcCall;
+   funcCall = ctx.buildCall("RooFit::Detail::EvaluateFuncs::piecewiseInterpolationEvaluate", _interpCode[0], _lowSet,
+                            _highSet, _nominal, _paramSet, n);
+   std::string code = "double " + resName + " = " + funcCall + ";\n";
+
    if (_positiveDefinite)
       code += resName + " = " + resName + " < 0 ? 0 : " + resName + ";\n";
 
