@@ -11,6 +11,7 @@
 #include "rootcling_impl.h"
 #include "RConfigure.h"
 #include <ROOT/RConfig.hxx>
+#include <cassert>
 #include <cstdlib>
 #include <string>
 
@@ -24,12 +25,18 @@ static void (*dlsymaddr)() = &usedToIdentifyRootClingByDlSym;
 ROOT::Internal::RootCling::TROOTSYSSetter gROOTSYSSetter;
 
 static const char *GetIncludeDir() {
-   static std::string incdir = std::string(getenv("ROOTSYS")) + "/include";
+   const char *rootsys = getenv("ROOTSYS");
+   // The environment variable ROOTSYS is expected to be set by SetRootSys().
+   assert(rootsys != nullptr);
+   static std::string incdir = std::string(rootsys) + "/include";
    return incdir.c_str();
 }
 
 static const char *GetEtcDir() {
-   static std::string etcdir = std::string(getenv("ROOTSYS")) + "/etc";
+   const char *rootsys = getenv("ROOTSYS");
+   // The environment variable ROOTSYS is expected to be set by SetRootSys().
+   assert(rootsys != nullptr);
+   static std::string etcdir = std::string(rootsys) + "/etc";
    return etcdir.c_str();
 }
 
