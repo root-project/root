@@ -493,9 +493,14 @@ TEST_P(HFFixtureFit, Fit)
    RooStats::ModelConfig *mc = dynamic_cast<RooStats::ModelConfig *>(ws->obj("ModelConfig"));
    ASSERT_NE(mc, nullptr);
 
-   for (bool constTermOptimisation : {true, false}) { // This tests both correct pre-caching of constant terms and (if
-                                                      // false) that all computeBatch() are correct.
-      SCOPED_TRACE(constTermOptimisation ? "const term optimisation" : "No const term optimisation");
+   // This tests both correct pre-caching of constant terms and (if false) that all computeBatch() are correct.
+   for (bool constTermOptimization : {true, false}) {
+
+      // constTermOptimization makes only sense in the legacy backend
+      if (constTermOptimization && batchMode != "off") {
+         continue;
+      }
+      SCOPED_TRACE(constTermOptimization ? "const term optimisation" : "No const term optimisation");
 
       // Stop if one of the previous runs had a failure to keep the terminal clean.
       if (HasFailure())
@@ -515,21 +520,27 @@ TEST_P(HFFixtureFit, Fit)
          poi->setConstant();
       }
 
-      std::unique_ptr<RooFitResult> fitResult{simPdf->fitTo(
-         *data, RooFit::BatchMode(batchMode), RooFit::Optimize(constTermOptimisation),
-         RooFit::GlobalObservables(*mc->GetGlobalObservables()), RooFit::Save(), RooFit::PrintLevel(verbose ? 1 : -1))};
+      using namespace RooFit;
+      std::unique_ptr<RooFitResult> fitResult{
+         simPdf->fitTo(*data, BatchMode(batchMode), Optimize(constTermOptimization),
+                       GlobalObservables(*mc->GetGlobalObservables()), Save(), PrintLevel(verbose ? 1 : -1))};
       ASSERT_NE(fitResult, nullptr);
       if (verbose)
-         fitResult->Print();
+         fitResult->Print("v");
       EXPECT_EQ(fitResult->status(), 0);
 
-      auto checkParam = [&fitResult](const std::string &param, double target, double absPrecision) {
+      auto checkParam = [&](const std::string &param, double target, double absPrecision) {
          auto par = dynamic_cast<RooRealVar *>(fitResult->floatParsFinal().find(param.c_str()));
          if (!par) {
             // Parameter was constant in this fit
             par = dynamic_cast<RooRealVar *>(fitResult->constPars().find(param.c_str()));
-            ASSERT_NE(par, nullptr);
-            EXPECT_DOUBLE_EQ(par->getVal(), target) << "Constant parameter " << param << " is off target.";
+            if (batchMode != "codegen") {
+               ASSERT_NE(par, nullptr);
+               EXPECT_DOUBLE_EQ(par->getVal(), target) << "Constant parameter " << param << " is off target.";
+            } else {
+               // We expect "codegen" to strip away constant RooRealVars
+               ASSERT_EQ(par, nullptr);
+            }
          } else {
             EXPECT_NEAR(par->getVal(), target, par->getError())
                << "Parameter " << param << " close to target " << target << " within uncertainty";
@@ -623,5 +634,8 @@ INSTANTIATE_TEST_SUITE_P(HistFactory, HFFixtureFit,
 #ifdef TEST_CODEGEN_AD
 // To be merged with the previous HFFixtureFix test suite once the codegen AD supports all of HistFactory
 INSTANTIATE_TEST_SUITE_P(HistFactoryCodeGen, HFFixtureFit,
-                         testing::Combine(testing::Values(kEquidistantBins), testing::Values("codegen")), getName);
+                         testing::Combine(testing::Values(kEquidistantBins, kEquidistantBins_histoSyst,
+                                                          kEquidistantBins_statSyst),
+                                          testing::Values("codegen")),
+                         getName);
 #endif
