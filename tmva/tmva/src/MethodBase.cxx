@@ -809,11 +809,12 @@ void TMVA::MethodBase::AddMulticlassOutput(Types::ETreeType type)
          << (type==Types::kTraining?"training":"testing") << " sample" << Endl;
 
    resMulticlass->Resize( nEvents );
+   Int_t modulo = Int_t(nEvents/100) + 1;
    for (Int_t ievt=0; ievt<nEvents; ievt++) {
       Data()->SetCurrentEvent(ievt);
       std::vector< Float_t > vals = GetMulticlassValues();
       resMulticlass->SetValue( vals, ievt );
-      timer.DrawProgressBar( ievt );
+      if (ievt%modulo == 0) timer.DrawProgressBar( ievt );
    }
 
    Log() << kINFO <<Form("Dataset[%s] : ",DataInfo().GetName())
@@ -963,6 +964,8 @@ void TMVA::MethodBase::AddClassifierOutputProb( Types::ETreeType type )
          << (type==Types::kTraining?"training":"testing") << " sample" << Endl;
 
    mvaProb->Resize( nEvents );
+   Int_t modulo = Int_t(nEvents/100);
+   if (modulo <= 0 ) modulo = 1;
    for (Int_t ievt=0; ievt<nEvents; ievt++) {
 
       Data()->SetCurrentEvent(ievt);
@@ -971,8 +974,6 @@ void TMVA::MethodBase::AddClassifierOutputProb( Types::ETreeType type )
       mvaProb->SetValue( proba, ievt, DataInfo().IsSignal( Data()->GetEvent()) );
 
       // print progress
-      Int_t modulo = Int_t(nEvents/100);
-      if (modulo <= 0 ) modulo = 1;
       if (ievt%modulo == 0) timer.DrawProgressBar( ievt );
    }
 
@@ -1008,6 +1009,7 @@ void TMVA::MethodBase::TestRegression( Double_t& bias, Double_t& biasT,
    Float_t  xmin = 1e30, xmax = -1e30;
    Log() << kINFO << "Calculate regression for all events" << Endl;
    Timer timer( nevt, GetName(), kTRUE );
+   Long64_t modulo = Long64_t(nevt / 100) + 1;
    for (Long64_t ievt=0; ievt<nevt; ievt++) {
 
       const Event* ev = Data()->GetEvent(ievt); // NOTE: need untransformed event here !
@@ -1036,7 +1038,6 @@ void TMVA::MethodBase::TestRegression( Double_t& bias, Double_t& biasT,
       m2  += r*w; s2 += r*r*w;
       s12 += t*r;
       // print progress
-      Long64_t modulo = Long64_t(nevt / 100);
       if (ievt % modulo == 0)
          timer.DrawProgressBar(ievt);
    }
