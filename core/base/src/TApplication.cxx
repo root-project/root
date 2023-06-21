@@ -1168,7 +1168,8 @@ void TApplication::OpenReferenceGuideFor(const TString &strippedClass)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// The function (".forum <type>") submits a new issue on GitHub via web browser.
+/// The function (".forum <type>") submits a new post on the ROOT forum
+/// via web browser.
 /// \note You can use "bug" as <type>.
 /// \param[in] line command from the command line
 
