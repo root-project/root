@@ -523,23 +523,32 @@ FactoryTestParams param7{"HistPdf", getDataHistModel,
                          1e-4,
                          /*randomizeParameters=*/true};
 
-FactoryTestParams param9{"Poisson",
+FactoryTestParams param8{"Lognormal",
                          [](RooWorkspace &ws) {
-                            ws.factory("sum::mu_shifted(mu[0, -10, 10], shift[1.0, -10, 10])");
-                            ws.factory("Poisson::model(x[5, -10, 10], mu_shifted)");
+                            ws.factory("Lognormal::model(x[1.0, 1.1, 10], mu[2.0, 1.1, 10], k[2.0, 1.1, 5.0])");
                             ws.defineSet("observables", "x");
                          },
                          [](RooAbsPdf &pdf, RooAbsData &data, RooWorkspace &, std::string const& backend) {
                             return std::unique_ptr<RooAbsReal>{pdf.createNLL(data, RooFit::BatchMode(backend))};
                          },
                          1e-4,
-                         /*randomizeParameters=*/false};
+                         /*randomizeParameters=*/true};
+
+FactoryTestParams param9{"Poisson",
+                         [](RooWorkspace &ws) {
+                            ws.factory("Poisson::model(x[5, 0, 10], mu[5, 0, 10])");
+                            ws.defineSet("observables", "x");
+                         },
+                         [](RooAbsPdf &pdf, RooAbsData &data, RooWorkspace &, std::string const& backend) {
+                            return std::unique_ptr<RooAbsReal>{pdf.createNLL(data, RooFit::BatchMode(backend))};
+                         },
+                         1e-4,
+                         /*randomizeParameters=*/true};
 
 // A RooPoisson where x is not rounded, like it is used in HistFactory
 FactoryTestParams param10{"PoissonNoRounding",
                           [](RooWorkspace &ws) {
-                             ws.factory("sum::mu_shifted(mu[0, -10, 10], shift[1.0, -10, 10])");
-                             ws.factory("Poisson::model(x[5, -10, 10], mu_shifted)");
+                             ws.factory("Poisson::model(x[5, 0, 10], mu[5, 0, 10])");
                              auto poisson = static_cast<RooPoisson *>(ws.pdf("model"));
                              poisson->setNoRounding(true);
                              ws.defineSet("observables", "x");
@@ -548,10 +557,10 @@ FactoryTestParams param10{"PoissonNoRounding",
                              return std::unique_ptr<RooAbsReal>{pdf.createNLL(data, RooFit::BatchMode(backend))};
                           },
                           1e-4,
-                          /*randomizeParameters=*/false};
+                          /*randomizeParameters=*/true};
 
 INSTANTIATE_TEST_SUITE_P(RooFuncWrapper, FactoryTest,
-                         testing::Values(param1, param2, param3, param4, param5, param6, param7, param9,
+                         testing::Values(param1, param2, param3, param4, param5, param6, param7, param8, param9,
                                          param10),
                          [](testing::TestParamInfo<FactoryTest::ParamType> const &paramInfo) {
                             return paramInfo.param._name;
