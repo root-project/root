@@ -75,9 +75,6 @@ namespace HistFactory{
     std::vector<int> _interpCode;
     double _interpBoundary;
 
-    mutable bool         _logInit ;            ///<! flag used for caching polynomial coefficients
-    mutable std::vector< double>  _polCoeff;     ///<! cached polynomial coefficients
-
     double evaluate() const override;
 
     ClassDefOverride(RooStats::HistFactory::FlexibleInterpVar,2) // flexible interpolation
