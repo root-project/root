@@ -507,9 +507,13 @@ void RooFitResult::printMultiline(ostream& os, Int_t /*contents*/, bool verbose,
     << indent << "  --------------------  ------------" << endl ;
 
       for (i=0 ; i<_constPars->getSize() ; i++) {
-   os << indent << "  " << setw(20) << ((RooAbsArg*)_constPars->at(i))->GetName()
-      << "  " << setw(12) << Form("%12.4e",((RooRealVar*)_constPars->at(i))->getVal())
-      << endl ;
+        os << indent << "  " << setw(20) << _constPars->at(i)->GetName() << "  " << setw(12);
+        if(RooRealVar* v = dynamic_cast<RooRealVar*>(_constPars->at(i))) {
+         os << TString::Format("%12.4e",v->getVal());
+        } else {
+          _constPars->at(i)->printValue(os); // for anything other than RooRealVar use printValue method to print
+        }  
+        os << endl ;
       }
 
       os << endl ;
