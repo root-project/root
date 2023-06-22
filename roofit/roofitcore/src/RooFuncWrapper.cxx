@@ -26,6 +26,7 @@
 #include <TROOT.h>
 #include <TSystem.h>
 
+#include <chrono>
 #include <fstream>
 
 namespace RooFit {
@@ -57,9 +58,14 @@ RooFuncWrapper::RooFuncWrapper(const char *name, const char *title, RooAbsReal &
 
    func = buildCode(obj);
 
+   auto start = std::chrono::high_resolution_clock::now();
    // Declare the function and create its derivative.
    _funcName = declareFunction(func);
    _func = reinterpret_cast<Func>(gInterpreter->ProcessLine((_funcName + ";").c_str()));
+   std::cout << "Function JIT time: "
+             << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start)
+                   .count()
+             << " [ms]" << std::endl;
 }
 
 RooFuncWrapper::RooFuncWrapper(const RooFuncWrapper &other, const char *name)
@@ -149,6 +155,7 @@ void RooFuncWrapper::createGradient()
    std::string requestName = _funcName + "_req";
    std::string wrapperName = _funcName + "_derivativeWrapper";
 
+   auto start = std::chrono::high_resolution_clock::now();
    // Calculate gradient
    gInterpreter->ProcessLine("#include <Math/CladDerivator.h>");
    // disable clang-format for making the following code unreadable.
@@ -168,11 +175,16 @@ void RooFuncWrapper::createGradient()
       oocoutE(nullptr, InputArguments) << errorMsg.str() << std::endl;
       throw std::runtime_error(errorMsg.str().c_str());
    }
+   std::cout << "clad JIT time: "
+             << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start)
+                   .count()
+             << " [ms]" << std::endl;
 
    // Build a wrapper over the derivative to hide clad specific types such as 'array_ref'.
    // disable clang-format for making the following code unreadable.
    // clang-format off
    std::stringstream dWrapperStrm;
+   start = std::chrono::high_resolution_clock::now();
    dWrapperStrm << "void " << wrapperName << "(double* params, double const* obs, double const* xlArr, double* out) {\n"
                    "  clad::array_ref<double> cladOut(out, " << _params.size() << ");\n"
                    "  " << gradName << "(params, obs, xlArr, cladOut);\n"
@@ -181,6 +193,10 @@ void RooFuncWrapper::createGradient()
    _allCode << dWrapperStrm.str() << std::endl;
    gInterpreter->Declare(dWrapperStrm.str().c_str());
    _grad = reinterpret_cast<Grad>(gInterpreter->ProcessLine((wrapperName + ";").c_str()));
+   std::cout << "IR to mach time: "
+             << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start)
+                   .count()
+             << " [ms]" << std::endl;
    _hasGradient = true;
 }
 
