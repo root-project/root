@@ -703,6 +703,13 @@ bool X86MCCodeEmitter::emitPrefixImpl(unsigned &CurOp, const MCInst &MI,
     HasREX = emitOpcodePrefix(MemoryOperand, MI, STI, OS);
 
   uint64_t Form = TSFlags & X86II::FormMask;
+  // FIXME (bellenot): Visual Studio v17.6.0 makes root.exe crash
+  // at the switch statement with Form being 0x002 or 0x001, values
+  // normally going to the 'default' switch branch, so the behavior
+  // doesn't change.
+  // To be reviewed and removed as soon as VS works again
+  if (Form <= 0x002)
+    return HasREX;
   switch (Form) {
   default:
     break;
