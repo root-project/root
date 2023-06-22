@@ -80,6 +80,14 @@
 #elif defined(R__FBSD) || defined(R__OBSD)
 #   include <sys/param.h>
 #   include <sys/mount.h>
+# ifdef R__FBSD
+#   include <sys/user.h>
+#   include <sys/types.h>
+#   include <sys/param.h>
+#   include <sys/queue.h>
+#   include <libprocstat.h>
+#   include <libutil.h>
+# endif
 #else
 #   include <sys/statfs.h>
 #endif
@@ -180,7 +188,7 @@ extern "C" {
 #   endif
 #   define HAVE_DLADDR
 #endif
-#if defined(R__MACOSX)
+#if defined(R__MACOSX) || defined(R__FBSD)
 #      define HAVE_BACKTRACE_SYMBOLS_FD
 #      define HAVE_DLADDR
 #endif
@@ -404,7 +412,7 @@ static const char *GetExePath()
 #if defined(R__MACOSX)
       exepath = _dyld_get_image_name(0);
 #elif defined(R__LINUX) || defined(R__SOLARIS) || defined(R__FBSD)
-      char buf[kMAXPATHLEN];  // exe path name
+      char buf[kMAXPATHLEN]="";  // exe path name
 
       // get the name from the link in /proc
 #if defined(R__LINUX)
@@ -412,7 +420,16 @@ static const char *GetExePath()
 #elif defined(R__SOLARIS)
       int ret = readlink("/proc/self/path/a.out", buf, kMAXPATHLEN);
 #elif defined(R__FBSD)
-      int ret = readlink("/proc/curproc/file", buf, kMAXPATHLEN);
+      procstat* ps = procstat_open_sysctl();
+      kinfo_proc* kp = kinfo_getproc(getpid());
+
+      int ret{0};
+      if (kp!=NULL) {
+	procstat_getpathname(ps, kp, buf, sizeof(buf));
+      }
+      free(kp);
+      procstat_close(ps);
+      exepath = buf;
 #endif
       if (ret > 0 && ret < kMAXPATHLEN) {
          buf[ret] = 0;
