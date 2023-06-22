@@ -339,17 +339,20 @@ void RHnCUDA<T, Dim, BlockSize>::AllocateBuffers()
    // Allocate array with (intermediate) results of the stats for each block.
    ERRCHECK(cudaMalloc((void **)&fDIntermediateStats, ceil(fBufferSize / BlockSize / 2.) * kNStats * sizeof(double)));
    ERRCHECK(cudaMalloc((void **)&fDStats, kNStats * sizeof(double)));
+   ERRCHECK(cudaMemset(fDStats, 0, kNStats * sizeof(double)));
 }
 
 template <typename T, unsigned int Dim, unsigned int BlockSize>
 void RHnCUDA<T, Dim, BlockSize>::Fill(const std::array<double, Dim> &coords, double w)
 {
-   fHCoords.insert(fHCoords.end(), coords.begin(), coords.end());
-   fHWeights.push_back(w);
+   auto bufferIdx = fEntries % fBufferSize;
+   std::copy(coords.begin(), coords.end(), &fHCoords[bufferIdx * Dim]);
+   fHWeights[bufferIdx] = w;
 
    // Only execute when a certain number of values are buffered to increase the GPU workload and decrease the
    // frequency of kernel launches.
-   if (fHWeights.size() == fBufferSize) {
+   fEntries++;
+   if (fEntries % fBufferSize == 0) {
       ExecuteCUDAHisto();
    }
 }
@@ -429,7 +432,7 @@ void RHnCUDA<T, Dim, BlockSize>::GetStats(unsigned int size)
 template <typename T, unsigned int Dim, unsigned int BlockSize>
 void RHnCUDA<T, Dim, BlockSize>::ExecuteCUDAHisto()
 {
-   unsigned int size = fmin(fBufferSize, fHWeights.size());
+   unsigned int size = (fEntries - 1) % fBufferSize + 1;
    int numBlocks = size % BlockSize == 0 ? size / BlockSize : size / BlockSize + 1;
 
    fEntries += size;
@@ -456,7 +459,7 @@ template <typename T, unsigned int Dim, unsigned int BlockSize>
 void RHnCUDA<T, Dim, BlockSize>::RetrieveResults(T *histResult, double *statsResult)
 {
    // Fill the histogram with remaining values in the buffer.
-   if (fHWeights.size() > 0) {
+   if (fEntries % fBufferSize != 0) {
       ExecuteCUDAHisto();
    }
 

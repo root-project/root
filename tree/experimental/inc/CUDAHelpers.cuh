@@ -193,6 +193,17 @@ __device__ Long64_t BinarySearch(Long64_t n, const T *array, T value)
    // return pind - array - !((pind != array + n) && (*pind == value)); // OPTIMIZATION: is this better?
 }
 
+// For debugging
+__global__ void PrintArray(double *array, int n)
+{
+   if (threadIdx.x == 0) {
+      for (int i = 0; i < n; i++) {
+         printf("%f ", array[i]);
+      }
+      printf("\n");
+   }
+}
+
 } // namespace CUDAHelpers
 } // namespace Experimental
 } // namespace ROOT

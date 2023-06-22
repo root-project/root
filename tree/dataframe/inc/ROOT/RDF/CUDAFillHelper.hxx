@@ -67,9 +67,10 @@ template <typename HIST = Hist_t>
 class R__CLING_PTRCHECK(off) CUDAFillHelper : public RActionImpl<CUDAFillHelper<HIST>> {
 
    static constexpr size_t dim = getHistDim((HIST *)nullptr);
+   using CUDAHIST = ROOT::Experimental::RHnCUDA<decltype(getHistType((HIST *)nullptr)), dim>;
 
    std::vector<HIST *> fObjects;
-   std::vector<ROOT::Experimental::RHnCUDA<decltype(getHistType((HIST *)nullptr)), dim> *> fCudaHist;
+   std::vector<std::unique_ptr<CUDAHIST>> fCudaHist;
 
    template <typename H = HIST, typename = decltype(std::declval<H>().Reset())>
    void ResetIfPossible(H *h)
@@ -227,12 +228,10 @@ public:
             printf("\tdim %d --- nbins: %d xlow: %f xhigh: %f\n", d, ncells[d], xlow[d], xhigh[d]);
       }
 
-      fCudaHist[i] = new ROOT::Experimental::RHnCUDA<decltype(getHistType((HIST *)nullptr)), dim>(ncells, xlow, xhigh,
-                                                                                                  binEdges.data());
+      fCudaHist.push_back(std::make_unique<CUDAHIST>(ncells, xlow, xhigh, binEdges.data()));
    }
 
-   CUDAFillHelper(const std::shared_ptr<HIST> &h, const unsigned int nSlots)
-      : fObjects(nSlots, nullptr), fCudaHist(nSlots, nullptr)
+   CUDAFillHelper(const std::shared_ptr<HIST> &h, const unsigned int nSlots) : fObjects(nSlots, nullptr)
    {
       fObjects[0] = h.get();
       init_cuda(fObjects[0], 0);
