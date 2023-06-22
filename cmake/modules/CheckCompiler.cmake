@@ -204,6 +204,8 @@ endif()
 #---Setup details depending on the major platform type----------------------------------------------
 if(CMAKE_SYSTEM_NAME MATCHES Linux)
   include(SetUpLinux)
+elseif(CMAKE_SYSTEM_NAME MATCHES FreeBSD)
+  include(SetUpFreeBSD)
 elseif(APPLE)
   include(SetUpMacOS)
 elseif(WIN32)

@@ -33,3 +33,4 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RootAuth
 )
 
 target_link_libraries(RootAuth PRIVATE rsa $<$<PLATFORM_ID:Linux>:crypt>)
+target_link_libraries(RootAuth PRIVATE rsa $<$<PLATFORM_ID:FreeBSD>:crypt>)

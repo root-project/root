@@ -85,7 +85,9 @@ The structure of a directory is shown in TDirectoryFile::TDirectoryFile
 #include <sys/stat.h>
 #ifndef WIN32
 #include <unistd.h>
+#ifndef R__FBSD
 #include <sys/xattr.h>
+#endif
 #else
 #   define ssize_t int
 #   include <io.h>
@@ -141,6 +143,10 @@ The structure of a directory is shown in TDirectoryFile::TDirectoryFile
 #include "ROOT/RConcurrentHashColl.hxx"
 #include <memory>
 
+#ifdef R__FBSD
+#include <sys/extattr.h>
+#endif
+
 using std::sqrt;
 
 std::atomic<Long64_t> TFile::fgBytesRead{0};
@@ -162,6 +168,9 @@ ROOT::Internal::RConcurrentHashColl TFile::fgTsSIHashes;
 #ifdef R__MACOSX
 /* On macOS getxattr takes two extra arguments that should be set to 0 */
 #define getxattr(path, name, value, size) getxattr(path, name, value, size, 0u, 0)
+#endif
+#ifdef R__FBSD
+#define getxattr(path, name, value, size) extattr_get_file(path, EXTATTR_NAMESPACE_USER, name, value, size)
 #endif
 
 const Int_t kBEGIN = 100;
