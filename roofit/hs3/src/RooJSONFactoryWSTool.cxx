@@ -15,6 +15,7 @@
 
 #include <RooConstVar.h>
 #include <RooRealVar.h>
+#include <RooBinning.h>
 #include <RooAbsCategory.h>
 #include <RooRealProxy.h>
 #include <RooListProxy.h>
@@ -162,7 +163,14 @@ void logInputArgumentsError(std::stringstream &&ss)
 
 Var::Var(const JSONNode &val)
 {
-   if (val.is_map()) {
+   if (val.find("bounds")) {
+      for (auto const &child : val.children()) {
+         this->bounds.push_back(child.val_double());
+      }
+      this->nbins = this->bounds.size();
+      this->min = this->bounds[0];
+      this->max = this->bounds[this->nbins - 1];
+   } else {
       if (!val.find("nbins"))
          this->nbins = 1;
       else
@@ -175,13 +183,6 @@ Var::Var(const JSONNode &val)
          this->max = 1;
       else
          this->max = val["max"].val_double();
-   } else if (val.is_seq()) {
-      for (auto const &child : val.children()) {
-         this->bounds.push_back(child.val_double());
-      }
-      this->nbins = this->bounds.size();
-      this->min = this->bounds[0];
-      this->max = this->bounds[this->nbins - 1];
    }
 }
 
@@ -271,7 +272,7 @@ std::vector<std::vector<int>> generateBinIndices(const RooArgList &vars)
    std::vector<int> vars_numbins;
    vars_numbins.reserve(vars.size());
    for (const auto *absv : static_range_cast<RooRealVar *>(vars)) {
-      vars_numbins.push_back(absv->numBins());
+      vars_numbins.push_back(absv->getBins());
    }
    std::vector<int> curr_comb(vars.size());
    ::genIndicesHelper(combinations, curr_comb, vars_numbins, 0);
@@ -708,8 +709,8 @@ void RooJSONFactoryWSTool::exportVariable(const RooAbsArg *v, JSONNode &node)
       if (rrv->isConstant()) {
          var["const"] << rrv->isConstant();
       }
-      if (rrv->numBins() != 100) {
-         var["nbins"] << rrv->numBins();
+      if (rrv->getBins() != 100) {
+         var["nbins"] << rrv->getBins();
       }
       _domains->readVariable(*rrv);
    }
@@ -953,9 +954,20 @@ void RooJSONFactoryWSTool::exportHisto(RooArgSet const &vars, std::size_t n, dou
    for (auto *var : static_range_cast<RooRealVar *>(vars)) {
       JSONNode &obsNode = observablesNode.append_child().set_map();
       obsNode["name"] << var->GetName();
-      obsNode["min"] << var->getMin();
-      obsNode["max"] << var->getMax();
-      obsNode["nbins"] << var->numBins();
+      if (var->getBinning().isUniform()) {
+         obsNode["min"] << var->getMin();
+         obsNode["max"] << var->getMax();
+         obsNode["nbins"] << var->getBins();
+      } else {
+         auto &bounds = obsNode["bounds"];
+         bounds.set_seq();
+         double val = var->getBinning().binLow(0);
+         bounds.append_child() << val;
+         for (int i = 0; i < var->getBinning().numBins(); ++i) {
+            val = var->getBinning().binHigh(i);
+            bounds.append_child() << val;
+         }
+      }
    }
 
    return exportArray(n, contents, output["contents"]);
@@ -1100,7 +1112,7 @@ void RooJSONFactoryWSTool::exportData(RooAbsData const &data)
             break;
          contents.push_back(data.weight());
       }
-      if (i == x.numBins())
+      if (i == x.getBins())
          isBinnedData = true;
       if (isBinnedData) {
          output["type"] << "binned";
@@ -1128,10 +1140,26 @@ std::unique_ptr<RooDataHist> RooJSONFactoryWSTool::readBinnedData(const JSONNode
    RooArgList varlist;
 
    for (JSONNode const &nd : n["axes"].children()) {
-      const std::string nm = nd["name"].val();
-      auto var = std::make_unique<RooRealVar>(nm.c_str(), nm.c_str(), nd["min"].val_double(), nd["max"].val_double());
-      var->setBins(nd["nbins"].val_double());
-      varlist.addOwned(std::move(var));
+      if (nd.has_child("bounds")) {
+         std::vector<double> bounds;
+         for (auto const &bound : nd["bounds"].children()) {
+            bounds.push_back(bound.val_double());
+         }
+         auto obs = std::make_unique<RooRealVar>(nd["name"].val().c_str(), nd["name"].val().c_str(), bounds[0],
+                                                 bounds[bounds.size() - 1]);
+         RooBinning bins(obs->getMin(), obs->getMax());
+         ;
+         for (auto b : bounds) {
+            bins.addBoundary(b);
+         }
+         obs->setBinning(bins);
+         varlist.addOwned(std::move(obs));
+      } else {
+         auto obs = std::make_unique<RooRealVar>(nd["name"].val().c_str(), nd["name"].val().c_str(),
+                                                 nd["min"].val_double(), nd["max"].val_double());
+         obs->setBins(nd["nbins"].val_int());
+         varlist.addOwned(std::move(obs));
+      }
    }
 
    return readBinnedData(n, name, varlist);

@@ -38,15 +38,16 @@ bool checkRegularBins(const TAxis &ax)
    return true;
 }
 
-inline void writeAxis(JSONNode &bounds, const TAxis &ax)
+inline void writeAxis(JSONNode &axis, const TAxis &ax)
 {
    bool regular = (!ax.IsVariableBinSize()) || checkRegularBins(ax);
    if (regular) {
-      bounds.set_map();
-      bounds["nbins"] << ax.GetNbins();
-      bounds["min"] << ax.GetXmin();
-      bounds["max"] << ax.GetXmax();
+      axis.set_map();
+      axis["nbins"] << ax.GetNbins();
+      axis["min"] << ax.GetXmin();
+      axis["max"] << ax.GetXmax();
    } else {
+      auto &bounds = axis["bounds"];
       bounds.set_seq();
       for (int i = 0; i <= ax.GetNbins(); ++i) {
          bounds.append_child() << ax.GetBinUpEdge(i);
