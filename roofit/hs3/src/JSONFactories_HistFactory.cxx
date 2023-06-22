@@ -29,6 +29,7 @@
 #include <RooPoisson.h>
 #include <RooLognormal.h>
 #include <RooGaussian.h>
+#include <RooBinning.h>
 #include <RooProduct.h>
 #include <RooWorkspace.h>
 
@@ -38,18 +39,21 @@ using RooFit::Detail::JSONNode;
 
 namespace {
 
-inline void writeAxis(JSONNode &bounds, RooRealVar const &obs)
+inline void writeAxis(JSONNode &axis, RooRealVar const &obs)
 {
    auto &binning = obs.getBinning();
    if (binning.isUniform()) {
-      bounds["nbins"] << obs.numBins();
-      bounds["min"] << obs.getMin();
-      bounds["max"] << obs.getMax();
+      axis["nbins"] << obs.numBins();
+      axis["min"] << obs.getMin();
+      axis["max"] << obs.getMax();
    } else {
+      auto &bounds = axis["bounds"];
       bounds.set_seq();
-      bounds.append_child() << binning.binLow(0);
-      for (int i = 0; i <= binning.numBins(); ++i) {
-         bounds.append_child() << binning.binHigh(i);
+      double val = binning.binLow(0);
+      bounds.append_child() << val;
+      for (int i = 0; i < binning.numBins(); ++i) {
+         val = binning.binHigh(i);
+         bounds.append_child() << val;
       }
    }
 }
@@ -375,10 +379,25 @@ public:
       std::vector<std::string> coefnames;
       RooArgSet observables;
       for (auto const &obsNode : p["axes"].children()) {
-         RooRealVar &obs = getOrCreate<RooRealVar>(ws, obsNode["name"].val(), obsNode["min"].val_double(),
-                                                   obsNode["max"].val_double());
-         obs.setBins(obsNode["nbins"].val_int());
-         observables.add(obs);
+         if (obsNode.has_child("bounds")) {
+            std::vector<double> bounds;
+            for (auto const &bound : obsNode["bounds"].children()) {
+               bounds.push_back(bound.val_double());
+            }
+            RooRealVar &obs = getOrCreate<RooRealVar>(ws, obsNode["name"].val(), bounds[0], bounds[bounds.size() - 1]);
+            RooBinning bins(obs.getMin(), obs.getMax());
+            ;
+            for (auto b : bounds) {
+               bins.addBoundary(b);
+            }
+            obs.setBinning(bins);
+            observables.add(obs);
+         } else {
+            RooRealVar &obs = getOrCreate<RooRealVar>(ws, obsNode["name"].val(), obsNode["min"].val_double(),
+                                                      obsNode["max"].val_double());
+            obs.setBins(obsNode["nbins"].val_int());
+            observables.add(obs);
+         }
       }
 
       std::string fprefix = name;
