@@ -3,16 +3,22 @@ import textwrap
 
 
 def get_argparse():
-    DESCRIPTION = """This program will add histograms from a list of root files and write them to a target root file.\n
-The target file is newly created and must not exist, or if -f (\"force\") is given, must not be one of the source files.\n
-"""
-    EPILOGUE = """
-If Target and source files have different compression settings a slower method is used.
-For options that takes a size as argument, a decimal number of bytes is expected.
-If the number ends with a ``k'', ``m'', ``g'', etc., the number is multiplied by 1000 (1K), 1000000 (1MB), 1000000000 (1G), etc.
-If this prefix is followed by i, the number is multiplied by the traditional 1024 (1KiB), 1048576 (1MiB), 1073741824 (1GiB), etc.
-The prefix can be optionally followed by B whose casing is ignored, eg. 1k, 1K, 1Kb and 1KB are the same.
-"""
+    DESCRIPTION = textwrap.fill(
+        "This program will add histograms, trees and other objects from a list "
+        "of ROOT files and write them to a target ROOT file. The target file is "
+        "newly created and must not exist, or if -f (\"force\") is given, must "
+        "not be one of the source files.")
+
+    EPILOGUE = textwrap.fill(
+        "If TARGET and SOURCES have different compression settings a slower "
+        "method is used. For options that takes a size as argument, a decimal "
+        "number of bytes is expected. If the number ends with a ``k'', ``m'', "
+        "``g'', etc., the number is multiplied by 1000 (1K), 1000000 (1MB), "
+        "1000000000 (1G), etc. If this prefix is followed by i, the number is "
+        "multiplied by the traditional 1024 (1KiB), 1048576 (1MiB), 1073741824 "
+        "(1GiB), etc. The prefix can be optionally followed by B whose casing "
+        "is ignored, eg. 1k, 1K, 1Kb and 1KB are the same. ")
+
     parser = argparse.ArgumentParser(add_help=False, prog='hadd',
                                      description=DESCRIPTION, epilog=EPILOGUE)
     parser.add_argument("-a", help="Append to the output")
