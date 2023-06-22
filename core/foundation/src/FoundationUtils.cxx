@@ -113,9 +113,11 @@ const std::string& GetFallbackRootSys() {
    if (!fallback.empty())
       return fallback;
 
+#if defined(WIN32) || defined(__FreeBSD__)
    auto parent_path = [](std::string path) {
      return path.substr(0, path.find_last_of("/\\"));
    };
+#endif
 
 #ifdef WIN32
    static char lpFilename[_MAX_PATH];
