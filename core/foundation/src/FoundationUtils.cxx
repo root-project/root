@@ -142,6 +142,7 @@ const std::string& GetFallbackRootSys() {
    // windows technique to get the path to the executable. The easiest way
    // to do this is to depend on LLVMSupport and use getMainExecutable.
    fallback = "/usr/local/root";
+   (void) parent_path; // avoid compiler warnings
 #endif
    return fallback;
 }
