@@ -837,8 +837,8 @@ the option `SAME`. They allow to plot the histograms next to each other.
 ### The SCATter plot option
 
 \attention
-Use of option `SCAT` is now deprecated. It use to be the default drawing option for 2D and
-3D histograms. The new default option is now `COL` (heat-map).
+Use of option `SCAT` has been deprecated. It was the default drawing option for 2D and
+3D histograms. The new default option is `COL` (heat-map).
 
 
 For each cell (i,j) a number of points proportional to the cell content is
