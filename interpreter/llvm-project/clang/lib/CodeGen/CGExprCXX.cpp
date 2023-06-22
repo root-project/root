@@ -97,9 +97,8 @@ RValue CodeGenFunction::EmitCXXDestructorCall(
   const CXXMethodDecl *DtorDecl = cast<CXXMethodDecl>(Dtor.getDecl());
 
   assert(!ThisTy.isNull());
-  assert(
-      declaresSameEntity(ThisTy->getAsCXXRecordDecl(), DtorDecl->getParent()) &&
-      "Pointer/Object mixup");
+  assert(ThisTy->getAsCXXRecordDecl() == DtorDecl->getParent() &&
+         "Pointer/Object mixup");
 
   LangAS SrcAS = ThisTy.getAddressSpace();
   LangAS DstAS = DtorDecl->getMethodQualifiers().getAddressSpace();
