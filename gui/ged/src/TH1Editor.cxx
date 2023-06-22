@@ -166,7 +166,6 @@ TH1Editor::TH1Editor(const TGWindow *p,  Int_t width,
    // Histogram draw options
    TGCompositeFrame *fHistLbl = new TGCompositeFrame(this, 145, 10,
                                                            kHorizontalFrame |
-                                                           kLHintsExpandX   |
                                                            kFixedWidth      |
                                                            kOwnBackground);
    fHistLbl->AddFrame(new TGLabel(fHistLbl,"Histogram"),
