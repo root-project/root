@@ -41,8 +41,6 @@
 #include "llvm/Support/ErrorHandling.h"
 #include <algorithm>
 
-#include "HackForDefaultTemplateArg.h"
-
 using namespace llvm::omp;
 
 namespace clang {
@@ -4118,21 +4116,12 @@ NestedNameSpecifierLoc TreeTransform<Derived>::TransformNestedNameSpecifierLoc(
       if (!TL)
         return NestedNameSpecifierLoc();
 
-      // When using ROOT the type being passed can still be sugared
-      // so that we can construct template instance name with template
-      // default added that still uses the original spelling of the 
-      // arguments. [This is part of adding support for opaque typedef
-      // and 'shorter' names]
-      QualType tlType = TL.getType();
-      if (HackForDefaultTemplateArg::AllowNonCanonicalSubst()) {
-        tlType = tlType->getCanonicalTypeInternal().getUnqualifiedType();
-      }
-      if (tlType->isDependentType() || tlType->isRecordType() ||
+      if (TL.getType()->isDependentType() || TL.getType()->isRecordType() ||
           (SemaRef.getLangOpts().CPlusPlus11 &&
-           tlType->isEnumeralType())) {
-        assert(!tlType.hasLocalQualifiers() &&
+           TL.getType()->isEnumeralType())) {
+        assert(!TL.getType().hasLocalQualifiers() &&
                "Can't get cv-qualifiers here");
-        if (tlType->isEnumeralType())
+        if (TL.getType()->isEnumeralType())
           SemaRef.Diag(TL.getBeginLoc(),
                        diag::warn_cxx98_compat_enum_nested_name_spec);
         SS.Extend(SemaRef.Context, /*FIXME:*/ SourceLocation(), TL,
@@ -6335,7 +6324,7 @@ QualType TreeTransform<Derived>::TransformSubstTemplateTypeParmType(
   Replacement = SemaRef.Context.getCanonicalType(Replacement);
   QualType Result
     = SemaRef.Context.getSubstTemplateTypeParmType(T->getReplacedParameter(),
-                                                   Replacement,false);
+                                                   Replacement);
 
   // Propagate type-source information.
   SubstTemplateTypeParmTypeLoc NewTL

@@ -1826,8 +1826,7 @@ TemplateInstantiator::TransformTemplateTypeParmType(TypeLocBuilder &TLB,
 
     // TODO: only do this uniquing once, at the start of instantiation.
     QualType Result
-      = getSema().Context.getSubstTemplateTypeParmType(T, Replacement,
-                          HackForDefaultTemplateArg::AllowNonCanonicalSubst());
+      = getSema().Context.getSubstTemplateTypeParmType(T, Replacement);
     SubstTemplateTypeParmTypeLoc NewTL
       = TLB.push<SubstTemplateTypeParmTypeLoc>(Result);
     NewTL.setNameLoc(TL.getNameLoc());
@@ -1869,8 +1868,7 @@ TemplateInstantiator::TransformSubstTemplateTypeParmPackType(
 
   Result = getSema().Context.getSubstTemplateTypeParmType(
                                       TL.getTypePtr()->getReplacedParameter(),
-                                                          Result,
-                           HackForDefaultTemplateArg::AllowNonCanonicalSubst());
+                                                          Result);
   SubstTemplateTypeParmTypeLoc NewTL
     = TLB.push<SubstTemplateTypeParmTypeLoc>(Result);
   NewTL.setNameLoc(TL.getNameLoc());
