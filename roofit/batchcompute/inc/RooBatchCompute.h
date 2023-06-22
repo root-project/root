@@ -56,6 +56,8 @@ enum Computer {
    Gamma,
    GaussModelExpBasis,
    Gaussian,
+   Power,
+   ExpPoly,
    Identity,
    Johnson,
    Landau,

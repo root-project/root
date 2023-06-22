@@ -94,6 +94,16 @@ RooPower::RooPower(const RooPower &other, const char *name)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+/// Compute multiple values of Power distribution.
+void RooPower::computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const
+{
+  auto dispatch = stream ? RooBatchCompute::dispatchCUDA : RooBatchCompute::dispatchCPU;
+  dispatch->compute(stream, RooBatchCompute::Power, output, nEvents,
+          {dataMap.at(x), dataMap.at(mean), dataMap.at(sigma)});
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 double RooPower::evaluate() const
 {
    // Calculate and return value of polynomial

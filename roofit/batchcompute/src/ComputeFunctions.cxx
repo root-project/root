@@ -390,6 +390,32 @@ __rooglobal__ void computeGaussian(BatchesHandle batches)
    }
 }
 
+__rooglobal__ void computePower(BatchesHandle batches)
+{
+   /*TODO: Implement*/
+   auto a1 = batches.a1;
+   auto a2 = batches.a2;
+   auto b1 = batches.b1;
+   auto b2 = batches.b2;
+   auto X = batches.X;
+   for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
+      batches._output[i] = a1 * pow(x[i],b1) + a2 * pow(X[i],b2);
+   }   
+}
+
+__rooglobal__ void computeExpPoly(BatchesHandle batches)
+{
+   /*TODO: Implement*/
+   auto x = batches.X;
+   auto a = batches.A;
+   auto b = batches.B;
+   double sum = 0.0;
+   for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
+      sum += pow(x,i);
+   }  
+   batches._output = 1.0 * pow(x,0) + sum + a * pow(x,2) + b * pow(x,3);
+}
+
 __rooglobal__ void computeIdentity(BatchesHandle batches)
 {
    for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
@@ -802,6 +828,8 @@ std::vector<void (*)(BatchesHandle)> getFunctions()
            computeGamma,
            computeGaussModelExpBasis,
            computeGaussian,
+           computePower,
+           computeExpPoly,
            computeIdentity,
            computeJohnson,
            computeLandau,
