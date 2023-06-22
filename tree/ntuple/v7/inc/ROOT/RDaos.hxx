@@ -40,21 +40,64 @@ namespace ROOT {
 namespace Experimental {
 namespace Detail {
 
-struct RDaosEventQueue {
-   daos_handle_t fQueue;
-   RDaosEventQueue();
-   ~RDaosEventQueue();
+class RDaosObject;
 
-   /// \brief Sets event barrier for a given parent event and waits for the completion of all children launched before
-   /// the barrier (must have at least one child).
+std::string_view inline GetDaosError(int err)
+{
+   return d_errstr(err);
+}
+
+/**
+  \class RDaosObjectId
+  \brief Wrapper structure for a DAOS object identifier. Its constructor takes the ntuple's index in order to encode it
+  into the MSb half of the identifier and keep a consistent address sub-space among objects of the same dataset.
+  */
+struct RDaosObjectId {
+   using ObjectIndex_t = std::uint64_t;
+   daos_obj_id_t fData;
+   RDaosObjectId(std::uint64_t ntupleIndex, ObjectIndex_t objectIndex)
+      : fData{static_cast<decltype(daos_obj_id_t::lo)>(objectIndex),
+              static_cast<decltype(daos_obj_id_t::hi)>(ntupleIndex)}
+   {
+   }
+   [[nodiscard]] daos_obj_id_t Get() const { return fData; }
+};
+
+/**
+  \class RDaosIov
+  \brief Wrapper structure for a DAOS I/O operation vector (IOV). Its purpose it to provide uniform getter/setter
+  functionality exploitable by generic storage layers for different backends.
+  */
+struct RDaosIov {
+   d_iov_t fIov{};
+
+   RDaosIov(void *buffer, size_t size) : fIov{buffer, size, size} {}
+   void Set(void *buffer, size_t size) { d_iov_set(&fIov, buffer, size); }
+   [[nodiscard]] d_iov_t Get() const { return fIov; }
+   [[nodiscard]] void *GetBuffer() const { return fIov.iov_buf; }
+   [[nodiscard]] size_t GetBufferSize() const { return fIov.iov_buf_len; }
+};
+
+/**
+  \class RDaosOperationQueue
+  \brief Operation queue manager for DAOS events, used to launch fetch and update requests to the object store.
+  Supports blocking calls on parent operations. Note that instantiating DAOS queues incurs significant overhead.
+  */
+struct RDaosOperationQueue {
+   daos_handle_t fQueue;
+   RDaosOperationQueue();
+   ~RDaosOperationQueue();
+
+   /// \brief Sets operation barrier for a given parent operation and waits for the completion of all children launched
+   /// before the barrier (must have at least one child).
    /// \return 0 on success; a DAOS error code otherwise (< 0).
    static int WaitOnParentBarrier(daos_event_t *ev_ptr);
-   /// \brief Reserve event in queue, optionally tied to a parent event.
+   /// \brief Reserve operation in queue, optionally tied to a parent operation.
    /// \return 0 on success; a DAOS error code otherwise (< 0).
-   int InitializeEvent(daos_event_t *ev_ptr, daos_event_t *parent_ptr = nullptr) const;
-   /// \brief Release event data from queue.
+   int InitializeOperation(daos_event_t *ev_ptr, daos_event_t *parent_ptr = nullptr) const;
+   /// \brief Release operation data from queue.
    /// \return 0 on success; a DAOS error code otherwise (< 0).
-   static int FinalizeEvent(daos_event_t *ev_ptr);
+   static int FinalizeOperation(daos_event_t *ev_ptr);
 };
 
 class RDaosContainer;
@@ -69,7 +112,7 @@ private:
    daos_handle_t fPoolHandle{};
    uuid_t fPoolUuid{};
    std::string fPoolLabel{};
-   std::unique_ptr<RDaosEventQueue> fEventQueue;
+   std::unique_ptr<RDaosOperationQueue> fOperationQueue;
 
 public:
    RDaosPool(const RDaosPool&) = delete;
@@ -124,20 +167,21 @@ public:
       FetchUpdateArgs(FetchUpdateArgs &&fua) noexcept;
       FetchUpdateArgs(DistributionKey_t d, std::span<RAkeyRequest> rs, bool is_async = false);
       FetchUpdateArgs &operator=(const FetchUpdateArgs &) = delete;
-      daos_event_t *GetEventPointer();
+      daos_event_t *GetDaosOpPointer();
 
       /// \brief A `daos_key_t` is a type alias of `d_iov_t`. This type stores a pointer and a length.
       /// In order for `fDistributionKey` to point to memory that we own, `fDkey` holds the distribution key.
       DistributionKey_t fDkey{};
       /// \brief `fRequests` is a sequential container assumed to remain valid throughout the fetch/update operation,
-      /// holding a list of `RAkeyRequest`-typed elements.
+      /// holding a list of `RAkeyRequest`-typed elements. Note that the internal structure cannot be const, as DAOS may
+      // modify contents of the scatter-gather lists with the number of bytes effectively handled.
       std::span<RAkeyRequest> fRequests{};
 
       /// \brief The distribution key, as used by the `daos_obj_{fetch,update}` functions.
       daos_key_t fDistributionKey{};
       std::vector<daos_iod_t> fIods{};
       std::vector<d_sg_list_t> fSgls{};
-      std::optional<daos_event_t> fEvent{};
+      std::optional<daos_event_t> fDaosOp{};
    };
 
    RDaosObject() = delete;
@@ -148,6 +192,14 @@ public:
 
    int Fetch(FetchUpdateArgs &args);
    int Update(FetchUpdateArgs &args);
+};
+
+struct RDaosBlobLocator {
+   using DistributionKey_t = RDaosObject::DistributionKey_t;
+   using AttributeKey_t = RDaosObject::AttributeKey_t;
+   RDaosObjectId fOid;
+   DistributionKey_t fDkey;
+   AttributeKey_t fAkey;
 };
 
 /**
@@ -173,7 +225,7 @@ public:
       }
 
       struct Hash {
-         auto operator()(const ROidDkeyPair &x) const
+         size_t operator()(const ROidDkeyPair &x) const
          {
             /// Implementation borrowed from `boost::hash_combine`. Comparable to initial seeding with `oid.hi` followed
             /// by two subsequent hash calls for `oid.lo` and `dkey`.
@@ -201,34 +253,41 @@ public:
       std::vector<RDaosObject::RAkeyRequest> fDataRequests{};
       std::unordered_map<AttributeKey_t, unsigned> fIndices{};
 
-      void Insert(AttributeKey_t attr, const d_iov_t &iov)
+      void Insert(AttributeKey_t attr, const RDaosIov &iov)
       {
          auto [it, ret] = fIndices.emplace(attr, fDataRequests.size());
          unsigned attrIndex = it->second;
 
          if (attrIndex == fDataRequests.size()) {
-            fDataRequests.emplace_back(attr, std::initializer_list<d_iov_t>{iov});
+            fDataRequests.emplace_back(attr, std::initializer_list<d_iov_t>{iov.Get()});
          } else {
-            fDataRequests[attrIndex].fIovs.emplace_back(iov);
-         }
-      }
-
-      void Insert(AttributeKey_t attr, std::vector<d_iov_t> &iovs)
-      {
-         auto [it, ret] = fIndices.emplace(attr, fDataRequests.size());
-         unsigned attrIndex = it->second;
-
-         if (attrIndex == fDataRequests.size()) {
-            fDataRequests.emplace_back(attr, iovs);
-         } else {
-            fDataRequests[attrIndex].fIovs.insert(std::end(fDataRequests[attrIndex].fIovs),
-                                                  std::make_move_iterator(std::begin(iovs)),
-                                                  std::make_move_iterator(std::end(iovs)));
+            fDataRequests[attrIndex].fIovs.emplace_back(iov.Get());
          }
       }
    };
 
-   using MultiObjectRWOperation_t = std::unordered_map<ROidDkeyPair, RWOperation, ROidDkeyPair::Hash>;
+   /// \brief Manages request batches for multiple objects. Internally, a dictionary coalesces the requests by their
+   /// co-locality, i.e., their `ROidDkeyPair`. Provides iterator access to the internal data structure.
+   class MultiObjectRWOperation {
+   public:
+      using RequestDict_t =
+         std::unordered_map<RDaosContainer::ROidDkeyPair, RWOperation, RDaosContainer::ROidDkeyPair::Hash>;
+      [[nodiscard]] auto begin() { return fRequestDict.begin(); }
+      [[nodiscard]] auto end() { return fRequestDict.end(); }
+      [[nodiscard]] size_t GetSize() const { return fRequestDict.size(); }
+
+      MultiObjectRWOperation() = default;
+
+      void Insert(RDaosBlobLocator &key, const RDaosIov &pageIov)
+      {
+         auto odPair = RDaosContainer::ROidDkeyPair{key.fOid.Get(), key.fDkey};
+         auto [it, ret] = fRequestDict.emplace(odPair, RWOperation(odPair));
+         it->second.Insert(key.fAkey, pageIov);
+      }
+
+   private:
+      RequestDict_t fRequestDict;
+   };
 
    std::string GetContainerUuid();
 
@@ -241,12 +300,12 @@ private:
 
    /**
      \brief Perform a vector read/write operation on different objects.
-     \param map A `MultiObjectRWOperation_t` that describes read/write operations to perform.
+     \param map A `MultiObjectRWOperation` that describes read/write operations to perform.
      \param cid The `daos_oclass_id_t` used to qualify OIDs.
      \param fn Either `&RDaosObject::Fetch` (read) or `&RDaosObject::Update` (write).
      \return 0 if the operation succeeded; a negative DAOS error number otherwise.
      */
-   int VectorReadWrite(MultiObjectRWOperation_t &map, ObjClassId_t cid,
+   int VectorReadWrite(MultiObjectRWOperation &map, ObjClassId_t cid,
                        int (RDaosObject::*fn)(RDaosObject::FetchUpdateArgs &));
 
 public:
@@ -260,56 +319,55 @@ public:
      \brief Read data from a single object attribute key to the given buffer.
      \param buffer The address of a buffer that has capacity for at least `length` bytes.
      \param length Length of the buffer.
-     \param oid A 128-bit DAOS object identifier.
+     \param oid A DAOS object identifier.
      \param dkey The distribution key used for this operation.
      \param akey The attribute key used for this operation.
      \param cid An object class ID.
      \return 0 if the operation succeeded; a negative DAOS error number otherwise.
      */
-   int ReadSingleAkey(void *buffer, std::size_t length, daos_obj_id_t oid,
-                      DistributionKey_t dkey, AttributeKey_t akey, ObjClassId_t cid);
-   int ReadSingleAkey(void *buffer, std::size_t length, daos_obj_id_t oid,
-                      DistributionKey_t dkey, AttributeKey_t akey)
-   { return ReadSingleAkey(buffer, length, oid, dkey, akey, fDefaultObjectClass); }
+   int ReadSingleAkey(void *buffer, std::size_t length, RDaosBlobLocator key, ObjClassId_t cid);
+   int ReadSingleAkey(void *buffer, std::size_t length, RDaosBlobLocator key)
+   {
+      return ReadSingleAkey(buffer, length, key, fDefaultObjectClass);
+   }
 
    /**
      \brief Write the given buffer to a single object attribute key.
      \param buffer The address of the source buffer.
      \param length Length of the buffer.
-     \param oid A 128-bit DAOS object identifier.
+     \param oid A DAOS object identifier.
      \param dkey The distribution key used for this operation.
      \param akey The attribute key used for this operation.
      \param cid An object class ID.
      \return 0 if the operation succeeded; a negative DAOS error number otherwise.
      */
-   int WriteSingleAkey(const void *buffer, std::size_t length, daos_obj_id_t oid,
-                       DistributionKey_t dkey, AttributeKey_t akey, ObjClassId_t cid);
-   int WriteSingleAkey(const void *buffer, std::size_t length, daos_obj_id_t oid,
-                       DistributionKey_t dkey, AttributeKey_t akey)
-   { return WriteSingleAkey(buffer, length, oid, dkey, akey, fDefaultObjectClass); }
+   int WriteSingleAkey(const void *buffer, std::size_t length, RDaosBlobLocator key, ObjClassId_t cid);
+   int WriteSingleAkey(const void *buffer, std::size_t length, RDaosBlobLocator key)
+   {
+      return WriteSingleAkey(buffer, length, key, fDefaultObjectClass);
+   }
 
    /**
      \brief Perform a vector read operation on multiple objects.
-     \param map A `MultiObjectRWOperation_t` that describes read operations to perform.
+     \param map A `MultiObjectRWOperation` that describes read operations to perform.
      \param cid An object class ID.
      \return Number of operations that could not complete.
      */
-   int ReadV(MultiObjectRWOperation_t &map, ObjClassId_t cid) { return VectorReadWrite(map, cid, &RDaosObject::Fetch); }
-   int ReadV(MultiObjectRWOperation_t &map) { return ReadV(map, fDefaultObjectClass); }
+   int ReadV(MultiObjectRWOperation &map, ObjClassId_t cid) { return VectorReadWrite(map, cid, &RDaosObject::Fetch); }
+   int ReadV(MultiObjectRWOperation &map) { return ReadV(map, fDefaultObjectClass); }
 
    /**
      \brief Perform a vector write operation on multiple objects.
-     \param map A `MultiObjectRWOperation_t` that describes write operations to perform.
+     \param map A `MultiObjectRWOperation` that describes write operations to perform.
      \param cid An object class ID.
      \return Number of operations that could not complete.
      */
-   int WriteV(MultiObjectRWOperation_t &map, ObjClassId_t cid)
+   int WriteV(MultiObjectRWOperation &map, ObjClassId_t cid)
    {
       return VectorReadWrite(map, cid, &RDaosObject::Update);
    }
-   int WriteV(MultiObjectRWOperation_t &map) { return WriteV(map, fDefaultObjectClass); }
+   int WriteV(MultiObjectRWOperation &map) { return WriteV(map, fDefaultObjectClass); }
 };
-
 } // namespace Detail
 
 } // namespace Experimental
