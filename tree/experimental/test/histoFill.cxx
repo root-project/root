@@ -10,7 +10,7 @@
 #include "TH1.h"
 #include "TAxis.h"
 
-using namespace ROOT::Experimental::CUDAHist;
+using ROOT::Experimental::RHnCUDA;
 
 // Helper function for toggling ON CUDA histogramming.
 char env[] = "CUDA_HIST";
@@ -131,7 +131,7 @@ protected:
    double *stats, *expectedStats;
    int nStats;
 
-   const RHnCUDA<histType, dim> histogram;
+   RHnCUDA<histType, dim> histogram;
 
    HistoTestFixture() : histogram(Repeat<int, dim>(numBins), Repeat<double, dim>(startBin), Repeat<double, dim>(endBin))
    {
@@ -208,7 +208,7 @@ TYPED_TEST(HistoTestFixture, FillFixedBins)
 {
    // int, double, or float
    using t = typename TypeParam::type;
-   auto h = this->histogram;
+   auto &h = this->histogram;
 
    std::vector<std::array<double, this->dim>> coords = {
       Repeat<double, this->dim>(this->startBin - 1),                   // Underflow
@@ -242,7 +242,7 @@ TYPED_TEST(HistoTestFixture, FillFixedBinsWeighted)
 {
    // int, double, or float
    using t = typename TypeParam::type;
-   auto h = this->histogram;
+   auto &h = this->histogram;
 
    std::vector<std::array<double, this->dim>> coords = {
       Repeat<double, this->dim>(this->startBin - 1),                   // Underflow

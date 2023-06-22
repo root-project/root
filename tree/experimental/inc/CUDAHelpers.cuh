@@ -16,6 +16,8 @@ inline static void __checkCudaErrors(cudaError_t error, std::string func, std::s
    }
 }
 
+namespace ROOT {
+namespace Experimental {
 namespace CUDAHelpers {
 
 // Dynamic shared memory needs to be declared as "extern" in CUDA. Having templated kernels with shared memory
@@ -175,9 +177,9 @@ void ReduceSum(int numBlocks, int blockSize, T *in, T *out, unsigned int n, T in
       Error("ReduceSum", "Unsupported block size: %d", blockSize);
 }
 
-// CUDA version of TMath::BinarySearchCUDA
+// CUDA version of TMath::BinarySearch
 template <typename T>
-__device__ Long64_t BinarySearchCUDA(Long64_t n, const T *array, T value)
+__device__ Long64_t BinarySearch(Long64_t n, const T *array, T value)
 {
    const T *pind;
 
@@ -192,5 +194,6 @@ __device__ Long64_t BinarySearchCUDA(Long64_t n, const T *array, T value)
 }
 
 } // namespace CUDAHelpers
-
+} // namespace Experimental
+} // namespace ROOT
 #endif

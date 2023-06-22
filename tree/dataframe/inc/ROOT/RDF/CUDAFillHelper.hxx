@@ -30,13 +30,17 @@
 #include <string>
 #include <array>
 
+using ROOT::Internal::RDF::Disjunction;
+using ROOT::Internal::RDF::GetNthElement;
+using ROOT::Internal::RDF::IsDataContainer;
+using ROOT::Internal::RDF::RActionImpl;
+using ROOT::Internal::RDF::RMergeableFill;
+using ROOT::Internal::RDF::RMergeableValueBase;
+
 namespace ROOT {
 namespace Experimental {
-namespace Internal {
-namespace RDF {
-using namespace ROOT::Internal::RDF;
-using Hist_t = ::TH1D;
 
+using Hist_t = ::TH1D;
 // clang-format off
 static constexpr size_t getHistDim(TH3 *) { return 3; }
 static constexpr size_t getHistDim(TH2 *) { return 2; }
@@ -57,15 +61,15 @@ static constexpr float getHistType(TH3F *) { return (float) 0; }
 static constexpr double getHistType(TH1D *) { return (double) 0; }
 static constexpr double getHistType(TH2D *) { return (double) 0; }
 static constexpr double getHistType(TH3D *) { return (double) 0; }
-
 // clang-format on
 
 template <typename HIST = Hist_t>
 class R__CLING_PTRCHECK(off) CUDAFillHelper : public RActionImpl<CUDAFillHelper<HIST>> {
+
    static constexpr size_t dim = getHistDim((HIST *)nullptr);
 
    std::vector<HIST *> fObjects;
-   std::vector<ROOT::Experimental::CUDAHist::RHnCUDA<decltype(getHistType((HIST *)nullptr)), dim> *> fCudaHist;
+   std::vector<ROOT::Experimental::RHnCUDA<decltype(getHistType((HIST *)nullptr)), dim> *> fCudaHist;
 
    template <typename H = HIST, typename = decltype(std::declval<H>().Reset())>
    void ResetIfPossible(H *h)
@@ -223,8 +227,8 @@ public:
             printf("\tdim %d --- nbins: %d xlow: %f xhigh: %f\n", d, ncells[d], xlow[d], xhigh[d]);
       }
 
-      fCudaHist[i] =
-         new CUDAHist::RHnCUDA<decltype(getHistType((HIST *)nullptr)), dim>(ncells, xlow, xhigh, binEdges.data());
+      fCudaHist[i] = new ROOT::Experimental::RHnCUDA<decltype(getHistType((HIST *)nullptr)), dim>(ncells, xlow, xhigh,
+                                                                                                  binEdges.data());
    }
 
    CUDAFillHelper(const std::shared_ptr<HIST> &h, const unsigned int nSlots)
@@ -375,9 +379,6 @@ public:
    }
 };
 
-} // namespace RDF
-} // namespace Internal
 } // namespace Experimental
 } // namespace ROOT
-
 #endif

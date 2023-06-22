@@ -22,10 +22,6 @@ if(sqlite)
   list(APPEND RDATAFRAME_EXTRA_HEADERS ROOT/RSqliteDS.hxx)
 endif()
 
-if(cuda)
-  list(APPEND RDATAFRAME_EXTRA_HEADERS ROOT/RDF/CUDAFillHelper.hxx)
-endif()
-
 if(root7)
   list(APPEND RDATAFRAME_EXTRA_HEADERS ROOT/RNTupleDS.hxx)
   list(APPEND RDATAFRAME_EXTRA_DEPS ROOTNTuple)
@@ -150,7 +146,6 @@ if(arrow)
 endif()
 
 if (cuda)
-  target_compile_definitions(ROOTDataFrame PRIVATE ROOT_RDF_CUDA)
   target_link_libraries(ROOTDataFrame PRIVATE CUDAHist)
 endif()
 

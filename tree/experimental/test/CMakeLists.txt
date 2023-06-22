@@ -4,6 +4,6 @@
 # For the licensing terms see $ROOTSYS/LICENSE.
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
-ROOT_ADD_GTEST(Histo histo.cxx LIBRARIES CUDAHist Hist ROOTDataFrame)
+ROOT_ADD_GTEST(HistoRDF histoRDF.cxx LIBRARIES CUDAHist Hist ROOTDataFrame)
 ROOT_ADD_GTEST(HistoFill histoFill.cxx LIBRARIES CUDAHist Hist ROOTDataFrame)
 
