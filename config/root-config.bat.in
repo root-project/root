@@ -137,6 +137,15 @@ for %%w in (%*) do (
    if "!arg!"=="--python3-version" (
       set out=!$out! @python3vers@
    )
+   if "!arg!"=="--python-executable" (
+      set out=!out! @rootconfigpythonexecutable@
+   )
+   if "!arg!"=="--python2-executable" (
+      set out=!$out! @rootconfigpython2executable@
+   )
+   if "!arg!"=="--python3-executable" (
+      set out=!$out! @rootconfigpython3executable@
+   )
    if "!arg!"=="--cflags" (
       set out=!out! !cxxflags! -I!incdir!
    )

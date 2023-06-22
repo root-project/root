@@ -213,4 +213,5 @@ Some of these classes are now removed from the public interface:
 
 ## Build, Configuration and Testing Infrastructure
 
-
+* `root-config` can also print the path to the Python executable used when building ROOT. Options `--python-executable`,
+  `--python2-executable`, `--python3-executable` are now supported by the utility.
