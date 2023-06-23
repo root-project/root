@@ -2,7 +2,7 @@ import { BIT, isFunc, clTLatex, clTMathText, clTAnnotation, clTPolyLine } from '
 import { rgb as d3_rgb, select as d3_select } from '../d3.mjs';
 import { BasePainter, makeTranslate } from '../base/BasePainter.mjs';
 import { addMoveHandler } from '../gui/utils.mjs';
-import { assignContextMenu } from '../gui/menu.mjs';
+import { assignContextMenu, kToFront } from '../gui/menu.mjs';
 
 
 /** @summary Draw TText
@@ -96,7 +96,7 @@ async function drawText() {
          };
       }
 
-      assignContextMenu(this);
+      assignContextMenu(this, kToFront);
 
       return this;
    });
@@ -133,7 +133,7 @@ function drawPolyLine() {
       elem.call(this.lineatt.func)
           .style('fill', 'none');
 
-   assignContextMenu(this);
+   assignContextMenu(this, kToFront);
 
    addMoveHandler(this);
 
@@ -255,7 +255,7 @@ function drawEllipse() {
       .call(this.lineatt.func)
       .call(this.fillatt.func);
 
-   assignContextMenu(this);
+   assignContextMenu(this, kToFront);
 
    addMoveHandler(this);
 
@@ -373,7 +373,7 @@ function drawBox() {
                  .style('fill', d3_rgb(this.fillatt.color).darker(0.5).formatHex());
    }
 
-   assignContextMenu(this);
+   assignContextMenu(this, kToFront);
 
    addMoveHandler(this);
 
@@ -435,7 +435,7 @@ function drawMarker() {
           .attr('d', path)
           .call(this.markeratt.func);
 
-   assignContextMenu(this);
+   assignContextMenu(this, kToFront);
 
    addMoveHandler(this);
 
@@ -478,7 +478,7 @@ function drawPolyMarker() {
           .attr('d', path)
           .call(this.markeratt.func);
 
-   assignContextMenu(this);
+   assignContextMenu(this, kToFront);
 
    addMoveHandler(this);
 
