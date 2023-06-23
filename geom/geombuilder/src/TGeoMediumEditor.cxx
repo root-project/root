@@ -100,7 +100,7 @@ TGeoMediumEditor::TGeoMediumEditor(const TGWindow *p, Int_t width,
    AddFrame(f1, new TGLayoutHints(kLHintsLeft | kLHintsExpandX, 2, 2, 0, 0));
 
 // Combo box for magnetic field option
-   f1 = new TGCompositeFrame(this, 145, 10, kHorizontalFrame | kLHintsExpandX | kFixedWidth | kOwnBackground);
+   f1 = new TGCompositeFrame(this, 145, 10, kHorizontalFrame | kFitWidth | kFixedWidth | kOwnBackground);
    f1->AddFrame(label = new TGLabel(f1, "Mag. field option"), new TGLayoutHints(kLHintsLeft, 1, 1, 0, 0));
    f1->AddFrame(new TGHorizontal3DLine(f1), new TGLayoutHints(kLHintsExpandX, 5, 5, 7, 7));
    gClient->GetColorByName("#ff0000", color);
@@ -122,7 +122,7 @@ TGeoMediumEditor::TGeoMediumEditor(const TGWindow *p, Int_t width,
 
    // Number entry for fieldm
    f1 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
-                                 kLHintsExpandX | kFixedWidth | kOwnBackground);
+                                 kFitWidth | kFixedWidth | kOwnBackground);
    f1->AddFrame(new TGLabel(f1, "FIELDM"), new TGLayoutHints(kLHintsLeft, 1, 1, 4, 0));
    fMedFieldm = new TGNumberEntry(f1, 0., 5, kMED_FIELDM);
    nef = (TGTextEntry*)fMedFieldm->GetNumberEntry();
@@ -134,7 +134,7 @@ TGeoMediumEditor::TGeoMediumEditor(const TGWindow *p, Int_t width,
 
    // Number entry for tmaxfd
    TGCompositeFrame *f2 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
-                                 kLHintsExpandX | kFixedWidth | kOwnBackground);
+                                 kFitWidth | kFixedWidth | kOwnBackground);
    f2->AddFrame(new TGLabel(f2, "TMAXFD"), new TGLayoutHints(kLHintsLeft, 1, 1, 4, 0));
    fMedTmaxfd = new TGNumberEntry(f2, 0., 5, kMED_TMAX);
    nef = (TGTextEntry*)fMedTmaxfd->GetNumberEntry();
@@ -146,7 +146,7 @@ TGeoMediumEditor::TGeoMediumEditor(const TGWindow *p, Int_t width,
 
    // Number entry for stemax
    TGCompositeFrame *f3 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
-                                 kLHintsExpandX | kFixedWidth | kOwnBackground);
+                                 kFitWidth | kFixedWidth | kOwnBackground);
    f3->AddFrame(new TGLabel(f3, "STEMAX"), new TGLayoutHints(kLHintsLeft, 1, 1, 4, 0));
    fMedStemax = new TGNumberEntry(f3, 0., 5, kMED_STEMAX);
    nef = (TGTextEntry*)fMedStemax->GetNumberEntry();
@@ -158,7 +158,7 @@ TGeoMediumEditor::TGeoMediumEditor(const TGWindow *p, Int_t width,
 
    // Number entry for deemax
    TGCompositeFrame *f4 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
-                                 kLHintsExpandX | kFixedWidth | kOwnBackground);
+                                 kFitWidth | kFixedWidth | kOwnBackground);
    f4->AddFrame(new TGLabel(f4, "DEEMAX"), new TGLayoutHints(kLHintsLeft, 1, 1, 4, 0));
    fMedDeemax = new TGNumberEntry(f4, 0., 5, kMED_DEEMAX);
    nef = (TGTextEntry*)fMedDeemax->GetNumberEntry();
@@ -170,7 +170,7 @@ TGeoMediumEditor::TGeoMediumEditor(const TGWindow *p, Int_t width,
 
    // Number entry for epsil
    TGCompositeFrame *f5 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
-                                 kLHintsExpandX | kFixedWidth | kOwnBackground);
+                                 kFitWidth | kFixedWidth | kOwnBackground);
    f5->AddFrame(new TGLabel(f5, "EPSIL"), new TGLayoutHints(kLHintsLeft, 1, 1, 4, 0));
    fMedEpsil = new TGNumberEntry(f5, 0., 5, kMED_EPSIL);
    nef = (TGTextEntry*)fMedEpsil->GetNumberEntry();
@@ -182,7 +182,7 @@ TGeoMediumEditor::TGeoMediumEditor(const TGWindow *p, Int_t width,
 
    // Number entry for stmin
    TGCompositeFrame *f6 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
-                                 kLHintsExpandX | kFixedWidth | kOwnBackground);
+                                 kFitWidth | kFixedWidth | kOwnBackground);
    f6->AddFrame(new TGLabel(f6, "STMIN"), new TGLayoutHints(kLHintsLeft, 1, 1, 4, 0));
    fMedStmin = new TGNumberEntry(f6, 0., 5, kMED_STMIN);
    nef = (TGTextEntry*)fMedStmin->GetNumberEntry();
