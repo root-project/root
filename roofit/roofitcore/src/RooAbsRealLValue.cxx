@@ -242,7 +242,7 @@ RooPlot* RooAbsRealLValue::frame(const RooCmdArg& arg1, const RooCmdArg& arg2, c
 RooPlot* RooAbsRealLValue::frame(const RooLinkedList& cmdList) const
 {
   // Define configuration for this method
-  RooCmdConfig pc(Form("RooAbsRealLValue::frame(%s)",GetName())) ;
+  RooCmdConfig pc("RooAbsRealLValue::frame(" + std::string(GetName()) + ")");
   pc.defineDouble("min","Range",0,getMin()) ;
   pc.defineDouble("max","Range",1,getMax()) ;
   pc.defineInt("nbins","Bins",0,getBins()) ;
@@ -586,7 +586,7 @@ TH1* RooAbsRealLValue::createHistogram(const char *name, const RooCmdArg& arg1, 
 TH1* RooAbsRealLValue::createHistogram(const char *name, const RooLinkedList& cmdList) const
 {
   // Define configuration for this method
-  RooCmdConfig pc(Form("RooAbsRealLValue::createHistogram(%s)",GetName())) ;
+  RooCmdConfig pc("RooAbsRealLValue::createHistogram(" + std::string(GetName()) + ")");
 
   pc.defineObject("xbinning","Binning",0,0) ;
   pc.defineString("xbinningName","BinningName",0,"") ;
