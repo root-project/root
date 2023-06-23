@@ -148,8 +148,20 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        # We have to get a bit creative here: GitHub actions only allows to
+        # exclude partial matches, so we artificially add the event_name as
+        # a "constant variable" that we can use to remove the Debug entries
+        # for pull requests and on branch pushes. This is further complicated
+        # by the fact that event_name is a string, but we need an array. So
+        # we construct a JSON string that we can then convert into an array.
+        event_name: ${{ fromJSON(format('["{0}"]', github.event_name)) }}
         config: ["Debug", "Release"]
         target_arch: [x64, x86]
+        exclude:
+          - event_name: pull_request
+            config: Debug
+          - event_name: push
+            config: Debug
 
     name: Windows 10 ${{ matrix.target_arch }} ${{ matrix.config }}
 
@@ -164,7 +176,7 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Pull Request Build
-        if: github.event_name == 'pull_request' && matrix.config == 'Release'
+        if: github.event_name == 'pull_request'
         env:
           INCREMENTAL: ${{ !contains(github.event.pull_request.labels.*.name, 'clean build') }}
           GITHUB_PR_ORIGIN: ${{ github.event.pull_request.head.repo.clone_url }}
@@ -205,7 +217,7 @@ jobs:
                     --architecture ${{ matrix.target_arch }}  "
 
       - name: Update artifacts after push to release branch
-        if:   github.event_name == 'push' && matrix.config == 'Release'
+        if:   github.event_name == 'push'
         shell: cmd
         run: "C:\\setenv.bat ${{ matrix.target_arch }} &&
               python .github/workflows/root-ci-config/build_root.py
