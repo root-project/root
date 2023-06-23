@@ -462,7 +462,7 @@ RooAbsData* RooAbsData::reduce(const RooCmdArg& arg1,const RooCmdArg& arg2,const
                 const RooCmdArg& arg5,const RooCmdArg& arg6,const RooCmdArg& arg7,const RooCmdArg& arg8)
 {
   // Define configuration for this method
-  RooCmdConfig pc(Form("RooAbsData::reduce(%s)",GetName())) ;
+  RooCmdConfig pc("RooAbsData::reduce(" + std::string(GetName()) + ")");
   pc.defineString("name","Name",0,"") ;
   pc.defineString("title","Title",0,"") ;
   pc.defineString("cutRange","CutRange",0,"") ;
@@ -737,7 +737,7 @@ TH1 *RooAbsData::createHistogram(const char *name, const RooAbsRealLValue& xvar,
   RooLinkedList argList(argListIn) ;
 
   // Define configuration for this method
-  RooCmdConfig pc(Form("RooAbsData::createHistogram(%s)",GetName())) ;
+  RooCmdConfig pc("RooAbsData::createHistogram(" + std::string(GetName()) + ")");
   pc.defineString("cutRange","CutRange",0,"",true) ;
   pc.defineString("cutString","CutSpec",0,"") ;
   pc.defineObject("yvar","YVar",0,0) ;
@@ -1219,7 +1219,7 @@ RooPlot* RooAbsData::statOn(RooPlot* frame, const RooCmdArg& arg1, const RooCmdA
   cmdList.Add(const_cast<RooCmdArg*>(&arg7)) ;  cmdList.Add(const_cast<RooCmdArg*>(&arg8)) ;
 
   // Select the pdf-specific commands
-  RooCmdConfig pc(Form("RooTreeData::statOn(%s)",GetName())) ;
+  RooCmdConfig pc("RooTreeData::statOn(" + std::string(GetName()) + ")");
   pc.defineString("what","What",0,"MNR") ;
   pc.defineString("label","Label",0,"") ;
   pc.defineDouble("xmin","Layout",0,0.65) ;
@@ -1743,7 +1743,7 @@ RooPlot* RooAbsData::plotOn(RooPlot* frame, const RooLinkedList& argList) const
   // New experimental plotOn() with varargs...
 
   // Define configuration for this method
-  RooCmdConfig pc(Form("RooAbsData::plotOn(%s)",GetName())) ;
+  RooCmdConfig pc("RooAbsData::plotOn(" + std::string(GetName()) + ")");
   pc.defineString("drawOption","DrawOption",0,"P") ;
   pc.defineString("cutRange","CutRange",0,"",true) ;
   pc.defineString("cutString","CutSpec",0,"") ;

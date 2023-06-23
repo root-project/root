@@ -336,7 +336,7 @@ RooDataSet::RooDataSet(RooStringView name, RooStringView title, const RooArgSet&
   TRACE_CREATE;
 
   // Define configuration for this method
-  RooCmdConfig pc(Form("RooDataSet::ctor(%s)",GetName())) ;
+  RooCmdConfig pc("RooDataSet::ctor(" + std::string(GetName()) + ")");
   pc.defineInt("ownLinked","OwnLinked",0) ;
   pc.defineObject("impTree","ImportTree",0) ;
   pc.defineObject("impData","ImportData",0) ;
@@ -1366,7 +1366,7 @@ RooPlot* RooDataSet::plotOnXY(RooPlot* frame, const RooCmdArg& arg1, const RooCm
   argList.Add((TObject*)&arg7) ;  argList.Add((TObject*)&arg8) ;
 
   // Process named arguments
-  RooCmdConfig pc(Form("RooDataSet::plotOnXY(%s)",GetName())) ;
+  RooCmdConfig pc("RooDataSet::plotOnXY(" + std::string(GetName()) + ")");
   pc.defineString("drawOption","DrawOption",0,"P") ;
   pc.defineString("histName","Name",0,"") ;
   pc.defineInt("lineColor","LineColor",0,-999) ;
@@ -1418,7 +1418,7 @@ RooPlot* RooDataSet::plotOnXY(RooPlot* frame, const RooCmdArg& arg1, const RooCm
   if (histName) {
     graph->SetName(histName) ;
   } else {
-    graph->SetName(Form("hxy_%s",GetName())) ;
+    graph->SetName(("hxy_" + std::string(GetName())).c_str());
   }
 
   for (int i=0 ; i<numEntries() ; i++) {
