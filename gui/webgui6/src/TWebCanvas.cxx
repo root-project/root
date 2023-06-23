@@ -1564,6 +1564,23 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
          Canvas()->fCw = arr->at(0);
          Canvas()->fCh = arr->at(1);
       }
+   } else if (arg.compare(0, 7, "POPOBJ:") == 0) {
+      auto arr = TBufferJSON::FromJSON<std::vector<std::string>>(arg.substr(7));
+      if (arr && arr->size() == 2) {
+         TPad *pad = dynamic_cast<TPad *>(FindPrimitive(arr->at(0)));
+         TObject *obj = FindPrimitive(arr->at(1), 0, pad);
+         if (pad && obj && (obj != pad->GetListOfPrimitives()->Last())) {
+            TIter next(pad->GetListOfPrimitives());
+            while (auto o = next())
+               if (obj == o) {
+                  TString opt = next.GetOption();
+                  pad->GetListOfPrimitives()->Remove(obj);
+                  pad->GetListOfPrimitives()->AddLast(obj, opt.Data());
+                  pad->Modified();
+                  break;
+               }
+         }
+      }
    } else if (arg == "INTERRUPT"s) {
       gROOT->SetInterrupt();
    } else {
