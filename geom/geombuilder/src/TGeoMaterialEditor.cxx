@@ -91,7 +91,7 @@ TGeoMaterialEditor::TGeoMaterialEditor(const TGWindow *p, Int_t width,
    TGCompositeFrame *compxyz = new TGCompositeFrame(this, 118, 30, kVerticalFrame | kRaisedFrame | kDoubleBorder);
    // Combo box for material state
    f1 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
-                             kLHintsExpandX | kFixedWidth | kOwnBackground);
+                             kFitWidth | kFixedWidth | kOwnBackground);
    f1->AddFrame(new TGLabel(f1, "State"), new TGLayoutHints(kLHintsLeft, 1, 1, 6, 0));
    fMatState = new TGComboBox(f1, kMATERIAL_STATE);
    fMatState->AddEntry("Undefined", TGeoMaterial::kMatStateUndefined);
@@ -104,7 +104,7 @@ TGeoMaterialEditor::TGeoMaterialEditor(const TGWindow *p, Int_t width,
 
    // Number entry for density
    f1 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
-                             kLHintsExpandX | kFixedWidth | kOwnBackground);
+                             kFitWidth | kFixedWidth | kOwnBackground);
    f1->AddFrame(new TGLabel(f1, "Density"), new TGLayoutHints(kLHintsLeft, 1, 1, 6, 0));
    fMatDensity = new TGNumberEntry(f1, 0., 5, kMATERIAL_RHO, TGNumberFormat::kNESRealThree);
    fMatDensity->Resize(90, fMaterialName->GetDefaultHeight());
@@ -116,7 +116,7 @@ TGeoMaterialEditor::TGeoMaterialEditor(const TGWindow *p, Int_t width,
 
    // Number entry for temperature
    f1 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
-                             kLHintsExpandX | kFixedWidth | kOwnBackground);
+                             kFitWidth | kFixedWidth | kOwnBackground);
    f1->AddFrame(new TGLabel(f1, "Temperature"), new TGLayoutHints(kLHintsLeft, 1, 1, 6, 0));
    fMatTemperature = new TGNumberEntry(f1, 0., 5, kMATERIAL_TEMP, TGNumberFormat::kNESRealTwo);
    fMatTemperature->Resize(90, fMaterialName->GetDefaultHeight());
@@ -128,7 +128,7 @@ TGeoMaterialEditor::TGeoMaterialEditor(const TGWindow *p, Int_t width,
 
    // Number entry for pressure
    f1 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
-                             kLHintsExpandX | kFixedWidth | kOwnBackground);
+                             kFitWidth | kFixedWidth | kOwnBackground);
    f1->AddFrame(new TGLabel(f1, "Pressure"), new TGLayoutHints(kLHintsLeft, 1, 1, 6, 0));
    fMatPressure = new TGNumberEntry(f1, 0., 5, kMATERIAL_PRES, TGNumberFormat::kNESRealThree);
    fMatPressure->Resize(90, fMaterialName->GetDefaultHeight());
@@ -140,7 +140,7 @@ TGeoMaterialEditor::TGeoMaterialEditor(const TGWindow *p, Int_t width,
 
    // Number entry for radiation length
    f1 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
-                             kLHintsExpandX | kFixedWidth | kOwnBackground);
+                             kFitWidth | kFixedWidth | kOwnBackground);
    f1->AddFrame(new TGLabel(f1, "RadLen"), new TGLayoutHints(kLHintsLeft, 1, 1, 6, 0));
    fMatRadLen = new TGNumberEntry(f1, 0., 5, kMATERIAL_RAD);
    fMatRadLen->Resize(90, fMaterialName->GetDefaultHeight());
@@ -152,7 +152,7 @@ TGeoMaterialEditor::TGeoMaterialEditor(const TGWindow *p, Int_t width,
 
    // Number entry for absorption length
    f1 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
-                             kLHintsExpandX | kFixedWidth | kOwnBackground);
+                             kFitWidth | kFixedWidth | kOwnBackground);
    f1->AddFrame(new TGLabel(f1, "AbsLen"), new TGLayoutHints(kLHintsLeft, 1, 1, 6, 0));
    fMatAbsLen = new TGNumberEntry(f1, 0., 5, kMATERIAL_ABS);
    fMatAbsLen->Resize(90, fMaterialName->GetDefaultHeight());
@@ -407,7 +407,7 @@ TGeoMixtureEditor::TGeoMixtureEditor(const TGWindow *p, Int_t width,
    compxyz = new TGCompositeFrame(this, 118, 30, kVerticalFrame | kRaisedFrame | kDoubleBorder);
    // Combo box for selecting elements
    f1 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
-                             kLHintsExpandX | kFixedWidth | kOwnBackground);
+                             kFitWidth | kFixedWidth | kOwnBackground);
    fMixElem = new TGComboBox(f1, kMIX_ELEM);
    TGeoElementTable *table = gGeoManager->GetElementTable();
    if (table) {
@@ -430,7 +430,7 @@ TGeoMixtureEditor::TGeoMixtureEditor(const TGWindow *p, Int_t width,
 
    // Fraction by weight
    f1 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
-                             kLHintsExpandX | kFixedWidth | kOwnBackground);
+                             kFitWidth | kFixedWidth | kOwnBackground);
    fChkFraction = new TGCheckButton(f1, "% weight");
    fChkFraction->SetDown(kTRUE);
    f1->AddFrame(fChkFraction, new TGLayoutHints(kLHintsLeft , 2, 2, 6, 1));
@@ -446,7 +446,7 @@ TGeoMixtureEditor::TGeoMixtureEditor(const TGWindow *p, Int_t width,
 
    // Fraction by number of atoms
    f1 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
-                             kLHintsExpandX | kFixedWidth | kOwnBackground);
+                             kFitWidth | kFixedWidth | kOwnBackground);
    fChkNatoms = new TGCheckButton(f1, "N. atoms");
    fChkNatoms->SetDown(kFALSE);
    f1->AddFrame(fChkNatoms, new TGLayoutHints(kLHintsLeft, 2, 2, 6, 1));

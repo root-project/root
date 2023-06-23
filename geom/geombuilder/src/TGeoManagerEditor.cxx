@@ -515,7 +515,7 @@ TGeoManagerEditor::TGeoManagerEditor(const TGWindow *p, Int_t width,
 
    // List of media
    f5 = new TGCompositeFrame(container, 155, 10, kVerticalFrame | kFixedWidth);
-   f1 = new TGCompositeFrame(f5, 145, 10, kHorizontalFrame | kLHintsExpandX | kFixedWidth | kOwnBackground);
+   f1 = new TGCompositeFrame(f5, 145, 10, kHorizontalFrame | kFitWidth | kFixedWidth | kOwnBackground);
    f1->AddFrame(label = new TGLabel(f1, "Existing media"), new TGLayoutHints(kLHintsLeft, 1, 1, 0, 0));
    f1->AddFrame(new TGHorizontal3DLine(f1), new TGLayoutHints(kLHintsExpandX, 5, 5, 7, 7));
    gClient->GetColorByName("#ff0000", color);
