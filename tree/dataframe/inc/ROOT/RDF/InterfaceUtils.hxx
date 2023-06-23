@@ -52,11 +52,11 @@ namespace Detail {
 namespace RDF {
 class RNodeBase;
 }
-}
+} // namespace Detail
 namespace RDF {
 template <typename T>
 class RResultPtr;
-template<typename T, typename V>
+template <typename T, typename V>
 class RInterface;
 using RNode = RInterface<::ROOT::Detail::RDF::RNodeBase, void>;
 class RDataSource;
@@ -174,7 +174,7 @@ BuildAction(const ColumnNames_t &bl, const std::shared_ptr<::TH1D> &h, const uns
    } else
 #endif
 
-   if (hasAxisLimits || !IsImplicitMTEnabled()) {
+      if (hasAxisLimits || !IsImplicitMTEnabled()) {
       using Helper_t = FillHelper<::TH1D>;
       using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<ColTypes...>>;
       return std::make_unique<Action_t>(Helper_t(h, nSlots), bl, std::move(prevNode), colRegister);
