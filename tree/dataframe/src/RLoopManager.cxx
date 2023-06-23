@@ -402,7 +402,7 @@ void RLoopManager::ChangeSpec(ROOT::RDF::Experimental::RDatasetSpec &&spec)
    fSampleMap.clear();
 
    // Create the internal main chain
-   auto chain = std::make_shared<TChain>("");
+   auto chain = ROOT::Internal::TreeUtils::MakeChainForMT();
    for (auto &sample : fSamples) {
       const auto &trees = sample.GetTreeNames();
       const auto &files = sample.GetFileNameGlobs();
