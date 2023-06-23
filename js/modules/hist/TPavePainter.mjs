@@ -974,19 +974,9 @@ class TPavePainter extends ObjectPainter {
          });
    }
 
-   /** @summary Bring pave painter as last in list of primitives of its parent */
-   bringToFront() {
-      if (!this.draw_g) return;
-      let prnt = this.draw_g.node().parentNode;
-      prnt?.appendChild(this.draw_g.node());
-   }
-
    /** @summary Fill context menu items for the TPave object */
    fillContextMenuItems(menu) {
       let pave = this.getObject();
-
-
-      menu.add('Bring to front', () => this.bringToFront());
 
       if (this.isStats()) {
          menu.add('Default position', () => {
@@ -1096,6 +1086,8 @@ class TPavePainter extends ObjectPainter {
             gStyle.fTitleFont = pave.fTextFont;
          }, 'Store title position and graphical attributes to gStyle');
       }
+
+      menu.add('Bring to front', () => this.bringToFront(!this.isStats() && !this.z_handle));
    }
 
    /** @summary Show pave context menu */

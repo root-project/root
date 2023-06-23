@@ -2,7 +2,7 @@ import { BIT } from '../core.mjs';
 import { ObjectPainter } from '../base/ObjectPainter.mjs';
 import { ensureTCanvas } from '../gpad/TCanvasPainter.mjs';
 import { addMoveHandler } from '../gui/utils.mjs';
-import { assignContextMenu } from '../gui/menu.mjs';
+import { assignContextMenu, kToFront } from '../gui/menu.mjs';
 
 class TLinePainter extends ObjectPainter {
 
@@ -75,7 +75,7 @@ class TLinePainter extends ObjectPainter {
       this.addExtras(elem);
 
       addMoveHandler(this);
-      assignContextMenu(this);
+      assignContextMenu(this, kToFront);
 
       return this;
    }

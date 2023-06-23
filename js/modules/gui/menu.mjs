@@ -6,6 +6,7 @@ import { TAttMarkerHandler } from '../base/TAttMarkerHandler.mjs';
 import { getSvgLineStyle } from '../base/TAttLineHandler.mjs';
 import { FontHandler } from '../base/FontHandler.mjs';
 
+const kToFront = '__front__';
 
 /**
  * @summary Abstract class for creating context menu
@@ -1396,6 +1397,10 @@ function showPainterMenu(evnt, painter, kind) {
 
    createMenu(evnt, painter).then(menu => {
       painter.fillContextMenu(menu);
+      if ((kind == kToFront) && isFunc(painter.bringToFront)) {
+         menu.add('Bring to front', () => painter.bringToFront(true));
+         kind = undefined;
+      }
       return painter.fillObjectExecMenu(menu, kind);
    }).then(menu => menu.show());
 }
@@ -1407,4 +1412,4 @@ function assignContextMenu(painter, kind) {
       painter.draw_g.on('contextmenu', settings.ContextMenu ? evnt => showPainterMenu(evnt, painter, kind) : null);
 }
 
-export { createMenu, closeMenu, showPainterMenu, assignContextMenu };
+export { createMenu, closeMenu, showPainterMenu, assignContextMenu, kToFront };
