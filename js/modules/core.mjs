@@ -5,17 +5,20 @@ let version_id = 'dev';
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-let version_date = '1/06/2023';
+let version_date = '23/06/2023';
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
   * Like '7.0.0 14/04/2022' */
 let version = version_id + ' ' + version_date;
 
-/** @summary Location of JSROOT scripts
-  * @desc Automatically detected and used to load other scripts or modules */
+/** @summary Location of JSROOT modules
+  * @desc Automatically detected and used to dynamically load other modules
+  * @private */
 let source_dir = '';
 
+/** @summary Is node.js flag
+  * @private */
 let nodejs = !!((typeof process == 'object') && isObject(process.versions) && process.versions.node && process.versions.v8);
 
 /** @summary internal data
@@ -23,8 +26,6 @@ let nodejs = !!((typeof process == 'object') && isObject(process.versions) && pr
 let internals = {
    id_counter: 1          ///< unique id contner, starts from 1
 };
-
-//openuicfg // DO NOT DELETE, used to configure openui5 usage like internals.openui5src = 'nojsroot';
 
 const src = import.meta?.url;
 if (src && isStr(src)) {
@@ -38,33 +39,41 @@ if (src && isStr(src)) {
    }
 }
 
+/** @summary Is batch mode flag
+  * @private */
 let batch_mode = nodejs;
 
 /** @summary Indicates if running in batch mode */
 function isBatchMode() { return batch_mode; }
 
-/** @summary Set batch mode */
+/** @summary Set batch mode
+  * @private */
 function setBatchMode(on) { batch_mode = !!on; }
 
 /** @summary Indicates if running inside Node.js */
 function isNodeJs() { return nodejs; }
 
-/** @summary atob function in all environments */
+/** @summary atob function in all environments
+  * @private */
 const atob_func = isNodeJs() ? str => Buffer.from(str,'base64').toString('latin1') : globalThis?.atob;
 
-/** @summary btoa function in all environments */
+/** @summary btoa function in all environments
+  * @private */
 const btoa_func = isNodeJs() ? str => Buffer.from(str,'latin1').toString('base64') : globalThis?.btoa;
 
-let browser = { isFirefox: true, isSafari: false, isChrome: false, isWin: false, touches: false };
+/** @summary browser detection flags
+  * @private */
+let browser = { isFirefox: true, isSafari: false, isChrome: false, isWin: false, touches: false, screenWidth: 1200 };
 
 if ((typeof document !== 'undefined') && (typeof window !== 'undefined') && (typeof navigator !== 'undefined')) {
-   browser.isFirefox = (navigator.userAgent.indexOf('Firefox') >= 0) || (typeof InstallTrigger !== 'undefined');
+   browser.isFirefox = navigator.userAgent.indexOf('Firefox') >= 0;
    browser.isSafari = Object.prototype.toString.call(window.HTMLElement).indexOf('Constructor') > 0;
    browser.isChrome = !!window.chrome;
    browser.isChromeHeadless = navigator.userAgent.indexOf('HeadlessChrome') >= 0;
    browser.chromeVersion = (browser.isChrome || browser.isChromeHeadless) ? parseInt(navigator.userAgent.match(/Chrom(?:e|ium)\/([0-9]+)\.([0-9]+)\.([0-9]+)\.([0-9]+)/)[1]) : 0;
    browser.isWin = navigator.userAgent.indexOf('Windows') >= 0;
    browser.touches = ('ontouchend' in document); // identify if touch events are supported
+   browser.screenWidth = window.screen?.width ?? 1200;
 }
 
 /** @summary Check if prototype string match to array (typed on untyped)
@@ -166,33 +175,33 @@ let settings = {
    /** @summary Way to embed 3D drawing in SVG, see {@link constants.Embed3D} for possible values */
    Embed3D: constants.Embed3D.Default,
    /** @summary Enable or disable tooltips, default on */
-   Tooltip: true,
+   Tooltip: !nodejs,
    /** @summary Time in msec for appearance of tooltips, 0 - no animation */
    TooltipAnimation: 500,
    /** @summary Enables context menu usage */
-   ContextMenu: true,
+   ContextMenu: !nodejs,
    /** @summary Global zooming flag, enable/disable any kind of interactive zooming */
-   Zooming: true,
+   Zooming: !nodejs,
    /** @summary Zooming with the mouse events */
-   ZoomMouse: true,
+   ZoomMouse: !nodejs,
    /** @summary Zooming with mouse wheel */
-   ZoomWheel: true,
+   ZoomWheel: !nodejs,
    /** @summary Zooming on touch devices */
-   ZoomTouch: true,
+   ZoomTouch: !nodejs,
    /** @summary Enables move and resize of elements like statbox, title, pave, colz  */
-   MoveResize: true,
+   MoveResize: !browser.touches && !nodejs,
    /** @summary Configures keybord key press handling
      * @desc Can be disabled to prevent keys heandling in complex HTML layouts
      * @default true */
-   HandleKeys: true,
+   HandleKeys: !nodejs,
    /** @summary enables drag and drop functionality */
-   DragAndDrop: true,
+   DragAndDrop: !nodejs,
    /** @summary Interactive dragging of TGraph points */
    DragGraphs: true,
    /** @summary Show progress box */
-   ProgressBox: true,
+   ProgressBox: !nodejs,
    /** @summary Show additional tool buttons on the canvas, false - disabled, true - enabled, 'popup' - only toggle button */
-   ToolBar: 'popup',
+   ToolBar: nodejs ? false : 'popup',
    /** @summary Position of toolbar 'left' left-bottom corner on canvas, 'right' - right-bottom corner on canvas, opposite on sub-pads */
    ToolBarSide: 'left',
    /** @summary display tool bar vertical (default false) */
@@ -207,8 +216,9 @@ let settings = {
    OptimizeDraw: 1,
    /** @summary Automatically create stats box, default on */
    AutoStat: true,
-   /** @summary Default frame position in NFC */
-   FrameNDC: { fX1NDC: 0.07, fY1NDC: 0.12, fX2NDC: 0.95, fY2NDC: 0.88 },
+   /** @summary Default frame position in NFC
+     * @deprecated Use gStyle.fPad[Left/Right/Top/Bottom]Margin values instead */
+   FrameNDC: {},
    /** @summary size of pad, where many features will be deactivated like text draw or zooming  */
    SmallPad: { width: 150, height: 100 },
    /** @summary Default color palette id  */
@@ -237,6 +247,7 @@ let settings = {
    /** @summary Tweak browser caching with stamp URL parameter
      * @desc When specified, extra URL parameter like ```?stamp=unique_value``` append to each files loaded
      * In such case browser will be forced to load file content disregards of server cache settings
+     * Can be disabled by providing &usestamp=false in URL or via Settings/Files sub-menu
      * @default true */
    UseStamp: true,
    /** @summary Maximal number of bytes ranges in http 'Range' header
@@ -254,10 +265,6 @@ let settings = {
    /** @summary Prefer to use saved points in TF1/TF2, avoids eval() and Function() when possible */
    PreferSavedPoints: false
 };
-
-
-if (nodejs)
-   Object.assign(settings, { ToolBar: false, Tooltip: 0, ContextMenu: false, Zooming: false, MoveResize: false, DragAndDrop: false, ProgressBox: false });
 
 
 /** @namespace
@@ -293,6 +300,10 @@ let gStyle = {
    fPadGridY: false,
    fPadTickX: 0,
    fPadTickY: 0,
+   fPadBorderSize: 2,
+   fPadBorderMode: 0,
+   fCanvasBorderSize: 2,
+   fCanvasBorderMode: 0,
    /** @summary fill color for stat box */
    fStatColor: 0,
    /** @summary fill style for stat box */
@@ -429,7 +440,7 @@ async function injectCode(code) {
 }
 
 /** @summary Load script or CSS file into the browser
-  * @param {String} url - script or css file URL (or array, in this case they all loaded secuentially)
+  * @param {String} url - script or css file URL (or array, in this case they all loaded sequentially)
   * @return {Promise} */
 async function loadScript(url) {
    if (!url)
@@ -460,6 +471,10 @@ async function loadScript(url) {
          return null;
       if ((url.indexOf('http:') == 0) || (url.indexOf('https:') == 0))
          return httpRequest(url, 'text').then(code => injectCode(code));
+
+      // local files, read and use it
+      if (url.indexOf('./') == 0)
+         return import('fs').then(fs => injectCode(fs.readFileSync(url)));
 
       return import(/* webpackIgnore: true */ url);
    }
@@ -719,11 +734,17 @@ function parseMulti(json) {
 }
 
 /** @summary Method converts JavaScript object into ROOT-like JSON
-  * @desc Produced JSON can be used in parse() again
-  * When performed properly, JSON can be used in [TBufferJSON::fromJSON()]{@link https://root.cern/doc/master/classTBufferJSON.html#a2ecf0daacdad801e60b8093a404c897d} method to read data back with C++
+  * @desc When performed properly, JSON can be used in [TBufferJSON::fromJSON()]{@link https://root.cern/doc/master/classTBufferJSON.html#a2ecf0daacdad801e60b8093a404c897d} method to read data back with C++
+  * Or one can again parse json with {@link parse} function
   * @param {object} obj - JavaScript object to convert
   * @param {number} [spacing] - optional line spacing in JSON
-  * @return {string} produced JSON code */
+  * @return {string} produced JSON code
+  * @example
+  * import { openFile, draw, toJSON } from 'https://root.cern/js/latest/modules/main.mjs';
+  * let file = await openFile('https://root.cern/js/files/hsimple.root');
+  * let obj = await file.readObject('hpxpy;1');
+  * obj.fTitle = 'New histogram title';
+  * let json = toJSON(obj); */
 function toJSON(obj, spacing) {
    if (!isObject(obj)) return '';
 
@@ -777,6 +798,7 @@ function toJSON(obj, spacing) {
   * @param {string} [url] URL string with options, document.URL will be used when not specified
   * @return {Object} with ```.has(opt)``` and ```.get(opt,dflt)``` methods
   * @example
+  * import { decodeUrl } from 'https://root.cern/js/latest/modules/core.mjs';
   * let d = decodeUrl('any?opt1&op2=3');
   * console.log(`Has opt1 ${d.has('opt1')}`);     // true
   * console.log(`Get opt1 ${d.get('opt1')}`);     // ''
@@ -842,120 +864,114 @@ function findFunction(name) {
 }
 
 
-/** @summary Assign methods to request
-  * @private */
-function setRequestMethods(xhr, url, kind, user_accept_callback, user_reject_callback) {
-   xhr.http_callback = isFunc(user_accept_callback) ? user_accept_callback.bind(xhr) : function() {};
-   xhr.error_callback = isFunc(user_reject_callback) ? user_reject_callback.bind(xhr) : function(err) { console.warn(err.message); this.http_callback(null); }.bind(xhr);
-
-   if (!kind) kind = 'buf';
-
-   let method = 'GET', is_async = true, p = kind.indexOf(';sync');
-   if (p > 0) { kind = kind.slice(0,p); is_async = false; }
-   switch (kind) {
-      case 'head': method = 'HEAD'; break;
-      case 'posttext': method = 'POST'; kind = 'text'; break;
-      case 'postbuf':  method = 'POST'; kind = 'buf'; break;
-      case 'post':
-      case 'multi': method = 'POST'; break;
-   }
-
-   xhr.kind = kind;
-
-   if (settings.WithCredentials)
-      xhr.withCredentials = true;
-
-   if (settings.HandleWrongHttpResponse && (method == 'GET') && isFunc(xhr.addEventListener))
-      xhr.addEventListener('progress', function(oEvent) {
-         if (oEvent.lengthComputable && this.expected_size && (oEvent.loaded > this.expected_size)) {
-            this.did_abort = true;
-            this.abort();
-            this.error_callback(Error(`Server sends more bytes ${oEvent.loaded} than expected ${this.expected_size}. Abort I/O operation`), 598);
-         }
-      }.bind(xhr));
-
-   xhr.onreadystatechange = function() {
-
-      if (this.did_abort) return;
-
-      if ((this.readyState === 2) && this.expected_size) {
-         let len = parseInt(this.getResponseHeader('Content-Length'));
-         if (Number.isInteger(len) && (len > this.expected_size) && !settings.HandleWrongHttpResponse) {
-            this.did_abort = true;
-            this.abort();
-            return this.error_callback(Error(`Server response size ${len} larger than expected ${this.expected_size}. Abort I/O operation`), 599);
-         }
-      }
-
-      if (this.readyState != 4) return;
-
-      if ((this.status != 200) && (this.status != 206) && !browser.qt5 &&
-          // in these special cases browsers not always set status
-          !((this.status == 0) && ((url.indexOf('file://') == 0) || (url.indexOf('blob:') == 0)))) {
-            return this.error_callback(Error(`Fail to load url ${url}`), this.status);
-      }
-
-      if (this.nodejs_checkzip && (this.getResponseHeader('content-encoding') == 'gzip'))
-         // special handling of gzipped JSON objects in Node.js
-         return import('zlib').then(handle => {
-             let res = handle.unzipSync(Buffer.from(this.response)),
-                 obj = JSON.parse(res); // zlib returns Buffer, use JSON to parse it
-            return this.http_callback(parse(obj));
-         });
-
-      switch(this.kind) {
-         case 'xml': return this.http_callback(this.responseXML);
-         case 'text': return this.http_callback(this.responseText);
-         case 'object': return this.http_callback(parse(this.responseText));
-         case 'multi': return this.http_callback(parseMulti(this.responseText));
-         case 'head': return this.http_callback(this);
-      }
-
-      // if no response type is supported, return as text (most probably, will fail)
-      if (this.responseType === undefined)
-         return this.http_callback(this.responseText);
-
-      if ((this.kind == 'bin') && ('byteLength' in this.response)) {
-         // if string representation in requested - provide it
-
-         let filecontent = '', u8Arr = new Uint8Array(this.response);
-         for (let i = 0; i < u8Arr.length; ++i)
-            filecontent += String.fromCharCode(u8Arr[i]);
-
-         return this.http_callback(filecontent);
-      }
-
-      this.http_callback(this.response);
-   };
-
-   xhr.open(method, url, is_async);
-
-   if ((kind == 'bin') || (kind == 'buf'))
-      xhr.responseType = 'arraybuffer';
-
-   if (nodejs && (method == 'GET') && (kind === 'object') && (url.indexOf('.json.gz') > 0)) {
-      xhr.nodejs_checkzip = true;
-      xhr.responseType = 'arraybuffer';
-   }
-
-   return xhr;
-}
-
 /** @summary Method to create http request, without promise can be used only in browser environment
   * @private */
 function createHttpRequest(url, kind, user_accept_callback, user_reject_callback, use_promise) {
-   if (isNodeJs()) {
-      if (!use_promise)
-         throw Error('Not allowed to create http requests in node without promise');
-      return import('xhr2').then(h => {
-         let xhr = new h.default();
-         setRequestMethods(xhr, url, kind, user_accept_callback, user_reject_callback);
-         return xhr;
-      });
+
+   function configureXhr(xhr) {
+      xhr.http_callback = isFunc(user_accept_callback) ? user_accept_callback.bind(xhr) : () => {};
+      xhr.error_callback = isFunc(user_reject_callback) ? user_reject_callback.bind(xhr) : function(err) { console.warn(err.message); this.http_callback(null); }.bind(xhr);
+
+      if (!kind) kind = 'buf';
+
+      let method = 'GET', is_async = true, p = kind.indexOf(';sync');
+      if (p > 0) { kind = kind.slice(0,p); is_async = false; }
+      switch (kind) {
+         case 'head': method = 'HEAD'; break;
+         case 'posttext': method = 'POST'; kind = 'text'; break;
+         case 'postbuf':  method = 'POST'; kind = 'buf'; break;
+         case 'post':
+         case 'multi': method = 'POST'; break;
+      }
+
+      xhr.kind = kind;
+
+      if (settings.WithCredentials)
+         xhr.withCredentials = true;
+
+      if (settings.HandleWrongHttpResponse && (method == 'GET') && isFunc(xhr.addEventListener))
+         xhr.addEventListener('progress', function(oEvent) {
+            if (oEvent.lengthComputable && this.expected_size && (oEvent.loaded > this.expected_size)) {
+               this.did_abort = true;
+               this.abort();
+               this.error_callback(Error(`Server sends more bytes ${oEvent.loaded} than expected ${this.expected_size}. Abort I/O operation`), 598);
+            }
+         }.bind(xhr));
+
+      xhr.onreadystatechange = function() {
+
+         if (this.did_abort) return;
+
+         if ((this.readyState === 2) && this.expected_size) {
+            let len = parseInt(this.getResponseHeader('Content-Length'));
+            if (Number.isInteger(len) && (len > this.expected_size) && !settings.HandleWrongHttpResponse) {
+               this.did_abort = true;
+               this.abort();
+               return this.error_callback(Error(`Server response size ${len} larger than expected ${this.expected_size}. Abort I/O operation`), 599);
+            }
+         }
+
+         if (this.readyState != 4) return;
+
+         if ((this.status != 200) && (this.status != 206) && !browser.qt5 &&
+             // in these special cases browsers not always set status
+             !((this.status == 0) && ((url.indexOf('file://') == 0) || (url.indexOf('blob:') == 0)))) {
+               return this.error_callback(Error(`Fail to load url ${url}`), this.status);
+         }
+
+         if (this.nodejs_checkzip && (this.getResponseHeader('content-encoding') == 'gzip'))
+            // special handling of gzipped JSON objects in Node.js
+            return import('zlib').then(handle => {
+                let res = handle.unzipSync(Buffer.from(this.response)),
+                    obj = JSON.parse(res); // zlib returns Buffer, use JSON to parse it
+               return this.http_callback(parse(obj));
+            });
+
+         switch(this.kind) {
+            case 'xml': return this.http_callback(this.responseXML);
+            case 'text': return this.http_callback(this.responseText);
+            case 'object': return this.http_callback(parse(this.responseText));
+            case 'multi': return this.http_callback(parseMulti(this.responseText));
+            case 'head': return this.http_callback(this);
+         }
+
+         // if no response type is supported, return as text (most probably, will fail)
+         if (this.responseType === undefined)
+            return this.http_callback(this.responseText);
+
+         if ((this.kind == 'bin') && ('byteLength' in this.response)) {
+            // if string representation in requested - provide it
+
+            let filecontent = '', u8Arr = new Uint8Array(this.response);
+            for (let i = 0; i < u8Arr.length; ++i)
+               filecontent += String.fromCharCode(u8Arr[i]);
+
+            return this.http_callback(filecontent);
+         }
+
+         this.http_callback(this.response);
+      };
+
+      xhr.open(method, url, is_async);
+
+      if ((kind == 'bin') || (kind == 'buf'))
+         xhr.responseType = 'arraybuffer';
+
+      if (nodejs && (method == 'GET') && (kind === 'object') && (url.indexOf('.json.gz') > 0)) {
+         xhr.nodejs_checkzip = true;
+         xhr.responseType = 'arraybuffer';
+      }
+
+      return xhr;
    }
 
-   let xhr = new XMLHttpRequest();
-   setRequestMethods(xhr, url, kind, user_accept_callback, user_reject_callback);
+   if (isNodeJs()) {
+      if (!use_promise)
+         throw Error('Not allowed to create http requests in node.js without promise');
+      return import('xhr2').then(h => configureXhr(new h.default()));
+   }
+
+   let xhr = configureXhr(new XMLHttpRequest());
    return use_promise ? Promise.resolve(xhr) : xhr;
 }
 
@@ -975,6 +991,7 @@ function createHttpRequest(url, kind, user_accept_callback, user_reject_callback
   * @param {string} [post_data] - data submitted with post kind of request
   * @return {Promise} Promise for requested data, result type depends from the kind
   * @example
+  * import { httpRequest } from 'https://root.cern/js/latest/modules/core.mjs';
   * httpRequest('https://root.cern/js/files/thstack.json.gz', 'object')
   *       .then(obj => console.log(`Get object of type ${obj._typename}`))
   *       .catch(err => console.error(err.message)); */
@@ -992,7 +1009,8 @@ const prROOT = 'ROOT.', clTObject = 'TObject', clTNamed = 'TNamed', clTString = 
       clTGraphPolar = 'TGraphPolar', clTGraphPolargram = 'TGraphPolargram', clTGraphTime = 'TGraphTime',
       clTPave = 'TPave', clTPaveText = 'TPaveText', clTPaveStats = 'TPaveStats', clTPavesText = 'TPavesText',
       clTPaveLabel = 'TPaveLabel', clTDiamond = 'TDiamond',
-      clTLegend = 'TLegend', clTLegendEntry = 'TLegendEntry', clTPaletteAxis = 'TPaletteAxis',
+      clTLegend = 'TLegend', clTLegendEntry = 'TLegendEntry',
+      clTPaletteAxis = 'TPaletteAxis', clTImagePalette = 'TImagePalette',
       clTText = 'TText', clTLatex = 'TLatex', clTMathText = 'TMathText', clTAnnotation = 'TAnnotation',
       clTColor = 'TColor', clTLine = 'TLine', clTBox = 'TBox', clTPolyLine = 'TPolyLine',
       clTPolyLine3D = 'TPolyLine3D', clTPolyMarker3D = 'TPolyMarker3D',
@@ -1009,7 +1027,7 @@ const prROOT = 'ROOT.', clTObject = 'TObject', clTNamed = 'TNamed', clTString = 
   * @desc Supported classes: `TObject`, `TNamed`, `TList`, `TAxis`, `TLine`, `TText`, `TLatex`, `TPad`, `TCanvas`
   * @param {string} typename - ROOT class name
   * @example
-  * import { create } from 'path_to_jsroot/modules/core.mjs';
+  * import { create } from 'https://root.cern/js/latest/modules/core.mjs';
   * let obj = create('TNamed');
   * obj.fName = 'name';
   * obj.fTitle = 'title'; */
@@ -1236,13 +1254,12 @@ function create(typename, target) {
                        fUxmin: 0, fUymin: 0, fUxmax: 0, fUymax: 0, fTheta: 30, fPhi: 30, fAspectRatio: 0,
                        fNumber: 0, fLogx: gStyle.fOptLogx, fLogy: gStyle.fOptLogy, fLogz: gStyle.fOptLogz,
                        fTickx: gStyle.fPadTickX, fTicky: gStyle.fPadTickY,
-                       fPadPaint: 0, fCrosshair: 0, fCrosshairPos: 0, fBorderSize: 2,
-                       fBorderMode: 0, fModified: false,
+                       fPadPaint: 0, fCrosshair: 0, fCrosshairPos: 0, fBorderSize: gStyle.fPadBorderSize,
+                       fBorderMode: gStyle.fPadBorderMode, fModified: false,
                        fGridx: gStyle.fPadGridX, fGridy: gStyle.fPadGridY,
                        fAbsCoord: false, fEditable: true, fFixedAspectRatio: false,
                        fPrimitives: create(clTList), fExecs: null,
                        fName: 'pad', fTitle: 'canvas' });
-
          break;
       case clTAttCanvas:
          extend(obj, { fXBetween: 2, fYBetween: 2, fTitleFromTop: 1.2,
@@ -1255,6 +1272,7 @@ function create(typename, target) {
                        fDoubleBuffer: 0, fRetained: true, fXsizeUser: 0,
                        fYsizeUser: 0, fXsizeReal: 20, fYsizeReal: 10,
                        fWindowTopX: 0, fWindowTopY: 0, fWindowWidth: 0, fWindowHeight: 0,
+                       fBorderSize: gStyle.fCanvasBorderSize, fBorderMode: gStyle.fCanvasBorderMode,
                        fCw: 500, fCh: 300, fCatt: create(clTAttCanvas),
                        kMoveOpaque: true, kResizeOpaque: true, fHighLightColor: 5,
                        fBatch: true, kShowEventStatus: false, kAutoExec: true, kMenuBar: true });
@@ -1303,6 +1321,7 @@ function create(typename, target) {
   * @param {number} [nbinsz] - number of bins on Z-axis (for 3D histograms)
   * @return {Object} created histogram object
   * @example
+  * import { createHistogram } from 'https://root.cern/js/latest/modules/core.mjs';
   * let h1 = createHistogram('TH1I', 20);
   * h1.fName = 'Hist1';
   * h1.fTitle = 'Histogram title';
@@ -1379,6 +1398,7 @@ function createTGraph(npoints, xpts, ypts) {
 /** @summary Creates THStack object
   * @desc As arguments one could specify any number of histograms objects
   * @example
+  * import { createHistogram, createTHStack } from 'https://root.cern/js/latest/modules/core.mjs';
   * let nbinsx = 20;
   * let h1 = createHistogram('TH1F', nbinsx);
   * let h2 = createHistogram('TH1F', nbinsx);
@@ -1394,6 +1414,7 @@ function createTHStack() {
 /** @summary Creates TMultiGraph object
   * @desc As arguments one could specify any number of TGraph objects
   * @example
+  * import { createTGraph, createTMultiGraph } from 'https://root.cern/js/latest/modules/core.mjs';
   * let gr1 = createTGraph(100);
   * let gr2 = createTGraph(100);
   * let gr3 = createTGraph(100);
@@ -1747,7 +1768,7 @@ export { version_id, version_date, version, source_dir, isNodeJs, isBatchMode, s
          clTObject, clTNamed, clTString, clTObjString, clTList, clTHashList, clTMap, clTObjArray, clTClonesArray,
          clTAttLine, clTAttFill, clTAttMarker, clTAttText,
          clTPave, clTPaveText, clTPavesText, clTPaveStats, clTPaveLabel, clTDiamond,
-         clTLegend, clTLegendEntry, clTPaletteAxis, clTText, clTLatex, clTMathText, clTAnnotation, clTMultiGraph,
+         clTLegend, clTLegendEntry, clTPaletteAxis, clTImagePalette, clTText, clTLatex, clTMathText, clTAnnotation, clTMultiGraph,
          clTColor, clTLine, clTBox, clTPolyLine, clTPad, clTCanvas, clTAttCanvas, clTGaxis,
          clTAxis, clTStyle, clTH1, clTH1I, clTH2, clTH2I, clTH2F, clTH3, clTF1, clTF2, clTProfile, clTProfile2D, clTHStack,
          clTGraph, clTGraph2DErrors, clTGraph2DAsymmErrors,

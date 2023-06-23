@@ -697,6 +697,9 @@ class WebWindowHandle {
   * @return {Promise} for ready-to-use {@link WebWindowHandle} instance  */
 async function connectWebWindow(arg) {
 
+   // mark that jsroot used with RWebWindow
+   browser.webwindow = true;
+
    if (isFunc(arg))
       arg = { callback: arg };
    else if (!isObject(arg))

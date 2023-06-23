@@ -13,9 +13,37 @@ import { drawPolyMarker3D } from '../draw/TPolyMarker3D.mjs';
 import { showProgress, registerForResize } from '../gui/utils.mjs';
 
 
-/** @summary Show TTree::Draw progress during processing */
+function treeShowProgress(handle, str) {
+   if (isBatchMode() || (typeof document == 'undefined')) return;
+
+   if (!str)
+      return showProgress();
+
+   let main_box = document.createElement('p'),
+       text_node = document.createTextNode(str);
+
+   main_box.appendChild(text_node);
+   main_box.title = 'Click on element to break';
+
+   main_box.onclick = () => {
+      if (!handle._break) handle._break = 0;
+
+      if (++handle._break < 3) {
+         main_box.title = 'Will break after next I/O operation';
+         return text_node.nodeValue = 'Breaking ... ';
+      }
+      if (isFunc(handle.Abort))
+         handle.Abort();
+      showProgress();
+   };
+
+   showProgress(main_box);
+}
+
+
+/** @summary Show TTree::Draw progress during processing
+  * @private */
 TDrawSelector.prototype.ShowProgress = function(value) {
-   if ((typeof document == 'undefined') || isBatchMode()) return;
 
    if ((value === undefined) || !Number.isFinite(value))
       return showProgress();
@@ -25,6 +53,8 @@ TDrawSelector.prototype.ShowProgress = function(value) {
       if (!this.aver_diff) this.aver_diff = diff;
       this.aver_diff = diff * 0.3 + this.aver_diff * 0.7;
    }
+
+   this.last_progress = value;
 
    let ndig = 0;
    if (this.aver_diff <= 0)
@@ -36,24 +66,7 @@ TDrawSelector.prototype.ShowProgress = function(value) {
    else if (this.aver_diff < 0.01)
       ndig = 1;
 
-   let main_box = document.createElement('p'),
-      text_node = document.createTextNode('TTree draw ' + (value * 100).toFixed(ndig) + ' %  '),
-      selector = this;
-
-   main_box.appendChild(text_node);
-   main_box.title = 'Click on element to break drawing';
-
-   main_box.onclick = function() {
-      if (++selector._break < 3) {
-         main_box.title = 'Tree draw will break after next I/O operation';
-         return text_node.nodeValue = 'Breaking ... ';
-      }
-      selector.Abort();
-      showProgress();
-   };
-
-   showProgress(main_box);
-   this.last_progress = value;
+   treeShowProgress(this, `TTree draw ${(value * 100).toFixed(ndig)} % `);
 }
 
 /** @summary Draw result of tree drawing
@@ -463,7 +476,7 @@ async function drawTree(dom, obj, opt) {
    let pr;
    if (args.expr === 'testio') {
       args.testio = true;
-      args.showProgress = showProgress;
+      args.showProgress = msg => treeShowProgress(args, msg);
       pr = treeIOTest(tree, args);
    } else if (args.expr || args.branch) {
       pr = treeDraw(tree, args);

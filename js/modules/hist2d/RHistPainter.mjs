@@ -661,8 +661,7 @@ class RHistPainter extends RObjectPainter {
             });
 
             if ((this.options.Lego == 12) || (this.options.Lego == 14)) {
-               if (this.fillPaletteMenu)
-                  this.fillPaletteMenu(menu);
+               this.fillPaletteMenu(menu);
             }
          }
 
