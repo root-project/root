@@ -375,7 +375,7 @@ RLoopManager::RLoopManager(ROOT::RDF::Experimental::RDatasetSpec &&spec)
      fSampleInfos(fNSlots),
      fDatasetColumnReaders(fNSlots)
 {
-   auto chain = std::make_shared<TChain>("");
+   auto chain = ROOT::Internal::TreeUtils::MakeChainForMT();
    for (auto &sample : fSamples) {
       const auto &trees = sample.GetTreeNames();
       const auto &files = sample.GetFileNameGlobs();

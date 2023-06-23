@@ -8,6 +8,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+#include "ROOT/InternalTreeUtils.hxx"
 #include "ROOT/RDataFrame.hxx"
 #include "ROOT/RDataSource.hxx"
 #include "ROOT/RDF/RDatasetSpec.hxx"
@@ -1387,7 +1388,7 @@ RDataFrame::RDataFrame(std::string_view treeName, std::string_view filenameglob,
 {
    const std::string treeNameInt(treeName);
    const std::string filenameglobInt(filenameglob);
-   auto chain = std::make_shared<TChain>(treeNameInt.c_str(), "", TChain::kWithoutGlobalRegistration);
+   auto chain = ROOT::Internal::TreeUtils::MakeChainForMT(treeNameInt);
    chain->Add(filenameglobInt.c_str());
    GetProxiedPtr()->SetTree(std::move(chain));
 }
@@ -1408,7 +1409,7 @@ RDataFrame::RDataFrame(std::string_view treeName, const std::vector<std::string>
    : RInterface(std::make_shared<RDFDetail::RLoopManager>(nullptr, defaultColumns))
 {
    std::string treeNameInt(treeName);
-   auto chain = std::make_shared<TChain>(treeNameInt.c_str(), "", TChain::kWithoutGlobalRegistration);
+   auto chain = ROOT::Internal::TreeUtils::MakeChainForMT(treeNameInt);
    for (auto &f : fileglobs)
       chain->Add(f.c_str());
    GetProxiedPtr()->SetTree(std::move(chain));
