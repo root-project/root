@@ -279,7 +279,7 @@ RooDataHist::RooDataHist(RooStringView name, RooStringView title, const RooArgLi
   _dstore = makeDefaultDataStore(name, title, _vars);
 
   // Define configuration for this method
-  RooCmdConfig pc(Form("RooDataHist::ctor(%s)",GetName())) ;
+  RooCmdConfig pc("RooDataHist::ctor(" + std::string(GetName()) + ")");
   pc.defineObject("impHist","ImportHisto",0) ;
   pc.defineInt("impDens","ImportHisto",0) ;
   pc.defineObject("indexCat","IndexCat",0) ;
@@ -1572,11 +1572,11 @@ void RooDataHist::weightError(double& lo, double& hi, ErrorType etype) const
   switch (etype) {
 
   case Auto:
-    throw std::invalid_argument(Form("RooDataHist::weightError(%s) error type Auto not allowed here",GetName())) ;
+    throw std::invalid_argument("RooDataHist::weightError(" + std::string(GetName()) + ") error type Auto not allowed here");
     break ;
 
   case Expected:
-    throw std::invalid_argument(Form("RooDataHist::weightError(%s) error type Expected not allowed here",GetName())) ;
+    throw std::invalid_argument("RooDataHist::weightError(" + std::string(GetName()) + ") error type Expected not allowed here");
     break ;
 
   case Poisson:

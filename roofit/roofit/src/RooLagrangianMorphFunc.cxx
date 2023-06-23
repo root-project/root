@@ -342,9 +342,9 @@ typedef std::map<int, std::unique_ptr<RooAbsReal>> FormulaList;
 ///////////////////////////////////////////////////////////////////////////////
 /// (-?-)
 
-inline TString makeValidName(const char *input)
+inline TString makeValidName(std::string const& input)
 {
-   TString retval(input);
+   TString retval(input.c_str());
    retval.ReplaceAll("/", "_");
    retval.ReplaceAll("^", "");
    retval.ReplaceAll("*", "X");
@@ -800,8 +800,8 @@ void collectHistograms(const char *name, TDirectory *file, std::map<std::string,
          }
 
          // generate the mean value
-         TString histname = makeValidName(Form("dh_%s_%s", sample.c_str(), name));
-         TString funcname = makeValidName(Form("phys_%s_%s", sample.c_str(), name));
+         TString histname = makeValidName("dh_" + sample + "_" + name);
+         TString funcname = makeValidName("phys_" + sample + "_" + name);
          RooArgSet vars;
          vars.add(var);
 
@@ -872,7 +872,7 @@ void collectCrosssections(const char *name, TDirectory *file, std::map<std::stri
          xs = (RooRealVar *)(physics.at(it->second));
          xs->setVal(xsection->GetVal());
       } else {
-         std::string objname = Form("phys_%s_%s", name, sample.c_str());
+         std::string objname = "phys_" + std::string(name) + "_" + sample;
          auto xsOwner = std::make_unique<RooRealVar>(objname.c_str(), objname.c_str(), xsection->GetVal());
          xs = xsOwner.get();
          xs->setConstant(true);
@@ -1208,7 +1208,7 @@ FormulaList buildFormulas(const char *mfname, const RooLagrangianMorphFunc::Para
          if (val == nNP) {
             if (flagsZero.find(obj->GetName()) != flagsZero.end() && flagsZero.at(obj->GetName())) {
                removedByFlag = true;
-               reason = Form("flag %s is zero", obj->GetName());
+               reason = "flag " + std::string(obj->GetName()) + " is zero";
             }
             ss.add(*obj);
          }
@@ -1264,7 +1264,7 @@ inline void buildSampleWeights(T1 &weights, const char *fname, const RooLagrangi
    for (auto sampleit : inputParameters) {
       const std::string sample(sampleit.first);
       std::stringstream title;
-      TString name_full(makeValidName(sample.c_str()));
+      TString name_full(makeValidName(sample));
       if (fname) {
          name_full.Append("_");
          name_full.Append(fname);
@@ -1460,7 +1460,7 @@ public:
       RooArgList scaleElements;
       for (auto sampleit : inputParameters) {
          // for now, we assume all the lists are nicely ordered
-         TString prodname(makeValidName(sampleit.first.c_str()));
+         TString prodname(makeValidName(sampleit.first));
 
          RooAbsReal *obj = static_cast<RooAbsReal *>(physics.at(storage.at(prodname.Data())));
 
@@ -1496,7 +1496,7 @@ public:
       }
 
       // put everything together
-      _sumFunc = make_unique<RooRealSumFunc>(Form("%s_morphfunc", name), name, sumElements, scaleElements);
+      _sumFunc = make_unique<RooRealSumFunc>((std::string(name) + "_morphfunc").c_str(), name, sumElements, scaleElements);
 
       if (!observable)
          std::cerr << "unable to access observable" << std::endl;
@@ -1661,7 +1661,7 @@ RooRealVar *RooLagrangianMorphFunc::setupObservable(const char *obsname, TClass 
       }
    }
 
-   TString sbw = Form("binWidth_%s", makeValidName(obs->GetName()).Data());
+   TString sbw = TString::Format("binWidth_%s", makeValidName(obs->GetName()).Data());
    auto binWidth = std::make_unique<RooRealVar>(sbw.Data(), sbw.Data(), 1.);
    double bw = obs->numBins() / (obs->getMax() - obs->getMin());
    binWidth->setVal(bw);

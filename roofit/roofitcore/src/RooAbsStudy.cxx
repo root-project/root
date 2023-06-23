@@ -79,8 +79,8 @@ void RooAbsStudy::registerSummaryOutput(const RooArgSet& allVars, const RooArgSe
     return ;
   }
 
-  string name = Form("%s_summary_data",GetName()) ;
-  string title = Form("%s Summary Data",GetTitle()) ;
+  std::string name = std::string(GetName()) + "_summary_data";
+  std::string title = std::string(GetTitle()) + " Summary Data";
   _summaryData = new RooDataSet(name.c_str(),title.c_str(),allVars,RooFit::StoreError(varsWithError),RooFit::StoreAsymError(varsWithAsymError)) ;
 }
 

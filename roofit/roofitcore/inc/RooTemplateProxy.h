@@ -237,7 +237,7 @@ public:
   bool setArg(T& newRef) {
     if (_arg) {
       if (std::string(arg().GetName()) != newRef.GetName()) {
-        newRef.setAttribute(Form("ORIGNAME:%s", arg().GetName())) ;
+        newRef.setAttribute(("ORIGNAME:" + std::string(arg().GetName())).c_str()) ;
       }
       return changePointer(RooArgSet(newRef), true);
     } else {

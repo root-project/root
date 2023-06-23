@@ -709,7 +709,7 @@ double RooCurve::interpolate(double xvalue, double tolerance) const
 RooCurve* RooCurve::makeErrorBand(const vector<RooCurve*>& variations, double Z) const
 {
   RooCurve* band = new RooCurve ;
-  band->SetName(Form("%s_errorband",GetName())) ;
+  band->SetName((std::string(GetName()) + "_errorband").c_str());
   band->SetLineWidth(1) ;
   band->SetFillColor(kCyan) ;
   band->SetLineColor(kCyan) ;
@@ -749,7 +749,7 @@ RooCurve* RooCurve::makeErrorBand(const vector<RooCurve*>& plusVar, const vector
 {
 
   RooCurve* band = new RooCurve ;
-  band->SetName(Form("%s_errorband",GetName())) ;
+  band->SetName((std::string(GetName()) + "_errorband").c_str());
   band->SetLineWidth(1) ;
   band->SetFillColor(kCyan) ;
   band->SetLineColor(kCyan) ;

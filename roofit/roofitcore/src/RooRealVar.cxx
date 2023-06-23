@@ -874,7 +874,7 @@ TString* RooRealVar::format(const RooCmdArg& formatArg) const
   RooCmdArg tmp(formatArg) ;
   tmp.setProcessRecArgs(true) ;
 
-  RooCmdConfig pc(Form("RooRealVar::format(%s)",GetName())) ;
+  RooCmdConfig pc("RooRealVar::format(" + std::string(GetName()) + ")");
   pc.defineString("what","FormatArgs",0,"") ;
   pc.defineInt("autop","FormatArgs::AutoPrecision",0,2) ;
   pc.defineInt("fixedp","FormatArgs::FixedPrecision",0,2) ;

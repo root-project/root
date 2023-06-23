@@ -120,7 +120,7 @@ RooMCStudy::RooMCStudy(const RooAbsPdf& model, const RooArgSet& observables,
   cmdList.Add(const_cast<RooCmdArg*>(&arg7)) ;  cmdList.Add(const_cast<RooCmdArg*>(&arg8)) ;
 
   // Select the pdf-specific commands
-  RooCmdConfig pc(Form("RooMCStudy::RooMCStudy(%s)",model.GetName())) ;
+  RooCmdConfig pc("RooMCStudy::RooMCStudy(" + std::string(model.GetName()) + ")");
 
   pc.defineObject("fitModel","FitModel",0,0) ;
   pc.defineSet("condObs","ProjectedObservables",0,0) ;
@@ -256,14 +256,14 @@ RooMCStudy::RooMCStudy(const RooAbsPdf& model, const RooArgSet& observables,
   // Mark all variable to store their errors in the dataset
   tmp2.setAttribAll("StoreError",true) ;
   tmp2.setAttribAll("StoreAsymError",true) ;
-  TString fpdName ;
+  std::string fpdName;
   if (_fitModel==_genModel) {
-    fpdName = Form("fitParData_%s",_fitModel->GetName()) ;
+    fpdName = "fitParData_" + std::string(_fitModel->GetName());
   } else {
-    fpdName= Form("fitParData_%s_%s",_fitModel->GetName(),_genModel->GetName()) ;
+    fpdName= "fitParData_" + std::string(_fitModel->GetName()) + "_" + std::string(_genModel->GetName());
   }
 
-  _fitParData = std::make_unique<RooDataSet>(fpdName.Data(),"Fit Parameters DataSet",tmp2);
+  _fitParData = std::make_unique<RooDataSet>(fpdName.c_str(),"Fit Parameters DataSet",tmp2);
   tmp2.setAttribAll("StoreError",false) ;
   tmp2.setAttribAll("StoreAsymError",false) ;
 
@@ -481,7 +481,7 @@ bool RooMCStudy::run(bool doGenerate, bool DoFit, Int_t nSamples, Int_t nEvtPerS
 
   if (_genParData) {
     for(RooAbsArg * arg : *_genParData->get()) {
-      _genParData->changeObservableName(arg->GetName(),Form("%s_gen",arg->GetName())) ;
+      _genParData->changeObservableName(arg->GetName(),(std::string(arg->GetName()) + "_gen").c_str());
     }
 
     _fitParData->merge(_genParData.get());
@@ -1116,7 +1116,7 @@ RooPlot* RooMCStudy::plotPull(const RooRealVar& param, const RooCmdArg& arg1, co
   if (frame) {
 
     // Pick up optonal FitGauss command from list
-    RooCmdConfig pc(Form("RooMCStudy::plotPull(%s)",_genModel->GetName())) ;
+    RooCmdConfig pc("RooMCStudy::plotPull(" + std::string(_genModel->GetName()) + ")");
     pc.defineInt("fitGauss","FitGauss",0,0) ;
     pc.allowUndefined() ;
     pc.process(cmdList) ;
@@ -1152,7 +1152,7 @@ RooPlot* RooMCStudy::plotPull(const RooRealVar& param, const RooCmdArg& arg1, co
 RooPlot* RooMCStudy::makeFrameAndPlotCmd(const RooRealVar& param, RooLinkedList& cmdList, bool symRange) const
 {
   // Select the frame-specific commands
-  RooCmdConfig pc(Form("RooMCStudy::plotParam(%s)",_genModel->GetName())) ;
+  RooCmdConfig pc("RooMCStudy::plotParam(" + std::string(_genModel->GetName()) + ")");
   pc.defineInt("nbins","Bins",0,0) ;
   pc.defineDouble("xlo","Range",0,0) ;
   pc.defineDouble("xhi","Range",1,0) ;
