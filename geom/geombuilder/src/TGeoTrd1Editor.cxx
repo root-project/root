@@ -66,7 +66,7 @@ TGeoTrd1Editor::TGeoTrd1Editor(const TGWindow *p, Int_t width,
 
    // Number entry for dx1
    TGCompositeFrame *f1 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
-                                 kLHintsExpandX | kFixedWidth | kOwnBackground);
+                                 kFitWidth | kFixedWidth | kOwnBackground);
    f1->AddFrame(new TGLabel(f1, "DX1"), new TGLayoutHints(kLHintsLeft, 1, 1, 6, 0));
    fEDx1 = new TGNumberEntry(f1, 0., 5, kTRD1_X1);
    fEDx1->SetNumAttr(TGNumberFormat::kNEAPositive);
@@ -78,7 +78,7 @@ TGeoTrd1Editor::TGeoTrd1Editor(const TGWindow *p, Int_t width,
 
    // Number entry for dx2
    f1 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
-                                 kLHintsExpandX | kFixedWidth | kOwnBackground);
+                                 kFitWidth | kFixedWidth | kOwnBackground);
    f1->AddFrame(new TGLabel(f1, "DX2"), new TGLayoutHints(kLHintsLeft, 1, 1, 6, 0));
    fEDx2 = new TGNumberEntry(f1, 0., 5, kTRD1_X2);
    fEDx2->SetNumAttr(TGNumberFormat::kNEAPositive);
@@ -90,7 +90,7 @@ TGeoTrd1Editor::TGeoTrd1Editor(const TGWindow *p, Int_t width,
 
    // Number entry for dy
    TGCompositeFrame *f2 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
-                                 kLHintsExpandX | kFixedWidth | kOwnBackground);
+                                 kFitWidth | kFixedWidth | kOwnBackground);
    f2->AddFrame(new TGLabel(f2, "DY"), new TGLayoutHints(kLHintsLeft, 1, 1, 6, 0));
    fEDy = new TGNumberEntry(f2, 0., 5, kTRD1_Y);
    fEDy->SetNumAttr(TGNumberFormat::kNEAPositive);
@@ -102,7 +102,7 @@ TGeoTrd1Editor::TGeoTrd1Editor(const TGWindow *p, Int_t width,
 
    // Number entry for dz
    TGCompositeFrame *f3 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
-                                 kLHintsExpandX | kFixedWidth | kOwnBackground);
+                                 kFitWidth | kFixedWidth | kOwnBackground);
    f3->AddFrame(new TGLabel(f3, "DZ"), new TGLayoutHints(kLHintsLeft, 1, 1, 6, 0));
    fEDz = new TGNumberEntry(f3, 0., 5, kTRD1_Z);
    fEDz->SetNumAttr(TGNumberFormat::kNEAPositive);

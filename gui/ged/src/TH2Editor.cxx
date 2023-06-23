@@ -288,7 +288,7 @@ TH2Editor::TH2Editor(const TGWindow *p, Int_t width,
 
    // Bin bar settings
    f12 = new TGCompositeFrame(this, 145, 10, kHorizontalFrame |
-                                             kLHintsExpandX   |
+                                             kFitWidth        |
                                              kFixedWidth      |
                                              kOwnBackground);
    f12->AddFrame(new TGLabel(f12,"Bar"),
@@ -323,7 +323,7 @@ TH2Editor::TH2Editor(const TGWindow *p, Int_t width,
    // Set the color and pattern of the Frame (only for Cartesian 3D plot).
    f38 = new TGCompositeFrame(this, 80, 20, kVerticalFrame);
    TGCompositeFrame *f39 = new TGCompositeFrame(f38, 145, 10, kHorizontalFrame |
-                                                              kLHintsExpandX   |
+                                                              kFitWidth        |
                                                               kFixedWidth      |
                                                               kOwnBackground);
    f39->AddFrame(new TGLabel(f39,"Frame Fill"),
@@ -361,7 +361,7 @@ void TH2Editor::CreateBinTab()
    fBinXCont = new TGCompositeFrame(fBin, 80, 20, kVerticalFrame);
    TGCompositeFrame *title1 = new TGCompositeFrame(fBinXCont, 145, 10,
                                                               kHorizontalFrame |
-                                                              kLHintsExpandX   |
+                                                              kFitWidth        |
                                                               kFixedWidth      |
                                                               kOwnBackground);
    title1->AddFrame(new TGLabel(title1, "Rebin"),
@@ -430,7 +430,7 @@ void TH2Editor::CreateBinTab()
    fBinXCont1 = new TGCompositeFrame(fBin, 80, 20, kVerticalFrame);
    TGCompositeFrame *title2 = new TGCompositeFrame(fBinXCont1, 145, 10,
                                                                kHorizontalFrame |
-                                                               kLHintsExpandX   |
+                                                               kFitWidth        |
                                                                kFixedWidth      |
                                                                kOwnBackground);
    title2->AddFrame(new TGLabel(title2, "X-Axis"),
@@ -504,7 +504,7 @@ void TH2Editor::CreateBinTab()
    fBinYCont1 = new TGCompositeFrame(fBin, 80, 20, kVerticalFrame);
    TGCompositeFrame *title3 = new TGCompositeFrame(fBinYCont1, 145, 10,
                                                                kHorizontalFrame |
-                                                               kLHintsExpandX   |
+                                                               kFitWidth        |
                                                                kFixedWidth      |
                                                                kOwnBackground);
    title3->AddFrame(new TGLabel(title3, "Y-Axis"),
@@ -576,7 +576,7 @@ void TH2Editor::CreateBinTab()
    // Axis ranges
    TGCompositeFrame *title4 = new TGCompositeFrame(fBin, 145, 10,
                                                          kHorizontalFrame |
-                                                         kLHintsExpandX   |
+                                                         kFitWidth        |
                                                          kFixedWidth      |
                                                          kOwnBackground);
    title4->AddFrame(new TGLabel(title4, "Axis Range"),
