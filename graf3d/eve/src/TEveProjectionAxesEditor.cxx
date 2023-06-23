@@ -89,7 +89,7 @@ TEveProjectionAxesEditor::TEveProjectionAxesEditor(const TGWindow *p, Int_t widt
 
    TGCompositeFrame *title1 = new TGCompositeFrame(fCenterFrame, 180, 10,
                                                    kHorizontalFrame |
-                                                   kLHintsExpandX   |
+                                                   kFitWidth        |
                                                    kFixedWidth      |
                                                    kOwnBackground);
    title1->AddFrame(new TGLabel(title1, "Distortion Center"),

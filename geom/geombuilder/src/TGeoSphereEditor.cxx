@@ -68,7 +68,7 @@ TGeoSphereEditor::TGeoSphereEditor(const TGWindow *p, Int_t width,
    TGCompositeFrame *compxyz = new TGCompositeFrame(this, 118, 30, kVerticalFrame | kRaisedFrame);
    // Number entry for rmin
    TGCompositeFrame *f1 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
-                                 kLHintsExpandX | kOwnBackground);
+                                 kFitWidth | kOwnBackground);
    f1->AddFrame(new TGLabel(f1, "Rmin"), new TGLayoutHints(kLHintsLeft, 1, 1, 6, 0));
    fERmin = new TGNumberEntry(f1, 0., 5, kSPHERE_RMIN);
    fERmin->SetNumAttr(TGNumberFormat::kNEANonNegative);
@@ -81,7 +81,7 @@ TGeoSphereEditor::TGeoSphereEditor(const TGWindow *p, Int_t width,
 
    // Number entry for Rmax
    f1 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
-                                 kLHintsExpandX | kOwnBackground);
+                                 kFitWidth | kOwnBackground);
    f1->AddFrame(new TGLabel(f1, "Rmax"), new TGLayoutHints(kLHintsLeft, 1, 1, 6, 0));
    fERmax = new TGNumberEntry(f1, 0., 5, kSPHERE_RMAX);
    fERmax->SetNumAttr(TGNumberFormat::kNEANonNegative);

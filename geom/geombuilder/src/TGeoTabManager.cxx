@@ -298,7 +298,7 @@ TGeoTreeDialog::TGeoTreeDialog(TGFrame *caller, const TGWindow *main, UInt_t w, 
    fLT->Associate(this);
    fCanvas->SetContainer(fLT);
    AddFrame(fCanvas, new TGLayoutHints(kLHintsLeft | kLHintsExpandX | kLHintsExpandY, 2,2,2,2));
-   f1 = new TGCompositeFrame(this, 100, 10, kHorizontalFrame | kLHintsExpandX);
+   f1 = new TGCompositeFrame(this, 100, 10, kHorizontalFrame | kFitWidth);
    fObjLabel = new TGLabel(f1, "Selected: -none-");
    Pixel_t color;
    gClient->GetColorByName("#0000ff", color);

@@ -141,7 +141,7 @@ void TEveTrackListEditor::CreateRefsTab()
 
    TGCompositeFrame *title1 = new TGCompositeFrame(fRefs, 145, 10,
                                                    kHorizontalFrame |
-                                                   kLHintsExpandX   |
+                                                   kFitWidth        |
                                                    kFixedWidth      |
                                                    kOwnBackground);
    title1->AddFrame(new TGLabel(title1, "PathMarks"),

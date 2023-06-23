@@ -66,7 +66,7 @@ TGeoTrd2Editor::TGeoTrd2Editor(const TGWindow *p, Int_t width,
 
    // Number entry for dx1
    TGCompositeFrame *f1 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
-                                 kLHintsExpandX | kFixedWidth | kOwnBackground);
+                                 kFitWidth | kFixedWidth | kOwnBackground);
    f1->AddFrame(new TGLabel(f1, "DX1"), new TGLayoutHints(kLHintsLeft, 1, 1, 6, 0));
    fEDx1 = new TGNumberEntry(f1, 0., 5, kTRD2_X1);
    fEDx1->SetNumAttr(TGNumberFormat::kNEAPositive);
@@ -78,7 +78,7 @@ TGeoTrd2Editor::TGeoTrd2Editor(const TGWindow *p, Int_t width,
 
    // Number entry for dx2
    f1 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
-                                 kLHintsExpandX | kFixedWidth | kOwnBackground);
+                                 kFitWidth | kFixedWidth | kOwnBackground);
    f1->AddFrame(new TGLabel(f1, "DX2"), new TGLayoutHints(kLHintsLeft, 1, 1, 6, 0));
    fEDx2 = new TGNumberEntry(f1, 0., 5, kTRD2_X2);
    fEDx2->SetNumAttr(TGNumberFormat::kNEAPositive);
@@ -90,7 +90,7 @@ TGeoTrd2Editor::TGeoTrd2Editor(const TGWindow *p, Int_t width,
 
    // Number entry for dy1
    TGCompositeFrame *f2 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
-                                 kLHintsExpandX | kFixedWidth | kOwnBackground);
+                                 kFitWidth | kFixedWidth | kOwnBackground);
    f2->AddFrame(new TGLabel(f2, "DY1"), new TGLayoutHints(kLHintsLeft, 1, 1, 6, 0));
    fEDy1 = new TGNumberEntry(f2, 0., 5, kTRD2_Y1);
    fEDy1->SetNumAttr(TGNumberFormat::kNEAPositive);
@@ -102,7 +102,7 @@ TGeoTrd2Editor::TGeoTrd2Editor(const TGWindow *p, Int_t width,
 
    // Number entry for dy2
    f2 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
-                                 kLHintsExpandX | kFixedWidth | kOwnBackground);
+                                 kFitWidth | kFixedWidth | kOwnBackground);
    f2->AddFrame(new TGLabel(f2, "DY2"), new TGLayoutHints(kLHintsLeft, 1, 1, 6, 0));
    fEDy2 = new TGNumberEntry(f2, 0., 5, kTRD2_Y2);
    fEDy2->SetNumAttr(TGNumberFormat::kNEAPositive);
@@ -114,7 +114,7 @@ TGeoTrd2Editor::TGeoTrd2Editor(const TGWindow *p, Int_t width,
 
    // Number entry for dz
    TGCompositeFrame *f3 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
-                                 kLHintsExpandX | kFixedWidth | kOwnBackground);
+                                 kFitWidth | kFixedWidth | kOwnBackground);
    f3->AddFrame(new TGLabel(f3, "DZ"), new TGLayoutHints(kLHintsLeft, 1, 1, 6, 0));
    fEDz = new TGNumberEntry(f3, 0., 5, kTRD2_Z);
    fEDz->SetNumAttr(TGNumberFormat::kNEAPositive);

@@ -67,7 +67,7 @@ TGeoBBoxEditor::TGeoBBoxEditor(const TGWindow *p, Int_t width,
    TGCompositeFrame *compxyz = new TGCompositeFrame(this, 118, 30, kVerticalFrame | kRaisedFrame | kDoubleBorder);
    // Number entry for dx
    TGCompositeFrame *f1 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
-                                 kLHintsExpandX | kFixedWidth | kOwnBackground);
+                                 kFitWidth | kFixedWidth | kOwnBackground);
    f1->AddFrame(new TGLabel(f1, "DX"), new TGLayoutHints(kLHintsLeft, 1, 1, 6, 0));
    fBoxDx = new TGNumberEntry(f1, 0., 5, kBOX_X);
    fBoxDx->SetNumAttr(TGNumberFormat::kNEAPositive);
@@ -79,7 +79,7 @@ TGeoBBoxEditor::TGeoBBoxEditor(const TGWindow *p, Int_t width,
 
    // Number entry for dy
    TGCompositeFrame *f2 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
-                                 kLHintsExpandX | kFixedWidth | kOwnBackground);
+                                 kFitWidth | kFixedWidth | kOwnBackground);
    f2->AddFrame(new TGLabel(f2, "DY"), new TGLayoutHints(kLHintsLeft, 1, 1, 6, 0));
    fBoxDy = new TGNumberEntry(f2, 0., 5, kBOX_Y);
    fBoxDy->SetNumAttr(TGNumberFormat::kNEAPositive);
@@ -91,7 +91,7 @@ TGeoBBoxEditor::TGeoBBoxEditor(const TGWindow *p, Int_t width,
 
    // Number entry for dx
    TGCompositeFrame *f3 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
-                                 kLHintsExpandX | kFixedWidth | kOwnBackground);
+                                 kFitWidth | kFixedWidth | kOwnBackground);
    f3->AddFrame(new TGLabel(f3, "DZ"), new TGLayoutHints(kLHintsLeft, 1, 1, 6, 0));
    fBoxDz = new TGNumberEntry(f3, 0., 5, kBOX_Z);
    fBoxDz->SetNumAttr(TGNumberFormat::kNEAPositive);
@@ -108,7 +108,7 @@ TGeoBBoxEditor::TGeoBBoxEditor(const TGWindow *p, Int_t width,
    compxyz = new TGCompositeFrame(this, 118, 30, kVerticalFrame | kRaisedFrame | kDoubleBorder);
    // Number entry for dx
    f1 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
-                             kLHintsExpandX | kFixedWidth | kOwnBackground);
+                             kFitWidth | kFixedWidth | kOwnBackground);
    f1->AddFrame(new TGLabel(f1, "OX"), new TGLayoutHints(kLHintsLeft, 1, 1, 6, 0));
    fBoxOx = new TGNumberEntry(f1, 0., 5, kBOX_OX);
    nef = (TGTextEntry*)fBoxOx->GetNumberEntry();
@@ -119,7 +119,7 @@ TGeoBBoxEditor::TGeoBBoxEditor(const TGWindow *p, Int_t width,
 
    // Number entry for dy
    f2 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
-                             kLHintsExpandX | kFixedWidth | kOwnBackground);
+                             kFitWidth | kFixedWidth | kOwnBackground);
    f2->AddFrame(new TGLabel(f2, "OY"), new TGLayoutHints(kLHintsLeft, 1, 1, 6, 0));
    fBoxOy = new TGNumberEntry(f2, 0., 5, kBOX_OY);
    nef = (TGTextEntry*)fBoxOy->GetNumberEntry();
@@ -130,7 +130,7 @@ TGeoBBoxEditor::TGeoBBoxEditor(const TGWindow *p, Int_t width,
 
    // Number entry for dx
    f3 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
-                             kLHintsExpandX | kFixedWidth | kOwnBackground);
+                             kFitWidth | kFixedWidth | kOwnBackground);
    f3->AddFrame(new TGLabel(f3, "OZ"), new TGLayoutHints(kLHintsLeft, 1, 1, 6, 0));
    fBoxOz = new TGNumberEntry(f3, 0., 5, kBOX_OZ);
    nef = (TGTextEntry*)fBoxOz->GetNumberEntry();
