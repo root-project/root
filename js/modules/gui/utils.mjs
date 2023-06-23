@@ -1,4 +1,4 @@
-import { settings, gStyle, isBatchMode, isNodeJs, isObject, isFunc, isStr, source_dir, atob_func, btoa_func } from '../core.mjs';
+import { settings, browser, gStyle, isBatchMode, isNodeJs, isObject, isFunc, isStr, source_dir, atob_func, btoa_func } from '../core.mjs';
 import { select as d3_select, pointer as d3_pointer, drag as d3_drag, color as d3_color } from '../d3.mjs';
 import { BasePainter } from '../base/BasePainter.mjs';
 import { resize } from '../base/ObjectPainter.mjs';
@@ -12,7 +12,8 @@ import { getRootColors } from '../base/colors.mjs';
   * @param {number} tmout - optional timeout in milliseconds, after message will disappear
   * @private */
 function showProgress(msg, tmout) {
-   if (isBatchMode() || (typeof document === 'undefined')) return;
+   if (isBatchMode() || (typeof document === 'undefined'))
+      return;
    let id = 'jsroot_progressbox',
        box = d3_select('#' + id);
 
@@ -39,7 +40,8 @@ function showProgress(msg, tmout) {
       box.html('');
       box.node().appendChild(msg);
    }
-   injectStyle('#jsroot_progressbox p { font-size: 10px; margin-left: 10px; margin-right: 10px; margin-top: 3px; margin-bottom: 3px; }', box.node());
+
+   box.select('p').attr('style', 'font-size: 10px; margin-left: 10px; margin-right: 10px; margin-top: 3px; margin-bottom: 3px');
 
    if (Number.isFinite(tmout) && (tmout > 0)) {
       box.property('with_timeout', true);
@@ -191,7 +193,7 @@ const ToolbarIcons = {
    circle: { path: 'M256,256 m-150,0 a150,150 0 1,0 300,0 a150,150 0 1,0 -300,0' },
    three_circles: { path: 'M256,85 m-70,0 a70,70 0 1,0 140,0 a70,70 0 1,0 -140,0  M256,255 m-70,0 a70,70 0 1,0 140,0 a70,70 0 1,0 -140,0  M256,425 m-70,0 a70,70 0 1,0 140,0 a70,70 0 1,0 -140,0 ' },
    diamand: { path: 'M256,0L384,256L256,511L128,256z' },
-   rect: { path: 'M80,80h352v352h-352z' },
+   rect: { path: 'M90,90h352v352h-352z' },
    cross: { path: 'M80,40l176,176l176,-176l40,40l-176,176l176,176l-40,40l-176,-176l-176,176l-40,-40l176,-176l-176,-176z' },
    vrgoggles: { size: '245.82 141.73', path: 'M175.56,111.37c-22.52,0-40.77-18.84-40.77-42.07S153,27.24,175.56,27.24s40.77,18.84,40.77,42.07S198.08,111.37,175.56,111.37ZM26.84,69.31c0-23.23,18.25-42.07,40.77-42.07s40.77,18.84,40.77,42.07-18.26,42.07-40.77,42.07S26.84,92.54,26.84,69.31ZM27.27,0C11.54,0,0,12.34,0,28.58V110.9c0,16.24,11.54,30.83,27.27,30.83H99.57c2.17,0,4.19-1.83,5.4-3.7L116.47,118a8,8,0,0,1,12.52-.18l11.51,20.34c1.2,1.86,3.22,3.61,5.39,3.61h72.29c15.74,0,27.63-14.6,27.63-30.83V28.58C245.82,12.34,233.93,0,218.19,0H27.27Z' },
    th2colorz: { recs: [{ x: 128, y: 486, w: 256, h: 26, f: 'rgb(38,62,168)' }, { y: 461, f: 'rgb(22,82,205)' }, { y: 435, f: 'rgb(16,100,220)' }, { y: 410, f: 'rgb(18,114,217)' }, { y: 384, f: 'rgb(20,129,214)' }, { y: 358, f: 'rgb(14,143,209)' }, { y: 333, f: 'rgb(9,157,204)' }, { y: 307, f: 'rgb(13,167,195)' }, { y: 282, f: 'rgb(30,175,179)' }, { y: 256, f: 'rgb(46,183,164)' }, { y: 230, f: 'rgb(82,186,146)' }, { y: 205, f: 'rgb(116,189,129)' }, { y: 179, f: 'rgb(149,190,113)' }, { y: 154, f: 'rgb(179,189,101)' }, { y: 128, f: 'rgb(209,187,89)' }, { y: 102, f: 'rgb(226,192,75)' }, { y: 77, f: 'rgb(244,198,59)' }, { y: 51, f: 'rgb(253,210,43)' }, { y: 26, f: 'rgb(251,230,29)' }, { y: 0, f: 'rgb(249,249,15)' }] },
@@ -203,15 +205,31 @@ const ToolbarIcons = {
             'M460.293,256.149H339.237c-28.521,0-51.721,23.199-51.721,51.726v89.915c0,28.504,23.2,51.715,51.721,51.715h121.045   c28.521,0,51.721-23.199,51.721-51.715v-89.915C512.002,279.354,488.802,256.149,460.293,256.149z M465.03,397.784   c0,2.615-2.122,4.736-4.748,4.736H339.237c-2.614,0-4.747-2.121-4.747-4.736v-89.909c0-2.626,2.121-4.753,4.747-4.753h121.045 c2.615,0,4.748,2.116,4.748,4.753V397.784z'
    },
 
-   createSVG(group, btn, size, title) {
-      injectStyle('.jsroot_svg_toolbar_btn { fill: steelblue; cursor: pointer; opacity: 0.3; } .jsroot_svg_toolbar_btn:hover { opacity: 1.0; }', group.node());
-
-      let svg = group.append('svg:svg')
-                     .attr('class', 'jsroot_svg_toolbar_btn')
+   createSVG(group, btn, size, title, arg) {
+      let use_dark = (arg === true) || (arg === false) ? arg : settings.DarkMode,
+          opacity0 = (arg == 'browser') ? (browser.touches ? 0.2 : 0) : (use_dark ? 0.8 : 0.2),
+          svg = group.append('svg:svg')
                      .attr('width', size + 'px')
                      .attr('height', size + 'px')
                      .attr('viewBox', '0 0 512 512')
-                     .style('overflow', 'hidden');
+                     .style('overflow', 'hidden')
+                     .style('cursor', 'pointer')
+                     .style('fill', use_dark ? 'rgba(255, 224, 160)' : 'steelblue')
+                     .style('opacity', opacity0)
+                     .property('opacity0', opacity0)
+                     .property('opacity1', use_dark ? 1 : 0.8)
+                     .on('mouseenter', function() {
+                        let elem = d3_select(this);
+                        elem.style('opacity', elem.property('opacity1'));
+                        let func = elem.node()._mouseenter;
+                        if (isFunc(func)) func();
+                     })
+                     .on('mouseleave', function() {
+                        let elem = d3_select(this);
+                        elem.style('opacity', elem.property('opacity0'));
+                        let func = elem.node()._mouseleave;
+                        if (isFunc(func)) func();
+                     });
 
       if ('recs' in btn) {
          let rec = {};
@@ -282,10 +300,7 @@ function registerForResize(handle, delay) {
 /** @summary Detect mouse right button
   * @private */
 function detectRightButton(event) {
-   if ('buttons' in event) return event.buttons === 2;
-   if ('which' in event) return event.which === 3;
-   if ('button' in event) return event.button === 2;
-   return false;
+   return (event?.buttons === 2) || (event?.button === 2);
 }
 
 /** @summary Add move handlers for drawn element
@@ -295,7 +310,7 @@ function addMoveHandler(painter, enabled) {
    if (enabled === undefined)
       enabled = true;
 
-   if (!settings.MoveResize || isBatchMode() || !painter.draw_g) return;
+   if (!settings.MoveResize || painter.isBatchMode() || !painter.draw_g) return;
 
    if (!enabled) {
       if (painter.draw_g.property('assigned_move')) {

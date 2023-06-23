@@ -1,4 +1,4 @@
-import { settings, create, isBatchMode } from '../core.mjs';
+import { settings, create } from '../core.mjs';
 import { scaleLinear, select as d3_select, pointer as d3_pointer } from '../d3.mjs';
 import { DrawOptions, buildSvgCurve, makeTranslate } from '../base/BasePainter.mjs';
 import { ObjectPainter, getElementMainPainter } from '../base/ObjectPainter.mjs';
@@ -262,7 +262,7 @@ class TGraphPolargramPainter extends ObjectPainter {
                    .call(this.gridatt.func);
             }
 
-         if (isBatchMode()) return;
+         if (this.isBatchMode()) return;
 
          TooltipHandler.assign(this);
 

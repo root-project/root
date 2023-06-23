@@ -49,14 +49,19 @@ class TMultiGraphPainter extends ObjectPainter {
             isany = true;
       }
 
-      for (let i = 0; i < graphs.arr.length; ++i)
-         if ((i < this.painters.length) && this.painters[i].updateObject(graphs.arr[i]))
+      let ngr = Math.min(graphs.arr.length, this.painters.length);
+
+      for (let i = 0; i < ngr; ++i)
+         if (this.painters[i].updateObject(graphs.arr[i], graphs.opt[i]))
             isany = true;
 
-      obj.fFunctions?.arr?.forEach(func => {
+      let nfunc = obj.fFunctions?.arr?.length ?? 0;
+      for (let i = 0; i < nfunc; ++i) {
+         let func = obj.fFunctions.arr[i],
+             fopt = obj.fFunctions.opt[i];
          if (func?._typename && func?.fName)
-            pp?.findPainterFor(null, func.fName, func._typename)?.updateObject(func);
-      });
+            pp?.findPainterFor(null, func.fName, func._typename)?.updateObject(func, fopt);
+      }
 
       return isany;
    }

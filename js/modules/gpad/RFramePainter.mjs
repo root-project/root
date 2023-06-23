@@ -1,4 +1,4 @@
-import { gStyle, settings, create, isBatchMode, isFunc, isStr, clTAxis, nsREX } from '../core.mjs';
+import { gStyle, settings, create, isFunc, isStr, clTAxis, nsREX } from '../core.mjs';
 import { pointer as d3_pointer } from '../d3.mjs';
 import { getSvgLineStyle } from '../base/TAttLineHandler.mjs';
 import { makeTranslate} from '../base/BasePainter.mjs';
@@ -61,10 +61,10 @@ class RFramePainter extends RObjectPainter {
       if ((this.fX1NDC === undefined) || (force && !this.modified_NDC)) {
 
          let rect = this.getPadPainter().getPadRect();
-         this.fX1NDC = this.v7EvalLength('margins_left', rect.width, settings.FrameNDC.fX1NDC) / rect.width;
-         this.fY1NDC = this.v7EvalLength('margins_bottom', rect.height, settings.FrameNDC.fY1NDC) / rect.height;
-         this.fX2NDC = 1 - this.v7EvalLength('margins_right', rect.width, 1-settings.FrameNDC.fX2NDC) / rect.width;
-         this.fY2NDC = 1 - this.v7EvalLength('margins_top', rect.height, 1-settings.FrameNDC.fY2NDC) / rect.height;
+         this.fX1NDC = this.v7EvalLength('margins_left', rect.width, gStyle.fPadLeftMargin) / rect.width;
+         this.fY1NDC = this.v7EvalLength('margins_bottom', rect.height, gStyle.fPadBottomMargin) / rect.height;
+         this.fX2NDC = 1 - this.v7EvalLength('margins_right', rect.width, gStyle.fPadRightMargin) / rect.width;
+         this.fY2NDC = 1 - this.v7EvalLength('margins_top', rect.height, gStyle.fPadTopMargin) / rect.height;
       }
 
       if (!this.fillatt)
@@ -265,7 +265,7 @@ class RFramePainter extends RObjectPainter {
 
       this.cleanXY(); // remove all previous configurations
 
-      if (!opts) opts = {};
+      if (!opts) opts = { ndim: 1 };
 
       this.v6axes = true;
       this.swap_xy = opts.swap_xy || false;
@@ -276,6 +276,8 @@ class RFramePainter extends RObjectPainter {
       this.logy = this.v7EvalAttr('y_log', 0);
 
       let w = this.getFrameWidth(), h = this.getFrameHeight();
+
+      this.scales_ndim = opts.ndim;
 
       this.scale_xmin = this.xmin;
       this.scale_xmax = this.xmax;
@@ -719,7 +721,7 @@ class RFramePainter extends RObjectPainter {
 
          this.draw_g = this.getLayerSvg('primitives_layer').append('svg:g').attr('class', 'root_frame');
 
-         if (!isBatchMode())
+         if (!this.isBatchMode())
             this.draw_g.append('svg:title').text('');
 
          top_rect = this.draw_g.append('svg:rect');
@@ -766,7 +768,7 @@ class RFramePainter extends RObjectPainter {
       }
 
       return pr.then(() => {
-         if (!isBatchMode()) {
+         if (!this.isBatchMode()) {
             top_rect.style('pointer-events', 'visibleFill');  // let process mouse events inside frame
 
             FrameInteractive.assign(this);
@@ -1078,8 +1080,9 @@ class RFramePainter extends RObjectPainter {
 
    /** @summary Fill context menu */
    fillContextMenu(menu, kind, /* obj */) {
-
       // when fill and show context menu, remove all zooming
+
+      if (kind == 'pal') kind = 'z';
 
       if ((kind == 'x') || (kind == 'y') || (kind == 'x2') || (kind == 'y2')) {
          let handle = this[kind+'_handle'];
@@ -1167,7 +1170,7 @@ class RFramePainter extends RObjectPainter {
    /** @summary Add interactive keys handlers
     * @private */
    addKeysHandler() {
-      if (isBatchMode()) return;
+      if (this.isBatchMode()) return;
       FrameInteractive.assign(this);
       this.addFrameKeysHandler();
    }
@@ -1176,7 +1179,7 @@ class RFramePainter extends RObjectPainter {
     * @private */
    addInteractivity(for_second_axes) {
 
-      if (isBatchMode() || (!settings.Zooming && !settings.ContextMenu))
+      if (this.isBatchMode() || (!settings.Zooming && !settings.ContextMenu))
          return true;
       FrameInteractive.assign(this);
       return this.addFrameInteractivity(for_second_axes);

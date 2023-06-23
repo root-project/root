@@ -1,4 +1,4 @@
-import { gStyle, settings, isBatchMode, clTF1, kNoZoom } from '../core.mjs';
+import { gStyle, settings, clTF1, kNoZoom } from '../core.mjs';
 import { rgb as d3_rgb } from '../d3.mjs';
 import { floatToString, buildSvgCurve, addHighlightStyle } from '../base/BasePainter.mjs';
 import { THistPainter } from './THistPainter.mjs';
@@ -446,7 +446,7 @@ class TH1Painter extends THistPainter {
       let left = this.getSelectIndex('x', 'left', -1),
           right = this.getSelectIndex('x', 'right', 2),
           histo = this.getHisto(),
-          want_tooltip = !isBatchMode() && settings.Tooltip,
+          want_tooltip = !this.isBatchMode() && settings.Tooltip,
           xaxis = histo.fXaxis,
           res = '', lastbin = false,
           startx, currx, curry, x, grx, y, gry, curry_min, curry_max, prevy, prevx, i, bestimin, bestimax,
@@ -724,7 +724,7 @@ class TH1Painter extends THistPainter {
                this.draw_g.append('svg:path')
                    .attr('d', hints_err)
                    .style('fill', 'none')
-                   .style('pointer-events', isBatchMode() ? null : 'visibleFill');
+                   .style('pointer-events', this.isBatchMode() ? null : 'visibleFill');
 
          if (path_line) {
             if (!this.fillatt.empty() && !draw_hist)
@@ -747,7 +747,7 @@ class TH1Painter extends THistPainter {
             this.draw_g.append('svg:path')
                 .attr('d', hints_marker)
                 .style('fill', 'none')
-                .style('pointer-events', isBatchMode() ? null : 'visibleFill');
+                .style('pointer-events', this.isBatchMode() ? null : 'visibleFill');
       }
 
       if (res && draw_hist)
