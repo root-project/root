@@ -772,13 +772,13 @@ namespace RooStats {
      const std::string& ChannelName = nameIdx.first;
      fChannelNameVec.push_back( ChannelName );
      RooAbsPdf* pdftmp = simPdf->getPdf(ChannelName.c_str()) ;
-     RooArgSet* obstmp = pdftmp->getObservables(*observables) ;
+     RooArgSet* obstmp = std::unique_ptr<RooArgSet>{pdftmp->getObservables(*observables)}.release();
      fChannelPdfMap[ChannelName] = pdftmp;
      fChannelObservMap[ChannelName] =  obstmp;
    }
 
       } else {
-   RooArgSet* obstmp = modelPdf->getObservables(*observables) ;
+   RooArgSet* obstmp = std::unique_ptr<RooArgSet>{modelPdf->getObservables(*observables)}.release();
    // The channel name is model_CHANNEL
    std::string ChannelName = modelPdf->GetName();
    ChannelName = ChannelName.replace(0, 6, "");
@@ -803,7 +803,8 @@ namespace RooStats {
    // the (one) that is a RooRealSumPdf
    // Based on the mode, we assume that node is
    // the "unconstrained" pdf node for that channel
-    for (auto *arg : *pdf->getComponents()) {
+   std::unique_ptr<RooArgSet> comps{pdf->getComponents()};
+    for (auto *arg : *comps) {
       std::string ClassName = arg->ClassName();
       if( ClassName == "RooRealSumPdf" ) {
          fChannelSumNodeMap[ChannelName] = static_cast <RooRealSumPdf*>(arg);
@@ -864,7 +865,8 @@ namespace RooStats {
 
       // Check if it is a "component",
       // ie a sub node:
-      for (auto arg : *parent->getComponents()) {
+      std::unique_ptr<RooArgSet> comps{parent->getComponents()};
+      for (auto arg : *comps) {
          std::string ArgName = arg->GetName();
          if (ArgName == name) {
             term = arg;
@@ -878,7 +880,8 @@ namespace RooStats {
       // Check if it's a Parameter
       // (ie a RooRealVar)
       RooArgSet args;
-      for (auto *param : *parent->getParameters(&args)) {
+      std::unique_ptr<RooArgSet> parameters{parent->getParameters(&args)};
+      for (auto *param : *parameters) {
         std::string ParamName = param->GetName();
         if( ParamName == name ) {
             term = param;

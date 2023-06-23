@@ -138,7 +138,7 @@ protected:
 
 public:
    REveRefBackPtr() = default;
-   virtual ~REveRefBackPtr();
+   ~REveRefBackPtr() override;
 
    using REveRefCnt::DecRefCount;
    using REveRefCnt::IncRefCount;

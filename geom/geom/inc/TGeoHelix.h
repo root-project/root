@@ -44,7 +44,7 @@ public:
    TGeoHelix();
    TGeoHelix(Double_t curvature, Double_t step, Int_t charge=1);
    // destructor
-   virtual ~TGeoHelix();
+   ~TGeoHelix() override;
 
    void            InitPoint(Double_t x0, Double_t y0, Double_t z0);
    void            InitPoint(Double_t *point);
@@ -72,7 +72,7 @@ public:
 
    void            UpdateHelix();
 
-   ClassDef(TGeoHelix, 1)              // helix class
+   ClassDefOverride(TGeoHelix, 1)              // helix class
 };
 
 #endif

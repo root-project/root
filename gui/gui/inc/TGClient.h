@@ -75,7 +75,7 @@ protected:
 
 public:
    TGClient(const char *dpyName = nullptr);
-   virtual ~TGClient();
+   ~TGClient() override;
 
    const TGWindow *GetRoot() const;
    const TGWindow *GetDefaultRoot() const;

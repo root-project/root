@@ -27,7 +27,7 @@ class RGeoPainter : public TVirtualGeoPainter {
 
 public:
    RGeoPainter(TGeoManager *manager);
-   virtual ~RGeoPainter();
+   ~RGeoPainter() override;
 
    void       AddSize3D(Int_t, Int_t, Int_t) override {}
    TVirtualGeoTrack *AddTrack(Int_t, Int_t, TObject *) override { return nullptr; }

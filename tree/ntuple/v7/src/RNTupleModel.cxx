@@ -29,9 +29,9 @@ ROOT::Experimental::RNTupleModel::RProjectedFields::EnsureValidMapping(const Det
                                                                        const FieldMap_t &fieldMap)
 {
    auto source = fieldMap.at(target);
-   const bool hasCompatibleStructure = (source->GetStructure() == target->GetStructure()) ||
-                                       ((source->GetStructure() == ENTupleStructure::kCollection) &&
-                                        (target->GetType() == "ROOT::Experimental::RNTupleCardinality"));
+   const bool hasCompatibleStructure =
+      (source->GetStructure() == target->GetStructure()) ||
+      ((source->GetStructure() == ENTupleStructure::kCollection) && dynamic_cast<const RCardinalityField *>(target));
    if (!hasCompatibleStructure)
       return R__FAIL("field mapping structural mismatch: " + source->GetName() + " --> " + target->GetName());
    if (source->GetStructure() == ENTupleStructure::kLeaf) {
@@ -135,8 +135,6 @@ ROOT::Experimental::RNTupleModel::RUpdater::RUpdater(RNTupleWriter &writer)
 
 void ROOT::Experimental::RNTupleModel::RUpdater::BeginUpdate()
 {
-   if (fWriter.fNEntries > 0)
-      throw RException(R__FAIL("invalid attempt to alter model (fWriter.fNEntries > 0)"));
    fOpenChangeset.fModel.Unfreeze();
 }
 
@@ -148,7 +146,7 @@ void ROOT::Experimental::RNTupleModel::RUpdater::CommitUpdate()
    Detail::RNTupleModelChangeset toCommit{fOpenChangeset.fModel};
    std::swap(fOpenChangeset.fAddedFields, toCommit.fAddedFields);
    std::swap(fOpenChangeset.fAddedProjectedFields, toCommit.fAddedProjectedFields);
-   fWriter.fSink->UpdateSchema(toCommit);
+   fWriter.fSink->UpdateSchema(toCommit, fWriter.fNEntries);
 }
 
 void ROOT::Experimental::RNTupleModel::RUpdater::AddField(std::unique_ptr<Detail::RFieldBase> field)

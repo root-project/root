@@ -32,7 +32,7 @@ protected:
 
 public:
    TGShapedFrame(const char *fname = nullptr, const TGWindow *p = nullptr, UInt_t w = 1, UInt_t h = 1, UInt_t options = 0);
-   virtual ~TGShapedFrame();
+   ~TGShapedFrame() override;
 
    const TGPicture   GetPicture() const { return *fBgnd; }
    TImage            GetImage() const { return *fImage; }

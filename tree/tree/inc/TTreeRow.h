@@ -47,7 +47,7 @@ public:
    TTreeRow();
    TTreeRow(Int_t nfields);
    TTreeRow(Int_t nfields, const Int_t *fields, const char *row);
-   virtual ~TTreeRow();
+   ~TTreeRow() override;
 
    void        Close(Option_t *option="") override;
    ULong_t     GetFieldLength(Int_t field) override;

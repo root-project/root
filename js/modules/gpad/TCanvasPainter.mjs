@@ -1,10 +1,9 @@
-import { BIT, settings, create, parse, toJSON, loadScript, isBatchMode, isFunc, isStr, clTCanvas } from '../core.mjs';
+import { BIT, settings, create, parse, toJSON, loadScript, isFunc, isStr, clTCanvas } from '../core.mjs';
 import { select as d3_select } from '../d3.mjs';
 import { closeCurrentWindow, showProgress, loadOpenui5, ToolbarIcons, getColorExec } from '../gui/utils.mjs';
 import { GridDisplay, getHPainter } from '../gui/display.mjs';
 import { getElementRect } from '../base/BasePainter.mjs';
 import { cleanup, resize, selectActivePad, EAxisBits } from '../base/ObjectPainter.mjs';
-import { TAxisPainter } from './TAxisPainter.mjs';
 import { TFramePainter } from './TFramePainter.mjs';
 import { TPadPainter, clTButton } from './TPadPainter.mjs';
 
@@ -350,7 +349,7 @@ class TCanvasPainter extends TPadPainter {
              snap = parse(msg.slice(p1+1));
 
          this.syncDraw(true)
-             .then(() => this.ensureBrowserSize(!this.snapid, snap.fSnapshot.fCw, snap.fSnapshot.fCh))
+             .then(() => this.ensureBrowserSize(snap.fSnapshot.fCw, snap.fSnapshot.fCh, !this.snapid))
              .then(() => this.redrawPadSnap(snap))
              .then(() => {
                 this.completeCanvasSnapDrawing();
@@ -402,8 +401,10 @@ class TCanvasPainter extends TPadPainter {
 
    /** @summary Handle pad button click event */
    clickPadButton(funcname, evnt) {
-      if (funcname == 'ToggleGed') return this.activateGed(this, null, 'toggle');
-      if (funcname == 'ToggleStatus') return this.activateStatusBar('toggle');
+      if (funcname == 'ToggleGed')
+         return this.activateGed(this, null, 'toggle');
+      if (funcname == 'ToggleStatus')
+         return this.activateStatusBar('toggle');
       super.clickPadButton(funcname, evnt);
    }
 
@@ -487,13 +488,13 @@ class TCanvasPainter extends TPadPainter {
 
       let btns = this.brlayout.createBrowserBtns();
 
-      ToolbarIcons.createSVG(btns, ToolbarIcons.diamand, 15, 'toggle fix-pos mode')
+      ToolbarIcons.createSVG(btns, ToolbarIcons.diamand, 15, 'toggle fix-pos mode', 'browser')
                   .style('margin','3px').on('click', () => this.brlayout.toggleKind('fix'));
 
-      ToolbarIcons.createSVG(btns, ToolbarIcons.circle, 15, 'toggle float mode')
+      ToolbarIcons.createSVG(btns, ToolbarIcons.circle, 15, 'toggle float mode', 'browser')
                   .style('margin','3px').on('click', () => this.brlayout.toggleKind('float'));
 
-      ToolbarIcons.createSVG(btns, ToolbarIcons.cross, 15, 'delete GED')
+      ToolbarIcons.createSVG(btns, ToolbarIcons.cross, 15, 'delete GED', 'browser')
                   .style('margin','3px').on('click', () => this.removeGed());
 
       // be aware, that jsroot_browser_hierarchy required for flexible layout that element use full browser area
@@ -618,6 +619,9 @@ class TCanvasPainter extends TPadPainter {
             if (isFunc(painter.getWebPadOptions))
                msg = 'OPTIONS6:' + painter.getWebPadOptions('only_this');
             break;
+         case 'padpos': // when changing pad position
+            msg = 'OPTIONS6:' + painter.getWebPadOptions('with_subpads');
+            break;
          case 'drawopt':
             if (painter.snapid)
                msg = 'DRAWOPT:' + JSON.stringify([painter.snapid.toString(), painter.getDrawOpt() || '']);
@@ -731,7 +735,7 @@ class TCanvasPainter extends TPadPainter {
 
    /** @summary resize browser window to get requested canvas sizes */
    resizeBrowser(canvW, canvH) {
-      if (!isFunc(window?.resizeTo) || !canvW || !canvH || isBatchMode() || this.embed_canvas || this.batch_mode)
+      if (!canvW || !canvH || this.isBatchMode() || this.embed_canvas || this.batch_mode)
          return;
 
       let rect = getElementRect(this.selectDom('origin'));
@@ -741,7 +745,10 @@ class TCanvasPainter extends TPadPainter {
           fullH = window.innerHeight - rect.height + canvH;
 
       if ((fullW > 0) && (fullH > 0) && ((rect.width != canvW) || (rect.height != canvH))) {
-         window.resizeTo(fullW, fullH);
+         if (this._websocket)
+            this._websocket.resizeWindow(fullW, fullH);
+         else if (isFunc(window?.resizeTo))
+            window.resizeTo(fullW, fullH);
          return true;
       }
    }
@@ -754,7 +761,7 @@ class TCanvasPainter extends TPadPainter {
       let painter = new TCanvasPainter(dom, can);
       painter.checkSpecialsInPrimitives(can);
 
-      if (!nocanvas && can.fCw && can.fCh && !isBatchMode()) {
+      if (!nocanvas && can.fCw && can.fCh && !painter.isBatchMode()) {
          let rect0 = painter.selectDom().node().getBoundingClientRect();
          if (!rect0.height && (rect0.width > 0.1*can.fCw)) {
             painter.selectDom().style('width', can.fCw+'px').style('height', can.fCh+'px');

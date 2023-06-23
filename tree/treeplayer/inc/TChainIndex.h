@@ -78,19 +78,19 @@ protected:
 public:
    TChainIndex();
    TChainIndex(const TTree *T, const char *majorname, const char *minorname);
-   virtual               ~TChainIndex();
-   virtual void           Append(const TVirtualIndex *, Bool_t delaySort = kFALSE);
-   virtual Long64_t       GetEntryNumberFriend(const TTree *parent);
-   virtual Long64_t       GetEntryNumberWithIndex(Long64_t major, Long64_t minor) const;
-   virtual Long64_t       GetEntryNumberWithBestIndex(Long64_t major, Long64_t minor) const;
-   const char            *GetMajorName()    const {return fMajorName.Data();}
-   const char            *GetMinorName()    const {return fMinorName.Data();}
-   virtual Long64_t       GetN()            const {return fEntries.size();}
-   virtual Bool_t         IsValidFor(const TTree *parent);
-   virtual void           UpdateFormulaLeaves(const TTree *parent);
-   virtual void           SetTree(TTree *T);
+                 ~TChainIndex() override;
+   void           Append(const TVirtualIndex *, Bool_t delaySort = kFALSE) override;
+   Long64_t       GetEntryNumberFriend(const TTree *parent) override;
+   Long64_t       GetEntryNumberWithIndex(Long64_t major, Long64_t minor) const override;
+   Long64_t       GetEntryNumberWithBestIndex(Long64_t major, Long64_t minor) const override;
+   const char    *GetMajorName()    const override {return fMajorName.Data();}
+   const char    *GetMinorName()    const override {return fMinorName.Data();}
+   Long64_t       GetN()            const override {return fEntries.size();}
+   Bool_t         IsValidFor(const TTree *parent) override;
+   void           UpdateFormulaLeaves(const TTree *parent) override;
+   void           SetTree(TTree *T) override;
 
-   ClassDef(TChainIndex,1)  //A Tree Index with majorname and minorname.
+   ClassDefOverride(TChainIndex,1)  //A Tree Index with majorname and minorname.
 };
 
 #endif

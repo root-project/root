@@ -46,11 +46,11 @@ public:
    TGeoPolygon();
    TGeoPolygon(Int_t nvert);
    // destructor
-   virtual ~TGeoPolygon();
+   ~TGeoPolygon() override;
    // methods
    Double_t            Area() const;
    Bool_t              Contains(const Double_t *point) const;
-   virtual void        Draw(Option_t *option="");
+   void        Draw(Option_t *option="") override;
    void                FinishPolygon();
    Int_t               GetNvert() const {return fNvert;}
    Int_t               GetNconvex() const {return fNconvex;}
@@ -67,7 +67,7 @@ public:
    void                SetXY(Double_t *x, Double_t *y);
    void                SetNextIndex(Int_t index=-1);
 
-   ClassDef(TGeoPolygon, 2)         // class for handling arbitrary polygons
+   ClassDefOverride(TGeoPolygon, 2)         // class for handling arbitrary polygons
 };
 
 #endif

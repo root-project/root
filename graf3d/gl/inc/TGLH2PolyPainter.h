@@ -15,18 +15,18 @@ class TGLH2PolyPainter : public TGLPlotPainter {
 public:
    TGLH2PolyPainter(TH1 *hist, TGLPlotCamera *camera, TGLPlotCoordinates *coord);
 
-   char        *GetPlotInfo(Int_t px, Int_t py);
-   Bool_t       InitGeometry();
-   void         StartPan(Int_t px, Int_t py);
-   void         Pan(Int_t px, Int_t py);
-   void         AddOption(const TString &stringOption);
-   void         ProcessEvent(Int_t event, Int_t px, Int_t py);
+   char        *GetPlotInfo(Int_t px, Int_t py) override;
+   Bool_t       InitGeometry() override;
+   void         StartPan(Int_t px, Int_t py) override;
+   void         Pan(Int_t px, Int_t py) override;
+   void         AddOption(const TString &stringOption) override;
+   void         ProcessEvent(Int_t event, Int_t px, Int_t py) override;
 
 private:
    //Overriders
-   void         InitGL()const;
-   void         DeInitGL()const;
-   void         DrawPlot()const;
+   void         InitGL()const override;
+   void         DeInitGL()const override;
+   void         DrawPlot()const override;
    //Aux. functions.
    //Draw edges of a bin.
    void         DrawExtrusion()const;
@@ -46,11 +46,11 @@ private:
    void         SetBinColor(Int_t bin)const;
 
    //Empty overriders.
-   void         DrawSectionXOZ()const;
-   void         DrawSectionYOZ()const;
-   void         DrawSectionXOY()const;
+   void         DrawSectionXOZ()const override;
+   void         DrawSectionYOZ()const override;
+   void         DrawSectionXOY()const override;
    void         DrawPalette()const;
-   void         DrawPaletteAxis()const;
+   void         DrawPaletteAxis()const override;
 
    //Aux. staff.
    void         FillTemporaryPolygon(const Double_t *xs, const Double_t *ys, Double_t z, Int_t n)const;
@@ -67,7 +67,7 @@ private:
    Bool_t                             fZLog;//Change in logZ updates only bin heights.
    Double_t                           fZMin;
 
-   ClassDef(TGLH2PolyPainter, 0); //Painter class for TH2Poly.
+   ClassDefOverride(TGLH2PolyPainter, 0); //Painter class for TH2Poly.
 };
 
 #endif

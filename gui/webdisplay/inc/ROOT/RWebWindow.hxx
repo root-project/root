@@ -110,6 +110,12 @@ private:
       }
    };
 
+   struct MasterConn {
+      unsigned connid{0};
+      int channel{-1};
+      MasterConn(unsigned _connid, int _channel) : connid(_connid), channel(_channel) {}
+   };
+
    enum EQueueEntryKind { kind_None, kind_Connect, kind_Data, kind_Disconnect };
 
    struct QueueEntry {
@@ -124,8 +130,7 @@ private:
 
    std::shared_ptr<RWebWindowsManager> fMgr;        ///<! display manager
    std::shared_ptr<RWebWindow> fMaster;             ///<! master window where this window is embedded
-   unsigned fMasterConnId{0};                       ///<! master connection id
-   int fMasterChannel{-1};                          ///<! channel id in the master window
+   std::vector<MasterConn> fMasterConns;            ///<! master connections
    std::string fDefaultPage;                        ///<! HTML page (or file name) returned when window URL is opened
    std::string fPanelName;                          ///<! panel name which should be shown in the window
    unsigned fId{0};                                 ///<! unique identifier
@@ -168,7 +173,7 @@ private:
 
    void CompleteWSSend(unsigned wsid);
 
-   ConnectionsList_t GetConnections(unsigned connid = 0, bool only_active = false) const;
+   ConnectionsList_t GetWindowConnections(unsigned connid = 0, bool only_active = false) const;
 
    std::shared_ptr<WebConn> FindOrCreateConnection(unsigned wsid, bool make_new, const char *query);
 
@@ -201,9 +206,15 @@ private:
 
    unsigned AddDisplayHandle(bool headless_mode, const std::string &key, std::unique_ptr<RWebDisplayHandle> &handle);
 
-   unsigned AddEmbedWindow(std::shared_ptr<RWebWindow> window, int channel);
+   unsigned AddEmbedWindow(std::shared_ptr<RWebWindow> window, unsigned connid, int channel);
 
    void RemoveEmbedWindow(unsigned connid, int channel);
+
+   void AddMasterConnection(std::shared_ptr<RWebWindow> window, unsigned connid, int channel);
+
+   std::vector<MasterConn> GetMasterConnections(unsigned connid = 0) const;
+
+   void RemoveMasterConnection(unsigned connid = 0);
 
    bool ProcessBatchHolder(std::shared_ptr<THttpCallArg> &arg);
 
@@ -299,6 +310,8 @@ public:
    int NumConnections(bool with_pending = false) const;
 
    unsigned GetConnectionId(int num = 0) const;
+
+   std::vector<unsigned> GetConnections(unsigned excludeid = 0) const;
 
    bool HasConnection(unsigned connid = 0, bool only_active = true) const;
 

@@ -39,7 +39,7 @@ namespace Internal {
       void OutputInit(FILE *hf, int offset, UInt_t maxVarname,
                       const char *prefix);
 
-      ClassDef(TBranchProxyDescriptor,0); // Describe the proxy for a branch
+      ClassDefOverride(TBranchProxyDescriptor,0); // Describe the proxy for a branch
    };
 }
 }

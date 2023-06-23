@@ -1,5 +1,5 @@
 import { select as d3_select, pointer as d3_pointer } from '../d3.mjs';
-import { settings, constants, internals, isNodeJs, getPromise, BIT,
+import { settings, constants, internals, isNodeJs, isBatchMode, getPromise, BIT,
          prROOT, clTObjString, clTAxis, isObject, isFunc, isStr } from '../core.mjs';
 import { isPlainText, producePlainText, produceLatex, produceMathjax, typesetMathjax } from './latex.mjs';
 import { getElementRect, BasePainter, makeTranslate } from './BasePainter.mjs';
@@ -50,9 +50,12 @@ class ObjectPainter extends BasePainter {
    }
 
    /** @summary Returns pad name where object is drawn */
-   getPadName() {
-      return this.pad_name || '';
-   }
+   getPadName() { return this.pad_name || ''; }
+
+   /** @summary Indicates that drawing runs in batch mode
+     * @private */
+   isBatchMode() { return isBatchMode() ? true : (this.getCanvPainter()?.isBatchMode() ?? false); }
+
 
    /** @summary Assign snapid to the painter
     * @desc Identifier used to communicate with server side and identifies object on the server
@@ -786,18 +789,26 @@ class ObjectPainter extends BasePainter {
    /** @summary Fill context menu for the object
      * @private */
    fillContextMenu(menu) {
-      let title = this.getObjectHint(), obj = this.getObject();
-      if (obj?._typename)
-         title = `${obj._typename}::${title}`;
+      let name = this.getObject()?.fName || '',
+          cl = this.getClassName();
+
+      let p = cl.lastIndexOf('::');
+      if (p > 0) cl = cl.slice(p+2);
+      let title = cl && name ? `${cl}:${name}` : cl ? cl : name || 'object';
 
       menu.add(`header:${title}`);
 
-      menu.addAttributesMenu(this);
+      let size0 = menu.size();
 
-      if ((menu.size() > 0) && this.showInspector('check'))
+      if (isFunc(this.fillContextMenuItems))
+         this.fillContextMenuItems(menu);
+
+      if ((menu.size() > size0) && this.showInspector('check'))
          menu.add('Inspect', this.showInspector);
 
-      return menu.size() > 0;
+      menu.addAttributesMenu(this);
+
+      return menu.size() > size0;
    }
 
    /** @summary shows objects status
@@ -1584,6 +1595,7 @@ function getActivePad() {
   * the element even after minimal resize
   * Or one just supply object with exact sizes like { width:300, height:200, force:true };
   * @example
+  * import { resize } from 'https://root.cern/js/latest/modules/base/ObjectPainter.mjs';
   * resize('drawing', { width: 500, height: 200 });
   * resize(document.querySelector('#drawing'), true); */
 function resize(dom, arg) {
@@ -1604,6 +1616,7 @@ function resize(dom, arg) {
   * @param {string|object} dom - id or DOM element
   * @public
   * @example
+  * import { cleanup } from 'https://root.cern/js/latest/modules/base/ObjectPainter.mjs';
   * cleanup('drawing');
   * cleanup(document.querySelector('#drawing')); */
 function cleanup(dom) {

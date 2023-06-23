@@ -104,7 +104,7 @@ Minuit2Minimizer::Minuit2Minimizer(const char *type) : Minimizer(), fDim(0), fMi
       algoType = kCombined;
    if (algoname == "scan")
       algoType = kScan;
-   if (algoname == "fumili")
+   if (algoname == "fumili" || algoname == "fumili2")
       algoType = kFumili;
    if (algoname == "bfgs")
       algoType = kMigradBFGS;

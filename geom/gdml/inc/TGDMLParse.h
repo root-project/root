@@ -37,7 +37,7 @@ public:
       fMatrix = nullptr;
    }
 
-   virtual ~TGDMLRefl() {}
+   ~TGDMLRefl() override {}
 
    TGDMLRefl(const char* name, const char* solid, TGeoMatrix* matrix);
    TGeoMatrix* GetMatrix();
@@ -48,7 +48,7 @@ private:
    const char*     fSolid;      //!solid name being reflected
    TGeoMatrix     *fMatrix;     //!matrix of reflected solid
 
-   ClassDef(TGDMLRefl, 0)     //helper class used for the storage of reflected solids
+   ClassDefOverride(TGDMLRefl, 0)     //helper class used for the storage of reflected solids
 };
 
 /*************************************************************************
@@ -107,7 +107,7 @@ public:
    std::string fDefault_aunit = "rad";
 
    TGDMLParse();
-   virtual ~TGDMLParse() {}
+   ~TGDMLParse() override {}
 
    static TGeoVolume* StartGDML(const char* filename) {
       TGDMLParse* parser = new TGDMLParse;
@@ -222,7 +222,7 @@ private:
    ConstMap fconsts;              //!Map containing values of constants declared in the file
    MatrixMap fmatrices;           //!Map containing matrices defined in the GDML file
 
-   ClassDef(TGDMLParse, 0)    //imports GDML using DOM and binds it to ROOT
+   ClassDefOverride(TGDMLParse, 0)    //imports GDML using DOM and binds it to ROOT
 };
 
 #endif

@@ -72,11 +72,11 @@ public:
    {
    public:
       TExceptionHandler() : TStdExceptionHandler() { Add(); }
-      virtual ~TExceptionHandler()                 { Remove(); }
+      ~TExceptionHandler() override                 { Remove(); }
 
-      virtual EStatus  Handle(std::exception& exc);
+      EStatus  Handle(std::exception& exc) override;
 
-      ClassDef(TExceptionHandler, 0); // Exception handler for Eve exceptions.
+      ClassDefOverride(TExceptionHandler, 0); // Exception handler for Eve exceptions.
    };
 
 protected:

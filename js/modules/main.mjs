@@ -21,7 +21,7 @@ export { createGeoPainter, TGeoPainter } from './geom/TGeoPainter.mjs';
 
 export { loadOpenui5, registerForResize, setSaveFile } from './gui/utils.mjs';
 
-export { draw, redraw, makeSVG, addDrawFunc, setDefaultDrawOpt } from './draw.mjs';
+export { draw, redraw, makeSVG, makeImage, addDrawFunc, setDefaultDrawOpt } from './draw.mjs';
 
 export { openFile, FileProxy } from './io.mjs';
 

@@ -191,6 +191,7 @@ TEST(RFieldDescriptorBuilder, HeaderExtension)
                             .Model(RColumnModel{EColumnType::kInt64, false})
                             .FieldId(3)
                             .Index(0)
+                            .FirstElementIndex(1002)
                             .MakeDescriptor()
                             .Unwrap());
    descBuilder.AddFieldLink(2, 3);
@@ -208,6 +209,7 @@ TEST(RFieldDescriptorBuilder, HeaderExtension)
                             .Model(RColumnModel{EColumnType::kBit, false})
                             .FieldId(4)
                             .Index(0)
+                            .FirstElementIndex(1100)
                             .MakeDescriptor()
                             .Unwrap());
    descBuilder.AddFieldLink(0, 4);
@@ -248,6 +250,9 @@ TEST(RFieldDescriptorBuilder, HeaderExtension)
       for (auto child_field : xHeader->GetTopLevelFields(desc))
          EXPECT_EQ(desc.GetFieldDescriptor(child_field).GetFieldName(), child_names[i++]);
    }
+   EXPECT_EQ(desc.GetColumnDescriptor(0).GetFirstElementIndex(), 0U);
+   EXPECT_EQ(desc.GetColumnDescriptor(1).GetFirstElementIndex(), 1002U);
+   EXPECT_EQ(desc.GetColumnDescriptor(2).GetFirstElementIndex(), 1100U);
 }
 
 TEST(RNTupleDescriptor, QualifiedFieldName)
@@ -427,6 +432,13 @@ TEST(RColumnDescriptorIterable, IterateOverColumns)
       counter++;
    }
    EXPECT_EQ(3, counter);
+
+   counter = 0;
+   for (const auto &c : desc->GetColumnIterable()) {
+      (void)c;
+      counter++;
+   }
+   EXPECT_EQ(desc->GetNLogicalColumns(), counter);
 }
 
 TEST(RClusterDescriptor, GetBytesOnStorage)
@@ -452,7 +464,7 @@ TEST(RClusterDescriptor, GetBytesOnStorage)
 
    auto clusterID = desc->FindClusterId(0, 0);
    ASSERT_NE(ROOT::Experimental::kInvalidDescriptorId, clusterID);
-   EXPECT_EQ(4 + 8 + 4 + 3, desc->GetClusterDescriptor(clusterID).GetBytesOnStorage());
+   EXPECT_EQ(8 + 8 + 8 + 3, desc->GetClusterDescriptor(clusterID).GetBytesOnStorage());
 }
 
 TEST(RNTupleDescriptor, Clone)

@@ -16,14 +16,16 @@
 
 //#include <thread>
 
-// in case we do not use CGAL
+// use the triangle library if we do not use CGAL
 #ifndef HAS_CGAL
-// use the triangle library
 #include "triangle.h"
 #endif
 
 #include <algorithm>
 #include <stdlib.h>
+
+#include <iostream>
+#include <limits>
 
 namespace ROOT {
 
@@ -60,11 +62,7 @@ void Delaunay2D::SetInputPoints(int n, const double * x, const double * y, const
                            double xmin, double xmax, double ymin, double ymax) {
 
 
-#ifdef THREAD_SAFE
-   fInit         = Initialization::UNINITIALIZED;
-#else
    fInit         = kFALSE;
-#endif
 
    if (n == 0 || !x || !y || !z ) return;
 
@@ -128,9 +126,8 @@ double Delaunay2D::Interpolate(double x, double y)
    yy = Linear_transform(y, fOffsetY, fScaleFactorY); //yy = yTransformer(y);
    double zz = DoInterpolateNormalized(xx, yy);
 
-   // Wrong zeros may appear when points sit on a regular grid.
-   // The following line try to avoid this problem.
-   if (zz==0) zz = DoInterpolateNormalized(xx+0.0001, yy);
+   // the case of points on a regular grid (i.e. points on triangle edges) it is now handles in
+   // DoInterpolateNormalized
 
    return zz;
 }
@@ -139,119 +136,32 @@ double Delaunay2D::Interpolate(double x, double y)
 void Delaunay2D::FindAllTriangles()
 {
 
-#ifdef THREAD_SAFE
-   //treat the common case first
-   if(fInit.load(std::memory_order::memory_order_relaxed) == Initialization::INITIALIZED)
+   if (fInit)
       return;
+   else
+      fInit = kTRUE;
 
-   Initialization cState = Initialization::UNINITIALIZED;
-   if(fInit.compare_exchange_strong(cState, Initialization::INITIALIZING,
-                                    std::memory_order::memory_order_release, std::memory_order::memory_order_relaxed))
-   {
-      // the value of fInit was indeed UNINIT, we replaced it atomically with initializing
-      // performing the initialzing now
-#else
-      if (fInit) return; else fInit = kTRUE;
-#endif
+   // Function used internally only. It creates the data structures needed to
+   // compute the Delaunay triangles.
 
-      // Function used internally only. It creates the data structures needed to
-      // compute the Delaunay triangles.
+   // Offset fX and fY so they average zero, and scale so the average
+   // of the X and Y ranges is one. The normalized version of fX and fY used
+   // in Interpolate.
 
-      // Offset fX and fY so they average zero, and scale so the average
-      // of the X and Y ranges is one. The normalized version of fX and fY used
-      // in Interpolate.
+   DoNormalizePoints(); // call backend specific point normalization
 
-      DoNormalizePoints(); // call backend specific point normalization
+   DoFindTriangles(); // call backend specific triangle finding
 
-      DoFindTriangles(); // call backend specific triangle finding
-
-      fNdt = fTriangles.size();
-
-#ifdef THREAD_SAFE
-      fInit = Initialization::INITIALIZED;
-   } else while(cState != Initialization::INITIALIZED) {
-         //the value of fInit was NOT UNINIT, so we have to spin until we reach INITIALEZED
-         cState = fInit.load(std::memory_order::memory_order_relaxed);
-      }
-#endif
-
+   fNdt = fTriangles.size();
 }
-
 
 // backend specific implementations
 
-#ifdef HAS_CGAL
-/// CGAL implementation of normalize points
-void Delaunay2D::DonormalizePoints() {
-   for (Int_t n = 0; n < fNpoints; n++) {
-      //Point p(xTransformer(fX[n]), yTransformer(fY[n]));
-      Point p(linear_transform(fX[n], fOffsetX, fScaleFactorX),
-              linear_transform(fY[n], fOffsetY, fScaleFactorY));
+#ifndef HAS_CGAL
 
-      fNormalizedPoints.insert(std::make_pair(p, n));
-   }
-}
+// Triangle implementation (default case)
 
-/// CGAL implementation for finding triangles
-void Delaunay2D::DoFindTriangles() {
-   fCGALdelaunay.insert(fNormalizedPoints.begin(), fNormalizedPoints.end());
-
-   std::transform(fCGALdelaunay.finite_faces_begin(),
-                  fCGALdelaunay.finite_faces_end(), std::back_inserter(fTriangles),
-                  [] (const Delaunay::Face face) -> Triangle {
-
-                     Triangle tri;
-
-                     auto transform = [&] (const unsigned int i) {
-                        tri.x[i] = face.vertex(i)->point().x();
-                        tri.y[i] = face.vertex(i)->point().y();
-                        tri.idx[i] = face.vertex(i)->info();
-                     };
-
-                     transform(0);
-                     transform(1);
-                     transform(2);
-
-                     return tri;
-
-                  });
-}
-
-/// CGAL implementation for interpolation
-double Delaunay2D::DoInterpolateNormalized(double xx, double yy)
-{
-   // Finds the Delaunay triangle that the point (xi,yi) sits in (if any) and
-   // calculate a z-value for it by linearly interpolating the z-values that
-   // make up that triangle.
-
-   // initialise the Delaunay algorithm if needed
-    FindAllTriangles();
-
-   //coordinate computation
-   Point p(xx, yy);
-
-   std::vector<std::pair<Point, Coord_type> > coords;
-   auto nn = CGAL::natural_neighbor_coordinates_2(fCGALdelaunay, p,
-                                                  std::back_inserter(coords));
-
-   //std::cout << std::this_thread::get_id() << ": Found " << coords.size() << " points" << std::endl;
-
-   if(!nn.third) //neighbor finding was NOT successfull, return standard value
-      return fZout;
-
-   //printf("found neighbors %u\n", coords.size());
-
-   Coord_type res = CGAL::linear_interpolation(coords.begin(), coords.end(),
-                                               nn.second, Value_access(fNormalizedPoints, fZ));
-
-   //std::cout << std::this_thread::get_id() << ": Result " << res << std::endl;
-
-   return res;
-}
-
-#else // HAS_CGAL
-
-/// Triangle implementation for normalizing the points
+/// Triangle implementation for points normalization
 void Delaunay2D::DoNormalizePoints() {
    for (Int_t n = 0; n < fNpoints; n++) {
       fXN.push_back(Linear_transform(fX[n], fOffsetX, fScaleFactorX));
@@ -387,84 +297,132 @@ void Delaunay2D::DoFindTriangles() {
 /// Finds the Delaunay triangle that the point (xi,yi) sits in (if any) and
 /// calculate a z-value for it by linearly interpolating the z-values that
 /// make up that triangle.
+/// Relay that all the triangles have been found before
+/// see comment in class description (in Delaunay2D.h) for implementation details:
+/// finding barycentric cordinates and computing the interpolation
 double Delaunay2D::DoInterpolateNormalized(double xx, double yy)
 {
 
-   // relay that ll the triangles have been found
-   ///  FindAllTriangles();
+   // compute barycentric coordinates of a point P(xx,yy,zz)
+   auto bayCoords = [&](const unsigned int t) -> std::tuple<double, double, double> {
+      double la = ((fTriangles[t].y[1] - fTriangles[t].y[2]) * (xx - fTriangles[t].x[2]) +
+                   (fTriangles[t].x[2] - fTriangles[t].x[1]) * (yy - fTriangles[t].y[2])) *
+                  fTriangles[t].invDenom;
+      double lb = ((fTriangles[t].y[2] - fTriangles[t].y[0]) * (xx - fTriangles[t].x[2]) +
+                   (fTriangles[t].x[0] - fTriangles[t].x[2]) * (yy - fTriangles[t].y[2])) *
+                  fTriangles[t].invDenom;
 
-    //see comment in header for CGAL fallback section
-    auto bayCoords = [&] (const unsigned int t) -> std::tuple<double, double, double> {
-       double la = ( (fTriangles[t].y[1] - fTriangles[t].y[2])*(xx - fTriangles[t].x[2])
-                    + (fTriangles[t].x[2] - fTriangles[t].x[1])*(yy - fTriangles[t].y[2]) ) * fTriangles[t].invDenom;
-       double lb = ( (fTriangles[t].y[2] - fTriangles[t].y[0])*(xx - fTriangles[t].x[2])
-                    + (fTriangles[t].x[0] - fTriangles[t].x[2])*(yy - fTriangles[t].y[2]) ) * fTriangles[t].invDenom;
+      return std::make_tuple(la, lb, (1 - la - lb));
+   };
 
-       return std::make_tuple(la, lb, (1 - la - lb));
-    };
-
-    auto inTriangle = [] (const std::tuple<double, double, double> & coords) -> bool {
-       return std::get<0>(coords) >= 0 && std::get<1>(coords) >= 0 && std::get<2>(coords) >= 0;
-    };
+   // function to test if a point with barycentric coordinates (a,b,c) is inside the triangle
+   // If the point is outside one or more of the coordinate are negative.
+   // If the point is on a triangle edge, one of the coordinate (the one not part of the edge) is zero.
+   // Due to numerical error, it can happen that if the point is at the edge the result is a small negative value.
+   // Use then a tolerance (of - eps) to still consider the point within the triangle
+   auto inTriangle = [](const std::tuple<double, double, double> &coords) -> bool {
+      constexpr double eps = -4 * std::numeric_limits<double>::epsilon();
+      return std::get<0>(coords) > eps && std::get<1>(coords) > eps && std::get<2>(coords) > eps;
+   };
 
    int cX = CellX(xx);
    int cY = CellY(yy);
 
-   if(cX < 0 || cX > fNCells || cY < 0 || cY > fNCells)
-      return fZout; //TODO some more fancy interpolation here
+   if (cX < 0 || cX > fNCells || cY < 0 || cY > fNCells)
+      return fZout; // TODO some more fancy interpolation here
 
-    for(unsigned int t : fCells[Cell(cX, cY)]){
-       auto coords = bayCoords(t);
+   for (unsigned int t : fCells[Cell(cX, cY)]) {
 
-       if(inTriangle(coords)){
-          //we found the triangle -> interpolate using the barycentric interpolation
-          return std::get<0>(coords) * fZ[fTriangles[t].idx[0]]
-                 + std::get<1>(coords) * fZ[fTriangles[t].idx[1]]
-               + std::get<2>(coords) * fZ[fTriangles[t].idx[2]];
+      auto coords = bayCoords(t);
 
-       }
-    }
+      // std::cout << "result of bayCoords " << std::get<0>(coords) <<
+      //     "  " << std::get<1>(coords)  << "   " << std::get<2>(coords) << std::endl;
 
-    //debugging
+      if (inTriangle(coords)) {
 
-    /*
-    for(unsigned int t = 0; t < fNdt; ++t) {
-       auto coords = bayCoords(t);
+         // we found the triangle -> interpolate using the barycentric interpolation
 
-       if(inTriangle(coords)){
+         return std::get<0>(coords) * fZ[fTriangles[t].idx[0]] + std::get<1>(coords) * fZ[fTriangles[t].idx[1]] +
+                std::get<2>(coords) * fZ[fTriangles[t].idx[2]];
+      }
+   }
 
-          //brute force found a triangle -> grid not
-          printf("Found triangle %u for (%f,%f) -> (%u,%u)\n", t, xx,yy, cX, cY);
-          printf("Triangles in grid cell: ");
-          for(unsigned int x : fCells[Cell(cX, cY)])
-             printf("%u ", x);
-          printf("\n");
+   // printf("Could not find a triangle for point (%f,%f)\n", xx, yy);
 
-          printf("Triangle %u is in cells: ", t);
-          for(unsigned int i = 0; i <= fNCells; ++i)
-             for(unsigned int j = 0; j <= fNCells; ++j)
-                if(fCells[Cell(i,j)].count(t))
-                   printf("(%u,%u) ", i, j);
-          printf("\n");
-          for(unsigned int i = 0; i < 3; ++i)
-             printf("\tpoint %u (%u): (%f,%f) -> (%u,%u)\n", i, fTriangles[t].idx[i], fTriangles[t].x[i], fTriangles[t].y[i], CellX(fTriangles[t].x[i]), CellY(fTriangles[t].y[i]));
-
-          //we found the triangle -> interpolate using the barycentric interpolation
-          return std::get<0>(coords) * fZ[fTriangles[t].idx[0]]
-                 + std::get<1>(coords) * fZ[fTriangles[t].idx[1]]
-                 + std::get<2>(coords) * fZ[fTriangles[t].idx[2]];
-
-       }
-    }
-
-    printf("Could not find a triangle for point (%f,%f)\n", xx, yy);
-    */
-
-    //no triangle found return standard value
+   // no triangle found return standard value
    return fZout;
 }
-#endif //HAS_CGAL
+
+#else //HAS_CGAL: case of using GCAL
+
+/// CGAL implementation of normalize points
+void Delaunay2D::DonormalizePoints() {
+   for (Int_t n = 0; n < fNpoints; n++) {
+      //Point p(xTransformer(fX[n]), yTransformer(fY[n]));
+      Point p(linear_transform(fX[n], fOffsetX, fScaleFactorX),
+              linear_transform(fY[n], fOffsetY, fScaleFactorY));
+
+      fNormalizedPoints.insert(std::make_pair(p, n));
+   }
+}
+
+/// CGAL implementation for finding triangles
+void Delaunay2D::DoFindTriangles() {
+   fCGALdelaunay.insert(fNormalizedPoints.begin(), fNormalizedPoints.end());
+
+   std::transform(fCGALdelaunay.finite_faces_begin(),
+                  fCGALdelaunay.finite_faces_end(), std::back_inserter(fTriangles),
+                  [] (const Delaunay::Face face) -> Triangle {
+
+                     Triangle tri;
+
+                     auto transform = [&] (const unsigned int i) {
+                        tri.x[i] = face.vertex(i)->point().x();
+                        tri.y[i] = face.vertex(i)->point().y();
+                        tri.idx[i] = face.vertex(i)->info();
+                     };
+
+                     transform(0);
+                     transform(1);
+                     transform(2);
+
+                     return tri;
+
+                  });
+}
+
+/// CGAL implementation for interpolation
+double Delaunay2D::DoInterpolateNormalized(double xx, double yy)
+{
+   // Finds the Delaunay triangle that the point (xi,yi) sits in (if any) and
+   // calculate a z-value for it by linearly interpolating the z-values that
+   // make up that triangle.
+
+   // initialise the Delaunay algorithm if needed
+    FindAllTriangles();
+
+   //coordinate computation
+   Point p(xx, yy);
+
+   std::vector<std::pair<Point, Coord_type> > coords;
+   auto nn = CGAL::natural_neighbor_coordinates_2(fCGALdelaunay, p,
+                                                  std::back_inserter(coords));
+
+   //std::cout << std::this_thread::get_id() << ": Found " << coords.size() << " points" << std::endl;
+
+   if(!nn.third) //neighbor finding was NOT successfull, return standard value
+      return fZout;
+
+   //printf("found neighbors %u\n", coords.size());
+
+   Coord_type res = CGAL::linear_interpolation(coords.begin(), coords.end(),
+                                               nn.second, Value_access(fNormalizedPoints, fZ));
+
+   //std::cout << std::this_thread::get_id() << ": Result " << res << std::endl;
+
+   return res;
+}
+#endif // HAS_GCAL
 
 } // namespace Math
 } // namespace ROOT
-

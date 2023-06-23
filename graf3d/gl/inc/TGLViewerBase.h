@@ -83,9 +83,9 @@ protected:
 public:
 
    TGLViewerBase();
-   virtual ~TGLViewerBase();
+   ~TGLViewerBase() override;
 
-   virtual const char* LockIdStr() const;
+   const char* LockIdStr() const override;
 
    TGLSceneInfo* AddScene(TGLSceneBase* scene);
    void          RemoveScene(TGLSceneBase* scene);
@@ -158,7 +158,7 @@ public:
    TGLRnrCtx* GetRnrCtx() const { return  fRnrCtx; }
    TGLRnrCtx& RnrCtx() const    { return *fRnrCtx; }
 
-   ClassDef(TGLViewerBase, 0); // GL Viewer base-class.
+   ClassDefOverride(TGLViewerBase, 0); // GL Viewer base-class.
 };
 
 

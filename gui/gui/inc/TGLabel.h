@@ -67,7 +67,7 @@ public:
            UInt_t options = kChildFrame,
            Pixel_t back = GetDefaultFrameBackground());
 
-   virtual ~TGLabel();
+   ~TGLabel() override;
 
    TGDimension GetDefaultSize() const override;
 

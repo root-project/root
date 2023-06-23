@@ -354,17 +354,18 @@ class THStackPainter extends ObjectPainter {
 
       // and now update histograms
       let hlst = this.options.nostack ? stack.fHists : stack.fStack,
-          nhists = (hlst && hlst.arr) ? hlst.arr.length : 0;
+          nhists = hlst?.arr?.length ?? 0;
 
       if (nhists !== this.painters.length) {
-         this.getPadPainter()?.cleanPrimitives(objp => { return this.painters.indexOf(objp) >= 0; });
+         this.getPadPainter()?.cleanPrimitives(objp => this.painters.indexOf(objp) >= 0);
          this.painters = [];
          this.did_update = true;
       } else {
          for (let indx = 0; indx < nhists; ++indx) {
-            let rindx = this.options.horder ? indx : nhists-indx-1;
-            let hist = hlst.arr[rindx];
-            this.painters[indx].updateObject(hist);
+            let rindx = this.options.horder ? indx : nhists - indx - 1,
+                hist = hlst.arr[rindx],
+                hopt = hlst.opt[rindx];
+            this.painters[indx].updateObject(hist, hopt);
          }
       }
 

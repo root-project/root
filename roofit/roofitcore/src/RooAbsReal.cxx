@@ -49,7 +49,6 @@
 #include "RooAbsCategoryLValue.h"
 #include "RooCustomizer.h"
 #include "RooAbsData.h"
-#include "RooScaledFunc.h"
 #include "RooAddPdf.h"
 #include "RooCmdConfig.h"
 #include "RooCategory.h"
@@ -62,6 +61,7 @@
 #include "RooGlobalFunc.h"
 #include "RooParamBinning.h"
 #include "RooProfileLL.h"
+#include "RooProduct.h"
 #include "RooFunctor.h"
 #include "RooDerivative.h"
 #include "RooXYChi2Var.h"
@@ -500,7 +500,7 @@ RooAbsReal* RooAbsReal::createProfile(const RooArgSet& paramsOfInterest)
 /// | `NumIntConfig(const RooNumIntConfig&)` | Use given configuration for any numeric integration, if necessary
 /// | `Range(const char* name)`              | Integrate only over given range. Multiple ranges may be specified by passing multiple Range() arguments
 
-RooAbsReal* RooAbsReal::createIntegral(const RooArgSet& iset, const RooCmdArg& arg1, const RooCmdArg& arg2,
+RooFit::OwningPtr<RooAbsReal> RooAbsReal::createIntegral(const RooArgSet& iset, const RooCmdArg& arg1, const RooCmdArg& arg2,
                    const RooCmdArg& arg3, const RooCmdArg& arg4, const RooCmdArg& arg5,
                    const RooCmdArg& arg6, const RooCmdArg& arg7, const RooCmdArg& arg8) const
 {
@@ -541,17 +541,15 @@ RooAbsReal* RooAbsReal::createIntegral(const RooArgSet& iset, const RooCmdArg& a
 /// aspect of the integral. It will not force the integral to be performed numerically, which is
 /// decided automatically by RooRealIntegral.
 
-RooAbsReal* RooAbsReal::createIntegral(const RooArgSet& iset, const RooArgSet* nset,
+RooFit::OwningPtr<RooAbsReal> RooAbsReal::createIntegral(const RooArgSet& iset, const RooArgSet* nset,
                    const RooNumIntConfig* cfg, const char* rangeName) const
 {
   if (!rangeName || strchr(rangeName,',')==0) {
     // Simple case: integral over full range or single limited range
-    return createIntObj(iset,nset,cfg,rangeName) ;
+    return createIntObj(iset,nset,cfg,rangeName);
   }
 
   // Integral over multiple ranges
-  RooArgSet components ;
-
   std::vector<std::string> tokens = ROOT::Split(rangeName, ",");
 
   if(RooHelpers::checkIfRangesOverlap(iset, tokens)) {
@@ -563,22 +561,24 @@ RooAbsReal* RooAbsReal::createIntegral(const RooArgSet& iset, const RooArgSet* n
     throw std::invalid_argument(errMsgString);
   }
 
+  RooArgSet components ;
   for (const std::string& token : tokens) {
-    RooAbsReal* compIntegral = createIntObj(iset,nset,cfg, token.c_str());
-    components.add(*compIntegral);
+    components.addOwned(std::unique_ptr<RooAbsReal>{createIntObj(iset,nset,cfg, token.c_str())});
   }
 
   const std::string title = std::string("Integral of ") + GetTitle();
   const std::string fullName = std::string(GetName()) + integralNameSuffix(iset,nset,rangeName).Data();
 
-  return new RooAddition(fullName.c_str(), title.c_str(), components, true);
+  auto out = std::make_unique<RooAddition>(fullName.c_str(), title.c_str(), components);
+  out->addOwnedComponents(std::move(components));
+  return RooFit::Detail::owningPtr<RooAbsReal>(std::move(out));
 }
 
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Internal utility function for createIntegral() that creates the actual integral object.
-RooAbsReal* RooAbsReal::createIntObj(const RooArgSet& iset2, const RooArgSet* nset2,
+RooFit::OwningPtr<RooAbsReal> RooAbsReal::createIntObj(const RooArgSet& iset2, const RooArgSet* nset2,
                  const RooNumIntConfig* cfg, const char* rangeName) const
 {
   // Make internal use copies of iset and nset
@@ -597,7 +597,8 @@ RooAbsReal* RooAbsReal::createIntObj(const RooArgSet& iset2, const RooArgSet* ns
     const std::string title = std::string("Integral of ") + GetTitle();
     const std::string name = std::string(GetName()) + integralNameSuffix(iset,nset,rangeName).Data();
 
-    return new RooRealIntegral(name.c_str(), title.c_str(), *this, iset, nset, cfg, rangeName);
+    auto out = std::make_unique<RooRealIntegral>(name.c_str(), title.c_str(), *this, iset, nset, cfg, rangeName);
+    return RooFit::Detail::owningPtr<RooAbsReal>(std::move(out));
   }
 
   // Process integration over remaining integration variables
@@ -663,7 +664,7 @@ RooAbsReal* RooAbsReal::createIntObj(const RooArgSet& iset2, const RooArgSet* ns
       cxcoutD(Caching) << "RooAbsReal::createIntObj(" << GetName() << ") INFO: constructing " << cacheParams.size()
            << "-dim value cache for integral over " << iset2 << " as a function of " << cacheParams << " in range " << (rangeName?rangeName:"<none>") <<  std::endl ;
       std::string name = Form("%s_CACHE_[%s]",integral->GetName(),cacheParams.contentsString().c_str()) ;
-      RooCachedReal* cachedIntegral = new RooCachedReal(name.c_str(),name.c_str(),*integral,cacheParams) ;
+      auto cachedIntegral = std::make_unique<RooCachedReal>(name.c_str(),name.c_str(),*integral,cacheParams);
       cachedIntegral->setInterpolationOrder(2) ;
       cachedIntegral->addOwnedComponents(std::move(integral));
       cachedIntegral->setCacheSource(true) ;
@@ -671,11 +672,11 @@ RooAbsReal* RooAbsReal::createIntObj(const RooArgSet& iset2, const RooArgSet* ns
    cachedIntegral->setOperMode(ADirty) ;
       }
       //cachedIntegral->disableCache(true) ;
-      return cachedIntegral;
+      return RooFit::Detail::owningPtr<RooAbsReal>(std::move(cachedIntegral));
     }
   }
 
-  return integral.release();
+  return RooFit::Detail::owningPtr(std::move(integral));
 }
 
 
@@ -924,29 +925,28 @@ const RooAbsReal *RooAbsReal::createPlotProjection(const RooArgSet &dependentVar
   title.Prepend("Projection of ");
 
 
-  RooAbsReal* projected= theClone->createIntegral(*projectedVars,normSet,rangeName) ;
+  std::unique_ptr<RooAbsReal> projected{theClone->createIntegral(*projectedVars,normSet,rangeName)};
 
-  if(0 == projected || !projected->isValid()) {
+  if(nullptr == projected || !projected->isValid()) {
     coutE(Plotting) << ClassName() << "::" << GetName() << ":createPlotProjection: cannot integrate out ";
     projectedVars->printStream(std::cout,kName|kArgs,kSingleLine);
-    // cleanup and exit
-    if(0 != projected) delete projected;
     return 0;
   }
 
   if(projected->InheritsFrom(RooRealIntegral::Class())){
-    static_cast<RooRealIntegral*>(projected)->setAllowComponentSelection(true);
+    static_cast<RooRealIntegral&>(*projected).setAllowComponentSelection(true);
   }
 
   projected->SetName(name.Data()) ;
   projected->SetTitle(title.Data()) ;
 
   // Add the projection integral to the cloneSet so that it eventually gets cleaned up by the caller.
-  cloneSet->addOwned(*projected);
+  RooAbsReal *projectedPtr = projected.get();
+  cloneSet->addOwned(std::move(projected));
 
   // return a const pointer to remind the caller that they do not delete the returned object
   // directly (it is contained in the cloneSet instead).
-  return projected;
+  return projectedPtr;
 }
 
 
@@ -2120,8 +2120,8 @@ RooPlot* RooAbsReal::plotOn(RooPlot *frame, PlotOpt o) const
     // Do _not_ activate cache-and-track as necessary information to define normalization observables are not present in the underlying dataset
     dwa.constOptimizeTestStatistic(Activate,false) ;
 
-    RooRealBinding projBind(dwa,*plotVar) ;
-    RooScaledFunc scaleBind(projBind,o.scaleFactor);
+    RooProduct scaledDwa{"scaled_dwa", "Data Weighted average", dwa, {RooFit::RooConst(o.scaleFactor)}};
+    RooRealBinding scaleBind(scaledDwa,*plotVar) ;
 
     // Set default range, if not specified
     if (o.rangeLo==0 && o.rangeHi==0) {
@@ -2482,12 +2482,11 @@ RooPlot* RooAbsReal::plotAsymOn(RooPlot *frame, const RooAbsCategoryLValue& asym
     //RooDataWeightedAverage dwa(Form("%sDataWgtAvg",GetName()),"Data Weighted average",*funcAsym,*projDataSel,*projDataSel->get(),o.numCPU,o.interleave,true) ;
     dwa.constOptimizeTestStatistic(Activate) ;
 
-    RooRealBinding projBind(dwa,*plotVar) ;
-
     ((RooAbsReal*)posProj)->attachDataSet(*projDataSel) ;
     ((RooAbsReal*)negProj)->attachDataSet(*projDataSel) ;
 
-    RooScaledFunc scaleBind(projBind,o.scaleFactor);
+    RooProduct scaledDwa{"scaled_dwa", "Data Weighted average", {dwa, RooFit::RooConst(o.scaleFactor)}};
+    RooRealBinding scaleBind(scaledDwa,*plotVar) ;
 
     // Set default range, if not specified
     if (o.rangeLo==0 && o.rangeHi==0) {
@@ -2594,7 +2593,7 @@ double RooAbsReal::getPropagatedError(const RooFitResult &fr, const RooArgSet &n
      if(rrvFitRes->namePtr() == namePtr()) return rrvFitRes->getError();
 
      // Strip out parameters with zero error
-     if (rrvFitRes->getError() <= rrvFitRes->getVal() * std::numeric_limits<double>::epsilon()) continue;
+     if (rrvFitRes->getError() <= std::abs(rrvFitRes->getVal()) * std::numeric_limits<double>::epsilon()) continue;
 
      // Ignore parameters in the fit result that this RooAbsReal doesn't depend on
      if(!rrvInAbsReal) continue;
@@ -2770,10 +2769,10 @@ RooPlot* RooAbsReal::plotOnWithErrorBand(RooPlot* frame,const RooFitResult& fr, 
     // Generate variation curves with above set of parameter values
     double ymin = frame->GetMinimum() ;
     double ymax = frame->GetMaximum() ;
-    RooDataSet* d = paramPdf->generate(errorParams,n) ;
+    std::unique_ptr<RooDataSet> generatedData{paramPdf->generate(errorParams,n)};
     std::vector<RooCurve*> cvec ;
-    for (int i=0 ; i<d->numEntries() ; i++) {
-      cloneParams.assign(*d->get(i)) ;
+    for (int i=0 ; i<generatedData->numEntries() ; i++) {
+      cloneParams.assign(*generatedData->get(i)) ;
       plotFunc(*cloneFunc);
       cvec.push_back(frame->getCurve()) ;
       frame->remove(0,false) ;
@@ -3884,8 +3883,8 @@ RooFit::OwningPtr<RooAbsReal> RooAbsReal::createRunningIntegral(const RooArgSet&
     return createScanRI(iset,nset,numScanBins,intOrder) ;
   }
   if (doScanNum) {
-    std::unique_ptr<RooRealIntegral> tmp{static_cast<RooRealIntegral*>(createIntegral(iset))};
-    Int_t isNum= (tmp->numIntRealVars().size()==1) ;
+    std::unique_ptr<RooAbsReal> tmp{createIntegral(iset)} ;
+    Int_t isNum= !static_cast<RooRealIntegral&>(*tmp).numIntRealVars().empty();
 
     if (isNum) {
       coutI(NumIntegration) << "RooAbsPdf::createRunningIntegral(" << GetName() << ") integration over observable(s) " << iset << " involves numeric integration," << std::endl
@@ -3896,7 +3895,7 @@ RooFit::OwningPtr<RooAbsReal> RooAbsReal::createRunningIntegral(const RooArgSet&
 
     return isNum ? createScanRI(iset,nset,numScanBins,intOrder) : createIntRI(iset,nset) ;
   }
-  return 0 ;
+  return nullptr;
 }
 
 
@@ -3912,7 +3911,7 @@ RooFit::OwningPtr<RooAbsReal> RooAbsReal::createScanRI(const RooArgSet& iset, co
   ivar->setBins(numScanBins,"numcdf") ;
   auto ret = std::make_unique<RooNumRunningInt>(name.c_str(),name.c_str(),*this,*ivar,"numrunint") ;
   ret->setInterpolationOrder(intOrder) ;
-  return RooFit::OwningPtr<RooAbsReal>{ret.release()};
+  return RooFit::Detail::owningPtr(std::move(ret));
 }
 
 
@@ -3974,7 +3973,7 @@ RooFit::OwningPtr<RooAbsReal> RooAbsReal::createIntRI(const RooArgSet& iset, con
   cdf->addOwnedComponents(cloneList) ;
   cdf->addOwnedComponents(loList) ;
 
-  return RooFit::OwningPtr<RooAbsReal>{cdf.release()};
+  return RooFit::Detail::owningPtr(std::move(cdf));
 }
 
 
@@ -4190,7 +4189,7 @@ double RooAbsReal::findRoot(RooRealVar& x, double xmin, double xmax, double yval
 /// </table>
 ///
 
-RooFitResult* RooAbsReal::chi2FitTo(RooDataHist& data, const RooCmdArg& arg1,  const RooCmdArg& arg2,
+RooFit::OwningPtr<RooFitResult> RooAbsReal::chi2FitTo(RooDataHist& data, const RooCmdArg& arg1,  const RooCmdArg& arg2,
                 const RooCmdArg& arg3,  const RooCmdArg& arg4, const RooCmdArg& arg5,
                 const RooCmdArg& arg6,  const RooCmdArg& arg7, const RooCmdArg& arg8)
 {
@@ -4208,7 +4207,7 @@ RooFitResult* RooAbsReal::chi2FitTo(RooDataHist& data, const RooCmdArg& arg1,  c
 ////////////////////////////////////////////////////////////////////////////////
 /// \copydoc RooAbsReal::chi2FitTo(RooDataHist&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&)
 
-RooFitResult* RooAbsReal::chi2FitTo(RooDataHist& data, const RooLinkedList& cmdList)
+RooFit::OwningPtr<RooFitResult> RooAbsReal::chi2FitTo(RooDataHist& data, const RooLinkedList& cmdList)
 {
   // Select the pdf-specific commands
   RooCmdConfig pc(Form("RooAbsPdf::chi2FitTo(%s)",GetName())) ;
@@ -4218,9 +4217,7 @@ RooFitResult* RooAbsReal::chi2FitTo(RooDataHist& data, const RooLinkedList& cmdL
   RooLinkedList chi2CmdList = pc.filterCmdList(fitCmdList,"Range,RangeWithName,NumCPU,Optimize,IntegrateBins") ;
 
   std::unique_ptr<RooAbsReal> chi2{createChi2(data,chi2CmdList)};
-  RooFitResult* ret = chi2FitDriver(*chi2,fitCmdList) ;
-
-  return ret ;
+  return chi2FitDriver(*chi2,fitCmdList) ;
 }
 
 
@@ -4305,7 +4302,7 @@ RooAbsReal* RooAbsReal::createChi2(RooDataHist& data, const RooLinkedList& cmdLi
 ///                                   a positive value is will print details of each error up to numErr messages per p.d.f component.
 /// </table>
 
-RooFitResult* RooAbsReal::chi2FitTo(RooDataSet& xydata, const RooCmdArg& arg1,  const RooCmdArg& arg2,
+RooFit::OwningPtr<RooFitResult> RooAbsReal::chi2FitTo(RooDataSet& xydata, const RooCmdArg& arg1,  const RooCmdArg& arg2,
                   const RooCmdArg& arg3,  const RooCmdArg& arg4, const RooCmdArg& arg5,
                   const RooCmdArg& arg6,  const RooCmdArg& arg7, const RooCmdArg& arg8)
 {
@@ -4323,7 +4320,7 @@ RooFitResult* RooAbsReal::chi2FitTo(RooDataSet& xydata, const RooCmdArg& arg1,  
 ////////////////////////////////////////////////////////////////////////////////
 /// \copydoc RooAbsReal::chi2FitTo(RooDataSet&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&)
 
-RooFitResult* RooAbsReal::chi2FitTo(RooDataSet& xydata, const RooLinkedList& cmdList)
+RooFit::OwningPtr<RooFitResult> RooAbsReal::chi2FitTo(RooDataSet& xydata, const RooLinkedList& cmdList)
 {
   // Select the pdf-specific commands
   RooCmdConfig pc(Form("RooAbsPdf::chi2FitTo(%s)",GetName())) ;
@@ -4333,9 +4330,7 @@ RooFitResult* RooAbsReal::chi2FitTo(RooDataSet& xydata, const RooLinkedList& cmd
   RooLinkedList chi2CmdList = pc.filterCmdList(fitCmdList,"YVar,Integrate") ;
 
   std::unique_ptr<RooAbsReal> xychi2{createChi2(xydata,chi2CmdList)};
-  RooFitResult* ret = chi2FitDriver(*xychi2,fitCmdList) ;
-
-  return ret ;
+  return chi2FitDriver(*xychi2,fitCmdList) ;
 }
 
 
@@ -4407,7 +4402,7 @@ RooAbsReal* RooAbsReal::createChi2(RooDataSet& data, const RooLinkedList& cmdLis
 ////////////////////////////////////////////////////////////////////////////////
 /// Internal driver function for chi2 fits
 
-RooFitResult* RooAbsReal::chi2FitDriver(RooAbsReal& fcn, RooLinkedList& cmdList)
+RooFit::OwningPtr<RooFitResult> RooAbsReal::chi2FitDriver(RooAbsReal& fcn, RooLinkedList& cmdList)
 {
   // Select the pdf-specific commands
   RooCmdConfig pc(Form("RooAbsPdf::chi2FitDriver(%s)",GetName())) ;
@@ -4431,7 +4426,7 @@ RooFitResult* RooAbsReal::chi2FitDriver(RooAbsReal& fcn, RooLinkedList& cmdList)
   // Process and check varargs
   pc.process(cmdList) ;
   if (!pc.ok(true)) {
-    return 0 ;
+    return nullptr;
   }
 
   // Decode command line arguments
@@ -4450,7 +4445,7 @@ RooFitResult* RooAbsReal::chi2FitDriver(RooAbsReal& fcn, RooLinkedList& cmdList)
   Int_t doWarn   = pc.getInt("doWarn") ;
   const RooArgSet* minosSet = pc.getSet("minosSet");
 
-  RooFitResult *ret = 0 ;
+  std::unique_ptr<RooFitResult> ret;
 
   // Instantiate MINUIT
   RooMinimizer m(fcn) ;
@@ -4510,12 +4505,10 @@ RooFitResult* RooAbsReal::chi2FitDriver(RooAbsReal& fcn, RooLinkedList& cmdList)
   if (doSave) {
     std::string name = Form("fitresult_%s",fcn.GetName()) ;
     std::string title = Form("Result of fit of %s ",GetName()) ;
-    ret = m.save(name.c_str(),title.c_str()) ;
+    ret = std::unique_ptr<RooFitResult>{m.save(name.c_str(),title.c_str())};
   }
 
-  // Cleanup
-  return ret ;
-
+  return RooFit::Detail::owningPtr(std::move(ret));
 }
 
 

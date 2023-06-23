@@ -87,7 +87,7 @@ public:
    TASImage(const char *name, const TVectorD &imageData, UInt_t width, TImagePalette *palette = nullptr);
    TASImage(const TASImage &img);
    TASImage &operator=(const TASImage &img);
-   virtual ~TASImage();
+   ~TASImage() override;
 
    TObject *Clone(const char *newname) const override;
 

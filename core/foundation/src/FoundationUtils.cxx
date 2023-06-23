@@ -25,12 +25,22 @@
 
 #include <errno.h>
 #include <string.h>
+
 #ifdef _WIN32
 #include <direct.h>
 #include <Windows4Root.h>
 #else
 #include <unistd.h>
 #endif // _WIN32
+
+#ifdef __FreeBSD__
+#include <sys/syslimits.h>
+#include <sys/param.h>
+#include <sys/user.h>
+#include <sys/types.h>
+#include <libutil.h>
+#include <libprocstat.h>
+#endif // __FreeBSD__
 
 namespace ROOT {
 namespace FoundationUtils {
@@ -102,17 +112,33 @@ const std::string& GetFallbackRootSys() {
    static std::string fallback;
    if (!fallback.empty())
       return fallback;
+
+#if defined(WIN32) || defined(__FreeBSD__)
+   auto parent_path = [](std::string path) {
+     return path.substr(0, path.find_last_of("/\\"));
+   };
+#endif
+
 #ifdef WIN32
    static char lpFilename[_MAX_PATH];
    if (::GetModuleFileNameA(
           NULL,                   // handle to module to find filename for
           lpFilename,             // pointer to buffer to receive module path
           sizeof(lpFilename))) {  // size of buffer, in characters
-      auto parent_path = [](std::string path) {
-         return path.substr(0, path.find_last_of("/\\"));
-      };
       fallback = parent_path(parent_path(lpFilename));
    }
+#elif defined __FreeBSD__
+  procstat* ps = procstat_open_sysctl();  //
+  kinfo_proc* kp = kinfo_getproc(getpid());
+
+  char lpFilename[PATH_MAX] = "";
+  if (kp!=NULL) {
+     procstat_getpathname(ps, kp, lpFilename, sizeof(lpFilename));
+      fallback = parent_path(parent_path({lpFilename}));
+  }
+
+  free(kp);
+  procstat_close(ps);
 #else
    // FIXME: We should not hardcode this path. We can use a similar to the
    // windows technique to get the path to the executable. The easiest way

@@ -59,8 +59,8 @@ public:
                   Int_t width = 140, Int_t height = 30,
                   UInt_t options = kChildFrame,
                   Pixel_t back = GetDefaultFrameBackground());
-   virtual ~TGeoNodeEditor();
-   virtual void   SetModel(TObject *obj);
+   ~TGeoNodeEditor() override;
+   void   SetModel(TObject *obj) override;
 
    void           DoEditMother();
    void           DoEditVolume();
@@ -73,7 +73,7 @@ public:
    void           DoApply();
    void           DoUndo();
 
-   ClassDef(TGeoNodeEditor,0)   // TGeoNode editor
+   ClassDefOverride(TGeoNodeEditor,0)   // TGeoNode editor
 };
 
 #endif

@@ -2,6 +2,7 @@
 /// \ingroup NTuple ROOT7
 /// \author Jakob Blomer <jblomer@cern.ch>
 /// \author Max Orok <maxwellorok@gmail.com>
+/// \author Javier Lopez-Gomez <javier.lopez.gomez@cern.ch>
 /// \date 2021-03-17
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
 /// is welcome!
@@ -63,29 +64,32 @@ private:
       RColumnBuf& operator=(const RColumnBuf&) = delete;
       RColumnBuf(RColumnBuf&&) = default;
       RColumnBuf& operator=(RColumnBuf&&) = default;
-      ~RColumnBuf() = default;
+      ~RColumnBuf() { DropBufferedPages(); }
 
-      using iterator = std::deque<RPageZipItem>::iterator;
-      /// Returns an iterator to the newly buffered page. The iterator remains
+      /// Returns a reference to the newly buffered page. The reference remains
       /// valid until the return value of DrainBufferedPages() is destroyed.
-      iterator BufferPage(
+      /// Note that `BufferPage()` yields the ownership of `page` to RColumnBuf.
+      RPageZipItem &BufferPage(
          RPageStorage::ColumnHandle_t columnHandle, const RPage &page)
       {
          if (!fCol) {
             fCol = columnHandle;
          }
-         // Safety: Insertion at the end of a deque never invalidates existing
-         // iterators.
+         // Safety: Insertion at the end of a deque never invalidates references
+         // to existing elements.
          fBufferedPages.push_back(RPageZipItem(page));
-         return std::prev(fBufferedPages.end());
+         return fBufferedPages.back();
       }
       const RPageStorage::ColumnHandle_t &GetHandle() const { return fCol; }
-      bool HasSealedPagesOnly() const { return fBufferedPages.size() && fBufferedPages.size() == fSealedPages.size(); }
+      bool IsEmpty() const { return fBufferedPages.empty(); }
+      bool HasSealedPagesOnly() const { return fBufferedPages.size() == fSealedPages.size(); }
       const RPageStorage::SealedPageSequence_t &GetSealedPages() const { return fSealedPages; }
 
       using BufferedPages_t = std::tuple<std::deque<RPageZipItem>, RPageStorage::SealedPageSequence_t>;
-      // When the return value of DrainBufferedPages() is destroyed, all iterators
-      // returned by GetBuffer are invalidated.
+      /// When the return value of DrainBufferedPages() is destroyed, all references
+      /// returned by GetBuffer are invalidated.
+      /// This function gives up on the ownership of the buffered pages.  Thus, `ReleasePage()` must be called
+      /// accordingly.
       BufferedPages_t DrainBufferedPages()
       {
          BufferedPages_t drained;
@@ -93,21 +97,24 @@ private:
          std::swap(fSealedPages, std::get<decltype(fSealedPages)>(drained));
          return drained;
       }
+      void DropBufferedPages();
 
-      // The returned iterator points to a default-constructed RSealedPage. This iterator can be used
+      // The returned reference points to a default-constructed RSealedPage. It can be used
       // to fill in data after sealing.
-      RPageStorage::SealedPageSequence_t::iterator RegisterSealedPage()
+      RSealedPage &RegisterSealedPage()
       {
-         return fSealedPages.emplace(std::end(fSealedPages));
+         return fSealedPages.emplace_back();
       }
 
    private:
       RPageStorage::ColumnHandle_t fCol;
-      // Using a deque guarantees that element iterators are never invalidated
-      // by appends to the end of the iterator by BufferPage.
+      /// Using a deque guarantees that element iterators are never invalidated
+      /// by appends to the end of the iterator by BufferPage.
       std::deque<RPageZipItem> fBufferedPages;
-      // Pages that have been already sealed by a concurrent task. A vector commit can be issued if all
-      // buffered pages have been sealed.
+      /// Pages that have been already sealed by a concurrent task. A vector commit can be issued if all
+      /// buffered pages have been sealed.
+      /// Note that each RSealedPage refers to the same buffer as `fBufferedPages[i].fBuf` for some value of `i`, and
+      /// thus owned by RPageZipItem
       RPageStorage::SealedPageSequence_t fSealedPages;
    };
 
@@ -140,9 +147,9 @@ public:
    RPageSinkBuf& operator=(const RPageSinkBuf&) = delete;
    RPageSinkBuf(RPageSinkBuf&&) = default;
    RPageSinkBuf& operator=(RPageSinkBuf&&) = default;
-   ~RPageSinkBuf() override = default;
+   ~RPageSinkBuf() override;
 
-   void UpdateSchema(const RNTupleModelChangeset &changeset) final;
+   void UpdateSchema(const RNTupleModelChangeset &changeset, NTupleSize_t firstEntry) final;
    RPage ReservePage(ColumnHandle_t columnHandle, std::size_t nElements) final;
    void ReleasePage(RPage &page) final;
 

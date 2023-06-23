@@ -43,7 +43,7 @@ public:
    {
    }
    // Standard Destructor
-   virtual ~TGenVectorProxy()
+   ~TGenVectorProxy() override
    {
    }
    // Return the address of the value at index 'idx'
@@ -93,7 +93,7 @@ public:
    {
       // Standard Constructor.
    }
-   virtual ~TGenVectorBoolProxy()
+   ~TGenVectorBoolProxy() override
    {
       // Standard Destructor.
    }
@@ -139,7 +139,7 @@ public:
    {
       // Standard Constructor.
    }
-   virtual ~TGenBitsetProxy()
+   ~TGenBitsetProxy() override
    {
       // Standard Destructor.
    }
@@ -194,7 +194,7 @@ public:
    {
    }
    // Standard Destructor
-   virtual ~TGenListProxy()
+   ~TGenListProxy() override
    {
    }
    // Return the address of the value at index 'idx'
@@ -236,7 +236,7 @@ public:
    {
    }
    // Standard Destructor
-   virtual ~TGenSetProxy()
+   ~TGenSetProxy() override
    {
    }
    // Return the address of the value at index 'idx'
@@ -281,7 +281,7 @@ public:
    {
    }
    // Standard Destructor
-   virtual ~TGenMapProxy()
+   ~TGenMapProxy() override
    {
    }
    // Call to delete/destruct individual item

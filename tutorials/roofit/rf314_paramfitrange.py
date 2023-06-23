@@ -8,7 +8,9 @@
 ##
 ## where `t` and `tmin` are both observables in the dataset
 ##
+## \macro_image
 ## \macro_code
+## \macro_output
 ##
 ## \date February 2018
 ## \authors Clemens Lange, Wouter Verkerke (C++ version)
@@ -45,7 +47,7 @@ dacc = model.generate({t}, ProtoData=tmp)
 # Fit pdf to data in acceptance region
 # -----------------------------------------------------------------------
 
-r = model.fitTo(dacc, Save=True)
+r = model.fitTo(dacc, Save=True, PrintLevel=-1)
 
 # Plot fitted pdf on full and accepted data
 # ---------------------------------------------------------------------------------

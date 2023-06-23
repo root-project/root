@@ -318,10 +318,10 @@ RooRealIntegral::RooRealIntegral(const char *name, const char *title,
       _valid= false;
     }
     if (!function.dependsOn(*arg)) {
-      RooAbsArg* argClone = (RooAbsArg*) arg->Clone() ;
-      _facListOwned.addOwned(*argClone) ;
+      std::unique_ptr<RooAbsArg> argClone{static_cast<RooAbsArg*>(arg->Clone())};
       _facList.add(*argClone) ;
       addServer(*argClone,false,true) ;
+      _facListOwned.addOwned(std::move(argClone));
     }
   }
 
@@ -748,10 +748,10 @@ RooRealIntegral::RooRealIntegral(const RooRealIntegral& other, const char* name)
  }
 
  for (const auto arg : other._facList) {
-   RooAbsArg* argClone = (RooAbsArg*) arg->Clone() ;
-   _facListOwned.addOwned(*argClone) ;
+   std::unique_ptr<RooAbsArg> argClone{static_cast<RooAbsArg*>(arg->Clone())};
    _facList.add(*argClone) ;
    addServer(*argClone,false,true) ;
+   _facListOwned.addOwned(std::move(argClone));
  }
 
  other._intList.snapshot(_saveInt) ;
@@ -771,7 +771,7 @@ RooRealIntegral::~RooRealIntegral()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-RooAbsReal* RooRealIntegral::createIntegral(const RooArgSet& iset, const RooArgSet* nset, const RooNumIntConfig* cfg, const char* rangeName) const
+RooFit::OwningPtr<RooAbsReal> RooRealIntegral::createIntegral(const RooArgSet& iset, const RooArgSet* nset, const RooNumIntConfig* cfg, const char* rangeName) const
 {
   // Handle special case of no integration with default algorithm
   if (iset.empty()) {
@@ -797,9 +797,7 @@ RooAbsReal* RooRealIntegral::createIntegral(const RooArgSet& iset, const RooArgS
     tmp->add(*_funcNormSet,true) ;
     newNormSet = tmp.get();
   }
-  RooAbsReal* ret =  _function->createIntegral(isetAll,newNormSet,cfg,rangeName) ;
-
-  return ret ;
+  return  _function->createIntegral(isetAll,newNormSet,cfg,rangeName);
 }
 
 
@@ -1169,4 +1167,11 @@ void RooRealIntegral::setCacheAllNumeric(Int_t ndim) {
 Int_t RooRealIntegral::getCacheAllNumeric()
 {
   return _cacheAllNDim ;
+}
+
+
+std::unique_ptr<RooAbsArg>
+RooRealIntegral::compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileContext &ctx) const
+{
+   return RooAbsReal::compileForNormSet(_funcNormSet ? *_funcNormSet : normSet, ctx);
 }

@@ -20,6 +20,8 @@
 #include <ROOT/RNTuple.hxx>
 #include <ROOT/RNTupleDescriptor.hxx>
 
+#include <TFile.h>
+
 #include <cstdlib>
 #include <memory>
 
@@ -55,12 +57,14 @@ std::cout << "The compression factor is " << std::fixed << std::setprecision(2)
 // clang-format on
 class RNTupleInspector {
 private:
+   std::unique_ptr<TFile> fSourceFile;
    std::unique_ptr<ROOT::Experimental::Detail::RPageSource> fPageSource;
    int fCompressionSettings;
    std::uint64_t fCompressedSize;
    std::uint64_t fUncompressedSize;
 
-   RNTupleInspector(std::unique_ptr<ROOT::Experimental::Detail::RPageSource> pageSource) : fPageSource(std::move(pageSource)) {};
+   RNTupleInspector(std::unique_ptr<ROOT::Experimental::Detail::RPageSource> pageSource)
+      : fPageSource(std::move(pageSource)){};
 
    void CollectSizeData();
 
@@ -72,8 +76,10 @@ public:
    ~RNTupleInspector() = default;
 
    /// Creates a new inspector for a given RNTuple.
-   static RResult<std::unique_ptr<RNTupleInspector>> Create(std::unique_ptr<ROOT::Experimental::Detail::RPageSource> pageSource);
+   static RResult<std::unique_ptr<RNTupleInspector>>
+   Create(std::unique_ptr<ROOT::Experimental::Detail::RPageSource> pageSource);
    static RResult<std::unique_ptr<RNTupleInspector>> Create(RNTuple *sourceNTuple);
+   static RResult<std::unique_ptr<RNTupleInspector>> Create(std::string_view ntupleName, std::string_view storage);
 
    /// Get the name of the RNTuple being inspected.
    std::string GetName();

@@ -52,11 +52,11 @@ namespace Detail {
 namespace RDF {
 class RNodeBase;
 }
-} // namespace Detail
+}
 namespace RDF {
 template <typename T>
 class RResultPtr;
-template <typename T, typename V>
+template<typename T, typename V>
 class RInterface;
 using RNode = RInterface<::ROOT::Detail::RDF::RNodeBase, void>;
 class RDataSource;
@@ -129,18 +129,6 @@ struct HistoUtils<T, false> {
    static bool HasAxisLimits(T &) { return true; }
 };
 
-template <class T>
-struct has_getxaxis {
-   static std::false_type test(...);
-
-   template <class U>
-   static auto test(U) -> decltype(std::declval<U>().GetXaxis(), std::true_type{});
-
-   static constexpr bool value = decltype(test(std::declval<T>()))::value;
-};
-
-template <class T>
-constexpr bool has_getxaxis_v = has_getxaxis<T>::value;
 
 // Generic filling (covers Histo2D, Histo3D, HistoND, Profile1D and Profile2D actions, with and without weights)
 template <typename... ColTypes, typename ActionTag, typename ActionResultType, typename PrevNodeType>
@@ -151,7 +139,8 @@ BuildAction(const ColumnNames_t &bl, const std::shared_ptr<ActionResultType> &h,
 #ifdef ROOT_RDF_CUDA
    // Avoid compilation errors for custom objects for which the dimension is unknown, like CustomFiller in
    // tree/dataframe/test/datagframe_helpers.cxx
-   if constexpr (has_getxaxis_v<ActionResultType>) {
+   if constexpr (std::is_same<ActionTag, ActionTags::Histo2D>::value ||
+                 std::is_same<ActionTag, ActionTags::Histo3D>::value) {
       if (getenv("CUDA_HIST")) {
          using Helper_t = ROOT::Experimental::CUDAFillHelper<ActionResultType>;
          using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<ColTypes...>>;
@@ -184,7 +173,8 @@ BuildAction(const ColumnNames_t &bl, const std::shared_ptr<::TH1D> &h, const uns
       return std::make_unique<Action_t>(Helper_t(h, nSlots), bl, std::move(prevNode), colRegister);
    } else
 #endif
-      if (hasAxisLimits) {
+
+   if (hasAxisLimits || !IsImplicitMTEnabled()) {
       using Helper_t = FillHelper<::TH1D>;
       using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<ColTypes...>>;
       return std::make_unique<Action_t>(Helper_t(h, nSlots), bl, std::move(prevNode), colRegister);
@@ -276,8 +266,7 @@ using displayHelperArgs_t = std::pair<size_t, std::shared_ptr<ROOT::RDF::RDispla
 template <typename... ColTypes, typename PrevNodeType>
 std::unique_ptr<RActionBase>
 BuildAction(const ColumnNames_t &bl, const std::shared_ptr<displayHelperArgs_t> &helperArgs, const unsigned int,
-            std::shared_ptr<PrevNodeType> prevNode, ActionTags::Display,
-            const RDFInternal::RColumnRegister &colRegister)
+            std::shared_ptr<PrevNodeType> prevNode, ActionTags::Display, const RColumnRegister &colRegister)
 {
    using Helper_t = DisplayHelper<PrevNodeType>;
    using Action_t = RAction<Helper_t, PrevNodeType, TTraits::TypeList<ColTypes...>>;
@@ -310,7 +299,7 @@ BuildAction(const ColumnNames_t &colNames, const std::shared_ptr<SnapshotHelperA
       std::vector<bool> isDef;
       isDef.reserve(sizeof...(ColTypes));
       for (auto i = 0u; i < sizeof...(ColTypes); ++i)
-         isDef[i] = colRegister.IsDefineOrAlias(colNames[i]);
+         isDef.push_back(colRegister.IsDefineOrAlias(colNames[i]));
       return isDef;
    };
    std::vector<bool> isDefine = makeIsDefine();
@@ -508,7 +497,7 @@ void JitFilterHelper(F &&f, const char **colsPtr, std::size_t colsSize, std::str
 namespace DefineTypes {
 struct RDefineTag {};
 struct RDefinePerSampleTag {};
-} // namespace DefineTypes
+}
 
 template <typename F>
 auto MakeDefineNode(DefineTypes::RDefineTag, std::string_view name, std::string_view dummyType, F &&f,
@@ -522,7 +511,8 @@ template <typename F>
 auto MakeDefineNode(DefineTypes::RDefinePerSampleTag, std::string_view name, std::string_view dummyType, F &&f,
                     const ColumnNames_t &, RColumnRegister &, RLoopManager &lm)
 {
-   return std::unique_ptr<RDefineBase>(new RDefinePerSample<std::decay_t<F>>(name, dummyType, std::forward<F>(f), lm));
+   return std::unique_ptr<RDefineBase>(
+      new RDefinePerSample<std::decay_t<F>>(name, dummyType, std::forward<F>(f), lm));
 }
 
 // Build a RDefine or a RDefinePerSample object and attach it to an existing RJittedDefine
@@ -704,7 +694,7 @@ struct RNeedJittingHelper<RInferredType> {
    static constexpr bool value = true;
 };
 
-template <typename... ColTypes>
+template <typename ...ColTypes>
 struct RNeedJitting {
    static constexpr bool value = RNeedJittingHelper<ColTypes...>::value;
 };

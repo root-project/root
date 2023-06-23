@@ -22,7 +22,7 @@ public:
    const std::string fFileName = "BulkApiTestVarLength.root";
 
 protected:
-   virtual void SetUp()
+   void SetUp() override
    {
       auto hfile = new TFile(fFileName.c_str(), "RECREATE", "TTree float micro benchmark ROOT file");
       hfile->SetCompressionLevel(0); // No compression at all.

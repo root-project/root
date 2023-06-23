@@ -20,6 +20,8 @@ def write_header(parser, fileName):
 	file.write("#define ROOT_{}\n".format(splitPath[len(splitPath)-1].partition(".")[0]))
 	file.write("constexpr static const char kCommandLineOptionsHelp[] = R\"RAW(\n")
 	file.write(parser.format_usage() + "\n")
+	if parser.description is not None:
+		file.write(parser.description + "\n\n")
 	file.write("OPTIONS:\n")
 	for arg in listArgs:
 		options = ""
@@ -35,6 +37,8 @@ def write_header(parser, fileName):
 			file.write("  {}{}{}\n".format(options, spaces, help))
 		else:
 			file.write("  {}\n".format(options))
+	if parser.epilog is not None:
+		file.write("\n" + parser.epilog + "\n")
 	file.write(")RAW\";\n")
 	file.write("#endif\n")
 	file.close()
@@ -54,7 +58,7 @@ def write_man(parser, fileName):
 			listOptions = [arg.dest]
 		else:
 			listOptions = arg.option_strings
-		options = "\ ".join(listOptions)
+		options = " ".join(listOptions)
 		if help != None:
 			file.write(".IP {}\n".format(options))
 			file.write(help.replace("\n","\n.IP\n")+ "\n")

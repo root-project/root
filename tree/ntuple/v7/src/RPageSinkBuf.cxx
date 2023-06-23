@@ -2,6 +2,7 @@
 /// \ingroup NTuple ROOT7
 /// \author Jakob Blomer <jblomer@cern.ch>
 /// \author Max Orok <maxwellorok@gmail.com>
+/// \author Javier Lopez-Gomez <javier.lopez.gomez@cern.ch>
 /// \date 2021-03-17
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
 /// is welcome!
@@ -21,6 +22,17 @@
 
 #include <algorithm>
 
+void ROOT::Experimental::Detail::RPageSinkBuf::RColumnBuf::DropBufferedPages()
+{
+   for (auto &bufPage : fBufferedPages) {
+      fCol.fColumn->GetPageSink()->ReleasePage(bufPage.fPage);
+   }
+   fBufferedPages.clear();
+   // Each RSealedPage points to the same region as `fBuf` for some element in `fBufferedPages`; thus, no further
+   // clean-up is required
+   fSealedPages.clear();
+}
+
 ROOT::Experimental::Detail::RPageSinkBuf::RPageSinkBuf(std::unique_ptr<RPageSink> inner)
    : RPageSink(inner->GetNTupleName(), inner->GetWriteOptions())
    , fMetrics("RPageSinkBuf")
@@ -33,6 +45,14 @@ ROOT::Experimental::Detail::RPageSinkBuf::RPageSinkBuf(std::unique_ptr<RPageSink
    fMetrics.ObserveMetrics(fInnerSink->GetMetrics());
 }
 
+ROOT::Experimental::Detail::RPageSinkBuf::~RPageSinkBuf()
+{
+   // Wait for unterminated tasks, if any, as they may still hold a reference to `this`.
+   // This cannot be moved to the base class destructor, given non-static members have been destroyed by the time the
+   // base class destructor is invoked.
+   WaitForAllTasks();
+}
+
 void ROOT::Experimental::Detail::RPageSinkBuf::CreateImpl(const RNTupleModel &model,
                                                           unsigned char * /* serializedHeader */,
                                                           std::uint32_t /* length */)
@@ -41,9 +61,10 @@ void ROOT::Experimental::Detail::RPageSinkBuf::CreateImpl(const RNTupleModel &mo
    fInnerSink->Create(*fInnerModel);
 }
 
-void ROOT::Experimental::Detail::RPageSinkBuf::UpdateSchema(const RNTupleModelChangeset &changeset)
+void ROOT::Experimental::Detail::RPageSinkBuf::UpdateSchema(const RNTupleModelChangeset &changeset,
+                                                            NTupleSize_t firstEntry)
 {
-   RPageSink::UpdateSchema(changeset);
+   RPageSink::UpdateSchema(changeset, firstEntry);
    bool isIncremental = !fBufferedColumns.empty();
    fBufferedColumns.resize(fDescriptorBuilder.GetDescriptor().GetNPhysicalColumns());
    if (!isIncremental)
@@ -76,7 +97,7 @@ void ROOT::Experimental::Detail::RPageSinkBuf::UpdateSchema(const RNTupleModelCh
    std::transform(changeset.fAddedProjectedFields.cbegin(), changeset.fAddedProjectedFields.cend(),
                   std::back_inserter(innerChangeset.fAddedProjectedFields), cloneAddProjectedField);
    fInnerModel->Freeze();
-   fInnerSink->UpdateSchema(innerChangeset);
+   fInnerSink->UpdateSchema(innerChangeset, firstEntry);
 }
 
 ROOT::Experimental::RNTupleLocator
@@ -87,24 +108,24 @@ ROOT::Experimental::Detail::RPageSinkBuf::CommitPageImpl(ColumnHandle_t columnHa
    // make sure the page is aware of how many elements it will have
    bufPage.GrowUnchecked(page.GetNElements());
    memcpy(bufPage.GetBuffer(), page.GetBuffer(), page.GetNBytes());
-   // Safety: RColumnBuf::iterators are guaranteed to be valid until the
-   // element is destroyed. In other words, all buffered page iterators are
+   // Safety: References are guaranteed to be valid until the
+   // element is destroyed. In other words, all buffered page elements are
    // valid until the return value of DrainBufferedPages() goes out of scope in
    // CommitCluster().
-   RColumnBuf::iterator zipItem = fBufferedColumns.at(columnHandle.fPhysicalId).BufferPage(columnHandle, bufPage);
+   auto &zipItem = fBufferedColumns.at(columnHandle.fPhysicalId).BufferPage(columnHandle, bufPage);
    if (!fTaskScheduler) {
       return RNTupleLocator{};
    }
    fCounters->fParallelZip.SetValue(1);
    // Thread safety: Each thread works on a distinct zipItem which owns its
    // compression buffer.
-   zipItem->AllocateSealedPageBuf();
-   R__ASSERT(zipItem->fBuf);
-   auto sealedPage = fBufferedColumns.at(columnHandle.fPhysicalId).RegisterSealedPage();
-   fTaskScheduler->AddTask([this, zipItem, sealedPage, colId = columnHandle.fPhysicalId] {
-      *sealedPage = SealPage(zipItem->fPage, *fBufferedColumns.at(colId).GetHandle().fColumn->GetElement(),
-                             GetWriteOptions().GetCompression(), zipItem->fBuf.get());
-      zipItem->fSealedPage = &(*sealedPage);
+   zipItem.AllocateSealedPageBuf();
+   R__ASSERT(zipItem.fBuf);
+   auto &sealedPage = fBufferedColumns.at(columnHandle.fPhysicalId).RegisterSealedPage();
+   fTaskScheduler->AddTask([this, &zipItem, &sealedPage, colId = columnHandle.fPhysicalId] {
+      sealedPage = SealPage(zipItem.fPage, *fBufferedColumns.at(colId).GetHandle().fColumn->GetElement(),
+                            GetWriteOptions().GetCompression(), zipItem.fBuf.get());
+      zipItem.fSealedPage = &sealedPage;
    });
 
    // we're feeding bad locators to fOpenPageRanges but it should not matter
@@ -125,10 +146,7 @@ ROOT::Experimental::Detail::RPageSinkBuf::CommitSealedPageImpl(DescriptorId_t ph
 std::uint64_t
 ROOT::Experimental::Detail::RPageSinkBuf::CommitClusterImpl(ROOT::Experimental::NTupleSize_t nEntries)
 {
-   if (fTaskScheduler) {
-      fTaskScheduler->Wait();
-      fTaskScheduler->Reset();
-   }
+   WaitForAllTasks();
 
    // If we have only sealed pages in all buffered columns, commit them in a single `CommitSealedPageV()` call
    bool singleCommitCall = std::all_of(fBufferedColumns.begin(), fBufferedColumns.end(),
@@ -142,11 +160,8 @@ ROOT::Experimental::Detail::RPageSinkBuf::CommitClusterImpl(ROOT::Experimental::
       }
       fInnerSink->CommitSealedPageV(toCommit);
 
-      for (auto &bufColumn : fBufferedColumns) {
-         auto drained = bufColumn.DrainBufferedPages();
-         for (auto &bufPage : std::get<std::deque<RColumnBuf::RPageZipItem>>(drained))
-            ReleasePage(bufPage.fPage);
-      }
+      for (auto &bufColumn : fBufferedColumns)
+         bufColumn.DropBufferedPages();
       return fInnerSink->CommitCluster(nEntries);
    }
 
@@ -155,7 +170,7 @@ ROOT::Experimental::Detail::RPageSinkBuf::CommitClusterImpl(ROOT::Experimental::
       // In practice, either all (see above) or none of the buffered pages have been sealed, depending on whether
       // a task scheduler is available. The rare condition of a few columns consisting only of sealed pages should
       // not happen unless the API is misused.
-      if (bufColumn.HasSealedPagesOnly())
+      if (!bufColumn.IsEmpty() && bufColumn.HasSealedPagesOnly())
          throw RException(R__FAIL("only a few columns have all pages sealed"));
 
       // Slow path: if the buffered column contains both sealed and unsealed pages, commit them one by one.

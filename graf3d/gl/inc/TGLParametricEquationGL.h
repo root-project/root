@@ -30,19 +30,19 @@ protected:
 
 public:
    TGLParametricEquationGL();
-   virtual ~TGLParametricEquationGL();
+   ~TGLParametricEquationGL() override;
 
-   virtual Bool_t SetModel(TObject* obj, const Option_t *opt = nullptr);
-   virtual void   SetBBox();
-   virtual void   DirectDraw(TGLRnrCtx & rnrCtx) const;
+   Bool_t SetModel(TObject* obj, const Option_t *opt = nullptr) override;
+   void   SetBBox() override;
+   void   DirectDraw(TGLRnrCtx & rnrCtx) const override;
 
-   virtual Bool_t KeepDuringSmartRefresh() const { return kFALSE; }
+   Bool_t KeepDuringSmartRefresh() const override { return kFALSE; }
 
    // To support two-level selection
    // virtual Bool_t SupportsSecondarySelect() const { return kTRUE; }
    // virtual void ProcessSelection(UInt_t* ptr, TGLViewer*, TGLScene*);
 
-   ClassDef(TGLParametricEquationGL, 0); // GL renderer for TGLParametricEquation
+   ClassDefOverride(TGLParametricEquationGL, 0); // GL renderer for TGLParametricEquation
 };
 
 #endif

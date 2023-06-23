@@ -188,7 +188,7 @@ bool AsymptoticCalculator::Initialize() const {
    // evaluate the unconditional nll for the full model on the  observed data
    if (verbose >= 0)
       oocoutP(nullptr,Eval) << "AsymptoticCalculator::Initialize - Find  best unconditional NLL on observed data" << endl;
-   fNLLObs = EvaluateNLL( *nullPdf, data, GetNullModel()->GetConditionalObservables(),GetNullModel()->GetGlobalObservables());
+   fNLLObs = EvaluateNLL(*GetNullModel(), data);
    // fill also snapshot of best poi
    poi->snapshot(fBestFitPoi);
    RooRealVar * muBest = dynamic_cast<RooRealVar*>(fBestFitPoi.first());
@@ -269,7 +269,7 @@ bool AsymptoticCalculator::Initialize() const {
       oocoutP(nullptr,Eval) << "AsymptoticCalculator::Initialize Find  best conditional NLL on ASIMOV data set for given alt POI ( " <<
          muAlt->GetName() << " ) = " << muAlt->getVal() << std::endl;
 
-   fNLLAsimov =  EvaluateNLL( *nullPdf, *fAsimovData, GetNullModel()->GetConditionalObservables(), GetNullModel()->GetGlobalObservables(), &poiAlt );
+   fNLLAsimov =  EvaluateNLL(*GetNullModel(), *fAsimovData, &poiAlt );
    // for unconditional fit
    //fNLLAsimov =  EvaluateNLL( *nullPdf, *fAsimovData);
    //poi->Print("v");
@@ -286,9 +286,11 @@ bool AsymptoticCalculator::Initialize() const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-double AsymptoticCalculator::EvaluateNLL(RooAbsPdf & pdf, RooAbsData& data,   const RooArgSet * condObs, const RooArgSet * globObs, const RooArgSet *poiSet) {
+double AsymptoticCalculator::EvaluateNLL(RooStats::ModelConfig const& modelConfig, RooAbsData& data, const RooArgSet *poiSet)
+{
     int verbose = fgPrintLevel;
 
+    RooAbsPdf &pdf = *modelConfig.GetPdf();
 
     RooFit::MsgLevel msglevel = RooMsgService::instance().globalKillBelow();
     if (verbose < 2) RooMsgService::instance().setGlobalKillBelow(RooFit::FATAL);
@@ -298,15 +300,9 @@ double AsymptoticCalculator::EvaluateNLL(RooAbsPdf & pdf, RooAbsData& data,   co
     RooStats::RemoveConstantParameters(&*allParams);
     // add constraint terms for all non-constant parameters
 
-    RooArgSet conditionalObs;
-    if (condObs) conditionalObs.add(*condObs);
-    RooArgSet globalObs;
-    if (globObs) globalObs.add(*globObs);
-
     // need to call constrain for RooSimultaneous until stripDisconnected problem fixed
     auto& config = GetGlobalRooStatsConfig();
-    std::unique_ptr<RooAbsReal> nll{pdf.createNLL(data, RooFit::CloneData(false),RooFit::Constrain(*allParams),RooFit::ConditionalObservables(conditionalObs), RooFit::GlobalObservables(globalObs),
-        RooFit::Offset(config.useLikelihoodOffset))};
+    std::unique_ptr<RooAbsReal> nll{modelConfig.createNLL(data, RooFit::Constrain(*allParams), RooFit::Offset(config.useLikelihoodOffset))};
 
     std::unique_ptr<RooArgSet> attachedSet{nll->getVariables()};
 
@@ -406,11 +402,11 @@ double AsymptoticCalculator::EvaluateNLL(RooAbsPdf & pdf, RooAbsData& data,   co
           }
        }
 
-       RooFitResult * result = 0;
+       std::unique_ptr<RooFitResult> result;
 
        // ignore errors in Hesse or in Improve and also when matrix was made pos def (status returned = 1)
        if (status >= 0) {
-          result = minim.save();
+          result = std::unique_ptr<RooFitResult>{minim.save()};
        }
        if (result){
           if (!RooStats::IsNLLOffset() )
@@ -429,9 +425,6 @@ double AsymptoticCalculator::EvaluateNLL(RooAbsPdf & pdf, RooAbsData& data,   co
        }
 
        minim.optimizeConst(false);
-       if (result) delete result;
-
-
     }
 
     double muTest = 0;
@@ -521,7 +514,7 @@ HypoTestResult* AsymptoticCalculator::GetHypoTest() const {
    }
 
    // evaluate the conditional NLL on the observed data for the snapshot value
-   double condNLL = EvaluateNLL( *nullPdf, const_cast<RooAbsData&>(*GetData()), GetNullModel()->GetConditionalObservables(), GetNullModel()->GetGlobalObservables(), &poiTest);
+   double condNLL = EvaluateNLL(*GetNullModel(), const_cast<RooAbsData&>(*GetData()), &poiTest);
 
    double qmu = 2.*(condNLL - fNLLObs);
 
@@ -543,7 +536,7 @@ HypoTestResult* AsymptoticCalculator::GetHypoTest() const {
                                            << std::endl;
 
 
-      double nll = EvaluateNLL( *nullPdf, const_cast<RooAbsData&>(*GetData()),GetNullModel()->GetConditionalObservables(),GetNullModel()->GetGlobalObservables());
+      double nll = EvaluateNLL(*GetNullModel(), const_cast<RooAbsData&>(*GetData()));
 
       if (nll < fNLLObs || (TMath::IsNaN(fNLLObs) && !TMath::IsNaN(nll) ) ) {
          oocoutW(nullptr,Minimization) << "AsymptoticCalculator:  Found a better unconditional minimum "
@@ -605,7 +598,7 @@ HypoTestResult* AsymptoticCalculator::GetHypoTest() const {
 
    if (verbose > 0) oocoutP(nullptr,Eval) << "AsymptoticCalculator::GetHypoTest -- Find  best conditional NLL on ASIMOV data set .... " << std::endl;
 
-   double condNLL_A = EvaluateNLL( *nullPdf, *fAsimovData, GetNullModel()->GetConditionalObservables(),  GetNullModel()->GetGlobalObservables(), &poiTest);
+   double condNLL_A = EvaluateNLL(*GetNullModel(), *fAsimovData, &poiTest);
 
 
    double qmu_A = 2.*(condNLL_A - fNLLAsimov  );
@@ -623,7 +616,7 @@ HypoTestResult* AsymptoticCalculator::GetHypoTest() const {
                                            << std::endl;
 
 
-      double nll = EvaluateNLL( *nullPdf, *fAsimovData,  GetNullModel()->GetConditionalObservables(), GetNullModel()->GetGlobalObservables() );
+      double nll = EvaluateNLL(*GetNullModel(), *fAsimovData);
 
       if (nll < fNLLAsimov || (TMath::IsNaN(fNLLAsimov) && !TMath::IsNaN(nll) )) {
          oocoutW(nullptr,Minimization) << "AsymptoticCalculator:  Found a better unconditional minimum for Asimov data set"

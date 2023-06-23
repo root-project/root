@@ -72,6 +72,8 @@ private:
    RPage fReadPage;
    /// The column id is used to find matching pages with content when reading
    ColumnId_t fColumnIdSource = kInvalidColumnId;
+   /// Global index of the first element in this column; usually == 0, unless it is a deferred column
+   NTupleSize_t fFirstElementIndex = 0;
    /// Used to pack and unpack pages on writing/reading
    std::unique_ptr<RColumnElementBase> fElement;
 
@@ -112,7 +114,11 @@ public:
    RColumn &operator =(const RColumn&) = delete;
    ~RColumn();
 
-   void Connect(DescriptorId_t fieldId, RPageStorage *pageStorage);
+   /// Connect the column to a page storage.  If `pageStorage` is a page sink, `firstElementIndex` can be used to
+   /// specify the first column element index with backing storage for this column.  On read back, elements before
+   /// `firstElementIndex` will cause the zero page to be mapped.
+   /// TODO(jalopezg): at this point it would be nicer to distinguish between connecting a page sink and a page source
+   void Connect(DescriptorId_t fieldId, RPageStorage *pageStorage, NTupleSize_t firstElementIndex = 0U);
 
    void Append(const RColumnElementBase &element) {
       void *dst = fWritePage[fWritePageIdx].GrowUnchecked(1);
@@ -312,7 +318,9 @@ public:
    const RColumnModel &GetModel() const { return fModel; }
    std::uint32_t GetIndex() const { return fIndex; }
    ColumnId_t GetColumnIdSource() const { return fColumnIdSource; }
+   NTupleSize_t GetFirstElementIndex() const { return fFirstElementIndex; }
    RPageSource *GetPageSource() const { return fPageSource; }
+   RPageSink *GetPageSink() const { return fPageSink; }
    RPageStorage::ColumnHandle_t GetHandleSource() const { return fHandleSource; }
    RPageStorage::ColumnHandle_t GetHandleSink() const { return fHandleSink; }
 };

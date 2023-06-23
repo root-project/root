@@ -57,7 +57,7 @@ private:
    void                GetEditors(TClass *cl);
 public:
    TGeoTabManager(TGedEditor *ged);
-   virtual ~TGeoTabManager();
+   ~TGeoTabManager() override;
 
    static TGeoTabManager *GetMakeTabManager(TGedEditor *ged);
    static void         Cleanup(TGCompositeFrame *frame);
@@ -78,7 +78,7 @@ public:
    TGCompositeFrame   *GetVolumeTab() const {return fVolumeTab;}
    TGeoVolume         *GetVolume() const {return fVolume;}
 
-   ClassDef(TGeoTabManager, 0)   // Tab manager for geometry editors
+   ClassDefOverride(TGeoTabManager, 0)   // Tab manager for geometry editors
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -103,7 +103,7 @@ protected:
    virtual void        ConnectSignalsToSlots() = 0;
 public:
    TGeoTreeDialog(TGFrame *caller, const TGWindow *main, UInt_t w = 1, UInt_t h = 1);
-   virtual ~TGeoTreeDialog();
+   ~TGeoTreeDialog() override;
 
    static TObject     *GetSelected();
    // Slots
@@ -111,7 +111,7 @@ public:
    virtual void        DoItemClick(TGListTreeItem *item, Int_t btn) = 0;
    void                DoSelect(TGListTreeItem *item);
 
-   ClassDef(TGeoTreeDialog, 0)   // List-Tree based dialog
+   ClassDefOverride(TGeoTreeDialog, 0)   // List-Tree based dialog
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -125,18 +125,18 @@ public:
 class TGeoVolumeDialog : public TGeoTreeDialog {
 
 protected:
-   virtual void        BuildListTree();
-   virtual void        ConnectSignalsToSlots();
+   void        BuildListTree() override;
+   void        ConnectSignalsToSlots() override;
 
 public:
    TGeoVolumeDialog(TGFrame *caller, const TGWindow *main, UInt_t w = 1, UInt_t h = 1);
-   virtual ~TGeoVolumeDialog() {}
+   ~TGeoVolumeDialog() override {}
 
    // Slots
-   virtual void        DoClose();
-   virtual void        DoItemClick(TGListTreeItem *item, Int_t btn);
+   void        DoClose() override;
+   void        DoItemClick(TGListTreeItem *item, Int_t btn) override;
 
-   ClassDef(TGeoVolumeDialog, 0)   // List-Tree based volume dialog
+   ClassDefOverride(TGeoVolumeDialog, 0)   // List-Tree based volume dialog
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -150,18 +150,18 @@ public:
 class TGeoShapeDialog : public TGeoTreeDialog {
 
 protected:
-   virtual void        BuildListTree();
-   virtual void        ConnectSignalsToSlots();
+   void        BuildListTree() override;
+   void        ConnectSignalsToSlots() override;
 
 public:
    TGeoShapeDialog(TGFrame *caller, const TGWindow *main, UInt_t w = 1, UInt_t h = 1);
-   virtual ~TGeoShapeDialog() {}
+   ~TGeoShapeDialog() override {}
 
    // Slots
-   virtual void        DoClose();
-   virtual void        DoItemClick(TGListTreeItem *item, Int_t btn);
+   void        DoClose() override;
+   void        DoItemClick(TGListTreeItem *item, Int_t btn) override;
 
-   ClassDef(TGeoShapeDialog, 0)   // List-Tree based shape dialog
+   ClassDefOverride(TGeoShapeDialog, 0)   // List-Tree based shape dialog
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -175,18 +175,18 @@ public:
 class TGeoMediumDialog : public TGeoTreeDialog {
 
 protected:
-   virtual void        BuildListTree();
-   virtual void        ConnectSignalsToSlots();
+   void        BuildListTree() override;
+   void        ConnectSignalsToSlots() override;
 
 public:
    TGeoMediumDialog(TGFrame *caller, const TGWindow *main, UInt_t w = 1, UInt_t h = 1);
-   virtual ~TGeoMediumDialog() {}
+   ~TGeoMediumDialog() override {}
 
    // Slots
-   virtual void        DoClose();
-   virtual void        DoItemClick(TGListTreeItem *item, Int_t btn);
+   void        DoClose() override;
+   void        DoItemClick(TGListTreeItem *item, Int_t btn) override;
 
-   ClassDef(TGeoMediumDialog, 0)   // List-Tree based medium dialog
+   ClassDefOverride(TGeoMediumDialog, 0)   // List-Tree based medium dialog
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -200,18 +200,18 @@ public:
 class TGeoMaterialDialog : public TGeoTreeDialog {
 
 protected:
-   virtual void        BuildListTree();
-   virtual void        ConnectSignalsToSlots();
+   void        BuildListTree() override;
+   void        ConnectSignalsToSlots() override;
 
 public:
    TGeoMaterialDialog(TGFrame *caller, const TGWindow *main, UInt_t w = 1, UInt_t h = 1);
-   virtual ~TGeoMaterialDialog() {}
+   ~TGeoMaterialDialog() override {}
 
    // Slots
-   virtual void        DoClose();
-   virtual void        DoItemClick(TGListTreeItem *item, Int_t btn);
+   void        DoClose() override;
+   void        DoItemClick(TGListTreeItem *item, Int_t btn) override;
 
-   ClassDef(TGeoMaterialDialog, 0)   // List-Tree based material dialog
+   ClassDefOverride(TGeoMaterialDialog, 0)   // List-Tree based material dialog
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -225,18 +225,18 @@ public:
 class TGeoMatrixDialog : public TGeoTreeDialog {
 
 protected:
-   virtual void        BuildListTree();
-   virtual void        ConnectSignalsToSlots();
+   void        BuildListTree() override;
+   void        ConnectSignalsToSlots() override;
 
 public:
    TGeoMatrixDialog(TGFrame *caller, const TGWindow *main, UInt_t w = 1, UInt_t h = 1);
-   virtual ~TGeoMatrixDialog() {}
+   ~TGeoMatrixDialog() override {}
 
    // Slots
-   virtual void        DoClose();
-   virtual void        DoItemClick(TGListTreeItem *item, Int_t btn);
+   void        DoClose() override;
+   void        DoItemClick(TGListTreeItem *item, Int_t btn) override;
 
-   ClassDef(TGeoMatrixDialog, 0)   // List-Tree based matrix dialog
+   ClassDefOverride(TGeoMatrixDialog, 0)   // List-Tree based matrix dialog
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -258,9 +258,9 @@ class TGeoTransientPanel : public TGMainFrame {
 
 public:
    TGeoTransientPanel(TGedEditor* ged, const char *name, TObject *obj);
-   virtual ~TGeoTransientPanel();
+   ~TGeoTransientPanel() override;
 
-   virtual void        CloseWindow();
+   void        CloseWindow() override;
    virtual void        DeleteEditors();
 
    TGTab              *GetTab() const {return fTab;}
@@ -272,7 +272,7 @@ public:
    virtual void        Show();
    void                SetModel(TObject *model);
 
-   ClassDef(TGeoTransientPanel, 0)   // List-Tree based dialog
+   ClassDefOverride(TGeoTransientPanel, 0)   // List-Tree based dialog
 };
 
 #endif

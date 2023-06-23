@@ -146,31 +146,40 @@ std::tuple<std::string, std::vector<size_t>> ParseArrayType(std::string_view typ
    return std::make_tuple(std::string{typeName}, sizeVec);
 }
 
-std::string GetNormalizedType(const std::string &typeName) {
+/// Returns the normalized resolved type and the normalized typedef before typedef resolution. If the given type
+/// is not a typedef, the second element of the returned pair is the empty string.
+std::pair<std::string, std::string> GetNormalizedType(const std::string &typeName) {
    std::string normalizedType(TClassEdit::CleanType(typeName.c_str(), /*mode=*/2));
    // The following types are asummed to be canonical names; thus, do not perform `typedef` resolution on those
    if (normalizedType == "ROOT::Experimental::ClusterSize_t")
-      return normalizedType;
+      return std::make_pair(normalizedType, "");
+   // We want the template parameter to stay in "std::uint32_t" / "std::uint64_t" form
+   if (normalizedType.substr(0, 39) == "ROOT::Experimental::RNTupleCardinality<")
+      return std::make_pair(normalizedType, "");
 
-   normalizedType = TClassEdit::ResolveTypedef(normalizedType.c_str());
-   auto translatedType = typeTranslationMap.find(normalizedType);
+   std::string resolvedType = TClassEdit::ResolveTypedef(normalizedType.c_str());
+   if (resolvedType == normalizedType)
+      normalizedType = "";
+   auto translatedType = typeTranslationMap.find(resolvedType);
    if (translatedType != typeTranslationMap.end())
-      normalizedType = translatedType->second;
+      resolvedType = translatedType->second;
 
-   if (normalizedType.substr(0, 7) == "vector<")
-      normalizedType = "std::" + normalizedType;
-   if (normalizedType.substr(0, 6) == "array<")
-      normalizedType = "std::" + normalizedType;
-   if (normalizedType.substr(0, 8) == "variant<")
-      normalizedType = "std::" + normalizedType;
-   if (normalizedType.substr(0, 5) == "pair<")
-      normalizedType = "std::" + normalizedType;
-   if (normalizedType.substr(0, 6) == "tuple<")
-      normalizedType = "std::" + normalizedType;
-   if (normalizedType.substr(0, 7) == "bitset<")
-      normalizedType = "std::" + normalizedType;
+   if (resolvedType.substr(0, 7) == "vector<")
+      resolvedType = "std::" + resolvedType;
+   if (resolvedType.substr(0, 6) == "array<")
+      resolvedType = "std::" + resolvedType;
+   if (resolvedType.substr(0, 8) == "variant<")
+      resolvedType = "std::" + resolvedType;
+   if (resolvedType.substr(0, 5) == "pair<")
+      resolvedType = "std::" + resolvedType;
+   if (resolvedType.substr(0, 6) == "tuple<")
+      resolvedType = "std::" + resolvedType;
+   if (resolvedType.substr(0, 7) == "bitset<")
+      resolvedType = "std::" + resolvedType;
+   if (resolvedType.substr(0, 11) == "unique_ptr<")
+      resolvedType = "std::" + resolvedType;
 
-   return normalizedType;
+   return std::make_pair(resolvedType, normalizedType);
 }
 
 /// Retrieve the addresses of the data members of a generic RVec from a pointer to the beginning of the RVec object.
@@ -233,24 +242,22 @@ std::string ROOT::Experimental::Detail::RFieldBase::GetQualifiedFieldName() cons
 ROOT::Experimental::RResult<std::unique_ptr<ROOT::Experimental::Detail::RFieldBase>>
 ROOT::Experimental::Detail::RFieldBase::Create(const std::string &fieldName, const std::string &typeName)
 {
-   std::string normalizedType(GetNormalizedType(typeName));
+   auto [normalizedType, typeAlias] = GetNormalizedType(typeName);
    if (normalizedType.empty())
       return R__FAIL("no type name specified for Field " + fieldName);
-
-   std::unique_ptr<ROOT::Experimental::Detail::RFieldBase> result;
 
    if (auto [arrayBaseType, arraySize] = ParseArrayType(normalizedType); !arraySize.empty()) {
       // TODO(jalopezg): support multi-dimensional row-major (C order) arrays in RArrayField
       if (arraySize.size() > 1)
          return R__FAIL("multi-dimensional array type not supported " + normalizedType);
-      auto itemField = Create(GetNormalizedType(arrayBaseType), arrayBaseType);
-      return {std::make_unique<RArrayField>(fieldName, itemField.Unwrap(), arraySize[0])};
+      auto itemField = Create("_0", arrayBaseType).Unwrap();
+      return {std::make_unique<RArrayField>(fieldName, std::move(itemField), arraySize[0])};
    }
+
+   std::unique_ptr<ROOT::Experimental::Detail::RFieldBase> result;
 
    if (normalizedType == "ROOT::Experimental::ClusterSize_t") {
       result = std::make_unique<RField<ClusterSize_t>>(fieldName);
-   } else if (normalizedType == "ROOT::Experimental::RNTupleCardinality") {
-      result = std::make_unique<RField<RNTupleCardinality>>(fieldName);
    } else if (normalizedType == "bool") {
       result = std::make_unique<RField<bool>>(fieldName);
    } else if (normalizedType == "char") {
@@ -275,6 +282,11 @@ ROOT::Experimental::Detail::RFieldBase::Create(const std::string &fieldName, con
       result = std::make_unique<RField<float>>(fieldName);
    } else if (normalizedType == "double") {
       result = std::make_unique<RField<double>>(fieldName);
+   } else if (normalizedType == "Double32_t") {
+      result = std::make_unique<RField<double>>(fieldName);
+      static_cast<RField<double> *>(result.get())->SetDouble32();
+      // Prevent the type alias from being reset by returning early
+      return result;
    } else if (normalizedType == "std::string") {
       result = std::make_unique<RField<std::string>>(fieldName);
    } else if (normalizedType == "std::vector<bool>") {
@@ -291,40 +303,53 @@ ROOT::Experimental::Detail::RFieldBase::Create(const std::string &fieldName, con
       auto arrayDef = TokenizeTypeList(normalizedType.substr(11, normalizedType.length() - 12));
       R__ASSERT(arrayDef.size() == 2);
       auto arrayLength = std::stoi(arrayDef[1]);
-      auto itemField = Create(GetNormalizedType(arrayDef[0]), arrayDef[0]);
+      auto itemField = Create("_0", arrayDef[0]);
       result = std::make_unique<RArrayField>(fieldName, itemField.Unwrap(), arrayLength);
-   }
-   if (normalizedType.substr(0, 13) == "std::variant<") {
+   } else if (normalizedType.substr(0, 13) == "std::variant<") {
       auto innerTypes = TokenizeTypeList(normalizedType.substr(13, normalizedType.length() - 14));
       std::vector<RFieldBase *> items;
       for (unsigned int i = 0; i < innerTypes.size(); ++i) {
          items.emplace_back(Create("_" + std::to_string(i), innerTypes[i]).Unwrap().release());
       }
       result = std::make_unique<RVariantField>(fieldName, items);
-   }
-   if (normalizedType.substr(0, 10) == "std::pair<") {
+   } else if (normalizedType.substr(0, 10) == "std::pair<") {
       auto innerTypes = TokenizeTypeList(normalizedType.substr(10, normalizedType.length() - 11));
       if (innerTypes.size() != 2)
          return R__FAIL("the type list for std::pair must have exactly two elements");
       std::array<std::unique_ptr<RFieldBase>, 2> items{Create("_0", innerTypes[0]).Unwrap(),
                                                        Create("_1", innerTypes[1]).Unwrap()};
       result = std::make_unique<RPairField>(fieldName, items);
-   }
-   if (normalizedType.substr(0, 11) == "std::tuple<") {
+   } else if (normalizedType.substr(0, 11) == "std::tuple<") {
       auto innerTypes = TokenizeTypeList(normalizedType.substr(11, normalizedType.length() - 12));
       std::vector<std::unique_ptr<RFieldBase>> items;
       for (unsigned int i = 0; i < innerTypes.size(); ++i) {
          items.emplace_back(Create("_" + std::to_string(i), innerTypes[i]).Unwrap());
       }
       result = std::make_unique<RTupleField>(fieldName, items);
-   }
-   if (normalizedType.substr(0, 12) == "std::bitset<") {
+   } else if (normalizedType.substr(0, 12) == "std::bitset<") {
       auto size = std::stoull(normalizedType.substr(12, normalizedType.length() - 13));
       result = std::make_unique<RBitsetField>(fieldName, size);
+   } else if (normalizedType.substr(0, 16) == "std::unique_ptr<") {
+      std::string itemTypeName = normalizedType.substr(16, normalizedType.length() - 17);
+      auto itemField = Create("_0", itemTypeName).Unwrap();
+      auto normalizedInnerTypeName = itemField->GetType();
+      result = std::make_unique<RUniquePtrField>(fieldName, "std::unique_ptr<" + normalizedInnerTypeName + ">",
+                                                 std::move(itemField));
+   } else if (normalizedType == ":Collection:") {
+      // TODO: create an RCollectionField?
+      result = std::make_unique<RField<ClusterSize_t>>(fieldName);
+   } else if (normalizedType.substr(0, 39) == "ROOT::Experimental::RNTupleCardinality<") {
+      auto innerTypes = TokenizeTypeList(normalizedType.substr(39, normalizedType.length() - 40));
+      if (innerTypes.size() != 1)
+         return R__FAIL(std::string("Field ") + fieldName + " has invalid cardinality template: " + normalizedType);
+      if (innerTypes[0] == "std::uint32_t") {
+         result = std::make_unique<RField<RNTupleCardinality<std::uint32_t>>>(fieldName);
+      } else if (innerTypes[0] == "std::uint64_t") {
+         result = std::make_unique<RField<RNTupleCardinality<std::uint64_t>>>(fieldName);
+      } else {
+         return R__FAIL(std::string("Field ") + fieldName + " has invalid cardinality template: " + normalizedType);
+      }
    }
-   // TODO: create an RCollectionField?
-   if (normalizedType == ":Collection:")
-     result = std::make_unique<RField<ClusterSize_t>>(fieldName);
 
    if (!result) {
       auto cl = TClass::GetClass(normalizedType.c_str());
@@ -336,8 +361,10 @@ ROOT::Experimental::Detail::RFieldBase::Create(const std::string &fieldName, con
       }
    }
 
-   if (result)
+   if (result) {
+      result->fTypeAlias = typeAlias;
       return result;
+   }
    return R__FAIL(std::string("Field ") + fieldName + " has unknown type " + normalizedType);
 }
 
@@ -363,6 +390,7 @@ std::unique_ptr<ROOT::Experimental::Detail::RFieldBase>
 ROOT::Experimental::Detail::RFieldBase::Clone(std::string_view newName) const
 {
    auto clone = CloneImpl(newName);
+   clone->fTypeAlias = fTypeAlias;
    clone->fOnDiskId = fOnDiskId;
    clone->fDescription = fDescription;
    // We can just copy the pointer because fColumnRepresentative points into a static structure
@@ -409,6 +437,18 @@ void ROOT::Experimental::Detail::RFieldBase::Attach(
    fSubFields.emplace_back(std::move(child));
 }
 
+ROOT::Experimental::NTupleSize_t
+ROOT::Experimental::Detail::RFieldBase::EntryToColumnElementIndex(ROOT::Experimental::NTupleSize_t globalIndex) const
+{
+   std::size_t result = globalIndex;
+   for (auto f = this; f != nullptr; f = f->GetParent()) {
+      auto parent = f->GetParent();
+      if (parent && (parent->GetStructure() == kCollection || parent->GetStructure() == kVariant))
+         return 0U;
+      result *= std::max(f->GetNRepetitions(), std::size_t{1U});
+   }
+   return result;
+}
 
 std::vector<ROOT::Experimental::Detail::RFieldBase *> ROOT::Experimental::Detail::RFieldBase::GetSubFields() const
 {
@@ -450,7 +490,7 @@ const ROOT::Experimental::Detail::RFieldBase::ColumnRepresentation_t &
 ROOT::Experimental::Detail::RFieldBase::EnsureCompatibleColumnTypes(const RNTupleDescriptor &desc) const
 {
    if (fOnDiskId == kInvalidDescriptorId)
-      throw RException(R__FAIL("No on-disk column information for for field `" + GetQualifiedFieldName() + "`"));
+      throw RException(R__FAIL("No on-disk column information for field `" + GetQualifiedFieldName() + "`"));
 
    ColumnRepresentation_t onDiskTypes;
    for (const auto &c : desc.GetColumnIterable(fOnDiskId)) {
@@ -484,15 +524,13 @@ void ROOT::Experimental::Detail::RFieldBase::RemoveReadCallback(size_t idx)
    fIsSimple = (fTraits & kTraitMappable) && fReadCallbacks.empty();
 }
 
-void ROOT::Experimental::Detail::RFieldBase::ConnectPageSink(RPageSink &pageSink)
+void ROOT::Experimental::Detail::RFieldBase::AutoAdjustColumnTypes(const RNTupleWriteOptions &options)
 {
-   R__ASSERT(fColumns.empty());
-
-   /// Fix-up default encoding: if the ntuple is uncompressed, the default encoding should be non-split
-   if ((pageSink.GetWriteOptions().GetCompression() == 0) && HasDefaultColumnRepresentative()) {
+   if ((options.GetCompression() == 0) && HasDefaultColumnRepresentative()) {
       ColumnRepresentation_t rep = GetColumnRepresentative();
       for (auto &colType : rep) {
          switch (colType) {
+         case EColumnType::kSplitIndex64: colType = EColumnType::kIndex64; break;
          case EColumnType::kSplitIndex32: colType = EColumnType::kIndex32; break;
          case EColumnType::kSplitReal64: colType = EColumnType::kReal64; break;
          case EColumnType::kSplitReal32: colType = EColumnType::kReal32; break;
@@ -505,11 +543,35 @@ void ROOT::Experimental::Detail::RFieldBase::ConnectPageSink(RPageSink &pageSink
       SetColumnRepresentative(rep);
    }
 
+   if (options.GetHasSmallClusters()) {
+      ColumnRepresentation_t rep = GetColumnRepresentative();
+      for (auto &colType : rep) {
+         switch (colType) {
+         case EColumnType::kSplitIndex64: colType = EColumnType::kSplitIndex32; break;
+         case EColumnType::kIndex64: colType = EColumnType::kIndex32; break;
+         default: break;
+         }
+      }
+      SetColumnRepresentative(rep);
+   }
+
+   if (fTypeAlias == "Double32_t")
+      SetColumnRepresentative({EColumnType::kSplitReal32});
+}
+
+void ROOT::Experimental::Detail::RFieldBase::ConnectPageSink(RPageSink &pageSink, NTupleSize_t firstEntry)
+{
+   R__ASSERT(fColumns.empty());
+
+   AutoAdjustColumnTypes(pageSink.GetWriteOptions());
+
    GenerateColumnsImpl();
    if (!fColumns.empty())
       fPrincipalColumn = fColumns[0].get();
-   for (auto& column : fColumns)
-      column->Connect(fOnDiskId, &pageSink);
+   for (auto &column : fColumns) {
+      auto firstElementIndex = (column.get() == fPrincipalColumn) ? EntryToColumnElementIndex(firstEntry) : 0;
+      column->Connect(fOnDiskId, &pageSink, firstElementIndex);
+   }
 }
 
 
@@ -612,7 +674,9 @@ void ROOT::Experimental::RFieldZero::AcceptVisitor(Detail::RFieldVisitor &visito
 const ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations &
 ROOT::Experimental::RField<ROOT::Experimental::ClusterSize_t>::GetColumnRepresentations() const
 {
-   static RColumnRepresentations representations({{EColumnType::kSplitIndex32}, {EColumnType::kIndex32}}, {{}});
+   static RColumnRepresentations representations(
+      {{EColumnType::kSplitIndex64}, {EColumnType::kIndex64}, {EColumnType::kSplitIndex32}, {EColumnType::kIndex32}},
+      {});
    return representations;
 }
 
@@ -635,23 +699,35 @@ void ROOT::Experimental::RField<ROOT::Experimental::ClusterSize_t>::AcceptVisito
 //------------------------------------------------------------------------------
 
 const ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations &
-ROOT::Experimental::RField<ROOT::Experimental::RNTupleCardinality>::GetColumnRepresentations() const
+ROOT::Experimental::RCardinalityField::GetColumnRepresentations() const
 {
-   static RColumnRepresentations representations({{EColumnType::kSplitIndex32}, {EColumnType::kIndex32}}, {{}});
+   static RColumnRepresentations representations(
+      {{EColumnType::kSplitIndex64}, {EColumnType::kIndex64}, {EColumnType::kSplitIndex32}, {EColumnType::kIndex32}},
+      {});
    return representations;
 }
 
-void ROOT::Experimental::RField<ROOT::Experimental::RNTupleCardinality>::GenerateColumnsImpl(
-   const RNTupleDescriptor &desc)
+void ROOT::Experimental::RCardinalityField::GenerateColumnsImpl(const RNTupleDescriptor &desc)
 {
    auto onDiskTypes = EnsureCompatibleColumnTypes(desc);
    fColumns.emplace_back(Detail::RColumn::Create<ClusterSize_t>(RColumnModel(onDiskTypes[0]), 0));
 }
 
-void ROOT::Experimental::RField<ROOT::Experimental::RNTupleCardinality>::AcceptVisitor(
-   Detail::RFieldVisitor &visitor) const
+void ROOT::Experimental::RCardinalityField::AcceptVisitor(Detail::RFieldVisitor &visitor) const
 {
    visitor.VisitCardinalityField(*this);
+}
+
+const ROOT::Experimental::RField<ROOT::Experimental::RNTupleCardinality<std::uint32_t>> *
+ROOT::Experimental::RCardinalityField::As32Bit() const
+{
+   return dynamic_cast<const RField<RNTupleCardinality<std::uint32_t>> *>(this);
+}
+
+const ROOT::Experimental::RField<ROOT::Experimental::RNTupleCardinality<std::uint64_t>> *
+ROOT::Experimental::RCardinalityField::As64Bit() const
+{
+   return dynamic_cast<const RField<RNTupleCardinality<std::uint64_t>> *>(this);
 }
 
 //------------------------------------------------------------------------------
@@ -684,7 +760,7 @@ void ROOT::Experimental::RField<char>::AcceptVisitor(Detail::RFieldVisitor &visi
 const ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations &
 ROOT::Experimental::RField<std::int8_t>::GetColumnRepresentations() const
 {
-   static RColumnRepresentations representations({{EColumnType::kInt8}}, {{}});
+   static RColumnRepresentations representations({{EColumnType::kInt8}}, {{EColumnType::kUInt8}});
    return representations;
 }
 
@@ -709,7 +785,7 @@ void ROOT::Experimental::RField<std::int8_t>::AcceptVisitor(Detail::RFieldVisito
 const ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations &
 ROOT::Experimental::RField<std::uint8_t>::GetColumnRepresentations() const
 {
-   static RColumnRepresentations representations({{EColumnType::kInt8}}, {{}});
+   static RColumnRepresentations representations({{EColumnType::kUInt8}}, {{EColumnType::kInt8}});
    return representations;
 }
 
@@ -734,7 +810,7 @@ void ROOT::Experimental::RField<std::uint8_t>::AcceptVisitor(Detail::RFieldVisit
 const ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations &
 ROOT::Experimental::RField<bool>::GetColumnRepresentations() const
 {
-   static RColumnRepresentations representations({{EColumnType::kBit}}, {{}});
+   static RColumnRepresentations representations({{EColumnType::kBit}}, {});
    return representations;
 }
 
@@ -759,7 +835,7 @@ void ROOT::Experimental::RField<bool>::AcceptVisitor(Detail::RFieldVisitor &visi
 const ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations &
 ROOT::Experimental::RField<float>::GetColumnRepresentations() const
 {
-   static RColumnRepresentations representations({{EColumnType::kSplitReal32}, {EColumnType::kReal32}}, {{}});
+   static RColumnRepresentations representations({{EColumnType::kSplitReal32}, {EColumnType::kReal32}}, {});
    return representations;
 }
 
@@ -785,7 +861,8 @@ void ROOT::Experimental::RField<float>::AcceptVisitor(Detail::RFieldVisitor &vis
 const ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations &
 ROOT::Experimental::RField<double>::GetColumnRepresentations() const
 {
-   static RColumnRepresentations representations({{EColumnType::kSplitReal64}, {EColumnType::kReal64}}, {{}});
+   static RColumnRepresentations representations(
+      {{EColumnType::kSplitReal64}, {EColumnType::kReal64}, {EColumnType::kSplitReal32}, {EColumnType::kReal32}}, {});
    return representations;
 }
 
@@ -805,12 +882,18 @@ void ROOT::Experimental::RField<double>::AcceptVisitor(Detail::RFieldVisitor &vi
    visitor.VisitDoubleField(*this);
 }
 
+void ROOT::Experimental::RField<double>::SetDouble32()
+{
+   fTypeAlias = "Double32_t";
+}
+
 //------------------------------------------------------------------------------
 
 const ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations &
 ROOT::Experimental::RField<std::int16_t>::GetColumnRepresentations() const
 {
-   static RColumnRepresentations representations({{EColumnType::kSplitInt16}, {EColumnType::kInt16}}, {{}});
+   static RColumnRepresentations representations({{EColumnType::kSplitInt16}, {EColumnType::kInt16}},
+                                                 {{EColumnType::kSplitUInt16}, {EColumnType::kUInt16}});
    return representations;
 }
 
@@ -835,7 +918,8 @@ void ROOT::Experimental::RField<std::int16_t>::AcceptVisitor(Detail::RFieldVisit
 const ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations &
 ROOT::Experimental::RField<std::uint16_t>::GetColumnRepresentations() const
 {
-   static RColumnRepresentations representations({{EColumnType::kSplitInt16}, {EColumnType::kInt16}}, {{}});
+   static RColumnRepresentations representations({{EColumnType::kSplitUInt16}, {EColumnType::kUInt16}},
+                                                 {{EColumnType::kSplitInt16}, {EColumnType::kInt16}});
    return representations;
 }
 
@@ -860,7 +944,8 @@ void ROOT::Experimental::RField<std::uint16_t>::AcceptVisitor(Detail::RFieldVisi
 const ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations &
 ROOT::Experimental::RField<std::int32_t>::GetColumnRepresentations() const
 {
-   static RColumnRepresentations representations({{EColumnType::kSplitInt32}, {EColumnType::kInt32}}, {{}});
+   static RColumnRepresentations representations({{EColumnType::kSplitInt32}, {EColumnType::kInt32}},
+                                                 {{EColumnType::kSplitUInt32}, {EColumnType::kUInt32}});
    return representations;
 }
 
@@ -885,7 +970,8 @@ void ROOT::Experimental::RField<std::int32_t>::AcceptVisitor(Detail::RFieldVisit
 const ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations &
 ROOT::Experimental::RField<std::uint32_t>::GetColumnRepresentations() const
 {
-   static RColumnRepresentations representations({{EColumnType::kSplitInt32}, {EColumnType::kInt32}}, {{}});
+   static RColumnRepresentations representations({{EColumnType::kSplitUInt32}, {EColumnType::kUInt32}},
+                                                 {{EColumnType::kSplitInt32}, {EColumnType::kInt32}});
    return representations;
 }
 
@@ -910,7 +996,8 @@ void ROOT::Experimental::RField<std::uint32_t>::AcceptVisitor(Detail::RFieldVisi
 const ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations &
 ROOT::Experimental::RField<std::uint64_t>::GetColumnRepresentations() const
 {
-   static RColumnRepresentations representations({{EColumnType::kSplitInt64}, {EColumnType::kInt64}}, {{}});
+   static RColumnRepresentations representations({{EColumnType::kSplitUInt64}, {EColumnType::kUInt64}},
+                                                 {{EColumnType::kSplitInt64}, {EColumnType::kInt64}});
    return representations;
 }
 
@@ -936,7 +1023,12 @@ const ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations &
 ROOT::Experimental::RField<std::int64_t>::GetColumnRepresentations() const
 {
    static RColumnRepresentations representations({{EColumnType::kSplitInt64}, {EColumnType::kInt64}},
-                                                 {{EColumnType::kInt32}, {EColumnType::kSplitInt32}});
+                                                 {{EColumnType::kSplitUInt64},
+                                                  {EColumnType::kUInt64},
+                                                  {EColumnType::kInt32},
+                                                  {EColumnType::kSplitInt32},
+                                                  {EColumnType::kUInt32},
+                                                  {EColumnType::kSplitUInt32}});
    return representations;
 }
 
@@ -961,8 +1053,11 @@ void ROOT::Experimental::RField<std::int64_t>::AcceptVisitor(Detail::RFieldVisit
 const ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations &
 ROOT::Experimental::RField<std::string>::GetColumnRepresentations() const
 {
-   static RColumnRepresentations representations(
-      {{EColumnType::kSplitIndex32, EColumnType::kChar}, {EColumnType::kIndex32, EColumnType::kChar}}, {{}});
+   static RColumnRepresentations representations({{EColumnType::kSplitIndex64, EColumnType::kChar},
+                                                  {EColumnType::kIndex64, EColumnType::kChar},
+                                                  {EColumnType::kSplitIndex32, EColumnType::kChar},
+                                                  {EColumnType::kIndex32, EColumnType::kChar}},
+                                                 {});
    return representations;
 }
 
@@ -987,7 +1082,7 @@ std::size_t ROOT::Experimental::RField<std::string>::AppendImpl(const ROOT::Expe
    fColumns[1]->AppendV(elemChars, length);
    fIndex += length;
    fColumns[0]->Append(fElemIndex);
-   return length + sizeof(fElemIndex);
+   return length + fColumns[0]->GetElement()->GetPackedSize();
 }
 
 void ROOT::Experimental::RField<std::string>::ReadGlobalImpl(
@@ -1300,7 +1395,7 @@ std::size_t ROOT::Experimental::RCollectionClassField::AppendImpl(const Detail::
    Detail::RColumnElement<ClusterSize_t> elemIndex(&fNWritten);
    fNWritten += count;
    fColumns[0]->Append(elemIndex);
-   return nbytes + sizeof(elemIndex);
+   return nbytes + fColumns[0]->GetElement()->GetPackedSize();
 }
 
 void ROOT::Experimental::RCollectionClassField::ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue *value)
@@ -1326,7 +1421,9 @@ void ROOT::Experimental::RCollectionClassField::ReadGlobalImpl(NTupleSize_t glob
 const ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations &
 ROOT::Experimental::RCollectionClassField::GetColumnRepresentations() const
 {
-   static RColumnRepresentations representations({{EColumnType::kSplitIndex32}, {EColumnType::kIndex32}}, {{}});
+   static RColumnRepresentations representations(
+      {{EColumnType::kSplitIndex64}, {EColumnType::kIndex64}, {EColumnType::kSplitIndex32}, {EColumnType::kIndex32}},
+      {});
    return representations;
 }
 
@@ -1543,7 +1640,7 @@ std::size_t ROOT::Experimental::RVectorField::AppendImpl(const Detail::RFieldVal
    Detail::RColumnElement<ClusterSize_t> elemIndex(&fNWritten);
    fNWritten += count;
    fColumns[0]->Append(elemIndex);
-   return nbytes + sizeof(elemIndex);
+   return nbytes + fColumns[0]->GetElement()->GetPackedSize();
 }
 
 void ROOT::Experimental::RVectorField::ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue *value)
@@ -1585,7 +1682,9 @@ void ROOT::Experimental::RVectorField::ReadGlobalImpl(NTupleSize_t globalIndex, 
 const ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations &
 ROOT::Experimental::RVectorField::GetColumnRepresentations() const
 {
-   static RColumnRepresentations representations({{EColumnType::kSplitIndex32}, {EColumnType::kIndex32}}, {{}});
+   static RColumnRepresentations representations(
+      {{EColumnType::kSplitIndex64}, {EColumnType::kIndex64}, {EColumnType::kSplitIndex32}, {EColumnType::kIndex32}},
+      {});
    return representations;
 }
 
@@ -1682,7 +1781,7 @@ std::size_t ROOT::Experimental::RRVecField::AppendImpl(const Detail::RFieldValue
    Detail::RColumnElement<ClusterSize_t> elemIndex(&fNWritten);
    fNWritten += *sizePtr;
    fColumns[0]->Append(elemIndex);
-   return nbytes + sizeof(elemIndex);
+   return nbytes + fColumns[0]->GetElement()->GetPackedSize();
 }
 
 void ROOT::Experimental::RRVecField::ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue *value)
@@ -1756,7 +1855,9 @@ void ROOT::Experimental::RRVecField::ReadGlobalImpl(NTupleSize_t globalIndex, De
 const ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations &
 ROOT::Experimental::RRVecField::GetColumnRepresentations() const
 {
-   static RColumnRepresentations representations({{EColumnType::kSplitIndex32}, {EColumnType::kIndex32}}, {{}});
+   static RColumnRepresentations representations(
+      {{EColumnType::kSplitIndex64}, {EColumnType::kIndex64}, {EColumnType::kSplitIndex32}, {EColumnType::kIndex32}},
+      {});
    return representations;
 }
 
@@ -1920,7 +2021,7 @@ std::size_t ROOT::Experimental::RField<std::vector<bool>>::AppendImpl(const Deta
    Detail::RColumnElement<ClusterSize_t> elemIndex(&fNWritten);
    fNWritten += count;
    fColumns[0]->Append(elemIndex);
-   return count + sizeof(elemIndex);
+   return count + fColumns[0]->GetElement()->GetPackedSize();
 }
 
 void ROOT::Experimental::RField<std::vector<bool>>::ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue* value)
@@ -1943,7 +2044,9 @@ void ROOT::Experimental::RField<std::vector<bool>>::ReadGlobalImpl(NTupleSize_t 
 const ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations &
 ROOT::Experimental::RField<std::vector<bool>>::GetColumnRepresentations() const
 {
-   static RColumnRepresentations representations({{EColumnType::kSplitIndex32}, {EColumnType::kIndex32}}, {{}});
+   static RColumnRepresentations representations(
+      {{EColumnType::kSplitIndex64}, {EColumnType::kIndex64}, {EColumnType::kSplitIndex32}, {EColumnType::kIndex32}},
+      {});
    return representations;
 }
 
@@ -2227,10 +2330,14 @@ void ROOT::Experimental::RVariantField::ReadGlobalImpl(NTupleSize_t globalIndex,
    RClusterIndex variantIndex;
    std::uint32_t tag;
    fPrincipalColumn->GetSwitchInfo(globalIndex, &variantIndex, &tag);
-   R__ASSERT(tag > 0); // TODO(jblomer): deal with invalid variants
 
-   auto itemValue = fSubFields[tag - 1]->GenerateValue(value->GetRawPtr());
-   fSubFields[tag - 1]->Read(variantIndex, &itemValue);
+   // If `tag` equals 0, the variant is in the invalid state, i.e, it does not hold any of the valid alternatives in
+   // the type list.  This happens, e.g., if the field was late added; in this case, keep the invalid tag, which makes
+   // any `std::holds_alternative<T>` check fail later.
+   if (R__likely(tag > 0)) {
+      auto itemValue = fSubFields[tag - 1]->GenerateValue(value->GetRawPtr());
+      fSubFields[tag - 1]->Read(variantIndex, &itemValue);
+   }
    SetTag(value->GetRawPtr(), tag);
 }
 
@@ -2285,6 +2392,194 @@ size_t ROOT::Experimental::RVariantField::GetValueSize() const
 void ROOT::Experimental::RVariantField::CommitCluster()
 {
    std::fill(fNWritten.begin(), fNWritten.end(), 0);
+}
+
+//------------------------------------------------------------------------------
+
+ROOT::Experimental::RNullableField::RNullableField(std::string_view fieldName, std::string_view typeName,
+                                                   std::unique_ptr<Detail::RFieldBase> itemField)
+   : ROOT::Experimental::Detail::RFieldBase(fieldName, typeName, ENTupleStructure::kCollection, false /* isSimple */)
+{
+   Attach(std::move(itemField));
+}
+
+ROOT::Experimental::RNullableField::~RNullableField()
+{
+   if (fDefaultItemValue.GetField()) {
+      fDefaultItemValue.GetField()->DestroyValue(fDefaultItemValue);
+   }
+}
+
+const ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations &
+ROOT::Experimental::RNullableField::GetColumnRepresentations() const
+{
+   static RColumnRepresentations representations(
+      {{EColumnType::kSplitIndex64}, {EColumnType::kIndex64}, {EColumnType::kSplitIndex32}, {EColumnType::kIndex32},
+       {EColumnType::kBit}}, {});
+   return representations;
+}
+
+void ROOT::Experimental::RNullableField::GenerateColumnsImpl()
+{
+   if (HasDefaultColumnRepresentative()) {
+      if (fSubFields[0]->GetValueSize() < 4) {
+         SetColumnRepresentative({EColumnType::kBit});
+      }
+   }
+   if (IsDense()) {
+      fDefaultItemValue = fSubFields[0]->GenerateValue();
+      fColumns.emplace_back(Detail::RColumn::Create<bool>(RColumnModel(EColumnType::kBit), 0));
+   } else {
+      fColumns.emplace_back(Detail::RColumn::Create<ClusterSize_t>(RColumnModel(GetColumnRepresentative()[0]), 0));
+   }
+}
+
+void ROOT::Experimental::RNullableField::GenerateColumnsImpl(const RNTupleDescriptor &desc)
+{
+   auto onDiskTypes = EnsureCompatibleColumnTypes(desc);
+   if (onDiskTypes[0] == EColumnType::kBit) {
+      fColumns.emplace_back(Detail::RColumn::Create<bool>(RColumnModel(EColumnType::kBit), 0));
+   } else {
+      fColumns.emplace_back(Detail::RColumn::Create<ClusterSize_t>(RColumnModel(onDiskTypes[0]), 0));
+   }
+}
+
+std::size_t ROOT::Experimental::RNullableField::AppendNull()
+{
+   if (IsDense()) {
+      bool mask = false;
+      Detail::RColumnElement<bool> maskElement(&mask);
+      fPrincipalColumn->Append(maskElement);
+      return 1 + fSubFields[0]->Append(fDefaultItemValue);
+   } else {
+      Detail::RColumnElement<ClusterSize_t> offsetElement(&fNWritten);
+      fPrincipalColumn->Append(offsetElement);
+      return sizeof(ClusterSize_t);
+   }
+}
+
+std::size_t ROOT::Experimental::RNullableField::AppendValue(const Detail::RFieldValue &value)
+{
+   auto nbytesItem = fSubFields[0]->Append(value);
+   if (IsDense()) {
+      bool mask = true;
+      Detail::RColumnElement<bool> maskElement(&mask);
+      fPrincipalColumn->Append(maskElement);
+      return 1 + nbytesItem;
+   } else {
+      fNWritten++;
+      Detail::RColumnElement<ClusterSize_t> offsetElement(&fNWritten);
+      fPrincipalColumn->Append(offsetElement);
+      return sizeof(ClusterSize_t) + nbytesItem;
+   }
+}
+
+ROOT::Experimental::RClusterIndex ROOT::Experimental::RNullableField::GetItemIndex(NTupleSize_t globalIndex)
+{
+   RClusterIndex nullIndex;
+   if (IsDense()) {
+      const bool isValidItem = *fPrincipalColumn->Map<bool>(globalIndex);
+      return isValidItem ? fPrincipalColumn->GetClusterIndex(globalIndex) : nullIndex;
+   } else {
+      RClusterIndex collectionStart;
+      ClusterSize_t collectionSize;
+      fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, &collectionSize);
+      return (collectionSize == 0) ? nullIndex : collectionStart;
+   }
+}
+
+void ROOT::Experimental::RNullableField::AcceptVisitor(Detail::RFieldVisitor &visitor) const
+{
+   visitor.VisitNullableField(*this);
+}
+
+//------------------------------------------------------------------------------
+
+ROOT::Experimental::RUniquePtrField::RUniquePtrField(std::string_view fieldName, std::string_view typeName,
+                                                     std::unique_ptr<Detail::RFieldBase> itemField)
+   : RNullableField(fieldName, typeName, std::move(itemField))
+{
+}
+
+std::unique_ptr<ROOT::Experimental::Detail::RFieldBase>
+ROOT::Experimental::RUniquePtrField::CloneImpl(std::string_view newName) const
+{
+   auto newItemField = fSubFields[0]->Clone(fSubFields[0]->GetName());
+   return std::make_unique<RUniquePtrField>(newName, GetType(), std::move(newItemField));
+}
+
+std::size_t ROOT::Experimental::RUniquePtrField::AppendImpl(const Detail::RFieldValue &value)
+{
+   auto typedValue = value.Get<std::unique_ptr<char>>();
+   if (*typedValue) {
+      auto itemValue = fSubFields[0]->CaptureValue(typedValue->get());
+      return AppendValue(itemValue);
+   } else {
+      return AppendNull();
+   }
+}
+
+void ROOT::Experimental::RUniquePtrField::ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue *value)
+{
+   auto ptr = value->Get<std::unique_ptr<char>>();
+   bool isValidValue = static_cast<bool>(*ptr);
+
+   auto itemIndex = GetItemIndex(globalIndex);
+   bool isValidItem = itemIndex.GetIndex() != kInvalidClusterIndex;
+
+   Detail::RFieldValue itemValue;
+   if (isValidValue)
+      itemValue = fSubFields[0]->CaptureValue(ptr->get());
+
+   if (isValidValue && !isValidItem) {
+      ptr->release();
+      fSubFields[0]->DestroyValue(itemValue, false /* dtorOnly */);
+      return;
+   }
+
+   if (!isValidItem) // On-disk value missing; nothing else to do
+      return;
+
+   if (!isValidValue) {
+      itemValue = fSubFields[0]->GenerateValue();
+      ptr->reset(itemValue.Get<char>());
+   }
+
+   fSubFields[0]->Read(itemIndex, &itemValue);
+}
+
+ROOT::Experimental::Detail::RFieldValue ROOT::Experimental::RUniquePtrField::GenerateValue(void *where)
+{
+   return Detail::RFieldValue(this, reinterpret_cast<std::unique_ptr<char> *>(where));
+}
+
+void ROOT::Experimental::RUniquePtrField::DestroyValue(const Detail::RFieldValue &value, bool dtorOnly)
+{
+   auto ptr = value.Get<std::unique_ptr<char>>();
+   if (*ptr) {
+      auto itemValue = fSubFields[0]->CaptureValue(ptr->get());
+      fSubFields[0]->DestroyValue(itemValue, false /* dtorOnly */);
+      ptr->release();
+   }
+   if (!dtorOnly)
+      free(ptr);
+}
+
+ROOT::Experimental::Detail::RFieldValue ROOT::Experimental::RUniquePtrField::CaptureValue(void *where)
+{
+   return Detail::RFieldValue(true /* captureFlag */, this, where);
+}
+
+std::vector<ROOT::Experimental::Detail::RFieldValue>
+ROOT::Experimental::RUniquePtrField::SplitValue(const Detail::RFieldValue &value) const
+{
+   std::vector<Detail::RFieldValue> result;
+   auto ptr = value.Get<std::unique_ptr<char>>();
+   if (*ptr) {
+      auto itemValue = fSubFields[0]->CaptureValue(ptr->get());
+      result.emplace_back(itemValue);
+   }
+   return result;
 }
 
 //------------------------------------------------------------------------------
@@ -2430,7 +2725,9 @@ ROOT::Experimental::RCollectionField::RCollectionField(
 const ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations &
 ROOT::Experimental::RCollectionField::GetColumnRepresentations() const
 {
-   static RColumnRepresentations representations({{EColumnType::kSplitIndex32}, {EColumnType::kIndex32}}, {{}});
+   static RColumnRepresentations representations(
+      {{EColumnType::kSplitIndex64}, {EColumnType::kIndex64}, {EColumnType::kSplitIndex32}, {EColumnType::kIndex32}},
+      {});
    return representations;
 }
 

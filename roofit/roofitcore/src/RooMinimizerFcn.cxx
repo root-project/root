@@ -54,7 +54,7 @@ RooArgSet getParameters(RooAbsReal const &funct)
 RooMinimizerFcn::RooMinimizerFcn(RooAbsReal *funct, RooMinimizer *context)
    : RooAbsMinimizerFcn(getParameters(*funct), context), _funct(funct)
 {
-   if (context->_cfg.gradFunc) {
+   if (context->_cfg.useGradient && funct->hasGradient()) {
       _multiGenFcn = std::make_unique<ROOT::Math::GradFunctor>(this, &RooMinimizerFcn::operator(),
                                                                &RooMinimizerFcn::evaluateGradient, getNDim());
    } else {
@@ -125,7 +125,7 @@ void RooMinimizerFcn::evaluateGradient(const double *x, double *out) const
       SetPdfParamVal(index, x[index]);
    }
 
-   _context->_cfg.gradFunc(out);
+   _funct->gradient(out);
 
    // Optional logging
    if (cfg().verbose) {

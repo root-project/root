@@ -126,6 +126,7 @@ Bool_t TWebCanvas::IsJSSupportedClass(TObject *obj, Bool_t many_primitives)
                             {"TEllipse", true, true},  // can be handled via TWebPainter, disable for large number of primitives (like in greyscale.C)
                             {"TText"},
                             {"TLatex"},
+                            {"TAnnotation"},
                             {"TMathText"},
                             {"TMarker"},
                             {"TPolyMarker"},
@@ -328,6 +329,7 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
    }
    paddata.SetSnapshot(TWebSnapshot::kSubPad, pad); // add ref to the pad
    paddata.SetWithoutPrimitives(!process_primitives);
+   paddata.SetHasExecs(pad->GetListOfExecs()); // if pad execs are there provide more events from client
 
    // check style changes every time when creating canvas snapshot
    if (resfunc && (GetStyleDelivery() > 0)) {
@@ -1209,7 +1211,7 @@ void TWebCanvas::ProcessLinesForObject(TObject *obj, const std::string &lines)
 
       std::stringstream exec;
       exec << "((" << obj->ClassName() << " *) " << std::hex << std::showbase << (size_t)obj << ")->" << sub << ";";
-      Info("ProcessData", "Obj %s Execute %s", obj->GetName(), exec.str().c_str());
+      Info("ProcessLinesForObject", "Obj %s Execute %s", obj->GetName(), exec.str().c_str());
       gROOT->ProcessLine(exec.str().c_str());
    }
 }
@@ -1995,6 +1997,11 @@ TObject *TWebCanvas::FindPrimitive(const std::string &sid, int idcnt, TPad *pad,
             auto funcname = kind.substr(5);
             TCollection *col = h1 ? h1->GetListOfFunctions() : (gr ? gr->GetListOfFunctions() : scatter->GetGraph()->GetListOfFunctions());
             return col ? col->FindObject(funcname.c_str()) : nullptr;
+         }
+
+         if ((h1 || gr) && !kind.empty() && (kind.compare(0,5,"indx_") == 0)) {
+            auto col = h1 ? h1->GetListOfFunctions() : gr->GetListOfFunctions();
+            return col ? col->At(std::stoi(kind.substr(5))) : nullptr;
          }
 
          if (!kind.empty() && (kind.compare(0,7,"member_") == 0)) {

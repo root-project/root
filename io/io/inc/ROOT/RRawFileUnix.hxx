@@ -42,7 +42,7 @@ protected:
 
 public:
    RRawFileUnix(std::string_view url, RRawFile::ROptions options);
-   ~RRawFileUnix();
+   ~RRawFileUnix() override;
    std::unique_ptr<RRawFile> Clone() const final;
    int GetFeatures() const final;
    int GetFd() const { return fFileDes; }

@@ -15,11 +15,12 @@ set(LLVM_ENABLE_FFI OFF CACHE BOOL "")
 set(LLVM_ENABLE_OCAMLDOC OFF CACHE BOOL "")
 set(LLVM_ENABLE_Z3_SOLVER OFF CACHE BOOL "")
 set(LLVM_ENABLE_WARNINGS OFF CACHE BOOL "")
+set(CLANG_ENABLE_STATIC_ANALYZER OFF CACHE BOOL "")
+set(CLANG_ENABLE_ARCMT OFF CACHE BOOL "")
 set(LLVM_INCLUDE_TESTS OFF CACHE BOOL "")
 set(LLVM_INCLUDE_BENCHMARKS OFF CACHE BOOL "")
 set(CLANG_INCLUDE_TESTS OFF CACHE BOOL "")
 set(LLVM_INCLUDE_EXAMPLES OFF CACHE BOOL "")
-set(LLVM_CXX_STD "c++${CMAKE_CXX_STANDARD}" CACHE STRING "")
 set(CLANG_BUILD_TOOLS OFF CACHE BOOL "")
 # It looks like that turning off CLANG_BUILD_TOOLS is not enough.
 set(CLANG_TOOL_ARCMT_TEST_BUILD OFF CACHE BOOL "")
@@ -40,8 +41,6 @@ set(LLVM_BUILD_TOOLS OFF CACHE BOOL "")
 set(LLVM_TOOL_LLVM_AR_BUILD OFF CACHE BOOL "")
 set(CLANG_TOOL_CLANG_OFFLOAD_BUNDLER_BUILD OFF CACHE BOOL "")
 set(LLVM_FORCE_USE_OLD_TOOLCHAIN ON CACHE BOOL "")
-# Support gcc 4.8 and higher.
-set(LLVM_TEMPORARILY_ALLOW_OLD_TOOLCHAIN ON CACHE BOOL "")
 
 # Prevent Clang from finding CUDA just to determine the architecture for OpenMP
 # offloading, which we are not interested in. If the CUDA package was already
@@ -60,12 +59,6 @@ endif()
 # to serialize access to llvm.  We can later review how to make this finer grained by using llvm's own locking
 # mechanism.
 set(LLVM_ENABLE_THREADS OFF CACHE BOOL "")
-
-if(CMAKE_CXX_STANDARD EQUAL 17)
-  set(LLVM_ENABLE_CXX1Z ON CACHE BOOL "" FORCE)
-elseif(CMAKE_CXX_STANDARD EQUAL 14)
-  set(LLVM_ENABLE_CXX1Y ON CACHE BOOL "" FORCE)
-endif()
 
 # The llvm::ReverseIterate<bool>::value symbol from llvm's SmallPtrSet.h
 # somehow lands in our cling libraries on OS X and doesn't get hidden
@@ -226,15 +219,8 @@ if(builtin_llvm)
 
   set(BUILD_SHARED_LIBS FALSE)
 
-  set(CLANG_ENABLE_STATIC_ANALYZER OFF CACHE BOOL "")
-  set(CLANG_ENABLE_ARCMT OFF CACHE BOOL "")
-  set(CLANG_ENABLE_FORMAT OFF CACHE BOOL "")
-
   #---Remove the inherited include_directories()
   set_directory_properties(PROPERTIES INCLUDE_DIRECTORIES "")
-
-  #---Disable VCS writing to prevent that we always have to rebuild when someone touched the git HEAD
-  set(LLVM_APPEND_VC_REV OFF CACHE BOOL "Disabled LLVM revision dependency" FORCE)
 
   #---Add the sub-directory excluding all the targets from all-----------------------------------------
   if(CMAKE_GENERATOR MATCHES "Xcode")

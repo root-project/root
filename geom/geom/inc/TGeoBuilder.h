@@ -38,7 +38,7 @@ private :
    void                   SetGeometry(TGeoManager *geom) {fGeometry = geom;}
 
 public :
-   virtual ~TGeoBuilder();
+   ~TGeoBuilder() override;
 
    static TGeoBuilder    *Instance(TGeoManager *geom);
 
@@ -129,7 +129,7 @@ public :
    TGeoVolume            *Volume(const char *name, const char *shape, Int_t nmed,
                                        Double_t *upar, Int_t npar=0);
 
-   ClassDef(TGeoBuilder, 0)          // geometry builder singleton
+   ClassDefOverride(TGeoBuilder, 0)          // geometry builder singleton
 };
 
 #endif

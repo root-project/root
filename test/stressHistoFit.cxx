@@ -80,6 +80,7 @@
 #include "TTree.h"
 #include "TF1.h"
 #include "TF2.h"
+#include "TFile.h"
 #include "snprintf.h"
 
 #include "Math/IFunction.h"
@@ -131,19 +132,34 @@ extern "C" {
 
 #include "Riostream.h"
 using namespace std;
-// Next line should not exist. It is now there for testing
-// pourpuses.
-#undef R__HAS_MATHMORE
+
 
 unsigned int __DRAW__ = 0;
+unsigned int __WRITE__ = 0; // write fitted object in a file
 
 int gSelectedTest = 0;
+int gSelectedFit = 0; // to select a fit in the test
 
 bool gEnableMT = kFALSE;
 
 // set a small tolerance for the tests
 // The default of 10*-2 make sometimes Simplex do not converge
-const double gDefaultTolerance = 1.E-4;
+//const double gDefaultTolerance = 1.E-4;
+
+// Options to indicate how the test has to be run
+enum testOpt {
+   testOptPars  = 1,  // Check parameters
+   testOptChi   = 2,  // Check Chi2 Test
+   testOptErr   = 4,  // Show the failures
+   testOptColor = 8,  // Show wrong output in color
+   testOptDebug = 16, // Print out debug version
+   testOptCheck = 32, // Make the checks
+   testOptFitDbg = 64, // Make fit debug (normal printout)
+   testOptFitVer = 128 // Make fit very verbose (option V)
+};
+
+// Default options that all tests will have
+int defaultOptions = testOptCheck;// | testOptDebug;
 
 TRandom3 rndm;
 
@@ -155,10 +171,20 @@ enum cmpOpts {
    cmpErr  = 8,
 };
 
+int defCmpOpt = cmpPars | cmpChi2;
+
+//histogram options
+const double minX = -5.;
+const double maxX = +5.;
+const double minY = -5.;
+const double maxY = +5.;
+const int nbinsX = 30;
+const int nbinsY = 30;
+
 // Reference structure to compare the fitting results
 struct RefValue {
    const double* pars;
-   const double  chi;
+   double  chi;
    RefValue(const double* p = 0, const double c = 0.0): pars(p), chi(c) {};
 };
 
@@ -171,23 +197,23 @@ public:
    int opts;
    double tolPar;
    double tolChi2;
-   CompareResult(int _opts = cmpPars, double _tolPar = 3, double _tolChi2 = 0.01):
+   CompareResult(int _opts = defCmpOpt, double _tolPar = 3, double _tolChi2 = 0.01):
       refValue(0), opts(_opts), tolPar(_tolPar), tolChi2(_tolChi2) {};
 
    // use default copy-ctor and assignment operator
-   
+
    void setRefValue(struct RefValue* _refValue)
    {
       refValue = _refValue;
    };
 
-   int parameters(int npar, double val, double ref) const
+   // test parameters (use interval of tolPar*err), where err is parameter error
+   int parameters(int npar, double val, double err) const
    {
       int ret = 0;
       if ( refValue && (opts & cmpPars) )
       {
-         ret = compareResult(val, refValue->pars[npar], tolPar*ref);
-//          printf("[TOL:%f]", ref);
+         ret = compareResult(val, refValue->pars[npar], tolPar*err);
       }
       return ret;
    };
@@ -196,10 +222,10 @@ public:
    { return ( refValue && (opts & cmpChi2) ) ? compareResult(val, refValue->chi, tolChi2) : 0; };
 
 public:
-   // Compares two doubles with a given tolerence
+   // Compares two doubles with a given tolerance
    int compareResult(double v1, double v2, double tol = 0.01) const {
-      if (std::abs(v1-v2) > tol ) return 1;
-      return 0;
+      if (std::abs(v1-v2) <= tol ) return 0;
+      return 1;
    }
 };
 
@@ -230,27 +256,19 @@ void FillVariableRange(Double_t v[], Int_t numberOfBins, Double_t minRange, Doub
 // used.
 class algoType {
 public:
-   const char* type;
-   const char* algo;
-   const char* opts;
+   TString type;
+   TString algo;
+   TString opts;
    CompareResult cmpResult;
+   bool reference = false;
 
    algoType(): type(0), algo(0), opts(0), cmpResult(0) {}
 
    algoType(const char* s1, const char* s2, const char* s3,
-            CompareResult _cmpResult):
-      type(s1), algo(s2), opts(s3), cmpResult(_cmpResult) {}
+            CompareResult _cmpResult, bool _ref = false):
+      type(s1), algo(s2), opts(s3), cmpResult(_cmpResult), reference(_ref) {}
 };
 
-// Different vectors containing the list of algorithms to be used.
-vector<algoType> commonAlgos;
-vector<algoType> simplexAlgos;
-vector<algoType> specialAlgos;
-vector<algoType> noGraphAlgos;
-vector<algoType> noGraphErrorAlgos;
-vector<algoType> graphErrorAlgos;
-vector<algoType> histGaus2D;
-vector<algoType> linearAlgos;
 
 vector< vector<algoType> > listTH1DAlgos;
 vector< vector<algoType> > listAlgosTGraph;
@@ -261,6 +279,7 @@ vector< vector<algoType> > listLinearAlgos;
 vector< vector<algoType> > listTH2DAlgos;
 vector< vector<algoType> > listAlgosTGraph2D;
 vector< vector<algoType> > listAlgosTGraph2DError;
+vector< vector<algoType> > listTreeAlgos;
 
 
 // Class defining the limits in the parameters of a function.
@@ -379,48 +398,10 @@ double gausNd(double *x, double *p) {
    f *= ROOT::Math::normal_pdf(x[4],p[10],p[9]);
    f *= ROOT::Math::normal_pdf(x[5],p[12],p[11]);
 
-   if (f <= 0) {
-      std::cout << "invalid f value " << f << " for x ";
-      for (int i = 0; i < 6; ++i) std::cout << "  " << x[i];
-      std::cout << "\t P = ";
-      for (int i = 0; i < 11; ++i) std::cout << "  " << p[i];
-      std::cout << "\n\n ";
-      return 1.E-300;
-   }
-   else if (f > 0) return f;
-
-   std::cout << " f is a nan " << f << std::endl;
-   for (int i = 0; i < 6; ++i) std::cout << "  " << x[i];
-   std::cout << "\t P = ";
-   for (int i = 0; i < 11; ++i) std::cout << "  " << p[i];
-   std::cout << "\n\n ";
-   Error("gausNd","f is a nan");
-   assert(1);
-   return 0;
+   return f;
 }
 
-const double minX = -5.;
-const double maxX = +5.;
-const double minY = -5.;
-const double maxY = +5.;
-const int nbinsX = 30;
-const int nbinsY = 30;
-
-// Options to indicate how the test has to be run
-enum testOpt {
-   testOptPars  = 1,  // Check parameters
-   testOptChi   = 2,  // Check Chi2 Test
-   testOptErr   = 4,  // Show the errors
-   testOptColor = 8,  // Show wrong output in color
-   testOptDebug = 16, // Print out debug version
-   testOptCheck = 32, // Make the checkings
-   testOptFitDbg = 64 // Make fit verbose
-};
-
-// Default options that all tests will have
-int defaultOptions = testOptColor | testOptCheck;// | testOptDebug;
-
-// Object to manage the fitter depending on the optiones used
+// Object to manage the fitter depending on the options used
 template <typename T>
 class ObjectWrapper {
 public:
@@ -429,6 +410,7 @@ public:
    template <typename F>
    Int_t Fit(F func, const char* opts)
    {
+#if 0
       if ( opts[0] == 'G' )
       {
          ROOT::Fit::BinData d;
@@ -457,9 +439,9 @@ public:
 //          fitResult.Print(std::cout);
          return iret;
       } else {
+#endif
 //          printf("Normal FIT\n");
          return object->Fit(func, opts);
-      }
    };
    const char* GetName() { return object->GetName(); }
 };
@@ -483,24 +465,28 @@ void printTestName(T* object, TF1* func)
    fflush(stdout);
 }
 
-// In debug mode, prints the title of the debug table.
-void printTitle(TF1* func)
-{
-   printf("\nMin Type    | Min Algo    | OPT  | PARAMETERS             ");
-   int n = func->GetNpar();
-   for ( int i = 1; i < n; ++i ) {
-      printf("                       ");
-   }
-   printf(" | CHI2TEST        | ERRORS \n");
-   fflush(stdout);
-}
-
 // In debug mode, separator for the different tests
 void printSeparator()
 {
    fflush(stdout);
    printf("*********************************************************************"
           "********************************************************************\n");
+   fflush(stdout);
+}
+
+// In debug mode, prints the title of the debug table.
+void printTitle(TF1* func)
+{
+   printf(" # | Min Type    | Min Algo    | OPT  | CHI2/Ndf   |    PARAMETERS       ");
+   int n = func->GetNpar();
+   for ( int i = 1; i < n; ++i ) {
+      printf("                    ");
+   }
+   printf(" | ERRORS");
+   for ( int i = 3; i < n; ++i ) {
+      printf("  ");
+   }
+   printf("| COMPARISONS \n");
    fflush(stdout);
 }
 
@@ -525,6 +511,7 @@ void setColor(int red = 0)
 }
 
 // Test a fit once it has been done:
+//     @itest test number
 //     @str1 Name of the library used
 //     @str2 Name of the algorithm used
 //     @str3 Options used when fitting
@@ -532,45 +519,57 @@ void setColor(int red = 0)
 //     @cmpResult Object to compare the result. It contains all the reference
 //               objects as well as the method to compare. It will know whether something has to be tested or not.
 //     @opts Options of the test, to know what has to be printed or tested.
-int testFit(const char* str1, const char* str2, const char* str3,
-               TF1* func, CompareResult const& cmpResult, int opts)
+//     @isRef  flag to indicate if is a reference fit
+int testFit(int itest, const char* str1, const char* str2, const char* str3,
+               TF1* func, CompareResult const& cmpResult, int opts, bool isRef = false)
 {
    bool debug = opts & testOptDebug;
    // so far, status will just count the number of parameters wronly
    // calculated. There is no other test of the fitters
-   int status = 0;
    int diff = 0;
+   int statusPar = 0;
+   int statusChi2 = 0;
+   int statusErrAll = 0;
 
    double chi2 = 0;
    if (  opts & testOptChi || opts & testOptCheck )
       chi2 = func->GetChisquare();
 
    fflush(stdout);
+
+   if ( debug )
+      printf("%2d | %-11s | %-11s | %-4s |  ", itest, str1, str2, str3);
+
+   if ( opts & testOptChi )
+   {
+      diff = cmpResult.chi2(chi2/func->GetNDF());
+      statusChi2 += diff;
+      if ( debug )
+         printf(" %8.6g | ",  chi2/func->GetNDF());
+   } else if (debug) {
+       printf("          | ");
+   }
+
    if ( opts & testOptPars )
    {
       int n = func->GetNpar();
       double* values = func->GetParameters();
-      if ( debug )
-         printf("%-11s | %-11s | %-4s | ", str1, str2, str3);
       for ( int i = 0; i < n; ++i ) {
          if ( opts & testOptCheck )
+            // compare parameter value with reference with tolerance = parameterError * chi2
             diff = cmpResult.parameters(i,
                                         values[i],
                                         std::max(std::sqrt(chi2/func->GetNDF()),1.0)*func->GetParError(i));
-         status += diff;
+         statusPar += diff;
          if ( opts & testOptColor )
             setColor ( diff );
-         if ( debug )
-            printf("%10.6f +/-(%-6.3f) ", values[i], func->GetParError(i));
+         if ( debug ) {
+            printf("%8.4g +/-(%5.4g) ", values[i], func->GetParError(i));
+            if (itest == 0) printf(" ");  //additional space for ref values
+         }
          fflush(stdout);
       }
-      setColor(0);
-   }
-
-   if ( opts & testOptChi )
-   {
-      if ( debug )
-         printf(" | chi2: %9.4f | ",  chi2);
+      if (opts & testOptColor ) setColor(0);
    }
 
    if ( opts & testOptErr )
@@ -580,21 +579,58 @@ int testFit(const char* str1, const char* str2, const char* str3,
          TBackCompFitter* fitter = dynamic_cast<TBackCompFitter*>( TVirtualFitter::GetFitter() );
          assert(fitter != 0);
          const ROOT::Fit::FitResult& fitResult = fitter->GetFitResult();
-         if ( debug )
-            printf("err: ");
+         if (debug)  printf("| ");
          int n = func->GetNpar();
          for ( int i = 0; i < n; ++i ) {
-            if ( debug )
-               printf("%c ", (fitResult.LowerError(i) == fitResult.UpperError(i))?'E':'D');
+            int statusErr = 0;
+            // check that the lower error and upper error are compatible with the parabolic error within 30%
+            // note that Minos returns lower error as negative
+            if (fitResult.HasMinosError(i)) {
+               statusErr += std::abs(fitResult.Error(i)+fitResult.LowerError(i)) > 0.3*fitResult.Error(i);
+               statusErr += 2*std::abs(fitResult.UpperError(i)-fitResult.Error(i)) > 0.3*fitResult.Error(i);
+            }
+            if ( debug ) {
+               if (statusErr == 0) printf("%c ",'E');
+               else if (statusErr == 1) printf("%c ",'L');
+               else if (statusErr == 2) printf("%c ",'U');
+               else printf("%c ",'D');
+            }
+            statusErrAll += statusErr;
          }
          if ( debug )
             printf("| ");
       }
+   } else if (debug) {
+      printf("|    ");
+      int n = func->GetNpar();
+      for ( int i = 1; i < n; ++i )
+         printf("  ");
+      printf("| ");
    }
+   if (itest> 0 && debug) {
+      // print summary comparison
+      if (isRef)
+         printf("%c ",'R');
+      else if (cmpResult.opts & cmpChi2)
+         printf("%d ",statusChi2);
+      else
+         printf("%c ",'-');
+      // now for parameters
+      if (cmpResult.opts & cmpPars)
+         printf("%d ",statusPar);
+      else
+         printf("%c ",'-');
+      // now for errors
+      if (opts & testOptErr )
+         printf("%d |",statusErrAll);
+      else
+         printf("%c |",'-');
+   }
+   int status = statusPar+statusChi2+statusErrAll;
 
    if ( opts != 0 )
    {
-      setColor(0);
+      if ( opts & testOptColor ) setColor(0);
       if ( debug )
          printf("\n");
    }
@@ -609,76 +645,100 @@ int testFit(const char* str1, const char* str2, const char* str3,
 //      @listAlgos All the algorithms that should be tested
 //      @fitFunction Parameters of the function used to fill the object
 template <typename T, typename F>
-int testFitters(T* object, F* func, vector< vector<algoType> >& listAlgos, fitFunctions const& fitFunction)
+int testFitters(T* object, F* func, vector< vector<algoType> >& listAlgos, fitFunctions const& fitFunction, bool variableBins = false)
 {
    // counts the number of parameters wronly calculated
    int status = 0;
 
-   int numberOfTests = 0;
+   int numberOfFits = 0;
+   int numberOfFailedFits = 0;
    const double* origpars = &(fitFunction.origPars[0]);
    const double* fitpars = &(fitFunction.fitPars[0]);
+   std::vector<double> parSteps(func->GetNpar());   // use empty step sizes
 
    func->SetParameters(fitpars);
+   func->SetParErrors(parSteps.data());
+
+   // use as reference algorithm the first one in the list
+   auto & refAlgo = listAlgos[0][0];
 
    printTestName(object, func);
-   ROOT::Math::MinimizerOptions::SetDefaultMinimizer(commonAlgos[0].type, commonAlgos[0].algo);
-   ROOT::Math::MinimizerOptions::SetDefaultTolerance(gDefaultTolerance);
-
-   TString opt = "";
-   if (! (defaultOptions & testOptFitDbg) ) opt += "Q";
-   if (! __DRAW__) opt += "0";
-
-   object->Fit(func, opt);
-   if ( defaultOptions & testOptDebug ) printTitle(func);
-   struct RefValue ref(origpars, func->GetChisquare());
-   commonAlgos[0].cmpResult.setRefValue(&ref);
-   int defMinOptions = testOptPars | testOptChi | testOptErr | defaultOptions;
-   status += testFit(commonAlgos[0].type, commonAlgos[0].algo
-                     , commonAlgos[0].opts, func
-                     , commonAlgos[0].cmpResult, defMinOptions);
-   numberOfTests += 1;
 
    if ( defaultOptions & testOptDebug )
    {
+      printf("\n");
       printSeparator();
       func->SetParameters(origpars);
-      status += testFit("Parameters", "Original", "", func, commonAlgos[0].cmpResult, testOptPars | testOptDebug);
+      status += testFit(0,"Parameters", "Original", "", func, refAlgo.cmpResult, testOptPars | testOptDebug);
       func->SetParameters(fitpars);
-      status += testFit("Parameters", "Initial",  "", func, commonAlgos[0].cmpResult, testOptPars | testOptDebug);
+      status += testFit(0,"Parameters", "Initial",  "", func, refAlgo.cmpResult, testOptPars | testOptDebug);
+      printSeparator();
+      printTitle(func);
       printSeparator();
    }
 
+   RefValue ref(origpars, -1);  // structure with reference values
    for ( unsigned int j = 0; j < listAlgos.size(); ++j )
    {
       for ( unsigned int i = 0; i < listAlgos[j].size(); ++i )
       {
-         int testFitOptions = testOptPars | testOptChi | testOptErr | defaultOptions;
+         int testFitOptions = testOptPars | testOptChi | defaultOptions;
          ROOT::Math::MinimizerOptions::SetDefaultMinimizer(listAlgos[j][i].type, listAlgos[j][i].algo);
          func->SetParameters(fitpars);
+         func->SetParErrors(parSteps.data());
          fflush(stdout);
-         object->Fit(func, listAlgos[j][i].opts);
-         listAlgos[j][i].cmpResult.setRefValue(&ref);
-         status += testFit(listAlgos[j][i].type, listAlgos[j][i].algo, listAlgos[j][i].opts
-                           , func, listAlgos[j][i].cmpResult, testFitOptions);
-         numberOfTests += 1;
+         // perform the fit: if a fit is selected use only that one (order starts from 1)
+         numberOfFits += 1;
+         //std::cout << "doing fit " << numberOfFits << std::endl;
+         if (gSelectedFit <= 0 || numberOfFits == gSelectedFit) {
+            TString opt = listAlgos[j][i].opts;
+            if (opt.Contains('E') && !opt.Contains("EX0")) testFitOptions |= testOptErr;
+            if (! (defaultOptions & testOptFitDbg) && ! (defaultOptions & testOptFitVer))  opt += "Q";
+            if (! __DRAW__) opt += "0";
+            if (gSelectedFit > 0 && (defaultOptions & testOptFitVer)) opt += "V";
+            if (variableBins) opt += " WIDTH";
+            //std::cout << "doing selected fit with option " << opt << std::endl;
+            // perform the fit
+            object->Fit(func, opt);
+            // if is a reference set the reference value for chi2 (parameters are compared to original ones)
+            if (listAlgos[j][i].reference) {
+               ref.chi = func->GetChisquare()/func->GetNDF();
+            }
+            listAlgos[j][i].cmpResult.setRefValue(&ref);
+            // test validity of the fit and print result
+            int ret = testFit(numberOfFits,listAlgos[j][i].type, listAlgos[j][i].algo, listAlgos[j][i].opts,
+                              func, listAlgos[j][i].cmpResult, testFitOptions,listAlgos[j][i].reference);
+            if (ret > 0) numberOfFailedFits += 1;
+            status += ret;
+         }
          fflush(stdout);
       }
    }
 
-   double percentageFailure = double( status * 100 ) / double( numberOfTests*func->GetNpar() );
+   int totalNumberOfTests = numberOfFits;
+   if (defaultOptions & testOptPars)
+      totalNumberOfTests += (func->GetNpar()-1)*numberOfFits;
+   if (defaultOptions & testOptChi)
+      totalNumberOfTests += numberOfFits;
+   if (defaultOptions & testOptErr)
+      totalNumberOfTests += func->GetNpar()*numberOfFits;
+   double percentageFailure = double( status * 100 ) / double( numberOfFits*func->GetNpar() );
 
    if ( defaultOptions & testOptDebug )
    {
       printSeparator();
-      printf("Number of fails: %d Total Number of tests %d", status, numberOfTests);
+      printf("Number of failed tests/total: %d / %d - Number of fit failed %d Total Number of fits %d", status, totalNumberOfTests,
+         numberOfFailedFits, numberOfFits);
       printf(" Percentage of failure: %f\n", percentageFailure );
    }
+   else
+      printf("( %d/%d fits) ... ",(numberOfFits-numberOfFailedFits), numberOfFits);
 
    // limit in the percentage of failure!
    return (percentageFailure < 4)?0:1;
 }
 
-// Test the diferent objects in 1D
+// Test the different objects in 1D
 int test1DObjects(vector< vector<algoType> >& listH,
                   vector< vector<algoType> >& listG,
                   vector< vector<algoType> >& listGE,
@@ -701,18 +761,19 @@ int test1DObjects(vector< vector<algoType> >& listH,
       if ( func ) delete func;
       func = new TF1( listOfFunctions[j].name, listOfFunctions[j].func, minX, maxX, listOfFunctions[j].npars);
       func->SetParameters(&(listOfFunctions[j].origPars[0]));
+      for (int i =0; i < func->GetNpar(); i++) func->SetParError(i,0.);
       SetParsLimits(listOfFunctions[j].parLimits, func);
 
       // create here h1 since it is used to make TGrpahs's and THnsparse
       if (h1) delete h1;
       h1 = new TH1D("h1", "Histogram1D Equal Bins", nbinsX, minX, maxX);
-      for (int i = 0; i <= h1->GetNbinsX() + 1; ++i)
+      for (int i = 1; i <= h1->GetNbinsX() + 1; ++i)
          h1->SetBinContent(i, rndm.Poisson(func->Eval(h1->GetBinCenter(i))));
 
       gTestIndex++;
       if (gSelectedTest == 0 || gSelectedTest == gTestIndex) {
          // fill equal bin 1D  histogram
-         TString hname = TString::Format("H1D_%d", gTestIndex);
+         TString hname = "H1D_EqBins";
          h1->SetName(hname);
 
          if (c1 && !__DRAW__) delete c1;
@@ -732,19 +793,23 @@ int test1DObjects(vector< vector<algoType> >& listH,
          double v[nbinsX + 1];
          FillVariableRange(v, nbinsX, minX, maxX);
          if (h2) delete h2;
-         TString hname = TString::Format("H1D_%d", gTestIndex);
-         h2 = new TH1D(hname, "HIstogram1D Variable Bins", nbinsX, v);
-         for (int i = 0; i <= h2->GetNbinsX() + 1; ++i)
-            h2->SetBinContent(i, rndm.Poisson(func->Eval(h2->GetBinCenter(i))));
+         TString hname = "H1D_VarBins";
+         h2 = new TH1D(hname, "Histogram1D Variable Bins", nbinsX, v);
+         for (int i = 1; i <= h2->GetNbinsX(); ++i)
+            h2->SetBinContent(i,rndm.Poisson(func->Integral(h2->GetXaxis()->GetBinLowEdge(i),
+                                                            h2->GetXaxis()->GetBinUpEdge(i)) ));
 
          if (c0 && !__DRAW__) delete c0;
          c0 = new TCanvas(TString::Format("c%d_H1D", gTestIndex), "Histogram1D Variable");
          ObjectWrapper<TH1D *> owh2(h2);
-         globalStatus += status = testFitters(&owh2, func, listH, listOfFunctions[j]);
+         globalStatus += status = testFitters(&owh2, func, listH, listOfFunctions[j], true); // pass flag to set var bin fits
          printf("%s\n", (status ? "FAILED" : "OK"));
          if (__DRAW__) {
             h2->DrawCopy();
             func->DrawCopy("SAME");
+         }
+         if (__WRITE__) {
+            h2->Write("h1D_var");
          }
       }
 
@@ -839,8 +904,8 @@ int test2DObjects(vector< vector<algoType> >& listH,
       ge1->SetName("Graph2DErrors");
       ge1->SetTitle("Graph2D with Errors");
       unsigned int counter = 0;
-      for (int i = 0; i <= h1->GetNbinsX() + 1; ++i) {
-         for (int j = 0; j <= h1->GetNbinsY() + 1; ++j) {
+      for (int i = 1; i <= h1->GetNbinsX() ; ++i) {
+         for (int j = 1; j <= h1->GetNbinsY() ; ++j) {
             double xc = h1->GetXaxis()->GetBinCenter(i);
             double yc = h1->GetYaxis()->GetBinCenter(j);
             double content = rndm.Poisson(func->Eval(xc, yc));
@@ -855,7 +920,7 @@ int test2DObjects(vector< vector<algoType> >& listH,
       // 2D Equal bins test
       gTestIndex++;
       if (gSelectedTest == 0 || gSelectedTest == gTestIndex) {
-         TString hname = TString::Format("H2D_%d", gTestIndex);
+         TString hname = "H2D_EqBins";
          h1->SetName(hname);
          if ( c1 && ! __DRAW__) delete c1;
          c1 = new TCanvas(TString::Format("c%d_H2D", gTestIndex), "Histogram2D");
@@ -865,6 +930,9 @@ int test2DObjects(vector< vector<algoType> >& listH,
          if (__DRAW__) {
             h1->DrawCopy("COLZ");
             func->DrawCopy("SAME");
+         }
+         if (__WRITE__) {
+            h1->Write("h2D_eq");
          }
       }
 
@@ -877,13 +945,15 @@ int test2DObjects(vector< vector<algoType> >& listH,
          FillVariableRange(x, nbinsX, minX, maxX);
          double y[nbinsY + 1];
          FillVariableRange(y, nbinsY, minY, maxY);
-         TString hname = TString::Format("H2D_%d", gTestIndex);
+         TString hname = "H2D_VarBins";
          h2 = new TH2D(hname, "Histogram2D Variable Bins", nbinsX, x, nbinsY, y);
-         for (int i = 0; i <= h2->GetNbinsX() + 1; ++i) {
-            for (int j = 0; j <= h2->GetNbinsY() + 1; ++j) {
-               double xc = h2->GetXaxis()->GetBinCenter(i);
-               double yc = h2->GetYaxis()->GetBinCenter(j);
-               double content = rndm.Poisson(func->Eval(xc, yc));
+         for (int i = 1; i <= h2->GetNbinsX() ; ++i) {
+            for (int j = 1; j <= h2->GetNbinsY() ; ++j) {
+               double xl = h2->GetXaxis()->GetBinLowEdge(i);
+               double xh = h2->GetXaxis()->GetBinUpEdge(i);
+               double yl = h2->GetYaxis()->GetBinLowEdge(j);
+               double yh = h2->GetYaxis()->GetBinUpEdge(j);
+               double content = rndm.Poisson(func->Integral(xl,xh,yl,yh));
                h2->SetBinContent(i, j, content);
             }
          }
@@ -891,11 +961,14 @@ int test2DObjects(vector< vector<algoType> >& listH,
          if (c0 && ! __DRAW__) delete c0;
          c0 = new TCanvas(TString::Format("c%d_H2D", gTestIndex), "Histogram2D Variable");
          ObjectWrapper<TH2D *> owh2(h2);
-         globalStatus += status = testFitters(&owh2, func, listH, listOfFunctions[h]);
+         globalStatus += status = testFitters(&owh2, func, listH, listOfFunctions[h], true); // flag is a var bins
          printf("%s\n", (status ? "FAILED" : "OK"));
          if (__DRAW__) {
             h2->DrawCopy("COLZ");
             func->DrawCopy("SAME");
+         }
+         if (__WRITE__) {
+            h2->Write("h2D_var");
          }
       }
 
@@ -940,8 +1013,15 @@ int test2DObjects(vector< vector<algoType> >& listH,
       if (gSelectedTest == 0 || gSelectedTest == gTestIndex) {
          delete s1; s1 = THnSparse::CreateSparse("THnSparse2D", "THnSparse 2D", h1);
          ObjectWrapper<THnSparse*> ows1(s1);
+         // mask linear test
+         if (listH.size() == 1 && listH[0].size() == 1 && listH[0][0].type=="Linear")
+            listH[0][0].cmpResult = CompareResult(0);
          globalStatus += status = testFitters(&ows1, func, listH, listOfFunctions[h]);
          printf("%s\n", (status?"FAILED":"OK"));
+         if (__WRITE__) {
+            h1->Write("hns2D_h1");
+            s1->Write("hns2D");
+         }
       }
    }
 
@@ -1034,9 +1114,6 @@ int testUnBinnedFit(int n = 10000)
 
    delete func;
 
-   vector< vector<algoType> > listAlgos(2);
-   listAlgos[0] = commonAlgos;
-   listAlgos[1] = simplexAlgos;
 
    TreeWrapper tw;
    TF1 * f1 = 0;
@@ -1049,7 +1126,7 @@ int testUnBinnedFit(int n = 10000)
       f1->SetParameters( &(treeFunctions[0].fitPars[0]) );
       f1->FixParameter(2,1);
       tw.set(tree, "x", "");
-      globalStatus += status = testFitters(&tw, f1, listAlgos, treeFunctions[0]);
+      globalStatus += status = testFitters(&tw, f1, listTreeAlgos, treeFunctions[0]);
       printf("%s\n", (status?"FAILED":"OK"));
    }
 
@@ -1058,7 +1135,7 @@ int testUnBinnedFit(int n = 10000)
    //noCompareInTree.push_back(algoType( "Minuit2",     "Simplex",     "Q0", CompareResult(0)));
 
    vector< vector<algoType> > listAlgosND(2);
-   listAlgosND[0] = commonAlgos;
+   listAlgosND[0] = listTreeAlgos[0]; // commonAlgos
    listAlgosND[1] = noCompareInTree;
 
    gTestIndex++;
@@ -1091,117 +1168,170 @@ int testUnBinnedFit(int n = 10000)
 // fitting functions.
 void init_structures()
 {
-   commonAlgos.push_back( algoType( "Minuit",      "Migrad",      "Q0X", CompareResult())  );
-   commonAlgos.push_back( algoType( "Minuit",      "Minimize",    "Q0X", CompareResult())  );
-   commonAlgos.push_back( algoType( "Minuit",      "Scan",        "Q0X", CompareResult(0)) );
-   commonAlgos.push_back( algoType( "Minuit",      "Seek",        "Q0X", CompareResult())  );
-   commonAlgos.push_back( algoType( "Minuit2",     "Migrad",      "Q0X", CompareResult())  );
-   commonAlgos.push_back( algoType( "Minuit2",     "Minimize",    "Q0X", CompareResult())  );
-   commonAlgos.push_back( algoType( "Minuit2",     "Scan",        "Q0X", CompareResult(0)) );
-   commonAlgos.push_back( algoType( "Minuit2",     "Fumili2",     "Q0X", CompareResult())  );
-#ifdef R__HAS_MATHMORE
-   commonAlgos.push_back( algoType( "GSLMultiMin", "conjugatefr", "Q0X", CompareResult()) );
-   commonAlgos.push_back( algoType( "GSLMultiMin", "conjugatepr", "Q0X", CompareResult()) );
-   commonAlgos.push_back( algoType( "GSLMultiMin", "bfgs2",       "Q0X", CompareResult()) );
-   commonAlgos.push_back( algoType( "GSLSimAn",    "",            "Q0X", CompareResult()) );
-#endif
 
-// simplex
-   simplexAlgos.push_back( algoType( "Minuit",      "Simplex",     "Q0X", CompareResult()) );
+   // Different vectors containing the list of algorithms to be used.
+   vector<algoType> commonAlgos;
+   vector<algoType> extraAlgos;
+   vector<algoType> specialAlgos;
+   vector<algoType> noGraphAlgos;
+   vector<algoType> noGraphErrorAlgos;
+   vector<algoType> graphErrorAlgos;
+   vector<algoType> histGaus2D;
+   vector<algoType> linearAlgos;
+
+   // common Fits (apply to all) : Quite + no Graphics + chi-square
+   // use X for chi2 because for THnsparse default is likelihood fit instead of chi2
+   commonAlgos.push_back( algoType( "Minuit2",     "Migrad",      "X", CompareResult(), true)  ); //reference
+   commonAlgos.push_back( algoType( "Minuit",      "Migrad",      "X", CompareResult())  );
+   commonAlgos.push_back( algoType( "Minuit",      "Minimize",    "X", CompareResult())  );
+   commonAlgos.push_back( algoType( "Minuit2",     "Minimize",    "X", CompareResult())  );
+   // extra algorithm
+   extraAlgos.push_back( algoType( "Minuit",      "Scan",        "X", CompareResult(0)) );  // mask this
+   //commonAlgos.push_back( algoType( "Minuit",      "Seek",        "X", CompareResult(defCmpOpt,5,0.1)) );
+   extraAlgos.push_back( algoType( "Minuit",      "Seek",        "X", CompareResult(0)) );  //mask
+   extraAlgos.push_back( algoType( "Minuit2",     "Scan",        "X", CompareResult(0)) );  // mask
+
+   extraAlgos.push_back( algoType( "Minuit",      "Simplex",     "X", CompareResult(cmpChi2,0,1)) );
    //simplex MInuit2 does not work well (needs to be checked)
-   // simplexAlgos.push_back( algoType( "Minuit2",     "Simplex",     "Q0", CompareResult())  );
-
-   specialAlgos.push_back( algoType( "Minuit",      "Migrad",      "QE0X", CompareResult()) );
-   specialAlgos.push_back( algoType( "Minuit",      "Migrad",      "QW0X", CompareResult()) );
-
-   noGraphAlgos.push_back( algoType( "Minuit",      "Migrad","      Q0IX", CompareResult()) );
-   noGraphAlgos.push_back( algoType( "Minuit",      "Migrad","      QL0", CompareResult()) );
-   noGraphAlgos.push_back( algoType( "Minuit",      "Migrad","     QLI0", CompareResult()) );
-
-   // Gradient algorithms
-   // No Minuit algorithms to use with the 'G' options until some stuff is fixed.
-   noGraphAlgos.push_back( algoType( "Minuit",      "Migrad",      "GQ0", CompareResult()) );
-//    noGraphAlgos.push_back( algoType( "Minuit",      "Minimize",    "GQ0", CompareResult()) );
-   noGraphAlgos.push_back( algoType( "Minuit2",     "Migrad",      "GQ0", CompareResult()) );
-   noGraphAlgos.push_back( algoType( "Minuit2",     "Minimize",    "GQ0", CompareResult()) );
-   noGraphAlgos.push_back( algoType( "Fumili",      "Fumili",      "GQ0", CompareResult()) );
-   noGraphAlgos.push_back( algoType( "Minuit2",     "Fumili",      "GQ0", CompareResult()) );
-//    noGraphAlgos.push_back( algoType( "Minuit",      "Migrad",      "GQE0", CompareResult()) );
-    noGraphAlgos.push_back( algoType( "Minuit",      "Migrad",      "GQL0", CompareResult()) );
-
-    noGraphErrorAlgos.push_back(algoType("Minuit2", "Fumili", "Q0", CompareResult()));
-    //noGraphErrorAlgos.push_back(algoType("Fumili", "Fumili", "Q0", CompareResult()));
+   // simplexAlgos.push_back( algoType( "Minuit2",     "Simplex",     "", CompareResult())  );
 #ifdef R__HAS_MATHMORE
-   noGraphErrorAlgos.push_back( algoType( "GSLMultiFit", "",            "Q0", CompareResult()) ); // Not in TGraphError
+   extraAlgos.push_back( algoType( "GSLMultiMin", "conjugatefr", "X", CompareResult(cmpChi2)) );
+   extraAlgos.push_back( algoType( "GSLMultiMin", "conjugatepr", "X", CompareResult(cmpChi2)) );
+   extraAlgos.push_back( algoType( "GSLMultiMin", "bfgs2",       "X", CompareResult(cmpChi2)) );
+   extraAlgos.push_back( algoType( "GSLSimAn",    "",            "X", CompareResult(cmpChi2,0,1.)) );
 #endif
 
-   // Same as TH1D (but different comparision scheme!): commonAlgos,
-   histGaus2D.push_back( algoType( "Minuit",      "Migrad",      "Q0",   CompareResult(cmpPars,6)) );
-   histGaus2D.push_back( algoType( "Minuit",      "Minimize",    "Q0",   CompareResult(cmpPars,6)) );
-   histGaus2D.push_back( algoType( "Minuit",      "Scan",        "Q0",   CompareResult(0))         );
-   histGaus2D.push_back( algoType( "Minuit",      "Seek",        "Q0",   CompareResult(cmpPars,6)) );
-   histGaus2D.push_back( algoType( "Minuit2",     "Migrad",      "Q0",   CompareResult(cmpPars,6)) );
-   histGaus2D.push_back( algoType( "Minuit2",     "Minimize",    "Q0",   CompareResult(cmpPars,6)) );
-   histGaus2D.push_back( algoType( "Minuit2",     "Scan",        "Q0",   CompareResult(0))         );
-   histGaus2D.push_back( algoType( "Minuit2",     "Fumili2",     "Q0",   CompareResult(cmpPars,6)) );
+
+   specialAlgos.push_back( algoType( "Minuit",      "Migrad",      "WX", CompareResult(cmpPars)) );
+
+   // specific fitting options to be used when not fitting a TGraph (e.g. integral, likelihood,...)
+   noGraphAlgos.push_back( algoType( "Minuit",      "Migrad",      "EX", CompareResult()) );
+   noGraphAlgos.push_back( algoType( "Minuit2",     "Migrad",      "EX", CompareResult()) );
+   noGraphAlgos.push_back( algoType( "Minuit",      "Migrad",      "L", CompareResult(defCmpOpt,3,0.1)) );  // normal binned likelihood fit
+   noGraphAlgos.push_back( algoType( "Minuit2",     "Migrad",      "L", CompareResult(defCmpOpt,3,0.1)) );
+   noGraphAlgos.push_back( algoType( "Minuit2",     "Migrad",      "G", CompareResult()) ); // gradient chi2 fit
+   //noGraphAlgos.push_back( algoType( "Minuit",      "Migrad",      "G", CompareResult()) );   // skip TMinuit with G
+   noGraphAlgos.push_back( algoType( "Minuit2",     "Minimize",    "G", CompareResult()) );
+   //noGraphAlgos.push_back( algoType( "Minuit",      "Migrad",      "LG", CompareResult()) ); // gradient likelihood fit
+   noGraphAlgos.push_back( algoType( "Minuit2",     "Migrad",      "LG", CompareResult(defCmpOpt,3,0.1)) );
+   // new reference for integral bin fits
+   noGraphAlgos.push_back( algoType( "Minuit",      "Migrad",      "IX", CompareResult(),true) );    // chi2 fit with bin integral
+   noGraphAlgos.push_back( algoType( "Minuit2",     "Migrad",      "IX", CompareResult()) );
+   noGraphAlgos.push_back( algoType( "Minuit",      "Migrad",      "IL", CompareResult(defCmpOpt,3,0.1)) );    // likelihood fit with bin integral
+   noGraphAlgos.push_back( algoType( "Minuit2",     "Migrad",      "IL", CompareResult(defCmpOpt,3,0.1)) );
+   // new reference for Pearson chi2
+   noGraphAlgos.push_back( algoType( "Minuit",      "Migrad",      "P", CompareResult(),true) );  // Pearson chi2 fit
+   noGraphAlgos.push_back( algoType( "Minuit2",     "Migrad",      "P", CompareResult()) );
+
+   //specific algorithm to be used when not fitting TGraphError's
+   noGraphErrorAlgos.push_back(algoType("Minuit2", "Fumili",  "X", CompareResult()));   // chi2 fit using Fumili
+   noGraphErrorAlgos.push_back(algoType("Fumili",        "",  "X", CompareResult()));
+   #ifdef R__HAS_MATHMORE
+   noGraphErrorAlgos.push_back(algoType("GSLMultiFit", "",    "X", CompareResult()) ); // Using LM from GSL
+   #endif
+   noGraphErrorAlgos.push_back( algoType("Minuit2","Fumili",  "G", CompareResult(0)) );  // chi2 fit with gradient
+   noGraphErrorAlgos.push_back( algoType("Fumili",       "",  "G", CompareResult(0)) );
+   //mask these Likelihood Fumili
+   noGraphErrorAlgos.push_back(algoType("Minuit2", "Fumili",  "L", CompareResult(0)) );  // Binned likelihood fit using Fumili
+   noGraphErrorAlgos.push_back(algoType("Fumili",       "" ,  "L", CompareResult(0)) );
+   noGraphErrorAlgos.push_back(algoType("Minuit2", "Fumili",  "LG", CompareResult(0)) );  // Binned likelihood fit using Fumili and gradient
+   noGraphErrorAlgos.push_back(algoType("Fumili",       "" ,  "LG", CompareResult(0)) );
+
+
+   // Options for TH2 fitting: same as TH1D algos (but different comparision scheme than commonAlgos and others!)
+   histGaus2D.push_back( algoType( "Minuit2",     "Migrad",      "X",   CompareResult(),true) );
+   histGaus2D.push_back( algoType( "Minuit",      "Migrad",      "X",   CompareResult()) );
+   histGaus2D.push_back( algoType( "Minuit",      "Minimize",    "X",   CompareResult(cmpPars,6)) );
+   histGaus2D.push_back( algoType( "Minuit",      "Scan",        "X",   CompareResult(0))         );
+   histGaus2D.push_back( algoType( "Minuit",      "Seek",        "X",   CompareResult(0)) );
+   histGaus2D.push_back( algoType( "Minuit2",     "Minimize",    "X",   CompareResult(cmpPars,6)) );
+   histGaus2D.push_back( algoType( "Minuit2",     "Scan",        "X",   CompareResult(0))         );
+   // specialized algorithms (Fumili)
+   histGaus2D.push_back( algoType( "Minuit2",     "Fumili",      "X",   CompareResult(cmpPars,6)) );
+   histGaus2D.push_back( algoType( "Fumili",      ""      ,      "X",   CompareResult(cmpPars,6)) );
+
 #ifdef R__HAS_MATHMORE
-   histGaus2D.push_back( algoType( "GSLMultiMin", "conjugatefr", "Q0", CompareResult(cmpPars,6)) );
-   histGaus2D.push_back( algoType( "GSLMultiMin", "conjugatepr", "Q0", CompareResult(cmpPars,6)) );
-   histGaus2D.push_back( algoType( "GSLMultiMin", "bfgs2",       "Q0", CompareResult(cmpPars,6)) );
-   histGaus2D.push_back( algoType( "GSLSimAn",    "",            "Q0", CompareResult(cmpPars,6)) );
-#endif   // treeFail
-   histGaus2D.push_back( algoType( "Minuit",      "Simplex",     "Q0",   CompareResult(cmpPars,6)) );
+   // compare only Chi2 value since parameter error is not estimated in GSLMultiMin
+   histGaus2D.push_back( algoType( "GSLMultiMin", "conjugatefr", "X", CompareResult(cmpChi2)) );
+   histGaus2D.push_back( algoType( "GSLMultiMin", "conjugatepr", "X", CompareResult(cmpChi2)) );
+   histGaus2D.push_back( algoType( "GSLMultiMin", "bfgs2",       "X", CompareResult(cmpChi2)) );
+   histGaus2D.push_back( algoType( "GSLSimAn",    "",            "X", CompareResult(cmpChi2, 0, 1.)) );
+
+   histGaus2D.push_back( algoType( "GSLMultiFit", "",            "X",   CompareResult() ));
+#endif
+   histGaus2D.push_back( algoType( "Minuit",      "Simplex",     "X",   CompareResult(cmpPars,6)) );
    // minuit2 simplex fails in 2d
-   //histGaus2D.push_back( algoType( "Minuit2",     "Simplex",     "Q0",   CompareResult(cmpPars,6)) );
+   //histGaus2D.push_back( algoType( "Minuit2",     "Simplex",     "",   CompareResult(cmpPars,6)) );
    // special algos
-   histGaus2D.push_back( algoType( "Minuit",      "Migrad",      "QE0",  CompareResult(cmpPars,6)) );
-   histGaus2D.push_back( algoType( "Minuit",      "Migrad",      "QW0",  CompareResult())          );
-   // noGraphAlgos
-   histGaus2D.push_back( algoType( "Minuit",    "Migrad", "       Q0I",  CompareResult(cmpPars,6)) );
-   histGaus2D.push_back( algoType( "Minuit",      "Migrad",      "QL0",  CompareResult())          );
-   histGaus2D.push_back( algoType( "Minuit",    "Migrad", "      QLI0", CompareResult())          );
-
-// Gradient algorithms
-   histGaus2D.push_back( algoType( "Minuit",      "Migrad",      "GQ0", CompareResult()) );
-   histGaus2D.push_back( algoType( "Minuit",      "Minimize",    "GQ0", CompareResult()) );
-   histGaus2D.push_back( algoType( "Minuit2",     "Migrad",      "GQ0", CompareResult()) );
-   histGaus2D.push_back( algoType( "Minuit2",     "Minimize",    "GQ0", CompareResult()) );
-   histGaus2D.push_back( algoType( "Fumili",      "Fumili",      "GQ0", CompareResult()) );
-   histGaus2D.push_back( algoType( "Minuit2",     "Fumili",      "GQ0", CompareResult()) );
-//    histGaus2D.push_back( algoType( "Minuit",      "Migrad",      "GQE0", CompareResult()) );
-   histGaus2D.push_back( algoType( "Minuit",      "Migrad",      "GQL0", CompareResult()) );
-
-   // noGraphErrorAlgos
-   histGaus2D.push_back( algoType( "Fumili",      "Fumili",      "Q0",   CompareResult(cmpPars,6)) );
+   histGaus2D.push_back( algoType( "Minuit",      "Migrad",      "WX",  CompareResult(cmpPars)) );
+   //gradient
+   histGaus2D.push_back( algoType( "Minuit",      "Migrad",    "GX", CompareResult()) );
+   histGaus2D.push_back( algoType( "Minuit2",     "Migrad",      "GX", CompareResult()) );
+   histGaus2D.push_back( algoType( "Fumili",      ""      ,      "GX", CompareResult(0)) );
+   histGaus2D.push_back( algoType( "Minuit2",     "Fumili",      "GX", CompareResult(0)) );
 #ifdef R__HAS_MATHMORE
-   histGaus2D.push_back( algoType( "GSLMultiFit", "",            "Q0",   CompareResult(cmpPars,6)) );
+   histGaus2D.push_back( algoType( "GSLMultiFit", "",            "GX",   CompareResult()) );
 #endif
+   // I - L algos
+   histGaus2D.push_back( algoType( "Minuit",      "Migrad",      "L",  CompareResult(),true) );
+   histGaus2D.push_back( algoType( "Minuit2",      "Migrad",     "L",  CompareResult())  );
+   histGaus2D.push_back( algoType( "Minuit",      "Migrad",      "GL",  CompareResult()) );
+   histGaus2D.push_back( algoType( "Minuit2",      "Migrad",     "GL",  CompareResult())  );
+#ifdef _HAVE_NEW_FUMILI
+   histGaus2D.push_back( algoType( "Fumili",      ""      ,      "L", CompareResult()) );  // likelihood
+   histGaus2D.push_back( algoType( "Minuit2",     "Fumili",      "L", CompareResult()) );
+   histGaus2D.push_back( algoType( "Fumili",      ""      ,      "GL", CompareResult()) );  // likelihood
+   histGaus2D.push_back( algoType( "Minuit2",     "Fumili",      "GL", CompareResult()) );
+#endif
+   // integral option
+   histGaus2D.push_back( algoType( "Minuit",      "Migrad",      "XI",  CompareResult(),true) );
+   histGaus2D.push_back( algoType( "Minuit2",      "Migrad",     "XI",  CompareResult()) );
+   histGaus2D.push_back( algoType( "Minuit",      "Migrad",      "LI", CompareResult(),true)          );
+   histGaus2D.push_back( algoType( "Minuit2",      "Migrad",     "LI", CompareResult())          );
+   // P option
+   histGaus2D.push_back( algoType( "Minuit2",      "Migrad",     "P",   CompareResult(),true) );
+   histGaus2D.push_back( algoType( "Minuit",     "Migrad",      "P",   CompareResult()) );
 
-   graphErrorAlgos.push_back( algoType( "Minuit",      "Migrad",      "Q0EX0", CompareResult()) );
-   graphErrorAlgos.push_back( algoType( "Minuit2",      "Migrad",      "Q0EX0", CompareResult()) );
 
+   // algorithms only for GraphErrors (excluding error in X)
+   graphErrorAlgos.push_back( algoType( "Minuit2",    "Migrad",      "EX0", CompareResult(),true) );
+   graphErrorAlgos.push_back( algoType( "Minuit",    "Migrad",      "EX0", CompareResult()) );
+   graphErrorAlgos.push_back( algoType( "Minuit2",   "Fumili",      "EX0", CompareResult()) );
+   graphErrorAlgos.push_back( algoType( "Fumili",          "",      "EX0", CompareResult()) );
+#ifdef R__HAS_MATHMORE
+   graphErrorAlgos.push_back( algoType( "GSLMultiFit",    "",        "EX0", CompareResult(),true ));
+#endif
 
    // For testing the linear fitter we can force the use by setting Linear the default minimizer and use
    // the G option. In this case the fit is linearized using the gradient as the linear components
-   // Option "G" has not to be set as first option character to avoid using Fitter class in
-   // the test program
    // Use option "X" to force Chi2 calculations
-   linearAlgos.push_back( algoType( "Linear",      "",            "Q0XG", CompareResult()) );
+   linearAlgos.push_back( algoType( "Linear",      "",            "XG", CompareResult(cmpPars)) );
+
+   listLinearAlgos.clear();
+   listTH1DAlgos.clear();
+   listAlgosTGraph.clear();
+   listAlgosTGraphError.clear();
+   listTH2DAlgos.clear();
+   listAlgosTGraph2D.clear();
+   listAlgosTGraph2DError.clear();
+
    listLinearAlgos.push_back( linearAlgos );
 
+
    listTH1DAlgos.push_back( commonAlgos );
-   listTH1DAlgos.push_back( simplexAlgos );
+   listTH1DAlgos.push_back( extraAlgos );
    listTH1DAlgos.push_back( specialAlgos );
-   listTH1DAlgos.push_back( noGraphAlgos );
    listTH1DAlgos.push_back( noGraphErrorAlgos );
+   listTH1DAlgos.push_back( noGraphAlgos );
+
 
    listAlgosTGraph.push_back( commonAlgos );
-   listAlgosTGraph.push_back( simplexAlgos );
+   listAlgosTGraph.push_back( extraAlgos );
    listAlgosTGraph.push_back( specialAlgos );
    listAlgosTGraph.push_back( noGraphErrorAlgos );
 
    listAlgosTGraphError.push_back( commonAlgos );
-   listAlgosTGraphError.push_back( simplexAlgos );
+   listAlgosTGraphError.push_back( extraAlgos );
    listAlgosTGraphError.push_back( specialAlgos );
    listAlgosTGraphError.push_back( graphErrorAlgos );
 
@@ -1215,7 +1345,15 @@ void init_structures()
    listAlgosTGraph2DError.push_back( specialAlgos );
    listAlgosTGraph2DError.push_back( graphErrorAlgos );
 
+   listTreeAlgos.clear();
+   listTreeAlgos.push_back(commonAlgos);
+
    vector<ParLimit> emptyLimits(0);
+   l1DFunctions.clear();
+   l2DFunctions.clear();
+   treeFunctions.clear();
+   l1DLinearFunctions.clear();
+   l2DLinearFunctions.clear();
 
    double gausOrig[] = {  0.,  3., 200.};
    double gausFit[] =  {0.5, 3.7,  250.};
@@ -1223,12 +1361,13 @@ void init_structures()
    gaus1DLimits.push_back( ParLimit(1, 0, 5) );
    l1DFunctions.push_back( fitFunctions("GAUS",       gaus1DImpl, 3, gausOrig,  gausFit, gaus1DLimits) );
    double poly1DOrig[] = { 2, 3, 4, 200};
-   double poly1DFit[] = { 6.4, -2.3, 15.4, 210.5};
+   //double poly1DFit[] = { 6.4, -2.3, 15.4, 210.5};
+   double poly1DFit[] = {6., -1., 15., 300.};
    l1DFunctions.push_back( fitFunctions("Polynomial", poly1DImpl, 4, poly1DOrig, poly1DFit, emptyLimits) );
 
    // range os -5,5
-   double gaus2DOrig[] = { 500., +.5, 2.7, -.5, 3.0 };
-   double gaus2DFit[] = { 510., .0, 1.8, -1.0, 1.6};
+   double gaus2DOrig[] = { 900., +.5, 2.7, -.5, 3.0 };
+   double gaus2DFit[] = { 1200., .0, 1.8, -1.0, 1.6};
    l2DFunctions.push_back( fitFunctions("gaus2D", gaus2DImpl, 5, gaus2DOrig, gaus2DFit, emptyLimits) );
 
    double gausnOrig[3] = {1,2,1};
@@ -1256,6 +1395,11 @@ int stressHistoFit()
    init_structures();
 
    int iret = 0;
+   gTestIndex = 0;
+
+   TFile * fout = nullptr;
+   if (__WRITE__)
+      fout = TFile::Open("stressHistoFit.root","RECREATE");
 
    TBenchmark bm;
    bm.Start("stressHistoFit");
@@ -1285,6 +1429,11 @@ int stressHistoFit()
              << gROOT->GetGitBranch() << "@" << gROOT->GetGitCommit() << std::endl;
    std::cout <<"****************************************************************************\n";
 
+   if (__WRITE__) {
+      fout->Close();
+      delete fout;
+   }
+
    return iret;
 }
 
@@ -1295,7 +1444,10 @@ int main(int argc, char** argv)
 
    Int_t  verbose     =      0;
    Int_t testNumber   =      0;
+   Int_t fitNumber   =       0;
    Bool_t doDraw      = kFALSE;
+   Bool_t doWrite     = kFALSE;
+
 
    // Parse command line arguments
    for (Int_t i = 1 ;  i < argc ; i++) {
@@ -1308,42 +1460,54 @@ int main(int argc, char** argv)
       } else if (arg == "-vv") {
          cout << "stressHistoFit: running in very verbose mode" << endl;
          verbose = 2;
+      } else if (arg == "-vvv") {
+         cout << "stressHistoFit: running in very very verbose mode" << endl;
+         verbose = 3;
       } else if (arg == "-a") {
          cout << "stressHistoFit: deploying full suite of tests" << endl;
       } else if (arg == "-n") {
          cout << "stressHistoFit: running single test" << endl;
-         testNumber = atoi(argv[++i]);
+         if (argc > i+1) testNumber = atoi(argv[++i]);
+         if (argc > i+1) fitNumber = atoi(argv[++i]);
+         if (verbose==0) verbose=1;
       } else if (arg == "-d") {
          cout << "stressHistoFit: setting gDebug to " << argv[i + 1] << endl;
          gDebug = atoi(argv[++i]);
       } else if (arg == "-g") {
          cout << "stressHistoFit: running in graphics mode " << endl;
          doDraw = kTRUE;
+       } else if (arg == "-s") {
+         cout << "stressHistoFit: save results in stressHistoFit.root " << endl;
+         doWrite = kTRUE;
       } else if (arg == "-t") {
          cout << "stressHistoFit: running in multi-thread mode " << endl;
          gEnableMT = kTRUE;
       } else if (arg == "-h") {
          cout << "usage: stressHistoFit [ options ] " << endl;
          cout << "" << endl;
-         cout << "       -n N      : only run test with sequential number N" << endl;
+         cout << "       -n N M    : only run test with sequential number N and fit M" << endl;
          cout << "       -a        : run full suite of tests (default is basic suite); this overrides the -n single test option" << endl;
          cout << "       -g        : create a TApplication and produce plots" << endl;
-         cout << "       -v/-vv    : set verbose mode (show result of each regression test) or very verbose mode (show all roofit output as well)" << endl;
-         cout << "       -d N      : set ROOT gDebug flag to N" << endl ;
-         cout << "       -t        : set ROOT to run in Multi-thread mode" << endl;
+         cout << "       -s        : save fit results in a output ROOT file" << endl;
+         cout << "       -v/-vv/-vvv: set verbose mode (show result of each regression test) or very verbose mode (show all roofit output as well)" << endl;
+         cout << "       -d N       : set ROOT gDebug flag to N" << endl ;
+         cout << "       -t         : set ROOT to run in Multi-thread mode" << endl;
          cout << " " << endl ;
          return 0 ;
       }
    }
 
-   __DRAW__ = ( doDraw || verbose == 2);
+   __DRAW__ = ( doDraw || verbose >= 2);
+   __WRITE__ = (doWrite);
 
    if (verbose > 0) {
       defaultOptions |= testOptDebug;   // debug mode (print test results)
       if (verbose > 1) defaultOptions |= testOptFitDbg;   // very debug (print also fit outputs)
+      if (verbose > 1) defaultOptions |= testOptFitVer;
    }
 
    gSelectedTest = testNumber;  // number of selected test
+   gSelectedFit = fitNumber;
 
    if ( __DRAW__ )
       theApp = new TApplication("App",&argc,argv);

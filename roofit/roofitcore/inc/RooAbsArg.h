@@ -35,6 +35,7 @@
 #include <set>
 #include <stack>
 #include <string>
+#include <unordered_map>
 
 
 class TTree ;
@@ -169,12 +170,9 @@ public:
   }
 
   // --- Obsolete functions for backward compatibility
-  /// \deprecated Use getObservables()
-  inline RooArgSet* getDependents(const RooArgSet& set) const { return getObservables(set) ; }
-  /// \deprecated Use getObservables()
-  inline RooArgSet* getDependents(const RooAbsData* set) const { return getObservables(set) ; }
-  /// \deprecated Use getObservables()
-  inline RooArgSet* getDependents(const RooArgSet* depList) const { return getObservables(depList) ; }
+  RooFit::OwningPtr<RooArgSet> getDependents(const RooArgSet& set) const;
+  RooFit::OwningPtr<RooArgSet> getDependents(const RooAbsData* set) const;
+  RooFit::OwningPtr<RooArgSet> getDependents(const RooArgSet* depList) const;
   /// \deprecated Use observableOverlaps()
   inline bool dependentOverlaps(const RooAbsData* dset, const RooAbsArg& testArg) const { return observableOverlaps(dset,testArg) ; }
   /// \deprecated Use observableOverlaps()
@@ -270,6 +268,7 @@ public:
 
   // Server redirection interface
   bool redirectServers(const RooAbsCollection& newServerList, bool mustReplaceAll=false, bool nameChange=false, bool isRecursionStep=false) ;
+  bool redirectServers(std::unordered_map<RooAbsArg*, RooAbsArg*> const& replacements);
   bool recursiveRedirectServers(const RooAbsCollection& newServerList, bool mustReplaceAll=false, bool nameChange=false, bool recurseInNewSet=true) ;
 
   virtual bool redirectServersHook(const RooAbsCollection & newServerList, bool mustReplaceAll,
@@ -298,22 +297,16 @@ public:
   RooFit::OwningPtr<RooArgSet> getParameters(const RooArgSet& observables, bool stripDisconnected=true) const;
   RooFit::OwningPtr<RooArgSet> getParameters(const RooArgSet* observables, bool stripDisconnected=true) const;
   virtual bool getParameters(const RooArgSet* observables, RooArgSet& outputSet, bool stripDisconnected=true) const;
-  /// Given a set of possible observables, return the observables that this PDF depends on.
-  RooArgSet* getObservables(const RooArgSet& set, bool valueOnly=true) const {
-    return getObservables(&set,valueOnly) ;
-  }
-  RooArgSet* getObservables(const RooAbsData* data) const ;
-  /// Return the observables of this pdf given the observables defined by `data`.
-  RooArgSet* getObservables(const RooAbsData& data) const {
-    return getObservables(&data) ;
-  }
-  RooArgSet* getObservables(const RooArgSet* depList, bool valueOnly=true) const ;
+  RooFit::OwningPtr<RooArgSet> getObservables(const RooArgSet& set, bool valueOnly=true) const;
+  RooFit::OwningPtr<RooArgSet> getObservables(const RooAbsData* data) const;
+  RooFit::OwningPtr<RooArgSet> getObservables(const RooAbsData& data) const;
+  RooFit::OwningPtr<RooArgSet> getObservables(const RooArgSet* depList, bool valueOnly=true) const;
   bool getObservables(const RooAbsCollection* depList, RooArgSet& outputSet, bool valueOnly=true) const;
   bool observableOverlaps(const RooAbsData* dset, const RooAbsArg& testArg) const ;
   bool observableOverlaps(const RooArgSet* depList, const RooAbsArg& testArg) const ;
   virtual bool checkObservables(const RooArgSet* nset) const ;
   bool recursiveCheckObservables(const RooArgSet* nset) const ;
-  RooArgSet* getComponents() const ;
+  RooFit::OwningPtr<RooArgSet> getComponents() const ;
 
 
 
@@ -713,9 +706,9 @@ private:
 
   /// Returns the token for retrieving results in the BatchMode. For internal use only.
   std::size_t dataToken() const { return _dataToken; }
-
-  /// Sets the token for retrieving results in the BatchMode. For internal use only.
-  void setDataToken(std::size_t index) { _dataToken = index; }
+  bool hasDataToken() const { return _dataToken != std::numeric_limits<std::size_t>::max(); }
+  void setDataToken(std::size_t index);
+  void resetDataToken() { _dataToken = std::numeric_limits<std::size_t>::max(); }
  protected:
 
 
@@ -742,7 +735,7 @@ private:
 
   mutable RooWorkspace *_myws; //! In which workspace do I live, if any
 
-  std::size_t _dataToken = 0; //! Set by the RooFitDriver for this arg to retrieve its result in the run context
+  std::size_t _dataToken = std::numeric_limits<std::size_t>::max(); //! Set by the RooFitDriver for this arg to retrieve its result in the run context
 
   /// \cond Internal
   // Legacy streamers need the following statics:
@@ -753,6 +746,10 @@ private:
  protected:
   static std::stack<RooAbsArg*> _ioReadStack ; // reading stack
   /// \endcond
+
+ private:
+  void substituteServer(RooAbsArg *oldServer, RooAbsArg *newServer);
+  bool callRedirectServersHook(RooAbsCollection const& newSet, bool mustReplaceAll, bool nameChange, bool isRecursionStep);
 
   ClassDefOverride(RooAbsArg,9) // Abstract variable
 };

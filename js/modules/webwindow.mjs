@@ -444,6 +444,15 @@ class WebWindowHandle {
       this.send('KEEPALIVE', 0);
    }
 
+   /** @summary Request server to resize window
+     * @desc For local displays like CEF or qt5 only server can do this */
+   resizeWindow(w, h) {
+      if (browser.qt5 || browser.cef3)
+         this.send(`RESIZE=${w},${h}`, 0);
+      else if (isFunc(window?.resizeTo))
+         window.resizeTo(w, h);
+   }
+
    /** @summary Method open channel, which will share same connection, but can be used independently from main
      * @private */
    createChannel() {
@@ -687,6 +696,9 @@ class WebWindowHandle {
   * @param {string} [arg.href] - URL to RWebWindow, using window.location.href by default
   * @return {Promise} for ready-to-use {@link WebWindowHandle} instance  */
 async function connectWebWindow(arg) {
+
+   // mark that jsroot used with RWebWindow
+   browser.webwindow = true;
 
    if (isFunc(arg))
       arg = { callback: arg };

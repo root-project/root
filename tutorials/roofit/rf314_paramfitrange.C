@@ -9,8 +9,8 @@
 /// where `t` and `tmin` are both observables in the dataset
 ///
 /// \macro_image
-/// \macro_output
 /// \macro_code
+/// \macro_output
 ///
 /// \date July 2008
 /// \author Wouter Verkerke
@@ -59,7 +59,7 @@ void rf314_paramfitrange()
    // F i t   p d f   t o   d a t a   i n   a c c e p t a n c e   r e g i o n
    // -----------------------------------------------------------------------
 
-   RooFitResult *r = model.fitTo(*dacc, Save());
+   std::unique_ptr<RooFitResult> r{model.fitTo(*dacc, Save(), PrintLevel(-1))};
 
    // P l o t   f i t t e d   p d f   o n   f u l l   a n d   a c c e p t e d   d a t a
    // ---------------------------------------------------------------------------------

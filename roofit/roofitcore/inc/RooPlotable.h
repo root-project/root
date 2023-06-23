@@ -25,9 +25,6 @@ class RooArgSet;
 
 class RooPlotable : public RooPrintable {
 public:
-  inline RooPlotable() : _ymin(0), _ymax(0), _normValue(0) { }
-  inline ~RooPlotable() override { }
-
   inline const char* getYAxisLabel() const { return _yAxisLabel.Data(); }
   inline void setYAxisLabel(const char *label) { _yAxisLabel= label; }
   inline void updateYAxisLimits(double y) {
@@ -52,7 +49,9 @@ public:
   TObject *crossCast();
 protected:
   TString _yAxisLabel;
-  double _ymin, _ymax, _normValue;
+  double _ymin = 0.0;
+  double _ymax = 0.0;
+  double _normValue = 0.0;
   ClassDefOverride(RooPlotable,1) // Abstract interface for plotable objects in a RooPlot
 };
 

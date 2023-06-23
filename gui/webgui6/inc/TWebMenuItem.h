@@ -66,7 +66,7 @@ public:
    }
 
    /** virtual destructor need for vtable, used when vector of TMenuItem* is stored */
-   virtual ~TWebCheckedMenuItem() = default;
+   ~TWebCheckedMenuItem() override = default;
 
    /** Set checked state for the item, default is none */
    void SetChecked(bool on = true) { fChecked = on; }
@@ -105,7 +105,7 @@ public:
    TWebArgsMenuItem(const std::string &name, const std::string &title) : TWebMenuItem(name, title) {}
 
    /** virtual destructor need for vtable, used when vector of TMenuItem* is stored */
-   virtual ~TWebArgsMenuItem() = default;
+   ~TWebArgsMenuItem() override = default;
 
    std::vector<TWebMenuArgument> &GetArgs() { return fArgs; }
 

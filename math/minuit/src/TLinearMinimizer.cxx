@@ -169,15 +169,35 @@ void TLinearMinimizer::SetFunction(const  ROOT::Math::IMultiGenFunction & objfun
    // get the fitter data
    const ROOT::Fit::BinData & data = chi2func->Data();
    // add the data but not store them
+   std::vector<double> xc(data.NDim());
    for (unsigned int i = 0; i < data.Size(); ++i) {
       double y = 0;
-      const double * x = data.GetPoint(i,y);
+      const double * x1 = data.GetPoint(i,y);
       double ey = 1;
       if (! data.Opt().fErrors1) {
          ey = data.Error(i);
       }
-      // interface should take a double *
-      fFitter->AddPoint( const_cast<double *>(x) , y, ey);
+      // in case of bin volume- scale the data according to the bin volume
+      double binVolume = 1.;
+      double * x = nullptr;
+      if (data.Opt().fBinVolume) {
+         // compute the bin volume
+         const double * x2 = data.BinUpEdge(i);
+         for (unsigned int j  = 0; j < data.NDim(); ++j) {
+            binVolume *= (x2[j]-x1[j]);
+            // we are alwyas using bin centers
+            xc[j] = 0.5 * (x2[j]+ x1[j]);
+         }
+         if (data.Opt().fNormBinVolume) binVolume /= data.RefVolume();
+         // we cannot scale f so we scale the points
+         y /= binVolume;
+         ey /= binVolume;
+         x = xc.data();
+      } else {
+         x = const_cast<double*>(x1);
+      }
+      //std::cout << "adding point " << i << " x " << x[0] << " y " << y << " e " << ey << std::endl;
+      fFitter->AddPoint( x , y, ey);
    }
 
 }

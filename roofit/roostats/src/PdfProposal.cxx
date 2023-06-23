@@ -122,7 +122,7 @@ void PdfProposal::Propose(RooArgSet& xPrime, RooArgSet& x)
          for (fIt = fMap.begin(); fIt != fMap.end(); fIt++)
             fIt->first->setVal(fIt->second->getVal(&x));
       }
-      fCache = fPdf->generate(xPrime, fCacheSize);
+      fCache = std::unique_ptr<RooDataSet>{fPdf->generate(xPrime, fCacheSize)}.release();
    }
 
    bool moved = false;
@@ -148,7 +148,7 @@ void PdfProposal::Propose(RooArgSet& xPrime, RooArgSet& x)
    // generate new cache if necessary
    if (moved || fCachePosition >= fCacheSize) {
       delete fCache;
-      fCache = fPdf->generate(xPrime, fCacheSize);
+      fCache = std::unique_ptr<RooDataSet>{fPdf->generate(xPrime, fCacheSize)}.release();
       fCachePosition = 0;
    }
 
@@ -177,9 +177,8 @@ double PdfProposal::GetProposalDensity(RooArgSet& x1, RooArgSet& x2)
    RooStats::SetParameters(&x2, &fMaster);
    for (fIt = fMap.begin(); fIt != fMap.end(); fIt++)
       fIt->first->setVal(fIt->second->getVal(&x2));
-   RooArgSet* temp = fPdf->getObservables(x1);
-   RooStats::SetParameters(&x1, temp);
-   delete temp;
+   std::unique_ptr<RooArgSet> temp{fPdf->getObservables(x1)};
+   RooStats::SetParameters(&x1, temp.get());
    return fPdf->getVal(&x1); // could just as well use x2
 }
 
@@ -197,5 +196,5 @@ void PdfProposal::AddMapping(RooRealVar& proposalParam, RooAbsReal& update)
    fMaster.add(*update.getParameters(static_cast<RooAbsData const*>(nullptr)));
    if (update.getParameters(static_cast<RooAbsData const*>(nullptr))->empty())
       fMaster.add(update);
-   fMap.insert(pair<RooRealVar*, RooAbsReal*>(&proposalParam, &update));
+   fMap.insert(std::pair<RooRealVar*, RooAbsReal*>(&proposalParam, &update));
 }

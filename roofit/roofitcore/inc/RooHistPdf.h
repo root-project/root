@@ -96,8 +96,11 @@ public:
 
   void computeBatch(cudaStream_t*, double* output, size_t size, RooFit::Detail::DataMap const&) const override;
 
-protected:
+  void translate(RooFit::Detail::CodeSquashContext &ctx) const override;
+  std::string
+  buildCallToAnalyticIntegral(int code, const char *rangeName, RooFit::Detail::CodeSquashContext &ctx) const override;
 
+  protected:
   bool areIdentical(const RooDataHist& dh1, const RooDataHist& dh2) ;
 
   bool importWorkspaceHook(RooWorkspace& ws) override ;
@@ -144,6 +147,12 @@ private:
                                              RooAbsRealLValue& obs,
                                              double xlo,
                                              double xhi);
+
+  static void rooHistTranslateImpl(RooAbsArg const *klass, RooFit::Detail::CodeSquashContext &ctx, int intOrder,
+                                   RooDataHist const *dataHist, const RooArgSet &obs, bool correctForBinSize);
+
+  static std::string rooHistIntegralTranslateImpl(int code, RooAbsArg const *klass, RooDataHist const *dataHist,
+                                                  const RooArgSet &obs, bool histFuncMode);
 
   ClassDefOverride(RooHistPdf,4) // Histogram based PDF
 };

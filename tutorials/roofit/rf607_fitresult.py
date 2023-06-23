@@ -3,7 +3,9 @@
 ## \notebook
 ## Likelihood and minimization: demonstration of options of the RooFitResult class
 ##
+## \macro_image
 ## \macro_code
+## \macro_output
 ##
 ## \date February 2018
 ## \authors Clemens Lange, Wouter Verkerke (C++ version)
@@ -47,7 +49,7 @@ data = model.generate({x}, 1000)
 # -------------------------------------------------------------
 
 # Perform fit and save result
-r = model.fitTo(data, Save=True)
+r = model.fitTo(data, Save=True, PrintLevel=-1)
 
 # Print fit results
 # ---------------------------------

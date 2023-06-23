@@ -15,6 +15,7 @@
 #define RooFit_Detail_AnalyticalIntegrals_h
 
 #include <TMath.h>
+#include <Math/ProbFuncMathCore.h>
 
 #include <cmath>
 
@@ -171,6 +172,77 @@ inline double chebychevIntegral(double const *coeffs, unsigned int nCoeffs, doub
    // take care to multiply with the right factor to account for the mapping to
    // normalised range [-1, 1]
    return halfrange * sum;
+}
+
+// Clad does not like std::max and std::min so redefined here for simplicity.
+inline double max(double x, double y)
+{
+   return x >= y ? x : y;
+}
+
+inline double min(double x, double y)
+{
+   return x <= y ? x : y;
+}
+
+// The last param should be of type bool but it is not as that causes some issues with Cling for some reason...
+inline double
+poissonIntegral(int code, double mu, double x, double integrandMin, double integrandMax, unsigned int protectNegative)
+{
+   if (protectNegative && mu < 0.0) {
+      return std::exp(-2.0 * mu); // make it fall quickly
+   }
+
+   if (code == 1) {
+      // Implement integral over x as summation. Add special handling in case
+      // range boundaries are not on integer values of x
+      integrandMin = max(0, integrandMin);
+
+      if (integrandMax < 0. || integrandMax < integrandMin) {
+         return 0;
+      }
+      const double delta = 100.0 * std::sqrt(mu);
+      // If the limits are more than many standard deviations away from the mean,
+      // we might as well return the integral of the full Poisson distribution to
+      // save computing time.
+      if (integrandMin < max(mu - delta, 0.0) && integrandMax > mu + delta) {
+         return 1.;
+      }
+
+      // The range as integers. ixMin is included, ixMax outside.
+      const unsigned int ixMin = integrandMin;
+      const unsigned int ixMax = min(integrandMax + 1, (double)std::numeric_limits<unsigned int>::max());
+
+      // Sum from 0 to just before the bin outside of the range.
+      if (ixMin == 0) {
+         return ROOT::Math::gamma_cdf_c(mu, ixMax, 1);
+      } else {
+         // If necessary, subtract from 0 to the beginning of the range
+         if (ixMin <= mu) {
+            return ROOT::Math::gamma_cdf_c(mu, ixMax, 1) - ROOT::Math::gamma_cdf_c(mu, ixMin, 1);
+         } else {
+            // Avoid catastrophic cancellation in the high tails:
+            return ROOT::Math::gamma_cdf(mu, ixMin, 1) - ROOT::Math::gamma_cdf(mu, ixMax, 1);
+         }
+      }
+   }
+
+   // the integral with respect to the mean is the integral of a gamma distribution
+   // negative ix does not need protection (gamma returns 0.0)
+   const double ix = 1 + x;
+
+   return ROOT::Math::gamma_cdf(integrandMax, ix, 1.0) - ROOT::Math::gamma_cdf(integrandMin, ix, 1.0);
+}
+
+inline double logNormalIntegral(double xMin, double xMax, double m0, double k)
+{
+   double root2 = std::sqrt(2.);
+
+   double ln_k = TMath::Abs(TMath::Log(k));
+   double ret =
+      0.5 * (TMath::Erf(TMath::Log(xMax / m0) / (root2 * ln_k)) - TMath::Erf(TMath::Log(xMin / m0) / (root2 * ln_k)));
+
+   return ret;
 }
 
 } // namespace AnalyticalIntegrals

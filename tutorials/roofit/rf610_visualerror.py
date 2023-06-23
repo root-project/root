@@ -3,7 +3,9 @@
 ## \notebook
 ## Likelihood and minimization: visualization of errors from a covariance matrix
 ##
+## \macro_image
 ## \macro_code
+## \macro_output
 ##
 ## \date February 2018
 ## \authors Clemens Lange, Wouter Verkerke (C++ version)
@@ -33,7 +35,7 @@ x.setBins(25)
 d = model.generateBinned({x}, 1000)
 
 # Perform fit and save fit result
-r = model.fitTo(d, Save=True)
+r = model.fitTo(d, Save=True, PrintLevel=-1)
 
 # Visualize fit error
 # -------------------------------------

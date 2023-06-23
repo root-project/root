@@ -16,14 +16,16 @@
 #ifndef ROO_BRENT_ROOT_FINDER
 #define ROO_BRENT_ROOT_FINDER
 
-#include "RooAbsRootFinder.h"
+#include <Rtypes.h>
 
-class RooBrentRootFinder : public RooAbsRootFinder {
+class RooAbsFunc;
+
+class RooBrentRootFinder {
 public:
   RooBrentRootFinder(const RooAbsFunc& function);
-  inline ~RooBrentRootFinder() override { }
+  virtual ~RooBrentRootFinder() = default;
 
-  bool findRoot(double &result, double xlo, double xhi, double value= 0) const override;
+  bool findRoot(double &result, double xlo, double xhi, double value= 0) const;
 
   /// Set convergence tolerance parameter
   void setTol(double tol) {
@@ -31,11 +33,14 @@ public:
   }
 
 protected:
-  enum { MaxIterations = 512 };
+  static constexpr int MaxIterations = 512;
+
+  const RooAbsFunc *_function; ///< Pointer to input function
+  bool _valid;               ///< True if current state is valid
 
   double _tol ;
 
-  ClassDefOverride(RooBrentRootFinder,0) // Abstract interface for 1-dim real-valued function root finders
+  ClassDef(RooBrentRootFinder,0)
 };
 
 #endif

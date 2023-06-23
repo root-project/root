@@ -34,6 +34,25 @@ class RPadPainter extends RObjectPainter {
       this.painters = []; // complete list of all painters in the pad
       this.has_canvas = true;
       this.forEachPainter = this.forEachPainterInPad;
+
+      let d = this.selectDom();
+      if (!d.empty() && d.property('_batch_mode'))
+         this.batch_mode = true;
+   }
+
+   /** @summary Indicates that drawing runs in batch mode
+     * @private */
+   isBatchMode() {
+      if (this.batch_mode !== undefined)
+         return this.batch_mode;
+
+      if (isBatchMode())
+         return true;
+
+      if (!this.iscan && this.has_canvas)
+         return this.getCanvPainter()?.isBatchMode();
+
+      return false;
    }
 
    /** @summary Indicates that is not Root6 pad painter
@@ -157,7 +176,7 @@ class RPadPainter extends RObjectPainter {
      * @desc used to find title drawing
      * @private */
    findInPrimitives(objname, objtype) {
-      console.error('findInPrimitives not implemented for RPad');
+      console.warn('findInPrimitives not implemented for RPad');
       return null;
    }
 
@@ -259,6 +278,15 @@ class RPadPainter extends RObjectPainter {
       canp.producePadEvent('select', this, painter, pos, place);
    }
 
+   /** @summary Set fast drawing property depending on the size
+     * @private */
+   setFastDrawing(w, h) {
+      let was_fast = this._fast_drawing;
+      this._fast_drawing = settings.SmallPad && ((w < settings.SmallPad.width) || (h  < settings.SmallPad.height));
+      if (was_fast !== this._fast_drawing)
+         this.showPadButtons();
+   }
+
    /** @summary Create SVG element for the canvas */
    createCanvasSvg(check_resize, new_size) {
 
@@ -280,7 +308,7 @@ class RPadPainter extends RObjectPainter {
          if (!rect.changed && (check_resize == 1))
             return false;
 
-         if (!isBatchMode())
+         if (!this.isBatchMode())
             btns = this.getLayerSvg('btns_layer', this.this_pad_name);
 
          frect = svg.select('.canvas_fillrect');
@@ -300,11 +328,11 @@ class RPadPainter extends RObjectPainter {
 
          this.setTopPainter(); //assign canvas as top painter of that element
 
-         if (!isBatchMode() && !this.online_canvas)
+         if (!this.isBatchMode() && !this.online_canvas)
             svg.append('svg:title').text('ROOT canvas');
 
          frect = svg.append('svg:path').attr('class','canvas_fillrect');
-         if (!isBatchMode())
+         if (!this.isBatchMode())
             frect.style('pointer-events', 'visibleFill')
                  .on('dblclick', evnt => this.enlargePad(evnt, true))
                  .on('click', () => this.selectObjectPainter(this, null))
@@ -313,7 +341,7 @@ class RPadPainter extends RObjectPainter {
 
          svg.append('svg:g').attr('class', 'primitives_layer');
          svg.append('svg:g').attr('class', 'info_layer');
-         if (!isBatchMode())
+         if (!this.isBatchMode())
             btns = svg.append('svg:g')
                       .attr('class','btns_layer')
                       .property('leftside', settings.ToolBarSide == 'left')
@@ -381,7 +409,7 @@ class RPadPainter extends RObjectPainter {
       frect.attr('d', `M0,0H${rect.width}V${rect.height}H0Z`)
            .call(this.fillatt.func);
 
-      this._fast_drawing = settings.SmallPad && ((rect.width < settings.SmallPad.width) || (rect.height < settings.SmallPad.height));
+      this.setFastDrawing(rect.width, rect.height);
 
       if (this.alignButtons && btns)
          this.alignButtons(btns, rect.width, rect.height);
@@ -423,12 +451,7 @@ class RPadPainter extends RObjectPainter {
          console.error('missmatch with pad double click events');
       }
 
-      let was_fast = this._fast_drawing;
-
       this.checkResize(true);
-
-      if (this._fast_drawing != was_fast)
-         this.showPadButtons();
    }
 
    /** @summary Create SVG element for the pad
@@ -469,7 +492,7 @@ class RPadPainter extends RObjectPainter {
       if (only_resize) {
          svg_pad = this.svg_this_pad();
          svg_rect = svg_pad.select('.root_pad_border');
-         if (!isBatchMode())
+         if (!this.isBatchMode())
             btns = this.getLayerSvg('btns_layer', this.this_pad_name);
       } else {
          svg_pad = svg_parent.select('.primitives_layer')
@@ -478,13 +501,13 @@ class RPadPainter extends RObjectPainter {
              .attr('pad', this.this_pad_name) // set extra attribute  to mark pad name
              .property('pad_painter', this); // this is custom property
 
-         if (!isBatchMode())
+         if (!this.isBatchMode())
             svg_pad.append('svg:title').text('ROOT subpad');
 
          svg_rect = svg_pad.append('svg:path').attr('class', 'root_pad_border');
 
          svg_pad.append('svg:g').attr('class','primitives_layer');
-         if (!isBatchMode())
+         if (!this.isBatchMode())
             btns = svg_pad.append('svg:g')
                           .attr('class','btns_layer')
                           .property('leftside', settings.ToolBarSide != 'left')
@@ -493,7 +516,7 @@ class RPadPainter extends RObjectPainter {
          if (settings.ContextMenu)
             svg_rect.on('contextmenu', evnt => this.padContextMenu(evnt));
 
-         if (!isBatchMode())
+         if (!this.isBatchMode())
             svg_rect.style('pointer-events', 'visibleFill') // get events also for not visible rect
                     .on('dblclick', evnt => this.enlargePad(evnt, true))
                     .on('click', () => this.selectObjectPainter(this, null))
@@ -525,9 +548,9 @@ class RPadPainter extends RObjectPainter {
               .call(this.fillatt.func)
               .call(this.lineatt.func);
 
-      this._fast_drawing = settings.SmallPad && ((w < settings.SmallPad.width) || (h < settings.SmallPad.height));
+      this.setFastDrawing(w, h);
 
-       // special case of 3D canvas overlay
+      // special case of 3D canvas overlay
       if (svg_pad.property('can3d') === constants.Embed3D.Overlay)
           this.selectDom().select('.draw3d_' + this.this_pad_name)
               .style('display', pad_visible ? '' : 'none');
@@ -765,6 +788,9 @@ class RPadPainter extends RObjectPainter {
    /** @summary Check resize of canvas */
    checkCanvasResize(size, force) {
 
+      if (this._ignore_resize)
+         return false;
+
       if (this._dbr) {
          // special case of invoked intentially web browser resize to keep layout of canvas the same
          clearTimeout(this._dbr.handle);
@@ -777,9 +803,10 @@ class RPadPainter extends RObjectPainter {
          if ((rect.width == this._dbr.width) === (rect.height == this._dbr.height)) {
             let func = this._dbr.func;
             delete this._dbr;
+            delete this.enforceCanvasSize;
             func(true);
          } else {
-            this._dbr.setTimer(300); // check for next resize
+            this._dbr.setTimer(200); // check for next resize
          }
          return false;
       }
@@ -804,12 +831,11 @@ class RPadPainter extends RObjectPainter {
              return getPromise(this.painters[indx].redraw(force ? 'redraw' : 'resize')).then(() => redrawNext(indx+1));
           };
 
-      return sync_promise.then(() => this.ensureBrowserSize(this.enforceCanvasSize && this.pad?.fWinSize, this.pad.fWinSize[0], this.pad.fWinSize[1])).then(() => {
-         delete this.enforceCanvasSize;
 
+      return sync_promise.then(() => this.ensureBrowserSize(this.pad?.fWinSize[0], this.pad?.fWinSize[1])).then(() => {
          changed = this.createCanvasSvg(force ? 2 : 1, size);
 
-         if (changed && this.iscan && this.pad && this.online_canvas && !this.embed_canvas && !this.batch_mode) {
+         if (changed && this.iscan && this.pad && this.online_canvas && !this.embed_canvas && !this.isBatchMode()) {
             if (this._resize_tmout)
                clearTimeout(this._resize_tmout);
             this._resize_tmout = setTimeout(() => {
@@ -1078,8 +1104,11 @@ class RPadPainter extends RObjectPainter {
    /** @summary Ensure that browser window size match to requested canvas size
      * @desc Actively used for the first canvas drawing or after intentional layout resize when browser should be adjusted
      * @private */
-   ensureBrowserSize(condition, canvW, canvH) {
-      if (!condition || this._dbr || !canvW || !canvH || !isFunc(this.resizeBrowser) || !this.online_canvas || this.batch_mode || !this.use_openui || this.embed_canvas)
+   ensureBrowserSize(canvW, canvH, condition) {
+      if (this.enforceCanvasSize)
+         condition = true;
+
+      if (!condition || this._dbr || !canvW || !canvH || !isFunc(this.resizeBrowser) || !this.online_canvas || this.isBatchMode() || !this.use_openui || this.embed_canvas)
          return true;
 
       return new Promise(resolveFunc => {
@@ -1088,6 +1117,7 @@ class RPadPainter extends RObjectPainter {
                this._dbr.handle = setTimeout(() => {
                   if (this._dbr) {
                      delete this._dbr;
+                     delete this.enforceCanvasSize;
                      resolveFunc(true);
                   }
                }, tmout);
@@ -1096,6 +1126,7 @@ class RPadPainter extends RObjectPainter {
 
          if (!this.resizeBrowser(canvW, canvH)) {
             delete this._dbr;
+            delete this.enforceCanvasSize;
             resolveFunc(true);
          } else if (this._dbr) {
             this._dbr.setTimer(200); // set short timer
@@ -1116,7 +1147,7 @@ class RPadPainter extends RObjectPainter {
       // let padattr = { fCw: snap.fWinSize[0], fCh: snap.fWinSize[1], fTitle: snap.fTitle };
 
       // if canvas size not specified in batch mode, temporary use 900x700 size
-      // if (this.batch_mode && this.iscan && (!padattr.fCw || !padattr.fCh)) { padattr.fCw = 900; padattr.fCh = 700; }
+      // if (this.isBatchMode() && this.iscan && (!padattr.fCw || !padattr.fCh)) { padattr.fCw = 900; padattr.fCh = 700; }
 
       if (this.iscan && this._websocket && snap.fTitle && !this.embed_canvas && (typeof document !== 'undefined'))
          document.title = snap.fTitle;
@@ -1129,12 +1160,12 @@ class RPadPainter extends RObjectPainter {
          this.draw_object = snap;
          this.pad = snap;
 
-         if (this.batch_mode && this.iscan)
+         if (this.isBatchMode() && this.iscan)
              this._fixed_size = true;
 
          let mainid = this.selectDom().attr('id');
 
-         if (!this.batch_mode && !this.use_openui && !this.brlayout && mainid && isStr(mainid)) {
+         if (!this.isBatchMode() && !this.use_openui && !this.brlayout && mainid && isStr(mainid)) {
             this.brlayout = new BrowserLayout(mainid, null, this);
             this.brlayout.create(mainid, true);
             this.setDom(this.brlayout.drawing_divid()); // need to create canvas
@@ -1359,11 +1390,7 @@ class RPadPainter extends RObjectPainter {
          height = fp.getFrameHeight();
       }
 
-      let svg = `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">${elem.node().innerHTML}</svg>`;
-
-      if (internals.processSvgWorkarounds)
-         svg = internals.processSvgWorkarounds(svg);
-
+      let svg = `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">${elem.node().innerHTML}</svg>`;
       svg = compressSVG(svg);
 
       return svgToImage(svg, file_format).then(res => {
@@ -1402,11 +1429,8 @@ class RPadPainter extends RObjectPainter {
 
       if (funcname == 'PadContextMenus') {
 
-         if (evnt) {
-            evnt.preventDefault();
-            evnt.stopPropagation();
-         }
-
+         evnt?.preventDefault();
+         evnt?.stopPropagation();
          if (closeMenu()) return;
 
          createMenu(evnt, this).then(menu => {
@@ -1457,7 +1481,7 @@ class RPadPainter extends RObjectPainter {
          let pp = this.painters[i];
 
          if (isFunc(pp.clickPadButton))
-            pp.clickPadButton(funcname);
+            pp.clickPadButton(funcname, evnt);
 
          if (!done && isFunc(pp.clickButton))
             done = pp.clickButton(funcname);
@@ -1467,7 +1491,7 @@ class RPadPainter extends RObjectPainter {
    /** @summary Add button to the pad
      * @private */
    addPadButton(btn, tooltip, funcname, keyname) {
-      if (!settings.ToolBar || isBatchMode() || this.batch_mode) return;
+      if (!settings.ToolBar || this.isBatchMode()) return;
 
       if (!this._buttons) this._buttons = [];
       // check if there are duplications
@@ -1600,9 +1624,8 @@ class RPadPainter extends RObjectPainter {
 
       painter.createPadSvg();
 
-      if (painter.matchObjectType(clTPad) && (!painter.has_canvas || painter.hasObjectsToDraw())) {
+      if (painter.matchObjectType(clTPad) && (!painter.has_canvas || painter.hasObjectsToDraw()))
          painter.addPadButtons();
-      }
 
       // we select current pad, where all drawing is performed
       let prev_name = painter.has_canvas ? painter.selectCurrentPad(painter.this_pad_name) : undefined;

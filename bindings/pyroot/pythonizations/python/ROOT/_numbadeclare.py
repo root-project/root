@@ -61,9 +61,11 @@ def _NumbaDeclareDecorator(input_types, return_type = None, name=None):
                         'UL': 'unsigned long',
                         'B': 'bool'
                         }
-                if t[4:] in typemap: # first 3 characters are "RVec"
-                    return typemap[t[4:]]
-                raise Exception(
+                rvec_start = t.find('RVec') # discard a possible const modifier before "RVec"
+                try:
+                    return typemap[t[rvec_start+4:]] # alias type characters come after "RVec"
+                except KeyError:
+                    raise Exception(
                         'Unrecognized type {}. Valid shorthand aliases of RVec are {}'
                         .format(t, list('RVec' + i for i in typemap.keys())))
             g = re.match('(.*)<(.*)>', t).groups(0)
@@ -137,6 +139,25 @@ def _NumbaDeclareDecorator(input_types, return_type = None, name=None):
             nb_return_type = None
         return nb_return_type, nb_input_types
 
+    def add_rvec_input_type_ref(input_types_ref, const_mod, rvect):
+        '''
+        Construct the type of an RVec input parameter for its use in the C++
+        wrapper function signature.
+        '''
+        tref = '{}ROOT::{}&'.format(const_mod, rvect)
+        input_types_ref.append(tref)
+
+    def add_rvec_func_ptr_input_type(func_ptr_input_types, const_mod, rvect):
+        '''
+        Construct the type of an RVec input parameter for its use in the cast
+        of the function pointer of the jitted Python wrapper.
+        '''
+        innert = get_inner_type(rvect)
+        if innert == 'bool':
+            # Special treatment for bool: In numpy, bools have 1 byte
+            innert = 'char'
+
+        func_ptr_input_types += ['{}{}*, int'.format(const_mod, innert)]
 
     def inner(func, input_types=input_types, return_type=return_type, name=name):
         '''
@@ -265,22 +286,25 @@ def pywrapper({SIGNATURE}):
 
         # Build C++ wrapper for jitting with cling
 
-        # Define input signature
-        input_types_ref = ['ROOT::{}&'.format(t) if 'RVec' in t else t for t in input_types]
-        input_signature = ', '.join('{} x_{}'.format(t, i) for i, t in enumerate(input_types_ref))
-
-        # Define function pointer types
+        # Define:
+        # - Input signature
+        # - Function pointer types
+        input_types_ref = []
         func_ptr_input_types = []
         for t in input_types:
-            if 'RVec' in t:
-                innert = get_inner_type(t)
-                if innert == 'bool':
-                    # Special treatment for bool: In numpy, bools have 1 byte
-                    func_ptr_input_types += ['char*, int']
-                else:
-                    func_ptr_input_types += ['{}*, int'.format(innert)]
+            m = re.match('\s*(const\s+)?(RVec\w+|RVec<[\w\s]+>)', t)
+            if m:
+                const_mod = '' if m.group(1) is None else 'const '
+                rvect = m.group(2)
+
+                add_rvec_input_type_ref(input_types_ref, const_mod, rvect)
+                add_rvec_func_ptr_input_type(func_ptr_input_types, const_mod, rvect)
             else:
-                func_ptr_input_types += [t]
+                input_types_ref.append(t)
+                func_ptr_input_types.append(t)
+
+        input_signature = ', '.join('{} x_{}'.format(t, i) for i, t in enumerate(input_types_ref))
+
         if 'RVec' in return_type:
             # See C++ wrapper code for the reason using these types
             innert = get_inner_type(return_type)

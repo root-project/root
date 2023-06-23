@@ -115,7 +115,16 @@ public:
 
   // List content management
   virtual bool add(const RooAbsArg& var, bool silent=false) ;
+// The following function is not memory safe, because it takes ownership of var
+// without moving it. It is not publically available in the memory safe
+// interfaces mode.
+#ifdef ROOFIT_MEMORY_SAFE_INTERFACES
+protected:
+#endif
   virtual bool addOwned(RooAbsArg& var, bool silent=false);
+#ifdef ROOFIT_MEMORY_SAFE_INTERFACES
+public:
+#endif
   bool addOwned(std::unique_ptr<RooAbsArg> var, bool silent=false);
   virtual RooAbsArg *addClone(const RooAbsArg& var, bool silent=false) ;
   virtual bool replace(const RooAbsArg& var1, const RooAbsArg& var2) ;

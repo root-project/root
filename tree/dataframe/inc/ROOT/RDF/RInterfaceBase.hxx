@@ -11,6 +11,7 @@
 #ifndef ROOT_RDF_RINTERFACEBASE
 #define ROOT_RDF_RINTERFACEBASE
 
+#include "ROOT/RVec.hxx"
 #include <ROOT/RDF/InterfaceUtils.hxx>
 #include <ROOT/RDF/RColumnRegister.hxx>
 #include <ROOT/RDF/RDisplay.hxx>
@@ -80,10 +81,10 @@ protected:
       }
       RDFInternal::CheckValidCppVarName(variationName, "Vary");
 
-      static_assert(RDFInternal::IsRVec<RetType>::value, "Vary expressions must return an RVec.");
+      static_assert(ROOT::Internal::VecOps::IsRVec<RetType>::value, "Vary expressions must return an RVec.");
 
       if (colNames.size() > 1) { // we are varying multiple columns simultaneously, RetType is RVec<RVec<T>>
-         constexpr bool hasInnerRVec = RDFInternal::IsRVec<typename RetType::value_type>::value;
+         constexpr bool hasInnerRVec = ROOT::Internal::VecOps::IsRVec<typename RetType::value_type>::value;
          if (!hasInnerRVec)
             throw std::runtime_error("This Vary call is varying multiple columns simultaneously but the expression "
                                      "does not return an RVec of RVecs.");
@@ -98,8 +99,8 @@ protected:
 
          for (auto i = 0u; i < colTypes.size(); ++i) {
             const auto *define = fColRegister.GetDefine(colNames[i]);
-            const auto &expectedTypeID = define ? define->GetTypeId() : RDFInternal::TypeName2TypeID(colTypes[i]);
-            if (innerTypeID != expectedTypeID)
+            const auto *expectedTypeID = define ? &define->GetTypeId() : &RDFInternal::TypeName2TypeID(colTypes[i]);
+            if (innerTypeID != *expectedTypeID)
                throw std::runtime_error("Varied values for column \"" + colNames[i] + "\" have a different type (" +
                                         RDFInternal::TypeID2TypeName(innerTypeID) + ") than the nominal value (" +
                                         colTypes[i] + ").");
@@ -108,9 +109,9 @@ protected:
          const auto &retTypeID = typeid(typename RetType::value_type);
          const auto &colName = colNames[0]; // we have only one element in there
          const auto *define = fColRegister.GetDefine(colName);
-         const auto &expectedTypeID =
-            define ? define->GetTypeId() : RDFInternal::TypeName2TypeID(GetColumnType(colName));
-         if (retTypeID != expectedTypeID)
+         const auto *expectedTypeID =
+            define ? &define->GetTypeId() : &RDFInternal::TypeName2TypeID(GetColumnType(colName));
+         if (retTypeID != *expectedTypeID)
             throw std::runtime_error("Varied values for column \"" + colName + "\" have a different type (" +
                                      RDFInternal::TypeID2TypeName(retTypeID) + ") than the nominal value (" +
                                      GetColumnType(colName) + ").");

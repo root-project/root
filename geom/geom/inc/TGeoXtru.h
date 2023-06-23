@@ -34,8 +34,8 @@ public:
       ~ThreadData_t();
    };
    ThreadData_t&         GetThreadData()   const;
-   virtual void          ClearThreadData() const;
-   virtual void          CreateThreadData(Int_t nthreads);
+   void          ClearThreadData() const override;
+   void          CreateThreadData(Int_t nthreads) override;
 
 protected:
    // data members
@@ -71,25 +71,25 @@ public:
    TGeoXtru(Int_t nz);
    TGeoXtru(Double_t *param);
    // destructor
-   virtual ~TGeoXtru();
+   ~TGeoXtru() override;
    // methods
-   virtual Double_t      Capacity() const;
-   virtual void          ComputeBBox();
-   virtual void          ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm);
-   virtual void          ComputeNormal_v(const Double_t *points, const Double_t *dirs, Double_t *norms, Int_t vecsize);
-   virtual Bool_t        Contains(const Double_t *point) const;
-   virtual void          Contains_v(const Double_t *points, Bool_t *inside, Int_t vecsize) const;
+   Double_t      Capacity() const override;
+   void          ComputeBBox() override;
+   void          ComputeNormal(const Double_t *point, const Double_t *dir, Double_t *norm) override;
+   void          ComputeNormal_v(const Double_t *points, const Double_t *dirs, Double_t *norms, Int_t vecsize) override;
+   Bool_t        Contains(const Double_t *point) const override;
+   void          Contains_v(const Double_t *points, Bool_t *inside, Int_t vecsize) const override;
    Bool_t                DefinePolygon(Int_t nvert, const Double_t *xv, const Double_t *yv);
    virtual void          DefineSection(Int_t snum, Double_t z, Double_t x0=0., Double_t y0=0., Double_t scale=1.);
-   virtual Double_t      DistFromInside(const Double_t *point, const Double_t *dir, Int_t iact=1,
-                                   Double_t step=TGeoShape::Big(), Double_t *safe=nullptr) const;
-   virtual void          DistFromInside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t *step) const;
-   virtual Double_t      DistFromOutside(const Double_t *point, const Double_t *dir, Int_t iact=1,
-                                   Double_t step=TGeoShape::Big(), Double_t *safe=nullptr) const;
-   virtual void          DistFromOutside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t *step) const;
-   virtual Int_t         DistancetoPrimitive(Int_t px, Int_t py);
+   Double_t      DistFromInside(const Double_t *point, const Double_t *dir, Int_t iact=1,
+                                   Double_t step=TGeoShape::Big(), Double_t *safe=nullptr) const override;
+   void          DistFromInside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t *step) const override;
+   Double_t      DistFromOutside(const Double_t *point, const Double_t *dir, Int_t iact=1,
+                                   Double_t step=TGeoShape::Big(), Double_t *safe=nullptr) const override;
+   void          DistFromOutside_v(const Double_t *points, const Double_t *dirs, Double_t *dists, Int_t vecsize, Double_t *step) const override;
+   Int_t         DistancetoPrimitive(Int_t px, Int_t py) override;
    void                  DrawPolygon(Option_t *option="");
-   virtual const TBuffer3D &GetBuffer3D(Int_t reqSections, Bool_t localFrame) const;
+   const TBuffer3D &GetBuffer3D(Int_t reqSections, Bool_t localFrame) const override;
 //   virtual Int_t         GetByteCount() const {return 60+12*fNz;}
    Int_t                 GetNz() const    {return fNz;}
    Int_t                 GetNvert() const {return fNvert;}
@@ -100,24 +100,24 @@ public:
    Double_t              GetScale(Int_t i) const {return (i<fNz&&i>-1 && fScale) ? fScale[i] : 1.0;}
    Double_t             *GetZ() const     {return fZ;}
    Double_t              GetZ(Int_t ipl) const;
-   virtual TGeoShape    *GetMakeRuntimeShape(TGeoShape * /*mother*/, TGeoMatrix * /*mat*/) const {return nullptr;}
-   virtual void          GetMeshNumbers(Int_t &nvert, Int_t &nsegs, Int_t &npols) const;
-   virtual Int_t         GetNmeshVertices() const;
-   virtual void          InspectShape() const;
-   virtual TBuffer3D    *MakeBuffer3D() const;
+   TGeoShape    *GetMakeRuntimeShape(TGeoShape * /*mother*/, TGeoMatrix * /*mat*/) const override {return nullptr;}
+   void          GetMeshNumbers(Int_t &nvert, Int_t &nsegs, Int_t &npols) const override;
+   Int_t         GetNmeshVertices() const override;
+   void          InspectShape() const override;
+   TBuffer3D    *MakeBuffer3D() const override;
    Double_t             &Z(Int_t ipl) {return fZ[ipl];}
-   virtual Double_t      Safety(const Double_t *point, Bool_t in=kTRUE) const;
-   virtual void          Safety_v(const Double_t *points, const Bool_t *inside, Double_t *safe, Int_t vecsize) const;
-   virtual void          SavePrimitive(std::ostream &out, Option_t *option = "");
+   Double_t      Safety(const Double_t *point, Bool_t in=kTRUE) const override;
+   void          Safety_v(const Double_t *points, const Bool_t *inside, Double_t *safe, Int_t vecsize) const override;
+   void          SavePrimitive(std::ostream &out, Option_t *option = "") override;
    void                  SetCurrentZ(Double_t z, Int_t iz);
    void                  SetCurrentVertices(Double_t x0, Double_t y0, Double_t scale);
-   virtual void          SetDimensions(Double_t *param);
-   virtual void          SetPoints(Double_t *points) const;
-   virtual void          SetPoints(Float_t *points) const;
-   virtual void          SetSegsAndPols(TBuffer3D &buff) const;
-   virtual void          Sizeof3D() const;
+   void          SetDimensions(Double_t *param) override;
+   void          SetPoints(Double_t *points) const override;
+   void          SetPoints(Float_t *points) const override;
+   void          SetSegsAndPols(TBuffer3D &buff) const override;
+   void          Sizeof3D() const override;
 
-   ClassDef(TGeoXtru, 3)         // extruded polygon class
+   ClassDefOverride(TGeoXtru, 3)         // extruded polygon class
 };
 
 #endif

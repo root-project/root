@@ -52,7 +52,7 @@ public:
    virtual void VisitCollectionClassField(const RCollectionClassField &field) { VisitField(field); }
    virtual void VisitRecordField(const RRecordField &field) { VisitField(field); }
    virtual void VisitClusterSizeField(const RField<ClusterSize_t> &field) { VisitField(field); }
-   virtual void VisitCardinalityField(const RField<RNTupleCardinality> &field) { VisitField(field); }
+   virtual void VisitCardinalityField(const RCardinalityField &field) { VisitField(field); }
    virtual void VisitDoubleField(const RField<double> &field) { VisitField(field); }
    virtual void VisitFloatField(const RField<float> &field) { VisitField(field); }
    virtual void VisitCharField(const RField<char> &field) { VisitField(field); }
@@ -60,6 +60,7 @@ public:
    virtual void VisitInt16Field(const RField<std::int16_t> &field) { VisitField(field); }
    virtual void VisitIntField(const RField<int> &field) { VisitField(field); }
    virtual void VisitInt64Field(const RField<std::int64_t> &field) { VisitField(field); }
+   virtual void VisitNullableField(const RNullableField &field) { VisitField(field); }
    virtual void VisitStringField(const RField<std::string> &field) { VisitField(field); }
    virtual void VisitUInt16Field(const RField<std::uint16_t> &field) { VisitField(field); }
    virtual void VisitUInt32Field(const RField<std::uint32_t> &field) { VisitField(field); }
@@ -208,8 +209,8 @@ public:
    void VisitUInt16Field(const RField<std::uint16_t> &field) final;
    void VisitUInt32Field(const RField<std::uint32_t> &field) final;
    void VisitUInt64Field(const RField<std::uint64_t> &field) final;
-   void VisitCardinalityField(const RField<RNTupleCardinality> &field) final;
 
+   void VisitCardinalityField(const RCardinalityField &field) final;
    void VisitArrayField(const RArrayField &field) final;
    void VisitClassField(const RClassField &field) final;
    void VisitRecordField(const RRecordField &field) final;
@@ -218,6 +219,7 @@ public:
    void VisitVectorBoolField(const RField<std::vector<bool>> &field) final;
    void VisitRVecField(const RRVecField &field) final;
    void VisitBitsetField(const RBitsetField &field) final;
+   void VisitNullableField(const RNullableField &field) final;
 };
 
 

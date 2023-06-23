@@ -86,9 +86,9 @@ protected:
       Int_t numee=0, bool doEEVal=false, double eeVal=0.0);
 
 
-  void shiftCurveToZero(double prevYMax) ;
+  void shiftCurveToZero();
 
-  bool _showProgress ; ///<! Show progress indication when adding points
+  bool _showProgress = false; ///<! Show progress indication when adding points
 
   ClassDefOverride(RooCurve,1) // 1-dimensional smooth curve for use in RooPlots
 };

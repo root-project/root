@@ -63,9 +63,14 @@ struct RClusterSize {
 using ClusterSize_t = RClusterSize;
 constexpr ClusterSize_t kInvalidClusterIndex(std::uint64_t(-1));
 
-/// Helper type to present an offset column as array of collection sizes. See RField<RNTupleCardinality> for details.
+/// Helper types to present an offset column as array of collection sizes.
+/// See RField<RNTupleCardinality<SizeT>> for details.
+template <typename SizeT>
 struct RNTupleCardinality {
-   using ValueType = std::size_t;
+   static_assert(std::is_same_v<SizeT, std::uint32_t> || std::is_same_v<SizeT, std::uint64_t>,
+                 "RNTupleCardinality is only supported with std::uint32_t or std::uint64_t template parameters");
+
+   using ValueType = SizeT;
 
    RNTupleCardinality() : fValue(0) {}
    explicit constexpr RNTupleCardinality(ValueType value) : fValue(value) {}
@@ -138,11 +143,15 @@ struct RNTupleLocatorObject64 {
 /// and therefore we need to store their actual size.
 /// TODO(jblomer): consider moving this to `RNTupleDescriptor`
 struct RNTupleLocator {
-   /// Values for the _Type_ field in non-disk locators; see `doc/specifications.md` for details
+   /// Values for the _Type_ field in non-disk locators.  Serializable types must have the MSb == 0; see
+   /// `doc/specifications.md` for details
    enum ELocatorType : std::uint8_t {
       kTypeFile = 0x00,
       kTypeURI = 0x01,
       kTypeDAOS = 0x02,
+
+      kLastSerializableType = 0x7f,
+      kTypePageZero = kLastSerializableType + 1,
    };
 
    /// Simple on-disk locators consisting of a 64-bit offset use variant type `uint64_t`; extended locators have

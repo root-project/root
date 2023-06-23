@@ -24,18 +24,19 @@
 #include <TSystem.h>
 
 RooFuncWrapper::RooFuncWrapper(const char *name, const char *title, std::string const &funcBody,
-                               RooArgSet const &paramSet, const RooAbsData *data /*=nullptr*/)
+                               RooArgSet const &paramSet, const RooAbsData *data /*=nullptr*/,
+                               RooSimultaneous const *simPdf)
    : RooAbsReal{name, title}, _params{"!params", "List of parameters", this}
 {
    // Declare the function and create its derivative.
    declareAndDiffFunction(name, funcBody);
 
    // Load the parameters and observables.
-   loadParamsAndData(name, nullptr, paramSet, data);
+   loadParamsAndData(name, nullptr, paramSet, data, simPdf);
 }
 
 RooFuncWrapper::RooFuncWrapper(const char *name, const char *title, RooAbsReal const &obj, RooArgSet const &normSet,
-                               const RooAbsData *data /*=nullptr*/)
+                               const RooAbsData *data /*=nullptr*/, RooSimultaneous const *simPdf)
    : RooAbsReal{name, title}, _params{"!params", "List of parameters", this}
 {
    std::string func;
@@ -46,9 +47,15 @@ RooFuncWrapper::RooFuncWrapper(const char *name, const char *title, RooAbsReal c
    // Get the parameters.
    RooArgSet paramSet;
    obj.getParameters(data ? data->get() : nullptr, paramSet);
+   RooArgSet floatingParamSet;
+   for (RooAbsArg * param : paramSet) {
+      if(!param->isConstant()) {
+        floatingParamSet.add(*param);
+      }
+   }
 
    // Load the parameters and observables.
-   loadParamsAndData(name, pdf.get(), paramSet, data);
+   loadParamsAndData(name, pdf.get(), floatingParamSet, data, simPdf);
 
    func = buildCode(*pdf);
 
@@ -67,8 +74,27 @@ RooFuncWrapper::RooFuncWrapper(const RooFuncWrapper &other, const char *name)
 }
 
 void RooFuncWrapper::loadParamsAndData(std::string funcName, RooAbsArg const *head, RooArgSet const &paramSet,
-                                       const RooAbsData *data)
+                                       const RooAbsData *data, RooSimultaneous const *simPdf)
 {
+   // Extract observables
+   std::stack<std::vector<double>> vectorBuffers; // for data loading
+   std::map<RooFit::Detail::DataKey, RooSpan<const double>> spans;
+
+   if (data) {
+      spans = RooFit::BatchModeDataHelpers::getDataSpans(*data, "", simPdf, true, false, vectorBuffers);
+   }
+
+   std::size_t idx = 0;
+   for (auto const &item : spans) {
+      std::size_t n = item.second.size();
+      _obsInfos.emplace(item.first, ObsInfo{idx, n});
+      _observables.reserve(_observables.size() + n);
+      for (std::size_t i = 0; i < n; ++i) {
+         _observables.push_back(item.second[i]);
+      }
+      idx += n;
+   }
+
    // Extract parameters
    for (auto *param : paramSet) {
       if (!dynamic_cast<RooAbsReal *>(param)) {
@@ -78,25 +104,11 @@ void RooFuncWrapper::loadParamsAndData(std::string funcName, RooAbsArg const *he
          coutE(InputArguments) << errorMsg.str() << std::endl;
          throw std::runtime_error(errorMsg.str().c_str());
       }
-      _params.add(*param);
-   }
-   _gradientVarBuffer.resize(_params.size());
-
-   if (data == nullptr)
-      return;
-
-   // Extract observables
-   std::stack<std::vector<double>> vectorBuffers; // for data loading
-   auto spans = RooFit::BatchModeDataHelpers::getDataSpans(*data, "", nullptr, true, false, vectorBuffers);
-
-   for (auto const &item : spans) {
-      std::size_t n = item.second.size();
-      _obsInfos.emplace(item.first, ObsInfo{_observables.size(), n});
-      _observables.reserve(_observables.size() + n);
-      for (std::size_t i = 0; i < n; ++i) {
-         _observables.push_back(item.second[i]);
+      if (spans.find(param) == spans.end()) {
+         _params.add(*param);
       }
    }
+   _gradientVarBuffer.resize(_params.size());
 
    if (head) {
       _nodeOutputSizes = RooFit::BatchModeDataHelpers::determineOutputSizes(*head, spans);
@@ -155,7 +167,7 @@ void RooFuncWrapper::declareAndDiffFunction(std::string funcName, std::string co
    _grad = reinterpret_cast<Grad>(gInterpreter->ProcessLine((wrapperName + ";").c_str()));
 }
 
-void RooFuncWrapper::getGradient(double *out) const
+void RooFuncWrapper::gradient(double *out) const
 {
    updateGradientVarBuffer();
    std::fill(out, out + _params.size(), 0.0);

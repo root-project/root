@@ -46,7 +46,7 @@ public:
                  GContext_t norm = GetDefaultGC()(),
                  FontStruct_t font = GetDefaultFontStruct(),
                  UInt_t option = 0);
-   virtual ~TGTableHeader();
+   ~TGTableHeader() override;
 
    void SetWidth(UInt_t width) override;
    void SetHeight(UInt_t height) override;

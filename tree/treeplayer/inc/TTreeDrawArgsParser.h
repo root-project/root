@@ -80,7 +80,7 @@ protected:
 
 public:
    TTreeDrawArgsParser();
-   ~TTreeDrawArgsParser();
+   ~TTreeDrawArgsParser() override;
 
    Bool_t         Parse(const char *varexp, const char *selection, Option_t *option);
    Bool_t         GetAdd() const { return fAdd; }
@@ -103,7 +103,7 @@ public:
    void           SetOriginal(TObject *o) { fOriginal = o; }
    static Int_t   GetMaxDimension();
 
-   ClassDef(TTreeDrawArgsParser,0); // Helper class to parse the argument to TTree::Draw
+   ClassDefOverride(TTreeDrawArgsParser,0); // Helper class to parse the argument to TTree::Draw
 };
 
 #endif

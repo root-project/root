@@ -1,6 +1,7 @@
 /// \file ROOT/RNTupleSerialize.hxx
 /// \ingroup NTuple ROOT7
 /// \author Jakob Blomer <jblomer@cern.ch>
+/// \author Javier Lopez-Gomez <javier.lopez.gomez@cern.ch>
 /// \date 2021-08-02
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
 /// is welcome!
@@ -63,6 +64,7 @@ public:
    static constexpr std::uint32_t kFlagSortAscColumn     = 0x01;
    static constexpr std::uint32_t kFlagSortDesColumn     = 0x02;
    static constexpr std::uint32_t kFlagNonNegativeColumn = 0x04;
+   static constexpr std::uint32_t kFlagDeferredColumn    = 0x08;
 
    static constexpr DescriptorId_t kZeroFieldId = std::uint64_t(-2);
 

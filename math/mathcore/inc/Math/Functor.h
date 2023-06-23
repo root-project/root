@@ -207,12 +207,12 @@ public:
    {}
 
    // Clone of the function handler (use copy-ctor).
-   GradFunctor * Clone() const { return new GradFunctor(*this); }
+   GradFunctor * Clone() const override { return new GradFunctor(*this); }
 
    // for multi-dimensional functions
-   unsigned int NDim() const { return fDim; }
+   unsigned int NDim() const override { return fDim; }
 
-   void Gradient(const double *x, double *g) const {
+   void Gradient(const double *x, double *g) const override {
       // Fall back to base implementation if no gradient function is provided
       // (it will fill the gradient calling DoDerivative() for each component).
       if(!fGradFunc) {
@@ -224,11 +224,11 @@ public:
 
 private :
 
-   inline double DoEval (const double * x) const {
+   inline double DoEval (const double * x) const override {
       return fFunc(x);
    }
 
-   inline double DoDerivative (const double * x, unsigned int icoord  ) const {
+   inline double DoDerivative (const double * x, unsigned int icoord  ) const override {
       if(fDerivFunc) {
          return fDerivFunc(x, icoord);
       }
@@ -297,12 +297,12 @@ public:
    {}
 
    // clone of the function handler (use copy-ctor)
-   GradFunctor1D * Clone() const { return new GradFunctor1D(*this); }
+   GradFunctor1D * Clone() const override { return new GradFunctor1D(*this); }
 
 private :
 
-   inline double DoEval (double x) const { return fFunc(x); }
-   inline double DoDerivative (double x) const { return fDerivFunc(x); }
+   inline double DoEval (double x) const override { return fFunc(x); }
+   inline double DoDerivative (double x) const override { return fDerivFunc(x); }
 
    std::function<double(double)> fFunc;
    std::function<double(double)> fDerivFunc;

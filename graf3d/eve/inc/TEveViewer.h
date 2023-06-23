@@ -43,10 +43,10 @@ protected:
 
 public:
    TEveViewer(const char* n="TEveViewer", const char* t="");
-   virtual ~TEveViewer();
+   ~TEveViewer() override;
 
-   virtual void PreUndock();
-   virtual void PostDock();
+   void PreUndock() override;
+   void PostDock() override;
 
    TGLViewer* GetGLViewer() const { return fGLViewer; }
    void SetGLViewer(TGLViewer* viewer, TGFrame* frame);
@@ -59,16 +59,16 @@ public:
 
    virtual void AddScene(TEveScene* scene);
 
-   virtual void RemoveElementLocal(TEveElement* el);
-   virtual void RemoveElementsLocal();
+   void RemoveElementLocal(TEveElement* el) override;
+   void RemoveElementsLocal() override;
 
-   virtual TObject* GetEditorObject(const TEveException& eh="TEveViewer::GetEditorObject ") const;
+   TObject* GetEditorObject(const TEveException& eh="TEveViewer::GetEditorObject ") const override;
 
-   virtual Bool_t HandleElementPaste(TEveElement* el);
+   Bool_t HandleElementPaste(TEveElement* el) override;
 
-   virtual const TGPicture* GetListTreeIcon(Bool_t open=kFALSE);
+   const TGPicture* GetListTreeIcon(Bool_t open=kFALSE) override;
 
-   ClassDef(TEveViewer, 0); // Reve representation of TGLViewer.
+   ClassDefOverride(TEveViewer, 0); // Reve representation of TGLViewer.
 };
 
 
@@ -92,11 +92,11 @@ protected:
 
 public:
    TEveViewerList(const char* n="TEveViewerList", const char* t="");
-   virtual ~TEveViewerList();
+   ~TEveViewerList() override;
 
-   virtual void AddElement(TEveElement* el);
-   virtual void RemoveElementLocal(TEveElement* el);
-   virtual void RemoveElementsLocal();
+   void AddElement(TEveElement* el) override;
+   void RemoveElementLocal(TEveElement* el) override;
+   void RemoveElementsLocal() override;
 
    // --------------------------------
 
@@ -129,7 +129,7 @@ public:
    Bool_t  UseLightColorSet()   const { return fUseLightColorSet; }
    void    SwitchColorSet();
 
-   ClassDef(TEveViewerList, 0); // List of Viewers providing common operations on TEveViewer collections.
+   ClassDefOverride(TEveViewerList, 0); // List of Viewers providing common operations on TEveViewer collections.
 };
 
 #endif

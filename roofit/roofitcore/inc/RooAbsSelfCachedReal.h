@@ -54,7 +54,7 @@ protected:
       // Use own name as base name for caches
       return Base_t::GetName();
    }
-   RooArgSet *actualObservables(const RooArgSet &nset) const override;
+   RooFit::OwningPtr<RooArgSet> actualObservables(const RooArgSet &nset) const override;
    RooFit::OwningPtr<RooArgSet> actualParameters(const RooArgSet &nset) const override;
    void fillCacheObject(typename Base_t::CacheElem &cache) const override;
 
@@ -95,7 +95,7 @@ void RooAbsSelfCached<Base_t>::fillCacheObject(typename Base_t::CacheElem &cache
 /// Returns the subset of nset that are observables this p.d.f
 
 template <class Base_t>
-RooArgSet *RooAbsSelfCached<Base_t>::actualObservables(const RooArgSet &nset) const
+RooFit::OwningPtr<RooArgSet> RooAbsSelfCached<Base_t>::actualObservables(const RooArgSet &nset) const
 {
    // Make list of servers
    RooArgSet serverSet;
@@ -105,11 +105,11 @@ RooArgSet *RooAbsSelfCached<Base_t>::actualObservables(const RooArgSet &nset) co
    }
 
    // Return servers that are in common with given normalization set
-   return (RooArgSet *)serverSet.selectCommon(nset);
+   return RooFit::OwningPtr<RooArgSet>{static_cast<RooArgSet *>(serverSet.selectCommon(nset))};
 }
 
 template <>
-inline RooArgSet *RooAbsSelfCached<RooAbsCachedPdf>::actualObservables(const RooArgSet & /*nset*/) const
+inline RooFit::OwningPtr<RooArgSet> RooAbsSelfCached<RooAbsCachedPdf>::actualObservables(const RooArgSet & /*nset*/) const
 {
    // Make list of servers
    auto serverSet = new RooArgSet;
@@ -122,7 +122,7 @@ inline RooArgSet *RooAbsSelfCached<RooAbsCachedPdf>::actualObservables(const Roo
    // For unknown reasons, the original implementation in RooAbsSelfCachedPdf
    // skipped the "selectCommon" strep, which is why this is the only method
    // that is implemented separately for RooAbsSelfCachedPdf.
-   return serverSet;
+   return RooFit::OwningPtr<RooArgSet>{serverSet};
 }
 
 ////////////////////////////////////////////////////////////////////////////////

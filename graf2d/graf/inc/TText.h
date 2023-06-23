@@ -36,7 +36,7 @@ public:
    TText(Double_t x, Double_t y, const char *text);
    TText(Double_t x, Double_t y, const wchar_t *text);
    TText(const TText &text);
-   virtual ~TText();
+   ~TText() override;
 
    TText &operator=(const TText &src);
 

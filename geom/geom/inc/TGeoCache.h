@@ -46,12 +46,12 @@ protected:
 public:
    TGeoCacheState();
    TGeoCacheState(Int_t capacity);
-   virtual ~TGeoCacheState();
+   ~TGeoCacheState() override;
 
    void                 SetState(Int_t level, Int_t startlevel, Int_t nmany, Bool_t ovlp, Double_t *point=nullptr);
    Bool_t               GetState(Int_t &level, Int_t &nmany, Double_t *point) const;
 
-   ClassDef(TGeoCacheState, 0)       // class storing the cache state
+   ClassDefOverride(TGeoCacheState, 0)       // class storing the cache state
 };
 
 class TGeoNodeCache : public TObject
@@ -84,7 +84,7 @@ private:
 public:
    TGeoNodeCache();
    TGeoNodeCache(TGeoNode *top, Bool_t nodeid=kFALSE, Int_t capacity=30);
-   virtual ~TGeoNodeCache();
+   ~TGeoNodeCache() override;
 
    void                 BuildIdArray();
    void                 BuildInfoBranch();
@@ -129,7 +129,7 @@ public:
    void                 Refresh() {fNode=fNodeBranch[fLevel]; fMatrix=fMatrixBranch[fLevel];}
    Bool_t               RestoreState(Int_t &nmany, TGeoCacheState *state, Double_t *point=nullptr);
 
-   ClassDef(TGeoNodeCache, 0)        // cache of reusable physical nodes
+   ClassDefOverride(TGeoNodeCache, 0)        // cache of reusable physical nodes
 };
 
 #endif

@@ -65,6 +65,8 @@ public:
   /// is the sum of all coefficients.
   double expectedEvents(const RooArgSet* nset) const override;
 
+  std::unique_ptr<RooAbsReal> createExpectedEventsFunc(const RooArgSet* nset) const override;
+
   const RooArgList& pdfList() const {
     // Return list of component p.d.fs
     return _pdfList ;
@@ -92,6 +94,8 @@ public:
   void setCacheAndTrackHints(RooArgSet&) override;
 
   void translate(RooFit::Detail::CodeSquashContext &ctx) const override;
+
+  std::unique_ptr<RooAbsArg> compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileContext & ctx) const override;
 
   protected:
   void selectNormalization(const RooArgSet* depSet=nullptr, bool force=false) override;

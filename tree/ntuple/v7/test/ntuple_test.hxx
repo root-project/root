@@ -25,6 +25,7 @@
 #include <ROOT/RPageStorageFile.hxx>
 #include <ROOT/RRawFile.hxx>
 #include <ROOT/RVec.hxx>
+#include <ROOT/TestSupport.hxx>
 
 #include <RZip.h>
 #include <TClass.h>

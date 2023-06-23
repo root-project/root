@@ -29,7 +29,9 @@ private:
 
 public:
    TASPluginGS(const char *ext);
-   virtual ~TASPluginGS();
+   ~TASPluginGS() override;
+
+   ULong_t Hash() const override { return fExtension.Hash(); }
 
    ASImage *File2ASImage(const char *filename) override;
 

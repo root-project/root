@@ -55,7 +55,7 @@ protected:
 
       std::unique_ptr<RWebDisplayHandle> Display(const RWebDisplayArgs &args) override;
 
-      virtual ~BrowserCreator() = default;
+      ~BrowserCreator() override = default;
    };
 
    class ChromeCreator : public BrowserCreator {
@@ -63,7 +63,7 @@ protected:
       std::string fEnvPrefix; // rc parameters prefix
    public:
       ChromeCreator(bool is_edge = false);
-      virtual ~ChromeCreator() = default;
+      ~ChromeCreator() override = default;
       bool IsActive() const override { return !fProg.empty(); }
       void ProcessGeometry(std::string &, const RWebDisplayArgs &args) override;
       std::string MakeProfile(std::string &exec, bool) override;
@@ -72,7 +72,7 @@ protected:
    class FirefoxCreator : public BrowserCreator {
    public:
       FirefoxCreator();
-      virtual ~FirefoxCreator() = default;
+      ~FirefoxCreator() override = default;
       bool IsActive() const override { return !fProg.empty(); }
       std::string MakeProfile(std::string &exec, bool batch) override;
    };
@@ -96,6 +96,9 @@ public:
    void SetContent(const std::string &cont) { fContent = cont; }
    /// get content
    const std::string &GetContent() const { return fContent; }
+
+   /// resize web window - if possible
+   virtual bool Resize(int, int) { return false; }
 
    static std::unique_ptr<RWebDisplayHandle> Display(const RWebDisplayArgs &args);
 

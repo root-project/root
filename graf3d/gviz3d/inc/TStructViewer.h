@@ -45,9 +45,9 @@ private:
 
 public:
    TStructViewer(void* ptr = nullptr, const char * clname = nullptr);
-   ~TStructViewer();
+   ~TStructViewer() override;
 
-   void     Draw(Option_t *option = "");
+   void     Draw(Option_t *option = "") override;
    TCanvas* GetCanvas();
    TGMainFrame* GetFrame();
    TColor   GetColor(const char* typeName);
@@ -59,7 +59,7 @@ public:
    void     SetLinksVisibility(Bool_t val);
    void     SetPointer(void* ptr, const char* clname = nullptr);
 
-   ClassDef(TStructViewer, 0); // A 3D struct viewer
+   ClassDefOverride(TStructViewer, 0); // A 3D struct viewer
 };
 
 #endif

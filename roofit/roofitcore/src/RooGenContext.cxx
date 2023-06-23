@@ -65,7 +65,7 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
               const RooDataSet *prototype, const RooArgSet* auxProto,
               bool verbose, const RooArgSet* forceDirect) :
   RooAbsGenContext(model,vars,prototype,auxProto,verbose),
-  _pdfClone(0), _acceptRejectFunc(0), _generator(0),
+  _pdfClone(0), _generator(0),
   _maxVar(0), _updateFMaxPerEvent(0)
 {
   cxcoutI(Generation) << "RooGenContext::ctor() setting up event generator context for p.d.f. " << model.GetName()
@@ -218,17 +218,18 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
 
     if (_otherVars.getSize()>0) {
       _pdfClone->getVal(&vars) ; // WVE debug
-      _acceptRejectFunc= new RooRealIntegral(nname,ntitle,*_pdfClone,depList,&vars);
+      _acceptRejectFunc= std::make_unique<RooRealIntegral>(nname,ntitle,*_pdfClone,depList,&vars);
       cxcoutI(Generation) << "RooGenContext::ctor() accept/reject sampling function is " << _acceptRejectFunc->GetName() << endl ;
     } else {
-      _acceptRejectFunc = 0 ;
+      _acceptRejectFunc = nullptr;
     }
 
   } else {
 
     // Generation _with_ prototype variable
     depList.remove(_protoVars,true,true);
-    _acceptRejectFunc= (RooRealIntegral*) _pdfClone->createIntegral(depList,vars) ;
+    std::unique_ptr<RooAbsReal> integ{_pdfClone->createIntegral(depList,vars)};
+    _acceptRejectFunc= std::unique_ptr<RooRealIntegral>{static_cast<RooRealIntegral*>(integ.release())};
     cxcoutI(Generation) << "RooGenContext::ctor() accept/reject sampling function is " << _acceptRejectFunc->GetName() << endl ;
 
     // Check if PDF supports maximum finding for the entire phase space
@@ -310,7 +311,6 @@ RooGenContext::~RooGenContext()
 {
   // Clean up our accept/reject generator
   if (_generator) delete _generator;
-  if (_acceptRejectFunc) delete _acceptRejectFunc;
   if (_maxVar) delete _maxVar ;
 }
 

@@ -49,7 +49,7 @@ namespace HistFactory{
     void setHigh(RooAbsReal& param, double newHigh);
 
     void printAllInterpCodes();
-    const std::vector<int>&  interpolationCodes() const { return _interpCode; }    
+    const std::vector<int>&  interpolationCodes() const { return _interpCode; }
 
     TObject* clone(const char* newname) const override { return new FlexibleInterpVar(*this, newname); }
     ~FlexibleInterpVar() override ;
@@ -62,9 +62,9 @@ namespace HistFactory{
     const std::vector<double>& low() const;
     const std::vector<double>& high() const;
 
-  private:
+    void computeBatch(cudaStream_t*, double* output, size_t size, RooFit::Detail::DataMap const&) const override;
 
-    double PolyInterpValue(int i, double x) const;
+    void translate(RooFit::Detail::CodeSquashContext &ctx) const override;
 
   protected:
 

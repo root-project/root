@@ -63,14 +63,18 @@ std::vector<std::string> getObsnames(RooStats::HistFactory::Channel const &c)
 
 void writeObservables(const TH1 &h, JSONNode &n, const std::vector<std::string> &varnames)
 {
-   auto &observables = n["axes"];
-   auto &x = RooJSONFactoryWSTool::appendNamedChild(observables, varnames[0]);
+   // axes need to be ordered, so this is a sequence and not a map
+   auto &observables = n["axes"].set_seq();
+   auto &x = observables.append_child().set_map();
+   x["name"] << varnames[0];
    writeAxis(x, *h.GetXaxis());
    if (h.GetDimension() > 1) {
-      auto &y = RooJSONFactoryWSTool::appendNamedChild(observables, varnames[1]);
+      auto &y = observables.append_child().set_map();
+      y["name"] << varnames[1];
       writeAxis(y, *(h.GetYaxis()));
       if (h.GetDimension() > 2) {
-         auto &z = RooJSONFactoryWSTool::appendNamedChild(observables, varnames[2]);
+         auto &z = observables.append_child().set_map();
+         z["name"] << varnames[2];
          writeAxis(z, *(h.GetZaxis()));
       }
    }
@@ -222,12 +226,9 @@ void exportMeasurement(RooStats::HistFactory::Measurement &measurement, JSONNode
 
    auto &analysisNode = RooJSONFactoryWSTool::appendNamedChild(n["analyses"], "simPdf");
    analysisNode.set_map();
-   analysisNode["InterpolationScheme"] << measurement.GetInterpolationScheme();
    analysisNode["domains"].set_seq().append_child() << "default_domain";
 
-   auto &analysisPois = analysisNode["pois"].set_seq();
-
-   auto &analysisObservables = analysisNode["observables"].set_seq();
+   auto &analysisPois = analysisNode["parameters_of_interest"].set_seq();
 
    for (const auto &poi : measurement.GetPOIList()) {
       analysisPois.append_child() << poi;
@@ -305,9 +306,8 @@ void exportMeasurement(RooStats::HistFactory::Measurement &measurement, JSONNode
    }
 
    // the data
-   auto &child1 = RooJSONFactoryWSTool::appendNamedChild(n.get("misc", "ROOT_internal", "combined_datas"), "obsData");
-   auto &child2 =
-      RooJSONFactoryWSTool::appendNamedChild(n.get("misc", "ROOT_internal", "combined_distributions"), "simPdf");
+   auto &child1 = n.get("misc", "ROOT_internal", "combined_datas").set_map()["obsData"].set_map();
+   auto &child2 = n.get("misc", "ROOT_internal", "combined_distributions").set_map()["simPdf"].set_map();
 
    child1["index_cat"] << "channelCat";
    auto &labels1 = child1["labels"].set_seq();
@@ -329,23 +329,19 @@ void exportMeasurement(RooStats::HistFactory::Measurement &measurement, JSONNode
       JSONNode &dataOutput = RooJSONFactoryWSTool::appendNamedChild(n["data"], std::string("obsData_") + c.GetName());
       dataOutput["type"] << "binned";
 
-      const std::vector<std::string> obsnames = getObsnames(c);
-
-      for (auto const &obsname : obsnames) {
-         analysisObservables.append_child() << obsname;
-      }
-
-      exportHistogram(*c.GetData().GetHisto(), dataOutput, obsnames);
+      exportHistogram(*c.GetData().GetHisto(), dataOutput, getObsnames(c));
       channelNames.push_back(c.GetName());
    }
 
-   RooJSONFactoryWSTool::writeCombinedDataName(n, "simPdf", "obsData");
+   auto &modelConfigAux = RooJSONFactoryWSTool::getRooFitInternal(n, "ModelConfigs", "simPdf").set_map();
+   modelConfigAux["combined_data_name"] << "obsData";
+   modelConfigAux["pdfName"] << "simPdf";
+   modelConfigAux["mcName"] << "ModelConfig";
 
    // Finally write lumi constraint
-   auto &lumiConstraint = RooJSONFactoryWSTool::appendNamedChild(pdflist, "lumiConstraint");
+   auto &lumiConstraint = RooJSONFactoryWSTool::appendNamedChild(pdflist, "lumiConstraint").set_map();
    lumiConstraint["mean"] << "nominalLumi";
-   lumiConstraint["name"] << "lumiConstraint";
-   lumiConstraint["sigma"] << std::to_string(measurement.GetLumi() * measurement.GetLumiRelErr());
+   lumiConstraint["sigma"] << (measurement.GetLumi() * measurement.GetLumiRelErr());
    lumiConstraint["type"] << "gaussian_dist";
    lumiConstraint["x"] << "Lumi";
 }
@@ -386,7 +382,6 @@ void RooStats::HistFactory::JSONTool::PrintYAML(std::string const &filename)
 
 void RooStats::HistFactory::JSONTool::activateStatError(JSONNode &sampleNode)
 {
-   auto &node = sampleNode["modifiers"].set_seq().append_child().set_map();
+   auto &node = RooJSONFactoryWSTool::appendNamedChild(sampleNode["modifiers"], "mcstat");
    node["type"] << "staterror";
-   node["name"] << "mcstat";
 }

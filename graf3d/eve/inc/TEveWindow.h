@@ -74,7 +74,7 @@ protected:
 
 public:
    TEveCompositeFrame(TGCompositeFrame* gui_parent, TEveWindow* eve_parent);
-   virtual ~TEveCompositeFrame();
+   ~TEveCompositeFrame() override;
 
    virtual void WindowNameChanged(const TString& name);
 
@@ -100,7 +100,7 @@ public:
                                 UInt_t mini_bar_height    = 4,
                                 Bool_t allow_top_collapse = kTRUE);
 
-   ClassDef(TEveCompositeFrame, 0); // Composite frame containing eve-window-controls and eve-windows.
+   ClassDefOverride(TEveCompositeFrame, 0); // Composite frame containing eve-window-controls and eve-windows.
 };
 
 
@@ -122,11 +122,11 @@ protected:
 public:
    TEveCompositeFrameInMainFrame(TGCompositeFrame* parent, TEveWindow* eve_parent,
                                  TGMainFrame* mf);
-   virtual ~TEveCompositeFrameInMainFrame();
+   ~TEveCompositeFrameInMainFrame() override;
 
-   virtual void WindowNameChanged(const TString& name);
+   void WindowNameChanged(const TString& name) override;
 
-   virtual void Destroy();
+   void Destroy() override;
 
    void SetOriginalSlotAndContainer(TEveWindow* slot, TEveWindow* container);
 
@@ -136,7 +136,7 @@ public:
    TEveWindow* GetOriginalSlot() const { return fOriginalSlot; }
    TEveWindow* GetOriginalContainer() const { return fOriginalContainer; }
 
-   ClassDef(TEveCompositeFrameInMainFrame, 0); // Eve-composite-frame that is contained in one tab of a TGTab.
+   ClassDefOverride(TEveCompositeFrameInMainFrame, 0); // Eve-composite-frame that is contained in one tab of a TGTab.
 };
 
 
@@ -156,11 +156,11 @@ protected:
 public:
    TEveCompositeFrameInPack(TGCompositeFrame* parent, TEveWindow* eve_parent,
                             TGPack* pack);
-   virtual ~TEveCompositeFrameInPack();
+   ~TEveCompositeFrameInPack() override;
 
-   virtual void Destroy();
+   void Destroy() override;
 
-   ClassDef(TEveCompositeFrameInPack, 0); // Eve-composite-frame that is contained in a TGPack.
+   ClassDefOverride(TEveCompositeFrameInPack, 0); // Eve-composite-frame that is contained in a TGPack.
 };
 
 
@@ -183,15 +183,15 @@ protected:
 public:
    TEveCompositeFrameInTab(TGCompositeFrame* parent, TEveWindow* eve_parent,
                            TGTab* tab);
-   virtual ~TEveCompositeFrameInTab();
+   ~TEveCompositeFrameInTab() override;
 
-   virtual void WindowNameChanged(const TString& name);
+   void WindowNameChanged(const TString& name) override;
 
-   virtual void Destroy();
+   void Destroy() override;
 
-   virtual void SetCurrent(Bool_t curr);
+   void SetCurrent(Bool_t curr) override;
 
-   ClassDef(TEveCompositeFrameInTab, 0); // Eve-composite-frame that is contained in one tab of a TGTab.
+   ClassDefOverride(TEveCompositeFrameInTab, 0); // Eve-composite-frame that is contained in one tab of a TGTab.
 };
 
 
@@ -226,13 +226,13 @@ protected:
    static Pixel_t       fgCurrentBackgroundColor;
    static Pixel_t       fgMiniBarBackgroundColor;
 
-   virtual void PreDeleteElement();
+   void PreDeleteElement() override;
 
 public:
    TEveWindow(const char* n="TEveWindow", const char* t="");
-   virtual ~TEveWindow();
+   ~TEveWindow() override;
 
-   virtual void NameTitleChanged();
+   void NameTitleChanged() override;
 
    virtual TGFrame*        GetGUIFrame() = 0;
    virtual void            PreUndock();
@@ -290,7 +290,7 @@ public:
    static void    SetCurrentBackgroundColor(Pixel_t p);
    static void    SetMiniBarBackgroundColor(Pixel_t p);
 
-   ClassDef(TEveWindow, 0); // Abstract base-class for eve-windows.
+   ClassDefOverride(TEveWindow, 0); // Abstract base-class for eve-windows.
 };
 
 
@@ -308,13 +308,13 @@ protected:
    TGTextButton      *fEmptyButt;
    TGCompositeFrame  *fEmbedBuffer;
 
-   virtual void SetCurrent(Bool_t curr);
+   void SetCurrent(Bool_t curr) override;
 
 public:
    TEveWindowSlot(const char* n="TEveWindowSlot", const char* t="");
-   virtual ~TEveWindowSlot();
+   ~TEveWindowSlot() override;
 
-   virtual TGFrame* GetGUIFrame();
+   TGFrame* GetGUIFrame() override;
 
    TEveWindowPack*   MakePack(); // *MENU*
    TEveWindowTab*    MakeTab();  // *MENU*
@@ -324,7 +324,7 @@ public:
    TGCompositeFrame* StartEmbedding();
    TEveWindowFrame*  StopEmbedding(const char* name=nullptr);
 
-   ClassDef(TEveWindowSlot, 0); // An unoccupied eve-window slot.
+   ClassDefOverride(TEveWindowSlot, 0); // An unoccupied eve-window slot.
 };
 
 
@@ -343,13 +343,13 @@ protected:
 
 public:
    TEveWindowFrame(TGFrame* frame, const char* n="TEveWindowFrame", const char* t="");
-   virtual ~TEveWindowFrame();
+   ~TEveWindowFrame() override;
 
-   virtual TGFrame* GetGUIFrame() { return fGUIFrame; }
+   TGFrame* GetGUIFrame() override { return fGUIFrame; }
 
    TGCompositeFrame* GetGUICompositeFrame();
 
-   ClassDef(TEveWindowFrame, 0); // Eve-window containing any TGFrame.
+   ClassDefOverride(TEveWindowFrame, 0); // Eve-window containing any TGFrame.
 };
 
 
@@ -368,13 +368,13 @@ protected:
 
 public:
    TEveWindowPack(TGPack* p, const char* n="TEveWindowPack", const char* t="");
-   virtual ~TEveWindowPack();
+   ~TEveWindowPack() override;
 
-   virtual TGFrame*        GetGUIFrame();
+   TGFrame*        GetGUIFrame() override;
 
-   virtual Bool_t          CanMakeNewSlots() const { return kTRUE; }
+   Bool_t          CanMakeNewSlots() const override { return kTRUE; }
    virtual TEveWindowSlot* NewSlotWithWeight(Float_t w);
-   virtual TEveWindowSlot* NewSlot(); // *MENU*
+   TEveWindowSlot* NewSlot() override; // *MENU*
 
    void FlipOrientation(); // *MENU*
    void SetVertical(Bool_t x=kTRUE);
@@ -384,7 +384,7 @@ public:
 
    TGPack* GetPack() const { return fPack; }
 
-   ClassDef(TEveWindowPack, 0); // Eve-window containing a TGPack.
+   ClassDefOverride(TEveWindowPack, 0); // Eve-window containing a TGPack.
 };
 
 
@@ -403,16 +403,16 @@ protected:
 
 public:
    TEveWindowTab(TGTab* tab, const char* n="TEveWindowTab", const char* t="");
-   virtual ~TEveWindowTab();
+   ~TEveWindowTab() override;
 
-   virtual TGFrame*        GetGUIFrame();
+   TGFrame*        GetGUIFrame() override;
 
-   virtual Bool_t          CanMakeNewSlots() const { return kTRUE; }
-   virtual TEveWindowSlot* NewSlot(); // *MENU*
+   Bool_t          CanMakeNewSlots() const override { return kTRUE; }
+   TEveWindowSlot* NewSlot() override; // *MENU*
 
    TGTab* GetTab() const { return fTab; }
 
-   ClassDef(TEveWindowTab, 0); // Eve-window containing a TGTab.
+   ClassDefOverride(TEveWindowTab, 0); // Eve-window containing a TGTab.
 };
 
 
@@ -434,7 +434,7 @@ public:
 
    void SetupAndPopup(TGWindow* button, TObject* obj);
 
-   ClassDef(TEveContextMenu, 0) // Specialization of TContextMenu for Eve.
+   ClassDefOverride(TEveContextMenu, 0) // Specialization of TContextMenu for Eve.
 };
 
 #endif

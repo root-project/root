@@ -35,7 +35,7 @@ protected:
 
 public:
    TEveGValuatorBase(const TGWindow *p, const char* title, UInt_t w, UInt_t h, Int_t widgetId=-1);
-   virtual ~TEveGValuatorBase() {}
+   ~TEveGValuatorBase() override {}
 
    virtual void Build(Bool_t connect=kTRUE) = 0;
 
@@ -48,7 +48,7 @@ public:
 
    TGLabel* GetLabel() {return fLabel;}
 
-   ClassDef(TEveGValuatorBase, 0); // Base class for composite GUI elements for setting of numeric values.
+   ClassDefOverride(TEveGValuatorBase, 0); // Base class for composite GUI elements for setting of numeric values.
 };
 
 
@@ -73,9 +73,9 @@ protected:
 
 public:
    TEveGValuator(const TGWindow *p, const char* title, UInt_t w, UInt_t h, Int_t widgetId=-1);
-   virtual ~TEveGValuator() {}
+   ~TEveGValuator() override {}
 
-   virtual void Build(Bool_t connect=kTRUE);
+   void Build(Bool_t connect=kTRUE) override;
 
    Float_t GetValue() const { return fValue; }
    virtual void SetValue(Float_t v, Bool_t emit=kFALSE);
@@ -99,7 +99,7 @@ public:
    void SetToolTip(const char* tip);
    void SetEnabled(Bool_t state);
 
-   ClassDef(TEveGValuator, 0); // Composite GUI element for single value selection (supports label, number-entry and slider).
+   ClassDefOverride(TEveGValuator, 0); // Composite GUI element for single value selection (supports label, number-entry and slider).
 };
 
 
@@ -117,9 +117,9 @@ protected:
 
 public:
    TEveGDoubleValuator(const TGWindow *p, const char* title, UInt_t w, UInt_t h, Int_t widgetId=-1);
-   virtual ~TEveGDoubleValuator() {}
+   ~TEveGDoubleValuator() override {}
 
-   virtual void Build(Bool_t connect=kTRUE);
+   void Build(Bool_t connect=kTRUE) override;
 
    void MinEntryCallback();
    void MaxEntryCallback();
@@ -141,7 +141,7 @@ public:
    Float_t GetLimitMin() const { return fMinEntry->GetNumMin(); }
    Float_t GetLimitMax() const { return fMaxEntry->GetNumMax(); }
 
-   ClassDef(TEveGDoubleValuator, 0); // Composite GUI element for selection of range (label, two number-entries and double-slider).
+   ClassDefOverride(TEveGDoubleValuator, 0); // Composite GUI element for selection of range (label, two number-entries and double-slider).
 };
 
 
@@ -162,7 +162,7 @@ protected:
 
 public:
    TEveGTriVecValuator(const TGWindow *p, const char* name, UInt_t w, UInt_t h, Int_t widgetId=-1);
-   virtual ~TEveGTriVecValuator() {}
+   ~TEveGTriVecValuator() override {}
 
    void Build(Bool_t vertical, const char* lab0, const char* lab1, const char* lab2);
 
@@ -196,7 +196,7 @@ public:
    void SetLimits(Float_t min, Float_t max,
                   TGNumberFormat::EStyle nef=TGNumberFormat::kNESRealTwo);
 
-   ClassDef(TEveGTriVecValuator, 0); // Composite GUI element for setting three numerical values (label, three number-entries).
+   ClassDefOverride(TEveGTriVecValuator, 0); // Composite GUI element for setting three numerical values (label, three number-entries).
 };
 
 #endif

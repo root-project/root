@@ -4,8 +4,8 @@
 /// Likelihood and minimization: interactive minimization with MINUIT
 ///
 /// \macro_image
-/// \macro_output
 /// \macro_code
+/// \macro_output
 ///
 /// \date July 2008
 /// \author Wouter Verkerke
@@ -46,7 +46,7 @@ void rf601_intminuit()
    RooDataSet *data = model.generate(x, 1000);
 
    // Construct unbinned likelihood of model w.r.t. data
-   RooAbsReal *nll = model.createNLL(*data);
+   std::unique_ptr<RooAbsReal> nll{model.createNLL(*data)};
 
    // I n t e r a c t i v e   m i n i m i z a t i o n ,   e r r o r   a n a l y s i s
    // -------------------------------------------------------------------------------
@@ -62,7 +62,7 @@ void rf601_intminuit()
 
    // Print values of all parameters, that reflect values (and error estimates)
    // that are back propagated from MINUIT
-   model.getParameters(x)->Print("s");
+   std::unique_ptr<RooArgSet>{model.getParameters(x)}->Print("s");
 
    // Disable verbose logging
    m.setVerbose(false);
@@ -89,14 +89,14 @@ void rf601_intminuit()
    // matrix, the EDM, the minimized FCN , the last MINUIT status code and
    // the number of times the RooFit function object has indicated evaluation
    // problems (e.g. zero probabilities during likelihood evaluation)
-   RooFitResult *r = m.save();
+   std::unique_ptr<RooFitResult> fitResult{m.save()};
 
    // Make contour plot of mx vs sx at 1,2,3 sigma
    RooPlot *frame = m.contour(frac, sigma_g2, 1, 2, 3);
    frame->SetTitle("Minuit contour plot");
 
    // Print the fit result snapshot
-   r->Print("v");
+   fitResult->Print("v");
 
    // C h a n g e   p a r a m e t e r   v a l u e s ,   f l o a t i n g
    // -----------------------------------------------------------------

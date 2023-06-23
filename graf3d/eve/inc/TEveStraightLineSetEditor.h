@@ -35,15 +35,15 @@ protected:
 
 public:
    TEveStraightLineSetEditor(const TGWindow *p = nullptr, Int_t width=170, Int_t height=30, UInt_t options = kChildFrame, Pixel_t back=GetDefaultFrameBackground());
-   virtual ~TEveStraightLineSetEditor() {}
+   ~TEveStraightLineSetEditor() override {}
 
-   virtual void SetModel(TObject* obj);
+   void SetModel(TObject* obj) override;
 
    // Declare callback/slot methods
    void DoRnrMarkers();
    void DoRnrLines();
 
-   ClassDef(TEveStraightLineSetEditor, 0); // Editor for TEveStraightLineSet class.
+   ClassDefOverride(TEveStraightLineSetEditor, 0); // Editor for TEveStraightLineSet class.
 };
 
 #endif

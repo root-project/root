@@ -113,6 +113,13 @@ public:
 protected:
    std::string fNTupleName;
    RTaskScheduler *fTaskScheduler = nullptr;
+   void WaitForAllTasks()
+   {
+      if (!fTaskScheduler)
+         return;
+      fTaskScheduler->Wait();
+      fTaskScheduler->Reset();
+   }
 
 public:
    explicit RPageStorage(std::string_view name);
@@ -267,8 +274,9 @@ public:
    /// Create() associates column handles to the columns referenced by the model
    void Create(RNTupleModel &model);
    /// Incorporate incremental changes to the model into the ntuple descriptor. This happens, e.g. if new fields were
-   /// added after the initial call to `RPageSink::Create(RNTupleModel &)`
-   virtual void UpdateSchema(const RNTupleModelChangeset &changeset);
+   /// added after the initial call to `RPageSink::Create(RNTupleModel &)`.
+   /// `firstEntry` specifies the global index for the first stored element in the added columns.
+   virtual void UpdateSchema(const RNTupleModelChangeset &changeset, NTupleSize_t firstEntry);
 
    /// Write a page to the storage. The column must have been added before.
    void CommitPage(ColumnHandle_t columnHandle, const RPage &page);

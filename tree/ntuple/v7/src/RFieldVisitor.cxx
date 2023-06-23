@@ -254,11 +254,19 @@ void ROOT::Experimental::RPrintValueVisitor::VisitUInt64Field(const RField<std::
    fOutput << *fValue.Get<std::uint64_t>();
 }
 
-void ROOT::Experimental::RPrintValueVisitor::VisitCardinalityField(const RField<RNTupleCardinality> &field)
+void ROOT::Experimental::RPrintValueVisitor::VisitCardinalityField(const RCardinalityField &field)
 {
    PrintIndent();
    PrintName(field);
-   fOutput << static_cast<std::size_t>(*fValue.Get<RNTupleCardinality>());
+   if (field.As32Bit()) {
+      fOutput << *fValue.Get<std::uint32_t>();
+      return;
+   }
+   if (field.As64Bit()) {
+      fOutput << *fValue.Get<std::uint64_t>();
+      return;
+   }
+   R__ASSERT(false && "unsupported cardinality size type");
 }
 
 void ROOT::Experimental::RPrintValueVisitor::VisitBitsetField(const RBitsetField &field)
@@ -343,6 +351,22 @@ void ROOT::Experimental::RPrintValueVisitor::VisitRecordField(const RRecordField
    }
    PrintIndent();
    fOutput << "}";
+}
+
+void ROOT::Experimental::RPrintValueVisitor::VisitNullableField(const RNullableField &field)
+{
+   PrintIndent();
+   PrintName(field);
+   auto elems = field.SplitValue(fValue);
+   if (elems.empty()) {
+      fOutput << "null";
+   } else {
+      RPrintOptions options;
+      options.fPrintSingleLine = true;
+      options.fPrintName = false;
+      RPrintValueVisitor visitor(elems[0], fOutput, fLevel, options);
+      elems[0].GetField()->AcceptVisitor(visitor);
+   }
 }
 
 void ROOT::Experimental::RPrintValueVisitor::VisitCollectionClassField(const RCollectionClassField &field)

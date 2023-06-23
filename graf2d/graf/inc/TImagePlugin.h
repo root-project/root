@@ -26,7 +26,7 @@ protected:
 
 public:
    TImagePlugin(const char *ext) { fExtension = ext; }
-   virtual ~TImagePlugin()
+   ~TImagePlugin() override
    {
       // Required since we overload TObject::Hash.
       ROOT::CallRecursiveRemoveIfNeeded(*this);

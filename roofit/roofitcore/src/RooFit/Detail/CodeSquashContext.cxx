@@ -19,14 +19,12 @@ namespace RooFit {
 
 namespace Detail {
 
-namespace {
-
 /// Transform a string into a valid C++ variable name by replacing forbidden.
 /// \note The implementation was copy-pasted from `TSystem.cxx`.
 /// characters with underscores.
 /// @param in The input string.
 /// @return A new string vaild variable name.
-std::string makeValidVarName(TString in)
+std::string CodeSquashContext::makeValidVarName(TString in) const
 {
 
    static const int nForbidden = 27;
@@ -39,8 +37,6 @@ std::string makeValidVarName(TString in)
 
    return in.Data();
 }
-
-} // namespace
 
 /// @brief Adds (or overwrites) the string representing the result of a node.
 /// @param key The name of the node to add the result for.
@@ -115,6 +111,33 @@ void CodeSquashContext::addVecObs(const char *key, int idx)
       _vecObsIndices[namePtr] = idx;
 }
 
+/// @brief Adds the input string to the squashed code body. If a class implements a translate function that wants to
+/// emit something to the squashed code body, it must call this function with the code it wants to emit. In case of
+/// loops, automatically determines if code needs to be stored inside or outside loop scope.
+/// @param klass The class requesting this addition, usually 'this'.
+/// @param in String to add to the squashed code.
+void CodeSquashContext::addToCodeBody(RooAbsArg const *klass, std::string const &in)
+{
+   // If we are in a loop and the value is scope independent, save it at the top of the loop.
+   // else, just save it in the current scope.
+   addToCodeBody(in, isScopeIndependent(klass));
+}
+
+/// @brief A variation of the previous addToCodeBody that takes in a bool value that determines
+/// if input is independent. This overload exists because there might other ways to determine if
+/// a value/collection of values is scope independent.
+/// @param in String to add to the squashed code.
+/// @param isScopeIndep The value determining if the input is scope dependent.
+void CodeSquashContext::addToCodeBody(std::string const &in, bool isScopeIndep /* = false */)
+{
+   // If we are in a loop and the value is scope independent, save it at the top of the loop.
+   // else, just save it in the current scope.
+   if (_scopePtr != -1 && isScopeIndep)
+      _tempScope += in;
+   else
+      _code += in;
+}
+
 /// @brief Create a RAII scope for iterating over vector observables. You can't use the result of vector observables
 /// outside these loop scopes.
 /// @param in A pointer to the calling class, used to determine the loop dependent variables.
@@ -148,7 +171,7 @@ std::unique_ptr<CodeSquashContext::LoopScope> CodeSquashContext::beginLoop(RooAb
    _scopePtr = _code.size();
 
    // Make sure that the name of this variable doesn't clash with other stuff
-   addToCodeBody("for(int " + idx + " = 0; " + idx + " < " + std::to_string(numEntries) + "; " + idx + "++) {\n");
+   addToCodeBody(in, "for(int " + idx + " = 0; " + idx + " < " + std::to_string(numEntries) + "; " + idx + "++) {\n");
 
    ++_loopLevel;
    return std::make_unique<LoopScope>(*this, std::move(vars));
@@ -184,26 +207,16 @@ void CodeSquashContext::addResult(RooAbsArg const *in, std::string const &valueT
 {
    std::string savedName = makeValidVarName(in->GetName());
 
-   // Check if this result can be placed anywhere (i.e. scope independent)
-   bool canSaveValOutside = !in->isReducerNode() && outputSize(in->namePtr()) == 1;
    // Only save values if they contain operations.
    bool hasOperations = valueToSave.find_first_of(":-+/*") != std::string::npos;
 
    // If the name is not empty and this value is worth saving, save it to the correct scope.
    // otherwise, just return the actual value itself
    if (hasOperations) {
-
       // If this is a scalar result, it will go just outside the loop because
       // it doesn't need to be recomputed inside loops.
       std::string outVarDecl = "const double " + savedName + " = " + valueToSave + ";\n";
-
-      // If we are in a loop and the value is scope independent, save it at the top of the loop.
-      // else, just save it in the current scope.
-      if (canSaveValOutside && _scopePtr != -1)
-         _tempScope += outVarDecl;
-      else
-         _code += outVarDecl;
-
+      addToCodeBody(in, outVarDecl);
    } else {
       savedName = valueToSave;
    }
@@ -227,20 +240,35 @@ std::string CodeSquashContext::buildArg(RooAbsCollection const &in)
    declStrm << "double " << savedName << "[] = {";
    for (const auto arg : in) {
       declStrm << getResult(*arg) << ",";
-      canSaveOutside = canSaveOutside && !arg->isReducerNode() && outputSize(arg->namePtr()) == 1;
+      canSaveOutside = canSaveOutside && isScopeIndependent(arg);
    }
    declStrm.seekp(-1, declStrm.cur);
    declStrm << "};\n";
 
-   // Save outside only if we can and we are in a loop.
-   // otherwise save in current scope.
-   if (canSaveOutside && _scopePtr != -1)
-      _tempScope += declStrm.str();
-   else
-      _code += declStrm.str();
+   addToCodeBody(declStrm.str(), canSaveOutside);
 
    listNames.insert({in.uniqueId().value(), savedName});
    return savedName;
+}
+
+std::string CodeSquashContext::buildArg(RooSpan<const double> arr)
+{
+   unsigned int n = arr.size();
+   std::string arrName = getTmpVarName();
+   std::string arrDecl = "double " + arrName + "[" + std::to_string(n) + "] = {";
+   for (unsigned int i = 0; i < n; i++) {
+      arrDecl += " " + std::to_string(arr[i]) + ",";
+   }
+   arrDecl.back() = '}';
+   arrDecl += ";\n";
+   addToCodeBody(arrDecl, true);
+
+   return arrName;
+}
+
+bool CodeSquashContext::isScopeIndependent(RooAbsArg const *in) const
+{
+   return !in->isReducerNode() && outputSize(in->namePtr()) == 1;
 }
 
 } // namespace Detail

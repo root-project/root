@@ -541,8 +541,7 @@ Int_t RooSimultaneous::getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& an
 
   // Create the partial integral set for this request
   for(auto * proxy : static_range_cast<RooRealProxy*>(_pdfProxyList)) {
-    RooAbsReal* pdfInt = proxy->arg().createIntegral(analVars,normSet,0,rangeName) ;
-    cache->_partIntList.addOwned(*pdfInt) ;
+    cache->_partIntList.addOwned(std::unique_ptr<RooAbsReal>{proxy->arg().createIntegral(analVars,normSet,0,rangeName)});
   }
 
   // Store the partial integral list and return the assigned code ;
@@ -1036,13 +1035,13 @@ RooDataHist* RooSimultaneous::fillDataHist(RooDataHist *hist,
 ////////////////////////////////////////////////////////////////////////////////
 /// Special generator interface for generation of 'global observables' -- for RooStats tools
 
-RooDataSet* RooSimultaneous::generateSimGlobal(const RooArgSet& whatVars, Int_t nEvents)
+RooFit::OwningPtr<RooDataSet> RooSimultaneous::generateSimGlobal(const RooArgSet& whatVars, Int_t nEvents)
 {
   // Make set with clone of variables (placeholder for output)
   RooArgSet globClone;
   whatVars.snapshot(globClone);
 
-  RooDataSet* data = new RooDataSet("gensimglobal","gensimglobal",whatVars) ;
+  auto data = std::make_unique<RooDataSet>("gensimglobal","gensimglobal",whatVars);
 
   for (Int_t i=0 ; i<nEvents ; i++) {
     for (const auto& nameIdx : indexCat()) {
@@ -1061,7 +1060,7 @@ RooDataSet* RooSimultaneous::generateSimGlobal(const RooArgSet& whatVars, Int_t 
     data->add(globClone) ;
   }
 
-  return data ;
+  return RooFit::Detail::owningPtr(std::move(data));
 }
 
 
@@ -1217,7 +1216,23 @@ RooSimultaneous::compileForNormSet(RooArgSet const &normSet, RooFit::Detail::Com
          pdf.setNormRange(RooHelpers::getRangeNameForSimComponent(rangeName, splitRange, catName).c_str());
       }
 
-      auto *pdfFinal = RooFit::Detail::CompileContext{*pdfNormSet}.compile(pdf, *newSimPdf, *pdfNormSet);
+      // If this is a binned likelihood, we're flagging it in the context.
+      // Then, the RooBinWidthFunctions know that they should not put
+      // themselves in the computation graph. Like this, the pdf values can
+      // directly be interpreted as yields, without multiplying them with the
+      // bin widths again in the NLL. However, the NLL class has to be careful
+      // to only skip the bin with multiplication when there actually were
+      // RooBinWidthFunctions! This is not the case for old workspace before
+      // ROOT 6.26. Therefore, we use the "BinnedLikelihoodActiveYields"
+      // attribute to let the NLL know what it should do.
+      RooFit::Detail::CompileContext pdfContext{*pdfNormSet};
+      pdfContext.setLikelihoodMode(ctx.likelihoodMode());
+      pdfContext.setBinnedLikelihoodMode(ctx.likelihoodMode() && binnedInfo.isBinnedL);
+      auto *pdfFinal = pdfContext.compile(pdf, *newSimPdf, *pdfNormSet);
+      if(pdfContext.binWidthFuncFlag()) {
+         pdfFinal->setAttribute("BinnedLikelihoodActiveYields");
+      }
+
       pdfFinal->fixAddCoefNormalization(*pdfNormSet, false);
 
       pdfClone->SetName((std::string("_") + pdfClone->GetName()).c_str());

@@ -1,0 +1,47 @@
+name: SonarCloud
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened]
+jobs:
+  build:
+    if: github.repository_owner == 'root-project' || github.event_name == 'pull_request'
+
+    permissions:
+      contents: read
+
+    name: Build and analyze
+    runs-on: ubuntu-latest
+    container:
+      image: registry.cern.ch/root-ci/ubuntu22:buildready
+      options: '--security-opt label=disable --rm'
+      env:
+        PYTHONUNBUFFERED: true
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+    steps:
+      - name: Check secret
+        run: |
+          if [ "x${SONAR_TOKEN}" == "x" ]; then echo 'ERROR: no SONAR_TOKEN!'; exit 1; fi
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+          ref: ${{ github.event.pull_request.head.sha }} # We do not run any user-provided code.
+      - name: install external llvm, clang
+        # install builtins that do not get built by CMAKE_EXPORT_COMPILE_COMMANDS
+        # and would cause parse errors
+        run: |
+          apt update -qq
+          apt -y install llvm-13-dev libclang-13-dev libxrootd-dev libgtest-dev
+      - name: Create compile_commands.json
+        run: |
+          touch interpreter/cling/lib/Interpreter/cling-compiledata.h
+          cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=On -S . -B builddir -Dtesting=On -Droottest=Off -Dbuiltin_gtest=Off -Dall=On -Dveccore=Off -Dvdt=Off -Dvc=Off -DCMAKE_BUILD_TYPE=Release -Dbuiltin_clang=Off -Dbuiltin_llvm=Off -DCLANG_RESOURCE_DIR_VERSION=13
+      - name: Install sonar-scanner and build-wrapper
+        uses: SonarSource/sonarcloud-github-c-cpp@v1
+      - name: Install Nodejs
+        run: |
+          curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+          apt-get install -y nodejs
+      - name: Run sonar-scanner
+        run: |
+          sonar-scanner

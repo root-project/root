@@ -48,18 +48,18 @@ protected:
 public:
    TFileDrawMap();
    TFileDrawMap(const TFile *file, const char *keys, Option_t *option);
-   virtual ~TFileDrawMap();
+   ~TFileDrawMap() override;
 
    virtual void  AnimateTree(const char *branches=""); // *MENU*
-   virtual Int_t DistancetoPrimitive(Int_t px, Int_t py);
+   Int_t DistancetoPrimitive(Int_t px, Int_t py) override;
    virtual void  DrawObject(); // *MENU*
    virtual void  DumpObject(); // *MENU*
-   virtual void  ExecuteEvent(Int_t event, Int_t px, Int_t py);
-   virtual char *GetObjectInfo(Int_t px, Int_t py) const;
+   void  ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
+   char *GetObjectInfo(Int_t px, Int_t py) const override;
    virtual void  InspectObject(); // *MENU*
-   virtual void  Paint(Option_t *option);
+   void  Paint(Option_t *option) override;
 
-   ClassDef(TFileDrawMap,1);  //Draw a 2-d map of the objects in a file
+   ClassDefOverride(TFileDrawMap,1);  //Draw a 2-d map of the objects in a file
 };
 
 #endif

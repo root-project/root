@@ -137,7 +137,7 @@ protected:
 
 public:
    TGMdiButtons(const TGWindow *p, const TGWindow *titlebar);
-   virtual ~TGMdiButtons();
+   ~TGMdiButtons() override;
 
    TGPictureButton *GetButton(Int_t no) const { return fButton[no]; }
 
@@ -161,7 +161,7 @@ protected:
 public:
    TGMdiTitleIcon(const TGWindow *p, const TGWindow *titlebar,
                   const TGPicture *pic, Int_t w, Int_t h);
-   virtual ~TGMdiTitleIcon();
+   ~TGMdiTitleIcon() override;
 
    Bool_t HandleDoubleClick(Event_t *event) override;
    Bool_t HandleButton(Event_t *event) override;
@@ -197,7 +197,7 @@ protected:
    void RemoveFrames(TGMdiTitleIcon *icon, TGMdiButtons *buttons);
 
 public:
-   virtual ~TGMdiTitleBar();
+   ~TGMdiTitleBar() override;
 
    Bool_t               HandleButton(Event_t *event) override;
    Bool_t               HandleDoubleClick(Event_t *event) override;
@@ -259,7 +259,7 @@ public:
    TGMdiDecorFrame(TGMdiMainFrame *main, TGMdiFrame *frame, Int_t w, Int_t h,
                    const TGGC *boxGC, UInt_t options = 0,
                    Pixel_t back = GetDefaultFrameBackground());
-   virtual ~TGMdiDecorFrame();
+   ~TGMdiDecorFrame() override;
 
    Bool_t           HandleButton(Event_t *event) override;
    Bool_t           HandleConfigureNotify(Event_t *event) override;

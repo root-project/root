@@ -5,7 +5,6 @@
 #include <RooDataHist.h>
 #include <RooDataSet.h>
 #include <RooFormulaVar.h>
-#include <RooGenProdProj.h>
 #include <RooGenericPdf.h>
 #include <RooHelpers.h>
 #include <RooHistPdf.h>
@@ -19,6 +18,8 @@
 #include <ROOT/StringUtils.hxx>
 
 #include <gtest/gtest.h>
+
+#include "../src/RooGenProdProj.h"
 
 // Backward compatibility for gtest version < 1.10.0
 #ifndef INSTANTIATE_TEST_SUITE_P

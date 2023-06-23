@@ -10,8 +10,8 @@ sap.ui.define([
    'sap/m/Input',
    'sap/m/Button',
    'sap/m/ButtonType',
-   'sap/ui/layout/Splitter',
-   'sap/ui/layout/SplitterLayoutData'
+   'sap/ui/layout/SplitterLayoutData',
+   'sap/ui/core/ResizeHandler'
 ], function (Controller,
              Component,
              JSONModel,
@@ -23,8 +23,8 @@ sap.ui.define([
              Input,
              Button,
              ButtonType,
-             Splitter,
-             SplitterLayoutData) {
+             SplitterLayoutData,
+             ResizeHandler) {
    "use strict";
 
    function chk_icon(flag) {
@@ -87,6 +87,16 @@ sap.ui.define([
             if (!cp.embed_canvas && ws?.addReloadKeyHandler)
                ws.addReloadKeyHandler();
          }
+
+         if (!cp.embed_canvas)
+            ResizeHandler.register(this.getView(), () => {
+               cp._ignore_resize = true;
+               // ensure that all elements get there proper sizes
+               // otherwise canvas resize handler fails to determine real canvas size
+               this.getView().rerender();
+               delete cp._ignore_resize;
+               cp.checkCanvasResize();
+            });
       },
 
       onAfterRendering() {
@@ -123,7 +133,7 @@ sap.ui.define([
       },
 
       /** @summary function used to activate GED in full canvas */
-      activateGed(painter, kind, mode) {
+      activateGed(painter /*, kind, mode */) {
 
          let canvp = this.getCanvasPainter();
 
@@ -344,7 +354,7 @@ sap.ui.define([
              model = this.getView().getModel(),
              curr = model.getProperty('/LeftArea');
 
-         if (!split || (curr === panel_name))
+         if (!split || (curr === panel_name) || (!curr && !panel_name))
             return Promise.resolve(null);
 
          model.setProperty("/LeftArea", panel_name);
@@ -505,13 +515,16 @@ sap.ui.define([
          if ((new_state === undefined) || (new_state == "toggle"))
             new_state = !this.isStatusShown();
 
-         this._Page.setShowFooter(new_state);
          this.getView().getModel().setProperty("/StatusIcon", chk_icon(new_state));
 
-         let canvp = this.getCanvasPainter();
-         if (canvp) {
-            canvp.enforceCanvasSize = true;
-            canvp.processChanges("sbits", canvp);
+         if (this.isStatusShown() != new_state) {
+
+            this._Page.setShowFooter(new_state);
+            let canvp = this.getCanvasPainter();
+            if (canvp) {
+               canvp.enforceCanvasSize = true;
+               canvp.processChanges("sbits", canvp);
+            }
          }
       },
 
@@ -545,11 +558,13 @@ sap.ui.define([
          if ((new_state === undefined) || (new_state == "toggle"))
             new_state = !this._Page.getShowHeader();
          this.getView().getModel().setProperty("/MenuBarIcon", chk_icon(new_state));
-         this._Page.setShowHeader(new_state);
 
-         let canvp = this.getCanvasPainter();
-         if (canvp)
-            canvp.enforceCanvasSize = true;
+         if (this.isMenuBarShow() != new_state) {
+            let canvp = this.getCanvasPainter();
+            if (canvp)
+               canvp.enforceCanvasSize = true;
+            this._Page.setShowHeader(new_state);
+         }
       },
 
       onDivideDialog() {

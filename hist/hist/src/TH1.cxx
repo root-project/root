@@ -616,7 +616,7 @@ TH1::TH1(): TNamed(), TAttLine(), TAttFill(), TAttMarker()
    fYaxis.SetParent(this);
    fZaxis.SetParent(this);
    UseCurrentStyle();
-};
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Histogram default destructor.

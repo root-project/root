@@ -102,7 +102,7 @@ public:
    TCandle(const Double_t candlePos, const Double_t candleWidth, Long64_t n, Double_t * points);
    TCandle(const Double_t candlePos, const Double_t candleWidth, TH1D *proj);
    TCandle(const TCandle &candle);
-   virtual ~TCandle();
+   ~TCandle() override;
 
    Double_t       GetMean() const {return fMean;}
    Double_t       GetMedian() const {return fMedian;}

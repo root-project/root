@@ -47,6 +47,7 @@ WINDOWS = (os.name == 'nt')
 WORKDIR = '/tmp/workspace' if not WINDOWS else 'C:/ROOT-CI'
 COMPRESSIONLEVEL = 6 if not WINDOWS else 1
 
+
 def main():
     # openstack.enable_logging(debug=True)
 
@@ -63,7 +64,7 @@ def main():
     parser.add_argument("--incremental",  default="false",   help="Do incremental build")
     parser.add_argument("--buildtype",    default="Release", help="Release|Debug|RelWithDebInfo")
     parser.add_argument("--base_ref",     default=None,      help="Ref to target branch")
-    parser.add_argument("--head_ref",     default=None,      help="Ref to feature branch")
+    parser.add_argument("--head_ref",     default=None,      help="Ref to feature branch; it may contain a :<dst> part")
     parser.add_argument("--architecture", default=None,      help="Windows only, target arch")
     parser.add_argument("--repository",   default="https://github.com/root-project/root.git",
                         help="url to repository")
@@ -126,6 +127,13 @@ def main():
 
     shell_log = build(options, args.buildtype, shell_log)
 
+    # Build artifacts should only be uploaded for full builds, and only for
+    # "official" branches (master, v?-??-??-patches), i.e. not for pull_request
+    # We also want to upload any successful build, even if it fails testing
+    # later on.
+    if not pull_request and not args.incremental:
+        archive_and_upload(yyyy_mm_dd, obj_prefix)
+
     testing: bool = options_dict['testing'].lower() == "on" and options_dict['roottest'].lower() == "on"
 
     if testing:
@@ -136,11 +144,6 @@ def main():
             extra_ctest_flags += "--build-config " + args.buildtype
 
         shell_log = run_ctest(shell_log, extra_ctest_flags)
-
-    # Build artifacts should only be uploaded for full builds, and only for "official" branches
-    # (master, v?-??-??-patches), i.e. not for pull_request
-    if not pull_request and not args.incremental:
-        archive_and_upload(yyyy_mm_dd, obj_prefix)
 
     print_shell_log(shell_log)
 
@@ -175,7 +178,7 @@ def cleanup_previous_build(shell_log):
 
 
 @github_log_group("Pull/clone branch")
-def git_pull(repository:str, branch: str, shell_log: str):
+def git_pull(repository: str, branch: str, shell_log: str):
     returncode = 1
 
     for attempts in range(5):
@@ -223,7 +226,7 @@ def download_artifacts(obj_prefix: str, shell_log: str):
 
 @github_log_group("Node state")
 def show_node_state(shell_log: str, options: str) -> str:
-    result, shell_log = subprocess_with_log(f"""
+    result, shell_log = subprocess_with_log("""
         which cmake
         cmake --version
         which c++ || true
@@ -249,7 +252,7 @@ def run_ctest(shell_log: str, extra_ctest_flags: str) -> str:
     """, shell_log)
 
     if result != 0:
-        print_warning("Some tests failed")
+        die(result, "Some tests failed", shell_log)
 
     return shell_log
 
@@ -312,9 +315,8 @@ def build(options, buildtype, shell_log):
 
 @github_log_group("Rebase")
 def rebase(base_ref, head_ref, shell_log) -> str:
-    # This mental gymnastics is neccessary because the the CMake build fetches
-    # roottest based on the current branch name of ROOT
-    #
+    head_ref_src, _, head_ref_dst = head_ref.partition(":")
+    head_ref_dst = head_ref_dst or "__tmp"
     # rebase fails unless user.email and user.name is set
     result, shell_log = subprocess_with_log(f"""
         cd '{WORKDIR}/src'
@@ -322,12 +324,9 @@ def rebase(base_ref, head_ref, shell_log) -> str:
         git config user.email "rootci@root.cern"
         git config user.name 'ROOT Continous Integration'
 
-        git fetch origin {head_ref}:__tmp
-        git checkout __tmp
-
+        git fetch origin {head_ref_src}:{head_ref_dst}
+        git checkout {head_ref_dst}
         git rebase {base_ref}
-        git checkout {base_ref}
-        git reset --hard __tmp
     """, shell_log)
 
     if result != 0:

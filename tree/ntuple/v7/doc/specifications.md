@@ -317,20 +317,41 @@ The column type and bits on storage integers can have one of the following value
 | 0x07 |   64 | Real64       | IEEE-754 double precision float                                               |
 | 0x08 |   32 | Real32       | IEEE-754 single precision float                                               |
 | 0x09 |   16 | Real16       | IEEE-754 half precision float                                                 |
-| 0x0A |   64 | Int64        | Two's complement, little-endian 8 byte integer                                |
-| 0x0B |   32 | Int32        | Two's complement, little-endian 4 byte integer                                |
-| 0x0C |   16 | Int16        | Two's complement, little-endian 2 byte integer                                |
-| 0x0D |    8 | Int8         | Two's complement, 1 byte integer                                              |
+| 0x16 |   64 | Int64        | Two's complement, little-endian 8 byte signed integer                         |
+| 0x0A |   64 | UInt64       | Little-endian 8 byte unsigned integer                                         |
+| 0x17 |   32 | Int32        | Two's complement, little-endian 4 byte signed integer                         |
+| 0x0B |   32 | UInt32       | Little-endian 4 byte unsigned integer                                         |
+| 0x18 |   16 | Int16        | Two's complement, little-endian 2 byte signed integer                         |
+| 0x0C |   16 | UInt16       | Little-endian 2 byte unsigned integer                                         |
+| 0x19 |    8 | Int8         | Two's complement, 1 byte signed integer                                       |
+| 0x0D |    8 | UInt8        | 1 byte unsigned integer                                                       |
 | 0x0E |   64 | SplitIndex64 | Like Index64 but pages are stored in split + delta encoding                   |
 | 0x0F |   32 | SplitIndex32 | Like Index32 but pages are stored in split + delta encoding                   |
 | 0x10 |   64 | SplitReal64  | Like Real64 but in split encoding                                             |
 | 0x11 |   32 | SplitReal32  | Like Real32 but in split encoding                                             |
 | 0x12 |   16 | SplitReal16  | Like Real16 but in split encoding                                             |
-| 0x13 |   64 | SplitInt64   | Like Int64 but in split encoding                                              |
-| 0x14 |   32 | SplitInt32   | Like Int32 but in split encoding                                              |
-| 0x15 |   16 | SplitInt16   | Like Int16 but in split encoding                                              |
+| 0x1A |   64 | SplitInt64   | Like Int64 but in split + zigzag encoding                                     |
+| 0x13 |   64 | SplitUInt64  | Like UInt64 but in split encoding                                             |
+| 0x1B |   64 | SplitInt32   | Like Int32 but in split + zigzag encoding                                     |
+| 0x14 |   32 | SplitUInt32  | Like UInt32 but in split encoding                                             |
+| 0x1C |   16 | SplitInt16   | Like Int16 but in split + zigzag encoding                                     |
+| 0x15 |   16 | SplitUInt16  | Like UInt16 but in split encoding                                             |
 
-Future versions of the file format may introduce addtional column types
+The "split encoding" columns apply a byte transformation encoding to all pages of that column
+and in addition, depending on the column type, delta or zigzag encoding:
+
+Split (only)
+: Rearranges the bytes of elements: All the first bytes first, then all the second bytes, etc.
+
+Delta + split
+: The first element is stored unmodified, all other elements store the delta to the previous element.
+  Followed by split encoding.
+
+Zigzag + split
+: Used on signed integers only; it maps x to 2x if x is positive and to -(2x+1) if x is negative.
+  Followed by split encoding
+
+Future versions of the file format may introduce additional column types
 without changing the minimum version of the header.
 Old readers need to ignore these columns and fields constructed from such columns.
 Old readers can, however, figure out the number of elements stored in such unknown columns.
@@ -342,7 +363,14 @@ The flags field can have one of the following bits set
 | 0x01     | Elements in the column are sorted (monotonically increasing) |
 | 0x02     | Elements in the column are sorted (monotonically decreasing) |
 | 0x04     | Elements have only non-negative values                       |
+| 0x08     | Index of first element in the column is not zero             |
 
+If flag 0x08 (deferred column) is set, the index of the first element in this column is not zero, which happens if the column is added at a later point during write.
+In this case, an additional 64bit integer containing the first element index follows the flags field.
+Compliant implementations should yield synthetic data pages made up of 0x00 bytes when trying to read back elements in the range $[0, firstElementIndex-1]$.
+This results in zero-initialized values in the aforementioned range for fields of any supported C++ type, including `std::variant<Ts...>` and collections such as `std::vector<T>`.
+The leading zero pages of deferred columns are _not_ part of the page list, i.e. they have no page locator.
+In practice, deferred columns only appear in the schema extension record frame (see Section Footer Envelope).
 
 #### Alias columns
 
@@ -459,7 +487,7 @@ The cluster summary record frame contains the entry range of a cluster:
 If flag 0x01 (sharded cluster) is set,
 an additional 32bit integer containing the column group ID follows the flags field.
 If flags is zero, the cluster stores the event range of _all_ the original columns
-_excluding_ the columns from extension headers.
+_including_ the columns from extension headers.
 
 The order of the cluster summaries defines the cluster IDs, starting from zero.
 
@@ -594,15 +622,24 @@ The following fundamental types are stored as `leaf` fields with a single column
 -----------------------------------|------------------------|-----------------------|
 | bool                             | Bit                    |                       |
 | char                             | Char                   |                       |
-| int8_t, uint_8_t, unsigned char  | Int8                   |                       |
-| int16_t, uint16_t                | SplitInt16             | Int16                 |
-| int32_t, uint32_t                | SplitInt32             | Int32                 |
-| int64_t, uint64_t                | SplitInt64             | Int64                 |
+| int8_t                           | Int8                   |                       |
+| uint_8_t, unsigned char          | UInt8                  |                       |
+| int16_t                          | SplitInt16             | Int16                 |
+| uint16_t                         | SplitUInt16            | UInt16                |
+| uint32_t                         | SplitUInt32            | UInt32                |
+| int32_t                          | SplitInt32             | Int32                 |
+| uint64_t                         | SplitUInt64            | UInt64                |
+| int64_t                          | SplitInt64             | Int64                 |
 | float                            | SplitReal32            | Real32                |
 | double                           | SplitReal64            | Real64                |
 
 Possibly available `const` and `volatile` qualifiers of the C++ types are ignored for serialization.
 If the ntuple is stored uncompressed, the default changes from split encoding to non-split encoding where applicable.
+
+### Low-precision Floating Points
+
+The ROOT type `Double32_t` is stored on disk as a `double` field with a `SplitReal32` column representation.
+The field's type alias is set to `Double32_t`.
 
 ### STL Types and Collections
 
@@ -631,7 +668,7 @@ They are stored as two fields:
 
 Fixed-sized arrays are stored as two fields:
   - A repetitive field of type `std::array<T, N>` with no attached columns. The array size `N` is stored in the field meta-data.
-  - Child field of type `T`, which must be a type with RNTuple I/O support.
+  - Child field of type `T` named `_0`, which must be a type with RNTuple I/O support.
 
 Multi-dimensional arrays of the form `T[N][M]...` are currently not supported.
 
@@ -652,13 +689,25 @@ The child fileds are named `_0` and `_1`.
 #### std::tuple<T1, T2, ..., Tn>
 
 A tuple is stored using an empty mother field with $n$ subfields of type `T1`, `T2`, ..., `Tn`. All types must have RNTuple I/O support.
-The child fileds are named `_0`, `_1`, ...
+The child fields are named `_0`, `_1`, ...
 
 #### std::bitset<N>
 
 A bitset is stored as a repetitive leaf field with an attached `Bit` column.
 The bitset size `N` is stored as repetition parameter in the field meta-data.
 Within the repetition blocks, bits are stored in little-endian order, i.e. the least significant bits come first.
+
+#### std::unique_ptr<T>, std::optional<T>
+
+A unique pointer and an optional type have the same on disk representation.
+They are represented as a collection of `T`s of zero or one elements.
+A collection mother field has a single subfield named `_0` for `T`, where `T` must have RNTuple I/O support.
+Note that RNTuple does not support polymorphism, so the type `T` is expected to be `T` and not a child class of `T`.
+
+By default, the mother field has a principal column of type `(Split)Index[64|32]`.
+This is called sparse representation.
+The alternative, dense representation uses a `Bit` column to mask non-existing instances of the subfield.
+In this second case, a default-constructed `T` (or, if applicable, a `T` constructed by the ROOT I/O constructor) is stored on disk for the non-existing instances.
 
 ### User-defined classes
 
@@ -690,13 +739,16 @@ The on-disk representation is similar to a `std::vector<T>` where `T` is the val
   - Child field of type `T`, which must by a type with RNTuple I/O support.
     The name of the child field is `_0`.
 
-### ROOT::Experimental::RNTupleCardinality
+### ROOT::Experimental::RNTupleCardinality<SizeT>
 
-A field whose type is `ROOT::Experimental::RNTupleCardinality` is associated to a single column of type (Split)Index32 or (Split)Index64.
+A field whose type is `ROOT::Experimental::RNTupleCardinality<SizeT>` is associated to a single column of type (Split)Index32 or (Split)Index64.
 This field presents the offsets in the index column as lengths that correspond to the cardinality of the pointed-to collection.
 
 The value for the $i$-th element is computed by subtracting the $(i-1)$-th value from the $i$-th value in the index column.
 If $i == 0$, i.e. it falls on the start of a cluster, the $(i-1)$-th value in the index column is assumed to be 0, e.g. given the index column values `[1, 1, 3]`, the values yielded by `RNTupleCardinality` shall be `[1, 0, 2]`.
+
+The `SizeT` template parameter defines the in-memory integer type of the collection size.
+The valid types are `std::uint32_t` and `std::uint64_t`.
 
 ## Limits
 

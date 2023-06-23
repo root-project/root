@@ -369,20 +369,44 @@ RLoopManager::RLoopManager(std::unique_ptr<RDataSource> ds, const ColumnNames_t 
 }
 
 RLoopManager::RLoopManager(ROOT::RDF::Experimental::RDatasetSpec &&spec)
-   : fBeginEntry(spec.GetEntryRangeBegin()),
-     fEndEntry(spec.GetEntryRangeEnd()),
-     fSamples(spec.MoveOutSamples()),
-     fNSlots(RDFInternal::GetNSlots()),
+   : fNSlots(RDFInternal::GetNSlots()),
      fLoopType(ROOT::IsImplicitMTEnabled() ? ELoopType::kROOTFilesMT : ELoopType::kROOTFiles),
      fNewSampleNotifier(fNSlots),
      fSampleInfos(fNSlots),
      fDatasetColumnReaders(fNSlots)
 {
+   ChangeSpec(std::move(spec));
+}
+
+/**
+ * @brief Changes the internal TTree held by the RLoopManager.
+ *
+ * @warning This method may lead to potentially dangerous interactions if used
+ *     after the construction of the RDataFrame. Changing the specification makes
+ *     sense *if and only if* the schema of the dataset is *unchanged*, i.e. the
+ *     new specification refers to exactly the same number of columns, with the
+ *     same names and types. The actual use case of this method is moving the
+ *     processing of the same RDataFrame to a different range of entries of the
+ *     same dataset (which may be stored in a different set of files).
+ *
+ * @param spec The specification of the dataset to be adopted.
+ */
+void RLoopManager::ChangeSpec(ROOT::RDF::Experimental::RDatasetSpec &&spec)
+{
+   // Change the range of entries to be processed
+   fBeginEntry = spec.GetEntryRangeBegin();
+   fEndEntry = spec.GetEntryRangeEnd();
+
+   // Store the samples
+   fSamples = spec.MoveOutSamples();
+   fSampleMap.clear();
+
+   // Create the internal main chain
    auto chain = std::make_shared<TChain>("");
    for (auto &sample : fSamples) {
       const auto &trees = sample.GetTreeNames();
       const auto &files = sample.GetFileNameGlobs();
-      for (auto i = 0u; i < files.size(); ++i) {
+      for (std::size_t i = 0ul; i < files.size(); ++i) {
          // We need to use `<filename>?#<treename>` as an argument to TChain::Add
          // (see https://github.com/root-project/root/pull/8820 for why)
          const auto fullpath = files[i] + "?#" + trees[i];
@@ -394,7 +418,6 @@ RLoopManager::RLoopManager(ROOT::RDF::Experimental::RDatasetSpec &&spec)
          fSampleMap.insert({sampleId, &sample});
       }
    }
-
    SetTree(std::move(chain));
 
    // Create friends from the specification and connect them to the main chain

@@ -419,7 +419,6 @@ Int_t TAxis::FindFixBin(const char *label) const
 Int_t TAxis::FindFixBin(Double_t x) const
 {
    Int_t bin;
-
    if (x < fXmin) {              //*-* underflow
       bin = 0;
    } else  if ( !(x < fXmax)) {     //*-* overflow  (note the way to catch NaN

@@ -48,7 +48,7 @@ if(NOT MSVC OR win_broken_tests)
   ROOT_ADD_GTEST(testRooRealIntegral testRooRealIntegral.cxx LIBRARIES RooFitCore)
   if(clad)
     # Test disabled on windows due to an issue with cling symbols.
-    ROOT_ADD_GTEST(testRooFuncWrapper testRooFuncWrapper.cxx LIBRARIES RooFitCore)
+    ROOT_ADD_GTEST(testRooFuncWrapper testRooFuncWrapper.cxx LIBRARIES RooFitCore RooFit HistFactory)
   endif()
   ROOT_ADD_GTEST(testTestStatistics testTestStatistics.cxx LIBRARIES RooFitCore)
 endif()

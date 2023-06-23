@@ -40,7 +40,7 @@ public:
    TBox(Double_t x1, Double_t y1,Double_t x2, Double_t  y2);
    TBox(const TBox &box);
    TBox& operator=(const TBox&);
-   virtual ~TBox();
+   ~TBox() override;
 
    void          Copy(TObject &box) const override;
    Int_t         DistancetoPrimitive(Int_t px, Int_t py) override;

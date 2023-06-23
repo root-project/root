@@ -40,7 +40,7 @@ protected:
    GContext_t    fNormGC;       ///< text drawing graphics context
    FontStruct_t  fFontStruct;   ///< font used to draw position text
 
-   virtual void DoRedraw() override = 0;
+   void DoRedraw() override = 0;
 
    static const TGFont *fgDefaultFont;
    static TGGC         *fgDefaultGC;
@@ -55,7 +55,7 @@ public:
                  GContext_t norm = GetDefaultGC()(),
                  FontStruct_t font = GetDefaultFontStruct(),
                  UInt_t options = kDoubleBorder | kSunkenFrame);
-   virtual ~TGProgressBar() { }
+   ~TGProgressBar() override { }
 
    Float_t      GetMin() const { return fMin; }
    Float_t      GetMax() const { return fMax; }
@@ -105,7 +105,7 @@ public:
                   FontStruct_t font = GetDefaultFontStruct(),
                   UInt_t options = kDoubleBorder | kSunkenFrame);
    TGHProgressBar(const TGWindow *p, EBarType type, UInt_t w);
-   virtual ~TGHProgressBar() { }
+   ~TGHProgressBar() override { }
 
    TGDimension GetDefaultSize() const override
                { return TGDimension(fWidth, fBarWidth); }
@@ -133,7 +133,7 @@ public:
                   FontStruct_t font = GetDefaultFontStruct(),
                   UInt_t options = kDoubleBorder | kSunkenFrame);
    TGVProgressBar(const TGWindow *p, EBarType type, UInt_t h);
-   virtual ~TGVProgressBar() { }
+   ~TGVProgressBar() override { }
 
    TGDimension GetDefaultSize() const override
                 { return TGDimension(fBarWidth, fHeight); }

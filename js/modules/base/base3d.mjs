@@ -5,7 +5,7 @@ import { HelveticerRegularJson, Font, WebGLRenderer, WebGLRenderTarget,
          Vector2, Vector3, Color, Points, PointsMaterial,
          LineSegments, LineDashedMaterial, LineBasicMaterial,
          OrbitControls, Raycaster, SVGRenderer } from '../three.mjs';
-import { browser, settings, constants, internals, isBatchMode, isNodeJs, isObject, isFunc, isStr, getDocument } from '../core.mjs';
+import { browser, settings, constants, isBatchMode, isNodeJs, isObject, isFunc, isStr, getDocument } from '../core.mjs';
 import { getElementRect, getAbsPosInCanvas, makeTranslate } from './BasePainter.mjs';
 import { TAttMarkerHandler } from './TAttMarkerHandler.mjs';
 import { getSvgLineStyle } from './TAttLineHandler.mjs';
@@ -30,7 +30,7 @@ function createSVGRenderer(as_is, precision, doc) {
      svg_style: {},
      path_attr: {},
      accPath: '',
-     createElementNS(ns,kind) {
+     createElementNS(ns, kind) {
         if (kind == 'path')
            return {
               _wrapper: this,
@@ -71,12 +71,17 @@ function createSVGRenderer(as_is, precision, doc) {
      }
    };
 
-   let originalDocument = globalThis.document;
-   globalThis.document = doc_wrapper;
+   let originalDocument;
+
+   if (isNodeJs()) {
+      originalDocument = globalThis.document;
+      globalThis.document = doc_wrapper;
+   }
 
    let rndr = new SVGRenderer();
 
-   globalThis.document = originalDocument;
+   if (isNodeJs())
+      globalThis.document = originalDocument;
 
    rndr.doc_wrapper = doc_wrapper; // use it to get final SVG code
 
@@ -84,11 +89,13 @@ function createSVGRenderer(as_is, precision, doc) {
 
    rndr.render = function (scene, camera) {
       let originalDocument = globalThis.document;
-      globalThis.document = this.doc_wrapper;
+      if (isNodeJs())
+         globalThis.document = this.doc_wrapper;
 
       this.originalRender(scene, camera);
 
-      globalThis.document = originalDocument;
+      if (isNodeJs())
+         globalThis.document = originalDocument;
    }
 
    rndr.clearHTML = function() {
@@ -104,6 +111,35 @@ function createSVGRenderer(as_is, precision, doc) {
       return `<svg xmlns="http://www.w3.org/2000/svg" ${_textSizeAttr}${_textClearAttr}>${wrap.accPath}</svg>`;
    }
 
+   rndr.fillTargetSVG = function(svg) {
+
+      if (isNodeJs()) {
+
+         let wrap = this.doc_wrapper;
+
+         svg.setAttribute('viewBox', wrap.svg_attr['viewBox']);
+         svg.setAttribute('width', wrap.svg_attr['width']);
+         svg.setAttribute('height', wrap.svg_attr['height']);
+         svg.style.background = wrap.svg_style.backgroundColor || '';
+
+         svg.innerHTML = wrap.accPath;
+      } else {
+         let src = this.domElement;
+
+         svg.setAttribute('viewBox', src.getAttribute('viewBox'));
+         svg.setAttribute('width', src.getAttribute('width'));
+         svg.setAttribute('height', src.getAttribute('height'));
+         svg.style.background = src.style.backgroundColor;
+
+         while (src.firstChild) {
+            let elem = src.firstChild;
+            src.removeChild(elem);
+            svg.appendChild(elem);
+         }
+
+      }
+   }
+
    rndr.setPrecision(precision);
 
    return rndr;
@@ -112,14 +148,18 @@ function createSVGRenderer(as_is, precision, doc) {
 
 /** @ummary Define rendering kind which will be used for rendering of 3D elements
   * @param {value} [render3d] - preconfigured value, will be used if applicable
+  * @param {value} [is_batch] - is batch mode is configured
   * @return {value} - rendering kind, see constants.Render3D
   * @private */
-function getRender3DKind(render3d) {
-   if (!render3d) render3d = isBatchMode() ? settings.Render3DBatch : settings.Render3D;
+function getRender3DKind(render3d, is_batch) {
+   if (is_batch === undefined)
+      is_batch = isBatchMode();
+
+   if (!render3d) render3d = is_batch ? settings.Render3DBatch : settings.Render3D;
    let rc = constants.Render3D;
 
-   if (render3d == rc.Default) render3d = isBatchMode() ? rc.WebGLImage : rc.WebGL;
-   if (isBatchMode() && (render3d == rc.WebGL)) render3d = rc.WebGLImage;
+   if (render3d == rc.Default) render3d = is_batch ? rc.WebGLImage : rc.WebGL;
+   if (is_batch && (render3d == rc.WebGL)) render3d = rc.WebGLImage;
 
    return render3d;
 }
@@ -313,7 +353,7 @@ let Handling3DDrawings = {
             if (elem.empty())
                elem = svg.insert('g', '.primitives_layer').attr('class', size.clname);
 
-            elem.attr('transform', makeTranslate(size.x,size.y));
+            elem.attr('transform', makeTranslate(size.x, size.y));
 
          } else {
 
@@ -387,7 +427,7 @@ function assign3DHandler(painter) {
   * @private */
 async function createRender3D(width, height, render3d, args) {
 
-   let rc = constants.Render3D, promise, need_workaround = false, doc = getDocument();
+   let rc = constants.Render3D, promise, doc = getDocument();
 
    render3d = getRender3DKind(render3d);
 
@@ -401,11 +441,8 @@ async function createRender3D(width, height, render3d, args) {
       // SVG rendering
       let r = createSVGRenderer(false, 0, doc);
 
-      if (isBatchMode()) {
-         need_workaround = true;
-      } else {
-         r.jsroot_dom = doc.createElementNS('http://www.w3.org/2000/svg', 'svg');
-      }
+      r.jsroot_dom = doc.createElementNS('http://www.w3.org/2000/svg', 'svg');
+
       promise = Promise.resolve(r);
    } else if (isNodeJs()) {
       // try to use WebGL inside node.js - need to create headless context
@@ -421,46 +458,48 @@ async function createRender3D(width, height, render3d, args) {
          args.context = gl;
          gl.canvas = args.canvas;
 
+         globalThis.WebGLRenderingContext = function() {}; // workaround to prevent crash in three.js constructor
+
          let r = new WebGLRenderer(args);
 
          r.jsroot_output = new WebGLRenderTarget(width, height);
          r.setRenderTarget(r.jsroot_output);
-         need_workaround = true;
+         r.jsroot_dom = doc.createElementNS('http://www.w3.org/2000/svg', 'image');
          return r;
       });
-
    } else {
       // rendering with WebGL directly into svg image
       let r = new WebGLRenderer(args);
       r.jsroot_dom = doc.createElementNS('http://www.w3.org/2000/svg', 'image');
-      d3_select(r.jsroot_dom).attr('width', width).attr('height', height);
       promise = Promise.resolve(r);
    }
 
    return promise.then(renderer => {
-
-      if (need_workaround) {
-          if (!internals.svg_3ds) internals.svg_3ds = [];
-         renderer.workaround_id = internals.svg_3ds.length;
-         internals.svg_3ds[renderer.workaround_id] = '<svg></svg>'; // dummy, provided in afterRender3D
-
-         // replace DOM element in renderer
-         renderer.jsroot_dom = doc.createElementNS('http://www.w3.org/2000/svg', 'path');
-         renderer.jsroot_dom.setAttribute('jsroot_svg_workaround', renderer.workaround_id);
-      } else if (!renderer.jsroot_dom) {
+      if (!renderer.jsroot_dom)
          renderer.jsroot_dom = renderer.domElement;
-      }
+      else
+         renderer.jsroot_custom_dom = true;
 
       // res.renderer.setClearColor('#000000', 1);
       // res.renderer.setClearColor(0x0, 0);
-      renderer.setSize(width, height);
       renderer.jsroot_render3d = render3d;
 
+      // which format used to convert into images
+      renderer.jsroot_image_format = 'png';
+
+      renderer.originalSetSize = renderer.setSize;
+
       // apply size to dom element
-      renderer.setJSROOTSize = function(width, height) {
-         if ((this.jsroot_render3d === constants.Render3D.WebGLImage) && !isBatchMode() && !isNodeJs())
-            return d3_select(this.jsroot_dom).attr('width', width).attr('height', height);
+      renderer.setSize = function(width, height, updateStyle) {
+         if (this.jsroot_custom_dom) {
+            this.jsroot_dom.setAttribute('width', width);
+            this.jsroot_dom.setAttribute('height', height);
+         }
+
+         this.originalSetSize(width, height, updateStyle);
       };
+
+      renderer.setSize(width, height);
 
       return renderer;
    });
@@ -475,7 +514,8 @@ function cleanupRender3D(renderer) {
    if (isNodeJs()) {
       let ctxt = isFunc(renderer.getContext) ? renderer.getContext() : null,
           ext = ctxt?.getExtension('STACKGL_destroy_context');
-      if (ext) ext.destroy();
+      if (isFunc(ext?.destroy))
+          ext.destroy();
    } else {
       // suppress warnings in Chrome about lost webgl context, not required in firefox
       if (browser.isChrome && isFunc(renderer.forceContextLoss))
@@ -490,7 +530,8 @@ function cleanupRender3D(renderer) {
   * @desc used together with SVG
   * @private */
 function beforeRender3D(renderer) {
-   if (renderer.clearHTML) renderer.clearHTML();
+   if (isFunc(renderer.clearHTML))
+      renderer.clearHTML();
 }
 
 /** @summary Post-process result of rendering
@@ -499,19 +540,13 @@ function beforeRender3D(renderer) {
 function afterRender3D(renderer) {
 
    let rc = constants.Render3D;
-   if (renderer.jsroot_render3d == rc.WebGL) return;
+
+   if (renderer.jsroot_render3d == rc.WebGL)
+      return;
 
    if (renderer.jsroot_render3d == rc.SVG) {
       // case of SVGRenderer
-      if (isBatchMode()) {
-         internals.svg_3ds[renderer.workaround_id] = renderer.makeOuterHTML();
-      } else {
-         let parent = renderer.jsroot_dom.parentNode;
-         if (parent) {
-            parent.innerHTML = renderer.makeOuterHTML();
-            renderer.jsroot_dom = parent.firstChild;
-         }
-      }
+      renderer.fillTargetSVG(renderer.jsroot_dom);
    } else if (isNodeJs()) {
       // this is WebGL rendering in node.js
       let canvas = renderer.domElement,
@@ -534,25 +569,15 @@ function afterRender3D(renderer) {
       imageData.data.set(pixels);
       context.putImageData(imageData, 0, 0);
 
-      let dataUrl = canvas.toDataURL('image/png'),
-          svg = `<image width="${canvas.width}" height="${canvas.height}" xlink:href="${dataUrl}"></image>`;
-      internals.svg_3ds[renderer.workaround_id] = svg;
-   } else {
-      let dataUrl = renderer.domElement.toDataURL('image/png');
-      d3_select(renderer.jsroot_dom).attr('xlink:href', dataUrl);
-   }
-}
+      let format = 'image/' + renderer.jsroot_image_format,
+          dataUrl = canvas.toDataURL(format);
 
-/** @summary Special way to insert WebGL drawing into produced SVG batch code
-  * @desc Used only in batch mode for SVG images generation
-  * @private */
-internals.processSvgWorkarounds = function(svg, keep_workarounds) {
-   if (!internals.svg_3ds) return svg;
-   for (let k = 0;  k < internals.svg_3ds.length; ++k)
-      svg = svg.replace(`<path jsroot_svg_workaround="${k}"></path>`, internals.svg_3ds[k]);
-   if (!keep_workarounds)
-      internals.svg_3ds = undefined;
-   return svg;
+      renderer.jsroot_dom.setAttribute('href', dataUrl);
+
+   } else {
+      let dataUrl = renderer.domElement.toDataURL('image/' + renderer.jsroot_image_format);
+      renderer.jsroot_dom.setAttribute('href', dataUrl);
+   }
 }
 
 // ========================================================================================================
@@ -904,7 +929,7 @@ function createOrbitControl(painter, camera, scene, renderer, lookat) {
       // domElement gives correct coordinate with canvas render, but isn't always right for webgl renderer
       if (!this.renderer) return [];
 
-      let sz = (this.renderer instanceof WebGLRenderer) ? this.renderer.getSize(new Vector2()) : this.renderer.domElement,
+      let sz = (this.renderer instanceof SVGRenderer) ? this.renderer.domElement : this.renderer.getSize(new Vector2()),
           pnt = { x: mouse.x / sz.width * 2 - 1, y: -mouse.y / sz.height * 2 + 1 };
 
       this.camera.updateMatrix();
@@ -1284,7 +1309,8 @@ const Box3D = {
                 new Vector3(0, 0, 0), new Vector3(0, 0, 1) ],
     Indexes: [ 0,2,1, 2,3,1, 4,6,5, 6,7,5, 4,5,1, 5,0,1, 7,6,2, 6,3,2, 5,7,0, 7,2,0, 1,3,4, 3,6,4 ],
     Normals: [ 1,0,0, -1,0,0, 0,1,0, 0,-1,0, 0,0,1, 0,0,-1 ],
-    Segments: [0, 2, 2, 7, 7, 5, 5, 0, 1, 3, 3, 6, 6, 4, 4, 1, 1, 0, 3, 2, 6, 7, 4, 5]  // segments addresses Vertices
+    Segments: [0, 2, 2, 7, 7, 5, 5, 0, 1, 3, 3, 6, 6, 4, 4, 1, 1, 0, 3, 2, 6, 7, 4, 5],  // segments addresses Vertices
+    MeshSegments: undefined
 };
 
 // these segments address vertices from the mesh, we can use positions from box mesh

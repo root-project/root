@@ -1,5 +1,7 @@
-import { FrontSide, Object3D, Box3, Mesh, Vector2, Vector3, Matrix4,
-         MeshLambertMaterial, Color, PerspectiveCamera, Frustum, Raycaster,
+import { DoubleSide, FrontSide, Object3D, Box3, Mesh, InstancedMesh, Vector2, Vector3, Matrix4,
+         MeshLambertMaterial, MeshBasicMaterial, MeshStandardMaterial, MeshNormalMaterial,
+         MeshPhysicalMaterial, MeshPhongMaterial, MeshDepthMaterial, MeshMatcapMaterial, MeshToonMaterial,
+         Color, PerspectiveCamera, Frustum, Raycaster,
          ShapeUtils, BufferGeometry, BufferAttribute } from '../three.mjs';
 import { isObject, isFunc, BIT } from '../core.mjs';
 import { createBufferGeometry, createNormal,
@@ -2271,6 +2273,67 @@ function createFrustum(source) {
    return frustum;
 }
 
+/** @summary Create node material
+  * @private */
+function createMaterial(cfg, args0) {
+   if (!cfg) cfg = { material_kind: 'lambert' };
+
+   let args = Object.assign({}, args0);
+
+   if (args.opacity === undefined)
+      args.opacity = 1;
+
+   if (cfg.transparency)
+      args.opacity = Math.min(1 - cfg.transparency, args.opacity);
+
+   args.wireframe = cfg.wireframe ?? false;
+   if (!args.color) args.color = 'red';
+   args.side = FrontSide;
+   args.transparent = args.opacity < 1;
+   args.depthWrite = args.opactity == 1;
+
+   let material;
+
+   if (cfg.material_kind == 'basic') {
+      material = new MeshBasicMaterial(args);
+   } else if (cfg.material_kind == 'depth') {
+      delete args.color;
+      material = new MeshDepthMaterial(args);
+   } else if (cfg.material_kind == 'toon') {
+      material = new MeshToonMaterial(args);
+   } else if (cfg.material_kind == 'matcap') {
+      delete args.wireframe;
+      material = new MeshMatcapMaterial(args);
+   } else if (cfg.material_kind == 'standard') {
+      args.metalness = cfg.metalness ?? 0.5;
+      args.roughness = cfg.roughness ?? 0.1;
+      material = new MeshStandardMaterial(args);
+   } else if (cfg.material_kind == 'normal') {
+      delete args.color;
+      material = new MeshNormalMaterial(args);
+   } else if (cfg.material_kind == 'physical') {
+      args.metalness = cfg.metalness ?? 0.5;
+      args.roughness = cfg.roughness ?? 0.1;
+      args.reflectivity = cfg.reflectivity ?? 0.5;
+      args.emissive = args.color;
+      material = new MeshPhysicalMaterial(args);
+   } else if (cfg.material_kind == 'phong') {
+      args.shininess = cfg.shininess ?? 0.9;
+      material = new MeshPhongMaterial(args);
+   } else {
+      args.vertexColors = false;
+      material = new MeshLambertMaterial(args);
+   }
+
+   if ((material.flatShading !== undefined) && (cfg.flatShading !== undefined))
+      material.flatShading = cfg.flatShading;
+   material.inherentOpacity = args0.opacity ?? 1;
+   material.inherentArgs = args0;
+
+   return material;
+}
+
+
 /** @summary Compares two stacks.
   * @return {Number} 0 if same, -1 when stack1 < stack2, +1 when stack1 > stack2
   * @private */
@@ -2339,13 +2402,20 @@ class ClonedNodes {
    }
 
    /** @summary Set maximal number of visible nodes */
-   setMaxVisNodes(v) {
+   setMaxVisNodes(v, more) {
       this.maxnodes = Number.isFinite(v) ? v : 10000;
+      if (more && Number.isFinite(more))
+         this.maxnodes *= more;
    }
 
    /** @summary Returns configured maximal number of visible nodes */
    getMaxVisNodes() {
       return this.maxnodes;
+   }
+
+   /** @summary Set geo painter configuration - used for material creation */
+   setConfig(cfg) {
+      this._cfg = cfg;
    }
 
    /** @summary Insert node into existing array */
@@ -2818,7 +2888,8 @@ class ClonedNodes {
       return node ? node.name : '';
    }
 
-   /** @summary Returns description for provide stack */
+   /** @summary Returns description for provided stack
+     * @desc If specified, absolute matrix is also calculated */
    resolveStack(stack, withmatrix) {
 
       let res = { id: 0, obj: null, node: this.nodes[0], name: this.name_prefix || '' };
@@ -3000,12 +3071,7 @@ class ClonedNodes {
          let prop = { name: clone.name, nname: clone.name, shape: null, material: null, chlds: null },
              opacity = entry.opacity || 1, col = entry.color || '#0000FF';
          prop.fillcolor = new Color(col[0] == '#' ? col : `rgb(${col})`);
-         prop.material = new MeshLambertMaterial({ transparent: opacity < 1,
-                          opacity, wireframe: false, color: prop.fillcolor,
-                          side: FrontSide, vertexColors: false,
-                          depthWrite: opacity == 1 });
-         prop.material.inherentOpacity = opacity;
-
+         prop.material = createMaterial(this._cfg, { opacity, color: prop.fillcolor });
          return prop;
       }
 
@@ -3025,11 +3091,8 @@ class ClonedNodes {
 
          if (visible) {
             let opacity = Math.min(1, node.fRGBA[3]);
-            prop.fillcolor = new Color( node.fRGBA[0], node.fRGBA[1], node.fRGBA[2] );
-            prop.material = new MeshLambertMaterial({ transparent: opacity < 1,
-                                                      opacity, wireframe: false, color: prop.fillcolor,
-                                                      side: FrontSide, vertexColors: false, depthWrite: opacity == 1 });
-            prop.material.inherentOpacity = opacity;
+            prop.fillcolor = new Color(node.fRGBA[0], node.fRGBA[1], node.fRGBA[2]);
+            prop.material = createMaterial(this._cfg, { opacity, color: prop.fillcolor });
          }
 
          return prop;
@@ -3037,11 +3100,8 @@ class ClonedNodes {
 
       let volume = node.fVolume;
 
-      let prop = { name: getObjectName(volume), nname: getObjectName(node), volume: node.fVolume, shape: volume.fShape, material: null, chlds: null };
-
-      if (node.fVolume.fNodes !== null) prop.chlds = node.fVolume.fNodes.arr;
-
-      if (volume) prop.linewidth = volume.fLineWidth;
+      let prop = { name: getObjectName(volume), nname: getObjectName(node), volume, shape: volume.fShape, material: null,
+                   chlds: volume.fNodes?.arr, linewidth: volume.fLineWidth };
 
       if (visible) {
 
@@ -3069,18 +3129,14 @@ class ClonedNodes {
             }
 
             if (transparency > 0)
-               opacity = (100.0 - transparency) / 100.0;
+               opacity = (100 - transparency) / 100;
             if (prop.fillcolor === undefined)
                prop.fillcolor = root_colors[mat.fFillColor];
          }
          if (prop.fillcolor === undefined)
             prop.fillcolor = 'lightgrey';
 
-         prop.material = new MeshLambertMaterial({ transparent: opacity < 1,
-                                                   opacity, wireframe: false, color: prop.fillcolor,
-                                                   side: FrontSide, vertexColors: false,
-                                                   depthWrite: opacity == 1 });
-         prop.material.inherentOpacity = opacity;
+         prop.material = createMaterial(this._cfg, { opacity, color: prop.fillcolor });
       }
 
       return prop;
@@ -3095,11 +3151,16 @@ class ClonedNodes {
           force = isObject(options) || (options === 'force');
 
       for(let lvl = 0; lvl <= stack.length; ++lvl) {
-         let nchld = (lvl > 0) ? stack[lvl-1] : 0;
-         // extract current node
-         if (lvl > 0)  node = this.nodes[node.chlds[nchld]];
+         let nchld = (lvl > 0) ? stack[lvl-1] : 0,
+             // extract current node
+             child = (lvl > 0) ? this.nodes[node.chlds[nchld]] : node,
+             obj3d = undefined;
+         if (!child) {
+            console.error(`Wrong stack ${JSON.stringify(stack)} for nodes at level ${lvl}, node.id ${node.id}, numnodes ${this.nodes.length}, nchld ${nchld}, numchilds ${node.chlds.length}, chldid ${node.chlds[nchld]}`);
+            return null;
+         }
 
-         let obj3d = undefined;
+         node = child;
 
          if (three_prnt.children)
             for (let i = 0; i < three_prnt.children.length; ++i) {
@@ -3172,6 +3233,180 @@ class ClonedNodes {
       }
 
       return three_prnt;
+   }
+
+   /** @summary Create mesh for single physical node */
+   createEntryMesh(ctrl, toplevel, entry, shape, colors) {
+      if (!shape || !shape.ready)
+         return null;
+
+      entry.done = true; // mark entry is created
+      shape.used = true; // indicate that shape was used in building
+
+      if (!shape.geom || !shape.nfaces) {
+         // node is visible, but shape does not created
+         this.createObject3D(entry.stack, toplevel, 'delete_mesh');
+         return null;
+      }
+
+      let prop = this.getDrawEntryProperties(entry, colors),
+          obj3d = this.createObject3D(entry.stack, toplevel, ctrl),
+          matrix = obj3d.absMatrix || obj3d.matrixWorld, mesh;
+
+      prop.material.wireframe = ctrl.wireframe;
+
+      prop.material.side = ctrl.doubleside ? DoubleSide : FrontSide;
+
+      if (matrix.determinant() > -0.9) {
+         mesh = new Mesh(shape.geom, prop.material);
+      } else {
+         mesh = createFlippedMesh(shape, prop.material);
+      }
+
+      obj3d.add(mesh);
+
+      if (obj3d.absMatrix) {
+         mesh.matrix.copy(obj3d.absMatrix);
+         mesh.matrix.decompose(mesh.position, mesh.quaternion, mesh.scale);
+         mesh.updateMatrixWorld();
+      }
+
+      // keep full stack of nodes
+      mesh.stack = entry.stack;
+      mesh.renderOrder = this.maxdepth - entry.stack.length; // order of transparency handling
+
+      // keep hierarchy level
+      mesh.$jsroot_order = obj3d.$jsroot_depth;
+
+      if (ctrl.info?.num_meshes !== undefined) {
+         ctrl.info.num_meshes++;
+         ctrl.info.num_faces += shape.nfaces;
+      }
+
+      // set initial render order, when camera moves, one must refine it
+      //mesh.$jsroot_order = mesh.renderOrder =
+      //   this._clones.maxdepth - ((obj3d.$jsroot_depth !== undefined) ? obj3d.$jsroot_depth : entry.stack.length);
+
+      return mesh;
+
+   }
+
+   /** @summary Check if instancing can be used for the nodes */
+   createInstancedMeshes(ctrl, toplevel, draw_nodes, build_shapes, colors) {
+      if (ctrl.instancing < 0)
+         return false;
+
+      // first delete previous data
+      let used_shapes = [], max_entries = 1;
+
+      for (let n = 0; n < draw_nodes.length; ++n) {
+         let entry = draw_nodes[n];
+         if (entry.done) continue;
+
+         /// shape can be provided with entry itself
+         let shape = entry.server_shape || build_shapes[entry.shapeid];
+         if (!shape || !shape.ready) {
+            console.warn(`Problem with shape id ${entry.shapeid} when building`);
+            return false;
+         }
+
+         // ignore shape without geometry
+         if (!shape.geom || !shape.nfaces)
+            continue;
+
+         if (shape.instances === undefined) {
+            shape.instances = [];
+            used_shapes.push(shape);
+         }
+
+         let instance = shape.instances.find(i => i.nodeid == entry.nodeid);
+
+         if (instance) {
+            instance.entries.push(entry);
+            max_entries = Math.max(max_entries, instance.entries.length);
+         } else {
+            shape.instances.push({ nodeid: entry.nodeid, entries: [ entry ]});
+         }
+      }
+
+      let make_sense = ctrl.instancing > 0 ? (max_entries > 2) :
+                        (draw_nodes.length > 10000) && (max_entries > 10);
+
+      if (!make_sense) {
+         used_shapes.forEach(shape => { delete shape.instances; });
+         return false;
+      }
+
+      used_shapes.forEach(shape => {
+         shape.used = true;
+         shape.instances.forEach(instance => {
+            let entry0 = instance.entries[0],
+                prop = this.getDrawEntryProperties(entry0, colors);
+
+            prop.material.wireframe = ctrl.wireframe;
+
+            prop.material.side = ctrl.doubleside ? DoubleSide : FrontSide;
+
+            if (instance.entries.length == 1) {
+               this.createEntryMesh(ctrl, toplevel, entry0, shape, colors);
+            } else {
+               let arr1 = [], arr2 = [], stacks1 = [], stacks2 = [];
+
+               instance.entries.forEach(entry => {
+                  let info = this.resolveStack(entry.stack, true);
+
+                  if (info.matrix.determinant() > -0.9) {
+                     arr1.push(info.matrix);
+                     stacks1.push(entry.stack);
+                  } else {
+                     arr2.push(info.matrix);
+                     stacks2.push(entry.stack);
+                  }
+                  entry.done = true;
+               });
+
+               if (arr1.length > 0) {
+                  let mesh1 = new InstancedMesh(shape.geom, prop.material, arr1.length);
+
+                  mesh1.stacks = stacks1;
+                  arr1.forEach((matrix,i) => mesh1.setMatrixAt(i, matrix));
+
+                  toplevel.add(mesh1);
+
+                  mesh1.renderOrder = 1;
+
+                  mesh1.$jsroot_order = 1;
+                  ctrl.info.num_meshes++;
+                  ctrl.info.num_faces += shape.nfaces*arr1.length;
+               }
+
+               if (arr2.length > 0) {
+                  if (shape.geomZ === undefined)
+                     shape.geomZ = createFlippedGeom(shape.geom);
+
+                  let mesh2 = new InstancedMesh(shape.geomZ, prop.material, arr2.length);
+
+                  mesh2.stacks = stacks2;
+                  let m = new Matrix4().makeScale(1,1,-1);
+                  arr2.forEach((matrix,i) => {
+                     mesh2.setMatrixAt(i, matrix.multiply(m));
+                  });
+                  mesh2._flippedMesh = true;
+
+                  toplevel.add(mesh2);
+
+                  mesh2.renderOrder = 1;
+                  mesh2.$jsroot_order = 1;
+                  ctrl.info.num_meshes++;
+                  ctrl.info.num_faces += shape.nfaces*arr2.length;
+               }
+            }
+         });
+
+         delete shape.instances;
+      });
+
+      return true;
    }
 
    /** @summary Get volume boundary */
@@ -3459,7 +3694,7 @@ class ClonedNodes {
 
          res.shapes++;
          if (!item.used) res.notusedshapes++;
-         res.faces += item.nfaces*item.refcnt;
+         res.faces += item.nfaces * item.refcnt;
 
          if (res.faces >= limit) {
             res.done = true;
@@ -3509,6 +3744,60 @@ class ClonedNodes {
    }
 }
 
+function createFlippedGeom(geom) {
+
+   let pos = geom.getAttribute('position').array,
+       norm = geom.getAttribute('normal').array,
+       index = geom.getIndex();
+
+   if (index) {
+      // we need to unfold all points to
+      let arr = index.array,
+          i0 = geom.drawRange.start,
+          ilen = geom.drawRange.count;
+      if (i0 + ilen > arr.length) ilen = arr.length - i0;
+
+      let dpos = new Float32Array(ilen*3), dnorm = new Float32Array(ilen*3);
+      for (let ii = 0; ii < ilen; ++ii) {
+         let k = arr[i0 + ii];
+         if ((k < 0) || (k*3 >= pos.length))
+            console.log(`strange index ${k*3} totallen = ${pos.length}`);
+         dpos[ii*3] = pos[k*3];
+         dpos[ii*3+1] = pos[k*3+1];
+         dpos[ii*3+2] = pos[k*3+2];
+         dnorm[ii*3] = norm[k*3];
+         dnorm[ii*3+1] = norm[k*3+1];
+         dnorm[ii*3+2] = norm[k*3+2];
+      }
+
+      pos = dpos; norm = dnorm;
+   }
+
+   let len = pos.length,
+       newpos = new Float32Array(len),
+       newnorm = new Float32Array(len);
+
+   // we should swap second and third point in each face
+   for (let n = 0, shift = 0; n < len; n += 3) {
+      newpos[n]   = pos[n+shift];
+      newpos[n+1] = pos[n+1+shift];
+      newpos[n+2] = -pos[n+2+shift];
+
+      newnorm[n]   = norm[n+shift];
+      newnorm[n+1] = norm[n+1+shift];
+      newnorm[n+2] = -norm[n+2+shift];
+
+      shift+=3; if (shift===6) shift=-3; // values 0,3,-3
+   }
+
+   let geomZ = new BufferGeometry();
+   geomZ.setAttribute('position', new BufferAttribute(newpos, 3));
+   geomZ.setAttribute('normal', new BufferAttribute(newnorm, 3));
+
+   return geomZ;
+}
+
+
 /** @summary Create flipped mesh for the shape
   * @desc When transformation matrix includes one or several inversion of axis,
   * one should inverse geometry object, otherwise three.js cannot correctly draw it
@@ -3517,63 +3806,11 @@ class ClonedNodes {
   * @private */
 function createFlippedMesh(shape, material) {
 
-   let flip =  new Vector3(1,1,-1);
+   if (shape.geomZ === undefined)
+      shape.geomZ = createFlippedGeom(shape.geom);
 
-   if (shape.geomZ === undefined) {
-
-      let pos = shape.geom.getAttribute('position').array,
-          norm = shape.geom.getAttribute('normal').array,
-          index = shape.geom.getIndex();
-
-      if (index) {
-         // we need to unfold all points to
-         let arr = index.array,
-             i0 = shape.geom.drawRange.start,
-             ilen = shape.geom.drawRange.count;
-         if (i0 + ilen > arr.length) ilen = arr.length - i0;
-
-         let dpos = new Float32Array(ilen*3), dnorm = new Float32Array(ilen*3);
-         for (let ii = 0; ii < ilen; ++ii) {
-            let k = arr[i0 + ii];
-            if ((k < 0) || (k*3 >= pos.length))
-               console.log(`strange index ${k*3} totallen = ${pos.length}`);
-            dpos[ii*3] = pos[k*3];
-            dpos[ii*3+1] = pos[k*3+1];
-            dpos[ii*3+2] = pos[k*3+2];
-            dnorm[ii*3] = norm[k*3];
-            dnorm[ii*3+1] = norm[k*3+1];
-            dnorm[ii*3+2] = norm[k*3+2];
-         }
-
-         pos = dpos; norm = dnorm;
-      }
-
-      let len = pos.length, n, shift = 0,
-          newpos = new Float32Array(len),
-          newnorm = new Float32Array(len);
-
-      // we should swap second and third point in each face
-      for (n = 0; n < len; n += 3) {
-         newpos[n]   = pos[n+shift];
-         newpos[n+1] = pos[n+1+shift];
-         newpos[n+2] = -pos[n+2+shift];
-
-         newnorm[n]   = norm[n+shift];
-         newnorm[n+1] = norm[n+1+shift];
-         newnorm[n+2] = -norm[n+2+shift];
-
-         shift+=3; if (shift===6) shift=-3; // values 0,3,-3
-      }
-
-      shape.geomZ = new BufferGeometry();
-      shape.geomZ.setAttribute('position', new BufferAttribute(newpos, 3));
-      shape.geomZ.setAttribute('normal', new BufferAttribute(newnorm, 3));
-      // normals are calculated with normal geometry and correctly scaled
-      // geom.computeVertexNormals();
-   }
-
-   let mesh = new Mesh( shape.geomZ, material );
-   mesh.scale.copy(flip);
+   let mesh = new Mesh(shape.geomZ, material);
+   mesh.scale.copy(new Vector3(1,1,-1));
    mesh.updateMatrix();
 
    mesh._flippedMesh = true;
@@ -3582,12 +3819,25 @@ function createFlippedMesh(shape, material) {
 }
 
 /** @summary extract code of Box3.expandByObject
-  * @desc Major difference - do not traverse hierarchy
+  * @desc Major difference - do not traverse hierarchy, support InstancedMesh
   * @private */
 function getBoundingBox(node, box3, local_coordinates) {
    if (!node?.geometry) return box3;
 
    if (!box3) box3 = new Box3().makeEmpty();
+
+   if (node.isInstancedMesh) {
+      let m = new Matrix4(), b = new Box3().makeEmpty();
+
+      node.geometry.computeBoundingBox();
+
+      for ( let i = 0; i < node.count; i ++ ) {
+         node.getMatrixAt( i, m );
+         b.copy( node.geometry.boundingBox ).applyMatrix4( m );
+         box3.union( b );
+      }
+      return box3;
+   }
 
    if (!local_coordinates) node.updateWorldMatrix(false, false);
 
@@ -3770,7 +4020,7 @@ function produceRenderOrder(toplevel, origin, method, clones) {
          }
 
       for (let i = 0; i < resort.length; ++i) {
-         resort[i].renderOrder = Math.round( maxorder - (i+1) / (resort.length+1) * (maxorder-minorder));
+         resort[i].renderOrder = Math.round(maxorder - (i+1) / (resort.length + 1) * (maxorder - minorder));
          delete resort[i].$jsroot_index;
          delete resort[i].$jsroot_distance;
       }
@@ -3840,10 +4090,9 @@ function getShapeIcon(shape) {
    return 'img_geotube';
 }
 
-
 export { kindGeo, kindEve, kindShape,
          clTGeoBBox, clTGeoCompositeShape,
          geoCfg, geoBITS, ClonedNodes, isSameStack, checkDuplicates, getObjectName, testGeoBit, setGeoBit, toggleGeoBit,
-         setInvisibleAll, countNumShapes, getNodeKind, produceRenderOrder, createFlippedMesh, cleanupShape,
-         createGeometry, numGeometryFaces, numGeometryVertices, createServerGeometry,
+         setInvisibleAll, countNumShapes, getNodeKind, produceRenderOrder, createFlippedGeom, createFlippedMesh, cleanupShape,
+         createGeometry, numGeometryFaces, numGeometryVertices, createServerGeometry, createMaterial,
          projectGeometry, countGeometryFaces, createFrustum, createProjectionMatrix, getBoundingBox, provideObjectInfo, getShapeIcon };

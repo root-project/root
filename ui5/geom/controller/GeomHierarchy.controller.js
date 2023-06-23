@@ -87,7 +87,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             label: 'Description',
             tooltip: 'Name of geometry nodes',
             autoResizable: true,
-            width: '15rem',
+            width: show_columns ? '50%' : '100%',
             visible: true,
             tooltip: "{name}",
             template: new HorizontalLayout({
@@ -107,7 +107,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                tooltip: 'Visibility flags',
                autoResizable: true,
                visible: true,
-               width: '5rem',
+               width: '20%',
                template: new HorizontalLayout({
                   content: [
                      new mCheckBox({ enabled: true, visible: true, selected: "{_node/visible}", select: evnt => this.changeVisibility(evnt), tooltip: '{name} logical node visibility' }),
@@ -119,7 +119,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             t.addColumn(new tableColumn('columnColor', {
                label: 'Color',
                tooltip: 'Color of geometry volumes',
-               width: '2rem',
+               width: '10%',
                autoResizable: true,
                visible: true,
                template: new GeomColorBox({color: "{_node/color}", visible: "{= !!${_node/color}}"})
@@ -127,7 +127,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             t.addColumn(new tableColumn('columnMaterial', {
                label: 'Material',
                tooltip: 'Material of the volumes',
-               width: '6rem',
+               width: '20%',
                autoResizable: true,
                visible: true,
                template: new mText({text: "{_node/material}", wrapping: false})
@@ -291,10 +291,13 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             break;
          case "BREPL:":   // browser reply
             let bresp = JSON.parse(msg);
-            if (this.model)
-               this.model.processResponse(bresp);
-            if (bresp?.path?.length == 0)
-               this.byId("treeTable").autoResizeColumn(0);
+
+            let br = this.byId("treeTable")
+            br?.setNoData("");
+            br?.setShowNoData(false);
+
+            this.model?.setNoData(false);
+            this.model?.processResponse(bresp);
             break;
          case "FOUND:":  // text message for found query
             this.showTextInBrowser(msg);
@@ -310,6 +313,11 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             break;
          case 'HIGHL:':
             this.highlighRowWithPath(JSON.parse(msg)); //
+            break;
+         case 'SETSR:':
+            this.getView().byId("searchNode").setValue(msg);
+            if (!msg)
+               this.doReload(false);
             break;
          default:
             console.error(`Non recognized msg ${mhdr} len=${msg.length}`);
@@ -509,6 +517,7 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
 
       /** @summary when new query entered in the seach field */
       onSearch(oEvt, direct) {
+
          let query = (typeof oEvt == 'string' && direct) ? oEvt : oEvt.getSource().getValue();
 
          if (!this.standalone) {
@@ -552,6 +561,8 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
              prop = ctxt?.getProperty(ctxt.getPath());
 
          oEvent.preventDefault();
+
+         if (!prop?._elem) return;
 
          if (!this._oIdContextMenu) {
             this._oIdContextMenu = new Menu();

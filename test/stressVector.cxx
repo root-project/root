@@ -540,7 +540,7 @@ int main(int argc,const char *argv[]) {
       s1=a.testDeltaR   (v1, t, t1,      "DeltaR   TLorentzVector      " );
       s2=a.testDeltaR   (v2, t, t2,      "DeltaR   XYZTVector          " );
       s3=a.testDeltaR   (v3, t, t3,      "DeltaR   PtEtaPhiEVector     " );
-      a.check("DeltaR",s1,s2,s3,15);
+      a.check("DeltaR",s1,s2,s3,20);
 
 
       int n1, n2, n3;

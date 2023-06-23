@@ -916,6 +916,7 @@ if(fitsio OR builtin_cfitsio)
         TIMEOUT 600
       )
       set(CFITSIO_INCLUDE_DIR ${CMAKE_BINARY_DIR}/CFITSIO-prefix/src/CFITSIO)
+      install(DIRECTORY ${CMAKE_BINARY_DIR}/bin/ DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT libraries FILES_MATCHING PATTERN "cfitsio*.dll")
     else()
       ExternalProject_Add(
         CFITSIO
@@ -1050,24 +1051,6 @@ if(xrootd AND NOT builtin_xrootd AND builtin_openssl)
   endif()
 endif()
 
-#---Alien support----------------------------------------------------------------
-if(alien)
-  find_package(Alien)
-  if(NOT ALIEN_FOUND)
-    if(fail-on-missing)
-      message(FATAL_ERROR " Alien API not found and is required."
-        " Set the variable ALIEN_DIR to point to your Alien installation,"
-        " or include the installation of Alien in the CMAKE_PREFIX_PATH.")
-    else()
-      message(STATUS " Alien API not found."
-        " Set variable ALIEN_DIR to point to your Alien installation,"
-        " or include the installation of Alien in the CMAKE_PREFIX_PATH."
-        " For the time being switching OFF 'alien' option")
-      set(alien OFF CACHE BOOL "Disabled because Alien API not found (${alien_description})" FORCE)
-    endif()
-  endif()
-endif()
-
 #---Check for Apache Arrow
 if(arrow)
   find_package(Arrow)
@@ -1187,13 +1170,21 @@ if(davix AND NOT builtin_davix)
     find_package(Davix 0.6.4)
     if(NOT DAVIX_FOUND)
       find_package(libuuid)
+      if(NOT libuuid_FOUND)
+        message(STATUS "Davix dependency libuuid not found, switching OFF 'davix' option.")
+      endif()
       find_package(LibXml2)
+      if(NOT LIBXML2_FOUND)
+        message(STATUS "Davix dependency libxml2 not found, switching OFF 'davix' option.")
+      endif()
       find_package(OpenSSL)
-      if(UUID_FOUND AND LIBXML2_FOUND AND (OPENSSL_FOUND OR builtin_openssl))
+      if(NOT (OPENSSL_FOUND OR builtin_openssl))
+        message(STATUS "Davix dependency openssl not found, switching OFF 'davix' option.")
+      endif()
+      if(libuuid_FOUND AND LIBXML2_FOUND AND (OPENSSL_FOUND OR builtin_openssl))
         message(STATUS "Davix not found, switching ON 'builtin_davix' option.")
         set(builtin_davix ON CACHE BOOL "Enabled because external Davix not found but davix requested (${builtin_davix_description})" FORCE)
       else()
-        message(STATUS "Davix dependencies not found, switching OFF 'davix' option.")
         set(davix OFF CACHE BOOL "Disabled because dependencies not found (${davix_description})" FORCE)
       endif()
     endif()
@@ -1341,28 +1332,38 @@ if(builtin_tbb)
   set(tbb_sha256 1ce48f34dada7837f510735ff1172f6e2c261b09460e3bf773b49791d247d24e)
 
   if(MSVC)
+    set(tbb_build Release)
     if(winrtdebug)
+      set(tbb_build Debug)
       set(tbbsuffix "_debug")
     endif()
     set(TBB_LIBRARIES ${CMAKE_BINARY_DIR}/lib/tbb12${tbbsuffix}.lib)
-  else()
-    set(TBB_LIBRARIES ${CMAKE_BINARY_DIR}/lib/libtbb${CMAKE_SHARED_LIBRARY_SUFFIX})
-  endif()
-
-  ExternalProject_Add(
-    TBB
-    URL ${tbb_url}
-    URL_HASH SHA256=${tbb_sha256}
-    INSTALL_DIR ${CMAKE_BINARY_DIR}
-    CMAKE_ARGS -DCMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD} -DTBB_ENABLE_IPO=OFF -DTBB_TEST=Off -DTBB_STRICT=Off -DTBBMALLOC_BUILD=Off -DTBBMALLOC_PROXY_BUILD=Off "-DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}" "-DCMAKE_INSTALL_LIBDIR=${CMAKE_BINARY_DIR}/lib" "-DCMAKE_INSTALL_INCLUDEDIR=${CMAKE_BINARY_DIR}/include"
-    LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 LOG_OUTPUT_ON_FAILURE 1
-    BUILD_BYPRODUCTS ${TBB_LIBRARIES}
-    TIMEOUT 600
-  )
-  if(MSVC)
-    install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin/ DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT libraries FILES_MATCHING PATTERN "tbb*.dll")
+    ExternalProject_Add(
+      TBB
+      URL ${tbb_url}
+      URL_HASH SHA256=${tbb_sha256}
+      INSTALL_DIR ${CMAKE_BINARY_DIR}
+      CMAKE_ARGS -DCMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD} -DTBB_ENABLE_IPO=OFF -DTBB_TEST=Off -DTBB_STRICT=Off -DTBBMALLOC_BUILD=Off -DTBBMALLOC_PROXY_BUILD=Off "-DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}" "-DCMAKE_INSTALL_LIBDIR=${CMAKE_BINARY_DIR}/lib" "-DCMAKE_INSTALL_INCLUDEDIR=${CMAKE_BINARY_DIR}/include"
+      BUILD_COMMAND ${CMAKE_COMMAND} --build . --config ${tbb_build}
+      INSTALL_COMMAND ${CMAKE_COMMAND}  --install . --config ${tbb_build}
+      LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 LOG_OUTPUT_ON_FAILURE 1
+      BUILD_BYPRODUCTS ${TBB_LIBRARIES}
+      TIMEOUT 600
+    )
+    install(DIRECTORY ${CMAKE_BINARY_DIR}/bin/ DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT libraries FILES_MATCHING PATTERN "tbb*.dll")
     install(DIRECTORY ${CMAKE_BINARY_DIR}/lib/ DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries FILES_MATCHING PATTERN "tbb*.lib")
   else()
+    set(TBB_LIBRARIES ${CMAKE_BINARY_DIR}/lib/libtbb${CMAKE_SHARED_LIBRARY_SUFFIX})
+    ExternalProject_Add(
+      TBB
+      URL ${tbb_url}
+      URL_HASH SHA256=${tbb_sha256}
+      INSTALL_DIR ${CMAKE_BINARY_DIR}
+      CMAKE_ARGS -DCMAKE_CXX_STANDARD=${CMAKE_CXX_STANDARD} -DTBB_ENABLE_IPO=OFF -DTBB_TEST=Off -DTBB_STRICT=Off -DTBBMALLOC_BUILD=Off -DTBBMALLOC_PROXY_BUILD=Off "-DCMAKE_INSTALL_PREFIX=${CMAKE_CURRENT_BINARY_DIR}" "-DCMAKE_INSTALL_LIBDIR=${CMAKE_BINARY_DIR}/lib" "-DCMAKE_INSTALL_INCLUDEDIR=${CMAKE_BINARY_DIR}/include"
+      LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 LOG_OUTPUT_ON_FAILURE 1
+      BUILD_BYPRODUCTS ${TBB_LIBRARIES}
+      TIMEOUT 600
+    )
     install(DIRECTORY ${CMAKE_BINARY_DIR}/lib/ DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT libraries FILES_MATCHING PATTERN "libtbb*")
   endif()
 
@@ -2119,6 +2120,16 @@ if(webgui)
     INSTALL_COMMAND ""
     SOURCE_DIR ${CMAKE_BINARY_DIR}/ui5/eve7/rcore
     TIMEOUT 600
+  )
+  ExternalProject_Add(
+     MATHJAX
+     URL ${CMAKE_SOURCE_DIR}/documentation/doxygen/mathjax.tar.gz
+     URL_HASH SHA256=c5e22e60430a65963a87ab4dcc8856b9be5bd434d3b3871f27ee65b584c3c3ea
+     CONFIGURE_COMMAND ""
+     BUILD_COMMAND ""
+     INSTALL_COMMAND ""
+     SOURCE_DIR ${CMAKE_BINARY_DIR}/js/mathjax/
+     TIMEOUT 600
   )
   install(DIRECTORY ${CMAKE_BINARY_DIR}/ui5/eve7/rcore/ DESTINATION ${CMAKE_INSTALL_OPENUI5DIR}/eve7/rcore/ COMPONENT libraries FILES_MATCHING PATTERN "*")
 endif()

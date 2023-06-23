@@ -103,7 +103,7 @@ public:
 
    void InitSlot(TTreeReader *r, unsigned int slot) final
    {
-      RDFInternal::RColumnReadersInfo info{GetColumnNames(), GetColRegister(), fIsDefine.data(), *fLoopManager};
+      RColumnReadersInfo info{GetColumnNames(), GetColRegister(), fIsDefine.data(), *fLoopManager};
 
       // get readers for each systematic variation
       for (const auto &variation : GetVariations())
@@ -192,6 +192,22 @@ public:
    [[noreturn]] std::unique_ptr<RActionBase> MakeVariedAction(std::vector<void *> &&) final
    {
       throw std::logic_error("Cannot produce a varied action from a varied action.");
+   }
+
+   std::unique_ptr<RActionBase> CloneAction(void *typeErasedResults) final
+   {
+      const auto &vectorOfTypeErasedResults = *reinterpret_cast<const std::vector<void *> *>(typeErasedResults);
+      assert(vectorOfTypeErasedResults.size() == fHelpers.size() &&
+             "The number of results and the number of helpers are not the same!");
+
+      std::vector<Helper> clonedHelpers;
+      clonedHelpers.reserve(fHelpers.size());
+      for (std::size_t i = 0; i < fHelpers.size(); i++) {
+         clonedHelpers.emplace_back(fHelpers[i].CallMakeNew(vectorOfTypeErasedResults[i]));
+      }
+
+      return std::make_unique<RVariedAction>(std::move(clonedHelpers), GetColumnNames(),
+                                             std::static_pointer_cast<PrevNode>(fPrevNodes[0]), GetColRegister());
    }
 
 private:

@@ -23,8 +23,8 @@ double inner_product(const LAVector &, const LAVector &);
 double similarity(const LAVector &, const LASymMatrix &);
 double sum_of_elements(const LASymMatrix &);
 
-// define here a square matrix that it is needed for computingthe BFGS update
-//  define just the class, no need for defining operatipons as dane for the Symmetric matrices
+// define here a square matrix that it is needed for computing the BFGS update
+//  define just the class, no need for defining operations as done for the Symmetric matrices
 // since the square matrix will be converted in a symmetric one afterwards
 
 class LASquareMatrix {

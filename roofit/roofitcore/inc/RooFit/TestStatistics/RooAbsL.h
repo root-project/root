@@ -36,9 +36,16 @@ public:
    static bool isExtendedHelper(RooAbsPdf *pdf, Extended extended);
 
    /// Convenience wrapper class used to distinguish between pdf/data owning and non-owning constructors.
-   struct ClonePdfData {
-      RooAbsPdf *pdf;
-      RooAbsData *data;
+   class ClonePdfData {
+   public:
+      ClonePdfData(RooAbsPdf *inPdf, RooAbsData *inData) : pdf{inPdf}, data{inData} {}
+      ClonePdfData(std::unique_ptr<RooAbsPdf> inPdf, RooAbsData *inData)
+         : pdf{inPdf.get()}, data{inData}, ownedPdf{std::move(inPdf)}
+      {
+      }
+      RooAbsPdf *pdf = nullptr;
+      RooAbsData *data = nullptr;
+      std::shared_ptr<RooAbsPdf> ownedPdf;
    };
 
 private:
@@ -74,7 +81,8 @@ public:
          }
       }
 
-      friend bool operator==(const Section& lhs, const Section& rhs) {
+      friend bool operator==(const Section &lhs, const Section &rhs)
+      {
          return lhs.begin_fraction == rhs.begin_fraction && lhs.end_fraction == rhs.end_fraction;
       }
 

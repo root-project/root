@@ -80,6 +80,9 @@
 #if defined(R__WIN32)
 #  define R__HAS_DECLSPEC_THREAD
 #endif
+#if defined(R__FBSD)
+#  define R__HAS_PTHREAD
+#endif
 
 #ifdef __cplusplus
 

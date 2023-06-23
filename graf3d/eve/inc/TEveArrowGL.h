@@ -29,13 +29,13 @@ protected:
 
 public:
    TEveArrowGL();
-   virtual ~TEveArrowGL() {}
+   ~TEveArrowGL() override {}
 
-   virtual Bool_t SetModel(TObject* obj, const Option_t *opt = nullptr);
-   virtual void   SetBBox();
-   virtual void   DirectDraw(TGLRnrCtx & rnrCtx) const;
+   Bool_t SetModel(TObject* obj, const Option_t *opt = nullptr) override;
+   void   SetBBox() override;
+   void   DirectDraw(TGLRnrCtx & rnrCtx) const override;
 
-   ClassDef(TEveArrowGL, 0); // GL renderer class for TEveArrow.
+   ClassDefOverride(TEveArrowGL, 0); // GL renderer class for TEveArrow.
 };
 
 #endif

@@ -20,6 +20,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <memory>
 
 namespace ROOT {
 namespace Experimental {
@@ -40,6 +41,8 @@ with the page pool and allocated/freed by the page storage.
 // clang-format on
 class RPage {
 public:
+   static constexpr size_t kPageZeroSize = 64 * 1024;
+
    /**
     * Stores information about the cluster in which this page resides.
     */
@@ -127,7 +130,18 @@ public:
       fClusterInfo = RClusterInfo(clusterId, fClusterInfo.GetIndexOffset());
    }
 
+   /// Make a 'zero' page for column `columnId` (that is comprised of 0x00 bytes only). The caller is responsible for
+   /// invoking `GrowUnchecked()` and `SetWindow()` as appropriate.
+   static RPage MakePageZero(ColumnId_t columnId, ClusterSize_t::ValueType elementSize)
+   {
+      return RPage{columnId, const_cast<void *>(GetPageZeroBuffer()), elementSize,
+                   /*maxElements=*/(kPageZeroSize / elementSize)};
+   }
+   /// Return a pointer to the page zero buffer used if there is no on-disk data for a particular deferred column
+   static const void *GetPageZeroBuffer();
+
    bool IsNull() const { return fBuffer == nullptr; }
+   bool IsPageZero() const { return fBuffer == GetPageZeroBuffer(); }
    bool IsEmpty() const { return fNElements == 0; }
    bool operator ==(const RPage &other) const { return fBuffer == other.fBuffer; }
    bool operator !=(const RPage &other) const { return !(*this == other); }

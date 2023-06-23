@@ -54,8 +54,8 @@ public:
                    Int_t width = 140, Int_t height = 30,
                    UInt_t options = kChildFrame,
                    Pixel_t back = GetDefaultFrameBackground());
-   virtual ~TGeoTrd1Editor();
-   virtual void   SetModel(TObject *obj);
+   ~TGeoTrd1Editor() override;
+   void   SetModel(TObject *obj) override;
 
    void           DoDx1();
    void           DoDx2();
@@ -66,7 +66,7 @@ public:
    void           DoApply();
    void           DoUndo();
 
-   ClassDef(TGeoTrd1Editor,0)   // TGeoTrd1 editor
+   ClassDefOverride(TGeoTrd1Editor,0)   // TGeoTrd1 editor
 };
 
 #endif

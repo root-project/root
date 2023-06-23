@@ -55,7 +55,7 @@ private:
 
 public:
    TGuiBldBorderFrame(const TGWindow *p, TGuiBldEditor *editor);
-   virtual ~TGuiBldBorderFrame() { }
+   ~TGuiBldBorderFrame() override { }
 
    void  ChangeSelected(TGFrame*);
 };

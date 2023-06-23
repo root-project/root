@@ -195,17 +195,16 @@ void RooAbsOptTestStatistic::initSlave(RooAbsReal& real, RooAbsData& indata, con
   _funcCloneSet = 0 ;
 
   // Attach FUNC to data set
-  _funcObsSet = _funcClone->getObservables(indata) ;
+  _funcObsSet = std::unique_ptr<RooArgSet>{_funcClone->getObservables(indata)}.release();
 
   if (_funcClone->getAttribute("BinnedLikelihood")) {
     _funcClone->setAttribute("BinnedLikelihoodActive") ;
   }
 
   // Mark all projected dependents as such
-  if (projDeps.getSize()>0) {
-    RooArgSet *projDataDeps = (RooArgSet*) _funcObsSet->selectCommon(projDeps) ;
+  if (!projDeps.empty()) {
+    std::unique_ptr<RooArgSet> projDataDeps{static_cast<RooArgSet*>(_funcObsSet->selectCommon(projDeps))};
     projDataDeps->setAttribAll("projectedDependent") ;
-    delete projDataDeps ;
   }
 
   // If PDF is a RooProdPdf (with possible constraint terms)

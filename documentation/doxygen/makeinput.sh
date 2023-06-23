@@ -57,7 +57,6 @@ echo "        ../../main/src/hadd.cxx          \\" >> Doxyfile_INPUT
 echo "        ../../math/                      \\" >> Doxyfile_INPUT
 echo "        ../../montecarlo/                \\" >> Doxyfile_INPUT
 echo "        ../../net/doc/                   \\" >> Doxyfile_INPUT
-echo "        ../../net/alien/                 \\" >> Doxyfile_INPUT
 echo "        ../../net/auth/                  \\" >> Doxyfile_INPUT
 echo "        ../../net/davix/                 \\" >> Doxyfile_INPUT
 echo "        ../../net/http/                  \\" >> Doxyfile_INPUT

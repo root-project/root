@@ -804,8 +804,8 @@ TEST(RDFSimpleTests, AutomaticNamesOfHisto1DAndGraph)
    EXPECT_STREQ(hxy->GetTitle(), "x, weights: y");
    EXPECT_STREQ(hxy->GetXaxis()->GetTitle(), "x");
    EXPECT_STREQ(hxy->GetYaxis()->GetTitle(), "count * y");
-   EXPECT_STREQ(gxy->GetName(), "x_vs_y");
-   EXPECT_STREQ(gxy->GetTitle(), "x vs y");
+   EXPECT_STREQ(gxy->GetName(), "y_vs_x");
+   EXPECT_STREQ(gxy->GetTitle(), "y vs x");
    EXPECT_STREQ(gxy->GetXaxis()->GetTitle(), "x");
    EXPECT_STREQ(gxy->GetYaxis()->GetTitle(), "y");
 
@@ -958,16 +958,33 @@ TEST_P(RDFSimpleTests, Stats)
    EXPECT_ANY_THROW(rr.Stats<ULong64_t>("v", "one"));
 }
 
-// ROOT-10092
 TEST(RDFSimpleTests, ScalarValuesCollectionWeights)
 {
    ROOT::RDataFrame r(1);
-   auto h = r.Define("x", [](){return 10;})
-             .Define("y", [](){return ROOT::RVec<int>{1,2,3}; })
-             .Histo1D<int, ROOT::RVec<int>>("x","y");
 
-   // Check that the exception is thrown
-   EXPECT_ANY_THROW(*h);
+   // with no model
+   auto h = r.Define("x", []() { return 10; })
+               .Define("y",
+                       [] {
+                          return ROOT::RVec<int>{1, 2, 3};
+                       })
+               .Histo1D<int, ROOT::RVec<int>>("x", "y");
+
+   EXPECT_EQ(h->GetEntries(), 3);
+   EXPECT_DOUBLE_EQ(h->GetMean(), 10.);
+   EXPECT_DOUBLE_EQ(h->GetMaximum(), 6.);
+
+   // with model
+   auto h2 = r.Define("x", []() { return 10; })
+                .Define("y",
+                        [] {
+                           return ROOT::RVec<int>{1, 2, 3};
+                        })
+                .Histo1D<int, ROOT::RVec<int>>({"h", "h", 20, 0., 20.}, "x", "y");
+
+   EXPECT_EQ(h2->GetEntries(), 3);
+   EXPECT_DOUBLE_EQ(h2->GetMean(), 10.);
+   EXPECT_DOUBLE_EQ(h2->GetMaximum(), 6.);
 }
 
 TEST_P(RDFSimpleTests, ChainWithDifferentTreeNames)

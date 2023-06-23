@@ -3,7 +3,9 @@
 ## \notebook
 ## Basic functionality: interpreted functions and pdfs
 ##
+## \macro_image
 ## \macro_code
+## \macro_output
 ##
 ## \date February 2018
 ## \authors Clemens Lange, Wouter Verkerke (C++ version)
@@ -32,7 +34,7 @@ genpdf = ROOT.RooGenericPdf("genpdf", "genpdf", "(1+0.1*abs(x)+sin(sqrt(abs(x*al
 data = genpdf.generate({x}, 10000)
 
 # Fit the interpreted pdf to the generated data
-genpdf.fitTo(data)
+genpdf.fitTo(data, PrintLevel=-1)
 
 # Make a plot of the data and the pdf overlaid
 xframe = x.frame(Title="Interpreted expression pdf")
@@ -68,7 +70,7 @@ data2 = g1.generate({x}, 1000)
 # -------------------------------------------------------------------
 
 # Fit g2 to data from g1
-r = g2.fitTo(data2, Save=True)  # ROOT.RooFitResult
+r = g2.fitTo(data2, Save=True, PrintLevel=-1)  # ROOT.RooFitResult
 r.Print()
 
 # Plot data on frame and overlay projection of g2

@@ -27,6 +27,8 @@
 template <class T>
 class RooTemplateProxy;
 
+class TString;
+
 namespace RooFit {
 
 namespace Detail {
@@ -65,10 +67,9 @@ public:
    std::string assembleCode(std::string const &returnExpr);
    void addVecObs(const char *key, int idx);
 
-   /// @brief Adds the input string to the squashed code body. If a class implements a translate function that wants to
-   /// emit something to the squashed code body, it must call this function with the code it wants to emit.
-   /// @param in String to add to the squashed code.
-   inline void addToCodeBody(std::string const &in) { _code += in; }
+   void addToCodeBody(RooAbsArg const *klass, std::string const &in);
+
+   void addToCodeBody(std::string const &in, bool isScopeIndep = false);
 
    /// @brief Build the code to call the function with name `funcname`, passing some arguments.
    /// The arguments can either be doubles or some RooFit arguments whose
@@ -102,21 +103,32 @@ public:
    std::unique_ptr<LoopScope> beginLoop(RooAbsArg const *in);
 
    std::string getTmpVarName();
+   std::string makeValidVarName(TString in) const;
+
+   std::string buildArg(RooAbsCollection const &x);
+   std::string buildArg(RooSpan<const double> arr);
 
 private:
+   bool isScopeIndependent(RooAbsArg const *in) const;
+
    void endLoop(LoopScope const &scope);
 
    void addResult(TNamed const *key, std::string const &value);
 
-   template <class T, typename std::enable_if<std::is_arithmetic<T>{}, bool>::type = true>
+   template <class T, typename std::enable_if<std::is_floating_point<T>{}, bool>::type = true>
    std::string buildArg(T x)
    {
       return RooNumber::toString(x);
    }
 
-   std::string buildArg(std::string const &x) { return x; }
+   // If input is integer, we want to print it into the code like one (i.e. avoid the unnecessary '.0000').
+   template <class T, typename std::enable_if<std::is_integral<T>{}, bool>::type = true>
+   std::string buildArg(T x)
+   {
+      return std::to_string(x);
+   }
 
-   std::string buildArg(RooAbsCollection const &x);
+   std::string buildArg(std::string const &x) { return x; }
 
    std::string buildArg(RooAbsArg const &arg) { return getResult(arg); }
 

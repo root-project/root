@@ -34,7 +34,7 @@ protected:
 public:
    TMixture();
    TMixture(const char *name, const char *title, Int_t nmixt);
-   virtual ~TMixture();
+   ~TMixture() override;
 
    virtual void  DefineElement(Int_t n, Float_t a, Float_t z, Float_t w);
    Int_t         GetNmixt() const {return fNmixt;}
@@ -42,7 +42,7 @@ public:
    Float_t      *GetZmixt() const {return fZmixt;}
    Float_t      *GetWmixt() const {return fWmixt;}
 
-   ClassDef(TMixture,1)  //Mixtures used in the Geometry Shapes
+   ClassDefOverride(TMixture,1)  //Mixtures used in the Geometry Shapes
 };
 
 #endif

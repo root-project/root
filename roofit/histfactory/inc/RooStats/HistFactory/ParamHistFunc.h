@@ -104,7 +104,9 @@ protected:
   double evaluate() const override;
   void computeBatch(cudaStream_t*, double* output, size_t size, RooFit::Detail::DataMap const&) const override;
 
-private:
+  void translate(RooFit::Detail::CodeSquashContext &ctx) const override;
+
+  private:
   static NumBins getNumBinsPerDim(RooArgSet const& vars);
 
   ClassDefOverride(ParamHistFunc, 7)

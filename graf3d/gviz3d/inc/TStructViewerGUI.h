@@ -91,14 +91,14 @@ private:
 public:
    TStructViewerGUI(TStructViewer* parent, TStructNode* nodePtr, TList* colors, const TGWindow *p = nullptr,
       UInt_t w = 800, UInt_t h = 600);
-   ~TStructViewerGUI();
+   ~TStructViewerGUI() override;
 
    void           AutoRefreshButtonSlot(Bool_t on);
    void           BoxHeightValueSetSlot(Long_t h);
-   void           CloseWindow();
+   void           CloseWindow() override;
    void           ColorSelectedSlot(Pixel_t pixel);
    void           DoubleClickedSlot();
-   void           Draw(Option_t* option = "");
+   void           Draw(Option_t* option = "") override;
    TCanvas       *GetCanvas();
    Int_t          GetColor(TStructNode* node);
    TStructNodeProperty* GetDefaultColor();
@@ -118,7 +118,7 @@ public:
    void           Update(Bool_t resetCamera = false);
    void           UpdateButtonSlot();
 
-   ClassDef(TStructViewerGUI, 0); // A GUI fo 3D struct viewer
+   ClassDefOverride(TStructViewerGUI, 0); // A GUI fo 3D struct viewer
 };
 
 #endif

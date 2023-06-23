@@ -68,5 +68,10 @@ int main(){
    modelActivations.Generate();
    modelActivations.OutputGenerated("KerasActivationsModel.hxx");
 
+   // Emitting header file for Swish activation functions model
+   RModel modelSwish = TMVA::Experimental::SOFIE::PyKeras::Parse("swish_model.h5");
+   modelSwish.Generate();
+   modelSwish.OutputGenerated("KerasSwish_model.hxx");
+
    return 0;
 }

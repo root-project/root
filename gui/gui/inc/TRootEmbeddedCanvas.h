@@ -49,7 +49,7 @@ public:
    TRootEmbeddedCanvas(const char *name = nullptr, const TGWindow *p = nullptr, UInt_t w = 10,
             UInt_t h = 10, UInt_t options = kSunkenFrame | kDoubleBorder,
             Pixel_t back = GetDefaultFrameBackground());
-   virtual ~TRootEmbeddedCanvas();
+   ~TRootEmbeddedCanvas() override;
 
    void       AdoptCanvas(TCanvas *c);
    TCanvas   *GetCanvas() const { return fCanvas; }

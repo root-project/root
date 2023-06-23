@@ -163,7 +163,7 @@ public:
    TPad(const char *name, const char *title, Double_t xlow,
         Double_t ylow, Double_t xup, Double_t yup,
         Color_t color=-1, Short_t bordersize=-1, Short_t bordermode=-2);
-   virtual ~TPad();
+   ~TPad() override;
    void              AbsCoordinates(Bool_t set) override { fAbsCoord = set; }
    Double_t          AbsPixeltoX(Int_t px) override { return fAbsPixeltoXk + px*fPixeltoX; }
    Double_t          AbsPixeltoY(Int_t py) override { return fAbsPixeltoYk + py*fPixeltoY; }
@@ -267,7 +267,7 @@ public:
    void              HighLight(Color_t col=kRed, Bool_t set=kTRUE) override;
    Bool_t            HasFixedAspectRatio() const override { return fFixedAspectRatio; }
    Bool_t            IsBatch() const override;
-   virtual Bool_t    IsEditable() const override { return fEditable; }
+   Bool_t    IsEditable() const override { return fEditable; }
    Bool_t            IsFolder() const override { return kTRUE; }
    Bool_t            IsModified() const override { return fModified; }
    Bool_t            IsRetained() const override;

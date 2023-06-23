@@ -5,7 +5,9 @@
 ##
 ## Using RooMCStudy on models with constraints
 ##
+## \macro_image
 ## \macro_code
+## \macro_output
 ##
 ## \date February 2018
 ## \author Clemens Lange

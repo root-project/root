@@ -120,7 +120,7 @@ public:
    {
    }
 
-   virtual ~RWebBrowserHandle()
+   ~RWebBrowserHandle() override
    {
 #ifdef _MSC_VER
       if (fHasPid)
@@ -329,7 +329,7 @@ RWebDisplayHandle::BrowserCreator::Display(const RWebDisplayArgs &args)
 
       R__LOG_DEBUG(0, WebGUILog()) << "Showing web window in " << fProg << " with:\n" << exec;
 
-      _spawnv(_P_NOWAIT, fProg.c_str(), argv.data());
+      _spawnv(_P_NOWAIT, gSystem->UnixPathName(fProg.c_str()), argv.data());
 
       return std::make_unique<RWebBrowserHandle>(url, rmdir, ""s);
    }
@@ -399,11 +399,11 @@ RWebDisplayHandle::ChromeCreator::ChromeCreator(bool _edge) : BrowserCreator(tru
 
 #ifdef _MSC_VER
    fBatchExec = gEnv->GetValue((fEnvPrefix + "Batch").c_str(), "$prog --headless $geometry $url");
-   fHeadlessExec = gEnv->GetValue((fEnvPrefix + "Headless").c_str(), "$prog --headless --disable-gpu $geometry $url &");
+   fHeadlessExec = gEnv->GetValue((fEnvPrefix + "Headless").c_str(), "$prog --headless --disable-gpu $geometry \"$url\" --dump-dom &");
    fExec = gEnv->GetValue((fEnvPrefix + "Interactive").c_str(), "$prog $geometry --new-window --app=$url &"); // & in windows mean usage of spawn
 #else
    fBatchExec = gEnv->GetValue((fEnvPrefix + "Batch").c_str(), "$prog --headless --no-sandbox --no-zygote --disable-extensions --disable-gpu --disable-audio-output $geometry $url");
-   fHeadlessExec = gEnv->GetValue((fEnvPrefix + "Headless").c_str(), "fork: --headless --no-sandbox --no-zygote --disable-extensions --disable-gpu --disable-audio-output $geometry $url");
+   fHeadlessExec = gEnv->GetValue((fEnvPrefix + "Headless").c_str(), "$prog --headless --no-sandbox --no-zygote --disable-extensions --disable-gpu --disable-audio-output $geometry \'$url\' --dump-dom >/dev/null &");
    fExec = gEnv->GetValue((fEnvPrefix + "Interactive").c_str(), "$prog $geometry --new-window --app=\'$url\' &");
 #endif
 }

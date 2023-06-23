@@ -236,10 +236,10 @@ private:
    Pixel_t fBgndColor;
 
 protected:
-   void DoRedraw();
+   void DoRedraw() override;
 
 public:
-   virtual ~TGuiBldMenuTitle() {}
+   ~TGuiBldMenuTitle() override {}
    TGuiBldMenuTitle(const TGWindow *p, TGHotString *s, TGPopupMenu *menu) :
       TGMenuTitle(p, s, menu) {
          fEditDisabled = kEditDisable;
@@ -248,7 +248,7 @@ public:
          AddInput(kEnterWindowMask | kLeaveWindowMask);
    }
 
-   Bool_t HandleCrossing(Event_t *event);
+   Bool_t HandleCrossing(Event_t *event) override;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -299,14 +299,14 @@ void TGuiBldMenuTitle::DoRedraw()
 class TGuiBldPopupMenu : public TGPopupMenu {
 
 public:
-   virtual ~TGuiBldPopupMenu() { }
+   ~TGuiBldPopupMenu() override { }
    TGuiBldPopupMenu() :
       TGPopupMenu(gClient->GetDefaultRoot()) {
       fEditDisabled = kEditDisable;
       SetBackgroundColor(TRootGuiBuilder::GetPopupBgnd());
       fEntrySep = 8;
    }
-   void DrawEntry(TGMenuEntry *entry);
+   void DrawEntry(TGMenuEntry *entry) override;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -465,20 +465,20 @@ private:
    Pixel_t fBgndColor;
 
 protected:
-   void  DoRedraw();
+   void  DoRedraw() override;
 
 public:
-   virtual ~TGuiBldToolButton() { }
+   ~TGuiBldToolButton() override { }
    TGuiBldToolButton(const TGWindow *p, const TGPicture *pic, Int_t id = -1) :
          TGPictureButton(p, pic, id) {
       fBgndColor = TRootGuiBuilder::GetBgnd();
       ChangeOptions(GetOptions() & ~kRaisedFrame);
    }
 
-   Bool_t IsDown() const { return (fOptions & kSunkenFrame); }
-   void SetState(EButtonState state, Bool_t emit = kTRUE);
-   Bool_t HandleCrossing(Event_t *event);
-   void SetBackgroundColor(Pixel_t bgnd) { fBgndColor = bgnd; TGFrame::SetBackgroundColor(bgnd); }
+   Bool_t IsDown() const override { return (fOptions & kSunkenFrame); }
+   void SetState(EButtonState state, Bool_t emit = kTRUE) override;
+   Bool_t HandleCrossing(Event_t *event) override;
+   void SetBackgroundColor(Pixel_t bgnd) override { fBgndColor = bgnd; TGFrame::SetBackgroundColor(bgnd); }
 };
 
 ////////////////////////////////////////////////////////////////////////////////

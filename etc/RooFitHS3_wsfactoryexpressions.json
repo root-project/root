@@ -1,60 +1,4 @@
 {
-    "gaussian_dist": {
-        "class": "RooGaussian",
-        "arguments": [
-            "x",
-            "mean",
-            "sigma"
-        ]
-    },
-    "exponential_dist": {
-        "class": "RooExponential",
-        "arguments": [
-            "x",
-            "c"
-        ]
-    },
-    "poisson_dist": {
-        "class": "RooPoisson",
-        "arguments": [
-            "x",
-            "mean"
-        ]
-    },
-    "product": {
-        "class": "RooProduct",
-        "arguments": [
-            "factors"
-        ]
-    },
-    "product_dist": {
-        "class": "RooProdPdf",
-        "arguments": [
-            "factors"
-        ]
-    },
-    "interpolation0d": {
-        "class": "RooStats::HistFactory::FlexibleInterpVar",
-        "arguments": [
-            "vars",
-            "nom",
-            "low",
-            "high"
-        ]
-    },
-    "sum": {
-        "class": "RooAddition",
-        "arguments": [
-            "summands"
-        ]
-    },
-    "step": {
-        "class": "ParamHistFunc",
-        "arguments": [
-            "variables",
-            "parameters"
-        ]
-    },
     "ARGUS_dist": {
         "class": "RooArgusBG",
         "arguments": [
@@ -71,6 +15,15 @@
             "coefficients"
         ]
     },
+    "bifurkated_gaussian_dist": {
+        "class": "RooBifurGauss",
+        "arguments": [
+            "x",
+            "mean",
+            "sigmaL",
+            "sigmaR"
+        ]
+    },
     "crystalball_dist": {
         "class": "RooCBShape",
         "arguments": [
@@ -81,13 +34,99 @@
             "n"
         ]
     },
-    "bifurkated_gaussian_dist": {
-        "class": "RooBifurGauss",
+    "exponential_dist": {
+        "class": "RooExponential",
+        "arguments": [
+            "x",
+            "c"
+        ]
+    },
+    "gamma_dist": {
+        "class": "RooGamma",
+        "arguments": [
+            "x",
+            "gamma",
+            "beta",
+            "mu"
+        ]
+    },
+    "gaussian_dist": {
+        "class": "RooGaussian",
         "arguments": [
             "x",
             "mean",
-            "sigmaL",
-            "sigmaR"
+            "sigma"
+        ]
+    },
+    "interpolation0d": {
+        "class": "RooStats::HistFactory::FlexibleInterpVar",
+        "arguments": [
+            "vars",
+            "nom",
+            "low",
+            "high"
+        ]
+    },
+    "landau_dist": {
+        "class": "RooLandau",
+        "arguments": [
+            "x",
+            "mean",
+            "sigma"
+        ]
+    },
+    "lognormal_dist": {
+        "class": "RooLognormal",
+        "arguments": [
+            "x",
+            "m0",
+            "k"
+        ]
+    },
+    "poisson_dist": {
+        "class": "RooPoisson",
+        "arguments": [
+            "x",
+            "mean"
+        ]
+    },
+    "power_dist": {
+        "class": "RooPower",
+        "arguments": [
+            "x",
+            "coefficients",
+            "exponents"
+        ]
+    },
+    "product": {
+        "class": "RooProduct",
+        "arguments": [
+            "factors"
+        ]
+    },
+    "product_dist": {
+        "class": "RooProdPdf",
+        "arguments": [
+            "factors"
+        ]
+    },
+    "step": {
+        "class": "ParamHistFunc",
+        "arguments": [
+            "variables",
+            "parameters"
+        ]
+    },
+    "sum": {
+        "class": "RooAddition",
+        "arguments": [
+            "summands"
+        ]
+    },
+    "uniform_dist": {
+        "class": "RooUniform",
+        "arguments": [
+            "x"
         ]
     }
 }

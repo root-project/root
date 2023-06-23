@@ -173,7 +173,7 @@ public:
    TBranchElement(TBranch *parent, const char* name, TClonesArray* clones, Int_t basketsize = 32000, Int_t splitlevel = 0, Int_t compress = ROOT::RCompressionSetting::EAlgorithm::kInherit);
    TBranchElement(TBranch *parent, const char* name, TVirtualCollectionProxy* cont, Int_t basketsize = 32000, Int_t splitlevel = 0, Int_t compress = ROOT::RCompressionSetting::EAlgorithm::kInherit);
 
-   virtual                  ~TBranchElement();
+                    ~TBranchElement() override;
 
            void             Browse(TBrowser* b) override;
            TBranch         *FindBranch(const char *name) override;

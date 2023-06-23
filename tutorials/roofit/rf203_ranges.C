@@ -4,8 +4,8 @@
 /// Fitting and plotting in sub ranges.
 ///
 /// \macro_image
-/// \macro_output
 /// \macro_code
+/// \macro_output
 ///
 /// \date July 2008
 /// \author Wouter Verkerke
@@ -48,7 +48,7 @@ void rf203_ranges()
    // ---------------------------
 
    // Fit pdf to all data
-   RooFitResult *r_full = model.fitTo(*modelData, Save(true));
+   std::unique_ptr<RooFitResult> r_full{model.fitTo(*modelData, Save(true), PrintLevel(-1))};
 
    // F i t   p a r t i a l   r a n g e
    // ----------------------------------
@@ -57,7 +57,7 @@ void rf203_ranges()
    x.setRange("signal", -3, 3);
 
    // Fit pdf only to data in "signal" range
-   RooFitResult *r_sig = model.fitTo(*modelData, Save(true), Range("signal"));
+   std::unique_ptr<RooFitResult> r_sig{model.fitTo(*modelData, Save(true), Range("signal"), PrintLevel(-1))};
 
    // P l o t   /   p r i n t   r e s u l t s
    // ---------------------------------------

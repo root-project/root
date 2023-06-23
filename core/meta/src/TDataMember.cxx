@@ -886,8 +886,8 @@ TMethodCall *TDataMember::SetterMethod(TClass *cl)
          TString settername;
          settername.Form( "Set%s", dataname+1);
          if (strstr(settername, "Is")) settername.Form( "Set%s", dataname+3);
-         if (GetClass()->GetMethod(settername, "1"))
-            fValueSetter = new TMethodCall(cl, settername, "1");
+         if (GetClass()->GetMethod(settername, "0"))
+            fValueSetter = new TMethodCall(cl, settername, "0");
          if (!fValueSetter)
             if (GetClass()->GetMethod(settername, "true"))
                fValueSetter = new TMethodCall(cl, settername, "true");

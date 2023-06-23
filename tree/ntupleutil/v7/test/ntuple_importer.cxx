@@ -25,7 +25,7 @@ TEST(RNTupleImporter, Empty)
       tree->Write();
    }
 
-   auto importer = RNTupleImporter::Create(fileGuard.GetPath(), "tree", fileGuard.GetPath()).Unwrap();
+   auto importer = RNTupleImporter::Create(fileGuard.GetPath(), "tree", fileGuard.GetPath());
    importer->SetIsQuiet(true);
    EXPECT_THROW(importer->Import(), ROOT::Experimental::RException);
    importer->SetNTupleName("ntuple");
@@ -47,7 +47,7 @@ TEST(RNTupleImporter, CreateFromTree)
    std::unique_ptr<TFile> file(TFile::Open(fileGuard.GetPath().c_str()));
    auto tree = file->Get<TTree>("tree");
 
-   auto importer = RNTupleImporter::Create(tree, fileGuard.GetPath()).Unwrap();
+   auto importer = RNTupleImporter::Create(tree, fileGuard.GetPath());
    importer->SetIsQuiet(true);
    EXPECT_THROW(importer->Import(), ROOT::Experimental::RException);
    importer->SetNTupleName("ntuple");
@@ -85,7 +85,7 @@ TEST(RNTupleImporter, CreateFromChain)
    chain->Add(fileGuard1.GetPath().c_str());
    chain->Add(fileGuard2.GetPath().c_str());
 
-   auto importer = RNTupleImporter::Create(chain, fileGuard1.GetPath()).Unwrap();
+   auto importer = RNTupleImporter::Create(chain, fileGuard1.GetPath());
    importer->SetIsQuiet(true);
    EXPECT_THROW(importer->Import(), ROOT::Experimental::RException);
    importer->SetNTupleName("ntuple");
@@ -134,7 +134,7 @@ TEST(RNTupleImporter, Simple)
       tree->Write();
    }
 
-   auto importer = RNTupleImporter::Create(fileGuard.GetPath(), "tree", fileGuard.GetPath()).Unwrap();
+   auto importer = RNTupleImporter::Create(fileGuard.GetPath(), "tree", fileGuard.GetPath());
    importer->SetIsQuiet(true);
    importer->SetNTupleName("ntuple");
    importer->Import();
@@ -167,7 +167,7 @@ TEST(RNTupleImporter, FieldName)
       tree->Write();
    }
 
-   auto importer = RNTupleImporter::Create(fileGuard.GetPath(), "tree", fileGuard.GetPath()).Unwrap();
+   auto importer = RNTupleImporter::Create(fileGuard.GetPath(), "tree", fileGuard.GetPath());
    importer->SetIsQuiet(true);
    importer->SetNTupleName("ntuple");
    importer->Import();
@@ -175,6 +175,31 @@ TEST(RNTupleImporter, FieldName)
    EXPECT_EQ(1U, reader->GetNEntries());
    reader->LoadEntry(0);
    EXPECT_EQ(42, *reader->GetModel()->Get<std::int32_t>("a"));
+}
+
+TEST(RNTupleImporter, ConvertDotsInBranchNames)
+{
+   FileRaii fileGuard("test_ntuple_importer_field_name.root");
+   {
+      std::unique_ptr<TFile> file(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
+      auto tree = std::make_unique<TTree>("tree", "");
+      Int_t a = 42;
+      tree->Branch("a.a", &a);
+      tree->Fill();
+      tree->Write();
+   }
+
+   auto importer = RNTupleImporter::Create(fileGuard.GetPath(), "tree", fileGuard.GetPath());
+   importer->SetIsQuiet(true);
+   importer->SetNTupleName("ntuple");
+
+   EXPECT_THROW(importer->Import(), ROOT::Experimental::RException);
+
+   importer->SetConvertDotsInBranchNames(true);
+   importer->Import();
+   auto reader = RNTupleReader::Open("ntuple", fileGuard.GetPath());
+   reader->LoadEntry(0);
+   EXPECT_EQ(42, *reader->GetModel()->Get<std::int32_t>("a_a"));
 }
 
 TEST(RNTupleImporter, CString)
@@ -195,7 +220,7 @@ TEST(RNTupleImporter, CString)
       tree->Write();
    }
 
-   auto importer = RNTupleImporter::Create(fileGuard.GetPath(), "tree", fileGuard.GetPath()).Unwrap();
+   auto importer = RNTupleImporter::Create(fileGuard.GetPath(), "tree", fileGuard.GetPath());
    importer->SetIsQuiet(true);
    importer->SetNTupleName("ntuple");
    importer->Import();
@@ -224,7 +249,7 @@ TEST(RNTupleImporter, Leaflist)
       tree->Write();
    }
 
-   auto importer = RNTupleImporter::Create(fileGuard.GetPath(), "tree", fileGuard.GetPath()).Unwrap();
+   auto importer = RNTupleImporter::Create(fileGuard.GetPath(), "tree", fileGuard.GetPath());
    importer->SetIsQuiet(true);
    importer->SetNTupleName("ntuple");
    importer->Import();
@@ -249,7 +274,7 @@ TEST(RNTupleImporter, FixedSizeArray)
       char c[4] = {'R', 'O', 'O', 'T'};
       tree->Branch("a", a, "a[1]/I");
       tree->Branch("b", b, "b[2]/I");
-      tree->Branch("c", c, "c[4]/C");
+      tree->Branch("c", c, "c[4]/B");
       struct {
          Int_t a = 1;
          Int_t b[2] = {2, 3};
@@ -260,7 +285,7 @@ TEST(RNTupleImporter, FixedSizeArray)
       tree->Write();
    }
 
-   auto importer = RNTupleImporter::Create(fileGuard.GetPath(), "tree", fileGuard.GetPath()).Unwrap();
+   auto importer = RNTupleImporter::Create(fileGuard.GetPath(), "tree", fileGuard.GetPath());
    importer->SetIsQuiet(true);
    importer->SetNTupleName("ntuple");
    importer->Import();
@@ -329,7 +354,7 @@ TEST(RNTupleImporter, LeafCountArray)
       tree->Write();
    }
 
-   auto importer = RNTupleImporter::Create(fileGuard.GetPath(), "tree", fileGuard.GetPath()).Unwrap();
+   auto importer = RNTupleImporter::Create(fileGuard.GetPath(), "tree", fileGuard.GetPath());
    importer->SetIsQuiet(true);
    importer->SetNTupleName("ntuple");
    importer->Import();
@@ -347,10 +372,10 @@ TEST(RNTupleImporter, LeafCountArray)
    auto viewJetEta = viewJets.GetView<float>("jet_eta");
    auto viewMuons = reader->GetViewCollection("_collection1");
    auto viewMuonPt = viewMuons.GetView<float>("muon_pt");
-   auto viewProjectedNjets = reader->GetView<ROOT::Experimental::RNTupleCardinality>("njets");
+   auto viewProjectedNjets = reader->GetView<ROOT::Experimental::RNTupleCardinality<std::uint32_t>>("njets");
    auto viewProjectedJetPt = reader->GetView<ROOT::RVec<float>>("jet_pt");
    auto viewProjectedJetEta = reader->GetView<ROOT::RVec<float>>("jet_eta");
-   auto viewProjectedNmuons = reader->GetView<ROOT::Experimental::RNTupleCardinality>("nmuons");
+   auto viewProjectedNmuons = reader->GetView<ROOT::Experimental::RNTupleCardinality<std::uint32_t>>("nmuons");
    auto viewProjectedMuonPt = reader->GetView<ROOT::RVec<float>>("muon_pt");
 
    // Entry 0: 1 jet, 1 muon
@@ -418,7 +443,7 @@ TEST(RNTupleImporter, STL)
       delete tuple;
    }
 
-   auto importer = RNTupleImporter::Create(fileGuard.GetPath(), "tree", fileGuard.GetPath()).Unwrap();
+   auto importer = RNTupleImporter::Create(fileGuard.GetPath(), "tree", fileGuard.GetPath());
    importer->SetIsQuiet(true);
    importer->SetNTupleName("ntuple");
    importer->Import();
@@ -459,7 +484,7 @@ TEST(RNTupleImporter, CustomClass)
       tree->Write();
    }
 
-   auto importer = RNTupleImporter::Create(fileGuard.GetPath(), "tree", fileGuard.GetPath()).Unwrap();
+   auto importer = RNTupleImporter::Create(fileGuard.GetPath(), "tree", fileGuard.GetPath());
    importer->SetIsQuiet(true);
    importer->SetNTupleName("ntuple");
    importer->Import();
@@ -502,7 +527,7 @@ TEST(RNTupleImporter, ComplexClass)
          tree->Write();
       }
 
-      auto importer = RNTupleImporter::Create(fileGuard.GetPath(), "tree", fileGuard.GetPath()).Unwrap();
+      auto importer = RNTupleImporter::Create(fileGuard.GetPath(), "tree", fileGuard.GetPath());
       importer->SetIsQuiet(true);
       importer->SetNTupleName("ntuple");
       importer->Import();
@@ -544,7 +569,7 @@ TEST(RNTupleImporter, CollectionProxyClass)
          tree->Write();
       }
 
-      auto importer = RNTupleImporter::Create(fileGuard.GetPath(), "tree", fileGuard.GetPath()).Unwrap();
+      auto importer = RNTupleImporter::Create(fileGuard.GetPath(), "tree", fileGuard.GetPath());
       importer->SetIsQuiet(true);
       importer->SetNTupleName("ntuple");
       importer->Import();
@@ -579,7 +604,7 @@ TEST(RNTUpleImporter, MaxEntries)
       tree->Write();
    }
 
-   auto importer = RNTupleImporter::Create(fileGuard.GetPath(), "tree", fileGuard.GetPath()).Unwrap();
+   auto importer = RNTupleImporter::Create(fileGuard.GetPath(), "tree", fileGuard.GetPath());
 
    // Base case, we don't do anything with `SetMaxEntries`.
    importer->SetIsQuiet(true);

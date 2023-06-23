@@ -146,6 +146,16 @@ private:
          func(value);
    }
 
+   /// Translate an entry index to a column element index of the principal column and viceversa.  These functions
+   /// take into account the role and number of repetitions on each level of the field hierarchy as follows:
+   /// - Top level fields: element index == entry index
+   /// - Record fields propagate their principal column index to the principal columns of direct descendant fields
+   /// - Collection and variant fields set the principal column index of their childs to 0
+   ///
+   /// The column element index also depends on the number of repetitions of each field in the hierarchy, e.g., given a
+   /// field with type `std::array<std::array<float, 4>, 2>`, this function returns 8 for the inner-most field.
+   NTupleSize_t EntryToColumnElementIndex(NTupleSize_t globalIndex) const;
+
 protected:
    /// Collections and classes own sub fields
    std::vector<std::unique_ptr<RFieldBase>> fSubFields;
@@ -159,6 +169,8 @@ protected:
    std::vector<std::unique_ptr<RColumn>> fColumns;
    /// Properties of the type that allow for optimizations of collections of that type
    int fTraits = 0;
+   /// A typedef or using name that was used when creating the field
+   std::string fTypeAlias;
    /// List of functions to be called after reading a value
    std::vector<ReadCallback_t> fReadCallbacks;
    /// C++ type version cached from the descriptor after a call to `ConnectPageSource()`
@@ -200,6 +212,11 @@ protected:
    /// Called by `ConnectPageSource()` only once connected; derived classes may override this
    /// as appropriate
    virtual void OnConnectPageSource() {}
+   /// When connecting a field to a page sink, the field's default column representation is subject
+   /// to adjustment according to the write options. E.g., if compression is turned off, encoded columns
+   /// are changed to their unencoded counterparts.
+   void AutoAdjustColumnTypes(const RNTupleWriteOptions &options);
+
 
 public:
    /// Iterates over the sub tree of fields in depth-first search order
@@ -251,7 +268,8 @@ public:
    std::unique_ptr<RFieldBase> Clone(std::string_view newName) const;
 
    /// Factory method to resurrect a field from the stored on-disk type information
-   static RResult<std::unique_ptr<RFieldBase>> Create(const std::string &fieldName, const std::string &typeName);
+   static RResult<std::unique_ptr<RFieldBase>>
+   Create(const std::string &fieldName, const std::string &typeName);
    /// Check whether a given string is a valid field name
    static RResult<void> EnsureValidFieldName(std::string_view fieldName);
 
@@ -327,6 +345,7 @@ public:
    /// Returns the field name and parent field names separated by dots ("grandparent.parent.child")
    std::string GetQualifiedFieldName() const;
    std::string GetType() const { return fType; }
+   std::string GetTypeAlias() const { return fTypeAlias; }
    ENTupleStructure GetStructure() const { return fStructure; }
    std::size_t GetNRepetitions() const { return fNRepetitions; }
    NTupleSize_t GetNElements() const { return fPrincipalColumn->GetNElements(); }
@@ -351,7 +370,8 @@ public:
 
    /// Fields and their columns live in the void until connected to a physical page storage.  Only once connected, data
    /// can be read or written.  In order to find the field in the page storage, the field's on-disk ID has to be set.
-   void ConnectPageSink(RPageSink &pageSink);
+   /// \param firstEntry The global index of the first entry with on-disk data for the connected field
+   void ConnectPageSink(RPageSink &pageSink, NTupleSize_t firstEntry = 0);
    void ConnectPageSource(RPageSource &pageSource);
 
    /// Indicates an evolution of the mapping scheme from C++ type to columns
@@ -799,6 +819,69 @@ public:
    void CommitCluster() final;
 };
 
+/// The field for values that may or may not be present in an entry. Parent class for unique pointer field and
+/// optional field. A nullable field cannot be instantiated itself but only its descendants.
+/// The RNullableField takes care of the on-disk representation. Child classes are responsible for the in-memory
+/// representation.  The on-disk representation can be "dense" or "sparse". Dense nullable fields have a bitmask
+/// (true: item available, false: item missing) and serialize a default-constructed item for missing items.
+/// Sparse nullable fields use a (Split)Index[64|32] column to point to the available items.
+/// By default, items whose size is smaller or equal to 4 bytes (size of (Split)Index32 column element) are stored
+/// densely.
+class RNullableField : public Detail::RFieldBase {
+   /// For a dense nullable field, used to write a default-constructed item for missing ones.
+   Detail::RFieldValue fDefaultItemValue;
+   /// For a sparse nullable field, the number of written non-null items in this cluster
+   ClusterSize_t fNWritten{0};
+
+protected:
+   const Detail::RFieldBase::RColumnRepresentations &GetColumnRepresentations() const final;
+   void GenerateColumnsImpl() final;
+   void GenerateColumnsImpl(const RNTupleDescriptor &) final;
+
+   std::size_t AppendNull();
+   std::size_t AppendValue(const Detail::RFieldValue &value);
+   /// Given the index of the nullable field, returns the corresponding global index of the subfield or,
+   /// if it is null, returns kInvalidClusterIndex
+   RClusterIndex GetItemIndex(NTupleSize_t globalIndex);
+
+   RNullableField(std::string_view fieldName, std::string_view typeName, std::unique_ptr<Detail::RFieldBase> itemField);
+
+public:
+   RNullableField(RNullableField &&other) = default;
+   RNullableField &operator=(RNullableField &&other) = default;
+   ~RNullableField() override;
+
+   bool IsDense() const { return GetColumnRepresentative()[0] ==  EColumnType::kBit; }
+   bool IsSparse() const { return !IsDense(); }
+   void SetDense() { SetColumnRepresentative({EColumnType::kBit}); }
+   void SetSparse() { SetColumnRepresentative({EColumnType::kSplitIndex32}); }
+
+   void CommitCluster() final { fNWritten = 0; }
+
+   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
+};
+
+class RUniquePtrField : public RNullableField {
+protected:
+   std::unique_ptr<Detail::RFieldBase> CloneImpl(std::string_view newName) const final;
+   std::size_t AppendImpl(const Detail::RFieldValue &value) final;
+   void ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue *value) final;
+
+public:
+   RUniquePtrField(std::string_view fieldName, std::string_view typeName,
+                   std::unique_ptr<Detail::RFieldBase> itemField);
+   RUniquePtrField(RUniquePtrField &&other) = default;
+   RUniquePtrField &operator=(RUniquePtrField &&other) = default;
+   ~RUniquePtrField() override = default;
+
+   using Detail::RFieldBase::GenerateValue;
+   Detail::RFieldValue GenerateValue(void *where) override;
+   void DestroyValue(const Detail::RFieldValue &value, bool dtorOnly = false) final;
+   Detail::RFieldValue CaptureValue(void *where) final;
+   std::vector<Detail::RFieldValue> SplitValue(const Detail::RFieldValue &value) const final;
+   size_t GetValueSize() const final { return sizeof(std::unique_ptr<char>); }
+   size_t GetAlignment() const final { return alignof(std::unique_ptr<char>); }
+};
 
 /// Classes with dictionaries that can be inspected by TClass
 template <typename T, typename=void>
@@ -818,7 +901,15 @@ public:
    {
       return Detail::RFieldValue(this, static_cast<T *>(where), std::forward<ArgsT>(args)...);
    }
-   ROOT::Experimental::Detail::RFieldValue GenerateValue(void *where) final { return GenerateValue(where, T()); }
+   ROOT::Experimental::Detail::RFieldValue GenerateValue(void *where) final
+   {
+      if constexpr (std::is_default_constructible_v<T>) {
+         return GenerateValue(where, T());
+      } else {
+         // If there is no default constructor, try with the IO constructor
+         return GenerateValue(where, T(static_cast<TRootIOCtor *>(nullptr)));
+      }
+   }
 };
 
 template <typename T, typename = void>
@@ -988,8 +1079,37 @@ public:
    void DestroyValue(const Detail::RFieldValue &value, bool dtorOnly = false) override;
 };
 
-/// Template specializations for concrete C++ types
+/// An artificial field that transforms an RNTuple column that contains the offset of collections into
+/// collection sizes. It is only used for reading, e.g. as projected field or as an artificial field that provides the
+/// "number of" RDF columns for collections (e.g. `R_rdf_sizeof_jets` for a collection named `jets`).
+/// It is used in the templated RField<RNTupleCardinality<SizeT>> form, which represents the collection sizes either
+/// as 32bit unsigned int (std::uint32_t) or as 64bit unsigned int (std::uint64_t).
+class RCardinalityField : public Detail::RFieldBase {
+protected:
+   RCardinalityField(std::string_view fieldName, std::string_view typeName)
+      : Detail::RFieldBase(fieldName, typeName, ENTupleStructure::kLeaf, false /* isSimple */)
+   {
+   }
 
+   const RColumnRepresentations &GetColumnRepresentations() const final;
+   // Field is only used for reading
+   void GenerateColumnsImpl() final { throw RException(R__FAIL("Cardinality fields must only be used for reading")); }
+   void GenerateColumnsImpl(const RNTupleDescriptor &) final;
+
+public:
+   RCardinalityField(RCardinalityField &&other) = default;
+   RCardinalityField &operator=(RCardinalityField &&other) = default;
+   ~RCardinalityField() = default;
+
+   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
+
+   const RField<RNTupleCardinality<std::uint32_t>> *As32Bit() const;
+   const RField<RNTupleCardinality<std::uint64_t>> *As64Bit() const;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+/// Template specializations for concrete C++ types
+////////////////////////////////////////////////////////////////////////////////
 
 template <>
 class RField<ClusterSize_t> : public Detail::RFieldBase {
@@ -1052,28 +1172,17 @@ public:
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
 };
 
-/// An artificial field that transforms an RNTuple column that contains the offset of collections into
-/// collection sizes. It is only used for reading, e.g. as projected field or as an artificial field that provides the
-/// "number of" RDF columns for collections (e.g. `R_rdf_sizeof_jets` for a collection named `jets`).
-template <>
-class RField<RNTupleCardinality> : public Detail::RFieldBase {
+template <typename SizeT>
+class RField<RNTupleCardinality<SizeT>> : public RCardinalityField {
 protected:
    std::unique_ptr<ROOT::Experimental::Detail::RFieldBase> CloneImpl(std::string_view newName) const final
    {
-      return std::make_unique<RField<RNTupleCardinality>>(newName);
+      return std::make_unique<RField<RNTupleCardinality<SizeT>>>(newName);
    }
-
-   const RColumnRepresentations &GetColumnRepresentations() const final;
-   // Field is only used for reading
-   void GenerateColumnsImpl() final { throw RException(R__FAIL("Cardinality fields must only be used for reading")); }
-   void GenerateColumnsImpl(const RNTupleDescriptor &) final;
 
 public:
-   static std::string TypeName() { return "ROOT::Experimental::RNTupleCardinality"; }
-   explicit RField(std::string_view name)
-      : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, false /* isSimple */)
-   {
-   }
+   static std::string TypeName() { return "ROOT::Experimental::RNTupleCardinality<" + RField<SizeT>::TypeName() + ">"; }
+   explicit RField(std::string_view name) : RCardinalityField(name, TypeName()) {}
    RField(RField &&other) = default;
    RField &operator=(RField &&other) = default;
    ~RField() = default;
@@ -1082,15 +1191,15 @@ public:
    template <typename... ArgsT>
    ROOT::Experimental::Detail::RFieldValue GenerateValue(void *where, ArgsT &&...args)
    {
-      return Detail::RFieldValue(this, static_cast<RNTupleCardinality *>(where), std::forward<ArgsT>(args)...);
+      return Detail::RFieldValue(this, static_cast<RNTupleCardinality<SizeT> *>(where), std::forward<ArgsT>(args)...);
    }
    ROOT::Experimental::Detail::RFieldValue GenerateValue(void *where) final { return GenerateValue(where, 0); }
    Detail::RFieldValue CaptureValue(void *where) override
    {
       return Detail::RFieldValue(true /* captureFlag */, this, where);
    }
-   size_t GetValueSize() const final { return sizeof(RNTupleCardinality); }
-   size_t GetAlignment() const final { return alignof(RNTupleCardinality); }
+   size_t GetValueSize() const final { return sizeof(RNTupleCardinality<SizeT>); }
+   size_t GetAlignment() const final { return alignof(RNTupleCardinality<SizeT>); }
 
    /// Get the number of elements of the collection identified by globalIndex
    void ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue *value) final
@@ -1098,7 +1207,7 @@ public:
       RClusterIndex collectionStart;
       ClusterSize_t size;
       fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, &size);
-      *value->Get<RNTupleCardinality>() = size;
+      *value->Get<RNTupleCardinality<SizeT>>() = size;
    }
 
    /// Get the number of elements of the collection identified by clusterIndex
@@ -1107,10 +1216,8 @@ public:
       RClusterIndex collectionStart;
       ClusterSize_t size;
       fPrincipalColumn->GetCollectionInfo(clusterIndex, &collectionStart, &size);
-      *value->Get<RNTupleCardinality>() = size;
+      *value->Get<RNTupleCardinality<SizeT>>() = size;
    }
-
-   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
 };
 
 template <>
@@ -1271,6 +1378,9 @@ public:
    size_t GetValueSize() const final { return sizeof(double); }
    size_t GetAlignment() const final { return alignof(double); }
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
+
+   // Set the column representation to 32 bit floating point and the type alias to Double32_t
+   void SetDouble32();
 };
 
 template <>
@@ -1807,8 +1917,7 @@ public:
    static std::string TypeName() {
       return "std::array<" + RField<ItemT>::TypeName() + "," + std::to_string(N) + ">";
    }
-   explicit RField(std::string_view name)
-      : RArrayField(name, std::make_unique<RField<ItemT>>(RField<ItemT>::TypeName()), N)
+   explicit RField(std::string_view name) : RArrayField(name, std::make_unique<RField<ItemT>>("_0"), N)
    {}
    RField(RField&& other) = default;
    RField& operator =(RField&& other) = default;
@@ -2178,6 +2287,23 @@ public:
    {
       return Detail::RFieldValue(Detail::RColumnElement<std::bitset<N>>(static_cast<float *>(where)), this,
                                  static_cast<std::bitset<N> *>(where), std::forward<ArgsT>(args)...);
+   }
+};
+
+template <typename ItemT>
+class RField<std::unique_ptr<ItemT>> : public RUniquePtrField {
+public:
+   static std::string TypeName() { return "std::unique_ptr<" + RField<ItemT>::TypeName() + ">"; }
+   explicit RField(std::string_view name) : RUniquePtrField(name, TypeName(), std::make_unique<RField<ItemT>>("_0")) {}
+   RField(RField &&other) = default;
+   RField &operator=(RField &&other) = default;
+   ~RField() override = default;
+
+   using Detail::RFieldBase::GenerateValue;
+   template <typename... ArgsT>
+   ROOT::Experimental::Detail::RFieldValue GenerateValue(void *where, ArgsT &&...args)
+   {
+      return Detail::RFieldValue(this, static_cast<ItemT *>(where), std::forward<ArgsT>(args)...);
    }
 };
 

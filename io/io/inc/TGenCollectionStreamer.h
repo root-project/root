@@ -57,7 +57,7 @@ public:
    TGenCollectionStreamer(const ROOT::TCollectionProxyInfo &info, TClass *cl);
 
    // Standard destructor
-   virtual ~TGenCollectionStreamer();
+   ~TGenCollectionStreamer() override;
 
    // Streamer I/O overload
    void Streamer(TBuffer &refBuffer) override;
@@ -94,7 +94,7 @@ struct AnyCollectionStreamer : public TGenCollectionStreamer  {
       fFeed           = T::feed;
       CheckFunctions();
    }
-   virtual ~AnyCollectionStreamer() {}
+   ~AnyCollectionStreamer() override {}
 };
 
 // Forward declaration in the event of later separation

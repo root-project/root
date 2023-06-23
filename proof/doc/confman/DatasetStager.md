@@ -12,9 +12,7 @@ For each file to transfer, a script is called. The script can be
 customized to support your source and destination protocol.
 
 Staging requests are issued from the ROOT console, where you can also
-control the progress of your staging. How to request stagings and how to
-check current transfer progress from ROOT is explained in the [PROOF interface
-to AliEn file catalog documentation](TDataSetManagerAliEn.html).
+control the progress of your staging.
 
 Installation
 ------------

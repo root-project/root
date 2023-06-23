@@ -38,7 +38,7 @@ public:
    TLine() {}
    TLine(Double_t x1, Double_t y1, Double_t x2, Double_t  y2);
    TLine(const TLine &line);
-   virtual ~TLine() = default;
+   ~TLine() override = default;
 
    TLine &operator=(const TLine &src);
 

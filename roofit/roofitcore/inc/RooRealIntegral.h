@@ -76,10 +76,12 @@ public:
     return _function->plotSamplingHint(obs,xlo,xhi) ;
   }
 
-  RooAbsReal* createIntegral(const RooArgSet& iset, const RooArgSet* nset=nullptr, const RooNumIntConfig* cfg=nullptr, const char* rangeName=nullptr) const override ;
+  RooFit::OwningPtr<RooAbsReal> createIntegral(const RooArgSet& iset, const RooArgSet* nset=nullptr, const RooNumIntConfig* cfg=nullptr, const char* rangeName=nullptr) const override ;
 
   void setAllowComponentSelection(bool allow);
   bool getAllowComponentSelection() const;
+
+  std::unique_ptr<RooAbsArg> compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileContext & ctx) const override;
 
   void translate(RooFit::Detail::CodeSquashContext &ctx) const override;
 protected:

@@ -60,8 +60,8 @@ public:
                    Int_t width = 140, Int_t height = 30,
                    UInt_t options = kChildFrame,
                    Pixel_t back = GetDefaultFrameBackground());
-   virtual ~TGeoMediumEditor();
-   virtual void   SetModel(TObject *obj);
+   ~TGeoMediumEditor() override;
+   void   SetModel(TObject *obj) override;
 
    void           DoEditMaterial();
    void           DoSelectMaterial();
@@ -78,7 +78,7 @@ public:
    void           DoApply();
    void           DoUndo();
 
-   ClassDef(TGeoMediumEditor,0)   // TGeoMedium editor
+   ClassDefOverride(TGeoMediumEditor,0)   // TGeoMedium editor
 };
 
 #endif

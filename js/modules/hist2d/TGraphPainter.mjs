@@ -1,4 +1,4 @@
-import { gStyle, BIT, settings, create, createHistogram, isBatchMode, isFunc, isStr,
+import { gStyle, BIT, settings, create, createHistogram, isFunc, isStr,
          clTPaveStats, clTCutG, clTH1I, clTH2I, clTF1, clTF2, kNoZoom, kNoStats } from '../core.mjs';
 import { select as d3_select } from '../d3.mjs';
 import { DrawOptions, buildSvgCurve, makeTranslate, addHighlightStyle } from '../base/BasePainter.mjs';
@@ -7,6 +7,7 @@ import { TH1Painter, setHistTitle, PadDrawOptions } from './TH1Painter.mjs';
 import { TAttLineHandler } from '../base/TAttLineHandler.mjs';
 import { TAttFillHandler } from '../base/TAttFillHandler.mjs';
 import { addMoveHandler } from '../gui/utils.mjs';
+import { assignContextMenu } from '../gui/menu.mjs';
 
 
 const kNotEditable = BIT(18),   // bit set if graph is non editable
@@ -743,7 +744,7 @@ class TGraphPainter extends ObjectPainter {
          if (options.skip_errors_x0 || options.skip_errors_y0)
             visible = visible.filter(d => ((d.x != 0) || !options.skip_errors_x0) && ((d.y != 0) || !options.skip_errors_y0));
 
-         if (!isBatchMode() && settings.Tooltip && main_block)
+         if (!this.isBatchMode() && settings.Tooltip && main_block)
             visible.append('svg:path')
                    .style('fill', 'none')
                    .style('pointer-events', 'visibleFill')
@@ -770,7 +771,7 @@ class TGraphPainter extends ObjectPainter {
          this.markeratt.resetPos();
 
          let path = '', pnt, grx, gry,
-             want_tooltip = !isBatchMode() && settings.Tooltip && (!this.markeratt.fill || (this.marker_size < 7)) && !nodes && main_block,
+             want_tooltip = !this.isBatchMode() && settings.Tooltip && (!this.markeratt.fill || (this.marker_size < 7)) && !nodes && main_block,
              hints_marker = '', hsz = Math.max(5, Math.round(this.marker_size*0.7)),
              maxnummarker = 1000000 / (this.markeratt.getMarkerLength() + 7), step = 1; // let produce SVG at maximum 1MB
 
@@ -907,8 +908,10 @@ class TGraphPainter extends ObjectPainter {
          this.extractGmeErrors(0); // ensure that first block kept at the end
       }
 
-      if (!isBatchMode())
+      if (!this.isBatchMode()) {
          addMoveHandler(this, this.testEditable());
+         assignContextMenu(this);
+      }
    }
 
    /** @summary Provide tooltip at specified point */
@@ -1315,13 +1318,9 @@ class TGraphPainter extends ObjectPainter {
    }
 
    /** @summary Fill context menu */
-   fillContextMenu(menu) {
-      super.fillContextMenu(menu);
-
+   fillContextMenuItems(menu) {
       if (!this.snapid)
          menu.addchk(this.testEditable(), 'Editable', () => { this.testEditable('toggle'); this.drawGraph(); });
-
-      return menu.size() > 0;
    }
 
    /** @summary Execute menu command

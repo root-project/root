@@ -108,15 +108,11 @@ std::unique_ptr<RooAbsArg> RooConstraintSum::compileForNormSet(RooArgSet const &
 {
    std::unique_ptr<RooAbsReal> newArg{static_cast<RooAbsReal*>(this->Clone())};
 
-   RooArgList serverClones;
    for (const auto server : newArg->servers()) {
       RooArgSet nset;
       server->getObservables(&_paramSet, nset);
-      if (auto serverClone = ctx.compile(*server, *newArg, nset)) {
-         serverClones.add(*serverClone);
-      }
+      ctx.compileServer(*server, *newArg, nset);
    }
-   newArg->redirectServers(serverClones, false, true);
 
    return newArg;
 }

@@ -93,7 +93,7 @@ private:
 public:
    TGFileDialog(const TGWindow *p = nullptr, const TGWindow *main = nullptr,
                 EFileDialogMode dlg_type = kFDOpen, TGFileInfo *file_info = nullptr);
-   virtual ~TGFileDialog();
+   ~TGFileDialog() override;
 
    Bool_t ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2) override;
    void CloseWindow() override;

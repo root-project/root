@@ -46,13 +46,13 @@ protected:
 public:
    TGLOverlayButton(TGLViewerBase *parent, const char *text, Float_t posx,
                     Float_t posy, Float_t width, Float_t height);
-   virtual ~TGLOverlayButton() { }
+   ~TGLOverlayButton() override { }
 
-   virtual Bool_t       MouseEnter(TGLOvlSelectRecord& selRec);
-   virtual Bool_t       Handle(TGLRnrCtx& rnrCtx, TGLOvlSelectRecord& selRec, Event_t* event);
-   virtual void         MouseLeave();
+   Bool_t       MouseEnter(TGLOvlSelectRecord& selRec) override;
+   Bool_t       Handle(TGLRnrCtx& rnrCtx, TGLOvlSelectRecord& selRec, Event_t* event) override;
+   void         MouseLeave() override;
 
-   virtual void         Render(TGLRnrCtx& rnrCtx);
+   void         Render(TGLRnrCtx& rnrCtx) override;
    virtual void         ResetState() { fActiveID = -1; }
 
    virtual const char  *GetText() const { return fText.Data(); }
@@ -67,7 +67,7 @@ public:
 
    virtual void         Clicked(TGLViewerBase *viewer); // *SIGNAL*
 
-   ClassDef(TGLOverlayButton, 0); // GL-overlay button.
+   ClassDefOverride(TGLOverlayButton, 0); // GL-overlay button.
 };
 
 #endif

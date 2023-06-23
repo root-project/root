@@ -66,11 +66,6 @@ void DisableImplicitMT();
 bool IsImplicitMTEnabled();
 void EnableImplicitMT(UInt_t numthreads);
 class RDataFrame;
-namespace Internal {
-namespace RDF {
-class GraphCreatorHelper;
-}
-} // namespace Internal
 } // namespace ROOT
 namespace cling {
 std::string printValue(ROOT::RDataFrame *tdf);
@@ -90,7 +85,9 @@ using RNode = RInterface<::ROOT::Detail::RDF::RNodeBase, void>;
 
 namespace Internal {
 namespace RDF {
+class GraphCreatorHelper;
 void ChangeEmptyEntryRange(const ROOT::RDF::RNode &node, std::pair<ULong64_t, ULong64_t> &&newRange);
+void ChangeSpec(const ROOT::RDF::RNode &node, ROOT::RDF::Experimental::RDatasetSpec &&spec);
 } // namespace RDF
 } // namespace Internal
 
@@ -122,6 +119,7 @@ class RInterface : public RInterfaceBase {
 
    friend void RDFInternal::TriggerRun(RNode &node);
    friend void RDFInternal::ChangeEmptyEntryRange(const RNode &node, std::pair<ULong64_t, ULong64_t> &&newRange);
+   friend void RDFInternal::ChangeSpec(const RNode &node, ROOT::RDF::Experimental::RDatasetSpec &&spec);
 
    std::shared_ptr<Proxied> fProxiedPtr; ///< Smart pointer to the graph node encapsulated by this RInterface.
 
@@ -1908,8 +1906,8 @@ public:
       const auto validatedColumns = GetValidatedColumnNames(2, userColumns);
 
       // We build a default name and title based on the input columns
-      const auto g_name = validatedColumns[0] + "_vs_" + validatedColumns[1];
-      const auto g_title = validatedColumns[0] + " vs " + validatedColumns[1];
+      const auto g_name = validatedColumns[1] + "_vs_" + validatedColumns[0];
+      const auto g_title = validatedColumns[1] + " vs " + validatedColumns[0];
       graph->SetNameTitle(g_name.c_str(), g_title.c_str());
       graph->GetXaxis()->SetTitle(validatedColumns[0].c_str());
       graph->GetYaxis()->SetTitle(validatedColumns[1].c_str());
@@ -1962,8 +1960,8 @@ public:
       const auto validatedColumns = GetValidatedColumnNames(6, userColumns);
 
       // We build a default name and title based on the input columns
-      const auto g_name = validatedColumns[0] + "_vs_" + validatedColumns[1];
-      const auto g_title = validatedColumns[0] + " vs " + validatedColumns[1];
+      const auto g_name = validatedColumns[1] + "_vs_" + validatedColumns[0];
+      const auto g_title = validatedColumns[1] + " vs " + validatedColumns[0];
       graph->SetNameTitle(g_name.c_str(), g_title.c_str());
       graph->GetXaxis()->SetTitle(validatedColumns[0].c_str());
       graph->GetYaxis()->SetTitle(validatedColumns[1].c_str());
@@ -2809,7 +2807,7 @@ private:
              bool IsFStringConv = std::is_convertible<F, std::string>::value,
              bool IsRetTypeDefConstr = std::is_default_constructible<RetType>::value>
    std::enable_if_t<!IsFStringConv && !IsRetTypeDefConstr, RInterface<Proxied, DS_t>>
-   DefineImpl(std::string_view, F, const ColumnNames_t &)
+   DefineImpl(std::string_view, F, const ColumnNames_t &, const std::string &)
    {
       static_assert(std::is_default_constructible<typename TTraits::CallableTraits<F>::ret_type>::value,
                     "Error in `Define`: type returned by expression is not default-constructible");

@@ -38,10 +38,7 @@ ROOT::Experimental::Detail::RPageStorage::RPageStorage(std::string_view name) : 
 {
 }
 
-ROOT::Experimental::Detail::RPageStorage::~RPageStorage()
-{
-}
-
+ROOT::Experimental::Detail::RPageStorage::~RPageStorage() {}
 
 //------------------------------------------------------------------------------
 
@@ -160,6 +157,8 @@ std::unique_ptr<unsigned char []> ROOT::Experimental::Detail::RPageSource::Unsea
       // We cannot simply map the sealed page as we don't know its life time. Specialized page sources
       // may decide to implement to not use UnsealPage but to custom mapping / decompression code.
       // Note that usually pages are compressed.
+      // TODO(jalopezg): unsealing a page zero should be a no-op (i.e., no additional memcpy), but the current prototype
+      // of `UnsealPage()` prevents that
       memcpy(pageBuffer.get(), sealedPage.fBuffer, bytesPacked);
    }
 
@@ -305,11 +304,13 @@ ROOT::Experimental::Detail::RPageStorage::ColumnHandle_t
 ROOT::Experimental::Detail::RPageSink::AddColumn(DescriptorId_t fieldId, const RColumn &column)
 {
    auto columnId = fDescriptorBuilder.GetDescriptor().GetNPhysicalColumns();
-   fDescriptorBuilder.AddColumn(columnId, columnId, fieldId, column.GetModel(), column.GetIndex());
+   fDescriptorBuilder.AddColumn(columnId, columnId, fieldId, column.GetModel(), column.GetIndex(),
+                                column.GetFirstElementIndex());
    return ColumnHandle_t{columnId, &column};
 }
 
-void ROOT::Experimental::Detail::RPageSink::UpdateSchema(const RNTupleModelChangeset &changeset)
+void ROOT::Experimental::Detail::RPageSink::UpdateSchema(const RNTupleModelChangeset &changeset,
+                                                         NTupleSize_t firstEntry)
 {
    const auto &descriptor = fDescriptorBuilder.GetDescriptor();
    auto addField = [&](RFieldBase &f) {
@@ -317,7 +318,7 @@ void ROOT::Experimental::Detail::RPageSink::UpdateSchema(const RNTupleModelChang
       fDescriptorBuilder.AddField(RFieldDescriptorBuilder::FromField(f).FieldId(fieldId).MakeDescriptor().Unwrap());
       fDescriptorBuilder.AddFieldLink(f.GetParent()->GetOnDiskId(), fieldId);
       f.SetOnDiskId(fieldId);
-      f.ConnectPageSink(*this); // issues in turn one or several calls to AddColumn()
+      f.ConnectPageSink(*this, firstEntry); // issues in turn one or several calls to `AddColumn()`
    };
    auto addProjectedField = [&](RFieldBase &f) {
       auto fieldId = descriptor.GetNFields();
@@ -331,6 +332,7 @@ void ROOT::Experimental::Detail::RPageSink::UpdateSchema(const RNTupleModelChang
       }
    };
 
+   R__ASSERT(firstEntry >= fPrevClusterNEntries);
    const auto nColumnsBeforeUpdate = descriptor.GetNPhysicalColumns();
    for (auto f : changeset.fAddedFields) {
       addField(*f);
@@ -347,7 +349,10 @@ void ROOT::Experimental::Detail::RPageSink::UpdateSchema(const RNTupleModelChang
    for (DescriptorId_t i = nColumnsBeforeUpdate; i < nColumns; ++i) {
       RClusterDescriptor::RColumnRange columnRange;
       columnRange.fPhysicalColumnId = i;
-      columnRange.fFirstElementIndex = 0;
+      // We set the first element index in the current cluster to the first element that is part of a materialized page
+      // (i.e., that is part of a page list). For deferred columns, however, the column range is fixed up as needed by
+      // `RClusterDescriptorBuilder::AddDeferredColumnRanges()` on read back.
+      columnRange.fFirstElementIndex = descriptor.GetColumnDescriptor(i).GetFirstElementIndex();
       columnRange.fNElements = 0;
       columnRange.fCompressionSettings = GetWriteOptions().GetCompression();
       fOpenColumnRanges.emplace_back(columnRange);
@@ -377,7 +382,7 @@ void ROOT::Experimental::Detail::RPageSink::Create(RNTupleModel &model)
       initialChangeset.fAddedFields.emplace_back(f);
    for (auto f : model.GetProjectedFields().GetFieldZero()->GetSubFields())
       initialChangeset.fAddedProjectedFields.emplace_back(f);
-   UpdateSchema(initialChangeset);
+   UpdateSchema(initialChangeset, 0U);
 
    fSerializationContext = Internal::RNTupleSerializer::SerializeHeaderV1(nullptr, descriptor);
    auto buffer = std::make_unique<unsigned char[]>(fSerializationContext.GetHeaderSize());

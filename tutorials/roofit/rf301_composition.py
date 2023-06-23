@@ -6,7 +6,9 @@
 ##
 ## `pdf = gauss(x,f(y),s)` with `f(y) = a0 + a1*y`
 ##
+## \macro_image
 ## \macro_code
+## \macro_output
 ##
 ## \date February 2018
 ## \authors Clemens Lange, Wouter Verkerke (C++ version)

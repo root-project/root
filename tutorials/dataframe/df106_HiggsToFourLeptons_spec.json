@@ -1,0 +1,94 @@
+{
+   "samples": {
+      "dataA": {
+         "trees": ["mini"],
+         "files": ["root://eospublic.cern.ch//eos/opendata/atlas/OutreachDatasets/2020-01-22/4lep/Data/data_A.4lep.root"],
+         "metadata": {
+            "xsecs": 1.0,
+            "sumws": 1.0,
+            "sample_category": "data",
+            "lumi" : 10064.0
+         }
+      },
+      "dataB": {
+         "trees": ["mini"],
+         "files": ["root://eospublic.cern.ch//eos/opendata/atlas/OutreachDatasets/2020-01-22/4lep/Data/data_B.4lep.root"],
+         "metadata": {
+            "xsecs": 1.0,
+            "sumws": 1.0,
+            "sample_category": "data",
+            "lumi" : 10064.0
+         }
+      },
+      "dataC": {
+         "trees": ["mini"],
+         "files": ["root://eospublic.cern.ch//eos/opendata/atlas/OutreachDatasets/2020-01-22/4lep/Data/data_C.4lep.root"],
+         "metadata": {
+            "xsecs": 1.0,
+            "sumws": 1.0,
+            "sample_category": "data",
+            "lumi" : 10064.0
+         }
+      },
+      "dataD": {
+         "trees": ["mini"],
+         "files": ["root://eospublic.cern.ch//eos/opendata/atlas/OutreachDatasets/2020-01-22/4lep/Data/data_D.4lep.root"],
+         "metadata": {
+            "xsecs": 1.0,
+            "sumws": 1.0,
+            "sample_category": "data",
+            "lumi" : 10064.0
+         }
+      },
+      "mc_345060.ggH125_ZZ4lep": {
+         "trees": ["mini"],
+         "files": ["root://eospublic.cern.ch//eos/opendata/atlas/OutreachDatasets/2020-01-22/4lep/MC/mc_345060.ggH125_ZZ4lep.4lep.root"],
+         "metadata": {
+            "xsecs": 0.0060239,
+            "sumws": 27881776.6536,
+            "sample_category": "higgs",
+            "lumi" : 10064.0
+         }
+      },
+      "mc_344235.VBFH125_ZZ4lep": {
+         "trees": ["mini"],
+         "files": ["root://eospublic.cern.ch//eos/opendata/atlas/OutreachDatasets/2020-01-22/4lep/MC/mc_344235.VBFH125_ZZ4lep.4lep.root"],
+         "metadata": {
+            "xsecs": 0.0004633012,
+            "sumws": 3680490.83243,
+            "sample_category": "higgs",
+            "lumi" : 10064.0
+         }
+      },
+      "mc_363490.llll": {
+         "trees": ["mini"],
+         "files": ["root://eospublic.cern.ch//eos/opendata/atlas/OutreachDatasets/2020-01-22/4lep/MC/mc_363490.llll.4lep.root"],
+         "metadata": {
+            "xsecs": 1.2578,
+            "sumws": 7538705.8077,
+            "sample_category": "zz",
+            "lumi" : 10064.0
+         }
+      },
+      "mc_361106.Zee": {
+         "trees": ["mini"],
+         "files": ["root://eospublic.cern.ch//eos/opendata/atlas/OutreachDatasets/2020-01-22/4lep/MC/mc_361106.Zee.4lep.root"],
+         "metadata": {
+            "xsecs": 1950.5295,
+            "sumws": 150277594200.0,
+            "sample_category": "other",
+            "lumi" : 10064.0
+         }
+      },
+      "mc_361107.Zmumu": {
+         "trees": ["mini"],
+         "files": ["root://eospublic.cern.ch//eos/opendata/atlas/OutreachDatasets/2020-01-22/4lep/MC/mc_361107.Zmumu.4lep.root"],
+         "metadata": {
+            "xsecs": 1950.6321,
+            "sumws": 147334691090.0,
+            "sample_category": "other",
+            "lumi" : 10064.0
+         }
+      }
+   }
+}

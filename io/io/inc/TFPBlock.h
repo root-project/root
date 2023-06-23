@@ -36,7 +36,7 @@ private:
 public:
 
    TFPBlock(Long64_t*, Int_t*, Int_t);
-   virtual ~TFPBlock();
+   ~TFPBlock() override;
 
    Long64_t  GetPos(Int_t) const;
    Int_t     GetLen(Int_t) const;

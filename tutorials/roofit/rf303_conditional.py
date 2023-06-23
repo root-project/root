@@ -6,7 +6,9 @@
 ##
 ## pdf = gauss(x,f(y),sx | y ) with f(y) = a0 + a1*y
 ##
+## \macro_image
 ## \macro_code
+## \macro_output
 ##
 ## \date February 2018
 ## \authors Clemens Lange, Wouter Verkerke (C version)
@@ -65,7 +67,7 @@ data.Print()
 # Fit conditional p.d.f model(x|y) to data
 # ---------------------------------------------------------------------------------------------
 
-model.fitTo(expDataXY, ConditionalObservables={y})
+model.fitTo(expDataXY, ConditionalObservables={y}, PrintLevel=-1)
 
 # Project conditional p.d.f on x and y dimensions
 # ---------------------------------------------------------------------------------------------

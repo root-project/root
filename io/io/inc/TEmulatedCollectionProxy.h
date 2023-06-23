@@ -56,7 +56,7 @@ public:
    TEmulatedCollectionProxy(const char* cl_name, Bool_t silent);
 
    // Standard destructor
-   virtual ~TEmulatedCollectionProxy();
+   ~TEmulatedCollectionProxy() override;
 
    // Virtual constructor
    void* New() const override             {  return new Cont_t;         }

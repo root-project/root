@@ -39,7 +39,7 @@ namespace Experimental {
 
 // clang-format off
 /**
-\class ROOT::Experimental::Detail::RNTupleImporter
+\class ROOT::Experimental::RNTupleImporter
 \ingroup NTuple
 \brief Converts a TTree into an RNTuple
 
@@ -59,7 +59,14 @@ Note that input file and output file can be identical if the ntuple is stored un
 (use `SetNTupleName()`).
 
 By default, the RNTuple is compressed with zstd, independent of the input compression. The compression settings
-(and other output parameters) can be changed by `SetWriteOptions()`.
+(and other output parameters) can be changed by `SetWriteOptions()`. For example, to compress the imported RNTuple
+using lz4 (with compression level 4) instead:
+
+~~~ {.cpp}
+auto writeOptions = importer->GetWriteOptions();
+writeOptions.SetCompression(404);
+importer->SetWriteOptions(writeOptions);
+~~~
 
 Most RNTuple fields have a type identical to the corresponding TTree input branch. Exceptions are
   - C string branches are translated to std::string fields
@@ -81,7 +88,6 @@ Most RNTuple fields have a type identical to the corresponding TTree input branc
     These projections are meta-data only operations and don't involve duplicating the data.
 
 Current limitations of the importer:
-  - Importing collection proxies is untested
   - No support for trees containing TObject (or derived classes) or TClonesArray collections
   - Due to RNTuple currently storing data fully split, "don't split" markers are ignored
   - Some types are not (yet) available in RNTuple, such as pointers, Double32_t or std::map
@@ -216,6 +222,10 @@ private:
    std::unique_ptr<TFile> fDestFile;
    RNTupleWriteOptions fWriteOptions;
 
+   /// Whether or not dot characters in branch names should be converted to underscores. If this option is not set and a
+   /// branch with a '.' is encountered, the importer will throw an exception.
+   bool fConvertDotsInBranchNames = false;
+
    /// The maximum number of entries to import. When this value is -1 (default), import all entries.
    std::int64_t fMaxEntries = -1;
 
@@ -248,16 +258,20 @@ public:
    ~RNTupleImporter() = default;
 
    /// Opens the input file for reading and the output file for writing (update).
-   static RResult<std::unique_ptr<RNTupleImporter>>
+   static std::unique_ptr<RNTupleImporter>
    Create(std::string_view sourceFileName, std::string_view treeName, std::string_view destFileName);
 
    /// Directly uses the provided tree and opens the output file for writing (update).
-   static RResult<std::unique_ptr<RNTupleImporter>> Create(TTree *sourceTree, std::string_view destFileName);
+   static std::unique_ptr<RNTupleImporter> Create(TTree *sourceTree, std::string_view destFileName);
 
    RNTupleWriteOptions GetWriteOptions() const { return fWriteOptions; }
    void SetWriteOptions(RNTupleWriteOptions options) { fWriteOptions = options; }
    void SetNTupleName(const std::string &name) { fNTupleName = name; }
    void SetMaxEntries(std::uint64_t maxEntries) { fMaxEntries = maxEntries; };
+
+   /// Whereas branch names may contain dots, RNTuple field names may not. By setting this option, dot characters are
+   /// automatically converted into underscores to prevent the importer from throwing an exception.
+   void SetConvertDotsInBranchNames(bool value) { fConvertDotsInBranchNames = value; }
 
    /// Whether or not information and progress is printed to stdout.
    void SetIsQuiet(bool value) { fIsQuiet = value; }
@@ -267,7 +281,7 @@ public:
    ///    fields and the model
    /// 2. An event loop reads every entry from the TTree, applies transformations where necessary, and writes the
    ///    output entry to the RNTuple.
-   RResult<void> Import();
+   void Import();
 }; // class RNTupleImporter
 
 } // namespace Experimental

@@ -59,7 +59,7 @@ protected:
 
 public:
    TGedEditor(TCanvas* canvas = nullptr, UInt_t width = 175, UInt_t height = 20);
-   virtual ~TGedEditor();
+   ~TGedEditor() override;
 
    void          PrintFrameStat();
    virtual void  Update(TGedFrame* frame = nullptr);

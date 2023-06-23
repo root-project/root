@@ -5,7 +5,9 @@
 ## Demonstration of binding ROOT Math functions as RooFit functions
 ## and pdfs
 ##
+## \macro_image
 ## \macro_code
+## \macro_output
 ##
 ## \date February 2018
 ## \authors Clemens Lange, Wouter Verkerke (C version)
@@ -40,7 +42,7 @@ beta.Print()
 
 # Generate some events and fit
 data = beta.generate({x2}, 10000)
-beta.fitTo(data)
+beta.fitTo(data, PrintLevel=-1)
 
 # Plot data and pdf on frame
 frame2 = x2.frame(Title="ROOT.Math.Beta bound as ROOT.RooFit pdf")
