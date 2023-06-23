@@ -1,5 +1,7 @@
 import { DoubleSide, FrontSide, Object3D, Box3, Mesh, InstancedMesh, Vector2, Vector3, Matrix4,
-         MeshLambertMaterial, Color, PerspectiveCamera, Frustum, Raycaster,
+         MeshLambertMaterial, MeshBasicMaterial, MeshStandardMaterial, MeshNormalMaterial,
+         MeshPhysicalMaterial, MeshPhongMaterial, MeshDepthMaterial, MeshMatcapMaterial, MeshToonMaterial,
+         Color, PerspectiveCamera, Frustum, Raycaster,
          ShapeUtils, BufferGeometry, BufferAttribute } from '../three.mjs';
 import { isObject, isFunc, BIT } from '../core.mjs';
 import { createBufferGeometry, createNormal,
@@ -2271,6 +2273,67 @@ function createFrustum(source) {
    return frustum;
 }
 
+/** @summary Create node material
+  * @private */
+function createMaterial(cfg, args0) {
+   if (!cfg) cfg = { material_kind: 'lambert' };
+
+   let args = Object.assign({}, args0);
+
+   if (args.opacity === undefined)
+      args.opacity = 1;
+
+   if (cfg.transparency)
+      args.opacity = Math.min(1 - cfg.transparency, args.opacity);
+
+   args.wireframe = cfg.wireframe ?? false;
+   if (!args.color) args.color = 'red';
+   args.side = FrontSide;
+   args.transparent = args.opacity < 1;
+   args.depthWrite = args.opactity == 1;
+
+   let material;
+
+   if (cfg.material_kind == 'basic') {
+      material = new MeshBasicMaterial(args);
+   } else if (cfg.material_kind == 'depth') {
+      delete args.color;
+      material = new MeshDepthMaterial(args);
+   } else if (cfg.material_kind == 'toon') {
+      material = new MeshToonMaterial(args);
+   } else if (cfg.material_kind == 'matcap') {
+      delete args.wireframe;
+      material = new MeshMatcapMaterial(args);
+   } else if (cfg.material_kind == 'standard') {
+      args.metalness = cfg.metalness ?? 0.5;
+      args.roughness = cfg.roughness ?? 0.1;
+      material = new MeshStandardMaterial(args);
+   } else if (cfg.material_kind == 'normal') {
+      delete args.color;
+      material = new MeshNormalMaterial(args);
+   } else if (cfg.material_kind == 'physical') {
+      args.metalness = cfg.metalness ?? 0.5;
+      args.roughness = cfg.roughness ?? 0.1;
+      args.reflectivity = cfg.reflectivity ?? 0.5;
+      args.emissive = args.color;
+      material = new MeshPhysicalMaterial(args);
+   } else if (cfg.material_kind == 'phong') {
+      args.shininess = cfg.shininess ?? 0.9;
+      material = new MeshPhongMaterial(args);
+   } else {
+      args.vertexColors = false;
+      material = new MeshLambertMaterial(args);
+   }
+
+   if ((material.flatShading !== undefined) && (cfg.flatShading !== undefined))
+      material.flatShading = cfg.flatShading;
+   material.inherentOpacity = args0.opacity ?? 1;
+   material.inherentArgs = args0;
+
+   return material;
+}
+
+
 /** @summary Compares two stacks.
   * @return {Number} 0 if same, -1 when stack1 < stack2, +1 when stack1 > stack2
   * @private */
@@ -2339,13 +2402,20 @@ class ClonedNodes {
    }
 
    /** @summary Set maximal number of visible nodes */
-   setMaxVisNodes(v) {
+   setMaxVisNodes(v, more) {
       this.maxnodes = Number.isFinite(v) ? v : 10000;
+      if (more && Number.isFinite(more))
+         this.maxnodes *= more;
    }
 
    /** @summary Returns configured maximal number of visible nodes */
    getMaxVisNodes() {
       return this.maxnodes;
+   }
+
+   /** @summary Set geo painter configuration - used for material creation */
+   setConfig(cfg) {
+      this._cfg = cfg;
    }
 
    /** @summary Insert node into existing array */
@@ -3001,12 +3071,7 @@ class ClonedNodes {
          let prop = { name: clone.name, nname: clone.name, shape: null, material: null, chlds: null },
              opacity = entry.opacity || 1, col = entry.color || '#0000FF';
          prop.fillcolor = new Color(col[0] == '#' ? col : `rgb(${col})`);
-         prop.material = new MeshLambertMaterial({ transparent: opacity < 1,
-                          opacity, wireframe: false, color: prop.fillcolor,
-                          side: FrontSide, vertexColors: false,
-                          depthWrite: opacity == 1 });
-         prop.material.inherentOpacity = opacity;
-
+         prop.material = createMaterial(this._cfg, { opacity, color: prop.fillcolor });
          return prop;
       }
 
@@ -3026,11 +3091,8 @@ class ClonedNodes {
 
          if (visible) {
             let opacity = Math.min(1, node.fRGBA[3]);
-            prop.fillcolor = new Color( node.fRGBA[0], node.fRGBA[1], node.fRGBA[2] );
-            prop.material = new MeshLambertMaterial({ transparent: opacity < 1,
-                                                      opacity, wireframe: false, color: prop.fillcolor,
-                                                      side: FrontSide, vertexColors: false, depthWrite: opacity == 1 });
-            prop.material.inherentOpacity = opacity;
+            prop.fillcolor = new Color(node.fRGBA[0], node.fRGBA[1], node.fRGBA[2]);
+            prop.material = createMaterial(this._cfg, { opacity, color: prop.fillcolor });
          }
 
          return prop;
@@ -3067,18 +3129,14 @@ class ClonedNodes {
             }
 
             if (transparency > 0)
-               opacity = (100.0 - transparency) / 100.0;
+               opacity = (100 - transparency) / 100;
             if (prop.fillcolor === undefined)
                prop.fillcolor = root_colors[mat.fFillColor];
          }
          if (prop.fillcolor === undefined)
             prop.fillcolor = 'lightgrey';
 
-         prop.material = new MeshLambertMaterial({ transparent: opacity < 1,
-                                                   opacity, wireframe: false, color: prop.fillcolor,
-                                                   side: FrontSide, vertexColors: false,
-                                                   depthWrite: opacity == 1 });
-         prop.material.inherentOpacity = opacity;
+         prop.material = createMaterial(this._cfg, { opacity, color: prop.fillcolor });
       }
 
       return prop;
@@ -3962,7 +4020,7 @@ function produceRenderOrder(toplevel, origin, method, clones) {
          }
 
       for (let i = 0; i < resort.length; ++i) {
-         resort[i].renderOrder = Math.round( maxorder - (i+1) / (resort.length+1) * (maxorder-minorder));
+         resort[i].renderOrder = Math.round(maxorder - (i+1) / (resort.length + 1) * (maxorder - minorder));
          delete resort[i].$jsroot_index;
          delete resort[i].$jsroot_distance;
       }
@@ -4036,5 +4094,5 @@ export { kindGeo, kindEve, kindShape,
          clTGeoBBox, clTGeoCompositeShape,
          geoCfg, geoBITS, ClonedNodes, isSameStack, checkDuplicates, getObjectName, testGeoBit, setGeoBit, toggleGeoBit,
          setInvisibleAll, countNumShapes, getNodeKind, produceRenderOrder, createFlippedGeom, createFlippedMesh, cleanupShape,
-         createGeometry, numGeometryFaces, numGeometryVertices, createServerGeometry,
+         createGeometry, numGeometryFaces, numGeometryVertices, createServerGeometry, createMaterial,
          projectGeometry, countGeometryFaces, createFrustum, createProjectionMatrix, getBoundingBox, provideObjectInfo, getShapeIcon };

@@ -92,10 +92,9 @@ class TWebPaintingPainter extends ObjectPainter {
                   npoints = parseInt(arr[k].slice(1));
 
                   for (n = 0; n < npoints; ++n)
-                     d += ((n > 0) ? 'L' : 'M') +
-                           func.x(obj.fBuf[indx++]) + ',' + func.y(obj.fBuf[indx++]);
+                     d += `${(n>0)?'L':'M'}${func.x(obj.fBuf[indx++])},${func.y(obj.fBuf[indx++])}`;
 
-                  if (oper == 'f') d+='Z';
+                  if (oper == 'f') d += 'Z';
 
                   continue;
                }

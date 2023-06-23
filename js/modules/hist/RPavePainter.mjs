@@ -1,4 +1,4 @@
-import { settings, isBatchMode, isFunc, isStr, gStyle, nsREX } from '../core.mjs';
+import { settings, isFunc, isStr, gStyle, nsREX } from '../core.mjs';
 import { floatToString, makeTranslate } from '../base/BasePainter.mjs';
 import { RObjectPainter } from '../base/RObjectPainter.mjs';
 import { ensureRCanvas } from '../gpad/RCanvasPainter.mjs';
@@ -83,14 +83,15 @@ class RPavePainter extends RObjectPainter {
 
       return this.drawContent().then(() => {
 
-         if (isBatchMode()) return this;
+         if (!this.isBatchMode()) {
 
-         // TODO: provide pave context menu as in v6
-         if (settings.ContextMenu && this.paveContextMenu)
-            this.draw_g.on('contextmenu', evnt => this.paveContextMenu(evnt));
+            // TODO: provide pave context menu as in v6
+            if (settings.ContextMenu && this.paveContextMenu)
+               this.draw_g.on('contextmenu', evnt => this.paveContextMenu(evnt));
 
-         addDragHandler(this, { x: pave_x, y: pave_y, width: pave_width, height: pave_height,
-                                minwidth: 20, minheight: 20, redraw: d => this.sizeChanged(d) });
+            addDragHandler(this, { x: pave_x, y: pave_y, width: pave_width, height: pave_height,
+                                   minwidth: 20, minheight: 20, redraw: d => this.sizeChanged(d) });
+         }
 
          return this;
       });

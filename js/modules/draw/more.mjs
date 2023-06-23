@@ -1,4 +1,4 @@
-import { BIT, isBatchMode, isFunc, clTLatex, clTMathText, clTAnnotation, clTPolyLine } from '../core.mjs';
+import { BIT, isFunc, clTLatex, clTMathText, clTAnnotation, clTPolyLine } from '../core.mjs';
 import { rgb as d3_rgb, select as d3_select } from '../d3.mjs';
 import { BasePainter, makeTranslate } from '../base/BasePainter.mjs';
 import { addMoveHandler } from '../gui/utils.mjs';
@@ -64,7 +64,7 @@ async function drawText() {
    this.drawText(arg);
 
    return this.finishTextDrawing().then(() => {
-      if (isBatchMode()) return this;
+      if (this.isBatchMode()) return this;
 
       this.pos_dx = this.pos_dy = 0;
 

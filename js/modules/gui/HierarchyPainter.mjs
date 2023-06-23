@@ -1,9 +1,9 @@
-import { version, gStyle, httpRequest, createHttpRequest, loadScript, decodeUrl,
-         source_dir, settings, internals, findFunction,
+import { version, gStyle, httpRequest, create, createHttpRequest, loadScript, decodeUrl,
+         source_dir, settings, internals, browser, findFunction,
          isArrayProto, isRootCollection, isBatchMode, isNodeJs, isObject, isFunc, isStr, _ensureJSROOT,
          prROOT, clTList, clTMap, clTObjString, clTText, clTLatex, clTColor, clTStyle } from '../core.mjs';
 import { select as d3_select } from '../d3.mjs';
-import { openFile, clTStreamerInfoList, clTDirectory, clTDirectoryFile, nameStreamerInfo } from '../io.mjs';
+import { openFile, clTStreamerInfoList, clTDirectory, clTDirectoryFile, nameStreamerInfo, addUserStreamer } from '../io.mjs';
 import { getRGBfromTColor } from '../base/colors.mjs';
 import { BasePainter, getElementRect, _loadJSDOM } from '../base/BasePainter.mjs';
 import { getElementMainPainter, getElementCanvPainter, cleanup, ObjectPainter } from '../base/ObjectPainter.mjs';
@@ -79,7 +79,7 @@ ${img('class',16,'png','iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABmJLR0QA
 ${img('member',16,'png','iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABmJLR0QAvQC9AL1pQtWoAAAAX0lEQVR42mNgAAIVBob/+DADPgBS8GCPBV6M1xCKDcDnBRcoZhgW4D8DBV75v2bLATAmxyC4ZmRMrCFYNfeU9BBvwJwpS8AYWTNZBoAwTDPFBpAciDCDyNFMtXSAFwAAUyq0GRPbbz4AAABMelRYdFNvZnR3YXJlAAB42nPQUNb0zE1MT/VNTM9MzlYw0TPSM1CwtNQ3MNY3MFRILsosLql0yK0sLslM1kst1kspLcjPK9FLzs8FAPO/Eny7iktKAAAAM3pUWHRTaWduYXR1cmUAAHjaS01JNrE0S00zSbU0NEsxMbMwM0xOSjYwNzY3NLRIMjUCAJcdCJ2BHe6SAAAAAElFTkSuQmCC')}
 ${img('tf1',16,'png','iVBORw0KGgoAAAANSUhEUgAAABAAAAAQAgMAAABinRfyAAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAADFBMVEX/////AP8/SMz///+Cf5VqAAAAAXRSTlMAQObYZgAAAAFiS0dEAIgFHUgAAAAJcEhZcwAADsQAAA7EAZUrDhsAAAAHdElNRQfgCw4QHgSCla+2AAAAL0lEQVQI12MQYAACrAQXiFBoABINCgwMQgwcDAwSDEwMDKmhodMYJjAwaKDrAAEAoRAEjHDJ/uQAAAAldEVYdGRhdGU6Y3JlYXRlADIwMTYtMTEtMTRUMTc6Mjk6MjErMDE6MDDxcSccAAAAJXRFWHRkYXRlOm1vZGlmeQAyMDE2LTExLTE0VDE3OjI5OjA1KzAxOjAwNka8zgAAAABJRU5ErkJggg==')}
 ${img('tf2',16,'png','iVBORw0KGgoAAAANSUhEUgAAABAAAAAQAgMAAABinRfyAAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAADFBMVEX/////AP8A/wD////pL6WoAAAAAXRSTlMAQObYZgAAAAFiS0dEAIgFHUgAAAAJcEhZcwAADsQAAA7EAZUrDhsAAAAHdElNRQfgCw4PNgzGaW1jAAAARUlEQVQI12NgEGDQZAASKkBigQKQ6GhgYBDiYgASIiAigIGBS8iBgUFhEpCnoAEkUkNDQxkagUIMrUDMMAVETAARQI0MAD5GCJ7tAr1aAAAAJXRFWHRkYXRlOmNyZWF0ZQAyMDE2LTExLTE0VDE2OjUxOjUzKzAxOjAwi1Gz3gAAACV0RVh0ZGF0ZTptb2RpZnkAMjAxNi0xMS0xNFQxNjo1MTozNiswMTowMG5bLUIAAAAASUVORK5CYII=')}
-`, node);
+`, node, 'jsroot_hstyle');
 }
 
 /** @summary draw list content
@@ -715,6 +715,7 @@ const kindTFile = prROOT + 'TFile';
   * @summary Painter of hierarchical structures
   *
   * @example
+  * import { HierarchyPainter } from 'https://root.cern/js/latest/modules/gui/HierarchyPainter.mjs';
   * // create hierarchy painter in 'myTreeDiv'
   * let h = new HierarchyPainter('example', 'myTreeDiv');
   * // configure 'simple' layout in 'myMainDiv'
@@ -735,18 +736,23 @@ class HierarchyPainter extends BasePainter {
       this.h = null; // hierarchy
       this.with_icons = true;
 
-      if (backgr == '__as_dark_mode__') {
-         this.background = settings.DarkMode ? 'black' : 'white';
-         this.textcolor = settings.DarkMode ? '#eee' : '#111';
-      } else {
+      if (backgr == '__as_dark_mode__')
+         this.setBasicColors();
+      else
          this.background = backgr;
-      }
       this.files_monitoring = !frameid; // by default files monitored when nobrowser option specified
       this.nobrowser = (frameid === null);
 
       // remember only very first instance
       if (!getHPainter())
          setHPainter(this);
+   }
+
+   /** @summary Set basic colors
+     * @private */
+   setBasicColors() {
+      this.background = settings.DarkMode ? 'black' : 'white';
+      this.textcolor = settings.DarkMode ? '#eee' : '#111';
    }
 
    /** @summary Cleanup hierarchy painter
@@ -1670,14 +1676,28 @@ class HierarchyPainter extends BasePainter {
             this.forEachRootFile(folder => keysHierarchy(folder, folder._file.fKeys, folder._file, ''));
             this.refreshHtml();
          } else if (arg == 'dark') {
-            this.brlayout?.createStyle();
-            if (this.disp)
-               this.disp.forEachFrame(frame => {
-                  let canvp = getElementCanvPainter(frame);
-                  if (isFunc(canvp?.changeDarkMode))
-                     canvp.changeDarkMode();
-               });
+            this.changeDarkMode();
          }
+      });
+   }
+
+   /** @summary Handle changes of dark mode
+     * @private */
+   changeDarkMode() {
+      if (this.textcolor) {
+         this.setBasicColors();
+         this.refreshHtml();
+      }
+
+      this.brlayout?.createStyle();
+      this.createButtons(); // recreate buttons
+      if (isFunc(this.disp?.changeDarkMode))
+         this.disp.changeDarkMode();
+      this.disp?.forEachFrame(frame => {
+         let p = getElementCanvPainter(frame);
+         if (!p) p = getElementMainPainter(frame);
+         if (isFunc(p?.changeDarkMode) && (p !== this))
+            p.changeDarkMode();
       });
    }
 
@@ -1685,6 +1705,7 @@ class HierarchyPainter extends BasePainter {
      * @private */
    toggleDarkMode() {
       settings.DarkMode = !settings.DarkMode;
+      this.changeDarkMode();
    }
 
    /** @summary Handle context menu in the hieararchy
@@ -3144,11 +3165,17 @@ class HierarchyPainter extends BasePainter {
 
    /** @summary Load and execute scripts, kept to support v6 applications
      * @private */
-   async loadScripts(scripts, modules) {
+   async loadScripts(scripts, modules, use_inject) {
       if (!scripts?.length && !modules?.length)
          return true;
 
-      if (internals.ignore_v6)
+      if (use_inject && !globalThis.JSROOT)
+         globalThis.JSROOT = {
+            version, gStyle, create, httpRequest, loadScript, decodeUrl,
+            source_dir, settings, addUserStreamer, addDrawFunc
+         };
+
+      if (internals.ignore_v6 || use_inject)
          return loadScript(scripts);
 
       return _ensureJSROOT().then(v6 => {
@@ -3220,6 +3247,8 @@ class HierarchyPainter extends BasePainter {
       };
 
       let prereq = GetOption('prereq') || '',
+          load = GetOption('load'),
+          inject = GetOption('inject'),
           filesdir = d.get('path') || '', // path used in normal gui
           filesarr = GetOptionAsArray('#file;files'),
           jsonarr = GetOptionAsArray('#json;jsons'),
@@ -3242,16 +3271,23 @@ class HierarchyPainter extends BasePainter {
       else
          monitor = parseInt(monitor);
 
-      if (GetOption('float') !== null) { browser_kind = 'float'; browser_configured = true; } else
-      if (GetOption('fix') !== null) { browser_kind = 'fix'; browser_configured = true; }
+      if (GetOption('float') !== null) {
+         browser_kind = 'float';
+         browser_configured = true;
+      } else if (GetOption('fix') !== null) {
+         browser_kind = 'fix';
+         browser_configured = true;
+      }
+
+      if (!browser_configured && (browser.screenWidth <= 640))
+         browser_kind = 'float';
 
       this.no_select = GetOption('noselect');
 
-      if (GetOption('files_monitoring') !== null) this.files_monitoring = true;
+      if (GetOption('files_monitoring') !== null)
+         this.files_monitoring = true;
 
       if (title) document.title = title;
-
-      let load = GetOption('load');
 
       if (expanditems.length == 0 && (GetOption('expand') === '')) expanditems.push('');
 
@@ -3318,7 +3354,9 @@ class HierarchyPainter extends BasePainter {
 
          if (load || prereq) {
             promise = this.loadScripts(load, prereq); load = ''; prereq = '';
-         } else if (browser_kind) {
+         } else if (inject) {
+            promise = this.loadScripts(inject, '', true); inject = '';
+         } if (browser_kind) {
             promise = this.createBrowser(browser_kind); browser_kind = '';
          } else if (status !== null) {
             promise = this.createStatusLine(statush, status); status = null;
@@ -3402,22 +3440,28 @@ class HierarchyPainter extends BasePainter {
 
       this.brlayout.create(!this.exclude_browser);
 
-      if (!this.exclude_browser) {
-         let btns = this.brlayout.createBrowserBtns();
-
-         ToolbarIcons.createSVG(btns, ToolbarIcons.diamand, 15, 'toggle fix-pos browser')
-                     .style('margin','3px').on('click', () => this.createBrowser('fix', true));
-
-         if (!this.float_browser_disabled)
-            ToolbarIcons.createSVG(btns, ToolbarIcons.circle, 15, 'toggle float browser')
-                        .style('margin','3px').on('click', () => this.createBrowser('float', true));
-
-         if (!this.status_disabled)
-            ToolbarIcons.createSVG(btns, ToolbarIcons.three_circles, 15, 'toggle status line')
-                        .style('margin','3px').on('click', () => this.createStatusLine(0, 'toggle'));
-      }
+      this.createButtons();
 
       this.setDisplay(layout, this.brlayout.drawing_divid());
+   }
+
+   /** @summary Create shortcut buttons */
+   createButtons() {
+      if (this.exclude_browser) return;
+
+      let btns = this.brlayout?.createBrowserBtns();
+      if (!btns) return;
+
+      ToolbarIcons.createSVG(btns, ToolbarIcons.diamand, 15, 'toggle fix-pos browser', 'browser')
+                  .style('margin','3px').on('click', () => this.createBrowser('fix', true));
+
+      if (!this.float_browser_disabled)
+         ToolbarIcons.createSVG(btns, ToolbarIcons.circle, 15, 'toggle float browser', 'browser')
+                     .style('margin','3px').on('click', () => this.createBrowser('float', true));
+
+      if (!this.status_disabled)
+         ToolbarIcons.createSVG(btns, ToolbarIcons.three_circles, 15, 'toggle status line', 'browser')
+                     .style('margin','3px').on('click', () => this.createStatusLine(0, 'toggle'));
    }
 
    /** @summary Returns trus if status is exists */
@@ -3457,12 +3501,12 @@ class HierarchyPainter extends BasePainter {
          return false;
 
       let main = d3_select(`#${this.gui_div} .jsroot_browser`);
-
       // one requires top-level container
       if (main.empty())
          return false;
 
-      if ((browser_kind == 'float') && this.float_browser_disabled) browser_kind = 'fix';
+      if ((browser_kind == 'float') && this.float_browser_disabled)
+         browser_kind = 'fix';
 
       if (!main.select('.jsroot_browser_area').empty()) {
          // this is case when browser created,
@@ -3512,12 +3556,14 @@ class HierarchyPainter extends BasePainter {
       this.brlayout.setBrowserContent(guiCode);
 
       let title_elem = this.brlayout.setBrowserTitle(this.is_online ? 'ROOT online server' : 'Read a ROOT file');
-      if (title_elem) title_elem.on('contextmenu', evnt => {
+      title_elem?.on('contextmenu', evnt => {
          evnt.preventDefault();
          createMenu(evnt).then(menu => {
             this.fillSettingsMenu(menu, true);
             menu.show();
          });
+      }).on('dblclick', () => {
+         this.createBrowser(this?.brlayout?.browser_kind == 'float' ? 'fix' : 'float', true);
       });
 
       if (!this.is_online && !this.no_select) {
@@ -3526,7 +3572,7 @@ class HierarchyPainter extends BasePainter {
             let filename = main.select('.gui_urlToLoad').property('value').trim();
             if (!filename) return;
 
-            if (filename.toLowerCase().lastIndexOf('.json') == filename.length-5)
+            if (filename.toLowerCase().lastIndexOf('.json') == filename.length - 5)
                this.openJsonFile(filename);
             else
                this.openRootFile(filename);
@@ -3707,10 +3753,10 @@ async function drawInspector(dom, obj) {
    painter.fill_context = function(menu, hitem) {
       let sett = getDrawSettings(hitem._kind, 'nosame');
       if (sett.opts)
-         menu.addDrawMenu('nosub:Draw', sett.opts, function(arg) {
-            if (!hitem || !hitem._obj) return;
+         menu.addDrawMenu('nosub:Draw', sett.opts, arg => {
+            if (!hitem?._obj) return;
             let obj = hitem._obj, ddom = this.selectDom().node();
-            if (this.removeInspector) {
+            if (isFunc(this.removeInspector)) {
                ddom = ddom.parentNode;
                this.removeInspector();
                if (arg == 'inspect')

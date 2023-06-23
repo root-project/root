@@ -1,6 +1,6 @@
-import { settings, gStyle, isBatchMode, isObject, isFunc, isStr, clTGaxis } from '../core.mjs';
+import { settings, browser, gStyle, isObject, isFunc, isStr, clTGaxis } from '../core.mjs';
 import { rgb as d3_rgb, select as d3_select } from '../d3.mjs';
-import { injectStyle, selectgStyle, saveSettings, readSettings, saveStyle, getColorExec } from './utils.mjs';
+import { selectgStyle, saveSettings, readSettings, saveStyle, getColorExec } from './utils.mjs';
 import { getColor } from '../base/colors.mjs';
 import { TAttMarkerHandler } from '../base/TAttMarkerHandler.mjs';
 import { getSvgLineStyle } from '../base/TAttLineHandler.mjs';
@@ -19,7 +19,7 @@ class JSRootMenu {
       this.painter = painter;
       this.menuname = menuname;
       if (isObject(show_event) && (show_event.clientX !== undefined) && (show_event.clientY !== undefined))
-         this.show_evnt = { clientX: show_event.clientX, clientY: show_event.clientY };
+         this.show_evnt = { clientX: show_event.clientX, clientY: show_event.clientY, skip_close: show_event.skip_close };
 
       this.remove_handler = () => this.remove();
       this.element = null;
@@ -43,15 +43,22 @@ class JSRootMenu {
 
    /** @summary Close and remove menu */
    remove() {
-      if (this.element !== null) {
-         this.element.remove();
-         if (isFunc(this.resolveFunc)) {
-            this.resolveFunc();
-            delete this.resolveFunc;
-         }
-         document.body.removeEventListener('click', this.remove_handler);
+      if (!this.element)
+         return;
+
+      if (this.show_evnt?.skip_close) {
+         this.show_evnt.skip_close = 0;
+         return;
       }
+
+      this.element.remove();
       this.element = null;
+      if (isFunc(this.resolveFunc)) {
+         let func = this.resolveFunc;
+         delete this.resolveFunc;
+         func();
+      }
+      document.body.removeEventListener('click', this.remove_handler);
    }
 
    show(/*event*/) {
@@ -381,7 +388,7 @@ class JSRootMenu {
       }));
       for (let n = 1; n < 11; ++n) {
          let dash = getSvgLineStyle(n),
-             svg = `<svg width='100' height='18'><text x='1' y='12' style='font-size:12px'>${n}</text><line x1='30' y1='8' x2='100' y2='8' stroke='black' stroke-width='3' stroke-dasharray='${dash}'></line></svg>`;
+             svg = `<svg width='100' height='14'><text x='2' y='13' style='font-size:12px'>${n}</text><line x1='30' y1='7' x2='100' y2='7' stroke='black' stroke-width='3' stroke-dasharray='${dash}'></line></svg>`;
 
          this.addchk((value == n), svg, n, arg => set_func(parseInt(arg)));
       }
@@ -1053,7 +1060,11 @@ class StandaloneMenu extends JSRootMenu {
    _buildContextmenu(menu, left, top, loc) {
 
       let outer = document.createElement('div');
-      outer.className = 'jsroot_ctxt_container';
+
+      const container_style =
+         'position: absolute; top: 0; user-select: none; z-index: 100000; background-color: rgb(250, 250, 250); margin: 0; padding: 0px; width: auto;'+
+         'min-width: 100px; box-shadow: 0px 0px 10px rgb(0, 0, 0, 0.2); border: 3px solid rgb(215, 215, 215); font-family: Arial, helvetica, sans-serif, serif;'+
+         'font-size: 13px; color: rgb(0, 0, 0, 0.8); line-height: 15px;';
 
       //if loc !== document.body then its a submenu, so it needs to have position: relative;
       if (loc === document.body) {
@@ -1062,28 +1073,20 @@ class StandaloneMenu extends JSRootMenu {
          while (deleteElems.length > 0)
             deleteElems[0].parentNode.removeChild(deleteElems[0]);
 
+         outer.className = 'jsroot_ctxt_container';
+         outer.style = container_style;
          outer.style.position = 'fixed';
          outer.style.left = left + 'px';
          outer.style.top = top + 'px';
 
-         injectStyle(
-            `.jsroot_ctxt_container {`+
-            `   position: absolute; top: 0; user-select: none; z-index: 100000; background-color: rgb(250, 250, 250); margin: 0; padding: 0px; width: auto;`+
-            `   min-width: 100px; box-shadow: 0px 0px 10px rgb(0, 0, 0, 0.2); border: 3px solid rgb(215, 215, 215); font-family: Arial, helvetica, sans-serif, serif;`+
-            `   font-size: 13px; color: rgb(0, 0, 0, 0.8);`+
-            `}`+
-            `.jsroot_ctxt_column { float: left; }`+
-            `.jsroot_ctxt_divider { width: 85%; margin: 3px auto; border: 1px solid rgb(0, 0, 0, 0.15); }`+
-            `.jsroot_ctxt_header { background-color: lightblue; padding: 3px 7px; font-weight: bold; border-bottom: 1px; }`+
-            `.jsroot_ctxt_text { margin: 0; padding: 3px 7px; pointer-events: none; white-space: nowrap; }`+
-            `.jsroot_ctxt_extraText { margin: 0; padding: 3px 7px; color: rgb(0, 0, 0, 0.6); }`+
-            `.jsroot_ctxt_focus { background-color: rgb(220, 220, 220); }`+
-            `.jsroot_ctxt_item:hover { background-color: rgb(235, 235, 235); }`, this.element);
       } else if ((left < 0) && (top == left)) {
          // column
          outer.className = 'jsroot_ctxt_column';
+         outer.style.float = 'left';
          outer.style.width = (100/-left).toFixed(1) + '%';
       } else {
+         outer.className = 'jsroot_ctxt_container';
+         outer.style = container_style;
          outer.style.left = -loc.offsetLeft + loc.offsetWidth + 'px';
       }
 
@@ -1102,7 +1105,7 @@ class StandaloneMenu extends JSRootMenu {
 
          if (d.divider) {
             let hr = document.createElement('hr');
-            hr.className = 'jsroot_ctxt_divider';
+            hr.style = 'width: 85%; margin: 3px auto; border: 1px solid rgb(0, 0, 0, 0.15)';
             outer.appendChild(hr);
             return;
          }
@@ -1112,7 +1115,7 @@ class StandaloneMenu extends JSRootMenu {
          outer.appendChild(item);
 
          if (d.header) {
-            item.className = 'jsroot_ctxt_header';
+            item.style = 'background-color: lightblue; padding: 3px 7px; font-weight: bold; border-bottom: 1px;';
             item.innerHTML = d.text;
             return;
          }
@@ -1120,7 +1123,6 @@ class StandaloneMenu extends JSRootMenu {
          let hovArea = document.createElement('div');
          hovArea.style.width = '100%';
          hovArea.style.height = '100%';
-         hovArea.className = 'jsroot_ctxt_item';
          hovArea.style.display = 'flex';
          hovArea.style.justifyContent = 'space-between';
          hovArea.style.cursor = 'pointer';
@@ -1130,7 +1132,7 @@ class StandaloneMenu extends JSRootMenu {
          if (!d.text) d.text = 'item';
 
          let text = document.createElement('div');
-         text.className = 'jsroot_ctxt_text';
+         text.style = 'margin: 0; padding: 3px 7px; pointer-events: none; white-space: nowrap';
 
          if (d.text.indexOf('<svg') >= 0) {
             if (need_check_area) {
@@ -1169,29 +1171,55 @@ class StandaloneMenu extends JSRootMenu {
 
          hovArea.appendChild(text);
 
-         if (d.hasOwnProperty('extraText') || d.sub) {
-            let extraText = document.createElement('span');
-            extraText.className = 'jsroot_ctxt_extraText jsroot_ctxt_text';
-            extraText.textContent = d.sub ? '\u25B6' : d.extraText;
-            hovArea.appendChild(extraText);
+         function changeFocus(item, on) {
+            if (on) {
+               item.classList.add('jsroot_ctxt_focus');
+               item.style['background-color'] = 'rgb(220, 220, 220)';
+            } else if (item.classList.contains('jsroot_ctxt_focus')) {
+               item.style['background-color'] = null;
+               item.classList.remove('jsroot_ctxt_focus');
+               item.querySelector('.jsroot_ctxt_container')?.remove()
+            }
          }
 
+         if (d.hasOwnProperty('extraText') || d.sub) {
+            let extraText = document.createElement('span');
+            extraText.className = 'jsroot_ctxt_extraText';
+            extraText.style = 'margin: 0; padding: 3px 7px; color: rgb(0, 0, 0, 0.6);';
+            extraText.textContent = d.sub ? '\u25B6' : d.extraText;
+            hovArea.appendChild(extraText);
+
+            if (d.sub && browser.touches)
+               extraText.addEventListener('click', evnt => {
+                  evnt.preventDefault();
+                  evnt.stopPropagation();
+                  let was_active = item.parentNode.querySelector('.jsroot_ctxt_focus');
+
+                  if (was_active)
+                     changeFocus(was_active, false);
+
+                  if (item !== was_active) {
+                     changeFocus(item, true);
+                     this._buildContextmenu(d.sub, 0, 0, item);
+                  }
+               });
+         }
+
+         if (!browser.touches)
          hovArea.addEventListener('mouseenter', () => {
-            let focused = outer.childNodes;
-            focused.forEach(d => {
-               if (d.classList.contains('jsroot_ctxt_focus')) {
-                  d.removeChild(d.getElementsByClassName('jsroot_ctxt_container')[0]);
-                  d.classList.remove('jsroot_ctxt_focus');
-               }
-            })
-         });
 
-         if (d.sub)
-            hovArea.addEventListener('mouseenter', () => {
-               item.classList.add('jsroot_ctxt_focus');
+            if (this.prevHovArea)
+               this.prevHovArea.style['background-color'] = null;
+            hovArea.style['background-color'] = 'rgb(235, 235, 235)';
+            this.prevHovArea = hovArea;
+
+            outer.childNodes.forEach(chld => changeFocus(chld, false));
+
+            if (d.sub) {
+               changeFocus(item, true);
                this._buildContextmenu(d.sub, 0, 0, item);
-            });
-
+            }
+         });
 
          if (d.func)
             item.addEventListener('click', evnt => {
@@ -1225,7 +1253,7 @@ class StandaloneMenu extends JSRootMenu {
 
       } else if (outer.className != 'jsroot_ctxt_column') {
 
-         //if its sub-contextmenu
+         // if its sub-contextmenu
          let dimensionsLoc = loc.getBoundingClientRect(), dimensionsOuter = outer.getBoundingClientRect();
 
          //Does sub-contextmenu overflow window width?
@@ -1279,31 +1307,29 @@ class StandaloneMenu extends JSRootMenu {
       d3_select(`#${dlg_id}`).remove();
       d3_select(`#${dlg_id}_block`).remove();
 
-      let block = d3_select('body').append('div').attr('id', dlg_id+'_block').attr('class', 'jsroot_dialog_block');
-
-      let element = d3_select('body')
+      let w = Math.min(args.width || 450, Math.round(0.9*browser.screenWidth)),
+          block = d3_select('body').append('div')
+                                   .attr('id', `${dlg_id}_block`)
+                                   .attr('class', 'jsroot_dialog_block')
+                                   .attr('style', 'z-index: 100000; position: absolute; top: 0; left: 0; right: 0; bottom: 0; opacity: 0.2; background-color: white'),
+          element = d3_select('body')
                       .append('div')
-                      .attr('id',dlg_id)
-                      .attr('class','jsroot_dialog').style('width',(args.width || 450) + 'px')
+                      .attr('id', dlg_id)
+                      .attr('class', 'jsroot_dialog')
+                      .style('position', 'absolute')
+                      .style('width', `${w}px`)
+                      .style('left', '50%')
+                      .style('top', '50%')
+                      .style('z-index', 100001)
                       .attr('tabindex', '0')
                       .html(
-         `<div class="jsroot_dialog_body">
-            <div class="jsroot_dialog_header">${title}</div>
-            <div class="jsroot_dialog_content">${main_content}</div>
-            <div class="jsroot_dialog_footer">
-               <button class="jsroot_dialog_button">Ok</button>
-               ${args.btns ? '<button class="jsroot_dialog_button">Cancel</button>' : ''}
-           </div>
-          </div>`);
-
-      injectStyle(
-         `.jsroot_dialog_block { z-index: 100000; position: absolute; top: 0; left: 0; right: 0; bottom: 0; opacity: 0.2; background-color: white; }`+
-         `.jsroot_dialog { z-index: 100001; position: absolute; left: 50%; top: 50%; }`+
-         `.jsroot_dialog_body { position: relative; left: -50%; top: -50%; border: solid green 3px; padding: 5px; display: flex; flex-flow: column; background-color: white; }`+
-         `.jsroot_dialog_header { flex: 0 1 auto; padding: 5px; }`+
-         `.jsroot_dialog_content { flex: 1 1 auto; padding: 5px; }`+
-         `.jsroot_dialog_footer { flex: 0 1 auto; padding: 5px; }`+
-         `.jsroot_dialog_button { float: right; margin-right: 1em; }`, element.node());
+         `<div style='position: relative; left: -50%; top: -50%; border: solid green 3px; padding: 5px; display: flex; flex-flow: column; background-color: white'>`+
+           `<div style='flex: 0 1 auto; padding: 5px'>${title}</div>`+
+           `<div class='jsroot_dialog_content' style='flex: 1 1 auto; padding: 5px'>${main_content}</div>`+
+           `<div class='jsroot_dialog_footer' style='flex: 0 1 auto; padding: 5px'>`+
+              `<button class='jsroot_dialog_button' style='float: right; margin-right: 1em'>Ok</button>`+
+              (args.btns ? `<button class='jsroot_dialog_button' style='float: right; margin-right: 1em'>Cancel</button>` : '') +
+         `</div></div>`);
 
       return new Promise(resolveFunc => {
          element.on('keyup', evnt => {
@@ -1341,7 +1367,7 @@ class StandaloneMenu extends JSRootMenu {
   * @param {object} [handler] - object with handling function, in this case one not need to bind function
   * @param {string} [menuname] - optional menu name
   * @example
-  * import { createMenu } from 'path_to_jsroot/modules/gui/menu.mjs';
+  * import { createMenu } from 'https://root.cern/js/latest/modules/gui/menu.mjs';
   * let menu = await createMenu());
   * menu.add('First', () => console.log('Click first'));
   * let flag = true;
@@ -1355,16 +1381,18 @@ function createMenu(evnt, handler, menuname) {
 /** @summary Close previousely created and shown JSROOT menu
   * @param {string} [menuname] - optional menu name */
 function closeMenu(menuname) {
-   let x = document.getElementById(menuname || 'root_ctx_menu');
-   if (x) { x.parentNode.removeChild(x); return true; }
-   return false;
+   let element = document.getElementById(menuname || 'root_ctx_menu');
+   element?.remove();
+   return !!element;
 }
 
 /** @summary Fill and show context menu for painter object
   * @private */
 function showPainterMenu(evnt, painter, kind) {
-   evnt.stopPropagation(); // disable main context menu
-   evnt.preventDefault();  // disable browser context menu
+   if (isFunc(evnt.stopPropagation)) {
+      evnt.stopPropagation(); // disable main context menu
+      evnt.preventDefault();  // disable browser context menu
+   }
 
    createMenu(evnt, painter).then(menu => {
       painter.fillContextMenu(menu);
@@ -1375,7 +1403,7 @@ function showPainterMenu(evnt, painter, kind) {
 /** @summary Assign handler for context menu for painter draw element
   * @private */
 function assignContextMenu(painter, kind) {
-   if (!isBatchMode() && painter?.draw_g)
+   if (!painter?.isBatchMode() && painter?.draw_g)
       painter.draw_g.on('contextmenu', settings.ContextMenu ? evnt => showPainterMenu(evnt, painter, kind) : null);
 }
 

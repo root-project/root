@@ -88,8 +88,8 @@ class TSplinePainter extends ObjectPainter {
             ymax = Math.max(knot.fY, ymax);
          });
 
-         if (ymax > 0.0) ymax *= (1 + gStyle.fHistTopMargin);
-         if (ymin < 0.0) ymin *= (1 + gStyle.fHistTopMargin);
+         if (ymax > 0) ymax *= (1 + gStyle.fHistTopMargin);
+         if (ymin < 0) ymin *= (1 + gStyle.fHistTopMargin);
       }
 
       let histo = create(clTH1I);

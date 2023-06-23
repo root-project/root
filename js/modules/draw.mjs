@@ -5,10 +5,10 @@ import { loadScript, findFunction, internals, getPromise, isNodeJs, isObject, is
          clTText, clTLine, clTBox, clTLatex, clTMathText, clTAnnotation, clTMultiGraph, clTH2, clTF1, clTF2, clTProfile, clTProfile2D,
          clTColor, clTHStack, clTGraph, clTGraph2DErrors, clTGraph2DAsymmErrors,
          clTGraphPolar, clTGraphPolargram, clTGraphTime, clTCutG, clTPolyLine, clTPolyLine3D, clTPolyMarker3D,
-         clTPad, clTStyle, clTCanvas, clTGaxis, clTGeoVolume, nsREX } from './core.mjs';
+         clTPad, clTStyle, clTCanvas, clTGaxis, clTGeoVolume, nsREX, atob_func } from './core.mjs';
 import { clTStreamerInfoList } from './io.mjs';
 import { clTBranchFunc } from './tree.mjs';
-import { BasePainter, compressSVG, _loadJSDOM } from './base/BasePainter.mjs';
+import { BasePainter, compressSVG, svgToImage, _loadJSDOM } from './base/BasePainter.mjs';
 import { ObjectPainter, cleanup, drawRawText, getElementCanvPainter, getElementMainPainter } from './base/ObjectPainter.mjs';
 import { TPadPainter, clTButton } from './gpad/TPadPainter.mjs';
 
@@ -288,7 +288,11 @@ function getDrawSettings(kind, selector) {
    return res;
 }
 
-/** @summary Set default draw option for provided class */
+/** @summary Set default draw option for provided class
+  * @example
+  import { setDefaultDrawOpt } from 'https://root.cern/js/latest/modules/draw.mjs';
+  setDefaultDrawOpt('TH1', 'text');
+  setDefaultDrawOpt('TH2', 'col');  */
 function setDefaultDrawOpt(classname, opt) {
    let handle = getDrawHandle(prROOT + classname, 0);
    if (handle)
@@ -303,6 +307,8 @@ function setDefaultDrawOpt(classname, opt) {
   * @public
   * @desc An extensive list of support draw options can be found on [examples page]{@link https://root.cern/js/latest/examples.htm}
   * @example
+  * import { openFile } from 'https://root.cern/js/latest/modules/io.mjs';
+  * import { draw } from 'https://root.cern/js/latest/modules/draw.mjs';
   * let file = await openFile('https://root.cern/js/files/hsimple.root');
   * let obj = await file.readObject('hpxpy;1');
   * await draw('drawing', obj, 'colz;logx;gridx;gridy'); */
@@ -420,7 +426,18 @@ async function draw(dom, obj, opt) {
   * @return {Promise} with painter object
   * @desc If drawing was not done before, it will be performed with {@link draw}.
   * Otherwise drawing content will be updated
-  * @public */
+  * @public
+  * @example
+  * import { openFile } from 'https://root.cern/js/latest/modules/io.mjs';
+  * import { draw, redraw } from 'https://root.cern/js/latest/modules/draw.mjs';
+  * let file = await openFile('https://root.cern/js/files/hsimple.root');
+  * let obj = await file.readObject('hpxpy;1');
+  * await draw('drawing', obj, 'colz');
+  * let cnt = 0;
+  * setInterval(() => {
+  *    obj.fTitle = `Next iteration ${cnt++}`;
+  *    redraw('drawing', obj, 'colz');
+  * }, 1000); */
 async function redraw(dom, obj, opt) {
 
    if (!isObject(obj))
@@ -512,23 +529,36 @@ function addStreamerInfosForPainter(lst) {
    });
 }
 
-
-/** @summary Create SVG image for provided object.
+/** @summary Create SVG/PNG/JPEG image for provided object.
   * @desc Function especially useful in Node.js environment to generate images for
-  * supported ROOT classes
-  * @param {object} args - contains different settings
+  * supported ROOT classes, but also can be used from web browser
+  * @param {object} args - function settings
   * @param {object} args.object - object for the drawing
-  * @param {string} [args.option] - draw options
+  * @param {string} [args.format = 'svg'] - image format like 'svg' (default), 'png' or 'jpeg'
+  * @param {string} [args.option = ''] - draw options
   * @param {number} [args.width = 1200] - image width
   * @param {number} [args.height = 800] - image height
+  * @param {boolean} [args.as_buffer = false] - returns image as Buffer instance, can store directly to file
   * @param {boolean} [args.use_canvas_size = false] - if configured used size stored in TCanvas object
-  * @return {Promise} with svg code */
-async function makeSVG(args) {
-
+  * @return {Promise} with image code - svg as is, png/jpeg as base64 string or buffer (if as_buffer) specified
+  * @example
+  * // how makeImage can be used in node.js
+  * import { openFile, makeImage } from 'jsroot';
+  * let file = await openFile('https://root.cern/js/files/hsimple.root');
+  * let object = await file.readObject('hpxpy;1');
+  * let png64 = await makeImage({ format: 'png', object, option: 'colz', width: 1200, height: 800 });
+  * let pngbuf = await makeImage({ format: 'png', as_buffer: true, object, option: 'colz', width: 1200, height: 800 }); */
+async function makeImage(args) {
    if (!args) args = {};
-   if (!args.object) return Promise.reject(Error('No object specified to generate SVG'));
-   if (!args.width) args.width = 1200;
-   if (!args.height) args.height = 800;
+
+   if (!isObject(args.object))
+      return Promise.reject(Error('No object specified to generate SVG'));
+   if (!args.format)
+      args.format = 'svg';
+   if (!args.width)
+      args.width = 1200;
+   if (!args.height)
+      args.height = 800;
 
    if (args.use_canvas_size && (args.object?._typename == clTCanvas) && args.object.fCw && args.object.fCh) {
       args.width = args.object?.fCw;
@@ -538,17 +568,38 @@ async function makeSVG(args) {
    async function build(main) {
 
       main.attr('width', args.width).attr('height', args.height)
-          .style('width', args.width + 'px').style('height', args.height + 'px');
+          .style('width', args.width + 'px').style('height', args.height + 'px')
+          .property('_batch_mode', true)
+          .property('_batch_format', args.format != 'svg' ? args.format : null);
 
-      internals.svg_3ds = undefined;
+      function complete(res) {
+         cleanup(main.node());
+         main.remove();
+         return res;
+      }
 
       return draw(main.node(), args.object, args.option || '').then(() => {
 
-         let has_workarounds = internals.svg_3ds && internals.processSvgWorkarounds;
+         if (args.format != 'svg') {
+            let only_img = main.select('svg').selectChild('image');
+            if (!only_img.empty()) {
+               let href = only_img.attr('href');
+
+               if (args.as_buffer) {
+                  let p = href.indexOf('base64,'),
+                      str = atob_func(href.slice(p + 7)),
+                      buf = new ArrayBuffer(str.length),
+                      bufView = new Uint8Array(buf);
+                  for (let i = 0; i < str.length; i++)
+                     bufView[i] = str.charCodeAt(i);
+                  return isNodeJs() ? Buffer.from(buf) : buf;
+               }
+               return href;
+            }
+         }
 
          main.select('svg')
              .attr('xmlns', 'http://www.w3.org/2000/svg')
-             .attr('xmlns:xlink', 'http://www.w3.org/1999/xlink')
              .attr('width', args.width)
              .attr('height', args.height)
              .attr('style', null).attr('class', null).attr('x', null).attr('y', null);
@@ -558,31 +609,43 @@ async function makeSVG(args) {
             if (elem.style('display') == 'none') elem.remove();
          };
 
-         // remove containers with display: none
-         if (has_workarounds)
-            main.selectAll('g.root_frame').each(clear_element);
-
+         main.selectAll('g.root_frame').each(clear_element);
          main.selectAll('svg').each(clear_element);
 
-         let svg = main.html();
+         let svg = compressSVG(main.html());
 
-         if (has_workarounds)
-            svg = internals.processSvgWorkarounds(svg);
+         if (args.format == 'svg')
+            return complete(svg);
 
-         svg = compressSVG(svg);
-
-         cleanup(main.node());
-
-         main.remove();
-
-         return svg;
+         return svgToImage(svg, args.format, args.as_buffer).then(complete);
       });
    }
 
-   if (!isNodeJs())
-      return build(d3_select('body').append('div').style('visible', 'hidden'));
+   return isNodeJs() ? _loadJSDOM().then(handle => build(handle.body.append('div')))
+                     : build(d3_select('body').append('div').style('display', 'none'));
+}
 
-   return _loadJSDOM().then(handle => build(handle.body.append('div')));
+
+/** @summary Create SVG image for provided object.
+  * @desc Function especially useful in Node.js environment to generate images for
+  * supported ROOT classes
+  * @param {object} args - function settings
+  * @param {object} args.object - object for the drawing
+  * @param {string} [args.option] - draw options
+  * @param {number} [args.width = 1200] - image width
+  * @param {number} [args.height = 800] - image height
+  * @param {boolean} [args.use_canvas_size = false] - if configured used size stored in TCanvas object
+  * @return {Promise} with svg code
+  * @example
+  * // how makeSVG can be used in node.js
+  * import { openFile, makeSVG } from 'jsroot';
+  * let file = await openFile('https://root.cern/js/files/hsimple.root');
+  * let object = await file.readObject('hpxpy;1');
+  * let svg = await makeSVG({ object, option: 'lego2,pal50', width: 1200, height: 800 }); */
+async function makeSVG(args) {
+   if (!args) args = {};
+   args.format = 'svg';
+   return makeImage(args);
 }
 
 internals.addDrawFunc = addDrawFunc;
@@ -631,4 +694,4 @@ async function drawRooPlot(dom, plot) {
 }
 
 export { addDrawFunc, getDrawHandle, canDrawHandle, getDrawSettings, setDefaultDrawOpt,
-         draw, redraw, cleanup, makeSVG, drawRooPlot, assignPadPainterDraw };
+         draw, redraw, cleanup, makeSVG, makeImage, drawRooPlot, assignPadPainterDraw };

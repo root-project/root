@@ -594,13 +594,13 @@ class RCanvasPainter extends RPadPainter {
 
       let btns = this.brlayout.createBrowserBtns();
 
-      ToolbarIcons.createSVG(btns, ToolbarIcons.diamand, 15, 'toggle fix-pos mode')
+      ToolbarIcons.createSVG(btns, ToolbarIcons.diamand, 15, 'toggle fix-pos mode', 'browser')
                   .style('margin','3px').on('click', () => this.brlayout.toggleKind('fix'));
 
-      ToolbarIcons.createSVG(btns, ToolbarIcons.circle, 15, 'toggle float mode')
+      ToolbarIcons.createSVG(btns, ToolbarIcons.circle, 15, 'toggle float mode', 'browser')
                   .style('margin','3px').on('click', () => this.brlayout.toggleKind('float'));
 
-      ToolbarIcons.createSVG(btns, ToolbarIcons.cross, 15, 'delete GED')
+      ToolbarIcons.createSVG(btns, ToolbarIcons.cross, 15, 'delete GED', 'browser')
                   .style('margin','3px').on('click', () => this.removeGed());
 
       // be aware, that jsroot_browser_hierarchy required for flexible layout that element use full browser area
@@ -652,7 +652,7 @@ class RCanvasPainter extends RPadPainter {
 
    /** @summary resize browser window to get requested canvas sizes */
    resizeBrowser(canvW, canvH) {
-      if (!canvW || !canvH || isBatchMode() || this.embed_canvas || this.batch_mode)
+      if (!canvW || !canvH || this.isBatchMode() || this.embed_canvas || this.batch_mode)
          return;
 
       let rect = getElementRect(this.selectDom('origin'));
@@ -709,7 +709,8 @@ function drawRPadSnapshot(dom, snap /*, opt*/) {
   * @param {Object} painter  - painter object to process
   * @param {string|boolean} frame_kind  - false for no frame or '3d' for special 3D mode
   * @desc Assigns DOM, creates and draw RCanvas and RFrame if necessary, add painter to pad list of painters
-  * @return {Promise} for ready */
+  * @return {Promise} for ready
+  * @private */
 async function ensureRCanvas(painter, frame_kind) {
    if (!painter)
       return Promise.reject(Error('Painter not provided in ensureRCanvas'));
@@ -765,11 +766,10 @@ function drawRFrameTitle(reason, drag) {
 
    this.drawText(arg);
 
-   return this.finishTextDrawing().then(() => {
-      if (!isBatchMode())
-        addDragHandler(this, { x: fx, y: Math.round(fy-title_margin-title_height), width: title_width, height: title_height,
-                               minwidth: 20, minheight: 20, no_change_x: true, redraw: d => this.redraw('drag', d) });
-   });
+   return this.finishTextDrawing().then(() =>
+      addDragHandler(this, { x: fx, y: Math.round(fy-title_margin-title_height), width: title_width, height: title_height,
+                             minwidth: 20, minheight: 20, no_change_x: true, redraw: d => this.redraw('drag', d) })
+   );
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////

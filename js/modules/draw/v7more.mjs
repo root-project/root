@@ -1,4 +1,4 @@
-import { addMethods, settings, isBatchMode, nsREX } from '../core.mjs';
+import { addMethods, settings, nsREX } from '../core.mjs';
 import { select as d3_select, rgb as d3_rgb, pointer as d3_pointer } from '../d3.mjs';
 import { makeTranslate } from '../base/BasePainter.mjs';
 import { RObjectPainter } from '../base/RObjectPainter.mjs';
@@ -214,7 +214,7 @@ class RPalettePainter extends RObjectPainter {
 
       let promise = framep.z_handle.drawAxis(this.draw_g, makeTranslate(vertical ? palette_width : 0, palette_height), vertical ? -1 : 1);
 
-      if (isBatchMode() || drag)
+      if (this.isBatchMode() || drag)
          return promise;
 
       return promise.then(() => {

@@ -1,4 +1,4 @@
-import { decodeUrl, settings, constants, gStyle, internals, findFunction, parse, isFunc, isStr } from './core.mjs';
+import { decodeUrl, settings, constants, gStyle, internals, findFunction, parse, isFunc, isStr, isObject } from './core.mjs';
 import { select as d3_select } from './d3.mjs';
 import { HierarchyPainter } from './gui/HierarchyPainter.mjs';
 import { readSettings, readStyle } from './gui/utils.mjs';
@@ -146,7 +146,7 @@ function readStyleFromURL(url) {
   * @param {String} gui_kind - either 'online', 'nobrowser', 'draw'
   * @return {Promise} with {@link HierarchyPainter} instance
   * @example
-  * import { buildGUI } from '/path_to_jsroot/modules/gui.mjs';
+  * import { buildGUI } from 'https://root.cern/js/latest/modules/gui.mjs';
   * buildGUI('guiDiv'); */
 async function buildGUI(gui_element, gui_kind = '') {
    let myDiv = d3_select(isStr(gui_element) ? `#${gui_element}` : gui_element);
@@ -195,12 +195,14 @@ async function buildGUI(gui_element, gui_kind = '') {
          return hpainter.initializeBrowser();
       if (!drawing)
          return;
-      let obj = null, func = internals.getCachedObject || findFunction('GetCachedObject');
+      let obj, func = internals.getCachedObject || findFunction('GetCachedObject');
       if (isFunc(func))
          obj = parse(func());
-      if (obj) hpainter._cached_draw_object = obj;
+      if (isObject(obj))
+         hpainter._cached_draw_object = obj;
       let opt = d.get('opt', '');
-      if (d.has('websocket')) opt+=';websocket';
+      if (d.has('websocket'))
+         opt += ';websocket';
       return hpainter.display('', opt);
    }).then(() => hpainter);
 }

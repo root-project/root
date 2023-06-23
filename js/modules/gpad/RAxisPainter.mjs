@@ -1,4 +1,4 @@
-import { settings, isBatchMode, isFunc } from '../core.mjs';
+import { settings, isFunc } from '../core.mjs';
 import { select as d3_select, pointer as d3_pointer,
          drag as d3_drag, timeFormat as d3_timeFormat,
          scaleTime as d3_scaleTime, scaleSymlog as d3_scaleSymlog,
@@ -414,7 +414,7 @@ class RAxisPainter extends RObjectPainter {
 
    /** @summary Add interactive elements to draw axes title */
    addTitleDrag(title_g, side) {
-      if (!settings.MoveResize || isBatchMode()) return;
+      if (!settings.MoveResize || this.isBatchMode()) return;
 
       let drag_rect = null,
           acc_x, acc_y, new_x, new_y, alt_pos, curr_indx,
@@ -735,7 +735,7 @@ class RAxisPainter extends RObjectPainter {
 
    /** @summary Add zomming rect to axis drawing */
    addZoomingRect(axis_g, side, lgaps) {
-      if (settings.Zooming && !this.disable_zooming && !isBatchMode()) {
+      if (settings.Zooming && !this.disable_zooming && !this.isBatchMode()) {
          let sz = Math.max(lgaps[side], 10),
              d = this.vertical ? `v${this.gr_range}h${-side*sz}v${-this.gr_range}`
                                : `h${this.gr_range}v${side*sz}h${-this.gr_range}`;
@@ -981,7 +981,7 @@ class RAxisPainter extends RObjectPainter {
 
       let promise = this.drawAxis(this.draw_g, makeTranslate(pos.x, pos.y));
 
-      if (isBatchMode()) return promise;
+      if (this.isBatchMode()) return promise;
 
       return promise.then(() => {
          if (settings.ContextMenu)

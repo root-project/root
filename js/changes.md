@@ -1,6 +1,17 @@
 # JSROOT changelog
 
-## Changes in dev
+## Changed in dev
+
+1. Correctly implement TH2 projections like MERCATOR or PARABOLIC
+2. Use https://github.com/georgealways/lil-gui/ instead of dat.GUI
+3. Let configure material and scene properties in geom control gui
+4. Upgrade three.js r151 -> r153
+5. Let toggle vertical/horizontal flag for color palette via context menu
+6. Provide "Bring to front" menu command for title/stats/palette/legend objects
+7. Handle "dark mode" in geom painter - automatically adjust background
+
+
+## Changes in 7.4.0
 1. Upgrade d3.js v7.6.1 -> v7.8.4
 2. Upgrade three.js r146 -> r151
 3. Support `[cutg]` draw option for TH2
@@ -26,10 +37,25 @@
 23. Support labels rotation for simple axis in geometry
 24. Support many orthographic cameras with overlayed grid/labels
 25. Support InstancedMesh for TGeo drawing, let show really large geometries
-26. Fix - rescan sumw2 when update TH1
-27. Fix - correct placing for TLegend header
-28. Fix - correctly align sub/super scripts in complex TLatex
-29. Fix - failure in normal_cdf calculation
+26. Implement 'inject=path/script_name.js' url option to inject scripts without emulating of v6
+27. Exclude 'HEAD' http request when reading ROOT file, all necessary info can be get from first real HTTP request
+28. Provide makeImage function for generation of svg, png and jpeg images in batch and interactively (#257)
+29. Implement interactive zoom shifting when middle-mouse button down or single-touch moving
+30. Several improvements for touch devices or devices with small displays
+31. Remove settings.FrameNDC, use Style.fPadLeft/Right/Top/BottomMargin values instead
+32. Fix - rescan sumw2 when update TH1
+33. Fix - correct placing for TLegend header
+34. Fix - correctly align sub/super scripts in complex TLatex
+35. Fix - correctly set visibility level for geo drawing (#258)
+36. Fix - use more factor for number of nodes in geo drawing (#258)
+
+
+## Changes in 7.3.4
+1. Fix - failure in normal_cdf calculation
+2. Fix - check in TTree::Draw for null buffer
+3. Fix - do not rise exception in treeProcess
+4. Fix - RH1 zero line drawing only when required
+5. Fix - do not allow move float browser too far left/top
 
 
 ## Changes in 7.3.2
