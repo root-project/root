@@ -3280,7 +3280,14 @@ static int callback_for_dl_iterate_phdr(struct dl_phdr_info *info, size_t size, 
       // Skip \0, "", and kernel pseudo-libs linux-vdso.so.1 or linux-gate.so.1
       if (info->dlpi_name && info->dlpi_name[0]
 #if defined(R__FBSD)
-          && strstr(info->dlpi_name, "[vdso]")
+          //skip the executable (with null addr)
+          && info->dlpi_addr
+          //has no path
+          && strncmp(info->dlpi_name, "[vdso]", 6)
+          //the linker does not like to be mmapped
+          //causes a crash in cling::DynamicLibraryManager::loadLibrary())
+          //with error message "mmap of entire address space failed: Cannot allocate memory"
+          && strncmp(info->dlpi_name, "/libexec/ld-elf.so.1", 20)
 #endif
           && strncmp(info->dlpi_name, "linux-vdso.so", 13)
           && strncmp(info->dlpi_name, "linux-vdso32.so", 15)
