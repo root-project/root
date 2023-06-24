@@ -190,6 +190,7 @@ public:
 
    static std::unique_ptr<JSONTree> create();
    static std::unique_ptr<JSONTree> create(std::istream &is);
+   static std::unique_ptr<JSONTree> create(std::string const &str);
 
    static std::string getBackend();
    static void setBackend(std::string const &name);
@@ -201,6 +202,9 @@ private:
    enum class Backend { NlohmannJson, Ryml };
 
    static Backend &getBackendEnum();
+
+   template <typename... Args>
+   static std::unique_ptr<JSONTree> createImpl(Args &&...args);
 };
 
 std::ostream &operator<<(std::ostream &os, RooFit::Detail::JSONNode const &s);
