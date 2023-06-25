@@ -2241,7 +2241,7 @@ SEARCH_INCLUDES        = YES
 # This tag requires that the tag SEARCH_INCLUDES is set to YES.
 
 INCLUDE_PATH           = ../../core/base/inc ../../core/meta/inc \
-                         ../../bindings/r/inc ../../interpreter/llvm/src/tools/clang/include \
+                         ../../bindings/r/inc ../../interpreter/llvm-project/clang/include \
                          ../../graf2d/graf/inc ../../graf2d/gpadv7/inc ../../tmva/tmva/inc \
                          ../../hist/hist/inc ../../io/io/inc \
                          ../../tree/tree/inc ../../roofit/roostats/inc \
