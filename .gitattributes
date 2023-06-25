@@ -14,7 +14,7 @@
 tree/dataframe/test/RCsvDS_test_win.csv  eol=crlf
 
 # Files in the LLVM monorepo are not normalized, avoid whitespace diffs.
-interpreter/llvm/** -text
+interpreter/llvm-project/** -text
 
 # Denote all files that are truly binary and should not be modified.
 *.png binary

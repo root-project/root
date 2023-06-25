@@ -58,7 +58,7 @@
 #include "llvm/Support/FileSystem.h"
 
 // Intentionally access non-public header ...
-#include "../../../interpreter/llvm/src/tools/clang/lib/Sema/HackForDefaultTemplateArg.h"
+#include "../../../interpreter/llvm-project/clang/lib/Sema/HackForDefaultTemplateArg.h"
 
 #include "TClingUtils.h"
 
