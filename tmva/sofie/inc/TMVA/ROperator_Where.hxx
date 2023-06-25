@@ -25,8 +25,8 @@ private:
 
 public:
    ROperator_Where(){}
-   ROperator_Where(std::string nameX, std::string nameY, std::string nameCondition, std::string nameOutput):
-      fNX(UTILITY::Clean_name(nameX)), fNY(UTILITY::Clean_name(nameY)), fNCondition(UTILITY::Clean_name(nameCondition)), fNOutput(UTILITY::Clean_name(nameOutput)){}
+   ROperator_Where(std::string nameCondition, std::string nameX, std::string nameY, std::string nameOutput):
+      fNCondition(UTILITY::Clean_name(nameCondition)), fNX(UTILITY::Clean_name(nameX)), fNY(UTILITY::Clean_name(nameY)), fNOutput(UTILITY::Clean_name(nameOutput)){}
 
    std::vector<ETensorType> TypeInference(std::vector<ETensorType> input){
       return input;

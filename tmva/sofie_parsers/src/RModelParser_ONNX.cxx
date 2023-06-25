@@ -287,7 +287,7 @@ RModel RModelParser_ONNX::Parse(std::string filename, bool verbose)
       std::string input_name = valueinfoproto.name();
 
       ETensorType type = static_cast<ETensorType>(valueinfoproto.type().tensor_type().elem_type());
-      if (type != ETensorType::FLOAT && type != ETensorType::INT32 && type != ETensorType::INT64) {
+      if (type != ETensorType::FLOAT && type != ETensorType::INT32 && type != ETensorType::INT64 && type!= ETensorType::BOOL) {
          throw std::runtime_error("TMVA::SOFIE Data type in input tensor " + input_name + " not supported!\n");
       }
 

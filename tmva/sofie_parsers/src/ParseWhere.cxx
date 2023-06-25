@@ -6,22 +6,25 @@ namespace TMVA {
 namespace Experimental {
 namespace SOFIE {
 
-ParserFuncSignature ParseSigmoid = [](RModelParser_ONNX &parser, const onnx::NodeProto &nodeproto) {
+ParserFuncSignature ParseWhere = [](RModelParser_ONNX &parser, const onnx::NodeProto &nodeproto) {
    ETensorType input_type;
 
     for (int i = 0; i < 3; ++i) {
       auto input_name = nodeproto.input(i);
       if (parser.IsRegisteredTensorType(input_name)) {
          // according to ONNX both inputs have same type
+         if(i == 0){
+            input_type = ETensorType::BOOL;
+         }
          if (i == 1)
             input_type = parser.GetTensorType(input_name);
-         else
+         else if(i == 2)
             if (input_type != parser.GetTensorType(input_name)) {
                throw
-                  std::runtime_error("TMVA::SOFIE ONNX parser Binary op has input tensors of different types");
+                  std::runtime_error("TMVA::SOFIE ONNX parser Where op has input tensors of different types");
             }
       } else {
-         throw std::runtime_error("TMVA::SOFIE ONNX Parser Binary op has input tensor " + input_name +
+         throw std::runtime_error("TMVA::SOFIE ONNX Parser Where op has input tensor " + input_name +
                                   " but its type is not yet registered");
       }
    }
