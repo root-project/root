@@ -959,6 +959,7 @@ static TString GetUrlForMethod(const TString &scopeName, const TString &methodNa
 TString TApplication::GetSetup()
 {
    std::vector<TString> lines;
+   lines.emplace_back("```");
    lines.emplace_back(TString::Format("ROOT v%s",
                                       gROOT->GetVersion()));
    lines.emplace_back(TString::Format("Built for %s on %s", gSystem->GetBuildArch(), gROOT->GetGitDate()));
@@ -984,6 +985,7 @@ TString TApplication::GetSetup()
    lines.emplace_back(TString::Format("With %s",
                                       gSystem->GetBuildCompilerVersionStr()));
    lines.emplace_back("Binary directory: "+ gROOT->GetBinDir());
+   lines.emplace_back("```");
    TString setup = "";
    for (auto& line : lines) {
       setup.Append(line);
