@@ -101,8 +101,10 @@ TEST(RooFuncWrapper, GaussianNormalized)
    RooRealVar &mu = *ws.var("mu");
 
    RooArgSet normSet{x};
+   std::unique_ptr<RooAbsReal> gaussNormalized = RooFit::Detail::compileForNormSet(gauss, normSet);
 
-   RooFuncWrapper gaussFunc("myGauss3", "myGauss3", gauss, normSet, nullptr, nullptr, true);
+   RooFuncWrapper gaussFunc("myGauss3", "myGauss3", *gaussNormalized, nullptr, nullptr, false);
+   gaussFunc.createGradient();
 
    RooArgSet paramsGauss;
    gauss.getParameters(nullptr, paramsGauss);
@@ -142,7 +144,10 @@ TEST(RooFuncWrapper, Exponential)
 
       RooArgSet normSet{x};
 
-      RooFuncWrapper expoFunc(name.c_str(), name.c_str(), expo, normSet, nullptr, nullptr, true);
+      std::unique_ptr<RooAbsReal> expoNormalized = RooFit::Detail::compileForNormSet(expo, normSet);
+
+      RooFuncWrapper expoFunc(name.c_str(), name.c_str(), *expoNormalized, nullptr, nullptr, false);
+      expoFunc.createGradient();
 
       RooArgSet params;
       expo.getParameters(nullptr, params);
