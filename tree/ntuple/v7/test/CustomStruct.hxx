@@ -8,6 +8,7 @@
 #include <string>
 #include <variant>
 #include <vector>
+#include <set>
 
 /**
  * Used to test serialization and deserialization of classes in RNTuple with TClass
@@ -29,6 +30,10 @@ struct CustomStruct {
    std::vector<float> v1;
    std::vector<std::vector<float>> v2;
    std::string s;
+
+   bool operator <(const CustomStruct& c) const {
+      return a < c.a;
+   }
 };
 
 struct DerivedA : public CustomStruct {

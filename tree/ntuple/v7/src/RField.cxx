@@ -446,7 +446,7 @@ ROOT::Experimental::Detail::RFieldBase::Create(const std::string &fieldName, con
    } else if (canonicalType.substr(0, 9) == "std::set<") {
       std::string itemTypeName = canonicalType.substr(9, canonicalType.length() - 10);
       auto itemField = Create("_0", itemTypeName);
-      result = std::make_unique<RSetField>(fieldName, itemField.Unwrap());   
+      result = std::make_unique<RSetField>(fieldName, itemField.Unwrap());
    } else if (canonicalType == ":Collection:") {
       // TODO: create an RCollectionField?
       result = std::make_unique<RField<ClusterSize_t>>(fieldName);
@@ -1462,9 +1462,9 @@ void ROOT::Experimental::REnumField::AcceptVisitor(Detail::RFieldVisitor &visito
 
 //------------------------------------------------------------------------------
 
-ROOT::Experimental::RCollectionClassField::RCollectionIterableOnce::RIteratorFuncs
-ROOT::Experimental::RCollectionClassField::RCollectionIterableOnce::GetIteratorFuncs(TVirtualCollectionProxy *proxy,
-                                                                                     bool readFromDisk)
+ROOT::Experimental::RProxiedCollectionField::RCollectionIterableOnce::RIteratorFuncs
+ROOT::Experimental::RProxiedCollectionField::RCollectionIterableOnce::GetIteratorFuncs(TVirtualCollectionProxy *proxy,
+                                                                                       bool readFromDisk)
 {
    RIteratorFuncs ifuncs;
    ifuncs.fCreateIterators = proxy->GetFunctionCreateIterators(readFromDisk);
@@ -1475,13 +1475,13 @@ ROOT::Experimental::RCollectionClassField::RCollectionIterableOnce::GetIteratorF
    return ifuncs;
 }
 
-ROOT::Experimental::RCollectionClassField::RCollectionClassField(std::string_view fieldName, std::string_view className)
-   : RCollectionClassField(fieldName, className, TClass::GetClass(std::string(className).c_str()))
+ROOT::Experimental::RProxiedCollectionField::RProxiedCollectionField(std::string_view fieldName, std::string_view className)
+   : RProxiedCollectionField(fieldName, className, TClass::GetClass(std::string(className).c_str()))
 {
 }
 
-ROOT::Experimental::RCollectionClassField::RCollectionClassField(std::string_view fieldName, std::string_view className,
-                                                                 TClass *classp)
+ROOT::Experimental::RProxiedCollectionField::RProxiedCollectionField(std::string_view fieldName, std::string_view className,
+                                                                     TClass *classp)
    : ROOT::Experimental::Detail::RFieldBase(fieldName, className, ENTupleStructure::kCollection, false /* isSimple */),
      fNWritten(0)
 {
@@ -1495,13 +1495,12 @@ ROOT::Experimental::RCollectionClassField::RCollectionClassField(std::string_vie
    fCollectionType = fProxy->GetCollectionType();
    if (fProxy->HasPointers())
       throw RException(R__FAIL("collection proxies whose value type is a pointer are not supported"));
-   if (fProperties & TVirtualCollectionProxy::kIsAssociative)
-      throw RException(R__FAIL("associative collections not supported"));
 
    fIFuncsRead = RCollectionIterableOnce::GetIteratorFuncs(fProxy.get(), true /* readFromDisk */);
    fIFuncsWrite = RCollectionIterableOnce::GetIteratorFuncs(fProxy.get(), false /* readFromDisk */);
 
    std::unique_ptr<ROOT::Experimental::Detail::RFieldBase> itemField;
+
    if (auto valueClass = fProxy->GetValueClass()) {
       // Element type is a class
       itemField = RFieldBase::Create("_0", valueClass->GetName()).Unwrap();
@@ -1533,15 +1532,15 @@ ROOT::Experimental::RCollectionClassField::RCollectionClassField(std::string_vie
 }
 
 std::unique_ptr<ROOT::Experimental::Detail::RFieldBase>
-ROOT::Experimental::RCollectionClassField::CloneImpl(std::string_view newName) const
+ROOT::Experimental::RProxiedCollectionField::CloneImpl(std::string_view newName) const
 {
-   auto result = std::unique_ptr<RCollectionClassField>(
-      new RCollectionClassField(newName, GetType(), fProxy->GetCollectionClass()));
+   auto result = std::unique_ptr<RProxiedCollectionField>(
+      new RProxiedCollectionField(newName, GetType(), fProxy->GetCollectionClass()));
    SyncFieldIDs(*this, *result);
    return result;
 }
 
-std::size_t ROOT::Experimental::RCollectionClassField::AppendImpl(const void *from)
+std::size_t ROOT::Experimental::RProxiedCollectionField::AppendImpl(const void *from)
 {
    std::size_t nbytes = 0;
    unsigned count = 0;
@@ -1557,7 +1556,7 @@ std::size_t ROOT::Experimental::RCollectionClassField::AppendImpl(const void *fr
    return nbytes + fColumns[0]->GetElement()->GetPackedSize();
 }
 
-void ROOT::Experimental::RCollectionClassField::ReadGlobalImpl(NTupleSize_t globalIndex, void *to)
+void ROOT::Experimental::RProxiedCollectionField::ReadGlobalImpl(NTupleSize_t globalIndex, void *to)
 {
    ClusterSize_t nItems;
    RClusterIndex collectionStart;
@@ -1577,7 +1576,7 @@ void ROOT::Experimental::RCollectionClassField::ReadGlobalImpl(NTupleSize_t glob
 }
 
 const ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations &
-ROOT::Experimental::RCollectionClassField::GetColumnRepresentations() const
+ROOT::Experimental::RProxiedCollectionField::GetColumnRepresentations() const
 {
    static RColumnRepresentations representations(
       {{EColumnType::kSplitIndex64}, {EColumnType::kIndex64}, {EColumnType::kSplitIndex32}, {EColumnType::kIndex32}},
@@ -1585,23 +1584,23 @@ ROOT::Experimental::RCollectionClassField::GetColumnRepresentations() const
    return representations;
 }
 
-void ROOT::Experimental::RCollectionClassField::GenerateColumnsImpl()
+void ROOT::Experimental::RProxiedCollectionField::GenerateColumnsImpl()
 {
    fColumns.emplace_back(Detail::RColumn::Create<ClusterSize_t>(RColumnModel(GetColumnRepresentative()[0]), 0));
 }
 
-void ROOT::Experimental::RCollectionClassField::GenerateColumnsImpl(const RNTupleDescriptor &desc)
+void ROOT::Experimental::RProxiedCollectionField::GenerateColumnsImpl(const RNTupleDescriptor &desc)
 {
    auto onDiskTypes = EnsureCompatibleColumnTypes(desc);
    fColumns.emplace_back(Detail::RColumn::Create<ClusterSize_t>(RColumnModel(onDiskTypes[0]), 0));
 }
 
-void ROOT::Experimental::RCollectionClassField::GenerateValue(void *where) const
+void ROOT::Experimental::RProxiedCollectionField::GenerateValue(void *where) const
 {
    fProxy->New(where);
 }
 
-void ROOT::Experimental::RCollectionClassField::DestroyValue(void *objPtr, bool dtorOnly) const
+void ROOT::Experimental::RProxiedCollectionField::DestroyValue(void *objPtr, bool dtorOnly) const
 {
    if (fProperties & TVirtualCollectionProxy::kNeedDelete) {
       TVirtualCollectionProxy::TPushPop RAII(fProxy.get(), objPtr);
@@ -1615,7 +1614,7 @@ void ROOT::Experimental::RCollectionClassField::DestroyValue(void *objPtr, bool 
 }
 
 std::vector<ROOT::Experimental::Detail::RFieldBase::RValue>
-ROOT::Experimental::RCollectionClassField::SplitValue(const RValue &value) const
+ROOT::Experimental::RProxiedCollectionField::SplitValue(const RValue &value) const
 {
    std::vector<RValue> result;
    TVirtualCollectionProxy::TPushPop RAII(fProxy.get(), value.GetRawPtr());
@@ -1626,14 +1625,36 @@ ROOT::Experimental::RCollectionClassField::SplitValue(const RValue &value) const
    return result;
 }
 
-void ROOT::Experimental::RCollectionClassField::CommitCluster()
+void ROOT::Experimental::RProxiedCollectionField::CommitCluster()
 {
    fNWritten = 0;
 }
 
-void ROOT::Experimental::RCollectionClassField::AcceptVisitor(Detail::RFieldVisitor &visitor) const
+void ROOT::Experimental::RProxiedCollectionField::AcceptVisitor(Detail::RFieldVisitor &visitor) const
 {
-   visitor.VisitCollectionClassField(*this);
+   visitor.VisitProxiedCollectionField(*this);
+}
+
+//------------------------------------------------------------------------------
+
+ROOT::Experimental::RCollectionClassField::RCollectionClassField(std::string_view fieldName, std::string_view className)
+   : RCollectionClassField(fieldName, className, TClass::GetClass(std::string(className).c_str()))
+{
+}
+
+ROOT::Experimental::RCollectionClassField::RCollectionClassField(std::string_view fieldName, std::string_view className,
+                                                                 TClass *classp)
+   : ROOT::Experimental::RProxiedCollectionField(fieldName, className, classp)
+{
+   if (fProperties & TVirtualCollectionProxy::kIsAssociative)
+      throw RException(R__FAIL("custom associative collection proxies not supported"));
+}
+
+std::unique_ptr<ROOT::Experimental::Detail::RFieldBase>
+ROOT::Experimental::RCollectionClassField::CloneImpl(std::string_view newName) const
+{
+   return std::unique_ptr<RCollectionClassField>(
+      new RCollectionClassField(newName, GetType(), fProxy->GetCollectionClass()));
 }
 
 //------------------------------------------------------------------------------
@@ -2548,12 +2569,8 @@ void ROOT::Experimental::RVariantField::CommitCluster()
 //------------------------------------------------------------------------------
 
 ROOT::Experimental::RSetField::RSetField(std::string_view fieldName, std::unique_ptr<Detail::RFieldBase> itemField)
-   : ROOT::Experimental::Detail::RFieldBase(fieldName, "std::set<" + itemField->GetType() + ">",
-                                            ENTupleStructure::kCollection, false /* isSimple */),
-     fItemSize(itemField->GetValueSize()),
-     fNWritten(0)
+   : ROOT::Experimental::RProxiedCollectionField(fieldName, "std::set<" + itemField->GetType() + ">")
 {
-   Attach(std::move(itemField));
 }
 
 std::unique_ptr<ROOT::Experimental::Detail::RFieldBase>
@@ -2563,71 +2580,29 @@ ROOT::Experimental::RSetField::CloneImpl(std::string_view newName) const
    return std::make_unique<RSetField>(newName, std::move(newItemField));
 }
 
-const ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations &
-ROOT::Experimental::RSetField::GetColumnRepresentations() const
+void ROOT::Experimental::RSetField::ReadGlobalImpl(NTupleSize_t globalIndex, void *to)
 {
-   static RColumnRepresentations representations(
-      {{EColumnType::kSplitIndex64}, {EColumnType::kIndex64}, {EColumnType::kSplitIndex32}, {EColumnType::kIndex32}},
-      {});
-   return representations;
-}
+   if (!fProxy->GetCollectionClass()->HasDictionary()) {
+      throw RException(R__FAIL("RField: no dictionary loaded for collection type " + GetNormalizedTypeName(fProxy->GetCollectionClass()->GetName())));
+   }
 
-void ROOT::Experimental::RSetField::GenerateColumnsImpl()
-{
-   fColumns.emplace_back(Detail::RColumn::Create<ClusterSize_t>(RColumnModel(GetColumnRepresentative()[0]), 0));
-}
+   ClusterSize_t nItems;
+   RClusterIndex collectionStart;
+   fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, &nItems);
 
-void ROOT::Experimental::RSetField::GenerateColumnsImpl(const RNTupleDescriptor &desc)
-{
-   auto onDiskTypes = EnsureCompatibleColumnTypes(desc);
-   fColumns.emplace_back(Detail::RColumn::Create<ClusterSize_t>(RColumnModel(onDiskTypes[0]), 0));
-}
+   TVirtualCollectionProxy::TPushPop RAII(fProxy.get(), to);
+   fProxy->Clear();
+   for (unsigned i = 0; i < nItems; ++i) {
+      void *item;
+      if (fProxy->GetType())
+         item = malloc(fItemSize);
+      else
+         item = fProxy->GetValueClass()->New();
 
-std::size_t ROOT::Experimental::RSetField::AppendImpl(const Detail::RFieldValue & /*value*/)
-{
-   // TODO(fdegeus)
-   R__ASSERT(false);
-   return -1;
-}
-
-void ROOT::Experimental::RSetField::ReadGlobalImpl(NTupleSize_t /*globalIndex*/, Detail::RFieldValue * /*value*/)
-{
-   // TODO(fdegeus)
-   R__ASSERT(false);
-}
-
-ROOT::Experimental::Detail::RFieldValue ROOT::Experimental::RSetField::GenerateValue(void *where)
-{
-   return Detail::RFieldValue(this, reinterpret_cast<std::set<char> *>(where));
-}
-
-void ROOT::Experimental::RSetField::DestroyValue(const Detail::RFieldValue & /*value*/, bool /*dtorOnly*/)
-{
-   // TODO(fdegeus)
-   R__ASSERT(false);
-}
-
-ROOT::Experimental::Detail::RFieldValue ROOT::Experimental::RSetField::CaptureValue(void *where)
-{
-   return Detail::RFieldValue(true /* captureFlag */, this, where);
-}
-
-std::vector<ROOT::Experimental::Detail::RFieldValue>
-ROOT::Experimental::RSetField::SplitValue(const Detail::RFieldValue & /*value*/) const
-{
-   //  TODO(fdegeus)
-   R__ASSERT(false);
-   return {};
-}
-
-void ROOT::Experimental::RSetField::CommitCluster()
-{
-   fNWritten = 0;
-}
-
-void ROOT::Experimental::RSetField::AcceptVisitor(Detail::RFieldVisitor &visitor) const
-{
-   visitor.VisitSetField(*this);
+      fSubFields[0]->Read(collectionStart + i, &item);
+      fProxy->Insert(item, to, 1);
+      free(item);
+   }
 }
 
 //------------------------------------------------------------------------------
