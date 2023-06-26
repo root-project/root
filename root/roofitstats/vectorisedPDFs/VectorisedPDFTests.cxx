@@ -94,11 +94,11 @@ void PDFTest::SetUp() {
 }
 
 void PDFTest::makeFitData() {
-  _dataFit.reset(_pdf->generate(_variables, _nEvents));
+  _dataFit = std::unique_ptr<RooDataSet>{_pdf->generate(_variables, _nEvents)};
 }
 
 void PDFTest::makeUniformData() {
-  RooDataSet* data = new RooDataSet("testData", "testData", _variables);
+  auto data = std::make_unique<RooDataSet>("testData", "testData", _variables);
   for (auto var : _variables) {
     auto lv = static_cast<RooRealVar*>(var);
     const double max = lv->getMax();
@@ -110,7 +110,7 @@ void PDFTest::makeUniformData() {
     }
   }
 
-  _dataUniform.reset(data);
+  _dataUniform = std::move(data);
 }
 
 void PDFTest::randomiseParameters(ULong_t seed) {
