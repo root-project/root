@@ -20,7 +20,7 @@ make -j8
 ```
     
 ## Usage
-SOFIE works in a parser-generator working architecture. With SOFIE, the user gets an ONNX, [Keras](https://github.com/root-project/root/blob/master/tmva/pymva/src/RModelParser_Keras.cxx) and a [PyTorch](https://github.com/root-project/root/blob/master/tmva/pymva/src/RModelParser_PyTorch.cxx) parser for translating models in respective formats into SOFIE's internal representation.
+SOFIE works in a parser-generator working architecture. With SOFIE, the user gets an [ONNX](https://github.com/root-project/root/tree/master/tmva/sofie_parsers), [Keras](https://github.com/root-project/root/blob/master/tmva/pymva/src/RModelParser_Keras.cxx) and a [PyTorch](https://github.com/root-project/root/blob/master/tmva/pymva/src/RModelParser_PyTorch.cxx) parser for translating models in respective formats into SOFIE's internal representation.
 
 From ROOT command line, or in a ROOT macro, we can proceed with an ONNX model:
 
