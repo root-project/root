@@ -683,17 +683,50 @@ bool RWebDisplayHandle::ProduceImage(const std::string &fname, const std::string
       jsrootsys = jsrootsysdflt.Data();
    }
 
-   RWebDisplayArgs args; // set default browser kind, only Chrome or Firefox or CEF or Qt5 can be used here
-   if ((args.GetBrowserKind() != RWebDisplayArgs::kFirefox ) && (args.GetBrowserKind() != RWebDisplayArgs::kCEF) &&
-       (args.GetBrowserKind() != RWebDisplayArgs::kQt5) && (args.GetBrowserKind() != RWebDisplayArgs::kQt6))
-      args.SetBrowserKind(RWebDisplayArgs::kChrome);
+   RWebDisplayArgs args; // set default browser kind, only Chrome/Firefox/Edge or CEF/Qt5/Qt6 can be used here
+   if ((args.GetBrowserKind() != RWebDisplayArgs::kFirefox) && (args.GetBrowserKind() != RWebDisplayArgs::kEdge) &&
+       (args.GetBrowserKind() != RWebDisplayArgs::kChrome) && (args.GetBrowserKind() != RWebDisplayArgs::kCEF) &&
+       (args.GetBrowserKind() != RWebDisplayArgs::kQt5) && (args.GetBrowserKind() != RWebDisplayArgs::kQt6)) {
+      bool detected = false;
+
+      auto &h1 = FindCreator("chrome", "ChromeCreator");
+      if (h1 && h1->IsActive()) {
+         args.SetBrowserKind(RWebDisplayArgs::kChrome);
+         detected = true;
+      }
+
+      if (!detected) {
+         auto &h2 = FindCreator("firefox", "FirefoxCreator");
+         if (h2 && h2->IsActive()) {
+            args.SetBrowserKind(RWebDisplayArgs::kFirefox);
+            detected = true;
+         }
+      }
+
+#ifdef _MSC_VER
+      if (!detected) {
+         auto &h3 = FindCreator("edge", "ChromeCreator");
+         if (h3 && h3->IsActive()) {
+            args.SetBrowserKind(RWebDisplayArgs::kEdge);
+            detected = true;
+         }
+      }
+#endif
+      if (!detected) {
+         R__LOG_ERROR(WebGUILog()) << "Fail to detect supported browsers for image production";
+         return false;
+      }
+   }
+
+   auto isChromeBased = (args.GetBrowserKind() == RWebDisplayArgs::kChrome) || (args.GetBrowserKind() == RWebDisplayArgs::kEdge),
+        isFirefox = args.GetBrowserKind() == RWebDisplayArgs::kFirefox;
 
    std::string draw_kind;
 
    if (EndsWith(".pdf"))
       draw_kind = "draw"; // not a JSROOT drawing but Chrome capability to create PDF out of HTML page is used
    else if (EndsWith("shot.png"))
-      draw_kind = (args.GetBrowserKind() == RWebDisplayArgs::kChrome) ? "draw" : "png";
+      draw_kind = isChromeBased ? "draw" : "png";
    else if (EndsWith(".svg"))
       draw_kind = "svg";
    else if (EndsWith(".png"))
@@ -734,11 +767,11 @@ bool RWebDisplayHandle::ProduceImage(const std::string &fname, const std::string
 
    TString dump_name;
    if (draw_kind == "draw") {
-      if (args.GetBrowserKind() != RWebDisplayArgs::kChrome) {
-         R__LOG_ERROR(WebGUILog()) << "Creation of PDF files supported only by Chrome browser";
+      if (!isChromeBased) {
+         R__LOG_ERROR(WebGUILog()) << "Creation of PDF files supported only by Chrome-based browser";
          return false;
       }
-   } else if ((args.GetBrowserKind() == RWebDisplayArgs::kChrome) || (args.GetBrowserKind() == RWebDisplayArgs::kFirefox)) {
+   } else if (isChromeBased || isFirefox) {
       dump_name = "canvasdump";
       FILE *df = gSystem->TempFileName(dump_name);
       if (!df) {
@@ -825,11 +858,11 @@ try_again:
       else
          args.SetExtraArgs("--screenshot="s + gSystem->UnixPathName(tgtfilename.Data()));
 
-   } else if (args.GetBrowserKind() == RWebDisplayArgs::kFirefox) {
+   } else if (isFirefox) {
       // firefox will use window.dump to output produced result
       args.SetRedirectOutput(dump_name.Data());
       gSystem->Unlink(dump_name.Data());
-   } else if (args.GetBrowserKind() == RWebDisplayArgs::kChrome) {
+   } else if (isChromeBased) {
       // require temporary output file
       args.SetExtraArgs("--dump-dom");
       args.SetRedirectOutput(dump_name.Data());
@@ -862,7 +895,7 @@ try_again:
 
       auto dumpcont = handle->GetContent();
 
-      if ((dumpcont.length() > 20) && (dumpcont.length() < 60) && !chrome_tmp_workaround && (args.GetBrowserKind() == RWebDisplayArgs::kChrome)) {
+      if ((dumpcont.length() > 20) && (dumpcont.length() < 60) && !chrome_tmp_workaround && isChromeBased) {
          // chrome creates dummy html file with mostly no content
          // problem running chrome from /tmp directory, lets try work from home directory
          chrome_tmp_workaround = true;
