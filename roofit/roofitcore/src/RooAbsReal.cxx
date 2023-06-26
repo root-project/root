@@ -458,7 +458,7 @@ void RooAbsReal::printMultiline(std::ostream& os, Int_t contents, bool verbose, 
 /// present function. The nuisance parameters are defined as all parameters
 /// of the function except the stated paramsOfInterest
 
-RooAbsReal* RooAbsReal::createProfile(const RooArgSet& paramsOfInterest)
+RooFit::OwningPtr<RooAbsReal> RooAbsReal::createProfile(const RooArgSet& paramsOfInterest)
 {
   // Construct name of profile object
   auto name = std::string(GetName()) + "_Profile[";
@@ -474,7 +474,8 @@ RooAbsReal* RooAbsReal::createProfile(const RooArgSet& paramsOfInterest)
   name.append("]") ;
 
   // Create and return profile object
-  return new RooProfileLL(name.c_str(),(std::string("Profile of ") + GetTitle()).c_str(),*this,paramsOfInterest) ;
+  auto out = std::make_unique<RooProfileLL>(name.c_str(),(std::string("Profile of ") + GetTitle()).c_str(),*this,paramsOfInterest);
+  return RooFit::Detail::owningPtr(std::move(out));
 }
 
 
@@ -3083,14 +3084,14 @@ void RooAbsReal::globalSelectComp(bool flag)
 /// F(x1,x2,x3,x4) returns an object f(x1,x3) that is evaluated using the
 /// current values of x2 and x4. The caller takes ownership of the returned adaptor.
 
-RooAbsFunc *RooAbsReal::bindVars(const RooArgSet &vars, const RooArgSet* nset, bool clipInvalid) const
+RooFit::OwningPtr<RooAbsFunc> RooAbsReal::bindVars(const RooArgSet &vars, const RooArgSet* nset, bool clipInvalid) const
 {
   auto binding = std::make_unique<RooRealBinding>(*this,vars,nset,clipInvalid);
   if(!binding->isValid()) {
     coutE(InputArguments) << ClassName() << "::" << GetName() << ":bindVars: cannot bind to " << vars << std::endl ;
     return nullptr;
   }
-  return binding.release();
+  return RooFit::Detail::owningPtr(std::unique_ptr<RooAbsFunc>{std::move(binding)});
 }
 
 
@@ -3230,13 +3231,13 @@ void RooAbsReal::setTreeBranchStatus(TTree& t, bool active)
 /// Create a RooRealVar fundamental object with our properties. The new
 /// object will be created without any fit limits.
 
-RooAbsArg *RooAbsReal::createFundamental(const char* newname) const
+RooFit::OwningPtr<RooAbsArg> RooAbsReal::createFundamental(const char* newname) const
 {
-  RooRealVar *fund= new RooRealVar(newname?newname:GetName(),GetTitle(),_value,getUnit());
+  auto fund = std::make_unique<RooRealVar>(newname?newname:GetName(),GetTitle(),_value,getUnit());
   fund->removeRange();
   fund->setPlotLabel(getPlotLabel());
   fund->setAttribute("fundamentalCopy");
-  return fund;
+  return RooFit::Detail::owningPtr<RooAbsArg>(std::move(fund));
 }
 
 
@@ -4234,13 +4235,15 @@ RooFit::OwningPtr<RooFitResult> RooAbsReal::chi2FitTo(RooDataHist& data, const R
 /// \param data Histogram with data
 /// \return \f$ \chi^2 \f$ variable
 
-RooAbsReal* RooAbsReal::createChi2(RooDataHist& data, const RooCmdArg& arg1,  const RooCmdArg& arg2,
-               const RooCmdArg& arg3,  const RooCmdArg& arg4, const RooCmdArg& arg5,
-               const RooCmdArg& arg6,  const RooCmdArg& arg7, const RooCmdArg& arg8)
+RooFit::OwningPtr<RooAbsReal> RooAbsReal::createChi2(RooDataHist &data, const RooCmdArg &arg1, const RooCmdArg &arg2,
+                                                     const RooCmdArg &arg3, const RooCmdArg &arg4,
+                                                     const RooCmdArg &arg5, const RooCmdArg &arg6,
+                                                     const RooCmdArg &arg7, const RooCmdArg &arg8)
 {
-  std::string name = "chi2_" + std::string(GetName()) + "_" + data.GetName();
+   std::string name = "chi2_" + std::string(GetName()) + "_" + data.GetName();
 
-  return new RooChi2Var(name.c_str(),name.c_str(),*this,data,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8) ;
+   return RooFit::Detail::owningPtr(std::make_unique<RooChi2Var>(name.c_str(), name.c_str(), *this, data, arg1, arg2,
+                                                                 arg3, arg4, arg5, arg6, arg7, arg8));
 }
 
 
@@ -4251,7 +4254,7 @@ RooAbsReal* RooAbsReal::createChi2(RooDataHist& data, const RooCmdArg& arg1,  co
 /// \param data hist data
 /// \param cmdList List with RooCmdArg() from the table
 
-RooAbsReal* RooAbsReal::createChi2(RooDataHist& data, const RooLinkedList& cmdList)
+RooFit::OwningPtr<RooAbsReal> RooAbsReal::createChi2(RooDataHist& data, const RooLinkedList& cmdList)
 {
   // Fill array of commands
   const RooCmdArg* cmds[8] ;
@@ -4350,7 +4353,7 @@ RooFit::OwningPtr<RooFitResult> RooAbsReal::chi2FitTo(RooDataSet& xydata, const 
 /// | `Integrate(bool flag)`  | Integrate function over range specified by X errors rather than take value at bin center.
 ///
 
-RooAbsReal* RooAbsReal::createChi2(RooDataSet& data, const RooCmdArg& arg1,  const RooCmdArg& arg2,
+RooFit::OwningPtr<RooAbsReal> RooAbsReal::createChi2(RooDataSet& data, const RooCmdArg& arg1,  const RooCmdArg& arg2,
                  const RooCmdArg& arg3,  const RooCmdArg& arg4, const RooCmdArg& arg5,
                  const RooCmdArg& arg6,  const RooCmdArg& arg7, const RooCmdArg& arg8)
 {
@@ -4367,7 +4370,7 @@ RooAbsReal* RooAbsReal::createChi2(RooDataSet& data, const RooCmdArg& arg1,  con
 ////////////////////////////////////////////////////////////////////////////////
 /// See RooAbsReal::createChi2(RooDataSet&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&,const RooCmdArg&)
 
-RooAbsReal* RooAbsReal::createChi2(RooDataSet& data, const RooLinkedList& cmdList)
+RooFit::OwningPtr<RooAbsReal> RooAbsReal::createChi2(RooDataSet& data, const RooLinkedList& cmdList)
 {
   // Select the pdf-specific commands
   RooCmdConfig pc("RooAbsPdf::fitTo(" + std::string(GetName()) + ")");
@@ -4378,7 +4381,7 @@ RooAbsReal* RooAbsReal::createChi2(RooDataSet& data, const RooLinkedList& cmdLis
   // Process and check varargs
   pc.process(cmdList) ;
   if (!pc.ok(true)) {
-    return 0 ;
+    return nullptr;
   }
 
   // Decode command line arguments
@@ -4387,11 +4390,13 @@ RooAbsReal* RooAbsReal::createChi2(RooDataSet& data, const RooLinkedList& cmdLis
 
   std::string name = "chi2_" + std::string(GetName()) + "_" + data.GetName();
 
+  std::unique_ptr<RooAbsReal> out;
   if (yvar) {
-    return new RooXYChi2Var(name.c_str(),name.c_str(),*this,data,*yvar,integrate) ;
+    out = std::make_unique<RooXYChi2Var>(name.c_str(),name.c_str(),*this,data,*yvar,integrate) ;
   } else {
-    return new RooXYChi2Var(name.c_str(),name.c_str(),*this,data,integrate) ;
+    out = std::make_unique<RooXYChi2Var>(name.c_str(),name.c_str(),*this,data,integrate) ;
   }
+  return RooFit::Detail::owningPtr(std::move(out));
 }
 
 
