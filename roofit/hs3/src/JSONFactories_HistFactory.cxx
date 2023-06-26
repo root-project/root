@@ -670,7 +670,7 @@ bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname
    std::map<int, double> tot_yield2;
    std::map<int, double> rel_errors;
    RooArgSet const *varSet = nullptr;
-   int nBins = 0;
+   long unsigned int nBins = 0;
 
    std::vector<Sample> samples;
 
@@ -782,16 +782,18 @@ bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname
                }
                tot_yield[idx] += sample.hist[idx - 1];
                tot_yield2[idx] += (sample.hist[idx - 1] * sample.hist[idx - 1]);
-               sample.barlowBeestonLightConstraint = constraint->IsA();
-               if (RooPoisson *constraint_p = dynamic_cast<RooPoisson *>(constraint)) {
-                  double erel = 1. / std::sqrt(constraint_p->getX().getVal());
-                  rel_errors[idx] = erel;
-               } else if (RooGaussian *constraint_g = dynamic_cast<RooGaussian *>(constraint)) {
-                  double erel = constraint_g->getSigma().getVal() / constraint_g->getMean().getVal();
-                  rel_errors[idx] = erel;
-               } else {
-                  RooJSONFactoryWSTool::error(
-                     "currently, only RooPoisson and RooGaussian are supported as constraint types");
+               if (constraint) {
+                  sample.barlowBeestonLightConstraint = constraint->IsA();
+                  if (RooPoisson *constraint_p = dynamic_cast<RooPoisson *>(constraint)) {
+                     double erel = 1. / std::sqrt(constraint_p->getX().getVal());
+                     rel_errors[idx] = erel;
+                  } else if (RooGaussian *constraint_g = dynamic_cast<RooGaussian *>(constraint)) {
+                     double erel = constraint_g->getSigma().getVal() / constraint_g->getMean().getVal();
+                     rel_errors[idx] = erel;
+                  } else {
+                     RooJSONFactoryWSTool::error(
+                        "currently, only RooPoisson and RooGaussian are supported as constraint types");
+                  }
                }
             }
             sample.use_barlowBeestonLight = true;
@@ -854,6 +856,9 @@ bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname
    std::sort(samples.begin(), samples.end(), [](auto const &l, auto const &r) { return l.name < r.name; });
 
    for (auto &sample : samples) {
+      if (sample.hist.empty()) {
+         return false;
+      }
       if (sample.use_barlowBeestonLight) {
          sample.histError.resize(sample.hist.size());
          for (auto bin : rel_errors) {
@@ -904,6 +909,12 @@ bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname
          mod["parameter"] << sys.param->GetName();
          mod["constraint"] << toString(sys.constraint);
          auto &data = mod["data"].set_map();
+         if (nBins != sys.low.size() || nBins != sys.high.size()) {
+            std::stringstream ss;
+            ss << "inconsistent binning: " << nBins << " bins expected, but " << sys.low.size() << "/"
+               << sys.high.size() << " found in nominal histogram errors!";
+            RooJSONFactoryWSTool::error(ss.str().c_str());
+         }
          RooJSONFactoryWSTool::exportArray(nBins, sys.low.data(), data["lo"].set_map()["contents"]);
          RooJSONFactoryWSTool::exportArray(nBins, sys.high.data(), data["hi"].set_map()["contents"]);
       }
@@ -934,8 +945,20 @@ bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname
          observablesWritten = true;
       }
       auto &dataNode = s["data"].set_map();
+      if (nBins != sample.hist.size()) {
+         std::stringstream ss;
+         ss << "inconsistent binning: " << nBins << " bins expected, but " << sample.hist.size()
+            << " found in nominal histogram!";
+         RooJSONFactoryWSTool::error(ss.str().c_str());
+      }
       RooJSONFactoryWSTool::exportArray(nBins, sample.hist.data(), dataNode["contents"]);
       if (!sample.histError.empty()) {
+         if (nBins != sample.histError.size()) {
+            std::stringstream ss;
+            ss << "inconsistent binning: " << nBins << " bins expected, but " << sample.histError.size()
+               << " found in nominal histogram errors!";
+            RooJSONFactoryWSTool::error(ss.str().c_str());
+         }
          RooJSONFactoryWSTool::exportArray(nBins, sample.histError.data(), dataNode["errors"]);
       }
    }
