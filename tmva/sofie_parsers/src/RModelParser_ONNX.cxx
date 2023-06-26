@@ -61,6 +61,7 @@ extern ParserFuncSignature ParseShape;
 extern ParserFuncSignature ParseMatMul;
 extern ParserFuncSignature ParseLayerNormalization;
 extern ParserFuncSignature ParseGather;
+extern ParserFuncSignature ParseErf;
 // Decalaration of fused operators
 extern ParserFuseFuncSignature ParseFuseConvAdd;
 extern ParserFuseFuncSignature ParseFuseConvTransposeAdd;
@@ -128,6 +129,7 @@ RModelParser_ONNX::RModelParser_ONNX() noexcept : fOperatorsMapImpl(std::make_un
    RegisterOperator("LayerNormalization", ParseLayerNormalization);
    RegisterOperator("Expand", ParseExpand);
    RegisterOperator("Gather", ParseGather);
+   RegisterOperator("Erf", ParseErf);
 }
 
 // Destructor of the parser
