@@ -1,26 +1,31 @@
 // Tests for the HistFactory
 // Authors: Stephan Hageboeck, CERN  01/2019
+//          Jonas Rembser, CERN  06/2023
 
-#include "RooStats/HistFactory/Measurement.h"
-#include "RooStats/HistFactory/MakeModelAndMeasurementsFast.h"
-#include "RooStats/HistFactory/Sample.h"
-#include "RooFit/ModelConfig.h"
+#include <RooStats/HistFactory/Measurement.h>
+#include <RooStats/HistFactory/MakeModelAndMeasurementsFast.h>
+#include <RooStats/HistFactory/Sample.h>
+#include <RooFit/ModelConfig.h>
 
-#include "RooFit/Common.h"
-#include "RooDataHist.h"
-#include "RooWorkspace.h"
-#include "RooArgSet.h"
-#include "RooSimultaneous.h"
-#include "RooRealSumPdf.h"
-#include "RooRealVar.h"
-#include "RooHelpers.h"
-#include "RooFitResult.h"
-#include "RooPlot.h"
+#include <RooFitHS3/JSONIO.h>
+#include <RooFitHS3/RooJSONFactoryWSTool.h>
+#include <RooFitHS3/HistFactoryJSONTool.h>
 
-#include "TROOT.h"
-#include "TFile.h"
-#include "TCanvas.h"
-#include "gtest/gtest.h"
+#include <RooFit/Common.h>
+#include <RooDataHist.h>
+#include <RooWorkspace.h>
+#include <RooArgSet.h>
+#include <RooSimultaneous.h>
+#include <RooRealSumPdf.h>
+#include <RooRealVar.h>
+#include <RooHelpers.h>
+#include <RooFitResult.h>
+#include <RooPlot.h>
+
+#include <TROOT.h>
+#include <TFile.h>
+#include <TCanvas.h>
+#include <gtest/gtest.h>
 
 // Backward compatibility for gtest version < 1.10.0
 #ifndef INSTANTIATE_TEST_SUITE_P
@@ -28,6 +33,26 @@
 #endif
 
 #include <set>
+
+namespace {
+
+// If the JSON files should be written out for debugging purpose.
+const bool writeJsonFiles = false;
+
+void setupKeys()
+{
+   static bool isAlreadySetup = false;
+   if (isAlreadySetup)
+      return;
+
+   auto etcDir = std::string(TROOT::GetEtcDir());
+   RooFit::JSONIO::loadExportKeys(etcDir + "/RooFitHS3_wsexportkeys.json");
+   RooFit::JSONIO::loadFactoryExpressions(etcDir + "/RooFitHS3_wsfactoryexpressions.json");
+
+   isAlreadySetup = true;
+}
+
+} // namespace
 
 using namespace RooStats;
 using namespace RooStats::HistFactory;
@@ -113,6 +138,32 @@ enum MakeModelMode {
    kEquidistantBins_statSyst = 4,
    kCustomBins_statSyst = 5
 };
+
+std::string getName(std::tuple<MakeModelMode, std::string> const &param)
+{
+   MakeModelMode p = std::get<0>(param);
+   std::stringstream ss;
+   if (p == kEquidistantBins)
+      ss << "EquidistantBins";
+   if (p == kCustomBins)
+      ss << "CustomBins";
+   if (p == kEquidistantBins_histoSyst)
+      ss << "EquidistantBins_HistoSyst";
+   if (p == kCustomBins_histoSyst)
+      ss << "CustomBins_HistoSyst";
+   if (p == kEquidistantBins_statSyst)
+      ss << "EquidistantBins_StatSyst";
+   if (p == kCustomBins_statSyst)
+      ss << "CustomBins_StatSyst";
+
+   std::string batchMode = std::get<1>(param);
+   if (!batchMode.empty()) {
+      ss << "_BatchMode_" << batchMode;
+   }
+
+   return ss.str();
+}
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /// Fixture class to set up a toy hist factory model.
 /// In the SetUp() phase
@@ -131,9 +182,13 @@ public:
    const double _targetSysDo[2] = {108., 100.};
    std::unique_ptr<RooWorkspace> ws;
    std::set<std::string> _systNames; // Systematics defined during set up
+   std::unique_ptr<RooStats::HistFactory::Measurement> _measurement;
+   std::string _name;
 
    void SetUp()
    {
+      _name = getName(GetParam());
+
       const MakeModelMode makeModelMode = std::get<0>(GetParam());
       {
          TFile example(_inputFile.c_str(), "RECREATE");
@@ -175,9 +230,9 @@ public:
                data->SetBinContent(bin + 1, _targetMu * systUncDo->GetBinContent(bin + 1) + 100.);
             } else if (makeModelMode <= kCustomBins_statSyst) {
                // Tighten the stat. errors of the model, and kick bin 0, so the gammas have to adapt
-               signal->SetBinError(bin + 1, 0.1 * sqrt(signal->GetBinContent(bin + 1)));
-               bkg1->SetBinError(bin + 1, 0.1 * sqrt(bkg1->GetBinContent(bin + 1)));
-               bkg2->SetBinError(bin + 1, 0.1 * sqrt(bkg2->GetBinContent(bin + 1)));
+               signal->SetBinError(bin + 1, 0.1 * std::sqrt(signal->GetBinContent(bin + 1)));
+               bkg1->SetBinError(bin + 1, 0.1 * std::sqrt(bkg1->GetBinContent(bin + 1)));
+               bkg2->SetBinError(bin + 1, 0.1 * std::sqrt(bkg2->GetBinContent(bin + 1)));
 
                data->SetBinContent(bin + 1, _targetMu * signal->GetBinContent(bin + 1) + 100. + (bin == 0 ? 50. : 0.));
             }
@@ -192,7 +247,8 @@ public:
       }
 
       // Create the measurement
-      Measurement meas("meas", "meas");
+      _measurement = std::make_unique<Measurement>("meas", "meas");
+      Measurement &meas = *_measurement;
 
       meas.SetOutputFilePrefix("example_variableBins");
       meas.SetPOI("SigXsecOverSM");
@@ -471,6 +527,131 @@ TEST_P(HFFixture, BatchEvaluation)
    EXPECT_TRUE(evalMessages.str().empty()) << "RooFit issued " << evalMessages.str().substr(0, 1000) << " [...]";
 }
 
+TEST_P(HFFixture, HistFactoryJSONTool)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   setupKeys();
+
+   if (writeJsonFiles) {
+      RooStats::HistFactory::JSONTool{*_measurement}.PrintJSON(_name + "_1.json");
+   }
+   std::stringstream ss;
+   RooStats::HistFactory::JSONTool{*_measurement}.PrintJSON(ss);
+
+   RooWorkspace wsFromJson{"ws1"};
+   RooJSONFactoryWSTool{wsFromJson}.importJSONfromString(ss.str());
+
+   auto *mc = dynamic_cast<RooStats::ModelConfig *>(ws->obj("ModelConfig"));
+   EXPECT_TRUE(mc != nullptr);
+
+   auto *mcFromJson = dynamic_cast<RooStats::ModelConfig *>(wsFromJson.obj("ModelConfig"));
+   EXPECT_TRUE(mcFromJson != nullptr);
+
+   RooAbsPdf *pdf = mc->GetPdf();
+   EXPECT_TRUE(pdf != nullptr);
+
+   RooAbsPdf *pdfFromJson = mcFromJson->GetPdf();
+   EXPECT_TRUE(pdfFromJson != nullptr);
+
+   RooAbsData *data = ws->data("obsData");
+   EXPECT_TRUE(data != nullptr);
+
+   RooAbsData *dataFromJson = wsFromJson.data("obsData");
+   EXPECT_TRUE(dataFromJson != nullptr);
+
+   RooArgSet const &globs = *mc->GetGlobalObservables();
+   RooArgSet const &globsFromJson = *mcFromJson->GetGlobalObservables();
+
+   using namespace RooFit;
+   using Res = std::unique_ptr<RooFitResult>;
+
+   RooArgSet params;
+   RooArgSet initialParams;
+   pdf->getParameters(data->get(), params);
+   params.snapshot(initialParams);
+
+   Res result{pdf->fitTo(*data, Strategy(1), Minos(*mc->GetParametersOfInterest()), GlobalObservables(globs),
+                         PrintLevel(-1), Save())};
+   params.assign(initialParams);
+
+   Res resultFromJson{pdfFromJson->fitTo(*dataFromJson, Strategy(1), Minos(*mcFromJson->GetParametersOfInterest()),
+                                         GlobalObservables(globsFromJson), PrintLevel(-1), Save())};
+
+   // Do also the reverse comparison to check that the set of constant parameters matches
+   // TODO: understand why the tolerance must be so high
+   double tol = 5e-2;
+   EXPECT_TRUE(result->isIdenticalNoCov(*resultFromJson, tol, tol));
+   EXPECT_TRUE(resultFromJson->isIdenticalNoCov(*result, tol, tol));
+}
+
+TEST_P(HFFixture, HS3ClosureLoop)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   setupKeys();
+
+   auto *mc = dynamic_cast<RooStats::ModelConfig *>(ws->obj("ModelConfig"));
+   EXPECT_TRUE(mc != nullptr);
+
+   RooAbsPdf *pdf = mc->GetPdf();
+   EXPECT_TRUE(pdf != nullptr);
+
+   std::string const &js = RooJSONFactoryWSTool{*ws}.exportJSONtoString();
+   if (writeJsonFiles) {
+      RooJSONFactoryWSTool{*ws}.exportJSON(_name + "_2.json");
+   }
+
+   RooWorkspace newws("new");
+   RooJSONFactoryWSTool newtool{newws};
+   newtool.importJSONfromString(js);
+
+   std::string const &js3 = RooJSONFactoryWSTool{newws}.exportJSONtoString();
+
+   if (writeJsonFiles) {
+      RooJSONFactoryWSTool{newws}.exportJSON(_name + "_3.json");
+   }
+
+   // Chack that JSON > WS > JSON doesn't change the JSON
+   EXPECT_EQ(js, js3) << "The JSON -> WS -> JSON roundtrip did not result in the original JSON!";
+
+   auto *newmc = dynamic_cast<RooStats::ModelConfig *>(newws.obj("ModelConfig"));
+   EXPECT_TRUE(newmc != nullptr);
+
+   RooAbsPdf *newpdf = newmc->GetPdf();
+   EXPECT_TRUE(newpdf != nullptr);
+
+   RooAbsData *data = ws->data("obsData");
+   EXPECT_TRUE(data != nullptr);
+
+   RooAbsData *newdata = newws.data("obsData");
+   EXPECT_TRUE(newdata != nullptr);
+
+   RooArgSet const &globs = *mc->GetGlobalObservables();
+   RooArgSet const &globsFromJson = *newmc->GetGlobalObservables();
+
+   using namespace RooFit;
+   using Res = std::unique_ptr<RooFitResult>;
+
+   RooArgSet params;
+   RooArgSet initialParams;
+   pdf->getParameters(data->get(), params);
+   params.snapshot(initialParams);
+
+   Res result{pdf->fitTo(*data, Strategy(1), Minos(*mc->GetParametersOfInterest()), GlobalObservables(globs),
+                         PrintLevel(-1), Save())};
+   params.assign(initialParams);
+
+   Res resultFromJson{newpdf->fitTo(*newdata, Strategy(1), Minos(*newmc->GetParametersOfInterest()),
+                                    GlobalObservables(globsFromJson), PrintLevel(-1), Save())};
+
+   // Do also the reverse comparison to check that the set of constant parameters matches
+   // TODO: understand why the tolerance must be so high
+   double tol = 5e-2;
+   EXPECT_TRUE(result->isIdenticalNoCov(*resultFromJson, tol, tol));
+   EXPECT_TRUE(resultFromJson->isIdenticalNoCov(*result, tol, tol));
+}
+
 /// Fit the model to data, and check parameters.
 TEST_P(HFFixtureFit, Fit)
 {
@@ -592,29 +773,9 @@ TEST_P(HFFixtureFit, Fit)
    }
 }
 
-std::string getName(testing::TestParamInfo<HFFixture::ParamType> const &paramInfo)
+std::string getNameFromInfo(testing::TestParamInfo<HFFixture::ParamType> const &paramInfo)
 {
-   MakeModelMode p = std::get<0>(paramInfo.param);
-   std::stringstream ss;
-   if (p == kEquidistantBins)
-      ss << "EquidistantBins";
-   if (p == kCustomBins)
-      ss << "CustomBins";
-   if (p == kEquidistantBins_histoSyst)
-      ss << "EquidistantBins_HistoSyst";
-   if (p == kCustomBins_histoSyst)
-      ss << "CustomBins_HistoSyst";
-   if (p == kEquidistantBins_statSyst)
-      ss << "EquidistantBins_StatSyst";
-   if (p == kCustomBins_statSyst)
-      ss << "CustomBins_StatSyst";
-
-   std::string batchMode = std::get<1>(paramInfo.param);
-   if (!batchMode.empty()) {
-      ss << "_BatchMode_" << batchMode;
-   }
-
-   return ss.str();
+   return getName(paramInfo.param);
 }
 
 INSTANTIATE_TEST_SUITE_P(HistFactory, HFFixture,
@@ -622,20 +783,21 @@ INSTANTIATE_TEST_SUITE_P(HistFactory, HFFixture,
                                                           kCustomBins_histoSyst, kEquidistantBins_statSyst,
                                                           kCustomBins_statSyst),
                                           testing::Values("")),
-                         getName);
+                         getNameFromInfo);
 
 INSTANTIATE_TEST_SUITE_P(HistFactory, HFFixtureFit,
                          testing::Combine(testing::Values(kEquidistantBins, kCustomBins, kEquidistantBins_histoSyst,
                                                           kCustomBins_histoSyst, kEquidistantBins_statSyst,
                                                           kCustomBins_statSyst),
                                           testing::Values("off", "cpu")),
-                         getName);
+                         getNameFromInfo);
 
 #ifdef TEST_CODEGEN_AD
-// To be merged with the previous HFFixtureFix test suite once the codegen AD supports all of HistFactory
+// TODO: merge with the previous HFFixtureFix test suite once the codegen AD
+// supports all of HistFactory
 INSTANTIATE_TEST_SUITE_P(HistFactoryCodeGen, HFFixtureFit,
                          testing::Combine(testing::Values(kEquidistantBins, kEquidistantBins_histoSyst,
                                                           kEquidistantBins_statSyst),
                                           testing::Values("codegen")),
-                         getName);
+                         getNameFromInfo);
 #endif
