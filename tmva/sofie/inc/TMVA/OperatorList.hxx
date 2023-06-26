@@ -28,3 +28,4 @@
 #include "TMVA/ROperator_Expand.hxx"
 #include "TMVA/ROperator_Gather.hxx"
 #include "TMVA/ROperator_Swish.hxx"
+#include "TMVA/ROperator_Erf.hxx"
