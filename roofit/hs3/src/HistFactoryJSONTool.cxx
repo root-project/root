@@ -256,6 +256,7 @@ void exportMeasurement(RooStats::HistFactory::Measurement &measurement, JSONNode
       double minVal = -5.0;
       double maxVal = 5.0;
       bool isConstant = false;
+      bool writeDomain = true;
    };
    std::unordered_map<std::string, VariableInfo> variables;
 
@@ -273,7 +274,14 @@ void exportMeasurement(RooStats::HistFactory::Measurement &measurement, JSONNode
       }
    }
    for (const auto &sys : measurement.GetConstantParams()) {
-      variables[std::string("alpha_") + sys].isConstant = true;
+      auto &info = variables[sys];
+      info.isConstant = true;
+      bool isGamma = sys.find("gamma_") != std::string::npos;
+      // Gammas are 1.0 by default, alphas are 0.0
+      info.val = isGamma ? 1.0 : 0.0;
+      // For the gamma parameters, HistFactory will figure out the ranges
+      // itself based on the template bin contents and errors.
+      info.writeDomain = !isGamma;
    }
 
    // the lumi variables
@@ -303,7 +311,9 @@ void exportMeasurement(RooStats::HistFactory::Measurement &measurement, JSONNode
       v["value"] << info.val;
       if (info.isConstant)
          v["const"] << true;
-      domains.readVariable(parname.c_str(), info.minVal, info.maxVal);
+      if (info.writeDomain) {
+         domains.readVariable(parname.c_str(), info.minVal, info.maxVal);
+      }
    }
 
    // the data
