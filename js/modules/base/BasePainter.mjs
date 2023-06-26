@@ -722,6 +722,17 @@ async function svgToImage(svg, image_format, as_buffer) {
    if (image_format == 'svg')
       return svg;
 
+   if (!isNodeJs()) {
+      // required with df104.py/df105.py example with RCanvas
+      const doctype = '<?xml version="1.0" standalone="no"?><!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">';
+      svg = encodeURIComponent(doctype + svg);
+      svg = svg.replace(/%([0-9A-F]{2})/g, (match, p1) => {
+          let c = String.fromCharCode('0x'+p1);
+          return c === '%' ? '%25' : c;
+      });
+      svg = decodeURIComponent(svg);
+   }
+
    const img_src = 'data:image/svg+xml;base64,' + btoa_func(svg);
 
    if (isNodeJs())
@@ -739,6 +750,7 @@ async function svgToImage(svg, image_format, as_buffer) {
       });
 
    return new Promise(resolveFunc => {
+
       const image = document.createElement('img');
 
       image.onload = function() {
