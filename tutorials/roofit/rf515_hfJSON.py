@@ -26,22 +26,27 @@ ws.Print()
 # now, you can easily use your workspace to run your fit (as you usually would)
 # the model config is named after your pdf, i.e. <the pdf name>_modelConfig
 model = ws["ModelConfig"]
-pdf = model.GetPdf()
 
-# we are fitting a clone of the model now, such that we are not double-fitting
-# the model in the closure check.
-# The global observables are tagged with "globs" when reading a HistFactory workspace from JSON.
-result = pdf.cloneTree().fitTo(ws["observed"], Save=True, GlobalObservablesTag="globs", PrintLevel=-1)
+# for resetting the parameters after the fit
+params = model.GetPdf().getParameters(ws["observed"])
+params_initial = params.snapshot()
+
+# we are fitting a clone of the model now,
+result = model.fitTo(ws["observed"], ROOT.RooFit.Save(), ROOT.RooFit.PrintLevel(-1))
 result.Print()
+# reset parameters, such that we are not double-fitting the model in the
+# closure check.
+params.assign(params_initial)
 
 # in the end, you can again write to json
 # the result will be not completely identical to the JSON file you used as an input, but it will work just the same
 tool.exportJSON("myWorkspace.json")
 
 # You can again import it if you want and check for closure
-ws2 = ROOT.RooWorkspace("workspace")
-tool2 = ROOT.RooJSONFactoryWSTool(ws2)
-tool2.importJSON("myWorkspace.json")
-model2 = ws2["main_modelConfig"]
-result = model.GetPdf().fitTo(ws2["observed"], Save=True, GlobalObservablesTag="globs", PrintLevel=-1)
+ws_2 = ROOT.RooWorkspace("workspace")
+tool_2 = ROOT.RooJSONFactoryWSTool(ws_2)
+tool_2.importJSON("myWorkspace.json")
+ws_2.Print()
+model_2 = ws_2["ModelConfig"]
+result = model_2.fitTo(ws_2["observed"], ROOT.RooFit.Save(), ROOT.RooFit.PrintLevel(-1))
 result.Print()

@@ -480,12 +480,19 @@ void importAnalysis(const JSONNode &rootnode, const JSONNode &analysisNode, cons
    mc->SetObservables(observables);
    RooArgSet pars;
    pdf->getParameters(&observables, pars);
+
+   // Figure out the set parameters that appear in the main measurement:
+   // getAllConstraints() has the side effect to remove all parameters from
+   // "mainPars" that are not part of any pdf over observables.
+   RooArgSet mainPars{pars};
+   pdf->getAllConstraints(observables, mainPars, /*stripDisconnected*/true);
+
    RooArgSet nps;
    RooArgSet globs;
    for (const auto &p : pars) {
       if (mc->GetParametersOfInterest()->find(*p))
          continue;
-      if (p->isConstant())
+      if (p->isConstant() && !mainPars.find(*p))
          globs.add(*p);
       else
          nps.add(*p);
