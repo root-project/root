@@ -62,8 +62,7 @@ namespace RooStats {
 
       virtual void Reset()
       {
-         delete fCache;
-         fCache = nullptr;
+         fCache.reset();
          fCachePosition = 0;
          fLastX.removeAll();
       }
@@ -95,7 +94,6 @@ namespace RooStats {
 
       ~PdfProposal() override
       {
-         delete fCache;
          if (fOwnsPdf)
             delete fPdf;
       }
@@ -107,7 +105,7 @@ namespace RooStats {
       RooArgSet fLastX; /// the last point we were at
       Int_t fCacheSize; /// how many points to generate each time
       Int_t fCachePosition; /// our position in the cached proposal data set
-      RooDataSet* fCache; /// the cached proposal data set
+      std::unique_ptr<RooDataSet> fCache; /// the cached proposal data set
       RooArgSet fMaster; /// pointers to master variables needed for updates
       bool fOwnsPdf; /// whether we own the proposal density function
       //bool fIsAlwaysSymmetric; // does Q(x1 | x2) == Q(x2 | x1) for all x1, x2
@@ -116,7 +114,7 @@ namespace RooStats {
       virtual bool Equals(RooArgSet& x1, RooArgSet& x2);
 
       /// Interface for tools setting limits (producing confidence intervals)
-      ClassDefOverride(PdfProposal,1)
+      ClassDefOverride(PdfProposal,2);
    };
 }
 

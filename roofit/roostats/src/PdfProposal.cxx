@@ -77,7 +77,6 @@ PdfProposal::PdfProposal() : ProposalFunction()
    fOwnsPdf = false;
    fCacheSize = 1;
    fCachePosition = 0;
-   fCache = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -90,7 +89,6 @@ PdfProposal::PdfProposal(RooAbsPdf& pdf) : ProposalFunction()
    fOwnsPdf = false;
    fCacheSize = 1;
    fCachePosition = 0;
-   fCache = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -122,7 +120,7 @@ void PdfProposal::Propose(RooArgSet& xPrime, RooArgSet& x)
          for (fIt = fMap.begin(); fIt != fMap.end(); fIt++)
             fIt->first->setVal(fIt->second->getVal(&x));
       }
-      fCache = std::unique_ptr<RooDataSet>{fPdf->generate(xPrime, fCacheSize)}.release();
+      fCache = std::unique_ptr<RooDataSet>{fPdf->generate(xPrime, fCacheSize)};
    }
 
    bool moved = false;
@@ -147,8 +145,7 @@ void PdfProposal::Propose(RooArgSet& xPrime, RooArgSet& x)
 
    // generate new cache if necessary
    if (moved || fCachePosition >= fCacheSize) {
-      delete fCache;
-      fCache = std::unique_ptr<RooDataSet>{fPdf->generate(xPrime, fCacheSize)}.release();
+      fCache = std::unique_ptr<RooDataSet>{fPdf->generate(xPrime, fCacheSize)};
       fCachePosition = 0;
    }
 

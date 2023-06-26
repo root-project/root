@@ -40,6 +40,7 @@ implementations like RooAcceptReject and RooFoam
 
 using namespace std;
 
+RooAbsNumGenerator::RooAbsNumGenerator() = default;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -49,7 +50,7 @@ using namespace std;
 /// cloned and so will not be disturbed during the generation process.
 
 RooAbsNumGenerator::RooAbsNumGenerator(const RooAbsReal &func, const RooArgSet &genVars, bool verbose, const RooAbsReal* maxFuncVal) :
-  _funcClone(0), _funcMaxVal(maxFuncVal), _verbose(verbose), _funcValStore(0), _funcValPtr(0), _cache(0)
+  _funcClone(0), _funcMaxVal(maxFuncVal), _verbose(verbose)
 {
   // Clone the function and all nodes that it depends on so that this generator
   // is independent of any existing objects.
@@ -112,15 +113,13 @@ RooAbsNumGenerator::RooAbsNumGenerator(const RooAbsReal &func, const RooArgSet &
   }
 
   // create a fundamental type for storing function values
-  _funcValStore= dynamic_cast<RooRealVar*>(_funcClone->createFundamental());
-  assert(0 != _funcValStore);
+  _funcValStore= std::unique_ptr<RooAbsArg>{_funcClone->createFundamental()};
 
   // create a new dataset to cache trial events and function values
   RooArgSet cacheArgs(_catVars);
   cacheArgs.add(_realVars);
   cacheArgs.add(*_funcValStore);
-  _cache= new RooDataSet("cache","Accept-Reject Event Cache",cacheArgs);
-  assert(0 != _cache);
+  _cache= std::make_unique<RooDataSet>("cache","Accept-Reject Event Cache",cacheArgs);
 
   // attach our function clone to the cache dataset
   const RooArgSet *cacheVars= _cache->get();
@@ -138,16 +137,7 @@ RooAbsNumGenerator::RooAbsNumGenerator(const RooAbsReal &func, const RooArgSet &
 }
 
 
-
-////////////////////////////////////////////////////////////////////////////////
-/// Destructor
-
-RooAbsNumGenerator::~RooAbsNumGenerator()
-{
-  delete _cache ;
-  delete _funcValStore ;
-}
-
+RooAbsNumGenerator::~RooAbsNumGenerator() = default;
 
 
 ////////////////////////////////////////////////////////////////////////////////
