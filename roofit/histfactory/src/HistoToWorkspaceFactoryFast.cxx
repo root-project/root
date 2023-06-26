@@ -1223,28 +1223,12 @@ RooArgList HistoToWorkspaceFactoryFast::createObservables(const TH1 *hist, RooWo
     // fix specified parameters
     for(unsigned int i=0; i<systToFix.size(); ++i){
       RooRealVar* temp = proto->var(systToFix.at(i));
-      if(temp) {
-        // set the parameter constant
-        temp->setConstant();
-
-        // remove the corresponding auxiliary observable from the global observables
-        RooRealVar* auxMeas = nullptr;
-        if(systToFix.at(i)=="Lumi"){
-          auxMeas = proto->var("nominalLumi");
-        } else {
-          auxMeas = proto->var(std::string("nom_") + temp->GetName());
-        }
-
-        if(auxMeas){
-          const_cast<RooArgSet*>(proto->set("globalObservables"))->remove(*auxMeas);
-        } else{
-          cxcoutE(HistFactory) << "could not corresponding auxiliary measurement  "
-              << TString::Format("nom_%s",temp->GetName()) << endl;
-        }
-      } else {
+      if(!temp) {
         cxcoutE(HistFactory) << "could not find variable " << systToFix.at(i)
             << " could not set it to constant" << endl;
       }
+      // set the parameter constant
+      temp->setConstant();
     }
 
     //////////////////////////////////////
