@@ -37,7 +37,8 @@ namespace Detail {
 /// @brief A class to maintain the context for squashing of RooFit models into code.
 class CodeSquashContext {
 public:
-   CodeSquashContext(std::map<RooFit::Detail::DataKey, std::size_t> const &outputSizes) : _nodeOutputSizes(outputSizes)
+   CodeSquashContext(std::map<RooFit::Detail::DataKey, std::size_t> const &outputSizes, std::vector<double> &xlarr)
+      : _nodeOutputSizes(outputSizes), _xlArr(xlarr)
    {
    }
 
@@ -107,7 +108,7 @@ public:
 
    std::string buildArg(RooAbsCollection const &x);
 
-   std::string buildArg(std::span<const double> arr) { return buildArgSpanImpl(arr); }
+   std::string buildArg(std::span<const double> arr);
    std::string buildArg(std::span<const int> arr) { return buildArgSpanImpl(arr); }
 
 private:
@@ -183,6 +184,7 @@ private:
    std::string _tempScope;
    /// @brief A map to keep track of list names as assigned by addResult.
    std::unordered_map<RooFit::UniqueId<RooAbsCollection>::Value_t, std::string> listNames;
+   std::vector<double> &_xlArr;
 };
 
 template <>

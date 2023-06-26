@@ -121,7 +121,8 @@ void RooFuncWrapper::declareAndDiffFunction(std::string const &funcBody, bool cr
 
    // Declare the function
    std::stringstream bodyWithSigStrm;
-   bodyWithSigStrm << "double " << _funcName << "(double* params, double const* obs) {\n" << funcBody << "\n}";
+   bodyWithSigStrm << "double " << _funcName << "(double* params, double const* obs, double const* xlArr) {\n"
+                   << funcBody << "\n}";
    bool comp = gInterpreter->Declare(bodyWithSigStrm.str().c_str());
    if (!comp) {
       std::stringstream errorMsg;
@@ -157,9 +158,9 @@ void RooFuncWrapper::declareAndDiffFunction(std::string const &funcBody, bool cr
    // disable clang-format for making the following code unreadable.
    // clang-format off
    std::stringstream dWrapperStrm;
-   dWrapperStrm << "void " << wrapperName << "(double* params, double const* obs, double* out) {\n"
+   dWrapperStrm << "void " << wrapperName << "(double* params, double const* obs, double const* xlArr, double* out) {\n"
                    "  clad::array_ref<double> cladOut(out, " << _params.size() << ");\n"
-                   "  " << gradName << "(params, obs, cladOut);\n"
+                   "  " << gradName << "(params, obs, xlArr, cladOut);\n"
                    "}";
    // clang-format on
    gInterpreter->Declare(dWrapperStrm.str().c_str());
@@ -171,7 +172,7 @@ void RooFuncWrapper::gradient(double *out) const
    updateGradientVarBuffer();
    std::fill(out, out + _params.size(), 0.0);
 
-   _grad(_gradientVarBuffer.data(), _observables.data(), out);
+   _grad(_gradientVarBuffer.data(), _observables.data(), _xlArr.data(), out);
 }
 
 void RooFuncWrapper::updateGradientVarBuffer() const
@@ -184,19 +185,19 @@ double RooFuncWrapper::evaluate() const
 {
    updateGradientVarBuffer();
 
-   return _func(_gradientVarBuffer.data(), _observables.data());
+   return _func(_gradientVarBuffer.data(), _observables.data(), _xlArr.data());
 }
 
 void RooFuncWrapper::gradient(const double *x, double *g) const
 {
    std::fill(g, g + _params.size(), 0.0);
 
-   _grad(const_cast<double *>(x), _observables.data(), g);
+   _grad(const_cast<double *>(x), _observables.data(), _xlArr.data(), g);
 }
 
 std::string RooFuncWrapper::buildCode(RooAbsReal const &head)
 {
-   RooFit::Detail::CodeSquashContext ctx(_nodeOutputSizes);
+   RooFit::Detail::CodeSquashContext ctx(_nodeOutputSizes, _xlArr);
 
    // First update the result variable of params in the compute graph to in[<position>].
    int idx = 0;
