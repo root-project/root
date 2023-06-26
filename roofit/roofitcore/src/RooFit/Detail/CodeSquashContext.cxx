@@ -80,7 +80,12 @@ void CodeSquashContext::addToGlobalScope(std::string const &str)
 /// @return The final body of the function.
 std::string CodeSquashContext::assembleCode(std::string const &returnExpr)
 {
-   return _globalScope + _code + "\n return " + returnExpr + ";\n";
+   std::string arrDecl;
+   if(!_xlArr.empty()) {
+      arrDecl += "double auxArr[" + std::to_string(_xlArr.size()) + "];\n";
+      arrDecl += "for (int i = 0; i < " + std::to_string(_xlArr.size()) + "; i++) auxArr[i] = xlArr[i];\n";
+   }
+   return arrDecl + _globalScope + _code + "\n return " + returnExpr + ";\n";
 }
 
 /// @brief Since the squashed code represents all observables as a single flattened array, it is important
@@ -235,6 +240,17 @@ std::string CodeSquashContext::buildArg(RooAbsCollection const &in)
 
    listNames.insert({in.uniqueId().value(), savedName});
    return savedName;
+}
+
+std::string CodeSquashContext::buildArg(std::span<const double> arr)
+{
+   unsigned int n = arr.size();
+   std::string offset = std::to_string(_xlArr.size());
+   _xlArr.reserve(_xlArr.size() + n);
+   for (unsigned int i = 0; i < n; i++) {
+      _xlArr.push_back(arr[i]);
+   }
+   return "auxArr + " + offset;
 }
 
 bool CodeSquashContext::isScopeIndependent(RooAbsArg const *in) const
