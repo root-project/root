@@ -75,8 +75,8 @@ public:
     RooAbsReal* _alpha ; // ALPHA
     std::unique_ptr<RooAbsReal> _c1 ; // CDF of PDF 1
     std::unique_ptr<RooAbsReal> _c2 ; // CDF of PDF 2
-    RooAbsFunc* _cb1 ; // Binding of CDF1
-    RooAbsFunc* _cb2 ; // Binding of CDF2
+    std::unique_ptr<RooAbsFunc> _cb1 ; // Binding of CDF1
+    std::unique_ptr<RooAbsFunc> _cb2 ; // Binding of CDF2
     std::unique_ptr<RooBrentRootFinder> _rf1; // ROOT finder on CDF1
     std::unique_ptr<RooBrentRootFinder> _rf2; // ROOT finder of CDF2 ;
 

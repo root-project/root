@@ -228,8 +228,7 @@ RooGenContext::RooGenContext(const RooAbsPdf &model, const RooArgSet &vars,
 
     // Generation _with_ prototype variable
     depList.remove(_protoVars,true,true);
-    std::unique_ptr<RooAbsReal> integ{_pdfClone->createIntegral(depList,vars)};
-    _acceptRejectFunc= std::unique_ptr<RooRealIntegral>{static_cast<RooRealIntegral*>(integ.release())};
+    _acceptRejectFunc= std::unique_ptr<RooAbsReal>{_pdfClone->createIntegral(depList,vars)};
     cxcoutI(Generation) << "RooGenContext::ctor() accept/reject sampling function is " << _acceptRejectFunc->GetName() << endl ;
 
     // Check if PDF supports maximum finding for the entire phase space

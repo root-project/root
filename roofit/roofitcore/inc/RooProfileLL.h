@@ -35,7 +35,7 @@ public:
   const RooArgSet& bestFitParams() const ;
   const RooArgSet& bestFitObs() const ;
 
-  RooAbsReal* createProfile(const RooArgSet& paramsOfInterest) override ;
+  RooFit::OwningPtr<RooAbsReal> createProfile(const RooArgSet& paramsOfInterest) override ;
 
   bool redirectServersHook(const RooAbsCollection& /*newServerList*/, bool /*mustReplaceAll*/, bool /*nameChange*/, bool /*isRecursive*/) override ;
 
@@ -52,16 +52,16 @@ protected:
   RooRealProxy _nll ;    ///< Input -log(L) function
   RooSetProxy _obs ;     ///< Parameters of profile likelihood
   RooSetProxy _par ;     ///< Marginalised parameters of likelihood
-  bool _startFromMin ; ///< Always start minimization for global minimum?
+  bool _startFromMin = true; ///< Always start minimization for global minimum?
 
   mutable std::unique_ptr<RooMinimizer> _minimizer = nullptr ; ///<! Internal minimizer instance
 
-  mutable bool _absMinValid ; ///< flag if absmin is up-to-date
-  mutable double _absMin ; ///< absolute minimum of -log(L)
+  mutable bool _absMinValid = false; ///< flag if absmin is up-to-date
+  mutable double _absMin = 0.0; ///< absolute minimum of -log(L)
   mutable RooArgSet _paramAbsMin ; ///< Parameter values at absolute minimum
   mutable RooArgSet _obsAbsMin ; ///< Observable values at absolute minimum
   mutable std::map<std::string,bool> _paramFixed ; ///< Parameter constant status at last time of use
-  mutable Int_t _neval ; ///< Number evaluations used in last minimization
+  mutable Int_t _neval = 0; ///< Number evaluations used in last minimization
   double evaluate() const override ;
 
 

@@ -621,7 +621,7 @@ bool RooVectorDataStore::changeObservableName(const char* /*from*/, const char* 
 RooAbsArg* RooVectorDataStore::addColumn(RooAbsArg& newVar, bool /*adjustRange*/)
 {
   // Create a fundamental object of the right type to hold newVar values
-  RooAbsArg* valHolder= newVar.createFundamental();
+  auto valHolder = std::unique_ptr<RooAbsArg>{newVar.createFundamental()}.release();
   // Sanity check that the holder really is fundamental
   if(!valHolder->isFundamental()) {
     coutE(InputArguments) << GetName() << "::addColumn: holder argument is not fundamental: \""

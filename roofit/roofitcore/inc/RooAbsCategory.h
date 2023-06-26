@@ -85,7 +85,7 @@ public:
     return true ;
   }
 
-  RooAbsArg *createFundamental(const char* newname=nullptr) const override;
+  RooFit::OwningPtr<RooAbsArg> createFundamental(const char* newname=nullptr) const override;
 
   /// Iterator for category state names. Points to pairs of index and name.
   std::map<std::string, value_type>::const_iterator begin() const {

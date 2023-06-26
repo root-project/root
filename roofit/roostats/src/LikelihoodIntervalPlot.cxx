@@ -190,12 +190,14 @@ void LikelihoodIntervalPlot::Draw(const Option_t *options)
    // we need to re-do the profile likelihood function, otherwise those parameters will not be profiled
    // when plotting
    RooAbsReal* newProfile = 0;
+   std::unique_ptr<RooAbsReal> newProfileOwner;
    RooAbsReal* oldProfile = fInterval->GetLikelihoodRatio();
    if (fNdimPlot != intervalParams->getSize() ) {
       RooProfileLL * profilell = dynamic_cast<RooProfileLL*>(oldProfile);
       if (!profilell) return;
       RooAbsReal & nll =  profilell->nll();
-      newProfile = nll.createProfile(*fParamsPlot);
+      newProfileOwner = std::unique_ptr<RooAbsReal>{nll.createProfile(*fParamsPlot)};
+      newProfile = newProfileOwner.get();
    }
    else {
       newProfile = oldProfile;
@@ -592,9 +594,6 @@ void LikelihoodIntervalPlot::Draw(const Option_t *options)
 
 
    }
-
-   // need to delete if a new profileLL was made
-   if (newProfile != oldProfile) delete newProfile;
 
    return;
 }

@@ -27,7 +27,7 @@ class RooNumGenConfig ;
 
 class RooAbsNumGenerator {
 public:
-  RooAbsNumGenerator() : _funcClone(nullptr), _funcMaxVal(nullptr), _verbose(false), _isValid(false), _funcValStore(nullptr), _funcValPtr(nullptr), _cache(nullptr) {}
+  RooAbsNumGenerator();
   RooAbsNumGenerator(const RooAbsReal &func, const RooArgSet &genVars, bool verbose=false, const RooAbsReal* maxFuncVal=nullptr);
   virtual RooAbsNumGenerator* clone(const RooAbsReal&, const RooArgSet& genVars, const RooArgSet& condVars,
                 const RooNumGenConfig& config, bool verbose=false, const RooAbsReal* maxFuncVal=nullptr) const = 0 ;
@@ -61,14 +61,16 @@ public:
 
 protected:
 
-  RooArgSet _cloneSet;               ///< Set owning clone of input function
-  RooAbsReal *_funcClone;            ///< Pointer to top level node of cloned function
-  const RooAbsReal *_funcMaxVal ;    ///< Container for maximum function value
-  RooArgSet _catVars,_realVars ;     ///< Sets of discrete and real valued observabeles
-  bool _verbose, _isValid;           ///< Verbose and valid flag
-  RooRealVar *_funcValStore,*_funcValPtr; ///< RRVs storing function value in context and in output dataset
-
-  RooDataSet *_cache;                  ///< Dataset holding generared values of observables
+   RooArgSet _cloneSet;                      ///< Set owning clone of input function
+   RooAbsReal *_funcClone = nullptr;         ///< Pointer to top level node of cloned function
+   const RooAbsReal *_funcMaxVal = nullptr;  ///< Container for maximum function value
+   RooArgSet _catVars;                       ///< Set of discrete observabeles
+   RooArgSet _realVars;                      ///< Set of real valued observabeles
+   bool _verbose = false;                    ///< Verbose flag
+   bool _isValid = false;                    ///< Valid flag
+   std::unique_ptr<RooAbsArg> _funcValStore; ///< RRV storing function value in context
+   RooRealVar *_funcValPtr = nullptr;        ///< RRV storing function value in output dataset
+   std::unique_ptr<RooDataSet> _cache;       ///< Dataset holding generared values of observables
 };
 
 #endif

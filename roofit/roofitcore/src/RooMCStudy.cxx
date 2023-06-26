@@ -1004,8 +1004,8 @@ RooPlot* RooMCStudy::plotError(const RooRealVar& param, const RooCmdArg& arg1, c
   }
 
   std::unique_ptr<RooErrorVar> evar{param.errorVar()};
-  std::unique_ptr<RooRealVar> evar_rrv{static_cast<RooRealVar*>(evar->createFundamental())};
-  RooPlot* frame = plotParam(*evar_rrv,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8) ;
+  std::unique_ptr<RooAbsArg> evar_rrv{evar->createFundamental()};
+  RooPlot* frame = plotParam(static_cast<RooRealVar&>(*evar_rrv),arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8) ;
 
   // To make sure the frame has no dangling pointer to evar_rrv.
   frame->createInternalPlotVarClone();

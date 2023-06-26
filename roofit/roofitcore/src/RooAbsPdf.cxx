@@ -1789,7 +1789,7 @@ RooFit::OwningPtr<RooFitResult> RooAbsPdf::chi2FitTo(RooDataHist& data, const Ro
 /// The list of supported command arguments is given in the documentation for
 ///     RooChi2Var::RooChi2Var(const char *name, const char* title, RooAbsReal& func, RooDataHist& hdata, const RooCmdArg&,const RooCmdArg&,const RooCmdArg&, const RooCmdArg&,const RooCmdArg&,const RooCmdArg&, const RooCmdArg&,const RooCmdArg&,const RooCmdArg&).
 
-RooAbsReal* RooAbsPdf::createChi2(RooDataHist& data, const RooCmdArg& arg1,  const RooCmdArg& arg2,
+RooFit::OwningPtr<RooAbsReal> RooAbsPdf::createChi2(RooDataHist& data, const RooCmdArg& arg1,  const RooCmdArg& arg2,
                const RooCmdArg& arg3,  const RooCmdArg& arg4, const RooCmdArg& arg5,
                const RooCmdArg& arg6,  const RooCmdArg& arg7, const RooCmdArg& arg8)
 {
@@ -1804,7 +1804,7 @@ RooAbsReal* RooAbsPdf::createChi2(RooDataHist& data, const RooCmdArg& arg1,  con
   pc.allowUndefined(true) ;
   pc.process(cmdList) ;
   if (!pc.ok(true)) {
-    return 0 ;
+    return nullptr;
   }
   const char* rangeName = pc.getString("rangeName",0,true) ;
 
@@ -1853,7 +1853,7 @@ RooAbsReal* RooAbsPdf::createChi2(RooDataHist& data, const RooCmdArg& arg1,  con
   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors) ;
 
 
-  return chi2 ;
+  return RooFit::Detail::owningPtr(std::unique_ptr<RooAbsReal>{chi2});
 }
 
 
@@ -1862,7 +1862,7 @@ RooAbsReal* RooAbsPdf::createChi2(RooDataHist& data, const RooCmdArg& arg1,  con
 ////////////////////////////////////////////////////////////////////////////////
 /// Argument-list version of RooAbsPdf::createChi2()
 
-RooAbsReal* RooAbsPdf::createChi2(RooDataSet& data, const RooLinkedList& cmdList)
+RooFit::OwningPtr<RooAbsReal> RooAbsPdf::createChi2(RooDataSet& data, const RooLinkedList& cmdList)
 {
   // Select the pdf-specific commands
   RooCmdConfig pc("RooAbsPdf::createChi2(" + std::string(GetName()) + ")");
@@ -1873,7 +1873,7 @@ RooAbsReal* RooAbsPdf::createChi2(RooDataSet& data, const RooLinkedList& cmdList
   // Process and check varargs
   pc.process(cmdList) ;
   if (!pc.ok(true)) {
-    return 0 ;
+    return nullptr;
   }
 
   // Decode command line arguments
@@ -1882,11 +1882,13 @@ RooAbsReal* RooAbsPdf::createChi2(RooDataSet& data, const RooLinkedList& cmdList
 
   std::string name = "chi2_" + std::string(GetName()) + "_" + std::string(data.GetName());
 
+  std::unique_ptr<RooAbsReal> out;
   if (yvar) {
-    return new RooXYChi2Var(name.c_str(),name.c_str(),*this,data,*yvar,integrate) ;
+    out = std::make_unique<RooXYChi2Var>(name.c_str(),name.c_str(),*this,data,*yvar,integrate) ;
   } else {
-    return new RooXYChi2Var(name.c_str(),name.c_str(),*this,data,integrate) ;
+    out = std::make_unique<RooXYChi2Var>(name.c_str(),name.c_str(),*this,data,integrate) ;
   }
+  return RooFit::Detail::owningPtr(std::move(out));
 }
 
 

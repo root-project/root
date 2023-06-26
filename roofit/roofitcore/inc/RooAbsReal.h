@@ -156,10 +156,10 @@ public:
   TString getTitle(bool appendUnit= false) const;
 
   // Lightweight interface adaptors (caller takes ownership)
-  RooAbsFunc *bindVars(const RooArgSet &vars, const RooArgSet* nset=nullptr, bool clipInvalid=false) const;
+  RooFit::OwningPtr<RooAbsFunc> bindVars(const RooArgSet &vars, const RooArgSet* nset=nullptr, bool clipInvalid=false) const;
 
   // Create a fundamental-type object that can hold our value.
-  RooAbsArg *createFundamental(const char* newname=nullptr) const override;
+  RooFit::OwningPtr<RooAbsArg> createFundamental(const char* newname=nullptr) const override;
 
   // Analytical integration support
   virtual Int_t getAnalyticalIntegralWN(RooArgSet& allVars, RooArgSet& analVars, const RooArgSet* normSet, const char* rangeName=nullptr) const ;
@@ -184,8 +184,8 @@ public:
                               const RooCmdArg& arg6=RooCmdArg::none(),  const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none()) ;
   virtual RooFit::OwningPtr<RooFitResult> chi2FitTo(RooDataHist& data, const RooLinkedList& cmdList) ;
 
-  virtual RooAbsReal* createChi2(RooDataHist& data, const RooLinkedList& cmdList) ;
-  virtual RooAbsReal* createChi2(RooDataHist& data, const RooCmdArg& arg1=RooCmdArg::none(),  const RooCmdArg& arg2=RooCmdArg::none(),
+  virtual RooFit::OwningPtr<RooAbsReal> createChi2(RooDataHist& data, const RooLinkedList& cmdList) ;
+  virtual RooFit::OwningPtr<RooAbsReal> createChi2(RooDataHist& data, const RooCmdArg& arg1=RooCmdArg::none(),  const RooCmdArg& arg2=RooCmdArg::none(),
              const RooCmdArg& arg3=RooCmdArg::none(),  const RooCmdArg& arg4=RooCmdArg::none(), const RooCmdArg& arg5=RooCmdArg::none(),
              const RooCmdArg& arg6=RooCmdArg::none(),  const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none()) ;
 
@@ -195,13 +195,13 @@ public:
                               const RooCmdArg& arg6=RooCmdArg::none(),  const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none()) ;
   virtual RooFit::OwningPtr<RooFitResult> chi2FitTo(RooDataSet& xydata, const RooLinkedList& cmdList) ;
 
-  virtual RooAbsReal* createChi2(RooDataSet& data, const RooLinkedList& cmdList) ;
-  virtual RooAbsReal* createChi2(RooDataSet& data, const RooCmdArg& arg1=RooCmdArg::none(),  const RooCmdArg& arg2=RooCmdArg::none(),
+  virtual RooFit::OwningPtr<RooAbsReal> createChi2(RooDataSet& data, const RooLinkedList& cmdList) ;
+  virtual RooFit::OwningPtr<RooAbsReal> createChi2(RooDataSet& data, const RooCmdArg& arg1=RooCmdArg::none(),  const RooCmdArg& arg2=RooCmdArg::none(),
                const RooCmdArg& arg3=RooCmdArg::none(),  const RooCmdArg& arg4=RooCmdArg::none(), const RooCmdArg& arg5=RooCmdArg::none(),
                const RooCmdArg& arg6=RooCmdArg::none(),  const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none()) ;
 
 
-  virtual RooAbsReal* createProfile(const RooArgSet& paramsOfInterest) ;
+  virtual RooFit::OwningPtr<RooAbsReal> createProfile(const RooArgSet& paramsOfInterest) ;
 
 
   RooFit::OwningPtr<RooAbsReal> createIntegral(const RooArgSet& iset, const RooCmdArg& arg1, const RooCmdArg& arg2=RooCmdArg::none(),

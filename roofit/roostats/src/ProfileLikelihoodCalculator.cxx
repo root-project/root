@@ -237,7 +237,7 @@ LikelihoodInterval* ProfileLikelihoodCalculator::GetInterval() const {
       return nullptr;
    }
 
-   RooAbsReal* profile = nll->createProfile(fPOI);
+   std::unique_ptr<RooAbsReal> profile{nll->createProfile(fPOI)};
    profile->addOwnedComponents(std::move(nll)) ;  // to avoid memory leak
 
    // t.b.f. " RooProfileLL should keep and provide possibility to query on global minimum
@@ -272,7 +272,7 @@ LikelihoodInterval* ProfileLikelihoodCalculator::GetInterval() const {
    }
    // fPOI contains the parameter of interest of the PL object
    // and bestPOI contains a snapshot with the best fit values
-   LikelihoodInterval* interval = new LikelihoodInterval(name, profile, &fPOI, bestPOI);
+   LikelihoodInterval* interval = new LikelihoodInterval(name, profile.release(), &fPOI, bestPOI);
    interval->SetConfidenceLevel(1.-fSize);
    return interval;
 }

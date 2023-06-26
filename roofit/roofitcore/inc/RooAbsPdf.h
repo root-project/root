@@ -209,12 +209,12 @@ public:
   using RooAbsReal::chi2FitTo ;
   using RooAbsReal::createChi2 ;
   RooFit::OwningPtr<RooFitResult> chi2FitTo(RooDataHist& data, const RooLinkedList& cmdList) override ;
-  RooAbsReal* createChi2(RooDataHist& data, const RooCmdArg& arg1=RooCmdArg::none(),  const RooCmdArg& arg2=RooCmdArg::none(),
+  RooFit::OwningPtr<RooAbsReal> createChi2(RooDataHist& data, const RooCmdArg& arg1=RooCmdArg::none(),  const RooCmdArg& arg2=RooCmdArg::none(),
              const RooCmdArg& arg3=RooCmdArg::none(),  const RooCmdArg& arg4=RooCmdArg::none(), const RooCmdArg& arg5=RooCmdArg::none(),
              const RooCmdArg& arg6=RooCmdArg::none(),  const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none()) override ;
 
   // Chi^2 fits to X-Y datasets
-  RooAbsReal* createChi2(RooDataSet& data, const RooLinkedList& cmdList) override ;
+  RooFit::OwningPtr<RooAbsReal> createChi2(RooDataSet& data, const RooLinkedList& cmdList) override ;
 
 
   // Constraint management

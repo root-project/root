@@ -248,8 +248,8 @@ RooIntegralMorph::MorphCacheElem::MorphCacheElem(RooIntegralMorph& self, const R
   _pdf2 = (RooAbsPdf*)(self.pdf2.absArg()) ;
   _c1 = std::unique_ptr<RooAbsReal>{_pdf1->createCdf(*_x)};
   _c2 = std::unique_ptr<RooAbsReal>{_pdf2->createCdf(*_x)};
-  _cb1 = _c1->bindVars(*_x,_nset.get());
-  _cb2 = _c2->bindVars(*_x,_nset.get());
+  _cb1 = std::unique_ptr<RooAbsFunc>{_c1->bindVars(*_x,_nset.get())};
+  _cb2 = std::unique_ptr<RooAbsFunc>{_c2->bindVars(*_x,_nset.get())};
   _self = &self ;
 
   _rf1 = std::make_unique<RooBrentRootFinder>(*_cb1);

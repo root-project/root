@@ -43,11 +43,7 @@ ClassImp(RooProfileLL);
    RooAbsReal("RooProfileLL","RooProfileLL"),
    _nll(),
    _obs("paramOfInterest","Parameters of interest",this),
-   _par("nuisanceParam","Nuisance parameters",this,false,false),
-   _startFromMin(true),
-   _absMinValid(false),
-   _absMin(0),
-   _neval(0)
+   _par("nuisanceParam","Nuisance parameters",this,false,false)
 {
 }
 
@@ -63,11 +59,7 @@ RooProfileLL::RooProfileLL(const char *name, const char *title,
   RooAbsReal(name,title),
   _nll("input","-log(L) function",this,nllIn),
   _obs("paramOfInterest","Parameters of interest",this),
-  _par("nuisanceParam","Nuisance parameters",this,false,false),
-  _startFromMin(true),
-  _absMinValid(false),
-  _absMin(0),
-  _neval(0)
+  _par("nuisanceParam","Nuisance parameters",this,false,false)
 {
   // Determine actual parameters and observables
   nllIn.getObservables(&observables, _obs) ;
@@ -121,7 +113,7 @@ const RooArgSet& RooProfileLL::bestFitObs() const
 /// Return profile of original function in terms of stated parameters
 /// of interest rather than profiling recursively.
 
-RooAbsReal* RooProfileLL::createProfile(const RooArgSet& paramsOfInterest)
+RooFit::OwningPtr<RooAbsReal> RooProfileLL::createProfile(const RooArgSet& paramsOfInterest)
 {
   return nll().createProfile(paramsOfInterest) ;
 }
