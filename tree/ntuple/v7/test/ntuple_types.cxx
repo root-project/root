@@ -312,31 +312,31 @@ TEST(RNTuple, StdSet)
    EXPECT_EQ((sizeof(std::set<int64_t>)), otherField->GetValueSize());
    EXPECT_EQ((alignof(std::set<int64_t>)), field.GetAlignment());
    EXPECT_EQ((alignof(std::set<int64_t>)), otherField->GetAlignment());
-
-   // TODO(fdegeus): add and test custom comparators
-   // auto setSetField = RField<std::set<std::set<CustomStruct>>>("setSetField");
-   // EXPECT_STREQ("std::set<std::set<CustomStruct>>", setSetField.GetType().c_str());
+   auto setSetField = RField<std::set<std::set<CustomStruct>>>("setSetField");
+   EXPECT_STREQ("std::set<std::set<CustomStruct>>", setSetField.GetType().c_str());
 
    FileRaii fileGuard("test_ntuple_rfield_stdset.root");
    {
       auto model = RNTupleModel::Create();
       auto set_field = model->MakeField<std::set<float>>({"mySet", "float set"});
-      auto mySet2 = model->MakeField<std::set<std::string>>({"mySet2", "string set"});
-      auto mySet3 = model->MakeField<std::set<std::set<char>>>({"mySet3", "nested set"});
+      // For templated set fields, no dictionary should be necessary.
+      auto set_field2 = model->MakeField<std::set<std::set<int>>>({"mySet2"});
 
-      // TODO(fdegeus): add and test non-templated set fields
-      // auto mySet2 = RFieldBase::Create("mySet2", "std::set<std::string>").Unwrap();
-      // auto mySet3 = RFieldBase::Create("mySet3", "std::set<std::set<char>>").Unwrap();
-      // model->AddField(std::move(mySet2));
-      // model->AddField(std::move(mySet3));
+      auto mySet3 = RFieldBase::Create("mySet3", "std::set<std::string>").Unwrap();
+      // This field type has a dictionary entry, so reading and writing should be possible without any problems.
+      auto mySet4 = RFieldBase::Create("mySet4", "std::set<std::set<char>>").Unwrap();
+
+      model->AddField(std::move(mySet3));
+      model->AddField(std::move(mySet4));
 
       auto ntuple = RNTupleWriter::Recreate(std::move(model), "set_ntuple", fileGuard.GetPath());
-      auto set_field2 = ntuple->GetModel()->GetDefaultEntry()->Get<std::set<std::string>>("mySet2");
-      auto set_field3 = ntuple->GetModel()->GetDefaultEntry()->Get<std::set<std::set<char>>>("mySet3");
+      auto set_field3 = ntuple->GetModel()->GetDefaultEntry()->Get<std::set<std::string>>("mySet3");
+      auto set_field4 = ntuple->GetModel()->GetDefaultEntry()->Get<std::set<std::set<char>>>("mySet4");
       for (int i = 0; i < 2; i++) {
          *set_field = {static_cast<float>(i), 3.14, 0.42};
-         *set_field2 = {"Hello", "world!", std::to_string(i)};
-         *set_field3 = {{static_cast<char>(i), 'a'}, {'r', 'o', 'o', 't'}, {'h', 'i'}};
+         *set_field2 = {{static_cast<int>(i)}, {static_cast<int>(i * 2), 3}, {}};
+         *set_field3 = {"Hello", "world!", std::to_string(i)};
+         *set_field4 = {{static_cast<char>(i), 'a'}, {'r', 'o', 'o', 't'}, {'h', 'i'}};
          ntuple->Fill();
       }
    }
@@ -345,12 +345,14 @@ TEST(RNTuple, StdSet)
    EXPECT_EQ(2, ntuple->GetNEntries());
 
    auto viewSet = ntuple->GetView<std::set<float>>("mySet");
-   auto viewSet2 = ntuple->GetView<std::set<std::string>>("mySet2");
-   auto viewSet3 = ntuple->GetView<std::set<std::set<char>>>("mySet3");
+   auto viewSet2 = ntuple->GetView<std::set<std::set<int>>>("mySet2");
+   auto viewSet3 = ntuple->GetView<std::set<std::string>>("mySet3");
+   auto viewSet4 = ntuple->GetView<std::set<std::set<char>>>("mySet4");
    for (auto i : ntuple->GetEntryRange()) {
       EXPECT_EQ(std::set<float>({static_cast<float>(i), 3.14, 0.42}), viewSet(i));
-      EXPECT_EQ(std::set<std::string>({"Hello", "world!", std::to_string(i)}), viewSet2(i));
-      EXPECT_EQ(std::set<std::set<char>>({{static_cast<char>(i), 'a'}, {'r', 'o', 'o', 't'}, {'h', 'i'}}), viewSet3(i));
+      EXPECT_EQ(std::set<std::set<int>>({{static_cast<int>(i)}, {static_cast<int>(i * 2), 3}, {}}), viewSet2(i));
+      EXPECT_EQ(std::set<std::string>({"Hello", "world!", std::to_string(i)}), viewSet3(i));
+      EXPECT_EQ(std::set<std::set<char>>({{static_cast<char>(i), 'a'}, {'r', 'o', 'o', 't'}, {'h', 'i'}}), viewSet4(i));
    }
 }
 

@@ -70,7 +70,7 @@ class RPageStorage;
 
 // clang-format off
 /**
-\class ROOT::Experimental::RFieldBase
+\class ROOT::Experimental::Detail::RFieldBase
 \ingroup NTuple
 \brief A field translates read and write calls from/to underlying columns to/from tree values
 
@@ -607,8 +607,8 @@ public:
 /// `GetFunctionDeleteTwoIterators()`.
 ///
 /// The collection proxy for a given class can be set via `TClass::CopyCollectionProxy()`.
-class RCollectionClassField : public Detail::RFieldBase {
-private:
+class RProxiedCollectionField : public Detail::RFieldBase {
+protected:
    /// Allows for iterating over the elements of a proxied collection. RCollectionIterableOnce avoids an additional
    /// iterator copy (see `TVirtualCollectionProxy::GetFunctionCopyIterator`) and thus can only be iterated once.
    class RCollectionIterableOnce {
@@ -688,30 +688,30 @@ private:
    std::size_t fItemSize;
    ClusterSize_t fNWritten;
 
-   RCollectionClassField(std::string_view fieldName, std::string_view className, TClass *classp);
+   RProxiedCollectionField(std::string_view fieldName, std::string_view className, TClass *classp);
 
 protected:
-   std::unique_ptr<Detail::RFieldBase> CloneImpl(std::string_view newName) const final;
-   const RColumnRepresentations &GetColumnRepresentations() const final;
-   void GenerateColumnsImpl() final;
-   void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
+   std::unique_ptr<Detail::RFieldBase> CloneImpl(std::string_view newName) const override;
+   const RColumnRepresentations &GetColumnRepresentations() const override;
+   void GenerateColumnsImpl() override;
+   void GenerateColumnsImpl(const RNTupleDescriptor &desc) override;
 
    void GenerateValue(void *where) const override;
-   void DestroyValue(void *objPtr, bool dtorOnly = false) const final;
+   void DestroyValue(void *objPtr, bool dtorOnly = false) const override;
 
-   std::size_t AppendImpl(const void *from) final;
-   void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final;
+   std::size_t AppendImpl(const void *from) override;
+   void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) override;
 
 public:
-   RCollectionClassField(std::string_view fieldName, std::string_view className);
-   RCollectionClassField(RCollectionClassField &&other) = default;
-   RCollectionClassField &operator=(RCollectionClassField &&other) = default;
-   ~RCollectionClassField() override = default;
+   RProxiedCollectionField(std::string_view fieldName, std::string_view className);
+   RProxiedCollectionField(RProxiedCollectionField &&other) = default;
+   RProxiedCollectionField &operator=(RProxiedCollectionField &&other) = default;
+   ~RProxiedCollectionField() override = default;
 
    using Detail::RFieldBase::GenerateValue;
    std::vector<RValue> SplitValue(const RValue &value) const final;
    size_t GetValueSize() const override { return fProxy->Sizeof(); }
-   size_t GetAlignment() const final { return alignof(std::max_align_t); }
+   size_t GetAlignment() const override { return alignof(std::max_align_t); }
    void CommitCluster() final;
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
    void GetCollectionInfo(NTupleSize_t globalIndex, RClusterIndex *collectionStart, ClusterSize_t *size) const
@@ -722,6 +722,27 @@ public:
    {
       fPrincipalColumn->GetCollectionInfo(clusterIndex, collectionStart, size);
    }
+};
+
+/// The field for a class representing a collection of elements via `TVirtualCollectionProxy`.
+/// Objects of such type behave as collections that can be accessed through the corresponding member functions in
+/// `TVirtualCollectionProxy`. At a bare minimum, the user is required to provide an implementation for the following
+/// functions in `TVirtualCollectionProxy`: `HasPointers()`, `GetProperties()`, `GetValueClass()`, `GetType()`,
+/// `PushProxy()`, `PopProxy()`, `GetFunctionCreateIterators()`, `GetFunctionNext()`, and
+/// `GetFunctionDeleteTwoIterators()`.
+///
+/// The collection proxy for a given class can be set via `TClass::CopyCollectionProxy()`.
+class RCollectionClassField : public RProxiedCollectionField {
+protected:
+   RCollectionClassField(std::string_view fieldName, std::string_view className, TClass *classp);
+
+   std::unique_ptr<Detail::RFieldBase> CloneImpl(std::string_view newName) const final;
+
+public:
+   RCollectionClassField(std::string_view fieldName, std::string_view className);
+   RCollectionClassField(RCollectionClassField &&other) = default;
+   RCollectionClassField &operator=(RCollectionClassField &&other) = default;
+   ~RCollectionClassField() override = default;
 };
 
 /// The field for an untyped record. The subfields are stored consequitively in a memory block, i.e.
@@ -977,19 +998,10 @@ public:
 };
 
 /// The generic field for a std::set<Type>
-class RSetField : public Detail::RFieldBase {
-private:
-   std::size_t fItemSize;
-
+class RSetField : public RProxiedCollectionField {
 protected:
-   ClusterSize_t fNWritten;
-
-   std::unique_ptr<Detail::RFieldBase> CloneImpl(std::string_view newName) const override;
-   std::size_t AppendImpl(const Detail::RFieldValue &value) override;
-   const RColumnRepresentations &GetColumnRepresentations() const final;
-   void GenerateColumnsImpl() final;
-   void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
-   void ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue *value) override;
+   std::unique_ptr<Detail::RFieldBase> CloneImpl(std::string_view newName) const final;
+   void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) override;
 
 public:
    RSetField(std::string_view fieldName, std::unique_ptr<Detail::RFieldBase> itemField);
@@ -997,15 +1009,7 @@ public:
    RSetField &operator=(RSetField &&other) = default;
    ~RSetField() override = default;
 
-   using Detail::RFieldBase::GenerateValue;
-   Detail::RFieldValue GenerateValue(void *where) override;
-   void DestroyValue(const Detail::RFieldValue &value, bool dtorOnly = false) override;
-   Detail::RFieldValue CaptureValue(void *where) override;
-   std::vector<Detail::RFieldValue> SplitValue(const Detail::RFieldValue &value) const final;
-   size_t GetValueSize() const override { return sizeof(std::set<char>); }
-   size_t GetAlignment() const override { return std::alignment_of<std::set<char>>(); }
-   void CommitCluster() final;
-   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
+   size_t GetAlignment() const override { return std::alignment_of<std::set<std::max_align_t>>(); }
 };
 
 /// The field for values that may or may not be present in an entry. Parent class for unique pointer field and
@@ -1962,43 +1966,42 @@ public:
    ~RField() override = default;
 };
 
-template <typename ItemT> // TODO (fdegeus): Add comparator
+template <typename ItemT>
 class RField<std::set<ItemT>> : public RSetField {
    using ContainerT = typename std::set<ItemT>;
 
 protected:
-   std::unique_ptr<Detail::RFieldBase> CloneImpl(std::string_view newName) const final
+   std::size_t AppendImpl(const void *from) final
    {
-      auto newItemField = fSubFields[0]->Clone(fSubFields[0]->GetName());
-      return std::make_unique<RField<std::set<ItemT>>>(newName, std::move(newItemField));
-   }
-   std::size_t AppendImpl(const Detail::RFieldValue &value) final
-   {
-      auto typedValue = value.Get<ContainerT>();
+      auto typedValue = static_cast<const ContainerT *>(from);
       auto nbytes = 0;
       auto count = typedValue->size();
       for (auto item : *typedValue) {
-         auto itemValue = fSubFields[0]->CaptureValue(static_cast<void *>(&item));
-         nbytes += fSubFields[0]->Append(itemValue);
+         nbytes += fSubFields[0]->Append(&item);
       }
-      Detail::RColumnElement<ClusterSize_t, EColumnType::kUnknown> elemIndex(&this->fNWritten);
       this->fNWritten += count;
-      fColumns[0]->Append(elemIndex);
-      return nbytes + sizeof(elemIndex);
+      fColumns[0]->Append(&this->fNWritten);
+      return nbytes + fColumns[0]->GetElement()->GetPackedSize();
    }
-   void ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue *value) final
+
+   void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final
    {
-      auto typedValue = value->Get<ContainerT>();
+      auto typedValue = static_cast<ContainerT *>(to);
       RClusterIndex collectionStart;
       ClusterSize_t nItems;
       fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, &nItems);
       typedValue->clear();
       for (unsigned i = 0; i < nItems; ++i) {
          ItemT item;
-         auto itemValue = fSubFields[0]->CaptureValue(&item);
-         fSubFields[0]->Read(collectionStart + i, &itemValue);
-         typedValue->emplace(item);
+         fSubFields[0]->Read(collectionStart + i, &item);
+         typedValue->insert(item);
       }
+   }
+   void GenerateValue(void *where) const final { new (where) ContainerT(); }
+   void DestroyValue(void *objPtr, bool dtorOnly = false) const final
+   {
+      std::destroy_at(static_cast<ContainerT *>(objPtr));
+      Detail::RFieldBase::DestroyValue(objPtr, dtorOnly);
    }
 
 public:
@@ -2013,25 +2016,6 @@ public:
    ~RField() override = default;
 
    using Detail::RFieldBase::GenerateValue;
-   template <typename... ArgsT>
-   ROOT::Experimental::Detail::RFieldValue GenerateValue(void *where, ArgsT &&...args)
-   {
-      return Detail::RFieldValue(this, static_cast<ContainerT *>(where), std::forward<ArgsT>(args)...);
-   }
-   ROOT::Experimental::Detail::RFieldValue GenerateValue(void *where) final
-   {
-      return GenerateValue(where, ContainerT());
-   }
-   Detail::RFieldValue CaptureValue(void *where) final
-   {
-      return Detail::RFieldValue(true /* captureFlag */, this, static_cast<ContainerT *>(where));
-   }
-   void DestroyValue(const Detail::RFieldValue &value, bool dtorOnly = false) final
-   {
-      reinterpret_cast<ContainerT *>(value.GetRawPtr())->~set();
-      if (!dtorOnly)
-         free(reinterpret_cast<ContainerT *>(value.GetRawPtr()));
-   }
    size_t GetValueSize() const final { return sizeof(ContainerT); }
    size_t GetAlignment() const final { return std::alignment_of<ContainerT>(); }
 };
