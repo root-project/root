@@ -2052,8 +2052,7 @@ class TPadPainter extends ObjectPainter {
          for (let k = 0; k < items.length; ++k) {
             let item = items[k];
 
-            if (item.img)
-               item.img.remove(); // delete embed image
+            item.img?.remove(); // delete embed image
 
             let prim = item.prnt.select('.primitives_layer');
 
