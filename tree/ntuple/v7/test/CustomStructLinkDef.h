@@ -51,6 +51,8 @@
 #pragma link C++ class ConstructorTraits + ;
 #pragma link C++ class DestructorTraits + ;
 
+#pragma link C++ class std::set<std::set<char>> +;
+
 #pragma link C++ options = version(3) class StructWithIORulesBase + ;
 #pragma link C++ options = version(3) class StructWithTransientString + ;
 #pragma link C++ options = version(3) class StructWithIORules + ;
