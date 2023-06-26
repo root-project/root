@@ -11,7 +11,7 @@ let version_id = 'dev';
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-let version_date = '23/06/2023';
+let version_date = '26/06/2023';
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -8547,6 +8547,17 @@ async function svgToImage(svg, image_format, as_buffer) {
    if (image_format == 'svg')
       return svg;
 
+   if (!isNodeJs()) {
+      // required with df104.py/df105.py example with RCanvas
+      const doctype = '<?xml version="1.0" standalone="no"?><!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">';
+      svg = encodeURIComponent(doctype + svg);
+      svg = svg.replace(/%([0-9A-F]{2})/g, (match, p1) => {
+          let c = String.fromCharCode('0x'+p1);
+          return c === '%' ? '%25' : c;
+      });
+      svg = decodeURIComponent(svg);
+   }
+
    const img_src = 'data:image/svg+xml;base64,' + btoa_func(svg);
 
    if (isNodeJs())
@@ -8564,6 +8575,7 @@ async function svgToImage(svg, image_format, as_buffer) {
       });
 
    return new Promise(resolveFunc => {
+
       const image = document.createElement('img');
 
       image.onload = function() {
@@ -59304,7 +59316,7 @@ function showPainterMenu(evnt, painter, kind) {
 
    createMenu$1(evnt, painter).then(menu => {
       painter.fillContextMenu(menu);
-      if ((kind == kToFront) && isFunc(painter.bringToFront)) {
+      if ((kind === kToFront) && isFunc(painter.bringToFront)) {
          menu.add('Bring to front', () => painter.bringToFront(true));
          kind = undefined;
       }
@@ -67330,8 +67342,7 @@ class TPadPainter extends ObjectPainter {
          for (let k = 0; k < items.length; ++k) {
             let item = items[k];
 
-            if (item.img)
-               item.img.remove(); // delete embed image
+            item.img?.remove(); // delete embed image
 
             let prim = item.prnt.select('.primitives_layer');
 
@@ -114772,8 +114783,7 @@ class RPadPainter extends RObjectPainter {
          for (let k = 0; k < items.length; ++k) {
             let item = items[k];
 
-            if (item.img)
-               item.img.remove(); // delete embed image
+            item.img?.remove(); // delete embed image
 
             let prim = item.prnt.select('.primitives_layer');
 
