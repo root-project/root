@@ -426,6 +426,7 @@ sap.ui.define([
                let oModel = new JSONModel();
                let oSuggestionData = this.eveTable.fPublicFunctions;
                oModel.setData(oSuggestionData);
+               oModel.setSizeLimit(10000);// default limit is 100
                exprIn.setModel(oModel);
                exprIn.bindAggregation("suggestionRows", "/", oTableItemTemplate);
 
