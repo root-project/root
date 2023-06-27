@@ -19,6 +19,7 @@
 #include <ROOT/RWebDisplayArgs.hxx>
 #include <ROOT/RWebDisplayHandle.hxx>
 #include <ROOT/RWebWindow.hxx>
+#include <ROOT/RFileDialog.hxx>
 
 #include <memory>
 #include <string>
@@ -552,6 +553,10 @@ void RCanvasPainter::ProcessData(unsigned connid, const std::string &arg)
       TFile *f = TFile::Open(cdata.c_str(), "RECREATE");
       f->WriteObject(&fCanvas, "Canvas");
       delete f;
+   } else if (RFileDialog::IsMessageToStartDialog(arg)) {
+
+      RFileDialog::Embedded(fWindow, arg);
+
    } else if (check_header("REQ:")) {
       auto req = TBufferJSON::FromJSON<RDrawableRequest>(cdata);
       if (req) {
