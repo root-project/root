@@ -35,11 +35,10 @@ namespace RooStats {
 class ModelConfig;
 }
 
-class TClass;
-class RooSimultaneous;
-
 class RooJSONFactoryWSTool {
 public:
+   static constexpr bool useListsInsteadOfDicts = true;
+
    struct CombinedData {
       std::string name;
       std::map<std::string, std::string> components;

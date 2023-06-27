@@ -96,11 +96,8 @@ tool.writedoc("hs3.tex")
 
 using RooFit::Detail::JSONNode;
 using RooFit::Detail::JSONTree;
-using RooFit::JSONIO::Detail::Domains;
 
 namespace {
-
-constexpr bool useListsInsteadOfDicts = true;
 
 bool matches(const RooJSONFactoryWSTool::CombinedData &data, const RooSimultaneous *pdf)
 {
@@ -485,7 +482,7 @@ void importAnalysis(const JSONNode &rootnode, const JSONNode &analysisNode, cons
    // getAllConstraints() has the side effect to remove all parameters from
    // "mainPars" that are not part of any pdf over observables.
    RooArgSet mainPars{pars};
-   pdf->getAllConstraints(observables, mainPars, /*stripDisconnected*/true);
+   pdf->getAllConstraints(observables, mainPars, /*stripDisconnected*/ true);
 
    RooArgSet nps;
    RooArgSet globs;
@@ -616,8 +613,12 @@ JSONNode &RooJSONFactoryWSTool::appendNamedChild(JSONNode &node, std::string con
 JSONNode const *RooJSONFactoryWSTool::findNamedChild(JSONNode const &node, std::string const &name)
 {
    if (!useListsInsteadOfDicts) {
+      if (!node.is_map())
+         return nullptr;
       return node.find(name);
    }
+   if (!node.is_seq())
+      return nullptr;
    for (JSONNode const &child : node.children()) {
       if (child["name"].val() == name)
          return &child;
@@ -698,8 +699,6 @@ void RooJSONFactoryWSTool::exportVariable(const RooAbsArg *v, JSONNode &node)
    if (cv && strcmp(cv->GetName(), TString::Format("%g", cv->getVal()).Data()) == 0) {
       return;
    }
-
-   node.set_seq();
 
    // this variable was already exported
    if (findNamedChild(node, v->GetName())) {
@@ -1357,7 +1356,7 @@ void RooJSONFactoryWSTool::exportSingleModelConfig(JSONNode &rootnode, RooStats:
 
 void RooJSONFactoryWSTool::exportAllObjects(JSONNode &n)
 {
-   _domains = std::make_unique<Domains>();
+   _domains = std::make_unique<RooFit::JSONIO::Detail::Domains>();
    _varsNode = &makeVariablesNode(n);
    _rootnodeOutput = &n;
 
@@ -1526,7 +1525,7 @@ bool RooJSONFactoryWSTool::exportYML(std::string const &filename)
 
 void RooJSONFactoryWSTool::importAllNodes(const JSONNode &n)
 {
-   _domains = std::make_unique<Domains>();
+   _domains = std::make_unique<RooFit::JSONIO::Detail::Domains>();
    if (auto domains = n.find("domains"))
       _domains->readJSON(*domains);
 
