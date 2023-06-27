@@ -279,24 +279,28 @@ sap.ui.define([
             case "Quit ROOT":
                p.sendWebsocket("QUIT");
                break;
-            case "Canvas.png":
-            case "Canvas.jpeg":
-            case "Canvas.svg":
+            case 'Canvas.png':
+            case 'Canvas.jpeg':
+            case 'Canvas.svg':
                p.saveCanvasAsFile(name);
                break;
-            case "Canvas.root":
-            case "Canvas.pdf":
-            case "Canvas.ps":
-            case "Canvas.C":
+            case 'Canvas.root':
+            case 'Canvas.pdf':
+            case 'Canvas.ps':
+            case 'Canvas.C':
                p.sendSaveCommand(name);
                break;
-            case "Save as ...":
+            case 'Save as ...': {
+               let filters = ['Png files (*.png)', 'Jpeg files (*.jpeg)', 'SVG files (*.svg)', 'ROOT files (*.root)' ];
+               if (!p?.v7canvas)
+                  filters.push('PDF files (*.pdf)', 'C++ (*.cxx *.cpp *.c)');
+
                FileDialogController.SaveAs({
                   websocket: p._websocket,
                   filename: 'Canvas.png',
                   title: 'Select file name to save canvas',
                   filter: 'Png files',
-                  filters: ['Png files (*.png)', 'Jpeg files (*.jpeg)', 'SVG files (*.svg)', 'PDF files (*.pdf)',  'ROOT files (*.root)', 'C++ (*.cxx *.cpp *.c)'],
+                  filters,
                   // working_path: "/Home",
                   onOk: fname => {
                      if (fname.endsWith('.png') || fname.endsWith('.jpeg') || fname.endsWith('.svg'))
@@ -309,6 +313,7 @@ sap.ui.define([
                });
 
                break;
+           }
          }
 
          MessageToast.show(`Action triggered on item: ${name}`);
@@ -323,11 +328,11 @@ sap.ui.define([
       },
 
       onInterruptPress() {
-         this.getCanvasPainter()?.sendWebsocket("INTERRUPT");
+         this.getCanvasPainter()?.sendWebsocket('INTERRUPT');
       },
 
       onQuitRootPress() {
-         this.getCanvasPainter()?.sendWebsocket("QUIT");
+         this.getCanvasPainter()?.sendWebsocket('QUIT');
       },
 
       onReloadPress() {
