@@ -5,3 +5,4 @@
 # For the list of contributors see $ROOTSYS/README/CREDITS.
 
 ROOT_ADD_GTEST(testMatrixTSparse testMatrixTSparse.cxx LIBRARIES Matrix)
+ROOT_ADD_GTEST(testMatrixTDecomp testMatrixTDecomp.cxx LIBRARIES Matrix)

@@ -228,7 +228,7 @@ void TDecompBase::DiagProd(const TVectorD &diag,Double_t tol,Double_t &d1,Double
    for (Int_t i = 0; (((i < n) && (t1 !=zero ))); i++) {
       if (TMath::Abs(diag(i)) > tol) {
          t1 *= (Double_t) diag(i);
-         while ( TMath::Abs(t1) < one) {
+         while ( TMath::Abs(t1) >= one) {
             t1 *= sixteenth;
             t2 += four;
             niter2++;
