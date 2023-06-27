@@ -41,8 +41,8 @@ bool checkRegularBins(const TAxis &ax)
 inline void writeAxis(JSONNode &axis, const TAxis &ax)
 {
    bool regular = (!ax.IsVariableBinSize()) || checkRegularBins(ax);
+   axis.set_map();
    if (regular) {
-      axis.set_map();
       axis["nbins"] << ax.GetNbins();
       axis["min"] << ax.GetXmin();
       axis["max"] << ax.GetXmax();
@@ -137,15 +137,13 @@ void exportSample(const RooStats::HistFactory::Sample &sample, JSONNode &channel
          auto &sys = sample.GetHistoSysList()[i];
          auto &node = RooJSONFactoryWSTool::appendNamedChild(modifiers, sys.GetName());
          node["type"] << "histosys";
-         auto &data = node["data"];
-         data.set_map();
+         auto &data = node["data"].set_map();
          exportHistogram(*(sys.GetHistoLow()), data["lo"], obsnames, nullptr, false);
          exportHistogram(*(sys.GetHistoHigh()), data["hi"], obsnames, nullptr, false);
       }
    }
 
-   auto &tags = s["dict"];
-   tags.set_map();
+   auto &tags = s["dict"].set_map();
    tags["normalizeByTheory"] << sample.GetNormalizeByTheory();
 
    if (sample.GetStatError().GetActivate()) {
@@ -153,9 +151,8 @@ void exportSample(const RooStats::HistFactory::Sample &sample, JSONNode &channel
    }
 
    auto &data = s["data"];
-   TH1 const *errH = sample.GetStatError().GetActivate() && sample.GetStatError().GetUseHisto()
-                        ? sample.GetStatError().GetErrorHist()
-                        : nullptr;
+   const bool useStatError = sample.GetStatError().GetActivate() && sample.GetStatError().GetUseHisto();
+   TH1 const *errH = useStatError ? sample.GetStatError().GetErrorHist() : nullptr;
 
    if (!channelNode.has_child("axes")) {
       writeObservables(*sample.GetHisto(), channelNode, obsnames);
@@ -165,12 +162,9 @@ void exportSample(const RooStats::HistFactory::Sample &sample, JSONNode &channel
 
 void exportChannel(const RooStats::HistFactory::Channel &c, JSONNode &ch)
 {
-   ch.set_map();
-   ch["name"] << "model_" + c.GetName();
    ch["type"] << "histfactory_dist";
 
-   auto &staterr = ch["statError"];
-   staterr.set_map();
+   auto &staterr = ch["statError"].set_map();
    staterr["relThreshold"] << c.GetStatErrorConfig().GetRelErrorThreshold();
    staterr["constraint"] << RooStats::HistFactory::Constraint::Name(c.GetStatErrorConfig().GetConstraintType());
 
@@ -226,7 +220,6 @@ void exportMeasurement(RooStats::HistFactory::Measurement &measurement, JSONNode
    auto &pdflist = n["distributions"];
 
    auto &analysisNode = RooJSONFactoryWSTool::appendNamedChild(n["analyses"], "simPdf");
-   analysisNode.set_map();
    analysisNode["domains"].set_seq().append_child() << "default_domain";
 
    auto &analysisPois = analysisNode["parameters_of_interest"].set_seq();
@@ -350,7 +343,7 @@ void exportMeasurement(RooStats::HistFactory::Measurement &measurement, JSONNode
    modelConfigAux["mcName"] << "ModelConfig";
 
    // Finally write lumi constraint
-   auto &lumiConstraint = RooJSONFactoryWSTool::appendNamedChild(pdflist, "lumiConstraint").set_map();
+   auto &lumiConstraint = RooJSONFactoryWSTool::appendNamedChild(pdflist, "lumiConstraint");
    lumiConstraint["mean"] << "nominalLumi";
    lumiConstraint["sigma"] << (measurement.GetLumi() * measurement.GetLumiRelErr());
    lumiConstraint["type"] << "gaussian_dist";
@@ -377,8 +370,7 @@ void RooStats::HistFactory::JSONTool::PrintJSON(std::string const &filename)
 void RooStats::HistFactory::JSONTool::PrintYAML(std::ostream &os)
 {
    std::unique_ptr<RooFit::Detail::JSONTree> tree = RooJSONFactoryWSTool::createNewJSONTree();
-   auto &n = tree->rootnode();
-   n.set_map();
+   auto &n = tree->rootnode().set_map();
    RooFit::JSONIO::Detail::Domains domains;
    exportMeasurement(_measurement, n, domains);
    domains.writeJSON(n["domains"]);
