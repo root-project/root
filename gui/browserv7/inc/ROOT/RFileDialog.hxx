@@ -111,6 +111,8 @@ public:
 
    static std::shared_ptr<RFileDialog> Embedded(const std::shared_ptr<RWebWindow> &window, const std::string &args);
 
+   static bool IsMessageToStartDialog(const std::string &msg);
+
 };
 
 } // namespace Experimental
