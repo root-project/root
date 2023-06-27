@@ -379,6 +379,9 @@ void  REveDataCollection::StreamPublicMethods(nlohmann::json &j) const
       if (meth->GetListOfMethodArgs()->GetLast() > 1)
          continue;
 
+      if (strcmp(meth->GetReturnTypeName(),"void") == 0)
+         continue;
+
       TString ms;
       TMethodArg *ma;
       TIter next_ma(meth->GetListOfMethodArgs());
