@@ -649,6 +649,12 @@ else()
    set(hashardwareinterferencesize undef)
 endif()
 
+if(webgui)
+   set(root_canvas_class "TWebCanvas")
+else()
+   set(root_canvas_class "TRootCanvas")
+endif()
+
 if(root7 AND webgui)
    set(root_browser_class "ROOT::Experimental::RWebBrowserImp")
 else()
