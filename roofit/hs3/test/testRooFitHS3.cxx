@@ -13,6 +13,7 @@
 #include <RooGlobalFunc.h>
 #include <RooGaussian.h>
 #include <RooHelpers.h>
+#include <RooMultiVarGaussian.h>
 #include <RooRealVar.h>
 #include <RooSimultaneous.h>
 #include <RooProdPdf.h>
@@ -27,6 +28,9 @@ namespace {
 
 void setupKeys()
 {
+   // Uncomment this line to test the rapidyaml backend
+   // RooFit::Detail::JSONTree::setBackend("rapidyaml");
+
    static bool isAlreadySetup = false;
    if (isAlreadySetup)
       return;
@@ -213,6 +217,26 @@ TEST(RooFitHS3, RooLandau)
 TEST(RooFitHS3, RooLognormal)
 {
    int status = validate({"Lognormal::lognormal(x[0.1, 2.0], m0[0.0, 0.1, 10], k[3.0, 1.1, 10])"});
+   EXPECT_EQ(status, 0);
+}
+
+TEST(RooFitHS3, RooMultiVarGaussian)
+{
+   // To silence the numeric differentiation
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   using RooFit::RooConst;
+
+   RooRealVar x{"x", "x", 0, 10};
+   RooRealVar y{"y", "y", 0, 10};
+   RooRealVar mean{"mean", "mean", 3};
+   TMatrixDSym cov{2};
+   cov(0, 0) = 1.0;
+   cov(0, 1) = 0.2;
+   cov(1, 0) = 0.2;
+   cov(1, 1) = 1.0;
+   RooMultiVarGaussian multiVarGauss{"multi_var_gauss", "", {x, y}, {mean, RooConst(5.0)}, cov};
+   int status = validate(multiVarGauss);
    EXPECT_EQ(status, 0);
 }
 

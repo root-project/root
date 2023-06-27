@@ -600,6 +600,17 @@ RooJSONFactoryWSTool::RooJSONFactoryWSTool(RooWorkspace &ws) : _workspace{ws} {}
 
 RooJSONFactoryWSTool::~RooJSONFactoryWSTool() {}
 
+void RooJSONFactoryWSTool::fillSeq(JSONNode &node, RooAbsCollection const &coll)
+{
+   node.set_seq();
+   for (RooAbsArg const *arg : coll) {
+      if (isLiteralConstVar(*arg))
+         node.append_child() << static_cast<RooConstVar const *>(arg)->getVal();
+      else
+         node.append_child() << arg->GetName();
+   }
+}
+
 JSONNode &RooJSONFactoryWSTool::appendNamedChild(JSONNode &node, std::string const &name)
 {
    if (!useListsInsteadOfDicts) {
@@ -850,7 +861,7 @@ void RooJSONFactoryWSTool::exportObject(RooAbsArg const &func, std::set<std::str
          continue;
 
       if (auto l = dynamic_cast<RooListProxy *>(p)) {
-         elem[k->second].fill_seq(*l, [](auto const &e) { return e->GetName(); });
+         fillSeq(elem[k->second], *l);
       }
       if (auto r = dynamic_cast<RooRealProxy *>(p)) {
          if (isLiteralConstVar(r->arg()))

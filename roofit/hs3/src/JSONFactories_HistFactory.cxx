@@ -464,7 +464,7 @@ public:
    {
       auto fip = static_cast<const RooStats::HistFactory::FlexibleInterpVar *>(func);
       elem["type"] << key();
-      elem["vars"].fill_seq(fip->variables(), [](auto const &item) { return item->GetName(); });
+      RooJSONFactoryWSTool::fillSeq(elem["vars"], fip->variables());
       elem["interpolationCodes"].fill_seq(fip->interpolationCodes());
       elem["nom"] << fip->nominal();
       elem["high"].fill_seq(fip->high());
@@ -486,10 +486,10 @@ public:
       elem["type"] << key();
       elem["interpolationCodes"].fill_seq(pip->interpolationCodes());
       elem["positiveDefinite"] << pip->positiveDefinite();
-      elem["vars"].fill_seq(pip->paramList(), [](auto const &item) { return item->GetName(); });
+      RooJSONFactoryWSTool::fillSeq(elem["vars"], pip->paramList());
       elem["nom"] << pip->nominalHist()->GetName();
-      elem["high"].fill_seq(pip->highList(), [](auto const &item) { return item->GetName(); });
-      elem["low"].fill_seq(pip->lowList(), [](auto const &item) { return item->GetName(); });
+      RooJSONFactoryWSTool::fillSeq(elem["high"], pip->highList());
+      RooJSONFactoryWSTool::fillSeq(elem["low"], pip->lowList());
       return true;
    }
 };

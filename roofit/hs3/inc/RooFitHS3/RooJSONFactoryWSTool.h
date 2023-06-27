@@ -55,6 +55,8 @@ public:
    static RooFit::Detail::JSONNode &appendNamedChild(RooFit::Detail::JSONNode &node, std::string const &name);
    static RooFit::Detail::JSONNode const *findNamedChild(RooFit::Detail::JSONNode const &node, std::string const &name);
 
+   static void fillSeq(RooFit::Detail::JSONNode &node, RooAbsCollection const &coll);
+
    template <class T>
    T *request(const std::string &objname, const std::string &requestAuthor)
    {
