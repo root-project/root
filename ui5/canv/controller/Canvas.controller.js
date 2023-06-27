@@ -11,7 +11,8 @@ sap.ui.define([
    'sap/m/Button',
    'sap/m/ButtonType',
    'sap/ui/layout/SplitterLayoutData',
-   'sap/ui/core/ResizeHandler'
+   'sap/ui/core/ResizeHandler',
+   'rootui5/browser/controller/FileDialog.controller'
 ], function (Controller,
              Component,
              JSONModel,
@@ -24,7 +25,8 @@ sap.ui.define([
              Button,
              ButtonType,
              SplitterLayoutData,
-             ResizeHandler) {
+             ResizeHandler,
+             FileDialogController) {
    "use strict";
 
    function chk_icon(flag) {
@@ -287,6 +289,25 @@ sap.ui.define([
             case "Canvas.ps":
             case "Canvas.C":
                p.sendSaveCommand(name);
+               break;
+            case "Save as ...":
+               FileDialogController.SaveAs({
+                  websocket: p._websocket,
+                  filename: 'Canvas.png',
+                  title: 'Select file name to save canvas',
+                  filter: 'Png files',
+                  filters: ['Png files (*.png)', 'Jpeg files (*.jpeg)', 'SVG files (*.svg)', 'PDF files (*.pdf)',  'ROOT files (*.root)', 'C++ (*.cxx *.cpp *.c)'],
+                  // working_path: "/Home",
+                  onOk: fname => {
+                     if (fname.endsWith('.png') || fname.endsWith('.jpeg') || fname.endsWith('.svg'))
+                         p.saveCanvasAsFile(fname);
+                     else
+                         p.sendSaveCommand(fname);
+                  },
+                  onCancel: () => {},
+                  onFailure: () => {}
+               });
+
                break;
          }
 
