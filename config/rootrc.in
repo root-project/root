@@ -103,6 +103,7 @@ Root.Fitter:             Minuit
 # HighLightColor 2 = red. ShowEventStatus allows the event status bar to
 # be turned on by default. AutoExec allows TExec objects to be executed
 # on mouse and key events.
+Canvas.Name:                @root_canvas_class@
 Canvas.MoveOpaque:          true
 Canvas.ResizeOpaque:        true
 Canvas.ShowGuideLines:      true
