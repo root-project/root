@@ -417,6 +417,16 @@ std::string RFileDialog::NewFile(const std::string &title, const std::string &fn
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
+/// Check if this could be the message send by client to start new file dialog
+/// If returns true, one can call RFileDialog::Embedded() to really create file dialog
+/// instance inside existing widget
+
+bool RFileDialog::IsMessageToStartDialog(const std::string &msg)
+{
+   return msg.compare(0, 11, "FILEDIALOG:") == 0;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////
 /// Create dialog instance to use as embedded dialog inside other widget
 /// Embedded dialog started on the client side where FileDialogController.SaveAs() method called
 /// Such method immediately send message with "FILEDIALOG:" prefix
@@ -426,7 +436,7 @@ std::string RFileDialog::NewFile(const std::string &title, const std::string &fn
 
 std::shared_ptr<RFileDialog> RFileDialog::Embedded(const std::shared_ptr<RWebWindow> &window, const std::string &args)
 {
-   if (args.compare(0, 11, "FILEDIALOG:") != 0)
+   if (!IsMessageToStartDialog(args))
       return nullptr;
 
    auto arr = TBufferJSON::FromJSON<std::vector<std::string>>(args.substr(11));
