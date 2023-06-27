@@ -2770,6 +2770,7 @@ void TROOT::SetWebDisplay(const char *webdisplay)
    const char *wd = webdisplay ? webdisplay : "";
 
    // store default values to set them back when needed
+   static TString canName = gEnv->GetValue("Canvas.Name", "");
    static TString brName = gEnv->GetValue("Browser.Name", "");
    static TString trName = gEnv->GetValue("TreeViewer.Name", "");
 
@@ -2801,9 +2802,11 @@ void TROOT::SetWebDisplay(const char *webdisplay)
    }
 
    if (fIsWebDisplay) {
+      gEnv->SetValue("Canvas.Name", canName);
       gEnv->SetValue("Browser.Name", brName);
       gEnv->SetValue("TreeViewer.Name", "RTreeViewer");
    } else {
+      gEnv->SetValue("Canvas.Name", "TRootCanvas");
       gEnv->SetValue("Browser.Name", "TRootBrowser");
       gEnv->SetValue("TreeViewer.Name", trName);
    }

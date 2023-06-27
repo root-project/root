@@ -60,6 +60,16 @@ TApplicationImp *TRootGuiFactory::CreateApplicationImp(const char *classname,
 TCanvasImp *TRootGuiFactory::CreateCanvasImp(TCanvas *c, const char *title,
                                              UInt_t width, UInt_t height)
 {
+   TString canvName = gEnv->GetValue("Canvas.Name", "TWebCanvas");
+   if (canvName == "TWebCanvas") {
+      auto ph = gROOT->GetPluginManager()->FindHandler("TCanvasImp", "TWebCanvas");
+
+      if (ph && ph->LoadPlugin() != -1) {
+         auto imp = (TCanvasImp *) ph->ExecPlugin(6, c, title, 0, 0, width, height);
+         if (imp) return imp;
+      }
+   }
+
    return new TRootCanvas(c, title, width, height);
 }
 
@@ -69,6 +79,16 @@ TCanvasImp *TRootGuiFactory::CreateCanvasImp(TCanvas *c, const char *title,
 TCanvasImp *TRootGuiFactory::CreateCanvasImp(TCanvas *c, const char *title,
                                   Int_t x, Int_t y, UInt_t width, UInt_t height)
 {
+   TString canvName = gEnv->GetValue("Canvas.Name", "TWebCanvas");
+   if (canvName == "TWebCanvas") {
+      auto ph = gROOT->GetPluginManager()->FindHandler("TCanvasImp", "TWebCanvas");
+
+      if (ph && ph->LoadPlugin() != -1) {
+         auto imp = (TCanvasImp *) ph->ExecPlugin(6, c, title, x, y, width, height);
+         if (imp) return imp;
+      }
+   }
+
    return new TRootCanvas(c, title, x, y, width, height);
 }
 
