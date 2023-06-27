@@ -467,7 +467,10 @@ bool Minuit2Minimizer::Minimize()
 
    // set strategy and add extra options if needed
    ROOT::Minuit2::MnStrategy strategy(strategyLevel);
-   ROOT::Math::IOptions *minuit2Opt = ROOT::Math::MinimizerOptions::FindDefault("Minuit2");
+   const ROOT::Math::IOptions *minuit2Opt = fOptions.ExtraOptions();
+   if (!minuit2Opt) {
+      minuit2Opt = ROOT::Math::MinimizerOptions::FindDefault("Minuit2");
+   }
    if (minuit2Opt) {
       // set extra  options
       int nGradCycles = strategy.GradientNCycles();
@@ -495,7 +498,7 @@ bool Minuit2Minimizer::Minimize()
       strategy.SetGradientTolerance(gradTol);
       strategy.SetGradientStepTolerance(gradStepTol);
       strategy.SetHessianStepTolerance(hessStepTol);
-      strategy.SetHessianG2Tolerance(hessStepTol);
+      strategy.SetHessianG2Tolerance(hessG2Tol);
 
       int storageLevel = 1;
       bool ret = minuit2Opt->GetValue("StorageLevel", storageLevel);
@@ -551,7 +554,7 @@ bool Minuit2Minimizer::Minimize()
       fMinimum = new ROOT::Minuit2::FunctionMinimum(min);
    }
 
-   // check if Hesse needs to be run. We do it when is requested (IsValidError() == true)
+   // check if Hesse needs to be run. We do it when is requested (IsValidError() == true , set by SetParabError(true) in fitConfig)
    // (IsValidError() means the flag to get correct error from the Minimizer is set (Minimizer::SetValidError())
    // AND when we have a valid minimum,
    // AND  when the the current covariance matrix is estimated using the iterative approximation (Dcovar != 0 , i.e. Hesse has not computed  before)
@@ -1202,7 +1205,43 @@ bool Minuit2Minimizer::Hesse()
       return false;
    }
 
-   const int strategy = Strategy();
+
+   // set strategy and add extra options if needed
+   ROOT::Minuit2::MnStrategy strategy(Strategy());
+   const ROOT::Math::IOptions *minuit2Opt = fOptions.ExtraOptions();
+   if (!minuit2Opt) {
+      minuit2Opt = ROOT::Math::MinimizerOptions::FindDefault("Minuit2");
+   }
+   if (minuit2Opt) {
+      // set extra  options
+      int nGradCycles = strategy.GradientNCycles();
+      int nHessCycles = strategy.HessianNCycles();
+      int nHessGradCycles = strategy.HessianGradientNCycles();
+
+      double gradTol = strategy.GradientTolerance();
+      double gradStepTol = strategy.GradientStepTolerance();
+      double hessStepTol = strategy.HessianStepTolerance();
+      double hessG2Tol = strategy.HessianG2Tolerance();
+
+      minuit2Opt->GetValue("GradientNCycles", nGradCycles);
+      minuit2Opt->GetValue("HessianNCycles", nHessCycles);
+      minuit2Opt->GetValue("HessianGradientNCycles", nHessGradCycles);
+
+      minuit2Opt->GetValue("GradientTolerance", gradTol);
+      minuit2Opt->GetValue("GradientStepTolerance", gradStepTol);
+      minuit2Opt->GetValue("HessianStepTolerance", hessStepTol);
+      minuit2Opt->GetValue("HessianG2Tolerance", hessG2Tol);
+
+      strategy.SetGradientNCycles(nGradCycles);
+      strategy.SetHessianNCycles(nHessCycles);
+      strategy.SetHessianGradientNCycles(nHessGradCycles);
+
+      strategy.SetGradientTolerance(gradTol);
+      strategy.SetGradientStepTolerance(gradStepTol);
+      strategy.SetHessianStepTolerance(hessStepTol);
+      strategy.SetHessianG2Tolerance(hessG2Tol);
+   }
+
    const int maxfcn = MaxFunctionCalls();
    print.Info("Using max-calls", maxfcn);
 
@@ -1254,6 +1293,8 @@ bool Minuit2Minimizer::Hesse()
       covStatusType = "full but made positive defined";
    if (covStatus == 3)
       covStatusType = "accurate";
+   if (covStatus == 0)
+      covStatusType = "full but not positive defined";
 
    if (!fState.HasCovariance()) {
       // if false means error is not valid and this is due to a failure in Hesse

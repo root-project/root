@@ -176,12 +176,14 @@ MnUserParameterState::MnUserParameterState(const MinimumState &st, double up, co
 
       assert(fCovariance.Nrow() == VariableParameters());
 
-      fCovStatus = 1; // when is valid
+      if (!st.Error().IsNotPosDef())
+         fCovStatus = 1; // when is valid and not NotPosDef
    }
    if (st.Error().IsMadePosDef())
       fCovStatus = 2;
    if (st.Error().IsAccurate())
       fCovStatus = 3;
+
 }
 
 MnUserCovariance MnUserParameterState::Hessian() const

@@ -334,6 +334,7 @@ MinimumState MnHesse::ComputeNumerical(const MnFcn &mfcn, const MinimumState &st
 
    // off-diagonal Elements
    // initial starting values
+   bool doCentralFD = fStrategy.HessianCentralFDMixedDerivatives();
    if (n > 0) {
       MPIProcess mpiprocOffDiagonal(n * (n - 1) / 2, 0);
       unsigned int startParIndexOffDiagonal = mpiprocOffDiagonal.StartElementIndex();
@@ -357,10 +358,19 @@ MinimumState MnHesse::ComputeNumerical(const MnFcn &mfcn, const MinimumState &st
          x(j) += dirin(j);
 
          double fs1 = mfcn(x);
-         double elem = (fs1 + amin - yy(i) - yy(j)) / (dirin(i) * dirin(j));
-         vhmat(i, j) = elem;
-
-         x(j) -= dirin(j);
+         if(!doCentralFD) {
+            double elem = (fs1 + amin - yy(i) - yy(j)) / (dirin(i) * dirin(j));
+            vhmat(i, j) = elem;
+            x(j) -= dirin(j);
+         } else {
+            // three more function evaluations required for central fd
+            x(i) -= dirin(i); x(i) -= dirin(i);double fs3 = mfcn(x);
+            x(j) -= dirin(j); x(j) -= dirin(j);double fs4 = mfcn(x);
+            x(i) += dirin(i); x(i) += dirin(i);double fs2 = mfcn(x);
+            x(j) += dirin(j);
+            double elem = (fs1 - fs2 - fs3 + fs4)/(4.*dirin(i)*dirin(j));
+            vhmat(i, j) = elem;
+         }
 
          if (j % (n - 1) == 0 || in == endParIndexOffDiagonal - 1)
             x(i) -= dirin(i);
@@ -370,11 +380,17 @@ MinimumState MnHesse::ComputeNumerical(const MnFcn &mfcn, const MinimumState &st
    }
 
    // verify if matrix pos-def (still 2nd derivative)
+   // Note that for cases of extreme spread of eigenvalues, numerical precision
+   // can mean the hessian is computed as being not pos-def
+   // but the inverse of it is.
 
    print.Debug("Original error matrix", vhmat);
 
-   MinimumError tmpErr = MnPosDef()(MinimumError(vhmat, 1.), prec);
-   vhmat = tmpErr.InvHessian();
+   MinimumError tmpErr = MnPosDef()(MinimumError(vhmat, 1.), prec); // pos-def version of hessian
+
+   if(fStrategy.HessianForcePosDef()) {
+      vhmat = tmpErr.InvHessian();
+   }
 
    print.Debug("PosDef error matrix", vhmat);
 
@@ -398,7 +414,7 @@ MinimumState MnHesse::ComputeNumerical(const MnFcn &mfcn, const MinimumState &st
 
    // if matrix is made pos def returns anyway edm
    if (tmpErr.IsMadePosDef()) {
-      MinimumError err(vhmat, MinimumError::MnMadePosDef);
+      MinimumError err(vhmat, fStrategy.HessianForcePosDef() ? MinimumError::MnMadePosDef : MinimumError::MnNotPosDef);
       double edm = estim.Estimate(gr, err);
       return MinimumState(st.Parameters(), err, gr, edm, mfcn.NumOfCalls());
    }
