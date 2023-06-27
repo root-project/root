@@ -302,8 +302,8 @@ public:
    {
       const RooRealSumPdf *pdf = static_cast<const RooRealSumPdf *>(func);
       elem["type"] << key();
-      elem["samples"].fill_seq(pdf->funcList(), [](auto const &item) { return item->GetName(); });
-      elem["coefficients"].fill_seq(pdf->coefList(), [](auto const &item) { return item->GetName(); });
+      RooJSONFactoryWSTool::fillSeq(elem["samples"], pdf->funcList());
+      RooJSONFactoryWSTool::fillSeq(elem["coefficients"], pdf->coefList());
       elem["extended"] << (pdf->extendMode() == RooAbsPdf::CanBeExtended);
       return true;
    }
@@ -316,8 +316,8 @@ public:
    {
       const RooRealSumFunc *pdf = static_cast<const RooRealSumFunc *>(func);
       elem["type"] << key();
-      elem["samples"].fill_seq(pdf->funcList(), [](auto const &item) { return item->GetName(); });
-      elem["coefficients"].fill_seq(pdf->coefList(), [](auto const &item) { return item->GetName(); });
+      RooJSONFactoryWSTool::fillSeq(elem["samples"], pdf->funcList());
+      RooJSONFactoryWSTool::fillSeq(elem["coefficients"], pdf->coefList());
       return true;
    }
 };
@@ -467,8 +467,8 @@ public:
    {
       auto *pdf = static_cast<const RooMultiVarGaussian *>(func);
       elem["type"] << key();
-      elem["x"].fill_seq(pdf->xVec(), [](auto const &item) { return item->GetName(); });
-      elem["mean"].fill_seq(pdf->muVec(), [](auto const &item) { return item->GetName(); });
+      RooJSONFactoryWSTool::fillSeq(elem["x"], pdf->xVec());
+      RooJSONFactoryWSTool::fillSeq(elem["mean"], pdf->muVec());
       elem["covariances"].fill_mat(pdf->covarianceMatrix());
       return true;
    }
