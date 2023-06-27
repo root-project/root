@@ -28,6 +28,26 @@
 #include "Minuit2/MnParabolaPoint.h"
 #include "Minuit2/MnPrint.h"
 
+#include <iostream>
+#include <chrono>
+
+class TimingScope {
+public:
+   TimingScope(std::string const &label) : _begin{std::chrono::steady_clock::now()}, _label{label} {}
+   ~TimingScope()
+   {
+      std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
+      std::cout << "Time difference for " << _label << " = "
+                //<< std::chrono::duration_cast<std::chrono::microseconds>(end - _begin).count() << " [µs]" << std::endl;
+                << std::chrono::duration_cast<std::chrono::milliseconds>(end - _begin).count() << " [ms]" << std::endl;
+   }
+
+private:
+   std::chrono::steady_clock::time_point _begin;
+   const std::string _label;
+};
+
+
 namespace ROOT {
 
 namespace Minuit2 {
@@ -134,9 +154,13 @@ FunctionMinimum ModularFunctionMinimizer::Minimize(const FCNBase &fcn, const MnU
    unsigned int npar = st.VariableParameters();
    if (maxfcn == 0)
       maxfcn = 200 + 100 * npar + 5 * npar * npar;
-   MinimumSeed mnseeds = SeedGenerator()(mfcn, gc, st, strategy);
 
-   return Minimize(mfcn, gc, mnseeds, strategy, maxfcn, toler);
+   auto ts = std::make_unique<TimingScope>("Seeding");
+   MinimumSeed mnseeds = SeedGenerator()(mfcn, gc, st, strategy);
+   ts = std::make_unique<TimingScope>("Minimization");
+   auto out = Minimize(mfcn, gc, mnseeds, strategy, maxfcn, toler);
+   ts.reset();
+   return out;
 }
 
 // use Gradient here
@@ -163,8 +187,11 @@ FunctionMinimum ModularFunctionMinimizer::Minimize(const FCNGradientBase &fcn, c
       maxfcn = 200 + 100 * npar + 5 * npar * npar;
 
    // compute seed (will use internally numerical gradient in case calculator does not implement g2 computations)
+   auto ts = std::make_unique<TimingScope>("Seeding");
    MinimumSeed mnseeds = SeedGenerator()(mfcn, *gc, st, strategy);
+   ts = std::make_unique<TimingScope>("Minimization");
    auto minimum = Minimize(mfcn, *gc, mnseeds, strategy, maxfcn, toler);
+   ts.reset();
 
    return minimum;
 }
