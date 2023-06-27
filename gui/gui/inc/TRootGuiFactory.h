@@ -26,6 +26,9 @@ class TControlBar;
 
 class TRootGuiFactory : public TGuiFactory {
 
+protected:
+   void ShowWebCanvasWarning();
+
 public:
    TRootGuiFactory(const char *name = "Root", const char *title = "ROOT GUI Factory");
    ~TRootGuiFactory() override {}

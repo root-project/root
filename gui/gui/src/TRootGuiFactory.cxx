@@ -30,6 +30,8 @@ the member functions of the ABS TGuiFactory.
 #include "TPluginManager.h"
 #include "TEnv.h"
 
+#include <iostream>
+
 ClassImp(TRootGuiFactory);
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -49,9 +51,29 @@ TApplicationImp *TRootGuiFactory::CreateApplicationImp(const char *classname,
    TRootApplication *app = new TRootApplication(classname, argc, argv);
    if (!app->Client()) {
       delete app;
-      app = 0;
+      app = nullptr;
    }
    return app;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////
+/// Show warning that TWebCanvas will be started by default
+
+void TRootGuiFactory::ShowWebCanvasWarning()
+{
+   static bool show_warn = true;
+   if (!show_warn || gROOT->IsWebDisplay()) return;
+   show_warn = false;
+
+   std::cout << "\n"
+                "   !!! ATTENTION !!! \n"
+                "\n"
+                "ROOT comes with a web-based canvas, which is now being started. \n"
+                "Revert to default by setting \"Canvas.Name: TRootCanvas\" in rootrc file or\n"
+                "by starting \"root --web=off\". Web-based TCanvas can be used in batch mode for\n"
+                "image generation when running with \"root -b --web\"\n"
+                "Find more info on https://root.cern/for_developers/root7/#twebcanvas\n"
+                "\n";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -65,6 +87,7 @@ TCanvasImp *TRootGuiFactory::CreateCanvasImp(TCanvas *c, const char *title,
       auto ph = gROOT->GetPluginManager()->FindHandler("TCanvasImp", "TWebCanvas");
 
       if (ph && ph->LoadPlugin() != -1) {
+         ShowWebCanvasWarning();
          auto imp = (TCanvasImp *) ph->ExecPlugin(6, c, title, 0, 0, width, height);
          if (imp) return imp;
       }
@@ -84,6 +107,7 @@ TCanvasImp *TRootGuiFactory::CreateCanvasImp(TCanvas *c, const char *title,
       auto ph = gROOT->GetPluginManager()->FindHandler("TCanvasImp", "TWebCanvas");
 
       if (ph && ph->LoadPlugin() != -1) {
+         ShowWebCanvasWarning();
          auto imp = (TCanvasImp *) ph->ExecPlugin(6, c, title, x, y, width, height);
          if (imp) return imp;
       }
