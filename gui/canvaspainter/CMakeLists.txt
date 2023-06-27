@@ -14,4 +14,5 @@ ROOT_LINKER_LIBRARY(ROOTCanvasPainter
     ROOTGpadv7
     RHTTP
     ROOTWebDisplay
+    ROOTBrowserv7
 )
