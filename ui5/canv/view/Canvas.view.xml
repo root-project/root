@@ -33,7 +33,7 @@
                               <MenuItem text="Canvas.C" enabled="{/isRoot6}" tooltip="Produces C output on server side"/>
                            </items>
                         </MenuItem>
-                        <MenuItem text="Save as ..." icon="sap-icon://save" enabled="false"/>
+                        <MenuItem text="Save as ..." icon="sap-icon://save" enabled="true"/>
                         <MenuItem text="Interrupt" startsSection="true" icon="sap-icon://stop" enabled="{/Standalone}" tooltip="Interrupts current event loop"/>
                         <MenuItem text="Reload" icon="sap-icon://refresh" enabled="{/Standalone}" visible="{/Standalone}" tooltip="Fully reload canvas"/>
                         <MenuItem text="Quit ROOT" icon="sap-icon://log" enabled="{/Standalone}" tooltip="Quit ROOT session"/>

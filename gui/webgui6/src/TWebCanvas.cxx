@@ -15,6 +15,8 @@
 #include "TWebPS.h"
 #include "TWebMenuItem.h"
 
+#include "ROOT/RFileDialog.hxx"
+
 #include "TSystem.h"
 #include "TStyle.h"
 #include "TCanvas.h"
@@ -1338,6 +1340,10 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
             }
          }
       }
+   } else if (ROOT::Experimental::RFileDialog::IsMessageToStartDialog(arg)) {
+
+      ROOT::Experimental::RFileDialog::Embedded(fWindow, arg);
+
    } else if (IsReadOnly()) {
 
       // all following messages are not allowed in readonly mode
