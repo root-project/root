@@ -160,6 +160,9 @@ TContextMenuImp *TRootGuiFactory::CreateContextMenuImp(TContextMenu *c,
 
 TControlBarImp *TRootGuiFactory::CreateControlBarImp(TControlBar *c, const char *title)
 {
+   if (gROOT->IsWebDisplay())
+      return TGuiFactory::CreateControlBarImp(c, title);
+
    return new TRootControlBar(c, title);
 }
 
@@ -169,5 +172,8 @@ TControlBarImp *TRootGuiFactory::CreateControlBarImp(TControlBar *c, const char 
 TControlBarImp *TRootGuiFactory::CreateControlBarImp(TControlBar *c, const char *title,
                                                      Int_t x, Int_t y)
 {
+   if (gROOT->IsWebDisplay())
+      return TGuiFactory::CreateControlBarImp(c, title, x, y);
+
    return new TRootControlBar(c, title, x, y);
 }
