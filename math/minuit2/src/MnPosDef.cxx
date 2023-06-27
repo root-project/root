@@ -43,7 +43,7 @@ MinimumError MnPosDef::operator()(const MinimumError &e, const MnMachinePrecisio
    }
    //   std::cout<<"MnPosDef init matrix= "<<err<<std::endl;
 
-   double epspdf = std::max(1.e-6, prec.Eps2());
+   double epspdf = std::max(1.e-12, prec.Eps2()); // should this lower bound be configurable?
    double dgmin = err(0, 0);
 
    for (unsigned int i = 0; i < err.Nrow(); i++) {
