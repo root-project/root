@@ -629,7 +629,7 @@ void TApplication::OpenInBrowser(const TString &url)
    gSystem->Exec(cMac);
 #elif defined(R__WIN32)
    // Command for opening a browser on Windows.
-   TString cWindows("start ");
+   TString cWindows("start \"\" ");
    cWindows.Append(url);
    gSystem->Exec(cWindows);
 #else
