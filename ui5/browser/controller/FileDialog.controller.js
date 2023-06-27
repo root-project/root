@@ -36,12 +36,14 @@ sap.ui.define(['rootui5/panel/Controller',
          */
 
          this.kind = 'None'; // not yet known
+         this.lastSelectedExt = 'AllFiles';
+
          this.oModel = new JSONModel({ canEditName: (this.kind == 'SaveAs') || (this.kind == 'NewFile'),
                                        canChangePath: true,
                                        dialogTitle: 'Dialog Title',
                                        fileName: '',
                                        filesList: [{ name: 'dummy.txt', counter: 11 }],
-                                       fileExt: 'AllFiles',
+                                       fileExt: this.lastSelectedExt,
                                        showFileExt: false,
                                        fileExtList: [] });
                                       // fileExtList: [{ id: 'AllFiles', text: 'All files (*.*)' }, { id: 'png', text: 'png files (*.png)'}, { id: 'cxx', text: 'CXX files (*.cxx)'}] });
@@ -157,9 +159,62 @@ sap.ui.define(['rootui5/panel/Controller',
          this.oModel.setProperty('/fileName', item.getTitle());
       },
 
+      /** @summary Returns true if file extension match to extension name from dialog */
+      matchExtension(fname, extName) {
+         let p = fname.lastIndexOf('.');
+         if ((p < 0) || (p > fname.length-2)) return false;
+
+         if (!this.oModel.getProperty('/showFileExt')) return false;
+
+         let arr = this.oModel.getProperty('/fileExtList'),
+             expects = '*' + fname.slice(p);
+
+         for (let n = 0; n < arr?.length; ++l)
+            if (arr[n].id == extName)
+               return arr[n].text.indexOf(expects) >= 0;
+         return false;
+      },
+
       /** @summary When selected file extenstion changed */
       onFileExtChanged() {
+
          let extName = this.oModel.getProperty('/fileExt');
+
+         if ((this.lastSelectedExt != extName) && this.oModel.getProperty('/showFileExt') && this.oModel.getProperty('/canEditName')) {
+            let fname = this.oModel.getProperty('/fileName'),
+                p = fname.lastIndexOf('.'),
+                expect_to_find = (p > 0) && (p < fname.length - 1) ? '*' + fname.slice(p) : '',
+                arr = this.oModel.getProperty('/fileExtList'),
+                found_prev = false, newext = '';
+
+            for (let n = 0; n < arr?.length; ++n) {
+               if ((arr[n].id == this.lastSelectedExt) && expect_to_find) {
+                  let k = arr[n].text.indexOf(expect_to_find);
+                  if ((k > 0) && arr[n].text.slice(k + expect_to_find.length).search(/[,\s\)]/g) == 0)
+                     found_prev = true;
+               }
+               if (arr[n].id == extName) {
+                  let p1 = arr[n].text.indexOf('*.');
+                  if (p1 > 0) {
+                     let sub = arr[n].text.slice(p1+2),
+                         p2 = sub.search(/[,\s\)]/g);
+                     if (p2 > 0) newext = sub.slice(0, p2);
+                  }
+               }
+            }
+
+            if (found_prev && newext) {
+               fname = fname.slice(0, p+1) + newext;
+               this.oModel.setProperty('/fileName', fname);
+            } else if (newext && fname) {
+               if (fname[fname.length-1] != '.') fname += '.';
+               fname += newext;
+               this.oModel.setProperty('/fileName', fname);
+            }
+         }
+
+         this.lastSelectedExt = extName;
+
          this.websocket.send('CHEXT:' + extName);
       },
 
@@ -185,19 +240,21 @@ sap.ui.define(['rootui5/panel/Controller',
          if (cfg.can_change_path !== undefined)
             this.oModel.setProperty('/canChangePath', cfg.can_change_path);
 
-         if (cfg.filters && cfg.filters.length) {
+         if (cfg.filters?.length) {
             let arr = [];
             for (let k = 0; k < cfg.filters.length; ++k) {
-               let fname = cfg.filters[k];
-               let p = fname.indexOf('(');
-               if (p>0) fname = fname.substr(0,p);
-               arr.push({id: fname.trim(), text: cfg.filters[k]});
+               let fname = cfg.filters[k],
+                   p = fname.indexOf('(');
+               if (p > 0) fname = fname.slice(0, p);
+               arr.push({ id: fname.trim(), text: cfg.filters[k] });
             }
+            this.lastSelectedExt = cfg.filter;
             this.oModel.setProperty('/fileExt', cfg.filter);
             this.oModel.setProperty('/fileExtList', arr);
             this.oModel.setProperty('/showFileExt', true);
          } else {
-            this.oModel.setProperty('/fileExt', 'All files');
+            this.lastSelectedExt = 'AllFiles';
+            this.oModel.setProperty('/fileExt', this.lastSelectedExt);
             this.oModel.setProperty('/showFileExt', false);
          }
 
@@ -251,7 +308,7 @@ sap.ui.define(['rootui5/panel/Controller',
             return console.error('Browser do not uses binary messages len = ' + mgs.byteLength);
 
          let mhdr = msg.split(':')[0];
-         msg = msg.substr(mhdr.length+1);
+         msg = msg.slice(mhdr.length+1);
 
          switch (mhdr) {
          case 'INMSG':
@@ -332,15 +389,16 @@ sap.ui.define(['rootui5/panel/Controller',
 
          let fname = args.filename || '',
              p = Math.max(fname.lastIndexOf('/'), fname.lastIndexOf('\\'));
-         if (p > 0) fname = fname.substr(p+1);
+         if (p > 0) fname = fname.slice(p+1);
 
          this.kind = kind;
+         this.lastSelectedExt = 'AllFiles';
          this.oModel = new JSONModel({ canEditName: (this.kind == 'SaveAs') || (this.kind == 'NewFile'),
                                        canChangePath: args.can_change_path === undefined ? true : args.can_change_path,
                                        dialogTitle: args.title || 'Title',
                                        fileName: fname, // will be returned from the server, just for initialization
                                        filesList: [{ name: 'dummy.txt', counter: 11 }],
-                                       fileExt: 'All files',
+                                       fileExt: this.lastSelectedExt,
                                        showFileExt: false,
                                        fileExtList: [] });
                                        // fileExtList: [{ id: 'AllFiles', text: 'All files (*.*)' }, { id: 'png', text: 'png files (*.png)'}, { id: 'cxx', text: 'CXX files (*.cxx)'}] });
