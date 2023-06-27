@@ -97,6 +97,9 @@ public:
       // create implementation
       fWebCanvas = new TWebCanvas(fCanvas.get(), "title", 0, 0, 800, 600, readonly);
 
+      // use async mode to prevent blocking inside qt5/qt6/cef
+      fWebCanvas->SetAsyncMode(kTRUE);
+
       // assign implementation
       fCanvas->SetCanvasImp(fWebCanvas);
       SetPrivateCanvasFields(true);
@@ -115,6 +118,9 @@ public:
 
       // create implementation
       fWebCanvas = new TWebCanvas(fCanvas.get(), "title", 0, 0, 800, 600, readonly);
+
+      // use async mode to prevent blocking inside qt5/qt6/cef
+      fWebCanvas->SetAsyncMode(kTRUE);
 
       // assign implementation
       fCanvas->SetCanvasImp(fWebCanvas);
