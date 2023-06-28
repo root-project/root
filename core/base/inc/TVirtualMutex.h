@@ -89,12 +89,8 @@ public:
    ClassDefNV(TLockGuard,0)  // Exception safe locking/unlocking of mutex
 };
 
-// Zero overhead macros in case not compiled with thread support (-pthread)
 // Use with a trailing semicolon and pass a pointer as argument, e.g.:
 // TMutex m; R__LOCKGUARD(&m);
-// Warning: if program is compiled without pthread support, _REENTRANT will
-// be undefined and the macro has (silently) no effect, no locks are performed.
-#if defined (_REENTRANT) || defined (WIN32) || defined (R__FBSD)
 
 #define R__LOCKGUARD(mutex) TLockGuard _R__UNIQUE_(R__guard)(mutex)
 #define R__LOCKGUARD2(mutex)                             \
@@ -107,13 +103,6 @@ public:
    R__LOCKGUARD(mutex)
 #define R__LOCKGUARD_NAMED(name,mutex) TLockGuard _NAME2_(R__guard,name)(mutex)
 #define R__LOCKGUARD_UNLOCK(name) _NAME2_(R__guard,name).UnLock()
-#else
-//@todo: mutex is not checked to be of type TVirtualMutex*.
-#define R__LOCKGUARD(mutex)  (void)(mutex); { }
-#define R__LOCKGUARD_NAMED(name,mutex) (void)(mutex); { }
-#define R__LOCKGUARD2(mutex) (void)(mutex); { }
-#define R__LOCKGUARD_UNLOCK(name) { }
-#endif
 
 #ifdef R__USE_IMT
 #define R__LOCKGUARD_IMT(mutex)  R__LOCKGUARD(ROOT::Internal::IsParBranchProcessingEnabled() ? mutex : nullptr)
