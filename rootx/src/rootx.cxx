@@ -45,14 +45,6 @@
 #include <libprocstat.h>
 #endif // R__FBSD
 
-#ifdef __sun
-#   ifndef _REENTRANT
-#      if __SUNPRO_CC > 0x420
-#         define GLOBAL_ERRNO
-#      endif
-#   endif
-#endif
-
 #if defined(__CYGWIN__) && defined(__GNUC__)
 #define ROOTBINARY "root_exe.exe"
 #else
@@ -90,20 +82,12 @@ using ROOT::ROOTX::gChildpid;
 static int gChildpid;
 static int GetErrno()
 {
-#ifdef GLOBAL_ERRNO
-   return ::errno;
-#else
    return errno;
-#endif
 }
 
 static void ResetErrno()
 {
-#ifdef GLOBAL_ERRNO
-   ::errno = 0;
-#else
    errno = 0;
-#endif
 }
 
 #endif

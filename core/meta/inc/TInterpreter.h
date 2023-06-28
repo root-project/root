@@ -45,11 +45,7 @@ class TSeqCollection;
 
 R__EXTERN TVirtualMutex *gInterpreterMutex;
 
-#if defined (_REENTRANT) || defined (WIN32) || defined (R__FBSD)
 # define R__LOCKGUARD_CLING(mutex)  ::ROOT::Internal::InterpreterMutexRegistrationRAII _R__UNIQUE_(R__guard)(mutex); { }
-#else
-# define R__LOCKGUARD_CLING(mutex)  (void)(mutex); { }
-#endif
 
 namespace ROOT {
 namespace Internal {

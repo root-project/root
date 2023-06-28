@@ -121,7 +121,7 @@ const char *TDatime::AsString() const
 const char *TDatime::AsString(char *out) const
 {
    time_t t = Convert();
-#ifdef _REENTRANT
+#ifndef WIN32
 #if defined(R__SOLARIS) && (_POSIX_C_SOURCE - 0 < 199506L)
    char *retStr = ctime_r(&t, out, 26);
 #else
@@ -132,7 +132,7 @@ const char *TDatime::AsString(char *out) const
 #endif
    if (retStr) {
       *(retStr + 24) = 0;
-#ifndef _REENTRANT
+#ifdef WIN32
       strcpy(out, retStr);
 #endif
       return retStr;
@@ -203,7 +203,7 @@ UInt_t TDatime::Convert(Bool_t toGMT) const
       return 0;
    }
    if (toGMT) {
-#ifdef _REENTRANT
+#ifndef WIN32
       struct tm tg;
       struct tm *tgp = gmtime_r(&t, &tg);
 #else
@@ -290,12 +290,8 @@ void TDatime::Set()
 {
 #ifndef WIN32
    time_t tloc   = time(nullptr);
-#ifdef _REENTRANT
    struct tm tpa;
    struct tm *tp = localtime_r(&tloc, &tpa);
-#else
-   struct tm *tp = localtime(&tloc);
-#endif
    UInt_t year   = tp->tm_year;
    UInt_t month  = tp->tm_mon + 1;
    UInt_t day    = tp->tm_mday;
@@ -335,7 +331,7 @@ void TDatime::Set(UInt_t tloc, Bool_t dosDate)
       sec   = (tloc & 0x1f) * 2;
    } else {
       time_t t = (time_t) tloc;
-#ifdef _REENTRANT
+#ifndef WIN32
       struct tm tpa;
       struct tm *tp = localtime_r(&t, &tpa);
 #else

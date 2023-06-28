@@ -149,28 +149,12 @@ public:
 
 } // namespace ROOT.
 
-// Zero overhead macros in case not compiled with thread support (-pthread)
 // Use with a trailing semicolon and pass a pointer as argument, e.g.:
 // TMutex m; R__READ_LOCKGUARD(&m);
-// Warning: if program is compiled without pthread support, _REENTRANT will
-// be undefined and the macro has (silently) no effect, no locks are performed.
-#if defined (_REENTRANT) || defined (WIN32) || defined (R__FBSD)
-
 #define R__READ_LOCKGUARD(mutex) ::ROOT::TReadLockGuard _R__UNIQUE_(R__readguard)(mutex)
 #define R__READ_LOCKGUARD_NAMED(name,mutex) ::ROOT::TReadLockGuard _NAME2_(R__readguard,name)(mutex)
 
 #define R__WRITE_LOCKGUARD(mutex) ::ROOT::TWriteLockGuard _R__UNIQUE_(R__readguard)(mutex)
 #define R__WRITE_LOCKGUARD_NAMED(name,mutex) ::ROOT::TWriteLockGuard _NAME2_(R__readguard,name)(mutex)
-
-#else
-//@todo: mutex is not checked to be of type TVirtualMutex*.
-#define R__READ_LOCKGUARD(mutex) (void)mutex
-#define R__READ_LOCKGUARD_NAMED(name,mutex) (void)mutex
-
-#define R__WRITE_LOCKGUARD(mutex) (void)mutex
-#define R__WRITE_LOCKGUARD_NAMED(name,mutex) (void)mutex
-
-#endif
-
 
 #endif
