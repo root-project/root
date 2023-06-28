@@ -2348,9 +2348,9 @@ RVec<T> Take(const RVec<T> &v, const int n)
    const size_type size = v.size();
    const size_type absn = std::abs(n);
    if (absn > size) {
-      std::stringstream ss;
-      ss << "Try to take " << absn << " elements but vector has only size " << size << ".";
-      throw std::runtime_error(ss.str());
+      const auto msg = std::to_string(absn) + " elements requested from Take but input contains only " +
+                       std::to_string(size) + " elements.";
+      throw std::runtime_error(msg);
    }
    RVec<T> r(absn);
    if (n < 0) {
