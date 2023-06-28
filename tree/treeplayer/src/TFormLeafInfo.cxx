@@ -358,7 +358,7 @@ Bool_t TFormLeafInfo::IsString() const
       case kChar_t:
          // This is new in ROOT 3.02/05
          return kFALSE;
-      case TStreamerInfo::kOffsetL + kChar_t:
+      case TStreamerInfo::kOffsetL + TStreamerInfo::kChar:
          // This is new in ROOT 3.02/05
          return kTRUE;
       case TStreamerInfo::kCharStar:
@@ -887,7 +887,7 @@ T TFormLeafInfo::ReadValueImpl(char *thisobj, Int_t instance)
       case TStreamerInfo::kOffsetL + TStreamerInfo::kULong64:
          {Long64_t *val = (Long64_t*)(thisobj+fOffset);   return T(val[instance]);}
 #else
-      case TStreamerInfo::kOffsetL + kULong64_t:
+      case TStreamerInfo::kOffsetL + TStreamerInfo::kULong64:
          {ULong64_t *val = (ULong64_t*)(thisobj+fOffset); return T(val[instance]);}
 #endif
 
