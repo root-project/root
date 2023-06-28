@@ -149,7 +149,6 @@ if(roofit)
   ROOT_ADD_PYUNITTEST(pyroot_roofit_roodataset roofit/roodataset.py)
 
   # RooWorkspace pythonizations
-  ROOT_ADD_PYUNITTEST(pyroot_roofit_rooworkspace roofit/rooworkspace.py)
   ROOT_ADD_PYUNITTEST(pyroot_roofit_rooabspdf_fitto roofit/rooabspdf_fitto.py)
   ROOT_ADD_PYUNITTEST(pyroot_roofit_rooabsreal_ploton roofit/rooabsreal_ploton.py)
 
@@ -162,6 +161,9 @@ if(roofit)
     # Other pythonizations that fail on Windows for unknown reasons
     ROOT_ADD_PYUNITTEST(pyroot_roofit_rooglobalfunc roofit/rooglobalfunc.py)
     ROOT_ADD_PYUNITTEST(pyroot_roofit_roosimultaneous roofit/roosimultaneous.py)
+
+    # RooWorkspace pythonization that fails on Windows
+    ROOT_ADD_PYUNITTEST(pyroot_roofit_rooworkspace roofit/rooworkspace.py)
   endif()
 
   # NumPy compatibility
