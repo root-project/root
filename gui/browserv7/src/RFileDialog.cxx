@@ -483,3 +483,36 @@ std::shared_ptr<RFileDialog> RFileDialog::Embedded(const std::shared_ptr<RWebWin
 
    return dialog;
 }
+
+/////////////////////////////////////////////////////////////////////////////////////
+/// Set start dialog function for RWebWindow
+
+void RFileDialog::SetStartFunc(bool on)
+{
+   if (on)
+      RWebWindow::SetStartDialogFunc([](const std::shared_ptr<RWebWindow> &window, const std::string &args) -> bool {
+         auto res = RFileDialog::Embedded(window, args);
+         return res ? true : false;
+      });
+   else
+      RWebWindow::SetStartDialogFunc(nullptr);
+}
+
+
+/////////////////////////////////////////////////////////////////////////////////////
+
+namespace ROOT {
+namespace Experimental {
+namespace Details {
+
+class RWebWindowPlugin {
+public:
+   RWebWindowPlugin() { RFileDialog::SetStartFunc(true); }
+
+   ~RWebWindowPlugin() { RFileDialog::SetStartFunc(false); }
+} sRWebWindowPlugin;
+
+}
+}
+}
+
