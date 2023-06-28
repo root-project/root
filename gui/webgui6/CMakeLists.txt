@@ -31,5 +31,4 @@ ROOT_STANDARD_LIBRARY_PACKAGE(WebGui6
     RIO
     Gpad
     ROOTWebDisplay
-    ROOTBrowserv7
 )
