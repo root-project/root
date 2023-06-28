@@ -201,7 +201,7 @@ class DaskBackend(Base.BaseBackend):
         `local_directory` attribute of each worker.
         """
         for filepath in paths:
-            self.client.upload_file(filepath)
+            self.client.upload_file(filepath, load=False)
 
     def make_dataframe(self, *args, **kwargs):
         """
