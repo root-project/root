@@ -413,10 +413,8 @@ hpuxacc | hpuxia64acc)
 win32)
    ;;
 *)
-   for f in $features ; do
-      auxcflags="-D_REENTRANT $auxcflags"
-      auxlibs="-lpthread $auxlibs"
-   done
+   auxcflags="-D_REENTRANT $auxcflags"
+   auxlibs="-lpthread $auxlibs"
    ;;
 esac
 
