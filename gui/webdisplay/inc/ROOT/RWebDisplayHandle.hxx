@@ -81,6 +81,8 @@ protected:
 
    static std::unique_ptr<Creator> &FindCreator(const std::string &name, const std::string &libname = "");
 
+   static bool CheckIfCanProduceImages(RWebDisplayArgs &args);
+
 public:
 
    /// constructor
@@ -103,6 +105,8 @@ public:
    static std::unique_ptr<RWebDisplayHandle> Display(const RWebDisplayArgs &args);
 
    static bool DisplayUrl(const std::string &url);
+
+   static bool CanProduceImages(const std::string &browser = "");
 
    static bool ProduceImage(const std::string &fname, const std::string &json, int width = 800, int height = 600, const char *batch_file = nullptr);
 };

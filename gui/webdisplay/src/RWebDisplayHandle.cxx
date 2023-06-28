@@ -649,6 +649,72 @@ bool RWebDisplayHandle::DisplayUrl(const std::string &url)
    return !!handle;
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////
+/// Checks if configured browser can be used for image production
+
+bool RWebDisplayHandle::CheckIfCanProduceImages(RWebDisplayArgs &args)
+{
+   if ((args.GetBrowserKind() != RWebDisplayArgs::kFirefox) && (args.GetBrowserKind() != RWebDisplayArgs::kEdge) &&
+       (args.GetBrowserKind() != RWebDisplayArgs::kChrome) && (args.GetBrowserKind() != RWebDisplayArgs::kCEF) &&
+       (args.GetBrowserKind() != RWebDisplayArgs::kQt5) && (args.GetBrowserKind() != RWebDisplayArgs::kQt6)) {
+      bool detected = false;
+
+      auto &h1 = FindCreator("chrome", "ChromeCreator");
+      if (h1 && h1->IsActive()) {
+         args.SetBrowserKind(RWebDisplayArgs::kChrome);
+         detected = true;
+      }
+
+      if (!detected) {
+         auto &h2 = FindCreator("firefox", "FirefoxCreator");
+         if (h2 && h2->IsActive()) {
+            args.SetBrowserKind(RWebDisplayArgs::kFirefox);
+            detected = true;
+         }
+      }
+
+#ifdef _MSC_VER
+      if (!detected) {
+         auto &h3 = FindCreator("edge", "ChromeCreator");
+         if (h3 && h3->IsActive()) {
+            args.SetBrowserKind(RWebDisplayArgs::kEdge);
+            detected = true;
+         }
+      }
+#endif
+      return detected;
+   }
+
+   if (args.GetBrowserKind() == RWebDisplayArgs::kChrome) {
+      auto &h1 = FindCreator("chrome", "ChromeCreator");
+      return h1 && h1->IsActive();
+   }
+
+   if (args.GetBrowserKind() == RWebDisplayArgs::kFirefox) {
+      auto &h2 = FindCreator("firefox", "FirefoxCreator");
+      return h2 && h2->IsActive();
+   }
+
+#ifdef _MSC_VER
+   if (args.GetBrowserKind() == RWebDisplayArgs::kEdge) {
+      auto &h3 = FindCreator("edge", "ChromeCreator");
+      return h3 && h3->IsActive();
+   }
+#endif
+
+   return true;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+/// Returns true if image production for specified browser kind is supported
+/// If browser not specified - use currently configured browser or try to test existing web browsers
+
+bool RWebDisplayHandle::CanProduceImages(const std::string &browser)
+{
+   RWebDisplayArgs args(browser);
+
+   return CheckIfCanProduceImages(args);
+}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// Produce image file using JSON data as source
@@ -684,38 +750,9 @@ bool RWebDisplayHandle::ProduceImage(const std::string &fname, const std::string
    }
 
    RWebDisplayArgs args; // set default browser kind, only Chrome/Firefox/Edge or CEF/Qt5/Qt6 can be used here
-   if ((args.GetBrowserKind() != RWebDisplayArgs::kFirefox) && (args.GetBrowserKind() != RWebDisplayArgs::kEdge) &&
-       (args.GetBrowserKind() != RWebDisplayArgs::kChrome) && (args.GetBrowserKind() != RWebDisplayArgs::kCEF) &&
-       (args.GetBrowserKind() != RWebDisplayArgs::kQt5) && (args.GetBrowserKind() != RWebDisplayArgs::kQt6)) {
-      bool detected = false;
-
-      auto &h1 = FindCreator("chrome", "ChromeCreator");
-      if (h1 && h1->IsActive()) {
-         args.SetBrowserKind(RWebDisplayArgs::kChrome);
-         detected = true;
-      }
-
-      if (!detected) {
-         auto &h2 = FindCreator("firefox", "FirefoxCreator");
-         if (h2 && h2->IsActive()) {
-            args.SetBrowserKind(RWebDisplayArgs::kFirefox);
-            detected = true;
-         }
-      }
-
-#ifdef _MSC_VER
-      if (!detected) {
-         auto &h3 = FindCreator("edge", "ChromeCreator");
-         if (h3 && h3->IsActive()) {
-            args.SetBrowserKind(RWebDisplayArgs::kEdge);
-            detected = true;
-         }
-      }
-#endif
-      if (!detected) {
-         R__LOG_ERROR(WebGUILog()) << "Fail to detect supported browsers for image production";
-         return false;
-      }
+   if (!CheckIfCanProduceImages(args)) {
+      R__LOG_ERROR(WebGUILog()) << "Fail to detect supported browsers for image production";
+      return false;
    }
 
    auto isChromeBased = (args.GetBrowserKind() == RWebDisplayArgs::kChrome) || (args.GetBrowserKind() == RWebDisplayArgs::kEdge),
