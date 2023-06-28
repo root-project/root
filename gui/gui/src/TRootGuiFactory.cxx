@@ -69,9 +69,8 @@ void TRootGuiFactory::ShowWebCanvasWarning()
                 "   !!! ATTENTION !!! \n"
                 "\n"
                 "ROOT comes with a web-based canvas, which is now being started. \n"
-                "Revert to default by setting \"Canvas.Name: TRootCanvas\" in rootrc file or\n"
-                "by starting \"root --web=off\". Web-based TCanvas can be used in batch mode for\n"
-                "image generation when running with \"root -b --web\"\n"
+                "Revert to the legacy canvas by setting \"Canvas.Name: TRootCanvas\" in rootrc file or\n"
+                "by starting \"root --web=off\".\n"
                 "Find more info on https://root.cern/for_developers/root7/#twebcanvas\n"
                 "\n";
 }
