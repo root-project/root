@@ -2798,6 +2798,8 @@ void TROOT::SetWebDisplay(const char *webdisplay)
    }
 
    if (fIsWebDisplay) {
+      // restore canvas and browser classes configured at the moment when gROOT->SetWebDisplay() was called for the first time
+      // This is necessary when SetWebDisplay() called several times and therefore current settings may differ
       gEnv->SetValue("Canvas.Name", canName);
       gEnv->SetValue("Browser.Name", brName);
       gEnv->SetValue("TreeViewer.Name", "RTreeViewer");
