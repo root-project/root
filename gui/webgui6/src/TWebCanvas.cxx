@@ -765,7 +765,7 @@ void TWebCanvas::CheckDataToSend(unsigned connid)
          CreatePadSnapshot(holder, Canvas(), conn.fSendVersion, [&buf, &conn, this](TPadWebSnapshot *snap) {
             auto json = TBufferJSON::ToJSON(snap, fJsonComp);
             auto hash = json.Hash();
-            if (conn.fLastSendHash && (conn.fLastSendHash == hash)) {
+            if (conn.fLastSendHash && (conn.fLastSendHash == hash) && conn.fSendVersion) {
                // prevent looping when same data send many times
                buf.clear();
             } else {
@@ -776,8 +776,10 @@ void TWebCanvas::CheckDataToSend(unsigned connid)
 
          conn.fCheckedVersion = fCanvVersion;
 
-         if (!buf.empty())
-            conn.fSendVersion = fCanvVersion;
+         conn.fSendVersion = fCanvVersion;
+
+         if (buf.empty())
+            conn.fDrawVersion = fCanvVersion;
 
       } else if (!conn.fSend.empty()) {
 
