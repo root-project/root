@@ -262,15 +262,7 @@ const char *TSystem::GetError()
 
 Int_t TSystem::GetErrno()
 {
-#ifdef _REENTRANT
-   return errno; // errno can be a macro if _REENTRANT is set
-#else
-#ifdef R__SOLARIS_CC50
-   return ::errno;
-#else
    return errno;
-#endif
-#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -278,15 +270,7 @@ Int_t TSystem::GetErrno()
 
 void TSystem::ResetErrno()
 {
-#ifdef _REENTRANT
-   errno = 0; // errno can be a macro if _REENTRANT is set
-#else
-#ifdef R__SOLARIS_CC50
-   ::errno = 0;
-#else
    errno = 0;
-#endif
-#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -359,7 +359,7 @@ esac
 
 case $arch in
 freebsd*)
-   auxcflags="-pthread -D_REENTRANT $auxcflags"
+   auxcflags="-pthread $auxcflags"
    auxlibs="-pthread $auxlibs"
 
    for f in $features ; do
@@ -391,7 +391,6 @@ macosx*)
       auxcflags="-pthread $auxcflags"
       auxlibs="-lpthread $auxlibs"
    else
-      auxcflags="-D_REENTRANT $auxcflags"
       auxlibs="-lpthread $auxlibs"
    fi
    for f in $features ; do
@@ -413,7 +412,6 @@ hpuxacc | hpuxia64acc)
 win32)
    ;;
 *)
-   auxcflags="-D_REENTRANT $auxcflags"
    auxlibs="-lpthread $auxlibs"
    ;;
 esac

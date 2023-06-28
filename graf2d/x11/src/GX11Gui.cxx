@@ -808,7 +808,6 @@ void TGX11::GetWindowAttributes(Window_t id, WindowAttributes_t &attr)
 
 Int_t TGX11::OpenDisplay(const char *dpyName)
 {
-#ifdef _REENTRANT
    // In some cases there can be problems due to XInitThreads, like when
    // using Qt, so we allow for it to be turned off
    if (gEnv->GetValue("X11.XInitThread", 1)) {
@@ -816,7 +815,6 @@ Int_t TGX11::OpenDisplay(const char *dpyName)
       if (!XInitThreads())
          Warning("OpenDisplay", "system has no X11 thread support");
    }
-#endif
 
    Display *dpy;
    if (!(dpy = XOpenDisplay(dpyName)))
