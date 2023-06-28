@@ -770,9 +770,12 @@ if(testing)
     relatedrepo_GetClosestMatch(REPO_NAME roottest
                                 ORIGIN_PREFIX ${originprefix} UPSTREAM_PREFIX ${upstreamprefix}
                                 FETCHURL_VARIABLE roottest_url FETCHREF_VARIABLE roottest_ref)
-    # Use `-Droottest_checkout=FORCE` to force fetch and checkout in an existing repository
+    # Use `-Droottest_force_checkout=ON` to force fetch and checkout in an existing repository
+    if(roottest_force_checkout)
+       set(roottest_opts FORCE)
+    endif()
     relatedrepo_Checkout(REPO_NAME roottest FETCHURL ${roottest_url} FETCHREF "${roottest_ref}"
-                         REPO_DIR_VARIABLE roottest_dir ${roottest_checkout})
+                         REPO_DIR_VARIABLE roottest_dir ${roottest_opts})
     if(NOT IS_DIRECTORY ${roottest_dir})
       message(FATAL_ERROR "Expected roottest at '${roottest_dir}' (not a directory?)")
     endif()
@@ -782,8 +785,11 @@ if(testing)
 
   if(rootbench)
     find_package(Git REQUIRED)
+    if(rootbench_force_checkout)
+       set(rootbench_opts FORCE)
+    endif()
     relatedrepo_Checkout(REPO_NAME rootbench FETCHURL ${upstreamprefix} FETCHREF master
-                         REPO_DIR_VARIABLE rootbench_dir ${rootbench_checkout})
+                         REPO_DIR_VARIABLE rootbench_dir ${rootbench_opts})
     if(NOT IS_DIRECTORY ${rootbench_dir})
       message(FATAL_ERROR "Expected rootbench at '${rootbench_dir}' (not a directory?)")
     endif()
