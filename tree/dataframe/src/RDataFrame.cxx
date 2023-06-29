@@ -82,7 +82,7 @@ You can directly see RDataFrame in action in our [tutorials](https://root.cern.c
    - [Computation graphs (storing and reusing sets of transformations)](\ref callgraphs)
    - [Visualizing the computation graph](\ref representgraph)
    - [Activating RDataFrame execution logs](\ref rdf-logging)
-   - [Creating RDataFrame from dataset specification file] (\ref rdf-from-spec)
+   - [Creating an RDataFrame from a dataset specification file](\ref rdf-from-spec)
 - [Efficient analysis in Python](\ref python)
 - <a class="el" href="classROOT_1_1RDataFrame.html#reference" onclick="javascript:toggleInherit('pub_methods_classROOT_1_1RDF_1_1RInterface')">Class reference</a>
 
@@ -1341,7 +1341,7 @@ More information (e.g. start and end of each multi-thread task) is printed using
 (e.g. a full dump of the generated code that RDataFrame just-in-time-compiles) using `ELogLevel.kDebug+10`.
 
 \anchor rdf-from-spec
-### Creating an RDataFrame from dataset specification file 
+### Creating an RDataFrame from a dataset specification file
 
 RDataFrame can be created using a dataset specification JSON file: 
 
