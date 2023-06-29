@@ -45,7 +45,7 @@ void rf307_fullpereventerrors()
 
    // Use landau pdf to get empirical distribution with long tail
    RooLandau pdfDtErr("pdfDtErr", "pdfDtErr", dterr, 1.0, 0.25);
-   RooDataSet *expDataDterr = pdfDtErr.generate(dterr, 10000);
+   std::unique_ptr<RooDataSet> expDataDterr{pdfDtErr.generate(dterr, 10000)};
 
    // Construct a histogram pdf to describe the shape of the dtErr distribution
    RooDataHist *expHistDterr = expDataDterr->binnedClone();
@@ -65,7 +65,7 @@ void rf307_fullpereventerrors()
    // ------------------------------------------------------------------
 
    // Specify external dataset with dterr values to use model_dm as conditional pdf
-   RooDataSet *data = model.generate(RooArgSet(dt, dterr), 10000);
+   std::unique_ptr<RooDataSet> data{model.generate({dt, dterr}, 10000)};
 
    // F i t   c o n d i t i o n a l   d e c a y _ d m ( d t | d t e r r )
    // ---------------------------------------------------------------------

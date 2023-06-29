@@ -52,8 +52,8 @@ void rf602_chi2fit()
    // C r e a t e   b i n n e d   d a t a s e t
    // -----------------------------------------
 
-   RooDataSet *d = model.generate(x, 10000);
-   RooDataHist *dh = d->binnedClone();
+   std::unique_ptr<RooDataSet> d{model.generate(x, 10000)};
+   std::unique_ptr<RooDataHist> dh{d->binnedClone()};
 
    // Construct a chi^2 of the data and the model.
    // When a pdf is used in a chi^2 fit, the probability density scaled

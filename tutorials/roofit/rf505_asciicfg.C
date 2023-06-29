@@ -41,7 +41,7 @@ void rf505_asciicfg()
    // F i t   m o d e l   t o   t o y   d a t a
    // -----------------------------------------
 
-   RooDataSet *d = model.generate(x, 1000);
+   std::unique_ptr<RooDataSet> d{model.generate(x, 1000)};
    model.fitTo(*d, PrintLevel(-1));
 
    // W r i t e   p a r a m e t e r s   t o   a s c i i   f i l e

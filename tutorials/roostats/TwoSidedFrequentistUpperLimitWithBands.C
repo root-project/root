@@ -335,16 +335,16 @@ void TwoSidedFrequentistUpperLimitWithBands(const char *infile = "", const char 
       w->loadSnapshot("paramsToGenerateData");
       //    poiAndNuisance->Print("v");
 
-      RooDataSet *toyData = 0;
+      std::unique_ptr<RooDataSet> toyData;
       // now generate a toy dataset for the main measurement
       if (!mc->GetPdf()->canBeExtended()) {
          if (data->numEntries() == 1)
-            toyData = mc->GetPdf()->generate(*mc->GetObservables(), 1);
+            toyData = std::unique_ptr<RooDataSet>{mc->GetPdf()->generate(*mc->GetObservables(), 1)};
          else
             cout << "Not sure what to do about this model" << endl;
       } else {
          //      cout << "generating extended dataset"<<endl;
-         toyData = mc->GetPdf()->generate(*mc->GetObservables(), Extended());
+         toyData = std::unique_ptr<RooDataSet>{mc->GetPdf()->generate(*mc->GetObservables(), Extended())};
       }
 
       // generate global observables
@@ -356,17 +356,15 @@ void TwoSidedFrequentistUpperLimitWithBands(const char *infile = "", const char 
 
       RooSimultaneous *simPdf = dynamic_cast<RooSimultaneous *>(mc->GetPdf());
       if (!simPdf) {
-         RooDataSet *one = mc->GetPdf()->generate(*mc->GetGlobalObservables(), 1);
+         std::unique_ptr<RooDataSet> one{mc->GetPdf()->generate(*mc->GetGlobalObservables(), 1)};
          const RooArgSet *values = one->get();
          std::unique_ptr<RooArgSet> allVars{mc->GetPdf()->getVariables()};
          allVars->assign(*values);
-         delete one;
       } else {
-         RooDataSet *one = simPdf->generateSimGlobal(*mc->GetGlobalObservables(), 1);
+         std::unique_ptr<RooDataSet> one{simPdf->generateSimGlobal(*mc->GetGlobalObservables(), 1)};
          const RooArgSet *values = one->get();
          std::unique_ptr<RooArgSet> allVars{mc->GetPdf()->getVariables()};
          allVars->assign(*values);
-         delete one;
       }
 
       // get test stat at observed UL in observed data
@@ -402,8 +400,6 @@ void TwoSidedFrequentistUpperLimitWithBands(const char *infile = "", const char 
 
       // for few events, data is often the same, and UL is often the same
       //    cout << "thisUL = " << thisUL<<endl;
-
-      delete toyData;
    }
    histOfUL->Draw();
    c1->SaveAs("two-sided_upper_limit_output.pdf");

@@ -68,7 +68,7 @@ void rf210_angularconv()
    // --------------------------------------------------------------------------------
 
    // Generate some events in observable psi
-   RooDataSet *data_psi = Mpsi.generate(psi, 10000);
+   std::unique_ptr<RooDataSet> data_psi{Mpsi.generate(psi, 10000)};
 
    // Fit convoluted model as function of angle psi
    Mpsi.fitTo(*data_psi, PrintLevel(-1));
@@ -97,7 +97,7 @@ void rf210_angularconv()
    // --------------------------------------------------------------------------------
 
    // Generate some events
-   RooDataSet *data_cpsi = Mcpsi.generate(cpsi, 10000);
+   std::unique_ptr<RooDataSet> data_cpsi{Mcpsi.generate(cpsi, 10000)};
 
    // set psi constant to exclude to be a parameter of the fit
    psi.setConstant(true);

@@ -81,7 +81,7 @@ void IntervalExamples()
    modelConfig->SetObservables(*wspace->set("obs"));
 
    // create a toy dataset
-   RooDataSet *data = wspace->pdf("normal")->generate(*wspace->set("obs"), 100);
+   std::unique_ptr<RooDataSet> data{wspace->pdf("normal")->generate(*wspace->set("obs"), 100)};
    data->Print();
 
    // for convenience later on

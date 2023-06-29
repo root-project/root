@@ -38,7 +38,7 @@ void rf902_numgenconfig()
    RooAbsPdf::defaultGeneratorConfig()->method1D(false, false).setLabel("RooAcceptReject");
 
    // Generate 10Kevt using RooAcceptReject
-   RooDataSet *data_ar = model.generate(x, 10000, Verbose(true));
+   std::unique_ptr<RooDataSet> data_ar{model.generate(x, 10000, Verbose(true))};
    data_ar->Print();
 
    // A d j u s t i n g   d e f a u l t   c o n f i g   f o r   a   s p e c i f i c   p d f
@@ -62,6 +62,6 @@ void rf902_numgenconfig()
 
    // Generate 10Kevt using RooFoamGenerator (FOAM verbosity increased with above chatLevel adjustment for illustration
    // purposes)
-   RooDataSet *data_foam = model.generate(x, 10000, Verbose());
+   std::unique_ptr<RooDataSet> data_foam{model.generate(x, 10000, Verbose())};
    data_foam->Print();
 }

@@ -43,7 +43,7 @@ void rf601_intminuit()
    RooAddPdf model("model", "model", RooArgList(g1, g2), frac);
 
    // Generate 1000 events
-   RooDataSet *data = model.generate(x, 1000);
+   std::unique_ptr<RooDataSet> data{model.generate(x, 1000)};
 
    // Construct unbinned likelihood of model w.r.t. data
    std::unique_ptr<RooAbsReal> nll{model.createNLL(*data)};

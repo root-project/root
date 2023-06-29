@@ -162,7 +162,7 @@ void AddData(RooWorkspace *wks)
    RooAbsPdf *model = wks->pdf("model");
    RooRealVar *invMass = wks->var("invMass");
 
-   RooDataSet *data = model->generate(*invMass, nEvents);
+   std::unique_ptr<RooDataSet> data{model->generate(*invMass, nEvents)};
 
    wks->import(*data, Rename("data"));
 }
