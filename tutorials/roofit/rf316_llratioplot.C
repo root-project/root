@@ -49,7 +49,7 @@ void rf316_llratioplot()
    RooRealVar fsig("fsig", "signal fraction", 0.1, 0., 1.);
    RooAddPdf model("model", "model", RooArgList(sig, bkg), fsig);
 
-   RooDataSet *data = model.generate(RooArgSet(x, y, z), 20000);
+   std::unique_ptr<RooDataSet> data{model.generate({x, y, z}, 20000)};
 
    // P r o j e c t   p d f   a n d   d a t a   o n   x
    // -------------------------------------------------
@@ -89,7 +89,7 @@ void rf316_llratioplot()
    // ---------------------------------------------------------------------------------------------
 
    // Generate large number of events for MC integration of pdf projection
-   RooDataSet *mcprojData = model.generate(RooArgSet(x, y, z), 10000);
+   std::unique_ptr<RooDataSet> mcprojData{model.generate({x, y, z}, 10000)};
 
    // Calculate LL ratio for each generated event and select MC events with llratio)0.7
    mcprojData->addColumn(llratio_func);

@@ -98,7 +98,7 @@ void MultivariateGaussianTest(Int_t dim = 4, Int_t nPOI = 2)
 
    // --------------------
    // make a toy dataset
-   RooDataSet *data = mvg.generate(xVec, 100);
+   std::unique_ptr<RooDataSet> data{mvg.generate(xVec, 100)};
 
    // now create the model config for this problem
    RooWorkspace *w = new RooWorkspace("MVG");

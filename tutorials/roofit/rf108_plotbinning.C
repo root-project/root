@@ -55,7 +55,7 @@ void rf108_plotbinning()
    // --------------------------------------------
 
    // Sample 2000 events in (dt,mixState,tagFlav) from bmix
-   RooDataSet *data = bmix.generate(RooArgSet(dt, mixState, tagFlav), 2000);
+   std::unique_ptr<RooDataSet> data{bmix.generate(RooArgSet(dt, mixState, tagFlav), 2000)};
 
    // S h o w   d t   d i s t r i b u t i o n   w i t h   c u s t o m   b i n n i n g
    // -------------------------------------------------------------------------------

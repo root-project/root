@@ -49,7 +49,7 @@ void rf311_rangeplot()
    RooRealVar fsig("fsig", "signal fraction", 0.1, 0., 1.);
    RooAddPdf model("model", "model", RooArgList(sig, bkg), fsig);
 
-   RooDataSet *data = model.generate(RooArgSet(x, y, z), 20000);
+   std::unique_ptr<RooDataSet> data{model.generate({x, y, z}, 20000)};
 
    // P r o j e c t   p d f   a n d   d a t a   o n   x
    // -------------------------------------------------

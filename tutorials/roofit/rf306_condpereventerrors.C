@@ -45,13 +45,13 @@ void rf306_condpereventerrors()
 
    // Use landau pdf to get somewhat realistic distribution with long tail
    RooLandau pdfDtErr("pdfDtErr", "pdfDtErr", dterr, 1.0, 0.25);
-   RooDataSet *expDataDterr = pdfDtErr.generate(dterr, 10000);
+   std::unique_ptr<RooDataSet> expDataDterr{pdfDtErr.generate(dterr, 10000)};
 
    // S a m p l e   d a t a   f r o m   c o n d i t i o n a l   d e c a y _ g m ( d t | d t e r r )
    // ---------------------------------------------------------------------------------------------
 
    // Specify external dataset with dterr values to use decay_dm as conditional pdf
-   RooDataSet *data = decay_gm.generate(dt, ProtoData(*expDataDterr));
+   std::unique_ptr<RooDataSet> data{decay_gm.generate(dt, ProtoData(*expDataDterr))};
 
    // F i t   c o n d i t i o n a l   d e c a y _ d m ( d t | d t e r r )
    // ---------------------------------------------------------------------

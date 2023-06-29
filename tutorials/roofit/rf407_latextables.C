@@ -66,7 +66,7 @@ void rf407_latextables()
    std::unique_ptr<RooArgSet> initParams{static_cast<RooArgSet *>(params->snapshot())};
 
    // Do fit to data, to obtain error estimates on parameters
-   RooDataSet *data = model.generate(x, 1000);
+   std::unique_ptr<RooDataSet> data{model.generate(x, 1000)};
    model.fitTo(*data, PrintLevel(-1));
 
    // P r i n t   l a t ex   t a b l e   o f   p a r a m e t e r s   o f   p d f

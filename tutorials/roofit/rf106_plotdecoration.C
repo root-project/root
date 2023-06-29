@@ -35,7 +35,7 @@ void rf106_plotdecoration()
    RooGaussian gauss("gauss", "gauss", x, mean, sigma);
 
    // Generate a sample of 1000 events with sigma=3
-   RooDataSet *data = gauss.generate(x, 1000);
+   std::unique_ptr<RooDataSet> data{gauss.generate(x, 1000)};
 
    // Fit pdf to data
    gauss.fitTo(*data, PrintLevel(-1));

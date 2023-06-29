@@ -53,7 +53,7 @@ void rf105_funcbinding()
    beta->Print();
 
    // Generate some events and fit
-   RooDataSet *data = beta->generate(x2, 10000);
+   std::unique_ptr<RooDataSet> data{beta->generate(x2, 10000)};
    beta->fitTo(*data, PrintLevel(-1));
 
    // Plot data and pdf on frame

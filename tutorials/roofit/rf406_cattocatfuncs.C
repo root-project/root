@@ -44,7 +44,7 @@ void rf406_cattocatfuncs()
    // Construct a dummy dataset with random values of tagCat and b0flav
    RooRealVar x("x", "x", 0, 10);
    RooPolynomial p("p", "p", x);
-   RooDataSet *data = p.generate(RooArgSet(x, b0flav, tagCat), 10000);
+   std::unique_ptr<RooDataSet> data{p.generate({x, b0flav, tagCat}, 10000)};
 
    // C r e a t e   a   c a t - > c a t   m  a p p i n g   c a t e g o r y
    // ---------------------------------------------------------------------

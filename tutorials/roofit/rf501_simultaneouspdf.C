@@ -66,8 +66,8 @@ void rf501_simultaneouspdf()
    // ---------------------------------------------------------------
 
    // Generate 1000 events in x and y from model
-   RooDataSet *data = model.generate(RooArgSet(x), 100);
-   RooDataSet *data_ctl = model_ctl.generate(RooArgSet(x), 2000);
+   std::unique_ptr<RooDataSet> data{model.generate({x}, 100)};
+   std::unique_ptr<RooDataSet> data_ctl{model_ctl.generate({x}, 2000)};
 
    // C r e a t e   i n d e x   c a t e g o r y   a n d   j o i n   s a m p l e s
    // ---------------------------------------------------------------------------
@@ -79,7 +79,7 @@ void rf501_simultaneouspdf()
 
    // Construct combined dataset in (x,sample)
    RooDataSet combData("combData", "combined data", x, Index(sample),
-                       Import({{"physics", data}, {"control", data_ctl}}));
+                       Import({{"physics", data.get()}, {"control", data_ctl.get()}}));
 
    // C o n s t r u c t   a   s i m u l t a n e o u s   p d f   i n   ( x , s a m p l e )
    // -----------------------------------------------------------------------------------

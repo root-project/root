@@ -232,7 +232,7 @@ ClassImp(BinCountTestStat)
    // create a toy dataset with the x=150
    //  RooDataSet *data = new RooDataSet("d", "d", *w->set("obs"));
    //  data->add(*w->set("obs"));
-   RooDataSet *data = w->pdf("px")->generate(*w->set("obs"), 150);
+   std::unique_ptr<RooDataSet> data{w->pdf("px")->generate(*w->set("obs"), 150)};
 
    // Part 3a : Setup ModelConfigs
    //-------------------------------------------------------

@@ -40,7 +40,7 @@ void rf506_msgservice()
    RooRealVar f("f", "f", 0.5, 0., 1.);
    RooAddPdf model("model", "model", RooArgSet(gauss, poly), f);
 
-   RooDataSet *data = model.generate(x, 10);
+   std::unique_ptr<RooDataSet> data{model.generate(x, 10)};
 
    // P r i n t   c o n f i g u r a t i o n   o f   m e s s a g e   s e r v i c e
    // ---------------------------------------------------------------------------

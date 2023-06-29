@@ -212,7 +212,7 @@ void FourBinInstructional(bool doBayesian = false, bool doFeldmanCousins = false
    // generate toy data assuming current value of the parameters
    // import into workspace.
    // add Verbose() to see how it's being generated
-   RooDataSet *data = wspace->pdf("model")->generate(*wspace->set("obs"), 1);
+   std::unique_ptr<RooDataSet> data{wspace->pdf("model")->generate(*wspace->set("obs"), 1)};
    //  data->Print("v");
    wspace->import(*data);
 

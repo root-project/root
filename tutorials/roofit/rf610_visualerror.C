@@ -41,7 +41,7 @@ void rf610_visualerror()
 
    // Create binned dataset
    x.setBins(25);
-   RooAbsData *d = model.generateBinned(x, 1000);
+   std::unique_ptr<RooAbsData> d{model.generateBinned(x, 1000)};
 
    // Perform fit and save fit result
    std::unique_ptr<RooFitResult> r{model.fitTo(*d, Save(), PrintLevel(-1))};

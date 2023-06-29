@@ -49,7 +49,7 @@ void rf603_multicpu()
    RooAddPdf model("model", "model", RooArgList(sig, bkg), fsig);
 
    // Generate large dataset
-   RooDataSet *data = model.generate(RooArgSet(x, y, z), 200000);
+   std::unique_ptr<RooDataSet> data{model.generate({x, y, z}, 200000)};
 
    // P a r a l l e l   f i t t i n g
    // -------------------------------

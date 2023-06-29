@@ -60,7 +60,7 @@ void rf903_numintcache(Int_t mode = 0)
    // -----------------------------------------------------------------------------------
 
    // This is always slow (need to find maximum function value empirically in 3D space)
-   RooDataSet *d = w1->pdf("model")->generate(RooArgSet(*w1->var("x"), *w1->var("y"), *w1->var("z")), 1000);
+   std::unique_ptr<RooDataSet> d{w1->pdf("model")->generate({*w1->var("x"), *w1->var("y"), *w1->var("z")}, 1000)};
 
    // This is slow in mode 0, but fast in mode 1
    w1->pdf("model")->fitTo(*d, Verbose(true), Timer(true), PrintLevel(-1));

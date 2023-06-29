@@ -42,7 +42,7 @@ void rf309_ndimplot()
    RooGaussian model("model", "Gaussian with shifting mean", x, fy, sigma);
 
    // Sample dataset from gauss(x,y)
-   RooDataSet *data = model.generate(RooArgSet(x, y), 10000);
+   std::unique_ptr<RooDataSet> data{model.generate({x, y}, 10000)};
 
    // M a k e   2 D   p l o t s   o f   d a t a   a n d   m o d e l
    // -------------------------------------------------------------
@@ -64,7 +64,7 @@ void rf309_ndimplot()
    RooGaussian gz("gz", "gz", z, 0.0, 2.0);
    RooProdPdf model3("model3", "model3", RooArgSet(model, gz));
 
-   RooDataSet *data3 = model3.generate(RooArgSet(x, y, z), 10000);
+   std::unique_ptr<RooDataSet> data3{model3.generate({x, y, z}, 10000)};
 
    // M a k e   3 D   p l o t s   o f   d a t a   a n d   m o d e l
    // -------------------------------------------------------------

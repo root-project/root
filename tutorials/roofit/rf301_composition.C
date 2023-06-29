@@ -45,7 +45,7 @@ void rf301_composition()
    // ---------------------------------------------------------------------------------
 
    // Generate 10000 events in x and y from model
-   RooDataSet *data = model.generate(RooArgSet(x, y), 10000);
+   std::unique_ptr<RooDataSet> data{model.generate({x, y}, 10000)};
 
    // Plot x distribution of data and projection of model on x = Int(dy) model(x,y)
    RooPlot *xframe = x.frame();

@@ -56,7 +56,7 @@ void rf704_amplitudefit()
    RooRealSumPdf pdf("pdf", "pdf", RooArgList(ampl1, ampl2), RooArgList(f1, f2));
 
    // Generate some toy data from pdf
-   RooDataSet *data = pdf.generate(RooArgSet(t, cosa), 10000);
+   std::unique_ptr<RooDataSet> data{pdf.generate({t, cosa}, 10000)};
 
    // Fit pdf to toy data with only amplitude strength floating
    pdf.fitTo(*data, PrintLevel(-1));

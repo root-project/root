@@ -88,7 +88,7 @@ void rf705_linearmorph()
 
    // Generate a toy dataset at alpha = 0.8
    alpha = 0.8;
-   RooDataSet *data = lmorph.generate(x, 1000);
+   std::unique_ptr<RooDataSet> data{lmorph.generate(x, 1000)};
 
    // Fit pdf to toy data
    lmorph.setCacheAlpha(true);
