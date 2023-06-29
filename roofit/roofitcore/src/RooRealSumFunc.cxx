@@ -111,7 +111,7 @@ RooRealSumFunc::~RooRealSumFunc()
 //_____________________________________________________________________________
 double RooRealSumFunc::evaluate() const
 {
-  return RooRealSumPdf::evaluate(*this, _funcList, _coefList, _doFloor || _doFloorGlobal, _haveWarned);
+  return RooRealSumPdf::evaluate(*this, _funcList.nset(), _funcList, _coefList, _doFloor || _doFloorGlobal, _haveWarned);
 }
 
 void RooRealSumFunc::translate(RooFit::Detail::CodeSquashContext &ctx) const
@@ -129,7 +129,7 @@ bool RooRealSumFunc::checkObservables(const RooArgSet *nset) const
 Int_t RooRealSumFunc::getAnalyticalIntegralWN(RooArgSet &allVars, RooArgSet &analVars, const RooArgSet *normSet2,
                                               const char *rangeName) const
 {
-   return RooRealSumPdf::getAnalyticalIntegralWN(*this, _normIntMgr, _funcList, _coefList, allVars, analVars, normSet2, rangeName);
+   return RooRealSumPdf::getAnalyticalIntegralWN(*this, _normIntMgr, _funcList, allVars, analVars, normSet2 ? normSet2 : _funcList.nset(), rangeName);
 }
 
 //_____________________________________________________________________________
@@ -168,12 +168,4 @@ void RooRealSumFunc::setCacheAndTrackHints(RooArgSet &trackNodes)
 void RooRealSumFunc::printMetaArgs(std::ostream &os) const
 {
    RooRealSumPdf::printMetaArgs(_funcList, _coefList, os);
-}
-
-std::unique_ptr<RooAbsArg> RooRealSumFunc::compileForNormSet(RooArgSet const &/*normSet*/, RooFit::Detail::CompileContext & ctx) const
-{
-   auto newArg = std::unique_ptr<RooAbsArg>{static_cast<RooAbsArg *>(Clone())};
-   ctx.markAsCompiled(*newArg);
-   ctx.compileServers(*newArg, {});
-   return newArg;
 }

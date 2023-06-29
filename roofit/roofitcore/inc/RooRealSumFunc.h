@@ -58,8 +58,6 @@ public:
    CacheMode canNodeBeCached() const override { return RooAbsArg::NotAdvised; };
    void setCacheAndTrackHints(RooArgSet &) override;
 
-   std::unique_ptr<RooAbsArg> compileForNormSet(RooArgSet const &normSet, RooFit::Detail::CompileContext & ctx) const override;
-
    void translate(RooFit::Detail::CodeSquashContext &ctx) const override;
 
 protected:
