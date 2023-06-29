@@ -1127,7 +1127,7 @@ Bool_t TDocParser::HandleDirective(TString& line, Ssiz_t& pos, TString& word,
          if (fParseContext.size()>1)
             fParseContext.pop_back();
          if (isInCxxComment && !InContext(kComment)) {
-            fParseContext.push_back(kComment | kCXXComment);
+            fParseContext.push_back((int)kComment | (int)kCXXComment);
             fDocOutput->DecorateEntityBegin(line, pos, kComment);
          }
       }
