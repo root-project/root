@@ -502,15 +502,15 @@ bool RooClassFactory::makeClass(const char* baseName, const char* className, con
      << endl ;
 
   if (hasAnaInt) {
-    hf << "  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const ;" << endl
-       << "  double analyticalIntegral(Int_t code, const char* rangeName=0) const ;" << endl
+    hf << "  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars, const char* rangeName=0) const override;" << endl
+       << "  double analyticalIntegral(Int_t code, const char* rangeName=0) const override;" << endl
        << "" << endl ;
   }
 
   if (hasIntGen) {
-     hf << "  Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, bool staticInitOK=true) const;" << endl
-   << "  void initGenerator(Int_t code) {} ; // optional pre-generation initialization" << endl
-   << "  void generateEvent(Int_t code);" << endl
+     hf << "  Int_t getGenerator(const RooArgSet& directVars, RooArgSet &generateVars, bool staticInitOK=true) const override;" << endl
+   << "  void initGenerator(Int_t code) override {} ; // optional pre-generation initialization" << endl
+   << "  void generateEvent(Int_t code) override;" << endl
    << endl ;
   }
 
