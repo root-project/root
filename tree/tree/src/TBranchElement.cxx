@@ -5910,7 +5910,7 @@ void TBranchElement::SetupAddresses()
 
 void TBranchElement::SetupAddressesImpl()
 {
-   if (TestBit(kDoNotProcess|kAddressSet)) {
+   if (TestBit((long)kDoNotProcess|(long)kAddressSet)) {
       // -- Do nothing if we have been told not to.
       // Or the data member in this branch is not longer part of the
       // parent's layout.

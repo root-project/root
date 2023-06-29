@@ -4760,7 +4760,7 @@ Bool_t  TTreeFormula::IsLeafString(Int_t code) const
                if (fIndexes[code][fNdimensions[code]-1] != -1) return kFALSE;
                return kTRUE;
             }
-            if ( elem->GetNewType()== TStreamerInfo::kCharStar) {
+            if ( elem->GetNewType() == TStreamerInfo::kCharStar) {
                // Check whether a specific element of the string is specified!
                if (fNdimensions[code] && fIndexes[code][fNdimensions[code]-1] != -1) return kFALSE;
                return kTRUE;

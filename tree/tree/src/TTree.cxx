@@ -5403,7 +5403,7 @@ Int_t TTree::GetBranchStyle()
 
 Long64_t TTree::GetCacheAutoSize(Bool_t withDefault /* = kFALSE */ )
 {
-   auto calculateCacheSize = [=](Double_t cacheFactor)
+   auto calculateCacheSize = [this](Double_t cacheFactor)
    {
       Long64_t cacheSize = 0;
       if (fAutoFlush < 0) {
