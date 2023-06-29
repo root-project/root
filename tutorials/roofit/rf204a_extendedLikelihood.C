@@ -76,7 +76,7 @@ void rf204a_extendedLikelihood()
    // -------------------------------------------
 
    // Generate 1000 events from model so that nsig,nbkg come out to numbers <<500 in fit
-   RooDataSet *data = model.generate(x,1000) ;
+   std::unique_ptr<RooDataSet> data{model.generate(x,1000)};
 
 
 

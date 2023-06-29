@@ -65,7 +65,7 @@ void rf511_wsfactory_basic(bool compact = false)
    // enum --> Any enum label that belongs to an enum defined in the (base) class
 
    // Make a dummy dataset pdf 'model' and import it in the workspace
-   RooDataSet *data = w->pdf("model")->generate(*w->var("x"), 1000);
+   std::unique_ptr<RooDataSet> data{w->pdf("model")->generate(*w->var("x"), 1000)};
    w->import(*data, Rename("data"));
 
    // Construct a KEYS pdf passing a dataset name and an enum type defining the

@@ -26,8 +26,8 @@ void TestNonCentral()
 
    // w.var("kk")->setVal(4.); // test a large kk
 
-   RooDataSet *ncdata = w.pdf("nc")->generate(*w.var("x"), 100);
-   RooDataSet *csdata = w.pdf("cs")->generate(*w.var("x"), 100);
+   std::unique_ptr<RooDataSet> ncdata{w.pdf("nc")->generate(*w.var("x"), 100)};
+   std::unique_ptr<RooDataSet> csdata{w.pdf("cs")->generate(*w.var("x"), 100)};
    RooPlot *plot = w.var("x")->frame();
    ncdata->plotOn(plot, MarkerColor(kRed));
    csdata->plotOn(plot, MarkerColor(kBlue));

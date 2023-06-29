@@ -60,7 +60,7 @@ void rs401c_FeldmanCousins()
    RooArgSet parameters(mu);
 
    // create a toy dataset
-   RooDataSet *data = pois.generate(RooArgSet(x), 1);
+   std::unique_ptr<RooDataSet> data{pois.generate({x}, 1)};
    data->Print("v");
 
    TCanvas *dataCanvas = new TCanvas("dataCanvas");

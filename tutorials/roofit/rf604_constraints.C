@@ -43,7 +43,7 @@ void rf604_constraints()
    RooAddPdf model("model", "model", RooArgSet(gauss, poly), f);
 
    // Generate small dataset for use in fitting below
-   RooDataSet *d = model.generate(x, 50);
+   std::unique_ptr<RooDataSet> d{model.generate(x, 50)};
 
    // C r e a t e   c o n s t r a i n t   p d f
    // -----------------------------------------

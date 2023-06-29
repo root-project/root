@@ -42,7 +42,7 @@ void rf203_ranges()
    RooAddPdf model("model", "model", RooArgList(gx, px), f);
 
    // Generated 10000 events in (x,y) from pdf model
-   RooDataSet *modelData = model.generate(x, 10000);
+   std::unique_ptr<RooDataSet> modelData{model.generate(x, 10000)};
 
    // F i t   f u l l   r a n g e
    // ---------------------------

@@ -43,7 +43,7 @@ void rf103_interprfuncs()
    // ---------------------------------------------------------------
 
    // Generate a toy dataset from the interpreted pdf
-   RooDataSet *data = genpdf.generate(x, 10000);
+   std::unique_ptr<RooDataSet> data{genpdf.generate(x, 10000)};
 
    // Fit the interpreted pdf to the generated data
    genpdf.fitTo(*data, PrintLevel(-1));
@@ -76,7 +76,7 @@ void rf103_interprfuncs()
 
    // Construct a separate gaussian g1(x,10,3) to generate a toy Gaussian dataset with mean 10 and width 3
    RooGaussian g1("g1", "g1", x, 10.0, 3.0);
-   RooDataSet *data2 = g1.generate(x, 1000);
+   std::unique_ptr<RooDataSet> data2{g1.generate(x, 1000)};
 
    // F i t   a n d   p l o t   t a i l o r e d   s t a n d a r d   p d f
    // -------------------------------------------------------------------

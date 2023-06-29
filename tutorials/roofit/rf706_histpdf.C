@@ -33,7 +33,7 @@ void rf706_histpdf()
 
    // Sample 500 events from p
    x.setBins(20);
-   RooDataSet *data1 = p.generate(x, 500);
+   std::unique_ptr<RooDataSet> data1{p.generate(x, 500)};
 
    // Create a binned dataset with 20 bins and 500 events
    RooDataHist *hist1 = data1->binnedClone();
@@ -51,7 +51,7 @@ void rf706_histpdf()
 
    // Sample 100000 events from p
    x.setBins(10);
-   RooDataSet *data2 = p.generate(x, 100000);
+   std::unique_ptr<RooDataSet> data2{p.generate(x, 100000)};
 
    // Create a binned dataset with 10 bins and 100K events
    RooDataHist *hist2 = data2->binnedClone();
