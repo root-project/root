@@ -521,9 +521,10 @@ namespace Internal {
    /// a hint for ROOT: it will try to satisfy the request if the execution
    /// scenario allows it. For example, if ROOT is configured to use an external
    /// scheduler, setting a value for 'numthreads' might not have any effect.
-   /// To avoid this heuristic, the maximum number of threads can be set by the
-   /// environment variable `ROOT_MAX_THREADS`: `export ROOT_MAX_THREADS=2` will
-   /// set the maximum number of active threads to 2.
+   /// The maximum number of threads can be influenced by the environment
+   /// variable `ROOT_MAX_THREADS`: `export ROOT_MAX_THREADS=2` will try to set
+   /// the maximum number of active threads to 2, if the scheduling library
+   /// (such as tbb) "permit".
    ///
    /// \note Use `DisableImplicitMT()` to disable multi-threading (some locks will remain in place as
    /// described in EnableThreadSafety()). `EnableImplicitMT(1)` creates a thread-pool of size 1.
