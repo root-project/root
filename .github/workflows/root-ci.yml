@@ -329,7 +329,7 @@ jobs:
 
           cat "$FILE" || true
 
-      - uses: olemorud/gcc-problem-matcher@v1.0
+      - uses: root-project/gcc-problem-matcher-improved@main
         with:
           build-directory: /tmp/workspace/src/
 
