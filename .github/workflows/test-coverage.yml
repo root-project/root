@@ -17,7 +17,7 @@ on:
     branches:
       - 'master'
       - 'v*-*-*-patches'
-
+      - '**'
   # Allows nightly builds to trigger one run for each branch easily
   workflow_call:
     inputs:
