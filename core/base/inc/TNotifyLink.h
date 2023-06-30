@@ -93,15 +93,15 @@ public:
 template <class Type>
 class TNotifyLink : public TNotifyLinkBase {
 private:
-   Type *fCurrent;
+   Type *fSubscriber;
 
 public:
-   TNotifyLink(Type *current) : fCurrent(current) {}
+   TNotifyLink(Type *current) : fSubscriber(current) {}
 
    // Call Notify on the current and next object.
    Bool_t Notify() override
    {
-      auto result = fCurrent ? fCurrent->Notify() : kTRUE;
+      auto result = fSubscriber ? fSubscriber->Notify() : kTRUE;
       if (fNext) result &= fNext->Notify();
       return result;
    }
