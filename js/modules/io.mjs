@@ -2815,7 +2815,10 @@ class TFile {
                });
             } else if (first_block_retry && isFunc(xhr.addEventListener)) {
                xhr.addEventListener('progress', oEvent => {
-                  if (!oEvent.total || oEvent.total > 5e7) {
+                  if (!oEvent.total) {
+                     console.warn(`Fail to get file size information`);
+                     // xhr.abort();
+                  } else if (oEvent.total > 5e7) {
                      console.error(`Try to load very large file ${oEvent.total} at once - abort`);
                      xhr.abort();
                   }

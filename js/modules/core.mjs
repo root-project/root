@@ -5,7 +5,7 @@ let version_id = 'dev';
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-let version_date = '26/06/2023';
+let version_date = '30/06/2023';
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -1016,7 +1016,7 @@ const prROOT = 'ROOT.', clTObject = 'TObject', clTNamed = 'TNamed', clTString = 
       clTPolyLine3D = 'TPolyLine3D', clTPolyMarker3D = 'TPolyMarker3D',
       clTAttPad = 'TAttPad', clTPad = 'TPad', clTCanvas = 'TCanvas', clTAttCanvas = 'TAttCanvas',
       clTGaxis = 'TGaxis', clTAttAxis = 'TAttAxis', clTAxis = 'TAxis', clTStyle = 'TStyle',
-      clTH1 = 'TH1', clTH1I = 'TH1I', clTH2 = 'TH2', clTH2I = 'TH2I', clTH2F = 'TH2F', clTH3 = 'TH3',
+      clTH1 = 'TH1', clTH1I = 'TH1I', clTH1D = 'TH1D', clTH2 = 'TH2', clTH2I = 'TH2I', clTH2F = 'TH2F', clTH3 = 'TH3',
       clTF1 = 'TF1', clTF2 = 'TF2', clTProfile = 'TProfile', clTProfile2D = 'TProfile2D',
       clTGeoVolume = 'TGeoVolume', clTGeoNode = 'TGeoNode', clTGeoNodeMatrix = 'TGeoNodeMatrix',
       nsREX = 'ROOT::Experimental::',
@@ -1145,9 +1145,9 @@ function create(typename, target) {
                        fBufferSize: 0, fBuffer: [], fBinStatErrOpt: 0, fStatOverflows: 2 });
          break;
       case clTH1I:
+      case clTH1D:
       case 'TH1L64':
       case 'TH1F':
-      case 'TH1D':
       case 'TH1S':
       case 'TH1C':
          create(clTH1, obj);
@@ -1770,7 +1770,7 @@ export { version_id, version_date, version, source_dir, isNodeJs, isBatchMode, s
          clTPave, clTPaveText, clTPavesText, clTPaveStats, clTPaveLabel, clTDiamond,
          clTLegend, clTLegendEntry, clTPaletteAxis, clTImagePalette, clTText, clTLatex, clTMathText, clTAnnotation, clTMultiGraph,
          clTColor, clTLine, clTBox, clTPolyLine, clTPad, clTCanvas, clTAttCanvas, clTGaxis,
-         clTAxis, clTStyle, clTH1, clTH1I, clTH2, clTH2I, clTH2F, clTH3, clTF1, clTF2, clTProfile, clTProfile2D, clTHStack,
+         clTAxis, clTStyle, clTH1, clTH1I, clTH1D, clTH2, clTH2I, clTH2F, clTH3, clTF1, clTF2, clTProfile, clTProfile2D, clTHStack,
          clTGraph, clTGraph2DErrors, clTGraph2DAsymmErrors,
          clTGraphPolar, clTGraphPolargram, clTGraphTime, clTCutG,
          clTPolyLine3D, clTPolyMarker3D, clTGeoVolume, clTGeoNode, clTGeoNodeMatrix, nsREX, kNoZoom, kNoStats,

@@ -2486,7 +2486,9 @@ class TFramePainter extends ObjectPainter {
               .attr('viewBox', `0 0 ${w} ${h}`);
 
       if (!this.isBatchMode()) {
-         top_rect.style('pointer-events', 'visibleFill'); // let process mouse events inside frame
+         top_rect.style('pointer-events', 'visibleFill')  // let process mouse events inside frame
+                 .style('cursor', 'default');             // show normal cursor
+         main_svg.style('cursor', 'default');             // show normal cursor
          FrameInteractive.assign(this);
          this.addBasicInteractivity();
       }
@@ -2720,7 +2722,7 @@ class TFramePainter extends ObjectPainter {
               (!this.y_handle?.log_min_nz && ymin < logminfactorY*this.ymax) || (ymin < this.y_handle?.log_min_nz)))
             { ymin = this.ymin; cnt++; }
          if (ymax >= this.ymax) { ymax = this.ymax; cnt++; }
-         if (cnt === 2) { zoom_y = false; unzoom_y = true; }
+         if ((cnt === 2) && (this.scales_ndim !== 1)) { zoom_y = false; unzoom_y = true; }
       } else {
          unzoom_y = (ymin === ymax) && (ymin === 0);
       }
@@ -2729,7 +2731,7 @@ class TFramePainter extends ObjectPainter {
          let cnt = 0;
          if (zmin <= this.zmin) { zmin = this.zmin; cnt++; }
          if (zmax >= this.zmax) { zmax = this.zmax; cnt++; }
-         if (cnt === 2) { zoom_z = false; unzoom_z = true; }
+         if ((cnt === 2) && (this.scales_ndim > 2)) { zoom_z = false; unzoom_z = true; }
       } else {
          unzoom_z = (zmin === zmax) && (zmin === 0);
       }

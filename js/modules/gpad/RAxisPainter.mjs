@@ -282,6 +282,8 @@ class RAxisPainter extends RObjectPainter {
          return this.func(this.major[this.nmajor]);
       };
 
+      handle.get_modifier = function() { return null; };
+
       this.order = 0;
       this.ndig = 0;
 

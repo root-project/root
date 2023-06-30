@@ -521,8 +521,8 @@ class RH3Painter extends RHistPainter {
 
          if (use_colors) fillcolor = palette.getColor(ncol);
 
-         let material = use_lambert ? new MeshLambertMaterial({ color: fillcolor, opacity: use_opacity, transparent: (use_opacity < 1), vertexColors: false })
-                                    : new MeshBasicMaterial({ color: fillcolor, opacity: use_opacity, vertexColors: false });
+         let material = use_lambert ? new MeshLambertMaterial({ color: fillcolor, opacity: use_opacity, transparent: use_opacity < 1, vertexColors: false })
+                                    : new MeshBasicMaterial({ color: fillcolor, opacity: use_opacity, transparent: use_opacity < 1, vertexColors: false });
 
          let combined_bins = new Mesh(all_bins_buffgeom, material);
 

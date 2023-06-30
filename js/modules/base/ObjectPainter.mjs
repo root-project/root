@@ -56,7 +56,6 @@ class ObjectPainter extends BasePainter {
      * @private */
    isBatchMode() { return isBatchMode() ? true : (this.getCanvPainter()?.isBatchMode() ?? false); }
 
-
    /** @summary Assign snapid to the painter
     * @desc Identifier used to communicate with server side and identifies object on the server
     * @private */
@@ -101,6 +100,9 @@ class ObjectPainter extends BasePainter {
 
    /** @summary Returns drawn object */
    getObject() { return this.draw_object; }
+
+   /** @summary Returns drawn object name */
+   getObjectName() { return this.getObject()?.fName ?? ''; }
 
    /** @summary Returns drawn object class name */
    getClassName() { return this.getObject()?._typename ?? ''; }
@@ -166,12 +168,12 @@ class ObjectPainter extends BasePainter {
      * @desc works via pad painter and only when module was loaded */
    getSupportedDrawOptions() {
       let pp = this.getPadPainter(),
-          obj = this.getObject();
+          cl = this.getClassName();
 
-      if (!obj?._typename || !isFunc(pp?.getObjectDrawSettings))
+      if (!cl || !isFunc(pp?.getObjectDrawSettings))
          return [];
 
-      return pp.getObjectDrawSettings(prROOT + obj._typename, 'nosame')?.opts;
+      return pp.getObjectDrawSettings(prROOT + cl, 'nosame')?.opts;
    }
 
    /** @summary Central place to update objects drawing
@@ -208,7 +210,7 @@ class ObjectPainter extends BasePainter {
      * Such string typically used as object tooltip.
      * If result string larger than 20 symbols, it will be cutted. */
    getObjectHint() {
-      let hint = this.getItemName() || this.getObject()?.fName || this.getClassName() || '';
+      let hint = this.getItemName() || this.getObjectName() || this.getClassName() || '';
       return (hint.length <= 20) ? hint : hint.slice(0, 17) + '...';
    }
 
@@ -357,7 +359,7 @@ class ObjectPainter extends BasePainter {
       if (!pad_name || c.empty()) return c;
 
       let cp = c.property('pad_painter');
-      if (cp && cp.pads_cache && cp.pads_cache[pad_name])
+      if (cp?.pads_cache && cp.pads_cache[pad_name])
          return d3_select(cp.pads_cache[pad_name]);
 
       c = c.select('.primitives_layer .__root_pad_' + pad_name);
@@ -366,6 +368,14 @@ class ObjectPainter extends BasePainter {
          cp.pads_cache[pad_name] = c.node();
       }
       return c;
+   }
+
+   /** @summary Provides identifier on server for requested sublement */
+   getSnapId(subelem) {
+      if (!this.snapid)
+         return '';
+
+      return this.snapid.toString() + (subelem ? '#'+subelem : '');
    }
 
    /** @summary Method selects immediate layer under canvas/pad main element
@@ -802,12 +812,12 @@ class ObjectPainter extends BasePainter {
    /** @summary Fill context menu for the object
      * @private */
    fillContextMenu(menu) {
-      let name = this.getObject()?.fName || '',
+      let name = this.getObjectName(),
           cl = this.getClassName();
 
       let p = cl.lastIndexOf('::');
       if (p > 0) cl = cl.slice(p+2);
-      let title = cl && name ? `${cl}:${name}` : cl ? cl : name || 'object';
+      let title = (cl && name) ? `${cl}:${name}` : (cl || name || 'object');
 
       menu.add(`header:${title}`);
 
@@ -1315,8 +1325,8 @@ class ObjectPainter extends BasePainter {
              let exec = item.fExec.slice(0, item.fExec.length-1) + args + ')';
              if (cp?.v7canvas)
                 cp.submitExec(execp, exec, kind);
-             else if (cp)
-                cp.sendWebsocket(`OBJEXEC:${item.$execid}:${exec}`);
+             else
+                cp?.sendWebsocket(`OBJEXEC:${item.$execid}:${exec}`);
          });
       }
 
@@ -1366,8 +1376,7 @@ class ObjectPainter extends BasePainter {
          _resolveFunc(_menu);
       };
 
-      let reqid = this.snapid;
-      if (kind) reqid += '#' + kind; // use # to separate object id from member specifier like 'x' or 'z'
+      let reqid = this.getSnapId(kind);
 
       menu._got_menu = false;
 
