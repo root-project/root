@@ -157,6 +157,8 @@ clang/LLVM technology.
 #include <dlfcn.h>
 #include <mach-o/dyld.h>
 #include <mach-o/loader.h>
+#include <os/signpost.h>
+#include <os/log.h>
 #endif // __APPLE__
 
 #ifdef R__UNIX
@@ -1049,8 +1051,16 @@ static bool LoadModule(const std::string &ModuleName, cling::Interpreter &interp
    if (gDebug > 2)
       ::Info("TCling::__LoadModule", "Preloading module %s. \n",
              ModuleName.c_str());
-
-   return interp.loadModule(ModuleName, /*Complain=*/true);
+#ifdef __APPLE__
+   int uniqueModuleId = os_signpost_id_generate(OS_LOG_DEFAULT);
+   os_signpost_interval_begin(OS_LOG_DEFAULT, uniqueModuleId, "Preloading module", "Preloading Module: %{public}s",
+                              ModuleName.c_str());
+#endif
+   auto result = interp.loadModule(ModuleName, /*Complain=*/true);
+#ifdef __APPLE__
+   os_signpost_interval_end(OS_LOG_DEFAULT, uniqueModuleId, "Preloading module");
+#endif
+   return result;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
