@@ -1119,6 +1119,20 @@ public:
     return makeSpecIterator(getSpecializations(), true);
   }
 
+  /// All specializations that that have already been loaded, ie avoiding
+  /// deserialization of lazily registered specializations.
+  spec_range loaded_specializations() const {
+    return spec_range(loaded_spec_begin(), loaded_spec_end());
+  }
+
+  spec_iterator loaded_spec_begin() const {
+    return makeSpecIterator(getCommonPtr()->Specializations, false);
+  }
+
+  spec_iterator loaded_spec_end() const {
+    return makeSpecIterator(getCommonPtr()->Specializations, true);
+  }
+
   /// Retrieve the "injected" template arguments that correspond to the
   /// template parameters of this function template.
   ///
@@ -2448,6 +2462,20 @@ public:
     return makeSpecIterator(getSpecializations(), true);
   }
 
+  /// All specializations that that have already been loaded, ie avoiding
+  /// deserialization of lazily registered specializations.
+  spec_range loaded_specializations() const {
+    return spec_range(loaded_spec_begin(), loaded_spec_end());
+  }
+
+  spec_iterator loaded_spec_begin() const {
+    return makeSpecIterator(getCommonPtr()->Specializations, false);
+  }
+
+  spec_iterator loaded_spec_end() const {
+    return makeSpecIterator(getCommonPtr()->Specializations, true);
+  }
+
   // Implement isa/cast/dyncast support
   static bool classof(const Decl *D) { return classofKind(D->getKind()); }
   static bool classofKind(Kind K) { return K == ClassTemplate; }
@@ -3249,6 +3277,20 @@ public:
 
   spec_iterator spec_end() const {
     return makeSpecIterator(getSpecializations(), true);
+  }
+
+  /// All specializations that that have already been loaded, ie avoiding
+  /// deserialization of lazily registered specializations.
+  spec_range loaded_specializations() const {
+    return spec_range(loaded_spec_begin(), loaded_spec_end());
+  }
+
+  spec_iterator loaded_spec_begin() const {
+    return makeSpecIterator(getCommonPtr()->Specializations, false);
+  }
+
+  spec_iterator loaded_spec_end() const {
+    return makeSpecIterator(getCommonPtr()->Specializations, true);
   }
 
   // Implement isa/cast/dyncast support
