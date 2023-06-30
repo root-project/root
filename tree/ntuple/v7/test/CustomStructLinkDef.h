@@ -13,6 +13,7 @@
 #pragma link C++ class EmptyStruct + ;
 #pragma link C++ class TestEBO+;
 #pragma link C++ class IOConstructor+;
+#pragma link C++ class LowPrecisionFloats+;
 
 #pragma link C++ class EdmWrapper<CustomStruct> +;
 
