@@ -268,7 +268,11 @@ jobs:
           # - image: ubuntu20
           #   config: Release
 
-          - image: ubuntu2210
+          # - image: ubuntu2210
+          #   config: Release
+          #   overrides: ["coverage=On"]
+
+          - image: ubuntu-latest
             config: Release
             overrides: ["coverage=On"]
 
