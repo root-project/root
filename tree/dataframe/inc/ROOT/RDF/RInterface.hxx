@@ -2071,7 +2071,7 @@ public:
    /// \brief Fill and return a two-dimensional profile (*lazy action*).
    /// \tparam V1 The type of the column used to fill the x axis of the histogram. Inferred if not present.
    /// \tparam V2 The type of the column used to fill the y axis of the histogram. Inferred if not present.
-   /// \tparam V2 The type of the column used to fill the z axis of the histogram. Inferred if not present.
+   /// \tparam V3 The type of the column used to fill the z axis of the histogram. Inferred if not present.
    /// \param[in] model The returned profile will be constructed using this as a model.
    /// \param[in] v1Name The name of the column that will fill the x axis.
    /// \param[in] v2Name The name of the column that will fill the y axis.
