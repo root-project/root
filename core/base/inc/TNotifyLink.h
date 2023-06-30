@@ -52,32 +52,30 @@ public:
       } while(current);
    }
 
-   template <class Notifier>
-   void PrependLink(Notifier &notifier)
+   template <class Chain>
+   void PrependLink(Chain &chain)
    {
       SetBit(kLinked);
 
-      fNext = notifier.GetNotify();
-      if (auto link = dynamic_cast<TNotifyLinkBase*>(fNext)) {
-         link->fPrevious = this;
-      }
-      notifier.SetNotify(this);
+      fNext = chain.GetNotify();
+      chain.SetNotify(this);
+      if (auto next = dynamic_cast<TNotifyLinkBase *>(fNext))
+         next->fPrevious = this;
    }
 
-   template <class Notifier>
-   void RemoveLink(Notifier &notifier)
+   template <class Chain>
+   void RemoveLink(Chain &chain)
    {
       ResetBit(kLinked);
 
-      if (notifier.GetNotify() == this) {
+      if (chain.GetNotify() == this) { // this notify link is the first in the list
          R__ASSERT(fPrevious == nullptr && "The TNotifyLink head node should not have a previous element.");
-         notifier.SetNotify(fNext);
+         chain.SetNotify(fNext);
       } else if (fPrevious) {
          fPrevious->fNext = fNext;
       }
-      if (auto link = dynamic_cast<TNotifyLinkBase*>(fNext)) {
-         link->fPrevious = fPrevious;
-      }
+      if (auto next = dynamic_cast<TNotifyLinkBase *>(fNext))
+         next->fPrevious = fPrevious;
       fPrevious = nullptr;
       fNext = nullptr;
    }
@@ -96,13 +94,16 @@ private:
    Type *fSubscriber;
 
 public:
-   TNotifyLink(Type *current) : fSubscriber(current) {}
+   TNotifyLink(Type *subscriber) : fSubscriber(subscriber) {}
 
-   // Call Notify on the current and next object.
+   /// Call Notify on our subscriber and propagate the call to the next link.
    Bool_t Notify() override
    {
-      auto result = fSubscriber ? fSubscriber->Notify() : kTRUE;
-      if (fNext) result &= fNext->Notify();
+      bool result = true;
+      if (fSubscriber)
+         result &= fSubscriber->Notify();
+      if (fNext)
+         result &= fNext->Notify();
       return result;
    }
 
