@@ -4772,6 +4772,38 @@ const char *TUnixSystem::FindDynamicLibrary(TString& sLib, Bool_t quiet)
 
 //---- System, CPU and Memory info ---------------------------------------------
 
+#if defined(R__FBSD)
+///////////////////////////////////////////////////////////////////////////////
+//// Get system info for FreeBSD
+
+static void GetFreeBSDSysInfo(SysInfo_t *sysinfo)
+{
+   // it probably would be better to get this information from syscalls
+   // this is possibly less error prone
+   FILE *p = gSystem->OpenPipe("sysctl -n kern.ostype hw.model hw.ncpu "
+                               "hw.physmem dev.cpu.0.freq", "r");
+   TString s;
+   s.Gets(p);
+   sysinfo->fOS = s;
+   s.Gets(p);
+   sysinfo->fModel = s;
+   s.Gets(p);
+   sysinfo->fCpus = s.Atoi();
+   s.Gets(p);
+   Long64_t t = s.Atoll();
+   sysinfo->fPhysRam = Int_t(t / 1024 / 1024);
+   s.Gets(p);
+   t = s.Atoll();
+   sysinfo->fCpuSpeed = Int_t(t / 1000000);
+   gSystem->ClosePipe(p);
+}
+
+static void GetFreeBSDCpuInfo(CpuInfo_t*, Int_t)
+{
+  //not yet implemented
+}
+#endif
+
 #if defined(R__MACOSX)
 #include <sys/resource.h>
 #include <mach/mach.h>
@@ -5223,6 +5255,8 @@ int TUnixSystem::GetSysInfo(SysInfo_t *info) const
       GetDarwinSysInfo(&sysinfo);
 #elif defined(R__LINUX)
       GetLinuxSysInfo(&sysinfo);
+#elif defined(R__FBSD)
+      GetFreeBSDSysInfo(&sysinfo);
 #endif
    }
 
@@ -5244,6 +5278,8 @@ int TUnixSystem::GetCpuInfo(CpuInfo_t *info, Int_t sampleTime) const
    GetDarwinCpuInfo(info, sampleTime);
 #elif defined(R__LINUX)
    GetLinuxCpuInfo(info, sampleTime);
+#elif defined(R__FBSD)
+   GetFreeBSDCpuInfo(info, sampleTime);
 #endif
 
    return 0;
