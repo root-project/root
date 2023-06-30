@@ -265,7 +265,6 @@ jobs:
 
           - image: ubuntu2210
             config: Release
-            overrides: ["coverage=On", "roottest=On", "testing=On"]
 
           - image: ubuntu22
             config: Debug
