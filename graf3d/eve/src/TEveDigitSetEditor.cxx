@@ -60,7 +60,7 @@ void TEveDigitSetEditor::CreateInfoTab()
 
    TGCompositeFrame *title1 = new TGCompositeFrame(fInfoFrame, 180, 10,
                                                    kHorizontalFrame |
-                                                   kLHintsExpandX   |
+                                                   kFitWidth        |
                                                    kFixedWidth      |
                                                    kOwnBackground);
 
@@ -72,8 +72,7 @@ void TEveDigitSetEditor::CreateInfoTab()
 
 
    fHistoButtFrame = new TGHorizontalFrame(fInfoFrame);
-   TGTextButton* b = 0;
-   b = new TGTextButton(fHistoButtFrame, "Histo");
+   TGTextButton* b = new TGTextButton(fHistoButtFrame, "Histo");
    b->SetToolTipText("Show histogram over full range.");
    fHistoButtFrame->AddFrame(b, new TGLayoutHints(kLHintsLeft|kLHintsExpandX, 1, 1, 0, 0));
    b->Connect("Clicked()", "TEveDigitSetEditor", this, "DoHisto()");
