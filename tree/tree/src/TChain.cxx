@@ -1309,9 +1309,11 @@ Int_t TChain::LoadBaskets(Long64_t /*maxmemory*/)
 ///       as a ROOT issue.
 ///   * -6: An error occurred within the notify callback.
 ///
-/// Note: This is the only routine which sets the value of fTree to
-///       a non-zero pointer.
-
+/// Calls fNotify->Notify() (if fNotify is not null) when starting the processing of a new sub-tree.
+/// See TNotifyLink for more information on the notification mechanism.
+///
+/// \note This is the only routine which sets the value of fTree to a non-zero pointer.
+///
 Long64_t TChain::LoadTree(Long64_t entry)
 {
    // We already have been visited while recursively looking
