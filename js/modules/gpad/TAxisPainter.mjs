@@ -567,7 +567,7 @@ class TAxisPainter extends ObjectPainter {
       if (optionNoopt && this.nticks && (this.kind == 'normal'))
          this.noticksopt = true;
 
-      let handle = { nminor: 0, nmiddle: 0, nmajor: 0, func: this.func, minor: [], middle: [], major: [] }, ticks;
+      let handle = { painter: this, nminor: 0, nmiddle: 0, nmajor: 0, func: this.func, minor: [], middle: [], major: [] }, ticks;
 
       if (this.fixed_ticks) {
          ticks = [];
@@ -644,6 +644,10 @@ class TAxisPainter extends ObjectPainter {
       handle.next_major_grpos = function() {
          if (this.nmajor >= this.major.length) return null;
          return this.func(this.major[this.nmajor]);
+      };
+
+      handle.get_modifier = function() {
+         return this.painter.findLabelModifier(this.painter.getObject(), this.nmajor-1, this.major.length);
       };
 
       this.order = 0;

@@ -1,4 +1,4 @@
-import { select as d3_select } from '../d3.mjs';
+import { select as d3_select, color as d3_color } from '../d3.mjs';
 import { HelveticerRegularJson, Font, WebGLRenderer, WebGLRenderTarget,
          CanvasTexture, TextureLoader,
          BufferGeometry, BufferAttribute, Float32BufferAttribute,
@@ -9,6 +9,23 @@ import { browser, settings, constants, isBatchMode, isNodeJs, isObject, isFunc, 
 import { getElementRect, getAbsPosInCanvas, makeTranslate } from './BasePainter.mjs';
 import { TAttMarkerHandler } from './TAttMarkerHandler.mjs';
 import { getSvgLineStyle } from './TAttLineHandler.mjs';
+
+
+/** @ummary Create three.js Color instance, handles optional opacity
+  * @private */
+function getMaterialArgs(color, args) {
+   if (!args || !isObject(args)) args = {};
+
+   if (isStr(color) && ((color[0] == '#' && (color.length === 9)) || (color.indexOf('rgba') >= 0))) {
+      let col = d3_color(color);
+      args.color = new Color(col.r, col.g, col.b);
+      args.opacity = col.opacity ?? 1;
+      args.transparent = args.opacity < 1;
+   } else {
+      args.color = new Color(color);
+   }
+   return args;
+}
 
 
 const HelveticerRegularFont = new Font(HelveticerRegularJson);
@@ -1554,6 +1571,6 @@ function create3DLineMaterial(painter, arg, is_v7 = false) {
 }
 
 export { assign3DHandler, disposeThreejsObject, createOrbitControl,
-         createLineSegments, create3DLineMaterial, Box3D,
+         createLineSegments, create3DLineMaterial, Box3D, getMaterialArgs,
          createRender3D, beforeRender3D, afterRender3D, getRender3DKind, cleanupRender3D,
          HelveticerRegularFont, InteractiveControl, PointsControl, PointsCreator, createSVGRenderer };

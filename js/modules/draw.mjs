@@ -81,7 +81,7 @@ const drawFuncs = { lst: [
    { name: 'kind:Text', icon: 'img_text', func: drawRawText },
    { name: clTObjString, icon: 'img_text', func: drawRawText },
    { name: clTF1, icon: 'img_tf1', class: () => import('./hist/TF1Painter.mjs').then(h => h.TF1Painter) },
-   { name: clTF2, icon: 'img_tf2', draw: () => import('./draw/TF2.mjs').then(h => h.drawTF2), opt: ';BOX;ARR;SURF;SURF1;SURF2;SURF4;SURF6;LEGO;LEGO0;LEGO1;LEGO2;LEGO3;LEGO4;same' },
+   { name: clTF2, icon: 'img_tf2', class: () => import('./hist/TF2Painter.mjs').then(h => h.TF2Painter), opt: ';BOX;ARR;SURF;SURF1;SURF2;SURF4;SURF6;LEGO;LEGO0;LEGO1;LEGO2;LEGO3;LEGO4;same' },
    { name: clTSpline3, icon: 'img_tf1', class: () => import('./draw/TSplinePainter.mjs').then(h => h.TSplinePainter) },
    { name: 'TSpline5', sameas: clTSpline3 },
    { name: clTEllipse, icon: 'img_graph', draw: () => import_more().then(h => h.drawEllipse), direct: true },

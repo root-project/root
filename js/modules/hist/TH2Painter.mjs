@@ -1,5 +1,6 @@
 import { settings, gStyle, clTMultiGraph, kNoZoom } from '../core.mjs';
 import { Vector2, BufferGeometry, BufferAttribute, Mesh, MeshBasicMaterial, ShapeUtils } from '../three.mjs';
+import { getMaterialArgs } from '../base/base3d.mjs';
 import { assignFrame3DMethods, drawBinsLego, drawBinsError3D, drawBinsContour3D, drawBinsSurf3D } from './hist3d.mjs';
 import { TAxisPainter } from '../gpad/TAxisPainter.mjs';
 import { THistPainter } from '../hist2d/THistPainter.mjs';
@@ -163,8 +164,7 @@ function drawTH2PolyLego(painter) {
       geometry.setAttribute('position', new BufferAttribute(pos, 3));
       geometry.computeVertexNormals();
 
-      let color = painter.fPalette.getColor(colindx),
-          material = new MeshBasicMaterial({ color, vertexColors: false }),
+      let material = new MeshBasicMaterial(getMaterialArgs(painter.fPalette.getColor(colindx), { vertexColors: false })),
           mesh = new Mesh(geometry, material);
 
       pmain.toplevel.add(mesh);

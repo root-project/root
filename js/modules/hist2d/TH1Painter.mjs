@@ -775,7 +775,7 @@ class TH1Painter extends THistPainter {
 
       if (name) tips.push(name);
 
-      if (this.options.Error || this.options.Mark) {
+      if (this.options.Error || this.options.Mark || this.isTF1()) {
          tips.push('x = ' + xlbl, 'y = ' + funcs.axisAsText('y', cont));
          if (this.options.Error) {
             if (xlbl[0] == '[') tips.push('error x = ' + ((x2 - x1) / 2).toPrecision(4));
@@ -894,7 +894,7 @@ class TH1Painter extends THistPainter {
 
       } else if (this.options.Error || this.options.Mark || this.options.Line || this.options.Curve) {
 
-         show_rect = true;
+         show_rect = !this.isTF1();
 
          let msize = 3;
          if (this.markeratt) msize = Math.max(msize, this.markeratt.getFullSize());
@@ -961,7 +961,7 @@ class TH1Painter extends THistPainter {
          return null;
       }
 
-      let res = { name: histo.fName, title: histo.fTitle,
+      let res = { name: this.getObjectName(), title: histo.fTitle,
                   x: midx, y: midy, exact: true,
                   color1: this.lineatt?.color ?? 'green',
                   color2: this.fillatt?.getFillColorAlt('blue') ?? 'blue',
@@ -1042,13 +1042,13 @@ class TH1Painter extends THistPainter {
          this.decodeOptions(arg);
 
          if (this.options.need_fillcol && this.fillatt?.empty())
-            this.fillatt.change(5,1001);
+            this.fillatt.change(5, 1001);
 
          // redraw all objects in pad, inform dependent objects
          this.interactiveRedraw('pad', 'drawopt');
       });
 
-      if (!this.snapid && !this.isTProfile())
+      if (!this.snapid && !this.isTProfile() && !this.isTF1())
          menu.addRebinMenu(sz => this.rebinHist(sz));
    }
 

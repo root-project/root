@@ -646,14 +646,13 @@ class TCanvasPainter extends TPadPainter {
          }
       }
 
-      if (!msg && painter?.snapid && (kind.slice(0,5) == 'exec:'))
-         msg = 'PRIMIT6:' + toJSON({
-                  _typename: 'TWebObjectOptions',
-                  snapid: painter.snapid.toString() + (subelem ? '#'+subelem : ''),
-                  opt: kind.slice(5),
-                  fcust: 'exec',
-                  fopt: []
-               });
+      if (!msg && isFunc(painter?.getSnapId) && (kind.slice(0,5) == 'exec:')) {
+         let snapid = painter.getSnapId(subelem);
+         if (snapid)
+            msg = 'PRIMIT6:' + toJSON({
+                     _typename: 'TWebObjectOptions',
+                     snapid, opt: kind.slice(5), fcust: 'exec', fopt: [] });
+      }
 
       if (msg) {
          console.log(`Sending ${msg.length} ${msg.slice(0,40)}`);

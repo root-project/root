@@ -1,5 +1,5 @@
 import { gStyle, createHistogram, createTPolyLine, isFunc, isStr,
-         clTMultiGraph, clTF2, clTProfile2D } from '../core.mjs';
+         clTMultiGraph, clTH1D, clTF2, clTProfile2D } from '../core.mjs';
 import { rgb as d3_rgb, chord as d3_chord, arc as d3_arc, ribbon as d3_ribbon } from '../d3.mjs';
 import { TAttLineHandler } from '../base/TAttLineHandler.mjs';
 import { TAttMarkerHandler } from '../base/TAttMarkerHandler.mjs';
@@ -605,14 +605,14 @@ class TH2Painter extends THistPainter {
 
       const histo = this.getHisto(),
       createXProject = () => {
-        let p = createHistogram('TH1D', this.nbinsx);
+        let p = createHistogram(clTH1D, this.nbinsx);
         Object.assign(p.fXaxis, histo.fXaxis);
         p.fName = 'xproj';
         p.fTitle = 'X projection';
         return p;
       },
       createYProject = () => {
-        let p = createHistogram('TH1D', this.nbinsy);
+        let p = createHistogram(clTH1D, this.nbinsy);
         Object.assign(p.fXaxis, histo.fYaxis);
         p.fName = 'yproj';
         p.fTitle = 'Y projection';
