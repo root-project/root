@@ -374,6 +374,12 @@ class THistDrawOptions {
       if ((this.Lego > 0) || (hdim == 3) ||
           ((this.Surf > 0) || this.Error && (hdim == 2))) this.Mode3D = true;
 
+      // default draw options for TF1 is line and fill
+      if (painter.isTF1() && (hdim == 1) && (this.Hist === 1) && !this.Line && !this.Fill && !this.Curve) {
+         this.Hist = false;
+         this.Curve = this.Fill = true;
+      }
+
       //if (this.Surf == 15)
       //   if (this.System == CoordSystem.kPOLAR || this.System == CoordSystem.kCARTESIAN)
       //      this.Surf = 13;
@@ -628,6 +634,9 @@ class THistPainter extends ObjectPainter {
    isTProfile() {
       return this.matchObjectType(clTProfile);
    }
+
+   /** @summary Returns true if histogram drawn instead of TF1/TF2 object */
+   isTF1() { return false; }
 
    /** @summary Returns true if TH1K */
    isTH1K() {
@@ -1408,8 +1417,6 @@ class THistPainter extends ObjectPainter {
       if (!do_draw)
          return this.drawNextFunction(indx+1, only_extra);
 
-      func.$histo = histo; // required to draw TF1 correctly
-
       let promise = TPavePainter.canDraw(func) ? TPavePainter.draw(this.getDom(), func, opt)
                                                : pp.drawObject(this.getDom(), func, opt);
 
@@ -1594,7 +1601,7 @@ class THistPainter extends ObjectPainter {
           fp = this.getFramePainter();
       if (!histo) return;
 
-      if (this.options.Axis <= 0)
+      if ((this.options.Axis <= 0) && !this.isTF1())
          menu.addchk(this.toggleStat('only-check'), 'Show statbox', () => this.toggleStat());
 
       if (histo.fTitle && this.isMainPainter())
@@ -1662,6 +1669,21 @@ class THistPainter extends ObjectPainter {
 
       if (this.histogram_updated && fp.zoomChangedInteractive())
          menu.add('Let update zoom', () => fp.zoomChangedInteractive('reset'));
+   }
+
+   /** @summary Returns snap id for object or subelement
+     * @private */
+   getSnapId(subelem) {
+      if (!this.snapid)
+         return '';
+      let res = this.snapid.toString();
+      if (subelem) {
+         res += '#';
+         if (this.isTF1() && (subelem == 'x' || subelem == 'y' || subelem == 'z'))
+             res += 'hist#';
+         res += subelem;
+      }
+      return res;
    }
 
    /** @summary Auto zoom into histogram non-empty range
@@ -2246,7 +2268,7 @@ class THistPainter extends ObjectPainter {
 
       let x2 = axis.GetBinLowEdge(bin+2);
 
-      if (handle.kind === 'time')
+      if ((handle.kind === 'time') || this.isTF1())
          return funcs.axisAsText(name, (x1+x2)/2);
 
       return `[${funcs.axisAsText(name, x1)}, ${funcs.axisAsText(name, x2)})`;
