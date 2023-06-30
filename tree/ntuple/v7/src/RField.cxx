@@ -2429,17 +2429,21 @@ void ROOT::Experimental::RSetField::ReadGlobalImpl(NTupleSize_t globalIndex, voi
 
    TVirtualCollectionProxy::TPushPop RAII(fProxy.get(), to);
    fProxy->Clear();
-   for (unsigned i = 0; i < nItems; ++i) {
-      void *item;
-      if (fProxy->GetType())
-         item = malloc(fItemSize);
-      else
-         item = fProxy->GetValueClass()->New();
+   void *item;
+   if (fProxy->GetType())
+      item = malloc(fItemSize);
+   else
+      item = fProxy->GetValueClass()->New();
 
+   for (unsigned i = 0; i < nItems; ++i) {
       fSubFields[0]->Read(collectionStart + i, &item);
       fProxy->Insert(item, to, 1);
-      free(item);
    }
+
+   if (fProxy->GetType())
+      free(item);
+   else
+      fProxy->GetValueClass()->Destructor(item);
 }
 
 //------------------------------------------------------------------------------

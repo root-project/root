@@ -1974,8 +1974,8 @@ protected:
    std::size_t AppendImpl(const void *from) final
    {
       auto typedValue = static_cast<const ContainerT *>(from);
-      auto nbytes = 0;
       auto count = typedValue->size();
+      size_t nbytes = 0;
       for (auto item : *typedValue) {
          nbytes += fSubFields[0]->Append(&item);
       }
@@ -1991,8 +1991,8 @@ protected:
       ClusterSize_t nItems;
       fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, &nItems);
       typedValue->clear();
+      ItemT item;
       for (unsigned i = 0; i < nItems; ++i) {
-         ItemT item;
          fSubFields[0]->Read(collectionStart + i, &item);
          typedValue->insert(item);
       }
