@@ -16,13 +16,6 @@
 // Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 // 02110-1301 USA
 
-#ifdef WIN32
-// On Windows, Disable the warning:
-// "characters beyond first in wide-character constant ignored"
-#pragma warning( push )
-#pragma warning( disable : 4066)
-#endif
-
 #include <iostream>
 #include <algorithm>
 #include <string>
@@ -171,18 +164,18 @@ namespace mathtext {
             case 'Q':   _glyph = L'\u211a'; break;
             case 'R':   _glyph = L'\u211d'; break;
             case 'Z':   _glyph = L'\u2124'; break;
-            default:   _glyph = L'\U0001d538' + (_code[0] - 'A');
+            default:   _glyph = U'\U0001d538' + (_code[0] - 'A');
          }
          _type = atom_t::TYPE_ORD;
       }
       else if(_code[0] >= 'a' && _code[0] <= 'z') {
          _family = FAMILY_STIX_REGULAR;
-         _glyph = L'\U0001d552' + (_code[0] - 'a');
+         _glyph = U'\U0001d552' + (_code[0] - 'a');
          _type = atom_t::TYPE_ORD;
       }
       else if(_code[0] >= '0' && _code[0] <= '9') {
          _family = FAMILY_STIX_REGULAR;
-         _glyph = L'\U0001d7d8' + (_code[0] - '0');
+         _glyph = U'\U0001d7d8' + (_code[0] - '0');
          _type = atom_t::TYPE_ORD;
       }
    }
@@ -205,7 +198,7 @@ namespace mathtext {
             case 'E':   _glyph = L'\u2130'; break;
             case 'F':   _glyph = L'\u2131'; break;
             case 'M':   _glyph = L'\u2133'; break;
-            default:   _glyph = L'\U0001d49c' + (_code[0] - 'A');
+            default:   _glyph = U'\U0001d49c' + (_code[0] - 'A');
          }
          _type = atom_t::TYPE_ORD;
       }
@@ -216,7 +209,7 @@ namespace mathtext {
             case 'l':   _glyph = L'\u2113'; break;
             case 'e':   _glyph = L'\u212f'; break;
             case 'o':   _glyph = L'\u2134'; break;
-            default:   _glyph = L'\U0001d4b6' + (_code[0] - 'a');
+            default:   _glyph = U'\U0001d4b6' + (_code[0] - 'a');
          }
          _type = atom_t::TYPE_ORD;
       }
@@ -229,12 +222,12 @@ namespace mathtext {
 
       if(_code[0] >= 'A' && _code[0] <= 'Z') {
          _family = FAMILY_STIX_BOLD_ITALIC;
-         _glyph = L'\U0001d49c' + (_code[0] - 'A');
+         _glyph = U'\U0001d49c' + (_code[0] - 'A');
          _type = atom_t::TYPE_ORD;
       }
       else if(_code[0] >= 'a' && _code[0] <= 'z') {
          _family = FAMILY_STIX_BOLD_ITALIC;
-         _glyph = L'\U0001d4b6' + (_code[0] - 'a');
+         _glyph = U'\U0001d4b6' + (_code[0] - 'a');
          _type = atom_t::TYPE_ORD;
       }
    }
@@ -252,13 +245,13 @@ namespace mathtext {
             case 'R':   _glyph = L'\u211c'; break;
             case 'Z':   _glyph = L'\u2128'; break;
             case 'C':   _glyph = L'\u212d'; break;
-            default:   _glyph = L'\U0001d504' + (_code[0] - 'A');
+            default:   _glyph = U'\U0001d504' + (_code[0] - 'A');
          }
          _type = atom_t::TYPE_ORD;
       }
       else if(_code[0] >= 'a' && _code[0] <= 'z') {
          _family = FAMILY_STIX_REGULAR;
-         _glyph = L'\U0001d51e' + (_code[0] - 'a');
+         _glyph = U'\U0001d51e' + (_code[0] - 'a');
          _type = atom_t::TYPE_ORD;
       }
    }
@@ -270,12 +263,12 @@ namespace mathtext {
 
       if(_code[0] >= 'A' && _code[0] <= 'Z') {
          _family = FAMILY_STIX_BOLD;
-         _glyph = L'\U0001d56c' + (_code[0] - 'A');
+         _glyph = U'\U0001d56c' + (_code[0] - 'A');
          _type = atom_t::TYPE_ORD;
       }
       else if(_code[0] >= 'a' && _code[0] <= 'z') {
          _family = FAMILY_STIX_BOLD;
-         _glyph = L'\U0001d586' + (_code[0] - 'a');
+         _glyph = U'\U0001d586' + (_code[0] - 'a');
          _type = atom_t::TYPE_ORD;
       }
    }
@@ -288,17 +281,17 @@ namespace mathtext {
 
       if(_code[0] >= 'A' && _code[0] <= 'Z') {
          _family = FAMILY_STIX_REGULAR;
-         _glyph = L'\U0001d5a0' + (_code[0] - 'A');
+         _glyph = U'\U0001d5a0' + (_code[0] - 'A');
          _type = atom_t::TYPE_ORD;
       }
       else if(_code[0] >= 'a' && _code[0] <= 'z') {
          _family = FAMILY_STIX_REGULAR;
-         _glyph = L'\U0001d5ba' + (_code[0] - 'a');
+         _glyph = U'\U0001d5ba' + (_code[0] - 'a');
          _type = atom_t::TYPE_ORD;
       }
       else if(_code[0] >= '0' && _code[0] <= '9') {
          _family = FAMILY_STIX_REGULAR;
-         _glyph = L'\U0001d7e2' + (_code[0] - '0');
+         _glyph = U'\U0001d7e2' + (_code[0] - '0');
          _type = atom_t::TYPE_ORD;
       }
    }
@@ -311,12 +304,12 @@ namespace mathtext {
 
       if(_code[0] >= 'A' && _code[0] <= 'Z') {
          _family = FAMILY_STIX_ITALIC;
-         _glyph = L'\U0001d608' + (_code[0] - 'A');
+         _glyph = U'\U0001d608' + (_code[0] - 'A');
          _type = atom_t::TYPE_ORD;
       }
       else if(_code[0] >= 'a' && _code[0] <= 'z') {
          _family = FAMILY_STIX_ITALIC;
-         _glyph = L'\U0001d622' + (_code[0] - 'a');
+         _glyph = U'\U0001d622' + (_code[0] - 'a');
          _type = atom_t::TYPE_ORD;
       }
    }
@@ -329,17 +322,17 @@ namespace mathtext {
 
       if(_code[0] >= 'A' && _code[0] <= 'Z') {
          _family = FAMILY_STIX_BOLD;
-         _glyph = L'\U0001d5d4' + (_code[0] - 'A');
+         _glyph = U'\U0001d5d4' + (_code[0] - 'A');
          _type = atom_t::TYPE_ORD;
       }
       else if(_code[0] >= 'a' && _code[0] <= 'z') {
          _family = FAMILY_STIX_BOLD;
-         _glyph = L'\U0001d5ee' + (_code[0] - 'a');
+         _glyph = U'\U0001d5ee' + (_code[0] - 'a');
          _type = atom_t::TYPE_ORD;
       }
       else if(_code[0] >= '0' && _code[0] <= '9') {
          _family = FAMILY_STIX_BOLD;
-         _glyph = L'\U0001d7ec' + (_code[0] - '0');
+         _glyph = U'\U0001d7ec' + (_code[0] - '0');
          _type = atom_t::TYPE_ORD;
       }
    }
@@ -352,12 +345,12 @@ namespace mathtext {
 
       if(_code[0] >= 'A' && _code[0] <= 'Z') {
          _family = FAMILY_STIX_BOLD_ITALIC;
-         _glyph = L'\U0001d63c' + (_code[0] - 'A');
+         _glyph = U'\U0001d63c' + (_code[0] - 'A');
          _type = atom_t::TYPE_ORD;
       }
       else if(_code[0] >= 'a' && _code[0] <= 'z') {
          _family = FAMILY_STIX_BOLD_ITALIC;
-         _glyph = L'\U0001d656' + (_code[0] - 'a');
+         _glyph = U'\U0001d656' + (_code[0] - 'a');
          _type = atom_t::TYPE_ORD;
       }
    }
@@ -432,6 +425,3 @@ namespace mathtext {
    }
 
 }
-#ifdef WIN32
-#pragma warning( pop )
-#endif

@@ -17,13 +17,6 @@
 /// Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 /// 02110-1301 USA
 
-#ifdef WIN32
-// On Windows, Disable the warning:
-// "characters beyond first in wide-character constant ignored"
-#pragma warning( push )
-#pragma warning( disable : 4066)
-#endif
-
 #include <math.h>
 #include <algorithm>
 #include <sstream>
@@ -135,11 +128,11 @@ namespace mathtext {
        // Halfwidth and Fullwidth Forms
        (c >= L'\uff00' && c <= L'\uffef') ||
        // CJK Unified Ideographs, Extension B
-       (c >= L'\U00020000' && c <= L'\U0002a6df') ||
+       (c >= U'\U00020000' && c <= U'\U0002a6df') ||
        // CJK Unified Ideographs, Extension C
-       (c >= L'\U0002a700' && c <= L'\U0002b73f') ||
+       (c >= U'\U0002a700' && c <= U'\U0002b73f') ||
        // CJK Compatibility Ideographs
-       (c >= L'\U0002f800' && c <= L'\U0002fa1f'));
+       (c >= U'\U0002f800' && c <= U'\U0002fa1f'));
    }
 
 
@@ -709,6 +702,3 @@ namespace mathtext {
    }
 
 }
-#ifdef WIN32
-#pragma warning( pop )
-#endif
