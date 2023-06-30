@@ -35,7 +35,7 @@ public:
    template<typename FN> void Run(const FN &lambda) {
 #ifdef R__USE_IMT
       if (!fGroup) { fGroup.reset(new TaskGroup_t()); }
-      fGroup->Run( [=]() {
+      fGroup->Run( [this, &lambda]() {
          auto nbytes = lambda();
          if (nbytes >= 0) {
             fBytes += nbytes;

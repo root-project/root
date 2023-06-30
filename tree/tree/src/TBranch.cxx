@@ -3204,7 +3204,7 @@ Int_t TBranch::WriteBasketImpl(TBasket* basket, Int_t where, ROOT::Internal::TBr
    // Note: captures `basket`, `where`, and `this` by value; modifies the TBranch and basket,
    // as we make a copy of the pointer.  We cannot capture `basket` by reference as the pointer
    // itself might be modified after `WriteBasketImpl` exits.
-   auto doUpdates = [=]() {
+   auto doUpdates = [this, basket, where]() {
       Int_t nout  = basket->WriteBuffer();    //  Write buffer
       if (nout < 0)
          Error("WriteBasketImpl", "basket's WriteBuffer failed.");
