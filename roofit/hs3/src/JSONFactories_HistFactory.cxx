@@ -282,7 +282,9 @@ bool importHistSample(RooJSONFactoryWSTool &tool, RooDataHist &dh, RooArgSet con
       for (const auto &mod : p["modifiers"].children()) {
          std::string const &modtype = mod["type"].val();
          std::string const &sysname = RooJSONFactoryWSTool::name(mod);
-         if (modtype == "normfactor") {
+         if (modtype == "staterror") {
+           // this is dealt with at a different place, ignore it for now
+         } else if (modtype == "normfactor") {
             normElems.add(getOrCreate<RooRealVar>(ws, sysname, 1., -3, 5));
             if (auto constrInfo = mod.find("constraint_name")) {
                constraints.add(*tool.request<RooAbsReal>(constrInfo->val(), name));
@@ -318,6 +320,18 @@ bool importHistSample(RooJSONFactoryWSTool &tool, RooDataHist &dh, RooArgSet con
             RooArgList gammas;
             std::string constraint(mod["constraint"].val());
             shapeElems.add(createPHF(sysname, funcName, vals, tool, constraints, varlist, constraint, gammas, 0, 1000));
+         } else if(modtype == "custom") {
+            RooAbsReal* obj = ws.function(sysname);
+        if(!obj){
+              RooJSONFactoryWSTool::error("unable to find custom modifier '" + sysname + "'");
+            }
+            if(obj->dependsOn(varlist)){
+              shapeElems.add(*obj);
+            } else {
+              normElems.add(*obj);
+            }
+         } else {
+           RooJSONFactoryWSTool::error("modifier '" + sysname + "' of unknown type '"+modtype+"'");
          }
       }
 
@@ -620,6 +634,7 @@ struct Sample {
    std::vector<NormSys> normsys;
    std::vector<HistoSys> histosys;
    std::vector<ShapeSys> shapesys;
+   std::vector<RooAbsReal*> otherElements;
    bool use_barlowBeestonLight = false;
    TClass *barlowBeestonLightConstraint = RooPoisson::Class();
    Sample(const std::string &n) : name{n} {}
@@ -645,6 +660,7 @@ bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname
                           JSONNode &elem)
 {
    RooWorkspace *ws = tool->workspace();
+   RooArgSet customModifiers;
 
    if (!sumpdf)
       return false;
@@ -709,16 +725,15 @@ bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname
             }
          } else if (auto phf = dynamic_cast<ParamHistFunc *>(e)) {
             phfs.push_back(phf);
-         } else {
-            if (!fip) {
-               fip = dynamic_cast<RooStats::HistFactory::FlexibleInterpVar *>(e);
-            }
-            if (!pip) {
-               pip = dynamic_cast<PiecewiseInterpolation *>(e);
-            }
-         }
+         } else if (!fip && (fip = dynamic_cast<RooStats::HistFactory::FlexibleInterpVar *>(e))) {
+         } else if (!pip && (pip = dynamic_cast<PiecewiseInterpolation *>(e))) {
+         } else if(auto real = dynamic_cast<RooAbsReal*>(e)){
+           if(!dynamic_cast<RooBinWidthFunction*>(real)){
+             sample.otherElements.push_back(real);
+           }
+         } 
       }
-
+      
       // see if we can get the observables
       if (pip) {
          if (auto nh = dynamic_cast<RooHistFunc const *>(pip->nominalHist())) {
@@ -926,6 +941,13 @@ bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname
             vals.fill_seq(sys.constraints);
          }
       }
+
+      for (const auto& other : sample.otherElements){
+         auto &mod = RooJSONFactoryWSTool::appendNamedChild(modifiers, other->GetName());
+         customModifiers.add(*other);
+         mod["type"] << "custom";
+      }
+      
       if (sample.use_barlowBeestonLight) {
          auto &mod = RooJSONFactoryWSTool::appendNamedChild(modifiers, ::Literals::staterror);
          mod["type"] << ::Literals::staterror;
@@ -958,6 +980,12 @@ bool tryExportHistFactory(RooJSONFactoryWSTool *tool, const std::string &pdfname
          }
          RooJSONFactoryWSTool::exportArray(nBins, sample.histError.data(), dataNode["errors"]);
       }
+      
+   }
+   
+   // Export all the custom modifiers
+   for(RooAbsArg *modifier : customModifiers){
+     tool->queueExport(*modifier);
    }
 
    // Export all model parameters
