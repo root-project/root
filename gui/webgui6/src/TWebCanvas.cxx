@@ -30,6 +30,7 @@
 #include "TArrayI.h"
 #include "TList.h"
 #include "TF1.h"
+#include "TF2.h"
 #include "TH1.h"
 #include "TH1K.h"
 #include "THStack.h"
@@ -395,6 +396,10 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
          need_frame = true;
          if (strlen(obj->GetTitle()) > 0)
             need_title = obj->GetTitle();
+      } else if (obj->InheritsFrom(TF1::Class())) {
+         need_frame = !obj->InheritsFrom(TF2::Class());
+         if (!has_histo && (strlen(obj->GetTitle()) > 0))
+            need_title = obj->GetTitle();
       } else if (obj->InheritsFrom(TPaveText::Class())) {
          if (strcmp(obj->GetName(), "title") == 0)
             title = static_cast<TPaveText *>(obj);
@@ -633,6 +638,22 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
             fPrimitivesLists.Add(funcs);
 
          first_obj = false;
+      } else if (obj->InheritsFrom(TF1::Class())) {
+         flush_master();
+         auto f1 = static_cast<TF1 *> (obj);
+
+         TString f1opt = iter.GetOption();
+
+         if (first_obj) {
+            auto hist = f1->GetHistogram();
+            paddata.NewPrimitive(hist, "__ignore_drawing__").SetSnapshot(TWebSnapshot::kObject, hist);
+            f1opt.Append(";webcanv_hist");
+         }
+
+         paddata.NewPrimitive(f1, f1opt.Data()).SetSnapshot(TWebSnapshot::kObject, f1);
+
+         first_obj = false;
+
       } else if (obj->InheritsFrom(TGaxis::Class())) {
          flush_master();
          auto gaxis = static_cast<TGaxis *> (obj);
@@ -1968,6 +1989,7 @@ TObject *TWebCanvas::FindPrimitive(const std::string &sid, int idcnt, TPad *pad,
       TScatter *scatter = obj->InheritsFrom(TScatter::Class()) ? static_cast<TScatter *>(obj) : nullptr;
       TMultiGraph *mg = obj->InheritsFrom(TMultiGraph::Class()) ? static_cast<TMultiGraph *>(obj) : nullptr;
       THStack *hs = obj->InheritsFrom(THStack::Class()) ? static_cast<THStack *>(obj) : nullptr;
+      TF1 *f1 = obj->InheritsFrom(TF1::Class()) ? static_cast<TF1 *>(obj) : nullptr;
 
       if (search_hist) {
          if (objlnk)
@@ -1983,6 +2005,8 @@ TObject *TWebCanvas::FindPrimitive(const std::string &sid, int idcnt, TPad *pad,
             return getHistogram(mg);
          if (hs)
             return getHistogram(hs);
+         if (f1)
+            return getHistogram(f1);
 
          if (objlnk)
             *objlnk = nullptr;
@@ -1994,7 +2018,7 @@ TObject *TWebCanvas::FindPrimitive(const std::string &sid, int idcnt, TPad *pad,
          if (objpad)
             *objpad = pad;
 
-         if (kind.find("hist") == 0) {
+         if (kind.compare(0, 4, "hist") == 0) {
             if (gr)
                obj = h1 = getHistogram(gr);
             else if (mg)
@@ -2003,6 +2027,8 @@ TObject *TWebCanvas::FindPrimitive(const std::string &sid, int idcnt, TPad *pad,
                obj = h1 = getHistogram(hs);
             else if (scatter)
                obj = h1 = getHistogram(scatter);
+            else if (f1)
+               obj = h1 = getHistogram(f1);
 
             kind.erase(0,4);
             if (!kind.empty() && (kind[0]=='#')) kind.erase(0,1);
