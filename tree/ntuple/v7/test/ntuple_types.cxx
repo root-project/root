@@ -311,7 +311,10 @@ TEST(RNTuple, StdSet)
    EXPECT_EQ((sizeof(std::set<int64_t>)), field.GetValueSize());
    EXPECT_EQ((sizeof(std::set<int64_t>)), otherField->GetValueSize());
    EXPECT_EQ((alignof(std::set<int64_t>)), field.GetAlignment());
-   EXPECT_EQ((alignof(std::set<int64_t>)), otherField->GetAlignment());
+   // For type-erased set fields, we use `alignof(std::set<std::max_align_t>)` to set the alignment,
+   // so the actual alignment may be smaller.
+   EXPECT_LE((alignof(std::set<int64_t>)), otherField->GetAlignment());
+
    auto setSetField = RField<std::set<std::set<CustomStruct>>>("setSetField");
    EXPECT_STREQ("std::set<std::set<CustomStruct>>", setSetField.GetType().c_str());
 
@@ -320,7 +323,7 @@ TEST(RNTuple, StdSet)
       auto model = RNTupleModel::Create();
       auto set_field = model->MakeField<std::set<float>>({"mySet", "float set"});
       // For templated set fields, no dictionary should be necessary.
-      auto set_field2 = model->MakeField<std::set<std::set<int>>>({"mySet2"});
+      auto set_field2 = model->MakeField<std::set<std::pair<int, CustomStruct>>>({"mySet2"});
 
       auto mySet3 = RFieldBase::Create("mySet3", "std::set<std::string>").Unwrap();
       // This field type has a dictionary entry, so reading and writing should be possible without any problems.
@@ -334,7 +337,8 @@ TEST(RNTuple, StdSet)
       auto set_field4 = ntuple->GetModel()->GetDefaultEntry()->Get<std::set<std::set<char>>>("mySet4");
       for (int i = 0; i < 2; i++) {
          *set_field = {static_cast<float>(i), 3.14, 0.42};
-         *set_field2 = {{static_cast<int>(i)}, {static_cast<int>(i * 2), 3}, {}};
+         *set_field2 = {std::make_pair(i, CustomStruct{6.f, {7.f, 8.f}, {{9.f}, {10.f}}, "foo"}),
+                        std::make_pair(i + 1, CustomStruct{2.f, {3.f, 4.f}, {{5.f}, {6.f}}, "bar"})};
          *set_field3 = {"Hello", "world!", std::to_string(i)};
          *set_field4 = {{static_cast<char>(i), 'a'}, {'r', 'o', 'o', 't'}, {'h', 'i'}};
          ntuple->Fill();
@@ -345,12 +349,17 @@ TEST(RNTuple, StdSet)
    EXPECT_EQ(2, ntuple->GetNEntries());
 
    auto viewSet = ntuple->GetView<std::set<float>>("mySet");
-   auto viewSet2 = ntuple->GetView<std::set<std::set<int>>>("mySet2");
+   auto viewSet2 = ntuple->GetView<std::set<std::pair<int, CustomStruct>>>("mySet2");
    auto viewSet3 = ntuple->GetView<std::set<std::string>>("mySet3");
    auto viewSet4 = ntuple->GetView<std::set<std::set<char>>>("mySet4");
    for (auto i : ntuple->GetEntryRange()) {
       EXPECT_EQ(std::set<float>({static_cast<float>(i), 3.14, 0.42}), viewSet(i));
-      EXPECT_EQ(std::set<std::set<int>>({{static_cast<int>(i)}, {static_cast<int>(i * 2), 3}, {}}), viewSet2(i));
+
+      auto pairSet = std::set<std::pair<int, CustomStruct>>(
+         {std::make_pair(i, CustomStruct{6.f, {7.f, 8.f}, {{9.f}, {10.f}}, "foo"}),
+          std::make_pair(i + 1, CustomStruct{2.f, {3.f, 4.f}, {{5.f}, {6.f}}, "bar"})});
+      EXPECT_EQ(pairSet, viewSet2(i));
+
       EXPECT_EQ(std::set<std::string>({"Hello", "world!", std::to_string(i)}), viewSet3(i));
       EXPECT_EQ(std::set<std::set<char>>({{static_cast<char>(i), 'a'}, {'r', 'o', 'o', 't'}, {'h', 'i'}}), viewSet4(i));
    }

@@ -34,6 +34,8 @@ struct CustomStruct {
    bool operator <(const CustomStruct& c) const {
       return a < c.a;
    }
+
+   bool operator==(const CustomStruct &c) const { return a == c.a && v1 == c.v1 && v2 == c.v2 && s == c.s; }
 };
 
 struct DerivedA : public CustomStruct {
