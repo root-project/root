@@ -583,8 +583,14 @@ void TObject::ls(Option_t *option) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// This method must be overridden to handle object notification.
-
+/// This method must be overridden to handle object notification (the base implementation is no-op).
+///
+/// Different objects in ROOT use the `Notify` method for different purposes, in coordination
+/// with other objects that call this method at the appropriate time.
+///
+/// For example, `TLeaf` uses it to load class information; `TBranchRef` to load contents of
+/// referenced branches `TBranchRef`; most notably, based on `Notify`, `TChain` implements a
+/// callback mechanism to inform interested parties when it switches to a new sub-tree.
 Bool_t TObject::Notify()
 {
    return kFALSE;
