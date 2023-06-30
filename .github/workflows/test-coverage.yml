@@ -404,7 +404,7 @@ jobs:
 
 
   event_file:
-    if: github.repository_owner == 'root-project' || github.event_name == 'pull_request'
+
     name: "Upload Event Payload"
     runs-on: ubuntu-latest
     steps:
