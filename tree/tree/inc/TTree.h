@@ -637,7 +637,7 @@ public:
     *
     * @param[in] obj Pointer to a TObject to be notified.
     */
-   virtual void            SetNotify(TObject* obj) { fNotify = obj; }
+   virtual void            SetNotify(TObject* obj);
 
    virtual void            SetObject(const char* name, const char* title);
    virtual void            SetParallelUnzip(Bool_t opt=kTRUE, Float_t RelSize=-1);

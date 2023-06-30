@@ -118,6 +118,8 @@ public:
       return TestBit(kLinked);
    }
 
+   TObject *GetNext() const { return fNext; }
+
    ClassDefOverride(TNotifyLinkBase, 0);
 };
 

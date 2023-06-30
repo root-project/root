@@ -9215,6 +9215,32 @@ void TTree::SetName(const char* name)
    }
 }
 
+void TTree::SetNotify(TObject *obj)
+{
+   if (obj && fNotify && dynamic_cast<TNotifyLinkBase *>(fNotify)) {
+      auto *oldLink = static_cast<TNotifyLinkBase *>(fNotify);
+      auto *newLink = dynamic_cast<TNotifyLinkBase *>(obj);
+      if (!newLink) {
+         Warning("TTree::SetNotify",
+                 "The tree or chain already has a fNotify registered and it is a TNotifyLink, while the new object is "
+                 "not a TNotifyLink. Setting fNotify to the new value will lead to an orphan linked list of "
+                 "TNotifyLinks and it is most likely not intended. If this is the intended goal, please call "
+                 "SetNotify(nullptr) first to silence this warning.");
+      } else if (newLink->GetNext() != oldLink && oldLink->GetNext() != newLink) {
+         // If newLink->GetNext() == oldLink then we are prepending the new head, as in TNotifyLink::PrependLink
+         // If oldLink->GetNext() == newLink then we are removing the head of the list, as in TNotifyLink::RemoveLink
+         // Otherwise newLink and oldLink are unrelated:
+         Warning("TTree::SetNotify",
+                 "The tree or chain already has a TNotifyLink registered, and the new TNotifyLink `obj` does not link "
+                 "to it. Setting fNotify to the new value will lead to an orphan linked list of TNotifyLinks and it is "
+                 "most likely not intended. If this is the intended goal, please call SetNotify(nullptr) first to "
+                 "silence this warning.");
+      }
+   }
+
+   fNotify = obj;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Change the name and title of this tree.
 
