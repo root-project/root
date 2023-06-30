@@ -1,64 +1,64 @@
 
 name: 'ROOT CI'
 
-# on:
-#   schedule:
-#     - cron: '0 1 * * *'
-
-#   # https://github.com/root-project/root/pull/12112#issuecomment-1411004278
-#   pull_request:
-#     branches:
-#       - '**'
-#     paths-ignore:
-#       - 'doc/**'
-#       - 'documentation/**'
-
-#   push:
-#     branches:
-#       - 'master'
-#       - 'v*-*-*-patches'
-#       - '**'
-#   # Allows nightly builds to trigger one run for each branch easily
-#   workflow_call:
-#     inputs:
-#       head_ref:
-#         type: string
-#         required: true
-#         default: master
-#       base_ref:
-#         type: string
-#         required: true
-#         default: master
-#       incremental:
-#         type: boolean
-#         required: true
-#         default: true
-
-#   # Enables manual start of workflow
-#   workflow_dispatch:
-#     inputs:
-#       head_ref:
-#         description: rebase from ...
-#         type: string
-#         required: true
-#         default: master
-#       base_ref:
-#         description: ... to ... (can have same value)
-#         type: string
-#         required: true
-#         default: master
-#       incremental:
-#         description: 'Do incremental build'
-#         type: boolean
-#         required: true
-#         default: true
-
 on:
-  workflow_run:
-    workflows:
-      - '***'
-    types:
-      - completed
+  schedule:
+    - cron: '0 1 * * *'
+
+  # https://github.com/root-project/root/pull/12112#issuecomment-1411004278
+  pull_request:
+    branches:
+      - '**'
+    paths-ignore:
+      - 'doc/**'
+      - 'documentation/**'
+
+  push:
+    branches:
+      - 'master'
+      - 'v*-*-*-patches'
+      - '**'
+  # Allows nightly builds to trigger one run for each branch easily
+  workflow_call:
+    inputs:
+      head_ref:
+        type: string
+        required: true
+        default: master
+      base_ref:
+        type: string
+        required: true
+        default: master
+      incremental:
+        type: boolean
+        required: true
+        default: true
+
+  # Enables manual start of workflow
+  workflow_dispatch:
+    inputs:
+      head_ref:
+        description: rebase from ...
+        type: string
+        required: true
+        default: master
+      base_ref:
+        description: ... to ... (can have same value)
+        type: string
+        required: true
+        default: master
+      incremental:
+        description: 'Do incremental build'
+        type: boolean
+        required: true
+        default: true
+
+# on:
+#   workflow_run:
+#     workflows:
+#       - '***'
+#     types:
+#       - completed
 
 env:
   PYTHONUNBUFFERED: true
@@ -244,8 +244,6 @@ jobs:
 
 
   build-linux:
-    if: github.repository_owner == 'root-project' || github.event_name == 'pull_request'
-
     permissions:
       contents: read
 
