@@ -262,7 +262,7 @@ void TMVA::Experimental::Classification::Evaluate()
 #ifndef _MSC_VER
       fWorkers.SetNWorkers(fJobs);
 #endif
-      auto executor = [=](UInt_t workerID) -> ClassificationResult {
+      auto executor = [this](UInt_t workerID) -> ClassificationResult {
          TMVA::MsgLogger::InhibitOutput();
          TMVA::gConfig().SetSilent(kTRUE);
          TMVA::gConfig().SetUseColor(kFALSE);
