@@ -18,6 +18,8 @@
 #include <ROOT/RBrowserRequest.hxx>
 #include <ROOT/RBrowserReply.hxx>
 
+#include "TObject.h"
+
 #include <memory>
 #include <string>
 #include <vector>
@@ -30,11 +32,13 @@ class RLogChannel;
 /// Log channel for Browser diagnostics.
 RLogChannel &BrowserLog();
 
+namespace Internal {
 class RBrowserDataCleanup;
+}
 
 class RBrowserData {
 
-   friend class RBrowserDataCleanup;
+   friend class Internal::RBrowserDataCleanup;
 
    std::shared_ptr<Browsable::RElement> fTopElement;    ///<! top element
 
@@ -49,7 +53,7 @@ class RBrowserData {
    std::vector<const Browsable::RItem *> fLastSortedItems;   ///<! sorted child items, used in requests
    std::string fLastSortMethod;                          ///<! last sort method
    bool fLastSortReverse{false};                         ///<! last request reverse order
-   std::unique_ptr<RBrowserDataCleanup> fCleanupHandle;  ///<! cleanup handle for RecursiveRemove
+   std::unique_ptr<Internal::RBrowserDataCleanup> fCleanupHandle; ///<! cleanup handle for RecursiveRemove
 
    void ResetLastRequestData(bool with_element);
 
@@ -86,6 +90,19 @@ public:
 
 };
 
+namespace Internal {
+class RBrowserDataCleanup : public TObject {
+
+   RBrowserData &fData;
+
+public:
+   RBrowserDataCleanup(RBrowserData &_data) : fData(_data) {}
+
+   void RecursiveRemove(TObject *obj) override { fData.RemoveFromCache(obj); }
+
+   ClassDefOverride(RBrowserDataCleanup, 0)
+};
+} // namespace Internal
 
 } // namespace Experimental
 } // namespace ROOT
