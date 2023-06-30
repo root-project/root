@@ -16,6 +16,7 @@
 #pragma link C++ class ROOT::Experimental::RBrowserReply+;
 
 #pragma link C++ class ROOT::Experimental::RBrowserData+;
+#pragma link C++ class ROOT::Experimental::Internal::RBrowserDataCleanup+;
 
 #pragma link C++ class ROOT::Experimental::RBrowser+;
 #pragma link C++ class ROOT::Experimental::RFileDialog+;
