@@ -1,5 +1,5 @@
 
-name: Test Summary PR comment
+name: Test Summary as PR comment
 
 on:
   workflow_run:
@@ -11,7 +11,7 @@ permissions: {}
 
 jobs:
   comment-test-results:
-    name: Publish Test Results
+    name: Download and Publish Test Results
 
     if: github.event.workflow_run.event == 'pull_request'
 
