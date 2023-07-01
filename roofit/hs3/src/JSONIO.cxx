@@ -17,12 +17,27 @@
 #include <RooAbsPdf.h>
 
 #include <TClass.h>
+#include <TROOT.h>
 
 #include <iostream>
 #include <fstream>
 
 namespace RooFit {
 namespace JSONIO {
+
+void setupKeys()
+{
+   static bool isAlreadySetup = false;
+   if (isAlreadySetup) {
+      return;
+   }
+
+   isAlreadySetup = true;
+
+   auto etcDir = std::string(TROOT::GetEtcDir());
+   loadExportKeys(etcDir + "/RooFitHS3_wsexportkeys.json");
+   loadFactoryExpressions(etcDir + "/RooFitHS3_wsfactoryexpressions.json");
+}
 
 ImportMap &importers()
 {
@@ -38,18 +53,21 @@ ExportMap &exporters()
 
 ImportExpressionMap &pdfImportExpressions()
 {
+   setupKeys();
    static ImportExpressionMap _pdfFactoryExpressions;
    return _pdfFactoryExpressions;
 }
 
 ImportExpressionMap &functionImportExpressions()
 {
+   setupKeys();
    static ImportExpressionMap _funcFactoryExpressions;
    return _funcFactoryExpressions;
 }
 
 ExportKeysMap &exportKeys()
 {
+   setupKeys();
    static ExportKeysMap _exportKeys;
    return _exportKeys;
 }
