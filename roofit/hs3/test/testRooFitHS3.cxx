@@ -26,22 +26,6 @@
 
 namespace {
 
-void setupKeys()
-{
-   // Uncomment this line to test the rapidyaml backend
-   // RooFit::Detail::JSONTree::setBackend("rapidyaml");
-
-   static bool isAlreadySetup = false;
-   if (isAlreadySetup)
-      return;
-
-   auto etcDir = std::string(TROOT::GetEtcDir());
-   RooFit::JSONIO::loadExportKeys(etcDir + "/RooFitHS3_wsexportkeys.json");
-   RooFit::JSONIO::loadFactoryExpressions(etcDir + "/RooFitHS3_wsfactoryexpressions.json");
-
-   isAlreadySetup = true;
-}
-
 // Validate the JSON IO for a given RooAbsReal in a RooWorkspace. The workspace
 // will be written out and read back, and then the values of the old and new
 // RooAbsReal will be compared for equality in each bin of the observable that
@@ -95,7 +79,6 @@ int validate(RooAbsArg const &arg)
 // Test that the IO of attributes and string attributes works.
 TEST(RooFitHS3, AttributesIO)
 {
-   setupKeys();
 
    std::string jsonString;
 

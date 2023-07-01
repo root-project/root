@@ -39,19 +39,6 @@ namespace {
 // If the JSON files should be written out for debugging purpose.
 const bool writeJsonFiles = false;
 
-void setupKeys()
-{
-   static bool isAlreadySetup = false;
-   if (isAlreadySetup)
-      return;
-
-   auto etcDir = std::string(TROOT::GetEtcDir());
-   RooFit::JSONIO::loadExportKeys(etcDir + "/RooFitHS3_wsexportkeys.json");
-   RooFit::JSONIO::loadFactoryExpressions(etcDir + "/RooFitHS3_wsfactoryexpressions.json");
-
-   isAlreadySetup = true;
-}
-
 } // namespace
 
 using namespace RooStats;
@@ -531,8 +518,6 @@ TEST_P(HFFixture, HistFactoryJSONTool)
 {
    RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
 
-   setupKeys();
-
    if (writeJsonFiles) {
       RooStats::HistFactory::JSONTool{*_measurement}.PrintJSON(_name + "_1.json");
    }
@@ -588,8 +573,6 @@ TEST_P(HFFixture, HistFactoryJSONTool)
 TEST_P(HFFixture, HS3ClosureLoop)
 {
    RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
-
-   setupKeys();
 
    auto *mc = dynamic_cast<RooStats::ModelConfig *>(ws->obj("ModelConfig"));
    EXPECT_TRUE(mc != nullptr);
