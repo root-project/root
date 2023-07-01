@@ -61,6 +61,7 @@ using ExportMap = std::map<TClass const *, std::vector<std::unique_ptr<const Exp
 using ExportKeysMap = std::map<TClass const *, ExportKeys>;
 using ImportExpressionMap = std::map<const std::string, ImportExpression>;
 
+void setupKeys();
 ImportMap &importers();
 ExportMap &exporters();
 ImportExpressionMap &pdfImportExpressions();
