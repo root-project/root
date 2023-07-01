@@ -23,19 +23,6 @@
 
 namespace {
 
-void setupKeys()
-{
-   static bool isAlreadySetup = false;
-   if (isAlreadySetup)
-      return;
-
-   auto etcDir = std::string(TROOT::GetEtcDir());
-   RooFit::JSONIO::loadExportKeys(etcDir + "/RooFitHS3_wsexportkeys.json");
-   RooFit::JSONIO::loadFactoryExpressions(etcDir + "/RooFitHS3_wsfactoryexpressions.json");
-
-   isAlreadySetup = true;
-}
-
 std::unique_ptr<RooFitResult> writeJSONAndFitModel(std::string &jsonStr)
 {
    using namespace RooFit;
@@ -117,8 +104,6 @@ std::unique_ptr<RooFitResult> readJSONAndFitModel(std::string const &jsonStr)
 TEST(RooFitHS3, SimultaneousFit)
 {
    RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
-
-   setupKeys();
 
    using namespace RooFit;
 
