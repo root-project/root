@@ -58,21 +58,21 @@ public:
 
   // Import functions for dataset, functions, generic objects
   bool import(const RooAbsArg& arg,
-      const RooCmdArg& arg1=RooCmdArg(),const RooCmdArg& arg2=RooCmdArg(),const RooCmdArg& arg3=RooCmdArg(),
-      const RooCmdArg& arg4=RooCmdArg(),const RooCmdArg& arg5=RooCmdArg(),const RooCmdArg& arg6=RooCmdArg(),
-      const RooCmdArg& arg7=RooCmdArg(),const RooCmdArg& arg8=RooCmdArg(),const RooCmdArg& arg9=RooCmdArg()) ;
+      const RooCmdArg& arg1={},const RooCmdArg& arg2={},const RooCmdArg& arg3={},
+      const RooCmdArg& arg4={},const RooCmdArg& arg5={},const RooCmdArg& arg6={},
+      const RooCmdArg& arg7={},const RooCmdArg& arg8={},const RooCmdArg& arg9={}) ;
   bool import(const RooArgSet& args,
-      const RooCmdArg& arg1=RooCmdArg(),const RooCmdArg& arg2=RooCmdArg(),const RooCmdArg& arg3=RooCmdArg(),
-      const RooCmdArg& arg4=RooCmdArg(),const RooCmdArg& arg5=RooCmdArg(),const RooCmdArg& arg6=RooCmdArg(),
-      const RooCmdArg& arg7=RooCmdArg(),const RooCmdArg& arg8=RooCmdArg(),const RooCmdArg& arg9=RooCmdArg()) ;
+      const RooCmdArg& arg1={},const RooCmdArg& arg2={},const RooCmdArg& arg3={},
+      const RooCmdArg& arg4={},const RooCmdArg& arg5={},const RooCmdArg& arg6={},
+      const RooCmdArg& arg7={},const RooCmdArg& arg8={},const RooCmdArg& arg9={}) ;
   bool import(RooAbsData const& data,
-      const RooCmdArg& arg1=RooCmdArg(),const RooCmdArg& arg2=RooCmdArg(),const RooCmdArg& arg3=RooCmdArg(),
-      const RooCmdArg& arg4=RooCmdArg(),const RooCmdArg& arg5=RooCmdArg(),const RooCmdArg& arg6=RooCmdArg(),
-      const RooCmdArg& arg7=RooCmdArg(),const RooCmdArg& arg8=RooCmdArg(),const RooCmdArg& arg9=RooCmdArg()) ;
+      const RooCmdArg& arg1={},const RooCmdArg& arg2={},const RooCmdArg& arg3={},
+      const RooCmdArg& arg4={},const RooCmdArg& arg5={},const RooCmdArg& arg6={},
+      const RooCmdArg& arg7={},const RooCmdArg& arg8={},const RooCmdArg& arg9={}) ;
   bool import(const char *fileSpec,
-      const RooCmdArg& arg1=RooCmdArg(),const RooCmdArg& arg2=RooCmdArg(),const RooCmdArg& arg3=RooCmdArg(),
-      const RooCmdArg& arg4=RooCmdArg(),const RooCmdArg& arg5=RooCmdArg(),const RooCmdArg& arg6=RooCmdArg(),
-      const RooCmdArg& arg7=RooCmdArg(),const RooCmdArg& arg8=RooCmdArg(),const RooCmdArg& arg9=RooCmdArg()) ;
+      const RooCmdArg& arg1={},const RooCmdArg& arg2={},const RooCmdArg& arg3={},
+      const RooCmdArg& arg4={},const RooCmdArg& arg5={},const RooCmdArg& arg6={},
+      const RooCmdArg& arg7={},const RooCmdArg& arg8={},const RooCmdArg& arg9={}) ;
   bool import(TObject const& object, bool replaceExisting=false) ;
   bool import(TObject const& object, const char* aliasName, bool replaceExisting=false) ;
 

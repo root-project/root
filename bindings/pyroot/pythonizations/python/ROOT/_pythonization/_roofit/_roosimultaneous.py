@@ -42,11 +42,11 @@ class RooSimultaneous(object):
 
     @cpp_signature(
         "RooPlot *RooSimultaneous::plotOn(RooPlot* frame,"
-        "    const RooCmdArg& arg1            , const RooCmdArg& arg2=RooCmdArg(),"
-        "    const RooCmdArg& arg3=RooCmdArg(), const RooCmdArg& arg4=RooCmdArg(),"
-        "    const RooCmdArg& arg5=RooCmdArg(), const RooCmdArg& arg6=RooCmdArg(),"
-        "    const RooCmdArg& arg7=RooCmdArg(), const RooCmdArg& arg8=RooCmdArg(),"
-        "    const RooCmdArg& arg9=RooCmdArg(), const RooCmdArg& arg10=RooCmdArg()) const;"
+        "    const RooCmdArg& arg1            , const RooCmdArg& arg2={},"
+        "    const RooCmdArg& arg3={}, const RooCmdArg& arg4={},"
+        "    const RooCmdArg& arg5={}, const RooCmdArg& arg6={},"
+        "    const RooCmdArg& arg7={}, const RooCmdArg& arg8={},"
+        "    const RooCmdArg& arg9={}, const RooCmdArg& arg10={}) const;"
     )
     def plotOn(self, *args, **kwargs):
         r"""The RooSimultaneous::plotOn() function is pythonized with the command argument pythonization.
