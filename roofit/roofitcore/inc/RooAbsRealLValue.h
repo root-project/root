@@ -120,9 +120,9 @@ public:
 
 
   // Build 1-dimensional plots
-  RooPlot* frame(const RooCmdArg& arg1, const RooCmdArg& arg2=RooCmdArg::none(),
-                 const RooCmdArg& arg3=RooCmdArg::none(), const RooCmdArg& arg4=RooCmdArg::none(), const RooCmdArg& arg5=RooCmdArg::none(),
-                 const RooCmdArg& arg6=RooCmdArg::none(), const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none()) const ;
+  RooPlot* frame(const RooCmdArg& arg1, const RooCmdArg& arg2={},
+                 const RooCmdArg& arg3={}, const RooCmdArg& arg4={}, const RooCmdArg& arg5={},
+                 const RooCmdArg& arg6={}, const RooCmdArg& arg7={}, const RooCmdArg& arg8={}) const ;
   RooPlot *frame(const RooLinkedList& cmdList) const ;
   RooPlot *frame(double lo, double hi, Int_t nbins) const;
   RooPlot *frame(double lo, double hi) const;
@@ -131,10 +131,10 @@ public:
 
   // Create empty 1,2, and 3D histograms from a list of 1-3 RooAbsReals
   TH1 *createHistogram(const char *name,
-                       const RooCmdArg& arg1=RooCmdArg::none(), const RooCmdArg& arg2=RooCmdArg::none(),
-                       const RooCmdArg& arg3=RooCmdArg::none(), const RooCmdArg& arg4=RooCmdArg::none(),
-                       const RooCmdArg& arg5=RooCmdArg::none(), const RooCmdArg& arg6=RooCmdArg::none(),
-                       const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none()) const ;
+                       const RooCmdArg& arg1={}, const RooCmdArg& arg2={},
+                       const RooCmdArg& arg3={}, const RooCmdArg& arg4={},
+                       const RooCmdArg& arg5={}, const RooCmdArg& arg6={},
+                       const RooCmdArg& arg7={}, const RooCmdArg& arg8={}) const ;
   TH1 *createHistogram(const char *name, const RooLinkedList& cmdList) const ;
 
   TH1F *createHistogram(const char *name, const char *yAxisLabel) const ;

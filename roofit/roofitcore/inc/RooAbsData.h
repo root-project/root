@@ -68,8 +68,8 @@ public:
   virtual RooAbsData* emptyClone(const char* newName=nullptr, const char* newTitle=nullptr, const RooArgSet* vars=nullptr, const char* wgtVarName=nullptr) const = 0 ;
 
   // Reduction methods
-  RooAbsData* reduce(const RooCmdArg& arg1,const RooCmdArg& arg2=RooCmdArg(),const RooCmdArg& arg3=RooCmdArg(),const RooCmdArg& arg4=RooCmdArg(),
-                     const RooCmdArg& arg5=RooCmdArg(),const RooCmdArg& arg6=RooCmdArg(),const RooCmdArg& arg7=RooCmdArg(),const RooCmdArg& arg8=RooCmdArg()) ;
+  RooAbsData* reduce(const RooCmdArg& arg1,const RooCmdArg& arg2={},const RooCmdArg& arg3={},const RooCmdArg& arg4={},
+                     const RooCmdArg& arg5={},const RooCmdArg& arg6={},const RooCmdArg& arg7={},const RooCmdArg& arg8={}) ;
   RooAbsData* reduce(const char* cut) ;
   RooAbsData* reduce(const RooFormulaVar& cutVar) ;
   RooAbsData* reduce(const RooArgSet& varSubset, const char* cut=nullptr) ;
@@ -168,10 +168,10 @@ public:
   virtual Roo1DTable* table(const RooAbsCategory& cat, const char* cuts="", const char* opts="") const ;
   /// \see RooPlot* plotOn(RooPlot* frame, const RooLinkedList& cmdList) const
   virtual RooPlot* plotOn(RooPlot* frame,
-           const RooCmdArg& arg1=RooCmdArg::none(), const RooCmdArg& arg2=RooCmdArg::none(),
-           const RooCmdArg& arg3=RooCmdArg::none(), const RooCmdArg& arg4=RooCmdArg::none(),
-           const RooCmdArg& arg5=RooCmdArg::none(), const RooCmdArg& arg6=RooCmdArg::none(),
-           const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none()) const ;
+           const RooCmdArg& arg1={}, const RooCmdArg& arg2={},
+           const RooCmdArg& arg3={}, const RooCmdArg& arg4={},
+           const RooCmdArg& arg5={}, const RooCmdArg& arg6={},
+           const RooCmdArg& arg7={}, const RooCmdArg& arg8={}) const ;
 
   virtual RooPlot* plotOn(RooPlot* frame, const RooLinkedList& cmdList) const ;
 
@@ -208,13 +208,13 @@ public:
 
   /// Calls createHistogram(const char *name, const RooAbsRealLValue& xvar, const RooLinkedList& argList) const
   TH1 *createHistogram(const char *name, const RooAbsRealLValue& xvar,
-                       const RooCmdArg& arg1=RooCmdArg::none(), const RooCmdArg& arg2=RooCmdArg::none(),
-                       const RooCmdArg& arg3=RooCmdArg::none(), const RooCmdArg& arg4=RooCmdArg::none(),
-                       const RooCmdArg& arg5=RooCmdArg::none(), const RooCmdArg& arg6=RooCmdArg::none(),
-                       const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none()) const ;
+                       const RooCmdArg& arg1={}, const RooCmdArg& arg2={},
+                       const RooCmdArg& arg3={}, const RooCmdArg& arg4={},
+                       const RooCmdArg& arg5={}, const RooCmdArg& arg6={},
+                       const RooCmdArg& arg7={}, const RooCmdArg& arg8={}) const ;
   TH1 *createHistogram(const char* varNameList,
-                       const RooCmdArg& binArgX=RooCmdArg::none(), const RooCmdArg& binArgY=RooCmdArg::none(),
-                       const RooCmdArg& binArgZ=RooCmdArg::none()) const;
+                       const RooCmdArg& binArgX={}, const RooCmdArg& binArgY={},
+                       const RooCmdArg& binArgZ={}) const;
   /// Create and fill a ROOT histogram TH1,TH2 or TH3 with the values of this dataset.
   TH1 *createHistogram(const char *name, const RooAbsRealLValue& xvar, const RooLinkedList& argList) const ;
   TH2F* createHistogram(const RooAbsRealLValue& var1, const RooAbsRealLValue& var2, const char* cuts="",
@@ -261,10 +261,10 @@ public:
   RooRealVar* rmsVar(const RooRealVar &var, const char* cutSpec=nullptr, const char* cutRange=nullptr) const ;
 
   virtual RooPlot* statOn(RooPlot* frame,
-                          const RooCmdArg& arg1=RooCmdArg::none(), const RooCmdArg& arg2=RooCmdArg::none(),
-                          const RooCmdArg& arg3=RooCmdArg::none(), const RooCmdArg& arg4=RooCmdArg::none(),
-                          const RooCmdArg& arg5=RooCmdArg::none(), const RooCmdArg& arg6=RooCmdArg::none(),
-                          const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none()) ;
+                          const RooCmdArg& arg1={}, const RooCmdArg& arg2={},
+                          const RooCmdArg& arg3={}, const RooCmdArg& arg4={},
+                          const RooCmdArg& arg5={}, const RooCmdArg& arg6={},
+                          const RooCmdArg& arg7={}, const RooCmdArg& arg8={}) ;
 
   virtual RooPlot* statOn(RooPlot* frame, const char *what,
            const char *label= "", Int_t sigDigits= 2,

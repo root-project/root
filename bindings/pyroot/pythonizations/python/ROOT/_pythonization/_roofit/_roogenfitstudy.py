@@ -21,8 +21,8 @@ class RooGenFitStudy(object):
 
     @cpp_signature(
         [
-            "RooGenFitStudy::setGenConfig(const char* pdfName, const char* obsName, const RooCmdArg& arg1=RooCmdArg(), const RooCmdArg& arg2=RooCmdArg(),const RooCmdArg& arg3=RooCmdArg()) ;",
-            "RooGenFitStudy::setFitConfig(const char* pdfName, const char* obsName, const RooCmdArg& arg1=RooCmdArg(),const RooCmdArg& arg2=RooCmdArg(),const RooCmdArg& arg3=RooCmdArg()) ;",
+            "RooGenFitStudy::setGenConfig(const char* pdfName, const char* obsName, const RooCmdArg& arg1={}, const RooCmdArg& arg2={},const RooCmdArg& arg3={}) ;",
+            "RooGenFitStudy::setFitConfig(const char* pdfName, const char* obsName, const RooCmdArg& arg1={},const RooCmdArg& arg2={},const RooCmdArg& arg3={}) ;",
         ]
     )
     def setGenConfig(self, *args, **kwargs):

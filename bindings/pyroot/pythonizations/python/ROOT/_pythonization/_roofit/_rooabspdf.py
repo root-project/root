@@ -63,11 +63,11 @@ class RooAbsPdf(RooAbsReal):
 
     @cpp_signature(
         "RooPlot *RooAbsPdf::plotOn(RooPlot* frame,"
-        "    const RooCmdArg& arg1=RooCmdArg::none(), const RooCmdArg& arg2=RooCmdArg::none(),"
-        "    const RooCmdArg& arg3=RooCmdArg::none(), const RooCmdArg& arg4=RooCmdArg::none(),"
-        "    const RooCmdArg& arg5=RooCmdArg::none(), const RooCmdArg& arg6=RooCmdArg::none(),"
-        "    const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none(),"
-        "    const RooCmdArg& arg9=RooCmdArg::none(), const RooCmdArg& arg10=RooCmdArg::none()"
+        "    const RooCmdArg& arg1={}, const RooCmdArg& arg2={},"
+        "    const RooCmdArg& arg3={}, const RooCmdArg& arg4={},"
+        "    const RooCmdArg& arg5={}, const RooCmdArg& arg6={},"
+        "    const RooCmdArg& arg7={}, const RooCmdArg& arg8={},"
+        "    const RooCmdArg& arg9={}, const RooCmdArg& arg10={}"
         ") const;"
     )
     def plotOn(self, *args, **kwargs):
@@ -80,9 +80,9 @@ class RooAbsPdf(RooAbsReal):
 
     @cpp_signature(
         "RooDataSet *RooAbsPdf::generate(const RooArgSet &whatVars,"
-        "    const RooCmdArg& arg1=RooCmdArg::none(),const RooCmdArg& arg2=RooCmdArg::none(),"
-        "    const RooCmdArg& arg3=RooCmdArg::none(),const RooCmdArg& arg4=RooCmdArg::none(),"
-        "    const RooCmdArg& arg5=RooCmdArg::none(),const RooCmdArg& arg6=RooCmdArg::none()) ;"
+        "    const RooCmdArg& arg1={},const RooCmdArg& arg2={},"
+        "    const RooCmdArg& arg3={},const RooCmdArg& arg4={},"
+        "    const RooCmdArg& arg5={},const RooCmdArg& arg6={}) ;"
     )
     def generate(self, *args, **kwargs):
         r"""The RooAbsPdf::generate() function is pythonized with the command argument pythonization.
@@ -94,10 +94,10 @@ class RooAbsPdf(RooAbsReal):
 
     @cpp_signature(
         "RooPlot *RooAbsPdf::paramOn(RooPlot* frame,"
-        "    const RooCmdArg& arg1=RooCmdArg::none(), const RooCmdArg& arg2=RooCmdArg::none(),"
-        "    const RooCmdArg& arg3=RooCmdArg::none(), const RooCmdArg& arg4=RooCmdArg::none(),"
-        "    const RooCmdArg& arg5=RooCmdArg::none(), const RooCmdArg& arg6=RooCmdArg::none(),"
-        "    const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none()) ;"
+        "    const RooCmdArg& arg1={}, const RooCmdArg& arg2={},"
+        "    const RooCmdArg& arg3={}, const RooCmdArg& arg4={},"
+        "    const RooCmdArg& arg5={}, const RooCmdArg& arg6={},"
+        "    const RooCmdArg& arg7={}, const RooCmdArg& arg8={}) ;"
     )
     def paramOn(self, *args, **kwargs):
         r"""The RooAbsPdf::paramOn() function is pythonized with the command argument pythonization.
@@ -116,9 +116,9 @@ class RooAbsPdf(RooAbsReal):
         return self._createNLL(args[0], _pack_cmd_args(*args[1:], **kwargs))
 
     @cpp_signature(
-        "RooAbsReal *RooAbsPdf::createChi2(RooDataHist& data, const RooCmdArg& arg1=RooCmdArg::none(),  const RooCmdArg& arg2=RooCmdArg::none(),"
-        "    const RooCmdArg& arg3=RooCmdArg::none(),  const RooCmdArg& arg4=RooCmdArg::none(), const RooCmdArg& arg5=RooCmdArg::none(),"
-        "    const RooCmdArg& arg6=RooCmdArg::none(),  const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none()) ;"
+        "RooAbsReal *RooAbsPdf::createChi2(RooDataHist& data, const RooCmdArg& arg1={},  const RooCmdArg& arg2={},"
+        "    const RooCmdArg& arg3={},  const RooCmdArg& arg4={}, const RooCmdArg& arg5={},"
+        "    const RooCmdArg& arg6={},  const RooCmdArg& arg7={}, const RooCmdArg& arg8={}) ;"
     )
     def createChi2(self, *args, **kwargs):
         r"""The RooAbsPdf::createChi2() function is pythonized with the command argument pythonization.
@@ -129,10 +129,10 @@ class RooAbsPdf(RooAbsReal):
         return self._createChi2(*args, **kwargs)
 
     @cpp_signature(
-        "RooAbsReal *RooAbsPdf::createCdf(const RooArgSet& iset, const RooCmdArg& arg1, const RooCmdArg& arg2=RooCmdArg::none(),"
-        "    const RooCmdArg& arg3=RooCmdArg::none(), const RooCmdArg& arg4=RooCmdArg::none(),"
-        "    const RooCmdArg& arg5=RooCmdArg::none(), const RooCmdArg& arg6=RooCmdArg::none(),"
-        "    const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none()) ;"
+        "RooAbsReal *RooAbsPdf::createCdf(const RooArgSet& iset, const RooCmdArg& arg1, const RooCmdArg& arg2={},"
+        "    const RooCmdArg& arg3={}, const RooCmdArg& arg4={},"
+        "    const RooCmdArg& arg5={}, const RooCmdArg& arg6={},"
+        "    const RooCmdArg& arg7={}, const RooCmdArg& arg8={}) ;"
     )
     def createCdf(self, *args, **kwargs):
         r"""The RooAbsPdf::createCdf() function is pythonized with the command argument pythonization.
@@ -144,9 +144,9 @@ class RooAbsPdf(RooAbsReal):
 
     @cpp_signature(
         "RooDataHist *RooAbsPdf::generateBinned(const RooArgSet &whatVars,"
-        "   const RooCmdArg& arg1=RooCmdArg::none(),const RooCmdArg& arg2=RooCmdArg::none(),"
-        "    const RooCmdArg& arg3=RooCmdArg::none(),const RooCmdArg& arg4=RooCmdArg::none(),"
-        "    const RooCmdArg& arg5=RooCmdArg::none(),const RooCmdArg& arg6=RooCmdArg::none()) const;"
+        "   const RooCmdArg& arg1={},const RooCmdArg& arg2={},"
+        "    const RooCmdArg& arg3={},const RooCmdArg& arg4={},"
+        "    const RooCmdArg& arg5={},const RooCmdArg& arg6={}) const;"
     )
     def generateBinned(self, *args, **kwargs):
         r"""The RooAbsPdf::generateBinned() function is pythonized with the command argument pythonization.
@@ -158,9 +158,9 @@ class RooAbsPdf(RooAbsReal):
 
     @cpp_signature(
         "GenSpec *RooAbsPdf::prepareMultiGen(const RooArgSet &whatVars,"
-        "    const RooCmdArg& arg1=RooCmdArg::none(),const RooCmdArg& arg2=RooCmdArg::none(),"
-        "    const RooCmdArg& arg3=RooCmdArg::none(),const RooCmdArg& arg4=RooCmdArg::none(),"
-        "    const RooCmdArg& arg5=RooCmdArg::none(),const RooCmdArg& arg6=RooCmdArg::none()) ;"
+        "    const RooCmdArg& arg1={},const RooCmdArg& arg2={},"
+        "    const RooCmdArg& arg3={},const RooCmdArg& arg4={},"
+        "    const RooCmdArg& arg5={},const RooCmdArg& arg6={}) ;"
     )
     def prepareMultiGen(self, *args, **kwargs):
         r"""The RooAbsPdf::prepareMultiGen() function is pythonized with the command argument pythonization.
