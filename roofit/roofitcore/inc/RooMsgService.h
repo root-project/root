@@ -150,8 +150,8 @@ public:
   static bool anyDebug() ;
 
   // User interface -- Add or delete reporting streams ;
-  Int_t addStream(RooFit::MsgLevel level, const RooCmdArg& arg1=RooCmdArg(), const RooCmdArg& arg2=RooCmdArg(), const RooCmdArg& arg3=RooCmdArg(),
-                          const RooCmdArg& arg4=RooCmdArg(), const RooCmdArg& arg5=RooCmdArg(), const RooCmdArg& arg6=RooCmdArg());
+  Int_t addStream(RooFit::MsgLevel level, const RooCmdArg& arg1={}, const RooCmdArg& arg2={}, const RooCmdArg& arg3={},
+                          const RooCmdArg& arg4={}, const RooCmdArg& arg5={}, const RooCmdArg& arg6={});
   void deleteStream(Int_t id) ;
   StreamConfig& getStream(Int_t id) { return _streams[id] ; }
 

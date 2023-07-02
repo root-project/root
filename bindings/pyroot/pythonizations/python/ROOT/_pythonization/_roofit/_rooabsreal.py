@@ -31,11 +31,11 @@ class RooAbsReal(object):
 
     @cpp_signature(
         "RooPlot* RooAbsReal::plotOn(RooPlot* frame,"
-        "    const RooCmdArg& arg1=RooCmdArg(), const RooCmdArg& arg2=RooCmdArg(),"
-        "    const RooCmdArg& arg3=RooCmdArg(), const RooCmdArg& arg4=RooCmdArg(),"
-        "    const RooCmdArg& arg5=RooCmdArg(), const RooCmdArg& arg6=RooCmdArg(),"
-        "    const RooCmdArg& arg7=RooCmdArg(), const RooCmdArg& arg8=RooCmdArg(),"
-        "    const RooCmdArg& arg9=RooCmdArg(), const RooCmdArg& arg10=RooCmdArg()) const ;"
+        "    const RooCmdArg& arg1={}, const RooCmdArg& arg2={},"
+        "    const RooCmdArg& arg3={}, const RooCmdArg& arg4={},"
+        "    const RooCmdArg& arg5={}, const RooCmdArg& arg6={},"
+        "    const RooCmdArg& arg7={}, const RooCmdArg& arg8={},"
+        "    const RooCmdArg& arg9={}, const RooCmdArg& arg10={}) const ;"
     )
     def plotOn(self, *args, **kwargs):
         r"""The RooAbsReal::plotOn() function is pythonized with the command argument pythonization.
@@ -47,10 +47,10 @@ class RooAbsReal(object):
 
     @cpp_signature(
         "TH1 *RooAbsReal::createHistogram(const char *name, const RooAbsRealLValue& xvar,"
-        "    const RooCmdArg& arg1=RooCmdArg::none(), const RooCmdArg& arg2=RooCmdArg::none(),"
-        "    const RooCmdArg& arg3=RooCmdArg::none(), const RooCmdArg& arg4=RooCmdArg::none(),"
-        "    const RooCmdArg& arg5=RooCmdArg::none(), const RooCmdArg& arg6=RooCmdArg::none(),"
-        "    const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none()) const ;"
+        "    const RooCmdArg& arg1={}, const RooCmdArg& arg2={},"
+        "    const RooCmdArg& arg3={}, const RooCmdArg& arg4={},"
+        "    const RooCmdArg& arg5={}, const RooCmdArg& arg6={},"
+        "    const RooCmdArg& arg7={}, const RooCmdArg& arg8={}) const ;"
     )
     def createHistogram(self, *args, **kwargs):
         r"""The RooAbsReal::createHistogram() function is pythonized with the command argument pythonization.
@@ -61,10 +61,10 @@ class RooAbsReal(object):
         return self._createHistogram(*args, **kwargs)
 
     @cpp_signature(
-        "RooAbsReal* RooAbsReal::createIntegral(const RooArgSet& iset, const RooCmdArg& arg1, const RooCmdArg& arg2=RooCmdArg::none(),"
-        "    const RooCmdArg& arg3=RooCmdArg::none(), const RooCmdArg& arg4=RooCmdArg::none(),"
-        "    const RooCmdArg& arg5=RooCmdArg::none(), const RooCmdArg& arg6=RooCmdArg::none(),"
-        "    const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none()) const ;"
+        "RooAbsReal* RooAbsReal::createIntegral(const RooArgSet& iset, const RooCmdArg& arg1, const RooCmdArg& arg2={},"
+        "    const RooCmdArg& arg3={}, const RooCmdArg& arg4={},"
+        "    const RooCmdArg& arg5={}, const RooCmdArg& arg6={},"
+        "    const RooCmdArg& arg7={}, const RooCmdArg& arg8={}) const ;"
     )
     def createIntegral(self, *args, **kwargs):
         r"""The RooAbsReal::createIntegral() function is pythonized with the command argument pythonization.
@@ -75,10 +75,10 @@ class RooAbsReal(object):
         return self._createIntegral(*args, **kwargs)
 
     @cpp_signature(
-        "RooAbsReal* RooAbsReal::createRunningIntegral(const RooArgSet& iset, const RooCmdArg& arg1, const RooCmdArg& arg2=RooCmdArg::none(),"
-        "    const RooCmdArg& arg3=RooCmdArg::none(), const RooCmdArg& arg4=RooCmdArg::none(),"
-        "    const RooCmdArg& arg5=RooCmdArg::none(), const RooCmdArg& arg6=RooCmdArg::none(),"
-        "    const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none()) ;"
+        "RooAbsReal* RooAbsReal::createRunningIntegral(const RooArgSet& iset, const RooCmdArg& arg1, const RooCmdArg& arg2={},"
+        "    const RooCmdArg& arg3={}, const RooCmdArg& arg4={},"
+        "    const RooCmdArg& arg5={}, const RooCmdArg& arg6={},"
+        "    const RooCmdArg& arg7={}, const RooCmdArg& arg8={}) ;"
     )
     def createRunningIntegral(self, *args, **kwargs):
         r"""The RooAbsReal::createRunningIntegral() function is pythonized with the command argument pythonization.
@@ -89,9 +89,9 @@ class RooAbsReal(object):
         return self._createRunningIntegral(*args, **kwargs)
 
     @cpp_signature(
-        "RooAbsReal* RooAbsReal::createChi2(RooDataHist& data, const RooCmdArg& arg1=RooCmdArg::none(),  const RooCmdArg& arg2=RooCmdArg::none(),"
-        "    const RooCmdArg& arg3=RooCmdArg::none(),  const RooCmdArg& arg4=RooCmdArg::none(), const RooCmdArg& arg5=RooCmdArg::none(),"
-        "    const RooCmdArg& arg6=RooCmdArg::none(),  const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none()) ;"
+        "RooAbsReal* RooAbsReal::createChi2(RooDataHist& data, const RooCmdArg& arg1={},  const RooCmdArg& arg2={},"
+        "    const RooCmdArg& arg3={},  const RooCmdArg& arg4={}, const RooCmdArg& arg5={},"
+        "    const RooCmdArg& arg6={},  const RooCmdArg& arg7={}, const RooCmdArg& arg8={}) ;"
     )
     def createChi2(self, *args, **kwargs):
         r"""The RooAbsReal::createChi2() function is pythonized with the command argument pythonization.
@@ -102,9 +102,9 @@ class RooAbsReal(object):
         return self._createChi2(*args, **kwargs)
 
     @cpp_signature(
-        "RooFitResult *RooAbsReal::chi2FitTo(RooDataSet& xydata, const RooCmdArg& arg1=RooCmdArg::none(),  const RooCmdArg& arg2=RooCmdArg::none(),"
-        "    const RooCmdArg& arg3=RooCmdArg::none(),  const RooCmdArg& arg4=RooCmdArg::none(), const RooCmdArg& arg5=RooCmdArg::none(),"
-        "    const RooCmdArg& arg6=RooCmdArg::none(),  const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none()) ;"
+        "RooFitResult *RooAbsReal::chi2FitTo(RooDataSet& xydata, const RooCmdArg& arg1={},  const RooCmdArg& arg2={},"
+        "    const RooCmdArg& arg3={},  const RooCmdArg& arg4={}, const RooCmdArg& arg5={},"
+        "    const RooCmdArg& arg6={},  const RooCmdArg& arg7={}, const RooCmdArg& arg8={}) ;"
     )
     def chi2FitTo(self, *args, **kwargs):
         r"""The RooAbsReal::chi2FitTo() function is pythonized with the command argument pythonization.

@@ -55,9 +55,9 @@ _style_map = {"-": "kSolid", "--": "kDashed", ":": "kDotted", "-.": "kDashDotted
 
 
 @cpp_signature(
-    "RooFit::FitOptions(const RooCmdArg& arg1, const RooCmdArg& arg2=RooCmdArg::none(),"
-    "const RooCmdArg& arg3=RooCmdArg::none(),const RooCmdArg& arg4=RooCmdArg::none(),"
-    "const RooCmdArg& arg5=RooCmdArg::none(),const RooCmdArg& arg6=RooCmdArg::none()) ;"
+    "RooFit::FitOptions(const RooCmdArg& arg1, const RooCmdArg& arg2={},"
+    "const RooCmdArg& arg3={},const RooCmdArg& arg4={},"
+    "const RooCmdArg& arg5={},const RooCmdArg& arg6={}) ;"
 )
 def FitOptions(*args, **kwargs):
     r"""The FitOptions() function is pythonized with the command argument pythonization.
@@ -71,10 +71,10 @@ def FitOptions(*args, **kwargs):
 
 
 @cpp_signature(
-    "RooFit::Format(const char* what, const RooCmdArg& arg1=RooCmdArg::none(), const RooCmdArg& arg2=RooCmdArg::none(),"
-    "const RooCmdArg& arg3=RooCmdArg::none(),const RooCmdArg& arg4=RooCmdArg::none(),"
-    "const RooCmdArg& arg5=RooCmdArg::none(),const RooCmdArg& arg6=RooCmdArg::none(),"
-    "const RooCmdArg& arg7=RooCmdArg::none(),const RooCmdArg& arg8=RooCmdArg::none()) ;"
+    "RooFit::Format(const char* what, const RooCmdArg& arg1={}, const RooCmdArg& arg2={},"
+    "const RooCmdArg& arg3={},const RooCmdArg& arg4={},"
+    "const RooCmdArg& arg5={},const RooCmdArg& arg6={},"
+    "const RooCmdArg& arg7={},const RooCmdArg& arg8={}) ;"
 )
 def Format(*args, **kwargs):
     r"""The Format() function is pythonized with the command argument pythonization.
@@ -91,9 +91,9 @@ def Format(*args, **kwargs):
 
 
 @cpp_signature(
-    "RooFit::Frame(const RooCmdArg& arg1, const RooCmdArg& arg2=RooCmdArg::none(),"
-    "const RooCmdArg& arg3=RooCmdArg::none(), const RooCmdArg& arg4=RooCmdArg::none(),"
-    "const RooCmdArg& arg5=RooCmdArg::none(), const RooCmdArg& arg6=RooCmdArg::none()) ;"
+    "RooFit::Frame(const RooCmdArg& arg1, const RooCmdArg& arg2={},"
+    "const RooCmdArg& arg3={}, const RooCmdArg& arg4={},"
+    "const RooCmdArg& arg5={}, const RooCmdArg& arg6={}) ;"
 )
 def Frame(*args, **kwargs):
     r"""The Frame() function is pythonized with the command argument pythonization.
@@ -108,9 +108,9 @@ def Frame(*args, **kwargs):
 
 @cpp_signature(
     "RooFit::MultiArg(const RooCmdArg& arg1, const RooCmdArg& arg2,"
-    "const RooCmdArg& arg3=RooCmdArg::none(),const RooCmdArg& arg4=RooCmdArg::none(),"
-    "const RooCmdArg& arg5=RooCmdArg::none(),const RooCmdArg& arg6=RooCmdArg::none(),"
-    "const RooCmdArg& arg7=RooCmdArg::none(),const RooCmdArg& arg8=RooCmdArg::none()) ;"
+    "const RooCmdArg& arg3={},const RooCmdArg& arg4={},"
+    "const RooCmdArg& arg5={},const RooCmdArg& arg6={},"
+    "const RooCmdArg& arg7={},const RooCmdArg& arg8={}) ;"
 )
 def MultiArg(*args, **kwargs):
     r"""The MultiArg() function is pythonized with the command argument pythonization.
@@ -123,7 +123,7 @@ def MultiArg(*args, **kwargs):
     return RooFit._MultiArg(*args, **kwargs)
 
 
-@cpp_signature("RooFit::YVar(const RooAbsRealLValue& var, const RooCmdArg& arg=RooCmdArg::none()) ;")
+@cpp_signature("RooFit::YVar(const RooAbsRealLValue& var, const RooCmdArg& arg={}) ;")
 def YVar(*args, **kwargs):
     r"""The YVar() function is pythonized with the command argument pythonization.
     The keywords must correspond to the CmdArg of the function.
@@ -138,7 +138,7 @@ def YVar(*args, **kwargs):
     return RooFit._YVar(*args, **kwargs)
 
 
-@cpp_signature("RooFit::ZVar(const RooAbsRealLValue& var, const RooCmdArg& arg=RooCmdArg::none()) ;")
+@cpp_signature("RooFit::ZVar(const RooAbsRealLValue& var, const RooCmdArg& arg={}) ;")
 def ZVar(*args, **kwargs):
     r"""The ZVar() function is pythonized with the command argument pythonization.
     The keywords must correspond to the CmdArg of the function.

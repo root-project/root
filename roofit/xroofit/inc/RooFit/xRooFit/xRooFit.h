@@ -73,11 +73,9 @@ public:
    static xRooNLLVar createNLL(const std::shared_ptr<RooAbsPdf> pdf, const std::shared_ptr<RooAbsData> data,
                                const RooLinkedList &nllOpts);
    static xRooNLLVar createNLL(RooAbsPdf &pdf, RooAbsData *data, const RooLinkedList &nllOpts);
-   static xRooNLLVar createNLL(RooAbsPdf &pdf, RooAbsData *data, const RooCmdArg &arg1 = RooCmdArg::none(),
-                               const RooCmdArg &arg2 = RooCmdArg::none(), const RooCmdArg &arg3 = RooCmdArg::none(),
-                               const RooCmdArg &arg4 = RooCmdArg::none(), const RooCmdArg &arg5 = RooCmdArg::none(),
-                               const RooCmdArg &arg6 = RooCmdArg::none(), const RooCmdArg &arg7 = RooCmdArg::none(),
-                               const RooCmdArg &arg8 = RooCmdArg::none());
+   static xRooNLLVar createNLL(RooAbsPdf &pdf, RooAbsData *data, const RooCmdArg &arg1 = {}, const RooCmdArg &arg2 = {},
+                               const RooCmdArg &arg3 = {}, const RooCmdArg &arg4 = {}, const RooCmdArg &arg5 = {},
+                               const RooCmdArg &arg6 = {}, const RooCmdArg &arg7 = {}, const RooCmdArg &arg8 = {});
 
    static std::shared_ptr<ROOT::Fit::FitConfig> createFitConfig(); // obtain instance of default fit configuration
    static std::shared_ptr<RooLinkedList> createNLLOptions();       // obtain instance of default nll options

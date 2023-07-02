@@ -48,11 +48,11 @@ class RooDataHistPlotOn(unittest.TestCase):
         dh, yframe = self.create_hist_and_frame()
 
         # Overload taken from RooAbsData
-        # RooPlot* RooAbsData::plotOn(RooPlot* frame, const RooCmdArg& arg1 = RooCmdArg::none(),
-        # const RooCmdArg& arg2 = RooCmdArg::none(), const RooCmdArg& arg3 = RooCmdArg::none(),
-        # const RooCmdArg& arg4 = RooCmdArg::none(), const RooCmdArg& arg5 = RooCmdArg::none(),
-        # const RooCmdArg& arg6 = RooCmdArg::none(), const RooCmdArg& arg7 = RooCmdArg::none(),
-        # const RooCmdArg& arg8 = RooCmdArg::none())
+        # RooPlot* RooAbsData::plotOn(RooPlot* frame, const RooCmdArg& arg1 = {},
+        # const RooCmdArg& arg2 = {}, const RooCmdArg& arg3 = {},
+        # const RooCmdArg& arg4 = {}, const RooCmdArg& arg5 = {},
+        # const RooCmdArg& arg6 = {}, const RooCmdArg& arg7 = {},
+        # const RooCmdArg& arg8 = {})
         res = dh.plotOn(yframe)
         self.assertEqual(type(res), ROOT.RooPlot)
 

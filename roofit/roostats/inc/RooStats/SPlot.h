@@ -41,10 +41,10 @@ namespace RooStats{
     SPlot(const char* name, const char* title,RooDataSet& data, RooAbsPdf* pdf,
      const RooArgList &yieldsList,const RooArgSet &projDeps=RooArgSet(),
      bool useWeights=true, bool copyDataSet = false, const char* newName = "",
-     const RooCmdArg& fitToarg5=RooCmdArg::none(),
-     const RooCmdArg& fitToarg6=RooCmdArg::none(),
-     const RooCmdArg& fitToarg7=RooCmdArg::none(),
-     const RooCmdArg& fitToarg8=RooCmdArg::none());
+     const RooCmdArg& fitToarg5={},
+     const RooCmdArg& fitToarg6={},
+     const RooCmdArg& fitToarg7={},
+     const RooCmdArg& fitToarg8={});
 
     RooDataSet* SetSData(RooDataSet* data);
 
@@ -56,10 +56,10 @@ namespace RooStats{
 
     void AddSWeight(RooAbsPdf* pdf, const RooArgList &yieldsTmp,
           const RooArgSet &projDeps=RooArgSet(), bool includeWeights=true,
-          const RooCmdArg& fitToarg5=RooCmdArg::none(),
-          const RooCmdArg& fitToarg6=RooCmdArg::none(),
-          const RooCmdArg& fitToarg7=RooCmdArg::none(),
-          const RooCmdArg& fitToarg8=RooCmdArg::none());
+          const RooCmdArg& fitToarg5={},
+          const RooCmdArg& fitToarg6={},
+          const RooCmdArg& fitToarg7={},
+          const RooCmdArg& fitToarg8={});
 
     double GetSumOfEventSWeight(Int_t numEvent) const;
 

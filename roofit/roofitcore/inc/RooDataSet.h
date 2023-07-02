@@ -70,9 +70,9 @@ public:
      R__SUGGEST_ALTERNATIVE("Use RooDataSet(name, title, vars, RooFit::WeightVar(wgtVarName)).");
 
   // Universal constructor
-  RooDataSet(RooStringView name, RooStringView title, const RooArgSet& vars, const RooCmdArg& arg1=RooCmdArg(), const RooCmdArg& arg2=RooCmdArg(),
-             const RooCmdArg& arg3=RooCmdArg(), const RooCmdArg& arg4=RooCmdArg(),const RooCmdArg& arg5=RooCmdArg(),
-             const RooCmdArg& arg6=RooCmdArg(),const RooCmdArg& arg7=RooCmdArg(),const RooCmdArg& arg8=RooCmdArg()) ;
+  RooDataSet(RooStringView name, RooStringView title, const RooArgSet& vars, const RooCmdArg& arg1={}, const RooCmdArg& arg2={},
+             const RooCmdArg& arg3={}, const RooCmdArg& arg4={},const RooCmdArg& arg5={},
+             const RooCmdArg& arg6={},const RooCmdArg& arg7={},const RooCmdArg& arg8={}) ;
 
     // Constructor for subset of existing dataset
   RooDataSet(RooStringView name, RooStringView title, RooDataSet *data, const RooArgSet& vars,
@@ -101,10 +101,10 @@ public:
   double sumEntries(const char* cutSpec, const char* cutRange=nullptr) const override;
 
   virtual RooPlot* plotOnXY(RooPlot* frame,
-             const RooCmdArg& arg1=RooCmdArg::none(), const RooCmdArg& arg2=RooCmdArg::none(),
-             const RooCmdArg& arg3=RooCmdArg::none(), const RooCmdArg& arg4=RooCmdArg::none(),
-             const RooCmdArg& arg5=RooCmdArg::none(), const RooCmdArg& arg6=RooCmdArg::none(),
-             const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none()) const ;
+             const RooCmdArg& arg1={}, const RooCmdArg& arg2={},
+             const RooCmdArg& arg3={}, const RooCmdArg& arg4={},
+             const RooCmdArg& arg5={}, const RooCmdArg& arg6={},
+             const RooCmdArg& arg7={}, const RooCmdArg& arg8={}) const ;
 
 
   /// Read data from a text file and create a dataset from it.

@@ -66,9 +66,9 @@ class RooWorkspace(object):
 
     @cpp_signature(
         "Bool_t RooWorkspace::import(const RooAbsArg& arg,"
-        "    const RooCmdArg& arg1=RooCmdArg(),const RooCmdArg& arg2=RooCmdArg(),const RooCmdArg& arg3=RooCmdArg(),"
-        "    const RooCmdArg& arg4=RooCmdArg(),const RooCmdArg& arg5=RooCmdArg(),const RooCmdArg& arg6=RooCmdArg(),"
-        "    const RooCmdArg& arg7=RooCmdArg(),const RooCmdArg& arg8=RooCmdArg(),const RooCmdArg& arg9=RooCmdArg()) ;"
+        "    const RooCmdArg& arg1={},const RooCmdArg& arg2={},const RooCmdArg& arg3={},"
+        "    const RooCmdArg& arg4={},const RooCmdArg& arg5={},const RooCmdArg& arg6={},"
+        "    const RooCmdArg& arg7={},const RooCmdArg& arg8={},const RooCmdArg& arg9={}) ;"
     )
     def __init__(self, *args, **kwargs):
         r"""The RooWorkspace constructor is pythonized with the command argument pythonization.
@@ -140,17 +140,17 @@ class RooWorkspace(object):
     @cpp_signature(
         [
             "Bool_t RooWorkspace::import(const RooAbsArg& arg,"
-            "         const RooCmdArg& arg1=RooCmdArg(),const RooCmdArg& arg2=RooCmdArg(),const RooCmdArg& arg3=RooCmdArg(),"
-            "         const RooCmdArg& arg4=RooCmdArg(),const RooCmdArg& arg5=RooCmdArg(),const RooCmdArg& arg6=RooCmdArg(),"
-            "         const RooCmdArg& arg7=RooCmdArg(),const RooCmdArg& arg8=RooCmdArg(),const RooCmdArg& arg9=RooCmdArg()) ;",
+            "         const RooCmdArg& arg1={},const RooCmdArg& arg2={},const RooCmdArg& arg3={},"
+            "         const RooCmdArg& arg4={},const RooCmdArg& arg5={},const RooCmdArg& arg6={},"
+            "         const RooCmdArg& arg7={},const RooCmdArg& arg8={},const RooCmdArg& arg9={}) ;",
             "Bool_t RooWorkspace::import(RooAbsData& data,"
-            "         const RooCmdArg& arg1=RooCmdArg(),const RooCmdArg& arg2=RooCmdArg(),const RooCmdArg& arg3=RooCmdArg(),"
-            "         const RooCmdArg& arg4=RooCmdArg(),const RooCmdArg& arg5=RooCmdArg(),const RooCmdArg& arg6=RooCmdArg(),"
-            "         const RooCmdArg& arg7=RooCmdArg(),const RooCmdArg& arg8=RooCmdArg(),const RooCmdArg& arg9=RooCmdArg()) ;",
+            "         const RooCmdArg& arg1={},const RooCmdArg& arg2={},const RooCmdArg& arg3={},"
+            "         const RooCmdArg& arg4={},const RooCmdArg& arg5={},const RooCmdArg& arg6={},"
+            "         const RooCmdArg& arg7={},const RooCmdArg& arg8={},const RooCmdArg& arg9={}) ;",
             "RooWorkspace::import(const char *fileSpec,"
-            "         const RooCmdArg& arg1=RooCmdArg(),const RooCmdArg& arg2=RooCmdArg(),const RooCmdArg& arg3=RooCmdArg(),"
-            "         const RooCmdArg& arg4=RooCmdArg(),const RooCmdArg& arg5=RooCmdArg(),const RooCmdArg& arg6=RooCmdArg(),"
-            "         const RooCmdArg& arg7=RooCmdArg(),const RooCmdArg& arg8=RooCmdArg(),const RooCmdArg& arg9=RooCmdArg()) ;",
+            "         const RooCmdArg& arg1={},const RooCmdArg& arg2={},const RooCmdArg& arg3={},"
+            "         const RooCmdArg& arg4={},const RooCmdArg& arg5={},const RooCmdArg& arg6={},"
+            "         const RooCmdArg& arg7={},const RooCmdArg& arg8={},const RooCmdArg& arg9={}) ;",
         ]
     )
     def Import(self, *args, **kwargs):

@@ -179,35 +179,35 @@ public:
   bool getForceNumInt() const { return _forceNumInt ; }
 
   // Chi^2 fits to histograms
-  virtual RooFit::OwningPtr<RooFitResult> chi2FitTo(RooDataHist& data, const RooCmdArg& arg1=RooCmdArg::none(),  const RooCmdArg& arg2=RooCmdArg::none(),
-                              const RooCmdArg& arg3=RooCmdArg::none(),  const RooCmdArg& arg4=RooCmdArg::none(), const RooCmdArg& arg5=RooCmdArg::none(),
-                              const RooCmdArg& arg6=RooCmdArg::none(),  const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none()) ;
+  virtual RooFit::OwningPtr<RooFitResult> chi2FitTo(RooDataHist& data, const RooCmdArg& arg1={},  const RooCmdArg& arg2={},
+                              const RooCmdArg& arg3={},  const RooCmdArg& arg4={}, const RooCmdArg& arg5={},
+                              const RooCmdArg& arg6={},  const RooCmdArg& arg7={}, const RooCmdArg& arg8={}) ;
   virtual RooFit::OwningPtr<RooFitResult> chi2FitTo(RooDataHist& data, const RooLinkedList& cmdList) ;
 
   virtual RooFit::OwningPtr<RooAbsReal> createChi2(RooDataHist& data, const RooLinkedList& cmdList) ;
-  virtual RooFit::OwningPtr<RooAbsReal> createChi2(RooDataHist& data, const RooCmdArg& arg1=RooCmdArg::none(),  const RooCmdArg& arg2=RooCmdArg::none(),
-             const RooCmdArg& arg3=RooCmdArg::none(),  const RooCmdArg& arg4=RooCmdArg::none(), const RooCmdArg& arg5=RooCmdArg::none(),
-             const RooCmdArg& arg6=RooCmdArg::none(),  const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none()) ;
+  virtual RooFit::OwningPtr<RooAbsReal> createChi2(RooDataHist& data, const RooCmdArg& arg1={},  const RooCmdArg& arg2={},
+             const RooCmdArg& arg3={},  const RooCmdArg& arg4={}, const RooCmdArg& arg5={},
+             const RooCmdArg& arg6={},  const RooCmdArg& arg7={}, const RooCmdArg& arg8={}) ;
 
   // Chi^2 fits to X-Y datasets
-  virtual RooFit::OwningPtr<RooFitResult> chi2FitTo(RooDataSet& xydata, const RooCmdArg& arg1=RooCmdArg::none(),  const RooCmdArg& arg2=RooCmdArg::none(),
-                              const RooCmdArg& arg3=RooCmdArg::none(),  const RooCmdArg& arg4=RooCmdArg::none(), const RooCmdArg& arg5=RooCmdArg::none(),
-                              const RooCmdArg& arg6=RooCmdArg::none(),  const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none()) ;
+  virtual RooFit::OwningPtr<RooFitResult> chi2FitTo(RooDataSet& xydata, const RooCmdArg& arg1={},  const RooCmdArg& arg2={},
+                              const RooCmdArg& arg3={},  const RooCmdArg& arg4={}, const RooCmdArg& arg5={},
+                              const RooCmdArg& arg6={},  const RooCmdArg& arg7={}, const RooCmdArg& arg8={}) ;
   virtual RooFit::OwningPtr<RooFitResult> chi2FitTo(RooDataSet& xydata, const RooLinkedList& cmdList) ;
 
   virtual RooFit::OwningPtr<RooAbsReal> createChi2(RooDataSet& data, const RooLinkedList& cmdList) ;
-  virtual RooFit::OwningPtr<RooAbsReal> createChi2(RooDataSet& data, const RooCmdArg& arg1=RooCmdArg::none(),  const RooCmdArg& arg2=RooCmdArg::none(),
-               const RooCmdArg& arg3=RooCmdArg::none(),  const RooCmdArg& arg4=RooCmdArg::none(), const RooCmdArg& arg5=RooCmdArg::none(),
-               const RooCmdArg& arg6=RooCmdArg::none(),  const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none()) ;
+  virtual RooFit::OwningPtr<RooAbsReal> createChi2(RooDataSet& data, const RooCmdArg& arg1={},  const RooCmdArg& arg2={},
+               const RooCmdArg& arg3={},  const RooCmdArg& arg4={}, const RooCmdArg& arg5={},
+               const RooCmdArg& arg6={},  const RooCmdArg& arg7={}, const RooCmdArg& arg8={}) ;
 
 
   virtual RooFit::OwningPtr<RooAbsReal> createProfile(const RooArgSet& paramsOfInterest) ;
 
 
-  RooFit::OwningPtr<RooAbsReal> createIntegral(const RooArgSet& iset, const RooCmdArg& arg1, const RooCmdArg& arg2=RooCmdArg::none(),
-                             const RooCmdArg& arg3=RooCmdArg::none(), const RooCmdArg& arg4=RooCmdArg::none(),
-              const RooCmdArg& arg5=RooCmdArg::none(), const RooCmdArg& arg6=RooCmdArg::none(),
-              const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none()) const ;
+  RooFit::OwningPtr<RooAbsReal> createIntegral(const RooArgSet& iset, const RooCmdArg& arg1, const RooCmdArg& arg2={},
+                             const RooCmdArg& arg3={}, const RooCmdArg& arg4={},
+              const RooCmdArg& arg5={}, const RooCmdArg& arg6={},
+              const RooCmdArg& arg7={}, const RooCmdArg& arg8={}) const ;
 
   /// Create integral over observables in iset in range named rangeName.
   RooFit::OwningPtr<RooAbsReal> createIntegral(const RooArgSet& iset, const char* rangeName) const {
@@ -233,10 +233,10 @@ public:
 
   // Create running integrals
   RooFit::OwningPtr<RooAbsReal> createRunningIntegral(const RooArgSet& iset, const RooArgSet& nset={}) ;
-  RooFit::OwningPtr<RooAbsReal> createRunningIntegral(const RooArgSet& iset, const RooCmdArg& arg1, const RooCmdArg& arg2=RooCmdArg::none(),
-         const RooCmdArg& arg3=RooCmdArg::none(), const RooCmdArg& arg4=RooCmdArg::none(),
-         const RooCmdArg& arg5=RooCmdArg::none(), const RooCmdArg& arg6=RooCmdArg::none(),
-         const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none()) ;
+  RooFit::OwningPtr<RooAbsReal> createRunningIntegral(const RooArgSet& iset, const RooCmdArg& arg1, const RooCmdArg& arg2={},
+         const RooCmdArg& arg3={}, const RooCmdArg& arg4={},
+         const RooCmdArg& arg5={}, const RooCmdArg& arg6={},
+         const RooCmdArg& arg7={}, const RooCmdArg& arg8={}) ;
   RooFit::OwningPtr<RooAbsReal> createIntRI(const RooArgSet& iset, const RooArgSet& nset={}) ;
   RooFit::OwningPtr<RooAbsReal> createScanRI(const RooArgSet& iset, const RooArgSet& nset, Int_t numScanBins, Int_t intOrder) ;
 
@@ -271,11 +271,11 @@ public:
 
   // User entry point for plotting
   virtual RooPlot* plotOn(RooPlot* frame,
-           const RooCmdArg& arg1=RooCmdArg(), const RooCmdArg& arg2=RooCmdArg(),
-           const RooCmdArg& arg3=RooCmdArg(), const RooCmdArg& arg4=RooCmdArg(),
-           const RooCmdArg& arg5=RooCmdArg(), const RooCmdArg& arg6=RooCmdArg(),
-           const RooCmdArg& arg7=RooCmdArg(), const RooCmdArg& arg8=RooCmdArg(),
-           const RooCmdArg& arg9=RooCmdArg(), const RooCmdArg& arg10=RooCmdArg()
+           const RooCmdArg& arg1={}, const RooCmdArg& arg2={},
+           const RooCmdArg& arg3={}, const RooCmdArg& arg4={},
+           const RooCmdArg& arg5={}, const RooCmdArg& arg6={},
+           const RooCmdArg& arg7={}, const RooCmdArg& arg8={},
+           const RooCmdArg& arg9={}, const RooCmdArg& arg10={}
               ) const ;
 
 
@@ -294,10 +294,10 @@ public:
   TH1 *createHistogram(RooStringView varNameList, Int_t xbins=0, Int_t ybins=0, Int_t zbins=0) const ;
   TH1* createHistogram(const char *name, const RooAbsRealLValue& xvar, RooLinkedList& argList) const ;
   TH1 *createHistogram(const char *name, const RooAbsRealLValue& xvar,
-                       const RooCmdArg& arg1=RooCmdArg::none(), const RooCmdArg& arg2=RooCmdArg::none(),
-                       const RooCmdArg& arg3=RooCmdArg::none(), const RooCmdArg& arg4=RooCmdArg::none(),
-                       const RooCmdArg& arg5=RooCmdArg::none(), const RooCmdArg& arg6=RooCmdArg::none(),
-                       const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none()) const ;
+                       const RooCmdArg& arg1={}, const RooCmdArg& arg2={},
+                       const RooCmdArg& arg3={}, const RooCmdArg& arg4={},
+                       const RooCmdArg& arg5={}, const RooCmdArg& arg6={},
+                       const RooCmdArg& arg7={}, const RooCmdArg& arg8={}) const ;
 
   // Fill a RooDataHist
   RooDataHist* fillDataHist(RooDataHist *hist, const RooArgSet* nset, double scaleFactor,

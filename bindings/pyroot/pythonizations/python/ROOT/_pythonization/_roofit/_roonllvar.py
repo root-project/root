@@ -19,9 +19,9 @@ class RooNLLVar(object):
 
     @cpp_signature(
         "RooNLLVar(const char* name, const char* title, RooAbsPdf& pdf, RooAbsData& data,"
-        "    const RooCmdArg& arg1=RooCmdArg::none(), const RooCmdArg& arg2=RooCmdArg::none(),const RooCmdArg& arg3=RooCmdArg::none(),"
-        "    const RooCmdArg& arg4=RooCmdArg::none(), const RooCmdArg& arg5=RooCmdArg::none(),const RooCmdArg& arg6=RooCmdArg::none(),"
-        "    const RooCmdArg& arg7=RooCmdArg::none(), const RooCmdArg& arg8=RooCmdArg::none(),const RooCmdArg& arg9=RooCmdArg::none()) ;"
+        "    const RooCmdArg& arg1={}, const RooCmdArg& arg2={},const RooCmdArg& arg3={},"
+        "    const RooCmdArg& arg4={}, const RooCmdArg& arg5={},const RooCmdArg& arg6={},"
+        "    const RooCmdArg& arg7={}, const RooCmdArg& arg8={},const RooCmdArg& arg9={}) ;"
     )
     def __init__(self, *args, **kwargs):
         r"""The RooNLLVar constructor is pythonized with the command argument pythonization.

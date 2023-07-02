@@ -27,8 +27,8 @@ class RooMsgService(object):
     \endcode"""
 
     @cpp_signature(
-        "Int_t RooMsgService::addStream(RooFit::MsgLevel level, const RooCmdArg& arg1=RooCmdArg(), const RooCmdArg& arg2=RooCmdArg(), const RooCmdArg& arg3=RooCmdArg(),"
-        "    const RooCmdArg& arg4=RooCmdArg(), const RooCmdArg& arg5=RooCmdArg(), const RooCmdArg& arg6=RooCmdArg());"
+        "Int_t RooMsgService::addStream(RooFit::MsgLevel level, const RooCmdArg& arg1={}, const RooCmdArg& arg2={}, const RooCmdArg& arg3={},"
+        "    const RooCmdArg& arg4={}, const RooCmdArg& arg5={}, const RooCmdArg& arg6={});"
     )
     def addStream(self, *args, **kwargs):
         r"""The RooMsgService::addStream() function is pythonized with the command argument pythonization.

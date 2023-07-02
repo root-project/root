@@ -40,8 +40,8 @@ public:
   ~RooGenFitStudy() override ;
   RooAbsStudy* clone(const char* newname="") const override { return new RooGenFitStudy(newname?newname:GetName(),GetTitle()) ; }
 
-  void setGenConfig(const char* pdfName, const char* obsName, const RooCmdArg& arg1=RooCmdArg(),const RooCmdArg& arg2=RooCmdArg(),const RooCmdArg& arg3=RooCmdArg()) ;
-  void setFitConfig(const char* pdfName, const char* obsName, const RooCmdArg& arg1=RooCmdArg(),const RooCmdArg& arg2=RooCmdArg(),const RooCmdArg& arg3=RooCmdArg()) ;
+  void setGenConfig(const char* pdfName, const char* obsName, const RooCmdArg& arg1={},const RooCmdArg& arg2={},const RooCmdArg& arg3={}) ;
+  void setFitConfig(const char* pdfName, const char* obsName, const RooCmdArg& arg1={},const RooCmdArg& arg2={},const RooCmdArg& arg3={}) ;
 
   bool attach(RooWorkspace& w) override ;
   bool initialize() override ;
