@@ -280,10 +280,11 @@ jobs:
           #   config: Debug
           #   overrides: ["imt=Off"]
 
-    runs-on:
-      - self-hosted
-      - linux
-      - x64
+    # runs-on:
+    #   - self-hosted
+    #   - linux
+    #   - x64
+    runs-on: ubuntu-latest
 
     name: ${{ matrix.image }} ${{ matrix.config }} ${{ join( matrix.overrides, ', ' ) }}
 
