@@ -966,16 +966,6 @@ void CheckForDuplicateSnapshotColumns(const ColumnNames_t &cols)
    }
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// \brief Trigger the execution of an RDataFrame computation graph.
-/// \param[in] node A node of the computation graph (not a result).
-///
-/// This function calls the RLoopManager::Run method on the \p fLoopManager data
-/// member of the input argument. It is intended for internal use only.
-void TriggerRun(ROOT::RDF::RNode &node){
-   node.fLoopManager->Run();
-}
-
 /// Return copies of colsWithoutAliases and colsWithAliases with size branches for variable-sized array branches added
 /// in the right positions (i.e. before the array branches that need them).
 std::pair<std::vector<std::string>, std::vector<std::string>>
