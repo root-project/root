@@ -382,6 +382,8 @@ jobs:
             
       - name: Install Python
         run:  apt-get update && apt-get install -y python3
+      - name: Install openstack
+        run: pip install openstacksdk
 
       - name: Update artifacts after push to release branch
         if:   github.event_name == 'push'
