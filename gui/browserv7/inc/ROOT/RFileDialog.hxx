@@ -116,7 +116,7 @@ public:
    static std::string SaveAs(const std::string &title = "", const std::string &fname = "");
    static std::string NewFile(const std::string &title = "", const std::string &fname = "");
 
-   static std::shared_ptr<RFileDialog> Embedded(const std::shared_ptr<RWebWindow> &window, const std::string &args);
+   static std::shared_ptr<RFileDialog> Embed(const std::shared_ptr<RWebWindow> &window, unsigned connid, const std::string &args);
 
    static bool IsMessageToStartDialog(const std::string &msg);
 
