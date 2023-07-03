@@ -554,7 +554,7 @@ void RCanvasPainter::ProcessData(unsigned connid, const std::string &arg)
       delete f;
    } else if (RWebWindow::IsFileDialogMessage(arg)) {
 
-      RWebWindow::EmbedFileDialog(fWindow, arg);
+      RWebWindow::EmbedFileDialog(fWindow, connid, arg);
 
    } else if (check_header("REQ:")) {
       auto req = TBufferJSON::FromJSON<RDrawableRequest>(cdata);
