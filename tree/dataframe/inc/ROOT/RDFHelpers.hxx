@@ -159,6 +159,7 @@ RNode AsRNode(NodeType node)
 // clang-format off
 /// Trigger the event loop of multiple RDataFrames concurrently
 /// \param[in] handles A vector of RResultHandles
+/// \return The number of distinct computation graphs that have been processed
 ///
 /// This function triggers the event loop of all computation graphs which relate to the
 /// given RResultHandles. The advantage compared to running the event loop implicitly by accessing the
@@ -177,7 +178,7 @@ RNode AsRNode(NodeType node)
 /// ROOT::RDF::RunGraphs({r1, r2});
 /// ~~~
 // clang-format on
-void RunGraphs(std::vector<RResultHandle> handles);
+unsigned int RunGraphs(std::vector<RResultHandle> handles);
 
 namespace Experimental {
 

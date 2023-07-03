@@ -33,7 +33,7 @@ class RResultHandle {
    const std::type_info *fType = nullptr; ///< Type of the wrapped result
 
    // The ROOT::RDF::RunGraphs helper has to access the loop manager to check whether two RResultHandles belong to the same computation graph
-   friend void RunGraphs(std::vector<RResultHandle>);
+   friend unsigned int RunGraphs(std::vector<RResultHandle>);
 
    /// Get the pointer to the encapsulated result.
    /// Ownership is not transferred to the caller.
