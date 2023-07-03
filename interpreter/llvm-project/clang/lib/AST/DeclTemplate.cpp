@@ -309,19 +309,17 @@ Decl *RedeclarableTemplateDecl::loadLazySpecializationImpl(
   return getASTContext().getExternalSource()->GetExternalDecl(ID);
 }
 
-bool
+void
 RedeclarableTemplateDecl::loadLazySpecializationsImpl(ArrayRef<TemplateArgument>
                                                       Args,
                                                       TemplateParameterList *TPL) const {
-  bool LoadedSpecialization = false;
   CommonBase *CommonBasePtr = getMostRecentDecl()->getCommonPtr();
   if (auto *Specs = CommonBasePtr->LazySpecializations) {
     unsigned Hash = TemplateArgumentList::ComputeODRHash(Args);
     for (uint32_t I = 0, N = Specs[0].DeclID; I != N; ++I)
       if (Specs[I+1].ODRHash && Specs[I+1].ODRHash == Hash)
-        LoadedSpecialization |= (bool)loadLazySpecializationImpl(Specs[I+1]);
+        (void)loadLazySpecializationImpl(Specs[I+1]);
   }
-  return LoadedSpecialization;
 }
 
 template<class EntryType, typename... ProfileArguments>
@@ -331,7 +329,7 @@ RedeclarableTemplateDecl::findSpecializationImpl(
     ProfileArguments&&... ProfileArgs) {
   using SETraits = SpecEntryTraits<EntryType>;
 
-  (void)loadLazySpecializationsImpl(std::forward<ProfileArguments>(ProfileArgs)...);
+  loadLazySpecializationsImpl(std::forward<ProfileArguments>(ProfileArgs)...);
 
   llvm::FoldingSetNodeID ID;
   EntryType::Profile(ID, std::forward<ProfileArguments>(ProfileArgs)...,
@@ -349,8 +347,11 @@ void RedeclarableTemplateDecl::addSpecializationImpl(
   if (InsertPos) {
 #ifndef NDEBUG
     auto Args = SETraits::getTemplateArgs(Entry);
-    assert(!loadLazySpecializationsImpl(Args) &&
-           "Specialization is already registered as lazy");
+    // Due to hash collisions, it can happen that we load another template
+    // specialization with the same hash. This is fine, as long as the next
+    // call to findSpecializationImpl does not find a matching Decl for the
+    // template arguments.
+    loadLazySpecializationsImpl(Args);
     void *CorrectInsertPos;
     assert(!findSpecializationImpl(Specializations, CorrectInsertPos, Args) &&
            InsertPos == CorrectInsertPos &&

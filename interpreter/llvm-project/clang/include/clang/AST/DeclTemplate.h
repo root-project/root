@@ -828,8 +828,7 @@ protected:
 
   void loadLazySpecializationsImpl(bool OnlyPartial = false) const;
 
-  ///\returns true if any lazy specialization was loaded.
-  bool loadLazySpecializationsImpl(llvm::ArrayRef<TemplateArgument> Args,
+  void loadLazySpecializationsImpl(llvm::ArrayRef<TemplateArgument> Args,
                                    TemplateParameterList *TPL = nullptr) const;
 
   Decl *loadLazySpecializationImpl(LazySpecializationInfo &LazySpecInfo) const;
