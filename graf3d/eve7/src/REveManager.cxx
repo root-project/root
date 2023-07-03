@@ -18,7 +18,6 @@
 #include <ROOT/REveSceneInfo.hxx>
 #include <ROOT/REveClient.hxx>
 #include <ROOT/RWebWindow.hxx>
-#include <ROOT/RFileDialog.hxx>
 #include <ROOT/RLogger.hxx>
 #include <ROOT/REveSystem.hxx>
 
@@ -849,10 +848,10 @@ void REveManager::WindowData(unsigned connid, const std::string &arg)
 
       return;
    }
-   else if (arg.compare( 0, 10, "FILEDIALOG") == 0)
+   else if (RWebWindow::IsFileDialogMessage(arg))
    {
       // file dialog
-       RFileDialog::Embedded(fWebWindow, arg);
+      RWebWindow::EmbedFileDialog(fWebWindow, connid, arg);
        return;
    }
 
@@ -986,7 +985,7 @@ void REveManager::SendSceneChanges()
       std::stringstream strm;
       for (auto entry : gEveLogEntries) {
          nlohmann::json item = {};
-         item["lvl"] = entry.fLevel; 
+         item["lvl"] = entry.fLevel;
          int cappedLevel = std::min(static_cast<int>(entry.fLevel), numLevels - 1);
          strm <<  "Server " << sTag[cappedLevel] << ":";
 
