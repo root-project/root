@@ -658,7 +658,7 @@ TEST(RDataFrameInterface, Describe)
                      "myFloat                 Float_t                         Dataset\n"
                      "myInt                   Int_t                           Dataset\n"
                      "myLongColumnName        unsigned int                    Define\n"
-                     "myVec                   ROOT::VecOps::RVec<float>       Define";
+                     "myVec                   ROOT::VecOps::RVec<float>       Define\n";
    EXPECT_EQ(df3.Describe().AsString(), ref2);
 }
 
