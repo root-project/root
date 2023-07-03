@@ -80,20 +80,42 @@ class R__CLING_PTRCHECK(off) RVariedAction final : public RActionBase {
       return prevFilters;
    }
 
-public:
-   RVariedAction(std::vector<Helper> &&helpers, const ColumnNames_t &columns, std::shared_ptr<PrevNode> prevNode,
-                 const RColumnRegister &colRegister)
-      : RActionBase(prevNode->GetLoopManagerUnchecked(), columns, colRegister, prevNode->GetVariations()),
-        fHelpers(std::move(helpers)), fPrevNodes(MakePrevFilters(prevNode)), fInputValues(GetNSlots())
+   void SetupClass()
    {
+      // The column register and names are private members of RActionBase
+      const auto &colRegister = GetColRegister();
+      const auto &columnNames = GetColumnNames();
+
       fLoopManager->Register(this);
 
-      for (auto i = 0u; i < columns.size(); ++i) {
-         auto *define = colRegister.GetDefine(columns[i]);
+      for (auto i = 0u; i < columnNames.size(); ++i) {
+         auto *define = colRegister.GetDefine(columnNames[i]);
          fIsDefine[i] = define != nullptr;
          if (fIsDefine[i])
             define->MakeVariations(GetVariations());
       }
+   }
+
+   /// This constructor takes in input a vector of previous nodes, motivated by the CloneAction logic.
+   RVariedAction(std::vector<Helper> &&helpers, const ColumnNames_t &columns,
+                 const std::vector<std::shared_ptr<PrevNodeType>> &prevNodes, const RColumnRegister &colRegister)
+      : RActionBase(prevNodes[0]->GetLoopManagerUnchecked(), columns, colRegister, prevNodes[0]->GetVariations()),
+        fHelpers(std::move(helpers)),
+        fPrevNodes(prevNodes),
+        fInputValues(GetNSlots())
+   {
+      SetupClass();
+   }
+
+public:
+   RVariedAction(std::vector<Helper> &&helpers, const ColumnNames_t &columns, std::shared_ptr<PrevNode> prevNode,
+                 const RColumnRegister &colRegister)
+      : RActionBase(prevNode->GetLoopManagerUnchecked(), columns, colRegister, prevNode->GetVariations()),
+        fHelpers(std::move(helpers)),
+        fPrevNodes(MakePrevFilters(prevNode)),
+        fInputValues(GetNSlots())
+   {
+      SetupClass();
    }
 
    RVariedAction(const RVariedAction &) = delete;
@@ -211,8 +233,8 @@ public:
          clonedHelpers.emplace_back(fHelpers[i].CallMakeNew(vectorOfTypeErasedResults[i]));
       }
 
-      return std::make_unique<RVariedAction>(std::move(clonedHelpers), GetColumnNames(),
-                                             std::static_pointer_cast<PrevNode>(fPrevNodes[0]), GetColRegister());
+      return std::unique_ptr<RVariedAction>(
+         new RVariedAction(std::move(clonedHelpers), GetColumnNames(), fPrevNodes, GetColRegister()));
    }
 
 private:
