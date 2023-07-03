@@ -380,11 +380,8 @@ jobs:
                     --repository     ${{ github.server_url }}/${{ github.repository }}
               "
             
-      - name: Checkout Python
-        uses: actions/checkout@v3
-
-      - name: Install Python  
-        uses: actions/setup-python@v4
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
         with:
           python-version: '3.10'
       - run: python my_script.py
