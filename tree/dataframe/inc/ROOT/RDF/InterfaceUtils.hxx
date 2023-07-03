@@ -762,8 +762,6 @@ struct IsDeque_t<std::deque<T>> : std::true_type {};
 
 void CheckForDuplicateSnapshotColumns(const ColumnNames_t &cols);
 
-void TriggerRun(ROOT::RDF::RNode &node);
-
 template <typename T>
 struct InnerValueType {
    using type = T; // fallback for when T is not a nested RVec
