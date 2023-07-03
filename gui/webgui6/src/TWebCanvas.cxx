@@ -1361,7 +1361,7 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
       }
    } else if (ROOT::Experimental::RWebWindow::IsFileDialogMessage(arg)) {
 
-      ROOT::Experimental::RWebWindow::EmbedFileDialog(fWindow, arg);
+      ROOT::Experimental::RWebWindow::EmbedFileDialog(fWindow, connid, arg);
 
    } else if (IsReadOnly()) {
 
