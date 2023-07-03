@@ -34,7 +34,7 @@ namespace RDF {
 
 namespace RDFGraphDrawing = ROOT::Internal::RDF::GraphDrawing;
 
-/// Just like an RAction, but it has N action helpers (one per variation + nominal) and N previous nodes.
+/// Just like an RAction, but it has N action helpers and N previous nodes (N is the number of variations).
 template <typename Helper, typename PrevNode, typename ColumnTypes_t>
 class R__CLING_PTRCHECK(off) RVariedAction final : public RActionBase {
    using TypeInd_t = std::make_index_sequence<ColumnTypes_t::list_size>;
@@ -43,7 +43,7 @@ class R__CLING_PTRCHECK(off) RVariedAction final : public RActionBase {
    using PrevNodeType = std::conditional_t<std::is_same<PrevNode, RJittedFilter>::value, RFilterBase, PrevNode>;
 
    std::vector<Helper> fHelpers; ///< Action helpers per variation.
-   /// Owning pointers to upstream nodes for each systematic variation (with the "nominal" at index 0).
+   /// Owning pointers to upstream nodes for each systematic variation.
    std::vector<std::shared_ptr<PrevNodeType>> fPrevNodes;
 
    /// Column readers per slot (outer dimension), per variation and per input column (inner dimension, std::array).
@@ -52,6 +52,11 @@ class R__CLING_PTRCHECK(off) RVariedAction final : public RActionBase {
    /// The nth flag signals whether the nth input column is a custom column or not.
    std::array<bool, ColumnTypes_t::list_size> fIsDefine;
 
+   /// \brief Creates new filter nodes, one per variation, from the upstream nominal one.
+   /// \param nominal The nominal filter
+   /// \return The varied filters
+   ///
+   /// The nominal filter is not included in the return value.
    std::vector<std::shared_ptr<PrevNodeType>> MakePrevFilters(std::shared_ptr<PrevNode> nominal) const
    {
       const auto &variations = GetVariations();
@@ -148,10 +153,10 @@ public:
       SetHasRun();
    }
 
-   /// Return the partially-updated value connected to the nominal result.
+   /// Return the partially-updated value connected to the first variation.
    void *PartialUpdate(unsigned int slot) final { return PartialUpdateImpl(slot); }
 
-   /// Return the per-sample callback connected to the nominal result.
+   /// Return the per-sample callback connected to the first variation.
    ROOT::RDF::SampleCallback_t GetSampleCallback() final { return fHelpers[0].GetSampleCallback(); }
 
    std::shared_ptr<RDFGraphDrawing::GraphNode>
