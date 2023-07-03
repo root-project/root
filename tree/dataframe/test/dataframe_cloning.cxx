@@ -403,3 +403,84 @@ TEST(RDataFrameCloning, ChangeSpec)
       gSystem->Unlink(name.c_str());
    }
 }
+
+ROOT::RDF::Experimental::RResultMap<TH1D> dataframe_cloning_vary_with_filters_analysis(ROOT::RDF::RNode df)
+{
+   auto df1 = df.Define("jet_pt", []() { return ROOT::RVecF{30, 30, 30, 10, 10, 10, 10}; });
+
+   auto df2 = df1.Vary("jet_pt",
+                       [](ULong64_t) {
+                          return ROOT::RVec<ROOT::RVecF>{{31, 31, 31, 31, 11, 11, 11}, {29, 29, 29, 29, 9, 9, 9}};
+                       },
+                       {"rdfentry_"}, {"pt_scale_up", "pt_res_up"});
+
+   auto df3 =
+      df2.Define("jet_pt_mask", [](const ROOT::RVecF &jet_pt) { return jet_pt > 25; }, {"jet_pt"})
+         .Filter([](const ROOT::RVecI &jet_pt_mask) { return ROOT::VecOps::Sum(jet_pt_mask) >= 4; }, {"jet_pt_mask"});
+
+   auto df4 = df3.Vary(
+      "weights",
+      [](const ROOT::RVecF &jet_pt, const ROOT::RVecI &jet_pt_mask) {
+         // The next line triggered an error due to a previous faulty implementation
+         // that was not connecting the cloned varied action to the correct upstream
+         // varied filters. In particular, this lambda should be run after the `Filter`
+         // above, which checks that the number of jets that passes the `jet_pt_mask`
+         // is at least 4.
+         auto test = ROOT::VecOps::Take(jet_pt[jet_pt_mask], 4);
+         return ROOT::RVecD{-1, 1};
+      },
+      {"jet_pt", "jet_pt_mask"}, 2);
+
+   auto h = df4.Histo1D<ROOT::RVecF, double>({"NAME", "TITLE", 10, -10, 10}, "jet_pt", "weights");
+
+   auto vars = ROOT::RDF::Experimental::VariationsFor(h);
+
+   return vars;
+}
+
+/*
+ * This test reproduces a particular issue happening in analysis logic
+ * including both systematic variations and filters, with the order
+ *
+ * 1. Some call to Vary
+ * 2. Filter depending on the first Vary
+ * 3. Another Vary that depends on the Filter
+ *
+ * The logic that reproduces the problem is shown in the above function
+ * `dataframe_cloning_vary_with_filters_analysis`. In particular, the
+ * lambda used in the Vary call (3) calls ROOT::VecOps::Take(vec, 4),
+ * thus only works if `vec` has at least size `4`.
+ *
+ * In a previous implementation of cloning `RVariedAction`, the cloned action
+ * was connected to the wrong upstream filter (in fact, it was using a varied
+ * filter from the original action as if it was the nominal filter). This would
+ * then pass to the lambda used in the downstream Vary call (3) a vector
+ * `jet_pt` from which only 3 entries pass `jet_pt_mask`, eventually producing
+ * an error when reaching the `Take(jet_pt[jet_pt_mask], 4)` call.
+ */
+TEST(RDataFrameCloning, VaryWithFilters)
+{
+   ROOT::RDataFrame d{1};
+   auto df = d.Define("weights", []() { return 0.; });
+
+   // Create the computation graph and trigger it.
+   auto vars = dataframe_cloning_vary_with_filters_analysis(df);
+   ROOT::Internal::RDF::TriggerRun(df);
+
+   // Clone the RResultMap and re-run the computation graph
+   auto vars_clone = CloneResultAndAction(vars);
+   ROOT::Internal::RDF::TriggerRun(df);
+
+   // Make sure that the cloned varied results are the same
+   // as the original ones.
+   const auto &originalKeys = vars.GetKeys();
+   const auto &clonedKeys = vars_clone.GetKeys();
+
+   EXPECT_VEC_EQ(originalKeys, clonedKeys);
+   for (const auto &variation : originalKeys) {
+      const auto &histo = vars[variation];
+      const auto &clone = vars_clone[variation];
+      EXPECT_DOUBLE_EQ(histo.GetMean(), clone.GetMean());
+      EXPECT_EQ(histo.GetEntries(), clone.GetEntries());
+   }
+}
