@@ -280,24 +280,24 @@ jobs:
           #   config: Debug
           #   overrides: ["imt=Off"]
 
-    runs-on: docker://my-runner-image
+    runs-on: self-hosted
     # runs-on: ubuntu-latest
 
     name: ${{ matrix.image }} ${{ matrix.config }} ${{ join( matrix.overrides, ', ' ) }}
 
-    container:
-      #image: registry.cern.ch/root-ci/${{ matrix.image }}:buildready
-      image: ubuntu:latest
-      options: '--security-opt label=disable --rm'
-      env:
-        OS_APPLICATION_CREDENTIAL_ID: '7f5b64a265244623a3a933308569bdba'
-        OS_APPLICATION_CREDENTIAL_SECRET: ${{ secrets.OS_APPLICATION_CREDENTIAL_SECRET }}
-        OS_AUTH_TYPE: 'v3applicationcredential'
-        OS_AUTH_URL: 'https://keystone.cern.ch/v3'
-        OS_IDENTITY_API_VERSION: 3
-        OS_INTERFACE: 'public'
-        OS_REGION_NAME: 'cern'
-        PYTHONUNBUFFERED: true
+    # container:
+    #   #image: registry.cern.ch/root-ci/${{ matrix.image }}:buildready
+    #   image: ubuntu:latest
+    #   options: '--security-opt label=disable --rm'
+    #   env:
+    #     OS_APPLICATION_CREDENTIAL_ID: '7f5b64a265244623a3a933308569bdba'
+    #     OS_APPLICATION_CREDENTIAL_SECRET: ${{ secrets.OS_APPLICATION_CREDENTIAL_SECRET }}
+    #     OS_AUTH_TYPE: 'v3applicationcredential'
+    #     OS_AUTH_URL: 'https://keystone.cern.ch/v3'
+    #     OS_IDENTITY_API_VERSION: 3
+    #     OS_INTERFACE: 'public'
+    #     OS_REGION_NAME: 'cern'
+    #     PYTHONUNBUFFERED: true
 
     steps:
       - name: Checkout
@@ -312,6 +312,10 @@ jobs:
         run:  'printf "%s@%s\\n" "$(whoami)" "$(hostname)";
                ls -la
               '
+      - name: Install Docker
+        run: |
+          sudo apt-get update
+          sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
       - name: Apply option overrides from matrix for this job
         if: ${{ matrix.overrides != NaN }}
