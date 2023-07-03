@@ -430,11 +430,11 @@ bool RFileDialog::IsMessageToStartDialog(const std::string &msg)
 /// Create dialog instance to use as embedded dialog inside other widget
 /// Embedded dialog started on the client side where FileDialogController.SaveAs() method called
 /// Such method immediately send message with "FILEDIALOG:" prefix
-/// On the server side widget should detect such message and call RFileDialog::Embedded()
+/// On the server side widget should detect such message and call RFileDialog::Embed()
 /// providing received string as second argument.
 /// Returned instance of shared_ptr<RFileDialog> may be used to assign callback when file is selected
 
-std::shared_ptr<RFileDialog> RFileDialog::Embedded(const std::shared_ptr<RWebWindow> &window, const std::string &args)
+std::shared_ptr<RFileDialog> RFileDialog::Embed(const std::shared_ptr<RWebWindow> &window, unsigned connid, const std::string &args)
 {
    if (!IsMessageToStartDialog(args))
       return nullptr;
@@ -476,7 +476,7 @@ std::shared_ptr<RFileDialog> RFileDialog::Embedded(const std::shared_ptr<RWebWin
       dialog->SetNameFilters(*arr);
    }
 
-   dialog->Show({window, 0, chid});
+   dialog->Show({window, connid, chid});
 
    // use callback to release pointer, actually not needed but just to avoid compiler warning
    dialog->SetCallback([dialog](const std::string &) mutable { dialog.reset(); });
@@ -490,8 +490,8 @@ std::shared_ptr<RFileDialog> RFileDialog::Embedded(const std::shared_ptr<RWebWin
 void RFileDialog::SetStartFunc(bool on)
 {
    if (on)
-      RWebWindow::SetStartDialogFunc([](const std::shared_ptr<RWebWindow> &window, const std::string &args) -> bool {
-         auto res = RFileDialog::Embedded(window, args);
+      RWebWindow::SetStartDialogFunc([](const std::shared_ptr<RWebWindow> &window, unsigned connid, const std::string &args) -> bool {
+         auto res = RFileDialog::Embed(window, connid, args);
          return res ? true : false;
       });
    else
