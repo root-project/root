@@ -796,8 +796,10 @@ void RBrowser::ProcessMsg(unsigned connid, const std::string &arg0)
       auto logs = GetRootLogs();
       fWebWindow->Send(connid, "LOGS:"s + TBufferJSON::ToJSON(&logs, TBufferJSON::kNoSpaces).Data());
 
-   } else if (kind == "FILEDIALOG") {
-      RFileDialog::Embedded(fWebWindow, arg0);
+   } else if (RFileDialog::IsMessageToStartDialog(arg0)) {
+
+      RFileDialog::Embed(fWebWindow, connid, arg0);
+
    } else if (kind == "SYNCEDITOR") {
       auto arr = TBufferJSON::FromJSON<std::vector<std::string>>(msg);
       if (arr && (arr->size() > 4)) {
