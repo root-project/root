@@ -129,7 +129,7 @@ TGeoMediumEditor::TGeoMediumEditor(const TGWindow *p, Int_t width,
    nef->SetToolTipText("Maximum magnetic field [kilogauss]");
    fMedFieldm->Associate(this);
    fMedFieldm->Resize(90, fMedFieldm->GetDefaultHeight());
-   f1->AddFrame(fMedFieldm, new TGLayoutHints(kLHintsRight | kFixedWidth , 2, 2, 2, 2));
+   f1->AddFrame(fMedFieldm, new TGLayoutHints(kLHintsRight | kLHintsExpandY , 2, 2, 2, 2));
    compxyz->AddFrame(f1, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 1, 1));
 
    // Number entry for tmaxfd
@@ -141,7 +141,7 @@ TGeoMediumEditor::TGeoMediumEditor(const TGWindow *p, Int_t width,
    nef->SetToolTipText("Maximum angle per step due to field [deg]");
    fMedTmaxfd->Associate(this);
    fMedTmaxfd->Resize(90, fMedTmaxfd->GetDefaultHeight());
-   f2->AddFrame(fMedTmaxfd, new TGLayoutHints(kLHintsRight | kFixedWidth , 2, 2, 2, 2));
+   f2->AddFrame(fMedTmaxfd, new TGLayoutHints(kLHintsRight | kLHintsExpandY , 2, 2, 2, 2));
    compxyz->AddFrame(f2, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 1, 1));
 
    // Number entry for stemax
@@ -153,7 +153,7 @@ TGeoMediumEditor::TGeoMediumEditor(const TGWindow *p, Int_t width,
    nef->SetToolTipText("Maximum step allowed [cm]");
    fMedStemax->Associate(this);
    fMedStemax->Resize(90, fMedStemax->GetDefaultHeight());
-   f3->AddFrame(fMedStemax, new TGLayoutHints(kLHintsRight | kFixedWidth , 2, 2, 2, 2));
+   f3->AddFrame(fMedStemax, new TGLayoutHints(kLHintsRight | kLHintsExpandY , 2, 2, 2, 2));
    compxyz->AddFrame(f3, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 1, 1));
 
    // Number entry for deemax
@@ -165,7 +165,7 @@ TGeoMediumEditor::TGeoMediumEditor(const TGWindow *p, Int_t width,
    nef->SetToolTipText("Maximum fraction of energy lost in a step");
    fMedDeemax->Associate(this);
    fMedDeemax->Resize(90, fMedDeemax->GetDefaultHeight());
-   f4->AddFrame(fMedDeemax, new TGLayoutHints(kLHintsRight | kFixedWidth , 2, 2, 2, 2));
+   f4->AddFrame(fMedDeemax, new TGLayoutHints(kLHintsRight | kLHintsExpandY , 2, 2, 2, 2));
    compxyz->AddFrame(f4, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 1, 1));
 
    // Number entry for epsil
@@ -177,7 +177,7 @@ TGeoMediumEditor::TGeoMediumEditor(const TGWindow *p, Int_t width,
    nef->SetToolTipText("Tracking precision [cm]");
    fMedEpsil->Associate(this);
    fMedEpsil->Resize(90, fMedEpsil->GetDefaultHeight());
-   f5->AddFrame(fMedEpsil, new TGLayoutHints(kLHintsRight | kFixedWidth , 2, 2, 2, 2));
+   f5->AddFrame(fMedEpsil, new TGLayoutHints(kLHintsRight | kLHintsExpandY , 2, 2, 2, 2));
    compxyz->AddFrame(f5, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 1, 1));
 
    // Number entry for stmin
@@ -189,7 +189,7 @@ TGeoMediumEditor::TGeoMediumEditor(const TGWindow *p, Int_t width,
    nef->SetToolTipText("Minimum step due to continuous processes [cm]");
    fMedStmin->Associate(this);
    fMedStmin->Resize(90, fMedStmin->GetDefaultHeight());
-   f6->AddFrame(fMedStmin, new TGLayoutHints(kLHintsRight | kFixedWidth , 2, 2, 2, 2));
+   f6->AddFrame(fMedStmin, new TGLayoutHints(kLHintsRight | kLHintsExpandY , 2, 2, 2, 2));
    compxyz->AddFrame(f6, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 1, 1));
 
    compxyz->Resize(160,50);
