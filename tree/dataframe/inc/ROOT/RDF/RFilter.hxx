@@ -190,6 +190,8 @@ public:
    /// Return a clone of this Filter that works with values in the variationName "universe".
    std::shared_ptr<RNodeBase> GetVariedFilter(const std::string &variationName) final
    {
+      // Only the nominal filter should be asked to produce varied filters
+      assert(fVariation == "nominal");
       // nobody should ask for a varied filter for the nominal variation: they can just
       // use the nominal filter!
       assert(variationName != "nominal");
