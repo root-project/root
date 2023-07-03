@@ -6,6 +6,9 @@
 #include <thread> // std::thread::hardware_concurrency
 
 #include "SimpleFiller.h" // for VaryFill
+#include "TROOT.h"
+#include "ROOT/RDF/RActionImpl.hxx"
+#include "ROOT/RDF/RSampleInfo.hxx"
 
 #include <gtest/gtest.h>
 
@@ -1589,6 +1592,57 @@ TEST_P(RDFVary, ManyVariationsManyColumns)
       EXPECT_EQ(sxs["syst:" + std::to_string(i)], 420);
       EXPECT_EQ(sys["syst:" + std::to_string(i)], 80);
    }
+}
+
+struct HelperWithCallback : ROOT::Detail::RDF::RActionImpl<HelperWithCallback> {
+   using Result_t = int;
+   std::shared_ptr<Result_t> fResult = std::make_shared<Result_t>(0);
+   static std::atomic_uint fCallbackCallCount; // shared among all the helpers for all variations
+
+   void InitTask(TTreeReader *, unsigned int) {}
+   void Exec(unsigned int, int) {} // no-op
+   void Initialize() {}
+   void Finalize() { *fResult = fCallbackCallCount; }
+   std::shared_ptr<Result_t> GetResultPtr() const { return fResult; }
+   ROOT::RDF::SampleCallback_t GetSampleCallback() // increments fCallbackCallCount
+   {
+      auto callback = [](unsigned int, const ROOT::RDF::RSampleInfo &) { ++fCallbackCallCount; };
+      return callback;
+   }
+
+   HelperWithCallback MakeNew(void *newResult)
+   {
+      auto newHelper = HelperWithCallback();
+      newHelper.fResult = *static_cast<std::shared_ptr<Result_t> *>(newResult);
+      return newHelper;
+   }
+
+   std::string GetActionName() const { return "HelperWithCallback"; }
+};
+
+std::atomic_uint HelperWithCallback::fCallbackCallCount{0u};
+
+TEST_P(RDFVary, SampleCallbacks)
+{
+   // needs resetting between sequential and MT tests
+   HelperWithCallback::fCallbackCallCount = 0u;
+
+   // we book 2 tasks per thread with IMT, or 1 task in total in sequential execution
+   const auto nTasks = std::max(ROOT::GetThreadPoolSize() * 2, 1u);
+
+   auto r = ROOT::RDataFrame(nTasks) // one entry per task
+               .Define("x", [] { return 0; })
+               .Vary(
+                  "x",
+                  [] {
+                     return ROOT::RVecI{-1, 1};
+                  },
+                  {}, 2)
+               .Book<int>(HelperWithCallback{}, {"x"});
+   auto rv = VariationsFor(r);
+
+   // the callback should have been called once per task per variation
+   EXPECT_EQ(*r, nTasks * 3);
 }
 
 // instantiate single-thread tests
