@@ -132,7 +132,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTEve
     TreePlayer
     RCsg
     ROOTWebDisplay
-    ROOTBrowserv7
   ${EXTRA_DICT_OPTS}
 )
 
