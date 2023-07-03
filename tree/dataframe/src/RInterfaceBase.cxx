@@ -262,9 +262,7 @@ ROOT::RDF::RDFDescription ROOT::RDF::RInterfaceBase::Describe()
       if (definedColumnNamesSet.find(columnNames[i]) != definedColumnNamesSet.end())
          origin = "Define";
       ss << std::left << std::setw(columnWidthNames) << columnNames[i] << std::setw(columnWidthTypes) << columnTypes[i]
-         << origin;
-      if (i < nCols - 1)
-         ss << '\n';
+         << origin << '\n';
    }
    // Use the string returned from DescribeDataset() as the 'brief' description
    // Use the converted to string stringstream ss as the 'full' description
