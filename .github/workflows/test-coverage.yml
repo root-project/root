@@ -381,8 +381,8 @@ jobs:
               "
             
       - name: Install Python
-        run:  sudo apt-get update && sudo apt-get install -y python3
-                     
+        run:  apt-get update && apt-get install -y python3
+
       - name: Update artifacts after push to release branch
         if:   github.event_name == 'push'
         run: ".github/workflows/root-ci-config/build_root.py
