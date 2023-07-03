@@ -382,11 +382,11 @@ jobs:
             
       - name: Install Python
         run:  apt-get update && apt-get install -y python3
-        
+
       - name: Install pip
         run: |
-          python3 -m ensurepip --upgrade
-          python3 -m pip install --upgrade pip
+          curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
+          python3 get-pip.py
 
       - name: Install dependencies
         run: python3 -m pip install openstacksdk
