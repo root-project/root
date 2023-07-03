@@ -289,7 +289,8 @@ jobs:
     name: ${{ matrix.image }} ${{ matrix.config }} ${{ join( matrix.overrides, ', ' ) }}
 
     container:
-      image: registry.cern.ch/root-ci/${{ matrix.image }}:buildready
+      #image: registry.cern.ch/root-ci/${{ matrix.image }}:buildready
+      image: ubuntu:latest
       options: '--security-opt label=disable --rm'
       env:
         OS_APPLICATION_CREDENTIAL_ID: '7f5b64a265244623a3a933308569bdba'
