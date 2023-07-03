@@ -18,6 +18,7 @@
 #include "RLoopManager.hxx"
 #include "RJittedFilter.hxx"
 #include "ROOT/RDF/RMergeableValue.hxx"
+#include "ROOT/RDF/RSampleInfo.hxx"
 
 #include <Rtypes.h> // R__CLING_PTRCHECK
 #include <ROOT/TypeTraits.hxx>
@@ -178,8 +179,24 @@ public:
    /// Return the partially-updated value connected to the first variation.
    void *PartialUpdate(unsigned int slot) final { return PartialUpdateImpl(slot); }
 
-   /// Return the per-sample callback connected to the first variation.
-   ROOT::RDF::SampleCallback_t GetSampleCallback() final { return fHelpers[0].GetSampleCallback(); }
+   /// Return a callback that in turn runs the callbacks of each variation's helper.
+   ROOT::RDF::SampleCallback_t GetSampleCallback() final
+   {
+      if (fHelpers[0].GetSampleCallback()) {
+         std::vector<ROOT::RDF::SampleCallback_t> callbacks;
+         for (auto &h : fHelpers)
+            callbacks.push_back(h.GetSampleCallback());
+
+         auto callEachCallback = [cs = std::move(callbacks)](unsigned int slot, const RSampleInfo &info) {
+            for (auto &c : cs)
+               c(slot, info);
+         };
+
+         return callEachCallback;
+      }
+
+      return {};
+   }
 
    std::shared_ptr<RDFGraphDrawing::GraphNode>
    GetGraph(std::unordered_map<void *, std::shared_ptr<RDFGraphDrawing::GraphNode>> &visitedMap) final
