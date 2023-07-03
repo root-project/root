@@ -75,10 +75,9 @@ ScipyMinimizer::ScipyMinimizer() : BasicMinimizer()
    fOptions.SetMinimizerAlgorithm("L-BFGS-B");
    PyInitialize();
    fHessianFunc = nullptr;
-   // set extra options
-   SetAlgoExtraOptions();
    fConstraintsList = PyList_New(0);
    fConstN = 0;
+   fExtraOpts = nullptr;
 }
 
 //_______________________________________________________________________
@@ -89,16 +88,9 @@ ScipyMinimizer::ScipyMinimizer(const char *type)
    fOptions.SetMinimizerAlgorithm(type);
    PyInitialize();
    fHessianFunc = nullptr;
-   // set extra options
-   SetAlgoExtraOptions();
    fConstraintsList = PyList_New(0);
    fConstN = 0;
-}
-
-//_______________________________________________________________________
-void ScipyMinimizer::SetAlgoExtraOptions()
-{
-   SetExtraOptions(fExtraOpts);
+   fExtraOpts = nullptr;
 }
 
 //_______________________________________________________________________
@@ -192,6 +184,13 @@ ScipyMinimizer::~ScipyMinimizer()
 }
 
 //_______________________________________________________________________
+void ScipyMinimizer::SetExtraOptions()
+{
+   auto constExtraOpts = dynamic_cast<const GenAlgoOptions *>(fOptions.ExtraOptions());
+   fExtraOpts = const_cast<GenAlgoOptions *>(constExtraOpts);
+}
+
+//_______________________________________________________________________
 bool ScipyMinimizer::Minimize()
 {
    (gFunction) = ObjFunction();
@@ -205,11 +204,22 @@ bool ScipyMinimizer::Minimize()
    }
    auto method = fOptions.MinimizerAlgorithm();
    PyObject *pyoptions = PyDict_New();
-   if (method == "L-BFGS-B") {
-      for (std::string key : fExtraOpts.GetAllRealKeys()) {
+   SetExtraOptions();
+   if (fExtraOpts) {
+      for (std::string key : fExtraOpts->GetAllRealKeys()) {
          double value = 0;
-         fExtraOpts.GetRealValue(key.c_str(), value);
+         fExtraOpts->GetRealValue(key.c_str(), value);
          PyDict_SetItemString(pyoptions, key.c_str(), PyFloat_FromDouble(value));
+      }
+      for (std::string key : fExtraOpts->GetAllIntKeys()) {
+         int value = 0;
+         fExtraOpts->GetIntValue(key.c_str(), value);
+         PyDict_SetItemString(pyoptions, key.c_str(), PyLong_FromLong(value));
+      }
+      for (std::string key : fExtraOpts->GetAllNamedKeys()) {
+         std::string value = "";
+         fExtraOpts->GetNamedValue(key.c_str(), value);
+         PyDict_SetItemString(pyoptions, key.c_str(), PyUnicode_FromString(value.c_str()));
       }
    }
    PyDict_SetItemString(pyoptions, "maxiter", PyLong_FromLong(MaxIterations()));

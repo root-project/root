@@ -21,8 +21,6 @@
 
 #include "Math/BasicMinimizer.h"
 
-#include "Math/GenAlgoOptions.h"
-
 #include "Rtypes.h"
 #include "TString.h"
 
@@ -75,7 +73,7 @@ private:
    PyObject *fHessian;
    PyObject *fBoundsMod;
    PyObject *fConstraintsList; /// contraints functions
-   GenAlgoOptions fExtraOpts;
+   GenAlgoOptions *fExtraOpts;
    std::function<bool(const std::vector<double> &, double *)> fHessianFunc;
    unsigned int fConstN;
    unsigned int fCalls;
@@ -140,7 +138,11 @@ private:
       Copy constructor
    */
    ScipyMinimizer(const ScipyMinimizer &) : BasicMinimizer() {}
-   void SetAlgoExtraOptions();
+
+   /**
+      Get extra options from IOptions
+   */
+   void SetExtraOptions();
 
 public:
    /// method to perform the minimization
