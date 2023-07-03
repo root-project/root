@@ -530,7 +530,7 @@ TEST(RDatasetSpecTest, Describe)
                                              "Column  Type            Origin\n"
                                              "------  ----            ------\n"
                                              "w       Double_t        Dataset\n"
-                                             "x       Double_t        Dataset");
+                                             "x       Double_t        Dataset\n");
    EXPECT_EQ(expectedDescribe, df.Describe().AsString());
    for (auto i = 12u; i < 16; ++i)
       gSystem->Unlink(("specTestFile" + std::to_string(i) + ".root").c_str());
