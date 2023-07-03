@@ -1772,13 +1772,13 @@ unsigned RWebWindow::ShowWindow(std::shared_ptr<RWebWindow> window, const RWebDi
    return window->Show(args);
 }
 
-std::function<bool(const std::shared_ptr<RWebWindow> &, const std::string &)> gStartDialogFunc = nullptr;
+std::function<bool(const std::shared_ptr<RWebWindow> &, unsigned, const std::string &)> RWebWindow::gStartDialogFunc = nullptr;
 
 /////////////////////////////////////////////////////////////////////////////////////
 /// Configure func which has to be used for starting dialog
 
 
-void RWebWindow::SetStartDialogFunc(std::function<bool(const std::shared_ptr<RWebWindow> &, const std::string &)> func)
+void RWebWindow::SetStartDialogFunc(std::function<bool(const std::shared_ptr<RWebWindow> &, unsigned, const std::string &)> func)
 {
    gStartDialogFunc = func;
 }
@@ -1802,7 +1802,7 @@ bool RWebWindow::IsFileDialogMessage(const std::string &msg)
 /// providing received string as second argument.
 /// Returned instance of shared_ptr<RFileDialog> may be used to assign callback when file is selected
 
-bool RWebWindow::EmbedFileDialog(const std::shared_ptr<RWebWindow> &window, const std::string &args)
+bool RWebWindow::EmbedFileDialog(const std::shared_ptr<RWebWindow> &window, unsigned connid, const std::string &args)
 {
    if (!gStartDialogFunc)
       gSystem->Load("libROOTBrowserv7");
@@ -1810,5 +1810,5 @@ bool RWebWindow::EmbedFileDialog(const std::shared_ptr<RWebWindow> &window, cons
    if (!gStartDialogFunc)
       return false;
 
-   return gStartDialogFunc(window, args);
+   return gStartDialogFunc(window, connid, args);
 }
