@@ -228,7 +228,9 @@ private:
 
    void CheckThreadAssign();
 
-   static void SetStartDialogFunc(std::function<bool(const std::shared_ptr<RWebWindow> &, const std::string &)>);
+   static std::function<bool(const std::shared_ptr<RWebWindow> &, unsigned, const std::string &)> gStartDialogFunc;
+
+   static void SetStartDialogFunc(std::function<bool(const std::shared_ptr<RWebWindow> &, unsigned, const std::string &)>);
 
 public:
 
@@ -394,7 +396,7 @@ public:
 
    static bool IsFileDialogMessage(const std::string &msg);
 
-   static bool EmbedFileDialog(const std::shared_ptr<RWebWindow> &window, const std::string &args);
+   static bool EmbedFileDialog(const std::shared_ptr<RWebWindow> &window, unsigned connid, const std::string &args);
 };
 
 } // namespace Experimental
