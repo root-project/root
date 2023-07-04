@@ -1220,12 +1220,6 @@ RooJSONFactoryWSTool::readBinnedData(const JSONNode &n, const std::string &name,
       RooJSONFactoryWSTool::error(errMsg.str());
    }
    auto dh = std::make_unique<RooDataHist>(name.c_str(), name.c_str(), varlist);
-   // temporarily disable dirty flag propagation when filling the RDH
-   std::vector<double> initVals;
-   for (auto &v : varlist) {
-      v->setDirtyInhibit(true);
-      initVals.push_back(static_cast<RooAbsReal const *>(v)->getVal());
-   }
    std::vector<double> contentVals;
    contentVals.reserve(contents.num_children());
    for (auto const &cont : contents.children()) {
@@ -1239,17 +1233,8 @@ RooJSONFactoryWSTool::readBinnedData(const JSONNode &n, const std::string &name,
       }
    }
    for (size_t ibin = 0; ibin < bins.size(); ++ibin) {
-      for (size_t i = 0; i < bins[ibin].size(); ++i) {
-         static_cast<RooRealVar *>(varlist.at(i))->setBin(bins[ibin][i]);
-      }
       const double err = errors ? errorVals[ibin] : -1;
-      dh->add(varlist, contentVals[ibin], err > 0 ? err * err : -1);
-   }
-   // re-enable dirty flag propagation
-   for (size_t i = 0; i < varlist.size(); ++i) {
-      auto v = static_cast<RooRealVar *>(varlist.at(i));
-      v->setVal(initVals[i]);
-      v->setDirtyInhibit(false);
+      dh->set(ibin, contentVals[ibin], err);
    }
    return dh;
 }
