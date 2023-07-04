@@ -378,11 +378,11 @@ jobs:
                     --repository     ${{ github.server_url }}/${{ github.repository }}
               "
             
-      - uses: actions/checkout@v3
-      - uses: actions/setup-python@v4
-        with:
-          python-version: '3.10'
-      - run: python my_script.py
+      # - uses: actions/checkout@v3
+      # - uses: actions/setup-python@v4
+      #   with:
+      #     python-version: '3.10'
+      # - run: python my_script.py
 
       
       # - name: Install pip
