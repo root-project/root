@@ -2250,7 +2250,7 @@ TEST(ONNX, Equal){
    });
 
    TMVA_SOFIE_Equal::Session s("Equal_FromONNX.dat");
-   std::vector<bool> output = s.infer(input2.data(),input1.data());
+   std::vector<bool> output = s.infer(input1.data(),input2.data());
    // Checking output size
    EXPECT_EQ(output.size(), sizeof(Equal_ExpectedOutput::outputs) / sizeof(bool));
 

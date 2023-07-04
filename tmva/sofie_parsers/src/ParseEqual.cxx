@@ -6,9 +6,9 @@ namespace TMVA {
 namespace Experimental {
 namespace SOFIE {
 
+ParserFuncSignature ParseEqual = [](RModelParser_ONNX &parser, const onnx::NodeProto &nodeproto) {
+   std::unique_ptr<ROperator> op;
 
-std::unique_ptr<ROperator> ParseEqual(RModelParser_ONNX &parser, const onnx::NodeProto &nodeproto)
-{
    ETensorType input_type = ETensorType::UNDEFINED;
 
    for (int i = 0; i < 2; ++i) {
@@ -28,12 +28,11 @@ std::unique_ptr<ROperator> ParseEqual(RModelParser_ONNX &parser, const onnx::Nod
       }
    }
 
-   std::unique_ptr<ROperator> op;
-   std::string output_name = nodeproto.output(0);
+   const std::string output_name = nodeproto.output(0);
 
    switch (input_type) {
-   case ETensorType::FLOAT:
-      op.reset(new ROperator_Equal<float>(nodeproto.input(0), nodeproto.input(1), output_name));
+      case ETensorType::FLOAT:
+         op.reset(new ROperator_Equal<float>(nodeproto.input(0), nodeproto.input(1), output_name));
       break;
    default:
       throw std::runtime_error("TMVA::SOFIE - Unsupported - Equal Operator does not yet support input type " +

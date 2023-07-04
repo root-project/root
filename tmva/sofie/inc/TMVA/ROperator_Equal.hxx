@@ -94,7 +94,7 @@ public:
       } else {
          fShapeY = fShapeX1;
       }
-      model.AddIntermediateTensor(fNY, model.GetTensorType(fNX1), fShapeY);
+      model.AddIntermediateTensor(fNY, ETensorType::BOOL , fShapeY);
    }
 
    std::string Generate(std::string OpName){
@@ -128,7 +128,7 @@ public:
       const std::string& nameX2 = fNBroadcastedX2.empty()? fNX2 : fNBroadcastedX2;
      
       out << SP << "for (size_t id = 0; id < " << length << " ; id++){\n";
-      out << SP << SP << "tensor_" << fNY << "[id] = (tensor_" << nameX1 << "[id] == tensor_" << nameX2 <<"[id]) ? True : False;\n";
+      out << SP << SP << "tensor_" << fNY << "[id] = (tensor_" << nameX1 << "[id] == tensor_" << nameX2 <<"[id]) ? true : false;\n";
       out << SP << "}\n";
    
       return out.str();

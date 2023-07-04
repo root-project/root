@@ -48,6 +48,9 @@ std::string ConvertTypeToString(ETensorType type){
       case ETensorType::DOUBLE : {
          return "double";
       }
+      case ETensorType::BOOL : {
+         return "bool";
+      }
       default:{
          return "other";
       }
