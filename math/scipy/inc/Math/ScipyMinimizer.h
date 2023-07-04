@@ -59,6 +59,16 @@ namespace Experimental {
   Support for constraint functions will be implemented in the next releases.
   You can find a macro example in the folder $ROOTSYS/tutorial/fit/scipy.C
 
+  To provide extra options to the minimizer, you can use the class GenAlgoOptions
+  and the method SetExtraOptions().
+  Example:
+   ```
+   ROOT::Math::GenAlgoOptions l_bfgs_b_opt;
+   l_bfgs_b_opt.SetValue("gtol", 1e-3);
+   l_bfgs_b_opt.SetValue("ftol", 1e7);
+   minimizer->SetExtraOptions(l_bfgs_b_opt);
+   ```
+
   See <A HREF="https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html">Scipy doc</A>
   from more info on the Scipy minimization algorithms.
 
