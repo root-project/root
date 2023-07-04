@@ -692,9 +692,9 @@ protected:
 
 protected:
    std::unique_ptr<Detail::RFieldBase> CloneImpl(std::string_view newName) const override;
-   const RColumnRepresentations &GetColumnRepresentations() const override;
+   const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumnsImpl() override;
-   void GenerateColumnsImpl(const RNTupleDescriptor &desc) override;
+   void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
 
    void GenerateValue(void *where) const override;
    void DestroyValue(void *objPtr, bool dtorOnly = false) const override;
