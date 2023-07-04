@@ -1,7 +1,7 @@
 // Author: Sergey Linev, GSI   7/12/2016
 
 /*************************************************************************
- * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2023, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -59,8 +59,23 @@
 /** \class TWebCanvas
 \ingroup webgui6
 
-Basic TCanvasImp ABI implementation for Web-based GUI
-Provides painting of main ROOT6 classes in web browsers
+Basic TCanvasImp ABI implementation for Web-based Graphics
+Provides painting of main ROOT classes in web browsers using [JSROOT](https://root.cern/js/)
+
+Following settings parameters can be useful for TWebCanvas:
+
+     WebGui.FullCanvas:       1     read-only mode (0), full-functional canvas (1) (default - 1)
+     WebGui.StyleDelivery:    1     provide gStyle object to JSROOT client (default - 1)
+     WebGui.PaletteDelivery:  1     provide color palette to JSROOT client (default - 1)
+     WebGui.TF1UseSave:       0     used saved values for function drawing (1) or calculate function on the client side (0) (default - 0)
+
+TWebCanvas is used by default in interactive ROOT session. To use web-based canvas in batch mode for image
+generation, one should explicitly specify `--web` option when starting ROOT:
+
+    [shell] root -b --web tutorials/hsimple.root -e 'hpxpy->Draw("colz"); c1->SaveAs("image.png");'
+
+If for any reasons TWebCanvas does not provide required functionality, one always can disable it.
+Either by specifying `root --web=off` when starting ROOT or by setting `Canvas.Name: TRootCanvas` in rootrc file.
 
 */
 
