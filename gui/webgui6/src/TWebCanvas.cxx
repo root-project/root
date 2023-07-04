@@ -76,6 +76,7 @@ TWebCanvas::TWebCanvas(TCanvas *c, const char *name, Int_t x, Int_t y, UInt_t wi
    fStyleDelivery = gEnv->GetValue("WebGui.StyleDelivery", 1);
    fPaletteDelivery = gEnv->GetValue("WebGui.PaletteDelivery", 1);
    fPrimitivesMerge = gEnv->GetValue("WebGui.PrimitivesMerge", 100);
+   fTF1UseSave = gEnv->GetValue("WebGui.TF1UseSave", (Int_t) 0) > 0;
    fJsonComp = gEnv->GetValue("WebGui.JsonComp", TBufferJSON::kSameSuppression + TBufferJSON::kNoSpaces);
 }
 
@@ -643,6 +644,11 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
          auto f1 = static_cast<TF1 *> (obj);
 
          TString f1opt = iter.GetOption();
+
+         if (fTF1UseSave && (f1->IsA() == TF1::Class() || f1->IsA() == TF2::Class())) {
+            f1->Save(0, 0, 0, 0, 0, 0);
+            f1opt.Append(";force_saved");
+         }
 
          if (first_obj) {
             auto hist = f1->GetHistogram();
@@ -1932,8 +1938,14 @@ TPad *TWebCanvas::ProcessObjectOptions(TWebObjectOptions &item, TPad *pad, int i
             stats->AddText(item.fcust.substr(pos_start).c_str());
          }
       }
+   } else if (item.fcust.compare(0,9,"func_fail") == 0) {
+      if (!fTF1UseSave) {
+         fTF1UseSave = kTRUE;
+         modified = true;
+      } else {
+         Error("ProcessObjectOptions", "Client fails to calculate function %s cl %s but it should not try!", obj ? obj->GetName() : "---", obj ? obj->ClassName() : "---");
+      }
    }
-
 
    return modified ? objpad : nullptr;
 }
