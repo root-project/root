@@ -1,9 +1,13 @@
-import { settings, isStr, clTH1D, createHistogram, clTF1, clTF2, kNoStats } from '../core.mjs';
+import { settings, gStyle, isStr, isFunc, clTH1D, createHistogram, clTF1, clTF2, kNoStats } from '../core.mjs';
+import { floatToString } from '../base/BasePainter.mjs';
 import { getElementMainPainter, ObjectPainter } from '../base/ObjectPainter.mjs';
 import { THistPainter } from '../hist2d/THistPainter.mjs';
 import { TH1Painter } from '../hist2d/TH1Painter.mjs';
 import * as jsroot_math from '../base/math.mjs';
 
+
+/** @summary Assign `evalPar` function for TF1 object
+  * @private */
 
 function proivdeEvalPar(obj) {
 
@@ -76,6 +80,28 @@ function proivdeEvalPar(obj) {
    return true;
 }
 
+
+/** @summary Create log scale for axis bins
+  * @private */
+function produceTAxisLogScale(axis, num, min, max) {
+   let lmin, lmax;
+
+   if (max > 0) {
+      lmax = Math.log(max);
+      lmin = min > 0 ? Math.log(min) : lmax - 5;
+   } else {
+      lmax = -10;
+      lmax = -15;
+   }
+
+   axis.fNbins = num;
+   axis.fXbins = new Array(num + 1);
+   for (let i = 0; i <= num; ++i)
+      axis.fXbins[i] = Math.exp(lmin + i / num * (lmax - lmin));
+   axis.fXmin = Math.exp(lmin);
+   axis.fXmax = Math.exp(lmax);
+}
+
 /**
   * @summary Painter for TF1 object
   *
@@ -101,132 +127,116 @@ class TF1Painter extends TH1Painter {
 
       if (this.webcanv_hist) {
          let h0 = this.getPadPainter()?.findInPrimitives('Func', clTH1D);
-         if (h0) {
-            histo.fXaxis.fTitle = h0.fXaxis.fTitle;
-            histo.fYaxis.fTitle = h0.fYaxis.fTitle;
-            histo.fZaxis.fTitle = h0.fZaxis.fTitle;
-         }
+         if (h0) this.updateAxes(histo, h0, this.getFramePainter());
       }
 
+      this.$func = obj;
       this.createTF1Histogram(obj, histo);
+      this.scanContent();
       return true;
+   }
+
+   /** @summary Redraw TF1
+     * @private */
+   redraw(reason) {
+      if (!this._use_saved_points && (reason == 'logx' || reason == 'zoom')) {
+         this.createTF1Histogram(this.$func, this.getHisto());
+         this.scanContent();
+      }
+
+      return super.redraw(reason);
    }
 
    /** @summary Create histogram for TF1 drawing
      * @private */
-   createTF1Histogram(tf1, hist, ignore_zoom) {
+   createTF1Histogram(tf1, hist) {
 
-      let gxmin = 0, gxmax = 0,
-          main = this.getFramePainter();
+      let fp = this.getFramePainter(),
+          pad = this.getPadPainter()?.getRootPad(true),
+          logx = pad?.fLogx,
+          xmin = tf1.fXmin, xmax = tf1.fXmax,
+          gr = fp?.getGrFuncs(this.second_x, this.second_y);
 
-      if (main && !ignore_zoom) {
-         let gr = main.getGrFuncs(this.second_x, this.second_y);
-         gxmin = gr.scale_xmin;
-         gxmax = gr.scale_xmax;
+     if (gr?.zoom_xmin !== gr?.zoom_xmax) {
+         xmin = Math.min(xmin, gr.zoom_xmin);
+         xmax = Math.max(xmax, gr.zoom_xmax);
       }
 
-      let xmin = tf1.fXmin, xmax = tf1.fXmax, logx = false;
+      this._use_saved_points = (tf1.fSave.length > 3) && (settings.PreferSavedPoints || this.force_saved);
 
-      if (gxmin !== gxmax) {
-         if (gxmin > xmin) xmin = gxmin;
-         if (gxmax < xmax) xmax = gxmax;
-      }
+      const ensureBins = num => {
+         if (hist.fNcells !== num + 2) {
+            hist.fNcells = num + 2;
+            hist.fArray = new Float32Array(hist.fNcells);
+            hist.fArray.fill(0);
+         }
+         hist.fXaxis.fNbins = num;
+         hist.fXaxis.fXbins = [];
+      };
 
-      if (main?.logx && (xmin > 0) && (xmax > 0)) {
-         logx = true;
-         xmin = Math.log(xmin);
-         xmax = Math.log(xmax);
-      }
+      delete this._fail_eval;
 
-      let np = Math.max(tf1.fNpx, 100),
-          dx = (xmax - xmin) / np,
-          res = [], iserror = false, plain_scale = false,
-          has_saved_points = tf1.fSave.length > 3,
-          force_use_save = has_saved_points && (ignore_zoom || settings.PreferSavedPoints);
+      if (!this._use_saved_points) {
 
-      if (!force_use_save) {
+         let np = Math.max(tf1.fNpx, 100), iserror = false;
 
          if (!tf1.evalPar && !proivdeEvalPar(tf1))
             iserror = true;
 
-         plain_scale = !logx;
+         ensureBins(np);
 
-         for (let n = 0; n < np; n++) {
-            let x = xmin + (n + 0.5) * dx, y = 0;
-            if (logx) x = Math.exp(x);
+         if (logx) {
+            produceTAxisLogScale(hist.fXaxis, np, xmin, xmax);
+         } else {
+            hist.fXaxis.fXmin = xmin;
+            hist.fXaxis.fXmax = xmax;
+         }
+
+         for (let n = 0; (n < np) && !iserror; n++) {
+            let x = hist.fXaxis.GetBinCenter(n + 1), y = 0;
             try {
                y = tf1.evalPar(x);
             } catch(err) {
                iserror = true;
             }
 
-            if (iserror) break;
-
-            if (!Number.isFinite(y))
-               y = 0;
-
-            res.push({ n, x, y });
+            if (!iserror)
+               hist.setBinContent(n + 1, Number.isFinite(y) ? y : 0);
          }
-      }
 
-      this._use_saved_points = (iserror || ignore_zoom || !res.length) && has_saved_points;
+         if (iserror)
+            this._fail_eval = true;
+
+         if (iserror && (tf1.fSave.length > 3))
+            this._use_saved_points = true;
+      }
 
       // in the case there were points have saved and we cannot calculate function
       // if we don't have the user's function
       if (this._use_saved_points) {
 
-         np = tf1.fSave.length - 2;
+         let np = tf1.fSave.length - 2;
          xmin = tf1.fSave[np];
          xmax = tf1.fSave[np + 1];
-         res = [];
-         dx = (xmax - xmin) / (np - 1);
+
+         if (xmin === xmax) {
+            xmin = tf1.fSave[--np];
+            console.error('Very special stored values, see TF1.cxx', xmin, xmax );
+         }
+
+         ensureBins(np);
+
+         // TODO: try to detect such situation, should not happen with TWebCanvas
+         let dx = (xmax - xmin) / (np - 2); // np-2 due to arithmetic in the TF1 class
+         // extend range while saved values are for bin center
+         hist.fXaxis.fXmin = xmin - dx/2;
+         hist.fXaxis.fXmax = xmax + dx/2;
 
          for (let n = 0; n < np; ++n) {
-            let x = xmin + dx*n,
-                y = tf1.fSave[n];
-            if (!Number.isFinite(y)) y = 0;
-            res.push({ n, x, y });
-         }
-
-         // expected range for the histogram
-         xmin -= dx/2;
-         xmax += dx/2;
-         plain_scale = true;
-      }
-
-      hist.fName = 'Func';
-      hist.fXaxis.fXmin = xmin;
-      hist.fXaxis.fXmax = xmax;
-      hist.fXaxis.fXbins = [];
-
-      if (!plain_scale) {
-         for (let i = 0; i < res.length - 1; ++i) {
-            let dd = res[i+1].x - res[i].x,
-                midx = (res[i+1].x + res[i].x) / 2;
-            if (i == 0) {
-               hist.fXaxis.fXmin = midx - dd;
-               hist.fXaxis.fXbins.push(midx - dd);
-            }
-
-            hist.fXaxis.fXbins.push(midx);
-
-            if (i == res.length - 2) {
-               hist.fXaxis.fXmax = midx + dd;
-               hist.fXaxis.fXbins.push(midx + dd);
-            }
+            let y = tf1.fSave[n];
+            hist.setBinContent(n + 1, Number.isFinite(y) ? y : 0);
          }
       }
-
-      if (hist.fNcells != np + 2) {
-         hist.fNcells = np + 2;
-         hist.fArray = new Float64Array(hist.fNcells);
-         hist.fArray.fill(0);
-         hist.fXaxis.fNbins = np;
-      }
-
-      res.forEach(entry => {
-         hist.fArray[entry.n + 1] = entry.y;
-      });
 
       hist.fName = 'Func';
       hist.fTitle = tf1.fTitle;
@@ -241,6 +251,25 @@ class TF1Painter extends TH1Painter {
       hist.fMarkerStyle = tf1.fMarkerStyle;
       hist.fMarkerSize = tf1.fMarkerSize;
       hist.fBits |= kNoStats;
+   }
+
+   extractAxesProperties(ndim) {
+      super.extractAxesProperties(ndim);
+
+      let func = this.$func, nsave = func?.fSave.length ?? 0;
+
+      if (nsave > 3 && this._use_saved_points) {
+         let np = nsave - 2,
+             dx = (func.fSave[np+1] - func.fSave[np]) / (np - 2);
+
+         this.xmin = Math.min(this.xmin, func.fSave[np] - dx/2);
+         this.xmax = Math.max(this.xmax, func.fSave[np+1] + dx/2);
+
+      }
+      if (func) {
+         this.xmin = Math.min(this.xmin, func.fXmin);
+         this.xmax = Math.max(this.xmax, func.fXmax);
+      }
    }
 
    /** @summary Checks if it makes sense to zoom inside specified axis range */
@@ -259,12 +288,85 @@ class TF1Painter extends TH1Painter {
       return (axis == 'x') || (axis == 'y');
    }
 
+      /** @summary retrurn tooltips for TF2 */
+   getTF1Tooltips(pnt) {
+      delete this.$tmp_tooltip;
+      let lines = [ this.getObjectHint() ],
+          funcs = this.getFramePainter()?.getGrFuncs(this.options.second_x, this.options.second_y);
+
+      if (!funcs || !isFunc(this.$func?.evalPar)) {
+         lines.push('grx = ' + pnt.x, 'gry = ' + pnt.y);
+         return lines;
+      }
+
+      let x = funcs.revertAxis('x', pnt.x),
+          y = 0, gry = 0, iserror = false;
+
+       try {
+          y = this.$func.evalPar(x);
+          gry = Math.round(funcs.gry(y));
+       } catch {
+          iserror = true;
+       }
+
+      lines.push('x = ' + funcs.axisAsText('x', x),
+                 'value = ' + (iserror ? '<fail>' : floatToString(y, gStyle.fStatFormat)));
+
+      if (!iserror)
+         this.$tmp_tooltip = { y, gry };
+      return lines;
+   }
+
+   /** @summary process tooltip event for TF1 object */
+   processTooltipEvent(pnt) {
+      if (this._use_saved_points)
+         return super.processTooltipEvent(pnt);
+
+      let ttrect = this.draw_g?.select('.tooltip_bin');
+
+      if (!this.draw_g || !pnt) {
+         ttrect?.remove();
+         return null;
+      }
+
+      let res = { name: this.$func?.fName, title: this.$func?.fTitle,
+                  x: pnt.x, y: pnt.y,
+                  color1: this.lineatt?.color ?? 'green',
+                  color2: this.fillatt?.getFillColorAlt('blue') ?? 'blue',
+                  lines: this.getTF1Tooltips(pnt), exact: true, menu: true };
+
+      if (ttrect.empty())
+         ttrect = this.draw_g.append('svg:circle')
+                             .attr('class', 'tooltip_bin')
+                             .style('pointer-events', 'none')
+                             .style('fill', 'none')
+                             .attr('r', (this.lineatt?.width ?? 1) + 4);
+
+      ttrect.attr('cx', pnt.x)
+            .attr('cy', this.$tmp_tooltip.gry ?? pnt.y)
+            .call(this.lineatt?.func)
+
+      return res;
+   }
+
+   /** @summary fill information for TWebCanvas
+     * @private */
+   fillWebObjectOptions(opt) {
+      // mark that saved points are used or evaluation failed
+      opt.fcust = this._fail_eval ? 'func_fail' : '';
+   }
+
    /** @summary draw TF1 object */
    static async draw(dom, tf1, opt) {
      if (!isStr(opt)) opt = '';
-      let p = opt.indexOf(';webcanv_hist'), webcanv_hist = false;
+      let p = opt.indexOf(';webcanv_hist'), webcanv_hist = false, force_saved = false;
       if (p >= 0) {
          webcanv_hist = true;
+         opt = opt.slice(0, p);
+      }
+      p = opt.indexOf(';force_saved');
+      if (p >= 0) {
+         force_saved = true;
          opt = opt.slice(0, p);
       }
 
@@ -284,6 +386,7 @@ class TF1Painter extends TH1Painter {
 
       painter.$func = tf1;
       painter.webcanv_hist = webcanv_hist;
+      painter.force_saved = force_saved;
 
       painter.createTF1Histogram(tf1, hist)
 
@@ -292,4 +395,4 @@ class TF1Painter extends TH1Painter {
 
 } // class TF1Painter
 
-export { TF1Painter, proivdeEvalPar };
+export { TF1Painter, proivdeEvalPar, produceTAxisLogScale };
