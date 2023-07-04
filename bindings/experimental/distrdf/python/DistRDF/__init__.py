@@ -17,7 +17,7 @@ import types
 
 import concurrent.futures
 
-from typing import TYPE_CHECKING
+from typing import Iterable, TYPE_CHECKING
 
 from DistRDF.Backends import build_backends_submodules
 
@@ -71,7 +71,7 @@ def create_logger(level="WARNING", log_path="./DistRDF.log"):
     return logger
 
 
-def RunGraphs(proxies):
+def RunGraphs(proxies: Iterable) -> int:
     """
     Trigger the execution of multiple RDataFrame computation graphs on a certain
     distributed backend. If the backend doesn't support multiple job
@@ -82,6 +82,10 @@ def RunGraphs(proxies):
         proxies(list): List of action proxies that should be triggered. Only
             actions belonging to different RDataFrame graphs will be
             triggered to avoid useless calls.
+
+    Return:
+        (int): The number of unique computation graphs executed by this call.
+
 
     Example:
 
@@ -99,7 +103,7 @@ def RunGraphs(proxies):
         ]
 
         # Execute the 3 computation graphs
-        RunGraphs(histoproxies)
+        n_graphs_run = RunGraphs(histoproxies)
         # Retrieve all the histograms in one go
         histos = [histoproxy.GetValue() for histoproxy in histoproxies]
         @endcode
@@ -120,6 +124,8 @@ def RunGraphs(proxies):
     with concurrent.futures.ThreadPoolExecutor(max_workers=len(uniqueproxies)) as executor:
         futures = [executor.submit(execute_graph, proxy.proxied_node) for proxy in uniqueproxies]
         concurrent.futures.wait(futures)
+
+    return len(uniqueproxies)
 
 
 def VariationsFor(actionproxy: ActionProxy) -> VariationsProxy:
