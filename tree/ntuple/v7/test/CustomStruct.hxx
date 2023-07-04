@@ -31,9 +31,7 @@ struct CustomStruct {
    std::vector<std::vector<float>> v2;
    std::string s;
 
-   bool operator <(const CustomStruct& c) const {
-      return a < c.a;
-   }
+   bool operator<(const CustomStruct &c) const { return a < c.a && v1 < c.v1 && v2 < c.v2 && s < c.s; }
 
    bool operator==(const CustomStruct &c) const { return a == c.a && v1 == c.v1 && v2 == c.v2 && s == c.s; }
 };
