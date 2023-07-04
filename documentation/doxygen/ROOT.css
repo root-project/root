@@ -20,7 +20,7 @@ div.contents {
 
 .pyrootbox {
   border: 1px solid #879ecb;
-  background-color: #f9fafc;
+  background-color: var(--blockquote-background-color);
   padding: 15px;
 }
 
