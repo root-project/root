@@ -671,6 +671,7 @@ class TPadPainter extends ObjectPainter {
          svg_border = svg_pad.select('.root_pad_border');
          if (!is_batch)
             btns = this.getLayerSvg('btns_layer', this.this_pad_name);
+         this.addPadInteractive(true);
       } else {
          svg_pad = svg_can.select('.primitives_layer')
              .append('svg:svg') // svg used to blend all drawings outside
@@ -700,31 +701,6 @@ class TPadPainter extends ObjectPainter {
                           .property('leftside', settings.ToolBarSide != 'left')
                           .property('vertical', settings.ToolBarVert);
       }
-
-      if (!this.iscan && !is_batch)
-         addDragHandler(this, {
-            x, y, width: w, height: h, no_transform: true,
-            is_disabled: kind => svg_can.property('pad_enlarged') || this.btns_active_flag
-                            || (kind == 'move' && (this._disable_dragging || this.getFramePainter()?.mode3d)),
-            getDrawG: () => this.svg_this_pad(),
-            pad_rect: { width, height },
-            minwidth: 20, minheight: 20,
-            move_resize: (_x, _y, _w, _h) => {
-               let x0 = this.pad.fAbsXlowNDC,
-                   y0 = this.pad.fAbsYlowNDC,
-                   scale_w = _w / width / this.pad.fAbsWNDC,
-                   scale_h = _h / height / this.pad.fAbsHNDC,
-                   shift_x = _x / width - x0,
-                   shift_y = 1 - (_y + _h) / height - y0;
-               this.forEachPainterInPad(p => {
-                  p.pad.fAbsXlowNDC += (p.pad.fAbsXlowNDC - x0) * (scale_w - 1) + shift_x;
-                  p.pad.fAbsYlowNDC += (p.pad.fAbsYlowNDC - y0) * (scale_h - 1) + shift_y;
-                  p.pad.fAbsWNDC *= scale_w;
-                  p.pad.fAbsHNDC *= scale_h;
-               }, 'pads');
-            },
-            redraw: () => this.interactiveRedraw('pad', 'padpos')
-         });
 
       this.createAttFill({ attr: this.pad });
       this.createAttLine({ attr: this.pad, color0: !this.pad.fBorderMode ? 'none' : '' });
@@ -789,6 +765,43 @@ class TPadPainter extends ObjectPainter {
          this.alignButtons(btns, w, h);
 
       return pad_visible;
+   }
+
+   /** @summary Add pad interactive features like dragging and resize
+     * @private */
+   addPadInteractive(cleanup = false) {
+      if (this.iscan || this.isBatchMode())
+         return;
+
+      let svg_can = this.getCanvSvg(),
+          width = svg_can.property('draw_width'),
+          height = svg_can.property('draw_height');
+
+      addDragHandler(this, {
+         cleanup, // do cleanup to let assign new handlers later on
+         x: this._pad_x, y: this._pad_y, width: this._pad_width, height: this._pad_height, no_transform: true,
+         only_resize: true, // !cleanup && (this._disable_dragging || this.getFramePainter()?.mode3d),
+         is_disabled: kind => svg_can.property('pad_enlarged') || this.btns_active_flag
+                         || (kind == 'move' && (this._disable_dragging || this.getFramePainter()?.mode3d)),
+         getDrawG: () => this.svg_this_pad(),
+         pad_rect: { width, height },
+         minwidth: 20, minheight: 20,
+         move_resize: (_x, _y, _w, _h) => {
+            let x0 = this.pad.fAbsXlowNDC,
+                y0 = this.pad.fAbsYlowNDC,
+                scale_w = _w / width / this.pad.fAbsWNDC,
+                scale_h = _h / height / this.pad.fAbsHNDC,
+                shift_x = _x / width - x0,
+                shift_y = 1 - (_y + _h) / height - y0;
+            this.forEachPainterInPad(p => {
+               p.pad.fAbsXlowNDC += (p.pad.fAbsXlowNDC - x0) * (scale_w - 1) + shift_x;
+               p.pad.fAbsYlowNDC += (p.pad.fAbsYlowNDC - y0) * (scale_h - 1) + shift_y;
+               p.pad.fAbsWNDC *= scale_w;
+               p.pad.fAbsHNDC *= scale_h;
+            }, 'pads');
+         },
+         redraw: () => this.interactiveRedraw('pad', 'padpos')
+      });
    }
 
    /** @summary Disable pad drawing
@@ -1200,6 +1213,7 @@ class TPadPainter extends ObjectPainter {
             showsubitems = this.createPadSvg(true);
          return redrawNext(0);
       }).then(() => {
+         this.addPadInteractive();
          this.confirmDraw();
          if (getActivePad() === this)
             this.getCanvPainter()?.producePadEvent('padredraw', this);
@@ -1495,6 +1509,7 @@ class TPadPainter extends ObjectPainter {
          // we select current pad, where all drawing is performed
          let prev_name = padpainter.selectCurrentPad(padpainter.this_pad_name);
          return padpainter.drawNextSnap(snap.fPrimitives).then(() => {
+            padpainter.addPadInteractive();
             padpainter.selectCurrentPad(prev_name);
             return this.drawNextSnap(lst, indx); // call next
          });
@@ -1730,6 +1745,7 @@ class TPadPainter extends ObjectPainter {
             });
          return Promise.all(promises);
       }).then(() => {
+         this.addPadInteractive();
          this.selectCurrentPad(prev_name);
          if (getActivePad() === this)
             this.getCanvPainter()?.producePadEvent('padredraw', this);
@@ -2280,6 +2296,7 @@ class TPadPainter extends ObjectPainter {
       // flag used to prevent immediate pad redraw during first draw
       return painter.drawPrimitives().then(() => {
          painter.showPadButtons();
+         painter.addPadInteractive();
          // we restore previous pad name
          painter.selectCurrentPad(prev_name);
          return painter;

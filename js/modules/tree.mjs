@@ -2799,10 +2799,14 @@ function treeHierarchy(node, obj) {
       return true;
    }
 
+   // protect against corrupted TTree objects
+   if (obj.fBranches === undefined)
+      return false;
+
    node._childs = [];
    node._tree = obj;  // set reference, will be used later by TTree::Draw
 
-   for (let i = 0; i < obj.fBranches.arr.length; ++i)
+   for (let i = 0; i < obj.fBranches.arr?.length; ++i)
       createBranchItem(node, obj.fBranches.arr[i], obj);
 
    return true;

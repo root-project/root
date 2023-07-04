@@ -649,8 +649,7 @@ class TCanvasPainter extends TPadPainter {
       if (!msg && isFunc(painter?.getSnapId) && (kind.slice(0,5) == 'exec:')) {
          let snapid = painter.getSnapId(subelem);
          if (snapid)
-            msg = 'PRIMIT6:' + toJSON({
-                     _typename: 'TWebObjectOptions',
+            msg = 'PRIMIT6:' + toJSON({ _typename: 'TWebObjectOptions',
                      snapid, opt: kind.slice(5), fcust: 'exec', fopt: [] });
       }
 

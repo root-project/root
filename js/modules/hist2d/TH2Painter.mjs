@@ -2741,8 +2741,7 @@ class TH2Painter extends THistPainter {
    /** @summary Process tooltip event */
    processTooltipEvent(pnt) {
       if (!pnt || !this.draw_content || !this.draw_g || !this.tt_handle || this.options.Proj) {
-         if (this.draw_g)
-            this.draw_g.select('.tooltip_bin').remove();
+         this.draw_g?.select('.tooltip_bin').remove();
          return null;
       }
 

@@ -9,7 +9,7 @@
 5. Let toggle vertical/horizontal flag for color palette via context menu
 6. Provide "Bring to front" menu command for different objects like pave, box, marker, ...
 7. Handle "dark mode" in geom painter - automatically adjust background
-8. Change `TF1` and `TF2` drawing - always convert into histogram, support TWebCanvas
+8. Change `TF1` and `TF2` drawing - always convert into histogram, support TWebCanvas, handle log scales
 
 
 ## Changes in 7.4.0
