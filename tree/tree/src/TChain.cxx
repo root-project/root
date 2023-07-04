@@ -1676,6 +1676,7 @@ Long64_t TChain::LoadTree(Long64_t entry)
    fTree->SetMaxVirtualSize(fMaxVirtualSize);
 
    SetChainOffset(fTreeOffset[fTreeNumber]);
+   fTree->SetChainOffset(GetChainOffset());
 
    // Set the branch statuses for the newly opened file.
    TIter next(fStatus);
