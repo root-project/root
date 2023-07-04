@@ -1,7 +1,7 @@
 // Author: Sergey Linev, GSI   7/12/2016
 
 /*************************************************************************
- * Copyright (C) 1995-2021, Rene Brun and Fons Rademakers.               *
+ * Copyright (C) 1995-2023, Rene Brun and Fons Rademakers.               *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -79,7 +79,7 @@ protected:
 
    std::shared_ptr<ROOT::Experimental::RWebWindow> fWindow; ///!< configured display
 
-   Bool_t fReadOnly{true};         ///<! in read-only mode canvas cannot be changed from client side
+   Bool_t fReadOnly{kFALSE};       ///<! in read-only mode canvas cannot be changed from client side
    Long64_t fCanvVersion{1};       ///<! actual canvas version, changed with every new Modified() call
    UInt_t fClientBits{0};          ///<! latest status bits from client like editor visible or not
    TList fPrimitivesLists;         ///<! list of lists of primitives, temporary collected during painting
@@ -233,7 +233,7 @@ public:
 
    static TCanvasImp *NewCanvas(TCanvas *c, const char *name, Int_t x, Int_t y, UInt_t width, UInt_t height);
 
-   ClassDefOverride(TWebCanvas, 0) // Web-based implementation for TCanvasImp, read-only mode
+   ClassDefOverride(TWebCanvas, 0) // Web-based implementation for TCanvasImp
 };
 
 #endif
