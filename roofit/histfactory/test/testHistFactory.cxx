@@ -192,24 +192,24 @@ public:
       const MakeModelMode makeModelMode = std::get<0>(GetParam());
       {
          TFile example(_inputFile.c_str(), "RECREATE");
-         TH1F *data, *signal, *bkg1, *bkg2, *statUnc, *systUncUp, *systUncDo;
+         TH1D *data, *signal, *bkg1, *bkg2, *statUnc, *systUncUp, *systUncDo;
          data = signal = bkg1 = bkg2 = statUnc = systUncUp = systUncDo = nullptr;
          if (makeModelMode % 2 == kEquidistantBins) {
-            data = new TH1F("data", "data", 2, 1, 2);
-            signal = new TH1F("signal", "signal histogram (pb)", 2, 1, 2);
-            bkg1 = new TH1F("background1", "background 1 histogram (pb)", 2, 1, 2);
-            bkg2 = new TH1F("background2", "background 2 histogram (pb)", 2, 1, 2);
-            statUnc = new TH1F("background1_statUncert", "statUncert", 2, 1, 2);
-            systUncUp = new TH1F("shapeUnc_sigUp", "signal shape uncert.", 2, 1, 2);
-            systUncDo = new TH1F("shapeUnc_sigDo", "signal shape uncert.", 2, 1, 2);
+            data = new TH1D("data", "data", 2, 1, 2);
+            signal = new TH1D("signal", "signal histogram (pb)", 2, 1, 2);
+            bkg1 = new TH1D("background1", "background 1 histogram (pb)", 2, 1, 2);
+            bkg2 = new TH1D("background2", "background 2 histogram (pb)", 2, 1, 2);
+            statUnc = new TH1D("background1_statUncert", "statUncert", 2, 1, 2);
+            systUncUp = new TH1D("shapeUnc_sigUp", "signal shape uncert.", 2, 1, 2);
+            systUncDo = new TH1D("shapeUnc_sigDo", "signal shape uncert.", 2, 1, 2);
          } else if (makeModelMode % 2 == kCustomBins) {
-            data = new TH1F("data", "data", 2, _customBins);
-            signal = new TH1F("signal", "signal histogram (pb)", 2, _customBins);
-            bkg1 = new TH1F("background1", "background 1 histogram (pb)", 2, _customBins);
-            bkg2 = new TH1F("background2", "background 2 histogram (pb)", 2, _customBins);
-            statUnc = new TH1F("background1_statUncert", "statUncert", 2, _customBins);
-            systUncUp = new TH1F("shapeUnc_sigUp", "signal shape uncert.", 2, _customBins);
-            systUncDo = new TH1F("shapeUnc_sigDo", "signal shape uncert.", 2, _customBins);
+            data = new TH1D("data", "data", 2, _customBins);
+            signal = new TH1D("signal", "signal histogram (pb)", 2, _customBins);
+            bkg1 = new TH1D("background1", "background 1 histogram (pb)", 2, _customBins);
+            bkg2 = new TH1D("background2", "background 2 histogram (pb)", 2, _customBins);
+            statUnc = new TH1D("background1_statUncert", "statUncert", 2, _customBins);
+            systUncUp = new TH1D("shapeUnc_sigUp", "signal shape uncert.", 2, _customBins);
+            systUncDo = new TH1D("shapeUnc_sigDo", "signal shape uncert.", 2, _customBins);
          } else {
             // Harden the test and make clang-tidy happy:
             FAIL() << "This should not be reachable.";
@@ -563,26 +563,26 @@ TEST_P(HFFixture, HistFactoryJSONTool)
    RooArgSet const &globs = *mc->GetGlobalObservables();
    RooArgSet const &globsFromJson = *mcFromJson->GetGlobalObservables();
 
+   // The final parameters of alpha_syst2 and alpha_syst4 are very close to the
+   // pre-fit value zero. For the fit to converge reliably, the pre-fit values
+   // are set away from the minimum.
+   ws->var("alpha_syst2")->setVal(1.0);
+   ws->var("alpha_syst4")->setVal(-1.0);
+   wsFromJson.var("alpha_syst2")->setVal(1.0);
+   wsFromJson.var("alpha_syst4")->setVal(-1.0);
+
    using namespace RooFit;
    using Res = std::unique_ptr<RooFitResult>;
 
-   RooArgSet params;
-   RooArgSet initialParams;
-   pdf->getParameters(data->get(), params);
-   params.snapshot(initialParams);
-
    Res result{pdf->fitTo(*data, Strategy(1), Minos(*mc->GetParametersOfInterest()), GlobalObservables(globs),
                          PrintLevel(-1), Save())};
-   params.assign(initialParams);
 
    Res resultFromJson{pdfFromJson->fitTo(*dataFromJson, Strategy(1), Minos(*mcFromJson->GetParametersOfInterest()),
                                          GlobalObservables(globsFromJson), PrintLevel(-1), Save())};
 
    // Do also the reverse comparison to check that the set of constant parameters matches
-   // TODO: understand why the tolerance must be so high
-   double tol = 5e-2;
-   EXPECT_TRUE(result->isIdenticalNoCov(*resultFromJson, tol, tol));
-   EXPECT_TRUE(resultFromJson->isIdenticalNoCov(*result, tol, tol));
+   EXPECT_TRUE(result->isIdentical(*resultFromJson));
+   EXPECT_TRUE(resultFromJson->isIdentical(*result));
 }
 
 TEST_P(HFFixture, HS3ClosureLoop)
@@ -602,20 +602,20 @@ TEST_P(HFFixture, HS3ClosureLoop)
       RooJSONFactoryWSTool{*ws}.exportJSON(_name + "_2.json");
    }
 
-   RooWorkspace newws("new");
-   RooJSONFactoryWSTool newtool{newws};
+   RooWorkspace wsFromJson("new");
+   RooJSONFactoryWSTool newtool{wsFromJson};
    newtool.importJSONfromString(js);
 
-   std::string const &js3 = RooJSONFactoryWSTool{newws}.exportJSONtoString();
+   std::string const &js3 = RooJSONFactoryWSTool{wsFromJson}.exportJSONtoString();
 
    if (writeJsonFiles) {
-      RooJSONFactoryWSTool{newws}.exportJSON(_name + "_3.json");
+      RooJSONFactoryWSTool{wsFromJson}.exportJSON(_name + "_3.json");
    }
 
    // Chack that JSON > WS > JSON doesn't change the JSON
    EXPECT_EQ(js, js3) << "The JSON -> WS -> JSON roundtrip did not result in the original JSON!";
 
-   auto *newmc = dynamic_cast<RooStats::ModelConfig *>(newws.obj("ModelConfig"));
+   auto *newmc = dynamic_cast<RooStats::ModelConfig *>(wsFromJson.obj("ModelConfig"));
    EXPECT_TRUE(newmc != nullptr);
 
    RooAbsPdf *newpdf = newmc->GetPdf();
@@ -624,32 +624,32 @@ TEST_P(HFFixture, HS3ClosureLoop)
    RooAbsData *data = ws->data("obsData");
    EXPECT_TRUE(data != nullptr);
 
-   RooAbsData *newdata = newws.data("obsData");
+   RooAbsData *newdata = wsFromJson.data("obsData");
    EXPECT_TRUE(newdata != nullptr);
 
    RooArgSet const &globs = *mc->GetGlobalObservables();
    RooArgSet const &globsFromJson = *newmc->GetGlobalObservables();
 
+   // The final parameters of alpha_syst2 and alpha_syst4 are very close to the
+   // pre-fit value zero. For the fit to converge reliably, the pre-fit values
+   // are set away from the minimum.
+   ws->var("alpha_syst2")->setVal(1.0);
+   ws->var("alpha_syst4")->setVal(-1.0);
+   wsFromJson.var("alpha_syst2")->setVal(1.0);
+   wsFromJson.var("alpha_syst4")->setVal(-1.0);
+
    using namespace RooFit;
    using Res = std::unique_ptr<RooFitResult>;
 
-   RooArgSet params;
-   RooArgSet initialParams;
-   pdf->getParameters(data->get(), params);
-   params.snapshot(initialParams);
-
    Res result{pdf->fitTo(*data, Strategy(1), Minos(*mc->GetParametersOfInterest()), GlobalObservables(globs),
                          PrintLevel(-1), Save())};
-   params.assign(initialParams);
 
    Res resultFromJson{newpdf->fitTo(*newdata, Strategy(1), Minos(*newmc->GetParametersOfInterest()),
                                     GlobalObservables(globsFromJson), PrintLevel(-1), Save())};
 
    // Do also the reverse comparison to check that the set of constant parameters matches
-   // TODO: understand why the tolerance must be so high
-   double tol = 5e-2;
-   EXPECT_TRUE(result->isIdenticalNoCov(*resultFromJson, tol, tol));
-   EXPECT_TRUE(resultFromJson->isIdenticalNoCov(*result, tol, tol));
+   EXPECT_TRUE(result->isIdentical(*resultFromJson));
+   EXPECT_TRUE(resultFromJson->isIdentical(*result));
 }
 
 /// Fit the model to data, and check parameters.
