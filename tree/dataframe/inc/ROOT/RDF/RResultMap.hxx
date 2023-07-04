@@ -90,6 +90,8 @@ ROOT::RDF::Experimental::RResultMap<T> CloneResultAndAction(const ROOT::RDF::Exp
 
 namespace RDF {
 
+class RResultHandle;
+
 namespace Experimental {
 
 template <typename T>
@@ -111,6 +113,7 @@ class RResultMap {
    friend RResultMap ROOT::Internal::RDF::CloneResultAndAction<T>(const RResultMap<T> &inmap);
    friend std::unique_ptr<ROOT::Detail::RDF::RMergeableVariations<T>>
    ROOT::Detail::RDF::GetMergeableValue<T>(RResultMap<T> &rmap);
+   friend class ::ROOT::RDF::RResultHandle;
 
    // The preconditions are that results and keys have the same size, are ordered the same way, and keys are unique.
    RResultMap(std::shared_ptr<T> &&nominalResult, std::vector<std::shared_ptr<T>> &&variedResults,
