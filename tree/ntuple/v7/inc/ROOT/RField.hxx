@@ -601,7 +601,9 @@ public:
 
 /// The field for a class representing a collection of elements via `TVirtualCollectionProxy`.
 /// Objects of such type behave as collections that can be accessed through the corresponding member functions in
-/// `TVirtualCollectionProxy`. At a bare minimum, the user is required to provide an implementation for the following
+/// `TVirtualCollectionProxy`.
+/// The
+/// At a bare minimum, the user is required to provide an implementation for the following
 /// functions in `TVirtualCollectionProxy`: `HasPointers()`, `GetProperties()`, `GetValueClass()`, `GetType()`,
 /// `PushProxy()`, `PopProxy()`, `GetFunctionCreateIterators()`, `GetFunctionNext()`, and
 /// `GetFunctionDeleteTwoIterators()`.
@@ -724,7 +726,7 @@ public:
    }
 };
 
-/// The field for a class representing a collection of elements via `TVirtualCollectionProxy`.
+/// The field for a class representing a custom collections of elements via `TVirtualCollectionProxy`.
 /// Objects of such type behave as collections that can be accessed through the corresponding member functions in
 /// `TVirtualCollectionProxy`. At a bare minimum, the user is required to provide an implementation for the following
 /// functions in `TVirtualCollectionProxy`: `HasPointers()`, `GetProperties()`, `GetValueClass()`, `GetType()`,
