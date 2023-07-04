@@ -390,8 +390,7 @@ jobs:
       #     curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
       #     python3 get-pip.py
 
-      - name: Install dependencies
-        run: python3 -m pip install openstacksdk
+      
 
       - name: Update artifacts after push to release branch
         if:   github.event_name == 'push'
