@@ -57,7 +57,8 @@ class TScatterPainter extends TGraphPainter {
       scatter.fColor = obj.fColor;
       scatter.fSize = obj.fSize;
       scatter.fMargin = obj.fMargin;
-      scatter.fScale = obj.fScale;
+      scatter.fMinMarkerSize = obj.fMinMarkerSize;
+      scatter.fMaxMarkerSize = obj.fMaxMarkerSize;
       super._updateMembers(scatter.fGraph, obj.fGraph);
    }
 
@@ -95,6 +96,8 @@ class TScatterPainter extends TGraphPainter {
       if (maxc <= minc) maxc = minc + 1;
       if (maxs <= mins) maxs = mins + 1;
 
+      let scale = (scatter.fMaxMarkerSize - scatter.fMinMarkerSize) / (maxs - mins);
+
       fpainter.zmin = minc;
       fpainter.zmax = maxc;
 
@@ -110,7 +113,7 @@ class TScatterPainter extends TGraphPainter {
          let pnt = this.bins[i],
              grx = funcs.grx(pnt.x),
              gry = funcs.gry(pnt.y),
-             size = scatter.fScale * ((scatter.fSize[i] - mins) / (maxs - mins)),
+             size = scatter.fMinMarkerSize + scale * (scatter.fSize[i] - mins),
              color = this.fContour.getPaletteColor(this.fPalette, scatter.fColor[i]);
 
           let handle = new TAttMarkerHandler({ color, size, style: scatter.fMarkerStyle });

@@ -11,7 +11,7 @@ let version_id = 'dev';
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-let version_date = '4/07/2023';
+let version_date = '5/07/2023';
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -108351,7 +108351,8 @@ class TScatterPainter extends TGraphPainter$1 {
       scatter.fColor = obj.fColor;
       scatter.fSize = obj.fSize;
       scatter.fMargin = obj.fMargin;
-      scatter.fScale = obj.fScale;
+      scatter.fMinMarkerSize = obj.fMinMarkerSize;
+      scatter.fMaxMarkerSize = obj.fMaxMarkerSize;
       super._updateMembers(scatter.fGraph, obj.fGraph);
    }
 
@@ -108389,6 +108390,8 @@ class TScatterPainter extends TGraphPainter$1 {
       if (maxc <= minc) maxc = minc + 1;
       if (maxs <= mins) maxs = mins + 1;
 
+      let scale = (scatter.fMaxMarkerSize - scatter.fMinMarkerSize) / (maxs - mins);
+
       fpainter.zmin = minc;
       fpainter.zmax = maxc;
 
@@ -108404,7 +108407,7 @@ class TScatterPainter extends TGraphPainter$1 {
          let pnt = this.bins[i],
              grx = funcs.grx(pnt.x),
              gry = funcs.gry(pnt.y),
-             size = scatter.fScale * ((scatter.fSize[i] - mins) / (maxs - mins)),
+             size = scatter.fMinMarkerSize + scale * (scatter.fSize[i] - mins),
              color = this.fContour.getPaletteColor(this.fPalette, scatter.fColor[i]);
 
           let handle = new TAttMarkerHandler({ color, size, style: scatter.fMarkerStyle });
