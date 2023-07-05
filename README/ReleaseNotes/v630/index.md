@@ -42,6 +42,7 @@ that were deprecated in v6.02/00.
 - The deprecated `RooAbsPdf::paramOn()` overload that directly takes a formatting string was removed. Please take the overload that uses command arguments.
 - The `RooCatType` class was deprecated in ROOT 6.22 and its original `RooCatType.h` header is now removed. If you still need access to this class, please include `RooFitLegacy/RooCatTypeLegacy.h`.
 - The `RooAbsString` that was only an alias for `RooStringVar` got removed.
+- The `RooDataWeightedAverage` is now deprecated and will be removed in 6.32. It was only supposed to be an implementation detail of RooFits plotting that is now not necessary anymore.
 
 ## Core Libraries
 
