@@ -66,6 +66,36 @@ def _create_rdf_experimental_distributed_module(parent):
     return DistRDF.create_distributed_module(parent)
 
 
+def _distrdf_compatible_rungraphs(distrdf_rungraphs, rdf_rungraphs):
+    """
+    Create a callable that correctly dispatches either to the C++ version
+    or the dedicated DistRDF version of RunGraphs.
+    """
+
+    def rungraphs(handles):
+        if len(handles) > 0 and hasattr(handles[0], "proxied_node"):
+            return distrdf_rungraphs(handles)
+        else:
+            return rdf_rungraphs(handles)
+
+    return rungraphs
+
+
+def _distrdf_compatible_variationsfor(distrdf_variationsfor, rdf_variationsfor):
+    """
+    Create a callable that correctly dispatches either to the C++ version
+    or the dedicated DistRDF version of RunGraphs.
+    """
+
+    def variationsfor(resptr):
+        if hasattr(resptr, "proxied_node"):
+            return distrdf_variationsfor(resptr)
+        else:
+            return rdf_variationsfor(resptr)
+
+    return variationsfor
+
+
 def _subimport(name):
     # type: (str) -> types.ModuleType
     """
@@ -333,6 +363,8 @@ class ROOTFacade(types.ModuleType):
                 try:
                     # Inject Experimental.Distributed package into namespace RDF if available
                     ns.Experimental.Distributed = _create_rdf_experimental_distributed_module(ns.Experimental)
+                    ns.RunGraphs = _distrdf_compatible_rungraphs(ns.Experimental.Distributed.RunGraphs, ns.RunGraphs)
+                    ns.Experimental.VariationsFor = _distrdf_compatible_variationsfor(ns.Experimental.Distributed.VariationsFor, ns.Experimental.VariationsFor)
                 except ImportError:
                     pass
         except:
