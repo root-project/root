@@ -660,9 +660,11 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
 
          TString f1opt = iter.GetOption();
 
-         if (fTF1UseSave && (f1->IsA() == TF1::Class() || f1->IsA() == TF2::Class())) {
-            f1->Save(0, 0, 0, 0, 0, 0);
-            f1opt.Append(";force_saved");
+         if (f1->IsA() == TF1::Class() || f1->IsA() == TF2::Class()) {
+            if (paddata.IsBatchMode() || fTF1UseSave)
+               f1->Save(0, 0, 0, 0, 0, 0);
+            if (fTF1UseSave)
+               f1opt.Append(";force_saved");
          }
 
          if (first_obj) {
@@ -796,7 +798,7 @@ void TWebCanvas::CheckDataToSend(unsigned connid)
 
          buf = "SNAP6:"s + std::to_string(fCanvVersion) + ":"s;
 
-         TCanvasWebSnapshot holder(IsReadOnly());
+         TCanvasWebSnapshot holder(IsReadOnly(), true, false); // readonly, set ids, batchmode
 
          // scripts send only when canvas drawn for the first time
          if (!conn.fSendVersion)
@@ -1785,7 +1787,11 @@ Bool_t TWebCanvas::WaitWhenCanvasPainted(Long64_t ver)
    return kFALSE;
 }
 
-TString TWebCanvas::CreatePadJSON(TPad *pad, Int_t json_compression)
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Create JSON painting output for given pad
+/// Produce JSON can be used for offline drawing with JSROOT
+
+TString TWebCanvas::CreatePadJSON(TPad *pad, Int_t json_compression, Bool_t batchmode)
 {
    TString res;
    if (!pad)
@@ -1793,11 +1799,11 @@ TString TWebCanvas::CreatePadJSON(TPad *pad, Int_t json_compression)
 
    TCanvas *c = dynamic_cast<TCanvas *>(pad);
    if (c) {
-      res = CreateCanvasJSON(c, json_compression);
+      res = CreateCanvasJSON(c, json_compression, batchmode);
    } else {
       auto imp = std::make_unique<TWebCanvas>(pad->GetCanvas(), pad->GetName(), 0, 0, 1000, 500);
 
-      TPadWebSnapshot holder(true, false); // readonly, no ids
+      TPadWebSnapshot holder(true, false, batchmode); // readonly, no ids, batchmode
 
       imp->CreatePadSnapshot(holder, pad, 0, [&res, json_compression](TPadWebSnapshot *snap) {
          res = TBufferJSON::ToJSON(snap, json_compression);
@@ -1811,7 +1817,7 @@ TString TWebCanvas::CreatePadJSON(TPad *pad, Int_t json_compression)
 /// Create JSON painting output for given canvas
 /// Produce JSON can be used for offline drawing with JSROOT
 
-TString TWebCanvas::CreateCanvasJSON(TCanvas *c, Int_t json_compression)
+TString TWebCanvas::CreateCanvasJSON(TCanvas *c, Int_t json_compression, Bool_t batchmode)
 {
    TString res;
 
@@ -1821,7 +1827,7 @@ TString TWebCanvas::CreateCanvasJSON(TCanvas *c, Int_t json_compression)
    {
       auto imp = std::make_unique<TWebCanvas>(c, c->GetName(), 0, 0, 1000, 500);
 
-      TCanvasWebSnapshot holder(true, false); // readonly, no ids
+      TCanvasWebSnapshot holder(true, false, batchmode); // readonly, no ids, batchmode
 
       imp->CreatePadSnapshot(holder, c, 0, [&res, json_compression](TPadWebSnapshot *snap) {
          res = TBufferJSON::ToJSON(snap, json_compression);
@@ -1833,11 +1839,17 @@ TString TWebCanvas::CreateCanvasJSON(TCanvas *c, Int_t json_compression)
 
 //////////////////////////////////////////////////////////////////////////////////////////
 /// Create JSON painting output for given canvas and store into the file
-/// See TBufferJSON::ExportToFile() method for more details
+/// See TBufferJSON::ExportToFile() method for more details about option
+/// If option string starts with symbol 'b', JSON for batch mode will be generated
 
 Int_t TWebCanvas::StoreCanvasJSON(TCanvas *c, const char *filename, const char *option)
 {
    Int_t res = 0;
+   Bool_t batchmode = kFALSE;
+   if (option && *option == 'b') {
+      batchmode = kTRUE;
+      ++option;
+   }
 
    if (!c)
       return res;
@@ -1845,7 +1857,7 @@ Int_t TWebCanvas::StoreCanvasJSON(TCanvas *c, const char *filename, const char *
    {
       auto imp = std::make_unique<TWebCanvas>(c, c->GetName(), 0, 0, 1000, 500);
 
-      TCanvasWebSnapshot holder(true, false); // readonly, no ids
+      TCanvasWebSnapshot holder(true, false, batchmode); // readonly, no ids, batchmode
 
       imp->CreatePadSnapshot(holder, c, 0, [&res, filename, option](TPadWebSnapshot *snap) {
          res = TBufferJSON::ExportToFile(filename, snap, option);
@@ -1864,7 +1876,7 @@ bool TWebCanvas::ProduceImage(TPad *pad, const char *fileName, Int_t width, Int_
    if (!pad)
       return false;
 
-   auto json = TWebCanvas::CreatePadJSON(pad, TBufferJSON::kNoSpaces + TBufferJSON::kSameSuppression);
+   auto json = CreatePadJSON(pad, TBufferJSON::kNoSpaces + TBufferJSON::kSameSuppression, kTRUE);
    if (!json.Length())
       return false;
 
