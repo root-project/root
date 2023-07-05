@@ -2123,32 +2123,6 @@ class RField<std::set<ItemT>> : public RSetField {
    using ContainerT = typename std::set<ItemT>;
 
 protected:
-   std::size_t AppendImpl(const void *from) final
-   {
-      auto typedValue = static_cast<const ContainerT *>(from);
-      auto count = typedValue->size();
-      size_t nbytes = 0;
-      for (auto item : *typedValue) {
-         nbytes += fSubFields[0]->Append(&item);
-      }
-      this->fNWritten += count;
-      fColumns[0]->Append(&this->fNWritten);
-      return nbytes + fColumns[0]->GetElement()->GetPackedSize();
-   }
-
-   void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final
-   {
-      auto typedValue = static_cast<ContainerT *>(to);
-      RClusterIndex collectionStart;
-      ClusterSize_t nItems;
-      fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, &nItems);
-      typedValue->clear();
-      ItemT item;
-      for (unsigned i = 0; i < nItems; ++i) {
-         fSubFields[0]->Read(collectionStart + i, &item);
-         typedValue->insert(item);
-      }
-   }
    void GenerateValue(void *where) const final { new (where) ContainerT(); }
    void DestroyValue(void *objPtr, bool dtorOnly = false) const final
    {
