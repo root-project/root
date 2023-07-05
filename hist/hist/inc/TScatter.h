@@ -38,7 +38,8 @@ protected:
    TGraph    *fGraph{nullptr};     ///< Pointer to graph holding X and Y positions
    Double_t  *fColor{nullptr};     ///< [fNpoints] array of colors
    Double_t  *fSize{nullptr};      ///< [fNpoints] array of marker sizes
-   Double_t   fScale{5.};          ///< Largest marker size used to paint the markers
+   Double_t   fMaxMarkerSize{5.};  ///< Largest marker size used to paint the markers
+   Double_t   fMinMarkerSize{1.};  ///< Smallest marker size used to paint the markers
    Double_t   fMargin{.1};         ///< Margin around the plot in %
 
 public:
@@ -49,14 +50,16 @@ public:
 
    Int_t     DistancetoPrimitive(Int_t px, Int_t py) override;
    void      ExecuteEvent(Int_t event, Int_t px, Int_t py) override;
-   Double_t *GetColor()  const {return fColor;}  ///< Get the array of colors
-   Double_t *GetSize()   const {return fSize;}   ///< Get the array of marker sizes
-   Double_t  GetMargin() const {return fMargin;} ///< Set the margin around the plot in %
-   Double_t  GetScale()  const {return fScale;}  ///< Get the largest marker size used to paint the markers
-   TGraph   *GetGraph()  const {return fGraph;}  ///< Get the graph holding X and Y positions
-   TH2F     *GetHistogram() const;               ///< Get the graph histogram used for drawing axis
+   Double_t *GetColor()  const {return fColor;}                ///< Get the array of colors
+   Double_t *GetSize()   const {return fSize;}                 ///< Get the array of marker sizes
+   Double_t  GetMargin() const {return fMargin;}               ///< Set the margin around the plot in %
+   Double_t  GetMaxMarkerSize() const {return fMaxMarkerSize;} ///< Get the largest marker size used to paint the markers
+   Double_t  GetMinMarkerSize() const {return fMinMarkerSize;} ///< Get the smallest marker size used to paint the markers
+   TGraph   *GetGraph()  const {return fGraph;}                ///< Get the graph holding X and Y positions
+   TH2F     *GetHistogram() const;                             ///< Get the graph histogram used for drawing axis
 
-   void      SetScale(Double_t scale) {fScale = scale;}     ///< Set the largest marker size used to paint the markers
+   void      SetMaxMarkerSize(Double_t max) {fMaxMarkerSize = max;} ///< Set the largest marker size used to paint the markers
+   void      SetMinMarkerSize(Double_t min) {fMinMarkerSize = min;} ///< Set the smallest marker size used to paint the markers
    void      SetMargin(Double_t);
    void      SetHistogram(TH2F *h) {fHistogram = h;}
    void      Print(Option_t *chopt="") const override;
@@ -64,7 +67,7 @@ public:
    void      Paint(Option_t *chopt="") override;
 
 
-   ClassDefOverride(TScatter,1)  //A scatter plot
+   ClassDefOverride(TScatter,2)  //A scatter plot
 };
 #endif
 
