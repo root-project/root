@@ -226,8 +226,8 @@ public:
    void SetAsyncMode(Bool_t on = kTRUE) { fAsyncMode = on; }
    Bool_t IsAsyncMode() const { return fAsyncMode; }
 
-   static TString CreatePadJSON(TPad *pad, Int_t json_compression = 0);
-   static TString CreateCanvasJSON(TCanvas *c, Int_t json_compression = 0);
+   static TString CreatePadJSON(TPad *pad, Int_t json_compression = 0, Bool_t batchmode = kFALSE);
+   static TString CreateCanvasJSON(TCanvas *c, Int_t json_compression = 0, Bool_t batchmode = kFALSE);
    static Int_t StoreCanvasJSON(TCanvas *c, const char *filename, const char *option = "");
 
    static bool ProduceImage(TPad *pad, const char *filename, Int_t width = 0, Int_t height = 0);

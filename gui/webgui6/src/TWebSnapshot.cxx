@@ -68,7 +68,7 @@ TWebSnapshot &TPadWebSnapshot::NewPrimitive(TObject *obj, const std::string &opt
 
 TPadWebSnapshot &TPadWebSnapshot::NewSubPad()
 {
-   auto res = new TPadWebSnapshot(IsReadOnly(), IsSetObjectIds());
+   auto res = new TPadWebSnapshot(IsReadOnly(), IsSetObjectIds(), IsBatchMode());
    fPrimitives.emplace_back(res);
    return *res;
 }
