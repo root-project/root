@@ -2573,7 +2573,7 @@ ROOT::Experimental::RSetField::RSetField(std::string_view fieldName, std::unique
 {
    if (!fProxy->GetCollectionClass()->HasDictionary()) {
       throw RException(R__FAIL("RField: no dictionary loaded for collection type " +
-                               GetNormalizedType(fProxy->GetCollectionClass()->GetName()).first));
+                               GetNormalizedTypeName(fProxy->GetCollectionClass()->GetName())));
    }
 }
 
