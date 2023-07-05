@@ -322,11 +322,9 @@ TEST(RNTuple, StdSet)
    {
       auto model = RNTupleModel::Create();
       auto set_field = model->MakeField<std::set<float>>({"mySet", "float set"});
-      // For templated set fields, no dictionary should be necessary.
       auto set_field2 = model->MakeField<std::set<std::pair<int, CustomStruct>>>({"mySet2"});
 
       auto mySet3 = RFieldBase::Create("mySet3", "std::set<std::string>").Unwrap();
-      // This field type has a dictionary entry, so reading and writing should be possible without any problems.
       auto mySet4 = RFieldBase::Create("mySet4", "std::set<std::set<char>>").Unwrap();
 
       model->AddField(std::move(mySet3));
