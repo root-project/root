@@ -75,7 +75,8 @@ TScatter::TScatter(Int_t n)
 
    memset(fColor, 0, fNpoints * sizeof(Double_t));
    memset(fSize, 0, fNpoints * sizeof(Double_t));
-   fScale  = 5.;
+   fMaxMarkerSize = 5.;
+   fMinMarkerSize = 1.;
    fMargin = 0.1;
 }
 
@@ -101,7 +102,8 @@ TScatter::TScatter(Int_t n, const Double_t *x, const Double_t *y, const Double_t
       memcpy(fSize, size, bufsize);
    }
 
-   fScale  = 5.;
+   fMaxMarkerSize = 5.;
+   fMinMarkerSize = 1.;
    fMargin = 0.1;
 }
 
@@ -254,7 +256,8 @@ void TScatter::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    out << "   scat->SetName(" << quote << GetName() << quote << ");" << std::endl;
    out << "   scat->SetTitle(" << quote << GetTitle() << quote << ");" << std::endl;
    out << "   scat->SetMargin(" << GetMargin() << ");" << std::endl;
-   out << "   scat->SetScale(" << GetScale() << ");" << std::endl;
+   out << "   scat->SetMinMarkerSize(" << GetMinMarkerSize() << ");" << std::endl;
+   out << "   scat->SetMaxMarkerSize(" << GetMaxMarkerSize() << ");" << std::endl;
 
    SaveFillAttributes(out, "scat", 0, 1001);
    SaveLineAttributes(out, "scat", 1, 1, 1);

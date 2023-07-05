@@ -4335,12 +4335,13 @@ void TGraphPainter::PaintScatter(TScatter *theScatter, Option_t* chopt)
 
    if (opt.Contains("A")) optionAxis  = 1;  else optionAxis  = 0;
 
-   double *theX     = theScatter->GetGraph()->GetX();
-   double *theY     = theScatter->GetGraph()->GetY();
-   int n            = theScatter->GetGraph()->GetN();
-   double *theColor = theScatter->GetColor();
-   double *theSize  = theScatter->GetSize();
-   double scale     = theScatter->GetScale();
+   double *theX         = theScatter->GetGraph()->GetX();
+   double *theY         = theScatter->GetGraph()->GetY();
+   int n                = theScatter->GetGraph()->GetN();
+   double *theColor     = theScatter->GetColor();
+   double *theSize      = theScatter->GetSize();
+   double MinMarkerSize = theScatter->GetMinMarkerSize();
+   double MaxMarkerSize = theScatter->GetMaxMarkerSize();
 
    double minx =  DBL_MAX;
    double maxx = -DBL_MAX;
@@ -4420,7 +4421,8 @@ void TGraphPainter::PaintScatter(TScatter *theScatter, Option_t* chopt)
    }
    theScatter->SetMarkerColor(theScatter->GetMarkerColor());
    theScatter->TAttMarker::Modify();
-   double x,y,c;
+   double x,y,c,ms;
+   int nc;
    for (int i=0; i<n; i++) {
       if (theColor) {
          if (logz) {
@@ -4429,9 +4431,14 @@ void TGraphPainter::PaintScatter(TScatter *theScatter, Option_t* chopt)
          } else {
             c = theColor[i];
          }
-         theScatter->SetMarkerColor(gStyle->GetColorPalette(((c-minc)/(maxc-minc))*nbcol));
+         nc = TMath::Nint(((c-minc)/(maxc-minc))*(nbcol-1));
+         if (nc > nbcol-1) nc = nbcol-1;
+         theScatter->SetMarkerColor(gStyle->GetColorPalette(nc));
       }
-      if (theSize)  theScatter->SetMarkerSize(scale*((theSize[i]-mins)/(maxs-mins)));
+      if (theSize)  {
+         ms = (MaxMarkerSize-MinMarkerSize)*((theSize[i]-mins)/(maxs-mins))+MinMarkerSize;
+         theScatter->SetMarkerSize(ms);
+      }
       if (theColor || theSize) theScatter->TAttMarker::Modify();
       if (logx) {
         if (theX[i]>0) x = log10(theX[i]);
