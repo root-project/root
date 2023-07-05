@@ -2095,10 +2095,7 @@ bool SourceManager::isBeforeInTranslationUnit(SourceLocation LHS,
       return LIsScratch;
     return LOffs.second < ROffs.second;
   }
-  //AXEL: Work around diags from include chains not rooted in main file.
-  //AXEL: llvm_unreachable("Unsortable locations found");
-  assert(0 && "Unsortable locations found");
-  return LOffs.first < ROffs.first;
+  llvm_unreachable("Unsortable locations found");
 }
 
 std::pair<bool, bool> SourceManager::isInTheSameTranslationUnit(
