@@ -1434,16 +1434,17 @@ Bool_t TBranch::SupportsBulkRead() const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Read as many events as possible into the given buffer, using zero-copy
-/// mechanisms.
+/// \brief Read a basket of events into the given buffer with byte swapping.
 ///
-/// Returns -1 in case of a failure.  On success, returns a (non-zero) number of
-/// events of the type held by this branch currently in the buffer.
+/// \return On success, the number of events of the type held by this branch
+///         that have been read into the buffer. -1 on failure.
 ///
 /// On success, the caller should be able to access the contents of buf as they
 /// are with:
 ///
-///     static_cast<T*>(buf.GetCurrent())
+/// ~~~{.cpp}
+/// static_cast<T*>(buf.GetCurrent())
+/// ~~~
 ///
 /// where T is the type stored on this branch.
 ///
@@ -1453,19 +1454,21 @@ Bool_t TBranch::SupportsBulkRead() const {
 /// the number of elements corresponding to each entries.
 ///
 /// For each entry the number of elements is the multiplication of
-///    TLeaf *leaf = dynamic_cast<TLeaf*>(branch->GetListOfLeaves()->At(0))
-///    auto len = leaf->GetLen();
+/// 
+/// ~~~{.cpp}
+/// TLeaf *leaf = static_cast<TLeaf*>(branch->GetListOfLeaves()->At(0));
+/// auto len = leaf->GetLen();
+/// ~~~
+///
 /// and the value in the BranchCount corresponding to that entry (can be obtained
-/// from branch->GetBranchCount())
+/// from `branch->GetBranchCount()`).
 ///
+/// \note This interface is not meant to be exposed to end users, but rather it should
+///       be wrapped by higher-level interfaces.
 ///
+/// \note See TBranch::GetEntriesSerialized() for an alternative that does not
+///       perform byte swapping (useful to save one pass over data in some cases).
 ///
-/// NOTES:
-/// - This interface is meant to be used by higher-level, type-safe wrappers, not
-///   by end-users.
-/// - This only returns events
-///
-
 Int_t TBranch::GetBulkEntries(Long64_t entry, TBuffer &user_buf)
 {
    // TODO: eventually support multiple leaves.
@@ -1544,18 +1547,19 @@ Int_t TBranch::GetBulkEntries(Long64_t entry, TBuffer &user_buf)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Read as many events as possible into the given buffer, using zero-copy
-/// mechanisms (e.g. no de-seriralization or byte-swaps are performed).
+/// \brief Read a basket of events into the given buffer without byte swapping.
 ///
-/// Returns -1 in case of a failure.  On success, returns a (non-zero) number of
-/// events of the type held by this branch currently in the buffer.
+/// \return On success, the number of events of the type held by this branch
+///         that have been read into the buffer. -1 on failure.
 ///
 /// On success, the caller still need to deserialize the content.  For example for
 /// a scalar branch and `N` the return value (i.e. number of entries)
 ///
-///     rawdata = static_cast<char*>(buf.GetCurrent());
-///     for (std::size_t i = 0u; i < N; ++i, ++target)
-///         frombuf(rawdata, target); // `frombuf` also advances the `rawdata` pointer
+/// ~~~{.cpp}
+/// rawdata = static_cast<char*>(buf.GetCurrent());
+/// for (std::size_t i = 0u; i < N; ++i, ++target)
+///     frombuf(rawdata, target); // `frombuf` also advances the `rawdata` pointer
+/// ~~~
 ///
 /// where target is a pointer or array to the type stored on this branch.
 ///
@@ -1565,14 +1569,19 @@ Int_t TBranch::GetBulkEntries(Long64_t entry, TBuffer &user_buf)
 /// the number of elements corresponding to each entries.
 ///
 /// For each entry the number of elements is the multiplication of
-///    TLeaf *leaf = dynamic_cast<TLeaf*>(branch->GetListOfLeaves()->At(0))
-///    auto len = leaf->GetLen();
-/// and the value in the BranchCount corresponding to that entry (can be obtained
-/// from branch->GetBranchCount())
 ///
-/// NOTES:
-/// - This interface is meant to be used by higher-level, type-safe wrappers, not
-///   by end-users.
+/// ~~~{.cpp}
+/// TLeaf *leaf = dynamic_cast<TLeaf*>(branch->GetListOfLeaves()->At(0));
+/// auto len = leaf->GetLen();
+/// ~~~
+///
+/// and the value in the BranchCount corresponding to that entry (can be obtained
+/// from `branch->GetBranchCount()`).
+///
+/// \note This interface is not meant to be exposed to end users, but rather it should
+///       be wrapped by higher-level interfaces.
+///
+/// \note See TBranch::GetBulkEntries() for an alternative that also performs byte swapping.
 ///
 Int_t TBranch::GetEntriesSerialized(Long64_t entry, TBuffer &user_buf, TBuffer *count_buf)
 {
