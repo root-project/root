@@ -30,9 +30,13 @@ plot option.
 
 **/
 
+#define __ROOFIT_SUPPRESS_ROODATAWEIGHTEDAVERAGE_DEPRECATION_WARNING
+// At least for building the implementation we have to suppress the deprecation warning
+#include "RooDataWeightedAverage.h"
+#undef __ROOFIT_SUPPRESS_ROODATAWEIGHTEDAVERAGE_DEPRECATION_WARNING
+
 #include "Riostream.h"
 
-#include "RooDataWeightedAverage.h"
 #include "RooAbsData.h"
 #include "RooAbsPdf.h"
 #include "RooCmdConfig.h"
