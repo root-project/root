@@ -601,12 +601,8 @@ public:
 
 /// The field for a class representing a collection of elements via `TVirtualCollectionProxy`.
 /// Objects of such type behave as collections that can be accessed through the corresponding member functions in
-/// `TVirtualCollectionProxy`.
-/// The
-/// At a bare minimum, the user is required to provide an implementation for the following
-/// functions in `TVirtualCollectionProxy`: `HasPointers()`, `GetProperties()`, `GetValueClass()`, `GetType()`,
-/// `PushProxy()`, `PopProxy()`, `GetFunctionCreateIterators()`, `GetFunctionNext()`, and
-/// `GetFunctionDeleteTwoIterators()`.
+/// `TVirtualCollectionProxy`. For STL collections, these proxies are provided. Custom classes need to implement the
+/// corresponding member functions in `TVirtualCollectionProxy`.
 ///
 /// The collection proxy for a given class can be set via `TClass::CopyCollectionProxy()`.
 class RProxiedCollectionField : public Detail::RFieldBase {
@@ -726,12 +722,10 @@ public:
    }
 };
 
-/// The field for a class representing a custom collections of elements via `TVirtualCollectionProxy`.
-/// Objects of such type behave as collections that can be accessed through the corresponding member functions in
-/// `TVirtualCollectionProxy`. At a bare minimum, the user is required to provide an implementation for the following
-/// functions in `TVirtualCollectionProxy`: `HasPointers()`, `GetProperties()`, `GetValueClass()`, `GetType()`,
-/// `PushProxy()`, `PopProxy()`, `GetFunctionCreateIterators()`, `GetFunctionNext()`, and
-/// `GetFunctionDeleteTwoIterators()`.
+/// The field for a class representing a custom collections of elements via `TVirtualCollectionProxy`. At a bare
+/// minimum, the user is required to provide an implementation for the following functions in `TVirtualCollectionProxy`:
+/// `HasPointers()`, `GetProperties()`, `GetValueClass()`, `GetType()`, `PushProxy()`, `PopProxy()`,
+/// `GetFunctionCreateIterators()`, `GetFunctionNext()`, and `GetFunctionDeleteTwoIterators()`.
 ///
 /// The collection proxy for a given class can be set via `TClass::CopyCollectionProxy()`.
 class RCollectionClassField : public RProxiedCollectionField {

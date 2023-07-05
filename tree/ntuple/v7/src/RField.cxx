@@ -2408,6 +2408,10 @@ void ROOT::Experimental::RVariantField::CommitCluster()
 ROOT::Experimental::RSetField::RSetField(std::string_view fieldName, std::unique_ptr<Detail::RFieldBase> itemField)
    : ROOT::Experimental::RProxiedCollectionField(fieldName, "std::set<" + itemField->GetType() + ">")
 {
+   if (!fProxy->GetCollectionClass()->HasDictionary()) {
+      throw RException(R__FAIL("RField: no dictionary loaded for collection type " +
+                               GetNormalizedType(fProxy->GetCollectionClass()->GetName()).first));
+   }
 }
 
 std::unique_ptr<ROOT::Experimental::Detail::RFieldBase>
@@ -2419,10 +2423,6 @@ ROOT::Experimental::RSetField::CloneImpl(std::string_view newName) const
 
 void ROOT::Experimental::RSetField::ReadGlobalImpl(NTupleSize_t globalIndex, void *to)
 {
-   if (!fProxy->GetCollectionClass()->HasDictionary()) {
-      throw RException(R__FAIL("RField: no dictionary loaded for collection type " + GetNormalizedTypeName(fProxy->GetCollectionClass()->GetName())));
-   }
-
    ClusterSize_t nItems;
    RClusterIndex collectionStart;
    fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, &nItems);
