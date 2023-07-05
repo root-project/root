@@ -96,6 +96,7 @@ public:
    /// Get an RResultPtr to the encapsulated object.
    /// \tparam T Type of the action result
    template <class T>
+   R__DEPRECATED(6, 32, "Please use RResultPtr directly and only cast to RResultHandle in order to call RunGraphs.")
    RResultPtr<T> GetResultPtr()
    {
       CheckType(typeid(T));
