@@ -133,7 +133,7 @@ class RPavePainter extends RObjectPainter {
       this.v7AttrChange(changes, 'height', this.pave_height / rect.height);
       this.v7SendAttrChanges(changes, false); // do not invoke canvas update on the server
 
-      this.draw_g.select('rect')
+      this.draw_g.selectChild('rect')
                  .attr('width', this.pave_width)
                  .attr('height', this.pave_height);
 
@@ -407,7 +407,7 @@ class RHistStatsPainter extends RPavePainter {
       // for characters like 'p' or 'y' several more pixels required to stay in the box when drawn in last line
       let stepy = height / nlines, has_head = false, margin_x = 0.02 * width;
 
-      let text_g = this.draw_g.select('.statlines');
+      let text_g = this.draw_g.selectChild('.statlines');
       if (text_g.empty())
          text_g = this.draw_g.append('svg:g').attr('class', 'statlines');
       else

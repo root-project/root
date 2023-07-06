@@ -1804,8 +1804,16 @@ class HierarchyPainter extends BasePainter {
                   sett.opts.unshift('');
             }
 
-            if (sett.opts)
-               menu.addDrawMenu('Draw', sett.opts, arg => this.display(itemname, arg));
+            if (sett.opts) {
+               menu.addDrawMenu('Draw', sett.opts, arg => this.display(itemname, arg),
+                                'Draw item in the new frame');
+
+               let active_frame = this.disp?.getActiveFrame();
+
+               if (!sett.noappend && active_frame && (getElementCanvPainter(active_frame) || getElementMainPainter(active_frame)))
+                  menu.addDrawMenu('Superimpose', sett.opts, arg => this.dropItem(itemname, active_frame, arg),
+                                   'Superimpose item with drawing on active frame');
+            }
 
             if (fileprop && sett.opts && !fileprop.localfile) {
                let filepath = qualifyURL(fileprop.fileurl);
@@ -1823,7 +1831,8 @@ class HierarchyPainter extends BasePainter {
                   arg0 += '&with_credentials';
 
                menu.addDrawMenu('Draw in new tab', sett.opts,
-                                arg => window.open(`${source_dir}?${arg0}&${filepath}&opt=${arg}`));
+                                arg => window.open(`${source_dir}?${arg0}&${filepath}&opt=${arg}`),
+                                'Draw item in the new browser tab or window');
             }
 
             if ((sett.expand || sett.get_expand) && !('_childs' in hitem) && (hitem._more || !('_more' in hitem)))
@@ -2051,7 +2060,7 @@ class HierarchyPainter extends BasePainter {
       }).on('drop', function(ev) {
          d3_select(this).classed('jsroot_drag_area', false);
          let itemname = ev.dataTransfer.getData('item');
-         if (itemname) h.dropItem(itemname, this.getAttribute('id'));
+         if (itemname) h.dropItem(itemname, this);
       });
    }
 
@@ -2907,9 +2916,10 @@ class HierarchyPainter extends BasePainter {
                                               (this.isMonitoring() ? `&monitoring=${this.getMonitoringInterval()}` : '') +
                                               (arg ? `&opt=${arg}` : '')));
 
-      if (sett.opts && (sett.opts.length > 0) && root_type && (node._can_draw !== false))
+      if (sett.opts?.length && root_type && (node._can_draw !== false))
          menu.addDrawMenu('Draw as png', sett.opts,
-                           arg => window.open(onlineprop.server + onlineprop.itemname + '/root.png?w=600&h=400' + (arg ? '&opt=' + arg : '')));
+                           arg => window.open(onlineprop.server + onlineprop.itemname + '/root.png?w=600&h=400' + (arg ? '&opt=' + arg : '')),
+                           'Request PNG image from the server');
 
       if ('_player' in node)
          menu.add('Player', () => this.player(itemname));

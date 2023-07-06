@@ -1155,7 +1155,7 @@ class TAxisPainter extends ObjectPainter {
       this.lineatt.not_standard = true;
 
       if (!this.is_gaxis || (this.name === 'zaxis')) {
-         axis_g = layer.select(`.${this.name}_container`);
+         axis_g = layer.selectChild(`.${this.name}_container`);
          if (axis_g.empty())
             axis_g = layer.append('svg:g').attr('class', `${this.name}_container`);
          else

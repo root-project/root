@@ -10,6 +10,15 @@
 6. Provide "Bring to front" menu command for different objects like pave, box, marker, ...
 7. Handle "dark mode" in geom painter - automatically adjust background
 8. Change `TF1` and `TF2` drawing - always convert into histogram, support TWebCanvas, handle log scales
+9. Add "Superimpose" menu command in hierarchy - let select draw option when append item to pad
+
+
+## Changes in 7.4.1
+1. Fix - context menu position on lego plots
+2. Fix - add missing math functions Chebyshev0 and normalized Gaus
+3. Fix - correctly render TPolyLine3D
+4. Fix - properly add interactive resize elements for paves and frame
+5. Fix - drag and drop handling on tabs layout
 
 
 ## Changes in 7.4.0
