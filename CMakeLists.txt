@@ -212,10 +212,10 @@ function(relatedrepo_GetClosestMatch)
   # Finally, try upstream using the closest head/tag below the parent commit of the current head
   execute_process(COMMAND ${GIT_EXECUTABLE} --git-dir=${CMAKE_CURRENT_SOURCE_DIR}/.git
                   describe --all --abbrev=0 HEAD^
-                  OUTPUT_VARIABLE closest_ref OUTPUT_STRIP_TRAILING_WHITESPACE)
-  string(REGEX REPLACE "^(heads|tags)/" "" candidate_head ${closest_ref})
+                  OUTPUT_VARIABLE closest_ref ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
+  string(REGEX REPLACE "^(heads|tags)/" "" candidate_head "${closest_ref}")
   execute_process(COMMAND ${GIT_EXECUTABLE} ls-remote --heads --tags
-                  ${__UPSTREAM_PREFIX}/${__REPO_NAME} ${candidate_head} OUTPUT_VARIABLE matching_refs)
+                  ${__UPSTREAM_PREFIX}/${__REPO_NAME} "${candidate_head}" OUTPUT_VARIABLE matching_refs)
   if(NOT "${matching_refs}" STREQUAL "")
     set(${__FETCHREF_VARIABLE} ${candidate_head} PARENT_SCOPE)
     return()
