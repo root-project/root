@@ -397,6 +397,7 @@ __rooglobal__ void computePower(BatchesHandle batches)
    auto b1 = batches.extraArg(2);
    auto b2 =  batches.extraArg(3);
    auto x = batches[0];
+   
    for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
       batches._output[i] = a1 * pow(x[i],b1) + a2 * pow(x[i],b2);
    }   
