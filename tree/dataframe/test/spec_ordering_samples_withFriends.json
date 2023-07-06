@@ -1,0 +1,23 @@
+{
+    "samples": {
+       "sample2": {
+          "trees": ["subTree"],
+          "files": ["FromSpecTestFile2.root"]
+       },
+       "sample1": {
+          "trees": ["subTree"],
+          "files": ["FromSpecTestFile1.root"]
+       }
+    },
+    "friends": {
+       "friendTree2": {
+          "trees": ["anotherTree"],
+          "files": [ "FromSpecTestFile4.root"]
+       },
+       "friendTree1": {
+          "trees": ["anotherTree"],
+          "files": ["FromSpecTestFile3.root"]
+       }
+    }
+ }
+ 
