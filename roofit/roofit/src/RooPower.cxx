@@ -22,6 +22,7 @@ RooPower implements a power law PDF of the form
 #include <RooAbsReal.h>
 #include <RooArgList.h>
 #include <RooMsgService.h>
+#include "RooBatchCompute.h"
 
 #include <TError.h>
 
@@ -94,6 +95,28 @@ RooPower::RooPower(const RooPower &other, const char *name)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+/// Compute multiple values of Power distribution.
+void RooPower::computeBatch(double *output, size_t nEvents, RooFit::Detail::DataMap const &dataMap) const
+{
+    RooBatchCompute::VarVector vars;
+    vars.reserve(2 *  _coefList.size() + 1);
+    vars.push_back(dataMap.at(_x));
+
+    assert(_coefList.size() == _expList.size());
+
+   for (std::size_t i = 0; i < _coefList.size(); ++i) {
+     vars.push_back(dataMap.at(&_coefList[i]));
+     vars.push_back(dataMap.at(&_expList[i]));
+   }
+
+    RooBatchCompute::ArgVector args;
+    args.push_back(_coefList.size());
+
+   RooBatchCompute::compute(dataMap.config(this), RooBatchCompute::Power, output, nEvents, vars, args);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 double RooPower::evaluate() const
 {
    // Calculate and return value of polynomial
@@ -117,7 +140,7 @@ double RooPower::evaluate() const
    double x = this->_x;
    double retval = 0;
    for (unsigned int i = 0; i < sz; ++i) {
-      retval += coefs[i] * pow(x, exps[i]);
+      retval += coefs[i] * std::pow(x, exps[i]);
    }
    return retval;
 }

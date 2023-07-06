@@ -30,6 +30,7 @@ RooExpPoly::RooExpPoly(const char*, const char*, RooAbsReal&, const RooArgList&,
 #include <RooMath.h>
 #include <RooMsgService.h>
 #include <RooRealVar.h>
+#include "RooBatchCompute.h"
 
 #include <TMath.h>
 #include <TError.h>
@@ -131,6 +132,27 @@ double RooExpPoly::evaluateLog() const
 
 ////////////////////////////////////////////////////////////////////////////////
 
+/// Compute multiple values of ExpPoly distribution.
+void RooExpPoly::computeBatch(double *output, size_t nEvents, RooFit::Detail::DataMap const &dataMap) const
+{
+   RooBatchCompute::VarVector vars;
+   vars.reserve(_coefList.size() + 1);
+   vars.push_back(dataMap.at(_x));
+
+   std::vector<double> coefVals;
+   for (RooAbsArg *coef : _coefList) {
+      vars.push_back(dataMap.at(coef));
+   }
+
+   RooBatchCompute::ArgVector args;
+   args.push_back(_lowestOrder);
+   args.push_back(_coefList.size());
+
+   RooBatchCompute::compute(dataMap.config(this), RooBatchCompute::ExpPoly, output, nEvents, vars, args);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 void RooExpPoly::adjustLimits()
 {
    // Adjust the limits of all the coefficients to reflect the numeric boundaries
@@ -164,7 +186,7 @@ double RooExpPoly::evaluate() const
    // Calculate and return value of function
 
    const double logval = this->evaluateLog();
-   const double val = exp(logval);
+   const double val = std::exp(logval);
    if (std::isinf(val)) {
       coutE(InputArguments) << "RooExpPoly::evaluate(" << GetName()
                             << ") ERROR: result of exponentiation is infinite! exponent was " << logval << std::endl;
