@@ -838,6 +838,9 @@ void TWebCanvas::CheckDataToSend(unsigned connid)
          std::swap(buf, conn.fSend.front());
          conn.fSend.pop();
 
+      } else if ((conn.fConnId == fWebConn[0].fConnId) && !fCtrlMsgs.empty()) {
+         buf = "CTRL:"s + TBufferJSON::ToJSON(&fCtrlMsgs, TBufferJSON::kMapAsObject + TBufferJSON::kNoSpaces);
+         fCtrlMsgs.clear();
       }
 
       if (!buf.empty())
@@ -970,6 +973,44 @@ Bool_t TWebCanvas::HasStatusBar() const
 Bool_t TWebCanvas::HasToolTips() const
 {
    return (fClientBits & TCanvas::kShowToolTips) != 0;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Set window position of web canvas
+
+void TWebCanvas::SetWindowPosition(Int_t x, Int_t y)
+{
+   if (IsFirstDrawn()) {
+      fCtrlMsgs["x"s] = std::to_string(x);
+      fCtrlMsgs["y"s] = std::to_string(y);
+   }
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Set window size of web canvas
+
+void TWebCanvas::SetWindowSize(UInt_t w, UInt_t h)
+{
+   if (IsFirstDrawn()) {
+      fCtrlMsgs["w"s] = std::to_string(w);
+      fCtrlMsgs["h"s] = std::to_string(h);
+   }
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Set window title of web canvas
+
+void TWebCanvas::SetWindowTitle(const char *newTitle)
+{
+   if (IsFirstDrawn())
+      fCtrlMsgs["title"s] = newTitle;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Set canvas size of web canvas
+
+void TWebCanvas::SetCanvasSize(UInt_t, UInt_t)
+{
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
