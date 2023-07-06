@@ -18,58 +18,21 @@
 
 #include <RooArgSet.h>
 
-#include <vector>
-#include <map>
+#include <deque>
+#include <set>
 #include <string>
 
 class RooNormSetCache {
-private:
-  class Pair {
-  public:
-    using Value_t = RooFit::UniqueId<RooArgSet>::Value_t;
-    Pair(const RooArgSet* set1, const RooArgSet* set2)
-      : _pair{RooFit::getUniqueId(set1), RooFit::getUniqueId(set2)} {}
-   bool operator==(Pair const &other) const { return _pair == other._pair; }
-   bool operator<(Pair const &other) const { return _pair < other._pair; }
-
-   Value_t const& first() const { return _pair.first; }
-   Value_t const& second() const { return _pair.second; }
-  private:
-    std::pair<Value_t,Value_t> _pair;
-  };
-
-  typedef std::vector<Pair> PairVectType;
-  typedef std::map<Pair, std::size_t> PairIdxMapType;
 
 public:
   RooNormSetCache(std::size_t max = 32) : _max(max) {}
 
-  void add(const RooArgSet* set1, const RooArgSet* set2 = nullptr);
-
-  inline int index(const RooArgSet* set1, const RooArgSet* set2 = nullptr,
+  inline bool contains(const RooArgSet* set1, const RooArgSet* set2 = nullptr,
       const TNamed* set2RangeName = nullptr)
   {
     // Match range name first
-    if (set2RangeName != _set2RangeName) return -1;
-    const Pair pair(set1, set2);
-    PairIdxMapType::const_iterator it = _pairToIdx.lower_bound(pair);
-    if (_pairToIdx.end() != it && it->first == pair) {
-      return it->second;
-    }
-    return -1;
-  }
-
-  inline bool contains(const RooArgSet* set1, const RooArgSet* set2 = nullptr,
-      const TNamed* set2RangeName = nullptr)
-  { return (index(set1,set2,set2RangeName) >= 0); }
-
-  inline bool containsSet1(const RooArgSet* set1)
-  {
-    const Pair pair(set1, (const RooArgSet*)0);
-    PairIdxMapType::const_iterator it = _pairToIdx.lower_bound(pair);
-    if (_pairToIdx.end() != it && it->first.first() == (RooNormSetCache::Pair::Value_t)RooFit::getUniqueId(set1))
-      return true;
-    return false;
+    if (set2RangeName != _set2RangeName) return false;
+    return _pairSet.find({RooFit::getUniqueId(set1), RooFit::getUniqueId(set2)}) != _pairSet.end();
   }
 
   const std::string& nameSet1() const { return _name1; }
@@ -80,16 +43,17 @@ public:
       bool autoRefill = true);
 
   void clear();
-  std::size_t entries() const { return _pairs.size(); }
-
-  void initialize(const RooNormSetCache& other) { clear(); *this = other; }
 
 private:
 
-  PairVectType _pairs; ///<!
-  PairIdxMapType _pairToIdx; ///<!
+  void add(const RooArgSet* set1, const RooArgSet* set2 = nullptr);
+
+  using Value_t = RooFit::UniqueId<RooArgSet>::Value_t;
+  using Pair_t = std::pair<Value_t,Value_t>;
+
+  std::deque<Pair_t> _pairs; ///<!
+  std::set<Pair_t> _pairSet; ///<!
   std::size_t _max; ///<!
-  std::size_t _next = 0; ///<!
 
   std::string _name1;   ///<!
   std::string _name2;   ///<!
