@@ -2167,7 +2167,7 @@ void TCanvas::SetWindowPosition(Int_t x, Int_t y)
 
 void TCanvas::SetWindowSize(UInt_t ww, UInt_t wh)
 {
-   if (fBatch)
+   if (fBatch && !IsWeb())
       SetCanvasSize((ww + fCw) / 2, (wh + fCh) / 2);
    else if (fCanvasImp)
       fCanvasImp->SetWindowSize(ww, wh);
