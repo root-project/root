@@ -45,6 +45,7 @@
 #include <utility>
 
 class TClass;
+class TEnum;
 
 namespace ROOT {
 
@@ -470,6 +471,36 @@ public:
    size_t GetAlignment() const final { return fMaxAlignment; }
    std::uint32_t GetTypeVersion() const final;
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const override;
+};
+
+/// The field for an unscoped or scoped enum with dictionary
+class REnumField : public Detail::RFieldBase {
+private:
+   EColumnType fColumnType;
+   std::size_t fIntSize;   ///< size of the underlying integer
+   std::size_t fAlignment; ///< alignment of the underlying integer
+   REnumField(std::string_view fieldName, std::string_view enumName, TEnum *enump);
+
+   void CreateColumn();
+
+protected:
+   std::unique_ptr<Detail::RFieldBase> CloneImpl(std::string_view newName) const final;
+   const RColumnRepresentations &GetColumnRepresentations() const final;
+   void GenerateColumnsImpl() final;
+   void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
+
+public:
+   REnumField(std::string_view fieldName, std::string_view enumName);
+   REnumField(REnumField &&other) = default;
+   REnumField &operator=(REnumField &&other) = default;
+   ~REnumField() override = default;
+
+   using Detail::RFieldBase::GenerateValue;
+   Detail::RFieldValue GenerateValue(void *where) final;
+   Detail::RFieldValue CaptureValue(void *where) final;
+   size_t GetValueSize() const final { return fIntSize; }
+   size_t GetAlignment() const final { return fAlignment; }
+   void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
 };
 
 /// The field for a class representing a collection of elements via `TVirtualCollectionProxy`.
@@ -915,7 +946,7 @@ class RField : public RClassField {
 public:
    static std::string TypeName() { return ROOT::Internal::GetDemangledTypeName(typeid(T)); }
    RField(std::string_view name) : RClassField(name, TypeName()) {
-      static_assert(std::is_class<T>::value, "no I/O support for this basic C++ type");
+      static_assert(std::is_class_v<T>, "no I/O support for this basic C++ type");
    }
    RField(RField &&other) = default;
    RField &operator=(RField &&other) = default;
@@ -935,6 +966,23 @@ public:
          // If there is no default constructor, try with the IO constructor
          return GenerateValue(where, T(static_cast<TRootIOCtor *>(nullptr)));
       }
+   }
+};
+
+template <typename T>
+class RField<T, typename std::enable_if<std::is_enum_v<T>>::type> : public REnumField {
+public:
+   static std::string TypeName() { return ROOT::Internal::GetDemangledTypeName(typeid(T)); }
+   RField(std::string_view name) : REnumField(name, TypeName()) {}
+   RField(RField &&other) = default;
+   RField &operator=(RField &&other) = default;
+   ~RField() override = default;
+
+   using Detail::RFieldBase::GenerateValue;
+   template <typename... ArgsT>
+   ROOT::Experimental::Detail::RFieldValue GenerateValue(void *where, ArgsT &&...args)
+   {
+      return Detail::RFieldValue(this, static_cast<T *>(where), std::forward<ArgsT>(args)...);
    }
 };
 

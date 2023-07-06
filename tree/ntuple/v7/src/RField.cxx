@@ -29,6 +29,7 @@
 #include <TClassEdit.h>
 #include <TCollection.h>
 #include <TDataMember.h>
+#include <TEnum.h>
 #include <TError.h>
 #include <TList.h>
 #include <TObjArray.h>
@@ -366,6 +367,13 @@ ROOT::Experimental::Detail::RFieldBase::Create(const std::string &fieldName, con
          result = std::make_unique<RField<RNTupleCardinality<std::uint64_t>>>(fieldName);
       } else {
          return R__FAIL(std::string("Field ") + fieldName + " has invalid cardinality template: " + canonicalType);
+      }
+   }
+
+   if (!result) {
+      auto e = TEnum::GetEnum(canonicalType.c_str());
+      if (e != nullptr) {
+         result = std::make_unique<REnumField>(fieldName, canonicalType);
       }
    }
 
@@ -1314,6 +1322,213 @@ std::uint32_t ROOT::Experimental::RClassField::GetTypeVersion() const
 void ROOT::Experimental::RClassField::AcceptVisitor(Detail::RFieldVisitor &visitor) const
 {
    visitor.VisitClassField(*this);
+}
+
+//------------------------------------------------------------------------------
+
+ROOT::Experimental::REnumField::REnumField(std::string_view fieldName, std::string_view enumName)
+   : REnumField(fieldName, enumName, TEnum::GetEnum(std::string(enumName).c_str()))
+{
+}
+
+ROOT::Experimental::REnumField::REnumField(std::string_view fieldName, std::string_view enumName, TEnum *enump)
+   : ROOT::Experimental::Detail::RFieldBase(fieldName, enumName, ENTupleStructure::kLeaf, true /* isSimple */)
+{
+   if (enump == nullptr) {
+      throw RException(R__FAIL("RField: no I/O support for enum type " + std::string(enumName)));
+   }
+   // Avoid accidentally supporting std types through TEnum.
+   if (enump->Property() & kIsDefinedInStd) {
+      throw RException(R__FAIL(std::string(enumName) + " is not supported"));
+   }
+
+   switch (enump->GetUnderlyingType()) {
+   case kChar_t:
+      fColumnType = EColumnType::kInt8;
+      fIntSize = sizeof(std::int8_t);
+      fAlignment = alignof(std::int8_t);
+      break;
+   case kUChar_t:
+      fColumnType = EColumnType::kUInt8;
+      fIntSize = sizeof(std::uint8_t);
+      fAlignment = alignof(std::uint8_t);
+      break;
+   case kShort_t:
+      fColumnType = EColumnType::kSplitInt16;
+      fIntSize = sizeof(std::int16_t);
+      fAlignment = alignof(std::int16_t);
+      break;
+   case kUShort_t:
+      fColumnType = EColumnType::kSplitUInt16;
+      fIntSize = sizeof(std::uint16_t);
+      fAlignment = alignof(std::uint16_t);
+      break;
+   case kInt_t:
+      fColumnType = EColumnType::kSplitInt32;
+      fIntSize = sizeof(std::int32_t);
+      fAlignment = alignof(std::int32_t);
+      break;
+   case kUInt_t:
+      fColumnType = EColumnType::kSplitUInt32;
+      fIntSize = sizeof(std::uint32_t);
+      fAlignment = alignof(std::uint32_t);
+      break;
+   case kLong_t:
+   case kLong64_t:
+      fColumnType = EColumnType::kSplitInt64;
+      fIntSize = sizeof(std::int64_t);
+      fAlignment = alignof(std::int64_t);
+      break;
+   case kULong_t:
+   case kULong64_t:
+      fColumnType = EColumnType::kSplitUInt64;
+      fIntSize = sizeof(std::uint64_t);
+      fAlignment = alignof(std::uint64_t);
+      break;
+   default: throw RException(R__FAIL("Unsupported underlying integral type for enum type " + std::string(enumName)));
+   }
+
+   fTraits |= kTraitMappable | kTraitTriviallyDestructible;
+}
+
+std::unique_ptr<ROOT::Experimental::Detail::RFieldBase>
+ROOT::Experimental::REnumField::CloneImpl(std::string_view newName) const
+{
+   return std::unique_ptr<REnumField>(new REnumField(newName, GetType()));
+}
+
+ROOT::Experimental::Detail::RFieldValue ROOT::Experimental::REnumField::GenerateValue(void *where)
+{
+   switch (fColumnType) {
+   case EColumnType::kInt8: {
+      auto intPtr = static_cast<int8_t *>(where);
+      return Detail::RFieldValue(this, intPtr, 0);
+   }
+   case EColumnType::kUInt8: {
+      auto intPtr = static_cast<uint8_t *>(where);
+      return Detail::RFieldValue(this, intPtr, 0);
+   }
+   case EColumnType::kSplitInt16:
+   case EColumnType::kInt16: {
+      auto intPtr = static_cast<int16_t *>(where);
+      return Detail::RFieldValue(this, intPtr, 0);
+   }
+   case EColumnType::kSplitUInt16:
+   case EColumnType::kUInt16: {
+      auto intPtr = static_cast<uint16_t *>(where);
+      return Detail::RFieldValue(this, intPtr, 0);
+   }
+   case EColumnType::kSplitInt32:
+   case EColumnType::kInt32: {
+      auto intPtr = static_cast<int32_t *>(where);
+      return Detail::RFieldValue(this, intPtr, 0);
+   }
+   case EColumnType::kSplitUInt32:
+   case EColumnType::kUInt32: {
+      auto intPtr = static_cast<uint32_t *>(where);
+      return Detail::RFieldValue(this, intPtr, 0);
+   }
+   case EColumnType::kSplitInt64:
+   case EColumnType::kInt64: {
+      auto intPtr = static_cast<int64_t *>(where);
+      return Detail::RFieldValue(this, intPtr, 0);
+   }
+   case EColumnType::kSplitUInt64:
+   case EColumnType::kUInt64: {
+      auto intPtr = static_cast<uint64_t *>(where);
+      return Detail::RFieldValue(this, intPtr, 0);
+   }
+   default: throw RException(R__FAIL("Internal error: unsupported enum column type"));
+   }
+}
+
+ROOT::Experimental::Detail::RFieldValue ROOT::Experimental::REnumField::CaptureValue(void *where)
+{
+   return Detail::RFieldValue(true /* captureFlag */, this, where);
+}
+
+void ROOT::Experimental::REnumField::CreateColumn()
+{
+   switch (fColumnType) {
+   case EColumnType::kInt8:
+      fColumns.emplace_back(Detail::RColumn::Create<std::int8_t>(RColumnModel(fColumnType), 0));
+      break;
+   case EColumnType::kUInt8:
+      fColumns.emplace_back(Detail::RColumn::Create<std::uint8_t>(RColumnModel(fColumnType), 0));
+      break;
+   case EColumnType::kSplitInt16:
+   case EColumnType::kInt16:
+      fColumns.emplace_back(Detail::RColumn::Create<std::int16_t>(RColumnModel(fColumnType), 0));
+      break;
+   case EColumnType::kSplitUInt16:
+   case EColumnType::kUInt16:
+      fColumns.emplace_back(Detail::RColumn::Create<std::uint16_t>(RColumnModel(fColumnType), 0));
+      break;
+   case EColumnType::kSplitInt32:
+   case EColumnType::kInt32:
+      fColumns.emplace_back(Detail::RColumn::Create<std::int32_t>(RColumnModel(fColumnType), 0));
+      break;
+   case EColumnType::kSplitUInt32:
+   case EColumnType::kUInt32:
+      fColumns.emplace_back(Detail::RColumn::Create<std::uint32_t>(RColumnModel(fColumnType), 0));
+      break;
+   case EColumnType::kSplitInt64:
+   case EColumnType::kInt64:
+      fColumns.emplace_back(Detail::RColumn::Create<std::int64_t>(RColumnModel(fColumnType), 0));
+      break;
+   case EColumnType::kSplitUInt64:
+   case EColumnType::kUInt64:
+      fColumns.emplace_back(Detail::RColumn::Create<std::uint64_t>(RColumnModel(fColumnType), 0));
+      break;
+   default: throw RException(R__FAIL("Internal error: unsupported enum column type"));
+   }
+}
+
+const ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations &
+ROOT::Experimental::REnumField::GetColumnRepresentations() const
+{
+   static RColumnRepresentations representations({{EColumnType::kInt8},
+                                                  {EColumnType::kUInt8},
+                                                  {EColumnType::kSplitInt16},
+                                                  {EColumnType::kInt16},
+                                                  {EColumnType::kSplitUInt16},
+                                                  {EColumnType::kUInt16},
+                                                  {EColumnType::kSplitInt32},
+                                                  {EColumnType::kInt32},
+                                                  {EColumnType::kSplitUInt32},
+                                                  {EColumnType::kUInt32},
+                                                  {EColumnType::kSplitInt64},
+                                                  {EColumnType::kInt64},
+                                                  {EColumnType::kSplitUInt64},
+                                                  {EColumnType::kUInt64}},
+                                                 {});
+   return representations;
+}
+
+void ROOT::Experimental::REnumField::GenerateColumnsImpl()
+{
+   if (!HasDefaultColumnRepresentative()) {
+      // We allow setting split/unsplit column variants, but not setting another underlying int width
+      if (Detail::RColumnElementBase::Generate(GetColumnRepresentative()[0])->GetSize() !=
+          Detail::RColumnElementBase::Generate(fColumnType)->GetSize()) {
+         throw RException(R__FAIL("Mismatch between explicitly set column type and enum-induced column type"));
+      }
+   }
+   CreateColumn();
+}
+
+void ROOT::Experimental::REnumField::GenerateColumnsImpl(const RNTupleDescriptor &desc)
+{
+   auto onDiskTypes = EnsureCompatibleColumnTypes(desc);
+   if (onDiskTypes[0] != fColumnType) {
+      throw RException(R__FAIL("Mismatch between on-disk column representative and enum-induced column type"));
+   }
+   CreateColumn();
+}
+
+void ROOT::Experimental::REnumField::AcceptVisitor(Detail::RFieldVisitor &visitor) const
+{
+   visitor.VisitEnumField(*this);
 }
 
 //------------------------------------------------------------------------------
