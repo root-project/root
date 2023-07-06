@@ -46,6 +46,10 @@ protected:
 
    mutable std::vector<double> _wksp; //! do not persist
 
+   // CUDA support
+   void computeBatch(double *output, size_t size, RooFit::Detail::DataMap const &) const override;
+   inline bool canComputeBatchWithCuda() const override { return true; }
+
    /// Evaluation
    double evaluate() const override;
 

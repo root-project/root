@@ -309,6 +309,23 @@ __rooglobal__ void computeDstD0BG(BatchesHandle batches)
          batches._output[i] = 0;
 }
 
+__rooglobal__ void computeExpPoly(BatchesHandle batches)
+{
+   int lowestOrder = batches.extraArg(0);
+   int nTerms = batches.extraArg(1);
+   auto x = batches[0];
+
+   for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
+      batches._output[i] = 0.0;
+      double xTmp = std::pow(x[i], lowestOrder);
+      for (int k = 0; k < nTerms; ++k) {
+         batches._output[i] += batches[k + 1][i] * xTmp;
+         xTmp *= x[i];
+      }
+      batches._output[i] = std::exp(batches._output[i]);
+   }
+}
+
 __rooglobal__ void computeExponential(BatchesHandle batches)
 {
    Batch x = batches[0], c = batches[1];
@@ -640,6 +657,19 @@ __rooglobal__ void computePolynomial(BatchesHandle batches)
    }
 }
 
+__rooglobal__ void computePower(BatchesHandle batches)
+{
+   const int nCoef = batches.extraArg(0);
+   Batch x = batches[0];
+
+   for (size_t i = BEGIN; i < batches.getNEvents(); i += STEP) {
+      batches._output[i] = 0.0;
+      for (int k = 0; k < nCoef; ++k) {
+         batches._output[i] += batches[2 * k + 1][i]  * std::pow(x[i], batches[2 * k + 2][i]);
+      }
+   }
+}
+
 __rooglobal__ void computeProdPdf(BatchesHandle batches)
 {
    const int nPdfs = batches.extraArg(0);
@@ -798,6 +828,7 @@ std::vector<void (*)(BatchesHandle)> getFunctions()
            computeChiSquare,
            computeDeltaFunction,
            computeDstD0BG,
+           computeExpPoly,
            computeExponential,
            computeGamma,
            computeGaussModelExpBasis,
@@ -811,6 +842,7 @@ std::vector<void (*)(BatchesHandle)> getFunctions()
            computeNovosibirsk,
            computePoisson,
            computePolynomial,
+           computePower,
            computeProdPdf,
            computeRatio,
            computeTruthModelExpBasis,
