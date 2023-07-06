@@ -33,6 +33,7 @@
 #include "TF2.h"
 #include "TH1.h"
 #include "TH1K.h"
+#include "TH2.h"
 #include "THStack.h"
 #include "TMultiGraph.h"
 #include "TEnv.h"
@@ -381,7 +382,7 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
    TObject *obj = nullptr;
    TFrame *frame = nullptr;
    TPaveText *title = nullptr;
-   bool need_frame = false, has_histo = false;
+   bool need_frame = false, has_histo = false, need_palette = false;
    std::string need_title;
 
    while (process_primitives && ((obj = iter()) != nullptr)) {
@@ -409,6 +410,8 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
          has_histo = true;
          if (!obj->TestBit(TH1::kNoTitle) && !opt.Contains("SAME") && (strlen(obj->GetTitle()) > 0))
             need_title = obj->GetTitle();
+         if (obj->InheritsFrom(TH2::Class()) && (opt.Contains("COLZ") || opt.Contains("LEGO2Z") || opt.Contains("LEGO4Z") || opt.Contains("SURF2Z")))
+            need_palette = true;
       } else if (obj->InheritsFrom(TGraph::Class())) {
          if (opt.Contains("A")) {
             need_frame = true;
@@ -416,7 +419,7 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
                need_title = obj->GetTitle();
          }
       } else if (obj->InheritsFrom(TScatter::Class())) {
-         need_frame = true;
+         need_frame = need_palette = true;
          if (strlen(obj->GetTitle()) > 0)
             need_title = obj->GetTitle();
       } else if (obj->InheritsFrom(TF1::Class())) {
@@ -430,6 +433,9 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
    }
 
    if (need_frame && !frame && primitives && CanCreateObject("TFrame")) {
+      if (!IsReadOnly() && need_palette && (pad->GetRightMargin() < 0.12) && (pad->GetRightMargin() == gStyle->GetPadRightMargin()))
+         pad->SetRightMargin(0.12);
+
       frame = pad->GetFrame();
       if(frame)
          primitives->AddFirst(frame);
@@ -548,9 +554,11 @@ void TWebCanvas::CreatePadSnapshot(TPadWebSnapshot &paddata, TPad *pad, Long64_t
          }
 
          TString hopt = iter.GetOption();
+         TString o = hopt;
+         o.ToUpper();
 
          if (!palette && CanCreateObject("TPaletteAxis") && (hist->GetDimension() > 1) &&
-             (hopt.Index("colz", 0, TString::kIgnoreCase) != kNPOS)) {
+              (o.Contains("COLZ") || o.Contains("LEGO2Z") || o.Contains("LEGO4Z") || o.Contains("SURF2Z"))) {
             std::stringstream exec;
             exec << "new TPaletteAxis(0,0,0,0, (TH1*)" << std::hex << std::showbase << (size_t)hist << ");";
             palette = (TObject *)gROOT->ProcessLine(exec.str().c_str());
