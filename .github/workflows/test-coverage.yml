@@ -176,7 +176,7 @@ jobs:
           #   config: Release
           #   overrides: ["coverage=On"]
 
-          - image: ubuntu-latest
+          - image: ubuntu2210
             config: Release
             overrides: ["coverage=On"]
 
