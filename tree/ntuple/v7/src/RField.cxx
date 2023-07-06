@@ -1498,37 +1498,6 @@ ROOT::Experimental::RProxiedCollectionField::RProxiedCollectionField(std::string
 
    fIFuncsRead = RCollectionIterableOnce::GetIteratorFuncs(fProxy.get(), true /* readFromDisk */);
    fIFuncsWrite = RCollectionIterableOnce::GetIteratorFuncs(fProxy.get(), false /* readFromDisk */);
-
-   std::unique_ptr<ROOT::Experimental::Detail::RFieldBase> itemField;
-
-   if (auto valueClass = fProxy->GetValueClass()) {
-      // Element type is a class
-      itemField = RFieldBase::Create("_0", valueClass->GetName()).Unwrap();
-   } else {
-      switch (fProxy->GetType()) {
-      case EDataType::kChar_t:   itemField = std::make_unique<RField<char>>("_0"); break;
-      case EDataType::kUChar_t:  itemField = std::make_unique<RField<std::uint8_t>>("_0"); break;
-      case EDataType::kShort_t:  itemField = std::make_unique<RField<std::int16_t>>("_0"); break;
-      case EDataType::kUShort_t: itemField = std::make_unique<RField<std::uint16_t>>("_0"); break;
-      case EDataType::kInt_t:    itemField = std::make_unique<RField<std::int32_t>>("_0"); break;
-      case EDataType::kUInt_t:   itemField = std::make_unique<RField<std::uint32_t>>("_0"); break;
-      case EDataType::kLong_t:
-      case EDataType::kLong64_t:
-         itemField = std::make_unique<RField<std::int64_t>>("_0");
-         break;
-      case EDataType::kULong_t:
-      case EDataType::kULong64_t:
-         itemField = std::make_unique<RField<std::uint64_t>>("_0");
-         break;
-      case EDataType::kFloat_t:  itemField = std::make_unique<RField<float>>("_0"); break;
-      case EDataType::kDouble_t: itemField = std::make_unique<RField<double>>("_0"); break;
-      case EDataType::kBool_t:   itemField = std::make_unique<RField<bool>>("_0"); break;
-      default:
-         throw RException(R__FAIL("unsupported value type"));
-      }
-   }
-   fItemSize = itemField->GetValueSize();
-   Attach(std::move(itemField));
 }
 
 std::unique_ptr<ROOT::Experimental::Detail::RFieldBase>
@@ -1648,6 +1617,37 @@ ROOT::Experimental::RCollectionClassField::RCollectionClassField(std::string_vie
 {
    if (fProperties & TVirtualCollectionProxy::kIsAssociative)
       throw RException(R__FAIL("custom associative collection proxies not supported"));
+
+   std::unique_ptr<ROOT::Experimental::Detail::RFieldBase> itemField;
+
+   if (auto valueClass = fProxy->GetValueClass()) {
+      // Element type is a class
+      itemField = RFieldBase::Create("_0", valueClass->GetName()).Unwrap();
+   } else {
+      switch (fProxy->GetType()) {
+      case EDataType::kChar_t:   itemField = std::make_unique<RField<char>>("_0"); break;
+      case EDataType::kUChar_t:  itemField = std::make_unique<RField<std::uint8_t>>("_0"); break;
+      case EDataType::kShort_t:  itemField = std::make_unique<RField<std::int16_t>>("_0"); break;
+      case EDataType::kUShort_t: itemField = std::make_unique<RField<std::uint16_t>>("_0"); break;
+      case EDataType::kInt_t:    itemField = std::make_unique<RField<std::int32_t>>("_0"); break;
+      case EDataType::kUInt_t:   itemField = std::make_unique<RField<std::uint32_t>>("_0"); break;
+      case EDataType::kLong_t:
+      case EDataType::kLong64_t:
+         itemField = std::make_unique<RField<std::int64_t>>("_0");
+         break;
+      case EDataType::kULong_t:
+      case EDataType::kULong64_t:
+         itemField = std::make_unique<RField<std::uint64_t>>("_0");
+         break;
+      case EDataType::kFloat_t:  itemField = std::make_unique<RField<float>>("_0"); break;
+      case EDataType::kDouble_t: itemField = std::make_unique<RField<double>>("_0"); break;
+      case EDataType::kBool_t:   itemField = std::make_unique<RField<bool>>("_0"); break;
+      default:
+         throw RException(R__FAIL("unsupported value type"));
+      }
+   }
+   fItemSize = itemField->GetValueSize();
+   Attach(std::move(itemField));
 }
 
 std::unique_ptr<ROOT::Experimental::Detail::RFieldBase>
@@ -2575,6 +2575,9 @@ ROOT::Experimental::RSetField::RSetField(std::string_view fieldName, std::unique
       throw RException(R__FAIL("RField: no dictionary loaded for collection type " +
                                GetNormalizedTypeName(fProxy->GetCollectionClass()->GetName())));
    }
+
+   fItemSize = itemField->GetValueSize();
+   Attach(std::move(itemField));
 }
 
 std::unique_ptr<ROOT::Experimental::Detail::RFieldBase>
