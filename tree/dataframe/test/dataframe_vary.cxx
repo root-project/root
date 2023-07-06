@@ -380,6 +380,57 @@ TEST(RDFVary, SaveGraph)
       "source\\nEntries: 1\", style=\"filled\", fillcolor=\"#f4b400\", shape=\"ellipse\"];\n\t2 -> 1;\n\t0 -> 2;\n}");
 }
 
+
+TEST(RDFVary, WithRange) // no Range in multithreaded runs
+{
+   auto h = ROOT::RDataFrame(10)
+               .Define("x", [](ULong64_t e) { return int(e); }, {"rdfentry_"})
+               .Vary(
+                  "x",
+                  [](int x) {
+                     return ROOT::RVecI{x - 5, x + 5};
+                  },
+                  {"x"}, 2)
+               .Range(7)
+               .Filter("x > 1")
+               .Range(3)
+               .Sum<int>("x");
+   auto hs = VariationsFor(h);
+
+   EXPECT_EQ(*h, 9);
+   EXPECT_EQ(hs["nominal"], 9);
+   EXPECT_EQ(hs["x:0"], 0);
+   EXPECT_EQ(hs["x:1"], 18);
+}
+
+
+// must update this test when https://github.com/root-project/root/issues/9894 is addressed
+TEST(RDFVary, VaryDisplay) // TEST instead of TEST_P because Display is single-thread only
+{
+   auto d = ROOT::RDataFrame(1)
+               .Define("x", [] { return 0; })
+               .Vary(
+                  "x",
+                  [] {
+                     return ROOT::RVecI{-1, 2};
+                  },
+                  {}, 2)
+               .Display<int>({"x"});
+   // Display ignores variations, only displays the nominal values
+   EXPECT_EQ(d->AsString(), "+-----+---+\n| Row | x | \n+-----+---+\n| 0   | 0 | \n|     |   | \n+-----+---+\n");
+   // cannot vary a Display
+   EXPECT_THROW(
+      try { VariationsFor(d); } catch (const std::logic_error &err) {
+         const auto msg = "The MakeNew method is not implemented for this action helper (Display). "
+                          "Cannot Vary its result.";
+         EXPECT_STREQ(err.what(), msg);
+         throw;
+      },
+      std::logic_error);
+}
+
+
+/************ These tests are run in single- and multi-thread mode (they use TEST_P instead of TEST) ************/
 TEST_P(RDFVary, SimpleSum)
 {
    auto df = ROOT::RDataFrame(10).Define("x", [] { return 1; });
@@ -652,7 +703,7 @@ TEST_P(RDFVary, DefineDependingOnVariations)
    EXPECT_EQ(sums["yshift:low"], 410);
 }
 
-TEST(RDFVary, VaryAndAlias)
+TEST_P(RDFVary, VaryAndAlias)
 {
    auto df = ROOT::RDataFrame(10).Define("x", [] { return 1; }).Alias("y", "x").Vary("x", SimpleVariation, {}, 2);
    auto s1 = df.Sum<int>("y");
@@ -916,28 +967,6 @@ TEST_P(RDFVary, FillHelperResets)
    EXPECT_EQ(ss2["x:1"].GetMean(), 2);
 }
 
-TEST(RDFVary, WithRange) // no Range in multithreaded runs
-{
-   auto h = ROOT::RDataFrame(10)
-               .Define("x", [](ULong64_t e) { return int(e); }, {"rdfentry_"})
-               .Vary(
-                  "x",
-                  [](int x) {
-                     return ROOT::RVecI{x - 5, x + 5};
-                  },
-                  {"x"}, 2)
-               .Range(7)
-               .Filter("x > 1")
-               .Range(3)
-               .Sum<int>("x");
-   auto hs = VariationsFor(h);
-
-   EXPECT_EQ(*h, 9);
-   EXPECT_EQ(hs["nominal"], 9);
-   EXPECT_EQ(hs["x:0"], 0);
-   EXPECT_EQ(hs["x:1"], 18);
-}
-
 TEST_P(RDFVary, VaryRedefine)
 {
    // first redefine and then vary
@@ -1134,31 +1163,6 @@ TEST_P(RDFVary, VaryCount)
    EXPECT_EQ(hs["nominal"], 1);
    EXPECT_EQ(hs["x:0"], 0);
    EXPECT_EQ(hs["x:1"], 2);
-}
-
-// must update this test when https://github.com/root-project/root/issues/9894 is addressed
-TEST(RDFVary, VaryDisplay) // TEST instead of TEST_P because Display is single-thread only
-{
-   auto d = ROOT::RDataFrame(1)
-               .Define("x", [] { return 0; })
-               .Vary(
-                  "x",
-                  [] {
-                     return ROOT::RVecI{-1, 2};
-                  },
-                  {}, 2)
-               .Display<int>({"x"});
-   // Display ignores variations, only displays the nominal values
-   EXPECT_EQ(d->AsString(), "+-----+---+\n| Row | x | \n+-----+---+\n| 0   | 0 | \n|     |   | \n+-----+---+\n");
-   // cannot vary a Display
-   EXPECT_THROW(
-      try { VariationsFor(d); } catch (const std::logic_error &err) {
-         const auto msg = "The MakeNew method is not implemented for this action helper (Display). "
-                          "Cannot Vary its result.";
-         EXPECT_STREQ(err.what(), msg);
-         throw;
-      },
-      std::logic_error);
 }
 
 struct Jet {
