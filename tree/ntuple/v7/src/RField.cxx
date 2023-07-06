@@ -1335,6 +1335,7 @@ ROOT::Experimental::RCollectionClassField::RCollectionClassField(std::string_vie
 
    fProxy.reset(classp->GetCollectionProxy()->Generate());
    fProperties = fProxy->GetProperties();
+   fCollectionType = fProxy->GetCollectionType();
    if (fProxy->HasPointers())
       throw RException(R__FAIL("collection proxies whose value type is a pointer are not supported"));
    if (fProperties & TVirtualCollectionProxy::kIsAssociative)
@@ -1407,12 +1408,22 @@ void ROOT::Experimental::RCollectionClassField::ReadGlobalImpl(NTupleSize_t glob
    TVirtualCollectionProxy::TPushPop RAII(fProxy.get(), value->GetRawPtr());
    void *obj =
       fProxy->Allocate(static_cast<std::uint32_t>(nItems), (fProperties & TVirtualCollectionProxy::kNeedDelete));
-   unsigned i = 0;
-   // TODO(jalopezg): we might be able to further optimize this in case `GetCollectionType() == kSTLvector`
-   for (auto ptr : RCollectionIterableOnce{obj, fIFuncsWrite, fProxy.get()}) {
-      auto itemValue = fSubFields[0]->CaptureValue(ptr);
-      fSubFields[0]->Read(collectionStart + i, &itemValue);
-      i++;
+
+   RCollectionIterableOnce elements{obj, fIFuncsWrite, fProxy.get()};
+   // Elements in a vector / collection using a staging area are contiguous in memory, i.e. the address of each element
+   // is known given the base pointer.  Thus, the indirect call to increment the iterator can be avoided.
+   if (fCollectionType == kSTLvector || obj != value->GetRawPtr()) {
+      auto elementPtr = static_cast<unsigned char *>(*elements.begin());
+      for (unsigned i = 0; i < nItems; ++i, elementPtr += fItemSize) {
+         auto itemValue = fSubFields[0]->CaptureValue(elementPtr);
+         fSubFields[0]->Read(collectionStart + i, &itemValue);
+      }
+   } else {
+      unsigned i = 0;
+      for (auto elementPtr : elements) {
+         auto itemValue = fSubFields[0]->CaptureValue(elementPtr);
+         fSubFields[0]->Read(collectionStart + (i++), &itemValue);
+      }
    }
    if (obj != value->GetRawPtr())
       fProxy->Commit(obj);
