@@ -160,11 +160,14 @@ jobs:
         # Common configs: {Release,Debug,RelWithDebInfo)
         # Build options: https://root.cern/install/build_from_source/#all-build-options
         include:
-          # - image: fedora38
-          #   config: Debug
+          - image: fedora38
+            config: Debug
+            overrides: ["coverage=On"]
 
           # - image: fedora37
           #   config: Debug
+          
+
 
           # - image: alma8
           #   config: Release
@@ -176,9 +179,9 @@ jobs:
           #   config: Release
           #   overrides: ["coverage=On"]
 
-          - image: ubuntu2210
-            config: Release
-            overrides: ["coverage=On"]
+          # - image: ubuntu2210
+          #   config: Release
+          #   overrides: ["coverage=On"]
 
           # - image: ubuntu22
           #   config: Debug
