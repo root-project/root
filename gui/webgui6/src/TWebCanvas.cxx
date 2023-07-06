@@ -93,6 +93,13 @@ TWebCanvas::TWebCanvas(TCanvas *c, const char *name, Int_t x, Int_t y, UInt_t wi
    fPrimitivesMerge = gEnv->GetValue("WebGui.PrimitivesMerge", 100);
    fTF1UseSave = gEnv->GetValue("WebGui.TF1UseSave", (Int_t) 0) > 0;
    fJsonComp = gEnv->GetValue("WebGui.JsonComp", TBufferJSON::kSameSuppression + TBufferJSON::kNoSpaces);
+
+   if (!gROOT->IsBatch()) {
+      c->fWindowWidth = width;
+      c->fWindowHeight = height;
+      c->fCw = width > 2 ? width - 2 : 0;
+      c->fCh = height > 25 ? height - 25 : 0;
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1005,6 +1012,8 @@ Bool_t TWebCanvas::DecodePadOptions(const std::string &msg, bool process_execs)
          AssignStatusBits(r.bits);
          Canvas()->fCw = r.cw;
          Canvas()->fCh = r.ch;
+         Canvas()->fWindowWidth = r.cw + 2;
+         Canvas()->fWindowHeight = r.ch + 25;
       }
 
       if (r.active && (pad != gPad)) gPad = pad;
@@ -1613,6 +1622,8 @@ Bool_t TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
          // set members directly to avoid redrawing of the client again
          Canvas()->fCw = arr->at(0);
          Canvas()->fCh = arr->at(1);
+         Canvas()->fWindowWidth = arr->at(0) + 2;
+         Canvas()->fWindowHeight = arr->at(1) + 25;
       }
    } else if (arg.compare(0, 7, "POPOBJ:") == 0) {
       auto arr = TBufferJSON::FromJSON<std::vector<std::string>>(arg.substr(7));
