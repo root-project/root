@@ -1573,7 +1573,7 @@ namespace Experimental {
 ///~~~
 ROOT::RDataFrame FromSpec(const std::string &jsonFile)
 {
-   const nlohmann::json fullData = nlohmann::json::parse(std::ifstream(jsonFile));
+   const nlohmann::ordered_json fullData = nlohmann::ordered_json::parse(std::ifstream(jsonFile));
    if (!fullData.contains("samples") || fullData["samples"].size() == 0) {
       throw std::runtime_error(
          R"(The input specification does not contain any samples. Please provide the samples in the specification like:
