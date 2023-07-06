@@ -46,6 +46,10 @@ protected:
    RooListProxy _coefList;
    int _lowestOrder;
 
+   // CUDA support
+   void computeBatch(cudaStream_t*, double* output, size_t size, RooFit::Detail::DataMap const&) const override;
+   inline bool canComputeBatchWithCuda() const override { return true; }
+
    /// Evaluation
    double evaluate() const override;
    double evaluateLog() const;

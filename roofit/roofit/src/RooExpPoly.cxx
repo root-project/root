@@ -30,6 +30,7 @@ RooExpPoly::RooExpPoly(const char*, const char*, RooAbsReal&, const RooArgList&,
 #include <RooMath.h>
 #include <RooMsgService.h>
 #include <RooRealVar.h>
+#include "RooBatchCompute.h"
 
 #include <TMath.h>
 #include <TError.h>
@@ -130,6 +131,23 @@ double RooExpPoly::evaluateLog() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+/// Compute multiple values of ExpPoly distribution.
+void RooExpPoly::computeBatch(cudaStream_t* stream, double* output, size_t nEvents, RooFit::Detail::DataMap const& dataMap) const
+{
+
+   std::vector<double> coefVals;
+   for (RooAbsArg * coef : _coefList) {
+      coefVals.push_back(dataMap.at(coef)[0]);
+   }
+   coefVals.push_back(_lowestOrder);
+
+   auto dispatch = stream ? RooBatchCompute::dispatchCUDA : RooBatchCompute::dispatchCPU;
+   dispatch->compute(stream, RooBatchCompute::ExpPoly, output, nEvents, {dataMap.at(_x)}, coefVals);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 
 void RooExpPoly::adjustLimits()
 {
