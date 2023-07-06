@@ -1050,7 +1050,8 @@ TEST(RNTuple, TClassStlDerived)
 TEST(RNTuple, TVirtualCollectionProxy)
 {
    SimpleCollectionProxy<StructUsingCollectionProxy<char>> proxyC;
-   SimpleCollectionProxy<StructUsingCollectionProxy<float>> proxyF;
+   // Exposing as a non-vector forces iteration over collection elements in `ReadGlobalImpl()`
+   SimpleCollectionProxy<StructUsingCollectionProxy<float>, ROOT::kSTLdeque> proxyF;
    SimpleCollectionProxy<StructUsingCollectionProxy<CustomStruct>> proxyS;
    SimpleCollectionProxy<StructUsingCollectionProxy<StructUsingCollectionProxy<float>>> proxyNested;
 
