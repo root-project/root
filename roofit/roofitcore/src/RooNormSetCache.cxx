@@ -40,15 +40,8 @@ during their lifetime.
 
 void RooNormSetCache::clear()
 {
-  {
-    PairIdxMapType tmpmap;
-    tmpmap.swap(_pairToIdx);
-  }
-  {
-    PairVectType tmppairvect;
-    tmppairvect.swap(_pairs);
-  }
-  _next = 0;
+  _pairSet.clear();
+  _pairs.clear();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -56,28 +49,20 @@ void RooNormSetCache::clear()
 
 void RooNormSetCache::add(const RooArgSet* set1, const RooArgSet* set2)
 {
-  const Pair pair(set1, set2);
-  PairIdxMapType::iterator it = _pairToIdx.lower_bound(pair);
-  if (_pairToIdx.end() != it && it->first == pair) {
+  const Pair_t pair{RooFit::getUniqueId(set1), RooFit::getUniqueId(set2)};
+  auto it = _pairSet.find(pair);
+  if (it != _pairSet.end()) {
     // not empty, and keys match - nothing to do
     return;
   }
   // register pair -> index mapping
-  _pairToIdx.insert(it, std::make_pair(pair, _pairs.size()));
+  _pairSet.emplace(pair);
   // save pair at that index
-  _pairs.push_back(pair);
+  _pairs.emplace_back(pair);
   // if the cache grew too large, start replacing in a round-robin fashion
   while (_pairs.size() > _max) {
-    // new index of the pair: replace slot _next
-    it->second = _next;
-    // find and erase mapping of old pair in that slot
-    _pairToIdx.erase(_pairs[_next]);
-    // put new pair into new slot
-    _pairs[_next] = _pairs.back();
-    // and erase the copy we no longer need
-    _pairs.erase(_pairs.end() - 1);
-    ++_next;
-    _next %= _max;
+    _pairSet.erase(_pairs.front());
+    _pairs.pop_front();
   }
 }
 
