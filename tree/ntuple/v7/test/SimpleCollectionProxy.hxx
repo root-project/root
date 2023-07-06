@@ -5,7 +5,7 @@
 
 namespace {
 /// Simple collection proxy for `StructUsingCollectionProxy<T>`
-template <typename CollectionT>
+template <typename CollectionT, Int_t CollectionKind = ROOT::kSTLvector>
 class SimpleCollectionProxy : public TVirtualCollectionProxy {
    /// The internal representation of an iterator, which in this simple test only contains a pointer to an element
    struct IteratorData {
@@ -40,10 +40,13 @@ public:
       : TVirtualCollectionProxy(TClass::GetClass(ROOT::Internal::GetDemangledTypeName(typeid(CollectionT)).c_str()))
    {
    }
-   SimpleCollectionProxy(const SimpleCollectionProxy &) : SimpleCollectionProxy() {}
+   SimpleCollectionProxy(const SimpleCollectionProxy<CollectionT, CollectionKind> &) : SimpleCollectionProxy() {}
 
-   TVirtualCollectionProxy *Generate() const override { return new SimpleCollectionProxy<CollectionT>(*this); }
-   Int_t GetCollectionType() const override { return ROOT::kSTLvector; }
+   TVirtualCollectionProxy *Generate() const override
+   {
+      return new SimpleCollectionProxy<CollectionT, CollectionKind>(*this);
+   }
+   Int_t GetCollectionType() const override { return CollectionKind; }
    ULong_t GetIncrement() const override { return sizeof(typename CollectionT::ValueType); }
    UInt_t Sizeof() const override { return sizeof(CollectionT); }
    Bool_t HasPointers() const override { return kFALSE; }
