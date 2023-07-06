@@ -480,12 +480,10 @@ class TGraphPolarPainter extends ObjectPainter {
    /** @summary Show tooltip */
    showTooltip(hint) {
 
-      if (!this.draw_g) return;
+      let ttcircle = this.draw_g?.selectChild('.tooltip_bin');
 
-      let ttcircle = this.draw_g.select('.tooltip_bin');
-
-      if (!hint) {
-         ttcircle.remove();
+      if (!hint || !!this.draw_g) {
+         ttcircle?.remove();
          return;
       }
 

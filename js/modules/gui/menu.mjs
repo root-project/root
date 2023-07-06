@@ -83,7 +83,7 @@ class JSRootMenu {
 
    /** @summary Add draw sub-menu with draw options
      * @protected */
-   addDrawMenu(top_name, opts, call_back) {
+   addDrawMenu(top_name, opts, call_back, title) {
       if (!opts || !opts.length)
          return;
 
@@ -100,10 +100,11 @@ class JSRootMenu {
          return;
       }
 
-      if (!without_sub) this.add('sub:' + top_name, () => {
-         let opt = isFunc(this.painter?.getDrawOpt) ? this.painter.getDrawOpt() : opts[0];
-         this.input('Provide draw option', opt, 'text').then(call_back);
-      });
+      if (!without_sub)
+         this.add('sub:' + top_name, () => {
+            let opt = isFunc(this.painter?.getDrawOpt) ? this.painter.getDrawOpt() : opts[0];
+            this.input('Provide draw option', opt, 'text').then(call_back);
+         }, title);
 
       for (let i = 0; i < opts.length; ++i) {
          let name = opts[i] || (this._use_plain_text ? '<dflt>' : '&lt;dflt&gt;'),
@@ -126,7 +127,8 @@ class JSRootMenu {
             i = group-1;
          }
       }
-      if (!without_sub) this.add('endsub:');
+      if (!without_sub)
+         this.add('endsub:');
    }
 
    /** @summary Add color selection menu entries
@@ -1328,8 +1330,8 @@ class StandaloneMenu extends JSRootMenu {
            `<div style='flex: 0 1 auto; padding: 5px'>${title}</div>`+
            `<div class='jsroot_dialog_content' style='flex: 1 1 auto; padding: 5px'>${main_content}</div>`+
            `<div class='jsroot_dialog_footer' style='flex: 0 1 auto; padding: 5px'>`+
-              `<button class='jsroot_dialog_button' style='float: right; margin-right: 1em'>Ok</button>`+
-              (args.btns ? `<button class='jsroot_dialog_button' style='float: right; margin-right: 1em'>Cancel</button>` : '') +
+              `<button class='jsroot_dialog_button' style='float: right; width: fit-content; margin-right: 1em'>Ok</button>`+
+              (args.btns ? `<button class='jsroot_dialog_button' style='float: right; width: fit-content; margin-right: 1em'>Cancel</button>` : '') +
          `</div></div>`);
 
       return new Promise(resolveFunc => {

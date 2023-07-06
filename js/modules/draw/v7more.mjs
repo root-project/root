@@ -167,7 +167,7 @@ class RPalettePainter extends RObjectPainter {
           this.draw_g.attr('transform', makeTranslate(palette_x, palette_y));
       }
 
-      let g_btns = this.draw_g.select('.colbtns');
+      let g_btns = this.draw_g.selectChild('.colbtns');
       if (g_btns.empty())
          g_btns = this.draw_g.append('svg:g').attr('class', 'colbtns');
       else

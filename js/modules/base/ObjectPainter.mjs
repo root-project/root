@@ -298,7 +298,7 @@ class ObjectPainter extends BasePainter {
             return frame;
          }
          if (!isStr(frame_layer)) frame_layer = 'main_layer';
-         layer = frame.select('.' + frame_layer);
+         layer = frame.selectChild('.' + frame_layer);
       } else {
          layer = this.getLayerSvg('primitives_layer');
       }
@@ -387,18 +387,11 @@ class ObjectPainter extends BasePainter {
       if (svg.empty()) return svg;
 
       if (name.indexOf('prim#') == 0) {
-         svg = svg.select('.primitives_layer');
+         svg = svg.selectChild('.primitives_layer');
          name = name.slice(5);
       }
 
-      let node = svg.node().firstChild;
-      while (node) {
-         let elem = d3_select(node);
-         if (elem.classed(name)) return elem;
-         node = node.nextSibling;
-      }
-
-      return d3_select(null);
+      return svg.selectChild('.' + name);
    }
 
    /** @summary Method selects current pad name
@@ -1498,7 +1491,7 @@ class ObjectPainter extends BasePainter {
 
       let frame = this.getFrameSvg();
       if (frame.empty()) return null;
-      let layer = frame.select('.main_layer');
+      let layer = frame.selectChild('.main_layer');
       if (layer.empty()) return null;
 
       let pos = d3_pointer(evnt, layer.node()),

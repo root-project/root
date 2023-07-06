@@ -166,7 +166,7 @@ class TAttFillHandler {
       if (!svg || svg.empty() || (this.pattern < 3000) || (this.color == 'none')) return false;
 
       let id = `pat_${this.pattern}_${indx}`,
-         defs = svg.select('.canvas_defs');
+         defs = svg.selectChild('.canvas_defs');
 
       if (defs.empty())
          defs = svg.insert('svg:defs', ':first-child').attr('class', 'canvas_defs');
@@ -174,7 +174,7 @@ class TAttFillHandler {
       this.pattern_url = `url(#${id})`;
       this.antialias = false;
 
-      if (!defs.select('.' + id).empty())
+      if (!defs.selectChild('.' + id).empty())
          return true;
 
       let lines = '', lfill = null, fills = '', fills2 = '', w = 2, h = 2;

@@ -841,8 +841,8 @@ class RH2Painter extends RHistPainter {
          }
       }
 
-      let layer = this.getFrameSvg().select('.main_layer'),
-          defs = layer.select('def');
+      let layer = this.getFrameSvg().selectChild('.main_layer'),
+          defs = layer.selectChild('def');
       if (defs.empty() && (colPaths.length > 0))
          defs = layer.insert('svg:defs', ':first-child');
 
@@ -853,7 +853,7 @@ class RH2Painter extends RHistPainter {
       for (colindx = 0; colindx < colPaths.length; ++colindx)
         if ((colPaths[colindx] !== undefined) && (colindx<cntr.length)) {
            let pattern_id = (this.pad_name || 'canv') + `_scatter_${colindx}`,
-               pattern = defs.select(`#${pattern_id}`);
+               pattern = defs.selectChild(`#${pattern_id}`);
            if (pattern.empty())
               pattern = defs.append('svg:pattern')
                             .attr('id', pattern_id)
@@ -979,15 +979,14 @@ class RH2Painter extends RHistPainter {
 
    /** @summary Process tooltip event */
    processTooltipEvent(pnt) {
-      if (!pnt || !this.draw_content || !this.draw_g || !this.tt_handle || this.options.Proj) {
-         if (this.draw_g)
-            this.draw_g.select('.tooltip_bin').remove();
-         return null;
-      }
-
       let histo = this.getHisto(),
           h = this.tt_handle,
-          ttrect = this.draw_g.select('.tooltip_bin');
+          ttrect = this.draw_g?.selectChild('.tooltip_bin');
+
+      if (!pnt || !this.draw_content || !this.draw_g || !h || this.options.Proj) {
+         ttrect?.remove();
+         return null;
+      }
 
       if (h.poly) {
          // process tooltips from TH2Poly - see TH2Painter

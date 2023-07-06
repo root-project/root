@@ -620,9 +620,10 @@ class RH1Painter extends RHistPainter {
 
    /** @summary Process tooltip event */
    processTooltipEvent(pnt) {
+      let ttrect = this.draw_g?.selectChild('.tooltip_bin');
+
       if (!pnt || !this.draw_content || this.options.Mode3D || !this.draw_g) {
-         if (this.draw_g)
-            this.draw_g.select('.tooltip_bin').remove();
+         ttrect?.remove();
          return null;
       }
 
@@ -779,8 +780,6 @@ class RH1Painter extends RHistPainter {
          // exclude empty bin if empty bins suppressed
          if (!this.options.Zero && (histo.getBinContent(findbin+1) === 0)) findbin = null;
       }
-
-      let ttrect = this.draw_g.select('.tooltip_bin');
 
       if ((findbin === null) || ((gry2 <= 0) || (gry1 >= height))) {
          ttrect.remove();

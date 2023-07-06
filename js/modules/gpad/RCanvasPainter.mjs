@@ -719,7 +719,7 @@ async function ensureRCanvas(painter, frame_kind) {
    let pr = painter.getCanvSvg().empty() ? RCanvasPainter.draw(painter.getDom(), null /* noframe */) : Promise.resolve(true);
 
    return pr.then(() => {
-      if ((frame_kind !== false) && painter.getFrameSvg().select('.main_layer').empty())
+      if ((frame_kind !== false) && painter.getFrameSvg().selectChild('.main_layer').empty())
          return RFramePainter.draw(painter.getDom(), null, isStr(frame_kind) ? frame_kind : '');
    }).then(() => {
       painter.addToPadPrimitives();
@@ -932,13 +932,13 @@ registerMethods(`${nsREX}RPalette`, {
 function drawRFont() {
    let font   = this.getObject(),
        svg    = this.getCanvSvg(),
-       defs   = svg.select('.canvas_defs'),
+       defs   = svg.selectChild('.canvas_defs'),
        clname = 'custom_font_' + font.fFamily+font.fWeight+font.fStyle;
 
    if (defs.empty())
       defs = svg.insert('svg:defs', ':first-child').attr('class', 'canvas_defs');
 
-   let entry = defs.select('.' + clname);
+   let entry = defs.selectChild('.' + clname);
    if (entry.empty())
       entry = defs.append('style').attr('type', 'text/css').attr('class', clname);
 

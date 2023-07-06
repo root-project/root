@@ -132,14 +132,13 @@ class TSplinePainter extends ObjectPainter {
          }
       }
 
-      if (cleanup) {
-         if (this.draw_g)
-            this.draw_g.select('.tooltip_bin').remove();
+      let gbin = this.draw_g?.selectChild('.tooltip_bin'),
+          radius = this.lineatt.width + 3;
+
+      if (cleanup || !this.draw_g) {
+         gbin?.remove();
          return null;
       }
-
-      let gbin = this.draw_g.select('.tooltip_bin'),
-          radius = this.lineatt.width + 3;
 
       if (gbin.empty())
          gbin = this.draw_g.append('svg:circle')

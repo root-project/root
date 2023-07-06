@@ -994,15 +994,17 @@ class TGraphPainter extends ObjectPainter {
    /** @summary Show tooltip */
    showTooltip(hint) {
 
-      if (!hint) {
-         if (this.draw_g) this.draw_g.select('.tooltip_bin').remove();
+      let ttrect = this.draw_g?.selectChild('.tooltip_bin');
+
+      if (!hint || !this.draw_g) {
+         ttrect?.remove();
          return;
       }
 
-      if (hint.usepath) return this.showTooltipForPath(hint);
+      if (hint.usepath)
+         return this.showTooltipForPath(hint);
 
-      let d = d3_select(hint.d3bin).datum(),
-          ttrect = this.draw_g.select('.tooltip_bin');
+      let d = d3_select(hint.d3bin).datum();
 
       if (ttrect.empty())
          ttrect = this.draw_g.append('svg:rect')
@@ -1189,10 +1191,10 @@ class TGraphPainter extends ObjectPainter {
    /** @summary Show tooltip for path drawing */
    showTooltipForPath(hint) {
 
-      let ttbin = this.draw_g.select('.tooltip_bin');
+      let ttbin = this.draw_g?.selectChild('.tooltip_bin');
 
-      if (!hint || !hint.bin) {
-         ttbin.remove();
+      if (!hint?.bin || !this.draw_g) {
+         ttbin?.remove();
          return;
       }
 

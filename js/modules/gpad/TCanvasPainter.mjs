@@ -803,7 +803,7 @@ async function ensureTCanvas(painter, frame_kind) {
                  : Promise.resolve(true);
 
    return promise.then(() => {
-      if ((frame_kind !== false) &&  painter.getFrameSvg().select('.main_layer').empty() && !painter.getFramePainter())
+      if ((frame_kind !== false) &&  painter.getFrameSvg().selectChild('.main_layer').empty() && !painter.getFramePainter())
          directDrawTFrame(painter.getDom(), null, frame_kind);
 
       painter.addToPadPrimitives();
