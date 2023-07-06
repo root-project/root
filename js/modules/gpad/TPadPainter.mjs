@@ -408,8 +408,8 @@ class TPadPainter extends ObjectPainter {
       if (this.is_active_pad === undefined) return;
 
       if (!svg_rect)
-         svg_rect = this.iscan ? this.getCanvSvg().select('.canvas_fillrect') :
-                                 this.svg_this_pad().select('.root_pad_border');
+         svg_rect = this.iscan ? this.getCanvSvg().selectChild('.canvas_fillrect') :
+                                 this.svg_this_pad().selectChild('.root_pad_border');
 
       let lineatt = this.is_active_pad ? new TAttLineHandler({ style: 1, width: 1, color: 'red' }) : this.lineatt;
 
@@ -453,7 +453,7 @@ class TPadPainter extends ObjectPainter {
             btns = this.getLayerSvg('btns_layer', this.this_pad_name);
 
          info = this.getLayerSvg('info_layer', this.this_pad_name);
-         frect = svg.select('.canvas_fillrect');
+         frect = svg.selectChild('.canvas_fillrect');
 
       } else {
 
@@ -562,7 +562,7 @@ class TPadPainter extends ObjectPainter {
       if (this.alignButtons && btns)
          this.alignButtons(btns, rect.width, rect.height);
 
-      let dt = info.select('.canvas_date');
+      let dt = info.selectChild('.canvas_date');
       if (!gStyle.fOptDate) {
          dt.remove();
       } else {
@@ -578,7 +578,7 @@ class TPadPainter extends ObjectPainter {
       }
 
       if (!gStyle.fOptFile || !this.getItemName())
-         info.select('.canvas_item').remove();
+         info.selectChild('.canvas_item').remove();
       else
          this.drawItemNameOnCanvas(this.getItemName());
 
@@ -589,7 +589,7 @@ class TPadPainter extends ObjectPainter {
      * @private */
    drawItemNameOnCanvas(item_name) {
       let info = this.getLayerSvg('info_layer', this.this_pad_name),
-          df = info.select('.canvas_item');
+          df = info.selectChild('.canvas_item');
       if (!gStyle.fOptFile || !item_name) {
          df.remove();
       } else {
@@ -668,12 +668,12 @@ class TPadPainter extends ObjectPainter {
 
       if (only_resize) {
          svg_pad = this.svg_this_pad();
-         svg_border = svg_pad.select('.root_pad_border');
+         svg_border = svg_pad.selectChild('.root_pad_border');
          if (!is_batch)
             btns = this.getLayerSvg('btns_layer', this.this_pad_name);
          this.addPadInteractive(true);
       } else {
-         svg_pad = svg_can.select('.primitives_layer')
+         svg_pad = svg_can.selectChild('.primitives_layer')
              .append('svg:svg') // svg used to blend all drawings outside
              .classed('__root_pad_' + this.this_pad_name, true)
              .attr('pad', this.this_pad_name) // set extra attribute  to mark pad name
@@ -728,8 +728,8 @@ class TPadPainter extends ObjectPainter {
                    .call(this.lineatt.func);
          this.drawActiveBorder(svg_border);
 
-         let svg_border1 = svg_pad.select('.root_pad_border1'),
-             svg_border2 = svg_pad.select('.root_pad_border2');
+         let svg_border1 = svg_pad.selectChild('.root_pad_border1'),
+             svg_border2 = svg_pad.selectChild('.root_pad_border2');
 
          if (this.pad.fBorderMode && this.pad.fBorderSize) {
             let pw = this.pad.fBorderSize, ph = this.pad.fBorderSize,
@@ -2071,7 +2071,7 @@ class TPadPainter extends ObjectPainter {
 
             item.img?.remove(); // delete embed image
 
-            let prim = item.prnt.select('.primitives_layer');
+            let prim = item.prnt.selectChild('.primitives_layer');
 
             if (item.foreign) // reinsert foreign object
                item.prnt.node().insertBefore(item.foreign.node(), prim.node());

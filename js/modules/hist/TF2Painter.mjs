@@ -228,7 +228,7 @@ class TF2Painter extends TH2Painter {
       if (this._use_saved_points)
          return super.processTooltipEvent(pnt);
 
-      let ttrect = this.draw_g?.select('.tooltip_bin');
+      let ttrect = this.draw_g?.selectChild('.tooltip_bin');
 
       if (!this.draw_g || !pnt) {
          ttrect?.remove();

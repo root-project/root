@@ -11,7 +11,7 @@ let version_id = 'dev';
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-let version_date = '5/07/2023';
+let version_date = '6/07/2023';
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -8283,7 +8283,7 @@ class BasePainter {
           layout_selector = (layout == 'simple') ? '' : res.property('layout_selector');
 
       if (layout_selector)
-         res = res.select(layout_selector);
+         res = res.selectChild(layout_selector);
 
       // one could redirect here
       if (!is_direct && !res.empty() && use_enlarge)
@@ -10898,7 +10898,7 @@ class TAttFillHandler {
       if (!svg || svg.empty() || (this.pattern < 3000) || (this.color == 'none')) return false;
 
       let id = `pat_${this.pattern}_${indx}`,
-         defs = svg.select('.canvas_defs');
+         defs = svg.selectChild('.canvas_defs');
 
       if (defs.empty())
          defs = svg.insert('svg:defs', ':first-child').attr('class', 'canvas_defs');
@@ -10906,7 +10906,7 @@ class TAttFillHandler {
       this.pattern_url = `url(#${id})`;
       this.antialias = false;
 
-      if (!defs.select('.' + id).empty())
+      if (!defs.selectChild('.' + id).empty())
          return true;
 
       let lines = '', lfill = null, fills = '', fills2 = '', w = 2, h = 2;
@@ -11645,7 +11645,7 @@ class ObjectPainter extends BasePainter {
             return frame;
          }
          if (!isStr(frame_layer)) frame_layer = 'main_layer';
-         layer = frame.select('.' + frame_layer);
+         layer = frame.selectChild('.' + frame_layer);
       } else {
          layer = this.getLayerSvg('primitives_layer');
       }
@@ -11734,18 +11734,11 @@ class ObjectPainter extends BasePainter {
       if (svg.empty()) return svg;
 
       if (name.indexOf('prim#') == 0) {
-         svg = svg.select('.primitives_layer');
+         svg = svg.selectChild('.primitives_layer');
          name = name.slice(5);
       }
 
-      let node = svg.node().firstChild;
-      while (node) {
-         let elem = select(node);
-         if (elem.classed(name)) return elem;
-         node = node.nextSibling;
-      }
-
-      return select(null);
+      return svg.selectChild('.' + name);
    }
 
    /** @summary Method selects current pad name
@@ -12845,7 +12838,7 @@ class ObjectPainter extends BasePainter {
 
       let frame = this.getFrameSvg();
       if (frame.empty()) return null;
-      let layer = frame.select('.main_layer');
+      let layer = frame.selectChild('.main_layer');
       if (layer.empty()) return null;
 
       let pos = pointer(evnt, layer.node()),
@@ -58040,7 +58033,7 @@ class JSRootMenu {
 
    /** @summary Add draw sub-menu with draw options
      * @protected */
-   addDrawMenu(top_name, opts, call_back) {
+   addDrawMenu(top_name, opts, call_back, title) {
       if (!opts || !opts.length)
          return;
 
@@ -58057,10 +58050,11 @@ class JSRootMenu {
          return;
       }
 
-      if (!without_sub) this.add('sub:' + top_name, () => {
-         let opt = isFunc(this.painter?.getDrawOpt) ? this.painter.getDrawOpt() : opts[0];
-         this.input('Provide draw option', opt, 'text').then(call_back);
-      });
+      if (!without_sub)
+         this.add('sub:' + top_name, () => {
+            let opt = isFunc(this.painter?.getDrawOpt) ? this.painter.getDrawOpt() : opts[0];
+            this.input('Provide draw option', opt, 'text').then(call_back);
+         }, title);
 
       for (let i = 0; i < opts.length; ++i) {
          let name = opts[i] || (this._use_plain_text ? '<dflt>' : '&lt;dflt&gt;'),
@@ -58083,7 +58077,8 @@ class JSRootMenu {
             i = group-1;
          }
       }
-      if (!without_sub) this.add('endsub:');
+      if (!without_sub)
+         this.add('endsub:');
    }
 
    /** @summary Add color selection menu entries
@@ -59285,8 +59280,8 @@ class StandaloneMenu extends JSRootMenu {
            `<div style='flex: 0 1 auto; padding: 5px'>${title}</div>`+
            `<div class='jsroot_dialog_content' style='flex: 1 1 auto; padding: 5px'>${main_content}</div>`+
            `<div class='jsroot_dialog_footer' style='flex: 0 1 auto; padding: 5px'>`+
-              `<button class='jsroot_dialog_button' style='float: right; margin-right: 1em'>Ok</button>`+
-              (args.btns ? `<button class='jsroot_dialog_button' style='float: right; margin-right: 1em'>Cancel</button>` : '') +
+              `<button class='jsroot_dialog_button' style='float: right; width: fit-content; margin-right: 1em'>Ok</button>`+
+              (args.btns ? `<button class='jsroot_dialog_button' style='float: right; width: fit-content; margin-right: 1em'>Cancel</button>` : '') +
          `</div></div>`);
 
       return new Promise(resolveFunc => {
@@ -60517,7 +60512,7 @@ class TAxisPainter extends ObjectPainter {
       this.lineatt.not_standard = true;
 
       if (!this.is_gaxis || (this.name === 'zaxis')) {
-         axis_g = layer.select(`.${this.name}_container`);
+         axis_g = layer.selectChild(`.${this.name}_container`);
          if (axis_g.empty())
             axis_g = layer.append('svg:g').attr('class', `${this.name}_container`);
          else
@@ -60934,10 +60929,11 @@ const TooltipHandler = {
    isTooltipShown() {
       if (!this.tooltip_enabled || !this.isTooltipAllowed())
          return false;
-      let hintsg = this.hints_layer().select('.objects_hints');
+      let hintsg = this.hints_layer().selectChild('.objects_hints');
       return hintsg.empty() ? false : hintsg.property('hints_pad') == this.getPadName();
    },
 
+   /** @summary set tooltips enabled on/off */
    setTooltipEnabled(enabled) {
       if (enabled !== undefined)
          this.tooltip_enabled = enabled;
@@ -60948,7 +60944,7 @@ const TooltipHandler = {
 
       if (pnt?.handler) {
          // special use of interactive handler in the frame painter
-         let rect = this.draw_g?.select('.main_layer');
+         let rect = this.draw_g?.selectChild('.main_layer');
          if (!rect || rect.empty()) {
             pnt = null; // disable
          } else if (pnt.touch && evnt) {
@@ -61016,7 +61012,7 @@ const TooltipHandler = {
       }
 
       let layer = this.hints_layer(),
-          hintsg = layer.select('.objects_hints'), // group with all tooltips
+          hintsg = layer.selectChild('.objects_hints'), // group with all tooltips
           title = '', name = '', info = '',
           hint = null, best_dist2 = 1e10, best_hint = null, show_only_best = nhints > 15,
           coordinates = pnt ? Math.round(pnt.x) + ',' + Math.round(pnt.y) : '';
@@ -61124,7 +61120,7 @@ const TooltipHandler = {
 
       for (let n = 0; n < hints.length; ++n) {
          let hint = hints[n],
-            group = hintsg.select('.painter_hint_' + n);
+            group = hintsg.selectChild(`.painter_hint_${n}`);
 
          if (show_only_best && (hint !== best_hint)) hint = null;
 
@@ -61137,7 +61133,7 @@ const TooltipHandler = {
 
          if (was_empty)
             group = hintsg.append('svg:svg')
-               .attr('class', 'painter_hint_' + n)
+               .attr('class', `painter_hint_${n}`)
                .attr('opacity', 0) // use attribute, not style to make animation with d3.transition()
                .style('overflow', 'hidden')
                .style('pointer-events', 'none');
@@ -61271,7 +61267,7 @@ const FrameInteractive = {
                                 is_disabled: kind => { return (kind == 'move') && this.mode3d; },
                                 only_resize: true, minwidth: 20, minheight: 20, redraw: () => this.sizeChanged() });
 
-      let main_svg = this.draw_g.select('.main_layer');
+      let main_svg = this.draw_g.selectChild('.main_layer');
 
       main_svg.style('pointer-events','visibleFill')
               .property('handlers_set', 0);
@@ -61303,7 +61299,7 @@ const FrameInteractive = {
               .attr('width', this.getFrameWidth())
               .attr('height', this.getFrameHeight());
 
-      let hintsg = this.hints_layer().select('.objects_hints');
+      let hintsg = this.hints_layer().selectChild('.objects_hints');
       // if tooltips were visible before, try to reconstruct them after short timeout
       if (!hintsg.empty() && this.isTooltipAllowed() && (hintsg.property('hints_pad') == this.getPadName()))
          setTimeout(this.processFrameTooltipEvent.bind(this, hintsg.property('last_point'), null), 10);
@@ -61473,7 +61469,7 @@ const FrameInteractive = {
       if (evnt.buttons === this._shifting_buttons) {
          let frame = this.getFrameSvg(),
              pos = pointer(evnt, frame.node()),
-             main_svg = this.draw_g.select('.main_layer');
+             main_svg = this.draw_g.selectChild('.main_layer');
          let dx = pos0[0] - pos[0],
              dy = pos0[1] - pos[1],
              w = this.getFrameWidth(), h = this.getFrameHeight();
@@ -61505,7 +61501,7 @@ const FrameInteractive = {
     /** @summary Shift scales on defined positions */
    performScalesShift() {
       let w = this.getFrameWidth(), h = this.getFrameHeight(),
-          main_svg = this.draw_g.select('.main_layer'),
+          main_svg = this.draw_g.selectChild('.main_layer'),
           gr = this.getGrFuncs(),
           xmin = gr.revertAxis('x', this._shifting_dx),
           xmax = gr.revertAxis('x', this._shifting_dx + w),
@@ -62097,7 +62093,7 @@ const FrameInteractive = {
     * @private */
    moveTouchHandling(evnt, kind, pos0) {
       let frame = this.getFrameSvg(),
-          main_svg = this.draw_g.select('.main_layer'), pos;
+          main_svg = this.draw_g.selectChild('.main_layer'), pos;
 
       try {
         pos = pointers(evnt, frame.node())[0];
@@ -62683,7 +62679,7 @@ class TFramePainter extends ObjectPainter {
      * @desc Called immediately after axes drawing */
    drawGrids() {
 
-      let layer = this.getFrameSvg().select('.grid_layer');
+      let layer = this.getFrameSvg().selectChild('.grid_layer');
 
       layer.selectAll('.xgrid').remove();
       layer.selectAll('.ygrid').remove();
@@ -62765,7 +62761,7 @@ class TFramePainter extends ObjectPainter {
 
       if (AxisPos === undefined) AxisPos = 0;
 
-      let layer = this.getFrameSvg().select('.axis_layer'),
+      let layer = this.getFrameSvg().selectChild('.axis_layer'),
           w = this.getFrameWidth(),
           h = this.getFrameHeight(),
           pp = this.getPadPainter(),
@@ -62834,7 +62830,7 @@ class TFramePainter extends ObjectPainter {
    /** @summary draw second axes (if any)  */
    drawAxes2(second_x, second_y) {
 
-      let layer = this.getFrameSvg().select('.axis_layer'),
+      let layer = this.getFrameSvg().selectChild('.axis_layer'),
           w = this.getFrameWidth(),
           h = this.getFrameHeight(),
           pp = this.getPadPainter(),
@@ -62976,17 +62972,15 @@ class TFramePainter extends ObjectPainter {
 
    /** @summary remove all axes drawings */
    cleanAxesDrawings() {
-      if (this.x_handle) this.x_handle.removeG();
-      if (this.y_handle) this.y_handle.removeG();
-      if (this.z_handle) this.z_handle.removeG();
-      if (this.x2_handle) this.x2_handle.removeG();
-      if (this.y2_handle) this.y2_handle.removeG();
+      this.x_handle?.removeG();
+      this.y_handle?.removeG();
+      this.z_handle?.removeG();
+      this.x2_handle?.removeG();
+      this.y2_handle?.removeG();
 
       let g = this.getG();
-      if (g) {
-         g.select('.grid_layer').selectAll('*').remove();
-         g.select('.axis_layer').selectAll('*').remove();
-      }
+      g?.selectChild('.grid_layer').selectAll('*').remove();
+      g?.selectChild('.axis_layer').selectAll('*').remove();
       this.axes_drawn = false;
    }
 
@@ -63014,10 +63008,8 @@ class TFramePainter extends ObjectPainter {
       this.scale_ymin = this.scale_ymax = 0;
       this.scale_zmin = this.scale_zmax = 0;
 
-      if (this.draw_g) {
-         this.draw_g.select('.main_layer').selectAll('*').remove();
-         this.draw_g.select('.upper_layer').selectAll('*').remove();
-      }
+      this.draw_g?.selectChild('.main_layer').selectAll('*').remove();
+      this.draw_g?.selectChild('.upper_layer').selectAll('*').remove();
 
       this.xaxis = null;
       this.yaxis = null;
@@ -63118,8 +63110,8 @@ class TFramePainter extends ObjectPainter {
          this.draw_g.append('svg:g').attr('class', 'axis_layer');
          this.draw_g.append('svg:g').attr('class', 'upper_layer');
       } else {
-         top_rect = this.draw_g.select('path');
-         main_svg = this.draw_g.select('.main_layer');
+         top_rect = this.draw_g.selectChild('path');
+         main_svg = this.draw_g.selectChild('.main_layer');
       }
 
       this.axes_drawn = false;
@@ -65746,8 +65738,8 @@ class TPadPainter extends ObjectPainter {
       if (this.is_active_pad === undefined) return;
 
       if (!svg_rect)
-         svg_rect = this.iscan ? this.getCanvSvg().select('.canvas_fillrect') :
-                                 this.svg_this_pad().select('.root_pad_border');
+         svg_rect = this.iscan ? this.getCanvSvg().selectChild('.canvas_fillrect') :
+                                 this.svg_this_pad().selectChild('.root_pad_border');
 
       let lineatt = this.is_active_pad ? new TAttLineHandler({ style: 1, width: 1, color: 'red' }) : this.lineatt;
 
@@ -65791,7 +65783,7 @@ class TPadPainter extends ObjectPainter {
             btns = this.getLayerSvg('btns_layer', this.this_pad_name);
 
          info = this.getLayerSvg('info_layer', this.this_pad_name);
-         frect = svg.select('.canvas_fillrect');
+         frect = svg.selectChild('.canvas_fillrect');
 
       } else {
 
@@ -65900,7 +65892,7 @@ class TPadPainter extends ObjectPainter {
       if (this.alignButtons && btns)
          this.alignButtons(btns, rect.width, rect.height);
 
-      let dt = info.select('.canvas_date');
+      let dt = info.selectChild('.canvas_date');
       if (!gStyle.fOptDate) {
          dt.remove();
       } else {
@@ -65916,7 +65908,7 @@ class TPadPainter extends ObjectPainter {
       }
 
       if (!gStyle.fOptFile || !this.getItemName())
-         info.select('.canvas_item').remove();
+         info.selectChild('.canvas_item').remove();
       else
          this.drawItemNameOnCanvas(this.getItemName());
 
@@ -65927,7 +65919,7 @@ class TPadPainter extends ObjectPainter {
      * @private */
    drawItemNameOnCanvas(item_name) {
       let info = this.getLayerSvg('info_layer', this.this_pad_name),
-          df = info.select('.canvas_item');
+          df = info.selectChild('.canvas_item');
       if (!gStyle.fOptFile || !item_name) {
          df.remove();
       } else {
@@ -66006,12 +65998,12 @@ class TPadPainter extends ObjectPainter {
 
       if (only_resize) {
          svg_pad = this.svg_this_pad();
-         svg_border = svg_pad.select('.root_pad_border');
+         svg_border = svg_pad.selectChild('.root_pad_border');
          if (!is_batch)
             btns = this.getLayerSvg('btns_layer', this.this_pad_name);
          this.addPadInteractive(true);
       } else {
-         svg_pad = svg_can.select('.primitives_layer')
+         svg_pad = svg_can.selectChild('.primitives_layer')
              .append('svg:svg') // svg used to blend all drawings outside
              .classed('__root_pad_' + this.this_pad_name, true)
              .attr('pad', this.this_pad_name) // set extra attribute  to mark pad name
@@ -66066,8 +66058,8 @@ class TPadPainter extends ObjectPainter {
                    .call(this.lineatt.func);
          this.drawActiveBorder(svg_border);
 
-         let svg_border1 = svg_pad.select('.root_pad_border1'),
-             svg_border2 = svg_pad.select('.root_pad_border2');
+         let svg_border1 = svg_pad.selectChild('.root_pad_border1'),
+             svg_border2 = svg_pad.selectChild('.root_pad_border2');
 
          if (this.pad.fBorderMode && this.pad.fBorderSize) {
             let pw = this.pad.fBorderSize, ph = this.pad.fBorderSize,
@@ -67409,7 +67401,7 @@ class TPadPainter extends ObjectPainter {
 
             item.img?.remove(); // delete embed image
 
-            let prim = item.prnt.select('.primitives_layer');
+            let prim = item.prnt.selectChild('.primitives_layer');
 
             if (item.foreign) // reinsert foreign object
                item.prnt.node().insertBefore(item.foreign.node(), prim.node());
@@ -68445,7 +68437,7 @@ async function ensureTCanvas(painter, frame_kind) {
                  : Promise.resolve(true);
 
    return promise.then(() => {
-      if ((frame_kind !== false) &&  painter.getFrameSvg().select('.main_layer').empty() && !painter.getFramePainter())
+      if ((frame_kind !== false) &&  painter.getFrameSvg().selectChild('.main_layer').empty() && !painter.getFramePainter())
          directDrawTFrame(painter.getDom(), null, frame_kind);
 
       painter.addToPadPrimitives();
@@ -68507,7 +68499,7 @@ class TPavePainter extends ObjectPainter {
    /** @summary Autoplace legend on the frame
      * @return {Promise} with boolean flag if position was changed  */
    async autoPlaceLegend(pt, pad, keep_origin) {
-      let main_svg = this.getFrameSvg().select('.main_layer'),
+      let main_svg = this.getFrameSvg().selectChild('.main_layer'),
           svg_code = main_svg.node().outerHTML;
 
       svg_code = compressSVG(svg_code);
@@ -74481,8 +74473,8 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
          }
       }
 
-      let layer = this.getFrameSvg().select('.main_layer'),
-          defs = layer.select('defs');
+      let layer = this.getFrameSvg().selectChild('.main_layer'),
+          defs = layer.selectChild('defs');
       if (defs.empty() && (colPaths.length > 0))
          defs = layer.insert('svg:defs', ':first-child');
 
@@ -74491,7 +74483,7 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
       for (colindx = 0; colindx < colPaths.length; ++colindx)
         if ((colPaths[colindx] !== undefined) && (colindx < cntr.arr.length)) {
            let pattern_id = (this.pad_name || 'canv') + `_scatter_${colindx}`,
-               pattern = defs.select(`#${pattern_id}`);
+               pattern = defs.selectChild(`#${pattern_id}`);
            if (pattern.empty())
               pattern = defs.append('svg:pattern')
                             .attr('id', pattern_id)
@@ -74901,14 +74893,14 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
 
    /** @summary Process tooltip event */
    processTooltipEvent(pnt) {
-      if (!pnt || !this.draw_content || !this.draw_g || !this.tt_handle || this.options.Proj) {
-         this.draw_g?.select('.tooltip_bin').remove();
+      let ttrect = this.draw_g?.selectChild('.tooltip_bin'),
+          histo = this.getHisto(),
+          h = this.tt_handle;
+
+      if (!pnt || !this.draw_content || !this.draw_g || !h || this.options.Proj) {
+         ttrect?.remove();
          return null;
       }
-
-      let histo = this.getHisto(),
-          h = this.tt_handle,
-          ttrect = this.draw_g.select('.tooltip_bin');
 
       if (h.poly) {
          // process tooltips from TH2Poly
@@ -77531,13 +77523,14 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
           exclude_zero = !this.options.Zero,
           show_errors = this.options.Error,
           show_markers = this.options.Mark,
-          show_line = this.options.Line || this.options.Curve,
+          show_line = this.options.Line,
+          show_curve = this.options.Curve,
           show_text = this.options.Text,
           text_profile = show_text && (this.options.TextKind == 'E') && this.isTProfile() && histo.fBinEntries,
-          path_fill = null, path_err = null, path_marker = null, path_line = null,
+          path_fill = null, path_err = null, path_marker = null, path_line = '',
           hints_err = null, hints_marker = null, hsz = 5,
-          do_marker = false, do_err = false,
-          dend = 0, dlw = 0, my, yerr1, yerr2, bincont, binerr, mx1, mx2, midx, mmx1, mmx2,
+          do_marker = false, do_err = false, grpnts = [],
+          dend = 0, dlw = 0, my, yerr1, yerr2, bincont, binerr, mx1, mx2, midx, lx, ly, mmx1, mmx2,
           text_col, text_angle, text_size;
 
       if (show_errors && !show_markers && (histo.fMarkerStyle > 1))
@@ -77551,8 +77544,6 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
          hints_err = want_tooltip ? '' : null;
          do_err = true;
       }
-
-      if (show_line) path_line = '';
 
       dlw = this.lineatt.width + gStyle.fEndErrorSize;
       if (this.options.ErrorKind === 1)
@@ -77576,7 +77567,7 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
       }
 
       let draw_markers = show_errors || show_markers,
-          draw_any_but_hist = draw_markers || show_text || show_line,
+          draw_any_but_hist = draw_markers || show_text || show_line || show_curve,
           draw_hist = this.options.Hist && (!this.lineatt.empty() || !this.fillatt.empty());
 
       if (!draw_hist && !draw_any_but_hist)
@@ -77655,8 +77646,18 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
                }
             }
 
-            if (show_line && (path_line !== null))
-               path_line += ((path_line.length === 0) ? 'M' : 'L') + `${midx},${my}`;
+            if (show_line) {
+               if (path_line.length == 0)
+                  path_line = `M${midx},${my}`;
+               else if (lx == midx)
+                  path_line += `v${my-ly}`;
+               else if (ly == my)
+                  path_line += `h${midx-lx}`;
+               else
+                  path_line += `l${midx-lx},${my-ly}`;
+               lx = midx; ly = my;
+            } else if (show_curve)
+               grpnts.push({ grx: (mx1 + mx2) / 2, gry: funcs.gry(bincont) });
 
             if (draw_markers) {
                if ((my >= -yerr1) && (my <= height + yerr2)) {
@@ -77776,7 +77777,7 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
          }
       }
 
-      let fill_for_interactive = want_tooltip && this.fillatt.empty() && draw_hist && !draw_markers && !show_line,
+      let fill_for_interactive = want_tooltip && this.fillatt.empty() && draw_hist && !draw_markers && !show_line && !show_curve,
           h0 = height + 3;
       if (!fill_for_interactive) {
          let gry0 = Math.round(funcs.gry(0));
@@ -77787,7 +77788,7 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
       }
       let close_path = `L${currx},${h0}H${startx}Z`;
 
-      if (draw_markers || show_line) {
+      if (draw_markers || show_line || show_curve) {
          if (path_fill)
             this.draw_g.append('svg:path')
                        .attr('d', path_fill)
@@ -77805,6 +77806,17 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
                    .style('pointer-events', this.isBatchMode() ? null : 'visibleFill');
 
          if (path_line) {
+            if (!this.fillatt.empty() && !draw_hist)
+               this.draw_g.append('svg:path')
+                     .attr('d', path_line + close_path)
+                     .call(this.fillatt.func);
+
+            this.draw_g.append('svg:path')
+                   .attr('d', path_line)
+                   .style('fill', 'none')
+                   .call(this.lineatt.func);
+         } else if (grpnts.length) {
+            path_line = buildSvgCurve(grpnts);
             if (!this.fillatt.empty() && !draw_hist)
                this.draw_g.append('svg:path')
                      .attr('d', path_line + close_path)
@@ -77875,7 +77887,7 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
    processTooltipEvent(pnt) {
       if (!pnt || !this.draw_content || !this.draw_g || this.options.Mode3D) {
          if (this.draw_g)
-            this.draw_g.select('.tooltip_bin').remove();
+            this.draw_g.selectChild('.tooltip_bin').remove();
          return null;
       }
 
@@ -78032,7 +78044,7 @@ let TH1Painter$2 = class TH1Painter extends THistPainter {
             findbin = null; // exclude empty bin if empty bins suppressed
       }
 
-      let ttrect = this.draw_g.select('.tooltip_bin');
+      let ttrect = this.draw_g.selectChild('.tooltip_bin');
 
       if ((findbin === null) || ((gry2 <= 0) || (gry1 >= height))) {
          ttrect.remove();
@@ -99268,8 +99280,8 @@ const clTGraph2D = 'TGraph2D', clTH2Poly = 'TH2Poly', clTEllipse = 'TEllipse',
 
 // list of registered draw functions
 const drawFuncs = { lst: [
-   { name: clTCanvas, icon: 'img_canvas', class: () => Promise.resolve().then(function () { return TCanvasPainter$1; }).then(h => h.TCanvasPainter), opt: ';grid;gridx;gridy;tick;tickx;ticky;log;logx;logy;logz', expand_item: 'fPrimitives' },
-   { name: clTPad, icon: 'img_canvas', class: () => Promise.resolve().then(function () { return TPadPainter$1; }).then(h => h.TPadPainter), opt: ';grid;gridx;gridy;tick;tickx;ticky;log;logx;logy;logz', expand_item: 'fPrimitives' },
+   { name: clTCanvas, icon: 'img_canvas', class: () => Promise.resolve().then(function () { return TCanvasPainter$1; }).then(h => h.TCanvasPainter), opt: ';grid;gridx;gridy;tick;tickx;ticky;log;logx;logy;logz', expand_item: 'fPrimitives', noappend: true },
+   { name: clTPad, icon: 'img_canvas', class: () => Promise.resolve().then(function () { return TPadPainter$1; }).then(h => h.TPadPainter), opt: ';grid;gridx;gridy;tick;tickx;ticky;log;logx;logy;logz', expand_item: 'fPrimitives', noappend: true },
    { name: 'TSlider', icon: 'img_canvas', class: () => Promise.resolve().then(function () { return TPadPainter$1; }).then(h => h.TPadPainter) },
    { name: clTButton, icon: 'img_canvas', class: () => Promise.resolve().then(function () { return TPadPainter$1; }).then(h => h.TPadPainter) },
    { name: 'TFrame', icon: 'img_frame', draw: () => Promise.resolve().then(function () { return TCanvasPainter$1; }).then(h => h.drawTFrame) },
@@ -99285,7 +99297,7 @@ const drawFuncs = { lst: [
    { name: clTMathText, sameas: clTLatex },
    { name: clTText, sameas: clTLatex },
    { name: clTAnnotation, sameas: clTLatex },
-   { name: /^TH1/, icon: 'img_histo1d', class: () => Promise.resolve().then(function () { return TH1Painter$1; }).then(h => h.TH1Painter), opt: ';hist;P;P0;E;E1;E2;E3;E4;E1X0;L;LF2;B;B1;A;TEXT;LEGO;same', ctrl: 'l' },
+   { name: /^TH1/, icon: 'img_histo1d', class: () => Promise.resolve().then(function () { return TH1Painter$1; }).then(h => h.TH1Painter), opt: ';hist;P;P0;E;E1;E2;E3;E4;E1X0;L;LF2;C;B;B1;A;TEXT;LEGO;same', ctrl: 'l' },
    { name: clTProfile, icon: 'img_profile', class: () => Promise.resolve().then(function () { return TH1Painter$1; }).then(h => h.TH1Painter), opt: ';E0;E1;E2;p;AH;hist' },
    { name: clTH2Poly, icon: 'img_histo2d', class: () => Promise.resolve().then(function () { return TH2Painter$1; }).then(h => h.TH2Painter), opt: ';COL;COL0;COLZ;LCOL;LCOL0;LCOLZ;LEGO;TEXT;same', expand_item: 'fBins', theonly: true },
    { name: 'TProfile2Poly', sameas: clTH2Poly },
@@ -99348,7 +99360,7 @@ const drawFuncs = { lst: [
    { name: 'TEveGeoShapeExtract', sameas: clTGeoVolume, opt: ';more;all;count;projx;projz;wire;dflt' },
    { name: nsREX+'REveGeoShapeExtract', sameas: clTGeoVolume, opt: ';more;all;count;projx;projz;wire;dflt' },
    { name: 'TGeoOverlap', sameas: clTGeoVolume, opt: ';more;all;count;projx;projz;wire;dflt', dflt: 'dflt', ctrl: 'expand' },
-   { name: 'TGeoManager', sameas: clTGeoVolume, opt: ';more;all;count;projx;projz;wire;tracks;no_screen;dflt', dflt: 'expand', ctrl: 'dflt' },
+   { name: 'TGeoManager', sameas: clTGeoVolume, opt: ';more;all;count;projx;projz;wire;tracks;no_screen;dflt', dflt: 'expand', ctrl: 'dflt', noappend: true },
    { name: 'TGeoVolumeAssembly', sameas: clTGeoVolume, /* icon: 'img_geoassembly', */ opt: ';more;all;count' },
    { name: /^TGeo/, class: () => import_geo().then(h => h.TGeoPainter), get_expand: () => import_geo().then(h => h.expandGeoObject), opt: ';more;all;axis;compa;count;projx;projz;wire;no_screen;dflt', dflt: 'dflt', ctrl: 'expand' },
    { name: 'TAxis3D', icon: 'img_graph', draw: () => import_geo().then(h => h.drawAxis3D), direct: true },
@@ -99496,6 +99508,7 @@ function getDrawSettings(kind, selector) {
       if (!h) break;
       if (!res.handle) res.handle = h;
       if (h.noinspect) noinspect = true;
+      if (h.noappend) res.noappend = true;
       if (h.expand || h.get_expand || h.expand_item || h.can_expand) canexpand = true;
       if (!h.func && !h.class && !h.draw) break;
       isany = true;
@@ -99503,7 +99516,10 @@ function getDrawSettings(kind, selector) {
       let opts = h.opt.split(';');
       for (let i = 0; i < opts.length; ++i) {
          opts[i] = opts[i].toLowerCase();
-         if ((selector.indexOf('nosame') >= 0) && (opts[i].indexOf('same') == 0)) continue;
+         if (opts[i].indexOf('same') == 0) {
+            res.has_same = true;
+            if (selector.indexOf('nosame') >= 0) continue;
+         }
 
          if (res.opts === null) res.opts = [];
          if (res.opts.indexOf(opts[i]) < 0) res.opts.push(opts[i]);
@@ -101721,8 +101737,16 @@ class HierarchyPainter extends BasePainter {
                   sett.opts.unshift('');
             }
 
-            if (sett.opts)
-               menu.addDrawMenu('Draw', sett.opts, arg => this.display(itemname, arg));
+            if (sett.opts) {
+               menu.addDrawMenu('Draw', sett.opts, arg => this.display(itemname, arg),
+                                'Draw item in the new frame');
+
+               let active_frame = this.disp?.getActiveFrame();
+
+               if (!sett.noappend && active_frame && (getElementCanvPainter(active_frame) || getElementMainPainter(active_frame)))
+                  menu.addDrawMenu('Superimpose', sett.opts, arg => this.dropItem(itemname, active_frame, arg),
+                                   'Superimpose item with drawing on active frame');
+            }
 
             if (fileprop && sett.opts && !fileprop.localfile) {
                let filepath = qualifyURL(fileprop.fileurl);
@@ -101740,7 +101764,8 @@ class HierarchyPainter extends BasePainter {
                   arg0 += '&with_credentials';
 
                menu.addDrawMenu('Draw in new tab', sett.opts,
-                                arg => window.open(`${exports.source_dir}?${arg0}&${filepath}&opt=${arg}`));
+                                arg => window.open(`${exports.source_dir}?${arg0}&${filepath}&opt=${arg}`),
+                                'Draw item in the new browser tab or window');
             }
 
             if ((sett.expand || sett.get_expand) && !('_childs' in hitem) && (hitem._more || !('_more' in hitem)))
@@ -101968,7 +101993,7 @@ class HierarchyPainter extends BasePainter {
       }).on('drop', function(ev) {
          select(this).classed('jsroot_drag_area', false);
          let itemname = ev.dataTransfer.getData('item');
-         if (itemname) h.dropItem(itemname, this.getAttribute('id'));
+         if (itemname) h.dropItem(itemname, this);
       });
    }
 
@@ -102823,9 +102848,10 @@ class HierarchyPainter extends BasePainter {
                                               (this.isMonitoring() ? `&monitoring=${this.getMonitoringInterval()}` : '') +
                                               (arg ? `&opt=${arg}` : '')));
 
-      if (sett.opts && (sett.opts.length > 0) && root_type && (node._can_draw !== false))
+      if (sett.opts?.length && root_type && (node._can_draw !== false))
          menu.addDrawMenu('Draw as png', sett.opts,
-                           arg => window.open(onlineprop.server + onlineprop.itemname + '/root.png?w=600&h=400' + (arg ? '&opt=' + arg : '')));
+                           arg => window.open(onlineprop.server + onlineprop.itemname + '/root.png?w=600&h=400' + (arg ? '&opt=' + arg : '')),
+                           'Request PNG image from the server');
 
       if ('_player' in node)
          menu.add('Player', () => this.player(itemname));
@@ -106082,12 +106108,10 @@ class TGraphPolarPainter extends ObjectPainter {
    /** @summary Show tooltip */
    showTooltip(hint) {
 
-      if (!this.draw_g) return;
+      let ttcircle = this.draw_g?.selectChild('.tooltip_bin');
 
-      let ttcircle = this.draw_g.select('.tooltip_bin');
-
-      if (!hint) {
-         ttcircle.remove();
+      if (!hint || !!this.draw_g) {
+         ttcircle?.remove();
          return;
       }
 
@@ -107132,15 +107156,17 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
    /** @summary Show tooltip */
    showTooltip(hint) {
 
-      if (!hint) {
-         if (this.draw_g) this.draw_g.select('.tooltip_bin').remove();
+      let ttrect = this.draw_g?.selectChild('.tooltip_bin');
+
+      if (!hint || !this.draw_g) {
+         ttrect?.remove();
          return;
       }
 
-      if (hint.usepath) return this.showTooltipForPath(hint);
+      if (hint.usepath)
+         return this.showTooltipForPath(hint);
 
-      let d = select(hint.d3bin).datum(),
-          ttrect = this.draw_g.select('.tooltip_bin');
+      let d = select(hint.d3bin).datum();
 
       if (ttrect.empty())
          ttrect = this.draw_g.append('svg:rect')
@@ -107327,10 +107353,10 @@ let TGraphPainter$1 = class TGraphPainter extends ObjectPainter {
    /** @summary Show tooltip for path drawing */
    showTooltipForPath(hint) {
 
-      let ttbin = this.draw_g.select('.tooltip_bin');
+      let ttbin = this.draw_g?.selectChild('.tooltip_bin');
 
-      if (!hint || !hint.bin) {
-         ttbin.remove();
+      if (!hint?.bin || !this.draw_g) {
+         ttbin?.remove();
          return;
       }
 
@@ -108001,7 +108027,7 @@ class TF1Painter extends TH1Painter$2 {
       if (this._use_saved_points)
          return super.processTooltipEvent(pnt);
 
-      let ttrect = this.draw_g?.select('.tooltip_bin');
+      let ttrect = this.draw_g?.selectChild('.tooltip_bin');
 
       if (!this.draw_g || !pnt) {
          ttrect?.remove();
@@ -109444,7 +109470,7 @@ class TF2Painter extends TH2Painter {
       if (this._use_saved_points)
          return super.processTooltipEvent(pnt);
 
-      let ttrect = this.draw_g?.select('.tooltip_bin');
+      let ttrect = this.draw_g?.selectChild('.tooltip_bin');
 
       if (!this.draw_g || !pnt) {
          ttrect?.remove();
@@ -109664,14 +109690,13 @@ class TSplinePainter extends ObjectPainter {
          }
       }
 
-      if (cleanup) {
-         if (this.draw_g)
-            this.draw_g.select('.tooltip_bin').remove();
+      let gbin = this.draw_g?.selectChild('.tooltip_bin'),
+          radius = this.lineatt.width + 3;
+
+      if (cleanup || !this.draw_g) {
+         gbin?.remove();
          return null;
       }
-
-      let gbin = this.draw_g.select('.tooltip_bin'),
-          radius = this.lineatt.width + 3;
 
       if (gbin.empty())
          gbin = this.draw_g.append('svg:circle')
@@ -112259,7 +112284,7 @@ class RAxisPainter extends RObjectPainter {
       if (side === undefined) side = 1;
 
       if (!this.standalone) {
-         axis_g = layer.select(`.${this.name}_container`);
+         axis_g = layer.selectChild(`.${this.name}_container`);
          if (axis_g.empty())
             axis_g = layer.append('svg:g').attr('class', `${this.name}_container`);
          else
@@ -112336,9 +112361,9 @@ class RAxisPainter extends RObjectPainter {
 
    /** @summary Draw axis again on opposite frame size */
    drawAxisOtherPlace(layer, transform, side, only_ticks) {
-      let axis_g = layer.select('.' + this.name + '_container2');
+      let axis_g = layer.selectChild(`.${this.name}_container2`);
       if (axis_g.empty())
-         axis_g = layer.append('svg:g').attr('class',this.name + '_container2');
+         axis_g = layer.append('svg:g').attr('class',`${this.name}_container2`);
       else
          axis_g.selectAll('*').remove();
 
@@ -112655,7 +112680,7 @@ class RFramePainter extends RObjectPainter {
    /** @summary Draw axes grids
      * @desc Called immediately after axes drawing */
    drawGrids() {
-      let layer = this.getFrameSvg().select('.grid_layer');
+      let layer = this.getFrameSvg().selectChild('.grid_layer');
 
       layer.selectAll('.xgrid').remove();
       layer.selectAll('.ygrid').remove();
@@ -112928,7 +112953,7 @@ class RFramePainter extends RObjectPainter {
          this.z_handle.configureZAxis('zaxis', this);
       }
 
-      let layer = this.getFrameSvg().select('.axis_layer');
+      let layer = this.getFrameSvg().selectChild('.axis_layer');
 
       this.x_handle.has_obstacle = false;
 
@@ -112990,7 +113015,7 @@ class RFramePainter extends RObjectPainter {
    /** @summary Draw secondary configuread axes */
    drawAxes2(second_x, second_y) {
       let w = this.getFrameWidth(), h = this.getFrameHeight(),
-          layer = this.getFrameSvg().select('.axis_layer'),
+          layer = this.getFrameSvg().selectChild('.axis_layer'),
           pr1, pr2;
 
       if (second_x) {
@@ -113110,10 +113135,8 @@ class RFramePainter extends RObjectPainter {
    cleanupAxes() {
       this.cleanXY();
 
-      if (this.draw_g) {
-         this.draw_g.select('.grid_layer').selectAll('*').remove();
-         this.draw_g.select('.axis_layer').selectAll('*').remove();
-      }
+      this.draw_g?.selectChild('.grid_layer').selectAll('*').remove();
+      this.draw_g?.selectChild('.axis_layer').selectAll('*').remove();
       this.axes_drawn = false;
    }
 
@@ -113138,10 +113161,8 @@ class RFramePainter extends RObjectPainter {
       clean('x2');
       clean('y2');
 
-      if (this.draw_g) {
-         this.draw_g.select('.main_layer').selectAll('*').remove();
-         this.draw_g.select('.upper_layer').selectAll('*').remove();
-      }
+      this.draw_g?.selectChild('.main_layer').selectAll('*').remove();
+      this.draw_g?.selectChild('.upper_layer').selectAll('*').remove();
    }
 
    /** @summary Fully cleanup frame
@@ -113249,8 +113270,8 @@ class RFramePainter extends RObjectPainter {
          this.draw_g.append('svg:g').attr('class','axis_layer');
          this.draw_g.append('svg:g').attr('class','upper_layer');
       } else {
-         top_rect = this.draw_g.select('rect');
-         main_svg = this.draw_g.select('.main_layer');
+         top_rect = this.draw_g.selectChild('rect');
+         main_svg = this.draw_g.selectChild('.main_layer');
       }
 
       this.axes_drawn = false;
@@ -114008,7 +114029,7 @@ class RPadPainter extends RObjectPainter {
          if (!this.isBatchMode())
             btns = this.getLayerSvg('btns_layer', this.this_pad_name);
 
-         frect = svg.select('.canvas_fillrect');
+         frect = svg.selectChild('.canvas_fillrect');
 
       } else {
 
@@ -114188,11 +114209,11 @@ class RPadPainter extends RObjectPainter {
 
       if (only_resize) {
          svg_pad = this.svg_this_pad();
-         svg_rect = svg_pad.select('.root_pad_border');
+         svg_rect = svg_pad.selectChild('.root_pad_border');
          if (!this.isBatchMode())
             btns = this.getLayerSvg('btns_layer', this.this_pad_name);
       } else {
-         svg_pad = svg_parent.select('.primitives_layer')
+         svg_pad = svg_parent.selectChild('.primitives_layer')
              .append('svg:svg') // here was g before, svg used to blend all drawin outside
              .classed('__root_pad_' + this.this_pad_name, true)
              .attr('pad', this.this_pad_name) // set extra attribute  to mark pad name
@@ -115096,7 +115117,7 @@ class RPadPainter extends RObjectPainter {
 
             item.img?.remove(); // delete embed image
 
-            let prim = item.prnt.select('.primitives_layer');
+            let prim = item.prnt.selectChild('.primitives_layer');
 
             if (item.foreign) // reinsert foreign object
                item.prnt.node().insertBefore(item.foreign.node(), prim.node());
@@ -116723,7 +116744,7 @@ async function ensureRCanvas(painter, frame_kind) {
    let pr = painter.getCanvSvg().empty() ? RCanvasPainter.draw(painter.getDom(), null /* noframe */) : Promise.resolve(true);
 
    return pr.then(() => {
-      if ((frame_kind !== false) && painter.getFrameSvg().select('.main_layer').empty())
+      if ((frame_kind !== false) && painter.getFrameSvg().selectChild('.main_layer').empty())
          return RFramePainter.draw(painter.getDom(), null, isStr(frame_kind) ? frame_kind : '');
    }).then(() => {
       painter.addToPadPrimitives();
@@ -116936,13 +116957,13 @@ registerMethods(`${nsREX}RPalette`, {
 function drawRFont() {
    let font   = this.getObject(),
        svg    = this.getCanvSvg(),
-       defs   = svg.select('.canvas_defs'),
+       defs   = svg.selectChild('.canvas_defs'),
        clname = 'custom_font_' + font.fFamily+font.fWeight+font.fStyle;
 
    if (defs.empty())
       defs = svg.insert('svg:defs', ':first-child').attr('class', 'canvas_defs');
 
-   let entry = defs.select('.' + clname);
+   let entry = defs.selectChild('.' + clname);
    if (entry.empty())
       entry = defs.append('style').attr('type', 'text/css').attr('class', clname);
 
@@ -117145,7 +117166,7 @@ class RPalettePainter extends RObjectPainter {
           this.draw_g.attr('transform', makeTranslate(palette_x, palette_y));
       }
 
-      let g_btns = this.draw_g.select('.colbtns');
+      let g_btns = this.draw_g.selectChild('.colbtns');
       if (g_btns.empty())
          g_btns = this.draw_g.append('svg:g').attr('class', 'colbtns');
       else
@@ -117460,7 +117481,7 @@ class RPavePainter extends RObjectPainter {
       this.v7AttrChange(changes, 'height', this.pave_height / rect.height);
       this.v7SendAttrChanges(changes, false); // do not invoke canvas update on the server
 
-      this.draw_g.select('rect')
+      this.draw_g.selectChild('rect')
                  .attr('width', this.pave_width)
                  .attr('height', this.pave_height);
 
@@ -117734,7 +117755,7 @@ class RHistStatsPainter extends RPavePainter {
       // for characters like 'p' or 'y' several more pixels required to stay in the box when drawn in last line
       let stepy = height / nlines, has_head = false, margin_x = 0.02 * width;
 
-      let text_g = this.draw_g.select('.statlines');
+      let text_g = this.draw_g.selectChild('.statlines');
       if (text_g.empty())
          text_g = this.draw_g.append('svg:g').attr('class', 'statlines');
       else
@@ -119297,9 +119318,10 @@ let RH1Painter$2 = class RH1Painter extends RHistPainter {
 
    /** @summary Process tooltip event */
    processTooltipEvent(pnt) {
+      let ttrect = this.draw_g?.selectChild('.tooltip_bin');
+
       if (!pnt || !this.draw_content || this.options.Mode3D || !this.draw_g) {
-         if (this.draw_g)
-            this.draw_g.select('.tooltip_bin').remove();
+         ttrect?.remove();
          return null;
       }
 
@@ -119456,8 +119478,6 @@ let RH1Painter$2 = class RH1Painter extends RHistPainter {
          // exclude empty bin if empty bins suppressed
          if (!this.options.Zero && (histo.getBinContent(findbin+1) === 0)) findbin = null;
       }
-
-      let ttrect = this.draw_g.select('.tooltip_bin');
 
       if ((findbin === null) || ((gry2 <= 0) || (gry1 >= height))) {
          ttrect.remove();
@@ -120554,8 +120574,8 @@ let RH2Painter$2 = class RH2Painter extends RHistPainter {
          }
       }
 
-      let layer = this.getFrameSvg().select('.main_layer'),
-          defs = layer.select('def');
+      let layer = this.getFrameSvg().selectChild('.main_layer'),
+          defs = layer.selectChild('def');
       if (defs.empty() && (colPaths.length > 0))
          defs = layer.insert('svg:defs', ':first-child');
 
@@ -120566,7 +120586,7 @@ let RH2Painter$2 = class RH2Painter extends RHistPainter {
       for (colindx = 0; colindx < colPaths.length; ++colindx)
         if ((colPaths[colindx] !== undefined) && (colindx<cntr.length)) {
            let pattern_id = (this.pad_name || 'canv') + `_scatter_${colindx}`,
-               pattern = defs.select(`#${pattern_id}`);
+               pattern = defs.selectChild(`#${pattern_id}`);
            if (pattern.empty())
               pattern = defs.append('svg:pattern')
                             .attr('id', pattern_id)
@@ -120692,15 +120712,14 @@ let RH2Painter$2 = class RH2Painter extends RHistPainter {
 
    /** @summary Process tooltip event */
    processTooltipEvent(pnt) {
-      if (!pnt || !this.draw_content || !this.draw_g || !this.tt_handle || this.options.Proj) {
-         if (this.draw_g)
-            this.draw_g.select('.tooltip_bin').remove();
-         return null;
-      }
-
       let histo = this.getHisto(),
           h = this.tt_handle,
-          ttrect = this.draw_g.select('.tooltip_bin');
+          ttrect = this.draw_g?.selectChild('.tooltip_bin');
+
+      if (!pnt || !this.draw_content || !this.draw_g || !h || this.options.Proj) {
+         ttrect?.remove();
+         return null;
+      }
 
       if (h.poly) {
          // process tooltips from TH2Poly - see TH2Painter

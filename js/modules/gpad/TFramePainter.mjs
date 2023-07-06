@@ -289,10 +289,11 @@ const TooltipHandler = {
    isTooltipShown() {
       if (!this.tooltip_enabled || !this.isTooltipAllowed())
          return false;
-      let hintsg = this.hints_layer().select('.objects_hints');
+      let hintsg = this.hints_layer().selectChild('.objects_hints');
       return hintsg.empty() ? false : hintsg.property('hints_pad') == this.getPadName();
    },
 
+   /** @summary set tooltips enabled on/off */
    setTooltipEnabled(enabled) {
       if (enabled !== undefined)
          this.tooltip_enabled = enabled;
@@ -303,7 +304,7 @@ const TooltipHandler = {
 
       if (pnt?.handler) {
          // special use of interactive handler in the frame painter
-         let rect = this.draw_g?.select('.main_layer');
+         let rect = this.draw_g?.selectChild('.main_layer');
          if (!rect || rect.empty()) {
             pnt = null; // disable
          } else if (pnt.touch && evnt) {
@@ -371,7 +372,7 @@ const TooltipHandler = {
       }
 
       let layer = this.hints_layer(),
-          hintsg = layer.select('.objects_hints'), // group with all tooltips
+          hintsg = layer.selectChild('.objects_hints'), // group with all tooltips
           title = '', name = '', info = '',
           hint = null, best_dist2 = 1e10, best_hint = null, show_only_best = nhints > 15,
           coordinates = pnt ? Math.round(pnt.x) + ',' + Math.round(pnt.y) : '';
@@ -479,7 +480,7 @@ const TooltipHandler = {
 
       for (let n = 0; n < hints.length; ++n) {
          let hint = hints[n],
-            group = hintsg.select('.painter_hint_' + n);
+            group = hintsg.selectChild(`.painter_hint_${n}`);
 
          if (show_only_best && (hint !== best_hint)) hint = null;
 
@@ -492,7 +493,7 @@ const TooltipHandler = {
 
          if (was_empty)
             group = hintsg.append('svg:svg')
-               .attr('class', 'painter_hint_' + n)
+               .attr('class', `painter_hint_${n}`)
                .attr('opacity', 0) // use attribute, not style to make animation with d3.transition()
                .style('overflow', 'hidden')
                .style('pointer-events', 'none');
@@ -626,7 +627,7 @@ const FrameInteractive = {
                                 is_disabled: kind => { return (kind == 'move') && this.mode3d; },
                                 only_resize: true, minwidth: 20, minheight: 20, redraw: () => this.sizeChanged() });
 
-      let main_svg = this.draw_g.select('.main_layer');
+      let main_svg = this.draw_g.selectChild('.main_layer');
 
       main_svg.style('pointer-events','visibleFill')
               .property('handlers_set', 0);
@@ -658,7 +659,7 @@ const FrameInteractive = {
               .attr('width', this.getFrameWidth())
               .attr('height', this.getFrameHeight());
 
-      let hintsg = this.hints_layer().select('.objects_hints');
+      let hintsg = this.hints_layer().selectChild('.objects_hints');
       // if tooltips were visible before, try to reconstruct them after short timeout
       if (!hintsg.empty() && this.isTooltipAllowed() && (hintsg.property('hints_pad') == this.getPadName()))
          setTimeout(this.processFrameTooltipEvent.bind(this, hintsg.property('last_point'), null), 10);
@@ -828,7 +829,7 @@ const FrameInteractive = {
       if (evnt.buttons === this._shifting_buttons) {
          let frame = this.getFrameSvg(),
              pos = d3_pointer(evnt, frame.node()),
-             main_svg = this.draw_g.select('.main_layer');
+             main_svg = this.draw_g.selectChild('.main_layer');
          let dx = pos0[0] - pos[0],
              dy = pos0[1] - pos[1],
              w = this.getFrameWidth(), h = this.getFrameHeight();
@@ -860,7 +861,7 @@ const FrameInteractive = {
     /** @summary Shift scales on defined positions */
    performScalesShift() {
       let w = this.getFrameWidth(), h = this.getFrameHeight(),
-          main_svg = this.draw_g.select('.main_layer'),
+          main_svg = this.draw_g.selectChild('.main_layer'),
           gr = this.getGrFuncs(),
           xmin = gr.revertAxis('x', this._shifting_dx),
           xmax = gr.revertAxis('x', this._shifting_dx + w),
@@ -1452,7 +1453,7 @@ const FrameInteractive = {
     * @private */
    moveTouchHandling(evnt, kind, pos0) {
       let frame = this.getFrameSvg(),
-          main_svg = this.draw_g.select('.main_layer'), pos;
+          main_svg = this.draw_g.selectChild('.main_layer'), pos;
 
       try {
         pos = d3_pointers(evnt, frame.node())[0];
@@ -2038,7 +2039,7 @@ class TFramePainter extends ObjectPainter {
      * @desc Called immediately after axes drawing */
    drawGrids() {
 
-      let layer = this.getFrameSvg().select('.grid_layer');
+      let layer = this.getFrameSvg().selectChild('.grid_layer');
 
       layer.selectAll('.xgrid').remove();
       layer.selectAll('.ygrid').remove();
@@ -2120,7 +2121,7 @@ class TFramePainter extends ObjectPainter {
 
       if (AxisPos === undefined) AxisPos = 0;
 
-      let layer = this.getFrameSvg().select('.axis_layer'),
+      let layer = this.getFrameSvg().selectChild('.axis_layer'),
           w = this.getFrameWidth(),
           h = this.getFrameHeight(),
           pp = this.getPadPainter(),
@@ -2189,7 +2190,7 @@ class TFramePainter extends ObjectPainter {
    /** @summary draw second axes (if any)  */
    drawAxes2(second_x, second_y) {
 
-      let layer = this.getFrameSvg().select('.axis_layer'),
+      let layer = this.getFrameSvg().selectChild('.axis_layer'),
           w = this.getFrameWidth(),
           h = this.getFrameHeight(),
           pp = this.getPadPainter(),
@@ -2331,17 +2332,15 @@ class TFramePainter extends ObjectPainter {
 
    /** @summary remove all axes drawings */
    cleanAxesDrawings() {
-      if (this.x_handle) this.x_handle.removeG();
-      if (this.y_handle) this.y_handle.removeG();
-      if (this.z_handle) this.z_handle.removeG();
-      if (this.x2_handle) this.x2_handle.removeG();
-      if (this.y2_handle) this.y2_handle.removeG();
+      this.x_handle?.removeG();
+      this.y_handle?.removeG();
+      this.z_handle?.removeG();
+      this.x2_handle?.removeG();
+      this.y2_handle?.removeG();
 
       let g = this.getG();
-      if (g) {
-         g.select('.grid_layer').selectAll('*').remove();
-         g.select('.axis_layer').selectAll('*').remove();
-      }
+      g?.selectChild('.grid_layer').selectAll('*').remove();
+      g?.selectChild('.axis_layer').selectAll('*').remove();
       this.axes_drawn = false;
    }
 
@@ -2369,10 +2368,8 @@ class TFramePainter extends ObjectPainter {
       this.scale_ymin = this.scale_ymax = 0;
       this.scale_zmin = this.scale_zmax = 0;
 
-      if (this.draw_g) {
-         this.draw_g.select('.main_layer').selectAll('*').remove();
-         this.draw_g.select('.upper_layer').selectAll('*').remove();
-      }
+      this.draw_g?.selectChild('.main_layer').selectAll('*').remove();
+      this.draw_g?.selectChild('.upper_layer').selectAll('*').remove();
 
       this.xaxis = null;
       this.yaxis = null;
@@ -2473,8 +2470,8 @@ class TFramePainter extends ObjectPainter {
          this.draw_g.append('svg:g').attr('class', 'axis_layer');
          this.draw_g.append('svg:g').attr('class', 'upper_layer');
       } else {
-         top_rect = this.draw_g.select('path');
-         main_svg = this.draw_g.select('.main_layer');
+         top_rect = this.draw_g.selectChild('path');
+         main_svg = this.draw_g.selectChild('.main_layer');
       }
 
       this.axes_drawn = false;
