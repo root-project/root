@@ -94,13 +94,6 @@ TWebCanvas::TWebCanvas(TCanvas *c, const char *name, Int_t x, Int_t y, UInt_t wi
    fPrimitivesMerge = gEnv->GetValue("WebGui.PrimitivesMerge", 100);
    fTF1UseSave = gEnv->GetValue("WebGui.TF1UseSave", (Int_t) 0) > 0;
    fJsonComp = gEnv->GetValue("WebGui.JsonComp", TBufferJSON::kSameSuppression + TBufferJSON::kNoSpaces);
-
-   if (!gROOT->IsBatch()) {
-      c->fWindowWidth = width;
-      c->fWindowHeight = height;
-      c->fCw = width > 2 ? width - 2 : 0;
-      c->fCh = height > 25 ? height - 25 : 0;
-   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1820,7 +1813,7 @@ TString TWebCanvas::CreatePadJSON(TPad *pad, Int_t json_compression, Bool_t batc
    if (c) {
       res = CreateCanvasJSON(c, json_compression, batchmode);
    } else {
-      auto imp = std::make_unique<TWebCanvas>(pad->GetCanvas(), pad->GetName(), 0, 0, 1000, 500);
+      auto imp = std::make_unique<TWebCanvas>(pad->GetCanvas(), pad->GetName(), 0, 0, pad->GetWw(), pad->GetWh(), kTRUE);
 
       TPadWebSnapshot holder(true, false, batchmode); // readonly, no ids, batchmode
 
@@ -1844,7 +1837,7 @@ TString TWebCanvas::CreateCanvasJSON(TCanvas *c, Int_t json_compression, Bool_t 
       return res;
 
    {
-      auto imp = std::make_unique<TWebCanvas>(c, c->GetName(), 0, 0, 1000, 500);
+      auto imp = std::make_unique<TWebCanvas>(c, c->GetName(), 0, 0, c->GetWw(), c->GetWh(), kTRUE);
 
       TCanvasWebSnapshot holder(true, false, batchmode); // readonly, no ids, batchmode
 
@@ -1874,7 +1867,7 @@ Int_t TWebCanvas::StoreCanvasJSON(TCanvas *c, const char *filename, const char *
       return res;
 
    {
-      auto imp = std::make_unique<TWebCanvas>(c, c->GetName(), 0, 0, 1000, 500);
+      auto imp = std::make_unique<TWebCanvas>(c, c->GetName(), 0, 0, c->GetWw(), c->GetWh(), kTRUE);
 
       TCanvasWebSnapshot holder(true, false, batchmode); // readonly, no ids, batchmode
 
@@ -1899,7 +1892,17 @@ bool TWebCanvas::ProduceImage(TPad *pad, const char *fileName, Int_t width, Int_
    if (!json.Length())
       return false;
 
-   return ROOT::Experimental::RWebDisplayHandle::ProduceImage(fileName, json.Data(), width ? width : pad->GetWw(), height ? height : pad->GetWh());
+   if (!width && !height) {
+      if ((pad->GetCanvas() == pad) || (pad->IsA() == TCanvas::Class())) {
+         width = pad->GetWw();
+         height = pad->GetWh();
+      } else {
+         width = (Int_t) (pad->GetAbsWNDC() * pad->GetCanvas()->GetWw());
+         height = (Int_t) (pad->GetAbsHNDC() * pad->GetCanvas()->GetWh());
+      }
+   }
+
+   return ROOT::Experimental::RWebDisplayHandle::ProduceImage(fileName, json.Data(), width, height);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -2155,6 +2158,15 @@ TCanvasImp *TWebCanvas::NewCanvas(TCanvas *c, const char *name, Int_t x, Int_t y
 {
    Bool_t readonly = gEnv->GetValue("WebGui.FullCanvas", (Int_t) 1) == 0;
 
-   return new TWebCanvas(c, name, x, y, width, height, readonly);
+   auto imp = new TWebCanvas(c, name, x, y, width, height, readonly);
+
+   if (!gROOT->IsBatch()) {
+      c->fWindowWidth = width;
+      c->fWindowHeight = height;
+      c->fCw = width > 2 ? width - 2 : 0;
+      c->fCh = height > 25 ? height - 25 : 0;
+   }
+
+   return imp;
 }
 
