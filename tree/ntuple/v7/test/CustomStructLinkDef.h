@@ -4,6 +4,8 @@
 #pragma link off all classes;
 #pragma link off all functions;
 
+#pragma link C++ enum CustomEnum;
+
 #pragma link C++ class CustomStruct+;
 #pragma link C++ class DerivedA+;
 #pragma link C++ class DerivedA2+;

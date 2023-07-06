@@ -29,6 +29,18 @@ TEST(RNTuple, TypeName) {
       (ROOT::Experimental::RField<std::tuple<std::tuple<char, CustomStruct, char>, int>>::TypeName().c_str()));
 }
 
+TEST(RNTuple, Enum)
+{
+   auto f = RFieldBase::Create("f", "CustomEnum").Unwrap();
+
+   auto model = RNTupleModel::Create();
+   auto ptrEnum = model->MakeField<CustomEnum>("f");
+
+   EXPECT_EQ(model->GetField("f")->GetType(), f->GetType());
+
+   FileRaii fileGuard("test_ntuple_tclass.root");
+   auto ntuple = RNTupleWriter::Recreate(std::move(model), "f", fileGuard.GetPath());
+}
 
 TEST(RNTuple, CreateField)
 {
@@ -1166,7 +1178,7 @@ TEST(RNTuple, TVirtualCollectionProxy)
    }
 }
 
-TEST(RNTuple, Enums)
+TEST(RNTuple, EnumDeclarations)
 {
    FileRaii fileGuard("test_ntuple_enums.ntuple");
 

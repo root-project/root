@@ -12,6 +12,10 @@
 /**
  * Used to test serialization and deserialization of classes in RNTuple with TClass
  */
+
+enum CustomEnum {};
+enum class CustomEnumClass {};
+
 struct CustomStruct {
    float a = 0.0;
    std::vector<float> v1;
