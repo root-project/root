@@ -1,0 +1,13 @@
+diff --git a/.github/workflows/root-ci-config/build_root.py b/.github/workflows/root-ci-config/build_root.py
+index 33da0ac7b9..f88234edf1 100755
+--- a/.github/workflows/root-ci-config/build_root.py
++++ b/.github/workflows/root-ci-config/build_root.py
+@@ -131,7 +131,7 @@ def main():
+     # "official" branches (master, v?-??-??-patches), i.e. not for pull_request
+     # We also want to upload any successful build, even if it fails testing
+     # later on.
+-    if not pull_request and not args.incremental:
++    if not pull_request and not args.incremental and CONNECTION:
+         archive_and_upload(yyyy_mm_dd, obj_prefix)
+ 
+    testing: bool = options_dict['testing'].lower() == "on" and options_dict['roottest'].lower() == "on"
