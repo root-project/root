@@ -11,7 +11,7 @@ let version_id = 'dev';
 
 /** @summary version date
   * @desc Release date in format day/month/year like '14/04/2022' */
-let version_date = '6/07/2023';
+let version_date = '7/07/2023';
 
 /** @summary version id and date
   * @desc Produced by concatenation of {@link version_id} and {@link version_date}
@@ -68021,6 +68021,14 @@ class TCanvasPainter extends TPadPainter {
          let that = msg.slice(5),
              on = (that[that.length-1] == '1');
          this.showSection(that.slice(0,that.length-2), on);
+      } else if (msg.slice(0,5) == 'CTRL:') {
+         let obj = parse(msg.slice(5));
+         if ((obj?.title !== undefined) && (typeof document !== 'undefined'))
+            document.title = obj.title;
+         if (obj.x && obj.y && typeof window !== 'undefined')
+            window.moveTo(obj.x, obj.y);
+         if (obj.w && obj.h && typeof window !== 'undefined')
+            window.resizeTo(obj.w, obj.h);
       } else if (msg.slice(0,5) == 'EDIT:') {
          let obj_painter = this.findSnap(msg.slice(5));
          console.log(`GET EDIT ${msg.slice(5)} found ${!!obj_painter}`);
@@ -69856,7 +69864,7 @@ TPavePainter: TPavePainter,
 produceLegend: produceLegend
 });
 
-const CoordSystem = { kCARTESIAN: 1, kPOLAR: 2, kCYLINDRICAL: 3, kSPHERICAL: 4, kRAPIDITY: 5 };
+const kCARTESIAN = 1, kPOLAR = 2, kCYLINDRICAL = 3, kSPHERICAL = 4, kRAPIDITY = 5;
 
 
 /**
@@ -69882,7 +69890,7 @@ class THistDrawOptions {
               Spec: false, Pie: false, List: false, Zscale: false, Zvert: true, PadPalette: false,
               Candle: '', Violin: '', Scaled: null, Circular: 0,
               GLBox: 0, GLColor: false, Project: '',
-              System: CoordSystem.kCARTESIAN,
+              System: kCARTESIAN,
               AutoColor: false, NoStat: false, ForceStat: false, PadStats: false, PadTitle: false, AutoZoom: false,
               HighRes: 0, Zero: 1, Palette: 0, BaseLine: false,
               Optimize: settings.OptimizeDraw, adjustFrame: false,
@@ -69892,6 +69900,8 @@ class THistDrawOptions {
               _pmc: false, _plc: false, _pfc: false, need_fillcol: false,
               minimum: kNoZoom, maximum: kNoZoom, ymin: 0, ymax: 0, cutg: null, IgnoreMainScale: false });
    }
+
+   isCartesian() { return this.System == kCARTESIAN; }
 
    /** @summary Base on sumw2 values (re)set some bacis draw options, only for 1dim hist */
    decodeSumw2(histo, force) {
@@ -70131,10 +70141,10 @@ class THistDrawOptions {
       }
 
       if (d.check('SCAT')) this.Scat = true;
-      if (d.check('POL')) this.System = CoordSystem.kPOLAR;
-      if (d.check('CYL')) this.System = CoordSystem.kCYLINDRICAL;
-      if (d.check('SPH')) this.System = CoordSystem.kSPHERICAL;
-      if (d.check('PSR')) this.System = CoordSystem.kRAPIDITY;
+      if (d.check('POL')) this.System = kPOLAR;
+      if (d.check('CYL')) this.System = kCYLINDRICAL;
+      if (d.check('SPH')) this.System = kSPHERICAL;
+      if (d.check('PSR')) this.System = kRAPIDITY;
 
       if (d.check('TRI', true)) {
          this.Color = false;
@@ -70228,9 +70238,8 @@ class THistDrawOptions {
          this.Curve = this.Fill = true;
       }
 
-      //if (this.Surf == 15)
-      //   if (this.System == CoordSystem.kPOLAR || this.System == CoordSystem.kCARTESIAN)
-      //      this.Surf = 13;
+      if ((this.Surf == 15) && (this.System == kPOLAR || this.System == kCARTESIAN))
+         this.Surf = 13;
    }
 
    /** @summary Tries to reconstruct string with hist draw options */
@@ -71491,7 +71500,8 @@ class THistPainter extends ObjectPainter {
 
          menu.addchk(fp.enable_highlight, 'Highlight bins', () => {
             fp.enable_highlight = !fp.enable_highlight;
-            if (!fp.enable_highlight && fp.highlightBin3D && fp.mode3d) fp.highlightBin3D(null);
+            if (!fp.enable_highlight && fp.mode3d && isFunc(fp.highlightBin3D))
+               fp.highlightBin3D(null);
          });
 
          if (isFunc(fp?.render3D)) {
@@ -74568,7 +74578,7 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
             pr = this.drawBinsText(handle);
 
          if (!handle && !pr)
-            handle = this.drawBinsScatter();
+            handle = this.drawBinsColor();
       }
 
       if (handle)
@@ -75246,7 +75256,7 @@ let TH2Painter$2 = class TH2Painter extends THistPainter {
   * @private */
 function testAxisVisibility(camera, toplevel, fb, bb) {
    let top;
-   if (toplevel && toplevel.children)
+   if (toplevel?.children)
       for (let n = 0; n < toplevel.children.length; ++n) {
          top = toplevel.children[n];
          if (top.axis_draw) break;
@@ -75296,6 +75306,77 @@ function testAxisVisibility(camera, toplevel, fb, bb) {
       }
    }
 }
+
+
+function convertLegoBuf(painter, pos, binsx, binsy) {
+   if (painter.options.System === kCARTESIAN)
+      return pos;
+   let fp = painter.getFramePainter(), kx = 1/fp.size_x3d, ky = 1/fp.size_y3d;
+   if (binsx && binsy) {
+      kx *= binsx/(binsx-1);
+      ky *= binsy/(binsy-1);
+   }
+
+   if (painter.options.System === kPOLAR)
+      for (let i = 0; i < pos.length; i += 3) {
+         let angle = (1 - pos[i] * kx) * Math.PI,
+             radius = 0.5 + 0.5 * pos[i + 1] * ky;
+
+         pos[i] = Math.cos(angle) * radius * fp.size_x3d;
+         pos[i+1] = Math.sin(angle) * radius * fp.size_y3d;
+      }
+
+   else if (painter.options.System === kCYLINDRICAL)
+      for (let i = 0; i < pos.length; i += 3) {
+         let angle = (1 - pos[i] * kx) * Math.PI,
+             radius = 0.5 + pos[i + 2]/fp.size_z3d/4;
+
+         pos[i] = Math.cos(angle) * radius * fp.size_x3d;
+         pos[i+2] = (1 + Math.sin(angle) * radius) * fp.size_z3d;
+      }
+
+   else if (painter.options.System === kSPHERICAL)
+      for (let i = 0; i < pos.length; i += 3) {
+         let phi = (1 + pos[i] * kx) * Math.PI,
+             theta = pos[i+1] * ky * Math.PI,
+             radius = 0.5 + pos[i+2]/fp.size_z3d/4;
+
+         pos[i] = radius * Math.cos(theta) * Math.cos(phi) * fp.size_x3d;
+         pos[i+1] = radius * Math.cos(theta) * Math.sin(phi) * fp.size_y3d;
+         pos[i+2] = (1 + radius * Math.sin(theta)) * fp.size_z3d;
+      }
+
+   else if (painter.options.System === kRAPIDITY)
+      for (let i = 0; i < pos.length; i += 3) {
+         let phi = (1 - pos[i] * kx) * Math.PI,
+             theta = pos[i+1] * ky * Math.PI,
+             radius = 0.5 + pos[i+2]/fp.size_z3d/4;
+
+         pos[i] = radius * Math.cos(phi) * fp.size_x3d;
+         pos[i+1] = radius * Math.sin(theta) / Math.cos(theta) * fp.size_y3d / 2;
+         pos[i+2] = (1 + radius * Math.sin(phi)) * fp.size_z3d;
+      }
+
+   return pos;
+}
+
+function createLegoGeom(painter, positions, normals, binsx, binsy) {
+   let geometry = new BufferGeometry();
+   if (painter.options.System === kCARTESIAN) {
+      geometry.setAttribute('position', new BufferAttribute(positions, 3));
+      if (normals)
+         geometry.setAttribute('normal', new BufferAttribute(normals, 3));
+      else
+         geometry.computeVertexNormals();
+   } else {
+      convertLegoBuf(painter, positions, binsx, binsy);
+      geometry.setAttribute('position', new BufferAttribute(positions, 3));
+      geometry.computeVertexNormals();
+   }
+
+   return geometry;
+}
+
 
 /** @summary Set default camera position
   * @private */
@@ -75656,7 +75737,7 @@ function highlightBin3D(tip, selfmesh) {
          const geom = new BufferGeometry();
          geom.setAttribute('position', new BufferAttribute(pos, 3));
          geom.setAttribute('normal', new BufferAttribute(norm, 3));
-         const material = new MeshBasicMaterial({ color: color, opacity: opacity, vertexColors: false });
+         const material = new MeshBasicMaterial({ color, opacity, vertexColors: false });
          tooltip_mesh = new Mesh(geom, material);
       } else {
          pos = tooltip_mesh.geometry.attributes.position.array;
@@ -75684,11 +75765,16 @@ function highlightBin3D(tip, selfmesh) {
       }
       this.tooltip_mesh = tooltip_mesh;
       this.toplevel.add(tooltip_mesh);
+
+      if (tip.$painter && tip.$painter.options.System !== kCARTESIAN) {
+         convertLegoBuf(tip.$painter, pos);
+         tooltip_mesh.geometry.computeVertexNormals();
+      }
    }
 
    if (changed) this.render3D();
 
-   if (changed && isFunc(tip.$painter?.redrawProjection))
+   if (changed && tip.$projection && isFunc(tip.$painter?.redrawProjection))
       tip.$painter.redrawProjection(tip.ix-1, tip.ix, tip.iy-1, tip.iy);
 
    if (changed && mainp?.getObject())
@@ -75708,6 +75794,11 @@ function set3DOptions(hopt) {
   * @private */
 function drawXYZ(toplevel, AxisPainter, opts) {
    if (!opts) opts = {};
+
+   if (opts.drawany === false)
+      opts.draw = false;
+   else
+      opts.drawany = true;
 
    let grminx = -this.size_x3d, grmaxx = this.size_x3d,
        grminy = -this.size_y3d, grmaxy = this.size_y3d,
@@ -76000,7 +76091,8 @@ function drawXYZ(toplevel, AxisPainter, opts) {
       xcont.add(mesh);
    });
 
-   if (opts.zoom) xcont.add(createZoomMesh('x', this.size_x3d));
+   if (opts.zoom && opts.anydraw)
+      xcont.add(createZoomMesh('x', this.size_x3d));
    top.add(xcont);
 
    xcont = new Object3D();
@@ -76026,7 +76118,8 @@ function drawXYZ(toplevel, AxisPainter, opts) {
    });
 
    xcont.xyid = 4;
-   if (opts.zoom) xcont.add(createZoomMesh('x', this.size_x3d));
+   if (opts.zoom && opts.drawany)
+      xcont.add(createZoomMesh('x', this.size_x3d));
    top.add(xcont);
 
    lbls = []; text_scale = 1; maxtextheight = 0; ticks = [];
@@ -76110,7 +76203,8 @@ function drawXYZ(toplevel, AxisPainter, opts) {
       });
 
       ycont.xyid = 3;
-      if (opts.zoom) ycont.add(createZoomMesh('y', this.size_y3d));
+      if (opts.zoom && opts.drawany)
+         ycont.add(createZoomMesh('y', this.size_y3d));
       top.add(ycont);
 
       ycont = new Object3D();
@@ -76133,7 +76227,8 @@ function drawXYZ(toplevel, AxisPainter, opts) {
          ycont.add(mesh);
       });
       ycont.xyid = 1;
-      if (opts.zoom) ycont.add(createZoomMesh('y', this.size_y3d));
+      if (opts.zoom && opts.anydraw)
+         ycont.add(createZoomMesh('y', this.size_y3d));
       top.add(ycont);
    }
 
@@ -76141,7 +76236,7 @@ function drawXYZ(toplevel, AxisPainter, opts) {
 
    let zgridx = null, zgridy = null, lastmajorz = null, maxzlblwidth = 0;
 
-   if (this.size_z3d) {
+   if (this.size_z3d && opts.drawany) {
       zgridx = []; zgridy = [];
    }
 
@@ -76260,7 +76355,7 @@ function drawXYZ(toplevel, AxisPainter, opts) {
 
       if (opts.draw && zticksline)
          zcont[n].add(n == 0 ? zticksline : new LineSegments(zticksline.geometry, zticksline.material));
-      if (opts.zoom)
+      if (opts.zoom && opts.drawany)
          zcont[n].add(createZoomMesh('z', this.size_z3d, opts.use_y_for_z));
 
       zcont[n].zid = n + 2;
@@ -76278,6 +76373,9 @@ function drawXYZ(toplevel, AxisPainter, opts) {
 
    zcont[3].position.set(grminx,grminy,0);
    zcont[3].rotation.z = -3/4*Math.PI;
+
+   if (!opts.drawany)
+      return;
 
    let linex_material = getLineMaterial(this.x_handle),
        linex_geom = createLineSegments([grminx,0,0, grmaxx,0,0], linex_material, null, true);
@@ -76351,7 +76449,6 @@ function convert3DtoPadNDC(x, y, z) {
 function assignFrame3DMethods(fpainter) {
    Object.assign(fpainter, { create3DScene, render3D, resize3D, highlightBin3D, set3DOptions, drawXYZ, convert3DtoPadNDC });
 }
-
 
 /** @summary Draw histograms in 3D mode
   * @private */
@@ -76543,12 +76640,8 @@ function drawBinsLego(painter, is_v7 = false) {
          }
       }
 
-      let geometry = new BufferGeometry();
-      geometry.setAttribute('position', new BufferAttribute(positions, 3));
-      geometry.setAttribute('normal', new BufferAttribute(normals, 3));
-      // geometry.computeVertexNormals();
-
-      let rootcolor = is_v7 ? 3 : histo.fFillColor,
+      let geometry = createLegoGeom(painter, positions, normals),
+          rootcolor = is_v7 ? 3 : histo.fFillColor,
           fcolor = painter.getColor(rootcolor);
 
       if (palette) {
@@ -76600,8 +76693,8 @@ function drawBinsLego(painter, is_v7 = false) {
          tip.z2 = main.grz(Math.min(this.zmax, binz2));
 
          tip.color = this.tip_color;
-
-         if (p.is_projection && (p.getDimension() == 2)) tip.$painter = p; // used only for projections
+         tip.$painter = p;
+         tip.$projection = p.is_projection && (p.getDimension() == 2);
 
          return tip;
       };
@@ -76609,12 +76702,8 @@ function drawBinsLego(painter, is_v7 = false) {
       main.toplevel.add(mesh);
 
       if (num2vertices > 0) {
-         const geom2 = new BufferGeometry();
-         geom2.setAttribute('position', new BufferAttribute(pos2, 3));
-         geom2.setAttribute('normal', new BufferAttribute(norm2, 3));
-         //geom2.computeVertexNormals();
-
-         const color2 = (rootcolor < 2) ? new Color(0xFF0000) : new Color(rgb(fcolor).darker(0.5).toString()),
+         const geom2 = createLegoGeom(painter, pos2, norm2),
+               color2 = (rootcolor < 2) ? new Color(0xFF0000) : new Color(rgb(fcolor).darker(0.5).toString()),
                material2 = new MeshBasicMaterial({ color: color2, vertexColors: false }),
                mesh2 = new Mesh(geom2, material2);
          mesh2.face_to_bins_index = face_to_bins_indx2;
@@ -76708,7 +76797,7 @@ function drawBinsLego(painter, is_v7 = false) {
    // create boxes
    const lcolor = is_v7 ? painter.v7EvalColor('line_color', 'lightblue') : painter.getColor(histo.fLineColor),
          material = new LineBasicMaterial(getMaterialArgs(lcolor, { linewidth: is_v7 ? painter.v7EvalAttr('line_width', 1) : histo.fLineWidth })),
-         line = createLineSegments(lpositions, material, uselineindx ? lindicies : null );
+         line = createLineSegments(convertLegoBuf(painter, lpositions), material, uselineindx ? lindicies : null);
 
    /*
    line.painter = painter;
@@ -76927,46 +77016,43 @@ function drawBinsSurf3D(painter, is_v7 = false) {
       levels = [main_grz_min, main_grz_max]; // just cut top/bottom parts
    }
 
-   function RecalculateNormals(arr, normindx) {
-      for (let ii = handle.i1; ii < handle.i2; ++ii) {
-         for (let jj = handle.j1; jj < handle.j2; ++jj) {
-            let bin = ((ii-handle.i1) * (handle.j2-handle.j1) + (jj-handle.j1)) * 8;
-
-            if (normindx[bin] === -1) continue; // nothing there
-
-            let beg = (normindx[bin]  >= 0) ? bin : bin+9+normindx[bin],
-                end = bin+8, sumx=0, sumy = 0, sumz = 0;
-
-            for (let kk=beg;kk<end;++kk) {
-               let indx = normindx[kk];
-               if (indx < 0) return console.error('FAILURE in NORMALS RECALCULATIONS');
-               sumx+=arr[indx];
-               sumy+=arr[indx+1];
-               sumz+=arr[indx+2];
-            }
-
-            sumx = sumx/(end-beg); sumy = sumy/(end-beg); sumz = sumz/(end-beg);
-
-            for (let kk=beg;kk<end;++kk) {
-               let indx = normindx[kk];
-               arr[indx] = sumx;
-               arr[indx+1] = sumy;
-               arr[indx+2] = sumz;
-            }
-         }
-      }
-   }
-
    handle.grz = main_grz;
    handle.grz_min = main_grz_min;
    handle.grz_max = main_grz_max;
 
    buildSurf3D(histo, handle, ilevels, (lvl, pos, normindx) => {
-      let geometry = new BufferGeometry();
-      geometry.setAttribute('position', new BufferAttribute(pos, 3));
-      geometry.computeVertexNormals();
+      let geometry = createLegoGeom(painter, pos, null, handle.i2 - handle.i1, handle.j2 - handle.j1),
+          normals = geometry.getAttribute('normal').array;
+
+      // recalculate normals
       if (handle.donormals && (lvl === 1))
-         RecalculateNormals(geometry.getAttribute('normal').array, normindx);
+         for (let ii = handle.i1; ii < handle.i2; ++ii) {
+            for (let jj = handle.j1; jj < handle.j2; ++jj) {
+               let bin = ((ii-handle.i1) * (handle.j2 - handle.j1) + (jj - handle.j1)) * 8;
+
+               if (normindx[bin] === -1) continue; // nothing there
+
+               let beg = (normindx[bin]  >= 0) ? bin : bin+9+normindx[bin],
+                   end = bin+8, sumx = 0, sumy = 0, sumz = 0;
+
+               for (let kk = beg; kk < end; ++kk) {
+                  let indx = normindx[kk];
+                  if (indx < 0) return console.error('FAILURE in NORMALS RECALCULATIONS');
+                  sumx += normals[indx];
+                  sumy += normals[indx+1];
+                  sumz += normals[indx+2];
+               }
+
+               sumx = sumx/(end-beg); sumy = sumy/(end-beg); sumz = sumz/(end-beg);
+
+               for (let kk = beg; kk < end; ++kk) {
+                  let indx = normindx[kk];
+                  normals[indx] = sumx;
+                  normals[indx+1] = sumy;
+                  normals[indx+2] = sumz;
+               }
+            }
+         }
 
       let color, material;
       if (is_v7) {
@@ -77000,7 +77086,7 @@ function drawBinsSurf3D(painter, is_v7 = false) {
          material = new LineBasicMaterial(getMaterialArgs(color, { linewidth: histo.fLineWidth }));
       }
 
-      let line = createLineSegments(lpos, material);
+      let line = createLineSegments(convertLegoBuf(painter, lpos, handle.i2 - handle.i1, handle.j2 - handle.j1), material);
       line.painter = painter;
       main.toplevel.add(line);
    });
@@ -77061,11 +77147,8 @@ function drawBinsSurf3D(painter, is_v7 = false) {
                 }
              }
 
-             const geometry = new BufferGeometry();
-             geometry.setAttribute('position', new BufferAttribute(pos, 3));
-             geometry.setAttribute('normal', new BufferAttribute(norm, 3));
-
-             const material = new MeshBasicMaterial(getMaterialArgs(palette.getColor(colindx), { side: DoubleSide, opacity: 0.5, vertexColors: false })),
+             const geometry = createLegoGeom(painter, pos, norm, handle.i2 - handle.i1, handle.j2 - handle.j1),
+                   material = new MeshBasicMaterial(getMaterialArgs(palette.getColor(colindx), { side: DoubleSide, opacity: 0.5, vertexColors: false })),
                    mesh = new Mesh(geometry, material);
              mesh.painter = painter;
              main.toplevel.add(mesh);
@@ -78329,7 +78412,8 @@ class TH1Painter extends TH1Painter$2 {
             pr = main.create3DScene(this.options.Render3D, this.options.x3dscale, this.options.y3dscale).then(() => {
                main.setAxesRanges(histo.fXaxis, this.xmin, this.xmax, histo.fYaxis, this.ymin, this.ymax, histo.fZaxis, 0, 0, this);
                main.set3DOptions(this.options);
-               main.drawXYZ(main.toplevel, TAxisPainter, { use_y_for_z: true, zmult, zoom: settings.Zooming, ndim: 1, draw: this.options.Axis !== -1 });
+               main.drawXYZ(main.toplevel, TAxisPainter, { use_y_for_z: true, zmult, zoom: settings.Zooming, ndim: 1,
+                  draw: (this.options.Axis !== -1), drawany: this.options.isCartesian() });
             });
          }
 
@@ -78596,7 +78680,8 @@ class TH2Painter extends TH2Painter$2 {
                main.setAxesRanges(histo.fXaxis, this.xmin, this.xmax, histo.fYaxis, this.ymin, this.ymax, histo.fZaxis, this.zmin, this.zmax, this);
                main.set3DOptions(this.options);
                main.drawXYZ(main.toplevel, TAxisPainter, { zmult, zoom: settings.Zooming, ndim: 2,
-                  draw: this.options.Axis !== -1, reverse_x: this.options.RevX, reverse_y: this.options.RevY });
+                  draw: this.options.Axis !== -1, drawany: this.options.isCartesian(),
+                  reverse_x: this.options.RevX, reverse_y: this.options.RevY });
             });
          }
 
@@ -78920,11 +79005,14 @@ class TH3Painter extends THistPainter {
 
       let box_option = this.options.Box ? this.options.BoxStyle : 0;
 
-      if (!box_option && !this.options.GLBox && !this.options.GLColor && !this.options.Lego) {
+      if (this.options.Scat) {
          let promise = this.draw3DScatter();
          if (promise !== false) return promise;
          box_option = 12; // fall back to box2 draw option
+      } else if (this.options.Color) {
+         box_option = 12; // default draw option
       }
+
 
       let histo = this.getHisto(),
           fillcolor = this.getColor(histo.fFillColor),
@@ -79240,7 +79328,8 @@ class TH3Painter extends THistPainter {
          pr = main.create3DScene(this.options.Render3D, this.options.x3dscale, this.options.y3dscale).then(() => {
             main.setAxesRanges(histo.fXaxis, this.xmin, this.xmax, histo.fYaxis, this.ymin, this.ymax, histo.fZaxis, this.zmin, this.zmax, this);
             main.set3DOptions(this.options);
-            main.drawXYZ(main.toplevel, TAxisPainter, { zoom: settings.Zooming, ndim: 3, draw: this.options.Axis !== -1 });
+            main.drawXYZ(main.toplevel, TAxisPainter, { zoom: settings.Zooming, ndim: 3,
+                   draw: this.options.Axis !== -1, drawany: this.options.isCartesian() });
             return this.draw3DBins();
          }).then(() => {
             main.render3D();
@@ -118049,7 +118138,7 @@ class RHistPainter extends RObjectPainter {
 
    /** @summary Decode options */
    decodeOptions(/*opt*/) {
-      if (!this.options) this.options = { Hist : 1 };
+      if (!this.options) this.options = { Hist: 1, System: 1 };
    }
 
    /** @summary Copy draw options from other painter */
@@ -118490,7 +118579,8 @@ class RHistPainter extends RObjectPainter {
 
          menu.addchk(fp.enable_highlight, 'Highlight bins', () => {
             fp.enable_highlight = !fp.enable_highlight;
-            if (!fp.enable_highlight && main.highlightBin3D && main.mode3d) main.highlightBin3D(null);
+            if (!fp.enable_highlight && main.mode3d && isFunc(main.highlightBin3D))
+               main.highlightBin3D(null);
          });
 
          if (isFunc(fp?.render3D)) {

@@ -8,7 +8,7 @@ import { TPavePainter } from '../hist/TPavePainter.mjs';
 import { ensureTCanvas } from '../gpad/TCanvasPainter.mjs';
 
 
-const CoordSystem = { kCARTESIAN: 1, kPOLAR: 2, kCYLINDRICAL: 3, kSPHERICAL: 4, kRAPIDITY: 5 };
+const kCARTESIAN = 1, kPOLAR = 2, kCYLINDRICAL = 3, kSPHERICAL = 4, kRAPIDITY = 5;
 
 
 /**
@@ -34,7 +34,7 @@ class THistDrawOptions {
               Spec: false, Pie: false, List: false, Zscale: false, Zvert: true, PadPalette: false,
               Candle: '', Violin: '', Scaled: null, Circular: 0,
               GLBox: 0, GLColor: false, Project: '',
-              System: CoordSystem.kCARTESIAN,
+              System: kCARTESIAN,
               AutoColor: false, NoStat: false, ForceStat: false, PadStats: false, PadTitle: false, AutoZoom: false,
               HighRes: 0, Zero: 1, Palette: 0, BaseLine: false,
               Optimize: settings.OptimizeDraw, adjustFrame: false,
@@ -44,6 +44,8 @@ class THistDrawOptions {
               _pmc: false, _plc: false, _pfc: false, need_fillcol: false,
               minimum: kNoZoom, maximum: kNoZoom, ymin: 0, ymax: 0, cutg: null, IgnoreMainScale: false });
    }
+
+   isCartesian() { return this.System == kCARTESIAN; }
 
    /** @summary Base on sumw2 values (re)set some bacis draw options, only for 1dim hist */
    decodeSumw2(histo, force) {
@@ -283,10 +285,10 @@ class THistDrawOptions {
       }
 
       if (d.check('SCAT')) this.Scat = true;
-      if (d.check('POL')) this.System = CoordSystem.kPOLAR;
-      if (d.check('CYL')) this.System = CoordSystem.kCYLINDRICAL;
-      if (d.check('SPH')) this.System = CoordSystem.kSPHERICAL;
-      if (d.check('PSR')) this.System = CoordSystem.kRAPIDITY;
+      if (d.check('POL')) this.System = kPOLAR;
+      if (d.check('CYL')) this.System = kCYLINDRICAL;
+      if (d.check('SPH')) this.System = kSPHERICAL;
+      if (d.check('PSR')) this.System = kRAPIDITY;
 
       if (d.check('TRI', true)) {
          this.Color = false;
@@ -380,9 +382,8 @@ class THistDrawOptions {
          this.Curve = this.Fill = true;
       }
 
-      //if (this.Surf == 15)
-      //   if (this.System == CoordSystem.kPOLAR || this.System == CoordSystem.kCARTESIAN)
-      //      this.Surf = 13;
+      if ((this.Surf == 15) && (this.System == kPOLAR || this.System == kCARTESIAN))
+         this.Surf = 13;
    }
 
    /** @summary Tries to reconstruct string with hist draw options */
@@ -1643,7 +1644,8 @@ class THistPainter extends ObjectPainter {
 
          menu.addchk(fp.enable_highlight, 'Highlight bins', () => {
             fp.enable_highlight = !fp.enable_highlight;
-            if (!fp.enable_highlight && fp.highlightBin3D && fp.mode3d) fp.highlightBin3D(null);
+            if (!fp.enable_highlight && fp.mode3d && isFunc(fp.highlightBin3D))
+               fp.highlightBin3D(null);
          });
 
          if (isFunc(fp?.render3D)) {
@@ -2318,4 +2320,4 @@ class THistPainter extends ObjectPainter {
 
 } // class THistPainter
 
-export { THistPainter, kNoZoom, HistContour };
+export { THistPainter, kNoZoom, HistContour, kCARTESIAN, kPOLAR, kCYLINDRICAL, kSPHERICAL, kRAPIDITY };
