@@ -319,6 +319,7 @@ using `TH1::GetOption`:
 | "MERCATOR"   | Draw a contour via an Mercator projection.|
 | "SINUSOIDAL" | Draw a contour via an Sinusoidal projection.|
 | "PARABOLIC"  | Draw a contour via an Parabolic projection.|
+| "MOLLWEIDE"  | Draw a contour via an Mollweide projection.|
 | "LEGO9"      | Draw the 3D axis only. Mainly needed for internal use |
 | "FB"         | With LEGO or SURFACE, suppress the Front-Box.|
 | "BB"         | With LEGO or SURFACE, suppress the Back-Box.|
@@ -4338,6 +4339,10 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
    l = strstr(chopt,"PARABOLIC");
    if (l) {
       Hoption.Proj = 4; memcpy(l,"        ",9);    //Parabolic projection
+   }
+   l = strstr(chopt,"MOLLWEIDE");
+   if (l) {
+      Hoption.Proj = 5; memcpy(l,"        ",9);    //Mollweide projection
    }
    if (Hoption.Proj > 0) {
       Hoption.Color = 0;
@@ -10356,7 +10361,8 @@ Int_t THistPainter::ProjectMercator2xy(Double_t l, Double_t b, Double_t &Al, Dou
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Static function code from  Ernst-Jan Buis
+/// Static function code for sinusoidal projection
+/// from  Ernst-Jan Buis
 
 Int_t THistPainter::ProjectSinusoidal2xy(Double_t l, Double_t b, Double_t &Al, Double_t &Ab)
 {
@@ -10367,13 +10373,25 @@ Int_t THistPainter::ProjectSinusoidal2xy(Double_t l, Double_t b, Double_t &Al, D
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Static function code from  Ernst-Jan Buis
+/// Static function code for parabolic projection
+/// from  Ernst-Jan Buis
 
 Int_t THistPainter::ProjectParabolic2xy(Double_t l, Double_t b, Double_t &Al, Double_t &Ab)
 {
 
    Al = l*(2.*TMath::Cos(2*b*TMath::DegToRad()/3) - 1);
    Ab = 180*TMath::Sin(b*TMath::DegToRad()/3);
+   return 0;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Static function code for Mollweide projection
+
+Int_t THistPainter::ProjectMollweide2xy(Double_t l, Double_t b, Double_t &Al, Double_t &Ab)
+{
+
+   Al = l*TMath::Cos(b*TMath::DegToRad());
+   Ab = 90*TMath::Sin(b*TMath::DegToRad());
    return 0;
 }
 
@@ -10465,6 +10483,28 @@ void THistPainter::RecalculateRange()
       if (Hparam.xmin<0 && Hparam.xmax>0) {
          THistPainter::ProjectParabolic2xy(0, Hparam.ymin, xmin_aid, ymin_aid);
          THistPainter::ProjectParabolic2xy(0, Hparam.ymax, xmax_aid, ymin_aid);
+         if (ymin >ymin_aid) ymin = ymin_aid;
+         if (ymax <ymax_aid) ymax = ymax_aid;
+      }
+   } else if (Hoption.Proj == 5) {
+      THistPainter::ProjectMollweide2xy(Hparam.xmin, Hparam.ymin, xmin_aid, ymin_aid);
+      THistPainter::ProjectMollweide2xy(Hparam.xmin, Hparam.ymax, xmin,     ymax_aid);
+      THistPainter::ProjectMollweide2xy(Hparam.xmax, Hparam.ymax, xmax_aid, ymax);
+      THistPainter::ProjectMollweide2xy(Hparam.xmax, Hparam.ymin, xmax,     ymin);
+
+      if (xmin > xmin_aid) xmin = xmin_aid;
+      if (ymin > ymin_aid) ymin = ymin_aid;
+      if (xmax < xmax_aid) xmax = xmax_aid;
+      if (ymax < ymax_aid) ymax = ymax_aid;
+      if (Hparam.ymin<0 && Hparam.ymax>0) {
+         THistPainter::ProjectMollweide2xy(Hparam.xmin, 0, xmin_aid, ymin_aid);
+         THistPainter::ProjectMollweide2xy(Hparam.xmax, 0, xmax_aid, ymin_aid);
+         if (xmin >xmin_aid) xmin = xmin_aid;
+         if (xmax <xmax_aid) xmax = xmax_aid;
+      }
+      if (Hparam.xmin<0 && Hparam.xmax>0) {
+         THistPainter::ProjectMollweide2xy(0, Hparam.ymin, xmin_aid, ymin_aid);
+         THistPainter::ProjectMollweide2xy(0, Hparam.ymax, xmax_aid, ymin_aid);
          if (ymin >ymin_aid) ymin = ymin_aid;
          if (ymax <ymax_aid) ymax = ymax_aid;
       }
