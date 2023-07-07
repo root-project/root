@@ -141,7 +141,8 @@ public:
    std::string exportYMLtoString();
    bool importJSONfromString(const std::string &s);
    bool importYMLfromString(const std::string &s);
-   void importVarfromString(const std::string &jsonString);
+   void importJSONElement(const std::string &name, const std::string &jsonString);
+   void importVariableElement(const RooFit::Detail::JSONNode &n);
 
    void importFunction(const RooFit::Detail::JSONNode &n, bool importAllDependants);
    void importFunction(const std::string &jsonString, bool importAllDependants);
