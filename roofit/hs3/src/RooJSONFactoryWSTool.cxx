@@ -1654,11 +1654,28 @@ bool RooJSONFactoryWSTool::importYML(std::string const &filename)
    return this->importYML(infile);
 }
 
-void RooJSONFactoryWSTool::importVarfromString(const std::string &jsonString)
+void RooJSONFactoryWSTool::importJSONElement(const std::string &name, const std::string &jsonString)
 {
-   std::unique_ptr<JSONTree> tree = JSONTree::create(jsonString);
-   const JSONNode &n = tree->rootnode();
+   std::unique_ptr<RooFit::Detail::JSONTree> tree = RooFit::Detail::JSONTree::create(jsonString);
+   JSONNode &n = tree->rootnode();
+   n["name"] << name;
 
+   bool isVariable = true;
+   if (n.find("type")) {
+      isVariable = false;
+   }
+
+   if (isVariable) {
+      this->importVariableElement(n);
+   } else {
+      this->importFunction(n, false);
+   }
+}
+
+void RooJSONFactoryWSTool::importVariableElement(const JSONNode &elementNode)
+{
+   std::unique_ptr<RooFit::Detail::JSONTree> tree = varJSONString(elementNode);
+   JSONNode &n = tree->rootnode();
    _domains = std::make_unique<RooFit::JSONIO::Detail::Domains>();
    if (auto domains = n.find("domains"))
       _domains->readJSON(*domains);
