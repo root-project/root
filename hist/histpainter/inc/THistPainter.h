@@ -139,6 +139,7 @@ public:
    static  Int_t      ProjectMercator2xy(Double_t l, Double_t b, Double_t &Al, Double_t &Ab);
    static  Int_t      ProjectSinusoidal2xy(Double_t l, Double_t b, Double_t &Al, Double_t &Ab);
    static  Int_t      ProjectParabolic2xy(Double_t l, Double_t b, Double_t &Al, Double_t &Ab);
+   static  Int_t      ProjectMollweide2xy(Double_t l, Double_t b, Double_t &Al, Double_t &Ab);
    virtual void       RecalculateRange();
    void       RecursiveRemove(TObject *) override {}
    void       SetHighlight() override;
