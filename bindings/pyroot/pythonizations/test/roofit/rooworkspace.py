@@ -64,7 +64,7 @@ class RooWorkspace_test(unittest.TestCase):
         ws["m2"] = dict({"max": 5, "min": -5, "value": 1})
         ws["mean"] = dict({"type": "sum", "summands": ["m1", "m2"]})
         self.assertEqual(ws["mean"].GetName(), "mean")
-        self.assertEqual(ws["mean"].getVal(), 0.0)
+        self.assertEqual(ws["mean"].getVal(), 1.0)
 
         # Test to check if new p.d.f.s are created
         ws["sigma"] = dict({"value": 2, "min": 0.1, "max": 10.0})
