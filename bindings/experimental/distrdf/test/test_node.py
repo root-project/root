@@ -42,7 +42,7 @@ class OperationReadTest(unittest.TestCase):
         """Function names are read accurately."""
         hn = create_dummy_headnode(1)
         hn.backend = TestBackend()
-        node = Proxy.TransformationProxy(hn)
+        node = Proxy.NodeProxy(hn)
         func = node.Define  # noqa: avoid PEP8 F841
         self.assertEqual(node._new_op_name, "Define")
 
@@ -50,7 +50,7 @@ class OperationReadTest(unittest.TestCase):
         """Arguments (unnamed) are read accurately."""
         hn = create_dummy_headnode(1)
         hn.backend = TestBackend()
-        node = Proxy.TransformationProxy(hn)
+        node = Proxy.NodeProxy(hn)
         newNode = node.Define(1, "b", a="1", b=2)
         self.assertEqual(newNode.operation.args, [1, "b"])
 
@@ -58,7 +58,7 @@ class OperationReadTest(unittest.TestCase):
         """Named arguments are read accurately."""
         hn = create_dummy_headnode(1)
         hn.backend = TestBackend()
-        node = Proxy.TransformationProxy(hn)
+        node = Proxy.NodeProxy(hn)
         newNode = node.Define(1, "b", a="1", b=2)
         self.assertEqual(newNode.operation.kwargs, {"a": "1", "b": 2})
 
@@ -66,25 +66,25 @@ class OperationReadTest(unittest.TestCase):
 class NodeReturnTest(unittest.TestCase):
     """
     A series of test cases to check that right objects are returned for a node
-    (Proxy.ActionProxy, Proxy.TransformationProxy or Node).
+    (Proxy.ResultPtrProxy, Proxy.NodeProxy or Node).
     """
 
     def test_action_proxy_return(self):
         """Proxy objects are returned for action nodes."""
         hn = create_dummy_headnode(1)
         hn.backend = TestBackend()
-        node = Proxy.TransformationProxy(hn)
+        node = Proxy.NodeProxy(hn)
         newNode = node.Count()
-        self.assertIsInstance(newNode, Proxy.ActionProxy)
+        self.assertIsInstance(newNode, Proxy.ResultPtrProxy)
         self.assertIsInstance(newNode.proxied_node, Node.Node)
 
     def test_transformation_proxy_return(self):
         """Node objects are returned for transformation nodes."""
         hn = create_dummy_headnode(1)
         hn.backend = TestBackend()
-        node = Proxy.TransformationProxy(hn)
+        node = Proxy.NodeProxy(hn)
         newNode = node.Define(1)
-        self.assertIsInstance(newNode, Proxy.TransformationProxy)
+        self.assertIsInstance(newNode, Proxy.NodeProxy)
         self.assertIsInstance(newNode.proxied_node, Node.Node)
 
 
