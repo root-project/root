@@ -185,19 +185,6 @@ public:
 
 // clang-format off
 /**
-\class ROOT::Experimental::Detail::RPageAllocatorDaos
-\ingroup NTuple
-\brief Manages pages read from a DAOS container
-*/
-// clang-format on
-class RPageAllocatorDaos {
-public:
-   static RPage NewPage(ColumnId_t columnId, void *mem, std::size_t elementSize, std::size_t nElements);
-   static void DeletePage(const RPage &page);
-};
-
-// clang-format off
-/**
 \class ROOT::Experimental::Detail::RPageSourceDaos
 \ingroup NTuple
 \brief Storage provider that reads ntuple pages from a DAOS container
@@ -217,10 +204,7 @@ private:
 
    ntuple_index_t fNTupleIndex{0};
 
-   /// Populated pages might be shared; the memory buffer is managed by the RPageAllocatorDaos
-   std::unique_ptr<RPageAllocatorDaos> fPageAllocator;
-   // TODO: the page pool should probably be handled by the base class.
-   /// The page pool might, at some point, be used by multiple page sources
+   /// Populated pages might be shared; the page pool might, at some point, be used by multiple page sources
    std::shared_ptr<RPagePool> fPagePool;
    /// The last cluster from which a page got populated.  Points into fClusterPool->fPool
    RCluster *fCurrentCluster = nullptr;

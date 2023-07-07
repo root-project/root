@@ -92,21 +92,6 @@ public:
    void ReleasePage(RPage &page) final;
 };
 
-
-// clang-format off
-/**
-\class ROOT::Experimental::Detail::RPageAllocatorFile
-\ingroup NTuple
-\brief Manages pages read from a the file
-*/
-// clang-format on
-class RPageAllocatorFile {
-public:
-   static RPage NewPage(ColumnId_t columnId, void *mem, std::size_t elementSize, std::size_t nElements);
-   static void DeletePage(const RPage& page);
-};
-
-
 // clang-format off
 /**
 \class ROOT::Experimental::Detail::RPageSourceFile
@@ -128,9 +113,7 @@ private:
       std::uint64_t fColumnOffset = 0;
    };
 
-   /// Populated pages might be shared; there memory buffer is managed by the RPageAllocatorFile
-   std::unique_ptr<RPageAllocatorFile> fPageAllocator;
-   /// The page pool might, at some point, be used by multiple page sources
+   /// Populated pages might be shared; the page pool might, at some point, be used by multiple page sources
    std::shared_ptr<RPagePool> fPagePool;
    /// The last cluster from which a page got populated.  Points into fClusterPool->fPool
    RCluster *fCurrentCluster = nullptr;
