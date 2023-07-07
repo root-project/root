@@ -190,32 +190,11 @@ void ROOT::Experimental::Detail::RPageSinkFile::ReleasePage(RPage &page)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-
-ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageAllocatorFile::NewPage(
-   ColumnId_t columnId, void *mem, std::size_t elementSize, std::size_t nElements)
-{
-   RPage newPage(columnId, mem, elementSize, nElements);
-   newPage.GrowUnchecked(nElements);
-   return newPage;
-}
-
-void ROOT::Experimental::Detail::RPageAllocatorFile::DeletePage(const RPage& page)
-{
-   if (page.IsNull())
-      return;
-   delete[] reinterpret_cast<unsigned char *>(page.GetBuffer());
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-
-
 ROOT::Experimental::Detail::RPageSourceFile::RPageSourceFile(std::string_view ntupleName,
-   const RNTupleReadOptions &options)
-   : RPageSource(ntupleName, options)
-   , fPageAllocator(std::make_unique<RPageAllocatorFile>())
-   , fPagePool(std::make_shared<RPagePool>())
-   , fClusterPool(std::make_unique<RClusterPool>(*this, options.GetClusterBunchSize()))
+                                                             const RNTupleReadOptions &options)
+   : RPageSource(ntupleName, options),
+     fPagePool(std::make_shared<RPagePool>()),
+     fClusterPool(std::make_unique<RClusterPool>(*this, options.GetClusterBunchSize()))
 {
    fDecompressor = std::make_unique<RNTupleDecompressor>();
    EnableDefaultMetrics("RPageSourceFile");
