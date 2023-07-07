@@ -100,7 +100,7 @@
 - [The TEXT and TEXTnn Option](\ref HP15)
 - [The CONTour options](\ref HP16)
    - [The LIST option](\ref HP16a)
-   - [The AITOFF, MERCATOR, SINUSOIDAL and PARABOLIC options](\ref HP16b)
+   - [The AITOFF, MERCATOR, SINUSOIDAL, PARABOLIC and MOLLWEIDE options](\ref HP16b)
 - [The LEGO options](\ref HP17)
 - [The "SURFace" options](\ref HP18)
 - [Cylindrical, Polar, Spherical and PseudoRapidity/Phi options](\ref HP19)
@@ -319,6 +319,7 @@ using `TH1::GetOption`:
 | "MERCATOR"   | Draw a contour via an Mercator projection.|
 | "SINUSOIDAL" | Draw a contour via an Sinusoidal projection.|
 | "PARABOLIC"  | Draw a contour via an Parabolic projection.|
+| "MOLLWEIDE"  | Draw a contour via an Mollweide projection.|
 | "LEGO9"      | Draw the 3D axis only. Mainly needed for internal use |
 | "FB"         | With LEGO or SURFACE, suppress the Front-Box.|
 | "BB"         | With LEGO or SURFACE, suppress the Back-Box.|
@@ -1880,7 +1881,7 @@ Begin_Macro(source)
 End_Macro
 
 \anchor HP16b
-#### The AITOFF, MERCATOR, SINUSOIDAL and PARABOLIC options
+#### The AITOFF, MERCATOR, SINUSOIDAL, PARABOLIC and MOLLWEIDE options
 
 The following options select the `CONT4` option and are useful for
 sky maps or exposure maps (earth.C).
@@ -1891,6 +1892,7 @@ sky maps or exposure maps (earth.C).
 | "MERCATOR"   | Draw a contour via an Mercator projection.|
 | "SINUSOIDAL" | Draw a contour via an Sinusoidal projection.|
 | "PARABOLIC"  | Draw a contour via an Parabolic projection.|
+| "MOLLWEIDE"  | Draw a contour via an Mollweide projection.|
 
 Begin_Macro(source)
 ../../../tutorials/graphics/earth.C
@@ -4339,6 +4341,11 @@ Int_t THistPainter::MakeChopt(Option_t *choptin)
    if (l) {
       Hoption.Proj = 4; memcpy(l,"        ",9);    //Parabolic projection
    }
+   l = strstr(chopt,"MOLLWEIDE");
+   if (l) {
+      Hoption.Proj = 5; memcpy(l,"        ",9);    //Parabolic projection
+   }
+
    if (Hoption.Proj > 0) {
       Hoption.Color = 0;
       Hoption.Contour = 14;
@@ -10378,6 +10385,27 @@ Int_t THistPainter::ProjectParabolic2xy(Double_t l, Double_t b, Double_t &Al, Do
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Static function.
+///
+/// Convert Right Ascension, Declination to X,Y using an MOLLWEIDE projection.
+/// This procedure can be used to create an all-sky map in Galactic
+/// coordinates with an equal-area Mollweide projection.  Output map
+/// coordinates are zero longitude centered.
+/// It is also known as the Babinet projection, homalographic projection, homolographic projection, and elliptical projection.
+///
+/// code from  Marco Meyer-Conde
+
+Int_t THistPainter::ProjectMollweide2xy(Double_t l /* psi */, Double_t b /* lambda*/, Double_t &Al, Double_t &Ab)
+{
+   Double_t x, y;
+
+   Al = 0;
+   Ab = 0;
+   
+   return 0;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Recompute the histogram range following graphics operations.
 
 void THistPainter::RecalculateRange()
@@ -10468,7 +10496,32 @@ void THistPainter::RecalculateRange()
          if (ymin >ymin_aid) ymin = ymin_aid;
          if (ymax <ymax_aid) ymax = ymax_aid;
       }
+   } else if(Hoption.Proj == 5) {
+      // TODO : check x range not lower than -180 and not higher than 180
+      THistPainter::ProjectMollweide2xy(Hparam.xmin, Hparam.ymin, xmin_aid, ymin_aid);
+      THistPainter::ProjectMollweide2xy(Hparam.xmin, Hparam.ymax, xmin,     ymax_aid);
+      THistPainter::ProjectMollweide2xy(Hparam.xmax, Hparam.ymax, xmax_aid, ymax);
+      THistPainter::ProjectMollweide2xy(Hparam.xmax, Hparam.ymin, xmax,     ymin);
+
+      if (xmin > xmin_aid) xmin = xmin_aid;
+      if (ymin > ymin_aid) ymin = ymin_aid;
+      if (xmax < xmax_aid) xmax = xmax_aid;
+      if (ymax < ymax_aid) ymax = ymax_aid;
+      if (Hparam.ymin<0 && Hparam.ymax>0) {
+         // there is an  'equator', check its range in the plot..
+         THistPainter::ProjectMollweide2xy(Hparam.xmin*0.9999, 0, xmin_aid, ymin_aid);
+         THistPainter::ProjectMollweide2xy(Hparam.xmax*0.9999, 0, xmax_aid, ymin_aid);
+         if (xmin >xmin_aid) xmin = xmin_aid;
+         if (xmax <xmax_aid) xmax = xmax_aid;
+      }
+      if (Hparam.xmin<0 && Hparam.xmax>0) {
+         THistPainter::ProjectMollweide2xy(0, Hparam.ymin, xmin_aid, ymin_aid);
+         THistPainter::ProjectMollweide2xy(0, Hparam.ymax, xmax_aid, ymax_aid);
+         if (ymin >ymin_aid) ymin = ymin_aid;
+         if (ymax <ymax_aid) ymax = ymax_aid;
+      }
    }
+
    Hparam.xmin= xmin;
    Hparam.xmax= xmax;
    Hparam.ymin= ymin;

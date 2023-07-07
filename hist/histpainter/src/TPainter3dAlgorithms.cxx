@@ -3420,6 +3420,10 @@ void TPainter3dAlgorithms::SurfaceCartesian(Double_t, Int_t nx, Int_t ny, const 
                THistPainter::ProjectParabolic2xy(xyz[i*3 + 0], xyz[i*3 + 1], al, ab);
                xyz[i*3 + 0] = al;
                xyz[i*3 + 1] = ab;
+            } else if (Hoption.Proj == 5 ) {
+               THistPainter::ProjectMollweide2xy(xyz[i*3 + 0], xyz[i*3 + 1], al, ab);
+               xyz[i*3 + 0] = al;
+               xyz[i*3 + 1] = ab;
             }
          }
          icodes[0] = ix;

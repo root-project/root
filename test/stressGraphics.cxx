@@ -2339,6 +2339,7 @@ void earth()
    TH2F *h2 = new TH2F("h02","Mercator",  50, -180, 180, 50, -80.5, 80.5);
    TH2F *h3 = new TH2F("h03","Sinusoidal",50, -180, 180, 50, -90.5, 90.5);
    TH2F *h4 = new TH2F("h04","Parabolic", 50, -180, 180, 50, -90.5, 90.5);
+   TH2F *h5 = new TH2F("h05","Mollweide", 50, -180, 180, 50, -89.5, 89.5);
    std::ifstream in;
    in.open("../tutorials/graphics/earth.dat");
    if (!in) {
@@ -2355,12 +2356,14 @@ void earth()
      h2->Fill(x,y, 1);
      h3->Fill(x,y, 1);
      h4->Fill(x,y, 1);
+     h5->Fill(x,y, 1);
    }
    in.close();
    C->cd(1); h1->Draw("z aitoff");
    C->cd(2); h2->Draw("z mercator");
    C->cd(3); h3->Draw("z sinusoidal");
    C->cd(4); h4->Draw("z parabolic");
+   C->cd(5); h5->Draw("z mollweide");
 
    TestReport1(C, "Special contour options (AITOFF etc.)");
    DoCcode(C);
@@ -2369,6 +2372,7 @@ void earth()
    delete h2;
    delete h3;
    delete h4;
+   delete h5;
 }
 
 

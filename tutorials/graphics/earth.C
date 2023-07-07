@@ -18,13 +18,14 @@ TCanvas *earth(){
    gStyle->SetOptTitle(1);
    gStyle->SetOptStat(0);
 
-   TCanvas *c1 = new TCanvas("c1","earth_projections",700,700);
-   c1->Divide(2,2);
+   TCanvas *c1 = new TCanvas("c1","earth_projections",700,950);
+   c1->Divide(2,3);
 
    TH2F *ha = new TH2F("ha","Aitoff",    180, -180, 180, 179, -89.5, 89.5);
    TH2F *hm = new TH2F("hm","Mercator",  180, -180, 180, 161, -80.5, 80.5);
    TH2F *hs = new TH2F("hs","Sinusoidal",180, -180, 180, 181, -90.5, 90.5);
    TH2F *hp = new TH2F("hp","Parabolic", 180, -180, 180, 181, -90.5, 90.5);
+   TH2F *hw = new TH2F("hw","Mollweide", 180, -180, 180, 179, -89.5, 89.5);
 
    TString dat = gROOT->GetTutorialDir();
    dat.Append("/graphics/earth.dat");
@@ -40,6 +41,7 @@ TCanvas *earth(){
      hm->Fill(x,y, 1);
      hs->Fill(x,y, 1);
      hp->Fill(x,y, 1);
+     hw->Fill(x,y, 1);
    }
    in.close();
 
@@ -47,6 +49,7 @@ TCanvas *earth(){
    c1->cd(2); hm->Draw("mercator");
    c1->cd(3); hs->Draw("sinusoidal");
    c1->cd(4); hp->Draw("parabolic");
+   c1->cd(5); hw->Draw("mollweide");
 
    return c1;
 }

@@ -62244,6 +62244,8 @@ class TFramePainter extends ObjectPainter {
          case 3: return (l, b) => { return { x: l*Math.cos(b/180*Math.PI), y: b } };
          // parabolic
          case 4: return (l, b) => { return { x: l*(2.*Math.cos(2*b/180*Math.PI/3) - 1), y: 180*Math.sin(b/180*Math.PI/3) }; };
+         // mollweide
+         case 5: return (l, b) => { return { x: 0, y: 0 }; };
       }
    }
 
@@ -70147,6 +70149,7 @@ class THistDrawOptions {
       if (d.check('MERCATOR')) this.Proj = 2;
       if (d.check('SINUSOIDAL')) this.Proj = 3;
       if (d.check('PARABOLIC')) this.Proj = 4;
+      if (d.check('MOLLWEIDE')) this.Proj = 5;
       if (this.Proj > 0) this.Contour = 14;
 
       if (d.check('PROJXY', true)) this.Project = 'XY' + d.partAsInt(0,1);
@@ -112632,6 +112635,8 @@ class RFramePainter extends RObjectPainter {
          case 3: return (l, b) => { return { x: l*Math.cos(b/180*Math.PI), y: b } };
          // parabolic
          case 4: return (l, b) => { return { x: l*(2.*Math.cos(2*b/180*Math.PI/3) - 1), y: 180*Math.sin(b/180*Math.PI/3) }; };
+         // mollweide
+         case 5: return (l, b) => { return { x: 0, y: 0 }; };
       }
    }
 

@@ -787,7 +787,9 @@ in the list.
 
 -   "`PARABOLIC`": Draw a contour via a Parabolic projection
 
-The tutorial macro `earth.C` uses these four options and produces the
+-   "`MOLLWEIDE`": Draw a contour via a Mollweide projection
+
+The tutorial macro `earth.C` uses these five options and produces the
 following picture:
 
 ![The `earth.C` macro output](pictures/03000033.png)

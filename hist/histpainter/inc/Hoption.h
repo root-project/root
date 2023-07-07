@@ -56,7 +56,7 @@ typedef struct Hoption_t {
    int FrontBox;    ///< <b>"FB"</b> Suppress the front box for the 3D plots.
    int BackBox;     ///< <b>"BB"</b> Suppress the back box for the 3D plots.
    int List;        ///< <b>"LIST"</b> Generate the TObjArray "contours". To be used with option <b>"CONT"</b>
-   int Proj;        ///< <b>"AITOFF"</b>, <b>"MERCATOR"</b>, <b>"SINUSOIDAL"</b> and <b>"PARABOLIC"</b> projections for 2d plots.
+   int Proj;        ///< <b>"AITOFF"</b>, <b>"MERCATOR"</b>, <b>"SINUSOIDAL"</b>, <b>"PARABOLIC"</b> and <b>"MOLLWEIDE"</b> projections for 2d plots.
    int AxisPos;     ///< <b>"X+"</b> and <b>"Y+"</b> Axis position
    int Spec;        ///< <b>"SPEC"</b> TSpectrum graphics
    int Zero;        ///< <b>"0"</b> if selected with any LEGO option the empty bins are not drawn.

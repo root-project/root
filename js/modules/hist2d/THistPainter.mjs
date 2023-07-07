@@ -299,6 +299,7 @@ class THistDrawOptions {
       if (d.check('MERCATOR')) this.Proj = 2;
       if (d.check('SINUSOIDAL')) this.Proj = 3;
       if (d.check('PARABOLIC')) this.Proj = 4;
+      if (d.check('MOLLWEIDE')) this.Proj = 5;
       if (this.Proj > 0) this.Contour = 14;
 
       if (d.check('PROJXY', true)) this.Project = 'XY' + d.partAsInt(0,1);
