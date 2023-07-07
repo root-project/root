@@ -84,3 +84,23 @@ TEST(RNTupleZip, Large)
    decompressor.Unzip(zipBuffer.get(), szZip, N, unzipBuffer.get());
    EXPECT_EQ(data, std::string(unzipBuffer.get(), N));
 }
+
+TEST(RNTupleZip, LargeWithOutputBuffer)
+{
+   constexpr unsigned int N = kMAXZIPBUF + 32;
+   auto zipBuffer = std::make_unique<unsigned char[]>(N);
+   auto unzipBuffer = std::make_unique<char[]>(N);
+   std::string data(N, 'x');
+
+   RNTupleCompressor compressor;
+   RNTupleDecompressor decompressor;
+
+   /// Trailing byte cannot be compressed, entire buffer returns uncompressed
+   auto szZip = compressor.Zip(data.data(), kMAXZIPBUF + 1, 101, zipBuffer.get());
+   EXPECT_EQ(static_cast<unsigned int>(kMAXZIPBUF) + 1, szZip);
+
+   szZip = compressor.Zip(data.data(), data.length(), 101, zipBuffer.get());
+   EXPECT_LT(szZip, N);
+   decompressor.Unzip(zipBuffer.get(), szZip, N, unzipBuffer.get());
+   EXPECT_EQ(data, std::string(unzipBuffer.get(), N));
+}
