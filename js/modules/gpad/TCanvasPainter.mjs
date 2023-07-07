@@ -387,6 +387,14 @@ class TCanvasPainter extends TPadPainter {
          let that = msg.slice(5),
              on = (that[that.length-1] == '1');
          this.showSection(that.slice(0,that.length-2), on);
+      } else if (msg.slice(0,5) == 'CTRL:') {
+         let obj = parse(msg.slice(5));
+         if ((obj?.title !== undefined) && (typeof document !== 'undefined'))
+            document.title = obj.title;
+         if (obj.x && obj.y && typeof window !== 'undefined')
+            window.moveTo(obj.x, obj.y);
+         if (obj.w && obj.h && typeof window !== 'undefined')
+            window.resizeTo(obj.w, obj.h);
       } else if (msg.slice(0,5) == 'EDIT:') {
          let obj_painter = this.findSnap(msg.slice(5));
          console.log(`GET EDIT ${msg.slice(5)} found ${!!obj_painter}`);
