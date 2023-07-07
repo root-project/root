@@ -1604,6 +1604,8 @@ class TFramePainter extends ObjectPainter {
          case 3: return (l, b) => { return { x: l*Math.cos(b/180*Math.PI), y: b } };
          // parabolic
          case 4: return (l, b) => { return { x: l*(2.*Math.cos(2*b/180*Math.PI/3) - 1), y: 180*Math.sin(b/180*Math.PI/3) }; };
+         // Mollweide projection
+         case 5:  return (l, b) => { return { x: l*Math.cos(b/180*Math.PI), y: 90*Math.sin(b/180*Math.PI) }; };
       }
    }
 
