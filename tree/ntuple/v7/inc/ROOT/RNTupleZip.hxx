@@ -154,6 +154,7 @@ public:
 
          szZipData += szOutBlock;
          source += szSource;
+         target += szOutBlock;
          szRemaining -= szSource;
       }
       R__ASSERT(szRemaining == 0);
