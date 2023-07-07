@@ -22,7 +22,7 @@ from typing import Iterable, TYPE_CHECKING
 from DistRDF.Backends import build_backends_submodules
 
 if TYPE_CHECKING:
-    from DistRDF.Proxy import ActionProxy, VariationsProxy
+    from DistRDF.Proxy import ResultPtrProxy, ResultMapProxy
 
 logger = logging.getLogger(__name__)
 
@@ -128,7 +128,7 @@ def RunGraphs(proxies: Iterable) -> int:
     return len(uniqueproxies)
 
 
-def VariationsFor(actionproxy: ActionProxy) -> VariationsProxy:
+def VariationsFor(actionproxy: ResultPtrProxy) -> ResultMapProxy:
     """
     Equivalent of ROOT.RDF.Experimental.VariationsFor in distributed mode.
     """

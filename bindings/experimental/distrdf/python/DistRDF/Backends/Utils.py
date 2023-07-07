@@ -236,7 +236,7 @@ def _(mergeable: ROOT.Detail.RDF.RMergeableVariationsBase, node, backend):
     Connects the final value after distributed computation to the corresponding
     DistRDF node.
     In this overload, the node stores the reference to the mergeable variations
-    directly. It is then responsibility of the VariationsProxy object to access
+    directly. It is then responsibility of the ResultMapProxy object to access
     the specific varied object asked by the user, calling the right method of
     the RMergeableVariations class.
     """
