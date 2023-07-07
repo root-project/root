@@ -70,7 +70,7 @@ class ComputationGraphGeneratorTest(unittest.TestCase):
         # Head node
         hn = create_dummy_headnode(1)
         hn.backend = ComputationGraphGeneratorTest.TestBackend()
-        node = Proxy.TransformationProxy(hn)
+        node = Proxy.NodeProxy(hn)
         # Set of operations to build the graph
         n1 = node.Define()
         n2 = node.Filter().Filter()
@@ -103,7 +103,7 @@ class ComputationGraphGeneratorTest(unittest.TestCase):
         # Head node
         hn = create_dummy_headnode(1)
         hn.backend = ComputationGraphGeneratorTest.TestBackend()
-        node = Proxy.TransformationProxy(hn)
+        node = Proxy.NodeProxy(hn)
 
         # Set of operations to build the graph
         n1 = node.Define()
@@ -148,7 +148,7 @@ class ComputationGraphGeneratorTest(unittest.TestCase):
         # Head node
         hn = create_dummy_headnode(1)
         hn.backend = ComputationGraphGeneratorTest.TestBackend()
-        node = Proxy.TransformationProxy(hn)
+        node = Proxy.NodeProxy(hn)
 
         # Graph nodes
         n1 = node.Define()
@@ -185,7 +185,7 @@ class ComputationGraphGeneratorTest(unittest.TestCase):
         # Head node
         hn = create_dummy_headnode(1)
         hn.backend = ComputationGraphGeneratorTest.TestBackend()
-        node = Proxy.TransformationProxy(hn)
+        node = Proxy.NodeProxy(hn)
 
         # Graph nodes
         n1 = node.Define()
@@ -222,7 +222,7 @@ class ComputationGraphGeneratorTest(unittest.TestCase):
         # Head node
         hn = create_dummy_headnode(1)
         hn.backend = ComputationGraphGeneratorTest.TestBackend()
-        node = Proxy.TransformationProxy(hn)
+        node = Proxy.NodeProxy(hn)
 
         # Graph nodes
         n1 = node.Define()
@@ -261,7 +261,7 @@ class ComputationGraphGeneratorTest(unittest.TestCase):
         # Head node
         hn = create_dummy_headnode(1)
         hn.backend = ComputationGraphGeneratorTest.TestBackend()
-        node = Proxy.TransformationProxy(hn)
+        node = Proxy.NodeProxy(hn)
 
         # Graph nodes
         n1 = node.Define()
@@ -303,7 +303,7 @@ class ComputationGraphGeneratorTest(unittest.TestCase):
         # Head node
         hn = create_dummy_headnode(1)
         hn.backend = ComputationGraphGeneratorTest.TestBackend()
-        node = Proxy.TransformationProxy(hn)
+        node = Proxy.NodeProxy(hn)
 
         # Graph nodes
         n1 = node.Define()
@@ -337,7 +337,7 @@ class ComputationGraphGeneratorTest(unittest.TestCase):
         # Head node
         hn = create_dummy_headnode(1)
         hn.backend = ComputationGraphGeneratorTest.TestBackend()
-        node = Proxy.TransformationProxy(hn)
+        node = Proxy.NodeProxy(hn)
         # Create three branches
         n1 = node.Define()
         n2 = node.Filter()
