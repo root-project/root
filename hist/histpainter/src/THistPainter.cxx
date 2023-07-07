@@ -10404,115 +10404,64 @@ void THistPainter::RecalculateRange()
    if (Hoption.Same) return;
 
    //     Compute x,y range
-   Double_t xmin = Hparam.xmin;
-   Double_t xmax = Hparam.xmax;
-   Double_t ymin = Hparam.ymin;
-   Double_t ymax = Hparam.ymax;
+   Double_t xmin = Hparam.xmin,
+            xmax = Hparam.xmax,
+            ymin = Hparam.ymin,
+            ymax = Hparam.ymax,
+            xscale = 1;
 
-   Double_t xmin_aid, ymin_aid, xmax_aid, ymax_aid;
-   if (Hoption.Proj ==1) {
-      // TODO : check x range not lower than -180 and not higher than 180
-      THistPainter::ProjectAitoff2xy(Hparam.xmin, Hparam.ymin, xmin_aid, ymin_aid);
-      THistPainter::ProjectAitoff2xy(Hparam.xmin, Hparam.ymax, xmin,     ymax_aid);
-      THistPainter::ProjectAitoff2xy(Hparam.xmax, Hparam.ymax, xmax_aid, ymax);
-      THistPainter::ProjectAitoff2xy(Hparam.xmax, Hparam.ymin, xmax,     ymin);
+   std::function<Int_t(Double_t,Double_t,Double_t&,Double_t&)> func;
 
-      if (xmin > xmin_aid) xmin = xmin_aid;
-      if (ymin > ymin_aid) ymin = ymin_aid;
-      if (xmax < xmax_aid) xmax = xmax_aid;
-      if (ymax < ymax_aid) ymax = ymax_aid;
-      if (Hparam.ymin<0 && Hparam.ymax>0) {
-         // there is an  'equator', check its range in the plot..
-         THistPainter::ProjectAitoff2xy(Hparam.xmin*0.9999, 0, xmin_aid, ymin_aid);
-         THistPainter::ProjectAitoff2xy(Hparam.xmax*0.9999, 0, xmax_aid, ymin_aid);
-         if (xmin >xmin_aid) xmin = xmin_aid;
-         if (xmax <xmax_aid) xmax = xmax_aid;
-      }
-      if (Hparam.xmin<0 && Hparam.xmax>0) {
-         THistPainter::ProjectAitoff2xy(0, Hparam.ymin, xmin_aid, ymin_aid);
-         THistPainter::ProjectAitoff2xy(0, Hparam.ymax, xmax_aid, ymax_aid);
-         if (ymin >ymin_aid) ymin = ymin_aid;
-         if (ymax <ymax_aid) ymax = ymax_aid;
-      }
-   } else if ( Hoption.Proj ==2) {
-      if (Hparam.ymin <= -90 || Hparam.ymax >=90) {
+   if (Hoption.Proj == 1) {
+      func = ProjectAitoff2xy;
+      xscale = 0.9999;
+   } else if (Hoption.Proj == 2) {
+      if (Hparam.ymin <= -90 || Hparam.ymax >= 90) {
          Warning("Mercator Projection", "Latitude out of range %f or %f", Hparam.ymin, Hparam.ymax);
          Hoption.Proj = 0;
       } else {
-         THistPainter::ProjectMercator2xy(Hparam.xmin, Hparam.ymin, xmin, ymin);
-         THistPainter::ProjectMercator2xy(Hparam.xmax, Hparam.ymax, xmax, ymax);
+         ProjectMercator2xy(Hparam.xmin, Hparam.ymin, xmin, ymin);
+         ProjectMercator2xy(Hparam.xmax, Hparam.ymax, xmax, ymax);
       }
    } else if (Hoption.Proj == 3) {
-      THistPainter::ProjectSinusoidal2xy(Hparam.xmin, Hparam.ymin, xmin_aid, ymin_aid);
-      THistPainter::ProjectSinusoidal2xy(Hparam.xmin, Hparam.ymax, xmin,     ymax_aid);
-      THistPainter::ProjectSinusoidal2xy(Hparam.xmax, Hparam.ymax, xmax_aid, ymax);
-      THistPainter::ProjectSinusoidal2xy(Hparam.xmax, Hparam.ymin, xmax,     ymin);
-
-      if (xmin > xmin_aid) xmin = xmin_aid;
-      if (ymin > ymin_aid) ymin = ymin_aid;
-      if (xmax < xmax_aid) xmax = xmax_aid;
-      if (ymax < ymax_aid) ymax = ymax_aid;
-      if (Hparam.ymin<0 && Hparam.ymax>0) {
-         THistPainter::ProjectSinusoidal2xy(Hparam.xmin, 0, xmin_aid, ymin_aid);
-         THistPainter::ProjectSinusoidal2xy(Hparam.xmax, 0, xmax_aid, ymin_aid);
-         if (xmin >xmin_aid) xmin = xmin_aid;
-         if (xmax <xmax_aid) xmax = xmax_aid;
-      }
-      if (Hparam.xmin<0 && Hparam.xmax>0) {
-         THistPainter::ProjectSinusoidal2xy(0,Hparam.ymin, xmin_aid, ymin_aid);
-         THistPainter::ProjectSinusoidal2xy(0, Hparam.ymax, xmax_aid, ymin_aid);
-         if (ymin >ymin_aid) ymin = ymin_aid;
-         if (ymax <ymax_aid) ymax = ymax_aid;
-      }
+      func = ProjectSinusoidal2xy;
    } else if (Hoption.Proj == 4) {
-      THistPainter::ProjectParabolic2xy(Hparam.xmin, Hparam.ymin, xmin_aid, ymin_aid);
-      THistPainter::ProjectParabolic2xy(Hparam.xmin, Hparam.ymax, xmin,     ymax_aid);
-      THistPainter::ProjectParabolic2xy(Hparam.xmax, Hparam.ymax, xmax_aid, ymax);
-      THistPainter::ProjectParabolic2xy(Hparam.xmax, Hparam.ymin, xmax,     ymin);
-
-      if (xmin > xmin_aid) xmin = xmin_aid;
-      if (ymin > ymin_aid) ymin = ymin_aid;
-      if (xmax < xmax_aid) xmax = xmax_aid;
-      if (ymax < ymax_aid) ymax = ymax_aid;
-      if (Hparam.ymin<0 && Hparam.ymax>0) {
-         THistPainter::ProjectParabolic2xy(Hparam.xmin, 0, xmin_aid, ymin_aid);
-         THistPainter::ProjectParabolic2xy(Hparam.xmax, 0, xmax_aid, ymin_aid);
-         if (xmin >xmin_aid) xmin = xmin_aid;
-         if (xmax <xmax_aid) xmax = xmax_aid;
-      }
-      if (Hparam.xmin<0 && Hparam.xmax>0) {
-         THistPainter::ProjectParabolic2xy(0, Hparam.ymin, xmin_aid, ymin_aid);
-         THistPainter::ProjectParabolic2xy(0, Hparam.ymax, xmax_aid, ymin_aid);
-         if (ymin >ymin_aid) ymin = ymin_aid;
-         if (ymax <ymax_aid) ymax = ymax_aid;
-      }
+      func = ProjectParabolic2xy;
    } else if (Hoption.Proj == 5) {
-      THistPainter::ProjectMollweide2xy(Hparam.xmin, Hparam.ymin, xmin_aid, ymin_aid);
-      THistPainter::ProjectMollweide2xy(Hparam.xmin, Hparam.ymax, xmin,     ymax_aid);
-      THistPainter::ProjectMollweide2xy(Hparam.xmax, Hparam.ymax, xmax_aid, ymax);
-      THistPainter::ProjectMollweide2xy(Hparam.xmax, Hparam.ymin, xmax,     ymin);
+      func = ProjectMollweide2xy;
+   }
+
+   if (func) {
+      Double_t xmin_aid, ymin_aid, xmax_aid, ymax_aid;
+
+      func(Hparam.xmin, Hparam.ymin, xmin_aid, ymin_aid);
+      func(Hparam.xmin, Hparam.ymax, xmin,     ymax_aid);
+      func(Hparam.xmax, Hparam.ymax, xmax_aid, ymax);
+      func(Hparam.xmax, Hparam.ymin, xmax,     ymin);
 
       if (xmin > xmin_aid) xmin = xmin_aid;
       if (ymin > ymin_aid) ymin = ymin_aid;
       if (xmax < xmax_aid) xmax = xmax_aid;
       if (ymax < ymax_aid) ymax = ymax_aid;
-      if (Hparam.ymin<0 && Hparam.ymax>0) {
-         THistPainter::ProjectMollweide2xy(Hparam.xmin, 0, xmin_aid, ymin_aid);
-         THistPainter::ProjectMollweide2xy(Hparam.xmax, 0, xmax_aid, ymin_aid);
-         if (xmin >xmin_aid) xmin = xmin_aid;
-         if (xmax <xmax_aid) xmax = xmax_aid;
+      if (Hparam.ymin < 0 && Hparam.ymax > 0) {
+         // there is an  'equator', check its range in the plot..
+         func(Hparam.xmin*xscale, 0, xmin_aid, ymin_aid);
+         func(Hparam.xmax*xscale, 0, xmax_aid, ymin_aid);
+         if (xmin > xmin_aid) xmin = xmin_aid;
+         if (xmax < xmax_aid) xmax = xmax_aid;
       }
-      if (Hparam.xmin<0 && Hparam.xmax>0) {
-         THistPainter::ProjectMollweide2xy(0, Hparam.ymin, xmin_aid, ymin_aid);
-         THistPainter::ProjectMollweide2xy(0, Hparam.ymax, xmax_aid, ymin_aid);
-         if (ymin >ymin_aid) ymin = ymin_aid;
-         if (ymax <ymax_aid) ymax = ymax_aid;
+      if (Hparam.xmin < 0 && Hparam.xmax > 0) {
+         func(0, Hparam.ymin, xmin_aid, ymin_aid);
+         func(0, Hparam.ymax, xmax_aid, ymax_aid);
+         if (ymin > ymin_aid) ymin = ymin_aid;
+         if (ymax < ymax_aid) ymax = ymax_aid;
       }
    }
-   Hparam.xmin= xmin;
-   Hparam.xmax= xmax;
-   Hparam.ymin= ymin;
-   Hparam.ymax= ymax;
+
+   Hparam.xmin = xmin;
+   Hparam.xmax = xmax;
+   Hparam.ymin = ymin;
+   Hparam.ymax = ymax;
 
    Double_t dx   = xmax-xmin;
    Double_t dy   = ymax-ymin;
@@ -10522,9 +10471,9 @@ void THistPainter::RecalculateRange()
    // Range() could change the size of the pad pixmap and therefore should
    // be called before the other paint routines
    gPad->Range(xmin - dxr*gPad->GetLeftMargin(),
-                      ymin - dyr*gPad->GetBottomMargin(),
-                      xmax + dxr*gPad->GetRightMargin(),
-                      ymax + dyr*gPad->GetTopMargin());
+               ymin - dyr*gPad->GetBottomMargin(),
+               xmax + dxr*gPad->GetRightMargin(),
+               ymax + dyr*gPad->GetTopMargin());
    gPad->RangeAxis(xmin, ymin, xmax, ymax);
 }
 
