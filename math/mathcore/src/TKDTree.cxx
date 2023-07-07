@@ -276,12 +276,12 @@ TKDTree<Index, Value>::TKDTree() :
    ,fNDimm(0)
    ,fNPoints(0)
    ,fBucketSize(0)
-   ,fAxis(0x0)
-   ,fValue(0x0)
-   ,fRange(0x0)
-   ,fData(0x0)
-   ,fBoundaries(0x0)
-   ,fIndPoints(0x0)
+   ,fAxis(nullptr)
+   ,fValue(nullptr)
+   ,fRange(nullptr)
+   ,fData(nullptr)
+   ,fBoundaries(nullptr)
+   ,fIndPoints(nullptr)
    ,fRowT0(0)
    ,fCrossNode(0)
    ,fOffset(0)
@@ -298,12 +298,12 @@ TKDTree<Index, Value>::TKDTree(Index npoints, Index ndim, UInt_t bsize) :
    ,fNDimm(2*ndim)
    ,fNPoints(npoints)
    ,fBucketSize(bsize)
-   ,fAxis(0x0)
-   ,fValue(0x0)
-   ,fRange(0x0)
-   ,fData(0x0)
-   ,fBoundaries(0x0)
-   ,fIndPoints(0x0)
+   ,fAxis(nullptr)
+   ,fValue(nullptr)
+   ,fRange(nullptr)
+   ,fData(nullptr)
+   ,fBoundaries(nullptr)
+   ,fIndPoints(nullptr)
    ,fRowT0(0)
    ,fCrossNode(0)
    ,fOffset(0)
@@ -350,12 +350,12 @@ TKDTree<Index, Value>::TKDTree(Index npoints, Index ndim, UInt_t bsize, Value **
    ,fNDimm(2*ndim)
    ,fNPoints(npoints)
    ,fBucketSize(bsize)
-   ,fAxis(0x0)
-   ,fValue(0x0)
-   ,fRange(0x0)
+   ,fAxis(nullptr)
+   ,fValue(nullptr)
+   ,fRange(nullptr)
    ,fData(data) //Columnwise!!!!!
-   ,fBoundaries(0x0)
-   ,fIndPoints(0x0)
+   ,fBoundaries(nullptr)
+   ,fIndPoints(nullptr)
    ,fRowT0(0)
    ,fCrossNode(0)
    ,fOffset(0)
@@ -813,7 +813,7 @@ Index*  TKDTree<Index, Value>::GetPointsIndexes(Int_t node) const
 {
    if (!IsTerminal(node)){
       printf("GetPointsIndexes() only for terminal nodes, use GetNodePointsIndexes() instead\n");
-      return 0;
+      return nullptr;
    }
    Int_t offset = (node >= fCrossNode) ? (node-fCrossNode)*fBucketSize : fOffset+(node-fNNodes)*fBucketSize;
    return &fIndPoints[offset];
@@ -1042,7 +1042,7 @@ void TKDTree<Index, Value>::MakeBoundaries(Value *range)
 
 
    // loop
-   Value *tbounds = 0x0, *cbounds = 0x0;
+   Value *tbounds = nullptr, *cbounds = nullptr;
    Int_t cn;
    for(int inode=fNNodes-1; inode>=0; inode--){
       tbounds = &fBoundaries[inode*fNDimm];

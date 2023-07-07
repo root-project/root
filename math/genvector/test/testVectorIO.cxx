@@ -215,7 +215,7 @@ double read(const std::string & file_name) {
   // create tree
   TTree *t1 = (TTree*)f1.Get("t1");
 
-  Vector *v1 = 0;
+  Vector *v1 = nullptr;
 
   std::cout << "reading typeID  : " << typeid(*v1).name() << std::endl;
 

@@ -58,7 +58,7 @@ public:
    virtual double DataElement(const double *  x, unsigned i, double * g = nullptr, double * = nullptr, bool = false) const  {
       // transform from x internal to x external
       const double * xExt = fTransform->Transformation(x);
-      if ( g == 0) return fFunc.DataElement( xExt, i );
+      if ( g == nullptr) return fFunc.DataElement( xExt, i );
       // use gradient
       double val =  fFunc.DataElement( xExt, i, &fGrad[0]);
       // transform gradient
@@ -206,7 +206,7 @@ private:
 GSLNLSMinimizer::GSLNLSMinimizer( int type )
 {
    // Constructor implementation : create GSLMultiFit wrapper object
-   const gsl_multifit_fdfsolver_type * gsl_type = 0; // use default type defined in GSLMultiFit
+   const gsl_multifit_fdfsolver_type * gsl_type = nullptr; // use default type defined in GSLMultiFit
    if (type == 1) gsl_type =   gsl_multifit_fdfsolver_lmsder; // scaled lmder version
    if (type == 2) gsl_type =   gsl_multifit_fdfsolver_lmder; // unscaled version
 
@@ -226,7 +226,7 @@ GSLNLSMinimizer::GSLNLSMinimizer( int type )
 }
 
 GSLNLSMinimizer::~GSLNLSMinimizer () {
-   assert(fGSLMultiFit != 0);
+   assert(fGSLMultiFit != nullptr);
    delete fGSLMultiFit;
 }
 
@@ -385,7 +385,7 @@ bool GSLNLSMinimizer::DoMinimize(const Func & fitFunc) {
 
    // save state with values and function value
    const double * x = fGSLMultiFit->X();
-   if (x == 0) return false;
+   if (x == nullptr) return false;
    // apply transformation outside SetFinalValues(..)
    // because trFunc is not a MinimTransformFunction but a FitTransFormFunction
    if (trFunc)  x = trFunc->Transformation(x);

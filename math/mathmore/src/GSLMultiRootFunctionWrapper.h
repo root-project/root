@@ -62,9 +62,9 @@ public:
 
    GSLMultiRootFunctionWrapper()
    {
-      fFunc.f = 0;
+      fFunc.f = nullptr;
       fFunc.n = 0;
-      fFunc.params = 0;
+      fFunc.params = nullptr;
    }
 
 
@@ -72,7 +72,7 @@ public:
    template<class FuncVector>
    void SetFunctions(const FuncVector & f, unsigned int n ) {
       const void * p = &f;
-      assert (p != 0);
+      assert (p != nullptr);
       fFunc.f   = &GSLMultiRootFunctionAdapter<FuncVector >::F;
       fFunc.n = n;
       fFunc.params =  const_cast<void *>(p);
@@ -101,11 +101,11 @@ public:
 
    GSLMultiRootDerivFunctionWrapper()
    {
-      fFunc.f = 0;
-      fFunc.df = 0;
-      fFunc.fdf = 0;
+      fFunc.f = nullptr;
+      fFunc.df = nullptr;
+      fFunc.fdf = nullptr;
       fFunc.n = 0;
-      fFunc.params = 0;
+      fFunc.params = nullptr;
    }
 
 
@@ -113,7 +113,7 @@ public:
    template<class FuncVector>
    void SetFunctions(const FuncVector & f, unsigned int n  ) {
       const void * p = &f;
-      assert (p != 0);
+      assert (p != nullptr);
       fFunc.f   = &GSLMultiRootFunctionAdapter<FuncVector >::F;
       fFunc.df  = &GSLMultiRootFunctionAdapter<FuncVector >::Df;
       fFunc.fdf = &GSLMultiRootFunctionAdapter<FuncVector >::FDf;

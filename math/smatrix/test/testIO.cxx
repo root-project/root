@@ -389,7 +389,7 @@ double readTMatrix() {
   TTree *t2 = (TTree*)f2.Get("t2");
 
 
-  TMatrixD * v2 = 0;
+  TMatrixD * v2 = nullptr;
   t2->SetBranchAddress("TMatrix branch",&v2);
 
   timer.Start();
@@ -434,7 +434,7 @@ double readTMatrixSym() {
   TTree *t2 = (TTree*)f2.Get("t2");
 
 
-  TMatrixDSym * v2 = 0;
+  TMatrixDSym * v2 = nullptr;
   t2->SetBranchAddress("TMatrixSym branch",&v2);
 
   timer.Start();
@@ -477,7 +477,7 @@ double readSMatrix(const std::string & file) {
   // create tree
   TTree *t1 = (TTree*)f1.Get("t1");
 
-  SMatrix5 *v1 = 0;
+  SMatrix5 *v1 = nullptr;
   t1->SetBranchAddress("SMatrix branch",&v1);
 
   timer.Start();
@@ -524,7 +524,7 @@ double readSMatrixSym(const std::string & file) {
   // create tree
   TTree *t1 = (TTree*)f1.Get("t1");
 
-  SMatrixSym5 *v1 = 0;
+  SMatrixSym5 *v1 = nullptr;
   t1->SetBranchAddress("SMatrixSym branch",&v1);
 
   timer.Start();
@@ -648,7 +648,7 @@ double readTrackD() {
   // create tree
   TTree *t1 = (TTree*)f1.Get("t1");
 
-  TrackD *trk = 0;
+  TrackD *trk = nullptr;
   t1->SetBranchAddress("Track branch",&trk);
 
   timer.Start();
@@ -689,7 +689,7 @@ double readTrackD32() {
   // create tree
   TTree *t1 = (TTree*)f1.Get("t1");
 
-  TrackD32 *trk = 0;
+  TrackD32 *trk = nullptr;
   t1->SetBranchAddress("Track32 branch",&trk);
 
   timer.Start();

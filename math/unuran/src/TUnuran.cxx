@@ -30,14 +30,14 @@
 
 
 TUnuran::TUnuran(TRandom * r, unsigned int debugLevel) :
-   fGen(0),
-   fUdistr(0),
-   fUrng(0),
+   fGen(nullptr),
+   fUdistr(nullptr),
+   fUrng(nullptr),
    fRng(r)
 {
    // constructor implementation with a ROOT random generator
    // if no generator is given the ROOT default is used
-   if (fRng == 0) fRng = gRandom;
+   if (fRng == nullptr) fRng = gRandom;
    // set debug level at global level
    // (should be in a static  initialization function of the library ? )
    if ( debugLevel > 1)
@@ -53,10 +53,10 @@ TUnuran::TUnuran(TRandom * r, unsigned int debugLevel) :
 TUnuran::~TUnuran()
 {
    // Destructor implementation
-   if (fGen != 0) unur_free(fGen);
-   if (fUrng != 0) unur_urng_free(fUrng);
+   if (fGen != nullptr) unur_free(fGen);
+   if (fUrng != nullptr) unur_urng_free(fUrng);
   // we can delete now the distribution object
-   if (fUdistr != 0) unur_distr_free(fUdistr);
+   if (fUdistr != nullptr) unur_distr_free(fUdistr);
 }
 
 //private (no impl.)
@@ -77,7 +77,7 @@ bool  TUnuran::Init(const std::string & dist, const std::string & method)
    // initialize with a string
    std::string s = dist + " & " + method;
    fGen = unur_str2gen(s.c_str() );
-   if (fGen == 0) {
+   if (fGen == nullptr) {
       Error("Init","Cannot create generator object");
       return false;
    }
@@ -152,11 +152,11 @@ bool TUnuran::Init(const TUnuranEmpDist & distr, const std::string & method ) {
 bool  TUnuran::SetRandomGenerator()
 {
    // set an external random generator
-   if (fRng == 0) return false;
-   if (fGen == 0) return false;
+   if (fRng == nullptr) return false;
+   if (fGen == nullptr) return false;
 
    fUrng = unur_urng_new(&UnuranRng<TRandom>::Rndm, fRng );
-   if (fUrng == 0) return false;
+   if (fUrng == nullptr) return false;
    unsigned int ret = 0;
    ret |= unur_urng_set_delete(fUrng, &UnuranRng<TRandom>::Delete);
    ret |= unur_urng_set_seed(fUrng, &UnuranRng<TRandom>::Seed);
@@ -169,9 +169,9 @@ bool  TUnuran::SetRandomGenerator()
 bool  TUnuran::SetContDistribution(const TUnuranContDist & dist )
 {
    // internal method to set in unuran the function pointer for a continuous univariate distribution
-   if (fUdistr != 0)  unur_distr_free(fUdistr);
+   if (fUdistr != nullptr)  unur_distr_free(fUdistr);
    fUdistr = unur_distr_cont_new();
-   if (fUdistr == 0) return false;
+   if (fUdistr == nullptr) return false;
    unsigned int ret = 0;
    ret = unur_distr_set_extobj(fUdistr, &dist);
    if ( ! dist.IsLogPdf() ) {
@@ -215,9 +215,9 @@ bool  TUnuran::SetContDistribution(const TUnuranContDist & dist )
 bool  TUnuran::SetMultiDistribution(const TUnuranMultiContDist & dist )
 {
    // internal method to set in unuran the function pointer for a multivariate distribution
-   if (fUdistr != 0)  unur_distr_free(fUdistr);
+   if (fUdistr != nullptr)  unur_distr_free(fUdistr);
    fUdistr = unur_distr_cvec_new(dist.NDim() );
-   if (fUdistr == 0) return false;
+   if (fUdistr == nullptr) return false;
    unsigned int ret = 0;
    ret |= unur_distr_set_extobj(fUdistr, &dist );
    if ( ! dist.IsLogPdf() ) {
@@ -233,7 +233,7 @@ bool  TUnuran::SetMultiDistribution(const TUnuranMultiContDist & dist )
 
    const double * xmin = dist.GetLowerDomain();
    const double * xmax = dist.GetUpperDomain();
-   if ( xmin != 0 || xmax != 0 ) {
+   if ( xmin != nullptr || xmax != nullptr ) {
       ret = unur_distr_cvec_set_domain_rect(fUdistr,xmin,xmax);
       if (ret != 0)  {
          Error("SetMultiDistribution","invalid domain");
@@ -246,7 +246,7 @@ bool  TUnuran::SetMultiDistribution(const TUnuranMultiContDist & dist )
    }
 
    const double * xmode = dist.GetMode();
-   if (xmode != 0) {
+   if (xmode != nullptr) {
       ret = unur_distr_cvec_set_mode(fUdistr, xmode);
       if (ret != 0)  {
          Error("SetMultiDistribution","invalid mode");
@@ -259,13 +259,13 @@ bool  TUnuran::SetMultiDistribution(const TUnuranMultiContDist & dist )
 bool TUnuran::SetEmpiricalDistribution(const TUnuranEmpDist & dist) {
 
    // internal method to set in unuran the function pointer for am empiral distribution (from histogram)
-   if (fUdistr != 0)  unur_distr_free(fUdistr);
+   if (fUdistr != nullptr)  unur_distr_free(fUdistr);
    if (dist.NDim() == 1)
       fUdistr = unur_distr_cemp_new();
    else
       fUdistr = unur_distr_cvemp_new(dist.NDim() );
 
-   if (fUdistr == 0) return false;
+   if (fUdistr == nullptr) return false;
    unsigned int ret = 0;
 
 
@@ -300,9 +300,9 @@ bool TUnuran::SetEmpiricalDistribution(const TUnuranEmpDist & dist) {
 bool  TUnuran::SetDiscreteDistribution(const TUnuranDiscrDist & dist)
 {
    // internal method to set in unuran the function pointer for a discrete univariate distribution
-   if (fUdistr != 0)  unur_distr_free(fUdistr);
+   if (fUdistr != nullptr)  unur_distr_free(fUdistr);
    fUdistr = unur_distr_discr_new();
-   if (fUdistr == 0) return false;
+   if (fUdistr == nullptr) return false;
    unsigned int ret = 0;
    // if a probability mesh function is provided
    if (dist.ProbVec().size() == 0) {
@@ -348,14 +348,14 @@ bool TUnuran::SetMethodAndInit() {
 
    // internal function to set a method from a distribution and
    // initialize unuran with the given distribution.
-   if (fUdistr == 0) return false;
+   if (fUdistr == nullptr) return false;
 
-   struct unur_slist *mlist = NULL;
+   struct unur_slist *mlist = nullptr;
 
    UNUR_PAR * par = _unur_str2par(fUdistr, fMethod.c_str(), &mlist);
-   if (par == 0) {
+   if (par == nullptr) {
       Error("SetMethod","missing distribution information or syntax error");
-      if (mlist != 0)  _unur_slist_free(mlist);
+      if (mlist != nullptr)  _unur_slist_free(mlist);
       return false;
    }
 
@@ -364,10 +364,10 @@ bool TUnuran::SetMethodAndInit() {
    unur_set_use_distr_privatecopy (par, false);
 
    // need to free fGen if already existing ?
-   if (fGen != 0 )  unur_free(fGen);
+   if (fGen != nullptr )  unur_free(fGen);
    fGen = unur_init(par);
    _unur_slist_free(mlist);
-   if (fGen == 0) {
+   if (fGen == nullptr) {
       Error("SetMethod","initializing Unuran: condition for method violated");
       return false;
    }
@@ -422,21 +422,21 @@ bool TUnuran::IsDistEmpirical() const {
 int TUnuran::SampleDiscr()
 {
    // sample one-dimensional distribution
-   assert(fGen != 0);
+   assert(fGen != nullptr);
    return unur_sample_discr(fGen);
 }
 
 double TUnuran::Sample()
 {
    // sample one-dimensional distribution
-   assert(fGen != 0);
+   assert(fGen != nullptr);
    return unur_sample_cont(fGen);
 }
 
 bool TUnuran::SampleMulti(double * x)
 {
    // sample multidimensional distribution
-   if (fGen == 0) return false;
+   if (fGen == nullptr) return false;
    unur_sample_vec(fGen,x);
    return true;
 }
@@ -447,7 +447,7 @@ void TUnuran::SetSeed(unsigned int seed) {
 
 bool  TUnuran::SetLogLevel(unsigned int debugLevel)
 {
-   if (fGen == 0) return false;
+   if (fGen == nullptr) return false;
    int ret = 0;
    if ( debugLevel > 1)
       ret |= unur_chg_debug(fGen, UNUR_DEBUG_ALL);
@@ -468,7 +468,7 @@ bool TUnuran::InitPoisson(double mu, const std::string & method) {
    fUdistr = unur_distr_poisson(p,1);
 
    fMethod = method;
-   if (fUdistr == 0) return false;
+   if (fUdistr == nullptr) return false;
    if (! SetMethodAndInit() ) return false;
    if (! SetRandomGenerator() ) return false;
    return true;
@@ -482,7 +482,7 @@ bool TUnuran::InitBinomial(unsigned int ntot, double prob, const std::string & m
    fUdistr = unur_distr_binomial(par,2);
 
    fMethod = method;
-   if (fUdistr == 0) return false;
+   if (fUdistr == nullptr) return false;
    if (! SetMethodAndInit() ) return false;
    if (! SetRandomGenerator() ) return false;
    return true;

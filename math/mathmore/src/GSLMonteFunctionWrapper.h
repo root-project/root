@@ -60,9 +60,9 @@ public:
 
   GSLMonteFunctionWrapper()
    {
-      fFunc.f = 0;
+      fFunc.f = nullptr;
       fFunc.dim = 0;
-      fFunc.params = 0;
+      fFunc.params = nullptr;
    }
 
     void SetFuncPointer( GSLMonteFuncPointer f) { fFunc.f = f; }
@@ -73,7 +73,7 @@ public:
     template<class FuncType>
     void SetFunction(const FuncType &f) {
        const void * p = &f;
-       assert (p != 0);
+       assert (p != nullptr);
        SetFuncPointer(&GSLMonteFunctionAdapter<FuncType >::F);
        SetDim( f.NDim() );
        SetParams(const_cast<void *>(p));

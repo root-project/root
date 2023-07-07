@@ -513,22 +513,22 @@ struct Limits {
 
    //Mean, Geometric Mean, Median, RMS(sigma)
 
-   template <typename T> Double_t Mean(Long64_t n, const T *a, const Double_t *w=0);
+   template <typename T> Double_t Mean(Long64_t n, const T *a, const Double_t *w=nullptr);
    template <typename Iterator> Double_t Mean(Iterator first, Iterator last);
    template <typename Iterator, typename WeightIterator> Double_t Mean(Iterator first, Iterator last, WeightIterator wfirst);
 
    template <typename T> Double_t GeomMean(Long64_t n, const T *a);
    template <typename Iterator> Double_t GeomMean(Iterator first, Iterator last);
 
-   template <typename T> Double_t RMS(Long64_t n, const T *a, const Double_t *w=0);
+   template <typename T> Double_t RMS(Long64_t n, const T *a, const Double_t *w=nullptr);
    template <typename Iterator> Double_t RMS(Iterator first, Iterator last);
    template <typename Iterator, typename WeightIterator> Double_t RMS(Iterator first, Iterator last, WeightIterator wfirst);
 
-   template <typename T> Double_t StdDev(Long64_t n, const T *a, const Double_t * w = 0) { return RMS<T>(n,a,w); } /// Same as RMS
+   template <typename T> Double_t StdDev(Long64_t n, const T *a, const Double_t * w = nullptr) { return RMS<T>(n,a,w); } /// Same as RMS
    template <typename Iterator> Double_t StdDev(Iterator first, Iterator last) { return RMS<Iterator>(first,last); } /// Same as RMS
    template <typename Iterator, typename WeightIterator> Double_t StdDev(Iterator first, Iterator last, WeightIterator wfirst) { return RMS<Iterator,WeightIterator>(first,last,wfirst); } /// Same as RMS
 
-   template <typename T> Double_t Median(Long64_t n, const T *a,  const Double_t *w=0, Long64_t *work=0);
+   template <typename T> Double_t Median(Long64_t n, const T *a,  const Double_t *w=nullptr, Long64_t *work=nullptr);
 
    //k-th order statistic
    template <class Element, typename Size> Element KOrdStat(Size n, const Element *a, Size k, Size *work = 0);

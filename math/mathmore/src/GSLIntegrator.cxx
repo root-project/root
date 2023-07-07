@@ -61,8 +61,8 @@ GSLIntegrator::GSLIntegrator(const Integration::Type type , const Integration::G
    fSize(size),
    fMaxIntervals(size),
    fResult(0),fError(0),fStatus(-1),fNEval(-1),
-   fFunction(0),
-   fWorkspace(0)
+   fFunction(nullptr),
+   fWorkspace(nullptr)
 {
    // constructor for all types of integrations
    // allocate workspace (only if not adaptive algorithm)
@@ -82,8 +82,8 @@ GSLIntegrator::GSLIntegrator(double absTol, double relTol, size_t size) :
    fSize(size),
    fMaxIntervals(size),
    fResult(0),fError(0),fStatus(-1),fNEval(-1),
-   fFunction(0),
-   fWorkspace(0)
+   fFunction(nullptr),
+   fWorkspace(nullptr)
 {
    // constructor with default type (ADaptiveSingular) ,  rule is not needed
    fWorkspace = new GSLIntegrationWorkspace( fSize);
@@ -100,8 +100,8 @@ GSLIntegrator::GSLIntegrator(const Integration::Type type , double absTol, doubl
    fSize(size),
    fMaxIntervals(size),
    fResult(0),fError(0),fStatus(-1),fNEval(-1),
-   fFunction(0),
-   fWorkspace(0)
+   fFunction(nullptr),
+   fWorkspace(nullptr)
 {
 
    // constructor with default rule (gauss31) passing the type
@@ -118,13 +118,13 @@ GSLIntegrator::GSLIntegrator(const Integration::Type type , double absTol, doubl
    fSize(size),
    fMaxIntervals(size),
    fResult(0),fError(0),fStatus(-1),fNEval(-1),
-   fFunction(0),
-   fWorkspace(0)
+   fFunction(nullptr),
+   fWorkspace(nullptr)
 {
    //std::cout << type << std::endl;
 
    fType =  Integration::kADAPTIVESINGULAR;  // default
-   if (type != 0) {  // use this dafault
+   if (type != nullptr) {  // use this dafault
       std::string typeName(type);
       std::transform(typeName.begin(), typeName.end(), typeName.begin(), (int(*)(int)) toupper );
       if (typeName == "NONADAPTIVE")
@@ -174,14 +174,14 @@ GSLIntegrator & GSLIntegrator::operator = (const GSLIntegrator &rhs)
 
 void  GSLIntegrator::SetFunction( GSLFuncPointer  fp, void * p) {
    // fill GSLFunctionWrapper with the pointer to the function
-   if (fFunction ==0) fFunction = new GSLFunctionWrapper();
+   if (fFunction ==nullptr) fFunction = new GSLFunctionWrapper();
    fFunction->SetFuncPointer( fp );
    fFunction->SetParams ( p );
 }
 
 void  GSLIntegrator::SetFunction(const IGenFunction &f ) {
    // set function (make a copy of it)
-   if (fFunction ==0) fFunction = new GSLFunctionWrapper();
+   if (fFunction ==nullptr) fFunction = new GSLFunctionWrapper();
    fFunction->SetFunction(f);
 }
 

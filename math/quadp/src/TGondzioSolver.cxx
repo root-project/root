@@ -73,10 +73,10 @@ TGondzioSolver::TGondzioSolver()
    fBeta_min    = 0.0;
    fBeta_max    = 0.0;
 
-   fCorrector_step  = 0;
-   fStep            = 0;
-   fCorrector_resid = 0;
-   fFactory         = 0;
+   fCorrector_step  = nullptr;
+   fStep            = nullptr;
+   fCorrector_resid = nullptr;
+   fFactory         = nullptr;
 }
 
 
@@ -325,9 +325,9 @@ void TGondzioSolver::DefMonitor(TQpDataBase* /* data */,TQpVar* /* vars */,
 
 TGondzioSolver::~TGondzioSolver()
 {
-   if (fCorrector_step)  { delete fCorrector_step;  fCorrector_step  = 0; }
-   if (fStep)            { delete fStep;            fStep            = 0; }
-   if (fCorrector_resid) { delete fCorrector_resid; fCorrector_resid = 0; }
+   if (fCorrector_step)  { delete fCorrector_step;  fCorrector_step  = nullptr; }
+   if (fStep)            { delete fStep;            fStep            = nullptr; }
+   if (fCorrector_resid) { delete fCorrector_resid; fCorrector_resid = nullptr; }
 }
 
 

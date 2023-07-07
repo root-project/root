@@ -71,7 +71,7 @@ struct TKDTreeBinning::CompareDesc {
 /// The size of the array must be at least  dataDim*dataSize
 ///
 TKDTreeBinning::TKDTreeBinning(UInt_t dataSize, UInt_t dataDim, Double_t* data, UInt_t nBins, bool adjustBinEdges)
-: fData(0), fBinMinEdges(std::vector<Double_t>()), fBinMaxEdges(std::vector<Double_t>()), fDataBins((TKDTreeID*)0), fDim(dataDim),
+: fData(0), fBinMinEdges(std::vector<Double_t>()), fBinMaxEdges(std::vector<Double_t>()), fDataBins((TKDTreeID*)nullptr), fDim(dataDim),
 fDataSize(dataSize), fDataThresholds(std::vector<std::pair<Double_t, Double_t> >(fDim, std::make_pair(0., 0.))),
 fIsSorted(kFALSE), fIsSortedAsc(kFALSE), fBinsContent(std::vector<UInt_t>()) {
    if (adjustBinEdges) SetBit(kAdjustBinEdges);
@@ -95,7 +95,7 @@ fIsSorted(kFALSE), fIsSortedAsc(kFALSE), fBinsContent(std::vector<UInt_t>()) {
 /// The size of thedata vector must be at least  dataDim*dataSize
 ///
 TKDTreeBinning::TKDTreeBinning(UInt_t dataSize, UInt_t dataDim, const std::vector<double> &data, UInt_t nBins, bool adjustBinEdges)
-: fData(0), fBinMinEdges(std::vector<Double_t>()), fBinMaxEdges(std::vector<Double_t>()), fDataBins((TKDTreeID*)0), fNBins (nBins), fDim(dataDim),
+: fData(0), fBinMinEdges(std::vector<Double_t>()), fBinMaxEdges(std::vector<Double_t>()), fDataBins((TKDTreeID*)nullptr), fNBins (nBins), fDim(dataDim),
 fDataSize(dataSize), fDataThresholds(std::vector<std::pair<Double_t, Double_t> >(fDim, std::make_pair(0., 0.))),
 fIsSorted(kFALSE), fIsSortedAsc(kFALSE), fBinsContent(std::vector<UInt_t>()) {
    if (adjustBinEdges) SetBit(kAdjustBinEdges);
@@ -140,11 +140,11 @@ void TKDTreeBinning::SetNBins(UInt_t bins) {
          SetBinsEdges();
          SetBinsContent();
       } else {
-         fDataBins = (TKDTreeID*)0;
+         fDataBins = (TKDTreeID*)nullptr;
          this->Warning("SetNBins", "Number of bins is bigger than data size. Nothing is built.");
       }
    } else {
-      fDataBins = (TKDTreeID*)0;
+      fDataBins = (TKDTreeID*)nullptr;
       if (!fDim)
          this->Warning("SetNBins", "Data dimension is nil. Nothing is built.");
       if (!fNBins)
@@ -351,7 +351,7 @@ const Double_t* TKDTreeBinning::GetBinsMinEdges() const {
       return &fBinMinEdges[0];
    this->Warning("GetBinsMinEdges", "Binning kd-tree is nil. No bin edges retrieved.");
    this->Info("GetBinsMinEdges", "Returning null pointer.");
-   return (Double_t*)0;
+   return (Double_t*)nullptr;
 }
 
 /// Returns an array with all bins' maximum edges
@@ -362,7 +362,7 @@ const Double_t* TKDTreeBinning::GetBinsMaxEdges() const {
       return &fBinMaxEdges[0];
    this->Warning("GetBinsMaxEdges", "Binning kd-tree is nil. No bin edges retrieved.");
    this->Info("GetBinsMaxEdges", "Returning null pointer.");
-   return (Double_t*)0;
+   return (Double_t*)nullptr;
 }
 
 /// Returns a pair of an array with all bins minimum and maximum edges
@@ -372,7 +372,7 @@ std::pair<const Double_t*, const Double_t*> TKDTreeBinning::GetBinsEdges() const
       return std::make_pair(GetBinsMinEdges(), GetBinsMaxEdges());
    this->Warning("GetBinsEdges", "Binning kd-tree is nil. No bin edges retrieved.");
    this->Info("GetBinsEdges", "Returning null pointer pair.");
-   return std::make_pair((Double_t*)0, (Double_t*)0);
+   return std::make_pair((Double_t*)nullptr, (Double_t*)nullptr);
 }
 
 /// Returns the bin's minimum edges. 'bin' is between 0 and fNBins - 1
@@ -385,7 +385,7 @@ const Double_t* TKDTreeBinning::GetBinMinEdges(UInt_t bin) const {
    else
       this->Warning("GetBinMinEdges", "Binning kd-tree is nil. No bin edges retrieved.");
    this->Info("GetBinMinEdges", "Returning null pointer.");
-   return (Double_t*)0;
+   return (Double_t*)nullptr;
 }
 
 /// Returns the bin's maximum edges. 'bin' is between 0 and fNBins - 1
@@ -398,7 +398,7 @@ const Double_t* TKDTreeBinning::GetBinMaxEdges(UInt_t bin) const {
    else
       this->Warning("GetBinMaxEdges", "Binning kd-tree is nil. No bin edges retrieved.");
    this->Info("GetBinMaxEdges", "Returning null pointer.");
-   return (Double_t*)0;
+   return (Double_t*)nullptr;
 }
 
 /// Returns a pir with the bin's edges. 'bin' is between 0 and fNBins - 1
@@ -411,7 +411,7 @@ std::pair<const Double_t*, const Double_t*> TKDTreeBinning::GetBinEdges(UInt_t b
    else
       this->Warning("GetBinEdges", "Binning kd-tree is nil. No bin edges retrieved.");
    this->Info("GetBinEdges", "Returning null pointer pair.");
-   return std::make_pair((Double_t*)0, (Double_t*)0);
+   return std::make_pair((Double_t*)nullptr, (Double_t*)nullptr);
 }
 
 /// Returns the number of bins
@@ -439,7 +439,7 @@ TKDTreeID* TKDTreeBinning::GetTree() const {
    if (fDataBins)
       return fDataBins;
    this->Warning("GetTree", "Binning kd-tree is nil. No embedded kd-tree retrieved. Returning null pointer.");
-   return (TKDTreeID*)0;
+   return (TKDTreeID*)nullptr;
 }
 
 // Returns the data array in the dim coordinate. 'dim' is between 0 and fDim - 1
@@ -448,7 +448,7 @@ const Double_t* TKDTreeBinning::GetDimData(UInt_t dim) const {
       return &fData[dim*fDataSize];
    this->Warning("GetDimData", "No such dimensional coordinate. No coordinate data retrieved. Returning null pointer.");
    this->Info("GetDimData", "'dim' is between 0 and %d.", fDim - 1);
-   return 0;
+   return nullptr;
 }
 
 /// Returns the minimum of the data in the dim coordinate. 'dim' is between 0 and fDim - 1
@@ -508,7 +508,7 @@ const double * TKDTreeBinning::GetOneDimBinEdges() const  {
    }
    this->Warning("GetOneDimBinEdges", "Data is multidimensional. No sorted bin edges retrieved. Returning null pointer.");
    this->Info("GetOneDimBinEdges", "This method can only be invoked if the data is a one dimensional set");
-   return 0;
+   return nullptr;
 }
 
 /// Sort the one-dimensional bin edges and retuns a pointer to them
@@ -516,7 +516,7 @@ const Double_t * TKDTreeBinning::SortOneDimBinEdges(Bool_t sortAsc) {
    if (fDim != 1) {
       this->Warning("SortOneDimBinEdges", "Data is multidimensional. Cannot sorted bin edges. Returning null pointer.");
       this->Info("SortOneDimBinEdges", "This method can only be invoked if the data is a one dimensional set");
-      return 0;
+      return nullptr;
    }
    // order bins by increasing (or decreasing ) x positions
    std::vector<UInt_t> indices(fNBins);

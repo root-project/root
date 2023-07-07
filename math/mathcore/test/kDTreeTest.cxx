@@ -89,7 +89,7 @@ void TestBuild(const Int_t npoints, const Int_t bsize){
 void TestMembers()
 {
 
-   TKDTreeIF *kdtree = 0x0;
+   TKDTreeIF *kdtree = nullptr;
    Int_t npoints = 33;
    Int_t bsize = 10;
    Float_t *data0 = new Float_t[200]; //not to reallocate each time
@@ -244,7 +244,7 @@ void TestSpeed(Int_t npower2, Int_t bsize)
   g->SetMarkerStyle(7);
   TStopwatch timer;
   Int_t tpoints;
-  TKDTreeIF *kdtree = 0x0;
+  TKDTreeIF *kdtree = nullptr;
   for(int i=10; i<npower2; i++){
     tpoints = Int_t(pow(2., i))*bsize;
     timer.Start(kTRUE);
@@ -575,7 +575,7 @@ int main(int argc, char **argv) {
      }
    }
 
-   TApplication* theApp = 0;
+   TApplication* theApp = nullptr;
    if ( showGraphics )
       theApp = new TApplication("App",&argc,argv);
 
@@ -585,7 +585,7 @@ int main(int argc, char **argv) {
    {
       theApp->Run();
       delete theApp;
-      theApp = 0;
+      theApp = nullptr;
    }
 
    return 0;

@@ -41,13 +41,13 @@ TUnuranSampler::TUnuranSampler() : ROOT::Math::DistSampler(),
 }
 
 TUnuranSampler::~TUnuranSampler() {
-   assert(fUnuran != 0);
+   assert(fUnuran != nullptr);
    delete fUnuran;
 }
 
 bool TUnuranSampler::Init(const char * algo) {
    // initialize unuran classes using the given algorithm
-   assert (fUnuran != 0 );
+   assert (fUnuran != nullptr );
    bool ret = false;
    //case distribution has not been set
    // Maybe we are using the Unuran string API which contains also distribution string
@@ -146,8 +146,8 @@ bool TUnuranSampler::DoInit1D(const char * method) {
    // (to do: use directly 1D functions ??)
    // to do : add possibility for String API of UNURAN
    fOneDim = true;
-   TUnuranContDist * dist = 0;
-   if (fFunc1D == 0) {
+   TUnuranContDist * dist = nullptr;
+   if (fFunc1D == nullptr) {
       if (HasParentPdf()) {
          ROOT::Math::OneDimMultiFunctionAdapter<> function(ParentPdf() );
          dist = new TUnuranContDist(&function,fDPDF,fCDF,fUseLogPdf,true);
@@ -184,8 +184,8 @@ bool TUnuranSampler::DoInitDiscrete1D(const char * method) {
    // initialize for 1D sampling of discrete distributions
    fOneDim = true;
    fDiscrete = true;
-   TUnuranDiscrDist * dist = 0;
-   if (fFunc1D == 0) {
+   TUnuranDiscrDist * dist = nullptr;
+   if (fFunc1D == nullptr) {
       if (!HasParentPdf()) {
          Error("DoInitDiscrete1D", "No PMF has been defined");
          return false;

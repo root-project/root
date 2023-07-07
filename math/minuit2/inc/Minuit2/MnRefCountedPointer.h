@@ -21,7 +21,7 @@ class MnRefCountedPointer {
 
 public:
    // Default constructor needed for use inside array, vector, etc.
-   MnRefCountedPointer() : fPtr(0), fCounter(0) {}
+   MnRefCountedPointer() : fPtr(0), fCounter(nullptr) {}
 
    MnRefCountedPointer(T *pt) : fPtr(pt), fCounter(new MnReferenceCounter()) { AddReference(); }
 
@@ -94,7 +94,7 @@ public:
          delete fPtr;
          fPtr = 0;
          delete fCounter;
-         fCounter = 0;
+         fCounter = nullptr;
       }
    }
 

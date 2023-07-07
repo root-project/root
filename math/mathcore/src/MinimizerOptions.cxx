@@ -36,7 +36,7 @@ namespace Math {
       static int  gDefaultMaxIter  = 0;
       static int  gDefaultStrategy  = 1;
       static int  gDefaultPrintLevel  = 0;
-      static IOptions * gDefaultExtraOptions = 0; // pointer to default extra options
+      static IOptions * gDefaultExtraOptions = nullptr; // pointer to default extra options
    }
 
 
@@ -79,7 +79,7 @@ void MinimizerOptions::SetDefaultPrintLevel(int level) {
 void MinimizerOptions::SetDefaultExtraOptions(const IOptions * extraoptions) {
    // set the pointer to default extra options
    delete Minim::gDefaultExtraOptions;
-   Minim::gDefaultExtraOptions = (extraoptions) ? extraoptions->Clone() : 0;
+   Minim::gDefaultExtraOptions = (extraoptions) ? extraoptions->Clone() : nullptr;
 }
 
 const std::string & MinimizerOptions::DefaultMinimizerAlgo() { 
@@ -131,7 +131,7 @@ const std::string & MinimizerOptions::DefaultMinimizerType()
 
 
 MinimizerOptions::MinimizerOptions():
-   fExtraOptions(0)
+   fExtraOptions(nullptr)
 {
    // constructor using  the default options
 
@@ -139,7 +139,7 @@ MinimizerOptions::MinimizerOptions():
 }
 
 
-MinimizerOptions::MinimizerOptions(const MinimizerOptions & opt) : fExtraOptions(0) {
+MinimizerOptions::MinimizerOptions(const MinimizerOptions & opt) : fExtraOptions(nullptr) {
    // copy constructor
    (*this) = opt;
 }
@@ -158,7 +158,7 @@ MinimizerOptions & MinimizerOptions::operator=(const MinimizerOptions & opt) {
    fAlgoType = opt.fAlgoType;
 
    delete fExtraOptions;
-   fExtraOptions = (opt.fExtraOptions) ? (opt.fExtraOptions)->Clone() : 0;
+   fExtraOptions = (opt.fExtraOptions) ? (opt.fExtraOptions)->Clone() : nullptr;
 
    return *this;
 }
@@ -193,7 +193,7 @@ void MinimizerOptions::ResetToDefaultOptions() {
       fAlgoType = "";
 
    delete fExtraOptions;
-   fExtraOptions = 0;
+   fExtraOptions = nullptr;
    // check if extra options exists (copy them if needed)
    if (Minim::gDefaultExtraOptions)
       fExtraOptions = Minim::gDefaultExtraOptions->Clone();

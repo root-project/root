@@ -347,69 +347,69 @@ TMinuit::TMinuit(): TNamed("MINUIT","The Minimization package")
 {
    if (TMinuit::Class()->IsCallingNew() != TClass::kRealNew) {
       //preset all pointers to null
-      fCpnam     = 0;
-      fU         = 0;
-      fAlim      = 0;
-      fBlim      = 0;
-      fPstar     = 0;
-      fGin       = 0;
-      fNvarl     = 0;
-      fNiofex    = 0;
+      fCpnam     = nullptr;
+      fU         = nullptr;
+      fAlim      = nullptr;
+      fBlim      = nullptr;
+      fPstar     = nullptr;
+      fGin       = nullptr;
+      fNvarl     = nullptr;
+      fNiofex    = nullptr;
 
-      fNexofi    = 0;
-      fIpfix     = 0;
-      fErp       = 0;
-      fErn       = 0;
-      fWerr      = 0;
-      fGlobcc    = 0;
-      fX         = 0;
-      fXt        = 0;
-      fDirin     = 0;
-      fXs        = 0;
-      fXts       = 0;
-      fDirins    = 0;
-      fGrd       = 0;
-      fG2        = 0;
-      fGstep     = 0;
-      fDgrd      = 0;
-      fGrds      = 0;
-      fG2s       = 0;
-      fGsteps    = 0;
-      fPstst     = 0;
-      fPbar      = 0;
-      fPrho      = 0;
-      fWord7     = 0;
-      fVhmat     = 0;
-      fVthmat    = 0;
-      fP         = 0;
-      fXpt       = 0;
-      fYpt       = 0;
-      fChpt      = 0;
-      fCONTgcc   = 0;
-      fCONTw     = 0;
-      fFIXPyy    = 0;
-      fGRADgf    = 0;
-      fHESSyy    = 0;
-      fIMPRdsav  = 0;
-      fIMPRy     = 0;
-      fMATUvline = 0;
-      fMIGRflnu  = 0;
-      fMIGRstep  = 0;
-      fMIGRgs    = 0;
-      fMIGRvg    = 0;
-      fMIGRxxs   = 0;
-      fMNOTxdev  = 0;
-      fMNOTw     = 0;
-      fMNOTgcc   = 0;
-      fPSDFs     = 0;
-      fSEEKxmid  = 0;
-      fSEEKxbest = 0;
-      fSIMPy     = 0;
-      fVERTq     = 0;
-      fVERTs     = 0;
-      fVERTpp    = 0;
-      fCOMDplist = 0;
-      fPARSplist = 0;
+      fNexofi    = nullptr;
+      fIpfix     = nullptr;
+      fErp       = nullptr;
+      fErn       = nullptr;
+      fWerr      = nullptr;
+      fGlobcc    = nullptr;
+      fX         = nullptr;
+      fXt        = nullptr;
+      fDirin     = nullptr;
+      fXs        = nullptr;
+      fXts       = nullptr;
+      fDirins    = nullptr;
+      fGrd       = nullptr;
+      fG2        = nullptr;
+      fGstep     = nullptr;
+      fDgrd      = nullptr;
+      fGrds      = nullptr;
+      fG2s       = nullptr;
+      fGsteps    = nullptr;
+      fPstst     = nullptr;
+      fPbar      = nullptr;
+      fPrho      = nullptr;
+      fWord7     = nullptr;
+      fVhmat     = nullptr;
+      fVthmat    = nullptr;
+      fP         = nullptr;
+      fXpt       = nullptr;
+      fYpt       = nullptr;
+      fChpt      = nullptr;
+      fCONTgcc   = nullptr;
+      fCONTw     = nullptr;
+      fFIXPyy    = nullptr;
+      fGRADgf    = nullptr;
+      fHESSyy    = nullptr;
+      fIMPRdsav  = nullptr;
+      fIMPRy     = nullptr;
+      fMATUvline = nullptr;
+      fMIGRflnu  = nullptr;
+      fMIGRstep  = nullptr;
+      fMIGRgs    = nullptr;
+      fMIGRvg    = nullptr;
+      fMIGRxxs   = nullptr;
+      fMNOTxdev  = nullptr;
+      fMNOTw     = nullptr;
+      fMNOTgcc   = nullptr;
+      fPSDFs     = nullptr;
+      fSEEKxmid  = nullptr;
+      fSEEKxbest = nullptr;
+      fSIMPy     = nullptr;
+      fVERTq     = nullptr;
+      fVERTs     = nullptr;
+      fVERTpp    = nullptr;
+      fCOMDplist = nullptr;
+      fPARSplist = nullptr;
 
       fUp        = 0;
       fEpsi      = 0;
@@ -421,9 +421,9 @@ TMinuit::TMinuit(): TNamed("MINUIT","The Minimization package")
 
       fStatus       = 0;
       fEmpty        = 0;
-      fObjectFit    = 0;
-      fMethodCall   = 0;
-      fPlot         = 0;
+      fObjectFit    = nullptr;
+      fMethodCall   = nullptr;
+      fPlot         = nullptr;
       fGraphicsMode = kTRUE;
 
    } else {
@@ -439,15 +439,15 @@ TMinuit::TMinuit(): TNamed("MINUIT","The Minimization package")
 
       fStatus       = 0;
       fEmpty        = 0;
-      fObjectFit    = 0;
-      fMethodCall   = 0;
-      fPlot         = 0;
+      fObjectFit    = nullptr;
+      fMethodCall   = nullptr;
+      fPlot         = nullptr;
       fGraphicsMode = kTRUE;
       SetMaxIterations();
       mninit(5,6,7);
    }
 
-   fFCN = 0;
+   fFCN = nullptr;
    {
       R__LOCKGUARD(gROOTMutex);
       gROOT->GetListOfSpecials()->Add(this);
@@ -462,15 +462,15 @@ TMinuit::TMinuit(): TNamed("MINUIT","The Minimization package")
 
 TMinuit::TMinuit(Int_t maxpar): TNamed("MINUIT","The Minimization package")
 {
-   fFCN = 0;
+   fFCN = nullptr;
 
    BuildArrays(maxpar);
 
    fStatus       = 0;
    fEmpty        = 0;
-   fObjectFit    = 0;
-   fMethodCall   = 0;
-   fPlot         = 0;
+   fObjectFit    = nullptr;
+   fMethodCall   = nullptr;
+   fPlot         = nullptr;
    fGraphicsMode = kTRUE;
    SetMaxIterations();
 
@@ -500,7 +500,7 @@ TMinuit::~TMinuit()
    delete fMethodCall;
    {
       R__LOCKGUARD(gROOTMutex);
-      if (gROOT != 0 && gROOT->GetListOfSpecials() != 0) gROOT->GetListOfSpecials()->Remove(this);
+      if (gROOT != nullptr && gROOT->GetListOfSpecials() != nullptr) gROOT->GetListOfSpecials()->Remove(this);
    }
    if (gMinuit == this) gMinuit = nullptr;
 }
@@ -654,7 +654,7 @@ TObject *TMinuit::Contour(Int_t npoints, Int_t pa1, Int_t pa2)
    if (npoints<4) {
       // we need at least 4 points
       fStatus= 2;
-      return (TObject *)0;
+      return (TObject *)nullptr;
    }
    Int_t    npfound;
    Double_t *xcoor = new Double_t[npoints+1];
@@ -666,7 +666,7 @@ TObject *TMinuit::Contour(Int_t npoints, Int_t pa1, Int_t pa2)
       fStatus= (npfound==0 ? 1 : npfound);
       delete [] xcoor;
       delete [] ycoor;
-      return (TObject *)0;
+      return (TObject *)nullptr;
    }
    if (npfound!=npoints) {
       // mncont did go wrong
@@ -677,7 +677,7 @@ TObject *TMinuit::Contour(Int_t npoints, Int_t pa1, Int_t pa2)
    // create graph via the  PluginManager
    xcoor[npoints] = xcoor[0];  // add first point at end to get closed polyline
    ycoor[npoints] = ycoor[0];
-   TObject *gr = 0;
+   TObject *gr = nullptr;
    TPluginHandler *h;
    if ((h = gROOT->GetPluginManager()->FindHandler("TMinuitGraph"))) {
       if (h->LoadPlugin() != -1)
@@ -1678,7 +1678,7 @@ void TMinuit::mncrck(TString cardbuf, Int_t maxcwd, TString &comand, Int_t &lnc,
 {
    /* Initialized data */
 
-   char *cnull  = 0;
+   char *cnull  = nullptr;
    const char *cnumer = "123456789-.0+";
 
    /* Local variables */

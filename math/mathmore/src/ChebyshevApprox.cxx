@@ -47,7 +47,7 @@ namespace Math {
 
 
 ChebyshevApprox::ChebyshevApprox(const ROOT::Math::IGenFunction & f, double a, double b, size_t n) :
-   fOrder(n) , fSeries(0), fFunction(0)
+   fOrder(n) , fSeries(nullptr), fFunction(nullptr)
 {
    // constructor from function (IGenFunction type) and interval [a,b] and series size n
    fSeries = new GSLChebSeries(n);
@@ -58,7 +58,7 @@ ChebyshevApprox::ChebyshevApprox(const ROOT::Math::IGenFunction & f, double a, d
 
 // constructor with GSL function
 ChebyshevApprox::ChebyshevApprox(GSLFuncPointer f, void * params, double a, double b, size_t n) :
-fOrder(n) , fSeries(0), fFunction(0)
+fOrder(n) , fSeries(nullptr), fFunction(nullptr)
 {
    // constructor from function (GSL type) and interval [a,b] and series size n
    fSeries = new GSLChebSeries(n);
@@ -73,7 +73,7 @@ ChebyshevApprox::~ChebyshevApprox()
 }
 
 ChebyshevApprox::ChebyshevApprox(size_t n) :
-fOrder(n) , fSeries(0), fFunction(0)
+fOrder(n) , fSeries(nullptr), fFunction(nullptr)
 {
    // constructor passing only size (need to initialize setting the function afterwards)
    fSeries = new GSLChebSeries(n);
@@ -95,7 +95,7 @@ ChebyshevApprox & ChebyshevApprox::operator = (const ChebyshevApprox &rhs)
 void ChebyshevApprox::Initialize( GSLFuncPointer f, void * params, double a, double b) {
    // initialize by passing a function and interval [a,b]
    // delete previous existing function pointer
-   assert(fSeries != 0);
+   assert(fSeries != nullptr);
    if (fFunction) delete fFunction;
 
    fFunction = new GSLFunctionWrapper();

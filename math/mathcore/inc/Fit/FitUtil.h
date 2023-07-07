@@ -137,7 +137,7 @@ namespace FitUtil {
         }
      }
 
-     void SetFunction(const ParamFunc &func, const double *p = 0,
+     void SetFunction(const ParamFunc &func, const double *p = nullptr,
                       ROOT::Math::IntegrationOneDim::Type igType = ROOT::Math::IntegrationOneDim::kDEFAULT)
      {
         // set the integrand function and create required wrapper

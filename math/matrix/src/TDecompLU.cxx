@@ -46,7 +46,7 @@ TDecompLU::TDecompLU()
 {
    fSign = 0.0;
    fNIndex = 0;
-   fIndex = 0;
+   fIndex = nullptr;
    fImplicitPivot = 0;
 }
 
@@ -115,7 +115,7 @@ TDecompLU::TDecompLU(const TMatrixD &a,Double_t tol,Int_t implicit)
 TDecompLU::TDecompLU(const TDecompLU &another) : TDecompBase(another)
 {
    fNIndex = 0;
-   fIndex  = 0;
+   fIndex  = nullptr;
    *this = another;
 }
 

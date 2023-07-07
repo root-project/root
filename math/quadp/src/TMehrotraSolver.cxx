@@ -62,8 +62,8 @@ TMehrotraSolver::TMehrotraSolver()
 {
    fPrintlevel = 0;
    fTsig       = 0.0;
-   fStep       = 0;
-   fFactory    = 0;
+   fStep       = nullptr;
+   fFactory    = nullptr;
 }
 
 

@@ -51,10 +51,10 @@ ClassImp(TFFTComplex);
 
 TFFTComplex::TFFTComplex()
 {
-   fIn   = 0;
-   fOut  = 0;
-   fPlan = 0;
-   fN    = 0;
+   fIn   = nullptr;
+   fOut  = nullptr;
+   fPlan = nullptr;
+   fN    = nullptr;
    fNdim = 0;
    fTotalSize = 0;
    fSign = 1;
@@ -70,13 +70,13 @@ TFFTComplex::TFFTComplex(Int_t n, Bool_t inPlace)
    if (!inPlace)
       fOut = fftw_malloc(sizeof(fftw_complex) * n);
    else
-      fOut = 0;
+      fOut = nullptr;
    fN    = new Int_t[1];
    fN[0] = n;
    fTotalSize = n;
    fNdim = 1;
    fSign = 1;
-   fPlan = 0;
+   fPlan = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -96,9 +96,9 @@ TFFTComplex::TFFTComplex(Int_t ndim, Int_t *n, Bool_t inPlace)
    if (!inPlace)
       fOut = fftw_malloc(sizeof(fftw_complex) * fTotalSize);
    else
-      fOut = 0;
+      fOut = nullptr;
    fSign = 1;
-   fPlan = 0;
+   fPlan = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -109,7 +109,7 @@ TFFTComplex::TFFTComplex(Int_t ndim, Int_t *n, Bool_t inPlace)
 TFFTComplex::~TFFTComplex()
 {
    fftw_destroy_plan((fftw_plan)fPlan);
-   fPlan = 0;
+   fPlan = nullptr;
    fftw_free((fftw_complex*)fIn);
    if (fOut)
       fftw_free((fftw_complex*)fOut);
@@ -144,7 +144,7 @@ void TFFTComplex::Init( Option_t *flags, Int_t sign,const Int_t* /*kind*/)
 
    if (fPlan)
       fftw_destroy_plan((fftw_plan)fPlan);
-   fPlan = 0;
+   fPlan = nullptr;
 
    if (fOut)
       fPlan = (void*)fftw_plan_dft(fNdim, fN, (fftw_complex*)fIn, (fftw_complex*)fOut, sign,MapFlag(flags));

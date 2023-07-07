@@ -14,7 +14,7 @@ template <typename T> void testBinarySearch()
 {
    T k[nn];
 
-   TRandom2 r( time( 0 ) );
+   TRandom2 r( time( nullptr ) );
    for ( Int_t i = 0; i < nn; i++) {
       T number = (T) r.Integer( maxint );
       while ( number == except )

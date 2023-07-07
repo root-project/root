@@ -89,7 +89,7 @@ public:
    }
 
    template <class A, class B, class T>
-   LAVector(const ABObj<vec, ABSum<ABObj<vec, A, T>, ABObj<vec, B, T>>, T> &sum) : fSize(0), fData(0)
+   LAVector(const ABObj<vec, ABSum<ABObj<vec, A, T>, ABObj<vec, B, T>>, T> &sum) : fSize(0), fData(nullptr)
    {
       //     std::cout<<"template<class A, class B, class T> LAVector(const ABObj<ABSum<ABObj<A, T>, ABObj<B, T> > >&
       //     sum)"<<std::endl;
@@ -114,7 +114,7 @@ public:
    }
 
    template <class A, class T>
-   LAVector(const ABObj<vec, ABObj<vec, A, T>, T> &something) : fSize(0), fData(0)
+   LAVector(const ABObj<vec, ABObj<vec, A, T>, T> &something) : fSize(0), fData(nullptr)
    {
       //     std::cout<<"template<class A, class T> LAVector(const ABObj<ABObj<A, T>, T>& something)"<<std::endl;
       (*this) = something.Obj();
@@ -140,7 +140,7 @@ public:
             vec,
             ABSum<ABObj<vec, ABProd<ABObj<sym, LASymMatrix, T>, ABObj<vec, LAVector, T>>, T>, ABObj<vec, LAVector, T>>,
             T> &prod)
-      : fSize(0), fData(0)
+      : fSize(0), fData(nullptr)
    {
       (*this) = prod.Obj().B();
       (*this) += prod.Obj().A();

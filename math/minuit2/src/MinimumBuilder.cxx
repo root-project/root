@@ -14,7 +14,7 @@ namespace ROOT {
 
 namespace Minuit2 {
 
-MinimumBuilder::MinimumBuilder() : fPrintLevel(MnPrint::GlobalLevel()), fStorageLevel(1), fTracer(0) {}
+MinimumBuilder::MinimumBuilder() : fPrintLevel(MnPrint::GlobalLevel()), fStorageLevel(1), fTracer(nullptr) {}
 
 } // namespace Minuit2
 

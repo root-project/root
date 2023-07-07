@@ -51,7 +51,7 @@ bool testQuantiles(int type = 0, bool sorted = true) {
 
 
    if (type >0 && type < 10)
-      TMath::Quantiles(n,np,x,quant,p,sorted,0,type);
+      TMath::Quantiles(n,np,x,quant,p,sorted,nullptr,type);
    else
       TMath::Quantiles(n,np, x,quant,p,sorted);
 

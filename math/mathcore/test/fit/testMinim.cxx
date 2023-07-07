@@ -381,19 +381,19 @@ public :
 const double *  TrueXMinimum(const  ROOT::Math::IMultiGenFunction & func) {
 
    const RosenBrockFunction * fRB = dynamic_cast< const RosenBrockFunction *> (&func);
-   if (fRB != 0) return fRB->TrueXMinimum();
+   if (fRB != nullptr) return fRB->TrueXMinimum();
    const TrigoFletcherFunction * fTF = dynamic_cast< const TrigoFletcherFunction *> (&func);
-   if (fTF != 0) return fTF->TrueXMinimum();
+   if (fTF != nullptr) return fTF->TrueXMinimum();
 //    const ChebyQuadFunction * fCQ = dynamic_cast< const ChebyQuadFunction *> (&func);
 //    if (fCQ != 0) return fCQ->TrueXMinimum();
-   return 0;
+   return nullptr;
 }
 double TrueMinimum(const  ROOT::Math::IMultiGenFunction & func) {
 
    const RosenBrockFunction * fRB = dynamic_cast< const RosenBrockFunction *> (&func);
-   if (fRB != 0) return fRB->TrueMinimum();
+   if (fRB != nullptr) return fRB->TrueMinimum();
    const TrigoFletcherFunction * fTF = dynamic_cast< const TrigoFletcherFunction *> (&func);
-   if (fTF != 0) return fTF->TrueMinimum();
+   if (fTF != nullptr) return fTF->TrueMinimum();
 //    const ChebyQuadFunction * fCQ = dynamic_cast< const ChebyQuadFunction *> (&func);
 //    if (fCQ != 0) return fCQ->TrueXMinimum();
    return 0;
@@ -429,7 +429,7 @@ int DoNewMinimization( const ROOT::Math::IMultiGenFunction & func, const double 
    min->SetPrintLevel(gVerbose);
    // check if func provides gradient
    const ROOT::Math::IMultiGradFunction * gfunc = dynamic_cast<const  ROOT::Math::IMultiGradFunction *>(&func);
-   if (gfunc != 0)
+   if (gfunc != nullptr)
       min->SetFunction(*gfunc);
    else
       min->SetFunction(func);
@@ -451,7 +451,7 @@ int DoNewMinimization( const ROOT::Math::IMultiGenFunction & func, const double 
 
    bool ok = true;
    const double *  trueMin = TrueXMinimum(func);
-   if (trueMin != 0) {
+   if (trueMin != nullptr) {
       ok &= (std::fabs(minval - TrueMinimum(func) ) < gAbsTolerance );
       for (unsigned int i = 0; i < func.NDim(); ++i)
          ok &= (std::fabs(xmin[i]-trueMin[i] ) < sqrt(gAbsTolerance));
@@ -485,7 +485,7 @@ int DoOldMinimization( FCN  func, TVirtualFitter * min, double &minval, double &
 
   int iret = 0;
 
-  assert(min != 0);
+  assert(min != nullptr);
   min->SetFCN( func );
 
   Double_t arglist[100];
@@ -541,7 +541,7 @@ int testNewMinimizer( const ROOT::Math::IMultiGenFunction & func, const double *
    w.Start();
 
    ROOT::Math::Minimizer * min = ROOT::Math::Factory::CreateMinimizer(minimizer, algoType);
-   if (min == 0) {
+   if (min == nullptr) {
       std::cout << "Error using minimizer " << minimizer << "  " << algoType << std::endl;
       return -1;
    }
@@ -592,7 +592,7 @@ int testOldMinimizer( FCN  func, const std::string & fitter, int n=25) {
 
    TVirtualFitter::SetDefaultFitter(fitter.c_str());
 
-   TVirtualFitter *min = TVirtualFitter::Fitter(0,n);
+   TVirtualFitter *min = TVirtualFitter::Fitter(nullptr,n);
 
    //min->Dump();
 

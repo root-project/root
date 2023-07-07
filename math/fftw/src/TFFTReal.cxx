@@ -68,11 +68,11 @@ ClassImp(TFFTReal);
 
 TFFTReal::TFFTReal()
 {
-   fIn    = 0;
-   fOut   = 0;
-   fPlan  = 0;
-   fN     = 0;
-   fKind  = 0;
+   fIn    = nullptr;
+   fOut   = nullptr;
+   fPlan  = nullptr;
+   fN     = nullptr;
+   fKind  = nullptr;
    fNdim = 0;
    fTotalSize = 0;
 }
@@ -84,14 +84,14 @@ TFFTReal::TFFTReal()
 TFFTReal::TFFTReal(Int_t n, Bool_t inPlace)
 {
    fIn = fftw_malloc(sizeof(Double_t)*n);
-   if (inPlace) fOut = 0;
+   if (inPlace) fOut = nullptr;
    else fOut = fftw_malloc(sizeof(Double_t)*n);
 
-   fPlan = 0;
+   fPlan = nullptr;
    fNdim = 1;
    fN = new Int_t[1];
    fN[0] = n;
-   fKind = 0;
+   fKind = nullptr;
    fTotalSize = n;
 }
 
@@ -105,8 +105,8 @@ TFFTReal::TFFTReal(Int_t ndim, Int_t *n, Bool_t inPlace)
    fTotalSize = 1;
    fNdim = ndim;
    fN = new Int_t[ndim];
-   fKind = 0;
-   fPlan = 0;
+   fKind = nullptr;
+   fPlan = nullptr;
    for (Int_t i=0; i<ndim; i++){
       fTotalSize*=n[i];
       fN[i] = n[i];
@@ -115,7 +115,7 @@ TFFTReal::TFFTReal(Int_t ndim, Int_t *n, Bool_t inPlace)
    if (!inPlace)
       fOut = fftw_malloc(sizeof(Double_t)*fTotalSize);
    else
-      fOut = 0;
+      fOut = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -124,19 +124,19 @@ TFFTReal::TFFTReal(Int_t ndim, Int_t *n, Bool_t inPlace)
 TFFTReal::~TFFTReal()
 {
    fftw_destroy_plan((fftw_plan)fPlan);
-   fPlan = 0;
+   fPlan = nullptr;
    fftw_free(fIn);
-   fIn = 0;
+   fIn = nullptr;
    if (fOut){
       fftw_free(fOut);
    }
-   fOut = 0;
+   fOut = nullptr;
    if (fN)
       delete [] fN;
-   fN = 0;
+   fN = nullptr;
    if (fKind)
       fftw_free((fftw_r2r_kind*)fKind);
-   fKind = 0;
+   fKind = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -177,7 +177,7 @@ void TFFTReal::Init( Option_t* flags,Int_t /*sign*/, const Int_t *kind)
 {
    if (fPlan)
       fftw_destroy_plan((fftw_plan)fPlan);
-   fPlan = 0;
+   fPlan = nullptr;
 
    if (!fKind)
       fKind = (fftw_r2r_kind*)fftw_malloc(sizeof(fftw_r2r_kind)*fNdim);
@@ -300,7 +300,7 @@ Double_t* TFFTReal::GetPointsReal(Bool_t fromInput) const
       return (Double_t*)fOut;
    else if (fromInput && !fOut) {
       Error("GetPointsReal","Input array was destroyed");
-      return 0;
+      return nullptr;
    }
    //R__ASSERT(fIn);
    return (Double_t*)fIn;

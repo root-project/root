@@ -117,7 +117,7 @@ public:
    int TestDelta(double absTol, double relTol) const {
       gsl_vector * x =  GetRoot();
       gsl_vector * dx =  GetDx();
-      if (x == 0 || dx == 0) return -1;
+      if (x == nullptr || dx == nullptr) return -1;
       return gsl_multiroot_test_delta(dx, x, absTol, relTol);
    }
 
@@ -125,7 +125,7 @@ public:
    /// Sum |f|_i < absTol
    int TestResidual(double absTol) const {
       gsl_vector * f =  GetF();
-      if (f == 0) return -1;
+      if (f == nullptr) return -1;
       return gsl_multiroot_test_residual(f, absTol);
    }
 
@@ -160,8 +160,8 @@ public:
       Constructor from type and simension of system (number of functions)
    */
    GSLMultiRootSolver (const gsl_multiroot_fsolver_type * type, int n ) :
-      fSolver(0),
-      fVec(0),
+      fSolver(nullptr),
+      fVec(nullptr),
       fName(std::string("undefined"))
    {
       CreateSolver(type, n);
@@ -172,7 +172,7 @@ public:
    */
    ~GSLMultiRootSolver () override  {
       if (fSolver) gsl_multiroot_fsolver_free(fSolver);
-      if (fVec != 0) gsl_vector_free(fVec);
+      if (fVec != nullptr) gsl_vector_free(fVec);
    }
 
 private:
@@ -208,16 +208,16 @@ public:
    int SetSolver(const std::vector<ROOT::Math::IMultiGenFunction*> & funcVec, const double * x) override {
       // create a vector of the fit contributions
       // create function wrapper from an iterator of functions
-      assert(fSolver !=0);
+      assert(fSolver !=nullptr);
       unsigned int n = funcVec.size();
 
       fFunctions.SetFunctions(funcVec, funcVec.size() );
       // set initial values and create cached vector
-      if (fVec != 0) gsl_vector_free(fVec);
+      if (fVec != nullptr) gsl_vector_free(fVec);
       fVec = gsl_vector_alloc( n);
       std::copy(x,x+n, fVec->data);
       // solver should have been already created at this point
-      assert(fSolver != 0);
+      assert(fSolver != nullptr);
       return gsl_multiroot_fsolver_set(fSolver, fFunctions.GetFunctions(), fVec);
    }
 
@@ -226,25 +226,25 @@ public:
    }
 
    int Iterate() override {
-      if (fSolver == 0) return -1;
+      if (fSolver == nullptr) return -1;
       return gsl_multiroot_fsolver_iterate(fSolver);
    }
 
    /// solution values at the current iteration
    gsl_vector * GetRoot() const override {
-      if (fSolver == 0) return 0;
+      if (fSolver == nullptr) return nullptr;
       return  gsl_multiroot_fsolver_root(fSolver);
    }
 
    /// return function values
    gsl_vector * GetF() const override {
-      if (fSolver == 0) return 0;
+      if (fSolver == nullptr) return nullptr;
       return  gsl_multiroot_fsolver_f(fSolver);
    }
 
    /// return function steps
    gsl_vector * GetDx() const override {
-      if (fSolver == 0) return 0;
+      if (fSolver == nullptr) return nullptr;
       return gsl_multiroot_fsolver_dx(fSolver);
    }
 
@@ -273,8 +273,8 @@ public:
       Constructor
    */
    GSLMultiRootDerivSolver (const gsl_multiroot_fdfsolver_type * type, int n ) :
-      fDerivSolver(0),
-      fVec(0),
+      fDerivSolver(nullptr),
+      fVec(nullptr),
       fName(std::string("undefined"))
    {
       CreateSolver(type, n);
@@ -285,7 +285,7 @@ public:
    */
    ~GSLMultiRootDerivSolver () override  {
       if (fDerivSolver) gsl_multiroot_fdfsolver_free(fDerivSolver);
-      if (fVec != 0) gsl_vector_free(fVec);
+      if (fVec != nullptr) gsl_vector_free(fVec);
    }
 
 private:
@@ -324,12 +324,12 @@ public:
       // create a vector of the fit contributions
       // need to create a vecctor of gradient functions, convert and store in the class
       // the new vector pointer
-      assert(fDerivSolver !=0);
+      assert(fDerivSolver !=nullptr);
       unsigned int n = funcVec.size();
       fGradFuncVec.reserve( n );
       for (unsigned int i = 0; i < n; ++i) {
          ROOT::Math::IMultiGradFunction * func = dynamic_cast<ROOT::Math::IMultiGradFunction *>(funcVec[i] );
-         if (func == 0) {
+         if (func == nullptr) {
             MATH_ERROR_MSG("GSLMultiRootSolver::SetSolver","Function does not provide gradient interface");
             return -1;
          }
@@ -338,7 +338,7 @@ public:
 
       fDerivFunctions.SetFunctions(fGradFuncVec, funcVec.size() );
       // set initial values
-      if (fVec != 0) gsl_vector_free(fVec);
+      if (fVec != nullptr) gsl_vector_free(fVec);
       fVec = gsl_vector_alloc( n);
       std::copy(x,x+n, fVec->data);
 
@@ -350,25 +350,25 @@ public:
    }
 
    int Iterate() override {
-      if (fDerivSolver == 0) return -1;
+      if (fDerivSolver == nullptr) return -1;
       return gsl_multiroot_fdfsolver_iterate(fDerivSolver);
    }
 
    /// solution values at the current iteration
    gsl_vector * GetRoot() const override {
-      if (fDerivSolver == 0) return 0;
+      if (fDerivSolver == nullptr) return nullptr;
       return gsl_multiroot_fdfsolver_root(fDerivSolver);
    }
 
    /// return function values
    gsl_vector * GetF() const override {
-      if (fDerivSolver == 0) return 0;
+      if (fDerivSolver == nullptr) return nullptr;
       return  gsl_multiroot_fdfsolver_f(fDerivSolver);
    }
 
    /// return function steps
    gsl_vector * GetDx() const override {
-      if (fDerivSolver == 0) return 0;
+      if (fDerivSolver == nullptr) return nullptr;
       return  gsl_multiroot_fdfsolver_dx(fDerivSolver);
    }
 

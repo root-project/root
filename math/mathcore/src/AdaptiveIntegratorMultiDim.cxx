@@ -25,7 +25,7 @@ AdaptiveIntegratorMultiDim::AdaptiveIntegratorMultiDim(double absTol, double rel
    fError(0), fRelError(0),
    fNEval(0),
    fStatus(-1),
-   fFun(0)
+   fFun(nullptr)
 {
    // constructor - without passing a function
    if (fAbsTol < 0) fAbsTol = ROOT::Math::IntegratorMultiDimOptions::DefaultAbsTolerance();

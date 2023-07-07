@@ -46,7 +46,7 @@ namespace Math {
 
 
 GSLRootFinderDeriv::GSLRootFinderDeriv() :
-   fFunction(0), fS(0),
+   fFunction(nullptr), fS(nullptr),
    fRoot(0), fPrevRoot(0),
    fIter(0), fStatus(-1),
    fValidPoint(false)

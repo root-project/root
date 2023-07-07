@@ -205,7 +205,7 @@ void TMLPAnalyzer::GatherInformations()
    Double_t diff = 0.;
    if(fAnalysisTree) delete fAnalysisTree;
    fAnalysisTree = new TTree("result","analysis");
-   fAnalysisTree->SetDirectory(0);
+   fAnalysisTree->SetDirectory(nullptr);
    fAnalysisTree->Branch("inNeuron",&inNeuron,"inNeuron/I");
    fAnalysisTree->Branch("diff",&diff,"diff/D");
    Int_t numOutNodes=GetNeurons(GetLayers());
@@ -214,7 +214,7 @@ void TMLPAnalyzer::GatherInformations()
 
    delete fIOTree;
    fIOTree=new TTree("MLP_iotree","MLP_iotree");
-   fIOTree->SetDirectory(0);
+   fIOTree->SetDirectory(nullptr);
    TString leaflist;
    for (i=0; i<nn; i++)
       leaflist+=Form("In%d/D:",i);
@@ -312,14 +312,14 @@ void TMLPAnalyzer::DrawDInputs()
 {
    THStack* stack  = new THStack("differences","differences (impact of variables on ANN)");
    TLegend* legend = new TLegend(0.75,0.75,0.95,0.95);
-   TH1F* tmp = 0;
+   TH1F* tmp = nullptr;
    char var[64], sel[64];
    for(Int_t i = 0; i < GetNeurons(1); i++) {
       snprintf(var,64, "diff>>tmp%d", i);
       snprintf(sel,64, "inNeuron==%d", i);
       fAnalysisTree->Draw(var, sel, "goff");
       tmp = (TH1F*)gDirectory->Get(Form("tmp%d",i));
-      tmp->SetDirectory(0);
+      tmp->SetDirectory(nullptr);
       tmp->SetLineColor(i+1);
       stack->Add(tmp);
       legend->AddEntry(tmp,GetInputNeuronTitle(i),"l");
@@ -343,8 +343,8 @@ void TMLPAnalyzer::DrawNetwork(Int_t neuron, const char* signal, const char* bg)
    THStack* stack = new THStack("__NNout_TMLPA",Form("Neural net output (neuron %d)",neuron));
    TH1F *bgh  = new TH1F("__bgh_TMLPA", "NN output", 50, -0.5, 1.5);
    TH1F *sigh = new TH1F("__sigh_TMLPA", "NN output", 50, -0.5, 1.5);
-   bgh->SetDirectory(0);
-   sigh->SetDirectory(0);
+   bgh->SetDirectory(nullptr);
+   sigh->SetDirectory(nullptr);
    Int_t nEvents = 0;
    Int_t j=0;
    // build event lists for signal and background
@@ -405,7 +405,7 @@ TProfile* TMLPAnalyzer::DrawTruthDeviation(Int_t outnode /*=0*/,
                  outnode, outnode, outnode);
    fIOTree->Draw(drawline+pipehist+"(20)", "", "goff prof");
    TProfile* h=(TProfile*)gDirectory->Get(pipehist);
-   h->SetDirectory(0);
+   h->SetDirectory(nullptr);
    const char* title=GetOutputNeuronTitle(outnode);
    if (title) {
       h->SetTitle(Form("#Delta(output - truth) vs. truth for %s",
@@ -434,11 +434,11 @@ THStack* TMLPAnalyzer::DrawTruthDeviations(Option_t *option /*=""*/)
                            "Deviation of MLP output from truth");
 
    // leg!=0 means we're drawing
-   TLegend *leg=0;
+   TLegend *leg=nullptr;
    if (!option || !strstr(option,"goff"))
       leg=new TLegend(.4,.85,.95,.95,"#Delta(output - truth) vs. truth for:");
 
-   const char* xAxisTitle=0;
+   const char* xAxisTitle=nullptr;
 
    // create profile for each input neuron,
    // adding them into the THStack and the TLegend
@@ -482,7 +482,7 @@ TProfile* TMLPAnalyzer::DrawTruthDeviationInOut(Int_t innode,
                  outnode, outnode, innode);
    fIOTree->Draw(drawline+pipehist+"(50)", "", "goff prof");
    TProfile* h=(TProfile*)gROOT->FindObject(pipehist);
-   h->SetDirectory(0);
+   h->SetDirectory(nullptr);
    const char* titleInNeuron=GetInputNeuronTitle(innode);
    const char* titleOutNeuron=GetOutputNeuronTitle(outnode);
    h->SetTitle(Form("#Delta(output - truth) of %s vs. input %s",
@@ -514,7 +514,7 @@ THStack* TMLPAnalyzer::DrawTruthDeviationInsOut(Int_t outnode /*=0*/,
                                 outputNodeTitle));
 
    // leg!=0 means we're drawing.
-   TLegend *leg=0;
+   TLegend *leg=nullptr;
    if (!option || !strstr(option,"goff"))
       leg=new TLegend(.4,.75,.95,.95,
                       Form("#Delta(output - truth) of %s vs. input for:",

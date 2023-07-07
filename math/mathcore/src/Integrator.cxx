@@ -51,7 +51,7 @@ namespace ROOT {
 namespace Math {
 
 IntegrationOneDim::Type IntegratorOneDim::GetType(const char *name) {
-   if (name == 0) return IntegrationOneDim::kDEFAULT;
+   if (name == nullptr) return IntegrationOneDim::kDEFAULT;
    std::string typeName(name);
    std::transform(typeName.begin(), typeName.end(), typeName.begin(), (int(*)(int)) toupper );
    if (typeName == "GAUSS") return IntegrationOneDim::kGAUSS;
@@ -76,7 +76,7 @@ std::string IntegratorOneDim::GetName(IntegrationOneDim::Type type) {
 
 
 IntegrationMultiDim::Type IntegratorMultiDim::GetType(const char *name) {
-   if (name == 0) return IntegrationMultiDim::kDEFAULT;
+   if (name == nullptr) return IntegrationMultiDim::kDEFAULT;
    std::string typeName(name);
    std::transform(typeName.begin(), typeName.end(), typeName.begin(), (int(*)(int)) toupper );
    if (typeName == "ADAPTIVE") return IntegrationMultiDim::kADAPTIVE;
@@ -104,7 +104,7 @@ void IntegratorOneDim::SetFunction(const IMultiGenFunction &f, unsigned int icoo
    assert (icoord < ndim);
    ROOT::Math::OneDimMultiFunctionAdapter<> adapter(f,ndim,icoord);
    // case I pass a vector x which is needed (for example to compute I(y) = Integral( f(x,y) dx) ) need to setCX
-   if (x != 0) adapter.SetX(x, x+ ndim);
+   if (x != nullptr) adapter.SetX(x, x+ ndim);
    SetFunction(adapter,true); // need to copy this object
 }
 
@@ -138,7 +138,7 @@ VirtualIntegratorOneDim * IntegratorOneDim::CreateIntegrator(IntegrationOneDim::
       return new GaussLegendreIntegrator(rule,relTol);
    }
 
-   VirtualIntegratorOneDim * ig = 0;
+   VirtualIntegratorOneDim * ig = nullptr;
 
 #ifdef MATH_NO_PLUGIN_MANAGER    // no PM available
 #ifdef R__HAS_MATHMORE
@@ -164,7 +164,7 @@ VirtualIntegratorOneDim * IntegratorOneDim::CreateIntegrator(IntegrationOneDim::
          std::string typeName = GetName(type);
 
          ig = reinterpret_cast<ROOT::Math::VirtualIntegratorOneDim *>( h->ExecPlugin(5,typeName.c_str(), rule, absTol, relTol, size ) );
-         assert(ig != 0);
+         assert(ig != nullptr);
       }
 #ifdef DEBUG
       std::cout << "Loaded Integrator " << typeid(*ig).name() << std::endl;
@@ -196,7 +196,7 @@ VirtualIntegratorMultiDim * IntegratorMultiDim::CreateIntegrator(IntegrationMult
 
    // use now plugin-manager for creating the GSL integrator
 
-   VirtualIntegratorMultiDim * ig = 0;
+   VirtualIntegratorMultiDim * ig = nullptr;
 
 #ifdef MATH_NO_PLUGIN_MANAGER  // no PM available
 #ifdef R__HAS_MATHMORE
@@ -221,7 +221,7 @@ VirtualIntegratorMultiDim * IntegratorMultiDim::CreateIntegrator(IntegrationMult
          std::string typeName = GetName(type);
 
          ig = reinterpret_cast<ROOT::Math::VirtualIntegratorMultiDim *>( h->ExecPlugin(4,typeName.c_str(), absTol, relTol, ncall ) );
-         assert(ig != 0);
+         assert(ig != nullptr);
 
 #ifdef DEBUG
          std::cout << "Loaded Integrator " << typeid(*ig).name() << std::endl;

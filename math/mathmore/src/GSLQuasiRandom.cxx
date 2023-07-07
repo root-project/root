@@ -47,7 +47,7 @@ namespace Math {
 
   // default constructor (need to call set type later)
    GSLQuasiRandomEngine::GSLQuasiRandomEngine() :
-      fQRng(0 )
+      fQRng(nullptr )
   { }
 
    // constructor from external rng
@@ -90,7 +90,7 @@ namespace Math {
       if (!fQRng) return;
       fQRng->Free();
       delete fQRng;
-      fQRng = 0;
+      fQRng = nullptr;
    }
 
 
@@ -135,8 +135,8 @@ namespace Math {
    std::string GSLQuasiRandomEngine::Name() const {
       //////////////////////////////////////////////////////////////////////////
 
-      assert (fQRng != 0);
-      assert(fQRng->Rng() != 0);
+      assert (fQRng != nullptr);
+      assert(fQRng->Rng() != nullptr);
       const char * name = gsl_qrng_name( fQRng->Rng() );
       if (!name)  return std::string();
       return std::string( name);
@@ -145,14 +145,14 @@ namespace Math {
    unsigned int GSLQuasiRandomEngine::Size() const {
       //////////////////////////////////////////////////////////////////////////
 
-      assert (fQRng != 0);
+      assert (fQRng != nullptr);
       return gsl_qrng_size( fQRng->Rng() );
    }
 
    unsigned int GSLQuasiRandomEngine::NDim() const {
       //////////////////////////////////////////////////////////////////////////
 
-      assert (fQRng != 0);
+      assert (fQRng != nullptr);
       return fQRng->Dimension();
    }
 

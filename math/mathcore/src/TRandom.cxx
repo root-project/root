@@ -194,7 +194,7 @@ TRandom::TRandom(UInt_t seed): TNamed("Random","Default Random number generator"
 
 TRandom::~TRandom()
 {
-   if (gRandom == this) gRandom = 0;
+   if (gRandom == this) gRandom = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -45,7 +45,7 @@
 namespace ROOT {
 namespace Math {
 
-VavilovFast *VavilovFast::fgInstance = 0;
+VavilovFast *VavilovFast::fgInstance = nullptr;
 
 
 VavilovFast::VavilovFast(double kappa, double beta2)

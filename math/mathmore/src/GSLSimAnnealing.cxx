@@ -110,14 +110,14 @@ namespace GSLSimAn {
    double E( void * xp) {
       // evaluate the energy given a state xp
       GSLSimAnFunc * fx = reinterpret_cast<GSLSimAnFunc *> (xp);
-      assert (fx != 0);
+      assert (fx != nullptr);
       return fx->Energy();
    }
 
    void Step( const gsl_rng * r, void * xp, double step_size) {
       // change xp according to  the random step
       GSLSimAnFunc * fx = reinterpret_cast<GSLSimAnFunc *> (xp);
-      assert (fx != 0);
+      assert (fx != nullptr);
       // create GSLRandomEngine class
       // cast away constness (we make sure we don't delete (no call to Terminate() )
       GSLRngWrapper  rng(const_cast<gsl_rng *>(r));
@@ -131,8 +131,8 @@ namespace GSLSimAn {
       GSLSimAnFunc * fx = reinterpret_cast<GSLSimAnFunc *> (xp);
       GSLSimAnFunc * fy = reinterpret_cast<GSLSimAnFunc *> (yp);
 
-      assert (fx != 0);
-      assert (fy != 0);
+      assert (fx != nullptr);
+      assert (fy != nullptr);
       return fx->Distance(*fy);
    }
 
@@ -140,7 +140,7 @@ namespace GSLSimAn {
       // print the position  xp
       // GSL prints also first niter-  ntrials - temperature and then the energy
       GSLSimAnFunc * fx = reinterpret_cast<GSLSimAnFunc *> (xp);
-      assert (fx != 0);
+      assert (fx != nullptr);
       fx->Print();
    }
 
@@ -148,21 +148,21 @@ namespace GSLSimAn {
 
    void Copy( void * source, void * dest) {
       GSLSimAnFunc * fx = reinterpret_cast<GSLSimAnFunc *> (source);
-      assert (fx != 0);
+      assert (fx != nullptr);
       GSLSimAnFunc * gx = reinterpret_cast<GSLSimAnFunc *> (dest);
-      assert (gx != 0);
+      assert (gx != nullptr);
       gx->FastCopy(*fx);
    }
 
    void * CopyCtor( void * xp) {
       GSLSimAnFunc * fx = reinterpret_cast<GSLSimAnFunc *> (xp);
-      assert (fx != 0);
+      assert (fx != nullptr);
       return static_cast<void *> ( fx->Clone() );
    }
 
    void Destroy( void * xp) {
       GSLSimAnFunc * fx = reinterpret_cast<GSLSimAnFunc *> (xp);
-      assert (fx != 0);
+      assert (fx != nullptr);
       delete fx;
    }
 
@@ -225,7 +225,7 @@ int GSLSimAnnealing::Solve(GSLSimAnFunc & fx, bool debug) {
 
    else
       gsl_siman_solve(r, &fx, &GSLSimAn::E, &GSLSimAn::Step, &GSLSimAn::Dist,
-                   0, &GSLSimAn::Copy, &GSLSimAn::CopyCtor , &GSLSimAn::Destroy, 0, simanParams );
+                   nullptr, &GSLSimAn::Copy, &GSLSimAn::CopyCtor , &GSLSimAn::Destroy, 0, simanParams );
 
    return 0;
 

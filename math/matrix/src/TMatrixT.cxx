@@ -410,7 +410,7 @@ void TMatrixT<Element>::Delete_m(Int_t size,Element *&m)
    if (m) {
       if (size > this->kSizeMax)
          delete [] m;
-      m = 0;
+      m = nullptr;
    }
 }
 
@@ -421,7 +421,7 @@ void TMatrixT<Element>::Delete_m(Int_t size,Element *&m)
 template<class Element>
 Element* TMatrixT<Element>::New_m(Int_t size)
 {
-   if (size == 0) return 0;
+   if (size == 0) return nullptr;
    else {
       if ( size <= this->kSizeMax )
          return fDataStack;
@@ -469,7 +469,7 @@ void TMatrixT<Element>::Allocate(Int_t no_rows,Int_t no_cols,Int_t row_lwb,Int_t
 {
    this->fIsOwner = kTRUE;
    this->fTol     = std::numeric_limits<Element>::epsilon();
-   fElements      = 0;
+   fElements      = nullptr;
    this->fNrows   = 0;
    this->fNcols   = 0;
    this->fRowLwb  = 0;
@@ -503,7 +503,7 @@ void TMatrixT<Element>::Allocate(Int_t no_rows,Int_t no_cols,Int_t row_lwb,Int_t
       if (init)
          memset(fElements,0,this->fNelems*sizeof(Element));
    } else
-     fElements = 0;
+     fElements = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3169,7 +3169,7 @@ void TMatrixT<Element>::Streamer(TBuffer &R__b)
                fElements = new Element[this->fNelems];
                R__b.ReadFastArray(fElements,this->fNelems);
             } else
-               fElements = 0;
+               fElements = nullptr;
          }
          R__b.CheckByteCount(R__s,R__c,TMatrixT<Element>::IsA());
       } else { //====process old versions before automatic schema evolution

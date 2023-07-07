@@ -66,7 +66,7 @@ void doFit(int n,const char * fitter)
    //Generate points along a sin(x)+sin(2x) function
    makePoints(n, x , y, e);
 
-   TGraphErrors *gre3 = new TGraphErrors(n, &x.front(), &y.front(), 0, &e.front());
+   TGraphErrors *gre3 = new TGraphErrors(n, &x.front(), &y.front(), nullptr, &e.front());
    gre3->SetMarkerStyle(24);
    gre3->SetMarkerSize(0.3);
    gre3->Draw("ap");
@@ -100,7 +100,7 @@ void doFit(int n,const char * fitter)
    int np = theFitter->GetNumberFreeParameters();
    std::cout << "Number of free parameters " << np << "\nCovariance Matrix :\n";
    double * cv = theFitter->GetCovarianceMatrix();
-   assert(cv != 0);
+   assert(cv != nullptr);
    for (int i = 0; i < np ; ++i) {
       for (int j = 0; j < np ; ++j)
          std::cout << cv[j + i*np] << "\t";
@@ -169,7 +169,7 @@ int main(int argc, char **argv)
       }
    }
 
-   TApplication* theApp = 0;
+   TApplication* theApp = nullptr;
    if ( showGraphics )
       theApp = new TApplication("App",&argc,argv);
 
@@ -179,7 +179,7 @@ int main(int argc, char **argv)
    {
       theApp->Run();
       delete theApp;
-      theApp = 0;
+      theApp = nullptr;
    }
 
    return 0;

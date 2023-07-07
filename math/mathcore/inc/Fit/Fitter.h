@@ -263,7 +263,7 @@ public:
       For the options see documentation for following methods FitFCN(IMultiGenFunction & fcn,..)
     */
    template <class Function>
-   bool FitFCN(unsigned int npar, Function  & fcn, const double * params = 0, unsigned int dataSize = 0, bool chi2fit = false);
+   bool FitFCN(unsigned int npar, Function  & fcn, const double * params = nullptr, unsigned int dataSize = 0, bool chi2fit = false);
 
    /**
       Set a generic FCN function as a C++ callable object implementing
@@ -272,7 +272,7 @@ public:
       For the options see documentation for following methods FitFCN(IMultiGenFunction & fcn,..)
     */
    template <class Function>
-   bool SetFCN(unsigned int npar, Function  & fcn, const double * params = 0, unsigned int dataSize = 0, bool chi2fit = false);
+   bool SetFCN(unsigned int npar, Function  & fcn, const double * params = nullptr, unsigned int dataSize = 0, bool chi2fit = false);
 
    /**
       Fit using the given FCN function represented by a multi-dimensional function interface

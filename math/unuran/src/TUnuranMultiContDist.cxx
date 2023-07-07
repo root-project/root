@@ -27,7 +27,7 @@ TUnuranMultiContDist::TUnuranMultiContDist (const ROOT::Math::IMultiGenFunction 
 
 
 TUnuranMultiContDist::TUnuranMultiContDist (TF1 * func, unsigned int dim, bool isLogPdf) :
-   fPdf(0),
+   fPdf(nullptr),
    fIsLogPdf(isLogPdf),
    fOwnFunc(false)
 {
@@ -42,7 +42,7 @@ TUnuranMultiContDist::TUnuranMultiContDist (TF1 * func, unsigned int dim, bool i
 
 TUnuranMultiContDist::TUnuranMultiContDist(const TUnuranMultiContDist & rhs) :
    TUnuranBaseDist(),
-   fPdf(0)
+   fPdf(nullptr)
 {
    // Implementation of copy ctor using assignment operator
    operator=(rhs);
@@ -61,7 +61,7 @@ TUnuranMultiContDist & TUnuranMultiContDist::operator = (const TUnuranMultiContD
       fPdf   = rhs.fPdf;
    else {
        if (fPdf) delete fPdf;
-       fPdf  = (rhs.fPdf)  ? rhs.fPdf->Clone()  : 0;
+       fPdf  = (rhs.fPdf)  ? rhs.fPdf->Clone()  : nullptr;
    }
    return *this;
 }
@@ -74,7 +74,7 @@ TUnuranMultiContDist::~TUnuranMultiContDist() {
 
 double TUnuranMultiContDist::Pdf ( const double * x) const {
    // evaluate the distribution
-   assert(fPdf != 0);
+   assert(fPdf != nullptr);
    return (*fPdf)(x);
 }
 
@@ -95,7 +95,7 @@ double TUnuranMultiContDist::Derivative( const double * x, int coord) const {
 
    //double eps = 0.001;
    //const double kC1 = 8*std::numeric_limits<double>::epsilon();
-   assert(fPdf != 0);
+   assert(fPdf != nullptr);
 
    double h = 0.001;
 
