@@ -145,8 +145,15 @@ ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSource::Unsea
                                                                                       const RColumnElementBase &element,
                                                                                       DescriptorId_t physicalColumnId)
 {
-   const auto bytesPacked = element.GetPackedSize(sealedPage.fNElements);
+   // Unsealing a page zero is a no-op.  `RPageRange::ExtendToFitColumnRange()` guarantees that the page zero buffer is
+   // large enough to hold `sealedPage.fNElements`
+   if (sealedPage.fBuffer == RPage::GetPageZeroBuffer()) {
+      auto page = RPage::MakePageZero(physicalColumnId, element.GetSize());
+      page.GrowUnchecked(sealedPage.fNElements);
+      return page;
+   }
 
+   const auto bytesPacked = element.GetPackedSize(sealedPage.fNElements);
    using Allocator_t = RPageAllocatorHeap;
    auto page = Allocator_t::NewPage(physicalColumnId, element.GetSize(), sealedPage.fNElements);
    if (sealedPage.fSize != bytesPacked) {
@@ -155,8 +162,6 @@ ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSource::Unsea
       // We cannot simply map the sealed page as we don't know its life time. Specialized page sources
       // may decide to implement to not use UnsealPage but to custom mapping / decompression code.
       // Note that usually pages are compressed.
-      // TODO(jalopezg): unsealing a page zero should be a no-op (i.e., no additional memcpy), but the current prototype
-      // of `UnsealPage()` prevents that
       memcpy(page.GetBuffer(), sealedPage.fBuffer, bytesPacked);
    }
 
