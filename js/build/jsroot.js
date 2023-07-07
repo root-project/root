@@ -62244,6 +62244,8 @@ class TFramePainter extends ObjectPainter {
          case 3: return (l, b) => { return { x: l*Math.cos(b/180*Math.PI), y: b } };
          // parabolic
          case 4: return (l, b) => { return { x: l*(2.*Math.cos(2*b/180*Math.PI/3) - 1), y: 180*Math.sin(b/180*Math.PI/3) }; };
+         // Mollweide projection
+         case 5:  return (l, b) => { return { x: l*Math.cos(b/180*Math.PI), y: 90*Math.sin(b/180*Math.PI) }; };
       }
    }
 
@@ -69889,8 +69891,7 @@ class THistDrawOptions {
               Lego: 0, Surf: 0, Off: 0, Tri: 0, Proj: 0, AxisPos: 0,
               Spec: false, Pie: false, List: false, Zscale: false, Zvert: true, PadPalette: false,
               Candle: '', Violin: '', Scaled: null, Circular: 0,
-              GLBox: 0, GLColor: false, Project: '',
-              System: kCARTESIAN,
+              GLBox: 0, GLColor: false, Project: '', System: kCARTESIAN,
               AutoColor: false, NoStat: false, ForceStat: false, PadStats: false, PadTitle: false, AutoZoom: false,
               HighRes: 0, Zero: 1, Palette: 0, BaseLine: false,
               Optimize: settings.OptimizeDraw, adjustFrame: false,
@@ -70157,6 +70158,7 @@ class THistDrawOptions {
       if (d.check('MERCATOR')) this.Proj = 2;
       if (d.check('SINUSOIDAL')) this.Proj = 3;
       if (d.check('PARABOLIC')) this.Proj = 4;
+      if (d.check('MOLLWEIDE')) this.Proj = 5;
       if (this.Proj > 0) this.Contour = 14;
 
       if (d.check('PROJXY', true)) this.Project = 'XY' + d.partAsInt(0,1);
@@ -79005,14 +79007,13 @@ class TH3Painter extends THistPainter {
 
       let box_option = this.options.Box ? this.options.BoxStyle : 0;
 
-      if (this.options.Scat) {
+      if (!box_option && this.options.Scat) {
          let promise = this.draw3DScatter();
          if (promise !== false) return promise;
          box_option = 12; // fall back to box2 draw option
-      } else if (this.options.Color) {
+      } else if (!box_option && !this.options.GLBox && !this.options.GLColor && !this.options.Lego) {
          box_option = 12; // default draw option
       }
-
 
       let histo = this.getHisto(),
           fillcolor = this.getColor(histo.fFillColor),

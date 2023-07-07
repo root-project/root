@@ -290,14 +290,13 @@ class TH3Painter extends THistPainter {
 
       let box_option = this.options.Box ? this.options.BoxStyle : 0;
 
-      if (this.options.Scat) {
+      if (!box_option && this.options.Scat) {
          let promise = this.draw3DScatter();
          if (promise !== false) return promise;
          box_option = 12; // fall back to box2 draw option
-      } else if (this.options.Color) {
+      } else if (!box_option && !this.options.GLBox && !this.options.GLColor && !this.options.Lego) {
          box_option = 12; // default draw option
       }
-
 
       let histo = this.getHisto(),
           fillcolor = this.getColor(histo.fFillColor),
