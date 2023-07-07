@@ -2202,7 +2202,7 @@ void options2d1()
    C->Divide(2,2);
    C->SetFillColor(17);
    C->cd(1);
-   gH2->Draw();       pl1.DrawPaveLabel(x1,y1,x2,y2,"SCAT","brNDC");
+   gH2->Draw("text"); pl1.DrawPaveLabel(x1,y1,x2,y2,"TEXT","brNDC");
    C->cd(2);
    gH2->Draw("box");  pl1.DrawPaveLabel(x1,y1,x2,y2,"BOX","brNDC");
    C->cd(3);
