@@ -131,21 +131,22 @@ def main():
     # "official" branches (master, v?-??-??-patches), i.e. not for pull_request
     # We also want to upload any successful build, even if it fails testing
     # later on.
-    if not pull_request and not args.incremental:
-        archive_and_upload(yyyy_mm_dd, obj_prefix)
+    try:
+        if not pull_request and not args.incremental:
+            archive_and_upload(yyyy_mm_dd, obj_prefix)
+    except:
+        testing: bool = options_dict['testing'].lower() == "on" and options_dict['roottest'].lower() == "on"
 
-    testing: bool = options_dict['testing'].lower() == "on" and options_dict['roottest'].lower() == "on"
+        if testing:
+            extra_ctest_flags = ""
 
-    if testing:
-        extra_ctest_flags = ""
+            if WINDOWS:
+                extra_ctest_flags += "--repeat until-pass:3 "
+                extra_ctest_flags += "--build-config " + args.buildtype
 
-        if WINDOWS:
-            extra_ctest_flags += "--repeat until-pass:3 "
-            extra_ctest_flags += "--build-config " + args.buildtype
+            shell_log = run_ctest(shell_log, extra_ctest_flags)
 
-        shell_log = run_ctest(shell_log, extra_ctest_flags)
-
-    print_shell_log(shell_log)
+        print_shell_log(shell_log)
 
 
 @github_log_group("Clean up from previous runs")
