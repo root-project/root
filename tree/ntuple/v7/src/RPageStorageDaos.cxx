@@ -584,7 +584,7 @@ ROOT::Experimental::Detail::RPageSourceDaos::PopulatePageFromCluster(ColumnHandl
             R__FAIL("accessing caged pages is only supported in conjunction with cluster cache"));
       }
 
-      directReadBuffer = std::make_unique<unsigned char[]>(bytesOnStorage);
+      directReadBuffer = std::unique_ptr<unsigned char[]>(new unsigned char[bytesOnStorage]);
       RDaosKey daosKey = GetPageDaosKey<kDefaultDaosMapping>(
          fNTupleIndex, clusterId, columnId, pageInfo.fLocator.GetPosition<RNTupleLocatorObject64>().fLocation);
       fDaosContainer->ReadSingleAkey(directReadBuffer.get(), bytesOnStorage, daosKey.fOid, daosKey.fDkey,
