@@ -83,10 +83,7 @@ public:
 
    RPage PopulatePage(ColumnHandle_t columnHandle, NTupleSize_t i) final
    {
-      auto pageBuffer = RPageSource::UnsealPage(fPages[i], fElement);
-      RPage newPage(columnHandle.fPhysicalId, pageBuffer.release(), fElement.GetSize(), fPages[i].fNElements);
-      newPage.GrowUnchecked(fPages[i].fNElements);
-      return newPage;
+      return RPageSource::UnsealPage(fPages[i], fElement, columnHandle.fPhysicalId);
    }
    RPage PopulatePage(ColumnHandle_t, const ROOT::Experimental::RClusterIndex &) final { return RPage(); }
    void ReleasePage(RPage &) final {}

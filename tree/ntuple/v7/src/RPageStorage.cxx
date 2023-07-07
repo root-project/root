@@ -141,9 +141,9 @@ void ROOT::Experimental::Detail::RPageSource::UnzipCluster(RCluster *cluster)
       UnzipClusterImpl(cluster);
 }
 
-
-std::unique_ptr<unsigned char []> ROOT::Experimental::Detail::RPageSource::UnsealPage(
-   const RSealedPage &sealedPage, const RColumnElementBase &element)
+ROOT::Experimental::Detail::RPage ROOT::Experimental::Detail::RPageSource::UnsealPage(const RSealedPage &sealedPage,
+                                                                                      const RColumnElementBase &element,
+                                                                                      DescriptorId_t physicalColumnId)
 {
    const auto bytesPacked = element.GetPackedSize(sealedPage.fNElements);
    const auto pageSize = element.GetSize() * sealedPage.fNElements;
@@ -168,7 +168,9 @@ std::unique_ptr<unsigned char []> ROOT::Experimental::Detail::RPageSource::Unsea
       pageBuffer = std::unique_ptr<unsigned char []>(unpackedBuffer);
    }
 
-   return pageBuffer;
+   RPage page(physicalColumnId, pageBuffer.release(), element.GetSize(), sealedPage.fNElements);
+   page.GrowUnchecked(sealedPage.fNElements);
+   return page;
 }
 
 void ROOT::Experimental::Detail::RPageSource::EnableDefaultMetrics(const std::string &prefix)

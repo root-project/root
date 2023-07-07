@@ -608,19 +608,18 @@ ROOT::Experimental::Detail::RPageSourceDaos::PopulatePageFromCluster(ColumnHandl
       sealedPageBuffer = onDiskPage->GetAddress();
    }
 
-   std::unique_ptr<unsigned char[]> pageBuffer;
+   RPage newPage;
    {
       RNTupleAtomicTimer timer(fCounters->fTimeWallUnzip, fCounters->fTimeCpuUnzip);
-      pageBuffer = UnsealPage({sealedPageBuffer, bytesOnStorage, pageInfo.fNElements}, *element);
+      newPage = UnsealPage({sealedPageBuffer, bytesOnStorage, pageInfo.fNElements}, *element, columnId);
       fCounters->fSzUnzip.Add(elementSize * pageInfo.fNElements);
    }
 
-   auto newPage = fPageAllocator->NewPage(columnId, pageBuffer.release(), elementSize, pageInfo.fNElements);
    newPage.SetWindow(clusterInfo.fColumnOffset + pageInfo.fFirstInPage,
                      RPage::RClusterInfo(clusterId, clusterInfo.fColumnOffset));
    fPagePool->RegisterPage(
       newPage,
-      RPageDeleter([](const RPage &page, void * /*userData*/) { RPageAllocatorDaos::DeletePage(page); }, nullptr));
+      RPageDeleter([](const RPage &page, void * /*userData*/) { RPageAllocatorHeap::DeletePage(page); }, nullptr));
    fCounters->fNPagePopulated.Inc();
    return newPage;
 }
@@ -828,14 +827,13 @@ void ROOT::Experimental::Detail::RPageSourceDaos::UnzipClusterImpl(RCluster *clu
          auto taskFunc = [this, columnId, clusterId, firstInPage, onDiskPage, element = allElements.back().get(),
                           nElements = pi.fNElements,
                           indexOffset = clusterDescriptor.GetColumnRange(columnId).fFirstElementIndex]() {
-            auto pageBuffer = UnsealPage({onDiskPage->GetAddress(), onDiskPage->GetSize(), nElements}, *element);
+            auto newPage = UnsealPage({onDiskPage->GetAddress(), onDiskPage->GetSize(), nElements}, *element, columnId);
             fCounters->fSzUnzip.Add(element->GetSize() * nElements);
 
-            auto newPage = fPageAllocator->NewPage(columnId, pageBuffer.release(), element->GetSize(), nElements);
             newPage.SetWindow(indexOffset + firstInPage, RPage::RClusterInfo(clusterId, indexOffset));
             fPagePool->PreloadPage(
                newPage,
-               RPageDeleter([](const RPage &page, void * /*userData*/) { RPageAllocatorDaos::DeletePage(page); },
+               RPageDeleter([](const RPage &page, void * /*userData*/) { RPageAllocatorHeap::DeletePage(page); },
                             nullptr));
          };
 
