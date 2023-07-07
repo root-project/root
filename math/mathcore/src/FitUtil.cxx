@@ -264,7 +264,7 @@ double FitUtil::EvaluateChi2(const IModelFunction &func, const BinData &data, co
       igType = ROOT::Math::IntegrationOneDim::kGAUSS;
    }
 #ifdef USE_PARAMCACHE
-   IntegralEvaluator<> igEval( func, 0, useBinIntegral, igType);
+   IntegralEvaluator<> igEval( func, nullptr, useBinIntegral, igType);
 #else
    IntegralEvaluator<> igEval( func, p, useBinIntegral, igType);
 #endif
@@ -463,7 +463,7 @@ double FitUtil::EvaluateChi2Effective(const IModelFunction & func, const BinData
 
 
       double ey = 0;
-      const double * ex = 0;
+      const double * ex = nullptr;
       if (!data.HaveAsymErrors() )
          ex = data.GetPointError(i, ey);
       else {
@@ -560,7 +560,7 @@ double FitUtil::EvaluateChi2Residual(const IModelFunction & func, const BinData 
 
    unsigned int ndim = data.NDim();
    double binVolume = 1.0;
-   const double * x2 = 0;
+   const double * x2 = nullptr;
    if (useBinVolume || useBinIntegral) x2 = data.BinUpEdge(i);
 
    std::vector<double> xc;
@@ -899,7 +899,7 @@ double FitUtil::EvaluatePdf(const IModelFunction & func, const UnBinData & data,
    double fval = func ( x, p );
    double logPdf = ROOT::Math::Util::EvalLog(fval);
    //return
-   if (g == 0) return logPdf;
+   if (g == nullptr) return logPdf;
 
    const IGradModelFunction * gfunc = (hasGrad) ?
       dynamic_cast<const IGradModelFunction *>( &func) : nullptr;
@@ -1303,7 +1303,7 @@ double FitUtil::EvaluatePoissonBinPdf(const IModelFunction & func, const BinData
    bool useBinVolume = (fitOpt.fBinVolume && data.HasBinEdges());
 
    IntegralEvaluator<> igEval( func, p, useBinIntegral);
-   const double * x2 = 0;
+   const double * x2 = nullptr;
    // calculate the bin volume
    double binVolume = 1;
    std::vector<double> xc;
@@ -1488,7 +1488,7 @@ double FitUtil::EvaluatePoissonLogL(const IModelFunction &func, const BinData &d
       igType = ROOT::Math::IntegrationOneDim::kGAUSS;
    }
 #ifdef USE_PARAMCACHE
-   IntegralEvaluator<> igEval(func, 0, useBinIntegral, igType);
+   IntegralEvaluator<> igEval(func, nullptr, useBinIntegral, igType);
 #else
    IntegralEvaluator<> igEval(func, p, useBinIntegral, igType);
 #endif

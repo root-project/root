@@ -38,7 +38,7 @@ bool GaussIntegrator::fgAbsValue = false;
 
    fLastResult = fLastError = 0;
    fUsedOnce = false;
-   fFunction = 0;
+   fFunction = nullptr;
 }
 
 GaussIntegrator::~GaussIntegrator()
@@ -103,7 +103,7 @@ double GaussIntegrator::DoIntegral(double a, double b, const IGenFunction* funct
    double xx[1];
    int i;
 
-   if ( fFunction == 0 )
+   if ( fFunction == nullptr )
    {
       MATH_ERROR_MSG("ROOT::Math::GausIntegratorOneDim", "A function must be set first!");
       return 0.0;

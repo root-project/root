@@ -143,7 +143,7 @@ public:
 
    double Distance(const GSLSimAnFunc & f) const override {
       const MySimAnFunc * f2 = dynamic_cast<const MySimAnFunc *> (&f);
-      assert (f2 != 0);
+      assert (f2 != nullptr);
       double d = 0;
       // use change in permutations
       for (unsigned int i = 0; i < N_CITIES; ++i) {
@@ -183,7 +183,7 @@ public:
    // fast copy (need to keep base class type for using virtuality
    MySimAnFunc & FastCopy(const GSLSimAnFunc & f) override {
       const MySimAnFunc * rhs = dynamic_cast<const MySimAnFunc *>(&f);
-      assert (rhs != 0);
+      assert (rhs != nullptr);
       std::copy(rhs->fRoute, rhs->fRoute + N_CITIES, fRoute);
       return *this;
    }
@@ -475,12 +475,12 @@ int main(int argc, char **argv)
 
    if ( showGraphics )
    {
-      TApplication* theApp = 0;
+      TApplication* theApp = nullptr;
       theApp = new TApplication("App",&argc,argv);
       theApp->Run();
       simanTSP(verbose);
       delete theApp;
-      theApp = 0;
+      theApp = nullptr;
    }
    else
    {

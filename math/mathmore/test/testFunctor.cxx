@@ -182,7 +182,7 @@ void TestTimePF( PFunc & f) {
    r.RndmArray(Ntimes,&x[0]);
    w. Start();
    double s=0;
-   double * p = 0;
+   double * p = nullptr;
    for (int ipass = 0; ipass <NLOOP; ++ipass) {
       for (int i = 0; i < Ntimes-1; ++i) {
          double y = f(&x[i],p);
@@ -210,7 +210,7 @@ void TestTimeTF1(TF1 & f) {
    double s=0;
    for (int ipass = 0; ipass <NLOOP; ++ipass) {
       for (int i = 0; i < Ntimes-1; ++i) {
-         double y = f.EvalPar(&x[i],0);
+         double y = f.EvalPar(&x[i],nullptr);
          s+= y;
       }
    }

@@ -18,7 +18,7 @@ ClassImp(TMinuit2TraceObject);
 
 TMinuit2TraceObject::TMinuit2TraceObject(int parNumber)
    : ROOT::Minuit2::MnTraceObject(parNumber), TNamed("Minuit2TraceObject", "ROOT Trace Object for Minuit2"),
-     fIterOffset(0), fHistoFval(0), fHistoEdm(0), fHistoParList(0), fOldPad(0), fMinuitPad(0)
+     fIterOffset(0), fHistoFval(nullptr), fHistoEdm(nullptr), fHistoParList(nullptr), fOldPad(nullptr), fMinuitPad(nullptr)
 {
 }
 

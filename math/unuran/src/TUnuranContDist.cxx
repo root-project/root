@@ -151,7 +151,7 @@ double TUnuranContDist::DPdf( double x) const {
    ROOT::Math::RichardsonDerivator rd;
    static double gEps = 0.001;
    double h = ( std::abs(x) > 0 ) ?  gEps * std::abs(x) : gEps;
-   assert (fPdf != 0);
+   assert (fPdf != nullptr);
    return rd.Derivative1( *fPdf, x, h);
 }
 

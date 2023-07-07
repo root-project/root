@@ -55,7 +55,7 @@ class DistTest {
 public:
    DistTest(TF1 * f) :
       fCdf(f),
-      fHref(0)
+      fHref(nullptr)
    {
       // generate reference histo for distribution using cdf
 
@@ -71,8 +71,8 @@ public:
 
    int testUnuran(TUnuran & unr) {
 
-      assert(fHref != 0);
-      assert(fCdf != 0);
+      assert(fHref != nullptr);
+      assert(fCdf != nullptr);
 
       // test first the time
       TStopwatch w;
@@ -105,8 +105,8 @@ public:
 
    int testGetRandom(TF1 * f) {
 
-      assert(fHref != 0);
-      assert(fCdf != 0);
+      assert(fHref != nullptr);
+      assert(fCdf != nullptr);
 
       // test first the time
 

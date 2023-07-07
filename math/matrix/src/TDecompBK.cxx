@@ -64,7 +64,7 @@ ClassImp(TDecompBK);
 TDecompBK::TDecompBK()
 {
    fNIpiv = 0;
-   fIpiv  = 0;
+   fIpiv  = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -120,7 +120,7 @@ TDecompBK::TDecompBK(const TMatrixDSym &a,Double_t tol)
 TDecompBK::TDecompBK(const TDecompBK &another) : TDecompBase(another)
 {
    fNIpiv = 0;
-   fIpiv  = 0;
+   fIpiv  = nullptr;
    *this = another;
 }
 

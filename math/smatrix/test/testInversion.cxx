@@ -40,7 +40,7 @@ namespace test {
 
    public:
 
-      Timer(const std::string & s = "") : fName(s), fTime(0)
+      Timer(const std::string & s = "") : fName(s), fTime(nullptr)
       {
          fWatch.Start();
       }

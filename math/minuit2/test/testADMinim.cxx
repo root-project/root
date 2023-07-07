@@ -401,14 +401,14 @@ const double *TrueMinimum(const ROOT::Math::IMultiGenFunction &func)
 {
 
    const RosenBrockFunction *fRB = dynamic_cast<const RosenBrockFunction *>(&func);
-   if (fRB != 0)
+   if (fRB != nullptr)
       return fRB->TrueMinimum();
    const TrigoFletcherFunction *fTF = dynamic_cast<const TrigoFletcherFunction *>(&func);
-   if (fTF != 0)
+   if (fTF != nullptr)
       return fTF->TrueMinimum();
    //    const ChebyQuadFunction * fCQ = dynamic_cast< const ChebyQuadFunction *> (&func);
    //    if (fCQ != 0) return fCQ->TrueMinimum();
-   return 0;
+   return nullptr;
 }
 
 void printMinimum(const std::vector<double> &x)

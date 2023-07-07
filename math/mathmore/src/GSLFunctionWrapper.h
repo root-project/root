@@ -60,8 +60,8 @@ public:
 
    GSLFunctionWrapper()
    {
-      fFunc.function = 0;
-      fFunc.params = 0;
+      fFunc.function = nullptr;
+      fFunc.params = nullptr;
    }
 
    /// set in the GSL C struct the pointer to the function evaluation
@@ -75,7 +75,7 @@ public:
    template<class FuncType>
    void SetFunction(const FuncType &f) {
       const void * p = &f;
-      assert (p != 0);
+      assert (p != nullptr);
       SetFuncPointer(&GSLFunctionAdapter<FuncType >::F);
       SetParams(const_cast<void *>(p));
    }
@@ -89,7 +89,7 @@ public:
 
    /// check if function is valid (has been set)
    bool IsValid() {
-      return (fFunc.function != 0) ? true : false;
+      return (fFunc.function != nullptr) ? true : false;
    }
 
 private:
@@ -108,10 +108,10 @@ private:
 
      GSLFunctionDerivWrapper()
      {
-        fFunc.f = 0;
-        fFunc.df = 0;
-        fFunc.fdf = 0;
-        fFunc.params = 0;
+        fFunc.f = nullptr;
+        fFunc.df = nullptr;
+        fFunc.fdf = nullptr;
+        fFunc.params = nullptr;
      }
 
 
@@ -134,7 +134,7 @@ private:
 
    /// check if function is valid (has been set)
    bool IsValid() {
-      return (fFunc.f != 0 ) ? true : false;
+      return (fFunc.f != nullptr ) ? true : false;
    }
 
   private:

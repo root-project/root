@@ -46,7 +46,7 @@ template <typename T> bool testSort(const int n)
 
    bool equals = true;
 
-   TRandom2 r( time( 0 ) );
+   TRandom2 r( time( nullptr ) );
 
    cout << "k: ";
    for ( Int_t i = 0; i < n; i++) {

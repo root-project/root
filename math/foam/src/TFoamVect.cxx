@@ -28,7 +28,7 @@ ClassImp(TFoamVect);
 TFoamVect::TFoamVect()
 {
    fDim    =0;
-   fCoords =0;
+   fCoords =nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -39,11 +39,11 @@ TFoamVect::TFoamVect(Int_t n)
 {
    Int_t i;
    fDim=n;
-   fCoords = 0;
+   fCoords = nullptr;
    if (n>0) {
       fCoords = new Double_t[fDim];
       if(gDebug) {
-         if(fCoords == 0)
+         if(fCoords == nullptr)
             Error("TFoamVect", "Constructor failed to allocate\n");
       }
       for (i=0; i<n; i++) *(fCoords+i)=0.0;
@@ -56,11 +56,11 @@ TFoamVect::TFoamVect(Int_t n)
 
 TFoamVect::TFoamVect(const TFoamVect &Vect): TObject(Vect)
 {
-   fDim = Vect.fDim; fCoords = 0;
+   fDim = Vect.fDim; fCoords = nullptr;
    if(fDim > 0)  fCoords = new Double_t[fDim];
 
    if(gDebug) {
-      if(fCoords == 0) {
+      if(fCoords == nullptr) {
          Error("TFoamVect", "Constructor failed to allocate fCoords\n");
       }
    }
@@ -77,7 +77,7 @@ TFoamVect::~TFoamVect()
 {
    if(gDebug>=3) Info("TFoamVect"," DESTRUCTOR TFoamVect~ \n");
    delete [] fCoords; //  free(fCoords)
-   fCoords=0;
+   fCoords=nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -190,7 +190,7 @@ TFoamVect& TFoamVect::operator =(Double_t Vect[])
 
 TFoamVect& TFoamVect::operator =(Double_t x)
 {
-   if(fCoords != 0) {
+   if(fCoords != nullptr) {
       for(Int_t i=0; i<fDim; i++)
          fCoords[i] = x;
    }

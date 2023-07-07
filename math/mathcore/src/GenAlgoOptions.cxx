@@ -41,7 +41,7 @@ namespace GenAlgoOptUtil {
       if (pos !=  gOpts.end() ) {
          return &(pos->second);
       }
-      return 0;
+      return nullptr;
    }
 }
 

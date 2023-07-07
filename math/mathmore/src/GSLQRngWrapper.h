@@ -33,8 +33,8 @@ public:
    */
    GSLQRngWrapper () :
       fOwn(0),
-      fRng(0),
-      fRngType(0)
+      fRng(nullptr),
+      fRngType(nullptr)
     {
     }
 
@@ -43,7 +43,7 @@ public:
    */
    GSLQRngWrapper(const gsl_qrng_type * type) :
       fOwn(1),
-      fRng(0),
+      fRng(nullptr),
       fRngType(type)
     {
     }
@@ -54,7 +54,7 @@ public:
    */
    GSLQRngWrapper(const gsl_qrng * r ) :
       fOwn(0),
-      fRngType(0)
+      fRngType(nullptr)
     {
        fRng = const_cast<gsl_qrng *>(r);
     }
@@ -95,8 +95,8 @@ public:
     }
 
     void Allocate(unsigned int dimension) {
-      if (fRngType == 0) SetDefaultType();
-      if (fRng != 0 && fOwn) Free();
+      if (fRngType == nullptr) SetDefaultType();
+      if (fRng != nullptr && fOwn) Free();
       fRng = gsl_qrng_alloc( fRngType, dimension );
       //std::cout << " allocate   " << fRng <<  std::endl;
     }
@@ -104,8 +104,8 @@ public:
     void Free() {
        if (!fOwn) return; // no operation if pointer is not own
       //std::cout << "free gslrng " << fRngType <<  "  " << fRng <<  std::endl;
-      if (fRng != 0) gsl_qrng_free(fRng);
-      fRng = 0;
+      if (fRng != nullptr) gsl_qrng_free(fRng);
+      fRng = nullptr;
     }
 
 

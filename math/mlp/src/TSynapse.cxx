@@ -28,8 +28,8 @@ ClassImp(TSynapse);
 
 TSynapse::TSynapse()
 {
-   fpre    = 0;
-   fpost   = 0;
+   fpre    = nullptr;
+   fpost   = nullptr;
    fweight = 1;
    fDEDw   = 0;
 }

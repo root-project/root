@@ -63,7 +63,7 @@ bool GSLSimAnMinimizer::Minimize() {
 
 
    const ROOT::Math::IMultiGenFunction * function = ObjFunction();
-   if (function == 0) {
+   if (function == nullptr) {
       MATH_ERROR_MSG("GSLSimAnMinimizer::Minimize","Function has not been set");
       return false;
    }

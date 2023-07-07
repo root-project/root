@@ -172,7 +172,7 @@ Double_t TGenPhaseSpace::Generate()
 
 TLorentzVector *TGenPhaseSpace::GetDecay(Int_t n)
 {
-   if (n>fNt) return 0;
+   if (n>fNt) return nullptr;
    return fDecPro+n;
 }
 
