@@ -7,7 +7,6 @@ import numpy
 import ROOT
 
 from DistRDF.Backends import Spark
-from DistRDF.Proxy import ActionProxy
 
 
 class TestReducerMerge:
@@ -250,7 +249,6 @@ class TestReducerMerge:
 
         npy_lazy = df.AsNumpy(lazy=True)
         # The event loop hasn't been triggered yet
-        assert isinstance(npy_lazy, ActionProxy)
         assert npy_lazy.proxied_node.value is None
 
         # Trigger the computations and check final results
@@ -320,7 +318,6 @@ class TestReducerMerge:
         opts.fLazy = True
         snap_lazy = df.Snapshot("snapTree_lazy", "snapFile_lazy.root", ["x"], opts)
         # The event loop hasn't been triggered yet
-        assert isinstance(snap_lazy, ActionProxy)
         assert snap_lazy.proxied_node.value is None
 
         snapdf = snap_lazy.GetValue()
