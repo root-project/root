@@ -10364,6 +10364,7 @@ Int_t THistPainter::ProjectMercator2xy(Double_t l, Double_t b, Double_t &Al, Dou
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Static function code from  Ernst-Jan Buis
+/// Source: https://en.wikipedia.org/wiki/Sinusoidal_projection
 
 Int_t THistPainter::ProjectSinusoidal2xy(Double_t l, Double_t b, Double_t &Al, Double_t &Ab)
 {
@@ -10392,15 +10393,38 @@ Int_t THistPainter::ProjectParabolic2xy(Double_t l, Double_t b, Double_t &Al, Do
 /// coordinates with an equal-area Mollweide projection.  Output map
 /// coordinates are zero longitude centered.
 /// It is also known as the Babinet projection, homalographic projection, homolographic projection, and elliptical projection.
+/// Source: https://en.wikipedia.org/wiki/Mollweide_projection
 ///
 /// code from  Marco Meyer-Conde
 
 Int_t THistPainter::ProjectMollweide2xy(Double_t l /* psi */, Double_t b /* lambda*/, Double_t &Al, Double_t &Ab)
 {
+
    Double_t x, y;
 
-   Al = 0;
-   Ab = 0;
+   Double_t theta0 = b*TMath::DegToRad();
+   Double_t theta  = theta0;
+
+   for(int i = 0; i < 100; i++) {
+      Double_t num = 2*theta +   TMath::Sin(2*theta) - TMath::Pi()*TMath::Sin(theta0);
+      Double_t den = 2       + 2*TMath::Cos(2*theta);
+      theta = theta - num / den;
+
+      if(TMath::Abs(num/den) < 1e-4) break;
+      if(isnan(theta)) { // degenerated case
+         theta = theta0;
+         break;
+      }
+   }
+
+   Double_t lambda = l*TMath::DegToRad();
+   Double_t r2 = TMath::Sqrt(2.);
+   Double_t R  = 90./r2;
+   x      = R*r2/TMath::PiOver2()*lambda*TMath::Cos(theta);
+   y      = R*r2*TMath::Sin(theta);
+
+   Al = x;
+   Ab = y;
    
    return 0;
 }
@@ -10497,7 +10521,6 @@ void THistPainter::RecalculateRange()
          if (ymax <ymax_aid) ymax = ymax_aid;
       }
    } else if(Hoption.Proj == 5) {
-      // TODO : check x range not lower than -180 and not higher than 180
       THistPainter::ProjectMollweide2xy(Hparam.xmin, Hparam.ymin, xmin_aid, ymin_aid);
       THistPainter::ProjectMollweide2xy(Hparam.xmin, Hparam.ymax, xmin,     ymax_aid);
       THistPainter::ProjectMollweide2xy(Hparam.xmax, Hparam.ymax, xmax_aid, ymax);
@@ -10508,15 +10531,14 @@ void THistPainter::RecalculateRange()
       if (xmax < xmax_aid) xmax = xmax_aid;
       if (ymax < ymax_aid) ymax = ymax_aid;
       if (Hparam.ymin<0 && Hparam.ymax>0) {
-         // there is an  'equator', check its range in the plot..
-         THistPainter::ProjectMollweide2xy(Hparam.xmin*0.9999, 0, xmin_aid, ymin_aid);
-         THistPainter::ProjectMollweide2xy(Hparam.xmax*0.9999, 0, xmax_aid, ymin_aid);
+         THistPainter::ProjectMollweide2xy(Hparam.xmin, 0, xmin_aid, ymin_aid);
+         THistPainter::ProjectMollweide2xy(Hparam.xmax, 0, xmax_aid, ymin_aid);
          if (xmin >xmin_aid) xmin = xmin_aid;
          if (xmax <xmax_aid) xmax = xmax_aid;
       }
       if (Hparam.xmin<0 && Hparam.xmax>0) {
-         THistPainter::ProjectMollweide2xy(0, Hparam.ymin, xmin_aid, ymin_aid);
-         THistPainter::ProjectMollweide2xy(0, Hparam.ymax, xmax_aid, ymax_aid);
+         THistPainter::ProjectMollweide2xy(0,Hparam.ymin, xmin_aid, ymin_aid);
+         THistPainter::ProjectMollweide2xy(0, Hparam.ymax, xmax_aid, ymin_aid);
          if (ymin >ymin_aid) ymin = ymin_aid;
          if (ymax <ymax_aid) ymax = ymax_aid;
       }
