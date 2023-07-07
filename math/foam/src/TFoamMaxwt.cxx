@@ -24,8 +24,8 @@ TFoamMaxwt::TFoamMaxwt()
 {
    fNent = 0;
    fnBin = 0;
-   fWtHst1 = 0;
-   fWtHst2 = 0;
+   fWtHst1 = nullptr;
+   fWtHst2 = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -38,8 +38,8 @@ TFoamMaxwt::TFoamMaxwt(Double_t wmax, Int_t nBin)
    fwmax = wmax;
    fWtHst1 = new TH1D("TFoamMaxwt_hst_Wt1","Histo of weight   ",nBin,0.0,wmax);
    fWtHst2 = new TH1D("TFoamMaxwt_hst_Wt2","Histo of weight**2",nBin,0.0,wmax);
-   fWtHst1->SetDirectory(0);// exclude from diskfile
-   fWtHst2->SetDirectory(0);// and enable deleting
+   fWtHst1->SetDirectory(nullptr);// exclude from diskfile
+   fWtHst2->SetDirectory(nullptr);// and enable deleting
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -61,8 +61,8 @@ TFoamMaxwt::~TFoamMaxwt()
 {
    delete fWtHst1; // For this SetDirectory(0) is needed!
    delete fWtHst2; //
-   fWtHst1=0;
-   fWtHst2=0;
+   fWtHst1=nullptr;
+   fWtHst2=nullptr;
 }
 ////////////////////////////////////////////////////////////////////////////////
 /// Reseting weight analysis

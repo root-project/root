@@ -84,7 +84,7 @@ namespace Math {
    public :
 
       GSLVegasIntegrationWorkspace(size_t dim = 0) :
-         fWs(0)
+         fWs(nullptr)
       {
          if (dim > 0) Init(dim);
       }
@@ -92,7 +92,7 @@ namespace Math {
       bool Init(size_t dim) override {
          fWs = gsl_monte_vegas_alloc( dim);
          if (fWs) SetVegasParameters();
-         return (fWs != 0);
+         return (fWs != nullptr);
       }
 
       bool ReInit() override {
@@ -105,7 +105,7 @@ namespace Math {
 
       void Clear() override {
          if (fWs) gsl_monte_vegas_free( fWs);
-         fWs = 0;
+         fWs = nullptr;
       }
 
       gsl_monte_vegas_state * GetWS() { return fWs; }
@@ -159,7 +159,7 @@ namespace Math {
 
       GSLMiserIntegrationWorkspace(size_t dim = 0) :
          fHaveNewParams(false),
-         fWs(0)
+         fWs(nullptr)
       {
          if (dim > 0) Init(dim);
       }
@@ -170,7 +170,7 @@ namespace Math {
          // need this to set parameters according to dimension
          if (!fHaveNewParams) fParams = MiserParameters(dim);
          if (fWs) SetMiserParameters();
-         return (fWs != 0);
+         return (fWs != nullptr);
       }
 
       bool ReInit() override {
@@ -183,7 +183,7 @@ namespace Math {
 
       void Clear() override {
          if (fWs) gsl_monte_miser_free( fWs);
-         fWs = 0;
+         fWs = nullptr;
       }
 
       gsl_monte_miser_state * GetWS() { return fWs; }
@@ -232,13 +232,13 @@ namespace Math {
    public :
 
       GSLPlainIntegrationWorkspace() :
-         fWs(0)
+         fWs(nullptr)
       {  }
 
       bool Init(size_t dim) override {
          fWs = gsl_monte_plain_alloc( dim);
          // no parameter exists for plain
-         return (fWs != 0);
+         return (fWs != nullptr);
       }
 
       bool ReInit() override {
@@ -249,7 +249,7 @@ namespace Math {
 
       void Clear() override {
          if (fWs) gsl_monte_plain_free( fWs);
-         fWs = 0;
+         fWs = nullptr;
       }
 
       gsl_monte_plain_state * GetWS() { return fWs; }
@@ -261,7 +261,7 @@ namespace Math {
       size_t NDim() const override { return (fWs) ? fWs->dim : 0; }
 
       ROOT::Math::IOptions * Options() const override {
-         return 0;
+         return nullptr;
       }
 
 

@@ -118,7 +118,7 @@ extern void GraphFitChisquareFumili(Int_t &npar, Double_t *gin, Double_t &f, Dou
 
 ClassImp(TFumili);
 
-TFumili *gFumili=0;
+TFumili *gFumili=nullptr;
 // Machine dependent values  fiXME!!
 // But don't set min=max=0 if param is unlimited
 static const Double_t gMAXDOUBLE=1e300;
@@ -140,12 +140,12 @@ TFumili::TFumili(Int_t maxpar)
    fWARN    = true;
    fDEBUG   = false;
    fNlog    = 0;
-   fSumLog  = 0;
+   fSumLog  = nullptr;
    fNED1    = 0;
    fNED2    = 0;
    fNED12   = fNED1+fNED2;
-   fEXDA    = 0;
-   fFCN     = 0;
+   fEXDA    = nullptr;
+   fFCN     = nullptr;
    fNfcn    = 0;
    fRP      = 1.e-15; //precision
    fS       = 1e10;
@@ -218,7 +218,7 @@ TFumili::~TFumili() {
    DeleteArrays();
    if (gROOT && !gROOT->TestBit(TObject::kInvalidObject))
       gROOT->GetListOfSpecials()->Remove(this);
-   if (gFumili == this) gFumili = 0;
+   if (gFumili == this) gFumili = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1744,8 +1744,8 @@ void TFumili::FitChisquare(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u,
    }
    Double_t cu,eu,fu,fsum;
    Double_t x[3];
-   Double_t *zik=0;
-   Double_t *pl0=0;
+   Double_t *zik=nullptr;
+   Double_t *pl0=nullptr;
 
    TH1 *hfit = (TH1*)GetObjectFit();
    TF1 *f1   = (TF1*)GetUserFunc();
@@ -1810,8 +1810,8 @@ void TFumili::FitChisquareI(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u
 {
    Double_t cu,eu,fu,fsum;
    Double_t x[3];
-   Double_t *zik=0;
-   Double_t *pl0=0;
+   Double_t *zik=nullptr;
+   Double_t *pl0=nullptr;
 
    TH1 *hfit = (TH1*)GetObjectFit();
    TF1 *f1   = (TF1*)GetUserFunc();

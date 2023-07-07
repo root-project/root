@@ -17,7 +17,7 @@
 template<class _DataPoint>
 void CreatePseudoData(const unsigned long int nPoints,std::vector<const _DataPoint*>& vDataPoints)
 {
-   _DataPoint* pData = 0;
+   _DataPoint* pData = nullptr;
    for(unsigned long int i = 0; i < nPoints; ++i)
    {
       pData = new _DataPoint();
@@ -41,7 +41,7 @@ void DeletePseudoData(std::vector<const _DataPoint*>& vDataPoints)
 template<class _DataPoint>
 ROOT::Math::KDTree<_DataPoint>* BuildTree(const std::vector<const _DataPoint*>& vDataPoints,const unsigned int iBucketSize)
 {
-   ROOT::Math::KDTree<_DataPoint>* pTree = 0;
+   ROOT::Math::KDTree<_DataPoint>* pTree = nullptr;
    try
    {
       pTree = new ROOT::Math::KDTree<_DataPoint>(iBucketSize);
@@ -56,7 +56,7 @@ ROOT::Math::KDTree<_DataPoint>* BuildTree(const std::vector<const _DataPoint*>& 
       if(pTree)
       delete pTree;
 
-      pTree = 0;
+      pTree = nullptr;
    }
 
    return pTree;
@@ -338,7 +338,7 @@ int main()
    std::cout << "\nunit test for class KDTree" << std::endl;
    std::cout << "==========================\n" << std::endl;
 
-   int iSeed = time(0);
+   int iSeed = time(nullptr);
    std::cout << "using random seed: " << iSeed << std::endl;
 
    srand(iSeed);

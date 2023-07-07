@@ -47,7 +47,7 @@ namespace Math {
 
 
 GSLRootFinder::GSLRootFinder() :
-   fFunction(0), fS(0),
+   fFunction(nullptr), fS(nullptr),
    fRoot(0), fXlow(0), fXup(0),
    fIter(0), fStatus(-1),
    fValidInterval(false)

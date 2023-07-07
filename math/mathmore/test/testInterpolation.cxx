@@ -20,7 +20,7 @@
 
 bool showGraphics = true;
 
-TGraph *grorig = 0;
+TGraph *grorig = nullptr;
 
 void interpolate( const  ROOT::Math::Interpolator & itp, bool drawSame = false ) {
 
@@ -87,7 +87,7 @@ void testInterpolation() {
       yorig[i] = y[i];
    }
 
-   TCanvas *c1 = 0;
+   TCanvas *c1 = nullptr;
    if (showGraphics) {
       c1 = new TCanvas("c1","Original (red), Linear (upper left), Polynomial (upper right), Spline , Spline periodic, Akima (lower left) and Akima Periodic (lower right) Interpolation",10,10,1000,800);
       c1->Divide(2,3);
@@ -190,7 +190,7 @@ int main(int argc, char **argv)
      }
    }
 
-   TApplication* theApp = 0;
+   TApplication* theApp = nullptr;
 
    if ( showGraphics )
       theApp = new TApplication("App",&argc,argv);
@@ -201,7 +201,7 @@ int main(int argc, char **argv)
    {
       theApp->Run();
       delete theApp;
-      theApp = 0;
+      theApp = nullptr;
    }
 
    return 0;

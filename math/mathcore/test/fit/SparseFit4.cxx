@@ -165,7 +165,7 @@ void DoFit(THnSparse* s, TF1* f, ROOT::Fit::BinData& bd)
    cout << "DoFit: dim = " << s->GetNdimensions() << " - Retrieving the Sparse Data Structure" << endl;
    //ROOT::Fit::SparseData d(s);
    ROOT::Fit::SparseData d(s->GetNdimensions(), x_min, x_max);
-   ROOT::Fit::FillData(d, s, 0);
+   ROOT::Fit::FillData(d, s, nullptr);
    d.GetBinData(bd);
 
    ///////////////// FITS
@@ -218,7 +218,7 @@ void fitSparse1D()
    cout << "1D Fit : Retrieving the Sparse Data Structure" << endl;
    //ROOT::Fit::SparseData d(s1);
    ROOT::Fit::SparseData d(ndim, x_min, x_max);
-   ROOT::Fit::FillData(d, s1, 0);
+   ROOT::Fit::FillData(d, s1, nullptr);
 }
 
 void fitSparse2D()
@@ -336,7 +336,7 @@ int main(int argc, char** argv)
    }
 
 
-   TApplication* theApp = 0;
+   TApplication* theApp = nullptr;
 
    if ( showGraphics )
       theApp = new TApplication("App",&argc,argv);
@@ -350,7 +350,7 @@ int main(int argc, char** argv)
    if ( showGraphics ) {
       theApp->Run();
       delete theApp;
-      theApp = 0;
+      theApp = nullptr;
    }
 
    return 0;
