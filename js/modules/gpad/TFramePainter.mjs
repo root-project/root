@@ -1604,8 +1604,32 @@ class TFramePainter extends ObjectPainter {
          case 3: return (l, b) => { return { x: l*Math.cos(b/180*Math.PI), y: b } };
          // parabolic
          case 4: return (l, b) => { return { x: l*(2.*Math.cos(2*b/180*Math.PI/3) - 1), y: 180*Math.sin(b/180*Math.PI/3) }; };
-         // parabolic
-         case 5: return (l, b) => { return { x: 0, y: 0 }; };
+         // mollweide
+         case 5: return (l, b) => {
+            const theta0 = b*Math.PI/180,
+                  lambda = l*DegToRad,
+                  r2 = Math.sqrt(2.0),
+                  R = 90./r2;
+
+            var theta = theta0;
+            for (let i = 0; i < 100; i++) {
+            
+               num = 2 * theta + Math.sin(2 * theta) - Math.PI * Math.sin(theta0);
+               den = 2 + 2 * Math.cos(2 * theta);
+               theta = theta - num / den;
+
+               if (Math.abs(num / den) < 1e-4) break;
+               if (Math.isnan(theta)) {
+                  theta = theta0;
+                  break;
+               }
+            }
+            
+            return { 
+            x: R * r2 * 2 / Math.PI * lambda * Math.cos(theta), 
+            y: R * r2 * Math.sin(theta)
+            };
+         };
       }
    }
 
