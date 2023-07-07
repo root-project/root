@@ -417,7 +417,7 @@ protected:
    /// currently always makes a memory copy, even if the sealed page is uncompressed and in the final memory layout.
    /// The optimization of directly mapping pages is left to the concrete page source implementations.
    /// Usage of this method requires construction of fDecompressor.
-   std::unique_ptr<unsigned char []> UnsealPage(const RSealedPage &sealedPage, const RColumnElementBase &element);
+   RPage UnsealPage(const RSealedPage &sealedPage, const RColumnElementBase &element, DescriptorId_t physicalColumnId);
 
    /// Enables the default set of metrics provided by RPageSource. `prefix` will be used as the prefix for
    /// the counters registered in the internal RNTupleMetrics object.
