@@ -2415,7 +2415,7 @@ class TH2Painter extends THistPainter {
             pr = this.drawBinsText(handle);
 
          if (!handle && !pr)
-            handle = this.drawBinsScatter();
+            handle = this.drawBinsColor();
       }
 
       if (handle)

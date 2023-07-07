@@ -242,7 +242,8 @@ class TH2Painter extends TH2Painter2D {
                main.setAxesRanges(histo.fXaxis, this.xmin, this.xmax, histo.fYaxis, this.ymin, this.ymax, histo.fZaxis, this.zmin, this.zmax, this);
                main.set3DOptions(this.options);
                main.drawXYZ(main.toplevel, TAxisPainter, { zmult, zoom: settings.Zooming, ndim: 2,
-                  draw: this.options.Axis !== -1, reverse_x: this.options.RevX, reverse_y: this.options.RevY });
+                  draw: this.options.Axis !== -1, drawany: this.options.isCartesian(),
+                  reverse_x: this.options.RevX, reverse_y: this.options.RevY });
             });
          }
 
