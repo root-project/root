@@ -342,7 +342,7 @@ ROOT::Experimental::Detail::RPageSourceFile::PopulatePageFromCluster(ColumnHandl
    }
 
    if (fOptions.GetClusterCache() == RNTupleReadOptions::EClusterCache::kOff) {
-      directReadBuffer = std::make_unique<unsigned char[]>(bytesOnStorage);
+      directReadBuffer = std::unique_ptr<unsigned char[]>(new unsigned char[bytesOnStorage]);
       fReader.ReadBuffer(directReadBuffer.get(), bytesOnStorage, pageInfo.fLocator.GetPosition<std::uint64_t>());
       fCounters->fNPageLoaded.Inc();
       fCounters->fNRead.Inc();
