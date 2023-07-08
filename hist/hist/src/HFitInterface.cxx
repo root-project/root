@@ -53,7 +53,7 @@ namespace HFitInterface {
 
 bool IsPointOutOfRange(const TF1 * func, const double * x) {
    // function to check if a point is outside range
-   if (func ==0) return false;
+   if (func ==nullptr) return false;
    return !func->IsInside(x);
 }
 
@@ -120,7 +120,7 @@ void FillData(BinData & dv, const TH1 * hfit, TF1 * func)
    // store instead of bin center the bin edges
    bool useBinEdges = fitOpt.fIntegral || fitOpt.fBinVolume;
 
-   assert(hfit != 0);
+   assert(hfit != nullptr);
 
    //std::cout << "creating Fit Data from histogram " << hfit->GetName() << std::endl;
 
@@ -173,7 +173,7 @@ void FillData(BinData & dv, const TH1 * hfit, TF1 * func)
    int hdim =  hfit->GetDimension();
    int ndim = hdim;
    // case of function dimension less than histogram
-   if (func !=0 && func->GetNdim() == hdim-1) ndim = hdim-1;
+   if (func !=nullptr && func->GetNdim() == hdim-1) ndim = hdim-1;
 
    assert( ndim > 0 );
    //typedef  BinPoint::CoordData CoordData;
@@ -218,7 +218,7 @@ void FillData(BinData & dv, const TH1 * hfit, TF1 * func)
 
             // need to evaluate function to know about rejected points
             // hugly but no other solutions
-            if (func != 0) {
+            if (func != nullptr) {
                TF1::RejectPoint(false);
                (*func)( &x[0] );  // evaluate using stored function parameters
                if (TF1::RejectedPoint() ) continue;
@@ -484,12 +484,12 @@ BinData::ErrorType GetDataType(const TGraph * gr, DataOptions & fitOpt) {
    // default case for graphs (when they have errors)
    BinData::ErrorType type = BinData::kValueError;
    // if all errors are zero set option of using errors to 1
-   if (fitOpt.fErrors1 || ( ey == 0 && ( eyl == 0 || eyh == 0 ) ) ) {
+   if (fitOpt.fErrors1 || ( ey == nullptr && ( eyl == nullptr || eyh == nullptr ) ) ) {
       type =  BinData::kNoError;
    }
    // need to treat case when all errors are zero
    // note that by default fitOpt.fCoordError is true
-   else if ( ex != 0 && fitOpt.fCoordErrors)  {
+   else if ( ex != nullptr && fitOpt.fCoordErrors)  {
       // check that all errors are not zero
       int i = 0;
       while (i < gr->GetN() && type != BinData::kCoordError) {
@@ -498,7 +498,7 @@ BinData::ErrorType GetDataType(const TGraph * gr, DataOptions & fitOpt) {
       }
    }
    // case of asymmetric errors (by default fAsymErrors is true)
-   else if ( ( eyl != 0 && eyh != 0)  && fitOpt.fAsymErrors)  {
+   else if ( ( eyl != nullptr && eyh != nullptr)  && fitOpt.fAsymErrors)  {
       // check also if that all errors are non zero's
       int i = 0;
       bool zeroErrorX = true;
@@ -524,7 +524,7 @@ BinData::ErrorType GetDataType(const TGraph * gr, DataOptions & fitOpt) {
    }
 
    // need to look also a case when all errors in y are zero
-   if ( ey != 0 && type != BinData::kCoordError )  {
+   if ( ey != nullptr && type != BinData::kCoordError )  {
       int i = 0;
       bool zeroError = true;
       while (i < gr->GetN() && zeroError) {
@@ -551,10 +551,10 @@ BinData::ErrorType GetDataType(const TGraph2D * gr, const DataOptions & fitOpt) 
    // default case for graphs (when they have errors)
    BinData::ErrorType type = BinData::kValueError;
    // if all errors are zero set option of using errors to 1
-   if (fitOpt.fErrors1 || ez == 0 ) {
+   if (fitOpt.fErrors1 || ez == nullptr ) {
       type =  BinData::kNoError;
    }
-   else if ( ex != 0 && ey!=0 && fitOpt.fCoordErrors)  {
+   else if ( ex != nullptr && ey!=nullptr && fitOpt.fCoordErrors)  {
       // check that all errors are not zero
       int i = 0;
       while (i < gr->GetN() && type != BinData::kCoordError) {
@@ -792,7 +792,7 @@ void FillData(BinData & dv, const THnBase * s1, TF1 * func)
 void FillData ( BinData  & dv, const TGraph * gr,  TF1 * func ) {
    //  fill the data vector from a TGraph. Pass also the TF1 function which is
    // needed in case to exclude points rejected by the function
-   assert(gr != 0);
+   assert(gr != nullptr);
 
    // get fit option
    DataOptions & fitOpt = dv.Opt();
@@ -824,10 +824,10 @@ void FillData ( BinData  & dv, const TGraph * gr,  TF1 * func ) {
 void FillData ( BinData  & dv, const TMultiGraph * mg, TF1 * func ) {
    //  fill the data vector from a TMultiGraph. Pass also the TF1 function which is
    // needed in case to exclude points rejected by the function
-   assert(mg != 0);
+   assert(mg != nullptr);
 
    TList * grList = mg->GetListOfGraphs();
-   assert(grList != 0);
+   assert(grList != nullptr);
 
 #ifdef DEBUG
 //   grList->Print();
@@ -847,7 +847,7 @@ void FillData ( BinData  & dv, const TMultiGraph * mg, TF1 * func ) {
    TIter next(grList);
 
    BinData::ErrorType type = BinData::kNoError;
-   TGraph *gr = 0;
+   TGraph *gr = nullptr;
    while ((gr = (TGraph*) next())) {
       BinData::ErrorType t = GetDataType(gr,fitOpt);
       if (t > type ) type = t;
@@ -879,7 +879,7 @@ void FillData ( BinData  & dv, const TGraph2D * gr, TF1 * func ) {
    //  fill the data vector from a TGraph2D. Pass also the TF1 function which is
    // needed in case to exclude points rejected by the function
    // in case of a pure TGraph
-   assert(gr != 0);
+   assert(gr != nullptr);
 
    // get fit option
    DataOptions & fitOpt = dv.Opt();
@@ -895,7 +895,7 @@ void FillData ( BinData  & dv, const TGraph2D * gr, TF1 * func ) {
    double *gz = gr->GetZ();
 
    // if all errors are zero set option of using errors to 1
-   if ( gr->GetEZ() == 0) fitOpt.fErrors1 = true;
+   if ( gr->GetEZ() == nullptr) fitOpt.fErrors1 = true;
 
    double x[2];
    double ex[2];
@@ -969,7 +969,7 @@ bool GetConfidenceIntervals(const TH1 * h1, const ROOT::Fit::FitResult  & result
    }
    // fill fit data sets with points to estimate cl.
    BinData d;
-   FillData(d,h1,0);
+   FillData(d,h1,nullptr);
    gr->Set(d.NPoints() );
    double * ci = gr->GetEY(); // make CL values error of the graph
    result.GetConfidenceIntervals(d,ci,cl);

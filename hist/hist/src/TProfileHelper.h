@@ -633,7 +633,7 @@ void TProfileHelper::LabelsInflate(T* p, Option_t *ax)
    if (gDebug) Info("LabelsInflate","Inflate label for axis %s of profile %s",ax,p->GetName());
 
    Int_t iaxis = p->AxisChoice(ax);
-   TAxis *axis = 0;
+   TAxis *axis = nullptr;
    if (iaxis == 1) axis = p->GetXaxis();
    if (iaxis == 2) axis = p->GetYaxis();
    if (iaxis == 3) axis = p->GetZaxis();

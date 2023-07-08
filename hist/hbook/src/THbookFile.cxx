@@ -245,7 +245,7 @@ extern "C" void  type_of_call hldir(DEFCHAR,DEFCHAR);
 #endif
 
 Bool_t THbookFile::fgPawInit = kFALSE;
-Int_t  *THbookFile::fgLuns   = 0;
+Int_t  *THbookFile::fgLuns   = nullptr;
 
 ClassImp(THbookFile);
 
@@ -312,8 +312,8 @@ THbookFile::THbookFile(const char *fname, Int_t lrecl)
    if (ier || quest[0]) {
       fgLuns[fLun-10]=0;
       fLun  = 0;
-      fList = 0;
-      fKeys = 0;
+      fList = nullptr;
+      fKeys = nullptr;
       MakeZombie();
       return;
    }
@@ -453,10 +453,10 @@ TObject *THbookFile::Get(Int_t idd)
       id = quest[20];
       if (id == idd) break;
    }
-   if (id == 0) return 0;
+   if (id == 0) return nullptr;
    if (id != idd) {
       printf("Error cannot find ID = %d\n",idd);
-      return 0;
+      return nullptr;
    }
 
    int i999 = 999;
@@ -473,12 +473,12 @@ TObject *THbookFile::Get(Int_t idd)
    hrin(id,i999,0);
    if (quest[0]) {
       printf("Error cannot read ID = %d\n",id);
-      return 0;
+      return nullptr;
    }
    hdcofl();
    lcid  = hcbook[10];
    lcont = lq[lcid-1];
-   TObject *obj = 0;
+   TObject *obj = nullptr;
    if (hcbits[3]) {
       if (iq[lcid-2] == 2) obj = ConvertRWN(id);
       else                 obj = ConvertCWN(id);
@@ -611,7 +611,7 @@ TFile *THbookFile::Convert2root(const char *rootname, Int_t /*lrecl*/,
    opt.ToLower();
 
    Int_t nch = strlen(rootname);
-   char *rfile=0;
+   char *rfile=nullptr;
    if (nch) {
       rfile = new char[nch+1];
       strlcpy(rfile,rootname,nch+1);
@@ -633,10 +633,10 @@ TFile *THbookFile::Convert2root(const char *rootname, Int_t /*lrecl*/,
    gSystem->Exec(cmd);
 
    delete [] cmd;
-   if (opt.Contains("no")) {delete [] rfile; return 0;}
+   if (opt.Contains("no")) {delete [] rfile; return nullptr;}
    TFile *f = new TFile(rfile);
    delete [] rfile;
-   if (f->IsZombie()) {delete f; f = 0;}
+   if (f->IsZombie()) {delete f; f = nullptr;}
    return f;
 }
 
@@ -941,7 +941,7 @@ TObject *THbookFile::Convert1D(Int_t id)
       h1 = new TH1F(idname,chtitl,ncx,xmin,xmax);
    }
    if (hcbits[8]) h1->Sumw2();
-   TGraph *gr = 0;
+   TGraph *gr = nullptr;
    if (hcbits[11]) {
       gr = new TGraph(ncx);
       h1->GetListOfFunctions()->Add(gr);

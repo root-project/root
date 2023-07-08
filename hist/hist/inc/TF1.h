@@ -710,7 +710,7 @@ public:
 
 private:
    template <class T>
-   T EvalParTempl(const T *data, const Double_t *params = 0);
+   T EvalParTempl(const T *data, const Double_t *params = nullptr);
 
 #ifdef R__HAS_VECCORE
    inline double EvalParVec(const Double_t *data, const Double_t *params);

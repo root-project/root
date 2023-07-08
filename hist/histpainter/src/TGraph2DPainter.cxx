@@ -50,23 +50,23 @@ drawing options for these classes.
 
 TGraph2DPainter::TGraph2DPainter()
 {
-   fX        = 0;
-   fY        = 0;
-   fZ        = 0;
-   fEXlow    = 0;
-   fEXhigh   = 0;
-   fEYlow    = 0;
-   fEYhigh   = 0;
-   fEZlow    = 0;
-   fEZhigh   = 0;
-   fXN       = 0;
-   fYN       = 0;
-   fPTried   = 0;
-   fNTried   = 0;
-   fMTried   = 0;
-   fGraph2D  = 0;
-   fDelaunay = 0;
-   fDelaunay2D = 0;
+   fX        = nullptr;
+   fY        = nullptr;
+   fZ        = nullptr;
+   fEXlow    = nullptr;
+   fEXhigh   = nullptr;
+   fEYlow    = nullptr;
+   fEYhigh   = nullptr;
+   fEZlow    = nullptr;
+   fEZhigh   = nullptr;
+   fXN       = nullptr;
+   fYN       = nullptr;
+   fPTried   = nullptr;
+   fNTried   = nullptr;
+   fMTried   = nullptr;
+   fGraph2D  = nullptr;
+   fDelaunay = nullptr;
+   fDelaunay2D = nullptr;
    fXmin     = 0.;
    fXmax     = 0.;
    fYmin     = 0.;
@@ -88,7 +88,7 @@ TGraph2DPainter::TGraph2DPainter()
 TGraph2DPainter::TGraph2DPainter(TGraphDelaunay *gd)
 {
    fDelaunay = gd;
-   fDelaunay2D = 0;
+   fDelaunay2D = nullptr;
    fGraph2D  = fDelaunay->GetGraph2D();
    fNpoints  = fGraph2D->GetN();
    fX        = fGraph2D->GetX();
@@ -107,15 +107,15 @@ TGraph2DPainter::TGraph2DPainter(TGraphDelaunay *gd)
    if (fGraph2D->GetEZhigh()) fEZhigh = fGraph2D->GetEZhigh();
    else                       fEZhigh = fGraph2D->GetEZ();
    fNdt      = 0;
-   fXN       = 0;
-   fYN       = 0;
+   fXN       = nullptr;
+   fYN       = nullptr;
    fXNmin    = 0;
    fXNmax    = 0;
    fYNmin    = 0;
    fYNmax    = 0;
-   fPTried   = 0;
-   fNTried   = 0;
-   fMTried   = 0;
+   fPTried   = nullptr;
+   fNTried   = nullptr;
+   fMTried   = nullptr;
    fXmin     = 0.;
    fXmax     = 0.;
    fYmin     = 0.;
@@ -129,7 +129,7 @@ TGraph2DPainter::TGraph2DPainter(TGraphDelaunay *gd)
 
 TGraph2DPainter::TGraph2DPainter(TGraphDelaunay2D *gd)
 {
-   fDelaunay = 0;
+   fDelaunay = nullptr;
    fDelaunay2D = gd;
    fGraph2D  = fDelaunay2D->GetGraph2D();
    fNpoints  = fGraph2D->GetN();
@@ -149,15 +149,15 @@ TGraph2DPainter::TGraph2DPainter(TGraphDelaunay2D *gd)
    if (fGraph2D->GetEZhigh()) fEZhigh = fGraph2D->GetEZhigh();
    else                       fEZhigh = fGraph2D->GetEZ();
    fNdt      = 0;
-   fXN       = 0;
-   fYN       = 0;
+   fXN       = nullptr;
+   fYN       = nullptr;
    fXNmin    = 0;
    fXNmax    = 0;
    fYNmin    = 0;
    fYNmax    = 0;
-   fPTried   = 0;
-   fNTried   = 0;
-   fMTried   = 0;
+   fPTried   = nullptr;
+   fNTried   = nullptr;
+   fMTried   = nullptr;
    fXmin     = 0.;
    fXmax     = 0.;
    fYmin     = 0.;
@@ -220,13 +220,13 @@ TList *TGraph2DPainter::GetContourList(Double_t contour)
          zmin = TMath::Log10(zmin);
          zmax = TMath::Log10(zmax);
       } else {
-         return 0;
+         return nullptr;
       }
    }
    if(contour<zmin || contour>zmax) {
       Error("GetContourList", "Contour level (%g) outside the Z scope [%g,%g]",
       contour,zmin,zmax);
-      return 0;
+      return nullptr;
    }
 
    if (!fNdt) FindTriangles();

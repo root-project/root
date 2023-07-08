@@ -62,8 +62,8 @@ THbookTree::THbookTree(): TTree()
 {
    fID   = 0;
    fType = 0;
-   fX    = 0;
-   fFile = 0;
+   fX    = nullptr;
+   fFile = nullptr;
    fInit = kFALSE;
 }
 
@@ -75,8 +75,8 @@ THbookTree::THbookTree(const char *name,Int_t id)
 {
    fID   = id;
    fType = 0;
-   fX    = 0;
-   fFile = 0;
+   fX    = nullptr;
+   fFile = nullptr;
    fInit = kFALSE;
 }
 

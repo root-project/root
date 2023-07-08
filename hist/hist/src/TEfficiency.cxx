@@ -644,14 +644,14 @@ for a TH2::Draw object.
 TEfficiency::TEfficiency():
 fBeta_alpha(kDefBetaAlpha),
 fBeta_beta(kDefBetaBeta),
-fBoundary(0),
+fBoundary(nullptr),
 fConfLevel(kDefConfLevel),
-fDirectory(0),
-fFunctions(0),
-fPaintGraph(0),
-fPaintHisto(0),
-fPassedHistogram(0),
-fTotalHistogram(0),
+fDirectory(nullptr),
+fFunctions(nullptr),
+fPaintGraph(nullptr),
+fPaintHisto(nullptr),
+fPassedHistogram(nullptr),
+fTotalHistogram(nullptr),
 fWeight(kDefWeight)
 {
    SetStatisticOption(kDefStatOpt);
@@ -684,10 +684,10 @@ TEfficiency::TEfficiency(const TH1& passed,const TH1& total):
 fBeta_alpha(kDefBetaAlpha),
 fBeta_beta(kDefBetaBeta),
 fConfLevel(kDefConfLevel),
-fDirectory(0),
-fFunctions(0),
-fPaintGraph(0),
-fPaintHisto(0),
+fDirectory(nullptr),
+fFunctions(nullptr),
+fPaintGraph(nullptr),
+fPaintHisto(nullptr),
 fWeight(kDefWeight)
 {
    //check consistency of histograms
@@ -724,7 +724,7 @@ fWeight(kDefWeight)
    SetBit(kShortestInterval,false);
 
    SetStatisticOption(kDefStatOpt);
-   SetDirectory(0);
+   SetDirectory(nullptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -751,10 +751,10 @@ TEfficiency::TEfficiency(const char* name,const char* title,Int_t nbins,
 fBeta_alpha(kDefBetaAlpha),
 fBeta_beta(kDefBetaBeta),
 fConfLevel(kDefConfLevel),
-fDirectory(0),
-fFunctions(0),
-fPaintGraph(0),
-fPaintHisto(0),
+fDirectory(nullptr),
+fFunctions(nullptr),
+fPaintGraph(nullptr),
+fPaintHisto(nullptr),
 fWeight(kDefWeight)
 {
    // do not add new created histograms to gDirectory
@@ -792,10 +792,10 @@ TEfficiency::TEfficiency(const char* name,const char* title,Int_t nbinsx,
 fBeta_alpha(kDefBetaAlpha),
 fBeta_beta(kDefBetaBeta),
 fConfLevel(kDefConfLevel),
-fDirectory(0),
-fFunctions(0),
-fPaintGraph(0),
-fPaintHisto(0),
+fDirectory(nullptr),
+fFunctions(nullptr),
+fPaintGraph(nullptr),
+fPaintHisto(nullptr),
 fWeight(kDefWeight)
 {
    // do not add new created histograms to gDirectory
@@ -835,10 +835,10 @@ TEfficiency::TEfficiency(const char* name,const char* title,Int_t nbinsx,
 fBeta_alpha(kDefBetaAlpha),
 fBeta_beta(kDefBetaBeta),
 fConfLevel(kDefConfLevel),
-fDirectory(0),
-fFunctions(0),
-fPaintGraph(0),
-fPaintHisto(0),
+fDirectory(nullptr),
+fFunctions(nullptr),
+fPaintGraph(nullptr),
+fPaintHisto(nullptr),
 fWeight(kDefWeight)
 {
    // do not add new created histograms to gDirectory
@@ -878,10 +878,10 @@ TEfficiency::TEfficiency(const char* name,const char* title,Int_t nbinsx,
 fBeta_alpha(kDefBetaAlpha),
 fBeta_beta(kDefBetaBeta),
 fConfLevel(kDefConfLevel),
-fDirectory(0),
-fFunctions(0),
-fPaintGraph(0),
-fPaintHisto(0),
+fDirectory(nullptr),
+fFunctions(nullptr),
+fPaintGraph(nullptr),
+fPaintHisto(nullptr),
 fWeight(kDefWeight)
 {
    // do not add new created histograms to gDirectory
@@ -925,10 +925,10 @@ TEfficiency::TEfficiency(const char* name,const char* title,Int_t nbinsx,
 fBeta_alpha(kDefBetaAlpha),
 fBeta_beta(kDefBetaBeta),
 fConfLevel(kDefConfLevel),
-fDirectory(0),
-fFunctions(0),
-fPaintGraph(0),
-fPaintHisto(0),
+fDirectory(nullptr),
+fFunctions(nullptr),
+fPaintGraph(nullptr),
+fPaintHisto(nullptr),
 fWeight(kDefWeight)
 {
    // do not add new created histograms to gDirectory
@@ -972,10 +972,10 @@ TEfficiency::TEfficiency(const char* name,const char* title,Int_t nbinsx,
 fBeta_alpha(kDefBetaAlpha),
 fBeta_beta(kDefBetaBeta),
 fConfLevel(kDefConfLevel),
-fDirectory(0),
-fFunctions(0),
-fPaintGraph(0),
-fPaintHisto(0),
+fDirectory(nullptr),
+fFunctions(nullptr),
+fPaintGraph(nullptr),
+fPaintHisto(nullptr),
 fWeight(kDefWeight)
 {
    // do not add new created histograms to gDirectory
@@ -1013,10 +1013,10 @@ TEfficiency::TEfficiency(const TEfficiency& rEff):
    fBeta_beta(rEff.fBeta_beta),
    fBeta_bin_params(rEff.fBeta_bin_params),
    fConfLevel(rEff.fConfLevel),
-   fDirectory(0),
-   fFunctions(0),
-   fPaintGraph(0),
-   fPaintHisto(0),
+   fDirectory(nullptr),
+   fFunctions(nullptr),
+   fPaintGraph(nullptr),
+   fPaintHisto(nullptr),
    fWeight(rEff.fWeight)
 {
    // copy TObject bits
@@ -1038,7 +1038,7 @@ TEfficiency::TEfficiency(const TEfficiency& rEff):
 
    SetStatisticOption(rEff.GetStatisticOption());
 
-   SetDirectory(0);
+   SetDirectory(nullptr);
 
    //copy style
    rEff.TAttLine::Copy(*this);
@@ -1056,17 +1056,17 @@ TEfficiency::~TEfficiency()
    // (see TH1::~TH1 code in TH1.cxx)
    if(fFunctions) {
       fFunctions->SetBit(kInvalidObject);
-      TObject* obj = 0;
+      TObject* obj = nullptr;
       while ((obj  = fFunctions->First())) {
          while(fFunctions->Remove(obj)) { }
          if (ROOT::Detail::HasBeenDeleted(obj)) {
             break;
          }
          delete obj;
-         obj = 0;
+         obj = nullptr;
       }
       delete fFunctions;
-      fFunctions = 0;
+      fFunctions = nullptr;
    }
 
    if(fDirectory)
@@ -1480,8 +1480,8 @@ void TEfficiency::Build(const char* name,const char* title)
 Bool_t TEfficiency::CheckBinning(const TH1& pass,const TH1& total)
 {
 
-   const TAxis* ax1 = 0;
-   const TAxis* ax2 = 0;
+   const TAxis* ax1 = nullptr;
+   const TAxis* ax2 = nullptr;
 
    //check binning along axis
    for(Int_t j = 0; j < pass.GetDimension(); ++j) {
@@ -1621,7 +1621,7 @@ TGraphAsymmErrors * TEfficiency::CreateGraph(Option_t * opt) const
 {
    if (GetDimension() != 1) {
       Error("CreatePaintingGraph","Call this function only for dimension == 1");
-      return 0;
+      return nullptr;
    }
 
    Int_t npoints = fTotalHistogram->GetNbinsX();
@@ -1640,7 +1640,7 @@ TGraph2DAsymmErrors * TEfficiency::CreateGraph2D(Option_t * opt) const
 {
    if (GetDimension() != 2) {
       Error("CreatePaintingGraph","Call this function only for dimension == 2");
-      return 0;
+      return nullptr;
    }
 
    Int_t npoints = fTotalHistogram->GetNbinsX()*fTotalHistogram->GetNbinsY();
@@ -1846,14 +1846,14 @@ TH2 * TEfficiency::CreateHistogram(Option_t *) const
 {
    if (GetDimension() != 2) {
       Error("CreatePaintingistogram","Call this function only for dimension == 2");
-      return 0;
+      return nullptr;
    }
 
    Int_t nbinsx = fTotalHistogram->GetNbinsX();
    Int_t nbinsy = fTotalHistogram->GetNbinsY();
    TAxis * xaxis = fTotalHistogram->GetXaxis();
    TAxis * yaxis = fTotalHistogram->GetYaxis();
-   TH2 * hist = 0;
+   TH2 * hist = nullptr;
 
    if (xaxis->IsVariableBinSize() && yaxis->IsVariableBinSize() )
       hist = new TH2F("eff_histo",GetTitle(),nbinsx,xaxis->GetXbins()->GetArray(),
@@ -1869,7 +1869,7 @@ TH2 * TEfficiency::CreateHistogram(Option_t *) const
                       nbinsy,yaxis->GetXmin(), yaxis->GetXmax());
 
 
-   hist->SetDirectory(0);
+   hist->SetDirectory(nullptr);
 
    FillHistogram(hist);
 
@@ -2201,14 +2201,14 @@ TGraphAsymmErrors* TEfficiency::Combine(TCollection* pList,Option_t* option,
          else {
             gROOT->Error("TEfficiency::Combine","invalid custom weight found w = %.2lf",w[k]);
             gROOT->Info("TEfficiency::Combine","stop combining");
-            return 0;
+            return nullptr;
          }
       }
    }
 
    TIter next(pList);
-   TObject* obj = 0;
-   TEfficiency* pEff = 0;
+   TObject* obj = nullptr;
+   TEfficiency* pEff = nullptr;
    while((obj = next())) {
       pEff = dynamic_cast<TEfficiency*>(obj);
       //is object a TEfficiency object?
@@ -2253,14 +2253,14 @@ TGraphAsymmErrors* TEfficiency::Combine(TCollection* pList,Option_t* option,
    if(vTotal.empty()) {
       gROOT->Error("TEfficiency::Combine","no TEfficiency objects in given list");
       gROOT->Info("TEfficiency::Combine","stop combining");
-      return 0;
+      return nullptr;
    }
 
    //invalid number of custom weights
    if(bWeights && (n != (Int_t)vTotal.size())) {
       gROOT->Error("TEfficiency::Combine","number of weights n=%i differs from number of TEfficiency objects k=%i which should be combined",n,(Int_t)vTotal.size());
       gROOT->Info("TEfficiency::Combine","stop combining");
-      return 0;
+      return nullptr;
    }
 
    Int_t nbins_max = vTotal.at(0)->GetNbinsX();
@@ -2318,7 +2318,7 @@ TGraphAsymmErrors* TEfficiency::Combine(TCollection* pList,Option_t* option,
       if(eff[i-1] == -1) {
          gROOT->Error("TEfficiency::Combine","error occurred during combining");
          gROOT->Info("TEfficiency::Combine","stop combining");
-         return 0;
+         return nullptr;
       }
       efflow[i-1]= eff[i-1] - low;
       effhigh[i-1]= up - eff[i-1];
@@ -2528,7 +2528,7 @@ TFitResultPtr TEfficiency::Fit(TF1* f1,Option_t* opt)
 
       if(bDeleteOld) {
          TIter next(fFunctions);
-         TObject* obj = 0;
+         TObject* obj = nullptr;
          while((obj = next())) {
             if(obj->InheritsFrom(TF1::Class())) {
                fFunctions->Remove(obj);
@@ -2869,8 +2869,8 @@ Long64_t TEfficiency::Merge(TCollection* pList)
 {
    if(!pList->IsEmpty()) {
       TIter next(pList);
-      TObject* obj = 0;
-      TEfficiency* pEff = 0;
+      TObject* obj = nullptr;
+      TEfficiency* pEff = nullptr;
       while((obj = next())) {
          pEff = dynamic_cast<TEfficiency*>(obj);
          if(pEff) {
@@ -2932,21 +2932,21 @@ Double_t TEfficiency::Normal(Double_t total,Double_t passed,Double_t level,Bool_
 TEfficiency& TEfficiency::operator+=(const TEfficiency& rhs)
 {
 
-   if (fTotalHistogram == 0 && fPassedHistogram == 0) {
+   if (fTotalHistogram == nullptr && fPassedHistogram == nullptr) {
       // efficiency is empty just copy it over
       *this = rhs;
       return *this;
    }
-   else if (fTotalHistogram == 0 || fPassedHistogram == 0) {
+   else if (fTotalHistogram == nullptr || fPassedHistogram == nullptr) {
       Fatal("operator+=","Adding to a non consistent TEfficiency object which has not a total or a passed histogram ");
       return *this;
    }
 
-   if (rhs.fTotalHistogram == 0 && rhs.fPassedHistogram == 0 ) {
+   if (rhs.fTotalHistogram == nullptr && rhs.fPassedHistogram == nullptr ) {
       Warning("operator+=","no operation: adding an empty object");
       return *this;
    }
-   else  if (rhs.fTotalHistogram == 0  || rhs.fPassedHistogram == 0 ) {
+   else  if (rhs.fTotalHistogram == nullptr  || rhs.fPassedHistogram == nullptr ) {
       Fatal("operator+=","Adding a non consistent TEfficiency object which has not a total or a passed histogram ");
       return *this;
    }
@@ -3059,7 +3059,7 @@ void TEfficiency::Paint(const Option_t* opt)
          // the fit statistics will be painted if gStyle->SetOptFit(1) has been
          //  called by the user
          TIter next(fFunctions);
-         TObject *obj = 0;
+         TObject *obj = nullptr;
          while ((obj = next())) {
             if (obj->InheritsFrom(TF1::Class())) {
                fPaintGraph->PaintStats((TF1 *)obj);
@@ -3247,7 +3247,7 @@ void TEfficiency::SavePrimitive(std::ostream& out,Option_t* opt)
 
    //save list of functions
    TIter next(fFunctions);
-   TObject* obj = 0;
+   TObject* obj = nullptr;
    while((obj = next())) {
       obj->SavePrimitive(out,"nodraw");
       if(obj->InheritsFrom(TF1::Class())) {

@@ -64,7 +64,7 @@ TSpectrum2::TSpectrum2() :TNamed("Spectrum", "Miroslav Morhac peak finder")
    fPositionX  = new Double_t[n];
    fPositionY  = new Double_t[n];
    fResolution = 1;
-   fHistogram  = 0;
+   fHistogram  = nullptr;
    fNPeaks     = 0;
 }
 
@@ -83,7 +83,7 @@ TSpectrum2::TSpectrum2(Int_t maxpositions, Double_t resolution) :TNamed("Spectru
    fPosition  = new Double_t[n];
    fPositionX = new Double_t[n];
    fPositionY = new Double_t[n];
-   fHistogram = 0;
+   fHistogram = nullptr;
    fNPeaks    = 0;
    SetResolution(resolution);
 }
@@ -159,7 +159,7 @@ TH1 *TSpectrum2::Background(const TH1 * h, Int_t number_of_iterations,
 {
    Error("Background","function not yet implemented: h=%s, iter=%d, option=%sn"
         , h->GetName(), number_of_iterations, option);
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -208,7 +208,7 @@ void TSpectrum2::Print(Option_t *) const
 Int_t TSpectrum2::Search(const TH1 * hin, Double_t sigma,
                              Option_t * option, Double_t threshold)
 {
-   if (hin == 0)
+   if (hin == nullptr)
       return 0;
    Int_t dimension = hin->GetDimension();
    if (dimension != 2) {
@@ -539,7 +539,7 @@ const char *TSpectrum2::Background(Double_t **spectrum,
    for (i = 0; i < ssizex; i++)
       delete[]working_space[i];
    delete[]working_space;
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -607,7 +607,7 @@ const char* TSpectrum2::SmoothMarkov(Double_t **source, Int_t ssizex, Int_t ssiz
       for (i = 0; i < ssizex; i++)
          delete[]working_space[i];
       delete [] working_space;
-      return 0;
+      return nullptr;
    }
 
    nom = 0;
@@ -762,7 +762,7 @@ const char* TSpectrum2::SmoothMarkov(Double_t **source, Int_t ssizex, Int_t ssiz
    for (i = 0; i < ssizex; i++)
       delete[]working_space[i];
    delete[]working_space;
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -995,7 +995,7 @@ const char *TSpectrum2::Deconvolution(Double_t **source, Double_t **resp,
    for (i = 0; i < ssizex; i++)
       delete[]working_space[i];
    delete[]working_space;
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

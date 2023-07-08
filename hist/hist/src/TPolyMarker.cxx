@@ -378,7 +378,7 @@ void TPolyMarker::SetPolyMarker(Int_t n)
       fLastPoint = -1;
       delete [] fX;
       delete [] fY;
-      fX = fY = 0;
+      fX = fY = nullptr;
       return;
    }
    SetPoint(n-1,0,0);
@@ -394,7 +394,7 @@ void TPolyMarker::SetPolyMarker(Int_t n, Float_t *x, Float_t *y, Option_t *optio
       fLastPoint = -1;
       delete [] fX;
       delete [] fY;
-      fX = fY = 0;
+      fX = fY = nullptr;
       return;
    }
    fN =n;
@@ -420,7 +420,7 @@ void TPolyMarker::SetPolyMarker(Int_t n, Double_t *x, Double_t *y, Option_t *opt
       fLastPoint = -1;
       delete [] fX;
       delete [] fY;
-      fX = fY = 0;
+      fX = fY = nullptr;
       return;
    }
    fN =n;

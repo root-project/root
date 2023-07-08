@@ -58,7 +58,7 @@ TSpectrum::TSpectrum() :TNamed("Spectrum", "Miroslav Morhac peak finder")
    fPositionX  = new Double_t[n];
    fPositionY  = new Double_t[n];
    fResolution = 1;
-   fHistogram  = 0;
+   fHistogram  = nullptr;
    fNPeaks     = 0;
 }
 
@@ -79,7 +79,7 @@ TSpectrum::TSpectrum(Int_t maxpositions, Double_t resolution)
    fPosition  = new Double_t[n];
    fPositionX = new Double_t[n];
    fPositionY = new Double_t[n];
-   fHistogram = 0;
+   fHistogram = nullptr;
    fNPeaks    = 0;
    SetResolution(resolution);
 }
@@ -155,11 +155,11 @@ void TSpectrum::SetDeconIterations(Int_t n)
 TH1 *TSpectrum::Background(const TH1 * h, Int_t numberIterations,
                            Option_t * option)
 {
-   if (h == 0) return 0;
+   if (h == nullptr) return nullptr;
    Int_t dimension = h->GetDimension();
    if (dimension > 1) {
       Error("Search", "Only implemented for 1-d histograms");
-      return 0;
+      return nullptr;
    }
    TString opt = option;
    opt.ToLower();
@@ -269,7 +269,7 @@ void TSpectrum::Print(Option_t *) const
 Int_t TSpectrum::Search(const TH1 * hin, Double_t sigma, Option_t * option,
                         Double_t threshold)
 {
-   if (hin == 0) return 0;
+   if (hin == nullptr) return 0;
    Int_t dimension = hin->GetDimension();
    if (dimension > 2) {
       Error("Search", "Only implemented for 1-d and 2-d histograms");
@@ -1154,7 +1154,7 @@ const char *TSpectrum::Background(Double_t *spectrum, Int_t ssize,
    for (j = 0; j < ssize; j++)
       spectrum[j] = working_space[ssize + j];
    delete[]working_space;
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1213,7 +1213,7 @@ const char* TSpectrum::SmoothMarkov(Double_t *source, int ssize, int averWindow)
    }
    if(maxch == 0) {
       delete [] working_space;
-      return 0 ;
+      return nullptr ;
    }
 
    nom = 1;
@@ -1261,7 +1261,7 @@ const char* TSpectrum::SmoothMarkov(Double_t *source, int ssize, int averWindow)
    for(i = 0; i < ssize; i++)
       source[i] = working_space[i] * area;
    delete[]working_space;
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1588,7 +1588,7 @@ const char *TSpectrum::Deconvolution(Double_t *source, const Double_t *response,
    for (i = 0; i < ssize; i++)
       source[i] = area * working_space[ssize + i];
    delete[]working_space;
-   return 0;
+   return nullptr;
 }
 
 
@@ -1768,7 +1768,7 @@ const char *TSpectrum::DeconvolutionRL(Double_t *source, const Double_t *respons
    for (i = 0; i < ssize; i++)
       source[i] = working_space[ssize + i];
    delete[]working_space;
-   return 0;
+   return nullptr;
 }
 
 
@@ -2036,7 +2036,7 @@ const char *TSpectrum::Unfolding(Double_t *source,
          source[i] = 0;
    }
    delete[]working_space;
-   return 0;
+   return nullptr;
 }
 
 

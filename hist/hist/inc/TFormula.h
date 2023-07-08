@@ -243,7 +243,7 @@ public:
    // template <class T>
    // T Eval(T x, T y = 0, T z = 0, T t = 0) const;
    template <class T>
-   T EvalPar(const T *x, const Double_t *params = 0) const {
+   T EvalPar(const T *x, const Double_t *params = nullptr) const {
       return  EvalParVec(x, params);
    }
 #ifdef R__HAS_VECCORE
