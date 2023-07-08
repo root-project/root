@@ -353,7 +353,7 @@ TFitResultPtr HFit::Fit(FitObject * h1, TF1 *f1 , Foption_t & fitOption , const 
 
    // check if can use option user
    //typedef  void (* MinuitFCN_t )(int &npar, double *gin, double &f, double *u, int flag);
-   TVirtualFitter::FCNFunc_t  userFcn = 0;
+   TVirtualFitter::FCNFunc_t  userFcn = nullptr;
    if (fitOption.User && TVirtualFitter::GetFitter() ) {
       userFcn = (TVirtualFitter::GetFitter())->GetFCN();
       (TVirtualFitter::GetFitter())->SetUserFunc(f1);
@@ -527,7 +527,7 @@ void HFit::GetDrawingRange(TMultiGraph * mg,  ROOT::Fit::DataRange & range) {
       double xmin = std::numeric_limits<double>::infinity();
       double xmax = -std::numeric_limits<double>::infinity();
       TIter next(mg->GetListOfGraphs() );
-      TGraph * g = 0;
+      TGraph * g = nullptr;
       while (  (g = (TGraph*) next() ) ) {
          double x1 = 0, x2 = 0, y1 = 0, y2 = 0;
          g->ComputeRange(x1,y1,x2,y2);
@@ -593,7 +593,7 @@ void HFit::StoreAndDrawFitFunction(FitObject * h1, TF1 * f1, const ROOT::Fit::Da
 #endif
 
    TList * funcList = h1->GetListOfFunctions();
-   if (funcList == 0){
+   if (funcList == nullptr){
       Error("StoreAndDrawFitFunction","Function list has not been created - cannot store the fitted function");
       return;
    }
@@ -619,9 +619,9 @@ void HFit::StoreAndDrawFitFunction(FitObject * h1, TF1 * f1, const ROOT::Fit::Da
       }
    }
 
-   TF1 *fnew1 = 0;
-   TF2 *fnew2 = 0;
-   TF3 *fnew3 = 0;
+   TF1 *fnew1 = nullptr;
+   TF2 *fnew2 = nullptr;
+   TF3 *fnew3 = nullptr;
 
    // copy TF1 using TClass to avoid slicing in case of derived classes
    if (ndim < 2) {
@@ -677,7 +677,7 @@ void HFit::StoreAndDrawFitFunction(FitObject * h1, TF1 * f1, const ROOT::Fit::Da
    if (drawFunction && ndim < 3 && h1->InheritsFrom(TH1::Class() ) ) {
       // no need to re-draw the histogram if the histogram is already in the pad
       // in that case the function will be just drawn (if option N is not set)
-      if (!gPad || (gPad && gPad->GetListOfPrimitives()->FindObject(h1) == NULL ) )
+      if (!gPad || (gPad && gPad->GetListOfPrimitives()->FindObject(h1) == nullptr ) )
          h1->Draw(goption);
    }
    if (gPad) gPad->Modified(); // this is not in TH1 code (needed ??)
@@ -693,7 +693,7 @@ void ROOT::Fit::FitOptionsMake(EFitObjectType type, const char *option, Foption_
       fitOption.ExecPolicy = ROOT::EExecutionPolicy::kMultiThread;
    }
 
-   if (option == 0) return;
+   if (option == nullptr) return;
    if (!option[0]) return;
 
    TString opt = option;
@@ -935,7 +935,7 @@ TFitResultPtr ROOT::Fit::UnBinFit(ROOT::Fit::UnBinData * data, TF1 * fitfunc, Fo
       // pass ownership of Fitter and Fitdata to TBackCompFitter (fitter pointer cannot be used afterwards)
       TBackCompFitter * bcfitter = new TBackCompFitter(fitter, fitdata);
       // cannot use anymore now fitdata (given away ownership)
-      fitdata = 0;
+      fitdata = nullptr;
       bcfitter->SetFitOption(fitOption);
       //bcfitter->SetObjectFit(fTree);
       bcfitter->SetUserFunc(fitfunc);

@@ -567,7 +567,7 @@ When using the options 2 or 3 above, the labels are automatically
  histogram, call TH1::ResetStats. See TH1::GetStats.
 */
 
-TF1 *gF1=0;  //left for back compatibility (use TVirtualFitter::GetUserFunc instead)
+TF1 *gF1=nullptr;  //left for back compatibility (use TVirtualFitter::GetUserFunc instead)
 
 Int_t  TH1::fgBufferSize   = 1000;
 Bool_t TH1::fgAddDirectory = kTRUE;
@@ -836,7 +836,7 @@ Bool_t TH1::Add(TF1 *f1, Double_t c1, Option_t *option)
    Int_t bin, binx, biny, binz;
    Double_t cu=0;
    Double_t xx[3];
-   Double_t *params = 0;
+   Double_t *params = nullptr;
    f1->InitArgs(xx,params);
    for (binz = 0; binz < ncellsz; ++binz) {
       xx[2] = fZaxis.GetBinCenter(binz);
@@ -1489,7 +1489,7 @@ Int_t TH1::BufferFill(Double_t x, Double_t w)
       fBuffer[0] =  nbentries;
       if (fEntries > 0) {
          // set fBuffer to zero to avoid calling BufferEmpty in Reset
-         Double_t *buffer = fBuffer; fBuffer=0;
+         Double_t *buffer = fBuffer; fBuffer=nullptr;
          Reset("ICES");  // do not reset list of functions
          fBuffer = buffer;
       }
@@ -2731,7 +2731,7 @@ void TH1::Copy(TObject &obj) const
 
 TObject* TH1::Clone(const char* newname) const
 {
-   TH1* obj = (TH1*)IsA()->GetNew()(0);
+   TH1* obj = (TH1*)IsA()->GetNew()(nullptr);
    Copy(*obj);
 
    // Now handle the parts that Copy doesn't do
@@ -2841,7 +2841,7 @@ Bool_t TH1::Divide(TF1 *f1, Double_t c1)
    Int_t bin, binx, biny, binz;
    Double_t cu, w;
    Double_t xx[3];
-   Double_t *params = 0;
+   Double_t *params = nullptr;
    f1->InitArgs(xx,params);
    for (binz = 0; binz < nz; ++binz) {
       xx[2] = fZaxis.GetBinCenter(binz);
@@ -3313,7 +3313,7 @@ TH1* TH1::FFT(TH1* h_output, Option_t *option)
       delete [] kind;
    }
 
-   if (!fft) return 0;
+   if (!fft) return nullptr;
    Int_t in=0;
    for (Int_t binx = 1; binx<=ndim[0]; binx++) {
       for (Int_t biny=1; biny<=ndim[1]; biny++) {
@@ -3858,7 +3858,7 @@ Int_t TH1::FindLastBinAbove(Double_t threshold, Int_t axis, Int_t firstBin, Int_
 TObject *TH1::FindObject(const char *name) const
 {
    if (fFunctions) return fFunctions->FindObject(name);
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3867,7 +3867,7 @@ TObject *TH1::FindObject(const char *name) const
 TObject *TH1::FindObject(const TObject *obj) const
 {
    if (fFunctions) return fFunctions->FindObject(obj);
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -4591,7 +4591,7 @@ Int_t TH1::GetQuantiles(Int_t nprobSum, Double_t *q, const Double_t *probSum)
    Int_t i, ibin;
    Double_t *prob = (Double_t*)probSum;
    Int_t nq = nprobSum;
-   if (probSum == 0) {
+   if (probSum == nullptr) {
       nq = nbins+1;
       prob = new Double_t[nq];
       prob[0] = 0;
@@ -5214,7 +5214,7 @@ Bool_t TH1::IsBinUnderflow(Int_t bin, Int_t iaxis) const
 void TH1::LabelsDeflate(Option_t *ax)
 {
    Int_t iaxis = AxisChoice(ax);
-   TAxis *axis = 0;
+   TAxis *axis = nullptr;
    if (iaxis == 1) axis = GetXaxis();
    if (iaxis == 2) axis = GetYaxis();
    if (iaxis == 3) axis = GetZaxis();
@@ -5284,7 +5284,7 @@ void TH1::LabelsDeflate(Option_t *ax)
 void TH1::LabelsInflate(Option_t *ax)
 {
    Int_t iaxis = AxisChoice(ax);
-   TAxis *axis = 0;
+   TAxis *axis = nullptr;
    if (iaxis == 1) axis = GetXaxis();
    if (iaxis == 2) axis = GetYaxis();
    if (iaxis == 3) axis = GetZaxis();
@@ -5351,7 +5351,7 @@ void TH1::LabelsInflate(Option_t *ax)
 void TH1::LabelsOption(Option_t *option, Option_t *ax)
 {
    Int_t iaxis = AxisChoice(ax);
-   TAxis *axis = 0;
+   TAxis *axis = nullptr;
    if (iaxis == 1)
       axis = GetXaxis();
    if (iaxis == 2)
@@ -6037,7 +6037,7 @@ Bool_t TH1::Multiply(TF1 *f1, Double_t c1)
 
    //   - Loop on bins (including underflows/overflows)
    Double_t xx[3];
-   Double_t *params = 0;
+   Double_t *params = nullptr;
    f1->InitArgs(xx,params);
 
    for (Int_t binz = 0; binz < nz; ++binz) {
@@ -6266,16 +6266,16 @@ TH1 *TH1::Rebin(Int_t ngroup, const char*newname, const Double_t *xbins)
    Double_t xmax  = fXaxis.GetXmax();
    if ((ngroup <= 0) || (ngroup > nbins)) {
       Error("Rebin", "Illegal value of ngroup=%d",ngroup);
-      return 0;
+      return nullptr;
    }
 
    if (fDimension > 1 || InheritsFrom(TProfile::Class())) {
       Error("Rebin", "Operation valid on 1-D histograms only");
-      return 0;
+      return nullptr;
    }
    if (!newname && xbins) {
       Error("Rebin","if xbins is specified, newname must be given");
-      return 0;
+      return nullptr;
    }
 
    Int_t newbins = nbins/ngroup;
@@ -6299,7 +6299,7 @@ TH1 *TH1::Rebin(Int_t ngroup, const char*newname, const Double_t *xbins)
    Double_t *oldBins = new Double_t[nbins+2];
    Int_t bin, i;
    for (bin=0;bin<nbins+2;bin++) oldBins[bin] = RetrieveBinContent(bin);
-   Double_t *oldErrors = 0;
+   Double_t *oldErrors = nullptr;
    if (fSumw2.fN != 0) {
       oldErrors = new Double_t[nbins+2];
       for (bin=0;bin<nbins+2;bin++) oldErrors[bin] = GetBinError(bin);
@@ -6965,7 +6965,7 @@ void TH1::Streamer(TBuffer &b)
       b >> fTsumwx2;
       if (R__v < 2) {
          Float_t maximum, minimum, norm;
-         Float_t *contour=0;
+         Float_t *contour=nullptr;
          b >> maximum; fMaximum = maximum;
          b >> minimum; fMinimum = minimum;
          b >> norm;    fNormFactor = norm;
@@ -8006,8 +8006,8 @@ Double_t TH1::AndersonDarlingTest(const TH1 *h2, Double_t & advalue) const
    ROOT::Fit::BinData data1;
    ROOT::Fit::BinData data2;
 
-   ROOT::Fit::FillData(data1, this, 0);
-   ROOT::Fit::FillData(data2, h2, 0);
+   ROOT::Fit::FillData(data1, this, nullptr);
+   ROOT::Fit::FillData(data2, h2, nullptr);
 
    double pvalue;
    ROOT::Math::GoFTest::AndersonDarling2SamplesTest(data1,data2, pvalue,advalue);
@@ -8095,7 +8095,7 @@ Double_t TH1::KolmogorovTest(const TH1 *h2, Option_t *option) const
 
    Double_t prob = 0;
    TH1 *h1 = (TH1*)this;
-   if (h2 == 0) return 0;
+   if (h2 == nullptr) return 0;
    const TAxis *axis1 = h1->GetXaxis();
    const TAxis *axis2 = h2->GetXaxis();
    Int_t ncx1   = axis1->GetNbins();
@@ -9191,18 +9191,18 @@ TH1* TH1::TransformHisto(TVirtualFFT *fft, TH1* h_output,  Option_t *option)
 {
    if (!fft ||  !fft->GetN() ) {
       ::Error("TransformHisto","Invalid FFT transform class");
-      return 0;
+      return nullptr;
    }
 
    if (fft->GetNdim()>2){
       ::Error("TransformHisto","Only 1d and 2D transform are supported");
-      return 0;
+      return nullptr;
    }
    Int_t binx,biny;
    TString opt = option;
    opt.ToUpper();
    Int_t *n = fft->GetN();
-   TH1 *hout=0;
+   TH1 *hout=nullptr;
    if (h_output) {
       hout = h_output;
    }
@@ -9213,7 +9213,7 @@ TH1* TH1::TransformHisto(TVirtualFFT *fft, TH1* h_output,  Option_t *option)
       else if (fft->GetNdim()==2)
          hout = new TH2D(name, name, n[0], 0, n[0], n[1], 0, n[1]);
    }
-   R__ASSERT(hout != 0);
+   R__ASSERT(hout != nullptr);
    TString type=fft->GetType();
    Int_t ind[2];
    if (opt.Contains("RE")){
@@ -9247,7 +9247,7 @@ TH1* TH1::TransformHisto(TVirtualFFT *fft, TH1* h_output,  Option_t *option)
          }
       } else {
          ::Error("TransformHisto","No complex numbers in the output");
-         return 0;
+         return nullptr;
       }
    }
    if (opt.Contains("MA")) {
@@ -9296,7 +9296,7 @@ TH1* TH1::TransformHisto(TVirtualFFT *fft, TH1* h_output,  Option_t *option)
          }
       } else {
          printf("Pure real output, no phase");
-         return 0;
+         return nullptr;
       }
    }
 

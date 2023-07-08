@@ -3201,7 +3201,7 @@ THistPainter::THistPainter()
    fZaxis = nullptr;
    fFunctions = nullptr;
    fNcuts = 0;
-   fStack = 0;
+   fStack = nullptr;
    fShowProjection = 0;
    fShowProjection2 = 0;
    fShowOption = "";
@@ -4443,7 +4443,7 @@ Int_t THistPainter::MakeCuts(char *choptin)
       Int_t nc = strlen(cuts);
       while (cuts[nc-1] == ' ') {cuts[nc-1] = 0; nc--;}
       TIter next(gROOT->GetListOfSpecials());
-      TCutG *cut=0;
+      TCutG *cut=nullptr;
       TObject *obj;
       while ((obj = next())) {
          if (!obj->InheritsFrom(TCutG::Class())) continue;
@@ -4644,10 +4644,10 @@ void THistPainter::Paint(Option_t *option)
 paintstat:
    if ((Hoption.Same%10) != 1 && !fH->TestBit(TH1::kNoStats)) {  // bit set via TH1::SetStats
       TIter next(fFunctions);
-      TObject *obj = 0;
+      TObject *obj = nullptr;
       while ((obj = next())) {
          if (obj->InheritsFrom(TF1::Class())) break;
-         obj = 0;
+         obj = nullptr;
       }
 
       //Stat is painted twice (first, it will be in canvas' list of primitives),
@@ -8077,7 +8077,7 @@ void THistPainter::PaintLego(Option_t *)
    fLego = std::make_unique<TPainter3dAlgorithms>(fXbuf.data(), fYbuf.data(), Hoption.System);
 
    Int_t nids = -1;
-   TH1 * hid = NULL;
+   TH1 * hid = nullptr;
    Color_t colormain = -1, colordark = -1;
    Bool_t drawShadowsInLego1 = kTRUE;
 
@@ -8625,7 +8625,7 @@ void THistPainter::PaintStat(Int_t dostat, TF1 *fit)
    } else {
       dofit  = gStyle->GetOptFit();
    }
-   if (!dofit) fit = 0;
+   if (!dofit) fit = nullptr;
    if (dofit  == 1) dofit  =  111;
    if (dostat == 1) dostat = 1111;
    Int_t print_name    = dostat%10;
@@ -8857,7 +8857,7 @@ void THistPainter::PaintStat2(Int_t dostat, TF1 *fit)
    if (print_under || print_over) nlines += 3;
 
    // Pavetext with statistics
-   if (!gStyle->GetOptFit()) fit = 0;
+   if (!gStyle->GetOptFit()) fit = nullptr;
    Bool_t done = kFALSE;
    if (!dostat && !fit) {
       if (stats) { fFunctions->Remove(stats); delete stats;}
@@ -9070,7 +9070,7 @@ void THistPainter::PaintStat3(Int_t dostat, TF1 *fit)
    if (print_under || print_over) nlines += 3;
 
    // Pavetext with statistics
-   if (!gStyle->GetOptFit()) fit = 0;
+   if (!gStyle->GetOptFit()) fit = nullptr;
    Bool_t done = kFALSE;
    if (!dostat && !fit) {
       if (stats) { fFunctions->Remove(stats); delete stats;}
@@ -10514,7 +10514,7 @@ void THistPainter::RecalculateRange()
 void THistPainter::SetHistogram(TH1 *h)
 {
 
-   if (h == 0)  return;
+   if (h == nullptr)  return;
    fH = h;
    fXaxis = h->GetXaxis();
    fYaxis = h->GetYaxis();
@@ -10894,7 +10894,7 @@ void THistPainter::ShowProjectionX(Int_t /*px*/, Int_t py)
          Double_t valueTo     = fH->GetYaxis()->GetBinUpEdge(biny1);
          // Limit precision to 1 digit more than the difference between upper and lower bound (to also catch 121.5-120.5).
          Int_t valuePrecision = -TMath::Nint(TMath::Log10(valueTo-valueFrom))+1;
-         if (fH->GetYaxis()->GetLabels() != NULL) {
+         if (fH->GetYaxis()->GetLabels() != nullptr) {
             hp->SetTitle(TString::Format("ProjectionX of biny=%d [y=%.*lf..%.*lf] %s", biny1, valuePrecision, valueFrom, valuePrecision, valueTo, fH->GetYaxis()->GetBinLabel(biny1)));
          } else {
             hp->SetTitle(TString::Format("ProjectionX of biny=%d [y=%.*lf..%.*lf]", biny1, valuePrecision, valueFrom, valuePrecision, valueTo));
@@ -10906,7 +10906,7 @@ void THistPainter::ShowProjectionX(Int_t /*px*/, Int_t py)
          // biny1 is used here to get equal precision no matter how large the binrange is,
          // otherwise precision may change when moving the mouse to the histogram boundaries (limiting effective binrange).
          Int_t valuePrecision = -TMath::Nint(TMath::Log10(fH->GetYaxis()->GetBinUpEdge(biny1)-valueFrom))+1;
-         if (fH->GetYaxis()->GetLabels() != NULL) {
+         if (fH->GetYaxis()->GetLabels() != nullptr) {
             hp->SetTitle(TString::Format("ProjectionX of biny=[%d,%d] [y=%.*lf..%.*lf] [%s..%s]", biny1, biny2, valuePrecision, valueFrom, valuePrecision, valueTo, fH->GetYaxis()->GetBinLabel(biny1), fH->GetYaxis()->GetBinLabel(biny2)));
          } else {
             hp->SetTitle(TString::Format("ProjectionX of biny=[%d,%d] [y=%.*lf..%.*lf]", biny1, biny2, valuePrecision, valueFrom, valuePrecision, valueTo));
@@ -10982,7 +10982,7 @@ void THistPainter::ShowProjectionY(Int_t px, Int_t /*py*/)
          Double_t valueTo     = fH->GetXaxis()->GetBinUpEdge(binx1);
          // Limit precision to 1 digit more than the difference between upper and lower bound (to also catch 121.5-120.5).
          Int_t valuePrecision = -TMath::Nint(TMath::Log10(valueTo-valueFrom))+1;
-         if (fH->GetXaxis()->GetLabels() != NULL) {
+         if (fH->GetXaxis()->GetLabels() != nullptr) {
             hp->SetTitle(TString::Format("ProjectionY of binx=%d [x=%.*lf..%.*lf] [%s]", binx1, valuePrecision, valueFrom, valuePrecision, valueTo, fH->GetXaxis()->GetBinLabel(binx1)));
          } else {
             hp->SetTitle(TString::Format("ProjectionY of binx=%d [x=%.*lf..%.*lf]", binx1, valuePrecision, valueFrom, valuePrecision, valueTo));
@@ -10994,7 +10994,7 @@ void THistPainter::ShowProjectionY(Int_t px, Int_t /*py*/)
          // binx1 is used here to get equal precision no matter how large the binrange is,
          // otherwise precision may change when moving the mouse to the histogram boundaries (limiting effective binrange).
          Int_t valuePrecision = -TMath::Nint(TMath::Log10(fH->GetXaxis()->GetBinUpEdge(binx1)-valueFrom))+1;
-         if (fH->GetXaxis()->GetLabels() != NULL) {
+         if (fH->GetXaxis()->GetLabels() != nullptr) {
             hp->SetTitle(TString::Format("ProjectionY of binx=[%d,%d] [x=%.*lf..%.*lf] [%s..%s]", binx1, binx2, valuePrecision, valueFrom, valuePrecision, valueTo, fH->GetXaxis()->GetBinLabel(binx1), fH->GetXaxis()->GetBinLabel(binx2)));
          } else {
             hp->SetTitle(TString::Format("ProjectionY of binx=[%d,%d] [x=%.*lf..%.*lf]", binx1, binx2, valuePrecision, valueFrom, valuePrecision, valueTo));

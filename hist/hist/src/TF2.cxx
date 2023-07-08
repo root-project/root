@@ -339,7 +339,7 @@ Double_t TF2::GetContourLevel(Int_t level) const
 {
    if (level <0 || level >= fContour.fN) return 0;
    if (fContour.fArray[0] != -9999) return fContour.fArray[level];
-   if (fHistogram == 0) return 0;
+   if (fHistogram == nullptr) return 0;
    return fHistogram->GetContourLevel(level);
 }
 
@@ -368,7 +368,7 @@ Double_t TF2::FindMinMax(Double_t *x, Bool_t findmax) const
    Double_t rsign = (findmax) ? -1. : 1.;
    TF2 & function = const_cast<TF2&>(*this); // needed since EvalPar is not const
    Double_t xxmin = 0, yymin = 0, zzmin = 0;
-   if (x == NULL || ( (x!= NULL) && ( !TMath::Finite(x[0]) || !TMath::Finite(x[1]) ) ) ){
+   if (x == nullptr || ( (x!= nullptr) && ( !TMath::Finite(x[0]) || !TMath::Finite(x[1]) ) ) ){
       Double_t dx = (fXmax - fXmin)/fNpx;
       Double_t dy = (fYmax - fYmin)/fNpy;
       xxmin = fXmin;
@@ -705,7 +705,7 @@ TH1* TF2::CreateHistogram()
 
    Double_t *parameters = GetParameters();
    TH2F* h = new TH2F("Func",(char*)GetTitle(),fNpx,fXmin,fXmax,fNpy,fYmin,fYmax);
-   h->SetDirectory(0);
+   h->SetDirectory(nullptr);
 
    InitArgs(xv,parameters);
    dx = (fXmax - fXmin)/Double_t(fNpx);
@@ -721,7 +721,7 @@ TH1* TF2::CreateHistogram()
    h->Fill(fXmin-1,fYmin-1,0);  //This call to force fNentries non zero
 
    Double_t *levels = fContour.GetArray();
-   if (levels && levels[0] == -9999) levels = 0;
+   if (levels && levels[0] == -9999) levels = nullptr;
    h->SetMinimum(fMinimum);
    h->SetMaximum(fMaximum);
    h->SetContour(fContour.fN, levels);
@@ -754,7 +754,7 @@ void TF2::Paint(Option_t *option)
    if (!fHistogram) {
       fHistogram = new TH2F("Func",(char*)GetTitle(),fNpx,fXmin,fXmax,fNpy,fYmin,fYmax);
       if (!fHistogram) return;
-      fHistogram->SetDirectory(0);
+      fHistogram->SetDirectory(nullptr);
    }
    InitArgs(xv,parameters);
    dx = (fXmax - fXmin)/Double_t(fNpx);
@@ -771,7 +771,7 @@ void TF2::Paint(Option_t *option)
 
 //- Copy Function attributes to histogram attributes
    Double_t *levels = fContour.GetArray();
-   if (levels && levels[0] == -9999) levels = 0;
+   if (levels && levels[0] == -9999) levels = nullptr;
    fHistogram->SetMinimum(fMinimum);
    fHistogram->SetMaximum(fMaximum);
    fHistogram->SetContour(fContour.fN, levels);
@@ -977,7 +977,7 @@ void TF2::Streamer(TBuffer &R__b)
       R__b >> fNpy;
       R__b >> nlevels;
       if (R__v < 3) {
-         Float_t *contour = 0;
+         Float_t *contour = nullptr;
          Int_t n = R__b.ReadArray(contour);
          fContour.Set(n);
          for (Int_t i=0;i<n;i++) fContour.fArray[i] = contour[i];

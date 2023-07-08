@@ -148,7 +148,7 @@ TGraph2DErrors::~TGraph2DErrors()
 /// Copy everything except list of functions
 
 TGraph2DErrors::TGraph2DErrors(const TGraph2DErrors &g)
-: TGraph2D(g), fEX(0), fEY(0), fEZ(0)
+: TGraph2D(g), fEX(nullptr), fEY(nullptr), fEZ(nullptr)
 {
    if (fSize > 0) {
       fEX = new Double_t[fSize];

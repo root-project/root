@@ -153,9 +153,9 @@ TProfile2Poly::TProfile2Poly(const char *name, const char *title, Int_t nX, Doub
 
 TProfile2PolyBin *TProfile2Poly::CreateBin(TObject *poly)
 {
-   if (!poly) return 0;
+   if (!poly) return nullptr;
 
-   if (fBins == 0) {
+   if (fBins == nullptr) {
       fBins = new TList();
       fBins->SetOwner();
    }

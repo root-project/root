@@ -36,7 +36,7 @@ namespace {
                  Bool_t respectAxisRange);
       ~THnBinIter() override { delete [] fCounter; }
 
-      Long64_t Next(Int_t* coord = 0) override;
+      Long64_t Next(Int_t* coord = nullptr) override;
       Int_t GetCoord(Int_t dim) const override { return fCounter[dim].i; }
    private:
       THnBinIter(const THnBinIter&); // intentionally unimplemented
