@@ -37,8 +37,8 @@ TGraphTime::TGraphTime(): TNamed()
    fXmax      = 1;
    fYmin      = 0;
    fYmax      = 1;
-   fSteps     = 0;
-   fFrame     = 0;
+   fSteps     = nullptr;
+   fFrame     = nullptr;
 }
 
 
@@ -73,7 +73,7 @@ TGraphTime::~TGraphTime()
 {
    if (!fSteps) return;
    fSteps->Delete();
-   delete fSteps; fSteps=0;
+   delete fSteps; fSteps=nullptr;
 }
 
 
@@ -145,7 +145,7 @@ void TGraphTime::Paint(Option_t *option)
    TString opt = option;
    opt.ToLower();
    TObject *frame = gPad->GetPrimitive("frame");
-   TList *list = 0;
+   TList *list = nullptr;
    TObjLink *lnk;
 
    for (Int_t s=0;s<fNsteps;s++) {

@@ -12,7 +12,7 @@
 #include "TMath.h"
 #include "THLimitsFinder.h"
 
-THLimitsFinder *THLimitsFinder::fgLimitsFinder = 0;
+THLimitsFinder *THLimitsFinder::fgLimitsFinder = nullptr;
 
 ClassImp(THLimitsFinder);
 

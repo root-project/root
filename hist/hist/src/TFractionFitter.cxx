@@ -165,12 +165,12 @@ fFitDone(kFALSE),
 fLowLimitX(0), fHighLimitX(0),
 fLowLimitY(0), fHighLimitY(0),
 fLowLimitZ(0), fHighLimitZ(0),
-fData(0), fIntegralData(0),
-fPlot(0)
+fData(nullptr), fIntegralData(0),
+fPlot(nullptr)
 {
-   fFractionFitter = 0;
-   fIntegralMCs   = 0;
-   fFractions     = 0;
+   fFractionFitter = nullptr;
+   fIntegralMCs   = nullptr;
+   fFractions     = nullptr;
 
    fNpfits        = 0;
    fNDF           = 0;
@@ -191,7 +191,7 @@ fPlot(0)
 ///            - option = ""   : default: print initial fraction values and result
 
 TFractionFitter::TFractionFitter(TH1* data, TObjArray  *MCs, Option_t *option) :
-fFitDone(kFALSE), fChisquare(0), fPlot(0)  {
+fFitDone(kFALSE), fChisquare(0), fPlot(nullptr)  {
    fData = data;
    // Default: include all of the histogram (but without under- and overflows)
    fLowLimitX = 1;
@@ -212,7 +212,7 @@ fFitDone(kFALSE), fChisquare(0), fPlot(0)  {
       TString s = TString::Format("Prediction for MC sample %i",par);
       TH1* pred = (TH1*) ((TH1*)MCs->At(par))->Clone(s);
       // TFractionFitter manages these histograms
-      pred->SetDirectory(0);
+      pred->SetDirectory(nullptr);
       pred->SetTitle(s);
       fAji.Add(pred);
    }
@@ -554,7 +554,7 @@ TFitResultPtr TFractionFitter::Fit() {
 
    // remove any existing output histogram
    if (fPlot) {
-      delete fPlot; fPlot = 0;
+      delete fPlot; fPlot = nullptr;
    }
 
    // Make sure the correct likelihood computation is used
@@ -621,7 +621,7 @@ void TFractionFitter::GetResult(Int_t parm, Double_t& value, Double_t& error) co
 TH1* TFractionFitter::GetPlot() {
    if (! fFitDone) {
       Error("GetPlot","Fit not yet performed");
-      return 0;
+      return nullptr;
    }
    if (! fPlot) {
       Double_t f = 0;
@@ -695,7 +695,7 @@ void TFractionFitter::ComputeFCN(Double_t& f, const Double_t* xx, Int_t flag)
       TString ts = "Fraction fit to hist: "; ts += fData->GetName();
       fPlot = (TH1*) fData->Clone(ts.Data());
       // plot histogram is managed by TFractionFitter
-      fPlot->SetDirectory(0);
+      fPlot->SetDirectory(nullptr);
       fPlot->Reset();
    }
    // likelihood computation
@@ -963,7 +963,7 @@ TH1* TFractionFitter::GetMCPrediction(Int_t parm) const
    CheckParNo(parm);
    if ( !fFitDone ) {
       Error("GetMCPrediction","Fit not yet performed");
-      return 0;
+      return nullptr;
    }
    return (TH1*) fAji.At(parm);
 }

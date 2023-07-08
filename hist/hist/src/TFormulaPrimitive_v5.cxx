@@ -22,7 +22,7 @@
 #pragma optimize("",off)
 #endif
 
-static TVirtualMutex* gTFormulaPrimativeListMutex = 0;
+static TVirtualMutex* gTFormulaPrimativeListMutex = nullptr;
 
 
 ClassImp(ROOT::v5::TFormulaPrimitive);
@@ -63,7 +63,7 @@ The following sufixes are currently used, to describe function arguments:
 //______________________________________________________________________________
 // TFormula primitive
 //
-TObjArray * TFormulaPrimitive::fgListOfFunction = 0;
+TObjArray * TFormulaPrimitive::fgListOfFunction = nullptr;
 #ifdef R__COMPLETE_MEM_TERMINATION
 namespace {
    class TFormulaPrimitiveCleanup {
@@ -82,7 +82,7 @@ namespace {
 /// Default constructor.
 
 TFormulaPrimitive::TFormulaPrimitive() : TNamed(),
-                                         fFuncG(0),
+                                         fFuncG(nullptr),
                                          fType(0),fNArguments(0),fNParameters(0),fIsStatic(kTRUE)
 {
 }
@@ -194,7 +194,7 @@ TFormulaPrimitive::TFormulaPrimitive(const char *name,const char *formula,
 Int_t TFormulaPrimitive::AddFormula(TFormulaPrimitive * formula)
 {
    R__LOCKGUARD2(gTFormulaPrimativeListMutex);
-   if (fgListOfFunction == 0) BuildBasicFormulas();
+   if (fgListOfFunction == nullptr) BuildBasicFormulas();
    if (FindFormula(formula->GetName(),formula->fNArguments)){
       delete formula;
       return 0;
@@ -317,7 +317,7 @@ TFormulaPrimitive* TFormulaPrimitive::FindFormula(const char* name)
       TFormulaPrimitive *formula = (TFormulaPrimitive*)fgListOfFunction->At(i);
       if (formula && 0==strcmp(name, formula->GetName())) return formula;
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -337,7 +337,7 @@ TFormulaPrimitive* TFormulaPrimitive::FindFormula(const char* name, UInt_t nargs
          if (match && 0==strcmp(name, prim->GetName())) return prim;
       }
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -365,7 +365,7 @@ TFormulaPrimitive* TFormulaPrimitive::FindFormula(const char* name, const char *
    } else {
       return FindFormula(name);
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -407,7 +407,7 @@ Double_t TFastFun::Gausn(Double_t x, Double_t mean, Double_t sigma)
 Int_t TFormulaPrimitive::BuildBasicFormulas()
 {
    R__LOCKGUARD2(gTFormulaPrimativeListMutex);
-   if (fgListOfFunction==0) {
+   if (fgListOfFunction==nullptr) {
       fgListOfFunction = new TObjArray(1000);
       fgListOfFunction->SetOwner(kTRUE);
    }

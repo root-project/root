@@ -207,8 +207,8 @@ class THnSparseT: public THnSparse {
  public:
    THnSparseT() {}
    THnSparseT(const char* name, const char* title, Int_t dim,
-              const Int_t* nbins, const Double_t* xmin = 0,
-              const Double_t* xmax = 0, Int_t chunksize = 1024 * 16):
+              const Int_t* nbins, const Double_t* xmin = nullptr,
+              const Double_t* xmax = nullptr, Int_t chunksize = 1024 * 16):
       THnSparse(name, title, dim, nbins, xmin, xmax, chunksize) {}
 
    TArray* GenerateArray() const override { return new CONT(GetChunkSize()); }

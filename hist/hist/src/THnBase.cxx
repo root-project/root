@@ -197,7 +197,7 @@ void THnBase::Init(const char* name, const char* title,
    SetNameTitle(name, title);
 
    TIter iAxis(axes);
-   const TAxis* axis = 0;
+   const TAxis* axis = nullptr;
    Int_t pos = 0;
    Int_t *nbins = new Int_t[axes->GetEntriesFast()];
    while ((axis = (TAxis*)iAxis())) {
@@ -245,7 +245,7 @@ TH1* THnBase::CreateHist(const char* name, const char* title,
                          Bool_t keepTargetAxis ) const {
    const int ndim = axes->GetSize();
 
-   TH1* hist = 0;
+   TH1* hist = nullptr;
    // create hist with dummy axes, we fix them later.
    if (ndim == 1)
       hist = new TH1D(name, title, 1, 0., 1.);
@@ -255,7 +255,7 @@ TH1* THnBase::CreateHist(const char* name, const char* title,
       hist = new TH3D(name, title, 1, 0., 1., 1, 0., 1., 1, 0., 1.);
    else {
       Error("CreateHist", "Cannot create histogram %s with %d dimensions!", name, ndim);
-      return 0;
+      return nullptr;
    }
 
    TAxis* hax[3] = {hist->GetXaxis(), hist->GetYaxis(), hist->GetZaxis()};
@@ -314,7 +314,7 @@ THnBase* THnBase::CreateHnAny(const char* name, const char* title,
    // type of the TH1. The class name will be "TH??\0" where the first
    // ? is 1,2 or 3 and the second ? indicates the storage as C, S,
    // I, F or D.
-   THnBase* s = 0;
+   THnBase* s = nullptr;
    const char* cname( h->ClassName() );
    if (cname[0] == 'T' && cname[1] == 'H'
        && cname[2] >= '1' && cname[2] <= '3' && cname[4] == 0) {
@@ -340,7 +340,7 @@ break;
    }
    if (!s) {
       ::Warning("THnSparse::CreateHnAny", "Unknown Type of Histogram");
-      return 0;
+      return nullptr;
    }
 
    for (int i = 0; i < ndim; ++i) {
@@ -351,7 +351,7 @@ break;
    const TArray *array = dynamic_cast<const TArray*>(h);
    if (!array) {
       ::Warning("THnSparse::CreateHnAny", "Unknown Type of Histogram");
-      return 0;
+      return nullptr;
    }
 
    s->Add(h);
@@ -367,7 +367,7 @@ THnBase* THnBase::CreateHnAny(const char* name, const char* title,
                               const THnBase* hn, Bool_t sparse,
                               Int_t chunkSize /*= 1024 * 16*/)
 {
-   TClass* type = 0;
+   TClass* type = nullptr;
    if (hn->InheritsFrom(THnSparse::Class())) {
       if (sparse) type = hn->IsA();
       else {
@@ -381,7 +381,7 @@ THnBase* THnBase::CreateHnAny(const char* name, const char* title,
          else {
             hn->Error("CreateHnAny", "Type %s not implemented; please inform the ROOT team!",
                       hn->IsA()->GetName());
-            return 0;
+            return nullptr;
          }
          type = TClass::GetClass(TString::Format("THn%c", bintype));
       }
@@ -397,7 +397,7 @@ THnBase* THnBase::CreateHnAny(const char* name, const char* title,
          else if (hn->InheritsFrom(THnL::Class())) bintype = 'L';
          else if (hn->InheritsFrom(THnL64::Class())) {
             hn->Error("CreateHnAny", "Type THnSparse with Long64_t bins is not available!");
-            return 0;
+            return nullptr;
          }
          if (bintype) {
             type = TClass::GetClass(TString::Format("THnSparse%c", bintype));
@@ -406,12 +406,12 @@ THnBase* THnBase::CreateHnAny(const char* name, const char* title,
    } else {
       hn->Error("CreateHnAny", "Unhandled type %s, not deriving from THn nor THnSparse!",
                 hn->IsA()->GetName());
-      return 0;
+      return nullptr;
    }
    if (!type) {
       hn->Error("CreateHnAny", "Unhandled type %s, please inform the ROOT team!",
                 hn->IsA()->GetName());
-      return 0;
+      return nullptr;
    }
 
    THnBase* ret = (THnBase*)type->New();
@@ -583,11 +583,11 @@ TObject* THnBase::ProjectionAny(Int_t ndim, const Int_t* dim,
       newaxes.AddAt(GetAxis(dim[d]),d);
    }
 
-   THnBase* hn = 0;
-   TH1* hist = 0;
-   TObject* ret = 0;
+   THnBase* hn = nullptr;
+   TH1* hist = nullptr;
+   TObject* ret = nullptr;
 
-   Bool_t* hadRange = 0;
+   Bool_t* hadRange = nullptr;
    Bool_t ignoreTargetRange = (option && (strchr(option, 'A') || strchr(option, 'a')));
    Bool_t keepTargetAxis = ignoreTargetRange || (option && (strchr(option, 'O') || strchr(option, 'o')));
    if (ignoreTargetRange) {
@@ -743,7 +743,7 @@ void THnBase::AddInternal(const THnBase* h, Double_t c, Bool_t rebinned)
       Sumw2();
    Bool_t haveErrors = GetCalculateErrors();
 
-   Double_t* x = 0;
+   Double_t* x = nullptr;
    if (rebinned) {
       x = new Double_t[fNdimensions];
    }
@@ -837,7 +837,7 @@ Long64_t THnBase::Merge(TCollection* list)
 
    Long64_t sumNbins = GetNbins();
    TIter iter(list);
-   const TObject* addMeObj = 0;
+   const TObject* addMeObj = nullptr;
    while ((addMeObj = iter())) {
       const THnBase* addMe = dynamic_cast<const THnBase*>(addMeObj);
       if (addMe) {
@@ -936,7 +936,7 @@ void THnBase::Multiply(TF1* f, Double_t c)
       TF1::RejectPoint(kFALSE);
 
       // Evaluate function at points
-      Double_t fvalue = f->EvalPar(x, NULL);
+      Double_t fvalue = f->EvalPar(x, nullptr);
 
       SetBinContent(i, c * fvalue * value);
       if (wantErrors) {
@@ -1542,7 +1542,7 @@ ClassImp(ROOT::Internal::THnBaseBrowsable);
 /// Construct a THnBaseBrowsable.
 
 ROOT::Internal::THnBaseBrowsable::THnBaseBrowsable(THnBase* hist, Int_t axis):
-fHist(hist), fAxis(axis), fProj(0)
+fHist(hist), fAxis(axis), fProj(nullptr)
 {
    TString axisName = hist->GetAxis(axis)->GetName();
    if (axisName.IsNull()) {

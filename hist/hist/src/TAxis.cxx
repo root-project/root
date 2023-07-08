@@ -299,13 +299,13 @@ Int_t TAxis::FindBin(Double_t x)
    if (IsAlphanumeric() && gDebug) Info("FindBin","Numeric query on alphanumeric axis - Sorting the bins or extending the axes / rebinning can alter the correspondence between the label and the bin interval.");
    if (x < fXmin) {              //*-* underflow
       bin = 0;
-      if (fParent == 0) return bin;
+      if (fParent == nullptr) return bin;
       if (!CanExtend() || IsAlphanumeric() ) return bin;
       ((TH1*)fParent)->ExtendAxis(x,this);
       return FindFixBin(x);
    } else  if ( !(x < fXmax)) {     //*-* overflow  (note the way to catch NaN)
       bin = fNbins+1;
-      if (fParent == 0) return bin;
+      if (fParent == nullptr) return bin;
       if (!CanExtend() || IsAlphanumeric() ) return bin;
       ((TH1*)fParent)->ExtendAxis(x,this);
       return FindFixBin(x);
@@ -1204,7 +1204,7 @@ void TAxis::Streamer(TBuffer &R__b)
          Float_t xmin,xmax;
          R__b >> xmin; fXmin = xmin;
          R__b >> xmax; fXmax = xmax;
-         Float_t *xbins = 0;
+         Float_t *xbins = nullptr;
          Int_t n = R__b.ReadArray(xbins);
          fXbins.Set(n);
          for (Int_t i=0;i<n;i++) fXbins.fArray[i] = xbins[i];

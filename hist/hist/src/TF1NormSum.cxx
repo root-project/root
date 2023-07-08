@@ -272,12 +272,12 @@ TF1NormSum &TF1NormSum::operator=(const TF1NormSum &rhs)
 double TF1NormSum::operator()(const Double_t *x, const Double_t *p)
 {
    // first refresh the parameters
-   if (p != 0)
+   if (p != nullptr)
       SetParameters(p);
 
    Double_t sum = 0.;
    for (unsigned int n=0; n<fNOfFunctions; n++)
-      sum += fCoeffs[n]*(fFunctions[n] -> EvalPar(x,0));
+      sum += fCoeffs[n]*(fFunctions[n] -> EvalPar(x,nullptr));
 
    // normalize by a scale parameter (typically the bin width)
    return fScale * sum;

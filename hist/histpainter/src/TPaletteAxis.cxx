@@ -144,7 +144,7 @@ TPaletteAxis::TPaletteAxis(Double_t x1, Double_t y1, Double_t x2, Double_t  y2, 
 TPaletteAxis::TPaletteAxis(Double_t x1, Double_t y1, Double_t x2, Double_t  y2, Double_t min, Double_t max)
    : TPave(x1, y1, x2, y2)
 {
-   fH    = 0;
+   fH    = nullptr;
    fAxis.SetWmin(min);
    fAxis.SetWmax(max);
    SetName("palette");
@@ -158,7 +158,7 @@ TPaletteAxis::TPaletteAxis(Double_t x1, Double_t y1, Double_t x2, Double_t  y2, 
 TPaletteAxis::TPaletteAxis(Double_t x1, Double_t y1, Double_t x2, Double_t  y2, TAxis *ax)
    : TPave(x1, y1, x2, y2)
 {
-   fH = 0;
+   fH = nullptr;
    SetName("palette");
    fAxis.ImportAxisAttributes(ax);
    if (gPad->GetView()) SetBit(kHasView);

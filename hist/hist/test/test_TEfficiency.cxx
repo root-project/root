@@ -24,8 +24,8 @@ bool testTEfficiency_vs_TGA(int nexp = 1000, TEfficiency::EStatOption statOpt = 
       double k = int(cut * n);
       TH1D *h1 = new TH1D("h1", "h1", 1, 0, 1);
       TH1D *h2 = new TH1D("h2", "h2", 1, 0, 1);
-      h1->SetDirectory(0);
-      h2->SetDirectory(0);
+      h1->SetDirectory(nullptr);
+      h2->SetDirectory(nullptr);
       h1->SetBinContent(1, k);
       h2->SetBinContent(1, n);
 

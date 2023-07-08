@@ -502,7 +502,7 @@ TGraph::TGraph(const char *filename, const char *format, Option_t *option)
 
       // Initializing loop variables
       Bool_t isLineToBeSkipped = kFALSE ; //empty and ill-formed lines
-      char * token = NULL ;
+      char * token = nullptr ;
       TString token_str = "" ;
       Int_t token_idx = 0 ;
       Double_t * value = new Double_t [2] ; //x,y buffers
@@ -517,7 +517,7 @@ TGraph::TGraph(const char *filename, const char *format, Option_t *option)
             }
             //token = R__STRTOK_R(const_cast<char *>(line.c_str()), option, rest);
             token = R__STRTOK_R(const_cast<char *>(line.c_str()), option, &rest);
-            while (token != NULL && value_idx < 2) {
+            while (token != nullptr && value_idx < 2) {
                if (isTokenToBeSaved[token_idx]) {
                   token_str = TString(token) ;
                   token_str.ReplaceAll("\t", "") ;
@@ -529,7 +529,7 @@ TGraph::TGraph(const char *filename, const char *format, Option_t *option)
                      value_idx++ ;
                   }
                }
-               token = R__STRTOK_R(NULL, option, &rest); // next token
+               token = R__STRTOK_R(nullptr, option, &rest); // next token
                token_idx++ ;
             }
             if (!isLineToBeSkipped && value_idx == 2) {
@@ -540,7 +540,7 @@ TGraph::TGraph(const char *filename, const char *format, Option_t *option)
             }
          }
          isLineToBeSkipped = kFALSE ;
-         token = NULL ;
+         token = nullptr ;
          token_idx = 0 ;
          value_idx = 0 ;
       }

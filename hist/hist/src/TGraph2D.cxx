@@ -243,17 +243,17 @@ TGraph2D::TGraph2D()
    fMargin    = 0.;
    fNpx       = 40;
    fNpy       = 40;
-   fDirectory = 0;
-   fHistogram = 0;
+   fDirectory = nullptr;
+   fHistogram = nullptr;
    fDelaunay = nullptr;
    fMaximum   = -1111;
    fMinimum   = -1111;
-   fX         = 0;
-   fY         = 0;
-   fZ         = 0;
+   fX         = nullptr;
+   fY         = nullptr;
+   fZ         = nullptr;
    fZout      = 0;
    fMaxIter   = 100000;
-   fPainter   = 0;
+   fPainter   = nullptr;
    fFunctions = new TList;
    fUserHisto = kFALSE;
 }
@@ -471,7 +471,7 @@ TGraph2D::TGraph2D(const char *filename, const char *format, Option_t *option)
 
       // Initializing loop variables
       Bool_t isLineToBeSkipped = kFALSE ; //empty and ill-formed lines
-      char * token = NULL ;
+      char * token = nullptr ;
       TString token_str = "" ;
       Int_t token_idx = 0 ;
       Double_t * value = new Double_t [3] ;  //x,y,z buffers
@@ -485,7 +485,7 @@ TGraph2D::TGraph2D(const char *filename, const char *format, Option_t *option)
                line.erase(line.end() - 1, line.end()) ;
             }
             token = R__STRTOK_R(const_cast<char*>(line.c_str()), option, &rest);
-            while (token != NULL && value_idx < 3) {
+            while (token != nullptr && value_idx < 3) {
                if (isTokenToBeSaved[token_idx]) {
                   token_str = TString(token) ;
                   token_str.ReplaceAll("\t", "") ;
@@ -497,7 +497,7 @@ TGraph2D::TGraph2D(const char *filename, const char *format, Option_t *option)
                      value_idx++ ;
                   }
                }
-               token = R__STRTOK_R(NULL, option, &rest); // next token
+               token = R__STRTOK_R(nullptr, option, &rest); // next token
                token_idx++ ;
             }
             if (!isLineToBeSkipped && value_idx == 3) {
@@ -509,7 +509,7 @@ TGraph2D::TGraph2D(const char *filename, const char *format, Option_t *option)
             }
          }
          isLineToBeSkipped = kFALSE ;
-         token = NULL ;
+         token = nullptr ;
          token_idx = 0 ;
          value_idx = 0 ;
       }
@@ -529,8 +529,8 @@ TGraph2D::TGraph2D(const char *filename, const char *format, Option_t *option)
 
 TGraph2D::TGraph2D(const TGraph2D &g)
 : TNamed(g), TAttLine(g), TAttFill(g), TAttMarker(g),
-   fX(0), fY(0), fZ(0),
-   fHistogram(0), fDirectory(0), fPainter(0)
+   fX(nullptr), fY(nullptr), fZ(nullptr),
+   fHistogram(nullptr), fDirectory(nullptr), fPainter(nullptr)
 {
    fFunctions = new TList();   // do not copy the functions
 
@@ -581,9 +581,9 @@ TGraph2D& TGraph2D::operator=(const TGraph2D &g)
    fNpy = g.fNpy;
    fMaxIter = g.fMaxIter;
    fSize = fNpoints; // force size to be the same of npoints
-   fX         = (fSize > 0) ? new Double_t[fSize] : 0;
-   fY         = (fSize > 0) ? new Double_t[fSize] : 0;
-   fZ         = (fSize > 0) ? new Double_t[fSize] : 0;
+   fX         = (fSize > 0) ? new Double_t[fSize] : nullptr;
+   fY         = (fSize > 0) ? new Double_t[fSize] : nullptr;
+   fZ         = (fSize > 0) ? new Double_t[fSize] : nullptr;
    fMinimum = g.fMinimum;
    fMaximum = g.fMaximum;
    fMargin = g.fMargin;
@@ -618,8 +618,8 @@ void TGraph2D::Build(Int_t n)
    fMargin    = 0.;
    fNpx       = 40;
    fNpy       = 40;
-   fDirectory = 0;
-   fHistogram = 0;
+   fDirectory = nullptr;
+   fHistogram = nullptr;
    fDelaunay = nullptr;
    fMaximum   = -1111;
    fMinimum   = -1111;
@@ -629,7 +629,7 @@ void TGraph2D::Build(Int_t n)
    fZout      = 0;
    fMaxIter   = 100000;
    fFunctions = new TList;
-   fPainter   = 0;
+   fPainter   = nullptr;
    fUserHisto = kFALSE;
 
    if (TH1::AddDirectoryStatus()) {
@@ -657,11 +657,11 @@ void TGraph2D::Browse(TBrowser *)
 void TGraph2D::Clear(Option_t * /*option = "" */)
 {
    if (fX) delete [] fX;
-   fX = 0;
+   fX = nullptr;
    if (fY) delete [] fY;
-   fY = 0;
+   fY = nullptr;
    if (fZ) delete [] fZ;
-   fZ = 0;
+   fZ = nullptr;
    fSize = fNpoints = 0;
    if (fHistogram && !fUserHisto) {
       delete fHistogram;
@@ -672,11 +672,11 @@ void TGraph2D::Clear(Option_t * /*option = "" */)
       fFunctions->SetBit(kInvalidObject);
       fFunctions->Delete();
       delete fFunctions;
-      fFunctions = 0;
+      fFunctions = nullptr;
    }
    if (fDirectory) {
       fDirectory->Remove(this);
-      fDirectory = 0;
+      fDirectory = nullptr;
    }
 }
 
@@ -767,7 +767,7 @@ void TGraph2D::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 TObject *TGraph2D::FindObject(const char *name) const
 {
    if (fFunctions) return fFunctions->FindObject(name);
-   return 0;
+   return nullptr;
 }
 
 
@@ -777,7 +777,7 @@ TObject *TGraph2D::FindObject(const char *name) const
 TObject *TGraph2D::FindObject(const TObject *obj) const
 {
    if (fFunctions) return fFunctions->FindObject(obj);
-   return 0;
+   return nullptr;
 }
 
 
@@ -861,7 +861,7 @@ void TGraph2D::FitPanel()
 TAxis *TGraph2D::GetXaxis() const
 {
    TH1 *h = ((TGraph2D*)this)->GetHistogram("empty");
-   if (!h) return 0;
+   if (!h) return nullptr;
    return h->GetXaxis();
 }
 
@@ -872,7 +872,7 @@ TAxis *TGraph2D::GetXaxis() const
 TAxis *TGraph2D::GetYaxis() const
 {
    TH1 *h = ((TGraph2D*)this)->GetHistogram("empty");
-   if (!h) return 0;
+   if (!h) return nullptr;
    return h->GetYaxis();
 }
 
@@ -883,7 +883,7 @@ TAxis *TGraph2D::GetYaxis() const
 TAxis *TGraph2D::GetZaxis() const
 {
    TH1 *h = ((TGraph2D*)this)->GetHistogram("empty");
-   if (!h) return 0;
+   if (!h) return nullptr;
    return h->GetZaxis();
 }
 
@@ -897,7 +897,7 @@ TList *TGraph2D::GetContourList(Double_t contour)
 {
    if (fNpoints <= 0) {
       Error("GetContourList", "Empty TGraph2D");
-      return 0;
+      return nullptr;
    }
 
    if (!fHistogram) GetHistogram("empty");
@@ -1302,7 +1302,7 @@ TH1 *TGraph2D::Project(Option_t *option) const
 {
    if (fNpoints <= 0) {
       Error("Project", "Empty TGraph2D");
-      return 0;
+      return nullptr;
    }
 
    TString opt = option;
@@ -1315,8 +1315,8 @@ TH1 *TGraph2D::Project(Option_t *option) const
    if (opt.Contains("yx")) pcase = 4;
 
    // Create the projection histogram
-   TH1D *h1 = 0;
-   TH2D *h2 = 0;
+   TH1D *h1 = nullptr;
+   TH2D *h2 = nullptr;
    Int_t nch = strlen(GetName()) + opt.Length() + 2;
    char *name = new char[nch];
    snprintf(name, nch, "%s_%s", GetName(), option);
@@ -1352,7 +1352,7 @@ TH1 *TGraph2D::Project(Option_t *option) const
    delete [] title;
    TH1 *h = h1;
    if (h2) h = h2;
-   if (h == 0) return 0;
+   if (h == nullptr) return nullptr;
 
    // Fill the projected histogram
    Double_t entries = 0;
@@ -1438,7 +1438,7 @@ void TGraph2D::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
                                            << GetYaxis()->GetTitle() << ";"
                                            << GetZaxis()->GetTitle() << quote << ");" << std::endl;
 
-   if (fDirectory == 0) {
+   if (fDirectory == nullptr) {
       out << "   graph2d->SetDirectory(0);" << std::endl;
    }
 

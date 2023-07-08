@@ -147,10 +147,10 @@ TUnfoldBinning::~TUnfoldBinning(void)
 
 void TUnfoldBinning::Initialize(Int_t nBins)
 {
-   parentNode=0;
-   childNode=0;
-   nextNode=0;
-   prevNode=0;
+   parentNode=nullptr;
+   childNode=nullptr;
+   nextNode=nullptr;
+   prevNode=nullptr;
    fAxisList=new TObjArray();
    fAxisLabelList=new TObjArray();
    fAxisList->SetOwner();
@@ -158,7 +158,7 @@ void TUnfoldBinning::Initialize(Int_t nBins)
    fHasUnderflow=0;
    fHasOverflow=0;
    fDistributionSize=nBins;
-   fBinFactorFunction=0;
+   fBinFactorFunction=nullptr;
    fBinFactorConstant=1.0;
 }
 
@@ -262,7 +262,7 @@ TUnfoldBinning *TUnfoldBinning::AddBinning
 
 TUnfoldBinning *TUnfoldBinning::AddBinning(TUnfoldBinning *binning)
 {
-  TUnfoldBinning *r=0;
+  TUnfoldBinning *r=nullptr;
   if(binning->GetParentNode()) {
      Error("AddBinning",
            "binning \"%s\" already has parent \"%s\", can not be added to %s",
@@ -541,7 +541,7 @@ void TUnfoldBinning::SetBinFactorFunction
 
 TUnfoldBinning const *TUnfoldBinning::FindNode(char const *name) const
 {
-   TUnfoldBinning const *r=0;
+   TUnfoldBinning const *r=nullptr;
    if((!name)||(!TString(GetName()).CompareTo(name))) {
       r=this;
    }
@@ -747,7 +747,7 @@ TH1 *TUnfoldBinning::CreateHistogram
                              axisSteering);
    const TUnfoldBinning *neNode=GetNonemptyNode();
    TString title=BuildHistogramTitle(histogramName,histogramTitle,axisList);
-   TH1 *r=0;
+   TH1 *r=nullptr;
    if(nDim>0) {
       const TVectorD *axisBinsX=
          neNode->GetDistributionBinning(axisList[0]);
@@ -807,7 +807,7 @@ TH2D *TUnfoldBinning::CreateErrorMatrixHistogram
    Int_t nDim=GetTHxxBinning(originalAxisBinning ? 1 : 0,nBin,axisList,
                              axisSteering);
    TString title=BuildHistogramTitle(histogramName,histogramTitle,axisList);
-   TH2D *r=0;
+   TH2D *r=nullptr;
    if(nDim==1) {
       const TVectorD *axisBinsX=(TVectorD const *)
          GetNonemptyNode()->fAxisList->At(axisList[0]);
@@ -849,11 +849,11 @@ TH2D *TUnfoldBinning::CreateHistogramOfMigrations
 {
    Int_t nBinX[3],axisListX[3];
    Int_t nDimX=
-      xAxis->GetTHxxBinning(originalXAxisBinning ? 1 : 0,nBinX,axisListX,0);
+      xAxis->GetTHxxBinning(originalXAxisBinning ? 1 : 0,nBinX,axisListX,nullptr);
    const TUnfoldBinning *neNodeX=xAxis->GetNonemptyNode();
    Int_t nBinY[3],axisListY[3];
    Int_t nDimY=
-      yAxis->GetTHxxBinning(originalYAxisBinning ? 1 : 0,nBinY,axisListY,0);
+      yAxis->GetTHxxBinning(originalYAxisBinning ? 1 : 0,nBinY,axisListY,nullptr);
    const TUnfoldBinning *neNodeY=yAxis->GetNonemptyNode();
    TString title=xAxis->BuildHistogramTitle2D
       (histogramName,histogramTitle,axisListX[0],yAxis,axisListY[0]);
@@ -925,7 +925,7 @@ Int_t TUnfoldBinning::GetTHxxBinning
 
 const TUnfoldBinning *TUnfoldBinning::GetNonemptyNode(void) const
 {
-   const TUnfoldBinning *r=GetDistributionNumberOfBins()>0 ? this : 0;
+   const TUnfoldBinning *r=GetDistributionNumberOfBins()>0 ? this : nullptr;
    for(TUnfoldBinning const *child=GetChildNode();child;
        child=child->GetNextNode()) {
       const TUnfoldBinning *c=child->GetNonemptyNode();
@@ -935,7 +935,7 @@ const TUnfoldBinning *TUnfoldBinning::GetNonemptyNode(void) const
       } else {
          if(c) {
             // multiple nodes found
-            r=0;
+            r=nullptr;
             break;
          }
       }
@@ -1085,7 +1085,7 @@ Int_t TUnfoldBinning::FillBinMap1D
    Int_t axisBins[3],axisList[3];
    Int_t nDim=GetTHxxBinningSingleNode(3,axisBins,axisList,axisSteering);
    if((nDim==1)|| !GetDistributionDimension()) {
-      r+=FillBinMapSingleNode(0,r,0,0,axisSteering,binMap);
+      r+=FillBinMapSingleNode(nullptr,r,0,nullptr,axisSteering,binMap);
    } else {
       Error("FillBinMap1D","distribution %s with steering=%s is not 1D",
             (char *)GetName(),axisSteering);
@@ -1176,7 +1176,7 @@ Int_t TUnfoldBinning::FillBinMapRecursive
 (Int_t startBin,const char *axisSteering,Int_t *binMap) const
 {
    Int_t nbin=0;
-   nbin = FillBinMapSingleNode(0,startBin,0,0,axisSteering,binMap);
+   nbin = FillBinMapSingleNode(nullptr,startBin,0,nullptr,axisSteering,binMap);
    for(TUnfoldBinning const *child=GetChildNode();child;
        child=child->GetNextNode()) {
       nbin += child->FillBinMapRecursive(startBin+nbin,axisSteering,binMap);
@@ -1376,10 +1376,10 @@ TH1 *TUnfoldBinning::ExtractHistogram
  const TH2 *globalBinsEmatrix,Bool_t originalAxisBinning,
  const char *axisSteering) const
 {
-   Int_t *binMap=0;
-   TH1 *r=CreateHistogram(histogramName,originalAxisBinning,&binMap,0,
+   Int_t *binMap=nullptr;
+   TH1 *r=CreateHistogram(histogramName,originalAxisBinning,&binMap,nullptr,
                           axisSteering);
-   if(!r) return 0;
+   if(!r) return nullptr;
    TUnfoldBinning const *root=GetRootNode();
    Int_t nMax=-1;
    for(Int_t iSrc=root->GetStartBin();iSrc<root->GetEndBin();iSrc++) {
@@ -1387,7 +1387,7 @@ TH1 *TUnfoldBinning::ExtractHistogram
    }
    if(nMax<0) {
       delete r;
-      r=0;
+      r=nullptr;
    } else {
       TVectorD eSquared(nMax+1);
       for(Int_t iSrc=root->GetStartBin();iSrc<root->GetEndBin();iSrc++) {
@@ -2083,7 +2083,7 @@ Int_t TUnfoldBinning::ToGlobalBin
 TUnfoldBinning const *TUnfoldBinning::ToAxisBins
 (Int_t globalBin,Int_t *axisBins) const
 {
-   TUnfoldBinning const *r=0;
+   TUnfoldBinning const *r=nullptr;
    if((globalBin>=GetStartBin())&&(globalBin<GetEndBin())) {
       TUnfoldBinning const *node;
       for(node=GetChildNode();node && !r; node=node->GetNextNode()) {

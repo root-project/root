@@ -253,7 +253,7 @@ Int_t TProfile3D::BufferEmpty(Int_t action)
    if (nbentries < 0) {
       if (action == 0) return 0;
       nbentries  = -nbentries;
-      fBuffer=0;
+      fBuffer=nullptr;
       Reset("ICES"); // reset without deleting the functions
       fBuffer = buffer;
    }
@@ -279,7 +279,7 @@ Int_t TProfile3D::BufferEmpty(Int_t action)
       if (fXaxis.GetXmax() <= fXaxis.GetXmin() || fYaxis.GetXmax() <= fYaxis.GetXmin() || fZaxis.GetXmax() <= fZaxis.GetXmin()) {
          THLimitsFinder::GetLimitsFinder()->FindGoodLimits(this,xmin,xmax,ymin,ymax,zmin,zmax);
       } else {
-         fBuffer = 0;
+         fBuffer = nullptr;
          Int_t keep = fBufferSize; fBufferSize = 0;
          if (xmin <  fXaxis.GetXmin()) ExtendAxis(xmin,&fXaxis);
          if (xmax >= fXaxis.GetXmax()) ExtendAxis(xmax,&fXaxis);
@@ -292,13 +292,13 @@ Int_t TProfile3D::BufferEmpty(Int_t action)
       }
    }
 
-   fBuffer = 0;
+   fBuffer = nullptr;
    for (Int_t i=0;i<nbentries;i++) {
       Fill(buffer[5*i+2],buffer[5*i+3],buffer[5*i+4],buffer[5*i+5],buffer[5*i+1]);
    }
    fBuffer = buffer;
 
-   if (action > 0) { delete [] fBuffer; fBuffer = 0; fBufferSize = 0;}
+   if (action > 0) { delete [] fBuffer; fBuffer = nullptr; fBufferSize = 0;}
    else {
       if (nbentries == (Int_t)fEntries) fBuffer[0] = -nbentries;
       else                              fBuffer[0] = 0;
@@ -326,7 +326,7 @@ Int_t TProfile3D::BufferFill(Double_t x, Double_t y, Double_t z, Double_t t, Dou
       nbentries  = -nbentries;
       fBuffer[0] =  nbentries;
       if (fEntries > 0) {
-         Double_t *buffer = fBuffer; fBuffer=0;
+         Double_t *buffer = fBuffer; fBuffer=nullptr;
          Reset("ICES"); // reset without deleting the functions
          fBuffer = buffer;
       }
@@ -975,14 +975,14 @@ TH3D *TProfile3D::ProjectionXYZ(const char *name, Option_t *option) const
    if (pname == "_px") {
       pname = GetName();  pname.Append("_pxyz");
    }
-   TH3D *h1 = 0 ;
+   TH3D *h1 = nullptr ;
    if (xbins->fN == 0 && ybins->fN == 0 && zbins->fN == 0)
       h1 = new TH3D(pname,GetTitle(),nx,fXaxis.GetXmin(),fXaxis.GetXmax(),ny,fYaxis.GetXmin(),fYaxis.GetXmax(),nz,fZaxis.GetXmin(),fZaxis.GetXmax());
    else if ( xbins->fN != 0 && ybins->fN != 0 && zbins->fN != 0)
       h1 = new TH3D(pname,GetTitle(),nx,xbins->GetArray(),ny,ybins->GetArray(), nz,zbins->GetArray() );
    else {
       Error("ProjectionXYZ","Histogram has an axis with variable bins and an axis with fixed bins. This case is not supported - return a null pointer");
-      return 0;
+      return nullptr;
    }
 
 
@@ -1080,7 +1080,7 @@ TProfile2D *TProfile3D::DoProjectProfile2D(const char* name, const char * title,
    Int_t ny = iymax-iymin+1;
 
    // Create the projected profiles
-   TProfile2D *p2 = 0;
+   TProfile2D *p2 = nullptr;
    // Create always a new TProfile2D (not as in the case of TH3 projection)
 
    const TArrayD *xbins = projX->GetXbins();
@@ -1110,7 +1110,7 @@ TProfile2D *TProfile3D::DoProjectProfile2D(const char* name, const char * title,
    TH3D * h3dW = ProjectionXYZ("h3temp-W","W");
    TH3D * h3dN = ProjectionXYZ("h3temp-N","B");
 
-   h3dW->SetDirectory(0); h3dN->SetDirectory(0);
+   h3dW->SetDirectory(nullptr); h3dN->SetDirectory(nullptr);
 
    // Since no axis range is considered when doing the projection TProfile3D->TH3D
    // the resulting histogram will have the same axis as the parent one
@@ -1141,7 +1141,7 @@ TProfile2D *TProfile3D::DoProjectProfile2D(const char* name, const char * title,
 
    TH2D * h2W = TH3::DoProject2D(*h3dW,"htemp-W","",projX_hW, projY_hW, true, originalRange, useUF, useOF);
    TH2D * h2N = TH3::DoProject2D(*h3dN,"htemp-N","",projX_hN, projY_hN, useWeights, originalRange, useUF, useOF);
-   h2W->SetDirectory(0); h2N->SetDirectory(0);
+   h2W->SetDirectory(nullptr); h2N->SetDirectory(nullptr);
 
 
    // fill the bin content
@@ -1329,7 +1329,7 @@ void TProfile3D::SetBuffer(Int_t buffersize, Option_t *)
    if (fBuffer) {
       BufferEmpty();
       delete [] fBuffer;
-      fBuffer = 0;
+      fBuffer = nullptr;
    }
    if (buffersize <= 0) {
       fBufferSize = 0;

@@ -1407,7 +1407,7 @@ void TGraphPainter::PaintGraph(TGraph *theGraph, Int_t npoints, const Double_t *
          theGraph->GetHistogram()->SetMaximum(rwymax);
          theGraph->GetHistogram()->GetYaxis()->SetLimits(rwymin,rwymax);
          theGraph->GetHistogram()->SetBit(TH1::kNoStats);
-         theGraph->GetHistogram()->SetDirectory(0);
+         theGraph->GetHistogram()->SetDirectory(nullptr);
          theGraph->GetHistogram()->Sumw2(kFALSE);
          theGraph->GetHistogram()->Paint(chopth); // Draw histogram axis, title and grid
       } else {
@@ -3751,7 +3751,7 @@ void TGraphPainter::PaintGraphPolar(TGraph *theGraph, Option_t* options)
    // Check for existing TGraphPolargram in the Pad
    if (gPad) {
       // Existing polargram
-      if (thePolargram) if (!gPad->FindObject(thePolargram->GetName())) thePolargram=0;
+      if (thePolargram) if (!gPad->FindObject(thePolargram->GetName())) thePolargram=nullptr;
       if (!thePolargram) {
          // Find any other Polargram in the Pad
          TListIter padObjIter(gPad->GetListOfPrimitives());
@@ -4426,12 +4426,12 @@ void TGraphPainter::PaintScatter(TScatter *theScatter, Option_t* chopt)
          if (view) {
             if (!palette->TestBit(TPaletteAxis::kHasView)) {
                functions->Remove(palette);
-               delete palette; palette = 0;
+               delete palette; palette = nullptr;
             }
          } else {
             if (palette->TestBit(TPaletteAxis::kHasView)) {
                functions->Remove(palette);
-               delete palette; palette = 0;
+               delete palette; palette = nullptr;
             }
          }
       }
@@ -4760,7 +4760,7 @@ void TGraphPainter::PaintStats(TGraph *theGraph, TF1 *fit)
    if (stats) dofit  = stats->GetOptFit();
    else       dofit  = gStyle->GetOptFit();
 
-   if (!dofit) fit = 0;
+   if (!dofit) fit = nullptr;
    if (!fit) return;
    if (dofit  == 1) dofit  =  111;
    Int_t nlines = 0;

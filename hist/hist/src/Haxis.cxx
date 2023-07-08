@@ -201,7 +201,7 @@ void TH1::SetAxisColor(Color_t color, Option_t *axis)
 void TH1::SetAxisRange(Axis_t xmin, Axis_t xmax, Option_t *axis)
 {
    Int_t ax = AxisChoice(axis);
-   TAxis *theAxis = 0;
+   TAxis *theAxis = nullptr;
    if (ax == 1) theAxis = GetXaxis();
    if (ax == 2) theAxis = GetYaxis();
    if (ax == 3) theAxis = GetZaxis();

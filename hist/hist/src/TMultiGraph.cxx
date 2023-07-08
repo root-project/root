@@ -1310,7 +1310,7 @@ void TMultiGraph::Paint(Option_t *choptin)
          fHistogram->SetBit(TH1::kNoStats);
          fHistogram->SetMaximum(rwymax);
          fHistogram->GetYaxis()->SetLimits(rwymin,rwymax);
-         fHistogram->SetDirectory(0);
+         fHistogram->SetDirectory(nullptr);
          if (!xtitle.empty()) fHistogram->GetXaxis()->SetTitle(xtitle.c_str());
          if (!ytitle.empty()) fHistogram->GetYaxis()->SetTitle(ytitle.c_str());
          if (firstx != lastx) fHistogram->GetXaxis()->SetRange(firstx,lastx);

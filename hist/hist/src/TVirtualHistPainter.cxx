@@ -35,12 +35,12 @@ TVirtualHistPainter *TVirtualHistPainter::HistPainter(TH1 *obj)
       TPluginHandler *h;
       if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualHistPainter"))) {
          if (h->LoadPlugin() == -1)
-            return 0;
+            return nullptr;
          TVirtualHistPainter::SetPainter(h->GetClass());
-         if (!fgPainter) return 0;
+         if (!fgPainter) return nullptr;
       } else {
          // fgPainter is still null
-         return 0;
+         return nullptr;
       }
    }
 

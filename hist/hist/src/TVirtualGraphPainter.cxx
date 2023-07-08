@@ -32,7 +32,7 @@ TVirtualGraphPainter *TVirtualGraphPainter::GetPainter()
    if (!fgPainter) {
       TPluginHandler *h;
       if ((h = gROOT->GetPluginManager()->FindHandler("TVirtualGraphPainter"))) {
-         if (h->LoadPlugin() == -1) return 0;
+         if (h->LoadPlugin() == -1) return nullptr;
          fgPainter = (TVirtualGraphPainter*)gROOT->GetClass("TGraphPainter")->New();
       }
    }
