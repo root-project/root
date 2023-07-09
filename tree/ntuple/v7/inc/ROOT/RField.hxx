@@ -196,8 +196,10 @@ protected:
    /// column type exists.
    virtual std::size_t AppendImpl(const RFieldValue &value);
    virtual void ReadGlobalImpl(NTupleSize_t globalIndex, RFieldValue *value);
-   virtual void ReadInClusterImpl(const RClusterIndex &clusterIndex, RFieldValue *value) {
-      ReadGlobalImpl(fPrincipalColumn->GetGlobalIndex(clusterIndex), value);
+   virtual void ReadInClusterImpl(const RClusterIndex &clusterIndex, void *to)
+   {
+      RFieldValue value(true /* capture flag */, this, to);
+      ReadGlobalImpl(fPrincipalColumn->GetGlobalIndex(clusterIndex), &value);
    }
 
    /// Returns the on-disk column types found in the provided descriptor for fOnDiskId. Throws an exception if the types
@@ -328,7 +330,7 @@ public:
       if (fTraits & kTraitMappable)
          fPrincipalColumn->Read(clusterIndex, value->GetRawPtr());
       else
-         ReadInClusterImpl(clusterIndex, value);
+         ReadInClusterImpl(clusterIndex, value->GetRawPtr());
       if (R__unlikely(!fReadCallbacks.empty()))
          InvokeReadCallbacks(*value);
    }
@@ -442,7 +444,7 @@ protected:
    void GenerateColumnsImpl(const RNTupleDescriptor &) final {}
    std::size_t AppendImpl(const Detail::RFieldValue& value) final;
    void ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue *value) final;
-   void ReadInClusterImpl(const RClusterIndex &clusterIndex, Detail::RFieldValue *value) final;
+   void ReadInClusterImpl(const RClusterIndex &clusterIndex, void *to) final;
    void OnConnectPageSource() final;
 
 public:
@@ -599,7 +601,7 @@ protected:
    void GenerateColumnsImpl(const RNTupleDescriptor &) final {}
    std::size_t AppendImpl(const Detail::RFieldValue& value) final;
    void ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue *value) final;
-   void ReadInClusterImpl(const RClusterIndex &clusterIndex, Detail::RFieldValue *value) final;
+   void ReadInClusterImpl(const RClusterIndex &clusterIndex, void *to) final;
 
    RRecordField(std::string_view fieldName, std::vector<std::unique_ptr<Detail::RFieldBase>> &&itemFields,
                 const std::vector<std::size_t> &offsets, std::string_view typeName = "");
@@ -732,7 +734,7 @@ protected:
    void GenerateColumnsImpl(const RNTupleDescriptor &) final {}
    std::size_t AppendImpl(const Detail::RFieldValue& value) final;
    void ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue *value) final;
-   void ReadInClusterImpl(const RClusterIndex &clusterIndex, Detail::RFieldValue *value) final;
+   void ReadInClusterImpl(const RClusterIndex &clusterIndex, void *to) final;
 
 public:
    RArrayField(std::string_view fieldName, std::unique_ptr<Detail::RFieldBase> itemField, std::size_t arrayLength);
@@ -1221,12 +1223,12 @@ public:
    }
 
    /// Get the number of elements of the collection identified by clusterIndex
-   void ReadInClusterImpl(const RClusterIndex &clusterIndex, Detail::RFieldValue *value) final
+   void ReadInClusterImpl(const RClusterIndex &clusterIndex, void *to) final
    {
       RClusterIndex collectionStart;
       ClusterSize_t size;
       fPrincipalColumn->GetCollectionInfo(clusterIndex, &collectionStart, &size);
-      *value->Get<RNTupleCardinality<SizeT>>() = size;
+      *static_cast<RNTupleCardinality<SizeT> *>(to) = size;
    }
 };
 
