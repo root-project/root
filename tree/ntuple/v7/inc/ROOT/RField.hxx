@@ -81,7 +81,7 @@ The field knows based on its type and the field name the type(s) and name(s) of 
 class RFieldBase {
    friend class ROOT::Experimental::RCollectionField; // to move the fields from the collection model
    friend struct ROOT::Experimental::Internal::RFieldCallbackInjector; // used for unit tests
-   using ReadCallback_t = std::function<void(RFieldValue &)>;
+   using ReadCallback_t = std::function<void(void *)>;
 
 public:
    static constexpr std::uint32_t kInvalidTypeVersion = -1U;
@@ -140,10 +140,10 @@ private:
    /// Free text set by the user
    std::string fDescription;
 
-   void InvokeReadCallbacks(RFieldValue &value)
+   void InvokeReadCallbacks(void *target)
    {
       for (const auto &func : fReadCallbacks)
-         func(value);
+         func(target);
    }
 
    /// Translate an entry index to a column element index of the principal column and viceversa.  These functions
@@ -319,7 +319,7 @@ public:
       else
          ReadGlobalImpl(globalIndex, value->GetRawPtr());
       if (R__unlikely(!fReadCallbacks.empty()))
-         InvokeReadCallbacks(*value);
+         InvokeReadCallbacks(value->GetRawPtr());
    }
 
    void Read(const RClusterIndex &clusterIndex, RFieldValue *value) {
@@ -331,7 +331,7 @@ public:
       else
          ReadInClusterImpl(clusterIndex, value->GetRawPtr());
       if (R__unlikely(!fReadCallbacks.empty()))
-         InvokeReadCallbacks(*value);
+         InvokeReadCallbacks(value->GetRawPtr());
    }
 
    /// Ensure that all received items are written from page buffers to the storage.

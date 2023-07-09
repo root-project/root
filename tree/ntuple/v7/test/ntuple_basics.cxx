@@ -678,14 +678,14 @@ TEST(RNTuple, ReadCallback)
    auto model = RNTupleModel::Create();
    auto fieldI32 = std::make_unique<RField<std::int32_t>>("i32");
    auto fieldKlass = std::make_unique<RField<CustomStruct>>("klass");
-   RFieldCallbackInjector::Inject(*fieldI32, [](RFieldValue &value) {
+   RFieldCallbackInjector::Inject(*fieldI32, [](void *target) {
       static std::int32_t expected = 0;
-      EXPECT_EQ(*value.Get<std::int32_t>(), expected++);
+      EXPECT_EQ(*static_cast<std::int32_t *>(target), expected++);
       gNCallReadCallback++;
    });
-   RFieldCallbackInjector::Inject(*fieldI32, [](RFieldValue &) { gNCallReadCallback++; });
-   RFieldCallbackInjector::Inject(*fieldKlass, [](RFieldValue &value) {
-      auto typedValue = value.Get<CustomStruct>();
+   RFieldCallbackInjector::Inject(*fieldI32, [](void *) { gNCallReadCallback++; });
+   RFieldCallbackInjector::Inject(*fieldKlass, [](void *target) {
+      auto typedValue = static_cast<CustomStruct *>(target);
       typedValue->a = 1337.0; // should change the value on the default entry
       gNCallReadCallback++;
    });
