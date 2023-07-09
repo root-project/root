@@ -1209,7 +1209,10 @@ void TDirectoryFile::ls(Option_t *option) const
       while (lnk) {
          TKey *key = (TKey*)lnk->GetObject();
          TString s = key->GetName();
-         if (s.Index(re) == kNPOS) continue;
+         if (s.Index(re) == kNPOS) {
+            lnk = lnk->Next();
+            continue;
+         }
          bool first = (lnk->Prev() == nullptr) || (s != lnk->Prev()->GetObject()->GetName());
          bool hasbackup = (lnk->Next() != nullptr) && (s == lnk->Next()->GetObject()->GetName());
          if (first)
