@@ -1078,8 +1078,7 @@ std::size_t ROOT::Experimental::RField<std::string>::AppendImpl(const ROOT::Expe
 {
    auto typedValue = value.Get<std::string>();
    auto length = typedValue->length();
-   Detail::RColumnElement<char> elemChars(const_cast<char*>(typedValue->data()));
-   fColumns[1]->AppendV(elemChars, length);
+   fColumns[1]->AppendV(typedValue->data(), length);
    fIndex += length;
    fColumns[0]->Append(fElemIndex);
    return length + fColumns[0]->GetElement()->GetPackedSize();
