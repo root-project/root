@@ -166,25 +166,27 @@ public:
       SwapWritePagesIfFull();
    }
 
-   void Read(const NTupleSize_t globalIndex, RColumnElementBase *element) {
+   void Read(const NTupleSize_t globalIndex, void *to)
+   {
       if (!fReadPage.Contains(globalIndex)) {
          MapPage(globalIndex);
          R__ASSERT(fReadPage.Contains(globalIndex));
       }
       const auto elemSize = fElement->GetSize();
-      void *src = static_cast<unsigned char *>(fReadPage.GetBuffer()) +
-                  (globalIndex - fReadPage.GetGlobalRangeFirst()) * elemSize;
-      std::memcpy(element->GetRawContent(), src, elemSize);
+      void *from = static_cast<unsigned char *>(fReadPage.GetBuffer()) +
+                   (globalIndex - fReadPage.GetGlobalRangeFirst()) * elemSize;
+      std::memcpy(to, from, elemSize);
    }
 
-   void Read(const RClusterIndex &clusterIndex, RColumnElementBase *element) {
+   void Read(const RClusterIndex &clusterIndex, void *to)
+   {
       if (!fReadPage.Contains(clusterIndex)) {
          MapPage(clusterIndex);
       }
       const auto elemSize = fElement->GetSize();
-      void *src = static_cast<unsigned char *>(fReadPage.GetBuffer()) +
-                  (clusterIndex.GetIndex() - fReadPage.GetClusterRangeFirst()) * elemSize;
-      std::memcpy(element->GetRawContent(), src, elemSize);
+      void *from = static_cast<unsigned char *>(fReadPage.GetBuffer()) +
+                   (clusterIndex.GetIndex() - fReadPage.GetClusterRangeFirst()) * elemSize;
+      std::memcpy(to, from, elemSize);
    }
 
    void ReadV(const NTupleSize_t globalIndex, const ClusterSize_t::ValueType count, void *to)

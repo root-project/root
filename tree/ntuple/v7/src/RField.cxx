@@ -2236,9 +2236,8 @@ void ROOT::Experimental::RBitsetField::ReadGlobalImpl(NTupleSize_t globalIndex, 
 {
    auto *asULongArray = value->Get<Word_t>();
    bool elementValue;
-   Detail::RColumnElement<bool> element(&elementValue);
    for (std::size_t i = 0; i < fN; ++i) {
-      fColumns[0]->Read(globalIndex * fN + i, &element);
+      fColumns[0]->Read(globalIndex * fN + i, &elementValue);
       Word_t mask = static_cast<Word_t>(1) << (i % kBitsPerWord);
       Word_t bit = static_cast<Word_t>(elementValue) << (i % kBitsPerWord);
       asULongArray[i / kBitsPerWord] = (asULongArray[i / kBitsPerWord] & ~mask) | bit;
