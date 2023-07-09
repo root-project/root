@@ -134,12 +134,14 @@ public:
       SwapWritePagesIfFull();
    }
 
-   void AppendV(const RColumnElementBase &elemArray, std::size_t count) {
+   void AppendV(const void *from, std::size_t count)
+   {
       // We might not have enough space in the current page. In this case, fall back to one by one filling.
       if (fWritePage[fWritePageIdx].GetNElements() + count > fApproxNElementsPerPage) {
          // TODO(jblomer): use (fewer) calls to AppendV to write the data page-by-page
          for (unsigned i = 0; i < count; ++i) {
-            Append(RColumnElementBase(elemArray, i));
+            unsigned char *fromUChar = const_cast<unsigned char *>(static_cast<const unsigned char *>(from));
+            Append(RColumnElementBase(fromUChar + fElement->GetSize() * i, fElement->GetSize()));
          }
          return;
       }
@@ -157,7 +159,7 @@ public:
 
       void *dst = fWritePage[fWritePageIdx].GrowUnchecked(count);
 
-      memcpy(dst, elemArray.GetRawContent(), fElement->GetSize() * count);
+      memcpy(dst, from, fElement->GetSize() * count);
       fNElements += count;
 
       // Note that by the very first check in AppendV, we cannot have filled more than fApproxNElementsPerPage elements
