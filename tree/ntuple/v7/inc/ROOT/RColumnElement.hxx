@@ -290,16 +290,6 @@ public:
    static std::size_t GetBitsOnStorage(EColumnType type);
    static std::string GetTypeName(EColumnType type);
 
-   /// Write one or multiple column elements into destination
-   void WriteTo(void *destination, std::size_t count) const {
-      std::memcpy(destination, fRawContent, fSize * count);
-   }
-
-   /// Set the column element or an array of elements from the memory location source
-   void ReadFrom(void *source, std::size_t count) {
-      std::memcpy(fRawContent, source, fSize * count);
-   }
-
    /// Derived, typed classes tell whether the on-storage layout is bitwise identical to the memory layout
    virtual bool IsMappable() const { R__ASSERT(false); return false; }
    virtual std::size_t GetBitsOnStorage() const { R__ASSERT(false); return 0; }

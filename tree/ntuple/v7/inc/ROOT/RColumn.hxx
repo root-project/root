@@ -25,6 +25,7 @@
 
 #include <TError.h>
 
+#include <cstring> // for memcpy
 #include <memory>
 #include <utility>
 
@@ -127,7 +128,7 @@ public:
          FlushShadowWritePage();
       }
 
-      element.WriteTo(dst, 1);
+      memcpy(dst, element.GetRawContent(), fElement->GetSize());
       fNElements++;
 
       SwapWritePagesIfFull();
@@ -156,7 +157,7 @@ public:
 
       void *dst = fWritePage[fWritePageIdx].GrowUnchecked(count);
 
-      elemArray.WriteTo(dst, count);
+      memcpy(dst, elemArray.GetRawContent(), fElement->GetSize() * count);
       fNElements += count;
 
       // Note that by the very first check in AppendV, we cannot have filled more than fApproxNElementsPerPage elements
@@ -168,18 +169,20 @@ public:
          MapPage(globalIndex);
          R__ASSERT(fReadPage.Contains(globalIndex));
       }
+      const auto elemSize = fElement->GetSize();
       void *src = static_cast<unsigned char *>(fReadPage.GetBuffer()) +
-                  (globalIndex - fReadPage.GetGlobalRangeFirst()) * element->GetSize();
-      element->ReadFrom(src, 1);
+                  (globalIndex - fReadPage.GetGlobalRangeFirst()) * elemSize;
+      std::memcpy(element->GetRawContent(), src, elemSize);
    }
 
    void Read(const RClusterIndex &clusterIndex, RColumnElementBase *element) {
       if (!fReadPage.Contains(clusterIndex)) {
          MapPage(clusterIndex);
       }
+      const auto elemSize = fElement->GetSize();
       void *src = static_cast<unsigned char *>(fReadPage.GetBuffer()) +
-                  (clusterIndex.GetIndex() - fReadPage.GetClusterRangeFirst()) * element->GetSize();
-      element->ReadFrom(src, 1);
+                  (clusterIndex.GetIndex() - fReadPage.GetClusterRangeFirst()) * elemSize;
+      std::memcpy(element->GetRawContent(), src, elemSize);
    }
 
    void ReadV(const NTupleSize_t globalIndex, const ClusterSize_t::ValueType count, RColumnElementBase *elemArray) {
@@ -189,12 +192,13 @@ public:
       }
       NTupleSize_t idxInPage = globalIndex - fReadPage.GetGlobalRangeFirst();
 
-      void *src = static_cast<unsigned char *>(fReadPage.GetBuffer()) + idxInPage * elemArray->GetSize();
+      const auto elemSize = fElement->GetSize();
+      void *src = static_cast<unsigned char *>(fReadPage.GetBuffer()) + idxInPage * elemSize;
       if (globalIndex + count <= fReadPage.GetGlobalRangeLast() + 1) {
-         elemArray->ReadFrom(src, count);
+         std::memcpy(elemArray->GetRawContent(), src, elemSize * count);
       } else {
          ClusterSize_t::ValueType nBatch = fReadPage.GetNElements() - idxInPage;
-         elemArray->ReadFrom(src, nBatch);
+         std::memcpy(elemArray->GetRawContent(), src, elemSize * nBatch);
          RColumnElementBase elemTail(*elemArray, nBatch);
          ReadV(globalIndex + nBatch, count - nBatch, &elemTail);
       }
@@ -207,12 +211,13 @@ public:
       }
       NTupleSize_t idxInPage = clusterIndex.GetIndex() - fReadPage.GetClusterRangeFirst();
 
-      void* src = static_cast<unsigned char *>(fReadPage.GetBuffer()) + idxInPage * elemArray->GetSize();
+      const auto elemSize = fElement->GetSize();
+      void *src = static_cast<unsigned char *>(fReadPage.GetBuffer()) + idxInPage * elemSize;
       if (clusterIndex.GetIndex() + count <= fReadPage.GetClusterRangeLast() + 1) {
-         elemArray->ReadFrom(src, count);
+         std::memcpy(elemArray->GetRawContent(), src, elemSize * count);
       } else {
          ClusterSize_t::ValueType nBatch = fReadPage.GetNElements() - idxInPage;
-         elemArray->ReadFrom(src, nBatch);
+         std::memcpy(elemArray->GetRawContent(), src, elemSize * nBatch);
          RColumnElementBase elemTail(*elemArray, nBatch);
          ReadV(RClusterIndex(clusterIndex.GetClusterId(), clusterIndex.GetIndex() + nBatch), count - nBatch, &elemTail);
       }
