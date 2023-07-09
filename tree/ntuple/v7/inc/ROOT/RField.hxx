@@ -301,7 +301,7 @@ public:
       if (~fTraits & kTraitMappable)
          return AppendImpl(value);
 
-      fPrincipalColumn->Append(value.fMappedElement);
+      fPrincipalColumn->Append(value.GetRawPtr());
       return value.fMappedElement.GetSize();
    }
 
@@ -1880,7 +1880,6 @@ template <>
 class RField<std::string> : public Detail::RFieldBase {
 private:
    ClusterSize_t fIndex;
-   Detail::RColumnElement<ClusterSize_t, EColumnType::kUnknown> fElemIndex;
 
    std::unique_ptr<Detail::RFieldBase> CloneImpl(std::string_view newName) const final {
       return std::make_unique<RField>(newName);
@@ -1895,8 +1894,7 @@ private:
 public:
    static std::string TypeName() { return "std::string"; }
    explicit RField(std::string_view name)
-      : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, false /* isSimple */), fIndex(0),
-        fElemIndex(&fIndex)
+      : Detail::RFieldBase(name, TypeName(), ENTupleStructure::kLeaf, false /* isSimple */), fIndex(0)
    {
    }
    RField(RField&& other) = default;
@@ -2097,10 +2095,9 @@ protected:
          auto itemValue = fSubFields[0]->CaptureValue(&typedValue->data()[i]);
          nbytes += fSubFields[0]->Append(itemValue);
       }
-      Detail::RColumnElement<ClusterSize_t, EColumnType::kUnknown> elemIndex(&this->fNWritten);
       this->fNWritten += count;
-      fColumns[0]->Append(elemIndex);
-      return nbytes + sizeof(elemIndex);
+      fColumns[0]->Append(&this->fNWritten);
+      return nbytes + fColumns[0]->GetElement()->GetPackedSize();
    }
    void ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue *value) final {
       auto typedValue = value->Get<ContainerT>();
