@@ -195,11 +195,10 @@ protected:
    /// Operations on values of complex types, e.g. ones that involve multiple columns or for which no direct
    /// column type exists.
    virtual std::size_t AppendImpl(const RFieldValue &value);
-   virtual void ReadGlobalImpl(NTupleSize_t globalIndex, RFieldValue *value);
+   virtual void ReadGlobalImpl(NTupleSize_t globalIndex, void *to);
    virtual void ReadInClusterImpl(const RClusterIndex &clusterIndex, void *to)
    {
-      RFieldValue value(true /* capture flag */, this, to);
-      ReadGlobalImpl(fPrincipalColumn->GetGlobalIndex(clusterIndex), &value);
+      ReadGlobalImpl(fPrincipalColumn->GetGlobalIndex(clusterIndex), to);
    }
 
    /// Returns the on-disk column types found in the provided descriptor for fOnDiskId. Throws an exception if the types
@@ -318,7 +317,7 @@ public:
       if (fTraits & kTraitMappable)
          fPrincipalColumn->Read(globalIndex, value->GetRawPtr());
       else
-         ReadGlobalImpl(globalIndex, value);
+         ReadGlobalImpl(globalIndex, value->GetRawPtr());
       if (R__unlikely(!fReadCallbacks.empty()))
          InvokeReadCallbacks(*value);
    }
@@ -443,7 +442,7 @@ protected:
    void GenerateColumnsImpl() final {}
    void GenerateColumnsImpl(const RNTupleDescriptor &) final {}
    std::size_t AppendImpl(const Detail::RFieldValue& value) final;
-   void ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue *value) final;
+   void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final;
    void ReadInClusterImpl(const RClusterIndex &clusterIndex, void *to) final;
    void OnConnectPageSource() final;
 
@@ -559,7 +558,7 @@ protected:
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
    std::size_t AppendImpl(const Detail::RFieldValue &value) final;
-   void ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue *value) final;
+   void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final;
 
 public:
    RCollectionClassField(std::string_view fieldName, std::string_view className);
@@ -600,7 +599,7 @@ protected:
    void GenerateColumnsImpl() final {}
    void GenerateColumnsImpl(const RNTupleDescriptor &) final {}
    std::size_t AppendImpl(const Detail::RFieldValue& value) final;
-   void ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue *value) final;
+   void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final;
    void ReadInClusterImpl(const RClusterIndex &clusterIndex, void *to) final;
 
    RRecordField(std::string_view fieldName, std::vector<std::unique_ptr<Detail::RFieldBase>> &&itemFields,
@@ -651,7 +650,7 @@ protected:
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
    std::size_t AppendImpl(const Detail::RFieldValue& value) final;
-   void ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue *value) final;
+   void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final;
 
 public:
    RVectorField(std::string_view fieldName, std::unique_ptr<Detail::RFieldBase> itemField);
@@ -693,7 +692,7 @@ protected:
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
    std::size_t AppendImpl(const Detail::RFieldValue &value) override;
-   void ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue *value) override;
+   void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) override;
 
 public:
    RRVecField(std::string_view fieldName, std::unique_ptr<Detail::RFieldBase> itemField);
@@ -733,7 +732,7 @@ protected:
    void GenerateColumnsImpl() final {}
    void GenerateColumnsImpl(const RNTupleDescriptor &) final {}
    std::size_t AppendImpl(const Detail::RFieldValue& value) final;
-   void ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue *value) final;
+   void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final;
    void ReadInClusterImpl(const RClusterIndex &clusterIndex, void *to) final;
 
 public:
@@ -773,7 +772,7 @@ protected:
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
    std::size_t AppendImpl(const Detail::RFieldValue &value) final;
-   void ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue *value) final;
+   void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final;
 
 public:
    RBitsetField(std::string_view fieldName, std::size_t N);
@@ -819,7 +818,7 @@ protected:
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
    std::size_t AppendImpl(const Detail::RFieldValue& value) final;
-   void ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue *value) final;
+   void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final;
 
 public:
    // TODO(jblomer): use std::span in signature
@@ -883,7 +882,7 @@ class RUniquePtrField : public RNullableField {
 protected:
    std::unique_ptr<Detail::RFieldBase> CloneImpl(std::string_view newName) const final;
    std::size_t AppendImpl(const Detail::RFieldValue &value) final;
-   void ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue *value) final;
+   void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final;
 
 public:
    RUniquePtrField(std::string_view fieldName, std::string_view typeName,
@@ -1214,12 +1213,12 @@ public:
    size_t GetAlignment() const final { return alignof(RNTupleCardinality<SizeT>); }
 
    /// Get the number of elements of the collection identified by globalIndex
-   void ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue *value) final
+   void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final
    {
       RClusterIndex collectionStart;
       ClusterSize_t size;
       fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, &size);
-      *value->Get<RNTupleCardinality<SizeT>>() = size;
+      *static_cast<RNTupleCardinality<SizeT> *>(to) = size;
    }
 
    /// Get the number of elements of the collection identified by clusterIndex
@@ -1848,8 +1847,7 @@ private:
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
    std::size_t AppendImpl(const ROOT::Experimental::Detail::RFieldValue& value) final;
-   void ReadGlobalImpl(ROOT::Experimental::NTupleSize_t globalIndex,
-                       ROOT::Experimental::Detail::RFieldValue *value) final;
+   void ReadGlobalImpl(ROOT::Experimental::NTupleSize_t globalIndex, void *to) final;
 
 public:
    static std::string TypeName() { return "std::string"; }
@@ -1998,7 +1996,7 @@ protected:
       return std::make_unique<RField>(newName);
    }
    std::size_t AppendImpl(const Detail::RFieldValue& value) final;
-   void ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue *value) final;
+   void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final;
 
    const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumnsImpl() final;
@@ -2059,8 +2057,9 @@ protected:
       fColumns[0]->Append(&this->fNWritten);
       return nbytes + fColumns[0]->GetElement()->GetPackedSize();
    }
-   void ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue *value) final {
-      auto typedValue = value->Get<ContainerT>();
+   void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final
+   {
+      auto typedValue = static_cast<ContainerT *>(to);
       ClusterSize_t nItems;
       RClusterIndex collectionStart;
       fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, &nItems);
