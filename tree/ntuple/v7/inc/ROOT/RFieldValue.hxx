@@ -39,38 +39,22 @@ wrapper around the memory location, it does not own it.  Memory ownership is man
 */
 // clang-format on
 class RFieldValue {
-   friend class RFieldBase;
-
 protected:
    /// Every value is connected to a field of the corresponding type that has created the value.
    RFieldBase* fField;
    /// The memory location containing (constructed) data of a certain C++ type
    void* fRawPtr;
 
-   /// For simple types, the mapped element drills through the layers from the C++ data representation
-   /// to the primitive columns.  Otherwise, using fMappedElements is undefined.
-   /// Only RFieldBase uses fMappedElement
-   RColumnElementBase fMappedElement;
-
 public:
    RFieldValue() : fField(nullptr), fRawPtr(nullptr) {}
 
    // Constructors that wrap around existing objects; prefixed with a bool in order to help the constructor overload
    // selection.
-   RFieldValue(bool /*captureTag*/, Detail::RFieldBase* field, void* value) : fField(field), fRawPtr(value) {}
-   RFieldValue(bool /*captureTag*/, const Detail::RColumnElementBase& elem, Detail::RFieldBase* field, void* value)
-      : fField(field), fRawPtr(value), fMappedElement(elem) {}
+   RFieldValue(bool /*captureTag*/, Detail::RFieldBase *field, void *value) : fField(field), fRawPtr(value) {}
 
    // Typed constructors that initialize the given memory location
    template <typename T, typename... ArgsT>
    RFieldValue(RFieldBase* field, T* where, ArgsT&&... args) : fField(field), fRawPtr(where)
-   {
-      new (where) T(std::forward<ArgsT>(args)...);
-   }
-
-   template <typename T, typename... ArgsT>
-   RFieldValue(const Detail::RColumnElementBase& elem, Detail::RFieldBase* field, T* where, ArgsT&&... args)
-      : fField(field), fRawPtr(where), fMappedElement(elem)
    {
       new (where) T(std::forward<ArgsT>(args)...);
    }
