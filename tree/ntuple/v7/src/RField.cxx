@@ -1222,10 +1222,10 @@ void ROOT::Experimental::RClassField::ReadGlobalImpl(NTupleSize_t globalIndex, D
    }
 }
 
-void ROOT::Experimental::RClassField::ReadInClusterImpl(const RClusterIndex &clusterIndex, Detail::RFieldValue *value)
+void ROOT::Experimental::RClassField::ReadInClusterImpl(const RClusterIndex &clusterIndex, void *to)
 {
    for (unsigned i = 0; i < fSubFields.size(); i++) {
-      auto memberValue = fSubFields[i]->CaptureValue(value->Get<unsigned char>() + fSubFieldsInfo[i].fOffset);
+      auto memberValue = fSubFields[i]->CaptureValue(static_cast<unsigned char *>(to) + fSubFieldsInfo[i].fOffset);
       fSubFields[i]->Read(clusterIndex, &memberValue);
    }
 }
@@ -1562,10 +1562,10 @@ void ROOT::Experimental::RRecordField::ReadGlobalImpl(NTupleSize_t globalIndex, 
    }
 }
 
-void ROOT::Experimental::RRecordField::ReadInClusterImpl(const RClusterIndex &clusterIndex, Detail::RFieldValue *value)
+void ROOT::Experimental::RRecordField::ReadInClusterImpl(const RClusterIndex &clusterIndex, void *to)
 {
    for (unsigned i = 0; i < fSubFields.size(); ++i) {
-      auto memberValue = fSubFields[i]->CaptureValue(value->Get<unsigned char>() + fOffsets[i]);
+      auto memberValue = fSubFields[i]->CaptureValue(static_cast<unsigned char *>(to) + fOffsets[i]);
       fSubFields[i]->Read(clusterIndex, &memberValue);
    }
 }
@@ -2133,9 +2133,9 @@ void ROOT::Experimental::RArrayField::ReadGlobalImpl(NTupleSize_t globalIndex, D
    }
 }
 
-void ROOT::Experimental::RArrayField::ReadInClusterImpl(const RClusterIndex &clusterIndex, Detail::RFieldValue *value)
+void ROOT::Experimental::RArrayField::ReadInClusterImpl(const RClusterIndex &clusterIndex, void *to)
 {
-   auto arrayPtr = value->Get<unsigned char>();
+   auto arrayPtr = static_cast<unsigned char *>(to);
    for (unsigned i = 0; i < fArrayLength; ++i) {
       auto itemValue = fSubFields[0]->CaptureValue(arrayPtr + (i * fItemSize));
       fSubFields[0]->Read(RClusterIndex(clusterIndex.GetClusterId(), clusterIndex.GetIndex() * fArrayLength + i),
