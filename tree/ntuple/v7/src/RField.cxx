@@ -1080,7 +1080,7 @@ std::size_t ROOT::Experimental::RField<std::string>::AppendImpl(const ROOT::Expe
    auto length = typedValue->length();
    fColumns[1]->AppendV(typedValue->data(), length);
    fIndex += length;
-   fColumns[0]->Append(fElemIndex);
+   fColumns[0]->Append(&fIndex);
    return length + fColumns[0]->GetElement()->GetPackedSize();
 }
 
@@ -1392,9 +1392,8 @@ std::size_t ROOT::Experimental::RCollectionClassField::AppendImpl(const Detail::
       count++;
    }
 
-   Detail::RColumnElement<ClusterSize_t> elemIndex(&fNWritten);
    fNWritten += count;
-   fColumns[0]->Append(elemIndex);
+   fColumns[0]->Append(&fNWritten);
    return nbytes + fColumns[0]->GetElement()->GetPackedSize();
 }
 
@@ -1640,9 +1639,8 @@ std::size_t ROOT::Experimental::RVectorField::AppendImpl(const Detail::RFieldVal
       auto itemValue = fSubFields[0]->CaptureValue(typedValue->data() + (i * fItemSize));
       nbytes += fSubFields[0]->Append(itemValue);
    }
-   Detail::RColumnElement<ClusterSize_t> elemIndex(&fNWritten);
    fNWritten += count;
-   fColumns[0]->Append(elemIndex);
+   fColumns[0]->Append(&fNWritten);
    return nbytes + fColumns[0]->GetElement()->GetPackedSize();
 }
 
@@ -1781,9 +1779,8 @@ std::size_t ROOT::Experimental::RRVecField::AppendImpl(const Detail::RFieldValue
       nbytes += fSubFields[0]->Append(elementValue);
    }
 
-   Detail::RColumnElement<ClusterSize_t> elemIndex(&fNWritten);
    fNWritten += *sizePtr;
-   fColumns[0]->Append(elemIndex);
+   fColumns[0]->Append(&fNWritten);
    return nbytes + fColumns[0]->GetElement()->GetPackedSize();
 }
 
@@ -2021,9 +2018,8 @@ std::size_t ROOT::Experimental::RField<std::vector<bool>>::AppendImpl(const Deta
       auto itemValue = fSubFields[0]->CaptureValue(&bval);
       fSubFields[0]->Append(itemValue);
    }
-   Detail::RColumnElement<ClusterSize_t> elemIndex(&fNWritten);
    fNWritten += count;
-   fColumns[0]->Append(elemIndex);
+   fColumns[0]->Append(&fNWritten);
    return count + fColumns[0]->GetElement()->GetPackedSize();
 }
 
@@ -2226,12 +2222,11 @@ std::size_t ROOT::Experimental::RBitsetField::AppendImpl(const Detail::RFieldVal
 {
    const auto *asULongArray = value.Get<Word_t>();
    bool elementValue;
-   Detail::RColumnElement<bool> element(&elementValue);
    std::size_t i = 0;
    for (std::size_t word = 0; word < (fN + kBitsPerWord - 1) / kBitsPerWord; ++word) {
       for (std::size_t mask = 0; (mask < kBitsPerWord) && (i < fN); ++mask, ++i) {
          elementValue = (asULongArray[word] & (static_cast<Word_t>(1) << mask)) != 0;
-         fColumns[0]->Append(element);
+         fColumns[0]->Append(&elementValue);
       }
    }
    return fN;
@@ -2323,8 +2318,7 @@ std::size_t ROOT::Experimental::RVariantField::AppendImpl(const Detail::RFieldVa
       index = fNWritten[tag - 1]++;
    }
    RColumnSwitch varSwitch(ClusterSize_t(index), tag);
-   Detail::RColumnElement<RColumnSwitch> elemSwitch(&varSwitch);
-   fColumns[0]->Append(elemSwitch);
+   fColumns[0]->Append(&varSwitch);
    return nbytes + sizeof(RColumnSwitch);
 }
 
@@ -2451,12 +2445,10 @@ std::size_t ROOT::Experimental::RNullableField::AppendNull()
 {
    if (IsDense()) {
       bool mask = false;
-      Detail::RColumnElement<bool> maskElement(&mask);
-      fPrincipalColumn->Append(maskElement);
+      fPrincipalColumn->Append(&mask);
       return 1 + fSubFields[0]->Append(fDefaultItemValue);
    } else {
-      Detail::RColumnElement<ClusterSize_t> offsetElement(&fNWritten);
-      fPrincipalColumn->Append(offsetElement);
+      fPrincipalColumn->Append(&fNWritten);
       return sizeof(ClusterSize_t);
    }
 }
@@ -2466,13 +2458,11 @@ std::size_t ROOT::Experimental::RNullableField::AppendValue(const Detail::RField
    auto nbytesItem = fSubFields[0]->Append(value);
    if (IsDense()) {
       bool mask = true;
-      Detail::RColumnElement<bool> maskElement(&mask);
-      fPrincipalColumn->Append(maskElement);
+      fPrincipalColumn->Append(&mask);
       return 1 + nbytesItem;
    } else {
       fNWritten++;
-      Detail::RColumnElement<ClusterSize_t> offsetElement(&fNWritten);
-      fPrincipalColumn->Append(offsetElement);
+      fPrincipalColumn->Append(&fNWritten);
       return sizeof(ClusterSize_t) + nbytesItem;
    }
 }

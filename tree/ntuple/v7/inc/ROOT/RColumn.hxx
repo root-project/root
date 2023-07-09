@@ -121,14 +121,15 @@ public:
    /// TODO(jalopezg): at this point it would be nicer to distinguish between connecting a page sink and a page source
    void Connect(DescriptorId_t fieldId, RPageStorage *pageStorage, NTupleSize_t firstElementIndex = 0U);
 
-   void Append(const RColumnElementBase &element) {
+   void Append(const void *from)
+   {
       void *dst = fWritePage[fWritePageIdx].GrowUnchecked(1);
 
       if (fWritePage[fWritePageIdx].GetNElements() == fApproxNElementsPerPage / 2) {
          FlushShadowWritePage();
       }
 
-      memcpy(dst, element.GetRawContent(), fElement->GetSize());
+      memcpy(dst, from, fElement->GetSize());
       fNElements++;
 
       SwapWritePagesIfFull();
@@ -140,8 +141,7 @@ public:
       if (fWritePage[fWritePageIdx].GetNElements() + count > fApproxNElementsPerPage) {
          // TODO(jblomer): use (fewer) calls to AppendV to write the data page-by-page
          for (unsigned i = 0; i < count; ++i) {
-            unsigned char *fromUChar = const_cast<unsigned char *>(static_cast<const unsigned char *>(from));
-            Append(RColumnElementBase(fromUChar + fElement->GetSize() * i, fElement->GetSize()));
+            Append(static_cast<const unsigned char *>(from) + fElement->GetSize() * i);
          }
          return;
       }
