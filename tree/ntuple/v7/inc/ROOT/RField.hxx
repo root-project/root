@@ -311,10 +311,10 @@ public:
    /// read callback.
    void Read(NTupleSize_t globalIndex, RFieldValue *value) {
       if (fIsSimple)
-         return (void)fPrincipalColumn->Read(globalIndex, &value->fMappedElement);
+         return (void)fPrincipalColumn->Read(globalIndex, value->GetRawPtr());
 
       if (fTraits & kTraitMappable)
-         fPrincipalColumn->Read(globalIndex, &value->fMappedElement);
+         fPrincipalColumn->Read(globalIndex, value->GetRawPtr());
       else
          ReadGlobalImpl(globalIndex, value);
       if (R__unlikely(!fReadCallbacks.empty()))
@@ -323,10 +323,10 @@ public:
 
    void Read(const RClusterIndex &clusterIndex, RFieldValue *value) {
       if (fIsSimple)
-         return (void)fPrincipalColumn->Read(clusterIndex, &value->fMappedElement);
+         return (void)fPrincipalColumn->Read(clusterIndex, value->GetRawPtr());
 
       if (fTraits & kTraitMappable)
-         fPrincipalColumn->Read(clusterIndex, &value->fMappedElement);
+         fPrincipalColumn->Read(clusterIndex, value->GetRawPtr());
       else
          ReadInClusterImpl(clusterIndex, value);
       if (R__unlikely(!fReadCallbacks.empty()))
