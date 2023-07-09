@@ -404,9 +404,7 @@ std::size_t ROOT::Experimental::Detail::RFieldBase::AppendImpl(const ROOT::Exper
    return 0;
 }
 
-void ROOT::Experimental::Detail::RFieldBase::ReadGlobalImpl(
-   ROOT::Experimental::NTupleSize_t /*index*/,
-   RFieldValue* /*value*/)
+void ROOT::Experimental::Detail::RFieldBase::ReadGlobalImpl(ROOT::Experimental::NTupleSize_t /*index*/, void * /* to */)
 {
    R__ASSERT(false);
 }
@@ -1084,10 +1082,9 @@ std::size_t ROOT::Experimental::RField<std::string>::AppendImpl(const ROOT::Expe
    return length + fColumns[0]->GetElement()->GetPackedSize();
 }
 
-void ROOT::Experimental::RField<std::string>::ReadGlobalImpl(
-   ROOT::Experimental::NTupleSize_t globalIndex, ROOT::Experimental::Detail::RFieldValue *value)
+void ROOT::Experimental::RField<std::string>::ReadGlobalImpl(ROOT::Experimental::NTupleSize_t globalIndex, void *to)
 {
-   auto typedValue = value->Get<std::string>();
+   auto typedValue = static_cast<std::string *>(to);
    RClusterIndex collectionStart;
    ClusterSize_t nChars;
    fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, &nChars);
@@ -1214,10 +1211,10 @@ std::size_t ROOT::Experimental::RClassField::AppendImpl(const Detail::RFieldValu
    return nbytes;
 }
 
-void ROOT::Experimental::RClassField::ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue *value)
+void ROOT::Experimental::RClassField::ReadGlobalImpl(NTupleSize_t globalIndex, void *to)
 {
    for (unsigned i = 0; i < fSubFields.size(); i++) {
-      auto memberValue = fSubFields[i]->CaptureValue(value->Get<unsigned char>() + fSubFieldsInfo[i].fOffset);
+      auto memberValue = fSubFields[i]->CaptureValue(static_cast<unsigned char *>(to) + fSubFieldsInfo[i].fOffset);
       fSubFields[i]->Read(globalIndex, &memberValue);
    }
 }
@@ -1397,13 +1394,13 @@ std::size_t ROOT::Experimental::RCollectionClassField::AppendImpl(const Detail::
    return nbytes + fColumns[0]->GetElement()->GetPackedSize();
 }
 
-void ROOT::Experimental::RCollectionClassField::ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue *value)
+void ROOT::Experimental::RCollectionClassField::ReadGlobalImpl(NTupleSize_t globalIndex, void *to)
 {
    ClusterSize_t nItems;
    RClusterIndex collectionStart;
    fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, &nItems);
 
-   TVirtualCollectionProxy::TPushPop RAII(fProxy.get(), value->GetRawPtr());
+   TVirtualCollectionProxy::TPushPop RAII(fProxy.get(), to);
    void *obj =
       fProxy->Allocate(static_cast<std::uint32_t>(nItems), (fProperties & TVirtualCollectionProxy::kNeedDelete));
 
@@ -1414,7 +1411,7 @@ void ROOT::Experimental::RCollectionClassField::ReadGlobalImpl(NTupleSize_t glob
       auto itemValue = fSubFields[0]->CaptureValue(elementPtr);
       fSubFields[0]->Read(collectionStart + (i++), &itemValue);
    }
-   if (obj != value->GetRawPtr())
+   if (obj != to)
       fProxy->Commit(obj);
 }
 
@@ -1554,10 +1551,10 @@ std::size_t ROOT::Experimental::RRecordField::AppendImpl(const Detail::RFieldVal
    return nbytes;
 }
 
-void ROOT::Experimental::RRecordField::ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue *value)
+void ROOT::Experimental::RRecordField::ReadGlobalImpl(NTupleSize_t globalIndex, void *to)
 {
    for (unsigned i = 0; i < fSubFields.size(); ++i) {
-      auto memberValue = fSubFields[i]->CaptureValue(value->Get<unsigned char>() + fOffsets[i]);
+      auto memberValue = fSubFields[i]->CaptureValue(static_cast<unsigned char *>(to) + fOffsets[i]);
       fSubFields[i]->Read(globalIndex, &memberValue);
    }
 }
@@ -1644,9 +1641,9 @@ std::size_t ROOT::Experimental::RVectorField::AppendImpl(const Detail::RFieldVal
    return nbytes + fColumns[0]->GetElement()->GetPackedSize();
 }
 
-void ROOT::Experimental::RVectorField::ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue *value)
+void ROOT::Experimental::RVectorField::ReadGlobalImpl(NTupleSize_t globalIndex, void *to)
 {
-   auto typedValue = value->Get<std::vector<char>>();
+   auto typedValue = static_cast<std::vector<char> *>(to);
 
    ClusterSize_t nItems;
    RClusterIndex collectionStart;
@@ -1784,12 +1781,12 @@ std::size_t ROOT::Experimental::RRVecField::AppendImpl(const Detail::RFieldValue
    return nbytes + fColumns[0]->GetElement()->GetPackedSize();
 }
 
-void ROOT::Experimental::RRVecField::ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue *value)
+void ROOT::Experimental::RRVecField::ReadGlobalImpl(NTupleSize_t globalIndex, void *to)
 {
    // TODO as a performance optimization, we could assign values to elements of the inline buffer:
    // if size < inline buffer size: we save one allocation here and usage of the RVec skips a pointer indirection
 
-   auto [beginPtr, sizePtr, capacityPtr] = GetRVecDataMembers(value->GetRawPtr());
+   auto [beginPtr, sizePtr, capacityPtr] = GetRVecDataMembers(to);
 
    // Read collection info for this entry
    ClusterSize_t nItems;
@@ -2023,9 +2020,9 @@ std::size_t ROOT::Experimental::RField<std::vector<bool>>::AppendImpl(const Deta
    return count + fColumns[0]->GetElement()->GetPackedSize();
 }
 
-void ROOT::Experimental::RField<std::vector<bool>>::ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue* value)
+void ROOT::Experimental::RField<std::vector<bool>>::ReadGlobalImpl(NTupleSize_t globalIndex, void *to)
 {
-   auto typedValue = value->Get<std::vector<bool>>();
+   auto typedValue = static_cast<std::vector<bool> *>(to);
 
    ClusterSize_t nItems;
    RClusterIndex collectionStart;
@@ -2124,9 +2121,9 @@ std::size_t ROOT::Experimental::RArrayField::AppendImpl(const Detail::RFieldValu
    return nbytes;
 }
 
-void ROOT::Experimental::RArrayField::ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue *value)
+void ROOT::Experimental::RArrayField::ReadGlobalImpl(NTupleSize_t globalIndex, void *to)
 {
-   auto arrayPtr = value->Get<unsigned char>();
+   auto arrayPtr = static_cast<unsigned char *>(to);
    for (unsigned i = 0; i < fArrayLength; ++i) {
       auto itemValue = fSubFields[0]->CaptureValue(arrayPtr + (i * fItemSize));
       fSubFields[0]->Read(globalIndex * fArrayLength + i, &itemValue);
@@ -2232,9 +2229,9 @@ std::size_t ROOT::Experimental::RBitsetField::AppendImpl(const Detail::RFieldVal
    return fN;
 }
 
-void ROOT::Experimental::RBitsetField::ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue *value)
+void ROOT::Experimental::RBitsetField::ReadGlobalImpl(NTupleSize_t globalIndex, void *to)
 {
-   auto *asULongArray = value->Get<Word_t>();
+   auto *asULongArray = static_cast<Word_t *>(to);
    bool elementValue;
    for (std::size_t i = 0; i < fN; ++i) {
       fColumns[0]->Read(globalIndex * fN + i, &elementValue);
@@ -2321,7 +2318,7 @@ std::size_t ROOT::Experimental::RVariantField::AppendImpl(const Detail::RFieldVa
    return nbytes + sizeof(RColumnSwitch);
 }
 
-void ROOT::Experimental::RVariantField::ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue *value)
+void ROOT::Experimental::RVariantField::ReadGlobalImpl(NTupleSize_t globalIndex, void *to)
 {
    RClusterIndex variantIndex;
    std::uint32_t tag;
@@ -2331,10 +2328,10 @@ void ROOT::Experimental::RVariantField::ReadGlobalImpl(NTupleSize_t globalIndex,
    // the type list.  This happens, e.g., if the field was late added; in this case, keep the invalid tag, which makes
    // any `std::holds_alternative<T>` check fail later.
    if (R__likely(tag > 0)) {
-      auto itemValue = fSubFields[tag - 1]->GenerateValue(value->GetRawPtr());
+      auto itemValue = fSubFields[tag - 1]->GenerateValue(to);
       fSubFields[tag - 1]->Read(variantIndex, &itemValue);
    }
-   SetTag(value->GetRawPtr(), tag);
+   SetTag(to, tag);
 }
 
 const ROOT::Experimental::Detail::RFieldBase::RColumnRepresentations &
@@ -2511,9 +2508,9 @@ std::size_t ROOT::Experimental::RUniquePtrField::AppendImpl(const Detail::RField
    }
 }
 
-void ROOT::Experimental::RUniquePtrField::ReadGlobalImpl(NTupleSize_t globalIndex, Detail::RFieldValue *value)
+void ROOT::Experimental::RUniquePtrField::ReadGlobalImpl(NTupleSize_t globalIndex, void *to)
 {
-   auto ptr = value->Get<std::unique_ptr<char>>();
+   auto ptr = static_cast<std::unique_ptr<char> *>(to);
    bool isValidValue = static_cast<bool>(*ptr);
 
    auto itemIndex = GetItemIndex(globalIndex);

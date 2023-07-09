@@ -99,13 +99,12 @@ public:
    size_t GetAlignment() const final { return alignof(std::size_t); }
 
    /// Get the number of elements of the collection identified by globalIndex
-   void
-   ReadGlobalImpl(ROOT::Experimental::NTupleSize_t globalIndex, ROOT::Experimental::Detail::RFieldValue *value) final
+   void ReadGlobalImpl(ROOT::Experimental::NTupleSize_t globalIndex, void *to) final
    {
       RClusterIndex collectionStart;
       ClusterSize_t size;
       fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, &size);
-      *value->Get<std::size_t>() = size;
+      *static_cast<std::size_t *>(to) = size;
    }
 
    /// Get the number of elements of the collection identified by clusterIndex
