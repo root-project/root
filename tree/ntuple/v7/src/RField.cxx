@@ -1186,11 +1186,11 @@ void ROOT::Experimental::RClassField::AddReadCallbacksFromIORules(const std::spa
       }
       auto func = rule->GetReadFunctionPointer();
       R__ASSERT(func != nullptr);
-      fReadCallbacks.emplace_back([func, classp](Detail::RFieldValue &value) {
+      fReadCallbacks.emplace_back([func, classp](void *target) {
          TVirtualObject oldObj{nullptr};
          oldObj.fClass = classp;
-         oldObj.fObject = value.GetRawPtr();
-         func(static_cast<char *>(value.GetRawPtr()), &oldObj);
+         oldObj.fObject = target;
+         func(static_cast<char *>(target), &oldObj);
          oldObj.fClass = nullptr; // TVirtualObject does not own the value
       });
    }
