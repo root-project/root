@@ -1095,8 +1095,7 @@ void ROOT::Experimental::RField<std::string>::ReadGlobalImpl(
       typedValue->clear();
    } else {
       typedValue->resize(nChars);
-      Detail::RColumnElement<char> elemChars(const_cast<char*>(typedValue->data()));
-      fColumns[1]->ReadV(collectionStart, nChars, &elemChars);
+      fColumns[1]->ReadV(collectionStart, nChars, const_cast<char *>(typedValue->data()));
    }
 }
 
