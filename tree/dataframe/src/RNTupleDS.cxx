@@ -109,13 +109,12 @@ public:
    }
 
    /// Get the number of elements of the collection identified by clusterIndex
-   void ReadInClusterImpl(const ROOT::Experimental::RClusterIndex &clusterIndex,
-                          ROOT::Experimental::Detail::RFieldValue *value) final
+   void ReadInClusterImpl(const ROOT::Experimental::RClusterIndex &clusterIndex, void *to) final
    {
       RClusterIndex collectionStart;
       ClusterSize_t size;
       fPrincipalColumn->GetCollectionInfo(clusterIndex, &collectionStart, &size);
-      *value->Get<std::size_t>() = size;
+      *static_cast<std::size_t *>(to) = size;
    }
 };
 
