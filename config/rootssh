@@ -45,7 +45,7 @@ elif [[ "$1" == "--as-listener--" ]] ; then
 
    while [ $flag -ne 0 ] ; do
 
-      line="$(netcat -l -U $listener_socket)"
+      line="$(nc -l -U $listener_socket)"
 
       if [[ "${line:0:5}" == "http:" ]] ; then
          remoteport=${line:5}
@@ -78,7 +78,7 @@ else
    # analyze arguments
 
    localport=""
-   browser="xdg-open"
+   browser=""
    ssh_destination=""
    ssh_command=""
    ssh_args=""
@@ -109,12 +109,33 @@ else
       fi
    done
 
+
+   # List of potential local client browsers
+   browsers=( xdg-open open chromium firefox )
+   if [ -z "${browser}" ]; then
+      for b in "${browsers[@]}"
+      do
+         # test if the browser is available.
+         which ${b} 2>&1 >/dev/null
+         if [ $? -eq 0 ]; then
+            # The search was successful.
+           browser=${b}
+            break
+         fi
+      done
+   fi
+
+   if [ -z "${browser}" ]; then
+       echo "No appropriate browser found; please use --browser option"
+       exit 1
+   fi
+
    if [[ "x$localport" == "x" ]] ; then
       probe="probing"
       localport=7777
       while [[ "x$probe" != "x" ]] ; do
          localport=$((7000 + $RANDOM%1000))
-         probe=$(netcat -zv localhost $localport 2>/dev/null)
+         probe=$(nc -zv localhost $localport 2>/dev/null)
       done
    fi
 
@@ -137,7 +158,7 @@ else
 
    # try to stop listener with "stop" message
 
-   echo "stop" | netcat -U $listener_local -q 1 >/dev/null 2>&1
+   echo "stop" | nc -U $listener_local -q 1 >/dev/null 2>&1
 
    # Kill listener process
 
