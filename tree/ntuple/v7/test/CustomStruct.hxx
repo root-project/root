@@ -5,10 +5,10 @@
 #include <TRootIOCtor.h>
 
 #include <cstdint>
+#include <set>
 #include <string>
 #include <variant>
 #include <vector>
-#include <set>
 
 /**
  * Used to test serialization and deserialization of classes in RNTuple with TClass
