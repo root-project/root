@@ -71,7 +71,7 @@ ClassImp(TMVA::DataLoader);
                        For example, by setting
 ~~~~~~~~~~~~~~~{.cpp}
    TMVA::gConfig()::GetIONames().fWeightFileDirPrefix = "/tmp";
-   TMVA::gConfig()::GetIONames().fWeightFileDir = "myTrainigResults";
+   TMVA::gConfig()::GetIONames().fWeightFileDir = "myTrainingResults";
 ~~~~~~~~~~~~~~~
                        The training results will be stored in the `/tmp/thedlName/myTrainingResults`
                        directory.
