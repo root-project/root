@@ -1214,16 +1214,14 @@ std::size_t ROOT::Experimental::RClassField::AppendImpl(const Detail::RFieldValu
 void ROOT::Experimental::RClassField::ReadGlobalImpl(NTupleSize_t globalIndex, void *to)
 {
    for (unsigned i = 0; i < fSubFields.size(); i++) {
-      auto memberValue = fSubFields[i]->CaptureValue(static_cast<unsigned char *>(to) + fSubFieldsInfo[i].fOffset);
-      fSubFields[i]->Read(globalIndex, &memberValue);
+      fSubFields[i]->Read(globalIndex, static_cast<unsigned char *>(to) + fSubFieldsInfo[i].fOffset);
    }
 }
 
 void ROOT::Experimental::RClassField::ReadInClusterImpl(const RClusterIndex &clusterIndex, void *to)
 {
    for (unsigned i = 0; i < fSubFields.size(); i++) {
-      auto memberValue = fSubFields[i]->CaptureValue(static_cast<unsigned char *>(to) + fSubFieldsInfo[i].fOffset);
-      fSubFields[i]->Read(clusterIndex, &memberValue);
+      fSubFields[i]->Read(clusterIndex, static_cast<unsigned char *>(to) + fSubFieldsInfo[i].fOffset);
    }
 }
 
@@ -1405,11 +1403,9 @@ void ROOT::Experimental::RCollectionClassField::ReadGlobalImpl(NTupleSize_t glob
       fProxy->Allocate(static_cast<std::uint32_t>(nItems), (fProperties & TVirtualCollectionProxy::kNeedDelete));
 
    unsigned i = 0;
-   for (auto elementPtr :
-        RCollectionIterableOnce{obj, fIFuncsRead, fProxy.get(),
-                                (fCollectionType == kSTLvector || obj != value->GetRawPtr() ? fItemSize : 0U)}) {
-      auto itemValue = fSubFields[0]->CaptureValue(elementPtr);
-      fSubFields[0]->Read(collectionStart + (i++), &itemValue);
+   for (auto elementPtr : RCollectionIterableOnce{obj, fIFuncsRead, fProxy.get(),
+                                                  (fCollectionType == kSTLvector || obj != to ? fItemSize : 0U)}) {
+      fSubFields[0]->Read(collectionStart + (i++), elementPtr);
    }
    if (obj != to)
       fProxy->Commit(obj);
@@ -1554,16 +1550,14 @@ std::size_t ROOT::Experimental::RRecordField::AppendImpl(const Detail::RFieldVal
 void ROOT::Experimental::RRecordField::ReadGlobalImpl(NTupleSize_t globalIndex, void *to)
 {
    for (unsigned i = 0; i < fSubFields.size(); ++i) {
-      auto memberValue = fSubFields[i]->CaptureValue(static_cast<unsigned char *>(to) + fOffsets[i]);
-      fSubFields[i]->Read(globalIndex, &memberValue);
+      fSubFields[i]->Read(globalIndex, static_cast<unsigned char *>(to) + fOffsets[i]);
    }
 }
 
 void ROOT::Experimental::RRecordField::ReadInClusterImpl(const RClusterIndex &clusterIndex, void *to)
 {
    for (unsigned i = 0; i < fSubFields.size(); ++i) {
-      auto memberValue = fSubFields[i]->CaptureValue(static_cast<unsigned char *>(to) + fOffsets[i]);
-      fSubFields[i]->Read(clusterIndex, &memberValue);
+      fSubFields[i]->Read(clusterIndex, static_cast<unsigned char *>(to) + fOffsets[i]);
    }
 }
 
@@ -1672,8 +1666,7 @@ void ROOT::Experimental::RVectorField::ReadGlobalImpl(NTupleSize_t globalIndex, 
    }
 
    for (std::size_t i = 0; i < nItems; ++i) {
-      auto itemValue = fSubFields[0]->CaptureValue(typedValue->data() + (i * fItemSize));
-      fSubFields[0]->Read(collectionStart + i, &itemValue);
+      fSubFields[0]->Read(collectionStart + i, typedValue->data() + (i * fItemSize));
    }
 }
 
@@ -1844,8 +1837,7 @@ void ROOT::Experimental::RRVecField::ReadGlobalImpl(NTupleSize_t globalIndex, vo
 
    // Read the new values into the collection elements
    for (std::size_t i = 0; i < nItems; ++i) {
-      auto itemValue = fSubFields[0]->CaptureValue(begin + (i * fItemSize));
-      fSubFields[0]->Read(collectionStart + i, &itemValue);
+      fSubFields[0]->Read(collectionStart + i, begin + (i * fItemSize));
    }
 }
 
@@ -2031,8 +2023,7 @@ void ROOT::Experimental::RField<std::vector<bool>>::ReadGlobalImpl(NTupleSize_t 
    typedValue->resize(nItems);
    for (unsigned i = 0; i < nItems; ++i) {
       bool bval;
-      auto itemValue = fSubFields[0]->GenerateValue(&bval);
-      fSubFields[0]->Read(collectionStart + i, &itemValue);
+      fSubFields[0]->Read(collectionStart + i, &bval);
       (*typedValue)[i] = bval;
    }
 }
@@ -2125,8 +2116,7 @@ void ROOT::Experimental::RArrayField::ReadGlobalImpl(NTupleSize_t globalIndex, v
 {
    auto arrayPtr = static_cast<unsigned char *>(to);
    for (unsigned i = 0; i < fArrayLength; ++i) {
-      auto itemValue = fSubFields[0]->CaptureValue(arrayPtr + (i * fItemSize));
-      fSubFields[0]->Read(globalIndex * fArrayLength + i, &itemValue);
+      fSubFields[0]->Read(globalIndex * fArrayLength + i, arrayPtr + (i * fItemSize));
    }
 }
 
@@ -2134,9 +2124,8 @@ void ROOT::Experimental::RArrayField::ReadInClusterImpl(const RClusterIndex &clu
 {
    auto arrayPtr = static_cast<unsigned char *>(to);
    for (unsigned i = 0; i < fArrayLength; ++i) {
-      auto itemValue = fSubFields[0]->CaptureValue(arrayPtr + (i * fItemSize));
       fSubFields[0]->Read(RClusterIndex(clusterIndex.GetClusterId(), clusterIndex.GetIndex() * fArrayLength + i),
-                          &itemValue);
+                          arrayPtr + (i * fItemSize));
    }
 }
 
@@ -2329,7 +2318,7 @@ void ROOT::Experimental::RVariantField::ReadGlobalImpl(NTupleSize_t globalIndex,
    // any `std::holds_alternative<T>` check fail later.
    if (R__likely(tag > 0)) {
       auto itemValue = fSubFields[tag - 1]->GenerateValue(to);
-      fSubFields[tag - 1]->Read(variantIndex, &itemValue);
+      fSubFields[tag - 1]->Read(variantIndex, itemValue.GetRawPtr());
    }
    SetTag(to, tag);
 }
@@ -2534,7 +2523,7 @@ void ROOT::Experimental::RUniquePtrField::ReadGlobalImpl(NTupleSize_t globalInde
       ptr->reset(itemValue.Get<char>());
    }
 
-   fSubFields[0]->Read(itemIndex, &itemValue);
+   fSubFields[0]->Read(itemIndex, itemValue.GetRawPtr());
 }
 
 ROOT::Experimental::Detail::RFieldValue ROOT::Experimental::RUniquePtrField::GenerateValue(void *where)

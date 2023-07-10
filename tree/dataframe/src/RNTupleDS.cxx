@@ -151,7 +151,7 @@ public:
    void *GetImpl(Long64_t entry) final
    {
       if (entry != fLastEntry) {
-         fField->Read(entry, &fValue);
+         fField->Read(entry, fValue.GetRawPtr());
          fLastEntry = entry;
       }
       return fValue.GetRawPtr();

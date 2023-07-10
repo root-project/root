@@ -181,7 +181,7 @@ public:
       if constexpr (Internal::isMappable<FieldT>)
          return *fField.Map(globalIndex);
       else {
-         fField.Read(globalIndex, &fValue);
+         fField.Read(globalIndex, fValue.GetRawPtr());
          return *fValue.Get<T>();
       }
    }
@@ -191,7 +191,7 @@ public:
       if constexpr (Internal::isMappable<FieldT>)
          return *fField.Map(clusterIndex);
       else {
-         fField.Read(clusterIndex, &fValue);
+         fField.Read(clusterIndex, fValue.GetRawPtr());
          return *fValue.Get<T>();
       }
    }
