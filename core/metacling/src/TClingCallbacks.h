@@ -68,7 +68,7 @@ public:
 
    void InclusionDirective(clang::SourceLocation /*HashLoc*/, const clang::Token & /*IncludeTok*/,
                            llvm::StringRef FileName, bool /*IsAngled*/, clang::CharSourceRange /*FilenameRange*/,
-                           const clang::FileEntry * /*File*/, llvm::StringRef /*SearchPath*/,
+                           clang::OptionalFileEntryRef /*File*/, llvm::StringRef /*SearchPath*/,
                            llvm::StringRef /*RelativePath*/, const clang::Module * /*Imported*/,
                            clang::SrcMgr::CharacteristicKind /*FileType*/) override;
 
@@ -129,7 +129,7 @@ public:
 
 private:
    bool tryAutoParseInternal(llvm::StringRef Name, clang::LookupResult &R,
-                            clang::Scope *S, const clang::FileEntry* FE = 0);
+                            clang::Scope *S, clang::OptionalFileEntryRef FE = llvm::None);
    bool tryFindROOTSpecialInternal(clang::LookupResult &R, clang::Scope *S);
    bool tryResolveAtRuntimeInternal(clang::LookupResult &R, clang::Scope *S);
    bool shouldResolveAtRuntime(clang::LookupResult &R, clang::Scope *S);

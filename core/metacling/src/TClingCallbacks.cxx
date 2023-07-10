@@ -231,7 +231,7 @@ void TClingCallbacks::InclusionDirective(clang::SourceLocation sLoc/*HashLoc*/,
                                          llvm::StringRef FileName,
                                          bool /*IsAngled*/,
                                          clang::CharSourceRange /*FilenameRange*/,
-                                         const clang::FileEntry *FE,
+                                         clang::OptionalFileEntryRef FE,
                                          llvm::StringRef /*SearchPath*/,
                                          llvm::StringRef /*RelativePath*/,
                                          const clang::Module * Imported,
@@ -619,7 +619,7 @@ bool TClingCallbacks::LookupObject(clang::TagDecl* Tag) {
 // filename.
 //
 bool TClingCallbacks::tryAutoParseInternal(llvm::StringRef Name, LookupResult &R,
-                                           Scope *S, const FileEntry* FE /*=0*/) {
+                                           Scope *S, clang::OptionalFileEntryRef FE) {
    if (!fROOTSpecialNamespace) {
       // init error or rootcling
       return false;
