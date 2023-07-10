@@ -861,7 +861,7 @@ namespace {
    // Yes, throwing exceptions in error handlers is bad.
    // Doing nothing is pretty terrible, too.
    void exceptionErrorHandler(void * /*user_data*/,
-                              const std::string& reason,
+                              const char *reason,
                               bool /*gen_crash_diag*/) {
       throw std::runtime_error(std::string(">>> Interpreter compilation error:\n") + reason);
    }

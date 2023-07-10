@@ -3378,7 +3378,7 @@ std::string ROOT::TMetaUtils::GetFileName(const clang::Decl& decl,
    // points to the same file as the long version. If such a short version
    // exists it will be returned. If it doesn't the long version is returned.
    bool isAbsolute = llvm::sys::path::is_absolute(headerFileName);
-   llvm::Optional<clang::FileEntryRef> FELong;
+   clang::OptionalFileEntryRef FELong;
    // Find the longest available match.
    for (llvm::sys::path::const_iterator
            IDir = llvm::sys::path::begin(headerFileName),
@@ -4494,7 +4494,7 @@ static bool hasSomeTypedefSomewhere(const clang::Type* T) {
       return false; // shrug...
     }
     bool VisitTypeOfType(const TypeOfType* TOT) {
-      return TOT->getUnderlyingType().getTypePtr();
+      return TOT->getUnmodifiedType().getTypePtr();
     }
     bool VisitElaboratedType(const ElaboratedType* ET) {
       NestedNameSpecifier* NNS = ET->getQualifier();
