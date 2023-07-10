@@ -1206,8 +1206,7 @@ std::size_t ROOT::Experimental::RClassField::AppendImpl(void *from)
 {
    std::size_t nbytes = 0;
    for (unsigned i = 0; i < fSubFields.size(); i++) {
-      auto memberValue = fSubFields[i]->CaptureValue(static_cast<unsigned char *>(from) + fSubFieldsInfo[i].fOffset);
-      nbytes += fSubFields[i]->Append(memberValue);
+      nbytes += fSubFields[i]->Append(static_cast<unsigned char *>(from) + fSubFieldsInfo[i].fOffset);
    }
    return nbytes;
 }
@@ -1383,8 +1382,7 @@ std::size_t ROOT::Experimental::RCollectionClassField::AppendImpl(void *from)
    TVirtualCollectionProxy::TPushPop RAII(fProxy.get(), from);
    for (auto ptr :
         RCollectionIterableOnce{from, fIFuncsWrite, fProxy.get(), (fCollectionType == kSTLvector ? fItemSize : 0U)}) {
-      auto itemValue = fSubFields[0]->CaptureValue(ptr);
-      nbytes += fSubFields[0]->Append(itemValue);
+      nbytes += fSubFields[0]->Append(ptr);
       count++;
    }
 
@@ -1543,8 +1541,7 @@ std::size_t ROOT::Experimental::RRecordField::AppendImpl(void *from)
 {
    std::size_t nbytes = 0;
    for (unsigned i = 0; i < fSubFields.size(); ++i) {
-      auto memberValue = fSubFields[i]->CaptureValue(static_cast<unsigned char *>(from) + fOffsets[i]);
-      nbytes += fSubFields[i]->Append(memberValue);
+      nbytes += fSubFields[i]->Append(static_cast<unsigned char *>(from) + fOffsets[i]);
    }
    return nbytes;
 }
@@ -1630,8 +1627,7 @@ std::size_t ROOT::Experimental::RVectorField::AppendImpl(void *from)
    std::size_t nbytes = 0;
    auto count = typedValue->size() / fItemSize;
    for (unsigned i = 0; i < count; ++i) {
-      auto itemValue = fSubFields[0]->CaptureValue(typedValue->data() + (i * fItemSize));
-      nbytes += fSubFields[0]->Append(itemValue);
+      nbytes += fSubFields[0]->Append(typedValue->data() + (i * fItemSize));
    }
    fNWritten += count;
    fColumns[0]->Append(&fNWritten);
@@ -1768,8 +1764,7 @@ std::size_t ROOT::Experimental::RRVecField::AppendImpl(void *from)
    std::size_t nbytes = 0;
    char *begin = reinterpret_cast<char *>(*beginPtr); // for pointer arithmetics
    for (std::int32_t i = 0; i < *sizePtr; ++i) {
-      auto elementValue = fSubFields[0]->CaptureValue(begin + i * fItemSize);
-      nbytes += fSubFields[0]->Append(elementValue);
+      nbytes += fSubFields[0]->Append(begin + i * fItemSize);
    }
 
    fNWritten += *sizePtr;
@@ -2008,8 +2003,7 @@ std::size_t ROOT::Experimental::RField<std::vector<bool>>::AppendImpl(void *from
    auto count = typedValue->size();
    for (unsigned i = 0; i < count; ++i) {
       bool bval = (*typedValue)[i];
-      auto itemValue = fSubFields[0]->CaptureValue(&bval);
-      fSubFields[0]->Append(itemValue);
+      fSubFields[0]->Append(&bval);
    }
    fNWritten += count;
    fColumns[0]->Append(&fNWritten);
@@ -2111,8 +2105,7 @@ std::size_t ROOT::Experimental::RArrayField::AppendImpl(void *from)
    std::size_t nbytes = 0;
    auto arrayPtr = static_cast<unsigned char *>(from);
    for (unsigned i = 0; i < fArrayLength; ++i) {
-      auto itemValue = fSubFields[0]->CaptureValue(arrayPtr + (i * fItemSize));
-      nbytes += fSubFields[0]->Append(itemValue);
+      nbytes += fSubFields[0]->Append(arrayPtr + (i * fItemSize));
    }
    return nbytes;
 }
@@ -2303,8 +2296,7 @@ std::size_t ROOT::Experimental::RVariantField::AppendImpl(void *from)
    std::size_t nbytes = 0;
    auto index = 0;
    if (tag > 0) {
-      auto itemValue = fSubFields[tag - 1]->CaptureValue(from);
-      nbytes += fSubFields[tag - 1]->Append(itemValue);
+      nbytes += fSubFields[tag - 1]->Append(from);
       index = fNWritten[tag - 1]++;
    }
    RColumnSwitch varSwitch(ClusterSize_t(index), tag);
@@ -2436,16 +2428,16 @@ std::size_t ROOT::Experimental::RNullableField::AppendNull()
    if (IsDense()) {
       bool mask = false;
       fPrincipalColumn->Append(&mask);
-      return 1 + fSubFields[0]->Append(fDefaultItemValue);
+      return 1 + fSubFields[0]->Append(fDefaultItemValue.GetRawPtr());
    } else {
       fPrincipalColumn->Append(&fNWritten);
       return sizeof(ClusterSize_t);
    }
 }
 
-std::size_t ROOT::Experimental::RNullableField::AppendValue(const Detail::RFieldValue &value)
+std::size_t ROOT::Experimental::RNullableField::AppendValue(void *from)
 {
-   auto nbytesItem = fSubFields[0]->Append(value);
+   auto nbytesItem = fSubFields[0]->Append(from);
    if (IsDense()) {
       bool mask = true;
       fPrincipalColumn->Append(&mask);
@@ -2495,8 +2487,7 @@ std::size_t ROOT::Experimental::RUniquePtrField::AppendImpl(void *from)
 {
    auto typedValue = static_cast<std::unique_ptr<char> *>(from);
    if (*typedValue) {
-      auto itemValue = fSubFields[0]->CaptureValue(typedValue->get());
-      return AppendValue(itemValue);
+      return AppendValue(typedValue->get());
    } else {
       return AppendNull();
    }
