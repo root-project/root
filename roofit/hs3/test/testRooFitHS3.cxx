@@ -26,6 +26,9 @@
 
 namespace {
 
+// If the JSON files should be written out for debugging purpose.
+const bool writeJsonFiles = false;
+
 // Validate the JSON IO for a given RooAbsReal in a RooWorkspace. The workspace
 // will be written out and read back, and then the values of the old and new
 // RooAbsReal will be compared for equality in each bin of the observable that
@@ -34,6 +37,9 @@ int validate(RooWorkspace &ws1, std::string const &argName)
 {
    RooWorkspace ws2;
 
+   if (writeJsonFiles) {
+      RooJSONFactoryWSTool{ws1}.exportJSON(argName + ".json");
+   }
    RooJSONFactoryWSTool{ws2}.importJSONfromString(RooJSONFactoryWSTool{ws1}.exportJSONtoString());
 
    RooRealVar &x1 = *ws1.var("x");
@@ -151,7 +157,7 @@ TEST(RooFitHS3, RooExponential)
 
 TEST(RooFitHS3, RooExpPoly)
 {
-   // To silence the numeric differentiation
+   // To silence the numeric integration
    RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
 
    // Test different values for "lowestOrder"
@@ -173,6 +179,17 @@ TEST(RooFitHS3, RooGamma)
 TEST(RooFitHS3, RooGaussian)
 {
    int status = validate({"Gaussian::gaussian(x[0, 10], mean[5], sigma[1.0, 0.1, 10])"});
+   EXPECT_EQ(status, 0);
+}
+
+TEST(RooFitHS3, RooGenericPdf)
+{
+   // To silence the numeric integration
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   // At this point, only basic arithmetic operations with +, -, * and / are
+   // defined in the HS3 standard.
+   int status = validate({"x[0, 10]", "c[5]", "a[1.0, 0.1, 10]", "EXPR::genericPdf('a * x + c', {x, a, c})"});
    EXPECT_EQ(status, 0);
 }
 
