@@ -1573,12 +1573,9 @@ bool ROOT::TMetaUtils::hasOpaqueTypedef(clang::QualType instanceType, const ROOT
    //         fprintf(stderr,"ERROR: Could not findS TST for %s\n",type_name.c_str());
          return false;
       }
-      for(clang::TemplateSpecializationType::iterator
-          I = TST->begin(), E = TST->end();
-          I!=E; ++I)
-      {
-         if (I->getKind() == clang::TemplateArgument::Type) {
-            result |= ROOT::TMetaUtils::hasOpaqueTypedef(I->getAsType(), normCtxt);
+      for (const clang::TemplateArgument &TA : TST->template_arguments()) {
+         if (TA.getKind() == clang::TemplateArgument::Type) {
+            result |= ROOT::TMetaUtils::hasOpaqueTypedef(TA.getAsType(), normCtxt);
          }
       }
    }
@@ -2939,12 +2936,11 @@ clang::QualType ROOT::TMetaUtils::AddDefaultParameters(clang::QualType instanceT
       unsigned int dropDefault = normCtxt.GetConfig().DropDefaultArg(*Template);
 
       llvm::SmallVector<clang::TemplateArgument, 4> desArgs;
+      llvm::ArrayRef<clang::TemplateArgument> template_arguments = TST->template_arguments();
       unsigned int Idecl = 0, Edecl = TSTdecl->getTemplateArgs().size();
       unsigned int maxAddArg = TSTdecl->getTemplateArgs().size() - dropDefault;
-      for(clang::TemplateSpecializationType::iterator
-             I = TST->begin(), E = TST->end();
-          Idecl != Edecl;
-          I!=E ? ++I : nullptr, ++Idecl, ++Param) {
+      for (const clang::TemplateArgument *I = template_arguments.begin(), *E = template_arguments.end(); Idecl != Edecl;
+           I != E ? ++I : nullptr, ++Idecl, ++Param) {
 
          if (I != E) {
 
@@ -3864,7 +3860,8 @@ static void KeepNParams(clang::QualType& normalizedType,
    llvm::SmallVector<TemplateArgument, 4> argsToKeep;
 
    const int nArgs = tArgs.size();
-   const int nNormArgs = normalizedTst->getNumArgs();
+   const auto &normArgs = normalizedTst->template_arguments();
+   const int nNormArgs = normArgs.size();
 
    bool mightHaveChanged = false;
 
@@ -3882,7 +3879,7 @@ static void KeepNParams(clang::QualType& normalizedType,
       if (formal == nNormArgs || inst == nNormArgs) break;
 
       const TemplateArgument& tArg = tArgs.get(formal);
-      TemplateArgument normTArg(normalizedTst->getArgs()[inst]);
+      TemplateArgument normTArg(normArgs[inst]);
 
       bool shouldKeepArg = nArgsToKeep < 0 || inst < nArgsToKeep;
       if (isStdDropDefault) shouldKeepArg = false;
@@ -3900,7 +3897,7 @@ static void KeepNParams(clang::QualType& normalizedType,
             // in the template instance.  So to avoid inadvertenly dropping those
             // arguments we just process all remaining argument and exit the main loop.
             for( ; inst != nNormArgs; ++inst) {
-               normTArg = normalizedTst->getArgs()[inst];
+               normTArg = normArgs[inst];
                mightHaveChanged |= RecurseKeepNParams(normTArg, tArg, interp, normCtxt, astCtxt);
                argsToKeep.push_back(normTArg);
             }
@@ -4487,11 +4484,9 @@ static bool hasSomeTypedefSomewhere(const clang::Type* T) {
       return Visit(STST->getReplacementType().getTypePtr());
     }
     bool VisitTemplateSpecializationType(const TemplateSpecializationType* TST) {
-      for (int I = 0, N = TST->getNumArgs(); I < N; ++I) {
-        const TemplateArgument& TA = TST->getArg(I);
-        if (TA.getKind() == TemplateArgument::Type
-            && Visit(TA.getAsType().getTypePtr()))
-          return true;
+      for (const TemplateArgument &TA : TST->template_arguments()) {
+            if (TA.getKind() == TemplateArgument::Type && Visit(TA.getAsType().getTypePtr()))
+               return true;
       }
       return false;
     }
@@ -4726,14 +4721,15 @@ clang::QualType ROOT::TMetaUtils::ReSubstTemplateArg(clang::QualType input, cons
           substType->getReplacedParameter()->getDecl()
           == TSTdecl->getSpecializedTemplate ()->getTemplateParameters()->getParam(index))
       {
-         if ( index >= TST->getNumArgs() ) {
+         const auto &TAs = TST->template_arguments();
+         if (index >= TAs.size()) {
             // The argument replaced was a default template argument that is
             // being listed as part of the instance ...
             // so we probably don't really know how to spell it ... we would need to recreate it
             // (See AddDefaultParameters).
             return input;
-         } else if (TST->getArg(index).getKind() == clang::TemplateArgument::Type) {
-            return TST->getArg(index).getAsType();
+         } else if (TAs[index].getKind() == clang::TemplateArgument::Type) {
+            return TAs[index].getAsType();
          } else {
             // The argument is (likely) a value or expression and there is nothing for us
             // to change
@@ -4749,14 +4745,13 @@ clang::QualType ROOT::TMetaUtils::ReSubstTemplateArg(clang::QualType input, cons
    if (inputTST) {
       bool mightHaveChanged = false;
       llvm::SmallVector<clang::TemplateArgument, 4> desArgs;
-      for(clang::TemplateSpecializationType::iterator I = inputTST->begin(), E = inputTST->end();
-          I != E; ++I) {
-         if (I->getKind() != clang::TemplateArgument::Type) {
-            desArgs.push_back(*I);
+      for (const clang::TemplateArgument &TA : inputTST->template_arguments()) {
+         if (TA.getKind() != clang::TemplateArgument::Type) {
+            desArgs.push_back(TA);
             continue;
          }
 
-         clang::QualType SubTy = I->getAsType();
+         clang::QualType SubTy = TA.getAsType();
          // Check if the type needs more desugaring and recurse.
          if (llvm::isa<clang::SubstTemplateTypeParmType>(SubTy)
              || llvm::isa<clang::TemplateSpecializationType>(SubTy)) {
@@ -4766,7 +4761,7 @@ clang::QualType ROOT::TMetaUtils::ReSubstTemplateArg(clang::QualType input, cons
                desArgs.push_back(clang::TemplateArgument(newSubTy));
             }
          } else
-            desArgs.push_back(*I);
+            desArgs.push_back(TA);
       }
 
       // If desugaring happened allocate new type in the AST.
