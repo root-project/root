@@ -37,7 +37,7 @@ ROOT_ADD_GTEST(ntuple_project ntuple_project.cxx LIBRARIES ROOTDataFrame ROOTNTu
 ROOT_ADD_GTEST(ntuple_rdf ntuple_rdf.cxx LIBRARIES ROOTDataFrame ROOTNTuple MathCore CustomStruct)
 ROOT_ADD_GTEST(ntuple_modelext ntuple_modelext.cxx LIBRARIES ROOTDataFrame ROOTNTuple CustomStruct)
 ROOT_ADD_GTEST(ntuple_serialize ntuple_serialize.cxx LIBRARIES ROOTDataFrame ROOTNTuple MathCore CustomStruct)
-if(NOT MSVC OR ${LLVM_VERSION} VERSION_LESS 13.0.0 OR llvm13_broken_tests)
+if(NOT MSVC OR llvm13_broken_tests)
   ROOT_ADD_GTEST(ntuple_types ntuple_types.cxx LIBRARIES ROOTDataFrame ROOTNTuple MathCore CustomStruct)
 endif()
 ROOT_ADD_GTEST(ntuple_view ntuple_view.cxx LIBRARIES ROOTDataFrame ROOTNTuple MathCore CustomStruct)
