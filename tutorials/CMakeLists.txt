@@ -399,7 +399,7 @@ set(extra_veto
   eve7/*.C
   r/rootlogon.C)
 
-if(MSVC AND ${LLVM_VERSION} VERSION_GREATER_EQUAL 13.0.0 AND NOT llvm13_broken_tests)
+if(MSVC AND NOT llvm13_broken_tests)
  list(APPEND extra_veto
       dataframe/df002_dataModel.C
       dataframe/df007_snapshot.C
