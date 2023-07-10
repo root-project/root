@@ -51,6 +51,7 @@
 #pragma link C++ class ConstructorTraits + ;
 #pragma link C++ class DestructorTraits + ;
 
+#pragma link C++ class std::set<std::int64_t> +;
 #pragma link C++ class std::set<std::set<CustomStruct>> +;
 #pragma link C++ class std::set<std::set<char>> +;
 #pragma link C++ class std::set<std::pair<int, CustomStruct>> +;
