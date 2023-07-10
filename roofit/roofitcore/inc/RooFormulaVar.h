@@ -49,6 +49,10 @@ public:
   inline RooAbsArg* getParameter(Int_t index) const {
     return _actualVars.at(index) ;
   }
+  /// Return the number of parameters.
+  inline size_t nParameters() const {
+    return _actualVars.size();
+  }
 
   // I/O streaming interface (machine readable)
   bool readFromStream(std::istream& is, bool compact, bool verbose=false) override ;
