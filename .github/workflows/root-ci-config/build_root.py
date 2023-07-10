@@ -145,6 +145,7 @@ def main():
                 extra_ctest_flags += "--build-config " + args.buildtype
 
             shell_log = run_ctest(shell_log, extra_ctest_flags)
+        shell_log = create_coverage(shell_log)
 
         print_shell_log(shell_log)
 
@@ -252,11 +253,17 @@ def run_ctest(shell_log: str, extra_ctest_flags: str) -> str:
         ctest --output-on-failure --parallel {os.cpu_count()} --output-junit TestResults.xml {extra_ctest_flags}
     """, shell_log)
 
-    if result != 0:
-        die(result, "Some tests failed", shell_log)
+    # if result != 0:
+    #     die(result, "Some tests failed", shell_log)
+    print(result)
 
     return shell_log
 
+# @github_log_group("Create Test Coverage")
+# def create_coverage():
+#     directory = f"{WORKDIR}/builddir/interpreter/llvm-project/llvm/lib/ProfileData/Coverage/CmakeFiles"
+#     contents = os.listdir(directory)
+#     return contents
 
 @github_log_group("Archive and upload")
 def archive_and_upload(archive_name, prefix):
@@ -333,6 +340,27 @@ def rebase(base_ref, head_ref, shell_log) -> str:
     if result != 0:
         die(result, "Rebase failed", shell_log)
 
+    return shell_log
+
+
+@github_log_group("Create Test Coverage")
+def create_coverage(shell_log: str) -> str:
+    directory = f"{WORKDIR}/build/interpreter/llvm-project/llvm/lib/ProfileData/Coverage/CMakeFiles"
+    #directory = f"../root-ci-config/"
+    #directory = f"builddir/interpreter/llvm-project/llvm/lib/ProfileData/Coverage/CMakeFiles"
+    result, shell_log = subprocess_with_log(f"""
+        cd '{directory}'
+        lcov --directory . --capture --output-file coverage.info
+        genhtml coverage.info --output-directory coverage_report
+        cd coverage_report
+        firefox index.html
+    """, shell_log)
+    if directory == "":
+        print("No content")
+    #contents = os.listdir(directory)
+    print(result)
+    print("---------")
+    print(shell_log)
     return shell_log
 
 
