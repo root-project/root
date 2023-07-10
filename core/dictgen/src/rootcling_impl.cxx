@@ -3536,7 +3536,8 @@ public:
          Preprocessor& PP = m_Interpreter->getCI()->getPreprocessor();
          HeaderSearch& HS = PP.getHeaderSearchInfo();
          // FIXME: Reduce to Core.Rtypes.h.
-         Module* CoreModule = HS.lookupModule("Core", /*AllowSearch*/false);
+         Module* CoreModule = HS.lookupModule("Core", SourceLocation(),
+                                              /*AllowSearch*/false);
          assert(M && "Must have module Core");
          PP.makeModuleVisible(CoreModule, ImportLoc);
       }

@@ -84,7 +84,7 @@ extern "C" {
 class AutoloadLibraryMU : public llvm::orc::MaterializationUnit {
 public:
    AutoloadLibraryMU(const std::string &Library, const llvm::orc::SymbolNameVector &Symbols)
-      : MaterializationUnit(getSymbolFlagsMap(Symbols), nullptr), fLibrary(Library), fSymbols(Symbols)
+      : MaterializationUnit({getSymbolFlagsMap(Symbols), nullptr}), fLibrary(Library), fSymbols(Symbols)
    {
    }
 
@@ -203,7 +203,8 @@ public:
       }
 
       if (!missing.empty())
-         return llvm::make_error<llvm::orc::SymbolsNotFound>(std::move(missing));
+         return llvm::make_error<llvm::orc::SymbolsNotFound>(
+            JD.getExecutionSession().getSymbolStringPool(), std::move(missing));
 
       return llvm::Error::success();
    }
