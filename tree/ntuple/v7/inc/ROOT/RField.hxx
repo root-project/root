@@ -310,28 +310,30 @@ public:
    /// Reading copies data into the memory wrapped by the ntuple value.
    /// The fast path is conditioned by the field qualifying as simple, i.e. maps as-is to a single column and has no
    /// read callback.
-   void Read(NTupleSize_t globalIndex, RFieldValue *value) {
+   void Read(NTupleSize_t globalIndex, void *to)
+   {
       if (fIsSimple)
-         return (void)fPrincipalColumn->Read(globalIndex, value->GetRawPtr());
+         return (void)fPrincipalColumn->Read(globalIndex, to);
 
       if (fTraits & kTraitMappable)
-         fPrincipalColumn->Read(globalIndex, value->GetRawPtr());
+         fPrincipalColumn->Read(globalIndex, to);
       else
-         ReadGlobalImpl(globalIndex, value->GetRawPtr());
+         ReadGlobalImpl(globalIndex, to);
       if (R__unlikely(!fReadCallbacks.empty()))
-         InvokeReadCallbacks(value->GetRawPtr());
+         InvokeReadCallbacks(to);
    }
 
-   void Read(const RClusterIndex &clusterIndex, RFieldValue *value) {
+   void Read(const RClusterIndex &clusterIndex, void *to)
+   {
       if (fIsSimple)
-         return (void)fPrincipalColumn->Read(clusterIndex, value->GetRawPtr());
+         return (void)fPrincipalColumn->Read(clusterIndex, to);
 
       if (fTraits & kTraitMappable)
-         fPrincipalColumn->Read(clusterIndex, value->GetRawPtr());
+         fPrincipalColumn->Read(clusterIndex, to);
       else
-         ReadInClusterImpl(clusterIndex, value->GetRawPtr());
+         ReadInClusterImpl(clusterIndex, to);
       if (R__unlikely(!fReadCallbacks.empty()))
-         InvokeReadCallbacks(value->GetRawPtr());
+         InvokeReadCallbacks(to);
    }
 
    /// Ensure that all received items are written from page buffers to the storage.
@@ -2065,8 +2067,7 @@ protected:
       fPrincipalColumn->GetCollectionInfo(globalIndex, &collectionStart, &nItems);
       typedValue->resize(nItems);
       for (unsigned i = 0; i < nItems; ++i) {
-         auto itemValue = fSubFields[0]->CaptureValue(&typedValue->data()[i]);
-         fSubFields[0]->Read(collectionStart + i, &itemValue);
+         fSubFields[0]->Read(collectionStart + i, &typedValue->data()[i]);
       }
    }
 
