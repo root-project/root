@@ -1411,7 +1411,7 @@ TCling::TCling(const char *name, const char *title, const char* const argv[], vo
 
    // Process externally passed arguments if present.
    llvm::Optional<std::string> EnvOpt = llvm::sys::Process::GetEnv("EXTRA_CLING_ARGS");
-   if (EnvOpt.hasValue()) {
+   if (EnvOpt.has_value()) {
       StringRef Env(*EnvOpt);
       while (!Env.empty()) {
          StringRef Arg;
@@ -1423,7 +1423,7 @@ TCling::TCling(const char *name, const char *title, const char* const argv[], vo
    auto GetEnvVarPath = [](const std::string &EnvVar,
                        std::vector<std::string> &Paths) {
       llvm::Optional<std::string> EnvOpt = llvm::sys::Process::GetEnv(EnvVar);
-      if (EnvOpt.hasValue()) {
+      if (EnvOpt.has_value()) {
          StringRef Env(*EnvOpt);
          while (!Env.empty()) {
             StringRef Arg;
@@ -1450,7 +1450,7 @@ TCling::TCling(const char *name, const char *title, const char* const argv[], vo
 
    // FIXME: This only will enable frontend timing reports.
    EnvOpt = llvm::sys::Process::GetEnv("ROOT_CLING_TIMING");
-   if (EnvOpt.hasValue())
+   if (EnvOpt.has_value())
      clingArgsStorage.push_back("-ftime-report");
 
    // Add the overlay file. Note that we cannot factor it out for both root
@@ -1473,7 +1473,7 @@ TCling::TCling(const char *name, const char *title, const char* const argv[], vo
 
       std::string ModulesCachePath;
       EnvOpt = llvm::sys::Process::GetEnv("CLING_MODULES_CACHE_PATH");
-      if (EnvOpt.hasValue()){
+      if (EnvOpt.has_value()){
          StringRef Env(*EnvOpt);
          assert(llvm::sys::fs::exists(Env) && "Path does not exist!");
          ModulesCachePath = Env.str();
@@ -1535,7 +1535,7 @@ TCling::TCling(const char *name, const char *title, const char* const argv[], vo
    // Add the Rdict module file extension.
    cling::Interpreter::ModuleFileExtensions extensions;
    EnvOpt = llvm::sys::Process::GetEnv("ROOTDEBUG_RDICT");
-   if (!EnvOpt.hasValue())
+   if (!EnvOpt.has_value())
       extensions.push_back(std::make_shared<TClingRdictModuleFileExtension>());
 
    fInterpreter = std::make_unique<cling::Interpreter>(interpArgs.size(),
