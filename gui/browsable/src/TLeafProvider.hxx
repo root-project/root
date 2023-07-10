@@ -16,8 +16,32 @@
 #include "TTree.h"
 #include "TH1.h"
 #include "TDirectory.h"
+#include "TTimer.h"
 
 using namespace ROOT::Experimental::Browsable;
+
+class TLeafDrawProgressTimer : public TTimer {
+   TTree *fTree;
+public:
+   TLeafDrawProgressTimer(TTree *tree, Int_t period) : TTimer(period, kTRUE), fTree(tree)
+   {
+   }
+
+   Bool_t Notify() override
+   {
+      Long64_t first = 0;
+      Long64_t last = fTree->GetEntries();
+      Long64_t current = fTree->GetReadEntry();
+
+      if (last > first)
+         printf("Progress %5.3f\n", (current - first + 1.) / ( last - first + 0. ) * 100.);
+
+      Reset();
+
+      return kTRUE;
+   }
+};
+
 
 /** Provider for drawing of branches / leafs in the TTree */
 
@@ -31,7 +55,17 @@ public:
 
       std::string expr2 = expr + ">>htemp_tree_draw";
 
+      auto old = ttree->GetTimerInterval();
+      ttree->SetTimerInterval(500);
+
+      auto timer = std::make_unique<TLeafDrawProgressTimer>(ttree, 500);
+      timer->TurnOn();
+
       ttree->Draw(expr2.c_str(),"","goff");
+
+      ttree->SetTimerInterval(old);
+
+      timer->TurnOff();
 
       if (!gDirectory)
          return nullptr;
