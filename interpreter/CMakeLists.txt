@@ -235,16 +235,8 @@ if(builtin_llvm)
     CACHE STRING "LLVM include directories."
     )
   #---Set into parent scope LLVM_VERSION --------------------------------------------------------------
-  set(llvmconfigfile "${CMAKE_CURRENT_SOURCE_DIR}/llvm-project/llvm/CMakeLists.txt")
-  file(READ ${llvmconfigfile} _filestr)
-  foreach(versionpart LLVM_VERSION_MAJOR LLVM_VERSION_MINOR LLVM_VERSION_PATCH)
-    if("${_filestr}" MATCHES "set[(](${versionpart}[^)]+)")
-      string(REGEX REPLACE " *${versionpart} ([^)]+).*" "\\1" ${versionpart} "${CMAKE_MATCH_1}")
-    else()
-      MESSAGE(FATAL_ERROR "Cannot extract LLVM version number (${versionpart}) from ${llvmconfigfile}")
-    endif()
-  endforeach()
-  set(LLVM_VERSION "${LLVM_VERSION_MAJOR}.${LLVM_VERSION_MINOR}.${LLVM_VERSION_PATCH}" PARENT_SCOPE)
+  get_directory_property(_llvm_version DIRECTORY llvm-project/llvm DEFINITION LLVM_VERSION)
+  set(LLVM_VERSION "${_llvm_version}" PARENT_SCOPE)
 else()
   # Rely on llvm-config.
   set(CONFIG_OUTPUT)
