@@ -237,8 +237,8 @@ if(builtin_llvm)
   #---Set into parent scope LLVM_VERSION --------------------------------------------------------------
   get_directory_property(_llvm_version DIRECTORY llvm-project/llvm DEFINITION LLVM_VERSION)
   set(LLVM_VERSION "${_llvm_version}" PARENT_SCOPE)
-  #---Forward TARGET_TRIPLE for check-cling------------------------------------------------------------
-  get_directory_property(TARGET_TRIPLE DIRECTORY llvm-project/llvm DEFINITION TARGET_TRIPLE)
+  #---Forward LLVM_TARGET_TRIPLE for check-cling-------------------------------------------------------
+  get_directory_property(LLVM_TARGET_TRIPLE DIRECTORY llvm-project/llvm DEFINITION LLVM_TARGET_TRIPLE)
   #---Get back the potentially updated LLVM_TARGETS_TO_BUILD (expanding all/host/Native)---------------
   get_directory_property(LLVM_TARGETS_TO_BUILD DIRECTORY llvm-project/llvm DEFINITION LLVM_TARGETS_TO_BUILD)
 else()
