@@ -194,7 +194,7 @@ protected:
 
    /// Operations on values of complex types, e.g. ones that involve multiple columns or for which no direct
    /// column type exists.
-   virtual std::size_t AppendImpl(/* TODO: make const */ void *from);
+   virtual std::size_t AppendImpl(const void *from);
    virtual void ReadGlobalImpl(NTupleSize_t globalIndex, void *to);
    virtual void ReadInClusterImpl(const RClusterIndex &clusterIndex, void *to)
    {
@@ -298,7 +298,7 @@ public:
 
    /// Write the given value into columns. The value object has to be of the same type as the field.
    /// Returns the number of uncompressed bytes written.
-   std::size_t Append(/* TODO: make const */ void *from)
+   std::size_t Append(const void *from)
    {
       if (~fTraits & kTraitMappable)
          return AppendImpl(from);
@@ -444,7 +444,7 @@ protected:
    std::unique_ptr<Detail::RFieldBase> CloneImpl(std::string_view newName) const final;
    void GenerateColumnsImpl() final {}
    void GenerateColumnsImpl(const RNTupleDescriptor &) final {}
-   std::size_t AppendImpl(void *from) final;
+   std::size_t AppendImpl(const void *from) final;
    void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final;
    void ReadInClusterImpl(const RClusterIndex &clusterIndex, void *to) final;
    void OnConnectPageSource() final;
@@ -560,7 +560,7 @@ protected:
    const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
-   std::size_t AppendImpl(void *from) final;
+   std::size_t AppendImpl(const void *from) final;
    void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final;
 
 public:
@@ -601,7 +601,7 @@ protected:
    std::unique_ptr<Detail::RFieldBase> CloneImpl(std::string_view newName) const override;
    void GenerateColumnsImpl() final {}
    void GenerateColumnsImpl(const RNTupleDescriptor &) final {}
-   std::size_t AppendImpl(void *from) final;
+   std::size_t AppendImpl(const void *from) final;
    void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final;
    void ReadInClusterImpl(const RClusterIndex &clusterIndex, void *to) final;
 
@@ -652,7 +652,7 @@ protected:
    const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
-   std::size_t AppendImpl(void *from) final;
+   std::size_t AppendImpl(const void *from) final;
    void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final;
 
 public:
@@ -694,7 +694,7 @@ protected:
    const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
-   std::size_t AppendImpl(void *from) override;
+   std::size_t AppendImpl(const void *from) override;
    void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) override;
 
 public:
@@ -734,7 +734,7 @@ protected:
    std::unique_ptr<Detail::RFieldBase> CloneImpl(std::string_view newName) const final;
    void GenerateColumnsImpl() final {}
    void GenerateColumnsImpl(const RNTupleDescriptor &) final {}
-   std::size_t AppendImpl(void *from) final;
+   std::size_t AppendImpl(const void *from) final;
    void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final;
    void ReadInClusterImpl(const RClusterIndex &clusterIndex, void *to) final;
 
@@ -774,7 +774,7 @@ protected:
    const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
-   std::size_t AppendImpl(void *from) final;
+   std::size_t AppendImpl(const void *from) final;
    void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final;
 
 public:
@@ -812,7 +812,7 @@ private:
 
    static std::string GetTypeList(const std::vector<Detail::RFieldBase *> &itemFields);
    /// Extracts the index from an std::variant and transforms it into the 1-based index used for the switch column
-   std::uint32_t GetTag(void *variantPtr) const;
+   std::uint32_t GetTag(const void *variantPtr) const;
    void SetTag(void *variantPtr, std::uint32_t tag) const;
 
 protected:
@@ -820,7 +820,7 @@ protected:
    const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
-   std::size_t AppendImpl(void *from) final;
+   std::size_t AppendImpl(const void *from) final;
    void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final;
 
 public:
@@ -859,7 +859,7 @@ protected:
    void GenerateColumnsImpl(const RNTupleDescriptor &) final;
 
    std::size_t AppendNull();
-   std::size_t AppendValue(void *from);
+   std::size_t AppendValue(const void *from);
    /// Given the index of the nullable field, returns the corresponding global index of the subfield or,
    /// if it is null, returns kInvalidClusterIndex
    RClusterIndex GetItemIndex(NTupleSize_t globalIndex);
@@ -884,7 +884,7 @@ public:
 class RUniquePtrField : public RNullableField {
 protected:
    std::unique_ptr<Detail::RFieldBase> CloneImpl(std::string_view newName) const final;
-   std::size_t AppendImpl(void *from) final;
+   std::size_t AppendImpl(const void *from) final;
    void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final;
 
 public:
@@ -1849,7 +1849,7 @@ private:
    const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
-   std::size_t AppendImpl(void *from) final;
+   std::size_t AppendImpl(const void *from) final;
    void ReadGlobalImpl(ROOT::Experimental::NTupleSize_t globalIndex, void *to) final;
 
 public:
@@ -1998,7 +1998,7 @@ protected:
    std::unique_ptr<Detail::RFieldBase> CloneImpl(std::string_view newName) const final {
       return std::make_unique<RField>(newName);
    }
-   std::size_t AppendImpl(void *from) final;
+   std::size_t AppendImpl(const void *from) final;
    void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final;
 
    const RColumnRepresentations &GetColumnRepresentations() const final;
@@ -2048,9 +2048,9 @@ protected:
       auto newItemField = fSubFields[0]->Clone(fSubFields[0]->GetName());
       return std::make_unique<RField<ROOT::VecOps::RVec<ItemT>>>(newName, std::move(newItemField));
    }
-   std::size_t AppendImpl(void *from) final
+   std::size_t AppendImpl(const void *from) final
    {
-      auto typedValue = static_cast<ContainerT *>(from);
+      auto typedValue = static_cast<const ContainerT *>(from);
       auto nbytes = 0;
       auto count = typedValue->size();
       for (unsigned i = 0; i < count; ++i) {

@@ -196,6 +196,18 @@ std::tuple<void **, std::int32_t *, std::int32_t *> GetRVecDataMembers(void *rve
    return {begin, size, capacity};
 }
 
+std::tuple<const void **, const std::int32_t *, const std::int32_t *> GetRVecDataMembers(const void *rvecPtr)
+{
+   const void **begin = reinterpret_cast<const void **>(const_cast<void *>(rvecPtr));
+   // int32_t fSize is the second data member (after 1 void*)
+   const std::int32_t *size = reinterpret_cast<const std::int32_t *>(begin + 1);
+   R__ASSERT(*size >= 0);
+   // int32_t fCapacity is the third data member (1 int32_t after fSize)
+   const std::int32_t *capacity = size + 1;
+   R__ASSERT(*capacity >= -1);
+   return {begin, size, capacity};
+}
+
 } // anonymous namespace
 
 //------------------------------------------------------------------------------
@@ -398,7 +410,7 @@ ROOT::Experimental::Detail::RFieldBase::Clone(std::string_view newName) const
    return clone;
 }
 
-std::size_t ROOT::Experimental::Detail::RFieldBase::AppendImpl(void * /* from */)
+std::size_t ROOT::Experimental::Detail::RFieldBase::AppendImpl(const void * /* from */)
 {
    R__ASSERT(false && "A non-simple RField must implement its own AppendImpl");
    return 0;
@@ -1072,9 +1084,9 @@ void ROOT::Experimental::RField<std::string>::GenerateColumnsImpl(const RNTupleD
    fColumns.emplace_back(Detail::RColumn::Create<char>(RColumnModel(onDiskTypes[1]), 1));
 }
 
-std::size_t ROOT::Experimental::RField<std::string>::AppendImpl(void *from)
+std::size_t ROOT::Experimental::RField<std::string>::AppendImpl(const void *from)
 {
-   auto typedValue = static_cast<std::string *>(from);
+   auto typedValue = static_cast<const std::string *>(from);
    auto length = typedValue->length();
    fColumns[1]->AppendV(typedValue->data(), length);
    fIndex += length;
@@ -1202,11 +1214,11 @@ ROOT::Experimental::RClassField::CloneImpl(std::string_view newName) const
    return std::unique_ptr<RClassField>(new RClassField(newName, GetType(), fClass));
 }
 
-std::size_t ROOT::Experimental::RClassField::AppendImpl(void *from)
+std::size_t ROOT::Experimental::RClassField::AppendImpl(const void *from)
 {
    std::size_t nbytes = 0;
    for (unsigned i = 0; i < fSubFields.size(); i++) {
-      nbytes += fSubFields[i]->Append(static_cast<unsigned char *>(from) + fSubFieldsInfo[i].fOffset);
+      nbytes += fSubFields[i]->Append(static_cast<const unsigned char *>(from) + fSubFieldsInfo[i].fOffset);
    }
    return nbytes;
 }
@@ -1375,13 +1387,13 @@ ROOT::Experimental::RCollectionClassField::CloneImpl(std::string_view newName) c
       new RCollectionClassField(newName, GetType(), fProxy->GetCollectionClass()));
 }
 
-std::size_t ROOT::Experimental::RCollectionClassField::AppendImpl(void *from)
+std::size_t ROOT::Experimental::RCollectionClassField::AppendImpl(const void *from)
 {
    std::size_t nbytes = 0;
    unsigned count = 0;
-   TVirtualCollectionProxy::TPushPop RAII(fProxy.get(), from);
-   for (auto ptr :
-        RCollectionIterableOnce{from, fIFuncsWrite, fProxy.get(), (fCollectionType == kSTLvector ? fItemSize : 0U)}) {
+   TVirtualCollectionProxy::TPushPop RAII(fProxy.get(), const_cast<void *>(from));
+   for (auto ptr : RCollectionIterableOnce{const_cast<void *>(from), fIFuncsWrite, fProxy.get(),
+                                           (fCollectionType == kSTLvector ? fItemSize : 0U)}) {
       nbytes += fSubFields[0]->Append(ptr);
       count++;
    }
@@ -1537,11 +1549,11 @@ ROOT::Experimental::RRecordField::CloneImpl(std::string_view newName) const
    return std::unique_ptr<RRecordField>(new RRecordField(newName, std::move(cloneItems), fOffsets, GetType()));
 }
 
-std::size_t ROOT::Experimental::RRecordField::AppendImpl(void *from)
+std::size_t ROOT::Experimental::RRecordField::AppendImpl(const void *from)
 {
    std::size_t nbytes = 0;
    for (unsigned i = 0; i < fSubFields.size(); ++i) {
-      nbytes += fSubFields[i]->Append(static_cast<unsigned char *>(from) + fOffsets[i]);
+      nbytes += fSubFields[i]->Append(static_cast<const unsigned char *>(from) + fOffsets[i]);
    }
    return nbytes;
 }
@@ -1620,9 +1632,9 @@ ROOT::Experimental::RVectorField::CloneImpl(std::string_view newName) const
    return std::make_unique<RVectorField>(newName, std::move(newItemField));
 }
 
-std::size_t ROOT::Experimental::RVectorField::AppendImpl(void *from)
+std::size_t ROOT::Experimental::RVectorField::AppendImpl(const void *from)
 {
-   auto typedValue = static_cast<std::vector<char> *>(from);
+   auto typedValue = static_cast<const std::vector<char> *>(from);
    R__ASSERT((typedValue->size() % fItemSize) == 0);
    std::size_t nbytes = 0;
    auto count = typedValue->size() / fItemSize;
@@ -1757,12 +1769,12 @@ ROOT::Experimental::RRVecField::CloneImpl(std::string_view newName) const
    return std::make_unique<RRVecField>(newName, std::move(newItemField));
 }
 
-std::size_t ROOT::Experimental::RRVecField::AppendImpl(void *from)
+std::size_t ROOT::Experimental::RRVecField::AppendImpl(const void *from)
 {
    auto [beginPtr, sizePtr, _] = GetRVecDataMembers(from);
 
    std::size_t nbytes = 0;
-   char *begin = reinterpret_cast<char *>(*beginPtr); // for pointer arithmetics
+   const char *begin = reinterpret_cast<const char *>(*beginPtr); // for pointer arithmetics
    for (std::int32_t i = 0; i < *sizePtr; ++i) {
       nbytes += fSubFields[0]->Append(begin + i * fItemSize);
    }
@@ -1997,9 +2009,9 @@ ROOT::Experimental::RField<std::vector<bool>>::RField(std::string_view name)
    Attach(std::make_unique<RField<bool>>("_0"));
 }
 
-std::size_t ROOT::Experimental::RField<std::vector<bool>>::AppendImpl(void *from)
+std::size_t ROOT::Experimental::RField<std::vector<bool>>::AppendImpl(const void *from)
 {
-   auto typedValue = static_cast<std::vector<bool> *>(from);
+   auto typedValue = static_cast<const std::vector<bool> *>(from);
    auto count = typedValue->size();
    for (unsigned i = 0; i < count; ++i) {
       bool bval = (*typedValue)[i];
@@ -2100,10 +2112,10 @@ ROOT::Experimental::RArrayField::CloneImpl(std::string_view newName) const
    return std::make_unique<RArrayField>(newName, std::move(newItemField), fArrayLength);
 }
 
-std::size_t ROOT::Experimental::RArrayField::AppendImpl(void *from)
+std::size_t ROOT::Experimental::RArrayField::AppendImpl(const void *from)
 {
    std::size_t nbytes = 0;
-   auto arrayPtr = static_cast<unsigned char *>(from);
+   auto arrayPtr = static_cast<const unsigned char *>(from);
    for (unsigned i = 0; i < fArrayLength; ++i) {
       nbytes += fSubFields[0]->Append(arrayPtr + (i * fItemSize));
    }
@@ -2202,9 +2214,9 @@ void ROOT::Experimental::RBitsetField::GenerateColumnsImpl(const RNTupleDescript
    fColumns.emplace_back(Detail::RColumn::Create<bool>(RColumnModel(onDiskTypes[0]), 0));
 }
 
-std::size_t ROOT::Experimental::RBitsetField::AppendImpl(void *from)
+std::size_t ROOT::Experimental::RBitsetField::AppendImpl(const void *from)
 {
-   const auto *asULongArray = static_cast<Word_t *>(from);
+   const auto *asULongArray = static_cast<const Word_t *>(from);
    bool elementValue;
    std::size_t i = 0;
    for (std::size_t word = 0; word < (fN + kBitsPerWord - 1) / kBitsPerWord; ++word) {
@@ -2278,9 +2290,9 @@ ROOT::Experimental::RVariantField::CloneImpl(std::string_view newName) const
    return std::make_unique<RVariantField>(newName, itemFields);
 }
 
-std::uint32_t ROOT::Experimental::RVariantField::GetTag(void *variantPtr) const
+std::uint32_t ROOT::Experimental::RVariantField::GetTag(const void *variantPtr) const
 {
-   auto index = *(reinterpret_cast<char *>(variantPtr) + fTagOffset);
+   auto index = *(reinterpret_cast<const char *>(variantPtr) + fTagOffset);
    return (index < 0) ? 0 : index + 1;
 }
 
@@ -2290,7 +2302,7 @@ void ROOT::Experimental::RVariantField::SetTag(void *variantPtr, std::uint32_t t
    *index = static_cast<char>(tag - 1);
 }
 
-std::size_t ROOT::Experimental::RVariantField::AppendImpl(void *from)
+std::size_t ROOT::Experimental::RVariantField::AppendImpl(const void *from)
 {
    auto tag = GetTag(from);
    std::size_t nbytes = 0;
@@ -2435,7 +2447,7 @@ std::size_t ROOT::Experimental::RNullableField::AppendNull()
    }
 }
 
-std::size_t ROOT::Experimental::RNullableField::AppendValue(void *from)
+std::size_t ROOT::Experimental::RNullableField::AppendValue(const void *from)
 {
    auto nbytesItem = fSubFields[0]->Append(from);
    if (IsDense()) {
@@ -2483,9 +2495,9 @@ ROOT::Experimental::RUniquePtrField::CloneImpl(std::string_view newName) const
    return std::make_unique<RUniquePtrField>(newName, GetType(), std::move(newItemField));
 }
 
-std::size_t ROOT::Experimental::RUniquePtrField::AppendImpl(void *from)
+std::size_t ROOT::Experimental::RUniquePtrField::AppendImpl(const void *from)
 {
-   auto typedValue = static_cast<std::unique_ptr<char> *>(from);
+   auto typedValue = static_cast<const std::unique_ptr<char> *>(from);
    if (*typedValue) {
       return AppendValue(typedValue->get());
    } else {
