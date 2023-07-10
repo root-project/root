@@ -411,7 +411,14 @@ public:
    {
       const RooArg_t *pdf = static_cast<const RooArg_t *>(func);
       elem["type"] << key();
-      elem["expression"] << pdf->expression();
+      TString expression(pdf->expression());
+      for (size_t i = 0; i < pdf->nParameters(); ++i) {
+         RooAbsArg *par = pdf->getParameter(i);
+         std::stringstream ss;
+         ss << "x[" << i << "]";
+         expression.ReplaceAll(ss.str().c_str(), par->GetName());
+      }
+      elem["expression"] << expression.Data();
       return true;
    }
 };
