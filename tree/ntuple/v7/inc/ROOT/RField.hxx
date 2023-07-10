@@ -194,7 +194,7 @@ protected:
 
    /// Operations on values of complex types, e.g. ones that involve multiple columns or for which no direct
    /// column type exists.
-   virtual std::size_t AppendImpl(const RFieldValue &value);
+   virtual std::size_t AppendImpl(/* TODO: make const */ void *from);
    virtual void ReadGlobalImpl(NTupleSize_t globalIndex, void *to);
    virtual void ReadInClusterImpl(const RClusterIndex &clusterIndex, void *to)
    {
@@ -300,7 +300,7 @@ public:
    /// Returns the number of uncompressed bytes written.
    std::size_t Append(const RFieldValue& value) {
       if (~fTraits & kTraitMappable)
-         return AppendImpl(value);
+         return AppendImpl(value.GetRawPtr());
 
       fPrincipalColumn->Append(value.GetRawPtr());
       return fPrincipalColumn->GetElement()->GetPackedSize();
@@ -443,7 +443,7 @@ protected:
    std::unique_ptr<Detail::RFieldBase> CloneImpl(std::string_view newName) const final;
    void GenerateColumnsImpl() final {}
    void GenerateColumnsImpl(const RNTupleDescriptor &) final {}
-   std::size_t AppendImpl(const Detail::RFieldValue& value) final;
+   std::size_t AppendImpl(void *from) final;
    void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final;
    void ReadInClusterImpl(const RClusterIndex &clusterIndex, void *to) final;
    void OnConnectPageSource() final;
@@ -559,7 +559,7 @@ protected:
    const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
-   std::size_t AppendImpl(const Detail::RFieldValue &value) final;
+   std::size_t AppendImpl(void *from) final;
    void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final;
 
 public:
@@ -600,7 +600,7 @@ protected:
    std::unique_ptr<Detail::RFieldBase> CloneImpl(std::string_view newName) const override;
    void GenerateColumnsImpl() final {}
    void GenerateColumnsImpl(const RNTupleDescriptor &) final {}
-   std::size_t AppendImpl(const Detail::RFieldValue& value) final;
+   std::size_t AppendImpl(void *from) final;
    void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final;
    void ReadInClusterImpl(const RClusterIndex &clusterIndex, void *to) final;
 
@@ -651,7 +651,7 @@ protected:
    const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
-   std::size_t AppendImpl(const Detail::RFieldValue& value) final;
+   std::size_t AppendImpl(void *from) final;
    void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final;
 
 public:
@@ -693,7 +693,7 @@ protected:
    const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
-   std::size_t AppendImpl(const Detail::RFieldValue &value) override;
+   std::size_t AppendImpl(void *from) override;
    void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) override;
 
 public:
@@ -733,7 +733,7 @@ protected:
    std::unique_ptr<Detail::RFieldBase> CloneImpl(std::string_view newName) const final;
    void GenerateColumnsImpl() final {}
    void GenerateColumnsImpl(const RNTupleDescriptor &) final {}
-   std::size_t AppendImpl(const Detail::RFieldValue& value) final;
+   std::size_t AppendImpl(void *from) final;
    void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final;
    void ReadInClusterImpl(const RClusterIndex &clusterIndex, void *to) final;
 
@@ -773,7 +773,7 @@ protected:
    const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
-   std::size_t AppendImpl(const Detail::RFieldValue &value) final;
+   std::size_t AppendImpl(void *from) final;
    void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final;
 
 public:
@@ -819,7 +819,7 @@ protected:
    const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
-   std::size_t AppendImpl(const Detail::RFieldValue& value) final;
+   std::size_t AppendImpl(void *from) final;
    void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final;
 
 public:
@@ -883,7 +883,7 @@ public:
 class RUniquePtrField : public RNullableField {
 protected:
    std::unique_ptr<Detail::RFieldBase> CloneImpl(std::string_view newName) const final;
-   std::size_t AppendImpl(const Detail::RFieldValue &value) final;
+   std::size_t AppendImpl(void *from) final;
    void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final;
 
 public:
@@ -1848,7 +1848,7 @@ private:
    const RColumnRepresentations &GetColumnRepresentations() const final;
    void GenerateColumnsImpl() final;
    void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
-   std::size_t AppendImpl(const ROOT::Experimental::Detail::RFieldValue& value) final;
+   std::size_t AppendImpl(void *from) final;
    void ReadGlobalImpl(ROOT::Experimental::NTupleSize_t globalIndex, void *to) final;
 
 public:
@@ -1997,7 +1997,7 @@ protected:
    std::unique_ptr<Detail::RFieldBase> CloneImpl(std::string_view newName) const final {
       return std::make_unique<RField>(newName);
    }
-   std::size_t AppendImpl(const Detail::RFieldValue& value) final;
+   std::size_t AppendImpl(void *from) final;
    void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final;
 
    const RColumnRepresentations &GetColumnRepresentations() const final;
@@ -2047,8 +2047,9 @@ protected:
       auto newItemField = fSubFields[0]->Clone(fSubFields[0]->GetName());
       return std::make_unique<RField<ROOT::VecOps::RVec<ItemT>>>(newName, std::move(newItemField));
    }
-   std::size_t AppendImpl(const Detail::RFieldValue& value) final {
-      auto typedValue = value.Get<ContainerT>();
+   std::size_t AppendImpl(void *from) final
+   {
+      auto typedValue = static_cast<ContainerT *>(from);
       auto nbytes = 0;
       auto count = typedValue->size();
       for (unsigned i = 0; i < count; ++i) {
