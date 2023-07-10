@@ -254,7 +254,7 @@ public:
    /// Fills a user provided entry after checking that the entry has been instantiated from the ntuple model
    void LoadEntry(NTupleSize_t index, REntry &entry) {
       for (auto& value : entry) {
-         value.GetField()->Read(index, &value);
+         value.GetField()->Read(index, value.GetRawPtr());
       }
    }
 
