@@ -2936,6 +2936,7 @@ clang::QualType ROOT::TMetaUtils::AddDefaultParameters(clang::QualType instanceT
       unsigned int dropDefault = normCtxt.GetConfig().DropDefaultArg(*Template);
 
       llvm::SmallVector<clang::TemplateArgument, 4> desArgs;
+      llvm::SmallVector<clang::TemplateArgument, 4> canonArgs;
       llvm::ArrayRef<clang::TemplateArgument> template_arguments = TST->template_arguments();
       unsigned int Idecl = 0, Edecl = TSTdecl->getTemplateArgs().size();
       unsigned int maxAddArg = TSTdecl->getTemplateArgs().size() - dropDefault;
@@ -3020,6 +3021,7 @@ clang::QualType ROOT::TMetaUtils::AddDefaultParameters(clang::QualType instanceT
                                                                                               RAngleLoc,
                                                                                               TTP,
                                                                                               desArgs,
+                                                                                              canonArgs,
                                                                                               HasDefaultArgs);
                // The substition can fail, in which case there would have been compilation
                // error printed on the screen.
@@ -3616,12 +3618,14 @@ static bool areEqualTypes(const clang::TemplateArgument& tArg,
    {
       clang::Sema& S = interp.getCI()->getSema();
       cling::Interpreter::PushTransactionRAII clingRAII(const_cast<cling::Interpreter*>(&interp));
+      llvm::SmallVector<clang::TemplateArgument, 4> canonArgs;
       bool HasDefaultArgs;
       TemplateArgumentLoc defTArgLoc = S.SubstDefaultTemplateArgumentIfAvailable(Template,
                                                                                  TemplateLoc,
                                                                                  LAngleLoc,
                                                                                  ttpdPtr,
                                                                                  preceedingTArgs,
+                                                                                 canonArgs,
                                                                                  HasDefaultArgs);
       // The substition can fail, in which case there would have been compilation
       // error printed on the screen.
