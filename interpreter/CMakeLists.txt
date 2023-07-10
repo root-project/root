@@ -5,7 +5,6 @@ endif()
 
 #--Set the LLVM version required for ROOT-----------------------------------------------------------
 set(ROOT_LLVM_VERSION_REQUIRED_MAJOR 13)
-set(ROOT_LLVM_VERSION_REQUIRED_MINOR 0)
 
 #---Define the way we want to build and what of llvm/clang/cling------------------------------------
 set(LLVM_ENABLE_RTTI ON CACHE BOOL "")
@@ -352,10 +351,10 @@ else()
   include(VersionFromVCS)
 
   set(PACKAGE_VERSION "${LLVM_PACKAGE_VERSION}")
-  if (${PACKAGE_VERSION} MATCHES "${ROOT_LLVM_VERSION_REQUIRED_MAJOR}\\.${ROOT_LLVM_VERSION_REQUIRED_MINOR}(|\\.[0-9]+)")
+  if (${PACKAGE_VERSION} MATCHES "${ROOT_LLVM_VERSION_REQUIRED_MAJOR}\\.0(|\\.[0-9]+)")
     message(STATUS "Using LLVM external library - ${PACKAGE_VERSION}")
   else()
-    message(FATAL_ERROR "LLVM version different from ROOT supported, please try ${ROOT_LLVM_VERSION_REQUIRED_MAJOR}.${ROOT_LLVM_VERSION_REQUIRED_MINOR}.x")
+    message(FATAL_ERROR "LLVM version different from ROOT supported, please try ${ROOT_LLVM_VERSION_REQUIRED_MAJOR}.0.x")
   endif()
 
   if (NOT DEFINED LLVM_INCLUDE_TESTS)
