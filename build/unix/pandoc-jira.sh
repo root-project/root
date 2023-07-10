@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # Script to be called as filter by pandoc.
 # Replaces  text (!) [ROOT-7392] with a proper link; doesn't touch any link that

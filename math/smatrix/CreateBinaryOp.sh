@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 #
 # Script to generate binary operators for SVector & SMatrix class.
 # The operator is applied for each element:
