@@ -1578,9 +1578,6 @@ bool ROOT::TMetaUtils::hasOpaqueTypedef(clang::QualType instanceType, const ROOT
           I!=E; ++I)
       {
          if (I->getKind() == clang::TemplateArgument::Type) {
-   //            std::string arg;
-   //            arg = GetQualifiedName( I->getAsType(), *clxx );
-   //            fprintf(stderr,"DEBUG: looking at %s\n", arg.c_str());
             result |= ROOT::TMetaUtils::hasOpaqueTypedef(I->getAsType(), normCtxt);
          }
       }
