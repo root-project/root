@@ -425,7 +425,7 @@ bool TClingCallbacks::LookupObject(LookupResult &R, Scope *S) {
 bool TClingCallbacks::findInGlobalModuleIndex(DeclarationName Name, bool loadFirstMatchOnly /*=true*/)
 {
    llvm::Optional<std::string> envUseGMI = llvm::sys::Process::GetEnv("ROOT_USE_GMI");
-   if (envUseGMI.hasValue())
+   if (envUseGMI.has_value())
       if (!envUseGMI->empty() && !ROOT::FoundationUtils::ConvertEnvValueToBool(*envUseGMI))
          return false;
 
