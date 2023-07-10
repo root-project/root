@@ -10727,8 +10727,21 @@ const char * THistPainter::GetBestFormat(Double_t v, Double_t e, const char *f)
 
 void THistPainter::SetShowProjection(const char *option,Int_t nbins)
 {
+   if (fShowProjection2) {
+      auto name2 = TString::Format("c_%zx_projection2_%d", (size_t)fH, fShowProjection2);
+      auto c2 = static_cast<TVirtualPad *>(gROOT->GetListOfCanvases()->FindObject(name2.Data()));
+      if (c2) c2->Close();
+      fShowProjection2 = 0;
+   }
+   if (fShowProjection) {
+      auto name1 = TString::Format("c_%zx_projection_%d", (size_t)fH, fShowProjection);
+      auto c1 = static_cast<TVirtualPad *>(gROOT->GetListOfCanvases()->FindObject(name1.Data()));
+      if (c1) c1->Close();
+      fShowProjection = 0;
+   }
 
-   if (fShowProjection) return;
+   if (nbins <= 0) return;
+
    TString opt = option;
    opt.ToLower();
    Int_t projection = 0;
@@ -10744,6 +10757,7 @@ void THistPainter::SetShowProjection(const char *option,Int_t nbins)
    if (projection < 4) fShowOption = option+1;
    else                fShowOption = option+2;
    fShowProjection = projection+100*nbins;
+   fShowProjection2 = 0;
    gROOT->MakeDefCanvas();
    gPad->SetName(TString::Format("c_%zx_projection_%d", (size_t)fH, fShowProjection).Data());
    gPad->SetGrid();
@@ -10751,8 +10765,22 @@ void THistPainter::SetShowProjection(const char *option,Int_t nbins)
 
 void THistPainter::SetShowProjectionXY(const char *option,Int_t nbinsY,Int_t nbinsX)
 {
+   if (fShowProjection2) {
+      auto name2 = TString::Format("c_%zx_projection2_%d", (size_t)fH, fShowProjection2);
+      auto c2 = static_cast<TVirtualPad *>(gROOT->GetListOfCanvases()->FindObject(name2.Data()));
+      if (c2) c2->Close();
+      fShowProjection2 = 0;
+   }
+   if (fShowProjection) {
+      auto name1 = TString::Format("c_%zx_projection_%d", (size_t)fH, fShowProjection);
+      auto c1 = static_cast<TVirtualPad *>(gROOT->GetListOfCanvases()->FindObject(name1.Data()));
+      if (c1) c1->Close();
+      fShowProjection = 0;
+   }
 
-   if (fShowProjection2) return;
+   if ((nbinsX <= 0) || (nbinsY <= 0)) return;
+
+
    TString opt = option;
    opt.ToLower();
    Int_t projection = 0;
@@ -10809,8 +10837,8 @@ void THistPainter::ShowProjectionX(Int_t /*px*/, Int_t py)
 
    // Create or set the new canvas proj x
    TVirtualPad::TContext ctxt(true);
-   TVirtualPad *c = (TVirtualPad*)gROOT->GetListOfCanvases()->FindObject(TString::Format("c_%zx_projection_%d",
-                                                                              (size_t)fH, fShowProjection).Data());
+   auto name1 = TString::Format("c_%zx_projection_%d", (size_t)fH, fShowProjection);
+   TVirtualPad *c = (TVirtualPad*)gROOT->GetListOfCanvases()->FindObject(name1.Data());
    if (c) {
       c->Clear();
    } else {
@@ -10895,8 +10923,10 @@ void THistPainter::ShowProjectionY(Int_t px, Int_t /*py*/)
    // Create or set the new canvas proj y
    TVirtualPad::TContext ctxt(true);
 
-   TVirtualPad *c = (TVirtualPad*)gROOT->GetListOfCanvases()->FindObject(TString::Format(fShowProjection2 ? "c_%zx_projection2_%d" : "c_%zx_projection_%d",
-                                                                              (size_t)fH, fShowProjection).Data());
+   TString name2 = fShowProjection2 ? TString::Format("c_%zx_projection2_%d", (size_t)fH, fShowProjection2)
+                                    : TString::Format("c_%zx_projection_%d", (size_t)fH, fShowProjection);
+
+   TVirtualPad *c = (TVirtualPad*)gROOT->GetListOfCanvases()->FindObject(name2.Data());
    if (c) {
       c->Clear();
    } else {
@@ -10960,9 +10990,17 @@ void THistPainter::ShowProjection3(Int_t px, Int_t py)
 
    Int_t nbins=(Int_t)fShowProjection/100; //decode nbins
    if (fH->GetDimension() < 3) {
-      if (fShowProjection2%100 == 1) {ShowProjectionY(px,py);}
-      if (fShowProjection%100 == 1) {ShowProjectionX(px,py); return;}
-      if (fShowProjection%100 == 2) {ShowProjectionY(px,py); return;}
+      if (fShowProjection2 % 100 == 1) {
+         ShowProjectionY(px, py);
+      }
+      if (fShowProjection % 100 == 1) {
+         ShowProjectionX(px, py);
+         return;
+      }
+      if (fShowProjection % 100 == 2) {
+         ShowProjectionY(px, py);
+         return;
+      }
    }
 
    gPad->SetDoubleBuffer(0);             // turn off double buffer mode
