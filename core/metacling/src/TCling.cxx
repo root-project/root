@@ -3208,7 +3208,7 @@ Bool_t TCling::IsLoaded(const char* filename) const
                            /*BuildSystemModule*/ false,
                            /*OpenFile*/ false,
                            /*CacheFail*/ false);
-   if (FE && FE->isValid()) {
+   if (FE) {
       // check in the source manager if the file is actually loaded
       clang::SourceManager &SM = fInterpreter->getCI()->getSourceManager();
       // this works only with header (and source) files...

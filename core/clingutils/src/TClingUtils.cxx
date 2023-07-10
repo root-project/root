@@ -4665,7 +4665,7 @@ clang::QualType ROOT::TMetaUtils::ReSubstTemplateArg(clang::QualType input, cons
       // Make sure it got replaced from this template
       const clang::ClassTemplateDecl *replacedCtxt = nullptr;
 
-      const clang::DeclContext *replacedDeclCtxt = substType->getReplacedParameter()->getDecl()->getDeclContext();
+      const clang::DeclContext *replacedDeclCtxt = substType->getReplacedParameter()->getDeclContext();
       const clang::CXXRecordDecl *decl = llvm::dyn_cast<clang::CXXRecordDecl>(replacedDeclCtxt);
       unsigned int index = substType->getReplacedParameter()->getIndex();
       if (decl) {
@@ -4725,7 +4725,7 @@ clang::QualType ROOT::TMetaUtils::ReSubstTemplateArg(clang::QualType input, cons
 
       if ((replacedCtxt && replacedCtxt->getCanonicalDecl() == TSTdecl->getSpecializedTemplate()->getCanonicalDecl())
           || /* the following is likely just redundant */
-          substType->getReplacedParameter()->getDecl()
+          substType->getReplacedParameter()
           == TSTdecl->getSpecializedTemplate ()->getTemplateParameters()->getParam(index))
       {
          const auto &TAs = TST->template_arguments();

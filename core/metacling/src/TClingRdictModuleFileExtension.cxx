@@ -150,13 +150,11 @@ clang::ModuleFileExtensionMetadata TClingRdictModuleFileExtension::getExtensionM
    return {ROOT_CLING_RDICT_BLOCK_NAME, ROOT_CLING_RDICT_VERSION_MAJOR, ROOT_CLING_RDICT_VERSION_MINOR, UserInfo};
 }
 
-llvm::hash_code TClingRdictModuleFileExtension::hashExtension(llvm::hash_code Code) const
+void TClingRdictModuleFileExtension::hashExtension(ExtensionHashBuilder &HBuilder) const
 {
-   Code = llvm::hash_combine(Code, ROOT_CLING_RDICT_BLOCK_NAME);
-   Code = llvm::hash_combine(Code, ROOT_CLING_RDICT_VERSION_MAJOR);
-   Code = llvm::hash_combine(Code, ROOT_CLING_RDICT_VERSION_MINOR);
-
-   return Code;
+   HBuilder.add(ROOT_CLING_RDICT_BLOCK_NAME);
+   HBuilder.add(ROOT_CLING_RDICT_VERSION_MAJOR);
+   HBuilder.add(ROOT_CLING_RDICT_VERSION_MINOR);
 }
 
 std::unique_ptr<clang::ModuleFileExtensionWriter>
