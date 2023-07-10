@@ -298,11 +298,12 @@ public:
 
    /// Write the given value into columns. The value object has to be of the same type as the field.
    /// Returns the number of uncompressed bytes written.
-   std::size_t Append(const RFieldValue& value) {
+   std::size_t Append(/* TODO: make const */ void *from)
+   {
       if (~fTraits & kTraitMappable)
-         return AppendImpl(value.GetRawPtr());
+         return AppendImpl(from);
 
-      fPrincipalColumn->Append(value.GetRawPtr());
+      fPrincipalColumn->Append(from);
       return fPrincipalColumn->GetElement()->GetPackedSize();
    }
 
@@ -858,7 +859,7 @@ protected:
    void GenerateColumnsImpl(const RNTupleDescriptor &) final;
 
    std::size_t AppendNull();
-   std::size_t AppendValue(const Detail::RFieldValue &value);
+   std::size_t AppendValue(void *from);
    /// Given the index of the nullable field, returns the corresponding global index of the subfield or,
    /// if it is null, returns kInvalidClusterIndex
    RClusterIndex GetItemIndex(NTupleSize_t globalIndex);
@@ -2053,8 +2054,7 @@ protected:
       auto nbytes = 0;
       auto count = typedValue->size();
       for (unsigned i = 0; i < count; ++i) {
-         auto itemValue = fSubFields[0]->CaptureValue(&typedValue->data()[i]);
-         nbytes += fSubFields[0]->Append(itemValue);
+         nbytes += fSubFields[0]->Append(&typedValue->data()[i]);
       }
       this->fNWritten += count;
       fColumns[0]->Append(&this->fNWritten);
