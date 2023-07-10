@@ -2133,9 +2133,6 @@ protected:
 public:
    static std::string TypeName() { return "std::set<" + RField<ItemT>::TypeName() + ">"; }
 
-   RField(std::string_view name, std::unique_ptr<Detail::RFieldBase> itemField) : RSetField(name, std::move(itemField))
-   {
-   }
    explicit RField(std::string_view name) : RSetField(name, std::make_unique<RField<ItemT>>("_0")) {}
    RField(RField &&other) = default;
    RField &operator=(RField &&other) = default;
