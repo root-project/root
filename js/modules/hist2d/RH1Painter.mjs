@@ -268,7 +268,7 @@ class RH1Painter extends RHistPainter {
 
       let left = handle.i1, right = handle.i2, di = handle.stepi,
           histo = this.getHisto(), xaxis = this.getAxis('x'),
-          i, x, grx, y, yerr, gry1, gry2,
+          i, x, grx, y, yerr, gry,
           bins1 = [], bins2 = [];
 
       for (i = left; i < right; i += di) {
@@ -280,11 +280,11 @@ class RH1Painter extends RHistPainter {
          yerr = histo.getBinError(i+1);
          if (funcs.logy && (y-yerr < funcs.scale_ymin)) continue;
 
-         gry1 = Math.round(funcs.gry(y + yerr));
-         gry2 = Math.round(funcs.gry(y - yerr));
+         gry = Math.round(funcs.gry(y + yerr));
+         bins1.push({grx, gry});
 
-         bins1.push({grx: grx, gry: gry1});
-         bins2.unshift({grx: grx, gry: gry2});
+         gry = Math.round(funcs.gry(y - yerr));
+         bins2.unshift({grx, gry});
       }
 
       let path1 = buildSvgCurve(bins1, { line: this.options.ErrorKind !== 4 }),

@@ -25,21 +25,18 @@ class TGraphPolargramPainter extends ObjectPainter {
 
    /** @summary Translate coordinates */
    translate(angle, radius, keep_float) {
-      let _rx = this.r(radius), _ry = _rx/this.szx*this.szy,
-          pos = {
-            x: _rx * Math.cos(-angle - this.angle),
-            y: _ry * Math.sin(-angle - this.angle),
-            rx: _rx,
-            ry: _ry
-         };
+      let rx = this.r(radius),
+          ry = rx/this.szx*this.szy,
+          grx = rx * Math.cos(-angle - this.angle),
+          gry = ry * Math.sin(-angle - this.angle);
 
       if (!keep_float) {
-         pos.x = Math.round(pos.x);
-         pos.y = Math.round(pos.y);
-         pos.rx = Math.round(pos.rx);
-         pos.ry = Math.round(pos.ry);
+         grx = Math.round(grx);
+         gry = Math.round(gry);
+         rx = Math.round(rx);
+         ry = Math.round(ry);
       }
-      return pos;
+      return { grx, gry, rx, ry };
    }
 
    /** @summary format label for radius ticks */
@@ -357,7 +354,7 @@ class TGraphPolarPainter extends ObjectPainter {
 
       this.draw_g.attr('transform', main.draw_g.attr('transform'));
 
-      let mpath = '', epath = '', lpath = '', bins = [];
+      let mpath = '', epath = '', bins = [];
 
       for (let n = 0; n < graph.fNpoints; ++n) {
 
@@ -366,40 +363,36 @@ class TGraphPolarPainter extends ObjectPainter {
          if (this.options.err) {
             let pos1 = main.translate(graph.fX[n], graph.fY[n] - graph.fEY[n]),
                 pos2 = main.translate(graph.fX[n], graph.fY[n] + graph.fEY[n]);
-            epath += `M${pos1.x},${pos1.y}L${pos2.x},${pos2.y}`;
+            epath += `M${pos1.grx},${pos1.gry}L${pos2.grx},${pos2.gry}`;
 
             pos1 = main.translate(graph.fX[n] + graph.fEX[n], graph.fY[n]);
             pos2 = main.translate(graph.fX[n] - graph.fEX[n], graph.fY[n]);
 
-            epath += `M${pos1.x},${pos1.y}A${pos2.rx},${pos2.ry},0,0,1,${pos2.x},${pos2.y}`;
+            epath += `M${pos1.grx},${pos1.gry}A${pos2.rx},${pos2.ry},0,0,1,${pos2.grx},${pos2.gry}`;
          }
 
          let pos = main.translate(graph.fX[n], graph.fY[n]);
 
          if (this.options.mark)
-            mpath += this.markeratt.create(pos.x, pos.y);
+            mpath += this.markeratt.create(pos.grx, pos.gry);
 
-         if (this.options.line || this.options.fill) {
-            lpath += (lpath ? 'L' : 'M') + pos.x + ',' + pos.y;
-         }
-
-         if (this.options.curve) {
-            pos.grx = pos.x;
-            pos.gry = pos.y;
+         if (this.options.curve || this.options.line || this.options.fill)
             bins.push(pos);
-         }
       }
 
-      if (this.options.fill && lpath)
-         this.draw_g.append('svg:path')
-             .attr('d', lpath + 'Z')
-             .call(this.fillatt.func);
+      if ((this.options.fill || this.options.line) && bins.length) {
+         let lpath = buildSvgCurve(bins, { line: true });
+         if (this.options.fill)
+            this.draw_g.append('svg:path')
+                .attr('d', lpath + 'Z')
+                .call(this.fillatt.func);
 
-      if (this.options.line && lpath)
-         this.draw_g.append('svg:path')
-             .attr('d', lpath)
-             .style('fill', 'none')
-             .call(this.lineatt.func);
+         if (this.options.line)
+            this.draw_g.append('svg:path')
+                .attr('d', lpath)
+                .style('fill', 'none')
+                .call(this.lineatt.func);
+      }
 
       if (this.options.curve && bins.length)
          this.draw_g.append('svg:path')

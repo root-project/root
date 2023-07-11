@@ -4,7 +4,7 @@ import { getSvgLineStyle } from '../base/TAttLineHandler.mjs';
 import { makeTranslate} from '../base/BasePainter.mjs';
 import { TAxisPainter } from './TAxisPainter.mjs';
 import { RAxisPainter } from './RAxisPainter.mjs';
-import { FrameInteractive } from './TFramePainter.mjs';
+import { FrameInteractive, getEarthProjectionFunc } from './TFramePainter.mjs';
 import { RObjectPainter } from '../base/RObjectPainter.mjs';
 
 
@@ -74,30 +74,7 @@ class RFramePainter extends RObjectPainter {
    }
 
    /** @summary Returns coordinates transformation func */
-   getProjectionFunc() {
-      switch (this.projection) {
-         // Aitoff2xy
-         case 1: return (l, b) => {
-            const DegToRad = Math.PI/180,
-                  alpha2 = (l/2)*DegToRad,
-                  delta  = b*DegToRad,
-                  r2     = Math.sqrt(2),
-                  f      = 2*r2/Math.PI,
-                  cdec   = Math.cos(delta),
-                  denom  = Math.sqrt(1. + cdec*Math.cos(alpha2));
-            return {
-               x: cdec*Math.sin(alpha2)*2.*r2/denom/f/DegToRad,
-               y: Math.sin(delta)*r2/denom/f/DegToRad
-            };
-         };
-         // mercator
-         case 2: return (l, b) => { return { x: l, y: Math.log(Math.tan((Math.PI/2 + b/180*Math.PI)/2)) }; };
-         // sinusoidal
-         case 3: return (l, b) => { return { x: l*Math.cos(b/180*Math.PI), y: b } };
-         // parabolic
-         case 4: return (l, b) => { return { x: l*(2.*Math.cos(2*b/180*Math.PI/3) - 1), y: 180*Math.sin(b/180*Math.PI/3) }; };
-      }
-   }
+   getProjectionFunc() { return getEarthProjectionFunc(this.projection); }
 
    /** @summary Rcalculate frame ranges using specified projection functions
      * @desc Not yet used in v7 */
@@ -578,10 +555,8 @@ class RFramePainter extends RObjectPainter {
    cleanXY() {
       // remove all axes drawings
       let clean = (name,grname) => {
-         if (this[name]) {
-            this[name].cleanup();
-            delete this[name];
-         }
+         this[name]?.cleanup();
+         delete this[name];
          delete this[grname];
       };
 

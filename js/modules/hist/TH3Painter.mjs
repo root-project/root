@@ -1,5 +1,5 @@
-import { gStyle, settings, isFunc } from '../core.mjs';
-import { REVISION, Matrix4, BufferGeometry, BufferAttribute, Mesh, MeshBasicMaterial, MeshLambertMaterial,
+import { gStyle, settings } from '../core.mjs';
+import { Matrix4, BufferGeometry, BufferAttribute, Mesh, MeshBasicMaterial, MeshLambertMaterial,
          LineBasicMaterial, SphereGeometry } from '../three.mjs';
 import { TRandom, floatToString } from '../base/BasePainter.mjs';
 import { ensureTCanvas } from '../gpad/TCanvasPainter.mjs';
@@ -254,11 +254,6 @@ class TH3Painter extends THistPainter {
          mesh.tip_color = histo.fMarkerColor === 3 ? 0xFF0000 : 0x00FF00;
 
          mesh.tooltip = function(intersect) {
-            if (!Number.isInteger(intersect.index)) {
-               console.error(`intersect.index not provided, three.js version ${REVISION}`);
-               return null;
-            }
-
             let indx = Math.floor(intersect.index / this.nvertex);
             if ((indx < 0) || (indx >= this.bins.length)) return null;
 
@@ -555,10 +550,6 @@ class TH3Painter extends THistPainter {
          combined_bins.use_scale = use_scale;
 
          combined_bins.tooltip = function(intersect) {
-            if (!Number.isInteger(intersect.faceIndex)) {
-               console.error(`intersect.faceIndex not provided, three.js version ${REVISION}`);
-               return null;
-            }
             let indx = Math.floor(intersect.faceIndex / this.bins_faces);
             if ((indx < 0) || (indx >= this.bins.length)) return null;
 
