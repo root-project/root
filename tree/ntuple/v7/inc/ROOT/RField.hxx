@@ -477,17 +477,14 @@ public:
 class REnumField : public Detail::RFieldBase {
 private:
    EColumnType fColumnType;
-   std::size_t fIntSize;   ///< size of the underlying integer
-   std::size_t fAlignment; ///< alignment of the underlying integer
    REnumField(std::string_view fieldName, std::string_view enumName, TEnum *enump);
-
-   void CreateColumn();
 
 protected:
    std::unique_ptr<Detail::RFieldBase> CloneImpl(std::string_view newName) const final;
-   const RColumnRepresentations &GetColumnRepresentations() const final;
-   void GenerateColumnsImpl() final;
-   void GenerateColumnsImpl(const RNTupleDescriptor &desc) final;
+   void GenerateColumnsImpl() final {}
+   void GenerateColumnsImpl(const RNTupleDescriptor & /* desc */) final {}
+   std::size_t AppendImpl(const void *from) final;
+   void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final;
 
 public:
    REnumField(std::string_view fieldName, std::string_view enumName);
@@ -497,9 +494,13 @@ public:
 
    using Detail::RFieldBase::GenerateValue;
    Detail::RFieldValue GenerateValue(void *where) final;
-   Detail::RFieldValue CaptureValue(void *where) final;
-   size_t GetValueSize() const final { return fIntSize; }
-   size_t GetAlignment() const final { return fAlignment; }
+   Detail::RFieldValue CaptureValue(void *where) final
+   {
+      return Detail::RFieldValue(true /* captureTag */, this, where);
+   }
+   std::vector<Detail::RFieldValue> SplitValue(const Detail::RFieldValue &value) const final;
+   size_t GetValueSize() const final { return fSubFields[0]->GetValueSize(); }
+   size_t GetAlignment() const final { return fSubFields[0]->GetAlignment(); }
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
 };
 
