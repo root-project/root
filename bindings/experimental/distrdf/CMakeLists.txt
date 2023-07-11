@@ -14,7 +14,6 @@ file(COPY ${DistRDFDir} DESTINATION ${localruntimedir})
 set(py_sources
   DistRDF/__init__.py
   DistRDF/ComputationGraphGenerator.py
-  DistRDF/CppWorkflow.py
   DistRDF/DataFrame.py
   DistRDF/HeadNode.py
   DistRDF/Node.py

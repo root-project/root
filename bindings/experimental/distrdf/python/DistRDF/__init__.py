@@ -160,7 +160,4 @@ def create_distributed_module(parentmodule):
     distributed.RunGraphs = RunGraphs
     distributed.VariationsFor = VariationsFor
 
-    # Set non-optimized default mode
-    distributed.optimized = False
-
     return distributed
