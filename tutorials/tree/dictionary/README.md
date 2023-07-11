@@ -1,5 +1,5 @@
-How to read and write custom classes in TTrees
-==============================================
+How to read and write custom classes in TTree
+=============================================
 
 # Starting steps
 
