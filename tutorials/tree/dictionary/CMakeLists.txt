@@ -48,7 +48,7 @@ add_library(data2TreeLib SHARED data2Tree.cpp G__data2Tree.cxx)
 target_link_libraries(data2TreeLib ${ROOT_LIBRARIES}  ) 
 
 #---Create  a main program using the library
-add_executable(treeExample main.cpp)
+add_executable(treeExample main.cpp readTree.cpp writeTree.cpp)
 target_link_libraries(treeExample ${ROOT_LIBRARIES} data2TreeLib)
 
 # Enable PIC
