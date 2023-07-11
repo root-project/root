@@ -1100,3 +1100,7 @@ D: contributed to TStyle::CreateGradientColorTable()
 N: Omar Andres Zapata Mesa
 E: Omar.Zapata@cern.ch
 D: ROOT-R, JupyROOT, TMVA
+
+N: Marco Meyer-conde
+E: marco.meyer@cern.ch
+D: contour drawing options "MOLLWEIDE"
