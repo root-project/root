@@ -24,6 +24,10 @@ enum class CustomEnumUInt32 : unsigned int {};
 enum class CustomEnumInt64 : long int {};
 enum class CustomEnumUInt64 : unsigned long int {};
 
+struct StructWithEnum {
+   CustomEnum e = kCustomEnumVal;
+};
+
 struct CustomStruct {
    float a = 0.0;
    std::vector<float> v1;

@@ -31,12 +31,17 @@ TEST(RNTuple, TypeName) {
 
 TEST(RNTuple, EnumBasics)
 {
+   // Needs fix of TEnum
+   // auto stdEnum = RFieldBase::Create("f", "std::byte");
+   // EXPECT_FALSE(stdEnum);
+
    auto f = RFieldBase::Create("f", "CustomEnum").Unwrap();
 
    auto model = RNTupleModel::Create();
-   auto ptrEnum = model->MakeField<CustomEnum>("f");
+   auto ptrEnum = model->MakeField<CustomEnum>("e");
+   model->MakeField<StructWithEnum>("swe");
 
-   EXPECT_EQ(model->GetField("f")->GetType(), f->GetType());
+   EXPECT_EQ(model->GetField("e")->GetType(), f->GetType());
 
    FileRaii fileGuard("test_ntuple_enum_basics.root");
    {
@@ -48,7 +53,8 @@ TEST(RNTuple, EnumBasics)
    auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
    EXPECT_EQ(1, reader->GetNEntries());
    reader->LoadEntry(0);
-   EXPECT_EQ(kCustomEnumVal, *reader->GetModel()->GetDefaultEntry()->Get<CustomEnum>("f"));
+   EXPECT_EQ(kCustomEnumVal, *reader->GetModel()->GetDefaultEntry()->Get<CustomEnum>("e"));
+   EXPECT_EQ(kCustomEnumVal, reader->GetModel()->GetDefaultEntry()->Get<StructWithEnum>("swe")->e);
 }
 
 using EnumClassInts = ::testing::Types<CustomEnumInt8, CustomEnumUInt8, CustomEnumInt16, CustomEnumUInt16,
