@@ -16,7 +16,7 @@
 // Enumeration of the constants for the PDG particle IDs.
 //
 
-typedef enum {kRootino=0,kDown=1,kDownBar=-1,kUp=2,kUpBar=-2,kStrange=3,
+enum PDG_t {kRootino=0,kDown=1,kDownBar=-1,kUp=2,kUpBar=-2,kStrange=3,
    kStrangeBar=-3,kCharm=4,kCharmBar=-4,kBottom=5,
    kBottomBar=-5,kTop=6,kTopBar=-6,kGluon=21,kPythia92=92,
    kDd1=1103,kDd1Bar=-1103,kUd0=2101,kUd0Bar=-2101,kUd1=2103,
@@ -34,8 +34,7 @@ typedef enum {kRootino=0,kDown=1,kDownBar=-1,kUp=2,kUpBar=-2,kStrange=3,
    kLambda1520=3124,kLambda0Bar=-3122,kSigmaMinus=3112,kSigmaBarPlus=-3112,
    kSigmaPlus=3222,kSigmaBarMinus=-3222,kSigma0=3212,
    kSigma0Bar=-3212,kXiMinus=3312,kXiPlusBar=-3312,
-   kOmegaMinus=3334,kOmegaPlusBar=-3334}
-PDG_t;
+   kOmegaMinus=3334,kOmegaPlusBar=-3334};
 
 /*
    "a(2)(1320)-",     -215
