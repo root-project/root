@@ -17,7 +17,6 @@
 
 void writeTree()
 {
-
    TFile *ofile = TFile::Open("testFile.root", "recreate");
    if (!ofile) {
       std::cerr << " File not found or already exists" << std::endl;
