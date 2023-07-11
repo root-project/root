@@ -378,7 +378,7 @@ void RBrowser::ProcessRunMacro(const std::string &file_path)
 /////////////////////////////////////////////////////////////////////////////////
 /// Process dbl click on browser item
 
-std::string RBrowser::ProcessDblClick(std::vector<std::string> &args)
+std::string RBrowser::ProcessDblClick(unsigned connid, std::vector<std::string> &args)
 {
    args.pop_back(); // remove exec string, not used now
 
@@ -425,6 +425,11 @@ std::string RBrowser::ProcessDblClick(std::vector<std::string> &args)
    if (elem->IsCapable(Browsable::RElement::kActGeom) || elem->IsCapable(Browsable::RElement::kActTree)) {
       elem->GetChildsIter();
    }
+
+   fLastProgressSend = 0;
+   Browsable::RProvider::ProgressHandle handle(elem.get(), [this, connid](float progress, void *) {
+      SendProgress(connid, progress);
+   });
 
    auto widget = GetActiveWidget();
    if (widget && widget->DrawElement(elem, opt)) {
@@ -677,6 +682,25 @@ void RBrowser::SendInitMsg(unsigned connid)
 //////////////////////////////////////////////////////////////////////////////////////////////
 /// Return the current directory of ROOT
 
+void RBrowser::SendProgress(unsigned connid, float progr)
+{
+   long long millisec = gSystem->Now();
+
+   // let process window events
+   fWebWindow->Sync();
+
+   if ((!fLastProgressSendTm || millisec > fLastProgressSendTm - 400) && (progr > fLastProgressSend + 0.07) && fWebWindow->CanSend(connid)) {
+      fWebWindow->Send(connid, "PROGRESS:"s + std::to_string(progr));
+
+      fLastProgressSendTm = millisec;
+      fLastProgressSend = progr;
+   }
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+/// Return the current directory of ROOT
+
 std::string RBrowser::GetCurrentWorkingDirectory()
 {
    return "WORKPATH:"s + TBufferJSON::ToJSON(&fBrowsable.GetWorkingPath()).Data();
@@ -732,7 +756,7 @@ void RBrowser::ProcessMsg(unsigned connid, const std::string &arg0)
 
       auto arr = TBufferJSON::FromJSON<std::vector<std::string>>(msg);
       if (arr && (arr->size() > 2))
-         reply = ProcessDblClick(*arr);
+         reply = ProcessDblClick(connid, *arr);
 
       if (reply.empty())
          reply = "NOPE";
