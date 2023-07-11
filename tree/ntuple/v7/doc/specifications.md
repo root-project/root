@@ -720,6 +720,14 @@ This is called sparse representation.
 The alternative, dense representation uses a `Bit` column to mask non-existing instances of the subfield.
 In this second case, a default-constructed `T` (or, if applicable, a `T` constructed by the ROOT I/O constructor) is stored on disk for the non-existing instances.
 
+### User-defined enums
+
+User-defined enums are stored as a leaf field with a single subfield named `_0`.
+The mother field has no attached columns.
+The subfield corresponds to the integer type the underlies the enum.
+The enum needs to have a dictionary.
+Unscoped and scoped enums are supported.
+
 ### User-defined classes
 
 User-defined classes might behave either as a record or as a collection of elements of a given type.
