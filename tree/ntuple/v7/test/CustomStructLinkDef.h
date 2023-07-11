@@ -5,6 +5,14 @@
 #pragma link off all functions;
 
 #pragma link C++ enum CustomEnum;
+#pragma link C++ enum class CustomEnumInt8;
+#pragma link C++ enum class CustomEnumUInt8;
+#pragma link C++ enum class CustomEnumInt16;
+#pragma link C++ enum class CustomEnumUInt16;
+#pragma link C++ enum class CustomEnumInt32;
+#pragma link C++ enum class CustomEnumUInt32;
+#pragma link C++ enum class CustomEnumInt64;
+#pragma link C++ enum class CustomEnumUInt64;
 
 #pragma link C++ class CustomStruct+;
 #pragma link C++ class DerivedA+;
