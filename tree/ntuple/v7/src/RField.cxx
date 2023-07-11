@@ -1774,7 +1774,7 @@ std::size_t ROOT::Experimental::RRVecField::AppendImpl(const void *from)
    auto [beginPtr, sizePtr, _] = GetRVecDataMembers(from);
 
    std::size_t nbytes = 0;
-   const char *begin = reinterpret_cast<const char *>(*beginPtr); // for pointer arithmetics
+   auto begin = reinterpret_cast<const char *>(*beginPtr); // for pointer arithmetics
    for (std::int32_t i = 0; i < *sizePtr; ++i) {
       nbytes += fSubFields[0]->Append(begin + i * fItemSize);
    }
