@@ -29,7 +29,7 @@ TEST(RNTuple, TypeName) {
       (ROOT::Experimental::RField<std::tuple<std::tuple<char, CustomStruct, char>, int>>::TypeName().c_str()));
 }
 
-TEST(RNTuple, Enum)
+TEST(RNTuple, EnumBasics)
 {
    auto f = RFieldBase::Create("f", "CustomEnum").Unwrap();
 
@@ -38,8 +38,80 @@ TEST(RNTuple, Enum)
 
    EXPECT_EQ(model->GetField("f")->GetType(), f->GetType());
 
-   FileRaii fileGuard("test_ntuple_tclass.root");
-   auto ntuple = RNTupleWriter::Recreate(std::move(model), "f", fileGuard.GetPath());
+   FileRaii fileGuard("test_ntuple_enum_basics.root");
+   {
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      *ptrEnum = kCustomEnumVal;
+      writer->Fill();
+   }
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   EXPECT_EQ(1, reader->GetNEntries());
+   reader->LoadEntry(0);
+   EXPECT_EQ(kCustomEnumVal, *reader->GetModel()->GetDefaultEntry()->Get<CustomEnum>("f"));
+}
+
+using EnumClassInts = ::testing::Types<CustomEnumInt8, CustomEnumUInt8, CustomEnumInt16, CustomEnumUInt16,
+                                       CustomEnumInt32, CustomEnumUInt32, CustomEnumInt64, CustomEnumUInt64>;
+
+template <typename EnumT>
+class EnumClass : public ::testing::Test {
+public:
+   using Enum_t = EnumT;
+};
+
+TYPED_TEST_SUITE(EnumClass, EnumClassInts);
+
+TYPED_TEST(EnumClass, Widths)
+{
+   using ThisEnum_t = typename TestFixture::Enum_t;
+   using Underlying_t = std::underlying_type_t<ThisEnum_t>;
+
+   auto enumName = RField<ThisEnum_t>::TypeName();
+
+   FileRaii fileGuard("test_ntuple_enum_class_" + enumName + ".root");
+   {
+      auto model = RNTupleModel::Create();
+      auto ptrEnum = model->MakeField<ThisEnum_t>("e");
+      auto writer = RNTupleWriter::Recreate(std::move(model), "ntpl", fileGuard.GetPath());
+      *ptrEnum = static_cast<ThisEnum_t>(0);
+      writer->Fill();
+      *ptrEnum = static_cast<ThisEnum_t>(1);
+      writer->Fill();
+      *ptrEnum = static_cast<ThisEnum_t>(std::numeric_limits<Underlying_t>::max());
+      writer->Fill();
+      *ptrEnum = static_cast<ThisEnum_t>(std::numeric_limits<Underlying_t>::max() - 1);
+      writer->Fill();
+      if (std::is_signed_v<Underlying_t>) {
+         *ptrEnum = static_cast<ThisEnum_t>(-1);
+         writer->Fill();
+         *ptrEnum = static_cast<ThisEnum_t>(std::numeric_limits<Underlying_t>::min());
+         writer->Fill();
+         *ptrEnum = static_cast<ThisEnum_t>(std::numeric_limits<Underlying_t>::min() + 1);
+         writer->Fill();
+      }
+   }
+
+   auto reader = RNTupleReader::Open("ntpl", fileGuard.GetPath());
+   auto ptrEnum = reader->GetModel()->GetDefaultEntry()->Get<ThisEnum_t>("e");
+   reader->LoadEntry(0);
+   EXPECT_EQ(static_cast<ThisEnum_t>(0), *ptrEnum);
+   reader->LoadEntry(1);
+   EXPECT_EQ(static_cast<ThisEnum_t>(1), *ptrEnum);
+   reader->LoadEntry(2);
+   EXPECT_EQ(static_cast<ThisEnum_t>(std::numeric_limits<Underlying_t>::max()), *ptrEnum);
+   reader->LoadEntry(3);
+   EXPECT_EQ(static_cast<ThisEnum_t>(std::numeric_limits<Underlying_t>::max() - 1), *ptrEnum);
+
+   if (!std::is_signed_v<Underlying_t>)
+      return;
+
+   reader->LoadEntry(4);
+   EXPECT_EQ(static_cast<ThisEnum_t>(-1), *ptrEnum);
+   reader->LoadEntry(5);
+   EXPECT_EQ(static_cast<ThisEnum_t>(std::numeric_limits<Underlying_t>::min()), *ptrEnum);
+   reader->LoadEntry(6);
+   EXPECT_EQ(static_cast<ThisEnum_t>(std::numeric_limits<Underlying_t>::min() + 1), *ptrEnum);
 }
 
 TEST(RNTuple, CreateField)

@@ -13,8 +13,16 @@
  * Used to test serialization and deserialization of classes in RNTuple with TClass
  */
 
-enum CustomEnum {};
-enum class CustomEnumClass {};
+enum CustomEnum { kCustomEnumVal = 7 };
+// TODO(jblomer): use standard integer types for specyfing the underying width; requires TEnum fix.
+enum class CustomEnumInt8 : char {};
+enum class CustomEnumUInt8 : unsigned char {};
+enum class CustomEnumInt16 : short int {};
+enum class CustomEnumUInt16 : unsigned short int {};
+enum class CustomEnumInt32 : int {};
+enum class CustomEnumUInt32 : unsigned int {};
+enum class CustomEnumInt64 : long int {};
+enum class CustomEnumUInt64 : unsigned long int {};
 
 struct CustomStruct {
    float a = 0.0;
