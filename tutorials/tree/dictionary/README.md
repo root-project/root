@@ -20,7 +20,7 @@ cmake --build build
 
 # Files
 
-The TTree can be seen as a collection of objects (branches), with a number of attributes (leaves). The name of the branch corresponds to the name of the instantianated object. The name of the leaves corresponds to the name of the attributes.
+The TTree can be seen as a collection of objects (branches), with a number of attributes (leaves). The name of the branch corresponds to the name of the instantiated object. The name of the leaves corresponds to the name of the attributes.
 
 The attributes of 
 
