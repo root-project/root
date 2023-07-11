@@ -66,7 +66,14 @@ RProvider::ClassMap_t &RProvider::GetClassMap()
 }
 
 //////////////////////////////////////////////////////////////////////////////////
-// Returns map of registered icons base on class name
+// Returns vector of registered progress functions
+
+RProvider::ProgressVect_t &RProvider::GetProgressVect()
+{
+   static RProvider::ProgressVect_t sVect;
+   return sVect;
+}
+
 
 //////////////////////////////////////////////////////////////////////////////////
 // Destructor
@@ -433,6 +440,66 @@ bool RProvider::CanDraw7(const ClassArg &arg)
    return false;
 }
 
+/////////////////////////////////////////////////////////////////////
+/// Create progress handle
+
+RProvider::ProgressHandle::ProgressHandle(void *handle, RProvider::ProgressFunc_t func)
+{
+   fHandle = handle;
+   RProvider::GetProgressVect().emplace_back(StructProgress{handle, nullptr, func});
+}
+
+/////////////////////////////////////////////////////////////////////
+/// Destroy progress handle
+
+RProvider::ProgressHandle::~ProgressHandle()
+{
+   auto &vect = RProvider::GetProgressVect();
+   auto iter = vect.begin();
+   while (iter != vect.end()) {
+      if (iter->handle == fHandle) {
+         vect.erase(iter);
+      } else {
+         iter++;
+      }
+   }
+}
+
+/////////////////////////////////////////////////////////////////////
+/// Extend progress handle
+
+void RProvider::ProgressHandle::Extend(void *handle2)
+{
+   RProvider::ExtendProgressHandle(fHandle, handle2);
+}
+
+/////////////////////////////////////////////////////////////////////
+/// Extend progress handle - to be able react on sub item
+
+void RProvider::ExtendProgressHandle(void *handle, void *handle2)
+{
+   for (auto &elem : GetProgressVect())
+      if (elem.handle == handle)
+         elem.handle2 = handle2;
+}
+
+/////////////////////////////////////////////////////////////////////
+/// Report running progress
+/// Returns true if handling function was invoked
+/// Method can be used to detect if there any progress handler assigned
+
+
+bool RProvider::ReportProgress(void *handle, float progress)
+{
+   bool is_any = false;
+   for (auto &elem : GetProgressVect())
+      if ((elem.handle == handle) || (elem.handle2 == handle)) {
+         elem.func(progress, elem.handle);
+         is_any = true;
+      }
+
+   return is_any;
+}
 
 // ==============================================================================================
 

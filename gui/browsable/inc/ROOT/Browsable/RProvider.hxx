@@ -39,6 +39,8 @@ public:
 
    virtual ~RProvider();
 
+   using ProgressFunc_t = std::function<void(float progress, void *handle)>;
+
    class ClassArg {
       friend class RProvider;
       const TClass *cl{nullptr};
@@ -53,6 +55,20 @@ public:
       const TClass *GetClass() const { return cl; }
       const std::string &GetName() const { return name; }
    };
+
+   class ProgressHandle {
+      friend class RProvider;
+      void *fHandle{nullptr};
+
+      ProgressHandle(const ProgressHandle &) = delete;
+      ProgressHandle& operator=(const ProgressHandle &) = delete;
+   public:
+      explicit ProgressHandle(void *handle, ProgressFunc_t func);
+      ~ProgressHandle();
+      void Extend(void *handle2);
+   };
+
+   friend class ProgressHandle;
 
    static std::string GetClassIcon(const ClassArg &, bool = false);
    static std::string GetClassDrawOption(const ClassArg &);
@@ -69,6 +85,9 @@ public:
    static std::shared_ptr<RElement> BrowseNTuple(const std::string &tuplename, const std::string &filename);
    static bool Draw6(TVirtualPad *subpad, std::unique_ptr<RHolder> &obj, const std::string &opt = "");
    static bool Draw7(std::shared_ptr<ROOT::Experimental::RPadBase> &subpad, std::unique_ptr<RHolder> &obj, const std::string &opt = "");
+
+   static void ExtendProgressHandle(void *handle, void *handle2);
+   static bool ReportProgress(void *handle, float progress);
 
 protected:
 
@@ -96,6 +115,8 @@ private:
    struct StructFile { RProvider *provider{nullptr}; FileFunc_t func; };
    struct StructDraw6 { RProvider *provider{nullptr}; Draw6Func_t func; };
    struct StructDraw7 { RProvider *provider{nullptr}; Draw7Func_t func; };
+   struct StructProgress { void *handle{nullptr}, *handle2{nullptr}; ProgressFunc_t func; };
+
    struct StructClass {
       RProvider *provider{nullptr};
       bool can_have_childs{false};
@@ -108,12 +129,14 @@ private:
    using BrowseMap_t = std::multimap<const TClass*, StructBrowse>;
    using Draw6Map_t = std::multimap<const TClass*, StructDraw6>;
    using Draw7Map_t = std::multimap<const TClass*, StructDraw7>;
+   using ProgressVect_t = std::vector<StructProgress>;
 
    static ClassMap_t &GetClassMap();
    static FileMap_t &GetFileMap();
    static BrowseMap_t &GetBrowseMap();
    static Draw6Map_t &GetDraw6Map();
    static Draw7Map_t &GetDraw7Map();
+   static ProgressVect_t &GetProgressVect();
    static BrowseNTupleFunc_t gNTupleFunc;
 
    static StructClass &GetClassEntry(const ClassArg &);
