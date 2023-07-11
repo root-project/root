@@ -2112,9 +2112,9 @@ class THistPainter extends ObjectPainter {
       if (this.options.Mode3D) {
          if (!this.options.Surf && !this.options.Lego && !this.options.Error) {
             if ((this.nbinsx >= 50) || (this.nbinsy >= 50))
-               this.options.Lego = this.options.Color ? 14 : 13;
+               this.options.Lego = this.options.Scat ? 13 : 14;
             else
-               this.options.Lego = this.options.Color ? 12 : 1;
+               this.options.Lego = this.options.Scat ? 1 : 12;
 
             this.options.Zero = false; // do not show zeros by default
          }

@@ -1,4 +1,4 @@
-import { gStyle, isStr, createTPolyLine, kNoZoom } from '../core.mjs';
+import { gStyle, isStr, kNoZoom } from '../core.mjs';
 import { rgb as d3_rgb } from '../d3.mjs';
 import { TAttLineHandler } from '../base/TAttLineHandler.mjs';
 import { floatToString, TRandom, addHighlightStyle } from '../base/BasePainter.mjs';

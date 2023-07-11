@@ -457,7 +457,7 @@ class BasePainter {
           layout_selector = (layout == 'simple') ? '' : res.property('layout_selector');
 
       if (layout_selector)
-         res = res.selectChild(layout_selector);
+         res = res.select(layout_selector);
 
       // one could redirect here
       if (!is_direct && !res.empty() && use_enlarge)

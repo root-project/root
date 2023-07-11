@@ -1,5 +1,5 @@
 import { settings, createHistogram, kNoZoom, clTH2I, clTGraph2DErrors, clTGraph2DAsymmErrors, kNoStats } from '../core.mjs';
-import { REVISION, Color, LineBasicMaterial } from '../three.mjs';
+import { Color, LineBasicMaterial } from '../three.mjs';
 import { DrawOptions } from '../base/BasePainter.mjs';
 import { ObjectPainter } from '../base/ObjectPainter.mjs';
 import { TAttMarkerHandler } from '../base/TAttMarkerHandler.mjs';
@@ -108,11 +108,6 @@ class TGraph2DPainter extends ObjectPainter {
 
    /** @summary Function handles tooltips in the mesh */
    graph2DTooltip(intersect) {
-      if (!Number.isInteger(intersect.index)) {
-         console.error(`intersect.index not provided, three.js version ${REVISION}`);
-         return null;
-      }
-
       let indx = Math.floor(intersect.index / this.nvertex);
       if ((indx < 0) || (indx >= this.index.length)) return null;
       let sqr = v => v*v;
