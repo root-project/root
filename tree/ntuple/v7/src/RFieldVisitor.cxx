@@ -369,6 +369,18 @@ void ROOT::Experimental::RPrintValueVisitor::VisitNullableField(const RNullableF
    }
 }
 
+void ROOT::Experimental::RPrintValueVisitor::VisitEnumField(const REnumField &field)
+{
+   PrintIndent();
+   PrintName(field);
+   auto intValue = field.SplitValue(fValue)[0];
+   RPrintOptions options;
+   options.fPrintSingleLine = true;
+   options.fPrintName = false;
+   RPrintValueVisitor visitor(intValue, fOutput, fLevel, options);
+   intValue.GetField()->AcceptVisitor(visitor);
+}
+
 void ROOT::Experimental::RPrintValueVisitor::VisitCollectionClassField(const RCollectionClassField &field)
 {
    PrintCollection(field);

@@ -221,6 +221,7 @@ public:
    void VisitRVecField(const RRVecField &field) final;
    void VisitBitsetField(const RBitsetField &field) final;
    void VisitNullableField(const RNullableField &field) final;
+   void VisitEnumField(const REnumField &field) final;
 };
 
 
