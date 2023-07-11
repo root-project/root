@@ -3,18 +3,20 @@
 // # Copyright (c) 2018 Alvaro Tolosa. All rights reserved.		 #
 // ##########################################################################
 
-#include "readTree.cpp"
-#include "writeTree.cpp"
+#include <iostream>
+
+void writeTree();
+void readTree();
 
 int main()
 {
    std::cerr << "Starting writeTree()..." << std::endl;
    writeTree();
    std::cerr << "Starting writeTree()... Done! " << std::endl;
-
    std::cerr << "Starting readTree()..." << std::endl;
    readTree();
    std::cerr << "Starting readTree()... Done! " << std::endl;
 
    return 0;
 }
+
