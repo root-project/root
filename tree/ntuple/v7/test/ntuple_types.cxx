@@ -39,7 +39,7 @@ TEST(RNTuple, EnumBasics)
 
    auto model = RNTupleModel::Create();
    auto ptrEnum = model->MakeField<CustomEnum>("e");
-   model->MakeField<StructWithEnum>("swe");
+   model->MakeField<StructWithEnums>("swe");
 
    EXPECT_EQ(model->GetField("e")->GetType(), f->GetType());
 
@@ -54,7 +54,10 @@ TEST(RNTuple, EnumBasics)
    EXPECT_EQ(1, reader->GetNEntries());
    reader->LoadEntry(0);
    EXPECT_EQ(kCustomEnumVal, *reader->GetModel()->GetDefaultEntry()->Get<CustomEnum>("e"));
-   EXPECT_EQ(kCustomEnumVal, reader->GetModel()->GetDefaultEntry()->Get<StructWithEnum>("swe")->e);
+   auto ptrStructWithEnums = reader->GetModel()->GetDefaultEntry()->Get<StructWithEnums>("swe");
+   EXPECT_EQ(42, ptrStructWithEnums->a);
+   EXPECT_EQ(137, ptrStructWithEnums->b);
+   EXPECT_EQ(kCustomEnumVal, ptrStructWithEnums->e);
 }
 
 using EnumClassInts = ::testing::Types<CustomEnumInt8, CustomEnumUInt8, CustomEnumInt16, CustomEnumUInt16,
@@ -1254,24 +1257,6 @@ TEST(RNTuple, TVirtualCollectionProxy)
          }
       }
    }
-}
-
-TEST(RNTuple, EnumDeclarations)
-{
-   FileRaii fileGuard("test_ntuple_enums.ntuple");
-
-   {
-      auto model = RNTupleModel::Create();
-      auto fieldKlass = model->MakeField<StructWithEnums>("klass");
-      auto ntuple = RNTupleWriter::Recreate(std::move(model), "f", fileGuard.GetPath());
-      ntuple->Fill();
-   }
-
-   auto ntuple = RNTupleReader::Open("f", fileGuard.GetPath());
-   ASSERT_EQ(1U, ntuple->GetNEntries());
-   auto viewKlass = ntuple->GetView<StructWithEnums>("klass");
-   EXPECT_EQ(42, viewKlass(0).a);
-   EXPECT_EQ(137, viewKlass(0).b);
 }
 
 TEST(RNTuple, Traits)
