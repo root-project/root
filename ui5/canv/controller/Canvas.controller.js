@@ -374,13 +374,13 @@ sap.ui.define([
             this.activateGed(this.getCanvasPainter());
       },
 
-      /** @summary Load custom panel in canvas lef area */
+      /** @summary Load custom panel in canvas left area */
       showLeftArea(panel_name, panel_handle) {
          let split = this.getView().byId('MainAreaSplitter'),
              model = this.getView().getModel(),
              curr = model.getProperty('/LeftArea');
 
-         if (!split || (curr === panel_name) || (!curr && !panel_name))
+         if (!split || (!curr && !panel_name) || (curr === panel_name))
             return Promise.resolve(null);
 
          model.setProperty("/LeftArea", panel_name);
@@ -452,7 +452,11 @@ sap.ui.define([
          if (!ctrl || (typeof cp?.drawObject != 'function'))
             return Promise.resolve(null);
 
+         if (typeof ctrl?.cleanupPainter == 'function')
+            ctrl.cleanupPainter();
+
          return ctrl.getRenderPromise().then(dom => {
+            dom.innerHTML = ''; // delete everything
             dom.style.overflow = "hidden";
             return cp.drawObject(dom, obj, opt);
          }).then(painter => {
@@ -497,7 +501,7 @@ sap.ui.define([
          if (this.bottomVisible == is_on)
             return Promise.resolve(this.getBottomController());
 
-         let split = this.getView().byId("BottomAreaSplitter");
+         let split = this.getView().byId('BottomAreaSplitter');
          if (!split) return Promise.resolve(null);
 
          let cont = split.getContentAreas();
