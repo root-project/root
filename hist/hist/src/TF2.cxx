@@ -859,8 +859,11 @@ void TF2::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    SaveMarkerAttributes(out, f2Name.Data(), 1, 1, 1);
    SaveLineAttributes(out, f2Name.Data(), 1, 1, 4);
 
-   if (GetNpx() != 100)
+   if (GetNpx() != 30)
       out<<"   "<<f2Name.Data()<<"->SetNpx("<<GetNpx()<<");"<<std::endl;
+   if (GetNpy() != 30)
+      out<<"   "<<f2Name.Data()<<"->SetNpy("<<GetNpy()<<");"<<std::endl;
+
    if (GetChisquare() != 0)
       out<<"   "<<f2Name.Data()<<"->SetChisquare("<<GetChisquare()<<");"<<std::endl;
 
