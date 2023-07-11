@@ -14,5 +14,4 @@ void myDetectorData::clear()
    energy = 0;
    detectorID = 0;
    correlatedDetectors_v.clear();
-   return;
 }
