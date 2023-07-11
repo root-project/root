@@ -129,7 +129,7 @@ public:
          FlushShadowWritePage();
       }
 
-      memcpy(dst, from, fElement->GetSize());
+      std::memcpy(dst, from, fElement->GetSize());
       fNElements++;
 
       SwapWritePagesIfFull();
@@ -159,7 +159,7 @@ public:
 
       void *dst = fWritePage[fWritePageIdx].GrowUnchecked(count);
 
-      memcpy(dst, from, fElement->GetSize() * count);
+      std::memcpy(dst, from, fElement->GetSize() * count);
       fNElements += count;
 
       // Note that by the very first check in AppendV, we cannot have filled more than fApproxNElementsPerPage elements
