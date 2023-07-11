@@ -457,9 +457,28 @@ void importAnalysis(const JSONNode &rootnode, const JSONNode &analysisNode, cons
    JSONNode const *pdfNameNode = mcAuxNode ? mcAuxNode->find("pdfName") : nullptr;
    std::string const pdfName = pdfNameNode ? pdfNameNode->val() : "simPdf";
 
-   auto *pdf = static_cast<RooSimultaneous *>(workspace.pdf(pdfName));
-   if (!pdf)
-      std::runtime_error("pdf not found!");
+   RooAbsPdf *pdf = static_cast<RooSimultaneous *>(workspace.pdf(pdfName));
+
+   if (!pdf) {
+      // if there is no simultaneous pdf, we can check whether there is only one pdf in the list
+      if (nllDistNames.size() == 1) {
+         // if so, we can use that one to populate the ModelConfig
+         pdf = workspace.pdf(nllDistNames[0]);
+      } else {
+         // otherwise, we have no choice but to build a simPdf by hand
+         std::string simPdfName = analysisName + "_simPdf";
+         std::string indexCatName = analysisName + "_categoryIndex";
+         RooCategory indexCat{indexCatName.c_str(), indexCatName.c_str()};
+         std::map<std::string, RooAbsPdf *> pdfMap;
+         for (std::size_t i = 0; i < nllDistNames.size(); ++i) {
+            indexCat.defineType(nllDistNames[i], i);
+            pdfMap[nllDistNames[i]] = workspace.pdf(nllDistNames[i]);
+         }
+         RooSimultaneous simPdf{simPdfName.c_str(), simPdfName.c_str(), pdfMap, indexCat};
+         workspace.import(simPdf, RooFit::RecycleConflictNodes(true), RooFit::Silence(true));
+         pdf = static_cast<RooSimultaneous *>(workspace.pdf(simPdfName));
+      }
+   }
 
    mc->SetPdf(*pdf);
 
