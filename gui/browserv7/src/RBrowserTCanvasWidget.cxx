@@ -176,6 +176,8 @@ public:
       if (!obj)
          return false;
 
+      Browsable::RProvider::ExtendProgressHandle(elem.get(), obj.get());
+
       std::string drawopt = opt;
 
       // first remove all objects which may belong to removed pads

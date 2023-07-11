@@ -65,6 +65,8 @@ public:
       if (!obj)
          return false;
 
+      Browsable::RProvider::ExtendProgressHandle(elem.get(), obj.get());
+
       std::shared_ptr<RPadBase> subpad = fCanvas;
 
       std::string drawopt = opt;
