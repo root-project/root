@@ -245,7 +245,7 @@ def show_node_state(shell_log: str, options: str) -> str:
 
     return shell_log
 
-
+#Even in case of some failed tests I am still making it run
 @github_log_group("Run tests")
 def run_ctest(shell_log: str, extra_ctest_flags: str) -> str:
     result, shell_log = subprocess_with_log(f"""
@@ -346,6 +346,7 @@ def rebase(base_ref, head_ref, shell_log) -> str:
 @github_log_group("Create Test Coverage")
 def create_coverage(shell_log: str) -> str:
     directory = f"{WORKDIR}/build/interpreter/llvm-project/llvm/lib/ProfileData/Coverage/CMakeFiles"
+    #
     #directory = f"../root-ci-config/"
     #directory = f"builddir/interpreter/llvm-project/llvm/lib/ProfileData/Coverage/CMakeFiles"
     result, shell_log = subprocess_with_log(f"""
