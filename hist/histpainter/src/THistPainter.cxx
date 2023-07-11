@@ -10364,6 +10364,7 @@ Int_t THistPainter::ProjectMercator2xy(Double_t l, Double_t b, Double_t &Al, Dou
 ////////////////////////////////////////////////////////////////////////////////
 /// Static function code for sinusoidal projection
 /// from  Ernst-Jan Buis
+/// Source https://en.wikipedia.org/wiki/Sinusoidal_projection
 
 Int_t THistPainter::ProjectSinusoidal2xy(Double_t l, Double_t b, Double_t &Al, Double_t &Ab)
 {
@@ -10386,13 +10387,37 @@ Int_t THistPainter::ProjectParabolic2xy(Double_t l, Double_t b, Double_t &Al, Do
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Static function code for Mollweide projection
+/// Static function.
+///
+/// Convert Right Ascension, Declination to X,Y using an MOLLWEIDE projection.
+/// This procedure can be used to create an all-sky map in Galactic
+/// coordinates with an equal-area Mollweide projection.  Output map
+/// coordinates are zero longitude centered.
+/// It is also known as the Babinet projection, homalographic projection, homolographic projection, and elliptical projection.
+/// Source: https://en.wikipedia.org/wiki/Mollweide_projection
+///
+/// code from  Marco Meyer-Conde
 
 Int_t THistPainter::ProjectMollweide2xy(Double_t l, Double_t b, Double_t &Al, Double_t &Ab)
 {
 
-   Al = l*TMath::Cos(b*TMath::DegToRad());
-   Ab = 90*TMath::Sin(b*TMath::DegToRad());
+   Double_t theta0 = b * TMath::DegToRad(), theta = theta0;
+
+   for (int i = 0; i < 100; i++) {
+      Double_t num = 2 * theta + TMath::Sin(2 * theta) - TMath::Pi() * TMath::Sin(theta0);
+      Double_t den = 4 * TMath::Power(TMath::Cos(theta), 2);
+      theta -= num / den;
+
+      if (TMath::Abs(num / den) < 1e-4) break;
+      if (isnan(theta)) { // degenerated case
+         theta = theta0;
+         break;
+      }
+   }
+
+   Al = l * TMath::Cos(theta);
+   Ab = 90 * TMath::Sin(theta);
+
    return 0;
 }
 
