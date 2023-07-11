@@ -2600,6 +2600,19 @@ void TGaxis::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
    if (TestBit(TAxis::kNoExponent)) {
       out<<"   gaxis->SetNoExponent();"<<std::endl;
    }
+   if (fModLabs) {
+      TIter next(fModLabs);
+      while (auto ml = (TAxisModLab*)next()) {
+         out<<"   gaxis->ChangeLabel("
+            <<ml->GetLabNum()<<","
+            <<ml->GetAngle()<<","
+            <<ml->GetSize()<<","
+            <<ml->GetAlign()<<","
+            <<ml->GetColor()<<","
+            <<ml->GetFont()<<","
+            <<quote<<ml->GetText()<<quote<<");"<<std::endl;
+      }
+   }
 
    out<<"   gaxis->Draw();"<<std::endl;
 }

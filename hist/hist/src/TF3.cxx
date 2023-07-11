@@ -607,6 +607,7 @@ void TF3::Save(Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Doubl
 void TF3::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
    char quote = '"';
+   TString f3Name(GetName());
    out<<"   "<<std::endl;
    if (gROOT->ClassSaved(TF3::Class())) {
       out<<"   ";
@@ -614,37 +615,40 @@ void TF3::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
       out<<"   TF3 *";
    }
    if (!fMethodCall) {
-      out<<GetName()<<" = new TF3("<<quote<<GetName()<<quote<<","<<quote<<GetTitle()<<quote<<","<<fXmin<<","<<fXmax<<","<<fYmin<<","<<fYmax<<","<<fZmin<<","<<fZmax<<");"<<std::endl;
+      out<<f3Name.Data()<<" = new TF3("<<quote<<f3Name.Data()<<quote<<","<<quote<<GetTitle()<<quote<<","<<fXmin<<","<<fXmax<<","<<fYmin<<","<<fYmax<<","<<fZmin<<","<<fZmax<<");"<<std::endl;
    } else {
-      out<<GetName()<<" = new TF3("<<quote<<GetName()<<quote<<","<<GetTitle()<<","<<fXmin<<","<<fXmax<<","<<fYmin<<","<<fYmax<<","<<fZmin<<","<<fZmax<<","<<GetNpar()<<");"<<std::endl;
+      out<<f3Name.Data()<<" = new TF3("<<quote<<f3Name.Data()<<quote<<","<<GetTitle()<<","<<fXmin<<","<<fXmax<<","<<fYmin<<","<<fYmax<<","<<fZmin<<","<<fZmax<<","<<GetNpar()<<");"<<std::endl;
    }
 
    if (GetFillColor() != 0) {
       if (TColor::SaveColor(out, GetFillColor()))
-         out<<"   "<<GetName()<<"->SetFillColor(ci);" << std::endl;
+         out<<"   "<<f3Name.Data()<<"->SetFillColor(ci);" << std::endl;
       else
-         out<<"   "<<GetName()<<"->SetFillColor("<<GetFillColor()<<");"<<std::endl;
+         out<<"   "<<f3Name.Data()<<"->SetFillColor("<<GetFillColor()<<");"<<std::endl;
    }
    if (GetLineColor() != 1) {
       if (TColor::SaveColor(out, GetLineColor()))
-         out<<"   "<<GetName()<<"->SetLineColor(ci);" << std::endl;
+         out<<"   "<<f3Name.Data()<<"->SetLineColor(ci);" << std::endl;
       else
-         out<<"   "<<GetName()<<"->SetLineColor("<<GetLineColor()<<");"<<std::endl;
+         out<<"   "<<f3Name.Data()<<"->SetLineColor("<<GetLineColor()<<");"<<std::endl;
    }
    if (GetNpz() != 100) {
-      out<<"   "<<GetName()<<"->SetNpz("<<GetNpz()<<");"<<std::endl;
+      out<<"   "<<f3Name.Data()<<"->SetNpz("<<GetNpz()<<");"<<std::endl;
    }
    if (GetChisquare() != 0) {
-      out<<"   "<<GetName()<<"->SetChisquare("<<GetChisquare()<<");"<<std::endl;
+      out<<"   "<<f3Name.Data()<<"->SetChisquare("<<GetChisquare()<<");"<<std::endl;
    }
    Double_t parmin, parmax;
    for (Int_t i=0;i<GetNpar();i++) {
-      out<<"   "<<GetName()<<"->SetParameter("<<i<<","<<GetParameter(i)<<");"<<std::endl;
-      out<<"   "<<GetName()<<"->SetParError("<<i<<","<<GetParError(i)<<");"<<std::endl;
+      out<<"   "<<f3Name.Data()<<"->SetParameter("<<i<<","<<GetParameter(i)<<");"<<std::endl;
+      out<<"   "<<f3Name.Data()<<"->SetParError("<<i<<","<<GetParError(i)<<");"<<std::endl;
       GetParLimits(i,parmin,parmax);
-      out<<"   "<<GetName()<<"->SetParLimits("<<i<<","<<parmin<<","<<parmax<<");"<<std::endl;
+      out<<"   "<<f3Name.Data()<<"->SetParLimits("<<i<<","<<parmin<<","<<parmax<<");"<<std::endl;
    }
-   out<<"   "<<GetName()<<"->Draw("
+   if (GetXaxis()) GetXaxis()->SaveAttributes(out, f3Name.Data(), "->GetXaxis()");
+   if (GetYaxis()) GetYaxis()->SaveAttributes(out, f3Name.Data(), "->GetYaxis()");
+   if (GetZaxis()) GetZaxis()->SaveAttributes(out, f3Name.Data(), "->GetZaxis()");
+   out<<"   "<<f3Name.Data()<<"->Draw("
       <<quote<<option<<quote<<");"<<std::endl;
 }
 

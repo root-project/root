@@ -749,7 +749,19 @@ void TAxis::SaveAttributes(std::ostream &out, const char *name, const char *subn
    if (TestBit(kNoExponent)) {
       out<<"   "<<name<<subname<<"->SetNoExponent();"<<std::endl;
    }
-
+   if (fModLabs) {
+      TIter next(fModLabs);
+      while (auto ml = (TAxisModLab*)next()) {
+         out<<"   "<<name<<subname<<"->ChangeLabel("
+            <<ml->GetLabNum()<<","
+            <<ml->GetAngle()<<","
+            <<ml->GetSize()<<","
+            <<ml->GetAlign()<<","
+            <<ml->GetColor()<<","
+            <<ml->GetFont()<<","
+            <<quote<<ml->GetText()<<quote<<");"<<std::endl;
+      }
+   }
    TAttAxis::SaveAttributes(out,name,subname);
 }
 
