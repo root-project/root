@@ -248,16 +248,12 @@ namespace Detail {
 
 // clang-format off
 /**
-\class ROOT::Experimental::Detail::RColumnElement
+\class ROOT::Experimental::Detail::RColumnElementBase
 \ingroup NTuple
-\brief A column element points either to the content of an RFieldValue or into a memory mapped page.
+\brief A column element encapsulates the translation between basic C++ types and their column representation.
 
-The content pointed to by fRawContent can be a single element or the first element of an array.
 Usually the on-disk element should map bitwise to the in-memory element. Sometimes that's not the case
-though, for instance on big endian platforms and for exotic physical columns like 8 bit float.
-
-This class does not provide protection around the raw pointer, fRawContent has to be managed correctly
-by the user of this class.
+though, for instance on big endian platforms or for bools.
 */
 // clang-format on
 class RColumnElementBase {
@@ -268,16 +264,7 @@ protected:
    std::size_t fSize;
 
 public:
-   RColumnElementBase()
-     : fRawContent(nullptr)
-     , fSize(0)
-   {}
-   RColumnElementBase(void *rawContent, std::size_t size) : fRawContent(rawContent), fSize(size)
-   {}
-   RColumnElementBase(const RColumnElementBase &elemArray, std::size_t at)
-     : fRawContent(static_cast<unsigned char *>(elemArray.fRawContent) + elemArray.fSize * at)
-     , fSize(elemArray.fSize)
-   {}
+   RColumnElementBase(void *rawContent, std::size_t size) : fRawContent(rawContent), fSize(size) {}
    RColumnElementBase(const RColumnElementBase& other) = default;
    RColumnElementBase(RColumnElementBase&& other) = default;
    RColumnElementBase& operator =(const RColumnElementBase& other) = delete;
@@ -306,7 +293,6 @@ public:
       std::memcpy(destination, source, count);
    }
 
-   void *GetRawContent() const { return fRawContent; }
    std::size_t GetSize() const { return fSize; }
    std::size_t GetPackedSize(std::size_t nElements = 1U) const { return (nElements * GetBitsOnStorage() + 7) / 8; }
 };
