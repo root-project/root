@@ -45,8 +45,6 @@ void readTree()
    }
 
    ifile->Close();
-
-   return;
 }
 
 #endif
