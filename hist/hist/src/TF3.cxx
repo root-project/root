@@ -632,12 +632,17 @@ void TF3::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
       else
          out<<"   "<<f3Name.Data()<<"->SetLineColor("<<GetLineColor()<<");"<<std::endl;
    }
-   if (GetNpz() != 100) {
+
+   if (GetNpx() != 30)
+      out<<"   "<<f3Name.Data()<<"->SetNpx("<<GetNpx()<<");"<<std::endl;
+   if (GetNpy() != 30)
+      out<<"   "<<f3Name.Data()<<"->SetNpy("<<GetNpy()<<");"<<std::endl;
+   if (GetNpz() != 30)
       out<<"   "<<f3Name.Data()<<"->SetNpz("<<GetNpz()<<");"<<std::endl;
-   }
-   if (GetChisquare() != 0) {
+
+   if (GetChisquare() != 0)
       out<<"   "<<f3Name.Data()<<"->SetChisquare("<<GetChisquare()<<");"<<std::endl;
-   }
+
    Double_t parmin, parmax;
    for (Int_t i=0;i<GetNpar();i++) {
       out<<"   "<<f3Name.Data()<<"->SetParameter("<<i<<","<<GetParameter(i)<<");"<<std::endl;
@@ -645,9 +650,11 @@ void TF3::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
       GetParLimits(i,parmin,parmax);
       out<<"   "<<f3Name.Data()<<"->SetParLimits("<<i<<","<<parmin<<","<<parmax<<");"<<std::endl;
    }
+
    if (GetXaxis()) GetXaxis()->SaveAttributes(out, f3Name.Data(), "->GetXaxis()");
    if (GetYaxis()) GetYaxis()->SaveAttributes(out, f3Name.Data(), "->GetYaxis()");
    if (GetZaxis()) GetZaxis()->SaveAttributes(out, f3Name.Data(), "->GetZaxis()");
+
    out<<"   "<<f3Name.Data()<<"->Draw("
       <<quote<<option<<quote<<");"<<std::endl;
 }
