@@ -53,8 +53,6 @@ void writeTree()
 
    myTree->Write();
    ofile->Close();
-
-   return;
 }
 
 #endif
