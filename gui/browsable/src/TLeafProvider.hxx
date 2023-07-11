@@ -21,9 +21,10 @@
 using namespace ROOT::Experimental::Browsable;
 
 class TLeafDrawProgressTimer : public TTimer {
-   TTree *fTree;
+   TTree *fTree{nullptr};
+   void *fHandle2{nullptr};
 public:
-   TLeafDrawProgressTimer(TTree *tree, Int_t period) : TTimer(period, kTRUE), fTree(tree)
+   TLeafDrawProgressTimer(Int_t period, TTree *tree, void *handle2) : TTimer(period, kTRUE), fTree(tree), fHandle2(handle2)
    {
    }
 
@@ -34,7 +35,7 @@ public:
       Long64_t current = fTree->GetReadEntry();
 
       if (last > first)
-         printf("Progress %5.3f\n", (current - first + 1.) / ( last - first + 0. ) * 100.);
+         RProvider::ReportProgress(fHandle2, (current - first + 1.) / ( last - first + 0. ));
 
       Reset();
 
@@ -46,6 +47,9 @@ public:
 /** Provider for drawing of branches / leafs in the TTree */
 
 class TLeafProvider : public RProvider {
+
+   void *fHandle2{nullptr}; ///<!  used only for reporting progress
+
 public:
 
    TH1 *DrawTree(TTree *ttree, const std::string &expr, const std::string &hname)
@@ -55,17 +59,24 @@ public:
 
       std::string expr2 = expr + ">>htemp_tree_draw";
 
-      auto old = ttree->GetTimerInterval();
-      ttree->SetTimerInterval(500);
+      Int_t old_interval = -1111;
+      std::unique_ptr<TLeafDrawProgressTimer> timer;
 
-      auto timer = std::make_unique<TLeafDrawProgressTimer>(ttree, 500);
-      timer->TurnOn();
+      if (fHandle2 && RProvider::ReportProgress(fHandle2, 0.)) {
+         old_interval = ttree->GetTimerInterval();
+         ttree->SetTimerInterval(500);
+         timer = std::make_unique<TLeafDrawProgressTimer>(500, ttree, fHandle2);
+         timer->TurnOn();
+      }
 
       ttree->Draw(expr2.c_str(),"","goff");
 
-      ttree->SetTimerInterval(old);
-
-      timer->TurnOff();
+      if (timer) {
+         ttree->SetTimerInterval(old_interval);
+         timer->TurnOff();
+         timer.reset();
+         RProvider::ReportProgress(fHandle2, 1.);
+      }
 
       if (!gDirectory)
          return nullptr;
@@ -172,7 +183,6 @@ public:
       return true;
    }
 
-
    TH1 *DrawBranch(const TBranch *tbranch)
    {
       TString expr, name;
@@ -184,11 +194,14 @@ public:
 
    TH1 *DrawBranch(std::unique_ptr<RHolder> &obj)
    {
+      fHandle2 = obj.get();
       return DrawBranch(obj->get_object<TBranch>());
    }
 
    TH1 *DrawLeaf(std::unique_ptr<RHolder> &obj)
    {
+      fHandle2 = obj.get();
+
       auto tleaf = obj->get_object<TLeaf>();
 
       TString expr, name;
@@ -262,6 +275,8 @@ public:
 
    TH1 *DrawBranchElement(std::unique_ptr<RHolder> &obj)
    {
+      fHandle2 = obj.get();
+
       auto tbranch = obj->get_object<TBranchElement>();
       TString expr, name;
       if (!GetDrawExpr(tbranch, expr, name))
