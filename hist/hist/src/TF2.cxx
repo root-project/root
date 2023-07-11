@@ -842,6 +842,7 @@ void TF2::Save(Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Doubl
 void TF2::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
 {
    char quote = '"';
+   TString f2Name(GetName());
    out<<"   "<<std::endl;
    if (gROOT->ClassSaved(TF2::Class())) {
       out<<"   ";
@@ -849,28 +850,32 @@ void TF2::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
       out<<"   TF2 *";
    }
    if (!fMethodCall) {
-      out<<GetName()<<" = new TF2("<<quote<<GetName()<<quote<<","<<quote<<GetTitle()<<quote<<","<<fXmin<<","<<fXmax<<","<<fYmin<<","<<fYmax<<");"<<std::endl;
+      out<<f2Name.Data()<<" = new TF2("<<quote<<f2Name.Data()<<quote<<","<<quote<<GetTitle()<<quote<<","<<fXmin<<","<<fXmax<<","<<fYmin<<","<<fYmax<<");"<<std::endl;
    } else {
-      out<<GetName()<<" = new TF2("<<quote<<GetName()<<quote<<","<<GetTitle()<<","<<fXmin<<","<<fXmax<<","<<fYmin<<","<<fYmax<<","<<GetNpar()<<");"<<std::endl;
+      out<<f2Name.Data()<<" = new TF2("<<quote<<f2Name.Data()<<quote<<","<<GetTitle()<<","<<fXmin<<","<<fXmax<<","<<fYmin<<","<<fYmax<<","<<GetNpar()<<");"<<std::endl;
    }
 
-   SaveFillAttributes(out, GetName(), 0, 1001);
-   SaveMarkerAttributes(out, GetName(), 1, 1, 1);
-   SaveLineAttributes(out, GetName(), 1, 1, 4);
+   SaveFillAttributes(out, f2Name.Data(), 0, 1001);
+   SaveMarkerAttributes(out, f2Name.Data(), 1, 1, 1);
+   SaveLineAttributes(out, f2Name.Data(), 1, 1, 4);
 
    if (GetNpx() != 100)
-      out<<"   "<<GetName()<<"->SetNpx("<<GetNpx()<<");"<<std::endl;
+      out<<"   "<<f2Name.Data()<<"->SetNpx("<<GetNpx()<<");"<<std::endl;
    if (GetChisquare() != 0)
-      out<<"   "<<GetName()<<"->SetChisquare("<<GetChisquare()<<");"<<std::endl;
+      out<<"   "<<f2Name.Data()<<"->SetChisquare("<<GetChisquare()<<");"<<std::endl;
 
    Double_t parmin, parmax;
    for (Int_t i=0;i<GetNpar();i++) {
-      out<<"   "<<GetName()<<"->SetParameter("<<i<<","<<GetParameter(i)<<");"<<std::endl;
-      out<<"   "<<GetName()<<"->SetParError("<<i<<","<<GetParError(i)<<");"<<std::endl;
+      out<<"   "<<f2Name.Data()<<"->SetParameter("<<i<<","<<GetParameter(i)<<");"<<std::endl;
+      out<<"   "<<f2Name.Data()<<"->SetParError("<<i<<","<<GetParError(i)<<");"<<std::endl;
       GetParLimits(i,parmin,parmax);
-      out<<"   "<<GetName()<<"->SetParLimits("<<i<<","<<parmin<<","<<parmax<<");"<<std::endl;
+      out<<"   "<<f2Name.Data()<<"->SetParLimits("<<i<<","<<parmin<<","<<parmax<<");"<<std::endl;
    }
-   out<<"   "<<GetName()<<"->Draw("<<quote<<option<<quote<<");"<<std::endl;
+   out<<"   "<<f2Name.Data()<<"->Draw("<<quote<<option<<quote<<");"<<std::endl;
+
+   if (GetXaxis()) GetXaxis()->SaveAttributes(out, f2Name.Data(), "->GetXaxis()");
+   if (GetYaxis()) GetYaxis()->SaveAttributes(out, f2Name.Data(), "->GetYaxis()");
+   if (GetZaxis()) GetZaxis()->SaveAttributes(out, f2Name.Data(), "->GetZaxis()");
 }
 
 
