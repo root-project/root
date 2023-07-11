@@ -14,6 +14,8 @@
 #pragma link C++ enum class CustomEnumInt64;
 #pragma link C++ enum class CustomEnumUInt64;
 
+#pragma link C++ class StructWithEnum + ;
+
 #pragma link C++ class CustomStruct+;
 #pragma link C++ class DerivedA+;
 #pragma link C++ class DerivedA2+;
