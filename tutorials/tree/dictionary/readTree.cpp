@@ -3,9 +3,6 @@
 // # Copyright (c) 2018 Alvaro Tolosa. All rights reserved.		 #
 // ##########################################################################
 
-#ifndef __readTree_cpp__
-#define __readTree_cpp__
-
 #include <iostream>
 
 #include <TFile.h>
@@ -18,17 +15,17 @@
 void readTree()
 {
 
-   TFile *ifile = TFile::Open("testFile.root", "read");
-   if (!ifile) {
+   std::unique_ptr<TFile> ifile = std::make_unique<TFile>("testFile.root", "read");
+   if ( nullptr == ifile ) {
       std::cerr << " File not found " << std::endl;
       return;
    }
    if (!TClass::GetClass(typeid(myDetectorData))->IsLoaded()) {
-      std::cerr << " TClass::GetClass(typeid(std::string))->IsLoaded() == false " << std::endl;
+      std::cerr << " TClass::GetClass(typeid(myDetectorData))->IsLoaded() == false " << std::endl;
    }
 
    // Create a TTreeReader to read the tree named "myTree"
-   TTreeReader aReader("myTree", ifile);
+   TTreeReader aReader("myTree", ifile.get() );
 
    // Create TTreeReaderValues for the branches "branch1" and "branch2"
    TTreeReaderValue<myDetectorData> branch1(aReader, "branch1.");
@@ -47,4 +44,3 @@ void readTree()
    ifile->Close();
 }
 
-#endif

@@ -3,9 +3,6 @@
 // # Copyright (c) 2018 Alvaro Tolosa. All rights reserved.		 #
 // ##########################################################################
 
-#ifndef __writeTree_cpp__
-#define __writeTree_cpp__
-
 #include <iostream>
 
 #include <TFile.h>
@@ -17,12 +14,13 @@
 
 void writeTree()
 {
-   TFile *ofile = TFile::Open("testFile.root", "recreate");
-   if (!ofile) {
-      std::cerr << " File not found or already exists" << std::endl;
+   std::unique_ptr<TFile> ofile = std::make_unique<TFile>("testFile.root", "recreate");
+   if ( nullptr == ofile ) {
+      std::cerr << " File not open." << std::endl;
       return;
    }
-   TTree *myTree = new TTree("myTree", "");
+
+   TTree * myTree = new TTree("myTree", "");
    myDetectorData obj_for_branch1;
    myTree->Branch("branch1.", &obj_for_branch1);
 
@@ -55,4 +53,3 @@ void writeTree()
    ofile->Close();
 }
 
-#endif
