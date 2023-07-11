@@ -413,7 +413,8 @@ function render3D(tmout) {
    if (this.first_render_tm === 0) {
       this.first_render_tm = tm2.getTime() - tm1.getTime();
       this.enable_highlight = (this.first_render_tm < 1200) && this.isTooltipAllowed();
-      console.log(`three.js r${REVISION}, first render tm = ${this.first_render_tm}`);
+      if (this.first_render_tm > 500)
+         console.log(`three.js r${REVISION}, first render tm = ${this.first_render_tm}`);
    }
 
    if (this.processRender3D)
@@ -1424,11 +1425,6 @@ function drawBinsLego(painter, is_v7 = false) {
       mesh.handle = handle;
 
       mesh.tooltip = function(intersect) {
-         if (!Number.isInteger(intersect.faceIndex)) {
-            console.error(`faceIndex not provided, three.js version ${REVISION}`);
-            return null;
-         }
-
          if ((intersect.faceIndex < 0) || (intersect.faceIndex >= this.face_to_bins_index.length)) return null;
 
          const p = this.painter,
@@ -1653,11 +1649,6 @@ function drawBinsError3D(painter, is_v7 = false) {
     line.tip_color = (histo.fLineColor === 3) ? 0xFF0000 : 0x00FF00;
 
     line.tooltip = function(intersect) {
-       if (!Number.isInteger(intersect.index)) {
-          console.error(`segment index not provided, three.js version ${REVISION}`);
-          return null;
-       }
-
        let pos = Math.floor(intersect.index / 6);
        if ((pos < 0) || (pos >= this.intersect_index.length)) return null;
        let p = this.painter,

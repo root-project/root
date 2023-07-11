@@ -271,10 +271,8 @@ class ObjectPainter extends BasePainter {
      * @desc generic method to delete all graphical elements, associated with the painter
      * @protected */
    removeG() {
-      if (this.draw_g) {
-         this.draw_g.remove();
-         delete this.draw_g;
-      }
+      this.draw_g?.remove();
+      delete this.draw_g;
    }
 
    /** @summary Returns created <g> element used for object drawing

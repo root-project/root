@@ -691,6 +691,11 @@ class TH2Painter extends THistPainter {
          return true;
       }
 
+      if (method.fName == 'SetShowProjectionXY') {
+         this.toggleProjection('X' + args.replaceAll(',','_Y'));
+         return true;
+      }
+
       return false;
    }
 
@@ -767,6 +772,7 @@ class TH2Painter extends THistPainter {
          this.options.Color = true;
       } else {
          this.options.Color = !this.options.Color;
+         this.options.Scat = !this.options.Color;
       }
 
       this._can_move_colz = true; // indicate that next redraw can move Z scale
