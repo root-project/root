@@ -22,8 +22,6 @@ cmake --build build
 
 The TTree can be seen as a collection of objects (branches), with a number of attributes (leaves). The name of the branch corresponds to the name of the instantiated object. The name of the leaves corresponds to the name of the attributes.
 
-The attributes of 
-
 The class that is present in the TTree is declared in the .hpp, and the methods defined in the .cpp. 
 
 The linkdef file contains some instructions for ROOT, to specify which classes will require a dictionary:
