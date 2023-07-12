@@ -38,6 +38,9 @@ if(dataframe)
         TMVA/RInferenceUtils.hxx
         TMVA/RBDT.hxx
         TMVA/RSofieReader.hxx
+        TMVA/RBatchGenerator.hxx
+        TMVA/RBatchLoader.hxx
+        TMVA/RChunkLoader.hxx
     )
     set(TMVA_EXTRA_SOURCES
         RBDT.cxx
