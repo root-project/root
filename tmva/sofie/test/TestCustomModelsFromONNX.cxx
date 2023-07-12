@@ -254,6 +254,9 @@
 #include "Slice_Neg_FromONNX.hxx"
 #include "input_models/references/Slice_Neg.ref.hxx"
 
+#include "Log_FromONNX.hxx"
+#include "input_models/references/Log.ref.hxx"
+
 #include "gtest/gtest.h"
 
 constexpr float DEFAULT_TOLERANCE = 1e-3f;
@@ -560,6 +563,30 @@ TEST(ONNX, Erf)
    EXPECT_EQ(output.size(), sizeof(Erf_ExpectedOutput::outputs) / sizeof(float));
 
    float *correct = Erf_ExpectedOutput::outputs;
+
+   // Checking every output value, one by one
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_LE(std::abs(output[i] - correct[i]), TOLERANCE);
+   }
+}
+
+TEST(ONNX, Log)
+{
+   constexpr float TOLERANCE = DEFAULT_TOLERANCE;
+
+   // Preparing the random input
+   std::vector<float> input({
+     1, 2, 3, 4
+   });
+
+   TMVA_SOFIE_Log::Session s("Log_FromONNX.dat");
+
+   std::vector<float> output = s.infer(input.data());
+
+   // Checking output size
+   EXPECT_EQ(output.size(), sizeof(Log_ExpectedOutput::outputs) / sizeof(float));
+
+   float *correct = Log_ExpectedOutput::outputs;
 
    // Checking every output value, one by one
    for (size_t i = 0; i < output.size(); ++i) {

@@ -60,6 +60,11 @@ ParserFuncSignature ParseExp = [](RModelParser_ONNX &parser, const onnx::NodePro
    return ParseBasicUnary<EBasicUnaryOperator::kExp>(parser, nodeproto);
 };
 
+// Parse Log
+ParserFuncSignature ParseLog = [](RModelParser_ONNX &parser, const onnx::NodeProto &nodeproto) {
+   return ParseBasicUnary<EBasicUnaryOperator::kLog>(parser, nodeproto);
+};
+
 } // namespace SOFIE
 } // namespace Experimental
 } // namespace TMVA
