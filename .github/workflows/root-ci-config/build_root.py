@@ -351,6 +351,7 @@ def create_coverage(shell_log: str) -> str:
     #directory = f"builddir/interpreter/llvm-project/llvm/lib/ProfileData/Coverage/CMakeFiles"
     result, shell_log = subprocess_with_log(f"""
         cd '{directory}'
+        ls
         lcov --directory . --capture --output-file coverage.info
         genhtml coverage.info --output-directory coverage_report
         cd coverage_report
