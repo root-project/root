@@ -361,6 +361,12 @@ class ROOTFacade(types.ModuleType):
         hasRDF = gSystem.GetFromPipe("root-config --has-dataframe") == "yes"
         if hasRDF:
             try:
+                if sys.version_info >= (3, 8):
+                    from ._pythonization._tmva import inject_rbatchgenerator
+
+                    inject_rbatchgenerator(ns)
+
+
                 from libROOTPythonizations import AsRTensor
                 ns.Experimental.AsRTensor = AsRTensor
             except:
