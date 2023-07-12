@@ -1387,7 +1387,8 @@ std::size_t ROOT::Experimental::RCollectionClassField::AppendImpl(const Detail::
    std::size_t nbytes = 0;
    unsigned count = 0;
    TVirtualCollectionProxy::TPushPop RAII(fProxy.get(), value.GetRawPtr());
-   for (auto ptr : RCollectionIterableOnce{value.GetRawPtr(), fIFuncsRead, fProxy.get()}) {
+   for (auto ptr : RCollectionIterableOnce{value.GetRawPtr(), fIFuncsRead, fProxy.get(),
+                                           (fCollectionType == kSTLvector ? fItemSize : 0U)}) {
       auto itemValue = fSubFields[0]->CaptureValue(ptr);
       nbytes += fSubFields[0]->Append(itemValue);
       count++;
@@ -1409,21 +1410,12 @@ void ROOT::Experimental::RCollectionClassField::ReadGlobalImpl(NTupleSize_t glob
    void *obj =
       fProxy->Allocate(static_cast<std::uint32_t>(nItems), (fProperties & TVirtualCollectionProxy::kNeedDelete));
 
-   RCollectionIterableOnce elements{obj, fIFuncsWrite, fProxy.get()};
-   // Elements in a vector / collection using a staging area are contiguous in memory, i.e. the address of each element
-   // is known given the base pointer.  Thus, the indirect call to increment the iterator can be avoided.
-   if (fCollectionType == kSTLvector || obj != value->GetRawPtr()) {
-      auto elementPtr = static_cast<unsigned char *>(*elements.begin());
-      for (unsigned i = 0; i < nItems; ++i, elementPtr += fItemSize) {
-         auto itemValue = fSubFields[0]->CaptureValue(elementPtr);
-         fSubFields[0]->Read(collectionStart + i, &itemValue);
-      }
-   } else {
-      unsigned i = 0;
-      for (auto elementPtr : elements) {
-         auto itemValue = fSubFields[0]->CaptureValue(elementPtr);
-         fSubFields[0]->Read(collectionStart + (i++), &itemValue);
-      }
+   unsigned i = 0;
+   for (auto elementPtr :
+        RCollectionIterableOnce{obj, fIFuncsWrite, fProxy.get(),
+                                (fCollectionType == kSTLvector || obj != value->GetRawPtr() ? fItemSize : 0U)}) {
+      auto itemValue = fSubFields[0]->CaptureValue(elementPtr);
+      fSubFields[0]->Read(collectionStart + (i++), &itemValue);
    }
    if (obj != value->GetRawPtr())
       fProxy->Commit(obj);
@@ -1458,7 +1450,8 @@ void ROOT::Experimental::RCollectionClassField::DestroyValue(const Detail::RFiel
 {
    if (fProperties & TVirtualCollectionProxy::kNeedDelete) {
       TVirtualCollectionProxy::TPushPop RAII(fProxy.get(), value.GetRawPtr());
-      for (auto ptr : RCollectionIterableOnce{value.GetRawPtr(), fIFuncsWrite, fProxy.get()}) {
+      for (auto ptr : RCollectionIterableOnce{value.GetRawPtr(), fIFuncsWrite, fProxy.get(),
+                                              (fCollectionType == kSTLvector ? fItemSize : 0U)}) {
          auto itemValue = fSubFields[0]->CaptureValue(ptr);
          fSubFields[0]->DestroyValue(itemValue, true /* dtorOnly */);
       }
@@ -1478,7 +1471,8 @@ ROOT::Experimental::RCollectionClassField::SplitValue(const Detail::RFieldValue 
 {
    std::vector<Detail::RFieldValue> result;
    TVirtualCollectionProxy::TPushPop RAII(fProxy.get(), value.GetRawPtr());
-   for (auto ptr : RCollectionIterableOnce{value.GetRawPtr(), fIFuncsRead, fProxy.get()}) {
+   for (auto ptr : RCollectionIterableOnce{value.GetRawPtr(), fIFuncsRead, fProxy.get(),
+                                           (fCollectionType == kSTLvector ? fItemSize : 0U)}) {
       result.emplace_back(fSubFields[0]->CaptureValue(ptr));
    }
    return result;
