@@ -13,7 +13,7 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: '20'
-      - run: npm install octokit
+      - run: npm install 'octokit@^3'
       - run: node .github/actions/issues-nudge.js
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
