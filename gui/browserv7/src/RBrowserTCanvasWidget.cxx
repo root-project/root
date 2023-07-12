@@ -142,6 +142,11 @@ public:
 
       gROOT->GetListOfCanvases()->Remove(fCanvas.get());
 
+      if ((fCanvas->GetCanvasID() == -1) && (fCanvas->GetCanvasImp() == fWebCanvas)) {
+         fCanvas->SetCanvasImp(nullptr);
+         delete fWebCanvas;
+      }
+
       fCanvas->Close();
    }
 
