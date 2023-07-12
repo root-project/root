@@ -317,10 +317,13 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             kind: this.websocket.kind,
             href: this.websocket.getHRef(url),
             user_args: { nobrowser: true }
-         }).then(handle => XMLView.create({
-            viewName: "rootui5.tree.view.TreeViewer",
-            viewData: { conn_handle: handle, embeded: true, jsroot: this.jsroot }
-         })).then(oView => item.addContent(oView));
+         }).then(handle => {
+            item._jsroot_conn = handle;
+            return XMLView.create({
+               viewName: "rootui5.tree.view.TreeViewer",
+               viewData: { conn_handle: handle, embeded: true, jsroot: this.jsroot }
+            });
+         }).then(oView => item.addContent(oView));
 
          return item;
       },
@@ -888,6 +891,9 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          let oTabContainer = this.byId("tabContainer");
          if (item.getKey())
             this.websocket.send("CLOSE_TAB:" + item.getKey());
+         // force connection to close
+         item._jsroot_conn?.close(true);
+         item._jsroot_painter?.cleanup();
          oTabContainer.removeItem(item);
       },
 
@@ -1351,10 +1357,13 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
             kind: this.websocket.kind,
             href: this.websocket.getHRef(url),
             user_args: { nobrowser: true }
-         }).then(handle => XMLView.create({
-            viewName: "rootui5.geom.view.GeomViewer",
-            viewData: { conn_handle: handle, embeded: true, jsroot: this.jsroot }
-         })).then(oView => item.addContent(oView));
+         }).then(handle => {
+            item._jsroot_conn = handle;
+            return XMLView.create({
+               viewName: "rootui5.geom.view.GeomViewer",
+               viewData: { conn_handle: handle, embeded: true, jsroot: this.jsroot }
+            });
+         }).then(oView => item.addContent(oView));
 
          return item;
       },
@@ -1375,6 +1384,8 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
          let conn = new this.jsroot.WebWindowHandle(this.websocket.kind);
          conn.setHRef(this.websocket.getHRef(url)); // argument for connect, makes relative path
 
+         item._jsroot_conn = conn;
+
          import(this.jsroot.source_dir + 'modules/draw.mjs').then(draw => {
             if (kind == "rcanvas")
                return import(this.jsroot.source_dir + 'modules/gpad/RCanvasPainter.mjs').then(h => {
@@ -1387,6 +1398,8 @@ sap.ui.define(['sap/ui/core/mvc/Controller',
                return new h.TCanvasPainter(null, null);
             });
          }).then(painter => {
+            item._jsroot_painter = painter;
+
             painter.online_canvas = true; // indicates that canvas gets data from running server
             painter.embed_canvas = true;  // use to indicate that canvas ui should not close complete window when closing
             painter.use_openui = true;
