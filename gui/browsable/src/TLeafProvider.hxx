@@ -16,33 +16,68 @@
 #include "TTree.h"
 #include "TH1.h"
 #include "TDirectory.h"
-#include "TTimer.h"
+#include "TSystem.h"
+#include "TVirtualMonitoring.h"
 
 using namespace ROOT::Experimental::Browsable;
 
-class TLeafDrawProgressTimer : public TTimer {
+class TTreeDrawMonitoring : public TVirtualMonitoringWriter {
+
+private:
+
+   TTreeDrawMonitoring(const TTreeDrawMonitoring&) = delete;
+   TTreeDrawMonitoring& operator=(const TTreeDrawMonitoring&) = delete;
+
+   Int_t fPeriod{100};
    TTree *fTree{nullptr};
    void *fHandle2{nullptr};
+   long long fLastProgressSendTm{0};
+
 public:
-   TLeafDrawProgressTimer(Int_t period, TTree *tree, void *handle2) : TTimer(period, kTRUE), fTree(tree), fHandle2(handle2)
+   TTreeDrawMonitoring(Int_t period, TTree *tree, void *handle2)
+      : TVirtualMonitoringWriter(), fPeriod(period), fTree(tree), fHandle2(handle2)
    {
    }
 
-   Bool_t Notify() override
+   // TFile related info. In general they are gathered and sent only sometimes as summaries
+   Bool_t SendFileCloseEvent(TFile * /*file*/) override { return kFALSE; }
+   Bool_t SendFileReadProgress(TFile * /*file*/) override { return kFALSE; }
+   Bool_t SendFileWriteProgress(TFile * /*file*/) override { return kFALSE; }
+
+   Bool_t SendParameters(TList * /*valuelist*/, const char * /*identifier*/ = nullptr) override { return kFALSE; }
+   Bool_t SendInfoTime() override { return kFALSE; }
+   Bool_t SendInfoUser(const char * /*user*/ = nullptr) override { return kFALSE; }
+   Bool_t SendInfoDescription(const char * /*jobtag*/) override { return kFALSE; }
+   Bool_t SendInfoStatus(const char * /*status*/) override { return kFALSE; }
+
+   Bool_t SendFileOpenProgress(TFile * /*file*/, TList * /*openphases*/, const char * /*openphasename*/,
+                               Bool_t /*forcesend*/ = kFALSE) override
    {
-      Long64_t first = 0;
-      Long64_t last = fTree->GetEntries();
-      Long64_t current = fTree->GetReadEntry();
+      return kFALSE;
+   }
 
-      if (last > first)
-         RProvider::ReportProgress(fHandle2, (current - first + 1.) / ( last - first + 0. ));
+   Bool_t SendProcessingStatus(const char * /*status*/, Bool_t /*restarttimer*/ = kFALSE) override { return kFALSE; }
+   Bool_t SendProcessingProgress(Double_t nevent, Double_t /*nbytes*/, Bool_t /*force*/ = kFALSE) override
+   {
+      long long millisec = gSystem->Now();
 
-      Reset();
+      if (fLastProgressSendTm && (millisec < fLastProgressSendTm + fPeriod))
+         return kTRUE;
+
+      fLastProgressSendTm = millisec;
+
+      gSystem->ProcessEvents();
+
+      Double_t total = fTree->GetEntries();
+
+      if (total > 0)
+         RProvider::ReportProgress(fHandle2, nevent <= total ? nevent / total : 1.);
 
       return kTRUE;
    }
+   void SetLogLevel(const char * /*loglevel*/ = "WARNING") override {}
+   void Verbose(Bool_t /*onoff*/) override {}
 };
-
 
 /** Provider for drawing of branches / leafs in the TTree */
 
@@ -59,24 +94,17 @@ public:
 
       std::string expr2 = expr + ">>htemp_tree_draw";
 
-      Int_t old_interval = -1111;
-      std::unique_ptr<TLeafDrawProgressTimer> timer;
+      auto old = gMonitoringWriter;
+      std::unique_ptr<TTreeDrawMonitoring> monitoring;
 
       if (fHandle2 && RProvider::ReportProgress(fHandle2, 0.)) {
-         old_interval = ttree->GetTimerInterval();
-         ttree->SetTimerInterval(500);
-         timer = std::make_unique<TLeafDrawProgressTimer>(500, ttree, fHandle2);
-         timer->TurnOn();
+         monitoring = std::make_unique<TTreeDrawMonitoring>(50, ttree, fHandle2);
+         gMonitoringWriter = monitoring.get();
       }
 
       ttree->Draw(expr2.c_str(),"","goff");
 
-      if (timer) {
-         ttree->SetTimerInterval(old_interval);
-         timer->TurnOff();
-         timer.reset();
-         RProvider::ReportProgress(fHandle2, 1.);
-      }
+      gMonitoringWriter = old;
 
       if (!gDirectory)
          return nullptr;
