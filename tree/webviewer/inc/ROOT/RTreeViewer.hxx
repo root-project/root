@@ -29,11 +29,13 @@ namespace ROOT {
 namespace Experimental {
 
 class RWebWindow;
-class TProgressTimer;
+class RTreeDrawMonitoring;
+class RTreeDrawInvokeTimer;
 
 class RTreeViewer {
 
-friend class TProgressTimer;
+friend class RTreeDrawMonitoring;
+friend class RTreeDrawInvokeTimer;
 
 public:
 
@@ -89,8 +91,8 @@ private:
    bool fShowHierarchy{false};             ///<! show TTree hierarchy
    RConfig fCfg;                           ///<! configuration, exchanged between client and server
    PerformDrawCallback_t fCallback;        ///<! callback invoked when tree draw performed
-   std::unique_ptr<TProgressTimer> fProgrTimer; ///<! timer used to get draw progress
    std::string fLastSendProgress;          ///<! last send progress to client
+   std::unique_ptr<RTreeDrawInvokeTimer> fTimer; ///<!  timer to invoke tree draw
 
    void WebWindowConnect(unsigned connid);
    void WebWindowCallback(unsigned connid, const std::string &arg);
@@ -103,9 +105,9 @@ private:
 
    void UpdateConfig();
 
-   void SendProgress(bool completed = false);
+   void SendProgress(Double_t nevent = 0.);
 
-   void InvokeTreeDraw(const std::string &json);
+   void InvokeTreeDraw();
 };
 
 } // namespace Experimental
