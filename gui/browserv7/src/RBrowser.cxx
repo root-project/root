@@ -25,6 +25,7 @@
 #include "TString.h"
 #include "TSystem.h"
 #include "TError.h"
+#include "TTimer.h"
 #include "TROOT.h"
 #include "TBufferJSON.h"
 #include "TApplication.h"
@@ -41,7 +42,20 @@
 
 using namespace std::string_literals;
 
-using namespace ROOT::Experimental;
+namespace ROOT {
+namespace Experimental {
+
+class RBrowserTimer : public TTimer {
+public:
+   RBrowser &fBrowser; ///!< browser processing postponed requests
+
+   /// constructor
+   RBrowserTimer(Long_t milliSec, Bool_t mode, RBrowser &br) : TTimer(milliSec, mode), fBrowser(br) {}
+
+   /// timeout handler
+   /// used to process postponed requests in main ROOT thread
+   void Timeout() override { fBrowser.ProcessPostponedRequests(); }
+};
 
 
 class RBrowserEditorWidget : public RBrowserWidget {
@@ -241,6 +255,11 @@ public:
    }
 };
 
+} // namespace Experimental
+} // namespace ROOT
+
+using namespace ROOT::Experimental;
+
 
 /** \class ROOT::Experimental::RBrowser
 \ingroup rbrowser
@@ -267,6 +286,8 @@ RBrowser::RBrowser(bool use_rcanvas)
    SetUseRCanvas(use_rcanvas);
 
    fBrowsable.CreateDefaultElements();
+
+   fTimer = std::make_unique<RBrowserTimer>(10, kTRUE, *this);
 
    fWebWindow = RWebWindow::Create();
    fWebWindow->SetDefaultPage("file:rootui5sys/browser/browser.html");
@@ -689,7 +710,7 @@ void RBrowser::SendProgress(unsigned connid, float progr)
    // let process window events
    fWebWindow->Sync();
 
-   if ((!fLastProgressSendTm || millisec > fLastProgressSendTm - 400) && (progr > fLastProgressSend + 0.07) && fWebWindow->CanSend(connid)) {
+   if ((!fLastProgressSendTm || millisec > fLastProgressSendTm - 200) && (progr > fLastProgressSend + 0.04) && fWebWindow->CanSend(connid)) {
       fWebWindow->Send(connid, "PROGRESS:"s + std::to_string(progr));
 
       fLastProgressSendTm = millisec;
@@ -726,6 +747,34 @@ void RBrowser::CheckWidgtesModified()
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////
+/// Process postponed requests - decouple from websocket handling
+/// Only requests which can take longer time should be postponed
+
+void RBrowser::ProcessPostponedRequests()
+{
+   if (fPostponed.empty())
+      return;
+
+   auto arr = fPostponed[0];
+   fPostponed.erase(fPostponed.begin(), fPostponed.begin()+1);
+   if (fPostponed.empty())
+      fTimer->TurnOff();
+
+   std::string reply;
+   unsigned connid = std::stoul(arr.back()); arr.pop_back();
+   std::string kind = arr.back(); arr.pop_back();
+
+   if (kind == "DBLCLK") {
+      reply = ProcessDblClick(connid, arr);
+      if (reply.empty()) reply = "NOPE";
+   }
+
+   if (!reply.empty())
+      fWebWindow->Send(connid, reply);
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////
 /// Process received message from the client
 
 void RBrowser::ProcessMsg(unsigned connid, const std::string &arg0)
@@ -752,16 +801,16 @@ void RBrowser::ProcessMsg(unsigned connid, const std::string &arg0)
 
    } else if (kind == "DBLCLK") {
 
-      std::string reply;
-
       auto arr = TBufferJSON::FromJSON<std::vector<std::string>>(msg);
-      if (arr && (arr->size() > 2))
-         reply = ProcessDblClick(connid, *arr);
-
-      if (reply.empty())
-         reply = "NOPE";
-
-      fWebWindow->Send(connid, reply);
+      if (arr && (arr->size() > 2)) {
+         arr->push_back(kind);
+         arr->push_back(std::to_string(connid));
+         fPostponed.push_back(*arr);
+         if (fPostponed.size() == 1)
+            fTimer->TurnOn();
+      } else {
+         fWebWindow->Send(connid, "NOPE");
+      }
 
    } else if (kind == "WIDGET_SELECTED") {
       fActiveWidgetName = msg;

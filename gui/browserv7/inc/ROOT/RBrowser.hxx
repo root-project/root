@@ -23,8 +23,11 @@ namespace ROOT {
 namespace Experimental {
 
 class RBrowserWidget;
+class RBrowserTimer;
 
 class RBrowser {
+
+   friend class RBrowserTimer;
 
 protected:
 
@@ -42,7 +45,9 @@ protected:
 
    std::shared_ptr<RWebWindow> fWebWindow;   ///<! web window to browser
 
-   RBrowserData  fBrowsable;                   ///<! central browsing element
+   RBrowserData  fBrowsable;                 ///<! central browsing element
+   std::unique_ptr<RBrowserTimer>    fTimer; ///<!  timer to handle postponed requests
+   std::vector<std::vector<std::string>> fPostponed; ///<! postponed messages, handled in timer
 
    std::shared_ptr<RBrowserWidget> AddWidget(const std::string &kind);
    std::shared_ptr<RBrowserWidget> AddCatchedWidget(const std::string &url, const std::string &kind);
@@ -68,6 +73,8 @@ protected:
    void AddInitWidget(const std::string &kind);
 
    void CheckWidgtesModified();
+
+   void ProcessPostponedRequests();
 
 public:
    RBrowser(bool use_rcanvas = false);
