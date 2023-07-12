@@ -51,29 +51,7 @@ function getEarthProjectionFunc(id) {
       // parabolic
       case 4: return (l, b) => { return { x: l*(2.*Math.cos(2*b/180*Math.PI/3) - 1), y: 180*Math.sin(b/180*Math.PI/3) }; };
       // Mollweide projection
-      case 5: return (l, b) => {
-         const theta0 = b * Math.PI/180;
-         let theta = theta0, num, den;
-         for (let i = 0; i < 100; i++) {
-            num = 2 * theta + Math.sin(2 * theta) - Math.PI * Math.sin(theta0);
-            den = 4 * (Math.cos(theta)**2);
-            if (den < 1e-20) {
-               theta = theta0;
-               break;
-            }
-            theta -= num / den;
-            if (Math.abs(num / den) < 1e-4) break;
-            if (Math.isnan(theta)) {
-               theta = theta0;
-               break;
-            }
-         }
-
-         return {
-            x: l * Math.cos(theta),
-            y: 90 * Math.sin(theta)
-         };
-      };
+      case 5:  return (l, b) => { return { x: l*Math.cos(b/180*Math.PI), y: 90*Math.sin(b/180*Math.PI) }; };
 
    }
 }
