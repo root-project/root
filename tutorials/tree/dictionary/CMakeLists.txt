@@ -28,13 +28,7 @@ find_package(ROOT REQUIRED COMPONENTS MathCore RIO Hist Tree Net Graf3d Graf Gpa
 include(${ROOT_USE_FILE})
 
 #---Add include directory of ROOT to the build
-include_directories(${CMAKE_SOURCE_DIR} ${ROOT_INCLUDE_DIRS})
-
-#---Add library directory of ROOT to the build
-link_directories(${ROOT_LIBRARY_DIR})
-
-#---Set Flags
-add_definitions(${ROOT_CXX_FLAGS}  )
+include_directories(${CMAKE_SOURCE_DIR})
 
 # CMake function provided by ROOT, used to generate the dictionary file, G__data2Tree.cxx
 #     See this link for further details:
