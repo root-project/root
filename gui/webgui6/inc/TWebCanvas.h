@@ -236,6 +236,8 @@ public:
 
    static bool ProduceImage(TPad *pad, const char *filename, Int_t width = 0, Int_t height = 0);
 
+   static bool ProduceImages(std::vector<TPad *> pads, const char *filename, Int_t width = 0, Int_t height = 0);
+
    static TCanvasImp *NewCanvas(TCanvas *c, const char *name, Int_t x, Int_t y, UInt_t width, UInt_t height);
 
    ClassDefOverride(TWebCanvas, 0) // Web-based implementation for TCanvasImp
