@@ -1,8 +1,8 @@
-#####################################################################################################################
-
-# Jorge Agramunt Ros    @ IFIC(Valencia,Spain)  jorge.agramunt@ific.uv.es
-# Alvaro Tolosa Delgado @ IFIC(Valencia,Spain)  alvaro.tolosa@ific.uv.es
-# Copyright (c) 2016 Jorge Agramunt & Alvaro Tolosa. All rights reserved.
+# Copyright (C) 1995-2023, Rene Brun and Fons Rademakers.
+# All rights reserved.
+#
+# For the licensing terms see $ROOTSYS/LICENSE.
+# For the list of contributors see $ROOTSYS/README/CREDITS.
 
 #####################################################################################################################
 
