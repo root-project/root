@@ -928,7 +928,7 @@ try_again:
       wait_file_name = tgtfilename;
 
       if (EndsWith(".pdf"))
-         args.SetExtraArgs("--print-to-pdf="s + gSystem->UnixPathName(tgtfilename.Data()));
+         args.SetExtraArgs("--print-to-pdf-no-header --print-to-pdf="s + gSystem->UnixPathName(tgtfilename.Data()));
       else
          args.SetExtraArgs("--screenshot="s + gSystem->UnixPathName(tgtfilename.Data()));
 
