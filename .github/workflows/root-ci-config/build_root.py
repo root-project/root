@@ -145,7 +145,8 @@ def main():
                 extra_ctest_flags += "--build-config " + args.buildtype
 
             shell_log = run_ctest(shell_log, extra_ctest_flags)
-        shell_log = create_coverage(shell_log)
+        shell_log = create_coverage_html(shell_log)
+        shell_log = create_coverage_xml(shell_log)
 
         print_shell_log(shell_log)
 
@@ -343,8 +344,8 @@ def rebase(base_ref, head_ref, shell_log) -> str:
     return shell_log
 
 
-@github_log_group("Create Test Coverage")
-def create_coverage(shell_log: str) -> str:
+@github_log_group("Create Test Coverage in HTML")
+def create_coverage_html(shell_log: str) -> str:
     directory = f"{WORKDIR}/build/interpreter/llvm-project/llvm/lib/ProfileData/Coverage/CMakeFiles"
     #
     #directory = f"../root-ci-config/"
@@ -360,6 +361,25 @@ def create_coverage(shell_log: str) -> str:
     if directory == "":
         print("No content")
     #contents = os.listdir(directory)
+    print(result)
+    print("---------")
+    print(shell_log)
+    return shell_log
+
+
+
+
+@github_log_group("Create Test Coverage in XML")
+def create_coverage_xml(shell_log: str) -> str:
+    coverage_directory = f"{WORKDIR}/build/interpreter/llvm-project/llvm/lib/ProfileData/Coverage"
+    #directory = f"../root-ci-config"
+    result, shell_log = subprocess_with_log(f"""
+        pwd
+        gcovr --cobertura-pretty -r {WORKDIR}/src {coverage_directory} -o XMLCoverage.xml
+        pwd
+        ls
+        cat XMLCoverage.xml
+    """, shell_log)
     print(result)
     print("---------")
     print(shell_log)
