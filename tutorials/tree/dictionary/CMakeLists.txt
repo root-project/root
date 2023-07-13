@@ -51,5 +51,3 @@ target_link_libraries(data2TreeLib ${ROOT_LIBRARIES}  )
 add_executable(treeExample main.cpp readTree.cpp writeTree.cpp)
 target_link_libraries(treeExample ${ROOT_LIBRARIES} data2TreeLib)
 
-# Enable PIC
-set_property(TARGET treeExample PROPERTY POSITION_INDEPENDENT_CODE ON)
