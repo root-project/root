@@ -23,6 +23,7 @@
 #include "TEnv.h"
 #include "TROOT.h"
 #include "TBase64.h"
+#include "TBufferJSON.h"
 
 #include <fstream>
 #include <iostream>
@@ -719,22 +720,50 @@ bool RWebDisplayHandle::CanProduceImages(const std::string &browser)
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 /// Produce image file using JSON data as source
 /// Invokes JSROOT drawing functionality in headless browser - Google Chrome or Mozilla Firefox
-
 bool RWebDisplayHandle::ProduceImage(const std::string &fname, const std::string &json, int width, int height, const char *batch_file)
 {
-   if (json.empty())
+   return ProduceImages(fname, {json}, {width}, {height}, batch_file);
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+/// Produce image file(s) using JSON data as source
+/// Invokes JSROOT drawing functionality in headless browser - Google Chrome or Mozilla Firefox
+bool RWebDisplayHandle::ProduceImages(const std::string &fname, const std::vector<std::string> &jsons, const std::vector<int> &widths, const std::vector<int> &heights, const char *batch_file)
+{
+   if (jsons.empty())
       return false;
 
    std::string _fname = fname;
    std::transform(_fname.begin(), _fname.end(), _fname.begin(), ::tolower);
-
    auto EndsWith = [_fname](const std::string &suffix) {
-      return (_fname.length() > suffix.length()) ? (0 == _fname.compare (_fname.length() - suffix.length(), suffix.length(), suffix)) : false;
+      return (_fname.length() > suffix.length()) ? (0 == _fname.compare(_fname.length() - suffix.length(), suffix.length(), suffix)) : false;
    };
 
+   std::vector<std::string> fnames;
+
+   if (!EndsWith(".pdf")) {
+      std::string fname2 = fname;
+      auto p = fname2.find("%");
+      if (p != std::string::npos) {
+         fname2.erase(p, 1); // remove percent
+      } else if (jsons.size() > 1) {
+         p = fname2.rfind(".");
+      }
+
+      for (unsigned n = 0; n < jsons.size(); n++) {
+         auto suff = TString::Format("%03u", n);
+         std::string fname3 = fname2;
+         if (p != std::string::npos)
+            fname3.insert(p, suff.Data());
+         fnames.emplace_back(fname3);
+      }
+   }
+
    if (EndsWith(".json")) {
-      std::ofstream ofs(fname);
-      ofs << json;
+      for (unsigned n = 0; n < jsons.size(); ++n) {
+         std::ofstream ofs(fnames[n]);
+         ofs << jsons[n];
+      }
       return true;
    }
 
@@ -762,8 +791,8 @@ bool RWebDisplayHandle::ProduceImage(const std::string &fname, const std::string
 
    if (EndsWith(".pdf"))
       draw_kind = "draw"; // not a JSROOT drawing but Chrome capability to create PDF out of HTML page is used
-   else if (EndsWith("shot.png"))
-      draw_kind = isChromeBased ? "draw" : "png";
+   else if (EndsWith("shot.png") && (jsons.size() == 1))
+      draw_kind = isChromeBased ? "draw" : "png"; // using screenshot
    else if (EndsWith(".svg"))
       draw_kind = "svg";
    else if (EndsWith(".png"))
@@ -790,8 +819,15 @@ bool RWebDisplayHandle::ProduceImage(const std::string &fname, const std::string
       return false;
    }
 
-   filecont = std::regex_replace(filecont, std::regex("\\$draw_width"), std::to_string(width));
-   filecont = std::regex_replace(filecont, std::regex("\\$draw_height"), std::to_string(height));
+   auto jsonw = TBufferJSON::ToJSON(&widths, TBufferJSON::kNoSpaces);
+   auto jsonh = TBufferJSON::ToJSON(&heights, TBufferJSON::kNoSpaces);
+
+   std::string mains;
+   for (auto &json : jsons) {
+      mains.append(mains.empty() ? "[" : ", ");
+      mains.append(json);
+   }
+   mains.append("]");
 
    if (strstr(jsrootsys,"http://") || strstr(jsrootsys,"https://") || strstr(jsrootsys,"file://"))
       filecont = std::regex_replace(filecont, std::regex("\\$jsrootsys"), jsrootsys);
@@ -799,8 +835,9 @@ bool RWebDisplayHandle::ProduceImage(const std::string &fname, const std::string
       filecont = std::regex_replace(filecont, std::regex("\\$jsrootsys"), "file://"s + jsrootsys);
 
    filecont = std::regex_replace(filecont, std::regex("\\$draw_kind"), draw_kind);
-
-   filecont = std::regex_replace(filecont, std::regex("\\$draw_object"), json);
+   filecont = std::regex_replace(filecont, std::regex("\\$draw_widths"), jsonw.Data());
+   filecont = std::regex_replace(filecont, std::regex("\\$draw_heights"), jsonh.Data());
+   filecont = std::regex_replace(filecont, std::regex("\\$draw_objects"), mains);
 
    TString dump_name;
    if (draw_kind == "draw") {
@@ -834,7 +871,7 @@ try_again:
       tmp_name.Clear();
       html_name.Clear();
 
-      R__LOG_DEBUG(0, WebGUILog()) << "Using file content_len " << filecont.length() << " to produce batch image " << fname;
+      R__LOG_DEBUG(0, WebGUILog()) << "Using file content_len " << filecont.length() << " to produce batch images " << fname;
 
    } else {
       tmp_name = "canvasbody";
@@ -872,21 +909,21 @@ try_again:
       args.SetUrl("file://"s + gSystem->UnixPathName(html_name.Data()));
       args.SetPageContent(""s);
 
-      R__LOG_DEBUG(0, WebGUILog()) << "Using " << html_name << " content_len " << filecont.length() << " to produce batch image " << fname;
+      R__LOG_DEBUG(0, WebGUILog()) << "Using " << html_name << " content_len " << filecont.length() << " to produce batch images " << fname;
    }
-
-   TString tgtfilename = fname.c_str();
-   if (!gSystem->IsAbsoluteFileName(tgtfilename.Data()))
-      gSystem->PrependPathName(gSystem->WorkingDirectory(), tgtfilename);
 
    TString wait_file_name;
 
    args.SetStandalone(true);
    args.SetHeadless(true);
    args.SetBatchMode(true);
-   args.SetSize(width, height);
+   args.SetSize(widths[0], heights[0]);
 
    if (draw_kind == "draw") {
+
+      TString tgtfilename = fname.c_str();
+      if (!gSystem->IsAbsoluteFileName(tgtfilename.Data()))
+         gSystem->PrependPathName(gSystem->WorkingDirectory(), tgtfilename);
 
       wait_file_name = tgtfilename;
 
@@ -894,6 +931,9 @@ try_again:
          args.SetExtraArgs("--print-to-pdf="s + gSystem->UnixPathName(tgtfilename.Data()));
       else
          args.SetExtraArgs("--screenshot="s + gSystem->UnixPathName(tgtfilename.Data()));
+
+      // remove target image file - we use it as detection when chrome is ready
+      gSystem->Unlink(tgtfilename.Data());
 
    } else if (isFirefox) {
       // firefox will use window.dump to output produced result
@@ -908,9 +948,6 @@ try_again:
 
       gSystem->Unlink(dump_name.Data());
    }
-
-   // remove target image file - we use it as detection when chrome is ready
-   gSystem->Unlink(tgtfilename.Data());
 
    auto handle = RWebDisplayHandle::Display(args);
 
@@ -945,38 +982,52 @@ try_again:
       }
 
       if (draw_kind == "svg") {
-         auto p1 = dumpcont.find("<svg");
-         auto p2 = dumpcont.rfind("</svg>");
 
-         std::ofstream ofs(tgtfilename);
-         if ((p1 != std::string::npos) && (p2 != std::string::npos) && (p1 < p2)) {
-            ofs << dumpcont.substr(p1,p2-p1+6);
-         } else {
-            R__LOG_ERROR(WebGUILog()) << "Fail to extract SVG from HTML dump " << dump_name;
-            ofs << "Failure!!!\n" << dumpcont;
-            return false;
+         std::string::size_type p = 0;
+
+         for (auto & fn : fnames) {
+            auto p1 = dumpcont.find("<svg", p);
+            auto p2 = dumpcont.find("</svg></div>", p1 + 4);
+            p = p2 + 6;
+            std::ofstream ofs(fn);
+            if ((p1 != std::string::npos) && (p2 != std::string::npos) && (p1 < p2)) {
+               ofs << dumpcont.substr(p1, p2-p1+6);
+            } else {
+               R__LOG_ERROR(WebGUILog()) << "Fail to extract SVG from HTML dump " << dump_name;
+               ofs << "Failure!!!\n" << dumpcont;
+               return false;
+            }
          }
       } else {
 
-         auto p1 = dumpcont.rfind(";base64,");
-         auto p2 = dumpcont.rfind("></div>");
+         std::string::size_type p = 0;
 
-         if ((p1 != std::string::npos) && (p2 != std::string::npos) && (p1 < p2)) {
+         for (auto &fn : fnames) {
 
-            auto base64 = dumpcont.substr(p1+8, p2-p1-9);
-            auto binary = TBase64::Decode(base64.c_str());
+            auto p1 = dumpcont.find(";base64,", p);
+            auto p2 = dumpcont.find("></div>", p1 + 4);
+            p = p2 + 5;
 
-            std::ofstream ofs(tgtfilename, std::ios::binary);
-            ofs.write(binary.Data(), binary.Length());
-         } else {
-            R__LOG_ERROR(WebGUILog()) << "Fail to extract image from dump HTML code " << dump_name;
+            if ((p1 != std::string::npos) && (p2 != std::string::npos) && (p1 < p2)) {
 
-            return false;
+               auto base64 = dumpcont.substr(p1+8, p2-p1-9);
+               auto binary = TBase64::Decode(base64.c_str());
+
+               std::ofstream ofs(fn, std::ios::binary);
+               ofs.write(binary.Data(), binary.Length());
+            } else {
+               R__LOG_ERROR(WebGUILog()) << "Fail to extract image from dump HTML code " << dump_name;
+
+               return false;
+            }
          }
       }
    }
 
-   R__LOG_DEBUG(0, WebGUILog()) << "Create file " << fname;
+   if (fnames.size() == 1)
+      R__LOG_DEBUG(0, WebGUILog()) << "Create file " << fnames[0];
+   else
+      R__LOG_DEBUG(0, WebGUILog()) << "Create files " << TBufferJSON::ToJSON(&fnames, TBufferJSON::kNoSpaces);
 
    return true;
 }

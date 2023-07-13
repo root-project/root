@@ -15,18 +15,18 @@
 </head>
 
 <body style="margin:0; padding:0; overflow:hidden">
-  <div id="drawing" style="width:$draw_widthpx; height:$draw_heightpx; overflow:hidden; margin:0; padding:0"></div>
 </body>
 
 <script id="data">
-   globalThis.main_object = JSROOT.parse($draw_object);
+   globalThis.main_kind = "$draw_kind";
+   globalThis.main_widths = $draw_widths;
+   globalThis.main_heights = $draw_heights;
+   globalThis.main_objects = $draw_objects;
 </script>
 
 <script>
 
    JSROOT.setBatchMode(true);
-
-   let kind = "$draw_kind";
 
    function complete() {
       if (JSROOT.browser.isFirefox && window && (typeof window.dump == "function")) {
@@ -35,22 +35,56 @@
       }
    }
 
-   JSROOT.draw("drawing", globalThis.main_object, "").then(painter => {
-      document.getElementById('data').remove();
-      if (kind == 'draw')
+   let doms = [], promises = [];
+
+   for (let i = 0; i < globalThis.main_objects.length; ++i) {
+      let dom = document.createElement('div');
+      dom.style.overflow = 'hidden';
+      dom.style.margin = '0';
+      dom.style.padding = '0';
+      dom.style.width = globalThis.main_widths[i] + 'px';
+      dom.style.height = globalThis.main_heights[i] + 'px';
+      document.body.append(dom);
+      doms.push(dom);
+   }
+
+   for (let i = 0; i < globalThis.main_objects.length; ++i) {
+      let obj = JSROOT.parse(globalThis.main_objects[i]);
+      let pr = JSROOT.draw(doms[i], obj, '');
+      promises.push(pr);
+   }
+
+   // remove data
+   document.getElementById('data').remove();
+
+   // complete drawings
+   Promise.all(promises).then(arr => {
+      // as result, got array of painters
+      if (globalThis.main_kind == 'draw')
          return complete();
 
-      painter.produceImage(true, kind).then(res => {
+      let promises2 = [];
 
-         let elem = document.getElementById('drawing');
-         elem.removeAttribute('style');
-         if (kind == 'svg') {
-            elem.innerHTML = res;
-         } else {
-            elem.innerHTML = '';
-            let img = document.createElement('img');
-            img.setAttribute('src', res);
-            elem.appendChild(img);
+      for(let i = 0; i < arr.length; ++i) {
+         let painter = arr[i],
+             pr2 = painter.produceImage(true, globalThis.main_kind);
+         promises2.push(pr2);
+      }
+
+      return Promise.all(promises2).then(arr2 => {
+         // as result, got array of images
+
+         for(let i = 0; i < arr2.length; ++i) {
+            let res = arr2[i], elem = doms[i];
+            elem.removeAttribute('style');
+            if (globalThis.main_kind == 'svg') {
+               elem.innerHTML = res;
+            } else {
+               elem.innerHTML = '';
+               let img = document.createElement('img');
+               img.setAttribute('src', res);
+               elem.appendChild(img);
+            }
          }
 
          complete();
