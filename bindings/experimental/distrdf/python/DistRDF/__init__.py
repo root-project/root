@@ -48,29 +48,6 @@ def initialize(fun, *args, **kwargs):
     Base.BaseBackend.register_initialization(fun, *args, **kwargs)
 
 
-def create_logger(level="WARNING", log_path="./DistRDF.log"):
-    """DistRDF basic logger"""
-    logger = logging.getLogger(__name__)
-
-    level = getattr(logging, level)
-
-    logger.setLevel(level)
-
-    format_string = ("%(levelname)s: %(name)s[%(asctime)s]: %(message)s")
-    formatter = logging.Formatter(format_string)
-
-    stream_handler = logging.StreamHandler(sys.stdout)
-    stream_handler.setFormatter(formatter)
-    logger.addHandler(stream_handler)
-
-    if log_path:
-        file_handler = logging.FileHandler(log_path)
-        file_handler.setFormatter(formatter)
-        logger.addHandler(file_handler)
-
-    return logger
-
-
 def RunGraphs(proxies: Iterable) -> int:
     """
     Trigger the execution of multiple RDataFrame computation graphs on a certain
@@ -156,7 +133,6 @@ def create_distributed_module(parentmodule):
 
     # Inject top-level functions
     distributed.initialize = initialize
-    distributed.create_logger = create_logger
     distributed.RunGraphs = RunGraphs
     distributed.VariationsFor = VariationsFor
 
