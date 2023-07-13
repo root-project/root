@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 CMAKE_CURRENT_BINARY_DIR=$1
 

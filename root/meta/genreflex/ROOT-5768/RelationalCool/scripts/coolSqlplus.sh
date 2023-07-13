@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # See https://twiki.cern.ch/twiki/bin/view/PSSGroup/RlWrap
 if [ "${SCRAM_ARCH:0:5}" = "win32" ]; then
     cmd=`basename $0`

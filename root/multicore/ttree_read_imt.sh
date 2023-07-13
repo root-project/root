@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#!/bin/sh -e
 
 TESTNAME=ttree_read_imt
 NTHREADS=4

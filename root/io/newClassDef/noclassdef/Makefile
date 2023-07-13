@@ -1,4 +1,4 @@
-SHELL=/bin/bash
+SHELL=/bin/sh
 TEST_TARGETS += noclassdef mydict-diff
 CLEAN_TARGETS += *.o *.so ti_files ii_files mydict.* driver$(ExeSuf) *~ \
 	*.obj .def *.root *.mode driver.output $(ALL_LIBRARIES)
