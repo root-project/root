@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 if [ "x$1" = "x-h" -o "x$1" = "x--help" ]; then
     echo "Analyzes a roottest valgrind log file."

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # roottest needs several variables to be defined.
 # Pushing them through the buildbot config is more difficult than just

@@ -1,4 +1,4 @@
-SHELL=/bin/bash
+SHELL=/bin/sh
 
 # adjust the location of Rules.mk as needed.
 RULES_DIR=$(ROOTTEST_HOME)/scripts

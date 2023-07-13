@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#!/bin/sh -e
 
 TESTNAME=tp_process_imt
 NTHREADS=4

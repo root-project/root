@@ -5,7 +5,7 @@ CLEAN_TARGETS += *.log $(ALL_LIBRARIES) *.out
 TEST_TARGETS += templateSingleton longlong usingtemplate operator1 simpleSeparateDict forwardDecl constructorTest typenameTest \
 	templatefriend
 
-SHELL = /bin/bash
+SHELL = /bin/sh
 
 ifeq ($(strip $(ROOTTEST_HOME)),)
    export ROOTTEST_HOME := $(shell git rev-parse --show-toplevel)/

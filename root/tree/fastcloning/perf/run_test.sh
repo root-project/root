@@ -1,4 +1,4 @@
-#!/bin/bash -x
+#!/bin/sh -x
 
 #numevt=200000
 numevt=4000

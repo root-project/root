@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 FILECMP="$1"
 FILEOUT="$2"

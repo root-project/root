@@ -1,4 +1,4 @@
-#! /bin/bash
+#!/usr/bin/env bash
 
 # Check command line arguments
 if [ "$1" = "" ]; then

@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 ROOT_DIR=$1
 
