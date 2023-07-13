@@ -26,7 +26,7 @@ void writeTree()
       return;
    }
 
-   TTree * myTree = new TTree("myTree", "");
+    std::unique_ptr<TTree> myTree = std::make_unique<TTree>("myTree", "");
    myDetectorData obj_for_branch1;
    myTree->Branch("branch1.", &obj_for_branch1);
 
@@ -55,7 +55,7 @@ void writeTree()
 
    myTree->Print();
 
-   myTree->Write(); // This write the files and the TTree
-   ofile->Close();
+   ofile->Write(); // This write the files and the TTree
+
 }
 
