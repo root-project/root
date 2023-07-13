@@ -196,16 +196,9 @@ std::tuple<void **, std::int32_t *, std::int32_t *> GetRVecDataMembers(void *rve
    return {begin, size, capacity};
 }
 
-std::tuple<const void **, const std::int32_t *, const std::int32_t *> GetRVecDataMembers(const void *rvecPtr)
+std::tuple<const void *const *, const std::int32_t *, const std::int32_t *> GetRVecDataMembers(const void *rvecPtr)
 {
-   const void **begin = reinterpret_cast<const void **>(const_cast<void *>(rvecPtr));
-   // int32_t fSize is the second data member (after 1 void*)
-   const std::int32_t *size = reinterpret_cast<const std::int32_t *>(begin + 1);
-   R__ASSERT(*size >= 0);
-   // int32_t fCapacity is the third data member (1 int32_t after fSize)
-   const std::int32_t *capacity = size + 1;
-   R__ASSERT(*capacity >= -1);
-   return {begin, size, capacity};
+   return {GetRVecDataMembers(const_cast<void *>(rvecPtr))};
 }
 
 } // anonymous namespace
