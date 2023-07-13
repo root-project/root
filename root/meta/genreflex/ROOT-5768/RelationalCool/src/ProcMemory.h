@@ -111,8 +111,8 @@ inline long ProcMemory::getProcStatus( const std::string& key ) {
 
 //----------------------------------------------------------------------------
 
-// OSX
-#elif defined(__APPLE__)
+// OSX and FreeBSD
+#elif defined(__APPLE__) || defined(__FreeBSD__)
 
 inline long ProcMemory::getVsz() {
   return getProcStatus( "vsz" );
