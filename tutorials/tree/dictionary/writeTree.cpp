@@ -49,7 +49,7 @@ void writeTree()
 
    myTree->Print();
 
-   myTree->Write();
+   myTree->Write(); // This write the files and the TTree
    ofile->Close();
 }
 
