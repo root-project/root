@@ -1307,12 +1307,12 @@ void ROOT::Experimental::RClassField::AcceptVisitor(Detail::RFieldVisitor &visit
 
 ROOT::Experimental::RCollectionClassField::RCollectionIterableOnce::RIteratorFuncs
 ROOT::Experimental::RCollectionClassField::RCollectionIterableOnce::GetIteratorFuncs(TVirtualCollectionProxy *proxy,
-                                                                                     bool readOnly)
+                                                                                     bool readFromDisk)
 {
    RIteratorFuncs ifuncs;
-   ifuncs.fCreateIterators = proxy->GetFunctionCreateIterators(readOnly);
-   ifuncs.fDeleteTwoIterators = proxy->GetFunctionDeleteTwoIterators(readOnly);
-   ifuncs.fNext = proxy->GetFunctionNext(readOnly);
+   ifuncs.fCreateIterators = proxy->GetFunctionCreateIterators(readFromDisk);
+   ifuncs.fDeleteTwoIterators = proxy->GetFunctionDeleteTwoIterators(readFromDisk);
+   ifuncs.fNext = proxy->GetFunctionNext(readFromDisk);
    R__ASSERT((ifuncs.fCreateIterators != nullptr) && (ifuncs.fDeleteTwoIterators != nullptr) &&
              (ifuncs.fNext != nullptr));
    return ifuncs;
@@ -1341,8 +1341,8 @@ ROOT::Experimental::RCollectionClassField::RCollectionClassField(std::string_vie
    if (fProperties & TVirtualCollectionProxy::kIsAssociative)
       throw RException(R__FAIL("associative collections not supported"));
 
-   fIFuncsRead = RCollectionIterableOnce::GetIteratorFuncs(fProxy.get(), true /* readOnly */);
-   fIFuncsWrite = RCollectionIterableOnce::GetIteratorFuncs(fProxy.get(), false /* readOnly */);
+   fIFuncsRead = RCollectionIterableOnce::GetIteratorFuncs(fProxy.get(), true /* readFromDisk */);
+   fIFuncsWrite = RCollectionIterableOnce::GetIteratorFuncs(fProxy.get(), false /* readFromDisk */);
 
    std::unique_ptr<ROOT::Experimental::Detail::RFieldBase> itemField;
    if (auto valueClass = fProxy->GetValueClass()) {
@@ -1387,7 +1387,7 @@ std::size_t ROOT::Experimental::RCollectionClassField::AppendImpl(const Detail::
    std::size_t nbytes = 0;
    unsigned count = 0;
    TVirtualCollectionProxy::TPushPop RAII(fProxy.get(), value.GetRawPtr());
-   for (auto ptr : RCollectionIterableOnce{value.GetRawPtr(), fIFuncsRead, fProxy.get(),
+   for (auto ptr : RCollectionIterableOnce{value.GetRawPtr(), fIFuncsWrite, fProxy.get(),
                                            (fCollectionType == kSTLvector ? fItemSize : 0U)}) {
       auto itemValue = fSubFields[0]->CaptureValue(ptr);
       nbytes += fSubFields[0]->Append(itemValue);
@@ -1412,7 +1412,7 @@ void ROOT::Experimental::RCollectionClassField::ReadGlobalImpl(NTupleSize_t glob
 
    unsigned i = 0;
    for (auto elementPtr :
-        RCollectionIterableOnce{obj, fIFuncsWrite, fProxy.get(),
+        RCollectionIterableOnce{obj, fIFuncsRead, fProxy.get(),
                                 (fCollectionType == kSTLvector || obj != value->GetRawPtr() ? fItemSize : 0U)}) {
       auto itemValue = fSubFields[0]->CaptureValue(elementPtr);
       fSubFields[0]->Read(collectionStart + (i++), &itemValue);
@@ -1471,7 +1471,7 @@ ROOT::Experimental::RCollectionClassField::SplitValue(const Detail::RFieldValue 
 {
    std::vector<Detail::RFieldValue> result;
    TVirtualCollectionProxy::TPushPop RAII(fProxy.get(), value.GetRawPtr());
-   for (auto ptr : RCollectionIterableOnce{value.GetRawPtr(), fIFuncsRead, fProxy.get(),
+   for (auto ptr : RCollectionIterableOnce{value.GetRawPtr(), fIFuncsWrite, fProxy.get(),
                                            (fCollectionType == kSTLvector ? fItemSize : 0U)}) {
       result.emplace_back(fSubFields[0]->CaptureValue(ptr));
    }

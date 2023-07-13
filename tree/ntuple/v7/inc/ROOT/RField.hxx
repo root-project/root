@@ -481,7 +481,8 @@ private:
          TVirtualCollectionProxy::DeleteTwoIterators_t fDeleteTwoIterators;
          TVirtualCollectionProxy::Next_t fNext;
       };
-      static RIteratorFuncs GetIteratorFuncs(TVirtualCollectionProxy *proxy, bool readOnly);
+      static RIteratorFuncs GetIteratorFuncs(TVirtualCollectionProxy *proxy, bool readFromDisk);
+
    private:
       class RIterator {
          const RCollectionIterableOnce &fOwner;
@@ -541,7 +542,8 @@ private:
    std::unique_ptr<TVirtualCollectionProxy> fProxy;
    Int_t fProperties;
    Int_t fCollectionType;
-   /// Two sets of functions to operate on iterators, to be used depending on the access type
+   /// Two sets of functions to operate on iterators, to be used depending on the access type.  The direction preserves
+   /// the meaning from TVirtualCollectionProxy, i.e. read from disk / write to disk, respectively
    RCollectionIterableOnce::RIteratorFuncs fIFuncsRead;
    RCollectionIterableOnce::RIteratorFuncs fIFuncsWrite;
    std::size_t fItemSize;
