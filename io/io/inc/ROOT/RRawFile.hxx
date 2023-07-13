@@ -22,6 +22,10 @@
 namespace ROOT {
 namespace Internal {
 
+   //static int flip_offset = 0;
+   //extern int flip_size = 0;
+
+
 /**
  * \class RRawFile RRawFile.hxx
  * \ingroup IO
@@ -42,6 +46,8 @@ namespace Internal {
  */
 class RRawFile {
 public:
+
+
    /// Derived classes do not necessarily need to provide file size information but they can return "not known" instead
    static constexpr std::uint64_t kUnknownFileSize = std::uint64_t(-1);
    /// kAuto detects the line break from the first line, kSystem picks the system's default
@@ -139,6 +145,29 @@ protected:
    virtual void ReadVImpl(RIOVec *ioVec, unsigned int nReq);
 
 public:
+   
+   struct BitFlipParams{               
+      std::uint64_t rng_begin {0};
+      std::uint64_t rng_end {0};
+   };
+
+   static BitFlipParams& GetBitFlipParams() {
+      static BitFlipParams params;
+      return params;
+   }
+
+   // static std::uint64_t& range_begin() {
+   //    retSurn GetBitFlipParams().rng_begin;
+   // }
+
+   // static std::uint64_t& range_end() {
+   //    return GetBitFlipParams().rng_end;
+   // }
+
+   // Define the byte range start point and size for targeted bit flips
+   //static std::uint64_t& range_begin() { static std::uint64_t rng_begin = 0; return rng_begin; }
+   //static std::uint64_t& range_end() { static std::uint64_t rng_size = 0; return rng_size; }
+
    RRawFile(std::string_view url, ROptions options);
    RRawFile(const RRawFile &) = delete;
    RRawFile &operator=(const RRawFile &) = delete;
@@ -159,6 +188,9 @@ public:
     * Short reads indicate the end of the file
     */
    size_t ReadAt(void *buffer, size_t nbytes, std::uint64_t offset);
+   void PossiblyTriggerBitFlip(void* buffer, size_t total_bytes);
+   size_t ReadTotalBytes(void *buffer, size_t nbytes, std::uint64_t offset);
+
    /// Read from fFilePos offset. Returns the actual number of bytes read.
    size_t Read(void *buffer, size_t nbytes);
    /// Change the cursor fFilePos

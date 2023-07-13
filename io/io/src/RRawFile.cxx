@@ -11,6 +11,11 @@
 
 #include <ROOT/RConfig.h>
 #include <ROOT/RRawFile.hxx>
+
+
+#include <ROOT/RRawFileTest.hxx>
+
+
 #ifdef _WIN32
 #include <ROOT/RRawFileWin.hxx>
 #else
@@ -30,7 +35,20 @@
 #include <stdexcept>
 #include <string>
 
+#include <iostream>
+#include <random>
+
+//#ifndef RRAWFILE_TESTING_MODE
+#define RRAWFILE_TESTING_MODE
+
 namespace {
+
+//static bool testing_mode = true;
+static uint64_t bytes_processed_readAt = 0;
+static bool flip_triggered = false;
+
+std::random_device rd;
+
 const char *kTransportSeparator = "://";
 // Corresponds to ELineBreaks
 #ifdef _WIN32
@@ -79,6 +97,9 @@ ROOT::Internal::RRawFile::Create(std::string_view url, ROptions options)
 #else
       return std::unique_ptr<RRawFile>(new RRawFileUnix(url, options));
 #endif
+   }
+   if (transport == "test") {
+      return std::unique_ptr<RRawFile>(new RRawFileTest(url, options));
    }
    if (transport == "http" || transport == "https" ||
        transport == "root" || transport == "roots" ) {
@@ -162,8 +183,70 @@ size_t ROOT::Internal::RRawFile::Read(void *buffer, size_t nbytes)
    return res;
 }
 
+void ROOT::Internal::RRawFile::PossiblyTriggerBitFlip(void* buffer, size_t total_bytes)
+{    
+   std::random_device rd;
+   std::mt19937 mt(rd());
+   std::uniform_int_distribution<std::mt19937::result_type> p_dist(0,100);
+   
+   int rdm = 1;//p_dist(mt);
+   
+   if(rdm >= 0 && rdm <= 10 && !flip_triggered && bytes_processed_readAt >= ROOT::Internal::RRawFile::GetBitFlipParams().rng_begin && bytes_processed_readAt <= ROOT::Internal::RRawFile::GetBitFlipParams().rng_end){
+      
+      flip_triggered = true;
+
+      std::cout << "\nBit Flip Triggered" << std::endl;
+      std::cout << "bytes processed: " << bytes_processed_readAt << std::endl;
+      std::cout << "range begin: " << ROOT::Internal::RRawFile::GetBitFlipParams().rng_begin << std::endl;
+      std::cout << "range end: " << ROOT::Internal::RRawFile::GetBitFlipParams().rng_end << "\n" << std::endl;
+
+      auto byte_ptr = reinterpret_cast<unsigned char*>(buffer);
+
+      // make a copy of the original buffer
+      unsigned char* original_buffer = new unsigned char[total_bytes];
+      std::memcpy(original_buffer, byte_ptr, total_bytes);
+
+      std::mt19937 gen(rd());
+      std::uniform_int_distribution<std::mt19937::result_type> dist6(0,total_bytes);
+      int byte_idx = dist6(gen);
+
+      //std::mt19937 gen(rd());
+      std::uniform_int_distribution<std::mt19937::result_type> dis(0,8);
+      int bit_idx = dis(gen);
+
+      std::cout << "\nbyte idx " << byte_idx << " bit idx " << bit_idx << std::endl;
+
+      // randomly select a single byte within the buffer
+      unsigned char &chosen_byte = byte_ptr[byte_idx];
+      chosen_byte ^= (1 << bit_idx);
+
+      // compare the modified buffer with the original buffer
+      if (std::memcmp(original_buffer, byte_ptr, total_bytes) == 0) {
+         std::cout << "Unsuccessful bit flip" << std::endl;
+      } else {
+         std::cout << "Successful bit flip" << std::endl;
+      }
+
+      delete[] original_buffer;
+   }
+}
+
 size_t ROOT::Internal::RRawFile::ReadAt(void *buffer, size_t nbytes, std::uint64_t offset)
 {
+
+   size_t total_bytes = ReadTotalBytes(buffer,nbytes,offset);
+
+   bytes_processed_readAt += total_bytes;
+
+#ifdef RRAWFILE_TESTING_MODE
+   PossiblyTriggerBitFlip(buffer, total_bytes);
+#endif
+
+   return total_bytes;
+}
+
+size_t ROOT::Internal::RRawFile::ReadTotalBytes(void *buffer, size_t nbytes, std::uint64_t offset)
+{   
    if (!fIsOpen)
       OpenImpl();
    R__ASSERT(fOptions.fBlockSize >= 0);
@@ -208,12 +291,43 @@ size_t ROOT::Internal::RRawFile::ReadAt(void *buffer, size_t nbytes, std::uint64
    return totalBytes;
 }
 
+
 void ROOT::Internal::RRawFile::ReadV(RIOVec *ioVec, unsigned int nReq)
 {
    if (!fIsOpen)
       OpenImpl();
    fIsOpen = true;
    ReadVImpl(ioVec, nReq);
+
+#ifdef RRAWFILE_TESTING_MODE
+
+   std::mt19937 gen(rd()); 
+   std::uniform_real_distribution<double> dist6(0, nReq);
+   int random_idx = dist6(gen);
+
+   PossiblyTriggerBitFlip(ioVec[random_idx].fBuffer, ioVec[random_idx].fOutBytes);
+#endif
+
+//#if RRAWFILE_TESTING_MODE
+   // trigger a single bit flip in a specific location (header/footer)
+   // if(testing_mode && bytes_processed_readAt >= range_begin() && bytes_processed_readAt <= (range_begin()+range_size()) && !flip_triggered)
+   // {
+   //    flip_triggered = true;
+
+   //    std::mt19937 gen(rd()); 
+   //    std::uniform_real_distribution<double> dist6(0, nReq);
+   //    int random_idx = dist6(gen);
+      
+   //    //int random_idx = rand() % nReq+1;
+
+   //    std::cout << "\nRead V Bit Flip Triggered" << std::endl;
+   //    std::cout << "bytes processed: " << bytes_processed_readAt << std::endl;
+   //    std::cout << "header offset: " << range_begin() << std::endl;
+   //    std::cout << "header size: " << range_size() << "\n" << std::endl;
+      
+   //    TriggerBitFlip(ioVec[random_idx].fBuffer, ioVec[random_idx].fOutBytes); 
+   // }
+//#endif
 }
 
 bool ROOT::Internal::RRawFile::Readln(std::string &line)
