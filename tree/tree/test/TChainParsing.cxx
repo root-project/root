@@ -6,7 +6,18 @@
 #include "TSystem.h"
 #include "TTree.h"
 
+#include "ROOT/InternalTreeUtils.hxx"
+
 #include "gtest/gtest.h"
+
+template <typename T>
+void EXPECT_VEC_EQ(const std::vector<T> &v1, const std::vector<T> &v2)
+{
+   ASSERT_EQ(v1.size(), v2.size());
+   for (std::size_t i = 0ul; i < v1.size(); ++i) {
+      EXPECT_EQ(v1[i], v2[i]);
+   }
+}
 
 TEST(TChainParsing, RemoteAdd)
 {
@@ -153,3 +164,49 @@ TEST(TChainParsing, GlobbingWithTreenameToken)
       gSystem->Unlink(fileName.c_str());
    }
 }
+
+TEST(TChainParsing, GlobbingWithNonExistingDir)
+{
+   // Check that TChain::Add doesn't throw and an empty list of files is created
+   TChain c;
+   c.Add("nonexistingpath/nonexistingfile*");
+
+   const auto *chainFiles = c.GetListOfFiles();
+   ASSERT_TRUE(chainFiles);
+   EXPECT_EQ(chainFiles->GetEntries(), 0);
+
+   // Check that the equivalent call to the ExpandGlob function throws
+   try {
+      const auto expanded_glob = ROOT::Internal::TreeUtils::ExpandGlob("nonexistingpath/nonexistingfile*");
+   } catch (const std::runtime_error &err) {
+      std::string msg{"ExpandGlob: could not open directory 'nonexistingpath'."};
+      EXPECT_EQ(msg, err.what());
+   }
+}
+
+#if !defined(_MSC_VER) || defined(R__ENABLE_BROKEN_WIN_TESTS)
+// No XRootD support on Windows
+TEST(TChainParsing, RemoteGlob)
+{
+   TChain c;
+   c.Add("root://eospublic.cern.ch//eos/root-eos/cms_opendata_2012_nanoaod/Run*");
+   const auto *chainFiles = c.GetListOfFiles();
+
+   ASSERT_TRUE(chainFiles);
+   EXPECT_EQ(chainFiles->GetEntries(), 4);
+
+   std::vector<std::string> expectedFileNames{
+      "root://eospublic.cern.ch//eos/root-eos/cms_opendata_2012_nanoaod/Run2012B_DoubleElectron.root",
+      "root://eospublic.cern.ch//eos/root-eos/cms_opendata_2012_nanoaod/Run2012B_DoubleMuParked.root",
+      "root://eospublic.cern.ch//eos/root-eos/cms_opendata_2012_nanoaod/Run2012C_DoubleElectron.root",
+      "root://eospublic.cern.ch//eos/root-eos/cms_opendata_2012_nanoaod/Run2012C_DoubleMuParked.root"};
+
+   std::vector<std::string> chainFileNames;
+   chainFileNames.reserve(chainFiles->GetEntries());
+   for (const auto *obj : *chainFiles) {
+      chainFileNames.push_back(obj->GetTitle());
+   }
+
+   EXPECT_VEC_EQ(chainFileNames, expectedFileNames);
+}
+#endif
