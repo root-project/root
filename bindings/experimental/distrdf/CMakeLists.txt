@@ -13,6 +13,7 @@ file(COPY ${DistRDFDir} DESTINATION ${localruntimedir})
 
 set(py_sources
   DistRDF/__init__.py
+  DistRDF/_graph_cache.py
   DistRDF/ComputationGraphGenerator.py
   DistRDF/DataFrame.py
   DistRDF/HeadNode.py
