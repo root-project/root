@@ -422,6 +422,20 @@ OutOpt        = -o
 
 endif
 
+ifeq ($(PLATFORM),freebsd)
+# if specific FreeBSD archs require more differentiation, use $ARCH
+# for now let's assume it's prette homogeneous in BSD land
+
+CXX          ?= c++
+LD           ?= lld
+ifeq ($(ROOTBUILD),debug)
+CXXFLAGS      += -g -Wall -fPIC
+else
+CXXFLAGS      += -O -Wall -fPIC
+endif
+SOFLAGS       = -shared
+endif
+
 ifeq ($(ARCH),linux)
 
 # Linux with egcs, gcc 2.9x, gcc 3.x (>= RedHat 5.2)
