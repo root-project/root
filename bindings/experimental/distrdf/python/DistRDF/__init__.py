@@ -112,12 +112,12 @@ def RunGraphs(proxies: Iterable) -> int:
     return len(uniqueproxies)
 
 
-def VariationsFor(actionproxy: ResultPtrProxy) -> ResultMapProxy:
+def VariationsFor(resultproxy: ResultPtrProxy) -> ResultMapProxy:
     """
     Equivalent of ROOT.RDF.Experimental.VariationsFor in distributed mode.
     """
     # similar to resPtr.fActionPtr->MakeVariedAction()
-    return actionproxy.create_variations()
+    return resultproxy.create_variations()
 
 
 def create_distributed_module(parentmodule):
