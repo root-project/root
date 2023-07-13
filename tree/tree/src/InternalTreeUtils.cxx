@@ -7,11 +7,16 @@
  *************************************************************************/
 
 #include "ROOT/InternalTreeUtils.hxx"
+#include "ROOT/RRangeCast.hxx" // RRangeStaticCast
 #include "TBranch.h" // Usage of TBranch in ClearMustCleanupBits
 #include "TChain.h"
 #include "TCollection.h" // TRangeStaticCast
 #include "TFile.h"
 #include "TFriendElement.h"
+#include "TObjString.h"
+#include "TRegexp.h"
+#include "TString.h"
+#include "TSystem.h"
 #include "TTree.h"
 #include "TVirtualIndex.h"
 
@@ -401,6 +406,76 @@ std::vector<std::unique_ptr<TChain>> MakeFriends(const ROOT::TreeUtils::RFriendI
    }
 
    return friends;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// \brief Expands input glob into a collection of full paths to files.
+/// \param[in] glob The glob to expand.
+/// \throws std::runtime_error If the directory part of the glob refers to a
+///         path that cannot be opened.
+/// \return A vector of strings, the fully expanded paths to the files referred
+///         to by the glob.
+///
+/// The two parts of the glob (directory, fileglob) are separated. The directory
+/// is first expanded via TSystem::ExpandPathName then opened via
+/// TSystem::OpenDirectory. If the directory can be opened, then the remaining
+/// fileglob is used as regex expression (via TRegexp) and the function stores
+/// those files in the directory that match the regex.
+std::vector<std::string> ExpandGlob(const std::string &glob)
+{
+   // TODO: Also implement this pattern in some other free function
+   // This is practically Python's os.path.split
+   std::string dirname;
+   std::string basename;
+
+   const auto slashpos = glob.rfind('/');
+
+   if (slashpos != std::string::npos) {
+      // Separate the glob into its two components
+      dirname = glob.substr(0, slashpos);
+      basename = glob.substr(slashpos + 1);
+   } else {
+      // There is no directory component in the glob, use the CWD
+      dirname = gSystem->UnixPathName(gSystem->WorkingDirectory());
+      basename = glob;
+   }
+
+   // Attempt opening of directory contained in the glob
+   const char *epath = gSystem->ExpandPathName(dirname.c_str());
+   void *dir = gSystem->OpenDirectory(epath);
+   delete[] epath;
+
+   if (dir) {
+      // Create a TList to store the file names (not yet sorted)
+      TList l;
+      l.SetOwner(); // Make sure the TList will delete its objects
+      TRegexp re(basename.c_str(), true);
+      const char *file;
+      TString fname;
+      while ((file = gSystem->GetDirEntry(dir))) {
+         if (!strcmp(file, ".") || !strcmp(file, ".."))
+            continue;
+         fname = file;
+         if ((basename != file) && fname.Index(re) == kNPOS)
+            continue;
+         // Using '/' as separator here as it was done in TChain::Add
+         // In principle this should be using the appropriate platform separator
+         l.Add(new TObjString((dirname + '/' + file).c_str()));
+      }
+      gSystem->FreeDirectory(dir);
+      // Sort the files in alphanumeric order
+      l.Sort();
+
+      // Convert TList<TObjString> to std::vector<std::string>
+      std::vector<std::string> ret;
+      ret.reserve(l.GetEntries());
+      for (const auto *tobjstr : ROOT::RangeStaticCast<const TObjString *>(l)) {
+         ret.push_back(tobjstr->GetName());
+      }
+      return ret;
+   } else {
+      throw std::runtime_error("ExpandGlob: could not open directory '" + dirname + "'.");
+   }
 }
 
 } // namespace TreeUtils
