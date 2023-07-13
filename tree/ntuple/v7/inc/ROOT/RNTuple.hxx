@@ -526,6 +526,15 @@ public:
    RNTuple() = default;
    ~RNTuple() = default;
 
+   // create getters to return header and footer information
+   uint32_t GetSeekHeader() const {return fSeekHeader;}
+   uint32_t GetNBytesHeader() const {return fNBytesHeader;}
+   uint32_t GetLenHeader() const {return fLenHeader;}
+
+   uint32_t GetSeekFooter() const {return fSeekFooter;}
+   uint32_t GetNBytesFooter() const {return fNBytesFooter;}
+   uint32_t GetLenFooter() const {return fLenFooter;}
+
    /// Create a page source from the RNTuple object. Requires the RNTuple object to be streamed from a file.
    /// If fFile is not set, an exception is thrown.
    std::unique_ptr<Detail::RPageSource> MakePageSource(const RNTupleReadOptions &options = RNTupleReadOptions());

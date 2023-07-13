@@ -37,14 +37,20 @@ R__LOAD_LIBRARY(ROOTNTuple)
 #include <sstream>
 #include <utility>
 
+#include <nlohmann/json.hpp>
+
 // Import classes from experimental namespace for the time being
 using RNTupleModel = ROOT::Experimental::RNTupleModel;
 using RNTupleReader = ROOT::Experimental::RNTupleReader;
 using RNTupleWriter = ROOT::Experimental::RNTupleWriter;
 
-constexpr char const* kNTupleFileName = "ntpl001_staff.root";
+using RNTupleWriteOptions = ROOT::Experimental::RNTupleWriteOptions;
 
-void Ingest() {
+constexpr char const* kNTupleFileName = "ntpl001_staff.root";
+//constexpr char const* kNTupleFileName = "test://ntpl001_staff.root";
+
+void Ingest() {   
+   
    // The input file cernstaff.dat is a copy of the CERN staff data base from 1988
    ifstream fin(gROOT->GetTutorialDir() + "/tree/cernstaff.dat");
    assert(fin.is_open());
@@ -68,15 +74,47 @@ void Ingest() {
 
    // We hand-over the data model to a newly created ntuple of name "Staff", stored in kNTupleFileName
    // In return, we get a unique pointer to an ntuple that we can fill
-   auto ntuple = RNTupleWriter::Recreate(std::move(model), "Staff", kNTupleFileName);
 
-   std::string record;
-   while (std::getline(fin, record)) {
-      std::istringstream iss(record);
-      iss >> *fldCategory >> *fldFlag >> *fldAge >> *fldService >> *fldChildren >> *fldGrade >> *fldStep >> *fldHrweek
-          >> *fldCost >> *fldDivision >> *fldNation;
-      ntuple->Fill();
+   // Compress the .root file
+   RNTupleWriteOptions write_options;
+   write_options.SetCompression(0);
+
+   {
+      auto ntuple = RNTupleWriter::Recreate(std::move(model), "Staff", kNTupleFileName, write_options);
+      
+      std::string record;
+      while (std::getline(fin, record)) {
+         std::istringstream iss(record);
+         iss >> *fldCategory >> *fldFlag >> *fldAge >> *fldService >> *fldChildren >> *fldGrade >> *fldStep >> *fldHrweek
+            >> *fldCost >> *fldDivision >> *fldNation;
+         ntuple->Fill();
+      }
    }
+
+   // open the root file and retrieve rntuple object
+   auto f = TFile::Open("/home/vporter/Documents/root/tutorials/v7/ntuple/ntpl001_staff.root","READ");
+   
+   auto ntpl = f->Get<ROOT::Experimental::RNTuple>("Staff");
+
+
+   ROOT::Internal::RRawFile::GetBitFlipParams().rng_begin = ntpl->GetSeekHeader();
+   ROOT::Internal::RRawFile::GetBitFlipParams().rng_end = ntpl->GetSeekHeader() + ntpl->GetNBytesHeader();
+
+   // set parameters for targeted bit flips in the header
+   //ROOT::Internal::RRawFile::range_begin() = ntpl->GetSeekHeader(); // file offset of the header
+   //ROOT::Internal::RRawFile::range_end() = ntpl->GetSeekHeader() + ntpl->GetNBytesHeader(); // size of the compressed ntuple header
+
+   std::cout << ROOT::Internal::RRawFile::GetBitFlipParams().rng_begin << std::endl;
+   std::cout << ROOT::Internal::RRawFile::GetBitFlipParams().rng_end << std::endl;
+
+   //ROOT::Internal::RRawFile::bitFlipParams.rng_begin = ntpl->GetSeekHeader();
+   //ROOT::Internal::RRawFile::bitFlipParams.rng_end = ntpl->GetSeekHeader() + ntpl->GetNBytesHeader();
+
+   // set parameters for targeted bit flips in the footer
+   //ROOT::Internal::RRawFile::range_begin() = ntpl->GetSeekFooter();
+   //ROOT::Internal::RRawFile::range_size() = ntpl->GetNBytesFooter();
+
+   // Note: GetLenHeader() and GetLenFooter() return the size of the uncompressed ntuple header
 
    // The ntuple unique pointer goes out of scope here.  On destruction, the ntuple flushes unwritten data to disk
    // and closes the attached ROOT file.
@@ -91,25 +129,30 @@ void Analyze() {
 
    // Create an ntuple and attach the read model to it
    auto ntuple = RNTupleReader::Open(std::move(model), "Staff", kNTupleFileName);
-
+   //std::string("test://")+kNTupleFileName
+   
    // Quick overview of the ntuple and list of fields.
-   ntuple->PrintInfo();
-
-   std::cout << "The first entry in JSON format:" << std::endl;
-   ntuple->Show(0);
+   //ntuple->PrintInfo();
    // In a future version of RNTuple, there will be support for ntuple->Scan()
 
-   auto c = new TCanvas("c", "", 200, 10, 700, 500);
-   TH1I h("h", "Age Distribution CERN, 1988", 100, 0, 100);
-   h.SetFillColor(48);
+   //ntuple->Show(0);
 
-   for (auto entryId : *ntuple) {
-      // Populate fldAge
-      ntuple->LoadEntry(entryId);
-      h.Fill(*fldAge);
+   //specify and open output file
+   std::ofstream file("run_3.txt");
+
+   if(file.is_open())
+   {
+      for(int idx = 0; idx < ntuple->GetNEntries(); idx++) 
+      {
+         ntuple->Show(idx,file);
+         file << std::endl;
+      }
+
+      file.close();
    }
 
-   h.DrawCopy();
+   std::cout << "File Created!" << std::endl;
+
 }
 
 void ntpl001_staff() {
