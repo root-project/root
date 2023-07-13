@@ -6,9 +6,7 @@
    <title>Batch production</title>
    <style>
      @media print {
-        @page { margin: 0; }
-        body { margin: 1.6cm; }
-        div.page { page-break-after: always; page-break-inside: avoid; }
+        @page { margin: 10mm; size: 210mm 297mm; }
      }
   </style>
   <script src="$jsrootsys/build/jsroot.js"></script>
@@ -44,6 +42,8 @@
       dom.style.padding = '0';
       dom.style.width = globalThis.main_widths[i] + 'px';
       dom.style.height = globalThis.main_heights[i] + 'px';
+      if (i > 0) dom.style['page-break-before'] = 'always';
+      dom.style['page-break-inside'] = 'avoid';
       document.body.append(dom);
       doms.push(dom);
    }
