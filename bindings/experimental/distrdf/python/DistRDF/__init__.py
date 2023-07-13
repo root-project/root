@@ -89,18 +89,25 @@ def RunGraphs(proxies: Iterable) -> int:
     """
     # Import here to avoid circular dependencies in main module
     from DistRDF.Proxy import execute_graph
+    import ROOT
 
     if not proxies:
-        raise ValueError("The list of result pointers passed to RunGraphs is empty.")
+        logger.warning("RunGraphs: Got an empty list of handles, now quitting.")
+        return 0
 
     # Get proxies belonging to distinct computation graphs
     uniqueproxies = list({proxy.proxied_node.get_head(): proxy for proxy in proxies}.values())
 
-    # Submit all computation graphs concurrently from multiple Python threads.
-    # The submission is not computationally intensive
-    with concurrent.futures.ThreadPoolExecutor(max_workers=len(uniqueproxies)) as executor:
-        futures = [executor.submit(execute_graph, proxy.proxied_node) for proxy in uniqueproxies]
-        concurrent.futures.wait(futures)
+    if ROOT.IsImplicitMTEnabled():
+        # Submit all computation graphs concurrently from multiple Python threads.
+        # The submission is not computationally intensive
+        with concurrent.futures.ThreadPoolExecutor(max_workers=len(uniqueproxies)) as executor:
+            futures = [executor.submit(execute_graph, proxy.proxied_node) for proxy in uniqueproxies]
+            concurrent.futures.wait(futures)
+    else:
+        # Run the graphs sequentially
+        for p in uniqueproxies:
+            execute_graph(p.proxied_node)
 
     return len(uniqueproxies)
 
