@@ -160,7 +160,7 @@ jobs:
         # Common configs: {Release,Debug,RelWithDebInfo)
         # Build options: https://root.cern/install/build_from_source/#all-build-options
         include:
-          - image: fedora38
+          - image: fedora38-cov
             config: Debug
             overrides: ["coverage=On"]
 
@@ -193,8 +193,8 @@ jobs:
     name: ${{ matrix.image }} ${{ matrix.config }} ${{ join( matrix.overrides, ', ' ) }}
 
     container:
-      #image: registry.cern.ch/root-ci/${{ matrix.image }}:buildready
-      image: https://raw.githubusercontent.com/root-project/root-ci-images/main/fedora38-cov/Dockerfile
+      image: registry.cern.ch/root-ci/${{ matrix.image }}:buildready
+      #image: https://raw.githubusercontent.com/root-project/root-ci-images/main/fedora38-cov/Dockerfile
       #image: ubuntu:latest
       options: '--security-opt label=disable --rm'
       env:
