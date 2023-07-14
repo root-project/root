@@ -256,7 +256,8 @@ Usually the on-disk element should map bitwise to the in-memory element. Sometim
 though, for instance on big endian platforms or for bools.
 
 There is a template specialization for every valid pair of C++ type and column representation.
-These specialized child classes are responsible for packing and unpacking pages.
+These specialized child classes are responsible for overriding `Pack()` / `Unpack()` for packing / unpacking elements
+as appropriate.
 */
 // clang-format on
 class RColumnElementBase {
