@@ -585,9 +585,7 @@ public:
 #define __RCOLUMNELEMENT_SPEC_BODY(CppT, BaseT, BitsOnStorage)  \
    static constexpr std::size_t kSize = sizeof(CppT);           \
    static constexpr std::size_t kBitsOnStorage = BitsOnStorage; \
-   RColumnElement() : BaseT(kSize)                              \
-   {                                                            \
-   }                                                            \
+   RColumnElement() : BaseT(kSize) {}                           \
    bool IsMappable() const final                                \
    {                                                            \
       return kIsMappable;                                       \
