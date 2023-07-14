@@ -20,7 +20,6 @@
 #include <ROOT/RError.hxx>
 #include <ROOT/RField.hxx>
 #include <ROOT/RNTupleUtil.hxx>
-#include <ROOT/RFieldValue.hxx>
 #include <ROOT/RStringView.hxx>
 
 #include <cstdint>
