@@ -36,6 +36,11 @@ ROOT_GENERATE_DICTIONARY(G__data2Tree data2Tree.hpp LINKDEF data2TreeLinkDef.hpp
 add_library(data2TreeLib SHARED data2Tree.cpp G__data2Tree.cxx)
 target_link_libraries(data2TreeLib ${ROOT_LIBRARIES}  ) 
 
+#--- This is needed on Windows in order to export the symbols and create the data2TreeLib.lib file
+if(MSVC)
+  set_target_properties(data2TreeLib PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
+endif()
+
 #---Create  a main program using the library
 add_executable(treeExample main.cpp readTree.cpp writeTree.cpp)
 target_link_libraries(treeExample ${ROOT_LIBRARIES} data2TreeLib)
