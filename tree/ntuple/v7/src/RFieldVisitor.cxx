@@ -131,14 +131,15 @@ void ROOT::Experimental::RPrintValueVisitor::PrintCollection(const Detail::RFiel
    PrintName(field);
    fOutput << "[";
    auto elems = field.SplitValue(fValue);
-   for (auto iValue = elems.begin(); iValue != elems.end(); ) {
+   for (std::size_t i = 0; i < elems.size(); ++i) {
       RPrintOptions options;
       options.fPrintSingleLine = true;
       options.fPrintName = false;
-      RPrintValueVisitor elemVisitor(*iValue, fOutput, 0 /* level */, options);
-      iValue->GetField()->AcceptVisitor(elemVisitor);
+      auto subField = elems[i].GetField();
+      RPrintValueVisitor elemVisitor(std::move(elems[i]), fOutput, 0 /* level */, options);
+      subField->AcceptVisitor(elemVisitor);
 
-      if (++iValue == elems.end())
+      if (i == (elems.size() - 1))
          break;
       else
          fOutput << ", ";
@@ -300,16 +301,17 @@ void ROOT::Experimental::RPrintValueVisitor::VisitClassField(const RClassField &
    PrintName(field);
    fOutput << "{";
    auto elems = field.SplitValue(fValue);
-   for (auto iValue = elems.begin(); iValue != elems.end(); ) {
+   for (std::size_t i = 0; i < elems.size(); ++i) {
       if (!fPrintOptions.fPrintSingleLine)
          fOutput << std::endl;
 
       RPrintOptions options;
       options.fPrintSingleLine = fPrintOptions.fPrintSingleLine;
-      RPrintValueVisitor visitor(*iValue, fOutput, fLevel + 1, options);
-      iValue->GetField()->AcceptVisitor(visitor);
+      auto subField = elems[i].GetField();
+      RPrintValueVisitor visitor(std::move(elems[i]), fOutput, fLevel + 1, options);
+      subField->AcceptVisitor(visitor);
 
-      if (++iValue == elems.end()) {
+      if (i == (elems.size() - 1)) {
          if (!fPrintOptions.fPrintSingleLine)
             fOutput << std::endl;
          break;
@@ -330,16 +332,17 @@ void ROOT::Experimental::RPrintValueVisitor::VisitRecordField(const RRecordField
    PrintName(field);
    fOutput << "{";
    auto elems = field.SplitValue(fValue);
-   for (auto iValue = elems.begin(); iValue != elems.end(); ) {
+   for (std::size_t i = 0; i < elems.size(); ++i) {
       if (!fPrintOptions.fPrintSingleLine)
          fOutput << std::endl;
 
       RPrintOptions options;
       options.fPrintSingleLine = fPrintOptions.fPrintSingleLine;
-      RPrintValueVisitor visitor(*iValue, fOutput, fLevel + 1, options);
-      iValue->GetField()->AcceptVisitor(visitor);
+      auto subField = elems[i].GetField();
+      RPrintValueVisitor visitor(std::move(elems[i]), fOutput, fLevel + 1, options);
+      subField->AcceptVisitor(visitor);
 
-      if (++iValue == elems.end()) {
+      if (i == (elems.size() - 1)) {
          if (!fPrintOptions.fPrintSingleLine)
             fOutput << std::endl;
          break;
@@ -364,8 +367,9 @@ void ROOT::Experimental::RPrintValueVisitor::VisitNullableField(const RNullableF
       RPrintOptions options;
       options.fPrintSingleLine = true;
       options.fPrintName = false;
-      RPrintValueVisitor visitor(elems[0], fOutput, fLevel, options);
-      elems[0].GetField()->AcceptVisitor(visitor);
+      auto subField = elems[0].GetField();
+      RPrintValueVisitor visitor(std::move(elems[0]), fOutput, fLevel, options);
+      subField->AcceptVisitor(visitor);
    }
 }
 
@@ -373,12 +377,13 @@ void ROOT::Experimental::RPrintValueVisitor::VisitEnumField(const REnumField &fi
 {
    PrintIndent();
    PrintName(field);
-   auto intValue = field.SplitValue(fValue)[0];
+   auto intValue = std::move(field.SplitValue(fValue)[0]);
    RPrintOptions options;
    options.fPrintSingleLine = true;
    options.fPrintName = false;
-   RPrintValueVisitor visitor(intValue, fOutput, fLevel, options);
-   intValue.GetField()->AcceptVisitor(visitor);
+   auto subfield = intValue.GetField();
+   RPrintValueVisitor visitor(std::move(intValue), fOutput, fLevel, options);
+   subfield->AcceptVisitor(visitor);
 }
 
 void ROOT::Experimental::RPrintValueVisitor::VisitCollectionClassField(const RCollectionClassField &field)
