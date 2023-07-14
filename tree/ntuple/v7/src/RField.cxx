@@ -251,6 +251,13 @@ ROOT::Experimental::Detail::RFieldBase::Create(const std::string &fieldName, con
 {
    auto typeAlias = GetNormalizedTypeName(typeName);
    auto normalizedType = GetNormalizedTypeName(GetCanonicalTypeName(typeAlias));
+   return R__FORWARD_RESULT(RFieldBase::Create(fieldName, normalizedType, typeAlias));
+}
+
+ROOT::Experimental::RResult<std::unique_ptr<ROOT::Experimental::Detail::RFieldBase>>
+ROOT::Experimental::Detail::RFieldBase::Create(const std::string &fieldName, const std::string &normalizedType,
+                                               const std::string &typeAlias)
+{
    if (normalizedType.empty())
       return R__FAIL("no type name specified for Field " + fieldName);
 
