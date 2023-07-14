@@ -38,9 +38,6 @@ namespace Detail {
 \class ROOT::Experimental::RColumn
 \ingroup NTuple
 \brief A column is a storage-backed array of a simple, fixed-size type, from which pages can be mapped into memory.
-
-On the primitives data layer, the RColumn and RColumnElement are the equivalents to RField and RFieldValue on the
-logical data layer.
 */
 // clang-format on
 class RColumn {
