@@ -483,8 +483,8 @@ protected:
    std::unique_ptr<Detail::RFieldBase> CloneImpl(std::string_view newName) const final;
    void GenerateColumnsImpl() final {}
    void GenerateColumnsImpl(const RNTupleDescriptor & /* desc */) final {}
-   std::size_t AppendImpl(const void *from) final;
-   void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final;
+   std::size_t AppendImpl(const void *from) final { return fSubFields[0]->Append(from); }
+   void ReadGlobalImpl(NTupleSize_t globalIndex, void *to) final { fSubFields[0]->Read(globalIndex, to); }
 
 public:
    REnumField(std::string_view fieldName, std::string_view enumName);

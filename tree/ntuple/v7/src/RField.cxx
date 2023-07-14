@@ -1359,16 +1359,6 @@ ROOT::Experimental::REnumField::REnumField(std::string_view fieldName, std::stri
    fTraits |= kTraitTriviallyDestructible;
 }
 
-std::size_t ROOT::Experimental::REnumField::AppendImpl(const void *from)
-{
-   return fSubFields[0]->Append(from);
-}
-
-void ROOT::Experimental::REnumField::ReadGlobalImpl(NTupleSize_t globalIndex, void *to)
-{
-   fSubFields[0]->Read(globalIndex, to);
-}
-
 std::unique_ptr<ROOT::Experimental::Detail::RFieldBase>
 ROOT::Experimental::REnumField::CloneImpl(std::string_view newName) const
 {
