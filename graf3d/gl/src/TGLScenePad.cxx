@@ -597,6 +597,11 @@ Int_t TGLScenePad::ValidateObjectBuffer(const TBuffer3D& buffer, Bool_t includeR
    {
       needRaw = kTRUE;
    }
+   // 6. The shape is scaled
+   else if (buffer.fScaled)
+   {
+      needRaw = kTRUE;
+   }
 
    if (needRaw && !buffer.SectionsValid(TBuffer3D::kRawSizes|TBuffer3D::kRaw)) {
       return TBuffer3D::kRawSizes|TBuffer3D::kRaw;

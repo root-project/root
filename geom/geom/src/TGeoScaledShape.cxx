@@ -196,6 +196,7 @@ TGeoVolume *TGeoScaledShape::Divide(TGeoVolume * /*voldiv*/, const char *divname
 const TBuffer3D & TGeoScaledShape::GetBuffer3D(Int_t reqSections, Bool_t localFrame) const
 {
    TBuffer3D &buffer = (TBuffer3D &)fShape->GetBuffer3D(reqSections, localFrame);
+   buffer.fScaled = kTRUE;
 
 //   TGeoBBox::FillBuffer3D(buffer, reqSections, localFrame);
    Double_t halfLengths[3] = { fDX, fDY, fDZ };
