@@ -37,37 +37,17 @@ ROOT::Experimental::RLogChannel &ROOT::Experimental::BrowserLog() {
    return sLog;
 }
 
-namespace ROOT {
-namespace Experimental {
-
-class RBrowserDataCleanup : public TObject {
-
-   RBrowserData &fData;
-
-public:
-   RBrowserDataCleanup(RBrowserData &_data) : fData(_data) {}
-
-   void RecursiveRemove(TObject *obj) override
-   {
-      fData.RemoveFromCache(obj);
-   }
-};
+void ROOT::Experimental::Internal::RBrowserDataCleanup::RecursiveRemove(TObject *obj)
+{
+   fData.RemoveFromCache(obj);
 }
-}
-
-
-/** \class ROOT::Experimental::RBrowserData
-\ingroup rbrowser
-\brief Way to browse (hopefully) everything in %ROOT
-*/
-
 
 /////////////////////////////////////////////////////////////////////
 /// Default constructor
 
 RBrowserData::RBrowserData()
 {
-   fCleanupHandle = std::make_unique<RBrowserDataCleanup>(*this);
+   fCleanupHandle = std::make_unique<ROOT::Experimental::Internal::RBrowserDataCleanup>(*this);
    R__LOCKGUARD(gROOTMutex);
    gROOT->GetListOfCleanups()->Add(fCleanupHandle.get());
 }

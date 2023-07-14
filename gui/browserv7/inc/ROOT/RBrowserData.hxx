@@ -23,6 +23,8 @@
 #include <vector>
 #include <utility>
 
+#include <TObject.h>
+
 namespace ROOT {
 namespace Experimental {
 
@@ -30,11 +32,29 @@ class RLogChannel;
 /// Log channel for Browser diagnostics.
 RLogChannel &BrowserLog();
 
-class RBrowserDataCleanup;
+class RBrowserData;
+namespace Internal {
 
+class RBrowserDataCleanup final : public TObject {
+
+   ROOT::Experimental::RBrowserData &fData;
+
+public:
+   RBrowserDataCleanup(ROOT::Experimental::RBrowserData &_data) : fData(_data) {}
+
+   void RecursiveRemove(TObject *obj) final;
+
+   ClassDef(RBrowserDataCleanup, 0);
+};
+} // namespace Internal
+
+/** \class ROOT::Experimental::RBrowserData
+\ingroup rbrowser
+\brief Way to browse (hopefully) everything in %ROOT
+*/
 class RBrowserData {
 
-   friend class RBrowserDataCleanup;
+   friend class ROOT::Experimental::Internal::RBrowserDataCleanup;
 
    std::shared_ptr<Browsable::RElement> fTopElement;    ///<! top element
 
@@ -49,7 +69,7 @@ class RBrowserData {
    std::vector<const Browsable::RItem *> fLastSortedItems;   ///<! sorted child items, used in requests
    std::string fLastSortMethod;                          ///<! last sort method
    bool fLastSortReverse{false};                         ///<! last request reverse order
-   std::unique_ptr<RBrowserDataCleanup> fCleanupHandle;  ///<! cleanup handle for RecursiveRemove
+   std::unique_ptr<ROOT::Experimental::Internal::RBrowserDataCleanup> fCleanupHandle;  ///<! cleanup handle for RecursiveRemove
 
    void ResetLastRequestData(bool with_element);
 
