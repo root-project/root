@@ -123,7 +123,8 @@ public:
       TypesList_t fDeserializationTypes;
    };
 
-   // Keeps the relationship between an object created by a field and said field. Only fields can create RValue objects.
+   // Keeps the relationship between an object created by a field and said field.
+   // Only fields can create RValue objects through generation or splitting.
    class RValue {
       friend class RFieldBase;
 
@@ -154,10 +155,12 @@ public:
       }
 
       template <typename T>
-      const T *Get() const
+      T *Get() const
       {
          return static_cast<T *>(fObjPtr);
       }
+      void *GetRawPtr() const { return fObjPtr; }
+      const RFieldBase *GetField() const { return fField; }
    };
 
 private:
@@ -331,7 +334,7 @@ public:
    /// Creates the list of direct child values given a value for this field.  E.g. a single value for the
    /// correct variant or all the elements of a collection.  The default implementation assumes no sub values
    /// and returns an empty vector.
-   virtual std::vector<RFieldValue> SplitValue(const RFieldValue &value) const;
+   virtual std::vector<RValue> SplitValue(const RValue &value) const;
    /// The number of bytes taken by a value of the appropriate type
    virtual size_t GetValueSize() const = 0;
    /// As a rule of thumb, the alignment is equal to the size of the type. There are, however, various exceptions
@@ -503,7 +506,7 @@ public:
    Detail::RFieldValue GenerateValue(void* where) override;
    void DestroyValue(const Detail::RFieldValue& value, bool dtorOnly = false) final;
    Detail::RFieldValue CaptureValue(void *where) final;
-   std::vector<Detail::RFieldValue> SplitValue(const Detail::RFieldValue &value) const final;
+   std::vector<RValue> SplitValue(const RValue &value) const final;
    size_t GetValueSize() const override;
    size_t GetAlignment() const final { return fMaxAlignment; }
    std::uint32_t GetTypeVersion() const final;
@@ -534,7 +537,7 @@ public:
    {
       return Detail::RFieldValue(true /* captureTag */, this, where);
    }
-   std::vector<Detail::RFieldValue> SplitValue(const Detail::RFieldValue &value) const final;
+   std::vector<RValue> SplitValue(const RValue &value) const final;
    size_t GetValueSize() const final { return fSubFields[0]->GetValueSize(); }
    size_t GetAlignment() const final { return fSubFields[0]->GetAlignment(); }
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
@@ -647,7 +650,7 @@ public:
    Detail::RFieldValue GenerateValue(void *where) override;
    void DestroyValue(const Detail::RFieldValue &value, bool dtorOnly = false) final;
    Detail::RFieldValue CaptureValue(void *where) override;
-   std::vector<Detail::RFieldValue> SplitValue(const Detail::RFieldValue &value) const final;
+   std::vector<RValue> SplitValue(const RValue &value) const final;
    size_t GetValueSize() const override { return fProxy->Sizeof(); }
    size_t GetAlignment() const final { return alignof(std::max_align_t); }
    void CommitCluster() final;
@@ -709,7 +712,7 @@ public:
    Detail::RFieldValue GenerateValue(void* where) override;
    void DestroyValue(const Detail::RFieldValue& value, bool dtorOnly = false) override;
    Detail::RFieldValue CaptureValue(void *where) final;
-   std::vector<Detail::RFieldValue> SplitValue(const Detail::RFieldValue &value) const final;
+   std::vector<RValue> SplitValue(const RValue &value) const final;
    size_t GetValueSize() const final { return fSize; }
    size_t GetAlignment() const final { return fMaxAlignment; }
    void AcceptVisitor(Detail::RFieldVisitor &visitor) const final;
@@ -739,7 +742,7 @@ public:
    Detail::RFieldValue GenerateValue(void* where) override;
    void DestroyValue(const Detail::RFieldValue& value, bool dtorOnly = false) final;
    Detail::RFieldValue CaptureValue(void *where) override;
-   std::vector<Detail::RFieldValue> SplitValue(const Detail::RFieldValue &value) const final;
+   std::vector<RValue> SplitValue(const RValue &value) const final;
    size_t GetValueSize() const override { return sizeof(std::vector<char>); }
    size_t GetAlignment() const final { return std::alignment_of<std::vector<char>>(); }
    void CommitCluster() final;
@@ -783,7 +786,7 @@ public:
    Detail::RFieldValue GenerateValue(void *where) override;
    void DestroyValue(const Detail::RFieldValue &value, bool dtorOnly = false) override;
    Detail::RFieldValue CaptureValue(void *where) override;
-   std::vector<Detail::RFieldValue> SplitValue(const Detail::RFieldValue &value) const final;
+   std::vector<RValue> SplitValue(const RValue &value) const final;
    size_t GetValueSize() const override;
    size_t GetAlignment() const override;
    void CommitCluster() final;
@@ -822,7 +825,7 @@ public:
    Detail::RFieldValue GenerateValue(void *where) override;
    void DestroyValue(const Detail::RFieldValue &value, bool dtorOnly = false) final;
    Detail::RFieldValue CaptureValue(void *where) final;
-   std::vector<Detail::RFieldValue> SplitValue(const Detail::RFieldValue &value) const final;
+   std::vector<RValue> SplitValue(const RValue &value) const final;
    size_t GetLength() const { return fArrayLength; }
    size_t GetValueSize() const final { return fItemSize * fArrayLength; }
    size_t GetAlignment() const final { return fSubFields[0]->GetAlignment(); }
@@ -972,7 +975,7 @@ public:
    Detail::RFieldValue GenerateValue(void *where) override;
    void DestroyValue(const Detail::RFieldValue &value, bool dtorOnly = false) final;
    Detail::RFieldValue CaptureValue(void *where) final;
-   std::vector<Detail::RFieldValue> SplitValue(const Detail::RFieldValue &value) const final;
+   std::vector<RValue> SplitValue(const RValue &value) const final;
    size_t GetValueSize() const final { return sizeof(std::unique_ptr<char>); }
    size_t GetAlignment() const final { return alignof(std::unique_ptr<char>); }
 };
@@ -2115,7 +2118,7 @@ public:
    Detail::RFieldValue CaptureValue(void *where) final {
       return Detail::RFieldValue(true /* captureFlag */, this, where);
    }
-   std::vector<Detail::RFieldValue> SplitValue(const Detail::RFieldValue &value) const final;
+   std::vector<RValue> SplitValue(const RValue &value) const final;
    void DestroyValue(const Detail::RFieldValue& value, bool dtorOnly = false) final;
 
    size_t GetValueSize() const final { return sizeof(std::vector<bool>); }

@@ -17,7 +17,6 @@
 #define ROOT7_RFieldVisitor
 
 #include <ROOT/RField.hxx>
-#include <ROOT/RFieldValue.hxx>
 #include <ROOT/RNTupleUtil.hxx>
 
 #include <algorithm>
@@ -178,7 +177,7 @@ public:
    };
 
 private:
-   Detail::RFieldValue fValue;
+   Detail::RFieldBase::RValue fValue;
    /// The output is directed to fOutput which may differ from std::cout.
    std::ostream &fOutput;
    unsigned int fLevel;
@@ -189,11 +188,11 @@ private:
    void PrintCollection(const Detail::RFieldBase &field);
 
 public:
-   RPrintValueVisitor(const Detail::RFieldValue &value,
-                      std::ostream &output,
-                      unsigned int level = 0,
+   RPrintValueVisitor(Detail::RFieldBase::RValue &&value, std::ostream &output, unsigned int level = 0,
                       RPrintOptions options = RPrintOptions())
-      : fValue(value), fOutput{output}, fLevel(level), fPrintOptions(options) {}
+      : fValue(std::move(value)), fOutput{output}, fLevel(level), fPrintOptions(options)
+   {
+   }
 
    void VisitField(const Detail::RFieldBase &field) final;
 
