@@ -123,6 +123,43 @@ public:
       TypesList_t fDeserializationTypes;
    };
 
+   // Keeps the relationship between an object created by a field and said field. Only fields can create RValue objects.
+   class RValue {
+      friend class RFieldBase;
+
+   private:
+      RFieldBase *fField = nullptr;
+      void *fObjPtr = nullptr;
+
+      RValue(RFieldBase *field, void *objPtr) : fField(field), fObjPtr(objPtr) {}
+
+   public:
+      RValue(const RValue &) = delete;
+      RValue(RValue &&) = default;
+      RValue &operator=(const RValue &) = delete;
+      RValue &operator=(RValue &&) = default;
+      ~RValue() = default;
+
+      // Transitional constructor
+      explicit RValue(const RFieldValue &from) : fField(from.GetField()), fObjPtr(from.GetRawPtr()) {}
+
+      std::size_t Append() { return fField->Append(fObjPtr); }
+      void Read(NTupleSize_t globalIndex) { fField->Read(globalIndex, fObjPtr); }
+      void Read(const RClusterIndex &clusterIndex) { fField->Read(clusterIndex, fObjPtr); }
+      void Destroy()
+      {
+         auto transitional = fField->CaptureValue(fObjPtr);
+         fField->DestroyValue(transitional);
+         fObjPtr = nullptr;
+      }
+
+      template <typename T>
+      const T *Get() const
+      {
+         return static_cast<T *>(fObjPtr);
+      }
+   };
+
 private:
    /// The field name relative to its parent field
    std::string fName;
