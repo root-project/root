@@ -22,6 +22,8 @@ R__LOAD_LIBRARY(ROOTNTuple)
 
 #include <ROOT/RNTuple.hxx>
 #include <ROOT/RNTupleModel.hxx>
+#include <ROOT/RNTupleDescriptor.hxx>
+
 
 #include <TCanvas.h>
 #include <TH1I.h>
@@ -44,6 +46,7 @@ using RNTupleModel = ROOT::Experimental::RNTupleModel;
 using RNTupleReader = ROOT::Experimental::RNTupleReader;
 using RNTupleWriter = ROOT::Experimental::RNTupleWriter;
 
+using RNTupleDescriptor = ROOT::Experimental::RNTupleDescriptor;
 using RNTupleWriteOptions = ROOT::Experimental::RNTupleWriteOptions;
 
 constexpr char const* kNTupleFileName = "ntpl001_staff.root";
@@ -94,14 +97,125 @@ void Ingest() {
    // open the root file and retrieve rntuple object
    auto f = TFile::Open("/home/vporter/Documents/root/tutorials/v7/ntuple/ntpl001_staff.root","READ");
    
+   
+
    auto ntpl = f->Get<ROOT::Experimental::RNTuple>("Staff");
+
+   // Create an RNTupleReader from the ntuple
+   std::unique_ptr<RNTupleReader> ntupleReader = RNTupleReader::Open("Staff", "/home/vporter/Documents/root/tutorials/v7/ntuple/ntpl001_staff.root");
+
+   // Get descriptor of the ntuple
+   const RNTupleDescriptor* descriptor = ntupleReader->GetDescriptor();
+   
+   // Get field id of "category" -> Xf
+   auto fieldId = descriptor->FindFieldId("Category");
+
+   // // Physical column id (Xf,0) -> Xcol
+   //OLD auto columnId = descriptor->GetColumnId(fieldId,0);
+   auto columnId = descriptor->FindPhysicalColumnId(fieldId,0);
+
+   // // Get the cluster id (Xcol,0) -> Xcl
+   auto clusterId = descriptor->FindClusterId(columnId,0);
+
+   // // Get cluster descriptor of Xcl
+   const auto &clusterDescriptor = descriptor->GetClusterDescriptor(clusterId);
+
+   // // Get page range of Xcl and Xcol
+   auto &pageRangeXcl = clusterDescriptor.GetPageRange(clusterId);
+   // PageIndex_t startXcl = pageRangeXcl.first;
+   // PageIndex_t endXcl = pageRangeXcl.second;
+
+   //auto pageRangeXcol = descriptor->GetPageRange(columnId);
+   //auto startXcol = pageRangeXcol.first;
+   //auto endXcol = pageRangeXcol.second;
+
+   // // Get first page info of page range from above
+   // PageRange_t clusterPgRng = clusterDescriptor->GetPageRange(clusterId);
+   // const RPageInfo& firstPgInfoCluster = descriptor->GetPageInfo(clusterPgRng.first);
+
+   // PageRange_t columnPgRng = descriptor->GetPageRange(columnId);
+   // const RPageInfo& firstPgInfoColumn = descriptor->GetPageInfo(columnPgRng.first);
+
+   // // Get locator of page info from above
+   // const RPageLocator& pageLocator = firstPgInfoCluster.GetLocator();
+   // std::uint64_t pgStart = pageLocator.GetStart();
+   // std::uint66_t pgEnd = pageLocator.GetEnd();
+
+   // // set start and end point for targeted bit flip
+   // ROOT::Internal::RRawFile::GetBitFlipParams().rng_begin = pgStart;
+   // ROOT::Internal::RRawFile::GetBitFlipParams().rng_end = pgEnd;
+
+   // std::cout << ROOT::Internal::RRawFile::GetBitFlipParams().rng_begin << std::endl;
+   // std::cout << ROOT::Internal::RRawFile::GetBitFlipParams().rng_end << std::endl;
+    
+
+   // Access the descriptor information
+   //std::string ntupleName = descriptor->GetName();
+   //std::string ntupleDescription = descriptor->GetDescription();
+   // ... access other descriptor properties as needed
+
+
+
+
+
+
+
+   //ROOT::Internal::RRawFile::GetBitFlipParams().rng_begin = 
+
+   //auto ntuple_descriptor = ntpl->ROOT::Experimental::RNTupleDescriptor::GetDescriptor();
+
+   // A priori - field to read e.g. "pt"
+
+   // get descriptor of ntuple
+   //auto ntuple_descriptor = ntpl->ROOT::Internal::RNTupleDescriptor.GetDescriptor();
+
+   // get field id of "Category" -> Xf
+   //fldCategory.GetFieldId(); // ntuple_descriptor.GetFieldId();
+   //std::cout << fldCategory.GetFieldId() << std::endl;
+   //std::cout << ntuple_descriptor.GetFieldId() << std::endl;
+   // physical column id (Xf,0) -> Xcol
+
+
+   // cluster id
+
+   // get cluster descriptor
+
+   // get page range
+
+   // get first page info of page range
+
+   // get locator of page info
+
+
+
+
+
+   // auto ntuple_descriptor = ntpl->GetDescriptor();
+   // auto fieldId = ntuple_descriptor->GetFieldId();
+   // auto physicalId = fieldId->GetPhysicalId();
+   // auto clusterId = physicalId->GetId();
+   // auto cluster_descriptor = RClusterDescriptor(clusterId, physicalId, 0);
+   // auto pgrng_cluster = cluster_descriptor->GetPageRange(clusterId);
+   // auto pgrng_cluster = cluster_descriptor->GetPageRange(physicalId);
+
+
+
+
+
+
+
+
+
+
 
 
    ROOT::Internal::RRawFile::GetBitFlipParams().rng_begin = ntpl->GetSeekHeader();
    ROOT::Internal::RRawFile::GetBitFlipParams().rng_end = ntpl->GetSeekHeader() + ntpl->GetNBytesHeader();
 
+
+
    // set parameters for targeted bit flips in the header
-   //ROOT::Internal::RRawFile::range_begin() = ntpl->GetSeekHeader(); // file offset of the header
+   //ROOT::Internal::RRawFile::range_begin(.) = ntpl->GetSeekHeader(); // file offset of the header
    //ROOT::Internal::RRawFile::range_end() = ntpl->GetSeekHeader() + ntpl->GetNBytesHeader(); // size of the compressed ntuple header
 
    std::cout << ROOT::Internal::RRawFile::GetBitFlipParams().rng_begin << std::endl;
