@@ -47,6 +47,5 @@ void readTree()
          std::cerr << "WARNING: entry " << aReader.GetCurrentEntry() << " is empty! " << std::endl;
    }
 
-   ifile->Close();
 }
 
