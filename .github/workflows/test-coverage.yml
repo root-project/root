@@ -325,6 +325,18 @@ jobs:
         # When debugging increase to a suitable value!
         timeout-minutes: ${{ github.event.pull_request && 40 || 20 }}
 
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          directory: /tmp/workspace/build"
+          env_vars: OS,PYTHON
+          fail_ci_if_error: true
+          files: ./TestResults.xml 
+          flags: unittests
+          name: codecov-umbrella
+          verbose: true     
+
 
   event_file:
 
