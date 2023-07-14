@@ -1177,6 +1177,9 @@ RooFit::OwningPtr<RooAbsReal> RooAbsPdf::createNLL(RooAbsData& data, const RooLi
     return RooFit::Detail::owningPtr(std::move(nllWrapper));
   }
 
+  auto binnedLInfo = RooHelpers::getBinnedL(*this);
+  RooAbsPdf &actualPdf = binnedLInfo.binnedPdf ? *binnedLInfo.binnedPdf : *this;
+
   // Construct NLL
   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors) ;
   std::unique_ptr<RooAbsReal> nll ;
@@ -1188,10 +1191,10 @@ RooFit::OwningPtr<RooAbsReal> RooAbsPdf::createNLL(RooAbsData& data, const RooLi
   cfg.splitCutRange = static_cast<bool>(splitRange);
   cfg.cloneInputData = static_cast<bool>(cloneData);
   cfg.integrateOverBinsPrecision = pc.getDouble("IntegrateBins");
-  cfg.binnedL = false;
+  cfg.binnedL = binnedLInfo.isBinnedL;
   cfg.takeGlobalObservablesFromData = takeGlobalObservablesFromData;
   cfg.rangeName = rangeName ? rangeName : "";
-  auto nllVar = std::make_unique<RooNLLVar>(baseName.c_str(),"-log(likelihood)",*this,data,projDeps, ext, cfg);
+  auto nllVar = std::make_unique<RooNLLVar>(baseName.c_str(),"-log(likelihood)",actualPdf,data,projDeps, ext, cfg);
   nllVar->enableBinOffsetting(offset == RooFit::OffsetMode::Bin);
   nll = std::move(nllVar);
   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors) ;
