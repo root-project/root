@@ -146,40 +146,42 @@ std::tuple<std::string, std::vector<size_t>> ParseArrayType(std::string_view typ
    return std::make_tuple(std::string{typeName}, sizeVec);
 }
 
-/// Returns the normalized resolved type and the normalized typedef before typedef resolution. If the given type
-/// is not a typedef, the second element of the returned pair is the empty string.
-std::pair<std::string, std::string> GetNormalizedType(const std::string &typeName) {
-   std::string normalizedType(TClassEdit::CleanType(typeName.c_str(), /*mode=*/2));
+/// Return the canonical name of a type, resolving typedefs to their underlying types if needed
+std::string GetCanonicalTypeName(const std::string &typeName)
+{
    // The following types are asummed to be canonical names; thus, do not perform `typedef` resolution on those
-   if (normalizedType == "ROOT::Experimental::ClusterSize_t")
-      return std::make_pair(normalizedType, "");
-   // We want the template parameter to stay in "std::uint32_t" / "std::uint64_t" form
-   if (normalizedType.substr(0, 39) == "ROOT::Experimental::RNTupleCardinality<")
-      return std::make_pair(normalizedType, "");
+   if (typeName == "ROOT::Experimental::ClusterSize_t" ||
+       typeName.substr(0, 39) == "ROOT::Experimental::RNTupleCardinality<")
+      return typeName;
 
-   std::string resolvedType = TClassEdit::ResolveTypedef(normalizedType.c_str());
-   if (resolvedType == normalizedType)
-      normalizedType = "";
-   auto translatedType = typeTranslationMap.find(resolvedType);
-   if (translatedType != typeTranslationMap.end())
-      resolvedType = translatedType->second;
+   return TClassEdit::ResolveTypedef(typeName.c_str());
+}
 
-   if (resolvedType.substr(0, 7) == "vector<")
-      resolvedType = "std::" + resolvedType;
-   if (resolvedType.substr(0, 6) == "array<")
-      resolvedType = "std::" + resolvedType;
-   if (resolvedType.substr(0, 8) == "variant<")
-      resolvedType = "std::" + resolvedType;
-   if (resolvedType.substr(0, 5) == "pair<")
-      resolvedType = "std::" + resolvedType;
-   if (resolvedType.substr(0, 6) == "tuple<")
-      resolvedType = "std::" + resolvedType;
-   if (resolvedType.substr(0, 7) == "bitset<")
-      resolvedType = "std::" + resolvedType;
-   if (resolvedType.substr(0, 11) == "unique_ptr<")
-      resolvedType = "std::" + resolvedType;
+/// Applies type name normalization rules that lead to the final name used to create a RField, e.g. transforms
+/// `unsigned int` to `std::uint32_t` or `const vector<T>` to `std::vector<T>`
+std::string GetNormalizedTypeName(const std::string &typeName)
+{
+   std::string normalizedType{TClassEdit::CleanType(typeName.c_str(), /*mode=*/2)};
 
-   return std::make_pair(resolvedType, normalizedType);
+   if (auto it = typeTranslationMap.find(normalizedType); it != typeTranslationMap.end())
+      normalizedType = it->second;
+
+   if (normalizedType.substr(0, 7) == "vector<")
+      normalizedType = "std::" + normalizedType;
+   if (normalizedType.substr(0, 6) == "array<")
+      normalizedType = "std::" + normalizedType;
+   if (normalizedType.substr(0, 8) == "variant<")
+      normalizedType = "std::" + normalizedType;
+   if (normalizedType.substr(0, 5) == "pair<")
+      normalizedType = "std::" + normalizedType;
+   if (normalizedType.substr(0, 6) == "tuple<")
+      normalizedType = "std::" + normalizedType;
+   if (normalizedType.substr(0, 7) == "bitset<")
+      normalizedType = "std::" + normalizedType;
+   if (normalizedType.substr(0, 11) == "unique_ptr<")
+      normalizedType = "std::" + normalizedType;
+
+   return normalizedType;
 }
 
 /// Retrieve the addresses of the data members of a generic RVec from a pointer to the beginning of the RVec object.
@@ -247,7 +249,8 @@ std::string ROOT::Experimental::Detail::RFieldBase::GetQualifiedFieldName() cons
 ROOT::Experimental::RResult<std::unique_ptr<ROOT::Experimental::Detail::RFieldBase>>
 ROOT::Experimental::Detail::RFieldBase::Create(const std::string &fieldName, const std::string &typeName)
 {
-   auto [normalizedType, typeAlias] = GetNormalizedType(typeName);
+   auto typeAlias = GetNormalizedTypeName(typeName);
+   auto normalizedType = GetNormalizedTypeName(GetCanonicalTypeName(typeAlias));
    if (normalizedType.empty())
       return R__FAIL("no type name specified for Field " + fieldName);
 
@@ -367,7 +370,8 @@ ROOT::Experimental::Detail::RFieldBase::Create(const std::string &fieldName, con
    }
 
    if (result) {
-      result->fTypeAlias = typeAlias;
+      if (typeAlias != normalizedType)
+         result->fTypeAlias = typeAlias;
       return result;
    }
    return R__FAIL(std::string("Field ") + fieldName + " has unknown type " + normalizedType);
