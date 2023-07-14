@@ -1009,9 +1009,6 @@ TEST(RNTuple, TClassTemplateBased)
 
 TEST(RNTuple, TClassStlDerived)
 {
-   // For non-cxxmodules builds, cling needs to parse the header for the `SG::sgkey_t` type to be known
-   gInterpreter->ProcessLine("#include \"CustomStruct.hxx\"");
-
    FileRaii fileGuard("test_ntuple_tclass_stlderived.ntuple");
    {
       auto model = RNTupleModel::Create();

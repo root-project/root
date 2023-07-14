@@ -1172,13 +1172,14 @@ ROOT::Experimental::RClassField::RClassField(std::string_view fieldName, std::st
          continue;
       }
 
-      std::string typeName{dataMember->GetFullTypeName()};
+      std::string typeName{GetNormalizedTypeName(dataMember->GetTrueTypeName())};
+      std::string typeAlias{GetNormalizedTypeName(dataMember->GetFullTypeName())};
       // For C-style arrays, complete the type name with the size for each dimension, e.g. `int[4][2]`
       if (dataMember->Property() & kIsArray) {
          for (int dim = 0, n = dataMember->GetArrayDim(); dim < n; ++dim)
             typeName += "[" + std::to_string(dataMember->GetMaxIndex(dim)) + "]";
       }
-      auto subField = Detail::RFieldBase::Create(dataMember->GetName(), typeName).Unwrap();
+      auto subField = Detail::RFieldBase::Create(dataMember->GetName(), typeName, typeAlias).Unwrap();
       fTraits &= subField->GetTraits();
       Attach(std::move(subField),
 	     RSubFieldInfo{kDataMember, static_cast<std::size_t>(dataMember->GetOffset())});
