@@ -147,7 +147,7 @@ private:
    /// fFieldId has fParent always set to null; views access nested fields without looking at the parent
    FieldT fField;
    /// Used as a Read() destination for fields that are not mappable
-   Detail::RFieldValue fValue;
+   Detail::RFieldBase::RValue fValue;
 
 public:
    using FieldTypeT = T;
@@ -172,7 +172,7 @@ public:
    RNTupleView(RNTupleView&& other) = default;
    RNTupleView& operator=(const RNTupleView& other) = delete;
    RNTupleView& operator=(RNTupleView&& other) = default;
-   ~RNTupleView() { fField.DestroyValue(fValue); }
+   ~RNTupleView() { fValue.Destroy(); }
 
    RNTupleGlobalRange GetFieldRange() const { return RNTupleGlobalRange(0, fField.GetNElements()); }
 
@@ -181,7 +181,7 @@ public:
       if constexpr (Internal::isMappable<FieldT>)
          return *fField.Map(globalIndex);
       else {
-         fField.Read(globalIndex, fValue.GetRawPtr());
+         fValue.Read(globalIndex);
          return *fValue.Get<T>();
       }
    }
@@ -191,7 +191,7 @@ public:
       if constexpr (Internal::isMappable<FieldT>)
          return *fField.Map(clusterIndex);
       else {
-         fField.Read(clusterIndex, fValue.GetRawPtr());
+         fValue.Read(clusterIndex);
          return *fValue.Get<T>();
       }
    }
