@@ -150,7 +150,7 @@ std::tuple<std::string, std::vector<size_t>> ParseArrayType(std::string_view typ
 std::string GetCanonicalTypeName(const std::string &typeName)
 {
    // The following types are asummed to be canonical names; thus, do not perform `typedef` resolution on those
-   if (typeName == "ROOT::Experimental::ClusterSize_t" ||
+   if (typeName == "ROOT::Experimental::ClusterSize_t" || typeName.substr(0, 5) == "std::" ||
        typeName.substr(0, 39) == "ROOT::Experimental::RNTupleCardinality<")
       return typeName;
 
