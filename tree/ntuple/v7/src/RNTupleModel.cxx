@@ -221,7 +221,7 @@ std::unique_ptr<ROOT::Experimental::RNTupleModel> ROOT::Experimental::RNTupleMod
    if (fDefaultEntry) {
       cloneModel->fDefaultEntry = std::unique_ptr<REntry>(new REntry(fModelId));
       for (const auto &f : cloneModel->fFieldZero->GetSubFields()) {
-         cloneModel->fDefaultEntry->AddValue(f->GenerateValue());
+         cloneModel->fDefaultEntry->AddValue(Detail::RFieldBase::RValue(f->GenerateValue(), true /* isOwning */));
       }
    }
    return cloneModel;
@@ -236,7 +236,7 @@ void ROOT::Experimental::RNTupleModel::AddField(std::unique_ptr<Detail::RFieldBa
    EnsureValidFieldName(field->GetName());
 
    if (fDefaultEntry)
-      fDefaultEntry->AddValue(field->GenerateValue());
+      fDefaultEntry->AddValue(Detail::RFieldBase::RValue(field->GenerateValue(), true /*isOwning*/));
    fFieldZero->Attach(std::move(field));
 }
 
@@ -281,7 +281,7 @@ std::shared_ptr<ROOT::Experimental::RCollectionNTupleWriter> ROOT::Experimental:
    auto collectionNTuple = std::make_shared<RCollectionNTupleWriter>(std::move(collectionModel->fDefaultEntry));
    auto field = std::make_unique<RCollectionField>(fieldName, collectionNTuple, std::move(collectionModel));
    if (fDefaultEntry)
-      fDefaultEntry->CaptureValue(field->CaptureValue(collectionNTuple->GetOffsetPtr()));
+      fDefaultEntry->AddValue(Detail::RFieldBase::RValue(field->CaptureValue(collectionNTuple->GetOffsetPtr())));
    fFieldZero->Attach(std::move(field));
    return collectionNTuple;
 }
@@ -323,7 +323,7 @@ std::unique_ptr<ROOT::Experimental::REntry> ROOT::Experimental::RNTupleModel::Cr
 
    auto entry = std::unique_ptr<REntry>(new REntry(fModelId));
    for (const auto &f : fFieldZero->GetSubFields()) {
-      entry->AddValue(f->GenerateValue());
+      entry->AddValue(Detail::RFieldBase::RValue(f->GenerateValue(), true /*isOwning*/));
    }
    return entry;
 }
@@ -335,7 +335,7 @@ std::unique_ptr<ROOT::Experimental::REntry> ROOT::Experimental::RNTupleModel::Cr
 
    auto entry = std::unique_ptr<REntry>(new REntry(fModelId));
    for (const auto &f : fFieldZero->GetSubFields()) {
-      entry->CaptureValue(f->CaptureValue(nullptr));
+      entry->AddValue(Detail::RFieldBase::RValue(f->CaptureValue(nullptr)));
    }
    return entry;
 }

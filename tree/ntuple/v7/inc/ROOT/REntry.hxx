@@ -18,7 +18,6 @@
 
 #include <ROOT/RError.hxx>
 #include <ROOT/RField.hxx>
-#include <ROOT/RFieldValue.hxx>
 #include <ROOT/RStringView.hxx>
 
 #include <TError.h>
@@ -46,29 +45,23 @@ class REntry {
    /// The entry must be linked to a specific model (or one if its clones), identified by a model ID
    std::uint64_t fModelId = 0;
    /// Corresponds to the top-level fields of the linked model
-   std::vector<Detail::RFieldValue> fValues;
+   std::vector<Detail::RFieldBase::RValue> fValues;
    /// The objects involed in serialization and deserialization might be used long after the entry is gone:
    /// hence the shared pointer
    std::vector<std::shared_ptr<void>> fValuePtrs;
-   /// Points into fValues and indicates the values that are owned by the entry and need to be destructed
-   std::vector<std::size_t> fManagedValues;
 
    // Creation of entries is done by the RNTupleModel class
 
    REntry() = default;
    explicit REntry(std::uint64_t modelId) : fModelId(modelId) {}
 
-   /// Adds a value whose storage is managed by the entry
-   void AddValue(const Detail::RFieldValue& value);
-
-   /// Adds a value whose storage is _not_ managed by the entry
-   void CaptureValue(const Detail::RFieldValue& value);
+   void AddValue(Detail::RFieldBase::RValue &&value);
 
    /// While building the entry, adds a new value to the list and return the value's shared pointer
    template<typename T, typename... ArgsT>
    std::shared_ptr<T> AddValue(RField<T>* field, ArgsT&&... args) {
       auto ptr = std::make_shared<T>(std::forward<ArgsT>(args)...);
-      fValues.emplace_back(Detail::RFieldValue(field->CaptureValue(ptr.get())));
+      fValues.emplace_back(Detail::RFieldBase::RValue(field->CaptureValue(ptr.get())));
       fValuePtrs.emplace_back(ptr);
       return ptr;
    }
@@ -80,7 +73,7 @@ public:
    REntry &operator=(const REntry &other) = delete;
    REntry(REntry &&other) = default;
    REntry &operator=(REntry &&other) = default;
-   ~REntry();
+   ~REntry() = default;
 
    void CaptureValueUnsafe(std::string_view fieldName, void *where);
 
