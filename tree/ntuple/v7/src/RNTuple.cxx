@@ -239,7 +239,7 @@ void ROOT::Experimental::RNTupleReader::Show(NTupleSize_t index, std::ostream &o
    output << "{";
    for (auto iValue = entry->begin(); iValue != entry->end();) {
       output << std::endl;
-      RPrintValueVisitor visitor(Detail::RFieldBase::RValue(*iValue), output, 1 /* level */);
+      RPrintValueVisitor visitor(iValue->GetNonOwningCopy(), output, 1 /* level */);
       iValue->GetField()->AcceptVisitor(visitor);
 
       if (++iValue == entry->end()) {
