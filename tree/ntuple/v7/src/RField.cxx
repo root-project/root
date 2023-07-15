@@ -443,10 +443,10 @@ ROOT::Experimental::Detail::RFieldValue ROOT::Experimental::Detail::RFieldBase::
    return GenerateValue(where);
 }
 
-void ROOT::Experimental::Detail::RFieldBase::DestroyValue(const RFieldValue &value, bool dtorOnly)
+void ROOT::Experimental::Detail::RFieldBase::DestroyValue(void *objPtr, bool dtorOnly)
 {
    if (!dtorOnly)
-      free(value.GetRawPtr());
+      free(objPtr);
 }
 
 std::vector<ROOT::Experimental::Detail::RFieldBase::RValue>
@@ -1284,11 +1284,11 @@ ROOT::Experimental::Detail::RFieldValue ROOT::Experimental::RClassField::Generat
    return Detail::RFieldValue(true /* captureFlag */, this, fClass->New(where));
 }
 
-void ROOT::Experimental::RClassField::DestroyValue(const Detail::RFieldValue& value, bool dtorOnly)
+void ROOT::Experimental::RClassField::DestroyValue(void *objPtr, bool dtorOnly)
 {
-   fClass->Destructor(value.GetRawPtr(), true /* dtorOnly */);
+   fClass->Destructor(objPtr, true /* dtorOnly */);
    if (!dtorOnly)
-      free(value.GetRawPtr());
+      free(objPtr);
 }
 
 ROOT::Experimental::Detail::RFieldValue ROOT::Experimental::RClassField::CaptureValue(void* where)
@@ -1521,19 +1521,18 @@ ROOT::Experimental::Detail::RFieldValue ROOT::Experimental::RCollectionClassFiel
    return Detail::RFieldValue(true /* captureFlag */, this, fProxy->New(where));
 }
 
-void ROOT::Experimental::RCollectionClassField::DestroyValue(const Detail::RFieldValue &value, bool dtorOnly)
+void ROOT::Experimental::RCollectionClassField::DestroyValue(void *objPtr, bool dtorOnly)
 {
    if (fProperties & TVirtualCollectionProxy::kNeedDelete) {
-      TVirtualCollectionProxy::TPushPop RAII(fProxy.get(), value.GetRawPtr());
-      for (auto ptr : RCollectionIterableOnce{value.GetRawPtr(), fIFuncsWrite, fProxy.get(),
+      TVirtualCollectionProxy::TPushPop RAII(fProxy.get(), objPtr);
+      for (auto ptr : RCollectionIterableOnce{objPtr, fIFuncsWrite, fProxy.get(),
                                               (fCollectionType == kSTLvector ? fItemSize : 0U)}) {
-         auto itemValue = fSubFields[0]->CaptureValue(ptr);
-         fSubFields[0]->DestroyValue(itemValue, true /* dtorOnly */);
+         fSubFields[0]->DestroyValue(ptr, true /* dtorOnly */);
       }
    }
-   fProxy->Destructor(value.GetRawPtr(), true /* dtorOnly */);
+   fProxy->Destructor(objPtr, true /* dtorOnly */);
    if (!dtorOnly)
-      free(value.GetRawPtr());
+      free(objPtr);
 }
 
 ROOT::Experimental::Detail::RFieldValue ROOT::Experimental::RCollectionClassField::CaptureValue(void *where)
@@ -1654,15 +1653,13 @@ ROOT::Experimental::Detail::RFieldValue ROOT::Experimental::RRecordField::Genera
    return Detail::RFieldValue(true /* captureFlag */, this, where);
 }
 
-void ROOT::Experimental::RRecordField::DestroyValue(const Detail::RFieldValue& value, bool dtorOnly)
+void ROOT::Experimental::RRecordField::DestroyValue(void *objPtr, bool dtorOnly)
 {
    for (unsigned i = 0; i < fSubFields.size(); ++i) {
-      auto memberValue = fSubFields[i]->CaptureValue(value.Get<unsigned char>() + fOffsets[i]);
-      fSubFields[i]->DestroyValue(memberValue, true /* dtorOnly */);
+      fSubFields[i]->DestroyValue(static_cast<unsigned char *>(objPtr) + fOffsets[i], true /* dtorOnly */);
    }
-
    if (!dtorOnly)
-      free(value.GetRawPtr());
+      free(objPtr);
 }
 
 ROOT::Experimental::Detail::RFieldValue ROOT::Experimental::RRecordField::CaptureValue(void *where)
@@ -1737,8 +1734,7 @@ void ROOT::Experimental::RVectorField::ReadGlobalImpl(NTupleSize_t globalIndex, 
       if (!(fSubFields[0]->GetTraits() & kTraitTriviallyDestructible)) {
          allDeallocated = canRealloc;
          for (std::size_t i = allDeallocated ? 0 : nItems; i < oldNItems; ++i) {
-            auto itemValue = fSubFields[0]->CaptureValue(typedValue->data() + (i * fItemSize));
-            fSubFields[0]->DestroyValue(itemValue, true /* dtorOnly */);
+            fSubFields[0]->DestroyValue(typedValue->data() + (i * fItemSize), true /* dtorOnly */);
          }
       }
       typedValue->resize(nItems * fItemSize);
@@ -1779,20 +1775,19 @@ ROOT::Experimental::Detail::RFieldValue ROOT::Experimental::RVectorField::Genera
    return Detail::RFieldValue(this, reinterpret_cast<std::vector<char>*>(where));
 }
 
-void ROOT::Experimental::RVectorField::DestroyValue(const Detail::RFieldValue& value, bool dtorOnly)
+void ROOT::Experimental::RVectorField::DestroyValue(void *objPtr, bool dtorOnly)
 {
-   auto vec = static_cast<std::vector<char>*>(value.GetRawPtr());
-   R__ASSERT((vec->size() % fItemSize) == 0);
+   auto vecPtr = static_cast<std::vector<char> *>(objPtr);
+   R__ASSERT((vecPtr->size() % fItemSize) == 0);
    if (!(fSubFields[0]->GetTraits() & kTraitTriviallyDestructible)) {
-      auto nItems = vec->size() / fItemSize;
+      auto nItems = vecPtr->size() / fItemSize;
       for (unsigned i = 0; i < nItems; ++i) {
-         auto itemValue = fSubFields[0]->CaptureValue(vec->data() + (i * fItemSize));
-         fSubFields[0]->DestroyValue(itemValue, true /* dtorOnly */);
+         fSubFields[0]->DestroyValue(vecPtr->data() + (i * fItemSize), true /* dtorOnly */);
       }
    }
-   vec->~vector();
+   std::destroy_at(vecPtr);
    if (!dtorOnly)
-      free(vec);
+      free(vecPtr);
 }
 
 ROOT::Experimental::Detail::RFieldValue ROOT::Experimental::RVectorField::CaptureValue(void* where)
@@ -1879,8 +1874,7 @@ void ROOT::Experimental::RRVecField::ReadGlobalImpl(NTupleSize_t globalIndex, vo
    // Destroy excess elements, if any
    if (needsDestruct) {
       for (std::size_t i = nItems; i < oldSize; ++i) {
-         auto itemValue = fSubFields[0]->CaptureValue(begin + (i * fItemSize));
-         fSubFields[0]->DestroyValue(itemValue, true /* dtorOnly */);
+         fSubFields[0]->DestroyValue(begin + (i * fItemSize), true /* dtorOnly */);
       }
    }
 
@@ -1890,8 +1884,7 @@ void ROOT::Experimental::RRVecField::ReadGlobalImpl(NTupleSize_t globalIndex, vo
       // allocates memory we need to release it here to avoid memleaks (e.g. if this is an RVec<RVec<int>>)
       if (needsDestruct) {
          for (std::size_t i = 0u; i < oldSize; ++i) {
-            auto itemValue = fSubFields[0]->CaptureValue(begin + (i * fItemSize));
-            fSubFields[0]->DestroyValue(itemValue, true /* dtorOnly */);
+            fSubFields[0]->DestroyValue(begin + (i * fItemSize), true /* dtorOnly */);
          }
       }
 
@@ -1955,15 +1948,14 @@ ROOT::Experimental::Detail::RFieldValue ROOT::Experimental::RRVecField::Generate
    return Detail::RFieldValue(/*captureTag*/ true, this, where);
 }
 
-void ROOT::Experimental::RRVecField::DestroyValue(const Detail::RFieldValue &value, bool dtorOnly)
+void ROOT::Experimental::RRVecField::DestroyValue(void *objPtr, bool dtorOnly)
 {
-   auto [beginPtr, sizePtr, capacityPtr] = GetRVecDataMembers(value.GetRawPtr());
+   auto [beginPtr, sizePtr, capacityPtr] = GetRVecDataMembers(objPtr);
 
    char *begin = reinterpret_cast<char *>(*beginPtr); // for pointer arithmetics
    if (!(fSubFields[0]->GetTraits() & kTraitTriviallyDestructible)) {
       for (std::int32_t i = 0; i < *sizePtr; ++i) {
-         auto elementValue = fSubFields[0]->CaptureValue(begin + i * fItemSize);
-         fSubFields[0]->DestroyValue(elementValue, true /* dtorOnly */);
+         fSubFields[0]->DestroyValue(begin + i * fItemSize, true /* dtorOnly */);
       }
    }
 
@@ -2148,13 +2140,11 @@ ROOT::Experimental::RField<std::vector<bool>>::SplitValue(const RValue &value) c
    return result;
 }
 
-
-void ROOT::Experimental::RField<std::vector<bool>>::DestroyValue(const Detail::RFieldValue& value, bool dtorOnly)
+void ROOT::Experimental::RField<std::vector<bool>>::DestroyValue(void *objPtr, bool dtorOnly)
 {
-   auto vec = static_cast<std::vector<bool>*>(value.GetRawPtr());
-   vec->~vector();
+   std::destroy_at(static_cast<std::vector<bool> *>(objPtr));
    if (!dtorOnly)
-      free(vec);
+      free(objPtr);
 }
 
 void ROOT::Experimental::RField<std::vector<bool>>::AcceptVisitor(Detail::RFieldVisitor &visitor) const
@@ -2223,13 +2213,12 @@ ROOT::Experimental::Detail::RFieldValue ROOT::Experimental::RArrayField::Generat
    return Detail::RFieldValue(true /* captureFlag */, this, where);
 }
 
-void ROOT::Experimental::RArrayField::DestroyValue(const Detail::RFieldValue& value, bool dtorOnly)
+void ROOT::Experimental::RArrayField::DestroyValue(void *objPtr, bool dtorOnly)
 {
-   auto arrayPtr = value.Get<unsigned char>();
+   auto arrayPtr = static_cast<unsigned char *>(objPtr);
    if (!(fSubFields[0]->GetTraits() & kTraitTriviallyDestructible)) {
       for (unsigned i = 0; i < fArrayLength; ++i) {
-         auto itemValue = fSubFields[0]->CaptureValue(arrayPtr + (i * fItemSize));
-         fSubFields[0]->DestroyValue(itemValue, true /* dtorOnly */);
+         fSubFields[0]->DestroyValue(arrayPtr + (i * fItemSize), true /* dtorOnly */);
       }
    }
    if (!dtorOnly)
@@ -2429,16 +2418,14 @@ ROOT::Experimental::Detail::RFieldValue ROOT::Experimental::RVariantField::Gener
    return Detail::RFieldValue(this, reinterpret_cast<unsigned char *>(where));
 }
 
-void ROOT::Experimental::RVariantField::DestroyValue(const Detail::RFieldValue& value, bool dtorOnly)
+void ROOT::Experimental::RVariantField::DestroyValue(void *objPtr, bool dtorOnly)
 {
-   auto variantPtr = value.GetRawPtr();
-   auto tag = GetTag(variantPtr);
+   auto tag = GetTag(objPtr);
    if (tag > 0) {
-      auto itemValue = fSubFields[tag - 1]->CaptureValue(variantPtr);
-      fSubFields[tag - 1]->DestroyValue(itemValue, true /* dtorOnly */);
+      fSubFields[tag - 1]->DestroyValue(objPtr, true /* dtorOnly */);
    }
    if (!dtorOnly)
-      free(variantPtr);
+      free(objPtr);
 }
 
 ROOT::Experimental::Detail::RFieldValue ROOT::Experimental::RVariantField::CaptureValue(void *where)
@@ -2468,7 +2455,7 @@ ROOT::Experimental::RNullableField::RNullableField(std::string_view fieldName, s
 ROOT::Experimental::RNullableField::~RNullableField()
 {
    if (fDefaultItemValue.GetField()) {
-      fDefaultItemValue.GetField()->DestroyValue(fDefaultItemValue);
+      fDefaultItemValue.GetField()->DestroyValue(fDefaultItemValue.GetRawPtr());
    }
 }
 
@@ -2590,7 +2577,7 @@ void ROOT::Experimental::RUniquePtrField::ReadGlobalImpl(NTupleSize_t globalInde
 
    if (isValidValue && !isValidItem) {
       ptr->release();
-      fSubFields[0]->DestroyValue(itemValue, false /* dtorOnly */);
+      fSubFields[0]->DestroyValue(itemValue.GetRawPtr(), false /* dtorOnly */);
       return;
    }
 
@@ -2610,16 +2597,15 @@ ROOT::Experimental::Detail::RFieldValue ROOT::Experimental::RUniquePtrField::Gen
    return Detail::RFieldValue(this, reinterpret_cast<std::unique_ptr<char> *>(where));
 }
 
-void ROOT::Experimental::RUniquePtrField::DestroyValue(const Detail::RFieldValue &value, bool dtorOnly)
+void ROOT::Experimental::RUniquePtrField::DestroyValue(void *objPtr, bool dtorOnly)
 {
-   auto ptr = value.Get<std::unique_ptr<char>>();
-   if (*ptr) {
-      auto itemValue = fSubFields[0]->CaptureValue(ptr->get());
-      fSubFields[0]->DestroyValue(itemValue, false /* dtorOnly */);
-      ptr->release();
+   auto typedPtr = static_cast<std::unique_ptr<char> *>(objPtr);
+   if (*typedPtr) {
+      fSubFields[0]->DestroyValue(typedPtr->get(), false /* dtorOnly */);
+      typedPtr->release();
    }
    if (!dtorOnly)
-      free(ptr);
+      free(typedPtr);
 }
 
 ROOT::Experimental::Detail::RFieldValue ROOT::Experimental::RUniquePtrField::CaptureValue(void *where)
@@ -2684,11 +2670,11 @@ ROOT::Experimental::Detail::RFieldValue ROOT::Experimental::RPairField::Generate
    return Detail::RFieldValue(true /* captureFlag */, this, fClass->New(where));
 }
 
-void ROOT::Experimental::RPairField::DestroyValue(const Detail::RFieldValue& value, bool dtorOnly)
+void ROOT::Experimental::RPairField::DestroyValue(void *objPtr, bool dtorOnly)
 {
-   fClass->Destructor(value.GetRawPtr(), true /* dtorOnly */);
+   fClass->Destructor(objPtr, true /* dtorOnly */);
    if (!dtorOnly)
-      free(value.GetRawPtr());
+      free(objPtr);
 }
 
 //------------------------------------------------------------------------------
@@ -2755,11 +2741,11 @@ ROOT::Experimental::Detail::RFieldValue ROOT::Experimental::RTupleField::Generat
    return Detail::RFieldValue(true /* captureFlag */, this, fClass->New(where));
 }
 
-void ROOT::Experimental::RTupleField::DestroyValue(const Detail::RFieldValue &value, bool dtorOnly)
+void ROOT::Experimental::RTupleField::DestroyValue(void *objPtr, bool dtorOnly)
 {
-   fClass->Destructor(value.GetRawPtr(), true /* dtorOnly */);
+   fClass->Destructor(objPtr, true /* dtorOnly */);
    if (!dtorOnly)
-      free(value.GetRawPtr());
+      free(objPtr);
 }
 
 //------------------------------------------------------------------------------

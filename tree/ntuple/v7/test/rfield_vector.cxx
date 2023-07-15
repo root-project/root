@@ -143,17 +143,14 @@ TEST(RNTuple, InsideCollection)
    auto aVec = value.Get<std::vector<float>>();
    EXPECT_EQ(1U, aVec->size());
    EXPECT_EQ(42.0, (*aVec)[0]);
-   field->DestroyValue(value);
 
    auto valueCardinality64 = fieldCardinality64->GenerateValue();
    fieldCardinality64->Read(0, valueCardinality64.GetRawPtr());
    EXPECT_EQ(1U, *valueCardinality64.Get<std::uint64_t>());
-   fieldCardinality64->DestroyValue(valueCardinality64);
 
    auto valueCardinality32 = fieldCardinality32->GenerateValue();
    fieldCardinality32->Read(0, valueCardinality32.GetRawPtr());
    EXPECT_EQ(1U, *valueCardinality32.Get<std::uint32_t>());
-   fieldCardinality32->DestroyValue(valueCardinality32);
 
    // TODO: test reading of "klassVec.v1"
 }
