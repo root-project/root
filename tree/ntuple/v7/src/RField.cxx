@@ -1287,8 +1287,7 @@ ROOT::Experimental::Detail::RFieldValue ROOT::Experimental::RClassField::Generat
 void ROOT::Experimental::RClassField::DestroyValue(void *objPtr, bool dtorOnly)
 {
    fClass->Destructor(objPtr, true /* dtorOnly */);
-   if (!dtorOnly)
-      free(objPtr);
+   Detail::RFieldBase::DestroyValue(objPtr, dtorOnly);
 }
 
 ROOT::Experimental::Detail::RFieldValue ROOT::Experimental::RClassField::CaptureValue(void* where)
@@ -1531,8 +1530,7 @@ void ROOT::Experimental::RCollectionClassField::DestroyValue(void *objPtr, bool 
       }
    }
    fProxy->Destructor(objPtr, true /* dtorOnly */);
-   if (!dtorOnly)
-      free(objPtr);
+   Detail::RFieldBase::DestroyValue(objPtr, dtorOnly);
 }
 
 ROOT::Experimental::Detail::RFieldValue ROOT::Experimental::RCollectionClassField::CaptureValue(void *where)
@@ -1658,8 +1656,7 @@ void ROOT::Experimental::RRecordField::DestroyValue(void *objPtr, bool dtorOnly)
    for (unsigned i = 0; i < fSubFields.size(); ++i) {
       fSubFields[i]->DestroyValue(static_cast<unsigned char *>(objPtr) + fOffsets[i], true /* dtorOnly */);
    }
-   if (!dtorOnly)
-      free(objPtr);
+   Detail::RFieldBase::DestroyValue(objPtr, dtorOnly);
 }
 
 ROOT::Experimental::Detail::RFieldValue ROOT::Experimental::RRecordField::CaptureValue(void *where)
@@ -2143,8 +2140,7 @@ ROOT::Experimental::RField<std::vector<bool>>::SplitValue(const RValue &value) c
 void ROOT::Experimental::RField<std::vector<bool>>::DestroyValue(void *objPtr, bool dtorOnly)
 {
    std::destroy_at(static_cast<std::vector<bool> *>(objPtr));
-   if (!dtorOnly)
-      free(objPtr);
+   Detail::RFieldBase::DestroyValue(objPtr, dtorOnly);
 }
 
 void ROOT::Experimental::RField<std::vector<bool>>::AcceptVisitor(Detail::RFieldVisitor &visitor) const
@@ -2221,8 +2217,7 @@ void ROOT::Experimental::RArrayField::DestroyValue(void *objPtr, bool dtorOnly)
          fSubFields[0]->DestroyValue(arrayPtr + (i * fItemSize), true /* dtorOnly */);
       }
    }
-   if (!dtorOnly)
-      free(arrayPtr);
+   Detail::RFieldBase::DestroyValue(objPtr, dtorOnly);
 }
 
 ROOT::Experimental::Detail::RFieldValue ROOT::Experimental::RArrayField::CaptureValue(void *where)
@@ -2424,8 +2419,7 @@ void ROOT::Experimental::RVariantField::DestroyValue(void *objPtr, bool dtorOnly
    if (tag > 0) {
       fSubFields[tag - 1]->DestroyValue(objPtr, true /* dtorOnly */);
    }
-   if (!dtorOnly)
-      free(objPtr);
+   Detail::RFieldBase::DestroyValue(objPtr, dtorOnly);
 }
 
 ROOT::Experimental::Detail::RFieldValue ROOT::Experimental::RVariantField::CaptureValue(void *where)
@@ -2604,8 +2598,7 @@ void ROOT::Experimental::RUniquePtrField::DestroyValue(void *objPtr, bool dtorOn
       fSubFields[0]->DestroyValue(typedPtr->get(), false /* dtorOnly */);
       typedPtr->release();
    }
-   if (!dtorOnly)
-      free(typedPtr);
+   Detail::RFieldBase::DestroyValue(objPtr, dtorOnly);
 }
 
 ROOT::Experimental::Detail::RFieldValue ROOT::Experimental::RUniquePtrField::CaptureValue(void *where)
@@ -2673,8 +2666,7 @@ ROOT::Experimental::Detail::RFieldValue ROOT::Experimental::RPairField::Generate
 void ROOT::Experimental::RPairField::DestroyValue(void *objPtr, bool dtorOnly)
 {
    fClass->Destructor(objPtr, true /* dtorOnly */);
-   if (!dtorOnly)
-      free(objPtr);
+   Detail::RFieldBase::DestroyValue(objPtr, dtorOnly);
 }
 
 //------------------------------------------------------------------------------
@@ -2744,8 +2736,7 @@ ROOT::Experimental::Detail::RFieldValue ROOT::Experimental::RTupleField::Generat
 void ROOT::Experimental::RTupleField::DestroyValue(void *objPtr, bool dtorOnly)
 {
    fClass->Destructor(objPtr, true /* dtorOnly */);
-   if (!dtorOnly)
-      free(objPtr);
+   Detail::RFieldBase::DestroyValue(objPtr, dtorOnly);
 }
 
 //------------------------------------------------------------------------------
