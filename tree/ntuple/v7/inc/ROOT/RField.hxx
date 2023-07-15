@@ -1983,8 +1983,7 @@ public:
    void DestroyValue(void *objPtr, bool dtorOnly = false) override
    {
       std::destroy_at(static_cast<std::string *>(objPtr));
-      if (!dtorOnly)
-         free(objPtr);
+      Detail::RFieldBase::DestroyValue(objPtr, dtorOnly);
    }
    Detail::RFieldValue CaptureValue(void *where) override {
       return Detail::RFieldValue(true /* captureFlag */, this, where);
@@ -2200,8 +2199,7 @@ public:
    void DestroyValue(void *objPtr, bool dtorOnly = false) final
    {
       std::destroy_at(static_cast<ContainerT *>(objPtr));
-      if (!dtorOnly)
-         free(objPtr);
+      Detail::RFieldBase::DestroyValue(objPtr, dtorOnly);
    }
 
    static std::string TypeName() { return "ROOT::VecOps::RVec<" + RField<ItemT>::TypeName() + ">"; }
@@ -2267,8 +2265,7 @@ public:
    void DestroyValue(void *objPtr, bool dtorOnly = false) final
    {
       std::destroy_at(static_cast<ContainerT *>(objPtr));
-      if (!dtorOnly)
-         free(objPtr);
+      Detail::RFieldBase::DestroyValue(objPtr, dtorOnly);
    }
 };
 
@@ -2352,8 +2349,7 @@ public:
    void DestroyValue(void *objPtr, bool dtorOnly = false) final
    {
       std::destroy_at(static_cast<ContainerT *>(objPtr));
-      if (!dtorOnly)
-         free(objPtr);
+      Detail::RFieldBase::DestroyValue(objPtr, dtorOnly);
    }
 };
 
