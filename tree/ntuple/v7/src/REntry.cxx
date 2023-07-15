@@ -28,9 +28,7 @@ void ROOT::Experimental::REntry::CaptureValueUnsafe(std::string_view fieldName, 
    for (std::size_t i = 0; i < fValues.size(); ++i) {
       if (fValues[i].GetField()->GetName() != fieldName)
          continue;
-      // TODO: remove const_cast
-      fValues[i] =
-         Detail::RFieldBase::RValue(const_cast<Detail::RFieldBase *>(fValues[i].GetField())->CaptureValue(where));
+      fValues[i] = Detail::RFieldBase::RValue(fValues[i].GetField()->CaptureValue(where));
       return;
    }
    throw RException(R__FAIL("invalid field name: " + std::string(fieldName)));
