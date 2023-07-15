@@ -179,7 +179,7 @@ public:
          return static_cast<T *>(fObjPtr);
       }
       void *GetRawPtr() const { return fObjPtr; }
-      const RFieldBase *GetField() const { return fField; }
+      RFieldBase *GetField() const { return fField; }
    };
 
 private:
