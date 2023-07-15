@@ -137,10 +137,8 @@ public:
 
       void DestroyIfOwning()
       {
-         if (!fIsOwning)
-            return;
-         auto transitional = fField->CaptureValue(fObjPtr);
-         fField->DestroyValue(transitional);
+         if (fIsOwning)
+            fField->DestroyValue(fObjPtr);
       }
 
    public:
@@ -347,7 +345,7 @@ public:
    virtual RFieldValue GenerateValue(void *where) = 0;
    /// Releases the resources acquired during GenerateValue (memory and constructor)
    /// This implementation works for simple types but needs to be overwritten for complex ones
-   virtual void DestroyValue(const RFieldValue &value, bool dtorOnly = false);
+   virtual void DestroyValue(void *objPtr, bool dtorOnly = false);
    /// Creates a value from a memory location with an already constructed object
    virtual RFieldValue CaptureValue(void *where) = 0;
    /// Creates the list of direct child values given a value for this field.  E.g. a single value for the
@@ -523,7 +521,7 @@ public:
 
    using Detail::RFieldBase::GenerateValue;
    Detail::RFieldValue GenerateValue(void* where) override;
-   void DestroyValue(const Detail::RFieldValue& value, bool dtorOnly = false) final;
+   void DestroyValue(void *objPtr, bool dtorOnly = false) final;
    Detail::RFieldValue CaptureValue(void *where) final;
    std::vector<RValue> SplitValue(const RValue &value) const final;
    size_t GetValueSize() const override;
@@ -669,7 +667,7 @@ public:
 
    using Detail::RFieldBase::GenerateValue;
    Detail::RFieldValue GenerateValue(void *where) override;
-   void DestroyValue(const Detail::RFieldValue &value, bool dtorOnly = false) final;
+   void DestroyValue(void *objPtr, bool dtorOnly = false) final;
    Detail::RFieldValue CaptureValue(void *where) override;
    std::vector<RValue> SplitValue(const RValue &value) const final;
    size_t GetValueSize() const override { return fProxy->Sizeof(); }
@@ -731,7 +729,7 @@ public:
 
    using Detail::RFieldBase::GenerateValue;
    Detail::RFieldValue GenerateValue(void* where) override;
-   void DestroyValue(const Detail::RFieldValue& value, bool dtorOnly = false) override;
+   void DestroyValue(void *objPtr, bool dtorOnly = false) override;
    Detail::RFieldValue CaptureValue(void *where) final;
    std::vector<RValue> SplitValue(const RValue &value) const final;
    size_t GetValueSize() const final { return fSize; }
@@ -761,7 +759,7 @@ public:
 
    using Detail::RFieldBase::GenerateValue;
    Detail::RFieldValue GenerateValue(void* where) override;
-   void DestroyValue(const Detail::RFieldValue& value, bool dtorOnly = false) final;
+   void DestroyValue(void *objPtr, bool dtorOnly = false) final;
    Detail::RFieldValue CaptureValue(void *where) override;
    std::vector<RValue> SplitValue(const RValue &value) const final;
    size_t GetValueSize() const override { return sizeof(std::vector<char>); }
@@ -805,7 +803,7 @@ public:
 
    using Detail::RFieldBase::GenerateValue;
    Detail::RFieldValue GenerateValue(void *where) override;
-   void DestroyValue(const Detail::RFieldValue &value, bool dtorOnly = false) override;
+   void DestroyValue(void *objPtr, bool dtorOnly = false) override;
    Detail::RFieldValue CaptureValue(void *where) override;
    std::vector<RValue> SplitValue(const RValue &value) const final;
    size_t GetValueSize() const override;
@@ -844,7 +842,7 @@ public:
 
    using Detail::RFieldBase::GenerateValue;
    Detail::RFieldValue GenerateValue(void *where) override;
-   void DestroyValue(const Detail::RFieldValue &value, bool dtorOnly = false) final;
+   void DestroyValue(void *objPtr, bool dtorOnly = false) final;
    Detail::RFieldValue CaptureValue(void *where) final;
    std::vector<RValue> SplitValue(const RValue &value) const final;
    size_t GetLength() const { return fArrayLength; }
@@ -930,7 +928,7 @@ public:
 
    using Detail::RFieldBase::GenerateValue;
    Detail::RFieldValue GenerateValue(void *where) override;
-   void DestroyValue(const Detail::RFieldValue &value, bool dtorOnly = false) final;
+   void DestroyValue(void *objPtr, bool dtorOnly = false) final;
    Detail::RFieldValue CaptureValue(void *where) final;
    size_t GetValueSize() const final;
    size_t GetAlignment() const final { return fMaxAlignment; }
@@ -994,7 +992,7 @@ public:
 
    using Detail::RFieldBase::GenerateValue;
    Detail::RFieldValue GenerateValue(void *where) override;
-   void DestroyValue(const Detail::RFieldValue &value, bool dtorOnly = false) final;
+   void DestroyValue(void *objPtr, bool dtorOnly = false) final;
    Detail::RFieldValue CaptureValue(void *where) final;
    std::vector<RValue> SplitValue(const RValue &value) const final;
    size_t GetValueSize() const final { return sizeof(std::unique_ptr<char>); }
@@ -1185,7 +1183,7 @@ public:
 
    using Detail::RFieldBase::GenerateValue;
    Detail::RFieldValue GenerateValue(void *where) override;
-   void DestroyValue(const Detail::RFieldValue &value, bool dtorOnly = false) override;
+   void DestroyValue(void *objPtr, bool dtorOnly = false) override;
 };
 
 /// The generic field for `std::tuple<Ts...>` types
@@ -1208,7 +1206,7 @@ public:
 
    using Detail::RFieldBase::GenerateValue;
    Detail::RFieldValue GenerateValue(void *where) override;
-   void DestroyValue(const Detail::RFieldValue &value, bool dtorOnly = false) override;
+   void DestroyValue(void *objPtr, bool dtorOnly = false) override;
 };
 
 /// An artificial field that transforms an RNTuple column that contains the offset of collections into
@@ -1984,11 +1982,11 @@ public:
       return Detail::RFieldValue(this, static_cast<std::string*>(where), std::forward<ArgsT>(args)...);
    }
    ROOT::Experimental::Detail::RFieldValue GenerateValue(void* where) final { return GenerateValue(where, ""); }
-   void DestroyValue(const Detail::RFieldValue& value, bool dtorOnly = false) override {
-      auto str = value.Get<std::string>();
-      str->~basic_string(); // TODO(jblomer) C++17 std::destroy_at
+   void DestroyValue(void *objPtr, bool dtorOnly = false) override
+   {
+      std::destroy_at(static_cast<std::string *>(objPtr));
       if (!dtorOnly)
-         free(str);
+         free(objPtr);
    }
    Detail::RFieldValue CaptureValue(void *where) override {
       return Detail::RFieldValue(true /* captureFlag */, this, where);
@@ -2140,7 +2138,7 @@ public:
       return Detail::RFieldValue(true /* captureFlag */, this, where);
    }
    std::vector<RValue> SplitValue(const RValue &value) const final;
-   void DestroyValue(const Detail::RFieldValue& value, bool dtorOnly = false) final;
+   void DestroyValue(void *objPtr, bool dtorOnly = false) final;
 
    size_t GetValueSize() const final { return sizeof(std::vector<bool>); }
    size_t GetAlignment() const final { return std::alignment_of<std::vector<bool>>(); }
@@ -2201,11 +2199,11 @@ public:
    RField& operator =(RField&& other) = default;
    ~RField() override = default;
 
-   void DestroyValue(const Detail::RFieldValue& value, bool dtorOnly = false) final {
-      auto vec = reinterpret_cast<ContainerT*>(value.GetRawPtr());
-      vec->~RVec();
+   void DestroyValue(void *objPtr, bool dtorOnly = false) final
+   {
+      std::destroy_at(static_cast<ContainerT *>(objPtr));
       if (!dtorOnly)
-         free(vec);
+         free(objPtr);
    }
 
    static std::string TypeName() { return "ROOT::VecOps::RVec<" + RField<ItemT>::TypeName() + ">"; }
@@ -2268,11 +2266,11 @@ public:
    ROOT::Experimental::Detail::RFieldValue GenerateValue(void *where) final {
       return GenerateValue(where, ContainerT());
    }
-   void DestroyValue(const Detail::RFieldValue &value, bool dtorOnly = false) final
+   void DestroyValue(void *objPtr, bool dtorOnly = false) final
    {
-      reinterpret_cast<ContainerT *>(value.GetRawPtr())->~pair();
+      std::destroy_at(static_cast<ContainerT *>(objPtr));
       if (!dtorOnly)
-         free(reinterpret_cast<ContainerT *>(value.GetRawPtr()));
+         free(objPtr);
    }
 };
 
@@ -2353,11 +2351,11 @@ public:
    {
       return GenerateValue(where, ContainerT());
    }
-   void DestroyValue(const Detail::RFieldValue &value, bool dtorOnly = false) final
+   void DestroyValue(void *objPtr, bool dtorOnly = false) final
    {
-      reinterpret_cast<ContainerT *>(value.GetRawPtr())->~tuple();
+      std::destroy_at(static_cast<ContainerT *>(objPtr));
       if (!dtorOnly)
-         free(reinterpret_cast<ContainerT *>(value.GetRawPtr()));
+         free(objPtr);
    }
 };
 

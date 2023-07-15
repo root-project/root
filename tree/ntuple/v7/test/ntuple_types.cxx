@@ -128,7 +128,6 @@ TEST(RNTuple, CreateField)
    auto field = RFieldBase::Create("test", "vector<unsigned int>").Unwrap();
    EXPECT_STREQ("std::vector<std::uint32_t>", field->GetType().c_str());
    auto value = field->GenerateValue();
-   field->DestroyValue(value);
 
    std::vector<std::unique_ptr<RFieldBase>> itemFields;
    itemFields.push_back(std::make_unique<RField<std::uint32_t>>("u32"));
