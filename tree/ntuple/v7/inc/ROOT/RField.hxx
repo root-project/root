@@ -131,28 +131,47 @@ public:
    private:
       RFieldBase *fField = nullptr;
       void *fObjPtr = nullptr;
+      bool fIsOwning = false;
 
-      RValue(RFieldBase *field, void *objPtr) : fField(field), fObjPtr(objPtr) {}
+      RValue(RFieldBase *field, void *objPtr, bool isOwning) : fField(field), fObjPtr(objPtr), fIsOwning(isOwning) {}
+
+      void DestroyIfOwning()
+      {
+         if (!fIsOwning)
+            return;
+         auto transitional = fField->CaptureValue(fObjPtr);
+         fField->DestroyValue(transitional);
+      }
 
    public:
       RValue(const RValue &) = delete;
-      RValue(RValue &&) = default;
       RValue &operator=(const RValue &) = delete;
-      RValue &operator=(RValue &&) = default;
-      ~RValue() = default;
+      RValue(RValue &&other) : fField(other.fField), fObjPtr(other.fObjPtr), fIsOwning(other.fIsOwning)
+      {
+         other.fIsOwning = false;
+      }
+      RValue &operator=(RValue &&other)
+      {
+         DestroyIfOwning();
+         fField = other.fField;
+         fObjPtr = other.fObjPtr;
+         fIsOwning = other.fIsOwning;
+         other.fIsOwning = false;
+         return *this;
+      }
+      ~RValue() { DestroyIfOwning(); }
 
       // Transitional constructor
-      explicit RValue(const RFieldValue &from) : fField(from.GetField()), fObjPtr(from.GetRawPtr()) {}
+      explicit RValue(const RFieldValue &from, bool isOwning = false)
+         : fField(from.GetField()), fObjPtr(from.GetRawPtr()), fIsOwning(isOwning)
+      {
+      }
+
+      RValue GetNonOwningCopy() { return RValue(fField, fObjPtr, false); }
 
       std::size_t Append() { return fField->Append(fObjPtr); }
       void Read(NTupleSize_t globalIndex) { fField->Read(globalIndex, fObjPtr); }
       void Read(const RClusterIndex &clusterIndex) { fField->Read(clusterIndex, fObjPtr); }
-      void Destroy()
-      {
-         auto transitional = fField->CaptureValue(fObjPtr);
-         fField->DestroyValue(transitional);
-         fObjPtr = nullptr;
-      }
 
       template <typename T>
       T *Get() const

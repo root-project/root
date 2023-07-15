@@ -154,7 +154,7 @@ public:
 
    RNTupleView(DescriptorId_t fieldId, Detail::RPageSource *pageSource)
       : fField(pageSource->GetSharedDescriptorGuard()->GetFieldDescriptor(fieldId).GetFieldName()),
-        fValue(fField.GenerateValue())
+        fValue(fField.GenerateValue(), true /* owns object */)
    {
       fField.SetOnDiskId(fieldId);
       fField.ConnectPageSource(*pageSource);
@@ -172,7 +172,7 @@ public:
    RNTupleView(RNTupleView&& other) = default;
    RNTupleView& operator=(const RNTupleView& other) = delete;
    RNTupleView& operator=(RNTupleView&& other) = default;
-   ~RNTupleView() { fValue.Destroy(); }
+   ~RNTupleView() = default;
 
    RNTupleGlobalRange GetFieldRange() const { return RNTupleGlobalRange(0, fField.GetNElements()); }
 
