@@ -84,15 +84,6 @@ public:
 
    void CaptureValueUnsafe(std::string_view fieldName, void *where);
 
-   Detail::RFieldValue GetValue(std::string_view fieldName) const
-   {
-      for (auto& v : fValues) {
-         if (v.GetField()->GetName() == fieldName)
-            return v;
-      }
-      throw RException(R__FAIL("invalid field name: " + std::string(fieldName)));
-   }
-
    template <typename T>
    T *Get(std::string_view fieldName) const
    {
