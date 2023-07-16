@@ -923,7 +923,7 @@ void RooJSONFactoryWSTool::importFunction(const JSONNode &p, bool importAllDepen
    bool ok = false;
    if (it != importers.end()) {
       for (auto &imp : it->second) {
-         ok = isPdf ? imp->importPdf(this, p) : imp->importFunction(this, p);
+         ok = imp->importArg(this, p);
          if (ok)
             break;
       }
