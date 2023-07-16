@@ -33,9 +33,24 @@ namespace JSONIO {
 
 class Importer {
 public:
-   virtual bool importPdf(RooJSONFactoryWSTool *, const RooFit::Detail::JSONNode &) const { return false; }
-   virtual bool importFunction(RooJSONFactoryWSTool *, const RooFit::Detail::JSONNode &) const { return false; }
    virtual ~Importer() {}
+   virtual bool importArg(RooJSONFactoryWSTool *tool, const RooFit::Detail::JSONNode &node) const
+   {
+      return importFunction(tool, node);
+   }
+   // These two functions importPdf() and importFunction() are supposed to get
+   // deprecated at some point, and get superseeded by the general importArg().
+   // The reason for having these functions call each other in a loop by
+   // default is backwards compatibility: no matter which function is
+   // overridden, it will be called eventually.
+   virtual bool importFunction(RooJSONFactoryWSTool *tool, const RooFit::Detail::JSONNode &node) const
+   {
+      return importPdf(tool, node);
+   }
+   virtual bool importPdf(RooJSONFactoryWSTool *tool, const RooFit::Detail::JSONNode &node) const
+   {
+      return importArg(tool, node);
+   }
 };
 class Exporter {
 public:
